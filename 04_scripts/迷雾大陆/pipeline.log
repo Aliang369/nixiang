@@ -453,3 +453,25 @@ Success
 Success
 [2026-09-09 18:11:42] [迷雾大陆] stage=install 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:19:41] [迷雾大陆] stage=device_ready 开始
+命令: adb -s $SERIAL get-state && adb devices -l
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+device
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:7
+127.0.0.1:16384        device product:ALN-AL00 model:ALN_AL00 device:ALN-AL00 transport_id:9
+127.0.0.1:5555         device product:ALN-AL00 model:ALN_AL00 device:ALN-AL00 transport_id:8
+
+[2026-09-09 18:19:41] [迷雾大陆] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:19:46] [迷雾大陆] stage=install 开始
+命令: adb -s $SERIAL push "$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk" /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell am force-stop com.hortor.mwdl; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell rm -f /data/local/tmp/mwdl_mod.apk
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 28.5 MB/s (43314495 bytes in 1.448s)
+Success
+[2026-09-09 18:19:53] [迷雾大陆] stage=install 完成（校验通过）
+────────────────────────────────────────────
