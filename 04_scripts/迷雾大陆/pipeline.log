@@ -1,0 +1,455 @@
+
+────────────────────────────────────────────
+[2026-09-09 17:48:17] [迷雾大陆] stage=check_apk 开始
+命令: ls -lh "$NIXIANG/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk" && shasum -a 256 "$NIXIANG/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+-rw-r--r--@ 1 aliang  staff    40M Sep  9 17:47 /Users/aliang/Documents/nixiang/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk
+f40b58267d6ff42fc87e956007af81a8417dd58f409911fe7950dd0289c61aca  /Users/aliang/Documents/nixiang/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk
+[2026-09-09 17:48:17] [迷雾大陆] stage=check_apk 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 17:48:20] [迷雾大陆] stage=build_so 开始
+命令: "$NDK/ndk-build" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_mwdl.mk NDK_APPLICATION_MK=./Application.mk NDK_OUT=../../obj_mwdl NDK_LIBS_OUT=../../libs_mwdl -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile++      : starry_magic <= MwdlEntry.cpp
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs_mwdl/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= MwdlMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs_mwdl/arm64-v8a/libstarry_magic.so
+[2026-09-09 17:48:22] [迷雾大陆] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 17:48:29] [迷雾大陆] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_mwdl_14.0.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_mwdl/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease + ndk (starry)
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:sdkReleaseDependencyData
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/mwdl_surgical.cVzMkX/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/mwdl_surgical.cVzMkX/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/mwdl_surgical.cVzMkX/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 14s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes5.dex
+-rw-r--r--@ 1 aliang  wheel  380192 Sep  9 17:48 /tmp/mwdl_surgical.cVzMkX/classes5.dex
+[3b/6] patch classes3: GameApplication.attachBaseContext → SignSpoof + loadLibrary
+  +attachBaseContext → SignSpoof + loadLibrary
+-rw-r--r--@ 1 aliang  wheel  5279936 Sep  9 17:48 /tmp/mwdl_surgical.cVzMkX/classes3.dex
+[3c/6] patch classes4: AppActivity + force TapTap WebLogin + get_ret
+  ActivityHandler.authorize → force WebLogin
+  onCreate → MenuService.start
+  onResume → notifyHostResumed
+  onPause → notifyHostLeaving
+  +onUserLeaveHint
+  +get_ret/set_ret → MwdlHooks
+  +get_val/set_val → MwdlHooks
+-rw-r--r--@ 1 aliang  wheel  7769884 Sep  9 17:48 /tmp/mwdl_surgical.cVzMkX/classes4.dex
+[4/6] binary AndroidManifest（保留 GameApplication，加菜单权限/服务）
+  generate binary Manifest once (apktool d -s + b extract)
+  text Manifest patched (keep GameApplication)
+  cached → /Users/aliang/Documents/nixiang/07_patched/迷雾大陆/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  50628 Sep  9 17:49 /tmp/mwdl_surgical.cVzMkX/AndroidManifest.xml
+[5/6] zip surgical merge
+  merged ok; entries≈1428; c3=5279936 c4=7769884 c5=380192
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff    41M Sep  9 17:49 /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+DONE: /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+NOTE: 默认未装机。需要覆盖装机时再 STARRY_INSTALL=1 并先在聊天确认。
+[2026-09-09 17:49:16] [迷雾大陆] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 17:53:27] [迷雾大陆] stage=device_ready 开始
+命令: adb connect 127.0.0.1:5555 && adb devices -l
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+already connected to 127.0.0.1:5555
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:7
+127.0.0.1:16384        device product:ALN-AL00 model:ALN_AL00 device:ALN-AL00 transport_id:9
+127.0.0.1:5555         device product:ALN-AL00 model:ALN_AL00 device:ALN-AL00 transport_id:8
+
+[2026-09-09 17:53:27] [迷雾大陆] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 17:53:31] [迷雾大陆] stage=install 开始
+命令: adb -s 127.0.0.1:5555 push "$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk" /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell am force-stop com.hortor.mwdl; adb -s 127.0.0.1:5555 shell "su -c 'pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk'" && adb -s 127.0.0.1:5555 shell rm -f /data/local/tmp/mwdl_mod.apk
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 28.4 MB/s (43314495 bytes in 1.456s)
+[2026-09-09 17:53:33] [迷雾大陆] stage=install 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 17:54:43] [迷雾大陆] stage=install 开始
+命令: adb -s 127.0.0.1:5555 push "$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk" /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell am force-stop com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell rm -f /data/local/tmp/mwdl_mod.apk
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 49.9 MB/s (43314495 bytes in 0.827s)
+Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Package com.hortor.mwdl signatures do not match previously installed version; ignoring!]
+[2026-09-09 17:54:45] [迷雾大陆] stage=install 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 17:55:33] [迷雾大陆] stage=install 开始
+命令: adb -s 127.0.0.1:5555 push "$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk" /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell am force-stop com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm uninstall --user 0 com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell rm -f /data/local/tmp/mwdl_mod.apk
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 139.5 MB/s (43314495 bytes in 0.296s)
+Success
+Success
+[2026-09-09 17:55:36] [迷雾大陆] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:06:24] [迷雾大陆] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_mwdl_14.0.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_mwdl/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease + ndk (starry)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/mwdl_surgical.wGk7zu/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/mwdl_surgical.wGk7zu/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/mwdl_surgical.wGk7zu/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes5.dex
+-rw-r--r--@ 1 aliang  wheel  381948 Sep  9 18:06 /tmp/mwdl_surgical.wGk7zu/classes5.dex
+[3b/6] patch classes3: GameApplication.attachBaseContext → SignSpoof + loadLibrary
+  +attachBaseContext → SignSpoof + loadLibrary
+-rw-r--r--@ 1 aliang  wheel  5279936 Sep  9 18:06 /tmp/mwdl_surgical.wGk7zu/classes3.dex
+[3c/6] patch classes4: AppActivity + force TapTap WebLogin + get_ret
+  ActivityHandler.authorize → force WebLogin
+  onCreate → MenuService.start
+  onResume → notifyHostResumed
+  onPause → notifyHostLeaving
+  +onUserLeaveHint
+  +get_ret/set_ret → MwdlHooks
+  +get_val/set_val → MwdlHooks
+-rw-r--r--@ 1 aliang  wheel  7769884 Sep  9 18:06 /tmp/mwdl_surgical.wGk7zu/classes4.dex
+[4/6] binary AndroidManifest（保留 GameApplication，加菜单权限/服务）
+  using cached /Users/aliang/Documents/nixiang/07_patched/迷雾大陆/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  50628 Sep  9 18:06 /tmp/mwdl_surgical.wGk7zu/AndroidManifest.xml
+[5/6] zip surgical merge
+  merged ok; entries≈1428; c3=5279936 c4=7769884 c5=381948
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff    41M Sep  9 18:06 /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+DONE: /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+NOTE: 默认未装机。需要覆盖装机时再 STARRY_INSTALL=1 并先在聊天确认。
+[2026-09-09 18:06:56] [迷雾大陆] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:07:09] [迷雾大陆] stage=install 开始
+命令: adb -s 127.0.0.1:5555 push "$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk" /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell am force-stop com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm uninstall --user 0 com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell rm -f /data/local/tmp/mwdl_mod.apk
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 48.9 MB/s (43314495 bytes in 0.845s)
+Success
+Success
+[2026-09-09 18:07:15] [迷雾大陆] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:10:45] [迷雾大陆] stage=build_so 开始
+命令: "$NDK/ndk-build" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_mwdl.mk NDK_APPLICATION_MK=./Application.mk NDK_OUT=../../obj_mwdl NDK_LIBS_OUT=../../libs_mwdl -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[arm64-v8a] Install libs_mwdl/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs_mwdl/arm64-v8a/libstarry_magic.so
+[2026-09-09 18:10:48] [迷雾大陆] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:10:56] [迷雾大陆] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-09 18:10:56] [迷雾大陆] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:11:04] [迷雾大陆] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_mwdl_14.0.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_mwdl/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease + ndk (starry)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:stripReleaseDebugSymbols
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/mwdl_surgical.CMzj3p/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/mwdl_surgical.CMzj3p/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/mwdl_surgical.CMzj3p/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes5.dex
+-rw-r--r--@ 1 aliang  wheel  381948 Sep  9 18:11 /tmp/mwdl_surgical.CMzj3p/classes5.dex
+[3b/6] patch classes3: GameApplication.attachBaseContext → SignSpoof + loadLibrary
+  +attachBaseContext → SignSpoof + loadLibrary
+-rw-r--r--@ 1 aliang  wheel  5279936 Sep  9 18:11 /tmp/mwdl_surgical.CMzj3p/classes3.dex
+[3c/6] patch classes4: AppActivity + force TapTap WebLogin + get_ret
+  ActivityHandler.authorize → force WebLogin
+  onCreate → MenuService.start
+  onResume → notifyHostResumed
+  onPause → notifyHostLeaving
+  +onUserLeaveHint
+  +get_ret/set_ret → MwdlHooks
+  +get_val/set_val → MwdlHooks
+-rw-r--r--@ 1 aliang  wheel  7769884 Sep  9 18:11 /tmp/mwdl_surgical.CMzj3p/classes4.dex
+[4/6] binary AndroidManifest（保留 GameApplication，加菜单权限/服务）
+  using cached /Users/aliang/Documents/nixiang/07_patched/迷雾大陆/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  50628 Sep  9 18:11 /tmp/mwdl_surgical.CMzj3p/AndroidManifest.xml
+[5/6] zip surgical merge
+  merged ok; entries≈1428; c3=5279936 c4=7769884 c5=381948
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff    41M Sep  9 18:11 /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+DONE: /Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk
+NOTE: 默认未装机。需要覆盖装机时再 STARRY_INSTALL=1 并先在聊天确认。
+[2026-09-09 18:11:39] [迷雾大陆] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-09 18:11:40] [迷雾大陆] stage=install 开始
+命令: adb -s 127.0.0.1:5555 push "$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk" /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell am force-stop com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm uninstall --user 0 com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell rm -f /data/local/tmp/mwdl_mod.apk
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 155.6 MB/s (43314495 bytes in 0.265s)
+Success
+Success
+[2026-09-09 18:11:42] [迷雾大陆] stage=install 完成（校验通过）
+────────────────────────────────────────────
