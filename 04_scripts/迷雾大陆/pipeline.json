@@ -1,7 +1,7 @@
 {
   "game": "迷雾大陆",
   "version": "14.0.0",
-  "notes": "2026-09-09 热更失效修复：code bundle 1fe37→6355d，MwdlMod 锚点重定位（jA/vS/KH 尾锚）。modern 双轨（Android_mwdl.mk + MwdlEntry）。",
+  "notes": "2026-09-09 热更失效修复：code bundle 1fe37→6355d，MwdlMod 锚点重定位（jA/vS/KH 尾锚）。modern 双轨（Android_mwdl.mk + MwdlEntry）。20260909 晚真机二次验证：serial=f9a116a2。",
   "params": {
     "game_id": "mwdl",
     "package": "com.hortor.mwdl",
@@ -9,11 +9,12 @@
     "tag": "mwdl",
     "obj_dir": "obj_mwdl",
     "libs_dir": "libs_mwdl",
-    "serial": "127.0.0.1:5555"
+    "serial": "f9a116a2"
   },
   "env": {
     "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
-    "NIXIANG": "/Users/aliang/Documents/nixiang"
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
   },
   "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
   "stages": [
@@ -95,9 +96,9 @@
     },
     {
       "id": "device_ready",
-      "name": "设备准备（MuMu）",
+      "name": "设备准备（真机 f9a116a2）",
       "requires": [],
-      "command": "adb connect 127.0.0.1:5555 && adb devices -l",
+      "command": "adb -s $SERIAL get-state && adb devices -l",
       "verify": [
         {
           "type": "file_exists",
@@ -105,21 +106,21 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 17:53:27",
+      "done_at": "2026-09-09 18:19:41",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/pipeline.json": {
-          "md5": "469c4bfb124b376ff4802a7ebbbf32de"
+          "md5": "fddcf23cf3031c8c82c07a16b6457db5"
         }
       }
     },
     {
       "id": "install",
-      "name": "装机 MuMu（覆盖安装，禁止卸载）",
+      "name": "装机真机（全新安装）",
       "requires": [
         "surgical",
         "device_ready"
       ],
-      "command": "adb -s 127.0.0.1:5555 push \"$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk\" /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell am force-stop com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm uninstall --user 0 com.hortor.mwdl; adb -s 127.0.0.1:5555 shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s 127.0.0.1:5555 shell rm -f /data/local/tmp/mwdl_mod.apk",
+      "command": "adb -s $SERIAL push \"$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk\" /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell am force-stop com.hortor.mwdl; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell rm -f /data/local/tmp/mwdl_mod.apk",
       "verify": [
         {
           "type": "file_exists",
@@ -127,7 +128,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 18:11:42",
+      "done_at": "2026-09-09 18:19:53",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk": {
           "md5": "f286f5554e71171b2101e68c88386c9d"
