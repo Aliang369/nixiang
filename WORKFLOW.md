@@ -146,7 +146,7 @@
 
 仅用于无壳、无强反作弊游戏,且**短时探针**:
 - server:`04_scripts/_common/start_florida_server.sh`
-- 版本:server 17.9.1 ↔ 客户端 `frida==17.9.1`
+- 版本:server 17.9.1 ↔ 客户端 `frida==17.9.1`（2026-09-10 实测客户端已随官方升到 17.16.4，用 Florida 前须先降级，见 TOOLBOOK「Frida — 动态 Hook」客户端现状；三级使用矩阵同在该节）
 - 禁止热路径长挂。
 - 结束按 `AGENTS.md` 先保全证据、核对脚本范围与清理授权，再处理本轮残留。
 
