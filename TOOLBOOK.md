@@ -28,10 +28,9 @@
 | scrcpy | 4.1 | brew install scrcpy | 投屏控制 Android 设备 |
 | android-platform-tools (adb) | 1.0.41 | brew install --cask android-platform-tools | adb 设备控制 |
 | mitmproxy | 12.2.3 | brew install --cask mitmproxy | HTTP/HTTPS 抓包 |
-| frida（PC 客户端） | **17.16.4**（2026-09-10 实测，两个 CLI path 均此版本；用 Florida 前须降 17.9.1） | `python3.11 -m pip install --user frida==<ver>`；CLI 用 `$HOME/Library/Python/3.11/bin` | 动态 Hook 核心 |
+| frida（PC 客户端） | **17.16.4**（2026-09-10 实测，两个 CLI path 均此版本，与魔改 server 原生匹配） | `python3.11 -m pip install --user frida==<ver>`；CLI 用 `$HOME/Library/Python/3.11/bin` | 动态 Hook 核心 |
 | frida-tools | 14.4.5 | 同上 | Frida CLI |
-| frida-server（官方） | 17.16.4 | `01_tools/frida-server-17.16.4-android-arm64` | 弱/无检测游戏首选（见下方三级矩阵） |
-| Florida（魔改 server） | 17.9.1 | `01_tools/florida/`（server+inject 双档）+ `start_florida_server.sh` | 中检测游戏低成本试探（见 Frida 节实测结论） |
+| phantom-frida（魔改 server） | 17.16.4（run39.1） | `01_tools/phantom-frida/` + `start_frida_server.sh` | 非强检测游戏动态 Hook（选型依据见 Frida 节与其 README） |
 | objection | 1.12.5 | pip3 install objection | Frida 封装，快速操作 |
 | frida-dexdump | 2.0.1 | pip3 install frida-dexdump | 内存 dump DEX（脱壳） |
 | pycryptodome | 3.23.0 | pip3 install pycryptodome | AES/RSA/HMAC 加解密 |
@@ -206,50 +205,53 @@ dotnet Il2CppDumper.dll 06_dumped/libil2cpp.so 06_dumped/global-metadata.dat 06_
 | 5 | F5 反编译 | F5 | 分析具体函数时 | — |
 | 6 | Keypatch | Ctrl+Alt+K | 已授权的指令修改确有需要时 | 先核对改动边界与证据 |
 
-### Frida — 动态 Hook（三级使用矩阵）
+### Frida — 动态 Hook（使用矩阵）
 
-适用边界见 `WORKFLOW.md` §5（5.1 自注入 Trace 默认 / 5.2 Frida/Florida 备选）；授权、用户协作与清理见 `AGENTS.md`。参见 `01_tools/florida/README.md`、`.cursor/rules/frida-florida.mdc`、`.cursor/rules/user-coop-chat-first.mdc` 指针。
+适用边界见 `WORKFLOW.md` §5（5.1 自注入 Trace 默认 / 5.2 Frida 备选）；授权、用户协作与清理见 `AGENTS.md`。参见 `01_tools/phantom-frida/README.md`、`.cursor/rules/frida-florida.mdc` 指针。
 
-**三级使用矩阵**（2026-09-10 定稿：三个工具各就各位，不靠删除解决混乱）：
+**使用矩阵**（2026-09-10 定稿；本地只留一个魔改 server = phantom-frida 17.16.4，官方版与 Florida 已移除——二进制均可随时重下，删除不省成本，留多版反而误用）：
 
 | 游戏检测强度 | 用什么 | 判断方式 |
 |------|------|------|
 | 强（ACE/TSS/MHP/HTProtect/已知 frida 秒断） | 星光 so 自注入 Trace（唯一路线，见 WORKFLOW §5.1） | WORKFLOW §5 名单 + 历史记录 |
-| 中（有反 frida 但强度未知） | Florida 先试：attach 上=赚一轮，被杀=确认走 so，约 10 分钟出结论 | 无保护特征即降弱档 |
-| 弱/无（休闲游戏/自家壳/纯 app 分析） | 官方 frida-server 17.16.4（版本最新、生态最全、与当前客户端原生匹配） | 无保护特征 |
+| 中/弱/无（其余全部） | phantom-frida 17.16.4 短时探针；attach 上=赚一轮，被杀=立即撤回走 so | 无保护特征 |
 
 架构依据：so 路线的分析能力与交付功能同载体——用 so Trace 分析通的方案天然已过检测、可直接交付；frida 分析通了还要翻译回 so 再过一遍检测（等于过两次）。强检测游戏 frida 是「先偷懒后还债」。
 
-**Florida 实测结论**（2026-09-10，`grep -a -o` 静态特征计数，florida-server 与 florida-inject 两档结果一致）：
+**phantom-frida 实测结论**（2026-09-10，`grep -a -o` 静态特征计数，SHA256 与发布清单核对一致）：
 
-| 检测特征 | 官方 17.16.4 | Florida 17.9.1 | 结论 |
+| 检测特征 | 官方 17.16.4 | phantom 17.16.4 | 结论 |
 |------|------|------|------|
-| gum-js-loop（线程名） | 2 | 0 | ✅ 已清除，过线程名扫描 |
-| frida:rpc（协议 magic） | 20 | 16 | ❌ 残留，协议特征扫描仍可检出 |
-| frida-agent（模块名） | 9 | 10 | ❌ 残留，字符串扫描仍可检出 |
-| frida-server（进程名/路径） | 6 | 6 | ❌ 残留（推机改名 fs-arm64 可部分缓解） |
+| frida:rpc（协议 magic） | 20 | 0 | ✅ 全清 |
+| frida-agent / frida-server / frida-gadget（名） | 9/6/2 | 0/0/0 | ✅ 全清 |
+| gum-js-loop / gmain（线程名） | 2/4 | 0/0 | ✅ 全清 |
+| frida_agent_main（符号） | 3 | 0 | ✅ 全清 |
+| re.frida（仅剩 GLib 错误域名串） | 79 | 76 | ◐ 残 GLib 内部串，非路径/memfd 名 |
+| gdbus（仅剩 GLib 内部串） | 42 | 38 | ◐ 同上 |
+| 默认端口 | 27042 | 39571（随机构建） | ✅ 防默认端口扫描 |
 
-定性（基于静态特征的推断，未做实机对抗验证）：Florida 是「改名级」魔改——能过初级检测（命名/端口/线程名扫描型，多数休闲游戏的反 frida 即此级别），过不了中级（协议特征扫描）与高级（inline hook 行为特征、ptrace 检测）。是第一道防弹衣，不是隐身衣。另：Florida 17.9.1 落后官方 17.16.4，新系统兼容问题仍需官方侧兜底——这也是保留官方版不卸载的理由之一。
+定性（静态实测 + 项目自述，未做实机对抗验证）：~90 补丁覆盖 16 类检测向量，周构建随机改名+随机端口+出包「禁止标记」门禁+真机冒烟验证，build-info.json 全程溯源。静态隐蔽性全面优于 Florida（Florida 留 frida:rpc 16 处/frida-agent 10 处未清）。仍是「症状级」对抗——中级（协议行为）与高级（inline hook 行为特征、ptrace 检测）不保证，强检测游戏一律走 so。
 
-**客户端版本现状**（2026-09-10 实测）：两个 CLI（`$HOME/Library/Python/3.11/bin/frida`、`~/.local/bin/frida`）当前均为 **17.16.4**，环境里没有 17.9.1 客户端——与官方 server 原生匹配、与 Florida 17.9.1 **不匹配**。要用 Florida，先按其 README 执行 `python3.11 -m pip install --user 'frida==17.9.1'` 降级客户端，用完再升回；不做这步则 Florida 连不上。
+**魔改谱系落选记录**（选型时实测/核实）：strongR-frida-android（hluwa）仓库已 404 下架；zer0def/undetected-frida 构建流程有 bug——未打补丁的 server 被上传、anti-anti 处理产物未发布（实测线程名全在≈裸奔）；Florida（Ylarod）上游 17.16.x 起只发空 release（CI 停产二进制），且 17.9.1 须降级 pip 客户端，2026-09-10 已从 `01_tools/` 移除。gadget 版按需从 phantom 同 release 下载。
+
+**客户端版本现状**（2026-09-10 实测）：两个 CLI（`$HOME/Library/Python/3.11/bin/frida`、`~/.local/bin/frida`）均为 **17.16.4**，与 phantom server **原生匹配，无需任何 pip 降级**（Florida 时代的降级流程作废）。
 
 ```bash
-# 启动魔改 server（推到 /data/local/tmp/fs-arm64，当前 17.9.1）
-04_scripts/_common/start_florida_server.sh
+# 启动魔改 server（推到 /data/local/tmp/fs-arm64，phantom 17.16.4，端口随机构建）
+04_scripts/_common/start_frida_server.sh
 
-# 客户端必须与 server 同版本；CLI 用 3.11 user path
+# 客户端版本核对（应输出 17.16.4）
 export PATH="$HOME/Library/Python/3.11/bin:$PATH"
-python3.11 -c "import frida; print(frida.__version__)"   # Florida 期望 17.9.1（2026-09-10 实测为 17.16.4，见上）
+python3.11 -c "import frida; print(frida.__version__)"
 
 frida-ps -U
 frida -U -n "应用包名" -l 04_scripts/hook.js
 frida -U -f "应用包名" -l 04_scripts/hook.js --no-pause
 
-# 官方 server（弱/无检测首选）：adb push 01_tools/frida-server-17.16.4-android-arm64 → /data/local/tmp/ 后执行
 # objection -g "应用包名" explore
 ```
 
-下载新档（代理示例）：`https_proxy=http://127.0.0.1:7897 gh release download <ver> -R Ylarod/Florida -p 'florida-server-*-android-arm64.gz'`。详见 `01_tools/florida/README.md`。
+升级新档（代理示例，详见 `01_tools/phantom-frida/README.md`）：`https_proxy=http://127.0.0.1:7897 curl -sL -o /tmp/phantom-server.gz "https://github.com/TheQmaks/phantom-frida/releases/download/<tag>/ipcmodule-server-<ver>-android-arm64.gz"`，替换后重跑同口径扫描（关键字串应为 0）。
 
 ### adb — 设备控制
 

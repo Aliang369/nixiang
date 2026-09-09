@@ -142,11 +142,11 @@
 - Frida 秒断、闪退、被检测的游戏。
 - 热路径需要稳定观察的场景。
 
-### 5.2 备选:Frida/Florida
+### 5.2 备选:Frida
 
 仅用于无壳、无强反作弊游戏,且**短时探针**:
-- server:`04_scripts/_common/start_florida_server.sh`
-- 版本:server 17.9.1 ↔ 客户端 `frida==17.9.1`（2026-09-10 实测客户端已随官方升到 17.16.4，用 Florida 前须先降级，见 TOOLBOOK「Frida — 动态 Hook」客户端现状；三级使用矩阵同在该节）
+- server:`04_scripts/_common/start_frida_server.sh`（phantom-frida 17.16.4，随机名/随机端口；选型与实测见 TOOLBOOK「Frida — 动态 Hook」及 `01_tools/phantom-frida/README.md`）
+- 版本:server 17.16.4 ↔ 客户端 `frida==17.16.4` 原生匹配，无需 pip 降级
 - 禁止热路径长挂。
 - 结束按 `AGENTS.md` 先保全证据、核对脚本范围与清理授权，再处理本轮残留。
 
