@@ -52,11 +52,12 @@ run_su() {
 
 # ---------- 1) 停注入进程 ----------
 log "kill injectors / helpers"
-INJECT_PAT='frida-server|frida-helper|gum-js-loop|ltzj_ptrace|ltzj_patch|ltzj_sigbus|re\.frida'
+# 2026-09-10 起 server 换 phantom-frida：推机名 fs-arm64 / 原名 ipcmodule-server；线程名已随机化扫不到，靠进程名
+INJECT_PAT='frida-server|frida-helper|gum-js-loop|ltzj_ptrace|ltzj_patch|ltzj_sigbus|re\.frida|fs-arm64|ipcmodule'
 if [[ "$DRY" == "1" ]]; then
   adb shell "ps -A 2>/dev/null | grep -iE '$INJECT_PAT' || true" | tr -d '\r' || true
 else
-  adb shell "su -c 'killall frida-server frida-helper ltzj_ptrace_bus2 ltzj_ptrace_bus ltzj_ptrace_cont 2>/dev/null; pkill -f frida-server 2>/dev/null; pkill -f ltzj_ptrace 2>/dev/null; true'" || true
+  adb shell "su -c 'killall frida-server frida-helper fs-arm64 ipcmodule-server ltzj_ptrace_bus2 ltzj_ptrace_bus ltzj_ptrace_cont 2>/dev/null; pkill -f frida-server 2>/dev/null; pkill -f fs-arm64 2>/dev/null; pkill -f ipcmodule 2>/dev/null; pkill -f ltzj_ptrace 2>/dev/null; true'" || true
 fi
 
 # ---------- 2) KSU 全局 umount（试验常加的路径） ----------
@@ -88,6 +89,8 @@ TMP_GLOBS=(
   'frida-server*'
   'frida-helper*'
   're.frida*'
+  'fs-arm64*'
+  'ipcmodule*'
   'ltzj_*'
   'libltzj_*'
   'libtersafe2_ace*.so'
@@ -146,11 +149,12 @@ log "post-check"
 echo "--- processes ---"
 adb shell "ps -A 2>/dev/null | grep -iE '$INJECT_PAT' || echo '(none)'" | tr -d '\r'
 echo "--- tmp frida/ltzj ---"
-adb shell "su -c 'ls /data/local/tmp/frida-server /data/local/tmp/ltzj_* /data/local/tmp/libltzj_* 2>/dev/null || echo clean'" | tr -d '\r'
+adb shell "su -c 'ls /data/local/tmp/frida-server /data/local/tmp/fs-arm64* /data/local/tmp/ltzj_* /data/local/tmp/libltzj_* 2>/dev/null || echo clean'" | tr -d '\r'
 echo "--- ksud umount ---"
 adb shell "su -c 'ksud umount list 2>/dev/null || echo no-ksud'" | tr -d '\r'
 echo "--- frida port ---"
-adb shell "su -c 'ss -ltnp 2>/dev/null | grep 27042 || netstat -ltnp 2>/dev/null | grep 27042 || echo no-27042'" | tr -d '\r'
+# 27042=官方/Florida 时代；39571=phantom run39.1 本包端口（随机构建，换包以 build-info.json 为准）
+adb shell "su -c 'ss -ltnp 2>/dev/null | grep -E \"27042|39571\" || netstat -ltnp 2>/dev/null | grep -E \"27042|39571\" || echo no-frida-port'" | tr -d '\r'
 echo "--- starry device_id seed (MUST keep) ---"
 SEED_NOW="$(adb shell "su -c 'cat /data/local/tmp/starry_magic/device_id 2>/dev/null'" | tr -d '\r' || true)"
 if [[ "$SEED_NOW" == dev_* ]]; then

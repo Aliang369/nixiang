@@ -16,7 +16,7 @@
 #   bash scripts/ltzj_zip_assets_inject.sh              # 只出包
 #   STARRY_INSTALL=1 bash scripts/ltzj_zip_assets_inject.sh
 #
-# 注意：so 在 assets 内不会自动 JNI_OnLoad；需晚加载（开发：Florida；交付：delayed shim）。
+# 注意：so 在 assets 内不会自动 JNI_OnLoad；需晚加载（开发：phantom-frida 魔改，旧 Florida；交付：delayed shim）。
 # so/dex 运行时落点优先：/data/data/<pkg>/files/starry_native/（/data/local/tmp 常 Permission denied）
 set -euo pipefail
 
