@@ -80,7 +80,7 @@ check_one() {
       remind=$((remind+1))
       ;;
     *)
-      echo "✓ PASS  [跳过] $f（类型无检查器）"; pass=$((pass+1))
+      echo "✓ PASS  [跳过] ${f}（类型无检查器）"; pass=$((pass+1))
       ;;
   esac
 }
