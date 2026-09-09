@@ -591,11 +591,58 @@ static bool registerBridgeNatives(JNIEnv* env) {
 //  JNI_OnLoad（游戏早期动作统一经 mod->onLoad）
 // ============================================================
 
+// 隐藏 API 豁免（JNI 直调 VMRuntime.setHiddenApiExemptions）。
+// 部分 ROM（如 MuMu 硬化）会把 setHiddenApiExemptions 列入黑名单，
+// Java 反射（含元反射）找不到 → SignSpoof 清 PackageInfo 缓存失败。
+// JNI GetStaticMethodID 走同一条 hiddenapi 策略，失败则记录并继续
+// （SignSpoof 的 PackageInfo.CREATOR 伪装不受影响，多数游戏仍可过签）。
+static void TryExemptHiddenApis(JNIEnv* env) {
+    if (!env) return;
+    jclass vm = env->FindClass("dalvik/system/VMRuntime");
+    if (!vm) {
+        env->ExceptionClear();
+        return;
+    }
+    jmethodID getRuntime = env->GetStaticMethodID(
+        vm, "getRuntime", "()Ldalvik/system/VMRuntime;");
+    jmethodID setExempt = env->GetStaticMethodID(
+        vm, "setHiddenApiExemptions", "([Ljava/lang/String;)V");
+    if (!getRuntime || !setExempt) {
+        env->ExceptionClear();
+        LOGW("[桥接] exempt hidden apis via JNI 失败（隐藏方法）");
+        env->DeleteLocalRef(vm);
+        return;
+    }
+    jobject runtime = env->CallStaticObjectMethod(vm, getRuntime);
+    if (!runtime) {
+        env->ExceptionClear();
+        env->DeleteLocalRef(vm);
+        return;
+    }
+    jclass strCls = env->FindClass("java/lang/String");
+    jobjectArray arr = env->NewObjectArray(1, strCls, nullptr);
+    jstring all = env->NewStringUTF("L");
+    env->SetObjectArrayElement(arr, 0, all);
+    env->CallVoidMethod(runtime, setExempt, arr);
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        LOGW("[桥接] exempt hidden apis via JNI 调用异常");
+    } else {
+        LOGI("[桥接] exempt hidden apis via JNI OK");
+    }
+    env->DeleteLocalRef(all);
+    env->DeleteLocalRef(arr);
+    env->DeleteLocalRef(strCls);
+    env->DeleteLocalRef(runtime);
+    env->DeleteLocalRef(vm);
+}
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
     g_jvm = vm;
     {
         JNIEnv* env = nullptr;
         if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK && env) {
+            TryExemptHiddenApis(env);                 // 先豁免，SignSpoof.install 后续才有用
             registerBridgeNatives(env);   // 失败可重试：下次 JNI_OnLoad（System.loadLibrary）再注册
         } else {
             LOGW("[桥接] JNI_OnLoad 无 JNIEnv，注册延后");

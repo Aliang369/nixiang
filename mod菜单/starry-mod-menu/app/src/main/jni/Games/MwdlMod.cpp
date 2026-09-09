@@ -19,7 +19,7 @@
 
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
-#include "GameConfig.h"
+#include "Includes/SecStrings.hpp"
 #include "Dobby/dobby.h"
 
 static JavaVM* g_mwdlJvm = nullptr;
@@ -39,6 +39,12 @@ static volatile float g_speedMul = 1.f;  // 1=关，>1 倍率
 static std::atomic<int> g_spliceHits{0};
 
 static const char* kAct = "org.cocos2dx.javascript.AppActivity";
+
+#define MWDL_TARGET_LIB sec_lib_cocosjs()
+static constexpr const char* kSeEvalString =
+    "_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_";
+static constexpr const char* kJniEvalString =
+    "Java_org_cocos2dx_lib_Cocos2dxJavascriptJavaBridge_evalString";
 
 static JNIEnv* GetEnv(bool* needDetach) {
     *needDetach = false;
@@ -134,41 +140,39 @@ static void SyncJavaRets() {
 static std::string SpliceCombatJs(const char* src) {
     std::string s(src);
 
-    static char kKhHook[1100];
+    static char kKhHook[1200];
     static char kSpdRepl[1400];
     static char kTickHook[900];
     static bool once = false;
     if (!once) {
-        // get_ret(1)+get_ret(2)：百倍伤害 / 无敌 — 对齐斌哥 KH 头
+        // get_ret(1)+get_ret(2)：百倍伤害 / 无敌 — KH 尾部 i.target.damage=P
         snprintf(
             kKhHook, sizeof(kKhHook),
-            "/*starry_mwdl_kh*/ var isChecked_RET=jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",1);"
-            "if(isChecked_RET){if(e.unitType===qA.Hero||e.unitType===qA.Summon||"
-            "e.unitType===qA.Guardian||e.unitType===qA.Player||e.unitType===qA.ParasyteGuardian)"
-            "o.target.damage*=100,o.realDamage&&(o.target.realDamage*=100);}"
-            "var isChecked_RET2=jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",2);"
-            "if(isChecked_RET2){if(e.unitType===qA.Monster)"
-            "o.target.damage=0,o.target.realDamage=0;} ",
+            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===jA.Hero||"
+            "_su.unitType===jA.Summon||_su.unitType===jA.Guardian||"
+            "_su.unitType===jA.Player||_su.unitType===jA.ParasyteGuardian)){"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",1)&&(P*=100)}"
+            "if(_su&&_su.unitType===jA.Monster&&"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){P=0}"
+            "i.target.damage=P}",
             kAct, kAct);
-        // get_val(3)：移速倍率 — 原版压缩写法无 var n，整段替换 return
+        // get_val(3)：移速倍率 — MoveSpeed getter（vS.MOV_SPEED）
         snprintf(
             kSpdRepl, sizeof(kSpdRepl),
             "/*starry_mwdl_spd*/return t=Math.max(0,t),function(n){try{var "
             "m=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",3);"
-            "m>1&&(this.unitType===qA.Hero||this.unitType===qA.Summon||"
-            "this.unitType===qA.Guardian||this.unitType===qA.Player||"
-            "this.unitType===qA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
-            "n}.call(this,this.AttributeComponent.getAttr(mS.MOV_SPEED)*t)}",
+            "m>1&&(this.unitType===jA.Hero||this.unitType===jA.Summon||"
+            "this.unitType===jA.Guardian||this.unitType===jA.Player||"
+            "this.unitType===jA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
+            "n}.call(this,this.AttributeComponent.getAttr(vS.MOV_SPEED)*t)}",
             kAct);
         // get_ret(4)：无限技能 — 插在 SkillComponent.tick 前
         snprintf(
             kTickHook, sizeof(kTickHook),
             "/*starry_mwdl_uls*/ jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===qA.Hero||"
-            "this.unitType===qA.Summon||this.unitType===qA.Guardian||"
-            "this.unitType===qA.Player||this.unitType===qA.ParasyteGuardian)&&"
+            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===jA.Hero||"
+            "this.unitType===jA.Summon||this.unitType===jA.Guardian||"
+            "this.unitType===jA.Player||this.unitType===jA.ParasyteGuardian)&&"
             "(this.SkillComponent.reduceAllSkillColdDown(1e9),"
             "this.ActiveSkillComponent&&this.ActiveSkillComponent.reduceAllSkillColdDown(1e9)), ",
             kAct);
@@ -179,28 +183,18 @@ static std::string SpliceCombatJs(const char* src) {
         return s.find(tag) != std::string::npos;
     };
 
-    // --- KH ---
-    if (!already("starry_mwdl_kh") && s.find("isChecked_RET") == std::string::npos) {
-        static const char* kKhOpens[] = {
-            "function KH(t, e, i, o) {",
-            "function KH(t,e,i,o){",
-            nullptr,
-        };
-        for (int i = 0; kKhOpens[i]; i++) {
-            size_t p = s.find(kKhOpens[i]);
-            if (p == std::string::npos) continue;
-            size_t end = p + strlen(kKhOpens[i]);
-            s.insert(end, kKhHook);
-            LOGI("[Mwdl] spliced KH");
-            break;
-        }
+    // --- KH（百倍伤害 + 无敌）：尾锚 i.target.damage=P} ---
+    if (!already("starry_mwdl_kh") && s.find("i.target.damage=P}") != std::string::npos) {
+        size_t p = s.find("i.target.damage=P}");
+        s.replace(p, strlen("i.target.damage=P}"), kKhHook);
+        LOGI("[Mwdl] spliced KH (damage)");
     }
 
-    // --- MoveSpeed（原版压缩：return t=Math.max(0,t),getAttr(MOV_SPEED)*t）---
+    // --- MoveSpeed（移动速度：vS.MOV_SPEED）---
     if (!already("starry_mwdl_spd")) {
         static const char* kSpdFroms[] = {
-            "return t=Math.max(0,t),this.AttributeComponent.getAttr(mS.MOV_SPEED)*t}",
-            "return t = Math.max(0, t), this.AttributeComponent.getAttr(mS.MOV_SPEED) * t}",
+            "return t=Math.max(0,t),this.AttributeComponent.getAttr(vS.MOV_SPEED)*t}",
+            "return t = Math.max(0, t), this.AttributeComponent.getAttr(vS.MOV_SPEED) * t}",
             nullptr,
         };
         for (int i = 0; kSpdFroms[i]; i++) {
@@ -250,34 +244,6 @@ static std::string SpliceCombatJs(const char* src) {
         }
     }
 
-    // --- addCheat 上报 ---
-    if (!already("starry_mwdl_nocheat_add") &&
-        s.find("scene.playerHandler.addCheat") != std::string::npos) {
-        size_t p = s.find("scene.playerHandler.addCheat");
-        // 向前找最近的 function( 或 =function
-        size_t brace = s.rfind('{', p);
-        if (brace != std::string::npos && brace + 1 < p &&
-            s.find("starry_mwdl_nocheat_add", brace) == std::string::npos) {
-            s.insert(brace + 1, "/*starry_mwdl_nocheat_add*/return;");
-            LOGI("[Mwdl] neutralized addCheat");
-        }
-    }
-
-    // --- 聊天 md5 拦截（对齐斌哥，提示换星光文案）---
-    if (!already("starry_mwdl_nochatter") &&
-        s.find("hex_md5(MUtil.Utf8Encode(a + t + e))") != std::string::npos) {
-        size_t p = s.find("hex_md5(MUtil.Utf8Encode(a + t + e))");
-        s.insert(p,
-                 "/*starry_mwdl_nochatter*/MUtil.createFloatTips(\"星光：禁止聊天\");return;");
-        LOGI("[Mwdl] blocked chat md5");
-    } else if (!already("starry_mwdl_nochatter") &&
-               s.find("hex_md5(MUtil.Utf8Encode(a+t+e))") != std::string::npos) {
-        size_t p = s.find("hex_md5(MUtil.Utf8Encode(a+t+e))");
-        s.insert(p,
-                 "/*starry_mwdl_nochatter*/MUtil.createFloatTips(\"星光：禁止聊天\");return;");
-        LOGI("[Mwdl] blocked chat md5 (min)");
-    }
-
     return s;
 }
 
@@ -324,9 +290,9 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    bool interesting = has("function KH") || has("mS.MOV_SPEED") ||
+    bool interesting = has("function KH") || has("vS.MOV_SPEED") ||
                        has("SkillComponent.tick") || has("onStageCheat") ||
-                       has("playerHandler.addCheat") || has("hex_md5(MUtil");
+                       has("i.target.damage=P}");
     if (!interesting) {
         return orig_seEval(thiz, script, length, ret, fileName);
     }
@@ -348,10 +314,10 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
 }
 
 static void TryHookEvalString() {
-    const char* lib = GameCocos::TARGET_LIB;
+    const char* lib = MWDL_TARGET_LIB;
     if (!isLibraryLoaded(lib)) return;
     if (!g_seHooked) {
-        void* sym = DobbySymbolResolver(lib, GameCocos::Symbols::SE_EVAL_STRING);
+        void* sym = DobbySymbolResolver(lib, kSeEvalString);
         if (sym &&
             DobbyHook(sym, (dobby_dummy_func_t)hooked_seEval,
                       (dobby_dummy_func_t*)&orig_seEval) == 0) {
@@ -361,7 +327,7 @@ static void TryHookEvalString() {
         }
     }
     if (!g_jniHooked) {
-        void* jni = DobbySymbolResolver(lib, GameCocos::Symbols::EVAL_STRING);
+        void* jni = DobbySymbolResolver(lib, kJniEvalString);
         if (jni &&
             DobbyHook(jni, (dobby_dummy_func_t)hooked_jniEval,
                       (dobby_dummy_func_t*)&orig_jniEval) == 0) {
@@ -372,7 +338,7 @@ static void TryHookEvalString() {
 
 bool Mwdl_TryInit(JavaVM* jvm) {
     g_mwdlJvm = jvm;
-    if (!isLibraryLoaded(GameCocos::TARGET_LIB)) return false;
+    if (!isLibraryLoaded(MWDL_TARGET_LIB)) return false;
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
     if (env) {
@@ -389,7 +355,7 @@ bool Mwdl_TryInit(JavaVM* jvm) {
 static void* EarlyHookThread(void* arg) {
     g_mwdlJvm = (JavaVM*)arg;
     for (int i = 0; i < 2000; i++) {
-        if (isLibraryLoaded(GameCocos::TARGET_LIB)) {
+        if (isLibraryLoaded(MWDL_TARGET_LIB)) {
             TryHookEvalString();
             if (g_seHooked) {
                 g_ready = true;

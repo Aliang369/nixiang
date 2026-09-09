@@ -48,10 +48,10 @@ done
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
-MK="$STARRY_SRC/app/src/main/jni/Android.mk"
-grep -E '^\s*LOCAL_CFLAGS\s*\+=\s*-DENABLE_COCOS_HOOK\s+-DSTARRY_GAME_MWDL' "$MK" \
-  || { echo "ERROR: Android.mk must enable STARRY_GAME_MWDL"; exit 1; }
-echo "[check] Android.mk target=mwdl"
+SO_PREBUILT="${MWDL_SO:-$STARRY_SRC/app/src/libs_mwdl/arm64-v8a/libstarry_magic.so}"
+[[ -f "$SO_PREBUILT" ]] \
+  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 Android_mwdl.mk 构建）"; exit 1; }
+echo "[check] modern so = $SO_PREBUILT"
 
 LOCK_DIR="/tmp/mwdl_surgical.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -88,7 +88,7 @@ shopt -u nullglob
 "$SMALI_BIN" assemble -o "$WORK/classes5.dex" "$SMALI_ROOT"
 ls -la "$WORK/classes5.dex"
 
-SO_SRC="$WORK/starry_dec/lib/arm64-v8a/libstarry_magic.so"
+SO_SRC="$SO_PREBUILT"
 [[ -f "$SO_SRC" ]] || { echo "ERROR: missing libstarry_magic.so"; exit 1; }
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_SRC" "$WORK/lib/arm64-v8a/"
@@ -116,11 +116,12 @@ else:
 
     invoke-super {p0, p1}, Landroidx/multidex/MultiDexApplication;->attachBaseContext(Landroid/content/Context;)V
 
-    invoke-static {}, Lcom/starry/magic/sign/SignSpoof;->install()V
-
+    # starry：先 loadLibrary → JNI_OnLoad 做 hidden-api 豁免，再装 SignSpoof（清缓存才有豁免可用）
     const-string v0, "starry_magic"
 
     invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
+
+    invoke-static {}, Lcom/starry/magic/sign/SignSpoof;->install()V
 
     return-void
 .end method

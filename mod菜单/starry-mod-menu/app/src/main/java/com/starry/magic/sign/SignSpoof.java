@@ -485,6 +485,11 @@ public final class SignSpoof {
     private static final String YQZD_CERT_B64 =
             "MIIDQjCCAioCAQEwDQYJKoZIhvcNAQELBQAwZjEPMA0GA1UEAwwGaG9ydG9yMQ8wDQYDVQQLDAZob3J0b3IxDzANBgNVBAoMBmhvcnRvcjEPMA0GA1UEBwwGaG9ydG9yMQ8wDQYDVQQIDAZob3J0b3IxDzANBgNVBAYTBmhvcnRvcjAgFw0yNTA0MDIwNjA2MjBaGA8yMTUwMDMwMzA2MDYyMFowZjEPMA0GA1UEAwwGaG9ydG9yMQ8wDQYDVQQLDAZob3J0b3IxDzANBgNVBAoMBmhvcnRvcjEPMA0GA1UEBwwGaG9ydG9yMQ8wDQYDVQQIDAZob3J0b3IxDzANBgNVBAYTBmhvcnRvcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMT9Ctm4CePlyXG76del3o4QMiKmJ3fooEcJ4BTFCmY17/MqOjw4L+o9rxghho44XcBAMxsRgSe5td1uL12BN0yoFSSZ7w9HgvCw4A2FA9VCzAb2J2qQBIK4EdzmxLfTCRcFwe2/CvrtWQ/yvGwHciCHCCjWUGsAnF7nux8JZiYjEWliRi/6GKG4Ck1IyeURd8EIb1sQTNMMTzONu/jVxbvNCXtkhrLCiyvlzj6Eze37ucQBlgDfkIiEsX0XhGxaOYtumHD4+av0vNnzqNQ4vR6INTqFkcQDH8ygIEIcJ0RrpK0ZV1vZ5xwU4DNuRjHmH9/gR+STrJznS+gfDH3QEGUCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEANzkqCKDV7qsMP6NmzNfvRNglSNKQyUDZCy799fq+C7ESTMuzlohRNuMxn3S5DftydRSLSs+y2zaKnxmDD88uGpvYqkyg3Ainno8rnA2DdO6k7eI3ncN/hyKUEtnQ7i5o7sdcVLuxz7qFnIV1vXRY85ICTMcf1mEdjkKGkB/Y8r97BFLaAnTXX1adVXA7J9nBk5kD7GXIcho6DII3FGXhvVz6IVHji51wVXNIlMa3TgAl2h/OvBw03nkMNp6B1rtDt3POdqGCCUNLpcGo2Tb3EPZfNl26AHZyWafM/npjCktsPRcRbqzUNL1gWa5usruPHpyUo/r3tHZdKS7X8gYo2g==";
 
+    /** 迷雾大陆 原版 CN=1（SHA256=67cf2df1… / SHA1=f8676b8c…，2026-09-09 官方 14.0.0 v2 块导出） */
+    private static final String MWDL_PKG = "com.hortor.mwdl";
+    private static final String MWDL_CERT_B64 =
+            "MIIDBjCCAe4CAQEwDQYJKoZIhvcNAQELBQAwSDEKMAgGA1UEAwwBMTEKMAgGA1UECwwBMTEKMAgGA1UECgwBMTEKMAgGA1UEBwwBMTEKMAgGA1UECAwBMTEKMAgGA1UEBhMBMTAgFw0yNDA0MTAwNzQ5NDRaGA8yMTQ5MDMxMTA3NDk0NFowSDEKMAgGA1UEAwwBMTEKMAgGA1UECwwBMTEKMAgGA1UECgwBMTEKMAgGA1UEBwwBMTEKMAgGA1UECAwBMTEKMAgGA1UEBhMBMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKyjMicjFXHP4otqSyTI8xxSWydEEe4sDR0uqE6v/4/0VPvi1h/gjDQgNFWDUkMoj7lEM8Z6cHKr8nv779mmkC9d+BH8/gsHO8kYapvHEFudSOY9lVq2aYv3KbBidsAWxTw/sL5J5VyaQxufwCszxLJXMZN52nz88ucGMp+atxKX/jBEp1grlSpKU2BLXylBpMfgqAlXdmJED7aopTIL15nYBDTGnxURfyquqkDDSsntHbeaJ9JweaxSL8yfqUtU0C3qb1mW7N6E87nNy2gwxjcuNjN01q/3USIlu3fW5H+z50urzbEOaWi98wZTHkrqKASAxt7SxO8kXd3nQA8tCeMCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAhaxqfkDWoiqhvF2232BI4wVz5xFGbTDKwVOtvQnWhSTKfOVplRwTysa77KhBSFDUlMsqPesbNsl6ndXXcdIrOvmFcSt8ercOEvuvJajq/FmLXMfDFvHTMbSFD8dwXN0rtN09fD3S2ZfTijsPAzujToPfDOidePXcbUybY8WArjQEJTu+775SCj2LrlwC92zO772LpDtNA9/hheH78SWhMzHZEl6vVdfHzjSxv8hP9E+6FIJ42rVIWgXZnUkqtXSWy3wtZrV0p8aTdENA/ecCj18Fu4MsfhRqWV7UemHx+63xKLNOY1PVuivzxsNAyOFEt7kn26Tc6c0ZWQco2QFQow==";
+
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -522,6 +527,7 @@ public final class SignSpoof {
                 fakes.put(ENDFIELD_PKG, new Signature(Base64.decode(ENDFIELD_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WDYZ_PKG, new Signature(Base64.decode(WDYZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YQZD_PKG, new Signature(Base64.decode(YQZD_CERT_B64, Base64.DEFAULT)));
+                fakes.put(MWDL_PKG, new Signature(Base64.decode(MWDL_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());
@@ -533,18 +539,49 @@ public final class SignSpoof {
 
     private static void exemptHiddenApis() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return;
+        // 多路回退：元反射 → 直接 getDeclaredMethod → 直接 getMethod。
+        // 部分 ROM（如 MuMu 硬化）会黑名单隐藏 setHiddenApiExemptions 致元反射
+        // NoSuchMethodException，逐路降级尝试。
+        Throwable last = null;
         try {
-            /* 元反射（double reflection）：invoke 的即时代办是 java.lang.Class（boot 域），
-             * hiddenapi 按 caller 判定 → 放行。直接反射在 Android 16 被 denied（实证）。 */
             Method meta = Class.class.getDeclaredMethod("getDeclaredMethod", String.class, Class[].class);
             Class<?> vm = Class.forName("dalvik.system.VMRuntime");
             Method getRuntime = (Method) meta.invoke(vm, "getRuntime", (Object[]) null);
             Method setExemptions = (Method) meta.invoke(vm, "setHiddenApiExemptions", new Class[]{String[].class});
             Object runtime = getRuntime.invoke(null);
             setExemptions.invoke(runtime, (Object) new String[]{"L"});
+            Log.i(TAG, "exemptHiddenApis(meta) OK");
+            return;
         } catch (Throwable t) {
+            last = t;
             Log.e(TAG, "exemptHiddenApis(meta) failed", t);
         }
+        try {
+            Class<?> vm = Class.forName("dalvik.system.VMRuntime");
+            Method getRuntime = vm.getDeclaredMethod("getRuntime");
+            getRuntime.setAccessible(true);
+            Object runtime = getRuntime.invoke(null);
+            Method setExemptions = vm.getDeclaredMethod("setHiddenApiExemptions", String[].class);
+            setExemptions.setAccessible(true);
+            setExemptions.invoke(runtime, (Object) new String[]{"L"});
+            Log.i(TAG, "exemptHiddenApis(declared) OK");
+            return;
+        } catch (Throwable t) {
+            last = t;
+            Log.e(TAG, "exemptHiddenApis(declared) failed", t);
+        }
+        try {
+            Class<?> vm = Class.forName("dalvik.system.VMRuntime");
+            Method setExemptions = vm.getMethod("setHiddenApiExemptions", String[].class);
+            Object runtime = vm.getMethod("getRuntime").invoke(null);
+            setExemptions.invoke(runtime, (Object) new String[]{"L"});
+            Log.i(TAG, "exemptHiddenApis(public) OK");
+            return;
+        } catch (Throwable t) {
+            last = t;
+            Log.e(TAG, "exemptHiddenApis(public) failed", t);
+        }
+        Log.w(TAG, "exemptHiddenApis all failed: " + last);
     }
 
     private static void killPm(final Map<String, Signature> fakeByPkg) throws Exception {
