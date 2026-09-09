@@ -1,0 +1,18 @@
+total 315400
+drwxr-xr-x@ 17 aliang  staff   544B  9月  9 01:08 .
+drwxr-xr-x@  5 aliang  staff   160B  9月  9 01:06 ..
+-rw-r--r--@  1 aliang  staff    10K  9月  9 01:08 dump_log.txt
+-rw-r--r--@  1 aliang  staff     0B  9月  9 01:08 host_listing.txt
+-rw-r--r--@  1 aliang  staff    21M  9月  9 01:08 il2cpp_rx_1.bin
+-rw-r--r--@  1 aliang  staff   4.0K  9月  9 01:08 il2cpp_rx_2.bin
+-rw-r--r--@  1 aliang  staff    36K  9月  9 01:08 il2cpp_rx_3.bin
+-rw-r--r--@  1 aliang  staff   4.0K  9月  9 01:08 il2cpp_rx_4.bin
+-rw-r--r--@  1 aliang  staff   130M  9月  9 01:08 il2cpp_rx_5.bin
+-rw-r--r--@  1 aliang  staff   185B  9月  9 01:08 il2cpp_rx_segs.txt
+-rw-r--r--@  1 aliang  staff   453K  9月  9 01:06 maps.txt
+drwxr-xr-x@ 13 aliang  staff   416B  9月  9 01:08 raw
+-rw-r--r--@  1 aliang  staff    36K  9月  9 01:08 sdk_rw.bin
+-rw-r--r--@  1 aliang  staff   796K  9月  9 01:08 sdk_rx_1.bin
+-rw-r--r--@  1 aliang  staff   4.0K  9月  9 01:08 sdk_rx_2.bin
+-rw-r--r--@  1 aliang  staff   144K  9月  9 01:08 shell_rw_bss.bin
+-rw-r--r--@  1 aliang  staff   1.0M  9月  9 01:08 shell_rx_bss.bin

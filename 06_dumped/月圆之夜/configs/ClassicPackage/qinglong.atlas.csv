@@ -1,0 +1,167 @@
+
+qinglong.png
+size: 1593,403
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bozi01
+  rotate: false
+  xy: 1321, 271
+  size: 125, 130
+  orig: 125, 130
+  offset: 0, 0
+  index: -1
+bozi02
+  rotate: true
+  xy: 802, 2
+  size: 166, 243
+  orig: 166, 243
+  offset: 0, 0
+  index: -1
+bozi03
+  rotate: false
+  xy: 587, 7
+  size: 213, 146
+  orig: 213, 146
+  offset: 0, 0
+  index: -1
+bozi04
+  rotate: false
+  xy: 1448, 282
+  size: 112, 119
+  orig: 112, 119
+  offset: 0, 0
+  index: -1
+chibang01
+  rotate: false
+  xy: 200, 147
+  size: 210, 254
+  orig: 210, 254
+  offset: 0, 0
+  index: -1
+chibang02
+  rotate: false
+  xy: 412, 155
+  size: 207, 246
+  orig: 207, 246
+  offset: 0, 0
+  index: -1
+naodai01
+  rotate: true
+  xy: 621, 170
+  size: 231, 219
+  orig: 231, 219
+  offset: 0, 0
+  index: -1
+naodai02
+  rotate: false
+  xy: 842, 209
+  size: 255, 192
+  orig: 255, 192
+  offset: 0, 0
+  index: -1
+shangshen
+  rotate: false
+  xy: 1099, 214
+  size: 220, 187
+  orig: 220, 187
+  offset: 0, 0
+  index: -1
+shangyanpi01
+  rotate: false
+  xy: 105, 33
+  size: 42, 46
+  orig: 42, 46
+  offset: 0, 0
+  index: -1
+shangyanpi02
+  rotate: false
+  xy: 57, 5
+  size: 48, 23
+  orig: 48, 23
+  offset: 0, 0
+  index: -1
+tui01
+  rotate: false
+  xy: 1513, 18
+  size: 78, 149
+  orig: 78, 149
+  offset: 0, 0
+  index: -1
+tui02
+  rotate: true
+  xy: 1420, 169
+  size: 100, 135
+  orig: 100, 135
+  offset: 0, 0
+  index: -1
+tui03
+  rotate: true
+  xy: 393, 30
+  size: 115, 192
+  orig: 115, 192
+  offset: 0, 0
+  index: -1
+tui04
+  rotate: true
+  xy: 200, 24
+  size: 121, 191
+  orig: 121, 191
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: false
+  xy: 2, 81
+  size: 196, 320
+  orig: 196, 320
+  offset: 0, 0
+  index: -1
+xiaba01
+  rotate: true
+  xy: 1305, 59
+  size: 153, 113
+  orig: 153, 113
+  offset: 0, 0
+  index: -1
+xiaba02
+  rotate: true
+  xy: 1420, 31
+  size: 136, 91
+  orig: 136, 91
+  offset: 0, 0
+  index: -1
+xiabanshen
+  rotate: false
+  xy: 1047, 18
+  size: 256, 189
+  orig: 256, 189
+  offset: 0, 0
+  index: -1
+xiayanpi01
+  rotate: false
+  xy: 149, 44
+  size: 47, 35
+  orig: 47, 35
+  offset: 0, 0
+  index: -1
+xiayanpi02
+  rotate: false
+  xy: 107, 4
+  size: 46, 27
+  orig: 46, 27
+  offset: 0, 0
+  index: -1
+yanqiu01
+  rotate: false
+  xy: 2, 24
+  size: 53, 55
+  orig: 53, 55
+  offset: 0, 0
+  index: -1
+yanqiu02
+  rotate: true
+  xy: 57, 30
+  size: 49, 46
+  orig: 49, 46
+  offset: 0, 0
+  index: -1

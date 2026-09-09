@@ -1,0 +1,111 @@
+
+1001cuimianshi.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 958, 386
+  size: 33, 26
+  orig: 33, 26
+  offset: 0, 0
+  index: -1
+dabi  L
+  rotate: true
+  xy: 429, 63
+  size: 84, 80
+  orig: 84, 80
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: false
+  xy: 707, 177
+  size: 119, 117
+  orig: 119, 117
+  offset: 0, 0
+  index: -1
+maozi
+  rotate: false
+  xy: 511, 296
+  size: 328, 210
+  orig: 328, 210
+  offset: 0, 0
+  index: -1
+maozidibu
+  rotate: false
+  xy: 2, 14
+  size: 261, 133
+  orig: 261, 133
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 149
+  size: 507, 357
+  orig: 507, 357
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: false
+  xy: 511, 66
+  size: 68, 96
+  orig: 68, 96
+  offset: 0, 0
+  index: -1
+shou  R
+  rotate: false
+  xy: 958, 414
+  size: 64, 92
+  orig: 64, 92
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 841, 367
+  size: 115, 139
+  orig: 115, 139
+  offset: 0, 0
+  index: -1
+weijin
+  rotate: true
+  xy: 511, 164
+  size: 130, 194
+  orig: 130, 194
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: false
+  xy: 828, 208
+  size: 73, 86
+  orig: 73, 86
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: true
+  xy: 265, 62
+  size: 85, 162
+  orig: 85, 162
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: true
+  xy: 265, 14
+  size: 46, 81
+  orig: 46, 81
+  offset: 0, 0
+  index: -1
+yanqiu  L
+  rotate: false
+  xy: 2, 2
+  size: 11, 10
+  orig: 11, 10
+  offset: 0, 0
+  index: -1
+yuanpai
+  rotate: true
+  xy: 841, 296
+  size: 69, 116
+  orig: 69, 116
+  offset: 0, 0
+  index: -1

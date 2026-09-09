@@ -1,0 +1,195 @@
+
+1042moguguowang.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bianfu
+  rotate: false
+  xy: 2, 277
+  size: 560, 303
+  orig: 560, 303
+  offset: 0, 0
+  index: -1
+datui L
+  rotate: false
+  xy: 469, 205
+  size: 90, 70
+  orig: 90, 70
+  offset: 0, 0
+  index: -1
+datui R
+  rotate: true
+  xy: 422, 150
+  size: 76, 45
+  orig: 76, 45
+  offset: 0, 0
+  index: -1
+gebo L
+  rotate: true
+  xy: 213, 173
+  size: 102, 109
+  orig: 102, 109
+  offset: 0, 0
+  index: -1
+gebo R
+  rotate: false
+  xy: 324, 166
+  size: 96, 60
+  orig: 96, 60
+  offset: 0, 0
+  index: -1
+jiao L
+  rotate: false
+  xy: 2, 70
+  size: 131, 97
+  orig: 131, 97
+  offset: 0, 0
+  index: -1
+jiao R
+  rotate: false
+  xy: 324, 228
+  size: 143, 47
+  orig: 143, 47
+  offset: 0, 0
+  index: -1
+kouqiang R
+  rotate: false
+  xy: 842, 714
+  size: 115, 42
+  orig: 115, 42
+  offset: 0, 0
+  index: -1
+mogu 1
+  rotate: false
+  xy: 561, 201
+  size: 86, 74
+  orig: 86, 74
+  offset: 0, 0
+  index: -1
+mogu 2
+  rotate: true
+  xy: 976, 782
+  size: 42, 28
+  orig: 42, 28
+  offset: 0, 0
+  index: -1
+mogu 3
+  rotate: false
+  xy: 768, 568
+  size: 57, 54
+  orig: 57, 54
+  offset: 0, 0
+  index: -1
+mogu 4
+  rotate: false
+  xy: 131, 2
+  size: 79, 57
+  orig: 79, 57
+  offset: 0, 0
+  index: -1
+mogu ba L
+  rotate: false
+  xy: 687, 514
+  size: 61, 55
+  orig: 61, 55
+  offset: 0, 0
+  index: -1
+mogu shenzi  R
+  rotate: false
+  xy: 469, 136
+  size: 70, 67
+  orig: 70, 67
+  offset: 0, 0
+  index: -1
+mogu tou  R
+  rotate: true
+  xy: 564, 277
+  size: 116, 75
+  orig: 116, 75
+  offset: 0, 0
+  index: -1
+mogu xiaba R
+  rotate: true
+  xy: 653, 466
+  size: 114, 32
+  orig: 114, 32
+  offset: 0, 0
+  index: -1
+mogu xiao L
+  rotate: false
+  xy: 696, 624
+  size: 127, 81
+  orig: 127, 81
+  offset: 0, 0
+  index: -1
+shenzi
+  rotate: false
+  xy: 2, 582
+  size: 692, 438
+  orig: 692, 438
+  offset: 0, 0
+  index: -1
+shetou
+  rotate: false
+  xy: 696, 826
+  size: 317, 194
+  orig: 317, 194
+  offset: 0, 0
+  index: -1
+shou L
+  rotate: true
+  xy: 842, 758
+  size: 66, 132
+  orig: 66, 132
+  offset: 0, 0
+  index: -1
+shou R
+  rotate: false
+  xy: 135, 61
+  size: 75, 106
+  orig: 75, 106
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: false
+  xy: 2, 169
+  size: 209, 106
+  orig: 209, 106
+  offset: 0, 0
+  index: -1
+xiaba  L
+  rotate: false
+  xy: 2, 5
+  size: 127, 63
+  orig: 127, 63
+  offset: 0, 0
+  index: -1
+xiababuque
+  rotate: true
+  xy: 564, 395
+  size: 185, 87
+  orig: 185, 87
+  offset: 0, 0
+  index: -1
+xiaobib L
+  rotate: false
+  xy: 696, 707
+  size: 144, 117
+  orig: 144, 117
+  offset: 0, 0
+  index: -1
+xiaotui L
+  rotate: false
+  xy: 687, 467
+  size: 62, 45
+  orig: 62, 45
+  offset: 0, 0
+  index: -1
+xiaotui R
+  rotate: false
+  xy: 696, 571
+  size: 70, 51
+  orig: 70, 51
+  offset: 0, 0
+  index: -1

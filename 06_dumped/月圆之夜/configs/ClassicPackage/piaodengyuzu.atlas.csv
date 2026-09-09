@@ -1,0 +1,153 @@
+
+piaodengyuzu.png
+size: 2048,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+deng
+  rotate: false
+  xy: 1352, 233
+  size: 292, 273
+  orig: 292, 273
+  offset: 0, 0
+  index: -1
+ding1
+  rotate: false
+  xy: 1854, 66
+  size: 65, 67
+  orig: 65, 67
+  offset: 0, 0
+  index: -1
+ding2
+  rotate: false
+  xy: 415, 16
+  size: 54, 48
+  orig: 54, 48
+  offset: 0, 0
+  index: -1
+ding3
+  rotate: true
+  xy: 1943, 204
+  size: 72, 58
+  orig: 72, 58
+  offset: 0, 0
+  index: -1
+ding4
+  rotate: true
+  xy: 1943, 139
+  size: 63, 59
+  orig: 63, 59
+  offset: 0, 0
+  index: -1
+ding5
+  rotate: false
+  xy: 1941, 278
+  size: 54, 49
+  orig: 54, 49
+  offset: 0, 0
+  index: -1
+ding6
+  rotate: false
+  xy: 415, 66
+  size: 55, 54
+  orig: 55, 54
+  offset: 0, 0
+  index: -1
+guang
+  rotate: true
+  xy: 991, 2
+  size: 202, 260
+  orig: 202, 260
+  offset: 0, 0
+  index: -1
+qunzi
+  rotate: false
+  xy: 726, 9
+  size: 263, 256
+  orig: 263, 256
+  offset: 0, 0
+  index: -1
+qunzi2
+  rotate: false
+  xy: 1429, 14
+  size: 243, 217
+  orig: 243, 217
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: true
+  xy: 1646, 276
+  size: 230, 293
+  orig: 230, 293
+  offset: 0, 0
+  index: -1
+teilian
+  rotate: false
+  xy: 1941, 329
+  size: 59, 177
+  orig: 59, 177
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 1674, 47
+  size: 178, 227
+  orig: 178, 227
+  offset: 0, 0
+  index: -1
+toubu
+  rotate: false
+  xy: 2, 137
+  size: 440, 369
+  orig: 440, 369
+  offset: 0, 0
+  index: -1
+toubu1
+  rotate: true
+  xy: 1854, 135
+  size: 139, 87
+  orig: 139, 87
+  offset: 0, 0
+  index: -1
+toubu2
+  rotate: false
+  xy: 275, 16
+  size: 138, 119
+  orig: 138, 119
+  offset: 0, 0
+  index: -1
+youshou
+  rotate: false
+  xy: 1253, 16
+  size: 174, 188
+  orig: 174, 188
+  offset: 0, 0
+  index: -1
+youshoubi
+  rotate: true
+  xy: 1002, 206
+  size: 300, 348
+  orig: 300, 348
+  offset: 0, 0
+  index: -1
+youtui
+  rotate: true
+  xy: 2, 5
+  size: 130, 271
+  orig: 130, 271
+  offset: 0, 0
+  index: -1
+zuoshoubi
+  rotate: true
+  xy: 444, 267
+  size: 239, 556
+  orig: 239, 556
+  offset: 0, 0
+  index: -1
+zuotui
+  rotate: true
+  xy: 444, 122
+  size: 143, 280
+  orig: 143, 280
+  offset: 0, 0
+  index: -1

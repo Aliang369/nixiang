@@ -1,0 +1,104 @@
+
+1031yunwangnitan.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 436, 399
+  size: 162, 90
+  orig: 162, 90
+  offset: 0, 0
+  index: -1
+dabi  l
+  rotate: false
+  xy: 2, 402
+  size: 432, 612
+  orig: 432, 612
+  offset: 0, 0
+  index: -1
+jixue
+  rotate: false
+  xy: 2, 15
+  size: 243, 51
+  orig: 243, 51
+  offset: 0, 0
+  index: -1
+shu
+  rotate: false
+  xy: 651, 795
+  size: 224, 219
+  orig: 224, 219
+  offset: 0, 0
+  index: -1
+shu  L
+  rotate: false
+  xy: 2, 68
+  size: 279, 332
+  orig: 279, 332
+  offset: 0, 0
+  index: -1
+shu  R
+  rotate: false
+  xy: 436, 738
+  size: 213, 276
+  orig: 213, 276
+  offset: 0, 0
+  index: -1
+shugan  L
+  rotate: false
+  xy: 432, 285
+  size: 85, 112
+  orig: 85, 112
+  offset: 0, 0
+  index: -1
+shugan  R
+  rotate: false
+  xy: 519, 302
+  size: 89, 95
+  orig: 89, 95
+  offset: 0, 0
+  index: -1
+tou
+  rotate: true
+  xy: 283, 197
+  size: 203, 147
+  orig: 203, 147
+  offset: 0, 0
+  index: -1
+xiahegu
+  rotate: false
+  xy: 283, 76
+  size: 125, 119
+  orig: 125, 119
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: false
+  xy: 436, 491
+  size: 168, 245
+  orig: 168, 245
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: false
+  xy: 877, 828
+  size: 103, 186
+  orig: 103, 186
+  offset: 0, 0
+  index: -1
+yanqiu  L
+  rotate: false
+  xy: 651, 781
+  size: 11, 12
+  orig: 11, 12
+  offset: 0, 0
+  index: -1
+yanqiu  R
+  rotate: false
+  xy: 2, 2
+  size: 9, 11
+  orig: 9, 11
+  offset: 0, 0
+  index: -1

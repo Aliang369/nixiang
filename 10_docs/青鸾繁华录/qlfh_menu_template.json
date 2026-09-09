@@ -1,0 +1,12 @@
+{
+  "template_id": "qlfh",
+  "name": "青鸾繁华录",
+  "package": "com.hdg4.g4qlfh",
+  "source": "Games/QlfhMod.h QLFH_FEAT_* / Main.cpp STARRY_GAME_QLFH（v2）",
+  "features": [
+    {"feat_num": 1, "name": "免广告", "note": "三合一：直领+真广告改本地+倒计时1秒，均 get_ret(1)"},
+    {"feat_num": 2, "name": "百倍伤害", "note": "客户端战斗模拟器，×100"},
+    {"feat_num": 3, "name": "无敌", "note": "含反伤/自伤兜底"},
+    {"feat_num": 4, "name": "游戏加速", "type": "slider", "min": 1, "max": 10, "note": "1=关 2..10=倍率，get_speed()"}
+  ]
+}

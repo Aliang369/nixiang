@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "efoyYgy1+ig=",
+  "success": true,
+  "projectFilePath": "/Users/aliang/Documents/nixiang/04_scripts/无限升级/ilpatch_delta/ilpatch_delta.csproj",
+  "expectedPackageFiles": [
+    "/Users/aliang/.nuget/packages/mono.cecil/0.11.4/mono.cecil.0.11.4.nupkg.sha512"
+  ],
+  "logs": []
+}

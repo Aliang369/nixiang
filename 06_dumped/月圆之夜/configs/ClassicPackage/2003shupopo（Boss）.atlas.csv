@@ -1,0 +1,153 @@
+
+2003shupopo（Boss）.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: true
+  xy: 869, 470
+  size: 139, 50
+  orig: 139, 50
+  offset: 0, 0
+  index: -1
+bizi
+  rotate: false
+  xy: 670, 597
+  size: 182, 134
+  orig: 182, 134
+  offset: 0, 0
+  index: -1
+dabi  L
+  rotate: false
+  xy: 244, 129
+  size: 120, 226
+  orig: 120, 226
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: false
+  xy: 535, 239
+  size: 81, 138
+  orig: 81, 138
+  offset: 0, 0
+  index: -1
+erduo  L
+  rotate: true
+  xy: 358, 59
+  size: 68, 107
+  orig: 68, 107
+  offset: 0, 0
+  index: -1
+erduo  R
+  rotate: true
+  xy: 244, 64
+  size: 63, 112
+  orig: 63, 112
+  offset: 0, 0
+  index: -1
+jiao  L
+  rotate: false
+  xy: 366, 129
+  size: 144, 53
+  orig: 144, 53
+  offset: 0, 0
+  index: -1
+jiao  R
+  rotate: true
+  xy: 618, 234
+  size: 143, 49
+  orig: 143, 49
+  offset: 0, 0
+  index: -1
+lian
+  rotate: true
+  xy: 366, 184
+  size: 171, 167
+  orig: 171, 167
+  offset: 0, 0
+  index: -1
+meimao  L
+  rotate: false
+  xy: 775, 470
+  size: 92, 125
+  orig: 92, 125
+  offset: 0, 0
+  index: -1
+meimao  R
+  rotate: false
+  xy: 854, 611
+  size: 76, 120
+  orig: 76, 120
+  offset: 0, 0
+  index: -1
+shangbanshen
+  rotate: false
+  xy: 222, 357
+  size: 292, 346
+  orig: 292, 346
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: false
+  xy: 670, 477
+  size: 103, 118
+  orig: 103, 118
+  offset: 0, 0
+  index: -1
+shou  R
+  rotate: true
+  xy: 516, 379
+  size: 94, 137
+  orig: 94, 137
+  offset: 0, 0
+  index: -1
+xiabanshen
+  rotate: false
+  xy: 2, 101
+  size: 240, 244
+  orig: 240, 244
+  offset: 0, 0
+  index: -1
+xianjuan
+  rotate: false
+  xy: 222, 705
+  size: 437, 310
+  orig: 437, 310
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: true
+  xy: 2, 2
+  size: 97, 196
+  orig: 97, 196
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: false
+  xy: 913, 799
+  size: 99, 216
+  orig: 99, 216
+  offset: 0, 0
+  index: -1
+yaodai
+  rotate: true
+  xy: 516, 475
+  size: 228, 152
+  orig: 228, 152
+  offset: 0, 0
+  index: -1
+yiling
+  rotate: false
+  xy: 661, 733
+  size: 250, 282
+  orig: 250, 282
+  offset: 0, 0
+  index: -1
+zhen
+  rotate: false
+  xy: 2, 347
+  size: 218, 668
+  orig: 218, 668
+  offset: 0, 0
+  index: -1

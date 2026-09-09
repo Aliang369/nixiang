@@ -1,0 +1,14 @@
+{
+  "template_id": "zhmr",
+  "name": "战魂铭人",
+  "package": "com.chillyroom.zhmr.yw",
+  "source": "app/src/main/jni/Main.cpp g_featureList + Games/ZhmrMod.h",
+  "features": [
+    {"feat_num": 1, "name": "无敌（主角免伤锁血）"},
+    {"feat_num": 2, "name": "秒杀（敌人0.1血+破盾）"},
+    {"feat_num": 4, "name": "无限货币"},
+    {"feat_num": 5, "name": "无限道具（高封号操作）"},
+    {"feat_num": 7, "name": "解锁全角色与技能"},
+    {"feat_num": 8, "name": "解锁全皮肤"}
+  ]
+}

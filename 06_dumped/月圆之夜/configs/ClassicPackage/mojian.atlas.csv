@@ -1,0 +1,90 @@
+
+mojian.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+jian
+  rotate: true
+  xy: 951, 201
+  size: 87, 47
+  orig: 87, 47
+  offset: 0, 0
+  index: -1
+jian1
+  rotate: true
+  xy: 2, 148
+  size: 362, 692
+  orig: 362, 692
+  offset: 0, 0
+  index: -1
+lianzi1
+  rotate: true
+  xy: 840, 363
+  size: 147, 182
+  orig: 147, 182
+  offset: 0, 0
+  index: -1
+lianzi2
+  rotate: true
+  xy: 840, 290
+  size: 71, 182
+  orig: 71, 182
+  offset: 0, 0
+  index: -1
+lianzi3
+  rotate: true
+  xy: 650, 10
+  size: 92, 201
+  orig: 92, 201
+  offset: 0, 0
+  index: -1
+lianzi4
+  rotate: true
+  xy: 843, 104
+  size: 184, 106
+  orig: 184, 106
+  offset: 0, 0
+  index: -1
+yun1
+  rotate: false
+  xy: 696, 266
+  size: 142, 244
+  orig: 142, 244
+  offset: 0, 0
+  index: -1
+yun2
+  rotate: true
+  xy: 132, 19
+  size: 127, 232
+  orig: 127, 232
+  offset: 0, 0
+  index: -1
+yun3
+  rotate: true
+  xy: 696, 132
+  size: 132, 145
+  orig: 132, 145
+  offset: 0, 0
+  index: -1
+yun4
+  rotate: false
+  xy: 366, 18
+  size: 207, 128
+  orig: 207, 128
+  offset: 0, 0
+  index: -1
+yun5
+  rotate: false
+  xy: 575, 26
+  size: 73, 120
+  orig: 73, 120
+  offset: 0, 0
+  index: -1
+yun6
+  rotate: false
+  xy: 2, 2
+  size: 128, 144
+  orig: 128, 144
+  offset: 0, 0
+  index: -1

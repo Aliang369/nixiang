@@ -1,0 +1,188 @@
+
+2004langwaipo（Boss）.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+beizi
+  rotate: false
+  xy: 332, 113
+  size: 109, 72
+  orig: 109, 72
+  offset: 0, 0
+  index: -1
+biyan
+  rotate: false
+  xy: 799, 363
+  size: 122, 34
+  orig: 122, 34
+  offset: 0, 0
+  index: -1
+diezi
+  rotate: false
+  xy: 2, 2
+  size: 91, 23
+  orig: 91, 23
+  offset: 0, 0
+  index: -1
+erduo L
+  rotate: false
+  xy: 699, 145
+  size: 37, 70
+  orig: 37, 70
+  offset: 0, 0
+  index: -1
+erduo R
+  rotate: false
+  xy: 664, 136
+  size: 33, 76
+  orig: 33, 76
+  offset: 0, 0
+  index: -1
+gebo L
+  rotate: true
+  xy: 535, 136
+  size: 76, 91
+  orig: 76, 91
+  offset: 0, 0
+  index: -1
+gebo R
+  rotate: true
+  xy: 329, 39
+  size: 72, 93
+  orig: 72, 93
+  offset: 0, 0
+  index: -1
+jianbang  L
+  rotate: false
+  xy: 443, 124
+  size: 90, 95
+  orig: 90, 95
+  offset: 0, 0
+  index: -1
+jianbang  R
+  rotate: false
+  xy: 332, 187
+  size: 98, 112
+  orig: 98, 112
+  offset: 0, 0
+  index: -1
+jiao L
+  rotate: false
+  xy: 547, 214
+  size: 133, 65
+  orig: 133, 65
+  offset: 0, 0
+  index: -1
+jiao R
+  rotate: true
+  xy: 266, 122
+  size: 134, 64
+  orig: 134, 64
+  offset: 0, 0
+  index: -1
+shangbanshen
+  rotate: false
+  xy: 311, 301
+  size: 253, 209
+  orig: 253, 209
+  offset: 0, 0
+  index: -1
+shou L
+  rotate: true
+  xy: 266, 27
+  size: 93, 61
+  orig: 93, 61
+  offset: 0, 0
+  index: -1
+shou R
+  rotate: false
+  xy: 682, 217
+  size: 66, 62
+  orig: 66, 62
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 566, 367
+  size: 231, 143
+  orig: 231, 143
+  offset: 0, 0
+  index: -1
+toujin
+  rotate: true
+  xy: 799, 399
+  size: 111, 171
+  orig: 111, 171
+  offset: 0, 0
+  index: -1
+tui  L
+  rotate: false
+  xy: 878, 278
+  size: 34, 83
+  orig: 34, 83
+  offset: 0, 0
+  index: -1
+tui  R
+  rotate: false
+  xy: 628, 112
+  size: 34, 100
+  orig: 34, 100
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: true
+  xy: 2, 31
+  size: 225, 262
+  orig: 225, 262
+  offset: 0, 0
+  index: -1
+xiabanshen
+  rotate: false
+  xy: 2, 258
+  size: 307, 252
+  orig: 307, 252
+  offset: 0, 0
+  index: -1
+xiabanshen01
+  rotate: false
+  xy: 566, 281
+  size: 196, 84
+  orig: 196, 84
+  offset: 0, 0
+  index: -1
+xiaobi L
+  rotate: true
+  xy: 432, 221
+  size: 78, 113
+  orig: 78, 113
+  offset: 0, 0
+  index: -1
+xiaobi R
+  rotate: true
+  xy: 764, 283
+  size: 78, 112
+  orig: 78, 112
+  offset: 0, 0
+  index: -1
+yanjing
+  rotate: true
+  xy: 972, 404
+  size: 106, 47
+  orig: 106, 47
+  offset: 0, 0
+  index: -1
+yanzhu L
+  rotate: false
+  xy: 432, 209
+  size: 9, 10
+  orig: 9, 10
+  offset: 0, 0
+  index: -1
+yanzhu R
+  rotate: false
+  xy: 311, 288
+  size: 11, 11
+  orig: 11, 11
+  offset: 0, 0
+  index: -1

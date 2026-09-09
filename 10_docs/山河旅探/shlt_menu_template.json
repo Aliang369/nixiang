@@ -1,0 +1,10 @@
+{
+  "template_id": "shlt",
+  "name": "山河旅探",
+  "package": "com.itaotuo.shanhelvtan",
+  "source": "Games/ShltMod.h SHLT_FEAT_* / Main.cpp STARRY_GAME_SHLT",
+  "features": [
+    {"feat_num": 1, "name": "解锁所有章节"},
+    {"feat_num": 2, "name": "解锁所有服饰"}
+  ]
+}

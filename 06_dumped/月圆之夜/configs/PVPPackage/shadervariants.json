@@ -1,0 +1,3350 @@
+{
+    "ShaderTotalCount": 90,
+    "VariantTotalCount": 321,
+    "ShaderVariantInfos": [
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "UI/Default",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/BlitCopy",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Standard",
+            "ShaderVariantCount": 6,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Autodesk Interactive",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Skybox/Cubemap",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Skybox/Procedural",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_SUNDISK_SIMPLE"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Legacy Shaders/Particles/Additive",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Legacy Shaders/Particles/Additive (Soft)",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Legacy Shaders/Particles/Alpha Blended",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE",
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITextureClip",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITextureClipText",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITexture",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITextureBlit",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUIRoundedRect",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUIRoundedRectWithColorPerBorder",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-UIRAtlasBlitCopy",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/UIElements/EditorUIE",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Mobile/Particles/Additive",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Mobile/Particles/Alpha Blended",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Unlit/Transparent",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Unlit/Transparent Cutout",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Unlit/Texture",
+            "ShaderVariantCount": 11,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_ALPHATEST_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION",
+                        "_GLOSSYREFLECTIONS_OFF"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_EMISSION",
+                        "_GLOSSYREFLECTIONS_OFF"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_OUTLINEMODE_TANGENT",
+                        "_TESTMODE_NONE",
+                        "_ZWRITE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Unlit/Color",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_ALPHABLEND_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Shuijingqiu.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Shuijingqiu",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Mask_add.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Mask_add",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Sprites/Sprite-Multiply.shader",
+            "ShaderName": "YYZY_Shaders/Sprites/Multiply",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "ETC1_EXTERNAL_ALPHA",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_AlphaBlend.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_AlphaBlend",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_MaskAdditive.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_MaskAdditive",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASKTEXUV_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_MaskBlendDissovle.shader",
+            "ShaderName": "YYZY_Shaders/Effects/MaskBlendDissolve",
+            "ShaderVariantCount": 8,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_RIMSWITCH_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_CUSTOMXYTOOGLE_ON",
+                        "_RIMSWITCH_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON",
+                        "_RIMSWITCH_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_BaseMask.shader",
+            "ShaderName": "YYZY_Shaders/Effects/BaseMask",
+            "ShaderVariantCount": 12,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_UVMASK",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISTEXKEY_ON",
+                        "_DISTEXMOD1_UVMASK",
+                        "_KEYWORD0_ALPHA",
+                        "_KEYWORD0_KEY0",
+                        "_KEYWORD0_ON",
+                        "_KEYWORD1_ON",
+                        "_KEYWORD2_ON",
+                        "_KEYWORD4_NONE",
+                        "_KEYWORD4_ON",
+                        "_KEYWORD5_ON",
+                        "_MASKTEXKEY_ON",
+                        "_NOISETEXKEY_ON",
+                        "_PARTICALKEY_ON",
+                        "_PARTICALSWITCH_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "WD_AUTOMASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_VERTEXBY_OFF"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_VERTEXBY_OFF"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_VERTEXBY_SIMPLE"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK01ONOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "WD_AUTOMASK_ON",
+                        "_CUSTOMXYTOOGLE_ON",
+                        "_MASK01ONOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_MASK01ONOFF_ON",
+                        "_VERTEXBY_OFF"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK01ONOFF_ON",
+                        "_VERTEXBY_OFF"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK01ONOFF_ON",
+                        "_VERTEXBY_MASK"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Sprites/Sprites-Default.shader",
+            "ShaderName": "YYZY_Shaders/Sprites/Default",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Unlit-Opaque.shader",
+            "ShaderName": "YYZY_Shaders/Unlit/Opaque",
+            "ShaderVariantCount": 7,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_OUTLINEMODE_TANGENT",
+                        "_RIM_ON",
+                        "_TESTMODE_NONE",
+                        "_ZWRITE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_ALPHATEST_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_ALPHATEST_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Crush.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Crush",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ROATATE"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/UI_Effect_PVP.shader",
+            "ShaderName": "YYZY_Shaders/Effects/UI_Effect_PVP",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "UNITY_HDR_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_ONOFFCUSTOMX_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_VERTEXBY_OFF"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/ArtPackage/Common/Shader/Effect/NewUnlitShader.shader",
+            "ShaderName": "Unlit/NewUnlitShader",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/UI_Effect.shader",
+            "ShaderName": "YYZY_Shaders/Effects/UI_Effect",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Common_Effect.shader",
+            "ShaderName": "HRP/SLPK/UI/CommonEffect",
+            "ShaderVariantCount": 8,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEAR_ON",
+                        "_DISSOLVEPLUSAR_ON",
+                        "_DISSOLVETEXUVS_NORMAL",
+                        "_DISTORTADDTEX_ON",
+                        "_DISTORTMASKTEXAR_ON",
+                        "_DISTORTTEXAR_ON",
+                        "_FACE_Y",
+                        "_MAINTEXUVS_NORMAL",
+                        "_MASKALPHARA_ON",
+                        "_MASKTEXUVS_NORMAL",
+                        "_VTOAR_ON",
+                        "_VTOMASKAR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEAR_ON",
+                        "_DISSOLVEPLUSAR_ON",
+                        "_DISSOLVETEXUVS_NORMAL",
+                        "_DISTORTADDTEX_ON",
+                        "_DISTORTMASKTEXAR_ON",
+                        "_DISTORTTEXAR_ON",
+                        "_FACE_Y",
+                        "_MAINTEXUVS_NORMAL",
+                        "_MAINTEX_AR_ON",
+                        "_MASKALPHARA_ON",
+                        "_MASKTEXUVS_NORMAL",
+                        "_VTOAR_ON",
+                        "_VTOMASKAR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASKFEATURE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_TURBEFEATURE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEFEATURE_ON",
+                        "_MASKFEATURE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEFEATURE_ON",
+                        "_TURBEFEATURE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEFEATURE_ON",
+                        "_MASKFEATURE_ON",
+                        "_TURBEFEATURE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/ParticleAdd.shader",
+            "ShaderName": "YYZY_Shaders/Effects/ParticleAdd",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/ArtPackage/Classic/_FX/shaders/AE_Effect-Add_Mask.shader",
+            "ShaderName": "Particles/Addtive Mask",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Scene_UnlitColor.shader",
+            "ShaderName": "YYZY_Shaders/UnlitColor",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "SECOND_TEX",
+                        "_EMISSION",
+                        "_SHADOWCONTROL_ALPHA"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SECOND_TEX",
+                        "_EMISSION",
+                        "_SHADOWCONTROL_ALPHA"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Base.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Base",
+            "ShaderVariantCount": 12,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "UNITY_HDR_ON",
+                        "_ADDITIVE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "ETC1_EXTERNAL_ALPHA",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NORMAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_UVMASK",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ADDITIVE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/ParticleBlend.shader",
+            "ShaderName": "YYZY_Shaders/Effects/ParticleBlend",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_DissolveAlphaBlend_A.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_DissolveAlphaBlend_A",
+            "ShaderVariantCount": 8,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_UVMASK",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ADDITIVE_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ONOFFCUSTOMX_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ONOFFCUSTOMX_ON",
+                        "_USECUSTOMDATA_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEINLINE_ON",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEINLINE_ON",
+                        "_ONOFFCUSTOMX_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_MaskAlphaBlend.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_MaskAlphaBlend",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_ONOFFCUSTOMX_ON",
+                        "_USECUSTOMDATA_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/GamePVP/Third/TextMesh Pro/Shaders/TMP_SDF.shader",
+            "ShaderName": "TextMeshPro/Distance Field",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNDERLAY_ON",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "GLOW_ON",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Distortion.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Distortion",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_CUSTOMX"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMX"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_AlphaTrail.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Alpha_Trail",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_AddGradient.shader",
+            "ShaderName": "YYZY_Shaders/Effects/AddGradient",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK01ONOFF_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/ArtPackage/PVP/UI/Shader/GrayOffsetColor.shader",
+            "ShaderName": "CC/UI/GrayOffsetColor",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/Spin/Shaders/Spine-SkeletonGraphic.shader",
+            "ShaderName": "Spine/SkeletonGraphic (Premultiply Alpha)",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "_RECT_TEX"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "_RECT_CIRCLE"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "_RECT_SQUARE"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/DefaultResources/Particle Add.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Legacy Shaders/Additive",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_UV_Rotator&Panner.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_UV_Rotator&Panner",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_Additive.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_Additive",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "UNITY_HDR_ON",
+                        "_MASK_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_BaseAdd.shader",
+            "ShaderName": "YYZY_Shaders/Effects/BaseAdd",
+            "ShaderVariantCount": 7,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "ETC1_EXTERNAL_ALPHA",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISTEXKEY_ON",
+                        "_DISTEXMOD1_UVMASK",
+                        "_KEYWORD0_ALPHA",
+                        "_KEYWORD0_KEY0",
+                        "_KEYWORD0_ON",
+                        "_KEYWORD1_ON",
+                        "_KEYWORD2_ON",
+                        "_KEYWORD4_NONE",
+                        "_KEYWORD4_ON",
+                        "_KEYWORD5_ON",
+                        "_MASKTEXKEY_ON",
+                        "_NOISETEXKEY_ON",
+                        "_PARTICALKEY_ON",
+                        "_PARTICALSWITCH_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NORMAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISTEXKEY_ON",
+                        "_DISTEXMOD1_UVMASK",
+                        "_KEYWORD0_ALPHA",
+                        "_KEYWORD0_KEY0",
+                        "_KEYWORD0_ON",
+                        "_KEYWORD1_ON",
+                        "_KEYWORD2_ON",
+                        "_KEYWORD4_NONE",
+                        "_KEYWORD4_ON",
+                        "_KEYWORD5_ON",
+                        "_MASKTEXKEY_ON",
+                        "_NOISETEXKEY_ON",
+                        "_PARTICALKEY_ON",
+                        "_PARTICALSWITCH_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/Spin/Shaders/Spine-Skeleton.shader",
+            "ShaderName": "Spine/Skeleton",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/qinfeng_ronjie_yin.shader",
+            "ShaderName": "YYZY_Shaders/Effects/ronjie_yin",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/UI/UIGrayDefault.shader",
+            "ShaderName": "Hidden/Templates/Legacy/UIGrayDefault",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/DefaultResourcesExtra/UI/UI-Default.shader",
+            "ShaderName": "UI/Default",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/PostProcessing/GaussianBlur.shader",
+            "ShaderName": "YYZY_Shaders/PostProcessing/Gaussian Blur",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_UI_MultiplyColor.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_UI_MultiplyColor",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Character/Character_PlanarShadow.shader",
+            "ShaderName": "YYZY_Shaders/Character Planar Shadow",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Character/Toon_Char_Body_Pro.shader",
+            "ShaderName": "YYZY_Shaders/Toon/Toon_Char_Body_Pro",
+            "ShaderVariantCount": 24,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "INSTANCING_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "INSTANCING_ON",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "INSTANCING_ON",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "INSTANCING_ON",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_OUTLINEMODE_TANGENT",
+                        "_TESTMODE_NONE",
+                        "_ZWRITE_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "INSTANCING_ON",
+                        "UNITY_HDR_ON",
+                        "_EXPRESSION_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "INSTANCING_ON",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_EXPRESSION_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_ON",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "DISSOLVE_ON",
+                        "INSTANCING_ON",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_EDGELIGHT_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_EXPRESSION_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_EDGELIGHT_ON",
+                        "_EXPRESSION_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_ON",
+                        "_EDGELIGHT_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_EDGELIGHT_ON",
+                        "_FLOWLIGHT_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_OUTLINEMODE_TANGENT",
+                        "_RIM_ON",
+                        "_TESTMODE_NONE",
+                        "_ZWRITE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "_EDGELIGHT_ON",
+                        "_RIM_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_ON",
+                        "_EDGELIGHT_ON",
+                        "_RIM_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "INSTANCING_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "INSTANCING_ON",
+                        "SHADOWS_DEPTH"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "_EXPRESSION_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "DISSOLVE_ON",
+                        "_RIM_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/UI/UI_Mask.shader",
+            "ShaderName": "Custom/UI/Mask",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_CutScene.shader",
+            "ShaderName": "YYZY_Shaders/Effects/CutScene",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/UI/UI_ShowBg.shader",
+            "ShaderName": "YYZY_Shaders/UI/ShowBg",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Sprites/SpriteMask.shader",
+            "ShaderName": "YYZY_Shaders/Sprites/SpriteMask",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/PostProcessing/RadialBlur.shader",
+            "ShaderName": "YYZY_Shaders/PostProcessing/RadialBlur",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_LiquidBottle.shader",
+            "ShaderName": "YYZY_Shaders/Effects/LiquidBottle",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_BattleBase.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_BattleBase",
+            "ShaderVariantCount": 66,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CURVES_ON",
+                        "_DETILMAPOFF_ON",
+                        "_KEYWORD0_ALPHA",
+                        "_KEYWORD0_KEY0",
+                        "_KEYWORD0_ON",
+                        "_KEYWORD1_ON",
+                        "_KEYWORD1_POLARUV",
+                        "_KEYWORD2_MESHUV",
+                        "_KEYWORD2_ON",
+                        "_KEYWORD3_SCRENUV",
+                        "_KEYWORD4_MESHUV",
+                        "_KEYWORD4_NONE",
+                        "_KEYWORD5_ON",
+                        "_KEYWORD6_MUL",
+                        "_NOISEBLEND_ADD",
+                        "_PARTICAL_ON",
+                        "_POLARUV_ON",
+                        "_UVNOISE1CC_POLARUV"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_INACTIVE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_INACTIVE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_INACTIVE_ON",
+                        "_OUTLINEMODE_TANGENT",
+                        "_RIM_ON",
+                        "_TESTMODE_NONE",
+                        "_ZWRITE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DETAIL_MULX2",
+                        "_INACTIVE_ON",
+                        "_SHADOWCONTROL_NONE"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "TOON_NONE",
+                        "UNITY_HDR_ON",
+                        "_FLOWLIGHT_ON",
+                        "_INACTIVE_ON",
+                        "_SHADOWCONTROL_NONE"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_INACTIVE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISTEXKEY_ON",
+                        "_DISTEXMOD1_UVMASK",
+                        "_KEYWORD0_ALPHA",
+                        "_KEYWORD0_KEY0",
+                        "_KEYWORD0_ON",
+                        "_KEYWORD1_ON",
+                        "_KEYWORD2_ON",
+                        "_KEYWORD4_NONE",
+                        "_KEYWORD4_ON",
+                        "_KEYWORD5_ON",
+                        "_MASKTEXKEY_ON",
+                        "_NOISETEXKEY_ON",
+                        "_NOISE_ON",
+                        "_PARTICALKEY_ON",
+                        "_PARTICALSWITCH_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMX",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISTORTION_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK_ON",
+                        "_OUTLINEMODE_TANGENT",
+                        "_RIM_ON",
+                        "_TESTMODE_NONE",
+                        "_ZWRITE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_MASK_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_INACTIVE_ON",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_MASK_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NONE",
+                        "_INACTIVE_ON",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_INACTIVE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NORMAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_MASK_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_INACTIVE_ON",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NORMAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_MASK_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_INACTIVE_ON",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_NORMAL",
+                        "_INACTIVE_ON",
+                        "_MASK_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_INACTIVE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_INACTIVE_ON",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMAIN",
+                        "_INACTIVE_ON",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_INACTIVE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_INACTIVE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_INACTIVE_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_MASK_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_INACTIVE_ON",
+                        "_MASK_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_MASK_ON",
+                        "_NOISE_ON",
+                        "_NOISE_VERTEX"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DISSOLVE_UVMASK",
+                        "_INACTIVE_ON",
+                        "_MASK_ON",
+                        "_NOISE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Sprites/Sprites-Unlit.shader",
+            "ShaderName": "YYZY_Shaders/Sprites/Unlit",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_ALPHATEST_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/UI/UI-Gradient.shader",
+            "ShaderName": "YYZY_Shaders/UI/UI-Gradient",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Butterfly.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Butterfly",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Unlit_ScreenFresnel.shader",
+            "ShaderName": "YYZY_Shaders/Unlit/Unlit_ScreenFresnel",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_RIM_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_FresnelCommon.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_FresnelCommon",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_USE_MATCAP1_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_EDGELIGHT_OFF",
+                        "_RIM_ON",
+                        "_USE_MATCAP_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON",
+                        "_EDGELIGHT_OFF",
+                        "_RIM_ON",
+                        "_USE_MATCAP_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/PostProcessing/Fx_PostCommon.shader",
+            "ShaderName": "YYZY_Shaders/PostProcessing/Fx_PostCommon",
+            "ShaderVariantCount": 16,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NORMAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_POLARUV_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_POLARUV_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE2MAPOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE2MAPOFF_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE2MAPOFF_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE2MAPOFF_ON",
+                        "_POLARUV_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_NOISE2MAPOFF_ON",
+                        "_POLARUV_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DETAILMAPOFF_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DETAILMAPOFF_ON",
+                        "_POLARUV_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DETAILMAPOFF_ON",
+                        "_NOISE2MAPOFF_ON",
+                        "_RGBOFF_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DETAILMAPOFF_ON",
+                        "_NOISE2MAPOFF_ON",
+                        "_POLARUV_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DETAILMAPOFF_ON",
+                        "_NOISE2MAPOFF_ON",
+                        "_POLARUV_ON",
+                        "_RGBOFF_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Scene/Environment/RainingFar.shader",
+            "ShaderName": "YYZY_Shaders/Scene/Environment/RainingFar",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DOUBLE_LAYER"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Scene/Environment/Scene_Water.shader",
+            "ShaderName": "YYZY_Shaders/Scene/Environment/Scene_Water",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Scene/Environment/Replacement_Reflection.shader",
+            "ShaderName": "Hidden/YYZY_Shaders/Replacement_Reflection",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Unlit-Alpha.shader",
+            "ShaderName": "YYZY_Shaders/Unlit/Alpha",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_EXPRESSION_ON",
+                        "_OUTLINEMODE_TANGENT",
+                        "_TESTMODE_NONE",
+                        "_ZWRITE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/Art/Dynamic Skybox/Shaders/SimpleStaticClouds.shader",
+            "ShaderName": "YYZY_Shaders/Sky/SimpleStaticClouds",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_ONLY_BG"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/Art/Dynamic Skybox/Shaders/StaticClouds.shader",
+            "ShaderName": "YYZY_Shaders/Sky/StaticClouds",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Character/Toon_Character.shader",
+            "ShaderName": "YYZY_Shaders/Toon/Character",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "SHADOWS_SCREEN",
+                        "SHADOWS_SPLIT_SPHERES",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/DefaultResourcesExtra/UI/UI-Default-4X.shader",
+            "ShaderName": "UI/Default-4X",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "ISGRAY",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Mesh_Glow.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Mesh_Glow",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "INSTANCING_ON",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/Spin/Shaders/BlendModes/Spine-Skeleton-PMA-Additive.shader",
+            "ShaderName": "Spine/Blend Modes/Skeleton PMA Additive",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/Spin/Shaders/BlendModes/Spine-Skeleton-PMA-Multiply.shader",
+            "ShaderName": "Spine/Blend Modes/Skeleton PMA Multiply",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_USE8NEIGHBOURHOOD_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/Spin/Shaders/BlendModes/Spine-Skeleton-PMA-Screen.shader",
+            "ShaderName": "Spine/Blend Modes/Skeleton PMA Screen",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_USE8NEIGHBOURHOOD_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/ParallaxDistortion.shader",
+            "ShaderName": "YYZY_Shaders/Effects/ParallaxDistortion",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Card/CardPortrait.shader",
+            "ShaderName": "YYZY_Shaders/Card/CardPortrait",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_FLOWMAP_FX2",
+                        "_FLOWMAP_FX3",
+                        "_FLOWMAP_FX4",
+                        "_FX2_ON",
+                        "_FX3_ON",
+                        "_FX4_ON",
+                        "_FX5_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "SHADOWS_DEPTH"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "_FLOWMAP_FX2",
+                        "_FLOWMAP_FX3",
+                        "_FLOWMAP_FX4",
+                        "_FX2_ON",
+                        "_FX3_ON",
+                        "_FX4_ON",
+                        "_FX5_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Scripts/GPUAnimation/Shader/Spine-SkeletonGraphic-GPU.shader",
+            "ShaderName": "Spine/SkeletonGraphic-GPU",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "_RECT_TEX",
+                        "_USE_SLOT_TEX"
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1B3A"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="星光魔法"
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="收起菜单只留悬浮球后，点下方按钮\n若能弹出提示，说明穿透正常"
+            android:textColor="#A0A0C0"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btn_pass_through_test"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="28dp"
+            android:backgroundTint="#9B7ED8"
+            android:text="点我测试穿透"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btn_request_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#2D2E5F"
+            android:text="可选：开启悬浮窗备用"
+            android:textColor="#E8E8F5"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_pass_through_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="已点到：0 次"
+            android:textColor="#7EE0A0"
+            android:textSize="15sp" />
+    </LinearLayout>
+</FrameLayout>

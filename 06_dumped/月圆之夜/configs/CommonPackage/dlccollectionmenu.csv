@@ -1,0 +1,8 @@
+﻿ID;书皮名;遮罩图;遮罩X位置;遮罩Y位置;包含dlc;收藏进度是否开启;档案室是否开启;是否限时
+Id;Name;ShadowPic;xPosition;yPosition;IncludeDLC;isNeedOpenCollection;isNeedOpenDocumentary;IsLimitedTime
+0;经典模式;0;4.6;1.8;1001|1002|1003|1005|1006|1015;True;true;false 
+1;小红帽日记;1;4.3;-19.8;1004;True;true;false 
+2;镜中记忆;2;-5;5.2;11006|11004|11007|11008|11009|11010;True;false;false 
+3;愿望之夜;3;0.7;8;14001|14002|14003|14004;True;true;false 
+4;浪浪山小妖怪;4;;;1016|14005;True;true;true 
+5;小狗头人;5;;;14050|14051|14052;True;false ;false 

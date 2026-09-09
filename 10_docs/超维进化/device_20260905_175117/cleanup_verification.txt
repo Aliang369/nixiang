@@ -1,0 +1,328 @@
+Activity Resolver Table:
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        a4da73d com.grinning.beta.yszl/com.grinning.game.activity.SplashActivity filter 232fb32
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.LAUNCHER"
+
+Service Resolver Table:
+  Non-Data Actions:
+      com.ss.android.socialbase.downloader.remote:
+        2ea6083 com.grinning.beta.yszl/com.ss.android.socialbase.downloader.downloader.CSJIndependentProcessDownloadService filter f853200
+          Action: "com.ss.android.socialbase.downloader.remote"
+
+Domain verification status:
+
+Permissions:
+  Permission [com.grinning.beta.yszl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (7cf8648):
+    sourcePackage=com.grinning.beta.yszl
+    uid=10652 gids=[] type=0 prot=signature
+    perm=PermissionInfo{6744915 com.grinning.beta.yszl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}
+    flags=0x0
+
+Permissions:
+  Permission [com.grinning.beta.yszl.openadsdk.permission.TT_PANGOLIN] (1f64ce1):
+    sourcePackage=com.grinning.beta.yszl
+    uid=10652 gids=[] type=0 prot=signature
+    perm=PermissionInfo{6ceb21b com.grinning.beta.yszl.openadsdk.permission.TT_PANGOLIN}
+    flags=0x0
+
+Registered ContentProviders:
+  com.grinning.beta.yszl/com.byted.live.lite.ServerManager_downloader:
+    Provider{c283fb8 com.grinning.beta.yszl/com.byted.live.lite.ServerManager_downloader}
+  com.grinning.beta.yszl/com.bytedance.pangle.FileProvider:
+    Provider{dd6191 com.grinning.beta.yszl/com.bytedance.pangle.FileProvider}
+  com.grinning.beta.yszl/com.bytedance.pangle.provider.MainProcessProviderProxy:
+    Provider{922e8f6 com.grinning.beta.yszl/com.bytedance.pangle.provider.MainProcessProviderProxy}
+  com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.stub.server.MainServerManager:
+    Provider{b1c54f7 com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.stub.server.MainServerManager}
+  com.grinning.beta.yszl/com.bytedance.android.openliveplugin.process.server.LiveServerManager:
+    Provider{afd9f64 com.grinning.beta.yszl/com.bytedance.android.openliveplugin.process.server.LiveServerManager}
+  com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.TTFileProvider:
+    Provider{fe585cd com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.TTFileProvider}
+  com.grinning.beta.yszl/com.taptap.sdk.update.download.OkDownloadProvider:
+    Provider{d0c9e82 com.grinning.beta.yszl/com.taptap.sdk.update.download.OkDownloadProvider}
+  com.grinning.beta.yszl/com.byted.live.lite.ServerManager_bytelive:
+    Provider{1374993 com.grinning.beta.yszl/com.byted.live.lite.ServerManager_bytelive}
+  com.grinning.beta.yszl/com.taptap.sdk.themis.lite.ThemisProvider:
+    Provider{7a74dd0 com.grinning.beta.yszl/com.taptap.sdk.themis.lite.ThemisProvider}
+  com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.multipro.TTMultiProvider:
+    Provider{ad1b1c9 com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.multipro.TTMultiProvider}
+  com.grinning.beta.yszl/com.taptap.sdk.update.internal.TapUpdateFileProvider:
+    Provider{9ea20ce com.grinning.beta.yszl/com.taptap.sdk.update.internal.TapUpdateFileProvider}
+  com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.stub.server.DownloaderServerManager:
+    Provider{c02ebef com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.stub.server.DownloaderServerManager}
+  com.grinning.beta.yszl/androidx.startup.InitializationProvider:
+    Provider{afb76fc com.grinning.beta.yszl/androidx.startup.InitializationProvider}
+  com.grinning.beta.yszl/com.byted.live.lite.ServerManager_push:
+    Provider{e3aa185 com.grinning.beta.yszl/com.byted.live.lite.ServerManager_push}
+  com.grinning.beta.yszl/com.grinning.game.utils.FileProvider:
+    Provider{e0b7bda com.grinning.beta.yszl/com.grinning.game.utils.FileProvider}
+  com.grinning.beta.yszl/com.taptap.sdk.kit.internal.TapTapKitInitProvider:
+    Provider{f3c580b com.grinning.beta.yszl/com.taptap.sdk.kit.internal.TapTapKitInitProvider}
+
+ContentProvider Authorities:
+  [com.grinning.beta.yszl.pangle.servermanager.downloader.com.bytedance.sdk.openadsdk.adhost]:
+    Provider{c02ebef com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.stub.server.DownloaderServerManager}
+      applicationInfo=ApplicationInfo{8517a06 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.ApkFileProvider]:
+    Provider{e0b7bda com.grinning.beta.yszl/com.grinning.game.utils.FileProvider}
+      applicationInfo=ApplicationInfo{482f8c7 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.androidx-startup]:
+    Provider{afb76fc com.grinning.beta.yszl/androidx.startup.InitializationProvider}
+      applicationInfo=ApplicationInfo{47abef4 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.pangle.servermanager.push.com.byted.live.lite]:
+    Provider{e3aa185 com.grinning.beta.yszl/com.byted.live.lite.ServerManager_push}
+      applicationInfo=ApplicationInfo{329d61d com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.TTMultiProvider]:
+    Provider{ad1b1c9 com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.multipro.TTMultiProvider}
+      applicationInfo=ApplicationInfo{f7b3092 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.pangle.fileprovider]:
+    Provider{dd6191 com.grinning.beta.yszl/com.bytedance.pangle.FileProvider}
+      applicationInfo=ApplicationInfo{32c5a63 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.bytedance.android.openliveplugin.process.server.LiveServerManager]:
+    Provider{afd9f64 com.grinning.beta.yszl/com.bytedance.android.openliveplugin.process.server.LiveServerManager}
+      applicationInfo=ApplicationInfo{8fed660 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.TTFileProvider]:
+    Provider{fe585cd com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.TTFileProvider}
+      applicationInfo=ApplicationInfo{812b719 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.com.taptap.services.update.okdownload]:
+    Provider{d0c9e82 com.grinning.beta.yszl/com.taptap.sdk.update.download.OkDownloadProvider}
+      applicationInfo=ApplicationInfo{a17c3de com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.com.taptap.sdk.update.internal.fileProvider]:
+    Provider{9ea20ce com.grinning.beta.yszl/com.taptap.sdk.update.internal.TapUpdateFileProvider}
+      applicationInfo=ApplicationInfo{58039bf com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.TapTapKitInitProvider]:
+    Provider{f3c580b com.grinning.beta.yszl/com.taptap.sdk.kit.internal.TapTapKitInitProvider}
+      applicationInfo=ApplicationInfo{1eaf88c com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.pangle.servermanager.downloader.com.byted.live.lite]:
+    Provider{c283fb8 com.grinning.beta.yszl/com.byted.live.lite.ServerManager_downloader}
+      applicationInfo=ApplicationInfo{10eabd5 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.themisLite]:
+    Provider{7a74dd0 com.grinning.beta.yszl/com.taptap.sdk.themis.lite.ThemisProvider}
+      applicationInfo=ApplicationInfo{7583fea com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.pangle.servermanager.main]:
+    Provider{b1c54f7 com.grinning.beta.yszl/com.bytedance.sdk.openadsdk.stub.server.MainServerManager}
+      applicationInfo=ApplicationInfo{d08b2db com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.pangle.provider.proxy.main]:
+    Provider{922e8f6 com.grinning.beta.yszl/com.bytedance.pangle.provider.MainProcessProviderProxy}
+      applicationInfo=ApplicationInfo{3951178 com.grinning.beta.yszl}
+  [com.grinning.beta.yszl.pangle.servermanager.bytelive.com.byted.live.lite]:
+    Provider{1374993 com.grinning.beta.yszl/com.byted.live.lite.ServerManager_bytelive}
+      applicationInfo=ApplicationInfo{c9b3051 com.grinning.beta.yszl}
+
+Key Set Manager:
+  [com.grinning.beta.yszl]
+      Signing KeySets: 148
+
+Packages:
+  Package [com.grinning.beta.yszl] (e2e2786):
+    appId=10652
+    pkg=Package{266fc71 com.grinning.beta.yszl}
+    codePath=/data/app/~~Mtpgi_TCow_X6KPsTU1Gqw==/com.grinning.beta.yszl-bQj8VGm7XCg3ERQ3wXRi-g==
+    resourcePath=/data/app/~~Mtpgi_TCow_X6KPsTU1Gqw==/com.grinning.beta.yszl-bQj8VGm7XCg3ERQ3wXRi-g==
+    legacyNativeLibraryDir=/data/app/~~Mtpgi_TCow_X6KPsTU1Gqw==/com.grinning.beta.yszl-bQj8VGm7XCg3ERQ3wXRi-g==/lib
+    extractNativeLibs=false
+    primaryCpuAbi=arm64-v8a
+    secondaryCpuAbi=null
+    cpuAbiOverride=null
+    versionCode=11 minSdk=24 targetSdk=33
+    minExtensionVersions=[]
+    versionName=2.1
+    hiddenApiEnforcementPolicy=2
+    usesNonSdkApi=false
+    splits=[base]
+    apkSigningVersion=3
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    forceQueryable=false
+    pageSizeCompat=0
+    queriesPackages=[com.taptap, com.taptap.global, com.tencent.mm, com.taptap.global.lite, com.eg.android.AlipayGphone, com.eg.android.AlipayGphoneRC, hk.alipay.wallet, hk.alipay.walletRC, com.google.android.gms, com.android.vending, com.android.creator, com.mdid.msa, com.samsung.android.deviceidservice, com.coolpad.deviceidsupport, com.heytap.openid, com.huawei.hwid, com.huawei.hwid.tv, com.huawei.hms, com.asus.msa.SupplementaryDID, com.zui.deviceidservice, com.qiku.id, com.ss.android.ugc.aweme, com.ss.android.ugc.aweme.lite]
+    queriesIntents=[Intent { act=com.taptap.sdk.action cat=[android.intent.category.DEFAULT] }, Intent { act=com.taptap.global.sdk.action cat=[android.intent.category.DEFAULT] }, Intent { act=* dat=tbopen:/... }, Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=https:/... }]
+    scannedAsStoppedSystemApp=false
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    usesOptionalLibraries:
+      org.apache.http.legacy
+    usesLibraryFiles:
+      /system/framework/org.apache.http.legacy.jar
+    timeStamp=2026-09-05 12:11:04
+    lastUpdateTime=2026-09-05 12:11:14
+    installerPackageName=com.android.packageinstaller
+    installerPackageUid=10216
+    initiatingPackageName=com.android.packageinstaller
+    originatingPackageName=null
+    packageSource=0
+    appMetadataFilePath=null
+    appMetadataSource=0
+    signatures=PackageSignatures{72a1a56 version:3, signatures:[6f4dda0b], past signatures:[]}
+    installPermissionsFixed=false
+    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    apexModuleName=null
+    declared permissions:
+      com.grinning.beta.yszl.openadsdk.permission.TT_PANGOLIN: prot=signature
+      com.grinning.beta.yszl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature
+    requested permissions:
+      android.permission.WRITE_SETTINGS
+      android.permission.ACCESS_FINE_LOCATION
+      freemme.permission.msa
+      android.permission.SYSTEM_ALERT_WINDOW
+      android.permission.CHANGE_NETWORK_STATE
+      android.permission.FOREGROUND_SERVICE
+      android.permission.READ_MEDIA_VISUAL_USER_SELECTED
+      com.grinning.beta.yszl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+      android.permission.FOREGROUND_SERVICE_SPECIAL_USE
+      com.asus.msa.SupplementaryDID.ACCESS
+      android.permission.GET_TASKS
+      android.permission.INTERNET
+      com.grinning.beta.yszl.openadsdk.permission.TT_PANGOLIN
+      android.permission.ACCESS_COARSE_LOCATION
+      android.permission.READ_PHONE_STATE
+      android.permission.READ_MEDIA_IMAGES
+      android.permission.CHANGE_WIFI_STATE
+      android.permission.ACCESS_NETWORK_STATE
+      android.permission.READ_MEDIA_AUDIO
+      android.permission.READ_MEDIA_VIDEO
+      android.permission.VIBRATE
+      android.permission.ACCESS_WIFI_STATE
+      android.permission.REQUEST_INSTALL_PACKAGES
+      com.google.android.gms.permission.AD_ID
+      android.permission.WAKE_LOCK
+    install permissions:
+      android.permission.CHANGE_NETWORK_STATE: granted=true
+      android.permission.FOREGROUND_SERVICE: granted=true
+      com.grinning.beta.yszl.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.FOREGROUND_SERVICE_SPECIAL_USE: granted=true
+      android.permission.GET_TASKS: granted=true
+      android.permission.INTERNET: granted=true
+      com.grinning.beta.yszl.openadsdk.permission.TT_PANGOLIN: granted=true
+      android.permission.CHANGE_WIFI_STATE: granted=true
+      android.permission.ACCESS_NETWORK_STATE: granted=true
+      android.permission.VIBRATE: granted=true
+      android.permission.ACCESS_WIFI_STATE: granted=true
+      com.google.android.gms.permission.AD_ID: granted=true
+      android.permission.WAKE_LOCK: granted=true
+    User 0: ceDataInode=160360 deDataInode=160618 installed=true hidden=false suspended=false distractionFlags=0 stopped=true notLaunched=false enabled=0 ofs=0 pdm=false instant=false virtual=false quarantined=false
+      installReason=0
+      dataDir=/data/user/0/com.grinning.beta.yszl
+      firstInstallTime=2026-09-05 12:11:14
+      uninstallReason=0
+      overlay paths:
+        /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk
+        /data/resource-cache/com.android.systemui-neutral-rnTv.frro
+        /data/resource-cache/com.android.systemui-accent-IUUE.frro
+        /data/resource-cache/com.android.systemui-dynamic-JnzF.frro
+      legacy overlay paths:
+        /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk
+      lastDisabledCaller: com.android.packageinstaller
+      gids=[3003]
+      runtime permissions:
+        android.permission.ACCESS_FINE_LOCATION: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_MEDIA_VISUAL_USER_SELECTED: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.ACCESS_COARSE_LOCATION: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_PHONE_STATE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_MEDIA_IMAGES: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_MEDIA_AUDIO: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_MEDIA_VIDEO: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+
+Queries:
+  system apps queryable: false
+  queries via forceQueryable:
+  queries via package name:
+    com.grinning.beta.yszl:
+      com.ss.android.ugc.aweme
+      com.tencent.mm
+      com.taptap
+  queries via component:
+    com.heytap.speechassist:
+      com.grinning.beta.yszl
+    com.heytap.market:
+      com.grinning.beta.yszl
+    com.sohu.inputmethod.sogouoem:
+      com.grinning.beta.yszl
+    com.heytap.browser:
+      com.grinning.beta.yszl
+    com.nearme.instant.platform:
+      com.grinning.beta.yszl
+    com.heytap.cloud:
+      com.grinning.beta.yszl
+    com.coloros.assistantscreen:
+      com.grinning.beta.yszl
+    com.oplus.pay:
+      com.grinning.beta.yszl
+    com.heytap.htms:
+      com.grinning.beta.yszl
+    com.android.settings.intelligence:
+      com.grinning.beta.yszl
+    com.android.systemui:
+      com.grinning.beta.yszl
+    com.heytap.themestore:
+      com.grinning.beta.yszl
+    com.heytap.music:
+      com.grinning.beta.yszl
+    com.oppo.store:
+      com.grinning.beta.yszl
+    com.heytap.reader:
+      com.grinning.beta.yszl
+    com.netease.uuremote:
+      com.grinning.beta.yszl
+    com.tencent.tmgp.pubgmhd:
+      com.grinning.beta.yszl
+    com.schunshang.bij.aikanjv:
+      com.grinning.beta.yszl
+    com.mfcloudcalculate.networkdisk:
+      com.grinning.beta.yszl
+    com.tencent.mm:
+      com.grinning.beta.yszl
+    com.taptap:
+      com.grinning.beta.yszl
+    com.yf.yuji.bgyxbh:
+      com.grinning.beta.yszl
+    com.anjiu.fox:
+      com.grinning.beta.yszl
+    cn.ninegame.gamemanager:
+      com.grinning.beta.yszl
+    com.m4399.gamecenter:
+      com.grinning.beta.yszl
+    com.quark.browser:
+      com.grinning.beta.yszl
+    com.rsg.wdyz:
+      com.grinning.beta.yszl
+    com.xmcy.hykb:
+      com.grinning.beta.yszl
+    com.syyx.whrhx:
+      com.grinning.beta.yszl
+    com.a5game.ltzj.jj:
+      com.grinning.beta.yszl
+    com.xr.wgdzztap:
+      com.grinning.beta.yszl
+    com.chillyroom.containerofsoul.yw:
+      com.grinning.beta.yszl
+    com.hypergryph.endfield:
+      com.grinning.beta.yszl
+    com.grinning.beta.yszl:
+      com.heytap.browser
+      mark.via
+      com.taptap
+      com.quark.browser
+    com.bantu.trssgshz2:
+      com.grinning.beta.yszl
+    com.xingzuodaoshi.infinityUpgrade:
+      com.grinning.beta.yszl
+  queryable via interaction:
+    User 0:
+      [com.oplus.powermonitor,com.oplus.healthservice,android,com.oplus.owkservice,com.oplus.onetrace,com.oplus.crashbox,com.oplus.bttestmode,com.oplus.appplatform,com.oplus.wifibackuprestore,com.oplus.nas,com.oplus.mediaturbo,com.oplus.securitypermission,com.oplus.exsystemservice,com.oplus.battery,com.oplus.lfeh,com.android.dynsystem,com.oplus.sau,com.wapi.wapicertmanage,com.oplus.qualityprotect,com.android.localtransport,com.oplus.logkit,com.heytap.mcs,com.android.inputdevices,com.oplus.engineernetwork,com.qualcomm.qti.xrvd.service,com.oplus.wirelesssettings,com.oplus.subsys,com.oplus.notificationmanager,com.android.settings,com.oplus.postmanservice,vendor.qti.frameworks.utils,com.oplus.safecenter,com.oplus.obrain,com.oplus.athena,com.oplus.engineermode,com.android.DeviceAsWebcam,com.oplus.appbooster,oplus,com.oplus.trafficmonitor,com.android.keychain,com.android.providers.settings,com.android.location.fused,com.oplus.sauhelper,com.android.server.telecom,com.oplus.olc,com.oplus.customize.coreapp,com.oplus.atlas,com.oplus.audio.effectcenter]:
+        com.grinning.beta.yszl
+      com.sohu.inputmethod.sogouoem:
+        com.grinning.beta.yszl
+  queryable via uses-library:
+
+Dexopt state:
+  [com.grinning.beta.yszl]
+    path: /data/app/~~Mtpgi_TCow_X6KPsTU1Gqw==/com.grinning.beta.yszl-bQj8VGm7XCg3ERQ3wXRi-g==/base.apk
+      arm64: [status=verify] [reason=install] [primary-abi]
+        [location is /data/app/~~Mtpgi_TCow_X6KPsTU1Gqw==/com.grinning.beta.yszl-bQj8VGm7XCg3ERQ3wXRi-g==/oat/arm64/base.odex]
+
+Compiler stats:
+  [com.grinning.beta.yszl]
+     base.apk - 651

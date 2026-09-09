@@ -1,0 +1,118 @@
+
+fengkuankexuejia.png
+size: 2048,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 889, 525
+  size: 57, 28
+  orig: 57, 28
+  offset: 0, 0
+  index: -1
+houyi
+  rotate: false
+  xy: 1193, 648
+  size: 357, 363
+  orig: 357, 363
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 252
+  size: 559, 759
+  orig: 559, 759
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 563, 276
+  size: 228, 245
+  orig: 228, 245
+  offset: 0, 0
+  index: -1
+toufa
+  rotate: true
+  xy: 1341, 598
+  size: 48, 90
+  orig: 48, 90
+  offset: 0, 0
+  index: -1
+toufa2
+  rotate: false
+  xy: 1953, 813
+  size: 71, 101
+  orig: 71, 101
+  offset: 0, 0
+  index: -1
+toufa3
+  rotate: true
+  xy: 1552, 658
+  size: 51, 125
+  orig: 51, 125
+  offset: 0, 0
+  index: -1
+toufa4
+  rotate: false
+  xy: 1953, 916
+  size: 93, 95
+  orig: 93, 95
+  offset: 0, 0
+  index: -1
+toufa5
+  rotate: true
+  xy: 793, 392
+  size: 129, 65
+  orig: 129, 65
+  offset: 0, 0
+  index: -1
+toufa7
+  rotate: false
+  xy: 401, 68
+  size: 103, 64
+  orig: 103, 64
+  offset: 0, 0
+  index: -1
+toufa8
+  rotate: false
+  xy: 1193, 574
+  size: 146, 72
+  orig: 146, 72
+  offset: 0, 0
+  index: -1
+toufa9
+  rotate: false
+  xy: 401, 134
+  size: 132, 116
+  orig: 132, 116
+  offset: 0, 0
+  index: -1
+youshou
+  rotate: true
+  xy: 1552, 711
+  size: 300, 399
+  orig: 300, 399
+  offset: 0, 0
+  index: -1
+youyifu
+  rotate: false
+  xy: 563, 523
+  size: 324, 488
+  orig: 324, 488
+  offset: 0, 0
+  index: -1
+zuoshou
+  rotate: true
+  xy: 2, 2
+  size: 248, 397
+  orig: 248, 397
+  offset: 0, 0
+  index: -1
+zuoyifu
+  rotate: false
+  xy: 889, 555
+  size: 302, 456
+  orig: 302, 456
+  offset: 0, 0
+  index: -1

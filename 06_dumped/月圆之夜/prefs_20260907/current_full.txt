@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="GuanFang.LoginMode"></string>
+    <int name="Difficulty" value="2" />
+    <string name="TempPhoneNum">13778037848</string>
+    <float name="PVEVoiceValue49871733848" value="1.0" />
+    <int name="CurStatue.49871423927" value="1" />
+    <int name="EnterPVE" value="1" />
+    <string name="VCrash_BlockedModels"></string>
+    <float name="PVEVoiceValue1" value="1.0" />
+    <float name="PVESoundValue49871733848" value="1.0" />
+    <int name="BossLostThings0" value="8055530" />
+    <float name="PVEMusicValue1" value="1.0" />
+    <int name="1.SecondBook.RoleId" value="0" />
+    <int name="IsOldDevice" value="1" />
+    <float name="PVESoundValue1" value="1.0" />
+    <string name="gasdk_base_Language"></string>
+    <int name="LastPlayingGameMode" value="1" />
+    <int name="PVEMusicOn49871423927" value="1" />
+    <int name="warCard1Self" value="53" />
+    <string name="LastLoginUid">1</string>
+    <string name="IDName">%E5%86%AF%E4%BA%AE</string>
+    <int name="warCard2Enemy" value="2" />
+    <int name="49871423927.SecondBook.RoleId" value="0" />
+    <int name="OldPigNew49871423927" value="1" />
+    <string name="t1">8836f5473e460cbdea67858aaf06ada9</string>
+    <string name="t2">9c53061a618265f8fe27c9c300282fae</string>
+    <string name="Login.Phones">13778037848</string>
+    <int name="Screenmanager%20Resolution%20Height" value="3000" />
+    <float name="PVEMusicValue49871733848" value="1.0" />
+    <int name="49871733848.Difficulty" value="2" />
+    <string name="Notice.RedPoints">4174</string>
+    <string name="AndroidID">85122bdcc2290edb</string>
+    <int name="RecommendGift_PopupGift_i1" value="1" />
+    <int name="initCardSeed" value="9404724" />
+    <int name="Login.IsAgreement" value="1" />
+    <int name="1.Difficulty" value="2" />
+    <int name="BookMode.IsPassGuide" value="1" />
+    <int name="PVEMusicOn1" value="1" />
+    <float name="PVEVoiceValue49871423927" value="1.0" />
+    <int name="OldPigNew1" value="1" />
+    <int name="VCrash_Threshold" value="2" />
+    <int name="BookShelfMode.IsPassBookShelfSlaveGuide" value="1" />
+    <string name="VoiceLanguage">zh-cn</string>
+    <int name="PVEVoiceOn1" value="1" />
+    <string name="PurchaseCandy.NewIds">2080%2C2101%2C2059%2C2070%2C2071%2C2072%2C2091%2C2092%2C2093</string>
+    <int name="BookShelfMode.IsPassBookShelfGuide" value="1" />
+    <int name="UserInfo.GameMode" value="0" />
+    <int name="monsterKey0" value="8056114" />
+    <int name="Notice.Version" value="361" />
+    <string name="PurchaseCandy.RedPoint">0%2C3%2C2%2C1%2C4</string>
+    <int name="49871423927.SecondBook.Difficult" value="2" />
+    <int name="49871423927.SecondBook.JobPageIndex" value="0" />
+    <float name="PVEMusicValue49871423927" value="1.0" />
+    <int name="CheckIsOldDevice" value="1" />
+    <int name="49871423927.Difficulty" value="2" />
+    <int name="PVESoundOn1" value="1" />
+    <int name="SecondBook.BookMode" value="0" />
+    <int name="1.SecondBook.JobPageIndex" value="0" />
+    <int name="Screenmanager%20Resolution%20Width" value="2120" />
+    <int name="PVEMusicOn49871733848" value="1" />
+    <int name="GameEntrancePanel_ModeEntranceShowTypePref" value="2" />
+    <int name="PVESoundOn49871423927" value="1" />
+    <int name="VCrash_VideoInUse" value="0" />
+    <int name="SlavePigNew49871733848" value="1" />
+    <int name="RecommendGift_CrowdId_i1" value="26550" />
+    <string name="LastReadNotice_5_s">4174%7C4135%7C3959%7C3907%7C3679%7C3661%7C3633%7C3620%7C3607%7C3579%7C3251%7C</string>
+    <int name="49871733848.SecondBook.RoleId" value="0" />
+    <int name="RecommendGift_ActivityId_i1" value="10014" />
+    <string name="IDCard">510723200202203674</string>
+    <int name="__UNITY_PLAYERPREFS_VERSION__" value="1" />
+    <int name="OldPigNew49871733848" value="1" />
+    <string name="taskCard0">%7B%22Tasks%22%3A%5B%5D%7D</string>
+    <int name="SlavePigNew1" value="1" />
+    <int name="49871733848.SecondBook.JobPageIndex" value="0" />
+    <int name="GBM.EnterPVEMode" value="1" />
+    <string name="ADManager.WatchedStore"></string>
+    <int name="warCard2Self" value="53" />
+    <int name="1.SecondBook.Difficult" value="2" />
+    <int name="isShowHandBook" value="1" />
+    <string name="ADManager.BoxWatchTime">0%2C0%2C0</string>
+    <string name="VerifyTryTest">250%2C0</string>
+    <int name="CurStatue.1" value="1" />
+    <string name="Notice.NoticeCache">%7B%0A%20%20%22default%22%3A%20%7B%0A%20%20%20%20%22version%22%3A%202%2C%0A%20%20%20%20%22luaVersion%22%3A%20-1%2C%0A%20%20%20%20%22configVersion%22%3A%20431%2C%0A%20%20%20%20%22noticeVersion%22%3A%20361%2C%0A%20%20%20%20%22isOpenGame%22%3A%201%2C%0A%20%20%20%20%22ip%22%3A%20%7B%0A%20%20%20%20%20%20%22game%22%3A%20%22https%3A%2F%2Fyyzyoldin.ztgame.com.cn%22%2C%0A%20%20%20%20%20%20%22static%22%3A%20%22https%3A%2F%2Fyyzylog.ztgame.com.cn%22%2C%0A%20%20%20%20%20%20%22notice%22%3A%20%22https%3A%2F%2Fyyzyupdate.ztgame.com.cn%2Ffuhua%2Fyyzyautopatch%2Fupdate%22%2C%0A%20%20%20%20%20%20%22res%22%3A%20%22https%3A%2F%2Fyyzyupdate.ztgame.com.cn%2Ffuhua%2Fyyzyautopatch%2Fupdate%22%2C%0A%20%20%20%20%20%20%22notice_test%22%3A%20%22http%3A%2F%2F101.132.95.160%3A8100%2Fyyzy%22%2C%0A%20%20%20%20%20%20%22res_test%22%3A%20%22http%3A%2F%2F101.132.95.160%3A8100%2Fyyzy%22%0A%20%20%20%20%7D%2C%0A%20%20%20%20%22ips%22%3A%20%7B%0A%20%20%20%20%20%20%22game%22%3A%20%5B%22https%3A%2F%2Fyyzyoldin.ztgame.com.cn%22%2C%22https%3A%2F%2Fyyzyin.yueyuanzhiye.com%22%5D%2C%0A%20%20%20%20%20%20%22static%22%3A%20%5B%22https%3A%2F%2Fyyzylog.ztgame.com.cn%22%2C%22https%3A%2F%2Fyyzylog.yueyuanzhiye.com%22%5D%0A%20%20%20%20%7D%2C%0A%20%20%20%20%22ZoneId%22%3A%200%2C%0A%20%20%20%20%22festival%22%3A%200%2C%0A%20%20%20%20%22isOpenShare%22%3A%200%2C%0A%20%20%20%20%22hideCustom%22%3A%201%2C%0A%20%20%20%20%22isOpenAdvert%22%3A%201%2C%0A%20%20%20%20%22TryTestOneDay%22%3A%203%2C%0A%20%20%20%20%22review%22%3A%200%2C%0A%20%20%20%20%22idCheck%22%3A%203%2C%0A%20%20%20%20%22ShowESLanguage%22%3A%201%2C%0A%20%20%20%20%22IsHolidy%22%3A%200%2C%0A%20%20%20%20%22exChangeCode%22%3A%201%2C%0A%20%20%20%20%22customService%22%3A%201%2C%0A%20%20%20%20%22IsUploadMinionData%22%3A%200%2C%0A%20%20%20%20%22Scan%22%3A%201%2C%0A%20%20%20%20%22Offline%22%3A%201%2C%0A%20%20%20%20%22SocialShare%22%3A%201%2C%0A%20%20%20%20%22CommunityShow%22%3A%201%2C%0A%20%20%20%20%22MonthGift%22%3A%201%2C%0A%20%20%20%20%22isOpenTry%22%3A%200%2C%0A%20%20%20%20%22isOpenReplace%22%3A%200%2C%0A%20%20%20%20%22isOpenDoubleGold%22%3A%200%2C%0A%20%20%20%20%22isOpenRelive%22%3A%200%2C%0A%20%20%20%20%22AddWechatFriend%22%3A%201%0A%20%20%7D%0A%7D%0A</string>
+    <int name="49871423927.SlaveDifficulty" value="2" />
+    <string name="Login.PlayerOpenId">1-AndroidPhone_1-13778037848</string>
+    <int name="49871733848.SecondBook.Difficult" value="2" />
+    <int name="IDIPNotice.IsFirst" value="1" />
+    <int name="SlavePigNew49871423927" value="1" />
+    <string name="Language">zh-cn</string>
+    <string name="RecommendGift_ActivityEndTime_s1">1788922952</string>
+    <int name="Record.LastLoginTime" value="1788752426" />
+    <int name="PVESoundOn49871733848" value="1" />
+    <string name="OfflineData">RA4TLgWBy0XYvTAcaTD%2FAe4Kl2XySEUBIzN727D6FXUztnCy11HvJCXLa5zHnueH9slRX5wxQBs9jiPV9xHVbIbk6cGao9TDfEcmdnf43mV%2BTwniAJklakcqEGkF0Gk0GsQ8vRQ7dVyH3xncUttPrg%3D%3D</string>
+    <int name="PVEVoiceOn49871423927" value="1" />
+    <int name="warCard1Enemy" value="2" />
+    <int name="Record.LastLogoutTime" value="1788752788" />
+    <int name="VCrash_BlockedVer" value="1" />
+    <string name="BootCount">250%2C6</string>
+    <string name="Prefs_PlayerLocalData">%7B%22PhoneNum%22%3A%22%22%2C%22UId%22%3A1%2C%22Session%22%3A%22%22%2C%22PayCount%22%3A0%2C%22OpenId%22%3A%221-AndroidPhone_1-13778037848%22%2C%22OpenIdForSDK%22%3A%22%22%2C%22Device%22%3A%22%22%2C%22DLC%22%3A%5B%5D%2C%22IsValidSession%22%3Atrue%2C%22IsRealName%22%3A0%2C%22IDCard%22%3A%22510723200202203674%22%2C%22IDName%22%3A%22%22%2C%22IsLoginGameCenter%22%3Afalse%2C%22GameCenterId%22%3A%22%22%2C%22LoginQQWX%22%3A%22%22%2C%22ExpireTime%22%3A1791344492%2C%22HonorAchieve%22%3A%5B%5D%2C%22Gold%22%3A0%2C%22LeftTime%22%3A0%2C%22NextWatchTime%22%3A0%2C%22BatGold%22%3A0%2C%22FinishAchieves%22%3A%5B%5D%2C%22BindFrom%22%3A%5B%5D%2C%22BindFromOpenIds%22%3A%5B%5D%2C%22Discount%22%3A0%2C%22GameHelpM%22%3A0%2C%22ADCount%22%3A%22%22%2C%22TempBindOpenId%22%3A%22%22%2C%22rcdVer%22%3A0%2C%22rcdLen%22%3A0%2C%22del%22%3A%22%22%2C%22newFish%22%3Afalse%2C%22quickLoginMsg%22%3Afalse%2C%22totalPay%22%3A0%2C%22tryplaydlcx%22%3A0%2C%22accountCenterData%22%3A%7B%22nickName%22%3A%22%22%2C%22FreeRenameCount%22%3A0%2C%22equipDecoration%22%3A%5B1000%2C2000%2C3000%5D%2C%22unlockDecoration%22%3A%5B1000%2C2000%2C3000%5D%2C%22newDecoration%22%3A%5B%5D%7D%2C%22discountActivityData%22%3A%7B%22activityId%22%3A0%2C%22startTime%22%3A0%2C%22endTime%22%3A0%7D%2C%22shopTimeLimitData%22%3A%7B%7D%2C%22curStatue%22%3A0%2C%22channel%22%3A%22%22%2C%22loginTime%22%3A%2209%2F07%2F2026%2011%3A41%3A32%22%2C%22communityIdList%22%3A%5B%5D%2C%22loginAccreditInfos%22%3A%5B%5D%2C%22authroizationCode%22%3A%22%22%2C%22location%22%3A%22%22%2C%22lastLogin%22%3A0%2C%22platform%22%3A%22%22%7D</string>
+    <float name="PVESoundValue49871423927" value="1.0" />
+    <int name="PVEVoiceOn49871733848" value="1" />
+    <int name="enemyCard0" value="8055987" />
+    <int name="Screenmanager%20Fullscreen%20mode" value="1" />
+    <int name="RecommendGift_CrowdGroupId_i1" value="5" />
+    <int name="VCrash_AppAlive" value="1" />
+    <string name="GuanFang.LastLoginTip">Phone</string>
+    <string name="War.WarComplete">1%2C1</string>
+</map>

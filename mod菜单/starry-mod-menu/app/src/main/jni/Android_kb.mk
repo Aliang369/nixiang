@@ -1,0 +1,254 @@
+LOCAL_PATH := $(call my-dir)
+
+# ============================================================
+#  Dobby (Hook 框架) — 静态库
+# ============================================================
+include $(CLEAR_VARS)
+LOCAL_MODULE := Dobby
+LOCAL_SRC_FILES := Dobby/$(TARGET_ARCH_ABI)/libdobby.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# ============================================================
+#  Keystone (汇编引擎) — 静态库
+# ============================================================
+include $(CLEAR_VARS)
+LOCAL_MODULE := Keystone
+LOCAL_SRC_FILES := KittyMemory/Deps/Keystone/libs-android/$(TARGET_ARCH_ABI)/libkeystone.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# ============================================================
+#  星光魔法 MOD 菜单 — 主模块
+# ============================================================
+include $(CLEAR_VARS)
+
+LOCAL_MODULE    := starry_magic
+
+LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
+LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
+LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
+LOCAL_LDLIBS    := -llog -landroid
+
+LOCAL_ARM_MODE  := arm
+
+# ========== 切游戏：只启用下面「一组」里的一行 ==========
+# 鉴权 game_id 由 GameConfig.h 根据 STARRY_GAME_* 自动映射，勿再写 STARRY_AUTH_GAME_ID。
+# 正式游戏还需 ENABLE_*_HOOK + LOCAL_SRC_FILES 编入对应 Games/*Mod.cpp（见下方注释）。
+#
+# 自测菜单壳（无游戏逻辑）
+# LOCAL_CFLAGS    += -DSTARRY_GAME_SELF
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_NEON
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_HZSJ
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MILTHM
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZMXY
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WZYM
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_LTZJ
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_YWGN
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_PCR
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GYWS
+# 造梦无双 1.33
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZMWS
+
+# LOCAL_SRC_FILES := Main.cpp Games/HzsjMod.cpp Unity/Il2CppApi.cpp
+# 自测：无 Games/*Mod（纯菜单 UI）→ LOCAL_SRC_FILES := Main.cpp
+# cstjjs：Games/CstjjsMod.cpp + ENABLE_UNITY_HOOK
+# ywgn：Games/YwgnMod.cpp + Unity/Il2CppApi.cpp
+# neon：Games/NeonMod.cpp（纯 RVA + Dobby，不用 Il2CppApi）
+# hzsj：Games/HzsjMod.cpp + Unity/Il2CppApi.cpp
+# pcr：Games/PcrMod.cpp + Unity/Il2CppApi.cpp（公主连结）
+# 孤勇无双：Games/GywsMod.cpp + Unity/Il2CppApi.cpp
+# LOCAL_SRC_FILES := Main.cpp Games/GywsMod.cpp Unity/Il2CppApi.cpp
+# 造梦无双：Games/ZmwsMod.cpp + ENABLE_COCOS_HOOK
+# LOCAL_SRC_FILES := Main.cpp Games/ZmwsMod.cpp
+
+# zjmc：Games/ZjmcMod.cpp（纯 RVA + Dobby）
+# milthm：Games/MilthmMod.cpp
+# 造梦西游：Games/ZmxyMod.cpp + ENABLE_COCOS_HOOK
+# 镇邪人：Games/ZxrMod.cpp + ENABLE_COCOS_HOOK
+# 消消英雄2：Games/Match2Mod.cpp + ENABLE_UNITY_HOOK
+# 物质与魔法：Games/WzymMod.cpp + ENABLE_UNITY_HOOK
+# 雷霆：Games/LtzjMod.cpp + ENABLE_COCOS_HOOK
+
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_HZSJ
+# LOCAL_SRC_FILES := Main.cpp Games/HzsjMod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_PCR
+# LOCAL_SRC_FILES := Main.cpp Games/PcrMod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
+# LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GYWS
+# LOCAL_SRC_FILES := Main.cpp Games/GywsMod.cpp Unity/Il2CppApi.cpp
+# 弓箭传说2 1.1.8
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GJC2
+# LOCAL_SRC_FILES := Main.cpp Games/Archero2Mod.cpp Unity/Il2CppApi.cpp
+# 弓箭传说2 facai 国际 1.0.1（独立 game_id=gjc2intl，勿与 gjc2 混编）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GJC2INTL
+# LOCAL_SRC_FILES := Main.cpp Games/Archero2IntlMod.cpp Unity/Il2CppApi.cpp
+# milthm 6.0.5 TapTap · Unity IL2CPP 自动跳舞
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MILTHM
+# LOCAL_SRC_FILES := Main.cpp Games/MilthmMod.cpp
+# 生存33天 1.0.23 TapTap
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_SC33
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# ifdef SC33_SPLICE_ENABLED
+# LOCAL_CFLAGS    += -DSC33_SPLICE_ENABLED=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/Sc33Mod.cpp
+# 伯吉的温馨厨房 1.0.1 TapTap · 金币/广告券
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_BJDW
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/BjdwMod.cpp
+# 无悔华夏 3.8.280 九游 · 延迟 hook（默认零挂点，防启动闪退）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WHRHX
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/WhrhxMod.cpp Unity/Il2CppApi.cpp
+# 追迹迷城 1.0.20260824 TapTap
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 星光魔法模板 App 自测（纯菜单 UI，game_id=self）
+# LOCAL_CFLAGS    += -DSTARRY_GAME_SELF
+# LOCAL_SRC_FILES := Main.cpp
+# 王国大作战：前线 1.1.7646 TapTap · HybridCLR+xLua Trace
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_QLFH
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/QlfhMod.cpp
+# 战魂铭人 3.5.0 TapTap · Unity IL2CPP + HybridCLR
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
+# 公主连结 11.7.2 · GC 弱句柄敌我校验 + 属性 999999 输入框
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_PCR
+# LOCAL_SRC_FILES := Main.cpp Games/PcrMod.cpp Unity/Il2CppApi.cpp
+# 无悔华夏 3.8.280 九游 · 2026-08-29 Round2（资源车路线 + 身份重建）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WHRHX
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/WhrhxMod.cpp Unity/Il2CppApi.cpp
+# 无悔华夏 3.8.280 好游快爆 com.syyx.whrhx · 2026-08-30（KB RVA 表 + 捕获式身份，game_id=whhxkb）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WHRHXKB
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/WhrhxMod.cpp Unity/Il2CppApi.cpp
+# 弓箭传说2 1.1.8 国服 · HybridCLR 偷技能/隐身/全屏（当前激活）
+# 无悔华夏 3.8.280 好游快爆 · Trace 诊断版（并行会话共存：本文件为 whhxkb 私有构建脚本，共享 Android.mk 未动）
+# [原活跃块已在此文件中注释 — 共享 Android.mk 的 GJC2 块保持不动]
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GJC2
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/Archero2Mod.cpp Unity/Il2CppApi.cpp
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WHRHXKB
+ifdef STARRY_TRACE
+LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+endif
+LOCAL_SRC_FILES := Main.cpp Games/WhrhxMod.cpp Unity/Il2CppApi.cpp
+
+# 无悔华夏 3.8.280 好游快爆 · Trace 诊断版
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WHRHXKB
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/WhrhxMod.cpp Unity/Il2CppApi.cpp
+# 黑暗领域 1.0 · Cocos Creator 3.8 / libcocos.so（免广告+技能表）
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_HALY
+# LOCAL_SRC_FILES := Main.cpp Games/HalyMod.cpp
+# 弓箭传说2 1.1.8 国服 TapTap（同上，勿重复激活）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GJC2
+# LOCAL_SRC_FILES := Main.cpp Games/Archero2Mod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_DWCT
+# LOCAL_SRC_FILES := Main.cpp Games/DwctMod.cpp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GJC2
+# LOCAL_SRC_FILES := Main.cpp Games/Archero2Mod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_LTZJ -DSTARRY_CAVE_INTEGRITY_SOFT
+# LOCAL_SRC_FILES := Main.cpp Games/LtzjMod.cpp Games/LtzjAceSoft.cpp
+# 长生天机降世 0.9.10
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
+# LOCAL_SRC_FILES := Main.cpp Games/CstjjsMod.cpp Unity/Il2CppApi.cpp
+# 追迹迷城 1.0.20260816
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 动物餐厅 12.38 · 热更后 runtime 免内购（OTA so）
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_DWCT
+# LOCAL_SRC_FILES := Main.cpp Games/DwctMod.cpp
+# 雷霆战机 1.25.31 · 零 Root 冷启（不改 cocos；CaveBoot/AceSoft 仅分析用）
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_LTZJ
+# LOCAL_SRC_FILES := Main.cpp Games/LtzjMod.cpp Games/LtzjAceSoft.cpp
+# 山河旅探 1.4.38 · ILRuntime 热更 DLL 解锁章节/服饰
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_SHLT
+# LOCAL_SRC_FILES := Main.cpp Games/ShltMod.cpp Unity/Il2CppApi.cpp
+# 动物餐厅 12.38 · 热更 jsc 门控在 Java DwctIapGate；so 只同步 __starryNoIap
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_DWCT
+# LOCAL_SRC_FILES := Main.cpp Games/DwctMod.cpp
+# 弹力果冻 2.4.0 · HybridCLR 跳板 HpHandle/无敌/全屏秒杀/无限技能
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_TLGD
+# LOCAL_SRC_FILES := Main.cpp Games/TlgdMod.cpp Unity/Il2CppApi.cpp
+# 掌门下山 1.0.2 · 结案：服务端权威战斗，客户端无敌/秒杀不可行（文档见 10_docs/掌门下山）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZMXS
+# LOCAL_SRC_FILES := Main.cpp Games/ZmxsMod.cpp Unity/Il2CppApi.cpp
+# 独奏骑士 1.1.760 · HybridCLR 跳板 calTotalDamage/无敌/无限技能
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_DZQS
+# LOCAL_SRC_FILES := Main.cpp Games/DzqsMod.cpp Unity/Il2CppApi.cpp
+# 孤勇无双 1.0.3 · SkillEffectSystem ReceiveDamage/OnDamageEffect + HpComponent.DeductHp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_GYWS
+# LOCAL_SRC_FILES := Main.cpp Games/GywsMod.cpp Unity/Il2CppApi.cpp
+# 山海幻境 3.7 · Cocos GXR/GXD 十倍/无敌/百倍
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_SHHJ
+# LOCAL_SRC_FILES := Main.cpp Games/ShhjMod.cpp
+# 音舞光年 0.300.42 · Trace 证实出分 invoke MP + cfg.isAutoPlay 实例
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_YWGN
+# LOCAL_SRC_FILES := Main.cpp Games/YwgnMod.cpp Unity/Il2CppApi.cpp
+# 追迹迷城 1.0.20260821
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 镇邪人 1.0.3 · Cocos2djs se::evalString 战斗拼接 + 原生菜单
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+# LOCAL_SRC_FILES := Main.cpp Games/ZxrMod.cpp
+# 消消英雄2 1.2.26 · xLua AN_1/2/3；Trace 用 STARRY_LUA_DUMP_TRACE=1 + APP_CFLAGS
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
+# LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
+# 我嘎嘎乱杀 1.3.5 · BattleUtility CalculateDamage/ApplyDamage + BattleTimeMgr
+# Trace：APP_CFLAGS += -DSTARRY_TRACE=1 或下方 LOCAL_CFLAGS 加 -DSTARRY_TRACE=1
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WGGLS
+# LOCAL_SRC_FILES := Main.cpp Games/WgglsMod.cpp Unity/Il2CppApi.cpp
+# 无悔华夏 3.8.280 九游 · Trace 候选 RVA（WhrhxMod 纯 RVA）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WHRHX
+# ifdef STARRY_TRACE
+# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+# endif
+# LOCAL_SRC_FILES := Main.cpp Games/WhrhxMod.cpp Unity/Il2CppApi.cpp
+
+LOCAL_SRC_FILES += xDL/xdl.c \
+                   xDL/xdl_iterate.c \
+                   xDL/xdl_linker.c \
+                   xDL/xdl_util.c \
+                   xDL/xdl_lzma.c
+
+LOCAL_SRC_FILES += Includes/Utils.cpp \
+                   Includes/hmac_sha256.c
+
+LOCAL_C_INCLUDES := $(LOCAL_PATH) \
+                    $(LOCAL_PATH)/Includes \
+                    $(LOCAL_PATH)/Unity \
+                    $(LOCAL_PATH)/Games \
+                    $(LOCAL_PATH)/Dobby \
+                    $(LOCAL_PATH)/KittyMemory \
+                    $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
+                    $(LOCAL_PATH)/xDL
+
+LOCAL_STATIC_LIBRARIES := Dobby Keystone
+
+include $(BUILD_SHARED_LIBRARY)

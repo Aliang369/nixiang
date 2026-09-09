@@ -1,0 +1,202 @@
+
+1047leijingling.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: true
+  xy: 551, 157
+  size: 125, 61
+  orig: 125, 61
+  offset: 0, 0
+  index: -1
+chibang L
+  rotate: false
+  xy: 2, 18
+  size: 171, 54
+  orig: 171, 54
+  offset: 0, 0
+  index: -1
+chibang L1
+  rotate: false
+  xy: 2, 74
+  size: 214, 178
+  orig: 214, 178
+  offset: 0, 0
+  index: -1
+chibang R
+  rotate: false
+  xy: 477, 346
+  size: 171, 54
+  orig: 171, 54
+  offset: 0, 0
+  index: -1
+chibang R1
+  rotate: false
+  xy: 261, 328
+  size: 214, 178
+  orig: 214, 178
+  offset: 0, 0
+  index: -1
+dabi L
+  rotate: true
+  xy: 753, 322
+  size: 43, 78
+  orig: 43, 78
+  offset: 0, 0
+  index: -1
+dabi R
+  rotate: false
+  xy: 421, 269
+  size: 43, 57
+  orig: 43, 57
+  offset: 0, 0
+  index: -1
+dang
+  rotate: false
+  xy: 627, 284
+  size: 93, 60
+  orig: 93, 60
+  offset: 0, 0
+  index: -1
+datui L
+  rotate: true
+  xy: 477, 284
+  size: 60, 148
+  orig: 60, 148
+  offset: 0, 0
+  index: -1
+datui R
+  rotate: true
+  xy: 261, 251
+  size: 75, 158
+  orig: 75, 158
+  offset: 0, 0
+  index: -1
+erduo L
+  rotate: true
+  xy: 477, 402
+  size: 104, 204
+  orig: 104, 204
+  offset: 0, 0
+  index: -1
+erduo R
+  rotate: true
+  xy: 683, 405
+  size: 101, 204
+  orig: 101, 204
+  offset: 0, 0
+  index: -1
+heise L
+  rotate: true
+  xy: 856, 370
+  size: 33, 30
+  orig: 33, 30
+  offset: 0, 0
+  index: -1
+heise R
+  rotate: true
+  xy: 175, 29
+  size: 43, 40
+  orig: 43, 40
+  offset: 0, 0
+  index: -1
+jiao  L
+  rotate: false
+  xy: 614, 160
+  size: 47, 122
+  orig: 47, 122
+  offset: 0, 0
+  index: -1
+jiao  R
+  rotate: true
+  xy: 889, 368
+  size: 51, 126
+  orig: 51, 126
+  offset: 0, 0
+  index: -1
+shangbanshen
+  rotate: true
+  xy: 355, 118
+  size: 131, 127
+  orig: 131, 127
+  offset: 0, 0
+  index: -1
+shou L
+  rotate: true
+  xy: 218, 33
+  size: 85, 134
+  orig: 85, 134
+  offset: 0, 0
+  index: -1
+shou R
+  rotate: true
+  xy: 889, 421
+  size: 85, 133
+  orig: 85, 133
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 2, 254
+  size: 257, 252
+  orig: 257, 252
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: false
+  xy: 218, 120
+  size: 135, 129
+  orig: 135, 129
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: false
+  xy: 650, 346
+  size: 101, 54
+  orig: 101, 54
+  offset: 0, 0
+  index: -1
+xiaobi L
+  rotate: false
+  xy: 484, 148
+  size: 65, 134
+  orig: 65, 134
+  offset: 0, 0
+  index: -1
+xiaobi R
+  rotate: true
+  xy: 354, 33
+  size: 83, 125
+  orig: 83, 125
+  offset: 0, 0
+  index: -1
+xiaotui L
+  rotate: false
+  xy: 663, 183
+  size: 72, 99
+  orig: 72, 99
+  offset: 0, 0
+  index: -1
+xiaotui R
+  rotate: true
+  xy: 753, 367
+  size: 36, 101
+  orig: 36, 101
+  offset: 0, 0
+  index: -1
+yanzhu L
+  rotate: true
+  xy: 484, 135
+  size: 11, 33
+  orig: 11, 33
+  offset: 0, 0
+  index: -1
+yanzhu R
+  rotate: true
+  xy: 2, 2
+  size: 14, 33
+  orig: 14, 33
+  offset: 0, 0
+  index: -1

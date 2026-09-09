@@ -1,0 +1,181 @@
+
+1020mojing.png
+size: 2048,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bianfukouqiangL
+  rotate: false
+  xy: 1829, 495
+  size: 108, 97
+  orig: 108, 97
+  offset: 0, 0
+  index: -1
+bianfukouqiangR
+  rotate: false
+  xy: 1366, 217
+  size: 81, 73
+  orig: 81, 73
+  offset: 0, 0
+  index: -1
+bianfutouding  L
+  rotate: false
+  xy: 1659, 544
+  size: 115, 92
+  orig: 115, 92
+  offset: 0, 0
+  index: -1
+bianfutoudingR
+  rotate: true
+  xy: 1939, 503
+  size: 89, 66
+  orig: 89, 66
+  offset: 0, 0
+  index: -1
+bianfuxiaba  L
+  rotate: false
+  xy: 830, 2
+  size: 117, 69
+  orig: 117, 69
+  offset: 0, 0
+  index: -1
+bianfuxiabaR
+  rotate: true
+  xy: 1776, 546
+  size: 90, 51
+  orig: 90, 51
+  offset: 0, 0
+  index: -1
+biyan
+  rotate: false
+  xy: 1540, 484
+  size: 115, 45
+  orig: 115, 45
+  offset: 0, 0
+  index: -1
+huzi  L
+  rotate: false
+  xy: 1836, 594
+  size: 146, 100
+  orig: 146, 100
+  offset: 0, 0
+  index: -1
+huzi  R
+  rotate: false
+  xy: 1540, 531
+  size: 117, 105
+  orig: 117, 105
+  offset: 0, 0
+  index: -1
+jiao  L
+  rotate: true
+  xy: 1366, 292
+  size: 159, 83
+  orig: 159, 83
+  offset: 0, 0
+  index: -1
+jiao  R
+  rotate: true
+  xy: 1366, 453
+  size: 169, 88
+  orig: 169, 88
+  offset: 0, 0
+  index: -1
+jingzi
+  rotate: false
+  xy: 1006, 255
+  size: 358, 367
+  orig: 358, 367
+  offset: 0, 0
+  index: -1
+lazhu
+  rotate: true
+  xy: 830, 73
+  size: 149, 163
+  orig: 149, 163
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 658, 60
+  size: 170, 162
+  orig: 170, 162
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 1456, 489
+  size: 133, 82
+  orig: 133, 82
+  offset: 0, 0
+  index: -1
+蝙蝠/bf chibang L
+  rotate: false
+  xy: 2, 31
+  size: 326, 191
+  orig: 326, 191
+  offset: 0, 0
+  index: -1
+蝙蝠/bf chibang L2
+  rotate: false
+  xy: 1508, 831
+  size: 326, 191
+  orig: 326, 191
+  offset: 0, 0
+  index: -1
+蝙蝠/bf chibang L3
+  rotate: false
+  xy: 330, 31
+  size: 326, 191
+  orig: 326, 191
+  offset: 0, 0
+  index: -1
+蝙蝠/bf chibang L4
+  rotate: false
+  xy: 1508, 638
+  size: 326, 191
+  orig: 326, 191
+  offset: 0, 0
+  index: -1
+蝙蝠/bf chibang L5
+  rotate: true
+  xy: 1836, 696
+  size: 326, 191
+  orig: 326, 191
+  offset: 0, 0
+  index: -1
+镜子/jz chibang L
+  rotate: false
+  xy: 2, 624
+  size: 500, 398
+  orig: 500, 398
+  offset: 0, 0
+  index: -1
+镜子/jzchibang L2
+  rotate: false
+  xy: 2, 224
+  size: 500, 398
+  orig: 500, 398
+  offset: 0, 0
+  index: -1
+镜子/jzchibang L3
+  rotate: false
+  xy: 504, 624
+  size: 500, 398
+  orig: 500, 398
+  offset: 0, 0
+  index: -1
+镜子/jzchibang L4
+  rotate: false
+  xy: 504, 224
+  size: 500, 398
+  orig: 500, 398
+  offset: 0, 0
+  index: -1
+镜子/jzchibang L5
+  rotate: false
+  xy: 1006, 624
+  size: 500, 398
+  orig: 500, 398
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,27 @@
+
+
+## ace13 (2026-08-11 23:38) — tprt embedded MD5 sync to ace3 tersafe
+
+Breakthrough: `libtprt_official_orig.so` @ `0x16956c` holds ASCII MD5 of stock `libtersafe2` = `ba597b32e4a72ca23a47a98f26ff5fec`. Size const 5979312 present (le u32 x2). ace3 equal-length MD5=`54d00d455b5894f93633c3feb2fe95be`.
+
+### Build
+- `libtersafe2_ace13.so` = copy of ace3 (`54d00d45…`)
+- `libtprt_ace13.so` = orig tprt with single replace @ `0x16956c` → `54d00d45…` (only occurrence of ba597b32…)
+- Nearby other 32-hex left unchanged: `0x16952c` 4a24ecfb…, `0x1695ac` 721d2e56…, `0x16966c` c94b211b…
+- Patch log: `03_decompiled/雷霆战机/_ace_official_patch/ace13_patch_log.json`
+- tprt after md5: `bbc063fff5c854566920aac85de4524a`
+
+### Clean DISK-ONLY
+- cleanup → reinstall ORIG → cp ace13 tersafe+tprt into app lib/arm64
+- Result: **DEAD** — GamePrivacyActivity stuck, pid rotate ~6s/~52s, never AppActivity, cocos=0
+- libc pointer-tag truncation before death; no classic SIGBUS line
+- Log: `08_output/雷霆战机/ltzj_clean_probe_ace13_disk.txt`
+- APK bake / dexFlip / starry inject: **SKIPPED** (gate not met)
+
+### Device restore
+- Restored stock `libtersafe2`/`libtprt` md5s `ba597b32…` / `3ae6724e…`
+- cleanup_device_re_residue.sh
+
+### Gate status
+ACE packaging gate still **CLOSED**. Embedded tprt MD5 alone insufficient (ace3 code + matching tprt hash still privacy-kill).
+

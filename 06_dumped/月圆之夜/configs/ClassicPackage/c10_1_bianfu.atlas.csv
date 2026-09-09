@@ -1,0 +1,48 @@
+
+c10_1_bianfu.png
+size: 1024,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bianfushenti1
+  rotate: false
+  xy: 2, 15
+  size: 249, 232
+  orig: 249, 232
+  offset: 0, 0
+  index: -1
+chibang1
+  rotate: false
+  xy: 689, 110
+  size: 186, 137
+  orig: 186, 137
+  offset: 0, 0
+  index: -1
+chibang2
+  rotate: false
+  xy: 253, 23
+  size: 214, 224
+  orig: 214, 224
+  offset: 0, 0
+  index: -1
+chibang3
+  rotate: false
+  xy: 877, 139
+  size: 127, 108
+  orig: 127, 108
+  offset: 0, 0
+  index: -1
+chibang4
+  rotate: false
+  xy: 469, 2
+  size: 102, 95
+  orig: 102, 95
+  offset: 0, 0
+  index: -1
+chibang5
+  rotate: false
+  xy: 469, 99
+  size: 218, 148
+  orig: 218, 148
+  offset: 0, 0
+  index: -1

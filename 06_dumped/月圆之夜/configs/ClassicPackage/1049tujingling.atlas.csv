@@ -1,0 +1,146 @@
+
+1049tujingling.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 198, 105
+  size: 188, 46
+  orig: 188, 46
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: true
+  xy: 606, 415
+  size: 141, 252
+  orig: 141, 252
+  offset: 0, 0
+  index: -1
+dangbu
+  rotate: false
+  xy: 2, 2
+  size: 166, 106
+  orig: 166, 106
+  offset: 0, 0
+  index: -1
+datui  L
+  rotate: true
+  xy: 768, 301
+  size: 112, 109
+  orig: 112, 109
+  offset: 0, 0
+  index: -1
+datui  R
+  rotate: true
+  xy: 424, 149
+  size: 106, 121
+  orig: 106, 121
+  offset: 0, 0
+  index: -1
+jian  L
+  rotate: true
+  xy: 602, 780
+  size: 213, 294
+  orig: 213, 294
+  offset: 0, 0
+  index: -1
+jian  R
+  rotate: false
+  xy: 2, 110
+  size: 194, 308
+  orig: 194, 308
+  offset: 0, 0
+  index: -1
+jiao  L
+  rotate: false
+  xy: 768, 252
+  size: 89, 47
+  orig: 89, 47
+  offset: 0, 0
+  index: -1
+jiao  R
+  rotate: false
+  xy: 879, 386
+  size: 68, 46
+  orig: 68, 46
+  offset: 0, 0
+  index: -1
+kouqiang
+  rotate: false
+  xy: 424, 257
+  size: 150, 161
+  orig: 150, 161
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 420
+  size: 459, 284
+  orig: 459, 284
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: true
+  xy: 198, 153
+  size: 265, 224
+  orig: 265, 224
+  offset: 0, 0
+  index: -1
+shou  R
+  rotate: false
+  xy: 606, 558
+  size: 267, 220
+  orig: 267, 220
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 2, 706
+  size: 598, 287
+  orig: 598, 287
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 463, 431
+  size: 273, 141
+  orig: 273, 141
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: true
+  xy: 576, 231
+  size: 182, 190
+  orig: 182, 190
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: true
+  xy: 875, 636
+  size: 132, 147
+  orig: 132, 147
+  offset: 0, 0
+  index: -1
+xiaotui  L
+  rotate: false
+  xy: 875, 534
+  size: 107, 100
+  orig: 107, 100
+  offset: 0, 0
+  index: -1
+xiaotui  R
+  rotate: false
+  xy: 860, 434
+  size: 97, 98
+  orig: 97, 98
+  offset: 0, 0
+  index: -1
+yao
+  rotate: true
+  xy: 898, 770
+  size: 223, 84
+  orig: 223, 84
+  offset: 0, 0
+  index: -1

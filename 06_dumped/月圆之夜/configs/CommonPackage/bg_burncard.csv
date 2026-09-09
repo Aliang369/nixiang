@@ -1,0 +1,8 @@
+﻿酒馆等级;烧1星数量;烧2星数量;烧3星数量;烧2星装备数量;烧3星装备数量;end
+tier;tier1burn;tier2burn;tier3burn;tier2equipmentBurn;tier3equipmentBurn;end
+1;;;;;;1
+2;3;;;;;1
+3;2;3;;;;1
+4;1;2;;;;1
+5;3;3;4;1;;1
+6;3;3;6;;1;1

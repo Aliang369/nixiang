@@ -1,0 +1,371 @@
+超维进化 2.1 — JNI 初始化静态归因证据
+日期: 2026-09-05
+范围: 仅本游戏原 ELF、原包与安装哈希对应 Starry 包。无 patch、绕过、设备操作。
+地址: ELF VA；本文代码/rodata 位于首个 LOAD (offset=VA=0)，故同时为文件偏移。
+匿名函数的 __cxa_demangle+offset 标签仅为最近导出符号，不是实际函数名。
+ELF: /Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so
+ELF SHA256: 76ff0cf4a272e39edbf4075931f70c576fa367c8f64065943e60db26f62f5282
+比较表 VA/file offset 0x19f33b6，3个小端 uint32：0xd18450ce, 0x01a520d4, 0x685242a4
+原始字节: ce 50 84 d1 d4 20 a5 01 a4 42 52 68
+
+APK: /Users/aliang/Documents/nixiang/02_apks/超维进化/超维进化_2.1_base.apk
+APK SHA256: 285b0270bd98c25fb97e6d16ac6b79e632f40e3c475329dedef72d6f27d60a51
+apksigner verify exit=0; certificates=1
+Signer #1 certificate DN: CN=elliot lee, OU=Personal, O=Personal, L=Guangzhou, ST=Guangdong, C=86
+Signer #1 certificate SHA-256 digest: 4a91bad876209f25e3c09e7b388c31a1a1233d570690e18699a65540f20405d8
+Signer #1 certificate SHA-1 digest: 0565a5a3343ca4ed9dd9a4352e8729a0bdd103c3
+Signer #1 certificate MD5 digest: da9981084dc72772be8f80e1d756df26
+DER length=899; DER SHA256=4a91bad876209f25e3c09e7b388c31a1a1233d570690e18699a65540f20405d8; Adler32=0xd18450ce; table matches=[0]
+
+APK: /Users/aliang/Documents/nixiang/08_output/超维进化/超维进化_2.1_starry.apk
+APK SHA256: fa9313c98a5be10bfb5af5fbb2825e476334987fbf980d68698c77b0628f99d0
+apksigner verify exit=0; certificates=1
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+DER length=896; DER SHA256=83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d; Adler32=0xbbfa5bea; table matches=[]
+
+静态还原（不是运行时 trace）
+1. cocos_jni_env_init 日志 @0x717b60；随后 GetJavaVM；vm非空调用0x16d5100。
+2. 0x16d52e8同步调用sub_16d16ac，早于RegisterNatives、监控线程创建。
+3. sub_16d16ac从GZQYActivity.appContext取得PackageManager，getPackageInfo(name,0x40)，读取signatures，第0项toByteArray。
+4. 字节循环初始a=1,b=0；a=(a+unsigned_byte)%65521；b=(b+a)%65521；结果=(b<<16)|a。
+   0x16d1d90..1dbc的位运算化简为OR：两次与同一常量异或再异或消去常量，最后(X XOR Y)|(X AND Y)=X|Y。
+5. 0x16d1704保存比较表指针，长度0xc；0x16d2294..22c0比较index<12/4。
+   0x16d20d0..20f4做table[index]==Adler32。未命中经0x16d1fa0递增索引。
+6. 命中：状态0x03b1d03e -> 0x16d22f0 -> 0x16d1ad4 -> 0x16d1ff8。
+   读取global@0x1cd3090；若为0，经0x16d2274/22c8写入当前校验值；不为0则跳过写入。
+   两支均到0x16d2260，设matchFlag=[sp+0x14]=1。
+7. 遍历3项无命中：状态0x1085d19a -> 0x16d20fc -> 0x16d2178 -> 状态0xa49f537a -> 0x16d22e0，设matchFlag=0。
+8. 清理路径0x16d21d8..225c：
+   tmp=(~matchFlag)|0xfffffffe;
+   pass=(tmp!=0xffffffff)=(matchFlag&1);
+   [sp+0x10]=pass。
+9. 0x16d1f44..1f78：pass&1非零 -> 状态0x6142343b -> 0x16d1e68/1e74 -> 正常epilogue 0x16d23b8。
+   pass&1为零 -> 状态0x2b6bc709 -> 0x16d1b2c -> mov w1,#9 -> sub_16ebdf8。
+   签名数组长度<=0也会保留pass=0并进入上述退出判定；JNI异常/空对象另论，不假定可靠恢复。
+10. sub_16ebdf8先把w0清零，再x8=129、svc #0。AArch64 Linux __NR_kill=129，因此为kill(0,9)，而非kill(getpid(),9)。
+
+混淆谓词依据
+相关分派反复使用32位x*(x-1)最低位=0的恒等式。
+例如0x16d2178: (x*(x-1) XOR 0xfffffffe) AND x*(x-1) = 0；
+于是由比较y>9与该恒真/恒假值组成的(XOR/OR/NOT)表达式恒真，0x16d21d0选0xa49f537a。
+0x16d20fc、0x16d22f0使用的加减常量相消，也归约为同一偶数乘积恒等式；并非读取设备状态的有效限制。
+本次为指定相关块人工符号化简，未执行整个ELF，未开展全库扫描或全反汇编。
+
+结论
+原证书0xd18450ce命中表[0]：该同步签名门禁放行。
+Starry证书0xbbfa5bea不在三项表：该同步签名门禁进入kill(0,SIGKILL)。
+可确认原证书放行、这份Starry自签证书退出；不泛化为所有自签证书，也不代表原包能通过后续所有检查。
+
+证据边界与残余未知
+主代理确认安装对应修改包ELF同SHA76ff0cf4...；本次APK实测哈希fa9313c98a5be10bfb5af5fbb2825e476334987fbf980d68698c77b0628f99d0。
+用户提供运行时序：首次17:51:52.582 init，.627 am_proc_died；随后每次init后16–25ms死亡。这里只作为外部运行证据，不冒充本次设备实测。
+在Android返回APK实际Signer证书、JNI调用成功且执行字节未被运行时改写的条件下，静态链闭合，符合该时序与SIGKILL。
+未获取本次kill syscall运行时PC/信号发送者，未排除并行外部杀进程；故运行时最终归因仍非直接trace证明。
+未分析监控线程与其他保护机制，未推定重新启动由谁触发。未修改源码/APK/状态索引。
+
+复核工具
+/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner verify --print-certs-pem <APK>
+PEM base64解码得到DER；zlib.adler32(DER)并用逐字节a/b循环交叉复算。
+
+关键原始反汇编（仅选定地址片段）
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+0000000000717b2c <_Z18cocos_jni_env_initP7_JNIEnv>:
+  717b60: 97fef020     	bl	0x6d3be0 <__android_log_print@plt>
+  717b64: f90003ff     	str	xzr, [sp]
+  717b68: f9400268     	ldr	x8, [x19]
+  717b6c: 910003e1     	mov	x1, sp
+  717b70: aa1303e0     	mov	x0, x19
+  717b74: f9436d08     	ldr	x8, [x8, #0x6d8]
+  717b78: d63f0100     	blr	x8
+  717b7c: f94003e0     	ldr	x0, [sp]
+  717b80: b4000060     	cbz	x0, 0x717b8c <_Z18cocos_jni_env_initP7_JNIEnv+0x60>
+  717b84: aa1f03e1     	mov	x1, xzr
+  717b88: 943ef55e     	bl	0x16d5100 <__cxa_demangle+0x17788>
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d52d8: b94033e8     	ldr	w8, [sp, #0x30]
+ 16d52dc: f94013e0     	ldr	x0, [sp, #0x20]
+ 16d52e0: 52a8cdf8     	mov	w24, #0x466f0000        // =1181679616
+ 16d52e4: 729e0118     	movk	w24, #0xf008
+ 16d52e8: 97fff0f1     	bl	0x16d16ac <__cxa_demangle+0x13d34>
+ 16d52ec: f94013f3     	ldr	x19, [sp, #0x20]
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d16e4: 321e07e8     	orr	w8, wzr, #0xc
+ 16d16e8: f9400fe9     	ldr	x9, [sp, #0x18]
+ 16d16ec: f90013ea     	str	x10, [sp, #0x20]
+ 16d16f0: f94013e9     	ldr	x9, [sp, #0x20]
+ 16d16f4: b900a7e8     	str	w8, [sp, #0xa4]
+ 16d16f8: d0001908     	adrp	x8, 0x19f3000 <_ZTSSt10bad_typeid+0x1d2f>
+ 16d16fc: 910ec908     	add	x8, x8, #0x3b2
+ 16d1700: 91001108     	add	x8, x8, #0x4
+ 16d1704: f90057e8     	str	x8, [sp, #0xa8]
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d186c: f94027e3     	ldr	x3, [sp, #0x48]
+ 16d1870: f94023e1     	ldr	x1, [sp, #0x40]
+ 16d1874: 321a03e4     	orr	w4, wzr, #0x40
+ 16d1878: aa1303e0     	mov	x0, x19
+ 16d187c: aa1403e2     	mov	x2, x20
+ 16d1880: 97c13aa4     	bl	0x720310 <_ZN7cocos2d9JniHelper25callObjectByteArrayMethodIJEEEP11_jbyteArrayP8_jobjectRKNSt6__ndk112basic_stringIcNS6_11char_traitsIcEENS6_9allocatorIcEEEESE_DpT_+0x1d0>
+ 16d1884: f9002be0     	str	x0, [sp, #0x50]
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d1d00: aa1f03eb     	mov	x11, xzr
+ 16d1d04: 2a1f03e9     	mov	w9, wzr
+ 16d1d08: 1a95114a     	csel	w10, w10, w21, ne
+ 16d1d0c: 1a95102c     	csel	w12, w1, w21, ne
+ 16d1d10: 320003ed     	orr	w13, wzr, #0x1
+ 16d1d14: 7280ad8f     	movk	w15, #0x56c
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d1d88: b940c3ee     	ldr	w14, [sp, #0xc0]
+ 16d1d8c: b940c7ef     	ldr	w15, [sp, #0xc4]
+ 16d1d90: 53103dce     	lsl	w14, w14, #16
+ 16d1d94: 0a2f0390     	bic	w16, w28, w15
+ 16d1d98: 0a3c01f1     	bic	w17, w15, w28
+ 16d1d9c: 2a2e03f2     	mvn	w18, w14
+ 16d1da0: 0a2e0380     	bic	w0, w28, w14
+ 16d1da4: 0a3c01ce     	bic	w14, w14, w28
+ 16d1da8: 2a110210     	orr	w16, w16, w17
+ 16d1dac: 2a0e000e     	orr	w14, w0, w14
+ 16d1db0: 4a1001ce     	eor	w14, w14, w16
+ 16d1db4: 2a2f024f     	orn	w15, w18, w15
+ 16d1db8: 2a2f01ce     	orn	w14, w14, w15
+ 16d1dbc: b900b7ee     	str	w14, [sp, #0xb4]
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d1dd8: f9405fe9     	ldr	x9, [sp, #0xb8]
+ 16d1ddc: 52b000f0     	mov	w16, #-0x7ff90000       // =-2147024896
+ 16d1de0: 72900e30     	movk	w16, #0x8071
+ 16d1de4: 529ffe31     	mov	w17, #0xfff1            // =65521
+ 16d1de8: 38696909     	ldrb	w9, [x8, x9]
+ 16d1dec: b940c7eb     	ldr	w11, [sp, #0xc4]
+ 16d1df0: b940c3ee     	ldr	w14, [sp, #0xc0]
+ 16d1df4: f9405fef     	ldr	x15, [sp, #0xb8]
+ 16d1df8: 0b090169     	add	w9, w11, w9
+ 16d1dfc: 9bb07d2b     	umull	x11, w9, w16
+ 16d1e00: d36ffd6b     	lsr	x11, x11, #47
+ 16d1e04: 1b11a56d     	msub	w13, w11, w17, w9
+ 16d1e08: 0b0e01a9     	add	w9, w13, w14
+ 16d1e0c: d2ffcc8e     	mov	x14, #-0x19c000000000000 // =-115967690404790272
+ 16d1e10: f2d6e78e     	movk	x14, #0xb73c, lsl #32
+ 16d1e14: 9bb07d2b     	umull	x11, w9, w16
+ 16d1e18: f2b730ce     	movk	x14, #0xb986, lsl #16
+ 16d1e1c: d36ffd6b     	lsr	x11, x11, #47
+ 16d1e20: f28c620e     	movk	x14, #0x6310
+ 16d1e24: 1b11a569     	msub	w9, w11, w17, w9
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d20d0: f94057e8     	ldr	x8, [sp, #0xa8]
+ 16d20d4: b980a3e9     	ldrsw	x9, [sp, #0xa0]
+ 16d20d8: b8697908     	ldr	w8, [x8, x9, lsl #2]
+ 16d20dc: b9409be9     	ldr	w9, [sp, #0x98]
+ 16d20e0: 6b09011f     	cmp	w8, w9
+ 16d20e4: 52a07628     	mov	w8, #0x3b10000          // =61931520
+ 16d20e8: 52a8cb29     	mov	w9, #0x46590000         // =1180237824
+ 16d20ec: 729a07c8     	movk	w8, #0xd03e
+ 16d20f0: 7291db89     	movk	w9, #0x8edc
+ 16d20f4: 1a890109     	csel	w9, w8, w9, eq
+ 16d20f8: 17fffe79     	b	0x16d1adc <__cxa_demangle+0x14164>
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d2178: 90002e68     	adrp	x8, 0x1c9e000
+ 16d217c: f9475508     	ldr	x8, [x8, #0xea8]
+ 16d2180: 90002e69     	adrp	x9, 0x1c9e000
+ 16d2184: b9400108     	ldr	w8, [x8]
+ 16d2188: f9403d29     	ldr	x9, [x9, #0x78]
+ 16d218c: 5100050a     	sub	w10, w8, #0x1
+ 16d2190: b9400129     	ldr	w9, [x9]
+ 16d2194: 1b087d48     	mul	w8, w10, w8
+ 16d2198: 521f790a     	eor	w10, w8, #0xfffffffe
+ 16d219c: 7100253f     	cmp	w9, #0x9
+ 16d21a0: 1a9fd7e9     	cset	w9, gt
+ 16d21a4: 6a08015f     	tst	w10, w8
+ 16d21a8: 1a9f07e8     	cset	w8, ne
+ 16d21ac: 4a08012a     	eor	w10, w9, w8
+ 16d21b0: 2a080128     	orr	w8, w9, w8
+ 16d21b4: 52000108     	eor	w8, w8, #0x1
+ 16d21b8: 2a080148     	orr	w8, w10, w8
+ 16d21bc: 7100011f     	cmp	w8, #0x0
+ 16d21c0: 52b8f208     	mov	w8, #-0x38700000        // =-946864128
+ 16d21c4: 52b493e9     	mov	w9, #-0x5b610000        // =-1533083648
+ 16d21c8: 729258c8     	movk	w8, #0x92c6
+ 16d21cc: 728a6f49     	movk	w9, #0x537a
+ 16d21d0: 1a881129     	csel	w9, w9, w8, ne
+ 16d21d4: 17fffe42     	b	0x16d1adc <__cxa_demangle+0x14164>
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d221c: b94017e8     	ldr	w8, [sp, #0x14]
+ 16d2220: 52ac2850     	mov	w16, #0x61420000        // =1631715328
+ 16d2224: 52a1eeae     	mov	w14, #0xf750000         // =259325952
+ 16d2228: 52bbc84d     	mov	w13, #-0x21be0000       // =-566099968
+ 16d222c: 2a2803e8     	mvn	w8, w8
+ 16d2230: 321f7908     	orr	w8, w8, #0xfffffffe
+ 16d2234: 3100051f     	cmn	w8, #0x1
+ 16d2238: 52b493ec     	mov	w12, #-0x5b610000       // =-1533083648
+ 16d223c: 1a9f07e8     	cset	w8, ne
+ 16d2240: 52b41589     	mov	w9, #-0x5f540000        // =-1599340544
+ 16d2244: 72868750     	movk	w16, #0x343a
+ 16d2248: 72868cce     	movk	w14, #0x3466
+ 16d224c: 7282cc4d     	movk	w13, #0x1662
+ 16d2250: 728a6f2c     	movk	w12, #0x5379
+ 16d2254: b90013e8     	str	w8, [sp, #0x10]
+ 16d2258: 729e0629     	movk	w9, #0xf031
+ 16d225c: 17fffe20     	b	0x16d1adc <__cxa_demangle+0x14164>
+ 16d2260: 320003e8     	orr	w8, wzr, #0x1
+ 16d2264: 52bc69a9     	mov	w9, #-0x1cb30000        // =-481492992
+ 16d2268: b90017e8     	str	w8, [sp, #0x14]
+ 16d226c: 7290cd29     	movk	w9, #0x8669
+ 16d2270: 17fffe1b     	b	0x16d1adc <__cxa_demangle+0x14164>
+ 16d2274: 39427fe8     	ldrb	w8, [sp, #0x9f]
+ 16d2278: 52a71269     	mov	w9, #0x38930000         // =949157888
+ 16d227c: 728aefe9     	movk	w9, #0x577f
+ 16d2280: 7100011f     	cmp	w8, #0x0
+ 16d2284: 52ae6228     	mov	w8, #0x73110000         // =1930493952
+ 16d2288: 728e2528     	movk	w8, #0x7129
+ 16d228c: 1a881129     	csel	w9, w9, w8, ne
+ 16d2290: 17fffe13     	b	0x16d1adc <__cxa_demangle+0x14164>
+ 16d2294: b940a7e8     	ldr	w8, [sp, #0xa4]
+ 16d2298: b900a3f7     	str	w23, [sp, #0xa0]
+ 16d229c: b940a3e9     	ldr	w9, [sp, #0xa0]
+ 16d22a0: 11000d0a     	add	w10, w8, #0x3
+ 16d22a4: 7100011f     	cmp	w8, #0x0
+ 16d22a8: 1a88b148     	csel	w8, w10, w8, lt
+ 16d22ac: 6b88093f     	cmp	w9, w8, asr #2
+ 16d22b0: 52a210a8     	mov	w8, #0x10850000         // =277151744
+ 16d22b4: 52a1eea9     	mov	w9, #0xf750000          // =259325952
+ 16d22b8: 729a3348     	movk	w8, #0xd19a
+ 16d22bc: 72868ce9     	movk	w9, #0x3467
+ 16d22c0: 1a88b129     	csel	w9, w9, w8, lt
+ 16d22c4: 17fffe06     	b	0x16d1adc <__cxa_demangle+0x14164>
+ 16d22c8: b9409be8     	ldr	w8, [sp, #0x98]
+ 16d22cc: b0003009     	adrp	x9, 0x1cd3000 <__cxa_new_handler+0x1c8>
+ 16d22d0: b9009128     	str	w8, [x9, #0x90]
+ 16d22d4: 52ae6229     	mov	w9, #0x73110000         // =1930493952
+ 16d22d8: 728e2529     	movk	w9, #0x7129
+ 16d22dc: 17fffe00     	b	0x16d1adc <__cxa_demangle+0x14164>
+ 16d22e0: 52bc69a9     	mov	w9, #-0x1cb30000        // =-481492992
+ 16d22e4: b90017ff     	str	wzr, [sp, #0x14]
+ 16d22e8: 7290cd29     	movk	w9, #0x8669
+ 16d22ec: 17fffdfc     	b	0x16d1adc <__cxa_demangle+0x14164>
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d1f44: b94013e8     	ldr	w8, [sp, #0x10]
+ 16d1f48: 52ac2850     	mov	w16, #0x61420000        // =1631715328
+ 16d1f4c: 52a1eeae     	mov	w14, #0xf750000         // =259325952
+ 16d1f50: 52bbc84d     	mov	w13, #-0x21be0000       // =-566099968
+ 16d1f54: 7200011f     	tst	w8, #0x1
+ 16d1f58: 52a56d68     	mov	w8, #0x2b6b0000         // =728432640
+ 16d1f5c: 52b493ec     	mov	w12, #-0x5b610000       // =-1533083648
+ 16d1f60: 7298e128     	movk	w8, #0xc709
+ 16d1f64: 72868750     	movk	w16, #0x343a
+ 16d1f68: 72868cce     	movk	w14, #0x3466
+ 16d1f6c: 7282cc4d     	movk	w13, #0x1662
+ 16d1f70: 728a6f2c     	movk	w12, #0x5379
+ 16d1f74: 1a881329     	csel	w9, w25, w8, ne
+ 16d1f78: 17fffed9     	b	0x16d1adc <__cxa_demangle+0x14164>
+ 16d1f7c: 52a71269     	mov	w9, #0x38930000         // =949157888
+ 16d1f80: 728aefe9     	movk	w9, #0x577f
+ 16d1f84: 6b09011f     	cmp	w8, w9
+ 16d1f88: 54001a00     	b.eq	0x16d22c8 <__cxa_demangle+0x14950>
+ 16d1f8c: 52a8cb29     	mov	w9, #0x46590000         // =1180237824
+ 16d1f90: 7291db89     	movk	w9, #0x8edc
+ 16d1f94: 6b09011f     	cmp	w8, w9
+ 16d1f98: 2a0803e9     	mov	w9, w8
+ 16d1f9c: 54ffda01     	b.ne	0x16d1adc <__cxa_demangle+0x14164>
+ 16d1fa0: b940a3e8     	ldr	w8, [sp, #0xa0]
+ 16d1fa4: 52b3ef49     	mov	w9, #-0x60860000        // =-1619394560
+ 16d1fa8: 7291b4c9     	movk	w9, #0x8da6
+ 16d1fac: 11000517     	add	w23, w8, #0x1
+ 16d1fb0: 17fffecb     	b	0x16d1adc <__cxa_demangle+0x14164>
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16d1b18: 52a56d69     	mov	w9, #0x2b6b0000         // =728432640
+ 16d1b1c: 7298e129     	movk	w9, #0xc709
+ 16d1b20: 6b09011f     	cmp	w8, w9
+ 16d1b24: 2a0803e9     	mov	w9, w8
+ 16d1b28: 54fffda1     	b.ne	0x16d1adc <__cxa_demangle+0x14164>
+ 16d1b2c: 97c05f11     	bl	0x6e9770 <getpid@plt>
+ 16d1b30: 52800121     	mov	w1, #0x9                // =9
+ 16d1b34: 940068b1     	bl	0x16ebdf8 <__cxa_demangle+0x2e480>
+
+
+/Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so:	file format elf64-littleaarch64
+
+Disassembly of section .text:
+
+00000000016bd978 <__cxa_demangle>:
+ 16ebdf8: 2a1f03e0     	mov	w0, wzr
+ 16ebdfc: d10203ff     	sub	sp, sp, #0x80
+ 16ebe00: a9004ffe     	stp	x30, x19, [sp]
+ 16ebe04: f9000be8     	str	x8, [sp, #0x10]
+ 16ebe08: d2801028     	mov	x8, #0x81               // =129
+ 16ebe0c: d4000001     	svc	#0
+ 16ebe10: a9404ffe     	ldp	x30, x19, [sp]
+ 16ebe14: f9400be8     	ldr	x8, [sp, #0x10]
+ 16ebe18: 910203ff     	add	sp, sp, #0x80
+ 16ebe1c: d65f03c0     	ret
+

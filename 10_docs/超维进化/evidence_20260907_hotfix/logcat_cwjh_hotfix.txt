@@ -1,0 +1,111 @@
+09-07 10:35:43.866 30007 30007 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:35:43.867 30007 30007 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:35:43.868 30007 30007 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:35:43.870 30007 30007 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:35:44.671 30007 30007 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:35:44.671 30007 30007 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:35:44.671 30007 30007 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:35:44.671 30007 30007 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:39:42.349 30007 30007 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:39:42.351 30007 30007 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:39:42.353 30007 30007 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:39:42.354 30007 30007 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:39:43.155 30007 30007 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:39:43.156 30007 30007 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:39:43.156 30007 30007 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:39:43.156 30007 30007 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:39:52.129 30007 30007 I Mod_Menu: [Cwjh] feature #1=OFF noAd=1 splice=2
+09-07 10:39:53.648 30007 30007 I Mod_Menu: [Cwjh] feature #0=OFF noAd=1 splice=2
+09-07 10:39:56.282 30007 30007 I Mod_Menu: [Cwjh] feature #2=OFF noAd=1 splice=2
+09-07 10:39:56.695 30007 30007 I Mod_Menu: [Cwjh] feature #3=OFF noAd=0 splice=2
+09-07 10:40:00.528  1100  1305 I Mod_Menu: [Cwjh] early hook thread start
+09-07 10:40:00.528  1100  1100 I Mod_Menu: [Cwjh] CocosJsBridge cached ok=1
+09-07 10:40:00.528  1100  1100 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=0
+09-07 10:40:01.912  1100  1100 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=0
+09-07 10:40:01.912  1100  1100 I Mod_Menu: [Cwjh] feature #1=OFF noAd=0 splice=0
+09-07 10:40:01.912  1100  1100 I Mod_Menu: [Cwjh] feature #2=OFF noAd=0 splice=0
+09-07 10:40:01.912  1100  1100 I Mod_Menu: [Cwjh] feature #3=OFF noAd=0 splice=0
+09-07 10:40:05.046  1100  1100 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=0
+09-07 10:40:05.046  1100  1100 I Mod_Menu: [Cwjh] feature #1=OFF noAd=0 splice=0
+09-07 10:40:05.046  1100  1100 I Mod_Menu: [Cwjh] feature #2=OFF noAd=0 splice=0
+09-07 10:40:05.046  1100  1100 I Mod_Menu: [Cwjh] feature #3=OFF noAd=0 splice=0
+09-07 10:40:05.697  1100  1305 I Mod_Menu: [Cwjh] anti-tamper kill primitive neutralized @76ab0efdf8
+09-07 10:40:05.701  1100  1305 I Mod_Menu: [Cwjh] hooked se::ScriptEngine::evalString (combat splice)
+09-07 10:40:05.701  1100  1305 I Mod_Menu: [Cwjh] hooked JNI evalString (passthrough)
+09-07 10:40:05.701  1100  1305 I Mod_Menu: [Cwjh] early se hook ok at iter=193 splice=0
+09-07 10:40:05.850  1100  1403 I Mod_Menu: [Cwjh] init ok se=1 jni=1 splice=0 seCalls=2
+09-07 10:40:05.850  1100  1403 I StarryMagic: [Cwjh] 初始化成功
+09-07 10:40:06.043  1100  1599 I Mod_Menu: [Cwjh] combat splice #1 len 2627042→2628444 file=src/assets/script/src/logic/game.js
+09-07 10:40:06.915  1100  1599 I Mod_Menu: [Cwjh] combat splice #2 len 2627042→2628444 file=src/assets/script/src/logic/game.js
+09-07 10:40:18.220  1100  1100 I Mod_Menu: [Cwjh] feature #1=ON noAd=0 splice=2
+09-07 10:40:18.569  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=0 splice=2
+09-07 10:40:20.203  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=0 splice=2
+09-07 10:40:22.620  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:44:18.692  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:44:18.693  1100  1100 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:44:18.694  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:44:18.696  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:44:19.497  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:44:19.497  1100  1100 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:44:19.497  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:44:19.497  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:45:56.107  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:45:56.109  1100  1100 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:45:56.111  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:45:56.112  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:45:56.913  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:45:56.914  1100  1100 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:45:56.914  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:45:56.914  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:46:39.832  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:46:39.833  1100  1100 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:46:39.835  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:46:39.836  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:46:40.637  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:46:40.637  1100  1100 I Mod_Menu: [Cwjh] feature #1=ON noAd=1 splice=2
+09-07 10:46:40.638  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:46:40.638  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:46:50.226  1100  1100 I Mod_Menu: [Cwjh] feature #1=OFF noAd=1 splice=2
+09-07 10:46:57.791  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:46:57.793  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:46:57.795  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:46:58.595  1100  1100 I Mod_Menu: [Cwjh] feature #0=ON noAd=1 splice=2
+09-07 10:46:58.595  1100  1100 I Mod_Menu: [Cwjh] feature #1=OFF noAd=1 splice=2
+09-07 10:46:58.595  1100  1100 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:46:58.595  1100  1100 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:46:58.644  1100  1100 I Mod_Menu: [Cwjh] feature #0=OFF noAd=1 splice=2
+09-07 10:46:59.028  1100  1100 I Mod_Menu: [Cwjh] feature #2=OFF noAd=1 splice=2
+09-07 10:47:14.825  6948  6948 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=0
+09-07 10:47:14.831  6948  6990 I Mod_Menu: [Cwjh] early hook thread start
+09-07 10:47:16.246  6948  6948 I Mod_Menu: [Cwjh] CocosJsBridge cached ok=1
+09-07 10:47:16.246  6948  6948 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=0
+09-07 10:47:16.246  6948  6948 I Mod_Menu: [Cwjh] feature #1=OFF noAd=0 splice=0
+09-07 10:47:16.246  6948  6948 I Mod_Menu: [Cwjh] feature #2=OFF noAd=0 splice=0
+09-07 10:47:16.246  6948  6948 I Mod_Menu: [Cwjh] feature #3=OFF noAd=0 splice=0
+09-07 10:47:19.257  6948  6948 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=0
+09-07 10:47:19.259  6948  6948 I Mod_Menu: [Cwjh] feature #1=OFF noAd=0 splice=0
+09-07 10:47:19.259  6948  6948 I Mod_Menu: [Cwjh] feature #2=OFF noAd=0 splice=0
+09-07 10:47:19.259  6948  6948 I Mod_Menu: [Cwjh] feature #3=OFF noAd=0 splice=0
+09-07 10:47:19.993  6948  6990 I Mod_Menu: [Cwjh] anti-tamper kill primitive neutralized @76ac54fdf8
+09-07 10:47:19.996  6948  6990 I Mod_Menu: [Cwjh] hooked se::ScriptEngine::evalString (combat splice)
+09-07 10:47:19.996  6948  6990 I Mod_Menu: [Cwjh] hooked JNI evalString (passthrough)
+09-07 10:47:19.996  6948  6990 I Mod_Menu: [Cwjh] early se hook ok at iter=193 splice=0
+09-07 10:47:20.142  6948  7023 I Mod_Menu: [Cwjh] init ok se=1 jni=1 splice=0 seCalls=2
+09-07 10:47:20.142  6948  7023 I StarryMagic: [Cwjh] 初始化成功
+09-07 10:47:20.396  6948  7169 I Mod_Menu: [Cwjh] combat splice #1 len 2627042→2628444 file=src/assets/script/src/logic/game.js
+09-07 10:47:21.269  6948  7169 I Mod_Menu: [Cwjh] combat splice #2 len 2627042→2628444 file=src/assets/script/src/logic/game.js
+09-07 10:48:14.530  6948  6948 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=2
+09-07 10:48:14.531  6948  6948 I Mod_Menu: [Cwjh] feature #1=OFF noAd=0 splice=2
+09-07 10:48:14.531  6948  6948 I Mod_Menu: [Cwjh] feature #2=OFF noAd=0 splice=2
+09-07 10:48:14.531  6948  6948 I Mod_Menu: [Cwjh] feature #3=OFF noAd=0 splice=2
+09-07 10:48:35.603  6948  6948 I Mod_Menu: [Cwjh] feature #1=ON noAd=0 splice=2
+09-07 10:48:36.688  6948  6948 I Mod_Menu: [Cwjh] feature #0=ON noAd=0 splice=2
+09-07 10:48:48.709  6948  6948 I Mod_Menu: [Cwjh] feature #0=ON noAd=0 splice=2
+09-07 10:48:48.710  6948  6948 I Mod_Menu: [Cwjh] feature #1=ON noAd=0 splice=2
+09-07 10:48:49.513  6948  6948 I Mod_Menu: [Cwjh] feature #0=ON noAd=0 splice=2
+09-07 10:48:49.513  6948  6948 I Mod_Menu: [Cwjh] feature #1=ON noAd=0 splice=2
+09-07 10:48:49.513  6948  6948 I Mod_Menu: [Cwjh] feature #2=OFF noAd=0 splice=2
+09-07 10:48:49.513  6948  6948 I Mod_Menu: [Cwjh] feature #3=OFF noAd=0 splice=2
+09-07 10:48:49.638  6948  6948 I Mod_Menu: [Cwjh] feature #3=ON noAd=1 splice=2
+09-07 10:48:50.104  6948  6948 I Mod_Menu: [Cwjh] feature #2=ON noAd=1 splice=2
+09-07 10:48:52.104  6948  6948 I Mod_Menu: [Cwjh] feature #2=OFF noAd=1 splice=2

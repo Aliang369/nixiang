@@ -1,0 +1,13 @@
+编号;名称;描述;区域1权重;区域2权重;区域3权重;是否重置战斗技能;Buff;Buff数量;路径
+Id;Name;Desc;region1;region2;region3;ShouldRefreshSkill;Buff;BuffAmount;Icon
+1;激进号角;下次战斗开始时额外抽3张牌;1;1;1;;10003;3;Image/Talents/jijinhaojiao
+2;伤口愈合;下次战斗，每回合回复损失生命的10%;1;1;1;;5074;10;Image/Talents/shangkouyuhe
+3;突破技能;立即重置战斗技能;1;1;1;1;;;Image/Talents/tupojineng
+5;魔力强化;下次战斗的第一回合，法力消耗-3;0;1;0;;50;3;Image/Talents/moliqianghua
+6;无尽魔力;下次战斗的第一回合，法力消耗-6;0;0;1;;50;6;Image/Talents/wujinmoli
+7;自然抗性;下次战斗受到的元素伤害减半;1;1;1;;5009;50;Image/Talents/zirankangxing
+8;炙热火焰;下次战斗，敌方每使用一张牌，受到1点火属性伤害;1;1;1;;5029;1;Image/Talents/zhirehuoyan
+9;潜能爆发;下次战斗的第一回合，你造成伤害翻倍;1;1;1;;5073;1;Image/Talents/lumangfengbao
+10;从容不迫;下次战斗无效敌方前3张牌;0;1;1;;10011;3;Image/Talents/congrongbupo
+11;迷你护盾;下次战斗受到伤害-1;1;1;1;;10004;1;Image/Talents/minihudun
+12;穿透伤害;下次战斗你造成的伤害视为穿刺伤害;1;1;1;;4071;1;Image/Talents/chuantoushanghai

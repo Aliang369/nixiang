@@ -1,0 +1,19 @@
+{
+  "game_id": "hzsj",
+  "ver": 20260817,
+  "note": "示例：热更后偏移兜底（可按实抓改）",
+  "invoke_file": "0x28B90B0",
+  "offsets": {
+    "coin": 32,
+    "crystal": 44,
+    "cmd_base": 16,
+    "cmd_bft": 56,
+    "bft_is_player": 108,
+    "bft_game_state": 88,
+    "req_cost": 24,
+    "item_cd": 32,
+    "item_owner": 136,
+    "owner_bft": 40,
+    "skill_cd": 16
+  }
+}

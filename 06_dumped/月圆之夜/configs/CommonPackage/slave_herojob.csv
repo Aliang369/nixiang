@@ -1,0 +1,3 @@
+﻿id（该表已弃用）;职业名称;职业图标;解锁条件;end
+id;name;icon;unlockDesc;end
+1;战士;Image/Roles/Slave/qishi;;1

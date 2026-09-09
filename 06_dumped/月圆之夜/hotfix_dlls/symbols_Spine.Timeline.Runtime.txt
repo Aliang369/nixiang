@@ -1,0 +1,5 @@
+Security.Permissions.SecurityPermissionAttribu
+SkipVerification
+Spine.Unity.Playables.SpineAnimationStateClip
+WrapNonExceptionThrows
+dontPauseOnStop

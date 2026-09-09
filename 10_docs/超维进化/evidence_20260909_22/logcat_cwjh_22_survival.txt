@@ -1,0 +1,37 @@
+09-09 00:40:56.473 17531 17531 E StarrySignSpoof: 	at com.starry.magic.StarryApp.attachBaseContext(SourceFile:2)
+09-09 00:40:56.491 17531 17531 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+09-09 00:40:56.491 17531 17531 I StarryMagic: 星光魔法 MOD 菜单已加载 (JNI_OnLoad)
+09-09 00:40:56.491 17531 17557 I Mod_Menu: [Cwjh] early hook thread start
+09-09 00:40:56.492 17531 17531 I StarryMagic: [验证] flag=false live=0
+09-09 00:40:56.492 17531 17531 I Mod_Menu: [Cwjh] CocosJsBridge cached ok=1
+09-09 00:40:56.493 17531 17531 I Mod_Menu: [Cwjh] feature #0=OFF noAd=0 splice=0
+09-09 00:40:56.493 17531 17531 I StarryMagic: [开关] #0 selftest = OFF
+09-09 00:40:56.493 17531 17531 W StarryMagic: [数值] 拒绝 #0（未授权）
+09-09 00:40:56.493 17531 17531 I StarryMagic: [长整] #0 = 0
+09-09 00:40:56.493 17531 17531 W StarryMagic: [文本] 拒绝 #0（未授权）
+09-09 00:40:56.493 17531 17531 W StarryMagic: [验证] grant rejected
+09-09 00:40:56.493 17531 17531 W StarryMagic: [OTA] 补丁签名校验失败
+09-09 00:40:56.493 17531 17531 I StarryApp: native ensureLoaded=true path=loadLibrary(starry_magic)
+09-09 00:40:56.529 17531 17531 I StarryApp: onCreate proc=com.grinning.beta.yszl
+09-09 00:40:56.572 17531 17531 I StarryApp: MenuService.start scheduled (activity-resumed)
+09-09 00:40:56.585 17531 17531 I StarryApp: MenuService.start ok (activity-resumed)
+09-09 00:40:56.774 17531 17531 I StarryMagic: ===== 星光魔法 MOD 菜单初始化 =====
+09-09 00:40:56.788 17531 17531 W StarryMagic: 未检测到已知游戏引擎，进入通用模式
+09-09 00:40:56.788 17531 17531 I StarryMagic: 通用模式下，请手动配置目标库和 Hook 偏移
+09-09 00:40:56.788 17531 17570 I StarryMagic: MOD 后台线程已启动
+09-09 00:40:58.171 17531 17569 W StarryMagic: [验证] grant rejected
+09-09 00:41:01.716 17531 17557 I Mod_Menu: [Cwjh] bomb fn (libc kill) neutralized @6eb53d3a08
+09-09 00:41:01.716 17531 17557 I Mod_Menu: [Cwjh] kill wrapper neutralized @6eb53e9df8
+09-09 00:41:01.718 17531 17557 I Mod_Menu: [Cwjh] hooked se::ScriptEngine::evalString (combat splice)
+09-09 00:41:01.719 17531 17557 I Mod_Menu: [Cwjh] hooked JNI evalString (passthrough)
+09-09 00:41:01.719 17531 17557 I Mod_Menu: [Cwjh] early se hook ok at iter=221 splice=0
+09-09 00:41:01.941 17531 17570 I StarryMagic: 等待游戏库… 5s (il2cpp=0 cocos=0 cocosjs=1)
+09-09 00:41:01.946 17531 17570 I StarryMagic: 检测到 Cocos JS 引擎，ENGINE_COCOS
+09-09 00:41:01.947 17531 17570 I StarryMagic: 初始化超维进化 / Cocos2djs Hook（尽早挂 se::evalString）...
+09-09 00:41:01.951 17531 17570 I Mod_Menu: [Cwjh] init ok se=1 jni=1 splice=0 seCalls=0
+09-09 00:41:01.951 17531 17570 I StarryMagic: [Cwjh] 初始化成功
+09-09 00:41:01.951 17531 17570 I StarryMagic: MOD 已就绪 engine=3 cocosGame=1 unityGame=0
+09-09 00:41:02.941 17531 17837 I Mod_Menu: [Cwjh] combat splice #1 len 2627189→2628591 file=src/assets/script/src/logic/game.js
+09-09 00:41:03.934 17531 17837 I Mod_Menu: [Cwjh] combat splice #2 len 2627189→2628591 file=src/assets/script/src/logic/game.js
+09-09 00:42:09.285 17531 17837 I Mod_Menu: [Cwjh] combat splice #3 len 2627189→2628591 file=src/assets/script/src/logic/game.js
+09-09 00:42:09.966 17531 17837 I Mod_Menu: [Cwjh] combat splice #4 len 2627189→2628591 file=src/assets/script/src/logic/game.js

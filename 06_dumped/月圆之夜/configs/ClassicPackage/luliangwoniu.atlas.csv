@@ -1,0 +1,223 @@
+
+luliangwoniu.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+19
+  rotate: true
+  xy: 958, 416
+  size: 56, 54
+  orig: 56, 54
+  offset: 0, 0
+  index: -1
+20
+  rotate: true
+  xy: 969, 172
+  size: 57, 53
+  orig: 57, 53
+  offset: 0, 0
+  index: -1
+llwn_1
+  rotate: false
+  xy: 418, 44
+  size: 335, 188
+  orig: 335, 188
+  offset: 0, 0
+  index: -1
+llwn_10
+  rotate: false
+  xy: 259, 106
+  size: 88, 125
+  orig: 88, 125
+  offset: 0, 0
+  index: -1
+llwn_11
+  rotate: true
+  xy: 131, 143
+  size: 88, 126
+  orig: 88, 126
+  offset: 0, 0
+  index: -1
+llwn_12
+  rotate: false
+  xy: 216, 62
+  size: 34, 79
+  orig: 34, 79
+  offset: 0, 0
+  index: -1
+llwn_13
+  rotate: true
+  xy: 418, 540
+  size: 35, 79
+  orig: 35, 79
+  offset: 0, 0
+  index: -1
+llwn_14
+  rotate: true
+  xy: 349, 4
+  size: 115, 44
+  orig: 115, 44
+  offset: 0, 0
+  index: -1
+llwn_15
+  rotate: false
+  xy: 418, 234
+  size: 538, 299
+  orig: 538, 299
+  offset: 0, 0
+  index: -1
+llwn_16
+  rotate: true
+  xy: 2, 233
+  size: 482, 414
+  orig: 482, 414
+  offset: 0, 0
+  index: -1
+llwn_17
+  rotate: false
+  xy: 418, 577
+  size: 112, 138
+  orig: 112, 138
+  offset: 0, 0
+  index: -1
+llwn_18
+  rotate: true
+  xy: 958, 474
+  size: 59, 54
+  orig: 59, 54
+  offset: 0, 0
+  index: -1
+llwn_19_1
+  rotate: true
+  xy: 958, 358
+  size: 56, 54
+  orig: 56, 54
+  offset: 0, 0
+  index: -1
+llwn_2
+  rotate: true
+  xy: 755, 110
+  size: 122, 111
+  orig: 122, 111
+  offset: 0, 0
+  index: -1
+llwn_20
+  rotate: true
+  xy: 958, 231
+  size: 61, 53
+  orig: 61, 53
+  offset: 0, 0
+  index: -1
+llwn_21_1
+  rotate: true
+  xy: 969, 113
+  size: 57, 53
+  orig: 57, 53
+  offset: 0, 0
+  index: -1
+llwn_22
+  rotate: false
+  xy: 868, 103
+  size: 99, 126
+  orig: 99, 126
+  offset: 0, 0
+  index: -1
+llwn_23
+  rotate: true
+  xy: 2, 143
+  size: 88, 127
+  orig: 88, 127
+  offset: 0, 0
+  index: -1
+llwn_24
+  rotate: false
+  xy: 101, 100
+  size: 113, 41
+  orig: 113, 41
+  offset: 0, 0
+  index: -1
+llwn_25
+  rotate: false
+  xy: 2, 717
+  size: 538, 300
+  orig: 538, 300
+  offset: 0, 0
+  index: -1
+llwn_26
+  rotate: true
+  xy: 542, 535
+  size: 482, 449
+  orig: 482, 449
+  offset: 0, 0
+  index: -1
+llwn_27
+  rotate: true
+  xy: 864, 2
+  size: 99, 124
+  orig: 99, 124
+  offset: 0, 0
+  index: -1
+llwn_28
+  rotate: false
+  xy: 2, 69
+  size: 97, 72
+  orig: 97, 72
+  offset: 0, 0
+  index: -1
+llwn_29
+  rotate: false
+  xy: 958, 294
+  size: 53, 62
+  orig: 53, 62
+  offset: 0, 0
+  index: -1
+llwn_3
+  rotate: false
+  xy: 755, 20
+  size: 107, 88
+  orig: 107, 88
+  offset: 0, 0
+  index: -1
+llwn_4
+  rotate: false
+  xy: 499, 550
+  size: 39, 25
+  orig: 39, 25
+  offset: 0, 0
+  index: -1
+llwn_5
+  rotate: false
+  xy: 101, 47
+  size: 52, 51
+  orig: 52, 51
+  offset: 0, 0
+  index: -1
+llwn_6
+  rotate: true
+  xy: 349, 177
+  size: 54, 53
+  orig: 54, 53
+  offset: 0, 0
+  index: -1
+llwn_7
+  rotate: true
+  xy: 993, 979
+  size: 38, 24
+  orig: 38, 24
+  offset: 0, 0
+  index: -1
+llwn_8
+  rotate: false
+  xy: 252, 52
+  size: 52, 52
+  orig: 52, 52
+  offset: 0, 0
+  index: -1
+llwn_9
+  rotate: false
+  xy: 349, 121
+  size: 53, 54
+  orig: 53, 54
+  offset: 0, 0
+  index: -1

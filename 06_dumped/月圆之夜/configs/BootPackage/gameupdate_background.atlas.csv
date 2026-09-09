@@ -1,0 +1,111 @@
+
+gameupdate_background.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+BG2
+  rotate: false
+  xy: 2, 172
+  size: 482, 843
+  orig: 482, 843
+  offset: 0, 0
+  index: -1
+BG3
+  rotate: false
+  xy: 486, 757
+  size: 223, 258
+  orig: 234, 266
+  offset: 5, 8
+  index: -1
+_0000_wu
+  rotate: true
+  xy: 631, 295
+  size: 216, 137
+  orig: 216, 137
+  offset: 0, 0
+  index: -1
+guang
+  rotate: true
+  xy: 621, 513
+  size: 242, 187
+  orig: 248, 201
+  offset: 6, 6
+  index: -1
+shu1
+  rotate: true
+  xy: 2, 2
+  size: 168, 315
+  orig: 168, 315
+  offset: 0, 0
+  index: -1
+shu2
+  rotate: false
+  xy: 486, 436
+  size: 133, 319
+  orig: 133, 319
+  offset: 0, 0
+  index: -1
+shu3
+  rotate: false
+  xy: 486, 131
+  size: 143, 303
+  orig: 143, 304
+  offset: 0, 1
+  index: -1
+shu4
+  rotate: true
+  xy: 711, 843
+  size: 172, 276
+  orig: 172, 276
+  offset: 0, 0
+  index: -1
+shu5
+  rotate: false
+  xy: 631, 158
+  size: 67, 135
+  orig: 67, 135
+  offset: 0, 0
+  index: -1
+shu6
+  rotate: true
+  xy: 711, 783
+  size: 58, 158
+  orig: 58, 158
+  offset: 0, 0
+  index: -1
+shu7
+  rotate: false
+  xy: 319, 27
+  size: 78, 143
+  orig: 78, 143
+  offset: 0, 0
+  index: -1
+shu9
+  rotate: false
+  xy: 399, 44
+  size: 59, 126
+  orig: 59, 126
+  offset: 0, 0
+  index: -1
+snow2
+  rotate: false
+  xy: 770, 476
+  size: 35, 35
+  orig: 37, 37
+  offset: 1, 1
+  index: -1
+snow3
+  rotate: false
+  xy: 700, 250
+  size: 43, 43
+  orig: 45, 45
+  offset: 1, 1
+  index: -1
+snow8
+  rotate: false
+  xy: 871, 789
+  size: 56, 52
+  orig: 58, 54
+  offset: 1, 1
+  index: -1

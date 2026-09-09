@@ -1,0 +1,125 @@
+
+2017shenfu(Boss).png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 673, 372
+  size: 90, 25
+  orig: 90, 25
+  offset: 0, 0
+  index: -1
+bizi
+  rotate: false
+  xy: 682, 314
+  size: 49, 56
+  orig: 49, 56
+  offset: 0, 0
+  index: -1
+book
+  rotate: false
+  xy: 287, 115
+  size: 269, 241
+  orig: 269, 241
+  offset: 0, 0
+  index: -1
+dabi R
+  rotate: false
+  xy: 614, 103
+  size: 69, 110
+  orig: 69, 110
+  offset: 0, 0
+  index: -1
+doupeng
+  rotate: true
+  xy: 791, 741
+  size: 265, 212
+  orig: 265, 212
+  offset: 0, 0
+  index: -1
+doupeng hou
+  rotate: false
+  xy: 2, 2
+  size: 283, 354
+  orig: 283, 354
+  offset: 0, 0
+  index: -1
+gebo L
+  rotate: true
+  xy: 428, 40
+  size: 73, 107
+  orig: 73, 107
+  offset: 0, 0
+  index: -1
+huzi
+  rotate: false
+  xy: 673, 538
+  size: 116, 468
+  orig: 116, 468
+  offset: 0, 0
+  index: -1
+huzi L
+  rotate: false
+  xy: 558, 217
+  size: 61, 139
+  orig: 61, 139
+  offset: 0, 0
+  index: -1
+huzi R
+  rotate: false
+  xy: 621, 215
+  size: 59, 141
+  orig: 59, 141
+  offset: 0, 0
+  index: -1
+liangshanshan
+  rotate: false
+  xy: 558, 95
+  size: 54, 120
+  orig: 54, 120
+  offset: 0, 0
+  index: -1
+shou L
+  rotate: true
+  xy: 673, 399
+  size: 137, 94
+  orig: 137, 94
+  offset: 0, 0
+  index: -1
+shou R
+  rotate: false
+  xy: 287, 26
+  size: 139, 87
+  orig: 139, 87
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 791, 571
+  size: 230, 168
+  orig: 230, 168
+  offset: 0, 0
+  index: -1
+xiabanshen
+  rotate: false
+  xy: 2, 358
+  size: 669, 648
+  orig: 669, 648
+  offset: 0, 0
+  index: -1
+xiao  R
+  rotate: false
+  xy: 791, 516
+  size: 98, 53
+  orig: 98, 53
+  offset: 0, 0
+  index: -1
+xiaobi L
+  rotate: false
+  xy: 891, 520
+  size: 87, 49
+  orig: 87, 49
+  offset: 0, 0
+  index: -1

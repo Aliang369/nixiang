@@ -1,0 +1,54 @@
+﻿编号;名称;英文名;图标;噩梦8图标;按钮1;按钮2;功能简介;资料片id;资料片id;功能按钮;点击;进入;故事描述;故事描述;故事描述
+Id;Name;EnglishName;Icon;HardIcon;button1;button2;FunctionDesc;DlcId;DlcId.1;FunctionButton;Voice1;Voice2;StoryDesc;StoryDesc.1;StoryDesc.2
+1;老猫商店;OldCatShop;Image/Event/Store;;进入;离开;购买你需要的物品;;;购买;Event_StorePanel_Click;Voice_Enter_OldCatShop;我这都是货真\n价实的上等品;;Image/AdventCard/zahuodian
+2;生命之泉;;Image/Event/HealthSpring;Image/Event/wurandeshengmingzhiquan;喝光;喝1口（1金币）;;;;;Event_HealthSpring_Click;;可以治疗皮肉的伤痛，却治愈不了小红帽的心;;Image/AdventCard/shengminzhiquan
+3;绷带;;Image/Event/Bandage;Image/Event/wurandebengdai;使用;离开;;;;;Event_Bandage_Click;;处理伤口的紧急用\n品，生命回复{0};;Image/AdventCard/Heal
+4;卡牌收藏家;CardCollector;Image/Event/Dealer;;交易;离开;选择一张牌和我交换吧！;;;交易;Event_Dealer_Click;Voice_Enter_CardCollector;每张卡都有它的价值！;;Image/AdventCard/dealer
+5;女巫药剂室;WitchsPotionRoom;Image/Event/College;;进入;离开;选择想要品尝的药水;;;进入;Event_College_Click;Voice_Enter_WitchsPotionRoom;尝一尝吧！\n刚出炉的药剂;;Image/AdventCard/tonghuaxueyuan
+6;忘忧酒馆;SelflessnessTavern;Image/Event/Pub;;进入;离开;选择想要移除的卡牌;;;遗忘价格{0};Event_Pub_Click;Voice_Enter_SelflessnessTavern;让我们瞧瞧这是\n谁来了？！;;Image/AdventCard/jiuguan
+7;害羞的宝箱;;Image/Event/Chest;;打开;;;;;;Event_Chest_Click;;没有打开的宝箱\n才是最好的;;Image/AdventCard/baoxiang
+8;遗失的苹果;;Image/Event/Apple;;咬一口;;;;;;Event_LostApple_Click;;显示对应种类的描述：EventApple;;Image/AdventCard/IconBonusFire
+9;铁匠铺;Smithy;Image/Event/ThreePig;;打造;离开;选择想要升级的卡;;;;Event_Smithy_Click;Voice_Enter_Smithy;好钢用在刀刃上;;Image/AdventCard/dazao
+10;仙女祝福;FairyBlessing;Image/Event/Banshee;;许愿;;;;;;Event_Banshee_Click;Voice_Enter_FairyBlessing;我曾经赋予过匹诺\n曹生命，也赠送\n了灰姑娘水晶鞋;;Image/AdventCard/xiannv
+11;潘多拉魔盒;;Image/Event/MagicBox;;打开;离开;;;;;Event_MagicBox_Click;;打开盒子后会发\n生什么呢？;;Image/AdventCard/mohe
+12;下个路口;;Image/Event/Bifurcation;;前  往;离开;;;;;Event_Bifurcation_Click;;是否走向下个路口？;;Image/AdventCard/fenchalu
+13;尾页;;Image/Event/LastPage;;翻页;;;;;;Event_LastPage_Click;;本章节的最后一页，是否进入新篇章？;;Image/AdventCard/weiye
+14;女巫的疑惑;WitchsDoubt;Image/Event/FindApple;;寻找苹果;无视;;;;;Event_FindApple_Click;Voice_Enter_WitchsDoubt;皇后是不是又偷了我的苹果去害人了？;;Image/AdventCard/ProfessionAssassin
+16;最终真相;;Image/Event/Tsshijian1;;调查;;;;;;;;你想调查谁？;;Image/AdventCard/weiye
+17;女巫的奖赏;WitchsRewards;Image/Event/AppleReward;;领取;;选择想要复制的卡牌;;;;Event_AppleReward_Click;Voice_Enter_WitchsRewards;真不错~！你找到\n了所有的苹果！;;Image/AdventCard/ProfessionAssassin
+18;神秘人;;Image/Event/Tsshijian1;;调查;;;;;;Event_Tsshijian1_Click;;Ta看上去有点\n神志不清;;
+19;恶魔交易;恶魔交易;Image/Event/DemonicTrade;;交谈;;;1;;;Event_DemonicTrade_Click;;想要满足欲望，就必须付出相应的代价~;;
+20;短暂的祝福;短暂的祝福;Image/Event/ShortBlessings;;交谈;;;1;;;Event_ShortBlessings_Click;;你发现了微弱的光芒;;
+22;荆棘丛;荆棘丛;Image/Event/Bifurcation;;穿过;;;;;;Event_ShortBlessings_Click;;被黑暗力量滋养的\n荆棘丛，穿过会\n减少大量生命上限;;
+24;谦虚的宝箱;谦虚的宝箱;Image/Event/ModestyChest;;打开;离开;;;;;Event_ModestyChest_Click;;你获得了第二次机会！;;Image/AdventCard/baoxiang
+25;贪婪的宝箱;贪婪的宝箱;Image/Event/GreedyChest;;打开;离开;;;;;Event_GreedyChest_Click;;我的肚子好难受……;;Image/AdventCard/baoxiang
+26;可疑的宝箱;可疑的宝箱;Image/Event/Chest;;打开;离开;;;;;Event_SuspiciousChest_Click;;舔……;;Image/AdventCard/baoxiang
+27;妖精低语;;Image/Event/ShortBlessings;;冥想;;;1;;;Event_ShortBlessings_Click;;倾听我的低语…;;
+28;小石头;Rock;Image/Event/Stone;;踢开;;;;;;Event_FindApple_Click;;一个没用的小石头，离开它吧;;Image/AdventCard/Stone
+29;时光精灵;Genie;Image/Event/mofahuaibiao;;查看;;选择其中一个祝福;;;;Voice_Click_Genie;Voice_Enter_Genie;这是…外婆的怀表？;;Image/AdventCard/Stone
+30;搞错的礼物;a Lost Gift;Image/Event/wrongGift;;打开;;;;;;;;里面会有\n什么礼物呢？;;Image/AdventCard/wrongGift
+31;圣诞老人的疑惑;Where are those gifts?;Image/Event/FindGifts;;观察;;;;;;;;哦....？\n这一份是谁家的？;;Image/AdventCard/FindGifts
+32;外婆的叮嘱;Grandma's Advice;Image/Event/waipozhufu;;查看;;;;;;Voice_Click_GrandmaAdvice;Voice_Enter_GrandmaAdvice;孩子，他很强大;;Image/AdventCard/xiannv
+33;害羞的宝箱;;Image/Event/Chest;;打开;;;;;;Event_Chest_Click;;没有打开的宝箱\n才最好的;;Image/AdventCard/baoxiang
+34;封存的记忆;Grandma's Advice;Image/Event/shuijingqiu;;查看;;;;;打开;;;一个小瓶子，里面藏着5年前的回忆;;Image/AdventCard/xiannv
+36;广告商店;ADShop;Image/Event/Store;;进入;离开;观看广告收获卡牌;;;购买;Event_StorePanel_Click;Voice_Enter_OldCatShop;瞧一瞧看一看;;Image/AdventCard/zahuodian
+37;战斗痕迹;战斗痕迹;Image/Event/Stone;;调查;;;;;;Event_LastPage_Click;;残留魔法波动的战场，谁在这里战斗过？;;Image/AdventCard/xiannv
+38;稀有的宝箱;战斗痕迹;Image/Event/Stone;;调查;;;;;;Event_LastPage_Click;;舔……;;Image/AdventCard/xiannv
+39;死路;;Image/Event/silu2;;调头;离开;;;;;Event_Bifurcation_Click;;这是个死路\n无法继续前进;;Image/AdventCard/fenchalu
+40;荆棘丛;;Image/Event/jingji;;清除;;;;;;Event_Dealer_Click;;黑魔法催生的荆棘丛，挡住了去路;;
+41;可疑的痕迹;;Image/Event/rukou4-1;;调查;;;;;;Event_Tsshijian1_Click;;前面的痕迹很可疑，有黑魔法的气息;;
+42;松鼠银行;;Image/Event/cunqianguan;;打开;;;;;;Event_Dealer_Click;Voice_Enter_SquirrelBank;这次存，下次取，通关还有钱奖励;;
+43;梦魇音乐盒;;Image/Event/menyanyinyuehe;;倾听;;;;;;Event_Dealer_Click;;你被一段奇妙的音乐吸引…;;
+44;可疑的痕迹;;Image/Event/rukou4-1;;调查;;;;;;Event_Tsshijian1_Click;;树枝指引你来到了这里;;
+50;遗落的道具;;Image/Event/rukou4-1;;调查;;;;;;Event_Tsshijian1_Click;;树枝指引你来到了这里;;
+51;老猫的奇珍店;;Image/Event/laomaodezhenqidian;;进入;离开;;;;;Event_StorePanel_Click;Voice_Enter_OldCatShop;老猫甄选，只有携带vip卡的贵宾可以进入;;
+52;害羞的宝箱;;Image/Event/Chest;;打开;;;;;;Event_Chest_Click;;没有打开的宝箱\n才最好的;;Image/AdventCard/baoxiang
+101;万能商贩;;Image/Event/xzy-shangfan;;交易;;;;;;UI_Event_Click_AllPurposeTrader;Vo_PigMons2_Vendor_Event_Click;你总能在他的百宝箱中找到想要的;;
+102;凉茶铺;;Image/Event/xzy-qingwa;;交易;;;;;;UI_Event_Click_TeaShop;Vo_PigMons2_FrogDemon_Event_Click;喝了我的茶，\n忘掉那个他;;
+103;铜齿铁匠铺;;Image/Event/xzy-tuzi;;交易;;;;;;UI_Event_Click_ForgeShop;Vo_PigMons2_RabbitDemon_Event_Click;他的眼圈比锻造台\n还要黑一些;;
+104;泉水;;Image/Event/xzy-quanshui;;补给;;;;;;UI_Event_Click_SpringWater;;山泉水很解渴;;
+105;遗落的宝箱;;Image/Event/xzy-baoxiang;;检查;;;;;;Event_ModestyChest_Click;;是谁偷偷把它藏在这了;;
+106;芦苇丛;;Image/Event/xzy-luweicong;;拾取;;;;;;UI_Event_Click_ReedBush;;又长又直，可以\n拿来做箭;;
+107;碎枝;;Image/Event/cunmindechaihuo;;拾取;;;;;;UI_Event_Click_Branch;;这些可以直接拿来\n作为柴火;;
+108;夜深了;;Image/Event/ysl_bg;;睡觉去;;;;;;UI_Event_Click_Sleepy;;真是艰难的一天;;Image/AdventCard/fenchalu
+109;荆棘丛;;Image/Event/jingji;;;;;;;;UI_Event_Click_Thornbush;;此路不通;;

@@ -1,0 +1,76 @@
+
+huanniao.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 95, 2
+  size: 74, 69
+  orig: 74, 69
+  offset: 0, 0
+  index: -1
+biyan2
+  rotate: false
+  xy: 884, 454
+  size: 90, 86
+  orig: 90, 86
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 221
+  size: 589, 791
+  orig: 589, 791
+  offset: 0, 0
+  index: -1
+toumao
+  rotate: false
+  xy: 593, 770
+  size: 362, 242
+  orig: 362, 242
+  offset: 0, 0
+  index: -1
+toumao2
+  rotate: false
+  xy: 375, 72
+  size: 194, 147
+  orig: 194, 147
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: false
+  xy: 2, 73
+  size: 371, 146
+  orig: 371, 146
+  offset: 0, 0
+  index: -1
+weiba2
+  rotate: true
+  xy: 884, 542
+  size: 226, 90
+  orig: 226, 90
+  offset: 0, 0
+  index: -1
+youyu
+  rotate: false
+  xy: 593, 463
+  size: 289, 305
+  orig: 289, 305
+  offset: 0, 0
+  index: -1
+youyu2
+  rotate: true
+  xy: 2, 3
+  size: 68, 91
+  orig: 68, 91
+  offset: 0, 0
+  index: -1
+zuoyu
+  rotate: false
+  xy: 593, 205
+  size: 263, 256
+  orig: 263, 256
+  offset: 0, 0
+  index: -1

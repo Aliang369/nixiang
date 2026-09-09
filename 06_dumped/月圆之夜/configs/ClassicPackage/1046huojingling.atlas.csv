@@ -1,0 +1,181 @@
+
+1046huojingling.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 548, 504
+  size: 105, 50
+  orig: 105, 50
+  offset: 0, 0
+  index: -1
+dabi  L
+  rotate: false
+  xy: 373, 313
+  size: 82, 86
+  orig: 82, 86
+  offset: 0, 0
+  index: -1
+dabi R
+  rotate: false
+  xy: 390, 191
+  size: 79, 79
+  orig: 79, 79
+  offset: 0, 0
+  index: -1
+datui L
+  rotate: false
+  xy: 655, 555
+  size: 94, 98
+  orig: 94, 98
+  offset: 0, 0
+  index: -1
+datui R
+  rotate: true
+  xy: 571, 660
+  size: 105, 106
+  orig: 105, 106
+  offset: 0, 0
+  index: -1
+erduo L
+  rotate: true
+  xy: 679, 655
+  size: 110, 58
+  orig: 110, 58
+  offset: 0, 0
+  index: -1
+erduo R
+  rotate: true
+  xy: 337, 149
+  size: 117, 51
+  orig: 117, 51
+  offset: 0, 0
+  index: -1
+houmiandehuo
+  rotate: false
+  xy: 2, 507
+  size: 402, 507
+  orig: 402, 507
+  offset: 0, 0
+  index: -1
+jiao L
+  rotate: false
+  xy: 769, 864
+  size: 222, 74
+  orig: 222, 74
+  offset: 0, 0
+  index: -1
+jiao R
+  rotate: false
+  xy: 769, 940
+  size: 223, 74
+  orig: 223, 74
+  offset: 0, 0
+  index: -1
+kouqiang
+  rotate: false
+  xy: 655, 464
+  size: 94, 89
+  orig: 94, 89
+  offset: 0, 0
+  index: -1
+qianmian de huo
+  rotate: false
+  xy: 2, 268
+  size: 369, 237
+  orig: 369, 237
+  offset: 0, 0
+  index: -1
+shenzi
+  rotate: false
+  xy: 2, 12
+  size: 169, 254
+  orig: 169, 254
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: true
+  xy: 373, 401
+  size: 104, 102
+  orig: 104, 102
+  offset: 0, 0
+  index: -1
+shou R
+  rotate: false
+  xy: 548, 556
+  size: 105, 102
+  orig: 105, 102
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 173, 122
+  size: 162, 144
+  orig: 162, 144
+  offset: 0, 0
+  index: -1
+tou houde huo
+  rotate: false
+  xy: 406, 694
+  size: 163, 320
+  orig: 163, 320
+  offset: 0, 0
+  index: -1
+toushang de huo
+  rotate: false
+  xy: 571, 851
+  size: 196, 163
+  orig: 196, 163
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 406, 508
+  size: 184, 140
+  orig: 184, 140
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: false
+  xy: 571, 767
+  size: 167, 82
+  orig: 167, 82
+  offset: 0, 0
+  index: -1
+xiaobi R
+  rotate: false
+  xy: 173, 40
+  size: 166, 80
+  orig: 166, 80
+  offset: 0, 0
+  index: -1
+xiaotui L
+  rotate: false
+  xy: 390, 154
+  size: 78, 35
+  orig: 78, 35
+  offset: 0, 0
+  index: -1
+xiaotui R
+  rotate: false
+  xy: 373, 272
+  size: 81, 39
+  orig: 81, 39
+  offset: 0, 0
+  index: -1
+yanzhu L
+  rotate: true
+  xy: 2, 2
+  size: 8, 19
+  orig: 8, 19
+  offset: 0, 0
+  index: -1
+yanzhu R
+  rotate: false
+  xy: 994, 996
+  size: 9, 18
+  orig: 9, 18
+  offset: 0, 0
+  index: -1

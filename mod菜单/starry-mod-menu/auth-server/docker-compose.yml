@@ -1,0 +1,61 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: starlight
+      POSTGRES_PASSWORD: starlight
+      POSTGRES_DB: starlight
+    volumes:
+      - starlight_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U starlight -d starlight"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_NAME: 星光魔法验证
+      SECRET_KEY: ${SECRET_KEY:-please-change-this-secret-key-in-production}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_ALLOW_IPS: ${ADMIN_ALLOW_IPS:-}
+      ADMIN_LOGIN_MAX_FAILS: ${ADMIN_LOGIN_MAX_FAILS:-5}
+      ADMIN_LOGIN_WINDOW_SECONDS: ${ADMIN_LOGIN_WINDOW_SECONDS:-900}
+      DATABASE_URL: postgresql+psycopg2://starlight:starlight@db:5432/starlight
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
+      GRANT_HMAC_SECRET: ${GRANT_HMAC_SECRET:-sg-grant-v1-7f3a9c2e}
+      CARD_LOGIN_MAX_FAILS: ${CARD_LOGIN_MAX_FAILS:-12}
+      CARD_LOGIN_WINDOW_SECONDS: ${CARD_LOGIN_WINDOW_SECONDS:-600}
+      OFFLINE_CACHE_SECONDS: ${OFFLINE_CACHE_SECONDS:-600}
+      # 游戏补丁落盘（须挂卷，否则 rebuild 会丢）
+      OTA_DATA_DIR: ${OTA_DATA_DIR:-/data/ota}
+      OTA_SO_REQUIRE_TOKEN: ${OTA_SO_REQUIRE_TOKEN:-true}
+      DEFAULT_GAME_ID: starry_self
+      DEFAULT_GAME_NAME: 星光自测App
+      CORS_ORIGINS: "*"
+    # 仅容器内网，公网由 nginx:8443 反代
+    expose:
+      - "8000"
+    volumes:
+      - ./data/ota:/data/ota
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    depends_on:
+      - api
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./nginx/starlight.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs/starlight.crt:/etc/nginx/certs/starlight.crt:ro
+      - ./certs/starlight.key:/etc/nginx/certs/starlight.key:ro
+    restart: unless-stopped
+
+volumes:
+  starlight_pg:

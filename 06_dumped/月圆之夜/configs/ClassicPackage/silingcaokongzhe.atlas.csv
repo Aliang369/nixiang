@@ -1,0 +1,258 @@
+
+silingcaokongzhe.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1_1
+  rotate: false
+  xy: 449, 16
+  size: 42, 35
+  orig: 42, 35
+  offset: 0, 0
+  index: -1
+1_2
+  rotate: false
+  xy: 299, 2
+  size: 29, 49
+  orig: 29, 49
+  offset: 0, 0
+  index: -1
+1_st
+  rotate: true
+  xy: 524, 157
+  size: 88, 82
+  orig: 88, 82
+  offset: 0, 0
+  index: -1
+1_tou
+  rotate: false
+  xy: 325, 54
+  size: 103, 86
+  orig: 103, 86
+  offset: 0, 0
+  index: -1
+1_youbi
+  rotate: false
+  xy: 2, 11
+  size: 95, 49
+  orig: 95, 49
+  offset: 0, 0
+  index: -1
+1_youjiao
+  rotate: false
+  xy: 698, 149
+  size: 64, 87
+  orig: 64, 87
+  offset: 0, 0
+  index: -1
+1_youshou
+  rotate: false
+  xy: 638, 238
+  size: 95, 41
+  orig: 95, 41
+  offset: 0, 0
+  index: -1
+1_zuojiao
+  rotate: false
+  xy: 99, 2
+  size: 28, 58
+  orig: 28, 58
+  offset: 0, 0
+  index: -1
+2_st
+  rotate: false
+  xy: 606, 74
+  size: 77, 76
+  orig: 77, 76
+  offset: 0, 0
+  index: -1
+2_tou
+  rotate: false
+  xy: 425, 142
+  size: 97, 103
+  orig: 97, 103
+  offset: 0, 0
+  index: -1
+2_youjiao
+  rotate: true
+  xy: 650, 44
+  size: 28, 37
+  orig: 28, 37
+  offset: 0, 0
+  index: -1
+2_youshou
+  rotate: false
+  xy: 265, 7
+  size: 32, 65
+  orig: 32, 65
+  offset: 0, 0
+  index: -1
+2_zuojiao
+  rotate: false
+  xy: 574, 42
+  size: 27, 44
+  orig: 27, 44
+  offset: 0, 0
+  index: -1
+2_zuoshou
+  rotate: true
+  xy: 411, 2
+  size: 37, 36
+  orig: 37, 36
+  offset: 0, 0
+  index: -1
+3_st
+  rotate: true
+  xy: 182, 74
+  size: 66, 141
+  orig: 66, 141
+  offset: 0, 0
+  index: -1
+3_tou
+  rotate: true
+  xy: 608, 152
+  size: 84, 88
+  orig: 84, 88
+  offset: 0, 0
+  index: -1
+3_youjiao
+  rotate: true
+  xy: 603, 41
+  size: 31, 45
+  orig: 31, 45
+  offset: 0, 0
+  index: -1
+3_youshou
+  rotate: false
+  xy: 589, 267
+  size: 47, 48
+  orig: 47, 48
+  offset: 0, 0
+  index: -1
+3_zuojiao
+  rotate: false
+  xy: 377, 4
+  size: 32, 48
+  orig: 32, 48
+  offset: 0, 0
+  index: -1
+3_zuoshou
+  rotate: false
+  xy: 330, 4
+  size: 45, 48
+  orig: 45, 48
+  offset: 0, 0
+  index: -1
+biyan
+  rotate: true
+  xy: 999, 411
+  size: 99, 17
+  orig: 99, 17
+  offset: 0, 0
+  index: -1
+maozi
+  rotate: false
+  xy: 2, 260
+  size: 454, 250
+  orig: 454, 250
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 759, 402
+  size: 121, 108
+  orig: 121, 108
+  offset: 0, 0
+  index: -1
+weijing
+  rotate: false
+  xy: 685, 79
+  size: 71, 68
+  orig: 71, 68
+  offset: 0, 0
+  index: -1
+xiong
+  rotate: false
+  xy: 882, 403
+  size: 115, 107
+  orig: 115, 107
+  offset: 0, 0
+  index: -1
+yao
+  rotate: false
+  xy: 182, 142
+  size: 241, 116
+  orig: 241, 116
+  offset: 0, 0
+  index: -1
+youbi
+  rotate: false
+  xy: 430, 53
+  size: 88, 87
+  orig: 88, 87
+  offset: 0, 0
+  index: -1
+youer
+  rotate: true
+  xy: 129, 8
+  size: 52, 42
+  orig: 52, 42
+  offset: 0, 0
+  index: -1
+youjian
+  rotate: false
+  xy: 182, 2
+  size: 81, 70
+  orig: 81, 70
+  offset: 0, 0
+  index: -1
+youjiao
+  rotate: false
+  xy: 2, 62
+  size: 178, 196
+  orig: 178, 196
+  offset: 0, 0
+  index: -1
+youshou
+  rotate: false
+  xy: 638, 394
+  size: 119, 116
+  orig: 119, 116
+  offset: 0, 0
+  index: -1
+zoushou
+  rotate: false
+  xy: 458, 247
+  size: 129, 68
+  orig: 129, 68
+  offset: 0, 0
+  index: -1
+zuobi
+  rotate: false
+  xy: 638, 281
+  size: 113, 111
+  orig: 113, 111
+  offset: 0, 0
+  index: -1
+zuoer
+  rotate: false
+  xy: 520, 44
+  size: 52, 42
+  orig: 52, 42
+  offset: 0, 0
+  index: -1
+zuojian
+  rotate: false
+  xy: 524, 88
+  size: 80, 67
+  orig: 80, 67
+  offset: 0, 0
+  index: -1
+zuojiao
+  rotate: false
+  xy: 458, 317
+  size: 178, 193
+  orig: 178, 193
+  offset: 0, 0
+  index: -1

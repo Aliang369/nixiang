@@ -1,0 +1,14 @@
+GameBase.AnimatorExtensions+<Play>d__1
+RefParams+<>c__DisplayClass12_0`1+<<Get>b__0>d
+Security.Permissions.SecurityPermissionAttribu
+SkipVerification
+WrapNonExceptionThrows
+onClick
+onDown
+onDrag
+onDragBegin
+onDragEnd
+onDrop
+onEnter
+onSelect
+onUpdateSelect

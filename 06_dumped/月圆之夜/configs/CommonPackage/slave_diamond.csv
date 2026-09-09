@@ -1,0 +1,7 @@
+id;名称;描述;图片;作用目标类型;强化石效果;强化石效果数值;buffid表link;end
+id;name;desc;image;cardType;effects;effectsValue;buffId;end
+1;生命强化;随从生命+5;Image/Card/qiaoduo;1;1;5;;1
+2;攻击强化;随从攻击+4;Image/Card/qiaoduo;1;2;4;;1
+3;随从强化;随从生命+3攻击+3;Image/Card/qiaoduo;1;1,2;3,3;;1
+4;随从·费用;卡牌释放费用-1;Image/Card/qiaoduo;1;3;-1;;1
+5;法术·费用;卡牌释放费用-1;Image/Card/qiaoduo;2;3;-1;;1

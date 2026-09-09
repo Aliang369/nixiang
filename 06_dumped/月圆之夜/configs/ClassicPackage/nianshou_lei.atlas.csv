@@ -1,0 +1,132 @@
+
+nianshou_lei.png
+size: 2048,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+L_meimao
+  rotate: false
+  xy: 1728, 321
+  size: 124, 89
+  orig: 124, 89
+  offset: 0, 0
+  index: -1
+L_shangbi
+  rotate: false
+  xy: 2, 67
+  size: 300, 315
+  orig: 300, 315
+  offset: 0, 0
+  index: -1
+L_shangbimao
+  rotate: true
+  xy: 563, 148
+  size: 168, 252
+  orig: 168, 252
+  offset: 0, 0
+  index: -1
+L_shou
+  rotate: false
+  xy: 1728, 412
+  size: 187, 195
+  orig: 187, 195
+  offset: 0, 0
+  index: -1
+L_shoumao
+  rotate: true
+  xy: 1713, 609
+  size: 112, 189
+  orig: 112, 189
+  offset: 0, 0
+  index: -1
+L_xiaobi
+  rotate: true
+  xy: 1258, 361
+  size: 233, 258
+  orig: 233, 258
+  offset: 0, 0
+  index: -1
+R_meimao
+  rotate: false
+  xy: 840, 366
+  size: 126, 90
+  orig: 126, 90
+  offset: 0, 0
+  index: -1
+R_shangbi
+  rotate: false
+  xy: 304, 118
+  size: 257, 264
+  orig: 257, 264
+  offset: 0, 0
+  index: -1
+R_xiaobi
+  rotate: false
+  xy: 1713, 723
+  size: 244, 286
+  orig: 244, 286
+  offset: 0, 0
+  index: -1
+Rshou
+  rotate: false
+  xy: 1518, 355
+  size: 208, 239
+  orig: 208, 239
+  offset: 0, 0
+  index: -1
+biyan
+  rotate: true
+  xy: 1959, 861
+  size: 148, 34
+  orig: 148, 34
+  offset: 0, 0
+  index: -1
+bizi
+  rotate: false
+  xy: 2, 2
+  size: 147, 63
+  orig: 147, 63
+  offset: 0, 0
+  index: -1
+body
+  rotate: false
+  xy: 2, 384
+  size: 566, 625
+  orig: 566, 625
+  offset: 0, 0
+  index: -1
+houfa
+  rotate: false
+  xy: 570, 643
+  size: 722, 366
+  orig: 722, 366
+  offset: 0, 0
+  index: -1
+houfa2
+  rotate: false
+  xy: 570, 318
+  size: 268, 138
+  orig: 268, 138
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 1294, 596
+  size: 417, 413
+  orig: 417, 413
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: false
+  xy: 570, 458
+  size: 421, 183
+  orig: 421, 183
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: false
+  xy: 993, 442
+  size: 263, 199
+  orig: 263, 199
+  offset: 0, 0
+  index: -1

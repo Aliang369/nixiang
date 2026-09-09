@@ -1,0 +1,48 @@
+
+lazhu_R.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+(xiao)huoyan1
+  rotate: false
+  xy: 904, 687
+  size: 45, 92
+  orig: 47, 94
+  offset: 1, 1
+  index: -1
+(xiao)huoyan2
+  rotate: false
+  xy: 2, 2
+  size: 50, 100
+  orig: 52, 102
+  offset: 1, 1
+  index: -1
+(xiao)huoyan3
+  rotate: false
+  xy: 904, 781
+  size: 55, 116
+  orig: 57, 118
+  offset: 1, 1
+  index: -1
+(xiao)huoyan4
+  rotate: false
+  xy: 798, 350
+  size: 50, 91
+  orig: 52, 93
+  offset: 1, 1
+  index: -1
+lazhu
+  rotate: false
+  xy: 2, 104
+  size: 794, 337
+  orig: 796, 339
+  offset: 1, 1
+  index: -1
+shu
+  rotate: false
+  xy: 2, 443
+  size: 900, 454
+  orig: 902, 456
+  offset: 1, 1
+  index: -1

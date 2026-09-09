@@ -1,0 +1,139 @@
+
+shixiangdianyuzhang.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan1
+  rotate: false
+  xy: 763, 321
+  size: 26, 26
+  orig: 26, 26
+  offset: 0, 0
+  index: -1
+biyan2
+  rotate: false
+  xy: 294, 4
+  size: 25, 26
+  orig: 25, 26
+  offset: 0, 0
+  index: -1
+chibang_l
+  rotate: false
+  xy: 2, 2
+  size: 290, 499
+  orig: 290, 499
+  offset: 0, 0
+  index: -1
+chibang_r
+  rotate: false
+  xy: 2, 503
+  size: 290, 500
+  orig: 290, 500
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 294, 649
+  size: 369, 354
+  orig: 369, 354
+  offset: 0, 0
+  index: -1
+shou _l
+  rotate: false
+  xy: 665, 593
+  size: 238, 410
+  orig: 238, 410
+  offset: 0, 0
+  index: -1
+shou_r
+  rotate: false
+  xy: 294, 220
+  size: 242, 427
+  orig: 242, 427
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 538, 349
+  size: 270, 242
+  orig: 270, 242
+  offset: 0, 0
+  index: -1
+tui_l
+  rotate: true
+  xy: 294, 32
+  size: 186, 275
+  orig: 186, 275
+  offset: 0, 0
+  index: -1
+tui_r
+  rotate: false
+  xy: 810, 328
+  size: 186, 263
+  orig: 186, 263
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: true
+  xy: 571, 27
+  size: 155, 162
+  orig: 155, 162
+  offset: 0, 0
+  index: -1
+yaoshi
+  rotate: false
+  xy: 571, 184
+  size: 190, 163
+  orig: 190, 163
+  offset: 0, 0
+  index: -1
+yaoshi1
+  rotate: false
+  xy: 905, 640
+  size: 58, 131
+  orig: 58, 131
+  offset: 0, 0
+  index: -1
+yaoshi1_1
+  rotate: false
+  xy: 538, 311
+  size: 28, 36
+  orig: 28, 36
+  offset: 0, 0
+  index: -1
+yaoshi2
+  rotate: false
+  xy: 905, 773
+  size: 75, 122
+  orig: 75, 122
+  offset: 0, 0
+  index: -1
+yaoshi2_1
+  rotate: false
+  xy: 538, 610
+  size: 29, 37
+  orig: 29, 37
+  offset: 0, 0
+  index: -1
+yaoshi3
+  rotate: false
+  xy: 905, 897
+  size: 96, 106
+  orig: 96, 106
+  offset: 0, 0
+  index: -1
+yaoshi3_1
+  rotate: false
+  xy: 905, 615
+  size: 22, 23
+  orig: 22, 23
+  offset: 0, 0
+  index: -1
+yaoshi_hou
+  rotate: false
+  xy: 735, 155
+  size: 20, 27
+  orig: 20, 27
+  offset: 0, 0
+  index: -1

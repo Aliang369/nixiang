@@ -1,0 +1,132 @@
+
+beiqiujindelinghun.png
+size: 2048,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+shenti
+  rotate: false
+  xy: 2, 88
+  size: 559, 433
+  orig: 559, 433
+  offset: 0, 0
+  index: -1
+tielian_1
+  rotate: false
+  xy: 1399, 461
+  size: 57, 180
+  orig: 57, 180
+  offset: 0, 0
+  index: -1
+tou
+  rotate: true
+  xy: 601, 566
+  size: 422, 471
+  orig: 422, 471
+  offset: 0, 0
+  index: -1
+wuqi
+  rotate: false
+  xy: 2, 523
+  size: 597, 465
+  orig: 597, 465
+  offset: 0, 0
+  index: -1
+wuqi_1
+  rotate: true
+  xy: 1074, 436
+  size: 205, 323
+  orig: 205, 323
+  offset: 0, 0
+  index: -1
+yan_1
+  rotate: true
+  xy: 874, 444
+  size: 120, 165
+  orig: 120, 165
+  offset: 0, 0
+  index: -1
+yan_2
+  rotate: true
+  xy: 601, 432
+  size: 132, 271
+  orig: 132, 271
+  offset: 0, 0
+  index: -1
+youbi
+  rotate: false
+  xy: 1863, 743
+  size: 161, 245
+  orig: 161, 245
+  offset: 0, 0
+  index: -1
+youpifeng
+  rotate: false
+  xy: 1463, 661
+  size: 398, 327
+  orig: 398, 327
+  offset: 0, 0
+  index: -1
+youshou
+  rotate: true
+  xy: 780, 331
+  size: 99, 85
+  orig: 99, 85
+  offset: 0, 0
+  index: -1
+youshoukao_1
+  rotate: false
+  xy: 563, 89
+  size: 97, 212
+  orig: 97, 212
+  offset: 0, 0
+  index: -1
+youshoukao_2
+  rotate: false
+  xy: 662, 185
+  size: 96, 116
+  orig: 96, 116
+  offset: 0, 0
+  index: -1
+zuobi
+  rotate: false
+  xy: 563, 303
+  size: 215, 127
+  orig: 215, 127
+  offset: 0, 0
+  index: -1
+zuopifeng
+  rotate: false
+  xy: 1074, 643
+  size: 387, 345
+  orig: 387, 345
+  offset: 0, 0
+  index: -1
+zuoshou
+  rotate: true
+  xy: 284, 2
+  size: 84, 96
+  orig: 84, 96
+  offset: 0, 0
+  index: -1
+zuoshou_1
+  rotate: true
+  xy: 662, 99
+  size: 84, 96
+  orig: 84, 96
+  offset: 0, 0
+  index: -1
+zuoshoukao_1
+  rotate: true
+  xy: 2, 12
+  size: 74, 280
+  orig: 74, 280
+  offset: 0, 0
+  index: -1
+zuoshoukao_2
+  rotate: true
+  xy: 1863, 665
+  size: 76, 117
+  orig: 76, 117
+  offset: 0, 0
+  index: -1

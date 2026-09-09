@@ -1,0 +1,42 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.apk
+*.ap_
+*.dex
+*.so
+*.o
+*.a
+*.jar
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.cxx/
+
+# Logs
+*.log
+logcat_*
+
+# Runtime
+runtime-*.json
+validation-report.json
+
+# Keep source and scripts
+!app/src/**
+!scripts/**
+!auth-server/**
+!docs/**
+!assets/**
+!*.md
+!*.gradle
+!*.properties
+!*.mk
+!*.json

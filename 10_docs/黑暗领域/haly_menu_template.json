@@ -1,0 +1,12 @@
+{
+  "template_id": "haly",
+  "name": "黑暗领域",
+  "package": "com.haly.tap",
+  "source": "Games/HalyMod.h HALY_FEAT_* / Main.cpp STARRY_GAME_HALY",
+  "features": [
+    {"feat_num": 1, "name": "免广告"},
+    {"feat_num": 2, "name": "不羁怒火(自动无敌)"},
+    {"feat_num": 3, "name": "先祖之魂(自动召唤)"},
+    {"feat_num": 4, "name": "雷罚打击(普攻触发)"}
+  ]
+}

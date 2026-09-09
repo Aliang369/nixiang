@@ -1,0 +1,3554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>星光魔法 · 运营台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/admin/css/time-picker.css?v=3" />
+  <style>
+    :root {
+      /* 与菜单共用的品牌底色（见 设计风格美术规范.md） */
+      --bg: #1A1B3A;
+      --bg-deep: #0E0F23;
+      --surface: #252650;
+      --surface-2: #2D2E5F;
+      /* 运营台毛玻璃层 */
+      --glass: rgba(37, 38, 80, .52);
+      --glass-strong: rgba(22, 20, 48, .68);
+      --brand: #9B7ED8;
+      --brand-bright: #B8A0F0;
+      --brand-glow: rgba(155, 126, 216, .4);
+      --star: #E8E8F5;
+      --ink: #E8E8F5;
+      --ink-2: #B8B8D4;
+      --ink-3: #7A7A9E;
+      --line: rgba(155, 126, 216, .2);
+      --line-bright: rgba(184, 160, 240, .4);
+      --success: #7EE0A0; --warning: #FFE5B4; --error: #E07E7E; --info: #7EB8E0;
+      --sidebar-w: 228px;
+      --font-display: "Fredoka", "PingFang SC", "Noto Sans SC", sans-serif;
+      --font-body: "IBM Plex Sans", "PingFang SC", "Noto Sans SC", sans-serif;
+      --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+      --ease: cubic-bezier(.2, .8, .2, 1);
+      --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+      --dur-hover: 140ms;
+      --dur-state: 280ms;
+      --ctrl-h: 40px;
+      --ctrl-h-sm: 32px;
+      --ctrl-px: 12px;
+      --ctrl-radius: 8px;
+      --ctrl-fs: 14px;
+      --ctrl-fs-sm: 12.5px;
+      --focus-ring: 0 0 0 3px rgba(155, 126, 216, .22);
+      --blur: blur(20px) saturate(1.3);
+      --blur-sm: blur(12px) saturate(1.15);
+      --shadow-1: 0 1px 2px rgba(10, 10, 30, .3);
+      --shadow-2: 0 8px 24px -8px rgba(10, 10, 30, .5);
+      --shadow-3: 0 24px 60px -20px rgba(10, 10, 30, .6);
+      --shadow-glass: var(--shadow-2), inset 0 1px 0 rgba(255,255,255,.08);
+      --r-sm: 4px; --r-md: 8px; --r-lg: 16px; --r-xl: 20px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; min-height: 100%; color: var(--ink);
+      font-family: var(--font-body); font-size: 14px;
+      background: var(--bg-deep);
+    }
+    button, a, [onclick], .clickable, label.chk { cursor: pointer; }
+    .hidden { display: none !important; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    /* ===== 全局星空底 ===== */
+    .sky {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+      background:
+        radial-gradient(1200px 700px at 12% -8%, rgba(120, 90, 200, .28), transparent 55%),
+        radial-gradient(900px 600px at 92% 8%, rgba(70, 130, 210, .16), transparent 50%),
+        radial-gradient(700px 500px at 70% 100%, rgba(155, 80, 180, .14), transparent 55%),
+        linear-gradient(180deg, #050514 0%, #0d0c24 42%, #151235 100%);
+    }
+    .sky-nebula {
+      position: absolute; inset: -20%;
+      background:
+        radial-gradient(ellipse 40% 28% at 20% 30%, rgba(155,126,216,.18), transparent 70%),
+        radial-gradient(ellipse 35% 30% at 78% 55%, rgba(100,160,255,.1), transparent 70%);
+      animation: nebula-drift 28s ease-in-out infinite alternate;
+      filter: blur(2px);
+    }
+    .sky-stars, .sky-stars-2, .sky-stars-3 {
+      position: absolute; inset: 0;
+      background-repeat: repeat;
+      background-size: 320px 320px;
+    }
+    .sky-stars {
+      opacity: .9;
+      background-image: radial-gradient(1.5px 1.5px at 20px 30px, var(--star), transparent),
+        radial-gradient(1px 1px at 80px 120px, rgba(255,255,255,.85), transparent),
+        radial-gradient(1.2px 1.2px at 160px 60px, rgba(220,200,255,.9), transparent),
+        radial-gradient(1px 1px at 240px 200px, rgba(255,255,255,.7), transparent),
+        radial-gradient(1.5px 1.5px at 280px 90px, var(--star), transparent),
+        radial-gradient(1px 1px at 50px 220px, rgba(255,255,255,.6), transparent),
+        radial-gradient(1px 1px at 190px 250px, rgba(200,180,255,.8), transparent),
+        radial-gradient(1.2px 1.2px at 110px 180px, rgba(255,255,255,.75), transparent);
+      animation: twinkle 4.5s ease-in-out infinite;
+    }
+    .sky-stars-2 {
+      opacity: .55;
+      background-size: 480px 480px;
+      background-image: radial-gradient(1px 1px at 40px 80px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 200px 40px, rgba(220,210,255,.9), transparent),
+        radial-gradient(1px 1px at 320px 300px, #fff, transparent),
+        radial-gradient(2px 2px at 420px 160px, rgba(255,255,255,.5), transparent),
+        radial-gradient(1px 1px at 140px 360px, rgba(180,160,255,.8), transparent);
+      animation: twinkle 7s ease-in-out infinite reverse;
+    }
+    .sky-stars-3 {
+      opacity: .35;
+      background-size: 640px 640px;
+      background-image: radial-gradient(2px 2px at 100px 200px, rgba(255,255,255,.7), transparent),
+        radial-gradient(1px 1px at 400px 100px, #fff, transparent),
+        radial-gradient(1.5px 1.5px at 520px 480px, rgba(200,180,255,.6), transparent);
+      animation: drift-stars 60s linear infinite;
+    }
+    .sky-shooting {
+      position: absolute; width: 80px; height: 1.5px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.85), transparent);
+      top: 18%; left: -10%;
+      transform: rotate(-28deg);
+      animation: shoot 9s ease-in-out infinite;
+      opacity: 0;
+      box-shadow: 0 0 6px rgba(200,180,255,.6);
+    }
+    .sky-shooting.delay { animation-delay: 4.5s; top: 42%; }
+    @keyframes twinkle {
+      0%, 100% { opacity: .55; }
+      50% { opacity: 1; }
+    }
+    @keyframes drift-stars {
+      from { transform: translateY(0); }
+      to { transform: translateY(-40px); }
+    }
+    @keyframes nebula-drift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-2%, 1.5%) scale(1.04); }
+    }
+    @keyframes shoot {
+      0%, 70% { opacity: 0; transform: rotate(-28deg) translateX(0); }
+      75% { opacity: 1; }
+      100% { opacity: 0; transform: rotate(-28deg) translateX(120vw); }
+    }
+
+    #login-view, #app-view { position: relative; z-index: 1; }
+
+    /* ===== 登录 ===== */
+    .login-wrap {
+      min-height: 100vh; display: grid; place-items: center; padding: 24px;
+    }
+    .login-box {
+      width: min(420px, 100%); padding: 32px 28px; border-radius: 20px;
+      background: var(--glass-strong);
+      border: 1px solid var(--line-bright);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      box-shadow: var(--shadow-glass), 0 0 60px rgba(155,126,216,.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .login-box::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(200px 120px at 10% 0%, rgba(180,154,232,.2), transparent 70%),
+        radial-gradient(160px 100px at 100% 100%, rgba(100,140,220,.12), transparent 70%);
+    }
+    .login-ornament {
+      position: absolute; pointer-events: none; opacity: .55;
+      filter: drop-shadow(0 0 8px rgba(180,154,232,.5));
+    }
+    .login-ornament.tl { top: 12px; left: 14px; width: 36px; height: 36px; }
+    .login-ornament.br { bottom: 12px; right: 14px; width: 36px; height: 36px; transform: rotate(180deg); }
+    .login-ornament.tr { top: 14px; right: 16px; width: 14px; height: 14px; opacity: .7; animation: sparkle 2.4s ease-in-out infinite; }
+    .login-ornament.bl { bottom: 16px; left: 18px; width: 12px; height: 12px; opacity: .65; animation: sparkle 2.8s ease-in-out infinite .6s; }
+    @keyframes sparkle {
+      0%, 100% { opacity: .35; transform: scale(.85); }
+      50% { opacity: .95; transform: scale(1.15); }
+    }
+    .login-box h1 {
+      margin: 8px 0 4px; font-family: var(--font-display); font-size: 28px; position: relative;
+      background: linear-gradient(105deg, #fff 10%, #D4C4FF 45%, #9B7ED8 90%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 0 40px rgba(180,154,232,.25);
+    }
+    .login-box p { margin: 0 0 18px; color: var(--ink-3); font-size: 13px; position: relative; }
+    .login-box label { margin-top: 12px; position: relative; }
+    .login-box input, .login-box .btn { position: relative; }
+
+    label { display:block; font-size: 12px; color: var(--ink-2); margin: 0 0 6px; font-weight: 500; }
+    label.chk {
+      display: inline-flex; align-items: center; gap: 8px; margin: 0;
+      height: var(--ctrl-h); color: var(--ink-2); font-size: var(--ctrl-fs-sm); font-weight: 400;
+    }
+    label.chk input { width: auto; height: auto; min-height: 0; padding: 0; }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+    select,
+    textarea,
+    .btn {
+      height: var(--ctrl-h);
+      min-height: var(--ctrl-h);
+      padding: 0 var(--ctrl-px);
+      border-radius: var(--ctrl-radius);
+      border: 1px solid var(--line);
+      font-family: inherit;
+      font-size: var(--ctrl-fs);
+      line-height: 1.25;
+      transition: border-color .15s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease), transform .12s var(--ease);
+    }
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+    select,
+    textarea {
+      width: 100%;
+      background: rgba(20, 18, 48, .55);
+      color: var(--ink);
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%9B8FBA' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+      background-color: rgba(20, 18, 48, .55);
+    }
+    textarea {
+      height: auto; min-height: 104px; padding: 10px var(--ctrl-px); resize: vertical; line-height: 1.5;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(180,154,232,.7);
+      box-shadow: var(--focus-ring), 0 0 20px rgba(155,126,216,.12);
+    }
+    input::placeholder, textarea::placeholder { color: var(--ink-3); }
+    /* 暗色 UI 下原生控件（select 下拉等）配色正常 */
+    :root { color-scheme: dark; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: 0;
+      background: linear-gradient(135deg, var(--brand-bright) 0%, var(--brand) 55%, #7A5BC4 100%);
+      color: #fff; font-weight: 600; white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(139,106,208,.3), inset 0 1px 0 rgba(255,255,255,.2);
+    }
+    .btn:hover {
+      background: linear-gradient(135deg, #C4ADF0 0%, var(--brand-bright) 45%, var(--brand) 100%);
+      box-shadow: 0 6px 22px var(--brand-glow), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .btn:active { transform: scale(.98); }
+    .btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+    .btn.ghost {
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      color: var(--ink-2);
+      box-shadow: none;
+      backdrop-filter: blur(8px);
+    }
+    .btn.ghost:hover {
+      background: rgba(180,154,232,.16); color: var(--ink);
+      border-color: var(--line-bright); box-shadow: none;
+    }
+    .btn.danger { background: rgba(224,126,126,.2); color: var(--error); box-shadow: none; }
+    .btn.danger:hover { background: rgba(224,126,126,.32); box-shadow: none; }
+    .btn.sm {
+      height: var(--ctrl-h-sm); min-height: var(--ctrl-h-sm);
+      padding: 0 10px; font-size: var(--ctrl-fs-sm); border-radius: 8px;
+    }
+    .btn.block { width: 100%; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
+
+    .field { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+
+    /* ===== Shell ===== */
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0; padding: 20px 14px;
+      background: var(--glass-strong);
+      border-right: 1px solid var(--line);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      box-shadow: 4px 0 40px rgba(0,0,0,.2), inset -1px 0 0 rgba(255,255,255,.04);
+      display: flex; flex-direction: column; gap: 8px;
+      position: sticky; top: 0; height: 100vh;
+      z-index: 5;
+    }
+    .side-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px 20px;
+      position: relative;
+    }
+    .side-brand::after {
+      content: "";
+      position: absolute; left: 12px; right: 12px; bottom: 8px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(180,154,232,.45), transparent);
+    }
+    .side-brand-text {
+      display: flex; flex-direction: column; gap: 2px; min-width: 0;
+    }
+    .side-brand strong {
+      display: block; font-family: var(--font-display); font-size: 18px; line-height: 1.2;
+      background: linear-gradient(105deg, #fff, #C8B6F5 50%, #9B7ED8);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .side-brand span { color: var(--ink-3); font-size: 12px; line-height: 1.3; }
+    .brand-mark {
+      width: 40px; height: 40px; flex-shrink: 0; margin: 0;
+      filter: drop-shadow(0 0 10px rgba(180,154,232,.55));
+      animation: float-soft 5s ease-in-out infinite;
+    }
+    @keyframes float-soft {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    .side-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .side-nav button {
+      text-align: left; border: 0; background: transparent; color: var(--ink-3);
+      height: var(--ctrl-h); min-height: var(--ctrl-h); padding: 0 12px; border-radius: 12px;
+      font: inherit; font-size: var(--ctrl-fs); transition: .18s var(--ease);
+    }
+    .side-nav button:hover {
+      background: rgba(180,154,232,.12); color: var(--ink);
+    }
+    .side-nav button.active {
+      background: linear-gradient(135deg, rgba(180,154,232,.28), rgba(120,100,200,.16));
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1px rgba(180,154,232,.4), 0 0 20px rgba(155,126,216,.12);
+    }
+    .side-foot {
+      padding: 12px 10px; border-top: 1px solid var(--line);
+      background: rgba(255,255,255,.02); border-radius: 10px;
+    }
+
+    .main {
+      flex: 1; min-width: 0; padding: 22px 24px 48px;
+      background: transparent;
+    }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; margin-bottom: 18px; flex-wrap: wrap;
+      padding: 14px 16px; border-radius: 16px;
+      background: var(--glass);
+      border: 1px solid var(--line);
+      backdrop-filter: var(--blur-sm);
+      -webkit-backdrop-filter: var(--blur-sm);
+      box-shadow: var(--shadow-glass);
+    }
+    .topbar h2 {
+      margin: 0; font-family: var(--font-display); font-size: 22px;
+      background: linear-gradient(90deg, #fff, #C8B6F5);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .muted { color: var(--ink-3); font-size: 12px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .stats.stats-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 980px) {
+      .shell { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; align-items: center; }
+      .side-nav { flex-direction: row; flex-wrap: wrap; }
+      .stats, .stats.stats-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    .stat {
+      padding: 16px 18px; border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--glass);
+      backdrop-filter: var(--blur-sm);
+      -webkit-backdrop-filter: var(--blur-sm);
+      box-shadow: var(--shadow-glass);
+      cursor: pointer; transition: .2s var(--ease); text-align: left; width: 100%;
+      color: inherit; font: inherit;
+      position: relative; overflow: hidden;
+    }
+    .stat::before {
+      content: ""; position: absolute; top: -30%; right: -10%; width: 90px; height: 90px;
+      background: radial-gradient(circle, rgba(180,154,232,.25), transparent 70%);
+      pointer-events: none;
+    }
+    .stat:hover {
+      border-color: var(--line-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(4,4,20,.4), 0 0 28px rgba(155,126,216,.18), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .stat .k { color: var(--ink-3); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; position: relative; }
+    .stat .v { margin-top: 8px; font-family: var(--font-display); font-size: 28px; color: var(--ink); position: relative; text-shadow: 0 0 24px rgba(180,154,232,.25); }
+    .stat .s { margin-top: 6px; font-size: 11px; color: var(--ink-3); position: relative; line-height: 1.35; }
+
+    .panel {
+      background: var(--glass);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      box-shadow: var(--shadow-glass);
+      position: relative;
+    }
+    .panel::after {
+      content: "";
+      position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,.06), transparent 40%, transparent 60%, rgba(155,126,216,.05));
+    }
+    .panel > * { position: relative; z-index: 1; }
+    .panel + .panel { margin-top: 14px; }
+    .toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .toolbar h3 {
+      margin: 0; font-family: var(--font-display); font-size: 18px;
+      background: linear-gradient(90deg, var(--ink), var(--brand-bright));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .toolbar .toolbar-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .toolbar .toolbar-sub {
+      margin: 0; font-size: 12px; color: var(--ink-3); line-height: 1.35;
+      /* 占位一行，左右栏 toolbar 高度对齐 */
+      min-height: 1.35em;
+    }
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; margin-bottom: 14px; }
+    .filters .field { min-width: 148px; flex: 1 1 148px; max-width: 220px; }
+    .filters .field.grow { max-width: none; flex: 2 1 200px; }
+    .filters .field.actions { flex: 0 0 auto; max-width: none; min-width: 0; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid rgba(180,154,232,.12); text-align: left; vertical-align: middle; }
+    th { color: var(--ink-3); font-weight: 500; font-size: 12px; }
+    tbody tr { transition: background .12s var(--ease); }
+    tbody tr:nth-child(even) { background: rgba(180,154,232,.05); }
+    tbody tr:hover { background: rgba(180,154,232,.12); }
+    tbody tr.is-selected { background: rgba(180,154,232,.18); box-shadow: inset 3px 0 0 var(--brand); }
+    .tag { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; background: rgba(180,154,232,.2); color: var(--brand); line-height: 1.4; border: 1px solid rgba(180,154,232,.2); }
+    .tag.ok { background: rgba(126,224,160,.15); color: var(--success); border-color: rgba(126,224,160,.2); }
+    .tag.warn { background: rgba(255,229,180,.15); color: var(--warning); border-color: rgba(255,229,180,.2); }
+    .tag.bad { background: rgba(224,126,126,.15); color: var(--error); border-color: rgba(224,126,126,.2); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--info); text-shadow: 0 0 12px rgba(158,200,240,.25); }
+    .row-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .expire-adjust {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      margin: 4px 0 14px; padding: 10px 12px; border-radius: 12px;
+      border: 1px solid var(--line); background: rgba(10,8,28,.28);
+    }
+    .expire-adjust .sep {
+      width: 1px; height: 22px; background: var(--line); margin: 0 2px;
+    }
+    code.card-key {
+      cursor: pointer; padding: 2px 6px; border-radius: 6px;
+      transition: .15s var(--ease);
+    }
+    code.card-key:hover {
+      background: rgba(180,154,232,.18); color: var(--brand-bright);
+    }
+    .remain { font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+    .remain.warn { color: var(--warning); }
+    .remain.bad { color: var(--error); }
+    .device-full { word-break: break-all; font-size: 11px; color: var(--ink-2); margin-top: 4px; max-width: 240px; }
+    .note-cell { max-width: 160px; color: var(--ink-2); font-size: 12px; cursor: pointer; }
+    .note-cell:hover { color: var(--brand); }
+
+    /* ===== 可搜索选择器（游戏 / 模板；长列表可滚动）===== */
+    .game-picker { position: relative; width: 100%; }
+    .game-picker-trigger {
+      width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      height: var(--ctrl-h); min-height: var(--ctrl-h); padding: 0 12px;
+      border-radius: 10px; border: 1px solid var(--line); background: rgba(10,8,28,.45);
+      color: var(--ink); font: inherit; font-size: var(--ctrl-fs); cursor: pointer; text-align: left;
+    }
+    .game-picker-trigger:hover { border-color: var(--line-bright); }
+    .game-picker-trigger .gp-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .game-picker-trigger .gp-label.is-placeholder { color: var(--ink-3); }
+    .game-picker-trigger .gp-caret { color: var(--ink-3); flex-shrink: 0; font-size: 11px; }
+    .game-picker.open .game-picker-trigger {
+      border-color: rgba(180,154,232,.55);
+      box-shadow: var(--focus-ring);
+    }
+    /* 默认藏在触发器内；打开时挂到 body + fixed，避开 modal 的 backdrop-filter 错位 */
+    .game-picker-panel {
+      display: none; box-sizing: border-box;
+      border-radius: 12px; border: 1px solid var(--line-bright);
+      background: rgba(18,14,36,.98); backdrop-filter: blur(16px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.45); padding: 8px;
+    }
+    .game-picker-panel.is-open {
+      display: block; position: fixed; z-index: 5000;
+      left: 0; top: 0; right: auto; bottom: auto; width: 240px;
+    }
+    .game-picker-search {
+      width: 100%; height: 36px; border-radius: 8px; border: 1px solid var(--line);
+      background: rgba(0,0,0,.28); color: var(--ink); padding: 0 10px; font: inherit; font-size: 13px;
+      margin-bottom: 6px; box-sizing: border-box;
+    }
+    .game-picker-list {
+      list-style: none; margin: 0; padding: 0;
+      max-height: 240px; overflow-y: auto; overscroll-behavior: contain;
+    }
+    .game-picker-list li {
+      padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .game-picker-list li:hover, .game-picker-list li.active {
+      background: rgba(180,154,232,.18);
+    }
+    .game-picker-list li .gp-name { color: var(--ink); }
+    .game-picker-list li .gp-id { color: var(--ink-3); font-size: 11px; font-family: ui-monospace, monospace; }
+    .game-picker-list .gp-empty { padding: 14px; text-align: center; color: var(--ink-3); font-size: 12px; }
+
+    /* ===== 游戏补丁页 ===== */
+    .ota-layout {
+      display: grid; grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.2fr);
+      gap: 14px; align-items: start;
+    }
+    @media (max-width: 900px) { .ota-layout { grid-template-columns: 1fr; } }
+    .ota-status {
+      padding: 14px; border-radius: 14px; border: 1px solid var(--line);
+      background: rgba(10,8,28,.35); font-size: 13px; line-height: 1.7; min-height: 120px;
+    }
+    .ota-status .ota-ver { font-size: 18px; font-family: var(--font-display); color: var(--ink); margin-bottom: 6px; }
+    .ota-drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 640px) { .ota-drop-grid { grid-template-columns: 1fr; } }
+    .ota-drop {
+      position: relative; border: 1px dashed rgba(180,154,232,.35); border-radius: 14px;
+      padding: 16px 14px; background: rgba(180,154,232,.06); min-height: 120px;
+      display: flex; flex-direction: column; gap: 8px; transition: .15s var(--ease);
+    }
+    .ota-drop:hover, .ota-drop.dragover {
+      border-color: rgba(180,154,232,.7); background: rgba(180,154,232,.12);
+    }
+    .ota-drop h4 { margin: 0; font-size: 14px; color: var(--ink); }
+    .ota-drop p { margin: 0; font-size: 12px; color: var(--ink-3); line-height: 1.45; flex: 1; }
+    .ota-drop .ota-file-name {
+      font-size: 12px; color: var(--ink-3); word-break: break-all; min-height: 1.2em;
+    }
+    .ota-drop.has-file {
+      border-style: solid; border-color: rgba(180,154,232,.55);
+      background: rgba(180,154,232,.14);
+    }
+    .ota-drop.has-file .ota-file-name { color: var(--brand); font-weight: 600; }
+    /* 隐藏原生 file：由按钮 input.click() 触发；勿用透明全铺（会被全局 input 样式弄坏） */
+    .ota-drop input.ota-file-input {
+      position: absolute !important; left: 0; top: 0;
+      width: 1px !important; height: 1px !important; min-height: 0 !important;
+      padding: 0 !important; margin: 0 !important; border: 0 !important;
+      opacity: 0 !important; overflow: hidden; clip: rect(0,0,0,0);
+      pointer-events: none; appearance: auto; -webkit-appearance: initial;
+    }
+    .ota-drop .ota-pick {
+      align-self: flex-start;
+      height: 36px; min-height: 36px; padding: 0 14px; border-radius: 8px; font-size: 13px;
+      border: 1px solid var(--line); background: rgba(255,255,255,.08); color: var(--ink);
+      display: inline-flex; align-items: center; cursor: pointer; font: inherit;
+    }
+    .ota-drop .ota-pick:hover {
+      border-color: rgba(180,154,232,.55); background: rgba(180,154,232,.18);
+    }
+    .ota-drop.has-file .ota-pick {
+      border-color: rgba(180,154,232,.45); color: var(--ink); background: rgba(180,154,232,.18);
+    }
+    .ota-actions {
+      display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px;
+    }
+    .ota-actions .spacer { flex: 1; min-width: 8px; }
+
+    .split {
+      display: grid; grid-template-columns: 240px 1fr; gap: 14px;
+      min-height: 420px; align-items: stretch;
+    }
+    /* 并排时取消 .panel+.panel 的上下间距；窄屏叠放时恢复 */
+    .split > .panel + .panel { margin-top: 0; }
+    .split > .panel { display: flex; flex-direction: column; min-height: 0; }
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
+      .split > .panel + .panel { margin-top: 14px; }
+    }
+    .game-list { display: flex; flex-direction: column; gap: 6px; flex: 1; max-height: 560px; overflow: auto; }
+    .game-item {
+      text-align: left; border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--ink-2); border-radius: 12px; padding: 12px; min-height: var(--ctrl-h);
+      transition: .18s var(--ease); font: inherit;
+      backdrop-filter: blur(6px);
+    }
+    .game-item:hover { border-color: var(--line-bright); color: var(--ink); background: rgba(180,154,232,.1); }
+    .game-item.active {
+      background: linear-gradient(135deg, rgba(180,154,232,.28), rgba(100,90,180,.14));
+      color: var(--ink); border-color: rgba(180,154,232,.5);
+      box-shadow: 0 0 24px rgba(155,126,216,.15);
+    }
+    .game-item .name { font-weight: 600; display: block; }
+    .game-item .id { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+
+    .modal-mask {
+      position: fixed; inset: 0;
+      background: rgba(6, 6, 20, .55);
+      backdrop-filter: blur(10px) saturate(1.2);
+      -webkit-backdrop-filter: blur(10px) saturate(1.2);
+      display: grid; place-items: center; padding: 20px; z-index: 40;
+    }
+    .modal {
+      width: min(560px, 100%); max-height: min(86vh, 720px); overflow: auto;
+      background: var(--glass-strong);
+      border: 1px solid var(--line-bright);
+      border-radius: 20px; padding: 22px;
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      box-shadow: 0 28px 80px rgba(0,0,0,.5), 0 0 50px rgba(155,126,216,.12), inset 0 1px 0 rgba(255,255,255,.1);
+      position: relative;
+    }
+    .modal::before {
+      content: ""; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(220,200,255,.55), transparent);
+    }
+    .modal.wide { width: min(720px, 100%); }
+    .modal.feat-wide { width: min(920px, 100%); max-height: min(92vh, 900px); }
+    .modal h3 {
+      margin: 0 0 6px; font-family: var(--font-display);
+      background: linear-gradient(90deg, #fff, #C8B6F5);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .modal .sub { margin: 0 0 14px; color: var(--ink-3); font-size: 12px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .toast {
+      position: fixed; right: 18px; bottom: 18px; padding: 12px 16px; border-radius: 12px; z-index: 50;
+      background: var(--glass-strong);
+      border: 1px solid var(--line-bright);
+      backdrop-filter: var(--blur-sm);
+      -webkit-backdrop-filter: var(--blur-sm);
+      max-width: 320px;
+      box-shadow: var(--shadow-glass), 0 0 24px rgba(155,126,216,.2);
+      opacity: 0; transform: translateY(8px); transition: .25s var(--ease); pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: none; }
+    .key-list {
+      max-height: 280px; overflow: auto;
+      background: rgba(10, 8, 30, .45);
+      border: 1px solid var(--line);
+      border-radius: 12px; padding: 10px;
+    }
+    .key-list code { display: block; padding: 4px 0; }
+
+    .toast-swatch {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .toast-swatch.info { background: rgba(126,184,224,.18); color: var(--info); border-color: rgba(126,184,224,.25); }
+    .toast-swatch.success { background: rgba(126,224,160,.18); color: var(--success); border-color: rgba(126,224,160,.25); }
+    .toast-swatch.warning { background: rgba(255,229,180,.18); color: var(--warning); border-color: rgba(255,229,180,.25); }
+    .toast-swatch.error { background: rgba(224,126,126,.18); color: var(--error); border-color: rgba(224,126,126,.25); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+
+    .batch-bar {
+      display: none; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 10px 12px; margin-bottom: 12px; border-radius: 12px;
+      background: rgba(180,154,232,.12);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+    }
+    .batch-bar.show { display: flex; }
+    .prefix-preview {
+      font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--info);
+      padding: 8px 10px; border-radius: 10px;
+      background: rgba(10, 8, 30, .45);
+      border: 1px solid var(--line);
+      margin-top: 6px;
+    }
+
+    /* —— 细节完善 —— */
+    ::selection { background: rgba(155,126,216,.35); color: #fff; }
+    * { scrollbar-width: thin; scrollbar-color: rgba(155,126,216,.35) transparent; }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-thumb {
+      background: rgba(155,126,216,.35); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-thumb:hover { background: rgba(155,126,216,.55); background-clip: padding-box; }
+    *::-webkit-scrollbar-track { background: transparent; }
+
+    #page-dashboard, #page-cards, #page-announcements,
+    #page-toasts, #page-games, #page-templates, #page-audit, #page-settings {
+      animation: page-in .35s var(--ease) both;
+    }
+    .pager, .list-status {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin-top: 12px; padding: 10px 4px;
+    }
+    .pager .pager-actions { display: flex; align-items: center; gap: 8px; }
+    .filters + .table-wrap { margin-top: 0; }
+    .game-list-filters { margin-bottom: 10px; }
+    .game-list-filters.filters { margin-bottom: 10px; }
+    .game-list-filters .field { max-width: none; flex: 1 1 auto; }
+    .ann-preview {
+      padding: 14px 16px; border-radius: 12px;
+      border: 1px solid var(--line); background: var(--glass);
+      backdrop-filter: var(--blur-sm); -webkit-backdrop-filter: var(--blur-sm);
+      box-shadow: var(--shadow-glass); min-height: 72px;
+    }
+    .ann-preview .ann-preview-title {
+      font-family: var(--font-display); font-size: 16px; margin: 0 0 8px; color: var(--ink);
+    }
+    .ann-preview .ann-preview-body {
+      margin: 0; white-space: pre-wrap; color: var(--ink-2); font-size: 13px; line-height: 1.55;
+    }
+    .ann-preview .ann-preview-actions {
+      display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .ann-preview .ann-preview-actions .btn { pointer-events: none; }
+    @keyframes page-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .empty {
+      padding: 36px 20px; text-align: center; color: var(--ink-3);
+    }
+    /* 表格外的空状态可用 flex；td 必须保持 table-cell，否则 colspan 失效 */
+    div.empty, .panel > .empty, .game-list .empty {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    td.empty {
+      display: table-cell;
+      vertical-align: middle;
+    }
+    .empty::before {
+      content: ""; display: block; width: 28px; height: 28px; margin: 0 auto 8px; opacity: .55;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.94 6.26 6.86.99-4.96 4.83 1.17 6.82L12 17.77l-6.13 3.22 1.17-6.82L2.08 9.25l6.86-.99z' fill='%239B7ED8'/%3E%3C/svg%3E") center / contain no-repeat;
+      filter: drop-shadow(0 0 8px rgba(155,126,216,.45));
+      animation: sparkle 2.6s ease-in-out infinite;
+    }
+
+    .side-nav button {
+      position: relative;
+      padding-left: 28px !important;
+    }
+    .side-nav button::before {
+      content: ""; position: absolute; left: 12px; top: 50%; width: 5px; height: 5px;
+      border-radius: 50%; transform: translateY(-50%);
+      background: rgba(155,126,216,.25);
+      box-shadow: 0 0 0 0 transparent;
+      transition: .18s var(--ease);
+    }
+    .side-nav button:hover::before { background: rgba(155,126,216,.55); }
+    .side-nav button.active::before {
+      background: var(--brand-bright);
+      box-shadow: 0 0 10px var(--brand-glow);
+    }
+
+    thead th {
+      position: sticky; top: 0; z-index: 2;
+      background: rgba(14, 15, 35, .82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .table-wrap { overflow: auto; border-radius: 12px; border: 1px solid var(--line); background: rgba(10,8,28,.25); }
+    .table-wrap table { margin: 0; }
+    .table-wrap th:first-child, .table-wrap td:first-child { padding-left: 14px; }
+    .table-wrap th:last-child, .table-wrap td:last-child { padding-right: 14px; }
+
+    .btn { border-radius: var(--ctrl-radius); }
+    .panel { border-radius: var(--r-lg); }
+    .modal { border-radius: var(--r-xl); }
+    .topbar { border-radius: var(--r-lg); }
+    .stat { border-radius: var(--r-lg); }
+
+    code { font-family: var(--font-mono); }
+
+  </style>
+
+
+</head>
+<body>
+
+  <!-- 星空底 -->
+  <div class="sky" aria-hidden="true">
+    <div class="sky-nebula"></div>
+    <div class="sky-stars"></div>
+    <div class="sky-stars-2"></div>
+    <div class="sky-stars-3"></div>
+    <div class="sky-shooting"></div>
+    <div class="sky-shooting delay"></div>
+  </div>
+  <!-- LOGIN -->
+  <div id="login-view" class="login-wrap">
+    <div class="login-box">
+      <svg class="login-ornament tl" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="28" stroke="rgba(180,154,232,.55)" stroke-width="1"/><circle cx="32" cy="32" r="18" stroke="rgba(180,154,232,.35)" stroke-width="1"/><path d="M32 8v8M32 48v8M8 32h8M48 32h8" stroke="rgba(220,200,255,.5)" stroke-width="1"/><circle cx="32" cy="32" r="3" fill="rgba(244,238,255,.8)"/></svg>
+      <svg class="login-ornament br" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="28" stroke="rgba(180,154,232,.55)" stroke-width="1"/><circle cx="32" cy="32" r="18" stroke="rgba(180,154,232,.35)" stroke-width="1"/><path d="M32 8v8M32 48v8M8 32h8M48 32h8" stroke="rgba(220,200,255,.5)" stroke-width="1"/><circle cx="32" cy="32" r="3" fill="rgba(244,238,255,.8)"/></svg>
+      <svg class="login-ornament tr" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F4EEFF" d="M12 2l2.94 6.26 6.86.99-4.96 4.83 1.17 6.82L12 17.77l-6.13 3.22 1.17-6.82L2.08 9.25l6.86-.99z"/></svg>
+      <svg class="login-ornament bl" viewBox="0 0 24 24" aria-hidden="true"><path fill="#D4C4FF" d="M12 2l2.94 6.26 6.86.99-4.96 4.83 1.17 6.82L12 17.77l-6.13 3.22 1.17-6.82L2.08 9.25l6.86-.99z"/></svg>
+      <h1>星光魔法</h1>
+      <p>运营验证台 · 自签证书请在浏览器点「继续访问」</p>
+      <label>用户名</label>
+      <input id="login-user" autocomplete="username" />
+      <label>密码</label>
+      <input id="login-pass" type="password" autocomplete="current-password" />
+      <div style="margin-top:18px"><button class="btn block" onclick="doLogin()">进入运营台</button></div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app-view" class="shell hidden">
+    <aside class="sidebar">
+      <div class="side-brand">
+        <svg class="brand-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="28" stroke="rgba(180,154,232,.7)" stroke-width="1.2"/>
+          <circle cx="32" cy="32" r="18" stroke="rgba(180,154,232,.4)" stroke-width="1"/>
+          <path d="M32 6v10M32 48v10M6 32h10M48 32h10" stroke="rgba(244,238,255,.55)" stroke-width="1.2"/>
+          <!-- 五角星中心对齐魔法阵圆心 (32,32) -->
+          <path fill="#F4EEFF" d="M32 21L34.59 28.44L42.46 28.6L36.18 33.36L38.47 40.9L32 36.4L25.53 40.9L27.82 33.36L21.54 28.6L29.41 28.44Z"/>
+        </svg>
+        <div class="side-brand-text">
+          <strong>星光魔法</strong>
+          <span>运营验证台</span>
+        </div>
+      </div>
+      <nav class="side-nav" id="side-nav">
+        <button class="active" data-page="dashboard">数据看板</button>
+        <button data-page="games">游戏列表</button>
+        <button data-page="templates">菜单模板</button>
+        <button data-page="cards">卡密管理</button>
+        <button data-page="announcements">远程公告</button>
+        <button data-page="ota">游戏补丁</button>
+        <button data-page="toasts">开屏Toast</button>
+        <button data-page="audit">操作日志</button>
+        <button data-page="settings">后台设置</button>
+      </nav>
+      <div class="side-foot muted" id="who">—</div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h2 id="page-title">数据看板</h2>
+          <div class="muted" id="page-desc">总览在线与卡密概况</div>
+        </div>
+        <div class="actions">
+          <button class="btn ghost sm" onclick="refreshAll()">刷新</button>
+          <button class="btn ghost sm" onclick="logout()">退出</button>
+        </div>
+      </div>
+
+      <!-- dashboard -->
+      <section id="page-dashboard">
+        <div class="stats" id="stats"></div>
+        <div class="stats" id="stats-today"></div>
+        <div class="panel">
+          <div class="toolbar">
+            <h3>分游戏活跃</h3>
+            <label class="chk"><input type="checkbox" id="dash-auto" checked onchange="toggleDashAuto()" /> 30 秒自动刷新</label>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="d-q">搜索</label>
+              <input id="d-q" placeholder="游戏名称 / game_id" onkeydown="if(event.key==='Enter')renderDashOnline()" />
+            </div>
+            <div class="field">
+              <label for="d-filter-game">游戏</label>
+              <div class="game-picker" data-gp="d-filter-game" data-empty="全部" data-allow-empty="1"></div>
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="renderDashOnline()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>游戏</th><th>在线</th><th>卡密</th><th>游客</th><th>7日活跃</th><th>30日活跃</th><th>历史活跃</th><th></th></tr></thead>
+              <tbody id="online-by-game"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="list-status" id="dash-online-status"></div>
+          <p class="muted" style="margin:12px 0 0">按该游戏下去重设备统计。在线 = 近 90 秒有上报。7/30/历史 = 区间内打开过该游戏的设备数。默认按 7 日活跃排序。</p>
+        </div>
+      </section>
+
+      <!-- cards -->
+      <section id="page-cards" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>卡密列表</h3>
+            <button class="btn" onclick="openCardCreateModal()">生成卡密</button>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="c-q">搜索</label>
+              <input id="c-q" placeholder="卡密关键字" onkeydown="if(event.key==='Enter'){cardsPage=1;loadCards()}" />
+            </div>
+            <div class="field">
+              <label for="c-status">状态</label>
+              <select id="c-status">
+                <option value="">全部</option>
+                <option value="unused">未使用</option>
+                <option value="active">使用中</option>
+                <option value="expired">已过期</option>
+                <option value="banned">已封禁</option>
+                <option value="exhausted">次数用尽</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="c-filter-scope">范围</label>
+              <select id="c-filter-scope">
+                <option value="">全部</option>
+                <option value="global">仅全游戏</option>
+                <option value="game">仅单游戏</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="c-filter-game">游戏</label>
+              <div class="game-picker" data-gp="c-filter-game" data-empty="全部" data-allow-empty="1"></div>
+            </div>
+            <div class="field">
+              <label for="c-bound">绑定状态</label>
+              <select id="c-bound">
+                <option value="">全部</option>
+                <option value="1">已绑定</option>
+                <option value="0">未绑定</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="c-unbind">解绑过</label>
+              <select id="c-unbind">
+                <option value="">全部</option>
+                <option value="1">是</option>
+                <option value="0">否</option>
+              </select>
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="cardsPage=1;loadCards()">筛选</button></div>
+          </div>
+          <div class="batch-bar" id="card-batch-bar">
+            <span class="muted" id="card-batch-count">已选 0</span>
+            <button class="btn sm ghost" onclick="batchBanCards('banned')">批量封禁</button>
+            <button class="btn sm ghost" onclick="batchBanCards('active')">批量解封</button>
+            <button class="btn sm ghost" onclick="batchExtendCards(7)">批量+7天</button>
+            <button class="btn sm ghost" onclick="batchExtendCards(30)">批量+30天</button>
+            <button class="btn sm ghost" onclick="batchExportCards()">导出选中</button>
+            <button class="btn sm ghost" onclick="clearCardSelection()">取消选择</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:36px"><input type="checkbox" id="c-check-all" onchange="toggleAllCards(this.checked)" /></th>
+                  <th>卡密</th><th>范围</th><th>游戏</th><th>类型</th><th>状态</th><th>到期</th><th>备注</th><th>设备</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="cards-body"></tbody>
+            </table>
+          </div>
+          <div class="pager" id="cards-pager"></div>
+        </div>
+      </section>
+
+      <!-- announcements -->
+      <section id="page-announcements" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>远程公告</h3>
+            <button class="btn" onclick="openAnnModal()">发布公告</button>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="a-q">搜索</label>
+              <input id="a-q" placeholder="标题 / 内容" onkeydown="if(event.key==='Enter'){annPage=1;loadAnnouncements()}" />
+            </div>
+            <div class="field">
+              <label for="a-filter-game">游戏</label>
+              <div class="game-picker" data-gp="a-filter-game" data-empty="全部" data-allow-empty="1"></div>
+            </div>
+            <div class="field">
+              <label for="a-scope">范围</label>
+              <select id="a-scope">
+                <option value="">全部</option>
+                <option value="global">全游戏</option>
+                <option value="game">单游戏</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="a-enabled">状态</label>
+              <select id="a-enabled">
+                <option value="">全部</option>
+                <option value="1">启用</option>
+                <option value="0">停用</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="a-vis">可见性</label>
+              <select id="a-vis">
+                <option value="">全部</option>
+                <option value="always">始终</option>
+                <option value="logged_out">仅未登录</option>
+                <option value="logged_in">仅已登录</option>
+              </select>
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="annPage=1;loadAnnouncements()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>标题</th><th>范围</th><th>可见性</th><th>弹出</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="ann-body"></tbody>
+            </table>
+          </div>
+          <div class="pager" id="ann-pager"></div>
+        </div>
+      </section>
+
+      <!-- features page removed: managed via menu-template / game modals -->
+
+      <!-- menu templates -->
+      <section id="page-templates" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>菜单模板</h3>
+            <div class="actions">
+              <button class="btn ghost" onclick="openTemplateJsonModal()">JSON 导入</button>
+              <button class="btn" onclick="openTemplateModal()">新建模板</button>
+            </div>
+          </div>
+          <p class="muted" style="margin:0 0 12px">模板存在数据库，后台新建/编辑即时生效。导入/新建模板时会自动创建并绑定同 id 游戏（已存在的游戏只补绑定）。各游戏的开关/删除请到「游戏列表」点「功能管理」。</p>
+          <div class="filters">
+            <div class="field grow">
+              <label for="tpl-q">搜索</label>
+              <input id="tpl-q" placeholder="模板 id / 名称 / 包名" oninput="renderTemplatesTable()" />
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>模板 id</th><th>名称</th><th>包名</th><th>功能数</th><th>创建时间</th><th>操作</th></tr></thead>
+              <tbody id="tpl-body"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- toasts -->
+      <section id="page-toasts" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>开屏 Toast</h3>
+            <button class="btn" onclick="openToastModal()">添加开屏提示</button>
+          </div>
+          <p class="muted" style="margin:0 0 12px">菜单启动时按排序依次弹出（当前星光 Toast 样式）。不配置则启动不显示 Toast。操作类提示（登录失败等）由客户端固定文案，无需在此配置。</p>
+          <div class="filters">
+            <div class="field grow">
+              <label for="t-q">搜索</label>
+              <input id="t-q" placeholder="内容关键字" onkeydown="if(event.key==='Enter'){toastPage=1;loadToasts()}" />
+            </div>
+            <div class="field">
+              <label for="t-filter-game">游戏</label>
+              <div class="game-picker" data-gp="t-filter-game" data-empty="全部" data-allow-empty="1"></div>
+            </div>
+            <div class="field">
+              <label for="t-scope">范围</label>
+              <select id="t-scope">
+                <option value="">全部</option>
+                <option value="global">全游戏</option>
+                <option value="game">单游戏</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="t-enabled">状态</label>
+              <select id="t-enabled">
+                <option value="">全部</option>
+                <option value="1">启用</option>
+                <option value="0">停用</option>
+              </select>
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="toastPage=1;loadToasts()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>排序</th><th>内容</th><th>范围</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="toast-body"></tbody>
+            </table>
+          </div>
+          <div class="pager" id="toast-pager"></div>
+        </div>
+      </section>
+
+      <!-- ota / 游戏补丁 -->
+      <section id="page-ota" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <div class="toolbar-title">
+              <h3>游戏补丁</h3>
+              <p class="toolbar-sub">每游戏一份 latest；JSON 与 so 可共存；玩家设置里手动更新后须完全重启</p>
+            </div>
+            <button class="btn" onclick="openOtaPublishModal()">添加补丁</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>游戏</th>
+                  <th>版本</th>
+                  <th>JSON</th>
+                  <th>so</th>
+                  <th>说明</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="ota-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- games -->
+      <section id="page-games" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>游戏管理</h3>
+            <button class="btn" onclick="openGameModal()">添加游戏</button>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="g-q">搜索</label>
+              <input id="g-q" placeholder="名称 / game_id / 模板" onkeydown="if(event.key==='Enter'){gamesPage=1;loadGamesTable()}" />
+            </div>
+            <div class="field">
+              <label for="g-enabled">状态</label>
+              <select id="g-enabled">
+                <option value="">全部</option>
+                <option value="1">启用</option>
+                <option value="0">停用</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="g-card-auth">卡密</label>
+              <select id="g-card-auth">
+                <option value="">全部</option>
+                <option value="1">需卡密</option>
+                <option value="0">仅联网</option>
+              </select>
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="gamesPage=1;loadGamesTable()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>game_id</th><th>名称</th><th>菜单模板</th><th>卡密</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="games-body"></tbody>
+            </table>
+          </div>
+          <div class="pager" id="games-pager"></div>
+        </div>
+      </section>
+
+      <!-- audit -->
+      <section id="page-audit" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>管理审计日志</h3>
+            <button class="btn ghost sm" onclick="loadAudit()">刷新</button>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="au-q">搜索</label>
+              <input id="au-q" placeholder="管理员 / 动作 / 详情 / IP" onkeydown="if(event.key==='Enter'){auditPage=1;loadAudit()}" />
+            </div>
+            <div class="field">
+              <label for="au-action">动作</label>
+              <select id="au-action">
+                <option value="">全部</option>
+                <option value="cards.">卡密相关</option>
+                <option value="games.">游戏相关</option>
+                <option value="features.">功能相关</option>
+                <option value="announcements.">公告相关</option>
+                <option value="toasts.">Toast 相关</option>
+                <option value="admin.">管理员相关</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>开始日期</label>
+              <span id="au-from-slot"></span>
+            </div>
+            <div class="field">
+              <label>结束日期</label>
+              <span id="au-to-slot"></span>
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="auditPage=1;loadAudit()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>时间</th><th>管理员</th><th>动作</th><th>详情</th><th>IP</th></tr></thead>
+              <tbody id="audit-body"><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pager" id="audit-pager"></div>
+        </div>
+      </section>
+
+      <!-- settings -->
+      <section id="page-settings" class="hidden">
+        <div class="panel" style="max-width:480px">
+          <h3 style="margin-top:0;font-family:var(--font-display)">修改密码</h3>
+          <p class="muted">修改后需重新登录</p>
+          <div class="field" style="margin-top:12px">
+            <label for="pw-old">原密码</label>
+            <input id="pw-old" type="password" autocomplete="current-password" />
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label for="pw-new">新密码（至少 6 位）</label>
+            <input id="pw-new" type="password" autocomplete="new-password" />
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label for="pw-new2">确认新密码</label>
+            <input id="pw-new2" type="password" autocomplete="new-password" />
+          </div>
+          <div style="margin-top:16px"><button class="btn" onclick="changePassword()">保存新密码</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL ROOT -->
+  <div id="modal-root" class="modal-mask hidden" onclick="if(event.target===this)closeModal()"></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="/admin/js/time-picker.js?v=3"></script>
+  <script>
+    const API = location.origin;
+    const PAGE_META = {
+      dashboard: ['数据看板', '在线/今日活跃（按设备）与卡密概况'],
+      games: ['游戏列表', '维护 game_id；点「功能管理」开关/删除该游戏功能'],
+      templates: ['菜单模板', '维护功能清单，创建游戏时一键同步'],
+      cards: ['卡密管理', '生成、筛选、封禁与解绑'],
+      announcements: ['远程公告', '全游戏 / 单游戏远程公告'],
+      ota: ['游戏补丁', 'JSON + so 合并发布；每游戏只保留 latest'],
+      toasts: ['开屏 Toast', '启动时依次弹出的提示'],
+      audit: ['操作日志', '管理操作审计记录'],
+      settings: ['后台设置', '账号安全与菜单定制'],
+    };
+    const STATUS_CN = { unused: '未使用', active: '使用中', expired: '已过期', banned: '已封禁', exhausted: '次数用尽' };
+    const TYPE_CN = { hour: '小时', day: '天', month: '月', year: '年', permanent: '永久', count: '次数' };
+    const VIS_CN = { always: '始终', logged_out: '仅未登录', logged_in: '仅已登录' };
+    const POPUP_CN = { every_open: '每次打开', once_device: '每设备一次' };
+
+    let token = localStorage.getItem('sg_admin_token') || '';
+    let sessionExpiredHandling = false;
+    let gamesCache = []; // 下拉/侧栏用目录（最多 500）
+    let gamesRows = [];  // 游戏管理页当前页
+    let menuTemplates = [];
+    let selectedFeatGameId = '';
+    let featuresCache = [];
+    let cardsCache = [];
+    let cardsPage = 1;
+    let cardsPageSize = 50;
+    let cardsMeta = { total: 0, page: 1, page_size: 50 };
+    let announcementsCache = [];
+    let toastsCache = [];
+    let auditCache = [];
+    let dashOnlineCache = [];
+    let gamesPage = 1, gamesPageSize = 50, gamesMeta = { total: 0, page: 1, page_size: 50 };
+    let annPage = 1, annPageSize = 50, annMeta = { total: 0, page: 1, page_size: 50 };
+    let toastPage = 1, toastPageSize = 50, toastMeta = { total: 0, page: 1, page_size: 50 };
+    let auditPage = 1, auditPageSize = 50, auditMeta = { total: 0, page: 1, page_size: 50 };
+    let featPage = 1, featPageSize = 100, featMeta = { total: 0, page: 1, page_size: 100 };
+    let selectedCardIds = new Set();
+    let expandedDevices = new Set();
+    let dashTimer = null;
+    let currentPage = 'dashboard';
+
+    function textMatch(q, ...parts) {
+      const n = (q || '').trim().toLowerCase();
+      if (!n) return true;
+      return parts.some(p => String(p == null ? '' : p).toLowerCase().includes(n));
+    }
+
+    function renderListStatus(elId, shown, total) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (!total && !shown) {
+        el.innerHTML = '<span class="muted">共 0 条</span>';
+        return;
+      }
+      el.innerHTML = shown === total
+        ? `<span class="muted">共 ${total} 条</span>`
+        : `<span class="muted">显示 ${shown} / 共 ${total} 条</span>`;
+    }
+
+    function renderPager(elId, meta, onPrev, onNext) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      const total = meta.total || 0;
+      const page = meta.page || 1;
+      const size = meta.page_size || 50;
+      const pages = Math.max(1, Math.ceil(total / size) || 1);
+      el.innerHTML = `
+        <span class="muted">共 ${total} 条 · 第 ${page}/${pages} 页</span>
+        <div class="pager-actions">
+          <button class="btn sm ghost" ${page <= 1 ? 'disabled' : ''} onclick="${onPrev}">上一页</button>
+          <button class="btn sm ghost" ${page >= pages ? 'disabled' : ''} onclick="${onNext}">下一页</button>
+        </div>`;
+    }
+
+    function boolParam(v) {
+      if (v === '1') return 'true';
+      if (v === '0') return 'false';
+      return '';
+    }
+
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    function chineseApiError(status, message) {
+      const msg = (message || '').trim();
+      if (msg && /[\u4e00-\u9fff]/.test(msg)) return msg;
+      const byRaw = {
+        'unauthorized': '未登录或登录已过期',
+        'forbidden': '没有权限',
+        'not found': '资源不存在',
+        'bad request': '请求参数有误',
+        'internal server error': '服务器内部错误',
+        'invalid response': '无效响应',
+        'network error': '网络错误',
+        'failed to fetch': '网络请求失败',
+        'load failed': '网络请求失败',
+        'networkerror when attempting to fetch resource.': '网络请求失败',
+        'the operation was aborted.': '请求已取消',
+        'timeout': '请求超时',
+        'ssl error': '证书校验失败',
+        'certificate': '证书校验失败',
+      };
+      if (msg) {
+        const key = msg.toLowerCase().replace(/^http\s+\d+\s*/, '').trim();
+        if (byRaw[key]) return byRaw[key];
+        if (/failed to fetch|networkerror|load failed/i.test(msg)) return '网络请求失败';
+        if (/ssl|certificate|cert /i.test(msg)) return '证书校验失败';
+        if (/timeout|timed out/i.test(msg)) return '请求超时';
+        if (/[\u4e00-\u9fff]/.test(msg)) return msg;
+        // 纯英文短消息 → 中文包装，避免 toast 直接弹出英文
+        if (/^[A-Za-z0-9][\w\s\-.:'/()]+$/.test(msg) && msg.length < 120) {
+          if (/^HTTP\s+\d+$/i.test(msg)) {
+            /* fall through to byStatus */
+          } else if (!/^(error|ok|fail(ed)?|true|false)$/i.test(msg)) {
+            return '请求失败：' + msg;
+          }
+        }
+      }
+      const byStatus = {
+        400: '请求参数有误',
+        401: '未登录或登录已过期',
+        403: '没有权限',
+        404: '资源不存在',
+        409: '冲突，请刷新后重试',
+        422: '数据校验失败',
+        429: '请求过于频繁',
+        500: '服务器内部错误',
+        502: '网关错误',
+        503: '服务暂时不可用',
+      };
+      return byStatus[status] || (msg ? ('请求失败：' + msg) : ('请求失败（' + status + '）'));
+    }
+
+    async function api(path, opts = {}) {
+      const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+      if (token) headers.Authorization = 'Bearer ' + token;
+      let res;
+      try {
+        res = await fetch(API + path, { ...opts, headers });
+      } catch (e) {
+        throw new Error(chineseApiError(0, e && e.message === 'Failed to fetch' ? 'failed to fetch' : 'network error'));
+      }
+      const data = await res.json().catch(() => ({ ok: false, message: '' }));
+      if (res.status === 401 && !String(path).includes('/admin/login')) {
+        forceLogout('登录已过期，请重新登录');
+        throw new Error('登录已过期，请重新登录');
+      }
+      if (!res.ok || data.ok === false) {
+        const err = new Error(chineseApiError(res.status, data.message));
+        err.status = res.status;  // delGame 等需要区分 409 冲突
+        throw err;
+      }
+      return data;
+    }
+
+    function forceLogout(msg) {
+      if (sessionExpiredHandling) return;
+      sessionExpiredHandling = true;
+      token = '';
+      localStorage.removeItem('sg_admin_token');
+      stopDashAuto();
+      closeModal();
+      const app = document.getElementById('app-view');
+      const login = document.getElementById('login-view');
+      if (app) app.classList.add('hidden');
+      if (login) login.classList.remove('hidden');
+      toast(msg || '登录已过期，请重新登录');
+      setTimeout(() => { sessionExpiredHandling = false; }, 800);
+    }
+
+    function statusTag(s) {
+      const map = { active: 'ok', unused: '', banned: 'bad', expired: 'warn', exhausted: 'warn' };
+      return `<span class="tag ${map[s] || ''}">${STATUS_CN[s] || s}</span>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function copyText(text) {
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => toast('已复制')).catch(() => fallbackCopy(text));
+      } else fallbackCopy(text);
+    }
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); toast('已复制'); } catch (e) { toast('复制失败'); }
+      document.body.removeChild(ta);
+    }
+
+    function downloadText(filename, text) {
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    /* -------- modal -------- */
+    function openModal(html, wide) {
+      closeAllPickers();
+      const root = document.getElementById('modal-root');
+      const wideClass = wide === 'feat' ? 'feat-wide' : (wide ? 'wide' : '');
+      root.innerHTML = `<div class="modal ${wideClass}" onclick="event.stopPropagation()">${html}</div>`;
+      root.classList.remove('hidden');
+      initTimePickers();
+    }
+    function closeModal() {
+      closeAllPickers();
+      const root = document.getElementById('modal-root');
+      root.classList.add('hidden');
+      root.innerHTML = '';
+    }
+
+    /** 可搜索 + 可滚动选择器；kind=games|templates */
+    function gamePickerMarkup(id, opts) {
+      const empty = (opts && opts.emptyLabel) || '请选择';
+      const allowEmpty = !!(opts && opts.allowEmpty);
+      const onchange = (opts && opts.onchange) || '';
+      const kind = (opts && opts.kind) || 'games';
+      const ph = (opts && opts.searchPlaceholder) || (kind === 'templates' ? '搜索模板名称 / id' : '搜索名称 / game_id');
+      return `<div class="game-picker" data-gp="${escapeHtml(id)}" data-kind="${escapeHtml(kind)}" data-empty="${escapeHtml(empty)}" data-allow-empty="${allowEmpty ? '1' : '0'}" data-search-ph="${escapeHtml(ph)}"${onchange ? ` data-onchange="${escapeHtml(onchange)}"` : ''}></div>`;
+    }
+
+    function getPickerRoot(id) {
+      return document.querySelector(`.game-picker[data-gp="${id}"]`);
+    }
+
+    function getGamePickerValue(id) {
+      const root = getPickerRoot(id);
+      if (!root) {
+        const el = document.getElementById(id);
+        return el ? (el.value || '') : '';
+      }
+      return root.dataset.value || '';
+    }
+
+    function setGamePickerValue(id, value, silent) {
+      const root = getPickerRoot(id);
+      if (!root) {
+        const el = document.getElementById(id);
+        if (el) el.value = value || '';
+        return;
+      }
+      root.dataset.value = value || '';
+      refreshGamePickerLabel(root);
+      if (!silent) {
+        const fn = root.dataset.onchange;
+        if (fn && typeof window[fn] === 'function') window[fn]();
+      }
+    }
+
+    function pickerItems(root) {
+      const kind = root.dataset.kind || 'games';
+      if (kind === 'templates') {
+        return menuTemplates.map(t => ({
+          id: t.id,
+          name: t.name,
+          sub: `${t.id} · ${t.feature_count || (t.features || []).length} 项`,
+          search: `${t.id} ${t.name} ${t.package || ''}`,
+        }));
+      }
+      return gamesCache.map(g => ({
+        id: g.game_id,
+        name: g.name,
+        sub: g.game_id,
+        search: `${g.game_id} ${g.name} ${g.menu_template || ''}`,
+      }));
+    }
+
+    function refreshGamePickerLabel(root) {
+      const val = root.dataset.value || '';
+      const empty = root.dataset.empty || '请选择';
+      const label = root.querySelector('.gp-label');
+      if (!label) return;
+      if (!val) {
+        label.textContent = empty;
+        label.classList.add('is-placeholder');
+        return;
+      }
+      const item = pickerItems(root).find(x => x.id === val);
+      label.textContent = item
+        ? (root.dataset.kind === 'templates' ? `${item.name}（${item.sub}）` : `${item.name} (${item.sub})`)
+        : val;
+      label.classList.remove('is-placeholder');
+    }
+
+    function resetPickerPanelStyle(panel) {
+      if (!panel) return;
+      panel.classList.remove('is-open');
+      panel.style.left = '';
+      panel.style.top = '';
+      panel.style.bottom = '';
+      panel.style.width = '';
+      panel.style.right = '';
+    }
+
+    function closePicker(root) {
+      if (!root) return;
+      root.classList.remove('open');
+      const panel = root._panel;
+      if (!panel) return;
+      resetPickerPanelStyle(panel);
+      if (panel.parentElement !== root) root.appendChild(panel);
+    }
+
+    function closeAllPickers(except) {
+      document.querySelectorAll('.game-picker.open').forEach(p => {
+        if (p !== except) closePicker(p);
+      });
+      document.querySelectorAll('.time-picker.open').forEach(p => {
+        if (p !== except) closeTimePicker(p);
+      });
+      if (typeof closeCardRowMenu === 'function') closeCardRowMenu();
+    }
+
+    function placePickerPanel(root) {
+      const trigger = root.querySelector('.game-picker-trigger');
+      const panel = root._panel;
+      if (!trigger || !panel) return;
+      // 挂到 body：modal/backdrop-filter 会让 fixed 相对错误容器，导致飞到右下角
+      document.body.appendChild(panel);
+      panel.classList.add('is-open');
+      const rect = trigger.getBoundingClientRect();
+      const width = Math.max(rect.width, 260);
+      let left = rect.left;
+      let top = rect.bottom + 6;
+      panel.style.width = width + 'px';
+      panel.style.left = left + 'px';
+      panel.style.top = top + 'px';
+      panel.style.bottom = 'auto';
+      panel.style.right = 'auto';
+      // 二次校正：贴边 / 向上翻
+      const pr = panel.getBoundingClientRect();
+      const pad = 8;
+      if (pr.right > window.innerWidth - pad) {
+        left = Math.max(pad, window.innerWidth - pr.width - pad);
+        panel.style.left = left + 'px';
+      }
+      if (pr.bottom > window.innerHeight - pad) {
+        const upTop = rect.top - pr.height - 6;
+        if (upTop >= pad) {
+          panel.style.top = upTop + 'px';
+        } else {
+          panel.style.top = pad + 'px';
+          panel.style.maxHeight = (window.innerHeight - pad * 2) + 'px';
+        }
+      }
+    }
+
+    function renderGamePickerList(root, q) {
+      const panel = root._panel || root.querySelector('.game-picker-panel');
+      const list = panel && panel.querySelector('.game-picker-list');
+      if (!list) return;
+      const allowEmpty = root.dataset.allowEmpty === '1';
+      const emptyLabel = root.dataset.empty || '全部';
+      const cur = root.dataset.value || '';
+      const qq = (q || '').trim().toLowerCase();
+      let rows = pickerItems(root);
+      if (qq) rows = rows.filter(it => (it.search || '').toLowerCase().includes(qq));
+      let html = '';
+      if (allowEmpty) {
+        html += `<li data-v="" class="${!cur ? 'active' : ''}"><span class="gp-name">${escapeHtml(emptyLabel)}</span></li>`;
+      }
+      html += rows.map(it => `
+        <li data-v="${escapeHtml(it.id)}" class="${cur === it.id ? 'active' : ''}">
+          <span class="gp-name">${escapeHtml(it.name)}</span>
+          <span class="gp-id">${escapeHtml(it.sub)}</span>
+        </li>`).join('');
+      if (!rows.length) html += `<div class="gp-empty">无匹配项</div>`;
+      list.innerHTML = html;
+      list.querySelectorAll('li[data-v]').forEach(li => {
+        li.onclick = (e) => {
+          e.stopPropagation();
+          root.dataset.value = li.getAttribute('data-v') || '';
+          refreshGamePickerLabel(root);
+          closePicker(root);
+          const fn = root.dataset.onchange;
+          if (fn && typeof window[fn] === 'function') window[fn]();
+        };
+      });
+    }
+
+    function ensureGamePicker(root) {
+      if (!root) return;
+      if (root.dataset.ready === '1') {
+        refreshGamePickerLabel(root);
+        return;
+      }
+      root.dataset.ready = '1';
+      if (!root.dataset.value) root.dataset.value = '';
+      const ph = root.dataset.searchPh || '搜索…';
+      root.innerHTML = `
+        <button type="button" class="game-picker-trigger">
+          <span class="gp-label is-placeholder">${escapeHtml(root.dataset.empty || '请选择')}</span>
+          <span class="gp-caret">▾</span>
+        </button>
+        <div class="game-picker-panel">
+          <input class="game-picker-search" type="search" placeholder="${escapeHtml(ph)}" autocomplete="off" />
+          <ul class="game-picker-list"></ul>
+        </div>`;
+      const trigger = root.querySelector('.game-picker-trigger');
+      const panel = root.querySelector('.game-picker-panel');
+      const search = panel.querySelector('.game-picker-search');
+      root._panel = panel;
+
+      panel.addEventListener('click', e => e.stopPropagation());
+      panel.addEventListener('mousedown', e => e.stopPropagation());
+
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const willOpen = !root.classList.contains('open');
+        closeAllPickers(root);
+        if (!willOpen) {
+          closePicker(root);
+          return;
+        }
+        root.classList.add('open');
+        search.value = '';
+        renderGamePickerList(root, '');
+        placePickerPanel(root);
+        setTimeout(() => search.focus(), 0);
+      });
+      search.addEventListener('input', () => renderGamePickerList(root, search.value));
+      search.addEventListener('click', e => e.stopPropagation());
+      search.addEventListener('mousedown', e => e.stopPropagation());
+      refreshGamePickerLabel(root);
+    }
+
+    function fillGameSelects() {
+      document.querySelectorAll('.game-picker[data-gp]').forEach(root => {
+        ensureGamePicker(root);
+        refreshGamePickerLabel(root);
+        if (root.classList.contains('open')) renderGamePickerList(root, root._panel?.querySelector('.game-picker-search')?.value || '');
+      });
+    }
+
+    document.addEventListener('click', () => closeAllPickers());
+    window.addEventListener('resize', () => closeAllPickers());
+    document.addEventListener('scroll', (e) => {
+      // 列表内部滚动不关；页面滚动关掉，避免浮层错位
+      if (e.target && e.target.closest && e.target.closest('.game-picker-list')) return;
+      closeAllPickers();
+    }, true);
+
+    /* -------- nav -------- */
+    document.getElementById('side-nav').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-page]');
+      if (!btn) return;
+      switchPage(btn.dataset.page);
+    });
+
+    function switchPage(page) {
+      if (page === 'features') {
+        switchPage('games');
+        toast('请在游戏列表点「功能管理」');
+        return;
+      }
+      currentPage = page;
+      document.querySelectorAll('#side-nav button').forEach(b => b.classList.toggle('active', b.dataset.page === page));
+      Object.keys(PAGE_META).forEach(p => {
+        const el = document.getElementById('page-' + p);
+        if (el) el.classList.toggle('hidden', p !== page);
+      });
+      document.getElementById('page-title').textContent = PAGE_META[page][0];
+      document.getElementById('page-desc').textContent = PAGE_META[page][1];
+      if (page === 'dashboard') { loadDashboard(); toggleDashAuto(); }
+      else stopDashAuto();
+      if (page === 'cards') loadCards();
+      if (page === 'announcements') loadAnnouncements();
+      if (page === 'ota') loadOtaPage();
+      if (page === 'toasts') loadToasts();
+      if (page === 'games') loadGamesTable();
+      if (page === 'templates') loadTemplatesTable();
+      if (page === 'audit') loadAudit();
+    }
+
+    function goManageFeatures(gameId) {
+      openFeatureManageModal(gameId);
+    }
+
+    function jumpCardsFilter(status) {
+      switchPage('cards');
+      document.getElementById('c-status').value = status || '';
+      cardsPage = 1;
+      loadCards();
+    }
+
+    function stopDashAuto() {
+      if (dashTimer) { clearInterval(dashTimer); dashTimer = null; }
+    }
+    function toggleDashAuto() {
+      stopDashAuto();
+      const on = document.getElementById('dash-auto')?.checked;
+      if (on && currentPage === 'dashboard') {
+        dashTimer = setInterval(() => { if (currentPage === 'dashboard') loadDashboard(true); }, 30000);
+      }
+    }
+
+    async function refreshAll(silent) {
+      await Promise.all([loadGamesCatalog(), loadMenuTemplates()]);
+      await Promise.all([loadDashboard(), loadCards(), loadAnnouncements(), loadToasts()]);
+      if (currentPage === 'games') await loadGamesTable();
+      if (currentPage === 'ota') await loadOtaPage();
+      if (currentPage === 'templates') renderTemplatesTable();
+      if (document.getElementById('feat-body') && selectedFeatGameId) {
+        await loadFeaturesForGame(selectedFeatGameId);
+      }
+      if (!silent) toast('已刷新');
+    }
+
+    async function loadMenuTemplates() {
+      try {
+        const data = await api('/v1/admin/menu-templates');
+        menuTemplates = data.data || [];
+      } catch (e) { menuTemplates = []; }
+    }
+
+    // 服务端时间统一存 UTC；SQLite 经 isoformat() 输出无时区后缀的裸串，
+    // 直接 new Date() 会被当成浏览器本地时间 → 显示/回填都偏差 8 小时。
+    // 裸串一律补 Z 按 UTC 解析，再转浏览器本地显示（2026-09-05）。
+    function parseServerTime(v) {
+      if (!v) return null;
+      let s = String(v).trim();
+      if (!s) return null;
+      if (!/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)) s = s.replace(' ', 'T') + 'Z';
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    function fmtLocal(v) {
+      const d = parseServerTime(v);
+      if (!d) return '—';
+      const p = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    }
+    function formatDateTime(v) {
+      return fmtLocal(v);
+    }
+
+    async function loadTemplatesTable() {
+      await loadMenuTemplates();
+      renderTemplatesTable();
+    }
+
+    function renderTemplatesTable() {
+      const body = document.getElementById('tpl-body');
+      if (!body) return;
+      const q = document.getElementById('tpl-q')?.value || '';
+      const list = menuTemplates.filter(t => textMatch(q, t.id, t.name, t.package, t.source));
+      body.innerHTML = list.map(t => `
+        <tr>
+          <td><code>${escapeHtml(t.id)}</code></td>
+          <td>${escapeHtml(t.name)}</td>
+          <td>${t.package ? `<code>${escapeHtml(t.package)}</code>` : '<span class="muted">—</span>'}</td>
+          <td>${t.feature_count ?? (t.features || []).length}</td>
+          <td class="muted">${escapeHtml(formatDateTime(t.created_at))}</td>
+          <td class="row-actions">
+            <button class="btn sm ghost" onclick='copyTemplateJson(${JSON.stringify(t)})'>复制JSON</button>
+            <button class="btn sm ghost" onclick='openTemplateModal(${JSON.stringify(t)})'>编辑</button>
+            <button class="btn sm ghost" onclick="deleteTemplate('${escapeHtml(t.id)}')">删除</button>
+          </td>
+        </tr>`).join('') || `<tr><td colspan="6" class="empty">${menuTemplates.length ? '无匹配模板' : '暂无模板，可点「新建模板」或「JSON 导入」'}</td></tr>`;
+    }
+
+    function templateToJsonPayload(t) {
+      return {
+        template_id: t.id || t.template_id,
+        name: t.name || '',
+        package: t.package || null,
+        source: t.source || null,
+        features: (t.features || []).map(f => ({
+          feat_num: Number(f.feat_num),
+          name: f.name
+        }))
+      };
+    }
+
+    async function copyTemplateJson(t) {
+      const text = JSON.stringify(templateToJsonPayload(t), null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        toast('已复制模板 JSON');
+      } catch (_) {
+        openTemplateJsonModal(text);
+        toast('已打开 JSON，请手动复制');
+      }
+    }
+
+    function openTemplateJsonModal(preset) {
+      const sample = preset || `{
+  "template_id": "milthm",
+  "name": "milthm",
+  "package": "game.taptap.morizero.milthm",
+  "source": "Games/MilthmMod.cpp AddJudge+ToStatistic",
+  "features": [
+    {"feat_num": 1, "name": "自动跳舞"}
+  ]
+}`;
+      openModal(`
+        <h3>JSON 导入菜单模板</h3>
+        <p class="sub">粘贴单条对象，或 <code>[{...},{...}]</code> 数组批量导入。已存在的 <code>template_id</code> 会更新（PATCH），不存在则创建。</p>
+        <div class="form-grid">
+          <div class="full"><label>JSON</label>
+            <textarea id="m-tpl-json" rows="16" style="width:100%;font-family:ui-monospace,monospace;font-size:12px;line-height:1.45;padding:10px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);color:inherit"
+              spellcheck="false">${escapeHtml(sample)}</textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" onclick="importTemplatesFromJson()">导入</button>
+        </div>`);
+    }
+
+    function normalizeTemplateJsonItem(raw) {
+      if (!raw || typeof raw !== 'object') throw new Error('每项须为 JSON 对象');
+      const template_id = String(raw.template_id || raw.id || '').trim();
+      const name = String(raw.name || '').trim();
+      if (!template_id || !name) throw new Error('缺少 template_id / name');
+      let features = raw.features;
+      if (typeof features === 'string') {
+        features = parseFeaturesTextarea(features);
+      } else if (!Array.isArray(features) || !features.length) {
+        throw new Error(template_id + ': features 须为非空数组');
+      } else {
+        features = features.map((f, i) => {
+          const feat_num = Number(f.feat_num ?? f.num ?? f.id);
+          const fname = String(f.name || '').trim();
+          if (!Number.isInteger(feat_num) || feat_num < 0 || !fname) {
+            throw new Error(template_id + `: features[${i}] 需要 feat_num + name`);
+          }
+          return { feat_num, name: fname };
+        });
+      }
+      return {
+        template_id,
+        name,
+        package: (raw.package && String(raw.package).trim()) || null,
+        source: (raw.source && String(raw.source).trim()) || null,
+        features
+      };
+    }
+
+    async function importTemplatesFromJson() {
+      try {
+        const rawText = document.getElementById('m-tpl-json').value.trim();
+        if (!rawText) { toast('请粘贴 JSON'); return; }
+        let parsed = JSON.parse(rawText);
+        if (!Array.isArray(parsed)) parsed = [parsed];
+        if (!parsed.length) { toast('JSON 为空'); return; }
+        let created = 0, updated = 0, linkedGames = 0;
+        for (const item of parsed) {
+          const body = normalizeTemplateJsonItem(item);
+          const exists = menuTemplates.some(t => t.id === body.template_id);
+          if (exists) {
+            await api('/v1/admin/menu-templates/' + encodeURIComponent(body.template_id), {
+              method: 'PATCH',
+              body: JSON.stringify({
+                name: body.name,
+                package: body.package,
+                source: body.source,
+                features: body.features
+              })
+            });
+            updated++;
+          } else {
+            const r = await api('/v1/admin/menu-templates', {
+              method: 'POST',
+              body: JSON.stringify(body)
+            });
+            created++;
+            if (r.data?.linkage?.game_created || r.data?.linkage?.game_bound) linkedGames++;
+          }
+        }
+        closeModal();
+        toast(`导入完成：新建 ${created}，更新 ${updated}` + (linkedGames ? `，联动游戏 ${linkedGames}` : ''));
+        await loadTemplatesTable();
+        if (linkedGames) await loadGamesCatalog();
+      } catch (e) {
+        toast(e.message || String(e));
+      }
+    }
+
+    function featuresToTextarea(features) {
+      return (features || []).map(f => `${f.feat_num}|${f.name}`).join('\n');
+    }
+
+    function parseFeaturesTextarea(text) {
+      const lines = (text || '').split('\n').map(s => s.trim()).filter(Boolean);
+      const features = [];
+      for (const line of lines) {
+        const m = line.match(/^(\d+)\s*[|：:]\s*(.+)$/);
+        if (!m) throw new Error('功能行格式应为：编号|名称，例如 1|无敌');
+        features.push({ feat_num: parseInt(m[1], 10), name: m[2].trim() });
+      }
+      if (!features.length) throw new Error('至少填写 1 个功能');
+      return features;
+    }
+
+    function openTemplateModal(tpl) {
+      const isEdit = !!(tpl && tpl.id);
+      openModal(`
+        <h3>${isEdit ? '编辑菜单模板' : '新建菜单模板'}</h3>
+        <p class="sub">功能列表格式：每行 <code>编号|名称</code>，与客户端 feat_num 对齐。保存后立刻生效，无需重启。</p>
+        <div class="form-grid">
+          <div class="full"><label>模板 id</label>
+            <input id="m-tpl-id" value="${escapeHtml(tpl?.id || '')}" ${isEdit ? 'disabled' : ''}
+              placeholder="如 blzz，建议与 game_id 同名" /></div>
+          <div class="full"><label>名称</label>
+            <input id="m-tpl-name" value="${escapeHtml(tpl?.name || '')}" placeholder="如 堡垒之战" /></div>
+          <div class="full"><label>包名（可选）</label>
+            <input id="m-tpl-pkg" value="${escapeHtml(tpl?.package || '')}" placeholder="com.xxx.yyy" /></div>
+          <div class="full"><label>备注/来源（可选）</label>
+            <input id="m-tpl-src" value="${escapeHtml(tpl?.source || '')}" placeholder="Games/XxxMod.h" /></div>
+          <div class="full"><label>功能列表</label>
+            <textarea id="m-tpl-feats" rows="8" style="width:100%;font-family:ui-monospace,monospace;font-size:13px;line-height:1.5;padding:10px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);color:inherit"
+              placeholder="1|无敌&#10;2|十倍攻击">${escapeHtml(featuresToTextarea(tpl?.features))}</textarea>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" onclick="saveTemplate(${isEdit ? `'${escapeHtml(tpl.id)}'` : 'null'})">保存</button>
+        </div>`);
+    }
+
+    async function saveTemplate(editId) {
+      try {
+        const template_id = (editId || document.getElementById('m-tpl-id').value).trim();
+        const name = document.getElementById('m-tpl-name').value.trim();
+        const packageName = document.getElementById('m-tpl-pkg').value.trim() || null;
+        const source = document.getElementById('m-tpl-src').value.trim() || null;
+        const features = parseFeaturesTextarea(document.getElementById('m-tpl-feats').value);
+        if (!template_id || !name) { toast('请填写模板 id 与名称'); return; }
+        if (editId) {
+          await api('/v1/admin/menu-templates/' + encodeURIComponent(editId), {
+            method: 'PATCH',
+            body: JSON.stringify({ name, package: packageName, source, features })
+          });
+          toast('模板已更新');
+        } else {
+          const r = await api('/v1/admin/menu-templates', {
+            method: 'POST',
+            body: JSON.stringify({ template_id, name, package: packageName, source, features })
+          });
+          toast(r.message || '模板已创建');
+          if (r.data?.linkage?.game_created) await loadGamesCatalog();
+        }
+        closeModal();
+        await loadTemplatesTable();
+      } catch (e) { toast(e.message); }
+    }
+
+    async function deleteTemplate(id) {
+      if (!confirm('删除模板「' + id + '」？\n若有游戏绑定，请先解绑或确认强制删除。')) return;
+      try {
+        await api('/v1/admin/menu-templates/' + encodeURIComponent(id), { method: 'DELETE' });
+        toast('已删除');
+        await loadTemplatesTable();
+      } catch (e) {
+        if (String(e.message || '').includes('仍有')) {
+          if (confirm(e.message + '\n\n是否强制删除并清空这些游戏的模板绑定？')) {
+            try {
+              await api('/v1/admin/menu-templates/' + encodeURIComponent(id) + '?force=true', { method: 'DELETE' });
+              toast('已强制删除');
+              await loadTemplatesTable();
+            } catch (e2) { toast(e2.message); }
+          }
+        } else toast(e.message);
+      }
+    }
+
+    function templateOptionsHtml(selected) {
+      let html = '<option value="">不绑定（稍后手动同步）</option>';
+      menuTemplates.forEach(t => {
+        html += `<option value="${escapeHtml(t.id)}" ${selected === t.id ? 'selected' : ''}>${escapeHtml(t.name)}（${escapeHtml(t.id)} · ${t.feature_count} 项）</option>`;
+      });
+      return html;
+    }
+
+    function previewTemplateFeatures(templateId) {
+      const box = document.getElementById('m-g-preview');
+      if (!box) return;
+      const t = menuTemplates.find(x => x.id === templateId);
+      if (!t) { box.innerHTML = '<span class="muted">不绑定模板则不会自动写入功能</span>'; return; }
+      box.innerHTML = `<div class="muted" style="margin-bottom:6px">将自动写入：</div>` +
+        t.features.map(f => `<code>#${f.feat_num}</code> ${escapeHtml(f.name)}`).join('<br/>');
+    }
+
+    function showApp() {
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('app-view').classList.remove('hidden');
+      document.getElementById('who').textContent = '已登录 · ' + (localStorage.getItem('sg_admin_user') || 'admin');
+      const savedUser = localStorage.getItem('sg_admin_user_saved');
+      if (savedUser) document.getElementById('login-user').value = savedUser;
+      initStaticTimePickers();
+      refreshAll(true).then(() => switchPage('dashboard'));
+    }
+
+    /** 页面静态区域的时间选择器挂载（弹窗内的由 openModal → initTimePickers 负责） */
+    function initStaticTimePickers() {
+      const slots = [
+        ['au-from-slot', 'au-from', {}],
+        ['au-to-slot', 'au-to', {}],
+      ];
+      let added = false;
+      for (const [slotId, id, opts] of slots) {
+        const slot = document.getElementById(slotId);
+        if (slot && !slot.firstChild) {
+          slot.innerHTML = timePickerMarkup(id, opts);
+          added = true;
+        }
+      }
+      if (added) initTimePickers();
+    }
+
+    async function doLogin() {
+      try {
+        const username = document.getElementById('login-user').value.trim();
+        const password = document.getElementById('login-pass').value;
+        const data = await api('/v1/admin/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+        token = data.data.token;
+        localStorage.setItem('sg_admin_token', token);
+        localStorage.setItem('sg_admin_user', data.data.username);
+        localStorage.setItem('sg_admin_user_saved', data.data.username);
+        document.getElementById('login-pass').value = '';
+        toast('登录成功');
+        showApp();
+      } catch (e) { toast(e.message); }
+    }
+
+    function logout() {
+      token = '';
+      localStorage.removeItem('sg_admin_token');
+      location.reload();
+    }
+
+    /* -------- dashboard -------- */
+    async function loadDashboard(silent) {
+      try {
+        const data = await api('/v1/admin/dashboard');
+        const d = data.data;
+        const oc = d.online_card ?? 0;
+        const og = d.online_guest ?? Math.max((d.total_online || 0) - oc, 0);
+        const tc = d.today_card_devices ?? 0;
+        const tg = d.today_guest_devices ?? 0;
+        const cu = d.cards_unused ?? 0;
+        const a7c = d.d7_card_devices ?? 0;
+        const a7g = d.d7_guest_devices ?? 0;
+        const a30c = d.d30_card_devices ?? 0;
+        const a30g = d.d30_guest_devices ?? 0;
+        const aAc = d.all_card_devices ?? 0;
+        const aAg = d.all_guest_devices ?? 0;
+        document.getElementById('stats').innerHTML = `
+          <button class="stat" type="button">
+            <div class="k">总在线</div><div class="v">${d.total_online}</div>
+            <div class="s">设备 · 卡密 ${oc} · 游客 ${og}</div>
+          </button>
+          <button class="stat" onclick="switchPage('games')">
+            <div class="k">游戏数</div><div class="v">${d.games_count ?? 0}</div>
+          </button>
+          <button class="stat" onclick="jumpCardsFilter('')">
+            <div class="k">卡密总数</div><div class="v">${d.cards_total}</div>
+            <div class="s">激活 ${d.cards_active} · 未激活 ${cu}</div>
+          </button>
+          <button class="stat" onclick="jumpCardsFilter('banned')">
+            <div class="k">封禁</div><div class="v">${d.cards_banned}</div>
+          </button>`;
+        var todayEl = document.getElementById('stats-today');
+        if (todayEl) {
+          todayEl.style.display = '';
+          todayEl.innerHTML = `
+          <button class="stat" type="button">
+            <div class="k">今日活跃</div><div class="v">${d.today_active_devices ?? 0}</div>
+            <div class="s">卡密 ${tc} · 游客 ${tg}</div>
+          </button>
+          <button class="stat" type="button">
+            <div class="k">7 日活跃</div><div class="v">${d.d7_active_devices ?? 0}</div>
+            <div class="s">卡密 ${a7c} · 游客 ${a7g}</div>
+          </button>
+          <button class="stat" type="button">
+            <div class="k">30 日活跃</div><div class="v">${d.d30_active_devices ?? 0}</div>
+            <div class="s">卡密 ${a30c} · 游客 ${a30g}</div>
+          </button>
+          <button class="stat" type="button">
+            <div class="k">历史活跃</div><div class="v">${d.all_active_devices ?? 0}</div>
+            <div class="s">卡密 ${aAc} · 游客 ${aAg}</div>
+          </button>
+          <p class="muted" style="grid-column:1/-1;margin:0;font-size:12px;line-height:1.5">
+            大数字 = 统计窗口内打开过游戏的不同设备数（不是打开次数，一直挂着也只算 1）。
+            小字：卡密 = 其中登录过卡密的设备；游客 = 未登录设备。
+            统计窗口按北京时间自然日切，凌晨 0 点翻日（2026-09-05 修复：此前按 UTC，早 8 点才翻日）。
+          </p>`;
+        }
+        dashOnlineCache = d.online_by_game || [];
+        renderDashOnline();
+      } catch (e) { if (!silent) toast(e.message); }
+    }
+
+    function renderDashOnline() {
+      const q = document.getElementById('d-q')?.value || '';
+      const gameId = getGamePickerValue('d-filter-game');
+      const rows = dashOnlineCache.filter(r => {
+        if (gameId && r.game_id !== gameId) return false;
+        const g = gamesCache.find(x => x.game_id === r.game_id);
+        const name = g ? g.name : r.game_id;
+        return textMatch(q, name, r.game_id);
+      });
+      document.getElementById('online-by-game').innerHTML = rows.length
+        ? rows.map(r => {
+            const g = gamesCache.find(x => x.game_id === r.game_id);
+            const name = g ? g.name : r.game_id;
+            return `<tr>
+              <td><strong>${escapeHtml(name)}</strong><div class="muted"><code>${escapeHtml(r.game_id)}</code></div></td>
+              <td>${r.online ?? 0}</td>
+              <td>${r.online_card ?? 0}</td>
+              <td>${r.online_guest ?? 0}</td>
+              <td><strong>${r.d7_active ?? 0}</strong></td>
+              <td>${r.d30_active ?? 0}</td>
+              <td>${r.all_active ?? 0}</td>
+              <td class="row-actions"><button class="btn sm ghost" onclick="setGamePickerValue('c-filter-game','${escapeHtml(r.game_id)}',true);jumpCardsFilter('')">看卡密</button></td>
+            </tr>`;
+          }).join('')
+        : `<tr><td colspan="8" class="empty">${dashOnlineCache.length ? '无匹配游戏' : '暂无游戏数据'}</td></tr>`;
+      renderListStatus('dash-online-status', rows.length, dashOnlineCache.length);
+    }
+
+    /* -------- games -------- */
+    async function loadGamesCatalog() {
+      const data = await api('/v1/admin/games?page=1&page_size=500');
+      gamesCache = data.data || [];
+      fillGameSelects();
+      return gamesCache;
+    }
+
+    async function loadGames(renderTable = true) {
+      await loadGamesCatalog();
+      if (renderTable) await loadGamesTable();
+    }
+
+    async function loadGamesTable() {
+      const qs = new URLSearchParams();
+      const q = document.getElementById('g-q')?.value.trim() || '';
+      const en = boolParam(document.getElementById('g-enabled')?.value || '');
+      const ca = boolParam(document.getElementById('g-card-auth')?.value || '');
+      if (q) qs.set('q', q);
+      if (en) qs.set('enabled', en);
+      if (ca) qs.set('card_auth_enabled', ca);
+      qs.set('page', String(gamesPage));
+      qs.set('page_size', String(gamesPageSize));
+      const data = await api('/v1/admin/games?' + qs.toString());
+      gamesRows = data.data || [];
+      gamesMeta = data.meta || { total: gamesRows.length, page: gamesPage, page_size: gamesPageSize };
+      gamesPage = gamesMeta.page || gamesPage;
+      document.getElementById('games-body').innerHTML = gamesRows.map(g => `
+        <tr>
+          <td><code>${escapeHtml(g.game_id)}</code></td>
+          <td>${escapeHtml(g.name)}</td>
+          <td>${g.menu_template ? `<code>${escapeHtml(g.menu_template)}</code>` : '<span class="muted">未绑定</span>'}</td>
+          <td>${g.card_auth_enabled !== false
+            ? '<span class="tag ok">需卡密</span>'
+            : '<span class="tag warn">仅联网</span>'}</td>
+          <td>${g.enabled ? statusTag('active') : statusTag('banned')}</td>
+          <td class="row-actions">
+            <button class="btn sm ghost" onclick='openGameModal(${JSON.stringify(g)})'>编辑</button>
+            <button class="btn sm" onclick="goManageFeatures('${escapeHtml(g.game_id)}')">功能管理</button>
+            <button class="btn sm ghost" onclick="toggleCardAuth(${g.id}, ${g.card_auth_enabled === false})">${g.card_auth_enabled !== false ? '关卡密' : '开卡密'}</button>
+            <button class="btn sm ghost" onclick="toggleGame(${g.id}, ${!g.enabled})">${g.enabled ? '停用' : '启用'}</button>
+            <button class="btn sm danger" onclick="delGame(${g.id}, '${escapeHtml(g.game_id)}')">删除</button>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="6" class="empty">暂无游戏或无匹配项</td></tr>';
+      renderPager('games-pager', gamesMeta, `gamesPage=${gamesPage - 1};loadGamesTable()`, `gamesPage=${gamesPage + 1};loadGamesTable()`);
+    }
+
+    function openGameModal(game) {
+      const isEdit = !!(game && game.id);
+      openModal(`
+        <h3>${isEdit ? '编辑游戏' : '添加游戏'}</h3>
+        <p class="sub">${isEdit ? '可改名称、模板；点同步可从模板补齐功能' : '输入 game_id 后会自动匹配同名模板并带出名称；无匹配则保持空白'}</p>
+        <div class="form-grid">
+          <div class="full"><label>game_id</label>
+            <input id="m-g-id" value="${escapeHtml(game?.game_id || '')}" ${isEdit ? 'disabled' : ''}
+              placeholder="建议与模板同名，如 zhmr"
+              oninput="onGameIdInput(this.value)" /></div>
+          <div class="full"><label>名称</label>
+            <input id="m-g-name" value="${escapeHtml(game?.name || '')}" placeholder="如 战魂铭人"
+              oninput="onGameNameInput()" /></div>
+          <div class="full"><label>菜单模板</label>
+            ${gamePickerMarkup('m-g-template', {
+              kind: 'templates',
+              emptyLabel: '不绑定（稍后手动同步）',
+              allowEmpty: true,
+              onchange: 'onGameTemplateChange',
+              searchPlaceholder: '搜索模板名称 / id',
+            })}
+          </div>
+          <div class="full"><label>卡密启用</label>
+            <select id="m-g-card-auth">
+              <option value="1" ${(!game || game.card_auth_enabled !== false) ? 'selected' : ''}>开启（需卡密 + 显示账号 Tab）</option>
+              <option value="0" ${(game && game.card_auth_enabled === false) ? 'selected' : ''}>关闭（隐藏账号 Tab，仅需联网）</option>
+            </select>
+            <p class="muted" style="margin:6px 0 0">关闭后客户端不走卡密登录，但仍需成功拉取服务器配置才能用功能。</p>
+          </div>
+          ${isEdit ? `<div class="full"><label>游戏启用</label>
+            <select id="m-g-enabled"><option value="1" ${game.enabled ? 'selected' : ''}>启用</option>
+            <option value="0" ${!game.enabled ? 'selected' : ''}>停用</option></select></div>` : ''}
+          <div class="full" id="m-g-preview" style="padding:10px;border-radius:8px;background:rgba(0,0,0,.2);font-size:13px;line-height:1.7"></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          ${isEdit ? `<button class="btn ghost" onclick="saveGame(${game.id}, true)">保存并同步菜单</button>` : ''}
+          <button class="btn" onclick="saveGame(${isEdit ? game.id : 'null'})">保存</button>
+        </div>`);
+      fillGameSelects();
+      // 重置自动识别状态：弹窗打开时不预选模板、不预填名称、不封锁 game_id 自动识别。
+      // 修复 2026-09-05：此前打开即调 onGameTemplateChange() 把 touched 置 1，
+      // 且创建模式固定猜测 zhmr → 自动识别永远失效。
+      const tplRoot = getPickerRoot('m-g-template');
+      if (tplRoot) tplRoot.dataset.touched = '0';
+      const nameEl = document.getElementById('m-g-name');
+      if (nameEl) delete nameEl.dataset.autofilled;
+      if (isEdit) {
+        // 编辑模式：回填现有绑定并渲染功能预览（非静默会触发 onchange，见下）
+        setGamePickerValue('m-g-template', game?.menu_template || '', true);
+        previewTemplateFeatures(game?.menu_template || '');
+      } else {
+        previewTemplateFeatures('');
+      }
+    }
+
+    /** 模板 picker 用户手动选择时触发（组件无参回调）；程序化预览走 previewTemplateFeatures 直调，不走这里 */
+    function onGameTemplateChange() {
+      const tid = getGamePickerValue('m-g-template');
+      const root = getPickerRoot('m-g-template');
+      if (root) root.dataset.touched = '1';   // 手动选择后，game_id 自动识别让位
+      previewTemplateFeatures(tid);
+      fillNameFromTemplate(tid);
+    }
+
+    function onGameIdInput(gid) {
+      gid = (gid || '').trim();
+      const root = getPickerRoot('m-g-template');
+      if (!root || root.dataset.touched === '1') return;
+      if (menuTemplates.some(t => t.id === gid)) {
+        setGamePickerValue('m-g-template', gid, true);
+        previewTemplateFeatures(gid);
+        fillNameFromTemplate(gid);
+      }
+    }
+
+    /** 由模板带出名称：仅当名称为空或此前是自动带出的（用户手改过则不覆盖） */
+    function fillNameFromTemplate(tid) {
+      const nameEl = document.getElementById('m-g-name');
+      if (!nameEl) return;
+      const t = menuTemplates.find(x => x.id === tid);
+      if (!t) return;
+      if (nameEl.value.trim() && nameEl.dataset.autofilled !== '1') return;
+      nameEl.value = t.name;
+      nameEl.dataset.autofilled = '1';
+    }
+
+    /** 用户手动改名称后，取消自动带出标记 */
+    function onGameNameInput() {
+      const nameEl = document.getElementById('m-g-name');
+      if (nameEl) delete nameEl.dataset.autofilled;
+    }
+
+    async function saveGame(id, alsoSync) {
+      try {
+        const game_id = document.getElementById('m-g-id').value.trim();
+        const name = document.getElementById('m-g-name').value.trim();
+        const menu_template = getGamePickerValue('m-g-template') || null;
+        const card_auth_enabled = document.getElementById('m-g-card-auth').value === '1';
+        if (!game_id || !name) { toast('请填写完整'); return; }
+        if (id) {
+          const enabled = document.getElementById('m-g-enabled').value === '1';
+          await api('/v1/admin/games/' + id, {
+            method: 'PATCH',
+            body: JSON.stringify({ name, enabled, menu_template, card_auth_enabled })
+          });
+          if (alsoSync) {
+            const g = gamesCache.find(x => x.id === id) || { game_id };
+            const sync = await api('/v1/admin/games/' + encodeURIComponent(g.game_id) + '/sync-features', {
+              method: 'POST', body: JSON.stringify({ mode: 'replace', menu_template })
+            });
+            toast(`已保存，同步 +${sync.data?.added || 0} / 更新 ${sync.data?.updated || 0}`);
+          } else toast('已保存');
+          closeModal();
+          await loadGames();
+        } else {
+          const data = await api('/v1/admin/games', {
+            method: 'POST',
+            body: JSON.stringify({ game_id, name, menu_template, card_auth_enabled, sync_features: true })
+          });
+          closeModal();
+          await loadGames();
+          const synced = data.data?.synced_features;
+          const count = synced?.features?.length || 0;
+          openModal(`
+            <h3>游戏已创建</h3>
+            <p class="sub">${escapeHtml(name)}（${escapeHtml(game_id)}）
+              ${count ? `已自动写入 <strong>${count}</strong> 个菜单功能` : '未绑定模板，可稍后在功能管理中同步'}</p>
+            <div class="modal-actions">
+              <button class="btn ghost" onclick="closeModal()">稍后</button>
+              <button class="btn" onclick="closeModal(); goManageFeatures('${escapeHtml(game_id)}')">去开关功能</button>
+            </div>`);
+        }
+      } catch (e) { toast(e.message); }
+    }
+
+    async function toggleGame(id, enabled) {
+      try {
+        await api('/v1/admin/games/' + id, { method: 'PATCH', body: JSON.stringify({ enabled }) });
+        await loadGames(); toast('已更新');
+      } catch (e) { toast(e.message); }
+    }
+
+    async function toggleCardAuth(id, enabled) {
+      try {
+        await api('/v1/admin/games/' + id, { method: 'PATCH', body: JSON.stringify({ card_auth_enabled: enabled }) });
+        await loadGames();
+        toast(enabled ? '已开启卡密验证' : '已关闭卡密验证（仍需联网）');
+      } catch (e) { toast(e.message); }
+    }
+
+    // 删除游戏：服务端有卡密引用时 409，提示后可强制（连同该游戏卡密一起删）
+    async function delGame(id, gameId) {
+      if (!confirm(`删除游戏「${gameId}」？\n将同时删除该游戏的功能门控、在线统计、授权事件与会话，不可恢复。\n建议先「停用」观察几天再删。`)) return;
+      try {
+        const r = await api('/v1/admin/games/' + id, { method: 'DELETE' });
+        toast(r.message || '已删除');
+        await loadGames();
+        loadDashboard(true);
+      } catch (e) {
+        if (e.status === 409 && confirm(e.message + '\n\n是否强制删除（连同该游戏下全部卡密）？')) {
+          try {
+            const r2 = await api('/v1/admin/games/' + id + '?force=1', { method: 'DELETE' });
+            toast(r2.message || '已强制删除');
+            await loadGames();
+            loadDashboard(true);
+          } catch (e2) { toast(e2.message); }
+        } else {
+          toast(e.message);
+        }
+      }
+    }
+
+    /* -------- cards -------- */
+    function openCardCreateModal() {
+      if (!gamesCache.length) { toast('请先在「游戏」里添加游戏'); switchPage('games'); return; }
+      openModal(`
+        <h3>生成卡密</h3>
+        <p class="sub">生成后可一键复制或导出 txt</p>
+        <div class="form-grid">
+          <div><label for="m-c-mode">生成方式</label>
+            <select id="m-c-mode" onchange="onCardCreateModeChange()">
+              <option value="random" selected>随机生成</option>
+              <option value="custom">自定义卡密</option>
+            </select></div>
+          <div id="m-c-count-wrap"><label for="m-c-count">数量</label><input id="m-c-count" type="number" value="5" min="1" max="500" /></div>
+          <div id="m-c-prefix-wrap"><label for="m-c-prefix">前缀</label><input id="m-c-prefix" value="SG" maxlength="8" oninput="updatePrefixPreview()" /></div>
+          <div class="full" id="m-c-custom-wrap" style="display:none">
+            <label for="m-c-custom">自定义卡密（每行一条，也可用空格/逗号分隔，单次≤500）</label>
+            <textarea id="m-c-custom" rows="6" style="width:100%;font-family:ui-monospace,monospace;font-size:12.5px;padding:10px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);color:inherit"
+              placeholder="MY-CARD-001&#10;MY-CARD-002&#10;GIFT_2026"></textarea>
+            <p class="muted" style="margin:6px 0 0">输入什么就是什么。限字母/数字/-/_，4~64 位；与已有卡密或本批内重复将整批拒绝。</p>
+          </div>
+          <div><label for="m-c-scope">范围</label>
+            <select id="m-c-scope" onchange="onCardScopeChange()">
+              <option value="game">单游戏</option><option value="global">全游戏</option>
+            </select></div>
+          <div id="m-c-game-wrap"><label>游戏</label>
+            ${gamePickerMarkup('m-c-game', { emptyLabel: '请选择游戏', allowEmpty: false })}</div>
+          <div><label for="m-c-type">类型</label>
+            <select id="m-c-type">
+              <option value="hour">小时</option><option value="day" selected>天</option>
+              <option value="month">月</option><option value="year">年</option>
+              <option value="permanent">永久</option><option value="count">次数</option>
+            </select></div>
+          <div><label for="m-c-uses">次数上限（0=不限）</label><input id="m-c-uses" type="number" value="0" min="0" /></div>
+          <div class="full"><label for="m-c-note">备注</label><input id="m-c-note" placeholder="可选，如批次号" /></div>
+          <div class="full"><div class="muted">卡密预览</div><div class="prefix-preview" id="m-c-preview">SG-••••-••••</div></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" onclick="createCards()">生成</button>
+        </div>`);
+      updatePrefixPreview();
+      fillGameSelects();
+      if (gamesCache[0]) setGamePickerValue('m-c-game', gamesCache[0].game_id, true);
+      onCardScopeChange();
+      onCardCreateModeChange();
+    }
+
+    /** 生成方式切换：随机=数量+前缀；自定义=卡密文本域 */
+    function onCardCreateModeChange() {
+      const mode = document.getElementById('m-c-mode')?.value || 'random';
+      const custom = mode === 'custom';
+      const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+      show('m-c-count-wrap', !custom);
+      show('m-c-prefix-wrap', !custom);
+      show('m-c-custom-wrap', custom);
+      show('m-c-preview', !custom);
+    }
+
+    /** 范围=全游戏时隐藏并清空游戏选择器（此前只降透明度仍可点，会带出脏数据） */
+    function onCardScopeChange() {
+      const scope = document.getElementById('m-c-scope')?.value;
+      const wrap = document.getElementById('m-c-game-wrap');
+      if (wrap) wrap.style.display = scope === 'game' ? '' : 'none';
+      if (scope !== 'game') setGamePickerValue('m-c-game', '', true);
+    }
+
+    function updatePrefixPreview() {
+      const p = (document.getElementById('m-c-prefix')?.value || 'SG').trim() || 'SG';
+      const el = document.getElementById('m-c-preview');
+      if (el) el.textContent = p.toUpperCase() + '-A1B2-C3D4';
+    }
+
+    /* -------- 卡密「操作」下拉 + 统一编辑弹窗（2026-09-06） -------- */
+    let cardRowMenuEl = null;
+    function closeCardRowMenu() {
+      if (cardRowMenuEl) { cardRowMenuEl.remove(); cardRowMenuEl = null; }
+    }
+    function openCardRowMenu(ev, id, status) {
+      ev.stopPropagation(); ev.preventDefault();
+      if (cardRowMenuEl && cardRowMenuEl.dataset.forId === String(id)) { closeCardRowMenu(); return; }
+      closeCardRowMenu();
+      const banned = status === 'banned';
+      const menu = document.createElement('div');
+      menu.className = 'card-row-menu';
+      menu.dataset.forId = String(id);
+      menu.innerHTML = `
+        <div class="crm-item" data-act="edit">编辑</div>
+        <div class="crm-item" data-act="unbind">解绑设备</div>
+        <div class="crm-item${banned ? '' : ' crm-danger'}" data-act="ban">${banned ? '解封' : '封禁'}</div>
+        <div class="crm-item crm-danger" data-act="del">删除</div>`;
+      menu.addEventListener('click', e => e.stopPropagation());
+      menu.addEventListener('click', e => {
+        const item = e.target.closest('.crm-item');
+        if (!item) return;
+        const act = item.dataset.act;
+        closeCardRowMenu();
+        if (act === 'edit') openCardEditModal(id);
+        else if (act === 'unbind') forceUnbind(id);
+        else if (act === 'ban') banCard(id, banned ? 'active' : 'banned');
+        else if (act === 'del') delCard(id);
+      });
+      document.body.appendChild(menu);
+      cardRowMenuEl = menu;
+      const r = ev.currentTarget.getBoundingClientRect();
+      menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 148)) + 'px';
+      menu.style.top = Math.min(r.bottom + 4, window.innerHeight - 170) + 'px';
+    }
+
+    const CARD_STATUS_CN = { unused: '未使用', active: '正常', expired: '已过期', banned: '封禁', exhausted: '已用尽' };
+
+    /** 统一编辑弹窗：卡密只读；范围/游戏/类型/到期/次数/状态/备注可改。换游戏 → 下次心跳生效 */
+    function openCardEditModal(id) {
+      const card = cardsCache.find(c => c.id === id);
+      if (!card) { toast('卡密不存在'); return; }
+      openModal(`
+        <h3>编辑卡密</h3>
+        <p class="sub">卡密 <code>${escapeHtml(card.key_code)}</code>（不可修改） · 状态 ${escapeHtml(CARD_STATUS_CN[card.status] || card.status)}</p>
+        <div class="form-grid">
+          <div><label>范围</label>
+            <select id="m-e2-scope" onchange="onCardEditScopeChange()">
+              <option value="game" ${card.scope === 'game' ? 'selected' : ''}>单游戏</option>
+              <option value="global" ${card.scope === 'global' ? 'selected' : ''}>全游戏</option>
+            </select></div>
+          <div id="m-e2-game-wrap"><label>游戏（换成哪个就只能登哪个）</label>
+            ${gamePickerMarkup('m-e2-game', { emptyLabel: '请选择游戏', allowEmpty: false })}</div>
+          <div><label>类型</label>
+            <select id="m-e2-type">
+              ${['hour','day','month','year','permanent','count'].map(t => `<option value="${t}" ${card.duration_type === t ? 'selected' : ''}>${TYPE_CN[t] || t}</option>`).join('')}
+            </select></div>
+          <div><label>状态（由到期/次数/封禁自动判定）</label>
+            <div style="padding-top:8px">${statusTag(card.status)}</div></div>
+          <div><label>到期时间</label>
+            ${timePickerMarkup('m-e2-expire', { value: toLocalInput(card.expire_at), emptyLabel: '未设置（不限时）' })}</div>
+          <div><label>次数上限（0=不限）</label>
+            <input id="m-e2-max" type="number" min="0" value="${Number(card.max_uses || 0)}" /></div>
+          <div><label>已用次数</label>
+            <input id="m-e2-used" type="number" min="0" value="${Number(card.used_count || 0)}" /></div>
+          <div class="full"><label>备注</label>
+            <input id="m-e2-note" value="${escapeHtml(card.note || '')}" placeholder="可选，如批次号" /></div>
+        </div>
+        <p class="muted" style="margin:10px 0 0">换游戏后：原游戏下次心跳校验时失效，新登录只能登新游戏。清除到期时间并保存 = 取消时间限制。</p>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" onclick="saveCardEdit(${id})">保存</button>
+        </div>`);
+      fillGameSelects();
+      if (card.game_id) setGamePickerValue('m-e2-game', card.game_id, true);
+      onCardEditScopeChange();
+    }
+
+    function onCardEditScopeChange() {
+      const scope = document.getElementById('m-e2-scope')?.value;
+      const wrap = document.getElementById('m-e2-game-wrap');
+      if (wrap) wrap.style.display = scope === 'game' ? '' : 'none';
+    }
+
+    async function saveCardEdit(id) {
+      try {
+        const scope = document.getElementById('m-e2-scope').value;
+        const body = {
+          scope,
+          game_id: scope === 'game' ? (getGamePickerValue('m-e2-game') || null) : null,
+          duration_type: document.getElementById('m-e2-type').value,
+          expire_at: tpISOString('m-e2-expire'),
+          max_uses: Number(document.getElementById('m-e2-max').value || 0),
+          used_count: Number(document.getElementById('m-e2-used').value || 0),
+          note: document.getElementById('m-e2-note').value.trim() || null,
+        };
+        if (body.scope === 'game' && !body.game_id) { toast('请选择游戏'); return; }
+        await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify(body) });
+        closeModal(); toast('已保存'); loadCards(); loadDashboard(true);
+      } catch (e) { toast(e.message); }
+    }
+
+    async function createCards() {
+      try {
+        const customMode = (document.getElementById('m-c-mode')?.value || 'random') === 'custom';
+        const customKeys = customMode
+          ? document.getElementById('m-c-custom').value.split('\n').map(x => x.trim()).filter(Boolean)
+          : null;
+        if (customMode && !customKeys.length) { toast('请输入自定义卡密'); return; }
+        const body = {
+          count: Number(document.getElementById('m-c-count').value || 1),
+          prefix: (document.getElementById('m-c-prefix').value || 'SG').trim() || 'SG',
+          scope: document.getElementById('m-c-scope').value,
+          game_id: document.getElementById('m-c-scope').value === 'game'
+            ? (getGamePickerValue('m-c-game') || null) : null,
+          duration_type: document.getElementById('m-c-type').value,
+          max_uses: Number(document.getElementById('m-c-uses').value || 0),
+          note: document.getElementById('m-c-note').value.trim() || null,
+        };
+        if (customMode) body.custom_keys = customKeys;
+        if (body.scope === 'game' && !body.game_id) { toast('请选择游戏'); return; }
+        const data = await api('/v1/admin/cards', { method: 'POST', body: JSON.stringify(body) });
+        const keys = (data.data || []).map(c => c.key_code);
+        window.__lastGeneratedKeys = keys;
+        openModal(`
+          <h3>已生成 ${keys.length} 张</h3>
+          <p class="sub">可复制全部或导出为 txt</p>
+          <div class="key-list">${keys.map(k => `<code>${escapeHtml(k)}</code>`).join('')}</div>
+          <div class="modal-actions">
+            <button class="btn ghost" onclick="closeModal()">关闭</button>
+            <button class="btn ghost" onclick="downloadText('cards.txt', (window.__lastGeneratedKeys||[]).join('\\n'))">导出 txt</button>
+            <button class="btn" onclick="copyText((window.__lastGeneratedKeys||[]).join('\\n'))">全部复制</button>
+          </div>`, true);
+        loadCards(); loadDashboard(true);
+      } catch (e) { toast(e.message); }
+    }
+
+    async function loadCards() {
+      const q = document.getElementById('c-q').value.trim();
+      const status = document.getElementById('c-status').value;
+      const scope = document.getElementById('c-filter-scope')?.value || '';
+      const game_id = getGamePickerValue('c-filter-game');
+      const bound = document.getElementById('c-bound').value;
+      const unbind = document.getElementById('c-unbind').value;
+      const qs = new URLSearchParams();
+      if (q) qs.set('q', q);
+      if (status) qs.set('status', status);
+      if (scope) qs.set('scope', scope);
+      if (game_id) qs.set('game_id', game_id);
+      if (bound !== '') qs.set('bound', bound === '1' ? 'true' : 'false');
+      if (unbind !== '') qs.set('unbind_used', unbind === '1' ? 'true' : 'false');
+      qs.set('page', String(cardsPage));
+      qs.set('page_size', String(cardsPageSize));
+      const data = await api('/v1/admin/cards?' + qs.toString());
+      cardsCache = data.data || [];
+      cardsMeta = data.meta || { total: cardsCache.length, page: cardsPage, page_size: cardsPageSize };
+      cardsPage = cardsMeta.page || cardsPage;
+      selectedCardIds = new Set([...selectedCardIds].filter(id => cardsCache.some(c => c.id === id)));
+      renderCardsTable();
+      renderCardsPager();
+    }
+
+    function renderCardsPager() {
+      const el = document.getElementById('cards-pager');
+      if (!el) return;
+      const total = cardsMeta.total || 0;
+      const page = cardsMeta.page || cardsPage;
+      const size = cardsMeta.page_size || cardsPageSize;
+      const pages = Math.max(1, Math.ceil(total / size) || 1);
+      el.innerHTML = `
+        <span class="muted">共 ${total} 条 · 第 ${page}/${pages} 页</span>
+        <div class="pager-actions">
+          <button class="btn sm ghost" ${page <= 1 ? 'disabled' : ''} onclick="cardsPage=${page - 1};loadCards()">上一页</button>
+          <button class="btn sm ghost" ${page >= pages ? 'disabled' : ''} onclick="cardsPage=${page + 1};loadCards()">下一页</button>
+        </div>`;
+    }
+
+    function gameLabel(gameId) {
+      if (!gameId) return '—';
+      const g = gamesCache.find(x => x.game_id === gameId);
+      return g ? g.name : gameId;
+    }
+
+    function renderCardsTable() {
+      updateBatchBar();
+      const all = document.getElementById('c-check-all');
+      if (all) all.checked = cardsCache.length > 0 && selectedCardIds.size === cardsCache.length;
+      document.getElementById('cards-body').innerHTML = cardsCache.map(c => {
+        const exp = c.expire_at ? fmtLocal(c.expire_at) : (c.duration_type === 'permanent' ? '永久' : '-');
+        const note = c.note ? escapeHtml(c.note) : '<span class="muted">点击添加</span>';
+        const deviceShort = c.device_id ? escapeHtml(c.device_id.slice(0, 12)) + '…' : '未绑定';
+        const deviceFull = expandedDevices.has(c.id)
+          ? `<div class="device-full">${escapeHtml(c.device_id || '')}</div>` : '';
+        const checked = selectedCardIds.has(c.id) ? 'checked' : '';
+        const banLabel = c.status === 'banned' ? '解封' : '封禁';
+        const banStatus = c.status === 'banned' ? 'active' : 'banned';
+        return `
+        <tr class="${checked ? 'is-selected' : ''}" data-id="${c.id}">
+          <td><input type="checkbox" ${checked} onchange="toggleCardSelect(${c.id}, this.checked)" /></td>
+          <td><code class="card-key" title="点击复制" onclick="copyText('${c.key_code}')">${c.key_code}</code></td>
+          <td>${c.scope === 'global' ? '全游戏' : '单游戏'}</td>
+          <td>${c.scope === 'global' ? '<span class="muted">全部</span>' : escapeHtml(gameLabel(c.game_id))}</td>
+          <td>${TYPE_CN[c.duration_type] || c.duration_type}${c.max_uses ? ' · ' + c.used_count + '/' + c.max_uses : ''}</td>
+          <td>${statusTag(c.status)}</td>
+          <td>${exp}</td>
+          <td class="note-cell" onclick='editCardNote(${c.id}, ${JSON.stringify(c.note || '')})'>${note}</td>
+          <td>
+            <span style="cursor:pointer" onclick="toggleDevice(${c.id})">${deviceShort}</span>
+            ${c.unbind_used ? '<div class="muted">已解绑过</div>' : ''}
+            ${deviceFull}
+          </td>
+          <td class="row-actions">
+            <button class="btn sm ghost" onclick="openCardRowMenu(event, ${c.id}, '${c.status}')">操作 ▾</button>
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="10" class="empty">暂无卡密</td></tr>';
+    }
+
+    function toggleCardSelect(id, on) {
+      if (on) selectedCardIds.add(id); else selectedCardIds.delete(id);
+      updateBatchBar();
+      const tr = document.querySelector(`tr[data-id="${id}"]`);
+      if (tr) tr.classList.toggle('is-selected', on);
+    }
+    function toggleAllCards(on) {
+      selectedCardIds.clear();
+      if (on) cardsCache.forEach(c => selectedCardIds.add(c.id));
+      document.querySelectorAll('#cards-body input[type=checkbox]').forEach(cb => { cb.checked = on; });
+      document.querySelectorAll('#cards-body tr[data-id]').forEach(tr => tr.classList.toggle('is-selected', on));
+      updateBatchBar();
+    }
+    function clearCardSelection() {
+      selectedCardIds.clear();
+      const all = document.getElementById('c-check-all');
+      if (all) all.checked = false;
+      renderCardsTable();
+    }
+    function updateBatchBar() {
+      const bar = document.getElementById('card-batch-bar');
+      const n = selectedCardIds.size;
+      if (!bar) return;
+      bar.classList.toggle('show', n > 0);
+      document.getElementById('card-batch-count').textContent = '已选 ' + n;
+    }
+    async function batchBanCards(status) {
+      if (!selectedCardIds.size) return;
+      if (!confirm(`对选中的 ${selectedCardIds.size} 张执行${status === 'banned' ? '封禁' : '解封'}？`)) return;
+      try {
+        for (const id of [...selectedCardIds]) {
+          await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ status }) });
+        }
+        toast('批量操作完成'); loadCards(); loadDashboard(true);
+      } catch (e) { toast(e.message); }
+    }
+    async function batchExtendCards(days) {
+      if (!selectedCardIds.size) return;
+      if (!confirm(`对选中的 ${selectedCardIds.size} 张延期 ${days} 天？`)) return;
+      try {
+        await api('/v1/admin/cards/batch', {
+          method: 'POST',
+          body: JSON.stringify({ ids: [...selectedCardIds], extend_days: days })
+        });
+        toast(`已批量延期 ${days} 天`); loadCards(); loadDashboard(true);
+      } catch (e) { toast(e.message); }
+    }
+    function batchExportCards() {
+      const keys = cardsCache.filter(c => selectedCardIds.has(c.id)).map(c => c.key_code);
+      if (!keys.length) return;
+      downloadText('cards-selected.txt', keys.join('\n'));
+      toast('已导出 ' + keys.length + ' 张');
+    }
+    function toggleDevice(id) {
+      if (expandedDevices.has(id)) expandedDevices.delete(id); else expandedDevices.add(id);
+      renderCardsTable();
+    }
+    async function editCardNote(id, oldNote) {
+      openModal(`
+        <h3>编辑备注</h3>
+        <label for="m-note">备注</label>
+        <input id="m-note" value="${escapeHtml(oldNote || '')}" placeholder="批次 / 渠道等" />
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" onclick="saveCardNote(${id})">保存</button>
+        </div>`);
+    }
+    async function saveCardNote(id) {
+      try {
+        const note = document.getElementById('m-note').value.trim() || null;
+        await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ note }) });
+        closeModal(); toast('备注已更新'); loadCards();
+      } catch (e) { toast(e.message); }
+    }
+
+    async function banCard(id, status) {
+      try { await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ status }) }); toast('已更新'); loadCards(); loadDashboard(true); }
+      catch (e) { toast(e.message); }
+    }
+    async function saveCardUses(id) {
+      try {
+        const max_uses = Number(document.getElementById('m-max-uses').value || 0);
+        const used_count = Number(document.getElementById('m-used-count').value || 0);
+        if (max_uses < 0 || used_count < 0) { toast('次数不能为负'); return; }
+        await api('/v1/admin/cards/' + id, {
+          method: 'PATCH',
+          body: JSON.stringify({ max_uses, used_count })
+        });
+        closeModal(); toast('次数已更新'); loadCards();
+      } catch (e) { toast(e.message); }
+    }
+    async function forceUnbind(id) {
+      if (!confirm('强制解绑并重置自助解绑额度？')) return;
+      try {
+        await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ force_unbind: true, reset_unbind: true }) });
+        toast('已强制解绑'); loadCards();
+      } catch (e) { toast(e.message); }
+    }
+    async function delCard(id) {
+      if (!confirm('确认删除该卡密？')) return;
+      try { await api('/v1/admin/cards/' + id, { method: 'DELETE' }); toast('已删除'); loadCards(); loadDashboard(true); }
+      catch (e) { toast(e.message); }
+    }
+
+    /* -------- announcements -------- */
+    function toLocalInput(iso) {
+      // 经 parseServerTime：裸串按 UTC 解析再转本地，避免回填值早 8 小时、保存即吃掉 8 小时
+      const d = parseServerTime(iso);
+      if (!d) return '';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    async function loadAnnouncements() {
+      const qs = new URLSearchParams();
+      const q = document.getElementById('a-q')?.value.trim() || '';
+      const gameId = getGamePickerValue('a-filter-game');
+      const scope = document.getElementById('a-scope')?.value || '';
+      const en = boolParam(document.getElementById('a-enabled')?.value || '');
+      const vis = document.getElementById('a-vis')?.value || '';
+      if (q) qs.set('q', q);
+      if (gameId) qs.set('game_id', gameId);
+      if (scope) qs.set('scope', scope);
+      if (en) qs.set('enabled', en);
+      if (vis) qs.set('visibility', vis);
+      qs.set('page', String(annPage));
+      qs.set('page_size', String(annPageSize));
+      const data = await api('/v1/admin/announcements?' + qs.toString());
+      announcementsCache = data.data || [];
+      annMeta = data.meta || { total: announcementsCache.length, page: annPage, page_size: annPageSize };
+      annPage = annMeta.page || annPage;
+      document.getElementById('ann-body').innerHTML = announcementsCache.map(a => {
+        // 状态列 = 实际展示状态：开关开 + 在时间窗内 → 「显示」；否则「未显示」+原因
+        const nowMs = Date.now();
+        const sT = parseServerTime(a.start_at)?.getTime() ?? null;
+        const eT = parseServerTime(a.end_at)?.getTime() ?? null;
+        const showing = a.enabled && (sT === null || nowMs >= sT) && (eT === null || nowMs <= eT);
+        return `
+        <tr>
+          <td><strong>${escapeHtml(a.title)}</strong><div class="muted">${escapeHtml(a.content).slice(0,80)}</div>
+            ${a.action_url ? '<div class="muted">跳转：' + escapeHtml(a.action_url) + '</div>' : ''}</td>
+          <td>${a.scope === 'global' ? '全游戏' : '单游戏'}${a.game_id ? ' / ' + escapeHtml(gameLabel(a.game_id)) : ''}</td>
+          <td>${VIS_CN[a.visibility] || a.visibility || '始终'}</td>
+          <td>${POPUP_CN[a.popup_mode] || a.popup_mode || '每次打开'}</td>
+          <td>${a.start_at ? fmtLocal(a.start_at) : '<span class="muted">—</span>'}</td>
+          <td>${a.end_at ? fmtLocal(a.end_at) : '<span class="muted">—</span>'}</td>
+          <td>${showing ? '<span class="tag ok">显示</span>' : '<span class="tag warn">未显示</span>'}</td>
+          <td class="row-actions">
+            <button class="btn sm ghost" onclick="moveAnn(${a.id}, -1)">↑</button>
+            <button class="btn sm ghost" onclick="moveAnn(${a.id}, 1)">↓</button>
+            <button class="btn sm ghost" onclick='openAnnModal(${JSON.stringify(a)})'>编辑</button>
+            <button class="btn sm ghost" onclick="toggleAnn(${a.id}, ${!a.enabled})">${a.enabled ? '停用' : '启用'}</button>
+            <button class="btn sm danger" onclick="delAnn(${a.id})">删</button>
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="8" class="empty">暂无公告或无匹配项</td></tr>';
+      renderPager('ann-pager', annMeta, `annPage=${annPage - 1};loadAnnouncements()`, `annPage=${annPage + 1};loadAnnouncements()`);
+    }
+
+    async function moveAnn(id, dir) {
+      try {
+        await api('/v1/admin/announcements/' + id + '/move?direction=' + dir, { method: 'POST' });
+        loadAnnouncements();
+      } catch (e) { toast(e.message); }
+    }
+
+    function updateAnnPreview() {
+      const title = document.getElementById('m-a-title')?.value || '';
+      const content = document.getElementById('m-a-content')?.value || '';
+      const url = (document.getElementById('m-a-url')?.value || '').trim();
+      const label = (document.getElementById('m-a-label')?.value || '').trim() || '立即前往';
+      const box = document.getElementById('m-a-preview');
+      if (!box) return;
+      const actions = url
+        ? `<div class="ann-preview-actions">
+             <button class="btn sm ghost" type="button">关闭</button>
+             <button class="btn sm" type="button">${escapeHtml(label)}</button>
+           </div>`
+        : `<div class="ann-preview-actions">
+             <button class="btn sm ghost" type="button">关闭</button>
+           </div>`;
+      box.innerHTML = `
+        <div class="ann-preview-title">${escapeHtml(title) || '<span class="muted">标题预览</span>'}</div>
+        <p class="ann-preview-body">${escapeHtml(content) || '内容预览…'}</p>
+        ${actions}`;
+    }
+
+    function openAnnModal(a) {
+      const isEdit = !!(a && a.id);
+      const vis = a?.visibility || 'always';
+      const popup = a?.popup_mode || 'every_open';
+      openModal(`
+        <h3>${isEdit ? '编辑公告' : '发布公告'}</h3>
+        <div class="form-grid">
+          <div><label>范围</label>
+            <select id="m-a-scope" onchange="onAnnScopeChange()"><option value="global" ${!a || a.scope==='global'?'selected':''}>全游戏</option>
+            <option value="game" ${a&&a.scope==='game'?'selected':''}>单游戏</option></select></div>
+          <div id="m-a-game-wrap"><label>游戏</label>${gamePickerMarkup('m-a-game', { emptyLabel: '请选择 / 可空', allowEmpty: true })}</div>
+          <div><label>可见性</label>
+            <select id="m-a-vis">
+              <option value="always" ${vis==='always'?'selected':''}>始终</option>
+              <option value="logged_out" ${vis==='logged_out'?'selected':''}>仅未登录</option>
+              <option value="logged_in" ${vis==='logged_in'?'selected':''}>仅已登录</option>
+            </select></div>
+          <div><label>弹出方式</label>
+            <select id="m-a-popup">
+              <option value="every_open" ${popup==='every_open'?'selected':''}>每次打开</option>
+              <option value="once_device" ${popup==='once_device'?'selected':''}>每设备一次</option>
+            </select></div>
+          <div><label>开始时间（可选）</label>
+            ${timePickerMarkup('m-a-start', { value: toLocalInput(a?.start_at) })}</div>
+          <div><label>结束时间（可选）</label>
+            ${timePickerMarkup('m-a-end', { value: toLocalInput(a?.end_at) })}</div>
+          <div class="full"><label>标题</label>
+            <input id="m-a-title" value="${escapeHtml(a?.title || '')}" oninput="updateAnnPreview()" /></div>
+          <div class="full"><label>内容</label>
+            <textarea id="m-a-content" oninput="updateAnnPreview()">${escapeHtml(a?.content || '')}</textarea></div>
+          <div><label>跳转链接（可选）</label>
+            <input id="m-a-url" type="url" placeholder="https://… 不填则只显示关闭"
+              value="${escapeHtml(a?.action_url || '')}" oninput="updateAnnPreview()" /></div>
+          <div><label>按钮文案</label>
+            <input id="m-a-label" placeholder="立即前往" value="${escapeHtml(a?.action_label || '')}"
+              oninput="updateAnnPreview()" /></div>
+          <div class="full"><label>预览</label>
+            <div class="ann-preview" id="m-a-preview"></div>
+            <p class="muted" style="margin:8px 0 0">填写跳转链接后客户端才显示「立即前往」；留空则仅关闭按钮。</p></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" onclick="saveAnn(${isEdit ? a.id : 'null'})">保存</button>
+        </div>`);
+      fillGameSelects();
+      if (a?.game_id) setGamePickerValue('m-a-game', a.game_id, true);
+      onAnnScopeChange();
+      updateAnnPreview();
+    }
+
+    /** 范围=全游戏时隐藏并清空游戏选择器（与 Toast 弹窗同模式） */
+    function onAnnScopeChange() {
+      const scope = document.getElementById('m-a-scope')?.value;
+      const wrap = document.getElementById('m-a-game-wrap');
+      if (wrap) wrap.style.display = scope === 'game' ? '' : 'none';
+      if (scope !== 'game') setGamePickerValue('m-a-game', '', true);
+    }
+
+    async function saveAnn(id) {
+      try {
+        const urlRaw = document.getElementById('m-a-url').value.trim();
+        const labelRaw = document.getElementById('m-a-label').value.trim();
+        if (urlRaw && !/^https?:\/\//i.test(urlRaw)) {
+          toast('跳转链接需以 http:// 或 https:// 开头');
+          return;
+        }
+        const scope = document.getElementById('m-a-scope').value;
+        const body = {
+          scope,
+          game_id: scope === 'game' ? (getGamePickerValue('m-a-game') || null) : null,
+          title: document.getElementById('m-a-title').value.trim(),
+          content: document.getElementById('m-a-content').value.trim(),
+          visibility: document.getElementById('m-a-vis').value,
+          popup_mode: document.getElementById('m-a-popup').value,
+          start_at: tpISOString('m-a-start'),
+          end_at: tpISOString('m-a-end'),
+          action_url: urlRaw || null,
+          action_label: labelRaw || null,
+        };
+        if (!body.title || !body.content) { toast('请填写标题和内容'); return; }
+        if (id) await api('/v1/admin/announcements/' + id, { method: 'PATCH', body: JSON.stringify(body) });
+        else await api('/v1/admin/announcements', { method: 'POST', body: JSON.stringify(body) });
+        closeModal(); toast('已保存'); loadAnnouncements();
+      } catch (e) { toast(e.message); }
+    }
+    async function toggleAnn(id, enabled) {
+      try { await api('/v1/admin/announcements/' + id, { method: 'PATCH', body: JSON.stringify({ enabled }) }); loadAnnouncements(); }
+      catch (e) { toast(e.message); }
+    }
+    async function delAnn(id) {
+      if (!confirm('删除公告？')) return;
+      try { await api('/v1/admin/announcements/' + id, { method: 'DELETE' }); loadAnnouncements(); }
+      catch (e) { toast(e.message); }
+    }
+
+    /* -------- audit -------- */
+    const AUDIT_ACTION_LABELS = {
+      'admin.change_password': '修改密码',
+      'games.create': '创建游戏',
+      'games.update': '更新游戏',
+      'games.sync_features': '同步功能',
+      'cards.create': '生成卡密',
+      'cards.batch': '批量更新卡密',
+      'cards.update': '更新卡密',
+      'cards.delete': '删除卡密',
+      'features.create': '创建功能',
+      'features.update': '更新功能',
+      'features.delete': '删除功能',
+      'announcements.create': '创建公告',
+      'announcements.reorder': '调整公告顺序',
+      'announcements.update': '更新公告',
+      'announcements.delete': '删除公告',
+      'site_settings.update': '更新站点设置',
+      'toasts.create': '创建开屏 Toast',
+      'toasts.update': '更新开屏 Toast',
+      'toasts.delete': '删除开屏 Toast',
+    };
+    const AUDIT_STATUS_LABELS = {
+      active: '正常', banned: '封禁', expired: '过期', exhausted: '用尽', unused: '未使用',
+    };
+    const AUDIT_KEY_LABELS = {
+      id: 'ID', ids: '选中数量', updated: '已更新', status: '状态',
+      force_unbind: '强制解绑', reset_unbind: '重置解绑', key: '卡密',
+      count: '数量', scope: '范围', game_id: '游戏', title: '标题',
+      name: '名称', extend_days: '延期天数', template: '模板', mode: '模式',
+    };
+
+    function formatAuditAction(action) {
+      return AUDIT_ACTION_LABELS[action] || action || '—';
+    }
+
+    function formatAuditDetail(detail) {
+      if (!detail) return '—';
+      if (/[\u4e00-\u9fff]/.test(detail) && detail.indexOf('=') < 0) return detail;
+      return detail.split(/\s+/).filter(Boolean).map(part => {
+        const eq = part.indexOf('=');
+        if (eq < 0) return part;
+        const k = part.slice(0, eq);
+        let v = part.slice(eq + 1);
+        const label = AUDIT_KEY_LABELS[k] || k;
+        if (k === 'status') v = AUDIT_STATUS_LABELS[v] || v;
+        if (k === 'scope') v = v === 'global' ? '全局' : (v === 'game' ? '单游戏' : v);
+        if (k === 'force_unbind' || k === 'reset_unbind') v = (v === 'true' || v === '1') ? '是' : '否';
+        if (k === 'mode') {
+          if (v === 'fill') v = '仅补缺';
+          else if (v === 'upsert') v = '覆盖更新';
+        }
+        return `${label}=${v}`;
+      }).join('；');
+    }
+
+    async function loadAudit() {
+      try {
+        const qs = new URLSearchParams();
+        const q = document.getElementById('au-q')?.value.trim() || '';
+        const action = document.getElementById('au-action')?.value || '';
+        const fromIso = tpISOString('au-from');
+        const toIso = tpISOString('au-to', true);   // 结束日期含当天 23:59:59
+        if (q) qs.set('q', q);
+        if (action) qs.set('action', action);
+        if (fromIso) qs.set('from_at', fromIso);
+        if (toIso) qs.set('to_at', toIso);
+        qs.set('page', String(auditPage));
+        qs.set('page_size', String(auditPageSize));
+        const data = await api('/v1/admin/audit-logs?' + qs.toString());
+        auditCache = data.data || [];
+        auditMeta = data.meta || { total: auditCache.length, page: auditPage, page_size: auditPageSize };
+        auditPage = auditMeta.page || auditPage;
+        document.getElementById('audit-body').innerHTML = auditCache.map(r => `
+          <tr>
+            <td>${r.created_at ? escapeHtml(fmtLocal(r.created_at)) : '—'}</td>
+            <td>${escapeHtml(r.admin_username)}</td>
+            <td>${escapeHtml(formatAuditAction(r.action))}</td>
+            <td>${escapeHtml(formatAuditDetail(r.detail))}</td>
+            <td class="muted">${escapeHtml(r.ip || '—')}</td>
+          </tr>`).join('') || '<tr><td colspan="5" class="empty">暂无审计记录或无匹配项</td></tr>';
+        renderPager('audit-pager', auditMeta, `auditPage=${auditPage - 1};loadAudit()`, `auditPage=${auditPage + 1};loadAudit()`);
+      } catch (e) {
+        auditCache = [];
+        document.getElementById('audit-body').innerHTML =
+          `<tr><td colspan="5" class="empty">${escapeHtml(e.message)}</td></tr>`;
+        renderPager('audit-pager', { total: 0, page: 1, page_size: auditPageSize }, '', '');
+        toast(e.message);
+      }
+    }
+
+    /* -------- features (modal for one game) -------- */
+    async function openFeatureManageModal(gameId) {
+      if (!gameId) { toast('缺少 game_id'); return; }
+      try {
+        await Promise.all([loadGamesCatalog(), loadMenuTemplates()]);
+      } catch (e) { /* forceLogout handles 401 */ }
+
+      const g = gamesCache.find(x => x.game_id === gameId);
+      if (!g && !gamesCache.length) {
+        toast('请先在游戏列表添加游戏');
+        return;
+      }
+      selectedFeatGameId = gameId;
+      featPage = 1;
+      const titleName = g ? g.name : gameId;
+      const tpl = g?.menu_template ? `模板 ${g.menu_template}` : '未绑定模板';
+      const count = Number(g?.feature_count) || 0;
+
+      openModal(`
+        <h3>${escapeHtml(titleName)} · 功能管理</h3>
+        <p class="sub">game_id: <code>${escapeHtml(gameId)}</code> · ${escapeHtml(tpl)} · ${count} 项<br/>改模板后点「同步菜单」补缺/改名，不改已有开关。</p>
+        <div class="filters" style="margin-bottom:10px">
+          <div class="field grow">
+            <label for="m-feat-q">搜索功能</label>
+            <input id="m-feat-q" placeholder="名称 / 编号" onkeydown="if(event.key==='Enter'){featPage=1;loadFeaturesForGame(selectedFeatGameId)}" />
+          </div>
+          <div class="field">
+            <label for="m-feat-enabled">可用</label>
+            <select id="m-feat-enabled">
+              <option value="">全部</option>
+              <option value="1">开启</option>
+              <option value="0">关闭</option>
+            </select>
+          </div>
+          <div class="field actions"><label>&nbsp;</label>
+            <button class="btn ghost" type="button" onclick="featPage=1;loadFeaturesForGame(selectedFeatGameId)">筛选</button>
+          </div>
+        </div>
+        <div class="actions" style="margin-bottom:12px;justify-content:flex-start">
+          <button class="btn ghost" type="button" onclick="syncSelectedGameFeatures(false)">同步菜单</button>
+          <button class="btn ghost" type="button" onclick="syncSelectedGameFeatures(true)" title="按当前模板补齐/改名，并删除模板外多余功能">同步并清理多余</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>编号</th><th>名称</th><th>可用</th><th>操作</th></tr></thead>
+            <tbody id="feat-body"><tr><td colspan="4" class="empty">加载中…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pager" id="feat-pager"></div>
+        <div class="modal-actions">
+          <button class="btn ghost" type="button" onclick="closeModal()">关闭</button>
+        </div>`, 'feat');
+
+      await loadFeaturesForGame(gameId);
+    }
+
+    async function loadFeaturesForGame(gameId) {
+      const body = document.getElementById('feat-body');
+      if (!body) return;
+      if (!gameId) {
+        body.innerHTML = '<tr><td colspan="4" class="empty">缺少游戏</td></tr>';
+        renderPager('feat-pager', { total: 0, page: 1, page_size: featPageSize }, '', '');
+        return;
+      }
+      const qs = new URLSearchParams();
+      qs.set('game_id', gameId);
+      const q = document.getElementById('m-feat-q')?.value.trim() || '';
+      const en = boolParam(document.getElementById('m-feat-enabled')?.value || '');
+      if (q) qs.set('q', q);
+      if (en) qs.set('enabled', en);
+      qs.set('page', String(featPage));
+      qs.set('page_size', String(featPageSize));
+      try {
+        const data = await api('/v1/admin/features?' + qs.toString());
+        featuresCache = data.data || [];
+        featMeta = data.meta || { total: featuresCache.length, page: featPage, page_size: featPageSize };
+        featPage = featMeta.page || featPage;
+        body.innerHTML = featuresCache.map(f => `
+          <tr>
+            <td><code>${f.feat_num}</code></td>
+            <td>${escapeHtml(f.name)}</td>
+            <td>${f.enabled ? statusTag('active') : statusTag('banned')}</td>
+            <td class="row-actions">
+              <button class="btn sm ghost" onclick="toggleFeat(${f.id}, ${!f.enabled})">${f.enabled ? '关闭' : '开启'}</button>
+              <button class="btn sm ghost" onclick='deleteFeat(${f.id}, ${f.feat_num}, ${JSON.stringify(f.name)})'>删除</button>
+            </td>
+          </tr>`).join('') || `<tr><td colspan="4" class="empty">暂无功能<br/><button class="btn sm" style="margin-top:8px" onclick="syncSelectedGameFeatures(false)">从菜单模板同步</button></td></tr>`;
+        renderPager(
+          'feat-pager',
+          featMeta,
+          `featPage=${featPage - 1};loadFeaturesForGame(selectedFeatGameId)`,
+          `featPage=${featPage + 1};loadFeaturesForGame(selectedFeatGameId)`
+        );
+      } catch (e) {
+        body.innerHTML = `<tr><td colspan="4" class="empty">${escapeHtml(e.message)}</td></tr>`;
+        toast(e.message);
+      }
+    }
+
+    async function syncSelectedGameFeatures(pruneExtra) {
+      if (!selectedFeatGameId) { toast('缺少游戏'); return; }
+      const g = gamesCache.find(x => x.game_id === selectedFeatGameId);
+      let menu_template = g?.menu_template || null;
+      if (!menu_template) {
+        const pick = menuTemplates.map(t => t.id).join(' / ');
+        const input = prompt('该游戏未绑定模板，输入模板 id：\n' + pick, menuTemplates[0]?.id || 'zhmr');
+        if (!input) return;
+        menu_template = input.trim();
+      }
+      if (pruneExtra) {
+        const ok = confirm(
+          `将按模板「${menu_template}」同步，并删除该游戏中不在模板里的多余功能。\n已有功能的开关状态会保留。\n\n确认继续？`
+        );
+        if (!ok) return;
+      }
+      try {
+        const data = await api('/v1/admin/games/' + encodeURIComponent(selectedFeatGameId) + '/sync-features', {
+          method: 'POST',
+          body: JSON.stringify({ mode: pruneExtra ? 'prune' : 'replace', menu_template })
+        });
+        const r = data.data || {};
+        toast(`同步完成：+${r.added || 0} 新增，${r.updated || 0} 改名，${r.removed || 0} 删除多余`);
+        await loadGamesCatalog();
+        featPage = 1;
+        await loadFeaturesForGame(selectedFeatGameId);
+      } catch (e) { toast(e.message); }
+    }
+
+    async function toggleFeat(id, enabled) {
+      try {
+        await api('/v1/admin/features/' + id, { method: 'PATCH', body: JSON.stringify({ enabled }) });
+        await loadFeaturesForGame(selectedFeatGameId);
+        await loadGamesCatalog();
+      } catch (e) { toast(e.message); }
+    }
+
+    async function deleteFeat(id, featNum, name) {
+      if (!confirm(`删除功能 #${featNum}「${name}」？\n客户端若仍有该编号项，将因门控缺失而不可用。`)) return;
+      try {
+        await api('/v1/admin/features/' + id, { method: 'DELETE' });
+        toast('已删除');
+        await loadFeaturesForGame(selectedFeatGameId);
+        await loadGamesCatalog();
+      } catch (e) { toast(e.message); }
+    }
+
+    /* -------- toasts（开屏） -------- */
+    /* -------- 游戏补丁 OTA -------- */
+    let otaListCache = [];
+
+    function pickOtaFile(kind) {
+      const input = document.getElementById(kind === 'so' ? 'ota-so' : 'ota-json');
+      if (input) input.click();
+    }
+
+    function onOtaFilePicked(kind, input) {
+      const nameEl = document.getElementById(kind === 'so' ? 'ota-so-name' : 'ota-json-name');
+      const drop = document.getElementById(kind === 'so' ? 'ota-drop-so' : 'ota-drop-json');
+      const f = input?.files?.[0];
+      if (nameEl) nameEl.textContent = f ? f.name : '未选择文件';
+      if (drop) drop.classList.toggle('has-file', !!f);
+    }
+
+    function bindOtaDropZones() {
+      [['ota-drop-json', 'ota-json', 'json'], ['ota-drop-so', 'ota-so', 'so']].forEach(([dropId, inputId, kind]) => {
+        const drop = document.getElementById(dropId);
+        const input = document.getElementById(inputId);
+        if (!drop || !input || drop.dataset.dnd === '1') return;
+        drop.dataset.dnd = '1';
+        ['dragenter', 'dragover'].forEach(ev => {
+          drop.addEventListener(ev, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            drop.classList.add('dragover');
+          });
+        });
+        ['dragleave', 'drop'].forEach(ev => {
+          drop.addEventListener(ev, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            drop.classList.remove('dragover');
+          });
+        });
+        drop.addEventListener('drop', e => {
+          const files = e.dataTransfer?.files;
+          if (!files?.length) return;
+          const dt = new DataTransfer();
+          dt.items.add(files[0]);
+          input.files = dt.files;
+          onOtaFilePicked(kind, input);
+        });
+      });
+    }
+
+    async function loadOtaPage() {
+      if (!gamesCache.length) await loadGamesCatalog();
+      try {
+        const data = await api('/v1/admin/ota');
+        otaListCache = data.data || [];
+      } catch (e) {
+        otaListCache = [];
+        toast(e.message || '加载补丁列表失败');
+      }
+      renderOtaTable();
+    }
+
+    function renderOtaTable() {
+      const body = document.getElementById('ota-body');
+      if (!body) return;
+      const rows = (otaListCache || []).slice().sort((a, b) => {
+        const ga = gamesCache.find(g => g.game_id === a.game_id);
+        const gb = gamesCache.find(g => g.game_id === b.game_id);
+        const ta = ga?.created_at ? Date.parse(ga.created_at) : 0;
+        const tb = gb?.created_at ? Date.parse(gb.created_at) : 0;
+        if (tb !== ta) return tb - ta;
+        return String(a.game_id || '').localeCompare(String(b.game_id || ''));
+      });
+      body.innerHTML = rows.map(r => {
+        const gid = r.game_id || '';
+        const name = gameLabel(gid);
+        const jsha = (r.json_sha256 || '').slice(0, 10);
+        const ssha = (r.so_sha256 || '').slice(0, 10);
+        return `<tr>
+          <td><strong>${escapeHtml(name)}</strong><div class="muted"><code>${escapeHtml(gid)}</code></div></td>
+          <td>v${escapeHtml(r.ver)}</td>
+          <td>${r.has_json ? `<span class="tag ok">有</span> <code class="muted">${escapeHtml(jsha)}</code>` : '<span class="tag warn">无</span>'}</td>
+          <td>${r.has_so ? `<span class="tag ok">有</span> <code class="muted">${escapeHtml(ssha)}</code>` : '<span class="tag warn">无</span>'}</td>
+          <td>${r.note ? escapeHtml(r.note) : '<span class="muted">—</span>'}</td>
+          <td class="row-actions">
+            <button type="button" class="btn sm ghost" onclick='openOtaPublishModal(${JSON.stringify(gid)})'>更新</button>
+            <button type="button" class="btn sm danger" onclick='openOtaDeleteModal(${JSON.stringify(gid)})'>删除</button>
+          </td>
+        </tr>`;
+      }).join('') || '<tr><td colspan="6" class="empty">暂无补丁，点右上角「添加补丁」发布</td></tr>';
+    }
+
+    async function openOtaPublishModal(presetGameId) {
+      if (!gamesCache.length) await loadGamesCatalog();
+      const gid0 = presetGameId || '';
+      openModal(`
+        <h3>${gid0 ? '更新补丁' : '添加补丁'}</h3>
+        <p class="sub">${gid0
+          ? '给该游戏发更高 ver；只传 JSON 或 so 之一也可，未传的一侧保留原文件。'
+          : '发布新游戏补丁；只传 JSON 或 so 之一也可。'}</p>
+        <div class="form-grid">
+          <div class="full"><label>游戏</label>
+            ${gamePickerMarkup('ota-game', { emptyLabel: '请选择游戏', allowEmpty: true, onchange: 'onOtaGameChange' })}
+          </div>
+          <div><label for="ota-ver">新版本号</label>
+            <input id="ota-ver" type="number" min="1" placeholder="须大于当前 ver" /></div>
+          <div><label for="ota-note">说明（玩家可见）</label>
+            <input id="ota-note" placeholder="如：热更偏移 / 修闪退" maxlength="200" /></div>
+          <div class="full ota-status" id="ota-current" style="padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(10,8,28,.35);font-size:13px;line-height:1.6">
+            <div class="muted">选择游戏后显示当前 latest</div>
+          </div>
+          <div class="full">
+            <div class="ota-drop-grid">
+              <div class="ota-drop" id="ota-drop-json">
+                <h4>patch.json</h4>
+                <p>小补丁。不选则保留已有 JSON。</p>
+                <div class="ota-file-name" id="ota-json-name">未选择文件</div>
+                <button type="button" class="ota-pick" onclick="pickOtaFile('json')">选择 JSON</button>
+                <input id="ota-json" class="ota-file-input" type="file" accept=".json,application/json" onchange="onOtaFilePicked('json', this)" />
+              </div>
+              <div class="ota-drop" id="ota-drop-so">
+                <h4>libstarry_magic.so</h4>
+                <p>玩法 so。不选则保留已有 so。</p>
+                <div class="ota-file-name" id="ota-so-name">未选择文件</div>
+                <button type="button" class="ota-pick" onclick="pickOtaFile('so')">选择 so</button>
+                <input id="ota-so" class="ota-file-input" type="file" accept=".so,application/octet-stream" onchange="onOtaFilePicked('so', this)" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" id="ota-publish-btn" onclick="publishOta()">发布</button>
+        </div>`, 'wide');
+      fillGameSelects();
+      bindOtaDropZones();
+      if (gid0) {
+        // 更新：锁定到该行游戏
+        setGamePickerValue('ota-game', gid0, true);
+        const root = getPickerRoot('ota-game');
+        if (root) {
+          const trigger = root.querySelector('.game-picker-trigger');
+          if (trigger) trigger.disabled = true;
+        }
+      }
+      await onOtaGameChange();
+    }
+
+    function openOtaDeleteModal(gid) {
+      if (!gid) { toast('无游戏 id'); return; }
+      const name = gameLabel(gid);
+      openModal(`
+        <h3>删除补丁</h3>
+        <p class="sub"><strong>${escapeHtml(name)}</strong>（<code>${escapeHtml(gid)}</code>）</p>
+        <p class="muted" style="margin:0 0 12px">可只删一侧，或清空该游戏全部补丁。</p>
+        <div class="modal-actions" style="flex-wrap:wrap;justify-content:flex-start">
+          <button type="button" class="btn ghost" onclick='clearOta(${JSON.stringify(gid)}, "json")'>只删 JSON</button>
+          <button type="button" class="btn ghost" onclick='clearOta(${JSON.stringify(gid)}, "so")'>只删 so</button>
+          <button type="button" class="btn danger" onclick='clearOta(${JSON.stringify(gid)}, "all")'>全部删除</button>
+          <span class="spacer" style="flex:1"></span>
+          <button type="button" class="btn ghost" onclick="closeModal()">取消</button>
+        </div>`);
+    }
+
+    async function onOtaGameChange() {
+      const gid = getGamePickerValue('ota-game');
+      const box = document.getElementById('ota-current');
+      const verEl = document.getElementById('ota-ver');
+      if (!box) return;
+      if (!gid) {
+        box.innerHTML = '<div class="muted">选择游戏后显示当前 latest</div>';
+        if (verEl) verEl.value = '';
+        return;
+      }
+      box.innerHTML = '<div class="muted">加载中…</div>';
+      try {
+        const data = await api('/v1/admin/ota/' + encodeURIComponent(gid) + '/manifest');
+        const m = data.data;
+        if (!m) {
+          box.innerHTML = '<div><strong>尚无补丁</strong></div><div class="muted">可直接上传 JSON 和/或 so 发布 v1</div>';
+          if (verEl) verEl.value = '1';
+          return;
+        }
+        box.innerHTML = `
+          <div><strong>当前 v${escapeHtml(m.ver)}</strong> · JSON ${m.has_json ? '有' : '无'} · so ${m.has_so ? '有' : '无'}</div>
+          <div class="muted">${m.note ? escapeHtml(m.note) : '无说明'}</div>`;
+        if (verEl) verEl.value = String((m.ver || 0) + 1);
+      } catch (e) {
+        box.innerHTML = `<span class="tag bad">${escapeHtml(e.message)}</span>`;
+      }
+    }
+
+    async function publishOta() {
+      const gid = getGamePickerValue('ota-game');
+      const ver = parseInt(document.getElementById('ota-ver')?.value || '0', 10);
+      const note = document.getElementById('ota-note')?.value || '';
+      const jf = document.getElementById('ota-json')?.files?.[0];
+      const sf = document.getElementById('ota-so')?.files?.[0];
+      const btn = document.getElementById('ota-publish-btn');
+      if (!gid) { toast('请选择游戏'); return; }
+      if (!ver || ver < 1) { toast('请填写版本号'); return; }
+      if (!jf && !sf) { toast('请至少选择 JSON 或 so 之一（另一侧会自动保留）'); return; }
+      const fd = new FormData();
+      fd.append('ver', String(ver));
+      fd.append('note', note);
+      if (jf) fd.append('patch_json', jf);
+      if (sf) fd.append('so_file', sf);
+      if (btn) { btn.disabled = true; btn.textContent = '发布中…'; }
+      try {
+        const headers = {};
+        if (token) headers.Authorization = 'Bearer ' + token;
+        const res = await fetch(API + '/v1/admin/ota/' + encodeURIComponent(gid) + '/publish', {
+          method: 'POST', headers, body: fd
+        });
+        const data = await res.json().catch(() => ({ ok: false, message: '' }));
+        if (res.status === 401) {
+          forceLogout('登录已过期，请重新登录');
+          return;
+        }
+        if (!res.ok || data.ok === false) throw new Error(chineseApiError(res.status, data.message || data.detail));
+        const m = data.data || {};
+        toast(data.message || ('已发布 v' + m.ver));
+        closeModal();
+        await loadOtaPage();
+      } catch (e) {
+        toast(e.message || '发布失败');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '发布'; }
+      }
+    }
+
+    async function clearOta(gid, what) {
+      gid = gid || getGamePickerValue('ota-game');
+      what = what || 'all';
+      if (!gid) { toast('请选择游戏'); return; }
+      const labels = {
+        all: '删除该游戏全部补丁（JSON+so）？',
+        json: '只删 JSON，保留 so？',
+        so: '只删 so，保留 JSON？',
+      };
+      if (!confirm((labels[what] || '清理') + '\n游戏：' + gid)) return;
+      try {
+        const data = await api('/v1/admin/ota/' + encodeURIComponent(gid) + '?what=' + encodeURIComponent(what), {
+          method: 'DELETE'
+        });
+        toast(data.message || '已删除');
+        closeModal();
+        await loadOtaPage();
+      } catch (e) {
+        toast(e.message || '删除失败');
+      }
+    }
+
+    async function loadToasts() {
+      const qs = new URLSearchParams();
+      const q = document.getElementById('t-q')?.value.trim() || '';
+      const gameId = getGamePickerValue('t-filter-game');
+      const scope = document.getElementById('t-scope')?.value || '';
+      const en = boolParam(document.getElementById('t-enabled')?.value || '');
+      if (q) qs.set('q', q);
+      if (gameId) qs.set('game_id', gameId);
+      if (scope) qs.set('scope', scope);
+      if (en) qs.set('enabled', en);
+      qs.set('page', String(toastPage));
+      qs.set('page_size', String(toastPageSize));
+      const data = await api('/v1/admin/toasts?' + qs.toString());
+      toastsCache = data.data || [];
+      toastMeta = data.meta || { total: toastsCache.length, page: toastPage, page_size: toastPageSize };
+      toastPage = toastMeta.page || toastPage;
+      document.getElementById('toast-body').innerHTML = toastsCache.map(t => `
+        <tr>
+          <td>${Number(t.sort_order) || 0}</td>
+          <td><strong>${escapeHtml(t.content)}</strong></td>
+          <td>${t.scope === 'global' ? '全游戏' : '单游戏'}${t.game_id ? ' / ' + escapeHtml(gameLabel(t.game_id)) : ''}</td>
+          <td>${t.enabled ? statusTag('active') : statusTag('banned')}</td>
+          <td class="row-actions">
+            <button class="btn sm ghost" onclick='openToastModal(${JSON.stringify(t)})'>编辑</button>
+            <button class="btn sm ghost" onclick="toggleToast(${t.id}, ${!t.enabled})">${t.enabled ? '停用' : '启用'}</button>
+            <button class="btn sm danger" onclick="delToast(${t.id})">删</button>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="5" class="empty">暂无开屏 Toast 或无匹配项</td></tr>';
+      renderPager('toast-pager', toastMeta, `toastPage=${toastPage - 1};loadToasts()`, `toastPage=${toastPage + 1};loadToasts()`);
+    }
+
+    function openToastModal(t) {
+      const isEdit = !!(t && t.id);
+      openModal(`
+        <h3>${isEdit ? '编辑开屏 Toast' : '添加开屏 Toast'}</h3>
+        <p class="sub">启动时按「排序」从小到大依次弹出；样式固定为菜单默认 Toast，无需选类型</p>
+        <div class="form-grid">
+          <div><label for="m-t-scope">范围</label>
+            <select id="m-t-scope" onchange="onToastScopeChange()">
+              <option value="global" ${!t||t.scope==='global'?'selected':''}>全游戏</option>
+              <option value="game" ${t&&t.scope==='game'?'selected':''}>单游戏</option>
+            </select>
+            <p class="muted" style="margin:6px 0 0">全游戏：所有 game_id 启动都显示；单游戏：只对选中的那款游戏显示（如只给战魂 zhmr）</p>
+          </div>
+          <div id="m-t-game-wrap"><label>游戏</label>
+            ${gamePickerMarkup('m-t-game', { emptyLabel: '请选择游戏', allowEmpty: true })}</div>
+          <div><label for="m-t-order">排序</label>
+            <input id="m-t-order" type="number" value="${Number(t?.sort_order) || 0}" /></div>
+          <div><label for="m-t-enabled">启用</label>
+            <select id="m-t-enabled">
+              <option value="1" ${!t || t.enabled !== false ? 'selected' : ''}>启用</option>
+              <option value="0" ${t && t.enabled === false ? 'selected' : ''}>停用</option>
+            </select></div>
+          <div class="full"><label for="m-t-content">内容</label>
+            <input id="m-t-content" value="${escapeHtml(t?.content || '')}" placeholder="如：欢迎使用星光魔法" /></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn" onclick="saveToast(${isEdit ? t.id : 'null'})">保存</button>
+        </div>`);
+      fillGameSelects();
+      if (t?.game_id) setGamePickerValue('m-t-game', t.game_id, true);
+      onToastScopeChange();
+    }
+    function onToastScopeChange() {
+      const scope = document.getElementById('m-t-scope')?.value;
+      const wrap = document.getElementById('m-t-game-wrap');
+      if (wrap) wrap.style.display = scope === 'game' ? '' : 'none';
+    }
+
+    async function saveToast(id) {
+      try {
+        const scope = document.getElementById('m-t-scope').value;
+        const body = {
+          scope,
+          game_id: scope === 'game' ? (getGamePickerValue('m-t-game') || null) : null,
+          toast_type: 'info',
+          content: document.getElementById('m-t-content').value.trim(),
+          sort_order: parseInt(document.getElementById('m-t-order').value, 10) || 0,
+          enabled: document.getElementById('m-t-enabled').value === '1',
+        };
+        if (!body.content) { toast('请填写内容'); return; }
+        if (body.scope === 'game' && !body.game_id) { toast('请选择游戏'); return; }
+        if (id) await api('/v1/admin/toasts/' + id, { method: 'PATCH', body: JSON.stringify(body) });
+        else await api('/v1/admin/toasts', { method: 'POST', body: JSON.stringify(body) });
+        closeModal(); toast('已保存'); loadToasts();
+      } catch (e) { toast(e.message); }
+    }
+    async function toggleToast(id, enabled) {
+      try {
+        await api('/v1/admin/toasts/' + id, { method: 'PATCH', body: JSON.stringify({ enabled }) });
+        loadToasts();
+      } catch (e) { toast(e.message); }
+    }
+    async function delToast(id) {
+      if (!confirm('删除这条开屏 Toast？')) return;
+      try { await api('/v1/admin/toasts/' + id, { method: 'DELETE' }); loadToasts(); }
+      catch (e) { toast(e.message); }
+    }
+
+    /* -------- settings -------- */
+    async function changePassword() {
+      try {
+        const old_password = document.getElementById('pw-old').value;
+        const new_password = document.getElementById('pw-new').value;
+        const new2 = document.getElementById('pw-new2').value;
+        if (new_password.length < 6) { toast('新密码至少 6 位'); return; }
+        if (new_password !== new2) { toast('两次新密码不一致'); return; }
+        await api('/v1/admin/change-password', { method: 'POST', body: JSON.stringify({ old_password, new_password }) });
+        toast('密码已更新，请重新登录');
+        setTimeout(logout, 800);
+      } catch (e) { toast(e.message); }
+    }
+
+    /* boot */
+    const savedUser = localStorage.getItem('sg_admin_user_saved');
+    if (savedUser) document.getElementById('login-user').value = savedUser;
+    if (token) showApp();
+  </script>
+</body>
+</html>

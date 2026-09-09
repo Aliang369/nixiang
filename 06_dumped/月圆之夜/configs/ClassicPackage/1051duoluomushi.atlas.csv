@@ -1,0 +1,153 @@
+
+1051duoluomushi.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 397, 131
+  size: 62, 37
+  orig: 62, 37
+  offset: 0, 0
+  index: -1
+book
+  rotate: false
+  xy: 720, 811
+  size: 247, 211
+  orig: 247, 211
+  offset: 0, 0
+  index: -1
+daizi L
+  rotate: false
+  xy: 720, 540
+  size: 72, 269
+  orig: 72, 269
+  offset: 0, 0
+  index: -1
+daizi R
+  rotate: false
+  xy: 574, 271
+  size: 63, 262
+  orig: 63, 262
+  offset: 0, 0
+  index: -1
+gebo L
+  rotate: false
+  xy: 639, 336
+  size: 107, 197
+  orig: 107, 197
+  offset: 0, 0
+  index: -1
+geboR
+  rotate: true
+  xy: 794, 513
+  size: 120, 156
+  orig: 120, 156
+  offset: 0, 0
+  index: -1
+kouqiang
+  rotate: true
+  xy: 969, 832
+  size: 76, 42
+  orig: 76, 42
+  offset: 0, 0
+  index: -1
+kulou
+  rotate: true
+  xy: 398, 170
+  size: 62, 119
+  orig: 62, 119
+  offset: 0, 0
+  index: -1
+lian
+  rotate: true
+  xy: 639, 247
+  size: 87, 126
+  orig: 87, 126
+  offset: 0, 0
+  index: -1
+pifeng
+  rotate: false
+  xy: 2, 194
+  size: 394, 339
+  orig: 394, 339
+  offset: 0, 0
+  index: -1
+shangbanshen
+  rotate: false
+  xy: 2, 9
+  size: 252, 183
+  orig: 252, 183
+  offset: 0, 0
+  index: -1
+shou L
+  rotate: false
+  xy: 748, 365
+  size: 102, 146
+  orig: 102, 146
+  offset: 0, 0
+  index: -1
+shou R
+  rotate: true
+  xy: 256, 43
+  size: 149, 139
+  orig: 149, 139
+  offset: 0, 0
+  index: -1
+toufa hou
+  rotate: false
+  xy: 522, 243
+  size: 50, 290
+  orig: 50, 290
+  offset: 0, 0
+  index: -1
+toufa qian
+  rotate: false
+  xy: 398, 234
+  size: 122, 299
+  orig: 122, 299
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 969, 910
+  size: 112, 50
+  orig: 112, 50
+  offset: 0, 0
+  index: -1
+xiabanshen
+  rotate: false
+  xy: 2, 535
+  size: 716, 487
+  orig: 716, 487
+  offset: 0, 0
+  index: -1
+xiaobi L
+  rotate: false
+  xy: 852, 375
+  size: 92, 136
+  orig: 92, 136
+  offset: 0, 0
+  index: -1
+xiaobi R
+  rotate: false
+  xy: 794, 635
+  size: 158, 174
+  orig: 158, 174
+  offset: 0, 0
+  index: -1
+yanzhu L
+  rotate: true
+  xy: 522, 235
+  size: 6, 17
+  orig: 6, 17
+  offset: 0, 0
+  index: -1
+yanzhu R
+  rotate: true
+  xy: 2, 2
+  size: 5, 19
+  orig: 5, 19
+  offset: 0, 0
+  index: -1

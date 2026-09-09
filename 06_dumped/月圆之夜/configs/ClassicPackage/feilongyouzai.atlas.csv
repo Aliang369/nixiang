@@ -1,0 +1,90 @@
+
+feilongyouzai.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+chibang1
+  rotate: false
+  xy: 2, 73
+  size: 377, 196
+  orig: 377, 196
+  offset: 0, 0
+  index: -1
+chibang2
+  rotate: false
+  xy: 566, 752
+  size: 294, 263
+  orig: 294, 263
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 271
+  size: 562, 744
+  orig: 562, 744
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: true
+  xy: 566, 447
+  size: 303, 225
+  orig: 303, 225
+  offset: 0, 0
+  index: -1
+yangzhu1
+  rotate: false
+  xy: 489, 222
+  size: 46, 47
+  orig: 46, 47
+  offset: 0, 0
+  index: -1
+yangzhu2
+  rotate: false
+  xy: 793, 533
+  size: 40, 45
+  orig: 40, 45
+  offset: 0, 0
+  index: -1
+youshou
+  rotate: false
+  xy: 862, 715
+  size: 145, 300
+  orig: 145, 300
+  offset: 0, 0
+  index: -1
+youshouying
+  rotate: false
+  xy: 793, 580
+  size: 110, 133
+  orig: 110, 133
+  offset: 0, 0
+  index: -1
+zuiba
+  rotate: false
+  xy: 566, 257
+  size: 280, 188
+  orig: 280, 188
+  offset: 0, 0
+  index: -1
+zuiba2
+  rotate: true
+  xy: 2, 2
+  size: 69, 94
+  orig: 69, 94
+  offset: 0, 0
+  index: -1
+zuoshangbi
+  rotate: true
+  xy: 905, 580
+  size: 133, 107
+  orig: 133, 107
+  offset: 0, 0
+  index: -1
+zuoshou
+  rotate: false
+  xy: 381, 80
+  size: 106, 189
+  orig: 106, 189
+  offset: 0, 0
+  index: -1

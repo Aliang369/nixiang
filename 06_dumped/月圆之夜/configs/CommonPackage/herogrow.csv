@@ -1,0 +1,14 @@
+﻿编号;名称;参数A;游侠;修女;骑士;女巫;契约师;魔术师;探险家;问号;猎人;数学家;小猪妖;小猪妖;简介;图标;档次;最大次数;等级限制;END
+Id;Name;parameterA;thief;priest;warrior;wizard;summoner;magician;explorer;marksmen;hunter;mathematician;puppetmaster;puppetmaster.1;story;Icon;level;Max;LevelLimit;END
+102;清除;1;2;3;2;3;2;2;2;2;3;2;2;;从卡组中选择{0}张卡移除;Image/Reward/shanchu;1;100;;1
+103;行动;1;3;2;2;2;3;3;3;3;1;3;3;;获得{0}行动力;Image/Reward/xingdongli;1;100;;1
+104;强化;2;2;2;2;2;2;2;2;2;2;2;0;;获得{0}次升级卡牌的机会;Image/Reward/qianghua;1;100;;1
+105;生命;6;2;1;6;1;2;2;2;2;2;2;2;;生命上限+{0};Image/Reward/shengming;2;100;;1
+106;魔法;2;0;4;0;4;2;2;0;0;0;0;0;;初始魔法+{0};Image/Reward/mofa;2;100;;1
+107;装备槽;1;2;2;3;2;2;2;2;2;2;2;2;;入场佩戴装备+{0};Image/Reward/zhuangbeicao;1;100;;1
+109;财富;15;2;0;0;0;0;0;2;2;2;2;0;;获得{0}金币;Image/card/caifu;2;100;;1
+200;卡牌;1;7;7;7;7;7;7;7;7;7;7;7;;随机获得{0}张卡（随机库与商店出售规则一样），本描述不显示，显示出售卡牌的描述即可;;2;100;;1
+199;魔法;3;0;0;0;0;0;0;0;0;0;0;0;;初始魔法+{0};Image/Reward/mofa;0;0;;1
+150;金币;10;0;0;0;0;0;0;0;0;0;0;0;;获得{0}金币;Image/card/caifu;0;0;;1
+1000;唤醒种子;1;0;0;0;0;0;0;0;0;0;0;0;;使用霍普力量唤醒种子;Image/card/huanxingzhongzi;0;0;;1
+1001;净化枝叶;1;0;0;0;0;0;0;0;0;0;0;0;;使用霍普力量净化树枝;Image/card/jinhuazhiye;0;0;;1

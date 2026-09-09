@@ -1,0 +1,11 @@
+09-09 01:16:44.001 21614 21640 I Mod_Menu: [Cwjh] early hook thread start
+09-09 01:16:44.003 21614 21614 I Mod_Menu: [Cwjh] CocosJsBridge cached ok=1
+09-09 01:16:49.760 21614 21640 I Mod_Menu: [Cwjh] bomb fn (libc kill) neutralized @6eba2e7a08
+09-09 01:16:49.760 21614 21640 I Mod_Menu: [Cwjh] kill wrapper neutralized @6eba2fddf8
+09-09 01:16:49.764 21614 21640 I Mod_Menu: [Cwjh] hooked se::ScriptEngine::evalString (combat splice)
+09-09 01:16:49.765 21614 21640 I Mod_Menu: [Cwjh] hooked JNI evalString (passthrough)
+09-09 01:16:49.765 21614 21640 I Mod_Menu: [Cwjh] early se hook ok at iter=249 splice=0
+09-09 01:16:50.490 21614 21652 I Mod_Menu: [Cwjh] init ok se=1 jni=1 splice=0 seCalls=7
+09-09 01:16:50.490 21614 21652 I StarryMagic: [Cwjh] 初始化成功
+09-09 01:16:50.633 21614 22140 I Mod_Menu: [Cwjh] combat splice #1 len 2627189→2628962 file=src/assets/script/src/logic/game.js
+09-09 01:16:51.464 21614 22140 I Mod_Menu: [Cwjh] combat splice #2 len 2627189→2628962 file=src/assets/script/src/logic/game.js

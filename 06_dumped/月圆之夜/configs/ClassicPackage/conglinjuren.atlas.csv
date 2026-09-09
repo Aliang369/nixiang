@@ -1,0 +1,111 @@
+
+conglinjuren.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1
+  rotate: true
+  xy: 941, 730
+  size: 80, 51
+  orig: 80, 51
+  offset: 0, 0
+  index: -1
+biyan
+  rotate: true
+  xy: 689, 412
+  size: 59, 26
+  orig: 59, 26
+  offset: 0, 0
+  index: -1
+kunzi
+  rotate: false
+  xy: 568, 716
+  size: 260, 282
+  orig: 260, 282
+  offset: 0, 0
+  index: -1
+shengti
+  rotate: false
+  xy: 2, 274
+  size: 564, 724
+  orig: 564, 724
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 830, 812
+  size: 171, 186
+  orig: 171, 186
+  offset: 0, 0
+  index: -1
+youdabi
+  rotate: true
+  xy: 2, 2
+  size: 270, 303
+  orig: 270, 303
+  offset: 0, 0
+  index: -1
+youdatui
+  rotate: false
+  xy: 564, 162
+  size: 86, 97
+  orig: 86, 97
+  offset: 0, 0
+  index: -1
+youshouzhang
+  rotate: true
+  xy: 732, 575
+  size: 139, 128
+  orig: 139, 128
+  offset: 0, 0
+  index: -1
+youxiaobi
+  rotate: false
+  xy: 307, 19
+  size: 176, 253
+  orig: 176, 253
+  offset: 0, 0
+  index: -1
+youxiaotui
+  rotate: true
+  xy: 830, 735
+  size: 75, 109
+  orig: 75, 109
+  offset: 0, 0
+  index: -1
+zuodabi
+  rotate: false
+  xy: 568, 473
+  size: 162, 241
+  orig: 162, 241
+  offset: 0, 0
+  index: -1
+zuodatui
+  rotate: false
+  xy: 485, 58
+  size: 89, 91
+  orig: 89, 91
+  offset: 0, 0
+  index: -1
+zuoshouzhang
+  rotate: true
+  xy: 732, 469
+  size: 104, 123
+  orig: 104, 123
+  offset: 0, 0
+  index: -1
+zuoxiaobi
+  rotate: false
+  xy: 568, 261
+  size: 119, 210
+  orig: 119, 210
+  offset: 0, 0
+  index: -1
+zuoxiaotui
+  rotate: false
+  xy: 485, 151
+  size: 77, 121
+  orig: 77, 121
+  offset: 0, 0
+  index: -1

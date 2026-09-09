@@ -1,0 +1,174 @@
+
+1015famugongshushu.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+dabi  L
+  rotate: false
+  xy: 433, 626
+  size: 304, 172
+  orig: 304, 172
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: false
+  xy: 2, 43
+  size: 189, 222
+  orig: 189, 222
+  offset: 0, 0
+  index: -1
+damuzi  R
+  rotate: false
+  xy: 945, 615
+  size: 31, 55
+  orig: 31, 55
+  offset: 0, 0
+  index: -1
+datui  L
+  rotate: false
+  xy: 193, 150
+  size: 96, 115
+  orig: 96, 115
+  offset: 0, 0
+  index: -1
+datui  R
+  rotate: false
+  xy: 422, 365
+  size: 83, 123
+  orig: 83, 123
+  offset: 0, 0
+  index: -1
+face
+  rotate: false
+  xy: 739, 611
+  size: 204, 187
+  orig: 204, 187
+  offset: 0, 0
+  index: -1
+futou
+  rotate: false
+  xy: 2, 267
+  size: 288, 239
+  orig: 288, 239
+  offset: 0, 0
+  index: -1
+meimao  L
+  rotate: false
+  xy: 608, 493
+  size: 34, 14
+  orig: 34, 14
+  offset: 0, 0
+  index: -1
+meimao  R
+  rotate: false
+  xy: 422, 284
+  size: 47, 18
+  orig: 47, 18
+  offset: 0, 0
+  index: -1
+mutou
+  rotate: false
+  xy: 433, 800
+  size: 585, 212
+  orig: 585, 212
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 508
+  size: 429, 504
+  orig: 429, 504
+  offset: 0, 0
+  index: -1
+shizhi  R
+  rotate: true
+  xy: 711, 585
+  size: 39, 26
+  orig: 39, 26
+  offset: 0, 0
+  index: -1
+shouzhang  L
+  rotate: true
+  xy: 193, 43
+  size: 105, 82
+  orig: 105, 82
+  offset: 0, 0
+  index: -1
+shouzhang  R
+  rotate: false
+  xy: 608, 509
+  size: 101, 115
+  orig: 101, 115
+  offset: 0, 0
+  index: -1
+shouzhi  L
+  rotate: true
+  xy: 945, 672
+  size: 126, 59
+  orig: 126, 59
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: false
+  xy: 292, 277
+  size: 128, 229
+  orig: 128, 229
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: true
+  xy: 433, 490
+  size: 134, 173
+  orig: 134, 173
+  offset: 0, 0
+  index: -1
+xiaotui  L
+  rotate: false
+  xy: 422, 304
+  size: 82, 59
+  orig: 82, 59
+  offset: 0, 0
+  index: -1
+xiaotui  L01
+  rotate: false
+  xy: 2, 2
+  size: 88, 39
+  orig: 88, 39
+  offset: 0, 0
+  index: -1
+xiaotui  R
+  rotate: false
+  xy: 507, 418
+  size: 88, 70
+  orig: 88, 70
+  offset: 0, 0
+  index: -1
+xiaotui  R01
+  rotate: false
+  xy: 507, 362
+  size: 92, 54
+  orig: 92, 54
+  offset: 0, 0
+  index: -1
+yanbai
+  rotate: false
+  xy: 92, 14
+  size: 82, 27
+  orig: 82, 27
+  offset: 0, 0
+  index: -1
+yanqiu  L
+  rotate: true
+  xy: 277, 134
+  size: 14, 11
+  orig: 14, 11
+  offset: 0, 0
+  index: -1
+yanqiu  R
+  rotate: false
+  xy: 1006, 784
+  size: 16, 14
+  orig: 16, 14
+  offset: 0, 0
+  index: -1

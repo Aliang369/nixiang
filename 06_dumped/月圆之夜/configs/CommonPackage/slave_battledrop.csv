@@ -1,0 +1,12 @@
+﻿id;掉落名称;图标;掉落Id;掉落次数;boss选项1;boss选项1描述;boss选项2;boss选项2描述;金币;end
+id;dropName;icon;dropId;times;option1;option1Desc;option2;option2Desc;gold;end
+1;行动牌包;DeckNum;skillCardDrop;3;;;;;50;1
+2;行动牌包,单位牌包;DeckNum,DeckNum;skillCardDrop,slaveCardDrop;3,3;;;;;50;1
+3;行动牌包,精英奖励：{0};DeckNum,BB-zhufutubiao;skillCardDrop,slaveWeaponDrop;3,1;;;;;75;1
+4;行动牌包,单位牌包,精英奖励：{0};DeckNum,DeckNum,BB-zhufutubiao;skillCardDrop,slaveCardDrop,slaveWeaponDrop;3,3,1;;;;;75;1
+5;稀有行动牌包,稀有单位牌包,精英奖励：{0};DeckNum,DeckNum,BB-zhufutubiao;rareSkillCardDrop,rareSlaveCardDrop,rareSlaveWeaponDrop;3,3,1;;;;;100;1
+6;稀有行动牌包,稀有单位牌包;DeckNum,DeckNum;rareSkillCardDrop,rareSlaveCardDrop;3,3;;;;;100;1
+7;;;;;;;;;40;1
+8;;;;;;;;;60;1
+9;;;;;;;;;60;1
+10;;;;;;;;;100;1

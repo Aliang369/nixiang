@@ -1,0 +1,16 @@
+{
+  "template_id": "oxmhj2",
+  "name": "偶像梦幻祭2",
+  "package": "com.happyelements.es2",
+  "source": "Games/Es2Mod.cpp",
+  "features": [
+    {
+      "feat_num": 0,
+      "name": "玩法"
+    },
+    {
+      "feat_num": 1,
+      "name": "自动跳舞"
+    }
+  ]
+}

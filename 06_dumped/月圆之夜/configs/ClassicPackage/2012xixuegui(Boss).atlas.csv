@@ -1,0 +1,202 @@
+
+2012xixuegui(Boss).png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: true
+  xy: 987, 951
+  size: 71, 25
+  orig: 71, 25
+  offset: 0, 0
+  index: -1
+dabi  L
+  rotate: false
+  xy: 820, 772
+  size: 120, 148
+  orig: 120, 148
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: false
+  xy: 689, 758
+  size: 129, 162
+  orig: 129, 162
+  offset: 0, 0
+  index: -1
+datui  L
+  rotate: false
+  xy: 942, 771
+  size: 64, 149
+  orig: 64, 149
+  offset: 0, 0
+  index: -1
+datui  R
+  rotate: true
+  xy: 436, 515
+  size: 62, 146
+  orig: 62, 146
+  offset: 0, 0
+  index: -1
+erduo  L
+  rotate: false
+  xy: 213, 31
+  size: 86, 60
+  orig: 86, 60
+  offset: 0, 0
+  index: -1
+erduo  R
+  rotate: false
+  xy: 557, 371
+  size: 76, 63
+  orig: 76, 63
+  offset: 0, 0
+  index: -1
+guaizhang
+  rotate: true
+  xy: 368, 684
+  size: 70, 309
+  orig: 70, 309
+  offset: 0, 0
+  index: -1
+hongjiu
+  rotate: true
+  xy: 635, 367
+  size: 67, 59
+  orig: 67, 59
+  offset: 0, 0
+  index: -1
+hudiejie
+  rotate: false
+  xy: 450, 365
+  size: 105, 70
+  orig: 105, 70
+  offset: 0, 0
+  index: -1
+jiao  L
+  rotate: false
+  xy: 450, 437
+  size: 139, 76
+  orig: 139, 76
+  offset: 0, 0
+  index: -1
+jiao  R
+  rotate: false
+  xy: 565, 601
+  size: 138, 81
+  orig: 138, 81
+  offset: 0, 0
+  index: -1
+jiubei
+  rotate: true
+  xy: 689, 922
+  size: 100, 296
+  orig: 100, 296
+  offset: 0, 0
+  index: -1
+kouqiang
+  rotate: false
+  xy: 156, 33
+  size: 55, 58
+  orig: 55, 58
+  offset: 0, 0
+  index: -1
+ling
+  rotate: true
+  xy: 2, 197
+  size: 461, 125
+  orig: 461, 125
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 660
+  size: 364, 362
+  orig: 364, 362
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: true
+  xy: 328, 381
+  size: 125, 120
+  orig: 125, 120
+  offset: 0, 0
+  index: -1
+shou  R
+  rotate: false
+  xy: 584, 520
+  size: 118, 79
+  orig: 118, 79
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 2, 33
+  size: 120, 162
+  orig: 120, 162
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 591, 436
+  size: 82, 105
+  orig: 82, 105
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: false
+  xy: 156, 93
+  size: 135, 124
+  orig: 135, 124
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: true
+  xy: 129, 219
+  size: 150, 175
+  orig: 150, 175
+  offset: 0, 0
+  index: -1
+xiaotui  L
+  rotate: false
+  xy: 124, 33
+  size: 30, 162
+  orig: 30, 162
+  offset: 0, 0
+  index: -1
+xiaotui  R
+  rotate: true
+  xy: 2, 2
+  size: 29, 166
+  orig: 29, 166
+  offset: 0, 0
+  index: -1
+yanwei1
+  rotate: false
+  xy: 368, 756
+  size: 319, 266
+  orig: 319, 266
+  offset: 0, 0
+  index: -1
+yanwei2
+  rotate: true
+  xy: 129, 371
+  size: 287, 197
+  orig: 287, 197
+  offset: 0, 0
+  index: -1
+yanweifu
+  rotate: false
+  xy: 328, 508
+  size: 106, 150
+  orig: 106, 150
+  offset: 0, 0
+  index: -1
+yao
+  rotate: false
+  xy: 436, 579
+  size: 127, 103
+  orig: 127, 103
+  offset: 0, 0
+  index: -1

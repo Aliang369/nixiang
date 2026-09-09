@@ -1,0 +1,69 @@
+---- TIME 2026/9/5 17:51:19 ----
+ACTIVITY MANAGER PROCESS EXIT INFO (dumpsys activity exit-info)
+Last Timestamp of Persistence Into Persistent Storage: 2026-09-05 17:43:05.513
+  package: com.grinning.beta.yszl
+    Historical Process Exit for uid=10652
+        ApplicationExitInfo #0:
+          timestamp=2026-09-05 12:29:52.973 pid=25366 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=125 pss=0.00 rss=0.00 description=exit_self_25366_10652 state=empty trace=null
+        ApplicationExitInfo #1:
+          timestamp=2026-09-05 12:29:52.786 pid=25319 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_25319_10652 state=empty trace=null
+        ApplicationExitInfo #2:
+          timestamp=2026-09-05 12:29:52.623 pid=25269 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_25269_10652 state=empty trace=null
+        ApplicationExitInfo #3:
+          timestamp=2026-09-05 12:29:52.444 pid=25127 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_25127_10652 state=empty trace=null
+        ApplicationExitInfo #4:
+          timestamp=2026-09-05 12:29:52.100 pid=25047 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_25047_10652 state=empty trace=null
+        ApplicationExitInfo #5:
+          timestamp=2026-09-05 12:29:51.862 pid=24993 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24993_10652 state=empty trace=null
+        ApplicationExitInfo #6:
+          timestamp=2026-09-05 12:29:51.705 pid=24930 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24930_10652 state=empty trace=null
+        ApplicationExitInfo #7:
+          timestamp=2026-09-05 12:29:51.547 pid=24837 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24837_10652 state=empty trace=null
+        ApplicationExitInfo #8:
+          timestamp=2026-09-05 12:29:51.418 pid=24737 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24737_10652 state=empty trace=null
+        ApplicationExitInfo #9:
+          timestamp=2026-09-05 12:29:51.294 pid=24668 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24668_10652 state=empty trace=null
+        ApplicationExitInfo #10:
+          timestamp=2026-09-05 12:29:51.167 pid=24620 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24620_10652 state=empty trace=null
+        ApplicationExitInfo #11:
+          timestamp=2026-09-05 12:29:51.033 pid=24578 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24578_10652 state=empty trace=null
+        ApplicationExitInfo #12:
+          timestamp=2026-09-05 12:29:50.910 pid=24530 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24530_10652 state=empty trace=null
+        ApplicationExitInfo #13:
+          timestamp=2026-09-05 12:29:50.757 pid=24481 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24481_10652 state=empty trace=null
+        ApplicationExitInfo #14:
+          timestamp=2026-09-05 12:29:50.601 pid=24429 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24429_10652 state=empty trace=null
+        ApplicationExitInfo #15:
+          timestamp=2026-09-05 12:29:50.461 pid=24381 realUid=10652 packageUid=10652 definingUid=10652 user=0
+          process=com.grinning.beta.yszl reason=2 (SIGNALED) subreason=0 (UNKNOWN) status=9
+          importance=100 pss=0.00 rss=0.00 description=exit_self_24381_10652 state=empty trace=null

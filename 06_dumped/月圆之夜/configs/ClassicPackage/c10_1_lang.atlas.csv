@@ -1,0 +1,69 @@
+
+c10_1_lang.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+lang2_tou2
+  rotate: false
+  xy: 340, 124
+  size: 274, 363
+  orig: 274, 363
+  offset: 0, 0
+  index: -1
+lang2_tui1
+  rotate: false
+  xy: 616, 151
+  size: 149, 336
+  orig: 149, 336
+  offset: 0, 0
+  index: -1
+lang2_tui2
+  rotate: false
+  xy: 913, 198
+  size: 80, 145
+  orig: 80, 145
+  offset: 0, 0
+  index: -1
+lang2_tui3
+  rotate: false
+  xy: 767, 345
+  size: 193, 142
+  orig: 193, 142
+  offset: 0, 0
+  index: -1
+lang2_weiba3
+  rotate: false
+  xy: 469, 29
+  size: 116, 93
+  orig: 116, 93
+  offset: 0, 0
+  index: -1
+lang2_weiba4
+  rotate: false
+  xy: 767, 160
+  size: 93, 45
+  orig: 93, 45
+  offset: 0, 0
+  index: -1
+lang2_xiong
+  rotate: false
+  xy: 2, 2
+  size: 336, 485
+  orig: 336, 485
+  offset: 0, 0
+  index: -1
+lang2_zuodabi2
+  rotate: false
+  xy: 767, 207
+  size: 144, 136
+  orig: 144, 136
+  offset: 0, 0
+  index: -1
+lang2_zuoxiaobi2
+  rotate: false
+  xy: 340, 19
+  size: 127, 103
+  orig: 127, 103
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,153 @@
+
+1025shijingling.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 563, 59
+  size: 93, 34
+  orig: 93, 34
+  offset: 0, 0
+  index: -1
+dabi
+  rotate: true
+  xy: 694, 159
+  size: 140, 155
+  orig: 140, 155
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: true
+  xy: 2, 58
+  size: 129, 288
+  orig: 129, 288
+  offset: 0, 0
+  index: -1
+erduo  L
+  rotate: true
+  xy: 673, 95
+  size: 62, 87
+  orig: 62, 87
+  offset: 0, 0
+  index: -1
+erduo  R
+  rotate: false
+  xy: 933, 54
+  size: 63, 77
+  orig: 63, 77
+  offset: 0, 0
+  index: -1
+mogu1
+  rotate: true
+  xy: 269, 2
+  size: 54, 33
+  orig: 54, 33
+  offset: 0, 0
+  index: -1
+mogu2
+  rotate: true
+  xy: 848, 53
+  size: 78, 83
+  orig: 78, 83
+  offset: 0, 0
+  index: -1
+mogu3
+  rotate: true
+  xy: 658, 26
+  size: 67, 69
+  orig: 67, 69
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 189
+  size: 365, 319
+  orig: 365, 319
+  offset: 0, 0
+  index: -1
+shuye1
+  rotate: false
+  xy: 762, 84
+  size: 84, 73
+  orig: 84, 73
+  offset: 0, 0
+  index: -1
+shuye2
+  rotate: false
+  xy: 563, 95
+  size: 108, 89
+  orig: 108, 89
+  offset: 0, 0
+  index: -1
+shuye3
+  rotate: false
+  xy: 2, 2
+  size: 107, 54
+  orig: 107, 54
+  offset: 0, 0
+  index: -1
+shuye4
+  rotate: false
+  xy: 111, 11
+  size: 90, 45
+  orig: 90, 45
+  offset: 0, 0
+  index: -1
+shuye5
+  rotate: true
+  xy: 998, 71
+  size: 60, 24
+  orig: 60, 24
+  offset: 0, 0
+  index: -1
+shuye6
+  rotate: false
+  xy: 203, 17
+  size: 64, 39
+  orig: 64, 39
+  offset: 0, 0
+  index: -1
+shuyeweijing
+  rotate: true
+  xy: 369, 186
+  size: 322, 323
+  orig: 322, 323
+  offset: 0, 0
+  index: -1
+tou
+  rotate: true
+  xy: 851, 133
+  size: 177, 154
+  orig: 177, 154
+  offset: 0, 0
+  index: -1
+tui  L
+  rotate: true
+  xy: 292, 63
+  size: 121, 138
+  orig: 121, 138
+  offset: 0, 0
+  index: -1
+tui  R
+  rotate: true
+  xy: 432, 60
+  size: 124, 129
+  orig: 124, 129
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: false
+  xy: 694, 301
+  size: 154, 207
+  orig: 154, 207
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: false
+  xy: 850, 312
+  size: 156, 196
+  orig: 156, 196
+  offset: 0, 0
+  index: -1

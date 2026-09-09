@@ -1,0 +1,7 @@
+Starting: Intent { cmp=com.grinning.beta.yszl/com.grinning.game.activity.SplashActivity }
+Status: ok
+LaunchState: COLD
+Activity: com.grinning.beta.yszl/com.grinning.game.activity.SplashActivity
+TotalTime: 359
+WaitTime: 364
+Complete

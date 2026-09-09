@@ -1,0 +1,125 @@
+
+shimianyang.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+datui_l
+  rotate: false
+  xy: 732, 333
+  size: 220, 177
+  orig: 220, 177
+  offset: 0, 0
+  index: -1
+datui_r
+  rotate: false
+  xy: 732, 164
+  size: 184, 167
+  orig: 184, 167
+  offset: 0, 0
+  index: -1
+erduo1
+  rotate: true
+  xy: 2, 34
+  size: 83, 213
+  orig: 83, 213
+  offset: 0, 0
+  index: -1
+erduo2
+  rotate: true
+  xy: 518, 80
+  size: 96, 172
+  orig: 96, 172
+  offset: 0, 0
+  index: -1
+huzi
+  rotate: false
+  xy: 424, 56
+  size: 46, 82
+  orig: 46, 82
+  offset: 0, 0
+  index: -1
+lingdang
+  rotate: true
+  xy: 954, 407
+  size: 103, 53
+  orig: 103, 53
+  offset: 0, 0
+  index: -1
+lingdang1
+  rotate: false
+  xy: 217, 28
+  size: 96, 89
+  orig: 96, 89
+  offset: 0, 0
+  index: -1
+lingdang2
+  rotate: true
+  xy: 2, 2
+  size: 24, 27
+  orig: 24, 27
+  offset: 0, 0
+  index: -1
+lingdang3
+  rotate: true
+  xy: 918, 236
+  size: 95, 19
+  orig: 95, 19
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 119
+  size: 301, 391
+  orig: 301, 391
+  offset: 0, 0
+  index: -1
+shou
+  rotate: false
+  xy: 305, 140
+  size: 211, 370
+  orig: 211, 370
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 518, 178
+  size: 212, 332
+  orig: 212, 332
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: false
+  xy: 315, 28
+  size: 107, 110
+  orig: 107, 110
+  offset: 0, 0
+  index: -1
+yanpi1
+  rotate: true
+  xy: 692, 129
+  size: 47, 36
+  orig: 47, 36
+  offset: 0, 0
+  index: -1
+yanpi2
+  rotate: true
+  xy: 472, 91
+  size: 47, 44
+  orig: 47, 44
+  offset: 0, 0
+  index: -1
+yanpi3
+  rotate: true
+  xy: 692, 80
+  size: 47, 36
+  orig: 47, 36
+  offset: 0, 0
+  index: -1
+yanpi4
+  rotate: false
+  xy: 954, 361
+  size: 47, 44
+  orig: 47, 44
+  offset: 0, 0
+  index: -1

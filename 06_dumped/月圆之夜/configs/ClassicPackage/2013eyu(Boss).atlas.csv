@@ -1,0 +1,139 @@
+
+2013eyu(Boss).png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 2, 20
+  size: 77, 30
+  orig: 77, 30
+  offset: 0, 0
+  index: -1
+dabi R
+  rotate: true
+  xy: 661, 799
+  size: 51, 90
+  orig: 51, 90
+  offset: 0, 0
+  index: -1
+datui L
+  rotate: true
+  xy: 331, 162
+  size: 129, 150
+  orig: 129, 150
+  offset: 0, 0
+  index: -1
+datui R
+  rotate: true
+  xy: 331, 2
+  size: 158, 118
+  orig: 158, 118
+  offset: 0, 0
+  index: -1
+gebo L
+  rotate: true
+  xy: 331, 293
+  size: 180, 148
+  orig: 180, 148
+  offset: 0, 0
+  index: -1
+gebo R
+  rotate: true
+  xy: 481, 409
+  size: 146, 127
+  orig: 146, 127
+  offset: 0, 0
+  index: -1
+jiao L
+  rotate: false
+  xy: 446, 557
+  size: 156, 186
+  orig: 156, 186
+  offset: 0, 0
+  index: -1
+jiao R
+  rotate: false
+  xy: 2, 52
+  size: 229, 105
+  orig: 229, 105
+  offset: 0, 0
+  index: -1
+shange
+  rotate: false
+  xy: 582, 852
+  size: 234, 170
+  orig: 234, 170
+  offset: 0, 0
+  index: -1
+shatou
+  rotate: true
+  xy: 233, 54
+  size: 103, 61
+  orig: 103, 61
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 475
+  size: 442, 547
+  orig: 442, 547
+  offset: 0, 0
+  index: -1
+weiba
+  rotate: false
+  xy: 446, 745
+  size: 134, 277
+  orig: 134, 277
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: false
+  xy: 818, 841
+  size: 186, 181
+  orig: 186, 181
+  offset: 0, 0
+  index: -1
+xiangquan
+  rotate: false
+  xy: 2, 159
+  size: 327, 314
+  orig: 327, 314
+  offset: 0, 0
+  index: -1
+xiaobi L
+  rotate: true
+  xy: 451, 2
+  size: 158, 116
+  orig: 158, 116
+  offset: 0, 0
+  index: -1
+yachi
+  rotate: false
+  xy: 582, 761
+  size: 77, 89
+  orig: 77, 89
+  offset: 0, 0
+  index: -1
+yachi01
+  rotate: false
+  xy: 481, 331
+  size: 86, 76
+  orig: 86, 76
+  offset: 0, 0
+  index: -1
+yanzhu L
+  rotate: false
+  xy: 446, 546
+  size: 10, 9
+  orig: 10, 9
+  offset: 0, 0
+  index: -1
+yanzhu R
+  rotate: false
+  xy: 1006, 1011
+  size: 10, 11
+  orig: 10, 11
+  offset: 0, 0
+  index: -1

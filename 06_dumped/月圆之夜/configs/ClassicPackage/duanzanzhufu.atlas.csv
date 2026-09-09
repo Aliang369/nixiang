@@ -1,0 +1,146 @@
+
+duanzanzhufu.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+benti
+  rotate: false
+  xy: 297, 298
+  size: 205, 200
+  orig: 207, 202
+  offset: 1, 1
+  index: -1
+biyan
+  rotate: true
+  xy: 251, 28
+  size: 149, 69
+  orig: 151, 71
+  offset: 1, 1
+  index: -1
+cuxuyou
+  rotate: false
+  xy: 685, 337
+  size: 101, 161
+  orig: 103, 163
+  offset: 1, 1
+  index: -1
+cuxuzuo
+  rotate: true
+  xy: 297, 205
+  size: 91, 181
+  orig: 93, 183
+  offset: 1, 1
+  index: -1
+maoling
+  rotate: true
+  xy: 911, 355
+  size: 143, 95
+  orig: 145, 97
+  offset: 1, 1
+  index: -1
+meixin
+  rotate: false
+  xy: 1008, 476
+  size: 9, 22
+  orig: 11, 24
+  offset: 1, 1
+  index: -1
+tou
+  rotate: false
+  xy: 504, 328
+  size: 179, 170
+  orig: 181, 172
+  offset: 1, 1
+  index: -1
+toufa
+  rotate: false
+  xy: 2, 179
+  size: 293, 319
+  orig: 295, 321
+  offset: 1, 1
+  index: -1
+youchibang
+  rotate: false
+  xy: 788, 360
+  size: 121, 138
+  orig: 123, 140
+  offset: 1, 1
+  index: -1
+youerduo
+  rotate: true
+  xy: 788, 339
+  size: 19, 71
+  orig: 21, 73
+  offset: 1, 1
+  index: -1
+youshangbi
+  rotate: false
+  xy: 480, 215
+  size: 62, 81
+  orig: 64, 83
+  offset: 1, 1
+  index: -1
+youshangzhang
+  rotate: false
+  xy: 544, 219
+  size: 51, 79
+  orig: 53, 81
+  offset: 1, 1
+  index: -1
+youxiabi
+  rotate: true
+  xy: 504, 300
+  size: 26, 103
+  orig: 28, 105
+  offset: 1, 1
+  index: -1
+youzhitoushang
+  rotate: false
+  xy: 440, 182
+  size: 30, 21
+  orig: 32, 23
+  offset: 1, 1
+  index: -1
+zuiba
+  rotate: false
+  xy: 2, 2
+  size: 79, 25
+  orig: 81, 27
+  offset: 1, 1
+  index: -1
+zuochibang
+  rotate: false
+  xy: 2, 29
+  size: 247, 148
+  orig: 249, 150
+  offset: 1, 1
+  index: -1
+zuoerduo
+  rotate: false
+  xy: 322, 142
+  size: 116, 61
+  orig: 118, 63
+  offset: 1, 1
+  index: -1
+zuoshangbi
+  rotate: false
+  xy: 375, 56
+  size: 60, 84
+  orig: 62, 86
+  offset: 1, 1
+  index: -1
+zuoshouzhang
+  rotate: true
+  xy: 609, 273
+  size: 53, 77
+  orig: 55, 79
+  offset: 1, 1
+  index: -1
+zuoxiabi
+  rotate: false
+  xy: 322, 29
+  size: 51, 111
+  orig: 53, 113
+  offset: 1, 1
+  index: -1

@@ -1,0 +1,202 @@
+
+2015tiepiren(Boss).png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: true
+  xy: 979, 916
+  size: 99, 18
+  orig: 99, 18
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: false
+  xy: 605, 431
+  size: 108, 103
+  orig: 108, 103
+  offset: 0, 0
+  index: -1
+futou
+  rotate: false
+  xy: 2, 266
+  size: 317, 395
+  orig: 317, 395
+  offset: 0, 0
+  index: -1
+huatiao
+  rotate: true
+  xy: 606, 536
+  size: 127, 96
+  orig: 127, 96
+  offset: 0, 0
+  index: -1
+huatiao 2
+  rotate: false
+  xy: 439, 274
+  size: 91, 91
+  orig: 91, 91
+  offset: 0, 0
+  index: -1
+huatiao 4
+  rotate: false
+  xy: 462, 162
+  size: 96, 110
+  orig: 96, 110
+  offset: 0, 0
+  index: -1
+huatiao 5
+  rotate: false
+  xy: 479, 547
+  size: 125, 116
+  orig: 125, 116
+  offset: 0, 0
+  index: -1
+huatiao1
+  rotate: false
+  xy: 479, 442
+  size: 124, 103
+  orig: 124, 103
+  offset: 0, 0
+  index: -1
+huatiao3
+  rotate: true
+  xy: 462, 108
+  size: 52, 103
+  orig: 52, 103
+  offset: 0, 0
+  index: -1
+jian  L
+  rotate: true
+  xy: 675, 735
+  size: 134, 148
+  orig: 134, 148
+  offset: 0, 0
+  index: -1
+jian  R
+  rotate: false
+  xy: 675, 871
+  size: 152, 144
+  orig: 152, 144
+  offset: 0, 0
+  index: -1
+jiao  L
+  rotate: false
+  xy: 2, 2
+  size: 81, 38
+  orig: 81, 38
+  offset: 0, 0
+  index: -1
+jiao  R
+  rotate: false
+  xy: 176, 44
+  size: 77, 40
+  orig: 77, 40
+  offset: 0, 0
+  index: -1
+ling
+  rotate: false
+  xy: 442, 704
+  size: 227, 62
+  orig: 227, 62
+  offset: 0, 0
+  index: -1
+lingbuque
+  rotate: false
+  xy: 442, 665
+  size: 224, 37
+  orig: 224, 37
+  offset: 0, 0
+  index: -1
+maozi
+  rotate: true
+  xy: 176, 86
+  size: 178, 114
+  orig: 178, 114
+  offset: 0, 0
+  index: -1
+maozibuque
+  rotate: true
+  xy: 423, 499
+  size: 162, 54
+  orig: 162, 54
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 663
+  size: 438, 352
+  orig: 438, 352
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: true
+  xy: 829, 872
+  size: 143, 148
+  orig: 143, 148
+  offset: 0, 0
+  index: -1
+shou  R
+  rotate: true
+  xy: 321, 272
+  size: 167, 116
+  orig: 167, 116
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 439, 367
+  size: 136, 73
+  orig: 136, 73
+  offset: 0, 0
+  index: -1
+tui  L
+  rotate: false
+  xy: 292, 76
+  size: 85, 188
+  orig: 85, 188
+  offset: 0, 0
+  index: -1
+tui  R
+  rotate: false
+  xy: 321, 441
+  size: 100, 220
+  orig: 100, 220
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: false
+  xy: 2, 42
+  size: 172, 222
+  orig: 172, 222
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: false
+  xy: 442, 768
+  size: 231, 247
+  orig: 231, 247
+  offset: 0, 0
+  index: -1
+xiaobibuque  R
+  rotate: true
+  xy: 379, 98
+  size: 172, 81
+  orig: 172, 81
+  offset: 0, 0
+  index: -1
+yanjing  R
+  rotate: false
+  xy: 379, 84
+  size: 14, 12
+  orig: 14, 12
+  offset: 0, 0
+  index: -1
+yanqiu  L
+  rotate: false
+  xy: 423, 484
+  size: 12, 13
+  orig: 12, 13
+  offset: 0, 0
+  index: -1

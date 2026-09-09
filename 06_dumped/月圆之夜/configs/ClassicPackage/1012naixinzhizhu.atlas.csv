@@ -1,0 +1,195 @@
+
+1012naixinzhizhu.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 885, 439
+  size: 109, 71
+  orig: 109, 71
+  offset: 0, 0
+  index: -1
+biyan02
+  rotate: false
+  xy: 761, 385
+  size: 92, 56
+  orig: 92, 56
+  offset: 0, 0
+  index: -1
+hou 1 L
+  rotate: true
+  xy: 761, 338
+  size: 45, 89
+  orig: 45, 89
+  offset: 0, 0
+  index: -1
+hou 2 L
+  rotate: true
+  xy: 94, 2
+  size: 52, 169
+  orig: 52, 169
+  offset: 0, 0
+  index: -1
+hou 3L
+  rotate: true
+  xy: 176, 372
+  size: 82, 222
+  orig: 82, 222
+  offset: 0, 0
+  index: -1
+hou tui 1 R
+  rotate: true
+  xy: 464, 298
+  size: 38, 97
+  orig: 38, 97
+  offset: 0, 0
+  index: -1
+hou tui 2 R
+  rotate: true
+  xy: 457, 465
+  size: 45, 240
+  orig: 45, 240
+  offset: 0, 0
+  index: -1
+qian 1 L
+  rotate: false
+  xy: 946, 364
+  size: 54, 73
+  orig: 54, 73
+  offset: 0, 0
+  index: -1
+qian 1 R
+  rotate: false
+  xy: 683, 360
+  size: 76, 81
+  orig: 76, 81
+  offset: 0, 0
+  index: -1
+qian 2 R
+  rotate: true
+  xy: 699, 443
+  size: 67, 184
+  orig: 67, 184
+  offset: 0, 0
+  index: -1
+qian 2L
+  rotate: false
+  xy: 400, 304
+  size: 62, 150
+  orig: 62, 150
+  offset: 0, 0
+  index: -1
+qian 3 L
+  rotate: true
+  xy: 176, 456
+  size: 54, 279
+  orig: 54, 279
+  offset: 0, 0
+  index: -1
+qian 3 R
+  rotate: false
+  xy: 2, 14
+  size: 90, 287
+  orig: 90, 287
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 303
+  size: 172, 207
+  orig: 172, 207
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 574, 347
+  size: 107, 116
+  orig: 107, 116
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 997, 316
+  size: 46, 25
+  orig: 46, 25
+  offset: 0, 0
+  index: -1
+yachi
+  rotate: false
+  xy: 929, 306
+  size: 66, 56
+  orig: 66, 56
+  offset: 0, 0
+  index: -1
+yanjing 1  L
+  rotate: false
+  xy: 683, 450
+  size: 11, 13
+  orig: 11, 13
+  offset: 0, 0
+  index: -1
+yanjing 1  R
+  rotate: true
+  xy: 683, 347
+  size: 11, 13
+  orig: 11, 13
+  offset: 0, 0
+  index: -1
+yanjing 2  L
+  rotate: false
+  xy: 563, 328
+  size: 8, 8
+  orig: 8, 8
+  offset: 0, 0
+  index: -1
+yanjing 2  R
+  rotate: false
+  xy: 2, 2
+  size: 9, 10
+  orig: 9, 10
+  offset: 0, 0
+  index: -1
+zhong 1 L
+  rotate: true
+  xy: 852, 312
+  size: 71, 75
+  orig: 71, 75
+  offset: 0, 0
+  index: -1
+zhong 1 R
+  rotate: false
+  xy: 157, 241
+  size: 56, 60
+  orig: 56, 60
+  offset: 0, 0
+  index: -1
+zhong 2  R
+  rotate: true
+  xy: 855, 385
+  size: 52, 89
+  orig: 52, 89
+  offset: 0, 0
+  index: -1
+zhong 2 L
+  rotate: false
+  xy: 464, 338
+  size: 108, 125
+  orig: 108, 125
+  offset: 0, 0
+  index: -1
+zhong 3 L
+  rotate: false
+  xy: 94, 56
+  size: 61, 245
+  orig: 61, 245
+  offset: 0, 0
+  index: -1
+zhong 3R
+  rotate: true
+  xy: 176, 312
+  size: 58, 222
+  orig: 58, 222
+  offset: 0, 0
+  index: -1

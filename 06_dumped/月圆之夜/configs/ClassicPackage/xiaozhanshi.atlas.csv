@@ -1,0 +1,125 @@
+
+xiaozhanshi.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+baobao
+  rotate: true
+  xy: 383, 556
+  size: 153, 252
+  orig: 153, 252
+  offset: 0, 0
+  index: -1
+bianzi
+  rotate: false
+  xy: 921, 878
+  size: 88, 142
+  orig: 88, 142
+  offset: 0, 0
+  index: -1
+bianzi_y
+  rotate: false
+  xy: 921, 762
+  size: 60, 114
+  orig: 60, 114
+  offset: 0, 0
+  index: -1
+daimao
+  rotate: false
+  xy: 588, 223
+  size: 46, 78
+  orig: 46, 78
+  offset: 0, 0
+  index: -1
+houtoubu
+  rotate: false
+  xy: 383, 711
+  size: 296, 309
+  orig: 296, 309
+  offset: 0, 0
+  index: -1
+pifeng
+  rotate: true
+  xy: 2, 2
+  size: 550, 270
+  orig: 550, 270
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 554
+  size: 379, 466
+  orig: 379, 466
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 462, 303
+  size: 241, 251
+  orig: 241, 251
+  offset: 0, 0
+  index: -1
+tou_y
+  rotate: true
+  xy: 462, 220
+  size: 81, 124
+  orig: 81, 124
+  offset: 0, 0
+  index: -1
+tou_y2
+  rotate: false
+  xy: 637, 589
+  size: 22, 47
+  orig: 22, 47
+  offset: 0, 0
+  index: -1
+toupeng
+  rotate: false
+  xy: 681, 721
+  size: 238, 299
+  orig: 238, 299
+  offset: 0, 0
+  index: -1
+yanjie
+  rotate: false
+  xy: 921, 722
+  size: 37, 38
+  orig: 37, 38
+  offset: 0, 0
+  index: -1
+yanjie2
+  rotate: true
+  xy: 637, 638
+  size: 71, 41
+  orig: 71, 41
+  offset: 0, 0
+  index: -1
+yanjie3
+  rotate: true
+  xy: 983, 835
+  size: 41, 39
+  orig: 41, 39
+  offset: 0, 0
+  index: -1
+yanjie4
+  rotate: true
+  xy: 636, 230
+  size: 71, 37
+  orig: 71, 37
+  offset: 0, 0
+  index: -1
+youshou
+  rotate: true
+  xy: 274, 3
+  size: 203, 208
+  orig: 203, 208
+  offset: 0, 0
+  index: -1
+zuoshou
+  rotate: false
+  xy: 274, 208
+  size: 186, 344
+  orig: 186, 344
+  offset: 0, 0
+  index: -1

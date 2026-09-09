@@ -1,0 +1,48 @@
+
+baoxian.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+baoxiangbenti
+  rotate: false
+  xy: 2, 256
+  size: 575, 209
+  orig: 575, 209
+  offset: 0, 0
+  index: -1
+baoxianggai
+  rotate: false
+  xy: 579, 338
+  size: 355, 127
+  orig: 355, 127
+  offset: 0, 0
+  index: -1
+shetouteng
+  rotate: false
+  xy: 2, 2
+  size: 442, 252
+  orig: 442, 252
+  offset: 0, 0
+  index: -1
+yachi
+  rotate: false
+  xy: 579, 248
+  size: 294, 88
+  orig: 294, 88
+  offset: 0, 0
+  index: -1
+youshangteng
+  rotate: true
+  xy: 446, 96
+  size: 158, 121
+  orig: 158, 121
+  offset: 0, 0
+  index: -1
+zuoshangteng
+  rotate: false
+  xy: 569, 104
+  size: 157, 142
+  orig: 157, 142
+  offset: 0, 0
+  index: -1

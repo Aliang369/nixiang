@@ -1,0 +1,13 @@
+﻿编号;解锁条件;区域1权重;区域2权重;区域3权重;天赋名称;天赋描述;路径;英文名;盗贼;牧师;战士;法师;炼金师;魔术师;狼人;猎人;数学家;傀儡师;考古学家
+Id;clear;region1;region2;region3;Name;Story;Icon;Ps1;thief;priest;warrior;wizard;summoner;magician;explorer;hunter;mathematician;puppetmaster;marksmen
+1;1;1;1;1;生命;生命上限+5;Image/Talents/jiaxue;Healthy;1;1;1;1;1;1;1;1;1;1;1
+2;1;1;1;1;魔法;基础魔法+2;Image/Talents/mofa;Magical;1;1;1;1;1;1;1;1;1;1;1
+3;1;1;1;1;训练;选择牌组中的1张牌进行升级;Image/Talents/xunlian;Upgrade1;1;1;1;1;1;1;1;1;1;1;1
+4;2;0;2;2;富裕;金币+30;Image/Talents/fuyu;Rich;1;1;1;1;1;1;1;1;1;1;1
+5;2;0;2;2;敏捷;基础行动力+1;Image/Talents/minjie;Quick;1;1;1;1;1;1;1;1;1;1;1
+6;2;0;2;2;口袋;获得1个装备槽（入场佩戴已有装备）;Image/Talents/koudai;AdditionalEquipment;1;1;1;1;1;1;1;1;1;1;1
+7;2;0;2;2;复制;复制牌组中的一张牌;Image/Talents/fuzhi;CombatAbilityFlurry;1;1;1;1;1;1;1;1;1;1;1
+8;3;0;0;3;严格;你对敌人造成的物理伤害+1;Image/Talents/yanli;Cruel;1;1;1;1;1;1;1;1;1;1;1
+9;3;0;0;3;重生;下1次死亡时重生，并回复所有生命值;Image/Talents/chongsheng;Immortal;1;1;1;1;1;1;1;1;1;1;1
+10;3;0;0;3;纯洁;选择牌组中最多3张牌并删除它们;Image/Talents/chunjie;Purity;1;1;1;1;1;1;1;1;1;1;1
+11;1;1;1;1;除杂;选择牌组中1张牌并删除;Image/Talents/chunjie;Edulcoration;0;0;0;0;0;0;0;0;0;0;0

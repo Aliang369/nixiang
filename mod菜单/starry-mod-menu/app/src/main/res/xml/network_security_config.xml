@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 仅 HTTPS；证书固定在 AuthClient，此处禁止明文 -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

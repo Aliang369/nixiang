@@ -1,0 +1,14 @@
+{
+  "template_id": "whhxkb",
+  "name": "无悔华夏快爆",
+  "package": "com.syyx.whrhx",
+  "source": "Games/WhrhxMod.h WHRHX_FEAT_* / Main.cpp STARRY_GAME_WHRHXKB / GameConfig.h game_id=whhxkb",
+  "features": [
+    {"feat_num": 1, "name": "无限金币"},
+    {"feat_num": 2, "name": "无限食物"},
+    {"feat_num": 3, "name": "无限军队"},
+    {"feat_num": 4, "name": "无限人口"},
+    {"feat_num": 6, "name": "瞬间胜利"},
+    {"feat_num": 8, "name": "游戏加速", "type": "slider", "min": 1, "max": 5, "note": "1=关 2..5=倍速档"}
+  ]
+}

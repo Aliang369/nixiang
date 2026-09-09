@@ -1,0 +1,9 @@
+{
+  "game_id": "gyws",
+  "features": [
+    {"type": "category", "title": "战斗"},
+    {"type": "toggle", "title": "百倍伤害", "feat": 1},
+    {"type": "toggle", "title": "超级无敌", "feat": 2},
+    {"type": "toggle", "title": "全屏攻击", "feat": 3}
+  ]
+}

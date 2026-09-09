@@ -1,0 +1,5 @@
+﻿id;说明;string_value;int_value;float_value;int_list;path;END
+id;ps;string_value;int_value;float_value;int_list;path;end
+1;邮件数量上线;;500;;;;
+2;已读邮件保存时间（天）;;30;;;;
+3;未读邮件保存时间（天）;;60;;;;

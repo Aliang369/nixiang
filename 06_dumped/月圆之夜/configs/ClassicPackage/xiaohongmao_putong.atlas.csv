@@ -1,0 +1,153 @@
+
+xiaohongmao_putong.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bozi
+  rotate: false
+  xy: 556, 597
+  size: 36, 33
+  orig: 36, 33
+  offset: 0, 0
+  index: -1
+jiao
+  rotate: true
+  xy: 325, 370
+  size: 213, 62
+  orig: 213, 62
+  offset: 0, 0
+  index: -1
+l_dabi
+  rotate: true
+  xy: 176, 70
+  size: 69, 89
+  orig: 69, 89
+  offset: 0, 0
+  index: -1
+liuhai
+  rotate: true
+  xy: 325, 263
+  size: 105, 60
+  orig: 105, 60
+  offset: 0, 0
+  index: -1
+maozi
+  rotate: false
+  xy: 421, 632
+  size: 184, 169
+  orig: 184, 169
+  offset: 0, 0
+  index: -1
+maozi_back
+  rotate: false
+  xy: 421, 803
+  size: 184, 211
+  orig: 184, 211
+  offset: 0, 0
+  index: -1
+n_bao
+  rotate: true
+  xy: 607, 629
+  size: 68, 86
+  orig: 68, 86
+  offset: 0, 0
+  index: -1
+n_l_shou
+  rotate: false
+  xy: 607, 826
+  size: 123, 95
+  orig: 123, 95
+  offset: 0, 0
+  index: -1
+n_r_shou
+  rotate: false
+  xy: 2, 59
+  size: 172, 198
+  orig: 172, 198
+  offset: 0, 0
+  index: -1
+pifeng
+  rotate: false
+  xy: 2, 585
+  size: 417, 429
+  orig: 417, 429
+  offset: 0, 0
+  index: -1
+qunbai
+  rotate: false
+  xy: 2, 259
+  size: 321, 324
+  orig: 321, 324
+  offset: 0, 0
+  index: -1
+r_dabi
+  rotate: false
+  xy: 692, 728
+  size: 48, 96
+  orig: 48, 96
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 176, 141
+  size: 116, 116
+  orig: 116, 116
+  offset: 0, 0
+  index: -1
+toufa1
+  rotate: true
+  xy: 421, 573
+  size: 57, 133
+  orig: 57, 133
+  offset: 0, 0
+  index: -1
+toufa2
+  rotate: true
+  xy: 2, 2
+  size: 55, 146
+  orig: 55, 146
+  offset: 0, 0
+  index: -1
+weijing
+  rotate: false
+  xy: 753, 931
+  size: 135, 83
+  orig: 135, 83
+  offset: 0, 0
+  index: -1
+xiong
+  rotate: true
+  xy: 890, 916
+  size: 98, 109
+  orig: 98, 109
+  offset: 0, 0
+  index: -1
+yao
+  rotate: true
+  xy: 607, 699
+  size: 125, 83
+  orig: 125, 83
+  offset: 0, 0
+  index: -1
+yaodai
+  rotate: false
+  xy: 607, 923
+  size: 144, 91
+  orig: 144, 91
+  offset: 0, 0
+  index: -1
+youyan
+  rotate: true
+  xy: 389, 539
+  size: 44, 28
+  orig: 44, 28
+  offset: 0, 0
+  index: -1
+zuoyan
+  rotate: true
+  xy: 294, 213
+  size: 44, 28
+  orig: 44, 28
+  offset: 0, 0
+  index: -1

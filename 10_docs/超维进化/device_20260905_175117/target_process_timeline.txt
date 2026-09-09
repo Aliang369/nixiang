@@ -1,0 +1,214 @@
+249: 09-05 17:51:47.325  3151  3254 I am_proc_start: [0,27664,10652,com.grinning.beta.yszl,next-top-activity,{com.grinning.beta.yszl/com.grinning.game.activity.SplashActivity},NULL]
+8821: 09-05 17:51:52.582 27664 27664 D main    : cocos_jni_env_init
+8849: 09-05 17:51:52.627  3151  9067 I am_proc_died: [0,27664,com.grinning.beta.yszl,0,2]
+9046: 09-05 17:51:52.651  3151  3254 I am_proc_start: [0,27987,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+9965: 09-05 17:51:52.778 27987 27987 D main    : cocos_jni_env_init
+9977: 09-05 17:51:52.794  3151  3972 I am_proc_died: [0,27987,com.grinning.beta.yszl,0,2]
+10237: 09-05 17:51:52.812  3151  3254 I am_proc_start: [0,28022,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+10906: 09-05 17:51:52.898 28022 28022 D main    : cocos_jni_env_init
+10924: 09-05 17:51:52.915  3151  9067 I am_proc_died: [0,28022,com.grinning.beta.yszl,0,2]
+10975: 09-05 17:51:52.936  3151  3254 I am_proc_start: [0,28053,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+12086: 09-05 17:51:53.035 28053 28053 D main    : cocos_jni_env_init
+12113: 09-05 17:51:53.058  3151  3972 I am_proc_died: [0,28053,com.grinning.beta.yszl,0,2]
+12232: 09-05 17:51:53.077  3151  3254 I am_proc_start: [0,28087,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+13103: 09-05 17:51:53.163 28087 28087 D main    : cocos_jni_env_init
+13169: 09-05 17:51:53.179  3151  9067 I am_proc_died: [0,28087,com.grinning.beta.yszl,0,2]
+13253: 09-05 17:51:53.194  3151  3254 I am_proc_start: [0,28122,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+14082: 09-05 17:51:53.282 28122 28122 D main    : cocos_jni_env_init
+14229: 09-05 17:51:53.297  3151  3972 I am_proc_died: [0,28122,com.grinning.beta.yszl,0,2]
+14275: 09-05 17:51:53.314  3151  3254 I am_proc_start: [0,28155,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+15270: 09-05 17:51:53.398 28155 28155 D main    : cocos_jni_env_init
+15276: 09-05 17:51:53.412  3151  9067 I am_proc_died: [0,28155,com.grinning.beta.yszl,0,2]
+15326: 09-05 17:51:53.430  3151  3254 I am_proc_start: [0,28188,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+16306: 09-05 17:51:53.528 28188 28188 D main    : cocos_jni_env_init
+16312: 09-05 17:51:53.541  3151  3972 I am_proc_died: [0,28188,com.grinning.beta.yszl,0,2]
+16414: 09-05 17:51:53.560  3151  3254 I am_proc_start: [0,28221,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+17210: 09-05 17:51:53.629 28221 28221 D main    : cocos_jni_env_init
+17344: 09-05 17:51:53.647  3151  9067 I am_proc_died: [0,28221,com.grinning.beta.yszl,0,2]
+17399: 09-05 17:51:53.666  3151  3254 I am_proc_start: [0,28258,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+18294: 09-05 17:51:53.755 28258 28258 D main    : cocos_jni_env_init
+18301: 09-05 17:51:53.770  3151  3972 I am_proc_died: [0,28258,com.grinning.beta.yszl,0,2]
+18347: 09-05 17:51:53.786  3151  3254 I am_proc_start: [0,28293,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+19329: 09-05 17:51:53.870 28293 28293 D main    : cocos_jni_env_init
+19337: 09-05 17:51:53.883  3151  9067 I am_proc_died: [0,28293,com.grinning.beta.yszl,0,2]
+19381: 09-05 17:51:53.896  3151  3254 I am_proc_start: [0,28330,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+20086: 09-05 17:51:53.977 28330 28330 D main    : cocos_jni_env_init
+20094: 09-05 17:51:53.993  3151  3972 I am_proc_died: [0,28330,com.grinning.beta.yszl,0,2]
+20152: 09-05 17:51:54.010  3151  3254 I am_proc_start: [0,28362,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+20993: 09-05 17:51:54.089 28362 28362 D main    : cocos_jni_env_init
+21129: 09-05 17:51:54.109  3151  9067 I am_proc_died: [0,28362,com.grinning.beta.yszl,0,2]
+21182: 09-05 17:51:54.130  3151  3254 I am_proc_start: [0,28399,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+22105: 09-05 17:51:54.211 28399 28399 D main    : cocos_jni_env_init
+22113: 09-05 17:51:54.226  3151  3972 I am_proc_died: [0,28399,com.grinning.beta.yszl,0,2]
+22161: 09-05 17:51:54.244  3151  3254 I am_proc_start: [0,28447,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+23055: 09-05 17:51:54.341 28447 28447 D main    : cocos_jni_env_init
+23059: 09-05 17:51:54.356  3151  9067 I am_proc_died: [0,28447,com.grinning.beta.yszl,0,2]
+23154: 09-05 17:51:54.374  3151  3254 I am_proc_start: [0,28480,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+24006: 09-05 17:51:54.451 28480 28480 D main    : cocos_jni_env_init
+24136: 09-05 17:51:54.469  3151  3972 I am_proc_died: [0,28480,com.grinning.beta.yszl,0,2]
+24182: 09-05 17:51:54.487  3151  3254 I am_proc_start: [0,28516,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+25031: 09-05 17:51:54.578 28516 28516 D main    : cocos_jni_env_init
+25036: 09-05 17:51:54.594  3151  9067 I am_proc_died: [0,28516,com.grinning.beta.yszl,0,2]
+25139: 09-05 17:51:54.613  3151  3254 I am_proc_start: [0,28558,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+25972: 09-05 17:51:54.691 28558 28558 D main    : cocos_jni_env_init
+26070: 09-05 17:51:54.708  3151  3972 I am_proc_died: [0,28558,com.grinning.beta.yszl,0,2]
+26119: 09-05 17:51:54.726  3151  3254 I am_proc_start: [0,28607,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+26894: 09-05 17:51:54.804 28607 28607 D main    : cocos_jni_env_init
+27045: 09-05 17:51:54.823  3151  9067 I am_proc_died: [0,28607,com.grinning.beta.yszl,0,2]
+27147: 09-05 17:51:54.840  3151  3254 I am_proc_start: [0,28648,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+27863: 09-05 17:51:54.933 28648 28648 D main    : cocos_jni_env_init
+27868: 09-05 17:51:54.948  3151  3972 I am_proc_died: [0,28648,com.grinning.beta.yszl,0,2]
+27916: 09-05 17:51:54.968  3151  3254 I am_proc_start: [0,28682,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+28787: 09-05 17:51:55.042 28682 28682 D main    : cocos_jni_env_init
+28903: 09-05 17:51:55.059  3151  9067 I am_proc_died: [0,28682,com.grinning.beta.yszl,0,2]
+28950: 09-05 17:51:55.076  3151  3254 I am_proc_start: [0,28718,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+29871: 09-05 17:51:55.164 28718 28718 D main    : cocos_jni_env_init
+29877: 09-05 17:51:55.179  3151  3972 I am_proc_died: [0,28718,com.grinning.beta.yszl,0,2]
+29979: 09-05 17:51:55.199  3151  3254 I am_proc_start: [0,28751,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+30813: 09-05 17:51:55.274 28751 28751 D main    : cocos_jni_env_init
+30903: 09-05 17:51:55.291  3151  9067 I am_proc_died: [0,28751,com.grinning.beta.yszl,0,2]
+30952: 09-05 17:51:55.310  3151  3254 I am_proc_start: [0,28786,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+31754: 09-05 17:51:55.379 28786 28786 D main    : cocos_jni_env_init
+31858: 09-05 17:51:55.393  3151  3972 I am_proc_died: [0,28786,com.grinning.beta.yszl,0,2]
+31906: 09-05 17:51:55.409  3151  3254 I am_proc_start: [0,28820,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+32770: 09-05 17:51:55.510 28820 28820 D main    : cocos_jni_env_init
+32777: 09-05 17:51:55.526  3151  9067 I am_proc_died: [0,28820,com.grinning.beta.yszl,0,2]
+32827: 09-05 17:51:55.545  3151  3254 I am_proc_start: [0,28856,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+33682: 09-05 17:51:55.627 28856 28856 D main    : cocos_jni_env_init
+33753: 09-05 17:51:55.645  3151  3972 I am_proc_died: [0,28856,com.grinning.beta.yszl,0,2]
+33809: 09-05 17:51:55.667  3151  3254 I am_proc_start: [0,28889,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+34657: 09-05 17:51:55.746 28889 28889 D main    : cocos_jni_env_init
+34668: 09-05 17:51:55.762  3151  9067 I am_proc_died: [0,28889,com.grinning.beta.yszl,0,2]
+34768: 09-05 17:51:55.781  3151  3254 I am_proc_start: [0,28920,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+35696: 09-05 17:51:55.893 28920 28920 D main    : cocos_jni_env_init
+35705: 09-05 17:51:55.908  3151  3972 I am_proc_died: [0,28920,com.grinning.beta.yszl,0,2]
+35936: 09-05 17:51:55.931  3151  3254 I am_proc_start: [0,28955,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+36582: 09-05 17:51:56.008 28955 28955 D main    : cocos_jni_env_init
+36739: 09-05 17:51:56.027  3151  9067 I am_proc_died: [0,28955,com.grinning.beta.yszl,0,2]
+36788: 09-05 17:51:56.048  3151  3254 I am_proc_start: [0,28989,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+37466: 09-05 17:51:56.110 28989 28989 D main    : cocos_jni_env_init
+37638: 09-05 17:51:56.128  3151  3972 I am_proc_died: [0,28989,com.grinning.beta.yszl,0,2]
+37741: 09-05 17:51:56.146  3151  3254 I am_proc_start: [0,29023,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+38447: 09-05 17:51:56.227 29023 29023 D main    : cocos_jni_env_init
+38456: 09-05 17:51:56.243  3151  9067 I am_proc_died: [0,29023,com.grinning.beta.yszl,0,2]
+38505: 09-05 17:51:56.262  3151  3254 I am_proc_start: [0,29054,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+39435: 09-05 17:51:56.350 29054 29054 D main    : cocos_jni_env_init
+39442: 09-05 17:51:56.364  3151  3972 I am_proc_died: [0,29054,com.grinning.beta.yszl,0,2]
+39488: 09-05 17:51:56.381  3151  3254 I am_proc_start: [0,29091,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+40409: 09-05 17:51:56.465 29091 29091 D main    : cocos_jni_env_init
+40414: 09-05 17:51:56.481  3151  9067 I am_proc_died: [0,29091,com.grinning.beta.yszl,0,2]
+40465: 09-05 17:51:56.501  3151  3254 I am_proc_start: [0,29130,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+41448: 09-05 17:51:56.585 29130 29130 D main    : cocos_jni_env_init
+41459: 09-05 17:51:56.600  3151  3972 I am_proc_died: [0,29130,com.grinning.beta.yszl,0,2]
+41507: 09-05 17:51:56.616  3151  3254 I am_proc_start: [0,29165,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+42485: 09-05 17:51:56.702 29165 29165 D main    : cocos_jni_env_init
+42497: 09-05 17:51:56.717  3151  9067 I am_proc_died: [0,29165,com.grinning.beta.yszl,0,2]
+42598: 09-05 17:51:56.737  3151  3254 I am_proc_start: [0,29200,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+43415: 09-05 17:51:56.814 29200 29200 D main    : cocos_jni_env_init
+43531: 09-05 17:51:56.831  3151  3972 I am_proc_died: [0,29200,com.grinning.beta.yszl,0,2]
+43583: 09-05 17:51:56.848  3151  3254 I am_proc_start: [0,29236,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+44408: 09-05 17:51:56.921 29236 29236 D main    : cocos_jni_env_init
+44556: 09-05 17:51:56.941  3151  9067 I am_proc_died: [0,29236,com.grinning.beta.yszl,0,2]
+44602: 09-05 17:51:56.959  3151  3254 I am_proc_start: [0,29281,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+45486: 09-05 17:51:57.052 29281 29281 D main    : cocos_jni_env_init
+45490: 09-05 17:51:57.067  3151  3972 I am_proc_died: [0,29281,com.grinning.beta.yszl,0,2]
+45543: 09-05 17:51:57.087  3151  3254 I am_proc_start: [0,29314,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+46441: 09-05 17:51:57.186 29314 29314 D main    : cocos_jni_env_init
+46461: 09-05 17:51:57.206  3151  9067 I am_proc_died: [0,29314,com.grinning.beta.yszl,0,2]
+46699: 09-05 17:51:57.241  3151  3254 I am_proc_start: [0,29350,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+47351: 09-05 17:51:57.328 29350 29350 D main    : cocos_jni_env_init
+47508: 09-05 17:51:57.349  3151  3972 I am_proc_died: [0,29350,com.grinning.beta.yszl,0,2]
+47557: 09-05 17:51:57.367  3151  3254 I am_proc_start: [0,29385,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+48312: 09-05 17:51:57.443 29385 29385 D main    : cocos_jni_env_init
+48463: 09-05 17:51:57.459  3151  9067 I am_proc_died: [0,29385,com.grinning.beta.yszl,0,2]
+48507: 09-05 17:51:57.476  3151  3254 I am_proc_start: [0,29418,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+49130: 09-05 17:51:57.542 29418 29418 D main    : cocos_jni_env_init
+49226: 09-05 17:51:57.561  3151  3972 I am_proc_died: [0,29418,com.grinning.beta.yszl,0,2]
+49270: 09-05 17:51:57.579  3151  3254 I am_proc_start: [0,29451,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+50067: 09-05 17:51:57.659 29451 29451 D main    : cocos_jni_env_init
+50227: 09-05 17:51:57.683  3151  9067 I am_proc_died: [0,29451,com.grinning.beta.yszl,0,2]
+50271: 09-05 17:51:57.700  3151  3254 I am_proc_start: [0,29532,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+51208: 09-05 17:51:57.794 29532 29532 D main    : cocos_jni_env_init
+51217: 09-05 17:51:57.810  3151  3972 I am_proc_died: [0,29532,com.grinning.beta.yszl,0,2]
+51316: 09-05 17:51:57.829  3151  3254 I am_proc_start: [0,29576,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+52208: 09-05 17:51:57.920 29576 29576 D main    : cocos_jni_env_init
+52271: 09-05 17:51:57.938  3151  9067 I am_proc_died: [0,29576,com.grinning.beta.yszl,0,2]
+52363: 09-05 17:51:57.958  3151  3254 I am_proc_start: [0,29618,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+53233: 09-05 17:51:58.058 29618 29618 D main    : cocos_jni_env_init
+53354: 09-05 17:51:58.077  3151  3972 I am_proc_died: [0,29618,com.grinning.beta.yszl,0,2]
+53400: 09-05 17:51:58.095  3151  3254 I am_proc_start: [0,29656,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+54346: 09-05 17:51:58.200 29656 29656 D main    : cocos_jni_env_init
+54403: 09-05 17:51:58.216  3151  9067 I am_proc_died: [0,29656,com.grinning.beta.yszl,0,2]
+54452: 09-05 17:51:58.234  3151  3254 I am_proc_start: [0,29696,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+55385: 09-05 17:51:58.327 29696 29696 D main    : cocos_jni_env_init
+55445: 09-05 17:51:58.346  3151  3972 I am_proc_died: [0,29696,com.grinning.beta.yszl,0,2]
+55494: 09-05 17:51:58.368  3151  3254 I am_proc_start: [0,29729,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+56387: 09-05 17:51:58.461 29729 29729 D main    : cocos_jni_env_init
+56473: 09-05 17:51:58.477  3151  9067 I am_proc_died: [0,29729,com.grinning.beta.yszl,0,2]
+56524: 09-05 17:51:58.498  3151  3254 I am_proc_start: [0,29762,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+57519: 09-05 17:51:58.622 29762 29762 D main    : cocos_jni_env_init
+57527: 09-05 17:51:58.638  3151  3972 I am_proc_died: [0,29762,com.grinning.beta.yszl,0,2]
+57580: 09-05 17:51:58.656  3151  3254 I am_proc_start: [0,29800,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+58559: 09-05 17:51:58.760 29800 29800 D main    : cocos_jni_env_init
+58564: 09-05 17:51:58.777  3151  9067 I am_proc_died: [0,29800,com.grinning.beta.yszl,0,2]
+58772: 09-05 17:51:58.797  3151  3254 I am_proc_start: [0,29834,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+59614: 09-05 17:51:58.929 29834 29834 D main    : cocos_jni_env_init
+59623: 09-05 17:51:58.945  3151  3972 I am_proc_died: [0,29834,com.grinning.beta.yszl,0,2]
+59863: 09-05 17:51:58.967  3151  3254 I am_proc_start: [0,29870,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+60728: 09-05 17:51:59.062 29870 29870 D main    : cocos_jni_env_init
+60740: 09-05 17:51:59.079  3151  9067 I am_proc_died: [0,29870,com.grinning.beta.yszl,0,2]
+60789: 09-05 17:51:59.103  3151  3254 I am_proc_start: [0,29918,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+61771: 09-05 17:51:59.199 29918 29918 D main    : cocos_jni_env_init
+61779: 09-05 17:51:59.213  3151  3972 I am_proc_died: [0,29918,com.grinning.beta.yszl,0,2]
+61825: 09-05 17:51:59.230  3151  3254 I am_proc_start: [0,29955,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+62814: 09-05 17:51:59.340 29955 29955 D main    : cocos_jni_env_init
+62821: 09-05 17:51:59.357  3151  9067 I am_proc_died: [0,29955,com.grinning.beta.yszl,0,2]
+62944: 09-05 17:51:59.377  3151  3254 I am_proc_start: [0,29990,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+63651: 09-05 17:51:59.466 29990 29990 D main    : cocos_jni_env_init
+63854: 09-05 17:51:59.488  3151  3972 I am_proc_died: [0,29990,com.grinning.beta.yszl,0,2]
+63903: 09-05 17:51:59.507  3151  3254 I am_proc_start: [0,30026,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+64575: 09-05 17:51:59.581 30026 30026 D main    : cocos_jni_env_init
+64766: 09-05 17:51:59.601  3151  9067 I am_proc_died: [0,30026,com.grinning.beta.yszl,0,2]
+64818: 09-05 17:51:59.622  3151  3254 I am_proc_start: [0,30061,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+65750: 09-05 17:51:59.713 30061 30061 D main    : cocos_jni_env_init
+65755: 09-05 17:51:59.726  3151  3972 I am_proc_died: [0,30061,com.grinning.beta.yszl,0,2]
+65803: 09-05 17:51:59.746  3151  3254 I am_proc_start: [0,30099,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+66589: 09-05 17:51:59.823 30099 30099 D main    : cocos_jni_env_init
+66733: 09-05 17:51:59.840  3151  9067 I am_proc_died: [0,30099,com.grinning.beta.yszl,0,2]
+66783: 09-05 17:51:59.860  3151  3254 I am_proc_start: [0,30133,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+67628: 09-05 17:51:59.940 30133 30133 D main    : cocos_jni_env_init
+67768: 09-05 17:51:59.960  3151  3972 I am_proc_died: [0,30133,com.grinning.beta.yszl,0,2]
+67817: 09-05 17:51:59.979  3151  3254 I am_proc_start: [0,30170,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+68818: 09-05 17:52:00.092 30170 30170 D main    : cocos_jni_env_init
+68907: 09-05 17:52:00.113  3151  9067 I am_proc_died: [0,30170,com.grinning.beta.yszl,0,2]
+68953: 09-05 17:52:00.128  3151  3254 I am_proc_start: [0,30206,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+69708: 09-05 17:52:00.204 30206 30206 D main    : cocos_jni_env_init
+69803: 09-05 17:52:00.222  3151  3972 I am_proc_died: [0,30206,com.grinning.beta.yszl,0,2]
+69994: 09-05 17:52:00.245  3151  3254 I am_proc_start: [0,30240,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+70921: 09-05 17:52:00.338 30240 30240 D main    : cocos_jni_env_init
+70929: 09-05 17:52:00.351  3151  9067 I am_proc_died: [0,30240,com.grinning.beta.yszl,0,2]
+70978: 09-05 17:52:00.368  3151  3254 I am_proc_start: [0,30277,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+71940: 09-05 17:52:00.461 30277 30277 D main    : cocos_jni_env_init
+71967: 09-05 17:52:00.478  3151  3972 I am_proc_died: [0,30277,com.grinning.beta.yszl,0,2]
+72070: 09-05 17:52:00.499  3151  3254 I am_proc_start: [0,30317,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+72849: 09-05 17:52:00.571 30317 30317 D main    : cocos_jni_env_init
+72909: 09-05 17:52:00.587  3151  9067 I am_proc_died: [0,30317,com.grinning.beta.yszl,0,2]
+73096: 09-05 17:52:00.608  3151  3254 I am_proc_start: [0,30352,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+74034: 09-05 17:52:00.706 30352 30352 D main    : cocos_jni_env_init
+74038: 09-05 17:52:00.720  3151  3972 I am_proc_died: [0,30352,com.grinning.beta.yszl,0,2]
+74126: 09-05 17:52:00.740  3151  3254 I am_proc_start: [0,30389,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+75048: 09-05 17:52:00.815 30389 30389 D main    : cocos_jni_env_init
+75073: 09-05 17:52:00.830  3151  9067 I am_proc_died: [0,30389,com.grinning.beta.yszl,0,2]
+75124: 09-05 17:52:00.855  3151  3254 I am_proc_start: [0,30424,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+76109: 09-05 17:52:00.951 30424 30424 D main    : cocos_jni_env_init
+76115: 09-05 17:52:00.966  3151  3972 I am_proc_died: [0,30424,com.grinning.beta.yszl,0,2]
+76215: 09-05 17:52:00.986  3151  3254 I am_proc_start: [0,30462,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+77150: 09-05 17:52:01.096 30462 30462 D main    : cocos_jni_env_init
+77210: 09-05 17:52:01.117  3151  9067 I am_proc_died: [0,30462,com.grinning.beta.yszl,0,2]
+77258: 09-05 17:52:01.139  3151  3254 I am_proc_start: [0,30507,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+78050: 09-05 17:52:01.213 30507 30507 D main    : cocos_jni_env_init
+78190: 09-05 17:52:01.235  3151  3972 I am_proc_died: [0,30507,com.grinning.beta.yszl,0,2]
+78291: 09-05 17:52:01.259  3151  3254 I am_proc_start: [0,30540,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]
+79076: 09-05 17:52:01.348 30540 30540 D main    : cocos_jni_env_init
+79233: 09-05 17:52:01.367  3151  9067 I am_proc_died: [0,30540,com.grinning.beta.yszl,0,2]
+79334: 09-05 17:52:01.387  3151  3254 I am_proc_start: [0,30582,10652,com.grinning.beta.yszl,top-activity,{com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity},NULL]

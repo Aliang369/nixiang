@@ -1,0 +1,774 @@
+{
+    "ShaderTotalCount": 43,
+    "VariantTotalCount": 62,
+    "ShaderVariantInfos": [
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/BlitCopy",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Standard",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Skybox/Procedural",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_SUNDISK_SIMPLE"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Legacy Shaders/Particles/Additive",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_USEEXPOSUREFX_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Legacy Shaders/Particles/Additive (Soft)",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Legacy Shaders/Particles/Alpha Blended",
+            "ShaderVariantCount": 3,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_ALPHAPREMULTIPLY_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITextureClip",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITextureClipText",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITexture",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUITextureBlit",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUIRoundedRect",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-GUIRoundedRectWithColorPerBorder",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/Internal-UIRAtlasBlitCopy",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Hidden/UIElements/EditorUIE",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Mobile/Particles/Additive",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Mobile/Particles/Alpha Blended",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Unlit/Transparent",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Resources/unity_builtin_extra",
+            "ShaderName": "Unlit/Texture",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Shuijingqiu.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Shuijingqiu",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Mask_add.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Mask_add",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_AlphaBlend.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_AlphaBlend",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_MaskAdditive.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_MaskAdditive",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_MaskBlendDissovle.shader",
+            "ShaderName": "YYZY_Shaders/Effects/MaskBlendDissolve",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_BaseMask.shader",
+            "ShaderName": "YYZY_Shaders/Effects/BaseMask",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_MASK01ONOFF_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/niuqu.shader",
+            "ShaderName": "YYZY_Shaders/Effects/niuqu",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/ArtPackage/Common/Shader/Effect/NewUnlitShader.shader",
+            "ShaderName": "Unlit/NewUnlitShader",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Common_Effect.shader",
+            "ShaderName": "HRP/SLPK/UI/CommonEffect",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEAR_ON",
+                        "_DISSOLVEPLUSAR_ON",
+                        "_DISSOLVETEXUVS_NORMAL",
+                        "_DISTORTADDTEX_ON",
+                        "_DISTORTMASKTEXAR_ON",
+                        "_DISTORTTEXAR_ON",
+                        "_FACE_Y",
+                        "_MAINTEXUVS_NORMAL",
+                        "_MASKALPHARA_ON",
+                        "_MASKTEXUVS_NORMAL",
+                        "_VTOAR_ON",
+                        "_VTOMASKAR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_DISSOLVEAR_ON",
+                        "_DISSOLVEPLUSAR_ON",
+                        "_DISSOLVETEXUVS_NORMAL",
+                        "_DISTORTADDTEX_ON",
+                        "_DISTORTMASKTEXAR_ON",
+                        "_DISTORTTEXAR_ON",
+                        "_FACE_Y",
+                        "_MAINTEXUVS_NORMAL",
+                        "_MAINTEX_AR_ON",
+                        "_MASKALPHARA_ON",
+                        "_MASKTEXUVS_NORMAL",
+                        "_VTOAR_ON",
+                        "_VTOMASKAR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/ArtPackage/Common/Shader/Effect/liuguang.shader",
+            "ShaderName": "Unlit/liuguang",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/ParticleAdd.shader",
+            "ShaderName": "YYZY_Shaders/Effects/ParticleAdd",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Base.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Base",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "ETC1_EXTERNAL_ALPHA",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/ParticleBlend.shader",
+            "ShaderName": "YYZY_Shaders/Effects/ParticleBlend",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_DissolveAlphaBlend_A.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_DissolveAlphaBlend_A",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_ONOFFCUSTOMX_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_MaskAlphaBlend.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_MaskAlphaBlend",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/ArtPackage/Common/Shader/Effect/ImageBlur.shader",
+            "ShaderName": "Custom/ImageBlur",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/GamePVP/Third/TextMesh Pro/Shaders/TMP_SDF.shader",
+            "ShaderName": "TextMeshPro/Distance Field",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNDERLAY_ON",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "GLOW_ON",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Distortion.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Distortion",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON",
+                        "_CUSTOMX"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_AlphaTrail.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Alpha_Trail",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_AddGradient.shader",
+            "ShaderName": "YYZY_Shaders/Effects/AddGradient",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/DefaultResources/Particle Add.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Legacy Shaders/Additive",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_Sean_Additive.shader",
+            "ShaderName": "YYZY_Shaders/Effects/Fx_Sean_Additive",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/Fx_BaseAdd.shader",
+            "ShaderName": "YYZY_Shaders/Effects/BaseAdd",
+            "ShaderVariantCount": 2,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "DISSOLVE",
+                        "DISSOLVE_NONE",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_CUSTOMXYTOOGLE_ON"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/Effect/qinfeng_ronjie_yin.shader",
+            "ShaderName": "YYZY_Shaders/Effects/ronjie_yin",
+            "ShaderVariantCount": 4,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON"
+                    ]
+                },
+                {
+                    "PassType": 4,
+                    "Keywords": [
+                        "DIRECTIONAL",
+                        "LIGHTPROBE_SH",
+                        "UNITY_HDR_ON",
+                        "_EMISSION"
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        ""
+                    ]
+                },
+                {
+                    "PassType": 8,
+                    "Keywords": [
+                        "_EMISSION"
+                    ]
+                }
+            ]
+        },
+        {
+            "AssetPath": "Assets/Shaders/DefaultResourcesExtra/UI/UI-Default.shader",
+            "ShaderName": "UI/Default",
+            "ShaderVariantCount": 1,
+            "ShaderVariantElements": [
+                {
+                    "PassType": 0,
+                    "Keywords": [
+                        "UNITY_HDR_ON"
+                    ]
+                }
+            ]
+        }
+    ]
+}

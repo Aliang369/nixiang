@@ -1,0 +1,230 @@
+
+1007fengkuangyaojishi.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+belt
+  rotate: true
+  xy: 526, 380
+  size: 154, 76
+  orig: 154, 76
+  offset: 0, 0
+  index: -1
+biyan01
+  rotate: true
+  xy: 782, 665
+  size: 84, 44
+  orig: 84, 44
+  offset: 0, 0
+  index: -1
+body
+  rotate: false
+  xy: 2, 504
+  size: 445, 497
+  orig: 445, 497
+  offset: 0, 0
+  index: -1
+brain
+  rotate: false
+  xy: 394, 341
+  size: 130, 161
+  orig: 130, 161
+  offset: 0, 0
+  index: -1
+dabi  L
+  rotate: true
+  xy: 885, 853
+  size: 148, 136
+  orig: 148, 136
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: false
+  xy: 265, 281
+  size: 127, 221
+  orig: 127, 221
+  offset: 0, 0
+  index: -1
+dangbu
+  rotate: false
+  xy: 607, 522
+  size: 141, 122
+  orig: 141, 122
+  offset: 0, 0
+  index: -1
+datui  L
+  rotate: false
+  xy: 814, 769
+  size: 56, 91
+  orig: 56, 91
+  offset: 0, 0
+  index: -1
+datui  R
+  rotate: false
+  xy: 394, 216
+  size: 131, 123
+  orig: 131, 123
+  offset: 0, 0
+  index: -1
+ear  L
+  rotate: true
+  xy: 233, 134
+  size: 134, 42
+  orig: 134, 42
+  offset: 0, 0
+  index: -1
+ear  R
+  rotate: true
+  xy: 750, 533
+  size: 111, 34
+  orig: 111, 34
+  offset: 0, 0
+  index: -1
+eyeball  L
+  rotate: false
+  xy: 731, 508
+  size: 13, 12
+  orig: 13, 12
+  offset: 0, 0
+  index: -1
+eyeball  R
+  rotate: false
+  xy: 607, 688
+  size: 10, 10
+  orig: 10, 10
+  offset: 0, 0
+  index: -1
+face
+  rotate: true
+  xy: 620, 751
+  size: 109, 192
+  orig: 109, 192
+  offset: 0, 0
+  index: -1
+foot  L
+  rotate: false
+  xy: 449, 536
+  size: 156, 162
+  orig: 156, 162
+  offset: 0, 0
+  index: -1
+foot  R
+  rotate: false
+  xy: 2, 8
+  size: 172, 67
+  orig: 172, 67
+  offset: 0, 0
+  index: -1
+hair  L
+  rotate: false
+  xy: 2, 270
+  size: 261, 232
+  orig: 261, 232
+  offset: 0, 0
+  index: -1
+hair  R
+  rotate: false
+  xy: 2, 77
+  size: 229, 191
+  orig: 229, 191
+  offset: 0, 0
+  index: -1
+hand  L
+  rotate: false
+  xy: 872, 771
+  size: 87, 80
+  orig: 87, 80
+  offset: 0, 0
+  index: -1
+houbai
+  rotate: false
+  xy: 620, 862
+  size: 263, 139
+  orig: 263, 139
+  offset: 0, 0
+  index: -1
+inferior teeth
+  rotate: true
+  xy: 480, 123
+  size: 91, 50
+  orig: 91, 50
+  offset: 0, 0
+  index: -1
+key
+  rotate: false
+  xy: 374, 117
+  size: 104, 97
+  orig: 104, 97
+  offset: 0, 0
+  index: -1
+medicine bottle
+  rotate: false
+  xy: 449, 700
+  size: 169, 301
+  orig: 169, 301
+  offset: 0, 0
+  index: -1
+medicine watch
+  rotate: false
+  xy: 620, 646
+  size: 160, 103
+  orig: 160, 103
+  offset: 0, 0
+  index: -1
+shou  R
+  rotate: true
+  xy: 277, 150
+  size: 129, 95
+  orig: 129, 95
+  offset: 0, 0
+  index: -1
+tongue
+  rotate: true
+  xy: 233, 83
+  size: 49, 45
+  orig: 49, 45
+  offset: 0, 0
+  index: -1
+upper teeth
+  rotate: false
+  xy: 449, 515
+  size: 73, 19
+  orig: 73, 19
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: false
+  xy: 636, 249
+  size: 101, 138
+  orig: 101, 138
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: false
+  xy: 604, 389
+  size: 125, 131
+  orig: 125, 131
+  offset: 0, 0
+  index: -1
+xiaotui  L
+  rotate: false
+  xy: 176, 2
+  size: 53, 73
+  orig: 53, 73
+  offset: 0, 0
+  index: -1
+xiaotui  R
+  rotate: true
+  xy: 961, 769
+  size: 82, 53
+  orig: 82, 53
+  offset: 0, 0
+  index: -1
+yijiao  L
+  rotate: false
+  xy: 527, 236
+  size: 107, 142
+  orig: 107, 142
+  offset: 0, 0
+  index: -1

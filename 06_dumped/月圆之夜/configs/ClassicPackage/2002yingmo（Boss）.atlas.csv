@@ -1,0 +1,90 @@
+
+2002yingmo（Boss）.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: false
+  xy: 2, 26
+  size: 87, 29
+  orig: 87, 29
+  offset: 0, 0
+  index: -1
+dabi  L
+  rotate: true
+  xy: 2, 57
+  size: 163, 301
+  orig: 163, 301
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: true
+  xy: 773, 355
+  size: 154, 234
+  orig: 154, 234
+  offset: 0, 0
+  index: -1
+kouqiang
+  rotate: false
+  xy: 451, 3
+  size: 120, 67
+  orig: 120, 67
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: true
+  xy: 2, 222
+  size: 287, 527
+  orig: 287, 527
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: true
+  xy: 305, 2
+  size: 94, 144
+  orig: 94, 144
+  offset: 0, 0
+  index: -1
+shou  R
+  rotate: false
+  xy: 472, 72
+  size: 123, 148
+  orig: 123, 148
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 531, 318
+  size: 240, 191
+  orig: 240, 191
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 597, 114
+  size: 117, 78
+  orig: 117, 78
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: true
+  xy: 531, 233
+  size: 83, 179
+  orig: 83, 179
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: true
+  xy: 773, 273
+  size: 80, 172
+  orig: 80, 172
+  offset: 0, 0
+  index: -1
+xiati5
+  rotate: false
+  xy: 305, 98
+  size: 165, 122
+  orig: 165, 122
+  offset: 0, 0
+  index: -1

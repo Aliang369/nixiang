@@ -1,0 +1,12 @@
+{
+  "id": "zmws",
+  "name": "造梦无双",
+  "package": "com.xm4399.zmws.m4399",
+  "source": "Games/ZmwsMod.h AppActivity.get_ret 1..4 evalString",
+  "features": [
+    {"feat_num": 1, "name": "无限技能"},
+    {"feat_num": 2, "name": "法宝技能"},
+    {"feat_num": 3, "name": "超级秒杀"},
+    {"feat_num": 4, "name": "超级无敌"}
+  ]
+}

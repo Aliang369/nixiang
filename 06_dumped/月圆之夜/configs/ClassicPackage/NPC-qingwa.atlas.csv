@@ -1,0 +1,181 @@
+
+NPC-qingwa.png
+size: 703,774
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+gb1
+  rotate: true
+  xy: 514, 106
+  size: 80, 120
+  orig: 80, 120
+  offset: 0, 0
+  index: -1
+gb2
+  rotate: false
+  xy: 345, 81
+  size: 168, 113
+  orig: 168, 113
+  offset: 0, 0
+  index: -1
+gb3
+  rotate: true
+  xy: 138, 62
+  size: 115, 206
+  orig: 115, 206
+  offset: 0, 0
+  index: -1
+jt1
+  rotate: true
+  xy: 138, 178
+  size: 309, 198
+  orig: 309, 198
+  offset: 0, 0
+  index: -1
+lz
+  rotate: true
+  xy: 1, 51
+  size: 436, 136
+  orig: 436, 136
+  offset: 0, 0
+  index: -1
+shou1
+  rotate: false
+  xy: 416, 29
+  size: 51, 51
+  orig: 51, 51
+  offset: 0, 0
+  index: -1
+shou10
+  rotate: false
+  xy: 157, 17
+  size: 50, 44
+  orig: 50, 44
+  offset: 0, 0
+  index: -1
+shou2
+  rotate: true
+  xy: 208, 25
+  size: 36, 45
+  orig: 36, 45
+  offset: 0, 0
+  index: -1
+shou3
+  rotate: true
+  xy: 468, 36
+  size: 44, 45
+  orig: 44, 45
+  offset: 0, 0
+  index: -1
+shou4
+  rotate: false
+  xy: 345, 10
+  size: 70, 70
+  orig: 70, 70
+  offset: 0, 0
+  index: -1
+shou5
+  rotate: true
+  xy: 115, 3
+  size: 47, 41
+  orig: 47, 41
+  offset: 0, 0
+  index: -1
+shou6
+  rotate: true
+  xy: 1, 3
+  size: 47, 58
+  orig: 47, 58
+  offset: 0, 0
+  index: -1
+shou7
+  rotate: true
+  xy: 60, 3
+  size: 47, 54
+  orig: 47, 54
+  offset: 0, 0
+  index: -1
+shou8
+  rotate: true
+  xy: 468, 1
+  size: 34, 40
+  orig: 34, 40
+  offset: 0, 0
+  index: -1
+shou9
+  rotate: true
+  xy: 635, 92
+  size: 94, 58
+  orig: 94, 58
+  offset: 0, 0
+  index: -1
+st
+  rotate: true
+  xy: 336, 495
+  size: 278, 288
+  orig: 278, 288
+  offset: 0, 0
+  index: -1
+sz
+  rotate: false
+  xy: 337, 195
+  size: 225, 299
+  orig: 225, 299
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 1, 488
+  size: 334, 285
+  orig: 334, 285
+  offset: 0, 0
+  index: -1
+yan1
+  rotate: false
+  xy: 254, 32
+  size: 26, 29
+  orig: 26, 29
+  offset: 0, 0
+  index: -1
+yan2
+  rotate: false
+  xy: 208, 1
+  size: 22, 23
+  orig: 22, 23
+  offset: 0, 0
+  index: -1
+yan3
+  rotate: false
+  xy: 625, 634
+  size: 77, 139
+  orig: 77, 139
+  offset: 0, 0
+  index: -1
+yan4
+  rotate: false
+  xy: 625, 507
+  size: 73, 126
+  orig: 73, 126
+  offset: 0, 0
+  index: -1
+yp1
+  rotate: true
+  xy: 612, 18
+  size: 73, 84
+  orig: 73, 84
+  offset: 0, 0
+  index: -1
+yp2
+  rotate: true
+  xy: 514, 33
+  size: 72, 97
+  orig: 72, 97
+  offset: 0, 0
+  index: -1
+zui
+  rotate: true
+  xy: 563, 187
+  size: 307, 122
+  orig: 307, 122
+  offset: 0, 0
+  index: -1

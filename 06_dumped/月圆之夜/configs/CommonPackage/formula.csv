@@ -1,0 +1,11 @@
+﻿编号;名称;用途;参数A;参数B;参数C;公式备注1;公式备注2
+Id;Name;use;parameterA;parameterB;parameterC;Ps1;Ps2
+1;手牌上限;1;10;1;20;A*(B+num)*(B+num)+C;10 * (1 + num) * (1 + num) + 20
+2;行动力;1;10;1;0;A*(B+num)*(B+num)+C;10 * (1 + num) * (1 + num)
+3;生命值;1;5;1;0;A*(B+num)*(B+num)+C;5 * (1 + num) * (1 + num)
+4;法力值;1;5;1;0;A*(B+num)*(B+num)+C;5 * (1 + num) * (1 + num)
+5;经验;1;5;1;0;A*(B+num)*(B+num)+C;5 * (1 + num) * (1 + num)
+6;装备槽;1;1;100;;(num-A)*(num-A)*100;20,60,150，其它(num - 1) * (num - 1) * 100
+7;卡牌升级;9;5;1;;A * (B + num);5 * (1 + num)
+8;卡牌删除;6;10;15;;A+B*num;10 + 15 * num
+;;;      ;;;;

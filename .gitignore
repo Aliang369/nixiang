@@ -1,0 +1,92 @@
+# ================================================================
+#  nixiang 工作区 .gitignore（2026-09-09 定稿）
+#
+#  原则（详见 TOOLBOOK 清理规范 / 04_scripts/_common/stages.md）：
+#    Git 资产 = 源码 + 文档 + 脚本 + 模板 + 配置 + 06_dumped 文本（复现依据）
+#    本地滚动物 = 反编译产物 / 内存 dump 大二进制 / patched 包（可再生，不进 git）
+#    本地工具 = 01_tools / .kilo 等（重装麻烦，本地保留，不进 git）
+# ================================================================
+
+# ===== 敏感（绝不入库，任何例外都不允许）=====
+*.jks
+*.keystore
+*.pem
+*.p12
+.env
+.env.*
+
+# ===== 用户手动管理（AGENTS.md：AI 不动）=====
+02_apks/
+08_output/
+
+# ===== 本地工具 / 外部工具（重装麻烦或可重下，不入库）=====
+01_tools/
+.kilo/
+.cursor/
+.workbuddy/
+
+# ===== 可再生的滚动物（复测时管线 dump/surgical 阶段重建）=====
+03_decompiled/
+07_patched/
+09_test/
+11_proj_tools/
+05_ida/
+12_images/cache/
+
+# 99_archive 归档不入库；仅保留被 AGENTS.md 引用的历史快照（小）
+99_archive/*
+!99_archive/workspace_rules_backup_20260905_161706/
+
+# ===== 06_dumped：只进文本（dump.cs 等锚点分析依据），大二进制本地滚动 =====
+06_dumped/**
+!06_dumped/**/
+!06_dumped/**/*.cs
+!06_dumped/**/*.txt
+!06_dumped/**/*.json
+!06_dumped/**/*.md
+!06_dumped/**/*.py
+!06_dumped/**/*.js
+!06_dumped/**/*.tsv
+!06_dumped/**/*.csv
+
+# ===== mod菜单：构建产物不入库（源码/模板/脚本全入）=====
+mod菜单/**/app/src/obj*/
+mod菜单/**/app/src/libs*/
+mod菜单/**/build/
+mod_menu/
+# gradle 缓存
+mod菜单/**/.gradle/
+mod菜单/**/.externalNativeBuild/
+# 依赖缓存
+mod菜单/**/node_modules/
+
+# ===== IDE / 系统杂项 =====
+.DS_Store
+__pycache__/
+*.pyc
+.idea/
+*.iml
+.settings/
+.vscode/
+
+# ===== 运行日志（可再生）=====
+*.log
+!04_scripts/*/pipeline.log
+
+# ===== 通用大二进制（兜底；例外见下）=====
+*.apk
+*.ap_
+*.so
+*.o
+*.jar
+*.bin
+*.dat
+*.dex
+*.i64
+*.idb
+
+# ===== 例外：复现必要资产（构建直接引用，勿删勿忽略）=====
+!mod菜单/**/Games/WxsjPatchedDll.a
+!mod菜单/**/targetfuntional_dll.bin
+!mod菜单/**/jniLibs/**
+mod菜单/starry-mod-menu_111/

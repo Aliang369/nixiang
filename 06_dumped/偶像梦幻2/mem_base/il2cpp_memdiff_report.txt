@@ -1,0 +1,5 @@
+file_size=275619544 patch_regions=4 b_or_bl_prologues≈0 reported=4
+[0] file_off=0x70fb578 va=0x70ff578 len=12 bytes file=002440b9c0035fd6012400b9 mem=d17f2bb031c2129120021fd6
+[1] file_off=0x70fb588 va=0x70ff588 len=12 bytes file=002840b9c0035fd6012800b9 mem=d17f2bb03122149120021fd6
+[2] file_off=0x70fb5a8 va=0x70ff5a8 len=12 bytes file=e80300aa002840b940000034 mem=d17f2bb03182159120021fd6
+[3] file_off=0x710579c va=0x710979c len=12 bytes file=fe0f1cf8f85f01a9f65702a9 mem=717f2bf031e2169120021fd6

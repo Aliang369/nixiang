@@ -1,0 +1,174 @@
+
+beizuzhoudelangren.png
+size: 2048,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bengdai1
+  rotate: false
+  xy: 677, 264
+  size: 100, 123
+  orig: 100, 123
+  offset: 0, 0
+  index: -1
+bengdai2
+  rotate: false
+  xy: 375, 156
+  size: 77, 101
+  orig: 77, 101
+  offset: 0, 0
+  index: -1
+bengdai3
+  rotate: true
+  xy: 477, 244
+  size: 143, 198
+  orig: 143, 198
+  offset: 0, 0
+  index: -1
+bengdai4
+  rotate: true
+  xy: 1569, 849
+  size: 156, 231
+  orig: 156, 231
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 2, 432
+  size: 518, 573
+  orig: 518, 573
+  offset: 0, 0
+  index: -1
+shouzhang
+  rotate: false
+  xy: 1129, 473
+  size: 164, 153
+  orig: 164, 153
+  offset: 0, 0
+  index: -1
+shouzhang2
+  rotate: false
+  xy: 1129, 628
+  size: 165, 165
+  orig: 165, 165
+  offset: 0, 0
+  index: -1
+shouzhi1
+  rotate: false
+  xy: 1407, 702
+  size: 142, 130
+  orig: 142, 130
+  offset: 0, 0
+  index: -1
+shouzhi2
+  rotate: false
+  xy: 1802, 840
+  size: 217, 165
+  orig: 217, 165
+  offset: 0, 0
+  index: -1
+shouzhi3
+  rotate: false
+  xy: 2, 47
+  size: 223, 171
+  orig: 223, 171
+  offset: 0, 0
+  index: -1
+shouzhi4
+  rotate: false
+  xy: 773, 569
+  size: 217, 172
+  orig: 217, 172
+  offset: 0, 0
+  index: -1
+texiao10
+  rotate: false
+  xy: 522, 743
+  size: 578, 262
+  orig: 578, 262
+  offset: 0, 0
+  index: -1
+texiao6
+  rotate: false
+  xy: 2, 2
+  size: 45, 43
+  orig: 45, 43
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 1102, 795
+  size: 246, 210
+  orig: 246, 210
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: true
+  xy: 1296, 636
+  size: 157, 109
+  orig: 157, 109
+  offset: 0, 0
+  index: -1
+xueye
+  rotate: false
+  xy: 454, 181
+  size: 90, 61
+  orig: 90, 61
+  offset: 0, 0
+  index: -1
+you-shouzhi1
+  rotate: false
+  xy: 1407, 569
+  size: 141, 131
+  orig: 141, 131
+  offset: 0, 0
+  index: -1
+you-shouzhi2
+  rotate: false
+  xy: 1350, 834
+  size: 217, 171
+  orig: 217, 171
+  offset: 0, 0
+  index: -1
+you-shouzhi3
+  rotate: false
+  xy: 252, 259
+  size: 223, 171
+  orig: 223, 171
+  offset: 0, 0
+  index: -1
+you-shouzhi4
+  rotate: false
+  xy: 522, 389
+  size: 218, 141
+  orig: 218, 141
+  offset: 0, 0
+  index: -1
+youdabi
+  rotate: true
+  xy: 992, 563
+  size: 178, 135
+  orig: 178, 135
+  offset: 0, 0
+  index: -1
+youshangbi
+  rotate: false
+  xy: 2, 220
+  size: 248, 210
+  orig: 248, 210
+  offset: 0, 0
+  index: -1
+zuodabi
+  rotate: true
+  xy: 252, 141
+  size: 116, 121
+  orig: 116, 121
+  offset: 0, 0
+  index: -1
+zuoshangbi
+  rotate: false
+  xy: 522, 532
+  size: 249, 209
+  orig: 249, 209
+  offset: 0, 0
+  index: -1

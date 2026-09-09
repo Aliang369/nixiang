@@ -1,0 +1,7 @@
+﻿id;魔女文字内容;文字框类型;文字框头像;回应内容;回应内容头像;音频;头像转移;结束引导;end
+id;QText;QTextType;QTextIcon;AText;ATextIcon;Sound;ImageChange;EndGit;end
+1;哎呀呀，你总算醒来了。;1;jingzimonv01;.....？;heitiane;Vo_Sys_Cutscene_MirrorWitch_1;;;1
+2;想要离开？别担心，我会帮你的。;1;jingzimonv02;;;Vo_Sys_Cutscene_MirrorWitch_2;;;1
+3;作为交换，用你的力量帮我收集那些记忆吧。;1;jingzimonv03;;;Vo_Sys_Cutscene_MirrorWitch_3;;;1
+4;但首先，你需要学习如何在这个世界生存下去，跟我来~;1;jingzimonv04;!!!!;heitiane1;Vo_Sys_Cutscene_MirrorWitch_4;;;1
+5;;;;;;;1;1;1

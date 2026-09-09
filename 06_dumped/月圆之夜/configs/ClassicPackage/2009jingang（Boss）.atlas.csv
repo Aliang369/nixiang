@@ -1,0 +1,118 @@
+
+2009jingang（Boss）.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+biyan
+  rotate: true
+  xy: 952, 936
+  size: 74, 45
+  orig: 74, 45
+  offset: 0, 0
+  index: -1
+dabi L
+  rotate: false
+  xy: 472, 513
+  size: 234, 497
+  orig: 234, 497
+  offset: 0, 0
+  index: -1
+dabi R
+  rotate: false
+  xy: 708, 708
+  size: 242, 302
+  orig: 242, 302
+  offset: 0, 0
+  index: -1
+datui L
+  rotate: false
+  xy: 459, 252
+  size: 140, 141
+  orig: 140, 141
+  offset: 0, 0
+  index: -1
+datui R
+  rotate: false
+  xy: 472, 395
+  size: 155, 116
+  orig: 155, 116
+  offset: 0, 0
+  index: -1
+jiao L
+  rotate: false
+  xy: 459, 138
+  size: 140, 112
+  orig: 140, 112
+  offset: 0, 0
+  index: -1
+jiao R
+  rotate: true
+  xy: 435, 2
+  size: 134, 138
+  orig: 134, 138
+  offset: 0, 0
+  index: -1
+kouqiang
+  rotate: false
+  xy: 216, 38
+  size: 217, 103
+  orig: 217, 103
+  offset: 0, 0
+  index: -1
+lian
+  rotate: false
+  xy: 708, 491
+  size: 226, 215
+  orig: 226, 215
+  offset: 0, 0
+  index: -1
+shenzi
+  rotate: false
+  xy: 2, 468
+  size: 468, 542
+  orig: 468, 542
+  offset: 0, 0
+  index: -1
+xiaba
+  rotate: false
+  xy: 2, 27
+  size: 212, 125
+  orig: 212, 125
+  offset: 0, 0
+  index: -1
+xiaobi L
+  rotate: false
+  xy: 2, 154
+  size: 237, 312
+  orig: 237, 312
+  offset: 0, 0
+  index: -1
+xiaobi R
+  rotate: false
+  xy: 241, 143
+  size: 216, 323
+  orig: 216, 323
+  offset: 0, 0
+  index: -1
+xiaotui  R
+  rotate: true
+  xy: 601, 273
+  size: 120, 116
+  orig: 120, 116
+  offset: 0, 0
+  index: -1
+yanzhu L
+  rotate: true
+  xy: 459, 442
+  size: 10, 11
+  orig: 10, 11
+  offset: 0, 0
+  index: -1
+yanzhu R
+  rotate: false
+  xy: 459, 454
+  size: 11, 12
+  orig: 11, 12
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,42 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 35
+    ndkVersion '27.0.12077973'
+    defaultConfig {
+        applicationId "com.starry.magic"
+        minSdkVersion 21
+        targetSdkVersion 35
+        versionCode 22
+        versionName "2.2-selftest"
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    android.buildFeatures.buildConfig = true
+    buildTypes {
+        release {
+            // R8 混淆：上线 / inject 默认用此变体。最终游戏 APK 由 inject 脚本 uber 重签，
+            // 此处用 debug 证书仅保证 assembleRelease 能产出（勿把 app-release.apk 当独立上架包）。
+            signingConfig signingConfigs.debug
+            shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            // 调试保持可读；日常联调可用 STARRY_BUILD_TYPE=debug
+            shrinkResources false
+            minifyEnabled false
+        }
+    }
+    // externalNativeBuild disabled (ASCII CI): so from jniLibs
+    namespace 'com.starry.magic'
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}

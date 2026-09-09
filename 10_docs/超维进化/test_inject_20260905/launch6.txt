@@ -1,0 +1,8 @@
+Starting: Intent { cmp=com.grinning.beta.yszl/com.grinning.game.activity.SplashActivity }
+Warning: Activity not started, intent has been delivered to currently running top-most instance.
+Status: ok
+LaunchState: UNKNOWN (0)
+Activity: com.grinning.beta.yszl/org.cocos2dx.javascript.AppActivity
+TotalTime: 0
+WaitTime: 19
+Complete

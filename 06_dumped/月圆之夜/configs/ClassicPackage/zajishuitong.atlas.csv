@@ -1,0 +1,111 @@
+
+zajishuitong.png
+size: 1024,512
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+beijian1
+  rotate: true
+  xy: 616, 368
+  size: 136, 286
+  orig: 136, 286
+  offset: 0, 0
+  index: -1
+beijian2
+  rotate: false
+  xy: 795, 4
+  size: 110, 217
+  orig: 110, 217
+  offset: 0, 0
+  index: -1
+biyan
+  rotate: true
+  xy: 278, 95
+  size: 31, 23
+  orig: 31, 23
+  offset: 0, 0
+  index: -1
+biyan2
+  rotate: true
+  xy: 278, 62
+  size: 31, 23
+  orig: 31, 23
+  offset: 0, 0
+  index: -1
+lian
+  rotate: false
+  xy: 555, 59
+  size: 238, 162
+  orig: 238, 162
+  offset: 0, 0
+  index: -1
+qiu
+  rotate: false
+  xy: 2, 207
+  size: 299, 297
+  orig: 299, 297
+  offset: 0, 0
+  index: -1
+tongshen
+  rotate: true
+  xy: 303, 235
+  size: 269, 311
+  orig: 269, 311
+  offset: 0, 0
+  index: -1
+yan1
+  rotate: false
+  xy: 907, 187
+  size: 69, 68
+  orig: 69, 68
+  offset: 0, 0
+  index: -1
+yan2
+  rotate: false
+  xy: 907, 117
+  size: 68, 68
+  orig: 68, 68
+  offset: 0, 0
+  index: -1
+youjian1
+  rotate: true
+  xy: 2, 2
+  size: 203, 237
+  orig: 203, 237
+  offset: 0, 0
+  index: -1
+youtui
+  rotate: true
+  xy: 904, 257
+  size: 247, 89
+  orig: 247, 89
+  offset: 0, 0
+  index: -1
+zhezhao
+  rotate: false
+  xy: 241, 128
+  size: 55, 77
+  orig: 55, 77
+  offset: 0, 0
+  index: -1
+zhezhao2
+  rotate: false
+  xy: 241, 51
+  size: 35, 75
+  orig: 35, 75
+  offset: 0, 0
+  index: -1
+zuitui
+  rotate: true
+  xy: 303, 61
+  size: 172, 250
+  orig: 172, 250
+  offset: 0, 0
+  index: -1
+zuojian
+  rotate: false
+  xy: 616, 223
+  size: 270, 143
+  orig: 270, 143
+  offset: 0, 0
+  index: -1

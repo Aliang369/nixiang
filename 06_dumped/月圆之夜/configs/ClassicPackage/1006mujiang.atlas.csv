@@ -1,0 +1,174 @@
+
+1006mujiang.png
+size: 1024,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+bozi
+  rotate: true
+  xy: 738, 29
+  size: 32, 39
+  orig: 32, 39
+  offset: 0, 0
+  index: -1
+dabi  L
+  rotate: true
+  xy: 862, 132
+  size: 26, 77
+  orig: 26, 77
+  offset: 0, 0
+  index: -1
+dabi  R
+  rotate: false
+  xy: 962, 147
+  size: 43, 107
+  orig: 43, 107
+  offset: 0, 0
+  index: -1
+datui  L
+  rotate: true
+  xy: 531, 21
+  size: 43, 97
+  orig: 43, 97
+  offset: 0, 0
+  index: -1
+datui  R
+  rotate: true
+  xy: 630, 21
+  size: 40, 106
+  orig: 40, 106
+  offset: 0, 0
+  index: -1
+futou
+  rotate: false
+  xy: 2, 27
+  size: 164, 227
+  orig: 164, 227
+  offset: 0, 0
+  index: -1
+meimao
+  rotate: false
+  xy: 168, 18
+  size: 96, 32
+  orig: 96, 32
+  offset: 0, 0
+  index: -1
+shenti
+  rotate: false
+  xy: 168, 52
+  size: 183, 202
+  orig: 183, 202
+  offset: 0, 0
+  index: -1
+shou  L
+  rotate: false
+  xy: 631, 63
+  size: 72, 69
+  orig: 72, 69
+  offset: 0, 0
+  index: -1
+shouzhang  R
+  rotate: false
+  xy: 779, 70
+  size: 72, 73
+  orig: 72, 73
+  offset: 0, 0
+  index: -1
+tou
+  rotate: false
+  xy: 353, 107
+  size: 166, 147
+  orig: 166, 147
+  offset: 0, 0
+  index: -1
+toufa
+  rotate: false
+  xy: 521, 134
+  size: 174, 120
+  orig: 174, 120
+  offset: 0, 0
+  index: -1
+weijin
+  rotate: false
+  xy: 862, 160
+  size: 98, 94
+  orig: 98, 94
+  offset: 0, 0
+  index: -1
+xiaobi  L
+  rotate: true
+  xy: 779, 2
+  size: 66, 67
+  orig: 66, 67
+  offset: 0, 0
+  index: -1
+xiaobi  R
+  rotate: true
+  xy: 266, 11
+  size: 39, 79
+  orig: 39, 79
+  offset: 0, 0
+  index: -1
+xiaotui  L
+  rotate: true
+  xy: 697, 145
+  size: 109, 163
+  orig: 109, 163
+  offset: 0, 0
+  index: -1
+xiaotui  R
+  rotate: true
+  xy: 353, 10
+  size: 95, 176
+  orig: 95, 176
+  offset: 0, 0
+  index: -1
+xiuzi  R
+  rotate: false
+  xy: 705, 63
+  size: 72, 80
+  orig: 72, 80
+  offset: 0, 0
+  index: -1
+yanbai  R
+  rotate: false
+  xy: 853, 106
+  size: 30, 24
+  orig: 30, 24
+  offset: 0, 0
+  index: -1
+yanbao  L
+  rotate: false
+  xy: 853, 78
+  size: 28, 26
+  orig: 28, 26
+  offset: 0, 0
+  index: -1
+yanqiu  L
+  rotate: false
+  xy: 2, 12
+  size: 11, 13
+  orig: 11, 13
+  offset: 0, 0
+  index: -1
+yanqiu  R
+  rotate: false
+  xy: 941, 146
+  size: 10, 12
+  orig: 10, 12
+  offset: 0, 0
+  index: -1
+yaodai
+  rotate: false
+  xy: 531, 66
+  size: 98, 66
+  orig: 98, 66
+  offset: 0, 0
+  index: -1
+zuiba
+  rotate: true
+  xy: 1007, 216
+  size: 38, 11
+  orig: 38, 11
+  offset: 0, 0
+  index: -1

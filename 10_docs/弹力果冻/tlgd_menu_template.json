@@ -1,0 +1,12 @@
+{
+  "template_id": "tlgd",
+  "name": "弹力果冻",
+  "package": "com.ginicat.sweet.m4399",
+  "source": "Games/TlgdMod.h TLGD_FEAT_* / Main.cpp STARRY_GAME_TLGD",
+  "features": [
+    {"feat_num": 1, "name": "秒杀"},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "全屏秒杀"},
+    {"feat_num": 4, "name": "无限技能"}
+  ]
+}

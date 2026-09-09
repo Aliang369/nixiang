@@ -1,0 +1,154 @@
+超维进化 libcocos2djs.so 反篡改线程静态分析证据
+====================================================
+目标: /Users/aliang/Documents/nixiang/03_decompiled/超维进化/apktool_2.1/lib/arm64-v8a/libcocos2djs.so
+SHA256: 76ff0cf4a272e39edbf4075931f70c576fa367c8f64065943e60db26f62f5282  (已复核一致)
+分析方式: llvm-objdump/readelf 纯静态只读; ELF VA=文件偏移(首个LOAD p_offset=p_vaddr=0)
+日期: 2026-09-05  分析: ZCode 静态逆向 (所有地址=运行时so基址+该偏移)
+标注: [实测]=静态反汇编直接确证; [推断]=由调用结构强支持; 未标注处均为静态确证。
+
+一、线程拓扑（谁起谁）
+----------------------
+JNI_OnLoad → ... → 0x16d5100(sub_16d5100)
+  └ 0x16d4864 启动器函数 [实测 0x16d4864-0x16d48b0]:
+       0x16d4878  bl 0x16d16ac        ; 签名 Adler32 门禁(第3处调用点)
+       0x16d4890  pthread_create(., 0, 0x16d48b8, 0)   ; watchdog 线程
+       0x16d4894  bl 0x170b068        ; checkTask 启动器
+       (sub_16d5100 内 0x16d56ac 另有一处 pthread_create(0x16d48b8)、0x16d56b0 bl 0x170b068 —— 同构冗余启动)
+
+watchdog 线程入口 0x16d48b8 [实测]:
+  - 0x16d48f0 log("gJavaVm = %p", gJavaVm@[0x1cd3098]) → 0x17aed44(格式化日志函数)
+  - 扁平化状态机循环(OLLVM), 每轮:
+      * 0x16d4990/0x16d4a04  blr [gJavaVm+0x30] = DetachCurrentThread(vm)  ×2 (探测)
+      * 0x16d4a7c log("status = %d", ret); 0x16d4d0c cmn w8,#2 → 期望 JNI_EDETACHED(-2)
+      * 部分状态 blr [gJavaVm+0x20] = DestroyJavaVM(vm) (0x16d4df4/0x16d4ea0, 阻塞型探测/干扰)
+      * 0x16d4bc4  bl 0x16d33f8      ; root 检测 → 结果存 [sp+0x17]
+      * 0x16d4b7c  sleep(10)         ; 10 秒周期
+      * 0x16d4fa4  bl 0x16d423c      ; /proc/self/maps hook框架名扫描
+      * 0x16d4fb0  tst w0,#1 → csel: 非0 → 状态0x4A4709D6 → 0x16d4b20
+                   pthread_create(., 0, 0x16d5a08, arg=6)   ; ★炸弹线程
+                   为0 → 状态0xF6010A09 → sleep(10) 继续循环
+      * 命中 root/其他触发状态时: 0x16d4eec 或 0x16d502c 先 bl 0x16d56f4
+        (JNI 弹 toast "无法在root设备运行" @0x19f3156, "(Ljava/lang/String;)V" @0x19f319b),
+        随后无条件 pthread_create(0x16d5a08, arg=6)  @0x16d4f08 / 0x16d5048
+
+炸弹线程 0x16d5a08 [实测, 5条指令]:
+  16d5a08: str x30,[sp,#-0x10]!
+  16d5a0c: bl  sleep            ; sleep(arg=6) — 6 秒延迟
+  16d5a10: bl  getpid
+  16d5a14: mov w1, #9
+  16d5a18: bl  kill@plt          ; kill(getpid(), SIGKILL) —— 无条件自杀
+  16d5a1c/20/24: mov x0,xzr; ret
+  → 与真机观测"启动后 8 秒~数分钟 SIGKILL、kill 语义"完全一致(6s延迟+5/10s检测周期)。
+
+checkTask 线程 0x170b068 → 0x170b2b0 [实测]:
+  0x170b068: 状态机, 唯一实体动作 @0x170b0fc:
+      strb 1,[x29+0x1f8] (全局 0x1cd31f8 就绪标志)
+      pthread_create(., 0, 0x170b2b0, arg=3) + pthread_detach
+  0x170b2b0: log("checkTask protectFlag = %ld", 3) @0x170b3d4/0x170b5a4;
+      new 0x48字节检查对象(ctor 0x170dfe4 / 0x170f490);
+      循环: sleep(5) → bl 0x170ab48(obj, x1, protectFlag) @0x170b81c → sleep(5) …
+      0x170ab48: 按 protectFlag 位掩码(=3 → bit0+bit1)分派, 命中位 → bl 0x16f06b8(this,0) @0x170adcc
+      → 5 秒周期完整性检查。
+
+二、kill/exit 调用点清单（全文）
+----------------------
+全文 .text 仅 2 条 svc 指令(均为 svc #0), 位于原生 syscall 封装:
+  - 0x16ebdf8: 封装① mov x8,#129(kill); svc #0      ← 6 个调用点(下表)
+  - 0x16ebe24: 封装② mov x8,#56(clone); svc #0      (克隆相关, 非kill)
+全文无 exit_group/exit syscall; exit@plt/_exit@plt 仅被 cocos/v8/libuv 正常代码使用, 反篡改代码一律用 SIGKILL。
+
+#  调用点      机制                     前置条件/谓词
+1  0x16d5a18   kill@plt(getpid(),9)     炸弹线程固定流程: sleep(6) 后无条件执行; 该线程由 watchdog
+                                        三处 pthread_create(0x16d4b34/0x16d4f08/0x16d5048) 按检测结果派生
+2  0x16d1b34   svc kill(pid,9)          签名 Adler32 门禁 0x16d16ac 内, 状态0xC7092B6B 处理块(0x16d1b2c getpid);
+                                        门禁三项表 0x19f33b6 不命中即达(与既有实测一致)
+3  0x16eed98   svc kill(getpid,9)       反调试-端口占用: log("%d has being accupied, kill prc!"@0x19f36b2) 后杀
+                                        (0x16eeb68 "127.0.0.1" 端口探测)
+4  0x16eee2c   svc kill(getpid,9)       同上第二分支(另一端口/次序), 同一日志前缀
+5  0x16ef0dc   svc kill(w0=[sp+8],9)    反调试-TracerPid: /proc/%d/status 找 "TracerPid:"(0x19f36e3) 非0
+                                        → log("prc is debuging：line = %s, kill prc!"@0x19f36ee) 后杀
+6  0x16f79c4   svc kill(getpid,9)       完整性检查 kill 分支1: log("check ret : %s %s,kill and exit"@0x19f3778,
+                                        参数含 "has been changed!"@0x19f3766) 后杀; 选择该分支的谓词为
+                                        校验标志位组合(如 0x16f23e8-0x16f2414: csel w3,0x8CF4EF26=kill态,0x9CCA96F0=继续)
+7  0x16f7b04   svc kill(getpid,9)       完整性检查 kill 分支2: 同款日志后杀(第二条比较路径)
+
+三、校验对象判定（a/b/c/d）
+----------------------
+判定: 主触发 = (a) libcocos2djs.so 自身代码段完整性(inline hook 可见) —— 证据强度: 高
+      辅助存在 = (c) 签名复检(已知) 、(d) root/调试器/hook框架环境检测 —— 证据强度: 高(静态确证)
+      (b) game.js/apk 文件 hash 校验 —— 存在 readZipFileData 读取路径, 但本次未追到具体条目名, 证据强度: 低(待验证)
+
+(a) 代码段完整性 —— checkTask→0x16f06b8 大状态机 [实测字符串+调用链]:
+   - 0x170010c "/proc/%d/maps" → 解析本模块行
+   - 0x16fefb4-0x16fefc0  strstr(line, "r-xp"@0x19f37ec) → 锁定本 so 可执行段
+   - 0x16ff874 log("line = %s, startAddr=%p, endAddr = %p") → 段起止地址
+   - 0x16ff958 "error, moduleName is null"; 0x16ff8ac "error, fopen : %s failed!" → fopen 模块文件逐段 fread
+   - ELF 解析: 0x16efa08 "it's not elf file"; 0x16ef7f4 "e_phnum too max" (防畸形)
+   - 0x1704264 = Adler32(逐字节): 0x17044bc-0x17044f8 循环
+       A = (A + byte) % 65521;  B = (B + A) % 65521   (umull+lsr#47+msub 魔数除法实现取模)
+     与签名门禁同族(背景: 表 0x19f33b6 三项 Adler 值)
+   - 0x16f29a0/0x16f2c78 调 0x1704264 计算哈希并存入检查对象(0x1704570 写回)
+   - 不命中 → "has been changed!" + "check ret : %s %s,kill and exit" → kill 点 6/7
+   → 对 so 代码段做磁盘/内存(或常量表)Adler32 比对, inline hook 改写的前若干字节必然改变哈希。
+   → 与真机观测严丝合缝: 仅当宿主对 se::evalString/JNI evalString 做 inline hook 时被杀;
+     checkTask 5s 周期 + 炸弹 6s 延迟 ≈ 登录后 8s~数分钟的观测区间。
+(c) 签名复检: 0x16d16ac 门禁 + kill 点 2 (既有背景已实测 patch 表首项可过, 本次静态印证 0x16d1b34)。
+(d) 环境检测: root(sub_16d33f8: access "/system/xbin/which su"@0x19f3003、"/system/bin/which su"@0x19f3019、
+    popen "which su"@0x19f3025、日志"root检测存在文件： %s"@0x19f2fe7) + maps 扫描(sub_16d423c:
+    fopen "/proc/self/maps"@0x19c7170, 6 项 needle 表 0x19f3057..0x19f3095 = xposed/frida/cydiasubstrate/
+    com.saurik.substrate/libsubstrate/com.secneo.apkwrapper, 逐行 strstr) + 反调试(kill 点 3/4/5) +
+    JavaVM 探测(watchdog 每轮 DetachCurrentThread×2, 期望 -2; 部分状态调 DestroyJavaVM)。
+(b) readZipFileData: 0x170c928(zipPath, name, buf, len) → bool, 日志 0x16f7700 "readZipFileData ret = %d, path = %s";
+    调用于 0x16f76f8/0x16f7780, 结果存 [sp+0x186] 参与后续判定; 亦有 "find apk bundle pack"/"split_config.arm"/
+    "find normal pack"/"find ab pack" 等 APK 定位串(0x16fdc58/0x16fe7ec/0x16ff850/0x16ff994)。
+    未追到具体 zip 条目名(是否 game.js) —— 待验证, 不作结论。
+
+四、混淆与化简说明
+----------------------
+- 全部检测函数为 OLLVM 控制流扁平化: 状态寄存器(w8/w9) + 32位常量状态值(movz+movk), 二叉 cmp/b.gt/b.le 分派树,
+  状态处理块间 csel 切换。已在分析中逐块还原语义(关键边: 0x16d4a34→0x16d4a04→0x16d4990→0x16d4a78→0x16d4d00;
+  0x16d4b7c sleep10 ↔ 0x16d4fa4 检测; 0x16d4fb0 csel 选 0x4A4709D6 炸弹态)。
+- 不透明谓词模式(与既有经验一致): t=x*(x-1); (t^0xFFFFFFFE)&t==0 恒真; 及 ~(t)|0xFFFFFFFE 恒 -1 变体;
+  以及 (w9<10)|(w9>9) 恒真式。判定时一律先化简再读真实条件, 本报告所列谓词均已剔除此类恒真项。
+- 冗余: 多处同义状态(如 0xD2C7D3A2 与 0x1CDA1E4E 都调 root 检测)、启动器函数 0x16d4864 与 sub_16d5100 重复同构。
+
+五、最小中和建议（未实施, 不改 so）
+----------------------
+按"单点最小、副作用可控"排序:
+1. 【首选, 1 处】炸弹线程 0x16d5a18 的 bl kill@plt → NOP(0xD503201F)。
+   - 中和 watchdog 全部三条 spawn 路径(root/maps/JavaVM 探测)的最终执行; 线程 sleep(6) 后空转 ret, 无副作用。
+   - 不触碰任何校验逻辑与数据, 不需要同步任何表。
+2. 【彻底, 1 处】原生 kill 封装 0x16ebdf8 函数头直接 mov w0,#0; ret(或把 0x16ebe08 mov x8,#129 改为无害号)。
+   - 一并中和 kill 点 2-7(签名门禁、反调试、完整性), 共 7 条 kill 路径全灭。
+   - 风险: 若希望保留"签名复检"威慑需评估; clone 封装 0x16ebe24 独立, 不受影响。
+3. 【按检测点逐个, 7 处】各 kill 调用点 NOP 化: 0x16d1b34、0x16eed98、0x16eee2c、0x16ef0dc、0x16f79c4、0x16f7b04
+   (NOP 其 bl 0x16ebdf8 及紧邻的 mov w1,#9), 外加方案1。适合想保留日志观测能力的场景。
+4. 【使检测恒过(不推荐先做)】sub_16d423c 入口 mov w0,#0; ret(maps 扫描恒 0)、sub_16d33f8 恒 0(root)、
+   0x16f06b8 返回恒过——会同时改变状态机行为面, 需逐一回归; 若只要"不杀", 方案1/2 已足够。
+数据同步: 方案 1/2/3 均为纯指令中和, 不改动任何 Adler 期望表/签名表, 无需数据同步; 已有签名表 patch 可继续保留。
+
+六、关键反汇编片段备查
+----------------------
+[炸弹线程 0x16d5a08]   见第一节原文 5 条指令。
+[watchdog 周期检测]
+ 16d4b7c: mov w0,#0xa ; bl sleep          ; 10s
+ 16d4fa0: ldr x8,[sp,#0x18] ; bl 0x16d423c ; maps 扫描
+ 16d4fb0: tst w0,#1
+ 16d4fbc: b 0x16d4d54 ; 16d4d54: csel w8, w9(0x4A4709D6→0x16d4b20 炸弹), w8(0xF6010A09→sleep10), ne
+[炸弹派生]
+ 16d4b20: adrp x2,0x16d5000; add x2,x2,#0xa08 (=0x16d5a08); orr w3,wzr,#6; bl pthread_create
+ (同款: 0x16d4f04-0x16d4f08、0x16d5034-0x16d5048)
+[maps 扫描 needle 表构建]
+ 16d4260 adrp x10,0x19f3000; add x10,#0x57 ("xposed")  … q0/q1/sp+0x480 共 6 指针:
+ 0x19f3057 xposed / 0x19f305e frida / 0x19f3064 cydiasubstrate / 0x19f3073 com.saurik.substrate /
+ 0x19f3088 libsubstrate / 0x19f3095 com.secneo.apkwrapper
+ 16d42e8 bl fopen(0x19c7170 "/proc/self/maps", mode@0x184c624)
+ 16d45a8/16d4780 fgets(0x400); 16d4480 strstr(line, needle)
+[Adler32 核心 0x1704264 内层]
+ 17044c0: ldrb w24,[x0,x24]            ; 读字节
+ 17044c8: neg w24,w24 ; sub w24,w25,w24 ; = A + byte
+ 17044d0: umull x25,w24,w4 ; lsr x25,#47 ; msub w24,w25,w5,w24 ; = mod 65521
+ 17044e0-0x17044f8: 同构一次得 B += A (mod 65521)
+[完整性 kill 前日志]
+ 16f79a4-0x16f79b8: log("check ret : %s %s,kill and exit", [sp+0x178], "has been changed!")
+ 16f79bc: bl getpid ; 16f79c0: mov w1,#9 ; 16f79c4: bl 0x16ebdf8 (svc kill)
