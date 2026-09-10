@@ -1,0 +1,207 @@
+{
+  "game": "造梦无双",
+  "version": "1.33",
+  "notes": "2026-09-10 热更适配：APK 未变（md5 41065dcf… 与 8-14 一致），游戏内热更脚本包 260903143158（2026-09-03 推送，09-10 15:19 下载），assets/main/index.jsc 换新（eb84a20c…→cbea38bf…）→ ZmwsMod splice 锚点待运行时判定。本次迁移 modern 双轨：新增 Games/ZmwsEntry.cpp + Android_zmws.mk + surgical_zmws_1.33.sh（classes5.dex patch + classes7.dex 新增），共享文件零改动。设备=MuMu 127.0.0.1:5555。",
+  "params": {
+    "game_id": "zmws",
+    "package": "com.xm4399.zmws.m4399",
+    "mk": "Android_zmws.mk",
+    "tag": "zmws",
+    "obj_dir": "obj_zmws",
+    "libs_dir": "libs_zmws",
+    "serial": "127.0.0.1:5555"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "127.0.0.1:5555"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（从 MuMu 拉回的官方 1.33，与 8-14 登记 md5 一致）",
+      "requires": [],
+      "command": "md5 -q \"$NIXIANG/02_apks/造梦无双/造梦无双_1.33_official_4399.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/造梦无双/造梦无双_1.33_official_4399.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 15:35:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/造梦无双/造梦无双_1.33_official_4399.apk": {
+          "md5": "41065dcf3c36e7dd37a04612965144a1"
+        }
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "锚点抓取（历史定稿 + 本次热更漂移待运行时判定）",
+      "requires": [],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/造梦无双/抓点定稿_一次收齐_20260814.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-08-14 00:00:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/造梦无双/抓点定稿_一次收齐_20260814.md": {}
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（ZmwsMod 存量 + 本次新增 ZmwsEntry 注册表入口）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZmwsMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZmwsEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_zmws.mk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 15:40:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZmwsEntry.cpp": {}
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（modern Android_zmws.mk，独立 obj_zmws）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "Games/ZmwsMod.cpp",
+        "Games/ZmwsEntry.cpp",
+        "Android_zmws.mk"
+      ],
+      "command": "\"$NDK/ndk-build\" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_zmws.mk NDK_APPLICATION_MK=./Application.mk NDK_OUT=../../obj_zmws NDK_LIBS_OUT=../../libs_zmws -j\"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "../../libs_zmws/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "../../libs_zmws/arm64-v8a/libstarry_magic.so",
+          "pattern": "zmws"
+        },
+        {
+          "type": "file_contains",
+          "path": "../../libs_zmws/arm64-v8a/libstarry_magic.so",
+          "pattern": "JNI_OnLoad"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 16:23:51",
+      "artifacts": {
+        "../../libs_zmws/arm64-v8a/libstarry_magic.so": {
+          "md5": "110c9af5a30809c7bbe019651364c597"
+        }
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装 + 签名（classes5.dex patch + classes7 新增，官包字节尽量不变）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zmws_1.33.sh"
+      ],
+      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zmws_1.33.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 16:25:49",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk": {
+          "md5": "e97bc79d51078d5d0ba605704d678b16"
+        }
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（MuMu 127.0.0.1:5555）",
+      "requires": [],
+      "command": "adb connect $SERIAL; adb -s $SERIAL get-state",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/造梦无双/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 15:50:04",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/造梦无双/pipeline.json": {
+          "md5": "083d0d2006e1109f4a8252370e73004e"
+        }
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机 MuMu（覆盖安装，禁卸载）",
+      "requires": [
+        "surgical",
+        "device_ready"
+      ],
+      "command": "STARRY_INSTALL=1 bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zmws_1.33.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 16:28:24",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk": {
+          "md5": "1aa1040ae0496eb5508acc2b0c029949"
+        }
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（文档 + 索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/造梦无双/热更适配_260903143158_20260910.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 16:37:08",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/造梦无双/热更适配_260903143158_20260910.md": {
+          "md5": "a1807f58e276d770e68279e34a3a92bb"
+        }
+      }
+    }
+  ]
+}

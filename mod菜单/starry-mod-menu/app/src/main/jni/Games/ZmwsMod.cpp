@@ -285,6 +285,26 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
+#ifdef STARRY_ZMWS_PROBE
+    // 探针模式（锚点重定位诊断用，正式构建不编译）：dump 命中 combat 门限的明文脚本
+    {
+        static std::atomic<int> probeIdx{0};
+        int idx = ++probeIdx;
+        if (idx <= 6) {
+            char path[256];
+            snprintf(path, sizeof(path),
+                     "/sdcard/Android/data/com.xm4399.zmws.m4399/files/starry_eval_%d.js", idx);
+            FILE* f = fopen(path, "wb");
+            if (f) {
+                fwrite(script, 1, (size_t)n, f);
+                fclose(f);
+            }
+            LOGI("[Zmws] probe dump #%d len=%ld file=%s", idx, n,
+                 fileName ? fileName : "(null)");
+        }
+    }
+#endif
+
     std::string src(script, (size_t)n);
     std::string patched = SpliceCombatJs(src.c_str());
     if (patched == src) {
