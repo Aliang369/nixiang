@@ -50,9 +50,10 @@
 
 Gradle **不**编 native。跑 `assemble*` / 抽小模板 so 之前必须：
 
-1. `ndk-build`——modern 游戏：`APP_BUILD_SCRIPT=./Android_{tag}.mk NDK_OUT=../../obj_{tag}`（私有 mk + 独立 obj）；legacy 游戏：公共 `Android.mk` 已切到本游戏
+1. `ndk-build`——modern 游戏：`APP_BUILD_SCRIPT=./Android_{tag}.mk NDK_OUT=<starry根>/obj_{tag} NDK_LIBS_OUT=<starry根>/libs_{tag}`（私有 mk + 独立 obj；**必须绝对路径**，相对路径被 `-C` 解析到 app/ 下 → 校验到旧 so 假成功，2026-09-10 事故）
 2. 覆盖 `app/src/main/jniLibs/arm64-v8a/libstarry_magic.so`
-3. `strings` 自检本游戏标签（如 `[Gjc2]`），禁止上一款残留
+3. 标签自检：英文标签可 `strings`（如 `[Gjc2]`）；中文菜单串必须 `LC_ALL=C grep -ac '菜单名' <so>` 按字节搜（strings 默认 ASCII 不认 UTF-8 中文，会漏报）。禁止上一款残留
+4. 出包后闭环：包内 so md5 == 构建产物 md5（`unzip -p 成品.apk lib/arm64-v8a/libstarry_magic.so | md5 -q` 对比 `md5 -q libs_{tag}/arm64-v8a/libstarry_magic.so`），不一致=旧 so 混包，禁止交付
 
 否则成品菜单/鉴权会错成上一款游戏。**不影响** OTA 热更链路（OTA 另下 so）。
 
@@ -85,6 +86,13 @@ java -jar 01_tools/uber-apk-signer.jar -a <apk>
 ```bash
 # 覆盖安装（保留数据），禁止卸载大包
 adb install -r -d <signed.apk>
+```
+
+装机后校验（2026-09-10 起强制，防"装机成功"装了旧包）：
+
+```bash
+bash 04_scripts/_common/verify_installed_apk.sh <serial> <包名> <本地APK> [--su]
+# 设备 base.apk md5 != 本地产物 → FAIL；root 真机加 --su
 ```
 
 ---

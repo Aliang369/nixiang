@@ -54,6 +54,7 @@
 | FindCrypt | `plugins/findcrypt3.py` + `findcrypt3.rules` | 加密算法常量线索 |
 | Keypatch | `plugins/keypatch.py` | 汇编指令编辑辅助 |
 | Il2CppDumper | `01_tools/Il2CppDumper/` | IL2CPP 符号/元数据关联 |
+| ida-pro-mcp 2.0.0 | IDA 内 MCP 插件，HTTP `127.0.0.1:13337` | MCP 工具化分析（survey/xref/decompile 等 ~66 工具）；用法速查见 [references/ida-mcp-cheatsheet.md](references/ida-mcp-cheatsheet.md)（2026-09-10 自外部 reverse-skill 库择录，Windows 包装脚本不适用） |
 
 ## IDA Python 环境
 

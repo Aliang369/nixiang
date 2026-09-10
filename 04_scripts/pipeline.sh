@@ -53,6 +53,11 @@ usage() {
 $(list_games | sed 's/^/  - /')
 
 规则见 ${COMMON_DIR}/stages.md（操作二分 / 阶段表 / 失败即停）
+
+防旧产物直装机制（自动生效，无需记忆）:
+  - 上游阶段产物变化后，仍处 done 的下游阶段自动回退 pending（next 连跑即刷新）
+  - 上游链路过期时，本阶段拒绝执行（改了源码没重编、换了 so 没重打、都会拦）
+  - install 阶段后端应接 _common/verify_installed_apk.sh 校验设备包 hash
 EOF
 }
 
@@ -60,7 +65,7 @@ EOF
 json_py() {  # json_py <json路径> <python代码>；游戏目录作为 P4Game 注入
   local jf="$1"; shift
   python3 - "$jf" "$@" <<'PYEOF'
-import json, sys, os, time
+import json, sys, os, time, hashlib
 jf = sys.argv[1]
 data = json.load(open(jf, encoding="utf-8"))
 
@@ -69,6 +74,63 @@ def out(x):
 
 cmd = sys.argv[2] if len(sys.argv) > 2 else ""
 gdir = os.path.dirname(jf)
+workdir_root = data.get("workdir", gdir)
+stages = data.get("stages", [])
+by_id = {s["id"]: s for s in stages}
+
+# ---------- 陈旧度机制公共设施（2026-09-10 实战教训固化） ----------
+# 背景：reset build_so 后忘重跑下游 → 旧 so/旧包照常"装机成功"。产物指纹只防
+# "产物被人改过"，防不了"上游换了新产物、本阶段没重跑"。故引入 inputs 快照：
+# 阶段完成时记录其上游产物的 md5；之后任一环节发现快照≠现状 = 本阶段过期。
+# 排除两类"活文件"：pipeline.json（状态机自身，每次写都会变）与 *.md（分析
+# 文档，迭代期持续演进，不参与机器新鲜度判定）。
+def _is_state_file(p):
+    return os.path.basename(p) == "pipeline.json"
+
+def _is_doc_file(p):
+    return p.endswith(".md")
+
+def _resolve(p):
+    return p if os.path.isabs(p) else os.path.normpath(os.path.join(workdir_root, p))
+
+def _md5_of(p):
+    try:
+        return hashlib.md5(open(p, "rb").read()).hexdigest()
+    except Exception:
+        return None
+
+def _stage_inputs_of(s):
+    """本阶段上游产物快照：{path: md5}（剔除活文档/状态文件）"""
+    inp = {}
+    for r in s.get("requires", []):
+        for p in (by_id.get(r, {}) or {}).get("artifacts", {}):
+            if _is_state_file(p) or _is_doc_file(p):
+                continue
+            h = _md5_of(_resolve(p))
+            if h:
+                inp[p] = h
+    return inp
+
+def _stale_inputs(s):
+    """inputs 快照 vs 上游产物现状；非空 = 本阶段在上游变化后未重跑"""
+    bad = []
+    for p, rec_h in (s.get("inputs") or {}).items():
+        if _md5_of(_resolve(p)) != rec_h:
+            bad.append(p)
+    return bad
+
+def _transitive_ancestors(sid):
+    seen, stack = set(), list((by_id.get(sid, {}) or {}).get("requires", []))
+    while stack:
+        r = stack.pop()
+        if r in seen:
+            continue
+        seen.add(r)
+        stack.extend((by_id.get(r, {}) or {}).get("requires", []))
+    return seen
+
+def _save():
+    json.dump(data, open(jf, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 
 if cmd == "status":
     gname = os.path.basename(gdir)
@@ -85,6 +147,8 @@ if cmd == "status":
         if arts:
             changed = [k for k, v in arts.items() if isinstance(v, dict) and v.get("changed")]
             art_str = f"  [产物指纹{'⚠️已变化' if changed else '✓'}]" if arts else ""
+        if s.get("status") == "done" and s.get("inputs") and _stale_inputs(s):
+            art_str += "  [⚠️上游已更新，本阶段过期（需重跑）]"
         print(f" {mark} {i+1}. {s['id']:<12} {s.get('name','')}")
         print(f"      前置: {req}   状态: {s.get('status')}{art_str}")
         if s.get("status") == "failed" and s.get("error"):
@@ -147,12 +211,15 @@ elif cmd == "verify":
             ok, msg = True, f"未知校验类型(跳过): {t}"
         report.append(("  " + ("✓ " if ok else "✗ ") + msg))
         ok_all = ok_all and ok
-    # 产物指纹比对（检测"改错文件"）
+    # 产物指纹比对（检测"改错文件"）；跳过 pipeline.json 状态文件与 .md 活文档
+    # （前者随状态机写入而变、后者随迭代演进——指纹化只会永久假告警）
     changed = []
     for path, rec in artifacts.items():
+        if _is_state_file(path) or _is_doc_file(path):
+            rec.pop("changed", None)
+            continue
         ap = os.path.normpath(os.path.join(workdir, path)) if not os.path.isabs(path) else path
         try:
-            import hashlib
             h = hashlib.md5(open(ap, "rb").read()).hexdigest()
             if h != rec.get("md5"):
                 changed.append(path)
@@ -172,6 +239,28 @@ elif cmd == "verify":
     else:
         print("校验失败:"); [print(x) for x in report]; sys.exit(1)
 
+elif cmd == "check_stale":
+    # 上游链路陈旧度门禁：任一祖先阶段的 inputs 快照与上游产物现状不符 →
+    # 拒绝执行（防"改了源码没重编 so、换了 so 没重打 APK，拿旧产物继续"）。
+    # 只看 inputs 快照、不比祖先自身产物指纹：源码文件本身就是上游阶段的
+    # "产物"（impl_mod→HzsjMod.cpp），改源码后 reset 重编是正常调试循环，
+    # 若比自身指纹会把合法循环全部误杀。自身指纹归 verify 显式校验管。
+    sid = sys.argv[3]
+    reasons = []
+    for aid in sorted(_transitive_ancestors(sid)):
+        a = by_id.get(aid)
+        if not a:
+            continue
+        for p, rec_h in (a.get("inputs") or {}).items():
+            if _md5_of(_resolve(p)) != rec_h:
+                reasons.append(f"{aid}: 上游产物已变化 {p}")
+    if reasons:
+        for r in reasons:
+            out("  " + r)
+        out(f"阶段 {sid} 的上游链路已过期——继续执行=旧产物直装风险。")
+        sys.exit(1)
+    sys.exit(0)
+
 elif cmd == "set_status":
     sid, st = sys.argv[3], sys.argv[4]
     err = sys.argv[5] if len(sys.argv) > 5 else ""
@@ -180,26 +269,46 @@ elif cmd == "set_status":
             s["status"] = st
             if st == "done":
                 s["done_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-                # 记录产物指纹（verify 声明的 file_exists 产物）
-                workdir = data.get("workdir", gdir)
-                import hashlib
+                # 记录产物指纹（verify 声明的 file_exists 产物；剔除 pipeline.json
+                # 状态文件——它随状态机写入而变，指纹化只会产生永久假告警）
                 arts = {}
                 for r in s.get("verify", []):
-                    if r["type"] == "file_exists":
-                        p = os.path.normpath(os.path.join(workdir, r["path"])) if not os.path.isabs(r["path"]) else r["path"]
-                        try:
-                            arts[r["path"]] = {"md5": hashlib.md5(open(p, "rb").read()).hexdigest()}
-                        except Exception:
-                            pass
-                if arts:
-                    s["artifacts"] = arts
-            if st == "failed":
+                    if r["type"] == "file_exists" and not _is_state_file(r["path"]):
+                        h = _md5_of(_resolve(r["path"]))
+                        if h:
+                            arts[r["path"]] = {"md5": h}
+                s["artifacts"] = arts
+                # 上游产物快照（陈旧度机制的锚点）
+                inp = _stage_inputs_of(s)
+                if inp:
+                    s["inputs"] = inp
+                else:
+                    s.pop("inputs", None)
+            elif st == "failed":
                 s["failed_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
                 s["error"] = err[:300]
-            if st == "pending":
-                s.pop("done_at", None); s.pop("failed_at", None); s.pop("error", None); s.pop("artifacts", None)
+            elif st == "pending":
+                s.pop("done_at", None); s.pop("failed_at", None); s.pop("error", None)
+                s.pop("artifacts", None); s.pop("inputs", None)
             break
-    json.dump(data, open(jf, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    _save()
+    # 一致性扫掠：上游产物已变化而仍处 done 的阶段自动回退 pending。
+    # 这就是"reset 上游忘重跑下游 → 旧包直装"事故的结构性根治：
+    # 上游一完成，过期的下游立刻被打回 pending，next 连跑即刷新。
+    if st == "done":
+        pended = []
+        for d in data.get("stages", []):
+            if d.get("status") != "done" or d["id"] == sid:
+                continue
+            if _stale_inputs(d):
+                d["status"] = "pending"
+                for k in ("done_at", "failed_at", "error", "artifacts", "inputs"):
+                    d.pop(k, None)
+                pended.append(d["id"])
+        if pended:
+            _save()
+            for pid in pended:
+                out(f"⚠ 自动回退 [{pid}] → pending（上游产物已变化，本阶段产物过期；连跑 next 刷新）")
 
 elif cmd == "export_env":
     for k, v in data.get("env", {}).items():
@@ -219,6 +328,12 @@ run_stage() {
   # 前置检查
   if ! json_py "$jf" check_prereq "$sid"; then
     die "阶段 ${sid} 前置未满足（顺序执行是铁律；确需重跑请先 reset 前置阶段）"
+  fi
+
+  # 上游链路陈旧度门禁（防旧产物直装）：任一祖先阶段的产物/其上游快照与现状
+  # 不符（如改了 Mod 源码没重编 so、换了 so 没重打 APK），本阶段拒绝执行
+  if ! json_py "$jf" check_stale "$sid"; then
+    die "阶段 ${sid} 上游链路已过期：旧产物直装风险。先重跑上游（reset <上游阶段> 后 next 连跑），不要绕过。"
   fi
 
   local stage_json workdir

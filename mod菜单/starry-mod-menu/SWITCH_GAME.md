@@ -12,9 +12,13 @@ bash mod菜单/starry-mod-menu/scripts/new_game_mod.sh <Game> [日志标签]
 #    填 {Game}Mod.cpp 的 TODO（偏移/挂点/功能组）
 
 # 3. 构建（独立 obj，并行会话互不踩，切游戏无须清共享 obj）
+#    NDK_OUT/LIBS_OUT 必须绝对路径：相对路径被 ndk-build -C 解析到 app/ 下 → 校验到旧 so 假成功（2026-09-10 事故）
 cd app/src/main/jni && ndk-build NDK_PROJECT_PATH=../.. \
   APP_BUILD_SCRIPT=./Android_<tag>.mk NDK_APPLICATION_MK=./Application.mk \
-  NDK_OUT=../../obj_<tag> NDK_LIBS_OUT=../../libs_<tag>
+  NDK_OUT=<starry根>/obj_<tag> NDK_LIBS_OUT=<starry根>/libs_<tag>
+
+# 4. 注册管线出包（build_so 后端照 04_scripts/魂坠深境/hzsj_build_so.sh 范本，
+#    install 末尾接 _common/verify_installed_apk.sh；详见 04_scripts/_common/stages.md）
 ```
 
 | 双轨 | 入口 | 谁用 |

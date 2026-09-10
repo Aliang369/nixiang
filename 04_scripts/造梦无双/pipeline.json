@@ -90,9 +90,10 @@
       "preflight": [
         "Games/ZmwsMod.cpp",
         "Games/ZmwsEntry.cpp",
-        "Android_zmws.mk"
+        "Android_zmws.mk",
+        "/Users/aliang/Documents/nixiang/04_scripts/造梦无双/zmws_build_so.sh"
       ],
-      "command": "\"$NDK/ndk-build\" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_zmws.mk NDK_APPLICATION_MK=./Application.mk NDK_OUT=../../obj_zmws NDK_LIBS_OUT=../../libs_zmws -j\"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)\"",
+      "command": "bash \"$NIXIANG/04_scripts/造梦无双/zmws_build_so.sh\"",
       "verify": [
         {
           "type": "file_exists",
@@ -137,7 +138,7 @@
       "done_at": "2026-09-10 16:25:49",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk": {
-          "md5": "e97bc79d51078d5d0ba605704d678b16"
+          "md5": "1aa1040ae0496eb5508acc2b0c029949"
         }
       }
     },
@@ -153,12 +154,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-10 15:50:04",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/04_scripts/造梦无双/pipeline.json": {
-          "md5": "083d0d2006e1109f4a8252370e73004e"
-        }
-      }
+      "done_at": "2026-09-10 15:50:04"
     },
     {
       "id": "install",
@@ -167,7 +163,7 @@
         "surgical",
         "device_ready"
       ],
-      "command": "STARRY_INSTALL=1 bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zmws_1.33.sh\"",
+      "command": "adb -s $SERIAL push \"$NIXIANG/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk\" /data/local/tmp/zmws_surgical.apk && adb -s $SERIAL shell am force-stop com.xm4399.zmws.m4399; adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/zmws_surgical.apk\" || { echo \"覆盖安装失败——不自动卸载，签名冲突需人工确认\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/zmws_surgical.apk && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.xm4399.zmws.m4399 \"$NIXIANG/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk\"",
       "verify": [
         {
           "type": "file_exists",

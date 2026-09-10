@@ -40,17 +40,18 @@ bash 04_scripts/_common/preflight.sh <文件...>    # 改完任何文件必跑�
 | 2 | `dump` | 拆包 dump | 1 | decode_apk.sh + Il2CppDumper / jsc 解密 | dump.cs 等产物存在 |
 | 3 | `anchor` | 锚点抓取 | 2 | 分析性阶段（AI 自由推理），产出落 10_docs | 锚点文档路径入 json |
 | 4 | `impl_mod` | 功能实现 | 3 | new_game_mod.sh 四件套 + 填 TODO | Mod/Entry/mk 三件套存在 + 构建通过 |
-| 5 | `build_so` | 构建 so | 4 | ndk-build（私有 mk + 独立 obj；**换证书须先 `xxd -i` 重烘 `CertPinned.h`**，只换 dex/assets 无效） | so 含游戏标签 + JNI_OnLoad 导出 + md5 入 json |
-| 6 | `surgical` | 外科注入 | 5 | surgical_{游戏}_{版本}.sh（迭代场景后端配 `*_so_only.sh`，见下方内循环） | 注入包存在 + so 标签复核 |
+| 5 | `build_so` | 构建 so | 4 | ndk-build（私有 mk + 独立 obj；**换证书须先 `xxd -i` 重烘 `CertPinned.h`**，只换 dex/assets 无效） | so 含游戏标签 + JNI_OnLoad 导出 + md5 入 json；后端防呆四件套：**绝对路径 NDK_OUT/LIBS_OUT + obj stamp（mk/探针开关变化清 obj 重编）+ 链接活动保险（有新 .o 而 so 未变=FAIL）+ 菜单串按字节校验**（范本 `04_scripts/魂坠深境/hzsj_build_so.sh`） |
+| 6 | `surgical` | 外科注入 | 5 | surgical_{游戏}_{版本}.sh（迭代场景后端配 `*_so_only.sh`，见下方内循环） | 注入包存在 + so 标签复核 + **包内 so md5 == build_so 产物**（旧 so 混包直装防线） |
 | 7 | `sign` | 签名 | 6 | uber-apk-signer | 签名包存在 + hash 入 json |
 | 8 | `device_ready` | 设备准备 | — | adb devices / connect（MuMu `127.0.0.1:5555`，重启后端口可能变 16384）/ 端口转发（MT MCP `adb forward tcp:8787 tcp:8787`） | 目标设备在线 |
-| 9 | `install` | 装机验证 | 7,8 | adb install（须真机授权；大包 push+pm install） | 安装成功日志 |
+| 9 | `install` | 装机验证 | 7,8 | adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；防"装机成功"假象装旧包） |
 | 10 | `archive` | 收官归档 | 9 | 文档收尾 + current.md 索引 + **git 固化**（add -A → commit → push） | 索引行存在 + git status 干净 |
 
 规则：
 - **顺序执行**：`next` 只取第一个 pending 阶段；跳步=用 `run` 显式指定（会做前置检查，前置未满足直接拒绝）。
 - **失败即停**：阶段失败状态置 `failed` 并附日志路径；禁止换命令绕过，修完原因后 `reset` 该阶段重跑。
 - **产物即证据**：每阶段完成把产物指纹（md5/标签检查结果）写回 json——"改错文件返工"由此兜底：下一阶段前置校验产物指纹，改动过的产物立刻暴露。
+- **inputs 快照与陈旧度（2026-09-10 起，防旧产物直装）**：阶段完成时记录上游产物 md5 快照。快照≠现状 = 该阶段过期：① 仍处 done 的过期阶段被**自动回退 pending**（上游产物一变化即触发，`reset 上游忘重跑下游`不再可能装旧包）；② 过期链路上的阶段**拒绝执行**并点名环节（改了源码没重编 so、换了 so 没重打 APK 都会拦），remedy = `reset <被点名阶段>` 后 `next` 连跑；③ 产物未变化的重跑不引发级联（幂等）。`pipeline.json` 状态文件与 `*.md` 活文档不参与指纹/新鲜度判定。
 - **每游戏一份 pipeline.json**，位于 `04_scripts/{游戏}/pipeline.json`；新游戏由强 AI 生成（或后续并入 new_game_mod.sh 生成第五件套）。
 - 日志统一追加至 `04_scripts/{游戏}/pipeline.log`。
 
@@ -63,6 +64,9 @@ bash 04_scripts/pipeline.sh <游戏> reset build_so   # 回退构建阶段
 bash 04_scripts/pipeline.sh <游戏> next             # 连跑到 install（build_so → surgical → device_ready → install）
 ```
 
+- **防旧包直装是自动的（2026-09-10 起）**：reset 上游后忘 reset 下游不再需要记——上游产物一变化，
+  过期的下游 done 阶段自动回退 pending（终端会打 `⚠ 自动回退 [...]`），连跑 `next` 整条链刷新；
+  改了源码直接 `run` 下游会被陈旧度门禁拒绝并点名过期环节。产物未变化的重跑不会级联（幂等）。
 - surgical 阶段的 `command` 配 `*_so_only.sh` 后端（每游戏 pipeline.json 自行声明；so_only 语义=已有底包只换 so 重签，不碰原包）
 - 装机后的**观测采集属分析操作**（非管线阶段，AI 按诊断需要执行并记录）：
   - `adb logcat -s StarryMagic StarryTrace`（功能/hook 日志）

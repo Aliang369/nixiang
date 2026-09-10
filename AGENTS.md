@@ -17,7 +17,7 @@
    - 纯评估 / 文档维护 → 只读待评估文档及直接引用，不自动进入游戏执行流程。
 3. 流程细节按需读 `PLAYBOOK.md`（接手）、`WORKFLOW.md`（日常）、`TOOLBOOK.md`（工具/目录），不是串行必读链。
 4. 多代理协作先划定文件归属和禁止修改项；不覆盖他人改动，跨归属改动先协调，最终汇总改动与证据。
-5. 外部方法论 `/Users/aliang/Documents/reverse-skill/RULES.md` 仅在相关时参考，先确认路径存在；需要路由时可查其 `skills/scripts/master-route.sh` 与 `skills/tool-index.md`，不替代本入口或自动安装工具。
+5. 外部方法论引用已收敛（2026-09-10）：原 `/Users/aliang/Documents/reverse-skill` 外部库经评估整体与本工作区低相关，唯一有价值的 ida-pro-mcp 工具速查已择录进 `skill/ida-plugin-flow/references/ida-mcp-cheatsheet.md`，外部库本体已删除（可从 github.com/zhaoxuya520/reverse-skill 重新克隆）。不再引用外部路由，一切以本入口与 `skill/` 为准。
 
 ## 授权与测试边界
 

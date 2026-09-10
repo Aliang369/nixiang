@@ -19,7 +19,8 @@
 #   ✗ 不碰 Main.cpp / MainModern.cpp / GameConfig.h / 公共 Android.mk
 #   ✓ 只填 {Game}Entry.cpp 的 TODO（game_id / waitLib / 菜单）
 #   ✓ 只改 Android_<tag>.mk 差异区（源文件组合）
-#   ✓ 构建传独立 obj：NDK_OUT=app/src/obj_<tag>（并行会话互不踩）
+#   ✓ 构建传独立 obj（绝对路径）：NDK_OUT=<starry根>/obj_<tag>（并行会话互不踩；
+#     相对路径会被 ndk-build -C 解析到 app/ 下 → 旧 so 顶包假成功，2026-09-10 事故）
 #
 # 铁律提醒: 生成后先读 skill/re-implement/hook-rules.md（§16 懒装 / §17 缺失降级），
 # 只填 Mod.cpp 的 TODO 区；禁止从旧游戏 Mod 复制代码。
@@ -75,6 +76,9 @@ sed -e "s/{GAME}/${GAME}/g" \
     "${JNI_DIR}/Android_modern_template.mk" > "${MK_OUT}"
 echo "✅ 生成 ${MK_OUT}"
 
+STARRY_SRC="$(cd "${SCRIPT_DIR}/.." && pwd)"
+JNI_DIR_ABS="$(cd "${JNI_DIR}" && pwd)"
+
 cat <<EOF
 
 下一步接线（只碰新生成的三处，共享文件零接触）:
@@ -83,12 +87,21 @@ cat <<EOF
   2. ${GAME}Mod.cpp   : TODO 区（①开关/orig ②偏移与 RVA ⑤挂点表 ⑥功能组）
   3. Android_${LOWERTAG}.mk : 差异区（Cocos 系去掉 Unity/Il2CppApi.cpp；Trace 需要时加宏）
 
-构建（独立 obj，防并行会话互踩）:
-  cd app/src/main/jni && ndk-build NDK_PROJECT_PATH=../.. \\
+机械操作走管线（代码填完后注册）:
+  注册 04_scripts/${GAME}/pipeline.json（按 _common/stages.md 阶段表），其中：
+    - build_so 后端照范本 04_scripts/魂坠深境/hzsj_build_so.sh 写 ${LOWERTAG}_build_so.sh
+      （绝对路径 / obj stamp / 链接活动保险 / 菜单串字节校验四件套，不要自己发明）
+    - install 阶段末尾必须接 _common/verify_installed_apk.sh（设备包 md5 == 本地 APK）
+    - surgical 脚本末尾加包内 so md5 == 构建产物校验
+
+手工验证构建（仅调试用，正式出包走管线）:
+  cd ${JNI_DIR_ABS} && ndk-build NDK_PROJECT_PATH=../.. \\
     APP_BUILD_SCRIPT=./Android_${LOWERTAG}.mk NDK_APPLICATION_MK=./Application.mk \\
-    NDK_OUT=../../obj_${LOWERTAG} NDK_LIBS_OUT=../../libs_${LOWERTAG}
+    NDK_OUT=${STARRY_SRC}/obj_${LOWERTAG} NDK_LIBS_OUT=${STARRY_SRC}/libs_${LOWERTAG}
+  （NDK_OUT/LIBS_OUT 必须绝对路径：相对路径会被 -C 解析到 app/ 下 → 旧 so 顶包假成功）
 
 然后填 ${GAME}Mod.cpp 的 TODO 区:
   ① 开关/orig  ② 偏移与 RVA  ⑤ hook 函数与挂点表  ⑥ 功能组
-构建前自检: strings 成品 so | grep '${TAG}'
+构建前自检（按字节搜，strings 不认 UTF-8 中文菜单串）:
+  LC_ALL=C grep -ac '${TAG}' ${STARRY_SRC}/libs_${LOWERTAG}/arm64-v8a/libstarry_magic.so
 EOF

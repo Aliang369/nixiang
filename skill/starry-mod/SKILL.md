@@ -21,7 +21,8 @@
 ```bash
 bash mod菜单/starry-mod-menu/scripts/new_game_mod.sh {Game}
 # 填 {Game}Entry.cpp：authGameId（game_id）/ waitLib / featureList / 初始化参数
-# 构建：APP_BUILD_SCRIPT=./Android_{tag}.mk NDK_OUT=../../obj_{tag}（独立 obj，并行会话互不踩）
+# 构建：APP_BUILD_SCRIPT=./Android_{tag}.mk NDK_OUT=<starry根>/obj_{tag} NDK_LIBS_OUT=<starry根>/libs_{tag}
+#   （必须绝对路径：相对路径被 ndk-build -C 解析到 app/ 下 → 校验到旧 so 假成功，2026-09-10 事故）
 ```
 
 入口 = `MainModern.cpp`（游戏差异全在 Entry 的 `StarryGameMod` 注册表）。**禁止改 `Main.cpp` / `MainModern.cpp` / `GameConfig.h` / 公共 `Android.mk`**（`Main.cpp` 连注释都禁改：`OBFUSCATE` 用 `__LINE__` 做混淆种子，行号偏移即产物漂移，20260909 实测）。
@@ -42,7 +43,7 @@ modern 的 `Games/*Mod.cpp` 同样从生成器产出（防闪退骨架 v3，内�
 | 2 | `ndk-build`（产出常在 `app/src/libs/arm64-v8a/`） |
 | 3 | **拷贝覆盖** → `app/src/main/jniLibs/arm64-v8a/libstarry_magic.so`（建议同步 `app/src/main/libs/`、`app/libs/`） |
 | 4 | 再 `gradlew` / 跑 `surgical_*.sh` / `*_so_only.sh` |
-| 5 | **装机前自检**：`strings` 成品 APK（或 jniLibs）里的 so，须含本游戏标签（如 `[Gjc2]` / `gjc2`），**禁止**仍出现上一款（如 `[Dwct]`） |
+| 5 | **装机前自检**：成品 APK（或 jniLibs）里的 so，须含本游戏标签（如 `[Gjc2]` / `gjc2`），**禁止**仍出现上一款（如 `[Dwct]`）。中文菜单串用 `LC_ALL=C grep -ac '菜单名' <so>` 按字节搜——`strings` 默认 ASCII 不认 UTF-8 中文，会漏报（2026-09-10 坑） |
 
 **漏做第 3 步 = 菜单/鉴权仍是上一款游戏**（弓箭传说2 打出动物餐厅菜单即此坑；切游戏后 gradle 十几秒「成功」往往是旧 so）。
 
@@ -128,6 +129,8 @@ adb logcat -s StarryApp:V StarryMagic:V | grep "auth game_id synced from native"
 | 首包/改菜单/smali/Manifest | `inject_*.sh` 或 `surgical_*.sh` |
 | TSS/ACE 游戏 | **必须外科组装** |
 | 快速试改 smali | MT MCP |
+
+**已注册管线的一律走 `04_scripts/pipeline.sh`**（status/next/reset/verify），2026-09-10 起自动防旧产物直装：上游产物变化 → 过期下游阶段自动回退 pending；过期链路上 `run` 下游会被陈旧度门禁拒绝。构建后端四件套（绝对路径/obj stamp/链接活动保险/菜单串字节校验）范本 = `04_scripts/魂坠深境/hzsj_build_so.sh`；install 阶段末尾接 `04_scripts/_common/verify_installed_apk.sh` 校验设备包 md5 == 本地 APK。
 
 ### 构建环境
 

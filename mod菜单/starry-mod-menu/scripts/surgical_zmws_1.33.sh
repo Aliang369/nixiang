@@ -401,6 +401,15 @@ else
 fi
 ls -lh "$SIGNED"
 
+# ---- so 闭环校验：包内 so 必须与 build_so 产物字节一致（防旧 so 混包直装，2026-09-10 教训固化） ----
+IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
+SRC_SO_MD5="$(md5 -q "$SO_PREBUILT")"
+if [[ "$IN_SO_MD5" != "$SRC_SO_MD5" ]]; then
+  echo "ERROR: 包内 so ($IN_SO_MD5) != 构建产物 ($SRC_SO_MD5)——旧 so 混包，禁止交付" >&2
+  exit 1
+fi
+echo "[so-verify] 包内 so md5 == 构建产物 ($IN_SO_MD5) ✓"
+
 if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
   REMOTE="/data/local/tmp/zmws_surgical.apk"
   adb -s "$SERIAL" push "$SIGNED" "$REMOTE"
