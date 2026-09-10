@@ -1,0 +1,20 @@
+{
+  "template_id": "wjtxd",
+  "name": "无尽探险队",
+  "package": "com.wjtxdtt.zy",
+  "source": "Games/WjtxdMod.cpp a.native bridge.sendToNative JNI evalString splice",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "超级无敌"
+    },
+    {
+      "feat_num": 2,
+      "name": "超级移速"
+    },
+    {
+      "feat_num": 3,
+      "name": "免广告"
+    }
+  ]
+}

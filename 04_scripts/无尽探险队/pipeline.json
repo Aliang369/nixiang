@@ -1,0 +1,211 @@
+{
+  "game": "无尽探险队",
+  "version": "26.1.5",
+  "notes": "2026-09-10 新品复刻：斌哥包抓点（get_ret 1=超级无敌 / 2=超级移速，evalString splice）→ modern 双轨（WjtxdEntry + Android_wjtxd.mk）→ 官方包外科（GameApplication/GameActivity patch + classes5 + InitProvider）。TapTap 渠道：SignSpoof 补官方证书 + TapLoginForceWeb 新版分支（fallbackToWeb 反射）强制网页登录，用户实测登录成功。se::ScriptEngine::evalString 被 strip → PvRVA 0xC086D8 序言校验 hook（主路径），JNI 桥仅为旁路。设备=MuMu 127.0.0.1:16384。",
+  "params": {
+    "game_id": "wjtxd",
+    "package": "com.wjtxdtt.zy",
+    "mk": "Android_wjtxd.mk",
+    "tag": "wjtxd",
+    "obj_dir": "obj_wjtxd",
+    "libs_dir": "libs_wjtxd",
+    "serial": "127.0.0.1:16384"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "127.0.0.1:16384"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（MuMu 拉回官方 26.1.5，md5 95f3ef57…）",
+      "requires": [],
+      "command": "md5 -q \"$NIXIANG/02_apks/无尽探险队/official_base.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/无尽探险队/official_base.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 23:03:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/无尽探险队/official_base.apk": {
+          "md5": "95f3ef57617b2e48ec526268687de7c5"
+        }
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "锚点抓取（斌哥 BSS 注入 JS：get invulnerable / getFrameSpeed；se evalString RVA 0xC086D8）",
+      "requires": [],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/无尽探险队/斌哥包抓点_20260910.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 23:20:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/无尽探险队/斌哥包抓点_20260910.md": {}
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（WjtxdMod se::evalString splice + WjtxdEntry 注册表 + WjtxdHooks Java 桥 + TapLoginForceWeb 新版分支 + SignSpoof 补证书）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WjtxdMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WjtxdEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_wjtxd.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/WjtxdHooks.java"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 23:40:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WjtxdMod.cpp": {}
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（modern Android_wjtxd.mk，独立 obj_wjtxd）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "Games/WjtxdMod.cpp",
+        "Games/WjtxdEntry.cpp",
+        "Games/WjtxdMod.h",
+        "Android_wjtxd.mk",
+        "/Users/aliang/Documents/nixiang/04_scripts/无尽探险队/wjtxd_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无尽探险队/wjtxd_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "../../libs_wjtxd/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "../../libs_wjtxd/arm64-v8a/libstarry_magic.so",
+          "pattern": "wjtxd"
+        },
+        {
+          "type": "file_contains",
+          "path": "../../libs_wjtxd/arm64-v8a/libstarry_magic.so",
+          "pattern": "JNI_OnLoad"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 00:21:00",
+      "artifacts": {
+        "../../libs_wjtxd/arm64-v8a/libstarry_magic.so": {
+          "md5": "22106fd1ff598e2ffe102d34dcc8b69b"
+        }
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装 + 签名（patch classes2 + 新增 classes5/so/manifest：MenuService 服务 + StarryInitProvider）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_wjtxd_26.1.5.sh"
+      ],
+      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_wjtxd_26.1.5.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 00:23:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk": {
+          "md5": "0aba389639c4e495fe239244cfb30bab"
+        }
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（MuMu 127.0.0.1:16384）",
+      "requires": [],
+      "command": "adb connect $SERIAL; adb -s $SERIAL get-state",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/无尽探险队/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-10 23:44:00"
+    },
+    {
+      "id": "install",
+      "name": "装机（push + pm install -r + 装机指纹校验）",
+      "requires": [
+        "surgical",
+        "device_ready"
+      ],
+      "command": "adb -s $SERIAL push \"$NIXIANG/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk\" /data/local/tmp/wjtxd_surgical.apk && adb -s $SERIAL shell am force-stop com.wjtxdtt.zy; adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/wjtxd_surgical.apk\" || { echo \"覆盖安装失败——异签名需先卸载并获确认\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/wjtxd_surgical.apk && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.wjtxdtt.zy \"$NIXIANG/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 00:23:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk": {
+          "md5": "0aba389639c4e495fe239244cfb30bab"
+        }
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（复刻验证记录 + 索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/无尽探险队/复刻验证_20260911.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 00:28:18",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/无尽探险队/复刻验证_20260911.md": {
+          "md5": "9f42d53663de26394fe82eeef93660b7"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk": "0aba389639c4e495fe239244cfb30bab"
+      }
+    }
+  ]
+}

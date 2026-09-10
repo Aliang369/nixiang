@@ -490,6 +490,11 @@ public final class SignSpoof {
     private static final String MWDL_CERT_B64 =
             "MIIDBjCCAe4CAQEwDQYJKoZIhvcNAQELBQAwSDEKMAgGA1UEAwwBMTEKMAgGA1UECwwBMTEKMAgGA1UECgwBMTEKMAgGA1UEBwwBMTEKMAgGA1UECAwBMTEKMAgGA1UEBhMBMTAgFw0yNDA0MTAwNzQ5NDRaGA8yMTQ5MDMxMTA3NDk0NFowSDEKMAgGA1UEAwwBMTEKMAgGA1UECwwBMTEKMAgGA1UECgwBMTEKMAgGA1UEBwwBMTEKMAgGA1UECAwBMTEKMAgGA1UEBhMBMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKyjMicjFXHP4otqSyTI8xxSWydEEe4sDR0uqE6v/4/0VPvi1h/gjDQgNFWDUkMoj7lEM8Z6cHKr8nv779mmkC9d+BH8/gsHO8kYapvHEFudSOY9lVq2aYv3KbBidsAWxTw/sL5J5VyaQxufwCszxLJXMZN52nz88ucGMp+atxKX/jBEp1grlSpKU2BLXylBpMfgqAlXdmJED7aopTIL15nYBDTGnxURfyquqkDDSsntHbeaJ9JweaxSL8yfqUtU0C3qb1mW7N6E87nNy2gwxjcuNjN01q/3USIlu3fW5H+z50urzbEOaWi98wZTHkrqKASAxt7SxO8kXd3nQA8tCeMCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAhaxqfkDWoiqhvF2232BI4wVz5xFGbTDKwVOtvQnWhSTKfOVplRwTysa77KhBSFDUlMsqPesbNsl6ndXXcdIrOvmFcSt8ercOEvuvJajq/FmLXMfDFvHTMbSFD8dwXN0rtN09fD3S2ZfTijsPAzujToPfDOidePXcbUybY8WArjQEJTu+775SCj2LrlwC92zO772LpDtNA9/hheH78SWhMzHZEl6vVdfHzjSxv8hP9E+6FIJ42rVIWgXZnUkqtXSWy3wtZrV0p8aTdENA/ecCj18Fu4MsfhRqWV7UemHx+63xKLNOY1PVuivzxsNAyOFEt7kn26Tc6c0ZWQco2QFQow==";
 
+    /** 无尽探险队 官方（play800/com.wjtxdtt.zy，CN=Unknown，2026-09-10 官方 26.1.5 v2 块导出） */
+    private static final String WJTX_PKG = "com.wjtxdtt.zy";
+    private static final String WJTX_CERT_B64 =
+            "MIIDeTCCAmGgAwIBAgIEWeuT4DANBgkqhkiG9w0BAQsFADBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMCAXDTE2MDgwMTA3MzA0MFoYDzIwNzEwNTA1MDczMDQwWjBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt/Gpgl30Qet19rZq+Or6JCp/OO8RnV21Wcmp0DhY88fXnNZcV5p+gsshLrxOzl8dqfXTmaYSreafuPzKplOH1jwuc2XI7NjcavgoIH1L4uYSiM8LQnyLV5K0DDjpXgS3sn9dyapPA9mvB1TSHLtICd25afCKha5AdBqUKT8NR+RVh7jEwVvl+YeeADUk0WH7gq2xtagSWaZSbvq8YgG1g3GZQA0tddZOaYvr/inr0caaa4uY/kv/bvzbk5vj8JN+q80m7sV6MKZi/WX1MCM65hpk9xXYnd6ltQ6fQXoh02zWZ75ex2KmsCdrJqCFUKOBcO95dDFOhNcY7qQo3/w/vQIDAQABoyEwHzAdBgNVHQ4EFgQUwz98PXv6yDLafGJQKUxNlCRBiFkwDQYJKoZIhvcNAQELBQADggEBAErJ5uQBX7az88TIf9ehS8QCD7enSHutpR+xySAhWcSblXBcFNdu76FbiESs02IubYP61zjnA4IOV1Lgq5nmpdseUiFkXdpa0BkSi3pc81w3yG/JCqKdpJvqjbuIeNpmeDh8Ycw2/4I/O7+ti/9bDaxKBcOmJlblWbIfTS91JpsDWPTNnbj7SNYmhmzO29Z8z04ycAfZeA4q8Scv27cm7scM7t1op6rgBav+OTA+Y/ENlsnSjxoVEwyDCxWbQs0G+luBf662cdGbOuWswcFhOGMVBzSP43xSVlV6ryy3hq4FAjsSMkwFElE+dmNr4gAC7S3+S+HLN2sFfN5ksuTpgJg=";
+
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -528,6 +533,7 @@ public final class SignSpoof {
                 fakes.put(WDYZ_PKG, new Signature(Base64.decode(WDYZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YQZD_PKG, new Signature(Base64.decode(YQZD_CERT_B64, Base64.DEFAULT)));
                 fakes.put(MWDL_PKG, new Signature(Base64.decode(MWDL_CERT_B64, Base64.DEFAULT)));
+                fakes.put(WJTX_PKG, new Signature(Base64.decode(WJTX_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

@@ -1,38 +1,47 @@
 package com.starry.magic.sign;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * TapTap 强制内嵌网页登录（纯运行时反射，不改 dex —— ACE 校验官方 dex，字节级修改即闪退）。
  * <p>
- * TapSDK 4.7.0（终末地内嵌版）登录路由链路（smali 级实证）：
- * <ul>
- *   <li>{@code TapTapLoginActivity.<init>} 构造时即 new {@code LoginActivityImpl}，
- *       其 {@code loginHandlers} 固定为 [CloudLoginHandler, ClientLoginHandler]；
- *       {@code webHandler} 单独字段；</li>
- *   <li>{@code TapTapLoginActivity.onCreate}：super.onCreate → … → {@code impl.onCreate(this)}，
- *       后者遍历 {@code loginHandlers} 调 {@code canHandle}，命中即进对应 fragment；</li>
- *   <li>全部不命中时走 {@code fallbackToWeb(activity, request)} → webHandler →
- *       WebLoginFragment（内嵌网页登录）。</li>
- * </ul>
- * 时机：API 29+ {@code ActivityLifecycleCallbacks.onActivityPreCreated} 在
- * {@code performCreate} 内先于 {@code onCreate} 触发（onActivityCreated 在整个
- * onCreate 执行完之后才触发，太晚）。窗口内把数组中 ClientLoginHandler 换成
- * CloudLoginHandler 实例（非云游戏 canHandle=false）→ 全 false → 强制 fallbackToWeb。
- * TapSDK 为 app 自身类，同 classloader 反射无 hidden-API 限制。
+ * 旧版 TapSDK（终末地 4.7.0 内嵌版，loginHandlers 数组路由）：
+ * {@code TapTapLoginActivity.<init>} new {@code LoginActivityImpl}，其
+ * {@code loginHandlers} 固定为 [CloudLoginHandler, ClientLoginHandler]；onCreate 遍历
+ * canHandle，全不命中 → fallbackToWeb（WebLoginFragment）。窗口期把数组里
+ * ClientLoginHandler 换 CloudLoginHandler 实例（非云游戏 canHandle=false）→ 强制网页。
+ * <p>
+ * 新版 TapSDK（无尽探险队 tap-login_release 版）：
+ * {@code TapTapLoginActivity.onCreate} 读 intent extra request，首建（savedInstanceState==null）
+ * 即 {@code fragmentProvider.provide(request)} → {@code DefaultTapLoginFragmentProvider}
+ * 按 {@code LoginRequest.loginType} 分流（"mobile_client"→ClientLoginFragment /
+ * "embedded_web"→WebLoginFragment / 云端→CloudGameFragment）。SDK 自带
+ * {@code fallbackToWeb(request)}（copy request 置 loginType=WEB 后 replace）。
+ * 强制网页 = 两路：
+ *   ① onActivityPreCreated（onCreate 前）：反射改 intent extra 的 LoginRequest.loginType
+ *      = "embedded_web"，让首建 provide 直接走 WebLoginFragment（不拉起 TapTap 客户端）。
+ *   ② onActivityCreated 兜底：当前 fragment 非 WebLoginFragment 时反射调 fallbackToWeb。
  */
 public final class TapLoginForceWeb {
     private static final String TAG = "StarryTapLogin";
 
     private static final String LOGIN_ACTIVITY = "com.taptap.sdk.login.ui.TapTapLoginActivity";
+    private static final String LOGIN_ACTIVITY_IMPL =
+            "com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity";
     private static final String CLIENT_HANDLER =
             "com.taptap.sdk.login.internal.handlers.client.ClientLoginHandler";
     private static final String CLOUD_HANDLER =
             "com.taptap.sdk.login.internal.handlers.cloud.CloudLoginHandler";
+    private static final String REQUEST_EXTRA = "com_taptap_sdk_login_request";
+    private static final String FRAGMENT_TAG = "com_taptap_sdk_login_fragment";
+    private static final String WEB_LOGIN_FRAGMENT =
+            "com.taptap.sdk.login.impl.ui.fragment.WebLoginFragment";
 
     /** 包名白名单：只对这些游戏的 Tap 登录强制网页，其他星空包游戏不受影响。 */
     private static final java.util.Set<String> PKG_WHITELIST =
@@ -43,20 +52,81 @@ public final class TapLoginForceWeb {
                     // → DefaultTapLoginFragmentProvider 三分支，无 loginHandlers 数组（终末地 4.7.0 那套不存在）。
                     // 4.9.3 的强制网页走 CwjhTapGate（smali 层 isClientLogin 恒 false + gatekeeper 放行），
                     // 这里保留白名单以便将来同构版本复用反射方案。
-                    "com.grinning.beta.yszl"));
+                    "com.grinning.beta.yszl",
+                    // 无尽探险队：TapSDK 新版（tap-login_release），见类头说明。
+                    "com.wjtxdtt.zy"));
 
     private TapLoginForceWeb() {}
 
-    /** preCreated（onCreate 之前）：handler 遍历尚未发生，主清洗窗口。 */
+    /** preCreated（onCreate 之前）：新版改 request.loginType，旧版清洗 loginHandlers。 */
     public static void onPreCreated(Activity activity) {
-        if (Build.VERSION.SDK_INT >= 29) sanitize(activity);
+        if (Build.VERSION.SDK_INT >= 29) {
+            prepareNewImplRequest(activity);
+            sanitize(activity);
+        }
     }
 
-    /** 兜底：API&lt;29 无 preCreated 回调（onActivityCreated 时遍历已过，多半无效但无害）。 */
+    /** onCreated（onCreate 之后）：新版 fallbackToWeb 兜底，旧版 API&lt;29 清洗。 */
     public static void onCreated(Activity activity) {
+        forceNewImplWeb(activity);
         if (Build.VERSION.SDK_INT < 29) sanitize(activity);
     }
 
+    /** 新版路径①：onCreate 前改 intent extra 的 LoginRequest.loginType → embedded_web。 */
+    private static void prepareNewImplRequest(Activity activity) {
+        if (activity == null || !LOGIN_ACTIVITY_IMPL.equals(activity.getClass().getName())) return;
+        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
+        try {
+            Intent it = activity.getIntent();
+            if (it == null) return;
+            Object req = it.getParcelableExtra(REQUEST_EXTRA);
+            if (req == null) {
+                Log.i(TAG, "new-impl no request extra (retry via created)");
+                return;
+            }
+            Field lt = req.getClass().getDeclaredField("loginType");
+            lt.setAccessible(true);
+            String cur = (String) lt.get(req);
+            if (!"embedded_web".equals(cur)) {
+                lt.set(req, "embedded_web");
+                Log.i(TAG, "new-impl request loginType " + cur + " -> embedded_web (preCreated)");
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "prepareNewImplRequest failed (created fallback will run)", t);
+        }
+    }
+
+    /** 新版路径②：onCreate 后若当前 fragment 非 Web，反射调 fallbackToWeb(request)。 */
+    private static void forceNewImplWeb(Activity activity) {
+        if (activity == null || !LOGIN_ACTIVITY_IMPL.equals(activity.getClass().getName())) return;
+        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
+        try {
+            Field reqF = activity.getClass().getDeclaredField("request");
+            reqF.setAccessible(true);
+            final Object req = reqF.get(activity);
+            if (req == null) {
+                Log.w(TAG, "new-impl request field null");
+                return;
+            }
+            Object fm = activity.getFragmentManager();
+            if (fm != null) {
+                Method find = fm.getClass().getMethod("findFragmentByTag", String.class);
+                Object f = find.invoke(fm, FRAGMENT_TAG);
+                String cn = f != null ? f.getClass().getName() : null;
+                if (WEB_LOGIN_FRAGMENT.equals(cn)) {
+                    Log.i(TAG, "new-impl already WebLoginFragment, skip");
+                    return;
+                }
+                Log.i(TAG, "new-impl fragment=" + cn + " → fallbackToWeb");
+            }
+            Method fb = activity.getClass().getMethod("fallbackToWeb", req.getClass());
+            fb.invoke(activity, req);
+        } catch (Throwable t) {
+            Log.e(TAG, "forceNewImplWeb failed", t);
+        }
+    }
+
+    /** 旧版：loginHandlers 数组把 ClientLoginHandler 换成 CloudLoginHandler → 强制 fallbackToWeb。 */
     private static void sanitize(Activity activity) {
         if (activity == null || !LOGIN_ACTIVITY.equals(activity.getClass().getName())) return;
         if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
