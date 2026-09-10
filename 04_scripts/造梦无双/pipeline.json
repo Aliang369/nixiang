@@ -9,12 +9,12 @@
     "tag": "zmws",
     "obj_dir": "obj_zmws",
     "libs_dir": "libs_zmws",
-    "serial": "127.0.0.1:5555"
+    "serial": "f9a116a2"
   },
   "env": {
     "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
     "NIXIANG": "/Users/aliang/Documents/nixiang",
-    "SERIAL": "127.0.0.1:5555"
+    "SERIAL": "f9a116a2"
   },
   "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
   "stages": [
@@ -158,7 +158,7 @@
     },
     {
       "id": "install",
-      "name": "装机 MuMu（覆盖安装，禁卸载）",
+      "name": "装机（push + pm install 大包防超时 + 装机指纹校验；目标=env.SERIAL，MuMu/真机通用）",
       "requires": [
         "surgical",
         "device_ready"
@@ -171,11 +171,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-10 16:28:24",
+      "done_at": "2026-09-10 22:07:12",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk": {
           "md5": "1aa1040ae0496eb5508acc2b0c029949"
         }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk": "1aa1040ae0496eb5508acc2b0c029949"
       }
     },
     {

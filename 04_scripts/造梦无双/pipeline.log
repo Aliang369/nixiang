@@ -1219,3 +1219,13 @@ NOTE: 默认未装机。需要覆盖装机时再 STARRY_INSTALL=1 并先在聊�
 目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
 [2026-09-10 16:37:08] [造梦无双] stage=archive 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-10 22:05:54] [造梦无双] stage=install 开始
+命令: adb -s $SERIAL push "$NIXIANG/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk" /data/local/tmp/zmws_surgical.apk && adb -s $SERIAL shell am force-stop com.xm4399.zmws.m4399; adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/zmws_surgical.apk" || { echo "覆盖安装失败——不自动卸载，签名冲突需人工确认"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/zmws_surgical.apk && bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.xm4399.zmws.m4399 "$NIXIANG/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 29.4 MB/s (1499972918 bytes in 48.695s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (1aa1040ae0496eb5508acc2b0c029949) ✓
+[2026-09-10 22:07:19] [造梦无双] stage=install 完成（校验通过）
+────────────────────────────────────────────
