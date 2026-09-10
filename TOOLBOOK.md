@@ -228,9 +228,11 @@ dotnet Il2CppDumper.dll 06_dumped/libil2cpp.so 06_dumped/global-metadata.dat 06_
 | frida_agent_main（符号） | 3 | 0 | ✅ 全清 |
 | re.frida（仅剩 GLib 错误域名串） | 79 | 76 | ◐ 残 GLib 内部串，非路径/memfd 名 |
 | gdbus（仅剩 GLib 内部串） | 42 | 38 | ◐ 同上 |
-| 默认端口 | 27042 | 39571（随机构建） | ✅ 防默认端口扫描 |
+| 默认端口 | 27042 | 39571（随机构建） | ✅ 防默认端口扫描；**`-U` 使用时必须 `-l 127.0.0.1:27042` 覆盖**（见下） |
 
-定性（静态实测 + 项目自述，未做实机对抗验证）：~90 补丁覆盖 16 类检测向量，周构建随机改名+随机端口+出包「禁止标记」门禁+真机冒烟验证，build-info.json 全程溯源。静态隐蔽性全面优于 Florida（Florida 留 frida:rpc 16 处/frida-agent 10 处未清）。仍是「症状级」对抗——中级（协议行为）与高级（inline hook 行为特征、ptrace 检测）不保证，强检测游戏一律走 so。
+定性（静态实测 + 项目自述）：~90 补丁覆盖 16 类检测向量，周构建随机改名+随机端口+出包「禁止标记」门禁+真机冒烟验证，build-info.json 全程溯源。静态隐蔽性全面优于 Florida（Florida 留 frida:rpc 16 处/frida-agent 10 处未清）。仍是「症状级」对抗——中级（协议行为）与高级（inline hook 行为特征、ptrace 检测）不保证，强检测游戏一律走 so。
+
+**实机验证 2026-09-10（四项 NOT PROVEN 全转 PROVEN，详见 `01_tools/phantom-frida/README.md`）**：真机 OPD2515/Android 16/KSU Enforcing，目标=魂坠深境 1.1.1 原版——①`-U` 直连 ②spawn+探针 61s 存活且 agent 可响应 ③objection 1.12.5 attach+列 activity ④frida-dexdump 43 dex 落盘，全部通过。**端口铁律**：phantom 出厂随机端口会让客户端 `-U` 静默降级为「jailed adb 兜底」——`frida-ps -U` 假阳性能列进程，spawn/attach 全灭（`need Gadget on jailed Android`）；server 必须以 `-l 127.0.0.1:27042` 启动（start_frida_server.sh 已固化为默认）；隐匿备选=随机端口+`adb forward`+`-H`。**MuMu 12 同日四项同口径全过**（aarch64 原生内核无 houdini，arm64 server 直接可用；多设备用 `-D`/objection `-S`，见 README）。
 
 **魔改谱系落选记录**（选型时实测/核实）：strongR-frida-android（hluwa）仓库已 404 下架；zer0def/undetected-frida 构建流程有 bug——未打补丁的 server 被上传、anti-anti 处理产物未发布（实测线程名全在≈裸奔）；Florida（Ylarod）上游 17.16.x 起只发空 release（CI 停产二进制），且 17.9.1 须降级 pip 客户端，2026-09-10 已从 `01_tools/` 移除。gadget 版按需从 phantom 同 release 下载。
 

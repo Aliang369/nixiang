@@ -1,0 +1,63 @@
+using System;
+using UnityEngine;
+
+namespace ContainerOfSoul.Display.Game.PathLocationModules;
+
+public class FocusedImageModule : PathLocationDisplay.DisplayModule
+{
+	[SerializeField]
+	private Animator focusedImageAnim;
+
+	[NonSerialized]
+	private bool showing;
+
+	public override void UpdateDisplay()
+	{
+		switch (base.pathLocationDisplay.currentState)
+		{
+		case PathLocationDisplay.State.Disabled:
+		case PathLocationDisplay.State.Idle:
+		case PathLocationDisplay.State.Current_Unfinished:
+		case PathLocationDisplay.State.Current_Finished:
+		case PathLocationDisplay.State.Finished:
+		case PathLocationDisplay.State.Selectable:
+			Hide();
+			break;
+		case PathLocationDisplay.State.Focused:
+			if (base.pathLocationDisplay.location.selectable)
+			{
+				Show();
+			}
+			else
+			{
+				Hide();
+			}
+			break;
+		default:
+			throw new ArgumentOutOfRangeException();
+		}
+	}
+
+	private void Show()
+	{
+		if (!showing)
+		{
+			showing = true;
+			((Component)(object)focusedImageAnim).gameObject.SetActive(value: true);
+			focusedImageAnim.SetTrigger(AnimKeywords.show);
+		}
+	}
+
+	private void Select()
+	{
+	}
+
+	private void Hide(bool force = false)
+	{
+		if (showing || force)
+		{
+			showing = false;
+			((Component)(object)focusedImageAnim).gameObject.SetActive(value: false);
+		}
+	}
+}

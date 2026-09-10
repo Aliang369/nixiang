@@ -1,0 +1,283 @@
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Generated.ChillyRoomSdkClient;
+using Newtonsoft.Json;
+
+namespace ChillyRoom.Censor.V1;
+
+[GeneratedCode("NSwag", "14.0.2.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+public class ValidationClient
+{
+	protected struct ObjectResponseResult<T>(T responseObject, string responseText)
+	{
+		public T Object { get; } = responseObject;
+
+		public string Text { get; } = responseText;
+	}
+
+	private string _baseUrl = "";
+
+	private HttpClient _httpClient;
+
+	private Lazy<JsonSerializerSettings> _settings;
+
+	public string BaseUrl
+	{
+		get
+		{
+			return _baseUrl;
+		}
+		set
+		{
+			_baseUrl = value;
+		}
+	}
+
+	protected JsonSerializerSettings JsonSerializerSettings => _settings.Value;
+
+	public ValidationClient(string baseUrl, HttpClient httpClient)
+	{
+		BaseUrl = baseUrl;
+		_httpClient = httpClient;
+		_settings = new Lazy<JsonSerializerSettings>(CreateSerializerSettings);
+	}
+
+	private JsonSerializerSettings CreateSerializerSettings()
+	{
+		JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings();
+		UpdateJsonSerializerSettings(jsonSerializerSettings);
+		return jsonSerializerSettings;
+	}
+
+	private void UpdateJsonSerializerSettings(JsonSerializerSettings settings)
+	{
+		ChillyRoomService.AddEssentialConverters(settings);
+	}
+
+	public virtual Task<ValidateTextReply> ValidateTextAsync(ValidateTextRequest body)
+	{
+		return ValidateTextAsync(body, CancellationToken.None);
+	}
+
+	public virtual async Task<ValidateTextReply> ValidateTextAsync(ValidateTextRequest body, CancellationToken cancellationToken)
+	{
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.Append((BaseUrl != null) ? BaseUrl.TrimEnd('/') : "").Append("/Validation/ValidateText");
+		HttpClient client_ = _httpClient;
+		bool disposeClient_ = false;
+		try
+		{
+			using HttpRequestMessage request_ = new HttpRequestMessage();
+			string text = JsonConvert.SerializeObject(body, _settings.Value);
+			HttpContent httpContent;
+			if (text.Length < 800)
+			{
+				httpContent = new StringContent(text);
+			}
+			else
+			{
+				httpContent = new ByteArrayContent(Compress(text));
+				httpContent.Headers.ContentEncoding.Add("gzip");
+			}
+			httpContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/json");
+			request_.Content = httpContent;
+			request_.Method = new HttpMethod("POST");
+			request_.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
+			request_.Headers.AcceptEncoding.Add(StringWithQualityHeaderValue.Parse("gzip"));
+			string uriString = stringBuilder.ToString();
+			request_.RequestUri = new Uri(uriString, UriKind.RelativeOrAbsolute);
+			HttpResponseMessage response_ = await client_.SendAsync(request_, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+			bool disposeResponse_ = true;
+			try
+			{
+				Dictionary<string, IEnumerable<string>> headers_ = ((IEnumerable<KeyValuePair<string, IEnumerable<string>>>)(object)response_.Headers).ToDictionary((KeyValuePair<string, IEnumerable<string>> h_) => h_.Key, (KeyValuePair<string, IEnumerable<string>> h_) => h_.Value);
+				if (response_.Content != null && response_.Content.Headers != null)
+				{
+					foreach (KeyValuePair<string, IEnumerable<string>> item in (HttpHeaders)response_.Content.Headers)
+					{
+						headers_[item.Key] = item.Value;
+					}
+				}
+				int status_ = (int)response_.StatusCode;
+				switch (status_)
+				{
+				case 200:
+				{
+					ObjectResponseResult<ValidateTextReply> objectResponseResult = await ReadObjectResponseAsync<ValidateTextReply>(response_, headers_, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+					if (objectResponseResult.Object == null)
+					{
+						throw new ApiException("Response was null which was not expected.", status_, objectResponseResult.Text, headers_, null);
+					}
+					return objectResponseResult.Object;
+				}
+				case 400:
+				{
+					ObjectResponseResult<ErrorResponse> objectResponseResult3 = await ReadObjectResponseAsync<ErrorResponse>(response_, headers_, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+					if (objectResponseResult3.Object == null)
+					{
+						throw new ApiException("Response was null which was not expected.", status_, objectResponseResult3.Text, headers_, null);
+					}
+					throw new ApiException<ErrorResponse>("Bad Request", status_, objectResponseResult3.Text, headers_, objectResponseResult3.Object, null);
+				}
+				case 401:
+				{
+					ObjectResponseResult<ErrorResponse> objectResponseResult2 = await ReadObjectResponseAsync<ErrorResponse>(response_, headers_, cancellationToken).ConfigureAwait(continueOnCapturedContext: false);
+					if (objectResponseResult2.Object == null)
+					{
+						throw new ApiException("Response was null which was not expected.", status_, objectResponseResult2.Text, headers_, null);
+					}
+					throw new ApiException<ErrorResponse>("Unauthorized", status_, objectResponseResult2.Text, headers_, objectResponseResult2.Object, null);
+				}
+				case 500:
+				{
+					string text2 = ((response_.Content != null) ? (await response_.Content.ReadAsStringAsync().ConfigureAwait(continueOnCapturedContext: false)) : string.Empty);
+					string response2 = text2;
+					throw new ApiException("Server Error", status_, response2, headers_, null);
+				}
+				default:
+				{
+					string text2 = ((response_.Content != null) ? (await response_.Content.ReadAsStringAsync().ConfigureAwait(continueOnCapturedContext: false)) : null);
+					string response = text2;
+					throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, response, headers_, null);
+				}
+				}
+			}
+			finally
+			{
+				if (disposeResponse_)
+				{
+					response_.Dispose();
+				}
+			}
+		}
+		finally
+		{
+			if (disposeClient_)
+			{
+				client_.Dispose();
+			}
+		}
+	}
+
+	protected virtual async Task<ObjectResponseResult<T>> ReadObjectResponseAsync<T>(HttpResponseMessage response, IReadOnlyDictionary<string, IEnumerable<string>> headers, CancellationToken cancellationToken)
+	{
+		if (response == null || response.Content == null)
+		{
+			return new ObjectResponseResult<T>(default(T), string.Empty);
+		}
+		try
+		{
+			using Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(continueOnCapturedContext: false);
+			Stream stream2 = stream;
+			if (ContentIsGzipEncoded(headers))
+			{
+				stream2 = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
+			}
+			using StreamReader reader = new StreamReader(stream2);
+			using JsonTextReader reader2 = new JsonTextReader(reader);
+			T responseObject = JsonSerializer.Create(JsonSerializerSettings).Deserialize<T>(reader2);
+			return new ObjectResponseResult<T>(responseObject, string.Empty);
+		}
+		catch (JsonException innerException)
+		{
+			throw new ApiException("Could not deserialize the response body stream as " + typeof(T).FullName + ".", (int)response.StatusCode, string.Empty, headers, innerException);
+		}
+	}
+
+	private string ConvertToString(object value, CultureInfo cultureInfo)
+	{
+		if (value == null)
+		{
+			return "";
+		}
+		if (value is Enum)
+		{
+			string name = Enum.GetName(value.GetType(), value);
+			if (name != null)
+			{
+				FieldInfo declaredField = value.GetType().GetTypeInfo().GetDeclaredField(name);
+				if (declaredField != null && declaredField.GetCustomAttribute(typeof(EnumMemberAttribute)) is EnumMemberAttribute enumMemberAttribute)
+				{
+					if (enumMemberAttribute.Value == null)
+					{
+						return name;
+					}
+					return enumMemberAttribute.Value;
+				}
+				string text = Convert.ToString(Convert.ChangeType(value, Enum.GetUnderlyingType(value.GetType()), cultureInfo));
+				if (text != null)
+				{
+					return text;
+				}
+				return string.Empty;
+			}
+		}
+		else
+		{
+			if (value is bool)
+			{
+				return Convert.ToString((bool)value, cultureInfo).ToLowerInvariant();
+			}
+			if (value is byte[])
+			{
+				return Convert.ToBase64String((byte[])value);
+			}
+			if (value is string[])
+			{
+				return string.Join(",", (string[])value);
+			}
+			if (value.GetType().IsArray)
+			{
+				Array array = (Array)value;
+				string[] array2 = new string[array.Length];
+				for (int i = 0; i < array.Length; i++)
+				{
+					array2[i] = ConvertToString(array.GetValue(i), cultureInfo);
+				}
+				return string.Join(",", array2);
+			}
+		}
+		string text2 = Convert.ToString(value, cultureInfo);
+		if (text2 != null)
+		{
+			return text2;
+		}
+		return "";
+	}
+
+	private byte[] Compress(string uncompressedString)
+	{
+		using MemoryStream memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(uncompressedString));
+		using MemoryStream memoryStream2 = new MemoryStream();
+		using (GZipStream destination = new GZipStream(memoryStream2, CompressionMode.Compress))
+		{
+			memoryStream.CopyTo(destination);
+		}
+		return memoryStream2.ToArray();
+	}
+
+	private bool ContentIsGzipEncoded(IReadOnlyDictionary<string, IEnumerable<string>> headers)
+	{
+		bool result = false;
+		if (headers.TryGetValue("Content-Encoding", out var value) || headers.TryGetValue("content-encoding", out value))
+		{
+			foreach (string item in value)
+			{
+				result = item == "gzip";
+			}
+		}
+		return result;
+	}
+}

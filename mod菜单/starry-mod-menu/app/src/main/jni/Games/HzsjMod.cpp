@@ -67,6 +67,7 @@ static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_infCard{false};
 static std::atomic<bool> g_infCoin{false};
 static std::atomic<bool> g_infCrystal{false};
+static std::atomic<bool> g_autoWin{false};     // feat7：进战斗写敌血 0 走自然死亡链
 static std::atomic<uint32_t> g_gd{0};
 static std::atomic<uint32_t> g_card{0};
 static std::atomic<uint32_t> g_tick{0};
@@ -88,6 +89,9 @@ static void* g_clsItemPtr = nullptr;  // 自学习验证的 Item 类    // Item
 static void* g_mtdGetGameState = nullptr;
 static bool g_fieldsReady = false;
 static bool g_singletonReady = false;
+// —— feat7 自动胜利门控（20260910 实测通过版）：加载期不写、仅战斗内写 ——
+static size_t g_offBattleState = 0;  // GameStateInfo.battleState (BattleStateInfo)
+static size_t g_offInBattle = 0;     // BattleStateInfo.isInBattle (bool)
 
 // —— 1.1.0 直写链字段偏移（全部运行时按名解析，ilspy 源码核对 2026-09-03）——
 static size_t g_offCoin = OFF_PGSI_COIN;
@@ -146,7 +150,7 @@ static bool SoftPtr(void* p) {
 }
 
 static bool AnyGameplayOn() {
-    return g_seckill.load() || g_inv.load() || g_infCard.load() || g_infCoin.load() || g_infCrystal.load();
+    return g_seckill.load() || g_inv.load() || g_infCard.load() || g_infCoin.load() || g_infCrystal.load() || g_autoWin.load();
 }
 
 static bool CurrencyOn() { return g_infCoin.load() || g_infCrystal.load(); }
@@ -197,6 +201,14 @@ static void EnsureFields() {
         if (g_clsGs) {
             size_t ps = api.FieldOffset(g_clsGs, "playerState", 0);
             if (ps) g_offGsPlayer = ps;
+        }
+        // —— feat7 自动胜利门控：isInBattle（加载期不写，v28 日志实证 battleState@40 isInBattle@76）——
+        if (g_clsGs && !g_offBattleState) {
+            g_offBattleState = api.FieldOffset(g_clsGs, "battleState", 0);
+            void* bsCls = FindClassExact("BattleStateInfo");
+            if (bsCls) g_offInBattle = api.FieldOffset(bsCls, "isInBattle", 0);
+            if (g_offBattleState && g_offInBattle)
+                LOGI("[Hzsj] auto-win gate battleState@%zu isInBattle@%zu", g_offBattleState, g_offInBattle);
         }
         if (g_clsScene && g_clsGs && g_clsPgsi && (g_offSceneGs || g_mtdGetGameState) && g_offGsPlayer) {
             g_singletonReady = true;
@@ -485,6 +497,36 @@ static void ApplyBattleTick(uint32_t t) {
         }
     }
 
+    // —— 自动胜利（feat7 实测通过版）：敌血 0 走自然死亡链；isInBattle 门控防加载期误写 ——
+    if (g_autoWin.load() && g_offBattleState && g_offInBattle && g_offGsUiMgr && g_offUiPanel &&
+        g_offPanelEnemy && g_offDispBft && g_offBftHealth && g_offBftMaxHp) {
+        void* bs = ReadPtr(gs, g_offBattleState);
+        uint8_t inBattle = (bs && SoftPtr(bs)) ? ReadU8(bs, g_offInBattle) : 0;
+        if (inBattle) {
+            void* uiMgr = ReadPtr(gs, g_offGsUiMgr);
+            if (uiMgr && SoftPtr(uiMgr)) {
+                void* panel = ReadPtr(uiMgr, g_offUiPanel);
+                if (panel && SoftPtr(panel)) {
+                    void* disp = ReadPtr(panel, g_offPanelEnemy);
+                    if (disp && SoftPtr(disp)) {
+                        void* eBft = ReadPtr(disp, g_offDispBft);
+                        if (IsKlass(eBft, g_clsBft)) {
+                            uint8_t isP = ReadU8(eBft, g_offBftIsP);
+                            if (!isP) {
+                                WriteProtectedInt(eBft, g_offBftHealth, 0);
+                                WriteProtectedInt(eBft, g_offBftMaxHp, 0);
+                                if (g_offBftExtra) WriteProtectedInt(eBft, g_offBftExtra, 0);
+                                static uint32_t awLog = 0;
+                                uint32_t n = ++awLog;
+                                if (n <= 4 || (n % 200) == 0) LOGI("[Hzsj] AUTO_WIN#%u eBft=%p hp=0（自然死亡链）", n, eBft);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // —— 无限卡牌：己方容器 items 的 cooldown/deltaCost（v19 自学习 Item 类）——
     if (g_infCard.load() && g_offPgsiBft && g_offBftTable && g_offContItems) {
         void* ps = ReadPtr(gs, g_offGsPlayer);
@@ -624,6 +666,7 @@ void Hzsj_OnFeatureChanged(int featNum, bool enabled) {
         case HZSJ_FEAT_INF_CARD: g_infCard.store(enabled); break;
         case HZSJ_FEAT_INF_COIN: g_infCoin.store(enabled); break;
         case HZSJ_FEAT_INF_CRYSTAL: g_infCrystal.store(enabled); break;
+        case HZSJ_FEAT_AUTO_WIN: g_autoWin.store(enabled); break;
         default: break;
     }
     LOGI("[Hzsj] feat %d -> %d", featNum, enabled ? 1 : 0);
@@ -654,6 +697,7 @@ void Hzsj_ForceClear() {
     g_infCard.store(false);
     g_infCoin.store(false);
     g_infCrystal.store(false);
+    g_autoWin.store(false);
     InvalidatePgsi("force clear");
 }
 

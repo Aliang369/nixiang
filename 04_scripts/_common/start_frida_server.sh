@@ -14,8 +14,8 @@ fi
 
 adb shell "su -c 'killall frida-server fs-arm64 ipcmodule-server 2>/dev/null || true'"
 adb push "$BIN" "$REMOTE_PATH"
-adb shell "su -c 'chmod 755 $REMOTE_PATH; nohup $REMOTE_PATH -D >/data/local/tmp/${REMOTE_NAME}.log 2>&1 &'"
+adb shell "su -c 'chmod 755 $REMOTE_PATH; nohup $REMOTE_PATH -D -l 127.0.0.1:27042 >/dev/null 2>&1 &'"
 sleep 1
 adb shell "su -c 'ps -A | grep -E \"$REMOTE_NAME|frida\" | grep -v grep || true'"
-echo "phantom-frida server pushed as $REMOTE_PATH (port randomized per build, see build-info.json in release)"
+echo "phantom-frida server pushed as $REMOTE_PATH, listening 127.0.0.1:27042 (must be 27042: client -U only probes DEFAULT_CONTROL_PORT=27042; random port silently degrades to jailed adb-shell fallback, see 01_tools/phantom-frida/README.md)"
 echo "client frida 17.16.4 matches: python -c 'import frida;print(frida.__version__)'"

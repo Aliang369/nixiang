@@ -10,6 +10,7 @@ enum HzsjFeat : int {
     HZSJ_FEAT_INF_CARD    = 3,  // Toggle_无限卡牌
     HZSJ_FEAT_INF_COIN    = 4,  // Toggle_无限金币
     HZSJ_FEAT_INF_CRYSTAL = 5,  // Toggle_无限魂晶
+    HZSJ_FEAT_AUTO_WIN    = 7,  // Toggle_自动胜利（进战斗写敌血 0 走自然死亡链，实测通过）
 };
 
 bool Hzsj_TryInit();
