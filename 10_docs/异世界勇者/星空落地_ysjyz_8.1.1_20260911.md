@@ -26,7 +26,9 @@
 
 > 版本沿革：v1（14 项）→ v2（19 项）→ v3（20 项）→ v4（6 项，大幅精简）→ **v5（6 项 + 单分类，当前交付版）**。
 > v4→v5 的唯一变化：三个分类（基础功能／战斗增强／速度增强）**合并为一个** `Category_基础功能`，功能代码一字未改。
-> 每次均为**同签名覆盖安装**，无需卸载、不丢数据。全部 `Toggle_*` 默认关、`SeekBar_*` 最小值 = 关
+> 每次均为**同签名覆盖安装**，无需卸载、不丢数据。全部 `Toggle_*` 默认关；
+> ⚠️ **`SeekBar_*` 的默认值 = 声明的第三个数字，不是最小值**（实测见 §7.3）：
+> 本包 `dmg` 默认 **50**、`gspd` 默认 **2` → 装完未动菜单就已生效 50 倍伤害 + 2 倍速。
 > → 菜单不动时行为与官包一致。
 
 ### 1.1 v4 相对 v3 的删减（用户 2026-09-11 指示）
@@ -102,7 +104,11 @@ window.__require = function e(t, i, c) { /* 模块表 */ }({ ...模块... }, {},
 ### 3.1 取值约定
 
 - **`SeekBar_*` 没有独立开关**：滑块最小值即「关」（`clamp1()` 把 <1 的值夹到 1）。
-- **`Toggle_*` 默认全关**，`dmg=1 / gspd=1` → 菜单不动时游戏行为与官包一致。
+- **`Toggle_*` 默认全关**；但 **`SeekBar_*` 默认值 = 声明里第三个数字**（`dmg=50 / gspd=2`），
+  **不是** 1 → **装完即已生效 50 倍伤害 + 2 倍速**。要实现「菜单不动 = 与官包一致」，
+  必须把默认写成 `SeekBar_伤害倍率秒杀_1_1000_1` 与 `SeekBar_游戏倍速_1_5_1`。
+  > `Games/YsjYzEntry.cpp` 的头部注释与本文档早期版本都误记为「默认 1（=关）」，
+  > 已按实测更正；**源码注释的更正留到下次构建**（避免现在重建改动正式包 md5）。
 - **免广告同时覆盖"快速挂机免费"**：y41348 是 `ShowAD(function(){ Send("fortress/quick") })`，
   免广告直接回调即免费快速挂机，故不再单列。
 - 「无限技能」是**零CD + 不耗蓝的合并项**（原两项合一），三个挂点同属 `grp===1` 过滤。
@@ -241,6 +247,37 @@ Java 菜单（Preferences 持久化）
 | 回归 | 关掉全部开关后与官包行为一致；杀进程重启后菜单状态与 prefs 一致 |
 
 ---
+
+## 7.3 小米 M2102K1AC（Android 14）装机实测日志（2026-09-11 18:15）
+
+用户自行启动游戏（**管线不启动游戏**：`install` 只做 `am force-stop` + `pm install`，
+`verify_installed_apk.sh` 无任何启动命令）。logcat 证据：
+
+```
+I StarryMagic: [验证] grant ok exp=1789208125          ← 授权通过，到期 2026-09-12 18:15:25
+I MenuService: overlayVisible=true attached=true
+I MenuService: host layout changed → show ACTIVITY overlay host=AppActivity alive=true
+                                                       ← 未授悬浮窗也能挂上（ACTIVITY 模式）
+I Mod_Menu: [YsjYz] feature #1=OFF  ... #4=OFF
+I StarryMagic: [开关] #1 Toggle_免广告 = OFF  ... #4 Toggle_吸血拉满 = OFF
+I Mod_Menu: [YsjYz] value #5=50      ← 伤害倍率默认 50（非 1）
+I StarryMagic: [数值] #5 SeekBar_伤害倍率秒杀_1_1000_50 = 50
+I Mod_Menu: [YsjYz] value #6=2       ← 游戏倍速默认 2（非 1）
+I StarryMagic: [数值] #6 SeekBar_游戏倍速_1_5_2 = 2
+I Mod_Menu: [YsjYz] bundle splice #2 len 3152175->3160148 file=assets/main/index.jsc
+                                                       ← evalString 尾部 splice 生效（+7,973 B）
+D jswrapper: JS: [ysjyz] patch applied n=5             ← 5 处 JS 覆写加载成功
+```
+
+- **无 FATAL / 无 tombstone / 无 ANR**（logcat 里的 tombstone 属 `android.vending`，无关）。
+- 喜扑 SDK 正常初始化（`api.kuaigames.com/v1/api/muda`，channel `01aysjyztaptap1335`）。
+- `MenuService` 走 **ACTIVITY 模式**挂载 → **不需要悬浮窗权限**即可显示菜单。
+- ⚠️ 两条**良性但需知情**的告警：
+  1. `DeviceFingerprint: shared id write fail @/storage/emulated/0/Download/.starry_magic/device_id: EACCES`
+     —— targetSdk 30 + Android 14 分区存储，写不了 `Download/`。授权仍通过（`grant ok`），
+     只是 device_id 无法持久化；若日后出现授权失败，这是第一嫌疑点。
+  2. 授权 **24 小时有效**（`exp=1789208125` = 2026-09-12 18:15:25）。录制请在此前完成，
+     过期后重新启动游戏会重新签发。
 
 ## 8. 复现链
 
