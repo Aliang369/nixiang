@@ -212,10 +212,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 17:08:57",
+      "done_at": "2026-09-11 18:13:13",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": {
-          "md5": "4aafc7d93204ebd8766fcf0ee4241806"
+          "md5": "0acd6b9497c000af911c31f37fb43df8"
         }
       },
       "inputs": {
@@ -236,14 +236,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 17:09:30",
+      "done_at": "2026-09-11 18:13:41",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": {
-          "md5": "680a3d2c0e67175149c2ecdc8a8df1a9"
+          "md5": "94bdd89714236311496c09bd352f0bf6"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": "4aafc7d93204ebd8766fcf0ee4241806"
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": "0acd6b9497c000af911c31f37fb43df8"
       }
     },
     {
@@ -276,14 +276,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 17:10:01",
+      "done_at": "2026-09-11 18:14:08",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": {
-          "md5": "680a3d2c0e67175149c2ecdc8a8df1a9"
+          "md5": "94bdd89714236311496c09bd352f0bf6"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "680a3d2c0e67175149c2ecdc8a8df1a9"
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "94bdd89714236311496c09bd352f0bf6"
       }
     },
     {
@@ -300,14 +300,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 18:03:35",
+      "done_at": "2026-09-11 18:14:59",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/10_docs/异世界勇者/星空落地_ysjyz_8.1.1_20260911.md": {
           "md5": "f5aa79771e50e7420cba8d54da3c73b3"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "680a3d2c0e67175149c2ecdc8a8df1a9"
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "94bdd89714236311496c09bd352f0bf6"
       }
     }
   ]

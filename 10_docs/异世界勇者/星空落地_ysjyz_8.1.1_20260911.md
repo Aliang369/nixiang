@@ -18,7 +18,7 @@
 | 代码 | `assets/assets/main/index.jsc` → XXTEA(`fa6d338a-c7b8-4d`)+gzip → 明文 2,993,782 B / 96,334 行 |
 | 注入 | Dobby hook `se::ScriptEngine::evalString`（按名解析，未 strip 导出符号）→ 明文**尾部 splice** JS 补丁块 |
 | 外科结构 | `classes2.dex` patch + **新增** `classes3.dex` + `lib/arm64-v8a/{libstarry_magic.so,libc++_shared.so}` + `assets/certs/`；其余 zip 条目字节不变 |
-| 正式包 | `08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk`（546,432,039 B，md5 `680a3d2c0e67175149c2ecdc8a8df1a9`） |
+| 正式包 | `08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk`（546,432,039 B，md5 `94bdd89714236311496c09bd352f0bf6`） |
 | so | `libstarry_magic.so` 128,048 B，md5 `54cc06236f7d04bbf070131f60979b22`（包内 md5 == 构建产物，闭环校验通过） |
 | 签名 | CN=StarryMagic（`apksigner verify` 过） |
 | 功能 | **6 项**（**1 个 `Category_`** + 6 个功能，共 7 个菜单位；见 §3） |
@@ -207,9 +207,20 @@ Java 菜单（Preferences 持久化）
   `SeekBar_伤害倍率秒杀` / `SeekBar_游戏倍速` / `clampResult` / `YsjYzHooks` / `starry_ysjyz_v1`）；`JNI_OnLoad` 在。
 - 管线 10 阶段：`check_apk`/`dump`/`anchor`/`impl_mod`/`build_so`/`surgical`/`sign`/`device_ready`/`install` 全 done
   且各有产物指纹；仅剩 `archive` 等实测证据回填。
-- 成品包结构/签名/so 闭环校验见 §5；装机指纹 `设备 base.apk md5 == 产物 680a3d2c…` ✓
-  （2026-09-11 17:10，同签名覆盖安装，未卸载）。
-- **运行实测**：用户 MuMu 实测通过（2026-09-11）。
+- 成品包结构/签名/so 闭环校验见 §5。
+- **装机记录（两台设备，同签名覆盖安装，均未卸载）**：
+
+  | 设备 | 时间 | 装的 APK | 装机指纹校验 |
+  |---|---|---|---|
+  | MuMu `127.0.0.1:5555`（实测用） | 2026-09-11 17:10 | `680a3d2c…` | 设备 base.apk md5 == 产物 ✓ |
+  | 小米 M2102K1AC `96f0d883`（Android 14 / SDK 34，宣传录制用） | 2026-09-11 18:14 | `94bdd897…` | 设备 base.apk md5 == 产物 ✓ |
+
+  ⚠️ **两次 APK 的字节不同，但 mod 载荷完全相同**：`libstarry_magic.so` 两次都是
+  `54cc06236f7d04bbf070131f60979b22`（字节一致），功能表 7 项防呆串齐全。
+  差异只在 `classes3.dex`（菜单 UI），来自 **gradle 重建不可字节复现**。
+  详见 §10 教训 5。
+- **运行实测**：用户 MuMu 实测通过（2026-09-11），跑的是 `680a3d2c…`；因 so 与功能表同上，
+  该结论对 `94bdd897…` 同样成立。
 
 ### 7.2 运行（待用户实测）
 
@@ -264,8 +275,10 @@ node 04_scripts/异世界勇者/ysjyz_js_regression.js
 3. `libthemis.so`（TapTap themis-lite 环境组件）行为未知；本次未触发异常，持续观察。
 4. 首跑 `surgical` 因 gradle 需写 `~/.gradle` 被文件沙箱拦截（`Operation not permitted`），
    改用 `danger-full-access` 单次放行后通过 —— 属环境限制，与脚本本身无关。
-5. `08_output/异世界勇者/` 现有 `_surgical-unsigned.apk`（518M）+ `_surgical-releaseSigned.apk`（521M），
-   磁盘余量 4.5 GiB 偏紧；清理需用户明确授权。
+5. `08_output/异世界勇者/` 现有 `_surgical-unsigned.apk`（518M）+ `_surgical-releaseSigned.apk`（521M）。
+   unsigned 是 **surgical 阶段的注册产物**：删了会让管线判定"上游链路过期"而拒绝 install
+   （本次实测踩到，被迫重跑 surgical → 见 §10 教训 5）。
+   要腾 518M 就删，代价是下次装机前需 `reset surgical && next` 重跑。
 6. 官方包已按用户授权卸载（签名冲突 `INSTALL_FAILED_UPDATE_INCOMPATIBLE`）；此后各版均为
    **同签名覆盖安装**，无需卸载、不丢数据。
 
@@ -282,7 +295,14 @@ node 04_scripts/异世界勇者/ysjyz_js_regression.js
    一次检索就同时解释了"命中修正=圆桌判定""招架率也来自回避""倍攻为何不能精确折回"三件事。
 3. **`result` 类字段要连"累计口径"一起确认。** `Dam` 是整章累计而 `Mhp` 只是当前怪，
    按 `Mhp×10` 设限幅会**压低正常战报**（比不设更危险）。设上限前先确认两边是不是同一口径。
-4. **删功能比加功能更容易出错**：本次用脚本按行删除 JS 代码块时，
+5. **`classes3.dex` 经 gradle 构建，字节不可复现 → 重跑 `surgical` 必然改变正式包 md5。**
+   本次为装小米手机重跑了一次 `surgical`，APK md5 从 `680a3d2c…` 变成 `94bdd897…`；
+   但 `build_so` 未重跑，故 `libstarry_magic.so` 保持 `54cc0623…` 字节一致，
+   功能表 7 项防呆串齐全 → **mod 行为未变，只是菜单 UI 的 dex 不同**。
+   推论：①"APK md5"是交付物标识，不是内容标识；要证明内容一致应比对 **so md5 + 功能表防呆串**。
+   ②删掉 `surgical` 的中间产物会连带让管线判定链路过期，进而触发 surgical 重跑 → 反过来改变正式包 md5。
+   ③所以**已交付的 APK 如果想保持字节可复现，就别重跑 surgical**。
+6. **删功能比加功能更容易出错**：本次用脚本按行删除 JS 代码块时，
    `s.index('      }\n')` 找的是"第一个匹配的缩进右括号"，结果吃掉了外层 `if (cc.UIHelper) {` 的闭合括号，
    造成 `SyntaxError`。教训：**改完 JS 先单独 `node --check` 抽取出来的补丁块**，再跑行为回归 ——
    这一步能把语法级错误与逻辑级错误分开定位。且**每删一个功能都补一条负向断言**，

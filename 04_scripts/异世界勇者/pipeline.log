@@ -1069,3 +1069,141 @@ Success
 目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
 [2026-09-11 18:03:39] [异世界勇者] stage=archive 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 18:12:47] [异世界勇者] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so
+[1/5] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysjyz_surgical.o4ZBj6/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysjyz_surgical.o4ZBj6/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysjyz_surgical.o4ZBj6/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 8s
+50 actionable tasks: 50 executed
+[2/5] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  388044  9月 11 18:13 /tmp/ysjyz_surgical.o4ZBj6/classes3.dex
+[3/5] patch classes2: LocalApplication.onCreate + AppActivity 生命周期 + get_ret/get_val
+  LocalApplication ← SignSpoof + loadLibrary
+  onCreate → MenuService.start
+  onResume → notifyHostResumed
+  onPause → notifyHostLeaving
+  +onUserLeaveHint
+  +get_ret/get_val/set_ret/set_val → YsjYzHooks
+  classes2 patches done
+-rw-r--r--@ 1 aliang  wheel  7052820  9月 11 18:13 /tmp/ysjyz_surgical.o4ZBj6/classes2.dex
+[4/5] binary AndroidManifest（保留 LocalApplication，加菜单权限/服务）
+  using cached /Users/aliang/Documents/nixiang/07_patched/异世界勇者/surgical/AndroidManifest.xml
+-rw-r--r--  1 aliang  wheel  62324  9月 11 18:13 /tmp/ysjyz_surgical.o4ZBj6/AndroidManifest.xml
+[5/5] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk
+  merged ok; entries≈24625; c2=7052820 c3=388044; untouched 4/4 verified
+[so-verify] 包内 so md5 == 构建产物 (54cc06236f7d04bbf070131f60979b22) ✓
+-rw-r--r--@ 1 aliang  staff   518M  9月 11 18:13 /Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk
+NOTE: 未签名；由 ysjyz_sign.sh（pipeline sign 阶段）签名。
+[2026-09-11 18:13:18] [异世界勇者] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 18:13:19] [异世界勇者] stage=sign 开始
+命令: bash "$NIXIANG/04_scripts/异世界勇者/ysjyz_sign.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done → /Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk
+[sign] md5 = 94bdd89714236311496c09bd352f0bf6
+-rw-r--r--@ 1 aliang  staff   521M  9月 11 18:13 /Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk
+[2026-09-11 18:13:46] [异世界勇者] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 18:13:48] [异世界勇者] stage=install 开始
+命令: adb -s $SERIAL push "$NIXIANG/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk" /data/local/tmp/ysjyz_surgical.apk && adb -s $SERIAL shell am force-stop com.mudamuda.idlewow; { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/ysjyz_surgical.apk" || { echo "覆盖安装失败（同签名不应发生）→ 按用户授权卸载后重装"; adb -s $SERIAL uninstall com.mudamuda.idlewow && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/ysjyz_surgical.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/ysjyz_surgical.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.mudamuda.idlewow "$NIXIANG/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 37.9 MB/s (546432039 bytes in 13.744s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (94bdd89714236311496c09bd352f0bf6) ✓
+[2026-09-11 18:14:13] [异世界勇者] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 18:14:59] [异世界勇者] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-11 18:15:04] [异世界勇者] stage=archive 完成（校验通过）
+────────────────────────────────────────────
