@@ -1,0 +1,314 @@
+{
+  "game": "异世界勇者",
+  "version": "8.1.1",
+  "notes": "2026-09-11 新游戏接手（modern 注册表路线 game_id=ysjyz）：Cocos Creator 2.4.2（libcocos2djs.so + .jsc），se::ScriptEngine::evalString splice 注入。**v5 = 6 项功能 / 7 个菜单位（单一 Category_基础功能，用户要求不做多分类）**：免广告、无限技能（零CD+不耗蓝合并）、无敌、吸血拉满、伤害倍率秒杀、游戏倍速。战斗类全部落在 JS AddHp 结算层（this=受击方 / 末参 o=攻击方，判据 y30529）；本包无任何改面板功能 → result 的 Hp/Atk/Def/Free/Php/Patk/Pdef 天然与官包一致，CheckResult 与 Php/Pdef 伪装层整体删除；唯一照看 Dam：StatDam 按放大系数 1:1 折回（同步链，精确）+ Mhp×100 宽松兜底限幅（Dam 是整章累计、Mhp 只是当前怪）。离线行为回归=04_scripts/异世界勇者/ysjyz_js_regression.js（66 断言全过，含已删功能的负向断言）。设备=MuMu 127.0.0.1:5555；功能项已由用户实测确认通过；仅剩 archive 收官。",
+  "params": {
+    "game_id": "ysjyz",
+    "package": "com.mudamuda.idlewow",
+    "mk": "Android_ysjyz.mk",
+    "tag": "ysjyz",
+    "obj_dir": "obj_ysjyz",
+    "libs_dir": "libs_ysjyz",
+    "serial": "127.0.0.1:5555"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "127.0.0.1:5555"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（从 MuMu 拉回的官方 8.1.1，md5 与设备内 base.apk 一致）",
+      "requires": [],
+      "command": "md5 -q \"$NIXIANG/02_apks/异世界勇者/异世界勇者_8.1.1_official.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/异世界勇者/异世界勇者_8.1.1_official.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 15:33:14",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/异世界勇者/异世界勇者_8.1.1_official.apk": {
+          "md5": "710d1cfe9a86f837d5c697b376e73767"
+        }
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包 dump（jsc 已解密 + Manifest/dex 结构落 03_decompiled）",
+      "requires": [
+        "check_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/ysjyz_dump.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/异世界勇者/ysjyz_dump.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/异世界勇者/jsc_decrypted/main.index.js"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/03_decompiled/异世界勇者/dump_summary_8.1.1.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 15:34:30",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/异世界勇者/jsc_decrypted/main.index.js": {
+          "md5": "4de67139df92060f498867fbb85af6de"
+        },
+        "/Users/aliang/Documents/nixiang/03_decompiled/异世界勇者/dump_summary_8.1.1.md": {
+          "md5": "ea7028542dfc38eefb511af2d111d496"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/异世界勇者/异世界勇者_8.1.1_official.apk": "710d1cfe9a86f837d5c697b376e73767"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "锚点抓取（分析性阶段，产出落 10_docs）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/异世界勇者/分析_可逆向功能清单_20260911.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 16:01:20",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/异世界勇者/分析_可逆向功能清单_20260911.md": {
+          "md5": "253c4e755a680840579b8e8e32430654"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/异世界勇者/jsc_decrypted/main.index.js": "4de67139df92060f498867fbb85af6de"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（YsjYz 四件套 + YsjYzHooks.java + 外科脚本）",
+      "requires": [
+        "anchor"
+      ],
+      "preflight": [
+        "Games/YsjYzMod.cpp",
+        "Games/YsjYzEntry.cpp",
+        "Android_ysjyz.mk",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/YsjYzHooks.java",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "Games/YsjYzMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "Games/YsjYzEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "Android_ysjyz.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/YsjYzHooks.java"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 16:01:37",
+      "artifacts": {
+        "Games/YsjYzMod.cpp": {
+          "md5": "3dba0924e3248deaf79fa927cd56dcfc"
+        },
+        "Games/YsjYzEntry.cpp": {
+          "md5": "eea0413ba92479e94e6b5cf0f734d9e7"
+        },
+        "Android_ysjyz.mk": {
+          "md5": "151e2af70dcae9441764029fad346047"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/YsjYzHooks.java": {
+          "md5": "cb134255e7b0cb7678a4dccc34a79efa"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh": {
+          "md5": "d22400c12562f71e8c21d96363e644cb"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（modern Android_ysjyz.mk，独立 obj_ysjyz）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "Games/YsjYzMod.cpp",
+        "Games/YsjYzEntry.cpp",
+        "Android_ysjyz.mk",
+        "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/ysjyz_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/异世界勇者/ysjyz_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so",
+          "pattern": "ysjyz"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so",
+          "pattern": "JNI_OnLoad"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 17:08:21",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so": {
+          "md5": "54cc06236f7d04bbf070131f60979b22"
+        }
+      },
+      "inputs": {
+        "Games/YsjYzMod.cpp": "9a4c4c42aa483fb37b260b149dbfd613",
+        "Games/YsjYzEntry.cpp": "876af4a74303d83e9721ce282c6dd172",
+        "Android_ysjyz.mk": "151e2af70dcae9441764029fad346047",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/YsjYzHooks.java": "cb134255e7b0cb7678a4dccc34a79efa",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh": "d22400c12562f71e8c21d96363e644cb"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科注入（classes2.dex patch + classes3.dex 新增，官包字节尽量不变）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh"
+      ],
+      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 17:08:57",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": {
+          "md5": "4aafc7d93204ebd8766fcf0ee4241806"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so": "54cc06236f7d04bbf070131f60979b22"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（uber-apk-signer / apksigner）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/异世界勇者/ysjyz_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 17:09:30",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": {
+          "md5": "680a3d2c0e67175149c2ecdc8a8df1a9"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": "4aafc7d93204ebd8766fcf0ee4241806"
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（MuMu 127.0.0.1:5555）",
+      "requires": [],
+      "command": "adb connect $SERIAL; adb -s $SERIAL get-state",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 16:10:57",
+      "artifacts": {}
+    },
+    {
+      "id": "install",
+      "name": "装机（用户已明确授权卸载官方包；push + 卸载 + pm install + 装机指纹校验；目标=env.SERIAL）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "adb -s $SERIAL push \"$NIXIANG/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk\" /data/local/tmp/ysjyz_surgical.apk && adb -s $SERIAL shell am force-stop com.mudamuda.idlewow; { adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/ysjyz_surgical.apk\" || { echo \"覆盖安装失败（同签名不应发生）→ 按用户授权卸载后重装\"; adb -s $SERIAL uninstall com.mudamuda.idlewow && adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/ysjyz_surgical.apk\"; }; } || { echo \"安装失败：需人工介入\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/ysjyz_surgical.apk; bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.mudamuda.idlewow \"$NIXIANG/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 17:10:01",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": {
+          "md5": "680a3d2c0e67175149c2ecdc8a8df1a9"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "680a3d2c0e67175149c2ecdc8a8df1a9"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（文档 + current.md 索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/异世界勇者/星空落地_ysjyz_8.1.1_20260911.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 18:03:35",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/异世界勇者/星空落地_ysjyz_8.1.1_20260911.md": {
+          "md5": "f5aa79771e50e7420cba8d54da3c73b3"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "680a3d2c0e67175149c2ecdc8a8df1a9"
+      }
+    }
+  ]
+}
