@@ -1,7 +1,0 @@
-﻿idip活动ID;商店节日图片底配置;商店节日图片文字配置;TextIcon相对坐标Y;备注;End
-ID;ShopFestivalIcon;TextIcon;TextIconPosY;tips;End
-1;guanggaodi_zhongqiu;shopFestival_zhongqiu;0;中秋打折;1
-2;guanggaodi_xinchun;shopFestival_xinchun;-10;春节打折;1
-3;guanggaodi_xiaji;shopFestival_xiaji;-15;夏季打折;1
-4;guanggaodi_dongji;shopFestival_dongji;-15;冬季打折;1
-5;guanggaodi_anniversary7;shopFestival_anniversary7;-18;周年庆典;1

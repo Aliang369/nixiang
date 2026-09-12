@@ -1,4 +1,0 @@
-﻿id;名称;效果备注（仅供参考）;所属职业;费用消耗;每回合使用次数;冷却时间;选取目标;必须选取;buff列表;技能图标;解锁条件;end
-id;name;effectTips;jobType;needEnergy;useTime;turnCD;target;force;buffList;icon;unlockDesc;end
-9001;许愿;3选1许愿卡;1;1;1;1;;;90011;chensi;;1
-9002;许愿;3选1许愿卡;2;1;1;1;;;90011;chensi;;1

@@ -1,8 +1,0 @@
-﻿id;场景阶段;对应mapData场景类型;背景1（弃用 播timeline最后一帧）;背景2;备注;end
-ID;BgNum;MapData;bg1;bg2;tips;End
-1;1;1;Image/SlaveBg/SlaveBg1;Image/SlaveBg/SlaveBg1;矿区;1
-2;2;2;Image/SlaveBg/SlaveBg6;Image/SlaveBg/SlaveBg6;微光洞穴;1
-3;2;3;Image/SlaveBg/SlaveBg4;Image/SlaveBg/SlaveBg5;海盗区;1
-4;3;4;Image/SlaveBg/SlaveBg3;Image/SlaveBg/SlaveBg2;焦土龙室;1
-5;3;5;Image/SlaveBg/SlaveBg3;Image/SlaveBg/SlaveBg3;幽灵区;1
-6;4;6;Image/SlaveBg/SlaveBg3;Image/SlaveBg/SlaveBg3;最终区域;1

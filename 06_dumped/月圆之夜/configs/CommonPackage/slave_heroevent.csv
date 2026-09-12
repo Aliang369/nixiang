@@ -1,5 +1,0 @@
-﻿id;名称;图标;文本内容;参数;end
-id;name;eventImage;eventDesc;parameter;end
-1;强化;Attack0-2;英雄获得{0}攻击力;8;1
-2;魔术;moli;英雄获得{0}法术强度;2;1
-3;祝福;falihudun;英雄获得{0}最大生命值;15;1

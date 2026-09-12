@@ -1,4 +1,0 @@
-﻿id;名称;超值描述;描述;内容1;内容2;内容3;PurchaseShop表ID;赠送物品;价格;存在时间;次数上限;end
-ID;Name;Desc;DescA;DescB;DescC;DescD;PurchaseShop_ID;Givings;Price;PresenceTime;MaxTime;End
-1;礼包;超值300%+;仅需|{0}|即可获得礼包;解锁药剂师职业;获得60糖果;;1010;1002;6;480;2;1
-2;礼包;超值300%+;仅需|{0}|即可获得礼包;获得经典职业任选卡;获得60糖果;;1011;1101;6;480;2;1

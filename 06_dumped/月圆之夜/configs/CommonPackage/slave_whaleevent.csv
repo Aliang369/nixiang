@@ -1,8 +1,0 @@
-﻿id;名称;图标;文本内容;参数;权重;解锁条件;end
-id;name;eventImage;eventDesc;parameter;weight;condition;end
-1;强化;jueduifangyu;英雄+{0}最大生命值;15;100;1;1
-2;防御护符;fangyuhufu;所有友方单位+2生命;5022;100;1;1
-3;宝藏;gubaoqiezei;获得{0}金币;40;100;1;1
-4;祈祷;guanghuiqidao;变换1张行动牌;whaleCardDrop;100;2;1
-5;招募;guanjiu;获得1个随机单位;slaveCardFree;100;2;1
-6;祝福;gongtongxinyang;获得1个随机祝福;whaleBlessingDrop;100;3;1

@@ -1,5 +1,0 @@
-﻿id;区间;爆炸特效1;爆炸特效2;爆炸特效3;备注;end
-id;range;endEffect1;endEffect2;endEffect3;tips;end
-1;10,30;ef_hit_fire_01;ef_hit_fire_02;ef_hit_fire_03;火焰攻击;1
-2;10,30;ef_water_hit_01;ef_water_hit_02;ef_water_hit_03;水系攻击;1
-3;20,100;ef_hit_01a_S;ef_hit_01a_M;ef_hit_01a_L;普通攻击;1
