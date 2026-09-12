@@ -90,6 +90,10 @@ static void* g_clsSkillDriver = nullptr;
 static void* g_clsSkillContainer = nullptr;
 static void* g_clsBattleServer = nullptr;
 static void* g_miHpHandle = nullptr;
+static void* g_miGetMgrStuff = nullptr;
+static void* g_miFindTeam = nullptr;
+static void* g_getMgrStuff = nullptr;
+static void* g_findTeam = nullptr;
 static void* g_mgr = nullptr;
 
 static size_t offMgrUnits = 0;
@@ -105,6 +109,8 @@ static size_t offScSkills = 0;
 // 4399 8-24 路线：HybridCLR 解释器公共命中点，ABI 不是标准函数契约。
 // 不读 MethodInfo、不按方法名过滤；只从 a2 参数块扫描 DamageHandle/DamageInfo 形态。
 using Trampoline_t = void* (*)(void*, void*, void*, void*);
+using GetStuff_t = void* (*)(void*);
+using FindTeam_t = void* (*)(void*, int32_t, bool, void*);
 static Trampoline_t g_origTramp = nullptr;
 static thread_local int t_trampDepth = 0;
 
@@ -165,6 +171,29 @@ static inline void* ArrayAt(void* array, int32_t i) {
     return ReadPtr(array, 0x20 + (size_t)i * 8);
 }
 
+static void* MethodPointer(void* mi) {
+    return mi ? *reinterpret_cast<void**>(mi) : nullptr;
+}
+
+static bool IsEntityId(int64_t id);
+
+// FindBattleUnitByTeam already filters by team. Do not re-check the raw team
+// field here: stale recycled Unity objects can retain team=0.
+static void FillEidsFromList(void* list, int64_t* out, int32_t cap, int32_t* outN) {
+    *outN = 0;
+    if (!PtrOk(list) || cap <= 0) return;
+    const int32_t size = ListSize(list);
+    void* items = ListItems(list);
+    const int32_t arrLen = ArrayLength(items);
+    if (!PtrOk(items) || size < 0 || size > cap * 2 || arrLen < size) return;
+    for (int32_t i = 0; i < size && *outN < cap; i++) {
+        void* unit = ArrayAt(items, i);
+        if (!PtrOk(unit)) continue;
+        const int64_t eid = offEntEid ? ReadI64(unit, offEntEid) : 0;
+        if (IsEntityId(eid)) out[(*outN)++] = eid;
+    }
+}
+
 static bool NeedDamagePatch() {
     return g_kill.load() || g_aoe.load() || g_inv.load();
 }
@@ -223,10 +252,20 @@ static bool ValidateMgr(void* mgr) {
     return false;
 }
 
-static bool AcquireMgr() {
+static void* GetBattleMgr() {
+    // 4399 8-24 路线：优先走游戏自己的 get_Stuff 获取当前组件。
+    // 直接读静态 _Stuff 会在换章后拿到 Unity fake-null/旧管理器。
+    if (g_getMgrStuff && g_miGetMgrStuff) {
+        void* mgr = reinterpret_cast<GetStuff_t>(g_getMgrStuff)(g_miGetMgrStuff);
+        if (PtrOk(mgr)) return mgr;
+    }
     auto& api = Il2Cpp::GetApi();
-    if (!api.ready || !g_clsMgr) return false;
-    void* mgr = api.StaticRefField(g_clsMgr, "_Stuff");
+    if (!api.ready || !g_clsMgr) return nullptr;
+    return api.StaticRefField(g_clsMgr, "_Stuff");
+}
+
+static bool AcquireMgr() {
+    void* mgr = GetBattleMgr();
     if (!ValidateMgr(mgr)) return false;
     g_mgr = mgr;
     return true;
@@ -514,7 +553,64 @@ static void ApplyUnlimitedSkill(void* unit) {
     if (touched > 0) g_skillWrites.fetch_add((uint32_t)touched);
 }
 
+static bool RefreshBattleCacheViaFindTeam() {
+    if (!g_findTeam || !g_miFindTeam) return false;
+    void* mgr = GetBattleMgr();
+    if (!PtrOk(mgr)) return false;
+
+    void* players = reinterpret_cast<FindTeam_t>(g_findTeam)(
+        mgr, kTeamPlayer, false, g_miFindTeam);
+    void* enemies = reinterpret_cast<FindTeam_t>(g_findTeam)(
+        mgr, kTeamEnemy, false, g_miFindTeam);
+    int64_t playerEids[kMaxPlayerEid] = {};
+    int64_t enemyEids[kMaxEnemyEid] = {};
+    int32_t playerCount = 0;
+    int32_t enemyCount = 0;
+    FillEidsFromList(players, playerEids, kMaxPlayerEid, &playerCount);
+    FillEidsFromList(enemies, enemyEids, kMaxEnemyEid, &enemyCount);
+    if (playerCount == 0 && enemyCount == 0) return false;
+
+    g_mgr = mgr;
+    for (int32_t i = 0; i < kMaxPlayerEid; i++)
+        g_playerEids[i].store(i < playerCount ? playerEids[i] : 0);
+    for (int32_t i = 0; i < kMaxEnemyEid; i++)
+        g_enemyEids[i].store(i < enemyCount ? enemyEids[i] : 0);
+    g_playerN.store(playerCount);
+    g_enemyN.store(enemyCount);
+    if (enemyCount == 0) ClearAoeKilled();
+
+    int32_t size = 0;
+    if (g_nocd.load()) {
+        void* list = ReadPtr(mgr, offMgrUnits);
+        void* items = ListItems(list);
+        size = ListSize(list);
+        if (PtrOk(items) && size >= 0 && size <= kMaxUnits && ArrayLength(items) >= size) {
+            for (int32_t i = 0; i < size; i++) {
+                void* unit = ArrayAt(items, i);
+                if (PtrOk(unit)) ApplyUnlimitedSkill(unit);
+            }
+        }
+    }
+    g_seenUnits.store((uint32_t)size);
+    g_seenPlayers.store((uint32_t)playerCount);
+    g_seenEnemies.store((uint32_t)enemyCount);
+
+    static std::atomic<int32_t> s_lastPlayers{-1};
+    static std::atomic<int32_t> s_lastEnemies{-1};
+    if (playerCount != s_lastPlayers.load() || enemyCount != s_lastEnemies.load()) {
+        s_lastPlayers.store(playerCount);
+        s_lastEnemies.store(enemyCount);
+        LOGI(TLGD_TAG " 战场缓存：mgr=%p find=1 units=%d 我方=%d 敌方=%d p0=%lld e0=%lld",
+             mgr, size, playerCount, enemyCount,
+             (long long)(playerCount > 0 ? playerEids[0] : 0),
+             (long long)(enemyCount > 0 ? enemyEids[0] : 0));
+    }
+    return true;
+}
+
 static void RefreshBattleCache() {
+    if (RefreshBattleCacheViaFindTeam()) return;
+
     // 4399 路线：每轮都跟当前 BattleEntityManager._Stuff。
     // 跨局/跨章节后游戏会换管理器实例；旧实例仍可能通过 ValidateMgr，
     // 但其 battleUnits 已回收成 team=0，若缓存旧指针会导致三功能永久停摆。
@@ -628,10 +724,15 @@ static bool Resolve() {
     offScSkills        = api.FieldOffset(g_clsSkillContainer, "_skills");
 
     g_miHpHandle = api.GetMethod(g_clsBattleServer, "HpHandle", 1);
+    g_miGetMgrStuff = api.GetMethod(g_clsMgr, "get_Stuff", 0);
+    g_miFindTeam = api.GetMethod(g_clsMgr, "FindBattleUnitByTeam", 2);
+    g_getMgrStuff = MethodPointer(g_miGetMgrStuff);
+    g_findTeam = MethodPointer(g_miFindTeam);
 
     if (!offMgrUnits || !offEntTeam || !offEntEid ||
         !offUnitSkillDriver || !offSkillCd || !offSkillCanUseTimes ||
-        !offSdRunner || !offScCurSkill || !offScSkills || !g_miHpHandle) {
+        !offSdRunner || !offScCurSkill || !offScSkills || !g_miHpHandle ||
+        !g_miGetMgrStuff || !g_miFindTeam || !g_getMgrStuff || !g_findTeam) {
         LOGW(TLGD_TAG " 关键字段/方法缺失 units=0x%zx team=0x%zx eid=0x%zx "
                       "skills(unit=0x%zx driver=0x%zx cur=0x%zx dict=0x%zx cd=0x%zx use=%zu) mi=%p",
              offMgrUnits, offEntTeam, offEntEid,
