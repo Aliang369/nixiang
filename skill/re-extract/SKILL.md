@@ -12,22 +12,24 @@
 | 检测项 | 特征 |
 |--------|------|
 | APK 签名 | `CN=binge2.keystore` |
-| lib 目录 | `libSDKloading.so`（~3.7-3.9MB packed） |
+| lib 目录 | `libSDKloading.so`（大小变体 586KB~23.7M 均有，勿用大小排除） |
 | lib 目录 | `libtoolChecker.so`（RootBeer） |
-| Application | `KillerApplication193` / `SignatureSpoof` / `com.srp.patch.Init`（SRPatch 新变体）等 |
-| 嵌套原包 | `assets/base.apk`（与外层包 libil2cpp 字节一致，静态 dump 用它更干净） |
+| lib 目录 | 伪装 so：`libcodec2_server.so`（导出 `initUnitySdk`）/ `libunityluac.so`（瘦壳变体特征） |
+| Application | `KillerApplication193` / `SignatureSpoof` / `com.srp.patch.Init`（SRPatch 变体）/ `com.pengyou.cloneapp.SplashActivity`（双开容器）等 |
+| 嵌套原包 | `assets/base.apk`（全壳有，瘦壳无；与外层包 libil2cpp 字节一致，静态 dump 用它更干净） |
 | 远程菜单 URL | `https://menu-1255602259.file.myqcloud.com/game/<id>.html` |
 | shared_prefs | `{pkg}_preferences.xml` 含 boolean `"0"`/`"1"`/`"2"` |
-| 壳配置 | `shell_config.xml` / `shell_protected*.xml` |
+| 壳配置 | `shell_config.xml` / `shell_protected*.xml`（全壳有，瘦壳无） |
 | 免责声明邮箱 | `bg888@188.com` |
+| Java 桥 dex | `com.android.support.{Main,Menu,Preferences,BinGe,BUFF}`（含 `kaiguan` 开关字段） |
 
 **Application 名不能作为斌哥壳判定依据**（会出换名变体，如 `com.srp.patch.Init` + `libSRPatch.so` / `SRPatch_config.json`）：判定以**签名 + so + 免责邮箱的组合**为准，Application 变体只作线索。斌哥包与嵌套原包 `libil2cpp.so` 字节一致（2026-08-25 实锤）→ 玩法靠运行时 Hook，静态 dump 直接用嵌套原包，别用带壳外层。
 
 ### 有斌哥包 → 走 `binge-memdiff.md`
 
-这是最通用的路径，**70% 以上游戏走这条**。斌哥壳已内置菜单功能开关，通过 memdiff 差分即可提取所有 Hook 点。
+这是最通用的路径，**70% 以上游戏走这条**。斌哥壳已内置菜单功能开关，通过差分即可提取所有 Hook 点。
 
-→ **下一步：[binge-memdiff.md](./binge-memdiff.md)**
+→ **下一步：[binge-memdiff.md](./binge-memdiff.md)**（已升级为决策树版：先查固定不变量速查表和**斌哥游戏档案表**——同游戏版本未变直接复用历史 hook 点；未命中再按引擎分流 A 注入 JS 提取 / B 磁盘 vs 内存 diff / C 三态 memdiff / D HybridCLR 方法名过滤；解密按需触发，禁止默认解密）
 
 ---
 
@@ -71,7 +73,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| `binge-memdiff.md` | 斌哥壳 memdiff 完整流程（最核心） |
+| `binge-memdiff.md` | 斌哥壳抓点决策树（最核心：速查表 + 游戏档案表 + A/B/C/D 四路径 + 解密按需触发） |
 | `il2cpp-from-scratch.md` | Unity IL2CPP 从零抓点 |
 | `cocos-js-from-scratch.md` | Cocos JS 从零抓点 + jsc 解密 |
 | `hybridclr-runtime.md` | HybridCLR 热更抓点 |
