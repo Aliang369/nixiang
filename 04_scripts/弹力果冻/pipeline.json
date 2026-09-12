@@ -1,9 +1,9 @@
 {
   "game": "弹力果冻",
   "version": "2.4.0-taptap-vc4409",
-  "notes": "2026-09-11 换渠道接手：MuMu 实装 TapTap/官服包（com.ginicat.sweet，vc4409，2,128,558,103 B，md5 634b37691f40f94d05b77e0702604fec）取代原 4399 渠道（com.ginicat.sweet.m4399，vc4412）。引擎 Unity 2020.3.22f1c1 + HybridCLR（assets/AOTDLL/hotfix.bytes 明文 PE，9,534,976 B）；libil2cpp.so 已 strip（仅 2,510 动态符号），玩法类不在 global-metadata.dat（BattleServer/HpHandle 命中 0）全在热更程序集。**本包当前版本 = 5 功能数据型版（TlgdTapTap，2026-09-11 换版）**：Mod 为**零 hook / 零 invoke 数据型实现**：读 BattleEntityManager 单例 → battleUnits 枚举单位 → 只做 ObscuredFloat/float 字段读写；5 功能 = 秒杀（敌血压 1）/ 全屏秒杀（敌血写 0 走自然死亡链）/ 无敌（护盾拉满+锁血）/ 无限技能（cdCounter 清零）/ 移速（滑块倍率，加密写）。偏移探针阶段结论见 10_docs/弹力果冻/探针结论_TapTap2.4.0_20260911.md。旧 4399 硬编码挂点 0xBAAB0C 已判定不可静态复用（见 10_docs/弹力果冻/跳板重定位_TapTap2.4.0_20260911.md）。SignSpoof 已补官服包名条目（官服证书与 4399 同一张，逐字节比对通过）。",
+  "notes": "2026-09-12 TapTap 2.4.0（com.ginicat.sweet，vc4409）独立鉴权 ID=tlgdtt，不再复用 4399 历史 ID=tlgd；目录与 tag 仍为 Tlgd。当前 4 功能：秒杀 / 全屏秒杀 / 无敌 / 无限技能；移速不做，无限技能保持已验收数据链。三项伤害功能按 TlgdMod.cpp 的 2026-08-24 路线挂 TapTap HybridCLR 解释器公共点，mod 放大/补发伤害设置 isFromNet，绕开 TotalDamageCounter/ToTleDamager 结算异常链。用户 2026-09-12 实机日志确认 net 旁路递增且无发现异常；4399 玩家闪退缺少根因/日志，只按 TapTap 实际战斗表现继续观察。发布门禁：后台需为 tlgdtt 配置有效卡密/全游戏卡，建议功能门控同步为 1秒杀/2全屏秒杀/3无敌/4无限技能。详见 10_docs/弹力果冻/TapTap渠道ID隔离与实测复核_20260912.md。",
   "params": {
-    "game_id": "tlgd",
+    "game_id": "tlgdtt",
     "package": "com.ginicat.sweet",
     "mk": "Android_tlgd.mk",
     "tag": "Tlgd",
@@ -100,19 +100,16 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 19:42:32",
+      "done_at": "2026-09-12 19:07:01",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/包内实测复核_TapTap2.4.0反编译_20260911.md": {
-          "md5": "cef4e808fd7186cc62acb42ea6b241f6"
+          "md5": "5dd9e06b9cd2ba18b7d9557ffca84b5b"
         },
         "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/跳板重定位_TapTap2.4.0_20260911.md": {
           "md5": "965faa38af41c78f40b0832e917f15de"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix.bytes": "1cdad24cc429eca965a4b8dc0311975e",
-        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/global-metadata.dat": "c95d2ef936d70498b4442a2e8f058d27",
-        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/libil2cpp.so": "c067234d6526cd247691598e44aa5825",
         "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix_decompiled/hotfix.decompiled.cs": "57680ebe316ba029831fdc745fe78cde"
       }
     },
@@ -187,15 +184,15 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 01:22:49",
+      "done_at": "2026-09-12 22:10:28",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so": {
-          "md5": "ba64ab37d7dd3b7edf089f8abbb18bca"
+          "md5": "754bbaa086750b1bd362a90d4e19f8bb"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapMod.cpp": "a0f279a54d2955f832676ae53f44c07b",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapEntry.cpp": "6f5788228965724c1b12a393dde45eb2",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapMod.cpp": "61cb9e683c0324bbd8a61c75118e738d",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapEntry.cpp": "9ce1e0fae38ece7a2fc56b1dad97d25b",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_tlgd.mk": "689ce9c8d71bc05c0aa0f2bf3d10ef89"
       }
     },
@@ -215,9 +212,16 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"
         }
       ],
-      "status": "failed",
-      "failed_at": "2026-09-12 01:27:14",
-      "error": "命令退出码 1（详见日志尾部）"
+      "status": "done",
+      "done_at": "2026-09-12 22:17:08",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": {
+          "md5": "807ebeea0d39c946b813b963f392ebea"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so": "754bbaa086750b1bd362a90d4e19f8bb"
+      }
     },
     {
       "id": "sign",
@@ -232,7 +236,16 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-12 22:18:13",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": {
+          "md5": "807ebeea0d39c946b813b963f392ebea"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": "807ebeea0d39c946b813b963f392ebea"
+      }
     },
     {
       "id": "device_ready",
@@ -264,14 +277,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 01:14:32",
+      "done_at": "2026-09-12 22:20:36",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": {
-          "md5": "89e49725ffaf23c5f368f1f8f8efd307"
+          "md5": "807ebeea0d39c946b813b963f392ebea"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": "89e49725ffaf23c5f368f1f8f8efd307"
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": "807ebeea0d39c946b813b963f392ebea"
       }
     },
     {
@@ -287,7 +300,16 @@
           "path": "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/探针结论_TapTap2.4.0_20260911.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-12 22:21:54",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/探针结论_TapTap2.4.0_20260911.md": {
+          "md5": "407c3096512b81d5180b093584a0dea0"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": "807ebeea0d39c946b813b963f392ebea"
+      }
     }
   ]
 }

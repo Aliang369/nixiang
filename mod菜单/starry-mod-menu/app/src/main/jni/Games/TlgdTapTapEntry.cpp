@@ -7,12 +7,12 @@
  *    2 Toggle_全屏秒杀
  *    3 Toggle_无敌
  *    4 Toggle_无限技能
- *    5 Slider_移速倍率:1:10
  *
  *  接线要点：
- *   - authGameId="tlgd"（存量 id，不新增）
+ *   - authGameId="tlgdtt"（TapTap 独立 ID；4399 历史 tlgd 不复用）
  *   - waitLib="libil2cpp.so"（Unity 2020.3.22 IL2CPP + HybridCLR 热更）
  *   - initRetryMax × initRetryIntervalMs：热更程序集要等登录/进关，窗口给足
+ *   - 秒杀/全屏/无敌按 4399 2026-08-24 路线挂 HpHandle 桥；无限技能保持原数据链
  * ================================================================ */
 #include "ModEntry.h"
 #include "TlgdTapTapMod.h"
@@ -23,13 +23,12 @@ static const char* kTlgdTapTap_Features[] = {
     "Toggle_全屏秒杀",         // 2  TLGDTT_FEAT_AOE
     "Toggle_无敌",             // 3  TLGDTT_FEAT_INV
     "Toggle_无限技能",         // 4  TLGDTT_FEAT_NOCD
-    "Slider_移速倍率:1:10",    // 5  TLGDTT_FEAT_SPEED
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
     static const StarryGameMod mod = {
         .tag = "Tlgd",
-        .authGameId = "tlgd",
+        .authGameId = "tlgdtt",
         .featureList = kTlgdTapTap_Features,
         .featureCount = (int)(sizeof(kTlgdTapTap_Features) / sizeof(kTlgdTapTap_Features[0])),
 
