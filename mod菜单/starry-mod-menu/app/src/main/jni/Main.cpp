@@ -615,6 +615,7 @@ static const char* g_featureList[] = {
     "Toggle_瞬间胜利",                   // 6  WHRHX_FEAT_WIN
     "Category_其它",                     // 7
     "Slider_游戏加速:1:5",               // 8  WHRHX_FEAT_SPEED 1=关
+    "Toggle_科研立即完成",               // 9  WHRHX_FEAT_RESEARCH_DONE
 #elif defined(STARRY_GAME_WHRHXKB)
     // 无悔华夏（WhrhxMod.h — 斌哥六项对齐）
     "Category_资源",                     // 0

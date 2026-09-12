@@ -1,0 +1,960 @@
+
+────────────────────────────────────────────
+[2026-09-11 23:09:38] [城主别慌张] stage=check_apk 开始
+命令: md5 -q "$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+e98b130ca88d703bb6e25b99063f454a
+[2026-09-11 23:09:39] [城主别慌张] stage=check_apk 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 23:09:39] [城主别慌张] stage=dump 开始
+命令: bash "$NIXIANG/04_scripts/_common/decode_apk.sh" 城主别慌张 "$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk" 1.0.10
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/jadx_1.0.10
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 7887 (0%)INFO  - progress: 727 of 7887 (9%)INFO  - progress: 1113 of 7887 (14%)INFO  - progress: 2352 of 7887 (29%)INFO  - progress: 3043 of 7887 (38%)INFO  - progress: 5098 of 7887 (64%)INFO  - progress: 5107 of 7887 (64%)INFO  - progress: 5136 of 7887 (65%)INFO  - progress: 5234 of 7887 (66%)INFO  - progress: 5554 of 7887 (70%)INFO  - progress: 5634 of 7887 (71%)INFO  - progress: 5649 of 7887 (71%)INFO  - progress: 5804 of 7887 (73%)INFO  - progress: 5903 of 7887 (74%)INFO  - progress: 6053 of 7887 (76%)INFO  - progress: 6248 of 7887 (79%)INFO  - progress: 6333 of 7887 (80%)INFO  - progress: 6390 of 7887 (81%)INFO  - progress: 6405 of 7887 (81%)INFO  - progress: 6428 of 7887 (81%)INFO  - progress: 6467 of 7887 (81%)INFO  - progress: 6486 of 7887 (82%)INFO  - progress: 6547 of 7887 (83%)INFO  - progress: 6636 of 7887 (84%)INFO  - progress: 6674 of 7887 (84%)INFO  - progress: 6713 of 7887 (85%)INFO  - progress: 6738 of 7887 (85%)INFO  - progress: 6753 of 7887 (85%)INFO  - progress: 6772 of 7887 (85%)INFO  - progress: 6775 of 7887 (85%)INFO  - progress: 6801 of 7887 (86%)INFO  - progress: 6810 of 7887 (86%)INFO  - progress: 6820 of 7887 (86%)INFO  - progress: 6837 of 7887 (86%)INFO  - progress: 6870 of 7887 (87%)INFO  - progress: 6939 of 7887 (87%)INFO  - progress: 6996 of 7887 (88%)INFO  - progress: 7012 of 7887 (88%)INFO  - progress: 7031 of 7887 (89%)INFO  - progress: 7083 of 7887 (89%)INFO  - progress: 7121 of 7887 (90%)INFO  - progress: 7167 of 7887 (90%)INFO  - progress: 7193 of 7887 (91%)INFO  - progress: 7201 of 7887 (91%)INFO  - progress: 7247 of 7887 (91%)INFO  - progress: 7293 of 7887 (92%)INFO  - progress: 7334 of 7887 (92%)INFO  - progress: 7355 of 7887 (93%)INFO  - progress: 7383 of 7887 (93%)INFO  - progress: 7395 of 7887 (93%)INFO  - progress: 7442 of 7887 (94%)INFO  - progress: 7505 of 7887 (95%)INFO  - progress: 7530 of 7887 (95%)INFO  - progress: 7562 of 7887 (95%)INFO  - progress: 7578 of 7887 (96%)INFO  - progress: 7609 of 7887 (96%)INFO  - progress: 7651 of 7887 (97%)INFO  - progress: 7678 of 7887 (97%)INFO  - progress: 7721 of 7887 (97%)INFO  - progress: 7740 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7771 of 7887 (98%)INFO  - progress: 7813 of 7887 (99%)INFO  - progress: 7823 of 7887 (99%)INFO  - progress: 7855 of 7887 (99%)                                                             ERROR - finished with errors, count: 8
+/Users/aliang/Documents/nixiang/04_scripts/_common/decode_apk.sh: line 55: JADX_RC�: unbound variable
+[2026-09-11 23:10:20] [城主别慌张] stage=dump 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 23:10:59] [城主别慌张] stage=dump 开始
+命令: bash "$NIXIANG/04_scripts/_common/decode_apk.sh" 城主别慌张 "$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk" 1.0.10
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/jadx_1.0.10
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 7887 (0%)INFO  - progress: 896 of 7887 (11%)INFO  - progress: 1371 of 7887 (17%)INFO  - progress: 2727 of 7887 (34%)INFO  - progress: 3968 of 7887 (50%)INFO  - progress: 5102 of 7887 (64%)INFO  - progress: 5131 of 7887 (65%)INFO  - progress: 5191 of 7887 (65%)INFO  - progress: 5453 of 7887 (69%)INFO  - progress: 5634 of 7887 (71%)INFO  - progress: 5696 of 7887 (72%)INFO  - progress: 5842 of 7887 (74%)INFO  - progress: 5962 of 7887 (75%)INFO  - progress: 6011 of 7887 (76%)INFO  - progress: 6113 of 7887 (77%)INFO  - progress: 6251 of 7887 (79%)INFO  - progress: 6289 of 7887 (79%)INFO  - progress: 6333 of 7887 (80%)INFO  - progress: 6421 of 7887 (81%)INFO  - progress: 6431 of 7887 (81%)INFO  - progress: 6434 of 7887 (81%)INFO  - progress: 6467 of 7887 (81%)INFO  - progress: 6480 of 7887 (82%)INFO  - progress: 6491 of 7887 (82%)INFO  - progress: 6506 of 7887 (82%)INFO  - progress: 6545 of 7887 (82%)INFO  - progress: 6580 of 7887 (83%)INFO  - progress: 6606 of 7887 (83%)INFO  - progress: 6649 of 7887 (84%)INFO  - progress: 6682 of 7887 (84%)INFO  - progress: 6709 of 7887 (85%)INFO  - progress: 6736 of 7887 (85%)INFO  - progress: 6772 of 7887 (85%)INFO  - progress: 6792 of 7887 (86%)INFO  - progress: 6819 of 7887 (86%)INFO  - progress: 6861 of 7887 (86%)INFO  - progress: 6929 of 7887 (87%)INFO  - progress: 6968 of 7887 (88%)INFO  - progress: 7001 of 7887 (88%)INFO  - progress: 7013 of 7887 (88%)INFO  - progress: 7034 of 7887 (89%)INFO  - progress: 7071 of 7887 (89%)INFO  - progress: 7083 of 7887 (89%)INFO  - progress: 7106 of 7887 (90%)INFO  - progress: 7122 of 7887 (90%)INFO  - progress: 7134 of 7887 (90%)INFO  - progress: 7141 of 7887 (90%)INFO  - progress: 7141 of 7887 (90%)INFO  - progress: 7155 of 7887 (90%)INFO  - progress: 7164 of 7887 (90%)INFO  - progress: 7167 of 7887 (90%)INFO  - progress: 7171 of 7887 (90%)INFO  - progress: 7183 of 7887 (91%)INFO  - progress: 7193 of 7887 (91%)INFO  - progress: 7193 of 7887 (91%)INFO  - progress: 7215 of 7887 (91%)INFO  - progress: 7227 of 7887 (91%)INFO  - progress: 7263 of 7887 (92%)INFO  - progress: 7276 of 7887 (92%)INFO  - progress: 7318 of 7887 (92%)INFO  - progress: 7326 of 7887 (92%)INFO  - progress: 7334 of 7887 (92%)INFO  - progress: 7346 of 7887 (93%)INFO  - progress: 7356 of 7887 (93%)INFO  - progress: 7365 of 7887 (93%)INFO  - progress: 7377 of 7887 (93%)INFO  - progress: 7390 of 7887 (93%)INFO  - progress: 7395 of 7887 (93%)INFO  - progress: 7399 of 7887 (93%)INFO  - progress: 7404 of 7887 (93%)INFO  - progress: 7408 of 7887 (93%)INFO  - progress: 7413 of 7887 (93%)INFO  - progress: 7413 of 7887 (93%)INFO  - progress: 7416 of 7887 (94%)INFO  - progress: 7427 of 7887 (94%)INFO  - progress: 7435 of 7887 (94%)INFO  - progress: 7440 of 7887 (94%)INFO  - progress: 7441 of 7887 (94%)INFO  - progress: 7441 of 7887 (94%)INFO  - progress: 7442 of 7887 (94%)INFO  - progress: 7446 of 7887 (94%)INFO  - progress: 7452 of 7887 (94%)INFO  - progress: 7458 of 7887 (94%)INFO  - progress: 7460 of 7887 (94%)INFO  - progress: 7462 of 7887 (94%)INFO  - progress: 7470 of 7887 (94%)INFO  - progress: 7473 of 7887 (94%)INFO  - progress: 7475 of 7887 (94%)INFO  - progress: 7485 of 7887 (94%)INFO  - progress: 7500 of 7887 (95%)INFO  - progress: 7516 of 7887 (95%)INFO  - progress: 7517 of 7887 (95%)INFO  - progress: 7523 of 7887 (95%)INFO  - progress: 7547 of 7887 (95%)INFO  - progress: 7550 of 7887 (95%)INFO  - progress: 7555 of 7887 (95%)INFO  - progress: 7556 of 7887 (95%)INFO  - progress: 7564 of 7887 (95%)INFO  - progress: 7571 of 7887 (95%)INFO  - progress: 7573 of 7887 (96%)INFO  - progress: 7576 of 7887 (96%)INFO  - progress: 7578 of 7887 (96%)INFO  - progress: 7583 of 7887 (96%)INFO  - progress: 7584 of 7887 (96%)INFO  - progress: 7586 of 7887 (96%)INFO  - progress: 7591 of 7887 (96%)INFO  - progress: 7594 of 7887 (96%)INFO  - progress: 7601 of 7887 (96%)INFO  - progress: 7603 of 7887 (96%)INFO  - progress: 7605 of 7887 (96%)INFO  - progress: 7605 of 7887 (96%)INFO  - progress: 7610 of 7887 (96%)INFO  - progress: 7613 of 7887 (96%)INFO  - progress: 7627 of 7887 (96%)INFO  - progress: 7629 of 7887 (96%)INFO  - progress: 7630 of 7887 (96%)INFO  - progress: 7632 of 7887 (96%)INFO  - progress: 7633 of 7887 (96%)INFO  - progress: 7635 of 7887 (96%)INFO  - progress: 7637 of 7887 (96%)INFO  - progress: 7637 of 7887 (96%)INFO  - progress: 7641 of 7887 (96%)INFO  - progress: 7648 of 7887 (96%)INFO  - progress: 7648 of 7887 (96%)INFO  - progress: 7649 of 7887 (96%)INFO  - progress: 7660 of 7887 (97%)INFO  - progress: 7664 of 7887 (97%)INFO  - progress: 7668 of 7887 (97%)INFO  - progress: 7668 of 7887 (97%)INFO  - progress: 7672 of 7887 (97%)INFO  - progress: 7673 of 7887 (97%)INFO  - progress: 7677 of 7887 (97%)INFO  - progress: 7690 of 7887 (97%)INFO  - progress: 7693 of 7887 (97%)INFO  - progress: 7699 of 7887 (97%)INFO  - progress: 7701 of 7887 (97%)INFO  - progress: 7702 of 7887 (97%)INFO  - progress: 7717 of 7887 (97%)INFO  - progress: 7727 of 7887 (97%)INFO  - progress: 7730 of 7887 (98%)INFO  - progress: 7731 of 7887 (98%)INFO  - progress: 7736 of 7887 (98%)INFO  - progress: 7736 of 7887 (98%)INFO  - progress: 7737 of 7887 (98%)INFO  - progress: 7738 of 7887 (98%)INFO  - progress: 7740 of 7887 (98%)INFO  - progress: 7740 of 7887 (98%)INFO  - progress: 7744 of 7887 (98%)INFO  - progress: 7745 of 7887 (98%)INFO  - progress: 7748 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7752 of 7887 (98%)INFO  - progress: 7760 of 7887 (98%)INFO  - progress: 7765 of 7887 (98%)INFO  - progress: 7769 of 7887 (98%)INFO  - progress: 7775 of 7887 (98%)INFO  - progress: 7784 of 7887 (98%)INFO  - progress: 7788 of 7887 (98%)INFO  - progress: 7792 of 7887 (98%)INFO  - progress: 7795 of 7887 (98%)INFO  - progress: 7803 of 7887 (98%)INFO  - progress: 7808 of 7887 (98%)INFO  - progress: 7817 of 7887 (99%)INFO  - progress: 7823 of 7887 (99%)INFO  - progress: 7843 of 7887 (99%)INFO  - progress: 7855 of 7887 (99%)INFO  - progress: 7864 of 7887 (99%)INFO  - progress: 7879 of 7887 (99%)                                                             ERROR - finished with errors, count: 8
+警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
+==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/apktool_1.0.10
+I: Using Apktool 3.0.3 on ?????_1.0.10_huawei_base.apk with 8 threads
+I: Baksmaling classes.dex...
+I: Baksmaling classes2.dex...
+I: Baksmaling classes3.dex...
+I: Loading resource table...
+I: Decoding value resources...
+I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
+I: Decoding file resources...
+I: Generating values XMLs...
+I: Decoding AndroidManifest.xml with resources...
+I: Copying original files...
+I: Copying assets...
+I: Copying lib...
+I: Copying unknown files...
+
+完成。
+  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/jadx_1.0.10
+  apktool: /Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/apktool_1.0.10
+  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/decode_summary_1.0.10.md
+  manifest:/Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/manifest_1.0.10.txt
+[2026-09-11 23:13:58] [城主别慌张] stage=dump 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 23:47:32] [城主别慌张] stage=anchor 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-11 23:47:32] [城主别慌张] stage=anchor 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 23:57:20] [城主别慌张] stage=impl_mod 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/new_game_mod.sh" Czbhz czbhz
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+✅ 生成 /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/../app/src/main/jni/Games/CzbhzMod.h
+✅ 生成 /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/../app/src/main/jni/Games/CzbhzMod.cpp
+✅ 生成 /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/../app/src/main/jni/Games/CzbhzEntry.cpp
+✅ 生成 /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/../app/src/main/jni/Android_czbhz.mk
+
+下一步接线（只碰新生成的三处，共享文件零接触）:
+  1. CzbhzEntry.cpp : TODO 三项
+       authGameId（后台 games.game_id，拼音首字母）/ waitLib（目标库）/ featureList（菜单）
+  2. CzbhzMod.cpp   : TODO 区（①开关/orig ②偏移与 RVA ⑤挂点表 ⑥功能组）
+  3. Android_czbhz.mk : 差异区（Cocos 系去掉 Unity/Il2CppApi.cpp；Trace 需要时加宏）
+
+机械操作走管线（代码填完后注册）:
+  注册 04_scripts/Czbhz/pipeline.json（按 _common/stages.md 阶段表），其中：
+    - build_so 后端照范本 04_scripts/魂坠深境/hzsj_build_so.sh 写 czbhz_build_so.sh
+      （绝对路径 / obj stamp / 链接活动保险 / 菜单串字节校验四件套，不要自己发明）
+    - install 阶段末尾必须接 _common/verify_installed_apk.sh（设备包 md5 == 本地 APK）
+    - surgical 脚本末尾加包内 so md5 == 构建产物校验
+
+手工验证构建（仅调试用，正式出包走管线）:
+  cd /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni && ndk-build NDK_PROJECT_PATH=../.. \
+    APP_BUILD_SCRIPT=./Android_czbhz.mk NDK_APPLICATION_MK=./Application.mk \
+    NDK_OUT=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_czbhz NDK_LIBS_OUT=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz
+  （NDK_OUT/LIBS_OUT 必须绝对路径：相对路径会被 -C 解析到 app/ 下 → 旧 so 顶包假成功）
+
+然后填 CzbhzMod.cpp 的 TODO 区:
+  ① 开关/orig  ② 偏移与 RVA  ⑤ hook 函数与挂点表  ⑥ 功能组
+构建前自检（按字节搜，strings 不认 UTF-8 中文菜单串）:
+  LC_ALL=C grep -ac 'czbhz' /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+[2026-09-11 23:57:20] [城主别慌张] stage=impl_mod 校验失败
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:06:47] [城主别慌张] stage=impl_mod 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-12 00:06:47] [城主别慌张] stage=impl_mod 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:07:02] [城主别慌张] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/城主别慌张/czbhz_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= CzbhzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= CzbhzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+[build_so] md5 = 5a79410e335a00d197062d5f6be6dcef  size = 104832
+[2026-09-12 00:07:04] [城主别慌张] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:15:39] [城主别慌张] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/城主别慌张/czbhz_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+[build_so] md5 = 5a79410e335a00d197062d5f6be6dcef  size = 104832
+[2026-09-12 00:15:45] [城主别慌张] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:15:48] [城主别慌张] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[1/6] gradle assembleRelease（starry → smali + assets）
+Exception in thread "main" java.io.FileNotFoundException: /Users/aliang/.gradle/wrapper/dists/gradle-8.13-bin/ap7pdhvhnjtc6mxtzz89gkh0c/gradle-8.13-bin.zip.lck (Operation not permitted)
+	at java.base/java.io.RandomAccessFile.open0(Native Method)
+	at java.base/java.io.RandomAccessFile.open(RandomAccessFile.java:344)
+	at java.base/java.io.RandomAccessFile.<init>(RandomAccessFile.java:259)
+	at java.base/java.io.RandomAccessFile.<init>(RandomAccessFile.java:213)
+	at org.gradle.wrapper.GradleWrapperMain.main(SourceFile:67)
+[2026-09-12 00:15:54] [城主别慌张] stage=surgical 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:16:40] [城主别慌张] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[1/6] gradle assembleRelease（starry → smali + assets）
+Starting a Gradle Daemon, 1 incompatible Daemon could not be reused, use --status for details
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:processReleaseResources
+> Task :app:collectReleaseDependencies
+> Task :app:extractReleaseNativeSymbolTables
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/czbhz_surgical.dUfHbt/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: ??: [dep-ann] ??? @Deprecated ???????????
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/czbhz_surgical.dUfHbt/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: ??: [dep-ann] ??? @Deprecated ???????????
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+?: ???????????????? API?
+?: ??????, ??? -Xlint:deprecation ?????
+2 ???
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:bundleReleaseResources
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/czbhz_surgical.dUfHbt/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3m 27s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → 收集 com/starry smali + certs + JS 补丁
+[2/6] assemble → classes4.dex
+-rw-r--r--@ 1 aliang  wheel  397008 Sep 12 00:20 /tmp/czbhz_surgical.dUfHbt/classes4.dex
+  JS 补丁 10777 B
+[3/6] binary AndroidManifest（加菜单权限/服务/Provider，保留原 Application）
+  首次生成 binary Manifest（apktool d -s + b 抽取 Manifest）
+  +permissions: 2
+  +MenuService
+  +StarryInitProvider
+  +CzbhzH5Provider
+  text Manifest patched（保留原 Application）
+  cached → /Users/aliang/Documents/nixiang/07_patched/城主别慌张/surgical_1.0.10/AndroidManifest.xml
+-rw-r--r--  1 aliang  wheel  33620 Sep 12 00:23 /tmp/czbhz_surgical.dUfHbt/AndroidManifest.xml
+[4/6] zip 外科合并（游戏 dex 零改动）
+  merged ok; entries≈5104; classes4=397008 B; 未触碰 4/4 字节不变
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[5/6] done → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk (md5 a37763175f985dd40b540e97a4e2d28e)
+[6/6] 闭环校验
+  包内 so md5 一致 = 5a79410e335a00d197062d5f6be6dcef
+   397008  01-01-1980 00:00   classes4.dex
+    10777  01-01-1980 00:00   assets/starry/czbhz_patch.js
+   104832  01-01-1980 00:00   lib/arm64-v8a/libstarry_magic.so
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+✅ 外科组装完成：/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[2026-09-12 00:24:09] [城主别慌张] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:26:49] [城主别慌张] stage=device_ready 开始
+命令: adb connect $SERIAL; adb -s $SERIAL get-state
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+already connected to 127.0.0.1:16384
+device
+[2026-09-12 00:26:50] [城主别慌张] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:33:38] [城主别慌张] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/城主别慌张/czbhz_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+[build_so] md5 = 5a79410e335a00d197062d5f6be6dcef  size = 104832
+[2026-09-12 00:33:41] [城主别慌张] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:33:44] [城主别慌张] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[1/6] gradle assembleRelease（starry → smali + assets）
+Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:processReleaseResources
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:validateSigningRelease
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/czbhz_surgical.qoC9EP/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: ??: [dep-ann] ??? @Deprecated ???????????
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/czbhz_surgical.qoC9EP/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: ??: [dep-ann] ??? @Deprecated ???????????
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+?: ???????????????? API?
+?: ??????, ??? -Xlint:deprecation ?????
+2 ???
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/czbhz_surgical.qoC9EP/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 2m 19s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → 收集 com/starry smali + certs + JS 补丁
+[2/6] assemble → classes4.dex
+-rw-r--r--@ 1 aliang  wheel  397008 Sep 12 00:36 /tmp/czbhz_surgical.qoC9EP/classes4.dex
+  JS 补丁 16301 B
+[3/6] binary AndroidManifest（加菜单权限/服务/Provider，保留原 Application）
+  using cached /Users/aliang/Documents/nixiang/07_patched/城主别慌张/surgical_1.0.10/AndroidManifest.xml
+-rw-r--r--  1 aliang  wheel  33620 Sep 12 00:36 /tmp/czbhz_surgical.qoC9EP/AndroidManifest.xml
+[4/6] zip 外科合并（游戏 dex 零改动）
+  merged ok; entries≈5104; classes4=397008 B; 未触碰 4/4 字节不变
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[5/6] done → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk (md5 5c23450679e61389d978fc74cd69fd00)
+[6/6] 闭环校验
+  包内 so md5 一致 = 5a79410e335a00d197062d5f6be6dcef
+   397008  01-01-1980 00:00   classes4.dex
+    16301  01-01-1980 00:00   assets/starry/czbhz_patch.js
+   104832  01-01-1980 00:00   lib/arm64-v8a/libstarry_magic.so
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+✅ 外科组装完成：/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[2026-09-12 00:37:47] [城主别慌张] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:44:43] [城主别慌张] stage=install 开始
+命令: PKG=com.gzxx.czbhz1.huawei; APK="$NIXIANG/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk"; echo "[install] 用户 2026-09-12 明确授权：异签名先卸载官方包（官包存档于 02_apks/，其 /data/data 仅有空 cache，无存档损失）"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo "  (官方包不存在或卸载失败，继续)"; adb -s $SERIAL push "$APK" /data/local/tmp/czbhz_surgical.apk && adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/czbhz_surgical.apk" || { echo "安装失败"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_surgical.apk && bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" $PKG "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[install] 用户 2026-09-12 明确授权：异签名先卸载官方包（官包存档于 02_apks/，其 /data/data 仅有空 cache，无存档损失）
+adb: device '127.0.0.1:16384' not found
+  (官方包不存在或卸载失败，继续)
+adb: error: failed to get feature set: device '127.0.0.1:16384' not found
+adb: device '127.0.0.1:16384' not found
+安装失败
+[2026-09-12 00:44:43] [城主别慌张] stage=install 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:47:46] [城主别慌张] stage=device_ready 开始
+命令: adb connect $SERIAL; adb -s $SERIAL get-state
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+failed to resolve host: 'f9a116a2': nodename nor servname provided, or not known
+device
+[2026-09-12 00:47:47] [城主别慌张] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:48:51] [城主别慌张] stage=install 开始
+命令: PKG=com.gzxx.czbhz1.huawei; APK="$NIXIANG/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk"; echo "[install] 用户 2026-09-12 明确授权：异签名先卸载官方包（官包存档于 02_apks/，其 /data/data 仅有空 cache，无存档损失）"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo "  (官方包不存在或卸载失败，继续)"; adb -s $SERIAL push "$APK" /data/local/tmp/czbhz_surgical.apk && adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/czbhz_surgical.apk" || { echo "安装失败"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_surgical.apk && bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" $PKG "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[install] 用户 2026-09-12 明确授权：异签名先卸载官方包（官包存档于 02_apks/，其 /data/data 仅有空 cache，无存档损失）
+Failure [not installed for 0]
+  (官方包不存在或卸载失败，继续)
+/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 29.1 MB/s (190454660 bytes in 6.236s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (5c23450679e61389d978fc74cd69fd00) ✓
+[2026-09-12 00:49:34] [城主别慌张] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:57:40] [城主别慌张] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/城主别慌张/czbhz_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+[build_so] md5 = 5a79410e335a00d197062d5f6be6dcef  size = 104832
+[2026-09-12 00:57:41] [城主别慌张] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:57:42] [城主别慌张] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[1/6] gradle assembleRelease（starry → smali + assets）
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:stripReleaseDebugSymbols
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/czbhz_surgical.c2e1zp/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: ??: [dep-ann] ??? @Deprecated ???????????
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/czbhz_surgical.c2e1zp/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: ??: [dep-ann] ??? @Deprecated ???????????
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+?: ???????????????? API?
+?: ??????, ??? -Xlint:deprecation ?????
+2 ???
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/czbhz_surgical.c2e1zp/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → 收集 com/starry smali + certs + JS 补丁
+[2/6] assemble → classes4.dex
+-rw-r--r--@ 1 aliang  wheel  397768 Sep 12 00:57 /tmp/czbhz_surgical.c2e1zp/classes4.dex
+  JS 补丁 16318 B
+[3/6] binary AndroidManifest（加菜单权限/服务/Provider，保留原 Application）
+  using cached /Users/aliang/Documents/nixiang/07_patched/城主别慌张/surgical_1.0.10/AndroidManifest.xml
+-rw-r--r--  1 aliang  wheel  33620 Sep 12 00:57 /tmp/czbhz_surgical.c2e1zp/AndroidManifest.xml
+[4/6] zip 外科合并（游戏 dex 零改动）
+  merged ok; entries≈5104; classes4=397768 B; 未触碰 4/4 字节不变
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[5/6] done → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk (md5 525a3e619c4446a8292b5910112b1653)
+[6/6] 闭环校验
+  包内 so md5 一致 = 5a79410e335a00d197062d5f6be6dcef
+   397768  01-01-1980 00:00   classes4.dex
+    16318  01-01-1980 00:00   assets/starry/czbhz_patch.js
+   104832  01-01-1980 00:00   lib/arm64-v8a/libstarry_magic.so
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+✅ 外科组装完成：/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[2026-09-12 00:58:09] [城主别慌张] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:58:50] [城主别慌张] stage=device_ready 开始
+命令: adb connect $SERIAL; adb -s $SERIAL get-state
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+already connected to 127.0.0.1:16384
+device
+[2026-09-12 00:58:50] [城主别慌张] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 00:58:51] [城主别慌张] stage=install 开始
+命令: PKG=com.gzxx.czbhz1.huawei; APK="$NIXIANG/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk"; echo "[install] 用户 2026-09-12 明确授权：异签名先卸载官方包（官包存档于 02_apks/，其 /data/data 仅有空 cache，无存档损失）"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo "  (官方包不存在或卸载失败，继续)"; adb -s $SERIAL push "$APK" /data/local/tmp/czbhz_surgical.apk && adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/czbhz_surgical.apk" || { echo "安装失败"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_surgical.apk && bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" $PKG "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[install] 用户 2026-09-12 明确授权：异签名先卸载官方包（官包存档于 02_apks/，其 /data/data 仅有空 cache，无存档损失）
+Success
+/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 23.7 MB/s (190454660 bytes in 7.660s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (525a3e619c4446a8292b5910112b1653) ✓
+[2026-09-12 00:59:09] [城主别慌张] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:12:48] [城主别慌张] stage=diag_resign 开始
+命令: bash "$NIXIANG/04_scripts/城主别慌张/diag_resign_only.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[1/4] 原包 md5 = e98b130ca88d703bb6e25b99063f454a
+[2/4] 只重签名（不加 Provider / 不加 dex / 不加 so / 不改 Manifest）
+      → /Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk (md5 62c4743e56c0a6e55a53e31339aeb138)
+[3/4] 签名核对（必须是星光密钥，且与原包不同）
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+      原包签名：
+Signer #1 certificate DN: CN=XingXuan, OU=XingXuan, O=XingXuan, L=GuangZhou, ST=GuangDong, C=China
+Signer #1 certificate SHA-256 digest: f9732a3f59dc656b0b4e0b7371767736c646e75cf197ccdd6ee6f45c660aae73
+      zipalign ✓
+[4/4] 闭环断言：除签名块外与原包逐字节相同
+      非 META-INF 条目: 原包 5099 / 诊断包 5099 / 差集 空 ✓
+      逐条内容比对: 全部字节相同 ✓
+      无 mod 内容（classes4.dex / starry 补丁 / libstarry_magic.so 均不存在）✓
+✅ 诊断包就绪: /Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk
+[2026-09-12 01:13:08] [城主别慌张] stage=diag_resign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:13:49] [城主别慌张] stage=diag_install 开始
+命令: PKG=com.gzxx.czbhz1.huawei; APK="$NIXIANG/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk"; echo "[diag] 用户已授权对照实验：卸载当前包 → 装重签名原版"; adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo "  (未安装，继续)"; adb -s $SERIAL push "$APK" /data/local/tmp/czbhz_diag.apk && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/czbhz_diag.apk" || { echo "安装失败"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_diag.apk && bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" $PKG "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[diag] 用户已授权对照实验：卸载当前包 → 装重签名原版
+Success
+/Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk: 1 file pushed, 0 skipped. 44.0 MB/s (189766174 bytes in 4.114s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (62c4743e56c0a6e55a53e31339aeb138) ✓
+[2026-09-12 01:14:06] [城主别慌张] stage=diag_install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:21:54] [城主别慌张] stage=diag_official 开始
+命令: PKG=com.gzxx.czbhz1.huawei; APK="$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk"; echo "[diag] 控制组：装官方原包（用户已授权）"; adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo "  (未安装，继续)"; adb -s $SERIAL push "$APK" /data/local/tmp/czbhz_official.apk && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/czbhz_official.apk" || { echo "安装失败"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_official.apk && bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" $PKG "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[diag] 控制组：装官方原包（用户已授权）
+Success
+/Users/aliang/Documents/nixiang/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk: 1 file pushed, 0 skipped. 35.5 MB/s (189762082 bytes in 5.094s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (e98b130ca88d703bb6e25b99063f454a) ✓
+[2026-09-12 01:22:09] [城主别慌张] stage=diag_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:30:19] [城主别慌张] stage=cleanup_real_device 开始
+命令: PKG=com.gzxx.czbhz1.huawei; APK="$NIXIANG/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk"; RS=f9a116a2; echo "[cleanup] 用户 2026-09-12 授权：卸掉真机 $RS 上的本作星空包"; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$RS" $PKG "$APK" || { echo '设备上安装的不是本作星空包 —— 拒绝卸载（防误卸守卫）'; exit 1; }; adb -s $RS shell am force-stop $PKG; adb -s $RS shell pm uninstall --user 0 $PKG; echo '[cleanup] 卸载后残留检查:'; adb -s $RS shell "pm list packages | grep czbhz" || echo '  已无本包 ✓'; adb -s $RS shell "ls /data/local/tmp/ | grep -i czbhz" || echo '  /data/local/tmp 无残留 ✓'
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[cleanup] 用户 2026-09-12 授权：卸掉真机 f9a116a2 上的本作星空包
+ERROR: 设备包(5c23450679e61389d978fc74cd69fd00) != 本地产物(525a3e619c4446a8292b5910112b1653) —— 装的是旧包/没装上，禁止宣称装机完成
+设备上安装的不是本作星空包 —— 拒绝卸载（防误卸守卫）
+[2026-09-12 01:30:20] [城主别慌张] stage=cleanup_real_device 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:30:37] [城主别慌张] stage=cleanup_real_device 开始
+命令: PKG=com.gzxx.czbhz1.huawei; RS=f9a116a2; BT=$HOME/Library/Android/sdk/build-tools/36.0.0; STARRY_SHA1=821c92e404ab5fdac8dbf157c2e467e71440917d; echo "[cleanup] 用户 2026-09-12 授权：卸掉真机 $RS 上的本作星空包"; P=$(adb -s $RS shell pm path $PKG | head -1 | sed 's/package://' | tr -d '\r'); [[ -n "$P" ]] || { echo '设备上没装本包，无需清理 ✓'; exit 0; }; adb -s $RS pull "$P" /tmp/czbhz_real_installed.apk >/dev/null 2>&1 || { echo '拉取设备包失败'; exit 1; }; SHA1=$("$BT/apksigner" verify --print-certs /tmp/czbhz_real_installed.apk 2>/dev/null | grep -m1 'SHA-1 digest' | awk '{print $NF}'); echo "[cleanup] 设备包签名 SHA-1 = $SHA1"; [[ "$SHA1" == "$STARRY_SHA1" ]] || { echo "设备包不是我方星光构建（期望 $STARRY_SHA1）—— 拒绝卸载（防误卸守卫）"; exit 1; }; adb -s $RS shell am force-stop $PKG; adb -s $RS shell pm uninstall --user 0 $PKG; rm -f /tmp/czbhz_real_installed.apk; echo '[cleanup] 卸载后残留检查:'; adb -s $RS shell "pm list packages | grep czbhz" || echo '  已无本包 ✓'; adb -s $RS shell "ls /data/local/tmp/ | grep -i czbhz" || echo '  /data/local/tmp 无残留 ✓'
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[cleanup] 用户 2026-09-12 授权：卸掉真机 f9a116a2 上的本作星空包
+[cleanup] 设备包签名 SHA-1 = 821c92e404ab5fdac8dbf157c2e467e71440917d
+Success
+[cleanup] 卸载后残留检查:
+  已无本包 ✓
+  /data/local/tmp 无残留 ✓
+[2026-09-12 01:30:50] [城主别慌张] stage=cleanup_real_device 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:31:08] [城主别慌张] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-12 01:31:10] [城主别慌张] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:36:09] [城主别慌张] stage=offline_regression 开始
+命令: node "$NIXIANG/04_scripts/城主别慌张/offline_regression.js"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+离线行为回归 —— 《城主别慌张》星空版补丁
+补丁: mod菜单/starry-mod-menu/app/src/main/assets/starry/czbhz_patch.js (17302 B)
+
+A. 装载与守卫
+  ✓ 桥未就绪时不占守卫，且不抛异常
+  ✓ 桥就绪后装载：写守卫 + 装载日志 + ack
+  ✓ 重复注入被守卫拦住（幂等，不重复打日志）
+
+B. 授权门控
+  ✓ live=0：免广告与四项战斗全部哑火
+  ✓ live=1：免广告生效；开关关掉后立刻回落
+  ✓ live 由 1 变 0 时功能立即停止
+
+C. 免广告
+  ✓ P1：包装 canSkipAdWatch 并打标记（幂等）
+  ✓ P1 被游戏重建冲掉后自愈补装
+  ✓ P2 兜底：无 AdModel 时超时后包装 sdk.watchAd，跳过真播
+  ✓ P2 在 live=0 时不得跳过（回落真播）
+
+D. 战斗四项
+  ✓ PVE：四项全部落到我方单位
+  ✓ ★ PVP/GVE：对手的属性一个字都不能动
+  ✓ 幂等：同一 logicInput 二次入口（模拟 12103 重入）不复利
+  ✓ 中途改滑块：按首见原值重算，不复利
+  ✓ player_id 数字/字符串混用也能认出我方
+  ✓ 倍率为 1 时数值保持不变（滑块最小档不制造差异）
+
+E. 鲁棒性
+  ✓ 畸形 logicInput 不抛异常，且不阻断开战
+  ✓ 单位缺 attr 时跳过而不抛
+  ✓ battle 钩子被游戏重建后自愈补装
+  ✓ xy 尚未就绪时不报错，就绪后自动装钩
+  ✓ 战场结构诊断只打一次
+
+F. 源码级地雷
+  ✓ 补丁源码不含 % 与 #（loadUrl 退路会被解码截断）
+  ✓ featNum 与 CzbhzEntry.cpp 的菜单顺序对齐
+  ✓ 补丁里的功能位号常量与菜单对齐
+  ✓ 补丁代码内不自行拼 javascript: URL（不得出现 loadUrl 调用）
+
+────────────────────────────────────────────────────────────────
+✅ 离线行为回归全部通过：25 项
+[2026-09-12 01:36:11] [城主别慌张] stage=offline_regression 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:36:25] [城主别慌张] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/城主别慌张/czbhz_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so
+[build_so] md5 = 5a79410e335a00d197062d5f6be6dcef  size = 104832
+[2026-09-12 01:36:28] [城主别慌张] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:36:29] [城主别慌张] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[1/6] gradle assembleRelease（starry → smali + assets）
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:mergeReleaseJavaResource
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/czbhz_surgical.BwXEXq/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: ??: [dep-ann] ??? @Deprecated ???????????
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/czbhz_surgical.BwXEXq/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: ??: [dep-ann] ??? @Deprecated ???????????
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+?: ???????????????? API?
+?: ??????, ??? -Xlint:deprecation ?????
+2 ???
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/czbhz_surgical.BwXEXq/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 11s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → 收集 com/starry smali + certs + JS 补丁
+[2/6] assemble → classes4.dex
+-rw-r--r--@ 1 aliang  wheel  397768 Sep 12 01:36 /tmp/czbhz_surgical.BwXEXq/classes4.dex
+  JS 补丁 17302 B
+[3/6] binary AndroidManifest（加菜单权限/服务/Provider，保留原 Application）
+  using cached /Users/aliang/Documents/nixiang/07_patched/城主别慌张/surgical_1.0.10/AndroidManifest.xml
+-rw-r--r--  1 aliang  wheel  33620 Sep 12 01:36 /tmp/czbhz_surgical.BwXEXq/AndroidManifest.xml
+[4/6] zip 外科合并（游戏 dex 零改动）
+  merged ok; entries≈5104; classes4=397768 B; 未触碰 4/4 字节不变
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[5/6] done → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk (md5 ac5a251dd0637bea029b35840a59e5e1)
+[6/6] 闭环校验
+  包内 so md5 一致 = 5a79410e335a00d197062d5f6be6dcef
+   397768  01-01-1980 00:00   classes4.dex
+    17302  01-01-1980 00:00   assets/starry/czbhz_patch.js
+   104832  01-01-1980 00:00   lib/arm64-v8a/libstarry_magic.so
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+✅ 外科组装完成：/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[2026-09-12 01:37:01] [城主别慌张] stage=surgical 校验失败
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 01:42:22] [城主别慌张] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[1/6] gradle assembleRelease（starry → smali + assets）
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/czbhz_surgical.3KpZvo/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: ??: [dep-ann] ??? @Deprecated ???????????
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/czbhz_surgical.3KpZvo/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: ??: [dep-ann] ??? @Deprecated ???????????
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+?: ???????????????? API?
+?: ??????, ??? -Xlint:deprecation ?????
+2 ???
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/czbhz_surgical.3KpZvo/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → 收集 com/starry smali + certs + JS 补丁
+[2/6] assemble → classes4.dex
+-rw-r--r--@ 1 aliang  wheel  397768 Sep 12 01:42 /tmp/czbhz_surgical.3KpZvo/classes4.dex
+  JS 补丁 17302 B
+[3/6] binary AndroidManifest（加菜单权限/服务/Provider，保留原 Application）
+  using cached /Users/aliang/Documents/nixiang/07_patched/城主别慌张/surgical_1.0.10/AndroidManifest.xml
+-rw-r--r--  1 aliang  wheel  33620 Sep 12 01:42 /tmp/czbhz_surgical.3KpZvo/AndroidManifest.xml
+[4/6] zip 外科合并（游戏 dex 零改动）
+  merged ok; entries≈5104; classes4=397768 B; 未触碰 4/4 字节不变
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[5/6] done → /Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk (md5 9f088dd82cfdd467a99e06e0afe5fad7)
+[6/6] 闭环校验
+  包内 so md5 一致 = 5a79410e335a00d197062d5f6be6dcef
+   397768  01-01-1980 00:00   classes4.dex
+    17302  01-01-1980 00:00   assets/starry/czbhz_patch.js
+   104832  01-01-1980 00:00   lib/arm64-v8a/libstarry_magic.so
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+✅ 外科组装完成：/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk
+[2026-09-12 01:42:52] [城主别慌张] stage=surgical 完成（校验通过）
+────────────────────────────────────────────

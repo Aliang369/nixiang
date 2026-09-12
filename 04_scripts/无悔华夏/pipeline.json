@@ -1,0 +1,247 @@
+{
+  "game": "无悔华夏",
+  "version": "3.8.280 / hotfix 3.8.295.295",
+  "notes": "2026-09-12 科研立即完成：用真机当前星空包为底包，保留热更资源修复链，新增菜单 #9（Toggle_科研立即完成）。覆盖 GameUI.PolicyUI.ExecutePolicy(int) 与蒙华科技 ResearchTech 两条人工确认入口，在 PolicyDataMgr.ExecutePolicy 原调用后走 FinishPolicyTimeAnyway + UpdatePolicyTime(1.0f,true) 原生完成链，不全局放大政策时间；保留数据覆盖安装，不卸载、不清数据、不自动点屏。四项资源和科研均已经用户真机确认。",
+  "params": {
+    "game_id": "whhx",
+    "package": "com.yhhy.whrhx.aligames",
+    "mk": "Android_whrhx.mk",
+    "tag": "whhx",
+    "obj_dir": "obj_whrhx",
+    "libs_dir": "libs_whrhx",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "星空底包核对（真机当前安装包）",
+      "requires": [],
+      "command": "shasum -a 256 \"$NIXIANG/02_apks/无悔华夏/无悔华夏_3.8.280_九游星空_20260912.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/无悔华夏/无悔华夏_3.8.280_九游星空_20260912.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 14:51:52",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏/无悔华夏_3.8.280_九游星空_20260912.apk": {
+          "md5": "0eaa1fdca51ba402cf2a5c6f919f348c"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建修复版 so（资源热更修复 + 科研立即完成）",
+      "requires": [
+        "check_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_whrhx.mk",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WhrhxMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WhrhxMod.h",
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
+          "pattern": "GetCountryDataById"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
+          "pattern": "GetCityData"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
+          "pattern": "identity api ready"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
+          "pattern": "research hooks ready"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
+          "pattern": "科研立即完成"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 16:46:54",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": {
+          "md5": "afee96f5671039e4059d46f1363f5a7b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏/无悔华夏_3.8.280_九游星空_20260912.apk": "0eaa1fdca51ba402cf2a5c6f919f348c"
+      }
+    },
+    {
+      "id": "research_pair",
+      "name": "科研立即完成：旧 dex JNI 配对 + 新 so + 星空签名（不安装）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_research_pair_surgical.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_research_pair_surgical.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 16:48:27",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk": {
+          "md5": "ab30e56392f1ee3544d4c546dd829f9b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "afee96f5671039e4059d46f1363f5a7b"
+      }
+    },
+    {
+      "id": "install_research",
+      "name": "保留数据覆盖安装科研立即完成包（不卸载、不清数据、不自动点屏）",
+      "requires": [
+        "research_pair"
+      ],
+      "command": "APK=\"$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk\"; adb -s \"$SERIAL\" install -r \"$APK\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.yhhy.whrhx.aligames \"$APK\" --su",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 16:49:50",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk": {
+          "md5": "ab30e56392f1ee3544d4c546dd829f9b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk": "ab30e56392f1ee3544d4c546dd829f9b"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "替换底包 so + 星空证书签名（不安装）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_repair_surgical.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_repair_surgical.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_20260912-releaseSigned.apk"
+        }
+      ],
+      "status": "skipped",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_20260912-releaseSigned.apk": {
+          "md5": "7385979e203e8073c1ff7ee96ca09884"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "49db511c9ca2f86f85f4bc618636283b"
+      }
+    },
+    {
+      "id": "install",
+      "name": "保留数据覆盖安装（用户已授权，不自动点屏）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "adb -s \"$SERIAL\" install -r \"$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_20260912-releaseSigned.apk\"",
+      "verify": [],
+      "status": "skipped",
+      "artifacts": {},
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_20260912-releaseSigned.apk": "7385979e203e8073c1ff7ee96ca09884"
+      }
+    },
+    {
+      "id": "pair_dex",
+      "name": "补齐旧菜单 dex 的 JNI 声明 + 同源 so 重新签名（不安装）",
+      "requires": [
+        "install"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_repair_pair_surgical.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_repair_pair_surgical.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk"
+        }
+      ],
+      "status": "skipped",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk": {
+          "md5": "52506806d0038a8e5fd856c991bccf42"
+        }
+      }
+    },
+    {
+      "id": "install_pair",
+      "name": "保留数据覆盖安装 dex 配对修复包（不自动点屏）",
+      "requires": [
+        "pair_dex"
+      ],
+      "command": "adb -s \"$SERIAL\" install -r \"$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk\"",
+      "verify": [],
+      "status": "skipped",
+      "artifacts": {},
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk": "52506806d0038a8e5fd856c991bccf42"
+      }
+    },
+    {
+      "id": "uninstall_reset",
+      "name": "卸载无悔华夏（用户授权，清除损坏的本地资源）",
+      "requires": [
+        "install_pair"
+      ],
+      "command": "adb -s \"$SERIAL\" uninstall com.yhhy.whrhx.aligames",
+      "verify": [],
+      "status": "skipped",
+      "artifacts": {}
+    },
+    {
+      "id": "install_clean",
+      "name": "干净安装 dex 配对修复包（不自动点屏）",
+      "requires": [
+        "uninstall_reset"
+      ],
+      "command": "adb -s \"$SERIAL\" install \"$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk\"",
+      "verify": [],
+      "status": "skipped",
+      "artifacts": {}
+    }
+  ]
+}

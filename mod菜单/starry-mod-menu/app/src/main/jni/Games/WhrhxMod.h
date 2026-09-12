@@ -13,6 +13,7 @@ enum WhrhxFeat : int {
     WHRHX_FEAT_POP   = 4,
     WHRHX_FEAT_WIN   = 6,
     WHRHX_FEAT_SPEED = 8,
+    WHRHX_FEAT_RESEARCH_DONE = 9,
 };
 
 bool Whrhx_TryInit();

@@ -1,0 +1,415 @@
+
+────────────────────────────────────────────
+[2026-09-11 01:30:42] [阿瓦隆之王] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_awlzw_24.7.21.sh"
+目录: /Users/aliang/Documents/nixiang/04_scripts/阿瓦隆之王
+[check] Android_awlzw.mk target=awlzw (Unity IL2CPP)
+[1/7] ndk-build -> jniLibs（NDK_OUT 锁 awlzw 专属目录）
+[arm64-v8a] Compile++      : starry_magic <= AwlzwEntry.cpp
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_awlzw/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= AwlzwMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_awlzw/arm64-v8a/libstarry_magic.so
+  so -> jniLibs ok ([Awlzw] verified)
+[2/7] gradle assembleRelease (starry 小模板)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:mergeReleaseJavaResource
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/awlzw_surgical.MzrluV/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/awlzw_surgical.MzrluV/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/awlzw_surgical.MzrluV/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 12s
+50 actionable tasks: 50 executed
+[3/7] apktool d starry → com/starry smali → classes6.dex（官方 6 dex 不碰；ART 连续规则追加 classes6）
+  StarryApp .super + invoke-super → FunplusApplication
+-rw-r--r--@ 1 aliang  wheel  386112 Sep 11 01:31 /tmp/awlzw_surgical.MzrluV/classes6.dex
+[3b/7] collect lib + certs from starry decode
+[4/7] binary AndroidManifest（application 挂 StarryApp + FGS/SAW 权限 + MenuService）
+  mini apk（剔除 assets/lib/dex/META-INF）→ apktool 往返
+  mini apk: 1078 entries
+  manifest: application FunplusApplication → StarryApp (.super 补丁保留链路)
+  manifest: + SYSTEM_ALERT_WINDOW/FOREGROUND_SERVICE/SPECIAL_USE
+  manifest: MenuService added
+  cached → /Users/aliang/Documents/nixiang/07_patched/阿瓦隆之王/surgical_24.7.21/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  43656 Sep 11 01:31 /tmp/awlzw_surgical.MzrluV/AndroidManifest.xml
+[5/7] zip surgical merge（流式；官方 dex/arsc/libil2cpp/libunity 字节级保留；星光注入 classes6.dex）
+  sha256 ok: classes.dex
+  sha256 ok: classes2.dex
+  sha256 ok: classes3.dex
+  sha256 ok: classes4.dex
+  sha256 ok: classes5.dex
+  sha256 ok: resources.arsc
+  sha256 ok: lib/arm64-v8a/libil2cpp.so
+  sha256 ok: lib/arm64-v8a/libunity.so
+Traceback (most recent call last):
+  File "<stdin>", line 115, in <module>
+AssertionError: meta=0 rawname=0 flag=13600
+[2026-09-11 01:31:51] [阿瓦隆之王] stage=surgical 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 01:32:38] [阿瓦隆之王] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_awlzw_24.7.21.sh"
+目录: /Users/aliang/Documents/nixiang/04_scripts/阿瓦隆之王
+[check] Android_awlzw.mk target=awlzw (Unity IL2CPP)
+[1/7] ndk-build -> jniLibs（NDK_OUT 锁 awlzw 专属目录）
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_awlzw/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile++      : starry_magic <= AwlzwEntry.cpp
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= AwlzwMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_awlzw/arm64-v8a/libstarry_magic.so
+  so -> jniLibs ok ([Awlzw] verified)
+[2/7] gradle assembleRelease (starry 小模板)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:compressReleaseAssets
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/awlzw_surgical.HJFQbd/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/awlzw_surgical.HJFQbd/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/awlzw_surgical.HJFQbd/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+50 actionable tasks: 50 executed
+[3/7] apktool d starry → com/starry smali → classes6.dex（官方 6 dex 不碰；ART 连续规则追加 classes6）
+  StarryApp .super + invoke-super → FunplusApplication
+-rw-r--r--@ 1 aliang  wheel  386112 Sep 11 01:32 /tmp/awlzw_surgical.HJFQbd/classes6.dex
+[3b/7] collect lib + certs from starry decode
+[4/7] binary AndroidManifest（application 挂 StarryApp + FGS/SAW 权限 + MenuService）
+  using cached /Users/aliang/Documents/nixiang/07_patched/阿瓦隆之王/surgical_24.7.21/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  43656 Sep 11 01:32 /tmp/awlzw_surgical.HJFQbd/AndroidManifest.xml
+[5/7] zip surgical merge（流式；官方 dex/arsc/libil2cpp/libunity 字节级保留；星光注入 classes6.dex）
+  sha256 ok: classes.dex
+  sha256 ok: classes2.dex
+  sha256 ok: classes3.dex
+  sha256 ok: classes4.dex
+  sha256 ok: classes5.dex
+  sha256 ok: resources.arsc
+  sha256 ok: lib/arm64-v8a/libil2cpp.so
+  sha256 ok: lib/arm64-v8a/libunity.so
+  merged ok; official entries=13606; classes6.dex=386112B; +3 extras
+  全量 CRC/size/ctype 一致; name-bytes & utf8-flag 全量一致（mismatch=0）
+[6/7] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/阿瓦隆之王/阿瓦隆之王_24.7.21_surgical-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+  size : 732M
+  sha256: 755e0f8c37d5ea2f0eeb4f06240a56a1469a5a88bb35b34e552b999956543cd1
+  md5  : af3844c2ab6e55f2a09834f0adc580cb
+[so-verify] 包内 so md5 == 构建产物 (0b9ea6eb70f176c6bec58ebe153336da) ✓
+DONE: /Users/aliang/Documents/nixiang/08_output/阿瓦隆之王/阿瓦隆之王_24.7.21_surgical-releaseSigned.apk
+[2026-09-11 01:34:20] [阿瓦隆之王] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 01:34:45] [阿瓦隆之王] stage=sign 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/04_scripts/阿瓦隆之王
+[2026-09-11 01:34:49] [阿瓦隆之王] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 01:36:37] [阿瓦隆之王] stage=install 开始
+命令: STARRY_INSTALL=1 bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_awlzw_24.7.21.sh" && bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.funplus.kingofavalon.cn "$NIXIANG/08_output/阿瓦隆之王/阿瓦隆之王_24.7.21_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang/04_scripts/阿瓦隆之王
+[check] Android_awlzw.mk target=awlzw (Unity IL2CPP)
+[1/7] ndk-build -> jniLibs（NDK_OUT 锁 awlzw 专属目录）
+[arm64-v8a] Compile++      : starry_magic <= AwlzwEntry.cpp
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_awlzw/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= AwlzwMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/libs_awlzw/arm64-v8a/libstarry_magic.so
+  so -> jniLibs ok ([Awlzw] verified)
+[2/7] gradle assembleRelease (starry 小模板)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/awlzw_surgical.ydOkZP/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/awlzw_surgical.ydOkZP/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/awlzw_surgical.ydOkZP/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[3/7] apktool d starry → com/starry smali → classes6.dex（官方 6 dex 不碰；ART 连续规则追加 classes6）
+  StarryApp .super + invoke-super → FunplusApplication
+-rw-r--r--@ 1 aliang  wheel  386112 Sep 11 01:36 /tmp/awlzw_surgical.ydOkZP/classes6.dex
+[3b/7] collect lib + certs from starry decode
+[4/7] binary AndroidManifest（application 挂 StarryApp + FGS/SAW 权限 + MenuService）
+  using cached /Users/aliang/Documents/nixiang/07_patched/阿瓦隆之王/surgical_24.7.21/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  43656 Sep 11 01:36 /tmp/awlzw_surgical.ydOkZP/AndroidManifest.xml
+[5/7] zip surgical merge（流式；官方 dex/arsc/libil2cpp/libunity 字节级保留；星光注入 classes6.dex）
+  sha256 ok: classes.dex
+  sha256 ok: classes2.dex
+  sha256 ok: classes3.dex
+  sha256 ok: classes4.dex
+  sha256 ok: classes5.dex
+  sha256 ok: resources.arsc
+  sha256 ok: lib/arm64-v8a/libil2cpp.so
+  sha256 ok: lib/arm64-v8a/libunity.so
+  merged ok; official entries=13606; classes6.dex=386112B; +3 extras
+  全量 CRC/size/ctype 一致; name-bytes & utf8-flag 全量一致（mismatch=0）
+[6/7] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/阿瓦隆之王/阿瓦隆之王_24.7.21_surgical-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+  size : 732M
+  sha256: ce8a1bcac73606719d44358f1da32e0865579bf0dacb839b6101a430e206c668
+  md5  : 17c46200e86e23650bc6eee12c4132d7
+[so-verify] 包内 so md5 == 构建产物 (0b9ea6eb70f176c6bec58ebe153336da) ✓
+[7/7] install → 127.0.0.1:16384
+/Users/aliang/Documents/nixiang/08_output/阿瓦隆之王/阿瓦隆之王_24.7.21_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 57.2 MB/s (767935872 bytes in 12.794s)
+Success
+log: adb -s 127.0.0.1:16384 logcat -s StarryApp:V StarryMagic:V Awlzw:V MenuService:V
+DONE: /Users/aliang/Documents/nixiang/08_output/阿瓦隆之王/阿瓦隆之王_24.7.21_surgical-releaseSigned.apk
+[install-verify] 设备 base.apk md5 == 本地产物 (17c46200e86e23650bc6eee12c4132d7) ✓
+[2026-09-11 01:38:49] [阿瓦隆之王] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 02:07:19] [阿瓦隆之王] stage=sign 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/04_scripts/阿瓦隆之王
+[2026-09-11 02:07:25] [阿瓦隆之王] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-11 02:07:35] [阿瓦隆之王] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/04_scripts/阿瓦隆之王
+[2026-09-11 02:07:41] [阿瓦隆之王] stage=archive 完成（校验通过）
+────────────────────────────────────────────

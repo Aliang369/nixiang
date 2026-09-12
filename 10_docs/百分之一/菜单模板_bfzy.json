@@ -1,0 +1,77 @@
+{
+  "template_id": "bfzy",
+  "name": "百分之一",
+  "package": "com.woowaygames.onepercent",
+  "source": "Games/BfzyEntry.cpp",
+  "status": "候选草稿（20260911）— 功能集依赖出包路线定稿，未出包、未装机，勿上传后台",
+  "features": [
+    {
+      "feat_num": 0,
+      "name": "基础功能"
+    },
+    {
+      "feat_num": 1,
+      "name": "游戏倍速"
+    },
+    {
+      "feat_num": 2,
+      "name": "倍速档位解锁"
+    },
+    {
+      "feat_num": 3,
+      "name": "跳过新手引导"
+    },
+    {
+      "feat_num": 4,
+      "name": "去公告弹窗"
+    },
+    {
+      "feat_num": 5,
+      "name": "高帧率"
+    },
+    {
+      "feat_num": 6,
+      "name": "自动托管/最优走法"
+    },
+    {
+      "feat_num": 7,
+      "name": "卡牌无敌（仅卡牌对战）"
+    },
+    {
+      "feat_num": 8,
+      "name": "卡牌秒杀（仅卡牌对战）"
+    },
+    {
+      "feat_num": 9,
+      "name": "卡牌伤害倍率（仅卡牌对战）"
+    },
+    {
+      "feat_num": 10,
+      "name": "卡牌无限技能（仅卡牌对战）"
+    }
+  ],
+  "_notes": {
+    "phase1_低风险": [1, 2, 3, 4, 5, 6],
+    "phase1_依据": "native hook + 本地数据层；1/2/5 跨模式且纯表现层；3/4 纯 UI 流程；6 在消除系走「完整棋盘镜像本地搜索最优解」或官方 SUGGEST_REQUEST(1131)，全部经服务端正常裁决，服务端无法判定为作弊（推荐主功能）",
+    "phase2_需IL层": [7, 8, 9, 10],
+    "phase2_前提": "容器已实测可重建（内层 .NET BinaryFormatter/MS-NRBF 无校验和；外层 lz4 -3 -B4 -BD --no-frame-crc --content-size 字节级复现）。",
+    "phase2_硬约束": {
+      "必须对齐_version": "容器 _version（+0x18）须等于服务端当前热更版本，否则触发 DownloadNewest 覆盖我们的 dll → Mod 静默失效；官方一热更需重出包",
+      "必须改_guid": "保留官方 _guid（+0x10）时，已存在的官方 cache 按 cache._guid==origin._guid 规则优先于包内 origin → 改动不生效；须给新 _guid",
+      "离线风险": "若 _version 落后且设备离线，下载失败不回退 origin（DownloadCode 1/2/4/5/6 直接返回）→ 热更程序集不加载、游戏起不来",
+      "推荐解法": "用 native hook 守住 AOT 加载器 HotUpdateDll.<Load>(VA 0x38F7A98)/AotMetadataDll.Load(VA 0x38F653C)，强制只读 origin、永不下载 → A+B 组合拳"
+    },
+    "phase2_限制": "数值类仅对「卡牌对战 TCG」生效（客户端本地模拟）；主线冒险推图与消除系四战斗客户端无战斗数值，这些开关对其无效",
+    "未纳入_无收益": {
+      "免广告": "协议层有激励视频三件套（MESSAGE_ID 1328-1333 / CharacterCommon GetAdRemain/LaunchAd/FinishAd），但无 SDK、无视频、无客户端等待，客户端本就是秒领 → 无可跳过项，做成开关无用户可感收益；刷次数由服务端 quota 拒（自欺型）"
+    },
+    "未纳入_高风险": {
+      "去防沉迷弹窗": "服务端亦有防沉迷（PID_TEENAGE_*）并上报 anti.wooway.cn，本地仅去弹窗，可能增加可观测风险",
+      "卡牌胜负替换": "影响真实排位排行，属工作区「影响其他账户」红线，须单独授权"
+    },
+    "feat_num_1_挂点": "UnityEngine.Time::set_timeScale  RVA 0x43BB170 / file 0x43B7170",
+    "feat_num_2_挂点": "Script.Config.Script.Adventure/GemsBattleSpeedCfg.cs:14 IsUnlock()",
+    "feat_num_5_挂点": "Logics/Logic.cs:58-59 Database.GetGameUtils(\"HighFrameRate\")",
+    "feat_num_7_10_挂点": "见 战斗系统_可逆功能清单_20260911.md 附录 A"
+  }
+}

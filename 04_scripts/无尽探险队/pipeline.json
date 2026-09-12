@@ -9,12 +9,12 @@
     "tag": "wjtxd",
     "obj_dir": "obj_wjtxd",
     "libs_dir": "libs_wjtxd",
-    "serial": "127.0.0.1:16384"
+    "serial": "96f0d883"
   },
   "env": {
     "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
     "NIXIANG": "/Users/aliang/Documents/nixiang",
-    "SERIAL": "127.0.0.1:16384"
+    "SERIAL": "96f0d883"
   },
   "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
   "stages": [
@@ -149,7 +149,7 @@
     },
     {
       "id": "device_ready",
-      "name": "设备准备（MuMu 127.0.0.1:16384）",
+      "name": "设备准备（真机小米 M2102K1AC 96f0d883）",
       "requires": [],
       "command": "adb connect $SERIAL; adb -s $SERIAL get-state",
       "verify": [
@@ -176,11 +176,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 00:23:00",
+      "done_at": "2026-09-11 15:05:27",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk": {
           "md5": "0aba389639c4e495fe239244cfb30bab"
         }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无尽探险队/无尽探险队_26.1.5_surgical-releaseSigned.apk": "0aba389639c4e495fe239244cfb30bab"
       }
     },
     {

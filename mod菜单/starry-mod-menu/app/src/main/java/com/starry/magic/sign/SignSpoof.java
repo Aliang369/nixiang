@@ -250,6 +250,12 @@ public final class SignSpoof {
                     + "4fGUgqCLc2j12f+wT3uLK6otfQAYpa035Lbvhieeq28bhNxx/f+jGaY1OBYd9hdJT9sMo4+qhtxK"
                     + "O+tp8XM5XqFzQwkdmOB5AAE3Y0f5+2ZBLfP1oGtmxPKH367y82n8lZewfV/ahxQBm5OI";
 
+    /** 弹力果冻 官服/TapTap 原版（com.ginicat.sweet，vc4409）。
+     *  证书与 4399 渠道**同一张**：已用 openssl 从官方 TapTap 包 META-INF/CERT.RSA
+     *  抽出 DER→base64，与上面的 TLGD_CERT_B64 逐字节比对相同（904 字符）。*/
+    private static final String TLGD_TT_PKG = "com.ginicat.sweet";
+    private static final String TLGD_TT_CERT_B64 = TLGD_CERT_B64;
+
     /** 独奏骑士 原版（MD5=6870e083… O=Shimmer CN=shake） */
     private static final String DZQS_PKG = "com.Shimmer.SoloKnight.cn";
     private static final String DZQS_CERT_B64 =
@@ -541,6 +547,7 @@ public final class SignSpoof {
                 fakes.put(PCR_PKG, new Signature(Base64.decode(PCR_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GYWS_PKG, new Signature(Base64.decode(GYWS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(TLGD_PKG, new Signature(Base64.decode(TLGD_CERT_B64, Base64.DEFAULT)));
+                fakes.put(TLGD_TT_PKG, new Signature(Base64.decode(TLGD_TT_CERT_B64, Base64.DEFAULT)));
                 fakes.put(DZQS_PKG, new Signature(Base64.decode(DZQS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(SHHJ_PKG, new Signature(Base64.decode(SHHJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GJC2INTL_PKG, new Signature(Base64.decode(GJC2INTL_CERT_B64, Base64.DEFAULT)));

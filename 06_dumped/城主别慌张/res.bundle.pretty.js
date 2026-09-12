@@ -1,0 +1,3168 @@
+System.register("chunks:///_virtual/MotionTrail.ts", ["./rollupPluginModLoBabelHelpers.js", "cc"], (function(t) {
+    var e, i, r, a, o, s, n, l, h, p, u, d, c, f, y;
+    return {
+        setters: [function(t) {
+            e = t.applyDecoratedDescriptor, i = t.inheritsLoose, r = t.initializerDefineProperty, a = t.assertThisInitialized, o = t.createClass
+        }, function(t) {
+            s = t.cclegacy, n = t._decorator, l = t.SpriteAtlas, h = t.SpriteFrame, p = t.CCInteger, u = t.Color, d = t.Vec2, c = t.NodeEventType, f = t.Node, y = t.UIRenderer
+        }],
+        execute: function() {
+            var _, b, g, v, m, D, x, C, O, S, w, W, F, A, P, k, M, j, N, z, R, X, Y, G, q, V, B, I, L, T, U;
+            s._RF.push({}, "789d76+1jRFlo72m4PDVMMr", "MotionTrail", void 0);
+            var E = new ArrayBuffer(4),
+                H = new Float32Array(E),
+                J = new Int32Array(E);
+            var K = function() {
+                    this.x = 0, this.y = 0, this.dis = 0, this.cos = 0, this.sin = 0
+                },
+                Q = n.ccclass,
+                Z = n.property,
+                $ = n.menu;
+            t("MotionTrail", (_ = $("Gi/MotionTrail"), b = Z({
+                type: l,
+                readonly: !0
+            }), g = Z({
+                type: h
+            }), v = Z({
+                displayName: "是否激活"
+            }), m = Z({
+                displayName: "世界坐标"
+            }), D = Z({
+                displayName: "偏移"
+            }), x = Z({
+                type: p,
+                displayName: "拖尾长度"
+            }), C = Z({
+                displayName: "头部宽度"
+            }), O = Z({
+                displayName: "尾部宽度"
+            }), S = Z({
+                type: p,
+                min: 0,
+                max: 255,
+                slide: !0,
+                displayName: "头部透明度"
+            }), w = Z({
+                type: p,
+                min: 0,
+                max: 255,
+                slide: !0,
+                displayName: "尾部透明度"
+            }), W = Z({
+                type: u,
+                displayName: "头部颜色",
+                tooltip: "拖尾头部的颜色，仅在启用渐变颜色时生效"
+            }), F = Z({
+                type: u,
+                displayName: "尾部颜色",
+                tooltip: "拖尾尾部的颜色，仅在启用渐变颜色时生效"
+            }), A = Z({
+                displayName: "启用渐变颜色",
+                tooltip: "开启后拖尾将从头部颜色渐变到尾部颜色，关闭则使用统一颜色"
+            }), P = Z({
+                displayName: "使用快速平方根",
+                tooltip: "是否使用快速平方根计算（fastInvSqrt），提高性能,精度低一点但视觉效果基本不变"
+            }), Q(k = _((j = e((M = function(t) {
+                function e() {
+                    for (var e, i = arguments.length, o = new Array(i), s = 0; s < i; s++) o[s] = arguments[s];
+                    return e = t.call.apply(t, [this].concat(o)) || this, r(e, "atlas", j, a(e)), r(e, "_spriteFrame", N, a(e)), r(e, "_isActive", z, a(e)), r(e, "_isWorldXY", R, a(e)), r(e, "offset", X, a(e)), r(e, "_length", Y, a(e)), r(e, "_headWidth", G, a(e)), r(e, "_tailWidth", q, a(e)), r(e, "_headOpacity", V, a(e)), r(e, "_tailOpacity", B, a(e)), r(e, "_headColor", I, a(e)), r(e, "_tailColor", L, a(e)), r(e, "_useGradientColor", T, a(e)), r(e, "_useFastSqrt", U, a(e)), e.joints = [], e.cascadeScale = new d(1, 1), e.visibleScale = new d(1, 1), e.isPaused = !1, e._ibWeb = null, e
+                }
+                i(e, t);
+                var s = e.prototype;
+                return s.__preload = function() {
+                    t.prototype.__preload.call(this), this._assembler = {
+                        updateColor: this._updateColor.bind(this),
+                        updateRenderData: this.onFlushed.bind(this),
+                        fillBuffers: this.fillBuffer.bind(this)
+                    }, this._useVertexOpacity = !0
+                }, s.onLoad = function() {
+                    t.prototype.onLoad.call(this), this.updateSpriteFrame(), this.updateLength(), this.updateUV(), this.updateWidth(), this.updateActive(), this.node.on(c.TRANSFORM_CHANGED, this.updateVisibleScale, this)
+                }, s.onDestroy = function() {
+                    t.prototype.onDestroy.call(this), this.node.off(c.TRANSFORM_CHANGED, this.updateVisibleScale, this)
+                }, s.updateActive = function() {
+                    this._isActive && (this.updateCascadeScale(), this.updateVisibleScale(), this.resetPos())
+                }, s.clear = function() {
+                    this.resetPos(), this.markForUpdateRenderData()
+                }, s.updateLength = function() {
+                    for (var t = 0, e = this._length, i = this.joints = []; t < e; i[t++] = new K);
+                    this.createBuffer()
+                }, s.updateWidth = function() {
+                    for (var t = this._length, e = .5 * this._headWidth, i = (e - .5 * this._tailWidth) / (t - 1), r = 0, a = this.joints; r < t; a[r].dis = e - i * r++);
+                }, s.createBuffer = function() {
+                    this.destroyRenderData();
+                    var t = this._renderData = this.requestRenderData(),
+                        e = this._length << 1;
+                    t.dataLength = e, t.resize(e, 3 * (e - 2)), this._updateColor(), this.updateIData()
+                }, s.updateIData = function() {
+                    this._renderData.chunk;
+                    var t = this._renderData.indexCount;
+                    this._ibWeb && this._ibWeb.length === t || (this._ibWeb = new Uint16Array(t));
+                    for (var e = this._ibWeb, i = 0, r = 0, a = e.length; i < a; ++r) e[i++] = r, e[i++] = r + 1, e[i++] = r + 2
+                }, s.onFlushed = function() {
+                    this._spriteFrame && null != this._renderData && (this.isPaused || (this.updateXY(), this._renderData.updateRenderData(this, this._spriteFrame)))
+                }, s.updateCascadeScale = function() {
+                    for (var t = this.node, e = 1, i = 1; null !== t._parent;) e *= (t = t._parent).scale.x, i *= t.scale.y;
+                    this.cascadeScale.x = e, this.cascadeScale.y = i
+                }, s.updateVisibleScale = function(t) {
+                    void 0 === t && (t = 4), t & f.TransformBit.SCALE && (this.visibleScale.x = this.cascadeScale.x * this.node.scale.x, this.visibleScale.y = this.cascadeScale.y * this.node.scale.y)
+                }, s.updateXY = function() {
+                    var t = this.node,
+                        e = this.joints;
+                    if (null != this._renderData) {
+                        for (var i = this._renderData.data, r = this._length - 1, a = r; a > 0; --a) {
+                            var o = e[a],
+                                s = e[a - 1];
+                            o.x = s.x, o.y = s.y, o.sin = s.sin, o.cos = s.cos
+                        }
+                        var n = e[0],
+                            l = e[1],
+                            h = this.visibleScale.x,
+                            p = this.visibleScale.y;
+                        if (this._isWorldXY) {
+                            var u = t.worldMatrix;
+                            n.x = this.offset.x * h + u.m12, n.y = this.offset.y * p + u.m13
+                        } else n.x = this.offset.x * t.scale.x + t.position.x, n.y = this.offset.y * t.scale.y + t.position.y;
+                        var d = l.y - n.y,
+                            c = l.x - n.x,
+                            f = d * d + c * c;
+                        if (this._useFastSqrt) {
+                            if (f > 1e-4) {
+                                var y = function(t) {
+                                    var e = .5 * t;
+                                    H[0] = t, J[0] = 1597463007 - (J[0] >> 1);
+                                    var i = H[0];
+                                    return i * (1.5 - e * i * i)
+                                }(f);
+                                n.sin = d * y, n.cos = c * y
+                            }
+                        } else {
+                            var _ = f > 1e-4 ? Math.sqrt(f) : 1;
+                            n.sin = d / _, n.cos = c / _
+                        }
+                        var b = 0,
+                            g = 0,
+                            v = 1,
+                            m = 1;
+                        this._isWorldXY || (b = t.position.x, g = t.position.y, v = this.cascadeScale.x, m = this.cascadeScale.y);
+                        for (var D = 0, x = 0, C = 0, O = 0, S = 0, w = 0; w < r; ++w, D += 2) x = ((n = e[w]).x - b) * v, C = (n.y - g) * m, O = n.dis * h * n.sin, S = n.dis * p * n.cos, i[D].x = x + O, i[D].y = C - S, i[D + 1].x = x - O, i[D + 1].y = C + S;
+                        x = ((l = e[r]).x - b) * v, C = (l.y - g) * m, O = l.dis * h * n.sin, S = l.dis * p * n.cos, i[D].x = x + O, i[D].y = C - S, i[D + 1].x = x - O, i[D + 1].y = C + S, this.fitXY(i)
+                    }
+                }, s.resetPos = function() {
+                    var t = this.offset.x,
+                        e = this.offset.y,
+                        i = this.node;
+                    if (this._isWorldXY) {
+                        var r = i.worldMatrix;
+                        t += r.m12, e += r.m13
+                    } else t += i.position.x, e += i.position.y;
+                    for (var a = this._length - 1, o = this.joints; a > -1; --a) o[a].x = t, o[a].y = e;
+                    if (null != this._renderData) {
+                        for (var s = this._renderData.data, n = 0, l = s.length; n < l; ++n) s[n].x = t, s[n].y = e;
+                        this.fitXY(s)
+                    }
+                }, s.fitXY = function(t) {
+                    var e = this._renderData.chunk.vb;
+                    if (this._isWorldXY)
+                        for (var i = 0, r = e.length, a = this._renderData.floatStride, o = 0; i < r; i += a, ++o) e[i] = t[o].x, e[i + 1] = t[o].y;
+                    else
+                        for (var s = this.node.worldMatrix, n = s.m12, l = s.m13, h = 0, p = e.length, u = this._renderData.floatStride, d = 0; h < p; h += u, ++d) e[h] = t[d].x + n, e[h + 1] = t[d].y + l
+                }, s.updateUV = function() {
+                    var t = this._spriteFrame;
+                    if (t) {
+                        var e = this._renderData;
+                        if (e) {
+                            for (var i = e.chunk.vb, r = e.floatStride, a = 1 / (this.joints.length - 1), o = 3, s = 0, n = i.length; o < n; o += r, ++s) i[o] = 1 & s, i[o + 1] = 1 - a * (s >> 1);
+                            var l = t.uv;
+                            if (t._rotated)
+                                for (var h = l[0], p = l[1], u = l[4] - h, d = l[3] - p, c = 3, f = i.length, y = e.floatStride; c < f; c += y) {
+                                    var _ = i[c];
+                                    i[c] = h + i[c + 1] * u, i[c + 1] = p + _ * d
+                                } else {
+                                    h = l[0], p = l[1], u = l[2] - h, d = l[5] - p;
+                                    for (var b = 3, g = i.length, v = e.floatStride; b < g; b += v) i[b] = h + i[b] * u, i[b + 1] = p + i[b + 1] * d
+                                }
+                        }
+                    }
+                }, s._updateColor = function() {
+                    var t, e, i, r, a = this._renderData.chunk.vb,
+                        o = this._headOpacity / 255,
+                        s = (o - this._tailOpacity / 255) / (this._length - 1),
+                        n = 0,
+                        l = 0,
+                        h = 0;
+                    if (this._useGradientColor) {
+                        var p = this._headColor,
+                            u = this._tailColor;
+                        t = p.r / 255, e = p.g / 255, i = p.b / 255, r = this.color.a / 255, n = (u.r / 255 - t) / (this._length - 1), l = (u.g / 255 - e) / (this._length - 1), h = (u.b / 255 - i) / (this._length - 1)
+                    } else {
+                        var d = this.color;
+                        t = d.r / 255, e = d.g / 255, i = d.b / 255, r = d.a / 255
+                    }
+                    for (var c = 5, f = a.length, y = 2 * this._renderData.floatStride, _ = 0; c < f; c += y, ++_) {
+                        if (this._useGradientColor) {
+                            var b = t + n * _,
+                                g = e + l * _,
+                                v = i + h * _;
+                            a[c] = a[c + 9] = b, a[c + 1] = a[c + 10] = g, a[c + 2] = a[c + 11] = v
+                        } else a[c] = a[c + 9] = t, a[c + 1] = a[c + 10] = e, a[c + 2] = a[c + 11] = i;
+                        a[c + 3] = a[c + 12] = r * (o - s * _)
+                    }
+                }, s.updateMaterial = function() {
+                    t.prototype.updateMaterial.call(this), null != this._customMaterial || (this._customMaterial = this.getSharedMaterial(0))
+                }, s.updateSpriteFrame = function() {
+                    this._spriteFrame ? this._renderData && (this._renderData.textureDirty = !0) : this.atlas = null
+                }, s._render = function(t) {
+                    t.commitComp(this, this._renderData, this._spriteFrame, this._assembler, null), this.markForUpdateRenderData()
+                }, s._canRender = function() {
+                    var e;
+                    return t.prototype._canRender.call(this) && !(null == (e = this._spriteFrame) || !e.texture)
+                }, s.fillBuffer = function() {
+                    var t = this._renderData;
+                    if (null != t) {
+                        var e = t.chunk,
+                            i = e.vertexOffset,
+                            r = e.meshBuffer,
+                            a = r.iData,
+                            o = this._ibWeb;
+                        if (o && o.length === t.indexCount || (this.updateIData(), o = this._ibWeb)) {
+                            for (var s = 0, n = t.indexCount, l = r.indexOffset; s < n; a[l++] = i + o[s++]);
+                            r.indexOffset += t.indexCount
+                        }
+                    }
+                }, o(e, [{
+                    key: "spriteFrame",
+                    get: function() {
+                        return this._spriteFrame
+                    },
+                    set: function(t) {
+                        this._spriteFrame = t, this.updateSpriteFrame(), this.updateUV(), this.markForUpdateRenderData()
+                    }
+                }, {
+                    key: "isActive",
+                    get: function() {
+                        return this._isActive
+                    },
+                    set: function(t) {
+                        this._isActive = this.enabled = t, this.updateActive()
+                    }
+                }, {
+                    key: "isWorldXY",
+                    get: function() {
+                        return this._isWorldXY
+                    },
+                    set: function(t) {
+                        this._isWorldXY = t, this.resetPos()
+                    }
+                }, {
+                    key: "length",
+                    get: function() {
+                        return this._length
+                    },
+                    set: function(t) {
+                        this._length = Math.max(t, 2), this.updateLength(), this.updateIData(), this.updateUV(), this.updateWidth(), this.resetPos()
+                    }
+                }, {
+                    key: "headWidth",
+                    get: function() {
+                        return this._headWidth
+                    },
+                    set: function(t) {
+                        this._headWidth = Math.max(t, 0), this.updateWidth()
+                    }
+                }, {
+                    key: "tailWidth",
+                    get: function() {
+                        return this._tailWidth
+                    },
+                    set: function(t) {
+                        this._tailWidth = Math.max(t, 0), this.updateWidth()
+                    }
+                }, {
+                    key: "headOpacity",
+                    get: function() {
+                        return this._headOpacity
+                    },
+                    set: function(t) {
+                        this._headOpacity = t, this._updateColor()
+                    }
+                }, {
+                    key: "tailOpacity",
+                    get: function() {
+                        return this._tailOpacity
+                    },
+                    set: function(t) {
+                        this._tailOpacity = t, this._updateColor()
+                    }
+                }, {
+                    key: "headColor",
+                    get: function() {
+                        return this._headColor
+                    },
+                    set: function(t) {
+                        this._headColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "tailColor",
+                    get: function() {
+                        return this._tailColor
+                    },
+                    set: function(t) {
+                        this._tailColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "useGradientColor",
+                    get: function() {
+                        return this._useGradientColor
+                    },
+                    set: function(t) {
+                        this._useGradientColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "useFastSqrt",
+                    get: function() {
+                        return this._useFastSqrt
+                    },
+                    set: function(t) {
+                        this._useFastSqrt = t
+                    }
+                }]), e
+            }(y)).prototype, "atlas", [b], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), N = e(M.prototype, "_spriteFrame", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), e(M.prototype, "spriteFrame", [g], Object.getOwnPropertyDescriptor(M.prototype, "spriteFrame"), M.prototype), z = e(M.prototype, "_isActive", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(M.prototype, "isActive", [v], Object.getOwnPropertyDescriptor(M.prototype, "isActive"), M.prototype), R = e(M.prototype, "_isWorldXY", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(M.prototype, "isWorldXY", [m], Object.getOwnPropertyDescriptor(M.prototype, "isWorldXY"), M.prototype), X = e(M.prototype, "offset", [D], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new d
+                }
+            }), Y = e(M.prototype, "_length", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 20
+                }
+            }), e(M.prototype, "length", [x], Object.getOwnPropertyDescriptor(M.prototype, "length"), M.prototype), G = e(M.prototype, "_headWidth", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 100
+                }
+            }), e(M.prototype, "headWidth", [C], Object.getOwnPropertyDescriptor(M.prototype, "headWidth"), M.prototype), q = e(M.prototype, "_tailWidth", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(M.prototype, "tailWidth", [O], Object.getOwnPropertyDescriptor(M.prototype, "tailWidth"), M.prototype), V = e(M.prototype, "_headOpacity", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 255
+                }
+            }), e(M.prototype, "headOpacity", [S], Object.getOwnPropertyDescriptor(M.prototype, "headOpacity"), M.prototype), B = e(M.prototype, "_tailOpacity", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(M.prototype, "tailOpacity", [w], Object.getOwnPropertyDescriptor(M.prototype, "tailOpacity"), M.prototype), I = e(M.prototype, "_headColor", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new u(255, 255, 255, 255)
+                }
+            }), e(M.prototype, "headColor", [W], Object.getOwnPropertyDescriptor(M.prototype, "headColor"), M.prototype), L = e(M.prototype, "_tailColor", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new u(255, 255, 255, 255)
+                }
+            }), e(M.prototype, "tailColor", [F], Object.getOwnPropertyDescriptor(M.prototype, "tailColor"), M.prototype), T = e(M.prototype, "_useGradientColor", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !1
+                }
+            }), e(M.prototype, "useGradientColor", [A], Object.getOwnPropertyDescriptor(M.prototype, "useGradientColor"), M.prototype), U = e(M.prototype, "_useFastSqrt", [Z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(M.prototype, "useFastSqrt", [P], Object.getOwnPropertyDescriptor(M.prototype, "useFastSqrt"), M.prototype), k = M)) || k) || k));
+            s._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/MotionTrail2.ts", ["./rollupPluginModLoBabelHelpers.js", "cc"], (function(t) {
+    var e, i, r, a, s, o, n, h, l, p, u, c, d, f, y;
+    return {
+        setters: [function(t) {
+            e = t.applyDecoratedDescriptor, i = t.inheritsLoose, r = t.initializerDefineProperty, a = t.assertThisInitialized, s = t.createClass
+        }, function(t) {
+            o = t.cclegacy, n = t._decorator, h = t.SpriteAtlas, l = t.SpriteFrame, p = t.CCInteger, u = t.Color, c = t.Vec2, d = t.NodeEventType, f = t.Node, y = t.UIRenderer
+        }],
+        execute: function() {
+            var m, g, v, _, b, x, S, M, D, C, w, O, P, A, W, z, B, k, L, N, F, U, T, j, R, V, I, E, G, X, Y, q, H, J, K, Z, Q, $, tt, et, it, rt, at, st, ot, nt, ht, lt, pt, ut, ct, dt, ft, yt, mt, gt, vt, _t, bt, xt, St, Mt, Dt, Ct, wt, Ot;
+            o._RF.push({}, "90334bOM+5NkZwbKCtoSU35", "MotionTrail2", void 0);
+            var Pt = function() {
+                    this.x = 0, this.y = 0, this.dis = 0
+                },
+                At = n.ccclass,
+                Wt = n.property,
+                zt = n.menu,
+                Bt = function(t) {
+                    return t[t.Always = 0] = "Always", t[t.OnChange = 1] = "OnChange", t
+                }(Bt || {});
+            t("MotionTrail2", (m = zt("Gi/MotionTrail2"), g = Wt({
+                type: h,
+                readonly: !0
+            }), v = Wt({
+                type: l
+            }), _ = Wt({
+                displayName: "图片长度"
+            }), b = Wt({
+                displayName: "是否激活"
+            }), x = Wt({
+                displayName: "世界坐标"
+            }), S = Wt({
+                displayName: "偏移"
+            }), M = Wt({
+                type: p,
+                displayName: "拖尾长度"
+            }), D = Wt({
+                displayName: "头部宽度"
+            }), C = Wt({
+                displayName: "尾部宽度"
+            }), w = Wt({
+                type: p,
+                min: 0,
+                max: 255,
+                slide: !0,
+                displayName: "头部透明度"
+            }), O = Wt({
+                type: p,
+                min: 0,
+                max: 255,
+                slide: !0,
+                displayName: "尾部透明度"
+            }), P = Wt({
+                type: u,
+                displayName: "头部颜色",
+                tooltip: "拖尾头部的颜色，仅在启用渐变颜色时生效"
+            }), A = Wt({
+                type: u,
+                displayName: "尾部颜色",
+                tooltip: "拖尾尾部的颜色，仅在启用渐变颜色时生效"
+            }), W = Wt({
+                displayName: "启用渐变颜色",
+                tooltip: "开启后拖尾将从头部颜色渐变到尾部颜色，关闭则使用统一颜色"
+            }), z = Wt({
+                type: p
+            }), B = Wt({
+                type: p,
+                displayName: "UV更新模式",
+                tooltip: "0=每帧；1=仅变化/降频时"
+            }), k = Wt({
+                displayName: "锁定级联缩放",
+                tooltip: "开启后仅在激活/重置/显式刷新时计算级联缩放"
+            }), L = Wt({
+                type: p
+            }), N = Wt({
+                type: p,
+                min: 1,
+                max: 4,
+                displayName: "采样/UV降频",
+                tooltip: "1=每帧, 2=隔帧, 3=每三帧, 4=每四帧"
+            }), F = Wt({
+                displayName: "序列帧时间倍率",
+                tooltip: "用于 MotionStreak.effect 的 speed 缩放",
+                min: 0,
+                slide: !0
+            }), U = Wt({
+                displayName: "斜接限制(miterLimit)",
+                tooltip: "限制拐角处的加宽系数，避免尖刺",
+                min: 1
+            }), T = Wt({
+                displayName: "曲率收宽(0~1)",
+                tooltip: "拐弯处按曲率轻度收窄宽度，0为关闭",
+                min: 0,
+                max: 1,
+                slide: !0
+            }), j = Wt({
+                displayName: "启用曲率重采样"
+            }), R = Wt({
+                displayName: "曲率权重(β)",
+                tooltip: "对大转角分配更多关节，0禁用",
+                min: 0,
+                max: 2,
+                slide: !0
+            }), V = Wt({
+                type: p,
+                displayName: "曲率阈值(角度°)",
+                tooltip: "超过该角度才启用加权",
+                min: 0,
+                max: 90,
+                slide: !0
+            }), I = Wt({
+                displayName: "各向异性度量",
+                tooltip: "在固定父级缩放下采用一致度量计算miter/bevel，提升急弯连续性"
+            }), E = Wt({
+                type: p
+            }), G = Wt({
+                type: p,
+                displayName: "急弯Bevel角阈值(°)",
+                tooltip: "拐角角度小于该值时强制Bevel以避免尖刺"
+            }), X = Wt({
+                type: p
+            }), Y = Wt({
+                type: p,
+                displayName: "法线平滑邻域",
+                tooltip: "0=关闭，1=与上一个关节平滑，2=预留"
+            }), q = Wt({
+                displayName: "法线平滑强度(0~1)",
+                tooltip: "与前一关节的法线平滑混合强度",
+                min: 0,
+                max: 1,
+                slide: !0
+            }), H = Wt({
+                displayName: "曲率增强上限",
+                tooltip: "基于拐角锐度提升的重采样权重上限"
+            }), J = Wt({
+                displayName: "急弯轻度收窄强度",
+                tooltip: "急弯处对宽度进行轻度自适应收窄"
+            }), At(K = m(((Ot = function(t) {
+                function e() {
+                    for (var e, i = arguments.length, s = new Array(i), o = 0; o < i; o++) s[o] = arguments[o];
+                    return e = t.call.apply(t, [this].concat(s)) || this, r(e, "atlas", Q, a(e)), r(e, "_spriteFrame", $, a(e)), r(e, "_trailLength", tt, a(e)), r(e, "_isActive", et, a(e)), r(e, "_isWorldXY", it, a(e)), r(e, "offset", rt, a(e)), r(e, "_length", at, a(e)), r(e, "_headWidth", st, a(e)), r(e, "_tailWidth", ot, a(e)), r(e, "_headOpacity", nt, a(e)), r(e, "_tailOpacity", ht, a(e)), r(e, "_headColor", lt, a(e)), r(e, "_tailColor", pt, a(e)), r(e, "_useGradientColor", ut, a(e)), e.joints = [], e._vCoordsLeft = [], e._vCoordsRight = [], e.cascadeScale = new c(1, 1), e.visibleScale = new c(1, 1), e.pointBuffer = [], e.bufferHead = 0, e.bufferSize = 0, e.maxBufferSize = 100, e.lastPosition = new c(0, 0), e.frameSkipCounter = 0, e.unchangedFrames = 0, e.segmentDistances = [], e.segmentDirty = !0, e.cachedTotalLength = 0, e.sampleCache = [], e.sampleCacheDirty = !0, e.lastValidPointsLength = 0, e.dirtyVertices = [], e.lastJointPositions = [], e.vertexUpdateThreshold = .1, e.isPaused = !1, e._ibWeb = null, r(e, "_uvUpdateMode", ct, a(e)), r(e, "_lockCascadeScale", dt, a(e)), r(e, "_sampleUvDivisor", ft, a(e)), e.uvDirty = !0, e.frameCounter = 0, e._materialSpeedSupported = !1, e._baseSpeed = 1, r(e, "timeScale", yt, a(e)), e.dirXReuse = [], e.dirYReuse = [], e._clippedPoint = {
+                        x: 0,
+                        y: 0
+                    }, r(e, "_miterLimit", mt, a(e)), r(e, "_curvatureAtten", gt, a(e)), r(e, "_curvatureResampleEnabled", vt, a(e)), r(e, "_curvatureWeight", _t, a(e)), r(e, "_curvatureAngleThreshold", bt, a(e)), e.weightedSegLens = [], e.weightedPrefix = [], e._lastMinCos = 1, e._lastCosThreshold = 1, e._lastBeta = 0, r(e, "_enableAnisotropicMiter", xt, a(e)), r(e, "_cornerBevelAngleDeg", St, a(e)), r(e, "_normalSmoothWindow", Mt, a(e)), r(e, "_normalSmoothWeight", Dt, a(e)), r(e, "_curvatureBoostMax", Ct, a(e)), r(e, "_extraCurvatureGamma", wt, a(e)), e.metricSx = 1, e.metricSy = 1, e._cornerBevelAngleDegCos = Math.cos(60 * Math.PI / 180), e._curvatureAngleThresholdCos = Math.cos(25 * Math.PI / 180), e
+                }
+                i(e, t);
+                var o = e.prototype;
+                return o.__preload = function() {
+                    t.prototype.__preload.call(this), this._assembler = {
+                        updateColor: this._updateColor.bind(this),
+                        updateRenderData: this.onFlushed.bind(this),
+                        fillBuffers: this.fillBuffer.bind(this)
+                    }, this._useVertexOpacity = !0
+                }, o.onLoad = function() {
+                    t.prototype.onLoad.call(this), this.updateSpriteFrame(), this.updateLength(), this.updateUV(), this.updateWidth(), this.updateActive(), this.metricSx = Math.max(1e-4, Math.abs(this.visibleScale.x)), this.metricSy = Math.max(1e-4, Math.abs(this.visibleScale.y)), this.node.on(d.TRANSFORM_CHANGED, this.updateVisibleScale, this), this.uvDirty = !0, this.updateMaterial(), this.ensureMaterialSpeedInitialized(), this.applyMaterialTimeScale()
+                }, o.onDestroy = function() {
+                    t.prototype.onDestroy.call(this), this.node.off(d.TRANSFORM_CHANGED, this.updateVisibleScale, this)
+                }, o.updateActive = function() {
+                    this._isActive && (this.updateCascadeScale(), this.updateVisibleScale(), this.resetPos())
+                }, o.updateLength = function() {
+                    for (var t = 0, e = this._length, i = this.joints = []; t < e; i[t++] = new Pt);
+                    this._vCoordsLeft = new Array(this._length), this._vCoordsRight = new Array(this._length), this.maxBufferSize = Math.max(100, 5 * this._length), this.resetPointBuffer(), this.dirtyVertices = new Array(this._length).fill(!0), this.lastJointPositions = new Array(this._length);
+                    for (var r = 0; r < this._length; r++) this.lastJointPositions[r] = new c(0, 0);
+                    var a = Math.max(1, 2 * this._length);
+                    this.weightedSegLens = new Array(a), this.weightedPrefix = new Array(a + 1), this.createBuffer()
+                }, o.updateWidth = function() {
+                    for (var t = this._length, e = .5 * this._headWidth, i = (e - .5 * this._tailWidth) / (t - 1), r = 0, a = this.joints; r < t; a[r].dis = e - i * r++);
+                }, o.createBuffer = function() {
+                    this.destroyRenderData();
+                    var t = this._renderData = this.requestRenderData(),
+                        e = this._length << 1;
+                    t.dataLength = e, t.resize(e, 3 * (e - 2)), this._updateColor(), this.updateIData()
+                }, o.updateIData = function() {
+                    this._renderData.chunk;
+                    var t = this._renderData.indexCount;
+                    this._ibWeb && this._ibWeb.length === t || (this._ibWeb = new Uint16Array(t));
+                    for (var e = this._ibWeb, i = 0, r = 0, a = e.length; i < a; ++r) e[i++] = r, e[i++] = r + 1, e[i++] = r + 2
+                }, o.onFlushed = function() {
+                    if (this._spriteFrame && !this.isPaused) {
+                        this.frameCounter++, this.updateXY();
+                        var t = !1;
+                        (this._uvUpdateMode === Bt.Always || this.uvDirty || this._sampleUvDivisor > 1 && this.frameCounter % this._sampleUvDivisor == 0) && (t = !0), t && (this.updateUV(), this.uvDirty = !1), this._renderData && this._renderData.updateRenderData(this, this._spriteFrame)
+                    }
+                }, o.updateCascadeScale = function() {
+                    for (var t = this.node, e = 1, i = 1; null !== t._parent;) e *= (t = t._parent).scale.x, i *= t.scale.y;
+                    this.cascadeScale.x = e, this.cascadeScale.y = i
+                }, o.updateVisibleScale = function(t) {
+                    void 0 === t && (t = 4), t & f.TransformBit.SCALE && (this.visibleScale.x = this.cascadeScale.x * this.node.scale.x, this.visibleScale.y = this.cascadeScale.y * this.node.scale.y)
+                }, o.getUniformScaleForLength = function() {
+                    return .5 * (Math.abs(this.cascadeScale.x) + Math.abs(this.cascadeScale.y))
+                }, o.getEffectiveTrailLength = function() {
+                    return this._isWorldXY ? this._trailLength * this.getUniformScaleForLength() : this._trailLength
+                }, o.notifyUVChanged = function() {
+                    this.uvDirty = !0
+                }, o.refreshCascadeScale = function() {
+                    this.updateCascadeScale(), this.updateVisibleScale(), this.metricSx = Math.max(1e-4, Math.abs(this.visibleScale.x)), this.metricSy = Math.max(1e-4, Math.abs(this.visibleScale.y))
+                }, o.updateXY = function() {
+                    this._lockCascadeScale || (this.updateCascadeScale(), this.updateVisibleScale(), this.metricSx = Math.max(e.INV_SCALE_EPS, Math.abs(this.visibleScale.x)), this.metricSy = Math.max(e.INV_SCALE_EPS, Math.abs(this.visibleScale.y)));
+                    var t = this.node,
+                        i = this.joints;
+                    if (null != this._renderData) {
+                        var r = this._renderData.data,
+                            a = this._length - 1,
+                            s = this.visibleScale.x,
+                            o = this.visibleScale.y,
+                            n = .5 * (Math.abs(s) + Math.abs(o)),
+                            h = 0,
+                            l = 0;
+                        if (this._isWorldXY) {
+                            var p = t.worldMatrix;
+                            h = this.offset.x * s + p.m12, l = this.offset.y * o + p.m13
+                        } else h = this.offset.x * t.scale.x + t.position.x, l = this.offset.y * t.scale.y + t.position.y;
+                        if (h !== this.lastPosition.x || l !== this.lastPosition.y) this.lastPosition.set(h, l), this.unchangedFrames = 0;
+                        else if (this.unchangedFrames++, this.unchangedFrames >= 3) {
+                            if (this.frameSkipCounter++, this.frameSkipCounter < 5) return;
+                            this.frameSkipCounter = 0
+                        }
+                        var u = this.bufferSize > 0 ? this.getBufferPoint(0) : null;
+                        u && u.x === h && u.y === l || (this.addPoint(h, l), this.segmentDirty = !0, this.sampleCacheDirty = !0);
+                        for (var c = [], d = 0, f = this.getEffectiveTrailLength(), y = 0; y < this.bufferSize; ++y) {
+                            var m = this.getBufferPoint(y);
+                            if (!m) break;
+                            if (c.push(m), y > 0) {
+                                var g = c[y - 1],
+                                    v = Math.sqrt((m.x - g.x) * (m.x - g.x) + (m.y - g.y) * (m.y - g.y));
+                                if ((d += v) > f) {
+                                    var _ = (v - (d - f)) / v,
+                                        b = this._clippedPoint;
+                                    b.x = g.x + (m.x - g.x) * _, b.y = g.y + (m.y - g.y) * _, c[y] = b, c.length = y + 1;
+                                    break
+                                }
+                            }
+                        }
+                        if (this.updateSegmentDistances(c), this.updateSampleCache(c), 0 !== c.length) {
+                            i[0].x = c[0].x, i[0].y = c[0].y;
+                            for (var x = 1; x <= a; ++x) {
+                                var S = this.sampleCache[x - 1];
+                                if (S)
+                                    if (S.segmentIndex >= c.length - 1) {
+                                        var M = c[c.length - 1];
+                                        i[x].x = M.x, i[x].y = M.y
+                                    } else {
+                                        var D = c[S.segmentIndex],
+                                            C = c[S.segmentIndex + 1];
+                                        i[x].x = D.x + (C.x - D.x) * S.t, i[x].y = D.y + (C.y - D.y) * S.t
+                                    }
+                                else {
+                                    var w = c[c.length - 1];
+                                    i[x].x = w.x, i[x].y = w.y
+                                }
+                            }
+                            this.updateDirtyVertices();
+                            for (var O = 0, P = 0; P <= a; ++P, O += 2)
+                                if (this.dirtyVertices[P] || !(this.unchangedFrames > 0)) {
+                                    var A = i[P],
+                                        W = 0,
+                                        z = 0,
+                                        B = 0,
+                                        k = 0;
+                                    if (P > 0) {
+                                        W = A.x - i[P - 1].x, z = A.y - i[P - 1].y;
+                                        var L = Math.sqrt(W * W + z * z);
+                                        L > 1e-6 ? (W /= L, z /= L) : (W = 0, z = 0)
+                                    }
+                                    if (P < a) {
+                                        B = i[P + 1].x - A.x, k = i[P + 1].y - A.y;
+                                        var N = Math.sqrt(B * B + k * k);
+                                        N > 1e-6 ? (B /= N, k /= N) : (B = 0, k = 0)
+                                    } else B = W, k = z;
+                                    var F = -k,
+                                        U = B,
+                                        T = -z + F,
+                                        j = W + U,
+                                        R = Math.sqrt(T * T + j * j),
+                                        V = !1;
+                                    R < 1e-6 ? (T = F, j = U, R = Math.sqrt(T * T + j * j)) : (T /= R, j /= R);
+                                    var I = T * F + j * U;
+                                    Math.abs(I) < 1e-6 && (V = !0, I = 1);
+                                    var E = 1 / I;
+                                    (!isFinite(E) || E < 0) && (V = !0, E = 1), E > this._miterLimit && (V = !0);
+                                    var G = W * B + z * k;
+                                    G = Math.max(-1, Math.min(1, G));
+                                    var X = 1;
+                                    if (this._curvatureAtten > 0) {
+                                        var Y = 1 - G;
+                                        X *= 1 / (1 + this._curvatureAtten * Y)
+                                    }
+                                    if (G >= this._cornerBevelAngleDegCos && this._extraCurvatureGamma > 0) {
+                                        var q = 1 - G;
+                                        X *= 1 / (1 + this._extraCurvatureGamma * q)
+                                    }
+                                    var H = i[P].dis * X,
+                                        J = G >= this._cornerBevelAngleDegCos;
+                                    if (0 !== H) {
+                                        var K = void 0,
+                                            Z = void 0,
+                                            Q = !1;
+                                        if (this._enableAnisotropicMiter) {
+                                            var $ = this.computeMetricOffset(W, z, B, k, H, this.metricSx, this.metricSy, this._miterLimit, V || J);
+                                            K = $.offx, Z = $.offy, V = $.usedBevel, Q = !0
+                                        } else V || J ? (K = F * H * s, Z = U * H * o) : (K = T * (H * E) * s, Z = j * (H * E) * o);
+                                        if (this._normalSmoothWindow > 0 && P > 0 && H > 0) {
+                                            var tt = i[P - 1].x,
+                                                et = i[P - 1].y,
+                                                it = r[O - 2].x - tt,
+                                                rt = r[O - 2].y - et,
+                                                at = Math.sqrt(it * it + rt * rt);
+                                            at > 1e-6 && (it /= at, rt /= at);
+                                            var st = K,
+                                                ot = Z,
+                                                nt = Math.sqrt(st * st + ot * ot);
+                                            nt > 1e-6 && (st /= nt, ot /= nt), it * st + rt * ot < 0 && (st = -st, ot = -ot);
+                                            var ht = this._normalSmoothWeight,
+                                                lt = it * ht + st * (1 - ht),
+                                                pt = rt * ht + ot * (1 - ht),
+                                                ut = Math.sqrt(lt * lt + pt * pt);
+                                            ut > 1e-6 && (lt /= ut, pt /= ut), K = lt * H, Z = pt * H
+                                        }
+                                        var ct = Q ? K * n : K,
+                                            dt = Q ? Z * n : Z;
+                                        r[O].x = A.x + ct, r[O].y = A.y + dt, r[O + 1].x = A.x - ct, r[O + 1].y = A.y - dt
+                                    } else {
+                                        var ft = A.x,
+                                            yt = A.y;
+                                        r[O].x = ft, r[O].y = yt, r[O + 1].x = ft, r[O + 1].y = yt
+                                    }
+                                } this.fitXY(r)
+                        }
+                    }
+                }, o.safeNormalize = function(t, e, i) {
+                    void 0 === i && (i = 1e-6);
+                    var r = Math.sqrt(t * t + e * e);
+                    return r < i ? {
+                        x: 0,
+                        y: 0,
+                        len: 0
+                    } : {
+                        x: t / r,
+                        y: e / r,
+                        len: r
+                    }
+                }, o.clamp = function(t, e, i) {
+                    return Math.max(e, Math.min(i, t))
+                }, o.computeMetricOffset = function(t, e, i, r, a, s, o, n, h) {
+                    s = Math.max(1e-4, Math.abs(s)), o = Math.max(1e-4, Math.abs(o));
+                    var l = this.safeNormalize(t * s, e * o),
+                        p = this.safeNormalize(i * s, r * o);
+                    if (l.len < 1e-6 && p.len < 1e-6) return {
+                        offx: 0,
+                        offy: 0,
+                        usedBevel: !0
+                    };
+                    l.len < 1e-6 && (l = {
+                        x: p.x,
+                        y: p.y,
+                        len: p.len
+                    }), p.len < 1e-6 && (p = {
+                        x: l.x,
+                        y: l.y,
+                        len: l.len
+                    });
+                    var u = -l.y,
+                        c = l.x,
+                        d = -p.y,
+                        f = p.x,
+                        y = u + d,
+                        m = c + f,
+                        g = this.safeNormalize(y, m),
+                        v = h;
+                    g.len < 1e-6 ? (y = d, m = f) : (y = g.x, m = g.y);
+                    var _ = y * d + m * f;
+                    Math.abs(_) < 1e-6 && (_ = 1, v = !0);
+                    var b = 1 / _;
+                    (!isFinite(b) || b < 0) && (b = 1, v = !0), b > n && (v = !0);
+                    var x = (v ? d : y * b) / s,
+                        S = (v ? f : m * b) / o,
+                        M = this.safeNormalize(x, S);
+                    return {
+                        offx: M.x * a,
+                        offy: M.y * a,
+                        usedBevel: v
+                    }
+                }, o.resetPointBuffer = function() {
+                    this.pointBuffer = new Array(this.maxBufferSize);
+                    for (var t = 0; t < this.maxBufferSize; t++) this.pointBuffer[t] = {
+                        x: 0,
+                        y: 0
+                    };
+                    this.bufferHead = 0, this.bufferSize = 0, this.segmentDirty = !0, this.sampleCacheDirty = !0;
+                    var e = Math.max(1, this.maxBufferSize);
+                    this.weightedSegLens.length < e && (this.weightedSegLens = new Array(e)), this.weightedPrefix.length < e + 1 && (this.weightedPrefix = new Array(e + 1))
+                }, o.addPoint = function(t, e) {
+                    this.pointBuffer[this.bufferHead].x = t, this.pointBuffer[this.bufferHead].y = e, this.bufferHead = (this.bufferHead + 1) % this.maxBufferSize, this.bufferSize = Math.min(this.bufferSize + 1, this.maxBufferSize), this.segmentDirty = !0, this.sampleCacheDirty = !0
+                }, o.getBufferPoint = function(t) {
+                    if (t >= this.bufferSize) return null;
+                    var e = (this.bufferHead - 1 - t + this.maxBufferSize) % this.maxBufferSize;
+                    return this.pointBuffer[e]
+                }, o.updateSegmentDistances = function(t) {
+                    if (this.segmentDirty || this.segmentDistances.length !== t.length - 1) {
+                        this.segmentDistances.length = 0, this.cachedTotalLength = 0;
+                        for (var e = 1; e < t.length; ++e) {
+                            var i = t[e - 1],
+                                r = t[e],
+                                a = i.x - r.x,
+                                s = i.y - r.y,
+                                o = Math.sqrt(a * a + s * s);
+                            this.segmentDistances.push(o), this.cachedTotalLength += o
+                        }
+                        this.segmentDirty = !1
+                    }
+                }, o.updateSampleCache = function(t) {
+                    if (this.sampleCacheDirty || this.segmentDirty || this.lastValidPointsLength !== t.length)
+                        if (this.sampleCache.length = 0, this.lastValidPointsLength = t.length, t.length < 2) this.sampleCacheDirty = !1;
+                        else {
+                            var e = this._length - 1,
+                                i = this.segmentDistances,
+                                r = 1,
+                                a = this.dirXReuse,
+                                s = this.dirYReuse;
+                            a.length < t.length && (a.length = t.length), s.length < t.length && (s.length = t.length);
+                            for (var o = 0; o < t.length - 1; o++) {
+                                var n = t[o],
+                                    h = t[o + 1],
+                                    l = h.x - n.x,
+                                    p = h.y - n.y,
+                                    u = Math.sqrt(l * l + p * p);
+                                if (u > 1e-6 ? (l /= u, p /= u) : (l = 0, p = 0), a[o] = l, s[o] = p, o > 0) {
+                                    var c = a[o - 1] * l + s[o - 1] * p;
+                                    c < r && (r = c)
+                                }
+                            }
+                            var d = this._curvatureAngleThresholdCos,
+                                f = this._curvatureResampleEnabled && r < d && this._curvatureWeight > 0;
+                            if (this._lastMinCos = r, this._lastCosThreshold = d, this._lastBeta = this._curvatureWeight, f) {
+                                var y = 0;
+                                if (r < d) {
+                                    var m = Math.max(1e-6, 1 - d);
+                                    y = this.clamp((d - r) / m, 0, this._curvatureBoostMax)
+                                }
+                                var g = this._curvatureWeight * (1 + y),
+                                    v = i.length;
+                                this.weightedPrefix[0] = 0;
+                                for (var _ = 0; _ < v; _++) {
+                                    var b = 0;
+                                    if (_ < a.length - 1) {
+                                        var x = a[_] * a[_ + 1] + s[_] * s[_ + 1];
+                                        b = 1 - Math.max(-1, Math.min(1, x))
+                                    }
+                                    var S = 1 + g * b,
+                                        M = i[_] * S;
+                                    this.weightedSegLens[_] = M, this.weightedPrefix[_ + 1] = this.weightedPrefix[_] + M
+                                }
+                                for (var D = this.weightedPrefix[v] / e, C = 1; C <= e; C++) {
+                                    for (var w = D * C, O = 0; O < v && this.weightedPrefix[O + 1] < w;) O++;
+                                    if (O >= v) this.sampleCache.push({
+                                        segmentIndex: t.length - 1,
+                                        t: 1,
+                                        distance: w
+                                    });
+                                    else {
+                                        var P = w - this.weightedPrefix[O],
+                                            A = this.weightedSegLens[O],
+                                            W = A > 0 ? P / A : 0;
+                                        this.sampleCache.push({
+                                            segmentIndex: O,
+                                            t: W,
+                                            distance: w
+                                        })
+                                    }
+                                }
+                            } else
+                                for (var z = this.getEffectiveTrailLength() / e, B = 1, k = 0, L = 0; B <= e; ++B) {
+                                    for (var N = z * B; k < i.length && L + i[k] < N;) L += i[k], ++k;
+                                    if (k >= i.length) this.sampleCache.push({
+                                        segmentIndex: t.length - 1,
+                                        t: 1,
+                                        distance: N
+                                    });
+                                    else {
+                                        var F = N - L,
+                                            U = i[k] > 0 ? F / i[k] : 0;
+                                        this.sampleCache.push({
+                                            segmentIndex: k,
+                                            t: U,
+                                            distance: N
+                                        })
+                                    }
+                                }
+                            this.sampleCacheDirty = !1
+                        }
+                }, o.updateDirtyVertices = function() {
+                    for (var t = this.vertexUpdateThreshold, e = 0; e < this.joints.length; e++) {
+                        var i = this.joints[e],
+                            r = this.lastJointPositions[e];
+                        if (r) {
+                            var a = Math.abs(i.x - r.x),
+                                s = Math.abs(i.y - r.y);
+                            a > t || s > t ? (this.dirtyVertices[e] = !0, r.set(i.x, i.y)) : this.dirtyVertices[e] = !1
+                        } else this.lastJointPositions[e] = r = new c(i.x, i.y), this.dirtyVertices[e] = !0
+                    }
+                }, o.resetPos = function() {
+                    var t = this.offset.x,
+                        e = this.offset.y,
+                        i = this.node;
+                    if (this._isWorldXY) {
+                        var r = i.worldMatrix;
+                        t += r.m12, e += r.m13
+                    } else t += i.position.x, e += i.position.y;
+                    for (var a = this._length - 1, s = this.joints; a > -1; --a) s[a].x = t, s[a].y = e;
+                    for (var o = this._renderData.data, n = 0, h = o.length; n < h; ++n) o[n].x = t, o[n].y = e;
+                    for (var l = 0; l < this._length; l++) this.lastJointPositions[l] ? this.lastJointPositions[l].set(t, e) : this.lastJointPositions[l] = new c(t, e);
+                    this.fitXY(o)
+                }, o.fitXY = function(t) {
+                    for (var e = this._renderData.chunk.vb, i = 0, r = e.length, a = 0; i < r; i += this._renderData.floatStride, ++a) e[i] = t[a].x, e[i + 1] = t[a].y
+                }, o.updateUV = function() {
+                    var t = this._spriteFrame;
+                    if (t) {
+                        var e = this._renderData;
+                        if (e && (this._uvUpdateMode !== Bt.OnChange || this.uvDirty || !(this._sampleUvDivisor <= 1))) {
+                            for (var i = e.chunk.vb, r = e.floatStride, a = 1 / (this._length - 1), s = 3, o = 0, n = i.length; s < n; s += r, ++o) i[s] = 1 & o, i[s + 1] = 1 - a * (o >> 1);
+                            var h = t.uv;
+                            if (t._rotated)
+                                for (var l = h[0], p = h[1], u = h[4] - l, c = h[3] - p, d = 3, f = i.length, y = e.floatStride; d < f; d += y) {
+                                    var m = i[d];
+                                    i[d] = l + i[d + 1] * u, i[d + 1] = p + m * c
+                                } else {
+                                    l = h[0], p = h[1], u = h[2] - l, c = h[5] - p;
+                                    for (var g = 3, v = i.length, _ = e.floatStride; g < v; g += _) i[g] = l + i[g] * u, i[g + 1] = p + i[g + 1] * c
+                                }
+                        }
+                    }
+                }, o._updateColor = function() {
+                    var t, e, i, r, a = this._renderData.chunk.vb,
+                        s = this._headOpacity / 255,
+                        o = (s - this._tailOpacity / 255) / (this._length - 1),
+                        n = 0,
+                        h = 0,
+                        l = 0;
+                    if (this._useGradientColor) {
+                        var p = this._headColor,
+                            u = this._tailColor;
+                        t = p.r / 255, e = p.g / 255, i = p.b / 255, r = this.color.a / 255, n = (u.r / 255 - t) / (this._length - 1), h = (u.g / 255 - e) / (this._length - 1), l = (u.b / 255 - i) / (this._length - 1)
+                    } else {
+                        var c = this.color;
+                        t = c.r / 255, e = c.g / 255, i = c.b / 255, r = c.a / 255
+                    }
+                    for (var d = 5, f = a.length, y = 2 * this._renderData.floatStride, m = 0; d < f; d += y, ++m) {
+                        if (this._useGradientColor) {
+                            var g = t + n * m,
+                                v = e + h * m,
+                                _ = i + l * m;
+                            a[d] = a[d + 9] = g, a[d + 1] = a[d + 10] = v, a[d + 2] = a[d + 11] = _
+                        } else a[d] = a[d + 9] = t, a[d + 1] = a[d + 10] = e, a[d + 2] = a[d + 11] = i;
+                        a[d + 3] = a[d + 12] = r * (s - o * m)
+                    }
+                }, o.updateMaterial = function() {
+                    t.prototype.updateMaterial.call(this), null != this._customMaterial || (this._customMaterial = this.getSharedMaterial(0)), this.ensureMaterialSpeedInitialized(), this.applyMaterialTimeScale()
+                }, o.ensureMaterialSpeedInitialized = function() {
+                    var t, e = null != (t = this.getMaterialInstance(0)) ? t : this.getSharedMaterial(0);
+                    if (e) {
+                        var i = e.getProperty && e.getProperty("speed");
+                        void 0 !== i ? this._materialSpeedSupported || (this._materialSpeedSupported = !0, this._baseSpeed = "number" == typeof i ? i : 1) : this._materialSpeedSupported = !1
+                    } else this._materialSpeedSupported = !1
+                }, o.applyMaterialTimeScale = function() {
+                    var t;
+                    if (this._materialSpeedSupported) {
+                        var e = null != (t = this.getMaterialInstance(0)) ? t : this.getSharedMaterial(0);
+                        e && e.setProperty && e.setProperty("speed", this._baseSpeed * this.timeScale)
+                    }
+                }, o.setTimeScale = function(t) {
+                    this.timeScale = Math.max(0, t), this.applyMaterialTimeScale()
+                }, o.updateSpriteFrame = function() {
+                    this._spriteFrame ? this._renderData && (this._renderData.textureDirty = !0) : this.atlas = null
+                }, o._render = function(t) {
+                    t.commitComp(this, this._renderData, this._spriteFrame, this._assembler, null), this.markForUpdateRenderData()
+                }, o._canRender = function() {
+                    var e;
+                    return t.prototype._canRender.call(this) && !(null == (e = this._spriteFrame) || !e.texture)
+                }, o.fillBuffer = function() {
+                    var t = this._renderData;
+                    if (null != t) {
+                        var e = t.chunk,
+                            i = e.vertexOffset,
+                            r = e.meshBuffer,
+                            a = r.iData,
+                            s = this._ibWeb;
+                        if (s && s.length === t.indexCount || (this.updateIData(), s = this._ibWeb)) {
+                            for (var o = 0, n = t.indexCount, h = r.indexOffset; o < n; a[h++] = i + s[o++]);
+                            r.indexOffset += t.indexCount
+                        }
+                    }
+                }, s(e, [{
+                    key: "spriteFrame",
+                    get: function() {
+                        return this._spriteFrame
+                    },
+                    set: function(t) {
+                        this._spriteFrame = t, this.trailLength = t ? t.height : 100, this.maxBufferSize <= 0 && (this.maxBufferSize = Math.max(100, 5 * this._length)), this.resetPointBuffer(), this.updateSpriteFrame(), this.updateUV(), this.segmentDirty = !0, this.sampleCacheDirty = !0, this.unchangedFrames = 0, this.frameSkipCounter = 0, this.uvDirty = !0, this.markForUpdateRenderData()
+                    }
+                }, {
+                    key: "trailLength",
+                    get: function() {
+                        return this._trailLength
+                    },
+                    set: function(t) {
+                        this._trailLength = t, this.segmentDirty = !0, this.sampleCacheDirty = !0, this.unchangedFrames = 0, this.frameSkipCounter = 0, this.uvDirty = !0, this.markForUpdateRenderData()
+                    }
+                }, {
+                    key: "isActive",
+                    get: function() {
+                        return this._isActive
+                    },
+                    set: function(t) {
+                        this._isActive = this.enabled = t, this.updateActive()
+                    }
+                }, {
+                    key: "isWorldXY",
+                    get: function() {
+                        return this._isWorldXY
+                    },
+                    set: function(t) {
+                        this._isWorldXY = t, this.resetPos()
+                    }
+                }, {
+                    key: "length",
+                    get: function() {
+                        return this._length
+                    },
+                    set: function(t) {
+                        this._length = Math.max(t, 2), this.updateLength(), this.updateIData(), this.updateUV(), this.updateWidth(), this.resetPos(), this.uvDirty = !0
+                    }
+                }, {
+                    key: "headWidth",
+                    get: function() {
+                        return this._headWidth
+                    },
+                    set: function(t) {
+                        this._headWidth = Math.max(t, 0), this.updateWidth()
+                    }
+                }, {
+                    key: "tailWidth",
+                    get: function() {
+                        return this._tailWidth
+                    },
+                    set: function(t) {
+                        this._tailWidth = Math.max(t, 0), this.updateWidth()
+                    }
+                }, {
+                    key: "headOpacity",
+                    get: function() {
+                        return this._headOpacity
+                    },
+                    set: function(t) {
+                        this._headOpacity = t, this._updateColor()
+                    }
+                }, {
+                    key: "tailOpacity",
+                    get: function() {
+                        return this._tailOpacity
+                    },
+                    set: function(t) {
+                        this._tailOpacity = t, this._updateColor()
+                    }
+                }, {
+                    key: "headColor",
+                    get: function() {
+                        return this._headColor
+                    },
+                    set: function(t) {
+                        this._headColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "tailColor",
+                    get: function() {
+                        return this._tailColor
+                    },
+                    set: function(t) {
+                        this._tailColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "useGradientColor",
+                    get: function() {
+                        return this._useGradientColor
+                    },
+                    set: function(t) {
+                        this._useGradientColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "uvUpdateMode",
+                    get: function() {
+                        return this._uvUpdateMode
+                    },
+                    set: function(t) {
+                        this._uvUpdateMode = t, this.uvDirty = !0
+                    }
+                }, {
+                    key: "lockCascadeScale",
+                    get: function() {
+                        return this._lockCascadeScale
+                    },
+                    set: function(t) {
+                        this._lockCascadeScale = t
+                    }
+                }, {
+                    key: "sampleUvDivisor",
+                    get: function() {
+                        return this._sampleUvDivisor
+                    },
+                    set: function(t) {
+                        this._sampleUvDivisor = Math.max(1, Math.min(4, 0 | t))
+                    }
+                }, {
+                    key: "miterLimit",
+                    get: function() {
+                        return this._miterLimit
+                    },
+                    set: function(t) {
+                        this._miterLimit = Math.max(1, t)
+                    }
+                }, {
+                    key: "curvatureAtten",
+                    get: function() {
+                        return this._curvatureAtten
+                    },
+                    set: function(t) {
+                        this._curvatureAtten = Math.max(0, Math.min(1, t))
+                    }
+                }, {
+                    key: "curvatureResampleEnabled",
+                    get: function() {
+                        return this._curvatureResampleEnabled
+                    },
+                    set: function(t) {
+                        this._curvatureResampleEnabled = t, this.sampleCacheDirty = !0
+                    }
+                }, {
+                    key: "curvatureWeight",
+                    get: function() {
+                        return this._curvatureWeight
+                    },
+                    set: function(t) {
+                        this._curvatureWeight = Math.max(0, Math.min(2, t)), this.sampleCacheDirty = !0
+                    }
+                }, {
+                    key: "curvatureAngleThreshold",
+                    get: function() {
+                        return 0 | this._curvatureAngleThreshold
+                    },
+                    set: function(t) {
+                        this._curvatureAngleThreshold = Math.max(0, Math.min(90, 0 | t)), this._curvatureAngleThresholdCos = Math.cos(this._curvatureAngleThreshold * Math.PI / 180), this.sampleCacheDirty = !0
+                    }
+                }, {
+                    key: "enableAnisotropicMiter",
+                    get: function() {
+                        return this._enableAnisotropicMiter
+                    },
+                    set: function(t) {
+                        this._enableAnisotropicMiter = t
+                    }
+                }, {
+                    key: "cornerBevelAngleDeg",
+                    get: function() {
+                        return 0 | this._cornerBevelAngleDeg
+                    },
+                    set: function(t) {
+                        this._cornerBevelAngleDeg = Math.max(0, Math.min(180, 0 | t)), this._cornerBevelAngleDegCos = Math.cos(this._cornerBevelAngleDeg * Math.PI / 180)
+                    }
+                }, {
+                    key: "normalSmoothWindow",
+                    get: function() {
+                        return 0 | this._normalSmoothWindow
+                    },
+                    set: function(t) {
+                        this._normalSmoothWindow = Math.max(0, Math.min(2, 0 | t))
+                    }
+                }, {
+                    key: "normalSmoothWeight",
+                    get: function() {
+                        return this._normalSmoothWeight
+                    },
+                    set: function(t) {
+                        this._normalSmoothWeight = Math.max(0, Math.min(1, t))
+                    }
+                }, {
+                    key: "curvatureBoostMax",
+                    get: function() {
+                        return this._curvatureBoostMax
+                    },
+                    set: function(t) {
+                        this._curvatureBoostMax = Math.max(0, t)
+                    }
+                }, {
+                    key: "extraCurvatureGamma",
+                    get: function() {
+                        return this._extraCurvatureGamma
+                    },
+                    set: function(t) {
+                        this._extraCurvatureGamma = Math.max(0, t)
+                    }
+                }]), e
+            }(y)).EPS = 1e-6, Ot.INV_SCALE_EPS = 1e-4, Q = e((Z = Ot).prototype, "atlas", [g], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), $ = e(Z.prototype, "_spriteFrame", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), e(Z.prototype, "spriteFrame", [v], Object.getOwnPropertyDescriptor(Z.prototype, "spriteFrame"), Z.prototype), tt = e(Z.prototype, "_trailLength", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 100
+                }
+            }), e(Z.prototype, "trailLength", [_], Object.getOwnPropertyDescriptor(Z.prototype, "trailLength"), Z.prototype), et = e(Z.prototype, "_isActive", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(Z.prototype, "isActive", [b], Object.getOwnPropertyDescriptor(Z.prototype, "isActive"), Z.prototype), it = e(Z.prototype, "_isWorldXY", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(Z.prototype, "isWorldXY", [x], Object.getOwnPropertyDescriptor(Z.prototype, "isWorldXY"), Z.prototype), rt = e(Z.prototype, "offset", [S], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new c
+                }
+            }), at = e(Z.prototype, "_length", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 20
+                }
+            }), e(Z.prototype, "length", [M], Object.getOwnPropertyDescriptor(Z.prototype, "length"), Z.prototype), st = e(Z.prototype, "_headWidth", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 100
+                }
+            }), e(Z.prototype, "headWidth", [D], Object.getOwnPropertyDescriptor(Z.prototype, "headWidth"), Z.prototype), ot = e(Z.prototype, "_tailWidth", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(Z.prototype, "tailWidth", [C], Object.getOwnPropertyDescriptor(Z.prototype, "tailWidth"), Z.prototype), nt = e(Z.prototype, "_headOpacity", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 255
+                }
+            }), e(Z.prototype, "headOpacity", [w], Object.getOwnPropertyDescriptor(Z.prototype, "headOpacity"), Z.prototype), ht = e(Z.prototype, "_tailOpacity", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(Z.prototype, "tailOpacity", [O], Object.getOwnPropertyDescriptor(Z.prototype, "tailOpacity"), Z.prototype), lt = e(Z.prototype, "_headColor", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new u(255, 255, 255, 255)
+                }
+            }), e(Z.prototype, "headColor", [P], Object.getOwnPropertyDescriptor(Z.prototype, "headColor"), Z.prototype), pt = e(Z.prototype, "_tailColor", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new u(255, 255, 255, 255)
+                }
+            }), e(Z.prototype, "tailColor", [A], Object.getOwnPropertyDescriptor(Z.prototype, "tailColor"), Z.prototype), ut = e(Z.prototype, "_useGradientColor", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !1
+                }
+            }), e(Z.prototype, "useGradientColor", [W], Object.getOwnPropertyDescriptor(Z.prototype, "useGradientColor"), Z.prototype), ct = e(Z.prototype, "_uvUpdateMode", [z], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return Bt.OnChange
+                }
+            }), e(Z.prototype, "uvUpdateMode", [B], Object.getOwnPropertyDescriptor(Z.prototype, "uvUpdateMode"), Z.prototype), dt = e(Z.prototype, "_lockCascadeScale", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(Z.prototype, "lockCascadeScale", [k], Object.getOwnPropertyDescriptor(Z.prototype, "lockCascadeScale"), Z.prototype), ft = e(Z.prototype, "_sampleUvDivisor", [L], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 1
+                }
+            }), e(Z.prototype, "sampleUvDivisor", [N], Object.getOwnPropertyDescriptor(Z.prototype, "sampleUvDivisor"), Z.prototype), yt = e(Z.prototype, "timeScale", [F], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 1
+                }
+            }), mt = e(Z.prototype, "_miterLimit", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 2
+                }
+            }), e(Z.prototype, "miterLimit", [U], Object.getOwnPropertyDescriptor(Z.prototype, "miterLimit"), Z.prototype), gt = e(Z.prototype, "_curvatureAtten", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(Z.prototype, "curvatureAtten", [T], Object.getOwnPropertyDescriptor(Z.prototype, "curvatureAtten"), Z.prototype), vt = e(Z.prototype, "_curvatureResampleEnabled", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(Z.prototype, "curvatureResampleEnabled", [j], Object.getOwnPropertyDescriptor(Z.prototype, "curvatureResampleEnabled"), Z.prototype), _t = e(Z.prototype, "_curvatureWeight", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return .8
+                }
+            }), e(Z.prototype, "curvatureWeight", [R], Object.getOwnPropertyDescriptor(Z.prototype, "curvatureWeight"), Z.prototype), bt = e(Z.prototype, "_curvatureAngleThreshold", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 25
+                }
+            }), e(Z.prototype, "curvatureAngleThreshold", [V], Object.getOwnPropertyDescriptor(Z.prototype, "curvatureAngleThreshold"), Z.prototype), xt = e(Z.prototype, "_enableAnisotropicMiter", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(Z.prototype, "enableAnisotropicMiter", [I], Object.getOwnPropertyDescriptor(Z.prototype, "enableAnisotropicMiter"), Z.prototype), St = e(Z.prototype, "_cornerBevelAngleDeg", [E], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 60
+                }
+            }), e(Z.prototype, "cornerBevelAngleDeg", [G], Object.getOwnPropertyDescriptor(Z.prototype, "cornerBevelAngleDeg"), Z.prototype), Mt = e(Z.prototype, "_normalSmoothWindow", [X], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 1
+                }
+            }), e(Z.prototype, "normalSmoothWindow", [Y], Object.getOwnPropertyDescriptor(Z.prototype, "normalSmoothWindow"), Z.prototype), Dt = e(Z.prototype, "_normalSmoothWeight", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return .5
+                }
+            }), e(Z.prototype, "normalSmoothWeight", [q], Object.getOwnPropertyDescriptor(Z.prototype, "normalSmoothWeight"), Z.prototype), Ct = e(Z.prototype, "_curvatureBoostMax", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 1
+                }
+            }), e(Z.prototype, "curvatureBoostMax", [H], Object.getOwnPropertyDescriptor(Z.prototype, "curvatureBoostMax"), Z.prototype), wt = e(Z.prototype, "_extraCurvatureGamma", [Wt], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return .28
+                }
+            }), e(Z.prototype, "extraCurvatureGamma", [J], Object.getOwnPropertyDescriptor(Z.prototype, "extraCurvatureGamma"), Z.prototype), K = Z)) || K) || K));
+            o._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/MultSpine.ts", ["./rollupPluginModLoBabelHelpers.js", "cc"], (function(e) {
+    var t, r, n, i, a, o, s, l, u, c, f, d, h;
+    return {
+        setters: [function(e) {
+            t = e.createForOfIteratorHelperLoose
+        }, function(e) {
+            r = e.cclegacy, n = e.gfx, i = e.Material, a = e.game, o = e.Game, s = e.sp, l = e.director, u = e.Director, c = e.resources, f = e.Texture2D, d = e.renderer, h = e.Color
+        }],
+        execute: function() {
+            r._RF.push({}, "4f71ajigRVC9akaYdv+KRlB", "MultSpine", void 0);
+            var v = 0,
+                p = 0,
+                g = -1,
+                m = 0,
+                _ = [],
+                b = null,
+                x = null,
+                B = new Map,
+                D = new Map,
+                S = new n.BufferTextureCopy;
+            S.texExtent.width = 128, S.texExtent.height = 128, S.texOffset.x = 0, S.texOffset.y = 0, i.prototype.spineCache = [];
+            var E = e("SpineBatch", {
+                    enable: !1,
+                    parent: null,
+                    next: function() {
+                        B.clear(), m = 0, p = 0, g = -1
+                    },
+                    reset: function() {
+                        this.next(), v = 0
+                    },
+                    active: function() {
+                        return this.enable && this.parent
+                    },
+                    update: function() {
+                        if (this.active()) {
+                            for (var e, r = t(D.values()); !(e = r()).done;) {
+                                var n = e.value;
+                                n && (n.n = 0)
+                            }
+                            if (v > 0 && b) {
+                                var i = b._getGFXDevice(),
+                                    a = b.getGFXTexture(),
+                                    o = 1 + ~~((4 * v - 1) / 128);
+                                S.texExtent.height = o > 128 ? 128 : o, i.copyBuffersToTexture([x], a, [S])
+                            }
+                        }
+                    }
+                }),
+                M = function() {
+                    E.parent || c.load("multSpines/Mult-spine", i, (function(e, t) {
+                        e || (E.parent = t, t.addRef())
+                    }))
+                },
+                y = function() {
+                    var e = r.internal.Batcher2D.prototype,
+                        t = e.commitMiddleware;
+                    e.commitMiddleware = function(e, r, i, a, o, s, l) {
+                        if (!e.isMult) return t.call(this, e, r, i, a, o, s, l);
+                        var u = o.getGFXTexture(),
+                            c = u.objectID;
+                        void 0 === (p = B.get(c)) && m >= 8 || this._middlewareBuffer !== r || g !== s.hash || this._middlewareIndexStart + this._middlewareIndexCount !== i || this._currLayer !== e.node.layer ? (this.autoMergeBatches(this._currComponent), this.resetRenderStates(), this._currComponent = e, this._currTexture = u, this._currSampler = o.getGFXSampler(), this._currTextureHash = o.getHash(), this._currLayer = e.node.layer, this._currSamplerHash = this._currSampler.hash, this._currHash = 0, this._currTransform = null, this._middlewareEnableBatch = !1, this._middlewareBuffer = r, this._middlewareIndexStart = i, this._middlewareIndexCount = a, this._currMaterial = function(e, t) {
+                            var r = g = t.hash,
+                                i = D.get(r);
+                            void 0 === i && (i = {
+                                mats: [],
+                                n: 0
+                            }, D.set(r, i));
+                            var a = i.n++,
+                                o = i.mats,
+                                s = o[a];
+                            if (void 0 !== s) return _ = s.spineCache, s;
+                            var l = 15 & r,
+                                u = r >> 4 & 15,
+                                c = r >> 8 & 15,
+                                f = E.parent;
+                            return s = new d.MaterialInstance({
+                                parent: f
+                            }), o[a] = s, s.overridePipelineStates({
+                                blendState: {
+                                    blendColor: h.WHITE,
+                                    targets: [{
+                                        blendEq: n.BlendOp.ADD,
+                                        blendAlphaEq: n.BlendOp.ADD,
+                                        blendSrc: u,
+                                        blendDst: c,
+                                        blendSrcAlpha: u,
+                                        blendDstAlpha: c
+                                    }]
+                                }
+                            }), s.recompileShaders({
+                                TWO_COLORED: 1 === l,
+                                USE_LOCAL: !1,
+                                USE_SHADER_VAR: !0
+                            }), s.setProperty("spineData", b), _ = s.spineCache = [], s.addRef(), s
+                        }(0, s)) : this._middlewareIndexCount += a, this._currIsMiddleware = !0, 0 !== m && void 0 !== p || (p = m++, B.set(c, p)), _[p] !== c && (_[p] = c, this._currMaterial.setProperty("texture" + p, o))
+                    };
+                    var i = e.mergeBatchesForMiddleware;
+                    e.mergeBatchesForMiddleware = function(e) {
+                        this._currIsMiddleware && E.next(), i.call(this, e)
+                    }
+                };
+            a.once(o.EVENT_GAME_INITED, (function() {
+                s.Skeleton && (! function() {
+                    E.enable = !1;
+                    var e = 128;
+                    l.root.device.getFormatFeatures(n.Format.RGBA32F) & n.FormatFeatureBit.SAMPLED_TEXTURE && (E.enable = !0, b = new f, x = new Float32Array(65536), b.setFilters(f.Filter.NEAREST, f.Filter.NEAREST), b.reset({
+                        width: e,
+                        height: e,
+                        format: f.PixelFormat.RGBA32F,
+                        mipmapLevel: 0
+                    }), b.uploadData(x))
+                }(), E.enable && (M(), function() {
+                    var e = s.Skeleton.prototype;
+                    e.shaderVar = 0, e.isMult = !1, Object.defineProperty(e, "enableBatch", {
+                        get: function() {
+                            return !!this.customMaterial && this._enableBatch
+                        },
+                        set: function(e) {
+                            this.customMaterial && e !== this._enableBatch && (this._enableBatch = e, this._updateBatch())
+                        }
+                    });
+                    var t = e.getMaterialForBlendAndTint;
+                    e.getMaterialForBlendAndTint = function(e, r, n) {
+                        if (!E.active() || this.customMaterial) return this.isMult = !1, t.call(this, e, r, n);
+                        var i = n | e << 4 | r << 8;
+                        return this.isMult = !0, {
+                            hash: i
+                        }
+                    };
+                    var r = e._render;
+                    e._render = function(e) {
+                        if (!this.isMult) return r.call(this, e);
+                        var t = 0;
+                        if (this.renderData && this._drawList.length > 0) {
+                            for (var n = this.renderData, i = n.chunk, a = i.vertexAccessor, o = n.getMeshBuffer(), s = o.indexOffset, l = o.vertexFormatBytes >> 2, u = this._drawList.length > 1, c = i.vertexOffset, f = n.vertexCount, d = n.chunk.vb, h = n.indices, g = !1, m = 0; m < this._drawList.length; m++) {
+                                var _ = this._drawList.data[m];
+                                if (_.texture && (e.commitMiddleware(this, o, s + _.indexOffset, _.indexCount, _.texture, _.material, this._enableBatch), g = !0, u)) {
+                                    var b = _.indexOffset;
+                                    f = _.indexCount;
+                                    for (var B = 10 * v + p; f--;) d[(h[b++] - c) * l + 2] = B
+                                }
+                                t += _.indexCount
+                            }
+                            if (!u && g)
+                                for (var D = 10 * v + p, S = 0, E = 0; S < f; S++) d[E + 2] = D, E += l;
+                            if (g) {
+                                var M = 16 * v++,
+                                    y = x,
+                                    w = this.node.worldMatrix;
+                                y[M] = w.m00, y[M + 1] = w.m01, y[M + 2] = w.m02, y[M + 3] = this.shaderVar, y[M + 4] = w.m04, y[M + 5] = w.m05, y[M + 6] = w.m06, y[M + 7] = w.m07, y[M + 8] = w.m08, y[M + 9] = w.m09, y[M + 10] = w.m10, y[M + 11] = w.m11, y[M + 12] = w.m12, y[M + 13] = w.m13, y[M + 14] = w.m14, y[M + 15] = w.m15
+                            }
+                            var T = n.indices.subarray(0, t);
+                            a.appendIndices(i.bufferId, T), a.getMeshBuffer(i.bufferId).setDirty()
+                        }
+                    }
+                }(), y()))
+            })), a.on(o.EVENT_RESTART, (function() {
+                s.Skeleton && E.enable && (E.parent = null, M())
+            })), l.on(u.EVENT_AFTER_DRAW, (function(e) {
+                E.reset()
+            })), l.on(u.EVENT_BEFORE_COMMIT, (function(e) {
+                E.update()
+            }));
+            var w = e("DebugSpineBuffers", {
+                printBufferInfo: function() {
+                    try {
+                        var e, t = null == (e = l.root) ? void 0 : e.batcher2D;
+                        if (!t) return void console.warn("[DebugSpineBuffers] Batcher2D not found");
+                        var r = Number.parseInt("SPINE", 36),
+                            n = Number.parseInt("SPINETINT", 36);
+                        console.log("=== Spine Buffer Debug Info ==="), console.log("SPINE key:", r), console.log("SPINETINT key:", n);
+                        var i = t._bufferAccessors;
+                        if (!i) return void console.warn("[DebugSpineBuffers] _bufferAccessors not found");
+                        var a = i.get(r),
+                            o = i.get(n);
+                        if (a) {
+                            var s = a._buffers,
+                                u = a._vCount,
+                                c = a._iCount;
+                            console.log("\n[Spine Normal Accessor]"), console.log("  vCount:", u), console.log("  iCount:", c), console.log("  Buffer count:", (null == s ? void 0 : s.length) || 0), s && s.length > 0 && s.forEach((function(e, t) {
+                                var r, n, i, a;
+                                console.log("  Buffer " + t + ":", {
+                                    vDataLength: (null == (r = e.vData) ? void 0 : r.length) || 0,
+                                    iDataLength: (null == (n = e.iData) ? void 0 : n.length) || 0,
+                                    byteOffset: e.byteOffset,
+                                    indexOffset: e.indexOffset,
+                                    memoryMB: (((null == (i = e.vData) ? void 0 : i.byteLength) || 0) + ((null == (a = e.iData) ? void 0 : a.byteLength) || 0)) / 1024 / 1024
+                                })
+                            }))
+                        } else console.log("\n[Spine Normal Accessor] Not created yet");
+                        if (o) {
+                            var f = o._buffers,
+                                d = o._vCount,
+                                h = o._iCount;
+                            console.log("\n[Spine Tint Accessor]"), console.log("  vCount:", d), console.log("  iCount:", h), console.log("  Buffer count:", (null == f ? void 0 : f.length) || 0), f && f.length > 0 && f.forEach((function(e, t) {
+                                var r, n, i, a;
+                                console.log("  Buffer " + t + ":", {
+                                    vDataLength: (null == (r = e.vData) ? void 0 : r.length) || 0,
+                                    iDataLength: (null == (n = e.iData) ? void 0 : n.length) || 0,
+                                    byteOffset: e.byteOffset,
+                                    indexOffset: e.indexOffset,
+                                    memoryMB: (((null == (i = e.vData) ? void 0 : i.byteLength) || 0) + ((null == (a = e.iData) ? void 0 : a.byteLength) || 0)) / 1024 / 1024
+                                })
+                            }))
+                        } else console.log("\n[Spine Tint Accessor] Not created yet");
+                        console.log("=== End Debug Info ===\n")
+                    } catch (e) {
+                        console.error("[DebugSpineBuffers] Error:", e)
+                    }
+                },
+                startMonitoring: function(e) {
+                    var t = this;
+                    return void 0 === e && (e = 3e3), setInterval((function() {
+                        t.printBufferInfo()
+                    }), e)
+                }
+            });
+            "undefined" != typeof window && (window.DebugSpineBuffers = w), r._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/MultTextures.ts", ["cc", "./env"], (function(t) {
+    var e, r, a, i, s, n, u, l, h, c, o, f, d, p, D, M, v, _, y, g;
+    return {
+        setters: [function(t) {
+            e = t.cclegacy, r = t.gfx, a = t.Material, i = t.Component, s = t.VERSION, n = t.game, u = t.Game, l = t.resources, h = t.director, c = t.Director, o = t.StencilManager, f = t.renderer, d = t.murmurhash2_32_gc, p = t.Color, D = t.Label, M = t.BitmapFont, v = t.Sprite, _ = t.MotionStreak, y = t.TiledLayer
+        }, function(t) {
+            g = t.JSB
+        }],
+        execute: function() {
+            e._RF.push({}, "bd7e7vtojdMUJODlbuIb/Yi", "MultTextures", void 0);
+            r.Texture.prototype.texID = -1, a.prototype.isMult = !1, i.prototype.useMult = !1;
+            var x = t("enableMultTextures", (function() {
+                if (m.native) return !1;
+                var t = s.slice().split(".");
+                parseInt(t.join(""));
+                return !0
+            }));
+            n.once(u.EVENT_GAME_INITED, (function() {
+                x() && b()
+            }));
+            var m = t("MultBatch2D", {
+                    native: !1,
+                    enable: !1,
+                    parent: null,
+                    incID: 0,
+                    count: 0,
+                    hash: 0,
+                    reset: function() {
+                        this.incID += this.count, this.count = 0
+                    }
+                }),
+                b = function() {
+                    m.enable = !1, l.load("multTextures/Mult-material", a, (function(t, r) {
+                        if (!t) {
+                            var i = e.builtinResMgr.get("ui-sprite-material");
+                            i && (i._hash = m.hash = a.getHash(i), m.parent = r, m.enable = !0, r.isMult = !0, r.addRef())
+                        }
+                    }))
+                },
+                I = 0,
+                T = [];
+            n.once(u.EVENT_ENGINE_INITED, (function() {
+                if (x()) {
+                    ! function() {
+                        new p(255, 255, 255, 255), new p(255, 255, 255, 255), D.prototype.useMult = !0;
+                        var t = D.Assembler;
+                        if (t) {
+                            var e = t.getAssembler;
+                            t.getAssembler = function(t) {
+                                var r = e.call(this, t);
+                                if (null == r.changeColor) {
+                                    r.changeColor = function(t) {
+                                        var e = t.renderData;
+                                        e && e.chunk && (e.dataDirty = 1)
+                                    };
+                                    var a = t.font instanceof M || t.cacheMode === D.CacheMode.CHAR,
+                                        i = r.updateColor;
+                                    if (r.updateColor = function(t) {
+                                            i.call(this, t);
+                                            var e = t.renderData;
+                                            if (e && !g && (this.changeColor(t), !a))
+                                                for (var r = e.chunk.vb, s = r.length, n = 5; n < s; n += 9) r[n] = r[n + 1] = r[n + 2] = r[n + 3] = 1
+                                        }, a) {
+                                        var s = r.fillBuffers;
+                                        r.fillBuffers = function(t, e) {
+                                            s.call(this, t, e), this.changeColor(t)
+                                        }
+                                    }
+                                }
+                                return r
+                            }
+                        }
+                    }(),
+                    function() {
+                        v.prototype.useMult = !0;
+                        var t = v.Assembler;
+                        if (t) {
+                            var e = t.getAssembler;
+                            t.getAssembler = function(t) {
+                                var r = e.call(this, t);
+                                if (null == r.changeColor) {
+                                    r.changeColor = function(t) {
+                                        var e = t.renderData;
+                                        e && e.chunk && (e.dataDirty = 1)
+                                    };
+                                    var a = r.updateColorLate;
+                                    if (a) r.updateColorLate = function(t) {
+                                        a.call(this, t), this.changeColor(t)
+                                    };
+                                    else {
+                                        var i = r.updateColor;
+                                        i && (r.updateColor = function(t) {
+                                            i.call(this, t), this.changeColor(t)
+                                        })
+                                    }
+                                }
+                                return r
+                            }
+                        }
+                    }(),
+                    function() {
+                        var t = e.UI.RenderData.prototype;
+                        t.texID = -1, t.isMult = !1, t.matDirty = !0, t.texDirty = !0, t.dataDirty = 0, t.updateHash = function() {
+                            if (this.isMult && m.enable) {
+                                var t = "" + (this.chunk ? this.chunk.bufferId : -1) + this.layer + "98k";
+                                this.dataHash = d(t, 666), this.hashDirty = !1
+                            } else {
+                                var e = "" + (this.chunk ? this.chunk.bufferId : -1) + this.layer + " " + this.textureHash;
+                                this.dataHash = d(e, 666), this.hashDirty = !1
+                            }
+                            this.matDirty = !1
+                        }, Object.defineProperty(t, "textureDirty", {
+                            get: function() {
+                                return this.texDirty
+                            },
+                            set: function(t) {
+                                this.texDirty = t, !0 === t && (this.texID = -1)
+                            }
+                        }), Object.defineProperty(t, "material", {
+                            get: function() {
+                                return this._material
+                            },
+                            set: function(t) {
+                                if (this._material = t, this._renderDrawInfo) {
+                                    var e = this.isMult ? m.parent : t;
+                                    this._renderDrawInfo.setMaterial(e)
+                                }
+                            }
+                        });
+                        var r = function(t, e) {
+                                var r = t.isMult;
+                                t.isMult = !1;
+                                var i = e.getRenderMaterial(0);
+                                i && m.enable ? (e.useMult && !t._isMeshBuffer && ((!i.hash || t.passDirty || g) && (i._hash = a.getHash(i)), t.isMult = m.hash == i._hash), r && !t.isMult && e._updateColor()) : r && !t.isMult && e._updateColor()
+                            },
+                            i = t.updatePass;
+                        t.updatePass = function(t) {
+                            r(this, t), i.call(this, t)
+                        };
+                        var s = t.updateRenderData;
+                        t.updateRenderData = function(t, e) {
+                            r(this, t), s.call(this, t, e)
+                        }
+                    }(),
+                    function() {
+                        if (y && !g) {
+                            var t = y.prototype;
+                            t.useMult = !0, t.dataDirty = !1;
+                            var e = t.setUserNodeDirty;
+                            t.setUserNodeDirty = function(t) {
+                                e.call(this, t), t || (this.dataDirty = !0)
+                            }, t._render = function(t) {
+                                for (var e = this, r = this.node.layer, a = function(a) {
+                                        e._tiledDataArrayIdx = i;
+                                        var n = e._tiledDataArray[i];
+                                        if (e._drawInfoList[a], n.subNodes) n.subNodes.forEach((function(e) {
+                                            e && (t.walk(e.node), a++)
+                                        }));
+                                        else {
+                                            var u = n;
+                                            if (u.texture) {
+                                                var l = !1,
+                                                    h = u.renderData;
+                                                h.material = e.getRenderMaterial(0), h.texture !== u.texture && (h.texture = u.texture), h.layer !== r && (h.layer = r, l = !0), h.isMult = !0, l && h.updateHash(), e.dataDirty && (h.dataDirty = 1), t.commitComp(e, u.renderData, u.texture, e._assembler, null), a++
+                                            }
+                                        }
+                                        s = a
+                                    }, i = 0, s = 0; i < this._tiledDataArray.length; i++) a(s);
+                                this.dataDirty = !1, this.node._static = !0
+                            }
+                        }
+                    }(),
+                    function() {
+                        if (_) {
+                            var t = _.prototype;
+                            t.useMult = !0;
+                            var e = t.lateUpdate;
+                            t.lateUpdate = function(t) {
+                                if (e.call(this, t), this._assembler && this.points.length >= 2) {
+                                    var r = this.renderData;
+                                    r && (r.dataDirty = 1)
+                                }
+                            }
+                        }
+                    }(), h.on(c.EVENT_AFTER_DRAW, (function(t) {
+                        m.reset(), I = 0
+                    }));
+                    var t = e.internal.Batcher2D.prototype;
+                    t.isMult = !1, t.isNative = g, t.cacheTextures = [], t.currMaterial = null, Object.defineProperty(t, "_currMaterial", {
+                        get: function() {
+                            return this.currMaterial
+                        },
+                        set: function(t) {
+                            var e = this._currRenderData;
+                            t == this._emptyMaterial && (e = null), this.currMaterial = function(t, e) {
+                                void 0 === e && (e = null);
+                                var r = m;
+                                if (r.reset(), !(r.enable && t && e && e.isMult)) return t;
+                                if (!r.parent || !r.parent.isValid) return b(), t;
+                                var a = T[I++];
+                                if (!a || !a.isValid) {
+                                    var i = {
+                                        parent: r.parent
+                                    };
+                                    a = new f.MaterialInstance(i), T[I - 1] = a, a.cacheTextures = [], a.isMult = !0, a.addRef()
+                                }
+                                return a
+                            }(t, e), this.isMult = !1, m.enable && this.currMaterial && this.currMaterial.isMult && (this.cacheTextures = this.currMaterial.cacheTextures, this.isMult = !0)
+                        }
+                    });
+                    t.commitComp = function(t, e, r, a, i) {
+                        var s = 0,
+                            n = null,
+                            u = -1;
+                        if (e && e.chunk) {
+                            if (!e.isValid()) return;
+                            s = e.dataHash, n = e.material, u = e.chunk.bufferId
+                        }
+                        2 === t.stencilStage || 6 === t.stencilStage ? this._insertMaskBatch(t) : t.stencilStage = o.sharedManager.stage;
+                        var l = t.stencilStage,
+                            h = -1,
+                            c = null,
+                            f = m,
+                            d = !1;
+                        if (f.enable && e && e.isMult && (r && r.isValid && (c = r.getGFXTexture()), c && (void 0 === c.texID && (c.texID = -1), d = (h = c.texID - f.incID) < 0 && f.count >= 8, this.isMult && (n = this._currMaterial))), (d || this._currHash !== s || 0 === s || this._currMaterial !== n || this._currDepthStencilStateStage !== l) && (this.autoMergeBatches(this._currComponent), e && !e._isMeshBuffer && this.updateBuffer(e.vertexFormat, u), this._currRenderData = e, this._currHash = e ? e.dataHash : 0, this._currComponent = t, this._currTransform = i, this._currMaterial = t.getRenderMaterial(0), this._currDepthStencilStateStage = l, this._currLayer = t.node.layer, r ? (this._currTexture = r.getGFXTexture(), this._currSampler = r.getGFXSampler(), this._currTextureHash = r.getHash(), this._currSamplerHash = this._currSampler.hash) : (this._currTexture = null, this._currSampler = null, this._currTextureHash = 0, this._currSamplerHash = 0)), a.fillBuffers && a.fillBuffers(t, this), c && this.isMult) {
+                            if (h < 0 || 0 === f.count) {
+                                h = f.count++, c.texID = h + f.incID;
+                                var p = this.cacheTextures;
+                                p[h] !== c && (p[h] = c, (c = r.texture) || (c = r), this._currMaterial.setProperty("texture" + h, c))
+                            }
+                            this.fillTextureID(e, h)
+                        }
+                    }, t.fillTextureID = function(t, e) {
+                        var r = t.chunk.vb,
+                            a = 0,
+                            i = r.length;
+                        if (1 === t.dataDirty)
+                            for (var s = 0; s < i; s += 9) a = ~~(1e5 * r[s + 5]), r[s + 5] = 10 * a + e;
+                        else if (t.texID !== e)
+                            for (var n = 0; n < i; n += 9) a = ~~(.1 * r[n + 5]), r[n + 5] = 10 * a + e;
+                        t.dataDirty = 0, t.texID = e
+                    }
+                }
+            })), e._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/resources", ["./MotionTrail.ts", "./MotionTrail2.ts", "./SpriteMotionTrail.ts", "./Splash.ts", "./MultSpine.ts", "./MultTextures.ts", "./SnakeMeshBuilder.ts", "./SnakePath.ts", "./SnakeRenderer.ts"], (function() {
+    return {
+        setters: [null, null, null, null, null, null, null, null, null],
+        execute: function() {}
+    }
+}));
+
+System.register("chunks:///_virtual/SnakeMeshBuilder.ts", ["cc"], (function(t) {
+    var e, n;
+    return {
+        setters: [function(t) {
+            e = t.cclegacy, n = t.Vec2
+        }],
+        execute: function() {
+            e._RF.push({}, "05d3e/to7BGvozxqu34Pbjf", "SnakeMeshBuilder", void 0);
+            var a = t("SnakeMeshBuilder", function() {
+                function t() {}
+                return t.buildInPlace = function(t, e, n, a, r, i, s, o, u, h, c, m, p, _, v, f, l, P, g) {
+                    var M = Math.min(a.totalLength, r),
+                        d = M > 1 ? Math.min(Math.max(2, Math.floor(M / i) + 1), 256) : 0;
+                    if (d < 2) return 0;
+                    for (var x = t.vData, y = t.iData, k = .5 * s, B = 0; B < d; B++) {
+                        var S = B / (d - 1),
+                            T = S * M;
+                        a.sample(T, this._tempPos, this._tempTangent);
+                        var b = -this._tempTangent.y,
+                            w = this._tempTangent.x,
+                            D = o * (1 - S) + m * S,
+                            F = u * (1 - S) + p * S,
+                            R = h * (1 - S) + _ * S,
+                            j = c * (1 - S) + v * S,
+                            q = e + 2 * B,
+                            z = 9 * q,
+                            G = 9 * (q + 1);
+                        x[z + 0] = this._tempPos.x + b * k, x[z + 1] = this._tempPos.y + w * k, x[z + 2] = 0, x[z + 3] = D, x[z + 4] = F, x[z + 5] = f, x[z + 6] = l, x[z + 7] = P, x[z + 8] = g, x[G + 0] = this._tempPos.x - b * k, x[G + 1] = this._tempPos.y - w * k, x[G + 2] = 0, x[G + 3] = R, x[G + 4] = j, x[G + 5] = f, x[G + 6] = l, x[G + 7] = P, x[G + 8] = g
+                    }
+                    for (var I = 0; I < d - 1; I++) {
+                        var L = 2 * I,
+                            V = n + 6 * I;
+                        y[V + 0] = e + L, y[V + 1] = e + L + 2, y[V + 2] = e + L + 1, y[V + 3] = e + L + 1, y[V + 4] = e + L + 2, y[V + 5] = e + L + 3
+                    }
+                    return 2 * d
+                }, t
+            }());
+            a._tempPos = new n, a._tempTangent = new n, e._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/SnakePath.ts", ["./rollupPluginModLoBabelHelpers.js", "cc"], (function(t) {
+    var i, s;
+    return {
+        setters: [function(t) {
+            i = t.createClass
+        }, function(t) {
+            s = t.cclegacy
+        }],
+        execute: function() {
+            s._RF.push({}, "35dc6MaC7hEFpNGNmGuoTwt", "SnakePath", void 0);
+            t("SnakePath", function() {
+                function t(t, i) {
+                    void 0 === t && (t = 500), void 0 === i && (i = 2048), this._ptsX = void 0, this._ptsY = void 0, this._lens = void 0, this._capacity = void 0, this._head = 0, this._tail = 0, this._count = 0, this._maxLength = void 0, this._baseLen = 0, this._maxLength = t, this._capacity = i, this._ptsX = new Float64Array(i), this._ptsY = new Float64Array(i), this._lens = new Float64Array(i)
+                }
+                var s = t.prototype;
+                return s.addPoint = function(t, i) {
+                    if (0 === this._count) return this._ptsX[0] = t, this._ptsY[0] = i, this._lens[0] = this._baseLen, this._head = 0, this._tail = 1, void(this._count = 1);
+                    var s = (this._head + this._count - 1) % this._capacity,
+                        h = t - this._ptsX[s],
+                        a = i - this._ptsY[s],
+                        _ = Math.sqrt(h * h + a * a);
+                    if (!(_ < .5)) {
+                        var e = this._lens[s] + _;
+                        this._ptsX[this._tail] = t, this._ptsY[this._tail] = i, this._lens[this._tail] = e, this._tail = (this._tail + 1) % this._capacity, this._count < this._capacity ? this._count++ : (this._head = (this._head + 1) % this._capacity, this._baseLen = this._lens[this._head]), this._trim()
+                    }
+                }, s.clear = function() {
+                    this._head = 0, this._tail = 0, this._count = 0, this._baseLen = 0
+                }, s.sample = function(t, i, s) {
+                    if (0 === this._count) return i.set(0, 0), void s.set(0, 1);
+                    var h = this._head;
+                    this._head, this._count, this._capacity;
+                    if (1 === this._count) return i.set(this._ptsX[h], this._ptsY[h]), void s.set(0, 1);
+                    for (var a = this.totalLength, _ = Math.max(0, Math.min(a, a - t)), e = this._baseLen + _, n = 0, c = this._count - 1; n < c - 1;) {
+                        var o = n + c >> 1,
+                            r = (this._head + o) % this._capacity;
+                        this._lens[r] <= e ? n = o : c = o
+                    }
+                    var u = (this._head + n) % this._capacity,
+                        p = (this._head + c) % this._capacity,
+                        l = this._lens[u],
+                        d = this._lens[p] - l,
+                        v = d < .001 ? 0 : (e - l) / d,
+                        f = this._ptsX[u],
+                        y = this._ptsY[u],
+                        L = this._ptsX[p],
+                        g = this._ptsY[p];
+                    i.set(f + (L - f) * v, y + (g - y) * v);
+                    var m = L - f,
+                        b = g - y,
+                        k = Math.sqrt(m * m + b * b);
+                    k < .001 ? s.set(0, 1) : s.set(m / k, b / k)
+                }, s._trim = function() {
+                    if (!(this._count <= 2)) {
+                        for (var t = (this._head + this._count - 1) % this._capacity, i = this._lens[t]; this._count > 2;) {
+                            var s = (this._head + 1) % this._capacity;
+                            if (i - this._lens[s] <= this._maxLength) break;
+                            this._head = s, this._baseLen = this._lens[s], this._count--
+                        }
+                        if (this._baseLen > 1e6 && this._count > 0) {
+                            for (var h = 0; h < this._count; h++) {
+                                var a = (this._head + h) % this._capacity;
+                                this._lens[a] -= this._baseLen
+                            }
+                            this._baseLen = 0
+                        }
+                    }
+                }, i(t, [{
+                    key: "totalLength",
+                    get: function() {
+                        if (0 === this._count) return 0;
+                        var t = (this._head + this._count - 1) % this._capacity;
+                        return this._lens[t] - this._baseLen
+                    }
+                }, {
+                    key: "maxLength",
+                    get: function() {
+                        return this._maxLength
+                    },
+                    set: function(t) {
+                        this._maxLength = t
+                    }
+                }, {
+                    key: "pointCount",
+                    get: function() {
+                        return this._count
+                    }
+                }]), t
+            }());
+            s._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/SnakeRenderer.ts", ["./rollupPluginModLoBabelHelpers.js", "cc", "./SnakePath.ts", "./SnakeMeshBuilder.ts"], (function(t) {
+    var e, i, r, a, n, s, o, h, d, p, y, l, u;
+    return {
+        setters: [function(t) {
+            e = t.applyDecoratedDescriptor, i = t.inheritsLoose, r = t.initializerDefineProperty, a = t.assertThisInitialized, n = t.createClass
+        }, function(t) {
+            s = t.cclegacy, o = t._decorator, h = t.SpriteFrame, d = t.CCFloat, p = t.MeshRenderData, y = t.UIRenderer
+        }, function(t) {
+            l = t.SnakePath
+        }, function(t) {
+            u = t.SnakeMeshBuilder
+        }],
+        execute: function() {
+            var _, c, m, D, f, b, g, v, k, R, S, P, x, F, M;
+            s._RF.push({}, "c78c7udlWpLqavJY+i8S+8P", "SnakeRenderer", void 0);
+            var w = o.ccclass,
+                L = o.property,
+                W = o.executeInEditMode,
+                O = 2 * Math.PI,
+                z = 80 * Math.PI / 180,
+                H = {
+                    createData: function(t) {
+                        return null
+                    },
+                    updateRenderData: function(t) {
+                        t.renderData && t.snakeFrame && t.renderData.updateRenderData(t, t.snakeFrame)
+                    },
+                    fillBuffers: function(t, e) {
+                        var i = t._bodyRD;
+                        if (i && t.snakeFrame && t.renderData) {
+                            var r = i.vertexCount,
+                                a = i.indexCount;
+                            if (0 !== r && 0 !== a) {
+                                var n = t.renderData;
+                                if (n) {
+                                    var s = n.chunk;
+                                    if (s) {
+                                        var o = s.vb,
+                                            h = s.meshBuffer.iData,
+                                            d = s.vertexOffset,
+                                            p = s.meshBuffer.indexOffset;
+                                        o.set(i.vData.subarray(0, 9 * r), 0);
+                                        for (var y = i.iData, l = 0; l < a; l++) h[p + l] = y[l] + d;
+                                        s.meshBuffer.indexOffset += a
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+            t("SnakeRenderer", (_ = w("SnakeRenderer"), c = L({
+                type: h,
+                displayName: "蛇纹理"
+            }), m = L({
+                type: d,
+                displayName: "头部高度 (px)",
+                min: 10
+            }), D = L({
+                type: d,
+                displayName: "蛇身宽度 (px)",
+                min: 4
+            }), f = L({
+                type: d,
+                displayName: "蛇身最大长度 (px)",
+                min: 50
+            }), b = L({
+                type: d,
+                displayName: "网格采样间距 (px)",
+                min: 2
+            }), g = L({
+                type: d,
+                displayName: "蛇头转向速度",
+                min: 1
+            }), _(v = W((R = e((k = function(t) {
+                function e() {
+                    for (var e, i = arguments.length, n = new Array(i), s = 0; s < i; s++) n[s] = arguments[s];
+                    return e = t.call.apply(t, [this].concat(n)) || this, r(e, "_snakeFrame", R, a(e)), r(e, "_headHeight", S, a(e)), r(e, "_bodyWidth", P, a(e)), r(e, "_bodyLength", x, a(e)), r(e, "_segmentStep", F, a(e)), r(e, "_turnSpeed", M, a(e)), e._bodyRD = null, e._path = null, e._prevWx = 0, e._prevWy = 0, e._lastDirX = 0, e._lastDirY = 1, e._meshDirty = !0, e._prevPackedColor = 0, e
+                }
+                i(e, t);
+                var s = e.prototype;
+                return s.markDirty = function() {
+                    this._path.clear(), this._meshDirty = !0
+                }, s._rebuildEditorMesh = function() {}, s._initPreviewPath = function() {
+                    this._path || (this._path = new l(this.bodyLength)), this._path.clear();
+                    for (var t = this.node.worldPosition, e = this._lastDirX, i = this._lastDirY, r = Math.max(2, this.segmentStep), a = Math.ceil(this.bodyLength / r) + 1, n = a; n >= 0; n--) {
+                        var s = n / a * this.bodyLength;
+                        this._path.addPoint(t.x - e * s, t.y - i * s)
+                    }
+                    this._prevWx = t.x, this._prevWy = t.y, this._meshDirty = !0
+                }, s.onLoad = function() {
+                    t.prototype.onLoad.call(this), this._assembler = H, this._path = new l(this.bodyLength);
+                    var e = this.node.worldPosition;
+                    this._prevWx = e.x, this._prevWy = e.y, this._path.addPoint(e.x, e.y)
+                }, s.onEnable = function() {
+                    t.prototype.onEnable.call(this), this._initRenderData()
+                }, s.onDisable = function() {
+                    this._destroyRenderData(), t.prototype.onDisable.call(this)
+                }, s.onDestroy = function() {
+                    this._destroyRenderData(), t.prototype.onDestroy.call(this)
+                }, s._initRenderData = function() {
+                    if (this.renderData || this.requestRenderData(), !this._bodyRD) {
+                        this._bodyRD = p.add(), this._bodyRD.request(516, 1536) || console.error("[SnakeRenderer] MeshRenderData.request 分配失败"), this.snakeFrame && (this._bodyRD.frame = this.snakeFrame);
+                        for (var t = this._bodyRD.vData, e = 0; e < 516; e++) {
+                            var i = 9 * e;
+                            t[i + 5] = 1, t[i + 6] = 1, t[i + 7] = 1, t[i + 8] = 1
+                        }
+                    }
+                }, s._destroyRenderData = function() {
+                    this._bodyRD && (p.remove(this._bodyRD), this._bodyRD = null)
+                }, s.update = function(t) {
+                    !this.snakeFrame || this._bodyRD && this._bodyRD.frame === this.snakeFrame || this._bodyRD && (this._bodyRD.frame = this.snakeFrame);
+                    var e = this.node.worldPosition,
+                        i = e.x,
+                        r = e.y,
+                        a = i - this._prevWx,
+                        n = r - this._prevWy;
+                    if (a * a + n * n > .25) {
+                        for (var s = Math.atan2(n, a), o = Math.atan2(this._lastDirY, this._lastDirX), h = s - o; h < -Math.PI;) h += O;
+                        for (; h > Math.PI;) h -= O;
+                        if (Math.abs(h) > z) o = s;
+                        else o += h * Math.min(1, t * this.turnSpeed);
+                        this._lastDirX = Math.cos(o), this._lastDirY = Math.sin(o), this._prevWx = i, this._prevWy = r, this._path.addPoint(i, r), this._meshDirty = !0
+                    }
+                    var d = (this.color.r << 24 | this.color.g << 16 | this.color.b << 8 | this.color.a) >>> 0;
+                    this._prevPackedColor !== d && (this._prevPackedColor = d, this._meshDirty = !0), this._meshDirty && (this._rebuildVerts(), this.markForUpdateRenderData(), this._meshDirty = !1)
+                }, s._render = function(t) {
+                    this._bodyRD && this.snakeFrame && this.renderData && t.commitComp(this, this.renderData, this.snakeFrame, this._assembler, null)
+                }, s._rebuildVerts = function() {
+                    var t = this._bodyRD;
+                    if (!t || !this.snakeFrame) return t && t.resize(0, 0), void(this.renderData && this.renderData.resize(0, 0));
+                    var e = this.snakeFrame.uv,
+                        i = this.snakeFrame.originalSize,
+                        r = i && i.height > 0 ? Math.min(1, this.headHeight / i.height) : .5,
+                        a = e[0],
+                        n = e[1],
+                        s = e[2],
+                        o = e[3],
+                        h = e[4],
+                        d = e[5],
+                        p = e[6],
+                        y = e[7],
+                        l = h * (1 - r) + a * r,
+                        _ = d * (1 - r) + n * r,
+                        c = p * (1 - r) + s * r,
+                        m = y * (1 - r) + o * r,
+                        D = 0 === this._lastDirX && 0 === this._lastDirY ? 0 : this._lastDirX,
+                        f = 0 === this._lastDirX && 0 === this._lastDirY ? 1 : this._lastDirY,
+                        b = f,
+                        g = -D,
+                        v = .5 * this.bodyWidth,
+                        k = this.headHeight,
+                        R = this.node.worldPosition.x,
+                        S = this.node.worldPosition.y,
+                        P = R - v * b + k * D,
+                        x = S - v * g + k * f,
+                        F = R + v * b + k * D,
+                        M = S + v * g + k * f,
+                        w = R - v * b,
+                        L = S - v * g,
+                        W = R + v * b,
+                        O = S + v * g,
+                        z = Math.min(this._path.totalLength, this.bodyLength),
+                        H = z > 1 ? Math.min(Math.max(2, Math.floor(z / this.segmentStep) + 1), 256) : 0,
+                        C = 2 * H,
+                        I = C + 4,
+                        Y = H >= 2 ? 6 * (H - 1) : 0,
+                        j = Y + 6;
+                    this.renderData && this.renderData.resize(I, j), t.resize(I, j);
+                    var B = t.vData,
+                        X = t.iData,
+                        N = this.color.r / 255,
+                        q = this.color.g / 255,
+                        E = this.color.b / 255,
+                        U = this.color.a / 255;
+                    H >= 2 && (u.buildInPlace(t, 0, 0, this._path, this.bodyLength, this.segmentStep, this.bodyWidth, l, _, c, m, a, n, s, o, N, q, E, U), B[0] = w, B[1] = L, B[9] = W, B[10] = O);
+                    var V = 9 * C;
+                    B[V + 0 + 0] = P, B[V + 0 + 1] = x, B[V + 0 + 2] = 0, B[V + 0 + 3] = h, B[V + 0 + 4] = d, B[V + 0 + 5] = N, B[V + 0 + 6] = q, B[V + 0 + 7] = E, B[V + 0 + 8] = U, B[V + 9 + 0] = F, B[V + 9 + 1] = M, B[V + 9 + 2] = 0, B[V + 9 + 3] = p, B[V + 9 + 4] = y, B[V + 9 + 5] = N, B[V + 9 + 6] = q, B[V + 9 + 7] = E, B[V + 9 + 8] = U, B[V + 18 + 0] = w, B[V + 18 + 1] = L, B[V + 18 + 2] = 0, B[V + 18 + 3] = l, B[V + 18 + 4] = _, B[V + 18 + 5] = N, B[V + 18 + 6] = q, B[V + 18 + 7] = E, B[V + 18 + 8] = U, B[V + 27 + 0] = W, B[V + 27 + 1] = O, B[V + 27 + 2] = 0, B[V + 27 + 3] = c, B[V + 27 + 4] = m, B[V + 27 + 5] = N, B[V + 27 + 6] = q, B[V + 27 + 7] = E, B[V + 27 + 8] = U;
+                    var A = C,
+                        J = Y;
+                    X[J + 0] = A + 0, X[J + 1] = A + 2, X[J + 2] = A + 1, X[J + 3] = A + 1, X[J + 4] = A + 2, X[J + 5] = A + 3
+                }, n(e, [{
+                    key: "snakeFrame",
+                    get: function() {
+                        return this._snakeFrame
+                    },
+                    set: function(t) {
+                        this._snakeFrame !== t && (this._snakeFrame = t, this._meshDirty = !0)
+                    }
+                }, {
+                    key: "headHeight",
+                    get: function() {
+                        return this._headHeight
+                    },
+                    set: function(t) {
+                        this._headHeight !== t && (this._headHeight = t, this._meshDirty = !0)
+                    }
+                }, {
+                    key: "bodyWidth",
+                    get: function() {
+                        return this._bodyWidth
+                    },
+                    set: function(t) {
+                        this._bodyWidth !== t && (this._bodyWidth = t, this._meshDirty = !0)
+                    }
+                }, {
+                    key: "bodyLength",
+                    get: function() {
+                        return this._bodyLength
+                    },
+                    set: function(t) {
+                        this._bodyLength !== t && (this._bodyLength = t, this._path && (this._path.maxLength = t), this._meshDirty = !0)
+                    }
+                }, {
+                    key: "segmentStep",
+                    get: function() {
+                        return this._segmentStep
+                    },
+                    set: function(t) {
+                        this._segmentStep !== t && (this._segmentStep = Math.max(2, t), this._meshDirty = !0)
+                    }
+                }, {
+                    key: "turnSpeed",
+                    get: function() {
+                        return this._turnSpeed
+                    },
+                    set: function(t) {
+                        this._turnSpeed !== t && (this._turnSpeed = t)
+                    }
+                }]), e
+            }(y)).prototype, "_snakeFrame", [L], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), e(k.prototype, "snakeFrame", [c], Object.getOwnPropertyDescriptor(k.prototype, "snakeFrame"), k.prototype), S = e(k.prototype, "_headHeight", [L], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 80
+                }
+            }), e(k.prototype, "headHeight", [m], Object.getOwnPropertyDescriptor(k.prototype, "headHeight"), k.prototype), P = e(k.prototype, "_bodyWidth", [L], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 60
+                }
+            }), e(k.prototype, "bodyWidth", [D], Object.getOwnPropertyDescriptor(k.prototype, "bodyWidth"), k.prototype), x = e(k.prototype, "_bodyLength", [L], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 400
+                }
+            }), e(k.prototype, "bodyLength", [f], Object.getOwnPropertyDescriptor(k.prototype, "bodyLength"), k.prototype), F = e(k.prototype, "_segmentStep", [L], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 10
+                }
+            }), e(k.prototype, "segmentStep", [b], Object.getOwnPropertyDescriptor(k.prototype, "segmentStep"), k.prototype), M = e(k.prototype, "_turnSpeed", [L], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 30
+                }
+            }), e(k.prototype, "turnSpeed", [g], Object.getOwnPropertyDescriptor(k.prototype, "turnSpeed"), k.prototype), v = k)) || v) || v));
+            s._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/Splash.ts", ["./rollupPluginModLoBabelHelpers.js", "cc"], (function(e) {
+    var t, i, n, o, a, r, l, s, c, d, u, p, g, h, f, m, A, L, y;
+    return {
+        setters: [function(e) {
+            t = e.applyDecoratedDescriptor, i = e.inheritsLoose, n = e.initializerDefineProperty, o = e.assertThisInitialized
+        }, function(e) {
+            a = e.cclegacy, r = e._decorator, l = e.game, s = e.Game, c = e.Label, d = e.screen, u = e.Widget, p = e.UITransform, g = e.v3, h = e.Camera, f = e.profiler, m = e.assetManager, A = e.director, L = e.sys, y = e.Component
+        }],
+        execute: function() {
+            var b, M, v, C, S;
+            a._RF.push({}, "cda352ucJdPOam7EB946yd7", "Splash", void 0);
+            var _ = r.ccclass,
+                E = r.property;
+            l.once(s.EVENT_GAME_INITED, (function() {
+                window.hideCenterLogo && window.hideCenterLogo(300)
+            }));
+            e("Splash", (b = _("Splash"), M = E({
+                type: c,
+                tooltip: "加载文本"
+            }), b((S = t((C = function(e) {
+                function t() {
+                    for (var t, i = arguments.length, a = new Array(i), r = 0; r < i; r++) a[r] = arguments[r];
+                    return t = e.call.apply(e, [this].concat(a)) || this, n(t, "labLoad", S, o(t)), t
+                }
+                i(t, e);
+                var a = t.prototype;
+                return a.start = function() {
+                    var e = d.windowSize,
+                        t = e.width,
+                        i = e.height,
+                        n = this.node.getChildByName("viewNode"),
+                        o = n.getComponent(u);
+                    if (t / i <= .48 || this.isMiniGame() || xyMini.isSucai) o.isAlignLeft = o.isAlignRight = o.isAlignBottom = o.isAlignTop = !0;
+                    else {
+                        o.isAlignLeft = o.isAlignRight = o.isAlignBottom = o.isAlignTop = !1, n.getComponent(p).setContentSize(720, 1560);
+                        var a = i / 1560;
+                        n.setScale(g(a, a, 1)), this.node.getChildByName("Camera").getComponent(h).orthoHeight = i / 2
+                    }
+                    f.hideStats();
+                    var r = this;
+                    console.warn("Start Splash"), r.updateLoadingLabel("正在加载脚本..."), m.loadBundle("script", (function(e, t) {
+                        t ? (r.updateLoadingLabel("正在加载资源配置..."), m.loadBundle("res", (function(e, t) {
+                            t && (r.updateLoadingLabel("正在加载登录页..."), m.bundles.get("res").load("gui/login/LoginPage", (function(e, t) {
+                                A.loadScene("Main")
+                            })))
+                        }))) : console.error("script bundle error")
+                    }))
+                }, a.isMiniGame = function() {
+                    var e = L.platform;
+                    return e === L.Platform.WECHAT_GAME || e === L.Platform.BYTEDANCE_MINI_GAME || e === L.Platform.TAOBAO_MINI_GAME || e === L.Platform.ALIPAY_MINI_GAME
+                }, a.updateLoadingLabel = function(e) {
+                    this.labLoad.string = e
+                }, t
+            }(y)).prototype, "labLoad", [M], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), v = C)) || v));
+            a._RF.pop()
+        }
+    }
+}));
+
+System.register("chunks:///_virtual/SpriteMotionTrail.ts", ["./rollupPluginModLoBabelHelpers.js", "cc"], (function(t) {
+    var e, i, a, r, s, n, o, h, l, p, c, u, d, f, m, g;
+    return {
+        setters: [function(t) {
+            e = t.applyDecoratedDescriptor, i = t.inheritsLoose, a = t.initializerDefineProperty, r = t.assertThisInitialized, s = t.createClass
+        }, function(t) {
+            n = t.cclegacy, o = t._decorator, h = t.SpriteAtlas, l = t.SpriteFrame, p = t.CCInteger, c = t.Color, u = t.Vec2, d = t.Mat4, f = t.NodeEventType, m = t.Node, g = t.UIRenderer
+        }],
+        execute: function() {
+            var y, _, v, b, S, x, M, D, C, P, T, w, F, O, W, j, A, L, z, I, N, k, R, V, E, G, U, Y, J, X, B, q, H, K, Q, Z, $, tt, et, it, at, rt, st, nt, ot, ht;
+            n._RF.push({}, "bb015t0kipJLqbYpBumVHlK", "SpriteMotionTrail", void 0);
+            var lt = function() {
+                    this.x = 0, this.y = 0, this.dis = 0, this.cos = 0, this.sin = 0, this.time = 0, this.alpha = 1, this.angle = 0, this.targetAngle = 0
+                },
+                pt = o.ccclass,
+                ct = o.property,
+                ut = o.menu,
+                dt = o.executeInEditMode,
+                ft = o.playOnFocus;
+            t("SpriteMotionTrail", (y = pt("SpriteMotionTrail"), _ = ut("Gi/SpriteMotionTrail"), v = ct({
+                type: h,
+                readonly: !0
+            }), b = ct({
+                type: l,
+                displayName: "拖尾贴图"
+            }), S = ct({
+                displayName: "是否激活"
+            }), x = ct({
+                displayName: "世界坐标模式",
+                tooltip: "开启后使用世界坐标，关闭则使用节点本地坐标"
+            }), M = ct({
+                displayName: "位置偏移"
+            }), D = ct({
+                type: p,
+                min: 2,
+                max: 100,
+                displayName: "拖尾长度（关节数）"
+            }), C = ct({
+                displayName: "头部宽度",
+                min: 0
+            }), P = ct({
+                displayName: "尾部宽度",
+                min: 0
+            }), T = ct({
+                displayName: "缩尾时间（秒）",
+                tooltip: "控制拖尾保留最近多少秒的运动轨迹，值越大尾巴越长",
+                min: .1,
+                max: 10
+            }), w = ct({
+                displayName: "最小分段距离",
+                min: 1
+            }), F = ct({
+                displayName: "Low Speed Consume Rate",
+                min: 1,
+                max: 10,
+                tooltip: "Controls how fast the trail shrinks while moving slowly or standing still."
+            }), O = ct({
+                displayName: "Max Trail Length",
+                min: 0,
+                tooltip: "Caps the visible trail length in world units. Set to 0 for no limit."
+            }), W = ct({
+                type: p,
+                min: 0,
+                max: 255,
+                slide: !0,
+                displayName: "头部透明度"
+            }), j = ct({
+                type: p,
+                min: 0,
+                max: 255,
+                slide: !0,
+                displayName: "尾部透明度"
+            }), A = ct({
+                type: c,
+                displayName: "头部颜色",
+                tooltip: "拖尾头部的颜色，仅在启用渐变颜色时生效"
+            }), L = ct({
+                type: c,
+                displayName: "尾部颜色",
+                tooltip: "拖尾尾部的颜色，仅在启用渐变颜色时生效"
+            }), z = ct({
+                displayName: "启用渐变颜色",
+                tooltip: "开启后拖尾将从头部颜色渐变到尾部颜色，关闭则使用统一颜色"
+            }), I = ct({
+                displayName: "平滑移动",
+                tooltip: "开启后移动更加平滑，但会稍微增加计算量"
+            }), N = ct({
+                range: [.1, 2, .1],
+                displayName: "移动灵敏度",
+                tooltip: "值越大拖尾跟随越紧密"
+            }), k = ct({
+                range: [.1, 1, .1],
+                displayName: "转向平滑度",
+                tooltip: "值越小转向越平滑，值越大转向越锐利"
+            }), R = ct({
+                range: [0, 180, 5],
+                displayName: "急转弯阈值",
+                tooltip: "角度变化超过此值时启用急转弯处理（度）"
+            }), y(V = dt(V = ft(V = _((G = e((E = function(t) {
+                function e() {
+                    for (var e, i = arguments.length, s = new Array(i), n = 0; n < i; n++) s[n] = arguments[n];
+                    return (e = t.call.apply(t, [this].concat(s)) || this).sampleElapsed = 0, e.currentFrameSpeed = 0, a(e, "atlas", G, r(e)), a(e, "_spriteFrame", U, r(e)), a(e, "_isActive", Y, r(e)), a(e, "_isWorldXY", J, r(e)), a(e, "offset", X, r(e)), a(e, "_length", B, r(e)), a(e, "_headWidth", q, r(e)), a(e, "_tailWidth", H, r(e)), a(e, "_fadeTime", K, r(e)), a(e, "_minSeg", Q, r(e)), a(e, "_lowSpeedConsumeRate", Z, r(e)), a(e, "_maxTrailLength", $, r(e)), a(e, "_headOpacity", tt, r(e)), a(e, "_tailOpacity", et, r(e)), a(e, "_headColor", it, r(e)), a(e, "_tailColor", at, r(e)), a(e, "_useGradientColor", rt, r(e)), a(e, "smoothMovement", st, r(e)), a(e, "moveSensitivity", nt, r(e)), a(e, "turnSmoothness", ot, r(e)), a(e, "sharpTurnThreshold", ht, r(e)), e.joints = [], e.cascadeScale = new u(1, 1), e.visibleScale = new u(1, 1), e.trailPosition = new u, e.lastSamplePosition = new u, e.lastFramePosition = new u, e.moveDistance = 0, e.frameMoveDistance = 0, e.isFirstUpdate = !0, e.isPaused = !1, e._ibWeb = null, e.lastMoveDirection = new u, e.currentMoveDirection = new u, e.segmentLengths = [], e.jointVs = [], e.totalVisibleTrailLength = 0, e.cascadeScaleAbs = new u(1, 1), e._inverseMatrixCache = new d, e._useExternalStep = !1, e._timeScale = 1, e
+                }
+                i(e, t);
+                var n = e.prototype;
+                return n.__preload = function() {
+                    t.prototype.__preload.call(this), this._assembler = {
+                        updateColor: this._updateColor.bind(this),
+                        updateRenderData: this.onFlushed.bind(this),
+                        fillBuffers: this.fillBuffer.bind(this)
+                    }, this._useVertexOpacity = !0
+                }, n.onLoad = function() {
+                    t.prototype.onLoad.call(this), this.updateSpriteFrame(), this.updateLength(), this.updateUV(), this.updateWidth(), this.updateActive(), this.node.on(f.TRANSFORM_CHANGED, this.updateVisibleScale, this)
+                }, n.onDestroy = function() {
+                    t.prototype.onDestroy.call(this), this.node.off(f.TRANSFORM_CHANGED, this.updateVisibleScale, this)
+                }, n.onEnable = function() {
+                    t.prototype.onEnable.call(this), this.updateActive(), this.isFirstUpdate = !0
+                }, n.lateUpdate = function(t) {
+                    if (!this._useExternalStep) {
+                        var e = t;
+                        this.advance(e)
+                    }
+                }, n.updateActive = function() {
+                    this._isActive && (this.updateCascadeScale(), this.updateVisibleScale(), this.resetJointPositions())
+                }, n.updateLength = function() {
+                    for (var t = this.joints = [], e = 0, i = this._length; e < i; e++) t[e] = new lt;
+                    this.resizeMetricBuffers(), this.createBuffer()
+                }, n.resizeMetricBuffers = function() {
+                    var t = Math.max(this._length - 1, 0);
+                    this.segmentLengths.length = t;
+                    for (var e = 0; e < t; e++) this.segmentLengths[e] = 0;
+                    this.jointVs.length = this._length;
+                    for (var i = 0; i < this._length; i++) this.jointVs[i] = 0;
+                    this.totalVisibleTrailLength = 0
+                }, n.updateWidth = function() {
+                    for (var t = this._length, e = .5 * this._headWidth, i = (e - .5 * this._tailWidth) / (t - 1), a = 0, r = this.joints; a < t; r[a].dis = e - i * a++);
+                    this.refreshGeometry()
+                }, n.createBuffer = function() {
+                    this.destroyRenderData();
+                    var t = this._renderData = this.requestRenderData(),
+                        e = this._length << 1;
+                    t.dataLength = e, t.resize(e, 3 * (e - 2)), this._updateColor(), this.updateIData()
+                }, n.updateIData = function() {
+                    this._renderData.chunk;
+                    var t = this._renderData.indexCount;
+                    this._ibWeb && this._ibWeb.length === t || (this._ibWeb = new Uint16Array(t));
+                    for (var e = this._ibWeb, i = 0, a = 0, r = e.length; i < r; ++a) e[i++] = a, e[i++] = a + 1, e[i++] = a + 2
+                }, n.onFlushed = function() {
+                    this._spriteFrame && (this._renderData || this.updateLength(), this._renderData && this._renderData.updateRenderData(this, this._spriteFrame))
+                }, n.updateCascadeScale = function() {
+                    for (var t = this.node, e = 1, i = 1; null !== t._parent;) e *= (t = t._parent).scale.x, i *= t.scale.y;
+                    this.cascadeScale.x = e, this.cascadeScale.y = i, this.cascadeScaleAbs.x = Math.abs(e), this.cascadeScaleAbs.y = Math.abs(i)
+                }, n.updateVisibleScale = function(t) {
+                    void 0 === t && (t = 4), t & m.TransformBit.SCALE && (this.visibleScale.x = this.cascadeScale.x * this.node.scale.x, this.visibleScale.y = this.cascadeScale.y * this.node.scale.y)
+                }, n.getCurrentTrailPosition = function(t) {
+                    var e = this.node,
+                        i = this.visibleScale.x,
+                        a = this.visibleScale.y;
+                    if (this._isWorldXY) {
+                        var r = e.worldMatrix;
+                        t.set(this.offset.x * i + r.m12, this.offset.y * a + r.m13)
+                    } else t.set(this.offset.x * e.scale.x + e.position.x, this.offset.y * e.scale.y + e.position.y)
+                }, n.updateXY = function(t, e, i, a) {
+                    var r = this.joints,
+                        s = t - this.lastFramePosition.x,
+                        n = e - this.lastFramePosition.y,
+                        o = s * s + n * n;
+                    this.frameMoveDistance = o > 0 ? Math.sqrt(o) : 0;
+                    var h = t - this.lastSamplePosition.x,
+                        l = e - this.lastSamplePosition.y,
+                        p = h * h + l * l;
+                    if (this.moveDistance = p > 0 ? Math.sqrt(p) : 0, o > 1e-6) {
+                        var c = 1 / this.frameMoveDistance;
+                        this.currentMoveDirection.set(s * c, n * c)
+                    }
+                    var u = this.isFirstUpdate;
+                    (a > 0 || u) && (this.shiftJointsPosition(1), this.lastSamplePosition.set(t, e), this.isFirstUpdate = !1, this.moveDistance = 0);
+                    var d = r[0];
+                    d.x = t, d.y = e, d.time = this._fadeTime, this.calculateTargetDirection(d, u), o > 1e-6 && this.lastMoveDirection.set(this.currentMoveDirection);
+                    for (var f = 0; f < this._length; f++) {
+                        var m = r[f];
+                        m.time -= i, m.alpha = m.time > 0 ? 1 : 0
+                    }
+                    a > 1 && this.shiftJointsPosition(a - 1), this.lastFramePosition.set(t, e)
+                }, n.advanceSegment = function(t, e, i) {
+                    var a = t - this.lastSamplePosition.x,
+                        r = e - this.lastSamplePosition.y,
+                        s = a * a + r * r,
+                        n = this.getSampleInterval(),
+                        o = this.getConsumeRate(n);
+                    this.sampleElapsed += i * o;
+                    var h = this.isFirstUpdate || s >= this._minSeg * this._minSeg ? 1 : 0;
+                    !this.isFirstUpdate && n > 0 && this.sampleElapsed >= n && (h = Math.max(h, Math.floor(this.sampleElapsed / n))), h > 0 && (this.sampleElapsed = n > 0 ? Math.max(this.sampleElapsed - h * n, 0) : 0), this.updateXY(t, e, i, h)
+                }, n.getStepSubdivisionCount = function(t) {
+                    var e = this.getEffectiveTimeScale(),
+                        i = Math.max(1, Math.ceil(e)),
+                        a = this.getSampleInterval();
+                    if (t > 0 && a > 0) {
+                        var r = Math.max(this._lowSpeedConsumeRate, 1);
+                        i = Math.max(i, Math.ceil(t * r / a))
+                    }
+                    return i
+                }, n.getEffectiveTimeScale = function() {
+                    return Math.max(this._timeScale, 0)
+                }, n.getSampleInterval = function() {
+                    return this._fadeTime / Math.max(this._length - 1, 1)
+                }, n.getLowSpeedThreshold = function(t) {
+                    return t > 0 ? this._minSeg / t : Number.POSITIVE_INFINITY
+                }, n.getConsumeRate = function(t) {
+                    return t <= 0 ? 1 : this.currentFrameSpeed < this.getLowSpeedThreshold(t) ? this._lowSpeedConsumeRate : 1
+                }, n.shiftJointsPosition = function(t) {
+                    var e = this.joints,
+                        i = this._length - 1,
+                        a = Math.min(Math.max(t, 0), i);
+                    if (!(a <= 0))
+                        for (var r = i; r > 0; --r) {
+                            var s = r - a,
+                                n = e[s > 0 ? s : 0],
+                                o = e[r];
+                            o.x = n.x, o.y = n.y, o.time = n.time, o.targetAngle = n.angle
+                        }
+                }, n.calculateTargetDirection = function(t, e) {
+                    void 0 === e && (e = !1);
+                    var i = this.getAngleChange(),
+                        a = Math.abs(i) > this.sharpTurnThreshold * Math.PI / 180;
+                    if (this.frameMoveDistance > .001) {
+                        var r = Math.atan2(this.currentMoveDirection.y, this.currentMoveDirection.x);
+                        if (0 !== t.angle) {
+                            for (; r - t.angle > Math.PI;) r -= 2 * Math.PI;
+                            for (; r - t.angle < -Math.PI;) r += 2 * Math.PI
+                        }
+                        t.targetAngle = r, (a || e) && this.syncJointDirection(t, r)
+                    } else t.targetAngle = t.angle
+                }, n.getAngleChange = function() {
+                    var t = this.lastMoveDirection.x * this.lastMoveDirection.x + this.lastMoveDirection.y * this.lastMoveDirection.y,
+                        e = this.currentMoveDirection.x * this.currentMoveDirection.x + this.currentMoveDirection.y * this.currentMoveDirection.y;
+                    if (t < 1e-6 || e < 1e-6) return 0;
+                    var i = this.lastMoveDirection.dot(this.currentMoveDirection);
+                    return i = Math.max(-1, Math.min(1, i)), Math.acos(i)
+                }, n.smoothJointDirections = function(t) {
+                    var e = this.joints;
+                    if (!(t <= 0))
+                        for (var i = t, a = 1 - Math.pow(this.turnSmoothness, 60 * i), r = 0; r < this._length; r++) {
+                            for (var s = e[r], n = s.targetAngle - s.angle; n > Math.PI;) n -= 2 * Math.PI;
+                            for (; n < -Math.PI;) n += 2 * Math.PI;
+                            if (Math.abs(n) > 1e-5 && (s.angle += n * a, s.sin = Math.sin(s.angle), s.cos = Math.cos(s.angle)), r < this._length - 1) {
+                                var o = e[r + 1];
+                                if (!this.isFirstUpdate) {
+                                    o.targetAngle = .7 * s.angle + o.targetAngle * (1 - .7)
+                                }
+                            }
+                        }
+                }, n.applyTimeWindowCutoff = function() {
+                    var t = this.joints,
+                        e = this._length - 1;
+                    if (!(e < 0)) {
+                        for (var i = -1, a = 1; a <= e; a++)
+                            if (t[a].time <= 0) {
+                                i = a;
+                                break
+                            } if (!(i < 0)) {
+                            var r = t[i - 1],
+                                s = t[i],
+                                n = s.x,
+                                o = s.y,
+                                h = r.angle,
+                                l = r.time - s.time;
+                            if (r.time > 0 && l > 0) {
+                                var p = Math.min(Math.max(r.time / l, 0), 1);
+                                n = r.x + (s.x - r.x) * p, o = r.y + (s.y - r.y) * p, h = this.lerpAngle(r.angle, s.angle, p)
+                            } else n = r.x, o = r.y;
+                            this.collapseTailFrom(i, n, o, h)
+                        }
+                    }
+                }, n.rebuildTrailMetrics = function() {
+                    var t = this.joints,
+                        e = t.length;
+                    if (e <= 0) this.totalVisibleTrailLength = 0;
+                    else {
+                        this.segmentLengths.length === Math.max(e - 1, 0) && this.jointVs.length === e || this.resizeMetricBuffers();
+                        for (var i = this._maxTrailLength, a = 0, r = Math.max(e - 1, 0), s = 0; s < r; s++) this.segmentLengths[s] = 0;
+                        for (var n = -1, o = 1; o < e; o++) {
+                            var h = t[o - 1],
+                                l = t[o],
+                                p = l.x - h.x,
+                                c = l.y - h.y,
+                                u = this.getVisualSegmentLength(p, c);
+                            if (!(u <= 0)) {
+                                if (i > 0)
+                                    if (a + u > i) {
+                                        var d = Math.max(i - a, 0),
+                                            f = u > 0 ? Math.min(Math.max(d / u, 0), 1) : 0,
+                                            m = h.x + p * f,
+                                            g = h.y + c * f,
+                                            y = this.lerpAngle(h.angle, l.angle, f);
+                                        this.collapseTailFrom(o, m, g, y), this.segmentLengths[o - 1] = d, a += d, n = o;
+                                        break
+                                    } this.segmentLengths[o - 1] = u, a += u
+                            }
+                        }
+                        if (n > 0)
+                            for (var _ = n; _ < r; _++) this.segmentLengths[_] = 0;
+                        this.totalVisibleTrailLength = a;
+                        for (var v = 0, b = Math.max(e - 1, 1), S = 0; S < e; S++) this.jointVs[S] = a > 0 ? 1 - v / a : 1 - S / b, S < r && (v += this.segmentLengths[S])
+                    }
+                }, n.getVisualSegmentLength = function(t, e) {
+                    if (this._isWorldXY) return Math.sqrt(t * t + e * e);
+                    var i = t * this.cascadeScaleAbs.x,
+                        a = e * this.cascadeScaleAbs.y;
+                    return Math.sqrt(i * i + a * a)
+                }, n.collapseTailFrom = function(t, e, i, a) {
+                    for (var r = t; r < this._length; r++) {
+                        var s = this.joints[r];
+                        s.x = e, s.y = i, s.time = 0, s.alpha = 0, this.syncJointDirection(s, a)
+                    }
+                }, n.syncJointDirection = function(t, e) {
+                    t.angle = e, t.targetAngle = e, t.sin = Math.sin(e), t.cos = Math.cos(e)
+                }, n.lerpAngle = function(t, e, i) {
+                    for (var a = e - t; a > Math.PI;) a -= 2 * Math.PI;
+                    for (; a < -Math.PI;) a += 2 * Math.PI;
+                    return t + a * i
+                }, n.generateVertices = function(t) {
+                    var e = this.joints,
+                        i = this._length - 1,
+                        a = 0,
+                        r = 0,
+                        s = 1,
+                        n = 1;
+                    this._isWorldXY || (a = this.node.position.x, r = this.node.position.y, s = this.cascadeScale.x, n = this.cascadeScale.y);
+                    for (var o = 0, h = 0; h < i; ++h, o += 2) {
+                        var l = e[h],
+                            p = (l.x - a) * s,
+                            c = (l.y - r) * n,
+                            u = l.dis * this.visibleScale.x * l.sin,
+                            d = l.dis * this.visibleScale.y * l.cos;
+                        t[o].x = p + u, t[o].y = c - d, t[o + 1].x = p - u, t[o + 1].y = c + d
+                    }
+                    var f = e[i],
+                        m = (f.x - a) * s,
+                        g = (f.y - r) * n,
+                        y = f.dis * this.visibleScale.x * f.sin,
+                        _ = f.dis * this.visibleScale.y * f.cos;
+                    t[o].x = m + y, t[o].y = g - _, t[o + 1].x = m - y, t[o + 1].y = g + _, this.fitXY(t)
+                }, n.fitXY = function(t) {
+                    var e = this._renderData.chunk.vb;
+                    if (this._isWorldXY)
+                        for (var i = 0, a = e.length, r = this._renderData.floatStride, s = 0; i < a; i += r, ++s) e[i] = t[s].x, e[i + 1] = t[s].y;
+                    else
+                        for (var n = this.node.worldMatrix, o = n.m12, h = n.m13, l = 0, p = e.length, c = this._renderData.floatStride, u = 0; l < p; l += c, ++u) e[l] = t[u].x + o, e[l + 1] = t[u].y + h
+                }, n.updateUV = function() {
+                    var t = this._spriteFrame;
+                    if (t) {
+                        var e = this._renderData;
+                        if (e) {
+                            for (var i = e.chunk.vb, a = e.floatStride, r = this.joints.length << 1, s = this.jointVs, n = 3, o = 0; o < r; n += a, ++o) i[n] = 1 & o, i[n + 1] = s[o >> 1];
+                            var h = t.uv;
+                            if (t._rotated)
+                                for (var l = h[0], p = h[1], c = h[4] - l, u = h[3] - p, d = 3, f = 0; f < r; d += a, ++f) {
+                                    var m = i[d];
+                                    i[d] = l + i[d + 1] * c, i[d + 1] = p + m * u
+                                } else {
+                                    l = h[0], p = h[1], c = h[2] - l, u = h[5] - p;
+                                    for (var g = 3, y = 0; y < r; g += a, ++y) i[g] = l + i[g] * c, i[g + 1] = p + i[g + 1] * u
+                                }
+                        }
+                    }
+                }, n._updateColor = function() {
+                    if (this._renderData) {
+                        var t, e, i, a, r = this._renderData.chunk.vb,
+                            s = this._headOpacity / 255,
+                            n = (s - this._tailOpacity / 255) / (this._length - 1),
+                            o = 0,
+                            h = 0,
+                            l = 0;
+                        if (this._useGradientColor) {
+                            var p = this._headColor,
+                                c = this._tailColor;
+                            t = p.r / 255, e = p.g / 255, i = p.b / 255, a = this.color.a / 255, o = (c.r / 255 - t) / (this._length - 1), h = (c.g / 255 - e) / (this._length - 1), l = (c.b / 255 - i) / (this._length - 1)
+                        } else {
+                            var u = this.color;
+                            t = u.r / 255, e = u.g / 255, i = u.b / 255, a = u.a / 255
+                        }
+                        for (var d = 5, f = r.length, m = 2 * this._renderData.floatStride, g = 0; d < f; d += m, ++g) {
+                            var y = this.joints[g],
+                                _ = y ? y.alpha : 1;
+                            if (this._useGradientColor) {
+                                var v = t + o * g,
+                                    b = e + h * g,
+                                    S = i + l * g;
+                                r[d] = r[d + 9] = v, r[d + 1] = r[d + 10] = b, r[d + 2] = r[d + 11] = S
+                            } else r[d] = r[d + 9] = t, r[d + 1] = r[d + 10] = e, r[d + 2] = r[d + 11] = i;
+                            var x = a * (s - n * g) * _;
+                            r[d + 3] = r[d + 12] = x
+                        }
+                    }
+                }, n.rescaleJointTimes = function(t, e) {
+                    if (this.joints.length)
+                        for (var i = t > 0 ? e / t : 1, a = 0; a < this.joints.length; a++) {
+                            var r = this.joints[a];
+                            r.time *= i, r.alpha = r.time > 0 ? 1 : 0
+                        }
+                }, n.resetJointPositions = function() {
+                    this.getCurrentTrailPosition(this.trailPosition);
+                    for (var t = this.trailPosition.x, e = this.trailPosition.y, i = this._length - 1, a = this.joints; i > -1; --i) a[i].x = t, a[i].y = e, a[i].time = this._fadeTime, a[i].alpha = 1, a[i].sin = 0, a[i].cos = 1, a[i].angle = 0, a[i].targetAngle = 0;
+                    if (this._renderData) {
+                        for (var r = this._renderData.data, s = 0, n = r.length; s < n; ++s) r[s].x = t, r[s].y = e;
+                        this.fitXY(r)
+                    }
+                    this.lastSamplePosition.set(t, e), this.lastFramePosition.set(t, e), this.lastMoveDirection.set(1, 0), this.currentMoveDirection.set(1, 0), this.isFirstUpdate = !0, this.moveDistance = 0, this.frameMoveDistance = 0, this.sampleElapsed = 0, this.currentFrameSpeed = 0, this.refreshGeometry()
+                }, n.updateSpriteFrame = function() {
+                    this._spriteFrame ? this._renderData && (this._renderData.textureDirty = !0) : this.atlas = null
+                }, n._render = function(t) {
+                    t.commitComp(this, this._renderData, this._spriteFrame, this._assembler, null), this.markForUpdateRenderData()
+                }, n._canRender = function() {
+                    var e;
+                    return t.prototype._canRender.call(this) && !(null == (e = this._spriteFrame) || !e.texture)
+                }, n.fillBuffer = function() {
+                    var t = this._renderData,
+                        e = t.chunk,
+                        i = e.vertexOffset,
+                        a = e.meshBuffer,
+                        r = a.iData,
+                        s = this._ibWeb;
+                    if (s && s.length === t.indexCount || (this.updateIData(), s = this._ibWeb)) {
+                        for (var n = 0, o = t.indexCount, h = a.indexOffset; n < o; r[h++] = i + s[n++]);
+                        a.indexOffset += t.indexCount
+                    }
+                }, n.reset = function() {
+                    this.resetJointPositions()
+                }, n.pause = function(t) {
+                    void 0 === t && (t = !0), this.isPaused = t
+                }, n.setUseExternalStep = function(t) {
+                    this._useExternalStep !== t && (this._useExternalStep = t, this.syncTrailPositionsToCurrent())
+                }, n.setTimeScale = function(t) {
+                    var e = Math.max(t, 0);
+                    this._timeScale !== e && (this._timeScale = e, this.syncTrailPositionsToCurrent())
+                }, n.step = function(t) {
+                    this._useExternalStep && this.advance(t)
+                }, n.getTrailLength = function() {
+                    return this._length
+                }, n.getMoveDistance = function() {
+                    return this.moveDistance
+                }, n.setTrailColor = function(t, e) {
+                    this._headColor = t, this._tailColor = e || t, this._useGradientColor = !!e, this._updateColor()
+                }, n.setTrailWidth = function(t, e) {
+                    this._headWidth = t, this._tailWidth = null != e ? e : 0, this.updateWidth()
+                }, n.syncTrailPositionsToCurrent = function() {
+                    if (this.getCurrentTrailPosition(this.trailPosition), this.lastSamplePosition.set(this.trailPosition.x, this.trailPosition.y), this.lastFramePosition.set(this.trailPosition.x, this.trailPosition.y), this.joints.length > 0) {
+                        var t = this.joints[0];
+                        this.lastMoveDirection.set(t.cos, t.sin), this.currentMoveDirection.set(t.cos, t.sin)
+                    }
+                    this.moveDistance = 0, this.frameMoveDistance = 0, this.sampleElapsed = 0, this.currentFrameSpeed = 0
+                }, n.advance = function(t) {
+                    if (!(t <= 0 || !this._isActive || this.isPaused) && this._spriteFrame && (this._renderData || this.updateLength(), this._renderData)) {
+                        this.getCurrentTrailPosition(this.trailPosition);
+                        var e = this.lastFramePosition.x,
+                            i = this.lastFramePosition.y,
+                            a = this.trailPosition.x - e,
+                            r = this.trailPosition.y - i,
+                            s = Math.sqrt(a * a + r * r),
+                            n = t * this.getEffectiveTimeScale();
+                        if (!(n <= 0)) {
+                            this.currentFrameSpeed = n > 0 ? s / n : 0;
+                            for (var o = this.getStepSubdivisionCount(n), h = n / o, l = 1; l <= o; l++) {
+                                var p = l / o,
+                                    c = e + a * p,
+                                    u = i + r * p;
+                                this.advanceSegment(c, u, h)
+                            }
+                            this.finalizeFrame(n)
+                        }
+                    }
+                }, n.finalizeFrame = function(t) {
+                    !this._renderData || this._length < 2 || (t > 0 && this.smoothJointDirections(t), this.applyTimeWindowCutoff(), this.rebuildTrailMetrics(), this.generateVertices(this._renderData.data), this.updateUV(), this._updateColor(), this.markForUpdateRenderData())
+                }, n.refreshGeometry = function() {
+                    !this._renderData || this._length < 2 || this.finalizeFrame(0)
+                }, s(e, [{
+                    key: "spriteFrame",
+                    get: function() {
+                        return this._spriteFrame
+                    },
+                    set: function(t) {
+                        this._spriteFrame = t, this.updateSpriteFrame(), this.updateUV(), this.markForUpdateRenderData()
+                    }
+                }, {
+                    key: "isActive",
+                    get: function() {
+                        return this._isActive
+                    },
+                    set: function(t) {
+                        this._isActive = this.enabled = t, this.updateActive()
+                    }
+                }, {
+                    key: "isWorldXY",
+                    get: function() {
+                        return this._isWorldXY
+                    },
+                    set: function(t) {
+                        this._isWorldXY = t, this.resetJointPositions()
+                    }
+                }, {
+                    key: "length",
+                    get: function() {
+                        return this._length
+                    },
+                    set: function(t) {
+                        this._length = Math.max(t, 2), this.updateLength(), this.updateIData(), this.updateUV(), this.updateWidth(), this.resetJointPositions()
+                    }
+                }, {
+                    key: "headWidth",
+                    get: function() {
+                        return this._headWidth
+                    },
+                    set: function(t) {
+                        this._headWidth = Math.max(t, 0), this.updateWidth()
+                    }
+                }, {
+                    key: "tailWidth",
+                    get: function() {
+                        return this._tailWidth
+                    },
+                    set: function(t) {
+                        this._tailWidth = Math.max(t, 0), this.updateWidth()
+                    }
+                }, {
+                    key: "fadeTime",
+                    get: function() {
+                        return this._fadeTime
+                    },
+                    set: function(t) {
+                        var e = Math.max(t, .1);
+                        if (this._fadeTime !== e) {
+                            var i = this._fadeTime;
+                            this._fadeTime = e, this.rescaleJointTimes(i, e), this.refreshGeometry()
+                        }
+                    }
+                }, {
+                    key: "minSeg",
+                    get: function() {
+                        return this._minSeg
+                    },
+                    set: function(t) {
+                        this._minSeg = Math.max(t, 1), this.refreshGeometry()
+                    }
+                }, {
+                    key: "lowSpeedConsumeRate",
+                    get: function() {
+                        return this._lowSpeedConsumeRate
+                    },
+                    set: function(t) {
+                        this._lowSpeedConsumeRate = Math.max(t, 1), this.refreshGeometry()
+                    }
+                }, {
+                    key: "maxTrailLength",
+                    get: function() {
+                        return this._maxTrailLength
+                    },
+                    set: function(t) {
+                        this._maxTrailLength = Math.max(t, 0), this.refreshGeometry()
+                    }
+                }, {
+                    key: "headOpacity",
+                    get: function() {
+                        return this._headOpacity
+                    },
+                    set: function(t) {
+                        this._headOpacity = t, this._updateColor()
+                    }
+                }, {
+                    key: "tailOpacity",
+                    get: function() {
+                        return this._tailOpacity
+                    },
+                    set: function(t) {
+                        this._tailOpacity = t, this._updateColor()
+                    }
+                }, {
+                    key: "headColor",
+                    get: function() {
+                        return this._headColor
+                    },
+                    set: function(t) {
+                        this._headColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "tailColor",
+                    get: function() {
+                        return this._tailColor
+                    },
+                    set: function(t) {
+                        this._tailColor = t, this._updateColor()
+                    }
+                }, {
+                    key: "useGradientColor",
+                    get: function() {
+                        return this._useGradientColor
+                    },
+                    set: function(t) {
+                        this._useGradientColor = t, this._updateColor()
+                    }
+                }]), e
+            }(g)).prototype, "atlas", [v], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), U = e(E.prototype, "_spriteFrame", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return null
+                }
+            }), e(E.prototype, "spriteFrame", [b], Object.getOwnPropertyDescriptor(E.prototype, "spriteFrame"), E.prototype), Y = e(E.prototype, "_isActive", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(E.prototype, "isActive", [S], Object.getOwnPropertyDescriptor(E.prototype, "isActive"), E.prototype), J = e(E.prototype, "_isWorldXY", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), e(E.prototype, "isWorldXY", [x], Object.getOwnPropertyDescriptor(E.prototype, "isWorldXY"), E.prototype), X = e(E.prototype, "offset", [M], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new u
+                }
+            }), B = e(E.prototype, "_length", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 20
+                }
+            }), e(E.prototype, "length", [D], Object.getOwnPropertyDescriptor(E.prototype, "length"), E.prototype), q = e(E.prototype, "_headWidth", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 100
+                }
+            }), e(E.prototype, "headWidth", [C], Object.getOwnPropertyDescriptor(E.prototype, "headWidth"), E.prototype), H = e(E.prototype, "_tailWidth", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(E.prototype, "tailWidth", [P], Object.getOwnPropertyDescriptor(E.prototype, "tailWidth"), E.prototype), K = e(E.prototype, "_fadeTime", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 1
+                }
+            }), e(E.prototype, "fadeTime", [T], Object.getOwnPropertyDescriptor(E.prototype, "fadeTime"), E.prototype), Q = e(E.prototype, "_minSeg", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 5
+                }
+            }), e(E.prototype, "minSeg", [w], Object.getOwnPropertyDescriptor(E.prototype, "minSeg"), E.prototype), Z = e(E.prototype, "_lowSpeedConsumeRate", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 3
+                }
+            }), e(E.prototype, "lowSpeedConsumeRate", [F], Object.getOwnPropertyDescriptor(E.prototype, "lowSpeedConsumeRate"), E.prototype), $ = e(E.prototype, "_maxTrailLength", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(E.prototype, "maxTrailLength", [O], Object.getOwnPropertyDescriptor(E.prototype, "maxTrailLength"), E.prototype), tt = e(E.prototype, "_headOpacity", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 255
+                }
+            }), e(E.prototype, "headOpacity", [W], Object.getOwnPropertyDescriptor(E.prototype, "headOpacity"), E.prototype), et = e(E.prototype, "_tailOpacity", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 0
+                }
+            }), e(E.prototype, "tailOpacity", [j], Object.getOwnPropertyDescriptor(E.prototype, "tailOpacity"), E.prototype), it = e(E.prototype, "_headColor", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new c(255, 255, 255, 255)
+                }
+            }), e(E.prototype, "headColor", [A], Object.getOwnPropertyDescriptor(E.prototype, "headColor"), E.prototype), at = e(E.prototype, "_tailColor", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return new c(255, 255, 255, 255)
+                }
+            }), e(E.prototype, "tailColor", [L], Object.getOwnPropertyDescriptor(E.prototype, "tailColor"), E.prototype), rt = e(E.prototype, "_useGradientColor", [ct], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !1
+                }
+            }), e(E.prototype, "useGradientColor", [z], Object.getOwnPropertyDescriptor(E.prototype, "useGradientColor"), E.prototype), st = e(E.prototype, "smoothMovement", [I], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return !0
+                }
+            }), nt = e(E.prototype, "moveSensitivity", [N], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 1
+                }
+            }), ot = e(E.prototype, "turnSmoothness", [k], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return .3
+                }
+            }), ht = e(E.prototype, "sharpTurnThreshold", [R], {
+                configurable: !0,
+                enumerable: !0,
+                writable: !0,
+                initializer: function() {
+                    return 45
+                }
+            }), V = E)) || V) || V) || V) || V));
+            n._RF.pop()
+        }
+    }
+}));
+
+(function(r) {
+    r('virtual:///prerequisite-imports/resources', 'chunks:///_virtual/resources');
+})(function(mid, cid) {
+    System.register(mid, [cid], function(_export, _context) {
+        return {
+            setters: [function(_m) {
+                var _exportObj = {};
+
+                for (var _key in _m) {
+                    if (_key !== "default" && _key !== "__esModule") _exportObj[_key] = _m[_key];
+                }
+
+                _export(_exportObj);
+            }],
+            execute: function() {}
+        };
+    });
+});

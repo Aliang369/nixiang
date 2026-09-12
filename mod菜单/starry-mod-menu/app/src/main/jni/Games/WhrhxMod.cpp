@@ -40,9 +40,10 @@ enum : uintptr_t {
     RVA_BATTLE_UPDATE_TIME = 0x409BE4C,
     RVA_GET_DELTA_TIME    = 0x8B6C984,
     // 乐变热更后常见 190MB libil2cpp（sha b19435a5…）——官方 RVA 序言 miss，用下列对照
-    RVA_COST_SINGLE_LEB   = 0x31DF5F4,
-    RVA_COST_RES_LEB      = 0x31EE740,
-    RVA_CHECK_RES_LEB     = 0x31EE92C,
+    // 九游 3.8.295 乐变 190MB（sha d7b0817c…）RVA（2026-09-12 dump.cs + 序言实锤）
+    RVA_COST_SINGLE_LEB   = 0x681DA7C,
+    RVA_COST_RES_LEB      = 0x682CBC8,
+    RVA_CHECK_RES_LEB     = 0x682CDB4,
     RVA_GET_DELTA_LEB     = 0x8BD2100,  // 官方 0x8B6C984 在乐变上是 stub(B)，真身在此
     RVA_ON_BATTLE_END_LEB = 0x3BEF018,  // BattleUtil.OnBattleEnd；官方 SetEnd 页为 0
     // 2026-08-29 新 dump（乐变 b19435a5…，与 8/28 记录同构建）：资源发放 + 玩家身份
@@ -52,14 +53,16 @@ enum : uintptr_t {
     RVA_MGR_COUNTRY_ID_OFF = 0x30,       // CountryDataMgr.m_countryId（IsPlayerCountry 反汇编比对源）
     // 2026-08-30 v23 零身份钩子（乐变库带导出表，IsPlayerCountry 的 Dobby 钩 4/4 崩溃 → 永久禁钩）：
     // 读它的取值链（+0x8C adrp→ldr→ldr 得 MethodInfo；bl get_Instance@0x6558B64），Tick 直呼 getter 读 mgr+0x30
-    RVA_IS_PLAYER_LEB      = 0x31D98DC,  // 兼作乐变构建标记（序言 A9BE4FF4）
-    RVA_GET_INSTANCE_LEB   = 0x6558B64,  // QF.Singleton<CountryDataMgr>$$get_Instance（script.json 实锤）
+    RVA_IS_PLAYER_LEB      = 0x6817D64,  // 兼作乐变构建标记（序言 A9BE4FF4）
+    RVA_GET_INSTANCE_LEB   = 0x420C000,  // QF.Singleton<CountryDataMgr>$$get_Instance
     RVA_IS_PLAYER_DECODE_OFF = 0x8C,
     // 战斗三件（乐变 dump RVA；官方 SetEnd/Update 空页即拒）
     RVA_UPDATE_BATTLE_LEB  = 0x32FF1D8,
     RVA_SET_END_LEB        = 0x32FF644,
     RVA_START_BATTLE_LEB   = 0x3304C04,
-    RVA_ARMY_CORRECT_LEB   = 0x3A99D78,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
+    RVA_ARMY_CORRECT_LEB   = 0x70DEB54,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
+    RVA_GET_COUNTRY_MGR_LEB = 0x70DFCA4, // CountryDataMgr.GetCountryDataById(int) → 捕获 this
+    RVA_GET_CITY_MGR_LEB    = 0x6D68790, // CityDataMgr.GetCityData(int) → 捕获 this
 
     // ── 好游快爆 com.syyx.whrhx · 乐变 223.7MB（sha 1646c8bb…，8/20 构建）──
     // 2026-08-30 活内存 dump：metadata v24.5 变体(32段/method 64B token@+52/type 92B/image 40B)
@@ -79,6 +82,15 @@ enum : uintptr_t {
     RVA_KB_ON_BATTLE_END   = 0x3629344,  // LockStepMgr.OnBattleEnd（首指令 B 跳板，resolve-only）
     RVA_KB_GET_COUNTRY_MGR = 0x3A9AF68,  // CountryDataMgr.GetCountryDataById → 捕获 this
     RVA_KB_GET_CITY_MGR    = 0x3728BBC,  // CityDataMgr.GetCityData → 捕获 this
+
+    // ── 2026-09-12 3.8.295 热更：科研立即完成（dump.cs + arm64 序言实锤）──
+    RVA_RESEARCH_TECH          = 0x76234BC,  // MengHuaRecordMgr.ResearchTech(int)
+    RVA_TECH_POLICY_RESEARCH   = 0x762BEB4,  // MengHuaTechPolicyData.Research()
+    RVA_POLICY_GET_DATA        = 0x7862CAC,  // PolicyDataMgr.GetPolicyData(int)
+    RVA_POLICY_UPDATE_TIME     = 0x7863E6C,  // PolicyDataMgr.UpdatePolicyTime(float,bool)
+    RVA_POLICY_FINISH_ANYWAY   = 0x7865CA8,  // PolicyDataMgr.FinishPolicyTimeAnyway(int)
+    RVA_POLICY_EXECUTE         = 0x7868DB4,  // PolicyDataMgr.ExecutePolicy(int,float,bool)
+    RVA_POLICY_UI_EXECUTE      = 0x69BB284,  // GameUI.PolicyUI.ExecutePolicy(int)
 };
 
 static constexpr size_t kOffCountryMoney  = 0x118;
@@ -87,6 +99,7 @@ static constexpr size_t kOffCountryPop    = 0x188;
 static constexpr size_t kOffCountryArmy   = 0x198;
 static constexpr size_t kOffResDataNumFx  = 0x10;
 static constexpr size_t kOffArmyPercentFx = 0x18;
+static constexpr size_t kOffPolicyRemainTime = 0x14;  // PolicyData.m_remainTime (float)
 
 static constexpr int64_t kFakeRes = 99999999LL;
 static constexpr int64_t kFakeNum = 999999LL;
@@ -108,12 +121,14 @@ static std::atomic<bool> g_libReady{false};
 static std::atomic<bool> g_hooksEco{false};
 static std::atomic<bool> g_hooksBattle{false};
 static std::atomic<bool> g_hooksSpeed{false};
+static std::atomic<bool> g_hooksResearch{false};
 
 static std::atomic<bool> g_gold{false};
 static std::atomic<bool> g_food{false};
 static std::atomic<bool> g_army{false};
 static std::atomic<bool> g_pop{false};
 static std::atomic<bool> g_win{false};
+static std::atomic<bool> g_researchDone{false};
 static std::atomic<int>  g_speedLvl{1};
 static std::atomic<int>  g_lastSpeedLvl{0};
 
@@ -125,15 +140,18 @@ static std::atomic<void*> g_playerArmyFx{nullptr};
 // v23 身份链：getter 直呼（零钩子）+ 最近 Cost thiz（钩子线程只存裸指针）
 static std::atomic<void*> g_countryMgr{nullptr};
 static std::atomic<void*> g_lastCostCountry{nullptr};
+static std::atomic<size_t> g_offCountryId{0xE0};
+static std::atomic<size_t> g_offMgrCountryId{0x30};
+static std::atomic<bool> g_identityApiResolved{false};
+static void* g_countryIdMi{nullptr};       // CountryDataMgr.get_m_countryId MethodInfo*
+static void* g_countryIdFn{nullptr};       // 同上 methodPointer（不挂 Dobby，仅只读调用/兜底）
 // 钉值计数（功能逻辑使用，非仅 trace）
 static std::atomic<uint32_t> g_pins{0};
 static std::atomic<uint32_t> g_pinSkip{0};
 static void* g_mi{nullptr};          // Singleton<CountryDataMgr>.get_Instance 的 MethodInfo*
 static void* g_getInstFn{nullptr};   // 0x6558B64
 static std::atomic<int64_t> g_lastMgrMs{0};
-#ifdef STARRY_GAME_WHRHXKB
 static std::atomic<void*> g_cityMgr{nullptr};  // CityDataMgr 实例（GetCityData 捕获）
-#endif
 // v24 城市驻军源头钉值：CityDataMgr 单例（mi 经类名校验）+ 字典遍历
 static void* g_cityMi{nullptr};
 static constexpr uintptr_t kCityMgrSlotCandidates[] = {0xb651da8, 0xb5f5e70, 0xb534d68};
@@ -181,6 +199,11 @@ typedef void (*AddResTrade_t)(void*, int32_t, int64_t, bool, void*);
 typedef void (*AddResCamp_t)(void*, int32_t, int64_t, void*);
 // v23 身份：单例 getter（静态，直呼）
 typedef void* (*GetMgrInst_t)(void*);
+typedef void* (*GetCountryById_t)(void*, int32_t, void*);
+typedef void* (*GetCityById_t)(void*, int32_t, void*);
+typedef int32_t (*GetCountryId_t)(void*, void*);
+static GetCountryById_t g_origGetCountryById = nullptr;
+static GetCityById_t g_origGetCityById = nullptr;
 // 军队重算校正（mgr 级 CorrectArmyData；orig 后同步回钉，消除互跳）
 typedef void (*ArmyCorrect_t)(void*, void*);
 static ArmyCorrect_t g_origArmyCorrect = nullptr;
@@ -198,13 +221,28 @@ static AddResTrade_t g_origAddResTrade = nullptr;
 static AddResCamp_t g_origAddResCamp = nullptr;
 #ifdef STARRY_GAME_WHRHXKB
 // kb 捕获钩（身份链替代：getter 泛型化拿不到直呼地址）
-typedef void* (*GetCountryById_t)(void*, int32_t, void*);
-typedef void* (*GetCityById_t)(void*, int32_t, void*);
-static GetCountryById_t g_origGetCountryById = nullptr;
-static GetCityById_t g_origGetCityById = nullptr;
 static UpdateBattleTime_t g_origOnCountDown = nullptr;
 static UpdateBattleTime_t g_origUpdateCost = nullptr;
 #endif
+
+// 2026-09-12 科研立即完成：只消费科技研发入口触发的 ExecutePolicy，避免全局放大政策时间。
+typedef void (*ResearchTech_t)(void*, int32_t, void*);
+typedef void (*TechPolicyResearch_t)(void*, void*);
+typedef void* (*PolicyGetData_t)(void*, int32_t, void*);
+typedef void (*PolicyExecute_t)(void*, int32_t, float, bool, void*);
+typedef void (*PolicyFinishAnyway_t)(void*, int32_t, void*);
+typedef void (*PolicyUpdateTime_t)(void*, float, bool, void*);
+typedef void (*PolicyUiExecute_t)(void*, int32_t, void*);
+
+static ResearchTech_t g_origResearchTech = nullptr;
+static TechPolicyResearch_t g_origTechPolicyResearch = nullptr;
+static PolicyGetData_t g_policyGetData = nullptr;
+static PolicyExecute_t g_origPolicyExecute = nullptr;
+static PolicyFinishAnyway_t g_policyFinishAnyway = nullptr;
+static PolicyUpdateTime_t g_policyUpdateTime = nullptr;
+static PolicyUiExecute_t g_origPolicyUiExecute = nullptr;
+static thread_local int t_researchDepth = 0;
+static thread_local bool t_researchHandled = false;
 
 
 // --- 双路径：RVA ↔ Il2Cpp 按名；禁止 base+RVA；禁止全 RX 序言误扫 ---
@@ -287,6 +325,7 @@ static const PrologueExpect kExpect[] = {
     {RVA_COST_SINGLE_LEB, 0xD10283FF, "CostSingleRes"},
     {RVA_COST_RES_LEB, 0xD10143FF, "CostRes"},
     {RVA_CHECK_RES_LEB, 0xD10183FF, "CheckRes"},
+    {RVA_IS_PLAYER_LEB, 0xA9BE4FF4, "IsPlayerCountry"},
     {RVA_GET_DELTA_LEB, 0xF81E0FF3, "get_deltaTime"},
     {RVA_ON_BATTLE_END_LEB, 0xF81D0FF5, "OnBattleEnd"},
     {RVA_ADD_RES_LEB, 0xA9BC5FF8, "AddRes"},
@@ -301,6 +340,8 @@ static const PrologueExpect kExpect[] = {
     {RVA_SET_END_LEB, 0xD10243FF, "BattleSetEnd"},
     {RVA_START_BATTLE_LEB, 0xD10143FF, "StartBattle"},
     {RVA_ARMY_CORRECT_LEB, 0xD10303FF, "ArmyCorrectMgr"},
+    {RVA_GET_COUNTRY_MGR_LEB, 0xF81D0FF5, "GetCountryDataById"},
+    {RVA_GET_CITY_MGR_LEB, 0xF81D0FF5, "GetCityData"},
     // 好游快爆（8/20 构建活体内存序言）
     {RVA_KB_COST_SINGLE, 0xA9BD57F6, "KB.CostSingleRes"},
     {RVA_KB_CHECK_RES, 0xD101C3FF, "KB.CheckRes"},
@@ -314,6 +355,14 @@ static const PrologueExpect kExpect[] = {
     {RVA_KB_START_TIMER, 0xA9BE4FF4, "KB.StartTimer"},
     {RVA_KB_GET_COUNTRY_MGR, 0xD101C3FF, "KB.GetCountryDataById"},
     {RVA_KB_GET_CITY_MGR, 0xA9BD57F6, "KB.GetCityData"},
+    // 3.8.295 热更九游科研链（首指令逐点实锤）
+    {RVA_RESEARCH_TECH, 0xF81D0FF5, "MengHuaRecordMgr.ResearchTech"},
+    {RVA_TECH_POLICY_RESEARCH, 0xA9BE4FF4, "MengHuaTechPolicyData.Research"},
+    {RVA_POLICY_GET_DATA, 0xF81D0FF5, "PolicyDataMgr.GetPolicyData"},
+    {RVA_POLICY_UPDATE_TIME, 0xD10383FF, "PolicyDataMgr.UpdatePolicyTime"},
+    {RVA_POLICY_FINISH_ANYWAY, 0xD10103FF, "PolicyDataMgr.FinishPolicyTimeAnyway"},
+    {RVA_POLICY_EXECUTE, 0xD10403FF, "PolicyDataMgr.ExecutePolicy"},
+    {RVA_POLICY_UI_EXECUTE, 0xF81D0FF5, "PolicyUI.ExecutePolicy"},
 };
 
 static const PrologueExpect* ExpectForRva(uintptr_t rva) {
@@ -565,6 +614,7 @@ static void LogTraceSummary(const char* tag) {
 
 static bool KRead(const void* addr, void* out, size_t len);
 static bool KWrite(void* addr, const void* src, size_t len);
+static void CaptureCountryMgr(void* mgr);
 static void PinPlayerValues();
 static void PinCityArmies();
 
@@ -612,6 +662,7 @@ static void Hooked_ArmyCorrect(void* thiz, void* method) {
 #if defined(STARRY_TRACE)
     TraceHit("ArmyCorrectMgr", g_hitsArmyCorrect.fetch_add(1) + 1);
 #endif
+    CaptureCountryMgr(thiz);
     if (g_origArmyCorrect) g_origArmyCorrect(thiz, method);
     if (g_army.load()) PinCityArmies();  // 校正周期内同步补回，用时减少瞬时可见后即恢复
 }
@@ -681,17 +732,24 @@ static void Hooked_UpdateCostTime(void* thiz, void* method) {
     if (g_origUpdateCost) g_origUpdateCost(thiz, method);
     BattleTick(thiz);
 }
-// kb 身份捕获：QF.Singleton getter 泛型化 → 直呼地址拿不到；改高频 getter 只存 this
-// （钩体零逻辑零系统调用，开销可忽略；IsPlayer* 仍禁钩）
+#endif
+
+// CountryDataMgr.GetCountryDataById 是热更后仍保留的稳定入口：拿实例、拿权威 cid、
+// 并顺带捕获玩家 CountryData。这样资源钩不再依赖 IsPlayerCountry 的旧字节链。
 static void* Hooked_GetCountryMgr(void* thiz, int32_t id, void* method) {
-    if (thiz) g_countryMgr.store(thiz);
-    return g_origGetCountryById ? g_origGetCountryById(thiz, id, method) : nullptr;
+    if (thiz && (g_countryMgr.load() != thiz || g_playerCountryId.load() < 0))
+        CaptureCountryMgr(thiz);
+    void* result = g_origGetCountryById ? g_origGetCountryById(thiz, id, method) : nullptr;
+    const int32_t pid = g_playerCountryId.load();
+    if (result && pid > 0 && id == pid) g_playerCountry.store(result);
+    return result;
 }
+
+// CityDataMgr.GetCityData 同样是热更稳定的实例入口，军队/人口不再依赖旧静态槽链。
 static void* Hooked_GetCityMgr(void* thiz, int32_t id, void* method) {
     if (thiz) g_cityMgr.store(thiz);
     return g_origGetCityById ? g_origGetCityById(thiz, id, method) : nullptr;
 }
-#endif
 
 static void Hooked_OnBattleEnd(void* thiz, bool win, void* method) {
     if (g_win.load()) win = true;
@@ -713,7 +771,8 @@ static float Hooked_GetDelta(void* method) {
 
 static int32_t CountryIdOf(void* countryData) {
     if (!countryData) return -1;
-    return *reinterpret_cast<int32_t*>(static_cast<char*>(countryData) + RVA_COUNTRY_ID_OFF);
+    return *reinterpret_cast<int32_t*>(static_cast<char*>(countryData) +
+                                              g_offCountryId.load());
 }
 
 static void Hooked_AddResTrade(void* thiz, int32_t resType, int64_t cnt, bool isTrading,
@@ -834,46 +893,84 @@ static bool ResolveIdentityChainLEB() {
     return true;
 }
 
+// 热更后旧字节链可能漂移：优先用运行时 IL2CPP API 按类名/字段名取权威布局。
+// 只读调用 getter，不 Dobby；拿不到 API 时由 CaptureCountryMgr 用旧偏移兜底。
+static bool ResolveCountryIdentityApi() {
+    if (g_identityApiResolved.load()) return true;
+    if (!EnsureIl2CppApi()) return false;
+    void* mgrClass = FindClassNs("", "CountryDataMgr");
+    if (!mgrClass) return false;
+    void* mi = GetApi().GetMethod(mgrClass, "get_m_countryId", 0);
+    void* fn = MethodPointer(mi);
+    if (!fn || !Il2Cpp::IsValidHeapPtr(fn) ||
+        !FnInLibExec(fn, GameUnity::TARGET_LIB, nullptr))
+        return false;
+    if (GetApi().method_get_name) {
+        const char* name = GetApi().method_get_name(mi);
+        if (!name || strcmp(name, "get_m_countryId") != 0) return false;
+    }
+    size_t mgrOff = 0;
+    if (GetApi().class_get_field && GetApi().field_offset) {
+        void* field = GetApi().class_get_field(mgrClass, "<m_countryId>k__BackingField");
+        if (field) mgrOff = GetApi().field_offset(field);
+    }
+    size_t countryOff = 0;
+    if (void* countryClass = FindClassNs("", "CountryData");
+        countryClass && GetApi().class_get_field && GetApi().field_offset) {
+        void* field = GetApi().class_get_field(countryClass, "<m_id>k__BackingField");
+        if (field) countryOff = GetApi().field_offset(field);
+    }
+    if (mgrOff > 0 && mgrOff < 0x10000) g_offMgrCountryId.store(mgrOff);
+    if (countryOff > 0 && countryOff < 0x10000) g_offCountryId.store(countryOff);
+    g_countryIdMi = mi;
+    g_countryIdFn = fn;
+    g_identityApiResolved.store(true);
+    LOGI("[Whrhx] identity api ready mgrOff=0x%lX countryOff=0x%lX fn=%p",
+         (unsigned long)g_offMgrCountryId.load(), (unsigned long)g_offCountryId.load(), fn);
+    return true;
+}
+
+static void CaptureCountryMgr(void* mgr) {
+    if (!mgr) return;
+    g_countryMgr.store(mgr);
+    int32_t cid = -1;
+    if (!KRead(static_cast<char*>(mgr) + g_offMgrCountryId.load(), &cid, sizeof(cid)) ||
+        cid <= 0) {
+        if (g_countryIdFn && g_countryIdMi)
+            cid = reinterpret_cast<GetCountryId_t>(g_countryIdFn)(mgr, g_countryIdMi);
+    }
+    if (cid > 0) {
+        const int32_t oldCid = g_playerCountryId.load();
+        if (cid != oldCid) {
+            g_playerCountry.store(nullptr);
+            g_playerMoneyFx.store(nullptr);
+            g_playerFoodFx.store(nullptr);
+            g_playerArmyFx.store(nullptr);
+        }
+        if (cid != oldCid)
+            WHRHX_TRACE("player cid=%d (mgr capture)", cid);
+        g_playerCountryId.store(cid);
+    }
+}
+
 static void RefreshPlayerIdentityTick() {
-#ifdef STARRY_GAME_WHRHXKB
+    ResolveCountryIdentityApi();
     const int64_t now = NowMs();
     if (now - g_lastMgrMs.load() >= 2000) {
         g_lastMgrMs.store(now);
         void* mgr = g_countryMgr.load();
-        if (mgr) {
-            int32_t cid = -1;
-            if (KRead(static_cast<char*>(mgr) + RVA_MGR_COUNTRY_ID_OFF, &cid, sizeof(cid)) &&
-                cid > 0) {
-                if (cid != g_playerCountryId.load())
-                    WHRHX_TRACE("player cid=%d (mgr+0x30 capture)", cid);
-                g_playerCountryId.store(cid);
-            }
-        }
-        PinCityArmies();
-    }
-#else
-    if (!ResolveIdentityChainLEB()) return;
-    const int64_t now = NowMs();
-    if (now - g_lastMgrMs.load() >= 2000) {
-        g_lastMgrMs.store(now);
-        void* mgr = reinterpret_cast<GetMgrInst_t>(g_getInstFn)(g_mi);
-        if (mgr) {
-            int32_t cid = -1;
-            if (KRead(static_cast<char*>(mgr) + RVA_MGR_COUNTRY_ID_OFF, &cid, sizeof(cid)) &&
-                cid > 0) {
-                if (cid != g_playerCountryId.load())
-                    WHRHX_TRACE("player cid=%d (mgr+0x30)", cid);
-                g_playerCountryId.store(cid);
-                g_countryMgr.store(mgr);
-            }
-        }
-        PinCityArmies();
-    }
+#ifndef STARRY_GAME_WHRHXKB
+        if (!mgr && ResolveIdentityChainLEB())
+            mgr = reinterpret_cast<GetMgrInst_t>(g_getInstFn)(g_mi);
 #endif
+        if (mgr) CaptureCountryMgr(mgr);
+        PinCityArmies();
+    }
     void* thiz = g_lastCostCountry.load();
     if (thiz) {
         int32_t ccid = -1;
-        if (KRead(static_cast<char*>(thiz) + RVA_COUNTRY_ID_OFF, &ccid, sizeof(ccid)) && ccid >= 0 &&
+        if (KRead(static_cast<char*>(thiz) + g_offCountryId.load(), &ccid, sizeof(ccid)) &&
+            ccid >= 0 &&
             ccid == g_playerCountryId.load())
             g_playerCountry.store(thiz);
     }
@@ -966,17 +1063,14 @@ static bool ResolveCityMgrChain() {
 // 遍历 CityDataMgr.m_cityDataDic，钉玩家各城驻军（源头值大 → 汇总自然大，不回跳）
 static void PinCityArmies() {
     if (!g_army.load() && !g_pop.load()) return;
-#ifdef STARRY_GAME_WHRHXKB
-    void* mgr = g_cityMgr.load();
-    const int32_t pid = g_playerCountryId.load();
-    if (!mgr || pid < 0) return;
-#else
-    if (!ResolveCityMgrChain()) return;
     const int32_t pid = g_playerCountryId.load();
     if (pid < 0) return;
-    void* mgr = reinterpret_cast<GetMgrInst_t>(g_getInstFn)(g_cityMi);
-    if (!mgr) return;
+    void* mgr = g_cityMgr.load();
+#ifndef STARRY_GAME_WHRHXKB
+    if (!mgr && ResolveCityMgrChain())
+        mgr = reinterpret_cast<GetMgrInst_t>(g_getInstFn)(g_cityMi);
 #endif
+    if (!mgr) return;
     void* dict = nullptr;
     if (!KRead(static_cast<char*>(mgr) + 0x10, &dict, 8) || !dict) return;
     void* entries = nullptr;
@@ -1073,8 +1167,35 @@ static void PinPlayerValues() {
 // --- 按功能懒加载（启动零挂点；仅开关 ON 才 Dobby；不依赖 Il2Cpp API）---
 
 static void InstallEcoHooks() {
-    if (g_hooksEco.load()) return;
-    int n = 0;
+    if (g_hooksEco.load() && g_origGetCountryById && g_origGetCityById) return;
+    static std::atomic<uint32_t> s_attempts{0};
+    const uint32_t attempt = s_attempts.fetch_add(1);
+    if (attempt > 0 && (attempt % 10) != 0) return;
+    int n = 0, primary = 0;
+    // 身份捕获与资源钩分离：即使某个 Cost 方法漂移，管理器入口仍能把玩家链立起来。
+    static const int kOneArgcs[] = {1};
+    if (!g_origGetCountryById) {
+#ifdef STARRY_GAME_WHRHXKB
+        HookRvaOrIl2Cpp("GetCountryDataById", "", "CountryDataMgr", "GetCountryDataById",
+                            kOneArgcs, 1, RVA_KB_GET_COUNTRY_MGR, (void*)Hooked_GetCountryMgr,
+                            (void**)&g_origGetCountryById, false, 0);
+#else
+        HookRvaOrIl2Cpp("GetCountryDataById", "", "CountryDataMgr", "GetCountryDataById",
+                            kOneArgcs, 1, RVA_GET_COUNTRY_MGR_LEB, (void*)Hooked_GetCountryMgr,
+                            (void**)&g_origGetCountryById, false, 0);
+#endif
+    }
+    if (!g_origGetCityById) {
+#ifdef STARRY_GAME_WHRHXKB
+        HookRvaOrIl2Cpp("GetCityData", "", "CityDataMgr", "GetCityData",
+                            kOneArgcs, 1, RVA_KB_GET_CITY_MGR, (void*)Hooked_GetCityMgr,
+                            (void**)&g_origGetCityById, false, 0);
+#else
+        HookRvaOrIl2Cpp("GetCityData", "", "CityDataMgr", "GetCityData",
+                            kOneArgcs, 1, RVA_GET_CITY_MGR_LEB, (void*)Hooked_GetCityMgr,
+                            (void**)&g_origGetCityById, false, 0);
+#endif
+    }
     static const int kCostSingleArgcs[] = {2};
     static const int kCostResArgcs[] = {1};
     static const int kCheckResArgcs[] = {2};
@@ -1083,22 +1204,22 @@ static void InstallEcoHooks() {
     if (HookRvaOrIl2Cpp("CostSingleRes", "", "CountryData", "CostSingleRes", kCostSingleArgcs, 1,
                         RVA_KB_COST_SINGLE, (void*)Hooked_CostSingleRes,
                         (void**)&g_origCostSingle, true, 0))
-        ++n;
+        ++n, ++primary;
     if (HookRvaOrIl2Cpp("CheckRes", "", "CountryData", "CheckRes", kCheckResArgcs, 1,
                         RVA_KB_CHECK_RES, (void*)Hooked_CheckRes, (void**)&g_origCheckRes, true, 0))
-        ++n;
+        ++n, ++primary;
 #else
     if (HookRvaOrIl2Cpp("CostSingleRes", "", "CountryData", "CostSingleRes", kCostSingleArgcs, 1,
                         RVA_COST_SINGLE_LEB, (void*)Hooked_CostSingleRes,
                         (void**)&g_origCostSingle, true, 0))
-        ++n;
+        ++n, ++primary;
     if (HookRvaOrIl2Cpp("CostRes", "", "CountryData", "CostRes", kCostResArgcs, 1,
                         RVA_COST_RES_LEB, (void*)Hooked_CostRes, (void**)&g_origCostRes, true, 0))
-        ++n;
+        ++n, ++primary;
     if (HookRvaOrIl2Cpp("CheckRes", "", "CountryData", "CheckRes", kCheckResArgcs, 1,
                         RVA_CHECK_RES_LEB, (void*)Hooked_CheckRes, (void**)&g_origCheckRes, true,
                         0))
-        ++n;
+        ++n, ++primary;
 #endif
 #if defined(STARRY_TRACE)
     // Trace 附加：AddRes×2（只观测恒调 orig）
@@ -1128,16 +1249,25 @@ static void InstallEcoHooks() {
     if (HookRvaOrIl2Cpp("ArmyCorrectMgr", "", "CountryDataMgr", "CorrectArmyData", kCorrectArgcs, 1,
                         RVA_KB_ARMY_CORRECT, (void*)Hooked_ArmyCorrect,
                         (void**)&g_origArmyCorrect, true, 0))
-        ++n;
+        ++n, ++primary;
 #else
     if (HookRvaOrIl2Cpp("ArmyCorrectMgr", "", "CountryDataMgr", "CorrectArmyData", kCorrectArgcs, 1,
                         RVA_ARMY_CORRECT_LEB, (void*)Hooked_ArmyCorrect,
                         (void**)&g_origArmyCorrect, true, 0))
-        ++n;
+        ++n, ++primary;
 #endif
     if (n > 0) {
+        LOGI("[Whrhx] eco hooks=%d primary=%d capture=%d", n, primary,
+             g_origGetCountryById ? 1 : 0);
+    }
+#ifdef STARRY_GAME_WHRHXKB
+    const int required = 3;
+#else
+    const int required = 4;
+#endif
+    if (primary >= required) {
         g_hooksEco.store(true);
-        LOGI("[Whrhx] eco hooks=%d", n);
+        LOGI("[Whrhx] eco hooks ready primary=%d", primary);
     }
 }
 
@@ -1299,6 +1429,126 @@ static void InstallSpeedHooks() {
 #endif
 }
 
+// --- 科研立即完成：线程内标记仅覆盖 ResearchTech / MengHuaTechPolicyData.Research 调用栈 ---
+static void ResearchScopeEnter() {
+    if (t_researchDepth++ == 0) t_researchHandled = false;
+}
+
+static void ResearchScopeLeave() {
+    if (t_researchDepth > 0 && --t_researchDepth == 0) t_researchHandled = false;
+}
+
+static void Hooked_ResearchTech(void* thiz, int32_t techId, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) ResearchScopeEnter();
+    if (g_origResearchTech) g_origResearchTech(thiz, techId, method);
+    if (enabled) ResearchScopeLeave();
+}
+
+static void Hooked_PolicyUiExecute(void* thiz, int32_t policyId, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) {
+        LOGI("[Whrhx] policy ui execute id=%d", policyId);
+        ResearchScopeEnter();
+    }
+    if (g_origPolicyUiExecute) g_origPolicyUiExecute(thiz, policyId, method);
+    if (enabled) ResearchScopeLeave();
+}
+
+static void Hooked_TechPolicyResearch(void* thiz, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) ResearchScopeEnter();
+    if (g_origTechPolicyResearch) g_origTechPolicyResearch(thiz, method);
+    if (enabled) ResearchScopeLeave();
+}
+
+static void Hooked_PolicyExecute(void* thiz, int32_t id, float discount, bool needLog,
+                                 void* method) {
+    if (g_origPolicyExecute) g_origPolicyExecute(thiz, id, discount, needLog, method);
+    if (!g_researchDone.load() || t_researchDepth <= 0 || t_researchHandled) return;
+    if (!thiz || id <= 0 || !g_policyGetData || !g_policyFinishAnyway || !g_policyUpdateTime)
+        return;
+
+    t_researchHandled = true;
+    void* data = g_policyGetData(thiz, id, nullptr);
+    float remain = 0.f;
+    if (!data || !KRead(static_cast<char*>(data) + kOffPolicyRemainTime, &remain, sizeof(remain)) ||
+        !(remain > 0.f)) {
+        LOGW("[Whrhx] research finish id=%d no active remain=%.3f", id, remain);
+        return;
+    }
+
+    g_policyFinishAnyway(thiz, id, nullptr);
+    float after = remain;
+    const bool readBack =
+        KRead(static_cast<char*>(data) + kOffPolicyRemainTime, &after, sizeof(after));
+    bool fallback = false;
+    if (!readBack || !(after > 0.f) || after >= remain) {
+        const float nearDone = 0.1f;
+        fallback = KWrite(static_cast<char*>(data) + kOffPolicyRemainTime, &nearDone,
+                           sizeof(nearDone));
+    }
+    g_policyUpdateTime(thiz, 1.0f, true, nullptr);
+    LOGI("[Whrhx] research finish id=%d remain=%.3f fallback=%d", id, remain,
+         fallback ? 1 : 0);
+}
+
+static void InstallResearchHooks() {
+    if (g_hooksResearch.load()) return;
+    static std::atomic<uint32_t> s_attempts{0};
+    const uint32_t attempt = s_attempts.fetch_add(1);
+    if (attempt > 0 && (attempt % 10) != 0) return;
+
+    static const int kOneArgcs[] = {1};
+    static const int kZeroArgcs[] = {0};
+    static const int kExecuteArgcs[] = {3};
+    static const int kUpdateArgcs[] = {2};
+    if (!g_origPolicyUiExecute)
+        HookRvaOrIl2Cpp("PolicyUiExecute", "GameUI", "PolicyUI", "ExecutePolicy", kOneArgcs, 1,
+                        RVA_POLICY_UI_EXECUTE, (void*)Hooked_PolicyUiExecute,
+                        (void**)&g_origPolicyUiExecute, true);
+    if (!g_origResearchTech)
+        HookRvaOrIl2Cpp("ResearchTech", "", "MengHuaRecordMgr", "ResearchTech", kOneArgcs, 1,
+                        RVA_RESEARCH_TECH, (void*)Hooked_ResearchTech,
+                        (void**)&g_origResearchTech, true);
+    if (!g_origTechPolicyResearch)
+        HookRvaOrIl2Cpp("TechPolicyResearch", "", "MengHuaTechPolicyData", "Research",
+                        kZeroArgcs, 1, RVA_TECH_POLICY_RESEARCH,
+                        (void*)Hooked_TechPolicyResearch,
+                        (void**)&g_origTechPolicyResearch, true);
+    if (!g_origPolicyExecute)
+        HookRvaOrIl2Cpp("PolicyExecute", "", "PolicyDataMgr", "ExecutePolicy", kExecuteArgcs,
+                        1, RVA_POLICY_EXECUTE, (void*)Hooked_PolicyExecute,
+                        (void**)&g_origPolicyExecute, true);
+    if (!g_policyGetData)
+        ResolveOrigAny("PolicyGetData", "", "PolicyDataMgr", "GetPolicyData", kOneArgcs, 1,
+                       RVA_POLICY_GET_DATA, 0, (void**)&g_policyGetData);
+    if (!g_policyFinishAnyway)
+        ResolveOrigAny("PolicyFinishAnyway", "", "PolicyDataMgr", "FinishPolicyTimeAnyway",
+                       kOneArgcs, 1, RVA_POLICY_FINISH_ANYWAY, 0,
+                       (void**)&g_policyFinishAnyway);
+    if (!g_policyUpdateTime)
+        ResolveOrigAny("PolicyUpdateTime", "", "PolicyDataMgr", "UpdatePolicyTime",
+                       kUpdateArgcs, 1, RVA_POLICY_UPDATE_TIME, 0,
+                       (void**)&g_policyUpdateTime);
+
+    const bool hasEntry = g_origResearchTech || g_origTechPolicyResearch || g_origPolicyUiExecute;
+    if (hasEntry && g_origPolicyExecute && g_policyGetData && g_policyFinishAnyway &&
+        g_policyUpdateTime) {
+        g_hooksResearch.store(true);
+        LOGI("[Whrhx] research hooks ready wrapper=%d direct=%d ui=%d execute=%d", hasEntry,
+             g_origResearchTech ? 1 : 0, g_origPolicyUiExecute ? 1 : 0,
+             g_origPolicyExecute ? 1 : 0);
+    } else {
+        LOGW("[Whrhx] research hooks incomplete wrapper=%d direct=%d ui=%d execute=%d get=%d "
+             "finish=%d update=%d — will retry",
+             g_origResearchTech ? 1 : 0, g_origTechPolicyResearch ? 1 : 0,
+             g_origPolicyUiExecute ? 1 : 0, g_origPolicyExecute ? 1 : 0,
+             g_policyGetData ? 1 : 0, g_policyFinishAnyway ? 1 : 0,
+             g_policyUpdateTime ? 1 : 0);
+    }
+}
+
 #ifdef STARRY_GAME_WHRHXKB
 // kb 身份捕获钩（lib ready 后即装，不依赖功能开关；前 60 tick 重试）
 static void InstallCaptureHooks() {
@@ -1325,12 +1575,13 @@ static void Whrhx_SyncHooks() {
 #ifdef STARRY_GAME_WHRHXKB
     InstallCaptureHooks();
 #endif
-    if (g_gold.load() || g_food.load() || g_army.load()) InstallEcoHooks();
+    if (g_gold.load() || g_food.load() || g_army.load() || g_pop.load()) InstallEcoHooks();
     if (g_win.load()) {
         InstallBattleHooks();
         InstallSpeedHooks();  // Update 空页时用 delta 推帧强胜
     }
     if (g_speedLvl.load() > 1) InstallSpeedHooks();
+    if (g_researchDone.load()) InstallResearchHooks();
     PinPlayerValues();
 }
 
@@ -1358,6 +1609,7 @@ void Whrhx_Tick(const bool* features) {
         g_army.store(features[WHRHX_FEAT_ARMY]);
         g_pop.store(features[WHRHX_FEAT_POP]);
         g_win.store(features[WHRHX_FEAT_WIN]);
+        g_researchDone.store(features[WHRHX_FEAT_RESEARCH_DONE]);
     }
     if (g_libReady.load() && !GetApi().ready && isLibraryLoaded(GameUnity::TARGET_LIB)) {
         const uint32_t t = g_il2cppRetryTick.fetch_add(1);
@@ -1377,6 +1629,7 @@ void Whrhx_OnFeatureChanged(int featNum, bool enabled) {
         case WHRHX_FEAT_ARMY: g_army.store(enabled); break;
         case WHRHX_FEAT_POP:  g_pop.store(enabled); break;
         case WHRHX_FEAT_WIN:  g_win.store(enabled); break;
+        case WHRHX_FEAT_RESEARCH_DONE: g_researchDone.store(enabled); break;
         case WHRHX_FEAT_SPEED:
             if (!enabled) {
                 g_speedLvl.store(1);
@@ -1409,6 +1662,7 @@ void Whrhx_ForceClear() {
     g_army.store(false);
     g_pop.store(false);
     g_win.store(false);
+    g_researchDone.store(false);
     g_speedLvl.store(1);
     g_lastSpeedLvl.store(0);
     g_playerCountryId.store(-1);

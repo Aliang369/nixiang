@@ -23,6 +23,8 @@
 | Trace / WhrhxMod | ✅ | v11 延迟 hook · 启动零挂点 |
 | 启动闪退修复 | ✅ | [闪退修复_20260827.md](./闪退修复_20260827.md)（MenuService + 懒 hook） |
 | 真机六项验收 | ✅ | 2026-08-27 用户确认 |
+| 3.8.295 热更资源修复 | ✅ | 2026-09-12，九游星空底包；无限金币/食物/军队/人口由用户确认正常 |
+| 科研立即完成 | ✅ | 2026-09-12，覆盖 `GameUI.PolicyUI` 与蒙华科技入口；用户确认功能正常 |
 | 后台菜单 JSON | ✅ | [**whhx_menu_template.json**](./whhx_menu_template.json)（`game_id=whhx`） |
 | 中间 Trace 包清理 | ✅ | 2026-08-27 只留 release；中间 work 已归档 `99_archive/无悔华夏/work_cleanup_20260827/` |
 | 宣传图 | ✅ | `12_images/无悔华夏/无悔华夏_宣传图.png` |
@@ -50,9 +52,21 @@
 | [原包分析_20260826.md](./原包分析_20260826.md) | HTPX / CodeGen 提取过程（**RVA 表已被 §新文档覆写**） |
 | [原包dump实锤_20260826.md](./原包dump实锤_20260826.md) | **官方 metadata + token + RVA 定稿** |
 | [**whhx_menu_template.json**](./whhx_menu_template.json) | **后台菜单模板 JSON（导入用）** |
+| [热更资源失效修复_20260912.md](./热更资源失效修复_20260912.md) | **3.8.295 四项资源修复 + 最终包指纹** |
+| [政策科技研发加速与立即完成_可行性_20260912.md](./政策科技研发加速与立即完成_可行性_20260912.md) | **科研立即完成实现与真机验收** |
 | `prefs差分_*.md` | 各功能单开记录 |
 
 ## 产物路径
+
+当前最终包（2026-09-12）：
+
+```text
+08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk
+APK SHA-256 = 0b6c4772e64a6753b3a3169c9aea3a2e9af435c6361746c83b13516ba3f03167
+SO  SHA-256 = 742b366f8a68cc479450db0aac29de75c7ce344a987e317200f54e561aed708d
+```
+
+历史 8 月产物路径：
 
 ```
 08_output/无悔华夏/无悔华夏_3.8.280_surgical-releaseSigned.apk   # 正式包（唯一 APK）

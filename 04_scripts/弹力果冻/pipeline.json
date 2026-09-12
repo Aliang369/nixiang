@@ -1,0 +1,293 @@
+{
+  "game": "弹力果冻",
+  "version": "2.4.0-taptap-vc4409",
+  "notes": "2026-09-11 换渠道接手：MuMu 实装 TapTap/官服包（com.ginicat.sweet，vc4409，2,128,558,103 B，md5 634b37691f40f94d05b77e0702604fec）取代原 4399 渠道（com.ginicat.sweet.m4399，vc4412）。引擎 Unity 2020.3.22f1c1 + HybridCLR（assets/AOTDLL/hotfix.bytes 明文 PE，9,534,976 B）；libil2cpp.so 已 strip（仅 2,510 动态符号），玩法类不在 global-metadata.dat（BattleServer/HpHandle 命中 0）全在热更程序集。**本包当前版本 = 5 功能数据型版（TlgdTapTap，2026-09-11 换版）**：Mod 为**零 hook / 零 invoke 数据型实现**：读 BattleEntityManager 单例 → battleUnits 枚举单位 → 只做 ObscuredFloat/float 字段读写；5 功能 = 秒杀（敌血压 1）/ 全屏秒杀（敌血写 0 走自然死亡链）/ 无敌（护盾拉满+锁血）/ 无限技能（cdCounter 清零）/ 移速（滑块倍率，加密写）。偏移探针阶段结论见 10_docs/弹力果冻/探针结论_TapTap2.4.0_20260911.md。旧 4399 硬编码挂点 0xBAAB0C 已判定不可静态复用（见 10_docs/弹力果冻/跳板重定位_TapTap2.4.0_20260911.md）。SignSpoof 已补官服包名条目（官服证书与 4399 同一张，逐字节比对通过）。",
+  "params": {
+    "game_id": "tlgd",
+    "package": "com.ginicat.sweet",
+    "mk": "Android_tlgd.mk",
+    "tag": "Tlgd",
+    "obj_dir": "obj_tlgd",
+    "libs_dir": "libs_tlgd",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（从 MuMu 拉回的官方 TapTap 2.4.0 vc4409）",
+      "requires": [],
+      "command": "APK=\"$NIXIANG/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk\"; GOT=$(md5 -q \"$APK\"); WANT=634b37691f40f94d05b77e0702604fec; echo \"$APK\"; echo \"md5=$GOT size=$(stat -f%z \"$APK\")\"; [ \"$GOT\" = \"$WANT\" ] || { echo \"ERROR: 官包 md5 不符 want=$WANT\"; exit 1; }",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 19:42:16",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk": {
+          "md5": "634b37691f40f94d05b77e0702604fec"
+        }
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包 dump（管线建立前已完成：hotfix/metadata/libil2cpp/dex/smali）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix.bytes"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/global-metadata.dat"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/libil2cpp.so"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix_decompiled/hotfix.decompiled.cs"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 19:42:21",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix.bytes": {
+          "md5": "1cdad24cc429eca965a4b8dc0311975e"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/global-metadata.dat": {
+          "md5": "c95d2ef936d70498b4442a2e8f058d27"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/libil2cpp.so": {
+          "md5": "c067234d6526cd247691598e44aa5825"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix_decompiled/hotfix.decompiled.cs": {
+          "md5": "57680ebe316ba029831fdc745fe78cde"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk": "634b37691f40f94d05b77e0702604fec"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "锚点与结论（分析性阶段，产出落 10_docs）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/包内实测复核_TapTap2.4.0反编译_20260911.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/跳板重定位_TapTap2.4.0_20260911.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 19:42:32",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/包内实测复核_TapTap2.4.0反编译_20260911.md": {
+          "md5": "cef4e808fd7186cc62acb42ea6b241f6"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/跳板重定位_TapTap2.4.0_20260911.md": {
+          "md5": "965faa38af41c78f40b0832e917f15de"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix.bytes": "1cdad24cc429eca965a4b8dc0311975e",
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/global-metadata.dat": "c95d2ef936d70498b4442a2e8f058d27",
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/libil2cpp.so": "c067234d6526cd247691598e44aa5825",
+        "/Users/aliang/Documents/nixiang/06_dumped/弹力果冻/taptap_2.4.0/hotfix_decompiled/hotfix.decompiled.cs": "57680ebe316ba029831fdc745fe78cde"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "探针实现（modern 四件套 TlgdTapTap + SignSpoof 官服条目）",
+      "requires": [
+        "anchor"
+      ],
+      "preflight": [
+        "Games/TlgdTapTapMod.cpp",
+        "Games/TlgdTapTapEntry.cpp",
+        "Android_tlgd.mk",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_tlgd.mk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 19:42:43",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapMod.cpp": {
+          "md5": "123280cadee2b3c6a5269d4a545a908c"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapEntry.cpp": {
+          "md5": "00896fe4a5aa7dfffa1cc4614482a5cb"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_tlgd.mk": {
+          "md5": "689ce9c8d71bc05c0aa0f2bf3d10ef89"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（modern Android_tlgd.mk，独立 obj_tlgd）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "Games/TlgdTapTapMod.cpp",
+        "Games/TlgdTapTapEntry.cpp",
+        "Android_tlgd.mk",
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻/tlgd_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so",
+          "pattern": "TLGDF"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so",
+          "pattern": "JNI_OnLoad"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:22:49",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so": {
+          "md5": "ba64ab37d7dd3b7edf089f8abbb18bca"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapMod.cpp": "a0f279a54d2955f832676ae53f44c07b",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapEntry.cpp": "6f5788228965724c1b12a393dde45eb2",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_tlgd.mk": "689ce9c8d71bc05c0aa0f2bf3d10ef89"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（TapTap 底包；官方 classes.dex/resources.arsc 字节不变）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_tlgd_taptap_2.4.0.sh"
+      ],
+      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_tlgd_taptap_2.4.0.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"
+        }
+      ],
+      "status": "failed",
+      "failed_at": "2026-09-12 01:27:14",
+      "error": "命令退出码 1（详见日志尾部）"
+    },
+    {
+      "id": "sign",
+      "name": "签名核对（外科脚本内联 zipalign+apksigner，此处只核对产物与包内 so）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "APK=\"$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk\"; echo \"apk_md5=$(md5 -q \"$APK\")\"; echo \"inside_so_md5=$(unzip -p \"$APK\" lib/arm64-v8a/libstarry_magic.so | md5 -q)\"; echo \"built_so_md5=$(md5 -q \"$NIXIANG/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so\")\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（MuMu；端口 5555/16384 自动择一）",
+      "requires": [],
+      "command": "adb connect 127.0.0.1:16384 || true; adb connect 127.0.0.1:5555 || true; adb devices; adb -s $SERIAL get-state",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 20:51:29",
+      "artifacts": {}
+    },
+    {
+      "id": "install",
+      "name": "装机（用户已明确授权卸载官方包；push + 卸载 + pm install + 装机指纹校验）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "APK=\"$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk\"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell \"pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no\"; adb -s $SERIAL push \"$APK\" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk\" || { echo \"覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装\"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk\"; }; } || { echo \"安装失败：需人工介入\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.ginicat.sweet \"$APK\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:14:32",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": {
+          "md5": "89e49725ffaf23c5f368f1f8f8efd307"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk": "89e49725ffaf23c5f368f1f8f8efd307"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（探针结论文档 + current.md 索引）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/弹力果冻/探针结论_TapTap2.4.0_20260911.md"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}

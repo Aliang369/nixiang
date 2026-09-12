@@ -1,0 +1,378 @@
+{
+  "game": "城主别慌张",
+  "version": "1.0.10",
+  "notes": "2026-09-11 新品分析：MuMu 实装华为渠道包 com.gzxx.czbhz1.huawei（vc10 / 189,762,082B / md5 e98b130ca88d703bb6e25b99063f454a）。结构初判=Cocos Creator 3.x Web(H5) 构建（assets/game/{cocos-js,src,assets} + import-map + System.register 明文 ES module，无 libil2cpp/libcocos），承载方式待 DEX 确认（候选：Android WebView / 小游戏容器）。设备=MuMu 127.0.0.1:16384。",
+  "params": {
+    "game_id": "czbhz",
+    "package": "com.gzxx.czbhz1.huawei",
+    "mk": "Android_czbhz.mk",
+    "tag": "czbhz",
+    "obj_dir": "obj_czbhz",
+    "libs_dir": "libs_czbhz",
+    "serial": "127.0.0.1:16384"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "127.0.0.1:16384",
+    "LC_ALL": "C"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（MuMu 拉回华为渠道 1.0.10）",
+      "requires": [],
+      "command": "md5 -q \"$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 23:09:38",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk": {
+          "md5": "e98b130ca88d703bb6e25b99063f454a"
+        }
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包 dump（jadx + apktool；Cocos Web 构建，无 il2cpp）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/decode_apk.sh\" 城主别慌张 \"$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk\" 1.0.10",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/decode_summary_1.0.10.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 23:13:54",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/03_decompiled/城主别慌张/decode_summary_1.0.10.md": {
+          "md5": "f8656b5036bec3c1acbc5f0ce28c648c"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk": "e98b130ca88d703bb6e25b99063f454a"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "锚点抓取（引擎/承载判定 + 可逆功能锚点 + 上报检测面，产出落 10_docs）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/城主别慌张/分析_总览_20260911.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-11 23:47:32",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/城主别慌张/分析_总览_20260911.md": {
+          "md5": "533c12791f4662c235570cb099c8780d"
+        }
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（Czbhz 四件套 + StarryH5 Java 桥 + assets/starry/czbhz_patch.js；四件套由 new_game_mod.sh 生成后手写填充，禁重跑生成器覆盖）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzMod.h"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_czbhz.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/h5box/StarryH5.java"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/assets/starry/czbhz_patch.js"
+        }
+      ],
+      "status": "done",
+      "note": "生成器已执行并落地；此处不再重跑 new_game_mod.sh（会覆盖手写实现）",
+      "done_at": "2026-09-12 00:06:47",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzMod.cpp": {
+          "md5": "b0b093ad74e22ff85df4216fe7ee0568"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzEntry.cpp": {
+          "md5": "65f58283b019ba5f3e1d903e14c9a529"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzMod.h": {
+          "md5": "d6af8f0b3b40e468ffa19db529a759ff"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_czbhz.mk": {
+          "md5": "24315959409219f8ad4ede0ff0da6f94"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/h5box/StarryH5.java": {
+          "md5": "b6863aad4020c1fa1a21896e8039c821"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/assets/starry/czbhz_patch.js": {
+          "md5": "19567c1de2ba5090e8ccb2572fe34005"
+        }
+      }
+    },
+    {
+      "id": "offline_regression",
+      "name": "离线行为回归（Node 造 window.xy 仿真跑补丁；25 项断言——含 PVP 只动我方、幂等抗 12103 重入、授权门控、源码地雷）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/offline_regression.js"
+      ],
+      "command": "node \"$NIXIANG/04_scripts/城主别慌张/offline_regression.js\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/offline_regression.js"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:36:09",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/offline_regression.js": {
+          "md5": "fba15aca961005c77e5d11726a7e98d4"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzMod.cpp": "b0b093ad74e22ff85df4216fe7ee0568",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzEntry.cpp": "65f58283b019ba5f3e1d903e14c9a529",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/CzbhzMod.h": "d6af8f0b3b40e468ffa19db529a759ff",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_czbhz.mk": "24315959409219f8ad4ede0ff0da6f94",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/h5box/StarryH5.java": "8f0a5a9e1fcbeb1123287c57ea423d4f",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/assets/starry/czbhz_patch.js": "7ee4652732099383399bd7a32c16bb99"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（modern Android_czbhz.mk，独立 obj_czbhz / libs_czbhz）",
+      "requires": [
+        "offline_regression"
+      ],
+      "preflight": [
+        "Games/CzbhzMod.cpp",
+        "Games/CzbhzEntry.cpp",
+        "Games/CzbhzMod.h",
+        "Android_czbhz.mk",
+        "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/czbhz_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/城主别慌张/czbhz_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so",
+          "pattern": "czbhz"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so",
+          "pattern": "JNI_OnLoad"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:36:26",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so": {
+          "md5": "5a79410e335a00d197062d5f6be6dcef"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/offline_regression.js": "fba15aca961005c77e5d11726a7e98d4"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装 + 签名（换 Manifest 声明 Provider + 新增 classes4.dex + so + assets；游戏三个 dex 与 resources.arsc 零改动）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh"
+      ],
+      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_czbhz_1.0.10.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:42:47",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk": {
+          "md5": "9f088dd82cfdd467a99e06e0afe5fad7"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_czbhz/arm64-v8a/libstarry_magic.so": "5a79410e335a00d197062d5f6be6dcef"
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（MuMu 127.0.0.1:16384 / Android 12 / arm64-v8a / 机型 ALN-AL00；真机因缺 HMS 载不出游戏页，仅作对照）",
+      "requires": [],
+      "command": "adb connect $SERIAL; adb -s $SERIAL get-state",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 00:58:50",
+      "artifacts": {}
+    },
+    {
+      "id": "install",
+      "name": "装机验证（用户已授权：卸载官包 → push + pm install → 装机指纹校验）",
+      "requires": [
+        "surgical",
+        "device_ready"
+      ],
+      "command": "PKG=com.gzxx.czbhz1.huawei; APK=\"$NIXIANG/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk\"; echo \"[install] 用户 2026-09-12 明确授权：异签名先卸载官方包（官包存档于 02_apks/，其 /data/data 仅有空 cache，无存档损失）\"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo \"  (官方包不存在或卸载失败，继续)\"; adb -s $SERIAL push \"$APK\" /data/local/tmp/czbhz_surgical.apk && adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/czbhz_surgical.apk\" || { echo \"安装失败\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_surgical.apk && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" $PKG \"$APK\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/城主别慌张/城主别慌张_1.0.10_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "diag_resign",
+      "name": "诊断对照①：只重签名、零 mod 内容（区分「重签名」与「启动期注入」）",
+      "requires": [
+        "check_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/diag_resign_only.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/城主别慌张/diag_resign_only.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:13:07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk": {
+          "md5": "62c4743e56c0a6e55a53e31339aeb138"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk": "e98b130ca88d703bb6e25b99063f454a"
+      }
+    },
+    {
+      "id": "diag_install",
+      "name": "诊断对照②：装机到设备（卸当前包 → 装重签名原版 → 指纹校验）",
+      "requires": [
+        "diag_resign",
+        "device_ready"
+      ],
+      "command": "PKG=com.gzxx.czbhz1.huawei; APK=\"$NIXIANG/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk\"; echo \"[diag] 用户已授权对照实验：卸载当前包 → 装重签名原版\"; adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo \"  (未安装，继续)\"; adb -s $SERIAL push \"$APK\" /data/local/tmp/czbhz_diag.apk && adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/czbhz_diag.apk\" || { echo \"安装失败\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_diag.apk && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" $PKG \"$APK\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:14:05",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk": {
+          "md5": "62c4743e56c0a6e55a53e31339aeb138"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/07_patched/城主别慌张/diag_resign/e2_resign_only_1.0.10.apk": "62c4743e56c0a6e55a53e31339aeb138"
+      }
+    },
+    {
+      "id": "diag_official",
+      "name": "诊断对照③（控制组）：装回官方原包（官方签名），确认当前时刻它能否登录",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "PKG=com.gzxx.czbhz1.huawei; APK=\"$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk\"; echo \"[diag] 控制组：装官方原包（用户已授权）\"; adb -s $SERIAL shell am force-stop $PKG; adb -s $SERIAL shell pm uninstall --user 0 $PKG || echo \"  (未安装，继续)\"; adb -s $SERIAL push \"$APK\" /data/local/tmp/czbhz_official.apk && adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/czbhz_official.apk\" || { echo \"安装失败\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/czbhz_official.apk && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" $PKG \"$APK\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 01:22:07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk": {
+          "md5": "e98b130ca88d703bb6e25b99063f454a"
+        }
+      }
+    },
+    {
+      "id": "cleanup_real_device",
+      "name": "清理真机残留（仅卸本作星空包；防误卸守卫 = 设备包签名必须是我方星光密钥）",
+      "requires": [
+        "install"
+      ],
+      "command": "PKG=com.gzxx.czbhz1.huawei; RS=f9a116a2; BT=$HOME/Library/Android/sdk/build-tools/36.0.0; STARRY_SHA1=821c92e404ab5fdac8dbf157c2e467e71440917d; echo \"[cleanup] 用户 2026-09-12 授权：卸掉真机 $RS 上的本作星空包\"; P=$(adb -s $RS shell pm path $PKG | head -1 | sed 's/package://' | tr -d '\\r'); [[ -n \"$P\" ]] || { echo '设备上没装本包，无需清理 ✓'; exit 0; }; adb -s $RS pull \"$P\" /tmp/czbhz_real_installed.apk >/dev/null 2>&1 || { echo '拉取设备包失败'; exit 1; }; SHA1=$(\"$BT/apksigner\" verify --print-certs /tmp/czbhz_real_installed.apk 2>/dev/null | grep -m1 'SHA-1 digest' | awk '{print $NF}'); echo \"[cleanup] 设备包签名 SHA-1 = $SHA1\"; [[ \"$SHA1\" == \"$STARRY_SHA1\" ]] || { echo \"设备包不是我方星光构建（期望 $STARRY_SHA1）—— 拒绝卸载（防误卸守卫）\"; exit 1; }; adb -s $RS shell am force-stop $PKG; adb -s $RS shell pm uninstall --user 0 $PKG; rm -f /tmp/czbhz_real_installed.apk; echo '[cleanup] 卸载后残留检查:'; adb -s $RS shell \"pm list packages | grep czbhz\" || echo '  已无本包 ✓'; adb -s $RS shell \"ls /data/local/tmp/ | grep -i czbhz\" || echo '  /data/local/tmp 无残留 ✓'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/城主别慌张/pipeline.json"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（落地验证记录 + current.md 索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/城主别慌张/星空落地_1.0.10.md"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}
