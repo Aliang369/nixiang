@@ -1,6 +1,7 @@
 /* ================================================================
  *  迷雾大陆 MOD — 对齐斌哥 zip.apk get_ret 1..4 + 反作弊屏蔽
  *  路径：se::ScriptEngine::evalString 运行时拼接（方案 B）
+ *  15.0.0：符号 jA→ow、vS→RS，伤害尾锚 i.target.damage=E
  * ================================================================ */
 
 #include "MwdlMod.h"
@@ -145,34 +146,34 @@ static std::string SpliceCombatJs(const char* src) {
     static char kTickHook[900];
     static bool once = false;
     if (!once) {
-        // get_ret(1)+get_ret(2)：百倍伤害 / 无敌 — KH 尾部 i.target.damage=P
+        // get_ret(1)+get_ret(2)：百倍伤害 / 无敌 — 15.0.0 伤害尾锚 i.target.damage=E
         snprintf(
             kKhHook, sizeof(kKhHook),
-            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===jA.Hero||"
-            "_su.unitType===jA.Summon||_su.unitType===jA.Guardian||"
-            "_su.unitType===jA.Player||_su.unitType===jA.ParasyteGuardian)){"
-            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",1)&&(P*=100)}"
-            "if(_su&&_su.unitType===jA.Monster&&"
-            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){P=0}"
-            "i.target.damage=P}",
+            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===ow.Hero||"
+            "_su.unitType===ow.Summon||_su.unitType===ow.Guardian||"
+            "_su.unitType===ow.Player||_su.unitType===ow.ParasyteGuardian)){"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",1)&&(E*=100)}"
+            "if(_su&&_su.unitType===ow.Monster&&"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){E=0}"
+            "i.target.damage=E}",
             kAct, kAct);
-        // get_val(3)：移速倍率 — MoveSpeed getter（vS.MOV_SPEED）
+        // get_val(3)：移速倍率 — MoveSpeed getter（15.0.0 为 RS.MOV_SPEED）
         snprintf(
             kSpdRepl, sizeof(kSpdRepl),
-            "/*starry_mwdl_spd*/return t=Math.max(0,t),function(n){try{var "
+            "/*starry_mwdl_spd*/function(n){try{var "
             "m=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",3);"
-            "m>1&&(this.unitType===jA.Hero||this.unitType===jA.Summon||"
-            "this.unitType===jA.Guardian||this.unitType===jA.Player||"
-            "this.unitType===jA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
-            "n}.call(this,this.AttributeComponent.getAttr(vS.MOV_SPEED)*t)}",
+            "m>1&&(this.unitType===ow.Hero||this.unitType===ow.Summon||"
+            "this.unitType===ow.Guardian||this.unitType===ow.Player||"
+            "this.unitType===ow.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
+            "n}.call(this,this.AttributeComponent.getAttr(RS.MOV_SPEED)*t)}",
             kAct);
         // get_ret(4)：无限技能 — 插在 SkillComponent.tick 前
         snprintf(
             kTickHook, sizeof(kTickHook),
             "/*starry_mwdl_uls*/ jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===jA.Hero||"
-            "this.unitType===jA.Summon||this.unitType===jA.Guardian||"
-            "this.unitType===jA.Player||this.unitType===jA.ParasyteGuardian)&&"
+            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===ow.Hero||"
+            "this.unitType===ow.Summon||this.unitType===ow.Guardian||"
+            "this.unitType===ow.Player||this.unitType===ow.ParasyteGuardian)&&"
             "(this.SkillComponent.reduceAllSkillColdDown(1e9),"
             "this.ActiveSkillComponent&&this.ActiveSkillComponent.reduceAllSkillColdDown(1e9)), ",
             kAct);
@@ -183,18 +184,18 @@ static std::string SpliceCombatJs(const char* src) {
         return s.find(tag) != std::string::npos;
     };
 
-    // --- KH（百倍伤害 + 无敌）：尾锚 i.target.damage=P} ---
-    if (!already("starry_mwdl_kh") && s.find("i.target.damage=P}") != std::string::npos) {
-        size_t p = s.find("i.target.damage=P}");
-        s.replace(p, strlen("i.target.damage=P}"), kKhHook);
-        LOGI("[Mwdl] spliced KH (damage)");
+    // --- 伤害结算（百倍伤害 + 无敌）：15.0.0 尾锚 i.target.damage=E} ---
+    if (!already("starry_mwdl_kh") && s.find("i.target.damage=E}") != std::string::npos) {
+        size_t p = s.find("i.target.damage=E}");
+        s.replace(p, strlen("i.target.damage=E}"), kKhHook);
+        LOGI("[Mwdl] spliced damage (15.0.0)");
     }
 
-    // --- MoveSpeed（移动速度：vS.MOV_SPEED）---
+    // --- MoveSpeed（移动速度：15.0.0 为 RS.MOV_SPEED）---
     if (!already("starry_mwdl_spd")) {
         static const char* kSpdFroms[] = {
-            "return t=Math.max(0,t),this.AttributeComponent.getAttr(vS.MOV_SPEED)*t}",
-            "return t = Math.max(0, t), this.AttributeComponent.getAttr(vS.MOV_SPEED) * t}",
+            "this.AttributeComponent.getAttr(RS.MOV_SPEED)*t}",
+            "this.AttributeComponent.getAttr(vS.MOV_SPEED)*t}",
             nullptr,
         };
         for (int i = 0; kSpdFroms[i]; i++) {
@@ -226,21 +227,18 @@ static std::string SpliceCombatJs(const char* src) {
         }
     }
 
-    // --- 反作弊：onStageCheat / onDevilClear ---
+    // --- 反作弊：按方法边界中和，避免依赖 15.0.0 内部变量名 ---
     if (!already("starry_mwdl_nocheat_stage")) {
-        static const char* kStageCheat[] = {
-            "t.prototype.onStageCheat=function(t){C(v.ShowErrorTips,p.EErrorTips.FightCheat)}",
-            "t.prototype.onStageCheat = function(t) {C(v.ShowErrorTips, p.EErrorTips.FightCheat)}",
-            "t.prototype.onStageCheat = function(t) {\n          C(v.ShowErrorTips, p.EErrorTips.FightCheat)\n        }",
-            nullptr,
-        };
-        for (int i = 0; kStageCheat[i]; i++) {
-            size_t p = s.find(kStageCheat[i]);
-            if (p == std::string::npos) continue;
-            s.replace(p, strlen(kStageCheat[i]),
-                      "/*starry_mwdl_nocheat_stage*/t.prototype.onStageCheat=function(t){}");
-            LOGI("[Mwdl] neutralized onStageCheat");
-            break;
+        static const char* kStageCheat = "t.prototype.onStageCheat=function(t){";
+        size_t p = s.find(kStageCheat);
+        if (p != std::string::npos) {
+            size_t body = p + strlen(kStageCheat);
+            size_t end = s.find('}', body);
+            if (end != std::string::npos) {
+                s.replace(p, end - p + 1,
+                          "/*starry_mwdl_nocheat_stage*/t.prototype.onStageCheat=function(t){}");
+                LOGI("[Mwdl] neutralized onStageCheat (15.0.0)");
+            }
         }
     }
 
@@ -290,9 +288,8 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    bool interesting = has("function KH") || has("vS.MOV_SPEED") ||
-                       has("SkillComponent.tick") || has("onStageCheat") ||
-                       has("i.target.damage=P}");
+    bool interesting = has("i.target.damage=E}") || has("RS.MOV_SPEED") ||
+                       has("SkillComponent.tick") || has("onStageCheat");
     if (!interesting) {
         return orig_seEval(thiz, script, length, ret, fileName);
     }

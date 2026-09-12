@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "version": "15.0.0",
+  "code_version": "a1e47",
+  "code_size": 6743502,
+  "code_md5": "21a4ff6b94b83f4dfd4bf9feb71a5c91",
+  "checks": {
+    "damage_anchor": 1,
+    "speed_anchor": 1,
+    "tick_anchor": 2,
+    "cheat_anchor": 1,
+    "enum_ow": 1,
+    "attr_RS": 5,
+    "sourceUnit": 1
+  },
+  "patched_size": 6744620,
+  "node_check": "ok"
+}

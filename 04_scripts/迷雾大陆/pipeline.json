@@ -1,7 +1,7 @@
 {
   "game": "迷雾大陆",
-  "version": "14.0.0",
-  "notes": "2026-09-09 热更失效修复：code bundle 1fe37→6355d，MwdlMod 锚点重定位（jA/vS/KH 尾锚）。modern 双轨（Android_mwdl.mk + MwdlEntry）。20260909 晚真机二次验证：serial=f9a116a2。",
+  "version": "15.0.0",
+  "notes": "2026-09-12 15.0.0 星空包收官：只迁移旧版四项功能（百倍伤害/无敌/移动速度滑块/无限技能），未新增；当前 bundle code=a1e47、md5=21a4ff6b94b83f4dfd4bf9feb71a5c91，符号 jA→ow、vS→RS，伤害尾锚 i.target.damage=E。真机 f9a116a2 已安装星空包，设备 base.apk md5=6b4600de14a0b3cd76a22277456b4eb5，用户实测四项功能通过。",
   "params": {
     "game_id": "mwdl",
     "package": "com.hortor.mwdl",
@@ -20,28 +20,68 @@
   "stages": [
     {
       "id": "check_apk",
-      "name": "官包核对（从 MuMu 拉取的官方 14.0.0）",
+      "name": "拉取并核对真机官方 15.0.0 / vc20",
       "requires": [],
-      "command": "ls -lh \"$NIXIANG/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk\" && shasum -a 256 \"$NIXIANG/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk\"",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/fetch_official_15.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/迷雾大陆/fetch_official_15.sh\"",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk"
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/迷雾大陆_15.0.0_official.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 17:48:17",
+      "done_at": "2026-09-12 17:24:10",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/02_apks/迷雾大陆/迷雾大陆_14.0.0_official.apk": {
-          "md5": "7a08aa4b318190dda24ca6bdc54394ca"
+        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/迷雾大陆_15.0.0_official.apk": {
+          "md5": "a59d05317f18f1d6ef8629efc6da36d5"
         }
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "当前热更 bundle 锚点与语法校验",
+      "requires": [
+        "check_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/check_hotfix_15.py"
+      ],
+      "command": "python3 \"$NIXIANG/04_scripts/迷雾大陆/check_hotfix_15.py\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json",
+          "pattern": "\"ok\": true"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json",
+          "pattern": "\"node_check\": \"ok\""
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 17:25:47",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": {
+          "md5": "ae445340ce1e7e803073a63947779a7b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/迷雾大陆_15.0.0_official.apk": "a59d05317f18f1d6ef8629efc6da36d5"
       }
     },
     {
       "id": "build_so",
       "name": "构建 so（modern Android_mwdl.mk）",
       "requires": [
-        "check_apk"
+        "anchor"
       ],
       "preflight": [
         "Games/MwdlMod.cpp",
@@ -66,32 +106,41 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 18:10:48",
+      "done_at": "2026-09-12 17:25:58",
       "artifacts": {
         "../../libs_mwdl/arm64-v8a/libstarry_magic.so": {
-          "md5": "502ffb1a306931c4513ebd1acc72afb7"
+          "md5": "421abba5315f90488a807e164b445c0a"
         }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": "ae445340ce1e7e803073a63947779a7b"
       }
     },
     {
       "id": "surgical",
-      "name": "外科组装 + 签名（官方包为底）",
+      "name": "外科组装 + 签名（官方 15.0.0 底包）",
       "requires": [
         "build_so"
       ],
-      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_mwdl_14.0.0.sh\"",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_mwdl_15.0.0.sh"
+      ],
+      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_mwdl_15.0.0.sh\"",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 18:11:39",
+      "done_at": "2026-09-12 17:27:26",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk": {
-          "md5": "f286f5554e71171b2101e68c88386c9d"
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": {
+          "md5": "6b4600de14a0b3cd76a22277456b4eb5"
         }
+      },
+      "inputs": {
+        "../../libs_mwdl/arm64-v8a/libstarry_magic.so": "421abba5315f90488a807e164b445c0a"
       }
     },
     {
@@ -106,38 +155,75 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 18:19:41",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/pipeline.json": {
-          "md5": "fddcf23cf3031c8c82c07a16b6457db5"
-        }
-      }
+      "done_at": "2026-09-12 17:28:49",
+      "artifacts": {}
     },
     {
-      "id": "install",
-      "name": "装机真机（全新安装）",
+      "id": "uninstall_official",
+      "name": "按用户授权直接卸载官方包（不保留数据）",
       "requires": [
-        "surgical",
         "device_ready"
       ],
-      "command": "adb -s $SERIAL push \"$NIXIANG/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk\" /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell am force-stop com.hortor.mwdl; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell rm -f /data/local/tmp/mwdl_mod.apk",
+      "command": "adb -s $SERIAL shell am force-stop com.hortor.mwdl; adb -s $SERIAL shell pm uninstall --user 0 com.hortor.mwdl",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/pipeline.json"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 18:19:53",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_14.0.0_surgical-releaseSigned.apk": {
-          "md5": "f286f5554e71171b2101e68c88386c9d"
+      "done_at": "2026-09-12 17:34:10",
+      "artifacts": {}
+    },
+    {
+      "id": "install",
+      "name": "装机真机（需用户另行明确授权；异签名会发生覆盖冲突）",
+      "requires": [
+        "surgical",
+        "device_ready",
+        "uninstall_official"
+      ],
+      "command": "adb -s $SERIAL push \"$NIXIANG/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk\" /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell am force-stop com.hortor.mwdl; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/mwdl_mod.apk && adb -s $SERIAL shell rm -f /data/local/tmp/mwdl_mod.apk",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk"
         }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 17:34:27",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": {
+          "md5": "6b4600de14a0b3cd76a22277456b4eb5"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "6b4600de14a0b3cd76a22277456b4eb5"
+      }
+    },
+    {
+      "id": "verify_install",
+      "name": "校验设备 base.apk 与本地星空包一致",
+      "requires": [
+        "install"
+      ],
+      "command": "bash $NIXIANG/04_scripts/_common/verify_installed_apk.sh $SERIAL com.hortor.mwdl $NIXIANG/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk --su",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 17:34:34",
+      "artifacts": {},
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "6b4600de14a0b3cd76a22277456b4eb5"
       }
     },
     {
       "id": "archive",
-      "name": "收官归档（文档 + 索引 + git）",
+      "name": "收官归档（安装与运行验证后执行）",
       "requires": [
         "install"
       ],
@@ -145,15 +231,18 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/10_docs/迷雾大陆/热更失效根因与修复_20260909.md"
+          "path": "/Users/aliang/Documents/nixiang/10_docs/迷雾大陆/星空落地_15.0.0_20260912.md"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-09 18:10:56",
+      "done_at": "2026-09-12 17:40:27",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/10_docs/迷雾大陆/热更失效根因与修复_20260909.md": {
-          "md5": "a41288598156ecb521c8b8877ce38fb9"
+        "/Users/aliang/Documents/nixiang/10_docs/迷雾大陆/星空落地_15.0.0_20260912.md": {
+          "md5": "06f1703a79dd73010117b91bc8f8adf8"
         }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "6b4600de14a0b3cd76a22277456b4eb5"
       }
     }
   ]

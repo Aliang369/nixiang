@@ -1,0 +1,4 @@
+Signer #1 certificate DN: C=1, ST=1, L=1, O=1, OU=1, CN=1
+Signer #1 certificate SHA-256 digest: 67cf2df158336cc0310613041d3f12f6cd98f07e0f9822d4c4164fe08f3ecb04
+Signer #1 certificate SHA-1 digest: f8676b8cc4191cf605b9921692260a3e1bd1f0d8
+Signer #1 certificate MD5 digest: 648d86c8901e786f79cfd7e73b727133
