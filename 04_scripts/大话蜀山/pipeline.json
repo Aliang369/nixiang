@@ -1,0 +1,477 @@
+{
+  "game": "大话蜀山",
+  "version": "2.5",
+  "notes": "2026-09-13 接手：真机 f9a116a2 前台运行的是斌哥改包 com.cylj.rogue.tp479 2.5/vc11，待只读提取、识别壳与提取秒杀/无敌 Hook 点；随后复刻到原版并走星光 modern 出包。",
+  "params": {
+    "game_id": "dhss",
+    "serial": "f9a116a2",
+    "package": "com.cylj.rogue.tp479",
+    "channel": "taptap",
+    "tag": "dhss"
+  },
+  "env": {
+    "SERIAL": "f9a116a2",
+    "PKG": "com.cylj.rogue.tp479",
+    "APK_OUT": "/Users/aliang/Documents/nixiang/02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk",
+    "APK_OFFICIAL": "/Users/aliang/Documents/nixiang/02_apks/大话蜀山/大话蜀山_2.5_taptap_official.apk",
+    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
+    "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner",
+    "NIXIANG": "/Users/aliang/Documents/nixiang"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（核验真机 serial 与系统信息）",
+      "requires": [],
+      "command": "adb devices -l && adb -s \"$SERIAL\" get-state && printf 'model=' && adb -s \"$SERIAL\" shell getprop ro.product.model && printf 'android=' && adb -s \"$SERIAL\" shell getprop ro.build.version.release && printf 'abi=' && adb -s \"$SERIAL\" shell getprop ro.product.cpu.abi",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/大话蜀山/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 22:30:21",
+      "artifacts": {}
+    },
+    {
+      "id": "pull_device",
+      "name": "真机只读提取斌哥改包单一 base APK",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/大话蜀山/fetch_installed_apk.sh \"$SERIAL\" \"$PKG\" \"$APK_OUT\"",
+      "preflight": [
+        "04_scripts/大话蜀山/fetch_installed_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 22:30:51",
+      "artifacts": {
+        "02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk": {
+          "md5": "b3a7663c2d8a740db8d6ae3a8e26328e"
+        }
+      }
+    },
+    {
+      "id": "check_apk",
+      "name": "核对斌哥包身份、版本、签名与安装来源",
+      "requires": [
+        "pull_device"
+      ],
+      "command": "\"$AAPT2\" dump badging \"$APK_OUT\" | sed -n '1,30p'; \"$APKSIGNER\" verify --print-certs \"$APK_OUT\" | sed -n '1,40p'; unzip -l \"$APK_OUT\" | grep -E 'libSDKloading|libtoolChecker|libcodec2_server|libunityluac|assets/base.apk|shell_config|global-metadata' | sed -n '1,80p'; adb -s \"$SERIAL\" shell dumpsys package \"$PKG\" | tr -d '\r' | grep -E 'versionName=|versionCode=|installerPackageName=|primaryCpuAbi=|firstInstallTime=|lastUpdateTime=' | head -20; \"$AAPT2\" dump badging \"$APK_OUT\" | grep -Fq \"package: name='com.cylj.rogue.tp479' versionCode='11' versionName='2.5'\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 22:31:17",
+      "artifacts": {
+        "02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk": {
+          "md5": "b3a7663c2d8a740db8d6ae3a8e26328e"
+        }
+      },
+      "inputs": {
+        "02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk": "b3a7663c2d8a740db8d6ae3a8e26328e"
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包 dump（jadx + apktool + 壳特征摘要）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "bash 04_scripts/_common/decode_apk.sh 大话蜀山 \"$APK_OUT\" 2.5",
+      "preflight": [
+        "04_scripts/_common/decode_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/大话蜀山/decode_summary_2.5.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/大话蜀山/apktool_2.5/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 22:33:29",
+      "artifacts": {
+        "03_decompiled/大话蜀山/decode_summary_2.5.md": {
+          "md5": "26e814d924c24e2431da00c489acd3e1"
+        },
+        "03_decompiled/大话蜀山/apktool_2.5/AndroidManifest.xml": {
+          "md5": "499b937ba82ff6d78913f9e9992a7506"
+        }
+      },
+      "inputs": {
+        "02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk": "b3a7663c2d8a740db8d6ae3a8e26328e"
+      }
+    },
+    {
+      "id": "il2cpp_dump",
+      "name": "Il2CppDumper 静态符号 RVA 映射",
+      "requires": [
+        "dump"
+      ],
+      "command": "bash 04_scripts/大话蜀山/dump_il2cpp.sh \"$APK_OUT\"",
+      "preflight": [
+        "04_scripts/大话蜀山/dump_il2cpp.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/大话蜀山/il2cpp_dump_2.5/dump.cs"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/大话蜀山/il2cpp_dump_2.5/script.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 22:39:18",
+      "artifacts": {
+        "06_dumped/大话蜀山/il2cpp_dump_2.5/dump.cs": {
+          "md5": "2686373e907093a1bb01b2ecb4b18f3c"
+        },
+        "06_dumped/大话蜀山/il2cpp_dump_2.5/script.json": {
+          "md5": "e2a97297a3a6bea797c5714cc21e4aa7"
+        }
+      },
+      "inputs": {
+        "03_decompiled/大话蜀山/apktool_2.5/AndroidManifest.xml": "499b937ba82ff6d78913f9e9992a7506"
+      }
+    },
+    {
+      "id": "pull_runtime_so",
+      "name": "提取斌哥壳落盘的已 Hook libil2cpp.so",
+      "requires": [
+        "il2cpp_dump"
+      ],
+      "command": "bash 04_scripts/大话蜀山/fetch_runtime_so.sh \"$SERIAL\" \"$PKG\" \"$NIXIANG/06_dumped/大话蜀山/runtime_2.5/libil2cpp.patched.so\"",
+      "preflight": [
+        "04_scripts/大话蜀山/fetch_runtime_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/大话蜀山/runtime_2.5/libil2cpp.patched.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 22:41:43",
+      "artifacts": {
+        "06_dumped/大话蜀山/runtime_2.5/libil2cpp.patched.so": {
+          "md5": "54e2691c1343846f1192f4748169667d"
+        }
+      },
+      "inputs": {
+        "06_dumped/大话蜀山/il2cpp_dump_2.5/dump.cs": "2686373e907093a1bb01b2ecb4b18f3c",
+        "06_dumped/大话蜀山/il2cpp_dump_2.5/script.json": "e2a97297a3a6bea797c5714cc21e4aa7"
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读提取 TapTap 官方 2.5/vc11 单 APK",
+      "requires": [
+        "pull_runtime_so"
+      ],
+      "command": "bash 04_scripts/大话蜀山/fetch_installed_apk.sh \"$SERIAL\" \"$PKG\" \"$APK_OFFICIAL\"",
+      "preflight": [
+        "04_scripts/大话蜀山/fetch_installed_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/大话蜀山/大话蜀山_2.5_taptap_official.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 23:09:29",
+      "artifacts": {
+        "02_apks/大话蜀山/大话蜀山_2.5_taptap_official.apk": {
+          "md5": "774e107cde3e10b92d0ecdd1baec2813"
+        }
+      },
+      "inputs": {
+        "06_dumped/大话蜀山/runtime_2.5/libil2cpp.patched.so": "54e2691c1343846f1192f4748169667d"
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对 TapTap 官包版本/签名并与斌哥包对照核心 so",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "\"$AAPT2\" dump badging \"$APK_OFFICIAL\" | sed -n '1,30p'; \"$APKSIGNER\" verify --print-certs \"$APK_OFFICIAL\" | sed -n '1,20p'; bash 04_scripts/大话蜀山/compare_official_binge.sh \"$APK_OUT\" \"$APK_OFFICIAL\"",
+      "preflight": [
+        "04_scripts/大话蜀山/compare_official_binge.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/大话蜀山/official_compare_2.5.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 23:11:32",
+      "artifacts": {
+        "06_dumped/大话蜀山/official_compare_2.5.txt": {
+          "md5": "8c7aed17025bf207ec092cc7dbabf79b"
+        }
+      },
+      "inputs": {
+        "02_apks/大话蜀山/大话蜀山_2.5_taptap_official.apk": "774e107cde3e10b92d0ecdd1baec2813"
+      }
+    },
+    {
+      "id": "dump_official",
+      "name": "TapTap 官包拆包（jadx + apktool）",
+      "requires": [
+        "check_official"
+      ],
+      "command": "bash 04_scripts/_common/decode_apk.sh 大话蜀山 \"$APK_OFFICIAL\" 2.5_official",
+      "preflight": [
+        "04_scripts/_common/decode_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/大话蜀山/decode_summary_2.5_official.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/大话蜀山/apktool_2.5_official/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 23:12:58",
+      "artifacts": {
+        "03_decompiled/大话蜀山/decode_summary_2.5_official.md": {
+          "md5": "d01dbdc1518e134cfd8b9aca4af704c3"
+        },
+        "03_decompiled/大话蜀山/apktool_2.5_official/AndroidManifest.xml": {
+          "md5": "f4ff31b7c2030cf625f299c8e79c9398"
+        }
+      },
+      "inputs": {
+        "06_dumped/大话蜀山/official_compare_2.5.txt": "8c7aed17025bf207ec092cc7dbabf79b"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "斌哥包功能抓点：秒杀 / 无敌",
+      "requires": [
+        "dump_official"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/大话蜀山/斌哥包抓点_2.5_20260913.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 23:28:45",
+      "artifacts": {
+        "10_docs/大话蜀山/斌哥包抓点_2.5_20260913.md": {
+          "md5": "4f228588078e39a6ae60a5e5eca3a948"
+        }
+      },
+      "inputs": {
+        "03_decompiled/大话蜀山/apktool_2.5_official/AndroidManifest.xml": "f4ff31b7c2030cf625f299c8e79c9398"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "星光 modern 模块实现（DhssMod / DhssEntry / Android_dhss.mk）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Android_dhss.mk"
+        },
+        {
+          "type": "file_contains",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssEntry.cpp",
+          "pattern": "dhss"
+        },
+        {
+          "type": "file_contains",
+          "path": "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java",
+          "pattern": "com.cylj.rogue.tp479"
+        }
+      ],
+      "status": "done",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssMod.cpp": {
+          "md5": "e278d72251e8e6e98d01fc225cbfcac8"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssEntry.cpp": {
+          "md5": "ef8865119c0288a3b85d569702e2b076"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_dhss.mk": {
+          "md5": "b275a2304c70031e63c8a144c876cdee"
+        }
+      },
+      "done_at": "2026-09-13 23:40:45"
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（私有 Android_dhss.mk，含标签/菜单串校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash 04_scripts/大话蜀山/dhss_build_so.sh",
+      "preflight": [
+        "04_scripts/大话蜀山/dhss_build_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so",
+          "pattern": "dhss"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 01:30:19",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so": {
+          "md5": "1f5edc634c85aeec0c4801503f42e657"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssMod.cpp": "3fab35f74bf0a5ea9109ecfa12b5930a",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssEntry.cpp": "ffc96396c958238acfd4cbc840f84416",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_dhss.mk": "b275a2304c70031e63c8a144c876cdee"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（官包 dex/arsc/so 零改动 + classes5.dex + 星光 so + Manifest）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_dhss_2.5.sh",
+      "preflight": [
+        "mod菜单/starry-mod-menu/scripts/surgical_dhss_2.5.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 01:31:10",
+      "artifacts": {
+        "08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk": {
+          "md5": "1f89bbfbf29e107c665dd2a01e5470a3"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so": "1f5edc634c85aeec0c4801503f42e657"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（zipalign + apksigner，starry_release.jks）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash 04_scripts/大话蜀山/dhss_sign.sh",
+      "preflight": [
+        "04_scripts/大话蜀山/dhss_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 01:32:27",
+      "artifacts": {
+        "08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk": {
+          "md5": "c586e61de0f81bf00f6bd0308a476b9c"
+        }
+      },
+      "inputs": {
+        "08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk": "1f89bbfbf29e107c665dd2a01e5470a3"
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机验证（异签名需用户确认卸载，本阶段不自动卸载）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "APK=\"$NIXIANG/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk\"; adb -s $SERIAL shell am force-stop $PKG || true; adb -s $SERIAL push \"$APK\" /data/local/tmp/dhss_surgical.apk && { adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo \"覆盖安装失败（异签名）→ 按用户 2026-09-14 明确授权卸载官包后重装\"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || true; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo \"安装失败\"; exit 1; }; }; }; adb -s $SERIAL shell rm -f /data/local/tmp/dhss_surgical.apk; bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" $SERIAL $PKG \"$APK\" --su",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 01:33:21",
+      "artifacts": {
+        "08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk": {
+          "md5": "c586e61de0f81bf00f6bd0308a476b9c"
+        }
+      },
+      "inputs": {
+        "08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk": "c586e61de0f81bf00f6bd0308a476b9c"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（星空落地文档 + current.md 索引 + git 固化）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/大话蜀山/星空落地_2.5_20260914.md"
+        }
+      ],
+      "status": "done",
+      "artifacts": {
+        "10_docs/大话蜀山/星空落地_2.5_20260914.md": {
+          "md5": "90df418b278b59e817fb7430ae8064c8"
+        }
+      },
+      "done_at": "2026-09-14 01:40:05",
+      "inputs": {
+        "08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk": "c586e61de0f81bf00f6bd0308a476b9c"
+      }
+    }
+  ]
+}

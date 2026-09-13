@@ -564,6 +564,23 @@ public final class SignSpoof {
                     + "RX4Dr3xHfA1pUHO6iWekcXxrjM8ugjnIdIkflC+7NP3W1+67Ho3PQjbmPVHvtZUfyiBeTYyQ+hP2N8wn"
                     + "sMrfj3Ga7UHV0vc5jhPsLHtM";
 
+    /** 大话蜀山 TapTap 原版（MD5=9ff0bc6e… / SHA256=7c006b97… CN=tom） */
+    private static final String DHSS_PKG = "com.cylj.rogue.tp479";
+    private static final String DHSS_CERT_B64 =
+            "MIICuzCCAaOgAwIBAgIESn7z4DANBgkqhkiG9w0BAQsFADAOMQwwCgYDVQQDEwN0b20wHhcNMjIw"
+                    + "NDExMDMzMzUzWhcNNDcwNDA1MDMzMzUzWjAOMQwwCgYDVQQDEwN0b20wggEiMA0GCSqGSIb3DQEB"
+                    + "AQUAA4IBDwAwggEKAoIBAQDI0zDF80sLWvsz4c73StOfFmcDIMS6bR6+ezJd2fXto+7Yd1RjqUYX"
+                    + "LIP+Xk/oiV+pFz6NnzRt2Ky4xQQ2cNKC6rPoxycMTExkKcUfK+bQUUUlD+0wpml72BFy6nAJvloV"
+                    + "Laqa0G4mNIHFdMEIMOCXfkHfyHKoW/KeWKsFaMihkzaTsm0zZMcZ0DXm7VQH5iXITSLXwJDkCpYh"
+                    + "i+VUZBTZasd5LMBdHvlFUL+eMz5Y+Dzk8L2b5pxB6fwp6/MhcTVeb05wana64p2SKeUwyKTMZ7cy"
+                    + "NK8zuYeUpSzp482IGCcPWCoMyVHllPcsnosb+MRU9sbsay15jOt8m5jK8Oj/AgMBAAGjITAfMB0G"
+                    + "A1UdDgQWBBRT7eeHmzvXUi1mVKoXHkgVmSCJ4jANBgkqhkiG9w0BAQsFAAOCAQEAGBujkha7cDiu"
+                    + "rQ7MyuesoYpbcCGxE/nbU8w2cslVVkwVKpDKGTuHcAM6U2Q+GqgI9NThSTaMh7tKQ3QU30N859hh"
+                    + "dJObwbUerGZLG8IIXRDm706dElnrQLm56lC5D+eBiXny9NEIxfjJtQf5aTD+bMM12wY1RZ8lny4I"
+                    + "7GFH0PBcRlK67wpQPk06kc0SCHUOOSArDwHbfC6ZELMhI4nZe4bPnMrPbuwImBe+bHF/hzU/Ff1h"
+                    + "f4yKq97bpS854J1/krhVCIpSkSZQxeI4PcKugDlYb5hoDv7hy4AKkf0uIHHvmBk8lLA6MJ67fog+"
+                    + "c5YSVPmp7cWpwY2E22/gLKSLMA==";
+
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -607,6 +624,7 @@ public final class SignSpoof {
                 fakes.put(YSJYZ_PKG, new Signature(Base64.decode(YSJYZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(FCXYXZJ_PKG, new Signature(Base64.decode(FCXYXZJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WDXSJ_PKG, new Signature(Base64.decode(WDXSJ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(DHSS_PKG, new Signature(Base64.decode(DHSS_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

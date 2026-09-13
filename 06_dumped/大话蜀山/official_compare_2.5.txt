@@ -1,0 +1,9 @@
+# 大话蜀山 2.5 斌哥包 / TapTap 官包核心输入对照
+
+- 斌哥包: 大话蜀山_2.5_binge_from_device.apk md5=b3a7663c2d8a740db8d6ae3a8e26328e
+- 官包: 大话蜀山_2.5_taptap_official.apk md5=774e107cde3e10b92d0ecdd1baec2813
+
+entry                                                binge_sha256                                                     match
+lib/arm64-v8a/libil2cpp.so                           dc7bcc0bc97b2426bae76ee18eebd182d12071169d13031f956c378e67ad1caf yes
+lib/arm64-v8a/libunity.so                            397662b2e95cb0d9d29c416104f3fe2f31ed9478a78e8c08fa4ce3795de17a0c yes
+assets/bin/Data/Managed/Metadata/global-metadata.dat 31b3ea07c1eb02d6a5dbe93962e890196c5584600ca240075227b0bed6bffe14 yes

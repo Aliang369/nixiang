@@ -1,0 +1,1019 @@
+
+────────────────────────────────────────────
+[2026-09-13 22:30:21] [大话蜀山] stage=device_ready 开始
+命令: adb devices -l && adb -s "$SERIAL" get-state && printf 'model=' && adb -s "$SERIAL" shell getprop ro.product.model && printf 'android=' && adb -s "$SERIAL" shell getprop ro.build.version.release && printf 'abi=' && adb -s "$SERIAL" shell getprop ro.product.cpu.abi
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:5
+
+device
+model=OPD2515
+android=16
+abi=arm64-v8a
+[2026-09-13 22:30:21] [大话蜀山] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 22:30:27] [大话蜀山] stage=pull_device 开始
+命令: bash 04_scripts/大话蜀山/fetch_installed_apk.sh "$SERIAL" "$PKG" "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+/data/app/~~M5H61OWyA8S7LObL9duPvw==/com.cylj.rogue.tp479-0nOyPreRRvAYDW75mGBwnw==/base.apk: 1 file pulled, 0 skipped. 38.0 MB/s (757869374 bytes in 19.026s)
+package=com.cylj.rogue.tp479
+versionName=2.5
+versionCode=11
+installer=com.android.packageinstaller
+primaryCpuAbi=arm64-v8a
+serial=f9a116a2
+remote=/data/app/~~M5H61OWyA8S7LObL9duPvw==/com.cylj.rogue.tp479-0nOyPreRRvAYDW75mGBwnw==/base.apk
+output=/Users/aliang/Documents/nixiang/02_apks/大话蜀山/大话蜀山_2.5_binge_from_device.apk
+size=757869374
+sha256=c9b56113699e623f03dafe45f810933690a733a6b8aa86137377abbfcf016d61
+md5=b3a7663c2d8a740db8d6ae3a8e26328e
+[2026-09-13 22:30:53] [大话蜀山] stage=pull_device 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 22:31:01] [大话蜀山] stage=check_apk 开始
+命令: "$AAPT2" dump badging "$APK_OUT" | sed -n '1,30p'; "$APKSIGNER" verify --print-certs "$APK_OUT" | sed -n '1,40p'; unzip -l "$APK_OUT" | grep -E 'libSDKloading|libtoolChecker|libcodec2_server|libunityluac|assets/base.apk|shell_config|global-metadata' | sed -n '1,80p'; adb -s "$SERIAL" shell dumpsys package "$PKG" | tr -d '' | grep -E 'versionName=|versionCode=|installerPackageName=|primaryCpuAbi=|firstInstallTime=|lastUpdateTime=' | head -20; "$AAPT2" dump badging "$APK_OUT" | grep -Fq "package: name='com.cylj.rogue.tp479' versionCode='11' versionName='2.5'"
+目录: /Users/aliang/Documents/nixiang
+package: name='com.cylj.rogue.tp479' versionCode='11' versionName='2.5' platformBuildVersionName='11' platformBuildVersionCode='30'
+install-location:'preferExternal'
+minSdkVersion:'22'
+targetSdkVersion:'30'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.REQUEST_INSTALL_PACKAGES'
+uses-permission: name='android.permission.REPLACE_EXISTING_PACKAGE'
+uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.RECEIVE_USER_PRESENT'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.CHANGE_NETWORK_STATE'
+uses-permission: name='android.permission.ACCESS_WIFI_STATE'
+uses-permission: name='android.permission.ACCESS_FINE_LOCATION'
+uses-permission: name='android.permission.ACCESS_COARSE_LOCATION'
+uses-permission: name='android.permission.SYSTEM_ALERT_WINDOW'
+uses-permission: name='android.permission.EXPAND_STATUS_BAR'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.READ_PHONE_STATE'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.BLUETOOTH'
+uses-permission: name='android.permission.BLUETOOTH_CONNECT'
+uses-permission: name='android.permission.ACCESS_FINE_LOCATION'
+uses-permission: name='android.permission.ACCESS_COARSE_LOCATION'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.WRITE_SETTINGS'
+uses-permission: name='com.asus.msa.SupplementaryDID.ACCESS'
+uses-permission: name='freemme.permission.msa'
+Signer #1 certificate DN: CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2
+Signer #1 certificate SHA-256 digest: 11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba
+Signer #1 certificate SHA-1 digest: dde5c4a389c45d64c3802df7fc911171f3537019
+Signer #1 certificate MD5 digest: e571e96ec9428b88c9d3e358cbd3d655
+WARNING: META-INF/README.txt not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.activity_activity.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat-resources.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.arch.core_core-runtime.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.cardview_cardview.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.coordinatorlayout_coordinatorlayout.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.core_core.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.cursoradapter_cursoradapter.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.customview_customview.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.documentfile_documentfile.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.drawerlayout_drawerlayout.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.fragment_fragment.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.interpolator_interpolator.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.legacy_legacy-support-core-ui.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.legacy_legacy-support-core-utils.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.legacy_legacy-support-v4.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.lifecycle_lifecycle-extensions.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.lifecycle_lifecycle-livedata-core.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.lifecycle_lifecycle-livedata.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.lifecycle_lifecycle-process.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.lifecycle_lifecycle-runtime.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.lifecycle_lifecycle-service.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.lifecycle_lifecycle-viewmodel.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.loader_loader.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.localbroadcastmanager_localbroadcastmanager.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.media_media.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.print_print.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.recyclerview_recyclerview.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.savedstate_savedstate.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.slidingpanelayout_slidingpanelayout.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.vectordrawable_vectordrawable-animated.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.vectordrawable_vectordrawable.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.versionedparcelable_versionedparcelable.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+ 20908100  06-12-2026 17:40   assets/bin/Data/Managed/Metadata/global-metadata.dat
+ 23727144  01-01-1981 01:01   lib/arm64-v8a/libSDKloading.so
+     5512  09-13-2026 19:29   lib/arm64-v8a/libtoolChecker.so
+    primaryCpuAbi=arm64-v8a
+    versionCode=11 minSdk=22 targetSdk=30
+    versionName=2.5
+    lastUpdateTime=2026-09-13 20:51:14
+    installerPackageName=com.android.packageinstaller
+      firstInstallTime=2026-09-13 20:51:14
+[2026-09-13 22:31:20] [大话蜀山] stage=check_apk 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 22:31:51] [大话蜀山] stage=dump 开始
+命令: bash 04_scripts/_common/decode_apk.sh 大话蜀山 "$APK_OUT" 2.5
+目录: /Users/aliang/Documents/nixiang
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/jadx_2.5
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 12996 (0%)INFO  - progress: 1470 of 12996 (11%)INFO  - progress: 3407 of 12996 (26%)INFO  - progress: 5353 of 12996 (41%)INFO  - progress: 6508 of 12996 (50%)INFO  - progress: 7346 of 12996 (56%)INFO  - progress: 7353 of 12996 (56%)INFO  - progress: 7370 of 12996 (56%)INFO  - progress: 7394 of 12996 (56%)INFO  - progress: 7444 of 12996 (57%)INFO  - progress: 7828 of 12996 (60%)INFO  - progress: 8031 of 12996 (61%)INFO  - progress: 8215 of 12996 (63%)INFO  - progress: 8351 of 12996 (64%)INFO  - progress: 8441 of 12996 (64%)INFO  - progress: 8576 of 12996 (65%)INFO  - progress: 8651 of 12996 (66%)INFO  - progress: 8669 of 12996 (66%)INFO  - progress: 8707 of 12996 (66%)INFO  - progress: 8728 of 12996 (67%)INFO  - progress: 8758 of 12996 (67%)INFO  - progress: 8790 of 12996 (67%)INFO  - progress: 8829 of 12996 (67%)INFO  - progress: 8839 of 12996 (68%)INFO  - progress: 8845 of 12996 (68%)INFO  - progress: 8857 of 12996 (68%)INFO  - progress: 8913 of 12996 (68%)INFO  - progress: 9026 of 12996 (69%)INFO  - progress: 9106 of 12996 (70%)INFO  - progress: 9138 of 12996 (70%)INFO  - progress: 9171 of 12996 (70%)INFO  - progress: 9175 of 12996 (70%)INFO  - progress: 9200 of 12996 (70%)INFO  - progress: 9208 of 12996 (70%)INFO  - progress: 9246 of 12996 (71%)INFO  - progress: 9282 of 12996 (71%)INFO  - progress: 9326 of 12996 (71%)INFO  - progress: 9396 of 12996 (72%)INFO  - progress: 9441 of 12996 (72%)INFO  - progress: 9490 of 12996 (73%)INFO  - progress: 9557 of 12996 (73%)INFO  - progress: 9669 of 12996 (74%)INFO  - progress: 9710 of 12996 (74%)INFO  - progress: 9777 of 12996 (75%)INFO  - progress: 9855 of 12996 (75%)INFO  - progress: 9919 of 12996 (76%)INFO  - progress: 9941 of 12996 (76%)INFO  - progress: 9943 of 12996 (76%)INFO  - progress: 9950 of 12996 (76%)INFO  - progress: 9968 of 12996 (76%)INFO  - progress: 10007 of 12996 (77%)INFO  - progress: 10028 of 12996 (77%)INFO  - progress: 10043 of 12996 (77%)INFO  - progress: 10065 of 12996 (77%)INFO  - progress: 10112 of 12996 (77%)INFO  - progress: 10128 of 12996 (77%)INFO  - progress: 10150 of 12996 (78%)INFO  - progress: 10181 of 12996 (78%)INFO  - progress: 10201 of 12996 (78%)INFO  - progress: 10244 of 12996 (78%)INFO  - progress: 10293 of 12996 (79%)INFO  - progress: 10391 of 12996 (79%)INFO  - progress: 10452 of 12996 (80%)INFO  - progress: 10535 of 12996 (81%)INFO  - progress: 10569 of 12996 (81%)INFO  - progress: 10577 of 12996 (81%)INFO  - progress: 10644 of 12996 (81%)INFO  - progress: 10659 of 12996 (82%)INFO  - progress: 10752 of 12996 (82%)INFO  - progress: 10756 of 12996 (82%)INFO  - progress: 10804 of 12996 (83%)INFO  - progress: 10924 of 12996 (84%)INFO  - progress: 10991 of 12996 (84%)INFO  - progress: 11012 of 12996 (84%)INFO  - progress: 11044 of 12996 (84%)INFO  - progress: 11051 of 12996 (85%)INFO  - progress: 11066 of 12996 (85%)INFO  - progress: 11102 of 12996 (85%)INFO  - progress: 11128 of 12996 (85%)INFO  - progress: 11161 of 12996 (85%)INFO  - progress: 11179 of 12996 (86%)INFO  - progress: 11195 of 12996 (86%)INFO  - progress: 11211 of 12996 (86%)INFO  - progress: 11264 of 12996 (86%)INFO  - progress: 11325 of 12996 (87%)INFO  - progress: 11352 of 12996 (87%)INFO  - progress: 11358 of 12996 (87%)INFO  - progress: 11360 of 12996 (87%)INFO  - progress: 11364 of 12996 (87%)INFO  - progress: 11377 of 12996 (87%)INFO  - progress: 11387 of 12996 (87%)INFO  - progress: 11416 of 12996 (87%)INFO  - progress: 11458 of 12996 (88%)INFO  - progress: 11482 of 12996 (88%)INFO  - progress: 11492 of 12996 (88%)INFO  - progress: 11499 of 12996 (88%)INFO  - progress: 11499 of 12996 (88%)INFO  - progress: 11568 of 12996 (89%)INFO  - progress: 11648 of 12996 (89%)INFO  - progress: 11719 of 12996 (90%)INFO  - progress: 11749 of 12996 (90%)INFO  - progress: 11794 of 12996 (90%)INFO  - progress: 11810 of 12996 (90%)INFO  - progress: 11828 of 12996 (91%)INFO  - progress: 11854 of 12996 (91%)INFO  - progress: 11865 of 12996 (91%)INFO  - progress: 11865 of 12996 (91%)INFO  - progress: 11866 of 12996 (91%)INFO  - progress: 11873 of 12996 (91%)INFO  - progress: 11873 of 12996 (91%)INFO  - progress: 11873 of 12996 (91%)INFO  - progress: 11873 of 12996 (91%)INFO  - progress: 11873 of 12996 (91%)INFO  - progress: 11873 of 12996 (91%)INFO  - progress: 11944 of 12996 (91%)INFO  - progress: 12002 of 12996 (92%)INFO  - progress: 12003 of 12996 (92%)INFO  - progress: 12003 of 12996 (92%)INFO  - progress: 12009 of 12996 (92%)INFO  - progress: 12009 of 12996 (92%)INFO  - progress: 12042 of 12996 (92%)INFO  - progress: 12100 of 12996 (93%)INFO  - progress: 12163 of 12996 (93%)INFO  - progress: 12244 of 12996 (94%)INFO  - progress: 12344 of 12996 (94%)INFO  - progress: 12361 of 12996 (95%)INFO  - progress: 12461 of 12996 (95%)INFO  - progress: 12575 of 12996 (96%)INFO  - progress: 12637 of 12996 (97%)INFO  - progress: 12671 of 12996 (97%)INFO  - progress: 12689 of 12996 (97%)INFO  - progress: 12689 of 12996 (97%)INFO  - progress: 12690 of 12996 (97%)INFO  - progress: 12750 of 12996 (98%)INFO  - progress: 12792 of 12996 (98%)INFO  - progress: 12929 of 12996 (99%)INFO  - progress: 12988 of 12996 (99%)                                                             ERROR - finished with errors, count: 93
+警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
+==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/apktool_2.5
+I: Using Apktool 3.0.3 on 大话蜀山_2.5_binge_from_device.apk with 8 threads
+I: Baksmaling classes3.dex...
+I: Baksmaling classes2.dex...
+I: Baksmaling classes.dex...
+I: Baksmaling classes4.dex...
+I: Baksmaling classes5.dex...
+I: Baksmaling classes6.dex...
+I: Baksmaling classes7.dex...
+I: Loading resource table...
+I: Baksmaling classes8.dex...
+I: Decoding value resources...
+I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
+I: Decoding file resources...
+I: Generating values XMLs...
+I: Decoding AndroidManifest.xml with resources...
+I: Copying original files...
+I: Copying assets...
+I: Copying lib...
+I: Copying unknown files...
+
+完成。
+  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/jadx_2.5
+  apktool: /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/apktool_2.5
+  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/decode_summary_2.5.md
+  manifest:/Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/manifest_2.5.txt
+[2026-09-13 22:33:32] [大话蜀山] stage=dump 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 22:36:20] [大话蜀山] stage=il2cpp_dump 开始
+命令: bash 04_scripts/大话蜀山/dump_il2cpp.sh "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+==> Il2CppDumper
+Initializing metadata...
+Metadata Version: 29
+Initializing il2cpp file...
+Applying relocations...
+WARNING: find JNI_OnLoad
+ERROR: This file may be protected.
+Il2Cpp Version: 29
+Searching...
+Change il2cpp version to: 29.1
+CodeRegistration : 67943c8
+MetadataRegistration : 6a06ab0
+Dumping...
+Done!
+Generate dummy dll...
+Done!
+错误: Il2CppDumper 未产出 script.json
+[2026-09-13 22:37:09] [大话蜀山] stage=il2cpp_dump 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 22:38:32] [大话蜀山] stage=il2cpp_dump 开始
+命令: bash 04_scripts/大话蜀山/dump_il2cpp.sh "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+==> Il2CppDumper
+Initializing metadata...
+Metadata Version: 29
+Initializing il2cpp file...
+Applying relocations...
+WARNING: find JNI_OnLoad
+ERROR: This file may be protected.
+Il2Cpp Version: 29
+Searching...
+Change il2cpp version to: 29.1
+CodeRegistration : 67943c8
+MetadataRegistration : 6a06ab0
+Dumping...
+Done!
+Generate struct...
+Done!
+Generate dummy dll...
+Done!
+ 1224062 /Users/aliang/Documents/nixiang/06_dumped/大话蜀山/il2cpp_dump_2.5/dump.cs
+-rw-r--r--@ 1 aliang  staff    43M Sep 13 22:39 /Users/aliang/Documents/nixiang/06_dumped/大话蜀山/il2cpp_dump_2.5/dump.cs
+-rw-r--r--@ 1 aliang  staff   122M Sep 13 22:39 /Users/aliang/Documents/nixiang/06_dumped/大话蜀山/il2cpp_dump_2.5/script.json
+完成: /Users/aliang/Documents/nixiang/06_dumped/大话蜀山/il2cpp_dump_2.5
+[2026-09-13 22:39:22] [大话蜀山] stage=il2cpp_dump 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 22:41:30] [大话蜀山] stage=pull_runtime_so 开始
+命令: bash 04_scripts/大话蜀山/fetch_runtime_so.sh "$SERIAL" "$PKG" "$NIXIANG/06_dumped/大话蜀山/runtime_2.5/libil2cpp.patched.so"
+目录: /Users/aliang/Documents/nixiang
+serial=f9a116a2
+package=com.cylj.rogue.tp479
+remote=files/libil2cpp.so
+output=/Users/aliang/Documents/nixiang/06_dumped/大话蜀山/runtime_2.5/libil2cpp.patched.so
+size=118366896
+sha256=95c773d8b2d5e094d00e8d826d42fb0ef9a916423c0748be90bae4e7eb9fc902
+md5=54e2691c1343846f1192f4748169667d
+[2026-09-13 22:41:48] [大话蜀山] stage=pull_runtime_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:09:02] [大话蜀山] stage=pull_official 开始
+命令: bash 04_scripts/大话蜀山/fetch_installed_apk.sh "$SERIAL" "$PKG" "$APK_OFFICIAL"
+目录: /Users/aliang/Documents/nixiang
+/data/app/~~QLRl5iTI2aM2vWmADxqVxQ==/com.cylj.rogue.tp479-S6E-c7IRkPttWn2usIKu8Q==/base.apk: 1 file pulled, 0 skipped. 33.9 MB/s (795573848 bytes in 22.385s)
+package=com.cylj.rogue.tp479
+versionName=2.5
+versionCode=11
+installer=com.android.packageinstaller
+primaryCpuAbi=arm64-v8a
+serial=f9a116a2
+remote=/data/app/~~QLRl5iTI2aM2vWmADxqVxQ==/com.cylj.rogue.tp479-S6E-c7IRkPttWn2usIKu8Q==/base.apk
+output=/Users/aliang/Documents/nixiang/02_apks/大话蜀山/大话蜀山_2.5_taptap_official.apk
+size=795573848
+sha256=b2998559c6e8c4a51d684f3bd92ffaea7b231f3c707f4863dffb21cfd4ddf8df
+md5=774e107cde3e10b92d0ecdd1baec2813
+[2026-09-13 23:09:34] [大话蜀山] stage=pull_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:11:11] [大话蜀山] stage=check_official 开始
+命令: "$AAPT2" dump badging "$APK_OFFICIAL" | sed -n '1,30p'; "$APKSIGNER" verify --print-certs "$APK_OFFICIAL" | sed -n '1,20p'; bash 04_scripts/大话蜀山/compare_official_binge.sh "$APK_OUT" "$APK_OFFICIAL"
+目录: /Users/aliang/Documents/nixiang
+package: name='com.cylj.rogue.tp479' versionCode='11' versionName='2.5' platformBuildVersionName='11' platformBuildVersionCode='30'
+install-location:'preferExternal'
+minSdkVersion:'22'
+targetSdkVersion:'30'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.REQUEST_INSTALL_PACKAGES'
+uses-permission: name='android.permission.REPLACE_EXISTING_PACKAGE'
+uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.RECEIVE_USER_PRESENT'
+uses-permission: name='android.permission.RECEIVE_BOOT_COMPLETED'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.CHANGE_NETWORK_STATE'
+uses-permission: name='android.permission.ACCESS_WIFI_STATE'
+uses-permission: name='android.permission.ACCESS_FINE_LOCATION'
+uses-permission: name='android.permission.ACCESS_COARSE_LOCATION'
+uses-permission: name='android.permission.SYSTEM_ALERT_WINDOW'
+uses-permission: name='android.permission.EXPAND_STATUS_BAR'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.READ_PHONE_STATE'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='android.permission.BLUETOOTH'
+uses-permission: name='android.permission.BLUETOOTH_CONNECT'
+uses-permission: name='android.permission.ACCESS_FINE_LOCATION'
+uses-permission: name='android.permission.ACCESS_COARSE_LOCATION'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.WRITE_SETTINGS'
+uses-permission: name='com.asus.msa.SupplementaryDID.ACCESS'
+uses-permission: name='freemme.permission.msa'
+Signer #1 certificate DN: CN=tom
+Signer #1 certificate SHA-256 digest: 7c006b97505db608ccae632edf7d41646286c4986ab98c729528272f33a9d256
+Signer #1 certificate SHA-1 digest: eaae1d22b7d98722e6f50472549fe24c91cf7b45
+Signer #1 certificate MD5 digest: 9ff0bc6e9ac45a30901da7584436487f
+WARNING: META-INF/androidx.activity_activity.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat-resources.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.arch.core_core-runtime.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.cardview_cardview.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.coordinatorlayout_coordinatorlayout.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.core_core.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.cursoradapter_cursoradapter.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.customview_customview.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.documentfile_documentfile.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.drawerlayout_drawerlayout.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.fragment_fragment.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.interpolator_interpolator.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.legacy_legacy-support-core-ui.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.legacy_legacy-support-core-utils.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+# 大话蜀山 2.5 斌哥包 / TapTap 官包核心输入对照
+
+- 斌哥包: 大话蜀山_2.5_binge_from_device.apk md5=b3a7663c2d8a740db8d6ae3a8e26328e
+- 官包: 大话蜀山_2.5_taptap_official.apk md5=774e107cde3e10b92d0ecdd1baec2813
+
+entry                                                binge_sha256                                                     match
+lib/arm64-v8a/libil2cpp.so                           dc7bcc0bc97b2426bae76ee18eebd182d12071169d13031f956c378e67ad1caf yes
+lib/arm64-v8a/libunity.so                            397662b2e95cb0d9d29c416104f3fe2f31ed9478a78e8c08fa4ce3795de17a0c yes
+assets/bin/Data/Managed/Metadata/global-metadata.dat 31b3ea07c1eb02d6a5dbe93962e890196c5584600ca240075227b0bed6bffe14 yes
+完成: /Users/aliang/Documents/nixiang/06_dumped/大话蜀山/official_compare_2.5.txt
+[2026-09-13 23:11:38] [大话蜀山] stage=check_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:11:55] [大话蜀山] stage=dump_official 开始
+命令: bash 04_scripts/_common/decode_apk.sh 大话蜀山 "$APK_OFFICIAL" 2.5_official
+目录: /Users/aliang/Documents/nixiang
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/jadx_2.5_official
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 12344 (0%)INFO  - progress: 1023 of 12344 (8%)INFO  - progress: 2690 of 12344 (21%)INFO  - progress: 4972 of 12344 (40%)INFO  - progress: 7180 of 12344 (58%)INFO  - progress: 7358 of 12344 (59%)INFO  - progress: 7369 of 12344 (59%)INFO  - progress: 7404 of 12344 (59%)INFO  - progress: 7505 of 12344 (60%)INFO  - progress: 7943 of 12344 (64%)INFO  - progress: 8093 of 12344 (65%)INFO  - progress: 8232 of 12344 (66%)INFO  - progress: 8380 of 12344 (67%)INFO  - progress: 8503 of 12344 (68%)INFO  - progress: 8589 of 12344 (69%)INFO  - progress: 8728 of 12344 (70%)INFO  - progress: 9013 of 12344 (73%)INFO  - progress: 9087 of 12344 (73%)INFO  - progress: 9217 of 12344 (74%)INFO  - progress: 9322 of 12344 (75%)INFO  - progress: 9455 of 12344 (76%)INFO  - progress: 9485 of 12344 (76%)INFO  - progress: 9536 of 12344 (77%)INFO  - progress: 9588 of 12344 (77%)INFO  - progress: 9667 of 12344 (78%)INFO  - progress: 9699 of 12344 (78%)INFO  - progress: 9748 of 12344 (78%)INFO  - progress: 9806 of 12344 (79%)INFO  - progress: 9880 of 12344 (80%)INFO  - progress: 9956 of 12344 (80%)INFO  - progress: 10005 of 12344 (81%)INFO  - progress: 10157 of 12344 (82%)INFO  - progress: 10242 of 12344 (82%)INFO  - progress: 10263 of 12344 (83%)INFO  - progress: 10320 of 12344 (83%)INFO  - progress: 10342 of 12344 (83%)INFO  - progress: 10391 of 12344 (84%)INFO  - progress: 10463 of 12344 (84%)INFO  - progress: 10554 of 12344 (85%)INFO  - progress: 10613 of 12344 (85%)INFO  - progress: 10716 of 12344 (86%)INFO  - progress: 10760 of 12344 (87%)INFO  - progress: 10783 of 12344 (87%)INFO  - progress: 10815 of 12344 (87%)INFO  - progress: 10908 of 12344 (88%)INFO  - progress: 10968 of 12344 (88%)INFO  - progress: 11030 of 12344 (89%)INFO  - progress: 11086 of 12344 (89%)INFO  - progress: 11144 of 12344 (90%)INFO  - progress: 11175 of 12344 (90%)INFO  - progress: 11193 of 12344 (90%)INFO  - progress: 11247 of 12344 (91%)INFO  - progress: 11302 of 12344 (91%)INFO  - progress: 11339 of 12344 (91%)INFO  - progress: 11353 of 12344 (91%)INFO  - progress: 11391 of 12344 (92%)INFO  - progress: 11408 of 12344 (92%)INFO  - progress: 11469 of 12344 (92%)INFO  - progress: 11498 of 12344 (93%)INFO  - progress: 11520 of 12344 (93%)INFO  - progress: 11548 of 12344 (93%)INFO  - progress: 11582 of 12344 (93%)INFO  - progress: 11649 of 12344 (94%)INFO  - progress: 11725 of 12344 (94%)INFO  - progress: 11847 of 12344 (95%)INFO  - progress: 11943 of 12344 (96%)INFO  - progress: 12045 of 12344 (97%)INFO  - progress: 12116 of 12344 (98%)INFO  - progress: 12155 of 12344 (98%)INFO  - progress: 12251 of 12344 (99%)INFO  - progress: 12313 of 12344 (99%)                                                             ERROR - finished with errors, count: 93
+警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
+==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/apktool_2.5_official
+I: Using Apktool 3.0.3 on 大话蜀山_2.5_taptap_official.apk with 8 threads
+I: Baksmaling classes2.dex...
+I: Baksmaling classes3.dex...
+I: Baksmaling classes.dex...
+I: Baksmaling classes4.dex...
+I: Loading resource table...
+I: Decoding value resources...
+I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
+I: Decoding file resources...
+I: Generating values XMLs...
+I: Decoding AndroidManifest.xml with resources...
+I: Copying original files...
+I: Copying assets...
+I: Copying lib...
+I: Copying unknown files...
+
+完成。
+  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/jadx_2.5_official
+  apktool: /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/apktool_2.5_official
+  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/decode_summary_2.5_official.md
+  manifest:/Users/aliang/Documents/nixiang/03_decompiled/大话蜀山/manifest_2.5_official.txt
+[2026-09-13 23:13:04] [大话蜀山] stage=dump_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:28:45] [大话蜀山] stage=anchor 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-13 23:28:52] [大话蜀山] stage=anchor 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:40:45] [大话蜀山] stage=impl_mod 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-13 23:40:52] [大话蜀山] stage=impl_mod 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:41:09] [大话蜀山] stage=build_so 开始
+命令: bash 04_scripts/大话蜀山/dhss_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= DhssEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= DhssMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[build_so] md5=74a5dafe34dfd5100df5da7973132e32
+[build_so] sha256=f86c06538ca8627997b0161f9928aa574c62c5cea91a90e2518ae539282adc3f
+[build_so] done
+[2026-09-13 23:41:21] [大话蜀山] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:41:46] [大话蜀山] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_dhss_2.5.sh
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/dhss_surgical.BBwJaW/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/dhss_surgical.BBwJaW/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/dhss_surgical.BBwJaW/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 13s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes5.dex
+-rw-r--r--@ 1 aliang  wheel  405492 Sep 13 23:42 /tmp/dhss_surgical.BBwJaW/classes5.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  generate binary Manifest once (apktool d -s --no-assets + b extract)
+  text Manifest patched (provider 注入, 保留原 Application)
+  cached → /Users/aliang/Documents/nixiang/07_patched/大话蜀山/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  46840 Sep 13 23:42 /tmp/dhss_surgical.BBwJaW/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + 官方节点零删除）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+  merged ok; entries≈7366; classes5.dex=405492; untouched 11/11 verified; META-INF kept 44
+[6/6] 闭环校验（包内 so == 构建产物；classes5.dex 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (74a5dafe34dfd5100df5da7973132e32) ✓
+[so-verify] 包内 so 含 dhss 标签 ✓
+[dex-verify] classes5.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   759M Sep 13 23:42 /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/大话蜀山/dhss_sign.sh（pipeline sign 阶段）签名。
+[2026-09-13 23:43:05] [大话蜀山] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:43:38] [大话蜀山] stage=sign 开始
+命令: bash 04_scripts/大话蜀山/dhss_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/androidx.activity_activity.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat-resources.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk
+[sign] size=796372856
+[sign] md5=e19d6435876aa6fcb4473b94aeaf0dd9
+[sign] sha256=bcf26686567bb13c3d173a6c3ebff0bc56d3a665c79a4f7444ffdcb95e748391
+[sign] so_md5=74a5dafe34dfd5100df5da7973132e32
+[2026-09-13 23:44:58] [大话蜀山] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:17:06] [大话蜀山] stage=install 开始
+命令: APK="$NIXIANG/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk"; adb -s $SERIAL shell am force-stop $PKG || true; adb -s $SERIAL push "$APK" /data/local/tmp/dhss_surgical.apk && { adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "覆盖安装失败（异签名）→ 按用户 2026-09-14 明确授权卸载官包后重装"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || true; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "安装失败"; exit 1; }; }; }; adb -s $SERIAL shell rm -f /data/local/tmp/dhss_surgical.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" $SERIAL $PKG "$APK" --su
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 34.1 MB/s (796372856 bytes in 22.243s)
+Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package com.cylj.rogue.tp479 signatures do not match newer version; ignoring!]
+覆盖安装失败（异签名）→ 按用户 2026-09-14 明确授权卸载官包后重装
+Success
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (e19d6435876aa6fcb4473b94aeaf0dd9) ✓
+[2026-09-14 00:26:56] [大话蜀山] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:44:54] [大话蜀山] stage=build_so 开始
+命令: bash 04_scripts/大话蜀山/dhss_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= DhssMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[build_so] md5=240ff4624ba3d49d2a8b10526ae5453b
+[build_so] sha256=1ce6f8b2d4bf2414ff3435825133b9d2e7e1ae3551f03fefa57b8dcc1cd8c8c9
+[build_so] done
+[2026-09-14 00:45:03] [大话蜀山] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:45:17] [大话蜀山] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_dhss_2.5.sh
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/dhss_surgical.XRJK81/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/dhss_surgical.XRJK81/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/dhss_surgical.XRJK81/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes5.dex
+-rw-r--r--@ 1 aliang  wheel  405492 Sep 14 00:45 /tmp/dhss_surgical.XRJK81/classes5.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/大话蜀山/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  46840 Sep 14 00:45 /tmp/dhss_surgical.XRJK81/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + 官方节点零删除）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+  merged ok; entries≈7366; classes5.dex=405492; untouched 11/11 verified; META-INF kept 44
+[6/6] 闭环校验（包内 so == 构建产物；classes5.dex 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (240ff4624ba3d49d2a8b10526ae5453b) ✓
+[so-verify] 包内 so 含 dhss 标签 ✓
+[dex-verify] classes5.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   759M Sep 14 00:45 /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/大话蜀山/dhss_sign.sh（pipeline sign 阶段）签名。
+[2026-09-14 00:45:55] [大话蜀山] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:46:10] [大话蜀山] stage=sign 开始
+命令: bash 04_scripts/大话蜀山/dhss_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/androidx.activity_activity.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat-resources.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk
+[sign] size=796356472
+[sign] md5=e2242370e5c664654dc7642be88cad62
+[sign] sha256=8c6ffce8e54dc744e21aac341482b13384689cc7c829a0ede4b3013134d5db6f
+[sign] so_md5=240ff4624ba3d49d2a8b10526ae5453b
+[2026-09-14 00:47:02] [大话蜀山] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:47:25] [大话蜀山] stage=install 开始
+命令: APK="$NIXIANG/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk"; adb -s $SERIAL shell am force-stop $PKG || true; adb -s $SERIAL push "$APK" /data/local/tmp/dhss_surgical.apk && { adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "覆盖安装失败（异签名）→ 按用户 2026-09-14 明确授权卸载官包后重装"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || true; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "安装失败"; exit 1; }; }; }; adb -s $SERIAL shell rm -f /data/local/tmp/dhss_surgical.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" $SERIAL $PKG "$APK" --su
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 32.4 MB/s (796356472 bytes in 23.439s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (e2242370e5c664654dc7642be88cad62) ✓
+[2026-09-14 00:48:07] [大话蜀山] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:14:46] [大话蜀山] stage=build_so 开始
+命令: bash 04_scripts/大话蜀山/dhss_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= DhssMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[build_so] md5=8e3e14160e1289ba46f72f0bbf468685
+[build_so] sha256=680c718c4635c5228c0847e6178565461fe731736b923a76095434568cdf2cf9
+[build_so] done
+[2026-09-14 01:15:07] [大话蜀山] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:15:42] [大话蜀山] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_dhss_2.5.sh
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:mergeReleaseJavaResource
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/dhss_surgical.XfnzyB/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/dhss_surgical.XfnzyB/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/dhss_surgical.XfnzyB/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 18s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes5.dex
+-rw-r--r--@ 1 aliang  wheel  405492 Sep 14 01:16 /tmp/dhss_surgical.XfnzyB/classes5.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/大话蜀山/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  46840 Sep 14 01:16 /tmp/dhss_surgical.XfnzyB/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + 官方节点零删除）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+  merged ok; entries≈7366; classes5.dex=405492; untouched 11/11 verified; META-INF kept 44
+[6/6] 闭环校验（包内 so == 构建产物；classes5.dex 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (8e3e14160e1289ba46f72f0bbf468685) ✓
+[so-verify] 包内 so 含 dhss 标签 ✓
+[dex-verify] classes5.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   759M Sep 14 01:16 /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/大话蜀山/dhss_sign.sh（pipeline sign 阶段）签名。
+[2026-09-14 01:16:44] [大话蜀山] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:16:50] [大话蜀山] stage=sign 开始
+命令: bash 04_scripts/大话蜀山/dhss_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/androidx.activity_activity.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat-resources.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk
+[sign] size=796360568
+[sign] md5=f48a07d51c17dc39957fe2c6cb796361
+[sign] sha256=d4b2111ffecb4abbbcd14d8310936949132a275ab386e7bd6bc5169532401deb
+[sign] so_md5=8e3e14160e1289ba46f72f0bbf468685
+[2026-09-14 01:17:44] [大话蜀山] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:17:51] [大话蜀山] stage=install 开始
+命令: APK="$NIXIANG/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk"; adb -s $SERIAL shell am force-stop $PKG || true; adb -s $SERIAL push "$APK" /data/local/tmp/dhss_surgical.apk && { adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "覆盖安装失败（异签名）→ 按用户 2026-09-14 明确授权卸载官包后重装"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || true; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "安装失败"; exit 1; }; }; }; adb -s $SERIAL shell rm -f /data/local/tmp/dhss_surgical.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" $SERIAL $PKG "$APK" --su
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 35.7 MB/s (796360568 bytes in 21.246s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (f48a07d51c17dc39957fe2c6cb796361) ✓
+[2026-09-14 01:18:41] [大话蜀山] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:30:17] [大话蜀山] stage=build_so 开始
+命令: bash 04_scripts/大话蜀山/dhss_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= DhssEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= DhssMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[build_so] md5=1f5edc634c85aeec0c4801503f42e657
+[build_so] sha256=7056ef083e5ece68b8677296b46f130838dffa0fbe7c9f33736907bfe585b742
+[build_so] done
+[2026-09-14 01:30:30] [大话蜀山] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:30:36] [大话蜀山] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_dhss_2.5.sh
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/dhss_surgical.XdbNpe/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/dhss_surgical.XdbNpe/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/dhss_surgical.XdbNpe/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes5.dex
+-rw-r--r--@ 1 aliang  wheel  405492 Sep 14 01:30 /tmp/dhss_surgical.XdbNpe/classes5.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/大话蜀山/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  46840 Sep 14 01:30 /tmp/dhss_surgical.XdbNpe/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + 官方节点零删除）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+  merged ok; entries≈7366; classes5.dex=405492; untouched 11/11 verified; META-INF kept 44
+[6/6] 闭环校验（包内 so == 构建产物；classes5.dex 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (1f5edc634c85aeec0c4801503f42e657) ✓
+[so-verify] 包内 so 含 dhss 标签 ✓
+[dex-verify] classes5.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   759M Sep 14 01:31 /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/大话蜀山/dhss_sign.sh（pipeline sign 阶段）签名。
+[2026-09-14 01:31:23] [大话蜀山] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:31:30] [大话蜀山] stage=sign 开始
+命令: bash 04_scripts/大话蜀山/dhss_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/androidx.activity_activity.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/androidx.appcompat_appcompat-resources.version not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk
+[sign] size=796360568
+[sign] md5=c586e61de0f81bf00f6bd0308a476b9c
+[sign] sha256=a828feda73177eaa68c10e376a339f860d3be214c14722108649bdbb8540ea82
+[sign] so_md5=1f5edc634c85aeec0c4801503f42e657
+[2026-09-14 01:32:40] [大话蜀山] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:32:51] [大话蜀山] stage=install 开始
+命令: APK="$NIXIANG/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk"; adb -s $SERIAL shell am force-stop $PKG || true; adb -s $SERIAL push "$APK" /data/local/tmp/dhss_surgical.apk && { adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "覆盖安装失败（异签名）→ 按用户 2026-09-14 明确授权卸载官包后重装"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || true; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dhss_surgical.apk || { echo "安装失败"; exit 1; }; }; }; adb -s $SERIAL shell rm -f /data/local/tmp/dhss_surgical.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" $SERIAL $PKG "$APK" --su
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/大话蜀山/大话蜀山_2.5_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 35.5 MB/s (796360568 bytes in 21.387s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (c586e61de0f81bf00f6bd0308a476b9c) ✓
+[2026-09-14 01:33:36] [大话蜀山] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 01:40:05] [大话蜀山] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-14 01:40:15] [大话蜀山] stage=archive 完成（校验通过）
+────────────────────────────────────────────

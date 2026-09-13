@@ -1,7 +1,7 @@
 {
   "game": "魂坠深境",
   "version": "1.1.1",
-  "notes": "2026-09-10 版本适配 vc41→vc42：热更源码字段/链路与 1.1.0 完全一致（见 10_docs/魂坠深境/版本适配_1.1.1_20260910.md），HzsjMod.cpp v19 零改动复用。legacy 路线（Main.cpp #if + 共享 mk /tmp 拷贝内切换）。install 阶段须先取得用户对卸载官方包的确认（签名冲突）。",
+  "notes": "2026-09-10 版本适配 vc41→vc42：热更源码字段/链路与 1.1.0 完全一致（见 10_docs/魂坠深境/版本适配_1.1.1_20260910.md），HzsjMod.cpp v19 零改动复用。legacy 路线（Main.cpp #if + 共享 mk /tmp 拷贝内切换）。install 阶段须先取得用户对卸载官方包的确认（签名冲突）。2026-09-13 增补真机只读提取星空包阶段，不覆盖已有 APK。",
   "params": {
     "game_id": "hzsj",
     "package": "com.chillyroom.containerofsoul.yw",
@@ -12,10 +12,38 @@
   "env": {
     "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
     "NIXIANG": "/Users/aliang/Documents/nixiang",
-    "SERIAL": "f9a116a2"
+    "SERIAL": "f9a116a2",
+    "PKG": "com.chillyroom.containerofsoul.yw",
+    "APK_OUT": "/Users/aliang/Documents/nixiang/02_apks/魂坠深境/魂坠深境_starry_from_device.apk",
+    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
+    "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner"
   },
   "workdir": "/Users/aliang/Documents/nixiang/04_scripts/魂坠深境",
   "stages": [
+    {
+      "id": "pull_device",
+      "name": "真机只读提取已安装星空包单一 base APK（不覆盖）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/魂坠深境/fetch_installed_apk.sh\" \"$SERIAL\" \"$PKG\" \"$APK_OUT\"",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/魂坠深境/fetch_installed_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/魂坠深境/魂坠深境_starry_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 23:35:42",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/魂坠深境/魂坠深境_starry_from_device.apk": {
+          "md5": "32746c20761874c37d82689566447ee4"
+        }
+      }
+    },
     {
       "id": "check_apk",
       "name": "官包核对（真机拉取官方 1.1.1/vc42）",
@@ -175,7 +203,8 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-10 14:23:16"
+      "done_at": "2026-09-13 23:33:24",
+      "artifacts": {}
     },
     {
       "id": "install",

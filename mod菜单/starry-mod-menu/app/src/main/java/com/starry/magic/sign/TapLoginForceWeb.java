@@ -66,7 +66,10 @@ public final class TapLoginForceWeb {
                     "com.qxjc.fcxyxzj",
                     // 我的修仙世界：TapSDK 4.7.0，LoginActivityImpl.loginHandlers
                     // = [CloudLoginHandler, ClientLoginHandler]，走旧版 handler 清洗路径。
-                    "com.lingsi.xiuxiandanji"));
+                    "com.lingsi.xiuxiandanji",
+                    // 大话蜀山：TapSDK 4.9.0，TapTapLoginActivity 按 LoginRequest.loginType
+                    // 分流（DefaultTapLoginFragmentProvider）；preCreated 改 embedded_web 即直接进网页。
+                    "com.cylj.rogue.tp479"));
 
     private TapLoginForceWeb() {}
 
