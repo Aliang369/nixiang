@@ -3932,3 +3932,890 @@ Success
 目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
 [2026-09-12 23:13:39] [弹力果冻] stage=archive 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 16:40:59] [弹力果冻] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= TlgdTapTapEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= TlgdTapTapMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+823ef7cd798865f467592aecea87e203
+[2026-09-13 16:41:06] [弹力果冻] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 16:41:11] [弹力果冻] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_tlgd_taptap_2.4.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] 底包 = /Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk
+[check] 私有 mk = Android_tlgd.mk (modern 注册表 TlgdTapTap)
+[1/6] 消费 build_so 产物 -> jniLibs（本脚本不重编 native）
+  so -> jniLibs ok (tlgd 探针版, md5=823ef7cd798865f467592aecea87e203)
+[1b/6] gradle assembleRelease (pack refreshed jniLibs so)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/tlgd_taptap.4b4Zy8/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/tlgd_taptap.4b4Zy8/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/tlgd_taptap.4b4Zy8/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+  APK 内 so verified [TLGDF]/Category_战斗
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes2.dex (官方仅 classes.dex)
+-rw-r--r--@ 1 aliang  wheel  402380 Sep 13 16:41 /tmp/tlgd_taptap.4b4Zy8/classes2.dex
+[4/6] binary AndroidManifest (mini apktool，不对 2G 原包 apktool b)
+  generate binary Manifest once via mini zip
+  mini apk 1750022 bytes
+  text Manifest patched
+  cached → /Users/aliang/Documents/nixiang/07_patched/弹力果冻/surgical_taptap/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  14260 Sep 13 16:41 /tmp/tlgd_taptap.4b4Zy8/AndroidManifest.xml
+[5/6] zip surgical merge (keep official classes.dex + arsc)
+  merged ok; entries≈4278; classes2=402380
+  [5b/6] 包内 so md5 == build_so 产物 (823ef7cd798865f467592aecea87e203)
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff   2.0G Sep 13 16:44 /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+artifact_md5=03753a62ea3f353e766ff40d3d372daf
+DONE: /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+[2026-09-13 16:45:17] [弹力果冻] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 16:45:22] [弹力果冻] stage=sign 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; echo "apk_md5=$(md5 -q "$APK")"; echo "inside_so_md5=$(unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so | md5 -q)"; echo "built_so_md5=$(md5 -q "$NIXIANG/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so")"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+apk_md5=03753a62ea3f353e766ff40d3d372daf
+inside_so_md5=823ef7cd798865f467592aecea87e203
+built_so_md5=823ef7cd798865f467592aecea87e203
+[2026-09-13 16:45:41] [弹力果冻] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 16:45:52] [弹力果冻] stage=install 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell "pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no"; adb -s $SERIAL push "$APK" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk" || { echo "覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.ginicat.sweet "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+installed_official=yes
+/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk: 1 file pushed, 0 skipped. 29.5 MB/s (2133893024 bytes in 68.965s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (03753a62ea3f353e766ff40d3d372daf) ✓
+[2026-09-13 16:47:41] [弹力果冻] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 16:47:59] [弹力果冻] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-13 16:48:22] [弹力果冻] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:12:32] [弹力果冻] stage=device_ready 开始
+命令: adb connect 127.0.0.1:16384 || true; adb connect 127.0.0.1:5555 || true; adb devices; adb -s $SERIAL get-state
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+failed to connect to '127.0.0.1:16384': Connection refused
+failed to connect to '127.0.0.1:5555': Connection refused
+List of devices attached
+96f0d883	device
+
+device
+[2026-09-13 18:12:52] [弹力果冻] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:13:02] [弹力果冻] stage=install 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell "pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no"; adb -s $SERIAL push "$APK" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk" || { echo "覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.ginicat.sweet "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+installed_official=no
+/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk: 1 file pushed, 0 skipped. 37.1 MB/s (2133893024 bytes in 54.805s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (03753a62ea3f353e766ff40d3d372daf) ✓
+[2026-09-13 18:14:46] [弹力果冻] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:23:54] [弹力果冻] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= TlgdTapTapMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+23435a56aa1ab0244f4a9508e871a10e
+[2026-09-13 18:24:19] [弹力果冻] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:24:24] [弹力果冻] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_tlgd_taptap_2.4.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] 底包 = /Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk
+[check] 私有 mk = Android_tlgd.mk (modern 注册表 TlgdTapTap)
+[1/6] 消费 build_so 产物 -> jniLibs（本脚本不重编 native）
+  so -> jniLibs ok (tlgd 探针版, md5=23435a56aa1ab0244f4a9508e871a10e)
+[1b/6] gradle assembleRelease (pack refreshed jniLibs so)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:parseReleaseLocalResources
+> Task :app:extractDeepLinksRelease
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/tlgd_taptap.LMoiGa/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/tlgd_taptap.LMoiGa/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/tlgd_taptap.LMoiGa/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+  APK 内 so verified [TLGDF]/Category_战斗
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes2.dex (官方仅 classes.dex)
+-rw-r--r--@ 1 aliang  wheel  402476 Sep 13 18:24 /tmp/tlgd_taptap.LMoiGa/classes2.dex
+[4/6] binary AndroidManifest (mini apktool，不对 2G 原包 apktool b)
+  using cached /Users/aliang/Documents/nixiang/07_patched/弹力果冻/surgical_taptap/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  14260 Sep 13 18:24 /tmp/tlgd_taptap.LMoiGa/AndroidManifest.xml
+[5/6] zip surgical merge (keep official classes.dex + arsc)
+  merged ok; entries≈4278; classes2=402476
+  [5b/6] 包内 so md5 == build_so 产物 (23435a56aa1ab0244f4a9508e871a10e)
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff   2.0G Sep 13 18:26 /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+artifact_md5=31bf4ae36a810634b13ae1ad8d2e93e1
+DONE: /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+[2026-09-13 18:27:58] [弹力果冻] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:28:03] [弹力果冻] stage=sign 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; echo "apk_md5=$(md5 -q "$APK")"; echo "inside_so_md5=$(unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so | md5 -q)"; echo "built_so_md5=$(md5 -q "$NIXIANG/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so")"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+apk_md5=31bf4ae36a810634b13ae1ad8d2e93e1
+inside_so_md5=23435a56aa1ab0244f4a9508e871a10e
+built_so_md5=23435a56aa1ab0244f4a9508e871a10e
+[2026-09-13 18:28:19] [弹力果冻] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:28:28] [弹力果冻] stage=install 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell "pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no"; adb -s $SERIAL push "$APK" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk" || { echo "覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.ginicat.sweet "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+installed_official=yes
+/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk: 1 file pushed, 0 skipped. 36.0 MB/s (2133893024 bytes in 56.571s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (31bf4ae36a810634b13ae1ad8d2e93e1) ✓
+[2026-09-13 18:30:07] [弹力果冻] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:30:22] [弹力果冻] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-13 18:30:40] [弹力果冻] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:47:48] [弹力果冻] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= TlgdTapTapMod.cpp
+./Games/TlgdTapTapMod.cpp:532:67: error: called object type 'void *' is not a function or function pointer
+  532 |     if (t_trampDepth > 0 || !NeedDamagePatch()) return g_origTramp(a0, a1, a2, a3);
+      |                                                        ~~~~~~~~~~~^
+./Games/TlgdTapTapMod.cpp:536:34: error: called object type 'void *' is not a function or function pointer
+  536 |     if (!info) return g_origTramp(a0, a1, a2, a3);
+      |                       ~~~~~~~~~~~^
+./Games/TlgdTapTapMod.cpp:545:32: error: called object type 'void *' is not a function or function pointer
+  545 |         void* ret = g_origTramp(a0, a1, a2, a3);
+      |                     ~~~~~~~~~~~^
+./Games/TlgdTapTapMod.cpp:557:28: error: called object type 'void *' is not a function or function pointer
+  557 |     void* ret = g_origTramp(a0, a1, a2, a3);
+      |                 ~~~~~~~~~~~^
+4 errors generated.
+make: *** [/Users/aliang/Library/Android/sdk/ndk/27.0.12077973/build/core/build-binary.mk:422: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_tlgd/local/arm64-v8a/objs/starry_magic/Games/TlgdTapTapMod.o] Error 1
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+ERROR: ndk-build rc=2
+[2026-09-13 18:47:50] [弹力果冻] stage=build_so 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:48:13] [弹力果冻] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= TlgdTapTapMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+dd7bd6e6c9b07e9642721b792c0bf69c
+[2026-09-13 18:48:49] [弹力果冻] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:48:57] [弹力果冻] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_tlgd_taptap_2.4.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] 底包 = /Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk
+[check] 私有 mk = Android_tlgd.mk (modern 注册表 TlgdTapTap)
+[1/6] 消费 build_so 产物 -> jniLibs（本脚本不重编 native）
+  so -> jniLibs ok (tlgd 探针版, md5=dd7bd6e6c9b07e9642721b792c0bf69c)
+[1b/6] gradle assembleRelease (pack refreshed jniLibs so)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/tlgd_taptap.YmbQgk/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/tlgd_taptap.YmbQgk/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/tlgd_taptap.YmbQgk/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 14s
+50 actionable tasks: 50 executed
+  APK 内 so verified [TLGDF]/Category_战斗
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes2.dex (官方仅 classes.dex)
+-rw-r--r--@ 1 aliang  wheel  402476 Sep 13 18:49 /tmp/tlgd_taptap.YmbQgk/classes2.dex
+[4/6] binary AndroidManifest (mini apktool，不对 2G 原包 apktool b)
+  using cached /Users/aliang/Documents/nixiang/07_patched/弹力果冻/surgical_taptap/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  14260 Sep 13 18:49 /tmp/tlgd_taptap.YmbQgk/AndroidManifest.xml
+[5/6] zip surgical merge (keep official classes.dex + arsc)
+  merged ok; entries≈4278; classes2=402476
+  [5b/6] 包内 so md5 == build_so 产物 (dd7bd6e6c9b07e9642721b792c0bf69c)
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff   2.0G Sep 13 18:54 /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+artifact_md5=7c4ebe7cb645f511792300608516b8f3
+DONE: /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+[2026-09-13 18:56:30] [弹力果冻] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:56:41] [弹力果冻] stage=sign 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; echo "apk_md5=$(md5 -q "$APK")"; echo "inside_so_md5=$(unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so | md5 -q)"; echo "built_so_md5=$(md5 -q "$NIXIANG/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so")"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+apk_md5=7c4ebe7cb645f511792300608516b8f3
+inside_so_md5=dd7bd6e6c9b07e9642721b792c0bf69c
+built_so_md5=dd7bd6e6c9b07e9642721b792c0bf69c
+[2026-09-13 18:57:26] [弹力果冻] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 18:57:50] [弹力果冻] stage=install 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell "pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no"; adb -s $SERIAL push "$APK" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk" || { echo "覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.ginicat.sweet "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+installed_official=yes
+/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk: 1 file pushed, 0 skipped. 35.5 MB/s (2133893024 bytes in 57.285s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (7c4ebe7cb645f511792300608516b8f3) ✓
+[2026-09-13 19:00:01] [弹力果冻] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:00:34] [弹力果冻] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-13 19:01:25] [弹力果冻] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:10:13] [弹力果冻] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= TlgdTapTapMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+ac8d82a249a50eb80f9dce85896625ff
+[2026-09-13 19:11:05] [弹力果冻] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:11:17] [弹力果冻] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_tlgd_taptap_2.4.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] 底包 = /Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk
+[check] 私有 mk = Android_tlgd.mk (modern 注册表 TlgdTapTap)
+[1/6] 消费 build_so 产物 -> jniLibs（本脚本不重编 native）
+  so -> jniLibs ok (tlgd 探针版, md5=ac8d82a249a50eb80f9dce85896625ff)
+[1b/6] gradle assembleRelease (pack refreshed jniLibs so)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/tlgd_taptap.ZfE7wx/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/tlgd_taptap.ZfE7wx/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/tlgd_taptap.ZfE7wx/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 15s
+50 actionable tasks: 50 executed
+  APK 内 so verified [TLGDF]/Category_战斗
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes2.dex (官方仅 classes.dex)
+-rw-r--r--@ 1 aliang  wheel  402476 Sep 13 19:11 /tmp/tlgd_taptap.ZfE7wx/classes2.dex
+[4/6] binary AndroidManifest (mini apktool，不对 2G 原包 apktool b)
+  using cached /Users/aliang/Documents/nixiang/07_patched/弹力果冻/surgical_taptap/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  14260 Sep 13 19:11 /tmp/tlgd_taptap.ZfE7wx/AndroidManifest.xml
+[5/6] zip surgical merge (keep official classes.dex + arsc)
+  merged ok; entries≈4278; classes2=402476
+  [5b/6] 包内 so md5 == build_so 产物 (ac8d82a249a50eb80f9dce85896625ff)
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff   2.0G Sep 13 19:17 /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+artifact_md5=103ad6eca9d5b1bcfde3af4612e10862
+DONE: /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+[2026-09-13 19:19:06] [弹力果冻] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:19:21] [弹力果冻] stage=sign 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; echo "apk_md5=$(md5 -q "$APK")"; echo "inside_so_md5=$(unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so | md5 -q)"; echo "built_so_md5=$(md5 -q "$NIXIANG/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so")"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+apk_md5=103ad6eca9d5b1bcfde3af4612e10862
+inside_so_md5=ac8d82a249a50eb80f9dce85896625ff
+built_so_md5=ac8d82a249a50eb80f9dce85896625ff
+[2026-09-13 19:20:11] [弹力果冻] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:20:43] [弹力果冻] stage=install 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell "pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no"; adb -s $SERIAL push "$APK" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk" || { echo "覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.ginicat.sweet "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+installed_official=yes
+/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk: 1 file pushed, 0 skipped. 35.6 MB/s (2133893024 bytes in 57.162s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (103ad6eca9d5b1bcfde3af4612e10862) ✓
+[2026-09-13 19:23:01] [弹力果冻] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:23:36] [弹力果冻] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-13 19:24:19] [弹力果冻] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:34:44] [弹力果冻] stage=build_so 开始
+命令: bash "$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so
+ac8d82a249a50eb80f9dce85896625ff
+[2026-09-13 19:35:11] [弹力果冻] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:35:52] [弹力果冻] stage=surgical 开始
+命令: bash "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_tlgd_taptap_2.4.0.sh"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[check] 底包 = /Users/aliang/Documents/nixiang/02_apks/弹力果冻/弹力果冻_2.4.0_taptap_official.apk
+[check] 私有 mk = Android_tlgd.mk (modern 注册表 TlgdTapTap)
+[1/6] 消费 build_so 产物 -> jniLibs（本脚本不重编 native）
+  so -> jniLibs ok (tlgd 探针版, md5=ac8d82a249a50eb80f9dce85896625ff)
+[1b/6] gradle assembleRelease (pack refreshed jniLibs so)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/tlgd_taptap.KntIm8/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/tlgd_taptap.KntIm8/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/tlgd_taptap.KntIm8/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 15s
+50 actionable tasks: 50 executed
+  APK 内 so verified [TLGDF]/Category_战斗
+[2/6] apktool d starry → smali + so + certs
+[3/6] collect com/starry smali → classes2.dex (官方仅 classes.dex)
+-rw-r--r--@ 1 aliang  wheel  399028 Sep 13 19:36 /tmp/tlgd_taptap.KntIm8/classes2.dex
+[4/6] binary AndroidManifest (mini apktool，不对 2G 原包 apktool b)
+  using cached /Users/aliang/Documents/nixiang/07_patched/弹力果冻/surgical_taptap/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  14260 Sep 13 19:36 /tmp/tlgd_taptap.KntIm8/AndroidManifest.xml
+[5/6] zip surgical merge (keep official classes.dex + arsc)
+  merged ok; entries≈4278; classes2=399028
+  [5b/6] 包内 so md5 == build_so 产物 (ac8d82a249a50eb80f9dce85896625ff)
+[6/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+-rw-r--r--@ 1 aliang  staff   2.0G Sep 13 19:41 /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+artifact_md5=dc997e364535bf5e9fb23f9400998234
+DONE: /Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk
+[2026-09-13 19:43:01] [弹力果冻] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:43:05] [弹力果冻] stage=sign 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; echo "apk_md5=$(md5 -q "$APK")"; echo "inside_so_md5=$(unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so | md5 -q)"; echo "built_so_md5=$(md5 -q "$NIXIANG/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so")"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+apk_md5=dc997e364535bf5e9fb23f9400998234
+inside_so_md5=ac8d82a249a50eb80f9dce85896625ff
+built_so_md5=ac8d82a249a50eb80f9dce85896625ff
+[2026-09-13 19:43:25] [弹力果冻] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:43:36] [弹力果冻] stage=install 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell "pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no"; adb -s $SERIAL push "$APK" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk" || { echo "覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.ginicat.sweet "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+adb: device '96f0d883' not found
+adb: error: failed to get feature set: device '96f0d883' not found
+安装失败：需人工介入
+[2026-09-13 19:43:36] [弹力果冻] stage=install 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:44:27] [弹力果冻] stage=device_ready 开始
+命令: adb connect 127.0.0.1:16384 || true; adb connect 127.0.0.1:5555 || true; adb devices; adb -s $SERIAL get-state
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+failed to connect to '127.0.0.1:16384': Connection refused
+failed to connect to '127.0.0.1:5555': Connection refused
+List of devices attached
+f9a116a2	device
+
+device
+[2026-09-13 19:44:38] [弹力果冻] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:44:48] [弹力果冻] stage=install 开始
+命令: APK="$NIXIANG/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk"; adb -s $SERIAL shell am force-stop com.ginicat.sweet 2>/dev/null || true; adb -s $SERIAL shell "pm list packages | grep -q com.ginicat.sweet && echo installed_official=yes || echo installed_official=no"; adb -s $SERIAL push "$APK" /data/local/tmp/tlgd_probe.apk && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk" || { echo "覆盖安装失败（异签名，符合预期）→ 按用户授权卸载官方包后重装"; adb -s $SERIAL uninstall com.ginicat.sweet && adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/tlgd_probe.apk"; }; } || { echo "安装失败：需人工介入"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/tlgd_probe.apk; bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.ginicat.sweet "$APK"
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+installed_official=yes
+/Users/aliang/Documents/nixiang/08_output/弹力果冻/弹力果冻_2.4.0_taptap-releaseSigned.apk: 1 file pushed, 0 skipped. 29.5 MB/s (2133893024 bytes in 69.088s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (dc997e364535bf5e9fb23f9400998234) ✓
+[2026-09-13 19:46:43] [弹力果冻] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 19:47:09] [弹力果冻] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni
+[2026-09-13 19:47:52] [弹力果冻] stage=archive 完成（校验通过）
+────────────────────────────────────────────

@@ -20,6 +20,7 @@
 #include "TlgdTapTapMod.h"
 
 #include <atomic>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <cstdio>
@@ -40,6 +41,7 @@ static constexpr uintptr_t kFileTrampoline = 0xBABB0C;
 static constexpr int64_t kKillDmg = 99999999LL;
 static constexpr float kKillAtk = 99999999.f;
 static constexpr size_t kOffIsFromNet = 37;
+static constexpr size_t kOffInfoIsReal = 56;
 static constexpr int32_t kTeamPlayer = 1;
 static constexpr int32_t kTeamEnemy = 2;
 static constexpr int32_t kMaxPlayerEid = 8;
@@ -57,6 +59,7 @@ static std::atomic<bool> g_kill{false};
 static std::atomic<bool> g_aoe{false};
 static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_nocd{false};
+static std::atomic<bool> g_refreshWanted{true};
 static std::atomic<bool> g_aoeBusy{false};
 static std::atomic<uint32_t> g_lastAoeTick{0};
 
@@ -73,6 +76,7 @@ static std::atomic<uint32_t> g_skillWrites{0};
 static std::atomic<uint32_t> g_seenUnits{0};
 static std::atomic<uint32_t> g_seenPlayers{0};
 static std::atomic<uint32_t> g_seenEnemies{0};
+static std::atomic<uint32_t> g_refreshFailures{0};
 
 static std::atomic<int64_t> g_playerEids[kMaxPlayerEid]{};
 static std::atomic<int32_t> g_playerN{0};
@@ -90,11 +94,15 @@ static void* g_clsSkillDriver = nullptr;
 static void* g_clsSkillContainer = nullptr;
 static void* g_clsBattleServer = nullptr;
 static void* g_miHpHandle = nullptr;
+static void* g_miGetSrvStuff = nullptr;
+static void* g_getSrvStuff = nullptr;
+static void* g_hpHandleFn = nullptr;
 static void* g_miGetMgrStuff = nullptr;
 static void* g_miFindTeam = nullptr;
 static void* g_getMgrStuff = nullptr;
 static void* g_findTeam = nullptr;
 static void* g_mgr = nullptr;
+static std::atomic<uint32_t> g_cacheSeq{0};
 
 static size_t offMgrUnits = 0;
 static size_t offEntTeam = 0;
@@ -106,13 +114,19 @@ static size_t offSdRunner = 0;
 static size_t offScCurSkill = 0;
 static size_t offScSkills = 0;
 
-// 4399 8-24 路线：HybridCLR 解释器公共命中点，ABI 不是标准函数契约。
-// 不读 MethodInfo、不按方法名过滤；只从 a2 参数块扫描 DamageHandle/DamageInfo 形态。
-using Trampoline_t = void* (*)(void*, void*, void*, void*);
+// TapTap 2.4.0 已反汇编确认的 HpHandle/CreateDamage 共用原生桥。
+// x0=this, x1=值类型指针, x2=MethodInfo；只处理 mi==HpHandle，避免扫描误伤其它调用。
 using GetStuff_t = void* (*)(void*);
-using FindTeam_t = void* (*)(void*, int32_t, bool, void*);
+using Trampoline_t = void* (*)(void*, void*, void*, void*);
 static Trampoline_t g_origTramp = nullptr;
+using HpHandle_t = void (*)(void*, void*, void*);
+using FindTeam_t = void* (*)(void*, int32_t, bool, void*);
 static thread_local int t_trampDepth = 0;
+
+struct TrampDepthGuard {
+    TrampDepthGuard() { t_trampDepth++; }
+    ~TrampDepthGuard() { t_trampDepth--; }
+};
 
 // DamageHandle layout from the TapTap 2.4.0 hotfix assembly:
 // finalDamage@0, attackerID@8, raceValue@16, attachSkillType@20,
@@ -145,6 +159,7 @@ static inline bool SoftArgPtr(void* p) {
     return tag != 0x71 && tag != 0x2e;
 }
 static inline int32_t ReadI32(void* p, size_t o) { return Il2Cpp::ReadI32(p, o); }
+static inline uint8_t ReadU8(void* p, size_t o) { return *reinterpret_cast<const uint8_t*>((uintptr_t)p + o); }
 static inline void WriteI32(void* p, size_t o, int32_t v) { Il2Cpp::WriteI32(p, o, v); }
 static inline float ReadF32(void* p, size_t o) { return Il2Cpp::ReadF32(p, o); }
 static inline void WriteF32(void* p, size_t o, float v) { Il2Cpp::WriteF32(p, o, v); }
@@ -196,6 +211,10 @@ static void FillEidsFromList(void* list, int64_t* out, int32_t cap, int32_t* out
 
 static bool NeedDamagePatch() {
     return g_kill.load() || g_aoe.load() || g_inv.load();
+}
+
+static bool AnyGameplayOn() {
+    return NeedDamagePatch() || g_nocd.load();
 }
 
 static bool IsEntityId(int64_t id) {
@@ -256,8 +275,12 @@ static void* GetBattleMgr() {
     // 4399 8-24 路线：优先走游戏自己的 get_Stuff 获取当前组件。
     // 直接读静态 _Stuff 会在换章后拿到 Unity fake-null/旧管理器。
     if (g_getMgrStuff && g_miGetMgrStuff) {
-        void* mgr = reinterpret_cast<GetStuff_t>(g_getMgrStuff)(g_miGetMgrStuff);
-        if (PtrOk(mgr)) return mgr;
+        try {
+            void* mgr = reinterpret_cast<GetStuff_t>(g_getMgrStuff)(g_miGetMgrStuff);
+            if (PtrOk(mgr)) return mgr;
+        } catch (...) {
+            g_refreshFailures.fetch_add(1);
+        }
     }
     auto& api = Il2Cpp::GetApi();
     if (!api.ready || !g_clsMgr) return nullptr;
@@ -271,20 +294,61 @@ static bool AcquireMgr() {
     return true;
 }
 
+static inline void CacheWriteBegin() {
+    g_cacheSeq.fetch_add(1, std::memory_order_acq_rel);
+}
+
+static inline void CacheWriteEnd() {
+    g_cacheSeq.fetch_add(1, std::memory_order_release);
+}
+
+static bool CacheReadBegin(uint32_t* outSeq) {
+    for (int retry = 0; retry < 8; retry++) {
+        const uint32_t seq = g_cacheSeq.load(std::memory_order_acquire);
+        if ((seq & 1u) == 0) {
+            *outSeq = seq;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool CacheReadEnd(uint32_t seq) {
+    return g_cacheSeq.load(std::memory_order_acquire) == seq;
+}
+
 static bool IsCachedPlayerAtk(int64_t eid) {
     if (!IsEntityId(eid)) return false;
-    const int32_t count = g_playerN.load();
-    for (int32_t i = 0; i < count && i < kMaxPlayerEid; i++) {
-        if (g_playerEids[i].load() == eid) return true;
+    for (int retry = 0; retry < 4; retry++) {
+        uint32_t seq = 0;
+        if (!CacheReadBegin(&seq)) continue;
+        const int32_t count = g_playerN.load(std::memory_order_acquire);
+        bool found = false;
+        for (int32_t i = 0; i < count && i < kMaxPlayerEid; i++) {
+            if (g_playerEids[i].load(std::memory_order_acquire) == eid) {
+                found = true;
+                break;
+            }
+        }
+        if (CacheReadEnd(seq)) return found;
     }
     return false;
 }
 
 static bool IsCachedEnemyVic(int64_t eid) {
     if (!IsEntityId(eid)) return false;
-    const int32_t count = g_enemyN.load();
-    for (int32_t i = 0; i < count && i < kMaxEnemyEid; i++) {
-        if (g_enemyEids[i].load() == eid) return true;
+    for (int retry = 0; retry < 4; retry++) {
+        uint32_t seq = 0;
+        if (!CacheReadBegin(&seq)) continue;
+        const int32_t count = g_enemyN.load(std::memory_order_acquire);
+        bool found = false;
+        for (int32_t i = 0; i < count && i < kMaxEnemyEid; i++) {
+            if (g_enemyEids[i].load(std::memory_order_acquire) == eid) {
+                found = true;
+                break;
+            }
+        }
+        if (CacheReadEnd(seq)) return found;
     }
     return false;
 }
@@ -324,7 +388,11 @@ static bool ValidateDamageHandleShape(void* h, int64_t* outDmg,
     return true;
 }
 
-// DamageInfo: attackerID@0, beAttackerID@8, atk(float)@16。
+// DamageInfo: IDs@0/8, float fields@16..52, bools@56/57/64, enum@60.
+static bool PlausibleInfoFloat(float v) {
+    return std::isfinite(v) && v >= -1.0e7f && v <= 1.0e9f;
+}
+
 static bool ValidateDamageInfoShape(void* p, int64_t* outAtk, int64_t* outVic) {
     if (!SoftArgPtr(p)) return false;
     const int64_t atk = ReadI64(p, 0);
@@ -332,6 +400,12 @@ static bool ValidateDamageInfoShape(void* p, int64_t* outAtk, int64_t* outVic) {
     if (!ValidateDamagePair(atk, vic)) return false;
     const float atkVal = ReadF32(p, 16);
     if (atkVal < 0.f || atkVal > kKillAtk) return false;
+    for (size_t off = 20; off <= 52; off += 4) {
+        if (!PlausibleInfoFloat(ReadF32(p, off))) return false;
+    }
+    if (ReadU8(p, 56) > 1 || ReadU8(p, 57) > 1 || ReadU8(p, 64) > 1) return false;
+    const int32_t linkType = ReadI32(p, 60);
+    if (linkType < 0 || linkType > 1000) return false;
     *outAtk = atk;
     *outVic = vic;
     return true;
@@ -394,6 +468,14 @@ static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
 }
 
 static void* BattleServerStuff() {
+    if (g_getSrvStuff && g_miGetSrvStuff) {
+        try {
+            void* server = reinterpret_cast<GetStuff_t>(g_getSrvStuff)(g_miGetSrvStuff);
+            if (PtrOk(server)) return server;
+        } catch (...) {
+            g_refreshFailures.fetch_add(1);
+        }
+    }
     auto& api = Il2Cpp::GetApi();
     if (!g_clsBattleServer) return nullptr;
     void* server = api.StaticRefField(g_clsBattleServer, "_Stuff");
@@ -401,9 +483,8 @@ static void* BattleServerStuff() {
 }
 
 static bool InvokeHpHandle(long long atkId, long long vicId) {
-    auto& api = Il2Cpp::GetApi();
     void* server = BattleServerStuff();
-    if (!server || !g_miHpHandle || !api.runtime_invoke) {
+    if (!server || !g_miHpHandle || !g_hpHandleFn) {
         g_aoeErrors.fetch_add(1);
         return false;
     }
@@ -412,14 +493,10 @@ static bool InvokeHpHandle(long long atkId, long long vicId) {
     blob.finalDamage = kKillDmg;
     blob.attackerID = atkId;
     blob.beAttackerID = vicId;
+    blob.isBuff = 1;
     blob.isFromNet = 1;
-    void* args[1] = {&blob};
-    void* exception = nullptr;
-    api.runtime_invoke(g_miHpHandle, server, args, &exception);
-    if (exception) {
-        g_aoeErrors.fetch_add(1);
-        return false;
-    }
+    // Direct call to the probe-confirmed native bridge, bypassing the shared hook.
+    reinterpret_cast<HpHandle_t>(g_hpHandleFn)(server, &blob, g_miHpHandle);
     g_aoeInvokes.fetch_add(1);
     g_netMasked.fetch_add(1);
     return true;
@@ -440,60 +517,77 @@ static void AoeSweep(long long atkId, long long primaryVic) {
     }
     g_lastAoeTick.store(tick);
 
-    const int32_t count = g_enemyN.load();
-    for (int32_t i = 0; i < count && i < kMaxEnemyEid; i++) {
-        const int64_t eid = g_enemyEids[i].load();
+    int64_t enemies[kMaxEnemyEid] = {};
+    int32_t count = 0;
+    bool stable = false;
+    for (int retry = 0; retry < 4; retry++) {
+        uint32_t seq = 0;
+        if (!CacheReadBegin(&seq)) continue;
+        count = g_enemyN.load(std::memory_order_acquire);
+        if (count < 0) count = 0;
+        if (count > kMaxEnemyEid) count = kMaxEnemyEid;
+        for (int32_t i = 0; i < count; i++)
+            enemies[i] = g_enemyEids[i].load(std::memory_order_acquire);
+        if (CacheReadEnd(seq)) {
+            stable = true;
+            break;
+        }
+    }
+    if (!stable) {
+        g_aoeBusy.store(false);
+        return;
+    }
+
+    for (int32_t i = 0; i < count; i++) {
+        const int64_t eid = enemies[i];
         if (!IsEntityId(eid) || eid == primaryVic || AlreadyAoeKilled(eid)) continue;
         if (InvokeHpHandle(atkId, eid)) MarkAoeKilled(eid);
     }
     g_aoeBusy.store(false);
 }
 
+static void RefreshBattleCache();
+
 static void* Hooked_Trampoline(void* a0, void* a1, void* a2, void* a3) {
     if (!g_origTramp) return nullptr;
-    if (t_trampDepth > 0 || !NeedDamagePatch()) return g_origTramp(a0, a1, a2, a3);
+    if (t_trampDepth > 0 || !AnyGameplayOn()) return g_origTramp(a0, a1, a2, a3);
+
+    if (g_refreshWanted.exchange(false)) {
+        TrampDepthGuard refreshGuard;
+        RefreshBattleCache();
+    }
+    if (!NeedDamagePatch()) return g_origTramp(a0, a1, a2, a3);
+
+    int64_t atkId = 0, vicId = 0;
+    void* info = FindDamageInfoInArgs(a2, &atkId, &vicId);
+    if (!info) return g_origTramp(a0, a1, a2, a3);
 
     g_trampHits.fetch_add(1);
-    int64_t dmg = 0, atkId = 0, vicId = 0;
-    void* handle = FindDamageHandleInArgs(a2, &dmg, &atkId, &vicId);
-    void* info = nullptr;
-    if (handle) {
-        g_handleShapes.fetch_add(1);
-    } else {
-        info = FindDamageInfoInArgs(a2, &atkId, &vicId);
-        if (!info) return g_origTramp(a0, a1, a2, a3);
-        g_infoShapes.fetch_add(1);
-    }
+    g_infoShapes.fetch_add(1);
+    TrampDepthGuard depthGuard;
 
-    t_trampDepth++;
     if (g_inv.load() && IsInvIncomingHit(atkId, vicId)) {
-        if (handle) WriteI64(handle, 24, 0);
-        else WriteI64(info, 8, 0);
+        WriteI64(info, 8, 0);
         g_invHits.fetch_add(1);
-        void* ret = g_origTramp(a0, a1, a2, a3);
-        t_trampDepth--;
-        return ret;
+        return g_origTramp(a0, a1, a2, a3);
     }
 
     const bool killStrike = WantKillStrike() && IsConfirmedPlayerStrike(atkId, vicId);
-    if (killStrike && handle) {
-        WriteI64(handle, 0, kKillDmg);
-        WriteU8(handle, kOffIsFromNet, 1);
-        g_netMasked.fetch_add(1);
+    if (killStrike) {
+        // Let the original CreateDamage path compute and apply damage exactly once.
+        WriteF32(info, 16, kKillAtk);
+        WriteU8(info, kOffInfoIsReal, 1);
     }
 
     void* ret = g_origTramp(a0, a1, a2, a3);
 
     if (killStrike) {
-        // DamageInfo 只描述输入伤害，主目标必须在 orig 后补一次正式 HpHandle。
-        if (!handle) InvokeHpHandle(atkId, vicId);
         g_killHits.fetch_add(1);
         if (g_aoe.load()) {
             MarkAoeKilled(vicId);
             AoeSweep(atkId, vicId);
         }
     }
-    t_trampDepth--;
     return ret;
 }
 
@@ -509,7 +603,7 @@ static bool InstallTrampolineHook() {
         return false;
     }
     g_hooked.store(true);
-    LOGI(TLGD_TAG " 解释器公共点已挂：file=0x%llx va=%p orig=%p " TLGDF "",
+    LOGI(TLGD_TAG " 解释器入口已挂：file=0x%llx va=%p orig=%p " TLGDF "",
          (unsigned long long)kFileTrampoline, tramp, g_origTramp);
     return true;
 }
@@ -553,15 +647,33 @@ static void ApplyUnlimitedSkill(void* unit) {
     if (touched > 0) g_skillWrites.fetch_add((uint32_t)touched);
 }
 
+static void ClearBattleCache() {
+    CacheWriteBegin();
+    g_mgr = nullptr;
+    for (int32_t i = 0; i < kMaxPlayerEid; i++) g_playerEids[i].store(0);
+    for (int32_t i = 0; i < kMaxEnemyEid; i++) g_enemyEids[i].store(0);
+    g_playerN.store(0);
+    g_enemyN.store(0);
+    CacheWriteEnd();
+    ClearAoeKilled();
+}
+
 static bool RefreshBattleCacheViaFindTeam() {
     if (!g_findTeam || !g_miFindTeam) return false;
     void* mgr = GetBattleMgr();
     if (!PtrOk(mgr)) return false;
 
-    void* players = reinterpret_cast<FindTeam_t>(g_findTeam)(
-        mgr, kTeamPlayer, false, g_miFindTeam);
-    void* enemies = reinterpret_cast<FindTeam_t>(g_findTeam)(
-        mgr, kTeamEnemy, false, g_miFindTeam);
+    void* players = nullptr;
+    void* enemies = nullptr;
+    try {
+        players = reinterpret_cast<FindTeam_t>(g_findTeam)(
+            mgr, kTeamPlayer, false, g_miFindTeam);
+        enemies = reinterpret_cast<FindTeam_t>(g_findTeam)(
+            mgr, kTeamEnemy, false, g_miFindTeam);
+    } catch (...) {
+        g_refreshFailures.fetch_add(1);
+        return false;
+    }
     int64_t playerEids[kMaxPlayerEid] = {};
     int64_t enemyEids[kMaxEnemyEid] = {};
     int32_t playerCount = 0;
@@ -570,6 +682,7 @@ static bool RefreshBattleCacheViaFindTeam() {
     FillEidsFromList(enemies, enemyEids, kMaxEnemyEid, &enemyCount);
     if (playerCount == 0 && enemyCount == 0) return false;
 
+    CacheWriteBegin();
     g_mgr = mgr;
     for (int32_t i = 0; i < kMaxPlayerEid; i++)
         g_playerEids[i].store(i < playerCount ? playerEids[i] : 0);
@@ -577,6 +690,7 @@ static bool RefreshBattleCacheViaFindTeam() {
         g_enemyEids[i].store(i < enemyCount ? enemyEids[i] : 0);
     g_playerN.store(playerCount);
     g_enemyN.store(enemyCount);
+    CacheWriteEnd();
     if (enemyCount == 0) ClearAoeKilled();
 
     int32_t size = 0;
@@ -615,19 +729,13 @@ static void RefreshBattleCache() {
     // 跨局/跨章节后游戏会换管理器实例；旧实例仍可能通过 ValidateMgr，
     // 但其 battleUnits 已回收成 team=0，若缓存旧指针会导致三功能永久停摆。
     if (!AcquireMgr()) {
-        g_mgr = nullptr;
-        g_playerN.store(0);
-        g_enemyN.store(0);
-        ClearAoeKilled();
+        ClearBattleCache();
         return;
     }
 
     void* list = ReadPtr(g_mgr, offMgrUnits);
     if (!PtrOk(list)) {
-        g_mgr = nullptr;
-        g_playerN.store(0);
-        g_enemyN.store(0);
-        ClearAoeKilled();
+        ClearBattleCache();
         return;
     }
 
@@ -635,13 +743,13 @@ static void RefreshBattleCache() {
     int32_t size = ListSize(list);
     const int32_t cap = ArrayLength(items);
     if (!PtrOk(items) || size < 0 || cap < size) {
-        g_playerN.store(0);
-        g_enemyN.store(0);
-        ClearAoeKilled();
+        ClearBattleCache();
         return;
     }
     if (size > kMaxUnits) size = kMaxUnits;
 
+    int64_t playerEids[kMaxPlayerEid] = {};
+    int64_t enemyEids[kMaxEnemyEid] = {};
     int32_t playerCount = 0;
     int32_t enemyCount = 0;
     for (int32_t i = 0; i < size; i++) {
@@ -651,19 +759,25 @@ static void RefreshBattleCache() {
         if (team == kTeamPlayer) {
             const int64_t eid = offEntEid ? ReadI64(unit, offEntEid) : 0;
             if (IsEntityId(eid) && playerCount < kMaxPlayerEid) {
-                g_playerEids[playerCount++].store(eid);
+                playerEids[playerCount++] = eid;
             }
             if (g_nocd.load()) ApplyUnlimitedSkill(unit);
         } else if (team == kTeamEnemy) {
             const int64_t eid = offEntEid ? ReadI64(unit, offEntEid) : 0;
             if (IsEntityId(eid) && enemyCount < kMaxEnemyEid) {
-                g_enemyEids[enemyCount++].store(eid);
+                enemyEids[enemyCount++] = eid;
             }
         }
     }
 
+    CacheWriteBegin();
+    for (int32_t i = 0; i < kMaxPlayerEid; i++)
+        g_playerEids[i].store(i < playerCount ? playerEids[i] : 0);
+    for (int32_t i = 0; i < kMaxEnemyEid; i++)
+        g_enemyEids[i].store(i < enemyCount ? enemyEids[i] : 0);
     g_playerN.store(playerCount);
     g_enemyN.store(enemyCount);
+    CacheWriteEnd();
     g_seenUnits.store((uint32_t)size);
     g_seenPlayers.store((uint32_t)playerCount);
     g_seenEnemies.store((uint32_t)enemyCount);
@@ -724,15 +838,19 @@ static bool Resolve() {
     offScSkills        = api.FieldOffset(g_clsSkillContainer, "_skills");
 
     g_miHpHandle = api.GetMethod(g_clsBattleServer, "HpHandle", 1);
+    g_miGetSrvStuff = api.GetMethod(g_clsBattleServer, "get_Stuff", 0);
     g_miGetMgrStuff = api.GetMethod(g_clsMgr, "get_Stuff", 0);
     g_miFindTeam = api.GetMethod(g_clsMgr, "FindBattleUnitByTeam", 2);
+    g_getSrvStuff = MethodPointer(g_miGetSrvStuff);
     g_getMgrStuff = MethodPointer(g_miGetMgrStuff);
     g_findTeam = MethodPointer(g_miFindTeam);
+    g_hpHandleFn = MethodPointer(g_miHpHandle);
 
     if (!offMgrUnits || !offEntTeam || !offEntEid ||
         !offUnitSkillDriver || !offSkillCd || !offSkillCanUseTimes ||
         !offSdRunner || !offScCurSkill || !offScSkills || !g_miHpHandle ||
-        !g_miGetMgrStuff || !g_miFindTeam || !g_getMgrStuff || !g_findTeam) {
+        !g_hpHandleFn || !g_miGetMgrStuff || !g_miFindTeam ||
+        !g_getMgrStuff || !g_findTeam) {
         LOGW(TLGD_TAG " 关键字段/方法缺失 units=0x%zx team=0x%zx eid=0x%zx "
                       "skills(unit=0x%zx driver=0x%zx cur=0x%zx dict=0x%zx cd=0x%zx use=%zu) mi=%p",
              offMgrUnits, offEntTeam, offEntEid,
@@ -743,10 +861,10 @@ static bool Resolve() {
 
     LOGI(TLGD_TAG " 解析完成：units=0x%zx team=0x%zx eid=0x%zx "
                       "skill(unit=0x%zx driver=0x%zx cur=0x%zx dict=0x%zx cd=0x%zx use=%zu) "
-                      "HpHandle(mi=%p)",
+                      "HpHandle(mi=%p fn=%p serverGet=%p)",
              offMgrUnits, offEntTeam, offEntEid,
              offUnitSkillDriver, offSdRunner, offScCurSkill, offScSkills,
-             offSkillCd, offSkillCanUseTimes, g_miHpHandle);
+             offSkillCd, offSkillCanUseTimes, g_miHpHandle, g_hpHandleFn, g_getSrvStuff);
     return true;
 }
 
@@ -768,7 +886,7 @@ bool TlgdTapTap_TryInit(JavaVM* /*vm*/) {
     if (!isLibraryLoaded(TLGD_LIB)) return false;
     if (!Resolve()) return false;
     g_ready.store(true);
-    LOGI(TLGD_TAG " 就绪：解释器公共点（秒杀/全屏秒杀/无敌）+ 原无限技能数据链");
+    LOGI(TLGD_TAG " 就绪：解释器入口 + HpHandle 原生桥补发 + 原无限技能数据链");
     return true;
 }
 
@@ -784,6 +902,7 @@ void TlgdTapTap_OnFeatureChanged(int featNum, bool enabled) {
         case TLGDTT_FEAT_NOCD: g_nocd.store(enabled); break;
         default: break;
     }
+    if (enabled) g_refreshWanted.store(true);
     LOGI(TLGD_TAG " 功能 %d -> %s", featNum, enabled ? "开" : "关");
 }
 
@@ -804,18 +923,15 @@ void TlgdTapTap_Tick(const bool* features, const int* values) {
     (void)values;
 
     const uint32_t tick = g_tick.fetch_add(1) + 1;
-    if (NeedDamagePatch()) InstallTrampolineHook();
+    if (AnyGameplayOn()) InstallTrampolineHook();
 
-    if (!g_kill.load() && !g_aoe.load() && !g_inv.load() && !g_nocd.load()) {
-        g_mgr = nullptr;
-        g_playerN.store(0);
-        g_enemyN.store(0);
-        ClearAoeKilled();
+    if (!AnyGameplayOn()) {
+        ClearBattleCache();
         if (tick <= 3 || (tick % 25) == 0) LogStat();
         return;
     }
 
-    RefreshBattleCache();
+    if (tick <= 2 || (tick % 2) == 0) g_refreshWanted.store(true);
     if (tick <= 3 || (tick % 25) == 0) LogStat();
 }
 
@@ -824,9 +940,7 @@ void TlgdTapTap_ForceClear() {
     g_aoe.store(false);
     g_inv.store(false);
     g_nocd.store(false);
-    g_mgr = nullptr;
-    g_playerN.store(0);
-    g_enemyN.store(0);
-    ClearAoeKilled();
+    g_refreshWanted.store(false);
+    ClearBattleCache();
     LOGW(TLGD_TAG " ForceClear：功能全关");
 }
