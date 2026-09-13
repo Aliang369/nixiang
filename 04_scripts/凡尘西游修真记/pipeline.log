@@ -1,0 +1,1107 @@
+
+────────────────────────────────────────────
+[2026-09-12 23:44:05] [凡尘西游修真记] stage=device_ready 开始
+命令: adb devices -l && adb -s "$SERIAL" get-state && printf 'model=' && adb -s "$SERIAL" shell getprop ro.product.model && printf 'android=' && adb -s "$SERIAL" shell getprop ro.build.version.release && printf 'abi=' && adb -s "$SERIAL" shell getprop ro.product.cpu.abi
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:37
+
+device
+model=OPD2515
+android=16
+abi=arm64-v8a
+[2026-09-12 23:44:05] [凡尘西游修真记] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 23:44:19] [凡尘西游修真记] stage=pull_device 开始
+命令: bash 04_scripts/凡尘西游修真记/fetch_installed_fcxyxzj.sh "$SERIAL" "$PKG" "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+/data/app/~~PnAw4BOTOqee_TekifW6Ug==/com.qxjc.fcxyxzj-pJObayzOLuJy5yxPkDvI-Q==/base.apk: 1 file pulled, 0 skipped. 32.8 MB/s (120392170 bytes in 3.505s)
+package=com.qxjc.fcxyxzj
+versionName=1.1.0
+versionCode=10
+installer=com.android.packageinstaller
+primaryCpuAbi=arm64-v8a
+serial=f9a116a2
+remote=/data/app/~~PnAw4BOTOqee_TekifW6Ug==/com.qxjc.fcxyxzj-pJObayzOLuJy5yxPkDvI-Q==/base.apk
+output=/Users/aliang/Documents/nixiang/02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk
+size=120392170
+sha256=ace20a83eb7e2f015124359819badcd16d846ff86ba9999a6eb0e58bc8c81d90
+md5=0ad89b80cb9384ce2c5b671425e24c82
+[2026-09-12 23:44:25] [凡尘西游修真记] stage=pull_device 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 23:44:36] [凡尘西游修真记] stage=check_apk 开始
+命令: "$AAPT2" dump badging "$APK_OUT" | sed -n '1,30p'; "$APKSIGNER" verify --print-certs "$APK_OUT" | sed -n '1,24p'; adb -s "$SERIAL" shell dumpsys package "$PKG" | tr -d '\r' | grep -E 'versionName=|versionCode=|installerPackageName=|primaryCpuAbi=|firstInstallTime=|lastUpdateTime=' | head -20; "$AAPT2" dump badging "$APK_OUT" | grep -Fq "package: name='com.qxjc.fcxyxzj'"
+目录: /Users/aliang/Documents/nixiang
+package: name='com.qxjc.fcxyxzj' versionCode='10' versionName='1.1.0' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+install-location:'preferExternal'
+minSdkVersion:'22'
+targetSdkVersion:'35'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.ACCESS_WIFI_STATE'
+uses-permission: name='android.permission.READ_PHONE_STATE'
+uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'
+uses-permission: name='android.permission.REQUEST_INSTALL_PACKAGES'
+uses-permission: name='android.permission.QUERY_ALL_PACKAGES'
+uses-permission: name='com.qxjc.fcxyxzj.openadsdk.permission.TT_PANGOLIN'
+uses-permission: name='com.asus.msa.SupplementaryDID.ACCESS'
+uses-permission: name='android.permission.SYSTEM_ALERT_WINDOW'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permission.CHANGE_WIFI_STATE'
+uses-permission: name='android.permission.WAKE_LOCK'
+uses-permission: name='android.permission.CHANGE_NETWORK_STATE'
+uses-permission: name='android.permission.ACCESS_COARSE_LOCATION'
+uses-permission: name='android.permission.REORDER_TASKS'
+uses-permission: name='android.permission.GET_TASKS'
+uses-permission: name='com.google.android.gms.permission.AD_ID'
+application-label:'凡尘西游修真记'
+application-label-af:'凡尘西游修真记'
+application-label-am:'凡尘西游修真记'
+application-label-ar:'凡尘西游修真记'
+application-label-as:'凡尘西游修真记'
+application-label-az:'凡尘西游修真记'
+application-label-be:'凡尘西游修真记'
+Signer #1 certificate DN: CN=sy, OU=jc, O=jc, L=qx, ST=gz, C=86
+Signer #1 certificate SHA-256 digest: 45c0c06c840a36c90ef7afe4372ae789e6663775f971d85314d1c921077912af
+Signer #1 certificate SHA-1 digest: 4c8b869beb56c22a0f3f4136588f40bca1b3e68c
+Signer #1 certificate MD5 digest: 7f381a30495f45b237008616bdcfdba7
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+    primaryCpuAbi=arm64-v8a
+    versionCode=10 minSdk=22 targetSdk=35
+    versionName=1.1.0
+    lastUpdateTime=2026-09-12 19:15:47
+    installerPackageName=com.android.packageinstaller
+      firstInstallTime=2026-09-12 19:15:47
+[2026-09-12 23:44:42] [凡尘西游修真记] stage=check_apk 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 00:07:30] [凡尘西游修真记] stage=dump 开始
+命令: bash 04_scripts/凡尘西游修真记/dump_fcxyxzj.sh "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+==> [1/3] jadx + apktool 拆包
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/jadx_1.1.0
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 5754 (0%)INFO  - progress: 60 of 5754 (1%)INFO  - progress: 634 of 5754 (11%)INFO  - progress: 1016 of 5754 (17%)INFO  - progress: 1019 of 5754 (17%)INFO  - progress: 1025 of 5754 (17%)INFO  - progress: 1040 of 5754 (18%)INFO  - progress: 1060 of 5754 (18%)INFO  - progress: 1081 of 5754 (18%)INFO  - progress: 1189 of 5754 (20%)INFO  - progress: 1469 of 5754 (25%)INFO  - progress: 1553 of 5754 (26%)INFO  - progress: 1702 of 5754 (29%)INFO  - progress: 1713 of 5754 (29%)INFO  - progress: 1731 of 5754 (30%)INFO  - progress: 1808 of 5754 (31%)INFO  - progress: 1861 of 5754 (32%)INFO  - progress: 1960 of 5754 (34%)INFO  - progress: 1996 of 5754 (34%)INFO  - progress: 2060 of 5754 (35%)INFO  - progress: 2111 of 5754 (36%)INFO  - progress: 2173 of 5754 (37%)INFO  - progress: 2294 of 5754 (39%)INFO  - progress: 2412 of 5754 (41%)INFO  - progress: 2456 of 5754 (42%)INFO  - progress: 2530 of 5754 (43%)INFO  - progress: 2622 of 5754 (45%)INFO  - progress: 2637 of 5754 (45%)INFO  - progress: 2672 of 5754 (46%)INFO  - progress: 2697 of 5754 (46%)INFO  - progress: 2733 of 5754 (47%)INFO  - progress: 2799 of 5754 (48%)INFO  - progress: 2845 of 5754 (49%)INFO  - progress: 2873 of 5754 (49%)INFO  - progress: 2895 of 5754 (50%)INFO  - progress: 2901 of 5754 (50%)INFO  - progress: 2923 of 5754 (50%)INFO  - progress: 2925 of 5754 (50%)INFO  - progress: 2929 of 5754 (50%)INFO  - progress: 2934 of 5754 (50%)INFO  - progress: 2962 of 5754 (51%)INFO  - progress: 3014 of 5754 (52%)INFO  - progress: 3041 of 5754 (52%)INFO  - progress: 3057 of 5754 (53%)INFO  - progress: 3080 of 5754 (53%)INFO  - progress: 3127 of 5754 (54%)INFO  - progress: 3182 of 5754 (55%)INFO  - progress: 3199 of 5754 (55%)INFO  - progress: 3222 of 5754 (55%)INFO  - progress: 3239 of 5754 (56%)INFO  - progress: 3276 of 5754 (56%)INFO  - progress: 3294 of 5754 (57%)INFO  - progress: 3313 of 5754 (57%)INFO  - progress: 3362 of 5754 (58%)INFO  - progress: 3456 of 5754 (60%)INFO  - progress: 3502 of 5754 (60%)INFO  - progress: 3561 of 5754 (61%)INFO  - progress: 3601 of 5754 (62%)INFO  - progress: 3615 of 5754 (62%)INFO  - progress: 3628 of 5754 (63%)INFO  - progress: 3669 of 5754 (63%)INFO  - progress: 3684 of 5754 (64%)INFO  - progress: 3698 of 5754 (64%)INFO  - progress: 3703 of 5754 (64%)INFO  - progress: 3730 of 5754 (64%)INFO  - progress: 3792 of 5754 (65%)INFO  - progress: 3830 of 5754 (66%)INFO  - progress: 3878 of 5754 (67%)INFO  - progress: 3917 of 5754 (68%)INFO  - progress: 3963 of 5754 (68%)INFO  - progress: 3977 of 5754 (69%)INFO  - progress: 3995 of 5754 (69%)INFO  - progress: 4021 of 5754 (69%)INFO  - progress: 4049 of 5754 (70%)INFO  - progress: 4085 of 5754 (70%)INFO  - progress: 4102 of 5754 (71%)INFO  - progress: 4128 of 5754 (71%)INFO  - progress: 4133 of 5754 (71%)INFO  - progress: 4164 of 5754 (72%)INFO  - progress: 4208 of 5754 (73%)INFO  - progress: 4221 of 5754 (73%)INFO  - progress: 4248 of 5754 (73%)INFO  - progress: 4280 of 5754 (74%)INFO  - progress: 4336 of 5754 (75%)INFO  - progress: 4358 of 5754 (75%)INFO  - progress: 4384 of 5754 (76%)INFO  - progress: 4414 of 5754 (76%)INFO  - progress: 4433 of 5754 (77%)INFO  - progress: 4466 of 5754 (77%)INFO  - progress: 4473 of 5754 (77%)INFO  - progress: 4487 of 5754 (77%)INFO  - progress: 4508 of 5754 (78%)INFO  - progress: 4538 of 5754 (78%)INFO  - progress: 4539 of 5754 (78%)INFO  - progress: 4554 of 5754 (79%)INFO  - progress: 4561 of 5754 (79%)INFO  - progress: 4581 of 5754 (79%)INFO  - progress: 4603 of 5754 (79%)INFO  - progress: 4625 of 5754 (80%)INFO  - progress: 4630 of 5754 (80%)INFO  - progress: 4644 of 5754 (80%)INFO  - progress: 4647 of 5754 (80%)INFO  - progress: 4652 of 5754 (80%)INFO  - progress: 4670 of 5754 (81%)INFO  - progress: 4685 of 5754 (81%)INFO  - progress: 4705 of 5754 (81%)INFO  - progress: 4713 of 5754 (81%)INFO  - progress: 4741 of 5754 (82%)INFO  - progress: 4752 of 5754 (82%)INFO  - progress: 4773 of 5754 (82%)INFO  - progress: 4789 of 5754 (83%)INFO  - progress: 4809 of 5754 (83%)INFO  - progress: 4828 of 5754 (83%)INFO  - progress: 4850 of 5754 (84%)INFO  - progress: 4877 of 5754 (84%)INFO  - progress: 4898 of 5754 (85%)INFO  - progress: 4911 of 5754 (85%)INFO  - progress: 4947 of 5754 (85%)INFO  - progress: 4961 of 5754 (86%)INFO  - progress: 4962 of 5754 (86%)INFO  - progress: 4962 of 5754 (86%)INFO  - progress: 4974 of 5754 (86%)INFO  - progress: 5018 of 5754 (87%)INFO  - progress: 5064 of 5754 (88%)INFO  - progress: 5079 of 5754 (88%)INFO  - progress: 5125 of 5754 (89%)INFO  - progress: 5170 of 5754 (89%)INFO  - progress: 5247 of 5754 (91%)INFO  - progress: 5304 of 5754 (92%)INFO  - progress: 5375 of 5754 (93%)INFO  - progress: 5396 of 5754 (93%)INFO  - progress: 5427 of 5754 (94%)INFO  - progress: 5460 of 5754 (94%)INFO  - progress: 5501 of 5754 (95%)INFO  - progress: 5502 of 5754 (95%)INFO  - progress: 5517 of 5754 (95%)INFO  - progress: 5562 of 5754 (96%)INFO  - progress: 5603 of 5754 (97%)INFO  - progress: 5615 of 5754 (97%)INFO  - progress: 5660 of 5754 (98%)INFO  - progress: 5675 of 5754 (98%)INFO  - progress: 5715 of 5754 (99%)INFO  - progress: 5738 of 5754 (99%)INFO  - progress: 5752 of 5754 (99%)INFO  - progress: 5753 of 5754 (99%)                                                             ERROR - finished with errors, count: 91
+警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
+==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/apktool_1.1.0
+I: Using Apktool 3.0.3 on 凡尘西游修真记_taptap_official.apk with 8 threads
+I: Loading resource table...
+I: Baksmaling classes.dex...
+I: Baksmaling classes2.dex...
+I: Decoding value resources...
+I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
+I: Decoding file resources...
+I: Generating values XMLs...
+I: Decoding AndroidManifest.xml with resources...
+I: Copying original files...
+I: Copying assets...
+I: Copying lib...
+I: Copying unknown files...
+
+完成。
+  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/jadx_1.1.0
+  apktool: /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/apktool_1.1.0
+  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/decode_summary_1.1.0.md
+  manifest:/Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/manifest_1.1.0.txt
+==> [2/3] 提取 IL2CPP 静态分析输入
+-rw-r--r--@ 1 aliang  staff  11831932 Sep 13 00:09 /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/global-metadata.packed.dat
+-rw-r--r--@ 1 aliang  staff  66273280 Sep 13 00:09 /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/libil2cpp.so
+==> [3/3] 运行时解码元数据（可选对照）
+已复制运行时解码元数据: /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/global-metadata.runtime.dat
+
+完成。dump 目录: /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记
+[2026-09-13 00:09:21] [凡尘西游修真记] stage=dump 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:24:33] [凡尘西游修真记] stage=anchor 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-13 01:24:34] [凡尘西游修真记] stage=anchor 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:24:36] [凡尘西游修真记] stage=impl_mod 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-13 01:24:36] [凡尘西游修真记] stage=impl_mod 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:25:03] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (15adfbe22201a6eeb40fdcfe89995a21)
+[2026-09-13 01:25:09] [凡尘西游修真记] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:49:29] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:mergeReleaseJavaResource
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.2JIOMG/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.2JIOMG/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.2JIOMG/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 19s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  397768 Sep 13 01:49 /tmp/fcxyxzj_surgical.2JIOMG/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  generate binary Manifest once (apktool d -s --no-assets + b extract)
+  text Manifest patched (provider 注入, 保留原 Application)
+  cached → /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 13 01:50 /tmp/fcxyxzj_surgical.2JIOMG/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=397768; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (15adfbe22201a6eeb40fdcfe89995a21) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 13 01:50 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-13 01:50:25] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:51:11] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = f3d6c3eafcdb31dcaa046982358a5e2f
+-rw-r--r--@ 1 aliang  staff   116M Sep 13 01:51 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-13 01:51:26] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:54:11] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 33.1 MB/s (121158404 bytes in 3.491s)
+Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package com.qxjc.fcxyxzj signatures do not match newer version; ignoring!]
+ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理
+[2026-09-13 01:54:17] [凡尘西游修真记] stage=install 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:58:54] [凡尘西游修真记] stage=uninstall_official 开始
+命令: adb -s $SERIAL uninstall com.qxjc.fcxyxzj; echo '--- pm path after uninstall:'; adb -s $SERIAL shell "pm path com.qxjc.fcxyxzj" || true
+目录: /Users/aliang/Documents/nixiang
+Success
+--- pm path after uninstall:
+[2026-09-13 01:58:56] [凡尘西游修真记] stage=uninstall_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 01:59:20] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 34.3 MB/s (121158404 bytes in 3.371s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (f3d6c3eafcdb31dcaa046982358a5e2f) ✓
+[2026-09-13 01:59:39] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:16:27] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.4S6TE7/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.4S6TE7/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.4S6TE7/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 8s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  399020 Sep 13 02:16 /tmp/fcxyxzj_surgical.4S6TE7/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 13 02:16 /tmp/fcxyxzj_surgical.4S6TE7/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=399020; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (15adfbe22201a6eeb40fdcfe89995a21) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 13 02:16 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-13 02:16:53] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:17:14] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = fd1495d847843ab8687028ab32954f88
+-rw-r--r--@ 1 aliang  staff   116M Sep 13 02:17 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-13 02:17:28] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:17:30] [凡尘西游修真记] stage=uninstall_official 开始
+命令: adb -s $SERIAL uninstall com.qxjc.fcxyxzj; echo '--- pm path after uninstall:'; adb -s $SERIAL shell "pm path com.qxjc.fcxyxzj" || true
+目录: /Users/aliang/Documents/nixiang
+Success
+--- pm path after uninstall:
+[2026-09-13 02:17:31] [凡尘西游修真记] stage=uninstall_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:17:45] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 35.1 MB/s (121158404 bytes in 3.293s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (fd1495d847843ab8687028ab32954f88) ✓
+[2026-09-13 02:18:00] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:22:37] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.M5Y8iN/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.M5Y8iN/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.M5Y8iN/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 11s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  399028 Sep 13 02:22 /tmp/fcxyxzj_surgical.M5Y8iN/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 13 02:22 /tmp/fcxyxzj_surgical.M5Y8iN/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=399028; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (15adfbe22201a6eeb40fdcfe89995a21) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 13 02:23 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-13 02:23:10] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:23:11] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = aec6e544d4797ed51d2716cbfd87e82e
+-rw-r--r--@ 1 aliang  staff   116M Sep 13 02:23 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-13 02:23:28] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:23:30] [凡尘西游修真记] stage=uninstall_official 开始
+命令: adb -s $SERIAL uninstall com.qxjc.fcxyxzj; echo '--- pm path after uninstall:'; adb -s $SERIAL shell "pm path com.qxjc.fcxyxzj" || true
+目录: /Users/aliang/Documents/nixiang
+Success
+--- pm path after uninstall:
+[2026-09-13 02:23:33] [凡尘西游修真记] stage=uninstall_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 02:23:35] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 36.8 MB/s (121158404 bytes in 3.140s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (aec6e544d4797ed51d2716cbfd87e82e) ✓
+[2026-09-13 02:23:52] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 03:05:14] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (a3ffbcce9f9f8c2d344dc0b480e8c98c)
+[2026-09-13 03:05:18] [凡尘西游修真记] stage=build_so 校验失败
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 03:06:24] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (a3ffbcce9f9f8c2d344dc0b480e8c98c)
+[2026-09-13 03:06:28] [凡尘西游修真记] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 03:07:11] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:mergeReleaseJavaResource
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.3vdfBx/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.3vdfBx/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.3vdfBx/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 29s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  399028 Sep 13 03:07 /tmp/fcxyxzj_surgical.3vdfBx/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 13 03:07 /tmp/fcxyxzj_surgical.3vdfBx/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=399028; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (a3ffbcce9f9f8c2d344dc0b480e8c98c) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 13 03:08 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-13 03:08:24] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 03:08:54] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = 563aaf1d108db7898664f088053d17aa
+-rw-r--r--@ 1 aliang  staff   116M Sep 13 03:09 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-13 03:09:20] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 03:10:17] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 33.7 MB/s (121158404 bytes in 3.427s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (563aaf1d108db7898664f088053d17aa) ✓
+[2026-09-13 03:10:27] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 14:23:23] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (2e97a4867f3da7b78eb5169ead2cd4db)
+[2026-09-13 14:23:27] [凡尘西游修真记] stage=build_so 校验失败
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 14:23:34] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (2e97a4867f3da7b78eb5169ead2cd4db)
+[2026-09-13 14:23:35] [凡尘西游修真记] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 14:23:55] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:processReleaseResources
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.zcO0Br/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.zcO0Br/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.zcO0Br/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 41s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  399028 Sep 13 14:24 /tmp/fcxyxzj_surgical.zcO0Br/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 13 14:24 /tmp/fcxyxzj_surgical.zcO0Br/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=399028; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (2e97a4867f3da7b78eb5169ead2cd4db) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 13 14:24 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-13 14:24:57] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 14:25:05] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = c8b5a4564aadc924cbeb5968e9fe6d83
+-rw-r--r--@ 1 aliang  staff   116M Sep 13 14:25 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-13 14:25:26] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 14:25:47] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 35.1 MB/s (121158404 bytes in 3.294s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (c8b5a4564aadc924cbeb5968e9fe6d83) ✓
+[2026-09-13 14:25:55] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 14:39:05] [凡尘西游修真记] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-13 14:39:09] [凡尘西游修真记] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 15:43:52] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (28ae829a8633d1a7e110bf320120076e)
+[2026-09-13 15:43:54] [凡尘西游修真记] stage=build_so 校验失败
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 15:44:06] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (28ae829a8633d1a7e110bf320120076e)
+[2026-09-13 15:44:08] [凡尘西游修真记] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 15:44:21] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+Starting a Gradle Daemon, 1 incompatible and 1 stopped Daemons could not be reused, use --status for details
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:stripReleaseDebugSymbols
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.e103jS/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.e103jS/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.e103jS/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 17s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  399028 Sep 13 15:44 /tmp/fcxyxzj_surgical.e103jS/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 13 15:44 /tmp/fcxyxzj_surgical.e103jS/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=399028; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (28ae829a8633d1a7e110bf320120076e) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 13 15:44 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-13 15:44:52] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 15:45:03] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = 443eec27fcabaa9ab1d351366b5e50e8
+-rw-r--r--@ 1 aliang  staff   116M Sep 13 15:45 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-13 15:45:12] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 15:45:19] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 34.5 MB/s (121162500 bytes in 3.345s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (443eec27fcabaa9ab1d351366b5e50e8) ✓
+[2026-09-13 15:45:26] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────

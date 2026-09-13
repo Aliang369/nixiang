@@ -1,0 +1,99 @@
+
+────────────────────────────────────────────
+[2026-09-12 20:32:29] [地城狩猎] stage=pull_device 开始
+命令: bash 04_scripts/地城狩猎/fetch_installed_apk.sh "$SERIAL" "$PKG" "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+/data/app/~~f5lPUKr_D69hJjoFR9-8Lg==/com.dcslad4.ad1b-GPQvMtH8Aa2DukcoMvXo0w==/base.apk: 1 file pulled, 0 skipped. 35.2 MB/s (239353716 bytes in 6.489s)
+package=com.dcslad4.ad1b
+versionName=1.0.77409
+versionCode=77409
+serial=f9a116a2
+remote=/data/app/~~f5lPUKr_D69hJjoFR9-8Lg==/com.dcslad4.ad1b-GPQvMtH8Aa2DukcoMvXo0w==/base.apk
+output=/Users/aliang/Documents/nixiang/02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk
+size=239353716
+sha256=a5987e8707145b4f500edf3f17d3c3b0b695f8c26f01f9acc94c9b6b5646b111
+md5=3183a4a7d79764d43c6fa2001f4c835f
+[2026-09-12 20:32:39] [地城狩猎] stage=pull_device 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 20:32:55] [地城狩猎] stage=check_apk 开始
+命令: "$AAPT2" dump badging "$APK_OUT" | sed -n '1,20p'; "$AAPT2" dump badging "$APK_OUT" | grep -Fq "package: name='com.dcslad4.ad1b' versionCode='77409' versionName='1.0.77409'"
+目录: /Users/aliang/Documents/nixiang
+package: name='com.dcslad4.ad1b' versionCode='77409' versionName='1.0.77409' platformBuildVersionName='6.0-2438415' platformBuildVersionCode='23' compileSdkVersion='23' compileSdkVersionCodename='6.0-2438415'
+minSdkVersion:'19'
+targetSdkVersion:'30'
+uses-permission: name='android.permission.SYSTEM_ALERT_WINDOW'
+uses-permission: name='android.permission.SYSTEM_OVERLAY_WINDOW'
+uses-permission: name='android.permission.WAKE_LOCK'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.MODIFY_AUDIO_SETTINGS'
+uses-permission: name='android.permission.ACCESS_WIFI_STATE'
+uses-permission: name='android.permission.MOUNT_UNMOUNT_FILESYSTEMS'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE' maxSdkVersion='32'
+uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE' maxSdkVersion='28'
+uses-permission: name='android.permission.READ_PHONE_STATE'
+uses-permission: name='android.permission.VIBRATE'
+uses-permission: name='android.permissions.INTETNET'
+uses-permission: name='android.permission.CAMERA'
+application-label:'地城狩猎'
+application-label-af:'地城狩猎'
+application-label-am:'地城狩猎'
+[2026-09-12 20:32:58] [地城狩猎] stage=check_apk 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 20:33:13] [地城狩猎] stage=dump 开始
+命令: bash 04_scripts/_common/decode_apk.sh 地城狩猎 "$APK_OUT" 1.0.77409
+目录: /Users/aliang/Documents/nixiang
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/地城狩猎/jadx_1.0.77409
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 8447 (0%)INFO  - progress: 933 of 8447 (11%)INFO  - progress: 1164 of 8447 (13%)INFO  - progress: 1516 of 8447 (17%)INFO  - progress: 1912 of 8447 (22%)INFO  - progress: 2672 of 8447 (31%)INFO  - progress: 3422 of 8447 (40%)INFO  - progress: 4116 of 8447 (48%)INFO  - progress: 4252 of 8447 (50%)INFO  - progress: 4269 of 8447 (50%)INFO  - progress: 4286 of 8447 (50%)INFO  - progress: 4308 of 8447 (51%)INFO  - progress: 4340 of 8447 (51%)INFO  - progress: 4459 of 8447 (52%)INFO  - progress: 4781 of 8447 (56%)INFO  - progress: 4901 of 8447 (58%)INFO  - progress: 5011 of 8447 (59%)INFO  - progress: 5104 of 8447 (60%)INFO  - progress: 5236 of 8447 (61%)INFO  - progress: 5322 of 8447 (63%)INFO  - progress: 5378 of 8447 (63%)INFO  - progress: 5431 of 8447 (64%)INFO  - progress: 5519 of 8447 (65%)INFO  - progress: 5550 of 8447 (65%)INFO  - progress: 5627 of 8447 (66%)INFO  - progress: 5842 of 8447 (69%)INFO  - progress: 5891 of 8447 (69%)INFO  - progress: 5911 of 8447 (69%)INFO  - progress: 5930 of 8447 (70%)INFO  - progress: 5964 of 8447 (70%)INFO  - progress: 6054 of 8447 (71%)INFO  - progress: 6109 of 8447 (72%)INFO  - progress: 6151 of 8447 (72%)INFO  - progress: 6171 of 8447 (73%)INFO  - progress: 6221 of 8447 (73%)INFO  - progress: 6258 of 8447 (74%)INFO  - progress: 6321 of 8447 (74%)INFO  - progress: 6367 of 8447 (75%)INFO  - progress: 6413 of 8447 (75%)INFO  - progress: 6434 of 8447 (76%)INFO  - progress: 6478 of 8447 (76%)INFO  - progress: 6491 of 8447 (76%)INFO  - progress: 6522 of 8447 (77%)INFO  - progress: 6548 of 8447 (77%)INFO  - progress: 6615 of 8447 (78%)INFO  - progress: 6638 of 8447 (78%)INFO  - progress: 6679 of 8447 (79%)INFO  - progress: 6698 of 8447 (79%)INFO  - progress: 6710 of 8447 (79%)INFO  - progress: 6765 of 8447 (80%)INFO  - progress: 6805 of 8447 (80%)INFO  - progress: 6832 of 8447 (80%)INFO  - progress: 6920 of 8447 (81%)INFO  - progress: 6943 of 8447 (82%)INFO  - progress: 7000 of 8447 (82%)INFO  - progress: 7031 of 8447 (83%)INFO  - progress: 7043 of 8447 (83%)INFO  - progress: 7098 of 8447 (84%)INFO  - progress: 7101 of 8447 (84%)INFO  - progress: 7138 of 8447 (84%)INFO  - progress: 7151 of 8447 (84%)INFO  - progress: 7172 of 8447 (84%)INFO  - progress: 7214 of 8447 (85%)INFO  - progress: 7239 of 8447 (85%)INFO  - progress: 7256 of 8447 (85%)INFO  - progress: 7296 of 8447 (86%)INFO  - progress: 7319 of 8447 (86%)INFO  - progress: 7359 of 8447 (87%)INFO  - progress: 7374 of 8447 (87%)INFO  - progress: 7390 of 8447 (87%)INFO  - progress: 7410 of 8447 (87%)INFO  - progress: 7412 of 8447 (87%)INFO  - progress: 7415 of 8447 (87%)INFO  - progress: 7454 of 8447 (88%)INFO  - progress: 7482 of 8447 (88%)INFO  - progress: 7488 of 8447 (88%)INFO  - progress: 7490 of 8447 (88%)INFO  - progress: 7493 of 8447 (88%)INFO  - progress: 7493 of 8447 (88%)INFO  - progress: 7494 of 8447 (88%)INFO  - progress: 7496 of 8447 (88%)INFO  - progress: 7499 of 8447 (88%)INFO  - progress: 7500 of 8447 (88%)INFO  - progress: 7501 of 8447 (88%)INFO  - progress: 7503 of 8447 (88%)INFO  - progress: 7503 of 8447 (88%)INFO  - progress: 7514 of 8447 (88%)INFO  - progress: 7520 of 8447 (89%)INFO  - progress: 7532 of 8447 (89%)INFO  - progress: 7548 of 8447 (89%)INFO  - progress: 7583 of 8447 (89%)INFO  - progress: 7607 of 8447 (90%)INFO  - progress: 7640 of 8447 (90%)INFO  - progress: 7655 of 8447 (90%)INFO  - progress: 7694 of 8447 (91%)INFO  - progress: 7702 of 8447 (91%)INFO  - progress: 7718 of 8447 (91%)INFO  - progress: 7726 of 8447 (91%)INFO  - progress: 7746 of 8447 (91%)INFO  - progress: 7748 of 8447 (91%)INFO  - progress: 7748 of 8447 (91%)INFO  - progress: 7765 of 8447 (91%)INFO  - progress: 7799 of 8447 (92%)INFO  - progress: 7825 of 8447 (92%)INFO  - progress: 7844 of 8447 (92%)INFO  - progress: 7858 of 8447 (93%)INFO  - progress: 7866 of 8447 (93%)INFO  - progress: 7877 of 8447 (93%)INFO  - progress: 7880 of 8447 (93%)INFO  - progress: 7882 of 8447 (93%)INFO  - progress: 7885 of 8447 (93%)INFO  - progress: 7885 of 8447 (93%)INFO  - progress: 7891 of 8447 (93%)INFO  - progress: 7898 of 8447 (93%)INFO  - progress: 7902 of 8447 (93%)INFO  - progress: 7905 of 8447 (93%)INFO  - progress: 7927 of 8447 (93%)INFO  - progress: 7947 of 8447 (94%)INFO  - progress: 7969 of 8447 (94%)INFO  - progress: 7982 of 8447 (94%)INFO  - progress: 7996 of 8447 (94%)INFO  - progress: 8004 of 8447 (94%)INFO  - progress: 8006 of 8447 (94%)INFO  - progress: 8006 of 8447 (94%)INFO  - progress: 8015 of 8447 (94%)INFO  - progress: 8034 of 8447 (95%)INFO  - progress: 8066 of 8447 (95%)INFO  - progress: 8115 of 8447 (96%)INFO  - progress: 8136 of 8447 (96%)INFO  - progress: 8165 of 8447 (96%)INFO  - progress: 8210 of 8447 (97%)INFO  - progress: 8302 of 8447 (98%)INFO  - progress: 8334 of 8447 (98%)INFO  - progress: 8341 of 8447 (98%)INFO  - progress: 8373 of 8447 (99%)INFO  - progress: 8374 of 8447 (99%)INFO  - progress: 8384 of 8447 (99%)INFO  - progress: 8396 of 8447 (99%)INFO  - progress: 8403 of 8447 (99%)INFO  - progress: 8414 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8421 of 8447 (99%)                                                             ERROR - finished with errors, count: 94
+04_scripts/_common/decode_apk.sh: line 55: JADX_RC�: unbound variable
+[2026-09-12 20:34:46] [地城狩猎] stage=dump 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 20:35:26] [地城狩猎] stage=dump 开始
+命令: bash 04_scripts/_common/decode_apk.sh 地城狩猎 "$APK_OUT" 1.0.77409
+目录: /Users/aliang/Documents/nixiang
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/地城狩猎/jadx_1.0.77409
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 8447 (0%)INFO  - progress: 733 of 8447 (8%)INFO  - progress: 1151 of 8447 (13%)INFO  - progress: 1180 of 8447 (13%)INFO  - progress: 1369 of 8447 (16%)INFO  - progress: 1520 of 8447 (17%)INFO  - progress: 2005 of 8447 (23%)INFO  - progress: 2396 of 8447 (28%)INFO  - progress: 3057 of 8447 (36%)INFO  - progress: 3556 of 8447 (42%)INFO  - progress: 4050 of 8447 (47%)INFO  - progress: 4244 of 8447 (50%)INFO  - progress: 4254 of 8447 (50%)INFO  - progress: 4271 of 8447 (50%)INFO  - progress: 4286 of 8447 (50%)INFO  - progress: 4305 of 8447 (50%)INFO  - progress: 4337 of 8447 (51%)INFO  - progress: 4417 of 8447 (52%)INFO  - progress: 4652 of 8447 (55%)INFO  - progress: 4886 of 8447 (57%)INFO  - progress: 4912 of 8447 (58%)INFO  - progress: 5060 of 8447 (59%)INFO  - progress: 5137 of 8447 (60%)INFO  - progress: 5212 of 8447 (61%)INFO  - progress: 5317 of 8447 (62%)INFO  - progress: 5373 of 8447 (63%)INFO  - progress: 5429 of 8447 (64%)INFO  - progress: 5523 of 8447 (65%)INFO  - progress: 5590 of 8447 (66%)INFO  - progress: 5710 of 8447 (67%)INFO  - progress: 5852 of 8447 (69%)INFO  - progress: 5895 of 8447 (69%)INFO  - progress: 5920 of 8447 (70%)INFO  - progress: 5965 of 8447 (70%)INFO  - progress: 6054 of 8447 (71%)INFO  - progress: 6068 of 8447 (71%)INFO  - progress: 6138 of 8447 (72%)INFO  - progress: 6148 of 8447 (72%)INFO  - progress: 6163 of 8447 (72%)INFO  - progress: 6203 of 8447 (73%)INFO  - progress: 6256 of 8447 (74%)INFO  - progress: 6334 of 8447 (74%)INFO  - progress: 6422 of 8447 (76%)INFO  - progress: 6454 of 8447 (76%)INFO  - progress: 6506 of 8447 (77%)INFO  - progress: 6600 of 8447 (78%)INFO  - progress: 6638 of 8447 (78%)INFO  - progress: 6679 of 8447 (79%)INFO  - progress: 6701 of 8447 (79%)INFO  - progress: 6709 of 8447 (79%)INFO  - progress: 6731 of 8447 (79%)INFO  - progress: 6768 of 8447 (80%)INFO  - progress: 6779 of 8447 (80%)INFO  - progress: 6818 of 8447 (80%)INFO  - progress: 6920 of 8447 (81%)INFO  - progress: 6978 of 8447 (82%)INFO  - progress: 7006 of 8447 (82%)INFO  - progress: 7030 of 8447 (83%)INFO  - progress: 7063 of 8447 (83%)INFO  - progress: 7113 of 8447 (84%)INFO  - progress: 7126 of 8447 (84%)INFO  - progress: 7155 of 8447 (84%)INFO  - progress: 7170 of 8447 (84%)INFO  - progress: 7172 of 8447 (84%)INFO  - progress: 7186 of 8447 (85%)INFO  - progress: 7211 of 8447 (85%)INFO  - progress: 7238 of 8447 (85%)INFO  - progress: 7252 of 8447 (85%)INFO  - progress: 7283 of 8447 (86%)INFO  - progress: 7304 of 8447 (86%)INFO  - progress: 7319 of 8447 (86%)INFO  - progress: 7372 of 8447 (87%)INFO  - progress: 7375 of 8447 (87%)INFO  - progress: 7400 of 8447 (87%)INFO  - progress: 7412 of 8447 (87%)INFO  - progress: 7423 of 8447 (87%)INFO  - progress: 7453 of 8447 (88%)INFO  - progress: 7475 of 8447 (88%)INFO  - progress: 7489 of 8447 (88%)INFO  - progress: 7493 of 8447 (88%)INFO  - progress: 7503 of 8447 (88%)INFO  - progress: 7524 of 8447 (89%)INFO  - progress: 7541 of 8447 (89%)INFO  - progress: 7579 of 8447 (89%)INFO  - progress: 7599 of 8447 (89%)INFO  - progress: 7629 of 8447 (90%)INFO  - progress: 7669 of 8447 (90%)INFO  - progress: 7703 of 8447 (91%)INFO  - progress: 7706 of 8447 (91%)INFO  - progress: 7727 of 8447 (91%)INFO  - progress: 7748 of 8447 (91%)INFO  - progress: 7748 of 8447 (91%)INFO  - progress: 7796 of 8447 (92%)INFO  - progress: 7833 of 8447 (92%)INFO  - progress: 7848 of 8447 (92%)INFO  - progress: 7865 of 8447 (93%)INFO  - progress: 7866 of 8447 (93%)INFO  - progress: 7873 of 8447 (93%)INFO  - progress: 7880 of 8447 (93%)INFO  - progress: 7885 of 8447 (93%)INFO  - progress: 7888 of 8447 (93%)INFO  - progress: 7890 of 8447 (93%)INFO  - progress: 7898 of 8447 (93%)INFO  - progress: 7905 of 8447 (93%)INFO  - progress: 7918 of 8447 (93%)INFO  - progress: 7933 of 8447 (93%)INFO  - progress: 7965 of 8447 (94%)INFO  - progress: 7981 of 8447 (94%)INFO  - progress: 7996 of 8447 (94%)INFO  - progress: 8000 of 8447 (94%)INFO  - progress: 8006 of 8447 (94%)INFO  - progress: 8006 of 8447 (94%)INFO  - progress: 8011 of 8447 (94%)INFO  - progress: 8044 of 8447 (95%)INFO  - progress: 8067 of 8447 (95%)INFO  - progress: 8115 of 8447 (96%)INFO  - progress: 8140 of 8447 (96%)INFO  - progress: 8198 of 8447 (97%)INFO  - progress: 8265 of 8447 (97%)INFO  - progress: 8306 of 8447 (98%)INFO  - progress: 8359 of 8447 (98%)INFO  - progress: 8374 of 8447 (99%)INFO  - progress: 8385 of 8447 (99%)INFO  - progress: 8396 of 8447 (99%)INFO  - progress: 8400 of 8447 (99%)INFO  - progress: 8407 of 8447 (99%)INFO  - progress: 8415 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8417 of 8447 (99%)INFO  - progress: 8430 of 8447 (99%)INFO  - progress: 8446 of 8447 (99%)                                                             ERROR - finished with errors, count: 94
+警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
+==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/地城狩猎/apktool_1.0.77409
+I: Using Apktool 3.0.3 on 地城狩猎_1.0.77409_from_device.apk with 8 threads
+I: Baksmaling classes7.dex...
+I: Baksmaling classes4.dex...
+I: Baksmaling classes2.dex...
+I: Baksmaling classes3.dex...
+I: Baksmaling classes8.dex...
+I: Baksmaling classes.dex...
+I: Loading resource table...
+I: Decoding value resources...
+I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
+I: Decoding file resources...
+I: Generating values XMLs...
+I: Decoding AndroidManifest.xml with resources...
+I: Copying original files...
+I: Copying assets...
+I: Copying lib...
+I: Copying unknown files...
+
+完成。
+  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/地城狩猎/jadx_1.0.77409
+  apktool: /Users/aliang/Documents/nixiang/03_decompiled/地城狩猎/apktool_1.0.77409
+  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/地城狩猎/decode_summary_1.0.77409.md
+  manifest:/Users/aliang/Documents/nixiang/03_decompiled/地城狩猎/manifest_1.0.77409.txt
+[2026-09-12 20:37:33] [地城狩猎] stage=dump 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-12 20:46:19] [地城狩猎] stage=anchor 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-12 20:46:21] [地城狩猎] stage=anchor 完成（校验通过）
+────────────────────────────────────────────

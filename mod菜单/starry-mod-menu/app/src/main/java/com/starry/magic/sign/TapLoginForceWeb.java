@@ -54,7 +54,13 @@ public final class TapLoginForceWeb {
                     // 这里保留白名单以便将来同构版本复用反射方案。
                     "com.grinning.beta.yszl",
                     // 无尽探险队：TapSDK 新版（tap-login_release），见类头说明。
-                    "com.wjtxdtt.zy"));
+                    "com.wjtxdtt.zy",
+                    // 凡尘西游修真记：TapSDK 4.10.7（TapLogin）。
+                    // 2026-09-13 核验包内：TapTapLoginActivity.EXTRAS_REQUEST=com_taptap_sdk_login_request、
+                    // model/LoginRequest.loginType、LoginTypes$WEB=embedded_web、fallbackToWeb(LoginRequest)、
+                    // DefaultTapLoginFragmentProvider → WebLoginFragment 全部存在，走新版反射路径。
+                    // 不加白名单时实测走 mobile_client（拉起 TapTap 客户端 SSO），改签包必失败。
+                    "com.qxjc.fcxyxzj"));
 
     private TapLoginForceWeb() {}
 

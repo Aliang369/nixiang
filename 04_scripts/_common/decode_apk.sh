@@ -52,7 +52,7 @@ jadx -d "$JADX_OUT" "$APK"
 JADX_RC=$?
 set -e
 if [[ $JADX_RC -ne 0 ]]; then
-  echo "警告: jadx 退出码 $JADX_RC（部分类失败时仍可能有可用产物）" >&2
+  echo "警告: jadx 退出码 ${JADX_RC}（部分类失败时仍可能有可用产物）" >&2
 fi
 
 echo "==> apktool → $APKTOOL_OUT"

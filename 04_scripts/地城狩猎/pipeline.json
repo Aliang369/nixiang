@@ -1,0 +1,123 @@
+{
+  "game": "地城狩猎",
+  "version": "1.0.77409",
+  "notes": "真机 f9a116a2 只读提取官方安装包；本轮仅做引擎、保护、网络与功能可行性分析，不实现、不装机、不运行。",
+  "params": {
+    "game_id": "dcsl",
+    "serial": "f9a116a2",
+    "package": "com.dcslad4.ad1b"
+  },
+  "env": {
+    "SERIAL": "f9a116a2",
+    "PKG": "com.dcslad4.ad1b",
+    "APK_OUT": "/Users/aliang/Documents/nixiang/02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk",
+    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "pull_device",
+      "name": "真机只读提取安装包",
+      "requires": [],
+      "command": "bash 04_scripts/地城狩猎/fetch_installed_apk.sh \"$SERIAL\" \"$PKG\" \"$APK_OUT\"",
+      "preflight": [
+        "04_scripts/地城狩猎/fetch_installed_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 20:32:38",
+      "artifacts": {
+        "02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk": {
+          "md5": "3183a4a7d79764d43c6fa2001f4c835f"
+        }
+      }
+    },
+    {
+      "id": "check_apk",
+      "name": "核对设备包身份",
+      "requires": [
+        "pull_device"
+      ],
+      "command": "\"$AAPT2\" dump badging \"$APK_OUT\" | sed -n '1,20p'; \"$AAPT2\" dump badging \"$APK_OUT\" | grep -Fq \"package: name='com.dcslad4.ad1b' versionCode='77409' versionName='1.0.77409'\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 20:32:56",
+      "artifacts": {
+        "02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk": {
+          "md5": "3183a4a7d79764d43c6fa2001f4c835f"
+        }
+      },
+      "inputs": {
+        "02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk": "3183a4a7d79764d43c6fa2001f4c835f"
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包并生成首轮摘要",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "bash 04_scripts/_common/decode_apk.sh 地城狩猎 \"$APK_OUT\" 1.0.77409",
+      "preflight": [
+        "04_scripts/_common/decode_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/地城狩猎/decode_summary_1.0.77409.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/地城狩猎/apktool_1.0.77409/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 20:37:31",
+      "artifacts": {
+        "03_decompiled/地城狩猎/decode_summary_1.0.77409.md": {
+          "md5": "bb552957318db22d785b7f48c8983f2e"
+        },
+        "03_decompiled/地城狩猎/apktool_1.0.77409/AndroidManifest.xml": {
+          "md5": "68368123667d24739969ff6d845522cd"
+        }
+      },
+      "inputs": {
+        "02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk": "3183a4a7d79764d43c6fa2001f4c835f"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "功能可行性结论",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/地城狩猎/可行性分析_1.0.77409_20260912.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 20:46:19",
+      "artifacts": {
+        "10_docs/地城狩猎/可行性分析_1.0.77409_20260912.md": {
+          "md5": "ba833dbacc9a255634ee4ca49c18107c"
+        }
+      },
+      "inputs": {
+        "03_decompiled/地城狩猎/apktool_1.0.77409/AndroidManifest.xml": "68368123667d24739969ff6d845522cd"
+      }
+    }
+  ]
+}

@@ -1,0 +1,324 @@
+{
+  "game": "凡尘西游修真记",
+  "version": "1.1.0",
+  "notes": "渠道=TapTap、登录=TapTap 登录（用户确认；包内实证 com/taptap/sdk + libtapsdkcore.so + libthemis.so + assets/THEMIS.dat）。真机只读提取官方单一 base APK；Unity 2022.3.62f2c1 IL2CPP AOT，包内元数据带混淆（需运行时解码）。未获明确授权前不卸载、不清数据。",
+  "params": {
+    "game_id": "fcxyxzj",
+    "serial": "f9a116a2",
+    "package": "com.qxjc.fcxyxzj",
+    "channel": "taptap"
+  },
+  "env": {
+    "SERIAL": "f9a116a2",
+    "PKG": "com.qxjc.fcxyxzj",
+    "APK_OUT": "/Users/aliang/Documents/nixiang/02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk",
+    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
+    "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（核验真机 serial 与系统信息）",
+      "requires": [],
+      "command": "adb devices -l && adb -s \"$SERIAL\" get-state && printf 'model=' && adb -s \"$SERIAL\" shell getprop ro.product.model && printf 'android=' && adb -s \"$SERIAL\" shell getprop ro.build.version.release && printf 'abi=' && adb -s \"$SERIAL\" shell getprop ro.product.cpu.abi",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/凡尘西游修真记/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 23:44:05",
+      "artifacts": {}
+    },
+    {
+      "id": "pull_device",
+      "name": "真机只读提取 TapTap 官方单一 base APK",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/凡尘西游修真记/fetch_installed_fcxyxzj.sh \"$SERIAL\" \"$PKG\" \"$APK_OUT\"",
+      "preflight": [
+        "04_scripts/凡尘西游修真记/fetch_installed_fcxyxzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 23:44:25",
+      "artifacts": {
+        "02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk": {
+          "md5": "0ad89b80cb9384ce2c5b671425e24c82"
+        }
+      }
+    },
+    {
+      "id": "check_apk",
+      "name": "核对包身份、版本、安装来源与官方签名",
+      "requires": [
+        "pull_device"
+      ],
+      "command": "\"$AAPT2\" dump badging \"$APK_OUT\" | sed -n '1,30p'; \"$APKSIGNER\" verify --print-certs \"$APK_OUT\" | sed -n '1,24p'; adb -s \"$SERIAL\" shell dumpsys package \"$PKG\" | tr -d '\\r' | grep -E 'versionName=|versionCode=|installerPackageName=|primaryCpuAbi=|firstInstallTime=|lastUpdateTime=' | head -20; \"$AAPT2\" dump badging \"$APK_OUT\" | grep -Fq \"package: name='com.qxjc.fcxyxzj'\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-12 23:44:41",
+      "artifacts": {
+        "02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk": {
+          "md5": "0ad89b80cb9384ce2c5b671425e24c82"
+        }
+      },
+      "inputs": {
+        "02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk": "0ad89b80cb9384ce2c5b671425e24c82"
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包 dump（jadx + apktool + IL2CPP 静态分析输入）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "bash 04_scripts/凡尘西游修真记/dump_fcxyxzj.sh \"$APK_OUT\"",
+      "preflight": [
+        "04_scripts/凡尘西游修真记/dump_fcxyxzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/凡尘西游修真记/decode_summary_1.1.0.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/凡尘西游修真记/libil2cpp.so"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/凡尘西游修真记/global-metadata.packed.dat"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 00:09:19",
+      "artifacts": {
+        "03_decompiled/凡尘西游修真记/decode_summary_1.1.0.md": {
+          "md5": "e1a6ae1a4fe244c6e17ca8f778dac3ee"
+        },
+        "06_dumped/凡尘西游修真记/libil2cpp.so": {
+          "md5": "73593ddc26164dc67fd2dee795a00f39"
+        },
+        "06_dumped/凡尘西游修真记/global-metadata.packed.dat": {
+          "md5": "d53ae35a7e5f6ffeae1330c89fc93ccc"
+        }
+      },
+      "inputs": {
+        "02_apks/凡尘西游修真记/凡尘西游修真记_taptap_official.apk": "0ad89b80cb9384ce2c5b671425e24c82"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "锚点抓取（分析阶段：四功能锚点静态反汇编 + 真机运行时实测）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/凡尘西游修真记/锚点_四功能_1.1.0_20260913.md"
+        }
+      ],
+      "status": "done",
+      "artifacts": {
+        "10_docs/凡尘西游修真记/锚点_四功能_1.1.0_20260913.md": {
+          "md5": "d8ffcfef641a3769c658b9717e1954ad"
+        }
+      },
+      "done_at": "2026-09-13 01:24:33",
+      "inputs": {
+        "06_dumped/凡尘西游修真记/libil2cpp.so": "73593ddc26164dc67fd2dee795a00f39",
+        "06_dumped/凡尘西游修真记/global-metadata.packed.dat": "d53ae35a7e5f6ffeae1330c89fc93ccc"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（modern 四件套：Mod.h/.cpp + Entry.cpp + 私有 mk）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Android_fcxyxzj.mk"
+        }
+      ],
+      "status": "done",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjMod.cpp": {
+          "md5": "e0b2490099e003672af019ca2d76d6d5"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjEntry.cpp": {
+          "md5": "81141740fdad84d22bb70412394bbc65"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_fcxyxzj.mk": {
+          "md5": "2d6347510def9a1818acf0cca95adfdf"
+        }
+      },
+      "done_at": "2026-09-13 01:24:36"
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（私有 Android_fcxyxzj.mk 直编 + obj stamp + 标签/菜单串校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh"
+      ],
+      "command": "bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 15:44:07",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so": {
+          "md5": "28ae829a8633d1a7e110bf320120076e"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjMod.cpp": "422ccf7d193a8bfc15b9aa3c27cb8d8e",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjEntry.cpp": "aa0cb5635c57a77f80dff35825439051",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_fcxyxzj.mk": "2d6347510def9a1818acf0cca95adfdf"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科注入（Manifest + classes3.dex 星光 smali；官包 dex/arsc/so 字节不变）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+      ],
+      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 15:44:50",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk": {
+          "md5": "bfdec351ccb0dc806fe2bd7830958615"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so": "28ae829a8633d1a7e110bf320120076e"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（apksigner + 01_tools/starry_release.jks）",
+      "requires": [
+        "surgical"
+      ],
+      "preflight": [
+        "04_scripts/凡尘西游修真记/fcxyxzj_sign.sh"
+      ],
+      "command": "bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 15:45:10",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": {
+          "md5": "443eec27fcabaa9ab1d351366b5e50e8"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk": "bfdec351ccb0dc806fe2bd7830958615"
+      }
+    },
+    {
+      "id": "uninstall_official",
+      "name": "卸载官方包（用户 2026-09-13 明确授权；签名冲突唯一路径，用户已声明数据不需保留）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "adb -s $SERIAL uninstall com.qxjc.fcxyxzj; echo '--- pm path after uninstall:'; adb -s $SERIAL shell \"pm path com.qxjc.fcxyxzj\" || true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/凡尘西游修真记/pipeline.json"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "install",
+      "name": "装机（push + pm install -r -d；官方签名不同 → 不自动卸载/清数据，报告后等用户决定）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "adb -s $SERIAL push \"/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk\" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk\" || { echo \"ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理\"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash \"/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.qxjc.fcxyxzj \"/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 15:45:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": {
+          "md5": "443eec27fcabaa9ab1d351366b5e50e8"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": "443eec27fcabaa9ab1d351366b5e50e8"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（星空落地文档 + 状态索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/凡尘西游修真记/星空落地_1.1.0_20260913.md"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}

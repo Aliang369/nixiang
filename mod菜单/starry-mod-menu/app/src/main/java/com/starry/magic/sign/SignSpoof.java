@@ -522,6 +522,28 @@ public final class SignSpoof {
                     + "oUFjLTSDHnDyBn6pZayVwlSgHdDXlpW8jpSoKEKsTacODR4ZzMNlaOBIFC5UXlSQzk3BZh"
                     + "457goy3sLdVcXzjExqln40fjQShQOgvySmI/Pwh98UtjCAy9abeLF1cwbzUJeIampg==";
 
+    /**
+     * 凡尘西游修真记 TapTap 官方（com.qxjc.fcxyxzj，CN=sy）。
+     * 2026-09-13 从官方 1.1.0 v1 块 META-INF/FCXYXZJ.RSA 导出；
+     * SHA-256=45c0c06c… / SHA-1=4c8b869b… / MD5=7f381a30…。
+     * 游戏侧 xxgame.GlobalGameFun.CheckSignature() 比对不符即 Application.Quit()（闪退），
+     * 此条为 2026-09-13 首包闪退的根因修复。
+     */
+    private static final String FCXYXZJ_PKG = "com.qxjc.fcxyxzj";
+    private static final String FCXYXZJ_CERT_B64 =
+            "MIIDPTCCAiWgAwIBAgIEfoAJ7TANBgkqhkiG9w0BAQsFADBOMQswCQYDVQQGEwI4NjELMAkGA1UECBMCZ3oxCzAJBgNVBAcTAnF4"
+                    + "MQswCQYDVQQKEwJqYzELMAkGA1UECxMCamMxCzAJBgNVBAMTAnN5MCAXDTI2MDYyOTAzNTMxM1oYDzIxMjYwNjA1MDM1MzEzWjBO"
+                    + "MQswCQYDVQQGEwI4NjELMAkGA1UECBMCZ3oxCzAJBgNVBAcTAnF4MQswCQYDVQQKEwJqYzELMAkGA1UECxMCamMxCzAJBgNVBAMT"
+                    + "AnN5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAn17Cx82vAPyzlaph/irvL20ifQgnyvmfbn8Ed4wKucofwpmmKj5+"
+                    + "PVnNjS2ksXjj+b1OrvZMRRYuOaFnmE5GOWvZSZ+98P5vqkBHHZ/ukQ19NLczGknrJq/36y3zHDSj+gHJEOuP1StOMJPWpoWfvRIq"
+                    + "wwSIElVjSXcfMjjnR/rQjLMDhaFwObQ2a8rudnSID49FwbUK2xkYLxXauhvWbqwnBDl2fOut6weeA0gzijuEB9/OWanVoKR/9Oxg"
+                    + "byEUjjGrzTnIZJQqc/0mK4uCUfI1ucQ8PLTkvtgVldw3TakFVXIsGJXKo013/8WwXKKAVufDSzlDBj3ZvfmH4zbLwQIDAQABoyEw"
+                    + "HzAdBgNVHQ4EFgQUwYfUtDMUl04eIib5Nn+w99IUlzwwDQYJKoZIhvcNAQELBQADggEBAJRN1VZePt9ahW1sWhd3tEWfLdnf4xFm"
+                    + "AaTlWwCgRfoXmQU9z4voYdkj4MpOoaoGg1XwrhJZNB3UWSKDXgh7nHfQuLdcJyzxDpVpAIHMgJ4Rz6uZzKIV6FR0rsjX8CFby/gY"
+                    + "wb+F12cfpikMVy5CpoevjAe+ilGmhXwtrYTHzS4KE9HcI8/+YHpnMErXJp7VHEJVEuJoAp7qjOf0YBHF/KgHba5PysSAZ5ikRlLZ"
+                    + "jYTpijUdkZJIMFlyiz3FggieEY4trcT/lcu8GZnm3ht1rhcs4v0UuCNHMExevaOPBtCqLXFM9pNPHedx6mHl4OSRr4FysGXgRGkB"
+                    + "jmFhRR2ms2A=";
+
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -563,6 +585,7 @@ public final class SignSpoof {
                 fakes.put(MWDL_PKG, new Signature(Base64.decode(MWDL_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WJTX_PKG, new Signature(Base64.decode(WJTX_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YSJYZ_PKG, new Signature(Base64.decode(YSJYZ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(FCXYXZJ_PKG, new Signature(Base64.decode(FCXYXZJ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());
