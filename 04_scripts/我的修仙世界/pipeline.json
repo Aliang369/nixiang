@@ -1,7 +1,7 @@
 {
   "game": "我的修仙世界",
   "version": "4.5",
-  "notes": "2026-09-13 收官交付：TapTap 官方 4.5/vc45 为底包，libil2cpp/metadata/libunity 与斌哥包 SHA-256 一致；星光 modern 三功能（百倍伤害/无敌/无限货币道具）已构建、外科、签名、装机并完成用户真机验证（用户回复：功能都没问题）。TapTap SDK 4.7.0 已加入强制网页白名单并回灌 O=YiKeYou 官方证书；GgSet 空实现、CheckZuoBi 恒 false、Application.Quit 只记录放行三个安全网常驻。最终包 08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk，md5 0b24f8647e4d697204db95bf2060e90c。免广告按用户指示不做。",
+  "notes": "2026-09-13 收官交付：TapTap 官方 4.5/vc45 为底包，libil2cpp/metadata/libunity 与斌哥包 SHA-256 一致；星光 modern 三功能（百倍伤害/无敌/无限货币道具）已构建、外科、签名、装机并完成用户真机验证（用户回复：功能都没问题）。TapTap SDK 4.7.0 已加入强制网页白名单并回灌 O=YiKeYou 官方证书；GgSet 空实现、CheckZuoBi 恒 false、Application.Quit 只记录放行三个安全网常驻。最终包 08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk，md5 0b24f8647e4d697204db95bf2060e90c。免广告按用户指示不做。标准滚动物 03/06 大二进制/07 已清理并按标准清单保留 Git 文本、02/08 与 05_ida；设备未清数据、未卸载星空包。收尾清单见 10_docs/我的修仙世界/收尾与最小复现清单_4.5_20260913.md。",
   "params": {
     "game_id": "wdxsj",
     "serial": "f9a116a2",
