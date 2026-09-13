@@ -1,0 +1,16 @@
+{
+  "template_id": "dcsl",
+  "name": "地城狩猎",
+  "package": "com.dcslad4.ad1b",
+  "source": "Games/DcslEntry.cpp",
+  "features": [
+    {
+      "feat_num": 0,
+      "name": "基础功能"
+    },
+    {
+      "feat_num": 1,
+      "name": "无限技能"
+    }
+  ]
+}

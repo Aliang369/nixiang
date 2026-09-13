@@ -1,13 +1,18 @@
 {
   "game": "地城狩猎",
   "version": "1.0.77409",
-  "notes": "真机 f9a116a2 只读提取官方安装包；本轮仅做引擎、保护、网络与功能可行性分析，不实现、不装机、不运行。",
+  "notes": "2026-09-13 定案 FAILED + 收官清理：LayaAir/Conch H5，客户端 CD/按钮、自动选技和发包链路均已打通，manual/auto/ui/net 回执与 S2C extra_harm 均实测；但多次真机点击仍无可见有效伤害。回包含全场单位事件，不能证明额外点击被服务端重复结算，服务端权威边界不可突破。按用户要求删除官方 APK/拆包/dump/中间包/最终 APK/obj/libs/过程日志并卸载真机测试包；文档、复现脚本与 mod 源码保留。未实现无敌/秒杀/倍攻。",
   "params": {
     "game_id": "dcsl",
     "serial": "f9a116a2",
-    "package": "com.dcslad4.ad1b"
+    "package": "com.dcslad4.ad1b",
+    "tag": "dcsl",
+    "obj_dir": "obj_dcsl",
+    "libs_dir": "libs_dcsl"
   },
   "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
     "SERIAL": "f9a116a2",
     "PKG": "com.dcslad4.ad1b",
     "APK_OUT": "/Users/aliang/Documents/nixiang/02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk",
@@ -109,7 +114,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 20:46:19",
+      "done_at": "2026-09-12 21:17:21",
       "artifacts": {
         "10_docs/地城狩猎/可行性分析_1.0.77409_20260912.md": {
           "md5": "ba833dbacc9a255634ee4ca49c18107c"
@@ -117,6 +122,196 @@
       },
       "inputs": {
         "03_decompiled/地城狩猎/apktool_1.0.77409/AndroidManifest.xml": "68368123667d24739969ff6d845522cd"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "无限技能实现（Conch Java bridge + 幂等 JS patch）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dcsl.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/conch/StarryConch.java"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/conch/DcslConchProvider.java"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/assets/starry/dcsl_patch.js"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 17:45:30",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslMod.cpp": {
+          "md5": "e802f405c8b1adfd5720655ce9914515"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslEntry.cpp": {
+          "md5": "453b3e242221be339a24ac208b48cddd"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dcsl.mk": {
+          "md5": "c75f1d1bbcd0133e15d1416b23e09b70"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/conch/StarryConch.java": {
+          "md5": "6888315b6708a69a806ee1ef69586b58"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/conch/DcslConchProvider.java": {
+          "md5": "6b37dc25c9bf272955941484bdb11663"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/assets/starry/dcsl_patch.js": {
+          "md5": "916fae6129f64ee7d5640c9dc6a568f5"
+        }
+      }
+    },
+    {
+      "id": "offline_regression",
+      "name": "离线行为回归（补丁门控/CD绕过/自动选技）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/地城狩猎/dcsl_js_regression.js"
+      ],
+      "command": "node \"$NIXIANG/04_scripts/地城狩猎/dcsl_js_regression.js\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/地城狩猎/dcsl_js_regression.js"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 17:45:35",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/地城狩猎/dcsl_js_regression.js": {
+          "md5": "7e17392c8750174800800d4536cf60e6"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslMod.cpp": "e802f405c8b1adfd5720655ce9914515",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslEntry.cpp": "453b3e242221be339a24ac208b48cddd",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dcsl.mk": "c75f1d1bbcd0133e15d1416b23e09b70",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/conch/StarryConch.java": "6888315b6708a69a806ee1ef69586b58",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/conch/DcslConchProvider.java": "6b37dc25c9bf272955941484bdb11663",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/assets/starry/dcsl_patch.js": "916fae6129f64ee7d5640c9dc6a568f5"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 Conch bridge so",
+      "requires": [
+        "offline_regression"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DcslEntry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dcsl.mk",
+        "/Users/aliang/Documents/nixiang/04_scripts/地城狩猎/dcsl_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/地城狩猎/dcsl_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dcsl/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dcsl/arm64-v8a/libstarry_magic.so",
+          "pattern": "dcsl"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 17:45:41",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dcsl/arm64-v8a/libstarry_magic.so": {
+          "md5": "1458aff70aa201216d1281d227e303ba"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/地城狩猎/dcsl_js_regression.js": "7e17392c8750174800800d4536cf60e6"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装 + 签名（原 DEX/arsc 字节保留）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_dcsl_1.0.77409.sh"
+      ],
+      "command": "STARRY_REPLACE=1 bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_dcsl_1.0.77409.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/地城狩猎/地城狩猎_1.0.77409_无限技能-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 17:47:45",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/地城狩猎/地城狩猎_1.0.77409_无限技能-releaseSigned.apk": {
+          "md5": "729a11fe7f89617c46c0162aed30e0d5"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dcsl/arm64-v8a/libstarry_magic.so": "1458aff70aa201216d1281d227e303ba"
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（真机 f9a116a2）",
+      "requires": [],
+      "command": "adb -s $SERIAL get-state && adb -s $SERIAL shell getprop ro.product.model",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/地城狩猎/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 16:38:56",
+      "artifacts": {}
+    },
+    {
+      "id": "install",
+      "name": "卸载官方包 + 安装星空包 + 指纹校验（用户 2026-09-13 明确授权不保留数据）",
+      "requires": [
+        "surgical",
+        "device_ready"
+      ],
+      "command": "APK=\"$NIXIANG/08_output/地城狩猎/地城狩猎_1.0.77409_无限技能-releaseSigned.apk\"; adb -s $SERIAL shell am force-stop $PKG || true; adb -s $SERIAL push \"$APK\" /data/local/tmp/dcsl_skill.apk && adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dcsl_skill.apk || { echo \"覆盖安装失败，按用户授权回退到卸载重装\"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || true; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/dcsl_skill.apk || { echo \"安装失败\"; exit 1; }; }; adb -s $SERIAL shell rm -f /data/local/tmp/dcsl_skill.apk; bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" $SERIAL $PKG \"$APK\" --su",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/地城狩猎/地城狩猎_1.0.77409_无限技能-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 17:48:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/地城狩猎/地城狩猎_1.0.77409_无限技能-releaseSigned.apk": {
+          "md5": "729a11fe7f89617c46c0162aed30e0d5"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/地城狩猎/地城狩猎_1.0.77409_无限技能-releaseSigned.apk": "729a11fe7f89617c46c0162aed30e0d5"
       }
     }
   ]
