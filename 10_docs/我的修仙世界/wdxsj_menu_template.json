@@ -1,0 +1,11 @@
+{
+  "template_id": "wdxsj",
+  "name": "我的修仙世界",
+  "package": "com.lingsi.xiuxiandanji",
+  "source": "Games/WdxsjMod.cpp",
+  "features": [
+    {"feat_num": 1, "name": "百倍伤害"},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "无限货币道具"}
+  ]
+}

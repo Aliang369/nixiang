@@ -1,0 +1,74 @@
+# 斌哥包 vs TapTap 官方包核对 — 4.5
+
+binge=/Users/aliang/Documents/nixiang/02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk
+official=/Users/aliang/Documents/nixiang/02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk
+binge_size=264105671
+official_size=259739966
+binge_md5=0c89399616262e8a8b4e99ff080fa15d
+official_md5=e94036940980417bed321949e793cfe2
+
+## badging
+--- binge
+package: name='com.lingsi.xiuxiandanji' versionCode='45' versionName='4.5' platformBuildVersionName='13' platformBuildVersionCode='33' compileSdkVersion='33' compileSdkVersionCodename='13'
+install-location:'preferExternal'
+minSdkVersion:'24'
+targetSdkVersion:'33'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+application-label:'我的修仙世界'
+application-label-af:'我的修仙世界'
+application-label-am:'我的修仙世界'
+application-label-ar:'我的修仙世界'
+application-label-as:'我的修仙世界'
+application-label-az:'我的修仙世界'
+--- official
+package: name='com.lingsi.xiuxiandanji' versionCode='45' versionName='4.5' platformBuildVersionName='13' platformBuildVersionCode='33' compileSdkVersion='33' compileSdkVersionCodename='13'
+install-location:'preferExternal'
+minSdkVersion:'24'
+targetSdkVersion:'33'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+application-label:'我的修仙世界'
+application-label-af:'我的修仙世界'
+application-label-am:'我的修仙世界'
+application-label-ar:'我的修仙世界'
+application-label-as:'我的修仙世界'
+application-label-az:'我的修仙世界'
+
+## certs
+--- binge
+Signer #1 certificate DN: CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2
+Signer #1 certificate SHA-256 digest: 11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba
+Signer #1 certificate SHA-1 digest: dde5c4a389c45d64c3802df7fc911171f3537019
+Signer #1 certificate MD5 digest: e571e96ec9428b88c9d3e358cbd3d655
+--- official
+Signer #1 certificate DN: O=YiKeYou
+Signer #1 certificate SHA-256 digest: d9e7f2e80a28cba7469bfcf24cc61d08c7919826b99fac2f0ae0019da4381a61
+Signer #1 certificate SHA-1 digest: 242a6d3989262b268911417dedb4d695f8bdd568
+Signer #1 certificate MD5 digest: c288b2392163f820f6b00f129666c574
+
+## game payload hashes
+[lib/arm64-v8a/libil2cpp.so]
+binge=0e412f8c7108e2cd7b4c8cfd4911da64560ef82a0de9c7ce7c420260884ce46b
+official=0e412f8c7108e2cd7b4c8cfd4911da64560ef82a0de9c7ce7c420260884ce46b
+[assets/bin/Data/Managed/Metadata/global-metadata.dat]
+binge=3ee8b29664f5a7a774aa4e9b2a004be391cda3155cd7ed5584211be3c67868ee
+official=3ee8b29664f5a7a774aa4e9b2a004be391cda3155cd7ed5584211be3c67868ee
+[lib/arm64-v8a/libunity.so]
+binge=25c511a3f769b875de870a6baaf789fa894f90079fc48446e0bfc3ce488c6e8a
+official=25c511a3f769b875de870a6baaf789fa894f90079fc48446e0bfc3ce488c6e8a
+[lib/arm64-v8a/libSDKloading.so]
+binge=dcbb5289ca2155817ee47e70f6b07b8701d70c377ae19c2418dd259dfc04406f
+official=MISSING
+
+## dex hashes
+--- binge
+classes.dex 8f996b23d88b73e221f1a627ae0e1da915902cd4ac54f42e502b69a6105d6021
+classes2.dex 8082f4753240e296f15dcfbad2ab735d4d9b22c1829db2cc24bc025f1c037ecb
+classes3.dex 3110426f2fc3faa71ee4ddbcb433a0c1f96f70a5864ef4a9990d01d5ef59eab1
+classes4.dex 8732ef4135fe6d0050327f6cd6791e3f3a425ebacad903c5d5d803bb4cfd536e
+classes5.dex dcfb6fa31024286347d6248161986b2b94a67c9067b62c1b6ae0b3c9f8a24f3c
+classes6.dex d9b43787510bbf32409a50f77ca72d0b4845d87a30efddd12c0126f2f6838b1e
+--- official
+classes.dex 538e1c7889bd670f8be535922033105273a1258ea2b04825fabf41fdd97f3981
+classes2.dex 8082f4753240e296f15dcfbad2ab735d4d9b22c1829db2cc24bc025f1c037ecb

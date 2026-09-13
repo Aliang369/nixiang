@@ -1,0 +1,450 @@
+{
+  "game": "我的修仙世界",
+  "version": "4.5",
+  "notes": "2026-09-13 收官交付：TapTap 官方 4.5/vc45 为底包，libil2cpp/metadata/libunity 与斌哥包 SHA-256 一致；星光 modern 三功能（百倍伤害/无敌/无限货币道具）已构建、外科、签名、装机并完成用户真机验证（用户回复：功能都没问题）。TapTap SDK 4.7.0 已加入强制网页白名单并回灌 O=YiKeYou 官方证书；GgSet 空实现、CheckZuoBi 恒 false、Application.Quit 只记录放行三个安全网常驻。最终包 08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk，md5 0b24f8647e4d697204db95bf2060e90c。免广告按用户指示不做。",
+  "params": {
+    "game_id": "wdxsj",
+    "serial": "f9a116a2",
+    "package": "com.lingsi.xiuxiandanji",
+    "channel": "taptap",
+    "tag": "wdxsj"
+  },
+  "env": {
+    "SERIAL": "f9a116a2",
+    "PKG": "com.lingsi.xiuxiandanji",
+    "APK_OUT": "/Users/aliang/Documents/nixiang/02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk",
+    "APK_OFFICIAL": "/Users/aliang/Documents/nixiang/02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk",
+    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
+    "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner",
+    "NIXIANG": "/Users/aliang/Documents/nixiang"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（核验真机 serial 与系统信息）",
+      "requires": [],
+      "command": "adb devices -l && adb -s \"$SERIAL\" get-state && printf 'model=' && adb -s \"$SERIAL\" shell getprop ro.product.model && printf 'android=' && adb -s \"$SERIAL\" shell getprop ro.build.version.release && printf 'abi=' && adb -s \"$SERIAL\" shell getprop ro.product.cpu.abi",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/我的修仙世界/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:14:59",
+      "artifacts": {}
+    },
+    {
+      "id": "pull_device",
+      "name": "真机只读提取斌哥改包单一 base APK",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/我的修仙世界/fetch_installed_apk.sh \"$SERIAL\" \"$PKG\" \"$APK_OUT\"",
+      "preflight": [
+        "04_scripts/我的修仙世界/fetch_installed_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:15:17",
+      "artifacts": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk": {
+          "md5": "0c89399616262e8a8b4e99ff080fa15d"
+        }
+      }
+    },
+    {
+      "id": "check_apk",
+      "name": "核对斌哥包身份、版本、签名与安装来源",
+      "requires": [
+        "pull_device"
+      ],
+      "command": "\"$AAPT2\" dump badging \"$APK_OUT\" | sed -n '1,30p'; \"$APKSIGNER\" verify --print-certs \"$APK_OUT\" | sed -n '1,28p'; adb -s \"$SERIAL\" shell dumpsys package \"$PKG\" | tr -d '\\r' | grep -E 'versionName=|versionCode=|installerPackageName=|primaryCpuAbi=|firstInstallTime=|lastUpdateTime=' | head -20; \"$AAPT2\" dump badging \"$APK_OUT\" | grep -Fq \"package: name='com.lingsi.xiuxiandanji'\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:15:33",
+      "artifacts": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk": {
+          "md5": "0c89399616262e8a8b4e99ff080fa15d"
+        }
+      },
+      "inputs": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk": "0c89399616262e8a8b4e99ff080fa15d"
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包 dump（jadx + apktool + 壳特征摘要）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "bash 04_scripts/_common/decode_apk.sh 我的修仙世界 \"$APK_OUT\" 4.5",
+      "preflight": [
+        "04_scripts/_common/decode_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/我的修仙世界/decode_summary_4.5.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/我的修仙世界/apktool_4.5/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:17:56",
+      "artifacts": {
+        "03_decompiled/我的修仙世界/decode_summary_4.5.md": {
+          "md5": "efe518981ebde82ff90eaedbf050f392"
+        },
+        "03_decompiled/我的修仙世界/apktool_4.5/AndroidManifest.xml": {
+          "md5": "429906429713d59811d852fbadf0a9f7"
+        }
+      },
+      "inputs": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_binge_from_device.apk": "0c89399616262e8a8b4e99ff080fa15d"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "斌哥包功能抓点：百倍伤害 / 无敌 / 无限货币道具",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/我的修仙世界/斌哥包抓点_4.5_20260913.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:28:42",
+      "artifacts": {
+        "10_docs/我的修仙世界/斌哥包抓点_4.5_20260913.md": {
+          "md5": "8543a43f6459599387db89b0d60dafd2"
+        }
+      },
+      "inputs": {
+        "03_decompiled/我的修仙世界/apktool_4.5/AndroidManifest.xml": "429906429713d59811d852fbadf0a9f7"
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读提取 TapTap 官方 4.5/vc45 单 APK",
+      "requires": [
+        "anchor"
+      ],
+      "command": "bash 04_scripts/我的修仙世界/fetch_installed_apk.sh \"$SERIAL\" \"$PKG\" \"$APK_OFFICIAL\"",
+      "preflight": [
+        "04_scripts/我的修仙世界/fetch_installed_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:34:11",
+      "artifacts": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk": {
+          "md5": "e94036940980417bed321949e793cfe2"
+        }
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对官方包身份并与斌哥包做 so/metadata 哈希对照",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "bash 04_scripts/我的修仙世界/compare_official_binge.sh \"$APK_OUT\" \"$APK_OFFICIAL\"",
+      "preflight": [
+        "04_scripts/我的修仙世界/compare_official_binge.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/我的修仙世界/official_compare_4.5.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:35:56",
+      "artifacts": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk": {
+          "md5": "e94036940980417bed321949e793cfe2"
+        },
+        "06_dumped/我的修仙世界/official_compare_4.5.txt": {
+          "md5": "cf106ed6945907b8547c57eaa1bbf739"
+        }
+      },
+      "inputs": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk": "e94036940980417bed321949e793cfe2"
+      }
+    },
+    {
+      "id": "dump_official",
+      "name": "TapTap 官方包拆包（jadx + apktool）",
+      "requires": [
+        "check_official"
+      ],
+      "command": "bash 04_scripts/_common/decode_apk.sh 我的修仙世界 \"$APK_OFFICIAL\" 4.5_official",
+      "preflight": [
+        "04_scripts/_common/decode_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/我的修仙世界/decode_summary_4.5_official.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/我的修仙世界/apktool_4.5_official/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 20:37:33",
+      "artifacts": {
+        "03_decompiled/我的修仙世界/decode_summary_4.5_official.md": {
+          "md5": "4449dace9fc9186d3e6f7efa987ec0fd"
+        },
+        "03_decompiled/我的修仙世界/apktool_4.5_official/AndroidManifest.xml": {
+          "md5": "ed802b5fc93bfe64c7e7cf30b8646fa3"
+        }
+      },
+      "inputs": {
+        "02_apks/我的修仙世界/我的修仙世界_4.5_taptap_official.apk": "e94036940980417bed321949e793cfe2",
+        "06_dumped/我的修仙世界/official_compare_4.5.txt": "cf106ed6945907b8547c57eaa1bbf739"
+      }
+    },
+    {
+      "id": "anchor_official",
+      "name": "官方包锚点：TapTap 登录强制网页 + 三功能载荷核对 + 反检测面",
+      "requires": [
+        "dump_official"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/我的修仙世界/官方包分析_4.5_20260913.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 21:11:39",
+      "artifacts": {
+        "10_docs/我的修仙世界/官方包分析_4.5_20260913.md": {
+          "md5": "bc4804103f1b8d6747a4987b3da4f7cc"
+        }
+      },
+      "inputs": {
+        "03_decompiled/我的修仙世界/apktool_4.5_official/AndroidManifest.xml": "ed802b5fc93bfe64c7e7cf30b8646fa3"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "三功能实现（modern 四件套 + TapTap 强制网页 + SignSpoof）",
+      "requires": [
+        "anchor_official"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Android_wdxsj.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 21:11:57",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjMod.cpp": {
+          "md5": "eeb9715daa45dd560c6b4b507d503199"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjEntry.cpp": {
+          "md5": "b1694023e5ac8eb09e461a68a8e88058"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_wdxsj.mk": {
+          "md5": "523bb7bb00ca7a0adaef008a2a1df110"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java": {
+          "md5": "a80443aeac6ebb4d96ed88d5aa8b240e"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": {
+          "md5": "4a87992c678ea4bd80d2cc12569fa461"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（Android_wdxsj.mk 私有直编 + 标签/菜单串校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "04_scripts/我的修仙世界/wdxsj_build_so.sh"
+      ],
+      "command": "bash 04_scripts/我的修仙世界/wdxsj_build_so.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so",
+          "pattern": "wdxsj"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 21:12:12",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so": {
+          "md5": "7b080c6876009ca1f09a3a36435f3f3c"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjMod.cpp": "eeb9715daa45dd560c6b4b507d503199",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjEntry.cpp": "b1694023e5ac8eb09e461a68a8e88058",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_wdxsj.mk": "523bb7bb00ca7a0adaef008a2a1df110",
+        "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java": "a80443aeac6ebb4d96ed88d5aa8b240e",
+        "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": "4a87992c678ea4bd80d2cc12569fa461"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（classes3.dex + starry so；原 dex/arsc/游戏 so 字节保留）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "mod菜单/starry-mod-menu/scripts/surgical_wdxsj_4.5.sh"
+      ],
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_wdxsj_4.5.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/我的修仙世界/我的修仙世界_4.5_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 21:12:47",
+      "artifacts": {
+        "08_output/我的修仙世界/我的修仙世界_4.5_surgical-unsigned.apk": {
+          "md5": "de5ef4ee23ab2918fd258de0b0aa6c1d"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so": "7b080c6876009ca1f09a3a36435f3f3c"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（apksigner + starry_release.jks）",
+      "requires": [
+        "surgical"
+      ],
+      "preflight": [
+        "04_scripts/我的修仙世界/wdxsj_sign.sh"
+      ],
+      "command": "bash 04_scripts/我的修仙世界/wdxsj_sign.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 21:13:20",
+      "artifacts": {
+        "08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk": {
+          "md5": "0b24f8647e4d697204db95bf2060e90c"
+        }
+      },
+      "inputs": {
+        "08_output/我的修仙世界/我的修仙世界_4.5_surgical-unsigned.apk": "de5ef4ee23ab2918fd258de0b0aa6c1d"
+      }
+    },
+    {
+      "id": "install",
+      "name": "安装星空包 + 设备指纹校验（用户已授权卸载安装）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "APK=\"$NIXIANG/08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk\"; adb -s $SERIAL shell am force-stop $PKG || true; adb -s $SERIAL push \"$APK\" /data/local/tmp/wdxsj_surgical.apk && { adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/wdxsj_surgical.apk || { echo \"覆盖安装失败（签名不同），按用户授权卸载后重装\"; adb -s $SERIAL shell pm uninstall --user 0 $PKG || true; adb -s $SERIAL shell pm install -r -d --user 0 /data/local/tmp/wdxsj_surgical.apk || { echo \"安装失败\"; exit 1; }; }; }; adb -s $SERIAL shell rm -f /data/local/tmp/wdxsj_surgical.apk; bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" $SERIAL $PKG \"$APK\" --su",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 21:14:39",
+      "artifacts": {
+        "08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk": {
+          "md5": "0b24f8647e4d697204db95bf2060e90c"
+        }
+      },
+      "inputs": {
+        "08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk": "0b24f8647e4d697204db95bf2060e90c"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（星空落地文档 + 状态索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/我的修仙世界/星空落地_4.5_20260913.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-13 21:22:25",
+      "artifacts": {
+        "10_docs/我的修仙世界/星空落地_4.5_20260913.md": {
+          "md5": "4b58ccbfc5cfebc9886718464948d263"
+        }
+      },
+      "inputs": {
+        "08_output/我的修仙世界/我的修仙世界_4.5_surgical-releaseSigned.apk": "0b24f8647e4d697204db95bf2060e90c"
+      }
+    }
+  ]
+}

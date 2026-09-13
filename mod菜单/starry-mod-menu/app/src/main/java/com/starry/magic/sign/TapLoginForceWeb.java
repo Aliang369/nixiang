@@ -42,6 +42,9 @@ public final class TapLoginForceWeb {
     private static final String FRAGMENT_TAG = "com_taptap_sdk_login_fragment";
     private static final String WEB_LOGIN_FRAGMENT =
             "com.taptap.sdk.login.impl.ui.fragment.WebLoginFragment";
+    private static final String OLD_WEB_LOGIN_FRAGMENT =
+            "com.taptap.sdk.login.internal.handlers.web.WebLoginFragment";
+    private static final String OLD_FRAGMENT_TAG = "login_fragment";
 
     /** 包名白名单：只对这些游戏的 Tap 登录强制网页，其他星空包游戏不受影响。 */
     private static final java.util.Set<String> PKG_WHITELIST =
@@ -60,7 +63,10 @@ public final class TapLoginForceWeb {
                     // model/LoginRequest.loginType、LoginTypes$WEB=embedded_web、fallbackToWeb(LoginRequest)、
                     // DefaultTapLoginFragmentProvider → WebLoginFragment 全部存在，走新版反射路径。
                     // 不加白名单时实测走 mobile_client（拉起 TapTap 客户端 SSO），改签包必失败。
-                    "com.qxjc.fcxyxzj"));
+                    "com.qxjc.fcxyxzj",
+                    // 我的修仙世界：TapSDK 4.7.0，LoginActivityImpl.loginHandlers
+                    // = [CloudLoginHandler, ClientLoginHandler]，走旧版 handler 清洗路径。
+                    "com.lingsi.xiuxiandanji"));
 
     private TapLoginForceWeb() {}
 
@@ -74,6 +80,7 @@ public final class TapLoginForceWeb {
 
     /** onCreated（onCreate 之后）：新版 fallbackToWeb 兜底，旧版 API&lt;29 清洗。 */
     public static void onCreated(Activity activity) {
+        forceOldImplWeb(activity);
         forceNewImplWeb(activity);
         if (Build.VERSION.SDK_INT < 29) sanitize(activity);
     }
@@ -129,6 +136,34 @@ public final class TapLoginForceWeb {
             fb.invoke(activity, req);
         } catch (Throwable t) {
             Log.e(TAG, "forceNewImplWeb failed", t);
+        }
+    }
+
+    /** 旧版兜底：onCreate 后若当前 fragment 非 WebLoginFragment，直接调 impl.fallbackToWeb。 */
+    private static void forceOldImplWeb(Activity activity) {
+        if (activity == null || !LOGIN_ACTIVITY.equals(activity.getClass().getName())) return;
+        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
+        try {
+            android.app.FragmentManager fm = activity.getFragmentManager();
+            if (fm != null) {
+                android.app.Fragment f = fm.findFragmentByTag(OLD_FRAGMENT_TAG);
+                if (f != null && OLD_WEB_LOGIN_FRAGMENT.equals(f.getClass().getName())) {
+                    Log.i(TAG, "old-impl already WebLoginFragment, skip");
+                    return;
+                }
+            }
+            Field implF = activity.getClass().getDeclaredField("impl");
+            implF.setAccessible(true);
+            Object impl = implF.get(activity);
+            Field reqF = activity.getClass().getDeclaredField("request");
+            reqF.setAccessible(true);
+            Object req = reqF.get(activity);
+            if (impl == null || req == null) return;
+            Method fb = impl.getClass().getMethod("fallbackToWeb", Activity.class, req.getClass());
+            fb.invoke(impl, activity, req);
+            Log.i(TAG, "old-impl fallbackToWeb invoked");
+        } catch (Throwable t) {
+            Log.e(TAG, "forceOldImplWeb failed", t);
         }
     }
 

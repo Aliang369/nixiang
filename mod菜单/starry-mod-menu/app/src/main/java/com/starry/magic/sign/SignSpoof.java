@@ -544,6 +544,26 @@ public final class SignSpoof {
                     + "jYTpijUdkZJIMFlyiz3FggieEY4trcT/lcu8GZnm3ht1rhcs4v0UuCNHMExevaOPBtCqLXFM9pNPHedx6mHl4OSRr4FysGXgRGkB"
                     + "jmFhRR2ms2A=";
 
+    /**
+     * 我的修仙世界 TapTap 官方（com.lingsi.xiuxiandanji，O=YiKeYou）。
+     * 2026-09-13 从官方 4.5 v2 签名块导出；SHA-256=d9e7f2e80a28cba7469bfcf24cc61d08c7919826b99fac2f0ae0019da4381a61。
+     * TapTap SDK 4.7.0 与游戏侧签名读取均回灌这张官方证书。
+     */
+    private static final String WDXSJ_PKG = "com.lingsi.xiuxiandanji";
+    private static final String WDXSJ_CERT_B64 =
+            "MIICojCCAYqgAwIBAgIERKQwtjANBgkqhkiG9w0BAQUFADASMRAwDgYDVQQKDAdZaUtlWW91MCAXDTI1"
+                    + "MDUwNzA1Mjc0NFoYDzIwNzUwNDI1MDUyNzQ0WjASMRAwDgYDVQQKDAdZaUtlWW91MIIBIjANBgkqhkiG"
+                    + "9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgutZYeGrsEaRHkelo8/LE2i9tnTwc/6nqwAYycJbnYpoTJTA4hLp"
+                    + "QGd4UweyFdgx2GWy5yxyCjeYrCwy4SrZ1CNhNyuWBf7Yk+wUXCH+kPSFbWlPwJW4U3vMGLTSBrGPjUYV"
+                    + "bUme/FpqX2y1s1ff9hWqoR6dZnCjZuKU6Mziqgi9CUYVo4SOT2NVw4GncgR8enT6TKYaYWr8AqshAH12"
+                    + "EQ3a1W+J6IFFURKVUAFri/0J04ENsPh+f7SSPfqrDa3uklG/TvKiha/onbkwX6pnJGgobRdl+uoqvcmd"
+                    + "UKrwlr/3PzlWWgE8A+RCC2etCH5ndjFg0/+EYZSCVpeP/8XBbwIDAQABMA0GCSqGSIb3DQEBBQUAA4IB"
+                    + "AQAi4EG0LxmhL7fDycRS/bFEx78+/+W7nvnagTHlN//Wvw1RNsYbF2IeEFQlUm9gVtVje7xAAz0Oeop9"
+                    + "kGPTYPFxYNZJOh/e9kJ7yVQBZmtf41/K2DJph5MEvQKsZaBMw/YCN5kx0iwpyHrGnv9eeBMh3dgm8KDJ"
+                    + "w9cdloeYRnKt50dXfzcadbQzykM+rHQNft8IaDX9RlJzKpzGPSqA8hn0OJltuTFvYmtQkf3AuGuoAKJ+"
+                    + "RX4Dr3xHfA1pUHO6iWekcXxrjM8ugjnIdIkflC+7NP3W1+67Ho3PQjbmPVHvtZUfyiBeTYyQ+hP2N8wn"
+                    + "sMrfj3Ga7UHV0vc5jhPsLHtM";
+
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -586,6 +606,7 @@ public final class SignSpoof {
                 fakes.put(WJTX_PKG, new Signature(Base64.decode(WJTX_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YSJYZ_PKG, new Signature(Base64.decode(YSJYZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(FCXYXZJ_PKG, new Signature(Base64.decode(FCXYXZJ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(WDXSJ_PKG, new Signature(Base64.decode(WDXSJ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

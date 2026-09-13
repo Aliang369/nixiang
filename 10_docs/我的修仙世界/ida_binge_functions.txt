@@ -1,0 +1,534 @@
+# BinGe libSDKloading targeted IDA export
+
+## 百倍伤害 @ 0x41AAE0
+- no direct xrefs
+## 玩家无敌 @ 0x41AAEF
+- no direct xrefs
+## 货币无限 @ 0x41AAFE
+- no direct xrefs
+## 三个功能钩子已挂上 @ 0x41AAB8
+- no direct xrefs
+## 功能钩子故意不挂 @ 0x41AB3E
+- no direct xrefs
+## featNum=0 @ 0x41ABC8
+- no direct xrefs
+## featNum=1 @ 0x41ABF6
+- no direct xrefs
+## 存档已被标记 @ 0x41A41D
+- no direct xrefs
+## 吞掉玩家扣血 @ 0x41A50C
+- no direct xrefs
+## 吞掉这次退出 @ 0x41A492
+- no direct xrefs
+## 游戏继续跑 @ 0x41A4A9
+- no direct xrefs
+## 不调原函数 @ 0x41A362
+- no direct xrefs
+## 反作弊 @ 0x41A2A5
+- no direct xrefs
+## 安全网 @ 0x41A2D4
+- no direct xrefs
+## 永久封 @ 0x41A313
+- no direct xrefs
+## GgSet @ 0x41A2E9
+- no direct xrefs
+## CheckZuoBi @ 0x41A345
+- no direct xrefs
+## HurtShow @ 0x41A4C3
+- no direct xrefs
+## GetItemNum @ 0x41A538
+- no direct xrefs
+## ReduceCreatureSpNum @ 0x41A726
+- ref 0x2CC700 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC70C type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC8A8 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC8BC type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC908 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC914 type=1 func=sub_2CC358@0x2cc358
+
+## LongRand @ 0x41A782
+- ref 0x2CC7C0 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC7CC type=1 func=sub_2CC358@0x2cc358
+
+## SetValue @ 0x41A78B
+- ref 0x2CC7C4 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC7D0 type=1 func=sub_2CC358@0x2cc358
+
+## GetMoneyId @ 0x41A794
+- ref 0x2CC7E4 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CC7EC type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CCB9C type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CCBB0 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CCBCC type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CCBD8 type=1 func=sub_2CC358@0x2cc358
+
+## Application.Quit @ 0x41A79F
+- ref 0x2CCB0C type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CCB20 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CCB40 type=1 func=sub_2CC358@0x2cc358
+- ref 0x2CCB4C type=1 func=sub_2CC358@0x2cc358
+
+## CheckConsume(List) @ 0x41A86E
+- no direct xrefs
+## UpdatePower @ 0x41A3F7
+- no direct xrefs
+## DailyDataMgr.GG @ 0x41A40D
+- no direct xrefs
+# Referencing functions
+
+## sub_2CC358 @ 0x2CC358
+labels: Application.Quit, GetMoneyId, LongRand, ReduceCreatureSpNum, SetValue
+
+```c
+__int64 sub_2CC358()
+{
+  int v0; // w0
+  int v1; // w19
+  ssize_t v2; // x20
+  __int64 v3; // x8
+  int v4; // w9
+  DIR *v5; // x0
+  DIR *v6; // x19
+  struct dirent *v7; // x0
+  unsigned int *v8; // x0
+  const char *d_name; // x27
+  int v10; // w0
+  int v11; // w27
+  int v12; // w21
+  int i; // w26
+  ssize_t v14; // x0
+  int v15; // w19
+  unsigned __int8 *v16; // x20
+  ssize_t v17; // x28
+  int v18; // w24
+  unsigned int *v19; // x0
+  __int64 v20; // x0
+  __int64 v21; // x21
+  __int64 v22; // x25
+  __int64 v23; // x24
+  __int64 v24; // x23
+  __int64 v25; // x27
+  __int64 v26; // x0
+  void *v27; // x3
+  void *v28; // x3
+  void *v29; // x3
+  void *v30; // x3
+  void *v31; // x3
+  void *v32; // x3
+  void *v33; // x3
+  const char *v34; // x2
+  __int64 v35; // x0
+  __int64 v36; // x23
+  __int64 v37; // x26
+  __int64 v38; // x21
+  __int64 v39; // x0
+  __int64 v40; // x28
+  const char *v41; // x0
+  __int64 v42; // x0
+  __int64 v43; // x0
+  __int64 v44; // x23
+  __int64 v45; // x20
+  __int64 v46; // x0
+  __int64 v47; // x28
+  const char *v48; // x0
+  __int64 v49; // x0
+  __int64 v50; // x4
+  int v51; // w8
+  __int64 v53; // [xsp+8h] [xbp-B98h]
+  __int64 v54; // [xsp+8h] [xbp-B98h]
+  __int64 v55; // [xsp+10h] [xbp-B90h]
+  __int64 v56; // [xsp+18h] [xbp-B88h]
+  DIR *v57; // [xsp+28h] [xbp-B78h]
+  __int64 v58; // [xsp+28h] [xbp-B78h]
+  char v59[400]; // [xsp+30h] [xbp-B70h] BYREF
+  char name[256]; // [xsp+1C0h] [xbp-9E0h] BYREF
+  _OWORD buf[8]; // [xsp+2C0h] [xbp-8E0h] BYREF
+  char v62[1024]; // [xsp+340h] [xbp-860h] BYREF
+  _QWORD v63[130]; // [xsp+740h] [xbp-460h] BYREF
+
+  v63[128] = *(_QWORD *)(_ReadStatusReg(TPIDR_EL0) + 40);
+  memset(buf, 0, sizeof(buf));
+  v0 = __open_2("/proc/self/cmdline", 0);
+  if ( v0 < 0
+    || (v1 = v0, v2 = read(v0, buf, 0x7Fu), close(v1), v2 < 1)
+    || (v3 = 0, *((_BYTE *)buf + v2) = 0, v4 = LOBYTE(buf[0]), !LOBYTE(buf[0])) )
+  {
+LABEL_6:
+    if ( !LOBYTE(buf[0]) )
+      goto LABEL_33;
+    goto LABEL_7;
+  }
+  while ( v4 != 58 )
+  {
+    ++v3;
+    v4 = *((unsigned __int8 *)buf + v3);
+    if ( !*((_BYTE *)buf + v3) )
+      goto LABEL_6;
+  }
+  *((_BYTE *)buf + (unsigned int)v3) = 0;
+  if ( LOBYTE(buf[0]) )
+  {
+LABEL_7:
+    sub_2C9C64(name, 256, 256, "/sdcard/Android/data/%s/files", (const char *)buf);
+    v5 = opendir(name);
+    if ( v5 )
+    {
+      v6 = v5;
+      v7 = readdir(v5);
+      if ( v7 )
+      {
+        v57 = v6;
+        do
+        {
+          d_name = v7->d_name;
+          if ( strstr(v7->d_name, "tombstone") )
+          {
+            sub_2C9C64(v59, 400, 400, "%s/%s", name, d_name);
+            v10 = __open_2(v59, 0);
+            if ( v10 < 0 )
+            {
+              v8 = (unsigned int *)__errno();
+              __android_log_print(6, byte_41A0A4, aTomb_0, v59, *v8);
+            }
+            else
+            {
+              v11 = v10;
+              __android_log_print(6, byte_41A0A4, "[TOMB] =========== %s ===========", v59);
+              v12 = 0;
+              for ( i = 0; i <= 23999; i += v15 )
+              {
+                v14 = read(v11, v63, 0x400u);
+                if ( v14 < 1 )
+                  break;
+                v15 = v14;
+                v16 = (unsigned __int8 *)v63;
+                v17 = v14;
+                do
+                {
+                  v18 = *v16;
+                  if ( v12 > 1022 || v18 == 10 )
+                  {
+                    v62[v12] = 0;
+                    if ( v12 >= 1 )
+                      __android_log_print(6, byte_41A0A4, "[TOMB] %s", v62);
+                    if ( v18 == 10 )
+                    {
+                      v12 = 0;
+                    }
+                    else
+                    {
+                      v62[0] = v18;
+                      v12 = 1;
+                    }
+                  }
+                  else
+                  {
+                    v62[v12++] = v18;
+                  }
+                  --v17;
+                  ++v16;
+                }
+                while ( v17 );
+              }
+              if ( v12 >= 1 )
+              {
+                v62[v12] = 0;
+                __android_log_print(6, byte_41A0A4, "[TOMB] %s", v62);
+              }
+              close(v11);
+              __android_log_print(6, byte_41A0A4, "[TOMB] =========== END %s ===========", v59);
+              v6 = v57;
+            }
+          }
+          v7 = readdir(v6);
+        }
+        while ( v7 );
+      }
+      closedir(v6);
+    }
+    else
+    {
+      v19 = (unsigned int *)__errno();
+      __android_log_print(6, byte_41A0A4, aTomb, name, *v19);
+    }
+  }
+LABEL_33:
+  sleep(7u);
+  if ( !off_169F9A0 || !off_169F858 || !off_169F8B0 )
+  {
+    __android_log_print(3, aBlackwind, aXIl2cppApi);
+    goto LABEL_119;
+  }
+  v20 = sub_2CBA98("Assembly-CSharp.dll", &byte_10910C3, "BattleMgr", "HurtShow", 6);
+  if ( !v20 )
+  {
+    __android_log_print(3, aBlackwind, aX_1);
+    goto LABEL_119;
+  }
+  v21 = v20;
+  qword_16A0500 = v20 - 21200164;
+  __android_log_print(3, aBlackwind, aX_2);
+  if ( (qword_16A0500 & 0xFFF) != 0 )
+  {
+    __android_log_print(3, aBlackwind, aX_3, qword_16A0500 & 0xFFF);
+    ++dword_16A066C;
+  }
+  v58 = sub_2CBA98("Assembly-CSharp.dll", &byte_10910C3, "CreatureControl", "ReduceCreatureSpNum", 3);
+  v56 = sub_2CBA98("Assembly-CSharp.dll", &byte_10910C3, "BagDataMgr", "GetItemNum", 2);
+  v22 = sub_2CBA98("Assembly-CSharp.dll", &byte_10910C3, "BaseDataMgr", "GgSet", 0);
+  v23 = sub_2CBA98("Assembly-CSharp.dll", &byte_10910C3, "EncryptPlayerDataMgr", "CheckZuoBi", 0);
+  v24 = sub_2CBA98("UnityEngine.CoreModule.dll", "UnityEngine", "Application", "Quit", 0);
+  v25 = sub_2CBA98("Assembly-CSharp.dll", &byte_10910C3, "LongRand", "SetValue", 1);
+  v26 = sub_2CBA98("Assembly-CSharp.dll", &byte_10910C3, "BagDataMgr", "GetMoneyId", 1);
+  v53 = qword_16A0500;
+  v55 = v26;
+  if ( v21 - qword_16A0500 == 21200164 )
+  {
+    v27 = &unk_41AE9B;
+  }
+  else
+  {
+    ++dword_16A066C;
+    v27 = &unk_41AE9F;
+  }
+  __android_log_print(3, aBlackwind, aX_4, v27, "HurtShow", v21);
+  if ( v58 )
+  {
+    if ( v58 - qword_16A0500 == 19431068 )
+    {
+      v28 = &unk_41AE9B;
+    }
+    else
+    {
+      ++dword_16A066C;
+      v28 = &unk_41AE9F;
+    }
+    __android_log_print(3, aBlackwind, aX_4, v28, "ReduceCreatureSpNum");
+  }
+  else
+  {
+    __android_log_print(3, aBlackwind, aX_5, "ReduceCreatureSpNum");
+    ++dword_16A066C;
+  }
+  if ( v56 )
+  {
+    if ( v56 - qword_16A0500 == 19108100 )
+    {
+      v29 = &unk_41AE9B;
+    }
+    else
+    {
+      ++dword_16A066C;
+      v29 = &unk_41AE9F;
+    }
+    __android_log_print(3, aBlackwind, aX_4, v29, "GetItemNum");
+    if ( v22 )
+    {
+LABEL_55:
+      if ( v22 - qword_16A0500 == 20102864 )
+      {
+        v30 = &unk_41AE9B;
+      }
+      else
+      {
+        ++dword_16A066C;
+        v30 = &unk_41AE9F;
+      }
+      __android_log_print(3, aBlackwind, aX_4, v30, "GgSet", v22);
+      if ( v23 )
+        goto LABEL_59;
+LABEL_65:
+      __android_log_print(3, aBlackwind, aX_5, "CheckZuoBi");
+      ++dword_16A066C;
+      goto LABEL_66;
+    }
+  }
+  else
+  {
+    __android_log_print(3, aBlackwind, aX_5, "GetItemNum");
+    ++dword_16A066C;
+    if ( v22 )
+      goto LABEL_55;
+  }
+  __android_log_print(3, aBlackwind, aX_5, "GgSet");
+  ++dword_16A066C;
+  if ( !v23 )
+    goto LABEL_65;
+LABEL_59:
+  if ( v23 - qword_16A0500 == 19050368 )
+  {
+    v31 = &unk_41AE9B;
+  }
+  else
+  {
+    ++dword_16A066C;
+    v31 = &unk_41AE9F;
+  }
+  __android_log_print(3, aBlackwind, aX_4, v31, "CheckZuoBi", v23);
+LABEL_66:
+  if ( v24 )
+  {
+    if ( v24 - qword_16A0500 == 40763680 )
+    {
+      v32 = &unk_41AE9B;
+    }
+    else
+    {
+      ++dword_16A066C;
+      v32 = &unk_41AE9F;
+    }
+    __android_log_print(3, aBlackwind, aX_4, v32, "Application.Quit", v24);
+  }
+  else
+  {
+    __android_log_print(3, aBlackwind, aX_5, "Application.Quit");
+    ++dword_16A066C;
+  }
+  if ( v55 )
+  {
+    if ( v55 - qword_16A0500 == 19105800 )
+    {
+      v33 = &unk_41AE9B;
+    }
+    else
+    {
+      ++dword_16A066C;
+      v33 = &unk_41AE9F;
+    }
+    __android_log_print(3, aBlackwind, aX_4, v33, "GetMoneyId");
+  }
+  else
+  {
+    __android_log_print(3, aBlackwind, aX_5, "GetMoneyId");
+    ++dword_16A066C;
+  }
+  off_16A0658 = (_UNKNOWN *)(qword_16A0500 + 21281700);
+  __android_log_print(3, aBlackwind, aX_6);
+  if ( v25 )
+    __android_log_print(3, aBlackwind, aX_7, v25, v25 - qword_16A0500);
+  __android_log_print(3, aBlackwind, aX_8, v53 + 19118168, 19118168);
+  if ( v22 )
+  {
+    DobbyHook(v22, sub_2CBC7C, &unk_16A0670);
+    __android_log_print(3, aBlackwind, aX_10);
+  }
+  else
+  {
+    __android_log_print(3, aBlackwind, aX_9);
+  }
+  if ( v23 )
+  {
+    DobbyHook(v23, sub_2CBC94, &unk_16A0678);
+    v34 = (const char *)&unk_41A945;
+  }
+  else
+  {
+    v34 = (const char *)&unk_41A974;
+  }
+  v54 = v53 + 19118168;
+  __android_log_print(3, aBlackwind, v34);
+  if ( v24 )
+  {
+    DobbyHook(v24, sub_2CBCC0, &off_16A0508);
+    __android_log_print(3, aBlackwind, aX_11);
+  }
+  v63[0] = 0;
+  v35 = off_169F9B0(qword_16A03B0, v63);
+  if ( v63[0] )
+  {
+    v36 = v35;
+    v37 = v21;
+    v38 = 0;
+    while ( 1 )
+    {
+      v39 = off_169F810(*(_QWORD *)(v36 + 8 * v38));
+      if ( v39 )
+      {
+        v40 = v39;
+        v41 = (const char *)off_169FDC8();
+        if ( !strcmp(v41, "Assembly-CSharp.dll") )
+        {
+          v42 = off_169F858(v40, &byte_10910C3, "PlayerControl");
+          if ( v42 )
+            break;
+        }
+      }
+      if ( (unsigned __int64)++v38 >= v63[0] )
+      {
+        v42 = 0;
+        break;
+      }
+    }
+    v21 = v37;
+  }
+  else
+  {
+    v42 = 0;
+  }
+  qword_16A0518 = v42;
+  v63[0] = 0;
+  v43 = off_169F9B0(qword_16A03B0, v63);
+  if ( v63[0] )
+  {
+    v44 = v43;
+    v45 = 0;
+    while ( 1 )
+    {
+      v46 = off_169F810(*(_QWORD *)(v44 + 8 * v45));
+      if ( v46 )
+      {
+        v47 = v46;
+        v48 = (const char *)off_169FDC8();
+        if ( !strcmp(v48, "Assembly-CSharp.dll") )
+        {
+          v49 = off_169F858(v47, &byte_10910C3, "WorldBossControl");
+          if ( v49 )
+            break;
+        }
+      }
+      if ( (unsigned __int64)++v45 >= v63[0] )
+        goto LABEL_105;
+    }
+    v50 = v49;
+  }
+  else
+  {
+LABEL_105:
+    v50 = 0;
+  }
+  qword_16A0520 = v50;
+  __android_log_print(3, aBlackwind, aX_12, qword_16A0518);
+  if ( qword_16A0518 )
+  {
+    if ( dword_16A066C )
+    {
+LABEL_108:
+      __android_log_print(3, aBlackwind, aX_14);
+      goto LABEL_119;
+    }
+  }
+  else
+  {
+    __android_log_print(3, aBlackwind, aX_13);
+    v51 = dword_16A066C++;
+    if ( v51 != -1 )
+      goto LABEL_108;
+  }
+  byte_16A0514 = 1;
+  DobbyHook(v21, sub_2CBD54, &off_16A0528);
+  if ( v58 )
+    DobbyHook(v58, sub_2CBF5C, &off_16A0538);
+  if ( v56 )
+    DobbyHook(v56, sub_2CC138, &off_16A0548);
+  if ( v55 )
+    DobbyHook(v55, sub_2CC088, &off_16A0540);
+  if ( v54 )
+    DobbyHook(v54, sub_2CC290, &off_16A0660);
+  __android_log_print(3, aBlackwind, aX_15);
+LABEL_119:
+  __android_log_print(3, aBlackwind, "111111111111");
+  return 0;
+}
+
+```
+

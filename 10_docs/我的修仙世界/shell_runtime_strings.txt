@@ -1,0 +1,76 @@
+0x41A180	Engine
+0x41A187	Application
+0x41A193	get_unityVersion
+0x41A1A4	执行FindObjects
+0x41A1B6	执行完毕
+0x41A1C3	寻找的对象类指针%p
+0x41A1DE	老版本
+0x41A1E8	新版本
+0x41A1F2	API 还没有初始化成功
+0x41A20F	[!] Class not found
+0x41A224	[+] Class found: %p
+0x41A238	PID:%d
+0x41A23F	内存表示：%s
+0x41A251	走到这里了
+0x41A261	[反作弊] BuildPassCheckInfo HIT model=%p extraIntDic=%p -> NULL
+0x41A2A4	[反作弊] BuildPassCheckInfo HIT model=NULL
+0x41A2D2	[X安全网] ★拦下 GgSet() —— 游戏想给这个存档打永久封号标记(dfdog), 已阻止
+0x41A338	[X安全网] CheckZuoBi() -> 强制 false(不调原函数)
+0x41A373	[X探针] ☠游戏要 Application.Quit()! 调用点RVA=0x%llX  (对照: 0x13F8xxx/0x13F9xxx=属性战力检测 0x1320F78~0x13214A4=UpdatePower 0x1333970=DailyDataMgr.GG(存档已被标记) 0x13340A0=时间回拨 0x144FCxx=加密值不变式被破坏)
+0x41A46F	[X探针] 诊断开关开着 -> 【吞掉这次退出】, 游戏继续跑
+0x41A4B9	[X探针] HurtShow#%d 受击者=%s hurt=%lld 类型=%d buffid=%d type=%d
+0x41A502	[X探针] 吞掉玩家扣血 #%d value=%lld
+0x41A52E	[X探针] GetItemNum 新itemid=%d 当前数量=%lld
+0x41A562	[X货币] 把"不足"判据改成够 #%d (原本缺的道具id=%d)
+0x41A5A5	[X] il2cpp API 尚未自动绑定, 跳过挂钩 (domain_get=%p)
+0x41A5E5	Assembly-CSharp.dll
+0x41A5F9	BattleMgr
+0x41A603	HurtShow
+0x41A60C	[X] ☠连 BattleMgr::HurtShow 都取不到 -> 游戏版本变了? 全部功能不挂。
+0x41A665	[X自检] 基址 = 0x%llX  (由 HurtShow 的 methodPointer 减 RVA 反推)
+0x41A6B0	[X自检] ☠☠基址低12位=0x%llX 不页对齐 -> dump 与设备不是同一构建, 立即停手!
+0x41A716	CreatureControl
+0x41A726	ReduceCreatureSpNum
+0x41A73A	BagDataMgr
+0x41A745	GetItemNum
+0x41A750	BaseDataMgr
+0x41A75C	GgSet
+0x41A762	EncryptPlayerDataMgr
+0x41A777	CheckZuoBi
+0x41A782	LongRand
+0x41A78B	SetValue
+0x41A794	GetMoneyId
+0x41A79F	Application.Quit
+0x41A7B0	[X自检] ✓ LongRand::SetValue(long) = %p  (base+0x%llX 直接算, 绕开重载陷阱)
+0x41A809	[X自检]   (旁证: 按名取到的是 %p RVA=0x%llX, 应等于 int 重载 0x144C198)
+0x41A860	[X自检] ✓ CheckConsume(List) = %p  (base+0x%llX 直接算, 三个重载里的 List 版)
+0x41A8BC	[X] ★安全网① GgSet 已空实现(封号标记写不进去了)
+0x41A900	[X] ☠安全网① GgSet 没挂上, 有被永久封存档的风险!
+0x41A945	[X] ★安全网② CheckZuoBi 已强制 false
+0x41A974	[X] ☠安全网② CheckZuoBi 没挂上
+0x41A99D	[X] ★探针 Application.Quit 已挂(平时只记录, 开诊断开关才拦)
+0x41A9EB	PlayerControl
+0x41A9F9	WorldBossControl
+0x41AA0A	[X] 类指针: PlayerControl=%p  WorldBossControl=%p
+0x41AA3F	[X] ☠拿不到 PlayerControl -> 敌我分不清, 伤害/无敌【不会生效】(安全失败)
+0x41AAA0	[X] ★★自检全过, 三个功能钩子已挂上。开关: 1=百倍伤害 2=玩家无敌 3=货币无限 4=诊断日志
+0x41AB1A	[X] ☠自检有 %d 项不通过 -> 【功能钩子故意不挂】(安全网仍在)。先看上面哪一行是 ☠, 多半是游戏更新了。
+0x41ABAA	111111111111
+0x41ABB7	★开关到达: featNum=0 百倍伤害 -> %d
+0x41ABE5	★开关到达: featNum=1 玩家无敌 -> %d
+0x41AC13	allocator<T>::allocate(size_t n) 'n' exceeds maximum supported size
+0x41AC57	安装特征索引:%d 地址:%lx 到HOOK槽:%d
+0x41AC86	候选数量%d超过HOOK槽上限%d，仅安装前%d个候选
+0x41ACC4	已拆除其余误判的 unityrun 候选 hook，仅保留索引:%d
+0x41AD07	自动锁定特征索引:%d 地址:%lx
+0x41AD2E	[X货币] 学到一个货币id=%d (白名单现有 %d 个)
+0x41AD69	/proc/self/cmdline
+0x41AD7C	/sdcard/Android/data/%s/files
+0x41AD9A	[TOMB] 打不开目录 %s (errno=%d)
+0x41ADBF	tombstone
+0x41ADC9	%s/%s
+0x41ADCF	[TOMB] 打不开 %s (errno=%d)
+0x41ADEE	[TOMB] =========== %s ===========
+0x41AE10	[TOMB] %s
+0x41AE1A	[TOMB] =========== END %s ===========
+0x41AE40	[X自检] ☠%s 没取到(NULL)
