@@ -1105,3 +1105,201 @@ Success
 [install-verify] 设备 base.apk md5 == 本地产物 (443eec27fcabaa9ab1d351366b5e50e8) ✓
 [2026-09-13 15:45:26] [凡尘西游修真记] stage=install 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-13 23:27:07] [凡尘西游修真记] stage=dump 开始
+命令: bash 04_scripts/凡尘西游修真记/dump_fcxyxzj.sh "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+==> [1/3] jadx + apktool 拆包
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/jadx_1.1.0
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 5754 (0%)INFO  - progress: 542 of 5754 (9%)INFO  - progress: 1022 of 5754 (17%)INFO  - progress: 1043 of 5754 (18%)INFO  - progress: 1097 of 5754 (19%)INFO  - progress: 1530 of 5754 (26%)INFO  - progress: 1708 of 5754 (29%)INFO  - progress: 1850 of 5754 (32%)INFO  - progress: 2013 of 5754 (34%)INFO  - progress: 2147 of 5754 (37%)INFO  - progress: 2197 of 5754 (38%)INFO  - progress: 2444 of 5754 (42%)INFO  - progress: 2621 of 5754 (45%)INFO  - progress: 2687 of 5754 (46%)INFO  - progress: 2725 of 5754 (47%)INFO  - progress: 2818 of 5754 (48%)INFO  - progress: 2873 of 5754 (49%)INFO  - progress: 2935 of 5754 (51%)INFO  - progress: 3038 of 5754 (52%)INFO  - progress: 3085 of 5754 (53%)INFO  - progress: 3190 of 5754 (55%)INFO  - progress: 3229 of 5754 (56%)INFO  - progress: 3276 of 5754 (56%)INFO  - progress: 3331 of 5754 (57%)INFO  - progress: 3463 of 5754 (60%)INFO  - progress: 3591 of 5754 (62%)INFO  - progress: 3673 of 5754 (63%)INFO  - progress: 3703 of 5754 (64%)INFO  - progress: 3765 of 5754 (65%)INFO  - progress: 3838 of 5754 (66%)INFO  - progress: 3919 of 5754 (68%)INFO  - progress: 3963 of 5754 (68%)INFO  - progress: 3984 of 5754 (69%)INFO  - progress: 4013 of 5754 (69%)INFO  - progress: 4015 of 5754 (69%)INFO  - progress: 4054 of 5754 (70%)INFO  - progress: 4117 of 5754 (71%)INFO  - progress: 4178 of 5754 (72%)INFO  - progress: 4253 of 5754 (73%)INFO  - progress: 4330 of 5754 (75%)INFO  - progress: 4397 of 5754 (76%)INFO  - progress: 4437 of 5754 (77%)INFO  - progress: 4464 of 5754 (77%)INFO  - progress: 4508 of 5754 (78%)INFO  - progress: 4539 of 5754 (78%)INFO  - progress: 4575 of 5754 (79%)INFO  - progress: 4619 of 5754 (80%)INFO  - progress: 4643 of 5754 (80%)INFO  - progress: 4654 of 5754 (80%)INFO  - progress: 4706 of 5754 (81%)INFO  - progress: 4744 of 5754 (82%)INFO  - progress: 4761 of 5754 (82%)INFO  - progress: 4782 of 5754 (83%)INFO  - progress: 4810 of 5754 (83%)INFO  - progress: 4815 of 5754 (83%)INFO  - progress: 4831 of 5754 (83%)INFO  - progress: 4831 of 5754 (83%)INFO  - progress: 4865 of 5754 (84%)INFO  - progress: 4915 of 5754 (85%)INFO  - progress: 4963 of 5754 (86%)INFO  - progress: 5017 of 5754 (87%)INFO  - progress: 5079 of 5754 (88%)INFO  - progress: 5104 of 5754 (88%)INFO  - progress: 5187 of 5754 (90%)INFO  - progress: 5307 of 5754 (92%)INFO  - progress: 5370 of 5754 (93%)INFO  - progress: 5427 of 5754 (94%)INFO  - progress: 5487 of 5754 (95%)INFO  - progress: 5511 of 5754 (95%)INFO  - progress: 5542 of 5754 (96%)INFO  - progress: 5602 of 5754 (97%)INFO  - progress: 5662 of 5754 (98%)INFO  - progress: 5730 of 5754 (99%)INFO  - progress: 5752 of 5754 (99%)                                                             ERROR - finished with errors, count: 91
+警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
+==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/apktool_1.1.0
+I: Using Apktool 3.0.3 on 凡尘西游修真记_taptap_official.apk with 8 threads
+I: Baksmaling classes.dex...
+I: Loading resource table...
+I: Baksmaling classes2.dex...
+I: Decoding value resources...
+I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
+I: Decoding file resources...
+I: Generating values XMLs...
+I: Decoding AndroidManifest.xml with resources...
+I: Copying original files...
+I: Copying assets...
+I: Copying lib...
+I: Copying unknown files...
+
+完成。
+  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/jadx_1.1.0
+  apktool: /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/apktool_1.1.0
+  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/decode_summary_1.1.0.md
+  manifest:/Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/manifest_1.1.0.txt
+==> [2/3] 提取 IL2CPP 静态分析输入
+-rw-r--r--@ 1 aliang  staff  11831932 Sep 13 23:28 /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/global-metadata.packed.dat
+-rw-r--r--@ 1 aliang  staff  66273280 Sep 13 23:28 /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/libil2cpp.so
+==> [3/3] 运行时解码元数据（可选对照）
+已复制运行时解码元数据: /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/global-metadata.runtime.dat
+
+完成。dump 目录: /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记
+[2026-09-13 23:28:07] [凡尘西游修真记] stage=dump 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:07:05] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (2d9a72265f0ea2a0842eda68ce2a37bf)
+[2026-09-14 00:07:11] [凡尘西游修真记] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:07:20] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.LxBrL2/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.LxBrL2/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.LxBrL2/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 28s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  405492 Sep 14 00:08 /tmp/fcxyxzj_surgical.LxBrL2/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 14 00:08 /tmp/fcxyxzj_surgical.LxBrL2/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=405492; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (2d9a72265f0ea2a0842eda68ce2a37bf) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 14 00:08 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-14 00:08:32] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:08:42] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = 08caa9ef7d775d8ef467d1d0c8313a83
+-rw-r--r--@ 1 aliang  staff   116M Sep 14 00:08 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-14 00:09:14] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:09:17] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 34.4 MB/s (121162500 bytes in 3.363s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (08caa9ef7d775d8ef467d1d0c8313a83) ✓
+[2026-09-14 00:09:28] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 00:20:50] [凡尘西游修真记] stage=archive 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-14 00:20:51] [凡尘西游修真记] stage=archive 完成（校验通过）
+────────────────────────────────────────────

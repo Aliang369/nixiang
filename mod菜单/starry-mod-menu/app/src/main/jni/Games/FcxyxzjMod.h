@@ -23,6 +23,7 @@ enum FcxyxzjFeat : int {
     FCXYXZJ_FEAT_ITEM = 3,  // Toggle_物品不减（药瓶/物品/符文书/快捷栏喝药 不消耗）
     FCXYXZJ_FEAT_DROP = 4,  // Toggle_掉落翻倍（战斗结算掉落 修为/灵石 ×2）
     FCXYXZJ_FEAT_RATE = 5,  // Toggle_掉落必掉（副本结算概率判定全通过，配置内可掉项必掉）
+    FCXYXZJ_FEAT_JADE = 6,  // Toggle_灵玉不减（灵玉兑换等消费前读值恒为大值，不断可兑）
 };
 
 // 签名与 ModEntry.h 回调一致（Unity 系忽略 vm）

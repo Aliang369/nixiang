@@ -51,6 +51,7 @@ static std::atomic<bool> g_cur{false};
 static std::atomic<bool> g_item{false};
 static std::atomic<bool> g_drop{false};
 static std::atomic<bool> g_dropRate{false};
+static std::atomic<bool> g_jade{false};
 
 // ============================================================
 // ② 锚点常量（1.1.0 实测；换包必须重新 dump 反汇编核对）
@@ -71,6 +72,8 @@ enum : uintptr_t {
     kRvaDropRateRet4    = 0x1AA2540,  // 难度相关 1~3%：rand >= 难度*10 跳过
     kRvaDropRateRet5    = 0x1AA2754,  // 百分比：cfg*2000 <= rand 跳过
     kRvaDropRateRet6    = 0x1AA2980,  // 百分比：cfg*2000 <= rand 跳过（另一分支）
+    // —— 灵玉（加密存储于 PlayerData+0x2A0 字符串，显示值 = (解密值-100)/3，上限 30）——
+    kRvaGetLingYu       = 0x1A58174,  // PlayerData::get_灵玉（唯一读取入口，含兑换按钮阈值判定）
     // —— 广告 ——
     kRvaShowAd          = 0x1ABA808,  // ToponVideo::showAd
     kRvaIsReady         = 0x1ABA8A0,  // ToponVideo::isReady
@@ -92,6 +95,7 @@ enum : uint32_t {
     kInsRemoveAt    = 0xF81E0FFE,  // str x30, [sp, #-0x20]!
     kInsShowAdLike  = 0xA9BE57FE,  // stp x30, x21, [sp, #-0x20]!（showAd/isReady/getXianjing 同序言）
     kInsGetSuccessWuPing = 0xD101C3FF,  // sub sp, sp, #0x70
+    kInsGetLingYu   = 0xF81F0FFE,  // str x30, [sp, #-0x10]!
 };
 
 enum : size_t {
@@ -110,6 +114,7 @@ enum : size_t {
 static const int32_t kResourceMultiplier = 1000;        // 无限资源：单次获取放大倍数
 static const int32_t kResourceAddCeiling = 1000000000;  // 上限保护（防 int32 溢出；addData 自身夹到 1e12）
 static const int32_t kItemCountRefill    = 99;          // 物品不减：count 归零时回填值
+static const int64_t kJadeValue          = 9999;        // 灵玉不减：读值恒定大值（原值上限 30）
 static const int32_t kMaxDropReplay      = 16;          // 掉落必掉：单局最多 replay 的候选数（防配置异常）
 static const int32_t kDropGateSkip       = 0x7FFFFFFF;  // replay 期间让附加概率闸门走「跳过」分支
 
@@ -336,6 +341,7 @@ typedef int32_t (*GetInt_t)(void* self, void* method);
 typedef void    (*RemoveAt_t)(void* list, int32_t index, void* method);
 typedef int32_t (*RandomRange_t)(int32_t lo, int32_t hi, void* method);
 typedef void*   (*GetSuccessWuPing_t)(void* self);  // 返回托管字符串（奖励提示文本）
+typedef int64_t (*GetLingYu_t)(void* self);         // PlayerData::get_灵玉（加密字段解密后的显示值）
 
 static AddData_t g_origAddData = nullptr;
 static AddData_t g_origSubData = nullptr;
@@ -345,6 +351,7 @@ static GetInt_t  g_origGetXianjing = nullptr;
 static RemoveAt_t g_origRemoveAt = nullptr;
 static RandomRange_t g_origRandomRange = nullptr;
 static GetSuccessWuPing_t g_origGetSuccessWuPing = nullptr;
+static GetLingYu_t g_origGetLingYu = nullptr;
 static thread_local bool t_allDropReplay = false;  // 主池候选重放中（同线程同步调用）
 
 static inline int32_t ScaleUp(int32_t v, int32_t mul) {
@@ -423,6 +430,14 @@ static void Hooked_ShowAd(void* self, void* method) {
 static int32_t Hooked_GetXianjing(void* self, void* method) {
     if (g_ad.load()) return 1;
     return g_origGetXianjing ? g_origGetXianjing(self, method) : 0;
+}
+
+// 灵玉不减：灵玉加密存在 PlayerData+0x2A0（Base64 密文），显示值 = (解密值-100)/3，上限 30。
+// 全库只有 getter 0x1A58174 一处读值出口（兑换按钮 cmp x0,#9 阈值、面板刷新、充值塔均走它），
+// 开启时直接返回大值：阈值永远通过、UI 显示大数字、消耗不再受影响（不碰密文与解密链）。
+static int64_t Hooked_GetLingYu(void* self) {
+    if (g_jade.load()) return kJadeValue;
+    return g_origGetLingYu ? g_origGetLingYu(self) : 0;
 }
 
 // 物品不减：只在 4 个“使用物品”入口拦 List<T>::RemoveAt，其余 150+ 调用点原样放行
@@ -578,6 +593,8 @@ static const HookSlot kSlots[] = {
     {"RandomRange", kRvaRandomRange, kInsShowAdLike, nullptr, nullptr, (void*)Hooked_RandomRange, (void**)&g_origRandomRange},
     // 掉落必掉（主池全候选：replay 原函数逐个发放；同名单方法无重载，可按名兼底）
     {"GetSuccessWuPing", kRvaGetSuccessWuPing, kInsGetSuccessWuPing, "FightTimeMgr", "GetSuccessWuPing", (void*)Hooked_GetSuccessWuPing, (void**)&g_origGetSuccessWuPing},
+    // 灵玉不减（加密字段，方法名无 LingYu 字样 → 只走 RVA + 序言校验）
+    {"getLingYu", kRvaGetLingYu, kInsGetLingYu, nullptr, nullptr, (void*)Hooked_GetLingYu, (void**)&g_origGetLingYu},
 };
 
 static void InstallSlotByTag(const char* tag) {
@@ -601,6 +618,7 @@ static void SyncHooks() {
         InstallSlotByTag("subData");
     }
     if (g_drop.load()) InstallSlotByTag("addData");
+    if (g_jade.load()) InstallSlotByTag("getLingYu");
     if (g_item.load()) InstallSlotByTag("RemoveAt");
     if (g_dropRate.load()) {
         // 顺序固定：addData（replay 期间抑住尾部灵石/修为）→ RandomRange（概率归零）
@@ -632,6 +650,7 @@ void Fcxyxzj_OnFeatureChanged(int featNum, bool enabled) {
         case FCXYXZJ_FEAT_ITEM: g_item.store(enabled); break;
         case FCXYXZJ_FEAT_DROP: g_drop.store(enabled); break;
         case FCXYXZJ_FEAT_RATE: g_dropRate.store(enabled); break;
+        case FCXYXZJ_FEAT_JADE: g_jade.store(enabled); break;
         default: break;
     }
     SyncHooks();
@@ -646,6 +665,7 @@ void Fcxyxzj_Tick(const bool* features, const int* /*values*/) {
         g_item.store(features[FCXYXZJ_FEAT_ITEM]);
         g_drop.store(features[FCXYXZJ_FEAT_DROP]);
         g_dropRate.store(features[FCXYXZJ_FEAT_RATE]);
+        g_jade.store(features[FCXYXZJ_FEAT_JADE]);
     }
     if (!g_libReady.load() && isLibraryLoaded(TPL_TARGET_LIB)) g_libReady.store(true);
     SyncHooks();
@@ -657,4 +677,5 @@ void Fcxyxzj_ForceClear() {
     g_item.store(false);
     g_drop.store(false);
     g_dropRate.store(false);
+    g_jade.store(false);
 }

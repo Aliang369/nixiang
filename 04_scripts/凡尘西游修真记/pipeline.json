@@ -105,10 +105,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-13 00:09:19",
+      "done_at": "2026-09-13 23:28:05",
       "artifacts": {
         "03_decompiled/凡尘西游修真记/decode_summary_1.1.0.md": {
-          "md5": "e1a6ae1a4fe244c6e17ca8f778dac3ee"
+          "md5": "2b1d740bfcf0cad859c19cd6645d1a61"
         },
         "06_dumped/凡尘西游修真记/libil2cpp.so": {
           "md5": "73593ddc26164dc67fd2dee795a00f39"
@@ -198,15 +198,15 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-13 15:44:07",
+      "done_at": "2026-09-14 00:07:08",
       "artifacts": {
         "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so": {
-          "md5": "28ae829a8633d1a7e110bf320120076e"
+          "md5": "2d9a72265f0ea2a0842eda68ce2a37bf"
         }
       },
       "inputs": {
-        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjMod.cpp": "422ccf7d193a8bfc15b9aa3c27cb8d8e",
-        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjEntry.cpp": "aa0cb5635c57a77f80dff35825439051",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjMod.cpp": "9fcf2aa0cfdd13773a4f8a65372c81d0",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjEntry.cpp": "e353ddf342443dce3cb072dbdd666eaf",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android_fcxyxzj.mk": "2d6347510def9a1818acf0cca95adfdf"
       }
     },
@@ -227,14 +227,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-13 15:44:50",
+      "done_at": "2026-09-14 00:08:28",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk": {
-          "md5": "bfdec351ccb0dc806fe2bd7830958615"
+          "md5": "ee0bcf932e382da12002d98bce1464b9"
         }
       },
       "inputs": {
-        "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so": "28ae829a8633d1a7e110bf320120076e"
+        "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so": "2d9a72265f0ea2a0842eda68ce2a37bf"
       }
     },
     {
@@ -254,14 +254,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-13 15:45:10",
+      "done_at": "2026-09-14 00:09:11",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": {
-          "md5": "443eec27fcabaa9ab1d351366b5e50e8"
+          "md5": "08caa9ef7d775d8ef467d1d0c8313a83"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk": "bfdec351ccb0dc806fe2bd7830958615"
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk": "ee0bcf932e382da12002d98bce1464b9"
       }
     },
     {
@@ -295,14 +295,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-13 15:45:25",
+      "done_at": "2026-09-14 00:09:25",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": {
-          "md5": "443eec27fcabaa9ab1d351366b5e50e8"
+          "md5": "08caa9ef7d775d8ef467d1d0c8313a83"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": "443eec27fcabaa9ab1d351366b5e50e8"
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": "08caa9ef7d775d8ef467d1d0c8313a83"
       }
     },
     {
@@ -318,7 +318,16 @@
           "path": "10_docs/凡尘西游修真记/星空落地_1.1.0_20260913.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-14 00:20:50",
+      "artifacts": {
+        "10_docs/凡尘西游修真记/星空落地_1.1.0_20260913.md": {
+          "md5": "3f29a6c7f002b5031a7ab624d33893bf"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk": "08caa9ef7d775d8ef467d1d0c8313a83"
+      }
     }
   ]
 }
