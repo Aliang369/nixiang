@@ -1,5 +1,6 @@
 # 跨游戏状态索引
 
+> 更新：2026-09-15，**「正中靶心2」1.7 攻击倍率版交付完成**：功能 `1=攻击倍率`（滑块 `1–100`，默认 1，乘在敌方最终 `changeHp`）、`2=无敌`、`3=战斗加速`（1–5 滑块）、`4=免广告`；TapTap 网页登录、异常兜底和反作弊审查已完成，用户确认“功能没问题”。正式包 md5 `ec9c0619…`，设备 `base.apk` 指纹一致；`03/07` 已清理，`06_dumped` 仅保留约 21M 文本。菜单模板=`10_docs/正中靶心2/zzbx2_menu_template.json`；收尾清单=`10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md`。
 > 更新：2026-09-15，**「正中靶心2」1.7 防封/上报审查与异常兜底版已装机**：官方包静态未见专用反作弊 SO、Root/Frida 检测或 `addCheat/onStageCheat/BuildPassCheckInfo` 上报链；`C2S_END_LEVEL` 可见字段无帧流/伤害/击杀/耗时，`NumFrames=0`。服务端隐藏风控仍为 NOT PROVEN。已补 JS `tick/applyBattle/applyAds` 异常捕获、广告 Promise 拒绝回退、native splice `catch(...)` 回原脚本；按用户要求不隔离 PvP。新包 md5 `15fe9d8b…`，设备一致，同签名覆盖未清数据，冷启动无 FATAL/SIGSEGV。
 > 更新：2026-09-15，**「正中靶心2」1.7 战斗加速已改为滑块**：菜单项 `Slider_战斗加速:1:5:1`，`1` 恢复原速，`2–5` 作为 `GameWorld.inst.gameSpeed` 倍率；native 增加滑块值桥，JS 回归 3/3 通过（2x、5x、回 1x）。新包 md5 `80c4707f…`，设备 `base.apk` md5 一致，同签名覆盖安装且未清数据；运行日志确认菜单已下发 `Slider_战斗加速:1:5:1 = 1`，冷启动无 FATAL/SIGSEGV，滑块真机交互待用户最终确认。
 > 更新：2026-09-14，**「正中靶心2」1.7 TapTap 签名修复包已同签名覆盖装机**：官方 `TapSignKit.getSign()` 使用 `PackageManager.GET_SIGNATURES`；此前 `SignSpoof` 漏了 `com.openew.monster` 官方证书映射，且 `TapLoginForceWeb` 未含该包。现已回灌 Openew 证书（SHA-256 `57fbc23b…`）并加入 `embedded_web` 白名单；修复包 md5 `cd0675d2…`，设备 `base.apk` md5 一致，未卸载、未清数据，冷启动通过。TapTap 实际登录与四功能回归待用户操作验收。文档=`10_docs/正中靶心2/星空落地_1.7_20260914.md`。
