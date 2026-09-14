@@ -1149,3 +1149,123 @@ Removing 06_dumped/一念通天/official_720/static/libunity.so
 [2026-09-15 01:38:04] [一念通天] stage=archive 开始
 命令: bash 04_scripts/一念通天/archive_yntt.sh
 目录: /Users/aliang/Documents/nixiang
+04_scripts/一念通天/.device_serial
+04_scripts/一念通天/archive_yntt.sh
+04_scripts/一念通天/binge_apk.json
+04_scripts/一念通天/check_mod_yntt.sh
+04_scripts/一念通天/cleanup_summary.json
+04_scripts/一念通天/cleanup_yntt.sh
+04_scripts/一念通天/device_ready_yntt.sh
+04_scripts/一念通天/dump_static_official_yntt.sh
+04_scripts/一念通天/dump_static_yntt.sh
+04_scripts/一念通天/fetch_installed_official_yntt.sh
+04_scripts/一念通天/fetch_installed_yntt.sh
+04_scripts/一念通天/install_yntt.sh
+04_scripts/一念通天/mod_archive_list.txt
+04_scripts/一念通天/mod_badging.txt
+04_scripts/一念通天/mod_check.json
+04_scripts/一念通天/mod_manifest.xml
+04_scripts/一念通天/mod_signature.txt
+04_scripts/一念通天/official_apk.json
+04_scripts/一念通天/pipeline.json
+04_scripts/一念通天/pipeline.log
+04_scripts/一念通天/yntt_build_so.sh
+04_scripts/一念通天/yntt_sign.sh
+06_dumped/一念通天/binge_719/memdump_all_on/il2cpp_memdiff_report.txt
+06_dumped/一念通天/binge_719/memdump_all_on/il2cpp_patch_count.txt
+06_dumped/一念通天/binge_719/memdump_initial/il2cpp_memdiff_report.txt
+06_dumped/一念通天/binge_719/memdump_initial/il2cpp_patch_count.txt
+06_dumped/一念通天/binge_719/memdump_kill_on/il2cpp_memdiff_report.txt
+06_dumped/一念通天/binge_719/memdump_kill_on/il2cpp_patch_count.txt
+06_dumped/一念通天/binge_719/memdump_restart_all_on/il2cpp_memdiff_report.txt
+06_dumped/一念通天/binge_719/memdump_restart_all_on/il2cpp_patch_count.txt
+06_dumped/一念通天/binge_719/static/il2cpp_dump/dump.cs
+06_dumped/一念通天/binge_719/static/il2cpp_dump/script.json
+06_dumped/一念通天/binge_719/static/il2cpp_dump/stringliteral.json
+06_dumped/一念通天/binge_719/static/summary.txt
+06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs
+06_dumped/一念通天/official_720/static/il2cpp_dump/script.json
+06_dumped/一念通天/official_720/static/il2cpp_dump/stringliteral.json
+06_dumped/一念通天/official_720/static/summary.txt
+10_docs/_state/current.md
+10_docs/一念通天/yntt_menu_template.json
+10_docs/一念通天/接手状态_719_20260914.md
+10_docs/一念通天/收尾与最小复现清单_720_20260915.md
+10_docs/一念通天/星空落地_720_20260915.md
+mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java
+mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java
+mod菜单/starry-mod-menu/app/src/main/jni/Android_yntt.mk
+mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttEntry.cpp
+mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp
+mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h
+mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh
+mod菜单/starry-mod-menu/yntt_smali/com/starry/magic/sign/YnttLoginRequest$1.smali
+mod菜单/starry-mod-menu/yntt_smali/com/starry/magic/sign/YnttLoginRequest.smali
+[main ce4f399] 一念通天 720 星空包交付与收官
+ 52 files changed, 4674439 insertions(+), 1 deletion(-)
+ create mode 100644 04_scripts/一念通天/.device_serial
+ create mode 100755 04_scripts/一念通天/archive_yntt.sh
+ create mode 100644 04_scripts/一念通天/binge_apk.json
+ create mode 100644 04_scripts/一念通天/check_mod_yntt.sh
+ create mode 100644 04_scripts/一念通天/cleanup_summary.json
+ create mode 100755 04_scripts/一念通天/cleanup_yntt.sh
+ create mode 100644 04_scripts/一念通天/device_ready_yntt.sh
+ create mode 100644 04_scripts/一念通天/dump_static_official_yntt.sh
+ create mode 100644 04_scripts/一念通天/dump_static_yntt.sh
+ create mode 100644 04_scripts/一念通天/fetch_installed_official_yntt.sh
+ create mode 100644 04_scripts/一念通天/fetch_installed_yntt.sh
+ create mode 100644 04_scripts/一念通天/install_yntt.sh
+ create mode 100644 04_scripts/一念通天/mod_archive_list.txt
+ create mode 100644 04_scripts/一念通天/mod_badging.txt
+ create mode 100644 04_scripts/一念通天/mod_check.json
+ create mode 100644 04_scripts/一念通天/mod_manifest.xml
+ create mode 100644 04_scripts/一念通天/mod_signature.txt
+ create mode 100644 04_scripts/一念通天/official_apk.json
+ create mode 100644 04_scripts/一念通天/pipeline.json
+ create mode 100644 04_scripts/一念通天/pipeline.log
+ create mode 100644 04_scripts/一念通天/yntt_build_so.sh
+ create mode 100644 04_scripts/一念通天/yntt_sign.sh
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_all_on/il2cpp_memdiff_report.txt
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_all_on/il2cpp_patch_count.txt
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_initial/il2cpp_memdiff_report.txt
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_initial/il2cpp_patch_count.txt
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_kill_on/il2cpp_memdiff_report.txt
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_kill_on/il2cpp_patch_count.txt
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_restart_all_on/il2cpp_memdiff_report.txt
+ create mode 100644 06_dumped/一念通天/binge_719/memdump_restart_all_on/il2cpp_patch_count.txt
+ create mode 100644 06_dumped/一念通天/binge_719/static/il2cpp_dump/dump.cs
+ create mode 100644 06_dumped/一念通天/binge_719/static/il2cpp_dump/script.json
+ create mode 100644 06_dumped/一念通天/binge_719/static/il2cpp_dump/stringliteral.json
+ create mode 100644 06_dumped/一念通天/binge_719/static/summary.txt
+ create mode 100644 06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs
+ create mode 100644 06_dumped/一念通天/official_720/static/il2cpp_dump/script.json
+ create mode 100644 06_dumped/一念通天/official_720/static/il2cpp_dump/stringliteral.json
+ create mode 100644 06_dumped/一念通天/official_720/static/summary.txt
+ create mode 100644 10_docs/一念通天/yntt_menu_template.json
+ create mode 100644 10_docs/一念通天/接手状态_719_20260914.md
+ create mode 100644 10_docs/一念通天/收尾与最小复现清单_720_20260915.md
+ create mode 100644 10_docs/一念通天/星空落地_720_20260915.md
+ create mode 100644 mod菜单/starry-mod-menu/app/src/main/jni/Android_yntt.mk
+ create mode 100644 mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttEntry.cpp
+ create mode 100644 mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp
+ create mode 100644 mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h
+ create mode 100644 mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh
+ create mode 100644 mod菜单/starry-mod-menu/yntt_smali/com/starry/magic/sign/YnttLoginRequest$1.smali
+ create mode 100644 mod菜单/starry-mod-menu/yntt_smali/com/starry/magic/sign/YnttLoginRequest.smali
+remote: warning: See https://gh.io/lfs for more information.        
+remote: warning: File 06_dumped/一念通天/official_720/static/il2cpp_dump/script.json is 68.86 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: File 06_dumped/一念通天/binge_719/static/il2cpp_dump/script.json is 68.86 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To github.com:Aliang369/nixiang.git
+   101793d..ce4f399  main -> main
+==> 本作相关状态
+ M 04_scripts/一念通天/pipeline.log
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/一念通天/pipeline.log
+ D 12_images/我的勇者/我的勇者_官方icon.png
+ D 12_images/我的勇者/我的勇者_宣传图.png
+ D 12_images/正中靶心2/正中靶心2_1.7_icon.png
+ D 12_images/正中靶心2/正中靶心2_1.7_icon_foreground.png
+ D 12_images/正中靶心2/正中靶心2_1.7_icon_round.png
+[2026-09-15 01:38:40] [一念通天] stage=archive 完成（校验通过）
+────────────────────────────────────────────
