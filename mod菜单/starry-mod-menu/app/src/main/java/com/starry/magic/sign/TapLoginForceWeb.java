@@ -3,8 +3,10 @@ package com.starry.magic.sign;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Parcelable;
 import android.util.Log;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -34,6 +36,10 @@ public final class TapLoginForceWeb {
     private static final String LOGIN_ACTIVITY = "com.taptap.sdk.login.ui.TapTapLoginActivity";
     private static final String LOGIN_ACTIVITY_IMPL =
             "com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity";
+    private static final String OLD_LOGIN_ACTIVITY = "com.taptap.sdk.ui.TapTapActivity";
+    private static final String OLD_REQUEST_EXTRA = "request";
+    private static final String OLD_REQUEST_CLASS =
+            "com.starry.magic.sign.YnttLoginRequest";
     private static final String CLIENT_HANDLER =
             "com.taptap.sdk.login.internal.handlers.client.ClientLoginHandler";
     private static final String CLOUD_HANDLER =
@@ -72,13 +78,16 @@ public final class TapLoginForceWeb {
                     "com.cylj.rogue.tp479",
                     // 正中靶心2：TapSDK 新版，TapTapLoginActivity 按 LoginRequest.loginType
                     // 分流；改签后直接走 embedded_web，避免客户端 SSO 校验真实签名。
-                    "com.openew.monster"));
+                    "com.openew.monster",
+                    // 一念通天：TapSDK + TapTap 登录；改签包固定走 embedded_web。
+                    "com.qinglv.Immortal"));
 
     private TapLoginForceWeb() {}
 
     /** preCreated（onCreate 之前）：新版改 request.loginType，旧版清洗 loginHandlers。 */
     public static void onPreCreated(Activity activity) {
         if (Build.VERSION.SDK_INT >= 29) {
+            forceOldImplWebEarly(activity);
             prepareNewImplRequest(activity);
             sanitize(activity);
         }
@@ -89,6 +98,68 @@ public final class TapLoginForceWeb {
         forceOldImplWeb(activity);
         forceNewImplWeb(activity);
         if (Build.VERSION.SDK_INT < 29) sanitize(activity);
+    }
+
+    /**
+     * 旧版 com.taptap.sdk.ui.TapTapActivity：SDK 3.30.2 没有 loginType 分流。
+     * onCreate 内会同步执行 LoginClient.sendLoginRequest，客户端已安装时必然先走
+     * ActivityHandler。这里在 onCreate 前替换 request 为 YnttLoginRequest；其
+     * getRequestCode() 抛 Exception，会被 LoginClient 捕获并回落官方 WebViewHandler。
+     */
+    private static void forceOldImplWebEarly(Activity activity) {
+        if (activity == null || !OLD_LOGIN_ACTIVITY.equals(activity.getClass().getName())) return;
+        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
+        try {
+            Intent it = activity.getIntent();
+            if (it == null) return;
+            Object original = it.getParcelableExtra(OLD_REQUEST_EXTRA);
+            if (original == null) {
+                Log.i(TAG, "old-impl no request extra");
+                return;
+            }
+            if (OLD_REQUEST_CLASS.equals(original.getClass().getName())) {
+                Log.i(TAG, "old-impl request already forced");
+                return;
+            }
+            Class<?> forcedClass = Class.forName(OLD_REQUEST_CLASS);
+            Constructor<?> ctor = forcedClass.getConstructor(String.class, String[].class);
+            Object state = invokeGetter(original, "getState");
+            Object permissions = invokeGetter(original, "getPermissions");
+            Object forced = ctor.newInstance(state, permissions);
+            copyStringProperty(original, forced, "getCodeChallenge", "setCodeChallenge");
+            copyStringProperty(original, forced, "getCodeChallengeMethod", "setCodeChallengeMethod");
+            copyStringProperty(original, forced, "getInfo", "setInfo");
+            copyStringProperty(original, forced, "getLoginVersion", "setLoginVersion");
+            copyStringProperty(original, forced, "getPhoneVerifyToken", "setPhoneVerifyToken");
+            copyStringProperty(original, forced, "getPreferredLoginType", "setPreferredLoginType");
+            copyStringProperty(original, forced, "getRedirectUri", "setRedirectUri");
+            copyStringProperty(original, forced, "getResponseType", "setResponseType");
+            copyStringProperty(original, forced, "getVersionCode", "setVersionCode");
+            copyBooleanProperty(original, forced, "isPreApproved", "setPreApproved");
+            it.putExtra(OLD_REQUEST_EXTRA, (Parcelable) forced);
+            Log.i(TAG, "old-impl request forced -> client throws, web fallback");
+        } catch (Throwable t) {
+            Log.e(TAG, "forceOldImplWebEarly failed", t);
+        }
+    }
+
+    private static Object invokeGetter(Object target, String name) throws Exception {
+        Method method = target.getClass().getMethod(name);
+        return method.invoke(target);
+    }
+
+    private static void copyStringProperty(Object from, Object to, String getter, String setter)
+            throws Exception {
+        Object value = invokeGetter(from, getter);
+        if (value == null) return;
+        to.getClass().getMethod(setter, String.class).invoke(to, (String) value);
+    }
+
+    private static void copyBooleanProperty(Object from, Object to, String getter, String setter)
+            throws Exception {
+        Object value = invokeGetter(from, getter);
+        if (value == null) return;
+        to.getClass().getMethod(setter, Boolean.TYPE).invoke(to, (Boolean) value);
     }
 
     /** 新版路径①：onCreate 前改 intent extra 的 LoginRequest.loginType → embedded_web。 */

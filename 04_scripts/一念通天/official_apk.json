@@ -1,0 +1,17 @@
+{
+  "package": "com.qinglv.Immortal",
+  "game": "一念通天",
+  "kind": "official_from_device",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/一念通天/一念通天_720_official_from_device.apk",
+  "version_name": "720",
+  "version_code": 720,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~xHxEXWwVEMXH6_BQYsdtzQ==/com.qinglv.Immortal-mbWw-jax65l_CZRL56___A==/base.apk",
+  "size": 420168647,
+  "sha256": "2f8d305c9fcadc88fff175bd9daf98ca2d6cf9d822eb43e8821f8550b42522a6",
+  "md5": "b4173e16118f54d2cf35026459710898",
+  "signer_dn": "CN=demo, OU=demo, O=demo, L=demo, ST=demo, C=demo",
+  "signer_sha256": "7b061a0851a1decc011688588b17547d6948086c8e5f5b7bf35b46b8b8485a27"
+}

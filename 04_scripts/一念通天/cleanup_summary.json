@@ -1,0 +1,23 @@
+{
+  "game": "一念通天",
+  "before_kb": 1303960,
+  "after_kb": 195988,
+  "released_kb": 1107972,
+  "before_at": "2026-09-15 01:37:25",
+  "after_at": "2026-09-15 01:37:26",
+  "kept": [
+    "02_apks/一念通天",
+    "08_output/一念通天",
+    "06_dumped/一念通天 text archives",
+    "04_scripts/一念通天",
+    "10_docs/一念通天",
+    "mod菜单 Yntt sources"
+  ],
+  "removed_roots": [
+    "03_decompiled/一念通天",
+    "07_patched/一念通天",
+    "06_dumped/一念通天 ignored binaries",
+    "09_test/一念通天",
+    "tmp yntt analysis directories"
+  ]
+}

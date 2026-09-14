@@ -606,6 +606,25 @@ public final class SignSpoof {
                     + "CxKdIQMYP2gVHU287PPxnceQySjasjWkCUz+TRIWMhjAoJgA2G9fmYB+QhnSiFJqeOuwOFSyqzK2"
                     + "6IsI13A0d5J0GqKuONYYMH7gm26WCMGZHYDK1nVOAZlDl9n+znmTDHr7f5c6tA==";
 
+    /** 一念通天 TapTap 720：从用户提供原包 v2 签名块提取，SHA-256=7b061a08…。
+     *  改签后回灌此证书，供 TapSDK/TapSignKit 签名读取路径使用。 */
+    private static final String YNTT_PKG = "com.qinglv.Immortal";
+    private static final String YNTT_CERT_B64 =
+            "MIIDUzCCAjugAwIBAgIEctnsBjANBgkqhkiG9w0BAQsFADBaMQ0wCwYDVQQGEwRkZW1vMQ0wCwYD"
+                    + "VQQIEwRkZW1vMQ0wCwYDVQQHEwRkZW1vMQ0wCwYDVQQKEwRkZW1vMQ0wCwYDVQQLEwRkZW1vMQ0w"
+                    + "CwYDVQQDEwRkZW1vMB4XDTIyMTAzMDA0MTkzMloXDTQ3MTAyNDA0MTkzMlowWjENMAsGA1UEBhME"
+                    + "ZGVtbzENMAsGA1UECBMEZGVtbzENMAsGA1UEBxMEZGVtbzENMAsGA1UEChMEZGVtbzENMAsGA1UE"
+                    + "CxMEZGVtbzENMAsGA1UEAxMEZGVtbzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK1F"
+                    + "oOo9xk/ODgEvg8HvMOr1yweMz2ORK6q8KKGyvG2AHQqqT07U0BM+TMobBz6ozdoVVeTwfI3+J18S"
+                    + "JSWfVQrVRxFUe7ByCLAnaAQsBG04RXtA5X49FPKQESwFfe56lxW9JGcHY28De3yHnNB3nz0hUzhR"
+                    + "P89QGZg2/0oqqKQeMOtIdNiPT0VmKDFev0fNixIA23TxSKyMxImvuAXuUi4rj+S32ESLyDJiQN20"
+                    + "Ms14GpSBoXX1nWCUKEblFg2otRzXoaj8U1aQ6gmMzAli6bVr1DCr4HoxwrTagvFOQJdaWvQrt9Jn"
+                    + "ZTjdiG+UzzSteH1hN+nguUlAlHySAKgXOIkCAwEAAaMhMB8wHQYDVR0OBBYEFA/xBG0z57PxLJ+V"
+                    + "yE7Nn4xDgxPLMA0GCSqGSIb3DQEBCwUAA4IBAQBmDoeaycURdJ2BslCt4fUPpg7UAY3UuHj/jj+L"
+                    + "kd91TTps9SgDOIw1Y6MulxxMufhNmx6Ua/tB1I2PUFThO/68QWfDoIcBac7ef3CfrMbHyons6HiD"
+                    + "4Kty3YYu24S/VjjedveiIPtRKs3EtvFaa3KLZkF7qakfdJjgBisnMEW3utpcDQRCtGs2I2ngdSrI"
+                    + "0RDKvwaCxqlAqBhlp3ry50uZP1+znfezJxC8SjrqHtFF7d2aJwWR/Jofrey5Kkeg7cFDclojBGDJ"
+                    + "aOXctA8+fFx9hw4Bk4KRFF5nOL3Cdtf4aSgpnXlxRFQ4LhMogmjly4wJiSNajEce15pdF4B9dZR2";
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -652,6 +671,7 @@ public final class SignSpoof {
                 fakes.put(WDXSJ_PKG, new Signature(Base64.decode(WDXSJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(DHSS_PKG, new Signature(Base64.decode(DHSS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ZZBX2_PKG, new Signature(Base64.decode(ZZBX2_CERT_B64, Base64.DEFAULT)));
+                fakes.put(YNTT_PKG, new Signature(Base64.decode(YNTT_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

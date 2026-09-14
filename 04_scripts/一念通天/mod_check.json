@@ -1,0 +1,20 @@
+{
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/一念通天/一念通天_719_binge_mod.apk",
+  "package": "com.qinglv.Immortal",
+  "version_name": "719",
+  "version_code": 719,
+  "application": "com.qk.game.GameApplication",
+  "signer_dn": "CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2",
+  "signer_sha256": "11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba",
+  "size": 424580536,
+  "md5": "6332d9d126712236236a7621b67dc2c9",
+  "sha256": "f9bfae59589696c6afe7788044779523a4aa2ebf7c9bde203a49534c646b63e5",
+  "engine": "Unity IL2CPP",
+  "shell": "binge_thin",
+  "markers": {
+    "libSDKloading": true,
+    "libtoolChecker": true,
+    "libil2cpp": true,
+    "global_metadata": true
+  }
+}

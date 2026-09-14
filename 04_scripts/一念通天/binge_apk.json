@@ -1,0 +1,15 @@
+{
+  "package": "com.qinglv.Immortal",
+  "game": "一念通天",
+  "kind": "binge_mod",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/一念通天/一念通天_719_binge_mod.apk",
+  "version_name": "719",
+  "version_code": 719,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~TMfom45T0XWi-2p5MTaRxQ==/com.qinglv.Immortal-gE4mHwCK1x4FDCAyoLTqZA==/base.apk",
+  "size": 424580536,
+  "sha256": "f9bfae59589696c6afe7788044779523a4aa2ebf7c9bde203a49534c646b63e5",
+  "md5": "6332d9d126712236236a7621b67dc2c9"
+}
