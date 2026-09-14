@@ -1,0 +1,15 @@
+--------- beginning of main
+09-14 20:52:34.119  6529  6529 I StarryMagic: [验证] grant ok exp=1789476753
+09-14 20:52:34.135  6529  6529 I StarryMagic: [开关] #1 Toggle_无限金币 = ON
+09-14 20:52:34.137  6529  6529 I StarryMagic: [开关] #2 Toggle_无限食物 = ON
+09-14 20:52:34.138  6529  6529 I StarryMagic: [开关] #3 Toggle_无限军队 = ON
+09-14 20:52:34.141  6529  6529 I StarryMagic: [开关] #6 Toggle_瞬间胜利 = ON
+09-14 20:52:34.147  6529  6529 I StarryMagic: [开关] #9 Toggle_科研立即完成 = ON
+09-14 20:52:34.947  6529  6529 I StarryMagic: [开关] #1 Toggle_无限金币 = ON
+09-14 20:52:34.947  6529  6529 I StarryMagic: [开关] #2 Toggle_无限食物 = ON
+09-14 20:52:34.947  6529  6529 I StarryMagic: [开关] #3 Toggle_无限军队 = ON
+09-14 20:52:34.947  6529  6529 I StarryMagic: [开关] #4 Toggle_无限人口 = OFF
+09-14 20:52:34.947  6529  6529 I StarryMagic: [开关] #6 Toggle_瞬间胜利 = ON
+09-14 20:52:34.947  6529  6529 I StarryMagic: [数值] #8 Slider_游戏加速:1:5 = 5
+09-14 20:52:34.947  6529  6529 I StarryMagic: [开关] #9 Toggle_科研立即完成 = ON
+09-14 20:52:35.744  6529  6529 I StarryMagic: [开关] #4 Toggle_无限人口 = ON

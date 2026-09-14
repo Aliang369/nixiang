@@ -1,0 +1,242 @@
+{
+  "game": "无悔华夏4399",
+  "version": "3.8.280 / vc33",
+  "notes": "4399 渠道 com.yhhy.whrhx.m4399 独立分析线。第一步只读提取真机现装单一 base APK；后续检查、dump、锚点与实现阶段按实际包分析结果追加。",
+  "params": {
+    "game_id": "whhx4399",
+    "package": "com.yhhy.whrhx.m4399",
+    "serial": "f9a116a2",
+    "tag": "whhx4399"
+  },
+  "env": {
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399",
+  "stages": [
+    {
+      "id": "fetch_apk",
+      "name": "真机只读提取 4399 单一 base APK",
+      "requires": [],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_fetch_apk.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_fetch_apk.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:02:34",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk": {
+          "md5": "a208a1ea0438d34dbd50439935c05bd8"
+        },
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": {
+          "md5": "d5069339674e4389ea542533e6d4d935"
+        }
+      }
+    },
+    {
+      "id": "check_apk",
+      "name": "核对 4399 包名、版本、签名、DEX 与 IL2CPP 指纹",
+      "requires": [
+        "fetch_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_check_apk.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_check_apk.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/check_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:08:36",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/check_summary.json": {
+          "md5": "761f0b941e782cff7a381f134f3d9847"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk": "a208a1ea0438d34dbd50439935c05bd8",
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": "d5069339674e4389ea542533e6d4d935"
+      }
+    },
+    {
+      "id": "dump_static",
+      "name": "提取 IL2CPP/壳 Dex/Manifest，并尝试离线 metadata 解析",
+      "requires": [
+        "check_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_dump_static.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_dump_static.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.280/libil2cpp.so"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.280/global-metadata.packed.dat"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/03_decompiled/无悔华夏4399/3.8.280/manifest.xmltree"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.280/static_hashes.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:09:27"
+    },
+    {
+      "id": "build_so",
+      "name": "构建 4399 无壳包星光 so（复用 WHRHX 功能位 + 4399 包名）",
+      "requires": [
+        "dump_static"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_whrhx4399.mk",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/GameConfig.h",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WhrhxMod.cpp",
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so",
+          "pattern": "target=m4399"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so",
+          "pattern": "[Whrhx]"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 21:06:31",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": {
+          "md5": "9c8d97fb72d858624c5a3141fee8796d"
+        }
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "无壳重建 + 真实 DEX + 星光 so 外科组装与签名",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_surgical_unshelled.sh",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_surgical_unshelled.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/base.odex.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 20:15:58",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": {
+          "md5": "a11e8e132551b20dea6cf028beafe1fa"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": "9c8d97fb72d858624c5a3141fee8796d"
+      }
+    },
+    {
+      "id": "install",
+      "name": "卸载官方包并安装 4399 无壳星空包（用户明确授权）",
+      "requires": [
+        "surgical"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_uninstall_install.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_uninstall_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 21:06:31",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": {
+          "md5": "a11e8e132551b20dea6cf028beafe1fa"
+        }
+      }
+    },
+    {
+      "id": "cleanup",
+      "name": "收官清理：删可再生的拆包/dump/热更大件，保留最终包与真实 DEX",
+      "requires": [
+        "install"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_cleanup.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_cleanup.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/03_decompiled/无悔华夏4399"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/base.odex.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/inmemory_dex/inmemory_L4_e1_8621488.dex"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 21:08:11",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/inmemory_dex/inmemory_L4_e1_8621488.dex": {
+          "md5": "37fc180a43ac662ec12dde70f885abfb"
+        },
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": {
+          "md5": "a11e8e132551b20dea6cf028beafe1fa"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": "a11e8e132551b20dea6cf028beafe1fa"
+      }
+    }
+  ]
+}

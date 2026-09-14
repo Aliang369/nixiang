@@ -45,10 +45,12 @@
 ### 坑（哪里翻车）
 - **加载链原生化**：二代/三代壳用 native `OpenMemory` 钩子还原 dex，frida-dexdump 依赖 ART 的 dex 加载回调，可能脱不干净 → 用内存扫 magic 兜底
 - **脱完重打包**：删壳 stub 换真 dex，注意 `application` 名要从 stub 改回真 `Application` 类（无悔华夏脱壳重建就是这个动作）
+- **InMemoryDexFile（易盾新版实锤）**：如果业务类由 `PathClassLoader` 的 `InMemoryDexFile` 提供，先枚举 ClassLoader，反射 `mCookie`，再按 `DexFile* -> begin_/file_size` 精确导出；不要只做全局内存搜 dex magic。见 [`../nesec-inmemory-dex.md`](../nesec-inmemory-dex.md)
 - **壳里藏校验**：有些壳 stub 还承担签名/完整性校验，脱壳重打包反而触发 → 脱之前先评估壳是否绑定签名
 
 ### 状态
 - ✅ 百度壳已实战（`baidu-shell.md`）
+- ✅ 网易易盾 7.6.1_857 的 InMemoryDexFile 精确脱壳 + 无壳重建已实机（无悔华夏 4399，2026-09-14）
 - ✅ 网易易盾 nesec 新旧版差异已实战（无悔华夏：旧版不绑签名、新版绑签名）
 - ⚠️ 其余品牌整体加密壳理论，待命中转正
 
@@ -198,8 +200,9 @@
 
 ### 状态
 - ✅ 无悔华夏九游版（整体加密壳绕壳包）
-- ✅ 无悔华夏好游快爆版（脱壳重建进行中，见 `_05_加固产品大厂库.md` §4 网易易盾）
-- ⚠️ Step2 修复器细节待验证（本工作区未实机命中完整修复流程）
+- ✅ 无悔华夏 4399 `7.6.1_857`：InMemoryDexFile 精确 dump → 真 DEX 无壳重建 → 七功能实机通过（2026-09-14，通用方法见 [`../nesec-inmemory-dex.md`](../nesec-inmemory-dex.md)）
+- 🟡 无悔华夏好游快爆版：历史断点在 Frida-dexdump；现可按 4399 的 ClassLoader + mCookie 方法直接重跑
+- ⚠️ “修复器”只在 dump 不完整时需要；InMemoryDexFile 精确全量导出通常可直接通过 dexdump/jadx，无需先修。先验货再决定是否修。
 
 ---
 

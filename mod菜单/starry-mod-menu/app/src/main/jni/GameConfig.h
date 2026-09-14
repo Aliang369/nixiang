@@ -81,6 +81,8 @@
 #define STARRY_AUTH_GAME_ID "zmxs"
 #elif defined(STARRY_GAME_WGGLS)
 #define STARRY_AUTH_GAME_ID "wggls"
+#elif defined(STARRY_GAME_WHRHX4399)
+#define STARRY_AUTH_GAME_ID "whhx"
 #elif defined(STARRY_GAME_WHRHX)
 #define STARRY_AUTH_GAME_ID "whhx"
 #elif defined(STARRY_GAME_WHRHXKB)
@@ -149,6 +151,10 @@ namespace GameUnity {
 #elif defined(STARRY_GAME_WGGLS)
     constexpr const char* PACKAGE    = "com.sixag.gaga";
     constexpr const char* GAME_NAME  = "我嘎嘎乱杀";
+    constexpr size_t HYBRIDCLR_FIELD_BIAS = 0;
+#elif defined(STARRY_GAME_WHRHX4399)
+    constexpr const char* PACKAGE    = "com.yhhy.whrhx.m4399";
+    constexpr const char* GAME_NAME  = "无悔华夏4399";
     constexpr size_t HYBRIDCLR_FIELD_BIAS = 0;
 #elif defined(STARRY_GAME_WHRHX)
     constexpr const char* PACKAGE    = "com.yhhy.whrhx.aligames";
@@ -532,4 +538,3 @@ namespace GameGeneric {
 #endif // ENABLE_GENERIC_HOOK
 
 #endif // STARRY_GAME_CONFIG_H#include "Includes/SecStrings.hpp"
-

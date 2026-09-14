@@ -404,6 +404,8 @@ public final class SignSpoof {
 
     /** 无悔华夏快爆原版 CN=SongYang, O=SYYX（SHA1=01:89:64:F0:5D:8B:B0:A8:84:0D:0D:D3:99:14:E9:70:16:0E:4A:1B） */
     private static final String WHRHXKB_PKG = "com.syyx.whrhx";
+    /** 无悔华夏 4399 原版，同一 SongYang/SYYX 证书（SHA1=01:89:64:F0:5D:8B:B0:A8:84:0D:0D:D3:99:14:E9:70:16:0E:4A:1B） */
+    private static final String WHRHX4399_PKG = "com.yhhy.whrhx.m4399";
     private static final String WHRHXKB_CERT_B64 =
             "MIIDTDCCAjSgAwIBAgIEHjyZ9jANBgkqhkiG9w0BAQUFADBnMREwDwYDVQQDDAhTb25nWWFuZzEP"
                     + "MA0GA1UECwwGRnVuTGFiMQ0wCwYDVQQKDARTWVlYMREwDwYDVQQHDAhTaGVuWmhlbjESMBAGA1UE"
@@ -615,6 +617,7 @@ public final class SignSpoof {
                 fakes.put(WGDZZ_PKG, new Signature(Base64.decode(WGDZZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(BJDW_PKG, new Signature(Base64.decode(BJDW_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WHRHXKB_PKG, new Signature(Base64.decode(WHRHXKB_CERT_B64, Base64.DEFAULT)));
+                fakes.put(WHRHX4399_PKG, new Signature(Base64.decode(WHRHXKB_CERT_B64, Base64.DEFAULT)));
                 fakes.put(CWJH_PKG, new Signature(Base64.decode(CWJH_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ENDFIELD_PKG, new Signature(Base64.decode(ENDFIELD_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WDYZ_PKG, new Signature(Base64.decode(WDYZ_CERT_B64, Base64.DEFAULT)));

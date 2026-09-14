@@ -1,0 +1,28 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk",
+  "md5": "a208a1ea0438d34dbd50439935c05bd8",
+  "package": "com.yhhy.whrhx.m4399",
+  "version_name": "3.8.280",
+  "version_code": 33,
+  "signer_dn": "C=CN, ST=GuangDong, L=ShenZhen, O=SYYX, OU=FunLab, CN=SongYang",
+  "signer_sha256": "ddff894a007fd5702bdc9be17f29c31f205c89146de730bc573c173fdbdea1d8",
+  "signer_sha1": "018964f05d8bb0a8840d0dd39914e970160e4a1b",
+  "signature_v1": true,
+  "signature_v2": true,
+  "dex_count": 1,
+  "libil2cpp": {
+    "size": 221468816,
+    "sha256": "c0411107012793410389f0170bb13c997a2f51adc235607dfb4db86122f3cead"
+  },
+  "global_metadata": {
+    "size": 42525216,
+    "sha256": "d1a7e47bea481920cffd771d8f7fa7090f32376ff2f674f4fc4db24197220543",
+    "magic_hex": "48545058"
+  },
+  "libunity_sha256": "16a99f6a6f366abb7bc4aa9e89281f487091778852e863559ed8a7fb052bd15c",
+  "libxlua_sha256": "b1e8ffb126bc92c930cf2bb421674982d8b05e902872cd4892563b218911e131",
+  "libnesec_sha256": "695514d225247c749d50e63be892d73b161fff2194ad76878670ec200f912e25",
+  "libNetHTProtect_sha256": "1a04229254bdea15875d1f18af9e33fa2c4db19d47e67224544415c8c489cf9c",
+  "has_baiduprotect": false,
+  "has_binge_shell": false
+}

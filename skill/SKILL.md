@@ -22,6 +22,7 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
    - `baidu-shell.md` — 百度 Sagittarius 加固
    - `ace-tss.md` — 腾讯 ACE/TSS（最危险）
    - `dex-integrity.md` — DEX 完整性 + 黑名单校验
+   - `nesec-inmemory-dex.md` — 网易易盾新版 InMemoryDexFile 精确脱壳 + 无壳重建（4399 实机）
    - `root-check.md` — Root 检测
    - `other-sign-check.md` — libqkcheck / MT Killer / 其他签名校验
    - `kwprotect.md` — Kiwi VM + KwProtect 完整性网 + Q1 PM 证书（加固保护族，8/28 首测）
