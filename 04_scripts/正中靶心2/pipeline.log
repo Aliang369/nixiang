@@ -7634,3 +7634,45 @@ Success
 [install] 完成: /Users/aliang/Documents/nixiang/08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk
 [2026-09-15 01:57:10] [正中靶心2] stage=install_official 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 02:02:14] [正中靶心2] stage=cleanup 开始
+命令: bash 04_scripts/正中靶心2/cleanup_zzbx2.sh
+目录: /Users/aliang/Documents/nixiang
+==> dry-run: 06_dumped/正中靶心2 ignored 大件
+Would remove 06_dumped/正中靶心2/official_1.7/apk_assets/assets/src/
+Would remove 06_dumped/正中靶心2/official_1.7/apk_libs/
+Would remove 06_dumped/正中靶心2/official_1.7/dex/
+Removing 07_patched/正中靶心2/
+Removing 06_dumped/正中靶心2/official_1.7/apk_assets/assets/src/
+Removing 06_dumped/正中靶心2/official_1.7/apk_libs/
+Removing 06_dumped/正中靶心2/official_1.7/dex/
+==> 设备本次临时文件（只清理明确路径）
+{
+  "game": "正中靶心2",
+  "before_kb": 284484,
+  "after_kb": 21844,
+  "released_kb": 262640,
+  "before_at": "2026-09-15 02:02:14",
+  "after_at": "2026-09-15 02:02:15",
+  "kept": [
+    "02_apks/正中靶心2",
+    "08_output/正中靶心2",
+    "06_dumped/正中靶心2 text assets",
+    "04_scripts/正中靶心2",
+    "10_docs/正中靶心2",
+    "mod菜单 Zzbx2 sources"
+  ],
+  "removed_roots": [
+    "03_decompiled/正中靶心2",
+    "07_patched/正中靶心2",
+    "06_dumped/正中靶心2 ignored binaries"
+  ]
+}
+[2026-09-15 02:02:17] [正中靶心2] stage=cleanup 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 02:02:28] [正中靶心2] stage=archive 开始
+命令: bash 04_scripts/正中靶心2/archive_zzbx2.sh
+目录: /Users/aliang/Documents/nixiang

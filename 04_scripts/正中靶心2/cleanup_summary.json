@@ -1,10 +1,10 @@
 {
   "game": "正中靶心2",
-  "before_kb": 21844,
+  "before_kb": 284484,
   "after_kb": 21844,
-  "released_kb": 0,
-  "before_at": "2026-09-15 00:35:41",
-  "after_at": "2026-09-15 00:35:42",
+  "released_kb": 262640,
+  "before_at": "2026-09-15 02:02:14",
+  "after_at": "2026-09-15 02:02:15",
   "kept": [
     "02_apks/正中靶心2",
     "08_output/正中靶心2",
