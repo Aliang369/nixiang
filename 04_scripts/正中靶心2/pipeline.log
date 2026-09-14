@@ -7305,3 +7305,69 @@ zzbx2_probe.bin
 [2026-09-15 00:34:47] [正中靶心2] stage=archive 开始
 命令: bash 04_scripts/正中靶心2/archive_zzbx2.sh
 目录: /Users/aliang/Documents/nixiang
+04_scripts/正中靶心2/archive_zzbx2.sh
+04_scripts/正中靶心2/cleanup_summary.json
+04_scripts/正中靶心2/pipeline.json
+04_scripts/正中靶心2/pipeline.log
+10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md
+[main 486179f] 正中靶心2 1.7 星空包交付与收官
+ 5 files changed, 141 insertions(+), 36 deletions(-)
+ create mode 100644 04_scripts/正中靶心2/cleanup_summary.json
+To github.com:Aliang369/nixiang.git
+   8b157ac..486179f  main -> main
+==> 本作相关状态
+ M 04_scripts/正中靶心2/pipeline.log
+ M 10_docs/_state/current.md
+?? mod菜单/starry-mod-menu/app/src/main/jni/Android_yntt.mk
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttEntry.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h
+?? mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/正中靶心2/pipeline.log
+ M 10_docs/_state/current.md
+?? 04_scripts/一念通天/
+?? 06_dumped/一念通天/
+?? 10_docs/一念通天/
+?? mod菜单/starry-mod-menu/app/src/main/jni/Android_yntt.mk
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttEntry.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h
+?? mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh
+[2026-09-15 00:34:54] [正中靶心2] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 00:35:40] [正中靶心2] stage=cleanup 开始
+命令: bash 04_scripts/正中靶心2/cleanup_zzbx2.sh
+目录: /Users/aliang/Documents/nixiang
+==> dry-run: 06_dumped/正中靶心2 ignored 大件
+==> 设备本次临时文件（只清理明确路径）
+{
+  "game": "正中靶心2",
+  "before_kb": 21844,
+  "after_kb": 21844,
+  "released_kb": 0,
+  "before_at": "2026-09-15 00:35:41",
+  "after_at": "2026-09-15 00:35:42",
+  "kept": [
+    "02_apks/正中靶心2",
+    "08_output/正中靶心2",
+    "06_dumped/正中靶心2 text assets",
+    "04_scripts/正中靶心2",
+    "10_docs/正中靶心2",
+    "mod菜单 Zzbx2 sources"
+  ],
+  "removed_roots": [
+    "03_decompiled/正中靶心2",
+    "07_patched/正中靶心2",
+    "06_dumped/正中靶心2 ignored binaries"
+  ]
+}
+[2026-09-15 00:35:44] [正中靶心2] stage=cleanup 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 00:35:54] [正中靶心2] stage=archive 开始
+命令: bash 04_scripts/正中靶心2/archive_zzbx2.sh
+目录: /Users/aliang/Documents/nixiang

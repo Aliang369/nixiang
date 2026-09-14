@@ -60,6 +60,7 @@ fi
 if [[ -n "$SERIAL" ]] && "$ADB_BIN" -s "$SERIAL" get-state >/dev/null 2>&1; then
   echo "==> 设备本次临时文件（只清理明确路径）"
   "$ADB_BIN" -s "$SERIAL" shell rm -f /data/local/tmp/zzbx2_1.7_starry.apk || true
+  "$ADB_BIN" -s "$SERIAL" shell rm -f /data/local/tmp/zzbx2_probe.bin || true
   "$ADB_BIN" -s "$SERIAL" shell ls -1 /data/local/tmp 2>/dev/null | tr -d '\r' | grep -E '^zzbx2_' || true
 else
   echo "设备不在线或无 serial；跳过设备临时件清理"
