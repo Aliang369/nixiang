@@ -1,0 +1,14 @@
+{
+  "package": "com.TeaMelo.DungeonChasers",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20260912_official.apk",
+  "serial": "f9a116a2",
+  "version_name": "1.0.20260912",
+  "version_code": 98503,
+  "apk_md5": "013749a32d1e9c660cb9ff05feeabf87",
+  "apk_sha256": "28ca13a77679319c9b20165a0f9899e4d929cc9687a30eeeeb54a65cadd32490",
+  "signer_cert_md5": "4684a2b2249e978c74230f8895635894",
+  "old_20260906_cert_md5": "4684a2b2249e978c74230f8895635894",
+  "cert_changed_vs_20260906": false,
+  "libil2cpp_md5": "576537f8333dc98511e6bb19690a01ea",
+  "global_metadata_md5": "e22cd5a294ed6a9cc751b7269fc8fee0"
+}

@@ -1,0 +1,26 @@
+{
+  "game": "追迹迷城",
+  "version_name": "1.0.20260912",
+  "version_code": 98503,
+  "package": "com.TeaMelo.DungeonChasers",
+  "libil2cpp_md5": "576537f8333dc98511e6bb19690a01ea",
+  "global_metadata_md5": "e22cd5a294ed6a9cc751b7269fc8fee0",
+  "elf_bias": "0x4000",
+  "targets": [
+    {"name": "Teamelo.ActionEngine.BattleManager.FixedUpdate", "rva": "0x3040214", "signature": "void FixedUpdate()", "role": "AOE hook"},
+    {"name": "Teamelo.ActionEngine.BattleManager.GetCurWaveAliveEnemyList", "rva": "0x3044788", "signature": "List<Monster> GetCurWaveAliveEnemyList()", "role": "AOE helper"},
+    {"name": "Teamelo.ActionEngine.AttackBattleData.CheckCurrentIsCanUse", "rva": "0x306C1C8", "signature": "bool CheckCurrentIsCanUse()", "role": "infinite skill"},
+    {"name": "Teamelo.ActionEngine.AttackBattleData.CheckCurSp", "rva": "0x306C1E4", "signature": "bool CheckCurSp()", "role": "infinite skill"},
+    {"name": "Teamelo.ActionEngine.MonsterPartnerSkillBattleData.CheckCurrentIsCanUse", "rva": "0x306C61C", "signature": "bool CheckCurrentIsCanUse()", "role": "infinite skill"},
+    {"name": "Teamelo.ActionEngine.MonsterPartnerSkillBattleData.CheckCurSp", "rva": "0x306C650", "signature": "bool CheckCurSp()", "role": "infinite skill"},
+    {"name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_1", "rva": "0x3111E48", "signature": "bool CheckSkillUse_1()", "role": "infinite skill"},
+    {"name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_2", "rva": "0x3111EF0", "signature": "bool CheckSkillUse_2()", "role": "infinite skill"},
+    {"name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_Dodge", "rva": "0x3111F1C", "signature": "bool CheckSkillUse_Dodge()", "role": "infinite skill optional"},
+    {"name": "Teamelo.ActionEngine.LocalPlayer.ProcessDamageOrHeal", "rva": "0x3112354", "signature": "bool ProcessDamageOrHeal(RoleUnit, CombatResultData)", "role": "invincible"},
+    {"name": "Teamelo.ActionEngine.LocalPlayer.ChangeHP", "rva": "0x3113F68", "signature": "float ChangeHP(float, bool)", "role": "invincible fallback"},
+    {"name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_ActionState", "rva": "0x31156AC", "signature": "bool CheckSkillUse_ActionState()", "role": "infinite skill"},
+    {"name": "Teamelo.ActionEngine.Monster.ProcessDamageOrHeal", "rva": "0x311B360", "signature": "bool ProcessDamageOrHeal(RoleUnit, CombatResultData)", "role": "one-hit kill fallback"},
+    {"name": "Teamelo.ActionEngine.Monster.ChangeHP", "rva": "0x311BE7C", "signature": "float ChangeHP(float, bool)", "role": "one-hit kill"},
+    {"name": "Teamelo.ProjectAT.ATGameManager.GetFreeSkipAdsRemainingCount", "rva": "0x2DCFD24", "signature": "int GetFreeSkipAdsRemainingCount()", "role": "no ad"}
+  ]
+}

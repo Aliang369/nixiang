@@ -248,9 +248,9 @@ LOCAL_ARM_MODE  := arm
 # Trace：ndk-build 传 STARRY_TRACE=1
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WGGLS
 # LOCAL_SRC_FILES += Main.cpp Games/WgglsMod.cpp Unity/Il2CppApi.cpp
-# 追迹迷城 1.0.20260906 TapTap（2026-09-06 版本更新，RVA 重算见 ZjmcMod.cpp）
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
-# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 追迹迷城 1.0.20260912 TapTap（2026-09-14 RVA 重算见 ZjmcMod.cpp）
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
 # 我的勇者 7.6.0（wdyz）— Battle 结算 RVA 钩：秒杀(MonsterSettle ×N)/无敌(HeroSettle 0)
 # 2026-09-07 星光自注入验证（不用 frida；TryEnterCd 已证死路，勿挂技能簇）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
@@ -267,8 +267,9 @@ LOCAL_ARM_MODE  := arm
 # endif
 # LOCAL_SRC_FILES := Main.cpp Games/Es2Mod.cpp Unity/Il2CppApi.cpp
 # 超维进化 2.2（cwjh）— Cocos2djs se::evalString splice（六锚点 2.2 预检全过 20260909）
-LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_CWJH
-LOCAL_SRC_FILES := Main.cpp Games/CwjhMod.cpp
+# 超维进化 2.2（cwjh）— 本轮切走，保留原配置供后续恢复
+# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_CWJH
+# LOCAL_SRC_FILES := Main.cpp Games/CwjhMod.cpp
 # 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
 # 20260908 SIGABRT 修复：类查齐后隔轮再读 offsets（热更 layout 中途 field_get_offset 必崩）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR

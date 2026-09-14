@@ -579,6 +579,7 @@ static const char* g_featureList[] = {
     "Toggle_无敌",                       // 2
     "Toggle_全屏秒杀",                   // 3
     "Toggle_无限技能",                   // 4
+    "Toggle_免广告",                     // 5
 #elif defined(STARRY_GAME_TLGD)
     // 弹力果冻（TlgdMod.h）— 修复斌哥无效的全屏秒杀/无限技能
     "Category_战斗",                     // 0

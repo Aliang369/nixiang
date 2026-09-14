@@ -1,0 +1,360 @@
+{
+  "game": "追迹迷城",
+  "version": "device-latest",
+  "notes": "设备上官方最新版 → 星光外科替换。当前阶段只执行只读取包、官方包核对、拆包与 IL2CPP dump；跨签名卸载需另行明确授权。",
+  "params": {
+    "game_id": "zjmc",
+    "package": "com.TeaMelo.DungeonChasers"
+  },
+  "env": {
+    "PKG": "com.TeaMelo.DungeonChasers",
+    "GAME": "追迹迷城"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（自动识别唯一真机 + root 检查）",
+      "requires": [],
+      "command": "bash 04_scripts/追迹迷城/device_ready_zjmc.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/device_ready_zjmc.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/追迹迷城/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 18:52:59",
+      "artifacts": {
+        "04_scripts/追迹迷城/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "pull_device",
+      "name": "真机只读提取官方单一 base APK",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/追迹迷城/fetch_installed_zjmc.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/fetch_installed_zjmc.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/追迹迷城/official_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 18:53:46",
+      "artifacts": {
+        "04_scripts/追迹迷城/official_apk.json": {
+          "md5": "43129311e03eff92b6c8d9b3b90fabbe"
+        }
+      },
+      "inputs": {
+        "04_scripts/追迹迷城/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "check_apk",
+      "name": "核对包名、版本、签名与 IL2CPP 输入",
+      "requires": [
+        "pull_device"
+      ],
+      "command": "bash 04_scripts/追迹迷城/check_zjmc_apk.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/check_zjmc_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/追迹迷城/check_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 18:54:01",
+      "artifacts": {
+        "04_scripts/追迹迷城/check_summary.json": {
+          "md5": "817b01a71639cb9211ce2203c2790e22"
+        }
+      },
+      "inputs": {
+        "04_scripts/追迹迷城/official_apk.json": "43129311e03eff92b6c8d9b3b90fabbe"
+      }
+    },
+    {
+      "id": "dump",
+      "name": "拆包与 IL2CPP 静态 dump",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "bash 04_scripts/追迹迷城/dump_zjmc.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/dump_zjmc.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "03_decompiled/追迹迷城/current/AndroidManifest.xml"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/追迹迷城/current/dump.cs"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/追迹迷城/current/script.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 18:57:37",
+      "artifacts": {
+        "03_decompiled/追迹迷城/current/AndroidManifest.xml": {
+          "md5": "15490ab63eeb954d840ef7194e46cd4e"
+        },
+        "06_dumped/追迹迷城/current/dump.cs": {
+          "md5": "82fed0909dd53e697832cad27c68b134"
+        },
+        "06_dumped/追迹迷城/current/script.json": {
+          "md5": "c0adacda777d1256b7e17d11b0e232ff"
+        }
+      },
+      "inputs": {
+        "04_scripts/追迹迷城/check_summary.json": "817b01a71639cb9211ce2203c2790e22"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "四功能锚点重定位（静态产物已完成，待状态固化）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/追迹迷城/锚点_五功能_1.0.20260912_20260914.md"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（原四功能 RVA 迁移 + 免广告 + Manifest 补丁缓存）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "bash 04_scripts/追迹迷城/zjmc_manifest.sh",
+      "preflight": [
+        "mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.cpp",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.h",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android.mk",
+        "04_scripts/追迹迷城/zjmc_manifest.sh",
+        "04_scripts/追迹迷城/patch_zjmc_binary_manifest_v2.py"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "07_patched/追迹迷城/surgical_1.0.20260912/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:08:00",
+      "artifacts": {
+        "07_patched/追迹迷城/surgical_1.0.20260912/AndroidManifest.xml": {
+          "md5": "722d54e7c398ede2ecf56c93f3e59f31"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（ZJMC 标签 + JNI 导出校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash 04_scripts/追迹迷城/zjmc_build_so.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/zjmc_build_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（classes3/5 patch + classes6 星光合并 + Manifest + so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh",
+        "04_scripts/追迹迷城/patch_zjmc_smali.py"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:15:37",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": {
+          "md5": "f50a6f15cd438745bdea3714884c7bf1"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": "08a6729c0f18e8beb3da8fe777b9e1ac"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名产物复核（外科脚本已用 starry_release.jks 签名）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:16:53",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": {
+          "md5": "f50a6f15cd438745bdea3714884c7bf1"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": "f50a6f15cd438745bdea3714884c7bf1"
+      }
+    },
+    {
+      "id": "uninstall_official",
+      "name": "卸载官方包（用户 2026-09-14 明确授权：不保留数据）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/追迹迷城/uninstall_official_zjmc.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/uninstall_official_zjmc.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/追迹迷城/uninstall_done.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:22:09",
+      "artifacts": {
+        "04_scripts/追迹迷城/uninstall_done.json": {
+          "md5": "8519545791febd4018487c96ee789c03"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": "f50a6f15cd438745bdea3714884c7bf1",
+        "04_scripts/追迹迷城/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "install",
+      "name": "安装星空包并校验设备 base.apk MD5",
+      "requires": [
+        "uninstall_official",
+        "sign"
+      ],
+      "command": "bash 04_scripts/追迹迷城/install_zjmc.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/install_zjmc.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/追迹迷城/uninstall_done.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:25:05",
+      "artifacts": {
+        "04_scripts/追迹迷城/uninstall_done.json": {
+          "md5": "8519545791febd4018487c96ee789c03"
+        }
+      },
+      "inputs": {
+        "04_scripts/追迹迷城/uninstall_done.json": "8519545791febd4018487c96ee789c03",
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": "f50a6f15cd438745bdea3714884c7bf1"
+      }
+    },
+    {
+      "id": "cleanup",
+      "name": "收官清理（本作可再生中间物 + 设备本次临时 APK）",
+      "requires": [],
+      "command": "bash 04_scripts/追迹迷城/cleanup_zjmc.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/cleanup_zjmc.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/追迹迷城/cleanup_summary.json"
+        },
+        {
+          "type": "not_exists",
+          "path": "03_decompiled/追迹迷城"
+        },
+        {
+          "type": "not_exists",
+          "path": "07_patched/追迹迷城"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 19:40:19",
+      "artifacts": {
+        "04_scripts/追迹迷城/cleanup_summary.json": {
+          "md5": "376f9aae89d4c1d95b38feda2ea3b569"
+        },
+        "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs": {
+          "md5": "82fed0909dd53e697832cad27c68b134"
+        }
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收尾文档与 Git 固化（只提交本作路径）",
+      "requires": [
+        "cleanup"
+      ],
+      "command": "bash 04_scripts/追迹迷城/archive_zjmc.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/archive_zjmc.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}

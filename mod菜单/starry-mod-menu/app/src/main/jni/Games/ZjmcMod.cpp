@@ -1,7 +1,10 @@
 /* ================================================================
- *  追迹迷城 1.0.20260906 / vc97902
- *  RVA 来自官方包 Il2CppDumper script.json（2026-09-06，游戏当日更新重算）
- *  14 钩子全部语义/签名不变，纯搬迁：BattleManager 簇 +0x1F1C，LocalPlayer/Monster 簇 +0x1B414。
+ *  追迹迷城 1.0.20260912 / vc98503
+ *  RVA 来自官方包 Il2CppDumper script.json（2026-09-14 静态重定位）。
+ *  原四功能 13 个 HookOne 语义/签名不变：BattleManager +0x11520、
+ *  Attack/Partner +0x11564、LocalPlayer +0x10EB8、Monster +0x110DC。
+ *  新增免广告：ATGameManager.GetFreeSkipAdsRemainingCount 开启时恒返回 3，
+ *  复用官方免费跳过广告分支，不伪造广告 SDK 回调。
  *  ELF bias +0x4000（RX LOAD vaddr-file = 0x4000，新版实测不变），运行时用 maps file_off。
  * ================================================================ */
 
@@ -19,20 +22,21 @@
 
 enum : uintptr_t {
     ELF_BIAS = 0x4000,
-    RVA_BM_UPDATE            = 0x302ECF4,  // FixedUpdate（AOE 用；Update=0x302F1F8）
-    RVA_BM_GET_ALIVE         = 0x3033268,
-    RVA_ATK_CAN_USE          = 0x305AC64,
-    RVA_ATK_CUR_SP           = 0x305AC80,
-    RVA_PARTNER_CAN_USE      = 0x305B0B8,
-    RVA_PARTNER_CUR_SP       = 0x305B0EC,
-    RVA_LP_CHECK_1           = 0x3100F90,
-    RVA_LP_CHECK_2           = 0x3101038,
-    RVA_LP_CHECK_DODGE       = 0x3101064,
-    RVA_LP_PROCESS_DMG       = 0x310149C,  // LocalPlayer$$ProcessDamageOrHeal
-    RVA_LP_CHANGE_HP         = 0x31030B0,  // LocalPlayer$$ChangeHP（非 DisplayClass 闭包）
-    RVA_LP_CHECK_ACTION      = 0x31047F4,
-    RVA_MONSTER_PROCESS_DMG  = 0x310A284,  // Monster$$ProcessDamageOrHeal
-    RVA_MONSTER_CHANGE_HP    = 0x310ADA0,
+    RVA_BM_UPDATE            = 0x3040214,  // FixedUpdate（AOE 用；Update=0x3040718）
+    RVA_BM_GET_ALIVE         = 0x3044788,
+    RVA_ATK_CAN_USE          = 0x306C1C8,
+    RVA_ATK_CUR_SP           = 0x306C1E4,
+    RVA_PARTNER_CAN_USE      = 0x306C61C,
+    RVA_PARTNER_CUR_SP       = 0x306C650,
+    RVA_LP_CHECK_1           = 0x3111E48,
+    RVA_LP_CHECK_2           = 0x3111EF0,
+    RVA_LP_CHECK_DODGE       = 0x3111F1C,
+    RVA_LP_PROCESS_DMG       = 0x3112354,  // LocalPlayer$$ProcessDamageOrHeal
+    RVA_LP_CHANGE_HP         = 0x3113F68,  // LocalPlayer$$ChangeHP（非 DisplayClass 闭包）
+    RVA_LP_CHECK_ACTION      = 0x31156AC,
+    RVA_MONSTER_PROCESS_DMG  = 0x311B360,  // Monster$$ProcessDamageOrHeal
+    RVA_MONSTER_CHANGE_HP    = 0x311BE7C,
+    RVA_GET_FREE_SKIP_ADS    = 0x2DCFD24,  // ATGameManager$$GetFreeSkipAdsRemainingCount
 };
 
 static std::atomic<bool> g_ready{false};
@@ -40,6 +44,7 @@ static std::atomic<bool> g_seckill{false};
 static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_aoe{false};
 static std::atomic<bool> g_nocd{false};
+static std::atomic<bool> g_noad{false};
 static std::atomic<bool> g_aoeReenter{false};
 
 typedef float (*ChangeHP_t)(void* thiz, float hp, bool showText, void* method);
@@ -47,6 +52,7 @@ typedef bool (*BoolFn_t)(void* thiz, void* method);
 typedef void (*Update_t)(void* thiz, void* method);
 typedef void* (*GetList_t)(void* thiz, void* method);
 typedef bool (*ProcessDmg_t)(void* thiz, void* attacker, void* resultData, void* method);
+typedef int (*IntReturnFn_t)(void* thiz, void* method);
 
 static ChangeHP_t g_origMonsterHp = nullptr;
 static ChangeHP_t g_origPlayerHp = nullptr;
@@ -64,6 +70,7 @@ static BoolFn_t g_origLp1 = nullptr;
 static BoolFn_t g_origLp2 = nullptr;
 static BoolFn_t g_origLpDodge = nullptr;
 static BoolFn_t g_origLpAction = nullptr;
+static IntReturnFn_t g_origFreeSkipAds = nullptr;
 
 /** maps：file_off → VA。libil2cpp RX 可能分段，禁止 ELF base+RVA。 */
 static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
@@ -156,6 +163,12 @@ static bool Hooked_Lp2(void* thiz, void* method) { return PassTrue(g_origLp2, th
 static bool Hooked_LpDodge(void* thiz, void* method) { return PassTrue(g_origLpDodge, thiz, method); }
 static bool Hooked_LpAction(void* thiz, void* method) { return PassTrue(g_origLpAction, thiz, method); }
 
+/** 免广告：走游戏官方 FREE_SKIP_ADS_DAILY_MAX=3 分支，开关开启时不消耗实际额度。 */
+static int Hooked_FreeSkipAds(void* thiz, void* method) {
+    if (g_noad.load()) return 3;
+    return g_origFreeSkipAds ? g_origFreeSkipAds(thiz, method) : 0;
+}
+
 /** Il2Cpp List`1：_items@0x10, _size@0x18；Array max_length@0x18, data@0x20 */
 static void AoeKillFromList(void* list) {
     if (!list || !g_origMonsterHp) return;
@@ -211,7 +224,9 @@ bool Zjmc_TryInit() {
     HookOne("LP.Dodge", RVA_LP_CHECK_DODGE, (void*)Hooked_LpDodge, (void**)&g_origLpDodge, false);
     ok &= HookOne("LP.Action", RVA_LP_CHECK_ACTION, (void*)Hooked_LpAction, (void**)&g_origLpAction,
                   true);
-
+    HookOne("AT.GetFreeSkipAds", RVA_GET_FREE_SKIP_ADS, (void*)Hooked_FreeSkipAds,
+            (void**)&g_origFreeSkipAds, false);
+ 
     if (ok) {
         g_ready.store(true);
         LOGI("[Zjmc] 初始化成功");
@@ -227,6 +242,7 @@ void Zjmc_OnFeatureChanged(int featNum, bool enabled) {
         case ZJMC_FEAT_INVINCIBLE: g_inv.store(enabled); break;
         case ZJMC_FEAT_AOE_KILL: g_aoe.store(enabled); break;
         case ZJMC_FEAT_NO_CD: g_nocd.store(enabled); break;
+        case ZJMC_FEAT_NO_AD: g_noad.store(enabled); break;
         default: break;
     }
     LOGI("[Zjmc] feat %d -> %d", featNum, enabled ? 1 : 0);
@@ -243,6 +259,7 @@ void Zjmc_Tick(const bool* features) {
     g_inv.store(features[ZJMC_FEAT_INVINCIBLE]);
     g_aoe.store(features[ZJMC_FEAT_AOE_KILL]);
     g_nocd.store(features[ZJMC_FEAT_NO_CD]);
+    g_noad.store(features[ZJMC_FEAT_NO_AD]);
 }
 
 void Zjmc_ForceClear() {
@@ -250,5 +267,6 @@ void Zjmc_ForceClear() {
     g_inv.store(false);
     g_aoe.store(false);
     g_nocd.store(false);
+    g_noad.store(false);
     LOGI("[Zjmc] ForceClear");
 }
