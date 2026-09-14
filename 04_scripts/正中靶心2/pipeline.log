@@ -7371,3 +7371,32 @@ To github.com:Aliang369/nixiang.git
 [2026-09-15 00:35:54] [正中靶心2] stage=archive 开始
 命令: bash 04_scripts/正中靶心2/archive_zzbx2.sh
 目录: /Users/aliang/Documents/nixiang
+04_scripts/正中靶心2/cleanup_summary.json
+04_scripts/正中靶心2/cleanup_zzbx2.sh
+04_scripts/正中靶心2/pipeline.json
+04_scripts/正中靶心2/pipeline.log
+[main 1564273] 正中靶心2 1.7 星空包交付与收官
+ 4 files changed, 73 insertions(+), 6 deletions(-)
+To github.com:Aliang369/nixiang.git
+   486179f..1564273  main -> main
+==> 本作相关状态
+ M 04_scripts/正中靶心2/pipeline.log
+ M 10_docs/_state/current.md
+?? mod菜单/starry-mod-menu/app/src/main/jni/Android_yntt.mk
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttEntry.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h
+?? mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/正中靶心2/pipeline.log
+ M 10_docs/_state/current.md
+?? 04_scripts/一念通天/
+?? 06_dumped/一念通天/
+?? 10_docs/一念通天/
+?? mod菜单/starry-mod-menu/app/src/main/jni/Android_yntt.mk
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttEntry.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp
+?? mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h
+?? mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh
+[2026-09-15 00:36:01] [正中靶心2] stage=archive 完成（校验通过）
+────────────────────────────────────────────
