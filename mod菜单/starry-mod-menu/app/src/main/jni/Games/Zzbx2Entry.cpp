@@ -6,7 +6,7 @@ static void Zzbx2_OnLoad(JavaVM* vm) { Zzbx2_StartEarlyHookThread(vm); }
 
 static const char* kZzbx2_Features[] = {
     "Category_功能",       // 0
-    "Toggle_秒杀",         // 1 ZZBX2_FEAT_KILL
+    "Slider_攻击倍率:1:100:1", // 1 ZZBX2_FEAT_ATK（1=关，2..100=最终伤害倍率）
     "Toggle_无敌",         // 2 ZZBX2_FEAT_INV
     "Slider_战斗加速:1:5:1", // 3 ZZBX2_FEAT_SPD（1=关，2..5=倍率）
     "Toggle_免广告",       // 4 ZZBX2_FEAT_ADFREE

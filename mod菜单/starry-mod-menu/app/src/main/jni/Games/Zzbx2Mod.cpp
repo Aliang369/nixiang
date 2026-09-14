@@ -29,6 +29,7 @@ static const char* kSeEvalSym() {
 }
 
 static std::atomic<bool> g_feat[ZZBX2_FEAT_COUNT];
+static std::atomic<int> g_atkValue{ZZBX2_ATK_DEFAULT};
 static std::atomic<int> g_speedValue{ZZBX2_SPEED_DEFAULT};
 static std::atomic<bool> g_ready{false};
 static std::atomic<bool> g_seHooked{false};
@@ -110,6 +111,8 @@ static void SyncJavaRets() {
         }
     }
     if (g_hooksCls && g_setVal) {
+        env->CallStaticVoidMethod(g_hooksCls, g_setVal,
+                                  ZZBX2_FEAT_ATK, g_atkValue.load());
         env->CallStaticVoidMethod(g_hooksCls, g_setVal,
                                   ZZBX2_FEAT_SPD, g_speedValue.load());
     }
@@ -234,6 +237,10 @@ void Zzbx2_Tick(const bool* features, const int* values) {
         for (int i = 1; i < ZZBX2_FEAT_COUNT; i++) g_feat[i].store(features[i]);
     }
     if (values) {
+        int atk = values[ZZBX2_FEAT_ATK];
+        if (atk >= ZZBX2_ATK_MIN && atk <= ZZBX2_ATK_MAX) {
+            g_atkValue.store(atk);
+        }
         int speed = values[ZZBX2_FEAT_SPD];
         if (speed >= ZZBX2_SPEED_MIN && speed <= ZZBX2_SPEED_MAX) {
             g_speedValue.store(speed);
@@ -244,17 +251,27 @@ void Zzbx2_Tick(const bool* features, const int* values) {
 }
 
 void Zzbx2_OnValueChanged(int featNum, int value) {
-    if (featNum != ZZBX2_FEAT_SPD) return;
-    int speed = value;
-    if (speed < ZZBX2_SPEED_MIN) speed = ZZBX2_SPEED_MIN;
-    if (speed > ZZBX2_SPEED_MAX) speed = ZZBX2_SPEED_MAX;
-    g_speedValue.store(speed);
-    LOGI("%s speed slider=%d", ZZBX2_LOG, speed);
+    if (featNum == ZZBX2_FEAT_ATK) {
+        int atk = value;
+        if (atk < ZZBX2_ATK_MIN) atk = ZZBX2_ATK_MIN;
+        if (atk > ZZBX2_ATK_MAX) atk = ZZBX2_ATK_MAX;
+        g_atkValue.store(atk);
+        LOGI("%s attack slider=%d", ZZBX2_LOG, atk);
+    } else if (featNum == ZZBX2_FEAT_SPD) {
+        int speed = value;
+        if (speed < ZZBX2_SPEED_MIN) speed = ZZBX2_SPEED_MIN;
+        if (speed > ZZBX2_SPEED_MAX) speed = ZZBX2_SPEED_MAX;
+        g_speedValue.store(speed);
+        LOGI("%s speed slider=%d", ZZBX2_LOG, speed);
+    } else {
+        return;
+    }
     SyncJavaRets();
 }
 
 void Zzbx2_ForceClear() {
     for (int i = 1; i < ZZBX2_FEAT_COUNT; i++) g_feat[i].store(false);
+    g_atkValue.store(ZZBX2_ATK_DEFAULT);
     g_speedValue.store(ZZBX2_SPEED_DEFAULT);
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
@@ -262,6 +279,8 @@ void Zzbx2_ForceClear() {
         CacheJava(env);
         if (g_hooksCls && g_clearAll) env->CallStaticVoidMethod(g_hooksCls, g_clearAll);
         if (g_hooksCls && g_setVal) {
+            env->CallStaticVoidMethod(g_hooksCls, g_setVal,
+                                      ZZBX2_FEAT_ATK, ZZBX2_ATK_DEFAULT);
             env->CallStaticVoidMethod(g_hooksCls, g_setVal,
                                       ZZBX2_FEAT_SPD, ZZBX2_SPEED_DEFAULT);
         }

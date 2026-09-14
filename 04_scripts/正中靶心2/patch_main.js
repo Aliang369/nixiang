@@ -3,7 +3,7 @@
   if (window.__starry_zzbx2) { return; }
   window.__starry_zzbx2 = 1;
   var ACT = "com.starry.magic.cocos.Zzbx2Hooks";
-  var S = { kill: 0, inv: 0, spdVal: 1, ad: 0, spdApplied: 0, prevSpeed: 1, n: 0, err: 0 };
+  var S = { atkMul: 1, inv: 0, spdVal: 1, ad: 0, spdApplied: 0, prevSpeed: 1, n: 0, err: 0 };
   function RET(n) {
     try {
       return !!jsb.reflection.callStaticMethod(ACT, "getRet", "(I)Z", n);
@@ -15,7 +15,9 @@
     } catch (e) { return 0; }
   }
   function refresh() {
-    S.kill = RET(1) ? 1 : 0;
+    S.atkMul = VAL(1);
+    if (S.atkMul < 1) { S.atkMul = 1; }
+    if (S.atkMul > 100) { S.atkMul = 100; }
     S.inv = RET(2) ? 1 : 0;
     S.spdVal = VAL(3);
     if (S.spdVal < 1) { S.spdVal = 1; }
@@ -51,14 +53,11 @@
             if (S.inv && this.entity.side === B.EntitySide.Own && dmg.GTInt(0)) {
               return zeroLike(dmg);
             }
-            if (S.kill && this.entity.side === B.EntitySide.Enemy && dmg.GTInt(0)) {
-              return dmg;
-            }
           }
         } catch (e) {}
         return origBuff.call(this, dmg, bullet);
       };
-      P.getBuffCanBeAttack.__starry_zzbx2_buff = 1;
+      P.__starry_zzbx2_buff = 1;
       S.n += 1;
     }
     if (typeof P.changeHp === "function" && !P.__starry_zzbx2_hp) {
@@ -67,8 +66,8 @@
         try {
           if (this && this.entity && B.EntitySide && amount) {
             var isDamage = (damageType === B.DamageType.damage || damageType === B.DamageType.bulletDamage);
-            if (isDamage && this.entity.side === B.EntitySide.Enemy && S.kill) {
-              amount = this.hp;
+            if (isDamage && this.entity.side === B.EntitySide.Enemy && S.atkMul > 1) {
+              if (amount && typeof amount.mulInt === "function") { amount = amount.mulInt(S.atkMul); }
             } else if (isDamage && this.entity.side === B.EntitySide.Own && S.inv) {
               amount = zeroLike(amount);
             }
@@ -76,7 +75,7 @@
         } catch (e) {}
         return origHp.call(this, amount, damageType, isSkill);
       };
-      P.changeHp.__starry_zzbx2_hp = 1;
+      P.__starry_zzbx2_hp = 1;
       S.n += 1;
     }
     } catch (e) { logError("applyBattle", e); }

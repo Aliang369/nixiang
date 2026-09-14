@@ -4,7 +4,15 @@
   "package": "com.openew.monster",
   "source": "Games/Zzbx2Entry.cpp kZzbx2_Features",
   "features": [
-    {"feat_num": 1, "name": "秒杀"},
+    {
+      "feat_num": 1,
+      "name": "攻击倍率",
+      "type": "slider",
+      "min": 1,
+      "max": 100,
+      "default": 1,
+      "note": "1=关，2..100=最终伤害倍率；对应 Slider_攻击倍率:1:100:1"
+    },
     {"feat_num": 2, "name": "无敌"},
     {
       "feat_num": 3,

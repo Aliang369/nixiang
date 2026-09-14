@@ -60,7 +60,7 @@ fi
 mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 
 LC_ALL=C grep -aq "zzbx2" "$SO" || { echo "ERROR: so 缺少 zzbx2 标签" >&2; exit 1; }
-LC_ALL=C grep -aq "Toggle_秒杀" "$SO" || { echo "ERROR: so 缺少 Toggle_秒杀" >&2; exit 1; }
+LC_ALL=C grep -aq "Slider_攻击倍率:1:100:1" "$SO" || { echo "ERROR: so 缺少 Slider_攻击倍率:1:100:1" >&2; exit 1; }
 LC_ALL=C grep -aq "Slider_战斗加速:1:5:1" "$SO" || { echo "ERROR: so 缺少 Slider_战斗加速:1:5:1" >&2; exit 1; }
 LC_ALL=C grep -aq "Toggle_免广告" "$SO" || { echo "ERROR: so 缺少 Toggle_免广告" >&2; exit 1; }
 LC_ALL=C grep -aq "starry_zzbx2_v1" "$SO" || { echo "ERROR: so 缺少 JS 补丁标记" >&2; exit 1; }

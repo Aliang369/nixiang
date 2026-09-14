@@ -10,11 +10,14 @@
 
 // 功能位号：必须与 Zzbx2Entry.cpp 的 featureList 数组下标一一对应
 enum Zzbx2Feat : int {
-    ZZBX2_FEAT_KILL = 1,
+    ZZBX2_FEAT_ATK = 1,
     ZZBX2_FEAT_INV = 2,
     ZZBX2_FEAT_SPD = 3,
     ZZBX2_FEAT_ADFREE = 4,
     ZZBX2_FEAT_COUNT = 5,
+    ZZBX2_ATK_MIN = 1,
+    ZZBX2_ATK_MAX = 100,
+    ZZBX2_ATK_DEFAULT = 1,
     ZZBX2_SPEED_MIN = 1,
     ZZBX2_SPEED_MAX = 5,
     ZZBX2_SPEED_DEFAULT = 1,
