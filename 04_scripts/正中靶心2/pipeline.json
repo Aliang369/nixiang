@@ -270,16 +270,7 @@
           "path": "08_output/正中靶心2/正中靶心2_1.6_starry-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-14 22:28:27",
-      "artifacts": {
-        "08_output/正中靶心2/正中靶心2_1.6_starry-releaseSigned.apk": {
-          "md5": "286ba60168661d4d57cd708892fbe411"
-        }
-      },
-      "inputs": {
-        "07_patched/正中靶心2/正中靶心2_1.6_starry-unsigned.apk": "c3d1c3edad10056b8cea969ad63b946f"
-      }
+      "status": "pending"
     },
     {
       "id": "pull_official",
@@ -378,16 +369,7 @@
           "path": "06_dumped/正中靶心2/official_1.7/decrypted_js/decrypt_summary.json"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-14 22:34:43",
-      "artifacts": {
-        "06_dumped/正中靶心2/official_1.7/decrypted_js/decrypt_summary.json": {
-          "md5": "7d20eab7692fdab978c606779ae6a013"
-        }
-      },
-      "inputs": {
-        "06_dumped/正中靶心2/official_1.7/apk_assets/assets/src/assets/Script/src/GameLogic.jsc": "3bc5b67eebe269ba7be64c956ed73311"
-      }
+      "status": "pending"
     },
     {
       "id": "anchor_official",
@@ -487,16 +469,7 @@
           "path": "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-15 00:14:40",
-      "artifacts": {
-        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": {
-          "md5": "15fe9d8b8e304c5bedf8b82b77f9fec4"
-        }
-      },
-      "inputs": {
-        "07_patched/正中靶心2/正中靶心2_1.7_starry-unsigned.apk": "e45bf326dfc38d8deae50805dc38cada"
-      }
+      "status": "pending"
     },
     {
       "id": "install_official",
@@ -551,7 +524,19 @@
           "path": "06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-15 00:34:02",
+      "artifacts": {
+        "04_scripts/正中靶心2/cleanup_summary.json": {
+          "md5": "82893df016e96b47f48892caaa0845ab"
+        },
+        "06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js": {
+          "md5": "f3fd0a2010e93007e8ff15f01891f5af"
+        }
+      },
+      "inputs": {
+        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": "15fe9d8b8e304c5bedf8b82b77f9fec4"
+      }
     },
     {
       "id": "archive",

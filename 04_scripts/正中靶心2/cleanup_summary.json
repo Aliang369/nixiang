@@ -1,0 +1,21 @@
+{
+  "game": "正中靶心2",
+  "before_kb": 559424,
+  "after_kb": 21844,
+  "released_kb": 537580,
+  "before_at": "2026-09-15 00:34:01",
+  "after_at": "2026-09-15 00:34:02",
+  "kept": [
+    "02_apks/正中靶心2",
+    "08_output/正中靶心2",
+    "06_dumped/正中靶心2 text assets",
+    "04_scripts/正中靶心2",
+    "10_docs/正中靶心2",
+    "mod菜单 Zzbx2 sources"
+  ],
+  "removed_roots": [
+    "03_decompiled/正中靶心2",
+    "07_patched/正中靶心2",
+    "06_dumped/正中靶心2 ignored binaries"
+  ]
+}
