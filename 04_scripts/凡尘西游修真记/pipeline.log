@@ -1303,3 +1303,194 @@ Success
 目录: /Users/aliang/Documents/nixiang
 [2026-09-14 00:20:51] [凡尘西游修真记] stage=archive 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 20:10:15] [凡尘西游修真记] stage=dump 开始
+命令: bash 04_scripts/凡尘西游修真记/dump_fcxyxzj.sh "$APK_OUT"
+目录: /Users/aliang/Documents/nixiang
+==> [1/3] jadx + apktool 拆包
+==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/jadx_1.1.0
+INFO  - loading ...
+INFO  - processing ...
+INFO  - progress: 0 of 5754 (0%)INFO  - progress: 22 of 5754 (0%)INFO  - progress: 64 of 5754 (1%)INFO  - progress: 400 of 5754 (6%)INFO  - progress: 936 of 5754 (16%)INFO  - progress: 1016 of 5754 (17%)INFO  - progress: 1020 of 5754 (17%)INFO  - progress: 1024 of 5754 (17%)INFO  - progress: 1029 of 5754 (17%)INFO  - progress: 1038 of 5754 (18%)INFO  - progress: 1044 of 5754 (18%)INFO  - progress: 1059 of 5754 (18%)INFO  - progress: 1072 of 5754 (18%)INFO  - progress: 1079 of 5754 (18%)INFO  - progress: 1092 of 5754 (18%)INFO  - progress: 1142 of 5754 (19%)INFO  - progress: 1219 of 5754 (21%)INFO  - progress: 1349 of 5754 (23%)INFO  - progress: 1434 of 5754 (24%)INFO  - progress: 1491 of 5754 (25%)INFO  - progress: 1537 of 5754 (26%)INFO  - progress: 1546 of 5754 (26%)INFO  - progress: 1630 of 5754 (28%)INFO  - progress: 1657 of 5754 (28%)INFO  - progress: 1702 of 5754 (29%)INFO  - progress: 1712 of 5754 (29%)INFO  - progress: 1719 of 5754 (29%)INFO  - progress: 1729 of 5754 (30%)INFO  - progress: 1769 of 5754 (30%)INFO  - progress: 1820 of 5754 (31%)INFO  - progress: 1851 of 5754 (32%)INFO  - progress: 1885 of 5754 (32%)INFO  - progress: 1937 of 5754 (33%)INFO  - progress: 1974 of 5754 (34%)INFO  - progress: 1984 of 5754 (34%)INFO  - progress: 2017 of 5754 (35%)INFO  - progress: 2047 of 5754 (35%)INFO  - progress: 2067 of 5754 (35%)INFO  - progress: 2091 of 5754 (36%)INFO  - progress: 2109 of 5754 (36%)INFO  - progress: 2128 of 5754 (36%)INFO  - progress: 2152 of 5754 (37%)INFO  - progress: 2192 of 5754 (38%)INFO  - progress: 2202 of 5754 (38%)INFO  - progress: 2265 of 5754 (39%)INFO  - progress: 2371 of 5754 (41%)INFO  - progress: 2395 of 5754 (41%)INFO  - progress: 2420 of 5754 (42%)INFO  - progress: 2430 of 5754 (42%)INFO  - progress: 2459 of 5754 (42%)INFO  - progress: 2488 of 5754 (43%)INFO  - progress: 2510 of 5754 (43%)INFO  - progress: 2567 of 5754 (44%)INFO  - progress: 2581 of 5754 (44%)INFO  - progress: 2601 of 5754 (45%)INFO  - progress: 2653 of 5754 (46%)INFO  - progress: 2663 of 5754 (46%)INFO  - progress: 2676 of 5754 (46%)INFO  - progress: 2688 of 5754 (46%)INFO  - progress: 2708 of 5754 (47%)INFO  - progress: 2731 of 5754 (47%)INFO  - progress: 2763 of 5754 (48%)INFO  - progress: 2789 of 5754 (48%)INFO  - progress: 2808 of 5754 (48%)INFO  - progress: 2829 of 5754 (49%)INFO  - progress: 2841 of 5754 (49%)INFO  - progress: 2859 of 5754 (49%)INFO  - progress: 2886 of 5754 (50%)INFO  - progress: 2924 of 5754 (50%)INFO  - progress: 2927 of 5754 (50%)INFO  - progress: 2933 of 5754 (50%)INFO  - progress: 2939 of 5754 (51%)INFO  - progress: 2946 of 5754 (51%)INFO  - progress: 2985 of 5754 (51%)INFO  - progress: 2998 of 5754 (52%)INFO  - progress: 3028 of 5754 (52%)INFO  - progress: 3036 of 5754 (52%)INFO  - progress: 3042 of 5754 (52%)INFO  - progress: 3056 of 5754 (53%)INFO  - progress: 3073 of 5754 (53%)INFO  - progress: 3082 of 5754 (53%)INFO  - progress: 3098 of 5754 (53%)INFO  - progress: 3150 of 5754 (54%)INFO  - progress: 3199 of 5754 (55%)INFO  - progress: 3218 of 5754 (55%)INFO  - progress: 3229 of 5754 (56%)INFO  - progress: 3243 of 5754 (56%)INFO  - progress: 3248 of 5754 (56%)INFO  - progress: 3276 of 5754 (56%)INFO  - progress: 3294 of 5754 (57%)INFO  - progress: 3312 of 5754 (57%)INFO  - progress: 3356 of 5754 (58%)INFO  - progress: 3392 of 5754 (58%)INFO  - progress: 3467 of 5754 (60%)INFO  - progress: 3515 of 5754 (61%)INFO  - progress: 3573 of 5754 (62%)INFO  - progress: 3601 of 5754 (62%)INFO  - progress: 3606 of 5754 (62%)INFO  - progress: 3610 of 5754 (62%)INFO  - progress: 3618 of 5754 (62%)INFO  - progress: 3622 of 5754 (62%)INFO  - progress: 3626 of 5754 (63%)INFO  - progress: 3637 of 5754 (63%)INFO  - progress: 3676 of 5754 (63%)INFO  - progress: 3682 of 5754 (63%)INFO  - progress: 3699 of 5754 (64%)INFO  - progress: 3703 of 5754 (64%)INFO  - progress: 3703 of 5754 (64%)INFO  - progress: 3712 of 5754 (64%)INFO  - progress: 3725 of 5754 (64%)INFO  - progress: 3736 of 5754 (64%)INFO  - progress: 3771 of 5754 (65%)INFO  - progress: 3795 of 5754 (65%)INFO  - progress: 3824 of 5754 (66%)INFO  - progress: 3862 of 5754 (67%)INFO  - progress: 3884 of 5754 (67%)INFO  - progress: 3919 of 5754 (68%)INFO  - progress: 3962 of 5754 (68%)INFO  - progress: 3973 of 5754 (69%)INFO  - progress: 3995 of 5754 (69%)INFO  - progress: 3995 of 5754 (69%)INFO  - progress: 4007 of 5754 (69%)INFO  - progress: 4020 of 5754 (69%)INFO  - progress: 4028 of 5754 (70%)INFO  - progress: 4059 of 5754 (70%)INFO  - progress: 4078 of 5754 (70%)INFO  - progress: 4091 of 5754 (71%)INFO  - progress: 4112 of 5754 (71%)INFO  - progress: 4133 of 5754 (71%)INFO  - progress: 4150 of 5754 (72%)INFO  - progress: 4176 of 5754 (72%)INFO  - progress: 4194 of 5754 (72%)INFO  - progress: 4209 of 5754 (73%)INFO  - progress: 4233 of 5754 (73%)INFO  - progress: 4250 of 5754 (73%)INFO  - progress: 4260 of 5754 (74%)INFO  - progress: 4288 of 5754 (74%)INFO  - progress: 4298 of 5754 (74%)INFO  - progress: 4322 of 5754 (75%)INFO  - progress: 4343 of 5754 (75%)INFO  - progress: 4360 of 5754 (75%)INFO  - progress: 4391 of 5754 (76%)INFO  - progress: 4407 of 5754 (76%)INFO  - progress: 4414 of 5754 (76%)INFO  - progress: 4418 of 5754 (76%)INFO  - progress: 4422 of 5754 (76%)INFO  - progress: 4439 of 5754 (77%)INFO  - progress: 4456 of 5754 (77%)INFO  - progress: 4464 of 5754 (77%)INFO  - progress: 4464 of 5754 (77%)INFO  - progress: 4464 of 5754 (77%)INFO  - progress: 4466 of 5754 (77%)INFO  - progress: 4480 of 5754 (77%)INFO  - progress: 4504 of 5754 (78%)INFO  - progress: 4508 of 5754 (78%)INFO  - progress: 4529 of 5754 (78%)INFO  - progress: 4544 of 5754 (78%)INFO  - progress: 4565 of 5754 (79%)INFO  - progress: 4576 of 5754 (79%)INFO  - progress: 4583 of 5754 (79%)INFO  - progress: 4601 of 5754 (79%)INFO  - progress: 4619 of 5754 (80%)INFO  - progress: 4626 of 5754 (80%)INFO  - progress: 4633 of 5754 (80%)INFO  - progress: 4644 of 5754 (80%)INFO  - progress: 4649 of 5754 (80%)INFO  - progress: 4649 of 5754 (80%)INFO  - progress: 4661 of 5754 (81%)INFO  - progress: 4679 of 5754 (81%)INFO  - progress: 4695 of 5754 (81%)INFO  - progress: 4707 of 5754 (81%)INFO  - progress: 4713 of 5754 (81%)INFO  - progress: 4734 of 5754 (82%)INFO  - progress: 4747 of 5754 (82%)INFO  - progress: 4750 of 5754 (82%)INFO  - progress: 4752 of 5754 (82%)INFO  - progress: 4759 of 5754 (82%)INFO  - progress: 4770 of 5754 (82%)INFO  - progress: 4781 of 5754 (83%)INFO  - progress: 4785 of 5754 (83%)INFO  - progress: 4799 of 5754 (83%)INFO  - progress: 4811 of 5754 (83%)INFO  - progress: 4814 of 5754 (83%)INFO  - progress: 4819 of 5754 (83%)INFO  - progress: 4833 of 5754 (83%)INFO  - progress: 4837 of 5754 (84%)INFO  - progress: 4842 of 5754 (84%)INFO  - progress: 4856 of 5754 (84%)INFO  - progress: 4861 of 5754 (84%)INFO  - progress: 4867 of 5754 (84%)INFO  - progress: 4872 of 5754 (84%)INFO  - progress: 4878 of 5754 (84%)INFO  - progress: 4889 of 5754 (84%)INFO  - progress: 4893 of 5754 (85%)INFO  - progress: 4907 of 5754 (85%)INFO  - progress: 4925 of 5754 (85%)INFO  - progress: 4947 of 5754 (85%)INFO  - progress: 4969 of 5754 (86%)INFO  - progress: 4993 of 5754 (86%)INFO  - progress: 5022 of 5754 (87%)INFO  - progress: 5057 of 5754 (87%)INFO  - progress: 5086 of 5754 (88%)INFO  - progress: 5117 of 5754 (88%)INFO  - progress: 5141 of 5754 (89%)INFO  - progress: 5192 of 5754 (90%)INFO  - progress: 5262 of 5754 (91%)INFO  - progress: 5297 of 5754 (92%)INFO  - progress: 5332 of 5754 (92%)INFO  - progress: 5372 of 5754 (93%)INFO  - progress: 5402 of 5754 (93%)INFO  - progress: 5414 of 5754 (94%)INFO  - progress: 5427 of 5754 (94%)INFO  - progress: 5437 of 5754 (94%)INFO  - progress: 5446 of 5754 (94%)INFO  - progress: 5457 of 5754 (94%)INFO  - progress: 5460 of 5754 (94%)INFO  - progress: 5484 of 5754 (95%)INFO  - progress: 5490 of 5754 (95%)INFO  - progress: 5501 of 5754 (95%)INFO  - progress: 5501 of 5754 (95%)INFO  - progress: 5501 of 5754 (95%)INFO  - progress: 5503 of 5754 (95%)INFO  - progress: 5507 of 5754 (95%)INFO  - progress: 5514 of 5754 (95%)INFO  - progress: 5528 of 5754 (96%)INFO  - progress: 5532 of 5754 (96%)INFO  - progress: 5559 of 5754 (96%)INFO  - progress: 5581 of 5754 (96%)INFO  - progress: 5599 of 5754 (97%)INFO  - progress: 5601 of 5754 (97%)INFO  - progress: 5601 of 5754 (97%)INFO  - progress: 5601 of 5754 (97%)INFO  - progress: 5602 of 5754 (97%)INFO  - progress: 5602 of 5754 (97%)INFO  - progress: 5607 of 5754 (97%)INFO  - progress: 5607 of 5754 (97%)INFO  - progress: 5607 of 5754 (97%)INFO  - progress: 5607 of 5754 (97%)INFO  - progress: 5607 of 5754 (97%)INFO  - progress: 5607 of 5754 (97%)INFO  - progress: 5612 of 5754 (97%)INFO  - progress: 5615 of 5754 (97%)INFO  - progress: 5627 of 5754 (97%)INFO  - progress: 5643 of 5754 (98%)INFO  - progress: 5664 of 5754 (98%)INFO  - progress: 5674 of 5754 (98%)INFO  - progress: 5679 of 5754 (98%)INFO  - progress: 5693 of 5754 (98%)INFO  - progress: 5701 of 5754 (99%)INFO  - progress: 5715 of 5754 (99%)INFO  - progress: 5730 of 5754 (99%)INFO  - progress: 5735 of 5754 (99%)INFO  - progress: 5735 of 5754 (99%)INFO  - progress: 5746 of 5754 (99%)INFO  - progress: 5752 of 5754 (99%)INFO  - progress: 5752 of 5754 (99%)INFO  - progress: 5753 of 5754 (99%)                                                             ERROR - finished with errors, count: 91
+警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
+==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/apktool_1.1.0
+I: Using Apktool 3.0.3 on 凡尘西游修真记_taptap_official.apk with 8 threads
+I: Baksmaling classes.dex...
+I: Baksmaling classes2.dex...
+I: Loading resource table...
+I: Decoding value resources...
+I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
+I: Decoding file resources...
+I: Generating values XMLs...
+I: Decoding AndroidManifest.xml with resources...
+I: Copying original files...
+I: Copying assets...
+I: Copying lib...
+I: Copying unknown files...
+
+完成。
+  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/jadx_1.1.0
+  apktool: /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/apktool_1.1.0
+  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/decode_summary_1.1.0.md
+  manifest:/Users/aliang/Documents/nixiang/03_decompiled/凡尘西游修真记/manifest_1.1.0.txt
+==> [2/3] 提取 IL2CPP 静态分析输入
+-rw-r--r--@ 1 aliang  staff  11831932 Sep 14 20:13 /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/global-metadata.packed.dat
+-rw-r--r--@ 1 aliang  staff  66273280 Sep 14 20:13 /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/libil2cpp.so
+==> [3/3] 运行时解码元数据（可选对照）
+已复制运行时解码元数据: /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记/global-metadata.runtime.dat
+
+完成。dump 目录: /Users/aliang/Documents/nixiang/06_dumped/凡尘西游修真记
+[2026-09-14 20:13:57] [凡尘西游修真记] stage=dump 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 20:29:29] [凡尘西游修真记] stage=build_so 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= FcxyxzjMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so (c605bd6cc1a1fd8ffde06d2fad0a4b1f)
+[2026-09-14 20:29:37] [凡尘西游修真记] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 20:29:47] [凡尘西游修真记] stage=surgical 开始
+命令: bash "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_fcxyxzj_1.1.0.sh"
+目录: /Users/aliang/Documents/nixiang
+[check] modern so = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so
+[1/6] gradle assembleRelease (starry → smali + certs)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:mergeReleaseJavaResource
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:stripReleaseDebugSymbols
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/fcxyxzj_surgical.w9rD0e/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/fcxyxzj_surgical.w9rD0e/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/fcxyxzj_surgical.w9rD0e/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 19s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry → com/starry smali → classes3.dex
+-rw-r--r--@ 1 aliang  wheel  405600 Sep 14 20:30 /tmp/fcxyxzj_surgical.w9rD0e/classes3.dex
+[3/6] binary AndroidManifest（保留原 application / appComponentFactory）
+  using cached /Users/aliang/Documents/nixiang/07_patched/凡尘西游修真记/surgical/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  38676 Sep 14 20:30 /tmp/fcxyxzj_surgical.w9rD0e/AndroidManifest.xml
+[4/6] binary Manifest 回读校验（provider/service/权限 + application 属性不变）
+  manifest ok (新增 19 行，无删除)
+[5/6] zip surgical merge → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+  merged ok; entries≈1021; classes3=405600; untouched 5/5 verified
+[6/6] 闭环校验（包内 so == 构建产物；classes3 含 StarryInitProvider）
+[so-verify] 包内 so md5 == 构建产物 (c605bd6cc1a1fd8ffde06d2fad0a4b1f) ✓
+[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓
+-rw-r--r--@ 1 aliang  staff   115M Sep 14 20:30 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+DONE(unsigned): /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk
+NOTE: 未签名；由 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh（pipeline sign 阶段）签名。
+[2026-09-14 20:30:44] [凡尘西游修真记] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 20:30:47] [凡尘西游修真记] stage=sign 开始
+命令: bash 04_scripts/凡尘西游修真记/fcxyxzj_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+WARNING: META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+WARNING: META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
+[sign] done → /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[sign] md5 = c63f592ecf60a2f23f8b62e4d139185b
+-rw-r--r--@ 1 aliang  staff   116M Sep 14 20:30 /Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk
+[2026-09-14 20:31:16] [凡尘西游修真记] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-14 20:31:19] [凡尘西游修真记] stage=install 开始
+命令: adb -s $SERIAL push "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk" /data/local/tmp/fcxyxzj_surgical.apk && { adb -s $SERIAL shell am force-stop com.qxjc.fcxyxzj || true; } && { adb -s $SERIAL shell "pm install -r -d --user 0 /data/local/tmp/fcxyxzj_surgical.apk" || { echo "ERROR: 覆盖安装失败（官方签名不同 → INSTALL_FAILED_UPDATE_INCOMPATIBLE）。不自动卸载、不清数据——报告用户后按其决定处理"; adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk; exit 1; }; } && adb -s $SERIAL shell rm -f /data/local/tmp/fcxyxzj_surgical.apk && bash "/Users/aliang/Documents/nixiang/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" com.qxjc.fcxyxzj "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 33.6 MB/s (121162500 bytes in 3.438s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (c63f592ecf60a2f23f8b62e4d139185b) ✓
+[2026-09-14 20:31:29] [凡尘西游修真记] stage=install 完成（校验通过）
+────────────────────────────────────────────

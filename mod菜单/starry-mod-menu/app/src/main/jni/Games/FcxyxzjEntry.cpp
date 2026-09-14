@@ -17,6 +17,7 @@ static const char* kFcxyxzjFeatures[] = {
     "Toggle_掉落翻倍",      // 4  FCXYXZJ_FEAT_DROP
     "Toggle_掉落必掉",      // 5  FCXYXZJ_FEAT_RATE（副本掉落几率判定必过）
     "Toggle_灵玉不减",      // 6  FCXYXZJ_FEAT_JADE（灵玉兑换等读值恒为大值）
+    "Toggle_积分不减",      // 7  FCXYXZJ_FEAT_POINT（商店/兑换积分读值恒为大值）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
