@@ -7676,3 +7676,19 @@ Removing 06_dumped/正中靶心2/official_1.7/dex/
 [2026-09-15 02:02:28] [正中靶心2] stage=archive 开始
 命令: bash 04_scripts/正中靶心2/archive_zzbx2.sh
 目录: /Users/aliang/Documents/nixiang
+04_scripts/正中靶心2/cleanup_summary.json
+04_scripts/正中靶心2/pipeline.json
+04_scripts/正中靶心2/pipeline.log
+[main b8cea0e] 正中靶心2 1.7 星空包交付与收官
+ 3 files changed, 62 insertions(+), 26 deletions(-)
+To github.com:Aliang369/nixiang.git
+   15ed1aa..b8cea0e  main -> main
+==> 本作相关状态
+ M 04_scripts/正中靶心2/pipeline.log
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/正中靶心2/pipeline.log
+ D 12_images/starry_mod_menu/FAB概念稿_20260827.png
+ D 12_images/我的勇者/我的勇者_官方icon.png
+ D 12_images/我的勇者/我的勇者_宣传图.png
+[2026-09-15 02:02:34] [正中靶心2] stage=archive 完成（校验通过）
+────────────────────────────────────────────
