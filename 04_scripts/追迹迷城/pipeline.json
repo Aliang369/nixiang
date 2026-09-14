@@ -1,7 +1,7 @@
 {
   "game": "追迹迷城",
-  "version": "device-latest",
-  "notes": "设备上官方最新版 → 星光外科替换。当前阶段只执行只读取包、官方包核对、拆包与 IL2CPP dump；跨签名卸载需另行明确授权。",
+  "version": "1.0.20260912",
+  "notes": "1.0.20260912 星空包已构建、装机并由用户完成五项功能真机验收；03/06 大件/07 已按收官清理，保留文本锚点、正式包和可重跑管线。",
   "params": {
     "game_id": "zjmc",
     "package": "com.TeaMelo.DungeonChasers"
@@ -131,7 +131,7 @@
     },
     {
       "id": "anchor",
-      "name": "四功能锚点重定位（静态产物已完成，待状态固化）",
+      "name": "五功能锚点重定位（已完成；分析文本保留，大件由 dump 清理）",
       "requires": [
         "dump"
       ],
@@ -142,7 +142,8 @@
           "path": "10_docs/追迹迷城/锚点_五功能_1.0.20260912_20260914.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "cleanup_note": "本阶段完成于 2026-09-14；06_dumped 大件在收官清理中删除，锚点文本已提交到 10_docs/。"
     },
     {
       "id": "impl_mod",
@@ -189,7 +190,8 @@
           "path": "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "cleanup_note": "本阶段完成于 2026-09-14；构建中间产物已按收官清理，jniLibs 与正式包保留可复现入口。"
     },
     {
       "id": "surgical",
