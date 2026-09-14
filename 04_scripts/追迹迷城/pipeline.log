@@ -418,3 +418,77 @@ hint: Disable this message with "git config set advice.addIgnoredFile false"
 [2026-09-14 19:42:04] [追迹迷城] stage=archive 开始
 命令: bash 04_scripts/追迹迷城/archive_zjmc.sh
 目录: /Users/aliang/Documents/nixiang
+04_scripts/追迹迷城/.device_serial
+04_scripts/追迹迷城/archive_zjmc.sh
+04_scripts/追迹迷城/check_summary.json
+04_scripts/追迹迷城/check_zjmc_apk.sh
+04_scripts/追迹迷城/cleanup_summary.json
+04_scripts/追迹迷城/cleanup_zjmc.sh
+04_scripts/追迹迷城/device_ready_zjmc.sh
+04_scripts/追迹迷城/dump_zjmc.sh
+04_scripts/追迹迷城/fetch_installed_zjmc.sh
+04_scripts/追迹迷城/install_zjmc.sh
+04_scripts/追迹迷城/official_apk.json
+04_scripts/追迹迷城/patch_zjmc_binary_manifest_v2.py
+04_scripts/追迹迷城/patch_zjmc_smali.py
+04_scripts/追迹迷城/pipeline.json
+04_scripts/追迹迷城/pipeline.log
+04_scripts/追迹迷城/uninstall_done.json
+04_scripts/追迹迷城/uninstall_official_zjmc.sh
+04_scripts/追迹迷城/zjmc_build_so.sh
+04_scripts/追迹迷城/zjmc_manifest.sh
+06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs
+06_dumped/追迹迷城/1.0.20260912_il2cpp/rva_targets.json
+06_dumped/追迹迷城/1.0.20260912_il2cpp/stringliteral.json
+10_docs/_state/current.md
+10_docs/_state/games/追迹迷城.md
+10_docs/追迹迷城/官方包核对_1.0.20260912.md
+10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md
+10_docs/追迹迷城/星光落地_1.0.20260912_20260914.md
+10_docs/追迹迷城/锚点_五功能_1.0.20260912_20260914.md
+mod菜单/starry-mod-menu/app/src/main/jni/Android.mk
+mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.cpp
+mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.h
+mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp
+mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so
+mod菜单/starry-mod-menu/app/src/main/libs/arm64-v8a/libstarry_magic.so
+mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh
+[main 1e61245] 追迹迷城 1.0.20260912 星空包交付与收官
+ 35 files changed, 1361001 insertions(+), 51 deletions(-)
+ create mode 100644 04_scripts/追迹迷城/.device_serial
+ create mode 100644 04_scripts/追迹迷城/archive_zjmc.sh
+ create mode 100644 04_scripts/追迹迷城/check_summary.json
+ create mode 100644 04_scripts/追迹迷城/check_zjmc_apk.sh
+ create mode 100644 04_scripts/追迹迷城/cleanup_summary.json
+ create mode 100644 04_scripts/追迹迷城/cleanup_zjmc.sh
+ create mode 100644 04_scripts/追迹迷城/device_ready_zjmc.sh
+ create mode 100644 04_scripts/追迹迷城/dump_zjmc.sh
+ create mode 100644 04_scripts/追迹迷城/fetch_installed_zjmc.sh
+ create mode 100644 04_scripts/追迹迷城/install_zjmc.sh
+ create mode 100644 04_scripts/追迹迷城/official_apk.json
+ create mode 100644 04_scripts/追迹迷城/patch_zjmc_binary_manifest_v2.py
+ create mode 100644 04_scripts/追迹迷城/patch_zjmc_smali.py
+ create mode 100644 04_scripts/追迹迷城/pipeline.json
+ create mode 100644 04_scripts/追迹迷城/pipeline.log
+ create mode 100644 04_scripts/追迹迷城/uninstall_done.json
+ create mode 100644 04_scripts/追迹迷城/uninstall_official_zjmc.sh
+ create mode 100644 04_scripts/追迹迷城/zjmc_build_so.sh
+ create mode 100644 04_scripts/追迹迷城/zjmc_manifest.sh
+ create mode 100644 06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs
+ create mode 100644 06_dumped/追迹迷城/1.0.20260912_il2cpp/rva_targets.json
+ create mode 100644 06_dumped/追迹迷城/1.0.20260912_il2cpp/stringliteral.json
+ create mode 100644 10_docs/追迹迷城/官方包核对_1.0.20260912.md
+ create mode 100644 10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md
+ create mode 100644 10_docs/追迹迷城/星光落地_1.0.20260912_20260914.md
+ create mode 100644 10_docs/追迹迷城/锚点_五功能_1.0.20260912_20260914.md
+ create mode 100755 mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh
+To https://github.com/Aliang369/nixiang.git
+   442584b..1e61245  main -> main
+==> 本作相关状态
+ M 04_scripts/追迹迷城/pipeline.log
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/追迹迷城/pipeline.log
+?? 04_scripts/无悔华夏4399/
+?? 06_dumped/无悔华夏4399/
+[2026-09-14 19:42:22] [追迹迷城] stage=archive 完成（校验通过）
+────────────────────────────────────────────

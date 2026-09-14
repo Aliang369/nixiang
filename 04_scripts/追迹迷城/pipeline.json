@@ -354,7 +354,17 @@
           "path": "10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-14 19:42:11",
+      "artifacts": {
+        "10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md": {
+          "md5": "6fab6c6897dfb851ebcf6ee48bf6c9a3"
+        }
+      },
+      "inputs": {
+        "04_scripts/追迹迷城/cleanup_summary.json": "38e8fb5d7c604030c2e612164169ff8b",
+        "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs": "82fed0909dd53e697832cad27c68b134"
+      }
     }
   ]
 }
