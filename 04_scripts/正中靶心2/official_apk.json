@@ -1,0 +1,15 @@
+{
+  "package": "com.openew.monster",
+  "game": "正中靶心2",
+  "kind": "official",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.7_official.apk",
+  "version_name": "1.7",
+  "version_code": 8,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~LmzEWkBr_uNzr147czNajA==/com.openew.monster-9g1gPGMyPxWiMGg1TW9Zpw==/base.apk",
+  "size": 201300206,
+  "sha256": "8975d5e500c8e10a855b99ba557d45f37eb959304a205b2c9dded7b5bcd0f0bf",
+  "md5": "a788bd056310a0f48488832890057135"
+}

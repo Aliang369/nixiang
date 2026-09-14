@@ -67,10 +67,11 @@ public class StarryInitProvider extends ContentProvider {
                 Log.i(TAG, "skip native (proc=" + StarryApp.currentProcessName() + ")");
                 return true;
             }
+            // 先于其它 Provider/SDK 初始化回灌官方证书，避免 TapSignKit 读到缓存真签。
+            SignSpoof.install();
             boolean ok = StarryNativeLoad.ensureLoaded(application);
             Log.i(TAG, "native ensureLoaded=" + ok + " path=" + StarryNativeLoad.loadedPath());
             // 签名回灌（TapSignKit 进程内 PM 查询拿官方签名）+ TapTap 强制网页登录
-            SignSpoof.install();
             application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
                 @Override
                 public void onActivityResumed(android.app.Activity activity) {

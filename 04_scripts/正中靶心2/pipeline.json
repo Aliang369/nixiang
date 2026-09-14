@@ -1,0 +1,575 @@
+{
+  "game": "正中靶心2",
+  "version": "1.7",
+  "notes": "2026-09-15：官方 1.7/vc8 已补 TapTap 官方证书/网页登录、战斗加速 1–5 滑块，并完成防封/上报审查与 JS/native 异常兜底；按用户要求不隔离 PvP。当前正式包 md5 15fe9d8b…，同签名覆盖装机且未清数据，冷启动无 FATAL/SIGSEGV。",
+  "params": {
+    "game_id": "zzbx2",
+    "package": "com.openew.monster",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.openew.monster",
+    "GAME": "正中靶心2",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（唯一真机 + root 检查）",
+      "requires": [],
+      "command": "bash 04_scripts/正中靶心2/device_ready_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/device_ready_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 21:39:36",
+      "artifacts": {
+        "04_scripts/正中靶心2/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "pull_mod",
+      "name": "真机只读提取斌哥改包（单一 base APK）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/正中靶心2/fetch_installed_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/fetch_installed_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/binge_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 21:39:49",
+      "artifacts": {
+        "04_scripts/正中靶心2/binge_apk.json": {
+          "md5": "edf6b71796f541aa17c882e4fc1a2868"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "check_mod",
+      "name": "核对包名/版本/签名/引擎/斌哥壳特征",
+      "requires": [
+        "pull_mod"
+      ],
+      "command": "bash 04_scripts/正中靶心2/check_mod_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/check_mod_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/mod_check.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 21:39:57",
+      "artifacts": {
+        "04_scripts/正中靶心2/mod_check.json": {
+          "md5": "eb5e17a6419b1aa69bd5479b4f8a6e33"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/binge_apk.json": "edf6b71796f541aa17c882e4fc1a2868"
+      }
+    },
+    {
+      "id": "dump",
+      "name": "提取 Cocos JS、关键 so 与 DEX 分析输入",
+      "requires": [
+        "check_mod"
+      ],
+      "command": "bash 04_scripts/正中靶心2/dump_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/dump_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/正中靶心2/binge_1.6/apk_assets/assets/main.js"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/正中靶心2/binge_1.6/summary.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 21:56:30",
+      "artifacts": {
+        "06_dumped/正中靶心2/binge_1.6/apk_assets/assets/main.js": {
+          "md5": "d9a2a97e4c8001857129f2a040f290ac"
+        },
+        "06_dumped/正中靶心2/binge_1.6/summary.txt": {
+          "md5": "7370f776604eb3db6312a605af6c3374"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/mod_check.json": "eb5e17a6419b1aa69bd5479b4f8a6e33"
+      }
+    },
+    {
+      "id": "decrypt_jsc",
+      "name": "XXTEA+gzip 解密 Cocos JSC",
+      "requires": [
+        "dump"
+      ],
+      "command": "bash 04_scripts/正中靶心2/decrypt_jsc_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/decrypt_jsc_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/正中靶心2/binge_1.6/decrypted_js/decrypt_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:07:10",
+      "artifacts": {
+        "06_dumped/正中靶心2/binge_1.6/decrypted_js/decrypt_summary.json": {
+          "md5": "32584ad5146b22a68d1a657e505f7645"
+        }
+      },
+      "inputs": {
+        "06_dumped/正中靶心2/binge_1.6/apk_assets/assets/main.js": "d9a2a97e4c8001857129f2a040f290ac",
+        "06_dumped/正中靶心2/binge_1.6/summary.txt": "7370f776604eb3db6312a605af6c3374"
+      }
+    },
+    {
+      "id": "runtime_diff",
+      "name": "磁盘 vs 运行时 RX 差分（定位 native inline patch）",
+      "requires": [
+        "decrypt_jsc"
+      ],
+      "command": "bash 04_scripts/正中靶心2/runtime_diff_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/runtime_diff_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/正中靶心2/binge_1.6/runtime_diff/runtime_diff.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:09:09",
+      "artifacts": {
+        "06_dumped/正中靶心2/binge_1.6/runtime_diff/runtime_diff.json": {
+          "md5": "156fd728b458d1862ac91fe1554a1c08"
+        }
+      },
+      "inputs": {
+        "06_dumped/正中靶心2/binge_1.6/decrypted_js/decrypt_summary.json": "32584ad5146b22a68d1a657e505f7645"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "实现星光状态桥与 assets/main.js 启动补丁",
+      "requires": [
+        "runtime_diff"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/patch_main.js"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/Zzbx2Mod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/Zzbx2Hooks.java"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:24:40",
+      "artifacts": {
+        "04_scripts/正中靶心2/patch_main.js": {
+          "md5": "1074c5b634ce1876f72dc03dc655b160"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/Zzbx2Mod.cpp": {
+          "md5": "c73041232ec3948b1ea432df0184688d"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/Zzbx2Hooks.java": {
+          "md5": "9d7875ed7f7d64efd7aa4cdc35d3c6fa"
+        }
+      },
+      "inputs": {
+        "06_dumped/正中靶心2/binge_1.6/runtime_diff/runtime_diff.json": "156fd728b458d1862ac91fe1554a1c08"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（zzbx2 标签与菜单串校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash 04_scripts/正中靶心2/zzbx2_build_so.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/zzbx2_build_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（Manifest + classes9 + main.js 补丁 + starry so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash 04_scripts/正中靶心2/surgical_zzbx2_1.6.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/surgical_zzbx2_1.6.sh",
+        "04_scripts/正中靶心2/patch_main.js"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "07_patched/正中靶心2/正中靶心2_1.6_starry-unsigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "sign",
+      "name": "签名（starry_release.jks）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash 04_scripts/正中靶心2/zzbx2_sign.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/zzbx2_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/正中靶心2/正中靶心2_1.6_starry-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:28:27",
+      "artifacts": {
+        "08_output/正中靶心2/正中靶心2_1.6_starry-releaseSigned.apk": {
+          "md5": "286ba60168661d4d57cd708892fbe411"
+        }
+      },
+      "inputs": {
+        "07_patched/正中靶心2/正中靶心2_1.6_starry-unsigned.apk": "c3d1c3edad10056b8cea969ad63b946f"
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读提取官方 1.7 原包",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/正中靶心2/fetch_installed_official_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/fetch_installed_official_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/official_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:32:29",
+      "artifacts": {
+        "04_scripts/正中靶心2/official_apk.json": {
+          "md5": "4dc7000bcab652917118eedda7e7ccf9"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对官方 1.7 包名/版本/签名/资源结构",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/check_official_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/check_official_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/official_check.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:32:43",
+      "artifacts": {
+        "04_scripts/正中靶心2/official_check.json": {
+          "md5": "142f258f5b84be1771a9dcdb71234ff6"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/official_apk.json": "4dc7000bcab652917118eedda7e7ccf9"
+      }
+    },
+    {
+      "id": "dump_official",
+      "name": "官方 1.7 提取 Cocos JS/关键 so/DEX",
+      "requires": [
+        "check_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/dump_official_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/dump_official_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/正中靶心2/official_1.7/apk_assets/assets/src/assets/Script/src/GameLogic.jsc"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:34:29",
+      "artifacts": {
+        "06_dumped/正中靶心2/official_1.7/apk_assets/assets/src/assets/Script/src/GameLogic.jsc": {
+          "md5": "3bc5b67eebe269ba7be64c956ed73311"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/official_check.json": "142f258f5b84be1771a9dcdb71234ff6"
+      }
+    },
+    {
+      "id": "decrypt_official",
+      "name": "官方 1.7 XXTEA+gzip 解密 JSC",
+      "requires": [
+        "dump_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/decrypt_official_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/decrypt_official_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/正中靶心2/official_1.7/decrypted_js/decrypt_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:34:43",
+      "artifacts": {
+        "06_dumped/正中靶心2/official_1.7/decrypted_js/decrypt_summary.json": {
+          "md5": "7d20eab7692fdab978c606779ae6a013"
+        }
+      },
+      "inputs": {
+        "06_dumped/正中靶心2/official_1.7/apk_assets/assets/src/assets/Script/src/GameLogic.jsc": "3bc5b67eebe269ba7be64c956ed73311"
+      }
+    },
+    {
+      "id": "anchor_official",
+      "name": "官方 1.7 星光补丁锚点检查",
+      "requires": [
+        "decrypt_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/verify_official_anchors_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/verify_official_anchors_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/official_anchors.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-14 22:34:58",
+      "artifacts": {
+        "04_scripts/正中靶心2/official_anchors.json": {
+          "md5": "1983393cf3bfec63932b9f382708835d"
+        }
+      },
+      "inputs": {
+        "06_dumped/正中靶心2/official_1.7/decrypted_js/decrypt_summary.json": "7d20eab7692fdab978c606779ae6a013"
+      }
+    },
+    {
+      "id": "build_so_official",
+      "name": "官方 1.7 构建 libstarry_magic.so",
+      "requires": [
+        "anchor_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/zzbx2_build_so.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/zzbx2_build_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 00:12:16",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so": {
+          "md5": "5bc8bc67d12633de04ca2626c8f5944b"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/official_anchors.json": "1983393cf3bfec63932b9f382708835d"
+      }
+    },
+    {
+      "id": "surgical_official",
+      "name": "官方 1.7 星空外科组装",
+      "requires": [
+        "build_so_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/surgical_zzbx2_1.7.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/surgical_zzbx2_1.7.sh",
+        "04_scripts/正中靶心2/patch_main.js"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "07_patched/正中靶心2/正中靶心2_1.7_starry-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 00:14:03",
+      "artifacts": {
+        "07_patched/正中靶心2/正中靶心2_1.7_starry-unsigned.apk": {
+          "md5": "e45bf326dfc38d8deae50805dc38cada"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so": "5bc8bc67d12633de04ca2626c8f5944b"
+      }
+    },
+    {
+      "id": "sign_official",
+      "name": "官方 1.7 签名（starry_release.jks）",
+      "requires": [
+        "surgical_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/zzbx2_sign_official.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/zzbx2_sign_official.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 00:14:40",
+      "artifacts": {
+        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": {
+          "md5": "15fe9d8b8e304c5bedf8b82b77f9fec4"
+        }
+      },
+      "inputs": {
+        "07_patched/正中靶心2/正中靶心2_1.7_starry-unsigned.apk": "e45bf326dfc38d8deae50805dc38cada"
+      }
+    },
+    {
+      "id": "install_official",
+      "name": "同签名覆盖安装星空包 + 设备指纹校验",
+      "requires": [
+        "sign_official",
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/正中靶心2/install_official_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/install_official_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 00:15:03",
+      "artifacts": {
+        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": {
+          "md5": "15fe9d8b8e304c5bedf8b82b77f9fec4"
+        }
+      },
+      "inputs": {
+        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": "15fe9d8b8e304c5bedf8b82b77f9fec4",
+        "04_scripts/正中靶心2/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "cleanup",
+      "name": "收官清理（本作可再生中间物 + 设备本次临时 APK）",
+      "requires": [
+        "install_official"
+      ],
+      "command": "bash 04_scripts/正中靶心2/cleanup_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/cleanup_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/正中靶心2/cleanup_summary.json"
+        },
+        {
+          "type": "not_exists",
+          "path": "07_patched/正中靶心2"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive",
+      "name": "收尾文档与 Git 固化（只提交本作路径）",
+      "requires": [
+        "cleanup"
+      ],
+      "command": "bash 04_scripts/正中靶心2/archive_zzbx2.sh",
+      "preflight": [
+        "04_scripts/正中靶心2/archive_zzbx2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "source": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js",
+  "needles": {
+    "BaseObjectComponent": true,
+    "getBuffCanBeAttack": true,
+    "changeHp": true,
+    "DamageType": true,
+    "EntitySide": true,
+    "GameWorld": true,
+    "gameSpeed": true,
+    "AdvertMgr": true,
+    "adsPlay": true,
+    "startAdverView": true,
+    "finishAdverViewed": true,
+    "C2S_WATCH_ADVERT": true
+  },
+  "missing": [],
+  "ready": true
+}

@@ -1,0 +1,8 @@
+apk=/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.6_binge_mod.apk
+assets=37
+js=3
+jsc=29
+dex=8
+native_libs=3
+main_js=/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/binge_1.6/apk_assets/assets/main.js
+out_root=/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/binge_1.6

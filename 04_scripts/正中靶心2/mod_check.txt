@@ -1,0 +1,23 @@
+package=com.openew.monster
+versionName=1.6
+versionCode=7
+signerDN=CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2
+signerSHA256=11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba
+verdict=binge_candidate
+modScore=2
+dexCount=8
+nativeLibCount=17
+libSDKloading.so=1
+libtoolChecker.so=1
+libcodec2_server.so=0
+libunityluac.so=0
+nested_assets_base_apk=0
+cocos2djs=1
+cocos=0
+binge_cn=0
+menu_tencent_url=0
+binge_email=0
+binge_prefs_bridge=0
+nativeLibs=lib/arm64-v8a/libCtaApiLib.so,lib/arm64-v8a/libPglbizssdk_ml.so,lib/arm64-v8a/libSDKloading.so,lib/arm64-v8a/libavmdl_lite.so,lib/arm64-v8a/libcocos2djs.so,lib/arm64-v8a/libdirichlet_ml.so,lib/arm64-v8a/libn.so,lib/arm64-v8a/libpanglearmor.so,lib/arm64-v8a/libpangleflipped.so,lib/arm64-v8a/libtapsdkcore.so,lib/arm64-v8a/libthemis.so,lib/arm64-v8a/libtkdna.so,lib/arm64-v8a/libtobEmbedEncrypt.so,lib/arm64-v8a/libtoolChecker.so,lib/arm64-v8a/libtt_ugen_layout.so,lib/arm64-v8a/libttmplayer_lite.so,lib/arm64-v8a/libturingad.so
+assetAPKs=
+assetScriptSamples=assets/jsb-adapter/jsb-builtin.js,assets/jsb-adapter/jsb-engine.js,assets/lottie_json/shake_phone.json,assets/lottie_json/swipe_right.json,assets/lottie_json/twist_multi_angle.json,assets/main.js,assets/project.json,assets/res/import/00/00421368-f3df-4c79-aa09-1646a7d1c64c.json,assets/res/import/00/00da6606-4e57-4b56-8e00-e1e65a6d4d10.json,assets/res/import/00/00e6c5a2-3bc7-4e14-b834-902a84c12baa.json,assets/res/import/00/00fd8694-3f3e-4b65-bc28-ee217a0ef43c.json,assets/res/import/01/01902b6f-df4e-404c-915c-3583f759b8c3.json,assets/res/import/01/01bd060a-c9bb-4d28-a233-5e1d3203fe98.json,assets/res/import/02/0275e94c-56a7-410f-bd1a-fc7483f7d14a.json,assets/res/import/04/042f397d-192c-4b84-878c-f9adf42b1547.json,assets/res/import/04/04ec2f1a-1e55-4e97-a15d-79f25751693e.json,assets/res/import/04/04f14349-7d91-4a57-9b46-cdad44118846.json,assets/res/import/06/06aece23-f7a2-46b4-ac2b-75584597c664.json,assets/res/import/07/07411e38-b392-402c-a1cf-eded4088aa50.json,assets/res/import/07/0743ed9a-98ad-43af-b0a5-85d07523da07.json,assets/res/import/07/0749c01d-5e69-4cd7-aa5d-3f53ab44c555.json,assets/res/import/07/07eaa561-6827-4de5-b258-34d846a6b83f.json,assets/res/import/08/08030151-2704-4a6e-afc1-e1164ca0c8b1.json,assets/res/import/08/08e8c0c7-a10c-4b62-9f8a-6759bfe77d8a.json,assets/res/import/08/08f8ff5b-fd60-4f0c-95f7-17ab9dcf32ed.json,assets/res/import/08/08fcbb49-49b8-40f0-b9c8-d7fd4cd44f43.json,assets/res/import/09/09d74678-6737-412b-b59a-cb78934a2514.json,assets/res/import/09/09f07bdb-a833-4916-8dd9-9bc2175daafb.json,assets/res/import/0a/0ada8355-808c-4ae7-9d21-818071dff529.json,assets/res/import/0b/0b541594-87ae-489f-9cf6-fed7329017c9.json,assets/res/import/0b/0b8935c7-ece8-40f8-94a5-92227ab66027.json,assets/res/import/0b/0bd5ca5b-a149-430e-a25b-2d910819f503.json,assets/res/import/0c/0c9684c2-3ca5-46b5-90ce-604e0af71279.json,assets/res/import/0d/0d20a9f1-90e2-44e5-986f-98333da89aeb.json,assets/res/import/0d/0d3e0884-6f9b-42c2-9a6c-0bbbf9996720.json,assets/res/import/0d/0d52fc43-6bd3-40bb-8a37-0f293845b565.json,assets/res/import/0e/0e1c60bc-8b39-406c-aa70-dc71e2c935d8.json,assets/res/import/0e/0e65a76b-b351-438e-a8aa-a3764a71672a.json,assets/res/import/0e/0e831319-f0b8-417b-9c09-58457b2a79a1.json,assets/res/import/0e/0e93aeaa-0b53-4e40-b8e0-6268b4e07bd7.json

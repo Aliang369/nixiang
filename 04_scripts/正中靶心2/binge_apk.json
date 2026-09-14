@@ -1,0 +1,15 @@
+{
+  "package": "com.openew.monster",
+  "game": "正中靶心2",
+  "kind": "binge_mod",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.6_binge_mod.apk",
+  "version_name": "1.6",
+  "version_code": 7,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/base.apk",
+  "size": 184540205,
+  "sha256": "2467aff9a86d15c2fd3342004b856014db39b3e3caa62b92e7158dc3013472de",
+  "md5": "7b99987150a68d5ed84fa202e4220b03"
+}

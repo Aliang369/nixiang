@@ -1,0 +1,2786 @@
+{
+  "package": "com.openew.monster",
+  "pid": 14853,
+  "modules": [
+    {
+      "module": "libSDKloading.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so",
+      "runtime_start": "0x72f56b0000",
+      "runtime_end": "0x72f56d3000",
+      "file_offset": "0x0",
+      "size": 143360,
+      "diff_bytes": 48107,
+      "diff_page_count": 35,
+      "diff_pages": [
+        "0x0",
+        "0x1000",
+        "0x2000",
+        "0x3000",
+        "0x4000",
+        "0x5000",
+        "0x6000",
+        "0x7000",
+        "0x8000",
+        "0x9000",
+        "0xa000",
+        "0xb000",
+        "0xc000",
+        "0xd000",
+        "0xe000",
+        "0xf000",
+        "0x10000",
+        "0x11000",
+        "0x12000",
+        "0x13000",
+        "0x14000",
+        "0x15000",
+        "0x16000",
+        "0x17000",
+        "0x18000",
+        "0x19000",
+        "0x1a000",
+        "0x1b000",
+        "0x1c000",
+        "0x1d000",
+        "0x1e000",
+        "0x1f000",
+        "0x20000",
+        "0x21000",
+        "0x22000"
+      ],
+      "diff_ranges": [
+        {
+          "offset": 408,
+          "size": 2,
+          "file_off": "0x198",
+          "runtime_off": "0x72f56b0198"
+        },
+        {
+          "offset": 412,
+          "size": 2,
+          "file_off": "0x19c",
+          "runtime_off": "0x72f56b019c"
+        },
+        {
+          "offset": 416,
+          "size": 2,
+          "file_off": "0x1a0",
+          "runtime_off": "0x72f56b01a0"
+        },
+        {
+          "offset": 420,
+          "size": 2,
+          "file_off": "0x1a4",
+          "runtime_off": "0x72f56b01a4"
+        },
+        {
+          "offset": 428,
+          "size": 2,
+          "file_off": "0x1ac",
+          "runtime_off": "0x72f56b01ac"
+        },
+        {
+          "offset": 432,
+          "size": 2,
+          "file_off": "0x1b0",
+          "runtime_off": "0x72f56b01b0"
+        },
+        {
+          "offset": 436,
+          "size": 2,
+          "file_off": "0x1b4",
+          "runtime_off": "0x72f56b01b4"
+        },
+        {
+          "offset": 440,
+          "size": 1,
+          "file_off": "0x1b8",
+          "runtime_off": "0x72f56b01b8"
+        },
+        {
+          "offset": 444,
+          "size": 2,
+          "file_off": "0x1bc",
+          "runtime_off": "0x72f56b01bc"
+        },
+        {
+          "offset": 448,
+          "size": 2,
+          "file_off": "0x1c0",
+          "runtime_off": "0x72f56b01c0"
+        },
+        {
+          "offset": 452,
+          "size": 2,
+          "file_off": "0x1c4",
+          "runtime_off": "0x72f56b01c4"
+        },
+        {
+          "offset": 456,
+          "size": 1,
+          "file_off": "0x1c8",
+          "runtime_off": "0x72f56b01c8"
+        },
+        {
+          "offset": 464,
+          "size": 2,
+          "file_off": "0x1d0",
+          "runtime_off": "0x72f56b01d0"
+        },
+        {
+          "offset": 468,
+          "size": 2,
+          "file_off": "0x1d4",
+          "runtime_off": "0x72f56b01d4"
+        },
+        {
+          "offset": 472,
+          "size": 2,
+          "file_off": "0x1d8",
+          "runtime_off": "0x72f56b01d8"
+        },
+        {
+          "offset": 476,
+          "size": 2,
+          "file_off": "0x1dc",
+          "runtime_off": "0x72f56b01dc"
+        },
+        {
+          "offset": 480,
+          "size": 2,
+          "file_off": "0x1e0",
+          "runtime_off": "0x72f56b01e0"
+        },
+        {
+          "offset": 484,
+          "size": 2,
+          "file_off": "0x1e4",
+          "runtime_off": "0x72f56b01e4"
+        },
+        {
+          "offset": 488,
+          "size": 2,
+          "file_off": "0x1e8",
+          "runtime_off": "0x72f56b01e8"
+        },
+        {
+          "offset": 496,
+          "size": 2,
+          "file_off": "0x1f0",
+          "runtime_off": "0x72f56b01f0"
+        },
+        {
+          "offset": 500,
+          "size": 1,
+          "file_off": "0x1f4",
+          "runtime_off": "0x72f56b01f4"
+        },
+        {
+          "offset": 504,
+          "size": 2,
+          "file_off": "0x1f8",
+          "runtime_off": "0x72f56b01f8"
+        },
+        {
+          "offset": 508,
+          "size": 2,
+          "file_off": "0x1fc",
+          "runtime_off": "0x72f56b01fc"
+        },
+        {
+          "offset": 512,
+          "size": 2,
+          "file_off": "0x200",
+          "runtime_off": "0x72f56b0200"
+        },
+        {
+          "offset": 516,
+          "size": 2,
+          "file_off": "0x204",
+          "runtime_off": "0x72f56b0204"
+        },
+        {
+          "offset": 520,
+          "size": 2,
+          "file_off": "0x208",
+          "runtime_off": "0x72f56b0208"
+        },
+        {
+          "offset": 524,
+          "size": 2,
+          "file_off": "0x20c",
+          "runtime_off": "0x72f56b020c"
+        },
+        {
+          "offset": 528,
+          "size": 2,
+          "file_off": "0x210",
+          "runtime_off": "0x72f56b0210"
+        },
+        {
+          "offset": 532,
+          "size": 2,
+          "file_off": "0x214",
+          "runtime_off": "0x72f56b0214"
+        },
+        {
+          "offset": 536,
+          "size": 2,
+          "file_off": "0x218",
+          "runtime_off": "0x72f56b0218"
+        },
+        {
+          "offset": 540,
+          "size": 2,
+          "file_off": "0x21c",
+          "runtime_off": "0x72f56b021c"
+        },
+        {
+          "offset": 544,
+          "size": 2,
+          "file_off": "0x220",
+          "runtime_off": "0x72f56b0220"
+        },
+        {
+          "offset": 548,
+          "size": 2,
+          "file_off": "0x224",
+          "runtime_off": "0x72f56b0224"
+        },
+        {
+          "offset": 556,
+          "size": 2,
+          "file_off": "0x22c",
+          "runtime_off": "0x72f56b022c"
+        },
+        {
+          "offset": 560,
+          "size": 2,
+          "file_off": "0x230",
+          "runtime_off": "0x72f56b0230"
+        },
+        {
+          "offset": 564,
+          "size": 2,
+          "file_off": "0x234",
+          "runtime_off": "0x72f56b0234"
+        },
+        {
+          "offset": 572,
+          "size": 2,
+          "file_off": "0x23c",
+          "runtime_off": "0x72f56b023c"
+        },
+        {
+          "offset": 576,
+          "size": 2,
+          "file_off": "0x240",
+          "runtime_off": "0x72f56b0240"
+        },
+        {
+          "offset": 584,
+          "size": 2,
+          "file_off": "0x248",
+          "runtime_off": "0x72f56b0248"
+        },
+        {
+          "offset": 588,
+          "size": 2,
+          "file_off": "0x24c",
+          "runtime_off": "0x72f56b024c"
+        },
+        {
+          "offset": 592,
+          "size": 2,
+          "file_off": "0x250",
+          "runtime_off": "0x72f56b0250"
+        },
+        {
+          "offset": 600,
+          "size": 2,
+          "file_off": "0x258",
+          "runtime_off": "0x72f56b0258"
+        },
+        {
+          "offset": 604,
+          "size": 2,
+          "file_off": "0x25c",
+          "runtime_off": "0x72f56b025c"
+        },
+        {
+          "offset": 608,
+          "size": 2,
+          "file_off": "0x260",
+          "runtime_off": "0x72f56b0260"
+        },
+        {
+          "offset": 612,
+          "size": 2,
+          "file_off": "0x264",
+          "runtime_off": "0x72f56b0264"
+        },
+        {
+          "offset": 620,
+          "size": 2,
+          "file_off": "0x26c",
+          "runtime_off": "0x72f56b026c"
+        },
+        {
+          "offset": 624,
+          "size": 2,
+          "file_off": "0x270",
+          "runtime_off": "0x72f56b0270"
+        },
+        {
+          "offset": 628,
+          "size": 2,
+          "file_off": "0x274",
+          "runtime_off": "0x72f56b0274"
+        },
+        {
+          "offset": 636,
+          "size": 2,
+          "file_off": "0x27c",
+          "runtime_off": "0x72f56b027c"
+        },
+        {
+          "offset": 640,
+          "size": 2,
+          "file_off": "0x280",
+          "runtime_off": "0x72f56b0280"
+        },
+        {
+          "offset": 644,
+          "size": 2,
+          "file_off": "0x284",
+          "runtime_off": "0x72f56b0284"
+        },
+        {
+          "offset": 648,
+          "size": 2,
+          "file_off": "0x288",
+          "runtime_off": "0x72f56b0288"
+        },
+        {
+          "offset": 656,
+          "size": 2,
+          "file_off": "0x290",
+          "runtime_off": "0x72f56b0290"
+        },
+        {
+          "offset": 664,
+          "size": 2,
+          "file_off": "0x298",
+          "runtime_off": "0x72f56b0298"
+        },
+        {
+          "offset": 672,
+          "size": 2,
+          "file_off": "0x2a0",
+          "runtime_off": "0x72f56b02a0"
+        },
+        {
+          "offset": 680,
+          "size": 2,
+          "file_off": "0x2a8",
+          "runtime_off": "0x72f56b02a8"
+        },
+        {
+          "offset": 684,
+          "size": 2,
+          "file_off": "0x2ac",
+          "runtime_off": "0x72f56b02ac"
+        },
+        {
+          "offset": 688,
+          "size": 2,
+          "file_off": "0x2b0",
+          "runtime_off": "0x72f56b02b0"
+        },
+        {
+          "offset": 696,
+          "size": 2,
+          "file_off": "0x2b8",
+          "runtime_off": "0x72f56b02b8"
+        },
+        {
+          "offset": 700,
+          "size": 2,
+          "file_off": "0x2bc",
+          "runtime_off": "0x72f56b02bc"
+        },
+        {
+          "offset": 704,
+          "size": 2,
+          "file_off": "0x2c0",
+          "runtime_off": "0x72f56b02c0"
+        },
+        {
+          "offset": 712,
+          "size": 2,
+          "file_off": "0x2c8",
+          "runtime_off": "0x72f56b02c8"
+        },
+        {
+          "offset": 720,
+          "size": 2,
+          "file_off": "0x2d0",
+          "runtime_off": "0x72f56b02d0"
+        },
+        {
+          "offset": 724,
+          "size": 2,
+          "file_off": "0x2d4",
+          "runtime_off": "0x72f56b02d4"
+        },
+        {
+          "offset": 740,
+          "size": 1,
+          "file_off": "0x2e4",
+          "runtime_off": "0x72f56b02e4"
+        },
+        {
+          "offset": 748,
+          "size": 2,
+          "file_off": "0x2ec",
+          "runtime_off": "0x72f56b02ec"
+        },
+        {
+          "offset": 768,
+          "size": 2,
+          "file_off": "0x300",
+          "runtime_off": "0x72f56b0300"
+        },
+        {
+          "offset": 772,
+          "size": 2,
+          "file_off": "0x304",
+          "runtime_off": "0x72f56b0304"
+        },
+        {
+          "offset": 776,
+          "size": 2,
+          "file_off": "0x308",
+          "runtime_off": "0x72f56b0308"
+        },
+        {
+          "offset": 780,
+          "size": 2,
+          "file_off": "0x30c",
+          "runtime_off": "0x72f56b030c"
+        },
+        {
+          "offset": 796,
+          "size": 2,
+          "file_off": "0x31c",
+          "runtime_off": "0x72f56b031c"
+        },
+        {
+          "offset": 804,
+          "size": 2,
+          "file_off": "0x324",
+          "runtime_off": "0x72f56b0324"
+        },
+        {
+          "offset": 816,
+          "size": 2,
+          "file_off": "0x330",
+          "runtime_off": "0x72f56b0330"
+        },
+        {
+          "offset": 824,
+          "size": 2,
+          "file_off": "0x338",
+          "runtime_off": "0x72f56b0338"
+        },
+        {
+          "offset": 828,
+          "size": 2,
+          "file_off": "0x33c",
+          "runtime_off": "0x72f56b033c"
+        },
+        {
+          "offset": 836,
+          "size": 2,
+          "file_off": "0x344",
+          "runtime_off": "0x72f56b0344"
+        },
+        {
+          "offset": 840,
+          "size": 2,
+          "file_off": "0x348",
+          "runtime_off": "0x72f56b0348"
+        },
+        {
+          "offset": 852,
+          "size": 2,
+          "file_off": "0x354",
+          "runtime_off": "0x72f56b0354"
+        },
+        {
+          "offset": 864,
+          "size": 2,
+          "file_off": "0x360",
+          "runtime_off": "0x72f56b0360"
+        },
+        {
+          "offset": 868,
+          "size": 2,
+          "file_off": "0x364",
+          "runtime_off": "0x72f56b0364"
+        },
+        {
+          "offset": 876,
+          "size": 2,
+          "file_off": "0x36c",
+          "runtime_off": "0x72f56b036c"
+        },
+        {
+          "offset": 888,
+          "size": 2,
+          "file_off": "0x378",
+          "runtime_off": "0x72f56b0378"
+        },
+        {
+          "offset": 892,
+          "size": 2,
+          "file_off": "0x37c",
+          "runtime_off": "0x72f56b037c"
+        },
+        {
+          "offset": 900,
+          "size": 2,
+          "file_off": "0x384",
+          "runtime_off": "0x72f56b0384"
+        },
+        {
+          "offset": 904,
+          "size": 2,
+          "file_off": "0x388",
+          "runtime_off": "0x72f56b0388"
+        },
+        {
+          "offset": 912,
+          "size": 2,
+          "file_off": "0x390",
+          "runtime_off": "0x72f56b0390"
+        },
+        {
+          "offset": 928,
+          "size": 2,
+          "file_off": "0x3a0",
+          "runtime_off": "0x72f56b03a0"
+        },
+        {
+          "offset": 940,
+          "size": 2,
+          "file_off": "0x3ac",
+          "runtime_off": "0x72f56b03ac"
+        },
+        {
+          "offset": 948,
+          "size": 2,
+          "file_off": "0x3b4",
+          "runtime_off": "0x72f56b03b4"
+        },
+        {
+          "offset": 960,
+          "size": 2,
+          "file_off": "0x3c0",
+          "runtime_off": "0x72f56b03c0"
+        },
+        {
+          "offset": 968,
+          "size": 2,
+          "file_off": "0x3c8",
+          "runtime_off": "0x72f56b03c8"
+        },
+        {
+          "offset": 984,
+          "size": 2,
+          "file_off": "0x3d8",
+          "runtime_off": "0x72f56b03d8"
+        },
+        {
+          "offset": 992,
+          "size": 2,
+          "file_off": "0x3e0",
+          "runtime_off": "0x72f56b03e0"
+        },
+        {
+          "offset": 996,
+          "size": 2,
+          "file_off": "0x3e4",
+          "runtime_off": "0x72f56b03e4"
+        },
+        {
+          "offset": 1004,
+          "size": 2,
+          "file_off": "0x3ec",
+          "runtime_off": "0x72f56b03ec"
+        },
+        {
+          "offset": 1008,
+          "size": 2,
+          "file_off": "0x3f0",
+          "runtime_off": "0x72f56b03f0"
+        },
+        {
+          "offset": 1012,
+          "size": 2,
+          "file_off": "0x3f4",
+          "runtime_off": "0x72f56b03f4"
+        },
+        {
+          "offset": 1020,
+          "size": 2,
+          "file_off": "0x3fc",
+          "runtime_off": "0x72f56b03fc"
+        },
+        {
+          "offset": 1040,
+          "size": 2,
+          "file_off": "0x410",
+          "runtime_off": "0x72f56b0410"
+        },
+        {
+          "offset": 1044,
+          "size": 2,
+          "file_off": "0x414",
+          "runtime_off": "0x72f56b0414"
+        },
+        {
+          "offset": 1048,
+          "size": 2,
+          "file_off": "0x418",
+          "runtime_off": "0x72f56b0418"
+        },
+        {
+          "offset": 1052,
+          "size": 2,
+          "file_off": "0x41c",
+          "runtime_off": "0x72f56b041c"
+        },
+        {
+          "offset": 1056,
+          "size": 2,
+          "file_off": "0x420",
+          "runtime_off": "0x72f56b0420"
+        },
+        {
+          "offset": 1068,
+          "size": 2,
+          "file_off": "0x42c",
+          "runtime_off": "0x72f56b042c"
+        },
+        {
+          "offset": 1072,
+          "size": 2,
+          "file_off": "0x430",
+          "runtime_off": "0x72f56b0430"
+        },
+        {
+          "offset": 1076,
+          "size": 2,
+          "file_off": "0x434",
+          "runtime_off": "0x72f56b0434"
+        },
+        {
+          "offset": 1088,
+          "size": 2,
+          "file_off": "0x440",
+          "runtime_off": "0x72f56b0440"
+        },
+        {
+          "offset": 1092,
+          "size": 2,
+          "file_off": "0x444",
+          "runtime_off": "0x72f56b0444"
+        },
+        {
+          "offset": 1096,
+          "size": 2,
+          "file_off": "0x448",
+          "runtime_off": "0x72f56b0448"
+        },
+        {
+          "offset": 1100,
+          "size": 2,
+          "file_off": "0x44c",
+          "runtime_off": "0x72f56b044c"
+        },
+        {
+          "offset": 1108,
+          "size": 2,
+          "file_off": "0x454",
+          "runtime_off": "0x72f56b0454"
+        },
+        {
+          "offset": 1116,
+          "size": 2,
+          "file_off": "0x45c",
+          "runtime_off": "0x72f56b045c"
+        },
+        {
+          "offset": 1120,
+          "size": 2,
+          "file_off": "0x460",
+          "runtime_off": "0x72f56b0460"
+        },
+        {
+          "offset": 1124,
+          "size": 2,
+          "file_off": "0x464",
+          "runtime_off": "0x72f56b0464"
+        },
+        {
+          "offset": 1132,
+          "size": 2,
+          "file_off": "0x46c",
+          "runtime_off": "0x72f56b046c"
+        },
+        {
+          "offset": 1144,
+          "size": 2,
+          "file_off": "0x478",
+          "runtime_off": "0x72f56b0478"
+        },
+        {
+          "offset": 1148,
+          "size": 2,
+          "file_off": "0x47c",
+          "runtime_off": "0x72f56b047c"
+        },
+        {
+          "offset": 1152,
+          "size": 2,
+          "file_off": "0x480",
+          "runtime_off": "0x72f56b0480"
+        },
+        {
+          "offset": 1156,
+          "size": 2,
+          "file_off": "0x484",
+          "runtime_off": "0x72f56b0484"
+        },
+        {
+          "offset": 1160,
+          "size": 2,
+          "file_off": "0x488",
+          "runtime_off": "0x72f56b0488"
+        },
+        {
+          "offset": 1164,
+          "size": 2,
+          "file_off": "0x48c",
+          "runtime_off": "0x72f56b048c"
+        },
+        {
+          "offset": 1168,
+          "size": 2,
+          "file_off": "0x490",
+          "runtime_off": "0x72f56b0490"
+        },
+        {
+          "offset": 1172,
+          "size": 2,
+          "file_off": "0x494",
+          "runtime_off": "0x72f56b0494"
+        },
+        {
+          "offset": 1176,
+          "size": 2,
+          "file_off": "0x498",
+          "runtime_off": "0x72f56b0498"
+        },
+        {
+          "offset": 1180,
+          "size": 2,
+          "file_off": "0x49c",
+          "runtime_off": "0x72f56b049c"
+        },
+        {
+          "offset": 1184,
+          "size": 2,
+          "file_off": "0x4a0",
+          "runtime_off": "0x72f56b04a0"
+        },
+        {
+          "offset": 1188,
+          "size": 2,
+          "file_off": "0x4a4",
+          "runtime_off": "0x72f56b04a4"
+        },
+        {
+          "offset": 1196,
+          "size": 2,
+          "file_off": "0x4ac",
+          "runtime_off": "0x72f56b04ac"
+        },
+        {
+          "offset": 1200,
+          "size": 2,
+          "file_off": "0x4b0",
+          "runtime_off": "0x72f56b04b0"
+        },
+        {
+          "offset": 1204,
+          "size": 2,
+          "file_off": "0x4b4",
+          "runtime_off": "0x72f56b04b4"
+        },
+        {
+          "offset": 1208,
+          "size": 2,
+          "file_off": "0x4b8",
+          "runtime_off": "0x72f56b04b8"
+        },
+        {
+          "offset": 1212,
+          "size": 2,
+          "file_off": "0x4bc",
+          "runtime_off": "0x72f56b04bc"
+        },
+        {
+          "offset": 1216,
+          "size": 2,
+          "file_off": "0x4c0",
+          "runtime_off": "0x72f56b04c0"
+        },
+        {
+          "offset": 1220,
+          "size": 1,
+          "file_off": "0x4c4",
+          "runtime_off": "0x72f56b04c4"
+        },
+        {
+          "offset": 1224,
+          "size": 1,
+          "file_off": "0x4c8",
+          "runtime_off": "0x72f56b04c8"
+        },
+        {
+          "offset": 1228,
+          "size": 2,
+          "file_off": "0x4cc",
+          "runtime_off": "0x72f56b04cc"
+        },
+        {
+          "offset": 1236,
+          "size": 2,
+          "file_off": "0x4d4",
+          "runtime_off": "0x72f56b04d4"
+        },
+        {
+          "offset": 1240,
+          "size": 2,
+          "file_off": "0x4d8",
+          "runtime_off": "0x72f56b04d8"
+        },
+        {
+          "offset": 1244,
+          "size": 2,
+          "file_off": "0x4dc",
+          "runtime_off": "0x72f56b04dc"
+        },
+        {
+          "offset": 1248,
+          "size": 2,
+          "file_off": "0x4e0",
+          "runtime_off": "0x72f56b04e0"
+        },
+        {
+          "offset": 1252,
+          "size": 2,
+          "file_off": "0x4e4",
+          "runtime_off": "0x72f56b04e4"
+        },
+        {
+          "offset": 1260,
+          "size": 2,
+          "file_off": "0x4ec",
+          "runtime_off": "0x72f56b04ec"
+        },
+        {
+          "offset": 1264,
+          "size": 1,
+          "file_off": "0x4f0",
+          "runtime_off": "0x72f56b04f0"
+        },
+        {
+          "offset": 1268,
+          "size": 2,
+          "file_off": "0x4f4",
+          "runtime_off": "0x72f56b04f4"
+        },
+        {
+          "offset": 1272,
+          "size": 2,
+          "file_off": "0x4f8",
+          "runtime_off": "0x72f56b04f8"
+        },
+        {
+          "offset": 1276,
+          "size": 2,
+          "file_off": "0x4fc",
+          "runtime_off": "0x72f56b04fc"
+        },
+        {
+          "offset": 1280,
+          "size": 2,
+          "file_off": "0x500",
+          "runtime_off": "0x72f56b0500"
+        },
+        {
+          "offset": 1288,
+          "size": 2,
+          "file_off": "0x508",
+          "runtime_off": "0x72f56b0508"
+        },
+        {
+          "offset": 1292,
+          "size": 2,
+          "file_off": "0x50c",
+          "runtime_off": "0x72f56b050c"
+        },
+        {
+          "offset": 1296,
+          "size": 2,
+          "file_off": "0x510",
+          "runtime_off": "0x72f56b0510"
+        },
+        {
+          "offset": 1300,
+          "size": 2,
+          "file_off": "0x514",
+          "runtime_off": "0x72f56b0514"
+        },
+        {
+          "offset": 1304,
+          "size": 2,
+          "file_off": "0x518",
+          "runtime_off": "0x72f56b0518"
+        },
+        {
+          "offset": 1308,
+          "size": 2,
+          "file_off": "0x51c",
+          "runtime_off": "0x72f56b051c"
+        },
+        {
+          "offset": 1312,
+          "size": 2,
+          "file_off": "0x520",
+          "runtime_off": "0x72f56b0520"
+        },
+        {
+          "offset": 1316,
+          "size": 2,
+          "file_off": "0x524",
+          "runtime_off": "0x72f56b0524"
+        },
+        {
+          "offset": 1320,
+          "size": 2,
+          "file_off": "0x528",
+          "runtime_off": "0x72f56b0528"
+        },
+        {
+          "offset": 1332,
+          "size": 1,
+          "file_off": "0x534",
+          "runtime_off": "0x72f56b0534"
+        },
+        {
+          "offset": 1336,
+          "size": 2,
+          "file_off": "0x538",
+          "runtime_off": "0x72f56b0538"
+        },
+        {
+          "offset": 1340,
+          "size": 2,
+          "file_off": "0x53c",
+          "runtime_off": "0x72f56b053c"
+        },
+        {
+          "offset": 1344,
+          "size": 2,
+          "file_off": "0x540",
+          "runtime_off": "0x72f56b0540"
+        },
+        {
+          "offset": 1348,
+          "size": 2,
+          "file_off": "0x544",
+          "runtime_off": "0x72f56b0544"
+        },
+        {
+          "offset": 1352,
+          "size": 2,
+          "file_off": "0x548",
+          "runtime_off": "0x72f56b0548"
+        },
+        {
+          "offset": 1356,
+          "size": 2,
+          "file_off": "0x54c",
+          "runtime_off": "0x72f56b054c"
+        },
+        {
+          "offset": 1360,
+          "size": 2,
+          "file_off": "0x550",
+          "runtime_off": "0x72f56b0550"
+        },
+        {
+          "offset": 1364,
+          "size": 2,
+          "file_off": "0x554",
+          "runtime_off": "0x72f56b0554"
+        },
+        {
+          "offset": 1368,
+          "size": 2,
+          "file_off": "0x558",
+          "runtime_off": "0x72f56b0558"
+        },
+        {
+          "offset": 1372,
+          "size": 2,
+          "file_off": "0x55c",
+          "runtime_off": "0x72f56b055c"
+        },
+        {
+          "offset": 1376,
+          "size": 2,
+          "file_off": "0x560",
+          "runtime_off": "0x72f56b0560"
+        },
+        {
+          "offset": 1380,
+          "size": 2,
+          "file_off": "0x564",
+          "runtime_off": "0x72f56b0564"
+        },
+        {
+          "offset": 1384,
+          "size": 2,
+          "file_off": "0x568",
+          "runtime_off": "0x72f56b0568"
+        },
+        {
+          "offset": 1392,
+          "size": 2,
+          "file_off": "0x570",
+          "runtime_off": "0x72f56b0570"
+        },
+        {
+          "offset": 1400,
+          "size": 2,
+          "file_off": "0x578",
+          "runtime_off": "0x72f56b0578"
+        },
+        {
+          "offset": 1404,
+          "size": 2,
+          "file_off": "0x57c",
+          "runtime_off": "0x72f56b057c"
+        },
+        {
+          "offset": 1408,
+          "size": 2,
+          "file_off": "0x580",
+          "runtime_off": "0x72f56b0580"
+        },
+        {
+          "offset": 1416,
+          "size": 2,
+          "file_off": "0x588",
+          "runtime_off": "0x72f56b0588"
+        },
+        {
+          "offset": 1420,
+          "size": 2,
+          "file_off": "0x58c",
+          "runtime_off": "0x72f56b058c"
+        },
+        {
+          "offset": 1424,
+          "size": 2,
+          "file_off": "0x590",
+          "runtime_off": "0x72f56b0590"
+        },
+        {
+          "offset": 1428,
+          "size": 2,
+          "file_off": "0x594",
+          "runtime_off": "0x72f56b0594"
+        },
+        {
+          "offset": 1432,
+          "size": 2,
+          "file_off": "0x598",
+          "runtime_off": "0x72f56b0598"
+        },
+        {
+          "offset": 1436,
+          "size": 2,
+          "file_off": "0x59c",
+          "runtime_off": "0x72f56b059c"
+        },
+        {
+          "offset": 1440,
+          "size": 2,
+          "file_off": "0x5a0",
+          "runtime_off": "0x72f56b05a0"
+        },
+        {
+          "offset": 1444,
+          "size": 2,
+          "file_off": "0x5a4",
+          "runtime_off": "0x72f56b05a4"
+        },
+        {
+          "offset": 1452,
+          "size": 2,
+          "file_off": "0x5ac",
+          "runtime_off": "0x72f56b05ac"
+        },
+        {
+          "offset": 1456,
+          "size": 2,
+          "file_off": "0x5b0",
+          "runtime_off": "0x72f56b05b0"
+        },
+        {
+          "offset": 1460,
+          "size": 2,
+          "file_off": "0x5b4",
+          "runtime_off": "0x72f56b05b4"
+        },
+        {
+          "offset": 1464,
+          "size": 2,
+          "file_off": "0x5b8",
+          "runtime_off": "0x72f56b05b8"
+        },
+        {
+          "offset": 1468,
+          "size": 2,
+          "file_off": "0x5bc",
+          "runtime_off": "0x72f56b05bc"
+        },
+        {
+          "offset": 1472,
+          "size": 2,
+          "file_off": "0x5c0",
+          "runtime_off": "0x72f56b05c0"
+        },
+        {
+          "offset": 1476,
+          "size": 2,
+          "file_off": "0x5c4",
+          "runtime_off": "0x72f56b05c4"
+        },
+        {
+          "offset": 1480,
+          "size": 2,
+          "file_off": "0x5c8",
+          "runtime_off": "0x72f56b05c8"
+        },
+        {
+          "offset": 1484,
+          "size": 2,
+          "file_off": "0x5cc",
+          "runtime_off": "0x72f56b05cc"
+        },
+        {
+          "offset": 1488,
+          "size": 2,
+          "file_off": "0x5d0",
+          "runtime_off": "0x72f56b05d0"
+        },
+        {
+          "offset": 1492,
+          "size": 2,
+          "file_off": "0x5d4",
+          "runtime_off": "0x72f56b05d4"
+        },
+        {
+          "offset": 1496,
+          "size": 2,
+          "file_off": "0x5d8",
+          "runtime_off": "0x72f56b05d8"
+        },
+        {
+          "offset": 1500,
+          "size": 2,
+          "file_off": "0x5dc",
+          "runtime_off": "0x72f56b05dc"
+        },
+        {
+          "offset": 1504,
+          "size": 2,
+          "file_off": "0x5e0",
+          "runtime_off": "0x72f56b05e0"
+        },
+        {
+          "offset": 1508,
+          "size": 2,
+          "file_off": "0x5e4",
+          "runtime_off": "0x72f56b05e4"
+        },
+        {
+          "offset": 1512,
+          "size": 2,
+          "file_off": "0x5e8",
+          "runtime_off": "0x72f56b05e8"
+        },
+        {
+          "offset": 1516,
+          "size": 2,
+          "file_off": "0x5ec",
+          "runtime_off": "0x72f56b05ec"
+        },
+        {
+          "offset": 1520,
+          "size": 2,
+          "file_off": "0x5f0",
+          "runtime_off": "0x72f56b05f0"
+        }
+      ]
+    },
+    {
+      "module": "libSDKloading.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so",
+      "runtime_start": "0x72f56d3000",
+      "runtime_end": "0x72f56ef000",
+      "file_offset": "0x23000",
+      "size": 114688,
+      "diff_bytes": 109500,
+      "diff_page_count": 28,
+      "diff_pages": [
+        "0x23000",
+        "0x24000",
+        "0x25000",
+        "0x26000",
+        "0x27000",
+        "0x28000",
+        "0x29000",
+        "0x2a000",
+        "0x2b000",
+        "0x2c000",
+        "0x2d000",
+        "0x2e000",
+        "0x2f000",
+        "0x30000",
+        "0x31000",
+        "0x32000",
+        "0x33000",
+        "0x34000",
+        "0x35000",
+        "0x36000",
+        "0x37000",
+        "0x38000",
+        "0x39000",
+        "0x3a000",
+        "0x3b000",
+        "0x3c000",
+        "0x3d000",
+        "0x3e000"
+      ],
+      "diff_ranges": [
+        {
+          "offset": 0,
+          "size": 1,
+          "file_off": "0x23000",
+          "runtime_off": "0x72f56d3000"
+        },
+        {
+          "offset": 8,
+          "size": 2,
+          "file_off": "0x23008",
+          "runtime_off": "0x72f56d3008"
+        },
+        {
+          "offset": 12,
+          "size": 1,
+          "file_off": "0x2300c",
+          "runtime_off": "0x72f56d300c"
+        },
+        {
+          "offset": 14,
+          "size": 1,
+          "file_off": "0x2300e",
+          "runtime_off": "0x72f56d300e"
+        },
+        {
+          "offset": 16,
+          "size": 3,
+          "file_off": "0x23010",
+          "runtime_off": "0x72f56d3010"
+        },
+        {
+          "offset": 24,
+          "size": 1,
+          "file_off": "0x23018",
+          "runtime_off": "0x72f56d3018"
+        },
+        {
+          "offset": 32,
+          "size": 2,
+          "file_off": "0x23020",
+          "runtime_off": "0x72f56d3020"
+        },
+        {
+          "offset": 36,
+          "size": 1,
+          "file_off": "0x23024",
+          "runtime_off": "0x72f56d3024"
+        },
+        {
+          "offset": 38,
+          "size": 1,
+          "file_off": "0x23026",
+          "runtime_off": "0x72f56d3026"
+        },
+        {
+          "offset": 40,
+          "size": 3,
+          "file_off": "0x23028",
+          "runtime_off": "0x72f56d3028"
+        },
+        {
+          "offset": 48,
+          "size": 1,
+          "file_off": "0x23030",
+          "runtime_off": "0x72f56d3030"
+        },
+        {
+          "offset": 56,
+          "size": 2,
+          "file_off": "0x23038",
+          "runtime_off": "0x72f56d3038"
+        },
+        {
+          "offset": 60,
+          "size": 1,
+          "file_off": "0x2303c",
+          "runtime_off": "0x72f56d303c"
+        },
+        {
+          "offset": 62,
+          "size": 1,
+          "file_off": "0x2303e",
+          "runtime_off": "0x72f56d303e"
+        },
+        {
+          "offset": 64,
+          "size": 3,
+          "file_off": "0x23040",
+          "runtime_off": "0x72f56d3040"
+        },
+        {
+          "offset": 72,
+          "size": 1,
+          "file_off": "0x23048",
+          "runtime_off": "0x72f56d3048"
+        },
+        {
+          "offset": 80,
+          "size": 2,
+          "file_off": "0x23050",
+          "runtime_off": "0x72f56d3050"
+        },
+        {
+          "offset": 84,
+          "size": 1,
+          "file_off": "0x23054",
+          "runtime_off": "0x72f56d3054"
+        },
+        {
+          "offset": 86,
+          "size": 1,
+          "file_off": "0x23056",
+          "runtime_off": "0x72f56d3056"
+        },
+        {
+          "offset": 88,
+          "size": 3,
+          "file_off": "0x23058",
+          "runtime_off": "0x72f56d3058"
+        },
+        {
+          "offset": 96,
+          "size": 1,
+          "file_off": "0x23060",
+          "runtime_off": "0x72f56d3060"
+        },
+        {
+          "offset": 104,
+          "size": 2,
+          "file_off": "0x23068",
+          "runtime_off": "0x72f56d3068"
+        },
+        {
+          "offset": 108,
+          "size": 1,
+          "file_off": "0x2306c",
+          "runtime_off": "0x72f56d306c"
+        },
+        {
+          "offset": 110,
+          "size": 1,
+          "file_off": "0x2306e",
+          "runtime_off": "0x72f56d306e"
+        },
+        {
+          "offset": 112,
+          "size": 3,
+          "file_off": "0x23070",
+          "runtime_off": "0x72f56d3070"
+        },
+        {
+          "offset": 120,
+          "size": 1,
+          "file_off": "0x23078",
+          "runtime_off": "0x72f56d3078"
+        },
+        {
+          "offset": 128,
+          "size": 2,
+          "file_off": "0x23080",
+          "runtime_off": "0x72f56d3080"
+        },
+        {
+          "offset": 132,
+          "size": 1,
+          "file_off": "0x23084",
+          "runtime_off": "0x72f56d3084"
+        },
+        {
+          "offset": 134,
+          "size": 1,
+          "file_off": "0x23086",
+          "runtime_off": "0x72f56d3086"
+        },
+        {
+          "offset": 136,
+          "size": 3,
+          "file_off": "0x23088",
+          "runtime_off": "0x72f56d3088"
+        },
+        {
+          "offset": 144,
+          "size": 1,
+          "file_off": "0x23090",
+          "runtime_off": "0x72f56d3090"
+        },
+        {
+          "offset": 152,
+          "size": 2,
+          "file_off": "0x23098",
+          "runtime_off": "0x72f56d3098"
+        },
+        {
+          "offset": 156,
+          "size": 1,
+          "file_off": "0x2309c",
+          "runtime_off": "0x72f56d309c"
+        },
+        {
+          "offset": 158,
+          "size": 1,
+          "file_off": "0x2309e",
+          "runtime_off": "0x72f56d309e"
+        },
+        {
+          "offset": 160,
+          "size": 3,
+          "file_off": "0x230a0",
+          "runtime_off": "0x72f56d30a0"
+        },
+        {
+          "offset": 168,
+          "size": 1,
+          "file_off": "0x230a8",
+          "runtime_off": "0x72f56d30a8"
+        },
+        {
+          "offset": 176,
+          "size": 3,
+          "file_off": "0x230b0",
+          "runtime_off": "0x72f56d30b0"
+        },
+        {
+          "offset": 180,
+          "size": 1,
+          "file_off": "0x230b4",
+          "runtime_off": "0x72f56d30b4"
+        },
+        {
+          "offset": 182,
+          "size": 1,
+          "file_off": "0x230b6",
+          "runtime_off": "0x72f56d30b6"
+        },
+        {
+          "offset": 184,
+          "size": 3,
+          "file_off": "0x230b8",
+          "runtime_off": "0x72f56d30b8"
+        },
+        {
+          "offset": 192,
+          "size": 1,
+          "file_off": "0x230c0",
+          "runtime_off": "0x72f56d30c0"
+        },
+        {
+          "offset": 200,
+          "size": 3,
+          "file_off": "0x230c8",
+          "runtime_off": "0x72f56d30c8"
+        },
+        {
+          "offset": 204,
+          "size": 1,
+          "file_off": "0x230cc",
+          "runtime_off": "0x72f56d30cc"
+        },
+        {
+          "offset": 206,
+          "size": 1,
+          "file_off": "0x230ce",
+          "runtime_off": "0x72f56d30ce"
+        },
+        {
+          "offset": 208,
+          "size": 3,
+          "file_off": "0x230d0",
+          "runtime_off": "0x72f56d30d0"
+        },
+        {
+          "offset": 216,
+          "size": 1,
+          "file_off": "0x230d8",
+          "runtime_off": "0x72f56d30d8"
+        },
+        {
+          "offset": 224,
+          "size": 3,
+          "file_off": "0x230e0",
+          "runtime_off": "0x72f56d30e0"
+        },
+        {
+          "offset": 228,
+          "size": 1,
+          "file_off": "0x230e4",
+          "runtime_off": "0x72f56d30e4"
+        },
+        {
+          "offset": 230,
+          "size": 1,
+          "file_off": "0x230e6",
+          "runtime_off": "0x72f56d30e6"
+        },
+        {
+          "offset": 232,
+          "size": 3,
+          "file_off": "0x230e8",
+          "runtime_off": "0x72f56d30e8"
+        },
+        {
+          "offset": 240,
+          "size": 1,
+          "file_off": "0x230f0",
+          "runtime_off": "0x72f56d30f0"
+        },
+        {
+          "offset": 248,
+          "size": 3,
+          "file_off": "0x230f8",
+          "runtime_off": "0x72f56d30f8"
+        },
+        {
+          "offset": 252,
+          "size": 1,
+          "file_off": "0x230fc",
+          "runtime_off": "0x72f56d30fc"
+        },
+        {
+          "offset": 254,
+          "size": 1,
+          "file_off": "0x230fe",
+          "runtime_off": "0x72f56d30fe"
+        },
+        {
+          "offset": 256,
+          "size": 3,
+          "file_off": "0x23100",
+          "runtime_off": "0x72f56d3100"
+        },
+        {
+          "offset": 264,
+          "size": 1,
+          "file_off": "0x23108",
+          "runtime_off": "0x72f56d3108"
+        },
+        {
+          "offset": 272,
+          "size": 2,
+          "file_off": "0x23110",
+          "runtime_off": "0x72f56d3110"
+        },
+        {
+          "offset": 276,
+          "size": 1,
+          "file_off": "0x23114",
+          "runtime_off": "0x72f56d3114"
+        },
+        {
+          "offset": 278,
+          "size": 1,
+          "file_off": "0x23116",
+          "runtime_off": "0x72f56d3116"
+        },
+        {
+          "offset": 280,
+          "size": 3,
+          "file_off": "0x23118",
+          "runtime_off": "0x72f56d3118"
+        },
+        {
+          "offset": 288,
+          "size": 1,
+          "file_off": "0x23120",
+          "runtime_off": "0x72f56d3120"
+        },
+        {
+          "offset": 296,
+          "size": 2,
+          "file_off": "0x23128",
+          "runtime_off": "0x72f56d3128"
+        },
+        {
+          "offset": 300,
+          "size": 1,
+          "file_off": "0x2312c",
+          "runtime_off": "0x72f56d312c"
+        },
+        {
+          "offset": 302,
+          "size": 1,
+          "file_off": "0x2312e",
+          "runtime_off": "0x72f56d312e"
+        },
+        {
+          "offset": 304,
+          "size": 3,
+          "file_off": "0x23130",
+          "runtime_off": "0x72f56d3130"
+        },
+        {
+          "offset": 312,
+          "size": 1,
+          "file_off": "0x23138",
+          "runtime_off": "0x72f56d3138"
+        },
+        {
+          "offset": 320,
+          "size": 3,
+          "file_off": "0x23140",
+          "runtime_off": "0x72f56d3140"
+        },
+        {
+          "offset": 324,
+          "size": 1,
+          "file_off": "0x23144",
+          "runtime_off": "0x72f56d3144"
+        },
+        {
+          "offset": 326,
+          "size": 1,
+          "file_off": "0x23146",
+          "runtime_off": "0x72f56d3146"
+        },
+        {
+          "offset": 328,
+          "size": 3,
+          "file_off": "0x23148",
+          "runtime_off": "0x72f56d3148"
+        },
+        {
+          "offset": 336,
+          "size": 1,
+          "file_off": "0x23150",
+          "runtime_off": "0x72f56d3150"
+        },
+        {
+          "offset": 344,
+          "size": 3,
+          "file_off": "0x23158",
+          "runtime_off": "0x72f56d3158"
+        },
+        {
+          "offset": 348,
+          "size": 1,
+          "file_off": "0x2315c",
+          "runtime_off": "0x72f56d315c"
+        },
+        {
+          "offset": 350,
+          "size": 1,
+          "file_off": "0x2315e",
+          "runtime_off": "0x72f56d315e"
+        },
+        {
+          "offset": 352,
+          "size": 3,
+          "file_off": "0x23160",
+          "runtime_off": "0x72f56d3160"
+        },
+        {
+          "offset": 360,
+          "size": 1,
+          "file_off": "0x23168",
+          "runtime_off": "0x72f56d3168"
+        },
+        {
+          "offset": 368,
+          "size": 3,
+          "file_off": "0x23170",
+          "runtime_off": "0x72f56d3170"
+        },
+        {
+          "offset": 372,
+          "size": 1,
+          "file_off": "0x23174",
+          "runtime_off": "0x72f56d3174"
+        },
+        {
+          "offset": 374,
+          "size": 1,
+          "file_off": "0x23176",
+          "runtime_off": "0x72f56d3176"
+        },
+        {
+          "offset": 376,
+          "size": 3,
+          "file_off": "0x23178",
+          "runtime_off": "0x72f56d3178"
+        },
+        {
+          "offset": 384,
+          "size": 1,
+          "file_off": "0x23180",
+          "runtime_off": "0x72f56d3180"
+        },
+        {
+          "offset": 392,
+          "size": 3,
+          "file_off": "0x23188",
+          "runtime_off": "0x72f56d3188"
+        },
+        {
+          "offset": 396,
+          "size": 1,
+          "file_off": "0x2318c",
+          "runtime_off": "0x72f56d318c"
+        },
+        {
+          "offset": 398,
+          "size": 1,
+          "file_off": "0x2318e",
+          "runtime_off": "0x72f56d318e"
+        },
+        {
+          "offset": 400,
+          "size": 3,
+          "file_off": "0x23190",
+          "runtime_off": "0x72f56d3190"
+        },
+        {
+          "offset": 408,
+          "size": 1,
+          "file_off": "0x23198",
+          "runtime_off": "0x72f56d3198"
+        },
+        {
+          "offset": 416,
+          "size": 3,
+          "file_off": "0x231a0",
+          "runtime_off": "0x72f56d31a0"
+        },
+        {
+          "offset": 420,
+          "size": 1,
+          "file_off": "0x231a4",
+          "runtime_off": "0x72f56d31a4"
+        },
+        {
+          "offset": 422,
+          "size": 1,
+          "file_off": "0x231a6",
+          "runtime_off": "0x72f56d31a6"
+        },
+        {
+          "offset": 424,
+          "size": 3,
+          "file_off": "0x231a8",
+          "runtime_off": "0x72f56d31a8"
+        },
+        {
+          "offset": 432,
+          "size": 1,
+          "file_off": "0x231b0",
+          "runtime_off": "0x72f56d31b0"
+        },
+        {
+          "offset": 440,
+          "size": 2,
+          "file_off": "0x231b8",
+          "runtime_off": "0x72f56d31b8"
+        },
+        {
+          "offset": 444,
+          "size": 1,
+          "file_off": "0x231bc",
+          "runtime_off": "0x72f56d31bc"
+        },
+        {
+          "offset": 446,
+          "size": 1,
+          "file_off": "0x231be",
+          "runtime_off": "0x72f56d31be"
+        },
+        {
+          "offset": 448,
+          "size": 3,
+          "file_off": "0x231c0",
+          "runtime_off": "0x72f56d31c0"
+        },
+        {
+          "offset": 456,
+          "size": 1,
+          "file_off": "0x231c8",
+          "runtime_off": "0x72f56d31c8"
+        },
+        {
+          "offset": 464,
+          "size": 3,
+          "file_off": "0x231d0",
+          "runtime_off": "0x72f56d31d0"
+        },
+        {
+          "offset": 468,
+          "size": 1,
+          "file_off": "0x231d4",
+          "runtime_off": "0x72f56d31d4"
+        },
+        {
+          "offset": 470,
+          "size": 1,
+          "file_off": "0x231d6",
+          "runtime_off": "0x72f56d31d6"
+        },
+        {
+          "offset": 472,
+          "size": 3,
+          "file_off": "0x231d8",
+          "runtime_off": "0x72f56d31d8"
+        },
+        {
+          "offset": 480,
+          "size": 1,
+          "file_off": "0x231e0",
+          "runtime_off": "0x72f56d31e0"
+        },
+        {
+          "offset": 488,
+          "size": 2,
+          "file_off": "0x231e8",
+          "runtime_off": "0x72f56d31e8"
+        },
+        {
+          "offset": 492,
+          "size": 1,
+          "file_off": "0x231ec",
+          "runtime_off": "0x72f56d31ec"
+        },
+        {
+          "offset": 494,
+          "size": 1,
+          "file_off": "0x231ee",
+          "runtime_off": "0x72f56d31ee"
+        },
+        {
+          "offset": 496,
+          "size": 3,
+          "file_off": "0x231f0",
+          "runtime_off": "0x72f56d31f0"
+        },
+        {
+          "offset": 504,
+          "size": 1,
+          "file_off": "0x231f8",
+          "runtime_off": "0x72f56d31f8"
+        },
+        {
+          "offset": 512,
+          "size": 2,
+          "file_off": "0x23200",
+          "runtime_off": "0x72f56d3200"
+        },
+        {
+          "offset": 516,
+          "size": 1,
+          "file_off": "0x23204",
+          "runtime_off": "0x72f56d3204"
+        },
+        {
+          "offset": 518,
+          "size": 1,
+          "file_off": "0x23206",
+          "runtime_off": "0x72f56d3206"
+        },
+        {
+          "offset": 520,
+          "size": 3,
+          "file_off": "0x23208",
+          "runtime_off": "0x72f56d3208"
+        },
+        {
+          "offset": 528,
+          "size": 1,
+          "file_off": "0x23210",
+          "runtime_off": "0x72f56d3210"
+        },
+        {
+          "offset": 536,
+          "size": 3,
+          "file_off": "0x23218",
+          "runtime_off": "0x72f56d3218"
+        },
+        {
+          "offset": 540,
+          "size": 1,
+          "file_off": "0x2321c",
+          "runtime_off": "0x72f56d321c"
+        },
+        {
+          "offset": 542,
+          "size": 1,
+          "file_off": "0x2321e",
+          "runtime_off": "0x72f56d321e"
+        },
+        {
+          "offset": 544,
+          "size": 3,
+          "file_off": "0x23220",
+          "runtime_off": "0x72f56d3220"
+        },
+        {
+          "offset": 552,
+          "size": 1,
+          "file_off": "0x23228",
+          "runtime_off": "0x72f56d3228"
+        },
+        {
+          "offset": 560,
+          "size": 2,
+          "file_off": "0x23230",
+          "runtime_off": "0x72f56d3230"
+        },
+        {
+          "offset": 564,
+          "size": 1,
+          "file_off": "0x23234",
+          "runtime_off": "0x72f56d3234"
+        },
+        {
+          "offset": 566,
+          "size": 1,
+          "file_off": "0x23236",
+          "runtime_off": "0x72f56d3236"
+        },
+        {
+          "offset": 568,
+          "size": 3,
+          "file_off": "0x23238",
+          "runtime_off": "0x72f56d3238"
+        },
+        {
+          "offset": 576,
+          "size": 1,
+          "file_off": "0x23240",
+          "runtime_off": "0x72f56d3240"
+        },
+        {
+          "offset": 584,
+          "size": 2,
+          "file_off": "0x23248",
+          "runtime_off": "0x72f56d3248"
+        },
+        {
+          "offset": 588,
+          "size": 1,
+          "file_off": "0x2324c",
+          "runtime_off": "0x72f56d324c"
+        },
+        {
+          "offset": 590,
+          "size": 1,
+          "file_off": "0x2324e",
+          "runtime_off": "0x72f56d324e"
+        },
+        {
+          "offset": 592,
+          "size": 3,
+          "file_off": "0x23250",
+          "runtime_off": "0x72f56d3250"
+        },
+        {
+          "offset": 600,
+          "size": 1,
+          "file_off": "0x23258",
+          "runtime_off": "0x72f56d3258"
+        },
+        {
+          "offset": 608,
+          "size": 2,
+          "file_off": "0x23260",
+          "runtime_off": "0x72f56d3260"
+        },
+        {
+          "offset": 612,
+          "size": 1,
+          "file_off": "0x23264",
+          "runtime_off": "0x72f56d3264"
+        },
+        {
+          "offset": 614,
+          "size": 1,
+          "file_off": "0x23266",
+          "runtime_off": "0x72f56d3266"
+        },
+        {
+          "offset": 616,
+          "size": 3,
+          "file_off": "0x23268",
+          "runtime_off": "0x72f56d3268"
+        },
+        {
+          "offset": 624,
+          "size": 1,
+          "file_off": "0x23270",
+          "runtime_off": "0x72f56d3270"
+        },
+        {
+          "offset": 632,
+          "size": 3,
+          "file_off": "0x23278",
+          "runtime_off": "0x72f56d3278"
+        },
+        {
+          "offset": 636,
+          "size": 1,
+          "file_off": "0x2327c",
+          "runtime_off": "0x72f56d327c"
+        },
+        {
+          "offset": 638,
+          "size": 1,
+          "file_off": "0x2327e",
+          "runtime_off": "0x72f56d327e"
+        },
+        {
+          "offset": 640,
+          "size": 3,
+          "file_off": "0x23280",
+          "runtime_off": "0x72f56d3280"
+        },
+        {
+          "offset": 648,
+          "size": 1,
+          "file_off": "0x23288",
+          "runtime_off": "0x72f56d3288"
+        },
+        {
+          "offset": 656,
+          "size": 2,
+          "file_off": "0x23290",
+          "runtime_off": "0x72f56d3290"
+        },
+        {
+          "offset": 660,
+          "size": 1,
+          "file_off": "0x23294",
+          "runtime_off": "0x72f56d3294"
+        },
+        {
+          "offset": 662,
+          "size": 1,
+          "file_off": "0x23296",
+          "runtime_off": "0x72f56d3296"
+        },
+        {
+          "offset": 664,
+          "size": 3,
+          "file_off": "0x23298",
+          "runtime_off": "0x72f56d3298"
+        },
+        {
+          "offset": 672,
+          "size": 1,
+          "file_off": "0x232a0",
+          "runtime_off": "0x72f56d32a0"
+        },
+        {
+          "offset": 687,
+          "size": 61,
+          "file_off": "0x232af",
+          "runtime_off": "0x72f56d32af"
+        },
+        {
+          "offset": 749,
+          "size": 13,
+          "file_off": "0x232ed",
+          "runtime_off": "0x72f56d32ed"
+        },
+        {
+          "offset": 763,
+          "size": 445,
+          "file_off": "0x232fb",
+          "runtime_off": "0x72f56d32fb"
+        },
+        {
+          "offset": 1209,
+          "size": 149,
+          "file_off": "0x234b9",
+          "runtime_off": "0x72f56d34b9"
+        },
+        {
+          "offset": 1359,
+          "size": 41,
+          "file_off": "0x2354f",
+          "runtime_off": "0x72f56d354f"
+        },
+        {
+          "offset": 1401,
+          "size": 32,
+          "file_off": "0x23579",
+          "runtime_off": "0x72f56d3579"
+        },
+        {
+          "offset": 1434,
+          "size": 50,
+          "file_off": "0x2359a",
+          "runtime_off": "0x72f56d359a"
+        },
+        {
+          "offset": 1485,
+          "size": 94,
+          "file_off": "0x235cd",
+          "runtime_off": "0x72f56d35cd"
+        },
+        {
+          "offset": 1580,
+          "size": 304,
+          "file_off": "0x2362c",
+          "runtime_off": "0x72f56d362c"
+        },
+        {
+          "offset": 1885,
+          "size": 232,
+          "file_off": "0x2375d",
+          "runtime_off": "0x72f56d375d"
+        },
+        {
+          "offset": 2118,
+          "size": 291,
+          "file_off": "0x23846",
+          "runtime_off": "0x72f56d3846"
+        },
+        {
+          "offset": 2410,
+          "size": 272,
+          "file_off": "0x2396a",
+          "runtime_off": "0x72f56d396a"
+        },
+        {
+          "offset": 2683,
+          "size": 284,
+          "file_off": "0x23a7b",
+          "runtime_off": "0x72f56d3a7b"
+        },
+        {
+          "offset": 2968,
+          "size": 7,
+          "file_off": "0x23b98",
+          "runtime_off": "0x72f56d3b98"
+        },
+        {
+          "offset": 2976,
+          "size": 144,
+          "file_off": "0x23ba0",
+          "runtime_off": "0x72f56d3ba0"
+        },
+        {
+          "offset": 3122,
+          "size": 32,
+          "file_off": "0x23c32",
+          "runtime_off": "0x72f56d3c32"
+        },
+        {
+          "offset": 3155,
+          "size": 446,
+          "file_off": "0x23c53",
+          "runtime_off": "0x72f56d3c53"
+        },
+        {
+          "offset": 3602,
+          "size": 201,
+          "file_off": "0x23e12",
+          "runtime_off": "0x72f56d3e12"
+        },
+        {
+          "offset": 3804,
+          "size": 71,
+          "file_off": "0x23edc",
+          "runtime_off": "0x72f56d3edc"
+        },
+        {
+          "offset": 3876,
+          "size": 23,
+          "file_off": "0x23f24",
+          "runtime_off": "0x72f56d3f24"
+        },
+        {
+          "offset": 3900,
+          "size": 12,
+          "file_off": "0x23f3c",
+          "runtime_off": "0x72f56d3f3c"
+        },
+        {
+          "offset": 3913,
+          "size": 11,
+          "file_off": "0x23f49",
+          "runtime_off": "0x72f56d3f49"
+        },
+        {
+          "offset": 3925,
+          "size": 17,
+          "file_off": "0x23f55",
+          "runtime_off": "0x72f56d3f55"
+        },
+        {
+          "offset": 3943,
+          "size": 24,
+          "file_off": "0x23f67",
+          "runtime_off": "0x72f56d3f67"
+        },
+        {
+          "offset": 3968,
+          "size": 7,
+          "file_off": "0x23f80",
+          "runtime_off": "0x72f56d3f80"
+        },
+        {
+          "offset": 3976,
+          "size": 23,
+          "file_off": "0x23f88",
+          "runtime_off": "0x72f56d3f88"
+        },
+        {
+          "offset": 4000,
+          "size": 19,
+          "file_off": "0x23fa0",
+          "runtime_off": "0x72f56d3fa0"
+        },
+        {
+          "offset": 4020,
+          "size": 325,
+          "file_off": "0x23fb4",
+          "runtime_off": "0x72f56d3fb4"
+        },
+        {
+          "offset": 4346,
+          "size": 79,
+          "file_off": "0x240fa",
+          "runtime_off": "0x72f56d40fa"
+        },
+        {
+          "offset": 4426,
+          "size": 457,
+          "file_off": "0x2414a",
+          "runtime_off": "0x72f56d414a"
+        },
+        {
+          "offset": 4884,
+          "size": 49,
+          "file_off": "0x24314",
+          "runtime_off": "0x72f56d4314"
+        },
+        {
+          "offset": 4934,
+          "size": 7,
+          "file_off": "0x24346",
+          "runtime_off": "0x72f56d4346"
+        },
+        {
+          "offset": 4942,
+          "size": 141,
+          "file_off": "0x2434e",
+          "runtime_off": "0x72f56d434e"
+        },
+        {
+          "offset": 5084,
+          "size": 235,
+          "file_off": "0x243dc",
+          "runtime_off": "0x72f56d43dc"
+        },
+        {
+          "offset": 5320,
+          "size": 63,
+          "file_off": "0x244c8",
+          "runtime_off": "0x72f56d44c8"
+        },
+        {
+          "offset": 5384,
+          "size": 34,
+          "file_off": "0x24508",
+          "runtime_off": "0x72f56d4508"
+        },
+        {
+          "offset": 5419,
+          "size": 94,
+          "file_off": "0x2452b",
+          "runtime_off": "0x72f56d452b"
+        },
+        {
+          "offset": 5514,
+          "size": 129,
+          "file_off": "0x2458a",
+          "runtime_off": "0x72f56d458a"
+        },
+        {
+          "offset": 5644,
+          "size": 27,
+          "file_off": "0x2460c",
+          "runtime_off": "0x72f56d460c"
+        },
+        {
+          "offset": 5672,
+          "size": 27,
+          "file_off": "0x24628",
+          "runtime_off": "0x72f56d4628"
+        },
+        {
+          "offset": 5700,
+          "size": 24,
+          "file_off": "0x24644",
+          "runtime_off": "0x72f56d4644"
+        },
+        {
+          "offset": 5725,
+          "size": 24,
+          "file_off": "0x2465d",
+          "runtime_off": "0x72f56d465d"
+        },
+        {
+          "offset": 5750,
+          "size": 62,
+          "file_off": "0x24676",
+          "runtime_off": "0x72f56d4676"
+        },
+        {
+          "offset": 5813,
+          "size": 27,
+          "file_off": "0x246b5",
+          "runtime_off": "0x72f56d46b5"
+        },
+        {
+          "offset": 5841,
+          "size": 27,
+          "file_off": "0x246d1",
+          "runtime_off": "0x72f56d46d1"
+        },
+        {
+          "offset": 5869,
+          "size": 27,
+          "file_off": "0x246ed",
+          "runtime_off": "0x72f56d46ed"
+        },
+        {
+          "offset": 5897,
+          "size": 27,
+          "file_off": "0x24709",
+          "runtime_off": "0x72f56d4709"
+        },
+        {
+          "offset": 5925,
+          "size": 24,
+          "file_off": "0x24725",
+          "runtime_off": "0x72f56d4725"
+        },
+        {
+          "offset": 5950,
+          "size": 12,
+          "file_off": "0x2473e",
+          "runtime_off": "0x72f56d473e"
+        },
+        {
+          "offset": 5963,
+          "size": 28,
+          "file_off": "0x2474b",
+          "runtime_off": "0x72f56d474b"
+        },
+        {
+          "offset": 5992,
+          "size": 8,
+          "file_off": "0x24768",
+          "runtime_off": "0x72f56d4768"
+        },
+        {
+          "offset": 6001,
+          "size": 16,
+          "file_off": "0x24771",
+          "runtime_off": "0x72f56d4771"
+        },
+        {
+          "offset": 6018,
+          "size": 26,
+          "file_off": "0x24782",
+          "runtime_off": "0x72f56d4782"
+        },
+        {
+          "offset": 6045,
+          "size": 24,
+          "file_off": "0x2479d",
+          "runtime_off": "0x72f56d479d"
+        },
+        {
+          "offset": 6070,
+          "size": 24,
+          "file_off": "0x247b6",
+          "runtime_off": "0x72f56d47b6"
+        },
+        {
+          "offset": 6095,
+          "size": 63,
+          "file_off": "0x247cf",
+          "runtime_off": "0x72f56d47cf"
+        },
+        {
+          "offset": 6159,
+          "size": 23,
+          "file_off": "0x2480f",
+          "runtime_off": "0x72f56d480f"
+        },
+        {
+          "offset": 6183,
+          "size": 42,
+          "file_off": "0x24827",
+          "runtime_off": "0x72f56d4827"
+        },
+        {
+          "offset": 6226,
+          "size": 183,
+          "file_off": "0x24852",
+          "runtime_off": "0x72f56d4852"
+        }
+      ]
+    },
+    {
+      "module": "libSDKloading.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so",
+      "runtime_start": "0x72f56ef000",
+      "runtime_end": "0x72f5741000",
+      "file_offset": "0x3f000",
+      "size": 335872,
+      "diff_bytes": 0,
+      "diff_page_count": 0,
+      "diff_pages": [],
+      "diff_ranges": []
+    },
+    {
+      "module": "libSDKloading.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so",
+      "runtime_start": "0x72f5741000",
+      "runtime_end": "0x72f5745000",
+      "file_offset": "0x91000",
+      "size": 16384,
+      "diff_bytes": 9817,
+      "diff_page_count": 4,
+      "diff_pages": [
+        "0x91000",
+        "0x92000",
+        "0x93000",
+        "0x94000"
+      ],
+      "diff_ranges": [
+        {
+          "offset": 3740,
+          "size": 141,
+          "file_off": "0x91e9c",
+          "runtime_off": "0x72f5741e9c"
+        },
+        {
+          "offset": 3882,
+          "size": 458,
+          "file_off": "0x91f2a",
+          "runtime_off": "0x72f5741f2a"
+        },
+        {
+          "offset": 4341,
+          "size": 139,
+          "file_off": "0x920f5",
+          "runtime_off": "0x72f57420f5"
+        },
+        {
+          "offset": 4481,
+          "size": 315,
+          "file_off": "0x92181",
+          "runtime_off": "0x72f5742181"
+        },
+        {
+          "offset": 4797,
+          "size": 88,
+          "file_off": "0x922bd",
+          "runtime_off": "0x72f57422bd"
+        },
+        {
+          "offset": 4886,
+          "size": 161,
+          "file_off": "0x92316",
+          "runtime_off": "0x72f5742316"
+        },
+        {
+          "offset": 5048,
+          "size": 13,
+          "file_off": "0x923b8",
+          "runtime_off": "0x72f57423b8"
+        },
+        {
+          "offset": 5062,
+          "size": 484,
+          "file_off": "0x923c6",
+          "runtime_off": "0x72f57423c6"
+        },
+        {
+          "offset": 5547,
+          "size": 356,
+          "file_off": "0x925ab",
+          "runtime_off": "0x72f57425ab"
+        },
+        {
+          "offset": 5904,
+          "size": 55,
+          "file_off": "0x92710",
+          "runtime_off": "0x72f5742710"
+        },
+        {
+          "offset": 5960,
+          "size": 253,
+          "file_off": "0x92748",
+          "runtime_off": "0x72f5742748"
+        },
+        {
+          "offset": 6214,
+          "size": 33,
+          "file_off": "0x92846",
+          "runtime_off": "0x72f5742846"
+        },
+        {
+          "offset": 6248,
+          "size": 219,
+          "file_off": "0x92868",
+          "runtime_off": "0x72f5742868"
+        },
+        {
+          "offset": 6468,
+          "size": 509,
+          "file_off": "0x92944",
+          "runtime_off": "0x72f5742944"
+        },
+        {
+          "offset": 6978,
+          "size": 629,
+          "file_off": "0x92b42",
+          "runtime_off": "0x72f5742b42"
+        },
+        {
+          "offset": 7608,
+          "size": 350,
+          "file_off": "0x92db8",
+          "runtime_off": "0x72f5742db8"
+        },
+        {
+          "offset": 7959,
+          "size": 128,
+          "file_off": "0x92f17",
+          "runtime_off": "0x72f5742f17"
+        },
+        {
+          "offset": 8088,
+          "size": 83,
+          "file_off": "0x92f98",
+          "runtime_off": "0x72f5742f98"
+        },
+        {
+          "offset": 8172,
+          "size": 107,
+          "file_off": "0x92fec",
+          "runtime_off": "0x72f5742fec"
+        },
+        {
+          "offset": 8280,
+          "size": 179,
+          "file_off": "0x93058",
+          "runtime_off": "0x72f5743058"
+        },
+        {
+          "offset": 8460,
+          "size": 20,
+          "file_off": "0x9310c",
+          "runtime_off": "0x72f574310c"
+        },
+        {
+          "offset": 8481,
+          "size": 194,
+          "file_off": "0x93121",
+          "runtime_off": "0x72f5743121"
+        },
+        {
+          "offset": 8676,
+          "size": 1066,
+          "file_off": "0x931e4",
+          "runtime_off": "0x72f57431e4"
+        },
+        {
+          "offset": 9743,
+          "size": 553,
+          "file_off": "0x9360f",
+          "runtime_off": "0x72f574360f"
+        },
+        {
+          "offset": 10297,
+          "size": 61,
+          "file_off": "0x93839",
+          "runtime_off": "0x72f5743839"
+        },
+        {
+          "offset": 10359,
+          "size": 925,
+          "file_off": "0x93877",
+          "runtime_off": "0x72f5743877"
+        },
+        {
+          "offset": 11285,
+          "size": 286,
+          "file_off": "0x93c15",
+          "runtime_off": "0x72f5743c15"
+        },
+        {
+          "offset": 11572,
+          "size": 191,
+          "file_off": "0x93d34",
+          "runtime_off": "0x72f5743d34"
+        },
+        {
+          "offset": 11764,
+          "size": 350,
+          "file_off": "0x93df4",
+          "runtime_off": "0x72f5743df4"
+        },
+        {
+          "offset": 12115,
+          "size": 905,
+          "file_off": "0x93f53",
+          "runtime_off": "0x72f5743f53"
+        },
+        {
+          "offset": 13021,
+          "size": 511,
+          "file_off": "0x942dd",
+          "runtime_off": "0x72f57442dd"
+        },
+        {
+          "offset": 13533,
+          "size": 55,
+          "file_off": "0x944dd",
+          "runtime_off": "0x72f57444dd"
+        }
+      ]
+    },
+    {
+      "module": "libSDKloading.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so",
+      "runtime_start": "0x72f5745000",
+      "runtime_end": "0x72f598d000",
+      "file_offset": "0x95000",
+      "size": 2392064,
+      "diff_bytes": 0,
+      "diff_page_count": 0,
+      "diff_pages": [],
+      "diff_ranges": []
+    },
+    {
+      "module": "libSDKloading.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so",
+      "runtime_start": "0x72f5bb8000",
+      "runtime_end": "0x72f5bbb000",
+      "file_offset": "0x3b9000",
+      "size": 12288,
+      "disk_available": 10744,
+      "error": "disk_view_size_mismatch"
+    },
+    {
+      "module": "libcocos2djs.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libcocos2djs.so",
+      "runtime_start": "0x72ef4b9000",
+      "runtime_end": "0x72efea1000",
+      "file_offset": "0x0",
+      "size": 10387456,
+      "diff_bytes": 0,
+      "diff_page_count": 0,
+      "diff_pages": [],
+      "diff_ranges": []
+    },
+    {
+      "module": "libcocos2djs.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libcocos2djs.so",
+      "runtime_start": "0x72efea1000",
+      "runtime_end": "0x72efea2000",
+      "file_offset": "0x9e8000",
+      "size": 4096,
+      "diff_bytes": 4,
+      "diff_page_count": 1,
+      "diff_pages": [
+        "0x9e8000"
+      ],
+      "diff_ranges": [
+        {
+          "offset": 2528,
+          "size": 4,
+          "file_off": "0x9e89e0",
+          "runtime_off": "0x72efea19e0"
+        }
+      ]
+    },
+    {
+      "module": "libcocos2djs.so",
+      "path": "/data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libcocos2djs.so",
+      "runtime_start": "0x72efea2000",
+      "runtime_end": "0x72f084b000",
+      "file_offset": "0x9e9000",
+      "size": 10129408,
+      "diff_bytes": 0,
+      "diff_page_count": 0,
+      "diff_pages": [],
+      "diff_ranges": []
+    }
+  ]
+}

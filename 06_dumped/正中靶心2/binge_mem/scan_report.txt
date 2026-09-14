@@ -1,0 +1,68 @@
+
+==== sdk_ro.bin size=16384 ====
+  keyword ascii=0
+
+==== sdk_rw.bin size=884736 ====
+  keyword ascii=2
+    TGOd
+    GOdViO9n
+  chinese utf8 runs=1
+    望璆
+
+==== sdk_rx_1.bin size=143360 ====
+  keyword ascii=0
+
+==== sdk_rx_2.bin size=114688 ====
+  keyword ascii=4
+    DobbyHook
+    dobby_enable_near_branch_trampoline
+    DobbyCodePatch
+    dobby_disable_near_branch_trampoline
+  SYM DobbyHook: 1 @ 709
+  SYM Dobby: 2 @ 709
+  PAT Dobby[A-Za-z0-9_]*: [(b'DobbyHook', 1), (b'DobbyCodePatch', 1)]
+
+==== sdk_rx_3.bin size=335872 ====
+  keyword ascii=0
+
+==== sdk_rx_4.bin size=16384 ====
+  keyword ascii=0
+
+==== sdk_rx_5.bin size=2392064 ====
+  keyword ascii=0
+  chinese utf8 runs=2
+    䌓燰
+    邰跎
+
+==== sdk_rx_6.bin size=12288 ====
+  keyword ascii=0
+
+==== shell_ro_bss.bin size=36864 ====
+  keyword ascii=0
+
+==== shell_rw_bss.bin size=12288 ====
+  keyword ascii=0
+
+==== shell_rwx_bss.bin size=57344 ====
+  keyword ascii=0
+
+==== shell_rx_bss.bin size=1032192 ====
+  keyword ascii=9
+    >C&goD6xNy
+    J3{jgOD
+    u5-bo2$#I*%9kWgody%q9
+    lGod9zF5wGhT
+     Hook
+    HOOK
+    200){T=t;R();}return C;}var M={};for(var i=1;i<=15;i++){(function(n){Object.defineProperty(M,'feature'+n,{get:function(){var c=G();return !!(c.f&&c.f.charAt(n-1
+     Hook
+    BW_MEMORYTOOL
+  SYM BW_MEMORYTOOL: 1 @ 278475
+  PAT [A-Za-z][A-Za-z0-9_]+\$\$[A-Za-z0-9_]+: [(b'maMf$$CazQ', 1), (b'Xh$$T1em', 1)]
+  chinese utf8 runs=6
+    定位到的首指令不是序言
+    放弃
+    失败
+    内存分配失败
+    定位失败
+    与特征扫描都没命中

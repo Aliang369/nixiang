@@ -1,0 +1,124 @@
+PID=14853
+a997c000-a997d000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a99fc000-a99fd000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a9a50000-a9a51000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a9a88000-a9a89000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa5b0000-aa5b1000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa8c8000-aa8c9000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aaa30000-aaa31000 rw-p 00000000 00:00 0                                  [anon:.bss]
+71ebfb2000-71ebfb8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7223305000-7223306000 rw-p 00000000 00:00 0                              [anon:.bss]
+7237dc3000-7237dc8000 rw-p 00000000 00:00 0                              [anon:.bss]
+72414cb000-72414cd000 rw-p 00000000 00:00 0                              [anon:.bss]
+72a3584000-72a35bd000 rw-p 00000000 00:00 0                              [anon:.bss]
+72c2dea000-72c2def000 rw-p 00000000 00:00 0                              [anon:.bss]
+72c2e65000-72c2e68000 rw-p 00000000 00:00 0                              [anon:.bss]
+72c2eee000-72c2eef000 rw-p 00000000 00:00 0                              [anon:.bss]
+72c41bf000-72c41c0000 rw-p 00000000 00:00 0                              [anon:.bss]
+72d3ba5000-72d3ba6000 rw-p 00000000 00:00 0                              [anon:.bss]
+72f08f1000-72f090f000 rw-p 00000000 00:00 0                              [anon:.bss]
+72f56b0000-72f56d3000 r-xp 00000000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f56d3000-72f56ef000 r-xp 00023000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f56ef000-72f5741000 r-xp 0003f000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f5741000-72f5745000 r-xp 00091000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f5745000-72f598d000 r-xp 00095000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f599d000-72f59a1000 r--p 002dd000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f59a1000-72f5a79000 rw-p 002e1000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f5a79000-72f5b75000 r-xp 00000000 00:00 0                              [anon:.bss]
+72f5b75000-72f5b7e000 r--p 00000000 00:00 0                              [anon:.bss]
+72f5b7e000-72f5ba7000 rw-p 00000000 00:00 0                              [anon:.bss]
+72f5ba7000-72f5bb5000 rwxp 00000000 00:00 0                              [anon:.bss]
+72f5bb5000-72f5bb8000 rw-p 00000000 00:00 0                              [anon:.bss]
+72f5bb8000-72f5bbb000 r-xp 003b9000 fe:48 343077                         /data/app/~~uvzApuo4nE9YScW6ozjQiw==/com.openew.monster-a4iwRxFiZtaDQJJqhiDLtg==/lib/arm64/libSDKloading.so
+72f8ebf000-72f8ec0000 rw-p 00000000 00:00 0                              [anon:.bss]
+72f9272000-72f9273000 rw-p 00000000 00:00 0                              [anon:.bss]
+730429b000-730429c000 rw-p 00000000 00:00 0                              [anon:.bss]
+7304719000-7304730000 rw-p 00000000 00:00 0                              [anon:.bss]
+732311d000-732312d000 rw-p 00000000 00:00 0                              [anon:.bss]
+732a670000-732a672000 r--p 00000000 00:00 0                              [anon:.bss]
+732d555000-732d5c7000 rw-p 00000000 00:00 0                              [anon:.bss]
+73d79bb000-73d7b74000 rw-p 00000000 00:00 0                              [anon:.bss]
+73d7b8f000-73d7b93000 rw-p 00000000 00:00 0                              [anon:.bss]
+740d9bc000-740d9c4000 rw-p 00000000 00:00 0                              [anon:.bss]
+740e860000-740e861000 rw-p 00000000 00:00 0                              [anon:.bss]
+740eb71000-740eb79000 rw-p 00000000 00:00 0                              [anon:.bss]
+740ebf2000-740ebf3000 rw-p 00000000 00:00 0                              [anon:.bss]
+740ee53000-740ee54000 rw-p 00000000 00:00 0                              [anon:.bss]
+740f1b5000-740f1e8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7412f6e000-7412f8f000 rw-p 00000000 00:00 0                              [anon:.bss]
+741487d000-7414880000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414ad9000-7414ada000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414b20000-7414b21000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414ba2000-7414ba3000 rw-p 00000000 00:00 0                              [anon:.bss]
+741725d000-741725e000 rw-p 00000000 00:00 0                              [anon:.bss]
+7417390000-7417393000 rw-p 00000000 00:00 0                              [anon:.bss]
+741751e000-741751f000 rw-p 00000000 00:00 0                              [anon:.bss]
+74175f1000-74175f4000 rw-p 00000000 00:00 0                              [anon:.bss]
+741783b000-741783d000 rw-p 00000000 00:00 0                              [anon:.bss]
+7419051000-7419052000 rw-p 00000000 00:00 0                              [anon:.bss]
+741911d000-741911e000 rw-p 00000000 00:00 0                              [anon:.bss]
+74191db000-74191dd000 rw-p 00000000 00:00 0                              [anon:.bss]
+7419de6000-7419de7000 rw-p 00000000 00:00 0                              [anon:.bss]
+741a173000-741a174000 rw-p 00000000 00:00 0                              [anon:.bss]
+741a1a0000-741a1a1000 rw-p 00000000 00:00 0                              [anon:.bss]
+741ea71000-741ea72000 rw-p 00000000 00:00 0                              [anon:.bss]
+741eb6c000-741eb73000 rw-p 00000000 00:00 0                              [anon:.bss]
+741ef0d000-741ef15000 rw-p 00000000 00:00 0                              [anon:.bss]
+74201e3000-74201eb000 rw-p 00000000 00:00 0                              [anon:.bss]
+7425a69000-7425a6a000 rw-p 00000000 00:00 0                              [anon:.bss]
+743007e000-743007f000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431ca3000-7431ca6000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431d0f000-7431d10000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431df6000-7431df7000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432a9b000-7432a9c000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432b61000-7432b62000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432c12000-7432c13000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432d31000-7432d32000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432f34000-7432f35000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432fb4000-7432fb5000 rw-p 00000000 00:00 0                              [anon:.bss]
+7436c49000-7436c4a000 rw-p 00000000 00:00 0                              [anon:.bss]
+7436d87000-7436d88000 rw-p 00000000 00:00 0                              [anon:.bss]
+7439182000-743918a000 rw-p 00000000 00:00 0                              [anon:.bss]
+DUMP sdk_rx_1.bin 0x72f56b0000-0x72f56d3000 size=143360
+-rw-r--r-- 1 root root 143360 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_rx_1.bin
+DUMP sdk_rx_2.bin 0x72f56d3000-0x72f56ef000 size=114688
+-rw-r--r-- 1 root root 114688 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_rx_2.bin
+DUMP sdk_rx_3.bin 0x72f56ef000-0x72f5741000 size=335872
+-rw-r--r-- 1 root root 335872 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_rx_3.bin
+DUMP sdk_rx_4.bin 0x72f5741000-0x72f5745000 size=16384
+-rw-r--r-- 1 root root 16384 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_rx_4.bin
+DUMP sdk_rx_5.bin 0x72f5745000-0x72f598d000 size=2392064
+-rw-r--r-- 1 root root 2392064 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_rx_5.bin
+DUMP sdk_ro.bin 0x72f599d000-0x72f59a1000 size=16384
+-rw-r--r-- 1 root root 16384 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_ro.bin
+DUMP sdk_rw.bin 0x72f59a1000-0x72f5a79000 size=884736
+-rw-r--r-- 1 root root 884736 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_rw.bin
+DUMP shell_rx_bss.bin 0x72f5a79000-0x72f5b75000 size=1032192
+-rw-r--r-- 1 root root 1032192 2026-09-14 21:40 /data/local/tmp/binge_memdump/shell_rx_bss.bin
+DUMP shell_ro_bss.bin 0x72f5b75000-0x72f5b7e000 size=36864
+-rw-r--r-- 1 root root 36864 2026-09-14 21:40 /data/local/tmp/binge_memdump/shell_ro_bss.bin
+DUMP shell_rw_bss.bin 0x72f5b7e000-0x72f5ba7000 size=167936
+-rw-r--r-- 1 root root 167936 2026-09-14 21:40 /data/local/tmp/binge_memdump/shell_rw_bss.bin
+DUMP shell_rwx_bss.bin 0x72f5ba7000-0x72f5bb5000 size=57344
+-rw-r--r-- 1 root root 57344 2026-09-14 21:40 /data/local/tmp/binge_memdump/shell_rwx_bss.bin
+DUMP shell_rw_bss.bin 0x72f5bb5000-0x72f5bb8000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-14 21:40 /data/local/tmp/binge_memdump/shell_rw_bss.bin
+DUMP sdk_rx_6.bin 0x72f5bb8000-0x72f5bbb000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-14 21:40 /data/local/tmp/binge_memdump/sdk_rx_6.bin
+total 4.8K
+drwxr-xr-x  2 root  root  3.3K 2026-09-14 21:40 .
+drwxrwx--x 14 shell shell  56K 2026-09-14 21:40 ..
+-rw-r--r--  1 root  root     0 2026-09-14 21:40 il2cpp_rx_segs.txt
+-rw-r--r--  1 root  root   16K 2026-09-14 21:40 sdk_ro.bin
+-rw-r--r--  1 root  root  864K 2026-09-14 21:40 sdk_rw.bin
+-rw-r--r--  1 root  root  140K 2026-09-14 21:40 sdk_rx_1.bin
+-rw-r--r--  1 root  root  112K 2026-09-14 21:40 sdk_rx_2.bin
+-rw-r--r--  1 root  root  328K 2026-09-14 21:40 sdk_rx_3.bin
+-rw-r--r--  1 root  root   16K 2026-09-14 21:40 sdk_rx_4.bin
+-rw-r--r--  1 root  root  2.2M 2026-09-14 21:40 sdk_rx_5.bin
+-rw-r--r--  1 root  root   12K 2026-09-14 21:40 sdk_rx_6.bin
+-rw-r--r--  1 root  root   36K 2026-09-14 21:40 shell_ro_bss.bin
+-rw-r--r--  1 root  root   12K 2026-09-14 21:40 shell_rw_bss.bin
+-rw-r--r--  1 root  root   56K 2026-09-14 21:40 shell_rwx_bss.bin
+-rw-r--r--  1 root  root  0.9M 2026-09-14 21:40 shell_rx_bss.bin
+DONE

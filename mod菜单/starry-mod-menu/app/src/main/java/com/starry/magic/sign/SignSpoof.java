@@ -583,6 +583,29 @@ public final class SignSpoof {
                     + "f4yKq97bpS854J1/krhVCIpSkSZQxeI4PcKugDlYb5hoDv7hy4AKkf0uIHHvmBk8lLA6MJ67fog+"
                     + "c5YSVPmp7cWpwY2E22/gLKSLMA==";
 
+    /** 正中靶心2 TapTap 官方（com.openew.monster，CN=elliot lee）。
+     *  2026-09-14 从官方 1.7 v2 签名块导出；TapSignKit.getSign() 读取
+     *  PackageManager.GET_SIGNATURES 的证书 DER 并取 MD5，必须回灌此证书。
+     *  SHA-256=57fbc23b… / SHA-1=41580c1d… / MD5=b9c07db6… */
+    private static final String ZZBX2_PKG = "com.openew.monster";
+    private static final String ZZBX2_CERT_B64 =
+            "MIIDgTCCAmmgAwIBAgIEN7EK0DANBgkqhkiG9w0BAQsFADBxMQswCQYDVQQGEwJnZDESMBAGA1UE"
+                    + "CBMJR3VhbmdEb25nMRIwEAYDVQQHEwlHdWFuZ1pob3UxDzANBgNVBAoTBk9wZW5ldzEUMBIGA1UE"
+                    + "CxMLT3BlbmV3LiBJbmMxEzARBgNVBAMTCmVsbGlvdCBsZWUwHhcNMTgxMDI2MTIxNTI0WhcNNDMx"
+                    + "MDIwMTIxNTI0WjBxMQswCQYDVQQGEwJnZDESMBAGA1UECBMJR3VhbmdEb25nMRIwEAYDVQQHEwlH"
+                    + "dWFuZ1pob3UxDzANBgNVBAoTBk9wZW5ldzEUMBIGA1UECxMLT3BlbmV3LiBJbmMxEzARBgNVBAMT"
+                    + "CmVsbGlvdCBsZWUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCiVRybhhVNPiXs0rTQ"
+                    + "pmn7XiZH9EfM1x18tHBoisojAYczxk4PIiUb7AX2BNO4mvmbxaeqXaqsuT1WgWJ58lT1w+Pq5Kov"
+                    + "41SHspXY0TawBrZRZZiGWovpj0ZRBJ3NKHxl09mJUqJOgAfiaIgwNLMEv3bdn72xcO9rj7sODaeX"
+                    + "rm7MVNcDNIInuUlZMwwLYVnLada7LA8iFd3cLQ297GeUlub1AnuwqyYnJsWbRbTHAYaMeRTUWmwk"
+                    + "X67kAVchuAkGGBln5UTbLGAObyn5lW4at1OuqTIa/lAbLjfPYKyNukSA16yQmAORFyz1yzewywjZ"
+                    + "lwg2eXvzbyC0or0mqPWjAgMBAAGjITAfMB0GA1UdDgQWBBRsI3duLMZHct4hTsrtxYYtPQxtcDAN"
+                    + "BgkqhkiG9w0BAQsFAAOCAQEAOIP4VM/w6ez4cFm0nRTwZb6Tq2ndyN4n7e2pUr5yR4Kcq/plesZL"
+                    + "sy/+IFtLFqvnw+ZXYKy1k6omffcp7q1OWKfkt0QMnyzkH8pcnoMLnjmNUMSZUc6LaqnUaeuEKirD"
+                    + "l0LrHY0wrrRGDecfCAmjkPgrxTG0uwqh+/ck1bhmeETu3zHA+sgi1UaLhjVwDCLFl4S8OSJduBzO"
+                    + "CxKdIQMYP2gVHU287PPxnceQySjasjWkCUz+TRIWMhjAoJgA2G9fmYB+QhnSiFJqeOuwOFSyqzK2"
+                    + "6IsI13A0d5J0GqKuONYYMH7gm26WCMGZHYDK1nVOAZlDl9n+znmTDHr7f5c6tA==";
+
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -628,6 +651,7 @@ public final class SignSpoof {
                 fakes.put(FCXYXZJ_PKG, new Signature(Base64.decode(FCXYXZJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WDXSJ_PKG, new Signature(Base64.decode(WDXSJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(DHSS_PKG, new Signature(Base64.decode(DHSS_CERT_B64, Base64.DEFAULT)));
+                fakes.put(ZZBX2_PKG, new Signature(Base64.decode(ZZBX2_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

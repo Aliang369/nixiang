@@ -69,7 +69,10 @@ public final class TapLoginForceWeb {
                     "com.lingsi.xiuxiandanji",
                     // 大话蜀山：TapSDK 4.9.0，TapTapLoginActivity 按 LoginRequest.loginType
                     // 分流（DefaultTapLoginFragmentProvider）；preCreated 改 embedded_web 即直接进网页。
-                    "com.cylj.rogue.tp479"));
+                    "com.cylj.rogue.tp479",
+                    // 正中靶心2：TapSDK 新版，TapTapLoginActivity 按 LoginRequest.loginType
+                    // 分流；改签后直接走 embedded_web，避免客户端 SSO 校验真实签名。
+                    "com.openew.monster"));
 
     private TapLoginForceWeb() {}
 
