@@ -82,7 +82,7 @@
 #elif defined(STARRY_GAME_WGGLS)
 #define STARRY_AUTH_GAME_ID "wggls"
 #elif defined(STARRY_GAME_WHRHX4399)
-#define STARRY_AUTH_GAME_ID "whhx"
+#define STARRY_AUTH_GAME_ID "whhx4399"
 #elif defined(STARRY_GAME_WHRHX)
 #define STARRY_AUTH_GAME_ID "whhx"
 #elif defined(STARRY_GAME_WHRHXKB)

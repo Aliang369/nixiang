@@ -133,10 +133,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 21:06:31",
+      "done_at": "2026-09-15 20:48:09",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": {
-          "md5": "9c8d97fb72d858624c5a3141fee8796d"
+          "md5": "947a5afe9e75e8cc60098ef3c0bd31e3"
         }
       }
     },
@@ -162,21 +162,47 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 20:15:58",
+      "done_at": "2026-09-14 20:15:58"
+    },
+    {
+      "id": "so_only",
+      "name": "仅替换 whhx4399 鉴权 so 并重签正式包（不重跑 1.6G 外科组装）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_so_only.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_so_only.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/inmemory_dex/inmemory_L4_e1_8621488.dex"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 20:49:33",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": {
-          "md5": "a11e8e132551b20dea6cf028beafe1fa"
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk": {
+          "md5": "e146f03c9c034d6f9dadf51d708b4aa0"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/inmemory_dex/inmemory_L4_e1_8621488.dex": {
+          "md5": "37fc180a43ac662ec12dde70f885abfb"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": "9c8d97fb72d858624c5a3141fee8796d"
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": "947a5afe9e75e8cc60098ef3c0bd31e3"
       }
     },
     {
       "id": "install",
       "name": "卸载官方包并安装 4399 无壳星空包（用户明确授权）",
       "requires": [
-        "surgical"
+        "so_only"
       ],
       "preflight": [
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_uninstall_install.sh"
@@ -185,16 +211,10 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-14 21:06:31",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": {
-          "md5": "a11e8e132551b20dea6cf028beafe1fa"
-        }
-      }
+      "status": "pending"
     },
     {
       "id": "cleanup",
@@ -221,22 +241,10 @@
         },
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-14 21:08:11",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/inmemory_dex/inmemory_L4_e1_8621488.dex": {
-          "md5": "37fc180a43ac662ec12dde70f885abfb"
-        },
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": {
-          "md5": "a11e8e132551b20dea6cf028beafe1fa"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能-releaseSigned.apk": "a11e8e132551b20dea6cf028beafe1fa"
-      }
+      "status": "pending"
     }
   ]
 }

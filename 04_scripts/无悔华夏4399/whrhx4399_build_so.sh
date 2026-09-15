@@ -51,7 +51,7 @@ chk() {
   }
 }
 chk "[Whrhx]"
-chk "whhx"
+chk "whhx4399"
 chk "target=m4399"
 chk "GetCountryDataById"
 chk "GetCityData"

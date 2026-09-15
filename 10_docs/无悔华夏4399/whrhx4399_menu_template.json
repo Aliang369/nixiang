@@ -1,8 +1,8 @@
 {
-  "template_id": "whhx",
+  "template_id": "whhx4399",
   "name": "无悔华夏4399",
   "package": "com.yhhy.whrhx.m4399",
-  "source": "Games/WhrhxMod.h WHRHX_FEAT_* / Main.cpp STARRY_GAME_WHRHX + STARRY_GAME_WHRHX4399 / GameConfig.h game_id=whhx",
+  "source": "Games/WhrhxMod.h WHRHX_FEAT_* / Main.cpp STARRY_GAME_WHRHX + STARRY_GAME_WHRHX4399 / GameConfig.h game_id=whhx4399",
   "features": [
     {"feat_num": 1, "name": "无限金币"},
     {"feat_num": 2, "name": "无限食物"},
