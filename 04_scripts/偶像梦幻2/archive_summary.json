@@ -1,0 +1,12 @@
+{
+  "game": "偶像梦幻2",
+  "version": "4.5.8861",
+  "status": "ready_for_git",
+  "final_apk": "/Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk",
+  "final_apk_md5": "29598948a08e234b83cca24a4a7fbd1c",
+  "landing_doc": "/Users/aliang/Documents/nixiang/10_docs/偶像梦幻2/星空落地_4.5.8861_20260915.md",
+  "state_index": "/Users/aliang/Documents/nixiang/10_docs/_state/current.md",
+  "git_scope_file": "/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/archive_git_scope.txt",
+  "git_head": "fc79f76ff57a31a87546a24a0c07fd7cea131cee",
+  "git_branch": "main"
+}

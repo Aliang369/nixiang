@@ -1,0 +1,16 @@
+{
+  "package": "com.happyelements.es2",
+  "game": "偶像梦幻2",
+  "kind": "official_from_device",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/偶像梦幻2/偶像梦幻2_4.5.8861_official_from_device.apk",
+  "version_name": "4.5.8861",
+  "version_code": 108861,
+  "installer": "com.android.packageinstaller",
+  "originating_package": "com.taptap",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~DcsVt_n6z3cTi7Ng2M6jqw==/com.happyelements.es2-6WFCMzO2R36InKttdbeumA==/base.apk",
+  "size": 1066627477,
+  "sha256": "42d5fe5f9c128975ea82a9cbf3dd0f5f8b252d2dbd84101a9fba092f9320220c",
+  "md5": "10c2b8993828ba5cd19ca6cceec8dd06"
+}

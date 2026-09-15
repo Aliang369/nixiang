@@ -1,0 +1,11 @@
+ M 10_docs/_state/current.md
+ M mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java
+ M mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java
+ M mod菜单/starry-mod-menu/app/src/main/jni/Android_es2.mk
+ M mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.cpp
+ M mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so
+ M mod菜单/starry-mod-menu/app/src/main/libs/arm64-v8a/libstarry_magic.so
+?? 04_scripts/偶像梦幻2/
+?? 10_docs/偶像梦幻2/星空落地_4.5.8861_20260915.md
+?? 10_docs/偶像梦幻2/锚点_自动跳舞_4.5.8861_20260915.md
+?? mod菜单/starry-mod-menu/scripts/surgical_es2_4.5.8861.sh

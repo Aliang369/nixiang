@@ -1,0 +1,16 @@
+{
+  "game": "偶像梦幻2",
+  "version": "4.5.8861",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/偶像梦幻2/偶像梦幻2_4.5.8861_official_from_device.apk",
+  "static_dir": "/Users/aliang/Documents/nixiang/06_dumped/偶像梦幻2/official_4.5.8861/static",
+  "libil2cpp_md5": "5c36c861e261aeb473351dedd61f3de5",
+  "libil2cpp_sha256": "bf313a5aff01a151eb8bcc4b5059c69046d47a0faba196f7a8b0ed39d379edbb",
+  "global_metadata_md5": "1a0b9692f18721180d8137ebc4083ac0",
+  "global_metadata_sha256": "14f1aa4ae407b6acc66f7c09ec116d65f1a330f5501e2ef0378a16f1a4f19c4e",
+  "dex_files": [
+    "classes.dex",
+    "classes2.dex"
+  ],
+  "il2cpp_dumper_applicable": false,
+  "reason": "历史 4.4.8684 记录官方 global-metadata.dat 为高熵加密；本阶段仅保留静态输入，重定位按机器码/运行时证据完成。"
+}

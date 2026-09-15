@@ -1,5 +1,6 @@
 # 跨游戏状态索引
 
+> 更新：2026-09-15，**「偶像梦幻祭2」4.5.8861 星光包交付完成**：从真机 `f9a116a2` 只读拉取 TapTap 官方 `com.happyelements.es2` 4.5.8861/vc108861（1,066,627,477B，md5 `10c2b899…`）。自动跳舞三锚点由 4.4.8684 整体重定位 `+0x24F474` 至 file `0x734A9EC/0x734A9FC/0x734AA1C`；新增 ES2 官方证书回灌与 TapTap 网页登录白名单。官方 2 dex/arsc/libil2cpp/libunity/libxlua 字节保留，v2/v3 签名、zipalign、包内 so 指纹均通过。用户明确授权卸载官方包并安装星光包，设备 `base.apk` md5 `29598948…` 与本地产物一致；随后用户人工验收回复“测试没问题”，登录、菜单与自动跳舞通过。正式包=`08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk`（so md5 `b8a13063…`）。文档=`10_docs/偶像梦幻2/星空落地_4.5.8861_20260915.md`；管线=`04_scripts/偶像梦幻2/pipeline.json`。
 > 更新：2026-09-15，**「勇士之心」1.0.3 自动战斗二次修复已装机，自动战斗挂点冷启动实证通过**：首测日志确认菜单 `feature #5=ON`，但点击仍出现 `MONTH_CARD_OPEN` 任务提示；根因是 `fsl()` 位于独立 `assets/game/index.js` bundle，而首版 native 只 patch `assets/battleLogic/index.js`。现已让 native 同时捕获 battleLogic/game 两个 bundle，冷启动实测 `logic splice ... file=assets/game/index.js`、`[MODMOD] auto-battle privilege hooked = .prototype.fsl`、`REPORT ... auto=yes`，自动战斗按 `AUTO_BATTLE + bVs(` 指纹放行金卡特权并走官方 `$ug.L` 命令；战斗内实际效果待复测。移速已从错误的 `MOD.feature4` 改为 `MOD.speed > 1`，滑条 2..5 按倍率乘 `hTimeScale`。异常兜底包括 native splice 回原脚本、JS capture/安装局部捕获、无限技能成本还原和移速还原保护；新增 Java 日志通道后安装结果不再静默。二次包 md5 `936eae1c…`，so md5 `c018dff9…`，设备 `base.apk` md5 一致；同签名覆盖未清数据。菜单模板=`10_docs/勇士之心/yszzx_menu_template.json`，文档=`10_docs/勇士之心/星空落地_1.0.3_20260915.md`。
 
 

@@ -1,0 +1,372 @@
+{
+  "game": "偶像梦幻2",
+  "version": "4.5.8861",
+  "notes": "2026-09-15：从真机 TapTap 官方 4.5.8861/vc108861 更新星光包。先只读拉包与静态重定位；install 阶段默认未授权，必须用户明确同意卸载官方包/不保留数据后才可运行。",
+  "params": {
+    "game_id": "oxmhj2",
+    "package": "com.happyelements.es2",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.happyelements.es2",
+    "GAME": "偶像梦幻2",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（锁定 f9a116a2 + root 检查）",
+      "requires": [],
+      "command": "bash 04_scripts/偶像梦幻2/device_ready_es2.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/device_ready_es2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/偶像梦幻2/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:17:27",
+      "artifacts": {
+        "04_scripts/偶像梦幻2/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读提取 TapTap 官方 4.5.8861 单一 base APK",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/fetch_installed_es2.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/fetch_installed_es2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/偶像梦幻2/official_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:18:18",
+      "artifacts": {
+        "04_scripts/偶像梦幻2/official_apk.json": {
+          "md5": "e000ff1e48e09230725f6b30cbe39ee5"
+        }
+      },
+      "inputs": {
+        "04_scripts/偶像梦幻2/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对包名/版本/签名/IL2CPP 输入/ZIP 结构",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/check_es2_apk.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/check_es2_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/偶像梦幻2/official_check.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:21:35",
+      "artifacts": {
+        "04_scripts/偶像梦幻2/official_check.json": {
+          "md5": "63173c4cba5ab6803fe775dfc36aa6c0"
+        }
+      },
+      "inputs": {
+        "04_scripts/偶像梦幻2/official_apk.json": "e000ff1e48e09230725f6b30cbe39ee5"
+      }
+    },
+    {
+      "id": "dump_static",
+      "name": "提取新版 libil2cpp/global-metadata/dex 静态输入",
+      "requires": [
+        "check_official"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/dump_es2_static.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/dump_es2_static.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/偶像梦幻2/official_4.5.8861/static/libil2cpp.so"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/偶像梦幻2/official_4.5.8861/static/dump_inputs.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:21:38",
+      "artifacts": {
+        "06_dumped/偶像梦幻2/official_4.5.8861/static/libil2cpp.so": {
+          "md5": "5c36c861e261aeb473351dedd61f3de5"
+        },
+        "06_dumped/偶像梦幻2/official_4.5.8861/static/dump_inputs.json": {
+          "md5": "dd7f69613b26decfeffa458bfb232be2"
+        }
+      },
+      "inputs": {
+        "04_scripts/偶像梦幻2/official_check.json": "63173c4cba5ab6803fe775dfc36aa6c0"
+      }
+    },
+    {
+      "id": "relocate_version",
+      "name": "重定位自动跳舞三个判定 getter（分析阶段）",
+      "requires": [
+        "dump_static"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/偶像梦幻2/锚点_自动跳舞_4.5.8861_20260915.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 20:08:34",
+      "artifacts": {
+        "10_docs/偶像梦幻2/锚点_自动跳舞_4.5.8861_20260915.md": {
+          "md5": "02525b9804eea386099f1f8b38f70644"
+        }
+      },
+      "inputs": {
+        "06_dumped/偶像梦幻2/official_4.5.8861/static/dump_inputs.json": "dd7f69613b26decfeffa458bfb232be2"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "更新 Es2Mod 到 4.5.8861 锚点并保留序言保护",
+      "requires": [
+        "relocate_version"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.h"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:25:31",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.cpp": {
+          "md5": "de81202c624b11edcb8ad4f5ec69d8b1"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.h": {
+          "md5": "45309abd5599a3275e98ad45b55cffc8"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（Es2/oxmhj2/菜单串校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/es2_build_so.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/es2_build_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:25:41",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so": {
+          "md5": "b8a13063764f906a025646b81aa3c9fd"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.cpp": "de81202c624b11edcb8ad4f5ec69d8b1",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.h": "45309abd5599a3275e98ad45b55cffc8"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装 4.5.8861（官方 dex/arsc/libil2cpp 字节保留）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_es2_4.5.8861.sh",
+      "preflight": [
+        "mod菜单/starry-mod-menu/scripts/surgical_es2_4.5.8861.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:32:51",
+      "artifacts": {
+        "08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk": {
+          "md5": "1fa54fbbd85255ee83583f40bf665e7e"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so": "b8a13063764f906a025646b81aa3c9fd"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "星光 release 签名与包内 so 指纹复核",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/sign_es2.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/sign_es2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 18:33:43",
+      "artifacts": {
+        "08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk": {
+          "md5": "29598948a08e234b83cca24a4a7fbd1c"
+        }
+      },
+      "inputs": {
+        "08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk": "1fa54fbbd85255ee83583f40bf665e7e"
+      }
+    },
+    {
+      "id": "install",
+      "name": "授权卸载官方包并安装星光包（默认禁止，待用户明确授权）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/install_es2.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/install_es2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/偶像梦幻2/install_result.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 19:48:30",
+      "artifacts": {
+        "04_scripts/偶像梦幻2/install_result.txt": {
+          "md5": "643b76a64b2d6e83ae5bb1d4974bd794"
+        }
+      },
+      "inputs": {
+        "08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk": "29598948a08e234b83cca24a4a7fbd1c",
+        "04_scripts/偶像梦幻2/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "cleanup",
+      "name": "收官清理（仅删本作可再生中间物与设备临时 APK）",
+      "requires": [
+        "install"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/cleanup_es2.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/cleanup_es2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/偶像梦幻2/cleanup_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 20:05:48",
+      "artifacts": {
+        "04_scripts/偶像梦幻2/cleanup_summary.json": {
+          "md5": "1e86091a0b5df705e57017d2fbb9978e"
+        }
+      },
+      "inputs": {
+        "04_scripts/偶像梦幻2/install_result.txt": "643b76a64b2d6e83ae5bb1d4974bd794"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收尾文档与 Git 固化（用户确认功能后再执行）",
+      "requires": [
+        "cleanup"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/archive_es2.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/archive_es2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/偶像梦幻2/archive_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 20:07:03",
+      "artifacts": {
+        "04_scripts/偶像梦幻2/archive_summary.json": {
+          "md5": "884cb647ac2e8cd816573aa3c431ebfb"
+        }
+      },
+      "inputs": {
+        "04_scripts/偶像梦幻2/cleanup_summary.json": "1e86091a0b5df705e57017d2fbb9978e"
+      }
+    },
+    {
+      "id": "post_cleanup",
+      "name": "归档后清理静态大件（保留文本与用户管理的 08_output）",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash 04_scripts/偶像梦幻2/post_cleanup_es2.sh",
+      "preflight": [
+        "04_scripts/偶像梦幻2/post_cleanup_es2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/偶像梦幻2/post_cleanup_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 20:07:47",
+      "artifacts": {
+        "04_scripts/偶像梦幻2/post_cleanup_summary.json": {
+          "md5": "880cdfda6b152cfd4906170f327fde55"
+        }
+      },
+      "inputs": {
+        "04_scripts/偶像梦幻2/archive_summary.json": "884cb647ac2e8cd816573aa3c431ebfb"
+      }
+    }
+  ]
+}

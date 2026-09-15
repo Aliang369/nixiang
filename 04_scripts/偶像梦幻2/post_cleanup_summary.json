@@ -1,0 +1,16 @@
+{
+  "game": "偶像梦幻2",
+  "version": "4.5.8861",
+  "status": "post_archive_cleanup_done",
+  "final_apk": "/Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk",
+  "final_apk_md5": "29598948a08e234b83cca24a4a7fbd1c",
+  "static_dir": "/Users/aliang/Documents/nixiang/06_dumped/偶像梦幻2/official_4.5.8861/static",
+  "estimated_freed_bytes": 372637696,
+  "preserved_text_inputs": [
+    "dump_inputs.json",
+    "entries.txt",
+    "AndroidManifest.xml",
+    "resources_arsc_zipinfo.txt"
+  ],
+  "output_policy": "08_output untouched (user-managed)"
+}

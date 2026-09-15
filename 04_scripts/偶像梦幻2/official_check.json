@@ -1,0 +1,26 @@
+{
+  "package": "com.happyelements.es2",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/偶像梦幻2/偶像梦幻2_4.5.8861_official_from_device.apk",
+  "serial": "f9a116a2",
+  "version_name": "4.5.8861",
+  "version_code": 108861,
+  "apk_md5": "10c2b8993828ba5cd19ca6cceec8dd06",
+  "apk_sha256": "42d5fe5f9c128975ea82a9cbf3dd0f5f8b252d2dbd84101a9fba092f9320220c",
+  "signer_cert_md5": "7874d14df2f7114c9b016f71572b0cb2",
+  "signer_cert_sha256": "60fd8332fc037c7cf9d4ee39bf3eacd598d688f5b45318c1990eef040038a105",
+  "device_signature_token": "16a924db",
+  "history_4.4.8684_signature_token": "16a924db",
+  "signature_token_matches_history": true,
+  "libil2cpp_md5": "5c36c861e261aeb473351dedd61f3de5",
+  "libil2cpp_size": 279732824,
+  "global_metadata_md5": "1a0b9692f18721180d8137ebc4083ac0",
+  "global_metadata_size": 46408524,
+  "dex_count": 2,
+  "dex_list": [
+    "classes.dex",
+    "classes2.dex"
+  ],
+  "arm64_so_count": 23,
+  "resources_arsc_compression": "                            none (stored)",
+  "contains_libstarry_magic": false
+}

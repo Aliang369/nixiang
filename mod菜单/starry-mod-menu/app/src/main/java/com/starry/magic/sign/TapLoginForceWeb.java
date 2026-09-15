@@ -80,7 +80,9 @@ public final class TapLoginForceWeb {
                     // 分流；改签后直接走 embedded_web，避免客户端 SSO 校验真实签名。
                     "com.openew.monster",
                     // 一念通天：TapSDK + TapTap 登录；改签包固定走 embedded_web。
-                    "com.qinglv.Immortal"));
+                    "com.qinglv.Immortal",
+                    // 偶像梦幻祭2：TapTap 渠道原版；存在 TapTap 登录入口时固定走 embedded_web。
+                    "com.happyelements.es2"));
 
     private TapLoginForceWeb() {}
 

@@ -625,6 +625,23 @@ public final class SignSpoof {
                     + "4Kty3YYu24S/VjjedveiIPtRKs3EtvFaa3KLZkF7qakfdJjgBisnMEW3utpcDQRCtGs2I2ngdSrI"
                     + "0RDKvwaCxqlAqBhlp3ry50uZP1+znfezJxC8SjrqHtFF7d2aJwWR/Jofrey5Kkeg7cFDclojBGDJ"
                     + "aOXctA8+fFx9hw4Bk4KRFF5nOL3Cdtf4aSgpnXlxRFQ4LhMogmjly4wJiSNajEce15pdF4B9dZR2";
+
+    /** 偶像梦幻祭2 TapTap 官方（com.happyelements.es2，CN=boy2，SHA-256=60fd8332…）。
+     *  2026-09-15 从官方 4.5.8861 的 KEY0.RSA / v2 签名块导出，供 TapSDK 签名读取回灌。 */
+    private static final String ES2_PKG = "com.happyelements.es2";
+    private static final String ES2_CERT_B64 =
+            "MIIDgTCCAmmgAwIBAgIEAxZhTzANBgkqhkiG9w0BAQsFADBxMQswCQYDVQQGEwJDTjEPMA0GA1UECAwG5YyX5LqsMQ8wDQYDVQQH"
+                    + "DAbljJfkuqwxFzAVBgNVBAoTDkhhcHB5IEVsZW1lbnRzMRcwFQYDVQQLEw5IYXBweSBFbGVtZW50czEOMAwGA1UEAxMFYm95czIw"
+                    + "HhcNMjAwMTEzMTEwMjE4WhcNNDUwMTA2MTEwMjE4WjBxMQswCQYDVQQGEwJDTjEPMA0GA1UECAwG5YyX5LqsMQ8wDQYDVQQHDAbl"
+                    + "jJfkuqwxFzAVBgNVBAoTDkhhcHB5IEVsZW1lbnRzMRcwFQYDVQQLEw5IYXBweSBFbGVtZW50czEOMAwGA1UEAxMFYm95czIwggEi"
+                    + "MA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCPO3NQj9evCPYR3NoGkz2H/7wUxUIunnyUzWZ5FOh8e3izdM+YKf02UDECS7BL"
+                    + "NFJTcEQDN2nHTxg+yAQ+DXuqMpLIv5y8lJtjLAb+HT/ZvVV89jMpu54wpV4fWeHZ+s3HDLzC2oLt/OjlIu38BulsJBJHqy/H8UOk"
+                    + "hBex119GSC2EAKGuXjZjWlTSbZgZDbZZBTKA+FlniE8YYzwnK+op7IsZ8laGJ3dcR/dTPutrpRpEtDGu7QQy/lM63VlV7EuqWCEw"
+                    + "oJnxH2n63i+8oR5KNlcGTdaeYy7sW0MK5DiFL2VEQ17CzRr3jBnjdaCbcQ81PAQ/Q9FU+/vtvvBntsFTAgMBAAGjITAfMB0GA1Ud"
+                    + "DgQWBBRVoQcgLv2VlvK/hUSPE1n4fawTnTANBgkqhkiG9w0BAQsFAAOCAQEASE1qLRN74kWPEJwaISTIAklHHEalRWudqEBFQOJk"
+                    + "sKuLSEd3HY08+g7d9+tLJv1vqziAKeerg+CWlyOwxmyQrPLeI2jWRXdfHvVBlxcbuipsR+UwSFNvz5oSPkDFPoYQLaVUg6HKAi4d"
+                    + "9J07ukU+S2ImCOgfHjtt5a2QWSCrvMwEfiJ7yRvZgfgcUiKamLMTVO8aVwWHSb8TE9z/86shUjLmQNOFHoxgE03vJzNoVTFb4vwd"
+                    + "WEPAKBaHCKD1fOSt85lkbCDZv61W/8JNC4LMXBx0a/nU1SHKMu7SQwtNCvgKYThl6Me4HwtVnx+xavlany5xkdox5C9ETclTOaE59A==";
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -672,6 +689,7 @@ public final class SignSpoof {
                 fakes.put(DHSS_PKG, new Signature(Base64.decode(DHSS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ZZBX2_PKG, new Signature(Base64.decode(ZZBX2_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YNTT_PKG, new Signature(Base64.decode(YNTT_CERT_B64, Base64.DEFAULT)));
+                fakes.put(ES2_PKG, new Signature(Base64.decode(ES2_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

@@ -1,0 +1,511 @@
+
+────────────────────────────────────────────
+[2026-09-15 18:17:27] [偶像梦幻2] stage=device_ready 开始
+命令: bash 04_scripts/偶像梦幻2/device_ready_es2.sh
+目录: /Users/aliang/Documents/nixiang
+serial=f9a116a2
+model=OPD2515
+android=16
+abi=arm64-v8a
+package=com.happyelements.es2
+package_path=/data/app/~~DcsVt_n6z3cTi7Ng2M6jqw==/com.happyelements.es2-6WFCMzO2R36InKttdbeumA==/base.apk
+root=uid=0(root) gid=0(root) groups=0(root) context=u:r:ksu:s0
+state_file=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/.device_serial
+[2026-09-15 18:17:27] [偶像梦幻2] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:17:33] [偶像梦幻2] stage=pull_official 开始
+命令: bash 04_scripts/偶像梦幻2/fetch_installed_es2.sh
+目录: /Users/aliang/Documents/nixiang
+==> 只读提取 /data/app/~~DcsVt_n6z3cTi7Ng2M6jqw==/com.happyelements.es2-6WFCMzO2R36InKttdbeumA==/base.apk
+/data/app/~~DcsVt_n6z3cTi7Ng2M6jqw==/com.happyelements.es2-6WFCMzO2R36InKttdbeumA==/base.apk: 1 file pulled, 0 skipped. 34.5 MB/s (1066627477 bytes in 29.497s)
+package=com.happyelements.es2
+versionName=4.5.8861
+versionCode=108861
+installer=com.android.packageinstaller
+originating=com.taptap
+primaryCpuAbi=arm64-v8a
+serial=f9a116a2
+remote=/data/app/~~DcsVt_n6z3cTi7Ng2M6jqw==/com.happyelements.es2-6WFCMzO2R36InKttdbeumA==/base.apk
+output=/Users/aliang/Documents/nixiang/02_apks/偶像梦幻2/偶像梦幻2_4.5.8861_official_from_device.apk
+size=1066627477
+sha256=42d5fe5f9c128975ea82a9cbf3dd0f5f8b252d2dbd84101a9fba092f9320220c
+md5=10c2b8993828ba5cd19ca6cceec8dd06
+meta=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/official_apk.json
+[2026-09-15 18:18:18] [偶像梦幻2] stage=pull_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:18:30] [偶像梦幻2] stage=check_official 开始
+命令: bash 04_scripts/偶像梦幻2/check_es2_apk.sh
+目录: /Users/aliang/Documents/nixiang
+package=com.happyelements.es2
+versionName=4.5.8861
+versionCode=108861
+cert_md5=7874d14df2f7114c9b016f71572b0cb2
+cert_unchanged_vs_4.4.8684=false
+libil2cpp_md5=5c36c861e261aeb473351dedd61f3de5
+libil2cpp_size=279732824
+global_metadata_md5=1a0b9692f18721180d8137ebc4083ac0
+global_metadata_size=46408524
+dex_count=2
+dex_list=classes.dex,classes2.dex
+arm64_so_count=23
+resources_arsc_compression=                            none (stored)
+summary=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/official_check.json
+[2026-09-15 18:18:38] [偶像梦幻2] stage=check_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:18:52] [偶像梦幻2] stage=dump_static 开始
+命令: bash 04_scripts/偶像梦幻2/dump_es2_static.sh
+目录: /Users/aliang/Documents/nixiang
+错误: libil2cpp.so 未提取
+[2026-09-15 18:18:52] [偶像梦幻2] stage=dump_static 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:19:46] [偶像梦幻2] stage=check_official 开始
+命令: bash 04_scripts/偶像梦幻2/check_es2_apk.sh
+目录: /Users/aliang/Documents/nixiang
+错误: 无法读取设备签名 token
+[2026-09-15 18:19:52] [偶像梦幻2] stage=check_official 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:20:41] [偶像梦幻2] stage=check_official 开始
+命令: bash 04_scripts/偶像梦幻2/check_es2_apk.sh
+目录: /Users/aliang/Documents/nixiang
+[2026-09-15 18:20:47] [偶像梦幻2] stage=check_official 命令失败 rc=141
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:21:04] [偶像梦幻2] stage=check_official 开始
+命令: bash 04_scripts/偶像梦幻2/check_es2_apk.sh
+目录: /Users/aliang/Documents/nixiang
+[2026-09-15 18:21:10] [偶像梦幻2] stage=check_official 命令失败 rc=141
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:21:27] [偶像梦幻2] stage=check_official 开始
+命令: bash 04_scripts/偶像梦幻2/check_es2_apk.sh
+目录: /Users/aliang/Documents/nixiang
+package=com.happyelements.es2
+versionName=4.5.8861
+versionCode=108861
+cert_md5=7874d14df2f7114c9b016f71572b0cb2
+device_signature_token=16a924db
+history_signature_token=16a924db
+signature_token_matches_history=true
+libil2cpp_md5=5c36c861e261aeb473351dedd61f3de5
+libil2cpp_size=279732824
+global_metadata_md5=1a0b9692f18721180d8137ebc4083ac0
+global_metadata_size=46408524
+dex_count=2
+dex_list=classes.dex,classes2.dex
+arm64_so_count=23
+resources_arsc_compression=                            none (stored)
+summary=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/official_check.json
+[2026-09-15 18:21:35] [偶像梦幻2] stage=check_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:21:35] [偶像梦幻2] stage=dump_static 开始
+命令: bash 04_scripts/偶像梦幻2/dump_es2_static.sh
+目录: /Users/aliang/Documents/nixiang
+static_dir=/Users/aliang/Documents/nixiang/06_dumped/偶像梦幻2/official_4.5.8861/static
+libil2cpp=279732824 bytes
+metadata=46408524 bytes
+summary=/Users/aliang/Documents/nixiang/06_dumped/偶像梦幻2/official_4.5.8861/static/dump_inputs.json
+[2026-09-15 18:21:38] [偶像梦幻2] stage=dump_static 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:25:30] [偶像梦幻2] stage=relocate_version 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-15 18:25:30] [偶像梦幻2] stage=relocate_version 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:25:31] [偶像梦幻2] stage=impl_mod 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-15 18:25:31] [偶像梦幻2] stage=impl_mod 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:25:38] [偶像梦幻2] stage=build_so 开始
+命令: bash 04_scripts/偶像梦幻2/es2_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Es2Mod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Il2CppApi.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so
+[build_so] md5=b8a13063764f906a025646b81aa3c9fd
+[build_so] sha256=56fbed668c115a6eb162d822d858936da41b85281b726ff997a8823519095bd8
+[build_so] size=156768
+[build_so] jniLibs=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so
+[2026-09-15 18:25:41] [偶像梦幻2] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:27:45] [偶像梦幻2] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_es2_4.5.8861.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ES2
+[check] Android_es2.mk target=es2 oxmhj2 (Unity IL2CPP probe)
+[check] disk avail=59G ok
+[1/7] use build_so output -> jniLibs
+  so -> jniLibs ok ([Es2] verified)
+[2/7] gradle assembleRelease (starry 小模板)
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:stripReleaseDebugSymbols
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/es2_surgical.jBCW3o/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/es2_surgical.jBCW3o/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/es2_surgical.jBCW3o/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 13s
+50 actionable tasks: 50 executed
+[3/7] apktool d starry → com/starry smali → classes3.dex（官方 2 dex 不碰；ART 连续规则追加 classes3）
+  StarryApp .super + invoke-super → HeSDKApplication
+-rw-r--r--@ 1 aliang  wheel  411052 Sep 15 18:28 /tmp/es2_surgical.jBCW3o/classes3.dex
+[3b/7] collect lib + certs from starry decode
+[4/7] binary AndroidManifest（application 挂 StarryApp + FGS/SAW 权限 + MenuService）
+  mini apk（剔除 assets/lib/dex/META-INF）→ apktool 往返
+  mini apk: 642 entries
+  manifest: application HeSDKApplication → StarryApp (.super 补丁保留链路)
+  manifest: + SYSTEM_ALERT_WINDOW/FOREGROUND_SERVICE/SPECIAL_USE
+  manifest: MenuService added
+  cached → /Users/aliang/Documents/nixiang/07_patched/偶像梦幻2/surgical_4.5.8861/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  33440 Sep 15 18:28 /tmp/es2_surgical.jBCW3o/AndroidManifest.xml
+[5/7] zip surgical merge（流式；官方 2 dex/arsc/libil2cpp/libunity/libxlua 字节级保留；星光注入 classes3.dex）
+  normalized: zip64 extras stripped/vneed fixed=0
+  sha256 ok: classes.dex
+  sha256 ok: classes2.dex
+  sha256 ok: resources.arsc
+  sha256 ok: lib/arm64-v8a/libil2cpp.so
+  sha256 ok: lib/arm64-v8a/libunity.so
+  sha256 ok: lib/arm64-v8a/libxlua.so
+  merged ok; official entries=4782; classes3.dex=411052B; +3 extras
+  全量 CRC/size/ctype 一致; name-bytes & utf8-flag 全量一致（mismatch=0）
+[6/7] finalize unsigned APK -> /Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk
+  size : 1.0G
+  sha256: 9640671e0a744c415b490570fb791e7761c7ae850d9f439350310bfd50712bc7
+  md5  : 333d5197ce166fa0d61a2e5dfbdf4d00
+DONE: /Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk
+[2026-09-15 18:29:01] [偶像梦幻2] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:29:20] [偶像梦幻2] stage=sign 开始
+命令: bash 04_scripts/偶像梦幻2/sign_es2.sh
+目录: /Users/aliang/Documents/nixiang
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk
+[sign] size=1067279737
+[sign] md5=adabcb4a449005f4b4f85d0f2b1198d5
+[sign] sha256=d91662339cae631dd4b8860c98324fdf8f7d3a7135d8ae4c2ecea09a40379a85
+[sign] so_md5=b8a13063764f906a025646b81aa3c9fd
+[2026-09-15 18:30:00] [偶像梦幻2] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:31:52] [偶像梦幻2] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_es2_4.5.8861.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ES2
+[check] Android_es2.mk target=es2 oxmhj2 (Unity IL2CPP probe)
+[check] disk avail=57G ok
+[1/7] use build_so output -> jniLibs
+  so -> jniLibs ok ([Es2] verified)
+[2/7] gradle assembleRelease (starry 小模板)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/es2_surgical.K8g9rL/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/es2_surgical.K8g9rL/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/es2_surgical.K8g9rL/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+50 actionable tasks: 50 executed
+[3/7] apktool d starry → com/starry smali → classes3.dex（官方 2 dex 不碰；ART 连续规则追加 classes3）
+  StarryApp .super + invoke-super → HeSDKApplication
+-rw-r--r--@ 1 aliang  wheel  412384 Sep 15 18:32 /tmp/es2_surgical.K8g9rL/classes3.dex
+[3b/7] collect lib + certs from starry decode
+[4/7] binary AndroidManifest（application 挂 StarryApp + FGS/SAW 权限 + MenuService）
+  using cached /Users/aliang/Documents/nixiang/07_patched/偶像梦幻2/surgical_4.5.8861/AndroidManifest.xml
+-rw-r--r--@ 1 aliang  wheel  33440 Sep 15 18:32 /tmp/es2_surgical.K8g9rL/AndroidManifest.xml
+[5/7] zip surgical merge（流式；官方 2 dex/arsc/libil2cpp/libunity/libxlua 字节级保留；星光注入 classes3.dex）
+  normalized: zip64 extras stripped/vneed fixed=0
+  sha256 ok: classes.dex
+  sha256 ok: classes2.dex
+  sha256 ok: resources.arsc
+  sha256 ok: lib/arm64-v8a/libil2cpp.so
+  sha256 ok: lib/arm64-v8a/libunity.so
+  sha256 ok: lib/arm64-v8a/libxlua.so
+  merged ok; official entries=4782; classes3.dex=412384B; +3 extras
+  全量 CRC/size/ctype 一致; name-bytes & utf8-flag 全量一致（mismatch=0）
+[6/7] finalize unsigned APK -> /Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk
+  size : 1.0G
+  sha256: 98fce4f4b73ee94a5fb854698b84db465fcb14960b55f0d4807c6476aa96bec4
+  md5  : 1fa54fbbd85255ee83583f40bf665e7e
+DONE: /Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk
+[2026-09-15 18:32:53] [偶像梦幻2] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 18:33:10] [偶像梦幻2] stage=sign 开始
+命令: bash 04_scripts/偶像梦幻2/sign_es2.sh
+目录: /Users/aliang/Documents/nixiang
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk
+[sign] size=1067279737
+[sign] md5=29598948a08e234b83cca24a4a7fbd1c
+[sign] sha256=e335103cc9294c317657fcaef4c8cdcc8f41ad148785954b559ceca91c11e5b9
+[sign] so_md5=b8a13063764f906a025646b81aa3c9fd
+[2026-09-15 18:33:48] [偶像梦幻2] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 19:47:17] [偶像梦幻2] stage=install 开始
+命令: bash 04_scripts/偶像梦幻2/install_es2.sh
+目录: /Users/aliang/Documents/nixiang
+/Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 31.1 MB/s (1067279737 bytes in 32.752s)
+Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: Existing package com.happyelements.es2 signatures do not match newer version; ignoring!]
+[install] 官方签名与星光签名不兼容；按用户明确授权卸载官方包并安装。
+[install] 警告：该操作会删除官方包应用数据，不执行清数据命令。
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (29598948a08e234b83cca24a4a7fbd1c) ✓
+[install] done: com.happyelements.es2
+[2026-09-15 19:48:35] [偶像梦幻2] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:04:46] [偶像梦幻2] stage=cleanup 开始
+命令: bash 04_scripts/偶像梦幻2/cleanup_es2.sh
+目录: /Users/aliang/Documents/nixiang
+04_scripts/偶像梦幻2/cleanup_es2.sh: line 75: DEVICE_TMP_BEFORE[@]: unbound variable
+[2026-09-15 20:04:55] [偶像梦幻2] stage=cleanup 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:05:40] [偶像梦幻2] stage=cleanup 开始
+命令: bash 04_scripts/偶像梦幻2/cleanup_es2.sh
+目录: /Users/aliang/Documents/nixiang
+[cleanup] final_md5=29598948a08e234b83cca24a4a7fbd1c
+[cleanup] official_md5=10c2b8993828ba5cd19ca6cceec8dd06
+[cleanup] estimated_freed_bytes=0
+[cleanup] device_base_md5=29598948a08e234b83cca24a4a7fbd1c
+[cleanup] summary=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/cleanup_summary.json
+[2026-09-15 20:06:01] [偶像梦幻2] stage=cleanup 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:06:19] [偶像梦幻2] stage=archive 开始
+命令: bash 04_scripts/偶像梦幻2/archive_es2.sh
+目录: /Users/aliang/Documents/nixiang
+ERROR: missing landing document
+[2026-09-15 20:06:24] [偶像梦幻2] stage=archive 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:06:57] [偶像梦幻2] stage=archive 开始
+命令: bash 04_scripts/偶像梦幻2/archive_es2.sh
+目录: /Users/aliang/Documents/nixiang
+[archive] final_md5=29598948a08e234b83cca24a4a7fbd1c
+[archive] summary=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/archive_summary.json
+[archive] git_scope=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/archive_git_scope.txt
+[2026-09-15 20:07:14] [偶像梦幻2] stage=archive 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:07:41] [偶像梦幻2] stage=post_cleanup 开始
+命令: bash 04_scripts/偶像梦幻2/post_cleanup_es2.sh
+目录: /Users/aliang/Documents/nixiang
+[post-cleanup] estimated_freed_bytes=372637696
+[post-cleanup] summary=/Users/aliang/Documents/nixiang/04_scripts/偶像梦幻2/post_cleanup_summary.json
+[2026-09-15 20:07:58] [偶像梦幻2] stage=post_cleanup 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:08:33] [偶像梦幻2] stage=relocate_version 开始
+命令: true
+目录: /Users/aliang/Documents/nixiang
+[2026-09-15 20:08:43] [偶像梦幻2] stage=relocate_version 完成（校验通过）
+────────────────────────────────────────────

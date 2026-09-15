@@ -1,6 +1,6 @@
 # ============================================================
 # ES2（偶像梦幻祭2）私有构建脚本 — 与公共 Android.mk（其他会话可能切到别的游戏）隔离
-# 用法：surgical_es2_4.4.8684.sh 已指向本文件；勿把公共 Android.mk 的激活段抢占
+# 用法：surgical_es2_4.5.8861.sh 已指向本文件；勿把公共 Android.mk 的激活段抢占
 # ============================================================
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
@@ -22,7 +22,7 @@ LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
 LOCAL_LDLIBS    := -llog -landroid
 LOCAL_ARM_MODE  := arm
-# 偶像梦幻祭2 4.4.8684 — Es2Mod（探测 v1.1：dlopen 符号修复 + il2cpp 全量枚举 dump）
+# 偶像梦幻祭2 4.5.8861 — Es2Mod（自动跳舞三个判定 getter，2026-09-15 重定位）
 LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ES2
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1

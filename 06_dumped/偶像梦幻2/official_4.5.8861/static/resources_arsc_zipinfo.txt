@@ -1,0 +1,45 @@
+Archive:  /Users/aliang/Documents/nixiang/02_apks/偶像梦幻2/偶像梦幻2_4.5.8861_official_from_device.apk
+There is no zipfile comment.
+
+End-of-central-directory record:
+-------------------------------
+
+  Zip archive file size:                1066627477 (000000003F937195h)
+  Actual end-cent-dir record offset:    1066627455 (000000003F93717Fh)
+  Expected end-cent-dir record offset:  1066627455 (000000003F93717Fh)
+  (based on the length of the central directory and its expected offset)
+
+  This zipfile constitutes the sole disk of a single-part archive; its
+  central directory contains 4821 entries.
+  The central directory is 532863 (000000000008217Fh) bytes long,
+  and its (expected) offset in bytes from the beginning of the zipfile
+  is 1066094592 (000000003F8B5000h).
+
+
+Central directory entry #727:
+---------------------------
+
+  resources.arsc
+
+  offset of local header from start of archive:   164960025
+                                                  (0000000009D51719h) bytes
+  file system or operating system of origin:      MS-DOS, OS/2 or NT FAT
+  version of encoding software:                   0.0
+  minimum file system compatibility required:     MS-DOS, OS/2 or NT FAT
+  minimum software version required to extract:   0.0
+  compression method:                             none (stored)
+  file security status:                           not encrypted
+  extended local header:                          no
+  file last modified on (DOS date/time):          1981 Jan 1 01:01:02
+  32-bit CRC value (hex):                         21160afd
+  compressed size:                                476112 bytes
+  uncompressed size:                              476112 bytes
+  length of filename:                             14 characters
+  length of extra field:                          0 bytes
+  length of file comment:                         0 characters
+  disk number on which file begins:               disk 1
+  apparent file type:                             binary
+  non-MSDOS external file attributes:             000000 hex
+  MS-DOS file attributes (00 hex):                none
+
+  There is no file comment.

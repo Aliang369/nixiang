@@ -1,0 +1,22 @@
+{
+  "game": "偶像梦幻2",
+  "version": "4.5.8861",
+  "status": "cleanup_done",
+  "final_apk": "/Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk",
+  "final_apk_md5": "29598948a08e234b83cca24a4a7fbd1c",
+  "official_apk": "/Users/aliang/Documents/nixiang/02_apks/偶像梦幻2/偶像梦幻2_4.5.8861_official_from_device.apk",
+  "official_apk_md5": "10c2b8993828ba5cd19ca6cceec8dd06",
+  "estimated_freed_bytes": 0,
+  "removed_device_tmp": [],
+  "serial": "f9a116a2",
+  "device_base_apk": "/data/app/~~BYXM6qx-BlOniGKD28xDqQ==/com.happyelements.es2-acGons-mQtDsRGZIR8__4A==/base.apk",
+  "device_base_apk_md5": "29598948a08e234b83cca24a4a7fbd1c",
+  "preserved": [
+    "02_apks/偶像梦幻2 official APK",
+    "06_dumped/偶像梦幻2 large static inputs until post-archive cleanup",
+    "08_output/偶像梦幻2 untouched (user-managed output directory)",
+    "mod菜单/starry-mod-menu/libs_es2 build artifact",
+    "10_docs/偶像梦幻2 analysis and landing documents",
+    "04_scripts/偶像梦幻2 pipeline"
+  ]
+}

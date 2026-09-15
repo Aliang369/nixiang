@@ -1,12 +1,14 @@
 /* ================================================================
- *  偶像梦幻祭2 (es2) 4.4.8684 — 「自动跳舞」正式版
+ *  偶像梦幻祭2 (es2) — 「自动跳舞」
+ *  版本：4.5.8861（2026-09-15 重定位）
  *
  *  复刻斌哥 AllAmazing/AllPerfect（用户体感等效）：hook 3 个判定字段
  *  getter（RVA 实锤见 10_docs/偶像梦幻2/分析_斌哥包抓点_20260908.md §3.5），
  *  开关 ON 时返回最高判定枚举值 6（20260909 真机打歌实锤：全最高评分）。
  *
  *  RVA→file = RVA-0x4000（LOAD2）；FileOffToVa 按 maps RX 段匹配。
- *  序言校验防漂移：版本更新需重做 memdiff。
+ *  4.5.8861 锚点：0x734A9EC/0x734A9FC/0x734AA1C（静态重定位文档 20260915）。
+ *  序言校验防漂移：三处任一不匹配则拒绝安装 hook 并持续重试。
  * ================================================================ */
 
 #include "Es2Mod.h"
@@ -90,11 +92,11 @@ struct GetterSlot {
     void**      origPtr;
 };
 
-// 序言 = 20260909 memdiff 实锤（0x70FB578/588/5A8）
+// 序言沿用 20260909 memdiff 实锤；file offset 已按 4.5.8861 重定位。
 static const GetterSlot kSlots[] = {
-    {"get+0x24",  0x70FB578, 0xB9402400u, 0xD65F03C0u, (void*)Hooked_Get0, (void**)&g_origGet0},
-    {"get+0x28",  0x70FB588, 0xB9402800u, 0xD65F03C0u, (void*)Hooked_Get1, (void**)&g_origGet1},
-    {"get2+0x28", 0x70FB5A8, 0xAA0003E8u, 0xB9402800u, (void*)Hooked_Get2, (void**)&g_origGet2},
+    {"get+0x24",  0x734A9EC, 0xB9402400u, 0xD65F03C0u, (void*)Hooked_Get0, (void**)&g_origGet0},
+    {"get+0x28",  0x734A9FC, 0xB9402800u, 0xD65F03C0u, (void*)Hooked_Get1, (void**)&g_origGet1},
+    {"get2+0x28", 0x734AA1C, 0xAA0003E8u, 0xB9402800u, (void*)Hooked_Get2, (void**)&g_origGet2},
 };
 
 // 幂等 + 序言校验：漂移拒绝挂（防挂错地址闪退），下轮 Tick 重试
@@ -109,7 +111,7 @@ static void EnsureHooks() {
         memcpy(&lo, va, 4);
         memcpy(&hi, (char*)va + 4, 4);
         if (lo != s.expectLo || hi != s.expectHi) {
-            LOGW("%s 序言漂移 got=%08X_%08X want=%08X_%08X（版本更新需重做 memdiff）",
+            LOGW("%s 序言漂移 got=%08X_%08X want=%08X_%08X（拒绝错挂，需重新重定位）",
                  s.tag, hi, lo, s.expectHi, s.expectLo);
             continue;
         }
