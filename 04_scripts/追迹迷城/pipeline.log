@@ -492,3 +492,52 @@ To https://github.com/Aliang369/nixiang.git
 ?? 06_dumped/无悔华夏4399/
 [2026-09-14 19:42:22] [追迹迷城] stage=archive 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:17:22] [追迹迷城] stage=build_so 开始
+命令: bash 04_scripts/追迹迷城/zjmc_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile++      : starry_magic <= ZjmcMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so
+so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so
+md5=a4d18d81d3230e0758304326eea457c5
+sha256=73fe25d138859dc52d60dceccd9a09aa48e8acd5db2dce54d966c52c6878d7b9
+size=166640
+jniLibs=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so
+[2026-09-15 20:17:24] [追迹迷城] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 20:18:37] [追迹迷城] stage=hotfix_no_ad 开始
+命令: STARRY_INSTALL=1 bash 04_scripts/追迹迷城/zjmc_so_only_no_ad_fix.sh
+目录: /Users/aliang/Documents/nixiang
+==> 回拉设备当前星空底包
+/data/app/~~29jaekkmZnvPfAp-g8wyQw==/com.TeaMelo.DungeonChasers-oe8nw8pWCp8uURwi9BZHLA==/base.apk: 1 file pulled, 0 skipped. 34.0 MB/s (926038183 bytes in 25.939s)
+==> 替换 so 并重签
+apk validation ok; only so changed
+==> 签名复核
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+==> 覆盖安装
+/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk: 1 file pushed, 0 skipped. 38.0 MB/s (926038183 bytes in 23.235s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (e2263456f4c39e1d97303cfc7b5ed6f7) ✓
+output=/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk
+output_md5=e2263456f4c39e1d97303cfc7b5ed6f7
+output_sha256=21f4736ef208fdf9e6617bcf1c19770f64743a1fb3c4865cecc4990ca436406c
+so_md5=a4d18d81d3230e0758304326eea457c5
+installed=1
+[2026-09-15 20:20:16] [追迹迷城] stage=hotfix_no_ad 完成（校验通过）
+────────────────────────────────────────────

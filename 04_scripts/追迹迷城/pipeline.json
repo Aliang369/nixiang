@@ -1,7 +1,7 @@
 {
   "game": "追迹迷城",
   "version": "1.0.20260912",
-  "notes": "1.0.20260912 星空包已构建、装机并由用户完成五项功能真机验收；03/06 大件/07 已按收官清理，保留文本锚点、正式包和可重跑管线。",
+  "notes": "1.0.20260912 星空包已构建、装机并通过五项功能验收；2026-09-15 免广告内联根因修复后已 so-only 覆盖安装，日志与奖励链验证通过。",
   "params": {
     "game_id": "zjmc",
     "package": "com.TeaMelo.DungeonChasers"
@@ -191,7 +191,13 @@
         }
       ],
       "status": "done",
-      "cleanup_note": "本阶段完成于 2026-09-14；构建中间产物已按收官清理，jniLibs 与正式包保留可复现入口。"
+      "cleanup_note": "本阶段完成于 2026-09-14；构建中间产物已按收官清理，jniLibs 与正式包保留可复现入口。",
+      "done_at": "2026-09-15 20:17:24",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": {
+          "md5": "a4d18d81d3230e0758304326eea457c5"
+        }
+      }
     },
     {
       "id": "surgical",
@@ -211,15 +217,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 19:15:37",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": {
-          "md5": "f50a6f15cd438745bdea3714884c7bf1"
-        }
-      },
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": "08a6729c0f18e8beb3da8fe777b9e1ac"
-      }
+      "cleanup_note": "2026-09-14 首次外科包完成；2026-09-15 免广告修复改走 hotfix_no_ad 的 so-only 路径。"
     },
     {
       "id": "sign",
@@ -235,15 +233,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 19:16:53",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": {
-          "md5": "f50a6f15cd438745bdea3714884c7bf1"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": "f50a6f15cd438745bdea3714884c7bf1"
-      }
+      "cleanup_note": "2026-09-14 首次签名完成；修复包签名记录见 hotfix_no_ad。"
     },
     {
       "id": "uninstall_official",
@@ -263,16 +253,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 19:22:09",
-      "artifacts": {
-        "04_scripts/追迹迷城/uninstall_done.json": {
-          "md5": "8519545791febd4018487c96ee789c03"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": "f50a6f15cd438745bdea3714884c7bf1",
-        "04_scripts/追迹迷城/.device_serial": "0bc47570b06495af1a544933783b7037"
-      }
+      "cleanup_note": "2026-09-14 用户授权卸载官方包且不保留数据，已完成；修复包为同签名覆盖安装，无需再次卸载。"
     },
     {
       "id": "install",
@@ -292,16 +273,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 19:25:05",
-      "artifacts": {
-        "04_scripts/追迹迷城/uninstall_done.json": {
-          "md5": "8519545791febd4018487c96ee789c03"
-        }
-      },
-      "inputs": {
-        "04_scripts/追迹迷城/uninstall_done.json": "8519545791febd4018487c96ee789c03",
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk": "f50a6f15cd438745bdea3714884c7bf1"
-      }
+      "cleanup_note": "2026-09-14 首次安装完成；2026-09-15 修复包覆盖安装记录见 hotfix_no_ad。"
     },
     {
       "id": "cleanup",
@@ -366,6 +338,35 @@
       "inputs": {
         "04_scripts/追迹迷城/cleanup_summary.json": "38e8fb5d7c604030c2e612164169ff8b",
         "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs": "82fed0909dd53e697832cad27c68b134"
+      }
+    },
+    {
+      "id": "hotfix_no_ad",
+      "name": "免广告修复（UsedCount/UseFreeSkipAds/RemainingCount 三钩 + 同签名 so-only 覆盖安装）",
+      "requires": [
+        "build_so",
+        "device_ready"
+      ],
+      "command": "STARRY_INSTALL=1 bash 04_scripts/追迹迷城/zjmc_so_only_no_ad_fix.sh",
+      "preflight": [
+        "04_scripts/追迹迷城/zjmc_so_only_no_ad_fix.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 20:20:13",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk": {
+          "md5": "e2263456f4c39e1d97303cfc7b5ed6f7"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": "a4d18d81d3230e0758304326eea457c5",
+        "04_scripts/追迹迷城/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     }
   ]

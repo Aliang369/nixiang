@@ -3,8 +3,8 @@
  *  RVA 来自官方包 Il2CppDumper script.json（2026-09-14 静态重定位）。
  *  原四功能 13 个 HookOne 语义/签名不变：BattleManager +0x11520、
  *  Attack/Partner +0x11564、LocalPlayer +0x10EB8、Monster +0x110DC。
- *  新增免广告：ATGameManager.GetFreeSkipAdsRemainingCount 开启时恒返回 3，
- *  复用官方免费跳过广告分支，不伪造广告 SDK 回调。
+ *  免广告：ShowRewardADS 会内联计算 3 - GetFreeSkipAdsUsedCount()，因此同时 hook
+ *  UsedCount / UseFreeSkipAds / RemainingCount 三个底层入口，持续复用官方免费跳过分发。
  *  ELF bias +0x4000（RX LOAD vaddr-file = 0x4000，新版实测不变），运行时用 maps file_off。
  * ================================================================ */
 
@@ -37,6 +37,8 @@ enum : uintptr_t {
     RVA_MONSTER_PROCESS_DMG  = 0x311B360,  // Monster$$ProcessDamageOrHeal
     RVA_MONSTER_CHANGE_HP    = 0x311BE7C,
     RVA_GET_FREE_SKIP_ADS    = 0x2DCFD24,  // ATGameManager$$GetFreeSkipAdsRemainingCount
+    RVA_GET_FREE_SKIP_ADS_USED = 0x2DCFEA0,  // ATGameManager$$GetFreeSkipAdsUsedCount
+    RVA_USE_FREE_SKIP_ADS    = 0x2DCFEC4,  // ATGameManager$$UseFreeSkipAds
 };
 
 static std::atomic<bool> g_ready{false};
@@ -46,6 +48,7 @@ static std::atomic<bool> g_aoe{false};
 static std::atomic<bool> g_nocd{false};
 static std::atomic<bool> g_noad{false};
 static std::atomic<bool> g_aoeReenter{false};
+static std::atomic<bool> g_noAdHitLogged{false};
 
 typedef float (*ChangeHP_t)(void* thiz, float hp, bool showText, void* method);
 typedef bool (*BoolFn_t)(void* thiz, void* method);
@@ -53,6 +56,7 @@ typedef void (*Update_t)(void* thiz, void* method);
 typedef void* (*GetList_t)(void* thiz, void* method);
 typedef bool (*ProcessDmg_t)(void* thiz, void* attacker, void* resultData, void* method);
 typedef int (*IntReturnFn_t)(void* thiz, void* method);
+typedef void (*VoidFn_t)(void* thiz, void* method);
 
 static ChangeHP_t g_origMonsterHp = nullptr;
 static ChangeHP_t g_origPlayerHp = nullptr;
@@ -71,6 +75,8 @@ static BoolFn_t g_origLp2 = nullptr;
 static BoolFn_t g_origLpDodge = nullptr;
 static BoolFn_t g_origLpAction = nullptr;
 static IntReturnFn_t g_origFreeSkipAds = nullptr;
+static IntReturnFn_t g_origFreeSkipAdsUsed = nullptr;
+static VoidFn_t g_origUseFreeSkipAds = nullptr;
 
 /** maps：file_off → VA。libil2cpp RX 可能分段，禁止 ELF base+RVA。 */
 static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
@@ -163,7 +169,22 @@ static bool Hooked_Lp2(void* thiz, void* method) { return PassTrue(g_origLp2, th
 static bool Hooked_LpDodge(void* thiz, void* method) { return PassTrue(g_origLpDodge, thiz, method); }
 static bool Hooked_LpAction(void* thiz, void* method) { return PassTrue(g_origLpAction, thiz, method); }
 
-/** 免广告：走游戏官方 FREE_SKIP_ADS_DAILY_MAX=3 分支，开关开启时不消耗实际额度。 */
+/** ShowRewardADS 内联调用 UsedCount，拦截它才能让免费跳过额度持续为 3。 */
+static int Hooked_FreeSkipAdsUsed(void* thiz, void* method) {
+    if (g_noad.load()) {
+        if (!g_noAdHitLogged.exchange(true)) LOGI("[Zjmc] no-ad bypass active");
+        return 0;
+    }
+    return g_origFreeSkipAdsUsed ? g_origFreeSkipAdsUsed(thiz, method) : 0;
+}
+
+/** 开启免广告时不再递增已用次数；关闭后完整恢复原逻辑。 */
+static void Hooked_UseFreeSkipAds(void* thiz, void* method) {
+    if (g_noad.load()) return;
+    if (g_origUseFreeSkipAds) g_origUseFreeSkipAds(thiz, method);
+}
+
+/** 兼容未内联的 RemainingCount 调用点。 */
 static int Hooked_FreeSkipAds(void* thiz, void* method) {
     if (g_noad.load()) return 3;
     return g_origFreeSkipAds ? g_origFreeSkipAds(thiz, method) : 0;
@@ -224,6 +245,10 @@ bool Zjmc_TryInit() {
     HookOne("LP.Dodge", RVA_LP_CHECK_DODGE, (void*)Hooked_LpDodge, (void**)&g_origLpDodge, false);
     ok &= HookOne("LP.Action", RVA_LP_CHECK_ACTION, (void*)Hooked_LpAction, (void**)&g_origLpAction,
                   true);
+    HookOne("AT.GetFreeSkipAdsUsed", RVA_GET_FREE_SKIP_ADS_USED, (void*)Hooked_FreeSkipAdsUsed,
+            (void**)&g_origFreeSkipAdsUsed, false);
+    HookOne("AT.UseFreeSkipAds", RVA_USE_FREE_SKIP_ADS, (void*)Hooked_UseFreeSkipAds,
+            (void**)&g_origUseFreeSkipAds, false);
     HookOne("AT.GetFreeSkipAds", RVA_GET_FREE_SKIP_ADS, (void*)Hooked_FreeSkipAds,
             (void**)&g_origFreeSkipAds, false);
  
