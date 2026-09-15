@@ -1,0 +1,14 @@
+{
+  "serial": "f9a116a2",
+  "package": "com.haly.tap",
+  "version_name": "1.0",
+  "version_code": 1,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "device_model": "OPD2515",
+  "android_version": "16",
+  "root": true,
+  "package_path": [
+    "/data/app/~~c8ZiHu1ejCqpsOY4UVrNyQ==/com.haly.tap-hJFukI0uRYq_D6JaHWx29g==/base.apk"
+  ]
+}

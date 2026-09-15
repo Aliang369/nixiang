@@ -1,0 +1,472 @@
+{
+  "game": "黑暗领域",
+  "version": "1.0-fix3",
+  "notes": "2026-09-15：fix2 仅补旧 dex 的 JNI 声明，菜单图标仍为旧版；fix3 已从当前 Gradle/R8 源码重建完整 classes4.dex（新图标 Base64 指纹命中、JNI 19 项齐全）并与 v2 so 同签名覆盖安装，未卸载、未清数据。",
+  "installed_apk": "08_output/黑暗领域/黑暗领域_1.0_combo_fix3-releaseSigned.apk",
+  "params": {
+    "game_id": "haly",
+    "package": "com.haly.tap",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.haly.tap",
+    "GAME": "黑暗领域",
+    "SERIAL": "f9a116a2",
+    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
+    "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（唯一真机与 root 检查）",
+      "requires": [],
+      "command": "bash 04_scripts/黑暗领域/device_ready_haly.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/device_ready_haly.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/.device_serial"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/device_info.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:07:31",
+      "artifacts": {
+        "04_scripts/黑暗领域/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        },
+        "04_scripts/黑暗领域/device_info.json": {
+          "md5": "869038f78816e12948186cbd76b40c19"
+        }
+      }
+    },
+    {
+      "id": "pull_mod",
+      "name": "只读提取真机当前星光包",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/黑暗领域/fetch_mod_haly.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/fetch_mod_haly.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/installed_mod_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:07:43",
+      "artifacts": {
+        "04_scripts/黑暗领域/installed_mod_apk.json": {
+          "md5": "21f2c0e9746ab02d877ca1bafde0d9f8"
+        }
+      },
+      "inputs": {
+        "04_scripts/黑暗领域/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/黑暗领域/device_info.json": "869038f78816e12948186cbd76b40c19"
+      }
+    },
+    {
+      "id": "pull_hotupdate",
+      "name": "只读提取 gg-hot-update 当前脚本",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/黑暗领域/pull_hotupdate_haly.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/pull_hotupdate_haly.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/hotupdate_meta.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:07:50",
+      "artifacts": {
+        "04_scripts/黑暗领域/hotupdate_meta.json": {
+          "md5": "5e40b77b3da93e82bf85c73eec453e9e"
+        }
+      },
+      "inputs": {
+        "04_scripts/黑暗领域/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/黑暗领域/device_info.json": "869038f78816e12948186cbd76b40c19"
+      }
+    },
+    {
+      "id": "check_mod",
+      "name": "核对当前星光包身份、签名与 Haly so 标签",
+      "requires": [
+        "pull_mod"
+      ],
+      "command": "bash 04_scripts/黑暗领域/check_mod_haly.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/check_mod_haly.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/mod_check.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/mod_manifest.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/mod_signature.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/mod_entries.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:07:58",
+      "artifacts": {
+        "04_scripts/黑暗领域/mod_check.json": {
+          "md5": "ed49526c36dc2d7ab92c8d4efd40e2dc"
+        },
+        "04_scripts/黑暗领域/mod_manifest.txt": {
+          "md5": "ba4aef3b65d99610085acec3d274c759"
+        },
+        "04_scripts/黑暗领域/mod_signature.txt": {
+          "md5": "244d562df1f3a4425eecda9314444016"
+        },
+        "04_scripts/黑暗领域/mod_entries.txt": {
+          "md5": "70bf4f06da2910f2fbd0dce10d965b08"
+        }
+      },
+      "inputs": {
+        "04_scripts/黑暗领域/installed_mod_apk.json": "21f2c0e9746ab02d877ca1bafde0d9f8"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建四项重写 v2 so（私有 mk / 独立 obj）",
+      "requires": [
+        "check_mod"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_build_so.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/gen_haly_patch_header.py",
+        "04_scripts/黑暗领域/haly_build_so.sh",
+        "04_scripts/黑暗领域/test_haly_patch.js",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/HalyPatch.js"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_haly/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:20:17",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_haly/arm64-v8a/libstarry_magic.so": {
+          "md5": "3851ad781942eec85e13016f609e4379"
+        }
+      },
+      "inputs": {
+        "04_scripts/黑暗领域/mod_check.json": "ed49526c36dc2d7ab92c8d4efd40e2dc",
+        "04_scripts/黑暗领域/mod_manifest.txt": "ba4aef3b65d99610085acec3d274c759",
+        "04_scripts/黑暗领域/mod_signature.txt": "244d562df1f3a4425eecda9314444016",
+        "04_scripts/黑暗领域/mod_entries.txt": "70bf4f06da2910f2fbd0dce10d965b08"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "以当前星光包为底替换 v2 so（外科 zip）",
+      "requires": [
+        "pull_mod",
+        "build_so"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_surgical_so.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_surgical_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/黑暗领域/黑暗领域_1.0_combo_fix-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:20:26",
+      "artifacts": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix-unsigned.apk": {
+          "md5": "f444fe078a51cf9a22c65f18ec417492"
+        }
+      },
+      "inputs": {
+        "04_scripts/黑暗领域/installed_mod_apk.json": "21f2c0e9746ab02d877ca1bafde0d9f8",
+        "mod菜单/starry-mod-menu/libs_haly/arm64-v8a/libstarry_magic.so": "3851ad781942eec85e13016f609e4379"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "对齐并使用星光证书签名",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_sign.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/黑暗领域/黑暗领域_1.0_combo_fix-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:20:43",
+      "artifacts": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix-releaseSigned.apk": {
+          "md5": "29516fd6f5c308c41fd93c7581198f9c"
+        }
+      },
+      "inputs": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix-unsigned.apk": "f444fe078a51cf9a22c65f18ec417492"
+      }
+    },
+    {
+      "id": "install",
+      "name": "同签名覆盖安装并核对设备包哈希",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_install.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_install.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/install_result.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:27:00",
+      "artifacts": {
+        "04_scripts/黑暗领域/install_result.json": {
+          "md5": "7ac308e29e0845f957b06855c24e5ca0"
+        }
+      },
+      "inputs": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix-releaseSigned.apk": "29516fd6f5c308c41fd93c7581198f9c",
+        "04_scripts/黑暗领域/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/黑暗领域/device_info.json": "869038f78816e12948186cbd76b40c19"
+      }
+    },
+    {
+      "id": "dex_fix2",
+      "name": "修补 classes4.dex 的 JNI 声明并与 v2 so 外科组装",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_patch_dex_fix2.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_patch_dex_fix2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/黑暗领域/黑暗领域_1.0_combo_fix2-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:38:19",
+      "artifacts": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix2-unsigned.apk": {
+          "md5": "1fbf08f2b4f11f852c7c55c3e7932d29"
+        }
+      },
+      "inputs": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix-releaseSigned.apk": "29516fd6f5c308c41fd93c7581198f9c"
+      }
+    },
+    {
+      "id": "sign_fix2",
+      "name": "对 JNI 配套修复包重新签名",
+      "requires": [
+        "dex_fix2"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_sign_fix2.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_sign_fix2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/黑暗领域/黑暗领域_1.0_combo_fix2-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:38:42",
+      "artifacts": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix2-releaseSigned.apk": {
+          "md5": "720e15590f6285a0175f24ad2a5f0220"
+        }
+      },
+      "inputs": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix2-unsigned.apk": "1fbf08f2b4f11f852c7c55c3e7932d29"
+      }
+    },
+    {
+      "id": "install_fix2",
+      "name": "覆盖安装 JNI 配套修复包并核对哈希",
+      "requires": [
+        "sign_fix2",
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_install_fix2.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_install_fix2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/install_result_fix2.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:39:03",
+      "artifacts": {
+        "04_scripts/黑暗领域/install_result_fix2.json": {
+          "md5": "df8bad16bec30df8d4ba6205f225c23f"
+        }
+      },
+      "inputs": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix2-releaseSigned.apk": "720e15590f6285a0175f24ad2a5f0220",
+        "04_scripts/黑暗领域/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/黑暗领域/device_info.json": "869038f78816e12948186cbd76b40c19"
+      }
+    },
+    {
+      "id": "build_latest_dex",
+      "name": "从当前 Gradle 源码重建完整 classes4.dex",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_build_latest_dex.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_build_latest_dex.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_haly/classes4.dex"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:47:32",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_haly/classes4.dex": {
+          "md5": "cd9d17a9e793d4c971e707781e755850"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_haly/arm64-v8a/libstarry_magic.so": "3851ad781942eec85e13016f609e4379"
+      }
+    },
+    {
+      "id": "pack_latest",
+      "name": "最新 dex 与 v2 so 外科组装",
+      "requires": [
+        "pull_mod",
+        "build_so",
+        "build_latest_dex"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_pack_latest_dex.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_pack_latest_dex.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/黑暗领域/黑暗领域_1.0_combo_fix3-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:48:49",
+      "artifacts": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix3-unsigned.apk": {
+          "md5": "610b6522ae18744893e8409dbea143fb"
+        }
+      },
+      "inputs": {
+        "04_scripts/黑暗领域/installed_mod_apk.json": "21f2c0e9746ab02d877ca1bafde0d9f8",
+        "mod菜单/starry-mod-menu/libs_haly/arm64-v8a/libstarry_magic.so": "3851ad781942eec85e13016f609e4379",
+        "mod菜单/starry-mod-menu/libs_haly/classes4.dex": "cd9d17a9e793d4c971e707781e755850"
+      }
+    },
+    {
+      "id": "sign_latest",
+      "name": "最新 dex 包签名",
+      "requires": [
+        "pack_latest"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_sign_latest.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_sign_latest.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/黑暗领域/黑暗领域_1.0_combo_fix3-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:49:34",
+      "artifacts": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix3-releaseSigned.apk": {
+          "md5": "a13c724224655fa99ca4c37cf5814927"
+        }
+      },
+      "inputs": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix3-unsigned.apk": "610b6522ae18744893e8409dbea143fb"
+      }
+    },
+    {
+      "id": "install_latest",
+      "name": "覆盖安装最新 dex 包并核对哈希",
+      "requires": [
+        "sign_latest",
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/黑暗领域/haly_install_latest.sh",
+      "preflight": [
+        "04_scripts/黑暗领域/haly_install_latest.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/黑暗领域/install_result_latest.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 21:50:06",
+      "artifacts": {
+        "04_scripts/黑暗领域/install_result_latest.json": {
+          "md5": "b5cfeb5562d988d224df6b824351bba6"
+        }
+      },
+      "inputs": {
+        "08_output/黑暗领域/黑暗领域_1.0_combo_fix3-releaseSigned.apk": "a13c724224655fa99ca4c37cf5814927",
+        "04_scripts/黑暗领域/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/黑暗领域/device_info.json": "869038f78816e12948186cbd76b40c19"
+      }
+    }
+  ]
+}

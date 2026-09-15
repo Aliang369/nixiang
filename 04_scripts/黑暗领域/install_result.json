@@ -1,0 +1,12 @@
+{
+  "game": "黑暗领域",
+  "serial": "f9a116a2",
+  "package": "com.haly.tap",
+  "apk_path": "/Users/aliang/Documents/nixiang/08_output/黑暗领域/黑暗领域_1.0_combo_fix-releaseSigned.apk",
+  "apk_md5": "29516fd6f5c308c41fd93c7581198f9c",
+  "apk_sha256": "af4b5b24124d57ee9431396cfdf4456582fec978c92c041fb542d44b0c55b815",
+  "device_md5": "29516fd6f5c308c41fd93c7581198f9c",
+  "version_name": "1.0",
+  "install_mode": "cover_install_same_signature",
+  "data_cleared": false
+}

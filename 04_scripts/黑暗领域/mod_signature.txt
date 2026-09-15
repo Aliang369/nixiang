@@ -1,0 +1,4 @@
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
