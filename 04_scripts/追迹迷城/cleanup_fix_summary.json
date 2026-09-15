@@ -1,0 +1,17 @@
+{
+  "game": "追迹迷城",
+  "version": "1.0.20260912",
+  "fix": "noAdFix",
+  "kept": [
+    "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk",
+    "/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so"
+  ],
+  "removed": [
+    "mod菜单/starry-mod-menu/obj_zjmc",
+    "mod菜单/starry-mod-menu/libs_zjmc",
+    "/tmp/zjmc_* temporary files",
+    "/data/local/tmp/zjmc_* temporary APKs"
+  ],
+  "apk_md5": "e2263456f4c39e1d97303cfc7b5ed6f7",
+  "ota_so_md5": "a4d18d81d3230e0758304326eea457c5"
+}
