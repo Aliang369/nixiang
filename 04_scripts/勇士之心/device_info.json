@@ -1,0 +1,11 @@
+{
+  "serial": "f9a116a2",
+  "package": "com.fightingstars.games.warrior",
+  "version_name": "999999",
+  "version_code": 999999,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "device_model": "OPD2515",
+  "android_version": "16",
+  "root": true
+}

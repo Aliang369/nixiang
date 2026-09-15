@@ -1,0 +1,2078 @@
+
+────────────────────────────────────────────
+[2026-09-15 12:24:21] [勇士之心] stage=device_ready 开始
+命令: bash 04_scripts/勇士之心/device_ready_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+* daemon not running; starting now at tcp:5037
+* daemon started successfully
+[2026-09-15 12:24:25] [勇士之心] stage=device_ready 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:24:55] [勇士之心] stage=device_ready 开始
+命令: bash 04_scripts/勇士之心/device_ready_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+错误: device_ready_ysxz.sh 第 38 行失败 rc=1
+[2026-09-15 12:24:56] [勇士之心] stage=device_ready 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:25:09] [勇士之心] stage=device_ready 开始
+命令: bash 04_scripts/勇士之心/device_ready_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+错误: 设备未安装预期斌哥包 com.yongshi.tenojo.ys
+候选包（名称含 yongshi）:
+[2026-09-15 12:25:10] [勇士之心] stage=device_ready 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:27:38] [勇士之心] stage=device_ready 开始
+命令: bash 04_scripts/勇士之心/device_ready_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+错误: 设备未安装预期斌哥包 com.yongshi.tenojo.ys
+候选包（名称含 yongshi）:
+第三方包清单: /Users/aliang/Documents/nixiang/04_scripts/勇士之心/device_packages.txt
+当前前台 Activity:
+    topResumedActivity=ActivityRecord{115244501 u0 com.fightingstars.games.warrior/org.cocos2dx.javascript.AppActivity t2088}
+[2026-09-15 12:27:38] [勇士之心] stage=device_ready 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:28:34] [勇士之心] stage=device_ready 开始
+命令: bash 04_scripts/勇士之心/device_ready_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+serial=f9a116a2
+package=com.fightingstars.games.warrior
+versionName=999999
+versionCode=999999
+installer=com.android.packageinstaller
+primaryCpuAbi=arm64-v8a
+model=OPD2515
+android=16
+state=/Users/aliang/Documents/nixiang/04_scripts/勇士之心/.device_serial
+info=/Users/aliang/Documents/nixiang/04_scripts/勇士之心/device_info.json
+[2026-09-15 12:28:35] [勇士之心] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:28:40] [勇士之心] stage=pull_mod 开始
+命令: bash 04_scripts/勇士之心/fetch_mod_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+==> 尝试直接只读拉取
+/data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/base.apk: 1 file pulled, 0 skipped. 30.0 MB/s (31303816 bytes in 0.996s)
+package=com.fightingstars.games.warrior
+versionName=999999
+versionCode=999999
+installer=com.android.packageinstaller
+primaryCpuAbi=arm64-v8a
+serial=f9a116a2
+remote=/data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/base.apk
+output=/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_999999_binge_mod.apk
+size=31303816
+sha256=386c3d72a8bb8be02a0bd2f3a75c6b2e1379402a6cbbc17885e69e82b754125a
+md5=b04dee2d596f152f83ff2f4195151651
+meta=/Users/aliang/Documents/nixiang/04_scripts/勇士之心/binge_apk.json
+[2026-09-15 12:28:42] [勇士之心] stage=pull_mod 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:28:54] [勇士之心] stage=check_mod 开始
+命令: bash 04_scripts/勇士之心/check_mod_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+{
+  "game": "勇士之心",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_999999_binge_mod.apk",
+  "apk_md5": "b04dee2d596f152f83ff2f4195151651",
+  "apk_sha256": "386c3d72a8bb8be02a0bd2f3a75c6b2e1379402a6cbbc17885e69e82b754125a",
+  "apk_size": 31303816,
+  "package": "com.fightingstars.games.warrior",
+  "version_name": "999999",
+  "version_code": "999999",
+  "launchable_activity": "com.ymeng.sdk.channel.egsdk.SplashActivity",
+  "engine": "cocos",
+  "engine_evidence": {
+    "libil2cpp": false,
+    "global_metadata": false,
+    "cocos_native": [
+      "lib/arm64-v8a/libcocos2djs.so"
+    ],
+    "cocos_assets": [
+      "assets/main.js"
+    ]
+  },
+  "shell_hits": [
+    "lib/arm64-v8a/libSDKloading.so",
+    "lib/arm64-v8a/libtoolChecker.so"
+  ],
+  "signer_dn": "CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2",
+  "signer_sha256": "11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba",
+  "binge_signature_hit": true,
+  "manifest_badging": [
+    "package: name='com.fightingstars.games.warrior' versionCode='999999' versionName='999999' platformBuildVersionName='13' platformBuildVersionCode='33' compileSdkVersion='23' compileSdkVersionCodename='6.0-2438415'",
+    "install-location:'auto'",
+    "minSdkVersion:'24'",
+    "targetSdkVersion:'30'",
+    "uses-permission: name='android.permission.INTERNET'",
+    "uses-permission: name='android.permission.ACCESS_NETWORK_STATE'",
+    "uses-permission: name='android.permission.ACCESS_WIFI_STATE'",
+    "uses-permission: name='android.permission.CHANGE_NETWORK_STATE'",
+    "uses-permission: name='android.permission.WRITE_EXTERNAL_STORAGE'",
+    "uses-permission: name='android.permission.READ_EXTERNAL_STORAGE'",
+    "uses-permission: name='android.permission.READ_PHONE_STATE'",
+    "uses-permission: name='android.permission.REQUEST_INSTALL_PACKAGES'",
+    "uses-permission: name='android.permission.ACCESS_COARSE_LOCATION'",
+    "uses-permission: name='android.permission.ACCESS_FINE_LOCATION'",
+    "uses-permission: name='android.permission.GET_SIGNATURES'",
+    "uses-permission: name='android.permission.WAKE_LOCK'",
+    "uses-permission: name='android.permission.VIBRATE'",
+    "uses-permission: name='android.permission.ACCESS_DOWNLOAD_MANAGER'",
+    "uses-permission: name='android.permission.SCHEDULE_EXACT_ALARM'",
+    "uses-permission: name='android.permission.GET_ACCOUNTS'",
+    "uses-permission: name='android.permission.READ_CLIPBOARD'",
+    "uses-permission: name='com.android.vending.BILLING'",
+    "uses-permission: name='android.permission.WRITE_SETTINGS'",
+    "uses-permission: name='com.google.android.gms.permission.AD_ID'",
+    "uses-permission: name='com.asus.msa.SupplementaryDID.ACCESS'",
+    "uses-permission: name='freemme.permission.msa'",
+    "uses-permission: name='com.fightingstars.games.warrior.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'",
+    "uses-permission: name='android.permission.CAMERA'",
+    "uses-permission: name='android.permission.FLASHLIGHT'",
+    "application-label:'勇士之心'",
+    "application-label-af:'勇士之心'",
+    "application-label-am:'勇士之心'",
+    "application-label-ar:'勇士之心'",
+    "application-label-as:'勇士之心'",
+    "application-label-az:'勇士之心'",
+    "application-label-be:'勇士之心'",
+    "application-label-bg:'勇士之心'",
+    "application-label-bn:'勇士之心'",
+    "application-label-bs:'勇士之心'",
+    "application-label-ca:'勇士之心'",
+    "application-label-cs:'勇士之心'",
+    "application-label-da:'勇士之心'",
+    "application-label-de:'勇士之心'",
+    "application-label-el:'勇士之心'",
+    "application-label-en-AU:'勇士之心'",
+    "application-label-en-CA:'勇士之心'",
+    "application-label-en-GB:'勇士之心'",
+    "application-label-en-IN:'勇士之心'",
+    "application-label-en-XC:'勇士之心'",
+    "application-label-es:'勇士之心'",
+    "application-label-es-US:'勇士之心'",
+    "application-label-et:'勇士之心'",
+    "application-label-eu:'勇士之心'",
+    "application-label-fa:'勇士之心'",
+    "application-label-fi:'勇士之心'",
+    "application-label-fr:'勇士之心'",
+    "application-label-fr-CA:'勇士之心'",
+    "application-label-gl:'勇士之心'",
+    "application-label-gu:'勇士之心'",
+    "application-label-hi:'勇士之心'",
+    "application-label-hr:'勇士之心'",
+    "application-label-hu:'勇士之心'",
+    "application-label-hy:'勇士之心'",
+    "application-label-in:'勇士之心'",
+    "application-label-is:'勇士之心'",
+    "application-label-it:'勇士之心'",
+    "application-label-iw:'勇士之心'",
+    "application-label-ja:'勇士之心'",
+    "application-label-ka:'勇士之心'",
+    "application-label-kk:'勇士之心'",
+    "application-label-km:'勇士之心'",
+    "application-label-kn:'勇士之心'",
+    "application-label-ko:'勇士之心'",
+    "application-label-ky:'勇士之心'",
+    "application-label-lo:'勇士之心'",
+    "application-label-lt:'勇士之心'",
+    "application-label-lv:'勇士之心'",
+    "application-label-mk:'勇士之心'",
+    "application-label-ml:'勇士之心'",
+    "application-label-mn:'勇士之心'"
+  ],
+  "signature_verify": [
+    "Signer #1 certificate DN: CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2",
+    "Signer #1 certificate SHA-256 digest: 11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba",
+    "Signer #1 certificate SHA-1 digest: dde5c4a389c45d64c3802df7fc911171f3537019",
+    "Signer #1 certificate MD5 digest: e571e96ec9428b88c9d3e358cbd3d655"
+  ]
+}
+[2026-09-15 12:28:55] [勇士之心] stage=check_mod 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:29:55] [勇士之心] stage=dump_mem 开始
+命令: bash 04_scripts/勇士之心/dump_mem_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+PACKAGE=com.fightingstars.games.warrior PID=23056 OUTDIR=/Users/aliang/Documents/nixiang/09_test/勇士之心/memdump_on
+/Users/aliang/Documents/nixiang/04_scripts/_common/dump_binge_shell_mem_device.sh: 1 file pushed, 0 skipped. 12.3 MB/s (3138 bytes in 0.000s)
+PID=23056
+a997c000-a997d000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a99fc000-a99fd000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a9a50000-a9a51000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a9a88000-a9a89000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa5b0000-aa5b1000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa8c8000-aa8c9000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aaa30000-aaa31000 rw-p 00000000 00:00 0                                  [anon:.bss]
+72e0b3c000-72e0bae000 rw-p 00000000 00:00 0                              [anon:.bss]
+72e8088000-72e80c0000 rw-p 00000000 00:00 0                              [anon:.bss]
+72fa6ad000-72fa6ae000 rw-p 00000000 00:00 0                              [anon:.bss]
+7305e39000-73067e5000 rw-p 00000000 00:00 0                              [anon:.bss]
+730ddc4000-730dddb000 rw-p 00000000 00:00 0                              [anon:.bss]
+731247d000-731247e000 rw-p 00000000 00:00 0                              [anon:.bss]
+7312486000-73124a9000 r-xp 00000000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+73124a9000-73124c5000 r-xp 00023000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+73124c5000-7312518000 r-xp 0003f000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312518000-731251b000 r-xp 00092000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+731251b000-7312764000 r-xp 00095000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312773000-7312777000 r--p 002dd000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312777000-7312850000 rw-p 002e1000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312850000-731294e000 r-xp 00000000 00:00 0                              [anon:.bss]
+731294e000-7312957000 r--p 00000000 00:00 0                              [anon:.bss]
+7312957000-7312982000 rw-p 00000000 00:00 0                              [anon:.bss]
+7312982000-7312990000 rwxp 00000000 00:00 0                              [anon:.bss]
+7312990000-7312993000 rw-p 00000000 00:00 0                              [anon:.bss]
+7312993000-7312996000 r-xp 003ba000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+731447f000-7314480000 rw-p 00000000 00:00 0                              [anon:.bss]
+73144b9000-73144ba000 rw-p 00000000 00:00 0                              [anon:.bss]
+7331e85000-7331e95000 rw-p 00000000 00:00 0                              [anon:.bss]
+73d79bb000-73d7b74000 rw-p 00000000 00:00 0                              [anon:.bss]
+73d7b8f000-73d7b93000 rw-p 00000000 00:00 0                              [anon:.bss]
+740d9bc000-740d9c4000 rw-p 00000000 00:00 0                              [anon:.bss]
+740eb71000-740eb79000 rw-p 00000000 00:00 0                              [anon:.bss]
+740ebf2000-740ebf3000 rw-p 00000000 00:00 0                              [anon:.bss]
+740ee53000-740ee54000 rw-p 00000000 00:00 0                              [anon:.bss]
+740f1b5000-740f1e8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7412f6e000-7412f8f000 rw-p 00000000 00:00 0                              [anon:.bss]
+741487d000-7414880000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414ad9000-7414ada000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414b20000-7414b21000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414ba2000-7414ba3000 rw-p 00000000 00:00 0                              [anon:.bss]
+741725d000-741725e000 rw-p 00000000 00:00 0                              [anon:.bss]
+7417390000-7417393000 rw-p 00000000 00:00 0                              [anon:.bss]
+741751e000-741751f000 rw-p 00000000 00:00 0                              [anon:.bss]
+74175f1000-74175f4000 rw-p 00000000 00:00 0                              [anon:.bss]
+741783b000-741783d000 rw-p 00000000 00:00 0                              [anon:.bss]
+7419051000-7419052000 rw-p 00000000 00:00 0                              [anon:.bss]
+741911d000-741911e000 rw-p 00000000 00:00 0                              [anon:.bss]
+74191db000-74191dd000 rw-p 00000000 00:00 0                              [anon:.bss]
+7419de6000-7419de7000 rw-p 00000000 00:00 0                              [anon:.bss]
+741a173000-741a174000 rw-p 00000000 00:00 0                              [anon:.bss]
+741a1a0000-741a1a1000 rw-p 00000000 00:00 0                              [anon:.bss]
+741ea71000-741ea72000 rw-p 00000000 00:00 0                              [anon:.bss]
+741eb6c000-741eb73000 rw-p 00000000 00:00 0                              [anon:.bss]
+741ef0d000-741ef15000 rw-p 00000000 00:00 0                              [anon:.bss]
+74201e3000-74201eb000 rw-p 00000000 00:00 0                              [anon:.bss]
+7425a69000-7425a6a000 rw-p 00000000 00:00 0                              [anon:.bss]
+743007e000-743007f000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431ca3000-7431ca6000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431d0f000-7431d10000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431df6000-7431df7000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432a9b000-7432a9c000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432b61000-7432b62000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432c12000-7432c13000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432d31000-7432d32000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432f34000-7432f35000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432fb4000-7432fb5000 rw-p 00000000 00:00 0                              [anon:.bss]
+7436c49000-7436c4a000 rw-p 00000000 00:00 0                              [anon:.bss]
+7436d87000-7436d88000 rw-p 00000000 00:00 0                              [anon:.bss]
+7439182000-743918a000 rw-p 00000000 00:00 0                              [anon:.bss]
+743cee1000-743cee2000 rw-p 00000000 00:00 0                              [anon:.bss]
+747c06a000-747c06b000 rw-p 00000000 00:00 0                              [anon:.bss]
+7486404000-7486432000 rw-p 00000000 00:00 0                              [anon:.bss]
+748654d000-748654e000 rw-p 00000000 00:00 0                              [anon:.bss]
+74865eb000-74865ec000 rw-p 00000000 00:00 0                              [anon:.bss]
+74882f4000-74882fd000 rw-p 00000000 00:00 0                              [anon:.bss]
+748838f000-7488390000 rw-p 00000000 00:00 0                              [anon:.bss]
+74883d7000-74883d8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7488533000-7488534000 rw-p 00000000 00:00 0                              [anon:.bss]
+7488573000-7488574000 rw-p 00000000 00:00 0                              [anon:.bss]
+DUMP sdk_rx_1.bin 0x7312486000-0x73124a9000 size=143360
+-rw-r--r-- 1 root root 143360 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_rx_1.bin
+DUMP sdk_rx_2.bin 0x73124a9000-0x73124c5000 size=114688
+-rw-r--r-- 1 root root 114688 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_rx_2.bin
+DUMP sdk_rx_3.bin 0x73124c5000-0x7312518000 size=339968
+-rw-r--r-- 1 root root 339968 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_rx_3.bin
+DUMP sdk_rx_4.bin 0x7312518000-0x731251b000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_rx_4.bin
+DUMP sdk_rx_5.bin 0x731251b000-0x7312764000 size=2396160
+-rw-r--r-- 1 root root 2396160 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_rx_5.bin
+DUMP sdk_ro.bin 0x7312773000-0x7312777000 size=16384
+-rw-r--r-- 1 root root 16384 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_ro.bin
+DUMP sdk_rw.bin 0x7312777000-0x7312850000 size=888832
+-rw-r--r-- 1 root root 888832 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_rw.bin
+DUMP shell_rx_bss.bin 0x7312850000-0x731294e000 size=1040384
+-rw-r--r-- 1 root root 1040384 2026-09-15 12:29 /data/local/tmp/binge_memdump/shell_rx_bss.bin
+DUMP shell_ro_bss.bin 0x731294e000-0x7312957000 size=36864
+-rw-r--r-- 1 root root 36864 2026-09-15 12:29 /data/local/tmp/binge_memdump/shell_ro_bss.bin
+DUMP shell_rw_bss.bin 0x7312957000-0x7312982000 size=176128
+-rw-r--r-- 1 root root 176128 2026-09-15 12:29 /data/local/tmp/binge_memdump/shell_rw_bss.bin
+DUMP shell_rwx_bss.bin 0x7312982000-0x7312990000 size=57344
+-rw-r--r-- 1 root root 57344 2026-09-15 12:29 /data/local/tmp/binge_memdump/shell_rwx_bss.bin
+DUMP shell_rw_bss.bin 0x7312990000-0x7312993000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-15 12:29 /data/local/tmp/binge_memdump/shell_rw_bss.bin
+DUMP sdk_rx_6.bin 0x7312993000-0x7312996000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-15 12:29 /data/local/tmp/binge_memdump/sdk_rx_6.bin
+total 4.8K
+drwxr-xr-x  2 root  root  3.3K 2026-09-15 12:29 .
+drwxrwx--x 14 shell shell  56K 2026-09-15 12:29 ..
+-rw-r--r--  1 root  root     0 2026-09-15 12:29 il2cpp_rx_segs.txt
+-rw-r--r--  1 root  root   16K 2026-09-15 12:29 sdk_ro.bin
+-rw-r--r--  1 root  root  868K 2026-09-15 12:29 sdk_rw.bin
+-rw-r--r--  1 root  root  140K 2026-09-15 12:29 sdk_rx_1.bin
+-rw-r--r--  1 root  root  112K 2026-09-15 12:29 sdk_rx_2.bin
+-rw-r--r--  1 root  root  332K 2026-09-15 12:29 sdk_rx_3.bin
+-rw-r--r--  1 root  root   12K 2026-09-15 12:29 sdk_rx_4.bin
+-rw-r--r--  1 root  root  2.2M 2026-09-15 12:29 sdk_rx_5.bin
+-rw-r--r--  1 root  root   12K 2026-09-15 12:29 sdk_rx_6.bin
+-rw-r--r--  1 root  root   36K 2026-09-15 12:29 shell_ro_bss.bin
+-rw-r--r--  1 root  root   12K 2026-09-15 12:29 shell_rw_bss.bin
+-rw-r--r--  1 root  root   56K 2026-09-15 12:29 shell_rwx_bss.bin
+-rw-r--r--  1 root  root  0.9M 2026-09-15 12:29 shell_rx_bss.bin
+DONE
+total 10784
+drwxr-xr-x@ 19 aliang  staff   608B Sep 15 12:31 .
+drwxr-xr-x@  3 aliang  staff    96B Sep 15 12:29 ..
+-rw-r--r--@  1 aliang  staff    10K Sep 15 12:31 dump_log.txt
+-rw-r--r--@  1 aliang  staff     0B Sep 15 12:31 host_listing.txt
+-rw-r--r--@  1 aliang  staff     0B Sep 15 12:31 il2cpp_rx_segs.txt
+-rw-r--r--@  1 aliang  staff   424K Sep 15 12:29 maps.txt
+drwxr-xr-x@ 15 aliang  staff   480B Sep 15 12:31 raw
+-rw-r--r--@  1 aliang  staff    16K Sep 15 12:31 sdk_ro.bin
+-rw-r--r--@  1 aliang  staff   868K Sep 15 12:31 sdk_rw.bin
+-rw-r--r--@  1 aliang  staff   140K Sep 15 12:31 sdk_rx_1.bin
+-rw-r--r--@  1 aliang  staff   112K Sep 15 12:31 sdk_rx_2.bin
+-rw-r--r--@  1 aliang  staff   332K Sep 15 12:31 sdk_rx_3.bin
+-rw-r--r--@  1 aliang  staff    12K Sep 15 12:31 sdk_rx_4.bin
+-rw-r--r--@  1 aliang  staff   2.3M Sep 15 12:31 sdk_rx_5.bin
+-rw-r--r--@  1 aliang  staff    12K Sep 15 12:31 sdk_rx_6.bin
+-rw-r--r--@  1 aliang  staff    36K Sep 15 12:31 shell_ro_bss.bin
+-rw-r--r--@  1 aliang  staff    12K Sep 15 12:31 shell_rw_bss.bin
+-rw-r--r--@  1 aliang  staff    56K Sep 15 12:31 shell_rwx_bss.bin
+-rw-r--r--@  1 aliang  staff   1.0M Sep 15 12:31 shell_rx_bss.bin
+OK pid=23056 -> /Users/aliang/Documents/nixiang/09_test/勇士之心/memdump_on
+[2026-09-15 12:31:05] [勇士之心] stage=dump_mem 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:31:12] [勇士之心] stage=scan_mem 开始
+命令: python3.11 04_scripts/_common/scan_shell_mem.py 09_test/勇士之心/memdump_on
+目录: /Users/aliang/Documents/nixiang
+
+==== sdk_ro.bin size=16384 ====
+  keyword ascii=0
+
+==== sdk_rw.bin size=888832 ====
+  keyword ascii=0
+  PAT [A-Za-z][A-Za-z0-9_]+\$\$[A-Za-z0-9_]+: [(b'cK$$c', 1)]
+  chinese utf8 runs=3
+    䛌楝
+    溍顺
+    頂䬨
+
+==== sdk_rx_1.bin size=143360 ====
+  keyword ascii=0
+Wrote 0 strings, 0 interesting for sdk_rx_1.bin
+
+==== sdk_rx_2.bin size=114688 ====
+  keyword ascii=4
+    DobbyHook
+    dobby_enable_near_branch_trampoline
+    DobbyCodePatch
+    dobby_disable_near_branch_trampoline
+  SYM DobbyHook: 1 @ 709
+  SYM Dobby: 2 @ 709
+  PAT Dobby[A-Za-z0-9_]*: [(b'DobbyHook', 1), (b'DobbyCodePatch', 1)]
+
+==== sdk_rx_3.bin size=339968 ====
+  keyword ascii=0
+
+==== sdk_rx_4.bin size=12288 ====
+  keyword ascii=0
+
+==== sdk_rx_5.bin size=2396160 ====
+  keyword ascii=0
+  chinese utf8 runs=3
+    蘂踿
+    溏銓
+    衲䉳
+
+==== sdk_rx_6.bin size=12288 ====
+  keyword ascii=0
+
+==== shell_ro_bss.bin size=36864 ====
+  keyword ascii=0
+
+==== shell_rw_bss.bin size=12288 ====
+  keyword ascii=0
+Wrote 0 strings, 0 interesting for shell_rw_bss.bin
+
+==== shell_rwx_bss.bin size=57344 ====
+  keyword ascii=0
+
+==== shell_rx_bss.bin size=1040384 ====
+  keyword ascii=6
+    :=GODU
+     Hook
+    HOOK
+    200){T=t;R();}return C;}var M={};for(var i=1;i<=15;i++){(function(n){Object.defineProperty(M,'feature'+n,{get:function(){var c=G();return !!(c.f&&c.f.charAt(n-1
+     Hook
+    BW_MEMORYTOOL
+  SYM BW_MEMORYTOOL: 1 @ 278255
+  PAT [A-Za-z][A-Za-z0-9_]+\$\$[A-Za-z0-9_]+: [(b'I1sS$$M6A', 1)]
+  chinese utf8 runs=6
+    定位到的首指令不是序言
+    放弃
+    失败
+    内存分配失败
+    定位失败
+    与特征扫描都没命中
+Wrote 15587 strings, 4 interesting for shell_rx_bss.bin
+
+Wrote 09_test/勇士之心/memdump_on/scan_report.txt
+[2026-09-15 12:31:13] [勇士之心] stage=scan_mem 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:32:23] [勇士之心] stage=pull_runtime 开始
+命令: bash 04_scripts/勇士之心/pull_runtime_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+错误: files/ 下未找到 mod_bridge.js
+[2026-09-15 12:32:25] [勇士之心] stage=pull_runtime 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:33:24] [勇士之心] stage=pull_runtime 开始
+命令: bash 04_scripts/勇士之心/pull_runtime_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+
+────────────────────────────────────────────
+[2026-09-15 12:36:29] [勇士之心] stage=pull_runtime 开始
+命令: bash 04_scripts/勇士之心/pull_runtime_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+remote_root=/data/data/com.fightingstars.games.warrior/files
+remote_sw=/data/data/com.fightingstars.games.warrior/files/mod_sw.txt
+bridge_count=0
+js_count=22
+config_count=17
+out=/Users/aliang/Documents/nixiang/09_test/勇士之心/runtime
+{"f":"000000000000000","blood":1,"atk":1,"spd":1,"slider":1}[2026-09-15 12:37:45] [勇士之心] stage=pull_runtime 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:41:43] [勇士之心] stage=dump_mem_all 开始
+命令: bash 04_scripts/勇士之心/dump_mem_state_ysxz.sh memdump_all
+目录: /Users/aliang/Documents/nixiang
+PACKAGE=com.fightingstars.games.warrior PID=23056 OUTDIR=/Users/aliang/Documents/nixiang/09_test/勇士之心/memdump_all
+/Users/aliang/Documents/nixiang/04_scripts/_common/dump_binge_shell_mem_device.sh: 1 file pushed, 0 skipped. 3.2 MB/s (3138 bytes in 0.001s)
+PID=23056
+a997c000-a997d000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a99fc000-a99fd000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a9a50000-a9a51000 rw-p 00000000 00:00 0                                  [anon:.bss]
+a9a88000-a9a89000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa5b0000-aa5b1000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa8c8000-aa8c9000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aaa30000-aaa31000 rw-p 00000000 00:00 0                                  [anon:.bss]
+72e0b3c000-72e0bae000 rw-p 00000000 00:00 0                              [anon:.bss]
+72e8088000-72e80c0000 rw-p 00000000 00:00 0                              [anon:.bss]
+72fa6ad000-72fa6ae000 rw-p 00000000 00:00 0                              [anon:.bss]
+7305e39000-73067e5000 rw-p 00000000 00:00 0                              [anon:.bss]
+730ddc4000-730dddb000 rw-p 00000000 00:00 0                              [anon:.bss]
+731247d000-731247e000 rw-p 00000000 00:00 0                              [anon:.bss]
+7312486000-73124a9000 r-xp 00000000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+73124a9000-73124c5000 r-xp 00023000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+73124c5000-7312518000 r-xp 0003f000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312518000-731251b000 r-xp 00092000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+731251b000-7312764000 r-xp 00095000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312773000-7312777000 r--p 002dd000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312777000-7312850000 rw-p 002e1000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+7312850000-731294e000 r-xp 00000000 00:00 0                              [anon:.bss]
+731294e000-7312957000 r--p 00000000 00:00 0                              [anon:.bss]
+7312957000-7312982000 rw-p 00000000 00:00 0                              [anon:.bss]
+7312982000-7312990000 rwxp 00000000 00:00 0                              [anon:.bss]
+7312990000-7312993000 rw-p 00000000 00:00 0                              [anon:.bss]
+7312993000-7312996000 r-xp 003ba000 fe:48 385458                         /data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/lib/arm64/libSDKloading.so
+731447f000-7314480000 rw-p 00000000 00:00 0                              [anon:.bss]
+73144b9000-73144ba000 rw-p 00000000 00:00 0                              [anon:.bss]
+7331e85000-7331e95000 rw-p 00000000 00:00 0                              [anon:.bss]
+73d79bb000-73d7b74000 rw-p 00000000 00:00 0                              [anon:.bss]
+73d7b8f000-73d7b93000 rw-p 00000000 00:00 0                              [anon:.bss]
+740d9bc000-740d9c4000 rw-p 00000000 00:00 0                              [anon:.bss]
+740eb71000-740eb79000 rw-p 00000000 00:00 0                              [anon:.bss]
+740ebf2000-740ebf3000 rw-p 00000000 00:00 0                              [anon:.bss]
+740ee53000-740ee54000 rw-p 00000000 00:00 0                              [anon:.bss]
+740f1b5000-740f1e8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7412f6e000-7412f8f000 rw-p 00000000 00:00 0                              [anon:.bss]
+741487d000-7414880000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414ad9000-7414ada000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414b20000-7414b21000 rw-p 00000000 00:00 0                              [anon:.bss]
+7414ba2000-7414ba3000 rw-p 00000000 00:00 0                              [anon:.bss]
+741725d000-741725e000 rw-p 00000000 00:00 0                              [anon:.bss]
+7417390000-7417393000 rw-p 00000000 00:00 0                              [anon:.bss]
+741751e000-741751f000 rw-p 00000000 00:00 0                              [anon:.bss]
+74175f1000-74175f4000 rw-p 00000000 00:00 0                              [anon:.bss]
+741783b000-741783d000 rw-p 00000000 00:00 0                              [anon:.bss]
+7419051000-7419052000 rw-p 00000000 00:00 0                              [anon:.bss]
+741911d000-741911e000 rw-p 00000000 00:00 0                              [anon:.bss]
+74191db000-74191dd000 rw-p 00000000 00:00 0                              [anon:.bss]
+7419de6000-7419de7000 rw-p 00000000 00:00 0                              [anon:.bss]
+741a173000-741a174000 rw-p 00000000 00:00 0                              [anon:.bss]
+741a1a0000-741a1a1000 rw-p 00000000 00:00 0                              [anon:.bss]
+741ea71000-741ea72000 rw-p 00000000 00:00 0                              [anon:.bss]
+741eb6c000-741eb73000 rw-p 00000000 00:00 0                              [anon:.bss]
+741ef0d000-741ef15000 rw-p 00000000 00:00 0                              [anon:.bss]
+74201e3000-74201eb000 rw-p 00000000 00:00 0                              [anon:.bss]
+7425a69000-7425a6a000 rw-p 00000000 00:00 0                              [anon:.bss]
+743007e000-743007f000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431ca3000-7431ca6000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431d0f000-7431d10000 rw-p 00000000 00:00 0                              [anon:.bss]
+7431df6000-7431df7000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432a9b000-7432a9c000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432b61000-7432b62000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432c12000-7432c13000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432d31000-7432d32000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432f34000-7432f35000 rw-p 00000000 00:00 0                              [anon:.bss]
+7432fb4000-7432fb5000 rw-p 00000000 00:00 0                              [anon:.bss]
+7436c49000-7436c4a000 rw-p 00000000 00:00 0                              [anon:.bss]
+7436d87000-7436d88000 rw-p 00000000 00:00 0                              [anon:.bss]
+7439182000-743918a000 rw-p 00000000 00:00 0                              [anon:.bss]
+743cee1000-743cee2000 rw-p 00000000 00:00 0                              [anon:.bss]
+747c06a000-747c06b000 rw-p 00000000 00:00 0                              [anon:.bss]
+7486404000-7486432000 rw-p 00000000 00:00 0                              [anon:.bss]
+748654d000-748654e000 rw-p 00000000 00:00 0                              [anon:.bss]
+74865eb000-74865ec000 rw-p 00000000 00:00 0                              [anon:.bss]
+74882f4000-74882fd000 rw-p 00000000 00:00 0                              [anon:.bss]
+748838f000-7488390000 rw-p 00000000 00:00 0                              [anon:.bss]
+74883d7000-74883d8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7488533000-7488534000 rw-p 00000000 00:00 0                              [anon:.bss]
+7488573000-7488574000 rw-p 00000000 00:00 0                              [anon:.bss]
+DUMP sdk_rx_1.bin 0x7312486000-0x73124a9000 size=143360
+-rw-r--r-- 1 root root 143360 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_rx_1.bin
+DUMP sdk_rx_2.bin 0x73124a9000-0x73124c5000 size=114688
+-rw-r--r-- 1 root root 114688 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_rx_2.bin
+DUMP sdk_rx_3.bin 0x73124c5000-0x7312518000 size=339968
+-rw-r--r-- 1 root root 339968 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_rx_3.bin
+DUMP sdk_rx_4.bin 0x7312518000-0x731251b000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_rx_4.bin
+DUMP sdk_rx_5.bin 0x731251b000-0x7312764000 size=2396160
+-rw-r--r-- 1 root root 2396160 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_rx_5.bin
+DUMP sdk_ro.bin 0x7312773000-0x7312777000 size=16384
+-rw-r--r-- 1 root root 16384 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_ro.bin
+DUMP sdk_rw.bin 0x7312777000-0x7312850000 size=888832
+-rw-r--r-- 1 root root 888832 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_rw.bin
+DUMP shell_rx_bss.bin 0x7312850000-0x731294e000 size=1040384
+-rw-r--r-- 1 root root 1040384 2026-09-15 12:41 /data/local/tmp/binge_memdump/shell_rx_bss.bin
+DUMP shell_ro_bss.bin 0x731294e000-0x7312957000 size=36864
+-rw-r--r-- 1 root root 36864 2026-09-15 12:41 /data/local/tmp/binge_memdump/shell_ro_bss.bin
+DUMP shell_rw_bss.bin 0x7312957000-0x7312982000 size=176128
+-rw-r--r-- 1 root root 176128 2026-09-15 12:41 /data/local/tmp/binge_memdump/shell_rw_bss.bin
+DUMP shell_rwx_bss.bin 0x7312982000-0x7312990000 size=57344
+-rw-r--r-- 1 root root 57344 2026-09-15 12:41 /data/local/tmp/binge_memdump/shell_rwx_bss.bin
+DUMP shell_rw_bss.bin 0x7312990000-0x7312993000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-15 12:41 /data/local/tmp/binge_memdump/shell_rw_bss.bin
+DUMP sdk_rx_6.bin 0x7312993000-0x7312996000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-15 12:41 /data/local/tmp/binge_memdump/sdk_rx_6.bin
+total 4.8K
+drwxr-xr-x  2 root  root  3.3K 2026-09-15 12:41 .
+drwxrwx--x 14 shell shell  56K 2026-09-15 12:41 ..
+-rw-r--r--  1 root  root     0 2026-09-15 12:41 il2cpp_rx_segs.txt
+-rw-r--r--  1 root  root   16K 2026-09-15 12:41 sdk_ro.bin
+-rw-r--r--  1 root  root  868K 2026-09-15 12:41 sdk_rw.bin
+-rw-r--r--  1 root  root  140K 2026-09-15 12:41 sdk_rx_1.bin
+-rw-r--r--  1 root  root  112K 2026-09-15 12:41 sdk_rx_2.bin
+-rw-r--r--  1 root  root  332K 2026-09-15 12:41 sdk_rx_3.bin
+-rw-r--r--  1 root  root   12K 2026-09-15 12:41 sdk_rx_4.bin
+-rw-r--r--  1 root  root  2.2M 2026-09-15 12:41 sdk_rx_5.bin
+-rw-r--r--  1 root  root   12K 2026-09-15 12:41 sdk_rx_6.bin
+-rw-r--r--  1 root  root   36K 2026-09-15 12:41 shell_ro_bss.bin
+-rw-r--r--  1 root  root   12K 2026-09-15 12:41 shell_rw_bss.bin
+-rw-r--r--  1 root  root   56K 2026-09-15 12:41 shell_rwx_bss.bin
+-rw-r--r--  1 root  root  0.9M 2026-09-15 12:41 shell_rx_bss.bin
+DONE
+total 10848
+drwxr-xr-x@ 19 aliang  staff   608B Sep 15 12:42 .
+drwxr-xr-x@  5 aliang  staff   160B Sep 15 12:41 ..
+-rw-r--r--@  1 aliang  staff    10K Sep 15 12:42 dump_log.txt
+-rw-r--r--@  1 aliang  staff     0B Sep 15 12:42 host_listing.txt
+-rw-r--r--@  1 aliang  staff     0B Sep 15 12:42 il2cpp_rx_segs.txt
+-rw-r--r--@  1 aliang  staff   456K Sep 15 12:41 maps.txt
+drwxr-xr-x@ 15 aliang  staff   480B Sep 15 12:42 raw
+-rw-r--r--@  1 aliang  staff    16K Sep 15 12:42 sdk_ro.bin
+-rw-r--r--@  1 aliang  staff   868K Sep 15 12:42 sdk_rw.bin
+-rw-r--r--@  1 aliang  staff   140K Sep 15 12:42 sdk_rx_1.bin
+-rw-r--r--@  1 aliang  staff   112K Sep 15 12:42 sdk_rx_2.bin
+-rw-r--r--@  1 aliang  staff   332K Sep 15 12:42 sdk_rx_3.bin
+-rw-r--r--@  1 aliang  staff    12K Sep 15 12:42 sdk_rx_4.bin
+-rw-r--r--@  1 aliang  staff   2.3M Sep 15 12:42 sdk_rx_5.bin
+-rw-r--r--@  1 aliang  staff    12K Sep 15 12:42 sdk_rx_6.bin
+-rw-r--r--@  1 aliang  staff    36K Sep 15 12:42 shell_ro_bss.bin
+-rw-r--r--@  1 aliang  staff    12K Sep 15 12:42 shell_rw_bss.bin
+-rw-r--r--@  1 aliang  staff    56K Sep 15 12:42 shell_rwx_bss.bin
+-rw-r--r--@  1 aliang  staff   1.0M Sep 15 12:42 shell_rx_bss.bin
+OK pid=23056 -> /Users/aliang/Documents/nixiang/09_test/勇士之心/memdump_all
+state=memdump_all
+out=/Users/aliang/Documents/nixiang/09_test/勇士之心/memdump_all
+mod_sw={"f":"111100000000000","blood":1,"atk":1,"spd":1,"slider":1}
+[2026-09-15 12:42:56] [勇士之心] stage=dump_mem_all 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 12:43:16] [勇士之心] stage=scan_mem_all 开始
+命令: python3.11 04_scripts/_common/scan_shell_mem.py 09_test/勇士之心/memdump_all
+目录: /Users/aliang/Documents/nixiang
+
+==== sdk_ro.bin size=16384 ====
+  keyword ascii=0
+
+==== sdk_rw.bin size=888832 ====
+  keyword ascii=0
+  PAT [A-Za-z][A-Za-z0-9_]+\$\$[A-Za-z0-9_]+: [(b'cK$$c', 1)]
+  chinese utf8 runs=3
+    䛌楝
+    溍顺
+    頂䬨
+
+==== sdk_rx_1.bin size=143360 ====
+  keyword ascii=0
+Wrote 0 strings, 0 interesting for sdk_rx_1.bin
+
+==== sdk_rx_2.bin size=114688 ====
+  keyword ascii=4
+    DobbyHook
+    dobby_enable_near_branch_trampoline
+    DobbyCodePatch
+    dobby_disable_near_branch_trampoline
+  SYM DobbyHook: 1 @ 709
+  SYM Dobby: 2 @ 709
+  PAT Dobby[A-Za-z0-9_]*: [(b'DobbyHook', 1), (b'DobbyCodePatch', 1)]
+
+==== sdk_rx_3.bin size=339968 ====
+  keyword ascii=0
+
+==== sdk_rx_4.bin size=12288 ====
+  keyword ascii=0
+
+==== sdk_rx_5.bin size=2396160 ====
+  keyword ascii=0
+  chinese utf8 runs=3
+    蘂踿
+    溏銓
+    衲䉳
+
+==== sdk_rx_6.bin size=12288 ====
+  keyword ascii=0
+
+==== shell_ro_bss.bin size=36864 ====
+  keyword ascii=0
+
+==== shell_rw_bss.bin size=12288 ====
+  keyword ascii=0
+Wrote 0 strings, 0 interesting for shell_rw_bss.bin
+
+==== shell_rwx_bss.bin size=57344 ====
+  keyword ascii=0
+
+==== shell_rx_bss.bin size=1040384 ====
+  keyword ascii=6
+    :=GODU
+     Hook
+    HOOK
+    200){T=t;R();}return C;}var M={};for(var i=1;i<=15;i++){(function(n){Object.defineProperty(M,'feature'+n,{get:function(){var c=G();return !!(c.f&&c.f.charAt(n-1
+     Hook
+    BW_MEMORYTOOL
+  SYM BW_MEMORYTOOL: 1 @ 278255
+  PAT [A-Za-z][A-Za-z0-9_]+\$\$[A-Za-z0-9_]+: [(b'I1sS$$M6A', 1)]
+  chinese utf8 runs=6
+    定位到的首指令不是序言
+    放弃
+    失败
+    内存分配失败
+    定位失败
+    与特征扫描都没命中
+Wrote 15587 strings, 4 interesting for shell_rx_bss.bin
+
+Wrote 09_test/勇士之心/memdump_all/scan_report.txt
+[2026-09-15 12:43:16] [勇士之心] stage=scan_mem_all 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:12:09] [勇士之心] stage=pull_official 开始
+命令: bash 04_scripts/勇士之心/fetch_official_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+==> 尝试直接只读拉取
+/data/app/~~Cw1C-wU_IU545AXTsfj3yA==/com.fightingstars.games.warrior-HkScsAfEmNj1YJxYAxGHIg==/base.apk: 1 file pulled, 0 skipped. 38.3 MB/s (56866924 bytes in 1.415s)
+package=com.fightingstars.games.warrior
+versionName=1.0.3
+versionCode=5
+installer=com.android.packageinstaller
+primaryCpuAbi=arm64-v8a
+serial=f9a116a2
+remote=/data/app/~~Cw1C-wU_IU545AXTsfj3yA==/com.fightingstars.games.warrior-HkScsAfEmNj1YJxYAxGHIg==/base.apk
+output=/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk
+size=56866924
+sha256=c88b92068ae9176d671824fbb465c6c72b5344497ba53f8ef0f43d5807ce5204
+md5=8d47c857b3c32e37b79d17775f30e2d4
+meta=/Users/aliang/Documents/nixiang/04_scripts/勇士之心/official_apk.json
+[2026-09-15 13:12:11] [勇士之心] stage=pull_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:12:19] [勇士之心] stage=check_official 开始
+命令: bash 04_scripts/勇士之心/check_official_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+[2026-09-15 13:12:20] [勇士之心] stage=check_official 命令失败 rc=11
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:13:13] [勇士之心] stage=check_official 开始
+命令: python3.11 04_scripts/勇士之心/check_official_ysxz.py
+目录: /Users/aliang/Documents/nixiang
+# 勇士之心 TapTap 原版 / 斌哥包核心输入对照
+
+- mod: 勇士之心_999999_binge_mod.apk md5=b04dee2d596f152f83ff2f4195151651
+- official: 勇士之心_1.0.3_taptap_official.apk md5=8d47c857b3c32e37b79d17775f30e2d4
+
+entry                                                official_sha256                                                  match_mod
+lib/arm64-v8a/libcocos2djs.so                        8459ad50f97265e218c25f77280db3186a458f5d54cd8dcede16f486e481c719 yes
+lib/arm64-v8a/libSDKloading.so                       MISSING                                                          NO mod=aa551c8e99024f822ae3f09682c5489c4e941c4c1c26cc3494a8350dc000d465
+assets/main.js                                       f231120146ea1a66cc78fe8ece71abc9f408ac9794a66d9446af8016b53401af yes
+assets/src/cocos2d-jsb.js                            ac005223eec6c0697492dd42de14c266f3c841e824b7a4035cc293f3ac5cf269 yes
+assets/src/settings.js                               171a9d9b6fe395f9a8ada57a840383347cf86cbc7b983960851d6d0df3a5a689 yes
+assets/assets/main/index.js                          19fa25ddf653ad8881df013b4bf48da4ab77ec0496bc36dfae05a2787189308b yes
+
+{
+  "game": "勇士之心",
+  "mod_apk": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_999999_binge_mod.apk",
+  "mod_md5": "b04dee2d596f152f83ff2f4195151651",
+  "official_apk": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk",
+  "official_md5": "8d47c857b3c32e37b79d17775f30e2d4",
+  "official_sha256": "c88b92068ae9176d671824fbb465c6c72b5344497ba53f8ef0f43d5807ce5204",
+  "official_size": 56866924,
+  "package": "com.fightingstars.games.warrior",
+  "version_name": "1.0.3",
+  "version_code": "5",
+  "launchable_activity": "com.ymeng.sdk.channel.egsdk.SplashActivity",
+  "signer_dn": "CN=shan, OU=bingo, O=bingo, L=guangzhou, ST=guangdong, C=CN",
+  "signer_sha256": "de8a75d30a1831f3ddc83f38f285513110fde9ab919fb4e471653f86b5083e0a",
+  "channel": "taptap",
+  "compare": {
+    "lib/arm64-v8a/libcocos2djs.so": {
+      "official_sha256": "8459ad50f97265e218c25f77280db3186a458f5d54cd8dcede16f486e481c719",
+      "mod_sha256": "8459ad50f97265e218c25f77280db3186a458f5d54cd8dcede16f486e481c719",
+      "match": true
+    },
+    "lib/arm64-v8a/libSDKloading.so": {
+      "official_sha256": "MISSING",
+      "mod_sha256": "aa551c8e99024f822ae3f09682c5489c4e941c4c1c26cc3494a8350dc000d465",
+      "match": false
+    },
+    "assets/main.js": {
+      "official_sha256": "f231120146ea1a66cc78fe8ece71abc9f408ac9794a66d9446af8016b53401af",
+      "mod_sha256": "f231120146ea1a66cc78fe8ece71abc9f408ac9794a66d9446af8016b53401af",
+      "match": true
+    },
+    "assets/src/cocos2d-jsb.js": {
+      "official_sha256": "ac005223eec6c0697492dd42de14c266f3c841e824b7a4035cc293f3ac5cf269",
+      "mod_sha256": "ac005223eec6c0697492dd42de14c266f3c841e824b7a4035cc293f3ac5cf269",
+      "match": true
+    },
+    "assets/src/settings.js": {
+      "official_sha256": "171a9d9b6fe395f9a8ada57a840383347cf86cbc7b983960851d6d0df3a5a689",
+      "mod_sha256": "171a9d9b6fe395f9a8ada57a840383347cf86cbc7b983960851d6d0df3a5a689",
+      "match": true
+    },
+    "assets/assets/main/index.js": {
+      "official_sha256": "19fa25ddf653ad8881df013b4bf48da4ab77ec0496bc36dfae05a2787189308b",
+      "mod_sha256": "19fa25ddf653ad8881df013b4bf48da4ab77ec0496bc36dfae05a2787189308b",
+      "match": true
+    }
+  }
+}
+
+[2026-09-15 13:13:14] [勇士之心] stage=check_official 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:19:49] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+[build_so] md5=8b28b38ba0f4f96dd7bdd2ad4d116027
+[build_so] sha256=4efe17a2cd423dfb586b60e66f5b154217d2df0f2c211a2c5fa4995c49ebb058
+[build_so] done
+[2026-09-15 13:19:51] [勇士之心] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:21:06] [勇士之心] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+[1/5] gradle assembleRelease (starry -> dex)
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:sdkReleaseDependencyData
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysxz_surgical.08ygK6/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysxz_surgical.08ygK6/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysxz_surgical.08ygK6/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 15s
+50 actionable tasks: 50 executed
+[2/5] starry com/starry smali -> classes4.dex
+-rw-r--r--@ 1 aliang  wheel  410992 Sep 15 13:21 /tmp/ysxz_surgical.08ygK6/classes4.dex
+[3/5] AndroidManifest：保留官方 WarriorApplication，仅追加星光组件
+  manifest patched: provider + service + foreground permissions
+[4/5] zip surgical merge -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+  merged ok; entries≈988; classes4.dex=410992; untouched 11/11 verified
+[5/5] 校验产物
+ERROR: classes4.dex missing
+[2026-09-15 13:21:41] [勇士之心] stage=surgical 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:22:15] [勇士之心] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+[1/5] gradle assembleRelease (starry -> dex)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysxz_surgical.Rn0Wa0/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysxz_surgical.Rn0Wa0/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysxz_surgical.Rn0Wa0/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+50 actionable tasks: 50 executed
+[2/5] starry com/starry smali -> classes4.dex
+-rw-r--r--@ 1 aliang  wheel  410992 Sep 15 13:22 /tmp/ysxz_surgical.Rn0Wa0/classes4.dex
+[3/5] AndroidManifest：保留官方 WarriorApplication，仅追加星光组件
+  manifest patched: provider + service + foreground permissions
+[4/5] zip surgical merge -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+  merged ok; entries≈988; classes4.dex=410992; untouched 11/11 verified
+[5/5] 校验产物
+unsigned=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+md5=b802c5bab9df7d064fe90ca9c17c168e
+sha256=80918cb762fe0398bef54a587a9cfa22c5755ac04df363f33c6b612cc30f1d02
+[2026-09-15 13:22:39] [勇士之心] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:22:50] [勇士之心] stage=sign 开始
+命令: bash 04_scripts/勇士之心/ysxz_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+[sign] size=57629060
+[sign] md5=ab4638670b1c7eea52beee960594dda2
+[sign] sha256=5207b6f4c71d33b3efb96650f09ecdadb526270cd764540fbb1275bad5e7980d
+[sign] so_md5=8b28b38ba0f4f96dd7bdd2ad4d116027
+[2026-09-15 13:22:54] [勇士之心] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:25:08] [勇士之心] stage=install 开始
+命令: ALLOW_UNINSTALL=1 bash 04_scripts/勇士之心/install_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+authorized_uninstall=1
+package=com.fightingstars.games.warrior
+serial=f9a116a2
+apk=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+local_md5=ab4638670b1c7eea52beee960594dda2
+==> 卸载原版（已授权不保留数据）
+Success
+==> push 星光包
+/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 31.9 MB/s (57629060 bytes in 1.721s)
+==> pm install
+Success
+==> 设备包指纹校验
+[install-verify] 设备 base.apk md5 == 本地产物 (ab4638670b1c7eea52beee960594dda2) ✓
+install_ok=true
+device_md5=ab4638670b1c7eea52beee960594dda2
+[2026-09-15 13:25:40] [勇士之心] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:32:51] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+[stamp] 构建配置变化 → 清 obj_ysxz 强制全量重编
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+[build_so] md5=bef21d39d22c24d920ca73da9172171d
+[build_so] sha256=1ba84ede5603d45be7c43a09ebf252edf136827edec4a7f4bbc0f8e94313161a
+[build_so] done
+[2026-09-15 13:32:53] [勇士之心] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:33:38] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+[stamp] 构建配置变化 → 清 obj_ysxz 强制全量重编
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+[build_so] md5=d3a0579f8f88c0f1cd7202969e9d1d16
+[build_so] sha256=16c6d362c821b071e980c2a5d55f38e9e18e3056a033c77fddcfbca33c5f9a53
+[build_so] done
+[2026-09-15 13:33:41] [勇士之心] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:33:56] [勇士之心] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+[1/5] gradle assembleRelease (starry -> dex)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:stripReleaseDebugSymbols
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysxz_surgical.03EH09/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysxz_surgical.03EH09/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysxz_surgical.03EH09/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/5] starry com/starry smali -> classes4.dex
+-rw-r--r--@ 1 aliang  wheel  410992 Sep 15 13:34 /tmp/ysxz_surgical.03EH09/classes4.dex
+[3/5] AndroidManifest：保留官方 WarriorApplication，仅追加星光组件
+  manifest patched: provider + service + foreground permissions
+[4/5] zip surgical merge -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+  merged ok; entries≈988; classes4.dex=410992; untouched 11/11 verified
+[5/5] 校验产物
+unsigned=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+md5=e2933f9b08a6d8242dec6eb0f9354a37
+sha256=0f2bdc4d26fd1854ec47e239a11728e9388f87ddb1c148ee87f8a27ee38185b9
+[2026-09-15 13:34:21] [勇士之心] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:34:30] [勇士之心] stage=sign 开始
+命令: bash 04_scripts/勇士之心/ysxz_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+[sign] size=57629060
+[sign] md5=2f3c6046f161834072dc4b968a0d88f9
+[sign] sha256=5014c441436f960155ab0e81d43677857885357e13b7d23eb811adfb4334afde
+[sign] so_md5=d3a0579f8f88c0f1cd7202969e9d1d16
+[2026-09-15 13:34:33] [勇士之心] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:34:43] [勇士之心] stage=install 开始
+命令: ALLOW_UNINSTALL=1 bash 04_scripts/勇士之心/install_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+authorized_uninstall=1
+package=com.fightingstars.games.warrior
+serial=f9a116a2
+apk=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+local_md5=2f3c6046f161834072dc4b968a0d88f9
+==> push 星光包
+/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 31.2 MB/s (57629060 bytes in 1.760s)
+==> 先尝试同签名覆盖安装（保留当前应用数据）
+Success
+==> 设备包指纹校验
+[install-verify] 设备 base.apk md5 == 本地产物 (2f3c6046f161834072dc4b968a0d88f9) ✓
+install_ok=true
+device_md5=2f3c6046f161834072dc4b968a0d88f9
+[2026-09-15 13:34:47] [勇士之心] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:43:21] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+[stamp] 构建配置变化 → 清 obj_ysxz 强制全量重编
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+./Games/YsxzMod.cpp:79:10: error: use of undeclared identifier 'FindBytes'
+   79 |     if (!FindBytes(script, (size_t)n, "window.__require") ||
+      |          ^
+./Games/YsxzMod.cpp:80:10: error: use of undeclared identifier 'FindBytes'
+   80 |         !FindBytes(script, (size_t)n, "maxApDefRate") ||
+      |          ^
+./Games/YsxzMod.cpp:81:9: error: use of undeclared identifier 'FindBytes'
+   81 |         FindBytes(script, (size_t)n, "starry_ysxz_v1")) {
+      |         ^
+./Games/YsxzMod.cpp:208:17: error: use of undeclared identifier 'HookEvalString'
+  208 |             if (HookEvalString()) {
+      |                 ^
+./Games/YsxzMod.cpp:243:10: error: use of undeclared identifier 'HookEvalString'
+  243 |     if (!HookEvalString()) return false;
+      |          ^
+./Games/YsxzMod.cpp:270:9: error: use of undeclared identifier 'HookEvalString'
+  270 |         HookEvalString();
+      |         ^
+6 errors generated.
+make: *** [/Users/aliang/Library/Android/sdk/ndk/27.0.12077973/build/core/build-binary.mk:422: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_ysxz/local/arm64-v8a/objs/starry_magic/Games/YsxzMod.o] Error 1
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: *** Waiting for unfinished jobs....
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+ERROR: ndk-build rc=2
+[2026-09-15 13:43:22] [勇士之心] stage=build_so 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:44:13] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+[build_so] md5=41bce4294387cec33327f6cade658b7a
+[build_so] sha256=7e1325f73cb034100484b69f211ce4b1391de1e18bc11f0c19e9be6cd822b990
+[build_so] done
+[2026-09-15 13:44:15] [勇士之心] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:44:23] [勇士之心] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+[1/5] gradle assembleRelease (starry -> dex)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:mergeReleaseNativeLibs
+> Task :app:processReleaseManifestForPackage
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:compressReleaseAssets
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysxz_surgical.XGWHPX/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysxz_surgical.XGWHPX/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysxz_surgical.XGWHPX/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+50 actionable tasks: 50 executed
+[2/5] starry com/starry smali -> classes4.dex
+-rw-r--r--@ 1 aliang  wheel  410992 Sep 15 13:44 /tmp/ysxz_surgical.XGWHPX/classes4.dex
+[3/5] AndroidManifest：保留官方 WarriorApplication，仅追加星光组件
+  manifest patched: provider + service + foreground permissions
+[4/5] zip surgical merge -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+  merged ok; entries≈988; classes4.dex=410992; untouched 11/11 verified
+[5/5] 校验产物
+unsigned=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+md5=f0597047d8a48de900a891a6f73adbda
+sha256=473531a7c504601901d721d505247f57346e72fd17df249a888bfe75ee598bab
+[2026-09-15 13:44:49] [勇士之心] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:44:58] [勇士之心] stage=sign 开始
+命令: bash 04_scripts/勇士之心/ysxz_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+[sign] size=57629060
+[sign] md5=78621c9eb860d441bf8f9ff889098865
+[sign] sha256=61bd52637a64433b1c5b7946cc507a6e1791e04cdbb8c0ab176ef11425dbad8e
+[sign] so_md5=41bce4294387cec33327f6cade658b7a
+[2026-09-15 13:45:02] [勇士之心] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:45:10] [勇士之心] stage=install 开始
+命令: ALLOW_UNINSTALL=1 bash 04_scripts/勇士之心/install_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+authorized_uninstall=1
+package=com.fightingstars.games.warrior
+serial=f9a116a2
+apk=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+local_md5=78621c9eb860d441bf8f9ff889098865
+==> push 星光包
+/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 32.8 MB/s (57629060 bytes in 1.675s)
+==> 先尝试同签名覆盖安装（保留当前应用数据）
+Success
+==> 设备包指纹校验
+[install-verify] 设备 base.apk md5 == 本地产物 (78621c9eb860d441bf8f9ff889098865) ✓
+install_ok=true
+device_md5=78621c9eb860d441bf8f9ff889098865
+[2026-09-15 13:45:15] [勇士之心] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:56:50] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+wrote /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h bytes=17985
+verify_ysxz_patch_js: OK
+[stamp] 构建配置变化 → 清 obj_ysxz 强制全量重编
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+[build_so] md5=930f889249ad2bafad2ac586c191a6be
+[build_so] sha256=a63500f392522bd94316854263bea4256334cbae2c32dcb099290d1320fe5814
+[build_so] done
+[2026-09-15 13:56:53] [勇士之心] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:57:03] [勇士之心] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+[1/5] gradle assembleRelease (starry -> dex)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysxz_surgical.FaFoeA/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysxz_surgical.FaFoeA/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysxz_surgical.FaFoeA/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/5] starry com/starry smali -> classes4.dex
+-rw-r--r--@ 1 aliang  wheel  410992 Sep 15 13:57 /tmp/ysxz_surgical.FaFoeA/classes4.dex
+[3/5] AndroidManifest：保留官方 WarriorApplication，仅追加星光组件
+  manifest patched: provider + service + foreground permissions
+[4/5] zip surgical merge -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+  merged ok; entries≈988; classes4.dex=410992; untouched 11/11 verified
+[5/5] 校验产物
+unsigned=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+md5=3915848b8696f11f12bf600d0d2457e9
+sha256=80554573b59d24e92e4e7f98a9fa019979e8bd83073ead7465078e8af2a83716
+[2026-09-15 13:57:26] [勇士之心] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:57:42] [勇士之心] stage=sign 开始
+命令: bash 04_scripts/勇士之心/ysxz_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+[sign] size=57629060
+[sign] md5=98c7c8a20c8076af992fa04d909116fd
+[sign] sha256=e8351402c9968ae31ab23e1459c0a5c9cb3f367aa273fe26aeae75caec7a29a2
+[sign] so_md5=930f889249ad2bafad2ac586c191a6be
+[2026-09-15 13:57:45] [勇士之心] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 13:58:07] [勇士之心] stage=install 开始
+命令: ALLOW_UNINSTALL=1 bash 04_scripts/勇士之心/install_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+authorized_uninstall=1
+package=com.fightingstars.games.warrior
+serial=f9a116a2
+apk=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+local_md5=98c7c8a20c8076af992fa04d909116fd
+==> push 星光包
+/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 31.2 MB/s (57629060 bytes in 1.763s)
+==> 先尝试同签名覆盖安装（保留当前应用数据）
+Success
+==> 设备包指纹校验
+[install-verify] 设备 base.apk md5 == 本地产物 (98c7c8a20c8076af992fa04d909116fd) ✓
+install_ok=true
+device_md5=98c7c8a20c8076af992fa04d909116fd
+[2026-09-15 13:58:11] [勇士之心] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:07:52] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+wrote /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h bytes=17985
+verify_ysxz_patch_js: OK
+[stamp] 构建配置变化 → 清 obj_ysxz 强制全量重编
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+[build_so] md5=201b8edb28ff2fe6d54b7c0455162233
+[build_so] sha256=4bf9c64e04adeeffc4db5642bd21eb0416b9ea33d9389370886852c93c351d86
+[build_so] done
+[2026-09-15 14:07:55] [勇士之心] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:08:05] [勇士之心] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+[1/5] gradle assembleRelease (starry -> dex)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysxz_surgical.KxeI3X/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysxz_surgical.KxeI3X/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysxz_surgical.KxeI3X/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+50 actionable tasks: 50 executed
+[2/5] starry com/starry smali -> classes4.dex
+-rw-r--r--@ 1 aliang  wheel  410992 Sep 15 14:08 /tmp/ysxz_surgical.KxeI3X/classes4.dex
+[3/5] AndroidManifest：保留官方 WarriorApplication，仅追加星光组件
+  manifest patched: provider + service + foreground permissions
+[4/5] zip surgical merge -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+  merged ok; entries≈988; classes4.dex=410992; untouched 11/11 verified
+[5/5] 校验产物
+unsigned=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+md5=b76df1de7c99489d0c84e9d2cb099229
+sha256=6e6cf74c9a61dc06b68d2c799abacdee378ea9d6bf85a56387a150c833fdd13e
+[2026-09-15 14:08:29] [勇士之心] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:08:39] [勇士之心] stage=sign 开始
+命令: bash 04_scripts/勇士之心/ysxz_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+[sign] size=57629060
+[sign] md5=6183b7f8306a5ad8a3bc7630c9e8d256
+[sign] sha256=a2b4c6b2afc10ad0dbe91ec28463e14b26c5465a3e0ea29be9368f3373361051
+[sign] so_md5=201b8edb28ff2fe6d54b7c0455162233
+[2026-09-15 14:08:43] [勇士之心] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:08:52] [勇士之心] stage=install 开始
+命令: ALLOW_UNINSTALL=1 bash 04_scripts/勇士之心/install_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+authorized_uninstall=1
+package=com.fightingstars.games.warrior
+serial=f9a116a2
+apk=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+local_md5=6183b7f8306a5ad8a3bc7630c9e8d256
+==> push 星光包
+/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 30.1 MB/s (57629060 bytes in 1.827s)
+==> 先尝试同签名覆盖安装（保留当前应用数据）
+Success
+==> 设备包指纹校验
+[install-verify] 设备 base.apk md5 == 本地产物 (6183b7f8306a5ad8a3bc7630c9e8d256) ✓
+install_ok=true
+device_md5=6183b7f8306a5ad8a3bc7630c9e8d256
+[2026-09-15 14:08:57] [勇士之心] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:12:44] [勇士之心] stage=build_so 开始
+命令: bash 04_scripts/勇士之心/ysxz_build_so.sh
+目录: /Users/aliang/Documents/nixiang
+wrote /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h bytes=18549
+verify_ysxz_patch_js: OK
+[stamp] 构建配置变化 → 清 obj_ysxz 强制全量重编
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzEntry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= YsxzMod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= MainModern.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so
+[build_so] md5=c018dff9e646db3580fc4794c7e1b4d7
+[build_so] sha256=d490ca2ff6416f6ce335f6109ba0a00a331e963110553d464f01af97f55134ed
+[build_so] done
+[2026-09-15 14:12:47] [勇士之心] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:12:57] [勇士之心] stage=surgical 开始
+命令: bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+[1/5] gradle assembleRelease (starry -> dex)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:compressReleaseAssets
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/ysxz_surgical.DqjYCD/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/ysxz_surgical.DqjYCD/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/ysxz_surgical.DqjYCD/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/5] starry com/starry smali -> classes4.dex
+-rw-r--r--@ 1 aliang  wheel  410992 Sep 15 14:13 /tmp/ysxz_surgical.DqjYCD/classes4.dex
+[3/5] AndroidManifest：保留官方 WarriorApplication，仅追加星光组件
+  manifest patched: provider + service + foreground permissions
+[4/5] zip surgical merge -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+  merged ok; entries≈988; classes4.dex=410992; untouched 11/11 verified
+[5/5] 校验产物
+unsigned=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk
+md5=ae1398bbbbbed5d9f7585a645b2ad35f
+sha256=fe8ffe43e5812c4f232179abb1d33e1b6bc9ab12e3c6230b0a1dc5ba37102af4
+[2026-09-15 14:13:21] [勇士之心] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:13:39] [勇士之心] stage=sign 开始
+命令: bash 04_scripts/勇士之心/ysxz_sign.sh
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done -> /Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+[sign] size=57629060
+[sign] md5=936eae1c0d81b6f14d27fcb63463b087
+[sign] sha256=1a4d9dac72d525e0287bf3ec098012ecf762a6c690d0772b41dc91b992215c8a
+[sign] so_md5=c018dff9e646db3580fc4794c7e1b4d7
+[2026-09-15 14:13:43] [勇士之心] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-15 14:13:54] [勇士之心] stage=install 开始
+命令: ALLOW_UNINSTALL=1 bash 04_scripts/勇士之心/install_ysxz.sh
+目录: /Users/aliang/Documents/nixiang
+authorized_uninstall=1
+package=com.fightingstars.games.warrior
+serial=f9a116a2
+apk=/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk
+local_md5=936eae1c0d81b6f14d27fcb63463b087
+==> push 星光包
+/Users/aliang/Documents/nixiang/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 32.2 MB/s (57629060 bytes in 1.704s)
+==> 先尝试同签名覆盖安装（保留当前应用数据）
+Success
+==> 设备包指纹校验
+[install-verify] 设备 base.apk md5 == 本地产物 (936eae1c0d81b6f14d27fcb63463b087) ✓
+install_ok=true
+device_md5=936eae1c0d81b6f14d27fcb63463b087
+[2026-09-15 14:13:59] [勇士之心] stage=install 完成（校验通过）
+────────────────────────────────────────────

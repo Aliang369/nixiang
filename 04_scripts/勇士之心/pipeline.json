@@ -1,0 +1,485 @@
+{
+  "game": "勇士之心",
+  "version": "999999",
+  "notes": "2026-09-15 接手：已从真机只读拉取斌哥改包并确认 Cocos JS + 斌哥壳；当前目标是提取全部菜单功能修改点，完成后暂停等待原版。",
+  "params": {
+    "game_id": "ysxz",
+    "package": "com.fightingstars.games.warrior",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.fightingstars.games.warrior",
+    "GAME": "勇士之心",
+    "SERIAL": "f9a116a2",
+    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
+    "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（唯一真机与 root 检查）",
+      "requires": [],
+      "command": "bash 04_scripts/勇士之心/device_ready_ysxz.sh",
+      "preflight": [
+        "04_scripts/勇士之心/device_ready_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/.device_serial"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/device_info.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:28:35",
+      "artifacts": {
+        "04_scripts/勇士之心/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        },
+        "04_scripts/勇士之心/device_info.json": {
+          "md5": "dc6f554a110bfc685d48fdd00c5d79b7"
+        }
+      }
+    },
+    {
+      "id": "pull_mod",
+      "name": "真机只读提取斌哥改包（单一 base APK）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/勇士之心/fetch_mod_ysxz.sh",
+      "preflight": [
+        "04_scripts/勇士之心/fetch_mod_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/binge_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:28:42",
+      "artifacts": {
+        "04_scripts/勇士之心/binge_apk.json": {
+          "md5": "09ad467791182d3a6f0511e9c4c1116e"
+        }
+      },
+      "inputs": {
+        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/勇士之心/device_info.json": "dc6f554a110bfc685d48fdd00c5d79b7"
+      }
+    },
+    {
+      "id": "check_mod",
+      "name": "核对斌哥包身份、签名、引擎与壳特征",
+      "requires": [
+        "pull_mod"
+      ],
+      "command": "bash 04_scripts/勇士之心/check_mod_ysxz.sh",
+      "preflight": [
+        "04_scripts/勇士之心/check_mod_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/mod_check.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/mod_manifest.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/mod_signature.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/mod_entries.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:28:55",
+      "artifacts": {
+        "04_scripts/勇士之心/mod_check.json": {
+          "md5": "94165577149219a3e82d6455b2d177da"
+        },
+        "04_scripts/勇士之心/mod_manifest.txt": {
+          "md5": "66b0eddbdaf3a8268331368ca1cb2260"
+        },
+        "04_scripts/勇士之心/mod_signature.txt": {
+          "md5": "6c738fe20b5691f15993e21249cf2248"
+        },
+        "04_scripts/勇士之心/mod_entries.txt": {
+          "md5": "9655b0d2a90d164ef2f372b46e1ec182"
+        }
+      },
+      "inputs": {
+        "04_scripts/勇士之心/binge_apk.json": "09ad467791182d3a6f0511e9c4c1116e"
+      }
+    },
+    {
+      "id": "dump_mem",
+      "name": "运行时只读提取斌哥壳 RX/RW/BSS/RWX 内存",
+      "requires": [
+        "check_mod"
+      ],
+      "command": "bash 04_scripts/勇士之心/dump_mem_ysxz.sh",
+      "preflight": [
+        "04_scripts/勇士之心/dump_mem_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/memdump_on/maps.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/memdump_on/dump_log.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:31:05",
+      "artifacts": {
+        "09_test/勇士之心/memdump_on/maps.txt": {
+          "md5": "d9fbb5d23c7e1e45af0e8dda3e3e644d"
+        },
+        "09_test/勇士之心/memdump_on/dump_log.txt": {
+          "md5": "c216262f74e5e8768cbacaa118e4ddd6"
+        }
+      },
+      "inputs": {
+        "04_scripts/勇士之心/mod_check.json": "94165577149219a3e82d6455b2d177da",
+        "04_scripts/勇士之心/mod_manifest.txt": "66b0eddbdaf3a8268331368ca1cb2260",
+        "04_scripts/勇士之心/mod_signature.txt": "6c738fe20b5691f15993e21249cf2248",
+        "04_scripts/勇士之心/mod_entries.txt": "9655b0d2a90d164ef2f372b46e1ec182"
+      }
+    },
+    {
+      "id": "scan_mem",
+      "name": "扫描运行时注入 JS、get_ret 门控与功能字符串",
+      "requires": [
+        "dump_mem"
+      ],
+      "command": "python3.11 04_scripts/_common/scan_shell_mem.py 09_test/勇士之心/memdump_on",
+      "preflight": [],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/memdump_on/scan_report.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:31:13",
+      "artifacts": {
+        "09_test/勇士之心/memdump_on/scan_report.txt": {
+          "md5": "d15d22afabfeeebf1c78757d0eb91848"
+        }
+      },
+      "inputs": {
+        "09_test/勇士之心/memdump_on/maps.txt": "d9fbb5d23c7e1e45af0e8dda3e3e644d",
+        "09_test/勇士之心/memdump_on/dump_log.txt": "c216262f74e5e8768cbacaa118e4ddd6"
+      }
+    },
+    {
+      "id": "pull_runtime",
+      "name": "只读导出 mod_sw.txt、mod_bridge.js 与 files 清单",
+      "requires": [
+        "scan_mem"
+      ],
+      "command": "bash 04_scripts/勇士之心/pull_runtime_ysxz.sh",
+      "preflight": [
+        "04_scripts/勇士之心/pull_runtime_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/runtime/runtime_pull.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/runtime/mod_sw.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/runtime/files_listing.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:37:44",
+      "artifacts": {
+        "09_test/勇士之心/runtime/runtime_pull.json": {
+          "md5": "4e7c592bdad9838ce17c16d5f0ac45c7"
+        },
+        "09_test/勇士之心/runtime/mod_sw.txt": {
+          "md5": "9f01357fbc69d7ca7f83f9926ae7a77c"
+        },
+        "09_test/勇士之心/runtime/files_listing.txt": {
+          "md5": "3aa6757d0b2537d98cf04dcbe38cc12c"
+        }
+      },
+      "inputs": {
+        "09_test/勇士之心/memdump_on/scan_report.txt": "d15d22afabfeeebf1c78757d0eb91848"
+      }
+    },
+    {
+      "id": "dump_mem_all",
+      "name": "抓取斌哥菜单全开状态下的壳内存",
+      "requires": [
+        "pull_runtime"
+      ],
+      "command": "bash 04_scripts/勇士之心/dump_mem_state_ysxz.sh memdump_all",
+      "preflight": [
+        "04_scripts/勇士之心/dump_mem_state_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/memdump_all/dump_log.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/memdump_all/mod_sw.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:42:56",
+      "artifacts": {
+        "09_test/勇士之心/memdump_all/dump_log.txt": {
+          "md5": "5fcd7fc43edc6f4724855de86a580273"
+        },
+        "09_test/勇士之心/memdump_all/mod_sw.txt": {
+          "md5": "89d598e394d6f4d419fa2d681bda6703"
+        }
+      },
+      "inputs": {
+        "09_test/勇士之心/runtime/runtime_pull.json": "4e7c592bdad9838ce17c16d5f0ac45c7",
+        "09_test/勇士之心/runtime/mod_sw.txt": "9f01357fbc69d7ca7f83f9926ae7a77c",
+        "09_test/勇士之心/runtime/files_listing.txt": "3aa6757d0b2537d98cf04dcbe38cc12c"
+      }
+    },
+    {
+      "id": "scan_mem_all",
+      "name": "扫描全开态解密注入 JS 与全部功能锚点",
+      "requires": [
+        "dump_mem_all"
+      ],
+      "command": "python3.11 04_scripts/_common/scan_shell_mem.py 09_test/勇士之心/memdump_all",
+      "preflight": [],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/memdump_all/scan_report.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 12:43:16",
+      "artifacts": {
+        "09_test/勇士之心/memdump_all/scan_report.txt": {
+          "md5": "d15d22afabfeeebf1c78757d0eb91848"
+        }
+      },
+      "inputs": {
+        "09_test/勇士之心/memdump_all/dump_log.txt": "5fcd7fc43edc6f4724855de86a580273",
+        "09_test/勇士之心/memdump_all/mod_sw.txt": "89d598e394d6f4d419fa2d681bda6703"
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读提取 TapTap 原版（单一 base APK）",
+      "requires": [
+        "scan_mem_all"
+      ],
+      "command": "bash 04_scripts/勇士之心/fetch_official_ysxz.sh",
+      "preflight": [
+        "04_scripts/勇士之心/fetch_official_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/official_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 13:12:11",
+      "artifacts": {
+        "04_scripts/勇士之心/official_apk.json": {
+          "md5": "c9d807879d535f12816e5bf715204e8d"
+        }
+      },
+      "inputs": {
+        "09_test/勇士之心/memdump_all/scan_report.txt": "d15d22afabfeeebf1c78757d0eb91848"
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对 TapTap 原版身份、签名与斌哥包核心输入差异",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "python3.11 04_scripts/勇士之心/check_official_ysxz.py",
+      "preflight": [
+        "04_scripts/勇士之心/check_official_ysxz.py"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/official_check.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/official_manifest.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/official_signature.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/勇士之心/official_compare.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 13:13:14",
+      "artifacts": {
+        "04_scripts/勇士之心/official_check.json": {
+          "md5": "e70c10d1930fc156c58c838cffa4c27a"
+        },
+        "04_scripts/勇士之心/official_manifest.txt": {
+          "md5": "92be0774a762e99ce5ced2e4c9a05c02"
+        },
+        "04_scripts/勇士之心/official_signature.txt": {
+          "md5": "e6d7bf0b9082e21ca7daf926791520f6"
+        },
+        "04_scripts/勇士之心/official_compare.txt": {
+          "md5": "8e3f3b8271213c7dd969a5f151295f08"
+        }
+      },
+      "inputs": {
+        "04_scripts/勇士之心/official_apk.json": "c9d807879d535f12816e5bf715204e8d"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 Ysxz 星光 so（evalString RVA splice）",
+      "requires": [
+        "check_official"
+      ],
+      "command": "bash 04_scripts/勇士之心/ysxz_build_so.sh",
+      "preflight": [
+        "04_scripts/勇士之心/ysxz_build_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so",
+          "pattern": "ysxz"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 14:12:47",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": {
+          "md5": "c018dff9e646db3580fc4794c7e1b4d7"
+        }
+      },
+      "inputs": {
+        "04_scripts/勇士之心/official_check.json": "e70c10d1930fc156c58c838cffa4c27a",
+        "04_scripts/勇士之心/official_manifest.txt": "92be0774a762e99ce5ced2e4c9a05c02",
+        "04_scripts/勇士之心/official_signature.txt": "e6d7bf0b9082e21ca7daf926791520f6",
+        "04_scripts/勇士之心/official_compare.txt": "8e3f3b8271213c7dd969a5f151295f08"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "TapTap 1.0.3 外科组装（保留官方 dex/arsc/so/assets）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh",
+      "preflight": [
+        "mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 14:13:20",
+      "artifacts": {
+        "08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk": {
+          "md5": "ae1398bbbbbed5d9f7585a645b2ad35f"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": "c018dff9e646db3580fc4794c7e1b4d7"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名星光包并校验包内 so",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash 04_scripts/勇士之心/ysxz_sign.sh",
+      "preflight": [
+        "04_scripts/勇士之心/ysxz_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 14:13:43",
+      "artifacts": {
+        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": {
+          "md5": "936eae1c0d81b6f14d27fcb63463b087"
+        }
+      },
+      "inputs": {
+        "08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk": "ae1398bbbbbed5d9f7585a645b2ad35f"
+      }
+    },
+    {
+      "id": "install",
+      "name": "已授权卸载原版并安装星光包 + 设备 MD5 校验",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "ALLOW_UNINSTALL=1 bash 04_scripts/勇士之心/install_ysxz.sh",
+      "preflight": [
+        "04_scripts/勇士之心/install_ysxz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-15 14:13:59",
+      "artifacts": {
+        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": {
+          "md5": "936eae1c0d81b6f14d27fcb63463b087"
+        }
+      },
+      "inputs": {
+        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": "936eae1c0d81b6f14d27fcb63463b087",
+        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/勇士之心/device_info.json": "dc6f554a110bfc685d48fdd00c5d79b7"
+      }
+    }
+  ]
+}

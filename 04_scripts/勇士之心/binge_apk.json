@@ -1,0 +1,15 @@
+{
+  "package": "com.fightingstars.games.warrior",
+  "game": "勇士之心",
+  "kind": "binge_mod",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_999999_binge_mod.apk",
+  "version_name": "999999",
+  "version_code": 999999,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~Ry50o17uB-Rtb-rKAS48TQ==/com.fightingstars.games.warrior-I5Tl755j22FsYb6GlhQNtQ==/base.apk",
+  "size": 31303816,
+  "sha256": "386c3d72a8bb8be02a0bd2f3a75c6b2e1379402a6cbbc17885e69e82b754125a",
+  "md5": "b04dee2d596f152f83ff2f4195151651"
+}

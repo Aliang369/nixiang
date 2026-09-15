@@ -1,0 +1,48 @@
+{
+  "game": "勇士之心",
+  "mod_apk": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_999999_binge_mod.apk",
+  "mod_md5": "b04dee2d596f152f83ff2f4195151651",
+  "official_apk": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk",
+  "official_md5": "8d47c857b3c32e37b79d17775f30e2d4",
+  "official_sha256": "c88b92068ae9176d671824fbb465c6c72b5344497ba53f8ef0f43d5807ce5204",
+  "official_size": 56866924,
+  "package": "com.fightingstars.games.warrior",
+  "version_name": "1.0.3",
+  "version_code": "5",
+  "launchable_activity": "com.ymeng.sdk.channel.egsdk.SplashActivity",
+  "signer_dn": "CN=shan, OU=bingo, O=bingo, L=guangzhou, ST=guangdong, C=CN",
+  "signer_sha256": "de8a75d30a1831f3ddc83f38f285513110fde9ab919fb4e471653f86b5083e0a",
+  "channel": "taptap",
+  "compare": {
+    "lib/arm64-v8a/libcocos2djs.so": {
+      "official_sha256": "8459ad50f97265e218c25f77280db3186a458f5d54cd8dcede16f486e481c719",
+      "mod_sha256": "8459ad50f97265e218c25f77280db3186a458f5d54cd8dcede16f486e481c719",
+      "match": true
+    },
+    "lib/arm64-v8a/libSDKloading.so": {
+      "official_sha256": "MISSING",
+      "mod_sha256": "aa551c8e99024f822ae3f09682c5489c4e941c4c1c26cc3494a8350dc000d465",
+      "match": false
+    },
+    "assets/main.js": {
+      "official_sha256": "f231120146ea1a66cc78fe8ece71abc9f408ac9794a66d9446af8016b53401af",
+      "mod_sha256": "f231120146ea1a66cc78fe8ece71abc9f408ac9794a66d9446af8016b53401af",
+      "match": true
+    },
+    "assets/src/cocos2d-jsb.js": {
+      "official_sha256": "ac005223eec6c0697492dd42de14c266f3c841e824b7a4035cc293f3ac5cf269",
+      "mod_sha256": "ac005223eec6c0697492dd42de14c266f3c841e824b7a4035cc293f3ac5cf269",
+      "match": true
+    },
+    "assets/src/settings.js": {
+      "official_sha256": "171a9d9b6fe395f9a8ada57a840383347cf86cbc7b983960851d6d0df3a5a689",
+      "mod_sha256": "171a9d9b6fe395f9a8ada57a840383347cf86cbc7b983960851d6d0df3a5a689",
+      "match": true
+    },
+    "assets/assets/main/index.js": {
+      "official_sha256": "19fa25ddf653ad8881df013b4bf48da4ab77ec0496bc36dfae05a2787189308b",
+      "mod_sha256": "19fa25ddf653ad8881df013b4bf48da4ab77ec0496bc36dfae05a2787189308b",
+      "match": true
+    }
+  }
+}

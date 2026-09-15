@@ -1,0 +1,4 @@
+Signer #1 certificate DN: CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2
+Signer #1 certificate SHA-256 digest: 11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba
+Signer #1 certificate SHA-1 digest: dde5c4a389c45d64c3802df7fc911171f3537019
+Signer #1 certificate MD5 digest: e571e96ec9428b88c9d3e358cbd3d655
