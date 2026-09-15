@@ -1,0 +1,50 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/黑暗领域",
+  "keep": "黑暗领域_1.0_combo_fix3-releaseSigned.apk",
+  "keep_size": 117345225,
+  "keep_md5": "a13c724224655fa99ca4c37cf5814927",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "黑暗领域_1.0_combo_fix-releaseSigned.apk.idsig",
+      "size": 931355,
+      "md5": "dc87d249321bab826102977b7bccb0ad"
+    },
+    {
+      "name": "黑暗领域_1.0_combo_fix2-releaseSigned.apk",
+      "size": 117287881,
+      "md5": "720e15590f6285a0175f24ad2a5f0220"
+    },
+    {
+      "name": "黑暗领域_1.0_combo_fix2-releaseSigned.apk.idsig",
+      "size": 931355,
+      "md5": "deca106fa09a8171adec74c6ba30ada0"
+    },
+    {
+      "name": "黑暗领域_1.0_combo_fix-releaseSigned.apk",
+      "size": 117291977,
+      "md5": "29516fd6f5c308c41fd93c7581198f9c"
+    },
+    {
+      "name": "黑暗领域_1.0_combo_fix-unsigned.apk",
+      "size": 117285494,
+      "md5": "f444fe078a51cf9a22c65f18ec417492"
+    },
+    {
+      "name": "黑暗领域_1.0_combo_fix2-unsigned.apk",
+      "size": 117276424,
+      "md5": "1fbf08f2b4f11f852c7c55c3e7932d29"
+    },
+    {
+      "name": "黑暗领域_1.0_combo_fix3-releaseSigned.apk.idsig",
+      "size": 931355,
+      "md5": "03aaa88b219654521cca6dcbfead6356"
+    },
+    {
+      "name": "黑暗领域_1.0_combo_fix3-unsigned.apk",
+      "size": 117333525,
+      "md5": "610b6522ae18744893e8409dbea143fb"
+    }
+  ],
+  "removed_count": 8
+}

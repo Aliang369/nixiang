@@ -88,12 +88,12 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 ## 收官口令（用户说「收尾+正式包+清理+git」时，AI 展开此清单）
 
 1. 文档收尾：游戏文档更新（结论/证据/遗留），current.md 索引行同步
-2. 正式包：08_output 唯一留存（用户手动管理，AI 只核对 hash 并记录）
+2. 正式包：核对指定正式包签名/哈希后，执行 `bash 04_scripts/_common/prune_output_final.sh 08_output/{游戏} {正式包} --apply --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json`；最终目录只保留一个正式 APK，被删候选包/idsig 的 hash/大小入清单
 3. 官包归位：02_apks（用户手动管理）
-4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；删前 `git status` 必须干净；中文路径先 `git config core.quotepath false`）
+4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；只清理本游戏路径；删前逐项核对再生依据；中文路径先 `git config core.quotepath false`）
 5. 设备残留：真机会话按 TOOLBOOK「真机残留清理」回收证据与残留
-6. **git 固化**：`git add -A && git commit -m "<描述>" && git push`（git 资产有变更即固化；push 冲突/报错停下问用户）
-7. 验证收口：`git status` 干净 + current.md 有本游戏行 + 汇报 CLAIM/VERDICT/EVIDENCE
+6. **git 固化**：只 `git add` 本任务相关路径，禁止把工作区无关改动带入提交；`git commit` 后 `git push`（push 冲突/网络失败则保留本地提交并明确报告）
+7. 验证收口：本任务相关路径无未提交改动；若工作区仍有无关改动，列表报告且不纳入提交。current.md 有本游戏行 + 汇报 CLAIM/VERDICT/EVIDENCE
 
 ## 现有脚本资产的角色
 
