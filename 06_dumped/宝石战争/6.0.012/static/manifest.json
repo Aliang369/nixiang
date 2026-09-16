@@ -1,0 +1,529 @@
+{
+  "version": "1.0.0.00",
+  "platform": "Android",
+  "cdnRemoteUrl": "",
+  "cdnHotVRootUrl": "https://bszzcdn.acingame.com/gow/HotUpdate/1.0.0.00/",
+  "files": [
+    {
+      "path": "Android/3/AdventurersPath.unity3d",
+      "hash": "c04896fd20741a25e9aa0af56c5361dd",
+      "size": 3864669
+    },
+    {
+      "path": "Android/3/AlchemyLab.unity3d",
+      "hash": "7aa97457916d5ab5a7fc9094b326aab7",
+      "size": 1151508
+    },
+    {
+      "path": "Android/3/Armour1.unity3d",
+      "hash": "5601f1dd0c78a89a92b6c4ae1bdad06f",
+      "size": 945914
+    },
+    {
+      "path": "Android/3/Banners.unity3d",
+      "hash": "f389cece21ebcd06d6b01205732cd424",
+      "size": 3454361
+    },
+    {
+      "path": "Android/3/Base.unity3d",
+      "hash": "d8debb3eefaf75e1db6367a3e77c1975",
+      "size": 5000354
+    },
+    {
+      "path": "Android/3/Chat.unity3d",
+      "hash": "05f3a1369f12c1b30ecb73569526ad6b",
+      "size": 8062242
+    },
+    {
+      "path": "Android/3/CommonResources.unity3d",
+      "hash": "f49c27eb197b56691993e4c3e05ee6ff",
+      "size": 3411584
+    },
+    {
+      "path": "Android/3/Dungeon.unity3d",
+      "hash": "34462a08ec8cd562345580a033026e5d",
+      "size": 1174709
+    },
+    {
+      "path": "Android/3/F1.unity3d",
+      "hash": "6cdfba36274f218058ffdfea1b57a3a0",
+      "size": 597156
+    },
+    {
+      "path": "Android/3/GuildShields.unity3d",
+      "hash": "e50c66f9d416b8e806bc1750a653ec2a",
+      "size": 1641454
+    },
+    {
+      "path": "Android/3/HeroBackdrop_K00.unity3d",
+      "hash": "02fdbd5eac5f746f7e67aae472ccdd36",
+      "size": 141428
+    },
+    {
+      "path": "Android/3/HeroBackdrop_K06.unity3d",
+      "hash": "f93363b58086f3ff3940a5d7db3b3f61",
+      "size": 142517
+    },
+    {
+      "path": "Android/3/HeroBackdrop_K15.unity3d",
+      "hash": "ef23c61ad72cd1106c35421464bf27c7",
+      "size": 141999
+    },
+    {
+      "path": "Android/3/K00.unity3d",
+      "hash": "59a08accd57c202c5859cec18b95303a",
+      "size": 3227404
+    },
+    {
+      "path": "Android/3/K01.unity3d",
+      "hash": "f88c9ae47756aff53da200c483cc18e9",
+      "size": 3238934
+    },
+    {
+      "path": "Android/3/K02.unity3d",
+      "hash": "c02cf08e53e66cb211e81a5f7d5ee014",
+      "size": 3300293
+    },
+    {
+      "path": "Android/3/K03.unity3d",
+      "hash": "b247aa77e42d242819312e0d28ddf23d",
+      "size": 3129369
+    },
+    {
+      "path": "Android/3/K04.unity3d",
+      "hash": "97a5745b9026c6eb8a64d7d031fc787a",
+      "size": 3279682
+    },
+    {
+      "path": "Android/3/K05.unity3d",
+      "hash": "b569f0c3f40aa71abd39503ea93f1229",
+      "size": 3366776
+    },
+    {
+      "path": "Android/3/K06.unity3d",
+      "hash": "593bc4fcac21610a5a1eddcd445adaaa",
+      "size": 3333163
+    },
+    {
+      "path": "Android/3/K07.unity3d",
+      "hash": "c86a173ab38382cf5993bff8e2adf4c9",
+      "size": 3225562
+    },
+    {
+      "path": "Android/3/K08.unity3d",
+      "hash": "b09b0192e0029dbec5290ab7d4e7cd0e",
+      "size": 3387396
+    },
+    {
+      "path": "Android/3/K09.unity3d",
+      "hash": "58c2371dc79137fdd6c76af31fd49244",
+      "size": 3340396
+    },
+    {
+      "path": "Android/3/K10.unity3d",
+      "hash": "0fdbe99160bbc51870906531be41cfcb",
+      "size": 4585788
+    },
+    {
+      "path": "Android/3/K11.unity3d",
+      "hash": "a348e31fc9f6abd51c50604b7c2b8d71",
+      "size": 3368968
+    },
+    {
+      "path": "Android/3/K12.unity3d",
+      "hash": "7bf553f0c15c8048f41e82c6a3fd31d5",
+      "size": 3290629
+    },
+    {
+      "path": "Android/3/K13.unity3d",
+      "hash": "079c775b6729927201e2ef4cc816920f",
+      "size": 3194961
+    },
+    {
+      "path": "Android/3/K14.unity3d",
+      "hash": "89c47b09dd7e1dde5c66265d9c0eb6e6",
+      "size": 3436902
+    },
+    {
+      "path": "Android/3/K15.unity3d",
+      "hash": "b1c83b6b6031daa5d6f5884fac81f843",
+      "size": 3479941
+    },
+    {
+      "path": "Android/3/K16.unity3d",
+      "hash": "20891f7955166e5d14e1d2cb01885ce4",
+      "size": 3494726
+    },
+    {
+      "path": "Android/3/K17.unity3d",
+      "hash": "cad232ab0d29a8885824d657062e4c7e",
+      "size": 3379637
+    },
+    {
+      "path": "Android/3/K18.unity3d",
+      "hash": "997697116c9d22068bb96f572d1eba4c",
+      "size": 3639145
+    },
+    {
+      "path": "Android/3/K19.unity3d",
+      "hash": "302efbfdc3a3be4786e0b18da232abb7",
+      "size": 3972933
+    },
+    {
+      "path": "Android/3/K20.unity3d",
+      "hash": "417f580e5556919b0bf13e9f2a5f679e",
+      "size": 4677313
+    },
+    {
+      "path": "Android/3/K21.unity3d",
+      "hash": "82c9b4cef4b87b6f0c4be2c09584d415",
+      "size": 3382396
+    },
+    {
+      "path": "Android/3/K22.unity3d",
+      "hash": "e855ff02559200c67bf27f77f2eb9075",
+      "size": 3293796
+    },
+    {
+      "path": "Android/3/K23.unity3d",
+      "hash": "aefda53913f48e7d30832d2ae4c3406c",
+      "size": 3503184
+    },
+    {
+      "path": "Android/3/K24.unity3d",
+      "hash": "e5f00851e50a7ee906f913096557c9b6",
+      "size": 3270386
+    },
+    {
+      "path": "Android/3/K25.unity3d",
+      "hash": "466c98768aff9bdffc944f3e1e3811b7",
+      "size": 3262074
+    },
+    {
+      "path": "Android/3/K26.unity3d",
+      "hash": "5b7c896207c39fe42752b57951746112",
+      "size": 2270912
+    },
+    {
+      "path": "Android/3/K27.unity3d",
+      "hash": "6fd4dd4b5fe4faf8ac4bc9faab97aa77",
+      "size": 3478813
+    },
+    {
+      "path": "Android/3/K28.unity3d",
+      "hash": "5ff0c459d9022456d764043b94c547cc",
+      "size": 3571617
+    },
+    {
+      "path": "Android/3/K29.unity3d",
+      "hash": "9d7155ca7551a5a89363754de92c33d3",
+      "size": 4286505
+    },
+    {
+      "path": "Android/3/K30.unity3d",
+      "hash": "15ff2def08d98105ea06ff8c403925b6",
+      "size": 3436314
+    },
+    {
+      "path": "Android/3/K31.unity3d",
+      "hash": "4da5212d6c519cdc665a68bb2378c06c",
+      "size": 3396465
+    },
+    {
+      "path": "Android/3/K32.unity3d",
+      "hash": "e8d6c438f94aeeb0d709108700ec8755",
+      "size": 2484180
+    },
+    {
+      "path": "Android/3/K34.unity3d",
+      "hash": "0485f86c44954b6beb858531a35ef1cf",
+      "size": 3914367
+    },
+    {
+      "path": "Android/3/K35.unity3d",
+      "hash": "4c8dec21af28a9d5afafe99f41d785ec",
+      "size": 3184788
+    },
+    {
+      "path": "Android/3/K45.unity3d",
+      "hash": "d742ece3d3af5f21a4fe649a163652ac",
+      "size": 2866994
+    },
+    {
+      "path": "Android/3/K70.unity3d",
+      "hash": "0015b76d979390ba137840af192a85ca",
+      "size": 2444199
+    },
+    {
+      "path": "Android/3/K72.unity3d",
+      "hash": "26b5c22dc3130ff2a17019a80da40c41",
+      "size": 3420072
+    },
+    {
+      "path": "Android/3/K74.unity3d",
+      "hash": "bc58e5d35204918e327d2566b27c0085",
+      "size": 2239187
+    },
+    {
+      "path": "Android/3/KingdomQuestMaps.unity3d",
+      "hash": "7819196f27e864f199030c349ebd1dab",
+      "size": 3218168
+    },
+    {
+      "path": "Android/3/Locations.unity3d",
+      "hash": "0d833ac837cb2d1c1c39899fe6b95729",
+      "size": 3996110
+    },
+    {
+      "path": "Android/3/M2.unity3d",
+      "hash": "b2a18ad58f602aa38a64449b4e2d0d56",
+      "size": 575897
+    },
+    {
+      "path": "Android/3/M3.unity3d",
+      "hash": "60aa87f5fc5b3ce7abd582967a1d9b06",
+      "size": 1190013
+    },
+    {
+      "path": "Android/3/MissingTroopDataAssets.unity3d",
+      "hash": "42a2aae6307bcdfc799e41f04fe42f09",
+      "size": 128048309
+    },
+    {
+      "path": "Android/3/Music.unity3d",
+      "hash": "63ad82fa7eca6d3b46e4fab205082e4f",
+      "size": 7979916
+    },
+    {
+      "path": "Android/3/Prison.unity3d",
+      "hash": "370244a877b7361822d6819d10c3bbaa",
+      "size": 1158325
+    },
+    {
+      "path": "Android/3/Roles.unity3d",
+      "hash": "74a1335fcc1a9493eb60a6dc7fb9049c",
+      "size": 92256
+    },
+    {
+      "path": "Android/3/Ship.unity3d",
+      "hash": "0ae312179d0698a77246d3b2e44f9085",
+      "size": 1144523
+    },
+    {
+      "path": "Android/3/Tavern.unity3d",
+      "hash": "f3fecf595e772d61136d4f3f9a2b27cf",
+      "size": 1099655
+    },
+    {
+      "path": "Android/3/TowerOfDoom.unity3d",
+      "hash": "b3059825dfa1cc35a132ab1883cd616b",
+      "size": 1066905
+    },
+    {
+      "path": "Android/3/Troop_Boss_K24.unity3d",
+      "hash": "dc6c5cd09a72fcd2c2041cc1fb5faee6",
+      "size": 441045
+    },
+    {
+      "path": "Android/3/Troop_CastSpell.unity3d",
+      "hash": "ea07622a23ff8aba1aac3d06c9682a27",
+      "size": 91315
+    },
+    {
+      "path": "Android/3/Troop_Death.unity3d",
+      "hash": "b31dd5e469ed91dec03bbd34ff387bea",
+      "size": 1019350
+    },
+    {
+      "path": "Android/3/Troop_K00_00.unity3d",
+      "hash": "1239d85258db577eff5dd1eaf25b035a",
+      "size": 515006
+    },
+    {
+      "path": "Android/3/Troop_K00_03.unity3d",
+      "hash": "90739d6518f380d12926ca49e272db50",
+      "size": 505227
+    },
+    {
+      "path": "Android/3/Troop_K00_08.unity3d",
+      "hash": "9c9fe4389721d60b9ba1992477491630",
+      "size": 548382
+    },
+    {
+      "path": "Android/3/Troop_K14_06.unity3d",
+      "hash": "94f3225e26aa42f9abcbc550afe43b69",
+      "size": 1157476
+    },
+    {
+      "path": "Android/3/Troop_K14_26.unity3d",
+      "hash": "d872dfc7e267d8ad96ffca65bd0b758f",
+      "size": 516576
+    },
+    {
+      "path": "Android/3/Troop_K14_27.unity3d",
+      "hash": "e509a7c6d877ba38565d9edd86434e93",
+      "size": 590582
+    },
+    {
+      "path": "Android/3/Troop_K14_28.unity3d",
+      "hash": "e4b7ad2845855f7d489a2d95613c1815",
+      "size": 550650
+    },
+    {
+      "path": "Android/3/Troop_K14_29.unity3d",
+      "hash": "2e572bca18956fa5cc75b2460488f058",
+      "size": 444018
+    },
+    {
+      "path": "Android/3/Troop_K24_01.unity3d",
+      "hash": "f2db0ce77b20cbc8cb3d485786b408fe",
+      "size": 525140
+    },
+    {
+      "path": "Android/3/Troop_K24_03.unity3d",
+      "hash": "38b1ad0bb46df786fa9ad3fe2206d7af",
+      "size": 469400
+    },
+    {
+      "path": "Android/3/Troop_K29_10.unity3d",
+      "hash": "9cb4b1431d08aa66dd41bfc7a01d2bb4",
+      "size": 427988
+    },
+    {
+      "path": "Android/3/Troop_Quest_K00.unity3d",
+      "hash": "12a00c379b2acc0b85aeb3a24b0c22b0",
+      "size": 849521
+    },
+    {
+      "path": "Android/3/Troop_Select.unity3d",
+      "hash": "663bd2f074b541ca4161b0c5be1ab822",
+      "size": 4363312
+    },
+    {
+      "path": "Android/3/Troop_Spell.unity3d",
+      "hash": "b89668617701bbbf451a1f3f1cf298fe",
+      "size": 4913525
+    },
+    {
+      "path": "Android/3/Tutorials.unity3d",
+      "hash": "a71ec36163c2a0c265ca40f1e765efaa",
+      "size": 1754192
+    },
+    {
+      "path": "Android/3/UncommonTroopCards.unity3d",
+      "hash": "bfa33122792207f902e947f9b426350e",
+      "size": 1330404
+    },
+    {
+      "path": "Android/3/Vault.unity3d",
+      "hash": "f1b0f807caec6ce9bb2f5d4f78d96389",
+      "size": 1161500
+    },
+    {
+      "path": "Android/3/Voice.unity3d",
+      "hash": "1db91943d0c1cfd4b3cb5ed43a095f0a",
+      "size": 133386
+    },
+    {
+      "path": "Android/3/Weapons16.unity3d",
+      "hash": "d191ede7b7becf7c0aeafd7e0ef9e764",
+      "size": 695656
+    },
+    {
+      "path": "Android/3/WorldMap_Main.unity3d",
+      "hash": "22ce019bfca34200346b4e23acaa84b1",
+      "size": 9668968
+    },
+    {
+      "path": "Android/Dlls/AOTMetadata.json",
+      "hash": "0ce57c1e4a9b8ce35d1ec53c01d7a4aa",
+      "size": 335
+    },
+    {
+      "path": "Android/Dlls/Cinemachine.dll.bytes",
+      "hash": "f2b2d3ba64e4c506d3acf296db7b3053",
+      "size": 270336
+    },
+    {
+      "path": "Android/Dlls/NGUI.dll.bytes",
+      "hash": "a786337b2d514c67dc17f4603e6b38dc",
+      "size": 413696
+    },
+    {
+      "path": "Android/Dlls/Newtonsoft.Json.dll.bytes",
+      "hash": "c3981773999d5d426c98c54d6461c09f",
+      "size": 600576
+    },
+    {
+      "path": "Android/Dlls/System.Core.dll.bytes",
+      "hash": "e280d51269a2228c536741b7d316b8e6",
+      "size": 449536
+    },
+    {
+      "path": "Android/Dlls/System.Network.dll.bytes",
+      "hash": "685e7bbf43fd27e7cc53915e0ab8d510",
+      "size": 8366592
+    },
+    {
+      "path": "Android/Dlls/System.Platform.dll.bytes",
+      "hash": "47129196e9832e6d0592c949b4e33684",
+      "size": 36864
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.AndroidJNIModule.dll.bytes",
+      "hash": "15a41e607df77b35d85ca4492d244f93",
+      "size": 78336
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.AnimationModule.dll.bytes",
+      "hash": "229a6ecc954b4c231732de219a93bae3",
+      "size": 63488
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.AssetBundleModule.dll.bytes",
+      "hash": "2d851648fc34b5bdb569447b9bb18041",
+      "size": 19968
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.CoreModule.dll.bytes",
+      "hash": "4ebdd00a1fac822d25bbf17bd84301de",
+      "size": 724480
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.JSONSerializeModule.dll.bytes",
+      "hash": "73f4b71519141a7fbec32863bfc7dcc8",
+      "size": 11264
+    },
+    {
+      "path": "Android/Dlls/mscorlib.dll.bytes",
+      "hash": "39f617cedec09565ca0b3e99b09d127e",
+      "size": 2597376
+    },
+    {
+      "path": "Android/Main.unity3d",
+      "hash": "19cbffdeee72f725f714d82e25807aa3",
+      "size": 70742138
+    },
+    {
+      "path": "Android/RuntimeAssembliesReceipt.json",
+      "hash": "2d54f075a2e142b3113c1beaa8e40ee0",
+      "size": 3173
+    }
+  ],
+  "startupFiles": [
+    "Android/Dlls/AOTMetadata.json",
+    "Android/Dlls/Cinemachine.dll.bytes",
+    "Android/Dlls/NGUI.dll.bytes",
+    "Android/Dlls/Newtonsoft.Json.dll.bytes",
+    "Android/Dlls/System.Core.dll.bytes",
+    "Android/Dlls/System.Network.dll.bytes",
+    "Android/Dlls/System.Platform.dll.bytes",
+    "Android/Dlls/UnityEngine.AndroidJNIModule.dll.bytes",
+    "Android/Dlls/UnityEngine.AnimationModule.dll.bytes",
+    "Android/Dlls/UnityEngine.AssetBundleModule.dll.bytes",
+    "Android/Dlls/UnityEngine.CoreModule.dll.bytes",
+    "Android/Dlls/UnityEngine.JSONSerializeModule.dll.bytes",
+    "Android/Dlls/mscorlib.dll.bytes",
+    "Android/Main.unity3d"
+  ]
+}

@@ -24,6 +24,7 @@
 | （框架样板 bug，已修 → 模板 v2） | 星光框架 2026-08-28 | `_TemplateMod.cpp` 曾 include 不存在的 "TemplateMod.h"，照抄必编译失败 → AI 绕开模板从旧游戏抄，旧坑传染（30 个 Mod 仅 1 个有 reenter/懒装）。**框架样板必须保证「复制即可编译」，约束要配机械工具（生成器/扫描），纯文字清单管不住 AI** |
 | `10_docs/_templates/经验_HybridCLR直写三铁律_20260829.md` | 战魂铭人 3.5.0 2026-08-29 | **HybridCLR 直写三铁律**：①MethodPointer hook 装上≠命中（解释器分发，必须命中计数证实）；②外部线程 invoke 热更方法=解释器 SIGSEGV（attach 不救，热更方法 0 invoke）；③字典 stride 随 TValue（0x18/0x10/0x78，步长自检，值类型闭包泛型 set_Item 直调无效→原地翻转 value）；附：稳态 Tick 零 il2cpp API + process_vm_readv 安全读、配置表驱动必须运行时枚举、field_get_offset 原值即真偏移（旧 +8 是扫描基址偏差） |
 | （机制已固化 → `_common/stages.md` 陈旧度机制 + 构建后端四件套 + `weak-ai-system-prompt.md`） | 魂坠深境 2026-09-10 | **构建/装机假成功三连**：①NDK_LIBS_OUT 相对路径落错目录→校验到旧 so；②reset 上游忘 reset 下游→旧包照常"装机成功"；③ndk-build obj 缓存不追踪 cflags→探针代码泄漏进"干净版"。防呆要进脚本不要靠记性；同文件并行 Edit 会读-改-写互相覆盖（事故×3）；同功能连败 3 轮须强制停手复盘再动 |
+| `10_docs/_templates/经验_HybridCLR热更DllImport不可用_20260916.md` | 宝石战争 6.0.012 2026-09-16 | **热更 C#（HybridCLR 解释执行）里 `[DllImport]` 解析不到符号，调用必抛异常**：被游戏协程吞 = 卡死，被自己 catch 吞 = 功能全无；native 侧首次调用计数=0 即实锤未打通。正解=状态通道走文件镜像（Java 写 `{filesDir}/state.txt`、热更 C# 读，只用游戏自身在用的 BCL API），桥接调用一律 try/catch 兼底 |
 
 ---
 

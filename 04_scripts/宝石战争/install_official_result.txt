@@ -1,0 +1,12 @@
+time=2026-09-16 23:20:03 +0800
+serial=f9a116a2
+apk=/Users/aliang/Documents/nixiang/02_apks/宝石战争/宝石战争_6.0.012_official_from_device.apk
+local_md5=f207fc9d5b62b1a956a72c35c6a56def
+mode=restore_official_authorized_uninstall
+Success
+uninstall_rc=0
+Performing Streamed Install
+Success
+install_rc=0
+[install-verify] 设备 base.apk md5 == 本地产物 (f207fc9d5b62b1a956a72c35c6a56def) ✓
+已切回官方原版（卸载安装模式：原星光包本地数据已清除）。

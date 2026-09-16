@@ -1,0 +1,11 @@
+{
+  "template_id": "bszz",
+  "name": "宝石战争",
+  "package": "com.acing.gow.adv",
+  "source": "app/src/main/jni/Games/BszzEntry.cpp kBszz_Features（MainModern 注册表 tag=Bszz）",
+  "features": [
+    {"feat_num": 1, "name": "攻击倍率", "type": "slider", "min": 1, "max": 100, "default": 1, "note": "1=关闭(原版伤害) 2..100=玩家对敌伤害倍率"},
+    {"feat_num": 2, "name": "上帝模式"},
+    {"feat_num": 3, "name": "无限技能"}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/宝石战争/宝石战争_6.0.012_official_from_device.apk",
+  "package": "com.acing.gow.adv",
+  "version_name": "6.0.012",
+  "version_code": 6000012,
+  "originating_package": "com.taptap",
+  "size": 529494836,
+  "md5": "f207fc9d5b62b1a956a72c35c6a56def",
+  "sha256": "8ba59a1c27e15eb6d998840913a53c55c38eeaf102d78702624a1f0cece53969",
+  "signer_sha256": "8943b31609712c8c7fdf583ce26b204ad8b01dad8eb09f4c7d1f276458985bb4",
+  "global_metadata_size": 10026028,
+  "global_metadata_md5": "1da4a40bfb63f1dde4cee041ba294d2f",
+  "system_network_size": 8366592,
+  "system_network_md5": "685e7bbf43fd27e7cc53915e0ab8d510",
+  "hot_update_version": "1.0.0.00",
+  "hybridclr_version": "8.13.0",
+  "unity_version": "2022.3.62f1",
+  "traditional_shell": false
+}

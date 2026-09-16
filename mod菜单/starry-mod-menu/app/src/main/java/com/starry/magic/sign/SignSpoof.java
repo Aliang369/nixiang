@@ -642,6 +642,31 @@ public final class SignSpoof {
                     + "sKuLSEd3HY08+g7d9+tLJv1vqziAKeerg+CWlyOwxmyQrPLeI2jWRXdfHvVBlxcbuipsR+UwSFNvz5oSPkDFPoYQLaVUg6HKAi4d"
                     + "9J07ukU+S2ImCOgfHjtt5a2QWSCrvMwEfiJ7yRvZgfgcUiKamLMTVO8aVwWHSb8TE9z/86shUjLmQNOFHoxgE03vJzNoVTFb4vwd"
                     + "WEPAKBaHCKD1fOSt85lkbCDZv61W/8JNC4LMXBx0a/nU1SHKMu7SQwtNCvgKYThl6Me4HwtVnx+xavlany5xkdox5C9ETclTOaE59A==";
+    /** 动物大联盟 TapTap 官方（com.fightingstars.games.animal，CN=shan，SHA-256=de8a75d3…）。
+     *  APKSecure 在 Application.attachBaseContext 中校验签名；需在 super 前回灌官方证书。 */
+    private static final String DWDLM_PKG = "com.fightingstars.games.animal";
+    private static final String DWDLM_CERT_B64 =
+            "MIIDaTCCAlGgAwIBAgIEaqhNXzANBgkqhkiG9w0BAQsFADBkMQswCQYDVQQGEwJDTjESMBAGA1UE"
+                    + "CBMJZ3Vhbmdkb25nMRIwEAYDVQQHEwlndWFuZ3pob3UxDjAMBgNVBAoTBWJpbmdvMQ4wDAYDVQQL"
+                    + "EwViaW5nbzENMAsGA1UEAxMEc2hhbjAgFw0yMzA5MDkwNTA3NDFaGA8yMTIzMDgxNjA1MDc0MVow"
+                    + "ZDELMAkGA1UEBhMCQ04xEjAQBgNVBAgTCWd1YW5nZG9uZzESMBAGA1UEBxMJZ3Vhbmd6aG91MQ4w"
+                    + "DAYDVQQKEwViaW5nbzEOMAwGA1UECxMFYmluZ28xDTALBgNVBAMTBHNoYW4wggEiMA0GCSqGSIb3"
+                    + "DQEBAQUAA4IBDwAwggEKAoIBAQCfR0huISUVuONz3O/C0HR93zyxx1y23fbLfAZDmm99Ye3MKsSt"
+                    + "G0dV+VfopLfnRv3Zg3BtSj2c7lpIdROdxEsT0EWuQ4o6JNKgCTParqNouB57xMWhqN+E8iaF1lP9"
+                    + "fYT/DQRaGLWoY1lfcu3JXy7kJiDsXXGgQUYiMJjgDbFHKPP+2qMfKKbdCyqHOWM4R1vjdkKifsd3"
+                    + "YTw8+FOrMsQ6XFYLPgDZAdmA4yWFsLJXVZaTbcRRcYl/9b1U1EXGsdARF8X0zWNW+lokddhKGwn"
+                    + "05tEnbpke18cclOKSstIiZGEab4aoifo6lWUbEM4sgILSJIozane5GbuGdqfz9huRAgMBAAGjITAf"
+                    + "MB0GA1UdDgQWBBTvLE8/I1WCrRjo25ZLgRZtFP1x7jANBgkqhkiG9w0BAQsFAAOCAQEAJmar+Mxz"
+                    + "Z+Oz4E+R2gT/L9h2sfjkv8U7I60k6wCkMIl6nvEgPoVBHFvJ+CgiXlWvWGJT/StLP1A0TbS4Ic+f"
+                    + "MrCB1a7tf3qopaJ8a/pbH/el4r6HQgI0rrqBXD8gtBcCT0q5NrcGaD3CNtz0MgwJB7Q7NF/bdtoX"
+                    + "6+B2JhhYsnNDyGe3CuK/XAEOo242gqe/uOAAh5jMdtzX3SibHsEEjOFMuh0W/1djI9lpKUtoQ9jj"
+                    + "Z3wLOd6bPDpgQeeul8GVY4Vo5J/X33ooWzAYukJlL/Ur3+10JcsPFDBLVwj5gG+eBR9GtsJoRfUF"
+                    + "3qcqVP1rpIumaNfiwEMOfzzZmbNv+w==";
+    /** 宝石战争 TapTap 官方（com.acing.gow.adv，MD5=d7dec28ad1785e76c9b912b19ad62d4c）。
+     *  2026-09-16 从官方 6.0.012 的 v2 签名证书导出，供 TapSDK 签名读取回灌。 */
+    private static final String BSZZ_PKG = "com.acing.gow.adv";
+    private static final String BSZZ_CERT_B64 =
+            "MIIDeTCCAmGgAwIBAgIEQUNGWDANBgkqhkiG9w0BAQsFADBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMCAXDTE2MDQyNzAzMzYzNloYDzIwNzEwMTI5MDMzNjM2WjBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu4tOXCl9qs+ofsxCC0S2FreAZSBABo6CfLam/oHCrPNP/gobaxi6w8/QcCN1mAvElyV+L1TISXo8Fm13y3zBuQvYiH3W5EYXvVZPKlyX4tb3FObJu7YPh/aNpLgs3xbJ/CVVdvjfNubhAWIYZCuoM3Bc08/lEyon8JqgoiT6KRvc6QjMlJPjro+DgEw6ohYSiXxdnDag0MSrdwJIXtUdQmyxz6Yn/6RZ+EcnjcKoEVcvW8SENoeKpdt/O7re/qECrKCpjktpAcB0jwD3LbfrSWhmUF7YIn7DT/bLapZzzSRdesc/iMH0YGU5RBpCIIUJisULlKneoMPRovJ3HY712wIDAQABoyEwHzAdBgNVHQ4EFgQU5pAJYGyev2009ECHKZWNhLX1mPwwDQYJKoZIhvcNAQELBQADggEBADPsSQ1Bcsxh5jFsouOv6+jP0AI54o56s6Dv4zLPXLgbK7aZp9RAwsyEIJddC/f++TlGFll3hF//M4wr/ALpKhFec/t+/zjR0/FXo7foKBFkdsgZDYrekL1L+035nJ7cJnAuKqLgDKJV8oryGh+kC225u0o3eB3qIqbwf6Hx7Avw6losxbrAbT2orIcNExOf1GNPcqa58Z49vBsML/lRhIr65FSYSQK5Ej3EvGMfLZpDBxwAryaPo2ka/BuNB1aop0Hhusfj8Z/kUr9y1HH1TqhqGwpIY3IG4XuCbHl7HGdeLZWYv6gUIeMEy8w2ooUhuY/KG//1QpeZ8DiGNhhJJkA=";
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -690,6 +715,8 @@ public final class SignSpoof {
                 fakes.put(ZZBX2_PKG, new Signature(Base64.decode(ZZBX2_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YNTT_PKG, new Signature(Base64.decode(YNTT_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ES2_PKG, new Signature(Base64.decode(ES2_CERT_B64, Base64.DEFAULT)));
+                fakes.put(DWDLM_PKG, new Signature(Base64.decode(DWDLM_CERT_B64, Base64.DEFAULT)));
+                fakes.put(BSZZ_PKG, new Signature(Base64.decode(BSZZ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

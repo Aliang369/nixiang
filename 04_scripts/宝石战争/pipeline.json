@@ -1,0 +1,378 @@
+{
+  "game": "宝石战争",
+  "version": "6.0.012",
+  "notes": "2026-09-16：TapTap 原版 6.0.012/vc6000012；HybridCLR 热更 System.Network.dll 做 IL 薄桥接，星光菜单负责 auth/开关。用户明确授权卸载安装，原版本地应用数据将清除。",
+  "params": {
+    "game_id": "bszz",
+    "package": "com.acing.gow.adv",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.acing.gow.adv",
+    "GAME": "宝石战争",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备锁定与 root 检查",
+      "requires": [],
+      "command": "bash 04_scripts/宝石战争/device_ready_bszz.sh",
+      "preflight": [
+        "04_scripts/宝石战争/device_ready_bszz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/宝石战争/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 21:19:59",
+      "artifacts": {
+        "04_scripts/宝石战争/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读提取 TapTap 官方单 base APK",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/宝石战争/fetch_installed_bszz.sh",
+      "preflight": [
+        "04_scripts/宝石战争/fetch_installed_bszz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/宝石战争/official_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 21:20:33",
+      "artifacts": {
+        "04_scripts/宝石战争/official_apk.json": {
+          "md5": "8044bfd721e432972f40117b34814033"
+        }
+      },
+      "inputs": {
+        "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对包名/版本/签名/Unity/HybridCLR/保护面",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "bash 04_scripts/宝石战争/check_bszz_apk.sh",
+      "preflight": [
+        "04_scripts/宝石战争/check_bszz_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/宝石战争/official_check.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 21:21:35",
+      "artifacts": {
+        "04_scripts/宝石战争/official_check.json": {
+          "md5": "bd6afc028c239a5b12a4dd111a5db610"
+        }
+      },
+      "inputs": {
+        "04_scripts/宝石战争/official_apk.json": "8044bfd721e432972f40117b34814033"
+      }
+    },
+    {
+      "id": "dump_static",
+      "name": "提取并解密 System.Network.dll/System.Platform.dll",
+      "requires": [
+        "check_official"
+      ],
+      "command": "bash 04_scripts/宝石战争/dump_bszz_static.sh",
+      "preflight": [
+        "04_scripts/宝石战争/dump_bszz_static.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/宝石战争/6.0.012/static/System.Network.dll"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/宝石战争/6.0.012/static/System.Platform.dll"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/宝石战争/6.0.012/static/static_inputs.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 21:22:08",
+      "artifacts": {
+        "06_dumped/宝石战争/6.0.012/static/System.Network.dll": {
+          "md5": "96a1937df274a2cda8fbcd39a595cc0d"
+        },
+        "06_dumped/宝石战争/6.0.012/static/System.Platform.dll": {
+          "md5": "b9bec3129844cfe97c89d2ecbf2bbfa9"
+        },
+        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": {
+          "md5": "477c080b77a1288882aef6843d568f66"
+        }
+      },
+      "inputs": {
+        "04_scripts/宝石战争/official_check.json": "bd6afc028c239a5b12a4dd111a5db610"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "星光菜单 Mod/Entry/私有 mk 与 DLL 注入工具",
+      "requires": [
+        "dump_static"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.h"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Android_bszz.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/宝石战争/dllpatch/Program.cs"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 23:19:44",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.cpp": {
+          "md5": "46e0a45d042138c05df1ccc66d6c644a"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.h": {
+          "md5": "5392caa2737de0089ee7b3a7b58e151e"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzEntry.cpp": {
+          "md5": "5467c3bc1c3d239d2a78a734965250eb"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_bszz.mk": {
+          "md5": "c270c01dfa15d213b90e7c8814bc480d"
+        },
+        "04_scripts/宝石战争/dllpatch/Program.cs": {
+          "md5": "c8fe8cfc784d4099b2d9cd2492885655"
+        }
+      },
+      "inputs": {
+        "06_dumped/宝石战争/6.0.012/static/System.Network.dll": "96a1937df274a2cda8fbcd39a595cc0d",
+        "06_dumped/宝石战争/6.0.012/static/System.Platform.dll": "b9bec3129844cfe97c89d2ecbf2bbfa9",
+        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": "477c080b77a1288882aef6843d568f66"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（Bszz/bszz/桥接符号）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash 04_scripts/宝石战争/bszz_build_so.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_build_so.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 23:19:59",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": {
+          "md5": "8abcd959bcf5851962d58f562b0153e7"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.cpp": "46e0a45d042138c05df1ccc66d6c644a",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.h": "5392caa2737de0089ee7b3a7b58e151e",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzEntry.cpp": "5467c3bc1c3d239d2a78a734965250eb",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_bszz.mk": "c270c01dfa15d213b90e7c8814bc480d",
+        "04_scripts/宝石战争/dllpatch/Program.cs": "c8fe8cfc784d4099b2d9cd2492885655"
+      }
+    },
+    {
+      "id": "patch_dll",
+      "name": "IL 注入 System.Network.dll 并同步热更 manifest",
+      "requires": [
+        "dump_static"
+      ],
+      "command": "bash 04_scripts/宝石战争/bszz_patch_dll.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_patch_dll.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "07_patched/宝石战争/6.0.012/assets/Android/Dlls/System.Network.dll.bytes"
+        },
+        {
+          "type": "file_exists",
+          "path": "07_patched/宝石战争/6.0.012/assets/Android/manifest.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "07_patched/宝石战争/6.0.012/patch_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 23:22:10",
+      "artifacts": {
+        "07_patched/宝石战争/6.0.012/assets/Android/Dlls/System.Network.dll.bytes": {
+          "md5": "a29e7dd8678536da56b1aed31c476baf"
+        },
+        "07_patched/宝石战争/6.0.012/assets/Android/manifest.json": {
+          "md5": "0a36eded90a3fc43181457bb7e266926"
+        },
+        "07_patched/宝石战争/6.0.012/patch_summary.json": {
+          "md5": "cf57b4f7a96e631da46813a7e1b42a30"
+        }
+      },
+      "inputs": {
+        "06_dumped/宝石战争/6.0.012/static/System.Network.dll": "96a1937df274a2cda8fbcd39a595cc0d",
+        "06_dumped/宝石战争/6.0.012/static/System.Platform.dll": "b9bec3129844cfe97c89d2ecbf2bbfa9",
+        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": "477c080b77a1288882aef6843d568f66"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装官方 APK + 星光 dex/so + patched DLL",
+      "requires": [
+        "build_so",
+        "patch_dll"
+      ],
+      "command": "bash 04_scripts/宝石战争/bszz_surgical_6.0.012.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_surgical_6.0.012.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/宝石战争/宝石战争_6.0.012_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 23:38:42",
+      "artifacts": {
+        "08_output/宝石战争/宝石战争_6.0.012_surgical-unsigned.apk": {
+          "md5": "e11c917620dfc8bf76e54a8ca6e56ba2"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": "8abcd959bcf5851962d58f562b0153e7",
+        "07_patched/宝石战争/6.0.012/assets/Android/Dlls/System.Network.dll.bytes": "a29e7dd8678536da56b1aed31c476baf",
+        "07_patched/宝石战争/6.0.012/assets/Android/manifest.json": "0a36eded90a3fc43181457bb7e266926",
+        "07_patched/宝石战争/6.0.012/patch_summary.json": "cf57b4f7a96e631da46813a7e1b42a30"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "zipalign + apksigner 正式签名",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash 04_scripts/宝石战争/bszz_sign.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 23:39:22",
+      "artifacts": {
+        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": {
+          "md5": "309402fb5127c9ced609f5b39a8dd431"
+        }
+      },
+      "inputs": {
+        "08_output/宝石战争/宝石战争_6.0.012_surgical-unsigned.apk": "e11c917620dfc8bf76e54a8ca6e56ba2"
+      }
+    },
+    {
+      "id": "install",
+      "name": "真机安装（默认同签名覆盖；BSZZ_ALLOW_UNINSTALL=1 才卸载安装）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/宝石战争/bszz_install.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_install.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/宝石战争/install_result.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 23:41:09",
+      "artifacts": {
+        "04_scripts/宝石战争/install_result.txt": {
+          "md5": "1c68a0d1f30b8b0c4e5980f5938cb998"
+        }
+      },
+      "inputs": {
+        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": "309402fb5127c9ced609f5b39a8dd431",
+        "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "install_official",
+      "name": "切回 TapTap 官方原版（卸载安装，用于与星光包对照）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "BSZZ_ALLOW_UNINSTALL=1 bash 04_scripts/宝石战争/bszz_install_official.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_install_official.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/宝石战争/install_official_result.txt"
+        }
+      ],
+      "done_at": "2026-09-16 23:20:35",
+      "status": "skipped",
+      "note": "对照/回退专用：只手动 run，不参与 next 自动推进（2026-09-16 被 next 连跑误触发一次）",
+      "artifacts": {
+        "04_scripts/宝石战争/install_official_result.txt": {
+          "md5": "3fb279088bc0473d6c36106deb638528"
+        }
+      },
+      "inputs": {
+        "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    }
+  ]
+}

@@ -12,6 +12,7 @@ import com.starry.magic.auth.AuthClient;
 import com.starry.magic.menu.FeatureListParser;
 import com.starry.magic.menu.MenuService;
 import com.starry.magic.menu.Preferences;
+import com.starry.magic.menu.StateMirror;
 import com.starry.magic.ota.PlayOtaPaths;
 
 import java.io.File;
@@ -176,6 +177,7 @@ public class ModBridge {
 
     public ModBridge(Context context) {
         this.context = context.getApplicationContext();
+        StateMirror.attach(this.context);
         Preferences.with(this.context);
         AuthClient.init(this.context);
         syncAuthGameIdFromNative();
@@ -190,6 +192,18 @@ public class ModBridge {
 
     private static boolean isUiFeature(int featNum) {
         return featNum >= UI_FEAT_MIN;
+    }
+
+    /**
+     * 菜单侧统一异常兼底：native 库缺失/符号缺失（UnsatisfiedLinkError）、
+     * 偏好类型不符（ClassCastException）等都只记日志，绝不冒泡到菜单 UI（防闪退）。
+     */
+    private static void safeCall(Runnable action) {
+        try {
+            action.run();
+        } catch (UnsatisfiedLinkError | Exception e) {
+            Log.w(TAG, "menu state push failed: " + e);
+        }
     }
 
     /** 功能项需 native session 活着（登录后不过期，直到进程重启） */
@@ -247,9 +261,10 @@ public class ModBridge {
             }
             return false;
         }
-        Preferences.changeFeatureBool(featName, featNum, enabled);
+        safeCall(() -> Preferences.changeFeatureBool(featName, featNum, enabled));
         if (!isUiFeature(featNum)) {
-            nativeSetFeature(featNum, featName, enabled);
+            StateMirror.mirror(featNum, enabled ? 1 : 0);
+            safeCall(() -> nativeSetFeature(featNum, featName, enabled));
         }
         return true;
     }
@@ -262,9 +277,10 @@ public class ModBridge {
             forceFeatureOff(featNum, featName, resolveSpec(featNum));
             return false;
         }
-        Preferences.changeFeatureInt(featName, featNum, value);
+        safeCall(() -> Preferences.changeFeatureInt(featName, featNum, value));
         if (!isUiFeature(featNum)) {
-            nativeSetValue(featNum, featName, value);
+            StateMirror.mirror(featNum, value);
+            safeCall(() -> nativeSetValue(featNum, featName, value));
         }
         return true;
     }
@@ -277,8 +293,8 @@ public class ModBridge {
             return true;
         }
         if (!requireAuthForFeature(featNum)) return false;
-        Preferences.changeFeatureInt(featName, featNum, 0);
-        nativeExecButton(featNum, featName);
+        safeCall(() -> Preferences.changeFeatureInt(featName, featNum, 0));
+        safeCall(() -> nativeExecButton(featNum, featName));
         return true;
     }
 
@@ -290,9 +306,10 @@ public class ModBridge {
             forceFeatureOff(featNum, featName, resolveSpec(featNum));
             return false;
         }
-        Preferences.changeFeatureInt(featName, featNum, position);
+        safeCall(() -> Preferences.changeFeatureInt(featName, featNum, position));
         if (!isUiFeature(featNum)) {
-            nativeSetValue(featNum, featName, position);
+            StateMirror.mirror(featNum, position);
+            safeCall(() -> nativeSetValue(featNum, featName, position));
         }
         return true;
     }
@@ -305,9 +322,9 @@ public class ModBridge {
             forceFeatureOff(featNum, featName, resolveSpec(featNum));
             return false;
         }
-        Preferences.changeFeatureString(featName, featNum, text);
+        safeCall(() -> Preferences.changeFeatureString(featName, featNum, text));
         if (!isUiFeature(featNum)) {
-            nativeSetText(featNum, featName, text);
+            safeCall(() -> nativeSetText(featNum, featName, text));
         }
         return true;
     }
@@ -364,6 +381,7 @@ public class ModBridge {
             try {
                 if (spec.startsWith("Toggle_") || spec.startsWith("CheckBox_")) {
                     boolean on = Preferences.loadPrefBool(i, false);
+                    StateMirror.mirror(i, on ? 1 : 0);
                     nativeSetFeature(i, spec, on);
                 } else if (spec.startsWith("Slider_") || spec.startsWith("SeekBar_")
                         || spec.startsWith("Spinner_")) {
@@ -374,6 +392,7 @@ public class ModBridge {
                         v = FeatureListParser.seekResetValue(spec);
                     }
                     nativeSetValue(i, spec, v);
+                    StateMirror.mirror(i, v);
                     // 部分游戏用 feature 开关控制滑块是否生效
                     if (Preferences.contains(i)) {
                         // no boolean key for slider usually
@@ -770,6 +789,7 @@ public class ModBridge {
      */
     public void forceFeatureOff(int featNum, String featName, String spec) {
         if (isUiFeature(featNum)) return;
+        StateMirror.mirror(featNum, 0);
         String s = spec != null ? spec : resolveSpec(featNum);
         String name = (featName != null && !featName.isEmpty()) ? featName : s;
         try {
