@@ -1,0 +1,416 @@
+{
+  "game": "山海幻境",
+  "version": "4 / vc54",
+  "notes": "2026-09-16：官方 4/vc54 已替换为星空包；登录 ret=5 非法客户端已修复，classes3 RSSDK.getMD5 回灌官方签名，修复包已同签覆盖并启动成功。无敌/百倍待用户实机验收。",
+  "params": {
+    "game_id": "shhj",
+    "package": "com.chx.shhj",
+    "serial": "f9a116a2",
+    "version": "4",
+    "version_code": 54
+  },
+  "env": {
+    "PKG": "com.chx.shhj",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "GAME": "山海幻境",
+    "SERIAL": "f9a116a2",
+    "EXPECTED_SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（锁定 f9a116a2 + root + 已安装官方包）",
+      "requires": [],
+      "command": "bash 04_scripts/山海幻境/device_ready_shhj.sh",
+      "preflight": [
+        "04_scripts/山海幻境/device_ready_shhj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:21:53",
+      "artifacts": {
+        "04_scripts/山海幻境/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读提取当前官方单一 base APK",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/山海幻境/fetch_installed_shhj.sh",
+      "preflight": [
+        "04_scripts/山海幻境/fetch_installed_shhj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/official_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:22:46",
+      "artifacts": {
+        "04_scripts/山海幻境/official_apk.json": {
+          "md5": "c0242ba2ea68663eaa78b6d4ba7e9b1a"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对包名、版本、签名、引擎与 APK 结构",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "bash 04_scripts/山海幻境/check_shhj_apk.sh",
+      "preflight": [
+        "04_scripts/山海幻境/check_shhj_apk.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/official_check.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/official_check.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:24:40",
+      "artifacts": {
+        "04_scripts/山海幻境/official_check.json": {
+          "md5": "2790892c8f963e270c7b49962acfd41d"
+        },
+        "04_scripts/山海幻境/official_check.txt": {
+          "md5": "e0df59cc3b622adcebe700cf075ad9d5"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/official_apk.json": "c0242ba2ea68663eaa78b6d4ba7e9b1a"
+      }
+    },
+    {
+      "id": "dump_static",
+      "name": "定向拆包（classes.dex、Manifest、关键类触点）",
+      "requires": [
+        "check_official"
+      ],
+      "command": "bash 04_scripts/山海幻境/dump_shhj_static.sh",
+      "preflight": [
+        "04_scripts/山海幻境/dump_shhj_static.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/山海幻境/official_4/dump_summary.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/山海幻境/official_4/smali/com/chx/shhj/AppActivity.smali"
+        },
+        {
+          "type": "file_exists",
+          "path": "07_patched/山海幻境/surgical_4/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:28:46",
+      "artifacts": {
+        "06_dumped/山海幻境/official_4/dump_summary.json": {
+          "md5": "75c45096327c770a4f64618663e21054"
+        },
+        "06_dumped/山海幻境/official_4/smali/com/chx/shhj/AppActivity.smali": {
+          "md5": "0e1fd2e79f9e03d79f4fd264f25dce95"
+        },
+        "07_patched/山海幻境/surgical_4/AndroidManifest.xml": {
+          "md5": "241748aba783f748a491882460908d7b"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/official_check.json": "2790892c8f963e270c7b49962acfd41d",
+        "04_scripts/山海幻境/official_check.txt": "e0df59cc3b622adcebe700cf075ad9d5"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "隔离构建 SHHJ legacy so",
+      "requires": [
+        "dump_static"
+      ],
+      "command": "bash 04_scripts/山海幻境/build_shhj_so_4.sh",
+      "preflight": [
+        "04_scripts/山海幻境/build_shhj_so_4.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "07_patched/山海幻境/build_4/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "07_patched/山海幻境/build_4/libstarry_magic.so",
+          "pattern": "[Shhj]"
+        }
+      ],
+      "status": "skipped",
+      "cleanup_note": "收官清理已删除该历史阶段的 03/06/07 中间产物；正式包与登录修复包指纹已固化，禁止按旧链重跑。"
+    },
+    {
+      "id": "surgical",
+      "name": "基于官方 4.0 外科组装星光包并签名",
+      "requires": [
+        "build_so"
+      ],
+      "command": "SHHJ_VERSION=4 SHHJ_ORIG_APK=$NIXIANG/02_apks/山海幻境/山海幻境_4_official_from_device.apk SHHJ_MF_CACHE=$NIXIANG/07_patched/山海幻境/surgical_4/AndroidManifest.binary.xml SHHJ_PREBUILT_SO=$NIXIANG/07_patched/山海幻境/build_4/libstarry_magic.so bash mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh",
+      "preflight": [
+        "mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/山海幻境/山海幻境_4_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "skipped",
+      "cleanup_note": "收官清理已删除该历史阶段的 03/06/07 中间产物；正式包与登录修复包指纹已固化，禁止按旧链重跑。"
+    },
+    {
+      "id": "sign",
+      "name": "星条正式包签名已在外科阶段完成",
+      "requires": [
+        "surgical"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/山海幻境/山海幻境_4_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "skipped",
+      "cleanup_note": "收官清理已删除该历史阶段的 03/06/07 中间产物；正式包与登录修复包指纹已固化，禁止按旧链重跑。"
+    },
+    {
+      "id": "verify_package",
+      "name": "候选包签名、Manifest、so 与官方字节保留核验",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash 04_scripts/山海幻境/verify_shhj_candidate.sh",
+      "preflight": [
+        "04_scripts/山海幻境/verify_shhj_candidate.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/candidate_verify.json"
+        }
+      ],
+      "status": "skipped",
+      "cleanup_note": "收官清理已删除该历史阶段的 03/06/07 中间产物；正式包与登录修复包指纹已固化，禁止按旧链重跑。"
+    },
+    {
+      "id": "uninstall_official",
+      "name": "跨签名替换：卸载官方 4.0（不保留数据，原包已备份）",
+      "requires": [
+        "verify_package"
+      ],
+      "command": "bash 04_scripts/山海幻境/uninstall_official_shhj.sh",
+      "preflight": [
+        "04_scripts/山海幻境/uninstall_official_shhj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/uninstall_done.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:41:08",
+      "artifacts": {
+        "04_scripts/山海幻境/uninstall_done.json": {
+          "md5": "4496cf1b1b050993f0ca6d54b7ca5636"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/candidate_verify.json": "10f5ece8e3767d8d9098481fe4535134"
+      }
+    },
+    {
+      "id": "install",
+      "name": "安装星空包并核对设备 base.apk 指纹",
+      "requires": [
+        "uninstall_official"
+      ],
+      "command": "bash 04_scripts/山海幻境/install_shhj.sh",
+      "preflight": [
+        "04_scripts/山海幻境/install_shhj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/install_result.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:42:10",
+      "artifacts": {
+        "04_scripts/山海幻境/install_result.json": {
+          "md5": "b2dd9e5a8f9bcfc028f6e426a284c320"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/uninstall_done.json": "4496cf1b1b050993f0ca6d54b7ca5636"
+      }
+    },
+    {
+      "id": "login_fix_surgical",
+      "name": "登录修复：回灌官方 packageSign，重建同签星光包",
+      "requires": [
+        "install"
+      ],
+      "command": "SHHJ_VERSION=4 SHHJ_ORIG_APK=$NIXIANG/02_apks/山海幻境/山海幻境_4_official_from_device.apk SHHJ_MF_CACHE=$NIXIANG/07_patched/山海幻境/surgical_4/AndroidManifest.binary.xml SHHJ_PREBUILT_SO=$NIXIANG/07_patched/山海幻境/build_4/libstarry_magic.so SHHJ_SPOOF_PACKAGE_SIGN=1 SHHJ_OUTPUT_NAME=山海幻境_4_loginfix-releaseSigned.apk bash mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh",
+      "preflight": [
+        "mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:54:51",
+      "artifacts": {
+        "08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk": {
+          "md5": "6bd976050b7571d71a9cd3597513427d"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/install_result.json": "b2dd9e5a8f9bcfc028f6e426a284c320"
+      }
+    },
+    {
+      "id": "login_fix_verify",
+      "name": "登录修复包签名、classes3 patch 与官方字节保留核验",
+      "requires": [
+        "login_fix_surgical"
+      ],
+      "command": "SHHJ_EXPECT_CLASSES3_PATCH=1 SHHJ_VERIFY_OUT=$NIXIANG/04_scripts/山海幻境/candidate_verify_loginfix.json bash 04_scripts/山海幻境/verify_shhj_candidate.sh $NIXIANG/08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk",
+      "preflight": [
+        "04_scripts/山海幻境/verify_shhj_candidate.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/candidate_verify_loginfix.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:56:38",
+      "artifacts": {
+        "04_scripts/山海幻境/candidate_verify_loginfix.json": {
+          "md5": "2e8478a7a55009b03291031722e292b2"
+        }
+      },
+      "inputs": {
+        "08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk": "6bd976050b7571d71a9cd3597513427d"
+      }
+    },
+    {
+      "id": "login_fix_install",
+      "name": "同签名覆盖安装登录修复包并校验设备 base.apk",
+      "requires": [
+        "login_fix_verify"
+      ],
+      "command": "SHHJ_APK=$NIXIANG/08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk SHHJ_VERIFY_FILE=$NIXIANG/04_scripts/山海幻境/candidate_verify_loginfix.json SHHJ_INSTALL_RESULT=$NIXIANG/04_scripts/山海幻境/install_result_loginfix.json bash 04_scripts/山海幻境/install_shhj.sh",
+      "preflight": [
+        "04_scripts/山海幻境/install_shhj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/install_result_loginfix.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 19:58:17",
+      "artifacts": {
+        "04_scripts/山海幻境/install_result_loginfix.json": {
+          "md5": "ec5f62697b0e6597844792e498672847"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/candidate_verify_loginfix.json": "2e8478a7a55009b03291031722e292b2"
+      }
+    },
+    {
+      "id": "cleanup",
+      "name": "收官清理：唯一正式包裁剪 + 本作滚动物与设备临时件回收",
+      "requires": [
+        "login_fix_install"
+      ],
+      "command": "bash 04_scripts/山海幻境/cleanup_shhj.sh",
+      "preflight": [
+        "04_scripts/山海幻境/cleanup_shhj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/cleanup_summary.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/山海幻境/正式包裁剪清单_4_20260916.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 20:05:19",
+      "artifacts": {
+        "04_scripts/山海幻境/cleanup_summary.json": {
+          "md5": "a38f55083fdd2985a0a67c9876647789"
+        },
+        "10_docs/山海幻境/正式包裁剪清单_4_20260916.json": {
+          "md5": "da53f18105232c405a66bccb366288d5"
+        }
+      },
+      "inputs": {
+        "04_scripts/山海幻境/install_result_loginfix.json": "ec5f62697b0e6597844792e498672847"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收尾文档、正式包与 Git 提交范围固化",
+      "requires": [],
+      "command": "bash 04_scripts/山海幻境/archive_shhj.sh",
+      "preflight": [
+        "04_scripts/山海幻境/archive_shhj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/山海幻境/archive_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-16 20:08:14",
+      "artifacts": {
+        "04_scripts/山海幻境/archive_summary.json": {
+          "md5": "9d8c4c4fc8947865343788ae1d7e6664"
+        }
+      }
+    }
+  ]
+}

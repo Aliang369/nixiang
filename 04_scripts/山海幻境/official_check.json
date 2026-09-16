@@ -1,0 +1,27 @@
+{
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/山海幻境/山海幻境_4_official_from_device.apk",
+  "apk_md5": "7d8a7085a271b4a6a649b56e758b8c6b",
+  "apk_sha256": "da1b459a9141f39b36cb6f13a3ade58bf85bf70ad2dc87c78363c744da91d116",
+  "package": "com.chx.shhj",
+  "version_name": "4",
+  "version_code": 54,
+  "signer_cert_md5": "86d1959875555021642fcf3b0d9c161d",
+  "signer_cert_sha256": "7a04fcc9f6970137e68ea8b07d5605c5aaf06f1c1a69d5160f0f76c23f0b5fd4",
+  "signer_dn": "CN=shhjchx, OU=shhjchx, O=shhjchx, L=ShenZhen, ST=GuangDong, C=86",
+  "history_signer_md5": "86d1959875555021642fcf3b0d9c161d",
+  "signer_matches_history": true,
+  "dex_count": 3,
+  "dex_list": [
+    "classes.dex",
+    "classes2.dex",
+    "classes3.dex"
+  ],
+  "libcocos2djs_md5": "09e19fcd4e4141913d17ffb4836c9634",
+  "libcocos2djs_size": 29176056,
+  "has_libSDKloading": false,
+  "has_libtoolChecker": false,
+  "jsc_entry_count": 9,
+  "main_js_entry_count": 1,
+  "resources_arsc_compression": "                            none (stored)",
+  "contains_libstarry_magic": false
+}

@@ -1,0 +1,14 @@
+{
+  "game": "山海幻境",
+  "version": "4 / vc54",
+  "status": "ready_for_git",
+  "final_apk": "/Users/aliang/Documents/nixiang/08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk",
+  "final_apk_md5": "6bd976050b7571d71a9cd3597513427d",
+  "landing_doc": "/Users/aliang/Documents/nixiang/10_docs/山海幻境/星光落地_4_20260916.md",
+  "formal_closure_doc": "/Users/aliang/Documents/nixiang/10_docs/山海幻境/收尾与最小复现清单_4_20260916.md",
+  "cleanup_summary": "/Users/aliang/Documents/nixiang/04_scripts/山海幻境/cleanup_summary.json",
+  "git_scope_file": "/Users/aliang/Documents/nixiang/04_scripts/山海幻境/archive_git_scope.txt",
+  "git_head": "02b23f895052cc58025bb3b89f82d84208d09cbe",
+  "git_branch": "main",
+  "notes": "current.md 仅暂存本作对应 hunk；无关会话改动不得纳入提交。"
+}

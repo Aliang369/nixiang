@@ -1,0 +1,30 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/山海幻境",
+  "keep": "山海幻境_4_loginfix-releaseSigned.apk",
+  "keep_size": 1235101013,
+  "keep_md5": "6bd976050b7571d71a9cd3597513427d",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "山海幻境_4_loginfix-releaseSigned.apk.idsig",
+      "size": 9733659,
+      "md5": "6d82dc4266c5aea3759c464877138c77"
+    },
+    {
+      "name": "山海幻境_4_starry.apk",
+      "size": 1235101013,
+      "md5": "6bd976050b7571d71a9cd3597513427d"
+    },
+    {
+      "name": "山海幻境_4_surgical-releaseSigned.apk",
+      "size": 1235105109,
+      "md5": "6fc07c16d0066fe90cde55f25e98e19e"
+    },
+    {
+      "name": "山海幻境_4_surgical-releaseSigned.apk.idsig",
+      "size": 9733659,
+      "md5": "c2816815e0c87a70f6e08df420303435"
+    }
+  ],
+  "removed_count": 4
+}

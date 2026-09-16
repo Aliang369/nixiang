@@ -1,0 +1,24 @@
+{
+  "game": "山海幻境",
+  "version": "4 / vc54",
+  "status": "cleanup_done",
+  "final_apk": "/Users/aliang/Documents/nixiang/08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk",
+  "final_apk_md5": "6bd976050b7571d71a9cd3597513427d",
+  "official_apk": "/Users/aliang/Documents/nixiang/02_apks/山海幻境/山海幻境_4_official_from_device.apk",
+  "official_apk_md5": "7d8a7085a271b4a6a649b56e758b8c6b",
+  "prune_manifest": "/Users/aliang/Documents/nixiang/10_docs/山海幻境/正式包裁剪清单_4_20260916.json",
+  "bytes_before": 5365608448,
+  "bytes_after": 1241518080,
+  "measured_freed_bytes": 4124090368,
+  "removed_device_tmp": [],
+  "serial": "f9a116a2",
+  "device_base_apk": "/data/app/~~t2oiKNzeKnpDBE5Ozm7WPg==/com.chx.shhj-bwYRQ-aY6VRYWGh0iORHMQ==/base.apk",
+  "device_base_apk_md5": "6bd976050b7571d71a9cd3597513427d",
+  "preserved": [
+    "02_apks/山海幻境 official APK",
+    "08_output/山海幻境 unique final APK",
+    "04_scripts/山海幻境 pipeline and scripts",
+    "10_docs/山海幻境 landing and acceptance documents",
+    "mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh"
+  ]
+}

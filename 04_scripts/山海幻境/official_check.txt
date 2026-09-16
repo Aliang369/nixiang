@@ -1,0 +1,16 @@
+package=com.chx.shhj
+versionName=4
+versionCode=54
+cert_md5=86d1959875555021642fcf3b0d9c161d
+cert_dn=CN=shhjchx, OU=shhjchx, O=shhjchx, L=ShenZhen, ST=GuangDong, C=86
+signer_matches_history=true
+dex_count=3
+dex_list=classes.dex,classes2.dex,classes3.dex
+libcocos2djs_md5=09e19fcd4e4141913d17ffb4836c9634
+libcocos2djs_size=29176056
+has_libSDKloading=0
+has_libtoolChecker=0
+jsc_entry_count=9
+main_js_entry_count=1
+resources_arsc_compression=                            none (stored)
+summary=/Users/aliang/Documents/nixiang/04_scripts/山海幻境/official_check.json

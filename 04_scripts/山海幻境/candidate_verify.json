@@ -1,0 +1,21 @@
+{
+  "apk_path": "/Users/aliang/Documents/nixiang/08_output/山海幻境/山海幻境_4_surgical-releaseSigned.apk",
+  "apk_md5": "6fc07c16d0066fe90cde55f25e98e19e",
+  "apk_sha256": "a284ba82cc0437cb2a4b55103b8cb1be42570982baec0bde8e5ebd7abe5221b7",
+  "package": "com.chx.shhj",
+  "version_name": "4",
+  "version_code": 54,
+  "signer_cert_md5": "161fca32a36d3df274458682a44cb774",
+  "signer_cert_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "v1_verified": true,
+  "v2_verified": true,
+  "v3_verified": true,
+  "zipalign_verified": true,
+  "libstarry_magic_md5": "b143c37636de8a17d8097338ee5e8b49",
+  "manifest_starry_app": true,
+  "manifest_menu_service": true,
+  "official_common_entries_preserved": 34225,
+  "official_common_entries_changed": [],
+  "official_non_meta_removed": [],
+  "unexpected_added": []
+}

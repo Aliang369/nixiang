@@ -25,7 +25,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 NIXIANG="/Users/aliang/Documents/nixiang"
-ORIG_APK="$NIXIANG/02_apks/山海幻境/山海幻境_3.8_taptap_official.apk"
+VERSION="${SHHJ_VERSION:-3.8}"
+ORIG_APK="${SHHJ_ORIG_APK:-$NIXIANG/02_apks/山海幻境/山海幻境_${VERSION}_taptap_official.apk}"
 OUT="$NIXIANG/08_output/山海幻境"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
@@ -34,10 +35,13 @@ NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 KS="$NIXIANG/01_tools/starry_release.jks"
 PKG="com.chx.shhj"
-SIGNED="$OUT/山海幻境_3.8_surgical-releaseSigned.apk"
-[[ "$BUILD_TYPE" == "debug" ]] && SIGNED="$OUT/山海幻境_3.8_surgical-debugSigned.apk"
-ALIAS_APK="$OUT/山海幻境_3.8_starry.apk"
-MF_CACHE="$NIXIANG/07_patched/山海幻境/surgical_3.8/AndroidManifest.xml"
+SIGNED="$OUT/山海幻境_${VERSION}_surgical-releaseSigned.apk"
+[[ "$BUILD_TYPE" == "debug" ]] && SIGNED="$OUT/山海幻境_${VERSION}_surgical-debugSigned.apk"
+if [[ -n "${SHHJ_OUTPUT_NAME:-}" ]]; then
+  SIGNED="$OUT/${SHHJ_OUTPUT_NAME}"
+fi
+ALIAS_APK="$OUT/山海幻境_${VERSION}_starry.apk"
+MF_CACHE="${SHHJ_MF_CACHE:-$NIXIANG/07_patched/山海幻境/surgical_${VERSION}/AndroidManifest.xml}"
 # TapTap 官方证书 MD5（TapSignKit.getSign）
 ORIG_MD5="86d1959875555021642fcf3b0d9c161d"
 
@@ -55,9 +59,13 @@ done
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
 MK="$STARRY_SRC/app/src/main/jni/Android.mk"
-grep -E '^\s*LOCAL_CFLAGS\s*\+=\s*-DENABLE_COCOS_HOOK\s+-DSTARRY_GAME_SHHJ' "$MK" \
-  || { echo "ERROR: Android.mk must enable STARRY_GAME_SHHJ"; exit 1; }
-echo "[check] Android.mk target=shhj"
+if [[ -z "${SHHJ_PREBUILT_SO:-}" ]]; then
+  grep -E '^\s*LOCAL_CFLAGS\s*\+=\s*-DENABLE_COCOS_HOOK\s+-DSTARRY_GAME_SHHJ' "$MK" \
+    || { echo "ERROR: Android.mk must enable STARRY_GAME_SHHJ"; exit 1; }
+  echo "[check] Android.mk target=shhj"
+else
+  echo "[check] prebuilt SHHJ so: $SHHJ_PREBUILT_SO"
+fi
 
 LOCK_DIR="/tmp/shhj_surgical.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -69,12 +77,16 @@ trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK" "$(dirname "$MF_CACHE")"
 
 echo "[1/6] ndk-build -> jniLibs (Gradle does not build native; packs jniLibs so only)"
-NDK_BUILD="$NDK/ndk-build"
-[[ -x "$NDK_BUILD" ]] || { echo "ERROR: missing $NDK_BUILD"; exit 1; }
-(cd "$STARRY_SRC/app/src/main/jni" && \
-  "$NDK_BUILD" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk \
-  -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
-SO_BUILT="$STARRY_SRC/app/src/libs/arm64-v8a/libstarry_magic.so"
+if [[ -n "${SHHJ_PREBUILT_SO:-}" ]]; then
+  SO_BUILT="$SHHJ_PREBUILT_SO"
+else
+  NDK_BUILD="$NDK/ndk-build"
+  [[ -x "$NDK_BUILD" ]] || { echo "ERROR: missing $NDK_BUILD"; exit 1; }
+  (cd "$STARRY_SRC/app/src/main/jni" && \
+    "$NDK_BUILD" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk \
+    -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
+  SO_BUILT="$STARRY_SRC/app/src/libs/arm64-v8a/libstarry_magic.so"
+fi
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT"; exit 1; }
 if ! grep -a -q 'shhj' "$SO_BUILT" || ! grep -a -q '\[Shhj\]' "$SO_BUILT"; then
   echo "ERROR: so 不是 SHHJ（可能仍是上一款游戏）。strings 检查失败。"
@@ -85,21 +97,15 @@ if grep -a -q '\[Gyws\]' "$SO_BUILT" || grep -a -q '\[Dwct\]' "$SO_BUILT" || gre
   echo "ERROR: so 仍含上一款游戏标签，jniLibs 未刷新"
   exit 1
 fi
-for dest in \
-  "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a" \
-  "$STARRY_SRC/app/src/main/libs/arm64-v8a" \
-  "$STARRY_SRC/app/libs/arm64-v8a"
-do
-  mkdir -p "$dest"
-  cp -f "$SO_BUILT" "$dest/libstarry_magic.so"
-done
-echo "  so -> jniLibs ok (shhj verified)"
 
 echo "[1b/6] gradle ${GRADLE_TASK} (pack refreshed jniLibs so)"
 rsync -a --delete \
   --exclude '.gradle/' --exclude 'app/build/' --exclude 'build/' \
   --exclude 'auth-server/.venv/' --exclude 'auth-server/data/' --exclude '.idea/' \
   "$STARRY_SRC/" "$WORK/starry/"
+mkdir -p "$WORK/starry/app/src/main/jniLibs/arm64-v8a"
+cp -f "$SO_BUILT" "$WORK/starry/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so"
+echo "  so -> temp jniLibs ok (shhj verified)"
 (cd "$WORK/starry" && ./gradlew "$GRADLE_TASK" --console=plain)
 STARRY_APK="$WORK/starry/app/build/outputs/apk/$BUILD_TYPE/$APK_NAME"
 [[ -f "$STARRY_APK" ]] || { echo "ERROR: missing $STARRY_APK"; exit 1; }
@@ -358,6 +364,44 @@ PY
 "$SMALI_BIN" assemble -o "$WORK/classes.dex" "$WORK/c1smali"
 ls -la "$WORK/classes.dex"
 
+if [[ "${SHHJ_SPOOF_PACKAGE_SIGN:-0}" == "1" ]]; then
+  echo "[3c/6] patch classes3.dex: RSSDK.getMD5 -> official $ORIG_MD5"
+  unzip -p "$ORIG_APK" classes3.dex > "$WORK/classes3_orig.dex"
+  "$BAKSMALI_BIN" d -o "$WORK/c3smali" "$WORK/classes3_orig.dex"
+  python3.11 - "$WORK/c3smali" "$ORIG_MD5" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+root = Path(sys.argv[1])
+md5 = sys.argv[2]
+rssdk = root / "org/cocos2dx/javascript/service/RSSDK.smali"
+if not rssdk.is_file():
+    raise SystemExit(f"missing {rssdk}")
+method = f""".method public static getMD5()Ljava/lang/String;
+    .registers 1
+
+    # starry_package_sign_spoof
+    const-string v0, "{md5}"
+
+    return-object v0
+.end method"""
+text = rssdk.read_text(encoding="utf-8")
+patched, count = re.subn(
+    r"\.method public static getMD5\(\)Ljava/lang/String;[\s\S]*?\.end method",
+    method,
+    text,
+    count=1,
+)
+if count != 1:
+    raise SystemExit("RSSDK.getMD5 patch failed")
+rssdk.write_text(patched, encoding="utf-8")
+print(f"  RSSDK.getMD5 -> {md5}")
+PY
+  "$SMALI_BIN" assemble -o "$WORK/classes3.dex" "$WORK/c3smali"
+  ls -la "$WORK/classes3.dex"
+fi
+
 echo "[4/6] binary AndroidManifest (GameApplication → StarryApp + MenuService)"
 if [[ -n "${SHHJ_BINARY_MANIFEST:-}" && -f "$SHHJ_BINARY_MANIFEST" ]]; then
   cp "$SHHJ_BINARY_MANIFEST" "$WORK/AndroidManifest.xml"
@@ -422,6 +466,8 @@ src, work, dst = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
 mf = (work / "AndroidManifest.xml").read_bytes()
 c1 = (work / "classes.dex").read_bytes()
 c4 = (work / "classes4.dex").read_bytes()
+c3_path = work / "classes3.dex"
+c3 = c3_path.read_bytes() if c3_path.is_file() else None
 extras = {}
 for p in (work / "lib").rglob("*"):
     if p.is_file():
@@ -436,6 +482,8 @@ replace = {
     "AndroidManifest.xml": mf,
     "classes.dex": c1,
 }
+if c3 is not None:
+    replace["classes3.dex"] = c3
 
 zin = zipfile.ZipFile(src, "r")
 zout = zipfile.ZipFile(dst, "w")
@@ -478,8 +526,12 @@ zin.close(); zout.close()
 
 zin2 = zipfile.ZipFile(src, "r")
 zout2 = zipfile.ZipFile(dst, "r")
-for name in ("resources.arsc", "classes2.dex", "classes3.dex"):
+for name in ("resources.arsc", "classes2.dex"):
     assert hashlib.sha256(zin2.read(name)).hexdigest() == hashlib.sha256(zout2.read(name)).hexdigest(), name
+if c3 is None:
+    assert hashlib.sha256(zin2.read("classes3.dex")).hexdigest() == hashlib.sha256(zout2.read("classes3.dex")).hexdigest(), "classes3.dex"
+else:
+    assert hashlib.sha256(zout2.read("classes3.dex")).hexdigest() != hashlib.sha256(zin2.read("classes3.dex")).hexdigest(), "classes3.dex"
 assert hashlib.sha256(zout2.read("classes.dex")).hexdigest() != hashlib.sha256(zin2.read("classes.dex")).hexdigest()
 assert "classes4.dex" in zout2.namelist()
 assert "lib/arm64-v8a/libstarry_magic.so" in zout2.namelist()
