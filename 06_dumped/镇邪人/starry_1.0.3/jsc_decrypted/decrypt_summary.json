@@ -1,0 +1,92 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk",
+  "apk_sha256": "ec124c8e7a7d54af5e48ad636bd9d6b2d10973e2dfde653b883da4b3f8c4d7f6",
+  "key": "c25d728a-a9d9-4c",
+  "algorithm": "XXTEA(padding=False) + gzip",
+  "decrypted_count": 9,
+  "error_count": 0,
+  "records": [
+    {
+      "apk_entry": "assets/assets/cert/index.88eae.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/cert/index.88eae.js",
+      "encrypted_size": 320,
+      "xxtea_size": 320,
+      "decrypted_size": 563,
+      "sha256": "7797411ef5e6c439b3b13999c9ee94c2142d743021727044531da33109e917bf",
+      "head": "(function r(e, n, t) { function i(u, f) { if (!n[u]) { if (!e[u]) { var _ = u.split(\"/\"); _ = _[_.length - 1]; if (!e[_]) { var p = \"function\" == typeof __requi"
+    },
+    {
+      "apk_entry": "assets/assets/internal/index.2c377.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/internal/index.2c377.js",
+      "encrypted_size": 320,
+      "xxtea_size": 320,
+      "decrypted_size": 563,
+      "sha256": "7797411ef5e6c439b3b13999c9ee94c2142d743021727044531da33109e917bf",
+      "head": "(function r(e, n, t) { function i(u, f) { if (!n[u]) { if (!e[u]) { var _ = u.split(\"/\"); _ = _[_.length - 1]; if (!e[_]) { var p = \"function\" == typeof __requi"
+    },
+    {
+      "apk_entry": "assets/assets/main/index.bf3f8.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/main/index.bf3f8.js",
+      "encrypted_size": 8284,
+      "xxtea_size": 8284,
+      "decrypted_size": 26598,
+      "sha256": "914fb318a96f8334b5045f46eeaa2b8b40e515822fb2fcaaa456667c1166ed17",
+      "head": "window.__require = function t(e, r, n) { function i(a, s) { if (!r[a]) { if (!e[a]) { var c = a.split(\"/\"); c = c[c.length - 1]; if (!e[c]) { var l = \"function\""
+    },
+    {
+      "apk_entry": "assets/assets/minigame/index.fa619.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/minigame/index.fa619.js",
+      "encrypted_size": 6864,
+      "xxtea_size": 6864,
+      "decrypted_size": 24481,
+      "sha256": "7d28b87a262a750905e9542eadef20ac3c90a3f87919f54f1e1bc8badb1bb01a",
+      "head": "window.__require = function e(t, n, o) { function i(a, s) { if (!n[a]) { if (!t[a]) { var c = a.split(\"/\"); c = c[c.length - 1]; if (!t[c]) { var l = \"function\""
+    },
+    {
+      "apk_entry": "assets/assets/scenes/index.6c061.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/scenes/index.6c061.js",
+      "encrypted_size": 320,
+      "xxtea_size": 320,
+      "decrypted_size": 563,
+      "sha256": "7797411ef5e6c439b3b13999c9ee94c2142d743021727044531da33109e917bf",
+      "head": "(function r(e, n, t) { function i(u, f) { if (!n[u]) { if (!e[u]) { var _ = u.split(\"/\"); _ = _[_.length - 1]; if (!e[_]) { var p = \"function\" == typeof __requi"
+    },
+    {
+      "apk_entry": "assets/assets/src/index.d5507.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/src/index.d5507.js",
+      "encrypted_size": 3459496,
+      "xxtea_size": 3459496,
+      "decrypted_size": 19939064,
+      "sha256": "4bfb2b61146f25b5dc15478ad38c295b10aa2cb4a10e8b28b39e29b862bb2574",
+      "head": "window.__require = function t(e, i, o) { function n(a, s) { if (!i[a]) { if (!e[a]) { var l = a.split(\"/\"); l = l[l.length - 1]; if (!e[l]) { var c = \"function\""
+    },
+    {
+      "apk_entry": "assets/src/assets/src/Config.4dec1.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/src/assets/src/Config.4dec1.js",
+      "encrypted_size": 252,
+      "xxtea_size": 252,
+      "decrypted_size": 498,
+      "sha256": "8ab73b4033de85e787e7843b2932c0888c63ffdd98a9a73f5b228503eb941add",
+      "head": "(function() { globalThis.Config || (globalThis.Config = {}); globalThis.Config.branchVersion = \"release1.0.1\"; globalThis.localeType = \"\"; globalThis.Config.ime"
+    },
+    {
+      "apk_entry": "assets/src/cocos2d-jsb.5e620.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/src/cocos2d-jsb.5e620.js",
+      "encrypted_size": 264440,
+      "xxtea_size": 264440,
+      "decrypted_size": 1081436,
+      "sha256": "c6aa1defb10930c33a3c11d5f30cb99c10d483d493c956990e20a1d8e657f9c9",
+      "head": "(function(t, e, i) { function n(i) { var r = e[i]; if (!r) { var s = t[i]; if (!s) return; var a = {}; r = e[i] = { exports: a }; s[0]((function(t) { return n(s"
+    },
+    {
+      "apk_entry": "assets/src/settings.ac44a.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/src/settings.ac44a.js",
+      "encrypted_size": 400,
+      "xxtea_size": 400,
+      "decrypted_size": 571,
+      "sha256": "60689c63a435afd0c4b5dba8c2f5a40cbbfa0a5bfedf9c069acce11810c56fc9",
+      "head": "window._CCSettings={platform:\"android\",groupList:[\"default\",\"UI\",\"Map\"],collisionMatrix:[[true],[false,false],[false,false,false]],hasResourcesBundle:true,hasSt"
+    }
+  ],
+  "errors": []
+}

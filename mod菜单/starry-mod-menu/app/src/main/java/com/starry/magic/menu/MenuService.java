@@ -172,7 +172,7 @@ public class MenuService extends Service {
     /** nativeMenu 是否已 attach 且当前视为「在屏上」 */
     private boolean overlayAttached = false;
     private boolean nativeBootstrapped = false;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Handler mainHandler = new MenuSafeHandler(TAG);
     private Application.ActivityLifecycleCallbacks resumeWatcher;
     /** 进程内已 started 的 Activity 数；为 0 视为进后台 */
     private int startedActivityCount = 0;
@@ -252,9 +252,9 @@ public class MenuService extends Service {
     private final Runnable heartbeatRunnable = new Runnable() {
         @Override
         public void run() {
+            try {
             if (instance == null) return;
             if (menuUserHidden) {
-                mainHandler.postDelayed(this, HEARTBEAT_INTERVAL_MS);
                 return;
             }
             Activity host = resolveMenuHost(focusedHost);
@@ -277,7 +277,11 @@ public class MenuService extends Service {
                     syncOverlayForHost("heartbeat");
                 }
             }
-            mainHandler.postDelayed(this, HEARTBEAT_INTERVAL_MS);
+            } catch (Throwable t) {
+                Log.e(TAG, "heartbeat exception isolated", t);
+            } finally {
+                mainHandler.postDelayed(this, HEARTBEAT_INTERVAL_MS);
+            }
         }
     };
 

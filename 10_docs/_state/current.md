@@ -1,4 +1,6 @@
 # 跨游戏状态索引
+> 更新：2026-09-16 20:10，**「镇邪人」1.0.3 正式收尾**：同签名覆盖真机 `f9a116a2`、未卸载未清数据。冷启动已过 100% 到服务器开始界面，无 JSC 解密错误、SIGSEGV、FATAL EXCEPTION；用户实测秒杀/无敌/攻速/全屏秒杀有效，并实际操作滑条 `3→4→5` 与 `#1~#4/#6` 全开，确认接受当前版本。排查确认旧加速失效不是 scheduler 路线错误，而是后续把速度同步混进约 1.2 KB 状态 JS 后被 native 缓冲截断；现已按 `skill/re-implement/utility-pattern.md` 模式二恢复独立 `SyncSpeedJs()`（384B，仅 `cc.director.getScheduler().setTimeScale(N)`），四项战斗沿用 `damage-pattern.md` 模式三的 Cocos evalString/锚点思路与 b5278 静态补丁，离线回归 7/7。正式包=`镇邪人_1.0.3_safe-releaseSigned.apk`（125,361,805B，md5 `7073581c…`，sha256 `8a6e6725…`，so sha256 `7186967c…`，b5278 JSC sha256 `af04701e…`）；文档=`10_docs/镇邪人/镇邪人_1.0.3_安全重写_20260916.md`；管线=`04_scripts/镇邪人/pipeline.json`。
+
 
 > 更新：2026-09-15，**「黑暗领域」1.0 fix3 正式包已收尾、裁剪并同签名覆盖安装**：fix2 仅是旧 dex 补 JNI 声明，菜单图标仍为旧版；fix3 已从当前 Gradle/R8 源码完整重建 `classes4.dex`，新 V4 云 masc 图标 Base64 指纹命中、19 项 JNI 方法齐全，并与四项功能 v2 so 一起同签名覆盖安装。正式包=`08_output/黑暗领域/黑暗领域_1.0_combo_fix3-releaseSigned.apk`（md5 `a13c7242…`，sha256 `2c50f0d7…`，dex md5 `cd9d17a9…`，so md5 `3851ad78…`）；设备 `base.apk` md5 一致，未卸载、未清数据；`21:49` 后无新 native crash。已清理可再生 `06_dumped/黑暗领域` 约 23M、`obj_haly` 约 3.1M，并把 `08_output/黑暗领域` 裁剪为唯一正式包，8 个旧 APK/idsig 清单见 `正式包裁剪清单_1.0fix3_20260915.json`；02_apks 原包仍按用户管理。G2 四项功能与结算稳定性仍标 NOT PROVEN。文档=`10_docs/黑暗领域/战斗代码复核与四功能重写_20260915.md` + `收尾与最小复现清单_1.0fix3_20260915.md`；管线=`04_scripts/黑暗领域/pipeline.json`。
 

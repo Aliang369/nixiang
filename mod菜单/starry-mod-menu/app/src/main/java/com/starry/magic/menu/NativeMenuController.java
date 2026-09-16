@@ -91,7 +91,7 @@ public final class NativeMenuController {
     public enum AttachMode { ACTIVITY, OVERLAY, NONE }
 
     private final Context appContext;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Handler mainHandler = new MenuSafeHandler(TAG);
     private final ExecutorService authExec = Executors.newSingleThreadExecutor();
     private final ModBridge bridge;
 
@@ -265,6 +265,13 @@ public final class NativeMenuController {
         hostRebindInFlight = true;
         try {
             ensureAliveOrRebindInner(preferredHost);
+        } catch (Throwable t) {
+            Log.e(TAG, "ensureAliveOrRebind isolated", t);
+            try {
+                detachWindowOnly();
+                expanded = false;
+            } catch (Throwable ignored) {
+            }
         } finally {
             hostRebindInFlight = false;
         }

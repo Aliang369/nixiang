@@ -1,0 +1,3193 @@
+
+────────────────────────────────────────────
+[2026-09-16 01:52:39] [镇邪人] stage=check_apk 开始
+命令: bash 04_scripts/镇邪人/check_apk_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[2026-09-16 01:52:40] [镇邪人] stage=check_apk 命令失败 rc=141
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 01:53:43] [镇邪人] stage=check_apk 开始
+命令: bash 04_scripts/镇邪人/check_apk_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+base_sha256=ec124c8e7a7d54af5e48ad636bd9d6b2d10973e2dfde653b883da4b3f8c4d7f6
+package=com.zxr.dlxmz.zxrwz37zgx10.gg9b
+version=1.0.3/11
+signature=verified
+[2026-09-16 01:53:47] [镇邪人] stage=check_apk 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 01:53:54] [镇邪人] stage=patch_jsc 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsc_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+generated /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZxrPatchJs.h
+patched=19940522 jsc=3410540 sha256=4e740291c6881c7b910d88efd0f97aeb117eeb9d2884e20d147dc6f1d78cd40a
+[patch_jsc] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/index.d5507.safe.js
+[patch_jsc] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/assets/src/index.d5507.jsc
+[patch_jsc] sha256=4e740291c6881c7b910d88efd0f97aeb117eeb9d2884e20d147dc6f1d78cd40a
+[2026-09-16 01:53:57] [镇邪人] stage=patch_jsc 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 01:54:04] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.Z5LAGg/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.Z5LAGg/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.Z5LAGg/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 11s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 01:54 /tmp/zxr_surgical.Z5LAGg/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 01:54 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 01:54 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 01:54:37] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 01:55:19] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+[2026-09-16 01:55:19] [镇邪人] stage=verify 命令失败 rc=141
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 01:55:53] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+ERROR: patched JSC marker missing after decryption
+[2026-09-16 01:55:56] [镇邪人] stage=verify 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 01:57:16] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=bf4de38570cfc7ef11efa6ef77c03deace68493938e224764f83f2c0c72561ac
+verify=pass
+[2026-09-16 01:57:20] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 02:00:22] [镇邪人] stage=patch_jsc 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsc_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+generated /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZxrPatchJs.h
+zxr_patch_regression=pass cases=7
+patched=19940535 jsc=3410548 sha256=7226d16abdddd8a2a286ba6eafe857381e361a746ddf0019eaf8e25db769dfb0
+[patch_jsc] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/index.d5507.safe.js
+[patch_jsc] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/assets/src/index.d5507.jsc
+[patch_jsc] sha256=7226d16abdddd8a2a286ba6eafe857381e361a746ddf0019eaf8e25db769dfb0
+[2026-09-16 02:00:26] [镇邪人] stage=patch_jsc 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 02:00:42] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:stripReleaseDebugSymbols
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.hDHwv7/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.hDHwv7/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.hDHwv7/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 9s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 02:01 /tmp/zxr_surgical.hDHwv7/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 02:01 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 02:01 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 02:01:19] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 02:01:43] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=5e1de300df39e79027080049ad5eda5aa49100bfb5542f6367d7518f9ff8cc6c
+verify=pass
+[2026-09-16 02:01:54] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:11:43] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:9
+
+[2026-09-16 13:11:44] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:11:58] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+
+────────────────────────────────────────────
+[2026-09-16 13:18:12] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 33.0 MB/s (100383749 bytes in 2.900s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (c665955f786715f2a5877150d603f7ee) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 13:18:18
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 13:18:19] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:32:41] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= ZxrRunScript.cpp
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:stripReleaseDebugSymbols
+> Task :app:mergeReleaseJavaResource
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:processReleaseResources
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:sdkReleaseDependencyData
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.2ApXF2/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.2ApXF2/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.2ApXF2/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 15s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 13:33 /tmp/zxr_surgical.2ApXF2/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 13:33 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 13:33 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 13:33:11] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:33:54] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=b59388ae6f1e344b6921eb75352714eb707468eed186ec4c33364fc68ff99ae0
+verify=pass
+[2026-09-16 13:33:57] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:34:27] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:9
+
+[2026-09-16 13:34:28] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:36:19] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 13:18:18
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 32.3 MB/s (100387845 bytes in 2.960s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (3f08ea70332a7fcb592dc40ea0803a42) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 13:36:24
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 13:36:27] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:49:33] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= ZxrRunScript.cpp
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.9nghYm/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.9nghYm/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.9nghYm/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 7s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 13:49 /tmp/zxr_surgical.9nghYm/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 13:49 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 13:49 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 13:49:56] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:51:16] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=8f8ffe75defe0ff3f31f26fb581e76b4bb691b481451a511762c304c0aab7b8f
+verify=pass
+[2026-09-16 13:51:19] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:51:28] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:9
+
+[2026-09-16 13:51:29] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 13:51:42] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 13:36:24
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 31.1 MB/s (100387845 bytes in 3.082s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (e7ec870f85cb22dbc7084ab46b6c5f53) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 13:51:47
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 13:51:49] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 14:04:51] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:stripReleaseDebugSymbols
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.WXn8Zs/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.WXn8Zs/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.WXn8Zs/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 5s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 14:05 /tmp/zxr_surgical.WXn8Zs/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 14:05 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff    96M Sep 16 14:05 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 14:05:13] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 14:06:38] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=e5ed4ef975c4710e592a78eddf5f187ab6536a8b152d01645af379643929dd22
+verify=pass
+[2026-09-16 14:06:42] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 14:06:53] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:9
+
+[2026-09-16 14:06:54] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 14:07:22] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 13:51:47
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 31.7 MB/s (100387845 bytes in 3.018s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (d89834fcaa643b921562877a512bbf3a) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 14:07:27
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 14:07:30] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:34:37] [镇邪人] stage=patch_b5278 开始
+命令: bash 04_scripts/镇邪人/build_patched_b5278_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+decrypted=24544048 js=/Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+881d38ed279e4d96aaacf2b9f727aab49a5d3c21f205a3c483e1a25c4a547bfc  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.encrypted.jsc
+00eb05151c03fa10bebf0d640327594ea4671b9b8c6f53229c3befbe5a6947e8  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+patched=24545519 jsc=4139584 sha256=bd840b49fc1148e4eae8ee52e85b41937e560981b67652b3814931785f9d5fcb
+zxr_patch_regression=pass cases=7
+[patch_b5278] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.safe.js
+[patch_b5278] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.jsc
+[patch_b5278] sha256=bd840b49fc1148e4eae8ee52e85b41937e560981b67652b3814931785f9d5fcb
+[2026-09-16 18:34:39] [镇邪人] stage=patch_b5278 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:35:37] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:generateReleaseResValues
+> Task :app:checkReleaseAarMetadata
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:mergeReleaseJavaResource
+> Task :app:compressReleaseAssets
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.oJ5xAW/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.oJ5xAW/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.oJ5xAW/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 13s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 18:35 /tmp/zxr_surgical.oJ5xAW/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:36 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:36 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:36:05] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:38:31] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=9b065e4e0ace224f1dd9882d4e188382c72f2e30033b785f48f659f320c45856
+verify=pass
+[2026-09-16 18:38:35] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:38:44] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 18:38:45] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:38:58] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 14:07:27
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 30.1 MB/s (108666012 bytes in 3.445s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (0166c694d7770fc54c51cc66c841195c) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:39:04
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:39:05] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:48:03] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:compressReleaseAssets
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.RJRCuU/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.RJRCuU/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.RJRCuU/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 18:48 /tmp/zxr_surgical.RJRCuU/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:48 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:48 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:48:22] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:48:38] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=1545cde5c3c19bf472edf1a34890d8a1e6b94384cfbd51542c58b13809214737
+verify=pass
+[2026-09-16 18:48:41] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:49:06] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 18:49:07] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:49:16] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:39:04
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 31.7 MB/s (108666012 bytes in 3.267s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (0db2f61dc1c160ba5ed5956426bfe3b0) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:49:22
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:49:25] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:51:05] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.wVUTCu/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.wVUTCu/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.wVUTCu/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 18:51 /tmp/zxr_surgical.wVUTCu/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=902 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:51 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:51 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:51:23] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:51:51] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=48d1cf2f326e51cb9a63931eddefce69e0265fa65105c23e82d7e16731c691df
+verify=pass
+[2026-09-16 18:51:54] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:52:03] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 18:52:04] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:52:12] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:49:22
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 31.5 MB/s (108666012 bytes in 3.287s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (1a6c2f6a525314488140e8264245a5fa) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:52:17
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:52:19] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:54:38] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=8047 sha256=2434d951d0a9b13c9b7c6f682543d15a684fe53518a63d8bb8eeea6136162cd7
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=2434d951d0a9b13c9b7c6f682543d15a684fe53518a63d8bb8eeea6136162cd7
+[2026-09-16 18:54:39] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:55:12] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:stripReleaseDebugSymbols
+> Task :app:processReleaseManifestForPackage
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.FebLjF/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.FebLjF/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.FebLjF/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 18:55 /tmp/zxr_surgical.FebLjF/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=901 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:55 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:55 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:55:30] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:55:47] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=1fe4f5011f5757a1c2c50b00f140a9543c3ec94e49e6624982eabe46f843c4b3
+verify=pass
+[2026-09-16 18:55:50] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:55:59] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 18:55:59] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:56:09] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:52:17
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 32.0 MB/s (108666012 bytes in 3.235s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (77f7ee4a9bd8820955c646771de35766) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:56:14
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:56:16] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:57:39] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=8269 sha256=713eabbae66bccadc7ecd923c25b94815ea68afa8a53d89cc477bbba84d05c18
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=713eabbae66bccadc7ecd923c25b94815ea68afa8a53d89cc477bbba84d05c18
+[2026-09-16 18:57:40] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:58:02] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:stripReleaseDebugSymbols
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.6ivPeK/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.6ivPeK/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.6ivPeK/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 18:58 /tmp/zxr_surgical.6ivPeK/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=901 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:58 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   104M Sep 16 18:58 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:58:20] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:58:44] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=058bc249897f905e4910b6a93c514a19f1479e7d5bde107658e9b678fba4275f
+verify=pass
+[2026-09-16 18:58:48] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:58:56] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 18:58:56] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 18:59:05] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:56:14
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 30.5 MB/s (108666012 bytes in 3.398s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (c95e6575588eee0b0e3e3851b5764bab) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:59:11
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 18:59:13] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:02:55] [镇邪人] stage=patch_b5278 开始
+命令: bash 04_scripts/镇邪人/build_patched_b5278_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+decrypted=24544048 js=/Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+881d38ed279e4d96aaacf2b9f727aab49a5d3c21f205a3c483e1a25c4a547bfc  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.encrypted.jsc
+00eb05151c03fa10bebf0d640327594ea4671b9b8c6f53229c3befbe5a6947e8  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+patched=24545519 jsc=4139584 sha256=bd840b49fc1148e4eae8ee52e85b41937e560981b67652b3814931785f9d5fcb
+zxr_patch_regression=pass cases=7
+[patch_b5278] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.safe.js
+[patch_b5278] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.jsc
+[patch_b5278] sha256=bd840b49fc1148e4eae8ee52e85b41937e560981b67652b3814931785f9d5fcb
+[2026-09-16 19:02:58] [镇邪人] stage=patch_b5278 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:03:12] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=8525 sha256=c75d0eb870a53904dc2978a149a6ce8a1a8b3d4c4bb6a9421e3367921d4e6636
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=c75d0eb870a53904dc2978a149a6ce8a1a8b3d4c4bb6a9421e3367921d4e6636
+[2026-09-16 19:03:13] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:03:28] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:stripReleaseDebugSymbols
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.3JXbAm/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.3JXbAm/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.3JXbAm/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 19:03 /tmp/zxr_surgical.3JXbAm/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=901 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   112M Sep 16 19:03 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   112M Sep 16 19:03 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:03:45] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:04:01] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=a43e7e61a4d45e750dfc247f7df823cf2fa6e7604bcc9fc639518830da2c1bc0
+verify=pass
+[2026-09-16 19:04:05] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:04:13] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 19:04:14] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:04:24] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 18:59:11
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 33.0 MB/s (116952554 bytes in 3.380s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (4f8bbc082799ae6658f5fa110ec04379) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:04:30
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:04:32] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:06:07] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=9450 sha256=260f9030dd0183bf699e99d9982ac03e7ff9b6718e220338edd314a371bfbcb5
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=260f9030dd0183bf699e99d9982ac03e7ff9b6718e220338edd314a371bfbcb5
+[2026-09-16 19:06:08] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:06:27] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:stripReleaseDebugSymbols
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.RvdqMx/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.RvdqMx/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.RvdqMx/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 19:06 /tmp/zxr_surgical.RvdqMx/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=901 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   112M Sep 16 19:06 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   112M Sep 16 19:06 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:06:45] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:07:01] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=46f0de788bdcd2035cce1b6a60def6b11bc1b2e7a2f291e255fb8ba493234558
+verify=pass
+[2026-09-16 19:07:04] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:07:13] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 19:07:14] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:07:23] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:04:30
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 33.7 MB/s (116952554 bytes in 3.305s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (b7bf8422d2a141250846d6f096bf9c2b) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:07:28
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:07:30] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:10:06] [镇邪人] stage=patch_jsb_engine 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsb_engine_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_jsb_engine=202508 sha256=309417fd04c9a212040dc1b83a7307c18d95160b966de1006cae047ec0b20a25
+[patch_jsb_engine] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/jsb-engine.js
+[patch_jsb_engine] sha256=309417fd04c9a212040dc1b83a7307c18d95160b966de1006cae047ec0b20a25
+[2026-09-16 19:10:07] [镇邪人] stage=patch_jsb_engine 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:10:33] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_PATCHED_JSB_ENGINE="$NIXIANG/07_patched/镇邪人/jsb-engine.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:stripReleaseDebugSymbols
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.IRRK7e/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.IRRK7e/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.IRRK7e/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 3s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 19:10 /tmp/zxr_surgical.IRRK7e/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=900 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   112M Sep 16 19:10 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   112M Sep 16 19:10 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:10:50] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:11:06] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=7a9664ca7cc2b17ff839175b1f7781d437cb312c039e012615ac8bfa100dc050
+verify=pass
+[2026-09-16 19:11:09] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:11:17] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 19:11:18] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:11:28] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:07:28
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 31.1 MB/s (116952554 bytes in 3.591s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (c69a80c35da9447a2970b6394e48992b) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:11:34
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:11:36] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:20:14] [镇邪人] stage=patch_b5278 开始
+命令: bash 04_scripts/镇邪人/build_patched_b5278_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+decrypted=24544048 js=/Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+881d38ed279e4d96aaacf2b9f727aab49a5d3c21f205a3c483e1a25c4a547bfc  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.encrypted.jsc
+00eb05151c03fa10bebf0d640327594ea4671b9b8c6f53229c3befbe5a6947e8  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+patched=24545519 jsc=4139584 sha256=bd840b49fc1148e4eae8ee52e85b41937e560981b67652b3814931785f9d5fcb
+zxr_patch_regression=pass cases=7
+[patch_b5278] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.safe.js
+[patch_b5278] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.jsc
+[patch_b5278] sha256=bd840b49fc1148e4eae8ee52e85b41937e560981b67652b3814931785f9d5fcb
+[2026-09-16 19:20:17] [镇邪人] stage=patch_b5278 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:20:26] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=9448 sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[2026-09-16 19:20:28] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:20:28] [镇邪人] stage=patch_jsb_engine 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsb_engine_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_jsb_engine=202557 sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[patch_jsb_engine] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/jsb-engine.js
+[patch_jsb_engine] sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[2026-09-16 19:20:30] [镇邪人] stage=patch_jsb_engine 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:20:56] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_JSC_B5278_JS="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.js" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_PATCHED_JSB_ENGINE="$NIXIANG/07_patched/镇邪人/jsb-engine.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:stripReleaseDebugSymbols
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseManifestForPackage
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.yyDCmK/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.yyDCmK/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.yyDCmK/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 6s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 19:21 /tmp/zxr_surgical.yyDCmK/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=900 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:21 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:21 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:21:20] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:21:38] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=baf4d160a841a7cdd58e3b5fa9a6cb433bde7ffecbf694fd6177c01ea7ff3801
+verify=pass
+[2026-09-16 19:21:42] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:21:52] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 19:21:53] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:22:02] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:11:34
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 19.3 MB/s (125361805 bytes in 6.210s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (b08f14f70a1409c52eaeffffbc2dd06a) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:22:10
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:22:12] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:31:06] [镇邪人] stage=patch_jsc 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsc_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+generated /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZxrPatchJs.h
+zxr_patch_regression=pass cases=7
+patched=19940536 jsc=3410556 sha256=2b5ef39a34339f1f8136f23ff2ed7eb7711ac757a15397d513cd20de4a10a53d
+[patch_jsc] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/index.d5507.safe.js
+[patch_jsc] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/assets/src/index.d5507.jsc
+[patch_jsc] sha256=2b5ef39a34339f1f8136f23ff2ed7eb7711ac757a15397d513cd20de4a10a53d
+[2026-09-16 19:31:11] [镇邪人] stage=patch_jsc 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:31:12] [镇邪人] stage=patch_b5278 开始
+命令: bash 04_scripts/镇邪人/build_patched_b5278_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+decrypted=24544048 js=/Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+881d38ed279e4d96aaacf2b9f727aab49a5d3c21f205a3c483e1a25c4a547bfc  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.encrypted.jsc
+00eb05151c03fa10bebf0d640327594ea4671b9b8c6f53229c3befbe5a6947e8  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+patched=24545520 jsc=4139688 sha256=b764f3061e3b68b04882b14b4660e464702cef6927b38d58ae4caed53eb252ae
+zxr_patch_regression=pass cases=7
+[patch_b5278] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.safe.js
+[patch_b5278] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.jsc
+[patch_b5278] sha256=b764f3061e3b68b04882b14b4660e464702cef6927b38d58ae4caed53eb252ae
+[2026-09-16 19:31:16] [镇邪人] stage=patch_b5278 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:31:17] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=9448 sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[2026-09-16 19:31:18] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:31:19] [镇邪人] stage=patch_jsb_engine 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsb_engine_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_jsb_engine=202557 sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[patch_jsb_engine] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/jsb-engine.js
+[patch_jsb_engine] sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[2026-09-16 19:31:20] [镇邪人] stage=patch_jsb_engine 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:32:37] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_JSC_B5278_JS="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.js" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_PATCHED_JSB_ENGINE="$NIXIANG/07_patched/镇邪人/jsb-engine.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:stripReleaseDebugSymbols
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.j910w2/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.j910w2/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.j910w2/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 14s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 19:33 /tmp/zxr_surgical.j910w2/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=900 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:33 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:33 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:33:22] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:33:36] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=a00634a42647e8236d250af2abc98ffa8c8d61b3a5e62c992f402ed78006a58d
+verify=pass
+[2026-09-16 19:33:49] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:33:52] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 19:33:57] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:34:00] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:22:10
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 32.4 MB/s (125361805 bytes in 3.693s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (8a8af0b14622bb5561f5a0b09ed8f4c8) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:34:06
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:34:10] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:44:40] [镇邪人] stage=patch_jsc 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsc_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+Zxr patch spec must contain exactly 3 replacements
+[2026-09-16 19:44:40] [镇邪人] stage=patch_jsc 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:45:39] [镇邪人] stage=patch_jsc 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsc_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+generated /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZxrPatchJs.h
+zxr_patch_regression=pass cases=9
+patched=19940679 jsc=3410624 sha256=349b47adbdc789db12e72b4d1f6491f8d453fdf6df2d80c888b6b5ba2cd9e847
+[patch_jsc] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/index.d5507.safe.js
+[patch_jsc] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/assets/src/index.d5507.jsc
+[patch_jsc] sha256=349b47adbdc789db12e72b4d1f6491f8d453fdf6df2d80c888b6b5ba2cd9e847
+[2026-09-16 19:45:41] [镇邪人] stage=patch_jsc 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:45:42] [镇邪人] stage=patch_b5278 开始
+命令: bash 04_scripts/镇邪人/build_patched_b5278_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+decrypted=24544048 js=/Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+881d38ed279e4d96aaacf2b9f727aab49a5d3c21f205a3c483e1a25c4a547bfc  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.encrypted.jsc
+00eb05151c03fa10bebf0d640327594ea4671b9b8c6f53229c3befbe5a6947e8  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+patched=24545663 jsc=4139764 sha256=af04701e5f785f6b311fc73951f7d76b67bc47044ab01c9731494453a6ae4354
+zxr_patch_regression=pass cases=9
+[patch_b5278] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.safe.js
+[patch_b5278] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.jsc
+[patch_b5278] sha256=af04701e5f785f6b311fc73951f7d76b67bc47044ab01c9731494453a6ae4354
+[2026-09-16 19:45:45] [镇邪人] stage=patch_b5278 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:45:46] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=9448 sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[2026-09-16 19:45:46] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:45:47] [镇邪人] stage=patch_jsb_engine 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsb_engine_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_jsb_engine=202557 sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[patch_jsb_engine] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/jsb-engine.js
+[patch_jsb_engine] sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[2026-09-16 19:45:47] [镇邪人] stage=patch_jsb_engine 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:46:13] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_JSC_B5278_JS="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.js" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_PATCHED_JSB_ENGINE="$NIXIANG/07_patched/镇邪人/jsb-engine.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:stripReleaseDebugSymbols
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.CBwvrv/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.CBwvrv/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.CBwvrv/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 19:46 /tmp/zxr_surgical.CBwvrv/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=900 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:46 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:46 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:46:33] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:46:48] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=0b7e5aa7d7743f6ee01ffb085c25e458a9a9ee035774313357a8807938cb52e6
+verify=pass
+[2026-09-16 19:46:52] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:46:53] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 19:46:54] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:46:55] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:34:06
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 28.8 MB/s (125361805 bytes in 4.152s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (ddc052087ca5ac9efa65d2e32b5bc7f0) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:47:01
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:47:04] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:50:40] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_JSC_B5278_JS="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.js" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_PATCHED_JSB_ENGINE="$NIXIANG/07_patched/镇邪人/jsb-engine.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:mergeReleaseArtProfile
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseJavaResource
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:compressReleaseAssets
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:stripReleaseDebugSymbols
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:mergeReleaseNativeDebugMetadata
+> Task :app:processReleaseResources
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.kxLoN1/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.kxLoN1/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.kxLoN1/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 8s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 19:50 /tmp/zxr_surgical.kxLoN1/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=900 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:51 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 19:51 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:51:11] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:51:32] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=c4f2901798d18bda745dd5b8a72e76813f0e27acffdecf34c02a58b175a8abc5
+verify=pass
+[2026-09-16 19:51:37] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:51:38] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 19:51:39] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:51:40] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:47:01
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 32.9 MB/s (125361805 bytes in 3.630s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (d78eeb0c8bb45aefe2e17e3374c725d5) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:51:46
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 19:51:48] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:59:38] [镇邪人] stage=patch_jsc 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsc_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+generated /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ZxrPatchJs.h
+zxr_patch_regression=pass cases=7
+patched=19940536 jsc=3410556 sha256=2b5ef39a34339f1f8136f23ff2ed7eb7711ac757a15397d513cd20de4a10a53d
+[patch_jsc] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/index.d5507.safe.js
+[patch_jsc] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/assets/src/index.d5507.jsc
+[patch_jsc] sha256=2b5ef39a34339f1f8136f23ff2ed7eb7711ac757a15397d513cd20de4a10a53d
+[2026-09-16 19:59:40] [镇邪人] stage=patch_jsc 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:59:41] [镇邪人] stage=patch_b5278 开始
+命令: bash 04_scripts/镇邪人/build_patched_b5278_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+decrypted=24544048 js=/Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+881d38ed279e4d96aaacf2b9f727aab49a5d3c21f205a3c483e1a25c4a547bfc  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.encrypted.jsc
+00eb05151c03fa10bebf0d640327594ea4671b9b8c6f53229c3befbe5a6947e8  /Users/aliang/Documents/nixiang/06_dumped/镇邪人/remote_b5278/index.b5278.js
+patched=24545520 jsc=4139688 sha256=b764f3061e3b68b04882b14b4660e464702cef6927b38d58ae4caed53eb252ae
+zxr_patch_regression=pass cases=7
+[patch_b5278] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.safe.js
+[patch_b5278] jsc=/Users/aliang/Documents/nixiang/07_patched/镇邪人/b5278/index.b5278.jsc
+[patch_b5278] sha256=b764f3061e3b68b04882b14b4660e464702cef6927b38d58ae4caed53eb252ae
+[2026-09-16 19:59:44] [镇邪人] stage=patch_b5278 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:59:45] [镇邪人] stage=patch_main 开始
+命令: bash 04_scripts/镇邪人/build_patched_main_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_main=9448 sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[patch_main] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/main.js
+[patch_main] sha256=7c0ab0b7b2835629d44550b542c10718dd404e0b4dca5326ce1d2132244e8297
+[2026-09-16 19:59:46] [镇邪人] stage=patch_main 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 19:59:47] [镇邪人] stage=patch_jsb_engine 开始
+命令: bash 04_scripts/镇邪人/build_patched_jsb_engine_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+patched_jsb_engine=202557 sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[patch_jsb_engine] js=/Users/aliang/Documents/nixiang/07_patched/镇邪人/jsb-engine.js
+[patch_jsb_engine] sha256=6cd91c3bd7366136560adef5c1f0a2676957c15b7fdbdfd07a6f3345c2fe4653
+[2026-09-16 19:59:48] [镇邪人] stage=patch_jsb_engine 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 20:00:34] [镇邪人] stage=build_package 开始
+命令: ZXR_BASE_APK="$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_starry_from_downloads_20260916.apk" ZXR_PATCHED_JSC="$NIXIANG/07_patched/镇邪人/assets/src/index.d5507.jsc" ZXR_PATCHED_JSC_B5278="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.jsc" ZXR_PATCHED_JSC_B5278_JS="$NIXIANG/07_patched/镇邪人/b5278/index.b5278.js" ZXR_PATCHED_MAIN="$NIXIANG/07_patched/镇邪人/main.js" ZXR_PATCHED_B5278_CONFIG="$NIXIANG/07_patched/镇邪人/b5278/config.b5278.json" ZXR_PATCHED_JSB_ENGINE="$NIXIANG/07_patched/镇邪人/jsb-engine.js" ZXR_OUTPUT_NAME="镇邪人_1.0.3_safe-releaseSigned.apk" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_1.0.3.sh
+目录: /Users/aliang/Documents/nixiang
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
+[check] Android.mk target=zxr
+[check] base has libstarry + classes8
+[1/6] ndk-build → jniLibs
+[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
+[arm64-v8a] Compile        : starry_magic <= xdl_util.c
+[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
+[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
+[arm64-v8a] Install libs/arm64-v8a/libc++_shared.so:
+[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
+[arm64-v8a] Compile        : starry_magic <= xdl.c
+[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
+[arm64-v8a] Compile++      : starry_magic <= ZxrMod.cpp
+[arm64-v8a] Compile++      : starry_magic <= Main.cpp
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+[arm64-v8a] Install        : libstarry_magic.so => libs/arm64-v8a/libstarry_magic.so
+  so tags ok ([Zxr] + zxr\0)
+  so → jniLibs ok ([Zxr]/zxr verified)
+[1b/6] gradle assembleRelease (starry template only)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseBuildConfig
+> Task :app:javaPreCompileRelease
+> Task :app:checkReleaseAarMetadata
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :app:mergeReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
+> Task :app:processReleaseMainManifest
+> Task :app:processReleaseManifest
+> Task :app:extractProguardFiles
+> Task :app:mergeReleaseJniLibFolders
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeReleaseNativeLibs
+> Task :app:mergeReleaseArtProfile
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeReleaseShaders
+> Task :app:stripReleaseDebugSymbols
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:processApplicationManifestReleaseForBundle
+> Task :app:collectReleaseDependencies
+> Task :app:extractReleaseNativeSymbolTables
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:compileReleaseJavaWithJavac
+/private/tmp/zxr_surgical.MIGxae/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
+                       ^
+/private/tmp/zxr_surgical.MIGxae/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
+    public static Drawable fabCircle(Context ctx) {
+                           ^
+注: 某些输入文件使用或覆盖了已过时的 API。
+注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+2 个警告
+
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:expandReleaseArtProfileWildcards
+> Task :app:mergeReleaseGeneratedProguardFiles
+> Task :app:bundleReleaseResources
+> Task :app:minifyReleaseWithR8
+> Task :app:compileReleaseArtProfile
+> Task :app:shrinkReleaseRes
+> Task :app:convertReleaseProtoResources
+> Task :app:optimizeReleaseResources
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///private/tmp/zxr_surgical.MIGxae/starry/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 9s
+50 actionable tasks: 50 executed
+[2/6] apktool d starry template -> com/starry smali
+[3/6] assemble classes8.dex = com/starry (NativeMenu)
+-rw-r--r--@ 1 aliang  wheel  415712 Sep 16 20:00 /tmp/zxr_surgical.MIGxae/classes8.dex
+[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）
+  merge ok; kept=900 dropped_web=0; arsc+c1-7 unchanged; classes8+so+certs replaced
+[5/6] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 20:01 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+-rw-r--r--@ 1 aliang  staff   120M Sep 16 20:01 /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_starry.apk
+[6/6] post-check strings
+  final so tags ok
+  final apk: no web, NativeMenu+ZxrHooks in classes8
+  final ok
+skip install (set STARRY_INSTALL=1 to cover-install)
+done → /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 20:01:10] [镇邪人] stage=build_package 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 20:01:38] [镇邪人] stage=verify 开始
+命令: bash 04_scripts/镇邪人/verify_apk_zxr.sh "$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk"
+目录: /Users/aliang/Documents/nixiang
+jsc_marker=assets/assets/src/index.d5507.jsc:starry_zxr_safe_v2
+jsc_marker=assets/assets/src/index.b5278.jsc:starry_zxr_safe_v2
+classes8=MenuSafeHandler+ZxrHooks
+apk_sha256=8a6e6725b0e131cac56ea712d41827526dce8b4fff0b24383cb9043070c91a04
+verify=pass
+[2026-09-16 20:01:46] [镇邪人] stage=verify 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 20:01:48] [镇邪人] stage=device_ready 开始
+命令: adb devices -l
+目录: /Users/aliang/Documents/nixiang
+List of devices attached
+f9a116a2               device usb:1310720X product:OPD2515 model:OPD2515 device:OP6548L1 transport_id:11
+
+[2026-09-16 20:01:50] [镇邪人] stage=device_ready 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-16 20:01:52] [镇邪人] stage=install 开始
+命令: SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh
+目录: /Users/aliang/Documents/nixiang
+[install] before:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 19:51:46
+      firstInstallTime=2026-09-16 13:18:18
+/Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk: 1 file pushed, 0 skipped. 32.3 MB/s (125361805 bytes in 3.707s)
+Success
+[install-verify] 设备 base.apk md5 == 本地产物 (7073581c16a2cb6123dae2081c80a09b) ✓
+[install] after:
+    versionCode=11 minSdk=21 targetSdk=30
+    versionName=1.0.3
+    lastUpdateTime=2026-09-16 20:01:58
+      firstInstallTime=2026-09-16 13:18:18
+[install] done: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_safe-releaseSigned.apk
+[2026-09-16 20:02:02] [镇邪人] stage=install 完成（校验通过）
+────────────────────────────────────────────

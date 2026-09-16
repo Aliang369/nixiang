@@ -1,17 +1,20 @@
 /* ================================================================
  *  镇邪人 MOD
- *  战斗：对齐斌哥 — 在 Cocos evalString 明文中拼接 get_ret 钩子
- *  免广告：Java SdkManager.SdkShowAdReward（见 inject 脚本）
+ *
+ *  战斗主路径：静态 patch 解密后的 assets/src/index.d5507.jsc。
+ *  native se::evalString hook 只作为热更兜底：只有脚本不含安全版本标记时，
+ *  才在内存中注入同源补丁；锚点不足或执行失败立即停用，不再反复改脚本。
  * ================================================================ */
 
 #include "ZxrMod.h"
-#include "Includes/obfuscate.h"
+#include "ZxrPatchJs.h"
 
 #include <atomic>
 #include <cstdio>
 #include <cstring>
-#include <pthread.h>
+#include <mutex>
 #include <string>
+#include <pthread.h>
 #include <unistd.h>
 
 #if defined(__linux__) || defined(__ANDROID__)
@@ -24,9 +27,22 @@
 #include "Dobby/dobby.h"
 
 static JavaVM* g_zxrJvm = nullptr;
-static bool g_ready = false;
-static bool g_evalHooked = false;
-static thread_local bool g_inEvalSplice = false;
+static std::mutex g_hookMutex;
+static std::mutex g_javaMutex;
+
+static std::atomic<bool> g_ready{false};
+static std::atomic<bool> g_seHooked{false};
+static std::atomic<bool> g_spliceDisabled{false};
+static std::atomic<int> g_spliceHits{0};
+static std::atomic<int> g_seCalls{0};
+static std::atomic<int> g_speedLvl{1};
+static thread_local bool t_inEvalSplice = false;
+
+static std::atomic<bool> g_seckill{false};
+static std::atomic<bool> g_inv{false};
+static std::atomic<bool> g_atkSpd{false};
+static std::atomic<bool> g_aoe{false};
+static std::atomic<bool> g_noAd{false};
 
 static jclass g_bridgeCls = nullptr;
 static jmethodID g_bridgeEval = nullptr;
@@ -34,14 +50,6 @@ static jclass g_hooksCls = nullptr;
 static jmethodID g_hooksSetRet = nullptr;
 static jmethodID g_hooksSetNoAd = nullptr;
 static jmethodID g_hooksClear = nullptr;
-
-static volatile bool g_seckill = false;
-static volatile bool g_inv = false;
-static volatile bool g_atkSpd = false;
-static volatile bool g_aoe = false;
-static volatile bool g_noAd = false;
-static std::atomic<int> g_speedLvl{1}; // 1=关, 2..5 → timeScale
-static std::atomic<int> g_spliceHits{0};
 
 static JNIEnv* GetEnv(bool* needDetach) {
     *needDetach = false;
@@ -58,6 +66,7 @@ static JNIEnv* GetEnv(bool* needDetach) {
 }
 
 static jclass LoadAppClass(JNIEnv* env, const char* name) {
+    if (!env || !name) return nullptr;
     jclass atCls = env->FindClass("android/app/ActivityThread");
     if (!atCls) {
         env->ExceptionClear();
@@ -77,56 +86,67 @@ static jclass LoadAppClass(JNIEnv* env, const char* name) {
         return nullptr;
     }
     jclass appCls = env->GetObjectClass(app);
-    jmethodID getCl = env->GetMethodID(appCls, "getClassLoader", "()Ljava/lang/ClassLoader;");
+    jmethodID getCl = appCls
+        ? env->GetMethodID(appCls, "getClassLoader", "()Ljava/lang/ClassLoader;")
+        : nullptr;
     jobject cl = getCl ? env->CallObjectMethod(app, getCl) : nullptr;
-    env->DeleteLocalRef(appCls);
+    if (appCls) env->DeleteLocalRef(appCls);
     env->DeleteLocalRef(app);
     if (!cl) {
         env->ExceptionClear();
         return nullptr;
     }
     jclass clCls = env->GetObjectClass(cl);
-    jmethodID loadClass =
-        env->GetMethodID(clCls, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-    jstring jname = env->NewStringUTF(name);
+    jmethodID loadClass = clCls
+        ? env->GetMethodID(clCls, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;")
+        : nullptr;
     jclass cls = nullptr;
-    if (loadClass && jname) {
-        cls = (jclass)env->CallObjectMethod(cl, loadClass, jname);
-        if (env->ExceptionCheck()) {
-            env->ExceptionClear();
-            cls = nullptr;
+    if (loadClass) {
+        jstring jname = env->NewStringUTF(name);
+        if (jname) {
+            cls = (jclass)env->CallObjectMethod(cl, loadClass, jname);
+            if (env->ExceptionCheck()) {
+                env->ExceptionClear();
+                cls = nullptr;
+            }
+            env->DeleteLocalRef(jname);
         }
     }
-    if (jname) env->DeleteLocalRef(jname);
-    env->DeleteLocalRef(clCls);
+    if (clCls) env->DeleteLocalRef(clCls);
     env->DeleteLocalRef(cl);
     return cls;
 }
 
 static void CacheJava(JNIEnv* env) {
+    if (!env) return;
+    std::lock_guard<std::mutex> lock(g_javaMutex);
     if (!g_bridgeCls) {
         jclass local = LoadAppClass(env, "com.starry.magic.cocos.CocosJsBridge");
-        if (!local) local = env->FindClass(OBFUSCATE("com/starry/magic/cocos/CocosJsBridge"));
+        if (!local) {
+            local = env->FindClass(OBFUSCATE("com/starry/magic/cocos/CocosJsBridge"));
+        }
         if (local) {
             g_bridgeCls = (jclass)env->NewGlobalRef(local);
-            g_bridgeEval =
-                env->GetStaticMethodID(g_bridgeCls, "evalOnGLThread", "(Ljava/lang/String;)V");
+            g_bridgeEval = env->GetStaticMethodID(
+                g_bridgeCls, "evalOnGLThread", "(Ljava/lang/String;)V");
             env->DeleteLocalRef(local);
-            LOGI("[Zxr] CocosJsBridge cached ok=%d", g_bridgeEval ? 1 : 0);
+            if (env->ExceptionCheck()) env->ExceptionClear();
         } else {
             env->ExceptionClear();
-            LOGW("[Zxr] CocosJsBridge not found");
         }
     }
     if (!g_hooksCls) {
         jclass local = LoadAppClass(env, "com.starry.magic.cocos.ZxrHooks");
-        if (!local) local = env->FindClass(OBFUSCATE("com/starry/magic/cocos/ZxrHooks"));
+        if (!local) {
+            local = env->FindClass(OBFUSCATE("com/starry/magic/cocos/ZxrHooks"));
+        }
         if (local) {
             g_hooksCls = (jclass)env->NewGlobalRef(local);
             g_hooksSetRet = env->GetStaticMethodID(g_hooksCls, "setRet", "(IZ)V");
             g_hooksSetNoAd = env->GetStaticMethodID(g_hooksCls, "setNoAd", "(Z)V");
             g_hooksClear = env->GetStaticMethodID(g_hooksCls, "clearAll", "()V");
             env->DeleteLocalRef(local);
+            if (env->ExceptionCheck()) env->ExceptionClear();
         } else {
             env->ExceptionClear();
         }
@@ -134,7 +154,7 @@ static void CacheJava(JNIEnv* env) {
 }
 
 static void EvalJs(const char* js) {
-    if (!g_zxrJvm || !js) return;
+    if (!js || !*js) return;
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
     if (!env) return;
@@ -143,10 +163,10 @@ static void EvalJs(const char* js) {
         jstring jjs = env->NewStringUTF(js);
         if (jjs) {
             env->CallStaticVoidMethod(g_bridgeCls, g_bridgeEval, jjs);
-            if (env->ExceptionCheck()) env->ExceptionClear();
             env->DeleteLocalRef(jjs);
         }
     }
+    if (env->ExceptionCheck()) env->ExceptionClear();
     if (detach) g_zxrJvm->DetachCurrentThread();
 }
 
@@ -156,15 +176,38 @@ static void SyncJavaRets() {
     if (!env) return;
     CacheJava(env);
     if (g_hooksCls && g_hooksSetRet) {
-        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 1, g_seckill ? JNI_TRUE : JNI_FALSE);
-        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 2, g_inv ? JNI_TRUE : JNI_FALSE);
-        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 3, g_atkSpd ? JNI_TRUE : JNI_FALSE);
-        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 4, g_aoe ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, ZXR_FEAT_SECKILL,
+                                  g_seckill.load() ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, ZXR_FEAT_INVINCIBLE,
+                                  g_inv.load() ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, ZXR_FEAT_ATK_SPEED,
+                                  g_atkSpd.load() ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, ZXR_FEAT_AOE_KILL,
+                                  g_aoe.load() ? JNI_TRUE : JNI_FALSE);
     }
     if (g_hooksCls && g_hooksSetNoAd) {
-        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetNoAd, g_noAd ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetNoAd,
+                                  g_noAd.load() ? JNI_TRUE : JNI_FALSE);
     }
+    if (env->ExceptionCheck()) env->ExceptionClear();
     if (detach) g_zxrJvm->DetachCurrentThread();
+}
+
+static void SyncJsState() {
+    if (!g_ready.load()) return;
+    char buf[2048];
+    snprintf(buf, sizeof(buf),
+             "(function(){try{var g=typeof globalThis!=='undefined'?globalThis:window;"
+             "var s=g.__starryZxrState=g.__starryZxrState||{};s.ret=s.ret||{};"
+             "s.ret[1]=%d;s.ret[2]=%d;s.ret[3]=%d;s.ret[4]=%d;"
+             "if(!s.logged){s.logged=1;try{jsb.reflection.callStaticMethod("
+             "\"com.starry.magic.cocos.ZxrHooks\",\"logStatus\",\"(Ljava/lang/String;)V\","
+             "\"zxr jsstate patched=\"+(typeof window.__starryZxrOn==='function'));}catch(e){}}"
+             "if(!s.bundleGuard&&typeof cc!=='undefined'&&cc.assetManager){s.bundleGuard=1;try{var am=cc.assetManager;if(am&&am.downloader){am.downloader.bundleVers=am.downloader.bundleVers||{};am.downloader.bundleVers.src=\"d5507\";var oa=am.addRemoteBundle;if(typeof oa===\"function\"){am.addRemoteBundle=function(n){if(n===\"src\")return;return oa.apply(this,arguments);};}var ol=am.loadBundle;if(typeof ol===\"function\"){am.loadBundle=function(n,o,c){if(n===\"src\"){try{am.downloader.bundleVers.src=\"d5507\";}catch(e){}}return ol.apply(this,arguments);};}}}catch(e){}"
+             "}catch(e){}})();",
+             g_seckill.load() ? 1 : 0, g_inv.load() ? 1 : 0,
+             g_atkSpd.load() ? 1 : 0, g_aoe.load() ? 1 : 0);
+    EvalJs(buf);
 }
 
 static void SyncSpeedJs() {
@@ -184,109 +227,74 @@ static void SyncSpeedJs() {
     EvalJs(buf);
 }
 
-/* 斌哥式拼接：锚点后插入 JMYBTActivity.get_ret 门控 */
-static bool NeedsCombatSplice(const char* s) {
-    if (!s) return false;
-    if (strstr(s, "isChecked_RET_dmg100")) return false; // 已拼
-    return strstr(s, "baseDmg") || strstr(s, "FightChangeEntityHp") ||
-           strstr(s, "Math.max(e,.01)") || strstr(s, "Math.max(e, .01)") ||
-           strstr(s, "getAtk=function") || strstr(s, "getAtk = function");
+static bool MemHas(const char* data, size_t size, const char* needle) {
+    if (!data || !needle) return false;
+    const size_t n = strlen(needle);
+    return n > 0 && size >= n && memmem(data, size, needle, n) != nullptr;
 }
 
-static void ReplaceOnce(std::string& s, const char* from, const char* to) {
-    size_t p = s.find(from);
-    if (p == std::string::npos) return;
-    s.replace(p, strlen(from), to);
+static bool ReplaceRequired(std::string& script, const char* anchor,
+                            const char* replacement, const char* name) {
+    if (!anchor || !*anchor || !replacement) return false;
+    size_t pos = script.find(anchor);
+    if (pos == std::string::npos) {
+        LOGW("[Zxr] hotfallback anchor missing: %s", name ? name : "?");
+        return false;
+    }
+    script.replace(pos, strlen(anchor), replacement);
+    return true;
 }
 
-static std::string SpliceCombatJs(const char* src) {
-    std::string s(src);
-    static const char* kDmgHook =
-        "var isChecked_RET_dmg100=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",1);"
-        "if(isChecked_RET_dmg100){n&&n.heroCfg&&(t*=100);}"
-        "var isChecked_RET_dmg0=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",2);"
-        "if(isChecked_RET_dmg0){r&&r.heroCfg&&(t=0);}";
-
-    static const char* kAtkHook =
-        "var isChecked_RET_atkspd10=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",3);"
-        "if(isChecked_RET_atkspd10){t&&t.heroCfg&&!t.CheckEntityHaveStatus("
-        "l.EnumEntityStatus.bossFakeControl)&&(e*=10);}";
-
-    static const char* kAoeHook =
-        "var isChecked_RET_aoeAll=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",4);"
-        "if(isChecked_RET_aoeAll&&!this._aoeAllEnemiesRunning&&i<0&&t&&t.monsterCfg){"
-        "var aoeCaster=d.EntityManager.Inst().GetEntity(e);"
-        "if(aoeCaster&&aoeCaster.heroCfg){this._aoeAllEnemiesRunning=!0;try{"
-        "var aoeMap=d.EntityManager.Inst().entityMap;"
-        "aoeMap&&aoeMap.forEach(function(aoeEnt){"
-        "aoeEnt&&aoeEnt!==t&&!aoeEnt.IsDead&&aoeEnt.monsterCfg&&"
-        "this.FightChangeEntityHp(aoeEnt,e,i,o,n);},this);"
-        "}finally{this._aoeAllEnemiesRunning=!1;}}}";
-
-    // 伤害：t=c.baseDmg → 其后插入秒杀/无敌
-    if (s.find("t=c.baseDmg") != std::string::npos) {
-        std::string rep = std::string("t=c.baseDmg;") + kDmgHook;
-        ReplaceOnce(s, "t=c.baseDmg", rep.c_str());
-    } else if (s.find("t = c.baseDmg") != std::string::npos) {
-        std::string rep = std::string("t = c.baseDmg;") + kDmgHook;
-        ReplaceOnce(s, "t = c.baseDmg", rep.c_str());
-    }
-
-    // 攻速：e=Math.max(e,.01)
-    if (s.find("e=Math.max(e,.01)") != std::string::npos) {
-        std::string rep = std::string("e=Math.max(e,.01);") + kAtkHook;
-        ReplaceOnce(s, "e=Math.max(e,.01)", rep.c_str());
-    } else if (s.find("e = Math.max(e, .01)") != std::string::npos) {
-        std::string rep = std::string("e = Math.max(e, .01);") + kAtkHook;
-        ReplaceOnce(s, "e = Math.max(e, .01)", rep.c_str());
-    } else if (s.find("e=Math.max(e, .01)") != std::string::npos) {
-        std::string rep = std::string("e=Math.max(e, .01);") + kAtkHook;
-        ReplaceOnce(s, "e=Math.max(e, .01)", rep.c_str());
-    }
-
-    // 全屏：FightChangeEntityHp 体内 var f=o&&o.force 前插入
-    if (s.find("FightChangeEntityHp") != std::string::npos) {
-        if (s.find("var f=o&&o.force") != std::string::npos) {
-            std::string rep = std::string(kAoeHook) + "var f=o&&o.force";
-            ReplaceOnce(s, "var f=o&&o.force", rep.c_str());
-        } else if (s.find("var f = o && o.force") != std::string::npos) {
-            std::string rep = std::string(kAoeHook) + "var f = o && o.force";
-            ReplaceOnce(s, "var f = o && o.force", rep.c_str());
+static bool BuildHotPatch(const char* src, size_t size, std::string* out) {
+    if (!src || !out) return false;
+    try {
+        std::string script;
+        script.reserve(size + strlen(kZxrPatchPrefix) + 4096);
+        script.append(src, size);
+        script.append("\n");
+        script.append(kZxrPatchPrefix);
+        if (!ReplaceRequired(script, kZxr_damage_and_invincible_anchor,
+                             kZxr_damage_and_invincible_replacement,
+                             "damage_and_invincible") ||
+            !ReplaceRequired(script, kZxr_attack_speed_anchor,
+                             kZxr_attack_speed_replacement, "attack_speed") ||
+            !ReplaceRequired(script, kZxr_full_screen_kill_anchor,
+                             kZxr_full_screen_kill_replacement,
+                             "full_screen_kill")) {
+            return false;
         }
+        out->swap(script);
+        return true;
+    } catch (...) {
+        LOGW("[Zxr] hotfallback build exception");
+        return false;
     }
-
-    return s;
 }
 
-/* JNI evalString：仅 Java→JS（加速/SDK）；战斗 .jsc 不走此路径 */
-typedef jint (*JniEvalString_t)(JNIEnv*, jclass, jstring);
-static JniEvalString_t orig_jniEval = nullptr;
-
-static jint hooked_jniEval(JNIEnv* env, jclass cls, jstring js) {
-    if (!orig_jniEval) return 0;
-    return orig_jniEval(env, cls, js);
-}
-
-/* 斌哥主路径：se::ScriptEngine::evalString(this, script, len, ret, fileName) */
 typedef bool (*SeEvalString_t)(void*, const char*, long, void*, const char*);
 static SeEvalString_t orig_seEval = nullptr;
-static bool g_seHooked = false;
-static bool g_jniHooked = false;
-static std::atomic<int> g_seCalls{0};
 
 static bool hooked_seEval(void* thiz, const char* script, long length, void* ret,
                           const char* fileName) {
     if (!orig_seEval) return false;
-    if (!script || g_inEvalSplice) {
+    if (!script || t_inEvalSplice || g_spliceDisabled.load()) {
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
     long n = length;
     if (n < 0) n = (long)strlen(script);
+    if (n < 1024 * 1024 || n > 48 * 1024 * 1024) {
+        return orig_seEval(thiz, script, length, ret, fileName);
+    }
+
+    if (fileName && !strstr(fileName, "index.d5507") &&
+        !strstr(fileName, "assets/src/index") &&
+        !strstr(fileName, "assets/assets/src") &&
+        !strstr(fileName, "index.b5278") &&
+        !strstr(fileName, "assets/remote/src/index")) {
+        return orig_seEval(thiz, script, length, ret, fileName);
+    }
+
     int calls = ++g_seCalls;
 #if defined(STARRY_TRACE)
     if (calls <= 8 || calls % 200 == 0) {
@@ -297,118 +305,93 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
     (void)calls;
 #endif
 
-    if (n < 32 || n > 48 * 1024 * 1024) {
+    if (MemHas(script, (size_t)n, kZxrPatchMarker)) {
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    // 大包勿整份拷贝进 std::string 两次；先 memmem 探关键词
-    auto has = [&](const char* needle) -> bool {
-        size_t nl = strlen(needle);
-        if ((size_t)n < nl) return false;
-        return memmem(script, (size_t)n, needle, nl) != nullptr;
-    };
-    bool already = has("isChecked_RET_dmg100");
-    bool combat = !already && (has("baseDmg") || has("FightChangeEntityHp") ||
-                               has("Math.max(e,.01)") || has("Math.max(e, .01)") ||
-                               has("getAtk=function") || has("getAtk = function"));
-#if defined(STARRY_TRACE)
-    if (n > 1024 * 1024) {
-        LOGI("[Zxr] big eval len=%ld combat=%d baseDmg=%d Fight=%d atkMax=%d file=%s", n,
-             combat ? 1 : 0, has("baseDmg") ? 1 : 0, has("FightChangeEntityHp") ? 1 : 0,
-             (has("Math.max(e,.01)") || has("Math.max(e, .01)")) ? 1 : 0,
-             fileName ? fileName : "(null)");
-    }
-#endif
-    if (!combat) {
+    if (!MemHas(script, (size_t)n, "FightChangeEntityHp") ||
+        !MemHas(script, (size_t)n, "DamageCommonCalcFinal") ||
+        !MemHas(script, (size_t)n, "CalcFinalAtkSpeedValue")) {
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    std::string src(script, (size_t)n);
-    std::string patched = SpliceCombatJs(src.c_str());
-    if (patched == src) {
-        LOGW("[Zxr] combat keywords hit but splice anchors missed len=%ld", n);
+    std::string patched;
+    if (!BuildHotPatch(script, (size_t)n, &patched)) {
+        g_spliceDisabled.store(true);
+        LOGW("[Zxr] hotfallback disabled: anchor set incomplete");
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    int hits = ++g_spliceHits;
-    LOGI("[Zxr] combat splice #%d len %zu→%zu file=%s", hits, src.size(), patched.size(),
-         fileName ? fileName : "(null)");
-
-    g_inEvalSplice = true;
-    bool ok = orig_seEval(thiz, patched.c_str(), (long)patched.size(), ret, fileName);
-    g_inEvalSplice = false;
+    LOGI("[Zxr] hotfallback splice #%d len=%ld->%zu file=%s",
+         ++g_spliceHits, n, patched.size(), fileName ? fileName : "(null)");
+    t_inEvalSplice = true;
+    bool ok = false;
+    try {
+        ok = orig_seEval(thiz, patched.c_str(), (long)patched.size(), ret, fileName);
+    } catch (...) {
+        LOGW("[Zxr] hotfallback eval exception");
+        ok = false;
+    }
+    t_inEvalSplice = false;
+    if (!ok) {
+        g_spliceDisabled.store(true);
+        LOGW("[Zxr] hotfallback disabled after eval failure");
+    }
     return ok;
 }
 
-static void TryHookEvalString() {
+static bool TryHookEvalString() {
+    if (g_seHooked.load() || g_spliceDisabled.load()) return g_seHooked.load();
+    std::lock_guard<std::mutex> lock(g_hookMutex);
+    if (g_seHooked.load()) return true;
     const char* lib = GameCocos::TARGET_LIB;
-    if (!isLibraryLoaded(lib)) return;
-
-    if (!g_seHooked) {
-        void* sym = DobbySymbolResolver(lib, GameCocos::Symbols::SE_EVAL_STRING);
-        if (sym &&
-            DobbyHook(sym, (dobby_dummy_func_t)hooked_seEval,
-                      (dobby_dummy_func_t*)&orig_seEval) == 0) {
-            g_seHooked = true;
-            g_evalHooked = true;
-            LOGI("[Zxr] hooked se::ScriptEngine::evalString (combat splice)");
-        } else if (!sym) {
-            LOGW("[Zxr] se::evalString symbol missing");
-        }
+    if (!isLibraryLoaded(lib)) return false;
+    void* sym = DobbySymbolResolver(lib, GameCocos::Symbols::SE_EVAL_STRING);
+    if (!sym) {
+        LOGW("[Zxr] se::evalString symbol missing");
+        return false;
     }
-
-    if (!g_jniHooked) {
-        void* jni = DobbySymbolResolver(lib, GameCocos::Symbols::EVAL_STRING);
-        if (jni &&
-            DobbyHook(jni, (dobby_dummy_func_t)hooked_jniEval,
-                      (dobby_dummy_func_t*)&orig_jniEval) == 0) {
-            g_jniHooked = true;
-            LOGI("[Zxr] hooked JNI evalString (passthrough)");
-        }
+    if (DobbyHook(sym, (dobby_dummy_func_t)hooked_seEval,
+                  (dobby_dummy_func_t*)&orig_seEval) != 0) {
+        LOGW("[Zxr] DobbyHook se::evalString failed");
+        return false;
     }
+    g_seHooked.store(true);
+    LOGI("[Zxr] hooked se::evalString for hot-update fallback");
+    return true;
 }
 
 bool Zxr_TryInit(JavaVM* jvm) {
-    g_zxrJvm = jvm;
-    const char* lib = GameCocos::TARGET_LIB;
-    if (!isLibraryLoaded(lib)) {
-        return false;
-    }
+    if (jvm) g_zxrJvm = jvm;
+    if (!isLibraryLoaded(GameCocos::TARGET_LIB)) return false;
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
     if (env) {
         CacheJava(env);
         if (detach) g_zxrJvm->DetachCurrentThread();
     }
-    TryHookEvalString();
-    if (!g_seHooked) return false;
-    g_ready = true;
+    if (!TryHookEvalString()) return false;
+    g_ready.store(true);
     SyncJavaRets();
+    SyncJsState();
     SyncSpeedJs();
-    LOGI("[Zxr] init ok se=%d jni=%d splice=%d seCalls=%d", g_seHooked ? 1 : 0,
-         g_jniHooked ? 1 : 0, g_spliceHits.load(), g_seCalls.load());
+    LOGI("[Zxr] init ok se=%d splice=%d seCalls=%d",
+         g_seHooked.load() ? 1 : 0, g_spliceHits.load(), g_seCalls.load());
     return true;
 }
 
 static void* EarlyHookThread(void* arg) {
     JavaVM* jvm = (JavaVM*)arg;
-    g_zxrJvm = jvm;
+    if (jvm) g_zxrJvm = jvm;
     LOGI("[Zxr] early hook thread start");
-    for (int i = 0; i < 2000; i++) { // ~40s @ 20ms
-        if (isLibraryLoaded(GameCocos::TARGET_LIB)) {
-            TryHookEvalString();
-            if (g_seHooked) {
-                g_ready = true;
-                LOGI("[Zxr] early se hook ok at iter=%d splice=%d", i, g_spliceHits.load());
-                bool detach = false;
-                JNIEnv* env = GetEnv(&detach);
-                if (env) {
-                    CacheJava(env);
-                    SyncJavaRets();
-                    if (detach) g_zxrJvm->DetachCurrentThread();
-                }
-                return nullptr;
-            }
+    for (int i = 0; i < 3000; i++) { // ~60s @ 20ms
+        if (isLibraryLoaded(GameCocos::TARGET_LIB) && TryHookEvalString()) {
+            g_ready.store(true);
+            SyncJavaRets();
+            SyncJsState();
+            SyncSpeedJs();
+            LOGI("[Zxr] early hook ready iter=%d", i);
+            return nullptr;
         }
         usleep(20 * 1000);
     }
@@ -429,35 +412,43 @@ void Zxr_StartEarlyHookThread(JavaVM* jvm) {
     }
 }
 
-bool Zxr_IsReady() { return g_ready; }
+bool Zxr_IsReady() { return g_ready.load(); }
 
 void Zxr_OnFeatureChanged(int featNum, bool enabled) {
-    if (featNum == ZXR_FEAT_SECKILL) g_seckill = enabled;
-    if (featNum == ZXR_FEAT_INVINCIBLE) g_inv = enabled;
-    if (featNum == ZXR_FEAT_ATK_SPEED) g_atkSpd = enabled;
-    if (featNum == ZXR_FEAT_AOE_KILL) g_aoe = enabled;
-    if (featNum == ZXR_FEAT_NO_AD) g_noAd = enabled;
-    if (featNum == ZXR_FEAT_SPEEDUP && !enabled) g_speedLvl.store(1);
+    switch (featNum) {
+        case ZXR_FEAT_SECKILL: g_seckill.store(enabled); break;
+        case ZXR_FEAT_INVINCIBLE: g_inv.store(enabled); break;
+        case ZXR_FEAT_ATK_SPEED: g_atkSpd.store(enabled); break;
+        case ZXR_FEAT_AOE_KILL: g_aoe.store(enabled); break;
+        case ZXR_FEAT_NO_AD: g_noAd.store(enabled); break;
+        case ZXR_FEAT_SPEEDUP:
+            if (!enabled) g_speedLvl.store(1);
+            break;
+        default: break;
+    }
     SyncJavaRets();
-    if (g_ready) SyncSpeedJs();
-    LOGI("[Zxr] feature #%d=%s noAd=%d splice=%d", featNum, enabled ? "ON" : "OFF",
-         g_noAd ? 1 : 0, g_spliceHits.load());
+    SyncJsState();
+    SyncSpeedJs();
+    LOGI("[Zxr] feature #%d=%s noAd=%d splice=%d", featNum,
+         enabled ? "ON" : "OFF", g_noAd.load() ? 1 : 0, g_spliceHits.load());
 }
 
 void Zxr_OnValueChanged(int featNum, int value) {
-    if (featNum == ZXR_FEAT_SPEEDUP) {
-        if (value < 1) value = 1;
-        if (value > 5) value = 5;
-        int prev = g_speedLvl.exchange(value);
-        if (prev == value) return;
-        if (g_ready) SyncSpeedJs();
-        LOGI("[Zxr] speedLvl=%d", value);
-    }
+    if (featNum != ZXR_FEAT_SPEEDUP) return;
+    if (value < 1) value = 1;
+    if (value > 5) value = 5;
+    int prev = g_speedLvl.exchange(value);
+    if (prev == value) return;
+    SyncSpeedJs();
+    LOGI("[Zxr] speedLvl=%d", value);
 }
 
 void Zxr_ForceClear() {
-    g_seckill = g_inv = g_atkSpd = g_aoe = false;
-    g_noAd = false;
+    g_seckill.store(false);
+    g_inv.store(false);
+    g_atkSpd.store(false);
+    g_aoe.store(false);
+    g_noAd.store(false);
     g_speedLvl.store(1);
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
@@ -466,9 +457,11 @@ void Zxr_ForceClear() {
         if (g_hooksCls && g_hooksClear) {
             env->CallStaticVoidMethod(g_hooksCls, g_hooksClear);
         }
+        if (env->ExceptionCheck()) env->ExceptionClear();
         if (detach) g_zxrJvm->DetachCurrentThread();
     }
-    if (g_ready) SyncSpeedJs();
+    SyncJsState();
+    SyncSpeedJs();
 }
 
 void Zxr_Tick(const bool* features) {
@@ -478,25 +471,29 @@ void Zxr_Tick(const bool* features) {
     bool a = features[ZXR_FEAT_ATK_SPEED];
     bool o = features[ZXR_FEAT_AOE_KILL];
     bool ad = features[ZXR_FEAT_NO_AD];
-    bool dirty = (s != g_seckill || i != g_inv || a != g_atkSpd || o != g_aoe || ad != g_noAd);
-    g_seckill = s;
-    g_inv = i;
-    g_atkSpd = a;
-    g_aoe = o;
-    g_noAd = ad;
-    if (!g_ready) return;
-    if (!g_evalHooked) TryHookEvalString();
+    bool dirty = (s != g_seckill.load() || i != g_inv.load() ||
+                  a != g_atkSpd.load() || o != g_aoe.load() ||
+                  ad != g_noAd.load());
+    g_seckill.store(s);
+    g_inv.store(i);
+    g_atkSpd.store(a);
+    g_aoe.store(o);
+    g_noAd.store(ad);
+    if (!g_ready.load()) {
+        TryHookEvalString();
+        return;
+    }
     if (dirty) {
         SyncJavaRets();
+        SyncJsState();
         LOGI("[Zxr] feature sync dirty splice=%d", g_spliceHits.load());
     }
-    // 加速仅在开启时周期刷 timeScale；关着不打 JNI/JS（防掉帧）
     static int tickN = 0;
     if ((++tickN % 40) == 0 && g_speedLvl.load() > 1) {
         SyncSpeedJs();
 #if defined(STARRY_TRACE)
-        LOGI("[Zxr] tick splice=%d seCalls=%d speedLvl=%d", g_spliceHits.load(),
-             g_seCalls.load(), g_speedLvl.load());
+        LOGI("[Zxr] tick splice=%d seCalls=%d speedLvl=%d",
+             g_spliceHits.load(), g_seCalls.load(), g_speedLvl.load());
 #endif
     }
 }

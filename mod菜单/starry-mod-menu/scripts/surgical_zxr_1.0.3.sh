@@ -38,7 +38,9 @@ if [[ "${ZXR_USE_RELEASE_KS:-0}" == "1" ]]; then
 fi
 PKG="com.zxr.dlxmz.zxrwz37zgx10.gg9b"
 # 正式包名：release 构建 + 签名。默认 uber-debug 证（与真机旧包同证）；ZXR_USE_RELEASE_KS=1 才用 starry_release.jks
-SIGNED="$OUT/镇邪人_1.0.3_starry-releaseSigned.apk"
+OUT_NAME="${ZXR_OUTPUT_NAME:-镇邪人_1.0.3_starry-releaseSigned.apk}"
+SIGNED="$OUT/$OUT_NAME"
+PATCHED_JSC="${ZXR_PATCHED_JSC:-}"
 ALIAS_APK="$OUT/镇邪人_1.0.3_starry.apk"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
@@ -151,6 +153,7 @@ fi
 echo "[4/6] zip surgical merge（替换菜单 dex/so/certs，删 web）"
 python3.11 - "$BASE_APK" "$WORK" "$WORK/unsigned.apk" <<'PY'
 import hashlib, sys, zipfile
+import os
 from pathlib import Path
 
 src, work, dst = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
@@ -164,6 +167,29 @@ if certs.is_dir():
     for p in certs.rglob("*"):
         if p.is_file():
             extras["assets/certs/" + str(p.relative_to(certs)).replace("\\", "/")] = p.read_bytes()
+patched_jsc = os.environ.get("ZXR_PATCHED_JSC", "").strip()
+if patched_jsc:
+    extras["assets/assets/src/index.d5507.jsc"] = Path(patched_jsc).read_bytes()
+patched_b5278 = os.environ.get("ZXR_PATCHED_JSC_B5278", "").strip()
+if patched_b5278:
+    data_b5278 = Path(patched_b5278).read_bytes()
+    extras["assets/assets/src/index.b5278.jsc"] = data_b5278
+    extras["assets/src/index.b5278.jsc"] = data_b5278
+    extras["assets/assets/remote/src/index.b5278.jsc"] = data_b5278
+    extras["assets/remote/src/index.b5278.jsc"] = data_b5278
+    extras["assets/assets/remote/src/index.b5278.js"] = Path(os.environ.get("ZXR_PATCHED_JSC_B5278_JS", "")).read_bytes()
+    extras["assets/remote/src/index.b5278.js"] = Path(os.environ.get("ZXR_PATCHED_JSC_B5278_JS", "")).read_bytes()
+patched_b5278_config = os.environ.get("ZXR_PATCHED_B5278_CONFIG", "").strip()
+if patched_b5278_config:
+    data_config = Path(patched_b5278_config).read_bytes()
+    extras["assets/assets/remote/src/config.b5278.json"] = data_config
+    extras["assets/remote/src/config.b5278.json"] = data_config
+patched_jsb_engine = os.environ.get("ZXR_PATCHED_JSB_ENGINE", "").strip()
+if patched_jsb_engine:
+    extras["assets/jsb-adapter/jsb-engine.js"] = Path(patched_jsb_engine).read_bytes()
+patched_main = os.environ.get("ZXR_PATCHED_MAIN", "").strip()
+if patched_main:
+    extras["assets/main.js"] = Path(patched_main).read_bytes()
 
 replace = {"classes8.dex": c8}
 # 底包里的 so/certs 也走 extras 覆盖
@@ -298,3 +324,7 @@ source "$NIXIANG/04_scripts/_common/starry_post_install.sh"
 starry_post_install "$PKG" || true
 echo "installed → $SIGNED"
 echo "log: adb logcat -s StarryApp:V StarryMagic:V NativeMenu:V Zxr:V | grep -E 'auth game_id|native menu|Zxr'"
+PATCHED_JSC_B5278="${ZXR_PATCHED_JSC_B5278:-}"
+PATCHED_MAIN="${ZXR_PATCHED_MAIN:-}"
+PATCHED_B5278_CONFIG="${ZXR_PATCHED_B5278_CONFIG:-}"
+PATCHED_JSB_ENGINE="${ZXR_PATCHED_JSB_ENGINE:-}"

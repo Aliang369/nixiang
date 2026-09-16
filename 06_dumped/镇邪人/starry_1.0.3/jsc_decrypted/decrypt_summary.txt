@@ -1,0 +1,10 @@
+decrypted=9 errors=0
+563	assets/assets/cert/index.88eae.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/cert/index.88eae.js
+563	assets/assets/internal/index.2c377.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/internal/index.2c377.js
+26598	assets/assets/main/index.bf3f8.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/main/index.bf3f8.js
+24481	assets/assets/minigame/index.fa619.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/minigame/index.fa619.js
+563	assets/assets/scenes/index.6c061.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/scenes/index.6c061.js
+19939064	assets/assets/src/index.d5507.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/assets/src/index.d5507.js
+498	assets/src/assets/src/Config.4dec1.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/src/assets/src/Config.4dec1.js
+1081436	assets/src/cocos2d-jsb.5e620.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/src/cocos2d-jsb.5e620.js
+571	assets/src/settings.ac44a.jsc	/Users/aliang/Documents/nixiang/06_dumped/镇邪人/starry_1.0.3/jsc_decrypted/src/settings.ac44a.js
