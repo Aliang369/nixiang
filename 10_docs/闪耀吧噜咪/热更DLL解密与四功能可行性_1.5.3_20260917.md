@@ -210,7 +210,7 @@ if (Entity<Player>.Instance.AdvAccState != AdvAccEnum.Normal) {
 
 - 已删（可再生）：`03_decompiled/闪耀吧噜咪`（104M，jadx）、`06_dumped/闪耀吧噜咪`（66M，热更 DLL/解密 bundle/内存 carve）、`09_test/闪耀吧噜咪`（1.0G，运行态 dump）。同一口径实测释放约 1.17G。
 - 保留：本目录文档、`04_scripts/闪耀吧噜咪/lgeb_decrypt.py`（自写复现工具，工作区规则规定随复现链永留）。
-- 未动：`02_apks/闪耀吧噜咪/闪耀吧噜咪_1.5.3_taptap_official_from_device.apk`（192M，工作区规则：原包用户手动管理）。
+- 已删（用户点名授权，2026-09-17）：`02_apks/闪耀吧噜咪/闪耀吧噜咪_1.5.3_taptap_official_from_device.apk`（201,358,707 B）。删除前核对指纹与记录一致：MD5 `65c593f50b6b9efd56ea24617033d1bd`、SHA-256 `a2989b10456bd1b8e5226d50e40f27d07cdd71d4a928336511c08ae2489eb864`；同目录无其它文件，目录一并移除。如需重跑，原包可从 TapTap 重新下载。
 
 - 热更程序集（解密后）：`06_dumped/闪耀吧噜咪/1.5.3/hotfix_dlls_real/Game.dll.596d1a96abb4.bin` 等 19 个
 - 解密后 bundle：`06_dumped/闪耀吧噜咪/1.5.3/runtime_bundles/dlls_assets_all_2517e568e31ff963bd6e37787662622e.dec.bundle`
