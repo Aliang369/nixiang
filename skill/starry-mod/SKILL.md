@@ -162,6 +162,28 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 
 ---
 
+## 装机前置检查（G1 必查，2026-09-17 起，不再等用户追问）
+
+> 来源：18 份会话记录审计——「防封审计做了吗」「异常兜底做了吗」在 3 个会话被用户重复追问才补做；凡尘西游 TapTap 游戏装机即闪退（SignSpoof 未预嵌证书+登录白名单缺失）；山海幻境装机后被服务端签名校验拦截（ret=5）返工。重复追问 = 流程缺口。
+
+装机（首装或覆盖）前逐项过，缺一不装机：
+
+1. **产物机器关**：`bash 04_scripts/_common/pre_install_gate.sh`（JS 语法/JNI 配套/P/Invoke 符号/控件读取四查，见 stages.md 专节）
+2. **防封/上报审计**：按 `../re-implement/anti-ban-analysis.md` 输出标准结论（上报链清单 + 量级线 + 服务端权威判定），无审计结论不装机
+3. **异常兜底审计**：战斗代码 + 菜单 Java 侧（`ModBridge.safeCall` 包裹、native 缺失/偏好类型不符的降级路径）都要有 try/catch 兜底结论；HybridCLR 游戏热更侧调 native 一律文件镜像通道（`starry_state.txt` 模式），桥接调用必须 try/catch
+4. **TapTap 渠道游戏三查**（凡尘西游/山海幻境教训）：
+   - 签名校验存在性：静态扫 `CheckSignature`/`getSign`/`getMD5`/`packageSign` 类入口，有则逐一给对策
+   - `SignSpoof` 证书回灌：官方证书 SHA 已嵌入（含 SDK 商签名映射，如 Openew/TapTap）
+   - `TapLoginForceWeb` 白名单含本包名；旧版 TapSDK（如 3.30.2）注意 `TapTapActivity` 客户端 SSO 分支需单独处理（一念通天教训）
+5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（无悔华夏 4399 事故：临时复用 `whhx` 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）
+
+**收尾固定产出**（3 个会话收尾时被用户索要，固化为清单项）：
+- icon 提取：`02_apks/{游戏}/icon_{游戏}_{尺寸}.png`
+- 菜单模板 JSON：`10_docs/{游戏}/{游戏拼音}_menu_template.json`（`template_id`=game_id）
+- 收尾清单：按 `10_docs/_templates/游戏收尾与最小复现清单.md` 填写，含生命周期场景矩阵已测/未测
+
+---
+
 ## 分发与装机红线（强制，适用于所有游戏）
 
 > 来源：2026-08-28 无悔华夏分发事故（`10_docs/无悔华夏/闪退修复_20260827.md`）。规则对所有游戏生效，不限于该游戏。

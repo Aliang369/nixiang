@@ -54,9 +54,10 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
    - `version-update-relocate.md` — 版本更新重定位方法论（小版本失效 `hits=0` 时照做）
 
 ### 星光菜单落地
-1. `starry-mod/SKILL.md` — 切游戏+**jniLibs 强制刷新**+构建路径+过检清单+设备指纹+**分发与装机红线**
+1. `starry-mod/SKILL.md` — 切游戏+**jniLibs 强制刷新**+构建路径+过检清单+设备指纹+**分发与装机红线**+**装机前置检查**（防封/兜底审计、TapTap 三查、game_id 独立）
 2. `starry-mod/surgical-build.md` — 外科组装规则（含 so 自检）
 3. `starry-mod/auth-chain.md` — 授权链路+登录永不过期
+4. 装机前产物门禁：`bash 04_scripts/_common/pre_install_gate.sh`（JS 语法/JNI 配套/P/Invoke/控件读取四查，定义见 `04_scripts/_common/stages.md` 专节）
 
 ### 收尾与最小复现
 1. [TOOLBOOK.md](../TOOLBOOK.md)「清理规则」「真机残留清理」— 保留输入、隔离重建、授权执行与设备分责。

@@ -21,6 +21,7 @@ bash 04_scripts/pipeline.sh <游戏> status        # 开工第一步：看当前
 bash 04_scripts/pipeline.sh <游戏> next          # 执行下一阶段（自动路由）
 bash 04_scripts/pipeline.sh <游戏> run <stage_id> # 显式重跑某阶段（重跑前建议先 reset）
 bash 04_scripts/_common/preflight.sh <文件...>    # 改完任何文件必跑的机器关
+bash 04_scripts/_common/pre_install_gate.sh ...   # 装机前产物四查门禁（见下方专节）
 ```
 
 辅助：`reset <stage_id>`（状态回退 pending）、`verify <stage_id>`（只校验产物不执行）。
@@ -31,6 +32,24 @@ bash 04_scripts/_common/preflight.sh <文件...>    # 改完任何文件必跑�
 - 改完 `.cpp/.mk` → preflight 会 REMIND：必须重跑管线构建阶段验证（C++ 无独立语法检查器，构建才是检查）
 - 管线阶段可在 json 里声明 `preflight` 文件列表（相对 workdir 或绝对路径）：执行阶段命令**前**自动过机器关，FAIL 即拦截——散装改脚本没过检查就跑，在管线侧不可能发生
 - 弱 AI 会话级注入纪律见 `weak-ai-system-prompt.md`（贴到 Cursor/Claude Code 等工具 Rules）
+
+### 装机前产物门禁 pre_install_gate.sh（2026-09-17 起，install 阶段必过）
+
+> 来源：18 份会话记录审计——多游戏装机失败属机器可拦截错误（JS 拼接截断、so/dex JNI 配套不齐、
+> P/Invoke 符号不符、滑块被 getRet 布尔读），每次都烧掉一整轮装机+用户实测。
+
+```bash
+bash 04_scripts/_common/pre_install_gate.sh \
+  --js <注入JS产物> [--js <更多>] \        # 查1 JS语法（截断缺尾/语法错）
+  --cpp <Mod源码> --dex <包内dex> [--dex <更多>] \  # 查2 JNI配套（so注册方法 vs dex声明）
+  --so <so> --pinvoke-json <EntryPoint清单> \  # 查3 P/Invoke符号 vs so导出表
+  --menu-json <菜单模板> --cpp <含getVal/getRet的源码>  # 查4 控件类型 vs 读取方式
+```
+
+- 各查独立可选（传了才查），有 FAIL 即禁止装机（exit 1）
+- 查4 局限：只抓字面量索引调用（`getRet(4)` 形式）；变量传参（`getRet(n)`）靠人工核对
+- 检出 FAIL 若属故意保留（如兼容空实现），须在装机报告显式说明并经用户确认才可放行
+- 与 preflight 职责区分：preflight 管"改完源文件"的语法；本门禁管"装机前"的产物交叉核对
 
 ## 标准阶段表（新游戏从模板生成后按此裁剪）
 
@@ -44,7 +63,7 @@ bash 04_scripts/_common/preflight.sh <文件...>    # 改完任何文件必跑�
 | 6 | `surgical` | 外科注入 | 5 | surgical_{游戏}_{版本}.sh（迭代场景后端配 `*_so_only.sh`，见下方内循环） | 注入包存在 + so 标签复核 + **包内 so md5 == build_so 产物**（旧 so 混包直装防线） |
 | 7 | `sign` | 签名 | 6 | uber-apk-signer | 签名包存在 + hash 入 json |
 | 8 | `device_ready` | 设备准备 | — | adb devices / connect（MuMu `127.0.0.1:5555`，重启后端口可能变 16384）/ 端口转发（MT MCP `adb forward tcp:8787 tcp:8787`） | 目标设备在线 |
-| 9 | `install` | 装机验证 | 7,8 | adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；防"装机成功"假象装旧包） |
+| 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 四查**（JS 语法/JNI 配套/P/Invoke 符号/控件读取，见上方专节）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；防"装机成功"假象装旧包） |
 | 10 | `archive` | 收官归档 | 9 | 文档收尾 + current.md 索引 + **git 固化**（add -A → commit → push） | 索引行存在 + git status 干净 |
 
 规则：
