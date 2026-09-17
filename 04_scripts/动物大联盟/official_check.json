@@ -1,0 +1,17 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.23_official.apk",
+  "package": "com.fightingstars.games.animal",
+  "version_name": "1.0.23",
+  "version_code": 23,
+  "signer_dn": "CN=shan, OU=bingo, O=bingo, L=guangzhou, ST=guangdong, C=CN",
+  "signer_sha256": "de8a75d30a1831f3ddc83f38f285513110fde9ab919fb4e471653f86b5083e0a",
+  "markers": {
+    "has_libcocos2djs": true,
+    "has_main_js": true,
+    "has_src_jsc": true,
+    "has_libtapsdkcore": true,
+    "has_libEncryptorP": true,
+    "has_libsecret": true,
+    "has_libBugly": true
+  }
+}

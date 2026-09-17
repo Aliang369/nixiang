@@ -11,6 +11,8 @@
 -dontwarn javax.annotation.**
 
 -keep class com.starry.magic.** { *; }
+-keep class dev.mars.secure.ProxyApplication { *; }
+-keepattributes Signature,InnerClasses,EnclosingMethod
 
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
