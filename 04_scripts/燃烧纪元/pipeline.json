@@ -1,0 +1,217 @@
+{
+  "game": "燃烧纪元",
+  "version": "1.13.09",
+  "notes": "2026-09-18 四功能干净版：Cocos2d-x JS，evalString 运行时补丁；仅攻击倍率 1-100、上帝模式、战斗速度 1-10、免广告。首领奖励由游戏战力检测决定，不在星光代码中拦截。构建前请先过 preflight 与 pre_install_gate。",
+  "params": {
+    "game_id": "rsjy",
+    "package": "com.rsjy.yf",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.rsjy.yf",
+    "GAME": "燃烧纪元",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "原版 1.13.09 核对",
+      "requires": [],
+      "command": "md5 -q '/Users/aliang/Documents/nixiang/02_apks/燃烧纪元/燃烧纪元_1.13.09_official_from_device.apk'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/燃烧纪元/燃烧纪元_1.13.09_official_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-18 20:21:20",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/燃烧纪元/燃烧纪元_1.13.09_official_from_device.apk": {
+          "md5": "f7751ad49e8fc56fc8d075797871f8bc"
+        }
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "斌哥抓点报告",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/燃烧纪元/斌哥包抓点_20260918.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-18 20:21:31",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/燃烧纪元/斌哥包抓点_20260918.md": {
+          "md5": "3696782f9fe40e1d22a02eecd7e22a63"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/燃烧纪元/燃烧纪元_1.13.09_official_from_device.apk": "f7751ad49e8fc56fc8d075797871f8bc"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "星光菜单与 JS 补丁实现",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/RsjyHooks.java"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/patch_rsjy.js"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_rsjy.mk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-18 20:21:43",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyMod.cpp": {
+          "md5": "8e50fe0242783d328ffaedb88bcdffef"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyEntry.cpp": {
+          "md5": "34439257ae98b9c3686608ca93d18f04"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/RsjyHooks.java": {
+          "md5": "69b519c7772a98badc11a1ffe22dc9c0"
+        },
+        "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/patch_rsjy.js": {
+          "md5": "f4128217b0538a6a32ba4a2767136213"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_rsjy.mk": {
+          "md5": "dd4a1692ddf6e855fdb3548da805dca7"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（rsjy 标签/菜单/补丁串）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/rsjy_build_so.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/patch_rsjy.js",
+        "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/rsjy_build_so.sh",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyEntry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_rsjy.mk"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_rsjy/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-18 23:27:37",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_rsjy/arm64-v8a/libstarry_magic.so": {
+          "md5": "96ab6a1993b6128fcfcf7ae0b04eb47e"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyMod.cpp": "8e50fe0242783d328ffaedb88bcdffef",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyEntry.cpp": "34439257ae98b9c3686608ca93d18f04",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/RsjyHooks.java": "69b519c7772a98badc11a1ffe22dc9c0",
+        "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/patch_rsjy.js": "f4128217b0538a6a32ba4a2767136213",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_rsjy.mk": "dd4a1692ddf6e855fdb3548da805dca7"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（Manifest + classes4 + starry so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/surgical_rsjy_1.13.09.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/surgical_rsjy_1.13.09.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/燃烧纪元/燃烧纪元_1.13.09_starry-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-18 23:29:27",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/07_patched/燃烧纪元/燃烧纪元_1.13.09_starry-unsigned.apk": {
+          "md5": "0e45c7bc45b01af706ef833b81cf387e"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_rsjy/arm64-v8a/libstarry_magic.so": "96ab6a1993b6128fcfcf7ae0b04eb47e"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（starry_release.jks）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/rsjy_sign.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/rsjy_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/燃烧纪元/燃烧纪元_1.13.09_starry-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-18 23:30:29",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/燃烧纪元/燃烧纪元_1.13.09_starry-releaseSigned.apk": {
+          "md5": "b5679e58f09ddcbe52a90da780765397"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/07_patched/燃烧纪元/燃烧纪元_1.13.09_starry-unsigned.apk": "0e45c7bc45b01af706ef833b81cf387e"
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机（需用户明确授权卸载异签名原包）",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/rsjy_install.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/rsjy_install.sh"
+      ],
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-09-18 23:32:44",
+      "artifacts": {},
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/燃烧纪元/燃烧纪元_1.13.09_starry-releaseSigned.apk": "b5679e58f09ddcbe52a90da780765397"
+      }
+    }
+  ]
+}

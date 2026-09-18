@@ -673,6 +673,9 @@ public final class SignSpoof {
     private static final String BSZZ_PKG = "com.acing.gow.adv";
     private static final String BSZZ_CERT_B64 =
             "MIIDeTCCAmGgAwIBAgIEQUNGWDANBgkqhkiG9w0BAQsFADBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMCAXDTE2MDQyNzAzMzYzNloYDzIwNzEwMTI5MDMzNjM2WjBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu4tOXCl9qs+ofsxCC0S2FreAZSBABo6CfLam/oHCrPNP/gobaxi6w8/QcCN1mAvElyV+L1TISXo8Fm13y3zBuQvYiH3W5EYXvVZPKlyX4tb3FObJu7YPh/aNpLgs3xbJ/CVVdvjfNubhAWIYZCuoM3Bc08/lEyon8JqgoiT6KRvc6QjMlJPjro+DgEw6ohYSiXxdnDag0MSrdwJIXtUdQmyxz6Yn/6RZ+EcnjcKoEVcvW8SENoeKpdt/O7re/qECrKCpjktpAcB0jwD3LbfrSWhmUF7YIn7DT/bLapZzzSRdesc/iMH0YGU5RBpCIIUJisULlKneoMPRovJ3HY712wIDAQABoyEwHzAdBgNVHQ4EFgQU5pAJYGyev2009ECHKZWNhLX1mPwwDQYJKoZIhvcNAQELBQADggEBADPsSQ1Bcsxh5jFsouOv6+jP0AI54o56s6Dv4zLPXLgbK7aZp9RAwsyEIJddC/f++TlGFll3hF//M4wr/ALpKhFec/t+/zjR0/FXo7foKBFkdsgZDYrekL1L+035nJ7cJnAuKqLgDKJV8oryGh+kC225u0o3eB3qIqbwf6Hx7Avw6losxbrAbT2orIcNExOf1GNPcqa58Z49vBsML/lRhIr65FSYSQK5Ej3EvGMfLZpDBxwAryaPo2ka/BuNB1aop0Hhusfj8Z/kUr9y1HH1TqhqGwpIY3IG4XuCbHl7HGdeLZWYv6gUIeMEy8w2ooUhuY/KG//1QpeZ8DiGNhhJJkA=";
+    /** 燃烧纪元官方（com.rsjy.yf，CN=hexianxiong，SHA-256=3a7302f6…）。 */
+    private static final String RSJY_PKG = "com.rsjy.yf";
+    private static final String RSJY_CERT_B64 = "MIIDtDCCApygAwIBAgIEVnpmXjANBgkqhkiG9w0BAQUFADCBmzEPMA0GA1UEBgwG5Lit5Zu9MQ8wDQYDVQQIDAblm5vlt50xDzANBgNVBAcMBuaIkOmDvTEnMCUGA1UECgwe5oiQ6YO95rKZ5ryP56eR5oqA5pyJ6ZmQ5YWs5Y+4MScwJQYDVQQLDB7miJDpg73mspnmvI/np5HmioDmnInpmZDlhazlj7gxFDASBgNVBAMTC2hleGlhbnhpb25nMB4XDTE1MTIyMzA5MTYxNFoXDTQzMDUxMDA5MTYxNFowgZsxDzANBgNVBAYMBuS4reWbvTEPMA0GA1UECAwG5Zub5bedMQ8wDQYDVQQHDAbmiJDpg70xJzAlBgNVBAoMHuaIkOmDveaymea8j+enkeaKgOaciemZkOWFrOWPuDEnMCUGA1UECwwe5oiQ6YO95rKZ5ryP56eR5oqA5pyJ6ZmQ5YWs5Y+4MRQwEgYDVQQDEwtoZXhpYW54aW9uZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAITHkFYjFep7JqJg4UeA//Xaz/yjVGlBcs7Z05ch/QD0Sz0N/PIcQKEzWLHSlQc6WHs+MCJGbfMIH2TyCBM9XqqaX74RjRdHwMww3S7uKkr+rnySOHBUDPS3W0TcgCbpMGjVgNm5MjEQLeEQRpXUKzecWB5syKgGWNiMW/mf23CEIwIHpKlVKYmqiBxBGEnNU/AGSy4R2gJEAuvvHZ8jCPPqs2caCrSx+KjRxEuqX6OeybH0GvtsPIX09h6MyYJMBFja+BodWdGi231RH0zRivlu2Tp6rCIM2h0jKnE2q8cNp5c9OXjUa3e5tWTv+zmMxKAcOeYVhNhIKpULvpYJQt8CAwEAATANBgkqhkiG9w0BAQUFAAOCAQEARA7LGsqrDl9bS/SYd/gpDDnUl17FQO8MkKnOjwzwolHm/EUeXMDH+3R5IX0SCfPoi6dSogEsYMfEEw3eMgsmjU642+OJi2zi9hCrWabP7H+evs7apmK/9jDpBsomLIPKaTXz+E3jSUibvMh77LGygTi3/5Vv85dtCvHfAO4063eLKb4oTXIjl31IfsDAFnH9MKY02ftmJdt86VlmyNOiWNLSFZp5aJB4eed8DsI9Odj5T3kUUdlCR9UbXd+4hPe5HahRK1jKL84bYT1Unfqn+v2H9mVRfccFhkMH+Dt+4qCiybiohFeZ1qbQPmz3BMCJEeL/JGKImKdDYLgBlJcOFw==";
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -723,6 +726,7 @@ public final class SignSpoof {
                 fakes.put(ES2_PKG, new Signature(Base64.decode(ES2_CERT_B64, Base64.DEFAULT)));
                 fakes.put(DWDLM_PKG, new Signature(Base64.decode(DWDLM_CERT_B64, Base64.DEFAULT)));
                 fakes.put(BSZZ_PKG, new Signature(Base64.decode(BSZZ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(RSJY_PKG, new Signature(Base64.decode(RSJY_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

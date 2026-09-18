@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/燃烧纪元",
+  "keep": "燃烧纪元_1.13.09_starry-releaseSigned.apk",
+  "keep_size": 826820214,
+  "keep_md5": "b5679e58f09ddcbe52a90da780765397",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "燃烧纪元_1.13.09_starry-releaseSigned.apk.idsig",
+      "size": 6522395,
+      "md5": "dab3c2788e417b50877aa129ead75bb6"
+    }
+  ],
+  "removed_count": 1
+}
