@@ -14,7 +14,9 @@ git config core.quotepath false
 git add -- \
   "04_scripts/正中靶心2" \
   "10_docs/正中靶心2" \
+  "10_docs/_state/current.md" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/StarryInitProvider.java" \
+  "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoofAppComponentFactory.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/Zzbx2Hooks.java" \
@@ -41,7 +43,9 @@ while IFS= read -r path; do
   [[ -n "$path" ]] || continue
   case "$path" in
     04_scripts/正中靶心2/*|10_docs/正中靶心2/*|\
+    10_docs/_state/current.md|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/StarryInitProvider.java|\
+    mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoofAppComponentFactory.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/Zzbx2Hooks.java|\
@@ -59,7 +63,7 @@ while IFS= read -r path; do
 done <<< "$STAGED"
 
 printf '%s\n' "$STAGED"
-git commit -m "正中靶心2 1.7 星空包交付与收官"
+git commit -m "正中靶心2 1.7 冷启动签名修复与收官"
 git push git@github.com:Aliang369/nixiang.git main
 
 echo "==> 本作相关状态"

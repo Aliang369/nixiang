@@ -12,8 +12,12 @@ import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * PackageManager 签名伪装（MT killPM 同款）：按包名回灌原厂证书 DER。
@@ -21,6 +25,8 @@ import java.util.Map;
  */
 public final class SignSpoof {
     private static final String TAG = "StarrySignSpoof";
+    private static final Set<String> LOGGED_HITS = Collections.newSetFromMap(
+            new ConcurrentHashMap<String, Boolean>());
 
     /** 音舞光年原版（SHA256=cb768829… / MD5=ebdb656e…） */
     private static final String YWGN_PKG = "com.uniugame.ywgn";
@@ -813,6 +819,7 @@ public final class SignSpoof {
         } else {
             packageInfo.signatures[0] = fakeSignature;
         }
+        logHit(packageInfo.packageName, fakeSignature);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             SigningInfo signingInfo = packageInfo.signingInfo;
             if (signingInfo != null) {
@@ -846,5 +853,20 @@ public final class SignSpoof {
             }
         }
         throw new NoSuchFieldException(fieldName);
+    }
+
+    private static void logHit(String packageName, Signature signature) {
+        if (packageName == null || !LOGGED_HITS.add(packageName)) return;
+        try {
+            byte[] digest = MessageDigest.getInstance("MD5").digest(signature.toByteArray());
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                hex.append(Character.forDigit((b >>> 4) & 0xF, 16));
+                hex.append(Character.forDigit(b & 0xF, 16));
+            }
+            Log.i(TAG, "spoof hit pkg=" + packageName + " md5=" + hex);
+        } catch (Throwable t) {
+            Log.i(TAG, "spoof hit pkg=" + packageName);
+        }
     }
 }

@@ -93,6 +93,13 @@ if perms:
         raise SystemExit("no uses-permission node")
     t = t[:i] + "\n".join(perms) + "\n" + t[i:]
 
+old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
+new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
+if new_factory not in t:
+    if old_factory not in t:
+        raise SystemExit("expected CoreComponentFactory not found")
+    t = t.replace(old_factory, new_factory, 1)
+
 if "com.starry.magic.menu.MenuService" not in t:
     svc = '''
         <service

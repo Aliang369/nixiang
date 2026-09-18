@@ -8,12 +8,11 @@ GAME="正中靶心2"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 SUMMARY="$SCRIPT_DIR/cleanup_summary.json"
 FINAL_APK="$NIXIANG_ROOT/08_output/$GAME/${GAME}_1.7_starry-releaseSigned.apk"
-FINAL_MD5="ec9c0619ce88f428c86105413ccaffee"
+FINAL_MD5="4a27592877bed5e9ce149e1acfa5da62"
 ADB_BIN="${ADB_BIN:-adb}"
 
 cd "$NIXIANG_ROOT"
 
-[[ -d "02_apks/$GAME" ]] || { echo "错误: 缺少官方包目录 02_apks/$GAME" >&2; exit 1; }
 [[ -d "08_output/$GAME" ]] || { echo "错误: 缺少正式包目录 08_output/$GAME" >&2; exit 1; }
 [[ -f "$FINAL_APK" ]] || { echo "错误: 缺少正式包 $FINAL_APK" >&2; exit 1; }
 [[ "$(md5 -q "$FINAL_APK")" == "$FINAL_MD5" ]] || { echo "错误: 正式包指纹与收尾记录不符" >&2; exit 1; }
@@ -47,7 +46,6 @@ git clean -xdf -- "09_test/$GAME" 2>/dev/null || true
 [[ -f "06_dumped/$GAME/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js" ]] || { echo "错误: GameLogic.js 被误删" >&2; exit 1; }
 [[ -f "06_dumped/$GAME/official_1.7/decrypted_js/decrypt_summary.json" ]] || { echo "错误: decrypt_summary.json 被误删" >&2; exit 1; }
 [[ -f "06_dumped/$GAME/official_1.7/zip_manifest.txt" ]] || { echo "错误: zip_manifest.txt 被误删" >&2; exit 1; }
-[[ -d "02_apks/$GAME" ]] || { echo "错误: 02_apks 被误删" >&2; exit 1; }
 [[ -d "08_output/$GAME" ]] || { echo "错误: 08_output 被误删" >&2; exit 1; }
 
 find /tmp -maxdepth 1 -name 'zzbx2_surgical.*' -print -exec rm -rf {} + 2>/dev/null || true
@@ -82,7 +80,7 @@ data = {
     "before_at": before_at,
     "after_at": after_at,
     "kept": [
-        "02_apks/正中靶心2",
+        "02_apks/正中靶心2 (user-managed, untouched or absent)",
         "08_output/正中靶心2",
         "06_dumped/正中靶心2 text assets",
         "04_scripts/正中靶心2",

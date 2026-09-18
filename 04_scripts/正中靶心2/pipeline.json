@@ -1,7 +1,7 @@
 {
   "game": "正中靶心2",
   "version": "1.7",
-  "notes": "2026-09-15：官方 1.7/vc8 星空包交付完成；菜单为攻击倍率 1–100 滑块、无敌、战斗加速 1–5 滑块、免广告，TapTap 登录、反作弊审查与 JS/native 异常兜底均已完成。用户确认功能没问题。正式包 md5 ec9c0619…，同签名覆盖装机且未清数据。",
+  "notes": "2026-09-18：1.7 冷启动 TapTap 签名修复完成；正式包 md5 4a275928…，仅 Manifest 与 classes5.dex 相对上一版变化，已同签名覆盖装机。功能仍为攻击倍率 1–100、无敌、战斗加速 1–5、免广告；已有账号二次冷启动待覆盖用户验收。",
   "params": {
     "game_id": "zzbx2",
     "package": "com.openew.monster",
@@ -443,10 +443,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 01:56:29",
+      "done_at": "2026-09-18 13:41:41",
       "artifacts": {
         "07_patched/正中靶心2/正中靶心2_1.7_starry-unsigned.apk": {
-          "md5": "48fa0a11f47762f59e8483cd6ef2ba3c"
+          "md5": "19b31d6c496e0b4c89381172106ba2ce"
         }
       },
       "inputs": {
@@ -489,14 +489,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 01:57:07",
+      "done_at": "2026-09-18 13:42:16",
       "artifacts": {
         "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": {
-          "md5": "ec9c0619ce88f428c86105413ccaffee"
+          "md5": "4a27592877bed5e9ce149e1acfa5da62"
         }
       },
       "inputs": {
-        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": "ec9c0619ce88f428c86105413ccaffee",
+        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": "4a27592877bed5e9ce149e1acfa5da62",
         "04_scripts/正中靶心2/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },
@@ -525,17 +525,17 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 02:02:16",
+      "done_at": "2026-09-18 13:46:23",
       "artifacts": {
         "04_scripts/正中靶心2/cleanup_summary.json": {
-          "md5": "c5614600a1c5e8781ada334c2eba45f2"
+          "md5": "b89969784f9619e1b0cbbe866639ac14"
         },
         "06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js": {
           "md5": "f3fd0a2010e93007e8ff15f01891f5af"
         }
       },
       "inputs": {
-        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": "ec9c0619ce88f428c86105413ccaffee"
+        "08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk": "4a27592877bed5e9ce149e1acfa5da62"
       }
     },
     {
@@ -554,17 +554,7 @@
           "path": "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-15 02:02:33",
-      "artifacts": {
-        "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md": {
-          "md5": "a40bf0b6c4bbd6491a15ad8533bb1d1e"
-        }
-      },
-      "inputs": {
-        "04_scripts/正中靶心2/cleanup_summary.json": "c5614600a1c5e8781ada334c2eba45f2",
-        "06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js": "f3fd0a2010e93007e8ff15f01891f5af"
-      }
+      "status": "pending"
     }
   ]
 }
