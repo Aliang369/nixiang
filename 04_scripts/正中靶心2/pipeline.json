@@ -554,7 +554,17 @@
           "path": "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-18 13:49:33",
+      "artifacts": {
+        "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md": {
+          "md5": "8811e377e06a52463260d45d3e44d5ec"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/cleanup_summary.json": "b89969784f9619e1b0cbbe866639ac14",
+        "06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js": "f3fd0a2010e93007e8ff15f01891f5af"
+      }
     }
   ]
 }
