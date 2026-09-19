@@ -45,10 +45,10 @@ while read -r line; do
     *'[anon:.bss]'*)
       SAW_BSS=1
       case "$perm" in
-        r-xp) dump_hex "$s" "$e" shell_rx_bss.bin ;;
-        r--p) dump_hex "$s" "$e" shell_ro_bss.bin ;;
-        rw-p) dump_hex "$s" "$e" shell_rw_bss.bin ;;
-        rwxp) dump_hex "$s" "$e" shell_rwx_bss.bin ;;
+        r-xp) dump_hex "$s" "$e" "shell_rx_bss_${s}_${e}.bin" ;;
+        r--p) dump_hex "$s" "$e" "shell_ro_bss_${s}_${e}.bin" ;;
+        rw-p) dump_hex "$s" "$e" "shell_rw_bss_${s}_${e}.bin" ;;
+        rwxp) dump_hex "$s" "$e" "shell_rwx_bss_${s}_${e}.bin" ;;
       esac
       ;;
     *)

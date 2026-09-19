@@ -1,0 +1,462 @@
+{
+  "game": "明日方舟",
+  "version": "2.7.71",
+  "notes": "2026-09-19 收尾：provider-only 方案保留官方 com.u8.sdk.U8Application 与 androidx.core.app.CoreComponentFactory，规避 ACE 启动击杀。用户实测后删除无效果的全屏攻击、自动开技能，最终七功能（超级攻速/超级无敌/基地锁血/十倍伤害/全图放置/无限技能/零部署费用）已重新构建并同签名覆盖安装。正式包 md5=e97a538853e0b2df7ac75d466f2e812f，sha256=5ee55ff7f70dc7dfef66fc4937bdce14fffb34c6d977be18372cfe455ce17417，so md5=dd2541da51e1e12c29f89ba11b83cdf4；冷启动 30 秒无 ACE 击杀/FATAL/ANR/tombstone，RegisterNatives 19/19。08_output 已裁剪为唯一正式 APK，06_dumped 删除约 1.15GB 可再生大二进制；服务端接受度与长时运行仍 NOT PROVEN。",
+  "params": {
+    "game_id": "mrfzz",
+    "package": "from_foreground_activity",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "GAME": "明日方舟",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "真机锁定、root 检查与前台斌哥包解析",
+      "requires": [],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_ready_mrfzz.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_ready_mrfzz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_info.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.device_package"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 20:44:46",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_info.json": {
+          "md5": "184bf21f8a5e239e51d4b77fc9d9099c"
+        },
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.device_package": {
+          "md5": "885476714f02a7228bd4f2f17713d50c"
+        }
+      }
+    },
+    {
+      "id": "fetch_binge",
+      "name": "斌哥改包真机只读拉取",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/fetch_binge_mrfzz.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/fetch_binge_mrfzz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/binge_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 20:46:32",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/binge_apk.json": {
+          "md5": "9baa5e8666abdb7f1e283c1ab9c5e6d1"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_info.json": "184bf21f8a5e239e51d4b77fc9d9099c",
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.device_package": "885476714f02a7228bd4f2f17713d50c"
+      }
+    },
+    {
+      "id": "static_inspect",
+      "name": "斌哥包静态检查与关键组件提取",
+      "requires": [
+        "fetch_binge"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/inspect_binge_mrfzz.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/inspect_binge_mrfzz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/static_inspect/zip_entries.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/static_inspect/static_identity.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 20:46:44",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/static_inspect/zip_entries.txt": {
+          "md5": "9713c75565dfcdb23a236d7fce774e5f"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/static_inspect/static_identity.json": {
+          "md5": "27e4cf3f63419acc8290aac73b00203c"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/binge_apk.json": "9baa5e8666abdb7f1e283c1ab9c5e6d1"
+      }
+    },
+    {
+      "id": "dump_runtime",
+      "name": "斌哥壳与 IL2CPP 运行时只读内存导出",
+      "requires": [
+        "static_inspect"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/dump_runtime_mrfzz.sh' current",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/dump_runtime_mrfzz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/runtime_current/maps.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/runtime_current/runtime_dump.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 20:52:45",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/runtime_current/maps.txt": {
+          "md5": "c5438c12d79220f114bfd140ba212fe7"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/runtime_current/runtime_dump.json": {
+          "md5": "54baced19993e61ad20b40a9ba900e45"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/static_inspect/zip_entries.txt": "9713c75565dfcdb23a236d7fce774e5f",
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/static_inspect/static_identity.json": "27e4cf3f63419acc8290aac73b00203c"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "斌哥菜单功能抓点报告",
+      "requires": [
+        "dump_runtime"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/明日方舟/斌哥包抓点_20260919.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 21:04:31",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/明日方舟/斌哥包抓点_20260919.md": {
+          "md5": "295dff54b858404c8353c36ba83bfc59"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/runtime_current/maps.txt": "c5438c12d79220f114bfd140ba212fe7",
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/runtime_current/runtime_dump.json": "54baced19993e61ad20b40a9ba900e45"
+      }
+    },
+    {
+      "id": "fetch_official",
+      "name": "TapTap 原版真机只读拉取",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/fetch_official_mrfzz.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/fetch_official_mrfzz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/official_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 21:15:36",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/official_apk.json": {
+          "md5": "9e7fd757f1b05010a0ba0d623e741ed0"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_info.json": "184bf21f8a5e239e51d4b77fc9d9099c",
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.device_package": "885476714f02a7228bd4f2f17713d50c"
+      }
+    },
+    {
+      "id": "inspect_official",
+      "name": "TapTap 原版静态检查与关键组件提取",
+      "requires": [
+        "fetch_official"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/inspect_official_mrfzz.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/inspect_official_mrfzz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/zip_entries.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/static_identity.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 21:15:43",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/zip_entries.txt": {
+          "md5": "467ff25f16ce726db6b9603c81814534"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/static_identity.json": {
+          "md5": "d8cf32b3a1dd558b722d64d47f859cd6"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/official_apk.json": "9e7fd757f1b05010a0ba0d623e741ed0"
+      }
+    },
+    {
+      "id": "dump_official_runtime",
+      "name": "TapTap 原版运行时解密 metadata 只读导出",
+      "requires": [
+        "inspect_official"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/dump_official_runtime_mrfzz.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/search_metadata_mem_device.sh",
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/dump_official_runtime_mrfzz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/runtime_metadata.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.dat"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 21:23:15",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/runtime_metadata.json": {
+          "md5": "5d8d77b19cabb58c84f535a31e147017"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.dat": {
+          "md5": "b7a57235822fe783f8665e525dfbeb95"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/zip_entries.txt": "467ff25f16ce726db6b9603c81814534",
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/static_identity.json": "d8cf32b3a1dd558b722d64d47f859cd6"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "星光七功能实现（modern 注册表三件套）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.h",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp",
+          "pattern": "Toggle_零部署费用"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 22:59:37",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp": {
+          "md5": "dd9f31b99dd9451649cc75389c1b4e11"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp": {
+          "md5": "2c25065ed7078e6a12737e0082ec5406"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk": {
+          "md5": "9a6fc8e84928991e1853c22f18b12cfc"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（mrfzz 七条菜单串硬校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/mrfzz_build_so.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/mrfzz_build_so.sh",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so",
+          "pattern": "Toggle_零部署费用"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 22:59:56",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": {
+          "md5": "dd2541da51e1e12c29f89ba11b83cdf4"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp": "dd9f31b99dd9451649cc75389c1b4e11",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp": "2c25065ed7078e6a12737e0082ec5406",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk": "9a6fc8e84928991e1853c22f18b12cfc"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（官方 entries 原字节 + Manifest + classes6.dex + starry so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/surgical_mrfzz_2.7.71.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/surgical_mrfzz_2.7.71.sh",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
+      ],
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.71_surgical-unsigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 23:01:13",
+      "note": "正式包裁剪时删除 surgical-unsigned.apk（md5 1c9e6e03287eb52bd32eecfac467f43d，记录见 10_docs/明日方舟/正式包裁剪清单_2.7.71_20260919.json）；07_patched/classes6.dex 保留作复现。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": {
+          "md5": "ae665927cf87757f991ff38446200ff6"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": "dd2541da51e1e12c29f89ba11b83cdf4"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（starry_release.jks；官方受保护 entries 零改动复核）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/mrfzz_sign.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/mrfzz_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.71_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 23:03:48",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.71_surgical-releaseSigned.apk": {
+          "md5": "e97a538853e0b2df7ac75d466f2e812f"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": "ae665927cf87757f991ff38446200ff6"
+      }
+    },
+    {
+      "id": "pre_install_gate",
+      "name": "装机前门禁（JNI/dex/so 交叉核对）",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp' --dex '/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex' --so '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.71_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "JNI 配套检查因 MainModern.cpp 的 RegisterNatives 名称被 OBFUSCATE(...) 包裹而 SKIP；已用 `llvm-nm -D` 确认 so 导出 JNI_OnLoad，并逐项确认 ModBridge.java 的 19 个 native 声明均存在于包内 classes6.dex。运行时 19/19 注册结果仍是 G2，NOT PROVEN。",
+      "done_at": "2026-09-19 23:04:15",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.71_surgical-releaseSigned.apk": {
+          "md5": "e97a538853e0b2df7ac75d466f2e812f"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.71_surgical-releaseSigned.apk": "e97a538853e0b2df7ac75d466f2e812f"
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机（默认拒绝异签覆盖；卸载需 MRFZZ_ALLOW_UNINSTALL=1）",
+      "requires": [
+        "pre_install_gate"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/mrfzz_install.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/mrfzz_install.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.install_ok"
+        }
+      ],
+      "note": "首轮旧包按用户授权异签卸载安装；最终七功能包于 2026-09-19 23:05 同签名覆盖安装，设备 base.apk md5 与本地一致，未清数据。冷启动 30 秒无 ACE 击杀/FATAL/ANR/tombstone；详细证据见 10_docs/明日方舟/星空落地_2.7.71_20260919.md。",
+      "status": "done",
+      "done_at": "2026-09-19 23:05:58",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.install_ok": {
+          "md5": "b7cdddd4881845ab7d273e34e4603cc4"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.71_surgical-releaseSigned.apk": "e97a538853e0b2df7ac75d466f2e812f"
+      }
+    }
+  ]
+}

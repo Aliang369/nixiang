@@ -1,0 +1,14 @@
+{
+  "kind": "official_runtime_metadata",
+  "serial": "f9a116a2",
+  "pid": 31027,
+  "package": "com.hypergryph.arknights",
+  "version_name": "2.7.71",
+  "version_code": 190,
+  "maps": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/maps.txt",
+  "magic_hits": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/magic_hits.txt",
+  "metadata": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.dat",
+  "metadata_size": 43646828,
+  "metadata_magic": "00000000",
+  "official_apk": "/Users/aliang/Documents/nixiang/02_apks/明日方舟/明日方舟_2.7.71_taptap_official_from_device.apk"
+}

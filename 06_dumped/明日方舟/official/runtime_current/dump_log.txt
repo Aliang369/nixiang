@@ -1,0 +1,7 @@
+-rw-r--r-- 1 root root 424157 2026-09-19 21:22 /data/local/tmp/mrfzz_official_metadata/maps.txt
+-rw-r--r-- 1 root root 210 2026-09-19 21:23 /data/local/tmp/mrfzz_official_metadata/magic_hits.txt
+-rw-r--r-- 1 root root 43646828 2026-09-19 21:23 /data/local/tmp/mrfzz_official_metadata/metadata_runtime_518649757696.bin
+/data/local/tmp/mrfzz_official_metadata/maps.txt
+/data/local/tmp/mrfzz_official_metadata/magic_hits.txt
+/data/local/tmp/mrfzz_official_metadata/metadata_runtime_518649757696.bin
+DONE

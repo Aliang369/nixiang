@@ -1,0 +1,134 @@
+PID=25237
+aa07c000-aa07d000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa0fc000-aa0fd000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa150000-aa151000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa188000-aa189000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aacb0000-aacb1000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aafc8000-aafc9000 rw-p 00000000 00:00 0                                  [anon:.bss]
+ab130000-ab131000 rw-p 00000000 00:00 0                                  [anon:.bss]
+73d2bea000-73d2beb000 rw-p 00000000 00:00 0                              [anon:.bss]
+73dc2f4000-73dc380000 rw-p 00000000 00:00 0                              [anon:.bss]
+7822722000-782f000000 r--p 00000000 fe:48 388281                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libil2cpp.so
+785f953000-785f9c5000 rw-p 00000000 00:00 0                              [anon:.bss]
+7982429000-798defa000 r-xp 00000000 fe:48 388281                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libil2cpp.so
+798defb000-798ecf3000 rw-p 0bad1000 fe:48 388281                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libil2cpp.so
+798ecf3000-798ef46000 rw-p 00000000 00:00 0                              [anon:.bss]
+798ef49000-798ef4d000 r-xp 0c8c9000 fe:48 388281                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libil2cpp.so
+798ef4d000-798ef4e000 rw-p 0c8cc000 fe:48 388281                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libil2cpp.so
+798ef4e000-798ef50000 rw-p 0c8cc000 fe:48 388281                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libil2cpp.so
+798ef51000-798ef62000 rw-p 0c8cc000 fe:48 388281                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libil2cpp.so
+798efb9000-798efba000 rw-p 00000000 00:00 0                              [anon:.bss]
+798efef000-798eff0000 rw-p 00000000 00:00 0                              [anon:.bss]
+79ae198000-79ae28b000 rw-p 00000000 00:00 0                              [anon:.bss]
+79b75e3000-79b75e4000 rw-p 00000000 00:00 0                              [anon:.bss]
+79b7918000-79b792f000 rw-p 00000000 00:00 0                              [anon:.bss]
+79d4efc000-79d4f0c000 rw-p 00000000 00:00 0                              [anon:.bss]
+79dc67c000-79dc69e000 r-xp 00000000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79dc69e000-79dc6ba000 r-xp 00022000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79dc6ba000-79dc70c000 r-xp 0003e000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79dc70c000-79dc711000 r-xp 00090000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79dc711000-79dc959000 r-xp 00095000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79dc969000-79dc96d000 r--p 002dd000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79dc96d000-79dca47000 rw-p 002e1000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79dca47000-79dcb3f000 r-xp 00000000 00:00 0                              [anon:.bss]
+79dcb3f000-79dcb48000 r--p 00000000 00:00 0                              [anon:.bss]
+79dcb48000-79dcb6e000 rw-p 00000000 00:00 0                              [anon:.bss]
+79dcb6e000-79dcb7c000 rwxp 00000000 00:00 0                              [anon:.bss]
+79dcb7c000-79dcb7e000 rw-p 00000000 00:00 0                              [anon:.bss]
+79dcb7e000-79dcb81000 r-xp 003bb000 fe:48 445742                         /data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/lib/arm64/libSDKloading.so
+79e2364000-79e23b7000 rw-p 00000000 00:00 0                              [anon:.bss]
+79eef8f000-79eefef000 r-xp 00000000 00:00 0                              [anon:.bss]
+79eefef000-79eeff0000 rw-p 00000000 00:00 0                              [anon:.bss]
+79eeff0000-79eeff4000 r--p 00000000 00:00 0                              [anon:.bss]
+79eeff4000-79eeff8000 rw-p 00000000 00:00 0                              [anon:.bss]
+79f09ed000-79f09f1000 rw-p 00000000 00:00 0                              [anon:.bss]
+79f335e000-79f3376000 rw-p 00000000 00:00 0                              [anon:.bss]
+7a8d02b000-7a8d1e4000 rw-p 00000000 00:00 0                              [anon:.bss]
+7a8d1ff000-7a8d203000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ac2beb000-7ac2bf3000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ac31c4000-7ac31cc000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ac705d000-7ac705e000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ac70f5000-7ac70f6000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ac8c3c000-7ac8c3f000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ac8dcd000-7ac8e00000 rw-p 00000000 00:00 0                              [anon:.bss]
+7acbf18000-7acbf39000 rw-p 00000000 00:00 0                              [anon:.bss]
+7acbfdf000-7acbfe0000 rw-p 00000000 00:00 0                              [anon:.bss]
+7acf05d000-7acf05e000 rw-p 00000000 00:00 0                              [anon:.bss]
+7acf355000-7acf356000 rw-p 00000000 00:00 0                              [anon:.bss]
+7acf3e4000-7acf3e5000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad00e7000-7ad00ea000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad01e9000-7ad01ec000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad02a5000-7ad02a7000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad0430000-7ad0431000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad0732000-7ad0733000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad07de000-7ad07df000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad0934000-7ad0936000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad14b0000-7ad14b1000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad14e8000-7ad14e9000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad15a7000-7ad15a8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad1654000-7ad1655000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ad41a8000-7ad41af000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ada96e000-7ada976000 rw-p 00000000 00:00 0                              [anon:.bss]
+7adc1ea000-7adc1f2000 rw-p 00000000 00:00 0                              [anon:.bss]
+7addfab000-7addfac000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ae38b3000-7ae38b4000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ae8569000-7ae856a000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ae85f9000-7ae85fa000 rw-p 00000000 00:00 0                              [anon:.bss]
+7ae8e74000-7ae8e75000 rw-p 00000000 00:00 0                              [anon:.bss]
+7aeaa8e000-7aeaa91000 rw-p 00000000 00:00 0                              [anon:.bss]
+7aeab33000-7aeab34000 rw-p 00000000 00:00 0                              [anon:.bss]
+7aeab53000-7aeab54000 rw-p 00000000 00:00 0                              [anon:.bss]
+7aee2cd000-7aee2ce000 rw-p 00000000 00:00 0                              [anon:.bss]
+DUMP sdk_rx_1.bin 0x79dc67c000-0x79dc69e000 size=139264
+-rw-r--r-- 1 root root 139264 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_rx_1.bin
+DUMP sdk_rx_2.bin 0x79dc69e000-0x79dc6ba000 size=114688
+-rw-r--r-- 1 root root 114688 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_rx_2.bin
+DUMP sdk_rx_3.bin 0x79dc6ba000-0x79dc70c000 size=335872
+-rw-r--r-- 1 root root 335872 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_rx_3.bin
+DUMP sdk_rx_4.bin 0x79dc70c000-0x79dc711000 size=20480
+-rw-r--r-- 1 root root 20480 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_rx_4.bin
+DUMP sdk_rx_5.bin 0x79dc711000-0x79dc959000 size=2392064
+-rw-r--r-- 1 root root 2392064 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_rx_5.bin
+DUMP sdk_ro.bin 0x79dc969000-0x79dc96d000 size=16384
+-rw-r--r-- 1 root root 16384 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_ro.bin
+DUMP sdk_rw.bin 0x79dc96d000-0x79dca47000 size=892928
+-rw-r--r-- 1 root root 892928 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_rw.bin
+DUMP shell_rx_bss_79dca47000_79dcb3f000.bin 0x79dca47000-0x79dcb3f000 size=1015808
+-rw-r--r-- 1 root root 1015808 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/shell_rx_bss_79dca47000_79dcb3f000.bin
+DUMP shell_ro_bss_79dcb3f000_79dcb48000.bin 0x79dcb3f000-0x79dcb48000 size=36864
+-rw-r--r-- 1 root root 36864 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/shell_ro_bss_79dcb3f000_79dcb48000.bin
+DUMP shell_rw_bss_79dcb48000_79dcb6e000.bin 0x79dcb48000-0x79dcb6e000 size=155648
+-rw-r--r-- 1 root root 155648 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/shell_rw_bss_79dcb48000_79dcb6e000.bin
+DUMP shell_rwx_bss_79dcb6e000_79dcb7c000.bin 0x79dcb6e000-0x79dcb7c000 size=57344
+-rw-r--r-- 1 root root 57344 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/shell_rwx_bss_79dcb6e000_79dcb7c000.bin
+DUMP shell_rw_bss_79dcb7c000_79dcb7e000.bin 0x79dcb7c000-0x79dcb7e000 size=8192
+-rw-r--r-- 1 root root 8192 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/shell_rw_bss_79dcb7c000_79dcb7e000.bin
+DUMP sdk_rx_6.bin 0x79dcb7e000-0x79dcb81000 size=12288
+-rw-r--r-- 1 root root 12288 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/sdk_rx_6.bin
+DUMP il2cpp_rx_1.bin 0x7982429000-0x798defa000 size=195891200
+-rw-r--r-- 1 root root 195891200 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/il2cpp_rx_1.bin
+DUMP il2cpp_rx_2.bin 0x798ef49000-0x798ef4d000 size=16384
+-rw-r--r-- 1 root root 16384 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/il2cpp_rx_2.bin
+DUMP anon_rwx_1.bin 0x78baaaf000-0x78babec000 size=1298432
+-rw-r--r-- 1 root root 1298432 2026-09-19 20:51 /data/local/tmp/mrfzz_memdump_current/anon_rwx_1.bin
+total 193K
+drwxr-xr-x  2 root  root  3.3K 2026-09-19 20:51 .
+drwxrwx--x 16 shell shell  56K 2026-09-19 20:51 ..
+-rw-r--r--  1 root  root  1.2M 2026-09-19 20:51 anon_rwx_1.bin
+-rw-r--r--  1 root  root  187M 2026-09-19 20:51 il2cpp_rx_1.bin
+-rw-r--r--  1 root  root   16K 2026-09-19 20:51 il2cpp_rx_2.bin
+-rw-r--r--  1 root  root    74 2026-09-19 20:51 il2cpp_rx_segs.txt
+-rw-r--r--  1 root  root   16K 2026-09-19 20:51 sdk_ro.bin
+-rw-r--r--  1 root  root  872K 2026-09-19 20:51 sdk_rw.bin
+-rw-r--r--  1 root  root  136K 2026-09-19 20:51 sdk_rx_1.bin
+-rw-r--r--  1 root  root  112K 2026-09-19 20:51 sdk_rx_2.bin
+-rw-r--r--  1 root  root  328K 2026-09-19 20:51 sdk_rx_3.bin
+-rw-r--r--  1 root  root   20K 2026-09-19 20:51 sdk_rx_4.bin
+-rw-r--r--  1 root  root  2.2M 2026-09-19 20:51 sdk_rx_5.bin
+-rw-r--r--  1 root  root   12K 2026-09-19 20:51 sdk_rx_6.bin
+-rw-r--r--  1 root  root   36K 2026-09-19 20:51 shell_ro_bss_79dcb3f000_79dcb48000.bin
+-rw-r--r--  1 root  root  152K 2026-09-19 20:51 shell_rw_bss_79dcb48000_79dcb6e000.bin
+-rw-r--r--  1 root  root  8.0K 2026-09-19 20:51 shell_rw_bss_79dcb7c000_79dcb7e000.bin
+-rw-r--r--  1 root  root   56K 2026-09-19 20:51 shell_rwx_bss_79dcb6e000_79dcb7c000.bin
+-rw-r--r--  1 root  root  992K 2026-09-19 20:51 shell_rx_bss_79dca47000_79dcb3f000.bin
+DONE

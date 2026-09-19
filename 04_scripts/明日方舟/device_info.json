@@ -1,0 +1,10 @@
+{
+  "serial": "f9a116a2",
+  "model": "OPD2515",
+  "android": "16",
+  "abi": "arm64-v8a",
+  "package": "com.hypergryph.arknights",
+  "foreground_activity": "com.hypergryph.arknights/com.u8.sdk.U8UnityContext",
+  "remote_apk": "/data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/base.apk",
+  "root_id": "uid=0(root) gid=0(root) groups=0(root) context=u:r:ksu:s0"
+}

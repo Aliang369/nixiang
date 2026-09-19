@@ -1,0 +1,289 @@
+{
+  "schema": "nixiang.binge.anchor.v1",
+  "captured_at": "2026-09-19",
+  "status": "capture_complete_pause_waiting_official_apk",
+  "game": {
+    "name": "明日方舟",
+    "package": "com.hypergryph.arknights",
+    "version_name": "2.7.71",
+    "version_code": 190,
+    "abi": "arm64-v8a",
+    "engine": "Unity IL2CPP"
+  },
+  "device": {
+    "serial": "f9a116a2",
+    "model": "OPD2515",
+    "android": "16",
+    "root": "KernelSU",
+    "pid": 25237,
+    "foreground_activity": "com.hypergryph.arknights/com.u8.sdk.U8UnityContext"
+  },
+  "apk": {
+    "kind": "binge_mod",
+    "path": "02_apks/明日方舟/明日方舟_2.7.71_binge_from_device.apk",
+    "remote_path": "/data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/base.apk",
+    "size": 1888707242,
+    "md5": "fdc4e4fa1529771366d21fe7159e5cac",
+    "sha256": "07e88378b946a5baa5d3366639ca6f9eb79175eb3e71289bde6992b5f8ccbcde",
+    "signer": "CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2",
+    "entry_count": 3696
+  },
+  "components": {
+    "shell": {
+      "path": "lib/arm64-v8a/libSDKloading.so",
+      "extracted": "06_dumped/明日方舟/static_inspect/key_files/lib_arm64-v8a_libSDKloading.so",
+      "size": 3922424,
+      "md5": "6f4d9e81d2e77fefb3c6410f452398b3",
+      "sha256": "2fe4fdf5b3fedb8f657801318475f3bbaf612a7fa3870ef2253f3e390d91f323"
+    },
+    "tool_checker": {
+      "path": "lib/arm64-v8a/libtoolChecker.so"
+    },
+    "libil2cpp": {
+      "path": "lib/arm64-v8a/libil2cpp.so",
+      "extracted": "06_dumped/明日方舟/static_inspect/key_files/lib_arm64-v8a_libil2cpp.so",
+      "size": 210621920,
+      "md5": "fe356af53fa578b15526546fcd87ff00",
+      "sha256": "3ece1e7b34165233fe8c3c919cf55dfcb4406b6bbc2725def2b1242b4c0a6259"
+    },
+    "metadata": {
+      "path": "assets/bin/Data/Managed/Metadata/global-metadata.dat",
+      "extracted": "06_dumped/明日方舟/static_inspect/key_files/assets_bin_Data_Managed_Metadata_global-metadata.dat",
+      "size": 43646828,
+      "md5": "e4c4b953d2011344b21742ac9485d9f9",
+      "sha256": "bf14421bbafe9c71d944ba4f97b31ecd666232640eac0829db3d84ac716ac8b8",
+      "state": "encrypted_or_openpgp_like",
+      "note": "Il2CppDumper metadata file not found or encrypted"
+    }
+  },
+  "runtime": {
+    "maps": "06_dumped/明日方舟/runtime_current/maps.txt",
+    "shell_rx_bss": {
+      "base": "0x79dca47000",
+      "path": "06_dumped/明日方舟/runtime_current/shell_rx_bss_79dca47000_79dcb3f000.bin",
+      "sha256": "057b4b18aeb00013c7599a04111441a0a98b4401d4f62162e50f9d0dc0a7a9c1"
+    },
+    "shell_rw_bss": {
+      "base": "0x79dcb48000",
+      "path": "06_dumped/明日方舟/runtime_current/shell_rw_bss_79dcb48000_79dcb6e000.bin",
+      "sha256": "b7a18987fdf002fce516a601c20f7db741cf5d3ca49df10d059c636f7d28adaa"
+    },
+    "flags": {
+      "attack_speed": {
+        "address": "0x79dcb4a000",
+        "value": 0
+      },
+      "invincible": {
+        "address": "0x79dcb4a004",
+        "value": 0
+      },
+      "base_life_lock": {
+        "address": "0x79dcb4a008",
+        "value": 0
+      },
+      "damage_x10": {
+        "address": "0x79dcb4a00c",
+        "value": 0
+      },
+      "reserved_4_to_14": {
+        "base": "0x79dcb4a010",
+        "end": "0x79dcb4a038",
+        "value": 0
+      }
+    },
+    "pointers": {
+      "get_side": {
+        "slot": "0x79dcb4a040",
+        "value": "0x798496f1dc"
+      },
+      "calculate_attack_interval_trampoline": {
+        "slot": "0x79dcb4a048",
+        "value": "0x7be91d0018"
+      },
+      "get_is_invincible_trampoline": {
+        "slot": "0x79dcb4a050",
+        "value": "0x7be91d0030"
+      },
+      "get_life_point_reduce_trampoline": {
+        "slot": "0x79dcb4a058",
+        "value": "0x7be91d0048"
+      },
+      "get_atk_trampoline": {
+        "slot": "0x79dcb4a060",
+        "value": "0x7be91d0060"
+      }
+    },
+    "parameter_mirrors": {
+      "0x79dcb48000": 1,
+      "0x79dcb48004": 1,
+      "0x79dcb48008": 1
+    }
+  },
+  "hook_chain": {
+    "resolver": "0x79dca905fc",
+    "dobby_wrapper": "0x79dca8acd0",
+    "installer_path": "0x79dca90888",
+    "install_calls": [
+      {
+        "call": "0x79dca90fb8",
+        "method": "CalculateAttackInterval",
+        "replacement": "0x79dca90778",
+        "trampoline_slot": "0x79dcb4a048"
+      },
+      {
+        "call": "0x79dca90fd0",
+        "method": "get_isInvincible",
+        "replacement": "0x79dca90798",
+        "trampoline_slot": "0x79dcb4a050"
+      },
+      {
+        "call": "0x79dca90fe8",
+        "method": "get_lifePointReduce",
+        "replacement": "0x79dca907f0",
+        "trampoline_slot": "0x79dcb4a058"
+      },
+      {
+        "call": "0x79dca91000",
+        "method": "get_atk",
+        "replacement": "0x79dca90810",
+        "trampoline_slot": "0x79dcb4a060"
+      }
+    ],
+    "resolved_get_side": {
+      "call": "0x79dca911b8",
+      "target": "Torappu.Battle.Entity.get_side",
+      "slot": "0x79dcb4a040"
+    }
+  },
+  "hooks": [
+    {
+      "menu_id": "btn_0",
+      "menu_label": "超级攻速",
+      "feature_index": 0,
+      "assembly": "Assembly-CSharp.dll",
+      "namespace": "Torappu.Battle",
+      "class": "BattleFormula",
+      "method": "CalculateAttackInterval",
+      "replacement": "0x79dca90778",
+      "flag": "0x79dcb4a000",
+      "enabled": "return 0",
+      "disabled": "tail_call_original"
+    },
+    {
+      "menu_id": "btn_1",
+      "menu_label": "超级无敌",
+      "feature_index": 1,
+      "assembly": "Assembly-CSharp.dll",
+      "namespace": "Torappu.Battle",
+      "class": "Entity",
+      "method": "get_isInvincible",
+      "replacement": "0x79dca90798",
+      "flag": "0x79dcb4a004",
+      "dependency": "Torappu.Battle.Entity.get_side",
+      "enabled": "return true when get_side(this) == 1",
+      "disabled": "tail_call_original"
+    },
+    {
+      "menu_id": "btn_2",
+      "menu_label": "基地锁血",
+      "feature_index": 2,
+      "assembly": "Assembly-CSharp.dll",
+      "namespace": "Torappu.Battle",
+      "class": "Enemy",
+      "method": "get_lifePointReduce",
+      "replacement": "0x79dca907f0",
+      "flag": "0x79dcb4a008",
+      "enabled": "return 0",
+      "disabled": "tail_call_original"
+    },
+    {
+      "menu_id": "btn_3",
+      "menu_label": "十倍伤害",
+      "feature_index": 3,
+      "assembly": "Assembly-CSharp.dll",
+      "namespace": "Torappu.Battle",
+      "class": "Entity",
+      "method": "get_atk",
+      "replacement": "0x79dca90810",
+      "flag": "0x79dcb4a00c",
+      "enabled": "return original * 10",
+      "disabled": "return original"
+    }
+  ],
+  "native_dispatch": {
+    "function": "0x79dca922ac",
+    "jump_table": "0x79dcaf937c",
+    "jump_table_bytes": "00 07 0e 3d 16 19 1c 1f 26 29 2c 2f 32 35 38",
+    "feature_index_arg": "w3",
+    "parameter_arg": "w5",
+    "enabled_arg_normalization": "w6 != 0 => byte 1, else byte 0",
+    "mapping": {
+      "0": "0x79dcb4a000",
+      "1": "0x79dcb4a004",
+      "2": "0x79dcb4a008",
+      "3": "0x79dcb4a00c",
+      "4..14": "0x79dcb4a010..0x79dcb4a038"
+    }
+  },
+  "menu": {
+    "game_id": "267",
+    "url": "https://menu-1255602259.file.myqcloud.com/game/267.html",
+    "html": "06_dumped/明日方舟/menu_analysis/267.html",
+    "script": "06_dumped/明日方舟/menu_analysis/app1.js",
+    "decoded_order": [
+      "btn_0_超级攻速",
+      "btn_1_超级无敌",
+      "btn_2_基地锁血",
+      "btn_3_十倍伤害",
+      "//btn_4_无线部署",
+      "//input_3_未添加"
+    ],
+    "click_bridge": "window.injectedObject.startFunction(id,state)"
+  },
+  "jni_chain": [
+    {
+      "symbol": "BinGe.startFunction(II)V",
+      "path": "06_dumped/明日方舟/smali_classes6/com/android/support/BinGe.smali",
+      "line": 6380
+    },
+    {
+      "symbol": "BinGe$2.run()V",
+      "path": "06_dumped/明日方舟/smali_classes6/com/android/support/BinGe$2.smali",
+      "line": 717
+    },
+    {
+      "symbol": "Preferences.changeFeatureBool(Ljava/lang/String;IZ)V",
+      "path": "06_dumped/明日方舟/smali_classes6/com/android/support/Preferences.smali",
+      "line": 736
+    },
+    {
+      "symbol": "com.android.support.Preferences.Changes(Landroid/content/Context;ILjava/lang/String;IZLjava/lang/String;)V",
+      "path": "06_dumped/明日方舟/smali_classes6/com/android/support/Preferences.smali",
+      "line": 733
+    }
+  ],
+  "evidence": {
+    "static_identity": "06_dumped/明日方舟/static_inspect/static_identity.json",
+    "runtime_dump": "06_dumped/明日方舟/runtime_current/runtime_dump.json",
+    "binge_apk": "04_scripts/明日方舟/binge_apk.json",
+    "device_info": "04_scripts/明日方舟/device_info.json",
+    "report": "10_docs/明日方舟/斌哥包抓点_20260919.md"
+  },
+  "not_proven": [
+    "四个功能开启态的战斗效果",
+    "关闭开关后的恢复行为",
+    "长时间稳定性",
+    "服务端接受度与风控风险",
+    "官方同版本组件是否与斌哥包一致",
+    "官方包内同名方法是否可在相同语义下解析"
+  ],
+  "next_step": {
+    "requires": "official com.hypergryph.arknights 2.7.71 vc190 arm64-v8a APK",
+    "action": "compare components, resolve same methods, then port to StarryMagic menu/state channel",
+    "do_not_reuse": [
+      "Binge shell process VA",
+      "Binge shell trampoline addresses",
+      "Binge shell flag offsets as a mandatory ABI contract"
+    ]
+  }
+}

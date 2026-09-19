@@ -476,6 +476,18 @@ public final class SignSpoof {
     private static final String ENDFIELD_CERT_B64 =
             "MIIDhTCCAm2gAwIBAgIEBKeDuDANBgkqhkiG9w0BAQsFADByMQswCQYDVQQGEwI4NjERMA8GA1UECBMIU2hhbmdoYWkxETAPBgNVBAcTCFNoYW5naGFpMRMwEQYDVQQKEwpIeXBlckdyeXBoMRMwEQYDVQQLEwpIeXBlckdyeXBoMRMwEQYDVQQDEwpIeXBlckdyeXBoMCAXDTIzMDkxMTA5MzI0NVoYDzIwODMwODI3MDkzMjQ1WjByMQswCQYDVQQGEwI4NjERMA8GA1UECBMIU2hhbmdoYWkxETAPBgNVBAcTCFNoYW5naGFpMRMwEQYDVQQKEwpIeXBlckdyeXBoMRMwEQYDVQQLEwpIeXBlckdyeXBoMRMwEQYDVQQDEwpIeXBlckdyeXBoMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjhfxXW0AZtIoO2f0EiJPYq5+hDCAXod0VPKUFuB5E/TnHSzWWWM+isOC89BXSZyKoin79f2N37K7HmqXw6WD2GHiuTpjw7G6A3IgJz6ofr/vC0oqTrC10Iut1HEjm59IWm/1bzqgTuPF2Jc03KjU5Gj2JecmoFfyBnAs1vEx+E0+w9hLg4hW51gxcn1c1x926LRj1eEH5+ahcRIxRkAebOFYvzl7r1OXsCtACX5xxjhg4/TOwix5AND1Aj1Ws3IiPv8j2Qzp2+cqVKno3b0w/sL9b2pGt4XDIpnWpYrm822qtn44xxSj0hO2YjO/RQNc/NuiZcIzT6Gn2zPO2S7C1QIDAQABoyEwHzAdBgNVHQ4EFgQUwd8Bs9+71uU94Hv7CRRK5LJaxlQwDQYJKoZIhvcNAQELBQADggEBAB45RgOdavnoEkdfybCvA7wbwaizxw0AZEjwTy96p7eg5eR+b+GKqXUaBeR0Lm5VJf50TUER9Gd1pUbglAmz5adkmP7i5mhczZuiFThxbliz98QqZmpgrT2NezqHYhYiFrZWqW9nPd4cvE/4m3F/THh7thrEcJu1sJIffEnKbpxymLt6nhH/aYxl/ABphbFkfaEs0DY7ciYDzjImV06K2tw8Cgvrc0f4N4mDSX1M92tFa97xtSmPN44XxVdAditZHPAoWFy3FkXBQw6tDLgMdmeCz5UN+NAC5FB/nmiFza/Vk4/KAel1yclAh5ag+mw2iTeRC3lbHvoBh12jKEQroi8=";
 
+    /** 明日方舟 2.7.71 TapTap 官方（DER SHA256=0c19c23b… / MD5=62ae221e… CN=HyperGryph） */
+    private static final String MRFZZ_PKG = "com.hypergryph.arknights";
+    private static final String MRFZZ_CERT_B64 =
+            "MIICMzCCAZygAwIBAgIEOMDPYzANBgkqhkiG9w0BAQUFADBdMRMwEQYDVQQDDApIeXBlckdyeXBoMRMwEQYDVQQKDApIeXBl"
+                    + "ckdyeXBoMREwDwYDVQQHDAhTaGFuZ2hhaTERMA8GA1UECAwIU2hhbmdoYWkxCzAJBgNVBAYTAjg2MCAXDTE4MDkxMjA5MTEx"
+                    + "NVoYDzIwNzgwODI4MDkxMTE1WjBdMRMwEQYDVQQDDApIeXBlckdyeXBoMRMwEQYDVQQKDApIeXBlckdyeXBoMREwDwYDVQQH"
+                    + "DAhTaGFuZ2hhaTERMA8GA1UECAwIU2hhbmdoYWkxCzAJBgNVBAYTAjg2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCC"
+                    + "4au27ZaSW5CCeM7OnkzlfRzoPZSblbsHpyRK2SSizWbdN8Is4Bp3VHjM2aB52NaSWt4+xa1PI5GXJqxn++GNsyMGB0p0gPFX"
+                    + "r9jjI1mN6Xn9Xynyaf6IHk/cgaUkxdL+9NHyQiMusrcPIptdf2By8YSVhj/SVjUVQzRLr6x/KQIDAQABMA0GCSqGSIb3DQEB"
+                    + "BQUAA4GBAE19AnyM40D7CcgZVIdK9oJk8g1Tt93NsYQsCMM93czccmrdYfZjJBgPtdOE/htI7mPSAbiGcJowADYAp5vU3uiU"
+                    + "CdQ5uAvngRsoZM3YznF/MABxBbjpktIekPoN9HmhfR+mKIW0HVlZGOUq2MYQ3lQ7zwL/rXa/Nikar23PNVBp";
+
     /** 超维进化 原版 CN=elliot lee（SHA256=4a91bad8… / MD5=da998108…，v2 块 DER 导出 2026-09-05） */
     private static final String CWJH_PKG = "com.grinning.beta.yszl";
     private static final String CWJH_CERT_B64 =
@@ -757,6 +769,7 @@ public final class SignSpoof {
                 fakes.put(WHRHX4399_PKG, new Signature(Base64.decode(WHRHXKB_CERT_B64, Base64.DEFAULT)));
                 fakes.put(CWJH_PKG, new Signature(Base64.decode(CWJH_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ENDFIELD_PKG, new Signature(Base64.decode(ENDFIELD_CERT_B64, Base64.DEFAULT)));
+                fakes.put(MRFZZ_PKG, new Signature(Base64.decode(MRFZZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WDYZ_PKG, new Signature(Base64.decode(WDYZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YQZD_PKG, new Signature(Base64.decode(YQZD_CERT_B64, Base64.DEFAULT)));
                 fakes.put(MWDL_PKG, new Signature(Base64.decode(MWDL_CERT_B64, Base64.DEFAULT)));

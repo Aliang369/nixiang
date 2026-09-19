@@ -1,0 +1,42 @@
+{
+  "label": "current",
+  "serial": "f9a116a2",
+  "package": "com.hypergryph.arknights",
+  "pid": 25237,
+  "device": {
+    "serial": "f9a116a2",
+    "model": "OPD2515",
+    "android": "16",
+    "abi": "arm64-v8a",
+    "package": "com.hypergryph.arknights",
+    "foreground_activity": "com.hypergryph.arknights/com.u8.sdk.U8UnityContext",
+    "remote_apk": "/data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/base.apk",
+    "root_id": "uid=0(root) gid=0(root) groups=0(root) context=u:r:ksu:s0"
+  },
+  "binge_apk": {
+    "package": "com.hypergryph.arknights",
+    "game": "明日方舟",
+    "kind": "binge_mod",
+    "apk_path": "/Users/aliang/Documents/nixiang/02_apks/明日方舟/明日方舟_2.7.71_binge_from_device.apk",
+    "version_name": "2.7.71",
+    "version_code": 190,
+    "installer": "com.android.packageinstaller",
+    "primary_cpu_abi": "arm64-v8a",
+    "serial": "f9a116a2",
+    "remote_path": "/data/app/~~xyFodsbxZrlxPRLKf8m_bA==/com.hypergryph.arknights-2-M13jtqK_w2mYmN__cE5w==/base.apk",
+    "size": 1888707242,
+    "sha256": "07e88378b946a5baa5d3366639ca6f9eb79175eb3e71289bde6992b5f8ccbcde",
+    "md5": "fdc4e4fa1529771366d21fe7159e5cac",
+    "signer": "CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2",
+    "signer_sha256": "11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba"
+  },
+  "maps": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/runtime_current/maps.txt",
+  "sdk_rx_count": 6,
+  "il2cpp_rx_count": 2,
+  "anon_rwx_count": 1,
+  "shell_rx_bss_count": 1,
+  "shell_ro_bss_count": 1,
+  "shell_rw_bss_count": 2,
+  "shell_rwx_bss_count": 1,
+  "near_exec_count": 0
+}

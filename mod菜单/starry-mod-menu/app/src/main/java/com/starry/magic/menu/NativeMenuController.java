@@ -26,6 +26,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
@@ -87,6 +88,11 @@ public final class NativeMenuController {
     private static final int VINE_OVERHANG_DP = 22;
     private static final int PANEL_INNER_W_DP = 312;
     private static final int VINE_CORNER_DP = 112;
+    // 内容滚动区高度预算：正常屏上限 260dp；小屏（横屏/低分辨率/大显示缩放）按屏幕 dp 视口收缩
+    private static final int PANEL_LIST_MAX_DP = 260;
+    private static final int PANEL_LIST_MIN_DP = 110;
+    // 滚动区之外的固定装饰高度（藤蔓外探44 + 上下padding32 + 标题栏约48 + 分割线约26 + tab栏44），实测估算
+    private static final int PANEL_CHROME_H_DP = 190;
 
     public enum AttachMode { ACTIVITY, OVERLAY, NONE }
 
@@ -347,6 +353,14 @@ public final class NativeMenuController {
             android.util.DisplayMetrics dm = appContext.getResources().getDisplayMetrics();
             int screenW = dm.widthPixels;
             int screenH = dm.heightPixels;
+            boolean heightClamped = false;
+            // 兜底：窗口高度超屏时压回屏内，否则底部 tab 栏出屏看不到也点不到
+            // （requestPanelRelayout 已按屏限高，此处防异常路径漏网，如重挂后 WRAP_CONTENT）
+            if (layoutParams.height > screenH) {
+                layoutParams.height = screenH;
+                heightClamped = true;
+                Log.i(TAG, "clampWindowOnScreen: height clamped to " + screenH);
+            }
             int w = layoutParams.width > 0 ? layoutParams.width : root.getWidth();
             int h = layoutParams.height > 0 ? layoutParams.height : root.getHeight();
             if (w <= 0) w = dp(FAB_WM_DP);
@@ -355,7 +369,7 @@ public final class NativeMenuController {
             int maxY = Math.max(0, screenH - Math.min(h, screenH));
             int nx = Math.max(0, Math.min(layoutParams.x, maxX));
             int ny = Math.max(0, Math.min(layoutParams.y, maxY));
-            if (nx != layoutParams.x || ny != layoutParams.y) {
+            if (heightClamped || nx != layoutParams.x || ny != layoutParams.y) {
                 layoutParams.x = nx;
                 layoutParams.y = ny;
                 windowManager.updateViewLayout(root, layoutParams);
@@ -444,6 +458,7 @@ public final class NativeMenuController {
         accountUsesTv = null;
         accountUnbindBtn = null;
         cardInput = null;
+        dismissEditClipboardBar();
         unbindArmed = false;
         bootstrapFetched = false;
         announceQueue.clear();
@@ -1019,16 +1034,16 @@ public final class NativeMenuController {
 
         featureList = new LinearLayout(appContext);
         featureList.setOrientation(LinearLayout.VERTICAL);
-        featScroll = wrapScroll(featureList, dp(260));
+        featScroll = wrapScroll(featureList);
         box.addView(featScroll);
 
         authPane = buildAuthPane();
-        authScroll = wrapScroll(authPane, dp(260));
+        authScroll = wrapScroll(authPane);
         authScroll.setVisibility(View.GONE);
         box.addView(authScroll);
 
         settingsPane = buildSettingsPane();
-        setScroll = wrapScroll(settingsPane, dp(260));
+        setScroll = wrapScroll(settingsPane);
         setScroll.setVisibility(View.GONE);
         box.addView(setScroll);
 
@@ -1070,6 +1085,15 @@ public final class NativeMenuController {
         featScroll.setVisibility(which == 0 ? View.VISIBLE : View.GONE);
         if (authScroll != null) authScroll.setVisibility(which == 1 ? View.VISIBLE : View.GONE);
         if (setScroll != null) setScroll.setVisibility(which == 2 ? View.VISIBLE : View.GONE);
+        // 账号登录页需要可焦点，否则输入框长按/剪贴板条出不来（不等输入框获焦，切页即放开）
+        if (which == 1 && accountLoginBox != null
+                && accountLoginBox.getVisibility() == View.VISIBLE) {
+            setWindowFocusableForIme(true);
+            MenuService.notifyOverlayInputFocus(true);
+        } else if (cardInput == null || !cardInput.hasFocus()) {
+            setWindowFocusableForIme(false);
+            MenuService.notifyOverlayInputFocus(false);
+        }
         if (root != null) root.post(this::requestPanelRelayout);
         else requestPanelRelayout();
     }
@@ -1169,6 +1193,13 @@ public final class NativeMenuController {
                     View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
             int h = root.getMeasuredHeight();
             if (h <= 0) return;
+            // 兜底：窗口总高不得超屏幕 9 成。内容区已按屏动态限高，此处防预算
+            // 偏差/异常装饰超高把底部 tab 栏挤出屏幕。
+            try {
+                int maxWinH = Math.round(appContext.getResources()
+                        .getDisplayMetrics().heightPixels * 0.9f);
+                if (h > maxWinH) h = maxWinH;
+            } catch (Throwable ignored) {}
             layoutParams.width = width;
             layoutParams.height = h;
             try {
@@ -1185,10 +1216,25 @@ public final class NativeMenuController {
         });
     }
 
-    private ScrollView wrapScroll(View child, final int maxH) {
+    /** 内容滚动区高度上限（px）：小屏（横屏/低分辨率/大显示缩放）按屏幕 dp 视口收缩，
+     *  正常屏维持 PANEL_LIST_MAX_DP，保证面板总高不超过屏幕高度的约 82%，
+     *  底部 tab 栏（功能/账号/设置）始终可见可点。onMeasure 时动态取值，
+     *  旋转/密度变化后重测自适应。 */
+    private int contentScrollMaxH() {
+        android.util.DisplayMetrics dm = appContext.getResources().getDisplayMetrics();
+        int screenHDp = Math.max(1, Math.round(dm.heightPixels / dm.density));
+        int budgetDp = Math.round(screenHDp * 0.82f) - PANEL_CHROME_H_DP;
+        if (budgetDp > PANEL_LIST_MAX_DP) budgetDp = PANEL_LIST_MAX_DP;
+        if (budgetDp < PANEL_LIST_MIN_DP) budgetDp = PANEL_LIST_MIN_DP;
+        return dp(budgetDp);
+    }
+
+    private ScrollView wrapScroll(View child) {
         ScrollView sv = new ScrollView(appContext) {
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+                // 上限动态取：小屏收缩防面板总高超屏裁掉底部 tab 栏
+                final int maxH = contentScrollMaxH();
                 // 先测内容真实高度，矮则跟内容，高过 maxH 才定高滚动
                 if (getChildCount() == 0) {
                     setMeasuredDimension(
@@ -1269,6 +1315,8 @@ public final class NativeMenuController {
             setWindowFocusableForIme(hasFocus);
             MenuService.notifyOverlayInputFocus(hasFocus);
         });
+        // 悬浮窗里系统长按菜单不可用：自绘全选/剪切/复制/粘贴弹条（111 已验证方案）
+        enableOverlayNativeEditClipboard(cardInput);
         LinearLayout.LayoutParams inputLp = new LinearLayout.LayoutParams(dp(240), dp(36));
         inputLp.gravity = Gravity.CENTER_HORIZONTAL;
         accountLoginBox.addView(cardInput, inputLp);
@@ -1897,6 +1945,8 @@ public final class NativeMenuController {
                             }
                         }
                     });
+                    // 参数输入框同样接自绘剪贴板条（悬浮窗系统长按菜单不可用）
+                    enableOverlayNativeEditClipboard(et);
                 }
                 row.addView(et, new LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -2183,6 +2233,7 @@ public final class NativeMenuController {
             fab.setScaleX(0.85f);
             fab.setScaleY(0.85f);
             fab.animate().scaleX(1f).scaleY(1f).setDuration(180).start();
+            dismissEditClipboardBar(); // 收面板时收掉剪贴板条，防悬空
             layoutParams.width = dp(FAB_WM_DP);
             layoutParams.height = dp(FAB_WM_DP);
             layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
@@ -2214,14 +2265,192 @@ public final class NativeMenuController {
         if (layoutParams == null || windowManager == null || !attached) return;
         if (focusable) {
             layoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            // 便于系统弹出输入法 + 文本选择浮动工具条
+            layoutParams.softInputMode =
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
+                            | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE;
         } else {
             layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+            layoutParams.softInputMode =
+                    WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
         }
         try {
             windowManager.updateViewLayout(root, layoutParams);
         } catch (Exception e) {
             Log.w(TAG, "setWindowFocusableForIme: " + e.getMessage());
         }
+    }
+
+    /**
+     * 悬浮窗上系统浮动工具条 / ActionMode 经常直接失败（startActionMode→null）。
+     * 用贴在输入框上方的横向 PopupWindow 仿系统条：全选/剪切/复制/粘贴，
+     * 操作仍走 {@link EditText#onTextContextMenuItem(int)}。
+     * （自 starry-mod-menu_111 迁移，该方案在悬浮窗实测可用）
+     */
+    private PopupWindow editClipboardPopup;
+
+    private void enableOverlayNativeEditClipboard(EditText et) {
+        if (et == null) return;
+        et.setLongClickable(true);
+        et.setFocusable(true);
+        et.setFocusableInTouchMode(true);
+        // 不用系统 long-click：ACTION_DOWN 里 updateViewLayout 会打断长按计时
+        final Handler h = mainHandler;
+        final Runnable[] pending = new Runnable[1];
+        final float[] down = new float[2];
+        et.setOnTouchListener((v, e) -> {
+            switch (e.getActionMasked()) {
+                case MotionEvent.ACTION_DOWN:
+                    down[0] = e.getRawX();
+                    down[1] = e.getRawY();
+                    if (pending[0] != null) h.removeCallbacks(pending[0]);
+                    pending[0] = () -> {
+                        pending[0] = null;
+                        if (!et.isAttachedToWindow()) return;
+                        et.requestFocus();
+                        CharSequence text = et.getText();
+                        if (text != null && text.length() > 0) {
+                            int s = et.getSelectionStart();
+                            int end = et.getSelectionEnd();
+                            if (s < 0 || end < 0 || s == end) et.selectAll();
+                        }
+                        showEditClipboardBar(et);
+                    };
+                    h.postDelayed(pending[0], ViewConfiguration.getLongPressTimeout());
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if (pending[0] != null
+                            && Math.hypot(e.getRawX() - down[0], e.getRawY() - down[1])
+                            > TAP_SLOP_PX) {
+                        h.removeCallbacks(pending[0]);
+                        pending[0] = null;
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    if (pending[0] != null) {
+                        h.removeCallbacks(pending[0]);
+                        pending[0] = null;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            return false;
+        });
+        et.setOnLongClickListener(v -> true); // 吃掉系统长按，避免再走失败的 ActionMode
+    }
+
+    private void dismissEditClipboardBar() {
+        if (editClipboardPopup != null) {
+            try {
+                if (editClipboardPopup.isShowing()) editClipboardPopup.dismiss();
+            } catch (Exception ignored) {
+            }
+            editClipboardPopup = null;
+        }
+    }
+
+    private void showEditClipboardBar(EditText et) {
+        if (et == null || !et.isAttachedToWindow()) return;
+        dismissEditClipboardBar();
+
+        Context ctx = et.getContext();
+        LinearLayout bar = new LinearLayout(ctx);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        int padH = dp(10);
+        int padV = dp(8);
+        bar.setPadding(padH, padV, padH, padV);
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xF2222222);
+        bg.setCornerRadius(dp(8));
+        bar.setBackground(bg);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            bar.setElevation(dp(6));
+        }
+
+        boolean hasText = et.getText() != null && et.getText().length() > 0;
+        boolean hasSel = et.hasSelection();
+        addClipboardBarItem(bar, et, android.R.string.selectAll, android.R.id.selectAll, hasText, false);
+        addClipboardBarItem(bar, et, android.R.string.cut, android.R.id.cut, hasSel, true);
+        addClipboardBarItem(bar, et, android.R.string.copy, android.R.id.copy, hasSel, true);
+        addClipboardBarItem(bar, et, android.R.string.paste, android.R.id.paste, true, true);
+
+        bar.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        PopupWindow pw = new PopupWindow(
+                bar, bar.getMeasuredWidth(), bar.getMeasuredHeight(), true);
+        pw.setBackgroundDrawable(new ColorDrawable(0x00000000));
+        pw.setOutsideTouchable(true);
+        pw.setTouchable(true);
+        pw.setClippingEnabled(false);
+        pw.setOnDismissListener(() -> {
+            if (editClipboardPopup == pw) editClipboardPopup = null;
+        });
+        editClipboardPopup = pw;
+
+        try {
+            // 贴在输入框上方居中（仿系统浮动条位置）
+            int xOff = (et.getWidth() - bar.getMeasuredWidth()) / 2;
+            int yOff = -(et.getHeight() + bar.getMeasuredHeight() + dp(6));
+            pw.showAsDropDown(et, xOff, yOff, Gravity.TOP | Gravity.START);
+            Log.i(TAG, "edit clipboard bar shown");
+        } catch (Exception e) {
+            Log.w(TAG, "showEditClipboardBar: " + e.getMessage());
+            editClipboardPopup = null;
+        }
+    }
+
+    private void addClipboardBarItem(LinearLayout bar, EditText et, int labelRes, int actionId,
+                                     boolean enabled, boolean withDivider) {
+        if (withDivider) {
+            View div = new View(bar.getContext());
+            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(dp(1), dp(16));
+            dlp.leftMargin = dp(2);
+            dlp.rightMargin = dp(2);
+            div.setLayoutParams(dlp);
+            div.setBackgroundColor(0x55FFFFFF);
+            bar.addView(div);
+        }
+        TextView tv = new TextView(bar.getContext());
+        try {
+            tv.setText(labelRes);
+        } catch (Exception e) {
+            tv.setText(actionId == android.R.id.paste ? "粘贴"
+                    : actionId == android.R.id.copy ? "复制"
+                    : actionId == android.R.id.cut ? "剪切" : "全选");
+        }
+        tv.setTextColor(enabled ? 0xFFFFFFFF : 0x66FFFFFF);
+        tv.setTypeface(Typeface.DEFAULT_BOLD);
+        setFs(tv, 13f);
+        tv.setPadding(dp(8), dp(2), dp(8), dp(2));
+        tv.setEnabled(enabled);
+        tv.setClickable(enabled);
+        if (enabled) {
+            tv.setOnClickListener(v -> {
+                try {
+                    if (actionId == android.R.id.selectAll) {
+                        et.selectAll();
+                        dismissEditClipboardBar();
+                        // 全选后再亮一次，方便接着复制
+                        et.post(() -> showEditClipboardBar(et));
+                        return;
+                    }
+                    if (actionId == android.R.id.copy && !et.hasSelection()
+                            && et.getText() != null && et.getText().length() > 0) {
+                        et.selectAll();
+                    }
+                    et.onTextContextMenuItem(actionId);
+                } catch (Exception e) {
+                    Log.w(TAG, "clipboard item: " + e.getMessage());
+                }
+                dismissEditClipboardBar();
+            });
+        }
+        bar.addView(tv, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
     private void applyCollapsedGeometry() {
