@@ -1,7 +1,7 @@
 {
   "game": "一念通天",
-  "version": "720",
-  "notes": "2026-09-15 正式收官：基于真机 720 原版内容完成六项星空功能与 TapTap 内嵌网页登录，用户人工验收通过；pipeline 覆盖构建、签名、安装、清理与 Git 固化。",
+  "version": "728",
+  "notes": "2026-09-19 728 版本重定位：六项功能与 TapTap 网页登录已复刻，候选包已构建并签名；设备原包 CN=demo 与星光包 CN=StarryMagic 异签，覆盖安装预计失败，卸载重装需用户明确授权。",
   "params": {
     "game_id": "yntt",
     "package": "com.qinglv.Immortal",
@@ -29,7 +29,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 22:36:02",
+      "done_at": "2026-09-19 23:46:54",
       "artifacts": {
         "04_scripts/一念通天/.device_serial": {
           "md5": "0bc47570b06495af1a544933783b7037"
@@ -165,10 +165,12 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 23:56:25",
+      "failed_at": "2026-09-19 23:47:49",
+      "error": "产物校验未通过（详见上方校验输出）",
+      "done_at": "2026-09-19 23:50:00",
       "artifacts": {
         "04_scripts/一念通天/official_apk.json": {
-          "md5": "1eadc9e37405a25a907b590a37b51283"
+          "md5": "910fa724083a1c776ad7f02d7d87d031"
         }
       },
       "inputs": {
@@ -177,36 +179,36 @@
     },
     {
       "id": "dump_official",
-      "name": "原版 720 静态 dump 与 RVA 重定位输入",
+      "name": "原版 728 静态 dump 与 RVA 重定位输入",
       "requires": [
         "pull_official"
       ],
-      "command": "bash 04_scripts/一念通天/dump_static_official_yntt.sh",
+      "command": "bash 04_scripts/一念通天/dump_static_official_yntt_728.sh",
       "preflight": [
-        "04_scripts/一念通天/dump_static_official_yntt.sh"
+        "04_scripts/一念通天/dump_static_official_yntt_728.sh"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs"
+          "path": "06_dumped/一念通天/official_728/static/il2cpp_dump/dump.cs"
         },
         {
           "type": "file_exists",
-          "path": "06_dumped/一念通天/official_720/static/il2cpp_dump/script.json"
+          "path": "06_dumped/一念通天/official_728/static/il2cpp_dump/script.json"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 23:59:25",
+      "done_at": "2026-09-19 23:50:13",
       "artifacts": {
-        "06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs": {
-          "md5": "b743ba598362b383a49d63793bdebdd7"
+        "06_dumped/一念通天/official_728/static/il2cpp_dump/dump.cs": {
+          "md5": "70517ffa494918d72d42da75c085b35d"
         },
-        "06_dumped/一念通天/official_720/static/il2cpp_dump/script.json": {
-          "md5": "49fae59ec8c8e12c04c7ea6e721d4ac2"
+        "06_dumped/一念通天/official_728/static/il2cpp_dump/script.json": {
+          "md5": "83d7e79991c0727560d168a7eee8f9f0"
         }
       },
       "inputs": {
-        "04_scripts/一念通天/official_apk.json": "1eadc9e37405a25a907b590a37b51283"
+        "04_scripts/一念通天/official_apk.json": "910fa724083a1c776ad7f02d7d87d031"
       }
     },
     {
@@ -226,43 +228,39 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 01:13:57",
+      "done_at": "2026-09-19 23:54:52",
       "artifacts": {
         "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so": {
-          "md5": "c93bb525a30554a2fef1860c90864942"
+          "md5": "e126bbfd82d84480c2466982ad6800c6"
         }
       },
       "inputs": {
-        "06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs": "b743ba598362b383a49d63793bdebdd7",
-        "06_dumped/一念通天/official_720/static/il2cpp_dump/script.json": "49fae59ec8c8e12c04c7ea6e721d4ac2"
+        "06_dumped/一念通天/official_728/static/il2cpp_dump/dump.cs": "70517ffa494918d72d42da75c085b35d",
+        "06_dumped/一念通天/official_728/static/il2cpp_dump/script.json": "83d7e79991c0727560d168a7eee8f9f0"
       }
     },
     {
       "id": "surgical",
-      "name": "原版 720 外科组装追加星光 so/dex",
+      "name": "原版 728 外科组装追加星光 so/dex",
       "requires": [
         "build_so"
       ],
-      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh",
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_yntt_728.sh",
       "preflight": [
-        "mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh"
+        "mod菜单/starry-mod-menu/scripts/surgical_yntt_728.sh"
       ],
       "verify": [
         {
-          "type": "file_exists",
-          "path": "08_output/一念通天/一念通天_720_surgical-unsigned.apk"
+          "type": "not_exists",
+          "path": "08_output/一念通天/一念通天_728_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 01:17:22",
-      "artifacts": {
-        "08_output/一念通天/一念通天_720_surgical-unsigned.apk": {
-          "md5": "94a902550761953f97c3d61be121065d"
-        }
-      },
+      "done_at": "2026-09-19 23:55:40",
       "inputs": {
-        "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so": "c93bb525a30554a2fef1860c90864942"
-      }
+        "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so": "e126bbfd82d84480c2466982ad6800c6"
+      },
+      "note": "unsigned 中间包已于 2026-09-19 正式包裁剪时删除；原 md5=bb44f2279eeeb049977f566b40be402c"
     },
     {
       "id": "sign",
@@ -270,53 +268,53 @@
       "requires": [
         "surgical"
       ],
-      "command": "bash 04_scripts/一念通天/yntt_sign.sh",
+      "command": "bash 04_scripts/一念通天/yntt_sign_728.sh",
       "preflight": [
-        "04_scripts/一念通天/yntt_sign.sh"
+        "04_scripts/一念通天/yntt_sign_728.sh"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/一念通天/一念通天_720_surgical-releaseSigned.apk"
+          "path": "08_output/一念通天/一念通天_728_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 01:18:36",
+      "done_at": "2026-09-19 23:56:04",
       "artifacts": {
-        "08_output/一念通天/一念通天_720_surgical-releaseSigned.apk": {
-          "md5": "21b3b6f1d542aaabfc539029339ca001"
+        "08_output/一念通天/一念通天_728_surgical-releaseSigned.apk": {
+          "md5": "3bdcebdb7e326957b69fbcc4a179524b"
         }
       },
-      "inputs": {
-        "08_output/一念通天/一念通天_720_surgical-unsigned.apk": "94a902550761953f97c3d61be121065d"
-      }
+      "note": "已签名正式包保留；其输入 unsigned 包已在正式包裁剪时删除"
     },
     {
       "id": "install",
-      "name": "授权卸载并重装星光包 + 设备 MD5 校验",
+      "name": "覆盖安装 728 星光包 + 设备 MD5 校验（异签需单独授权卸载重装）",
       "requires": [
         "sign",
         "device_ready"
       ],
-      "command": "bash 04_scripts/一念通天/install_yntt.sh",
+      "command": "YNTT_AUTHORIZED_UNINSTALL=1 bash 04_scripts/一念通天/install_yntt_728.sh",
       "preflight": [
-        "04_scripts/一念通天/install_yntt.sh"
+        "04_scripts/一念通天/install_yntt_728.sh"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/一念通天/一念通天_720_surgical-releaseSigned.apk"
+          "path": "08_output/一念通天/一念通天_728_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 01:19:15",
+      "failed_at": "2026-09-20 00:01:57",
+      "error": "命令退出码 1（详见日志尾部）",
+      "done_at": "2026-09-20 00:13:47",
       "artifacts": {
-        "08_output/一念通天/一念通天_720_surgical-releaseSigned.apk": {
-          "md5": "21b3b6f1d542aaabfc539029339ca001"
+        "08_output/一念通天/一念通天_728_surgical-releaseSigned.apk": {
+          "md5": "3bdcebdb7e326957b69fbcc4a179524b"
         }
       },
       "inputs": {
-        "08_output/一念通天/一念通天_720_surgical-releaseSigned.apk": "21b3b6f1d542aaabfc539029339ca001",
+        "08_output/一念通天/一念通天_728_surgical-releaseSigned.apk": "3bdcebdb7e326957b69fbcc4a179524b",
         "04_scripts/一念通天/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },
@@ -341,21 +339,28 @@
         },
         {
           "type": "file_exists",
+          "path": "06_dumped/一念通天/official_728/static/il2cpp_dump/dump.cs"
+        },
+        {
+          "type": "file_exists",
           "path": "06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 01:37:27",
+      "done_at": "2026-09-20 00:24:31",
       "artifacts": {
         "04_scripts/一念通天/cleanup_summary.json": {
-          "md5": "1cbb621c6930c70d11d382c8878089fe"
+          "md5": "6b43b42fa443fece0b55172da35e7288"
+        },
+        "06_dumped/一念通天/official_728/static/il2cpp_dump/dump.cs": {
+          "md5": "70517ffa494918d72d42da75c085b35d"
         },
         "06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs": {
           "md5": "b743ba598362b383a49d63793bdebdd7"
         }
       },
       "inputs": {
-        "08_output/一念通天/一念通天_720_surgical-releaseSigned.apk": "21b3b6f1d542aaabfc539029339ca001"
+        "08_output/一念通天/一念通天_728_surgical-releaseSigned.apk": "3bdcebdb7e326957b69fbcc4a179524b"
       }
     },
     {
@@ -371,20 +376,10 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "10_docs/一念通天/收尾与最小复现清单_720_20260915.md"
+          "path": "10_docs/一念通天/收尾与最小复现清单_728_20260919.md"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-15 01:38:32",
-      "artifacts": {
-        "10_docs/一念通天/收尾与最小复现清单_720_20260915.md": {
-          "md5": "a2b8e59ff93368d3086762e7059eaf1a"
-        }
-      },
-      "inputs": {
-        "04_scripts/一念通天/cleanup_summary.json": "1cbb621c6930c70d11d382c8878089fe",
-        "06_dumped/一念通天/official_720/static/il2cpp_dump/dump.cs": "b743ba598362b383a49d63793bdebdd7"
-      }
+      "status": "pending"
     }
   ]
 }

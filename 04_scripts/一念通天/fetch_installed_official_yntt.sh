@@ -45,17 +45,21 @@ OUT_DIR="$NIXIANG_ROOT/02_apks/$GAME"
 OUT="$OUT_DIR/${GAME}_${VERSION_NAME}_official_from_device.apk"
 TMP="$OUT.part"
 
-if [[ -e "$OUT" ]]; then
-  echo "错误: 目标 APK 已存在，拒绝覆盖: $OUT" >&2
-  exit 1
-fi
 mkdir -p "$OUT_DIR"
 rm -f "$TMP"
 trap 'rm -f "$TMP"' EXIT
 
 "$ADB_BIN" -s "$SERIAL" pull "$REMOTE_APK" "$TMP"
 unzip -tq "$TMP" >/dev/null
-mv "$TMP" "$OUT"
+if [[ -e "$OUT" ]]; then
+  if [[ "$(md5 -q "$OUT")" != "$(md5 -q "$TMP")" ]]; then
+    echo "错误: 本地同名 APK 已存在且与真机不一致，拒绝覆盖: $OUT" >&2
+    exit 1
+  fi
+  rm -f "$TMP"
+else
+  mv "$TMP" "$OUT"
+fi
 
 SIZE="$(stat -f '%z' "$OUT")"
 SHA256="$(shasum -a 256 "$OUT" | awk '{print $1}')"

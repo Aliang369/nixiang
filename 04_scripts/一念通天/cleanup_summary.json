@@ -1,14 +1,15 @@
 {
   "game": "一念通天",
-  "before_kb": 1303960,
-  "after_kb": 195988,
-  "released_kb": 1107972,
-  "before_at": "2026-09-15 01:37:25",
-  "after_at": "2026-09-15 01:37:26",
+  "before_kb": 488296,
+  "after_kb": 291748,
+  "released_kb": 196548,
+  "before_at": "2026-09-20 00:24:31",
+  "after_at": "2026-09-20 00:24:31",
   "kept": [
     "02_apks/一念通天",
-    "08_output/一念通天",
-    "06_dumped/一念通天 text archives",
+    "08_output/一念通天（正式包由 prune_output_final.sh 单独裁剪）",
+    "06_dumped/一念通天 text archives (official_728 + official_720 + binge_719)",
+    "09_test/一念通天 卸载前数据备份",
     "04_scripts/一念通天",
     "10_docs/一念通天",
     "mod菜单 Yntt sources"
@@ -17,7 +18,6 @@
     "03_decompiled/一念通天",
     "07_patched/一念通天",
     "06_dumped/一念通天 ignored binaries",
-    "09_test/一念通天",
     "tmp yntt analysis directories"
   ]
 }

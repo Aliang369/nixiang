@@ -9,7 +9,7 @@ cd "$NIXIANG_ROOT"
 git config core.quotepath false
 
 [[ -f "04_scripts/一念通天/cleanup_summary.json" ]] || { echo "错误: 缺少 cleanup_summary.json，先跑清理阶段" >&2; exit 1; }
-[[ -f "10_docs/一念通天/收尾与最小复现清单_720_20260915.md" ]] || { echo "错误: 缺少本作收尾清单" >&2; exit 1; }
+[[ -f "10_docs/一念通天/收尾与最小复现清单_728_20260919.md" ]] || { echo "错误: 缺少 728 收尾清单" >&2; exit 1; }
 
 git add -- \
   "04_scripts/一念通天" \
@@ -22,6 +22,7 @@ git add -- \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h" \
   "mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh" \
+  "mod菜单/starry-mod-menu/scripts/surgical_yntt_728.sh" \
   "mod菜单/starry-mod-menu/yntt_smali"
 
 git add -A -- "06_dumped/一念通天"
@@ -47,6 +48,7 @@ while IFS= read -r path; do
     mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp|\
     mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.h|\
     mod菜单/starry-mod-menu/scripts/surgical_yntt_720.sh|\
+    mod菜单/starry-mod-menu/scripts/surgical_yntt_728.sh|\
     mod菜单/starry-mod-menu/yntt_smali/*|06_dumped/一念通天/*)
       ;;
     *)
@@ -57,7 +59,7 @@ while IFS= read -r path; do
 done <<< "$STAGED"
 
 printf '%s\n' "$STAGED"
-git commit -m "一念通天 720 星空包交付与收官"
+git commit -m "一念通天 728 星空包交付与收官"
 git push git@github.com:Aliang369/nixiang.git main
 
 echo "==> 本作相关状态"

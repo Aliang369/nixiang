@@ -55,7 +55,10 @@ static std::mutex g_installMutex;
 static thread_local bool t_inCombatHook = false;
 static thread_local bool t_inShowAd = false;
 
-typedef void (*ReduceHp_t)(void* self, void* skillCfg, double damage, void* method);
+// 728: monsterStatus.ReduceHP 新增 bool isAreaDamge 参数；
+// NpcStatus.ReduceHP 仍是 4 参数，两者不能共用函数指针类型。
+typedef void (*MonsterReduceHp_t)(void* self, void* skillCfg, double damage, bool isAreaDamage, void* method);
+typedef void (*NpcReduceHp_t)(void* self, void* skillCfg, double damage, void* method);
 typedef void (*OnDamageBuff_t)(void* self, int32_t buffId, int32_t overLayer, void* method);
 typedef void (*PlayerOnDamage_t)(void* self, int64_t hate, void* skillOwner, void* method);
 typedef void (*SetTimeScale_t)(float value, void* method);
@@ -63,21 +66,21 @@ typedef void (*GameUpdate_t)(void* self, void* method);
 typedef void (*ShowAd_t)(void* self, void* request, void* method);
 typedef void (*WbarrierSetField_t)(void* obj, void** field, void* value);
 
-static ReduceHp_t      g_origMonsterReduce = nullptr;
-static ReduceHp_t      g_origNpcReduce = nullptr;
-static OnDamageBuff_t  g_origMonsterDot = nullptr;
-static OnDamageBuff_t  g_origNpcDot = nullptr;
-static PlayerOnDamage_t g_origPlayerDamage = nullptr;
-static SetTimeScale_t  g_origSetTimeScale = nullptr;
-static GameUpdate_t    g_origGameUpdate = nullptr;
-static ShowAd_t        g_origShowAd = nullptr;
+static MonsterReduceHp_t g_origMonsterReduce = nullptr;
+static NpcReduceHp_t     g_origNpcReduce = nullptr;
+static OnDamageBuff_t    g_origMonsterDot = nullptr;
+static OnDamageBuff_t    g_origNpcDot = nullptr;
+static PlayerOnDamage_t  g_origPlayerDamage = nullptr;
+static SetTimeScale_t    g_origSetTimeScale = nullptr;
+static GameUpdate_t      g_origGameUpdate = nullptr;
+static ShowAd_t          g_origShowAd = nullptr;
 
 static void* g_gameRuningKlass = nullptr;
 static void* g_onADSuccessMethod = nullptr;
 static WbarrierSetField_t g_wbarrierSetField = nullptr;
 
 // ============================================================
-// ② 字段偏移与 RVA（TODO：dump.cs / IDA / Trace 实测，禁止猜；换包重 dump）
+// ② 字段偏移与 RVA（728 dump.cs / 序言实测；换包必须重 dump）
 // ============================================================
 enum : size_t {
     kOffNpcType       = 0x18,
@@ -87,7 +90,7 @@ enum : size_t {
     kOffMoney         = 0xC0,
     kOffNpcData       = 0x2E8,
     kOffFuMoData      = 0x2F0,
-    kOffAdRequest     = 0x428,
+    kOffAdRequest     = 0x438,
     kOffFuMoTili      = 0x28,
     kOffFuMoTiliZq    = 0x48,
     kOffFuMoTiliGq    = 0x80,
@@ -95,14 +98,14 @@ enum : size_t {
 };
 
 enum : uintptr_t {
-    kRvaMonsterReduce = 0x129E288,
-    kRvaNpcReduce     = 0xFF2704,
-    kRvaMonsterDot    = 0x128FDD0,
-    kRvaNpcDot        = 0xFD8BD0,
-    kRvaPlayerDamage  = 0x1111D2C,
-    kRvaSetTimeScale  = 0x2E5C0E8,
-    kRvaGameUpdate    = 0x1223204,
-    kRvaShowAD        = 0x1221820,
+    kRvaMonsterReduce = 0x12AB52C,
+    kRvaNpcReduce     = 0xFF94F0,
+    kRvaMonsterDot    = 0x129D074,
+    kRvaNpcDot        = 0xFEECD4,
+    kRvaPlayerDamage  = 0x111E50C,
+    kRvaSetTimeScale  = 0x2E6EC94,
+    kRvaGameUpdate    = 0x1231804,
+    kRvaShowAD        = 0x122FE20,
 };
 
 enum : uint32_t {
@@ -361,14 +364,14 @@ static void InstallTable(const HookSlot* slots, size_t count) {
 // ============================================================
 // ⑤ hook 函数与挂点表（TODO：一个具体方法一个槽；绝不 hook 共享 invoke 入口）
 // ============================================================
-static void Hooked_MonsterReduce(void* self, void* cfg, double damage, void* method) {
+static void Hooked_MonsterReduce(void* self, void* cfg, double damage, bool isAreaDamage, void* method) {
     if (g_kill.load() && !t_inCombatHook) {
         t_inCombatHook = true;
-        if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, ScaleDamage(damage), method);
+        if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, ScaleDamage(damage), isAreaDamage, method);
         t_inCombatHook = false;
         return;
     }
-    if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, damage, method);
+    if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, damage, isAreaDamage, method);
 }
 
 static void Hooked_NpcReduce(void* self, void* cfg, double damage, void* method) {
@@ -450,7 +453,7 @@ static void Hooked_ShowAd(void* self, void* request, void* method) {
 }
 
 static const HookSlot kKillSlots[] = {
-    {"MonsterReduceHP", kRvaMonsterReduce, kInsMonsterReduce, "", "monsterStatus", "ReduceHP", 2,
+    {"MonsterReduceHP", kRvaMonsterReduce, kInsMonsterReduce, "", "monsterStatus", "ReduceHP", 3,
      (void*)Hooked_MonsterReduce, (void**)&g_origMonsterReduce},
     {"NpcReduceHP", kRvaNpcReduce, kInsNpcReduce, "", "NpcStatus", "ReduceHP", 2,
      (void*)Hooked_NpcReduce, (void**)&g_origNpcReduce},
