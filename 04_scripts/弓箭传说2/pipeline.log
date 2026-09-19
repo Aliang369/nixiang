@@ -559,3 +559,8 @@ tmp=dev_760f1cc7de536cd8c34dd8f79c6f62b4
   log: adb -s f9a116a2 logcat -s StarryMagic:V StarryApp:V StarryGjc2:V Gjc2:V MenuService:V
 [2026-09-19 16:28:30] [弓箭传说2] stage=install 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-19 17:19:17] [弓箭传说2] stage=archive 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/archive_gjc2.sh'
+目录: /Users/aliang/Documents/nixiang

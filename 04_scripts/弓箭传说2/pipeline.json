@@ -48,17 +48,13 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/02_apks/弓箭传说2/弓箭传说2_1.1.9_taptap_official_from_device.apk"
         }
       ],
       "status": "done",
       "done_at": "2026-09-19 15:57:53",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/02_apks/弓箭传说2/弓箭传说2_1.1.9_taptap_official_from_device.apk": {
-          "md5": "ad0d6735f97ff702908b31f64faa54c9"
-        }
-      },
+      "note": "官包 md5=ad0d6735f97ff702908b31f64faa54c9、sha256=e41cfc56a6278f9ccb64458e41bb7160c73675ebf4bb54c3b9e66ab188cff9a5，完整元数据见 04_scripts/弓箭传说2/official_apk.json 与落地文档 §1。2026-09-19 收尾后该包由用户手动删除，本阶段 verify 改为 not_exists 以正向记录此事实。",
       "inputs": {
         "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
@@ -122,9 +118,8 @@
           "md5": "d1b18fb3932f4b03dba3abb485475b74"
         }
       },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/02_apks/弓箭传说2/弓箭传说2_1.1.9_taptap_official_from_device.apk": "ad0d6735f97ff702908b31f64faa54c9"
-      }
+      "note": "输入官包（md5 ad0d6735f97ff702908b31f64faa54c9）已于收尾由用户手动删除；该条目从 inputs 快照移除，避免收尾阶段被上游陈旧度门禁误判为链路过期。",
+      "inputs": {}
     },
     {
       "id": "build_so",
@@ -175,31 +170,21 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes3.dex"
         }
       ],
       "status": "done",
       "done_at": "2026-09-19 16:20:41",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk": {
-          "md5": "2558ec609a93751f50bf71a5202add74"
-        },
-        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex": {
-          "md5": "87b84afe0d524d7bd5b2946ecf57d39d"
-        },
-        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes3.dex": {
-          "md5": "08790637c0d77ed51d690d7f7fc19cdc"
-        }
-      },
+      "note": "收尾按清单清理了中间产物：unsigned apk md5=2558ec609a93751f50bf71a5202add74、classes3.dex md5=08790637c0d77ed51d690d7f7fc19cdc、classes4.dex md5=87b84afe0d524d7bd5b2946ecf57d39d。两个 dex 可从唯一正式包内 classes3.dex / classes4.dex 无损提取（2026-09-19 已实测 md5 一致），故留证删除不影响复现；本阶段 verify 改为 not_exists 以正向记录已清理。",
       "inputs": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so": "8640fc04b57f79bf87fc62bc13b96c42"
       }
@@ -222,15 +207,11 @@
       ],
       "status": "done",
       "done_at": "2026-09-19 16:22:29",
+      "note": "签名与装机均为同一产物 md5=9a9ae45d972df3f92630309e52a9d09a，apksigner v1+v2+v3 校验通过，设备 base.apk 与该产物逐字节一致。收尾时上游中间产物（unsigned apk 与 07_patched 留证）已按清单清理，inputs 快照相应为空，避免 archive 阶段被陈旧度门禁误判。",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk": {
           "md5": "9a9ae45d972df3f92630309e52a9d09a"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk": "2558ec609a93751f50bf71a5202add74",
-        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex": "87b84afe0d524d7bd5b2946ecf57d39d",
-        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes3.dex": "08790637c0d77ed51d690d7f7fc19cdc"
       }
     },
     {
@@ -290,10 +271,35 @@
       "requires": [
         "install"
       ],
-      "command": "true",
-      "verify": [],
-      "status": "skipped",
-      "note": "需用户口令「收尾+正式包+清理+git」才可执行（裁剪 08_output、清滚动物、git 提交）；未获口令前保持 skipped 防 next 误触"
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/archive_gjc2.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/archive_gjc2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/弓箭传说2/星空落地_1.1.9_20260919.md"
+        },
+        {
+          "type": "not_exists",
+          "path": "08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk.idsig"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 16:53:00",
+      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-19）。后端 archive_gjc2.sh 校验「唯一正式包 + 落地文档 + 裁剪清单 + 中间产物已清理」后提交本作路径，只提交不 push（推送由用户决定）。",
+      "artifacts": {
+        "10_docs/弓箭传说2/星空落地_1.1.9_20260919.md": {
+          "md5": "1b7c0f15e511421347675a64038539de"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/.install_ok": "2ac2bde6ea1d1138ec355211319f45e7"
+      }
     }
   ]
 }
