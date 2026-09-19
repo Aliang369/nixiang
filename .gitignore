@@ -73,6 +73,9 @@ __pycache__/
 *.log
 !04_scripts/*/pipeline.log
 
+# ===== 装机成功戳（设备侧状态，每次装机重写）=====
+04_scripts/*/.install_ok
+
 # ===== 通用大二进制（兜底；例外见下）=====
 *.apk
 *.ap_

@@ -4,7 +4,6 @@
   "package": "com.wanda.sf3.wd",
   "source": "Games/Sf3Entry.cpp kSf3_Features",
   "features": [
-    {"feat_num": 0, "name": "功能"},
     {
       "feat_num": 1,
       "name": "伤害倍率",
