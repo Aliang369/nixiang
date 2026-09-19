@@ -564,3 +564,17 @@ tmp=dev_760f1cc7de536cd8c34dd8f79c6f62b4
 [2026-09-19 17:19:17] [弓箭传说2] stage=archive 开始
 命令: bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/archive_gjc2.sh'
 目录: /Users/aliang/Documents/nixiang
+04_scripts/弓箭传说2/archive_gjc2.sh
+04_scripts/弓箭传说2/pipeline.json
+04_scripts/弓箭传说2/pipeline.log
+[main 8396d7d] 弓箭传说2 1.1.9 状态机收口：archive 完成（9/9 阶段 done）
+ 3 files changed, 121 insertions(+), 32 deletions(-)
+ create mode 100644 04_scripts/弓箭传说2/archive_gjc2.sh
+==> 本作相关状态
+ M 04_scripts/弓箭传说2/pipeline.log
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/弓箭传说2/pipeline.log
+ D 10_docs/暗影格斗3/assets/sf3_icon_512.png
+ D 10_docs/暗影格斗3/assets/sf3_icon_round_192.png
+[2026-09-19 17:19:21] [弓箭传说2] stage=archive 完成（校验通过）
+────────────────────────────────────────────
