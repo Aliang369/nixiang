@@ -290,7 +290,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-19 14:54:22",
+      "done_at": "2026-09-19 16:05:18",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so": {
           "md5": "04afc551c12fae149d36128d37a00ef7"
@@ -302,7 +302,7 @@
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Entry.cpp": "7f24471257383d0e6e5184b45265fa2d",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_sf3.mk": "8c23e63ee732b08dec32e3e90281bd00",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp": "bdf44f0c676570735b826a51e4ad12a9",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": "c5174bb137dbe5706a3c0bc9f5369fa3"
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": "2105e19d36cf3e05774fb0583f4746ba"
       }
     },
     {
@@ -363,7 +363,6 @@
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-unsigned.apk": "64af48570ce240c87dcb47e6744d2e18",
         "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex": "1a53a0dedd3b9a1df4b688e9556d1cc7"
       }
     },
@@ -409,7 +408,7 @@
         }
       ],
       "status": "done",
-      "note": "2026-09-19 14:02 首跑实际未装上：sf3_install.sh 的 `$PKG（` 多字节变量名 bug 在卸载分支前崩溃，EXIT trap 又吞掉退出码，导致本阶段被误标 done（设备上仍是官方包）。已修脚本（${VAR} 写法 + trap 保码 + 成功戳）并把本阶段 verify 改为 success-marker；用户已授权卸载安装（SF3_ALLOW_UNINSTALL=1），reset 重跑。",
+      "note": "2026-09-19 14:02 首跑假 done（`$PKG（` 多字节变量名 bug + EXIT trap 吞码），修复后 14:17 经授权 SF3_ALLOW_UNINSTALL=1 卸载安装成功；v2（删无限货币+修伤害平方 bug）于 15:05 同签名覆盖安装 Success，设备 base.apk md5 fcb6c4f32a0a804a38567b142ffa7e93 == 产物，冷启动无崩溃。本阶段 verify 已改为 .install_ok 成功戳，成功戳由 sf3_install.sh 在闭环校验通过后写入。收尾口令执行后保持 done。",
       "done_at": "2026-09-19 15:05:11",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/.install_ok": {
@@ -426,10 +425,22 @@
       "requires": [
         "install"
       ],
-      "command": "true",
-      "verify": [],
-      "status": "skipped",
-      "note": "需用户口令「收尾+正式包+清理+git」才可执行（裁剪 08_output、清滚动物、git 提交）；未获口令前保持 skipped 防 next 误触"
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/archive_sf3.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/archive_sf3.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/暗影格斗3/收尾与最小复现清单_1.45.3_20260919.md"
+        },
+        {
+          "type": "not_exists",
+          "path": "08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-unsigned.apk"
+        }
+      ],
+      "status": "pending",
+      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-19）；后端 archive_sf3.sh 只提交本作路径，不 push（推送由用户决定）。"
     }
   ]
 }

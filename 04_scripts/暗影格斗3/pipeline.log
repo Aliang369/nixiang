@@ -998,3 +998,23 @@ Success
 [install] done: com.wanda.sf3.wd（首次启动请确认星光悬浮球与菜单）
 [2026-09-19 15:05:45] [暗影格斗3] stage=install 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-19 16:05:18] [暗影格斗3] stage=build_so 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_build_so.sh'
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so (04afc551c12fae149d36128d37a00ef7)
+[build_so] size = 151536
+[2026-09-19 16:05:43] [暗影格斗3] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-19 16:08:47] [暗影格斗3] stage=archive 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/archive_sf3.sh'
+目录: /Users/aliang/Documents/nixiang
