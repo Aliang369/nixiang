@@ -195,13 +195,14 @@ public class ModBridge {
     }
 
     /**
-     * 菜单侧统一异常兼底：native 库缺失/符号缺失（UnsatisfiedLinkError）、
-     * 偏好类型不符（ClassCastException）等都只记日志，绝不冒泡到菜单 UI（防闪退）。
+     * 菜单侧统一异常兼底：native 库缺失/符号缺失（UnsatisfiedLinkError/LinkageError）、
+     * 偏好类型不符（ClassCastException）、静态初始化失败（ExceptionInInitializerError）
+     * 等都只记日志，绝不冒泡到菜单 UI（防闪退）。
      */
     private static void safeCall(Runnable action) {
         try {
             action.run();
-        } catch (UnsatisfiedLinkError | Exception e) {
+        } catch (Throwable e) {   // Exception + Error 全覆盖：Error 子类不冒泡才是真兼底
             Log.w(TAG, "menu state push failed: " + e);
         }
     }

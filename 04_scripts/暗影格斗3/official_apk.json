@@ -1,0 +1,17 @@
+{
+  "package": "com.wanda.sf3.wd",
+  "game": "暗影格斗3",
+  "kind": "taptap_official",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/暗影格斗3/暗影格斗3_1.45.3_taptap_official_from_device.apk",
+  "version_name": "1.45.3",
+  "version_code": 907,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~MSDSCX-5pfVMPm2yyAOLYg==/com.wanda.sf3.wd-cT1GTC1XNVPO8D0dL5ohuw==/base.apk",
+  "size": 2713267683,
+  "sha256": "1b17ab1c1503dbf5eee3aeb1917948e1c5e80f3ce0b3c3a6c4d682966d166087",
+  "md5": "7ac7591436e92136f22b715c91b5b930",
+  "signer": "CN=sagely, OU=atr, O=szu, L=sz, ST=gd, C=cn",
+  "signer_sha256": "b147f6a485dfaa6dcb9154e5e5190d342264b0568566749df0aa38cfe55e76e3"
+}

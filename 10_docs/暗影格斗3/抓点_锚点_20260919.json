@@ -1,0 +1,124 @@
+{
+  "game": "暗影格斗3",
+  "version": "1.45.3",
+  "version_code": 907,
+  "package": "com.wanda.sf3.wd",
+  "capture_date": "2026-09-19",
+  "device": "f9a116a2",
+  "apk": {
+    "path": "02_apks/暗影格斗3/暗影格斗3_1.45.3_binge_from_device.apk",
+    "size": 2663728791,
+    "md5": "614da76b172a76c4b81e07e069b25dc3",
+    "sha256": "5e8e40b16a281897c24550ccce72820a35f2d2f3c17986f97aa925aa9e3d9e15",
+    "signer_cn": "binge2.keystore"
+  },
+  "engine": {
+    "type": "unity-il2cpp",
+    "metadata_version": 39,
+    "libil2cpp_md5": "53345cdb4d31dff336fdd575fb87b667",
+    "global_metadata_md5": "809ec525f0875c2092dc7f21e73fb288"
+  },
+  "shell": {
+    "lib": "lib/arm64-v8a/libSDKloading.so",
+    "md5": "b68688aaecfb5c694a0a5f061dca2088",
+    "dobby": "Dobby-20210616-223aabc",
+    "replacement_off": "0x2CC560",
+    "hook_install_fn_off": "0x2CC000",
+    "feature_dispatch_fn_off": "0x2CCE00",
+    "field_probe_fn_off": "0x2CBEA0"
+  },
+  "hook_target": {
+    "class": "IKHOBFONGIE",
+    "method": "OGFLOMPOMCI",
+    "shell_alias": "changeLife",
+    "rva": "0x5F55968",
+    "file_off": "0x5F51968",
+    "dump_cs_line": 130688,
+    "signature": "void IKHOBFONGIE__OGFLOMPOMCI(IKHOBFONGIE_o* __this, AJJGHOHIMGI_o a1, HJGEAPMLNAF_o* a2, LJMJLLJNEMK_o* unit, System_String_o* a4, System_Action_LJMJLLJNEMK__o* a5, const MethodInfo* method)",
+    "orig_prologue_bytes": "ff8303d1e83b00fdfd7b08a9",
+    "runtime_patch_hex": "f12f27903182159120021fd6",
+    "runtime_patch_decode": "adrp x17, page; add x17, x17, #0x560; br x17 -> shell_off 0x2CC560"
+  },
+  "readers": {
+    "getter": {
+      "method": "LJMJLLJNEMK.JDMGBLEBMAJ",
+      "rva": "0x5F3EAE8",
+      "file_off": "0x5F3AAE8",
+      "dump_cs_line": 128261,
+      "slot": 4,
+      "returns": "float",
+      "note": "value = *(u32*)(this+0x10) XOR key"
+    },
+    "setter": {
+      "method": "LJMJLLJNEMK.JBEFILOFEKD",
+      "rva": "0x5F3EB5C",
+      "file_off": "0x5F3AB5C",
+      "dump_cs_line": 128264,
+      "slot": 5,
+      "note": "*(u32*)(this+0x10) = bits(value) XOR key"
+    },
+    "container_type": "LJMJLLJNEMK : BLEKKHPIOKN<float>",
+    "container_value_off": "0x10",
+    "warning": "value at +0x10 is XOR-encrypted; always use getter/setter"
+  },
+  "fields": {
+    "unit_class": "HJGEAPMLNAF",
+    "self_class": "IKHOBFONGIE",
+    "player_field_off": "0x68",
+    "enemy_field_off": "0x70",
+    "player_field_name": "JOLEGCBKHKI",
+    "enemy_field_name": "AJBHLLFGAEA"
+  },
+  "runtime_globals": {
+    "shell_off": {
+      "0x169A00C": "player_field_offset",
+      "0x169A010": "enemy_field_offset",
+      "0x169A014": "damage_multiplier_f32",
+      "0x169A034": "third_party_log_counter",
+      "0x169C4C0": "flag_damage_x10",
+      "0x169C4C4": "flag_invincible",
+      "0x169C4C8": "flag_battle_speed_x5",
+      "0x169C4CC": "flag_infinite_stamina",
+      "0x169C4D0": "flag_infinite_currency",
+      "0x169C500": "getter_fn_ptr",
+      "0x169C508": "setter_fn_ptr",
+      "0x169C510": "orig_trampoline_ptr",
+      "0x169C518": "flag_hook_ready",
+      "0x169C51C": "flag_dispatch_init"
+    },
+    "observed_values": {
+      "0x169A00C": "0x68",
+      "0x169A010": "0x70",
+      "0x169A014": "10.0",
+      "0x169A034": 8,
+      "0x169C4C0": 0,
+      "0x169C4C4": 0,
+      "0x169C500": "0x798B97AAE8",
+      "0x169C508": "0x798B97AB5C",
+      "0x169C510": "0x7BECD01044",
+      "0x169C518": 1,
+      "0x169C51C": 1
+    }
+  },
+  "menu": {
+    "features": [
+      { "featNum": 0, "name": "十倍伤害", "flag_off": "0x169C4C0", "param_off": "0x169A014" },
+      { "featNum": 1, "name": "玩家无敌", "flag_off": "0x169C4C4" },
+      { "featNum": 2, "name": "战斗速度x5", "flag_off": "0x169C4C8", "param_off": "0x169A008" },
+      { "featNum": 3, "name": "无限体力", "flag_off": "0x169C4CC" },
+      { "featNum": 4, "name": "无限货币", "flag_off": "0x169C4D0" }
+    ],
+    "reserved_featnum_max": "0xE",
+    "menu_html_remote": true
+  },
+  "relocation_hint_from_shell_log": [
+    "SF3.Fight.MachineLearning.Core.PlayerState.Hp",
+    "find hp read function",
+    "find small class with 5 hp read/write methods",
+    "find callers of hp write"
+  ],
+  "not_proven": [
+    "开启状态下十倍伤害/无敌的真机效果",
+    "官方原版同版本 RVA 是否一致（待用户下载原版后核对）"
+  ]
+}

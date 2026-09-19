@@ -676,6 +676,27 @@ public final class SignSpoof {
     /** 燃烧纪元官方（com.rsjy.yf，CN=hexianxiong，SHA-256=3a7302f6…）。 */
     private static final String RSJY_PKG = "com.rsjy.yf";
     private static final String RSJY_CERT_B64 = "MIIDtDCCApygAwIBAgIEVnpmXjANBgkqhkiG9w0BAQUFADCBmzEPMA0GA1UEBgwG5Lit5Zu9MQ8wDQYDVQQIDAblm5vlt50xDzANBgNVBAcMBuaIkOmDvTEnMCUGA1UECgwe5oiQ6YO95rKZ5ryP56eR5oqA5pyJ6ZmQ5YWs5Y+4MScwJQYDVQQLDB7miJDpg73mspnmvI/np5HmioDmnInpmZDlhazlj7gxFDASBgNVBAMTC2hleGlhbnhpb25nMB4XDTE1MTIyMzA5MTYxNFoXDTQzMDUxMDA5MTYxNFowgZsxDzANBgNVBAYMBuS4reWbvTEPMA0GA1UECAwG5Zub5bedMQ8wDQYDVQQHDAbmiJDpg70xJzAlBgNVBAoMHuaIkOmDveaymea8j+enkeaKgOaciemZkOWFrOWPuDEnMCUGA1UECwwe5oiQ6YO95rKZ5ryP56eR5oqA5pyJ6ZmQ5YWs5Y+4MRQwEgYDVQQDEwtoZXhpYW54aW9uZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAITHkFYjFep7JqJg4UeA//Xaz/yjVGlBcs7Z05ch/QD0Sz0N/PIcQKEzWLHSlQc6WHs+MCJGbfMIH2TyCBM9XqqaX74RjRdHwMww3S7uKkr+rnySOHBUDPS3W0TcgCbpMGjVgNm5MjEQLeEQRpXUKzecWB5syKgGWNiMW/mf23CEIwIHpKlVKYmqiBxBGEnNU/AGSy4R2gJEAuvvHZ8jCPPqs2caCrSx+KjRxEuqX6OeybH0GvtsPIX09h6MyYJMBFja+BodWdGi231RH0zRivlu2Tp6rCIM2h0jKnE2q8cNp5c9OXjUa3e5tWTv+zmMxKAcOeYVhNhIKpULvpYJQt8CAwEAATANBgkqhkiG9w0BAQUFAAOCAQEARA7LGsqrDl9bS/SYd/gpDDnUl17FQO8MkKnOjwzwolHm/EUeXMDH+3R5IX0SCfPoi6dSogEsYMfEEw3eMgsmjU642+OJi2zi9hCrWabP7H+evs7apmK/9jDpBsomLIPKaTXz+E3jSUibvMh77LGygTi3/5Vv85dtCvHfAO4063eLKb4oTXIjl31IfsDAFnH9MKY02ftmJdt86VlmyNOiWNLSFZp5aJB4eed8DsI9Odj5T3kUUdlCR9UbXd+4hPe5HahRK1jKL84bYT1Unfqn+v2H9mVRfccFhkMH+Dt+4qCiybiohFeZ1qbQPmz3BMCJEeL/JGKImKdDYLgBlJcOFw==";
+    /** 暗影格斗3 TapTap 官方（com.wanda.sf3.wd，CN=sagely，SHA-256=b147f6a4… / MD5=c9950f9c…）。
+     *  2026-09-19 从官方 1.45.3/vc907 META-INF/AYGD3.RSA 导出（PKCS#7 → X.509 DER）。
+     *  改签包必须在 TapSDK 读签名前回灌，否则拉起 TapTap 客户端 SSO 必失败。
+     */
+    private static final String SF3_PKG = "com.wanda.sf3.wd";
+    private static final String SF3_CERT_B64 =
+            "MIIDSTCCAjGgAwIBAgIEJhYcejANBgkqhkiG9w0BAQsFADBUMQswCQYDVQQGEwJjbjELMAkGA1UE" +
+                    "CBMCZ2QxCzAJBgNVBAcTAnN6MQwwCgYDVQQKEwNzenUxDDAKBgNVBAsTA2F0cjEPMA0GA1UEAxMG" +
+                    "c2FnZWx5MCAXDTIwMDMxMTA1MDk0M1oYDzIwNzQxMjEzMDUwOTQzWjBUMQswCQYDVQQGEwJjbjEL" +
+                    "MAkGA1UECBMCZ2QxCzAJBgNVBAcTAnN6MQwwCgYDVQQKEwNzenUxDDAKBgNVBAsTA2F0cjEPMA0G" +
+                    "A1UEAxMGc2FnZWx5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAunRelFBMiIwmFGmB" +
+                    "pgWmBjs4iK09dhhmDT12Ilx7WNl96oM8LyCfvewnhkkUQpXUdUPPzdd1LqQbGnkL09R0c7QwqF8G" +
+                    "kDyHUGHzaDfzMYCVfbkFw56gd1cxO0dq56k0YYqOXYeC7hntlifQTCGCBdnNj/khhbzgXnmvu9DW" +
+                    "UmMtHoh3o+N4oRcSDLB5m9Ehj+zFQK3qY7KGD4DOcmqXbwvb4x38/HgWFFqS8jNcYaeMbJqLyn89" +
+                    "UqU50lMGVDE6psy52Q/ric2h4WAv8drxwQRLCQW3NY3Q6VNASqIL6yKI4e/XscQia8UHQfp/xpfn" +
+                    "IVEWZgt1BRIs0swB9B37AQIDAQABoyEwHzAdBgNVHQ4EFgQUSNXxYDnJO94VaWrdBMPTZJhzTwMw" +
+                    "DQYJKoZIhvcNAQELBQADggEBAEmI10oCT/fZoRz4xMpKETNx7Ke7KLUFUb+IwSdHloHXlFogYKJI" +
+                    "66Rk6pQdQPLeXblLTSVz7bCpoHza9KIeRgNm8kWez0Bf5P020OdHYxXzSBuD1OPgPPyEElYqrDUv" +
+                    "eeHIBy/8CTP7Opo88+qjPF9LCJCtXWQdD6aViBU5T2AUzB2gng/ZasConuAanBTpTkSf683VzEDa" +
+                    "cQThCpEmE4OidBC9gsd19wXBLWPuWJtkS86EyIXxYlBAvdFGNgI3Xf0Q9F3DAmyL2K78iXpk41aS" +
+                    "tBQhcBluSaEeu1pg5Mu0qLVG/ty8XbSZwm/app4FfVwk798M7JZYJk1G0+eoWK8=";
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -727,6 +748,7 @@ public final class SignSpoof {
                 fakes.put(DWDLM_PKG, new Signature(Base64.decode(DWDLM_CERT_B64, Base64.DEFAULT)));
                 fakes.put(BSZZ_PKG, new Signature(Base64.decode(BSZZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(RSJY_PKG, new Signature(Base64.decode(RSJY_CERT_B64, Base64.DEFAULT)));
+                fakes.put(SF3_PKG, new Signature(Base64.decode(SF3_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

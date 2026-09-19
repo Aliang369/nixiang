@@ -529,15 +529,8 @@ static jbyteArray mb_nativeGetPinnedCert(JNIEnv* env, jclass clazz) {
     return arr;
 }
 
-// Preferences.Changes 已废弃：偏好只写 SharedPreferences，C 状态由 ModBridge.nativeXxx 写入。
-// 保留空实现以免旧 so/反射残留调用崩溃。
-JNIEXPORT void JNICALL
-Java_com_starry_magic_menu_Preferences_Changes(JNIEnv* env, jclass clazz,
-        jobject context, jint featNum, jstring featName,
-        jint value, jlong Lvalue, jboolean isOn, jstring inputText) {
-    (void)env; (void)clazz; (void)context; (void)featNum; (void)featName;
-    (void)value; (void)Lvalue; (void)isOn; (void)inputText;
-}
+// 2026-09-19 移除已废弃的 Preferences.Changes 静态 JNI 导出（Java 侧早已无声明、无调用点，
+// 保留只会让 pre_install_gate 的静态 JNI 配套检查误报；将来需兼容旧包再按需恢复）。
 
 // ============================================================
 //  桥接注册（RegisterNatives，签名与 ModBridge.java 逐一对应）

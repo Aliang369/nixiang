@@ -1,0 +1,15 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/暗影格斗3/暗影格斗3_1.45.3_binge_from_device.apk",
+  "entry_count": 4939,
+  "manifest": "AndroidManifest.xml",
+  "libil2cpp": "lib/arm64-v8a/libil2cpp.so",
+  "global_metadata": "assets/bin/Data/Managed/Metadata/global-metadata.dat",
+  "libSDKloading": "lib/arm64-v8a/libSDKloading.so",
+  "libtoolChecker": "lib/arm64-v8a/libtoolChecker.so",
+  "nested_base_apk": "",
+  "libunity": "lib/arm64-v8a/libunity.so",
+  "binge_shell_by_path": [
+    "lib/arm64-v8a/libSDKloading.so",
+    "lib/arm64-v8a/libtoolChecker.so"
+  ]
+}

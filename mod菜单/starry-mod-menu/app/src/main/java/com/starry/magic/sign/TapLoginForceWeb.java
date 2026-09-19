@@ -44,6 +44,10 @@ public final class TapLoginForceWeb {
             "com.taptap.sdk.login.internal.handlers.client.ClientLoginHandler";
     private static final String CLOUD_HANDLER =
             "com.taptap.sdk.login.internal.handlers.cloud.CloudLoginHandler";
+    private static final String PHONE_HANDLER =
+            "com.taptap.sdk.login.internal.handlers.phone.PhoneLoginHandler";
+    private static final String LOGIN_HANDLER_IFACE =
+            "com.taptap.sdk.login.internal.handlers.LoginHandler";
     private static final String REQUEST_EXTRA = "com_taptap_sdk_login_request";
     private static final String FRAGMENT_TAG = "com_taptap_sdk_login_fragment";
     private static final String WEB_LOGIN_FRAGMENT =
@@ -87,7 +91,11 @@ public final class TapLoginForceWeb {
                     // fallbackToWeb），改签包固定 embedded_web，避免客户端 SSO 校验真签。
                     "com.rsjy.yf",
                     // 宝石战争：TapTap 渠道原版；改签包固定走 embedded_web，避免客户端 SSO 校验真签。
-                    "com.acing.gow.adv"));
+                    "com.acing.gow.adv",
+                    // 暗影格斗3：TapSDK 4.x（loginHandlers = {Cloud, Client, Phone} 数组路由）。
+                    // 设备装了 TapTap 客户端时 ClientLoginHandler.canHandle 恒 true（SSO 校验真签必失败），
+                    // PhoneLoginHandler 也可能为 true → sanitize 把两类都换成 canHandle 恒 false 的代理。
+                    "com.wanda.sf3.wd"));
 
     private TapLoginForceWeb() {}
 
@@ -270,16 +278,68 @@ public final class TapLoginForceWeb {
                 Log.i(TAG, "loginHandlers empty");
                 return;
             }
+            // 新版 TapSDK（4.7+）：loginHandlers = {CloudLoginHandler, ClientLoginHandler, PhoneLoginHandler}。
+            // Client 在设备装了 TapTap 客户端时 canHandle 恒 true（SSO 校验真签必失败）；Phone 快登同理。
+            // 两者都换成 canHandle 恒 false 的 LoginHandler 代理（不动 Cloud：非云游戏它自己 falsy），
+            // onCreate 的遍历一个都不命中 → 落 SDK 自带 fallbackToWeb（WebLoginFragment）。
+            // 接口类不可用（更老的 SDK）时退回原来的 CloudLoginHandler 替换路。
+            Object noop = falseProxy(activity.getClassLoader());
             boolean touched = false;
             for (int i = 0; i < handlers.length; i++) {
                 Object h = handlers[i];
-                if (h == null || !CLIENT_HANDLER.equals(h.getClass().getName())) continue;
-                handlers[i] = Class.forName(CLOUD_HANDLER).getDeclaredConstructor().newInstance();
+                if (h == null) continue;
+                String cn = h.getClass().getName();
+                if (PHONE_HANDLER.equals(cn) && noop != null) {
+                    handlers[i] = noop;
+                    touched = true;
+                    continue;
+                }
+                if (!CLIENT_HANDLER.equals(cn)) continue;
+                handlers[i] = noop != null
+                        ? noop
+                        : Class.forName(CLOUD_HANDLER).getDeclaredConstructor().newInstance();
                 touched = true;
             }
-            Log.i(TAG, "TapTapLoginActivity sanitized=" + touched);
+            Log.i(TAG, "TapTapLoginActivity sanitized=" + touched + " noopProxy=" + (noop != null));
         } catch (Throwable t) {
             Log.e(TAG, "sanitize failed", t);
+        }
+    }
+
+    /**
+     * canHandle 恒 false 的 LoginHandler 代理：不依赖具体 handler 实现类，只认接口。
+     * 接口不可用 / 代理创建失败时返回 null，调用方退回 CloudLoginHandler 替换路。
+     */
+    private static Object falseProxy(ClassLoader cl) {
+        if (cl == null) return null;
+        try {
+            Class<?> itf = Class.forName(LOGIN_HANDLER_IFACE, false, cl);
+            if (!itf.isInterface()) {
+                Log.w(TAG, LOGIN_HANDLER_IFACE + " is not an interface");
+                return null;
+            }
+            return java.lang.reflect.Proxy.newProxyInstance(cl, new Class<?>[]{itf},
+                    (proxy, method, args) -> {
+                        String name = method.getName();
+                        if ("toString".equals(name)) return "StarryNoopLoginHandler";
+                        if ("hashCode".equals(name)) return System.identityHashCode(proxy);
+                        if ("equals".equals(name)) {
+                            return args != null && args.length > 0 && proxy == args[0];
+                        }
+                        Class<?> rt = method.getReturnType();
+                        if (rt == boolean.class || rt == Boolean.class) return Boolean.FALSE;
+                        if (rt == int.class) return 0;
+                        if (rt == long.class) return 0L;
+                        if (rt == short.class) return (short) 0;
+                        if (rt == byte.class) return (byte) 0;
+                        if (rt == char.class) return (char) 0;
+                        if (rt == float.class) return 0f;
+                        if (rt == double.class) return 0d;
+                        return null;
+                    });
+        } catch (Throwable t) {
+            Log.w(TAG, "LoginHandler proxy unavailable", t);
+            return null;
         }
     }
 }
