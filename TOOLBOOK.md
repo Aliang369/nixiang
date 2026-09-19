@@ -543,9 +543,9 @@ nixiang/
 | `03_decompiled/{游戏}` | 删 | 管线 dump 阶段从原包重建（02_apks 原包在或渠道重下） |
 | `06_dumped/{游戏}` ignored 大二进制 | `git clean -xdn` dry-run 核对后 `git clean -xdf` | 可再生（重跑 dump） |
 | `06_dumped/{游戏}` 文本（已入 git） | 留 | dump.cs/反编译/解密产物 = 版本档案，更新时 RVA 对照复用 |
-| `07_patched/{游戏}` | 删 | surgical 复现 = 重跑管线 |
+| `07_patched/{游戏}` | 删 | surgical 复现 = 重跑管线；删后须按 `stages.md` 收官清单第 4 条同步修正 `{游戏}/pipeline.json` 快照，否则 `archive` 被上游陈旧度门禁拦截 |
 | `09_test/{游戏}` | 删 | 可再生 |
-| `08_output/{游戏}` | 收尾口令时裁剪为唯一正式 APK | 用户已定：收尾+正式包+清理时，用 `_common/prune_output_final.sh` 校验并保留指定正式包，删除其它候选 APK/idsig，被删清单入 10_docs |
+| `08_output/{游戏}` | 收尾口令时裁剪为唯一正式 APK | 用户已定：收尾+正式包+清理时，用 `_common/prune_output_final.sh` 校验并保留指定正式包，删除其它候选 APK/idsig，被删清单入 10_docs；被删的 unsigned/idsig 属门禁依赖产物，须按 `stages.md` 收官清单第 4 条同步修正 `pipeline.json` 快照 |
 | `10_docs`、`04_scripts`、mod 源码 | 永留 | 复现链本体，git 已保全 |
 
 不可再生例外（**勿按"可提取"误清**）：热更历史版本 dll/bin（官方 CDN 滚动覆盖，旧版拉不回，如 `07_patched/无限升级/targetfuntional*` = OTA 复现链）；设备拉取的装机备份；`02/08` 官包与正式包（用户手动管理）；未收官或暂停研究游戏的滚动物（按 current.md 状态判活跃）。
