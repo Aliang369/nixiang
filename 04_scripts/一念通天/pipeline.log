@@ -1581,3 +1581,61 @@ Removing 06_dumped/一念通天/official_728/static/libunity.so
 [2026-09-20 00:25:37] [一念通天] stage=archive 开始
 命令: bash 04_scripts/一念通天/archive_yntt.sh
 目录: /Users/aliang/Documents/nixiang
+04_scripts/一念通天/archive_yntt.sh
+04_scripts/一念通天/cleanup_summary.json
+04_scripts/一念通天/cleanup_yntt.sh
+04_scripts/一念通天/dump_static_official_yntt_728.sh
+04_scripts/一念通天/fetch_installed_official_yntt.sh
+04_scripts/一念通天/install_yntt_728.sh
+04_scripts/一念通天/official_apk.json
+04_scripts/一念通天/pipeline.json
+04_scripts/一念通天/pipeline.log
+04_scripts/一念通天/yntt_sign_728.sh
+06_dumped/一念通天/official_728/static/il2cpp_dump/dump.cs
+06_dumped/一念通天/official_728/static/il2cpp_dump/script.json
+06_dumped/一念通天/official_728/static/il2cpp_dump/stringliteral.json
+06_dumped/一念通天/official_728/static/summary.txt
+10_docs/_state/current.md
+10_docs/一念通天/收尾与最小复现清单_728_20260919.md
+10_docs/一念通天/星空落地_728_20260919.md
+10_docs/一念通天/正式包裁剪清单_728_20260919.json
+mod菜单/starry-mod-menu/app/src/main/jni/Games/YnttMod.cpp
+mod菜单/starry-mod-menu/scripts/surgical_yntt_728.sh
+[main 296641e] 一念通天 728 星空包交付与收官
+ 20 files changed, 2340081 insertions(+), 120 deletions(-)
+ mode change 100755 => 100644 04_scripts/一念通天/archive_yntt.sh
+ mode change 100755 => 100644 04_scripts/一念通天/cleanup_yntt.sh
+ create mode 100644 04_scripts/一念通天/dump_static_official_yntt_728.sh
+ create mode 100644 04_scripts/一念通天/install_yntt_728.sh
+ create mode 100644 04_scripts/一念通天/yntt_sign_728.sh
+ create mode 100644 06_dumped/一念通天/official_728/static/il2cpp_dump/dump.cs
+ create mode 100644 06_dumped/一念通天/official_728/static/il2cpp_dump/script.json
+ create mode 100644 06_dumped/一念通天/official_728/static/il2cpp_dump/stringliteral.json
+ create mode 100644 06_dumped/一念通天/official_728/static/summary.txt
+ create mode 100644 10_docs/一念通天/收尾与最小复现清单_728_20260919.md
+ create mode 100644 10_docs/一念通天/星空落地_728_20260919.md
+ create mode 100644 10_docs/一念通天/正式包裁剪清单_728_20260919.json
+ create mode 100644 mod菜单/starry-mod-menu/scripts/surgical_yntt_728.sh
+remote: warning: See https://gh.io/lfs for more information.        
+remote: warning: File 06_dumped/一念通天/official_728/static/il2cpp_dump/script.json is 68.98 MB; this is larger than GitHub's recommended maximum file size of 50.00 MB        
+remote: warning: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To github.com:Aliang369/nixiang.git
+   e74bbb3..296641e  main -> main
+==> 本作相关状态
+ M 04_scripts/一念通天/pipeline.log
+ M mod菜单/starry-mod-menu/.gradle/8.13/executionHistory/executionHistory.lock
+ M mod菜单/starry-mod-menu/.gradle/8.13/fileHashes/fileHashes.lock
+ M mod菜单/starry-mod-menu/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+ M mod菜单/starry-mod-menu/.gradle/file-system.probe
+ M mod菜单/starry-mod-menu/starry-magic-mod-menu.design
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/一念通天/pipeline.log
+ D 10_docs/暗影格斗3/assets/sf3_icon_512.png
+ D 10_docs/暗影格斗3/assets/sf3_icon_round_192.png
+ M mod菜单/starry-mod-menu/.gradle/8.13/executionHistory/executionHistory.lock
+ M mod菜单/starry-mod-menu/.gradle/8.13/fileHashes/fileHashes.lock
+ M mod菜单/starry-mod-menu/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+ M mod菜单/starry-mod-menu/.gradle/file-system.probe
+ M mod菜单/starry-mod-menu/starry-magic-mod-menu.design
+[2026-09-20 00:25:50] [一念通天] stage=archive 完成（校验通过）
+────────────────────────────────────────────
