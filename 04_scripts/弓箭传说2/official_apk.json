@@ -1,0 +1,17 @@
+{
+  "package": "com.xq.archeroii.ua",
+  "game": "弓箭传说2",
+  "kind": "taptap_official",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/弓箭传说2/弓箭传说2_1.1.9_taptap_official_from_device.apk",
+  "version_name": "1.1.9",
+  "version_code": 40,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~R7kbK0Hs-q_jlDeckDAimQ==/com.xq.archeroii.ua-2mddCGB7Lk3iTf1FIpw4AQ==/base.apk",
+  "size": 750543768,
+  "sha256": "e41cfc56a6278f9ccb64458e41bb7160c73675ebf4bb54c3b9e66ab188cff9a5",
+  "md5": "ad0d6735f97ff702908b31f64faa54c9",
+  "signer": "CN=Habby, OU=Habby, O=Habby, L=Unknown, ST=Unknown, C=XX",
+  "signer_sha256": "ecf3afb336f0751e75298cf88929febe0bd94b2ca79dbb7e5c0ddda080f7c500"
+}

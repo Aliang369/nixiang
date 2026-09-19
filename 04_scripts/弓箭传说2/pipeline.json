@@ -1,0 +1,299 @@
+{
+  "game": "弓箭传说2",
+  "version": "1.1.9",
+  "notes": "2026-09-19 接手：用户真机 f9a116a2 已 root，已安装 TapTap 原版 1.1.9/vc40（今天 13:56 全新安装，Habby 签名，无壳）。目标=在原版基础上重新复刻 8-31 定稿的三功能星空包（玩家隐身/全屏攻击/拿全部技能）+ TapTap 签名回灌。历史文档=10_docs/弓箭传说2/（功能落地_20260831.md 为终稿）。本游戏首次接入机械管线，实现走 modern 注册表（Android_gjc2.mk + Gjc2Entry.cpp），共享 Main.cpp/Android.mk 零改动。",
+  "params": {
+    "game_id": "gjc2",
+    "package": "com.xq.archeroii.ua",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.xq.archeroii.ua",
+    "GAME": "弓箭传说2",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "真机锁定与 root 只读检查",
+      "requires": [],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/device_ready_gjc2.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/device_ready_gjc2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 15:57:28",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "fetch_official",
+      "name": "TapTap 原版真机只读拉取",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/fetch_official_gjc2.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/fetch_official_gjc2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/弓箭传说2/弓箭传说2_1.1.9_taptap_official_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 15:57:53",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/弓箭传说2/弓箭传说2_1.1.9_taptap_official_from_device.apk": {
+          "md5": "ad0d6735f97ff702908b31f64faa54c9"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "星光实现（modern 注册表三件套 + SignSpoof 证书回灌）",
+      "requires": [
+        "fetch_official"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp",
+          "pattern": "Toggle_拿全部技能"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp",
+          "pattern": "Toggle_玩家隐身"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp",
+          "pattern": "Toggle_全屏攻击"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java",
+          "pattern": "com.xq.archeroii.ua"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java",
+          "pattern": "b298339c438d6645a4b649b984360c26"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 16:16:13",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp": {
+          "md5": "fc0321166f88f49cfcf9c9a632f3b82a"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk": {
+          "md5": "9af61209d665f424ae3312be57ed9043"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp": {
+          "md5": "d1b18fb3932f4b03dba3abb485475b74"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/弓箭传说2/弓箭传说2_1.1.9_taptap_official_from_device.apk": "ad0d6735f97ff702908b31f64faa54c9"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（gjc2 标签/三菜单串硬校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/gjc2_build_so.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/gjc2_build_so.sh",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so",
+          "pattern": "Toggle_拿全部技能"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 16:16:32",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so": {
+          "md5": "8640fc04b57f79bf87fc62bc13b96c42"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp": "fc0321166f88f49cfcf9c9a632f3b82a",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk": "9af61209d665f424ae3312be57ed9043",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp": "d1b18fb3932f4b03dba3abb485475b74"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（Manifest + classes3 TapSign 补丁 + classes4.dex + starry so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/surgical_gjc2_1.1.9.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/surgical_gjc2_1.1.9.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes3.dex"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 16:20:41",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk": {
+          "md5": "2558ec609a93751f50bf71a5202add74"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex": {
+          "md5": "87b84afe0d524d7bd5b2946ecf57d39d"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes3.dex": {
+          "md5": "08790637c0d77ed51d690d7f7fc19cdc"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so": "8640fc04b57f79bf87fc62bc13b96c42"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（starry_release.jks；含官包游戏本体零改动硬校验）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/gjc2_sign.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/gjc2_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 16:22:29",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk": {
+          "md5": "9a9ae45d972df3f92630309e52a9d09a"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk": "2558ec609a93751f50bf71a5202add74",
+        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex": "87b84afe0d524d7bd5b2946ecf57d39d",
+        "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes3.dex": "08790637c0d77ed51d690d7f7fc19cdc"
+      }
+    },
+    {
+      "id": "pre_install_gate",
+      "name": "装机前门禁（JNI 配套 / so 与 dex 交叉核对）",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp' --dex '/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex' --so '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 16:23:07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk": {
+          "md5": "9a9ae45d972df3f92630309e52a9d09a"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk": "9a9ae45d972df3f92630309e52a9d09a"
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机（默认只同签覆盖；异签卸载需 GJC2_ALLOW_UNINSTALL=1 明确授权）",
+      "requires": [
+        "pre_install_gate"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/gjc2_install.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/gjc2_install.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/.install_ok"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 16:28:23",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/弓箭传说2/.install_ok": {
+          "md5": "2ac2bde6ea1d1138ec355211319f45e7"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-releaseSigned.apk": "9a9ae45d972df3f92630309e52a9d09a"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收尾归档（需用户口令：收尾+正式包+清理+git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [],
+      "status": "skipped",
+      "note": "需用户口令「收尾+正式包+清理+git」才可执行（裁剪 08_output、清滚动物、git 提交）；未获口令前保持 skipped 防 next 误触"
+    }
+  ]
+}

@@ -303,6 +303,28 @@ public final class SignSpoof {
                     + "kKjDvgqzt0wLV0zb+SGxUsQWe/AjbK7ALQ6AkiCV+TIUZ3JSyxYj9rI77HQLe8qW"
                     + "VQ9HDwswHKhDbd8Ds3GTnhUjTA==";
 
+    /** 弓箭传说2国服 TapTap 1.1.9（证书 DER MD5=b298339c438d6645a4b649b984360c26，CN=Habby；与 1.1.8 同证书） */
+    private static final String GJC2_PKG = "com.xq.archeroii.ua";
+    private static final String GJC2_CERT_B64 =
+            "MIIDYzCCAkugAwIBAgIEFJTplTANBgkqhkiG9w0BAQsFADBhMQswCQYDVQQGEwJY"
+                    + "WDEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMHVW5rbm93bjEOMAwGA1UEChMF"
+                    + "SGFiYnkxDjAMBgNVBAsTBUhhYmJ5MQ4wDAYDVQQDEwVIYWJieTAgFw0yNDA5MDQw"
+                    + "NTEyMTRaGA8yMDUyMDEyMTA1MTIxNFowYTELMAkGA1UEBhMCWFgxEDAOBgNVBAgT"
+                    + "B1Vua25vd24xEDAOBgNVBAcTB1Vua25vd24xDjAMBgNVBAoTBUhhYmJ5MQ4wDAYD"
+                    + "VQQLEwVIYWJieTEOMAwGA1UEAxMFSGFiYnkwggEiMA0GCSqGSIb3DQEBAQUAA4IB"
+                    + "DwAwggEKAoIBAQCxptR01bl9V09Yz11ouuDRKCx0fZhbaEq01iMHtJf95m4mKR/G"
+                    + "YHRDVC8R45dw2ijdwv2Em9uwSBInLpxvFU4Htkl/LkijtsmQuXQTBUk/nI73Su9q"
+                    + "VqYV9ZFsnkudFj1qZp3FqkLcngzPEe5O7ROJmuu1gpXBZKKVzB7DT6A3Pg9VQlaH"
+                    + "HHjWDm7G/mp9593YNz+bWwO4HZNwzVgOGrsJ0MMsbPnpldzPP59J6PhOkd7Z6zk6"
+                    + "AgB7zy+HdsaQ6svzEeSoFjkX/MJ5hY5M7FWbJKciZCsuY6tWpw2kkPeaCnKCJGok"
+                    + "deXIDG+yu2uAgyd+Tg8LFSX1c5KbJAKl8J7nAgMBAAGjITAfMB0GA1UdDgQWBBR4"
+                    + "1rnZzuqt/OR0TjcwVylDeLu+/TANBgkqhkiG9w0BAQsFAAOCAQEAbUnTqbNzl4dD"
+                    + "ozHV1HygaPBvYrWcOVW2S3wdDHsyaSepsIUpAfswCsG+uLZ78PR0raBs+riLjlOz"
+                    + "B9xD92f7mGGZ2iguNQIQm6HXhxK8NOCMiZpPsPHcJfcRcbWHQDzfYH/HaB4zE63L"
+                    + "sGJUnox05DAVBHFiR0tcgZu84/OLvNleoXJkgoLrDl3WYiYXdh2eQCWjQVyI4MEa"
+                    + "jNZJHNrXlT5xZy+f2ikUHwgQuREi9RAKh71dHu0wC0Ke/PUOL5hgGNW4P1kAES4I"
+                    + "Q+hQ0Mvsy+hLcPUNnNq4ijdYyb9fo1fMtWA/N8iLRp7n4GNZ9BPVwy68xD2HytS0"
+                    + "wqEB52jYYA==";
     /** 弓箭传说2国际版 1.0.1（MD5=8adcdcca… CN=fc） */
     private static final String GJC2INTL_PKG = "com.facai.archeroii";
     private static final String GJC2INTL_CERT_B64 =
@@ -726,6 +748,7 @@ public final class SignSpoof {
                 fakes.put(DZQS_PKG, new Signature(Base64.decode(DZQS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(SHHJ_PKG, new Signature(Base64.decode(SHHJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GJC2INTL_PKG, new Signature(Base64.decode(GJC2INTL_CERT_B64, Base64.DEFAULT)));
+                fakes.put(GJC2_PKG, new Signature(Base64.decode(GJC2_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ZMXS_PKG, new Signature(Base64.decode(ZMXS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WGGLS_PKG, new Signature(Base64.decode(WGGLS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WGDZZ_PKG, new Signature(Base64.decode(WGDZZ_CERT_B64, Base64.DEFAULT)));

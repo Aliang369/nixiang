@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/弓箭传说2",
+  "keep": "弓箭传说2_1.1.9_surgical-releaseSigned.apk",
+  "keep_size": 752802530,
+  "keep_md5": "9a9ae45d972df3f92630309e52a9d09a",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "弓箭传说2_1.1.9_surgical-unsigned.apk",
+      "size": 752141225,
+      "md5": "2558ec609a93751f50bf71a5202add74"
+    },
+    {
+      "name": "弓箭传说2_1.1.9_surgical-releaseSigned.apk.idsig",
+      "size": 5936667,
+      "md5": "45c4994c851cd43b59269f11d9ce2892"
+    }
+  ],
+  "removed_count": 2
+}
