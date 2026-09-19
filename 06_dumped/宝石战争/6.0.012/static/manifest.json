@@ -461,8 +461,8 @@
     },
     {
       "path": "Android/Dlls/System.Network.dll.bytes",
-      "hash": "685e7bbf43fd27e7cc53915e0ab8d510",
-      "size": 8366592
+      "hash": "a29e7dd8678536da56b1aed31c476baf",
+      "size": 8292352
     },
     {
       "path": "Android/Dlls/System.Platform.dll.bytes",

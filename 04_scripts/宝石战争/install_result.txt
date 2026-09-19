@@ -1,62 +1,13 @@
-time=2026-09-16 23:40:49 +0800
+time=2026-09-19 18:16:09 +0800
 serial=f9a116a2
 apk=/Users/aliang/Documents/nixiang/08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk
-local_md5=309402fb5127c9ced609f5b39a8dd431
+local_md5=dd806e695ec1a1521c9902a280d0aa46
 mode=overwrite_only_no_uninstall_no_cleardata
 Serving...
 All files should be loaded. Notifying the device.
 Performing Incremental Install
 Success
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-ess
-Install command complete in 16813 ms
+Install command complete in 20467 ms
 install_rc=0
-[install-verify] 设备 base.apk md5 == 本地产物 (309402fb5127c9ced609f5b39a8dd431) ✓
+[install-verify] 设备 base.apk md5 == 本地产物 (dd806e695ec1a1521c9902a280d0aa46) ✓
 覆盖安装成功；未清数据。

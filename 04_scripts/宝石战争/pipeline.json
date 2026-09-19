@@ -1,7 +1,7 @@
 {
   "game": "宝石战争",
   "version": "6.0.012",
-  "notes": "2026-09-16：TapTap 原版 6.0.012/vc6000012；HybridCLR 热更 System.Network.dll 做 IL 薄桥接，星光菜单负责 auth/开关。用户明确授权卸载安装，原版本地应用数据将清除。",
+  "notes": "2026-09-19：TapTap 原版 6.0.012/vc6000012；基于旧星光正式包增量修改 HybridCLR 热更 System.Network.dll。无限技能开启时玩家侧 Mana 补到 ManaRequired；默认同签名覆盖安装，不卸载、不清数据。",
   "params": {
     "game_id": "bszz",
     "package": "com.acing.gow.adv",
@@ -10,7 +10,9 @@
   "env": {
     "PKG": "com.acing.gow.adv",
     "GAME": "宝石战争",
-    "SERIAL": "f9a116a2"
+    "SERIAL": "f9a116a2",
+    "BSZZ_SOURCE_APK": "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk",
+    "BSZZ_SOURCE_APK_MD5": "dd806e695ec1a1521c9902a280d0aa46"
   },
   "workdir": "/Users/aliang/Documents/nixiang",
   "stages": [
@@ -102,11 +104,11 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "06_dumped/宝石战争/6.0.012/static/System.Network.dll"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "06_dumped/宝石战争/6.0.012/static/System.Platform.dll"
         },
         {
@@ -115,16 +117,11 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 21:22:08",
+      "done_at": "2026-09-19 18:13:03",
+      "note": "收官已清大二进制：System.Network.dll md5=36ba38bf26bb4ca571eb010a1951ec2e，System.Platform.dll md5=b9bec3129844cfe97c89d2ecbf2bbfa9；static_inputs.json 保留。",
       "artifacts": {
-        "06_dumped/宝石战争/6.0.012/static/System.Network.dll": {
-          "md5": "96a1937df274a2cda8fbcd39a595cc0d"
-        },
-        "06_dumped/宝石战争/6.0.012/static/System.Platform.dll": {
-          "md5": "b9bec3129844cfe97c89d2ecbf2bbfa9"
-        },
         "06_dumped/宝石战争/6.0.012/static/static_inputs.json": {
-          "md5": "477c080b77a1288882aef6843d568f66"
+          "md5": "5b08d9f518afac54d5ddcc58ed9b930f"
         }
       },
       "inputs": {
@@ -161,7 +158,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 23:19:44",
+      "done_at": "2026-09-19 18:13:03",
       "artifacts": {
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.cpp": {
           "md5": "46e0a45d042138c05df1ccc66d6c644a"
@@ -176,13 +173,11 @@
           "md5": "c270c01dfa15d213b90e7c8814bc480d"
         },
         "04_scripts/宝石战争/dllpatch/Program.cs": {
-          "md5": "c8fe8cfc784d4099b2d9cd2492885655"
+          "md5": "b748d1e9f7d481d21ccf58b0f1af6041"
         }
       },
       "inputs": {
-        "06_dumped/宝石战争/6.0.012/static/System.Network.dll": "96a1937df274a2cda8fbcd39a595cc0d",
-        "06_dumped/宝石战争/6.0.012/static/System.Platform.dll": "b9bec3129844cfe97c89d2ecbf2bbfa9",
-        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": "477c080b77a1288882aef6843d568f66"
+        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": "5b08d9f518afac54d5ddcc58ed9b930f"
       }
     },
     {
@@ -197,23 +192,19 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 23:19:59",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": {
-          "md5": "8abcd959bcf5851962d58f562b0153e7"
-        }
-      },
+      "done_at": "2026-09-19 18:13:06",
+      "note": "收官已清 libs_bszz；原 so md5=2fc2873da7f268866502ce0feaaefa5c，OTA 副本保留在 08_output/宝石战争/ota/bszz/libstarry_magic.so。",
       "inputs": {
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.cpp": "46e0a45d042138c05df1ccc66d6c644a",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.h": "5392caa2737de0089ee7b3a7b58e151e",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzEntry.cpp": "5467c3bc1c3d239d2a78a734965250eb",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android_bszz.mk": "c270c01dfa15d213b90e7c8814bc480d",
-        "04_scripts/宝石战争/dllpatch/Program.cs": "c8fe8cfc784d4099b2d9cd2492885655"
+        "04_scripts/宝石战争/dllpatch/Program.cs": "b748d1e9f7d481d21ccf58b0f1af6041"
       }
     },
     {
@@ -228,35 +219,23 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "07_patched/宝石战争/6.0.012/assets/Android/Dlls/System.Network.dll.bytes"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "07_patched/宝石战争/6.0.012/assets/Android/manifest.json"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "07_patched/宝石战争/6.0.012/patch_summary.json"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 23:22:10",
-      "artifacts": {
-        "07_patched/宝石战争/6.0.012/assets/Android/Dlls/System.Network.dll.bytes": {
-          "md5": "a29e7dd8678536da56b1aed31c476baf"
-        },
-        "07_patched/宝石战争/6.0.012/assets/Android/manifest.json": {
-          "md5": "0a36eded90a3fc43181457bb7e266926"
-        },
-        "07_patched/宝石战争/6.0.012/patch_summary.json": {
-          "md5": "cf57b4f7a96e631da46813a7e1b42a30"
-        }
-      },
+      "done_at": "2026-09-19 18:13:21",
+      "note": "收官已清 07_patched；原 DLL.bytes md5=969bc3ddba10ca9637102d3e5decbf27，manifest md5=e5a3c57a72089b476c4c7f21d8dc4779，patch_summary md5=a03eabcd517f17803bf6ddc8995661b7。",
       "inputs": {
-        "06_dumped/宝石战争/6.0.012/static/System.Network.dll": "96a1937df274a2cda8fbcd39a595cc0d",
-        "06_dumped/宝石战争/6.0.012/static/System.Platform.dll": "b9bec3129844cfe97c89d2ecbf2bbfa9",
-        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": "477c080b77a1288882aef6843d568f66"
+        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": "5b08d9f518afac54d5ddcc58ed9b930f"
       }
     },
     {
@@ -272,23 +251,13 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "08_output/宝石战争/宝石战争_6.0.012_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 23:38:42",
-      "artifacts": {
-        "08_output/宝石战争/宝石战争_6.0.012_surgical-unsigned.apk": {
-          "md5": "e11c917620dfc8bf76e54a8ca6e56ba2"
-        }
-      },
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": "8abcd959bcf5851962d58f562b0153e7",
-        "07_patched/宝石战争/6.0.012/assets/Android/Dlls/System.Network.dll.bytes": "a29e7dd8678536da56b1aed31c476baf",
-        "07_patched/宝石战争/6.0.012/assets/Android/manifest.json": "0a36eded90a3fc43181457bb7e266926",
-        "07_patched/宝石战争/6.0.012/patch_summary.json": "cf57b4f7a96e631da46813a7e1b42a30"
-      }
+      "done_at": "2026-09-19 18:13:59",
+      "note": "收官裁剪已清 unsigned；原 md5=43fccb2e5065b750ca0525255f2d5202。"
     },
     {
       "id": "sign",
@@ -307,14 +276,38 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 23:39:22",
+      "done_at": "2026-09-19 18:14:18",
       "artifacts": {
         "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": {
-          "md5": "309402fb5127c9ced609f5b39a8dd431"
+          "md5": "dd806e695ec1a1521c9902a280d0aa46"
+        }
+      }
+    },
+    {
+      "id": "extract_ota_so",
+      "name": "从正式 APK 提取后台 OTA libstarry_magic.so",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash 04_scripts/宝石战争/extract_ota_so_bszz.sh",
+      "preflight": [
+        "04_scripts/宝石战争/extract_ota_so_bszz.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/宝石战争/ota/bszz/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-19 18:28:57",
+      "artifacts": {
+        "08_output/宝石战争/ota/bszz/libstarry_magic.so": {
+          "md5": "2fc2873da7f268866502ce0feaaefa5c"
         }
       },
       "inputs": {
-        "08_output/宝石战争/宝石战争_6.0.012_surgical-unsigned.apk": "e11c917620dfc8bf76e54a8ca6e56ba2"
+        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": "dd806e695ec1a1521c9902a280d0aa46"
       }
     },
     {
@@ -335,14 +328,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 23:41:09",
+      "done_at": "2026-09-19 18:16:32",
       "artifacts": {
         "04_scripts/宝石战争/install_result.txt": {
-          "md5": "1c68a0d1f30b8b0c4e5980f5938cb998"
+          "md5": "37858a7eb83f01f3c0a74b0d9964b9e6"
         }
       },
       "inputs": {
-        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": "309402fb5127c9ced609f5b39a8dd431",
+        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": "dd806e695ec1a1521c9902a280d0aa46",
         "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },

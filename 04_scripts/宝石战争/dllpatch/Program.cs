@@ -42,6 +42,20 @@ internal static class Program
         var setMana = RequireMethod(troopType, "SetMana", 1);
         InjectKeepMana(module, setMana, getPuzzlePlayer, playerIndexField, bridge.SafeShouldKeepMana);
 
+        // 无限技能原实现只忽略 SetMana(0)，开局 Init 直接写 Mana=0 时不会补满，
+        // 所以玩家仍要消块攒第一次能量。这里同时覆盖显示刷新与可用性查询：
+        // 玩家侧在无沉默/技能封锁时保持 Mana=ManaRequired，敌方与状态效果边界不变。
+        var manaField = RequireField(module, troopType, "Mana");
+        var manaRequiredField = RequireField(module, troopType, "ManaRequired");
+        var hasSilence = RequireMethod(troopType, "HasSilence", 0);
+        var hasSpellDisable = RequireMethod(troopType, "HasSpellDisable", 0);
+        var updateManaDisplay = RequireMethod(troopType, "UpdateManaDisplay", 0);
+        var canCastSpell = RequireMethod(troopType, "CanCastSpell", 0);
+        InjectFullMana(module, updateManaDisplay, getPuzzlePlayer, playerIndexField,
+            bridge.SafeShouldKeepMana, manaField, manaRequiredField, hasSilence, hasSpellDisable, null);
+        InjectFullMana(module, canCastSpell, getPuzzlePlayer, playerIndexField,
+            bridge.SafeShouldKeepMana, manaField, manaRequiredField, hasSilence, hasSpellDisable, updateManaDisplay);
+
         foreach (var method in troopType.Methods.Where(m => m.Name == "SetHealth" && (m.Parameters.Count == 1 || m.Parameters.Count == 2)))
         {
             InjectHealthValueGuard(module, method, getPuzzlePlayer, playerIndexField, bridge.SafeAdjustHealthValue);
@@ -154,12 +168,17 @@ internal static class Program
     // ------------------------------------------------------------------
     private static Bridge AddSafeWrappers(ModuleDefinition module, TypeDefinition bridge, Bridge raw)
     {
-        var state = AddStateReader(module, bridge);
+        var state = bridge.Methods.FirstOrDefault(m => m.Name == "StarryState" && m.Parameters.Count == 0)
+            ?? AddStateReader(module, bridge);
         var exceptionType = new TypeReference("System", "Exception", module, module.TypeSystem.CoreLibrary);
-        raw.SafeAdjustDamage = AddSafeAdjustDamage(module, bridge, state, exceptionType);
-        raw.SafeShouldKeepMana = AddSafeShouldKeepMana(module, bridge, state, exceptionType);
-        raw.SafeAdjustHealthValue = AddSafeAdjustHealthValue(module, bridge, state, exceptionType);
-        raw.SafeShouldBlockRunAway = AddSafeShouldBlockRunAway(module, bridge, state, exceptionType);
+        raw.SafeAdjustDamage = bridge.Methods.FirstOrDefault(m => m.Name == "SafeAdjustDamage" && m.Parameters.Count == 2)
+            ?? AddSafeAdjustDamage(module, bridge, state, exceptionType);
+        raw.SafeShouldKeepMana = bridge.Methods.FirstOrDefault(m => m.Name == "SafeShouldKeepMana" && m.Parameters.Count == 1)
+            ?? AddSafeShouldKeepMana(module, bridge, state, exceptionType);
+        raw.SafeAdjustHealthValue = bridge.Methods.FirstOrDefault(m => m.Name == "SafeAdjustHealthValue" && m.Parameters.Count == 2)
+            ?? AddSafeAdjustHealthValue(module, bridge, state, exceptionType);
+        raw.SafeShouldBlockRunAway = bridge.Methods.FirstOrDefault(m => m.Name == "SafeShouldBlockRunAway" && m.Parameters.Count == 1)
+            ?? AddSafeShouldBlockRunAway(module, bridge, state, exceptionType);
         return raw;
     }
 
@@ -257,7 +276,7 @@ internal static class Program
     }
 
     /** int StarryState()：读镜像文件并打包成 mult + god*1000 + mana*2000（文件缺失/格式错就抛，由 caller 兜底）。 */
-    private static MethodReference AddStateReader(ModuleDefinition module, TypeDefinition bridge)
+    private static MethodDefinition AddStateReader(ModuleDefinition module, TypeDefinition bridge)
     {
         var int32 = module.TypeSystem.Int32;
         var stringType = module.TypeSystem.String;
@@ -628,6 +647,10 @@ internal static class Program
     private static void InjectAdjustDamage(ModuleDefinition module, MethodDefinition method,
         FieldReference playerIndexField, MethodReference bridgeMethod)
     {
+        if (AlreadyCalls(method, bridgeMethod))
+        {
+            return;
+        }
         var il = method.Body.GetILProcessor();
         var first = method.Body.Instructions[0];
         var sequence = new[]
@@ -647,6 +670,10 @@ internal static class Program
     private static void InjectKeepMana(ModuleDefinition module, MethodDefinition method,
         MethodReference getPuzzlePlayer, FieldReference playerIndexField, MethodReference bridgeMethod)
     {
+        if (AlreadyCalls(method, bridgeMethod))
+        {
+            return;
+        }
         var il = method.Body.GetILProcessor();
         var first = method.Body.Instructions[0];
         var ret = Instruction.Create(OpCodes.Ret);
@@ -677,6 +704,10 @@ internal static class Program
     private static void InjectHealthValueGuard(ModuleDefinition module, MethodDefinition method,
         MethodReference getPuzzlePlayer, FieldReference playerIndexField, MethodReference bridgeMethod)
     {
+        if (AlreadyCalls(method, bridgeMethod))
+        {
+            return;
+        }
         var il = method.Body.GetILProcessor();
         var first = method.Body.Instructions[0];
         var playerIndex = new VariableDefinition(module.TypeSystem.Int32);
@@ -710,6 +741,10 @@ internal static class Program
     private static void InjectRunAwayGuard(ModuleDefinition module, MethodDefinition method,
         MethodReference getPuzzlePlayer, FieldReference playerIndexField, MethodReference bridgeMethod)
     {
+        if (AlreadyCalls(method, bridgeMethod))
+        {
+            return;
+        }
         var il = method.Body.GetILProcessor();
         var first = method.Body.Instructions[0];
         var ret = Instruction.Create(OpCodes.Ret);
@@ -732,5 +767,80 @@ internal static class Program
         {
             il.InsertBefore(first, ins);
         }
+    }
+
+    private static void InjectFullMana(ModuleDefinition module, MethodDefinition method,
+        MethodReference getPuzzlePlayer, FieldReference playerIndexField, MethodReference bridgeMethod,
+        FieldReference manaField, FieldReference manaRequiredField,
+        MethodReference hasSilence, MethodReference hasSpellDisable, MethodReference updateManaDisplay)
+    {
+        if (AlreadyCalls(method, bridgeMethod))
+        {
+            return;
+        }
+
+        var il = method.Body.GetILProcessor();
+        var first = method.Body.Instructions[0];
+        var playerIndex = new VariableDefinition(module.TypeSystem.Int32);
+        method.Body.Variables.Add(playerIndex);
+        method.Body.InitLocals = true;
+
+        var afterPlayerIndex = Instruction.Create(OpCodes.Nop);
+        var done = Instruction.Create(OpCodes.Nop);
+        var sequence = new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldc_I4_M1),
+            Instruction.Create(OpCodes.Stloc, playerIndex),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Call, module.ImportReference(getPuzzlePlayer)),
+            Instruction.Create(OpCodes.Brfalse_S, afterPlayerIndex),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Call, module.ImportReference(getPuzzlePlayer)),
+            Instruction.Create(OpCodes.Ldfld, playerIndexField),
+            Instruction.Create(OpCodes.Stloc, playerIndex),
+            afterPlayerIndex,
+            Instruction.Create(OpCodes.Ldloc, playerIndex),
+            Instruction.Create(OpCodes.Call, module.ImportReference(bridgeMethod)),
+            Instruction.Create(OpCodes.Brfalse_S, done),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Call, module.ImportReference(hasSilence)),
+            Instruction.Create(OpCodes.Brtrue_S, done),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Call, module.ImportReference(hasSpellDisable)),
+            Instruction.Create(OpCodes.Brtrue_S, done),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Ldfld, manaRequiredField),
+            Instruction.Create(OpCodes.Ldc_I4_0),
+            Instruction.Create(OpCodes.Ble_S, done),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Ldfld, manaField),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Ldfld, manaRequiredField),
+            Instruction.Create(OpCodes.Bge_S, done),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Ldarg_0),
+            Instruction.Create(OpCodes.Ldfld, manaRequiredField),
+            Instruction.Create(OpCodes.Stfld, manaField),
+        };
+        if (updateManaDisplay != null)
+        {
+            sequence.Add(Instruction.Create(OpCodes.Ldarg_0));
+            sequence.Add(Instruction.Create(OpCodes.Call, module.ImportReference(updateManaDisplay)));
+        }
+        sequence.Add(done);
+
+        foreach (var ins in sequence)
+        {
+            il.InsertBefore(first, ins);
+        }
+    }
+
+    private static bool AlreadyCalls(MethodDefinition method, MethodReference target)
+    {
+        return method.Body.Instructions
+            .Take(64)
+            .Any(i => (i.OpCode == OpCodes.Call || i.OpCode == OpCodes.Callvirt)
+                && i.Operand is MethodReference called
+                && called.FullName == target.FullName);
     }
 }

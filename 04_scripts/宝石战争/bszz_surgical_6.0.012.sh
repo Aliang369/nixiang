@@ -9,8 +9,9 @@ NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="宝石战争"
 VERSION="6.0.012"
 PKG="com.acing.gow.adv"
-ORIG_APK="$NIXIANG/02_apks/$GAME/${GAME}_${VERSION}_official_from_device.apk"
-ORIG_MD5="f207fc9d5b62b1a956a72c35c6a56def"
+ORIG_APK="${BSZZ_SOURCE_APK:-$NIXIANG/02_apks/$GAME/${GAME}_${VERSION}_official_from_device.apk}"
+[[ "$ORIG_APK" = /* ]] || ORIG_APK="$NIXIANG/$ORIG_APK"
+ORIG_MD5="${BSZZ_SOURCE_APK_MD5:-f207fc9d5b62b1a956a72c35c6a56def}"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
@@ -26,7 +27,7 @@ export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || tru
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK" >&2; exit 1; }
-[[ "$(md5 -q "$ORIG_APK")" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符" >&2; exit 1; }
+[[ "$(md5 -q "$ORIG_APK")" == "$ORIG_MD5" ]] || { echo "ERROR: 底包指纹不符" >&2; exit 1; }
 [[ -x "$SMALI_BIN" && -x "$BAKSMALI_BIN" ]] || { echo "ERROR: smali/baksmali missing" >&2; exit 1; }
 [[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing $SO_PREBUILT" >&2; exit 1; }
 for f in Dlls/System.Network.dll.bytes manifest.json RuntimeAssembliesReceipt.json; do
@@ -180,7 +181,6 @@ untouched = [
 ]
 zin = zipfile.ZipFile(src, "r")
 names = set(zin.namelist())
-assert "classes3.dex" not in names
 for n in untouched:
     assert n in names, f"orig apk missing {n}"
 
@@ -192,7 +192,7 @@ kept_meta = [n for n in names if n.startswith("META-INF/") and not is_sig(n)]
 zout = zipfile.ZipFile(dst, "w")
 for item in zin.infolist():
     name = item.filename
-    if is_sig(name) or name in patched or name in extras:
+    if is_sig(name) or name in patched or name in extras or name == "classes3.dex":
         continue
     data = mf if name == "AndroidManifest.xml" else zin.read(item)
     info = zipfile.ZipInfo(name, item.date_time)

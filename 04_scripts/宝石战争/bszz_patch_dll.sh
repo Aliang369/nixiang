@@ -17,6 +17,9 @@ mkdir -p "$DUMP" "$ASSETS/Dlls"
 if [[ ! -s "$DUMP/dump.cs" ]]; then
   dotnet "$DUMPER" "$STATIC/libil2cpp.so" "$STATIC/global-metadata.dat" "$DUMP"
 fi
+if [[ ! -d "$DUMP/DummyDll" ]]; then
+  dotnet "$DUMPER" "$STATIC/libil2cpp.so" "$STATIC/global-metadata.dat" "$DUMP"
+fi
 [[ -d "$DUMP/DummyDll" ]] || { echo "ERROR: Il2CppDumper DummyDll missing" >&2; exit 1; }
 
 dotnet build "$PATCH_TOOL/BszzDllPatch.csproj" -c Release --nologo

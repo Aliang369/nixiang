@@ -4,8 +4,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-APK="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["apk_path"])' "$SCRIPT_DIR/official_apk.json")"
 OUT="$NIXIANG_ROOT/06_dumped/宝石战争/6.0.012/static"
+
+if [[ -n "${BSZZ_SOURCE_APK:-}" ]]; then
+  APK="${BSZZ_SOURCE_APK}"
+  [[ "$APK" = /* ]] || APK="$NIXIANG_ROOT/$APK"
+else
+  APK="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["apk_path"])' "$SCRIPT_DIR/official_apk.json")"
+fi
+[[ -f "$APK" ]] || { echo "ERROR: missing source APK: $APK" >&2; exit 1; }
 mkdir -p "$OUT"
 
 unzip -p "$APK" assets/Android/Dlls/System.Network.dll.bytes > "$OUT/System.Network.dll.bytes"
@@ -15,7 +22,7 @@ unzip -p "$APK" assets/Android/RuntimeAssembliesReceipt.json > "$OUT/RuntimeAsse
 unzip -p "$APK" assets/bin/Data/Managed/Metadata/global-metadata.dat > "$OUT/global-metadata.dat"
 unzip -p "$APK" lib/arm64-v8a/libil2cpp.so > "$OUT/libil2cpp.so"
 
-python3 - "$OUT" <<'PY'
+python3 - "$OUT" "$APK" <<'PY'
 from pathlib import Path
 import hashlib, sys
 out = Path(sys.argv[1])
@@ -26,6 +33,8 @@ for name in ("System.Network", "System.Platform"):
         data[i] ^= key[i % len(key)]
     (out / f"{name}.dll").write_bytes(data)
 summary = {
+    "source_apk": sys.argv[2],
+    "source_apk_md5": hashlib.md5(Path(sys.argv[2]).read_bytes()).hexdigest(),
     "system_network_plain_md5": hashlib.md5((out / "System.Network.dll").read_bytes()).hexdigest(),
     "system_network_plain_size": (out / "System.Network.dll").stat().st_size,
     "system_network_encrypted_md5": hashlib.md5((out / "System.Network.dll.bytes").read_bytes()).hexdigest(),
