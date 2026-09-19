@@ -439,8 +439,17 @@
           "path": "08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-unsigned.apk"
         }
       ],
-      "status": "pending",
-      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-19）；后端 archive_sf3.sh 只提交本作路径，不 push（推送由用户决定）。"
+      "status": "done",
+      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-19）；后端 archive_sf3.sh 只提交本作路径，不 push（推送由用户决定）。",
+      "done_at": "2026-09-19 16:08:47",
+      "artifacts": {
+        "10_docs/暗影格斗3/收尾与最小复现清单_1.45.3_20260919.md": {
+          "md5": "d1bcfaa7afea7fdd0976640241d4a9d0"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/.install_ok": "50990e062ce74efd5036bdb22a9ef47e"
+      }
     }
   ]
 }
