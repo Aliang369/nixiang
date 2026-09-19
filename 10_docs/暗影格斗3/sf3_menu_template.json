@@ -1,0 +1,29 @@
+{
+  "template_id": "sf3",
+  "name": "暗影格斗3",
+  "package": "com.wanda.sf3.wd",
+  "source": "Games/Sf3Entry.cpp kSf3_Features",
+  "features": [
+    {"feat_num": 0, "name": "功能"},
+    {
+      "feat_num": 1,
+      "name": "伤害倍率",
+      "type": "slider",
+      "min": 1,
+      "max": 10,
+      "default": 1,
+      "note": "1=原伤害，2..10=最终伤害倍率；对应 Slider_伤害倍率:1:10:1"
+    },
+    {"feat_num": 2, "name": "上帝模式"},
+    {
+      "feat_num": 3,
+      "name": "战斗速度",
+      "type": "slider",
+      "min": 1,
+      "max": 10,
+      "default": 1,
+      "note": "1=原速，2..10=战斗倍速；对应 Slider_战斗速度:1:10:1"
+    },
+    {"feat_num": 4, "name": "无限体力"}
+  ]
+}
