@@ -8,7 +8,7 @@ GAME="正中靶心2"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 SUMMARY="$SCRIPT_DIR/cleanup_summary.json"
 FINAL_APK="$NIXIANG_ROOT/08_output/$GAME/${GAME}_1.7_starry-releaseSigned.apk"
-FINAL_MD5="4a27592877bed5e9ce149e1acfa5da62"
+FINAL_MD5="353f6767585f780f35352455f47cc9dc"
 ADB_BIN="${ADB_BIN:-adb}"
 
 cd "$NIXIANG_ROOT"

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# 正中靶心2 1.6 — 星空外科组装。
-# 以官方 1.7 为组装底包；只替换 Manifest、追加 classes5.dex、
-# 注入 libstarry_magic.so，并在明文 assets/main.js 末尾追加星光启动补丁。
+# 正中靶心2 1.7 — 星空外科组装。
+# 支持两种组装底包：
+#   1. 官方 1.7 原包；
+#   2. 真机上一版星空 1.7（其官方 classes1-4/assets/main.js 未变），
+#      重建时替换旧 classes5.dex、旧 libstarry_magic.so 与旧 Manifest 外挂项。
 set -euo pipefail
 
 BUILD_TYPE="${STARRY_BUILD_TYPE:-release}"
@@ -18,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 ORIG_APK="${ZZBX2_BASE_APK:-$NIXIANG/02_apks/正中靶心2/正中靶心2_1.7_official.apk}"
-ORIG_MD5="${ZZBX2_BASE_MD5:-a788bd056310a0f48488832890057135}"
+ORIG_MD5="${ZZBX2_BASE_MD5:-4a27592877bed5e9ce149e1acfa5da62}"
 OUT_DIR="$NIXIANG/07_patched/正中靶心2"
 UNSIGNED="$OUT_DIR/正中靶心2_1.7_starry-unsigned.apk"
 PATCH_JS="$SCRIPT_DIR/patch_main.js"
@@ -70,10 +72,119 @@ done
 shopt -u nullglob
 [[ -f "$SMALI_ROOT/com/starry/magic/StarryApp.smali" ]] || { echo "ERROR: StarryApp missing" >&2; exit 1; }
 [[ -f "$SMALI_ROOT/com/starry/magic/cocos/Zzbx2Hooks.smali" ]] || { echo "ERROR: Zzbx2Hooks missing from Gradle build" >&2; exit 1; }
+
+# API 24-27 会忽略 manifest 的 appComponentFactory，必须再把入口改为
+# StarryApp，并在 OpenewApplication.attachBaseContext 前安装 SignSpoof。
+python3 - "$SMALI_ROOT/com/starry/magic/StarryApp.smali" <<'PY'
+from pathlib import Path
+import sys
+
+p = Path(sys.argv[1])
+t = p.read_text(encoding="utf-8")
+repls = [
+    (".super Landroid/app/Application;", ".super Lcom/openew/game/OpenewApplication;"),
+    (
+        "invoke-direct {p0}, Landroid/app/Application;-><init>()V",
+        "invoke-direct {p0}, Lcom/openew/game/OpenewApplication;-><init>()V",
+    ),
+    (
+        "invoke-super {p0, p1}, Landroid/app/Application;->attachBaseContext(Landroid/content/Context;)V",
+        "invoke-super {p0, p1}, Lcom/openew/game/OpenewApplication;->attachBaseContext(Landroid/content/Context;)V",
+    ),
+    (
+        "invoke-super {p0}, Landroid/app/Application;->onCreate()V",
+        "invoke-super {p0}, Lcom/openew/game/OpenewApplication;->onCreate()V",
+    ),
+]
+changed = 0
+for old, new in repls:
+    if old in t:
+        t = t.replace(old, new)
+        changed += 1
+if ".super Lcom/openew/game/OpenewApplication;" not in t:
+    raise SystemExit("ERROR: StarryApp.smali did not switch super to OpenewApplication")
+for bad in (
+    "invoke-direct {p0}, Landroid/app/Application;-><init>()V",
+    "invoke-super {p0, p1}, Landroid/app/Application;->attachBaseContext(Landroid/content/Context;)V",
+    "invoke-super {p0}, Landroid/app/Application;->onCreate()V",
+):
+    if bad in t:
+        raise SystemExit(f"ERROR: StarryApp.smali still has old super call: {bad}")
+p.write_text(t, encoding="utf-8")
+print(f"  StarryApp -> OpenewApplication ok ({changed} edits)")
+PY
+
 "$SMALI_BIN" assemble -o "$WORK/classes5.dex" "$SMALI_ROOT"
 ls -lh "$WORK/classes5.dex"
 
-echo "[3/6] create Manifest patch"
+echo "[3/7] patch TapSignKit.getSign -> official Openew MD5"
+TAP_PATCHED_DEX="$WORK/taptap_patched.dex"
+TAP_DEX_NAME="$(python3 - "$ORIG_APK" "$WORK" "$BAKSMALI_BIN" "$SMALI_BIN" "$TAP_PATCHED_DEX" <<'PY'
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
+import zipfile
+
+apk = Path(sys.argv[1])
+work = Path(sys.argv[2])
+baksmali = sys.argv[3]
+smali = sys.argv[4]
+output = Path(sys.argv[5])
+cert_md5 = "b9c07db608080d40b04254d32ac3fc5c"
+marker = b"Lcom/taptap/sdk/kit/internal/utils/TapSignKit;"
+
+with zipfile.ZipFile(apk) as z:
+    candidates = [
+        name
+        for name in z.namelist()
+        if re.fullmatch(r"classes(?:\d+)?\.dex", name)
+        and marker in z.read(name)
+    ]
+if len(candidates) != 1:
+    raise SystemExit(f"expected exactly one TapSignKit dex, got {candidates}")
+
+dex_name = candidates[0]
+source_dex = work / f"original_{dex_name}"
+with zipfile.ZipFile(apk) as z:
+    source_dex.write_bytes(z.read(dex_name))
+
+unpacked = work / "taptap_smali"
+if unpacked.exists():
+    shutil.rmtree(unpacked)
+subprocess.run([baksmali, "d", "-o", str(unpacked), str(source_dex)], check=True)
+target = unpacked / "com/taptap/sdk/kit/internal/utils/TapSignKit.smali"
+if not target.is_file():
+    raise SystemExit(f"missing {target}")
+
+text = target.read_text(encoding="utf-8")
+pattern = re.compile(
+    r"\.method public final getSign\(Landroid/content/Context;\)Ljava/lang/String;"
+    r".*?\.end method",
+    re.S,
+)
+replacement = f""".method public final getSign(Landroid/content/Context;)Ljava/lang/String;
+    .locals 1
+
+    const-string v0, "{cert_md5}"
+
+    return-object v0
+.end method"""
+text, count = pattern.subn(replacement, text, count=1)
+if count != 1:
+    raise SystemExit("TapSignKit.getSign(Context) method not found")
+target.write_text(text, encoding="utf-8")
+
+subprocess.run([smali, "assemble", "-o", str(output), str(unpacked)], check=True)
+print(dex_name)
+PY
+)"
+[[ -n "$TAP_DEX_NAME" && -f "$TAP_PATCHED_DEX" ]] \
+  || { echo "ERROR: TapSignKit dex patch failed" >&2; exit 1; }
+echo "  $TAP_DEX_NAME TapSignKit.getSign -> b9c07db608080d40b04254d32ac3fc5c"
+
+echo "[4/7] create Manifest patch"
 apktool d -f -s -o "$WORK/base_dec" "$ORIG_APK" >/dev/null
 python3 - "$WORK/base_dec/AndroidManifest.xml" <<'PY'
 from pathlib import Path
@@ -92,6 +203,13 @@ if perms:
     if i < 0:
         raise SystemExit("no uses-permission node")
     t = t[:i] + "\n".join(perms) + "\n" + t[i:]
+
+old_app = 'android:name="com.openew.game.OpenewApplication"'
+new_app = 'android:name="com.starry.magic.StarryApp"'
+if new_app not in t:
+    if old_app not in t:
+        raise SystemExit("expected OpenewApplication not found in manifest")
+    t = t.replace(old_app, new_app, 1)
 
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
 new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
@@ -131,8 +249,9 @@ rm -rf "$WORK/base_dec"/smali* 2>/dev/null || true
 apktool b -f "$WORK/base_dec" -o "$WORK/manifest_only.apk" >/dev/null
 unzip -p "$WORK/manifest_only.apk" AndroidManifest.xml > "$WORK/AndroidManifest.xml"
 
-echo "[4/6] surgical zip merge（原 assets/main.js 保持字节不变）"
-python3 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$SO_PREBUILT" "$NDK_CXX" <<'PY'
+echo "[5/7] surgical zip merge（原 assets/main.js 保持字节不变）"
+python3 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$SO_PREBUILT" "$NDK_CXX" \
+  "$TAP_DEX_NAME" "$TAP_PATCHED_DEX" <<'PY'
 import hashlib, sys, zipfile
 from pathlib import Path
 
@@ -141,10 +260,15 @@ work = Path(sys.argv[2])
 dst = Path(sys.argv[3])
 so = Path(sys.argv[4]).read_bytes()
 cxx = Path(sys.argv[5]).read_bytes()
+tap_dex_name = sys.argv[6]
+tap_patched_dex = Path(sys.argv[7]).read_bytes()
 manifest = (work / 'AndroidManifest.xml').read_bytes()
 classes5 = (work / 'classes5.dex').read_bytes()
 
-replace = {'AndroidManifest.xml': manifest}
+replace = {
+    'AndroidManifest.xml': manifest,
+    tap_dex_name: tap_patched_dex,
+}
 extras = {
     'classes5.dex': classes5,
     'lib/arm64-v8a/libstarry_magic.so': so,
@@ -190,6 +314,21 @@ with zipfile.ZipFile(src, 'r') as zin, zipfile.ZipFile(dst, 'r') as zout:
 print('surgical zip verified: original assets unchanged + classes5 + starry so')
 PY
 
-echo "[5/6] unsigned output → $UNSIGNED"
+echo "[6/7] verify patched official dex"
+unzip -p "$UNSIGNED" "$TAP_DEX_NAME" > "$WORK/verify_taptap.dex"
+"$BAKSMALI_BIN" d -o "$WORK/verify_taptap_smali" "$WORK/verify_taptap.dex"
+python3 - "$WORK/verify_taptap_smali/com/taptap/sdk/kit/internal/utils/TapSignKit.smali" \
+  "b9c07db608080d40b04254d32ac3fc5c" <<'PY'
+from pathlib import Path
+import sys
+
+text = Path(sys.argv[1]).read_text(encoding="utf-8")
+md5 = sys.argv[2]
+if f'const-string v0, "{md5}"' not in text:
+    raise SystemExit("TapSignKit.getSign verification failed")
+print("  packaged TapSignKit.getSign returns official MD5")
+PY
+
+echo "[7/7] unsigned output → $UNSIGNED"
 echo "unsigned_md5=$(md5 -q "$UNSIGNED")"
 echo "unsigned_size=$(stat -f '%z' "$UNSIGNED")"

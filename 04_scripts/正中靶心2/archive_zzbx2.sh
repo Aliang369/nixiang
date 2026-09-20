@@ -63,7 +63,7 @@ while IFS= read -r path; do
 done <<< "$STAGED"
 
 printf '%s\n' "$STAGED"
-git commit -m "正中靶心2 1.7 冷启动签名修复与收官"
+git commit -m "正中靶心2 1.7 二次登录签名修复与验收"
 git push git@github.com:Aliang369/nixiang.git main
 
 echo "==> 本作相关状态"
