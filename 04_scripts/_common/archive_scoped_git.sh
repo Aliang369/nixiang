@@ -6,7 +6,8 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 MESSAGE=""
-PUSH=0
+# 默认提交后推送（用户口令「git」= 提交 + 推送连体）；--no-push 才关。
+PUSH=1
 PATHS=()
 
 usage() {
@@ -14,7 +15,7 @@ usage() {
 用法:
   bash 04_scripts/_common/archive_scoped_git.sh \
     --message "提交说明" \
-    [--push] \
+    [--no-push] \
     --path "04_scripts/{游戏}" \
     --path "10_docs/{游戏}" \
     [--path "..."]
@@ -22,7 +23,9 @@ usage() {
 说明:
   - 所有 path 都会用 `git add -A --` 暂存。
   - 暂存区出现白名单外路径时拒绝提交。
-  - 默认只提交；显式 --push 才推送 origin/main。
+  - 默认提交后推送 origin/main（用户口令「git」= 提交 + 推送连体）。
+    只有明确不想推送时才加 --no-push，并在汇报里说明未推送。
+  - push 失败/冲突则保留本地提交并报错，不自动强推。
   - 空白检查自动排除 pipeline.log、06_dumped、evidence 原始日志和二进制。
 EOF
   exit 2
@@ -37,6 +40,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --push)
       PUSH=1
+      shift
+      ;;
+    --no-push)
+      PUSH=0
       shift
       ;;
     --path)

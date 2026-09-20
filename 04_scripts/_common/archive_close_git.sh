@@ -7,11 +7,12 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 GAME=""
-PUSH=0
+# 默认提交后推送；--no-push 才关。
+PUSH=1
 MESSAGE=""
 
 usage() {
-  echo "用法: bash 04_scripts/_common/archive_close_git.sh --game <游戏> [--push] [--message <说明>]" >&2
+  echo "用法: bash 04_scripts/_common/archive_close_git.sh --game <游戏> [--no-push] [--message <说明>]" >&2
   exit 2
 }
 
@@ -24,6 +25,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --push)
       PUSH=1
+      shift
+      ;;
+    --no-push)
+      PUSH=0
       shift
       ;;
     --message)

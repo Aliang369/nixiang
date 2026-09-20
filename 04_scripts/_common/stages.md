@@ -71,8 +71,8 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 7 | `sign` | 签名 | 6 | uber-apk-signer | 签名包存在 + hash 入 json |
 | 8 | `device_ready` | 设备准备 | — | adb devices / connect（MuMu `127.0.0.1:5555`，重启后端口可能变 16384）/ 端口转发（MT MCP `adb forward tcp:8787 tcp:8787`） | 目标设备在线 |
 | 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 四查**（JS 语法/JNI 配套/P/Invoke 符号/控件读取，见上方专节）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；防"装机成功"假象装旧包） |
-| 10 | `archive` | 收官归档 | 9 | 文档/游戏摘要 + current.md 单行索引 + `_common/archive_scoped_git.sh` 白名单提交（显式授权才 push） | 索引行存在 + 唯一正式包/裁剪清单存在 |
-| 11 | `archive_close` | 状态收口提交 | 10 | pipeline 写回 archive done 后，运行 `_common/archive_close_git.sh --game {游戏}`，只提交 `pipeline.json` 状态变化；显式授权才 push | 本作路径无未提交状态 |
+| 10 | `archive` | 收官归档 | 9 | 文档/游戏摘要 + current.md 单行索引 + `_common/archive_scoped_git.sh` 白名单**提交并推送 origin/main**（用户口令「git」= 提交+推送连体；仅明确不想推送时才 `--no-push`） | 索引行存在 + 唯一正式包/裁剪清单存在 + 远端已同步 |
+| 11 | `archive_close` | 状态收口提交 | 10 | pipeline 写回 archive done 后，运行 `_common/archive_close_git.sh --game {游戏}`，只提交 `pipeline.json` 状态变化并推送（同上，`--no-push` 才关） | 本作路径无未提交状态 + 远端已同步 |
 
 规则：
 - **顺序执行**：`next` 只取第一个 pending 阶段；跳步=用 `run` 显式指定（会做前置检查，前置未满足直接拒绝）。
@@ -134,8 +134,10 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    仍应显式声明应清理的中间产物。**顺序：清理 → 脚本修快照 → 跑 `archive`**。
 5. 设备残留：真机会话按 TOOLBOOK「真机残留清理」回收证据与残留
 6. **git 固化**：优先用 `_common/archive_scoped_git.sh --path ... --message ...`，
-   只提交本任务白名单；显式授权 push 时加 `--push`。push 冲突/网络失败则保留本地
-   提交并明确报告。
+   只提交本任务白名单，**提交后默认推送 origin/main**（用户口令「git」= 提交+推送连体，
+   不需要再问「要不要推」）。仅当明确不想推送时才加 `--no-push`，且必须在汇报里写明
+   「已提交未推送 + 远端落后几个提交」。push 冲突/网络失败则保留本地提交并明确报告，
+   不自动强推。
    `--path` 只传**非忽略**路径（2026-09-20 实测）：传 `.gitignore` 覆盖的
    `mod菜单/**/app/src/libs*/` 下副本时，`git add -A` 打印「ignored by one of your
    .gitignore files」并返回非 0 → 脚本 `set -e` 中止，已暂存内容需 `git reset` 收拾
