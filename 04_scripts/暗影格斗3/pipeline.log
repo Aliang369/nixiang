@@ -1046,3 +1046,253 @@ make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-me
 ?? mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp
 [2026-09-19 16:09:14] [暗影格斗3] stage=archive 完成（校验通过）
 ────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 19:58:16] [暗影格斗3] stage=build_so 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_build_so.sh'
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Sf3Entry.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Sf3Mod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so (62218946c5d81557d0996e0ba926288e)
+[build_so] size = 157064
+[2026-09-20 19:58:18] [暗影格斗3] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 19:58:45] [暗影格斗3] stage=surgical 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_so_only.sh'
+目录: /Users/aliang/Documents/nixiang
+[so_only] base = /Users/aliang/Documents/nixiang/02_apks/暗影格斗3/暗影格斗3_1.45.3_starry_from_device.apk (fcb6c4f32a0a804a38567b142ffa7e93)
+[so_only] so   = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so (62218946c5d81557d0996e0ba926288e)
+  so_only verified: 4962 个原始条目字节不变 + 替换 libstarry_magic.so
+  normalized: zip64 extras fixed=726, classic EOCD ok
+[so_only] unsigned → /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-unsigned.apk
+unsigned_md5=6cc756a29e820a5cfe991716c24ade42
+unsigned_size=2714874521
+[2026-09-20 19:59:37] [暗影格斗3] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 19:59:45] [暗影格斗3] stage=pre_install_gate 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp' --dex '/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex' --so '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so'
+目录: /Users/aliang/Documents/nixiang
+- SKIP  [JNI配套] cpp 中未发现 JNI 注册（regOne/Java_*），无消耗
+────────────────────────────────
+汇总: PASS=0  FAIL=0  WARN=0  SKIP=0
+✅ 装机前门禁通过（WARN 属提醒项，装机报告需向用户说明）。
+[2026-09-20 19:59:45] [暗影格斗3] stage=pre_install_gate 校验失败
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 19:59:50] [暗影格斗3] stage=sign 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_sign.sh'
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done → /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk
+[sign] md5 = ae42b36dded2ab783522dfe8fe7798ce
+[sign] sha256 = fec3da3f7651dd40bf28be8048f60d3fa86c209aa316f229762fb89efa60c28c
+-rw-r--r--@ 1 aliang  staff   2.5G Sep 20 20:00 /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk
+[2026-09-20 20:01:39] [暗影格斗3] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:02:28] [暗影格斗3] stage=pre_install_gate 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp' --dex '/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex' --so '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so'
+目录: /Users/aliang/Documents/nixiang
+- SKIP  [JNI配套] cpp 中未发现 JNI 注册（regOne/Java_*），无消耗
+────────────────────────────────
+汇总: PASS=0  FAIL=0  WARN=0  SKIP=0
+✅ 装机前门禁通过（WARN 属提醒项，装机报告需向用户说明）。
+[2026-09-20 20:02:47] [暗影格斗3] stage=pre_install_gate 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:03:03] [暗影格斗3] stage=install 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_install.sh'
+目录: /Users/aliang/Documents/nixiang
+[install] local apk md5=ae42b36dded2ab783522dfe8fe7798ce
+[install] push /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk → /data/local/tmp/sf3_surgical.apk
+/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 35.7 MB/s (2715438777 bytes in 72.611s)
+[install] 同签名覆盖安装（保留数据）
+Success
+[install] 闭环校验：设备 base.apk == 本地产物
+[install-verify] 设备 base.apk md5 == 本地产物 (ae42b36dded2ab783522dfe8fe7798ce) ✓
+[install] done: com.wanda.sf3.wd（首次启动请确认星光悬浮球与菜单）
+[2026-09-20 20:05:06] [暗影格斗3] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:08:18] [暗影格斗3] stage=build_so 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_build_so.sh'
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Sf3Mod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so (a74e9d0229d7377a119a8607303b1d5d)
+[build_so] size = 157400
+[2026-09-20 20:08:20] [暗影格斗3] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:08:20] [暗影格斗3] stage=surgical 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_so_only.sh'
+目录: /Users/aliang/Documents/nixiang
+[so_only] base = /Users/aliang/Documents/nixiang/02_apks/暗影格斗3/暗影格斗3_1.45.3_starry_from_device.apk (fcb6c4f32a0a804a38567b142ffa7e93)
+[so_only] so   = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so (a74e9d0229d7377a119a8607303b1d5d)
+  so_only verified: 4962 个原始条目字节不变 + 替换 libstarry_magic.so
+  normalized: zip64 extras fixed=726, classic EOCD ok
+[so_only] unsigned → /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-unsigned.apk
+unsigned_md5=e2f4e7287e7c5d34f270f8e12ecc1eb5
+unsigned_size=2714874857
+[2026-09-20 20:09:12] [暗影格斗3] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:09:12] [暗影格斗3] stage=sign 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_sign.sh'
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done → /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk
+[sign] md5 = 84fbb28c44e49f21da8bf6ab211a192b
+[sign] sha256 = 66f95ac6c58e9f7dfe7436d77ef935e8c3a38ed7a305010a5b371e7a30993232
+-rw-r--r--@ 1 aliang  staff   2.5G Sep 20 20:09 /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk
+[2026-09-20 20:11:17] [暗影格斗3] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:11:24] [暗影格斗3] stage=pre_install_gate 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp' --dex '/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex' --so '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so'
+目录: /Users/aliang/Documents/nixiang
+- SKIP  [JNI配套] cpp 中未发现 JNI 注册（regOne/Java_*），无消耗
+────────────────────────────────
+汇总: PASS=0  FAIL=0  WARN=0  SKIP=0
+✅ 装机前门禁通过（WARN 属提醒项，装机报告需向用户说明）。
+[2026-09-20 20:11:43] [暗影格斗3] stage=pre_install_gate 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:11:56] [暗影格斗3] stage=install 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_install.sh'
+目录: /Users/aliang/Documents/nixiang
+[install] local apk md5=84fbb28c44e49f21da8bf6ab211a192b
+[install] push /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk → /data/local/tmp/sf3_surgical.apk
+/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 37.3 MB/s (2715438777 bytes in 69.410s)
+[install] 同签名覆盖安装（保留数据）
+Success
+[install] 闭环校验：设备 base.apk == 本地产物
+[install-verify] 设备 base.apk md5 == 本地产物 (84fbb28c44e49f21da8bf6ab211a192b) ✓
+[install] done: com.wanda.sf3.wd（首次启动请确认星光悬浮球与菜单）
+[2026-09-20 20:14:06] [暗影格斗3] stage=install 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:14:25] [暗影格斗3] stage=archive 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/archive_sf3.sh'
+目录: /Users/aliang/Documents/nixiang
+错误: 08_output/暗影格斗3 下有 2 个 apk，应只剩唯一正式包
+[2026-09-20 20:14:25] [暗影格斗3] stage=archive 命令失败 rc=1
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:14:32] [暗影格斗3] stage=build_so 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_build_so.sh'
+目录: /Users/aliang/Documents/nixiang
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libc++_shared.so:
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Compile++      : starry_magic <= Sf3Mod.cpp
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] SharedLibrary  : libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+make: Entering directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so
+make: Leaving directory '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni'
+[build_so] done → /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so (62218946c5d81557d0996e0ba926288e)
+[build_so] size = 157064
+[2026-09-20 20:14:34] [暗影格斗3] stage=build_so 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:14:34] [暗影格斗3] stage=surgical 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_so_only.sh'
+目录: /Users/aliang/Documents/nixiang
+[so_only] base = /Users/aliang/Documents/nixiang/02_apks/暗影格斗3/暗影格斗3_1.45.3_starry_from_device.apk (fcb6c4f32a0a804a38567b142ffa7e93)
+[so_only] so   = /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so (62218946c5d81557d0996e0ba926288e)
+  so_only verified: 4962 个原始条目字节不变 + 替换 libstarry_magic.so
+  normalized: zip64 extras fixed=726, classic EOCD ok
+[so_only] unsigned → /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-unsigned.apk
+unsigned_md5=6cc756a29e820a5cfe991716c24ade42
+unsigned_size=2714874521
+[2026-09-20 20:15:21] [暗影格斗3] stage=surgical 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:15:21] [暗影格斗3] stage=sign 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_sign.sh'
+目录: /Users/aliang/Documents/nixiang
+Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
+Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
+[sign] done → /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk
+[sign] md5 = ae42b36dded2ab783522dfe8fe7798ce
+[sign] sha256 = fec3da3f7651dd40bf28be8048f60d3fa86c209aa316f229762fb89efa60c28c
+-rw-r--r--@ 1 aliang  staff   2.5G Sep 20 20:15 /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk
+[2026-09-20 20:17:57] [暗影格斗3] stage=sign 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:18:06] [暗影格斗3] stage=pre_install_gate 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp' --dex '/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex' --so '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so'
+目录: /Users/aliang/Documents/nixiang
+- SKIP  [JNI配套] cpp 中未发现 JNI 注册（regOne/Java_*），无消耗
+────────────────────────────────
+汇总: PASS=0  FAIL=0  WARN=0  SKIP=0
+✅ 装机前门禁通过（WARN 属提醒项，装机报告需向用户说明）。
+[2026-09-20 20:18:31] [暗影格斗3] stage=pre_install_gate 完成（校验通过）
+────────────────────────────────────────────
+
+────────────────────────────────────────────
+[2026-09-20 20:18:49] [暗影格斗3] stage=install 开始
+命令: bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_install.sh'
+目录: /Users/aliang/Documents/nixiang
+[install] local apk md5=ae42b36dded2ab783522dfe8fe7798ce
+[install] push /Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk → /data/local/tmp/sf3_surgical.apk
+/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 38.1 MB/s (2715438777 bytes in 67.949s)
+[install] 同签名覆盖安装（保留数据）
+Success
+[install] 闭环校验：设备 base.apk == 本地产物
+[install-verify] 设备 base.apk md5 == 本地产物 (ae42b36dded2ab783522dfe8fe7798ce) ✓
+[install] done: com.wanda.sf3.wd（首次启动请确认星光悬浮球与菜单）
+[2026-09-20 20:20:55] [暗影格斗3] stage=install 完成（校验通过）
+────────────────────────────────────────────

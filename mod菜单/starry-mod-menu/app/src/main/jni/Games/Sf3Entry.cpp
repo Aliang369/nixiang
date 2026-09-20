@@ -39,7 +39,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
-        .onLoad = nullptr,              // 无需 EarlyHook：全部功能都是懒装 Dobby hook
+        // EarlyHook：只用来尽早挂 HNAccessCore::checkCopyright 版权补丁
+        // （登录可用性，与功能开关无关）；四项玩法仍是懒装 Dobby hook。
+        .onLoad = Sf3_OnLoad,
         .tryInit = Sf3_TryInit,
         .isReady = Sf3_IsReady,
         .tick = Sf3_Tick,

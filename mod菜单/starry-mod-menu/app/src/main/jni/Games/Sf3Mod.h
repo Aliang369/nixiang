@@ -28,6 +28,7 @@ enum Sf3Feat : int {
 };
 
 // 签名与 ModEntry.h 回调一致（Unity 系忽略 vm）
+void Sf3_OnLoad(JavaVM* vm);
 bool Sf3_TryInit(JavaVM* vm);
 bool Sf3_IsReady();
 void Sf3_OnFeatureChanged(int featNum, bool enabled);

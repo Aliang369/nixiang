@@ -33,9 +33,12 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <dlfcn.h>
 #include <link.h>
 #include <mutex>
 #include <pthread.h>
+#include <string>
+#include <unistd.h>
 
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
@@ -314,6 +317,118 @@ static void InstallTable(const HookSlot* slots, size_t count) {
 }
 
 // ============================================================
+// ④' 版权校验补丁（登录可用性，与功能开关无关，必须尽早挂）
+//
+//  现象（2026-09-20 用户反馈）：卸载重装后第一次能进，第二次启动/登录
+//  弹「非正版应用，请下载正版应用」或「SDK init error」→ 登录挂掉。
+//
+//  链：Hoolai/Nekki AccessSDK 的 HNAccessCore::InitServerCfg 会调
+//  HNAccessCore::checkCopyright()，拿沙箱指纹文件与
+//  HNConfigMgr::BinaryFingerprint() 比对；不等就写日志
+//  "Config Signature Md5: NOT_GENUINE_APP" 并返回假，SDK 初始化失败。
+//  首次安装沙箱为空 → 走「文件不存在」放行分支（返回 1），所以第一次能进。
+//
+//  修法依据（反汇编实测，非猜）：该函数是单出口 `mov w0, w19; ret`，
+//  「沙箱无该文件」路径 w19=1；调用方 InitServerCfg 用 `tbz w20,#0,0x1632c`，
+//  ret==1 落到 0x15F54 的配置 map 加载（正常路径），ret==0 才进异常分支。
+//  故恒定返回 1 = 让所有设备复现「干净安装」的行为，不引入新语义。
+//
+//  注：本 hook 是登录补丁不是玩法开关，不随菜单开关装卸。
+// ============================================================
+static std::atomic<bool> g_copyrightHooked{false};
+static std::atomic<bool> g_copyrightThreadStarted{false};
+static std::atomic<int>  g_copyrightAttempts{0};
+static int (*g_origCheckCopyright)(void* self) = nullptr;
+
+static const char* Sf3LibCpp() {
+    static const std::string s = OBFUSCATE("libcpp.so");
+    return s.c_str();
+}
+
+static const char* Sf3SymCheckCopyright() {
+    static const std::string s = OBFUSCATE("_ZNK12HNAccessCore14checkCopyrightEv");
+    return s.c_str();
+}
+
+// 从 /proc/self/maps 取库的绝对路径（dlopen 按 soname 失败时的回退）
+static std::string Sf3MappedLibPath(const char* lib) {
+    std::string out;
+    FILE* fp = fopen("/proc/self/maps", "rt");
+    if (!fp) return out;
+    char line[1024];
+    while (fgets(line, sizeof(line), fp)) {
+        if (!strstr(line, lib) || !strstr(line, ".so")) continue;
+        char* p = strchr(line, '/');
+        if (!p) continue;
+        char* nl = strchr(p, '\n');
+        if (nl) *nl = '\0';
+        out.assign(p);
+        break;
+    }
+    fclose(fp);
+    return out;
+}
+
+static int Hooked_CheckCopyright(void* self) {
+    (void)self;
+    return 1;   // 真品：与原版「沙箱无指纹文件」时的返回值一致
+}
+
+static void TryInstallCopyrightHook() {
+    if (g_copyrightHooked.load(std::memory_order_acquire)) return;
+    // 上限防御：库始终不出现时，Tick 兜底路径不会无限扫 maps
+    if (g_copyrightAttempts.fetch_add(1, std::memory_order_relaxed) >= 2000) return;
+    const char* lib = Sf3LibCpp();
+    if (!isLibraryLoaded(lib)) return;
+    void* h = dlopen(lib, RTLD_NOW);
+    if (!h) {
+        const std::string abs = Sf3MappedLibPath(lib);
+        if (!abs.empty()) h = dlopen(abs.c_str(), RTLD_NOW);
+    }
+    if (!h) {
+        LOGW(SF3_LOG " checkCopyright: dlopen(%s) failed", lib);
+        return;
+    }
+    void* sym = dlsym(h, Sf3SymCheckCopyright());
+    if (!sym) {
+        LOGW(SF3_LOG " checkCopyright: symbol miss in %s", lib);
+        return;
+    }
+    if (DobbyHook(sym, (dobby_dummy_func_t)Hooked_CheckCopyright,
+                  (dobby_dummy_func_t*)&g_origCheckCopyright) == 0) {
+        g_copyrightHooked.store(true, std::memory_order_release);
+        LOGI(SF3_LOG " checkCopyright hooked @%p (force genuine)", sym);
+    } else {
+        LOGW(SF3_LOG " checkCopyright DobbyHook failed @%p", sym);
+    }
+}
+
+// libcpp.so 可能比 il2cpp 更早载入，也可能晚；独立轮询线程保证在
+// AccessSDK 跑 InitServerCfg 之前挂上（不能等 initDelayMs=5s 的 tryInit）。
+static void* CopyrightPatchThread(void* /*arg*/) {
+    for (int i = 0; i < 900; i++) {          // 约 90s
+        TryInstallCopyrightHook();
+        if (g_copyrightHooked.load(std::memory_order_acquire)) return nullptr;
+        usleep(100 * 1000);
+    }
+    LOGW(SF3_LOG " checkCopyright 未安装（libcpp.so 未出现或符号缺失）");
+    return nullptr;
+}
+
+void Sf3_OnLoad(JavaVM* /*vm*/) {
+    bool expected = false;
+    if (!g_copyrightThreadStarted.compare_exchange_strong(expected, true)) return;
+    pthread_t th {};
+    if (pthread_create(&th, nullptr, CopyrightPatchThread, nullptr) == 0) {
+        pthread_detach(th);
+        LOGI(SF3_LOG " copyright patch thread started");
+    } else {
+        g_copyrightThreadStarted.store(false);
+        LOGW(SF3_LOG " copyright patch thread create failed");
+    }
+}
+
+// ============================================================
 // ⑤ hook 实现
 // ============================================================
 static void Hooked_ChangeLife(void* self, void* a1, void* a2, void* unit, void* value,
@@ -494,6 +609,7 @@ static void SyncHooks(bool force) {
 // ⑧ 对外接口（ModEntry.h 注册表契约，勿改签名）
 // ============================================================
 bool Sf3_TryInit(JavaVM* /*vm*/) {
+    TryInstallCopyrightHook();   // 版权补丁不依赖 il2cpp，独立于功能开关先试一次
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(SF3_TARGET_LIB)) return false;
     g_libReady.store(true);
@@ -544,6 +660,7 @@ void Sf3_OnValueChanged(int featNum, int value) {
 
 void Sf3_Tick(const bool* features, const int* values) {
     // 只做：同步开关 + 兜底安装。禁止在这里扫堆/遍历对象/逐对象写。
+    TryInstallCopyrightHook();   // 兜底：libcpp.so 晚载时补挂版权补丁
     if (features) {
         if (values && values[SF3_FEAT_DMG] > 0) {
             int mult = values[SF3_FEAT_DMG];
