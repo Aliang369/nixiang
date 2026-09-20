@@ -57,6 +57,11 @@ Gradle **不**编 native。跑 `assemble*` / 抽小模板 so 之前必须：
 
 否则成品菜单/鉴权会错成上一款游戏。**不影响** OTA 热更链路（OTA 另下 so）。
 
+> **沙箱/权限前置（2026-09-20 实测）**：第 4 步的 gradle 出包要写家目录缓存 `~/.gradle`；
+> 只允许写工作区的沙箱（DSH file policy=`workspace-write`）下必然失败于
+> `…/.gradle/wrapper/dists/gradle-8.13-bin/…zip.lck (Operation not permitted)`。
+> 构建脚本**一开始就带一次性放宽权限运行**，不要先撞一次再重跑（重跑还要重编 so）。
+
 ### 证书固定来源（2026-09-06 起）
 
 `AuthClient` 的 HTTPS 证书固定公钥**编译期烘焙在 `libstarry_magic.so`**（`jni/CertPinned.h`，经 `ModBridge.nativeGetPinnedCert` 桥接读取），不再读 `assets/certs/starlight.crt`；native 未加载时 fail-closed 拒发 HTTPS，不闪退。**换证书必须重编 so**（`xxd -i ../assets/certs/starlight.crt > CertPinned.h`，见头文件注释），只换 dex/assets 无效。装机前自检可加：`unzip -p 成品.apk lib/arm64-v8a/libstarry_magic.so | grep -a -c "BEGIN CERTIFICATE"` 应 ≥1。

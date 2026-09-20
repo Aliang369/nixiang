@@ -5,8 +5,9 @@
 #  背景（2026-09-17 会话记录审计定案）：多游戏装机失败属于机器可拦截错误，
 #  每次都浪费一整轮装机+用户实测。本脚本在 install 阶段前强制拦截四类：
 #    查1 JS语法关   ：注入 JS（拼接产物）node --check，防截断缺尾/语法错
-#    查2 JNI配套关  ：Mod 源码注册的 JNI 方法名 vs dex 字符串池，
-#                     防"新 so 注册 19 个方法、旧 dex 只有 17 个声明"装机即闪退
+#    查2 JNI配套关  ：Mod 源码动态注册的方法名（含 OBFUSCATE("…") 写法）vs dex 字符串池，
+#                     防"新 so 注册 19 个方法、旧 dex 只有 17 个声明"装机即闪退；
+#                     静态导出 Java_xxx 在 dex 无声明只 WARN（无 native 声明即无人查找，不崩）
 #    查3 P/Invoke符号关：EntryPoint 清单 vs so 导出表（nm -D），
 #                     防 DllImport 名与 so 导出不符（调用即 EntryPointNotFoundException）
 #    查4 控件读取关 ：菜单 JSON 控件类型 vs getVal/getRet 调用，
@@ -69,46 +70,66 @@ for f in $js_files; do
 done
 
 # ---------- 查2：JNI 配套关（cpp 注册方法 vs dex 字符串池） ----------
+# 方向定案（2026-09-20 我的勇者假 FAIL）：只有两个方向之一会崩——
+#   动态注册 regOne 的方法名 dex 里没有 → RegisterNatives 抛 NoSuchMethodError/SIGABRT → FAIL
+#   静态导出 Java_xxx 的符号 dex 里没有 → dex 无 native 声明即无人查找该符号，不崩 → WARN
+# 覆盖修正：regOne 第三个参数普遍写作 OBFUSCATE("name")（编译期混淆、运行时还原明文），
+#   旧正则只认裸字符串 → 19 条注册被整批漏抽、该查形同虚设（只剩静态导出在报错）。
 if [ -n "$cpp_files" ] && [ -n "$dex_files" ]; then
-  # 2a. 从 cpp 提取动态注册方法名：regOne(env, clazz, "name", "sig", fn)
-  #     与静态注册符号声明文本：Java_com_xxx_yyy（源码里 JNIEXPORT 函数名）
-  jni_names="$TMPDIR_PF/jni_names.txt"; : > "$jni_names"
+  reg_names="$TMPDIR_PF/reg_names.txt"; : > "$reg_names"
+  stat_syms="$TMPDIR_PF/stat_syms.txt"; : > "$stat_syms"
   for f in $cpp_files; do
     [ -f "$f" ] || { echo "✗ FAIL  [JNI] cpp 缺失: $f"; fail=$((fail+1)); }
-    grep -oE 'regOne[[:space:]]*\([^,]+,[^,]+,[[:space:]]*"[A-Za-z0-9_]+"' "$f" 2>/dev/null \
-      | grep -oE '"[A-Za-z0-9_]+"' | tr -d '"' >> "$jni_names"
-    # 静态注册符号拆解：Java_com_x_y → 类路径 com/x + 方法名 y（末段），分别核对 dex
-    grep -oE 'Java_[A-Za-z0-9_]+' "$f" 2>/dev/null | while read -r sym; do
-      base="${sym#Java_}"
-      cls="$(printf '%s' "$base" | sed 's/_[^_]*$//; s/_/\//g')"
-      mth="${base##*_}"
-      printf '%s\n%s\n' "$cls" "$mth" >> "$jni_names"
-    done
+    # 2a. 动态注册名：regOne(env, clazz, "name", …) 或 regOne(env, clazz, OBFUSCATE("name"), …)
+    grep -oE 'regOne[[:space:]]*\([^,]*,[^,]*,[[:space:]]*(OBFUSCATE[[:space:]]*\([[:space:]]*)?"[A-Za-z0-9_]+"' "$f" 2>/dev/null \
+      | grep -oE '"[A-Za-z0-9_]+"' | tr -d '"' >> "$reg_names"
+    # 2b. 静态注册符号 Java_com_x_y（仅用于 WARN 提示，不构成装机阻断）
+    grep -oE 'Java_[A-Za-z0-9_]+' "$f" 2>/dev/null >> "$stat_syms"
   done
-  # 去重
-  if [ -s "$jni_names" ]; then
-    sort -u "$jni_names" -o "$jni_names"
-    # 2b. 每个方法名必须出现在至少一个 dex 的字符串池里（dex 是二进制，用 grep -a）
+  if [ -s "$reg_names" ]; then
+    sort -u "$reg_names" -o "$reg_names"
     miss=0; total=0
     while read -r name; do
+      [ -n "$name" ] || continue
       total=$((total+1))
       found=0
       for d in $dex_files; do
         if [ -f "$d" ] && grep -aqF "$name" "$d" 2>/dev/null; then found=1; break; fi
       done
       if [ "$found" -eq 0 ]; then
-        echo "✗ FAIL  [JNI配套] 方法『${name}』在所有 dex 中都找不到声明（so 注册了、dex 没有 → 装机即 UnsatisfiedLinkError/SIGABRT）"
+        echo "✗ FAIL  [JNI配套] regOne 注册的方法『${name}』在所有 dex 中都找不到（RegisterNatives 即抛 NoSuchMethodError/SIGABRT）"
         miss=$((miss+1))
       fi
-    done < "$jni_names"
+    done < "$reg_names"
     if [ "$miss" -eq 0 ]; then
-      echo "✓ PASS  [JNI配套] $total 个 JNI 方法名在 dex 中全部有声明"; pass=$((pass+1))
+      echo "✓ PASS  [JNI配套] $total 个动态注册方法名在 dex 中全部有声明"; pass=$((pass+1))
     else
       echo "       （若是故意保留的兼容空实现，需在装机报告中显式说明并经用户确认后才可放行）"
       fail=$((fail+1))
     fi
   else
-    echo "- SKIP  [JNI配套] cpp 中未发现 JNI 注册（regOne/Java_*），无消耗"
+    echo "- SKIP  [JNI配套] cpp 中未发现 regOne 动态注册（含 OBFUSCATE 形式），无消耗"; skip=$((skip+1))
+  fi
+  # 2c. 静态导出符号：dex 无同名声明只提示、不拦截（死导出/遗留符号不构成崩溃）
+  if [ -s "$stat_syms" ]; then
+    sort -u "$stat_syms" -o "$stat_syms"
+    dead=""
+    while read -r sym; do
+      [ -n "$sym" ] || continue
+      mth="${sym##*_}"
+      [ -n "$mth" ] || continue
+      found=0
+      for d in $dex_files; do
+        if [ -f "$d" ] && grep -aqF "$mth" "$d" 2>/dev/null; then found=1; break; fi
+      done
+      if [ "$found" -eq 0 ]; then dead="$dead $mth"; fi
+    done < "$stat_syms"
+    if [ -n "$dead" ]; then
+      echo "! WARN  [JNI配套] 静态导出符号在 dex 中无同名声明（无害遗留，不阻断装机）:$dead"
+      warn=$((warn+1))
+    else
+      echo "✓ PASS  [JNI配套] 静态导出符号在 dex 中均有同名声明"; pass=$((pass+1))
+    fi
   fi
 fi
 

@@ -3,6 +3,13 @@
 > 配套统一入口 `04_scripts/pipeline.sh`。本文定义全游戏通用的标准阶段、
 > 前置条件与产物校验要求；每游戏的具体命令/参数在 `04_scripts/{游戏}/pipeline.json`。
 
+**入口判定（第一步，2026-09-20 起）**：`ls 04_scripts/{游戏}/pipeline.json`——
+- **存在** → 机械操作走 `pipeline.sh`（下方铁律）；
+- **不存在**（未接入管线的存量游戏）→ 该游戏的 `04_scripts/{游戏}/surgical_*.sh` /
+  `*_so_only.sh` / `inject_*.sh`，或 `mod菜单/starry-mod-menu/scripts/surgical_*.sh`
+  即合法机械入口；**仍禁止手敲 adb/apktool/zip/ndk-build 命令序列**，报错时读脚本输出
+  而不是换命令试错，并在收尾时评估是否顺手接入管线。
+
 ## 操作二分（大框架铁律，2026-09-09 定稿）
 
 | 操作类型 | 唯一合法方式 | 说明 |
@@ -129,6 +136,12 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 6. **git 固化**：优先用 `_common/archive_scoped_git.sh --path ... --message ...`，
    只提交本任务白名单；显式授权 push 时加 `--push`。push 冲突/网络失败则保留本地
    提交并明确报告。
+   `--path` 只传**非忽略**路径（2026-09-20 实测）：传 `.gitignore` 覆盖的
+   `mod菜单/**/app/src/libs*/` 下副本时，`git add -A` 打印「ignored by one of your
+   .gitignore files」并返回非 0 → 脚本 `set -e` 中止，已暂存内容需 `git reset` 收拾
+   （`obj*/`、`.gradle/` 实测不中止）。星光项目收官只提交
+   `app/src/main/jniLibs/arm64-v8a/libstarry_magic.so` 那份（gradle 实际打包的），
+   其余同内容副本在收尾清单写明「忽略目录副本，保留未暂存」。
 7. 管线写回 `archive=done` 后，运行
    `_common/archive_close_git.sh --game {游戏}` 收口状态，避免手工补第二次提交。
 8. 验证收口：本任务相关路径无未提交改动；若工作区仍有无关改动，列表报告且不纳入提交。`current.md` 有本游戏单行索引 + 汇报 CLAIM/VERDICT/EVIDENCE。

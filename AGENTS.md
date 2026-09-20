@@ -14,7 +14,7 @@
    - 已有包提取玩法 / 抓点 → `skill/re-extract/SKILL.md`
    - 写功能 / Hook → `skill/re-implement/SKILL.md`
    - 星光落地 / 切游戏 / 出包 → `skill/starry-mod/SKILL.md`
-   - 机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`（唯一入口 `04_scripts/pipeline.sh`；操作二分：机械操作只走管线、禁直接敲 adb/apktool/zip/ndk-build，分析操作照常推理产出落 `10_docs/`）
+   - 机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`（第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在→走 `pipeline.sh`；不存在→用该游戏的 `surgical_*/inject_*` 脚本，仍禁直接敲 adb/apktool/zip/ndk-build；分析操作照常推理产出落 `10_docs/`）
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（扫描与插件按具体问题触发，不作无差别全扫）
    - 经验查阅 → `skill/re-lessons/SKILL.md`
    - 纯评估 / 文档维护 → 只读待评估文档及直接引用，不自动进入游戏执行流程。

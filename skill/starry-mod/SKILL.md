@@ -145,6 +145,11 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 ./gradlew assembleRelease   # 仅打 Java/资源 + 打包已放好的 jniLibs so
 ```
 
+> **沙箱/权限（2026-09-20 实测）**：`./gradlew` 要写家目录缓存 `~/.gradle`。只允许写工作区的
+> 沙箱（如 DSH file policy=`workspace-write`）下会直接失败：
+> `java.io.FileNotFoundException: …/.gradle/wrapper/dists/gradle-8.13-bin/…zip.lck (Operation not permitted)`。
+> 结论：**构建命令一开始就带一次性放宽权限运行**，不要先撞一次再重跑（重跑还要重编 so，白烧一轮）。
+
 优先用各游戏的 `scripts/surgical_*.sh` / `*_so_only.sh`（脚本内应已含拷贝与自检）。
 
 ---
