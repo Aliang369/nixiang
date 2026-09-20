@@ -1,9 +1,11 @@
 {
-  "source_apk": "/Users/aliang/Documents/nixiang/08_output/宝石战争/宝石战争_6.0.012.apk",
-  "source_apk_md5": "309402fb5127c9ced609f5b39a8dd431",
-  "system_network_plain_md5": "36ba38bf26bb4ca571eb010a1951ec2e",
-  "system_network_plain_size": 8292352,
-  "system_network_encrypted_md5": "a29e7dd8678536da56b1aed31c476baf",
+  "source_apk": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.012/current/base.apk",
+  "source_apk_md5": "dd806e695ec1a1521c9902a280d0aa46",
+  "source_hotupdate_dir": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.012/current/hotupdate/Android",
+  "source_hotupdate_manifest_version": "1.0.0.01",
+  "system_network_plain_md5": "13c5bd679b52b155619c5c6d07b765ac",
+  "system_network_plain_size": 8615936,
+  "system_network_encrypted_md5": "dc99a96668297f42d0886c0b396e1c12",
   "global_metadata_md5": "1da4a40bfb63f1dde4cee041ba294d2f",
   "libil2cpp_md5": "d40791a829d78a492a0b314835a38605"
 }

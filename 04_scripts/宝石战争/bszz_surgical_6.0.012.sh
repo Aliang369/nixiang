@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 宝石战争 6.0.012 外科组装：官方 dex/arsc/IL2CPP/第三方 so 字节保留，
-# 只新增星光 dex/so，并替换注入后的 System.Network.dll.bytes 与 manifest 指纹。
+# 只新增星光 dex/so，完整替换 HotUpdate 资源，并仅覆盖注入后的 System.Network.dll.bytes。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -20,6 +20,7 @@ NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 PATCHED_ROOT="$NIXIANG/07_patched/$GAME/$VERSION"
 PATCHED_ASSETS="$PATCHED_ROOT/assets/Android"
+FULL_HOTUPDATE_ROOT="${BSZZ_HOTUPDATE_FULL_ROOT:-$PATCHED_ROOT/official_hotupdate}"
 SO_PREBUILT="${BSZZ_SO:-$STARRY_SRC/libs_bszz/arm64-v8a/libstarry_magic.so}"
 MF_CACHE="$NIXIANG/07_patched/$GAME/surgical/AndroidManifest.xml"
 
@@ -33,6 +34,14 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 for f in Dlls/System.Network.dll.bytes manifest.json RuntimeAssembliesReceipt.json; do
   [[ -f "$PATCHED_ASSETS/$f" ]] || { echo "ERROR: missing patched asset $f" >&2; exit 1; }
 done
+[[ -f "$FULL_HOTUPDATE_ROOT/Android/manifest.json" ]] || {
+  echo "ERROR: missing full HotUpdate manifest: $FULL_HOTUPDATE_ROOT/Android/manifest.json" >&2
+  exit 1
+}
+[[ -f "$FULL_HOTUPDATE_ROOT/Android/RuntimeAssembliesReceipt.json" ]] || {
+  echo "ERROR: missing full HotUpdate receipt" >&2
+  exit 1
+}
 
 # 注入 IL 的 P/Invoke 入口名必须与 so 导出符号一致，否则运行期 dlsym 失败抛
 # EntryPointNotFoundException，战斗协程被打断（2026-09-16 宝石战争回合结束卡死实锤）。
@@ -157,17 +166,27 @@ PY
 fi
 
 echo "[5/6] zip surgical merge -> $UNSIGNED"
-python3 - "$ORIG_APK" "$WORK" "$PATCHED_ROOT" "$UNSIGNED" <<'PY'
+python3 - "$ORIG_APK" "$WORK" "$PATCHED_ROOT" "$FULL_HOTUPDATE_ROOT" "$UNSIGNED" <<'PY'
 import hashlib, json, sys, zipfile
 from pathlib import Path
-src, work, patched_root, dst = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), Path(sys.argv[4])
+src, work, patched_root, full_hotupdate_root, dst = map(Path, sys.argv[1:6])
 mf = (work / "AndroidManifest.xml").read_bytes()
 c3 = (work / "classes3.dex").read_bytes()
-patched = {
-    "assets/Android/Dlls/System.Network.dll.bytes": (patched_root / "assets/Android/Dlls/System.Network.dll.bytes").read_bytes(),
-    "assets/Android/manifest.json": (patched_root / "assets/Android/manifest.json").read_bytes(),
-    "assets/Android/RuntimeAssembliesReceipt.json": (patched_root / "assets/Android/RuntimeAssembliesReceipt.json").read_bytes(),
-}
+official_manifest_path = full_hotupdate_root / "Android/manifest.json"
+official_manifest_bytes = official_manifest_path.read_bytes()
+official_manifest = json.loads(official_manifest_bytes)
+asset_overrides = {}
+for asset in official_manifest["files"]:
+    source = full_hotupdate_root / asset["path"]
+    assert source.is_file(), f"missing HotUpdate asset: {source}"
+    data = source.read_bytes()
+    assert len(data) == asset["size"], f"size mismatch: {asset['path']}"
+    assert hashlib.md5(data).hexdigest() == asset["hash"], f"md5 mismatch: {asset['path']}"
+    asset_overrides["assets/" + asset["path"]] = data
+patched_network_key = "assets/Android/Dlls/System.Network.dll.bytes"
+patched_network_bytes = (patched_root / patched_network_key).read_bytes()
+asset_overrides[patched_network_key] = patched_network_bytes
+asset_overrides["assets/Android/manifest.json"] = official_manifest_bytes
 extras = {}
 for p in (work / "lib").rglob("*"):
     if p.is_file():
@@ -192,7 +211,12 @@ kept_meta = [n for n in names if n.startswith("META-INF/") and not is_sig(n)]
 zout = zipfile.ZipFile(dst, "w")
 for item in zin.infolist():
     name = item.filename
-    if is_sig(name) or name in patched or name in extras or name == "classes3.dex":
+    if (
+        is_sig(name)
+        or name.startswith("assets/Android/")
+        or name in extras
+        or name == "classes3.dex"
+    ):
         continue
     data = mf if name == "AndroidManifest.xml" else zin.read(item)
     info = zipfile.ZipInfo(name, item.date_time)
@@ -205,7 +229,7 @@ for item in zin.infolist():
     info.external_attr = item.external_attr
     info.create_system = 3
     zout.writestr(info, data)
-for name, data in patched.items():
+for name, data in sorted(asset_overrides.items()):
     info = zipfile.ZipInfo(name)
     info.compress_type = zipfile.ZIP_DEFLATED
     info.create_system = 3
@@ -225,14 +249,30 @@ zin2 = zipfile.ZipFile(src, "r")
 zout2 = zipfile.ZipFile(dst, "r")
 for name in untouched:
     assert hashlib.sha256(zin2.read(name)).hexdigest() == hashlib.sha256(zout2.read(name)).hexdigest(), f"changed: {name}"
-for name, data in patched.items():
-    assert hashlib.sha256(zout2.read(name)).hexdigest() == hashlib.sha256(data).hexdigest(), f"patched asset mismatch: {name}"
+for name, data in asset_overrides.items():
+    assert hashlib.sha256(zout2.read(name)).hexdigest() == hashlib.sha256(data).hexdigest(), f"asset override mismatch: {name}"
+expected_android = {f"assets/{asset['path']}" for asset in official_manifest["files"]}
+expected_android.add("assets/Android/manifest.json")
+actual_android = {name for name in zout2.namelist() if name.startswith("assets/Android/")}
+assert actual_android == expected_android, (
+    f"assets/Android mismatch: missing={sorted(expected_android - actual_android)}, "
+    f"extra={sorted(actual_android - expected_android)}"
+)
+for asset in official_manifest["files"]:
+    name = "assets/" + asset["path"]
+    data = zout2.read(name)
+    if name == patched_network_key:
+        continue
+    assert len(data) == asset["size"], f"packaged size mismatch: {name}"
+    assert hashlib.md5(data).hexdigest() == asset["hash"], f"packaged md5 mismatch: {name}"
+assert zout2.read("assets/Android/manifest.json") == official_manifest_bytes
+assert len(patched_network_bytes) > 0
 for name in kept_meta:
     assert name in zout2.namelist(), f"lost META-INF entry: {name}"
 assert "classes3.dex" in zout2.namelist()
 assert "lib/arm64-v8a/libstarry_magic.so" in zout2.namelist()
 assert not any(n.upper().endswith((".SF", ".RSA", ".DSA", ".EC")) for n in zout2.namelist())
-print("  merged ok; patched assets/classes3/so verified")
+print("  merged ok; complete HotUpdate assets + patched DLL + classes3/so verified")
 zin2.close(); zout2.close()
 PY
 
@@ -243,6 +283,13 @@ SRC_SO_MD5="$(md5 -q "$SO_PREBUILT")"
 IN_NET_MD5="$(unzip -p "$UNSIGNED" assets/Android/Dlls/System.Network.dll.bytes | md5 -q)"
 SRC_NET_MD5="$(md5 -q "$PATCHED_ASSETS/Dlls/System.Network.dll.bytes")"
 [[ "$IN_NET_MD5" == "$SRC_NET_MD5" ]] || { echo "ERROR: 包内 System.Network 与 patched 产物不一致" >&2; exit 1; }
+IN_MANIFEST_VERSION="$(unzip -p "$UNSIGNED" assets/Android/manifest.json | jq -r '.version')"
+[[ "$IN_MANIFEST_VERSION" == "1.0.0.01" ]] || { echo "ERROR: 包内 manifest 版本异常: $IN_MANIFEST_VERSION" >&2; exit 1; }
+IN_MANIFEST_NET_HASH="$(unzip -p "$UNSIGNED" assets/Android/manifest.json | jq -r '.files[] | select(.path=="Android/Dlls/System.Network.dll.bytes") | .hash')"
+[[ "$IN_MANIFEST_NET_HASH" == "dc99a96668297f42d0886c0b396e1c12" ]] || {
+  echo "ERROR: 包内 manifest 未保留官方 Network hash: $IN_MANIFEST_NET_HASH" >&2
+  exit 1
+}
 rm -rf "$WORK/c3_check"
 unzip -p "$UNSIGNED" classes3.dex > "$WORK/classes3.check.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c3_check" "$WORK/classes3.check.dex" >/dev/null

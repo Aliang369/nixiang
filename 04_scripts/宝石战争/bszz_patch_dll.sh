@@ -25,6 +25,16 @@ fi
 dotnet build "$PATCH_TOOL/BszzDllPatch.csproj" -c Release --nologo
 dotnet "$PATCH_TOOL/bin/Release/net6.0/BszzDllPatch.dll" \
   "$STATIC/System.Network.dll" "$OUT/System.Network.patched.dll" "$DUMP/DummyDll" "$STATIC"
+python3 - "$OUT/System.Network.patched.pinvoke.json" <<'PY'
+from pathlib import Path
+import json
+import sys
+
+path = Path(sys.argv[1])
+data = json.loads(path.read_text(encoding="utf-8"))
+data["p_invoke"] = [{"EntryPoint": entry} for entry in data["entry_points"]]
+path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PY
 python3 "$SCRIPT_DIR/pack_network_dll.py" "$OUT/System.Network.patched.dll" "$ASSETS/Dlls/System.Network.dll.bytes"
 
 python3 - "$STATIC" "$ASSETS" "$OUT" <<'PY'

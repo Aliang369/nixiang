@@ -7,7 +7,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 APK="${BSZZ_OTA_SOURCE_APK:-$NIXIANG_ROOT/08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk}"
 OUT_DIR="$NIXIANG_ROOT/08_output/宝石战争/ota/bszz"
 OUT="$OUT_DIR/libstarry_magic.so"
-EXPECTED_APK_MD5="${BSZZ_OTA_APK_MD5:-dd806e695ec1a1521c9902a280d0aa46}"
+EXPECTED_APK_MD5="${BSZZ_OTA_APK_MD5:-746a21fb844654100df9dffabbd11326}"
 EXPECTED_SO_MD5="${BSZZ_OTA_SO_MD5:-2fc2873da7f268866502ce0feaaefa5c}"
 
 [[ -f "$APK" ]] || { echo "错误: 正式 APK 不存在: $APK" >&2; exit 1; }
@@ -16,8 +16,11 @@ EXPECTED_SO_MD5="${BSZZ_OTA_SO_MD5:-2fc2873da7f268866502ce0feaaefa5c}"
   exit 1
 }
 if [[ -e "$OUT" ]]; then
-  echo "错误: OTA so 已存在，拒绝覆盖: $OUT" >&2
-  exit 1
+  EXISTING_SO_MD5="$(md5 -q "$OUT")"
+  [[ "$EXISTING_SO_MD5" == "$EXPECTED_SO_MD5" ]] || {
+    echo "错误: OTA so 已存在且指纹异常，拒绝覆盖: $OUT" >&2
+    exit 1
+  }
 fi
 
 mkdir -p "$OUT_DIR"
@@ -37,19 +40,19 @@ LC_ALL=C grep -aFq 'BEGIN CERTIFICATE' "$OUT" || { echo "错误: OTA so 缺少�
 
 printf '%s  %s\n' "$SO_MD5" "libstarry_magic.so" > "$OUT_DIR/libstarry_magic.so.md5"
 printf '%s  %s\n' "$SO_SHA256" "libstarry_magic.so" > "$OUT_DIR/libstarry_magic.so.sha256"
-python3 - "$OUT_DIR/ota_meta.json" "$APK" "$SO_MD5" "$SO_SHA256" "$SO_SIZE" <<'PY'
+python3 - "$OUT_DIR/ota_meta.json" "$APK" "$SO_MD5" "$SO_SHA256" "$SO_SIZE" "$EXPECTED_APK_MD5" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-meta_path, apk, so_md5, so_sha256, so_size = sys.argv[1:]
+meta_path, apk, so_md5, so_sha256, so_size, source_apk_md5 = sys.argv[1:]
 data = {
     "game": "宝石战争",
     "game_id": "bszz",
     "version": "6.0.012",
     "fix": "unlimited_skill_full_mana",
     "source_apk": apk,
-    "source_apk_md5": "dd806e695ec1a1521c9902a280d0aa46",
+    "source_apk_md5": source_apk_md5,
     "so_md5": so_md5,
     "so_sha256": so_sha256,
     "so_size": int(so_size),
