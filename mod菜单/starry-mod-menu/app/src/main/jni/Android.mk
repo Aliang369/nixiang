@@ -249,12 +249,14 @@ LOCAL_ARM_MODE  := arm
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WGGLS
 # LOCAL_SRC_FILES += Main.cpp Games/WgglsMod.cpp Unity/Il2CppApi.cpp
 # 追迹迷城 1.0.20260912 TapTap（2026-09-14 RVA 重算见 ZjmcMod.cpp）
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
-LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
-# 我的勇者 7.6.0（wdyz）— Battle 结算 RVA 钩：秒杀(MonsterSettle ×N)/无敌(HeroSettle 0)
+# 2026-09-20 切走（我的勇者 7.6.1 出包），恢复时取消下面两行注释
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 我的勇者 7.6.1（wdyz）— Battle 结算钩：五倍攻击(敌 ×5)/无敌(HeroSettle 0)
 # 2026-09-07 星光自注入验证（不用 frida；TryEnterCd 已证死路，勿挂技能簇）
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
-# LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
+# 2026-09-20 7.6.1(vc203) 重 dump：RVA 全漂移 → 双路径按名兜底 + 新 RVA 回填
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
+LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
 # 长生天机降世 1.0.1 — EnterFrameFromInterpreter file 0x2657084（10_docs 20260908）
 # TryResolve 已加 Il2CppReady 门控（init 期半初始化 image SIGSEGV 实锤）
 # 长生天机降世 1.0.1 — CstjjsMod（Il2CppReady gating 已内置）

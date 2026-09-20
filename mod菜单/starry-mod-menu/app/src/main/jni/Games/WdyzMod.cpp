@@ -1,10 +1,15 @@
 /* ================================================================
- *  星光菜单游戏模块 — 我的勇者 7.6.0（wdyz）
+ *  星光菜单游戏模块 — 我的勇者 7.6.1（wdyz，vc203）
  *
  *  路线（2026-09-07 星光自注入验证，替代 frida）：
  *    仅挂 Battle 结算层两个函数（§10.1-4 证 monSettle hook 安全）：
- *      - 秒杀：MonsterCore.SettleDamage（0x45F8524）value<0 时 ×1000 放大
- *      - 无敌：HeroCore.SettleDamage（0x45EE170）  value<0 时归 0（免伤）
+ *      - 五倍攻击：BattleObjectCore.SettleDamage 基类，敌 core value ×5
+ *      - 无敌：HeroCore.SettleDamage + 基类己方 core，value 归 0（免伤）
+ *  2026-09-20 7.6.1(vc203) 版本重定位（重 dump 实证）：
+ *    - 类/方法名与参数个数全部未变（HeroCore/BattleObjectCore/MonsterCore.SettleDamage 均 5 参）
+ *    - il2cpp 12 个导出（domain_get_assemblies/class_from_name/…）全在 → 按名路径可用
+ *    - RVA 全漂移，且修正历史 expectInsn 字节序错误：dump.cs 的 **Offset 字段才是文件偏移**
+ *      （Offset = RVA - 0x4000；旧值用的是 RVA，故 7.6.0 时期实际一直走 @by-name 兜底）
  *    铁律：不挂 TryEnterCd/任何技能/CD 簇函数（§10.1-1 实锤保护会 SIGILL 自杀）；
  *          不直调任何 IL2CPP 方法（GoDeath 等在 frida 回调内必崩，§10.1-2/3）。
  *    防闪退设施保留：懒装 / 双路径挂点 / RVA 序言校验 / 幂等 / orig 必调 / OkPtr 校验。
@@ -37,8 +42,10 @@ static std::atomic<bool> g_inv{false};  // 无敌
 static std::atomic<bool> g_reenter{false};
 
 // BattleObjectCore.SettleDamage(value, shield, toughness, energy, fromgroup) 的函数签名：
-//   MonsterCore.SettleDamage override @0x45F8524（怪受伤结算，秒杀用）
-//   HeroCore.SettleDamage   override @0x45EE170（玩家受伤结算，无敌用）
+//   MonsterCore.SettleDamage override（7.6.1 Offset 0x45FC6BC，仅诊断对照）
+//   HeroCore.SettleDamage   override（7.6.1 Offset 0x45F2308，无敌用）
+//   BattleObjectCore.SettleDamage 基类（7.6.1 Offset 0x45B2404，五倍攻击/无敌落地点）
+// 参数寄存器：s0=value s1=shield s2=toughness s3=energy w4=fromgroup（7.6.1 参数名拼写有变，ABI 未变）
 typedef void (*SettleDamage_t)(void* self, float value, float shield, float toughness,
                                float energy, int fromgroup);
 static SettleDamage_t g_origMonsterSettle = nullptr;
@@ -46,14 +53,18 @@ static SettleDamage_t g_origHeroSettle = nullptr;
 static SettleDamage_t g_origBaseSettle = nullptr;
 
 // ============================================================
-// ② 偏移与 RVA（dump.cs + IDA 反汇编实测；换版本必须重 dump）
-//   RVA 序言首 4 字节（小端）：
-//     MonsterSettle 0x45F8524  "6d bb 2b eb" → 0xEB2BBB6D（stp d11,d10,[sp,#-0x50]!）
-//     HeroSettle    0x45EE170  "6d bc 2b eb" → 0xEB2BBC6D（stp d11,d10,[sp,#-0x40]!）
+// ② 偏移与 RVA（7.6.1/vc203 重 dump：/tmp/wdyz761/il2cpp_dump/dump.cs）
+//   地址口径 = dump.cs 的 Offset（文件偏移），供 FileOffToVa 在 /proc/self/maps 里换算 VA。
+//   RVA 序言首 4 字节（小端 memcpy 值）：
+//     MonsterCore.SettleDamage      Offset 0x45FC6BC  "eb 2b bb 6d" → 0x6DBB2BEB（stp d11,d10,[sp,#-0x50]!）
+//     HeroCore.SettleDamage         Offset 0x45F2308  "eb 2c bb 6d" → 0x6DBB2C6D（stp d11,d10,[sp,#-0x40]!）
+//     BattleObjectCore.SettleDamage Offset 0x45B2404  "ff 03 05 d1" → 0xD10503FF（sub sp,sp,#0x140）
+//   任一序言不符（热更/漂移）→ 自动转按名，不挂错地址。
 // ============================================================
 enum : size_t {
-    kRvaMonsterSettle = 0x45F8524,
-    kRvaHeroSettle    = 0x45EE170,
+    kRvaMonsterSettle = 0x45FC6BC,
+    kRvaHeroSettle    = 0x45F2308,
+    kRvaBaseSettle    = 0x45B2404,
 };
 
 // ============================================================
@@ -206,7 +217,7 @@ static int ClassTagOf(void* self) {
 }
 
 // 基类 BattleObjectCore.SettleDamage — 真正 HP 落地点（override 重算后再经此转发）
-// 秒杀：敌 core value ×1000；无敌：己 core value 归零（双保险，HeroSettle 已灵）
+// 五倍攻击：敌 core value ×5；无敌：己 core value 归零（双保险，HeroSettle 已灵）
 static void Wdyz_HookedBaseSettle(void* self, float value, float shield, float toughness,
                                   float energy, int fromgroup) {
     if (!g_reenter.load()) {
@@ -227,7 +238,7 @@ static void Wdyz_HookedBaseSettle(void* self, float value, float shield, float t
     if (g_origBaseSettle) g_origBaseSettle(self, value, shield, toughness, energy, fromgroup);
 }
 
-// 秒杀（菜单"十倍攻击"）[保留旧槽作诊断对照，逻辑已迁基类]
+// 旧槽（菜单早期"秒杀"位）[保留作诊断对照，倍率逻辑已迁基类]
 static void Wdyz_HookedMonsterSettle(void* self, float value, float shield, float toughness,
                                      float energy, int fromgroup) {
     if (++g_monSamp <= 4) {
@@ -252,13 +263,13 @@ static void Wdyz_HookedHeroSettle(void* self, float value, float shield, float t
 
 static const HookSlot kSlots[] = {
     // 无敌：HeroCore.SettleDamage override（已实测有效）
-    {"HeroSettle",    kRvaHeroSettle,    0xEB2BBC6D, "Battle", "HeroCore",     "SettleDamage", 5,
+    {"HeroSettle",    kRvaHeroSettle,    0x6DBB2C6D, "Battle", "HeroCore",     "SettleDamage", 5,
      (void*)Wdyz_HookedHeroSettle,    (void**)&g_origHeroSettle},
-    // 秒杀：BattleObjectCore.SettleDamage 基类（override 重算后的落地转发，按类名分派敌我）
-    {"BaseSettle",    0x0,               0x0,        "Battle", "BattleObjectCore", "SettleDamage", 5,
+    // 五倍攻击/无敌落地点：BattleObjectCore.SettleDamage 基类（override 重算后的落地转发，按类名分派敌我）
+    {"BaseSettle",    kRvaBaseSettle,    0xD10503FF, "Battle", "BattleObjectCore", "SettleDamage", 5,
      (void*)Wdyz_HookedBaseSettle,    (void**)&g_origBaseSettle},
-    // 诊断对照槽（仅观察原始入参，秒杀不在这里改）
-    {"MonsterSettle", kRvaMonsterSettle, 0xEB2BBB6D, "Battle", "MonsterCore",  "SettleDamage", 5,
+    // 诊断对照槽（仅观察原始入参，倍率不在这里改）
+    {"MonsterSettle", kRvaMonsterSettle, 0x6DBB2BEB, "Battle", "MonsterCore",  "SettleDamage", 5,
      (void*)Wdyz_HookedMonsterSettle, (void**)&g_origMonsterSettle},
 };
 

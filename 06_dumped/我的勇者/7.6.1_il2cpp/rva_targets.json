@@ -1,0 +1,61 @@
+{
+  "game": "我的勇者",
+  "package": "com.rsg.wdyz",
+  "version": "7.6.1",
+  "versionCode": 203,
+  "engine": "Unity IL2CPP (Metadata v31, libil2cpp.so 138,428,656 B, global-metadata.dat 29,897,420 B 未加密)",
+  "game_id": "wdyz",
+  "base_apk": "02_apks/我的勇者/我的勇者_7.6.1_base.apk",
+  "base_apk_sha256": "a008a4c4077a970efd4cc01f9e60e5252b5d62b4556d5b677cb92ca6daa16e4a",
+  "dump": "06_dumped/我的勇者/7.6.1_il2cpp/dump.cs",
+  "address_convention": "FileOffToVa 入参 = dump.cs 的 Offset 字段（文件偏移，= RVA - 0x4000）。禁止用 RVA/VA 字段：7.6.0 时期填 RVA（差 0x4000）且 expectInsn 字节序写反，RVA 路径从未命中，实际一直走 @by-name 兜底（与 §11.1 logcat 一致）",
+  "targets": [
+    {
+      "tag": "HeroSettle",
+      "ns": "Battle",
+      "class": "HeroCore",
+      "method": "SettleDamage",
+      "argc": 5,
+      "offset": "0x45F2308",
+      "rva": "0x45F6308",
+      "prologue_le": "0x6DBB2C6D",
+      "prologue_bytes": "eb 2c bb 6d",
+      "insn": "stp d11, d10, [sp, #-0x40]!",
+      "role": "无敌：玩家承伤结算 value 归零",
+      "dump_line": 573758
+    },
+    {
+      "tag": "BaseSettle",
+      "ns": "Battle",
+      "class": "BattleObjectCore",
+      "method": "SettleDamage",
+      "argc": 5,
+      "offset": "0x45B2404",
+      "rva": "0x45B6404",
+      "prologue_le": "0xD10503FF",
+      "prologue_bytes": "ff 03 05 d1",
+      "insn": "sub sp, sp, #0x140",
+      "role": "五倍攻击：敌 core value ×5；无敌：己 core 归零（按 object_class 类名分派）",
+      "dump_line": 571366
+    },
+    {
+      "tag": "MonsterSettle",
+      "ns": "Battle",
+      "class": "MonsterCore",
+      "method": "SettleDamage",
+      "argc": 5,
+      "offset": "0x45FC6BC",
+      "rva": "0x46006BC",
+      "prologue_le": "0x6DBB2BEB",
+      "prologue_bytes": "eb 2b bb 6d",
+      "insn": "stp d11, d10, [sp, #-0x50]!",
+      "role": "诊断对照槽（只观察入参，不改倍率）",
+      "dump_line": 576292
+    }
+  ],
+  "verified": {
+    "static": "在 Offset 处 xxd 命中上表序言字节（2026-09-20）",
+    "runtime": "用户实测功能生效（无敌/五倍攻击）；挂钩日志 @rva / @by-name 未采集（NOT PROVEN）",
+    "il2cpp_exports": "12/12 在（domain_get_assemblies / class_from_name / class_get_method_from_name / class_get_fields / field_get_offset / object_get_class / class_get_name / thread_attach …）"
+  }
+}

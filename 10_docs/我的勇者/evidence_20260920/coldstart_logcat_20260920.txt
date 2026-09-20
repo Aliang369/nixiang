@@ -1,0 +1,54 @@
+--------- beginning of main
+09-21 01:00:16.340 12445 12445 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+09-21 01:00:16.340 12445 12445 I StarryMagic: 星光魔法 MOD 菜单已加载 (JNI_OnLoad)
+09-21 01:00:16.340 12445 12445 I StarryMagic: [验证] flag=false live=0
+09-21 01:00:16.340 12445 12445 I StarryMagic: [开关] #0 selftest = OFF
+09-21 01:00:16.340 12445 12445 W StarryMagic: [数值] 拒绝 #0（未授权）
+09-21 01:00:16.340 12445 12445 I StarryMagic: [长整] #0 = 0
+09-21 01:00:16.340 12445 12445 W StarryMagic: [文本] 拒绝 #0（未授权）
+09-21 01:00:16.340 12445 12445 W StarryMagic: [验证] grant rejected
+09-21 01:00:16.340 12445 12445 W StarryMagic: [OTA] 补丁签名校验失败
+09-21 01:00:16.370 12445 12445 I MenuService: startService (plain, no-FGS)
+09-21 01:00:16.401 12445 12445 I MenuService: MenuService created
+09-21 01:00:16.402 12445 12445 I MenuService: auth game_id=wdyz
+09-21 01:00:16.402 12445 12445 I MenuService: lifecycleWatcher registered (resume + background hide)
+09-21 01:00:16.402 12445 12445 I MenuService: host lifecycle primed (start-thread-scan) started=1 resumed=1
+09-21 01:00:16.421 12445 12445 I StarryMagic: ===== 星光魔法 MOD 菜单初始化 =====
+09-21 01:00:16.431 12445 12445 W StarryMagic: 未检测到已知游戏引擎，进入通用模式
+09-21 01:00:16.431 12445 12445 I StarryMagic: 通用模式下，请手动配置目标库和 Hook 偏移
+09-21 01:00:16.431 12445 12549 I StarryMagic: MOD 后台线程已启动
+09-21 01:00:16.431 12445 12445 I MenuService: native menu shown mode=ACTIVITY
+09-21 01:00:16.449 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:16.449 12445 12445 I MenuService: prime:start-thread-scan → show ACTIVITY overlay host=PrivacyActivity alive=true
+09-21 01:00:16.483 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:16.483 12445 12445 I MenuService: host layout changed → show ACTIVITY overlay host=PrivacyActivity alive=true
+09-21 01:00:16.807 12445 12545 I StarryMagic: [验证] grant ok exp=1790009957
+09-21 01:00:17.110 12445 12445 W MenuService: host window focus gained (deferred) → ACTIVITY host dead, detach
+09-21 01:00:17.286 12445 12445 I MenuService: ensure native menu (activity-resumed:MainActivity)
+09-21 01:00:17.289 12445 12445 I MenuService: native menu shown mode=ACTIVITY
+09-21 01:00:17.299 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:17.299 12445 12445 I MenuService: activity-resumed:MainActivity → show ACTIVITY overlay host=MainActivity alive=false
+09-21 01:00:17.428 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:17.428 12445 12445 I MenuService: host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+09-21 01:00:17.449 12445 12549 I StarryMagic: 检测到 Unity 引擎，ENGINE_UNITY
+09-21 01:00:17.449 12445 12549 I StarryMagic: 初始化我的勇者 / Battle 结算按 RVA Hook...
+09-21 01:00:17.699 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:17.699 12445 12445 I MenuService: resume delayed 400 → show ACTIVITY overlay host=MainActivity alive=true
+09-21 01:00:17.792 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:17.792 12445 12445 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=MainActivity alive=true
+09-21 01:00:17.906 12445 12445 I StarryMagic: [开关] #1 Toggle_无敌 = OFF
+09-21 01:00:17.907 12445 12445 I StarryMagic: [开关] #2 Toggle_五倍攻击 = OFF
+09-21 01:00:18.042 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:18.042 12445 12445 I MenuService: host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+09-21 01:00:18.500 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:18.500 12445 12445 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=MainActivity alive=true
+09-21 01:00:19.451 12445 12549 I StarryMagic: [Wdyz] 初始化成功
+09-21 01:00:19.451 12445 12549 I StarryMagic: MOD 已就绪 engine=1 cocosGame=0 unityGame=1
+09-21 01:00:19.921 12445 12445 I StarryMagic: [验证] grant ok exp=1790010019
+09-21 01:00:20.212 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:20.212 12445 12445 I MenuService: host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+09-21 01:00:20.733 12445 12445 I StarryMagic: [开关] #1 Toggle_无敌 = OFF
+09-21 01:00:20.733 12445 12445 I StarryMagic: [开关] #2 Toggle_五倍攻击 = OFF
+09-21 01:00:25.758 12445 12445 I MenuService: host focus lost ignored (ACTIVITY mode)
+09-21 01:00:26.851 12445 12445 I MenuService: overlayVisible=true attached=true
+09-21 01:00:26.851 12445 12445 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=MainActivity alive=true
