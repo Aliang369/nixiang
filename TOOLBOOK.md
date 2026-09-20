@@ -528,7 +528,10 @@ nixiang/
 
 **Git 资产分层（2026-09-09 对接 GitHub 私仓 `Aliang369/nixiang` 起）**
 
-- 分层基线：**Git 资产**（源码/文档/脚本/模板/配置/`06_dumped` 文本白名单，按 `.gitignore`）已推远端=已保全，本地副本可清理可再clone；**本地滚动物**（`03_decompiled`/`07_patched` 大包/`06_dumped` 大二进制/`99_archive`）按游戏活跃度滚动清理（活跃=复测进行中，见 current.md）；**本地工具**（`01_tools`/`.kilo` 等）不清理不入库。
+- 分层基线：**Git 资产**（源码/文档/脚本/模板/配置/`06_dumped` 文本白名单，按 `.gitignore`）已推远端=已保全，本地副本可清理可再clone；**本地滚动物**（`03_decompiled`/`07_patched` 大包/`06_dumped` 大二进制/完整 `pipeline.log`/`99_archive`）按游戏活跃度滚动清理（活跃=复测进行中，见 `10_docs/_state/current.md` 的目标摘要）；**本地工具**（`01_tools`/`.kilo` 等）不清理不入库。
+- `04_scripts/{游戏}/pipeline.log` 是可再生日志：物理文件可保留用于故障排查，
+  但不再入 Git。需要长期证据时，在 `10_docs/{游戏}/evidence_日期/README.md`
+  记录决定性行、定位和最短复现命令，不提交整份日志。
 - 复测两场景的恢复路径：同版本重给包=clone→管线 check_apk→dump（03 重建）→锚点从 git 文本/Mod 源码恢复→build_so→surgical→装机；换新版本=同上+version-update-relocate 重抓锚点。
 - 清理滚动物铁律：**删除前 `git status` 必须干净**（git 追踪文件本地不可单删——要么走 commit 语义，要么恢复）；中文路径操作前 `git config core.quotepath false`（否则路径匹配失败会误删 git 文本，20260909 实锤）。
 - 敏感文件（`*.jks`/`*.keystore`/`.env`）永不入库（.gitignore 硬排除，add 前验证）；`02_apks`/`08_output` 用户手动管理不入库；`.gitignore` 的例外规则变更=资产分类变更，须具体授权。
@@ -548,7 +551,7 @@ nixiang/
 | `08_output/{游戏}` | 收尾口令时裁剪为唯一正式 APK | 用户已定：收尾+正式包+清理时，用 `_common/prune_output_final.sh` 校验并保留指定正式包，删除其它候选 APK/idsig，被删清单入 10_docs；被删的 unsigned/idsig 属门禁依赖产物，须按 `stages.md` 收官清单第 4 条同步修正 `pipeline.json` 快照 |
 | `10_docs`、`04_scripts`、mod 源码 | 永留 | 复现链本体，git 已保全 |
 
-不可再生例外（**勿按"可提取"误清**）：热更历史版本 dll/bin（官方 CDN 滚动覆盖，旧版拉不回，如 `07_patched/无限升级/targetfuntional*` = OTA 复现链）；设备拉取的装机备份；`02/08` 官包与正式包（用户手动管理）；未收官或暂停研究游戏的滚动物（按 current.md 状态判活跃）。
+不可再生例外（**勿按"可提取"误清**）：热更历史版本 dll/bin（官方 CDN 滚动覆盖，旧版拉不回，如 `07_patched/无限升级/targetfuntional*` = OTA 复现链）；设备拉取的装机备份；`02/08` 官包与正式包（用户手动管理）；未收官或暂停研究游戏的滚动物（按目标游戏状态摘要判活跃）。
 
 git 入库纪律（2026-09-12 实清后定，勿再犯）：过程日志（`dump_log.txt`/`maps.txt`）不入库；游戏资源提取物（语言 CSV/atlas/skel 等非分析产物）不入库；重试堆积目录（同分钟多份 dump_out）须确认互异且无引用后才决定去留。
 

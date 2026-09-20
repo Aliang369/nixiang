@@ -266,3 +266,13 @@ adb logcat -s StarryApp:V StarryMagic:V AuthClient DeviceFingerprint | grep -E \
 ## 收尾
 
 按 [TOOLBOOK.md](../../TOOLBOOK.md)「清理规则」「真机残留清理」收尾，填写 [游戏收尾与最小复现清单](../../10_docs/_templates/游戏收尾与最小复现清单.md)。保留输入、隔离重建、具体授权和设备分责以该处为准；现有清理脚本未改，不默认运行，缺证据或无法约束范围时记录待处理。
+
+收尾入口统一为：
+
+1. 清理后先跑 `04_scripts/_common/pipeline_record_cleanup.py` 修管线快照。
+2. Git 固化用 `04_scripts/_common/archive_scoped_git.sh` 白名单提交；只有明确
+   授权 push 时才加 `--push`。
+3. pipeline 写回 `archive=done` 后，用
+   `04_scripts/_common/archive_close_git.sh --game {游戏}` 补状态提交。
+4. 游戏详情更新到 `10_docs/_state/games/{游戏}.md`，`current.md` 只保留一行；
+   功能反复反馈和长证据分别补功能验收卡、证据 README。

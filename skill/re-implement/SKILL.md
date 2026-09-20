@@ -43,7 +43,7 @@
 2. 写完 Mod 后接线只碰新文件：`{Game}Entry.cpp` 填注册表（authGameId/waitLib/featureList/初始化参数），构建走 `Android_{tag}.mk` + 独立 obj
 3. **共享文件禁改**：`MainModern.cpp` / `Main.cpp`（连注释都不行，OBFUSCATE 行号敏感）/ `GameConfig.h` / 公共 `Android.mk`——往这些文件加游戏分支=堆积复发，见 `mod菜单/starry-mod-menu/SWITCH_GAME.md` 顶部
 
-**存量旧游戏更新**：不重写、不迁移、不按新模板改造——按 `version-update-relocate.md` 重定位锚点 + 最小改动，新增 hook 沿用模板安全助手与懒装模式；完整迁移注册表只在重新出包且真机回归时做（见 current.md mod菜单框架行）。
+**存量旧游戏更新**：不重写、不迁移、不按新模板改造——按 `version-update-relocate.md` 重定位锚点 + 最小改动，新增 hook 沿用模板安全助手与懒装模式；完整迁移注册表只在重新出包且真机回归时做（见 `10_docs/_state/games/infrastructure.md` mod 菜单框架记录）。
 
 ### 第三步：按 Hook 模式选择子文件
 
@@ -106,6 +106,16 @@
    - 结算是否失败（服务端校验）
    - 其他功能是否受影响
    - 长时间运行是否稳定（≥5 局）
+
+### 重复反馈与跨会话交接
+
+- 同一功能被用户第二次反馈，或日志已经超过阅读预算时，按
+  [`功能验收卡.md`](../../10_docs/_templates/功能验收卡.md) 压缩为：用户预期、
+  挂点、已实证、NOT PROVEN、已知限制、下一条最小区分实验。
+- `evidence_日期/` 增加
+  [`README.md`](../../10_docs/_templates/证据索引README.md)，只列决定性证据和
+  最短复现命令；后续会话先读该 README，不通读完整 logcat。
+- 用户决定“只记录、不修复”时，更新功能验收卡和游戏状态摘要，然后停止扩展实现。
 
 ## 子文件索引
 

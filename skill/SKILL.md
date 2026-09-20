@@ -16,6 +16,8 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
 ## 按需知识索引（由 AGENTS.md 路由，不要求依次通读）
 
 ### 第一步：这游戏什么情况？
+0. `../10_docs/_state/current.md` — 先查目标游戏的一行索引；只按该行链接读取
+   `../10_docs/_state/games/{游戏}.md`，不通读全部状态。
 1. `re-analyze/SKILL.md` — 拆包→引擎判定→保护识别→登录方式→能不能改的总判断
 2. `re-analyze/protection/` — 保护组件识别与既有案例：
    - `_总纲_加固与校验全体系.md` — **分层模型 + 死法分类学 + 排查决策树（拿新游戏/卡点无思路时先读）**
@@ -62,6 +64,8 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
 ### 收尾与最小复现
 1. [TOOLBOOK.md](../TOOLBOOK.md)「清理规则」「真机残留清理」— 保留输入、隔离重建、授权执行与设备分责。
 2. [游戏收尾与最小复现清单](../10_docs/_templates/游戏收尾与最小复现清单.md) — 按需填写证据与未处理项。
+3. [功能验收卡](../10_docs/_templates/功能验收卡.md) — 同一功能反复反馈或跨会话续查时，只保留最短判断链。
+4. [证据索引 README](../10_docs/_templates/证据索引README.md) — 长日志目录先写决定性证据入口，后续会话不通读全量日志。
 
 ### IDA 分析 .so
 1. `ida-plugin-flow/SKILL.md` — 按问题选步骤；仅有加密定位问题时触发扫描，通用政策见 `../AGENTS.md`

@@ -440,6 +440,26 @@
       "inputs": {
         "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok": "bf29c5b09da966e69f65219cdc9ee2f6"
       }
+    },
+    {
+      "id": "archive_close",
+      "name": "管线状态收口提交（新标准阶段）",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/archive_close_git.sh' --game '蛋壳战机'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/_common/archive_close_git.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/pipeline.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:55:00",
+      "note": "本阶段在标准脚本上线前已用等效手工提交 d02ea85 完成；后续 archive 写回 done 后直接运行 archive_close_git.sh 即可。"
     }
   ]
 }

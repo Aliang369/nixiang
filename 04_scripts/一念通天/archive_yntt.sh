@@ -14,6 +14,7 @@ git config core.quotepath false
 git add -- \
   "04_scripts/一念通天" \
   "10_docs/一念通天" \
+  "10_docs/_state/games/一念通天.md" \
   "10_docs/_state/current.md" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java" \
@@ -40,7 +41,7 @@ fi
 while IFS= read -r path; do
   [[ -n "$path" ]] || continue
   case "$path" in
-    04_scripts/一念通天/*|10_docs/一念通天/*|10_docs/_state/current.md|\
+    04_scripts/一念通天/*|10_docs/一念通天/*|10_docs/_state/games/一念通天.md|10_docs/_state/current.md|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java|\
     mod菜单/starry-mod-menu/app/src/main/jni/Android_yntt.mk|\
@@ -63,6 +64,6 @@ git commit -m "一念通天 728 星空包交付与收官"
 git push git@github.com:Aliang369/nixiang.git main
 
 echo "==> 本作相关状态"
-git status --short -- 04_scripts/一念通天 06_dumped/一念通天 10_docs/一念通天 10_docs/_state/current.md mod菜单/starry-mod-menu
+git status --short -- 04_scripts/一念通天 06_dumped/一念通天 10_docs/一念通天 10_docs/_state/games/一念通天.md 10_docs/_state/current.md mod菜单/starry-mod-menu
 echo "==> 全仓未处理项（应仅见其他会话/游戏）"
 git status --short

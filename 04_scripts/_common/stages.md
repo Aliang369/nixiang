@@ -64,7 +64,8 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 7 | `sign` | 签名 | 6 | uber-apk-signer | 签名包存在 + hash 入 json |
 | 8 | `device_ready` | 设备准备 | — | adb devices / connect（MuMu `127.0.0.1:5555`，重启后端口可能变 16384）/ 端口转发（MT MCP `adb forward tcp:8787 tcp:8787`） | 目标设备在线 |
 | 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 四查**（JS 语法/JNI 配套/P/Invoke 符号/控件读取，见上方专节）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；防"装机成功"假象装旧包） |
-| 10 | `archive` | 收官归档 | 9 | 文档收尾 + current.md 索引 + **git 固化**（add -A → commit → push） | 索引行存在 + git status 干净 |
+| 10 | `archive` | 收官归档 | 9 | 文档/游戏摘要 + current.md 单行索引 + `_common/archive_scoped_git.sh` 白名单提交（显式授权才 push） | 索引行存在 + 唯一正式包/裁剪清单存在 |
+| 11 | `archive_close` | 状态收口提交 | 10 | pipeline 写回 archive done 后，运行 `_common/archive_close_git.sh --game {游戏}`，只提交 `pipeline.json` 状态变化；显式授权才 push | 本作路径无未提交状态 |
 
 规则：
 - **顺序执行**：`next` 只取第一个 pending 阶段；跳步=用 `run` 显式指定（会做前置检查，前置未满足直接拒绝）。
@@ -72,11 +73,12 @@ bash 04_scripts/_common/pre_install_gate.sh \
 - **产物即证据**：每阶段完成把产物指纹（md5/标签检查结果）写回 json——"改错文件返工"由此兜底：下一阶段前置校验产物指纹，改动过的产物立刻暴露。
 - **inputs 快照与陈旧度（2026-09-10 起，防旧产物直装）**：阶段完成时记录上游产物 md5 快照。快照≠现状 = 该阶段过期：① 仍处 done 的过期阶段被**自动回退 pending**（上游产物一变化即触发，`reset 上游忘重跑下游`不再可能装旧包）；② 过期链路上的阶段**拒绝执行**并点名环节（改了源码没重编 so、换了 so 没重打 APK 都会拦），remedy = `reset <被点名阶段>` 后 `next` 连跑；③ 产物未变化的重跑不引发级联（幂等）。`pipeline.json` 状态文件与 `*.md` 活文档不参与指纹/新鲜度判定。
 - **每游戏一份 pipeline.json**，位于 `04_scripts/{游戏}/pipeline.json`；新游戏由强 AI 生成（或后续并入 new_game_mod.sh 生成第五件套）。
-- 日志统一追加至 `04_scripts/{游戏}/pipeline.log`。
+- 日志统一追加至 `04_scripts/{游戏}/pipeline.log`。完整日志是本地可再生物，
+  `.gitignore` 已排除；Git 只保留结论、决定性日志行和复现命令。
 
 ## 调试内循环（最高频场景：改 Mod → 重打 → 装机 → 看日志 → 再改）
 
-已有外科底包的迭代**不需要重走 10 阶段**，管线标准动作：
+已有外科底包的迭代**不需要重走完整标准阶段**，管线标准动作：
 
 ```bash
 bash 04_scripts/pipeline.sh <游戏> reset build_so   # 回退构建阶段
@@ -106,14 +108,30 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 
 ## 收官口令（用户说「收尾+正式包+清理+git」时，AI 展开此清单）
 
-1. 文档收尾：游戏文档更新（结论/证据/遗留），current.md 索引行同步
+1. 文档收尾：游戏文档更新（结论/证据/遗留）；详情写入
+   `10_docs/_state/games/{游戏}.md`，`current.md` 只同步一行摘要。反复反馈的
+   功能补 `10_docs/_templates/功能验收卡.md`，多日志证据补
+   `evidence_日期/README.md`。
 2. 正式包：核对指定正式包签名/哈希后，执行 `bash 04_scripts/_common/prune_output_final.sh 08_output/{游戏} {正式包} --apply --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json`；最终目录只保留一个正式 APK，被删候选包/idsig 的 hash/大小入清单
 3. 官包归位：02_apks（用户手动管理）
 4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；只清理本游戏路径；删前逐项核对再生依据；中文路径先 `git config core.quotepath false`）。
-   **清理后必须同步修正 `{游戏}/pipeline.json` 快照**（2026-09-19 补，弓箭传说2 踩坑）：`archive` 执行前的 `check_stale` 会遍历**所有祖先阶段**的 `inputs` 快照逐个比对 md5，被清理删掉的中间产物（unsigned APK、`07_patched` 留证、用户手动删除的 `02_apks` 官包）会让它判定「上游链路过期」并拒绝执行——**清理越彻底越跑不过**。修法：①产物被删的阶段（通常是 `surgical`）`verify` 由 `file_exists` 改 `not_exists`（正向记录已清理）、删 `artifacts`、原 md5 写进 `note` 留档；②引用这些产物的下游 `inputs` 条目一并移除，用户手动删除的输入同理（如 `impl_mod.inputs` 里的 `02_apks` 官包）；③`archive.verify` 用 `not_exists` 声明应清理的中间产物，`file_exists` 只留正式包/落地文档/裁剪清单。**顺序：清理 → 修快照 → 跑 `archive`**；若 `archive` 后端脚本（`archive_{tag}.sh`）自己 commit，`pipeline` 随后写状态会残留一次改动，补一次提交即收净。`check_stale` 是防「旧产物直装」的硬门禁，不得绕过；给它加「已清理豁免」属结构改造，需单独评估后再动。
+   **清理后必须同步修正 `{游戏}/pipeline.json` 快照**（2026-09-19 补，弓箭传说2 踩坑；2026-09-20 起脚本化）：`archive` 执行前的 `check_stale` 会遍历**所有祖先阶段**的 `inputs` 快照逐个比对 md5，被清理删掉的中间产物（unsigned APK、`07_patched` 留证、用户手动删除的 `02_apks` 官包）会让它判定「上游链路过期」并拒绝执行——**清理越彻底越跑不过**。先跑 dry-run：
+
+   ```bash
+   python3 04_scripts/_common/pipeline_record_cleanup.py \
+     --game {游戏} --manifest {清理或裁剪清单}.json
+   ```
+
+   核对输出后加 `--apply`。脚本会把命中的 `verify` 改为 `not_exists`、删除
+   对应 `artifacts`/下游 `inputs`，并把原 md5 追加到 stage `note`；`archive.verify`
+   仍应显式声明应清理的中间产物。**顺序：清理 → 脚本修快照 → 跑 `archive`**。
 5. 设备残留：真机会话按 TOOLBOOK「真机残留清理」回收证据与残留
-6. **git 固化**：只 `git add` 本任务相关路径，禁止把工作区无关改动带入提交；`git commit` 后 `git push`（push 冲突/网络失败则保留本地提交并明确报告）
-7. 验证收口：本任务相关路径无未提交改动；若工作区仍有无关改动，列表报告且不纳入提交。current.md 有本游戏行 + 汇报 CLAIM/VERDICT/EVIDENCE
+6. **git 固化**：优先用 `_common/archive_scoped_git.sh --path ... --message ...`，
+   只提交本任务白名单；显式授权 push 时加 `--push`。push 冲突/网络失败则保留本地
+   提交并明确报告。
+7. 管线写回 `archive=done` 后，运行
+   `_common/archive_close_git.sh --game {游戏}` 收口状态，避免手工补第二次提交。
+8. 验证收口：本任务相关路径无未提交改动；若工作区仍有无关改动，列表报告且不纳入提交。`current.md` 有本游戏单行索引 + 汇报 CLAIM/VERDICT/EVIDENCE。
 
 ## 现有脚本资产的角色
 

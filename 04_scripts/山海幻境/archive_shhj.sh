@@ -8,6 +8,7 @@ FINAL="$NIXIANG/08_output/$GAME/${GAME}_4_loginfix-releaseSigned.apk"
 DOC="$NIXIANG/10_docs/$GAME/星光落地_4_20260916.md"
 FORMAL="$NIXIANG/10_docs/$GAME/收尾与最小复现清单_4_20260916.md"
 CLEANUP="$NIXIANG/04_scripts/$GAME/cleanup_summary.json"
+STATE="$NIXIANG/10_docs/_state/games/$GAME.md"
 SUMMARY="$NIXIANG/04_scripts/$GAME/archive_summary.json"
 SCOPE="$NIXIANG/04_scripts/$GAME/archive_git_scope.txt"
 EXPECTED_MD5="6bd976050b7571d71a9cd3597513427d"
@@ -17,27 +18,30 @@ EXPECTED_MD5="6bd976050b7571d71a9cd3597513427d"
 [[ -f "$DOC" ]] || { echo "错误: 落点文档不存在" >&2; exit 1; }
 [[ -f "$FORMAL" ]] || { echo "错误: 收尾与最小复现清单不存在" >&2; exit 1; }
 [[ -f "$CLEANUP" ]] || { echo "错误: 清理台账不存在" >&2; exit 1; }
+[[ -f "$STATE" ]] || { echo "错误: 游戏状态摘要不存在" >&2; exit 1; }
 grep -q '登录 ret=5 非法客户端修复' "$DOC" || { echo "错误: 登录修复记录缺失" >&2; exit 1; }
 grep -q '山海幻境.*4 / vc54' "$NIXIANG/10_docs/_state/current.md" || { echo "错误: current.md 索引未更新" >&2; exit 1; }
 
 git -C "$NIXIANG" diff --check -- \
   04_scripts/$GAME \
   10_docs/$GAME \
+  10_docs/_state/games/$GAME.md \
   10_docs/_state/current.md \
   mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh
 
 git -C "$NIXIANG" status --short -- \
   04_scripts/$GAME \
   10_docs/$GAME \
+  10_docs/_state/games/$GAME.md \
   mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh > "$SCOPE"
 
-python3 - "$SUMMARY" "$FINAL" "$EXPECTED_MD5" "$DOC" "$FORMAL" "$SCOPE" <<'PY'
+python3 - "$SUMMARY" "$FINAL" "$EXPECTED_MD5" "$DOC" "$FORMAL" "$STATE" "$SCOPE" <<'PY'
 import json
 import subprocess
 import sys
 from pathlib import Path
 
-(out, final, md5, doc, formal, scope) = sys.argv[1:]
+(out, final, md5, doc, formal, state, scope) = sys.argv[1:]
 root = "/Users/aliang/Documents/nixiang"
 data = {
     "game": "山海幻境",
@@ -47,6 +51,7 @@ data = {
     "final_apk_md5": md5,
     "landing_doc": doc,
     "formal_closure_doc": formal,
+    "state_detail": state,
     "cleanup_summary": f"{root}/04_scripts/山海幻境/cleanup_summary.json",
     "git_scope_file": scope,
     "git_head": subprocess.check_output(["git", "-C", root, "rev-parse", "HEAD"], text=True).strip(),

@@ -25,6 +25,7 @@ APK_COUNT="$(find 08_output/暗影格斗3 -maxdepth 1 -name '*.apk' | wc -l | tr
 git add -- \
   "04_scripts/暗影格斗3" \
   "10_docs/暗影格斗3" \
+  "10_docs/_state/games/暗影格斗3.md" \
   "10_docs/_state/current.md" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/bridge/ModBridge.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java" \
@@ -53,7 +54,7 @@ while IFS= read -r path; do
   [[ -n "$path" ]] || continue
   case "$path" in
     04_scripts/暗影格斗3/*|10_docs/暗影格斗3/*|\
-    10_docs/_state/current.md|\
+    10_docs/_state/games/暗影格斗3.md|10_docs/_state/current.md|\
     06_dumped/暗影格斗3/*|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/bridge/ModBridge.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java|\
@@ -74,6 +75,6 @@ printf '%s\n' "$STAGED"
 git commit -m "暗影格斗3 1.45.3 收尾清理：06_dumped 大二进制删除 + 08_output 裁剪 + 文档补录"
 
 echo "==> 本作相关状态"
-git status --short -- 04_scripts/暗影格斗3 06_dumped/暗影格斗3 10_docs/暗影格斗3 10_docs/_state/current.md mod菜单/starry-mod-menu
+git status --short -- 04_scripts/暗影格斗3 06_dumped/暗影格斗3 10_docs/暗影格斗3 10_docs/_state/games/暗影格斗3.md 10_docs/_state/current.md mod菜单/starry-mod-menu
 echo "==> 全仓未处理项（应仅见其他会话/游戏）"
 git status --short

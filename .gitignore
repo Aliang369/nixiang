@@ -71,7 +71,6 @@ __pycache__/
 
 # ===== 运行日志（可再生）=====
 *.log
-!04_scripts/*/pipeline.log
 
 # ===== 装机成功戳（设备侧状态，每次装机重写）=====
 04_scripts/*/.install_ok

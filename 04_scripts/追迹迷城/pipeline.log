@@ -1,585 +1,0 @@
-
-────────────────────────────────────────────
-[2026-09-14 18:52:59] [追迹迷城] stage=device_ready 开始
-命令: bash 04_scripts/追迹迷城/device_ready_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-serial=f9a116a2
-model=OPD2515
-android=16
-abi=arm64-v8a
-root=uid=0(root) gid=0(root) groups=0(root) context=u:r:ksu:s0
-state_file=/Users/aliang/Documents/nixiang/04_scripts/追迹迷城/.device_serial
-[2026-09-14 18:52:59] [追迹迷城] stage=device_ready 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 18:53:12] [追迹迷城] stage=pull_device 开始
-命令: bash 04_scripts/追迹迷城/fetch_installed_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-==> 尝试直接只读拉取
-/data/app/~~aj3835_JBYEySj6ajqWjsw==/com.TeaMelo.DungeonChasers-DKMzIcImnmr5t8CtsMb1Aw==/base.apk: 1 file pulled, 0 skipped. 31.8 MB/s (942024125 bytes in 28.281s)
-package=com.TeaMelo.DungeonChasers
-versionName=1.0.20260912
-versionCode=98503
-installer=com.android.packageinstaller
-primaryCpuAbi=arm64-v8a
-serial=f9a116a2
-remote=/data/app/~~aj3835_JBYEySj6ajqWjsw==/com.TeaMelo.DungeonChasers-DKMzIcImnmr5t8CtsMb1Aw==/base.apk
-output=/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20260912_official.apk
-size=942024125
-sha256=28ca13a77679319c9b20165a0f9899e4d929cc9687a30eeeeb54a65cadd32490
-md5=013749a32d1e9c660cb9ff05feeabf87
-meta=/Users/aliang/Documents/nixiang/04_scripts/追迹迷城/official_apk.json
-[2026-09-14 18:53:46] [追迹迷城] stage=pull_device 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 18:53:55] [追迹迷城] stage=check_apk 开始
-命令: bash 04_scripts/追迹迷城/check_zjmc_apk.sh
-目录: /Users/aliang/Documents/nixiang
-==> 官方包核对
-Signer #1 certificate DN: O=深圳缇米乐科技有限公司, CN=蒋帅
-Signer #1 certificate SHA-256 digest: b4797b29735d73557ae10a3051ecbf3a2cd50d184c42479a91af08b5a1c97e55
-Signer #1 certificate SHA-1 digest: 903a5304253a8d24385d1567359f98d371b922d3
-Signer #1 certificate MD5 digest: 4684a2b2249e978c74230f8895635894
-package=com.TeaMelo.DungeonChasers
-versionName=1.0.20260912
-versionCode=98503
-cert_md5=4684a2b2249e978c74230f8895635894
-cert_changed_vs_20260906=false
-libil2cpp_md5=576537f8333dc98511e6bb19690a01ea
-global_metadata_md5=e22cd5a294ed6a9cc751b7269fc8fee0
-summary=/Users/aliang/Documents/nixiang/04_scripts/追迹迷城/check_summary.json
-doc=/Users/aliang/Documents/nixiang/10_docs/追迹迷城/官方包核对_1.0.20260912.md
-[2026-09-14 18:54:01] [追迹迷城] stage=check_apk 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 18:54:12] [追迹迷城] stage=dump 开始
-命令: bash 04_scripts/追迹迷城/dump_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-==> [1/3] jadx + apktool
-==> jadx → /Users/aliang/Documents/nixiang/03_decompiled/追迹迷城/jadx_1.0.20260912
-INFO  - loading ...
-INFO  - processing ...
-INFO  - progress: 0 of 26063 (0%)INFO  - progress: 763 of 26063 (2%)INFO  - progress: 2311 of 26063 (8%)INFO  - progress: 3636 of 26063 (13%)INFO  - progress: 5231 of 26063 (20%)INFO  - progress: 6599 of 26063 (25%)INFO  - progress: 8546 of 26063 (32%)INFO  - progress: 8797 of 26063 (33%)INFO  - progress: 8820 of 26063 (33%)INFO  - progress: 8915 of 26063 (34%)INFO  - progress: 9040 of 26063 (34%)INFO  - progress: 9895 of 26063 (37%)INFO  - progress: 10374 of 26063 (39%)INFO  - progress: 10842 of 26063 (41%)INFO  - progress: 11112 of 26063 (42%)INFO  - progress: 11318 of 26063 (43%)INFO  - progress: 11597 of 26063 (44%)INFO  - progress: 11794 of 26063 (45%)INFO  - progress: 12078 of 26063 (46%)INFO  - progress: 12216 of 26063 (46%)INFO  - progress: 12403 of 26063 (47%)INFO  - progress: 12633 of 26063 (48%)INFO  - progress: 12758 of 26063 (48%)INFO  - progress: 12973 of 26063 (49%)INFO  - progress: 13311 of 26063 (51%)INFO  - progress: 13834 of 26063 (53%)INFO  - progress: 13968 of 26063 (53%)INFO  - progress: 14050 of 26063 (53%)INFO  - progress: 14260 of 26063 (54%)INFO  - progress: 14366 of 26063 (55%)INFO  - progress: 14422 of 26063 (55%)INFO  - progress: 14471 of 26063 (55%)INFO  - progress: 14501 of 26063 (55%)INFO  - progress: 14617 of 26063 (56%)INFO  - progress: 14781 of 26063 (56%)INFO  - progress: 14869 of 26063 (57%)INFO  - progress: 15007 of 26063 (57%)INFO  - progress: 15153 of 26063 (58%)INFO  - progress: 15226 of 26063 (58%)INFO  - progress: 15333 of 26063 (58%)INFO  - progress: 15648 of 26063 (60%)INFO  - progress: 15829 of 26063 (60%)INFO  - progress: 15991 of 26063 (61%)INFO  - progress: 16189 of 26063 (62%)INFO  - progress: 16387 of 26063 (62%)INFO  - progress: 16494 of 26063 (63%)INFO  - progress: 16760 of 26063 (64%)INFO  - progress: 16893 of 26063 (64%)INFO  - progress: 17019 of 26063 (65%)INFO  - progress: 17134 of 26063 (65%)INFO  - progress: 17314 of 26063 (66%)INFO  - progress: 17484 of 26063 (67%)INFO  - progress: 17588 of 26063 (67%)INFO  - progress: 17681 of 26063 (67%)INFO  - progress: 17750 of 26063 (68%)INFO  - progress: 17860 of 26063 (68%)INFO  - progress: 18016 of 26063 (69%)INFO  - progress: 18138 of 26063 (69%)INFO  - progress: 18142 of 26063 (69%)INFO  - progress: 18269 of 26063 (70%)INFO  - progress: 18303 of 26063 (70%)INFO  - progress: 18399 of 26063 (70%)INFO  - progress: 18496 of 26063 (70%)INFO  - progress: 18550 of 26063 (71%)INFO  - progress: 18647 of 26063 (71%)INFO  - progress: 18762 of 26063 (71%)INFO  - progress: 18832 of 26063 (72%)INFO  - progress: 18859 of 26063 (72%)INFO  - progress: 18980 of 26063 (72%)INFO  - progress: 19060 of 26063 (73%)INFO  - progress: 19109 of 26063 (73%)INFO  - progress: 19169 of 26063 (73%)INFO  - progress: 19244 of 26063 (73%)INFO  - progress: 19360 of 26063 (74%)INFO  - progress: 19511 of 26063 (74%)INFO  - progress: 19551 of 26063 (75%)INFO  - progress: 19618 of 26063 (75%)INFO  - progress: 19734 of 26063 (75%)INFO  - progress: 19840 of 26063 (76%)INFO  - progress: 19978 of 26063 (76%)INFO  - progress: 20010 of 26063 (76%)INFO  - progress: 20085 of 26063 (77%)INFO  - progress: 20189 of 26063 (77%)INFO  - progress: 20224 of 26063 (77%)INFO  - progress: 20325 of 26063 (77%)INFO  - progress: 20442 of 26063 (78%)INFO  - progress: 20514 of 26063 (78%)INFO  - progress: 20604 of 26063 (79%)INFO  - progress: 20753 of 26063 (79%)INFO  - progress: 20821 of 26063 (79%)INFO  - progress: 20908 of 26063 (80%)INFO  - progress: 21020 of 26063 (80%)INFO  - progress: 21109 of 26063 (80%)INFO  - progress: 21191 of 26063 (81%)INFO  - progress: 21289 of 26063 (81%)INFO  - progress: 21351 of 26063 (81%)INFO  - progress: 21428 of 26063 (82%)INFO  - progress: 21507 of 26063 (82%)INFO  - progress: 21567 of 26063 (82%)INFO  - progress: 21567 of 26063 (82%)INFO  - progress: 21567 of 26063 (82%)INFO  - progress: 21656 of 26063 (83%)INFO  - progress: 21746 of 26063 (83%)INFO  - progress: 21864 of 26063 (83%)INFO  - progress: 21965 of 26063 (84%)INFO  - progress: 22074 of 26063 (84%)INFO  - progress: 22135 of 26063 (84%)INFO  - progress: 22209 of 26063 (85%)INFO  - progress: 22355 of 26063 (85%)INFO  - progress: 22411 of 26063 (85%)INFO  - progress: 22521 of 26063 (86%)INFO  - progress: 22592 of 26063 (86%)INFO  - progress: 22625 of 26063 (86%)INFO  - progress: 22634 of 26063 (86%)INFO  - progress: 22686 of 26063 (87%)INFO  - progress: 22769 of 26063 (87%)INFO  - progress: 22800 of 26063 (87%)INFO  - progress: 22864 of 26063 (87%)INFO  - progress: 22962 of 26063 (88%)INFO  - progress: 23032 of 26063 (88%)INFO  - progress: 23107 of 26063 (88%)INFO  - progress: 23113 of 26063 (88%)INFO  - progress: 23160 of 26063 (88%)INFO  - progress: 23167 of 26063 (88%)INFO  - progress: 23177 of 26063 (88%)INFO  - progress: 23222 of 26063 (89%)INFO  - progress: 23284 of 26063 (89%)INFO  - progress: 23347 of 26063 (89%)INFO  - progress: 23428 of 26063 (89%)INFO  - progress: 23453 of 26063 (89%)INFO  - progress: 23520 of 26063 (90%)INFO  - progress: 23569 of 26063 (90%)INFO  - progress: 23600 of 26063 (90%)INFO  - progress: 23632 of 26063 (90%)INFO  - progress: 23711 of 26063 (90%)INFO  - progress: 23805 of 26063 (91%)INFO  - progress: 23854 of 26063 (91%)INFO  - progress: 23907 of 26063 (91%)INFO  - progress: 24002 of 26063 (92%)INFO  - progress: 24068 of 26063 (92%)INFO  - progress: 24108 of 26063 (92%)INFO  - progress: 24149 of 26063 (92%)INFO  - progress: 24239 of 26063 (93%)INFO  - progress: 24315 of 26063 (93%)INFO  - progress: 24418 of 26063 (93%)INFO  - progress: 24518 of 26063 (94%)INFO  - progress: 24606 of 26063 (94%)INFO  - progress: 24623 of 26063 (94%)INFO  - progress: 24706 of 26063 (94%)INFO  - progress: 24799 of 26063 (95%)INFO  - progress: 24866 of 26063 (95%)INFO  - progress: 24949 of 26063 (95%)INFO  - progress: 25011 of 26063 (95%)INFO  - progress: 25146 of 26063 (96%)INFO  - progress: 25199 of 26063 (96%)INFO  - progress: 25226 of 26063 (96%)INFO  - progress: 25272 of 26063 (96%)INFO  - progress: 25404 of 26063 (97%)INFO  - progress: 25450 of 26063 (97%)INFO  - progress: 25483 of 26063 (97%)INFO  - progress: 25564 of 26063 (98%)INFO  - progress: 25642 of 26063 (98%)INFO  - progress: 25699 of 26063 (98%)INFO  - progress: 25779 of 26063 (98%)INFO  - progress: 25814 of 26063 (99%)INFO  - progress: 25867 of 26063 (99%)INFO  - progress: 25940 of 26063 (99%)INFO  - progress: 25993 of 26063 (99%)INFO  - progress: 26051 of 26063 (99%)                                                             ERROR - finished with errors, count: 172
-警告: jadx 退出码 3（部分类失败时仍可能有可用产物）
-==> apktool → /Users/aliang/Documents/nixiang/03_decompiled/追迹迷城/apktool_1.0.20260912
-I: Using Apktool 3.0.3 on 追迹迷城_1.0.20260912_official.apk with 8 threads
-I: Baksmaling classes2.dex...
-I: Baksmaling classes4.dex...
-I: Baksmaling classes3.dex...
-I: Baksmaling classes5.dex...
-I: Baksmaling classes.dex...
-I: Loading resource table...
-I: Baksmaling classes6.dex...
-I: Decoding value resources...
-I: Loading resource table from file: /Users/aliang/Library/apktool/framework/1.apk
-I: Decoding file resources...
-I: Generating values XMLs...
-I: Decoding AndroidManifest.xml with resources...
-I: Copying original files...
-I: Copying assets...
-I: Copying lib...
-I: Copying unknown files...
-
-完成。
-  jadx:    /Users/aliang/Documents/nixiang/03_decompiled/追迹迷城/jadx_1.0.20260912
-  apktool: /Users/aliang/Documents/nixiang/03_decompiled/追迹迷城/apktool_1.0.20260912
-  摘要:    /Users/aliang/Documents/nixiang/03_decompiled/追迹迷城/decode_summary_1.0.20260912.md
-  manifest:/Users/aliang/Documents/nixiang/03_decompiled/追迹迷城/manifest_1.0.20260912.txt
-==> [2/3] Il2CppDumper
-Initializing metadata...
-Metadata Version: 31
-Initializing il2cpp file...
-Applying relocations...
-WARNING: find JNI_OnLoad
-ERROR: This file may be protected.
-Il2Cpp Version: 31
-Searching...
-CodeRegistration : 61a6890
-MetadataRegistration : 63ee790
-Dumping...
-Done!
-Generate struct...
-Done!
-Generate dummy dll...
-Done!
-==> [3/3] 固化 current 指针与输入指纹
- 1239812 /Users/aliang/Documents/nixiang/06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs
--rw-r--r--@ 1 aliang  staff    42M Sep 14 18:57 /Users/aliang/Documents/nixiang/06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs
--rw-r--r--@ 1 aliang  staff   122M Sep 14 18:57 /Users/aliang/Documents/nixiang/06_dumped/追迹迷城/1.0.20260912_il2cpp/script.json
-完成: /Users/aliang/Documents/nixiang/06_dumped/追迹迷城/1.0.20260912_il2cpp
-[2026-09-14 18:57:38] [追迹迷城] stage=dump 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:00:15] [追迹迷城] stage=anchor 开始
-命令: true
-目录: /Users/aliang/Documents/nixiang
-[2026-09-14 19:00:15] [追迹迷城] stage=anchor 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:03:36] [追迹迷城] stage=anchor 开始
-命令: true
-目录: /Users/aliang/Documents/nixiang
-[2026-09-14 19:03:37] [追迹迷城] stage=anchor 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:08:00] [追迹迷城] stage=impl_mod 开始
-命令: bash 04_scripts/追迹迷城/zjmc_manifest.sh
-目录: /Users/aliang/Documents/nixiang
-[pool] count=454 flags=0x0
-[pool] slot swap idx=195: com.byazt.b.DownloadHandleService -> com.starry.magic.menu.MenuService
-[pool] rebuilt 454->458 strings, chunk 40268->40512 B
-[map] resource map +411 entries: {'idx454(foregroundServiceType)': '0x1010599'}
-[axml] application +android:name
-[axml] service +foregroundServiceType=specialUse
-[axml] +1 uses-permission, existing=29
-[done] /Users/aliang/Documents/nixiang/07_patched/追迹迷城/surgical_1.0.20260912/AndroidManifest.xml (89916 B)
-manifest binary validation ok
-version=1.0.20260912
-source_apk=/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20260912_official.apk
-patched_manifest=/Users/aliang/Documents/nixiang/07_patched/追迹迷城/surgical_1.0.20260912/AndroidManifest.xml
-md5=722d54e7c398ede2ecf56c93f3e59f31
-size=89916
-[2026-09-14 19:08:01] [追迹迷城] stage=impl_mod 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:08:20] [追迹迷城] stage=build_so 开始
-命令: bash 04_scripts/追迹迷城/zjmc_build_so.sh
-目录: /Users/aliang/Documents/nixiang
-[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
-[arm64-v8a] Compile        : starry_magic <= xdl_util.c
-[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
-[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
-[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libc++_shared.so:
-[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
-[arm64-v8a] Compile        : starry_magic <= xdl.c
-[arm64-v8a] Compile++      : starry_magic <= ZjmcMod.cpp
-[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
-[arm64-v8a] Compile++      : starry_magic <= Main.cpp
-[arm64-v8a] SharedLibrary  : libstarry_magic.so
-[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so
-so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so
-md5=08a6729c0f18e8beb3da8fe777b9e1ac
-sha256=e6e5ac70b2bf47256bbee937c40bf306c46b530a3a99c9f5f06beb846e4589e3
-size=163928
-jniLibs=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so
-[2026-09-14 19:08:26] [追迹迷城] stage=build_so 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:13:37] [追迹迷城] stage=surgical 开始
-命令: bash mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh
-目录: /Users/aliang/Documents/nixiang
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
-[check] Android.mk target=zjmc
-[1/7] verify build_so -> jniLibs
-  so -> jniLibs ok ([Zjmc] + 免广告 verified)
-[1b/7] gradle assembleRelease
-Starting a Gradle Daemon (subsequent builds will be faster)
-> Task :app:preBuild UP-TO-DATE
-> Task :app:preReleaseBuild UP-TO-DATE
-> Task :app:generateReleaseBuildConfig
-> Task :app:javaPreCompileRelease
-> Task :app:generateReleaseResValues
-> Task :app:checkReleaseAarMetadata
-> Task :app:mapReleaseSourceSetPaths
-> Task :app:generateReleaseResources
-> Task :app:packageReleaseResources
-> Task :app:mergeReleaseResources
-> Task :app:createReleaseCompatibleScreenManifests
-> Task :app:extractDeepLinksRelease
-> Task :app:parseReleaseLocalResources
-> Task :app:processReleaseMainManifest
-> Task :app:processReleaseManifest
-> Task :app:extractProguardFiles
-> Task :app:mergeReleaseJniLibFolders
-> Task :app:checkReleaseDuplicateClasses
-> Task :app:mergeReleaseArtProfile
-> Task :app:processReleaseJavaRes NO-SOURCE
-> Task :app:mergeReleaseNativeLibs
-> Task :app:mergeReleaseStartupProfile
-> Task :app:mergeReleaseShaders
-> Task :app:compileReleaseShaders NO-SOURCE
-> Task :app:generateReleaseAssets UP-TO-DATE
-> Task :app:mergeReleaseAssets
-> Task :app:processReleaseManifestForPackage
-> Task :app:mergeReleaseJavaResource
-> Task :app:compressReleaseAssets
-> Task :app:extractReleaseVersionControlInfo
-> Task :app:processApplicationManifestReleaseForBundle
-> Task :app:collectReleaseDependencies
-> Task :app:sdkReleaseDependencyData
-> Task :app:stripReleaseDebugSymbols
-> Task :app:validateSigningRelease
-> Task :app:writeReleaseAppMetadata
-> Task :app:writeReleaseSigningConfigVersions
-> Task :app:extractReleaseNativeSymbolTables
-> Task :app:processReleaseResources
-> Task :app:mergeReleaseNativeDebugMetadata
-
-> Task :app:compileReleaseJavaWithJavac
-/private/tmp/zjmc_surgical.hxirIW/starry/app/src/main/java/com/starry/magic/menu/Preferences.java:450: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
-    public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson) {
-                       ^
-/private/tmp/zjmc_surgical.hxirIW/starry/app/src/main/java/com/starry/magic/menu/MagicRes.java:82: 警告: [dep-ann] 未使用 @Deprecated 对已过时的项目进行注释
-    public static Drawable fabCircle(Context ctx) {
-                           ^
-注: 某些输入文件使用或覆盖了已过时的 API。
-注: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
-2 个警告
-
-> Task :app:generateReleaseLintVitalReportModel
-> Task :app:expandReleaseArtProfileWildcards
-> Task :app:mergeReleaseGeneratedProguardFiles
-> Task :app:bundleReleaseResources
-> Task :app:minifyReleaseWithR8
-> Task :app:compileReleaseArtProfile
-> Task :app:shrinkReleaseRes
-> Task :app:convertReleaseProtoResources
-> Task :app:optimizeReleaseResources
-> Task :app:packageRelease
-> Task :app:createReleaseApkListingFileRedirect
-> Task :app:lintVitalAnalyzeRelease
-> Task :app:lintVitalReportRelease
-> Task :app:lintVitalRelease
-> Task :app:assembleRelease
-
-[Incubating] Problems report is available at: file:///private/tmp/zjmc_surgical.hxirIW/starry/build/reports/problems/problems-report.html
-
-Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
-
-You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
-
-For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
-
-BUILD SUCCESSFUL in 27s
-50 actionable tasks: 50 executed
-[2/7] apktool d starry template
-[3/7] collect starry smali (will merge into classes6)
-  starry smali collected (139 files)
-[4/7] patch classes3 (PrivacyActivity / UnityPlayerActivity)
-  hook PrivacyActivity.smali.onCreate
-  hook PrivacyActivity.smali.onUserLeaveHint
-  hook PrivacyActivity.smali.onResume
-  hook UnityPlayerActivity.smali.onCreate
-  hook UnityPlayerActivity.smali.onUserLeaveHint
-[4b/7] patch classes5 (TapSign / WebLogin)
-  TapSignKit.getSign -> original cert
-  ClientLoginUtils -> force WebLogin
-[4c/7] merge starry smali into classes6 (no new dex)
-[5/7] binary AndroidManifest (StarryApp + MenuService)
-  using cached /Users/aliang/Documents/nixiang/07_patched/追迹迷城/surgical_1.0.20260912/AndroidManifest.xml
--rw-r--r--@ 1 aliang  wheel  89916 Sep 14 19:14 /tmp/zjmc_surgical.hxirIW/AndroidManifest.xml
-[6/7] zip surgical merge
-updating: classes3.dex (deflated 63%)
-updating: classes5.dex (deflated 63%)
-updating: classes6.dex (deflated 63%)
-updating: AndroidManifest.xml (deflated 85%)
-  adding: lib/arm64-v8a/libstarry_magic.so (deflated 51%)
-  adding: lib/arm64-v8a/libc++_shared.so (deflated 72%)
-  adding: assets/certs/starlight.crt (deflated 25%)
-  merged ok; arsc/classes.dex intact; [Zjmc] so
-[7/7] zipalign + sign → /Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk
-Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
-Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
-Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
-Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
-  signed ok; starry merged in classes6, login patches in classes3/5
--rw-r--r--@ 1 aliang  staff   883M Sep 14 19:15 /Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk
-DONE /Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk
-[2026-09-14 19:15:41] [追迹迷城] stage=surgical 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:16:53] [追迹迷城] stage=sign 开始
-命令: true
-目录: /Users/aliang/Documents/nixiang
-[2026-09-14 19:17:00] [追迹迷城] stage=sign 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:22:08] [追迹迷城] stage=uninstall_official 开始
-命令: bash 04_scripts/追迹迷城/uninstall_official_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-官方包路径: package:/data/app/~~aj3835_JBYEySj6ajqWjsw==/com.TeaMelo.DungeonChasers-DKMzIcImnmr5t8CtsMb1Aw==/base.apk
-Success
-serial=f9a116a2
-package=com.TeaMelo.DungeonChasers
-uninstall=ok
-keep_data=no
-[2026-09-14 19:22:14] [追迹迷城] stage=uninstall_official 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:22:31] [追迹迷城] stage=install 开始
-命令: bash 04_scripts/追迹迷城/install_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-==> 设备余量
-Filesystem       Size Used Avail Use% Mounted on
-/dev/block/dm-72 219G 146G   74G  67% /data/user/0
-==> push /Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk
-/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk: 1 file pushed, 0 skipped. 40.2 MB/s (926038183 bytes in 21.970s)
-==> pm install
-Success
-==> 验证设备包指纹
-[install-verify] 设备 base.apk md5 == 本地产物 (f50a6f15cd438745bdea3714884c7bf1) ✓
-==> 安装身份
-    primaryCpuAbi=arm64-v8a
-    versionCode=98503 minSdk=28 targetSdk=34
-    versionName=1.0.20260912
-    lastUpdateTime=2026-09-14 19:24:58
-serial=f9a116a2
-package=com.TeaMelo.DungeonChasers
-apk=/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk
-apk_md5=f50a6f15cd438745bdea3714884c7bf1
-install=ok
-[2026-09-14 19:25:12] [追迹迷城] stage=install 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:37:58] [追迹迷城] stage=cleanup 开始
-命令: bash 04_scripts/追迹迷城/cleanup_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-==> dry-run: 06_dumped/追迹迷城
-Would remove 06_dumped/追迹迷城/1.0.20260912_il2cpp.tool/
-Would remove 06_dumped/追迹迷城/1.0.20260912_il2cpp/DummyDll/
-Would remove 06_dumped/追迹迷城/1.0.20260912_il2cpp/il2cpp.h
-Would remove 06_dumped/追迹迷城/1.0.20260912_il2cpp/inputs.sha256
-Would remove 06_dumped/追迹迷城/1.0.20260912_il2cpp/script.json
-Would remove 06_dumped/追迹迷城/current
-Would remove 06_dumped/追迹迷城/inputs/
-Removing 03_decompiled/追迹迷城/
-Removing 07_patched/追迹迷城/
-Removing 06_dumped/追迹迷城/1.0.20260912_il2cpp.tool/
-Removing 06_dumped/追迹迷城/1.0.20260912_il2cpp/DummyDll/
-Removing 06_dumped/追迹迷城/1.0.20260912_il2cpp/il2cpp.h
-Removing 06_dumped/追迹迷城/1.0.20260912_il2cpp/inputs.sha256
-Removing 06_dumped/追迹迷城/1.0.20260912_il2cpp/script.json
-Removing 06_dumped/追迹迷城/current
-Removing 06_dumped/追迹迷城/inputs/
-==> 设备本次临时文件（只清理本次两个明确路径）
-[2026-09-14 19:38:14] [追迹迷城] stage=cleanup 命令失败 rc=1
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:39:41] [追迹迷城] stage=cleanup 开始
-命令: bash 04_scripts/追迹迷城/cleanup_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-[2026-09-14 19:39:41] [追迹迷城] stage=cleanup 命令失败 rc=1
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:40:18] [追迹迷城] stage=cleanup 开始
-命令: bash 04_scripts/追迹迷城/cleanup_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-==> dry-run: 06_dumped/追迹迷城
-==> 设备本次临时文件（只清理本次两个明确路径）
-{
-  "game": "追迹迷城",
-  "before_kb": 46208,
-  "after_kb": 46208,
-  "released_kb": 0,
-  "before_at": "2026-09-14 19:40:18",
-  "after_at": "2026-09-14 19:40:19",
-  "kept": [
-    "02_apks/追迹迷城",
-    "08_output/追迹迷城",
-    "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs",
-    "06_dumped/追迹迷城/1.0.20260912_il2cpp/stringliteral.json",
-    "06_dumped/追迹迷城/1.0.20260912_il2cpp/rva_targets.json"
-  ],
-  "removed_roots": [
-    "03_decompiled/追迹迷城",
-    "07_patched/追迹迷城",
-    "06_dumped/追迹迷城 ignored binaries"
-  ]
-}
-[2026-09-14 19:40:25] [追迹迷城] stage=cleanup 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:41:14] [追迹迷城] stage=archive 开始
-命令: bash 04_scripts/追迹迷城/archive_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-The following paths are ignored by one of your .gitignore files:
-mod菜单/starry-mod-menu/app/src/main/libs
-hint: Use -f if you really want to add them.
-hint: Disable this message with "git config set advice.addIgnoredFile false"
-[2026-09-14 19:41:14] [追迹迷城] stage=archive 命令失败 rc=1
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-14 19:42:04] [追迹迷城] stage=archive 开始
-命令: bash 04_scripts/追迹迷城/archive_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-04_scripts/追迹迷城/.device_serial
-04_scripts/追迹迷城/archive_zjmc.sh
-04_scripts/追迹迷城/check_summary.json
-04_scripts/追迹迷城/check_zjmc_apk.sh
-04_scripts/追迹迷城/cleanup_summary.json
-04_scripts/追迹迷城/cleanup_zjmc.sh
-04_scripts/追迹迷城/device_ready_zjmc.sh
-04_scripts/追迹迷城/dump_zjmc.sh
-04_scripts/追迹迷城/fetch_installed_zjmc.sh
-04_scripts/追迹迷城/install_zjmc.sh
-04_scripts/追迹迷城/official_apk.json
-04_scripts/追迹迷城/patch_zjmc_binary_manifest_v2.py
-04_scripts/追迹迷城/patch_zjmc_smali.py
-04_scripts/追迹迷城/pipeline.json
-04_scripts/追迹迷城/pipeline.log
-04_scripts/追迹迷城/uninstall_done.json
-04_scripts/追迹迷城/uninstall_official_zjmc.sh
-04_scripts/追迹迷城/zjmc_build_so.sh
-04_scripts/追迹迷城/zjmc_manifest.sh
-06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs
-06_dumped/追迹迷城/1.0.20260912_il2cpp/rva_targets.json
-06_dumped/追迹迷城/1.0.20260912_il2cpp/stringliteral.json
-10_docs/_state/current.md
-10_docs/_state/games/追迹迷城.md
-10_docs/追迹迷城/官方包核对_1.0.20260912.md
-10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md
-10_docs/追迹迷城/星光落地_1.0.20260912_20260914.md
-10_docs/追迹迷城/锚点_五功能_1.0.20260912_20260914.md
-mod菜单/starry-mod-menu/app/src/main/jni/Android.mk
-mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.cpp
-mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.h
-mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp
-mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so
-mod菜单/starry-mod-menu/app/src/main/libs/arm64-v8a/libstarry_magic.so
-mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh
-[main 1e61245] 追迹迷城 1.0.20260912 星空包交付与收官
- 35 files changed, 1361001 insertions(+), 51 deletions(-)
- create mode 100644 04_scripts/追迹迷城/.device_serial
- create mode 100644 04_scripts/追迹迷城/archive_zjmc.sh
- create mode 100644 04_scripts/追迹迷城/check_summary.json
- create mode 100644 04_scripts/追迹迷城/check_zjmc_apk.sh
- create mode 100644 04_scripts/追迹迷城/cleanup_summary.json
- create mode 100644 04_scripts/追迹迷城/cleanup_zjmc.sh
- create mode 100644 04_scripts/追迹迷城/device_ready_zjmc.sh
- create mode 100644 04_scripts/追迹迷城/dump_zjmc.sh
- create mode 100644 04_scripts/追迹迷城/fetch_installed_zjmc.sh
- create mode 100644 04_scripts/追迹迷城/install_zjmc.sh
- create mode 100644 04_scripts/追迹迷城/official_apk.json
- create mode 100644 04_scripts/追迹迷城/patch_zjmc_binary_manifest_v2.py
- create mode 100644 04_scripts/追迹迷城/patch_zjmc_smali.py
- create mode 100644 04_scripts/追迹迷城/pipeline.json
- create mode 100644 04_scripts/追迹迷城/pipeline.log
- create mode 100644 04_scripts/追迹迷城/uninstall_done.json
- create mode 100644 04_scripts/追迹迷城/uninstall_official_zjmc.sh
- create mode 100644 04_scripts/追迹迷城/zjmc_build_so.sh
- create mode 100644 04_scripts/追迹迷城/zjmc_manifest.sh
- create mode 100644 06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs
- create mode 100644 06_dumped/追迹迷城/1.0.20260912_il2cpp/rva_targets.json
- create mode 100644 06_dumped/追迹迷城/1.0.20260912_il2cpp/stringliteral.json
- create mode 100644 10_docs/追迹迷城/官方包核对_1.0.20260912.md
- create mode 100644 10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md
- create mode 100644 10_docs/追迹迷城/星光落地_1.0.20260912_20260914.md
- create mode 100644 10_docs/追迹迷城/锚点_五功能_1.0.20260912_20260914.md
- create mode 100755 mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh
-To https://github.com/Aliang369/nixiang.git
-   442584b..1e61245  main -> main
-==> 本作相关状态
- M 04_scripts/追迹迷城/pipeline.log
-==> 全仓未处理项（应仅见其他会话/游戏）
- M 04_scripts/追迹迷城/pipeline.log
-?? 04_scripts/无悔华夏4399/
-?? 06_dumped/无悔华夏4399/
-[2026-09-14 19:42:22] [追迹迷城] stage=archive 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-15 20:17:22] [追迹迷城] stage=build_so 开始
-命令: bash 04_scripts/追迹迷城/zjmc_build_so.sh
-目录: /Users/aliang/Documents/nixiang
-[arm64-v8a] Install /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libc++_shared.so:
-[arm64-v8a] Compile        : starry_magic <= xdl_util.c
-[arm64-v8a] Compile        : starry_magic <= xdl_iterate.c
-[arm64-v8a] Compile        : starry_magic <= xdl_linker.c
-[arm64-v8a] Compile        : starry_magic <= hmac_sha256.c
-[arm64-v8a] Compile        : starry_magic <= xdl.c
-[arm64-v8a] Compile        : starry_magic <= xdl_lzma.c
-[arm64-v8a] Compile++      : starry_magic <= ZjmcMod.cpp
-[arm64-v8a] Compile++      : starry_magic <= Utils.cpp
-[arm64-v8a] Compile++      : starry_magic <= Main.cpp
-[arm64-v8a] SharedLibrary  : libstarry_magic.so
-[arm64-v8a] Install        : libstarry_magic.so => /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so
-so=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so
-md5=a4d18d81d3230e0758304326eea457c5
-sha256=73fe25d138859dc52d60dceccd9a09aa48e8acd5db2dce54d966c52c6878d7b9
-size=166640
-jniLibs=/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so
-[2026-09-15 20:17:24] [追迹迷城] stage=build_so 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-15 20:18:37] [追迹迷城] stage=hotfix_no_ad 开始
-命令: STARRY_INSTALL=1 bash 04_scripts/追迹迷城/zjmc_so_only_no_ad_fix.sh
-目录: /Users/aliang/Documents/nixiang
-==> 回拉设备当前星空底包
-/data/app/~~29jaekkmZnvPfAp-g8wyQw==/com.TeaMelo.DungeonChasers-oe8nw8pWCp8uURwi9BZHLA==/base.apk: 1 file pulled, 0 skipped. 34.0 MB/s (926038183 bytes in 25.939s)
-==> 替换 so 并重签
-apk validation ok; only so changed
-==> 签名复核
-Signer #1 certificate DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
-Signer #1 certificate SHA-256 digest: 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
-Signer #1 certificate SHA-1 digest: 821c92e404ab5fdac8dbf157c2e467e71440917d
-Signer #1 certificate MD5 digest: 161fca32a36d3df274458682a44cb774
-==> 覆盖安装
-/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk: 1 file pushed, 0 skipped. 38.0 MB/s (926038183 bytes in 23.235s)
-Success
-[install-verify] 设备 base.apk md5 == 本地产物 (e2263456f4c39e1d97303cfc7b5ed6f7) ✓
-output=/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk
-output_md5=e2263456f4c39e1d97303cfc7b5ed6f7
-output_sha256=21f4736ef208fdf9e6617bcf1c19770f64743a1fb3c4865cecc4990ca436406c
-so_md5=a4d18d81d3230e0758304326eea457c5
-installed=1
-[2026-09-15 20:20:16] [追迹迷城] stage=hotfix_no_ad 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-15 20:44:35] [追迹迷城] stage=extract_ota_so 开始
-命令: bash 04_scripts/追迹迷城/extract_ota_so_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-{
-  "game": "追迹迷城",
-  "game_id": "zjmc",
-  "version": "1.0.20260912",
-  "fix": "noAdFix",
-  "source_apk": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk",
-  "so_md5": "a4d18d81d3230e0758304326eea457c5",
-  "so_sha256": "73fe25d138859dc52d60dceccd9a09aa48e8acd5db2dce54d966c52c6878d7b9",
-  "so_size": 166640
-}
-ota_so=/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so
-[2026-09-15 20:44:40] [追迹迷城] stage=extract_ota_so 完成（校验通过）
-────────────────────────────────────────────
-
-────────────────────────────────────────────
-[2026-09-15 20:46:23] [追迹迷城] stage=cleanup_fix 开始
-命令: bash 04_scripts/追迹迷城/cleanup_fix_zjmc.sh
-目录: /Users/aliang/Documents/nixiang
-{
-  "game": "追迹迷城",
-  "version": "1.0.20260912",
-  "fix": "noAdFix",
-  "kept": [
-    "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk",
-    "/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so"
-  ],
-  "removed": [
-    "mod菜单/starry-mod-menu/obj_zjmc",
-    "mod菜单/starry-mod-menu/libs_zjmc",
-    "/tmp/zjmc_* temporary files",
-    "/data/local/tmp/zjmc_* temporary APKs"
-  ],
-  "apk_md5": "e2263456f4c39e1d97303cfc7b5ed6f7",
-  "ota_so_md5": "a4d18d81d3230e0758304326eea457c5"
-}
-[2026-09-15 20:46:27] [追迹迷城] stage=cleanup_fix 完成（校验通过）
-────────────────────────────────────────────
