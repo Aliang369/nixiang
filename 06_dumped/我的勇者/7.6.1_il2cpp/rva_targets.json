@@ -8,6 +8,14 @@
   "base_apk": "02_apks/我的勇者/我的勇者_7.6.1_base.apk",
   "base_apk_sha256": "a008a4c4077a970efd4cc01f9e60e5252b5d62b4556d5b677cb92ca6daa16e4a",
   "dump": "06_dumped/我的勇者/7.6.1_il2cpp/dump.cs",
+  "so_binding": {
+    "rule": "RVA/Offset 只在本 so 哈希下有效；换版本/渠道先比对 so 哈希，同源可直接复用（hook-rules.md §23）",
+    "libil2cpp_sha256": "9af1ec580410b8eb5909a0a4f44f43d68cf5434e17640ec0d6cbc55edbb4cdf1",
+    "libil2cpp_size": 138428656,
+    "global_metadata_sha256": "b9ddf1e24c5eeea6a564d70b83136014570ed63abc00a445180404ec1d990d84",
+    "global_metadata_size": 29897420,
+    "starry_package_so_identical": "已核对：08_output 星光包内 lib/arm64-v8a/libil2cpp.so 与官包逐字节相同（cmp 通过），外科组装未触碰该 so"
+  },
   "address_convention": "FileOffToVa 入参 = dump.cs 的 Offset 字段（文件偏移，= RVA - 0x4000）。禁止用 RVA/VA 字段：7.6.0 时期填 RVA（差 0x4000）且 expectInsn 字节序写反，RVA 路径从未命中，实际一直走 @by-name 兜底（与 §11.1 logcat 一致）",
   "targets": [
     {
