@@ -1,0 +1,427 @@
+{
+  "game": "蛋壳战机",
+  "version": "1.1.5",
+  "notes": "2026-09-20：原版同源核对、星光四项功能（攻击倍率/上帝模式/偷盗技能/免广告）实现、构建、签名、装机前门禁和授权卸载安装均已完成。设备 base.apk 指纹一致，连续冷启动及新版覆盖后启动每次四项 Hook 与 grant ok 均通过，战斗/广告行为待进局验收。偷盗技能不会使重复同名技能升级，已按用户决定记录为已知限制、不再修复。",
+  "params": {
+    "package": "com.survivor.acecn",
+    "serial": "f9a116a2",
+    "source": "binge_from_device"
+  },
+  "env": {
+    "PKG": "com.survivor.acecn",
+    "GAME": "蛋壳战机",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "真机锁定与 root 只读检查",
+      "requires": [],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/device_ready_dkzj.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/device_ready_dkzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 20:48:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "fetch_binge",
+      "name": "斌哥改包真机只读拉取",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/fetch_binge_dkzj.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/fetch_binge_dkzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_binge_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 20:48:14",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_binge_from_device.apk": {
+          "md5": "005af54a8f0a03b592ed70b28e40772e"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "static_inspect",
+      "name": "斌哥包静态输入检查",
+      "requires": [
+        "fetch_binge"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/inspect_binge_dkzj.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/inspect_binge_dkzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/static_inspect/zip_entries.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/static_inspect/static_identity.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 20:48:19",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/static_inspect/zip_entries.txt": {
+          "md5": "9fa587f66e37540be38e0e260ea68928"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/static_inspect/static_identity.json": {
+          "md5": "f739bf1619e6640985623a910c1d49a1"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_binge_from_device.apk": "005af54a8f0a03b592ed70b28e40772e"
+      }
+    },
+    {
+      "id": "dump_il2cpp",
+      "name": "Il2CppDumper 静态符号映射",
+      "requires": [
+        "static_inspect"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dump_il2cpp_dkzj.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dump_il2cpp_dkzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.1.5/dump.cs"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.1.5/script.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 20:57:31",
+      "note": "收尾时删除 183776267B 的 script.json（原 md5 3877c0cb22e99a255357f5f4215a5779），可由 Il2CppDumper 重跑再生；dump.cs 仍保留。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.1.5/dump.cs": {
+          "md5": "a2ef9b97f7939744e2a443690c3423d8"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/static_inspect/zip_entries.txt": "9fa587f66e37540be38e0e260ea68928",
+        "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/static_inspect/static_identity.json": "f739bf1619e6640985623a910c1d49a1"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "斌哥包抓点与锚点归档",
+      "requires": [
+        "dump_il2cpp"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/斌哥包抓点_1.1.5_20260920.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/抓点_锚点_20260920.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:00:17",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/斌哥包抓点_1.1.5_20260920.md": {
+          "md5": "493b00cd2e20203c04e9a90c59865d69"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/抓点_锚点_20260920.json": {
+          "md5": "4a97e219af8f7cf4e918389460d96392"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.1.5/dump.cs": "a2ef9b97f7939744e2a443690c3423d8"
+      }
+    },
+    {
+      "id": "fetch_official",
+      "name": "同版本原版真机只读拉取",
+      "requires": [
+        "anchor"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/fetch_official_dkzj.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/fetch_official_dkzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_official_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:08:34",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_official_from_device.apk": {
+          "md5": "1cff7c1f24e641a41e3674fdc18cf3ee"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/抓点_锚点_20260920.json": "4a97e219af8f7cf4e918389460d96392"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "星光实现（Dkzj modern 注册表 + 四项功能 + SignSpoof）",
+      "requires": [
+        "fetch_official"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp",
+          "pattern": "Slider_攻击倍率:1:100:1"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp",
+          "pattern": "Toggle_上帝模式"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp",
+          "pattern": "Toggle_偷盗技能"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp",
+          "pattern": "Toggle_免广告"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java",
+          "pattern": "com.survivor.acecn"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java",
+          "pattern": "com.survivor.acecn"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:14:48",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp": {
+          "md5": "0b9216672a5ef9e737b670dc6c6ddb18"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp": {
+          "md5": "b6daaba2f85a78e0e67b41325011695b"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk": {
+          "md5": "01d68259671a8eeca0a94cbd1b3a8226"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_official_from_device.apk": "1cff7c1f24e641a41e3674fdc18cf3ee"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（dkzj 标签与五项菜单硬校验）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_build_so.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_build_so.sh",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.h",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk"
+      ],
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dkzj/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:46:00",
+      "note": "收尾时删除构建输出 libstarry_magic.so（原 md5 aeff52ad9ca16975823f6a021f0c156a），可由 dkzj_build_so.sh 重编；正式包内仍保留同 md5 的 so。",
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp": "fcc0c10af38db803dfa459bc93fb58b8",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp": "b6daaba2f85a78e0e67b41325011695b",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk": "01d68259671a8eeca0a94cbd1b3a8226"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（保留原 Application + factory/provider/service + classes5 + so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/surgical_dkzj_1.1.5.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/surgical_dkzj_1.1.5.sh"
+      ],
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:46:31",
+      "note": "收尾时删除 unsigned APK（原 md5 791e72768afe6a7ebdd15bfcaedbc8a7），可由 surgical_dkzj_1.1.5.sh 重跑再生；正式签名包保留。"
+    },
+    {
+      "id": "sign",
+      "name": "签名（StarryMagic；原包游戏本体零改动硬校验）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_sign.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_sign.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:46:50",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": {
+          "md5": "55457ccbc564504e42f57d566a2333f6"
+        }
+      },
+      "inputs": {}
+    },
+    {
+      "id": "pre_install_gate",
+      "name": "装机前门禁（JNI 配套 / so 与 dex 交叉核对）",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp' --cpp '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp' --dex '/Users/aliang/Documents/nixiang/07_patched/蛋壳战机/surgical/classes5.dex' --so '/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dkzj/arm64-v8a/libstarry_magic.so'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:46:58",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": {
+          "md5": "55457ccbc564504e42f57d566a2333f6"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": "55457ccbc564504e42f57d566a2333f6"
+      }
+    },
+    {
+      "id": "install",
+      "name": "安装候选包（异签时需显式 DKZJ_ALLOW_UNINSTALL=1）",
+      "requires": [
+        "pre_install_gate"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/install_dkzj.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/install_dkzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-20 21:47:21",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok": {
+          "md5": "bf29c5b09da966e69f65219cdc9ee2f6"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": "55457ccbc564504e42f57d566a2333f6"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收尾文档与 Git 固化（只提交本作路径）",
+      "requires": [
+        "install"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/archive_dkzj.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/archive_dkzj.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/cleanup_summary.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/正式包裁剪清单_1.1.5_20260920.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.5_20260920.md"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-unsigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk.idsig"
+        }
+      ],
+      "status": "pending",
+      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-20）。后端 archive_dkzj.sh 校验唯一正式包、裁剪清单与中间产物已清理，只提交本作路径并 push。偷盗技能不会使重复同名技能升级，作为已知限制记录，不修复。"
+    }
+  ]
+}

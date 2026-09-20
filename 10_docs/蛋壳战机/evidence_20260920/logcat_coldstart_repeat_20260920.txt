@@ -1,0 +1,60 @@
+09-20 21:29:13.448 21179 21179 W StarryMagic: [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+09-20 21:29:13.449 21179 21179 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+09-20 21:29:13.449 21179 21179 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=dkzj)
+09-20 21:29:13.449 21179 21179 I StarryMagic: [验证] flag=false live=0
+09-20 21:29:13.449 21179 21179 I StarryMagic: [开关] #0 selftest = OFF
+09-20 21:29:13.449 21179 21179 W StarryMagic: [数值] 拒绝 #0（未授权）
+09-20 21:29:13.449 21179 21179 I StarryMagic: [长整] #0 = 0
+09-20 21:29:13.449 21179 21179 W StarryMagic: [文本] 拒绝 #0（未授权）
+09-20 21:29:13.449 21179 21179 W StarryMagic: [验证] grant rejected
+09-20 21:29:13.449 21179 21179 W StarryMagic: [OTA] 补丁签名校验失败
+09-20 21:29:13.538 21179 21179 I StarryInitProvider: MenuService.start scheduled (activity-resumed)
+09-20 21:29:13.555 21179 21179 I MenuService: startService (plain, no-FGS)
+09-20 21:29:13.555 21179 21179 I StarryInitProvider: MenuService.start ok (activity-resumed)
+09-20 21:29:13.578  3150  4016 I ActivityManager: Background started FGS: Allowed [callingPackage: com.survivor.acecn; callingUid: 10799; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=com.survivor.acecn/com.starry.magic.menu.MenuService mCallingUid=10799 }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:36; callerTargetSdkVersion:36; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+09-20 21:29:13.580 21179 21179 I MenuService: MenuService created
+09-20 21:29:13.585 21179 21179 I MenuService: auth game_id=dkzj
+09-20 21:29:13.585 21179 21179 I MenuService: lifecycleWatcher registered (resume + background hide)
+09-20 21:29:13.585 21179 21179 I MenuService: host lifecycle primed (start-thread-scan) started=1 resumed=1
+09-20 21:29:13.603 21179 21179 I StarryMagic: ===== 星光魔法 MOD 菜单初始化（modern/dkzj）=====
+09-20 21:29:13.603 21179 21179 I MenuService: native menu shown mode=ACTIVITY
+09-20 21:29:13.604 21179 21223 I StarryMagic: MOD 后台线程已启动 tag=dkzj
+09-20 21:29:13.611 21179 21223 I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked file=0x6B72618
+09-20 21:29:13.614 21179 21223 I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked file=0x6C67610
+09-20 21:29:13.615 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:13.615 21179 21179 I MenuService: prime:start-thread-scan → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:13.617 21179 21223 I Mod_Menu: [dkzj] HeroComponentRandomSkill.OnAddSkill hooked file=0x6C4C9A4
+09-20 21:29:13.619 21179 21223 I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked file=0x7723920
+09-20 21:29:13.621 21179 21223 I Mod_Menu: [dkzj] lib ready; hooks file-offset + by-name fallback
+09-20 21:29:13.621 21179 21223 I StarryMagic: [dkzj] 初始化成功
+09-20 21:29:13.621 21179 21223 I StarryMagic: MOD 已就绪 tag=dkzj ready=1
+09-20 21:29:13.670 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:13.670 21179 21179 I MenuService: host layout changed → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:13.847 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:13.847 21179 21179 I MenuService: host layout changed → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:14.006 21179 21222 I StarryMagic: [验证] grant ok exp=1789997347
+09-20 21:29:14.193 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:14.193 21179 21179 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:14.346 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:14.346 21179 21179 I MenuService: host layout changed → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:14.621 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:14.622 21179 21179 I MenuService: host layout changed → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:14.685 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:14.685 21179 21179 I MenuService: host layout changed → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:14.810 21179 21179 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+09-20 21:29:14.811 21179 21179 I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+09-20 21:29:14.811 21179 21179 I StarryMagic: [开关] #3 Toggle_偷盗技能 = OFF
+09-20 21:29:14.811 21179 21179 I StarryMagic: [开关] #4 Toggle_免广告 = OFF
+09-20 21:29:15.012 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:15.012 21179 21179 I MenuService: activity-resumed:DxxUnityActivity → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:15.412 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:15.412 21179 21179 I MenuService: resume delayed 400 → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:15.480 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:15.480 21179 21179 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:16.212 21179 21179 I MenuService: overlayVisible=true attached=true
+09-20 21:29:16.212 21179 21179 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=DxxUnityActivity alive=true
+09-20 21:29:17.272 21179 21179 I StarryMagic: [验证] grant ok exp=1789997356
+09-20 21:29:18.081 21179 21179 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+09-20 21:29:18.082 21179 21179 I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+09-20 21:29:18.083 21179 21179 I StarryMagic: [开关] #3 Toggle_偷盗技能 = OFF
+09-20 21:29:18.083 21179 21179 I StarryMagic: [开关] #4 Toggle_免广告 = OFF

@@ -1,0 +1,506 @@
+Activity Resolver Table:
+  Schemes:
+      tencent:
+        55b181d com.survivor.acecn/com.tencent.tauth.AuthActivity filter c904a92
+          Action: "android.intent.action.VIEW"
+          Category: "android.intent.category.DEFAULT"
+          Category: "android.intent.category.BROWSABLE"
+          Scheme: "tencent"
+
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        4376ee1 com.survivor.acecn/com.gorilla.privacystartup.PrivacyStartupActivity filter 268f406
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.LAUNCHER"
+      android.intent.action.VIEW:
+        3adeac7 com.survivor.acecn/com.unity3d.player.DxxUnityActivity filter b7fc8f4
+          Action: "android.intent.action.VIEW"
+          Category: "android.intent.category.DEFAULT"
+          Category: "android.intent.category.BROWSABLE"
+          AutoVerify=true
+      intent.action.requestInstallPermission:
+        f146c63 com.survivor.acecn/com.kwad.sdk.api.proxy.app.BaseFragmentActivity$RequestInstallPermissionActivity filter c4a8060
+          Action: "intent.action.requestInstallPermission"
+          Category: "android.intent.category.DEFAULT"
+
+Receiver Resolver Table:
+  Non-Data Actions:
+      androidx.profileinstaller.action.SAVE_PROFILE:
+        9161919 com.survivor.acecn/androidx.profileinstaller.ProfileInstallReceiver filter f47428c
+          Action: "androidx.profileinstaller.action.SAVE_PROFILE"
+      androidx.profileinstaller.action.INSTALL_PROFILE:
+        9161919 com.survivor.acecn/androidx.profileinstaller.ProfileInstallReceiver filter c647dde
+          Action: "androidx.profileinstaller.action.INSTALL_PROFILE"
+      androidx.profileinstaller.action.SKIP_FILE:
+        9161919 com.survivor.acecn/androidx.profileinstaller.ProfileInstallReceiver filter cd76bbf
+          Action: "androidx.profileinstaller.action.SKIP_FILE"
+      androidx.profileinstaller.action.BENCHMARK_OPERATION:
+        9161919 com.survivor.acecn/androidx.profileinstaller.ProfileInstallReceiver filter be62dd5
+          Action: "androidx.profileinstaller.action.BENCHMARK_OPERATION"
+
+Service Resolver Table:
+  Non-Data Actions:
+      com.ss.android.socialbase.downloader.remote:
+        ab699ea com.survivor.acecn/com.byazt.zz.CSJIndependentProcessDownloadService filter 7a104db
+          Action: "com.ss.android.socialbase.downloader.remote"
+
+Domain verification status:
+
+Permissions:
+  Permission [com.survivor.acecn.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (24a4368):
+    sourcePackage=com.survivor.acecn
+    uid=10799 gids=[] type=0 prot=signature
+    perm=PermissionInfo{86cc8da com.survivor.acecn.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}
+    flags=0x0
+
+Permissions:
+  Permission [com.survivor.acecn.openadsdk.permission.TT_PANGOLIN] (4989381):
+    sourcePackage=com.survivor.acecn
+    uid=10799 gids=[] type=0 prot=signature
+    perm=PermissionInfo{7419be8 com.survivor.acecn.openadsdk.permission.TT_PANGOLIN}
+    flags=0x0
+
+Registered ContentProviders:
+  com.survivor.acecn/com.byted.live.lite.ServerManager_bytelive:
+    Provider{1e04201 com.survivor.acecn/com.byted.live.lite.ServerManager_bytelive}
+  com.survivor.acecn/com.qq.e.comm.GDTFileProvider:
+    Provider{e5e98a6 com.survivor.acecn/com.qq.e.comm.GDTFileProvider}
+  com.survivor.acecn/com.taptap.sdk.themis.lite.ThemisProvider:
+    Provider{72dc2e7 com.survivor.acecn/com.taptap.sdk.themis.lite.ThemisProvider}
+  com.survivor.acecn/com.gorilla.channel.core.ChannelInitializer:
+    Provider{5888e94 com.survivor.acecn/com.gorilla.channel.core.ChannelInitializer}
+  com.survivor.acecn/com.baidu.mobads.sdk.api.BdFileProvider:
+    Provider{10dfd3d com.survivor.acecn/com.baidu.mobads.sdk.api.BdFileProvider}
+  com.survivor.acecn/com.byazt.gg.DownloaderServerManager:
+    Provider{4b9932 com.survivor.acecn/com.byazt.gg.DownloaderServerManager}
+  com.survivor.acecn/androidx.startup.InitializationProvider:
+    Provider{789a683 com.survivor.acecn/androidx.startup.InitializationProvider}
+  com.survivor.acecn/com.byted.live.lite.ServerManager_push:
+    Provider{2aa0000 com.survivor.acecn/com.byted.live.lite.ServerManager_push}
+  com.survivor.acecn/com.byazt.sj.MainProcessProviderProxy:
+    Provider{e623039 com.survivor.acecn/com.byazt.sj.MainProcessProviderProxy}
+  com.survivor.acecn/com.starry.magic.StarryInitProvider:
+    Provider{f96167e com.survivor.acecn/com.starry.magic.StarryInitProvider}
+  com.survivor.acecn/com.sigmob.sdk.SigmobFileProvider:
+    Provider{13627df com.survivor.acecn/com.sigmob.sdk.SigmobFileProvider}
+  com.survivor.acecn/com.taptap.sdk.kit.internal.TapTapKitInitProvider:
+    Provider{9af1c2c com.survivor.acecn/com.taptap.sdk.kit.internal.TapTapKitInitProvider}
+  com.survivor.acecn/com.byazt.gg.MainServerManager:
+    Provider{2c96f5 com.survivor.acecn/com.byazt.gg.MainServerManager}
+  com.survivor.acecn/com.onevcat.uniwebview.UniWebViewFileProvider:
+    Provider{f791c8a com.survivor.acecn/com.onevcat.uniwebview.UniWebViewFileProvider}
+  com.survivor.acecn/com.byazt.quv.MainServerManager:
+    Provider{9ff62fb com.survivor.acecn/com.byazt.quv.MainServerManager}
+  com.survivor.acecn/com.gorilla.base.InitializeProvider:
+    Provider{b07cf18 com.survivor.acecn/com.gorilla.base.InitializeProvider}
+  com.survivor.acecn/com.gorilla.base.provider.GorillaShareFileProvider:
+    Provider{7fcad71 com.survivor.acecn/com.gorilla.base.provider.GorillaShareFileProvider}
+  com.survivor.acecn/com.byted.live.lite.ServerManager_downloader:
+    Provider{9d47756 com.survivor.acecn/com.byted.live.lite.ServerManager_downloader}
+  com.survivor.acecn/com.byazt.uk.FileProvider:
+    Provider{e5733d7 com.survivor.acecn/com.byazt.uk.FileProvider}
+  com.survivor.acecn/com.byazt.vf.TTMultiProvider:
+    Provider{c36c4c4 com.survivor.acecn/com.byazt.vf.TTMultiProvider}
+  com.survivor.acecn/com.kwad.sdk.api.proxy.app.AdSdkFileProvider:
+    Provider{6ddafad com.survivor.acecn/com.kwad.sdk.api.proxy.app.AdSdkFileProvider}
+  com.survivor.acecn/com.bytedance.android.openliveplugin.process.server.LiveServerManager:
+    Provider{4b8b2e2 com.survivor.acecn/com.bytedance.android.openliveplugin.process.server.LiveServerManager}
+  com.survivor.acecn/com.bytedance.sdk.openadsdk.TTFileProvider:
+    Provider{5f13673 com.survivor.acecn/com.bytedance.sdk.openadsdk.TTFileProvider}
+
+ContentProvider Authorities:
+  [com.survivor.acecn.pangle.servermanager.push.com.byted.live.lite]:
+    Provider{2aa0000 com.survivor.acecn/com.byted.live.lite.ServerManager_push}
+      applicationInfo=ApplicationInfo{8ae4c26 com.survivor.acecn}
+  [com.survivor.acecn.pangle.servermanager.downloader.com.byted.live.lite]:
+    Provider{9d47756 com.survivor.acecn/com.byted.live.lite.ServerManager_downloader}
+      applicationInfo=ApplicationInfo{8ce3067 com.survivor.acecn}
+  [com.survivor.acecn.TTMultiProvider]:
+    Provider{c36c4c4 com.survivor.acecn/com.byazt.vf.TTMultiProvider}
+      applicationInfo=ApplicationInfo{9342e14 com.survivor.acecn}
+  [com.survivor.acecn.themisLite]:
+    Provider{72dc2e7 com.survivor.acecn/com.taptap.sdk.themis.lite.ThemisProvider}
+      applicationInfo=ApplicationInfo{8b9e6bd com.survivor.acecn}
+  [com.survivor.acecn.uniwebview_fileprovider]:
+    Provider{f791c8a com.survivor.acecn/com.onevcat.uniwebview.UniWebViewFileProvider}
+      applicationInfo=ApplicationInfo{ea304b2 com.survivor.acecn}
+  [com.survivor.acecn.TapTapKitInitProvider]:
+    Provider{9af1c2c com.survivor.acecn/com.taptap.sdk.kit.internal.TapTapKitInitProvider}
+      applicationInfo=ApplicationInfo{a836c03 com.survivor.acecn}
+  [com.survivor.acecn.adFileProvider]:
+    Provider{6ddafad com.survivor.acecn/com.kwad.sdk.api.proxy.app.AdSdkFileProvider}
+      applicationInfo=ApplicationInfo{2301780 com.survivor.acecn}
+  [com.survivor.acecn.pangle.servermanager.main]:
+    Provider{2c96f5 com.survivor.acecn/com.byazt.gg.MainServerManager}
+      applicationInfo=ApplicationInfo{2a331b9 com.survivor.acecn}
+  [com.survivor.acecn.gdt.fileprovider]:
+    Provider{e5e98a6 com.survivor.acecn/com.qq.e.comm.GDTFileProvider}
+      applicationInfo=ApplicationInfo{6b8b9fe com.survivor.acecn}
+  [com.survivor.acecn.sigprovider]:
+    Provider{13627df com.survivor.acecn/com.sigmob.sdk.SigmobFileProvider}
+      applicationInfo=ApplicationInfo{dc6c55f com.survivor.acecn}
+  [com.survivor.acecn.gorilla-channel-init]:
+    Provider{5888e94 com.survivor.acecn/com.gorilla.channel.core.ChannelInitializer}
+      applicationInfo=ApplicationInfo{43f2bac com.survivor.acecn}
+  [com.survivor.acecn.androidx-startup]:
+    Provider{789a683 com.survivor.acecn/androidx.startup.InitializationProvider}
+      applicationInfo=ApplicationInfo{13c3075 com.survivor.acecn}
+  [com.survivor.acecn.pangle.fileprovider]:
+    Provider{e5733d7 com.survivor.acecn/com.byazt.uk.FileProvider}
+      applicationInfo=ApplicationInfo{ce2780a com.survivor.acecn}
+  [com.survivor.acecn.starryinit]:
+    Provider{f96167e com.survivor.acecn/com.starry.magic.StarryInitProvider}
+      applicationInfo=ApplicationInfo{ebc587b com.survivor.acecn}
+  [com.survivor.acecn.InitializeProvider]:
+    Provider{b07cf18 com.survivor.acecn/com.gorilla.base.InitializeProvider}
+      applicationInfo=ApplicationInfo{3495698 com.survivor.acecn}
+  [com.survivor.acecn.pangle.provider.proxy.main]:
+    Provider{e623039 com.survivor.acecn/com.byazt.sj.MainProcessProviderProxy}
+      applicationInfo=ApplicationInfo{2c5ef1 com.survivor.acecn}
+  [com.survivor.acecn.pangle.servermanager.downloader.com.bytedance.sdk.openadsdk.adhost]:
+    Provider{4b9932 com.survivor.acecn/com.byazt.gg.DownloaderServerManager}
+      applicationInfo=ApplicationInfo{7380ad6 com.survivor.acecn}
+  [com.survivor.acecn.bd.provider]:
+    Provider{10dfd3d com.survivor.acecn/com.baidu.mobads.sdk.api.BdFileProvider}
+      applicationInfo=ApplicationInfo{dae0157 com.survivor.acecn}
+  [com.survivor.acecn.bytedance.android.openliveplugin.process.server.LiveServerManager]:
+    Provider{4b8b2e2 com.survivor.acecn/com.bytedance.android.openliveplugin.process.server.LiveServerManager}
+      applicationInfo=ApplicationInfo{7c94444 com.survivor.acecn}
+  [com.survivor.acecn.pangle.servermanager.bytelive.com.byted.live.lite]:
+    Provider{1e04201 com.survivor.acecn/com.byted.live.lite.ServerManager_bytelive}
+      applicationInfo=ApplicationInfo{416f92d com.survivor.acecn}
+  [com.survivor.acecn.gorilla.fileprovider]:
+    Provider{7fcad71 com.survivor.acecn/com.gorilla.base.provider.GorillaShareFileProvider}
+      applicationInfo=ApplicationInfo{381fe62 com.survivor.acecn}
+  [com.survivor.acecn.TTFileProvider]:
+    Provider{5f13673 com.survivor.acecn/com.bytedance.sdk.openadsdk.TTFileProvider}
+      applicationInfo=ApplicationInfo{ba75bf3 com.survivor.acecn}
+
+Key Set Manager:
+  [com.survivor.acecn]
+      Signing KeySets: 148
+
+Packages:
+  Package [com.survivor.acecn] (daf5077):
+    appId=10799
+    pkg=Package{539a7ea com.survivor.acecn}
+    codePath=/data/app/~~w43xULix_qMDG4_MBNMpKA==/com.survivor.acecn-k3mDG9zJrf9YHly9XhFAVA==
+    resourcePath=/data/app/~~w43xULix_qMDG4_MBNMpKA==/com.survivor.acecn-k3mDG9zJrf9YHly9XhFAVA==
+    legacyNativeLibraryDir=/data/app/~~w43xULix_qMDG4_MBNMpKA==/com.survivor.acecn-k3mDG9zJrf9YHly9XhFAVA==/lib
+    extractNativeLibs=true
+    primaryCpuAbi=arm64-v8a
+    secondaryCpuAbi=null
+    cpuAbiOverride=null
+    versionCode=25 minSdk=26 targetSdk=36
+    minExtensionVersions=[]
+    versionName=1.1.5
+    hiddenApiEnforcementPolicy=2
+    usesNonSdkApi=false
+    splits=[base]
+    apkSigningVersion=3
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_REQUEST_LEGACY_EXTERNAL_STORAGE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    forceQueryable=false
+    pageSizeCompat=0
+    queriesPackages=[com.tencent.mm, com.eg.android.AlipayGphone, hk.alipay.wallet, com.tencent.mobileqq, com.tencent.tim, com.tencent.minihd.qq, com.smile.gifmaker, com.kuaishou.nebula, com.ss.android.ugc.aweme, com.ss.android.ugc.aweme.lite, com.taptap, com.taptap.global, com.taptap.global.lite, com.eg.android.AlipayGphoneRC, hk.alipay.walletRC]
+    queriesIntents=[Intent { act=android.intent.action.SEND dat=content://*/... typ=*/* }, Intent { act=android.intent.action.SEND_MULTIPLE dat=content://*/... typ=*/* }, Intent { act=com.android.vending.billing.InAppBillingService.BIND }, Intent { act=com.google.android.apps.play.billingtestcompanion.BillingOverrideService.BIND }, Intent { act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] }, Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=https:/... }, Intent { act=com.taptap.sdk.action cat=[android.intent.category.DEFAULT] }, Intent { act=com.taptap.global.sdk.action cat=[android.intent.category.DEFAULT] }, Intent { act=* dat=tbopen:/... }]
+    scannedAsStoppedSystemApp=false
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    usesOptionalLibraries:
+      org.apache.http.legacy
+    usesLibraryFiles:
+      /system/framework/org.apache.http.legacy.jar
+    timeStamp=2026-09-20 21:27:36
+    lastUpdateTime=2026-09-20 21:27:52
+    installerPackageName=com.android.packageinstaller
+    installerPackageUid=10216
+    initiatingPackageName=com.android.packageinstaller
+    originatingPackageName=null
+    packageSource=0
+    appMetadataFilePath=null
+    appMetadataSource=0
+    signatures=PackageSignatures{3b1fadb version:3, signatures:[6f4dda0b], past signatures:[]}
+    installPermissionsFixed=false
+    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ]
+    privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_REQUEST_LEGACY_EXTERNAL_STORAGE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    apexModuleName=null
+    declared permissions:
+      com.survivor.acecn.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature
+      com.survivor.acecn.openadsdk.permission.TT_PANGOLIN: prot=signature
+    requested permissions:
+      com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE
+      android.permission.POST_NOTIFICATIONS
+      android.permission.ACCESS_FINE_LOCATION
+      freemme.permission.msa
+      android.permission.SYSTEM_ALERT_WINDOW
+      android.permission.CHANGE_NETWORK_STATE
+      android.permission.FOREGROUND_SERVICE
+      android.permission.FOREGROUND_SERVICE_SPECIAL_USE
+      android.permission.EXPAND_STATUS_BAR
+      com.asus.msa.SupplementaryDID.ACCESS
+      android.permission.GET_TASKS
+      android.permission.INTERNET
+      android.permission.REORDER_TASKS
+      com.android.vending.BILLING
+      android.permission.RECEIVE_USER_PRESENT
+      android.permission.READ_EXTERNAL_STORAGE
+      android.permission.ACCESS_COARSE_LOCATION
+      android.permission.READ_PHONE_STATE
+      android.permission.CHANGE_WIFI_STATE
+      android.permission.ACCESS_NETWORK_STATE
+      com.survivor.acecn.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+      android.permission.WRITE_EXTERNAL_STORAGE
+      android.permission.VIBRATE
+      android.permission.ACCESS_WIFI_STATE
+      android.permission.REQUEST_INSTALL_PACKAGES
+      android.permission.QUERY_ALL_PACKAGES
+      com.google.android.gms.permission.AD_ID
+      android.permission.WAKE_LOCK
+      com.survivor.acecn.openadsdk.permission.TT_PANGOLIN
+    install permissions:
+      android.permission.CHANGE_NETWORK_STATE: granted=true
+      android.permission.FOREGROUND_SERVICE: granted=true
+      android.permission.FOREGROUND_SERVICE_SPECIAL_USE: granted=true
+      android.permission.EXPAND_STATUS_BAR: granted=true
+      android.permission.GET_TASKS: granted=true
+      android.permission.INTERNET: granted=true
+      android.permission.REORDER_TASKS: granted=true
+      android.permission.CHANGE_WIFI_STATE: granted=true
+      android.permission.ACCESS_NETWORK_STATE: granted=true
+      com.survivor.acecn.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      android.permission.VIBRATE: granted=true
+      android.permission.ACCESS_WIFI_STATE: granted=true
+      android.permission.QUERY_ALL_PACKAGES: granted=true
+      com.google.android.gms.permission.AD_ID: granted=true
+      android.permission.WAKE_LOCK: granted=true
+      com.survivor.acecn.openadsdk.permission.TT_PANGOLIN: granted=true
+    User 0: ceDataInode=634938 deDataInode=541842 installed=true hidden=false suspended=false distractionFlags=0 stopped=false notLaunched=false enabled=0 ofs=0 pdm=false instant=false virtual=false quarantined=false
+      installReason=0
+      dataDir=/data/user/0/com.survivor.acecn
+      firstInstallTime=2026-09-20 21:27:52
+      uninstallReason=0
+      overlay paths:
+        /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk
+        /data/resource-cache/com.android.systemui-neutral-rnTv.frro
+        /data/resource-cache/com.android.systemui-accent-IUUE.frro
+        /data/resource-cache/com.android.systemui-dynamic-JnzF.frro
+      legacy overlay paths:
+        /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk
+      lastDisabledCaller: com.android.packageinstaller
+      gids=[3003]
+      runtime permissions:
+        android.permission.POST_NOTIFICATIONS: granted=false, flags=[ USER_SET|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.ACCESS_FINE_LOCATION: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]
+        android.permission.ACCESS_COARSE_LOCATION: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_PHONE_STATE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]
+
+Queries:
+  system apps queryable: false
+  queries via forceQueryable:
+  queries via package name:
+    com.survivor.acecn:
+      com.tencent.tim
+      com.tencent.mobileqq
+      com.ss.android.ugc.aweme
+      com.tencent.mm
+      com.taptap
+  queries via component:
+    com.heytap.speechassist:
+      com.survivor.acecn
+    com.heytap.market:
+      com.survivor.acecn
+    com.oplus.account:
+      com.survivor.acecn
+    com.coloros.oshare:
+      com.survivor.acecn
+    com.oplus.aimemory:
+      com.survivor.acecn
+    com.sohu.inputmethod.sogouoem:
+      com.survivor.acecn
+    com.heytap.browser:
+      com.survivor.acecn
+    com.nearme.instant.platform:
+      com.survivor.acecn
+    com.heytap.cloud:
+      com.survivor.acecn
+    com.coloros.assistantscreen:
+      com.survivor.acecn
+    com.oplus.pay:
+      com.survivor.acecn
+    com.heytap.htms:
+      com.survivor.acecn
+    com.android.settings.intelligence:
+      com.survivor.acecn
+    com.android.systemui:
+      com.survivor.acecn
+    com.heytap.themestore:
+      com.survivor.acecn
+    com.heytap.music:
+      com.survivor.acecn
+    com.oneplus.bbs:
+      com.survivor.acecn
+    com.oppo.store:
+      com.survivor.acecn
+    com.heytap.reader:
+      com.survivor.acecn
+    com.coloros.note:
+      com.survivor.acecn
+    com.ss.android.ugc.aweme:
+      com.survivor.acecn
+    com.netease.uuremote:
+      com.survivor.acecn
+    mark.via:
+      com.survivor.acecn
+    com.tencent.tmgp.pubgmhd:
+      com.survivor.acecn
+    com.schunshang.bij.aikanjv:
+      com.survivor.acecn
+    com.mfcloudcalculate.networkdisk:
+      com.survivor.acecn
+    com.tencent.mm:
+      com.survivor.acecn
+    com.taptap:
+      com.survivor.acecn
+    com.yf.yuji.bgyxbh:
+      com.survivor.acecn
+    com.anjiu.fox:
+      com.survivor.acecn
+    cn.ninegame.gamemanager:
+      com.survivor.acecn
+    com.m4399.gamecenter:
+      com.survivor.acecn
+    com.quark.browser:
+      com.survivor.acecn
+    com.xmcy.hykb:
+      com.survivor.acecn
+    com.chillyroom.containerofsoul.yw:
+      com.survivor.acecn
+    com.hortor.yqzd:
+      com.survivor.acecn
+    com.wanda.sf3.wd:
+      com.survivor.acecn
+    com.fightingstars.games.animal:
+      com.survivor.acecn
+    com.xingzuodaoshi.infinityUpgrade:
+      com.survivor.acecn
+    com.survivor.acecn:
+      com.android.contacts
+      com.heytap.speechassist
+      com.heytap.market
+      com.android.mms
+      com.coloros.oshare
+      com.oplus.games
+      com.oplus.studycenter
+      com.oplus.aimemory
+      com.coloros.childrenspace
+      com.coloros.digitalwellbeing
+      com.heytap.browser
+      com.heytap.cloud
+      com.oplus.owork
+      com.coloros.ocrscanner
+      com.coloros.smartsidebar
+      com.android.bips
+      com.android.cellbroadcastreceiver.module
+      com.coloros.calculator
+      com.coloros.backuprestore
+      com.coloros.filemanager
+      com.coloros.alarmclock
+      com.oneplus.member
+      com.coloros.calendar
+      com.heytap.yoli
+      com.heytap.themestore
+      com.coloros.soundrecorder
+      com.heytap.music
+      com.oneplus.bbs
+      andes.oplus.documentsreader
+      com.oppo.store
+      com.android.email
+      com.coloros.compass2
+      com.oplus.tips
+      com.coloros.weather2
+      com.coloros.translate
+      com.heytap.reader
+      com.coloros.note
+      com.tencent.nrc
+      fun.kitsunebi.kitsunebi4android
+      com.spacex.nh.pubg
+      bin.mt.plus
+      com.Wecrane.Scar.pubg
+      com.tencent.tim
+      com.tencent.mobileqq
+      com.ss.android.ugc.aweme
+      com.netease.uuremote
+      mark.via
+      com.duowan.kiwi
+      com.tencent.tmgp.pubgmhd
+      com.sukisu.ultra
+      com.abc.abc
+      com.carriez.flutter_hbb
+      com.schunshang.bij.aikanjv
+      com.mfcloudcalculate.networkdisk
+      com.tencent.mm
+      com.taptap
+      com.yf.yuji.bgyxbh
+      com.anjiu.fox
+      cn.ninegame.gamemanager
+      com.m4399.gamecenter
+      com.quark.browser
+      com.bilibili.priconne
+      com.xmcy.hykb
+      top.niunaijun.blackdexa64
+      com.starry.magic
+      com.ztgame.yyzy
+      com.chillyroom.containerofsoul.yw
+      com.huawei.hwid
+      com.hortor.yqzd
+      com.wanda.sf3.wd
+      com.fightingstars.games.animal
+      com.xingzuodaoshi.infinityUpgrade
+  queryable via interaction:
+    User 0:
+      [com.oplus.wifibackuprestore,vendor.qti.frameworks.utils,com.android.DeviceAsWebcam,com.android.inputdevices,com.oplus.crashbox,com.android.dynsystem,com.android.location.fused,com.android.localtransport,com.android.server.telecom,com.oplus.postmanservice,com.oplus.sauhelper,com.oplus.exsystemservice,com.oplus.battery,com.qualcomm.qti.xrvd.service,com.oplus.logkit,com.oplus.subsys,com.oplus.customize.coreapp,com.oplus.powermonitor,com.android.settings,com.oplus.atlas,com.oplus.olc,com.oplus.wirelesssettings,com.oplus.qualityprotect,com.oplus.bttestmode,com.heytap.mcs,com.android.keychain,com.oplus.owkservice,com.oplus.appbooster,com.oplus.notificationmanager,com.oplus.nas,com.oplus.healthservice,com.oplus.sau,com.oplus.obrain,oplus,com.oplus.engineermode,com.oplus.engineernetwork,com.wapi.wapicertmanage,com.oplus.lfeh,com.oplus.athena,com.oplus.onetrace,com.oplus.audio.effectcenter,com.android.providers.settings,com.oplus.appplatform,com.oplus.securitypermission,com.oplus.trafficmonitor,com.oplus.safecenter,android,com.oplus.mediaturbo]:
+        com.survivor.acecn
+      com.heytap.openid:
+        com.survivor.acecn
+      com.sohu.inputmethod.sogouoem:
+        com.survivor.acecn
+      com.android.permissioncontroller:
+        com.survivor.acecn
+  queryable via uses-library:
+
+Dexopt state:
+  [com.survivor.acecn]
+    path: /data/app/~~w43xULix_qMDG4_MBNMpKA==/com.survivor.acecn-k3mDG9zJrf9YHly9XhFAVA==/base.apk
+      arm64: [status=verify] [reason=install] [primary-abi]
+        [location is /data/app/~~w43xULix_qMDG4_MBNMpKA==/com.survivor.acecn-k3mDG9zJrf9YHly9XhFAVA==/oat/arm64/base.odex]
+    known secondary dex files:
+      /data/user/0/com.survivor.acecn/app_baidu_sdk_remote/__xadsdk__remote__final__running__.jar (removed)
+        arm64: [status=error] [reason=error] [primary-abi]
+          [location is Failed to create OatFileAssistant: Failed to load class loader context files for '/data/user/0/com.survivor.acecn/app_baidu_sdk_remote/__xadsdk__remote__final__running__.jar' with context 'PCL[];PCL[/data/app/~~7nMZKlT--XAM4gSIxQ23wA==/com.survivor.acecn-hobknI6acfkavoGoMoYgJg==/base.apk]{PCL[/system/framework/org.apache.http.legacy.jar]}']
+        class loader context: PCL[];PCL[/data/app/~~7nMZKlT--XAM4gSIxQ23wA==/com.survivor.acecn-hobknI6acfkavoGoMoYgJg==/base.apk]{PCL[/system/framework/org.apache.http.legacy.jar]}
+      /data/user/0/com.survivor.acecn/app_e_qq_com_onlp_4808fa9e2edcf4076df1f995ce4776c7/1ced034d9b425c3061036c1cc1c9b634 (removed)
+        arm64: [status=unknown] [reason=unknown] [primary-abi]
+          [location is error]
+        class loader context: =UnsupportedClassLoaderContext=
+      /data/user/0/com.survivor.acecn/app_e_qq_com_plugin_4808fa9e2edcf4076df1f995ce4776c7/gdt_plugin.jar (removed)
+        arm64: [status=error] [reason=error] [primary-abi]
+          [location is Failed to create OatFileAssistant: Failed to load class loader context files for '/data/user/0/com.survivor.acecn/app_e_qq_com_plugin_4808fa9e2edcf4076df1f995ce4776c7/gdt_plugin.jar' with context 'PCL[];PCL[/data/app/~~7nMZKlT--XAM4gSIxQ23wA==/com.survivor.acecn-hobknI6acfkavoGoMoYgJg==/base.apk]{PCL[/system/framework/org.apache.http.legacy.jar]}']
+        class loader context: PCL[];PCL[/data/app/~~7nMZKlT--XAM4gSIxQ23wA==/com.survivor.acecn-hobknI6acfkavoGoMoYgJg==/base.apk]{PCL[/system/framework/org.apache.http.legacy.jar]}
+      /data/user/0/com.survivor.acecn/app_sodler/com.kwad.components.adWaynePlayer/4.4.20.1/base-1.apk (removed)
+        arm64: [status=unknown] [reason=unknown] [primary-abi]
+          [location is error]
+        class loader context: =UnsupportedClassLoaderContext=
+      /data/user/0/com.survivor.acecn/app_sodler/com.kwad.components.tachikoma/4.11.20.2/base-1.apk (removed)
+        arm64: [status=unknown] [reason=unknown] [primary-abi]
+          [location is error]
+        class loader context: =UnsupportedClassLoaderContext=
+      /data/user/0/com.survivor.acecn/files/cybermedia/libs/cyber-media-dex_7_126_0_16_jar (removed)
+        arm64: [status=unknown] [reason=unknown] [primary-abi]
+          [location is error]
+        class loader context: =UnsupportedClassLoaderContext=
+
+Compiler stats:
+  [com.survivor.acecn]
+     base.apk - 775

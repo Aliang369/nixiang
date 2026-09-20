@@ -1,0 +1,34 @@
+{
+  "game": "蛋壳战机",
+  "before_kb": 917524,
+  "after_kb": 66604,
+  "released_kb": 850920,
+  "before_at": "2026-09-20 21:52:00",
+  "after_at": "2026-09-20 21:52:30",
+  "kept": [
+    "02_apks/蛋壳战机 official source APK (user managed)",
+    "08_output/蛋壳战机 final APK only",
+    "06_dumped/蛋壳战机/dump.cs + stringliteral.json + inputs.sha256",
+    "06_dumped/蛋壳战机/static_inspect text and identity evidence",
+    "06_dumped/蛋壳战机/binge_mem_baseline text/menu/disassembly evidence",
+    "06_dumped/蛋壳战机/jadx_bridge source snippets",
+    "09_test/蛋壳战机 private-data backup",
+    "04_scripts/蛋壳战机",
+    "10_docs/蛋壳战机",
+    "mod菜单 Dkzj sources"
+  ],
+  "removed_roots": [
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5/DummyDll",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5/il2cpp.h",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5/script.json",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5.tool",
+    "06_dumped/蛋壳战机/static_inspect/key_files",
+    "06_dumped/蛋壳战机/binge_mem_baseline_20260920/raw",
+    "06_dumped/蛋壳战机/binge_mem_baseline_20260920/*.bin",
+    "07_patched/蛋壳战机",
+    "mod菜单/starry-mod-menu/obj_dkzj",
+    "mod菜单/starry-mod-menu/libs_dkzj",
+    "08_output/蛋壳战机 unsigned APK and idsig (prune_output_final)"
+  ],
+  "device_backup_kept": "09_test/蛋壳战机/backup_1.1.5_20260920_212733/private_data.tgz"
+}

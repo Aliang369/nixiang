@@ -1,0 +1,52 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_binge_from_device.apk",
+  "entry_count": 2707,
+  "manifest": "AndroidManifest.xml",
+  "dex_files": [
+    "classes.dex",
+    "classes2.dex",
+    "classes3.dex",
+    "classes4.dex",
+    "classes5.dex",
+    "classes6.dex",
+    "classes7.dex",
+    "classes8.dex"
+  ],
+  "libil2cpp": "lib/arm64-v8a/libil2cpp.so",
+  "global_metadata": "assets/bin/Data/Managed/Metadata/global-metadata.dat",
+  "libSDKloading": "lib/arm64-v8a/libSDKloading.so",
+  "libtoolChecker": "lib/arm64-v8a/libtoolChecker.so",
+  "nested_base_apk": "",
+  "libunity": "lib/arm64-v8a/libunity.so",
+  "libcocos": "",
+  "native_libs": [
+    "lib/arm64-v8a/libAdaptivePerformanceHint.so",
+    "lib/arm64-v8a/libAdaptivePerformanceThermalHeadroom.so",
+    "lib/arm64-v8a/libAndroidCpuUsage.so",
+    "lib/arm64-v8a/libBugly_Native.so",
+    "lib/arm64-v8a/libCtaApiLib.so",
+    "lib/arm64-v8a/libPglbizssdk_ml.so",
+    "lib/arm64-v8a/libSDKloading.so",
+    "lib/arm64-v8a/lib_burst_generated.so",
+    "lib/arm64-v8a/libavmdl_lite.so",
+    "lib/arm64-v8a/libil2cpp.so",
+    "lib/arm64-v8a/libmain.so",
+    "lib/arm64-v8a/libpanglearmor.so",
+    "lib/arm64-v8a/libpangleflipped.so",
+    "lib/arm64-v8a/libplt-base.so",
+    "lib/arm64-v8a/libsecsdk.so",
+    "lib/arm64-v8a/libsgcore.so",
+    "lib/arm64-v8a/libtapsdkcore.so",
+    "lib/arm64-v8a/libthemis.so",
+    "lib/arm64-v8a/libti-monitor.so",
+    "lib/arm64-v8a/libtobEmbedEncrypt.so",
+    "lib/arm64-v8a/libtoolChecker.so",
+    "lib/arm64-v8a/libtt_ugen_layout.so",
+    "lib/arm64-v8a/libttmplayer_lite.so",
+    "lib/arm64-v8a/libunity.so"
+  ],
+  "binge_shell_by_path": [
+    "lib/arm64-v8a/libSDKloading.so",
+    "lib/arm64-v8a/libtoolChecker.so"
+  ]
+}

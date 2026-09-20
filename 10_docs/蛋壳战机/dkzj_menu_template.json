@@ -1,0 +1,20 @@
+{
+  "template_id": "dkzj",
+  "name": "弹壳战机",
+  "package": "com.survivor.acecn",
+  "source": "Games/DkzjEntry.cpp kDkzj_Features",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "攻击倍率",
+      "type": "slider",
+      "min": 1,
+      "max": 100,
+      "default": 1,
+      "note": "1=关闭(原版伤害)，2..100=敌方受击伤害倍率；对应 Slider_攻击倍率:1:100:1"
+    },
+    {"feat_num": 2, "name": "上帝模式"},
+    {"feat_num": 3, "name": "偷盗技能"},
+    {"feat_num": 4, "name": "免广告"}
+  ]
+}

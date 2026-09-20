@@ -1,0 +1,17 @@
+{
+  "package": "com.survivor.acecn",
+  "game": "蛋壳战机",
+  "kind": "official_from_device",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_official_from_device.apk",
+  "version_name": "1.1.5",
+  "version_code": 25,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~djSSuQhGfxgmoCnfBlm7ww==/com.survivor.acecn-g3En7Fr4WCIE2BxQh2UpNg==/base.apk",
+  "size": 204186655,
+  "sha256": "38751a7a5cf4e2e9020afb64e8dea0eb07f4917a47d7f7b814fa43f198504fa6",
+  "md5": "1cff7c1f24e641a41e3674fdc18cf3ee",
+  "signer": "O=gorilla",
+  "signer_sha256": "4c999c6ac30fde9c5d6c72e2d48e643a9044c26ff353ce53c46a3d4e91a18994"
+}

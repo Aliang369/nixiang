@@ -95,7 +95,9 @@ public final class TapLoginForceWeb {
                     // 暗影格斗3：TapSDK 4.x（loginHandlers = {Cloud, Client, Phone} 数组路由）。
                     // 设备装了 TapTap 客户端时 ClientLoginHandler.canHandle 恒 true（SSO 校验真签必失败），
                     // PhoneLoginHandler 也可能为 true → sanitize 把两类都换成 canHandle 恒 false 的代理。
-                    "com.wanda.sf3.wd"));
+                    "com.wanda.sf3.wd",
+                    // 弹壳战机：TapTap 渠道原版；改签包固定走 embedded_web，避免客户端 SSO 校验真签。
+                    "com.survivor.acecn"));
 
     private TapLoginForceWeb() {}
 

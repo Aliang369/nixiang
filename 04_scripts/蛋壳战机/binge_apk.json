@@ -1,0 +1,17 @@
+{
+  "package": "com.survivor.acecn",
+  "game": "蛋壳战机",
+  "kind": "binge_mod",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_binge_from_device.apk",
+  "version_name": "1.1.5",
+  "version_code": 25,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~7nMZKlT--XAM4gSIxQ23wA==/com.survivor.acecn-hobknI6acfkavoGoMoYgJg==/base.apk",
+  "size": 209085516,
+  "sha256": "709f9a0d381a4bf843b56e2e5392257555b428658066fb5c7097653a0d1c54c3",
+  "md5": "005af54a8f0a03b592ed70b28e40772e",
+  "signer": "CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2",
+  "signer_sha256": "11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba"
+}

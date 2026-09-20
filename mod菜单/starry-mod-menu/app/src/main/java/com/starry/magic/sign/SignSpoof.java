@@ -731,6 +731,22 @@ public final class SignSpoof {
                     "eeHIBy/8CTP7Opo88+qjPF9LCJCtXWQdD6aViBU5T2AUzB2gng/ZasConuAanBTpTkSf683VzEDa" +
                     "cQThCpEmE4OidBC9gsd19wXBLWPuWJtkS86EyIXxYlBAvdFGNgI3Xf0Q9F3DAmyL2K78iXpk41aS" +
                     "tBQhcBluSaEeu1pg5Mu0qLVG/ty8XbSZwm/app4FfVwk798M7JZYJk1G0+eoWK8=";
+
+    /** 弹壳战机 TapTap 官方（com.survivor.acecn，O=gorilla，
+     *  SHA-256=4c999c6ac30fde9c5d6c72e2d48e643a9044c26ff353ce53c46a3d4e91a18994）。
+     *  2026-09-20 从官方 1.1.5/vc25 的 v2 签名证书导出。 */
+    private static final String DKZJ_PKG = "com.survivor.acecn";
+    private static final String DKZJ_CERT_B64 =
+            "MIICojCCAYqgAwIBAgIEbs5L8zANBgkqhkiG9w0BAQUFADASMRAwDgYDVQQKDAdnb3JpbGxhMCAXDTIxMDUyNzA2MjQ0MFoY" +
+                    "DzIwNzEwNTE1MDYyNDQwWjASMRAwDgYDVQQKDAdnb3JpbGxhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlUhl" +
+                    "R1Yq9cU69pp9dsrcaDjC3hWWiuS+C0h1psfc5EZ31cbP5OnDx+XQ1BeLT9k2H0sFYSOlvrqzD5e0Te7qvgmVVTw+NCceSnr6" +
+                    "8lytYVa4/SR/J+7BX/lBpFIH1W9PKTw/EtXOTawo4PivpFopzKcd2pwKSvKxFz8A+DwER2rLIYq56be/Fpiq4YnsRq1utJDn" +
+                    "GQUFrJUhBVeUmdoDl+QZT3RPJ0O23c+bvVhiD5Ifl6B/lFmX51FGWjpqpyDxW2xh5vQ064yexgoTl3YijZTmJsQ25eXVMYjb" +
+                    "2BnyeEn4XvEiQT5AlpD9rGaJpHdqi3e92rJqIYmdG7f9Znt6gwIDAQABMA0GCSqGSIb3DQEBBQUAA4IBAQAgPo1Q6o4KE0Hk" +
+                    "gT6qX2ofouGJhgVebnhdjED0gWfgH0jOb5fAqQjqk1Mm+6OsHv3wiH1ShIkE/QD0aPqUDfOcMLmHXqPk/icZh/1yWkS+kaUp" +
+                    "fZDqghX98NBeMhsDUekQnT/BsNB4WLGJGixD5hGDRIGItSFW0v999qsrW80qIa252pkR6cYfJ6OV5rWP9sSX8ds8GJQR7oLe" +
+                    "1NIT58TZhqmoDeoFc2IB8XbYPNbze2SncRE17OhEaygUD+S0+Y82Z7/FXtQF4hNtRDLc+M4mDiuSwuN6jxmLm0sT+Ch5oek8" +
+                    "2D2X8wa1+1mRU/QG4zFAbQ+5p0G7Sz8MMmarYTLx";
     private static volatile boolean sInstalled;
 
     private SignSpoof() {}
@@ -785,6 +801,7 @@ public final class SignSpoof {
                 fakes.put(BSZZ_PKG, new Signature(Base64.decode(BSZZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(RSJY_PKG, new Signature(Base64.decode(RSJY_CERT_B64, Base64.DEFAULT)));
                 fakes.put(SF3_PKG, new Signature(Base64.decode(SF3_CERT_B64, Base64.DEFAULT)));
+                fakes.put(DKZJ_PKG, new Signature(Base64.decode(DKZJ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());
