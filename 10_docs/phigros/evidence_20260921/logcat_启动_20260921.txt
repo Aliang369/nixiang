@@ -1,0 +1,60 @@
+09-21 01:25:16.070 I/StarrySignSpoof(19937): installed pkgs=[com.rsg.wdyz, com.sixag.gaga, com.bantu.trssgshz2, com.xr.wgdzztap, com.syyx.whrhx, com.blina.match2.tt, com.yhhy.neon.aligames, com.hortor.yqzd, com.netkuu.changsheng.tjjs, com.hnyg.bjdwxcf.topon, com.grinning.beta.yszl, com.hypergryph.endfield, com.facai.archeroii, com.a5game.ltzj.jj, com.chillyroom.containerofsoul.yw, com.fattoy.gyws.android, com.shangyoo.neon, com.uniugame.ywgn, com.bilibili.priconne, com.yofijoy.zmxs, com.xm4399.zmws.m4399, com.ginicat.sweet.m4399, com.xm4399.zmxy6hj, com.chx.shhj, com.TeaMelo.DungeonChasers, com.Shimmer.SoloKnight.cn]
+09-21 01:25:16.076 D/nativeloader(19937): Load /data/app/~~dVY_X8hkzePlpqdX7UHBdg==/com.PigeonGames.Phigros-SiwsOSugIontbiuwMgnG-g==/lib/arm64/libstarry_magic.so using class loader ns clns-9 (caller=/data/app/~~dVY_X8hkzePlpqdX7UHBdg==/com.PigeonGames.Phigros-SiwsOSugIontbiuwMgnG-g==/base.apk!classes2.dex): ok
+09-21 01:25:16.077 I/StarryMagic(19937): [桥接] RegisterNatives 19/19 全部成功
+09-21 01:25:16.077 I/StarryMagic(19937): 星光魔法 MOD 菜单已加载 (JNI_OnLoad)
+09-21 01:25:16.078 I/ModBridge(19937): libstarry_magic loaded
+09-21 01:25:16.079 I/StarryMagic(19937): [验证] flag=false live=0
+09-21 01:25:16.079 I/StarryMagic(19937): [开关] #0 selftest = OFF
+09-21 01:25:16.079 W/StarryMagic(19937): [数值] 拒绝 #0（未授权）
+09-21 01:25:16.079 I/StarryMagic(19937): [长整] #0 = 0
+09-21 01:25:16.079 W/StarryMagic(19937): [文本] 拒绝 #0（未授权）
+09-21 01:25:16.079 W/StarryMagic(19937): [验证] grant rejected
+09-21 01:25:16.079 W/StarryMagic(19937): [OTA] 补丁签名校验失败
+09-21 01:25:16.218 I/StarryMagic(19937): ===== 星光魔法 MOD 菜单初始化 =====
+09-21 01:25:16.219 I/StarryMagic(19937): 检测到 Unity 引擎
+09-21 01:25:16.219 I/StarryMagic(19937): MOD 后台线程已启动
+09-21 01:25:16.219 I/StarryMagic(19937): 检测到 Unity 引擎，ENGINE_UNITY
+09-21 01:25:16.219 I/StarryMagic(19937): 初始化 Phigros / 自动跳 v1...
+09-21 01:25:16.600 W/StarryMagic(19937): [验证] grant rejected
+09-21 01:25:18.223 I/StarryMagic(19937): [Phigros] 初始化成功
+09-21 01:25:18.223 I/StarryMagic(19937): MOD 已就绪 engine=1 cocosGame=0 unityGame=0
+09-21 01:25:34.283 I/BridgeLogger(19937): [EngineBridge] init!
+09-21 01:25:34.332 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSCommonService","method":"initWithConfig","args":"{\"initWithConfig\":\"{\\\"clientID\\\":\\\"rAK3FfdieFob2Nn8Am\\\",\\\"clientToken\\\":\\\"\\\",\\\"isCN\\\":true}\",\"versionName\":\"0.0.0.0\"}","callback":false,"callbackId":"","onceTime":false}
+09-21 01:25:34.332 I/BridgeLogger(19937): Looper is already prepare,start to create EngineHandler
+09-21 01:25:34.332 I/BridgeLogger(19937): 初始化 Bridge Thread Handler:UnityMain
+09-21 01:25:34.333 I/BridgeLogger(19937): 启动 Looper:54
+09-21 01:25:34.333 I/BridgeLogger(19937): Bridge start to execute command
+09-21 01:25:34.336 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSCommonService","method":"setXUA","args":"{\"setXUA\":\"{\\\"Engine-Version\\\":\\\"3.30.3\\\",\\\"Engine-Platform\\\":\\\"Unity\\\"}\"}","callback":false,"callbackId":"","onceTime":false}
+09-21 01:25:34.336 I/BridgeLogger(19937): Bridge Engine Handler already init or Current Thread is main Thread
+09-21 01:25:34.337 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSLoginService","method":"init","args":"{\"clientID\":\"rAK3FfdieFob2Nn8Am\"}","callback":false,"callbackId":"","onceTime":false}
+09-21 01:25:34.337 I/BridgeLogger(19937): Bridge Engine Handler already init or Current Thread is main Thread
+09-21 01:25:34.340 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TapAntiAddictionService","method":"init","args":"{\"gameIdentifier\":\"rAK3FfdieFob2Nn8Am\",\"showSwitchAccount\":false,\"useAgeRange\":true}","callback":false,"callbackId":"","onceTime":false}
+09-21 01:25:34.340 I/BridgeLogger(19937): Bridge Engine Handler already init or Current Thread is main Thread
+09-21 01:25:34.340 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TapAntiAddictionService","method":"setUnityVersion","args":"{\"setUnityVersion\":\"3.30.3\"}","callback":false,"callbackId":"","onceTime":true}
+09-21 01:25:34.340 I/BridgeLogger(19937): Bridge Engine Handler already init or Current Thread is main Thread
+09-21 01:25:34.341 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TapAntiAddictionService","method":"setAntiAddictionCallback","args":"","callback":true,"callbackId":"9e47839b-f296-4db7-b17f-1ec563d80a8d","onceTime":false}
+09-21 01:25:34.341 I/BridgeLogger(19937): Bridge Engine Handler already init or Current Thread is main Thread
+09-21 01:25:34.343 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TapAntiAddictionService","method":"startupWithTapTap","args":"{\"startupWithTapTap\":\"f484fd17-9d1d-4b78-b31b-4cf3a1141e5b\"}","callback":false,"callbackId":"","onceTime":false}
+09-21 01:25:34.343 I/BridgeLogger(19937): Bridge Engine Handler already init or Current Thread is main Thread
+09-21 01:25:34.368 I/TDS-common_log(19937): begin init userEventTrackerManager
+09-21 01:25:34.372 I/TDS-common_log(19937): initTrackerManager completed
+09-21 01:25:34.372 I/BridgeLogger(19937): Bridge start to execute command
+09-21 01:25:34.372 I/TDS-common_log-TDSCommonServiceImpl(19937): setXUA:{"Engine-Version":"3.30.3","Engine-Platform":"Unity"}
+09-21 01:25:34.372 I/BridgeLogger(19937): Bridge start to execute command
+09-21 01:25:34.372 I/TDS-common_log-TDSLoginServiceImpl(19937): init
+09-21 01:25:34.374 I/TDS-common_log(19937): register isc service TapLogin com.taptap.sdk.IscTapLoginService
+09-21 01:25:34.375 I/BridgeLogger(19937): Bridge start to execute command
+09-21 01:25:34.375 I/TDS-common_log-TapAntiAddictionServiceImpl(19937): initWithoutCallback(gameIdentifier:rAK3FfdieFob2Nn8Am, showSwitchAccount:false , useAgeRange = true
+09-21 01:25:34.385 I/BridgeLogger(19937): Bridge start to execute command
+09-21 01:25:34.385 I/TDS-common_log-TapAntiAddictionServiceImpl(19937): setUnityVersion(version:3.30.3
+09-21 01:25:34.385 I/BridgeLogger(19937): Bridge start to execute command
+09-21 01:25:34.385 I/TDS-common_log-TapAntiAddictionServiceImpl(19937): setAntiAddictionCallback
+09-21 01:25:34.386 I/BridgeLogger(19937): Bridge start to execute command
+09-21 01:25:34.386 I/TDS-common_log-TapAntiAddictionServiceImpl(19937): startupWithTapTap(userIdentifier:f484fd17-9d1d-4b78-b31b-4cf3a1141e5b
+09-21 01:25:34.727 E/AntiAddiction(19937): error ----- message: checkUserAuthIdentify: onError:NotFound: rpc error: code = NotFound desc = 实名信息不存在
+09-21 01:25:48.109 I/BridgeLogger(19937): EngineHandler send Message to Engine
+09-21 01:25:48.118 I/BridgeLogger(19937): Bridge Engine Handler Thread:UnityMain
+09-21 01:25:48.118 I/BridgeLogger(19937):  Message:Result{code=0, message='Success', callbackId='9e47839b-f296-4db7-b17f-1ec563d80a8d', content='{"extras":null, "code":9002}', onceTime=false}
+09-21 01:25:48.134 I/Unity   (19937): Plugins.AntiAddictionUIKit.AntiAddictionUIKit:PerformAndroidGetCurrentUserAgeLimit()
+09-21 01:25:48.134 I/Unity   (19937): Plugins.AntiAddictionUIKit.<>c__DisplayClass8_0:<SetAntiAddictionCallback>b__0(Result)
+09-21 01:25:48.136 I/Unity   (19937): Plugins.AntiAddictionUIKit.<>c__DisplayClass8_0:<SetAntiAddictionCallback>b__0(Result)

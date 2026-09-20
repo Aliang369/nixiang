@@ -1,0 +1,11 @@
+09-21 01:37:27.417 D/WindowManager( 3150): NFW_setClientVisible:ActivityRecord{96407729 u0 com.taptap/.common.account.ui.login.CheckOneKeyLoginActivity clientVisible:true
+09-21 01:37:27.419 D/OplusCompatModeManagerService( 3150): getRequestedConfigurationOrientation  res:0,req:3,config.old:0,config.new:0,ActivityRecord{96407729 u0 com.taptap/.common.account.ui.login.CheckOneKeyLoginActivity t-1}
+09-21 01:37:27.419 D/OplusCompatModeManagerService( 3150):  ar : ActivityRecord{96407729 u0 com.taptap/.common.account.ui.login.CheckOneKeyLoginActivity t-1} displayId:-1 inCompatMode: false
+--- 回到游戏后带 token 重新初始化（SSO 成功的决定性证据）---
+09-21 01:38:11.926 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSCommonService","method":"initWithConfig","args":"{\"initWithConfig\":\"{\\\"clientID\\\":\\\"rAK3FfdieFob2Nn8Am\\\",\\\"clientToken\\\":\\\"Qr9AEqtuoSVS3zeD6iVbM4ZC0AtkJcQ89tywVyi0\\\",\\\"isCN\\\":true}\",\"versionName\":\"0.0.0.0\"}","callback":false,"callbackId":"","onceTime":false}
+09-21 01:38:11.927 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSLoginService","method":"initWithClientID","args":"{\"clientID\":\"rAK3FfdieFob2Nn8Am\",\"regionType\":true,\"roundCorner\":true}","callback":false,"callbackId":"","onceTime":false}
+--- TapTap 侧登录 Activity 关闭（返回游戏）---
+component=com.PigeonGames.Phigros/com.taptap.sdk.TapLoginHelperActivity opt={t=FROM_STYLE mUserId=0}}
+component=com.PigeonGames.Phigros/com.taptap.sdk.TapLoginHelperActivity opt={t=FROM_STYLE mUserId=0}}] 
+component=com.PigeonGames.Phigros/com.taptap.sdk.ui.TapTapActivity opt={t=FROM_STYLE mUserId=0}}
+component=com.PigeonGames.Phigros/com.taptap.sdk.ui.TapTapActivity opt={t=FROM_STYLE mUserId=0}}] 

@@ -97,7 +97,14 @@ public final class TapLoginForceWeb {
                     // PhoneLoginHandler 也可能为 true → sanitize 把两类都换成 canHandle 恒 false 的代理。
                     "com.wanda.sf3.wd",
                     // 弹壳战机：TapTap 渠道原版；改签包固定走 embedded_web，避免客户端 SSO 校验真签。
-                    "com.survivor.acecn"));
+                    "com.survivor.acecn",
+                    // Phigros（taptap 渠道 3.20.0 / vc154）：TapSDK 3.30.3 旧版路径
+                    // （com.taptap.sdk.ui.TapTapActivity + intent extra "request" + LoginClient 的 catch
+                    //   分支落 WebViewHandler）。2026-09-21 实测：游戏内「账号与统计 → TapTap 登录」走
+                    //   客户端 SSO 时被 TapTap 客户端以 signature not match 拒绝（code=-1，
+                    //   error=permission_result），游戏侧显示「登录失败，请检查网络」，且 LoginBlock
+                    //   收 resultCode=-1 后不降级网页 → 必须在此强制内嵌网页登录。
+                    "com.PigeonGames.Phigros"));
 
     private TapLoginForceWeb() {}
 

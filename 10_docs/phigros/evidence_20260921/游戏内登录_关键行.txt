@@ -1,0 +1,7 @@
+1:09-21 01:44:37.381 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSLoginService","method":"registerLoginCallback","args":"","callback":true,"callbackId":"790b4480-458e-4094-b0e9-3d5
+4:09-21 01:44:37.382 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSLoginService","method":"startTapLogin","args":"{\"permissions\":[\"public_profile\"]}","callback":false,"callbackI
+6:09-21 01:44:37.382 I/TDS-common_log-TDSLoginServiceImpl(19937): registerLoginCallback
+8:09-21 01:44:37.382 I/TDS-common_log-TDSLoginServiceImpl(19937): startTapLogin
+421:09-21 01:44:37.880 I/BridgeLogger(19937):  Message:Result{code=0, message='Success', callbackId='790b4480-458e-4094-b0e9-3d5a59d9d2a2', content='{"loginCallbackCode":2, "wrapper":"{\"code\":-1,\"m
+445:09-21 01:44:37.894 I/BridgeLogger(19937): Command from Engine Bridge:{"service":"TDSLoginService","method":"unregisterLoginCallback","args":"","callback":false,"callbackId":"","onceTime":false}
+461:09-21 01:44:37.902 I/TDS-common_log-TDSLoginServiceImpl(19937): unregisterLoginCallback
