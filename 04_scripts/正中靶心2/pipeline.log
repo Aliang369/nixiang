@@ -8366,3 +8366,55 @@ Removing 07_patched/正中靶心2/
 [2026-09-20 19:45:57] [正中靶心2] stage=archive 开始
 命令: bash 04_scripts/正中靶心2/archive_zzbx2.sh
 目录: /Users/aliang/Documents/nixiang
+04_scripts/正中靶心2/archive_zzbx2.sh
+04_scripts/正中靶心2/cleanup_summary.json
+04_scripts/正中靶心2/cleanup_zzbx2.sh
+04_scripts/正中靶心2/fetch_installed_official_zzbx2.sh
+04_scripts/正中靶心2/official_apk.json
+04_scripts/正中靶心2/official_check.json
+04_scripts/正中靶心2/official_check.txt
+04_scripts/正中靶心2/pipeline.json
+04_scripts/正中靶心2/pipeline.log
+04_scripts/正中靶心2/surgical_zzbx2_1.7.sh
+10_docs/_state/current.md
+10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md
+10_docs/正中靶心2/星空落地_1.7_20260914.md
+[main 1082023] 正中靶心2 1.7 二次登录签名修复与验收
+ 13 files changed, 503 insertions(+), 78 deletions(-)
+To github.com:Aliang369/nixiang.git
+   19ff40f..1082023  main -> main
+==> 本作相关状态
+ M 04_scripts/正中靶心2/pipeline.log
+ M mod菜单/starry-mod-menu/.gradle/8.13/executionHistory/executionHistory.lock
+ M mod菜单/starry-mod-menu/.gradle/8.13/fileHashes/fileHashes.lock
+ M mod菜单/starry-mod-menu/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+ M mod菜单/starry-mod-menu/.gradle/file-system.probe
+ M mod菜单/starry-mod-menu/app/src/main/jni/Games/DwdlmMod.cpp
+ M mod菜单/starry-mod-menu/starry-magic-mod-menu.design
+==> 全仓未处理项（应仅见其他会话/游戏）
+ M 04_scripts/动物大联盟/dwdlm_build_so.sh
+ M 04_scripts/动物大联盟/dwdlm_install.sh
+ M 04_scripts/动物大联盟/official_apk.json
+ M 04_scripts/动物大联盟/patch_dwdlm.js
+ M 04_scripts/动物大联盟/pipeline.json
+ M 04_scripts/动物大联盟/pipeline.log
+ M 04_scripts/正中靶心2/pipeline.log
+ D 10_docs/暗影格斗3/assets/sf3_icon_512.png
+ D 10_docs/暗影格斗3/assets/sf3_icon_round_192.png
+ M 10_docs/暗影格斗3/星空落地_1.45.3_20260919.md
+ M mod菜单/starry-mod-menu/.gradle/8.13/executionHistory/executionHistory.lock
+ M mod菜单/starry-mod-menu/.gradle/8.13/fileHashes/fileHashes.lock
+ M mod菜单/starry-mod-menu/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+ M mod菜单/starry-mod-menu/.gradle/file-system.probe
+ M mod菜单/starry-mod-menu/app/src/main/jni/Games/DwdlmMod.cpp
+ M mod菜单/starry-mod-menu/starry-magic-mod-menu.design
+?? 04_scripts/遗弃之地/
+?? 06_dumped/动物大联盟/
+?? 10_docs/动物大联盟/evidence_20260920/
+?? 10_docs/动物大联盟/登录页达成_1.0.23_20260920.md
+?? 10_docs/暗影格斗3/evidence_20260920_login/
+?? 10_docs/暗影格斗3/登录问题诊断_无日志静态核验_20260920.md
+?? 10_docs/遗弃之地/分析_0.1.65_真机包与标准外科出路_20260920.md
+?? 暗影.md
+[2026-09-20 19:46:07] [正中靶心2] stage=archive 完成（校验通过）
+────────────────────────────────────────────

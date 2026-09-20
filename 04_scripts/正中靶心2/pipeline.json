@@ -1,7 +1,7 @@
 {
   "game": "正中靶心2",
   "version": "1.7",
-  "notes": "2026-09-20：按真机安装包（上一版星空基线）重建 1.7；新增 StarryApp 早期 SignSpoof 与 TapSignKit.getSign 固定官方 MD5 双层修复。正式包 md5 353f6767…，已同签覆盖装机；真实账号登录后强杀冷启动恢复成功（has_user true / setUserId 188717），二次登录问题通过。",
+  "notes": "2026-09-20：按真机安装包（上一版星空基线）重建 1.7；新增 StarryApp 早期 SignSpoof 与 TapSignKit.getSign 固定官方 MD5 双层修复。正式包 md5 353f6767…，已同签覆盖装机；真实账号登录后强杀冷启动恢复成功（has_user true / setUserId 188717），二次登录问题通过。cleanup 已删除 07_patched 等中间物，历史 surgical/sign 阶段因上游中间物不存在显示 pending 属预期，不代表正式包缺失。",
   "params": {
     "game_id": "zzbx2",
     "package": "com.openew.monster",
@@ -545,7 +545,17 @@
           "path": "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-20 19:46:06",
+      "artifacts": {
+        "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md": {
+          "md5": "ba7e10d24f92c91ffaf4acf0f97cad41"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/cleanup_summary.json": "901d575ed37584b0fa7ed5fee22b126b",
+        "06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js": "f3fd0a2010e93007e8ff15f01891f5af"
+      }
     }
   ]
 }
