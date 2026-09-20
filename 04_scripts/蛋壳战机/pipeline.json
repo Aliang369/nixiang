@@ -420,8 +420,26 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk.idsig"
         }
       ],
-      "status": "pending",
-      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-20）。后端 archive_dkzj.sh 校验唯一正式包、裁剪清单与中间产物已清理，只提交本作路径并 push。偷盗技能不会使重复同名技能升级，作为已知限制记录，不修复。"
+      "status": "done",
+      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-20）。后端 archive_dkzj.sh 校验唯一正式包、裁剪清单与中间产物已清理，只提交本作路径并 push。偷盗技能不会使重复同名技能升级，作为已知限制记录，不修复。",
+      "done_at": "2026-09-20 21:55:05",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": {
+          "md5": "55457ccbc564504e42f57d566a2333f6"
+        },
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/cleanup_summary.json": {
+          "md5": "89fbb739ae2a4a3627e0b6d5e9bd9838"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/正式包裁剪清单_1.1.5_20260920.json": {
+          "md5": "fc695232c2beda2ec31629feee3e1a4f"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.5_20260920.md": {
+          "md5": "127f26cd8285dbd90ff98c0371616c6f"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok": "bf29c5b09da966e69f65219cdc9ee2f6"
+      }
     }
   ]
 }
