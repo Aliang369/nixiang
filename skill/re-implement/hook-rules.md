@@ -80,6 +80,8 @@ int replacement(int a, int b) {
 
 对同一 PT_LOAD 的文件支持部分：`elf_va = p_vaddr + (file_off - p_offset)`。只在 `p_filesz` 覆盖范围内有效；BSS 等内存尾部没有对应文件字节。`p_vaddr - p_offset` 可因段而异，`0x4000` 不是通用常数，也不是运行时 load bias。
 
+Il2CppDumper `dump.cs` 的三个字段里，**`Offset` 才是 file offset**（`RVA − Offset` 即首段 `p_vaddr − p_offset`，本例 0x4000，须按程序头实测）；序言期望值按小端读成 `uint32_t`（`eb 2c bb 6d` → `0x6DBB2C6D`）；锚点表须绑定 `libil2cpp.so` 的 SHA-256（§23）。口径填错**不报错**，只会静默退回按名路径——「功能生效」不能作为口径正确的证据，唯一判据是 logcat 的 `@rva`/`@by-name`。详见 `version-update-relocate.md` §0.1。
+
 ## 7. 运行时 VA 换算与交叉检查
 
 - 用 ELF 程序头和实际 maps 对齐匹配；maps 可能按页拆分，不能把任意 RX 起点当模块基址。

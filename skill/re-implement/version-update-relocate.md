@@ -2,7 +2,7 @@
 
 > 📍 `re-implement/version-update-relocate.md`
 > 🎯 游戏小版本更新后原挂点失效（`hits=0` / 功能无效）时的标准流程，按 A→B→C→D 顺序走
-> 📖 蓝本：音舞光年 0.300.41→0.300.42（invoke 桩整体搬迁，2026-08-22）；弓箭传说2国际版 1.0.1（方法缺失，2026-08-23）；无悔华夏清数据节（导出剥离，2026-08-28）
+> 📖 蓝本：音舞光年 0.300.41→0.300.42（invoke 桩整体搬迁，2026-08-22）；弓箭传说2国际版 1.0.1（方法缺失，2026-08-23）；无悔华夏清数据节（导出剥离，2026-08-28）；我的勇者 7.6.1（锚点字段口径错误 + 静默退回按名，2026-09-20）
 
 ---
 
@@ -17,6 +17,21 @@ Unity/HybridCLR 重编 `libil2cpp.so` 时，内部解释器 helper 会**整体�
 | file `0x2BAC188` | 不存在 | 与 41 桩 **97% 字节相同** 的 116B 函数 | 真正的新桩 |
 
 Il2CppDumper 看不到热更玩法方法（`SendScore` / `BubbleConfig` 等）时，**不能**指望 dump.cs 给出新 RVA。理解调用链（菜单 ON → invoke 桩 4 参 → `a1=MethodInfo*` → 方法名过滤 → 改参 → orig）比记一个 offset 更能复现功能；**换的是桩的 file_off，不是 hook 思路**。
+
+---
+
+## 0.1 dump.cs 地址字段口径与序言校验（2026-09-20 起）
+
+> 来源：我的勇者 7.6.1（`10_docs/我的勇者/分析_战斗_20260906.md` §13.2；候选卡 `10_docs/_templates/经验_dump偏移口径与序言校验_20260920.md`）。此前 7.6.0 的锚点整版口径错误却「功能正常」，潜伏一个版本才被换版本时发现。
+
+- **字段口径**：`dump.cs` 每行给 `RVA: 0x… Offset: 0x… VA: 0x…` 三个值。自写 inline hook / `FileOffToVa` 收的是 **file offset**，即 **`Offset` 字段**（本例 `RVA − Offset = 0x4000`，来自首个 PT_LOAD 的 `p_vaddr − p_offset`；**0x4000 不是通用常数**，换 so 先按程序头实测，见 `hook-rules.md` §6）。
+- **序言期望值按小端读**：`Offset` 处 4 字节 `eb 2c bb 6d` → 期望值写 `0x6DBB2C6D`（`memcpy` 成 `uint32_t` 的结果），**不要**写字节序反转的形式。
+- **锚点表绑定 so**：锚点只在对应 so 哈希下有效，表里必须带 `libil2cpp.so` 与 `global-metadata.dat` 的 SHA-256（`hook-rules.md` §23）。
+- **填错不报错、只静默退回**：RVA 快路径序言校验不过时框架自动转按名（`hook-rules.md` §21 行为型双路径），功能照常生效。因此
+  - 「功能生效」**不能**作为口径正确的证据；
+  - 唯一判据 = logcat 里该锚点打印的是 `@rva` 还是 `@by-name`（例：`[Wdyz] HeroSettle hooked @rva 0x45F2308`）；
+  - 版本更新后若始终是 `@by-name`，先怀疑字段口径与序言值，再怀疑运行时 so 与静态 so 不同源（`/proc/<pid>/maps` + 哈希比对）。
+- **出包前自检**：`xxd -s <Offset> -l 4 <libil2cpp.so>` 与锚点表逐项对齐（脚本内做，别靠肉眼）。
 
 ---
 
