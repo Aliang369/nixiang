@@ -13,7 +13,8 @@
 - **复现入口**：`mod菜单/starry-mod-menu/scripts/build_phigros_dex_patch.sh`（重建补丁 dex，幂等）+ `surgical_phigros_dex_patch.sh`（换 dex/重签/装机，含 zip 条目审计与签名指纹校验）。
 - **实机验证**：点「账号与统计 → TapTap 登录」后顶层 Activity = `com.PigeonGames.Phigros/com.taptap.sdk.ui.TapTapActivity`，uiautomator 实读「登录 | TapTap / 手机号登录注册 / 老用户邮箱登录」→ **包内网页登录页，未拉起 TapTap 客户端，`signature not match` 消失**；用户在内嵌网页**实际完成登录，登录没问题**；`TapLoginHelperActivity` 正常销毁回到 `UnityPlayerActivity`。冷启动无 VerifyError，mod `RegisterNatives 19/19` 正常。
 - **NOT PROVEN**：登录后 `clientToken` 回填/账号态持久化未做 token 级取证；首页防沉迷链路未在新包回归。
-- **构建输入缺口（已发现并记录）**：上一轮的 `02_apks/phigros/`、`07_patched/phigros/`、`08_output/phigros/` 三级产物本次均不存在，全机也搜不到 Phigros APK；本轮改用真机已装包作基准（用户确认）。
+- **登录态取证（2026-09-21，用户确认两处均登录成功）**：`/data/data/com.PigeonGames.Phigros/shared_prefs/taptap_sharepreference.xml` 实读 `profile={"name":"晓亮","openid":"hJzcqWw+…","unionid":"rU4fZajJdbSQme5O7VSC5w=="}`、`token_data` 含真 `access_token`/`mac_key`/`scope:"public_profile compliance"`；`SP_AntiAddictionUiTip.xml` 有 `RealNameToast=true`（防沉迷实名链路也走通）。
+- **包管理约定**：`02_apks/`、`08_output/` 由用户管理，**每次安装后清理**，需要时会告知位置——不是缺口。
 
 ## 2026-09-21 ⚠️ 追加实测：游戏内账号登录因渠道签名失败（上一段结论部分作废）
 
