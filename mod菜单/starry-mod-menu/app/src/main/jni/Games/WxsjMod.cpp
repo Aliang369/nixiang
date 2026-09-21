@@ -36,13 +36,13 @@
 #endif
 
 // ---- 版本绑定常量（vc1637 / 11.266018，来源见 WxsjMod.h）----
-static constexpr uintptr_t kExecRva = 0x2b3f3c4;
+static constexpr uintptr_t kExecRva = 0x2b54de4;  // 11.266020 / vc1641（2026-09-21 运行时 methodPointers 重解）
 // 方法入口前 16 字节（运行时明文 .text 实测），装机即验，不符=版本漂移→拒绝 hook
 static const uint8_t kExecPrologue[16] = {
     0xfe, 0x0f, 0x1c, 0xf8, 0xf8, 0x5f, 0x01, 0xa9,
     0xf6, 0x57, 0x02, 0xa9, 0xf4, 0x4f, 0x03, 0xa9,
 };
-static constexpr int32_t kOrigDllLen = 1960960;   // 官方热更后 targetfuntional.dll 字节数（2026-09-07 1955840→1960960）
+static constexpr int32_t kOrigDllLen = 1960960;   // 官方热更 targetfuntional.dll 字节数（2026-09-21 运行时 dump 实测）
 static constexpr int32_t kLegacyDllLen = 1955840; // 官方上一版 dll（未拉到最新热更的玩家放行替换，避免误伤）
 static const char kDllNameKey[] = "targetfuntional";
 

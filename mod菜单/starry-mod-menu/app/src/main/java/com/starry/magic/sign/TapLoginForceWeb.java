@@ -104,7 +104,11 @@ public final class TapLoginForceWeb {
                     //   客户端 SSO 时被 TapTap 客户端以 signature not match 拒绝（code=-1，
                     //   error=permission_result），游戏侧显示「登录失败，请检查网络」，且 LoginBlock
                     //   收 resultCode=-1 后不降级网页 → 必须在此强制内嵌网页登录。
-                    "com.PigeonGames.Phigros"));
+                    "com.PigeonGames.Phigros",
+                    // 无限升级：TapSDK 4.7 旧版路径（TapTapLoginActivity.impl.loginHandlers
+                    // = [CloudLoginHandler, ClientLoginHandler]，sanitize 后自然回落 fallbackToWeb），
+                    // 改签包必须强制内嵌网页，避免拉起 TapTap 客户端 SSO 校验真签失败。
+                    "com.xingzuodaoshi.infinityUpgrade"));
 
     private TapLoginForceWeb() {}
 
@@ -256,7 +260,18 @@ public final class TapLoginForceWeb {
             Field implF = activity.getClass().getDeclaredField("impl");
             implF.setAccessible(true);
             Object impl = implF.get(activity);
-            Field reqF = activity.getClass().getDeclaredField("request");
+            Field reqF = null;
+            for (String name : new String[]{"loginRequest", "request"}) {
+                try {
+                    reqF = activity.getClass().getDeclaredField(name);
+                    break;
+                } catch (NoSuchFieldException ignored) {
+                }
+            }
+            if (reqF == null) {
+                Log.w(TAG, "old-impl request field missing");
+                return;
+            }
             reqF.setAccessible(true);
             Object req = reqF.get(activity);
             if (impl == null || req == null) return;
