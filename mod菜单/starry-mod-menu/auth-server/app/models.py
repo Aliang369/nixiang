@@ -20,7 +20,17 @@ class Game(Base):
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     # True=客户端需卡密登录并显示账号 Tab；False=隐藏账号 Tab，功能仅要求联网 bootstrap
     card_auth_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    # True=在门户页展示；False=门户页隐藏（不影响客户端授权，仅控制展示）
+    portal_visible: Mapped[bool] = mapped_column(Boolean, default=True)
+    # 星光包下载渠道（JSON 数组 [{name,url}]，最多 3 个；旧数据为纯 URL 字符串）；空则门户页下载按钮置灰
+    download_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
+    # 游戏来源渠道（TapTap/九游/4399/好游快爆/B站/国际服，选「其它」存自定义文本）；空=未设置
+    channel: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # 最近编辑时间（后台每次修改游戏自动刷新）；门户页「最新」排序依据
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True, onupdate=func.now()
+    )
 
 
 class AdminUser(Base):

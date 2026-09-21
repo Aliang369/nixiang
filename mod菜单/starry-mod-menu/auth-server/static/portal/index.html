@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0F0F23" />
+<title>星光游戏分享</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
+  :root {
+    --color-primary: #7C3AED;
+    --color-on-primary: #FFFFFF;
+    --color-secondary: #A78BFA;
+    --color-accent: #F43F5E;
+    --color-background: #0F0F23;
+    --color-foreground: #E2E8F0;
+    --color-muted: #27273B;
+    --color-border: #4C1D95;
+    --color-ring: #7C3AED;
+    --star: #E8E8F5;
+    --font-display: 'Orbitron', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    --radius-card: 16px;
+    --glow-primary: 0 0 18px rgba(124, 58, 237, .45);
+    --glow-accent: 0 0 16px rgba(244, 63, 94, .4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--color-background);
+    color: var(--color-foreground);
+    min-height: 100vh;
+  }
+
+  /* ===== 全局星空底（与管理后台登录页同款） ===== */
+  .sky {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    background:
+      radial-gradient(1200px 700px at 12% -8%, rgba(120, 90, 200, .28), transparent 55%),
+      radial-gradient(900px 600px at 92% 8%, rgba(70, 130, 210, .16), transparent 50%),
+      radial-gradient(700px 500px at 70% 100%, rgba(155, 80, 180, .14), transparent 55%),
+      linear-gradient(180deg, #050514 0%, #0d0c24 42%, #151235 100%);
+  }
+
+  .sky-nebula {
+    position: absolute; inset: -20%;
+    background:
+      radial-gradient(ellipse 40% 28% at 20% 30%, rgba(155,126,216,.18), transparent 70%),
+      radial-gradient(ellipse 35% 30% at 78% 55%, rgba(100,160,255,.1), transparent 70%);
+    animation: nebula-drift 28s ease-in-out infinite alternate;
+    filter: blur(2px);
+  }
+
+  .sky-stars, .sky-stars-2, .sky-stars-3 {
+    position: absolute; inset: 0;
+    background-repeat: repeat;
+    background-size: 320px 320px;
+  }
+
+  .sky-stars {
+    opacity: .9;
+    background-image: radial-gradient(1.5px 1.5px at 20px 30px, var(--star), transparent),
+      radial-gradient(1px 1px at 80px 120px, rgba(255,255,255,.85), transparent),
+      radial-gradient(1.2px 1.2px at 160px 60px, rgba(220,200,255,.9), transparent),
+      radial-gradient(1px 1px at 240px 200px, rgba(255,255,255,.7), transparent),
+      radial-gradient(1.5px 1.5px at 280px 90px, var(--star), transparent),
+      radial-gradient(1px 1px at 50px 220px, rgba(255,255,255,.6), transparent),
+      radial-gradient(1px 1px at 190px 250px, rgba(200,180,255,.8), transparent),
+      radial-gradient(1.2px 1.2px at 110px 180px, rgba(255,255,255,.75), transparent);
+    animation: twinkle 4.5s ease-in-out infinite;
+  }
+
+  .sky-stars-2 {
+    opacity: .55;
+    background-size: 480px 480px;
+    background-image: radial-gradient(1px 1px at 40px 80px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 200px 40px, rgba(220,210,255,.9), transparent),
+      radial-gradient(1px 1px at 320px 300px, #fff, transparent),
+      radial-gradient(2px 2px at 420px 160px, rgba(255,255,255,.5), transparent),
+      radial-gradient(1px 1px at 140px 360px, rgba(180,160,255,.8), transparent);
+    animation: twinkle 7s ease-in-out infinite reverse;
+  }
+
+  .sky-stars-3 {
+    opacity: .35;
+    background-size: 640px 640px;
+    background-image: radial-gradient(2px 2px at 100px 200px, rgba(255,255,255,.7), transparent),
+      radial-gradient(1px 1px at 400px 100px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 520px 480px, rgba(200,180,255,.6), transparent);
+    animation: drift-stars 60s linear infinite;
+  }
+
+  .sky-shooting {
+    position: absolute; width: 80px; height: 1.5px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.85), transparent);
+    top: 18%; right: -10%;
+    transform: rotate(-28deg);
+    animation: shoot 9s ease-in-out infinite;
+    opacity: 0;
+    box-shadow: 0 0 6px rgba(200,180,255,.6);
+  }
+
+  .sky-shooting.delay { animation-delay: 4.5s; top: 42%; }
+
+  /* 星空增强：错峰流星 + 两组交错闪烁的亮星（2026-09-21，与后台同套） */
+  .sky-shooting.s2 { top: 8%; width: 120px; animation: shoot 12s ease-in-out 2.2s infinite; }
+  .sky-shooting.s3 { top: 65%; width: 60px; animation: shoot 14s ease-in-out 6.8s infinite; }
+  .sky-shooting.s4 { top: 78%; width: 100px; animation: shoot-steep 11s ease-in-out 9.5s infinite; }
+  .sky-twinkles, .sky-twinkles-2 {
+    position: absolute; inset: 0;
+    background-repeat: repeat;
+    background-size: 560px 560px;
+  }
+  .sky-twinkles {
+    background-image:
+      radial-gradient(16px 16px at 120px 90px, rgba(200,180,255,.22), transparent 70%),
+      radial-gradient(3.5px 3.5px at 120px 90px, rgba(255,255,255,.95), transparent 65%),
+      radial-gradient(13px 13px at 340px 260px, rgba(180,160,255,.18), transparent 70%),
+      radial-gradient(3px 3px at 340px 260px, rgba(220,200,255,.9), transparent 65%),
+      radial-gradient(3px 3px at 60px 400px, rgba(255,255,255,.85), transparent 65%),
+      radial-gradient(14px 14px at 460px 140px, rgba(160,200,255,.16), transparent 70%),
+      radial-gradient(2.8px 2.8px at 460px 140px, rgba(200,220,255,.9), transparent 65%);
+    animation: twinkle-bright 4.2s ease-in-out infinite;
+  }
+  .sky-twinkles-2 {
+    background-size: 640px 640px;
+    background-image:
+      radial-gradient(15px 15px at 220px 200px, rgba(200,180,255,.2), transparent 70%),
+      radial-gradient(3.2px 3.2px at 220px 200px, rgba(255,255,255,.9), transparent 65%),
+      radial-gradient(12px 12px at 480px 420px, rgba(180,160,255,.17), transparent 70%),
+      radial-gradient(2.8px 2.8px at 480px 420px, rgba(220,200,255,.85), transparent 65%),
+      radial-gradient(3px 3px at 90px 520px, rgba(255,255,255,.8), transparent 65%);
+    animation: twinkle-bright 5.6s ease-in-out 1.6s infinite;
+  }
+  @keyframes twinkle-bright {
+    0%, 100% { opacity: .3; }
+    50% { opacity: 1; }
+  }
+  @keyframes shoot-steep {
+    0%, 72% { opacity: 0; transform: rotate(-38deg) translateX(0); }
+    76% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(-38deg) translateX(-120vw); }
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: .55; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes drift-stars {
+    from { transform: translateY(0); }
+    to { transform: translateY(-40px); }
+  }
+
+  @keyframes nebula-drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(-2%, 1.5%) scale(1.04); }
+  }
+
+  @keyframes shoot {
+    0%, 70% { opacity: 0; transform: rotate(-28deg) translateX(0); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: rotate(-28deg) translateX(-120vw); }
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 20px 16px calc(32px + env(safe-area-inset-bottom)); }
+
+  /* ---------- header ---------- */
+  header { text-align: center; padding: 28px 0 20px; }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 6vw, 40px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 14px rgba(124,58,237,.9), 0 0 40px rgba(124,58,237,.5);
+  }
+
+  .logo .accent { color: var(--color-secondary); }
+
+  .tagline { margin-top: 8px; font-size: 14px; color: var(--color-secondary); opacity: .85; }
+
+  .count-pill {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-secondary);
+    background: rgba(124,58,237,.14);
+    border: 1px solid rgba(124,58,237,.4);
+    border-radius: 999px;
+    vertical-align: 2px;
+  }
+
+  /* ---------- search ---------- */
+  .search-box {
+    max-width: 560px;
+    margin: 22px auto 0;
+    position: relative;
+  }
+
+  /* 图标用 input 自身背景 data-uri 渲染，规避 DOM SVG 的层叠/合成渲染问题 */
+  #search {
+    width: 100%;
+    height: 52px;
+    padding: 0 44px 0 46px;
+    font-size: 16px;
+    color: var(--color-foreground);
+    /* 与后台卡片同款淡紫低透明底，星空透出 */
+    background-color: rgba(124, 58, 237, .07);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23A78BFA' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 16px center;
+    border: 1px solid rgba(167, 139, 250, .16);
+    border-radius: 14px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  #search::placeholder { color: rgba(167, 139, 250, .65); }
+
+  #search:focus {
+    border-color: var(--color-ring);
+    box-shadow: var(--glow-primary);
+  }
+
+  #search-clear {
+    position: absolute;
+    right: 8px; top: 50%;
+    transform: translateY(-50%);
+    width: 36px; height: 36px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--color-secondary);
+    cursor: pointer;
+    border-radius: 10px;
+  }
+
+  #search-clear svg { position: static; transform: none; width: 18px; height: 18px; stroke: currentColor; }
+  #search-clear:hover { background: rgba(124,58,237,.18); }
+
+  /* ---------- stats / toolbar ---------- */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    margin: 22px 2px 14px;
+  }
+
+  .toolbar h2 { font-size: 17px; font-weight: 600; }
+
+  .sort-tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(124,58,237,.07);
+    border: 1px solid rgba(167,139,250,.16);
+    border-radius: 10px;
+    padding: 3px;
+  }
+
+  .sort-tab {
+    min-height: 32px;
+    padding: 0 16px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--color-secondary);
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .sort-tab:hover { color: #fff; }
+
+  .sort-tab.active {
+    color: #fff;
+    background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+    box-shadow: 0 2px 8px rgba(124,58,237,.4);
+  }
+
+  #stat:empty { display: none; }
+
+  /* ---------- grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  /* ---------- card ---------- */
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    /* 与后台卡片同款淡紫低透明底，星空透出 */
+    background: rgba(124,58,237,.07);
+    border: 1px solid rgba(167,139,250,.16);
+    border-radius: var(--radius-card);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-ring);
+    box-shadow: var(--glow-primary);
+  }
+
+  .card::before {
+    /* 顶部霓虹渐变线 */
+    content: '';
+    position: absolute;
+    top: 0; left: 16px; right: 16px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-accent), transparent);
+    opacity: .75;
+  }
+
+  .card-head { display: flex; align-items: center; gap: 14px; }
+
+  .avatar {
+    flex: none;
+    width: 52px; height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 900;
+    color: #fff;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    box-shadow: 0 4px 14px rgba(124,58,237,.4);
+    text-shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+
+  .card-title { min-width: 0; }
+
+  .card-title h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 渠道标签：卡片名字下方 */
+  .ch-tag {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #C4B5FD;
+    background: rgba(139,92,246,.14);
+    border: 1px solid rgba(167,139,250,.35);
+    border-radius: 999px;
+    padding: 1px 9px;
+    white-space: nowrap;
+  }
+
+  .badge {
+    margin-left: auto;
+    flex: none;
+    font-size: 12px;
+    color: var(--color-secondary);
+    background: rgba(39,39,59,.9);
+    border: 1px solid rgba(167,139,250,.3);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  .card-foot { display: flex; gap: 10px; margin-top: auto; }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    flex: 1;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: filter .15s, box-shadow .2s, background .15s, border-color .2s, opacity .2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn svg { width: 17px; height: 17px; flex: none; }
+
+  .btn-features {
+    color: var(--color-foreground);
+    background: rgba(124,58,237,.16);
+    border-color: rgba(124,58,237,.5);
+  }
+  .btn-features:hover { background: rgba(124,58,237,.28); box-shadow: var(--glow-primary); }
+
+  .btn-download {
+    color: #fff;
+    background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+    box-shadow: 0 3px 12px rgba(124, 58, 237, .45);
+  }
+  .btn-download:hover { filter: brightness(1.18); box-shadow: var(--glow-primary); }
+
+  .btn-download.disabled {
+    background: rgba(39,39,59,.7);
+    border-color: rgba(167,139,250,.25);
+    color: rgba(167,139,250,.55);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .btn:active { transform: scale(.97); }
+
+  /* ---------- states ---------- */
+  .state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 48px 16px;
+    color: var(--color-secondary);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+    .state .big { display: flex; justify-content: center; margin-bottom: 8px; opacity: .7; }
+    .state .big svg { width: 44px; height: 44px; stroke: var(--color-secondary); }
+
+  .spinner {
+    display: inline-block;
+    width: 30px; height: 30px;
+    border: 3px solid rgba(124,58,237,.3);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin-bottom: 10px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  mark {
+    background: rgba(244,63,94,.3);
+    color: #fff;
+    border-radius: 3px;
+    padding: 0 1px;
+  }
+
+  /* ---------- modal ---------- */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(6, 6, 18, .72);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .modal-mask.show { display: flex; }
+
+  .modal {
+    width: 100%;
+    max-width: 460px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(165deg, #232338, #17172c);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 12px 48px rgba(0,0,0,.6), var(--glow-primary);
+    animation: pop .18s ease;
+  }
+
+  @keyframes pop { from { transform: scale(.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(76,29,149,.5);
+  }
+
+  .modal-head h3 { font-size: 16px; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .modal-head .sub { font-size: 12px; color: var(--color-secondary); margin-top: 2px; }
+
+  .modal-close {
+    margin-left: auto;
+    flex: none;
+    width: 38px; height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-secondary);
+    cursor: pointer;
+  }
+
+  .modal-close:hover { background: rgba(244,63,94,.18); color: #fff; }
+
+  .feat-list { overflow-y: auto; padding: 10px 12px 14px; }
+
+  .feat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 10px;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: background .15s;
+  }
+
+  .feat-item:hover { background: rgba(124,58,237,.12); }
+
+  .feat-item + .feat-item { margin-top: 2px; }
+
+  .feat-num {
+    flex: none;
+    min-width: 34px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-secondary);
+    background: rgba(124,58,237,.18);
+    border: 1px solid rgba(124,58,237,.4);
+    border-radius: 8px;
+    padding: 0 6px;
+  }
+
+  /* ---------- 下载渠道弹窗 ---------- */
+  .dl-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 16px;
+  }
+
+  .dl-channel {
+    flex: 0 1 auto;
+    min-width: 104px;
+    max-width: 150px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #fff;
+    background: rgba(124, 58, 237, .16);
+    border: 1px solid rgba(139, 92, 246, .5);
+    border-radius: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .15s, box-shadow .2s, border-color .2s;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 8px;
+  }
+
+  .dl-channel:hover {
+    background: rgba(139, 92, 246, .26);
+    border-color: var(--color-primary);
+    box-shadow: var(--glow-primary);
+  }
+
+  .dl-channel:active { transform: scale(.96); }
+
+  .modal-foot {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(76,29,149,.5);
+  }
+
+  .modal-foot .btn { width: 100%; }
+
+  /* ---------- footer ---------- */
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: rgba(167,139,250,.5);
+    line-height: 1.8;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- 星空底：星云 + 三层星点 + 亮星 + 流星 -->
+<div class="sky" aria-hidden="true">
+  <div class="sky-nebula"></div>
+  <div class="sky-stars"></div>
+  <div class="sky-stars-2"></div>
+  <div class="sky-stars-3"></div>
+  <div class="sky-twinkles"></div>
+  <div class="sky-twinkles-2"></div>
+  <div class="sky-shooting"></div>
+  <div class="sky-shooting delay"></div>
+  <div class="sky-shooting s2"></div>
+  <div class="sky-shooting s3"></div>
+  <div class="sky-shooting s4"></div>
+</div>
+
+<div class="wrap">
+  <header>
+    <div class="logo">星光<span class="accent">游戏分享</span></div>
+    <p class="tagline">内容均来自互联网仅整理展示<span class="count-pill" id="stat"></span></p>
+    <div class="search-box">
+      <input id="search" type="search" placeholder="搜索游戏名" autocomplete="off" />
+      <button id="search-clear" type="button" aria-label="清空搜索">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <h2>游戏列表</h2>
+    <div class="sort-tabs" role="tablist" aria-label="排序方式">
+      <button class="sort-tab active" type="button" data-sort="new" role="tab" aria-selected="true">最新</button>
+      <button class="sort-tab" type="button" data-sort="hot" role="tab" aria-selected="false">最热</button>
+    </div>
+  </div>
+
+  <main class="grid" id="grid" aria-live="polite">
+    <div class="state"><span class="spinner"></span><br />正在加载游戏列表…</div>
+  </main>
+
+  <footer>星光游戏分享 · 功能以游戏内菜单实际展示为准</footer>
+</div>
+
+<!-- 功能列表弹窗 -->
+<div class="modal-mask" id="modal-mask" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal">
+    <div class="modal-head">
+      <div style="min-width:0">
+        <h3 id="modal-title"></h3>
+        <div class="sub" id="modal-sub"></div>
+      </div>
+      <button class="modal-close" type="button" id="modal-close" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="feat-list" id="feat-list"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+
+<!-- 下载渠道弹窗 -->
+<div class="modal-mask" id="dl-mask" role="dialog" aria-modal="true" aria-labelledby="dl-title">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div style="min-width:0">
+        <h3 id="dl-title">下载星光包</h3>
+        <div class="sub" id="dl-sub"></div>
+      </div>
+      <button class="modal-close" type="button" id="dl-close" aria-label="关闭">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="dl-grid" id="dl-grid"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var games = [];          // 全量数据
+  var sortMode = 'new';    // new=最新(编辑时间) | hot=最热(近7天活跃)
+  var grid = document.getElementById('grid');
+  var searchEl = document.getElementById('search');
+  var clearEl = document.getElementById('search-clear');
+  var statEl = document.getElementById('stat');
+
+  /* ---------- 工具 ---------- */
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // 搜索命中高亮（先转义再替换，避免注入）
+  function highlight(text, kw) {
+    var safe = escapeHtml(text);
+    if (!kw) return safe;
+    var safeKw = escapeHtml(kw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return safe.replace(new RegExp('(' + safeKw + ')', 'gi'), '<mark>$1</mark>');
+  }
+
+  function iconFeatures() {
+    // 游戏手柄（Lucide gamepad-2）
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>';
+  }
+
+  function iconDownload() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="m7 10 5 5 5-5"/><path d="M4 19h16"/></svg>';
+  }
+
+  function svgEmpty() {
+    return '<span class="big"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8.5 11h5"/></svg></span>';
+  }
+
+  function svgError() {
+    return '<span class="big"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4"/><path d="M12 17.2v.1"/></svg></span>';
+  }
+
+  /* ---------- 渲染 ---------- */
+  function cardHtml(g, kw) {
+    var n = (g.features || []).length;
+    var dl = (g.downloads || []).length;
+    var download = dl
+      ? '<button class="btn btn-download" type="button" data-act="download">' + iconDownload() + '下载</button>'
+      : '<button class="btn btn-download disabled" type="button" disabled title="暂无下载渠道，请联系管理员">' + iconDownload() + '下载</button>';
+    return (
+      '<article class="card" data-gid="' + escapeHtml(g.game_id) + '">' +
+        '<div class="card-head">' +
+          '<div class="avatar" aria-hidden="true">' + escapeHtml((g.name || g.game_id || '?').slice(0, 1).toUpperCase()) + '</div>' +
+          '<div class="card-title">' +
+            '<h3>' + highlight(g.name, kw) + '</h3>' +
+            (g.channel ? '<span class="ch-tag">' + escapeHtml(g.channel) + '</span>' : '') +
+          '</div>' +
+          '<span class="badge">' + n + ' 个功能</span>' +
+        '</div>' +
+        '<div class="card-foot">' +
+          '<button class="btn btn-features" type="button" data-act="features">' + iconFeatures() + '功能</button>' +
+          download +
+        '</div>' +
+      '</article>'
+    );
+  }
+
+  function render(kw) {
+    kw = (kw || '').trim().toLowerCase();
+    var list = games.slice(); // 排序会改数组，先拷贝
+    if (kw) {
+      list = list.filter(function (g) {
+        return (g.name || '').toLowerCase().indexOf(kw) >= 0;
+      });
+    }
+    // 排序：最新=后台最近编辑时间（无编辑记录回退创建时间）；最热=近7天活跃设备数
+    if (sortMode === 'hot') {
+      list.sort(function (a, b) { return (b.hot7d || 0) - (a.hot7d || 0); });
+    } else {
+      list.sort(function (a, b) {
+        var ta = Date.parse(a.updated_at || '') || Date.parse(a.created_at || '') || 0;
+        var tb = Date.parse(b.updated_at || '') || Date.parse(b.created_at || '') || 0;
+        return tb - ta;
+      });
+    }
+
+    statEl.textContent = kw
+      ? '匹配 ' + list.length + ' / ' + games.length + ' 款游戏'
+      : (games.length ? '共 ' + games.length + ' 款游戏' : '');
+
+    if (!games.length) {
+      grid.innerHTML = '<div class="state">' + svgEmpty() + '后台还没有登记任何游戏</div>';
+      return;
+    }
+    if (!list.length) {
+      grid.innerHTML = '<div class="state">' + svgEmpty() + '没有匹配「' + escapeHtml(kw) + '」的游戏<br />试试其他关键词</div>';
+      return;
+    }
+    grid.innerHTML = list.map(function (g) { return cardHtml(g, kw); }).join('');
+  }
+
+  /* ---------- 弹窗 ---------- */
+  var mask = document.getElementById('modal-mask');
+  var modalTitle = document.getElementById('modal-title');
+  var modalSub = document.getElementById('modal-sub');
+  var featList = document.getElementById('feat-list');
+  var modalFoot = document.getElementById('modal-foot');
+
+  function openModal(g) {
+    var feats = g.features || [];
+    modalTitle.textContent = g.name || g.game_id;
+    modalTitle.setAttribute('data-gid', g.game_id || '');
+    modalSub.textContent = feats.length + ' 个菜单功能';
+    featList.innerHTML = feats.length
+      ? feats.map(function (f, i) {
+          return '<div class="feat-item"><span class="feat-num">' + (i + 1) + '</span><span>' + escapeHtml(f.name) + '</span></div>';
+        }).join('')
+      : '<div class="state" style="padding:24px 8px">该游戏暂未登记菜单功能</div>';
+    modalFoot.innerHTML = (g.downloads || []).length
+      ? '<button class="btn btn-download" type="button" data-act="download">' + iconDownload() + '下载星光包</button>'
+      : '<button class="btn btn-download disabled" type="button" disabled>暂无下载渠道，请联系管理员</button>';
+    mask.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('modal-close').focus();
+  }
+
+  function closeModal() {
+    mask.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  /* ---------- 下载渠道弹窗 ---------- */
+  var dlMask = document.getElementById('dl-mask');
+  var dlTitle = document.getElementById('dl-title');
+  var dlSub = document.getElementById('dl-sub');
+  var dlGrid = document.getElementById('dl-grid');
+
+  // 补协议：后台填 www.xxx.com 这类无协议链接时，浏览器会当站内相对路径
+  function withProtocol(url) {
+    var s = String(url || '').trim();
+    return /^https?:\/\//i.test(s) ? s : 'https://' + s;
+  }
+
+  function openDownloadModal(g) {
+    var chans = g.downloads || [];
+    dlTitle.textContent = '下载 ' + (g.name || '星光包');
+    dlSub.textContent = '共 ' + chans.length + ' 个下载渠道，点击直达';
+    dlGrid.innerHTML = chans.map(function (c) {
+      return '<a class="dl-channel" href="' + escapeHtml(withProtocol(c.url)) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(c.name) + '</a>';
+    }).join('');
+    closeModal(); // 若从功能弹窗进入，先关它
+    dlMask.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('dl-close').focus();
+  }
+
+  function closeDownloadModal() {
+    dlMask.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  dlMask.addEventListener('click', function (e) { if (e.target === dlMask) closeDownloadModal(); });
+  document.getElementById('dl-close').addEventListener('click', closeDownloadModal);
+
+  mask.addEventListener('click', function (e) { if (e.target === mask) closeModal(); });
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (dlMask.classList.contains('show')) closeDownloadModal();
+    else if (mask.classList.contains('show')) closeModal();
+  });
+
+  /* ---------- 事件 ---------- */
+  grid.addEventListener('click', function (e) {
+    var card = e.target.closest('.card');
+    if (!card) return;
+    var g = games.find(function (x) { return x.game_id === card.dataset.gid; });
+    if (!g) return;
+    if (e.target.closest('[data-act="download"]')) { openDownloadModal(g); return; }
+    openModal(g);
+  });
+
+  modalFoot.addEventListener('click', function (e) {
+    if (!e.target.closest('[data-act="download"]')) return;
+    var gid = modalTitle.getAttribute('data-gid') || '';
+    var g = games.find(function (x) { return x.game_id === gid; });
+    if (g) openDownloadModal(g);
+  });
+
+  searchEl.addEventListener('input', function () {
+    clearEl.style.display = searchEl.value ? 'flex' : 'none';
+    render(searchEl.value);
+  });
+
+  clearEl.addEventListener('click', function () {
+    searchEl.value = '';
+    clearEl.style.display = 'none';
+    render('');
+    searchEl.focus();
+  });
+
+  // 最新/最热切换
+  document.querySelectorAll('.sort-tab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.dataset.sort === sortMode) return;
+      sortMode = btn.dataset.sort;
+      document.querySelectorAll('.sort-tab').forEach(function (b) {
+        var on = b === btn;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      render(searchEl.value);
+    });
+  });
+
+  /* ---------- 拉取数据 ---------- */
+  fetch('/v1/portal/games')
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (res) {
+      games = (res && res.ok && Array.isArray(res.data)) ? res.data : [];
+      render('');
+    })
+    .catch(function () {
+      grid.innerHTML = '<div class="state">' + svgError() + '游戏列表加载失败<br />请检查网络后刷新重试</div>';
+      statEl.textContent = '';
+    });
+})();
+</script>
+</body>
+</html>

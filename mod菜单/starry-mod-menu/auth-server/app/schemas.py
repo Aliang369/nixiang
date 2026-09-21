@@ -71,6 +71,12 @@ class GameCreate(BaseModel):
     card_auth_enabled: bool = True
     # 菜单模板 id（库表 menu_templates）；空则尝试用 game_id 匹配
     menu_template: Optional[str] = None
+    # 星光包下载渠道（JSON 数组 [{name,url}]，最多 3 个；兼容旧纯 URL）；空则门户页下载按钮置灰
+    download_url: Optional[str] = Field(default=None, max_length=2048)
+    # 游戏来源渠道；选「其它」时存自定义文本，最长 64
+    channel: Optional[str] = Field(default=None, max_length=64)
+    # 是否在门户页展示（不影响客户端授权）
+    portal_visible: bool = True
     # 创建时是否自动写入模板功能（默认是）
     sync_features: bool = True
 
@@ -80,6 +86,9 @@ class GameUpdate(BaseModel):
     enabled: Optional[bool] = None
     card_auth_enabled: Optional[bool] = None
     menu_template: Optional[str] = None
+    download_url: Optional[str] = Field(default=None, max_length=2048)
+    channel: Optional[str] = Field(default=None, max_length=64)
+    portal_visible: Optional[bool] = None
 
 
 class GameSyncFeaturesRequest(BaseModel):
@@ -148,10 +157,6 @@ class AnnouncementUpdate(BaseModel):
     end_at: Optional[datetime] = None
     action_url: Optional[str] = Field(default=None, max_length=512)
     action_label: Optional[str] = Field(default=None, max_length=64)
-
-
-class AnnouncementReorderRequest(BaseModel):
-    ordered_ids: list[int] = Field(min_length=1)
 
 
 class CardBatchRequest(BaseModel):

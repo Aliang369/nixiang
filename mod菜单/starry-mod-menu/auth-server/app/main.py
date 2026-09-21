@@ -11,7 +11,7 @@ from sqlalchemy import text
 from .config import get_settings
 from .database import Base, SessionLocal, engine
 from .models import AdminUser, FeatureFlag, Game
-from .routers import admin, client, ota
+from .routers import admin, client, ota, portal
 from .security import hash_password
 from .services.feature_sync import sync_game_features
 from .services.menu_templates import resolve_template_id, seed_builtin_templates
@@ -105,6 +105,20 @@ def ensure_schema() -> None:
                 conn.execute(
                     text("ALTER TABLE games ADD COLUMN card_auth_enabled BOOLEAN DEFAULT 1")
                 )
+            if "download_url" not in game_cols:
+                conn.execute(
+                    text("ALTER TABLE games ADD COLUMN download_url VARCHAR(512)")
+                )
+            if "updated_at" not in game_cols:
+                conn.execute(
+                    text("ALTER TABLE games ADD COLUMN updated_at TIMESTAMP")
+                )
+            if "portal_visible" not in game_cols:
+                conn.execute(
+                    text("ALTER TABLE games ADD COLUMN portal_visible BOOLEAN DEFAULT 1")
+                )
+            if "channel" not in game_cols:
+                conn.execute(text("ALTER TABLE games ADD COLUMN channel VARCHAR(64)"))
             ann_cols = {
                 r[1] for r in conn.execute(text("PRAGMA table_info(announcements)")).fetchall()
             }
@@ -145,6 +159,24 @@ def ensure_schema() -> None:
                     "ALTER TABLE games ADD COLUMN IF NOT EXISTS "
                     "card_auth_enabled BOOLEAN DEFAULT TRUE"
                 )
+            )
+            conn.execute(
+                text("ALTER TABLE games ADD COLUMN IF NOT EXISTS download_url VARCHAR(2048)")
+            )
+            conn.execute(
+                text("ALTER TABLE games ALTER COLUMN download_url TYPE VARCHAR(2048)")
+            )
+            conn.execute(
+                text("ALTER TABLE games ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ")
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE games ADD COLUMN IF NOT EXISTS "
+                    "portal_visible BOOLEAN DEFAULT TRUE"
+                )
+            )
+            conn.execute(
+                text("ALTER TABLE games ADD COLUMN IF NOT EXISTS channel VARCHAR(64)")
             )
             conn.execute(
                 text(
@@ -232,12 +264,17 @@ def on_startup():
 
 app.include_router(client.router)
 app.include_router(admin.router)
+app.include_router(portal.router)
 app.include_router(ota.client_router)
 app.include_router(ota.admin_router)
 
 static_dir = Path(__file__).resolve().parent.parent / "static" / "admin"
 if static_dir.exists():
     app.mount("/admin", StaticFiles(directory=str(static_dir), html=True), name="admin")
+
+portal_dir = Path(__file__).resolve().parent.parent / "static" / "portal"
+if portal_dir.exists():
+    app.mount("/portal", StaticFiles(directory=str(portal_dir), html=True), name="portal")
 
 
 @app.get("/health")

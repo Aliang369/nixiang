@@ -1,57 +1,49 @@
 # 运营后台 UI 规范
 
-> 视觉 Token 与美术总则见仓库根目录 [设计风格美术规范.md](../../设计风格美术规范.md) v2.0。  
-> 实现文件：`auth-server/static/admin/index.html`
+> 视觉 Token 与美术总则见仓库根目录 [设计风格美术规范.md](../../设计风格美术规范.md) v2.0。
+> 更新：2026-09-21（门户上线 + 后台 UI 重构 + CSS/JS 拆分后同步）。
+
+## 文件结构与缓存
+
+- 骨架：`static/admin/index.html`（~1150 行，只含 HTML + 内联骨架脚本）
+- 样式：`css/admin.css`（全量主题）+ `css/time-picker.css`（时间选择/行下拉）
+- 脚本：`js/` 9 个文件，加载顺序 time-picker → core → audit → features → dashboard → games → cards → announcements → toasts_ota → settings
+- **缓存铁律**：改任何 css/js 必须递增 `index.html` 里的 `?v=N`，否则线上不生效
+- 门户页：`static/portal/index.html`（单文件，含内联样式与脚本）
 
 ## 布局
 
-- 左侧导航固定宽 `--sidebar-w: 228px`，毛玻璃强层  
-- 顺序：看板 → 游戏 → 卡密 → 功能门控 → 公告 → Toast → 设置  
-- 顶栏：毛玻璃条，标题用 Display 渐变字  
-- 内容区透出全局 `.sky` 星空，不铺死色块底
+- 左侧栏：brand2 品牌卡（六芒星 SVG + 渐变字）→ side-nav 导航（淡紫容器）→ 账号卡（下拉菜单：修改密码 / 退出登录）
+- 顶栏已删除；各 tab 标题区只留标题与操作按钮
+- 导航顺序：数据看板 → 游戏列表 → 菜单模板 → 卡密管理 → 远程公告 → 游戏补丁 → 开屏Toast → 操作日志 → 后台设置（设置页暂空置）
+- 内容区 panel：淡紫低透明 `rgba(124,58,237,.07)` + 紫边框，无毛玻璃，星空透出
 
-## 控件尺寸（强制）
+## 主色与按钮
 
-| 类型 | 高度 |
-|------|------|
-| input / select / `.btn` | 40px |
-| `.btn.sm`、表格行内按钮 | 32px |
-| textarea | min-height 104px |
+- 主按钮 `.btn`：`linear-gradient(135deg, #8B5CF6, #7C3AED)`（与新界面紫统一，勿回退旧薰衣草紫）
+- ghost 淡紫描边；danger 红只用于删除/退出类
+- 卡片（brand2 / 账号卡 / stat）统一 `rgba(124,58,237,.26→.14)` 渐变底
 
-圆角控件 8px；面板 16px；弹窗 / 登录 20px。
+## 表格铁律
 
-## 组件约定
+- 全列表每页 **20 条**（core.js 各 PageSize；数据看板/菜单模板为本地分页）
+- 无斑马纹；th/td 水平居中；td `nowrap + ellipsis`（max-width 340）
+- **`.row-actions` 禁止改 td 的 display**（flex/block 会让 td 脱离 table-cell，行分隔线错位——已踩坑两次）；按钮 inline 排列 + `white-space: nowrap`，`td.row-actions { max-width: none }`，宽度不够靠 `.table-wrap` 横向滚动
+- 卡密/游戏操作列收缩为「操作 ▾」二级下拉（time-picker.css 的 `.card-row-menu` 紫色主题）
 
-| 组件 | 约定 |
-|------|------|
-| 主按钮 | 品牌紫渐变 + 辉光 |
-| 幽灵按钮 | 描边 + 浅透明底 |
-| 统计卡 | 可点击跳转筛选；悬停上浮 2px |
-| 表格 | `.table-wrap` + 斑马纹 + sticky 表头 |
-| 空状态 | `.empty` 自带五角星，无 emoji |
-| 弹窗 | 遮罩毛玻璃模糊；卡片顶边高光 |
-| Toast 类型 | 色块 swatch：info / success / warning / error |
+## 账号与交互
 
-## 星空装饰（克制）
+- 修改密码：账号卡下拉菜单 → 弹窗（原/新/确认），成功后 `doLogout` 直退
+- 退出登录：先确认弹窗，确认后 `doLogout`
+- 删除类操作走原生 confirm；账号菜单项 danger 红、普通项淡紫
 
-- 全屏星点 + 星云 + 最多 2 条流星  
-- 登录四角：魔法阵 + 星  
-- 侧栏：品牌魔法阵标（轻浮动）  
+## 星空装饰
+
+- 全屏 `.sky`：星云 + 3 层星点 + **2 组亮星层（twinkles，交错闪烁）+ 5 条流星**（全部右上→左下，两种角度 -28°/-38°，错峰）
+- 门户页同套星空与淡紫卡片；游戏卡片名字下显示渠道标签 `.ch-tag`
 - `prefers-reduced-motion` 下关闭动画
 
-## 业务联动（非纯视觉）
+## 渠道字段
 
-- 游戏创建绑定 `menu_template` → 自动同步功能列表  
-- 功能页只做开关 +「同步菜单」  
-- 卡密：剩余倒计时、快捷续期、批量操作
-- 公告：弹出模式（每次打开 / 本机一次）、可见性筛选
-- 站点设置：`custom_mod_qq` 等
-- 看板：总在线分卡密/游客；今日/7日/30日/历史活跃
-
-## 验收
-
-- [ ] 与菜单色板一致（主色 `#9B7ED8`）  
-- [ ] 控件高度统一 40/32  
-- [ ] 面板均见毛玻璃与细描边  
-- [ ] 无通用「紫白 Dashboard 模板」感；有星空/阵/星符号  
-- [ ] 强刷后登录页与侧栏装饰正常
+- 游戏来源渠道 `games.channel`：TapTap/九游/4399/好游快爆/B站/国际服，选「其它」自定义输入；PATCH 空串=清空
+- 下载渠道 `games.download_url`：JSON `[{name,url}]` 最多 3 个，旧纯 URL 兼容

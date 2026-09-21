@@ -19,7 +19,6 @@ from ..models import (
 )
 from ..schemas import (
     AnnouncementCreate,
-    AnnouncementReorderRequest,
     AnnouncementUpdate,
     CardBatchRequest,
     CardCreate,
@@ -99,7 +98,11 @@ def _game_dict(g: Game, feature_count: int | None = None) -> dict:
         "name": g.name,
         "enabled": g.enabled,
         "card_auth_enabled": bool(getattr(g, "card_auth_enabled", True)),
+        "portal_visible": bool(getattr(g, "portal_visible", True)),
         "menu_template": g.menu_template,
+        "download_url": getattr(g, "download_url", None),
+        "channel": getattr(g, "channel", None),
+        "updated_at": g.updated_at.isoformat() if getattr(g, "updated_at", None) else None,
         "created_at": g.created_at.isoformat() if g.created_at else None,
     }
     if feature_count is not None:
@@ -199,10 +202,14 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
     today_start = now_bj.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
     online_cut = now - timedelta(seconds=90)
 
+    # 只统计游戏列表里已登记的游戏：测试期客户端乱传的 game_id 不进看板
+    registered_ids = {row[0] for row in db.query(Game.game_id).all()}
+
     def _online_devices(extra=None) -> int:
         """总在线按设备去重（同机多游戏只计 1）。"""
         q = db.query(func.count(func.distinct(OnlinePresence.device_id))).filter(
-            OnlinePresence.last_seen_at >= online_cut
+            OnlinePresence.last_seen_at >= online_cut,
+            OnlinePresence.game_id.in_(registered_ids),
         )
         if extra is not None:
             q = q.filter(extra)
@@ -219,7 +226,9 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
 
     def _by_game_count(since=None, extra=None):
         """分游戏计数。表上 (game_id, device_id) 唯一，故 count(id)=该游戏下去重设备数。"""
-        q = db.query(OnlinePresence.game_id, func.count(OnlinePresence.id))
+        q = db.query(OnlinePresence.game_id, func.count(OnlinePresence.id)).filter(
+            OnlinePresence.game_id.in_(registered_ids)
+        )
         if since is not None:
             q = q.filter(OnlinePresence.last_seen_at >= since)
         if extra is not None:
@@ -234,16 +243,8 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
     by_game_d30 = _by_game_count(d30_start)
     by_game_all = _by_game_count(None)
 
-    registered_ids = {row[0] for row in db.query(Game.game_id).all()}
-    game_ids = sorted(
-        registered_ids
-        | set(by_game_total)
-        | set(by_game_card)
-        | set(by_game_guest)
-        | set(by_game_d7)
-        | set(by_game_d30)
-        | set(by_game_all)
-    )
+    # 分游戏表只列已登记游戏（测试数据已在查询层过滤）
+    game_ids = sorted(registered_ids)
     online_by_game = [
         {
             "game_id": gid,
@@ -256,9 +257,9 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
         }
         for gid in game_ids
     ]
-    # 默认按 7 日活跃排序，方便看哪款更火
+    # 默认按历史活跃排序（累计活跃设备数），方便看哪款累计玩的人最多
     online_by_game.sort(
-        key=lambda r: (-r["d7_active"], -r["d30_active"], -r["all_active"], -r["online"], r["game_id"])
+        key=lambda r: (-r["all_active"], -r["d30_active"], -r["d7_active"], -r["online"], r["game_id"])
     )
 
     cards_total = db.query(func.count(CardKey.id)).scalar() or 0
@@ -281,7 +282,9 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
         """
 
         def _distinct(extra=None) -> int:
-            q = db.query(func.count(func.distinct(OnlinePresence.device_id)))
+            q = db.query(func.count(func.distinct(OnlinePresence.device_id))).filter(
+                OnlinePresence.game_id.in_(registered_ids)
+            )
             if since is not None:
                 q = q.filter(OnlinePresence.last_seen_at >= since)
             if extra is not None:
@@ -520,7 +523,10 @@ def create_game(
         name=body.name,
         enabled=body.enabled,
         card_auth_enabled=body.card_auth_enabled,
+        portal_visible=body.portal_visible,
         menu_template=tid,
+        download_url=body.download_url or None,
+        channel=(body.channel or "").strip() or None,
     )
     db.add(g)
     db.flush()
@@ -550,6 +556,8 @@ def create_game(
             "enabled": g.enabled,
             "card_auth_enabled": bool(g.card_auth_enabled),
             "menu_template": g.menu_template,
+            "download_url": g.download_url,
+            "channel": g.channel,
             "synced_features": sync_result,
         },
     }
@@ -572,8 +580,17 @@ def update_game(
         g.enabled = body.enabled
     if body.card_auth_enabled is not None:
         g.card_auth_enabled = body.card_auth_enabled
+    if body.portal_visible is not None:
+        g.portal_visible = body.portal_visible
     if body.menu_template is not None:
         g.menu_template = body.menu_template or None
+    if body.download_url is not None:
+        g.download_url = body.download_url or None
+    # 空串=清空渠道；null=不更新（与 download_url 同语义）
+    if body.channel is not None:
+        g.channel = (body.channel or "").strip() or None
+    # 显式刷新编辑时间：值未变化时 SQLAlchemy 不发 UPDATE，onupdate 不会触发
+    g.updated_at = datetime.now(timezone.utc)
     record_admin_audit(
         db,
         payload.get("sub") or "unknown",
@@ -812,6 +829,38 @@ def batch_cards(
     }
 
 
+@router.post("/cards/batch-delete")
+def batch_delete_cards(
+    body: CardBatchRequest,
+    request: Request,
+    payload: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    # 与单删 delete_card 同语义：先吊销会话再删（在线设备下次心跳即失效）
+    deleted = 0
+    for card_id in body.ids:
+        card = db.query(CardKey).filter(CardKey.id == card_id).first()
+        if not card:
+            continue
+        revoke_card_sessions(db, card.id)
+        db.delete(card)
+        deleted += 1
+    record_admin_audit(
+        db,
+        payload.get("sub") or "unknown",
+        "cards.batch_delete",
+        detail=f"选中数量={len(body.ids)} 已删除={deleted}",
+        ip=_client_ip(request),
+        commit=False,
+    )
+    db.commit()
+    return {
+        "ok": True,
+        "message": f"已批量删除 {deleted} 张卡密",
+        "data": {"deleted": deleted},
+    }
+
+
 @router.patch("/cards/{card_id}")
 def update_card(
     card_id: int,
@@ -932,42 +981,6 @@ def list_announcements(
     }
 
 
-@router.post("/announcements/{ann_id}/move")
-def move_announcement(
-    ann_id: int,
-    request: Request,
-    direction: int = Query(..., description="-1 上移 / 1 下移"),
-    payload: dict = Depends(require_admin),
-    db: Session = Depends(get_db),
-):
-    if direction not in (-1, 1):
-        raise HTTPException(400, "direction 只能是 -1 或 1")
-    rows = (
-        db.query(Announcement)
-        .order_by(Announcement.sort_order.asc(), Announcement.id.desc())
-        .all()
-    )
-    idx = next((i for i, a in enumerate(rows) if a.id == ann_id), -1)
-    if idx < 0:
-        raise HTTPException(404, "公告不存在")
-    j = idx + direction
-    if j < 0 or j >= len(rows):
-        raise HTTPException(400, "已到边界，无法移动")
-    rows[idx], rows[j] = rows[j], rows[idx]
-    for i, a in enumerate(rows):
-        a.sort_order = i
-    record_admin_audit(
-        db,
-        payload.get("sub") or "unknown",
-        "announcements.reorder",
-        detail=f"ID={ann_id} 方向={'上' if direction < 0 else '下'}",
-        ip=_client_ip(request),
-        commit=False,
-    )
-    db.commit()
-    return {"ok": True, "message": "已调整排序"}
-
-
 @router.post("/announcements")
 def create_announcement(
     body: AnnouncementCreate,
@@ -998,29 +1011,6 @@ def create_announcement(
     db.commit()
     db.refresh(a)
     return {"ok": True, "message": "公告已创建", "data": _announcement_dict(a)}
-
-
-@router.post("/announcements/reorder")
-def reorder_announcements(
-    body: AnnouncementReorderRequest,
-    request: Request,
-    payload: dict = Depends(require_admin),
-    db: Session = Depends(get_db),
-):
-    for index, ann_id in enumerate(body.ordered_ids):
-        a = db.query(Announcement).filter(Announcement.id == ann_id).first()
-        if a:
-            a.sort_order = index
-    record_admin_audit(
-        db,
-        payload.get("sub") or "unknown",
-        "announcements.reorder",
-        detail=f"数量={len(body.ordered_ids)}",
-        ip=_client_ip(request),
-        commit=False,
-    )
-    db.commit()
-    return {"ok": True, "message": "公告排序已更新"}
 
 
 @router.patch("/announcements/{ann_id}")
