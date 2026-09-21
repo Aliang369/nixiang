@@ -9,6 +9,7 @@
 #include "DwdlmMod.h"
 
 #include <atomic>
+#include <functional>
 #include <cstring>
 #include <string>
 #include <dlfcn.h>
@@ -48,7 +49,12 @@ static std::atomic<bool> g_runScriptHooked{false};
 static std::atomic<bool> g_pathProbeHooked{false};
 static char g_lastScriptPath[256] = {0};
 static FILE* (*g_origFopen)(const char*, const char*) = nullptr;
+static int (*g_origUnlink)(const char*) = nullptr;
+static int (*g_origUnlinkat)(int, const char*, int) = nullptr;
+static std::atomic<bool> g_unlinkGuardHooked{false};
+static std::atomic<int> g_unlinkGuardHits{0};
 static std::atomic<bool> g_secureHookInstalled{false};
+static std::atomic<uintptr_t> g_secretBase{0};
 static std::atomic<int> g_spliceHits{0};
 static std::atomic<int> g_evalSeen{0};
 static thread_local bool t_inSplice = false;
@@ -154,22 +160,90 @@ static std::atomic<int> g_renderFrames{0};
 static void* FileOffToAnyVa(const char* lib, uintptr_t fileOff);
 static void* ImageAddr(const char* lib, uintptr_t vaddr);
 static void* FileOffToVa(const char* lib, uintptr_t fileOff, char* hitLine, size_t hitLineSize);
+static uintptr_t FindProtectedSecretBase(const char* lib);
+static void* SecretAddr(uintptr_t vaddr);
+static void* FindExecImageBase(const char* lib);
 
 static FILE* hooked_fopen(const char* path, const char* mode) {
     static std::atomic<int> seen{0};
     int n = ++seen;
-    if (path && (strstr(path, ".js") || strstr(path, ".jsc") ||
-                strstr(path, "/files/res/") || strstr(path, "assets/"))) {
+    // Internal map lookups recurse through this hook; keep them off the
+    // diagnostic path and use the original libc entry point below.
+    if (path && strcmp(path, "/proc/self/maps") == 0) {
+        return g_origFopen ? g_origFopen(path, mode) : nullptr;
+    }
+    if (n <= 400 && path &&
+        (strstr(path, ".js") || strstr(path, ".jsc") ||
+         strstr(path, "/files/res/") || strstr(path, "assets/"))) {
         snprintf(g_lastScriptPath, sizeof(g_lastScriptPath), "%s", path);
         LOGI("%s fopen %s mode=%s", DWDLM_LOG, path, mode ? mode : "(null)");
     }
-    if (n <= 400) LOGI("%s fopen#%d %s mode=%s", DWDLM_LOG, n, path ? path : "(null)", mode ? mode : "(null)");
+    if (n <= 400 && path && !strstr(path, "/proc/self/maps"))
+        LOGI("%s fopen#%d %s mode=%s", DWDLM_LOG, n, path, mode ? mode : "(null)");
     if (!g_origFopen) return nullptr;
     return g_origFopen(path, mode);
 }
 
 typedef void* (*AAssetManagerOpen_t)(void*, const char*, int);
 static AAssetManagerOpen_t g_origAAssetOpen = nullptr;
+
+static bool IsProtectedCocosTempPath(const char* path) {
+    return path && strstr(path, "/no_backup/mlib/") != nullptr &&
+           strstr(path, "libcocos2djs.so") != nullptr;
+}
+
+static int HookedUnlink(const char* path) {
+    if (IsProtectedCocosTempPath(path)) {
+        const int hit = ++g_unlinkGuardHits;
+        if (hit <= 16) {
+            LOGW("%s unlink guard kept %s (hit=%d)", DWDLM_LOG, path, hit);
+        }
+        return 0;
+    }
+    return g_origUnlink ? g_origUnlink(path) : -1;
+}
+
+static bool IsProtectedCocosTempPathAt(int dirfd, const char* path) {
+    if (IsProtectedCocosTempPath(path)) return true;
+    if (!path || dirfd == AT_FDCWD || strcmp(path, "libcocos2djs.so") != 0) return false;
+    char fdLink[64] = {0};
+    char dirPath[512] = {0};
+    snprintf(fdLink, sizeof(fdLink), "/proc/self/fd/%d", dirfd);
+    const ssize_t n = readlink(fdLink, dirPath, sizeof(dirPath) - 1);
+    if (n <= 0) return false;
+    dirPath[n] = '\0';
+    return strstr(dirPath, "/no_backup/mlib/") != nullptr;
+}
+
+static int HookedUnlinkat(int dirfd, const char* path, int flags) {
+    if (IsProtectedCocosTempPathAt(dirfd, path)) {
+        const int hit = ++g_unlinkGuardHits;
+        if (hit <= 16) {
+            LOGW("%s unlinkat guard kept %s (dirfd=%d hit=%d)", DWDLM_LOG,
+                 path, dirfd, hit);
+        }
+        return 0;
+    }
+    return g_origUnlinkat ? g_origUnlinkat(dirfd, path, flags) : -1;
+}
+
+static void InstallUnlinkGuard() {
+    if (g_unlinkGuardHooked.exchange(true)) return;
+    void* unlinkSym = dlsym(RTLD_DEFAULT, "unlink");
+    if (unlinkSym && DobbyHook(unlinkSym, (dobby_dummy_func_t)HookedUnlink,
+                              (dobby_dummy_func_t*)&g_origUnlink) == 0) {
+        LOGI("%s hooked unlink @%p", DWDLM_LOG, unlinkSym);
+    } else {
+        LOGW("%s DobbyHook unlink failed sym=%p", DWDLM_LOG, unlinkSym);
+    }
+    void* unlinkatSym = dlsym(RTLD_DEFAULT, "unlinkat");
+    if (unlinkatSym && DobbyHook(unlinkatSym, (dobby_dummy_func_t)HookedUnlinkat,
+                                (dobby_dummy_func_t*)&g_origUnlinkat) == 0) {
+        LOGI("%s hooked unlinkat @%p", DWDLM_LOG, unlinkatSym);
+    } else {
+        LOGW("%s DobbyHook unlinkat failed sym=%p", DWDLM_LOG, unlinkatSym);
+    }
+}
 
 static void* hooked_AAssetOpen(void* mgr, const char* filename, int mode) {
     if (filename && (strstr(filename, ".js") || strstr(filename, ".jsc") ||
@@ -183,6 +257,7 @@ static void* hooked_AAssetOpen(void* mgr, const char* filename, int mode) {
 
 static void InstallPathProbe() {
     if (g_pathProbeHooked.load()) return;
+    InstallUnlinkGuard();
     void* symbol = dlsym(RTLD_DEFAULT, "fopen");
     if (!symbol) {
         LOGW("%s fopen symbol missing", DWDLM_LOG);
@@ -259,6 +334,19 @@ static bool HasMarker(const std::string& s) {
            s.find("cc._RF.push") != std::string::npos;
 }
 
+// The main bundle is the only safe splice target. Appending the patch to
+// subScripts/index.jsc runs tick() during that bundle's own initialization
+// and produces a repeated "Cannot read property 'on' of undefined" loop.
+static bool IsMainScriptFile(const char* fileName) {
+    return fileName && strcmp(fileName, "assets/scripts/index.jsc") == 0;
+}
+
+// runScript has no file name. The main bundle observed here is ~2.3 MB;
+// subScripts is ~4.1 MB and battleScript is ~0.1 MB.
+static bool IsMainScriptSize(size_t n) {
+    return n >= 2u * 1024u * 1024u && n < 3u * 1024u * 1024u;
+}
+
 static bool hooked_seRunScript(void* thiz, void* scriptPtr, void* arg2) {
     int seen = ++g_evalSeen;
     std::string* source = reinterpret_cast<std::string*>(scriptPtr);
@@ -266,7 +354,7 @@ static bool hooked_seRunScript(void* thiz, void* scriptPtr, void* arg2) {
         LOGI("%s runScript call #%d script=%p arg2=%p", DWDLM_LOG, seen, scriptPtr, arg2);
     }
     if (!g_origSeRunScript) return false;
-    if (source && HasMarker(*source) &&
+    if (source && HasMarker(*source) && IsMainScriptSize(source->size()) &&
         source->find("starry_dwdlm_v1") == std::string::npos) {
         LOGI("%s runScript splice #%d len %zu", DWDLM_LOG, ++g_spliceHits,
              source->size());
@@ -291,6 +379,9 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
     if (n < 128u * 1024u || n > 64u * 1024u * 1024u) {
         return g_origSeEval(thiz, script, length, ret, fileName);
     }
+    if (!IsMainScriptFile(fileName)) {
+        return g_origSeEval(thiz, script, length, ret, fileName);
+    }
     try {
         std::string source(script, n);
         if (!HasMarker(source) || source.find("starry_dwdlm_v1") != std::string::npos) {
@@ -312,8 +403,36 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
     }
 }
 
-// ELF file offset -> runtime VA. APKSecure maps the deleted library in multiple
-// segments, so dladdr's image base plus an interior RVA is not reliable here.
+// The APKSecure-protected image is the one whose executable mappings are
+// split at ELF PT_LOAD boundaries (0x1d000/0x1f000/0x20000/0x21000/0x3d000/
+// 0x3e000). The transient dlopen copy has only one coarse RX mapping at
+// offset 0, so a nonzero executable offset identifies the protected image.
+static uintptr_t FindProtectedSecretBase(const char* lib) {
+    if (!lib) return 0;
+    FILE* fp = fopen("/proc/self/maps", "rt");
+    if (!fp) return 0;
+    char line[768];
+    uintptr_t bestBase = 0;
+    unsigned long bestOff = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        if (!strstr(line, lib) || !strstr(line, ".so")) continue;
+        unsigned long start = 0, end = 0, off = 0;
+        char perm[8] = {0};
+        if (sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
+        if (!strchr(perm, 'x') || end <= start) continue;
+        if (off == 0) continue;
+        if (off > bestOff) {
+            bestOff = off;
+            bestBase = static_cast<uintptr_t>(start - off);
+        }
+    }
+    fclose(fp);
+    return bestBase;
+}
+
+static void* SecretImageBase();
+static void* SecretAddr(uintptr_t vaddr);
+
 static void* FileOffToVa(const char* lib, uintptr_t fileOff, char* hitLine, size_t hitLineSize) {
     FILE* fp = fopen("/proc/self/maps", "rt");
     if (!fp) return nullptr;
@@ -341,7 +460,19 @@ static void* FileOffToVa(const char* lib, uintptr_t fileOff, char* hitLine, size
 // Runtime address for an ELF virtual address (not a file offset). The first
 // PT_LOAD has p_vaddr == 0, so image_base + vaddr is stable for .text,
 // .data and .bss even when bionic remaps individual segments.
+static void NormalizeSecretState(bool logOnce);
+
 static void* ImageAddr(const char* lib, uintptr_t vaddr) {
+    if (!lib) return nullptr;
+    if (strstr(lib, "libsecret.so")) return SecretAddr(vaddr);
+    const uintptr_t base = reinterpret_cast<uintptr_t>(FindExecImageBase(lib));
+    return base ? reinterpret_cast<void*>(base + vaddr) : nullptr;
+}
+
+// libcocos2djs.so is also mapped by APKSecure in split segments; its image
+// base is the executable mapping whose file offset starts at zero.
+static void* FindExecImageBase(const char* lib) {
+    if (!lib) return nullptr;
     FILE* fp = fopen("/proc/self/maps", "rt");
     if (!fp) return nullptr;
     char line[768];
@@ -351,14 +482,31 @@ static void* ImageAddr(const char* lib, uintptr_t vaddr) {
         unsigned long start = 0, end = 0, off = 0;
         char perm[8] = {0};
         if (sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
-        if (off == 0 && strchr(perm, 'r') && end > start) {
+        if (off == 0 && strchr(perm, 'x') && end > start) {
             base = reinterpret_cast<void*>(start);
             break;
         }
     }
     fclose(fp);
-    if (!base) return nullptr;
-    return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(base) + vaddr);
+    return base;
+}
+
+// The protected APKSecure image is the executable mapping whose file offset
+// starts at zero and spans the largest range. The dlopen fallback copy can
+// appear first and must not be used for shell state or export resolution.
+static void* SecretImageBase() {
+    static std::atomic<uintptr_t> cached{0};
+    uintptr_t base = cached.load(std::memory_order_acquire);
+    if (!base) {
+        base = FindProtectedSecretBase("libsecret.so");
+        if (base) cached.store(base, std::memory_order_release);
+    }
+    return reinterpret_cast<void*>(base);
+}
+
+static void* SecretAddr(uintptr_t vaddr) {
+    const uintptr_t base = reinterpret_cast<uintptr_t>(SecretImageBase());
+    return base ? reinterpret_cast<void*>(base + vaddr) : nullptr;
 }
 
 // Resolve an exported symbol by walking the in-memory ELF dynamic symbol
@@ -500,9 +648,9 @@ typedef long (*HttpResponseFn_t)(void*, void*, void*);
 typedef void (*BuildHeadersFn_t)(void*, void*);
 typedef void (*SignatureFn_t)(void*, void*);
 static std::string StdStringToUtf8(void* p);
+static void LogShellGlobals(const char* where);
 static IntBoolFn_t g_origIsFirstStartFn = nullptr;
 static IntBoolFn_t g_origShellGateReadyFn = nullptr;
-static VoidManyFn_t g_origResourceEntryFn = nullptr;
 static VoidTwoFn_t g_origFirstStartBranchFn = nullptr;
 static VoidOneFn_t g_origAfterFirstStartFn = nullptr;
 static VoidTwoFn_t g_origMaybeStartUpdateFn = nullptr;
@@ -524,9 +672,34 @@ static std::atomic<bool> g_bootFlowHooksInstalled{false};
 // establish a real ticket/fingerprint. Dobby patches there change the
 // bytes covered by self-text-check.
 constexpr bool kUseSecretTextHooks = true;
+static constexpr unsigned char kOfficialCertSha256[32] = {
+    0xde, 0x8a, 0x75, 0xd3, 0x0a, 0x18, 0x31, 0xf3,
+    0xdd, 0xc8, 0x3f, 0x38, 0xf2, 0x85, 0x51, 0x31,
+    0x10, 0xfd, 0xe9, 0xab, 0x91, 0x9f, 0xb4, 0xe4,
+    0x71, 0x65, 0x3f, 0x86, 0xb5, 0x08, 0x3e, 0x0a,
+};
+
+static void ApplyOfficialFingerprint(uintptr_t cocosBase) {
+    if (!cocosBase) return;
+    unsigned char* firstFp = reinterpret_cast<unsigned char*>(
+        cocosBase + 0x221B7A0);
+    unsigned char* secondFp = reinterpret_cast<unsigned char*>(
+        cocosBase + 0x221B7D0);
+    static std::atomic<int> logged{0};
+    if (++logged <= 2) {
+        LOGI("%s fingerprint before=%02x%02x%02x%02x%02x%02x%02x%02x second=%02x%02x%02x%02x", DWDLM_LOG,
+             firstFp[0], firstFp[1], firstFp[2], firstFp[3],
+             firstFp[4], firstFp[5], firstFp[6], firstFp[7],
+             secondFp[0], secondFp[1], secondFp[2], secondFp[3]);
+    }
+    memcpy(firstFp, kOfficialCertSha256, sizeof(kOfficialCertSha256));
+    memcpy(secondFp, kOfficialCertSha256, sizeof(kOfficialCertSha256));
+}
+
 static std::atomic<uintptr_t> g_cocosGuardBase{0};
 static void StartShellStateGuard();
 static void PatchCocosShellInterface();
+static void InstallUpdateCallbacksProbe();
 
 static int HookedIsFirstStart() {
     const int value = g_origIsFirstStartFn ? g_origIsFirstStartFn() : -1;
@@ -539,7 +712,7 @@ static int HookedSecShellIsReadyExport();
 static int HookedSecShellIsDirtyExport();
 static int HookedSecShellCheckedMaskExport();
 static int HookedSecShellFailedMaskExport();
-static void* HookedSecShellTicketExport();
+static uint64_t HookedSecShellTicketExport();
 static int HookedSecShellDeriveKeyExport(const void*, int, void*, int);
 
 static int HookedShellGateReady() {
@@ -560,6 +733,75 @@ static int HookedShellGateReadyCompat() {
 extern "C" void DwdlmLogSignatureInputs(void* key, void* message) {
     LOGI("%s sign key=%s message=%s", DWDLM_LOG,
          StdStringToUtf8(key).c_str(), StdStringToUtf8(message).c_str());
+    auto normalizeMessage = [](void* value) {
+        if (!value) return;
+        const unsigned char* raw = reinterpret_cast<const unsigned char*>(value);
+        const bool longString = (raw[0] & 0x1) != 0;
+        const size_t size = longString ? *reinterpret_cast<const size_t*>(raw + 8)
+                                      : static_cast<size_t>(raw[0] >> 1);
+        const char* data = longString ? *reinterpret_cast<char* const*>(raw + 16)
+                                     : reinterpret_cast<const char*>(raw + 1);
+        if (!data || size == 0) return;
+
+        const std::string current(data, size);
+        const size_t sh1Pos = current.find("\nsh1:");
+        if (sh1Pos == std::string::npos) return;
+        const size_t statusEnd = sh1Pos;
+        const size_t previousNewline = current.rfind('\n', statusEnd - 1);
+        if (previousNewline == std::string::npos) return;
+        const size_t statusStart = previousNewline + 1;
+        const size_t sh1End = current.find('\n', sh1Pos + 1);
+        if (sh1End == std::string::npos) return;
+
+        static constexpr char kOfficialFp[] =
+            "de8a75d30a1831f3ddc83f38f285513110fde9ab919fb4e471653f86b5083e0a";
+        static constexpr char kOfficialSh1[] = "sh1:00000000";
+        std::string normalized;
+        normalized.reserve(current.size());
+        normalized.append(current, 0, statusStart);
+        normalized.append(kOfficialFp, sizeof(kOfficialFp) - 1);
+        normalized.push_back('\n');
+        normalized.append(current, statusEnd, sh1Pos - statusEnd);
+        normalized.append(kOfficialSh1, sizeof(kOfficialSh1) - 1);
+        normalized.append(current, sh1End, std::string::npos);
+
+        typedef void (*AssignStdStringFn_t)(void*, const char*, size_t);
+        AssignStdStringFn_t assign = reinterpret_cast<AssignStdStringFn_t>(
+            FileOffToVa(kTargetLib(), 0x1FFB28, nullptr, 0));
+        if (!assign) return;
+        assign(value, normalized.data(), normalized.size());
+        LOGI("%s signature canonical normalized statusStart=%zu statusEnd=%zu size=%zu -> %zu",
+             DWDLM_LOG, statusStart, statusEnd, current.size(), normalized.size());
+    };
+
+    auto dumpStdString = [](const char* name, void* value) {
+        if (!value) { LOGI("%s sign %s=<null>", DWDLM_LOG, name); return; }
+        const unsigned char* raw = reinterpret_cast<const unsigned char*>(value);
+        const bool longString = (raw[0] & 0x1) != 0;
+        const size_t size = longString ? *reinterpret_cast<const size_t*>(raw + 8)
+                                      : static_cast<size_t>(raw[0] >> 1);
+        const char* data = longString ? *reinterpret_cast<char* const*>(raw + 16)
+                                     : reinterpret_cast<const char*>(raw + 1);
+        LOGI("%s sign %s ptr=%p long=%d size=%zu data=%p", DWDLM_LOG,
+             name, value, longString ? 1 : 0, size, data);
+        if (!data) return;
+        const size_t dumpSize = size < 1024 ? size : 1024;
+        for (size_t off = 0; off < dumpSize; off += 64) {
+            const size_t chunk = (dumpSize - off) < 64 ? (dumpSize - off) : 64;
+            char hex[3 * 64 + 1] = {0};
+            static constexpr char kHex[] = "0123456789abcdef";
+            for (size_t i = 0; i < chunk; ++i) {
+                const unsigned char byte = static_cast<unsigned char>(data[off + i]);
+                hex[i * 3] = kHex[byte >> 4];
+                hex[i * 3 + 1] = kHex[byte & 0xF];
+                hex[i * 3 + 2] = ' ';
+            }
+            LOGI("%s sign %s[%zu]=%s", DWDLM_LOG, name, off, hex);
+        }
+    };
+    normalizeMessage(message);
+    dumpStdString("x0", key);
+    dumpStdString("x1", message);
 }
 
 extern "C" void DwdlmLogSignatureOutput(void* key, void* message, void* output) {
@@ -596,13 +838,9 @@ static void PatchCocosShellInterface() {
 
     volatile uint32_t* shellStatus = reinterpret_cast<volatile uint32_t*>(
         base + 0x21C9058);
-    if (shellStatus) {
-        const uint32_t before = *shellStatus;
-        *shellStatus = 0;
-        if (first) {
-            LOGI("%s cocos shell status %u -> %u @%p", DWDLM_LOG,
-                 (unsigned)before, (unsigned)*shellStatus, (void*)shellStatus);
-        }
+    if (shellStatus && first) {
+        LOGI("%s cocos shell status preserved %u @%p", DWDLM_LOG,
+             (unsigned)*shellStatus, (void*)shellStatus);
     }
 
     struct Slot { uintptr_t off; const char* name; void* value; };
@@ -625,16 +863,21 @@ static void PatchCocosShellInterface() {
                  slot.name, target, slot.value, (void*)*target);
         }
     }
+
+    // The official initializer sets this only after all seven exports have
+    // been resolved and probed. The gate checks it independently of the
+    // replaced function pointers, so mirror that successful side effect.
+    volatile uint8_t* shellReady = reinterpret_cast<volatile uint8_t*>(
+        base + 0x221B828);
+    const uint8_t readyBefore = *shellReady;
+    *shellReady = 1;
+    if (first) {
+        LOGI("%s cocos shell ready byte %u -> %u @%p", DWDLM_LOG,
+             (unsigned)readyBefore, (unsigned)*shellReady, (void*)shellReady);
+    }
 }
 
 #ifndef DWDLM_SHELL_ONLY
-static void HookedResourceEntry(void* a0, void* a1, void* a2, void* a3,
-                                void* a4, void* a5, void* a6) {
-    LOGI("%s boot resourceEntry enter", DWDLM_LOG);
-    if (g_origResourceEntryFn) g_origResourceEntryFn(a0, a1, a2, a3, a4, a5, a6);
-    LOGI("%s boot resourceEntry exit", DWDLM_LOG);
-}
-
 static void HookedFirstStartBranch(void* a0, void* a1) {
     LOGI("%s boot firstStartBranch enter", DWDLM_LOG);
     if (g_origFirstStartBranchFn) g_origFirstStartBranchFn(a0, a1);
@@ -654,10 +897,13 @@ static void HookedMaybeStartUpdate(void* a0, void* a1) {
 }
 
 static void HookedUpdateTaskPump(void* a0) {
-    LOGI("%s boot updateTaskPump enter", DWDLM_LOG);
+    static std::atomic<int> logged{0};
+    const bool trace = ++logged <= 4;
+    if (trace) LOGI("%s boot updateTaskPump enter #%d", DWDLM_LOG, logged.load());
     PatchCocosShellInterface();
+    if (trace) LOGI("%s boot updateTaskPump orig-begin #%d", DWDLM_LOG, logged.load());
     if (g_origUpdateTaskPumpFn) g_origUpdateTaskPumpFn(a0);
-    LOGI("%s boot updateTaskPump exit", DWDLM_LOG);
+    if (trace) LOGI("%s boot updateTaskPump exit #%d", DWDLM_LOG, logged.load());
 }
 
 static void HookedUpdateTaskEnqueue(void* a0, int a1, void* a2, void* a3,
@@ -695,37 +941,48 @@ static void HookedUpdateError(void* a0, void* a1) {
 }
 
 static void HookedBuildHeaders(void* a0, void* a1) {
+    LogShellGlobals("buildHeaders-entry");
     const uintptr_t cocosBase = g_cocosGuardBase.load(std::memory_order_acquire);
     if (cocosBase) {
-        unsigned char* firstFp = reinterpret_cast<unsigned char*>(
-            cocosBase + 0x221B7A0);
-        unsigned char* secondFp = reinterpret_cast<unsigned char*>(
-            cocosBase + 0x221B7D0);
-        bool fpReady = false;
-        for (int i = 0; i < 32; ++i) fpReady |= firstFp[i] != 0;
-        if (fpReady) {
-            memcpy(secondFp, firstFp, 32);
-            *reinterpret_cast<volatile uint8_t*>(cocosBase + 0x221B7C4) = 0;
-            *reinterpret_cast<volatile uint8_t*>(cocosBase + 0x221B7F0) = 1;
-        }
+        ApplyOfficialFingerprint(cocosBase);
+        *reinterpret_cast<volatile uint8_t*>(cocosBase + 0x221B7C4) = 0;
+        *reinterpret_cast<volatile uint8_t*>(cocosBase + 0x221B7F0) = 1;
     }
     if (g_origBuildHeadersFn) g_origBuildHeadersFn(a0, a1);
-    static std::atomic<int> logged{0};
-    if (++logged > 4 || !a1) return;
+    if (!a1) return;
 
     uintptr_t client = 0;
     memcpy(&client, reinterpret_cast<char*>(a1) + 160, sizeof(client));
     if (!client) return;
-    const char* begin = nullptr;
-    const char* end = nullptr;
+    char* begin = nullptr;
+    char* end = nullptr;
     memcpy(&begin, reinterpret_cast<char*>(client) + 152, sizeof(begin));
     memcpy(&end, reinterpret_cast<char*>(client) + 160, sizeof(end));
     if (!begin || !end || end < begin || (end - begin) % 24 != 0) return;
 
+    // The first session request reports APKSecure's local verdict in these
+    // headers. A modified package must present the official first-run values
+    // so the server accepts the otherwise correctly signed request body.
+    typedef void (*AssignStdStringFn_t)(void*, const char*, size_t);
+    AssignStdStringFn_t assign = reinterpret_cast<AssignStdStringFn_t>(
+        FileOffToVa(kTargetLib(), 0x1FFB28, nullptr, 0));
+    if (!assign) return;
+    static constexpr char kOfficialFp[] =
+        "x-fp:de8a75d30a1831f3ddc83f38f285513110fde9ab919fb4e471653f86b5083e0a";
+    static constexpr char kOfficialMask[] = "x-mask:0x00000000";
     int index = 0;
-    for (const char* p = begin; p < end; p += 24) {
-        LOGI("%s http header[%d]=%s", DWDLM_LOG, index++,
-             StdStringToUtf8((void*)p).c_str());
+    for (char* p = begin; p < end; p += 24) {
+        const std::string current = StdStringToUtf8(p);
+        if (current.compare(0, 5, "x-fp:") == 0) {
+            assign(p, kOfficialFp, sizeof(kOfficialFp) - 1);
+        } else if (current.compare(0, 7, "x-mask:") == 0) {
+            assign(p, kOfficialMask, sizeof(kOfficialMask) - 1);
+        }
+        if (index < 12) {
+            LOGI("%s http header[%d]=%s", DWDLM_LOG, index,
+                 StdStringToUtf8(p).c_str());
+        }
+        ++index;
     }
 }
 
@@ -742,6 +999,9 @@ static long HookedHttpResponse(void* a0, void* a1, void* a2) {
         if (begin && length) {
             std::string body(begin, length);
             if (body.find("\"code\":4030") != std::string::npos) {
+                // Keep the real server response during the signature-text
+                // experiment so the observed code is not self-inflicted.
+#if 0
                 static constexpr const char kLocalSessionOk[] =
                     "{\"code\":0,\"msg\":\"success\",\"data\":{}}";
                 size_t newLength = sizeof(kLocalSessionOk) - 1;
@@ -763,6 +1023,7 @@ static long HookedHttpResponse(void* a0, void* a1, void* a2) {
                     }
                     LOGI("%s local session bypass applied", DWDLM_LOG);
                 }
+#endif
             }
         }
         if (length > 1024) length = 1024;
@@ -825,6 +1086,7 @@ static void HookedLoadAppInfo(void* a0) {
 static bool TryHookBootFlowFns() { return false; }
 #else
 static bool TryHookBootFlowFns() {
+    LogShellGlobals("bootflow-entry");
     if (g_bootFlowHooksInstalled.load()) return true;
     struct Item { uintptr_t off; void* hook; void** orig; const char* name; };
 #ifdef DWDLM_SHELL_ONLY
@@ -834,7 +1096,6 @@ static bool TryHookBootFlowFns() {
 #else
     Item items[] = {
         {0x22DBA8, (void*)HookedIsFirstStart, (void**)&g_origIsFirstStartFn, "isFirstStart"},
-        {0x23EC48, (void*)HookedResourceEntry, (void**)&g_origResourceEntryFn, "resourceEntry"},
         {0x23F6DC, (void*)HookedFirstStartBranch, (void**)&g_origFirstStartBranchFn, "firstStartBranch"},
         {0x23FA90, (void*)HookedAfterFirstStart, (void**)&g_origAfterFirstStartFn, "afterFirstStart"},
         {0x264A94, (void*)HookedMaybeStartUpdate, (void**)&g_origMaybeStartUpdateFn, "maybeStartUpdate"},
@@ -868,6 +1129,7 @@ static bool TryHookBootFlowFns() {
 #ifdef DWDLM_SHELL_ONLY
     if (any) PatchCocosShellInterface();
 #endif
+    if (any) InstallUpdateCallbacksProbe();
     return any;
 }
 #endif
@@ -921,6 +1183,25 @@ static std::string StdStringToUtf8(void* p) {
     const size_t size = *reinterpret_cast<const size_t*>(raw + 8);
     const char* data = *reinterpret_cast<const char* const*>(raw + 16);
     return data ? std::string(data, size) : std::string();
+}
+
+static void LogShellGlobals(const char* where) {
+    static std::atomic<int> logged{0};
+    if (!where || ++logged > 24) return;
+    volatile uint32_t* dirty = reinterpret_cast<volatile uint32_t*>(
+        ImageAddr("libsecret.so", 0x70318));
+    volatile uint32_t* ready = reinterpret_cast<volatile uint32_t*>(
+        ImageAddr("libsecret.so", 0x70358));
+    volatile uint32_t* checked = reinterpret_cast<volatile uint32_t*>(
+        ImageAddr("libsecret.so", 0x70328));
+    volatile uint32_t* failed = reinterpret_cast<volatile uint32_t*>(
+        ImageAddr("libsecret.so", 0x7032C));
+    const uintptr_t base = g_cocosGuardBase.load(std::memory_order_acquire);
+    const uint32_t shellStatus = base ? *reinterpret_cast<volatile uint32_t*>(base + 0x21C9058) : 0;
+    LOGI("%s shellglobals %s status=%u ready=%u dirty=%u checked=0x%X failed=0x%X", DWDLM_LOG,
+         where, (unsigned)shellStatus, ready ? (unsigned)*ready : 0,
+         dirty ? (unsigned)*dirty : 0, checked ? (unsigned)*checked : 0,
+         failed ? (unsigned)*failed : 0);
 }
 
 static bool HookedIsFileExist(void* thiz, void* path) {
@@ -1247,7 +1528,9 @@ bool Dwdlm_TryInit(JavaVM* vm) {
          g_nativeInitSeen.load() ? 1 : 0, g_bootStageSeen.load() ? 1 : 0,
          g_lastScriptPath[0] ? g_lastScriptPath : "(none)");
     if (vm) g_jvm = vm;
-    LOGW("%s probe mode: game hooks disabled", DWDLM_LOG);
+    // Init is reached after the early thread has had a chance to install the
+    // boot-flow hooks. Never mark ready before that chain is actually live.
+    if (!g_bootFlowHooksInstalled.load()) TryHookBootFlowFns();
     g_ready.store(true);
     SyncJavaRets();
     return true;
@@ -1351,6 +1634,70 @@ static void LogRuntimeApplication(JNIEnv* env, const char* phase) {
     if (env->ExceptionCheck()) env->ExceptionClear();
 }
 
+// APKSecure replaces the manifest ProxyApplication with the game's
+// BingoApplication after onShellCreate. On this build the replacement does
+// not receive Application.onCreate, so PluginHelper.app stays null and the
+// native session request is built with empty app/game fields. Replay only
+// that missing lifecycle callback once, after the shell has finished its
+// own onShellCreate work.
+static void EnsureBusinessApplicationOnCreate(JNIEnv* env) {
+    static std::atomic<bool> attempted{false};
+    bool expected = false;
+    if (!env || !attempted.compare_exchange_strong(expected, true)) return;
+
+    jclass helperCls = LoadAppClass(env, "com.bingo.sdklibs.utils.PluginHelper");
+    if (!helperCls) helperCls = env->FindClass("com/bingo/sdklibs/utils/PluginHelper");
+    if (helperCls) {
+        jfieldID appField = env->GetStaticFieldID(
+            helperCls, "app", "Landroid/app/Application;");
+        if (appField) {
+            jobject existing = env->GetStaticObjectField(helperCls, appField);
+            if (env->ExceptionCheck()) env->ExceptionClear();
+            if (existing) {
+                LOGI("%s business Application already initialized; skipping replay", DWDLM_LOG);
+                env->DeleteLocalRef(existing);
+                env->DeleteLocalRef(helperCls);
+                return;
+            }
+        }
+        env->DeleteLocalRef(helperCls);
+    }
+    if (env->ExceptionCheck()) env->ExceptionClear();
+
+
+    jclass atCls = env->FindClass("android/app/ActivityThread");
+    jmethodID current = atCls ? env->GetStaticMethodID(
+        atCls, "currentApplication", "()Landroid/app/Application;") : nullptr;
+    jobject app = current ? env->CallStaticObjectMethod(atCls, current) : nullptr;
+    if (env->ExceptionCheck()) env->ExceptionClear();
+    if (!app) {
+        LOGW("%s business app onCreate skipped: application null", DWDLM_LOG);
+        if (atCls) env->DeleteLocalRef(atCls);
+        return;
+    }
+
+    jclass appCls = env->GetObjectClass(app);
+    jmethodID onCreate = appCls ? env->GetMethodID(appCls, "onCreate", "()V") : nullptr;
+    if (env->ExceptionCheck()) env->ExceptionClear();
+    if (!onCreate) {
+        LOGW("%s business app onCreate method missing", DWDLM_LOG);
+    } else {
+        LOGI("%s replaying business Application.onCreate", DWDLM_LOG);
+        env->CallVoidMethod(app, onCreate);
+        if (env->ExceptionCheck()) {
+            env->ExceptionDescribe();
+            env->ExceptionClear();
+            LOGW("%s business Application.onCreate threw", DWDLM_LOG);
+        } else {
+            LOGI("%s business Application.onCreate completed", DWDLM_LOG);
+        }
+    }
+
+    if (appCls) env->DeleteLocalRef(appCls);
+    env->DeleteLocalRef(app);
+    if (atCls) env->DeleteLocalRef(atCls);
+}
+
 // The mod triggers APKSecure's self-text and manifest integrity checks, so the
 // shell marks its persistent state dirty even though the checks are rewritten
 // to pass at the reporting layer. onShellCreate runs the real game
@@ -1359,19 +1706,7 @@ static void LogRuntimeApplication(JNIEnv* env, const char* phase) {
 // earlier decryption/extraction state untouched.
 
 static void ClearShellDirty() {
-    volatile uint32_t* dirty = reinterpret_cast<volatile uint32_t*>(
-        ImageAddr("libsecret.so", 0x70318));
-    if (dirty) *dirty = 0;
-
-    volatile uint32_t* ready = reinterpret_cast<volatile uint32_t*>(
-        ImageAddr("libsecret.so", 0x70358));
-    volatile uint32_t* checked = reinterpret_cast<volatile uint32_t*>(
-        ImageAddr("libsecret.so", 0x70328));
-    volatile uint32_t* failed = reinterpret_cast<volatile uint32_t*>(
-        ImageAddr("libsecret.so", 0x7032C));
-    if (ready) *ready = 1;
-    if (checked) *checked = 0x7EFu;
-    if (failed) *failed = 0;
+    NormalizeSecretState(true);
 
     const char* path =
         "/data/user/0/com.fightingstars.games.animal/no_backup/.sec_shell_state";
@@ -1398,60 +1733,109 @@ static std::atomic<bool> g_shellStateGuardStarted{false};
 
 static void* SecretExport(uintptr_t fileOff);
 
-static void* ShellStateGuardThread(void*) {
-    for (int i = 0; i < 120000; ++i) {
-#ifdef DWDLM_DATA_GUARD_ONLY
-        volatile uint32_t* dirty = reinterpret_cast<volatile uint32_t*>(
-            ImageAddr("libsecret.so", 0x70318));
-        volatile uint32_t* ready = reinterpret_cast<volatile uint32_t*>(
-            ImageAddr("libsecret.so", 0x70358));
-        volatile uint32_t* checked = reinterpret_cast<volatile uint32_t*>(
-            ImageAddr("libsecret.so", 0x70328));
-        volatile uint32_t* failed = reinterpret_cast<volatile uint32_t*>(
-            ImageAddr("libsecret.so", 0x7032C));
-        if (!dirty || !ready || !checked || !failed) {
-            usleep(1000);
-            continue;
+// libsecret is mapped twice: the coarse image used by the JNI entry points
+// and the split image used by APKSecure's protected loader. Both images
+// carry independent copies of the shell state, so every normalization must
+// update both. Writing only the protected copy leaves the exit gate armed.
+static size_t SecretImageBases(uintptr_t* out, size_t capacity) {
+    if (!out || capacity == 0) return 0;
+    static std::atomic<int> cachedCount{0};
+    static std::atomic<uintptr_t> cachedBases[8];
+    size_t count = static_cast<size_t>(cachedCount.load(std::memory_order_acquire));
+    // libsecret normally exposes two executable images. Keep rescanning
+    // until both are present so an early guard thread cannot cache only one.
+    if (count >= 2) {
+        if (count > capacity) count = capacity;
+        for (size_t i = 0; i < count; ++i) {
+            out[i] = cachedBases[i].load(std::memory_order_relaxed);
         }
-        static std::atomic<int> logged{0};
-        if (++logged == 1) {
-            LOGI("%s data guard pointers dirty=%p ready=%p checked=%p failed=%p", DWDLM_LOG,
-                 (void*)dirty, (void*)ready, (void*)checked, (void*)failed);
+        return count;
+    }
+    FILE* fp = fopen("/proc/self/maps", "rt");
+    if (!fp) return 0;
+    char line[768];
+    uintptr_t found[8] = {0};
+    size_t foundCount = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        if (!strstr(line, "libsecret.so") || !strstr(line, ".so")) continue;
+        unsigned long start = 0, end = 0, off = 0;
+        char perm[8] = {0};
+        if (sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
+        if (off != 0 || !strchr(perm, 'x') || end <= start) continue;
+        const uintptr_t base = static_cast<uintptr_t>(start);
+        bool duplicate = false;
+        for (size_t i = 0; i < foundCount; ++i) {
+            if (found[i] == base) { duplicate = true; break; }
         }
-#else
-        const uintptr_t cocosBase = g_cocosGuardBase.load(std::memory_order_acquire);
-        if (!cocosBase) {
-            usleep(1000);
-            continue;
+        if (duplicate) continue;
+        if (foundCount < sizeof(found) / sizeof(found[0])) found[foundCount++] = base;
+    }
+    fclose(fp);
+    if (foundCount > capacity) foundCount = capacity;
+    for (size_t i = 0; i < foundCount; ++i) {
+        cachedBases[i].store(found[i], std::memory_order_relaxed);
+        out[i] = found[i];
+    }
+    if (foundCount >= 2) cachedCount.store(static_cast<int>(foundCount), std::memory_order_release);
+    return foundCount;
+}
+
+// Prefer the protected (split) image, but also return the coarse image so
+// callers can update the copy that the JNI entry points actually read.
+static void SecretStateAddrs(uintptr_t& protectedBase, uintptr_t& coarseBase) {
+    uintptr_t bases[8] = {0};
+    const size_t count = SecretImageBases(bases, sizeof(bases) / sizeof(bases[0]));
+    const uintptr_t preferred = reinterpret_cast<uintptr_t>(SecretImageBase());
+    protectedBase = 0;
+    coarseBase = 0;
+    for (size_t i = 0; i < count; ++i) {
+        if (bases[i] == preferred) protectedBase = bases[i];
+        else if (!coarseBase) coarseBase = bases[i];
+    }
+    if (!protectedBase && count) protectedBase = bases[0];
+    if (!coarseBase) {
+        for (size_t i = 0; i < count; ++i) {
+            if (bases[i] != protectedBase) { coarseBase = bases[i]; break; }
         }
-        volatile uint32_t* dirty = reinterpret_cast<volatile uint32_t*>(
-            SecretExport(0x70318));
-        volatile uint32_t* ready = reinterpret_cast<volatile uint32_t*>(
-            SecretExport(0x70358));
-        volatile uint32_t* checked = reinterpret_cast<volatile uint32_t*>(
-            SecretExport(0x70328));
-        volatile uint32_t* failed = reinterpret_cast<volatile uint32_t*>(
-            SecretExport(0x7032C));
-#endif
+    }
+}
+
+
+static void NormalizeSecretState(bool logOnce) {
+    static std::atomic<int> logged{0};
+    uintptr_t protectedBase = 0, coarseBase = 0;
+    SecretStateAddrs(protectedBase, coarseBase);
+    int images = 0;
+    for (uintptr_t base : {protectedBase, coarseBase}) {
+        if (!base) continue;
+        volatile uint32_t* dirty = reinterpret_cast<volatile uint32_t*>(base + 0x70318);
+        volatile uint32_t* ready = reinterpret_cast<volatile uint32_t*>(base + 0x70358);
+        volatile uint32_t* checked = reinterpret_cast<volatile uint32_t*>(base + 0x70328);
+        volatile uint32_t* failed = reinterpret_cast<volatile uint32_t*>(base + 0x7032C);
         if (dirty) *dirty = 0;
         if (ready) *ready = 1;
         if (checked) *checked = 0x7EFu;
         if (failed) *failed = 0;
+        ++images;
+    }
+    if (logOnce && ++logged <= 4) {
+        LOGI("%s secret state normalized across %d image(s)", DWDLM_LOG, images);
+    }
+}
+
+static void* ShellStateGuardThread(void*) {
+    for (int i = 0; i < 120000; ++i) {
+        NormalizeSecretState(false);
 #ifndef DWDLM_DATA_GUARD_ONLY
-        unsigned char* firstFp = reinterpret_cast<unsigned char*>(
-            cocosBase + 0x221B7A0);
-        unsigned char* secondFp = reinterpret_cast<unsigned char*>(
-            cocosBase + 0x221B7D0);
-        volatile uint8_t* tampered = reinterpret_cast<volatile uint8_t*>(
-            cocosBase + 0x221B7C4);
-        volatile uint8_t* secondFpReady = reinterpret_cast<volatile uint8_t*>(
-            cocosBase + 0x221B7F0);
-        if (firstFp && secondFp) memcpy(secondFp, firstFp, 32);
-        if (tampered) *tampered = 0;
-        if (secondFpReady) *secondFpReady = 1;
-        PatchCocosShellInterface();
+        const uintptr_t cocosBase = g_cocosGuardBase.load(std::memory_order_acquire);
+        if (cocosBase) {
+            ApplyOfficialFingerprint(cocosBase);
+            *reinterpret_cast<volatile uint8_t*>(cocosBase + 0x221B7C4) = 0;
+            *reinterpret_cast<volatile uint8_t*>(cocosBase + 0x221B7F0) = 1;
+            PatchCocosShellInterface();
+        }
 #endif
-        usleep(500);
+        usleep(20 * 1000);
     }
     LOGI("%s shell state guard exit", DWDLM_LOG);
     return nullptr;
@@ -1475,6 +1859,9 @@ static void HookedOnShellCreate(void* env, void* thiz, int api) {
     LogRuntimeApplication(reinterpret_cast<JNIEnv*>(env), "before");
     if (g_origOnShellCreate) g_origOnShellCreate(env, thiz, api);
     LogRuntimeApplication(reinterpret_cast<JNIEnv*>(env), "after");
+    // Let the shell's own lifecycle invoke BingoApplication.onCreate. Replaying
+    // it here re-enters the same startup path and deadlocks the main thread.
+    DumpBusinessDexOnce();
     LOGI("%s onShellCreate exit", DWDLM_LOG);
 }
 
@@ -1484,7 +1871,7 @@ static volatile uint32_t* g_secFailedMask = nullptr;
 
 static int g_secureOverrideHits = 0;
 typedef int (*SecShellNoArgFn_t)(void);
-typedef void* (*SecShellTicketFn_t)(void);
+typedef uint64_t (*SecShellTicketFn_t)(void);
 typedef int (*SecShellDeriveKeyFn_t)(const void*, int, void*, int);
 static SecShellNoArgFn_t g_origSecShellRequireExport = nullptr;
 static SecShellNoArgFn_t g_origSecShellIsReadyExport = nullptr;
@@ -1496,16 +1883,8 @@ static SecShellDeriveKeyFn_t g_origSecShellDeriveKeyExport = nullptr;
 static std::atomic<bool> g_shellGateHooksInstalled{false};
 
 static void* SecretExport(uintptr_t fileOff) {
-    static std::atomic<uintptr_t> cachedBase{0};
-    uintptr_t base = cachedBase.load(std::memory_order_acquire);
-    if (!base) {
-        void* handle = dlopen("libsecret.so", RTLD_NOW | RTLD_NOLOAD);
-        if (!handle) return nullptr;
-        void* require = dlsym(handle, "SecShell_Require");
-        if (!require) return nullptr;
-        base = reinterpret_cast<uintptr_t>(require) - 0x3D59C;
-        cachedBase.store(base, std::memory_order_release);
-    }
+    const uintptr_t base = reinterpret_cast<uintptr_t>(SecretImageBase());
+    if (!base) return nullptr;
     return reinterpret_cast<void*>(base + fileOff);
 }
 
@@ -1513,79 +1892,51 @@ static void* SecretExport(uintptr_t fileOff) {
 // SecShell_Require() returns zero when the shell is ready; the update gate
 // additionally requires SecShell_IsReady() to be non-zero.
 static int HookedSecShellRequireExport() {
-    typedef int (*Fn)(void);
-    Fn originalFn = g_origSecShellRequireExport
-        ? g_origSecShellRequireExport
-        : reinterpret_cast<Fn>(SecretExport(0x3D59C));
-    const int original = originalFn ? originalFn() : -1;
     static std::atomic<int> logged{0};
     if (++logged <= 8) {
-        LOGI("%s shell export Require()=%d -> 0", DWDLM_LOG, original);
+        LOGI("%s shell export Require() bypassed -> 0", DWDLM_LOG);
     }
     return 0;
 }
 
 static int HookedSecShellIsReadyExport() {
-    typedef int (*Fn)(void);
-    Fn originalFn = g_origSecShellIsReadyExport
-        ? g_origSecShellIsReadyExport
-        : reinterpret_cast<Fn>(SecretExport(0x3D68C));
-    const int original = originalFn ? originalFn() : 0;
-    static std::atomic<int> logged{0};
-    if (++logged <= 8) {
-        LOGI("%s shell export IsReady()=%d -> 1", DWDLM_LOG, original);
-    }
     return 1;
 }
 
 static int HookedSecShellIsDirtyExport() {
-    typedef int (*Fn)(void);
-    Fn originalFn = g_origSecShellIsDirtyExport
-        ? g_origSecShellIsDirtyExport
-        : reinterpret_cast<Fn>(SecretExport(0x3D6FC));
-    const int original = originalFn ? originalFn() : 0;
     static std::atomic<int> logged{0};
     if (++logged <= 8) {
-        LOGI("%s shell export IsDirty()=%d -> 0", DWDLM_LOG, original);
+        LOGI("%s shell export IsDirty() bypassed -> 0", DWDLM_LOG);
     }
     return 0;
 }
 
 static int HookedSecShellCheckedMaskExport() {
-    typedef int (*Fn)(void);
-    Fn originalFn = g_origSecShellCheckedMaskExport
-        ? g_origSecShellCheckedMaskExport
-        : reinterpret_cast<Fn>(SecretExport(0x3D76C));
-    const int original = originalFn ? originalFn() : 0;
     static std::atomic<int> logged{0};
     if (++logged <= 8) {
-        LOGI("%s shell export CheckedMask()=0x%X", DWDLM_LOG, (unsigned)original);
+        LOGI("%s shell export CheckedMask() bypassed -> 0x7EF", DWDLM_LOG);
     }
     return 0x7EF;
 }
 
 static int HookedSecShellFailedMaskExport() {
-    typedef int (*Fn)(void);
-    Fn originalFn = g_origSecShellFailedMaskExport
-        ? g_origSecShellFailedMaskExport
-        : reinterpret_cast<Fn>(SecretExport(0x3D7CC));
-    const int original = originalFn ? originalFn() : 0;
     static std::atomic<int> logged{0};
     if (++logged <= 8) {
-        LOGI("%s shell export FailedMask()=0x%X", DWDLM_LOG, (unsigned)original);
+        LOGI("%s shell export FailedMask() bypassed -> 0", DWDLM_LOG);
     }
     return 0;
 }
 
-static void* HookedSecShellTicketExport() {
-    typedef void* (*Fn)(void*);
+static uint64_t HookedSecShellTicketExport() {
+    typedef uint64_t (*Fn)(void);
     Fn originalFn = g_origSecShellTicketExport
         ? reinterpret_cast<Fn>(g_origSecShellTicketExport)
         : reinterpret_cast<Fn>(SecretExport(0x3DA18));
-    void* original = originalFn ? originalFn(nullptr) : nullptr;
+    const uint64_t original = originalFn ? originalFn() : 0;
     static std::atomic<int> logged{0};
     if (++logged <= 8) {
-        LOGI("%s shell export Ticket()=%p", DWDLM_LOG, original);
+        LOGI("%s shell export Ticket()=0x%llX", DWDLM_LOG,
+             (unsigned long long)original);
     }
     return original;
 }
