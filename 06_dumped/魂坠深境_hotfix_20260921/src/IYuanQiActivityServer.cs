@@ -1,0 +1,10 @@
+using System.Threading.Tasks;
+
+public interface IYuanQiActivityServer
+{
+	Task<GetYuanQiActivityStateResponse> GetActivityStateAsync(GetYuanQiActivityStateRequest request);
+
+	Task<ReportYuanQiActivityMissionReachedResponse> ReportMissionReachedAsync(ReportYuanQiActivityMissionReachedRequest request);
+
+	Task<ClaimYuanQiActivityMissionRewardResponse> ClaimMissionRewardAsync(ClaimYuanQiActivityMissionRewardRequest request);
+}

@@ -86,7 +86,6 @@ static void* g_clsBftDisp = nullptr; // BftUIDisplay
 static void* g_clsCont = nullptr;    // ItemContainer
 static void* g_clsItem = nullptr;
 static void* g_clsItemPtr = nullptr;  // 自学习验证的 Item 类    // Item
-static void* g_mtdGetGameState = nullptr;
 static bool g_fieldsReady = false;
 static bool g_singletonReady = false;
 // —— feat7 自动胜利门控（20260910 实测通过版）：加载期不写、仅战斗内写 ——
@@ -196,7 +195,6 @@ static void EnsureFields() {
         if (g_clsScene) {
             size_t gs = api.FieldOffset(g_clsScene, "_gameState", 0);
             if (gs) g_offSceneGs = gs;
-            if (!g_mtdGetGameState) g_mtdGetGameState = api.GetMethod(g_clsScene, "get_gameState", 0);
         }
         if (g_clsGs) {
             size_t ps = api.FieldOffset(g_clsGs, "playerState", 0);
@@ -210,11 +208,15 @@ static void EnsureFields() {
             if (g_offBattleState && g_offInBattle)
                 LOGI("[Hzsj] auto-win gate battleState@%zu isInBattle@%zu", g_offBattleState, g_offInBattle);
         }
-        if (g_clsScene && g_clsGs && g_clsPgsi && (g_offSceneGs || g_mtdGetGameState) && g_offGsPlayer) {
+        // 2026-09-21 热更：只认直读 _gameState。
+        // 禁止在 mod 线程 runtime_invoke 托管 getter get_gameState：热更切换窗口该调用
+        // 抛执行引擎异常，非托管线程无人接管 → il2cpp RaiseExecutionEngineException → abort
+        // （09-21 21:47:46 实锤；C# getter 本身也只是返回 _gameState）。
+        if (g_clsScene && g_clsGs && g_clsPgsi && g_offSceneGs && g_offGsPlayer) {
             g_singletonReady = true;
-            LOGI("[Hzsj] currency path SceneInfoSingleton→gameState→playerState "
-                 "(offGs=%zu offPlayer=%zu getter=%p coin@%zu cry@%zu)",
-                 g_offSceneGs, g_offGsPlayer, g_mtdGetGameState, g_offCoin, g_offCrystal);
+            LOGI("[Hzsj] currency path SceneInfoSingleton._gameState→playerState "
+                 "(offGs=%zu offPlayer=%zu coin@%zu cry@%zu, direct-read no invoke)",
+                 g_offSceneGs, g_offGsPlayer, g_offCoin, g_offCrystal);
         }
     }
 
@@ -362,13 +364,8 @@ static void* ResolveLivePgsi() {
     void* scene = api.StaticRefField(g_clsScene, "instance");
     if (!scene || !SoftPtr(scene)) return nullptr;
 
-    void* gs = nullptr;
-    if (g_mtdGetGameState && api.runtime_invoke) {
-        void* exc = nullptr;
-        gs = api.runtime_invoke(g_mtdGetGameState, scene, nullptr, &exc);
-        if (exc) gs = nullptr;
-    }
-    if (!gs && g_offSceneGs) gs = ReadPtr(scene, g_offSceneGs);
+    // 直读 _gameState（同 C# getter 语义）；不调托管 getter，避免热更窗口异常 abort
+    void* gs = g_offSceneGs ? ReadPtr(scene, g_offSceneGs) : nullptr;
     if (!gs || !SoftPtr(gs) || !g_offGsPlayer) return nullptr;
 
     void* ps = ReadPtr(gs, g_offGsPlayer);
@@ -401,16 +398,46 @@ static void WriteProtectedInt(void* obj, size_t off, int32_t value) {
     WriteI32(obj, off + 8, value ^ PROT_SALT ^ PROT_MAGIC);
 }
 
+/** 回读校验：写入后立刻按 ProtectedInt.Decode 语义验证，能区分“写失败”和“被游戏改回” */
+static bool ReadProtectedInt(void* obj, size_t off, int32_t* out) {
+    if (!obj || !out || !off) return false;
+    int32_t salt = ReadI32(obj, off + 0);
+    int32_t encoded = ReadI32(obj, off + 4);
+    int32_t check = ReadI32(obj, off + 8);
+    int32_t value = encoded ^ salt;
+    if (salt == 0 && encoded == 0 && check == 0) {
+        *out = 0;
+        return true;
+    }
+    if ((value ^ salt ^ PROT_MAGIC) != check) return false;
+    *out = value;
+    return true;
+}
+
+static bool WriteProtectedIntChecked(void* obj, size_t off, int32_t value, const char* tag) {
+    WriteProtectedInt(obj, off, value);
+    int32_t got = 0;
+    if (!ReadProtectedInt(obj, off, &got) || got != value) {
+        static uint32_t bad = 0;
+        uint32_t n = ++bad;
+        if (n <= 8 || (n % 100) == 0)
+            LOGI("[Hzsj] PROT_WRITE_BAD#%u %s obj=%p off=%zu want=%d got=%d (读回失败/被改写)",
+                 n, tag ? tag : "?", obj, off, value, got);
+        return false;
+    }
+    return true;
+}
+
 static bool WriteCurrencyAt(void* obj, const char* tag) {
     if (!obj || !SoftPtr(obj)) return false;
     if (!CurrencyOn()) return false;
     bool wrote = false;
     if (g_infCoin.load()) {
-        WriteProtectedInt(obj, g_offCoin, CURRENCY_VAL);
+        WriteProtectedIntChecked(obj, g_offCoin, CURRENCY_VAL, "coin");
         wrote = true;
     }
     if (g_infCrystal.load()) {
-        WriteProtectedInt(obj, g_offCrystal, CURRENCY_VAL);
+        WriteProtectedIntChecked(obj, g_offCrystal, CURRENCY_VAL, "crystal");
         wrote = true;
     }
     if (wrote) {
@@ -446,13 +473,8 @@ static void ApplyBattleTick(uint32_t t) {
 
     void* scene = api.StaticRefField(g_clsScene, "instance");
     if (!scene || !SoftPtr(scene)) return;
-    void* gs = nullptr;
-    if (g_mtdGetGameState && api.runtime_invoke) {
-        void* exc = nullptr;
-        gs = api.runtime_invoke(g_mtdGetGameState, scene, nullptr, &exc);
-        if (exc) gs = nullptr;
-    }
-    if (!gs && g_offSceneGs) gs = ReadPtr(scene, g_offSceneGs);
+    // 直读 _gameState（同 C# getter 语义）；不调托管 getter，避免热更窗口异常 abort
+    void* gs = g_offSceneGs ? ReadPtr(scene, g_offSceneGs) : nullptr;
     if (!gs || !SoftPtr(gs)) return;
 
     // —— 无敌：playerState.bft.health ——
@@ -463,7 +485,7 @@ static void ApplyBattleTick(uint32_t t) {
             if (IsKlass(myBft, g_clsBft)) {
                 uint8_t isP = ReadU8(myBft, g_offBftIsP);
                 if (isP) {
-                    WriteProtectedInt(myBft, g_offBftHealth, 999999);
+                    WriteProtectedIntChecked(myBft, g_offBftHealth, 999999, "inv");
                     static uint32_t invLog = 0;
                     uint32_t n = ++invLog;
                     if (n <= 4 || (n % 200) == 0) LOGI("[Hzsj] INV#%u myBft=%p health=999999", n, myBft);
@@ -485,7 +507,7 @@ static void ApplyBattleTick(uint32_t t) {
                     if (IsKlass(eBft, g_clsBft)) {
                         uint8_t isP = ReadU8(eBft, g_offBftIsP);
                         if (!isP) {  // 确认是敌人，防链错写自己
-                            WriteProtectedInt(eBft, g_offBftHealth, 1);
+                            WriteProtectedIntChecked(eBft, g_offBftHealth, 1, "sek");
                             if (g_offBftExtra) WriteProtectedInt(eBft, g_offBftExtra, 0);
                             static uint32_t sekLog = 0;
                             uint32_t n = ++sekLog;
@@ -513,8 +535,8 @@ static void ApplyBattleTick(uint32_t t) {
                         if (IsKlass(eBft, g_clsBft)) {
                             uint8_t isP = ReadU8(eBft, g_offBftIsP);
                             if (!isP) {
-                                WriteProtectedInt(eBft, g_offBftHealth, 0);
-                                WriteProtectedInt(eBft, g_offBftMaxHp, 0);
+                                WriteProtectedIntChecked(eBft, g_offBftHealth, 0, "autowin_hp");
+                                WriteProtectedIntChecked(eBft, g_offBftMaxHp, 0, "autowin_max");
                                 if (g_offBftExtra) WriteProtectedInt(eBft, g_offBftExtra, 0);
                                 static uint32_t awLog = 0;
                                 uint32_t n = ++awLog;
@@ -607,8 +629,8 @@ static void ApplyBattleTick(uint32_t t) {
                             void* it = ListAt(arr, i);
                             if (!it || !SoftPtr(it)) continue;
                             if (!IsKlass(it, g_clsItemPtr)) continue;
-                            WriteProtectedInt(it, g_offItemCd, 0);
-                            if (g_offItemDelta) WriteProtectedInt(it, g_offItemDelta, -99999);
+                            WriteProtectedIntChecked(it, g_offItemCd, 0, "card_cd");
+                            if (g_offItemDelta) WriteProtectedIntChecked(it, g_offItemDelta, -99999, "card_cost");
                             patched++;
                         }
                     }
@@ -682,6 +704,7 @@ void Hzsj_Tick(const bool* features) {
         g_infCard.store(features[HZSJ_FEAT_INF_CARD]);
         g_infCoin.store(features[HZSJ_FEAT_INF_COIN]);
         g_infCrystal.store(features[HZSJ_FEAT_INF_CRYSTAL]);
+        g_autoWin.store(features[HZSJ_FEAT_AUTO_WIN]);
     }
     if (!g_ready.load()) return;
     EnsureFields();
@@ -999,4 +1022,3 @@ void Hzsj_StartProbe() {
 }
 
 #endif  // STARRY_HZSJ_PROBE
-

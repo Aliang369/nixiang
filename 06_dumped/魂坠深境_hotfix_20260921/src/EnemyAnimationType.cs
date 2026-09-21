@@ -1,0 +1,25 @@
+public enum EnemyAnimationType
+{
+	none = 0,
+	idle = 1,
+	hit = 2,
+	attack1 = 3,
+	debut = 4,
+	defend = 5,
+	special = 6,
+	heal = 7,
+	death = 8,
+	action = 9,
+	attack2 = 21,
+	attack3 = 22,
+	attack4 = 23,
+	attack5 = attack4,
+	special1 = 31,
+	special2 = 32,
+	special3 = 33,
+	special4 = 34,
+	skin = 35,
+	skin1 = 36,
+	skin2 = 37,
+	leave = 38
+}
