@@ -1,10 +1,10 @@
 /* ================================================================
  *  无限升级 (com.xingzuodaoshi.infinityUpgrade)
  *  方案：裸 Dobby hook 热更 dll 装载边界（免 il2cpp API，壳无导出）
- *    RuntimeAssemblyLoader::ExecuteRuntimeAssembly RVA=0x2b3f3c4
- *    来源：06_dumped/无限升级 bss methodPointers 实测（2026-09-05，
- *    Il2CppDumper 失效，bss 搜模块名指针→methodPointers[rid-1]）
- *    绑定版本 vc1637 / 11.266018；升级后 RVA 必须重解
+ *    RuntimeAssemblyLoader::ExecuteRuntimeAssembly RVA=0x2b54de4
+ *    来源：2026-09-21 真机运行时 methodPointers 重解（vc1641 / 11.266020）；
+ *    历史来源：2026-09-05 bss methodPointers 实测（vc1637 / 11.266018）
+ *    升级后 RVA 必须重解
  *  功能：hook 内就地把 targetfuntional.dll 字节替换为内置 patched dll，
  *        功能开关由 dll 内 StarryConfig 读浮窗配置文件（2s 缓存）
  *  feat_num = Main.cpp g_featureList 下标（含 Category）
