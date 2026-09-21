@@ -4,16 +4,30 @@
  *        hook se::ScriptEngine::evalString 按锚点 splice 属性增益（同镇邪人模式）。
  *  20260909 功能重排（用户定稿）：移除秒杀/无敌/无限技能（封号风险），
  *        改为属性增益叠加——全部为现有值上的加法/乘法，任何情况不 nerf：
- *   0 超级回血   _timer 1s tick 己方多跳一次 recHp（回复速度 ×2）
- *   1 超级回蓝   同 tick 己方多跳一次 recSp（×2）
- *   2 高暴击率   暴击判定值 +40pp（玩家类+宠物类，己方攻击方）
+ *   0 超级回血   _timer 1s tick 己方多跳三次 recHp（回复速度 ×4，20260921 上调）
+ *   1 超级回蓝   同 tick 己方多跳三次 recSp（×4，20260921 上调）
+ *   2 高暴击率   暴击判定值 +60pp（原 +40pp，20260921 再 +20pp；玩家类+宠物类，己方攻击方）
  *   3 高暴击伤害 暴击倍率再 ×2（原倍率保留相乘，己方攻击方）
  *   4 高防御     护甲减伤 AMR +15pp（钳制后叠加，0.95 安全上限，己方受击方）
  *   5 高抗性     抗性净值 ×2（钳制后叠加，0.95 安全上限，己方受击方）
- *   6 高闪避     闪避值 +15pp（己方受击方）
+ *   6 高闪避     闪避值 +35pp（原 +15pp，20260921 再 +20pp；己方受击方）
  *   7 免广告     JS 侧强制走 skip 分支（C2S_WATCH_ADS_END 直领，需在线）
+ *   8 秒杀（封号）doDmg 入口 己方攻击伤害=受击方 CUR_HP+1（避免天文数字进 Dps 统计）
+ *   9 无敌（封号）doDmg 入口 己方受击伤害归零
  *  己方判定：sideType==1（MY_SIDE 字面量，内置/热更枚举一致，硬编码）。
  *  反篡改：libcocos2djs kill 包装器 + 2.2 炸弹函数（libc kill 路径）early 中和。
+ *
+ *  【20260921 热更重校（0.3.5，game.js 2,767,392 B / sha256 2fa45bc4…）】
+ *   漂移面：① doDmg 签名再追尾加形参 C（0.3.3 加 u → 0.3.5 为 14 参），旧签名全 miss；
+ *          ② 防御/抗性钳制行改写——变量 r/a→o/c，上限由字面量 .9/.5 改为函数
+ *             StatusDef.getMinEdr(this)（形态 C 新锚点）；③ 暴击副本增至 3、暴伤副本 2。
+ *          ①回血 ②暴击 ③暴伤 ⑥闪避 ⑦免广告 命中数与 0.3.x 同形（timer1/chcB3/chdB1+2+
+ *          chdB2×2/ddgB1/ads1）。
+ *   签名（0.3.5）：doDmg(r, a, o, c, h, l, _, d, u, m = !0, g = !1, p = i.Normal, f = !1, C = -1) {
+ *           语义经函数体守卫实锤：r=伤害（首参）、o=攻击者（三参，o.sideType/o.isChar/o.trigger）、
+ *           this=受击方；函数体内 t.SideType.MY_SIDE 仍在用，别名未漂移。
+ *          已改为「前缀 + 下一个 ") {"」动态取签名，后续再追尾加形参不必改代码。
+ *  实测 splice：热更档 2,767,392 → 2,769,815（+2423，离线模拟）；内置档 +2277（运行时实证）。
  * ================================================================ */
 
 #include "CwjhMod.h"
@@ -188,6 +202,14 @@ static void SyncJavaRets() {
 #define CWJH_RET "\"org.cocos2dx.javascript.AppActivity\",\"get_ret\",\"(I)Z\","
 #define CWJH_GATE(i) "jsb.reflection.callStaticMethod(" CWJH_RET #i ")"
 
+/* 功能数值（20260921 用户定稿，改这里即可，勿散落字面量）
+ *   回血/回蓝：每 tick 己方 recHp/recSp 调用总次数（原始 1 次，倍率 = 该值）
+ *   暴击率/闪避：在「当前值」上的加算 pp（原 +.4 / +.15，本次各再 +20pp） */
+#define CWJH_HP_TICK_MULT   4       /* 超级回血 ×4 */
+#define CWJH_SP_TICK_MULT   4       /* 超级回蓝 ×4 */
+#define CWJH_CHC_BONUS      ".6"    /* 高暴击率 +60pp（含原 +40pp） */
+#define CWJH_DODGE_BONUS    ".35"   /* 高闪避 +35pp（含原 +15pp） */
+
 static bool NeedsCombatSplice(const char* s, size_t n) {
     if (!s) return false;
     auto has = [&](const char* needle) -> bool {
@@ -215,31 +237,36 @@ static void ReplaceAll(std::string& s, const char* from, const char* to) {
 static std::string SpliceCombatJs(const char* src) {
     std::string s(src);
 
-    // ① 超级回血/回蓝：_timer 1s tick，己方单位各多跳一次（回复速度 ×2）
-    //    锚点内置/热更同形，各 1 处。不做任何公式改动，纯 tick 翻倍。
+    // ① 超级回血/回蓝：_timer 1s tick，己方单位各多跳 N-1 次（回复速度 ×N，N=CWJH_*_TICK_MULT）
+    //    锚点内置/热更同形，各 1 处。不做任何公式改动，纯 tick 次数放大。
     {
         static const char* kAnchor = "_timer() {\nthis.recHp();\nthis.recSp();\n}";
         if (s.find(kAnchor) != std::string::npos) {
-            std::string rep = std::string("_timer() {\n"
-                "if(" CWJH_GATE(0) "&&this.sideType==1)this.recHp();\n"
-                "this.recHp();\n"
-                "if(" CWJH_GATE(1) "&&this.sideType==1)this.recSp();\n"
-                "this.recSp();\n}");
+            // 注意：CWJH_GATE 用 #i 字符串化，只能喂字面量（喂变量会展开成变量名，
+            // 20260921 实测：gated(0,...) 传 int 参数 → JS 里变成未定义标识符 idx，tick 抛异常）
+            auto gated = [](const char* gate, const char* fn) {
+                return std::string("if(") + gate + "&&this.sideType==1)this." + fn + "();\n";
+            };
+            std::string rep = "_timer() {\n";
+            for (int i = 0; i < CWJH_HP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(0), "recHp");
+            rep += "this.recHp();\n";
+            for (int i = 0; i < CWJH_SP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(1), "recSp");
+            rep += "this.recSp();\n}";
             ReplaceAll(s, kAnchor, rep.c_str());
         }
     }
 
-    // ② 高暴击率：暴击判定值 +40pp（己方攻击方；玩家类+宠物类全替换）
+    // ② 高暴击率：暴击判定值 +CWJH_CHC_BONUS（己方攻击方；玩家类+宠物类全替换）
     {
         // 形态A（2.2 内置/2.1首发系）
         static const char* kChcA =
             "u = t ? this.getPropVal(\"CHC\") + (this.getPropVal(\"SK_CHC\", t.skId.toString()) || 0) + "
             "(this.getPropVal(\"SK_CHC\", \"0\") || 0) : this.getPropVal(\"CHC\");";
-        std::string repA = std::string(kChcA) + "\nif(" CWJH_GATE(2) "&&this.sideType==1)u+=.4;";
+        std::string repA = std::string(kChcA) + "\nif(" CWJH_GATE(2) "&&this.sideType==1)u+=" CWJH_CHC_BONUS ";";
         ReplaceAll(s, kChcA, repA.c_str());
         // 形态B（0.2.89+ 热更重构）
         static const char* kChcB = "let i = e ? e._dmgChc || 0 : this.getPropVal(\"CHC\") || 0;";
-        std::string repB = std::string(kChcB) + "\nif(" CWJH_GATE(2) "&&this.sideType==1)i+=.4;";
+        std::string repB = std::string(kChcB) + "\nif(" CWJH_GATE(2) "&&this.sideType==1)i+=" CWJH_CHC_BONUS ";";
         ReplaceAll(s, kChcB, repB.c_str());
     }
 
@@ -268,8 +295,13 @@ static std::string SpliceCombatJs(const char* src) {
         ReplaceAll(s, kChdB2, repB2.c_str());
     }
 
-    // ④ 高防御：护甲减伤 AMR +15pp（己方受击方；加在引擎钳制之后，0.95 安全上限防负伤害）
+    // ④ 高防御：护甲减伤 AMR +15pp（己方受击方；沿用引擎自己的钳制作为上限，不另设 0.95）
     {
+        // 形态C（0.3.5+，20260921 二次热更）：变量改名 o，上限改成函数 StatusDef.getMinEdr(this)
+        static const char* kAmrC = "o = Math.min(Math.max(o, -1), t.StatusDef.getMinEdr(this));";
+        std::string repC = std::string(kAmrC) + "\nif(" CWJH_GATE(
+            4) "&&i.sideType==1){o+=.15;o=Math.min(o,t.StatusDef.getMinEdr(this));}";
+        ReplaceAll(s, kAmrC, repC.c_str());
         // 形态A（钳 0.9）：r = Math.min(Math.max(r, -1), .9);（e=受击方）
         static const char* kAmrA = "r = Math.min(Math.max(r, -1), .9);";
         std::string repA = std::string(kAmrA) + "\nif(" CWJH_GATE(
@@ -282,8 +314,13 @@ static std::string SpliceCombatJs(const char* src) {
         ReplaceAll(s, kAmrB, repB.c_str());
     }
 
-    // ⑤ 高抗性：抗性净值 ×2（己方受击方；钳制后叠加，0.95 安全上限）
+    // ⑤ 高抗性：抗性净值 ×2（己方受击方；钳制后叠加，沿用引擎钳制作上限）
     {
+        // 形态C（0.3.5+）：变量改名 c，上限 StatusDef.getMinEdr(this)
+        static const char* kResC = "c = Math.min(Math.max(c, -1), t.StatusDef.getMinEdr(this));";
+        std::string repC = std::string(kResC) + "\nif(" CWJH_GATE(
+            5) "&&i.sideType==1){c*=2;c=Math.min(c,t.StatusDef.getMinEdr(this));}";
+        ReplaceAll(s, kResC, repC.c_str());
         // 形态A（钳 0.9）
         static const char* kResA = "a = Math.min(Math.max(a, -1), .9);";
         std::string repA = std::string(kResA) + "\nif(" CWJH_GATE(
@@ -296,15 +333,15 @@ static std::string SpliceCombatJs(const char* src) {
         ReplaceAll(s, kResB, repB.c_str());
     }
 
-    // ⑥ 高闪避：闪避值 +15pp（己方受击方；对面命中仍会抵消，引擎 roll 封顶保留为安全网）
+    // ⑥ 高闪避：闪避值 +CWJH_DODGE_BONUS（己方受击方；对面命中仍会抵消，引擎 roll 封顶保留为安全网）
     {
         // 形态A：s = e.getPropVal("DGC") 行后
         static const char* kDdgA = "s += e.trigger(skill.TriggerTiming.PreDodge, i, e, s);";
-        std::string repA = std::string(kDdgA) + "\nif(" CWJH_GATE(6) "&&e.sideType==1)s+=.15;";
+        std::string repA = std::string(kDdgA) + "\nif(" CWJH_GATE(6) "&&e.sideType==1)s+=" CWJH_DODGE_BONUS ";";
         ReplaceAll(s, kDdgA, repA.c_str());
         // 形态B
         static const char* kDdgB = "n += i.trigger(skill.TriggerTiming.PreDodge, s, i, n);";
-        std::string repB = std::string(kDdgB) + "\nif(" CWJH_GATE(6) "&&i.sideType==1)n+=.15;";
+        std::string repB = std::string(kDdgB) + "\nif(" CWJH_GATE(6) "&&i.sideType==1)n+=" CWJH_DODGE_BONUS ";";
         ReplaceAll(s, kDdgB, repB.c_str());
     }
 
@@ -326,28 +363,45 @@ static std::string SpliceCombatJs(const char* src) {
     //    doDmg 入口（this=受击方）。签名随热更被压缩器重命名（语义经函数体守卫实锤：
     //    首参=伤害，三参=攻击者）。无敌=己方受击归零；秒杀=己方攻击伤害=当前HP+1（避免天文数字进统计）。
     {
+        // 0.3.5+ 起签名会继续追尾加形参（0.3.3 加 u、0.3.5 加 C = -1），
+        // 故先按「前缀 + 下一个 ") {"」动态取整条签名，避免每次热更重编一端。
+        static const char* kPrefix = "doDmg(r, a, o, c, h, l, _, d, u, m = !0";
         struct DmgSig { const char* anchor; const char* dmg; const char* atk; };
         static const DmgSig kSigs[] = {
             {"doDmg(r, a, o, c, h, l, _, d, m, u = !0, g = !1, p = i.Normal, f = !1) {",
-             "r", "o"},                                                       // 0.2.9x+ 热更
+             "r", "o"},                                                       // 0.2.9x 热更
             {"doDmg(e, r, a, o, c, h, l, _, d, m = !0, u = !1, g = i.Normal, p = !1) {",
              "e", "a"},                                                       // 0.2.83
             {"doDmg(e, n, r, a, o, c, h, l, _, d = !0, m = !1, u = i.Normal) {",
              "e", "r"},                                                       // 2.1 首发/2.2 内置
         };
-        for (const auto& sig : kSigs) {
-            if (s.find(sig.anchor) == std::string::npos) continue;
-            std::string rep = std::string(sig.anchor);
+        auto inject = [&](const std::string& anchor, const char* dmg, const char* atk) -> bool {
+            if (s.find(anchor) == std::string::npos) return false;
+            std::string rep = anchor;
             // 无敌（get_ret 9）：己方单位受伤归零
             rep += "\nif(jsb.reflection.callStaticMethod(" CWJH_RET "9)"
                    "&&this.sideType==t.SideType.MY_SIDE){return 0;}";
             // 秒杀（get_ret 8）：己方攻击时伤害=当前HP+1（致死量，避免天文数字进 Dps 统计）
             rep += std::string("\nif(jsb.reflection.callStaticMethod(" CWJH_RET "8)")
-                   + "&&" + sig.atk + "&&this.sideType!=" + sig.atk + ".sideType&&" + sig.atk +
+                   + "&&" + atk + "&&this.sideType!=" + atk + ".sideType&&" + atk +
                    ".sideType==t.SideType.MY_SIDE)"
-                   "{" + sig.dmg + "=this.getPropVal(\"CUR_HP\")+1;}";
-            ReplaceAll(s, sig.anchor, rep.c_str());
-            break;
+                   "{" + dmg + "=this.getPropVal(\"CUR_HP\")+1;}";
+            ReplaceAll(s, anchor.c_str(), rep.c_str());
+            return true;
+        };
+        size_t p = s.find(kPrefix);
+        bool done = false;
+        if (p != std::string::npos) {
+            size_t e = s.find(") {", p);
+            if (e != std::string::npos && e - p < 220) {
+                // 语义经函数体守卫实锤：首参 r=伤害、三参 o=攻击者、this=受击方（0.3.x/0.3.5 一致）
+                done = inject(s.substr(p, e + 3 - p), "r", "o");
+            }
+        }
+        if (!done) {
+            for (const auto& sig : kSigs) {
+                if (inject(sig.anchor, sig.dmg, sig.atk)) break;
+            }
         }
     }
 

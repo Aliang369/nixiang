@@ -255,8 +255,9 @@ LOCAL_ARM_MODE  := arm
 # 我的勇者 7.6.1（wdyz）— Battle 结算钩：五倍攻击(敌 ×5)/无敌(HeroSettle 0)
 # 2026-09-07 星光自注入验证（不用 frida；TryEnterCd 已证死路，勿挂技能簇）
 # 2026-09-20 7.6.1(vc203) 重 dump：RVA 全漂移 → 双路径按名兜底 + 新 RVA 回填
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
-LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
+# 2026-09-21 切走（超维进化 0.3.x 热更重校出包）
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
+# LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
 # 长生天机降世 1.0.1 — EnterFrameFromInterpreter file 0x2657084（10_docs 20260908）
 # TryResolve 已加 Il2CppReady 门控（init 期半初始化 image SIGSEGV 实锤）
 # 长生天机降世 1.0.1 — CstjjsMod（Il2CppReady gating 已内置）
@@ -268,10 +269,10 @@ LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
 # LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 # endif
 # LOCAL_SRC_FILES := Main.cpp Games/Es2Mod.cpp Unity/Il2CppApi.cpp
-# 超维进化 2.2（cwjh）— Cocos2djs se::evalString splice（六锚点 2.2 预检全过 20260909）
-# 超维进化 2.2（cwjh）— 本轮切走，保留原配置供后续恢复
-# LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_CWJH
-# LOCAL_SRC_FILES := Main.cpp Games/CwjhMod.cpp
+# 超维进化（cwjh）— Cocos2djs se::evalString splice（20260921 0.3.5 热更：doDmg 14 参/前缀动态匹配）
+# 防御·抗性新增形态C锚点（o/c + StatusDef.getMinEdr）；回血回蓝×4、暴击+60pp、闪避+35pp
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_CWJH
+LOCAL_SRC_FILES := Main.cpp Games/CwjhMod.cpp
 # 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
 # 20260908 SIGABRT 修复：类查齐后隔轮再读 offsets（热更 layout 中途 field_get_offset 必崩）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR

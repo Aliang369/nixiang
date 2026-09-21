@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/超维进化",
+  "keep": "超维进化_2.2_hot035_surgical-releaseSigned.apk",
+  "keep_size": 179627890,
+  "keep_md5": "a9e2fabcd36f00ffb67e562b28bae67a",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "超维进化_0.3.3_hotfix_surgical-releaseSigned.apk",
+      "size": 179623794,
+      "md5": "540edeaef809df90c0024260210d5e01"
+    },
+    {
+      "name": "超维进化_so_only_20260921_130412-releaseSigned.apk.idsig",
+      "size": 1422875,
+      "md5": "67dd4e96ab882570a755474404bd6156"
+    }
+  ],
+  "removed_count": 2
+}
