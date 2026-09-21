@@ -25,6 +25,13 @@ def main() -> int:
         raise SystemExit("movement speed does not use slider value")
     if "if (MOD.feature5)" not in js or "AUTO_BATTLE" not in js:
         raise SystemExit("auto-battle privilege hook missing")
+    # 2026-09-21 热更修复：自动战斗指纹不得再写死被重命名的 buff 管理器方法名
+    if 'indexOf("bVs(")' in js:
+        raise SystemExit("auto-battle fingerprint still hardcodes the renamed bVs()")
+    if 'indexOf("BuffTableEnum")' not in js:
+        raise SystemExit("auto-battle plaintext fingerprint BuffTableEnum missing")
+    if "auto-battle candidate" not in js:
+        raise SystemExit("auto-battle reject diagnostic missing")
     if "restoreCosts" not in js:
         raise SystemExit("skill-cost exception fallback missing")
     if "try { touched[j][0].hTimeScale" not in js:

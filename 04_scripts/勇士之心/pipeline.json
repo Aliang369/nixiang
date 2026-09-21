@@ -1,7 +1,7 @@
 {
   "game": "勇士之心",
-  "version": "999999",
-  "notes": "2026-09-15 接手：已从真机只读拉取斌哥改包并确认 Cocos JS + 斌哥壳；当前目标是提取全部菜单功能修改点，完成后暂停等待原版。",
+  "version": "1.0.3",
+  "notes": "2026-09-21 热更 res 1.0.98.10 重抓与修复轮已收尾：只读重抓 23 个热更 JS + 官方 base.apk，解密后离线复现发现逻辑，根因=自动战斗指纹写死 bVs(（热更改名为 bXP）；修复为明文 BuffTableEnum 两级指纹；新包装机后六钩子全部安装，用户实测五项功能全部可用。本轮新增阶段：regrab_hotupdate / decrypt_hotupdate / verify_discovery。历史阶段快照中已不存在的中间产物按收尾清理修正为 not_exists。",
   "params": {
     "game_id": "ysxz",
     "package": "com.fightingstars.games.warrior",
@@ -133,24 +133,16 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/memdump_on/maps.txt"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/memdump_on/dump_log.txt"
         }
       ],
       "status": "done",
       "done_at": "2026-09-15 12:31:05",
-      "artifacts": {
-        "09_test/勇士之心/memdump_on/maps.txt": {
-          "md5": "d9fbb5d23c7e1e45af0e8dda3e3e644d"
-        },
-        "09_test/勇士之心/memdump_on/dump_log.txt": {
-          "md5": "c216262f74e5e8768cbacaa118e4ddd6"
-        }
-      },
       "inputs": {
         "04_scripts/勇士之心/mod_check.json": "94165577149219a3e82d6455b2d177da",
         "04_scripts/勇士之心/mod_manifest.txt": "66b0eddbdaf3a8268331368ca1cb2260",
@@ -168,21 +160,12 @@
       "preflight": [],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/memdump_on/scan_report.txt"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 12:31:13",
-      "artifacts": {
-        "09_test/勇士之心/memdump_on/scan_report.txt": {
-          "md5": "d15d22afabfeeebf1c78757d0eb91848"
-        }
-      },
-      "inputs": {
-        "09_test/勇士之心/memdump_on/maps.txt": "d9fbb5d23c7e1e45af0e8dda3e3e644d",
-        "09_test/勇士之心/memdump_on/dump_log.txt": "c216262f74e5e8768cbacaa118e4ddd6"
-      }
+      "done_at": "2026-09-15 12:31:13"
     },
     {
       "id": "pull_runtime",
@@ -196,34 +179,20 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/runtime/runtime_pull.json"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/runtime/mod_sw.txt"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/runtime/files_listing.txt"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 12:37:44",
-      "artifacts": {
-        "09_test/勇士之心/runtime/runtime_pull.json": {
-          "md5": "4e7c592bdad9838ce17c16d5f0ac45c7"
-        },
-        "09_test/勇士之心/runtime/mod_sw.txt": {
-          "md5": "9f01357fbc69d7ca7f83f9926ae7a77c"
-        },
-        "09_test/勇士之心/runtime/files_listing.txt": {
-          "md5": "3aa6757d0b2537d98cf04dcbe38cc12c"
-        }
-      },
-      "inputs": {
-        "09_test/勇士之心/memdump_on/scan_report.txt": "d15d22afabfeeebf1c78757d0eb91848"
-      }
+      "done_at": "2026-09-15 12:37:44"
     },
     {
       "id": "dump_mem_all",
@@ -237,29 +206,16 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/memdump_all/dump_log.txt"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/memdump_all/mod_sw.txt"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 12:42:56",
-      "artifacts": {
-        "09_test/勇士之心/memdump_all/dump_log.txt": {
-          "md5": "5fcd7fc43edc6f4724855de86a580273"
-        },
-        "09_test/勇士之心/memdump_all/mod_sw.txt": {
-          "md5": "89d598e394d6f4d419fa2d681bda6703"
-        }
-      },
-      "inputs": {
-        "09_test/勇士之心/runtime/runtime_pull.json": "4e7c592bdad9838ce17c16d5f0ac45c7",
-        "09_test/勇士之心/runtime/mod_sw.txt": "9f01357fbc69d7ca7f83f9926ae7a77c",
-        "09_test/勇士之心/runtime/files_listing.txt": "3aa6757d0b2537d98cf04dcbe38cc12c"
-      }
+      "done_at": "2026-09-15 12:42:56"
     },
     {
       "id": "scan_mem_all",
@@ -271,21 +227,12 @@
       "preflight": [],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/memdump_all/scan_report.txt"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 12:43:16",
-      "artifacts": {
-        "09_test/勇士之心/memdump_all/scan_report.txt": {
-          "md5": "d15d22afabfeeebf1c78757d0eb91848"
-        }
-      },
-      "inputs": {
-        "09_test/勇士之心/memdump_all/dump_log.txt": "5fcd7fc43edc6f4724855de86a580273",
-        "09_test/勇士之心/memdump_all/mod_sw.txt": "89d598e394d6f4d419fa2d681bda6703"
-      }
+      "done_at": "2026-09-15 12:43:16"
     },
     {
       "id": "pull_official",
@@ -309,9 +256,6 @@
         "04_scripts/勇士之心/official_apk.json": {
           "md5": "c9d807879d535f12816e5bf715204e8d"
         }
-      },
-      "inputs": {
-        "09_test/勇士之心/memdump_all/scan_report.txt": "d15d22afabfeeebf1c78757d0eb91848"
       }
     },
     {
@@ -326,38 +270,24 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "04_scripts/勇士之心/official_check.json"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "04_scripts/勇士之心/official_manifest.txt"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "04_scripts/勇士之心/official_signature.txt"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "04_scripts/勇士之心/official_compare.txt"
         }
       ],
       "status": "done",
       "done_at": "2026-09-15 13:13:14",
-      "artifacts": {
-        "04_scripts/勇士之心/official_check.json": {
-          "md5": "e70c10d1930fc156c58c838cffa4c27a"
-        },
-        "04_scripts/勇士之心/official_manifest.txt": {
-          "md5": "92be0774a762e99ce5ced2e4c9a05c02"
-        },
-        "04_scripts/勇士之心/official_signature.txt": {
-          "md5": "e6d7bf0b9082e21ca7daf926791520f6"
-        },
-        "04_scripts/勇士之心/official_compare.txt": {
-          "md5": "8e3f3b8271213c7dd969a5f151295f08"
-        }
-      },
       "inputs": {
         "04_scripts/勇士之心/official_apk.json": "c9d807879d535f12816e5bf715204e8d"
       }
@@ -387,15 +317,10 @@
       "done_at": "2026-09-15 14:12:47",
       "artifacts": {
         "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": {
-          "md5": "c018dff9e646db3580fc4794c7e1b4d7"
+          "md5": "9bf52c07974ff487a03e6889472f36f6"
         }
       },
-      "inputs": {
-        "04_scripts/勇士之心/official_check.json": "e70c10d1930fc156c58c838cffa4c27a",
-        "04_scripts/勇士之心/official_manifest.txt": "92be0774a762e99ce5ced2e4c9a05c02",
-        "04_scripts/勇士之心/official_signature.txt": "e6d7bf0b9082e21ca7daf926791520f6",
-        "04_scripts/勇士之心/official_compare.txt": "8e3f3b8271213c7dd969a5f151295f08"
-      }
+      "note": "2026-09-21 热更重抓轮：build_so 重跑，产物 md5=9bf52c07974ff487a03e6889472f36f6（自动战斗指纹改为明文 BuffTableEnum 两级指纹）。"
     },
     {
       "id": "surgical",
@@ -409,20 +334,17 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk"
         }
       ],
       "status": "done",
       "done_at": "2026-09-15 14:13:20",
-      "artifacts": {
-        "08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk": {
-          "md5": "ae1398bbbbbed5d9f7585a645b2ad35f"
-        }
-      },
       "inputs": {
-        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": "c018dff9e646db3580fc4794c7e1b4d7"
-      }
+        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": "9bf52c07974ff487a03e6889472f36f6",
+        "09_test/勇士之心/regrab_20260921/base.apk": "c20f70c8ba52032eae10574f846b88d1"
+      },
+      "note": "2026-09-21 收尾清理: 08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk; 原 md5=923e2c526338ccf5430afde2131ae89e\n2026-09-21 热更重抓轮改用 04_scripts/勇士之心/ysxz_surgical_rebased.sh，底包=真机只读拉取的官方 base.apk（md5 c20f70c8ba52032eae10574f846b88d1，libcocos2djs.so 与旧原版字节一致）；旧底包 02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk 已不在工作区。"
     },
     {
       "id": "sign",
@@ -444,12 +366,10 @@
       "done_at": "2026-09-15 14:13:43",
       "artifacts": {
         "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": {
-          "md5": "936eae1c0d81b6f14d27fcb63463b087"
+          "md5": "4175178fe6f9663556efe21541726f6e"
         }
       },
-      "inputs": {
-        "08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk": "ae1398bbbbbed5d9f7585a645b2ad35f"
-      }
+      "note": "2026-09-21 热更重抓轮重签：md5=4175178fe6f9663556efe21541726f6e，sha256=2846e57b0577bd4561a387d56b7e8ce1f98d6a5a3e4ed31c1df20427eea93a8d，size=64642859，签名 CN=StarryMagic；unsigned 中间包已按收官口令裁剪。"
     },
     {
       "id": "install",
@@ -472,14 +392,77 @@
       "done_at": "2026-09-15 14:13:59",
       "artifacts": {
         "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": {
-          "md5": "936eae1c0d81b6f14d27fcb63463b087"
+          "md5": "4175178fe6f9663556efe21541726f6e"
         }
       },
       "inputs": {
-        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": "936eae1c0d81b6f14d27fcb63463b087",
-        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037",
-        "04_scripts/勇士之心/device_info.json": "dc6f554a110bfc685d48fdd00c5d79b7"
-      }
+        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": "4175178fe6f9663556efe21541726f6e",
+        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037"
+      },
+      "note": "2026-09-21 热更重抓轮装机：官方包 CN=shan 与星光包 CN=StarryMagic 签名不同，覆盖安装返回 INSTALL_FAILED_UPDATE_INCOMPATIBLE，按用户明确指示（无需备份）卸载重装；设备 base.apk md5=4175178fe6f9663556efe21541726f6e 与产物一致；冷启动日志：hooked se::evalString rva=0x3138E4、game/battleLogic 两个 bundle 各自 splice、六钩子 + auto=yes 全部安装、无闪退；用户实机测试五项功能全部可用。"
+    },
+    {
+      "id": "regrab_hotupdate",
+      "name": "热更后只读重抓（files/res 全部 *.js + 官方 base.apk）",
+      "requires": [
+        "install"
+      ],
+      "command": "bash 04_scripts/勇士之心/regrab_ysxz_hotupdate.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/regrab_20260921/regrab_manifest.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/regrab_20260921/base.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-21 13:49:00",
+      "note": "23 个 *.js 的 md5 与设备端 res_js_md5_remote.txt 全一致；res 版本 localResVsersion=1.0.98.10；base.apk md5=c20f70c8ba52032eae10574f846b88d1。产物为可再生（重跑脚本即可，但设备需先回到官方包状态）。"
+    },
+    {
+      "id": "decrypt_hotupdate",
+      "name": "热更 JS 解密（*ze* + XXTEA 前16B + zlib）",
+      "requires": [
+        "regrab_hotupdate"
+      ],
+      "command": "python3.11 04_scripts/勇士之心/decrypt_hotupdate_ysxz.py",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "06_dumped/勇士之心/hotupdate_20260921/decrypt_summary.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "06_dumped/勇士之心/hotupdate_20260921/assets/battleLogic/index.js"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-21 13:52:00",
+      "note": "23/23 解密成功；battleLogic 307609B、game 6171927B、battleRender 291220B、main 1086879B（均为热更后新 res）。"
+    },
+    {
+      "id": "verify_discovery",
+      "name": "离线复现注入体指纹发现（旧/新 res × 旧/新指纹）",
+      "requires": [
+        "decrypt_hotupdate"
+      ],
+      "command": "python3.11 04_scripts/勇士之心/simulate_ysxz_discovery.py 06_dumped/勇士之心/hotupdate_20260921 --auto-fp NEW --fingerprints",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/regrab_20260921/discovery_sim_newres_newfp.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "09_test/勇士之心/regrab_20260921/discovery_sim_newres_oldfp.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-21 13:54:00",
+      "note": "对照结论：旧res+旧指纹=OK；新res+旧指纹=MISSING:auto（复现失效）；新res+新指纹=OK。"
     }
   ]
 }

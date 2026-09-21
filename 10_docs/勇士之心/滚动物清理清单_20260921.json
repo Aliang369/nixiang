@@ -1,0 +1,48 @@
+{
+  "game": "勇士之心",
+  "date": "2026-09-21",
+  "scope": "收官滚动物清理（仅本游戏路径）",
+  "kept_on_purpose": [
+    {
+      "path": "09_test/勇士之心/regrab_20260921/base.apk",
+      "size": 63864339,
+      "md5": "c20f70c8ba52032eae10574f846b88d1",
+      "why": "外科组装底包（官方 1.0.3 另一份构建）。设备现装星光包，官方包已无法再拉取 -> 保留为关键输入"
+    },
+    {
+      "path": "06_dumped/勇士之心/hotupdate_20260921/",
+      "why": "本轮热更 res 1.0.98.10 解密文本 = 版本档案/指纹对照依据，入 git"
+    },
+    {
+      "path": "06_dumped/勇士之心/jsc_decrypted/",
+      "why": "旧 res 解密文本（斌哥包来源，02_apks 已不在，无法再生），入 git"
+    },
+    {
+      "path": "10_docs/勇士之心/evidence_20260921/",
+      "why": "决定性证据行 + 最短复现命令"
+    }
+  ],
+  "removed": [
+    {
+      "path": "09_test/勇士之心/regrab_20260921/so",
+      "kind": "dir",
+      "files": 1,
+      "size": 35815880,
+      "reason": "从保留的 base.apk 可重新解出 libcocos2djs.so"
+    },
+    {
+      "path": "09_test/勇士之心/verify_20260921/logcat_live.log",
+      "kind": "file",
+      "size": 2911548,
+      "md5": "99ee1a089fb8cd775c8eb4428f2e1e8e",
+      "reason": "过程日志，不入库；决定性行已落 10_docs/勇士之心/evidence_20260921/README.md"
+    },
+    {
+      "path": "09_test/勇士之心/verify_20260921/logcat_final_dump.log",
+      "kind": "file",
+      "size": 1723897,
+      "md5": "3be217da89e75273f94bacb5b97c90f4",
+      "reason": "过程日志，不入库；决定性行已落 10_docs/勇士之心/evidence_20260921/README.md"
+    }
+  ]
+}
