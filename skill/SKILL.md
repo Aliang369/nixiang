@@ -36,7 +36,9 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
 ### 第二步：从斌哥包提取玩法（或从零抓点）
 1. `re-extract/SKILL.md` — 有没有斌哥包？→ 走对照还是从零
 2. `re-extract/binge-memdiff.md` — 斌哥壳 memdiff 完整流程（最通用）
-3. 没有斌哥包时按引擎走：
+3. **已有星光包在跑、游戏内热更后功能失效** → `re-extract/hotupdate-fingerprint-recheck.md`
+   （三查分流 → 只读重抓 → 离线复现发现逻辑先校准基线 → 两级指纹修复）
+4. 没有斌哥包时按引擎走：
    - `il2cpp-from-scratch.md` — Unity IL2CPP 从零抓点
    - `cocos-js-from-scratch.md` — Cocos JS 从零抓点 + jsc 解密
    - `hybridclr-runtime.md` — HybridCLR 热更抓点

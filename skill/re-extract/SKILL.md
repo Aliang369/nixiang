@@ -33,9 +33,20 @@
 
 ---
 
-## 第二步（无斌哥包）：按引擎走 from-scratch 路径
+## 特例：已有星光包在跑，游戏内热更后功能失效
 
-### 引擎判定速查表
+**不要重走抓点全流程，也不要先怀疑 native 偏移。** 先做"三查分流"（资源版本 / 核心 so SHA /
+玩法分包是否只在热更目录），确认是 JS 指纹漂移后走：
+
+→ **[hotupdate-fingerprint-recheck.md](./hotupdate-fingerprint-recheck.md)**
+（只读重抓先量后拉 → 解密 key 复用 → 离线复现发现逻辑**先校准基线** → 判定表三组对照
+定位漂移 → 两级指纹修复 → 装机后两个 REPORT 分工判据）
+
+指纹写法铁律见 `../re-implement/hook-rules.md` §24（禁止写死会被混淆器改名的短标识符）。
+
+---
+
+## 第二步（无斌哥包）：按引擎走 from-scratch 路径
 
 | 特征文件 | 引擎 | 玩法路径 | 跳转 |
 |----------|------|----------|------|
@@ -74,6 +85,7 @@
 | 文件 | 说明 |
 |------|------|
 | `binge-memdiff.md` | 斌哥壳抓点决策树（最核心：速查表 + 游戏档案表 + A/B/C/D 四路径 + 解密按需触发） |
+| `hotupdate-fingerprint-recheck.md` | **热更后功能失效**的指纹漂移重校（三查分流 + 先量后拉 + 离线复现先校准基线 + 两级指纹） |
 | `il2cpp-from-scratch.md` | Unity IL2CPP 从零抓点 |
 | `cocos-js-from-scratch.md` | Cocos JS 从零抓点 + jsc 解密 |
 | `hybridclr-runtime.md` | HybridCLR 热更抓点 |

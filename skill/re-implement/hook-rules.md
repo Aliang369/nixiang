@@ -223,3 +223,49 @@ struct ReentryGuard {
 - 每个游戏文档维护 **RVA ↔ so SHA 绑定表**：RVA 只在对应 so 哈希下有效；换渠道/换版本先比对 so 哈希，同源可直接复用 RVA（无悔华夏 4399 vs 九游实测字节一致 → RVA 零重定位）。
 - **任务开始第一步强制检索该游戏 `10_docs/{游戏}/` 历史文档**：已有的双库记载、否定结论、机制定案不重新推导。
 
+## 24. 指纹铁律：禁止用会被混淆器改名的标识符（2026-09-21 起）
+
+> 来源：勇士之心热更 res 1.0.98.10 功能失效——自动战斗指纹写死 `bVs(`，热更把 buff
+> 管理器方法改名为 `bXP`，`tryAuto` 全部落空，功能静默失效。**同一功能第二次翻车**
+> （09-15 是 bundle 归属判断错）。完整诊断路径见 `../re-extract/hotupdate-fingerprint-recheck.md`。
+
+**允许作为指纹（混淆器不动）**
+
+| 类型 | 示例 | 说明 |
+|---|---|---|
+| 字符串字面量 | `"isPlayer"`、`"finalHurtValue"` | TS 编译期字符串，改名不改字面量 |
+| 枚举成员全路径 | `BuffTableEnum.AUTO_BATTLE` | 枚举成员名保留 |
+| 明文属性/字段名 | `lockMinHP`、`maxApDefRate`、`hTimeScale` | 引擎/协议字段名不参与混淆 |
+| 明文 API 名 | `worldTimeScale`、`hitPauseTimeScale`、`prototype.update` | ECS/引擎 API |
+
+**禁止作为指纹**
+
+- 短混淆标识符：`bVs(`、`bXP(`、`fv`、`hX` —— **每次热更/换版本都可能变**。
+- 单一混淆名 + 无兜底：即使本次命中，下次仍会静默失效。
+- 整文件/整模块级判定：运行时是**按函数**遍历，粒度不对会得到假阴性。
+
+**写法要求（两级指纹 + 失败留痕）**
+
+```js
+// 主指纹：只用明文锚点
+var f = findFn(Cls.prototype, function (s) {
+    return s.indexOf("AUTO_BATTLE") >= 0 && s.indexOf("BuffTableEnum") >= 0 &&
+           s.indexOf("return") >= 0 && s.length < 600;
+});
+// 兜底指纹：结构特征（容忍任意方法名）
+if (!f) {
+    f = findFn(Cls.prototype, function (s) {
+        return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 400 &&
+               /return\s+[\w$.]+\.[\w$]+\s*\(/.test(s);
+    });
+}
+// 命中失败必须留日志：静默跳过是排查最贵的失败模式
+if (!f) {
+    var cand = findFn(Cls.prototype, function (s) { return s.indexOf("AUTO_BATTLE") >= 0; });
+    if (cand) log("!! auto-battle candidate .prototype." + cand + " rejected by fingerprint");
+    return;
+}
+```
+
+- 每加一条指纹，同步加一条**静态断言**（生成器/verify 脚本）禁止回退到写死标识符。
+- 菜单能开 ≠ 功能生效：功能失效优先按 §24 查指纹漂移，不要先怀疑 native 偏移。

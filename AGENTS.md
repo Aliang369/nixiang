@@ -12,7 +12,8 @@
 2. 按任务选首个入口，问题跨领域时再补相关章节，不限死为一门：
    - 新游戏 / 新版本接手 → `skill/re-analyze/SKILL.md`
    - 已有包提取玩法 / 抓点 → `skill/re-extract/SKILL.md`
-   - 写功能 / Hook → `skill/re-implement/SKILL.md`
+   - **已有星光包在跑、游戏内热更后功能失效 → `skill/re-extract/hotupdate-fingerprint-recheck.md`**（先三查分流：热更资源版本 / 核心 so SHA / 玩法分包是否只在热更目录；确认是 JS 指纹漂移再动手，不先改 native）
+   - 写功能 / Hook → `skill/re-implement/SKILL.md`（指纹铁律见 `re-implement/hook-rules.md` §24：禁止写死会被混淆器改名的短标识符）
    - 星光落地 / 切游戏 / 出包 → `skill/starry-mod/SKILL.md`
    - 机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`（第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在→走 `pipeline.sh`；不存在→用该游戏的 `surgical_*/inject_*` 脚本，仍禁直接敲 adb/apktool/zip/ndk-build；分析操作照常推理产出落 `10_docs/`）
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（扫描与插件按具体问题触发，不作无差别全扫）
@@ -60,6 +61,11 @@
 - 动态分析与工具选择见 `WORKFLOW.md` §5；Hook 技术约束（调原函数、共享入口过滤、主线程与对象访问等）见 `skill/re-implement/hook-rules.md`，本文件不复制技术正文。
 - 分类目录与例外见 `TOOLBOOK.md`「工作区目录结构规范」，包括 `01_tools/`、`99_archive/`、`04_scripts/_common/`、`10_docs/_templates/` 与状态索引 `10_docs/_state/`。
 - `02_apks/` 原包由用户手动管理；AI 不默认删除、整理或覆盖，操作须有指定文件的具体授权。普通清理清单排除整个 `02_apks/`。
+- **`02_apks/` 与 `08_output/` 的内容由用户手动增删，AI 不可控、也不可预判（2026-09-21 起）**：
+  - **开工时等用户声明**该游戏当前是否有原版包 / 星光包 / 上一轮正式包，把声明作为本次会话的输入边界；用户没说就先问一句，不要靠扫目录推断，也不要因为"上次文档写着有"就假定还在。
+  - 禁止为确认这两个目录是否存在而连续探测（`ls`/`find`/`md5` 逐个试）；用户声明即事实。
+  - 文档与游戏摘要里记录的包路径/hash 一律是**历史记录**，标注"用户可能已手动删除"；任何出包/装机步骤在动手前先确认当前是否有可用底包，缺底包就报告并停下，不自动重下、不自动替换。
+  - 需要底包而用户未提供时，优先询问用户提供；若设备上还装着官方原版，可只读拉取 `base.apk` 作为底包（需说明这是**不可再生**输入：设备一旦装上星光包，官方包就再也拉不回，须显式保留）。
 - `08_output/` 默认按用户管理，不自动整理；但当用户明确执行「收尾+正式包+清理+git」口令时，应将该次游戏的 `08_output/{游戏}` 裁剪为**唯一正式最终 APK**，使用 `04_scripts/_common/prune_output_final.sh` 保留指定包并记录被删清单，删除前校验签名与 hash。单独出包、普通清理或文档任务不得推定此项授权。
   - 口令中的 **「git」= 白名单提交 + 推送 origin/main 连体**（`archive_scoped_git.sh` 默认已推送），不需要再问「要不要推」；仅当用户明确说不要推时才 `--no-push`，并在汇报里写明「已提交未推送 + 远端落后 N 个提交」。push 冲突/网络失败保留本地提交并报告，不自动强推。
   - 收官汇报必须显式写出 git 结果：提交号 + 是否已推送 + 远端是否同步（`git status -sb` 无 `ahead`）。

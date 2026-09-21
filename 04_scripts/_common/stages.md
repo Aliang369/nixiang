@@ -98,6 +98,45 @@ bash 04_scripts/pipeline.sh <游戏> next             # 连跑到 install（buil
 - surgical 阶段的 `command` 配 `*_so_only.sh` 后端（每游戏 pipeline.json 自行声明；so_only 语义=已有底包只换 so 重签，不碰原包）
 - 装机后的**观测采集属分析操作**（非管线阶段，AI 按诊断需要执行并记录）：
   - `adb logcat -s StarryMagic StarryTrace`（功能/hook 日志）
+
+### 日志采集铁律（2026-09-21 起：省 token + 保信号）
+
+系统日志里存在**单行数千字符**的输出（如 `AppOrder{...}`、`ContextAware_*`），
+全缓冲 `grep` 一次就能吃掉大量上下文，且把真正的 hook 行淹没。规则：
+
+```bash
+# ✅ 首选：按 tag 白名单过滤（不读系统日志）
+adb -s $SERIAL logcat -v time -s Mod_Menu:V Ysxz:V StarryMagic:V MenuService:V
+
+# ✅ 需要离线归档：先落盘，再只 grep 文件、只 tail 命中行
+adb -s $SERIAL logcat -v time > /tmp/run.log
+grep -E 'MODMOD|Ysxz|splice|REPORT' /tmp/run.log | tail -40
+
+# ❌ 禁止：全缓冲 adb logcat -d | grep -Ei ...（会被超长系统行淹没/放大）
+```
+
+- 判定 hook 是否挂上，**只 grep 白名单关键字**：`hooked se::evalString`、`logic splice`、
+  `[MODMOD] names:`、`REPORT`、`feature #`；不读整段日志。
+- 收尾时把决定性行写进 `10_docs/{游戏}/evidence_日期/README.md`，**完整 logcat 不入库**。
+- 崩溃哨兵另算（只看 `data_app_crash`/`data_app_native_crash`/ANR 关键字），
+  与功能验证分开，不因"日志里还没出现 X"就改代码。
+
+### 设备批量拉取铁律（2026-09-21 起：先量后拉）
+
+逐文件 `adb exec-out` 在文件多时**必然超时且可能丢 stdout**（勇士之心实测：
+`files/res` 下 22,000 个 json，首版逐条拉取 10 分钟超时、零产出）。规则：
+
+```bash
+# 1) 先量：文件数 + 总量
+adb -s $SERIAL shell "su -c 'cd <dir> && find . -name \"*.js\" | wc -l; du -sh .'"
+# 2) >50 个文件或 >20MB → tar 单流一次拉走
+adb -s $SERIAL exec-out "su -c 'cd <dir> && tar -cf - \$(find . -name \"*.js\")'" > out.tar
+tar -xf out.tar -C <dest>
+```
+
+- 只拉**分析需要的类型**（`*.js` + `version`/`config`/清单），资源序列化数据
+  （`import/*.json`）不纳入分析拉取。
+- 拉完必须**逐文件比对设备端 md5**，数量与指纹全对才继续。
   - `adb shell ls /data/system/dropbox/`（闪退归因：`data_app_crash`=Java 层、`data_app_native_crash`=native 层，分开计数）
 - 迭代收敛后把最终 so 指纹与验证结论落 10_docs 游戏文档
 
@@ -119,10 +158,14 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    `10_docs/_state/games/{游戏}.md`，`current.md` 只同步一行摘要。反复反馈的
    功能补 `10_docs/_templates/功能验收卡.md`，多日志证据补
    `evidence_日期/README.md`。
-2. 正式包：核对指定正式包签名/哈希后，执行 `bash 04_scripts/_common/prune_output_final.sh 08_output/{游戏} {正式包} --apply --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json`；最终目录只保留一个正式 APK，被删候选包/idsig 的 hash/大小入清单
-3. 官包归位：02_apks（用户手动管理）
+2. 正式包：**先确认当前 `08_output/{游戏}` 里有哪些包**（用户手动增删，可能已空）。
+   核对指定正式包签名/哈希后，执行 `bash 04_scripts/_common/prune_output_final.sh 08_output/{游戏} {正式包} --apply --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json`；最终目录只保留一个正式 APK，被删候选包/idsig 的 hash/大小入清单。
+   目录为空或正式包不存在 → 报告并停下，不要从 `09_test` 里翻中间包冒充正式包。
+3. 官包归位：`02_apks`（用户手动管理，AI 不探测不整理）；本轮是否有原版以**用户声明**为准。
 4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；只清理本游戏路径；删前逐项核对再生依据；中文路径先 `git config core.quotepath false`）。
-   **清理后必须同步修正 `{游戏}/pipeline.json` 快照**（2026-09-19 补，弓箭传说2 踩坑；2026-09-20 起脚本化）：`archive` 执行前的 `check_stale` 会遍历**所有祖先阶段**的 `inputs` 快照逐个比对 md5，被清理删掉的中间产物（unsigned APK、`07_patched` 留证、用户手动删除的 `02_apks` 官包）会让它判定「上游链路过期」并拒绝执行——**清理越彻底越跑不过**。先跑 dry-run：
+   - **先看摘要的「本地产物与关键输入」表**：标"不可再生"的输入（设备拉取的官方底包、
+     唯一热更样本、已被用户删除的原包对应的解密产物）**一律保留**。
+   - **清理后必须同步修正 `{游戏}/pipeline.json` 快照**（2026-09-19 补，弓箭传说2 踩坑；2026-09-20 起脚本化）：`archive` 执行前的 `check_stale` 会遍历**所有祖先阶段**的 `inputs` 快照逐个比对 md5，被清理删掉的中间产物（unsigned APK、`07_patched` 留证、用户手动删除的 `02_apks` 官包）会让它判定「上游链路过期」并拒绝执行——**清理越彻底越跑不过**。先跑 dry-run：
 
    ```bash
    python3 04_scripts/_common/pipeline_record_cleanup.py \
@@ -132,6 +175,16 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    核对输出后加 `--apply`。脚本会把命中的 `verify` 改为 `not_exists`、删除
    对应 `artifacts`/下游 `inputs`，并把原 md5 追加到 stage `note`；`archive.verify`
    仍应显式声明应清理的中间产物。**顺序：清理 → 脚本修快照 → 跑 `archive`**。
+
+   **manifest schema 对照（2026-09-21 补，实测）**：脚本认 `removed_paths` /
+   `removed_roots` / `removed` 三种键，条目可以是字符串路径，也可以是带 `name` 的对象
+   （`name` 会补成 `08_output/{游戏}/{name}`）。`prune_output_final.sh` 产出的裁剪清单
+   用 `removed: [{name,size,md5}]`，**可直接喂给脚本**，无需手改：
+
+   ```bash
+   python3 04_scripts/_common/pipeline_record_cleanup.py \
+     --game {游戏} --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json --apply
+   ```
 5. 设备残留：真机会话按 TOOLBOOK「真机残留清理」回收证据与残留
 6. **git 固化**：优先用 `_common/archive_scoped_git.sh --path ... --message ...`，
    只提交本任务白名单，**提交后默认推送 origin/main**（用户口令「git」= 提交+推送连体，
@@ -144,8 +197,15 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    （`obj*/`、`.gradle/` 实测不中止）。星光项目收官只提交
    `app/src/main/jniLibs/arm64-v8a/libstarry_magic.so` 那份（gradle 实际打包的），
    其余同内容副本在收尾清单写明「忽略目录副本，保留未暂存」。
+   脚本有 `git diff --check` 空白门禁：**文件尾部多余空行会中止提交**，先归一化再提交。
+   查未提交改动时只查白名单路径，不要全量 `git status`（会把无关会话的改动全打出来）：
+   `git status --porcelain -- 04_scripts/{游戏} 10_docs/{游戏} 10_docs/_state`。
 7. 管线写回 `archive=done` 后，运行
    `_common/archive_close_git.sh --game {游戏}` 收口状态，避免手工补第二次提交。
+   **降级路径（2026-09-21 补）**：若该游戏 `pipeline.json` **没有 `archive` 阶段**
+   （存量游戏常见），第 7 步无对象——跳过 `archive_close_git.sh`，改为
+   在 `pipeline.json` 的 `notes` 与本轮新阶段 `note` 里记录收官事实（提交号/产物指纹），
+   并在汇报里注明"该游戏未接入 archive 阶段，无收口提交"。
 8. 验证收口：本任务相关路径无未提交改动；若工作区仍有无关改动，列表报告且不纳入提交。`current.md` 有本游戏单行索引 + 汇报 CLAIM/VERDICT/EVIDENCE。
 
 ## 现有脚本资产的角色
