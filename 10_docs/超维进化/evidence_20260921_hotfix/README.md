@@ -42,7 +42,13 @@ StarryMagic: 检测到 Cocos JS 引擎，ENGINE_COCOS / MOD 已就绪 engine=3 c
 
 反例（同日 13:07，干净安装首启）：停在隐私弹窗 60 s → `[Cwjh] early hook timeout` → 反篡改中和未装 → splice 后 9 s `WINDOW DIED`（无 Java 崩溃、crash buffer 空）。**重启即恢复**，见 `../热更重校_20260921.md` §0.1。
 
+## 功能验收（用户实测）
+
+用户 2026-09-21 13:24 手动实测后确认「功能没问题了」。日志侧证据 `play_session_menu_toggles_20260921.log`：
+32 条 `[Cwjh] feature #N=ON/OFF splice=2`（菜单逐项开关）、`[验证] grant ok exp=1790053894`（授权自恢复，未重输卡密）、
+期间无 JS 异常。战斗内数值本身为用户口径，客户端无独立数值证据。
+
 ## NOT PROVEN
 
-- 战斗内数值效果（×4 回复 / +60pp 暴击 / +35pp 闪避 / 秒杀 / 无敌）：等用户手动实测。
+- 战斗内数值的**量化**证据（回蓝/回血倍率、暴击/闪避百分点）：仅用户主观确认，无日志级量化。
 - 原生 checker 检出后是否向服务端上报：so 字符串全扫无 URL（沿用 20260905 结论，未推翻）。
