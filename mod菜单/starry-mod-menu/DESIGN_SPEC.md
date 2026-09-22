@@ -20,7 +20,7 @@
 
 | 表面 | 文件 | 要点 |
 |------|------|------|
-| 游戏菜单 | `app/src/main/assets/web/pages/mod-menu-v2.html` | 浮层面板、Toggle/Slider、星/阵装饰 |
+| 游戏菜单 | `app/src/main/java/com/starry/magic/menu/NativeMenuController.java` | 全原生 View 自绘（2026-09-22 星光紫升级：#8B5CF6 系 + 夜空渐变星尘面板 + 手风琴分类） |
 | 运营后台 | `auth-server/static/admin/index.html` | 全屏星空、毛玻璃侧栏/面板、控件高 **40 / 32px** |
 
 ## 后台专用补充

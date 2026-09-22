@@ -129,14 +129,11 @@ game_src/
 game_src/lib/arm64-v8a/libstarry_magic.so
 ```
 
-### 3.3 放入 HTML 资源
+### 3.3 注入前清理旧 HTML 资源
 
-把设计稿文件放到游戏 assets 目录：
+菜单 UI 已全原生（2026-08-13 起），无 HTML 资源；若旧包残留以下内容需删除：
 ```
-game_src/assets/web/pages/mod-menu-v2.html
-game_src/assets/web/images/background.jpg
-game_src/assets/web/images/magic-circle.jpg
-game_src/assets/web/images/mascot.jpg
+game_src/assets/web/   ← 整目录删除（旧 mod-menu-v2.html + images）
 ```
 
 ### 3.4 放入 smali 文件
@@ -150,7 +147,8 @@ game_src/smali/com/starry/magic/
 │   └── ModBridge.smali
 ├── menu/
 │   ├── MenuService.smali
-│   ├── PassThroughWebView.smali
+│   ├── NativeMenuController.smali
+│   ├── MagicRes.smali
 │   └── Preferences.smali
 └── cocos/                    ← Cocos 游戏用（DwctHooks / CocosJsBridge）
     ├── DwctHooks.smali
@@ -285,11 +283,12 @@ adb install game_mod_signed.apk
 - Android 6.0+ 必须运行时申请
 - 查看 logcat：`adb logcat -s MenuService:*`
 
-### 4.4 WebView 白屏
+### 4.4 菜单白屏 / 不显示（原生）
 
-- 检查 HTML 路径：`file:///android_asset/web/pages/mod-menu-v2.html`
-- 检查 assets 目录是否正确打包进 APK
-- 开启 WebView 调试：`WebView.setWebContentsDebuggingEnabled(true)`
+- 查看 logcat：`adb logcat -s NativeMenu:* MenuService:* ModBridge:*`
+- 确认 `auth game_id synced from native:` 与后台 `games.game_id` 一致
+- 确认 `bootstrap fetch` 返回 200（鉴权服务器可达）
+- 悬浮窗模式检查 `Settings.canDrawOverlays` 权限
 
 ### 4.5 .so 加载失败
 

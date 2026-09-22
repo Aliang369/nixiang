@@ -632,7 +632,7 @@ public final class NativeMenuController {
         } else {
             toastIcon.setImageDrawable(MagicRes.toastSparkles(appContext));
             toastIcon.setColorFilter(MagicRes.BRAND);
-            bg.setStroke(dp(1), 0x409B7ED8);
+            bg.setStroke(dp(1), 0x408B5CF6);
         }
     }
 
@@ -962,10 +962,10 @@ public final class NativeMenuController {
         shell.setElevation(dp(12));
 
         // 花藤挂在外壳四角，横跨描边（外探 + 内侧压边）
-        addVineCorner(shell, Gravity.TOP | Gravity.START, false, false);
-        addVineCorner(shell, Gravity.TOP | Gravity.END, true, false);
-        addVineCorner(shell, Gravity.BOTTOM | Gravity.START, false, true);
-        addVineCorner(shell, Gravity.BOTTOM | Gravity.END, true, true);
+        addVineCorner(shell, Gravity.TOP | Gravity.START);
+        addVineCorner(shell, Gravity.TOP | Gravity.END);
+        addVineCorner(shell, Gravity.BOTTOM | Gravity.START);
+        addVineCorner(shell, Gravity.BOTTOM | Gravity.END);
 
         LinearLayout box = new LinearLayout(appContext);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -1110,13 +1110,11 @@ public final class NativeMenuController {
         }
     }
 
-    private void addVineCorner(FrameLayout shell, int gravity, boolean flipX, boolean flipY) {
+    private void addVineCorner(FrameLayout shell, int gravity) {
         ImageView iv = new ImageView(appContext);
-        iv.setImageDrawable(MagicRes.vineCorner(appContext));
+        iv.setImageDrawable(MagicRes.vineCorner(appContext, gravity));
         iv.setAlpha(0.98f);
         iv.setScaleType(ImageView.ScaleType.FIT_XY);
-        if (flipX) iv.setScaleX(-1f);
-        if (flipY) iv.setScaleY(-1f);
         // 上下外探维持；左右再往里一点
         int overhang = dp(VINE_OVERHANG_DP);
         int mV = overhang - dp(14);
@@ -2104,58 +2102,53 @@ public final class NativeMenuController {
         }
     }
 
-    /** 居中标题 + 左右对称饰线，点击折叠/展开本组功能 */
+    /** 手风琴式分类（2026-09-22 重设计）：卡片头（左对齐名称+右侧折叠箭头）+ 缩进竖线内容区 */
     private void addCategorySection(String name) {
         LinearLayout section = new LinearLayout(appContext);
         section.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams secLp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        secLp.topMargin = dp(SPACE_TIGHT);
-        secLp.bottomMargin = 0;
+        secLp.topMargin = dp(SPACE);
+        secLp.bottomMargin = dp(SPACE_TIGHT);
         featureList.addView(section, secLp);
 
+        // ---- 分类头：整行可点的卡片（底色明示可交互）----
         LinearLayout header = new LinearLayout(appContext);
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
-        header.setPadding(dp(SPACE_TIGHT), dp(ROW_PAD_V), dp(SPACE_TIGHT), dp(ROW_PAD_V));
+        header.setPadding(dp(10), dp(9), dp(10), dp(9));
         header.setClickable(true);
         header.setFocusable(true);
+        header.setBackground(MagicRes.catHeaderBg(appContext));
         section.addView(header, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        ImageView left = new ImageView(appContext);
-        left.setImageDrawable(MagicRes.catOrnament(appContext));
-        left.setScaleType(ImageView.ScaleType.FIT_XY);
-        left.setAlpha(0.9f);
-        header.addView(left, new LinearLayout.LayoutParams(0, dp(12), 1f));
-
-        LinearLayout mid = new LinearLayout(appContext);
-        mid.setOrientation(LinearLayout.HORIZONTAL);
-        mid.setGravity(Gravity.CENTER);
-        mid.setPadding(dp(8), 0, dp(8), 0);
-        header.addView(mid, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
         TextView title = new TextView(appContext);
         title.setText(name);
-        title.setTextColor(MagicRes.BRAND);
+        title.setTextColor(MagicRes.INK);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         setFs(title, FS_SECTION);
-        title.setLetterSpacing(0.08f);
-        title.setGravity(Gravity.CENTER);
-        mid.addView(title);
+        title.setLetterSpacing(0.05f);
+        header.addView(title, new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
         ImageView chevron = new ImageView(appContext);
         chevron.setImageDrawable(MagicRes.catChevron(appContext));
-        chevron.setPadding(dp(4), 0, 0, 0);
-        mid.addView(chevron, new LinearLayout.LayoutParams(dp(14), dp(14)));
+        header.addView(chevron, new LinearLayout.LayoutParams(dp(16), dp(16)));
 
-        ImageView right = new ImageView(appContext);
-        right.setImageDrawable(MagicRes.catOrnament(appContext));
-        right.setScaleType(ImageView.ScaleType.FIT_XY);
-        right.setScaleX(-1f);
-        right.setAlpha(0.9f);
-        header.addView(right, new LinearLayout.LayoutParams(0, dp(12), 1f));
+        // ---- 内容区：左侧从属竖线 + 功能容器（缩进明示归属）----
+        LinearLayout indentRow = new LinearLayout(appContext);
+        indentRow.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams indLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        indLp.leftMargin = dp(6);
+        indLp.topMargin = dp(4);
+        section.addView(indentRow, indLp);
+
+        View guide = new View(appContext);
+        guide.setBackground(MagicRes.catIndentLine(appContext));
+        indentRow.addView(guide, new LinearLayout.LayoutParams(
+                Math.max(2, dp(2)), ViewGroup.LayoutParams.MATCH_PARENT));
 
         LinearLayout body = new LinearLayout(appContext);
         body.setOrientation(LinearLayout.VERTICAL);
@@ -2164,18 +2157,23 @@ public final class NativeMenuController {
         boolean expand = saved != null ? saved : true;
         categoryBuildIndex++;
         body.setVisibility(expand ? View.VISIBLE : View.GONE);
-        section.addView(body, new LinearLayout.LayoutParams(
+        body.setPadding(dp(8), 0, 0, 0);
+        indentRow.addView(body, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        indentRow.setVisibility(expand ? View.VISIBLE : View.GONE);
         currentCategoryBody = body;
 
         final boolean[] open = {expand};
-        // 对齐 HTML：chevron-down，展开时 rotate(180) 朝上，收起朝下
-        chevron.setRotation(expand ? 180f : 0f);
+        header.setSelected(expand);
+        // 手风琴惯例：展开 ▼(0°) / 收起 ▸(-90°)
+        chevron.setRotation(expand ? 0f : -90f);
         header.setOnClickListener(v -> {
             open[0] = !open[0];
             categoryOpenState.put(name, open[0]);
             body.setVisibility(open[0] ? View.VISIBLE : View.GONE);
-            chevron.animate().rotation(open[0] ? 180f : 0f).setDuration(160).start();
+            indentRow.setVisibility(open[0] ? View.VISIBLE : View.GONE);
+            header.setSelected(open[0]);
+            chevron.animate().rotation(open[0] ? 0f : -90f).setDuration(160).start();
             syncTrailingDividers(featureList);
             if (root != null) root.post(this::requestPanelRelayout);
             else requestPanelRelayout();
@@ -3063,10 +3061,10 @@ public final class NativeMenuController {
             cardLp.setMargins(overhang, overhang, overhang, overhang);
             shell.addView(card, cardLp);
             // 与主菜单同尺寸/同外探对齐
-            addVineCorner(shell, Gravity.TOP | Gravity.START, false, false);
-            addVineCorner(shell, Gravity.TOP | Gravity.END, true, false);
-            addVineCorner(shell, Gravity.BOTTOM | Gravity.START, false, true);
-            addVineCorner(shell, Gravity.BOTTOM | Gravity.END, true, true);
+            addVineCorner(shell, Gravity.TOP | Gravity.START);
+            addVineCorner(shell, Gravity.TOP | Gravity.END);
+            addVineCorner(shell, Gravity.BOTTOM | Gravity.START);
+            addVineCorner(shell, Gravity.BOTTOM | Gravity.END);
 
             announceLp = new WindowManager.LayoutParams(
                     cardW + overhang * 2,
