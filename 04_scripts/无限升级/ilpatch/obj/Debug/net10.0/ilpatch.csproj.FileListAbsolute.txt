@@ -18,3 +18,4 @@
 /Users/aliang/Documents/nixiang/04_scripts/无限升级/ilpatch/obj/Debug/net10.0/ilpatch.pdb
 /Users/aliang/Documents/nixiang/04_scripts/无限升级/ilpatch/obj/Debug/net10.0/ilpatch.genruntimeconfig.cache
 /Users/aliang/Documents/nixiang/04_scripts/无限升级/ilpatch/obj/Debug/net10.0/ref/ilpatch.dll
+/Users/aliang/Documents/nixiang/04_scripts/无限升级/ilpatch/obj/Debug/net10.0/ilpatch.sourcelink.json

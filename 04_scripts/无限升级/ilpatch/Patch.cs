@@ -13,6 +13,7 @@ using Mono.Cecil.Cil;
 internal static class Patcher
 {
     const string FILE_NAME = "starry_config.ini";
+    const string BLOCKED_RPC_FILE = "starry_blocked_rpc.txt";   // 静默防封：被拦 RPC 名诊断落盘（每名仅一次）
 
     static ModuleDefinition mod;
     static MethodReference mGetBool, mGetInt;
@@ -42,12 +43,12 @@ internal static class Patcher
         P(() => SendRTBlacklist(FindM(mod.GetType("NetBehaviour"), "SendRT")), "上报 SendRT 黑名单(10 fun)");
         P(() => SendRTBlacklist(FindM(mod.GetType("AccountMgr.LoginScene.AccountMgrClient"), "SendRT", 3)), "上报 AccountMgrClient.SendRT(byte,string,object[]) 黑名单(10 fun)");
         P(() => EarlyReturnVoid(FindM(mod.GetType("InfinityCoreNormal.NetConver"), "ForceBanGameAciton"), "block_report"), "上报 NetConver.ForceBanGameAciton");
+        // 注：COS 直传杀 / 实时云存档 no-op / 排行与数据同步拦截 均在 ilpatch_delta（v7.x 层）维护，本层不重复。
 
         // ===== 五、七项功能 =====
         P(() => EarlyReturnVoid(FindM(mod.GetType("PlayerMgr"), "OnHit"), "god"), "无敌 PlayerMgr.OnHit 入口返回");
         P(() => Oneshot(FindM(mod.GetType("Enemy"), "OnHit")), "秒杀 Enemy.OnHit Hp-=Hp");
         P(() => Oneshot(FindM(mod.GetType("BossEnemy"), "OnHit")), "秒杀 BossEnemy.OnHit Hp-=Hp");
-        P(() => EarlyReturnI4(FindM(mod.GetType("GameData"), "GetSkillUseAmount"), "no_skill_limit", 99), "无限技能 GetSkillUseAmount→99");
         P(() => EarlyReturnI8(FindM(mod.GetType("Calculater"), "CalculateSkillUpgrad"), "skill_free", 1), "技能免费 CalculateSkillUpgrad→1");
         P(() => EarlyReturnVoid(FindM(mod.GetType("SkillDetialWindow"), "QuickUpgrade"), "skill_free"), "技能免费 禁用一键升级(原生路径tagged-pointer崩溃,规避)");
         P(() => EarlyReturnBool(FindM(mod.GetType("SkillDetialWindow"), "CanLevelUp"), "skill_free", true), "技能合成 CanLevelUp→true");
@@ -55,6 +56,23 @@ internal static class Patcher
         P(() => AddItemDouble(FindM(mod.GetType("GameData"), "AddItem", 2)), "物品翻倍 AddItem 数量×2");
         P(() => AdsRewardMultiply(FindM(npm, "GetAdsRewardCallBack")), "广告奖励倍数 GetAdsRewardCallBack×N");
         P(() => ShowAdsFree(), "免广告 ShowAdsNewFlow.Show→AdsFree 原路径");
+        P(() => MijingFree(FindM(mod.GetType("EnemyGroupData"), "CanChanllage", 3)), "无限挑战秘境 CanChanllage→result=true");
+
+        // ===== 八、皮肤/功能全解锁（2026-09-23，key=skin_unlock / func_unlock）=====
+        {
+            var gd = mod.GetType("GameData");
+            var mGetAmountStr = gd.Methods.Single(x => x.Name == "GetAmount" && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.FullName == "System.String");
+            var mHasClothesShort = gd.Methods.Single(x => x.Name == "HasClothes" && x.Parameters.Count == 1 && x.Parameters[0].ParameterType.FullName == "System.Int16");
+            P(() => SkinFreeMysteryThread(mGetAmountStr), "皮肤解锁 御灵·神秘丝线 GetAmount→999");
+            P(() => EarlyReturnVoid(FindM(mod.GetType("GameData"), "MinusItem"), "skin_unlock"), "皮肤解锁 免扣神秘丝线 MinusItem 入口返回（否则丝线会变负）");
+            P(() => EarlyReturnBool(mHasClothesShort, "skin_unlock", true), "皮肤解锁 全时装 HasClothes(short)→true");
+            P(() => SkinFreeSkillSkins(FindM(mod.GetType("SkillDetialWindow"), "RefreshSkillSkins")), "皮肤解锁 全技能皮肤 allSkillSkins 补全(魔法弹/火球雨/天星地爆 × skin1/2)");
+            P(FuncUnlock, "功能解锁 FuntionButtonMgr.Check + UnLockChecker.CheckIsUnlock→true");
+            // 次元/异能全解锁（2026-09-23，key=func_unlock）
+            P(() => EarlyReturnBool(FindM(mod.GetType("CiYuan_DiffCell"), "IsUnLock"), "func_unlock", true), "功能解锁 全异能/难度 CiYuan_DiffCell.IsUnLock→true");
+            P(() => EarlyReturnBool(FindM(mod.GetType("WorldSelectCell"), "CanUse", 1), "func_unlock", true), "功能解锁 无视服务器「次元锁定」 WorldSelectCell.CanUse→true");
+            P(() => WorldCellUnlock(FindM(mod.GetType("WorldSelectCell"), "Show", 1)), "功能解锁 全次元 WorldSelectCell.Show 各出口 isUnLock=true+去锁标");
+        }
 
         // ===== 诊断模式2（WXSJ_DIAG=1）：配置读取链路插桩；正式包不带此变量重出 =====
         if (Environment.GetEnvironmentVariable("WXSJ_DIAG") == "1")
@@ -168,6 +186,15 @@ internal static class Patcher
     }
 
     static AssemblyNameReference Corlib() => mod.AssemblyReferences.First(r => r.Name == "mscorlib");
+
+    /// 按简单名全模块找类型（兼容带命名空间的类型，如 InfinityCore.FuntionButtonMgr）
+    static TypeDefinition FindType(string simpleName)
+    {
+        var list = mod.GetTypes().Where(t => t.Name == simpleName).ToList();
+        if (list.Count == 0) throw new Exception($"类型未找到: {simpleName}");
+        if (list.Count > 1) throw new Exception($"类型名不唯一: {simpleName} × {list.Count}");
+        return list[0];
+    }
 
     // ---------- StarryConfig ----------
     // 文件：<Application.persistentDataPath>/starry_config.ini，每行 key=value
@@ -367,6 +394,55 @@ internal static class Patcher
             TryStart = tP, TryEnd = hP, HandlerStart = hP, HandlerEnd = defPath, CatchType = tExc,
         });
         mGetInt = mGetDef;
+
+        // ---- 静默防封诊断：static void NoteBlockedRpc(string fun) ----
+        // 被 SendRT 白名单拦下的 RPC 名写入 files/starry_blocked_rpc.txt（每个名字只写一次 → 文件有界）
+        var tAl = new TypeReference("System.Collections", "ArrayList", mod, Corlib());
+        var fBlocked = new FieldDefinition("blocked", FieldAttributes.Static | FieldAttributes.Private, tAl);
+        cfgType.Fields.Add(fBlocked);
+        var mAlCtor = new MethodReference(".ctor", mod.TypeSystem.Void, tAl) { HasThis = true };
+        var mAlContains = new MethodReference("Contains", tBool, tAl) { HasThis = true };
+        mAlContains.Parameters.Add(new ParameterDefinition(tObj));
+        var mAlAdd = new MethodReference("Add", tI32, tAl) { HasThis = true };
+        mAlAdd.Parameters.Add(new ParameterDefinition(tObj));
+        var mAppend = new MethodReference("AppendAllText", mod.TypeSystem.Void, file) { HasThis = false };
+        mAppend.Parameters.Add(new ParameterDefinition(tStr));
+        mAppend.Parameters.Add(new ParameterDefinition(tStr));
+
+        var mNote = new MethodDefinition("NoteBlockedRpc",
+            MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.HideBySig, mod.TypeSystem.Void);
+        mNote.Parameters.Add(new ParameterDefinition("fun", ParameterAttributes.None, tStr));
+        cfgType.Methods.Add(mNote);
+        var nb = mNote.Body.Instructions;
+        var nbRet = Instruction.Create(OpCodes.Ret);
+        var nbHave = Instruction.Create(OpCodes.Ldsfld, fBlocked);
+        nb.Add(Instruction.Create(OpCodes.Ldsfld, fBlocked));
+        nb.Add(Instruction.Create(OpCodes.Brtrue, nbHave));
+        nb.Add(Instruction.Create(OpCodes.Newobj, mAlCtor));
+        nb.Add(Instruction.Create(OpCodes.Stsfld, fBlocked));
+        nb.Add(nbHave);
+        nb.Add(Instruction.Create(OpCodes.Ldarg_0));
+        nb.Add(Instruction.Create(OpCodes.Callvirt, mAlContains));
+        nb.Add(Instruction.Create(OpCodes.Brtrue, nbRet));
+        nb.Add(Instruction.Create(OpCodes.Ldsfld, fBlocked));
+        nb.Add(Instruction.Create(OpCodes.Ldarg_0));
+        nb.Add(Instruction.Create(OpCodes.Callvirt, mAlAdd));
+        nb.Add(Instruction.Create(OpCodes.Pop));
+        var tNbApp = Instruction.Create(OpCodes.Ldstr, "/data/user/0/com.xingzuodaoshi.infinityUpgrade/files/" + BLOCKED_RPC_FILE);
+        nb.Add(tNbApp);
+        nb.Add(Instruction.Create(OpCodes.Ldarg_0));
+        nb.Add(Instruction.Create(OpCodes.Ldstr, "\n"));
+        nb.Add(Instruction.Create(OpCodes.Call, mConcat));
+        nb.Add(Instruction.Create(OpCodes.Call, mAppend));
+        nb.Add(Instruction.Create(OpCodes.Leave, nbRet));
+        var hNbApp = Instruction.Create(OpCodes.Pop);
+        nb.Add(hNbApp);
+        nb.Add(Instruction.Create(OpCodes.Leave, nbRet));
+        nb.Add(nbRet);
+        mNote.Body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
+        {
+            TryStart = tNbApp, TryEnd = hNbApp, HandlerStart = hNbApp, HandlerEnd = nbRet, CatchType = tExc,
+        });
         Console.WriteLine("[cfg] StarryConfig created (2s cache, persistentDataPath/starry_config.ini)");
     }
 
@@ -640,5 +716,199 @@ internal static class Patcher
             Instruction.Create(OpCodes.Br, exitIns),
         };
         InsertAt(m, loopbr, seq);
+    }
+    /// 无限挑战秘境：EnemyGroupData.CanChanllage(out int current, out int limit, out bool result)
+    /// 是全部秘境入口的门禁（5 次/日上限 = dailyData.GetAdventureAmount(type) 与 diliyMaxAmount 比较）。
+    /// 在每个出口 ret 前把 result 强制为 true：保留原 current/limit 计算（UI 进度仍真实），
+    /// 仅让「次数耗尽」不再拒绝进入。3 个参数：ldarg.1=current ldarg.2=limit ldarg.3=result（bool&）。
+    static void MijingFree(MethodDefinition m)
+    {
+        var ins = m.Body.Instructions;
+        var rets = new List<Instruction>();
+        foreach (var x in ins) if (x.OpCode.Code == Code.Ret) rets.Add(x);
+        if (rets.Count == 0) throw new Exception("CanChanllage: no ret found");
+        foreach (var r in rets)
+        {
+            var seq = new List<Instruction>
+            {
+                Instruction.Create(OpCodes.Ldstr, "mijing_free"),
+                Instruction.Create(OpCodes.Call, mGetBool),
+                Instruction.Create(OpCodes.Brfalse, r),
+                Instruction.Create(OpCodes.Ldarg_3),
+                Instruction.Create(OpCodes.Ldc_I4_1),
+                Instruction.Create(OpCodes.Stind_I1),
+            };
+            InsertAt(m, ins.IndexOf(r), seq);
+        }
+        Console.WriteLine($"[mijing] CanChanllage: {rets.Count} exit(s) forced result=true");
+    }
+
+    // ---------- 皮肤/功能全解锁（2026-09-23）----------
+    /// 御灵皮肤：GameData.GetAmount("神秘丝线") 在 skin_unlock 开启时恒返回 999。
+    /// 原逻辑（PlayerSkinWindow 委托）：GetAmount("神秘丝线") < price → 弹「不足」；
+    /// 返回大值后走 WarningWindow 确认 → MinusItem（已被 item_keep 空转）→ clothesList.Add(id) 解锁。
+    static void SkinFreeMysteryThread(MethodDefinition m)
+    {
+        var first = m.Body.Instructions[0];
+        var seq = new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldarg_1),
+            Instruction.Create(OpCodes.Ldstr, "神秘丝线"),
+            Instruction.Create(OpCodes.Call, StrOpEquality()),
+            Instruction.Create(OpCodes.Brfalse, first),
+            Instruction.Create(OpCodes.Ldstr, "skin_unlock"),
+            Instruction.Create(OpCodes.Call, mGetBool),
+            Instruction.Create(OpCodes.Brfalse, first),
+            Instruction.Create(OpCodes.Ldc_I8, 999L),
+            Instruction.Create(OpCodes.Ret),
+        };
+        InsertAt(m, 0, seq);
+    }
+
+    /// System.String::op_Equality 自建 MemberRef（指向 mscorlib，与本文件 Debug.Log 同套路）
+    static MethodReference StrOpEquality()
+    {
+        var t = new TypeReference("System", "String", mod, Corlib());
+        var mr = new MethodReference("op_Equality", mod.TypeSystem.Boolean, t) { HasThis = false };
+        mr.Parameters.Add(new ParameterDefinition(t));
+        mr.Parameters.Add(new ParameterDefinition(t));
+        return mr;
+    }
+
+    /// 功能全解锁：功能按钮门禁（等级/创世/龙塔三档） + 英雄/秘境显示条件门禁
+    static void FuncUnlock()
+    {
+        EarlyReturnBool(FindM(FindType("FuntionButtonMgr"), "Check", 1), "func_unlock", true);
+        var uc = mod.GetType("UnLockChecker");
+        var mUnlock = uc.Methods.SingleOrDefault(x => x.Name == "CheckIsUnlock" && x.Parameters.Count == 1
+                        && x.Parameters[0].ParameterType.Name == "UnLockCondition");
+        if (mUnlock == null) throw new Exception("UnLockChecker.CheckIsUnlock(UnLockCondition) 未找到");
+        if (!mUnlock.IsStatic) throw new Exception("CheckIsUnlock 不再是静态方法，注入前提已变");
+        EarlyReturnBool(mUnlock, "func_unlock", true);
+    }
+
+    /// 技能皮肤全解锁：SkillDetialWindow.RefreshSkillSkins 入口补全 GameData.I.allSkillSkins
+    /// （Dictionary<string,List<int>>）。只补真正有皮肤资源的 3 个技能 × skin1/skin2；
+    /// 每项先 Contains 守卫 → 幂等，反复调用不会堆积重复项（否则 UI 会越点越多格）。
+    static void SkinFreeSkillSkins(MethodDefinition m)
+    {
+        var fI = FindRefField("GameData", "I");
+        var fAll = FindRefField("GameData", "allSkillSkins");
+        var mContainsKey = FindRefMethod(x => x.Name == "ContainsKey" && IsListOfIntDict(x.DeclaringType), "Dictionary<string,List<int>>.ContainsKey");
+        var mDictAdd = FindRefMethod(x => x.Name == "Add" && x.Parameters.Count == 2 && IsListOfIntDict(x.DeclaringType), "Dictionary<string,List<int>>.Add");
+        var mGetItem = FindRefMethod(x => x.Name == "get_Item" && IsListOfIntDict(x.DeclaringType), "Dictionary<string,List<int>>.get_Item");
+        var mListAdd = FindRefMethod(x => x.Name == "Add" && x.Parameters.Count == 1 && IsListOfInt(x.DeclaringType), "List<int>.Add");
+        var mListHas = FindRefMethod(x => x.Name == "Contains" && x.Parameters.Count == 1 && IsListOfInt(x.DeclaringType), "List<int>.Contains");
+        var mListCtor = FindRefMethod(x => x.Name == ".ctor" && x.Parameters.Count == 0 && IsListOfInt(x.DeclaringType), "List<int>.ctor");
+        var vDict = new VariableDefinition(fAll.FieldType);
+        m.Body.Variables.Add(vDict);
+        m.Body.InitLocals = true;
+        var first = m.Body.Instructions[0];
+        var seq = new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldstr, "skin_unlock"),
+            Instruction.Create(OpCodes.Call, mGetBool),
+            Instruction.Create(OpCodes.Brfalse, first),
+            Instruction.Create(OpCodes.Ldsfld, fI),
+            Instruction.Create(OpCodes.Ldfld, fAll),
+            Instruction.Create(OpCodes.Stloc, vDict),
+        };
+        foreach (var key in new[] { "魔法弹", "火球雨", "天星地爆" })
+        {
+            var have = Instruction.Create(OpCodes.Nop);
+            seq.Add(Instruction.Create(OpCodes.Ldloc, vDict));
+            seq.Add(Instruction.Create(OpCodes.Ldstr, key));
+            seq.Add(Instruction.Create(OpCodes.Callvirt, mContainsKey));
+            seq.Add(Instruction.Create(OpCodes.Brtrue, have));
+            seq.Add(Instruction.Create(OpCodes.Ldloc, vDict));
+            seq.Add(Instruction.Create(OpCodes.Ldstr, key));
+            seq.Add(Instruction.Create(OpCodes.Newobj, mListCtor));
+            seq.Add(Instruction.Create(OpCodes.Callvirt, mDictAdd));
+            seq.Add(have);
+            foreach (var idx in new[] { 1, 2 })
+            {
+                var skip = Instruction.Create(OpCodes.Nop);
+                seq.Add(Instruction.Create(OpCodes.Ldloc, vDict));
+                seq.Add(Instruction.Create(OpCodes.Ldstr, key));
+                seq.Add(Instruction.Create(OpCodes.Callvirt, mGetItem));
+                seq.Add(Instruction.Create(OpCodes.Ldc_I4, idx));
+                seq.Add(Instruction.Create(OpCodes.Callvirt, mListHas));
+                seq.Add(Instruction.Create(OpCodes.Brtrue, skip));
+                seq.Add(Instruction.Create(OpCodes.Ldloc, vDict));
+                seq.Add(Instruction.Create(OpCodes.Ldstr, key));
+                seq.Add(Instruction.Create(OpCodes.Callvirt, mGetItem));
+                seq.Add(Instruction.Create(OpCodes.Ldc_I4, idx));
+                seq.Add(Instruction.Create(OpCodes.Callvirt, mListAdd));
+                seq.Add(skip);
+            }
+        }
+        InsertAt(m, 0, seq);
+    }
+
+    static bool IsListOfInt(TypeReference t) =>
+        t is GenericInstanceType g && g.ElementType.Name == "List`1" &&
+        g.GenericArguments.Count == 1 && g.GenericArguments[0].FullName == "System.Int32";
+
+    static bool IsListOfIntDict(TypeReference t) =>
+        t is GenericInstanceType g && g.ElementType.Name == "Dictionary`2" && g.GenericArguments.Count == 2 &&
+        g.GenericArguments[0].FullName == "System.String" && IsListOfInt(g.GenericArguments[1]);
+
+    /// 全模块扫描方法引用（复用游戏自身 IL 里的 MemberRef，避免跨程序集 Import 出错）
+    static MethodReference FindRefMethod(Func<MethodReference, bool> pred, string what)
+    {
+        foreach (var t in mod.GetTypes())
+            foreach (var md in t.Methods)
+            {
+                if (!md.HasBody) continue;
+                foreach (var i in md.Body.Instructions)
+                    if (i.Operand is MethodReference mr && pred(mr)) return mr;
+            }
+        throw new Exception($"IL 方法引用未找到: {what}");
+    }
+
+    static FieldReference FindRefField(string typeName, string name)
+    {
+        foreach (var t in mod.GetTypes())
+            foreach (var md in t.Methods)
+            {
+                if (!md.HasBody) continue;
+                foreach (var i in md.Body.Instructions)
+                    if (i.Operand is FieldReference fr && fr.Name == name && fr.DeclaringType.Name == typeName) return fr;
+            }
+        throw new Exception($"IL 字段引用未找到: {typeName}.{name}");
+    }
+
+    /// 全次元解锁：`WorldSelectCell.Show(int)` 的每个出口前，把 isUnLock 置真并隐藏锁标。
+    /// 点击委托里的 `else if (isUnLock)` 分支（39594-39601）才是正确的跨世界切换路径
+    /// （会重写 GameData.I.currentLevelWorld），所以这里只放开 isUnLock，不改点击逻辑。
+    static void WorldCellUnlock(MethodDefinition m)
+    {
+        var fUnlock = FindRefField("WorldSelectCell", "isUnLock");
+        var fLock = FindRefField("WorldSelectCell", "lockMark");
+        var mSetActive = FindRefMethod(x => x.Name == "SetActive" && x.Parameters.Count == 1 &&
+            x.Parameters[0].ParameterType.FullName == "System.Boolean" &&
+            x.DeclaringType != null && x.DeclaringType.Name == "GameObject", "GameObject.SetActive(bool)");
+        var rets = m.Body.Instructions.Where(i => i.OpCode.Code == Mono.Cecil.Cil.Code.Ret).ToList();
+        foreach (var r in rets)
+        {
+            var idx = m.Body.Instructions.IndexOf(r);
+            var skip = Instruction.Create(OpCodes.Nop);
+            var seq = new List<Instruction>
+            {
+                Instruction.Create(OpCodes.Ldstr, "func_unlock"),
+                Instruction.Create(OpCodes.Call, mGetBool),
+                Instruction.Create(OpCodes.Brfalse, skip),
+                Instruction.Create(OpCodes.Ldarg_0),
+                Instruction.Create(OpCodes.Ldc_I4_1),
+                Instruction.Create(OpCodes.Stfld, fUnlock),
+                Instruction.Create(OpCodes.Ldarg_0),
+                Instruction.Create(OpCodes.Ldfld, fLock),
+                Instruction.Create(OpCodes.Ldc_I4_0),
+                Instruction.Create(OpCodes.Callvirt, mSetActive),
+                skip,
+            };
+            InsertAt(m, idx, seq);
+        }
+        Console.WriteLine($"[ciyuan] WorldSelectCell.Show: {rets.Count} exit(s) forced isUnLock=true");
     }
 }

@@ -654,6 +654,13 @@ static const char* g_featureList[] = {
     "Toggle_免广告",                     // 4  WXSJ_FEAT_FREEADS
     "Toggle_物品不减",                   // 5  WXSJ_FEAT_ITEMKEEP
     "Toggle_技能免费升级",               // 6  WXSJ_FEAT_SKILLFREE
+    "Toggle_广告奖励翻倍",               // 7  WXSJ_FEAT_ADSREWARD
+    "Toggle_物品翻倍",                   // 8  WXSJ_FEAT_ITEMDOUBLE
+    "Toggle_无限挑战秘境",               // 9  WXSJ_FEAT_MIJINGFREE
+    "Toggle_皮肤全解锁",                 // 10 WXSJ_FEAT_SKINUNLOCK
+    "Toggle_功能全解锁",                 // 11 WXSJ_FEAT_FUNCUNLOCK
+    // 静默防封（出站 RPC 白名单）不设按钮：与 block_report / COS 断链 / 执法 no-op 一样
+    // 无条件生效（δ 层 ilpatch_delta 里直接插门），玩家无需也无法关闭。
 #elif defined(STARRY_GAME_WGGLS)
     // 我嘎嘎乱杀（WgglsMod.h / 斌哥菜单三项）
     "Category_战斗",                     // 0

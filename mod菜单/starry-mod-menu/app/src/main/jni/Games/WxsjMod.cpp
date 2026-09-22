@@ -36,7 +36,7 @@
 #endif
 
 // ---- 版本绑定常量（vc1637 / 11.266018，来源见 WxsjMod.h）----
-static constexpr uintptr_t kExecRva = 0x2b54de4;  // 11.266020 / vc1641（2026-09-21 运行时 methodPointers 重解）
+static constexpr uintptr_t kExecRva = 0x2b890d8;  // 12.10701 / vc1644（2026-09-22 运行时映射重解；il2cpp_rx_2 +0x7460d8 prologue 实锤）
 // 方法入口前 16 字节（运行时明文 .text 实测），装机即验，不符=版本漂移→拒绝 hook
 static const uint8_t kExecPrologue[16] = {
     0xfe, 0x0f, 0x1c, 0xf8, 0xf8, 0x5f, 0x01, 0xa9,
@@ -88,6 +88,26 @@ extern "C" void StarryShowToast(const char* text);  // Main.cpp 导出，崩前�
 
 static std::atomic<bool> g_mismatchAborted{false};  // 官方热更失配：只崩一次
 
+// ---- DIAG 取证模式（-DWXSJ_DIAG_DUMP=1）：只落盘官方运行时 DLL，不替换/不崩 ----
+#if defined(WXSJ_DIAG_DUMP) && WXSJ_DIAG_DUMP
+static std::atomic<int> g_diagCount{0};
+static void DiagDumpDll(const uint8_t* bytes, int32_t len, const char* head) {
+    if (len < 400000) return;                 // 小框架 dll（mscorlib 等）略过
+    int n = g_diagCount.load();
+    if (n >= 8) return;
+    g_diagCount.store(n + 1);
+    std::string pkg = PkgName();
+    if (pkg.empty()) { LOGE(WXSJ_LOG " DIAG pkg empty"); return; }
+    char name[128];
+    snprintf(name, sizeof(name), "/data/user/0/%s/files/wxsj_dump_%d_%s.bin", pkg.c_str(), len, head);
+    FILE* f = fopen(name, "wb");
+    if (!f) { LOGE(WXSJ_LOG " DIAG cannot write %s", name); return; }
+    size_t w = fwrite(bytes, 1, (size_t)len, f);
+    fclose(f);
+    LOGI(WXSJ_LOG " DIAG dumped %zu/%d bytes -> %s", w, len, name);
+}
+#endif
+
 // ---- hook 函数：替换 targetfuntional 字节后调原函数 ----
 static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
     Exec_t orig = g_origExec;
@@ -103,6 +123,10 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
              g_replaceArmed.load(std::memory_order_relaxed) ? 1 : 0);
         const uint8_t* bytes = (const uint8_t*)data + 0x20;  // 数组数据@0x20
         const bool isDll = len >= 2 && bytes[0] == 'M' && bytes[1] == 'Z';
+#if defined(WXSJ_DIAG_DUMP) && WXSJ_DIAG_DUMP
+        // DIAG：只落盘官方运行时 dll（大数组），不替换、不崩
+        if (isDll) DiagDumpDll(bytes, len, head);
+#else
         if (g_replaceArmed.load(std::memory_order_relaxed)
                 && (len == kOrigDllLen || len == kLegacyDllLen) && isDll) {
             // 精确命中当前官方版长度：替换为内置 patched dll
@@ -148,6 +172,7 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
             usleep(1200 * 1000);  // 1.2s 让 toast 闪现
             abort();
         }
+#endif  // WXSJ_DIAG_DUMP
         if (g_mismatchAborted.load()) return orig(self, data, outP, mi);  // 已处置（竞态窗口）
     }
     return orig(self, data, outP, mi);
@@ -181,9 +206,11 @@ static bool TryHookOnce() {
         const std::string cfgPath = "/data/user/0/" + pkg + "/files/starry_config.ini";
         ReadFileLines(cfgPath, &lines);
         bool hasBr = false;
-        for (auto& l : lines)
+        for (auto& l : lines) {
             if (l.compare(0, 13, "block_report") == 0) hasBr = true;
+        }
         if (!hasBr) WriteConfigKey("block_report", "1");
+        // 静默防封（出站 RPC 白名单）不再走配置键：δ 层无条件插门，加载即生效。
     }
     return true;
 }
@@ -293,6 +320,12 @@ void Wxsj_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJ_FEAT_FREEADS:   WriteConfigKey("free_ads", on); break;
     case WXSJ_FEAT_ITEMKEEP:  WriteConfigKey("item_keep", on); break;
     case WXSJ_FEAT_SKILLFREE: WriteConfigKey("skill_free", on); break;
+    // 广告奖励翻倍：dll 侧 GetInt("ads_reward_x",1)，<=1 走原逻辑 → 开=2，关=1（不能写 0）
+    case WXSJ_FEAT_ADSREWARD:  WriteConfigKey("ads_reward_x", enabled ? "2" : "1"); break;
+    case WXSJ_FEAT_ITEMDOUBLE: WriteConfigKey("item_double", on); break;
+    case WXSJ_FEAT_MIJINGFREE: WriteConfigKey("mijing_free", on); break;
+    case WXSJ_FEAT_SKINUNLOCK: WriteConfigKey("skin_unlock", on); break;
+    case WXSJ_FEAT_FUNCUNLOCK: WriteConfigKey("func_unlock", on); break;
     default: break;
     }
     // 任一功能开启 → 武装字节替换（未开过 = 纯原版基线）

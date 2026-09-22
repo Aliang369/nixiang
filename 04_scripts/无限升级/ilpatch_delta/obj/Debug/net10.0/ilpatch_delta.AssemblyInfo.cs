@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ilpatch_delta")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ed61bcd4e1d9a0ebdda50b586d86a5263b563710")]
 [assembly: System.Reflection.AssemblyProductAttribute("ilpatch_delta")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ilpatch_delta")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
