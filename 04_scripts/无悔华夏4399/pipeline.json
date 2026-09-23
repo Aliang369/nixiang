@@ -1,7 +1,7 @@
 {
   "game": "无悔华夏4399",
   "version": "3.8.280 / vc33",
-  "notes": "4399 渠道 com.yhhy.whrhx.m4399 独立分析线。第一步只读提取真机现装单一 base APK；后续检查、dump、锚点与实现阶段按实际包分析结果追加。\n\n2026-09-23 续修：与九游同批——热更后科研立即完成修复（RVA 重校）、科研「资源不足」无条件执行（与 feat#9 同开关）、补做名臣科研、游戏内菜单换新版。4399 侧因真机已装星光包，改为「真机拉取底包 + 外科增量替换 classes4.dex 与 so」，运行时 libil2cpp.so 与九游同源 ⇒ RVA 直接复用。详见 10_docs/无悔华夏4399/实现进度_3.8.280_20260914.md §6。",
+  "notes": "4399 渠道 com.yhhy.whrhx.m4399 独立分析线。第一步只读提取真机现装单一 base APK；后续检查、dump、锚点与实现阶段按实际包分析结果追加。\n\n2026-09-23 续修：与九游同批——热更后科研立即完成修复（RVA 重校）、科研「资源不足」无条件执行（与 feat#9 同开关）、补做名臣科研、游戏内菜单换新版。4399 侧因真机已装星光包，改为「真机拉取底包 + 外科增量替换 classes4.dex 与 so」，运行时 libil2cpp.so 与九游同源 ⇒ RVA 直接复用。详见 10_docs/无悔华夏4399/实现进度_3.8.280_20260914.md §6。\n\n2026-09-23 22:52 装机后复查（本轮真机结论）：`install -r --no-incremental` 覆盖安装会让乐变**失效热更负载但不重下**，游戏退回映射 APK 内置 3.8.280 `libil2cpp.so`（199,563,384B md5 `d7c2b719a9e56d54479a017862751c57`）⇒ 全表失配（`whrhx_check_kexpect.py --so <内置so>` 命中 0 / 失配 46），`PolicyDataMgr.ExecutePolicy`/`UpdatePolicyTime`/`CountryData.GetResCnt`/`PolicyDataMgr.CheckPolicyDisable` 四方法按名亦失配 ⇒ 仅「立即完成」静默失效（不崩）。修复步骤：备份并重置 `/data/data/com.yhhy.whrhx.m4399/lebian/resourceInfo.cfg` 的 `currVer`(295→0) → force-stop + monkey 拉起**两次**（第一次只下到 1.8MB 的 `<md5>_file.zip` 会停）⇒ payload 重建：`lib/arm64/libil2cpp.so` 201,381,272B md5 `76e4418958efd53128d4eaeb4b7b4f60` ✓、`libstarry_magic.so` md5 `3ee2ed06b17f36e4eee64fe9cc067ee4` ✓、`resourceInfo.cfg` 回到 `currVer:295`。运行时复核（pid 27665）：maps 走 payload、`rva miss=0`、`eco hooks ready primary=4`、`policy panel gate ready tech=1 min=1 extra=1 res=1 can=1 disable=1 state=1`、`research hooks ready … execute=1 …` ⇒ 用户确认「功能没问题了」。详见 `10_docs/无悔华夏4399/实现进度_3.8.280_20260914.md` §7。",
   "params": {
     "game_id": "whhx4399",
     "package": "com.yhhy.whrhx.m4399",
