@@ -509,6 +509,10 @@
         {
           "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/evidence_1.1.6_20260923/README.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.6_20260923.md"
         }
       ],
       "note": "用户口令「功能没问题了，进行收尾+正式包+清理+git」已下达（2026-09-23）。本轮不动 1.1.5 阶段记录（它们是上一版的机械留档）；1.1.5 正式包已按口令裁剪，08_output/蛋壳战机 下现只剩 1.1.6 唯一正式包。清理：06_dumped/蛋壳战机/{il2cpp_dump_1.1.6/{script.json,il2cpp.h,DummyDll},il2cpp_dump_1.1.6.tool,static_inspect_1.1.6}、07_patched/蛋壳战机、mod菜单/starry-mod-menu/{obj_dkzj,libs_dkzj}，清理前 695,976 KiB → 清理后 128,116 KiB（释放约 554 MB）；不可再生输入 02_apks/蛋壳战机/蛋壳战机_1.1.6_official_from_device.apk 保留。pipeline_record_cleanup.py 对本轮裁剪清单返回「无需修改」（快照未引用被删路径）。完整 logcat 按 AGENTS 约定不入库，已移入 09_test/蛋壳战机/evidence_1.1.6_20260923/，10_docs 下只留决定性行（decisive_*.txt + README.md）。",
@@ -518,6 +522,9 @@
         },
         "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/正式包裁剪清单_1.1.6_20260923.json": {
           "md5": "5d4cbf186f1eeeb41707f74e6b1f9d0f"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.6_20260923.md": {
+          "md5": "8f387827df2912e9f065d7d2aaeb8006"
         }
       },
       "inputs": {
