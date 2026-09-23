@@ -1,6 +1,13 @@
 #include "obfuscate.h"
 #include "Utils.hpp"
 #include <xDL/xDL.h>
+#include "Includes/StarryStamp.h"
+
+// ===== 星光包构建戳（OTA 守卫判新旧用）=====
+// 定义放这里是因为 32/32 个 Android_*.mk 都编译 Includes/Utils.cpp，无需改各个 mk。
+extern "C" const char kStarryBuildStamp[] = STARRY_STAMP_MARKER;
+extern "C" const char *starry_build_stamp_marker(void) { return kStarryBuildStamp; }
+extern "C" long long starry_build_epoch(void) { return (long long) STARRY_BUILD_EPOCH; }
 
 std::map<std::string, uintptr_t> lib_links;
 bool mainLibLoaded = false;

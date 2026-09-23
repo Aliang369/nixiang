@@ -349,42 +349,36 @@ public final class PlayOtaManager {
     }
 
     /**
-     * 覆盖安装新星光包后：{@code PackageInfo.lastUpdateTime} 会变，但 {@code files/starry_ota/}
-     * 仍在 → {@link StarryNativeLoad} 会继续优先加载旧 OTA so，包内新 so 永远进不来。
-     * 在首次 load so 之前调用：若 APK 更新时间相对上次启动变了且本地有 OTA，则清空。
+     * 覆盖安装新星光包后：{@code files/starry_ota/} 里的旧补丁 so 会被优先加载，包内新 so
+     * 永远进不来。在首次 load so 之前调用：只比 so 内烘焙的构建戳（{@link OtaSoStamp}），
+     * 包内 so 比 OTA so 新才清。
+     *
+     * <p>不能用 {@code PackageInfo.lastUpdateTime} 判：乐变（免安装 overlay）会把它在真实
+     * 安装时间与 overlay APK 的 mtime 之间来回抖，旧实现据此误判「覆盖安装」，
+     * 每次冷启动都清掉玩家刚下载的补丁（无悔华夏 2026-09-24 实测）。
      *
      * @return true 表示本次清掉了本地 OTA
      */
     public static boolean invalidateOtaIfApkUpdated(Context ctx) {
         if (ctx == null) return false;
-        long nowLu;
+        File otaSo;
         try {
-            android.content.pm.PackageInfo pi =
-                    ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0);
-            nowLu = pi.lastUpdateTime;
+            otaSo = StarryNativeLoad.findOtaSo(ctx);
         } catch (Throwable t) {
-            Log.w(TAG, "invalidateOtaIfApkUpdated: no PackageInfo", t);
+            Log.w(TAG, "invalidateOtaIfApkUpdated: findOtaSo", t);
             return false;
         }
-        try {
-            Preferences.with(ctx);
-        } catch (Throwable t) {
-            Log.w(TAG, "invalidateOtaIfApkUpdated: prefs", t);
-            return false;
-        }
-        long stored = Preferences.getOtaApkLastUpdateTime();
-        boolean hasOta = hasLocalOtaFiles(ctx);
-        // 仅当 APK 变新（覆盖安装）才清 OTA。nowLu!=stored 含「变小/乐变抖动」会误删刚下的补丁。
-        if (stored != 0L && nowLu > stored && hasOta) {
-            Log.i(TAG, "APK lastUpdateTime " + stored + " -> " + nowLu
-                    + " (newer), clearing starry_ota so APK so can load");
+        if (otaSo == null || !otaSo.isFile()) return false;   // 没有 OTA so 就没什么可清
+        long apkStamp = OtaSoStamp.apkStamp(ctx);
+        long otaStamp = OtaSoStamp.of(otaSo);
+        // 包内 so 更新（真·覆盖安装）→ 清；戳相同（同源重建）或 OTA 更新 → 保留。
+        if (apkStamp > 0L && (otaStamp == 0L || apkStamp > otaStamp)) {
+            Log.i(TAG, "APK so stamp " + apkStamp + " > OTA so stamp " + otaStamp
+                    + ", clearing starry_ota so APK so can load");
             clearLocalOta(ctx);
-            Preferences.setOtaApkLastUpdateTime(nowLu);
             return true;
         }
-        if (stored != nowLu) {
-            Preferences.setOtaApkLastUpdateTime(nowLu);
-        }
+        Log.i(TAG, "keep OTA: apkSoStamp=" + apkStamp + " otaSoStamp=" + otaStamp);
         return false;
     }
 

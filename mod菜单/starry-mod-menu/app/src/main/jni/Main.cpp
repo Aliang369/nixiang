@@ -40,6 +40,7 @@
 #include "Includes/Logger.h"
 #include "CertPinned.h"        // 证书固定公钥（编译期烘焙，AuthClient 经桥接读取）
 #include "Includes/Utils.hpp"
+#include "Includes/StarryStamp.h"   // 构建戳（OTA 守卫判包内 so 与 OTA so 新旧）
 #include "Includes/SecStrings.hpp"
 
 #include "Includes/Macros.h"   // HOOK / PATCH / RESTORE 宏
@@ -2518,6 +2519,12 @@ static jboolean mb_nativeVerifyOtaSig(JNIEnv* env, jclass clazz,
     return ok ? JNI_TRUE : JNI_FALSE;
 }
 
+// ===== 构建戳：so 内烘焙的 epoch 字面量（OTA 守卫判包内 so / OTA so 新旧）=====
+// 格式 "STARRYSTAMP1:EPOCH=<秒>;"，Java 侧也直接扫 so 字节，这里给日志/自检用。
+static jstring mb_nativeGetBuildStamp(JNIEnv* env, jclass clazz) {
+    return env->NewStringUTF(starry_build_stamp_marker());
+}
+
 // ===== OTA patch.json 应用：按当前游戏分发到 Xxx_ApplyPlayPatch =====
 static void mb_nativeApplyPlayPatch(JNIEnv* env, jclass clazz,
         jstring jJson) {
@@ -2859,10 +2866,11 @@ static bool registerBridgeNatives(JNIEnv* env) {
     ok = regOne(env, bridge, OBFUSCATE("nativeApplyPlayPatch"),    OBFUSCATE("(Ljava/lang/String;)V"),                                (void*)mb_nativeApplyPlayPatch) && ok;
     ok = regOne(env, bridge, OBFUSCATE("nativeGetPinnedCert"),    OBFUSCATE("()[B"),                                                 (void*)mb_nativeGetPinnedCert) && ok;
     ok = regOne(env, bridge, OBFUSCATE("nativeBridgeRegistered"),  OBFUSCATE("()Z"),                                                  (void*)mb_bridgeRegistered) && ok;
+    ok = regOne(env, bridge, OBFUSCATE("nativeGetBuildStamp"),     OBFUSCATE("()Ljava/lang/String;"),                                 (void*)mb_nativeGetBuildStamp) && ok;
     if (ok) {
         done = true;
         g_bridge_registered_ok = true;
-        LOGI("[桥接] RegisterNatives 19/19 全部成功");
+        LOGI("[桥接] RegisterNatives 20/20 全部成功");
     }
     return ok;
 }

@@ -152,6 +152,17 @@ public class ModBridge {
     public static native void nativeApplyPlayPatch(String json);
     /** so 内烘焙的证书固定公钥（PEM 字节）；AuthClient 专用，assets 路径已废弃 */
     public static native byte[] nativeGetPinnedCert();
+    /** so 内烘焙的构建戳字面量 "STARRYSTAMP1:EPOCH=<秒>;"（OTA 守卫判新旧） */
+    private static native String nativeGetBuildStamp();
+
+    /** so 内烘焙的构建戳；老包或异常返回 null */
+    public static String getBuildStamp() {
+        try {
+            return nativeGetBuildStamp();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
 
     /** 用 so 内烘焙的 game_id 覆盖 prefs（唯一运行时真相） */
     public static void syncAuthGameIdFromNative() {

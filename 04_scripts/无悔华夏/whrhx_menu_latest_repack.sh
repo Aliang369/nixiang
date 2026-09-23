@@ -24,7 +24,7 @@ SO="${WHRHX_SO:-$NIXIANG/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarr
 DEX="${WHRHX_MENU_DEX:-$NIXIANG/07_patched/无悔华夏/menu_latest_20260923/classes2.dex}"
 DEX_SHA_EXPECT="${WHRHX_MENU_DEX_SHA:-ef84725fc724c7027775d7876ed0fc94058244cf7bfe737a1eaf08117fd54579}"
 OUT_DIR="$NIXIANG/08_output/无悔华夏"
-OUT_APK="$OUT_DIR/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk"
+OUT_APK="${WHRHX_OUT_APK:-$OUT_DIR/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk}"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"
@@ -42,6 +42,17 @@ BASE_SHA="$(shasum -a 256 "$BASE_APK" | awk '{print $1}')"
   echo "ERROR: unexpected base apk sha256=$BASE_SHA (want $BASE_SHA_EXPECT)" >&2
   exit 1
 }
+
+# --- 构建戳门禁：本轮 OTA 守卫修复要求 so 与 dex 都带 STARRYSTAMP1 戳 ---
+# （守卫改成比对 so 内戳，无戳的 so 会被判为「比包内旧」而每次冷启动清掉 OTA；
+#   旧包复现可 WHRHX_REQUIRE_STAMP=0 关掉）
+if [[ "${WHRHX_REQUIRE_STAMP:-1}" == "1" ]]; then
+  LC_ALL=C grep -a -q "STARRYSTAMP1:EPOCH=" "$SO" || {
+    echo "ERROR: mod so missing STARRYSTAMP1 build stamp（OTA 守卫会反复清补丁）" >&2; exit 1; }
+  LC_ALL=C grep -a -q "STARRYSTAMP1:EPOCH=" "$DEX" || {
+    echo "ERROR: menu dex missing OtaSoStamp stamp literal" >&2; exit 1; }
+  echo "[menu_latest] build stamp = $(LC_ALL=C grep -a -o 'STARRYSTAMP1:EPOCH=[0-9]*;' "$SO" | head -1)"
+fi
 
 # --- so 标签门禁：本轮科研真门 hook 标记必须存在 ---
 for tag in "[Whrhx]" "policy panel gate ready" "PolicyDataMgr.GetPolicyItemShowState" "科研立即完成"; do

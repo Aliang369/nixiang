@@ -4,6 +4,8 @@ import android.content.Context;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -16,8 +18,59 @@ public final class StarryNativeLoad {
     private static final String TAG = "StarryNativeLoad";
     private static final AtomicBoolean DONE = new AtomicBoolean(false);
     private static volatile String loadedPath = "";
+    /** 每个 classloader 独占的副本名前缀/槽位（乐变 overlay 二次实例化 Application 时用）。 */
+    private static final String COPY_PREFIX = "libstarry_magic_ld_";
+    private static final String COPY_SLOT =
+            Long.toHexString(new java.util.Random().nextLong() & 0x7fffffffffffffffL);
 
     private StarryNativeLoad() {}
+
+    private static String copyName() {
+        return COPY_PREFIX + COPY_SLOT + ".so";
+    }
+
+    /**
+     * 同一进程内乐变 overlay 会把 Application/Service 二次实例化到另一个 classloader，
+     * 而 Android nativeloader 禁止同一个 so <b>文件</b>被两个 classloader 打开
+     * （{@code UnsatisfiedLinkError: Shared library ... already opened by ClassLoader ...}）。
+     * 这里给本 classloader 复制一份独占副本再 load —— 内容仍是 OTA so，
+     * 不退回包内旧 so（差异探针语义不变）。
+     */
+    private static File copyForThisClassLoader(File ota) {
+        try {
+            File dir = ota.getParentFile();
+            if (dir == null || !dir.isDirectory()) return null;
+            File[] kids = dir.listFiles();
+            if (kids != null) {
+                long now = System.currentTimeMillis();
+                for (File f : kids) {
+                    String n = f.getName();
+                    if (!n.startsWith(COPY_PREFIX) || n.equals(copyName())) continue;
+                    // 已 dlopen 的副本删掉也安全（inode 仍在）；只清 60s 前的，避开并发加载
+                    if (now - f.lastModified() > 60000L) {
+                        //noinspection ResultOfMethodCallIgnored
+                        f.delete();
+                    }
+                }
+            }
+            File dst = new File(dir, copyName());
+            FileInputStream in = new FileInputStream(ota);
+            FileOutputStream out = new FileOutputStream(dst);
+            try {
+                byte[] buf = new byte[64 * 1024];
+                int n;
+                while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            } finally {
+                try { in.close(); } catch (Throwable ignored) { }
+                try { out.close(); } catch (Throwable ignored) { }
+            }
+            if (!dst.isFile() || dst.length() != ota.length()) return null;
+            return dst;
+        } catch (Throwable t) {
+            Log.w(TAG, "copy OTA so for classloader failed: " + t);
+            return null;
+        }
+    }
 
     public static boolean isDone() {
         return DONE.get();
@@ -76,7 +129,31 @@ public final class StarryNativeLoad {
                     return true;
                 } catch (Throwable t) {
                     Log.e(TAG, "load OTA so failed: " + ota.getAbsolutePath(), t);
-                    // 有 OTA 文件却 load 失败时，不要静默退回 APK（否则差异探针永远看不到）
+                    // 多 classloader 冲突（乐变 overlay 二次实例化 Application/Service）：
+                    // 同一 so 文件不能被两个 classloader 打开 → 复制本 classloader 独占副本再 load。
+                    File copy = copyForThisClassLoader(ota);
+                    if (copy != null) {
+                        try {
+                            System.load(copy.getAbsolutePath());
+                            loadedPath = copy.getAbsolutePath();
+                            DONE.set(true);
+                            Log.i(TAG, "loaded OTA so (classloader-private copy): " + loadedPath);
+                            return true;
+                        } catch (Throwable t2) {
+                            Log.e(TAG, "load OTA so copy failed: " + copy.getAbsolutePath(), t2);
+                        }
+                    }
+                    // 最后兜底：loadLibrary 本 classloader 自带的那份（包内 / 乐变负载内）。
+                    // 宁可菜单可用，也不要在这个 classloader 里留一个没 native 的死菜单。
+                    try {
+                        System.loadLibrary("starry_magic");
+                        loadedPath = "loadLibrary(starry_magic)";
+                        DONE.set(true);
+                        Log.w(TAG, "OTA so unusable in this classloader; loaded local so via loadLibrary");
+                        return true;
+                    } catch (UnsatisfiedLinkError e) {
+                        Log.e(TAG, "loadLibrary starry_magic failed", e);
+                    }
                     return false;
                 }
             }
