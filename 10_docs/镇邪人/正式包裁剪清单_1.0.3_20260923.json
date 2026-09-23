@@ -1,0 +1,45 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/镇邪人",
+  "keep": "镇邪人_1.0.3_ca0d4_star-releaseSigned.apk",
+  "keep_size": 106069153,
+  "keep_md5": "59a6e755e8ddea2232c6a9e3ee375f62",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "镇邪人_1.0.3_ca0d4_star-uberdebug.apk.idsig",
+      "size": 845306,
+      "md5": "787e8df27d5609e396a611698e1219a4"
+    },
+    {
+      "name": "镇邪人_1.0.3_ca0d4_star-releaseSigned.apk.idsig",
+      "size": 845339,
+      "md5": "a1d9f3ecd18dceb7e878cdbf569788f4"
+    },
+    {
+      "name": "镇邪人_1.0.3_ca0d4_menu-latest-releaseSigned.apk.idsig",
+      "size": 845306,
+      "md5": "47c5e3dc5c6fdd59dd5168579cf27d6b"
+    },
+    {
+      "name": "镇邪人_1.0.3_ca0d4_menu-latest-releaseSigned.apk",
+      "size": 106069157,
+      "md5": "830ab40f23e3d7f3a553aeb6a6ab0bb1"
+    },
+    {
+      "name": "镇邪人_1.0.3_ca0d4_star-uberdebug.apk",
+      "size": 106069157,
+      "md5": "3656f9cbe48c3f35c9603264c2fea263"
+    },
+    {
+      "name": "镇邪人_1.0.3_ca0d4_safe-releaseSigned.apk",
+      "size": 104631461,
+      "md5": "4f5ce594bd263e10c594f29135a56a94"
+    },
+    {
+      "name": "镇邪人_1.0.3_ca0d4_safe-releaseSigned.apk.idsig",
+      "size": 833018,
+      "md5": "f3bb2deacef0e7ff64f99df94f742b38"
+    }
+  ],
+  "removed_count": 7
+}

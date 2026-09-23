@@ -6,6 +6,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SRC="$ROOT/06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js"
+# 收官清理后 06_dumped 的大二进制会被删除（滚动物清理），明文 src 兜底取 09_test 的解密留存副本。
+[[ -f "$SRC" ]] || SRC="$ROOT/09_test/镇邪人_orig_20260923/decrypt_ca0d4/index.ca0d4.js"
 CONFIG_SRC="$ROOT/06_dumped/镇邪人/remote_ca0d4/config.ca0d4.json"
 OUT_DIR="$ROOT/07_patched/镇邪人/ca0d4"
 OUT_JS="$OUT_DIR/index.ca0d4.safe.js"

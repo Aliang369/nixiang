@@ -1,0 +1,40 @@
+{
+  "game": "镇邪人",
+  "date": "2026-09-23",
+  "reason": "用户口令「收尾+正式包+清理+git」第 4 步滚动物清理：删 06 大二进制 / 07 大包（只清本游戏路径，删前逐项核对再生依据）",
+  "removed_paths": [
+    "06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js",
+    "07_patched/镇邪人/ca0d4"
+  ],
+  "removed": [
+    {
+      "path": "06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js",
+      "size": 25147378,
+      "md5": "a19c15fcb4a07249735fa54e3cf318bf",
+      "note": "ca0d4 明文 src（git 已有文本；同 md5 副本留在 09_test/镇邪人_orig_20260923/decrypt_ca0d4/index.ca0d4.js，再生依据=唯一热更样本 09_test/镇邪人_orig_20260923/hotupdate 136M + XXTEA key）"
+    },
+    {
+      "path": "07_patched/镇邪人/ca0d4/index.ca0d4.safe.js",
+      "size": 25148850,
+      "md5": "184fdb2b052c25b0cdcac8e4ad57cf4d"
+    },
+    {
+      "path": "07_patched/镇邪人/ca0d4/index.ca0d4.jsc",
+      "size": 4242672,
+      "md5": "8ffe1e0994694f76a2e69f78670e8b41"
+    },
+    {
+      "path": "07_patched/镇邪人/ca0d4/config.ca0d4.json",
+      "size": 220,
+      "md5": "8a7a46cce9a525657672f167d9377a77"
+    }
+  ],
+  "removed_bytes": 54514120,
+  "kept": [
+    {"path": "09_test/镇邪人_orig_20260923/apk/orig_base.apk", "why": "不可再生：设备拉取的官方原版底包（包重建唯一输入）"},
+    {"path": "09_test/镇邪人_orig_20260923/hotupdate", "why": "不可再生：唯一热更样本（ca0d4 明文与补丁的再生依据）"},
+    {"path": "09_test/镇邪人_crash_20260923/apk/base.apk", "why": "不可再生：星光底包（build_package 默认 ZXR_BASE_APK）"},
+    {"path": "07_patched/镇邪人/menu_latest", "why": "菜单产物留档（classes8.dex / libstarry_magic.so / libc++_shared.so / starlight.crt）"},
+    {"path": "06_dumped/镇邪人/remote_ca0d4/config.ca0d4.json", "why": "220B 配置输入，非大二进制"}
+  ]
+}

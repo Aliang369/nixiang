@@ -105,8 +105,13 @@ def main() -> int:
         if isinstance(artifacts, dict):
             for path in list(artifacts):
                 for removed_path in removed:
+                    # 同一 artifact 可能同时命中父目录与具体文件两条 removed 条目；
+                    # 前一条已把它删掉，这里必须跳过，否则 artifacts[path] 抛 KeyError。
+                    if path not in artifacts:
+                        break
                     if matches(path, removed_path):
-                        md5 = artifacts[path].get("md5") if isinstance(artifacts[path], dict) else None
+                        entry = artifacts[path]
+                        md5 = entry.get("md5") if isinstance(entry, dict) else None
                         print(f"{sid}: remove artifact: {path}" + (f" (md5={md5})" if md5 else ""))
                         del artifacts[path]
                         changed += 1
