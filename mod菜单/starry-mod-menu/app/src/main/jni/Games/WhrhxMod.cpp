@@ -35,34 +35,36 @@ using Il2Cpp::GetApi;
 enum : uintptr_t {
     // 经济类官版 RVA 已删（2026-08-30）：官版会话身份链不可用，经济功能本就惰性，
     // 挂钩无意义；战斗/加速官版路径保留（官版首会话真生效，v9/v10 验证）。
-    RVA_BATTLE_SET_END    = 0x409C2B8,
-    RVA_BATTLE_START      = 0x40A0FEC,
-    RVA_BATTLE_UPDATE_TIME = 0x409BE4C,
-    RVA_GET_DELTA_TIME    = 0x8B6C984,
-    // 乐变热更后常见 190MB libil2cpp（sha b19435a5…）——官方 RVA 序言 miss，用下列对照
-    // 九游 3.8.295 乐变 190MB（sha d7b0817c…）RVA（2026-09-12 dump.cs + 序言实锤）
-    RVA_COST_SINGLE_LEB   = 0x681DA7C,
-    RVA_COST_RES_LEB      = 0x682CBC8,
-    RVA_CHECK_RES_LEB     = 0x682CDB4,
-    RVA_GET_DELTA_LEB     = 0x8BD2100,  // 官方 0x8B6C984 在乐变上是 stub(B)，真身在此
-    RVA_ON_BATTLE_END_LEB = 0x3BEF018,  // BattleUtil.OnBattleEnd；官方 SetEnd 页为 0
-    // 2026-08-29 新 dump（乐变 b19435a5…，与 8/28 记录同构建）：资源发放 + 玩家身份
-    RVA_ADD_RES_LEB       = 0x31EA5AC,  // CountryData.AddRes(resType, cnt, isTrading) — 物资车/资源车发放终点的候选
-    RVA_ADD_RES_CAMPAIGN  = 0x3E83634,  // CampaignData.AddRes(resType, cnt)
-    RVA_COUNTRY_ID_OFF    = 0xE0,       // CountryData 国家 id 字段偏移（旧 0x38 错，作废）
-    RVA_MGR_COUNTRY_ID_OFF = 0x30,       // CountryDataMgr.m_countryId（IsPlayerCountry 反汇编比对源）
+    // ★ 2026-09-23 热更重校：以下"官版"值即官方 so（APK 内置 221MB）在新构建下的真身，
+    //   乐变 OTA 那份 201MB 与本簇 RVA 同值（两者同构建）；旧值整体作废。
+    RVA_BATTLE_SET_END    = 0x33951C8,  // BattleControlMgr.SetEnd(bool,bool,int,int,int)
+    RVA_BATTLE_START      = 0x339A9E4,  // BattleControlMgr.StartBattle
+    RVA_BATTLE_UPDATE_TIME = 0x3394D5C, // BattleControlMgr.UpdateBattleTime
+    RVA_GET_DELTA_TIME    = 0x8BB9860,  // UnityEngine.Time.get_deltaTime()
+    // 乐变热更后常见 190MB libil2cpp——官方 RVA 序言 miss，用下列对照
+    // 九游 3.8.280 乐变 201MB（sha c04afff4…，2026-09-23 OTA 热更落地）
+    RVA_COST_SINGLE_LEB   = 0x325E210,  // CountryData.CostSingleRes(CostResData,bool)  ins D10283FF
+    RVA_COST_RES_LEB      = 0x326D35C,  // CountryData.CostRes(List<CostResData>)      ins D10143FF
+    RVA_CHECK_RES_LEB     = 0x326D548,  // CountryData.CheckRes(List<CostResData>,int) ins D10183FF
+    RVA_GET_DELTA_LEB     = 0x8BB9860,  // 与官版同址（本次热更后不再分叉）
+    RVA_ON_BATTLE_END_LEB = 0x3BDDBBC,  // BattleUtil.OnBattleEnd(bool)  ins F81D0FF5（官方 SetEnd 页为 0）
+    // 资源发放 + 玩家身份
+    RVA_ADD_RES_LEB       = 0x32691C8,  // CountryData.AddRes(resType, cnt, isTrading)  ins A9BC5FF8
+    RVA_ADD_RES_CAMPAIGN  = 0x3908B40,  // CampaignData.AddRes(resType, cnt)            ins F81D0FF5
+    RVA_COUNTRY_ID_OFF    = 0xE0,       // CountryData 国家 id 字段偏移
+    RVA_MGR_COUNTRY_ID_OFF = 0x30,      // CountryDataMgr.m_countryId（IsPlayerCountry 反汇编比对源）
     // 2026-08-30 v23 零身份钩子（乐变库带导出表，IsPlayerCountry 的 Dobby 钩 4/4 崩溃 → 永久禁钩）：
-    // 读它的取值链（+0x8C adrp→ldr→ldr 得 MethodInfo；bl get_Instance@0x6558B64），Tick 直呼 getter 读 mgr+0x30
-    RVA_IS_PLAYER_LEB      = 0x6817D64,  // 兼作乐变构建标记（序言 A9BE4FF4）
-    RVA_GET_INSTANCE_LEB   = 0x420C000,  // QF.Singleton<CountryDataMgr>$$get_Instance
+    // 读它的取值链（+0x8C adrp→ldr→ldr 得 MethodInfo；bl get_Instance），Tick 直呼 getter 读 mgr+0x30
+    RVA_IS_PLAYER_LEB      = 0x32584F4,  // 兼作乐变构建标记（序言 A9BE4FF4）
+    RVA_GET_INSTANCE_LEB   = 0x64F89D0,  // QF.Singleton<CountryDataMgr>$$get_Instance 泛型共享实例 ins F81C0FF7
     RVA_IS_PLAYER_DECODE_OFF = 0x8C,
     // 战斗三件（乐变 dump RVA；官方 SetEnd/Update 空页即拒）
-    RVA_UPDATE_BATTLE_LEB  = 0x32FF1D8,
-    RVA_SET_END_LEB        = 0x32FF644,
-    RVA_START_BATTLE_LEB   = 0x3304C04,
-    RVA_ARMY_CORRECT_LEB   = 0x70DEB54,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
-    RVA_GET_COUNTRY_MGR_LEB = 0x70DFCA4, // CountryDataMgr.GetCountryDataById(int) → 捕获 this
-    RVA_GET_CITY_MGR_LEB    = 0x6D68790, // CityDataMgr.GetCityData(int) → 捕获 this
+    RVA_UPDATE_BATTLE_LEB  = 0x3394D5C,
+    RVA_SET_END_LEB        = 0x33951C8,
+    RVA_START_BATTLE_LEB   = 0x339A9E4,
+    RVA_ARMY_CORRECT_LEB   = 0x3A0264C,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
+    RVA_GET_COUNTRY_MGR_LEB = 0x3A0379C, // CountryDataMgr.GetCountryDataById(int) → 捕获 this
+    RVA_GET_CITY_MGR_LEB    = 0x38659F0, // CityDataMgr.GetCityData(int) → 捕获 this
 
     // ── 好游快爆 com.syyx.whrhx · 乐变 223.7MB（sha 1646c8bb…，8/20 构建）──
     // 2026-08-30 活内存 dump：metadata v24.5 变体(32段/method 64B token@+52/type 92B/image 40B)
@@ -83,14 +85,34 @@ enum : uintptr_t {
     RVA_KB_GET_COUNTRY_MGR = 0x3A9AF68,  // CountryDataMgr.GetCountryDataById → 捕获 this
     RVA_KB_GET_CITY_MGR    = 0x3728BBC,  // CityDataMgr.GetCityData → 捕获 this
 
-    // ── 2026-09-12 3.8.295 热更：科研立即完成（dump.cs + arm64 序言实锤）──
-    RVA_RESEARCH_TECH          = 0x76234BC,  // MengHuaRecordMgr.ResearchTech(int)
-    RVA_TECH_POLICY_RESEARCH   = 0x762BEB4,  // MengHuaTechPolicyData.Research()
-    RVA_POLICY_GET_DATA        = 0x7862CAC,  // PolicyDataMgr.GetPolicyData(int)
-    RVA_POLICY_UPDATE_TIME     = 0x7863E6C,  // PolicyDataMgr.UpdatePolicyTime(float,bool)
-    RVA_POLICY_FINISH_ANYWAY   = 0x7865CA8,  // PolicyDataMgr.FinishPolicyTimeAnyway(int)
-    RVA_POLICY_EXECUTE         = 0x7868DB4,  // PolicyDataMgr.ExecutePolicy(int,float,bool)
-    RVA_POLICY_UI_EXECUTE      = 0x69BB284,  // GameUI.PolicyUI.ExecutePolicy(int)
+    // ── 2026-09-23 乐变 OTA 热更后重校（新 dump.cs + libil2cpp 首指令逐点实锤）──
+    // 旧值全部作废：OTA 换掉了运行时 libil2cpp.so，RVA 整体漂移。
+    RVA_RESEARCH_TECH          = 0x44AF604,  // MengHuaRecordMgr.ResearchTech(int)
+    RVA_TECH_POLICY_RESEARCH   = 0x3C09BF0,  // MengHuaTechPolicyData.Research()
+    RVA_POLICY_GET_DATA        = 0x3C506AC,  // PolicyDataMgr.GetPolicyData(int)
+    RVA_POLICY_UPDATE_TIME     = 0x3C51A6C,  // PolicyDataMgr.UpdatePolicyTime(float,bool,bool)  ← 2→3 参
+    RVA_POLICY_FINISH_ANYWAY   = 0x3C538B8,  // PolicyDataMgr.FinishPolicyTimeAnyway(int)
+    RVA_POLICY_EXECUTE         = 0x3C56968,  // PolicyDataMgr.ExecutePolicy(int,float,bool,bool) ← 3→4 参
+    RVA_POLICY_UI_EXECUTE      = 0x3854030,  // GameUI.PolicyUI.ExecutePolicy(int)
+    // 名臣科研入口（上一轮漏做）：与 PolicyUI 并列的另外两个政策面板
+    RVA_MINISTER_UI_EXECUTE       = 0x3C6C2B8,  // GameUI.MinisterPolicyUI.ExecutePolicy(int)
+    RVA_EXTRA_MINISTER_UI_EXECUTE = 0x422A7E8,  // GameUI.ExtraMinisterPolicyUI.ExecutePolicy(int)
+    // 国家政策面板的「资源不足」资源门（在内联于 ActivePolicy，不走 CountryData.CheckRes）：
+    // PolicyUI.ActivePolicy 内 → CanActive 早退 → GetResCnt(21/22) 对比 GetSpecialResCostList → ShowPopUI
+    RVA_POLICY_UI_ACTIVE      = 0x3852D18,  // GameUI.PolicyUI.ActivePolicy()  ins D10303FF
+    RVA_POLICY_CAN_ACTIVE     = 0x3C50760,  // PolicyDataMgr.CanActive(int,bool,bool,bool) ins A9BC5FF8
+    RVA_COUNTRY_GET_RES_CNT   = 0x326A8D0,  // CountryData.GetResCnt(eSpecialResType) → int ins A9BE4FF4
+    // 名臣两侧：TryActivePolicy → PolicyDataMgr.CheckPolicyDisable(学习条件) → ShowPopUI(条件文案)
+    // 实测：名臣面板默认也提示「资源不足」，执行完一项资源够的政策后因条件重算才放开；科技面板则始终不放
+    RVA_MINISTER_TRY_ACTIVE        = 0x3C6BA68,  // GameUI.MinisterPolicyUI.TryActivePolicy() ins D101C3FF
+    RVA_EXTRA_MINISTER_TRY_ACTIVE  = 0x4229014,  // GameUI.ExtraMinisterPolicyUI.TryActivePolicy() ins D101C3FF
+    RVA_POLICY_CHECK_DISABLE       = 0x3C5959C,  // PolicyDataMgr.CheckPolicyDisable(int) → int ins 0xA9BB67FA
+    // 「能不能点」的真门（2026-09-23 续修）：条目显示/可点状态由它返回
+    // 调用者 PolicyItem.CheckShowState @0x389AB0C（+0x124 处 bl 本函数，返回值存 PolicyItem+0x104）
+    // ← 列表构建 PolicyItem.InitPolicyItem +0x120、点击 PolicyUI.OnClickPolicyItem +0xF4
+    // 函数内 0x3C5C8E0 cmp/0x3C5C8E4 b.ge → 0x3C5C8E8 orr w20,wzr,#7(ResNotEnough)
+    //                                      / 0x3C5C8F0 orr w20,wzr,#2(CanExecute)
+    RVA_POLICY_ITEM_SHOW_STATE     = 0x3C5B5A4,  // PolicyDataMgr.GetPolicyItemShowState(int,float) ins D104C3FF
 };
 
 static constexpr size_t kOffCountryMoney  = 0x118;
@@ -226,13 +248,20 @@ static UpdateBattleTime_t g_origUpdateCost = nullptr;
 #endif
 
 // 2026-09-12 科研立即完成：只消费科技研发入口触发的 ExecutePolicy，避免全局放大政策时间。
+// 2026-09-23 OTA 后签名重校：ExecutePolicy +1 参（isAutoSave），UpdatePolicyTime +1 参（isAutoSave）。
 typedef void (*ResearchTech_t)(void*, int32_t, void*);
 typedef void (*TechPolicyResearch_t)(void*, void*);
 typedef void* (*PolicyGetData_t)(void*, int32_t, void*);
-typedef void (*PolicyExecute_t)(void*, int32_t, float, bool, void*);
+typedef void (*PolicyExecute_t)(void*, int32_t, float, bool, bool, void*);
 typedef void (*PolicyFinishAnyway_t)(void*, int32_t, void*);
-typedef void (*PolicyUpdateTime_t)(void*, float, bool, void*);
+typedef void (*PolicyUpdateTime_t)(void*, float, bool, bool, void*);
 typedef void (*PolicyUiExecute_t)(void*, int32_t, void*);
+// 面板资源门（2026-09-23）：科技面板内联检查 + 名臣面板学习条件检查
+typedef void (*PanelActive_t)(void*, void*);                                  // PolicyUI.ActivePolicy() 等 0 参实例方法
+typedef int32_t (*CountryGetResCnt_t)(void*, int32_t, void*);                 // CountryData.GetResCnt(eSpecialResType)
+typedef int32_t (*PolicyCheckDisable_t)(void*, int32_t, void*);               // PolicyDataMgr.CheckPolicyDisable(int)
+typedef bool (*PolicyCanActive_t)(void*, int32_t, bool, bool, bool, void*);   // PolicyDataMgr.CanActive(int,bool,bool,bool)
+typedef int32_t (*PolicyItemShowState_t)(void*, int32_t, float, void*);       // PolicyDataMgr.GetPolicyItemShowState(int,float) → ePolicyItemShowState
 
 static ResearchTech_t g_origResearchTech = nullptr;
 static TechPolicyResearch_t g_origTechPolicyResearch = nullptr;
@@ -241,8 +270,22 @@ static PolicyExecute_t g_origPolicyExecute = nullptr;
 static PolicyFinishAnyway_t g_policyFinishAnyway = nullptr;
 static PolicyUpdateTime_t g_policyUpdateTime = nullptr;
 static PolicyUiExecute_t g_origPolicyUiExecute = nullptr;
+// 名臣科研入口（MinisterPolicyUI / ExtraMinisterPolicyUI），签名与 PolicyUI.ExecutePolicy 同构
+static PolicyUiExecute_t g_origMinisterUiExecute = nullptr;
+static PolicyUiExecute_t g_origExtraMinisterUiExecute = nullptr;
+static PanelActive_t g_origPolicyUiActive = nullptr;          // GameUI.PolicyUI.ActivePolicy()
+static PanelActive_t g_origMinisterTryActive = nullptr;       // GameUI.MinisterPolicyUI.TryActivePolicy()
+static PanelActive_t g_origExtraMinisterTryActive = nullptr;  // GameUI.ExtraMinisterPolicyUI.TryActivePolicy()
+static CountryGetResCnt_t g_countryGetResCnt = nullptr;       // 解析后直呼（不需 hook 时）
+static PolicyCheckDisable_t g_policyCheckDisable = nullptr;
+static PolicyCanActive_t g_policyCanActive = nullptr;
+static PolicyItemShowState_t g_policyItemShowState = nullptr;  // 条目状态门（决定可点/显示文案）
 static thread_local int t_researchDepth = 0;
 static thread_local bool t_researchHandled = false;
+// 只在这三个面板的 ActivePolicy/TryActivePolicy 调用栈内放行资源门，避免全局污染 UI 数值
+static thread_local int t_policyPanelDepth = 0;
+static std::atomic<bool> g_hooksPanelGate{false};
+static constexpr int32_t kResCntBypass = 999999999;
 
 
 // --- 双路径：RVA ↔ Il2Cpp 按名；禁止 base+RVA；禁止全 RX 序言误扫 ---
@@ -355,14 +398,26 @@ static const PrologueExpect kExpect[] = {
     {RVA_KB_START_TIMER, 0xA9BE4FF4, "KB.StartTimer"},
     {RVA_KB_GET_COUNTRY_MGR, 0xD101C3FF, "KB.GetCountryDataById"},
     {RVA_KB_GET_CITY_MGR, 0xA9BD57F6, "KB.GetCityData"},
-    // 3.8.295 热更九游科研链（首指令逐点实锤）
+    // 2026-09-23 乐变 OTA 热更后九游科研链重校（首指令逐点实锤）
     {RVA_RESEARCH_TECH, 0xF81D0FF5, "MengHuaRecordMgr.ResearchTech"},
     {RVA_TECH_POLICY_RESEARCH, 0xA9BE4FF4, "MengHuaTechPolicyData.Research"},
     {RVA_POLICY_GET_DATA, 0xF81D0FF5, "PolicyDataMgr.GetPolicyData"},
     {RVA_POLICY_UPDATE_TIME, 0xD10383FF, "PolicyDataMgr.UpdatePolicyTime"},
     {RVA_POLICY_FINISH_ANYWAY, 0xD10103FF, "PolicyDataMgr.FinishPolicyTimeAnyway"},
-    {RVA_POLICY_EXECUTE, 0xD10403FF, "PolicyDataMgr.ExecutePolicy"},
+    {RVA_POLICY_EXECUTE, 0xFC1C0FE8, "PolicyDataMgr.ExecutePolicy"},
     {RVA_POLICY_UI_EXECUTE, 0xF81D0FF5, "PolicyUI.ExecutePolicy"},
+    {RVA_MINISTER_UI_EXECUTE, 0xFC1D0FE8, "MinisterPolicyUI.ExecutePolicy"},
+    {RVA_EXTRA_MINISTER_UI_EXECUTE, 0xFC1D0FE8, "ExtraMinisterPolicyUI.ExecutePolicy"},
+    // 国家政策面板资源门三件（2026-09-23 重校，首指令逐点实锤）
+    {RVA_POLICY_UI_ACTIVE, 0xD10303FF, "PolicyUI.ActivePolicy"},
+    {RVA_POLICY_CAN_ACTIVE, 0xA9BC5FF8, "PolicyDataMgr.CanActive"},
+    {RVA_COUNTRY_GET_RES_CNT, 0xA9BE4FF4, "CountryData.GetResCnt"},
+    // 名臣两侧学习条件门（首指令逐点实锤）
+    {RVA_MINISTER_TRY_ACTIVE, 0xD101C3FF, "MinisterPolicyUI.TryActivePolicy"},
+    {RVA_EXTRA_MINISTER_TRY_ACTIVE, 0xD101C3FF, "ExtraMinisterPolicyUI.TryActivePolicy"},
+    {RVA_POLICY_CHECK_DISABLE, 0xA9BB67FA, "PolicyDataMgr.CheckPolicyDisable"},
+    // 条目状态门（2026-09-23 续修）：资源/科技/前置等拦截态 → CanExecute
+    {RVA_POLICY_ITEM_SHOW_STATE, 0xD104C3FF, "PolicyDataMgr.GetPolicyItemShowState"},
 };
 
 static const PrologueExpect* ExpectForRva(uintptr_t rva) {
@@ -651,6 +706,10 @@ static bool Hooked_CheckRes(void* thiz, void* costs, int32_t from, void* method)
     TraceHit("CheckRes", g_hitsCheckRes.fetch_add(1) + 1);
 #endif
     g_lastCostCountry.store(thiz);
+    // 科研「无条件直接执行」：只要处在政策面板（国家/名臣/额外名臣）ExecutePolicy 的作用域内，
+    // 且 #9 科研开关为开，则跳过资源校验 → TryExecutePolicy 不再走「资源不足,无法执行」分支，
+    // 直接进入 CostRes/执行流程，再由科研链把它立刻完成。
+    if (g_researchDone.load() && t_researchDepth > 0) return true;
     if (IsPlayerCountryObj(thiz) && ListAllCostsBypass(costs)) return true;
     if (g_origCheckRes) return g_origCheckRes(thiz, costs, from, method);
     return true;
@@ -1455,6 +1514,28 @@ static void Hooked_PolicyUiExecute(void* thiz, int32_t policyId, void* method) {
     if (enabled) ResearchScopeLeave();
 }
 
+// 名臣科研入口（2026-09-23 补做）：MinisterPolicyUI / ExtraMinisterPolicyUI 与 PolicyUI 并列，
+// 内部同样 bl → PolicyDataMgr.ExecutePolicy，所以只要进 scope，「立即完成 + 无条件」就自动覆盖名臣。
+static void Hooked_MinisterUiExecute(void* thiz, int32_t policyId, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) {
+        LOGI("[Whrhx] minister policy ui execute id=%d", policyId);
+        ResearchScopeEnter();
+    }
+    if (g_origMinisterUiExecute) g_origMinisterUiExecute(thiz, policyId, method);
+    if (enabled) ResearchScopeLeave();
+}
+
+static void Hooked_ExtraMinisterUiExecute(void* thiz, int32_t policyId, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) {
+        LOGI("[Whrhx] extra minister policy ui execute id=%d", policyId);
+        ResearchScopeEnter();
+    }
+    if (g_origExtraMinisterUiExecute) g_origExtraMinisterUiExecute(thiz, policyId, method);
+    if (enabled) ResearchScopeLeave();
+}
+
 static void Hooked_TechPolicyResearch(void* thiz, void* method) {
     const bool enabled = g_researchDone.load();
     if (enabled) ResearchScopeEnter();
@@ -1463,8 +1544,9 @@ static void Hooked_TechPolicyResearch(void* thiz, void* method) {
 }
 
 static void Hooked_PolicyExecute(void* thiz, int32_t id, float discount, bool needLog,
-                                 void* method) {
-    if (g_origPolicyExecute) g_origPolicyExecute(thiz, id, discount, needLog, method);
+                                 bool isAutoSave, void* method) {
+    if (g_origPolicyExecute)
+        g_origPolicyExecute(thiz, id, discount, needLog, isAutoSave, method);
     if (!g_researchDone.load() || t_researchDepth <= 0 || t_researchHandled) return;
     if (!thiz || id <= 0 || !g_policyGetData || !g_policyFinishAnyway || !g_policyUpdateTime)
         return;
@@ -1488,12 +1570,153 @@ static void Hooked_PolicyExecute(void* thiz, int32_t id, float discount, bool ne
         fallback = KWrite(static_cast<char*>(data) + kOffPolicyRemainTime, &nearDone,
                            sizeof(nearDone));
     }
-    g_policyUpdateTime(thiz, 1.0f, true, nullptr);
+    g_policyUpdateTime(thiz, 1.0f, true, true, nullptr);
     LOGI("[Whrhx] research finish id=%d remain=%.3f fallback=%d", id, remain,
          fallback ? 1 : 0);
 }
 
+// ── 面板资源门放行（与 feat#9 同一开关）───────────────────────────────────────
+// 科技面板：GameUI.PolicyUI.ActivePolicy() 内联 GetResCnt(特殊资源 21/22) 与
+//   PolicyConfigMgr.GetSpecialResCostList 比较，不足即 Mathf.Clamp + ShowPopUI。
+// 名臣面板：MinisterPolicyUI/ExtraMinisterPolicyUI.TryActivePolicy() → PolicyDataMgr.
+//   CheckPolicyDisable(学习条件) → 非 0 即 ShowPopUI（实测文案同为「资源不足」）。
+// 作用域只在三个面板入口的调用栈内，离开即恢复，避免污染其它 UI 的真实数值。
+static void PolicyPanelScopeEnter() { t_policyPanelDepth++; }
+static void PolicyPanelScopeLeave() {
+    if (t_policyPanelDepth > 0) t_policyPanelDepth--;
+}
+
+static void Hooked_PolicyUiActive(void* thiz, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) PolicyPanelScopeEnter();
+    if (g_origPolicyUiActive) g_origPolicyUiActive(thiz, method);
+    if (enabled) PolicyPanelScopeLeave();
+}
+
+static void Hooked_MinisterTryActive(void* thiz, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) PolicyPanelScopeEnter();
+    if (g_origMinisterTryActive) g_origMinisterTryActive(thiz, method);
+    if (enabled) PolicyPanelScopeLeave();
+}
+
+static void Hooked_ExtraMinisterTryActive(void* thiz, void* method) {
+    const bool enabled = g_researchDone.load();
+    if (enabled) PolicyPanelScopeEnter();
+    if (g_origExtraMinisterTryActive) g_origExtraMinisterTryActive(thiz, method);
+    if (enabled) PolicyPanelScopeLeave();
+}
+
+// 资源数量直接给足：冲掉 GetResCnt 与消耗表的比较（以及随后的 Clamp）
+static int32_t Hooked_CountryGetResCnt(void* thiz, int32_t resType, void* method) {
+    if (g_researchDone.load() && t_policyPanelDepth > 0 && thiz) return kResCntBypass;
+    if (g_countryGetResCnt) return g_countryGetResCnt(thiz, resType, method);
+    return 0;
+}
+
+// 政策禁用原因 → 0 表示可执行（名臣面板的学习条件门）
+static int32_t Hooked_PolicyCheckDisable(void* thiz, int32_t policyId, void* method) {
+    if (g_researchDone.load() && t_policyPanelDepth > 0) return 0;
+    if (g_policyCheckDisable) return g_policyCheckDisable(thiz, policyId, method);
+    return 0;
+}
+
+// 面板前置判断（CanActive）在内被一并放行，避免另一条早退分支直接弹窗
+static bool Hooked_PolicyCanActive(void* thiz, int32_t policyId, bool isMinister, bool considerSlot,
+                                   bool includeOnlyForShow, void* method) {
+    if (g_researchDone.load() && t_policyPanelDepth > 0) return true;
+    if (g_policyCanActive)
+        return g_policyCanActive(thiz, policyId, isMinister, considerSlot, includeOnlyForShow,
+                                 method);
+    return false;
+}
+
+// ★ 真正的「能不能点」门（2026-09-23 续修）
+// 条目在**未点击之前**就由本函数定状态：ResNotEnough(7) → UI 显示「资源不足」且不可点，
+// 于是 ActivePolicy/TryActivePolicy 永不被调用、上面的作用域钩子永不生效（鸡生蛋）。
+// 本函数是纯查询（只读资源、返回枚举），改返回值不写存档/数值，风险最低。
+// 用户选定范围「乙」：资源/科技/前置/文化/嫁接/其他不可执行 一并转为可执行。
+static constexpr int32_t kPolicyStateCanExecute = 2;  // ePolicyItemShowState.CanExecute
+static int32_t Hooked_PolicyItemShowState(void* thiz, int32_t policyId, float discount, void* method) {
+    const int32_t st = g_policyItemShowState
+                           ? g_policyItemShowState(thiz, policyId, discount, method)
+                           : kPolicyStateCanExecute;
+    if (!g_researchDone.load()) return st;
+    switch (st) {
+        case 4:   // CultureNotEnough
+        case 5:   // TecNotEnough
+        case 6:   // GraftNotEnough
+        case 7:   // ResNotEnough ← 用户看到的「资源不足」
+        case 11:  // PreNotComplete
+        case 12:  // CanNotExecute
+            return kPolicyStateCanExecute;
+        default:  // 0 Executed / 1 Executing / 2 CanExecute / 3 CannotShow
+                  // / 8 FollowPolicy / 9 NotMission / 10 NoRemainingTimes → 保持原样
+            return st;
+    }
+}
+
+static void InstallPolicyPanelHooks() {
+    if (g_hooksPanelGate.load()) return;
+    static std::atomic<uint32_t> s_panelAttempts{0};
+    const uint32_t attempt = s_panelAttempts.fetch_add(1);
+    if (attempt > 0 && (attempt % 10) != 0) return;
+    static const int kZeroArgcsPanel[] = {0};
+    static const int kOneArgcsPanel[] = {1};
+    static const int kCanActiveArgcs[] = {4};
+    static const int kTwoArgcsPanel[] = {2};   // GetPolicyItemShowState(int, float)
+    if (!g_origPolicyUiActive)
+        HookRvaOrIl2Cpp("PolicyUiActive", "GameUI", "PolicyUI", "ActivePolicy", kZeroArgcsPanel, 1,
+                        RVA_POLICY_UI_ACTIVE, (void*)Hooked_PolicyUiActive,
+                        (void**)&g_origPolicyUiActive, true);
+    if (!g_origMinisterTryActive)
+        HookRvaOrIl2Cpp("MinisterTryActive", "GameUI", "MinisterPolicyUI", "TryActivePolicy",
+                        kZeroArgcsPanel, 1, RVA_MINISTER_TRY_ACTIVE,
+                        (void*)Hooked_MinisterTryActive, (void**)&g_origMinisterTryActive, true);
+    if (!g_origExtraMinisterTryActive)
+        HookRvaOrIl2Cpp("ExtraMinisterTryActive", "GameUI", "ExtraMinisterPolicyUI",
+                        "TryActivePolicy", kZeroArgcsPanel, 1, RVA_EXTRA_MINISTER_TRY_ACTIVE,
+                        (void*)Hooked_ExtraMinisterTryActive,
+                        (void**)&g_origExtraMinisterTryActive, true);
+    if (!g_countryGetResCnt)
+        HookAtRva("CountryGetResCnt", RVA_COUNTRY_GET_RES_CNT, (void*)Hooked_CountryGetResCnt,
+                  (void**)&g_countryGetResCnt);
+    if (!g_policyCheckDisable)
+        HookAtRva("PolicyCheckDisable", RVA_POLICY_CHECK_DISABLE, (void*)Hooked_PolicyCheckDisable,
+                  (void**)&g_policyCheckDisable);
+    if (!g_policyCanActive)
+        HookRvaOrIl2Cpp("PolicyCanActive", "", "PolicyDataMgr", "CanActive", kCanActiveArgcs, 1,
+                        RVA_POLICY_CAN_ACTIVE, (void*)Hooked_PolicyCanActive,
+                        (void**)&g_policyCanActive, true);
+    // 条目状态门必须最先可用：它决定条目能不能被点，点击之后的面板作用域才谈得上
+    if (!g_policyItemShowState)
+        HookRvaOrIl2Cpp("PolicyItemShowState", "", "PolicyDataMgr", "GetPolicyItemShowState",
+                        kTwoArgcsPanel, 1, RVA_POLICY_ITEM_SHOW_STATE,
+                        (void*)Hooked_PolicyItemShowState, (void**)&g_policyItemShowState, true);
+
+    const bool ready = g_origPolicyUiActive && g_origMinisterTryActive &&
+                       g_origExtraMinisterTryActive && g_countryGetResCnt && g_policyCheckDisable &&
+                       g_policyCanActive && g_policyItemShowState;
+    g_hooksPanelGate.store(ready);
+    if (ready)
+        LOGI("[Whrhx] policy panel gate ready tech=%d min=%d extra=%d res=%d can=%d disable=%d "
+             "state=%d",
+             g_origPolicyUiActive ? 1 : 0, g_origMinisterTryActive ? 1 : 0,
+             g_origExtraMinisterTryActive ? 1 : 0, g_countryGetResCnt ? 1 : 0,
+             g_policyCanActive ? 1 : 0, g_policyCheckDisable ? 1 : 0,
+             g_policyItemShowState ? 1 : 0);
+    else
+        LOGW("[Whrhx] policy panel gate incomplete tech=%d min=%d extra=%d res=%d can=%d "
+             "disable=%d state=%d — will retry",
+             g_origPolicyUiActive ? 1 : 0, g_origMinisterTryActive ? 1 : 0,
+             g_origExtraMinisterTryActive ? 1 : 0, g_countryGetResCnt ? 1 : 0,
+             g_policyCanActive ? 1 : 0, g_policyCheckDisable ? 1 : 0,
+             g_policyItemShowState ? 1 : 0);
+}
+
 static void InstallResearchHooks() {
+    // 面板资源门独立重试/独立就绪标志，必须放在 research 就绪早退之前
+    InstallPolicyPanelHooks();
     if (g_hooksResearch.load()) return;
     static std::atomic<uint32_t> s_attempts{0};
     const uint32_t attempt = s_attempts.fetch_add(1);
@@ -1501,12 +1724,21 @@ static void InstallResearchHooks() {
 
     static const int kOneArgcs[] = {1};
     static const int kZeroArgcs[] = {0};
-    static const int kExecuteArgcs[] = {3};
-    static const int kUpdateArgcs[] = {2};
+    static const int kExecuteArgcs[] = {4};   // 2026-09-23: int,float,bool,bool
+    static const int kUpdateArgcs[] = {3};    // 2026-09-23: float,bool,bool
     if (!g_origPolicyUiExecute)
         HookRvaOrIl2Cpp("PolicyUiExecute", "GameUI", "PolicyUI", "ExecutePolicy", kOneArgcs, 1,
                         RVA_POLICY_UI_EXECUTE, (void*)Hooked_PolicyUiExecute,
                         (void**)&g_origPolicyUiExecute, true);
+    if (!g_origMinisterUiExecute)
+        HookRvaOrIl2Cpp("MinisterUiExecute", "GameUI", "MinisterPolicyUI", "ExecutePolicy",
+                        kOneArgcs, 1, RVA_MINISTER_UI_EXECUTE,
+                        (void*)Hooked_MinisterUiExecute, (void**)&g_origMinisterUiExecute, true);
+    if (!g_origExtraMinisterUiExecute)
+        HookRvaOrIl2Cpp("ExtraMinisterUiExecute", "GameUI", "ExtraMinisterPolicyUI",
+                        "ExecutePolicy", kOneArgcs, 1, RVA_EXTRA_MINISTER_UI_EXECUTE,
+                        (void*)Hooked_ExtraMinisterUiExecute,
+                        (void**)&g_origExtraMinisterUiExecute, true);
     if (!g_origResearchTech)
         HookRvaOrIl2Cpp("ResearchTech", "", "MengHuaRecordMgr", "ResearchTech", kOneArgcs, 1,
                         RVA_RESEARCH_TECH, (void*)Hooked_ResearchTech,
@@ -1532,20 +1764,23 @@ static void InstallResearchHooks() {
                        kUpdateArgcs, 1, RVA_POLICY_UPDATE_TIME, 0,
                        (void**)&g_policyUpdateTime);
 
-    const bool hasEntry = g_origResearchTech || g_origTechPolicyResearch || g_origPolicyUiExecute;
+    const bool hasEntry = g_origResearchTech || g_origTechPolicyResearch || g_origPolicyUiExecute ||
+                          g_origMinisterUiExecute || g_origExtraMinisterUiExecute;
     if (hasEntry && g_origPolicyExecute && g_policyGetData && g_policyFinishAnyway &&
         g_policyUpdateTime) {
         g_hooksResearch.store(true);
-        LOGI("[Whrhx] research hooks ready wrapper=%d direct=%d ui=%d execute=%d", hasEntry,
-             g_origResearchTech ? 1 : 0, g_origPolicyUiExecute ? 1 : 0,
-             g_origPolicyExecute ? 1 : 0);
+        LOGI("[Whrhx] research hooks ready wrapper=%d direct=%d ui=%d execute=%d min=%d extra=%d",
+             hasEntry, g_origResearchTech ? 1 : 0, g_origPolicyUiExecute ? 1 : 0,
+             g_origPolicyExecute ? 1 : 0, g_origMinisterUiExecute ? 1 : 0,
+             g_origExtraMinisterUiExecute ? 1 : 0);
     } else {
         LOGW("[Whrhx] research hooks incomplete wrapper=%d direct=%d ui=%d execute=%d get=%d "
-             "finish=%d update=%d — will retry",
+             "finish=%d update=%d min=%d extra=%d — will retry",
              g_origResearchTech ? 1 : 0, g_origTechPolicyResearch ? 1 : 0,
              g_origPolicyUiExecute ? 1 : 0, g_origPolicyExecute ? 1 : 0,
              g_policyGetData ? 1 : 0, g_policyFinishAnyway ? 1 : 0,
-             g_policyUpdateTime ? 1 : 0);
+             g_policyUpdateTime ? 1 : 0, g_origMinisterUiExecute ? 1 : 0,
+             g_origExtraMinisterUiExecute ? 1 : 0);
     }
 }
 
@@ -1575,7 +1810,10 @@ static void Whrhx_SyncHooks() {
 #ifdef STARRY_GAME_WHRHXKB
     InstallCaptureHooks();
 #endif
-    if (g_gold.load() || g_food.load() || g_army.load() || g_pop.load()) InstallEcoHooks();
+    // feat#9（科研立即完成）也要装 CheckRes/CostRes 钩：科研放行判定在 Hooked_CheckRes 内，
+    // 之前只在 #1-#4 开启时才装，导致「只开 #9」时资源无条件放行不生效。
+    if (g_gold.load() || g_food.load() || g_army.load() || g_pop.load() || g_researchDone.load())
+        InstallEcoHooks();
     if (g_win.load()) {
         InstallBattleHooks();
         InstallSpeedHooks();  // Update 空页时用 delta 推帧强胜

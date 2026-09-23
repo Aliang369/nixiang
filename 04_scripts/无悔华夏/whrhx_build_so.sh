@@ -57,6 +57,8 @@ chk "GetCountryDataById"
 chk "GetCityData"
 chk "identity api ready"
 chk "research hooks ready"
+chk "policy panel gate ready"
+chk "PolicyDataMgr.GetPolicyItemShowState"
 chk "科研立即完成"
 
 echo "[build_so] done -> $SO"

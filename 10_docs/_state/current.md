@@ -30,7 +30,7 @@
 | 我的修仙世界 | 2026-09-13 | 已收尾 | [摘要](games/我的修仙世界.md) |
 | 地城狩猎 | 2026-09-13 | 失败/归档 | [摘要](games/地城狩猎.md) |
 | 迷雾大陆 | 2026-09-12 | 已收尾 | [摘要](games/迷雾大陆.md) |
-| 无悔华夏 | 2026-09-12 | 已收尾 | [摘要](games/无悔华夏.md) |
+| 无悔华夏 | 2026-09-23 | ✅ **科研三项用户实测通过**（国家科技「资源不足」可直接执行 / 名臣科研 / 与 feat#9 同开关）+ **新版菜单 dex 已注入并卸载重装**（晚场续修三）：真门=`PolicyDataMgr.GetPolicyItemShowState(int,float)@0x03C5B5A4`（把 4/5/6/7/11/12 统一改成 2 CanExecute，条目先能点、再走既有执行期放行）；菜单 UI **不在 so 里**，而在游戏 APK 的 `classes2.dex`（114 类全是 `com/starry/**`）⇒ 本轮用仓库当前 `starry-mod-menu` 重编 release（157 类，含 `MagicRes$PanelBgDrawable`）+ 补壳 App `.super`（`com/netease/nis/wrapper/MyApplication`）后外科替换，`resources.arsc`/`classes.dex`/manifest 逐字节未变；正式包 `08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk`（1,590,522,032B，sha256 `2f5e4210…`，md5 `59bc6689…`，so `3b754bba…`）；已按用户要求**卸载+全新安装**（存档清空）+ 乐变负载重下（Doze 白名单已加）；文档=`10_docs/无悔华夏/热更失效修复_20260923.md` §11/§12 | [摘要](games/无悔华夏.md) |
 | 弹力果冻 | 2026-09-12 | 已交付/待核验 | [摘要](games/弹力果冻.md) |
 | 城主别慌张 | 2026-09-11 | 渠道阻断/暂停 | [摘要](games/城主别慌张.md) |
 | 雷霆战机 | 2026-09-06 | 暂停 | [摘要](games/雷霆战机.md) |

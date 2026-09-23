@@ -1,7 +1,7 @@
 {
   "game": "无悔华夏",
   "version": "3.8.280 / hotfix 3.8.295.295",
-  "notes": "2026-09-12 科研立即完成：用真机当前星空包为底包，保留热更资源修复链，新增菜单 #9（Toggle_科研立即完成）。覆盖 GameUI.PolicyUI.ExecutePolicy(int) 与蒙华科技 ResearchTech 两条人工确认入口，在 PolicyDataMgr.ExecutePolicy 原调用后走 FinishPolicyTimeAnyway + UpdatePolicyTime(1.0f,true) 原生完成链，不全局放大政策时间；保留数据覆盖安装，不卸载、不清数据、不自动点屏。四项资源和科研均已经用户真机确认。",
+  "notes": "2026-09-12 科研立即完成：用真机当前星空包为底包，保留热更资源修复链，新增菜单 #9（Toggle_科研立即完成）。覆盖 GameUI.PolicyUI.ExecutePolicy(int) 与蒙华科技 ResearchTech 两条人工确认入口，在 PolicyDataMgr.ExecutePolicy 原调用后走 FinishPolicyTimeAnyway + UpdatePolicyTime(1.0f,true) 原生完成链，不全局放大政策时间；保留数据覆盖安装，不卸载、不清数据、不自动点屏。四项资源和科研均已经用户真机确认。\n2026-09-23 热更失效修复（乐变 OTA 换运行时 libil2cpp.so，metadata sha256 eb4d7f8e…）：科研立即完成整链 RVA 漂移重校（MengHuaRecordMgr.ResearchTech 0x44AF604 / MengHuaTechPolicyData.Research 0x3C09BF0 / PolicyDataMgr.GetPolicyData 0x3C506AC / UpdatePolicyTime 0x3C51A6C / FinishPolicyTimeAnyway 0x3C538B8 / ExecutePolicy 0x3C56968）；PolicyDataMgr.ExecutePolicy 与 UpdatePolicyTime 各新增一个 isAutoSave 参数（3→4 / 2→3），旧 argcs 使 il2cpp 按名兜底也失败，是本轮失效根因；新增名臣科研入口 MinisterPolicyUI.ExecutePolicy 0x3C6C2B8 与 ExtraMinisterPolicyUI.ExecutePolicy 0x422A7E8（同挂 research scope）；「资源不足」真门=CountryData.CheckRes（TryExecutePolicy 内），已加 g_researchDone && 科研 scope 内无条件放行，与菜单 #9 同开关。\n2026-09-23 晚 新版菜单 dex 注入（菜单 UI 不在 so 里，在 APK 的 classes2.dex）：构建路线=隔离副本 rsync mod菜单/starry-mod-menu → ./gradlew assembleRelease → apktool d → 汇总 157 个 com/starry/** smali → smali assemble → 壳 App 父类补丁（StarryApp 的 .super 与 3 处 invoke：Landroid/app/Application; → Lcom/netease/nis/wrapper/MyApplication;，九游=网易易盾；同一手法见 04_scripts/无悔华夏4399/whrhx4399_surgical_unshelled.sh:94-115）→ 归档 07_patched/无悔华夏/menu_latest_20260923/classes2.dex（445,652B sha256 ef84725fc724c7027775d7876ed0fc94058244cf7bfe737a1eaf08117fd54579 md5 a211c99525684f4dc42a9223507e44b4）。外科脚本 04_scripts/无悔华夏/whrhx_menu_latest_repack.sh 只用 zip -u 改两个条目（classes2.dex + lib/arm64-v8a/libstarry_magic.so），审计确认 classes.dex / resources.arsc / AndroidManifest.xml / libc++_shared.so / assets/certs/starlight.crt 逐字节未变；产物 08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk（1,590,522,032B sha256 2f5e421019aa5eaa1ad3a183bf481e66a049216df74047152ef38b03007eefab md5 59bc6689713ba16229b5605aa4f0614d）= 唯一正式包。按用户指示卸载+全新安装（清存档）20:20:20 装机，乐变回填后运行时 so/metadata 与校订基准一致、0 次 rva miss，用户真机确认「功能都没问题」。OTA 关系：乐变 payload（lebian/<pkg>-1/）按当前安装包重建 ⇒ 新版菜单 dex 与 mod so 都会镜像进 payload（实测 payload classes2.dex sha256=ef84725f…、payload libstarry_magic.so md5=c34f9dc0…）；OTA 覆盖清单 udir 含 lib/arm64-v8a/libil2cpp.so、libunity.so、libxlua.so、assets/SYResRoot 等，不含 libstarry_magic.so，故 mod so 不会被 OTA 覆盖；若从 APK 换新版菜单/so，则必须覆盖安装或卸载重装（乐变负载会按新包重建），否则 payload 里仍是旧包镜像。",
   "params": {
     "game_id": "whhx",
     "package": "com.yhhy.whrhx.aligames",
@@ -83,14 +83,11 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 16:46:54",
+      "done_at": "2026-09-23 20:09:08",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": {
-          "md5": "afee96f5671039e4059d46f1363f5a7b"
+          "md5": "c34f9dc0c8b7970a621551c9345d32ea"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏/无悔华夏_3.8.280_九游星空_20260912.apk": "0eaa1fdca51ba402cf2a5c6f919f348c"
       }
     },
     {
@@ -109,16 +106,8 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-12 16:48:27",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk": {
-          "md5": "ab30e56392f1ee3544d4c546dd829f9b"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "afee96f5671039e4059d46f1363f5a7b"
-      }
+      "status": "skipped",
+      "note": "2026-09-23 跳过：本阶段门禁要求底包 sha256=d6e3e8d2…（20260912 原始星空包，含未配对的 ModBridge dex），该底包已不在工作区；真机现装包 sha256=0b6c4772… 的 classes2.dex 已含 nativeBridgeRegistered/nativeGetPinnedCert 两个声明，smali 配对增量必然为 0，而审计要求恰好 2 个增量 → 本轮改走 surgical_so_only（只换 so）。"
     },
     {
       "id": "install_research",
@@ -133,16 +122,8 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-12 16:49:50",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk": {
-          "md5": "ab30e56392f1ee3544d4c546dd829f9b"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成_20260912-releaseSigned.apk": "ab30e56392f1ee3544d4c546dd829f9b"
-      }
+      "status": "skipped",
+      "note": "2026-09-23 跳过：由 install_so_only 替代（同包，加 pre_install_gate 四查）。"
     },
     {
       "id": "surgical",
@@ -242,6 +223,118 @@
       "verify": [],
       "status": "skipped",
       "artifacts": {}
+    },
+    {
+      "id": "surgical_so_only",
+      "name": "科研立即完成热更重校：so-only 外科（只换 libstarry_magic.so + 星空重签，不碰 dex/资源）",
+      "requires": [
+        "build_so"
+      ],
+      "status": "skipped",
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_research_so_only.sh\"",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_research_so_only.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk"
+        }
+      ],
+      "note": "底包=真机现装星空包（用户授权从设备拉取）06_dumped/无悔华夏/current_20260923/pkg/base_installed_20260923.apk sha256 0b6c4772e64a6753b3a3169c9aea3a2e9af435c6361746c83b13516ba3f03167；只替换 lib/arm64-v8a/libstarry_magic.so（so md5 4ab7c57af9b735455f6b215ea4f995e6） ｜ 2026-09-23 晚：本阶段产出的 so-only 包已被第 13 阶段『新版菜单』包取代（同一 so md5 c34f9dc0…，外加新 classes2.dex ef84725f…），旧包按既定腾盘方案删除，快照同步为 skipped。",
+      "done_at": "2026-09-23 19:52:32",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk": {
+          "md5": "f54d7b32d581ca296bd6a81604fbd251"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "c34f9dc0c8b7970a621551c9345d32ea"
+      }
+    },
+    {
+      "id": "install_so_only",
+      "name": "保留数据覆盖安装 科研立即完成热更修复包（不卸载、不清数据、不自动点屏）",
+      "requires": [
+        "surgical_so_only"
+      ],
+      "status": "skipped",
+      "command": "APK=\"/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk\"; D=\"$(mktemp -d)\"; unzip -o -q \"$APK\" classes.dex classes2.dex -d \"$D\"; bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/WhrhxMod.cpp\" --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp\" --dex \"$D/classes.dex\" --dex \"$D/classes2.dex\" --so \"$NIXIANG/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so\"; rc=$?; rm -rf \"$D\"; [ $rc -eq 0 ] || exit $rc; adb -s \"$SERIAL\" install -r \"$APK\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.yhhy.whrhx.aligames \"$APK\" --su",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk"
+        }
+      ],
+      "done_at": "2026-09-23 19:54:18",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk": {
+          "md5": "f54d7b32d581ca296bd6a81604fbd251"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk": "f54d7b32d581ca296bd6a81604fbd251"
+      },
+      "note": "2026-09-23 晚：被第 14 阶段 install_menu_latest 取代（同 so + 新菜单 dex，按用户指示改为卸载+全新安装），快照同步为 skipped。"
+    },
+    {
+      "id": "surgical_menu_latest",
+      "name": "新版菜单 dex 注入：换 classes2.dex + libstarry_magic.so + 星空重签（不安装）",
+      "requires": [
+        "build_so"
+      ],
+      "status": "done",
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_menu_latest_repack.sh\"",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_menu_latest_repack.sh",
+        "/Users/aliang/Documents/nixiang/07_patched/无悔华夏/menu_latest_20260923/classes2.dex"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk"
+        }
+      ],
+      "note": "底包 06_dumped/无悔华夏/current_20260923/pkg/base_installed_20260923.apk（sha256 0b6c4772e64a6753b3a3169c9aea3a2e9af435c6361746c83b13516ba3f03167）+ so 3b754bba935142080ef38265e40cc416e3037a025c559b55abd379ce92ecfad1（md5 c34f9dc0c8b7970a621551c9345d32ea）+ 新菜单 dex /Users/aliang/Documents/nixiang/07_patched/无悔华夏/menu_latest_20260923/classes2.dex（sha256 ef84725fc724c7027775d7876ed0fc94058244cf7bfe737a1eaf08117fd54579）。脚本内含底包/dex/so 三重门禁 + 双审计 + zipalign -p 4 + apksigner（01_tools/starry_release.jks，alias starry，CN=StarryMagic，SHA-1 821c92e404ab5fdac8dbf157c2e467e71440917d），且不覆盖已存在同名产物。",
+      "done_at": "2026-09-23 20:18:03",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk": {
+          "md5": "59bc6689713ba16229b5605aa4f0614d"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "c34f9dc0c8b7970a621551c9345d32ea",
+        "/Users/aliang/Documents/nixiang/07_patched/无悔华夏/menu_latest_20260923/classes2.dex": "a211c99525684f4dc42a9223507e44b4"
+      }
+    },
+    {
+      "id": "install_menu_latest",
+      "name": "卸载 + 全新安装 新版菜单包（用户明确要求，清存档；不自动点屏）",
+      "requires": [
+        "surgical_menu_latest"
+      ],
+      "status": "done",
+      "command": "WHRHX_APK=\"/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk\" bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_clean_reinstall.sh\" --uninstall",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_clean_reinstall.sh",
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk"
+        }
+      ],
+      "note": "pm uninstall Success（数据目录已清除）→ adb install（Incremental Install）Success 53096 ms → verify_installed_apk md5=59bc6689713ba16229b5605aa4f0614d ✓ → monkey 拉起。装机后乐变负载目录被清空需重新下载，已用 dumpsys/cmd deviceidle whitelist +com.yhhy.whrhx.aligames 防 ColorOS 以 o-stop(40) 杀 :lebian.base；实测约 1 分钟回填（payload libil2cpp.so sha256=c04afff475683c0d0550ba3443d28f6e3dcc53fcf661351aa5692be5e364d3ca ✓、payload libstarry_magic.so md5=c34f9dc0… ✓、payload classes2.dex sha256=ef84725f… ✓）。设备 firstInstallTime=lastUpdateTime=2026-09-23 20:20:20。",
+      "done_at": "2026-09-23 20:20:20",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk": {
+          "md5": "59bc6689713ba16229b5605aa4f0614d"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_新版菜单_20260923-releaseSigned.apk": "59bc6689713ba16229b5605aa4f0614d"
+      }
     }
   ]
 }
