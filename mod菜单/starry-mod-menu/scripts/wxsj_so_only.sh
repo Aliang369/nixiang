@@ -49,20 +49,29 @@ PRE_MD5="$(md5 -q "$SO_OUT" 2>/dev/null || echo none)"
 # ⇒ 本脚本从此**每次强制重建 .a**（objcopy 必须在 jni 下用相对文件名，符号名才叫
 #   `_binary_targetfuntional_dll_bin_*`），并断言 .a 大小 = bin + 552（.data 偏移 296 + 4 个节头 256）。
 BIN_SRC="$JNI/targetfuntional_dll.bin"
-[[ -f "$BIN_SRC" ]] || { echo "ERROR: 缺内嵌 dll $BIN_SRC"; exit 1; }
-BIN_NOW="$(stat -f%z "$BIN_SRC" 2>/dev/null || stat -c%s "$BIN_SRC")"
+BIN_V711="$JNI/targetfuntional_dll_v711.bin"
 OBJCOPY="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-objcopy"
 [[ -x "$OBJCOPY" ]] || { echo "ERROR: llvm-objcopy missing at $OBJCOPY"; exit 1; }
-echo "[wxsj-so 0/3] objcopy 重建内嵌 dll 静态库（$BIN_NOW B）"
-( cd "$JNI" && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 \
-    targetfuntional_dll.bin Games/WxsjPatchedDll.a )
-ARCHIVE="$JNI/Games/WxsjPatchedDll.a"
-A_SIZE="$(stat -f%z "$ARCHIVE" 2>/dev/null || stat -c%s "$ARCHIVE")"
-if (( A_SIZE != BIN_NOW + 552 )); then
-  echo "ERROR: $ARCHIVE 大小 $A_SIZE ≠ 内嵌 dll $BIN_NOW + 552 —— objcopy 未生效（链的会是旧 dll）"
-  exit 1
-fi
-echo "[wxsj-so] 静态库校验: $A_SIZE = $BIN_NOW + 552 ✓"
+echo "[wxsj-so 0/3] objcopy 重建内嵌 dll 静态库（2 份：官方热更会回滚/切换）"
+for PAIR in "$BIN_SRC|Games/WxsjPatchedDll.a|wxsj_dll" "$BIN_V711|Games/WxsjPatchedDll_v711.a|wxsj_dll_v711"; do
+  SRC="${PAIR%%|*}"; REST="${PAIR#*|}"; DST="${REST%%|*}"; MOD="${REST##*|}"
+  [[ -f "$SRC" ]] || { echo "ERROR: 缺内嵌 dll $SRC"; exit 1; }
+  N="$(stat -f%z "$SRC" 2>/dev/null || stat -c%s "$SRC")"
+  ( cd "$JNI" && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 \
+      "$(basename "$SRC")" "$DST" )
+  ARCHIVE="$JNI/$DST"
+  A_SIZE="$(stat -f%z "$ARCHIVE" 2>/dev/null || stat -c%s "$ARCHIVE")"
+  # 精确校验：从 .a 里把 .data 段抽回来与 bin 逐字节比对（.a 总大小的偏移量随符号名长度浮动，
+  # 不能写死 +552；符号名 `..._v711_bin_start` 更长 → 偏移更大，见 2026-09-23 双版本血案）
+  TMP_CHECK="$(mktemp -t wxsj_a_check)"
+  if ! "$OBJCOPY" -O binary --only-section=.data "$ARCHIVE" "$TMP_CHECK" 2>/dev/null \
+      || ! cmp -s "$TMP_CHECK" "$SRC"; then
+    echo "ERROR: $ARCHIVE 的 .data ≠ $SRC（$A_SIZE B vs $N B）—— objcopy 未生效（链的会是旧 dll）"
+    rm -f "$TMP_CHECK"; exit 1
+  fi
+  rm -f "$TMP_CHECK"
+  echo "[wxsj-so] 静态库校验: $MOD: .a=$A_SIZE, .data 与 $(basename "$SRC") 逐字节一致 ✓"
+done
 
 echo "[wxsj-so 1/3] ndk-build arm64-v8a (DIAG=$DIAG)"
 "$NDK/ndk-build" -C "$JNI" \
@@ -82,33 +91,42 @@ LC_ALL=C grep -aq '\[Wxsj\]' "$BUILT" || { echo "ERROR: so 缺 [Wxsj] 日志串"
 # 中文 UTF-8 必须 LC_ALL=C grep -a 按字节搜（strings 默认 ASCII 会漏报）
 LC_ALL=C grep -aq 'Toggle_秒杀' "$BUILT" || { echo "ERROR: so 缺菜单串 Toggle_秒杀（Main.cpp 未编入？）"; exit 1; }
 LC_ALL=C grep -aq 'targetfuntional' "$BUILT" || { echo "ERROR: so 缺内嵌 dll 名 targetfuntional"; exit 1; }
-# 血案防呆(2026-09-23)：内嵌 patched dll 必须 ≤ 官方热更数组长度 kOrigDllLen，
+# 血案防呆(2026-09-23)：每份内嵌 patched dll 必须 ≤ 其对应官方热更数组长度（kOrigDllLen / kPrevDllLen），
 # 否则运行时 HookExec 里 pLen > len → 「embedded dll size ... > array ..., skip」静默跳过
 # → 实际跑官方 dll（防封/全部功能失效、封号弹窗裸奔，且菜单开关看不出异常）。
-OFFICIAL_LEN="$(grep -oE 'kOrigDllLen[[:space:]]*=[[:space:]]*[0-9]+' "$JNI/Games/WxsjMod.cpp" | grep -oE '[0-9]+$' | head -1)"
-[[ -n "$OFFICIAL_LEN" ]] || { echo "ERROR: 无法从 Games/WxsjMod.cpp 解析 kOrigDllLen"; exit 1; }
-BIN="$JNI/targetfuntional_dll.bin"
-[[ -f "$BIN" ]] || { echo "ERROR: 缺内嵌 dll $BIN"; exit 1; }
-BIN_SIZE="$(stat -f%z "$BIN" 2>/dev/null || stat -c%s "$BIN")"
-if (( BIN_SIZE > OFFICIAL_LEN )); then
-  echo "ERROR: 内嵌 dll $BIN_SIZE B > 官方热更数组 $OFFICIAL_LEN B（超 $((BIN_SIZE - OFFICIAL_LEN)) B）→ 注入必然被跳过，先给补丁瘦身"
-  exit 1
-fi
-echo "[wxsj-so] 内嵌 dll 尺寸校验: $BIN_SIZE ≤ $OFFICIAL_LEN (余量 $((OFFICIAL_LEN - BIN_SIZE)) B)"
+LEN_OF() { grep -oE "$1[[:space:]]*=[[:space:]]*[0-9]+" "$JNI/Games/WxsjMod.cpp" | grep -oE '[0-9]+$' | head -1; }
+OFFICIAL_LEN="$(LEN_OF kOrigDllLen)"
+PREV_LEN="$(LEN_OF kPrevDllLen)"
+[[ -n "$OFFICIAL_LEN" && -n "$PREV_LEN" ]] || { echo "ERROR: 无法从 Games/WxsjMod.cpp 解析 kOrigDllLen/kPrevDllLen"; exit 1; }
+for PAIR in "$BIN_SRC|$OFFICIAL_LEN|kOrigDllLen" "$BIN_V711|$PREV_LEN|kPrevDllLen"; do
+  BIN="${PAIR%%|*}"; REST="${PAIR#*|}"; LIM="${REST%%|*}"; NAME="${REST##*|}"
+  [[ -f "$BIN" ]] || { echo "ERROR: 缺内嵌 dll $BIN"; exit 1; }
+  BIN_SIZE="$(stat -f%z "$BIN" 2>/dev/null || stat -c%s "$BIN")"
+  if (( BIN_SIZE > LIM )); then
+    echo "ERROR: 内嵌 dll $(basename "$BIN") $BIN_SIZE B > 官方热更数组 $NAME=$LIM B（超 $((BIN_SIZE - LIM)) B）→ 注入必然被跳过，先给补丁瘦身"
+    exit 1
+  fi
+  echo "[wxsj-so] 内嵌 dll 尺寸校验: $(basename "$BIN") $BIN_SIZE ≤ $LIM ($NAME, 余量 $((LIM - BIN_SIZE)) B)"
+done
 if [[ "$DIAG" == "1" ]]; then
   LC_ALL=C grep -aq 'DIAG dumped' "$BUILT" || { echo "ERROR: DIAG so 缺 dump 日志串"; exit 1; }
 else
   if LC_ALL=C grep -aq 'DIAG dumped' "$BUILT"; then echo "ERROR: 正式 so 含 DIAG dumped（取证代码未剥离）"; exit 1; fi
 fi
 POST_MD5="$(md5 -q "$BUILT")"
-# 🩸 终局断言：编译产物里必须**逐字节**含当前内嵌 dll（防 .a 过期 / 链接缓存复用旧数据）
-python3 - "$BUILT" "$BIN_SRC" <<'PY' || { echo "ERROR: so 内未找到内嵌 dll 的完整字节（.a 过期？）"; exit 1; }
+# 🩸 终局断言：编译产物里必须**逐字节**含两份内嵌 dll（防 .a 过期 / 链接缓存复用旧数据）
+python3 - "$BUILT" "$BIN_SRC" "$BIN_V711" <<'PY' || { echo "ERROR: so 内未找到内嵌 dll 的完整字节（.a 过期？）"; exit 1; }
 import sys
 so = open(sys.argv[1], 'rb').read()
-dll = open(sys.argv[2], 'rb').read()
-sys.exit(0 if so.find(dll) >= 0 else 1)
+for p in sys.argv[2:]:
+    dll = open(p, 'rb').read()
+    if so.find(dll) < 0:
+        print("MISSING in so: %s (%d B)" % (p, len(dll)))
+        sys.exit(1)
+    print("in-so OK: %s (%d B)" % (p, len(dll)))
+sys.exit(0)
 PY
-echo "[wxsj-so] 内嵌 dll 逐字节存在性校验 ✓"
+echo "[wxsj-so] 内嵌 dll 逐字节存在性校验 ✓（2/2）"
 if [[ "$POST_MD5" == "$PRE_MD5" ]]; then
   echo "WARN: so md5 与构建前相同（$PRE_MD5）—— 确认是否真的重链（无新 .o 时正常）"
 fi

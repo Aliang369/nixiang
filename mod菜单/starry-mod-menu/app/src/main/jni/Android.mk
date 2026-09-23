@@ -31,10 +31,16 @@ include $(PREBUILT_STATIC_LIBRARY)
 
 # ============================================================
 #  WXSJ 内置 patched targetfuntional.dll（objcopy 静态库）
+#  两份：官方热更会回滚/灰度切换（2026-09-23 血案）→ 按运行时长度选版本
 # ============================================================
 include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_dll
 LOCAL_SRC_FILES := Games/WxsjPatchedDll.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := wxsj_dll_v711
+LOCAL_SRC_FILES := Games/WxsjPatchedDll_v711.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # ============================================================
@@ -318,6 +324,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll
+LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll wxsj_dll_v711
 
 include $(BUILD_SHARED_LIBRARY)

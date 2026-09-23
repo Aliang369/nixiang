@@ -43,12 +43,26 @@ static const uint8_t kExecPrologue[16] = {
     0xf6, 0x57, 0x02, 0xa9, 0xf4, 0x4f, 0x03, 0xa9,
 };
 static constexpr int32_t kOrigDllLen = 2030080;   // 官方热更 targetfuntional.dll 字节数（2026-09-23 二次热更，真机 DIAG dump 实测）
-static constexpr int32_t kLegacyDllLen = 1955840; // 官方上一版 dll（未拉到最新热更的玩家：内置补丁装不进旧数组，走 skip 分支=跑官方 dll，不崩）
+static constexpr int32_t kPrevDllLen = 1960960;   // 官方上一版热更 dll（2026-09-23 下午官方回滚/灰度回落，真机 mismatch 标记实测）
 static const char kDllNameKey[] = "targetfuntional";
 
 // ---- 内置 patched dll（llvm-objcopy 生成，Android.mk 链接）----
-extern const uint8_t _binary_targetfuntional_dll_bin_start[];
+// 🩸 2026-09-23 血案：官方热更会**回滚/灰度切换**（同一天内 1960960 ⇄ 2030080 来回），
+// 只内置一份补丁必然在切换后失配。⇒ 两个已知官方版本各内置一份补丁，按运行时数组长度选。
+extern const uint8_t _binary_targetfuntional_dll_bin_start[];       // 对应 kOrigDllLen
 extern const uint8_t _binary_targetfuntional_dll_bin_end[];
+extern const uint8_t _binary_targetfuntional_dll_v711_bin_start[];  // 对应 kPrevDllLen
+extern const uint8_t _binary_targetfuntional_dll_v711_bin_end[];
+
+struct DllVariant { int32_t officialLen; const uint8_t* start; const uint8_t* end; const char* tag; };
+static const DllVariant* PickDllVariant(int32_t len) {
+    static const DllVariant kVars[] = {
+        { kOrigDllLen, _binary_targetfuntional_dll_bin_start,      _binary_targetfuntional_dll_bin_end,      "hotfix2-2030080" },
+        { kPrevDllLen, _binary_targetfuntional_dll_v711_bin_start, _binary_targetfuntional_dll_v711_bin_end, "v711-1960960" },
+    };
+    for (const DllVariant& v : kVars) if (v.officialLen == len) return &v;
+    return nullptr;
+}
 
 typedef uint8_t (*Exec_t)(void* self, void* data, void* outP, void* mi);
 
@@ -86,7 +100,24 @@ static uintptr_t Il2CppBase() {
 
 extern "C" void StarryShowToast(const char* text);  // Main.cpp 导出，崩前提示
 
-static std::atomic<bool> g_mismatchAborted{false};  // 官方热更失配：只崩一次
+static std::atomic<bool> g_mismatchBlocked{false};  // 官方热更失配：只处置一次（v7.13 起改为「禁止进入」而非崩溃）
+
+// ---- 测试钩子：files/starry_force_mismatch 存在 ⇒ 强制走失配分支 ----
+// 用途：不等官方真热更也能验证「禁止进入游戏」的行为（正式逻辑不受影响；删文件即恢复）
+static bool ForceMismatch() {
+    static std::atomic<int> cached{-1};  // -1 未查 / 0 无 / 1 有
+    int c = cached.load(std::memory_order_relaxed);
+    if (c < 0) {
+        std::string pkg = PkgName();
+        c = 0;
+        if (!pkg.empty()) {
+            std::string p = "/data/user/0/" + pkg + "/files/starry_force_mismatch";
+            if (access(p.c_str(), F_OK) == 0) c = 1;
+        }
+        cached.store(c, std::memory_order_relaxed);
+    }
+    return c == 1;
+}
 
 // ---- DIAG 取证模式（-DWXSJ_DIAG_DUMP=1）：只落盘官方运行时 DLL，不替换/不崩 ----
 #if defined(WXSJ_DIAG_DUMP) && WXSJ_DIAG_DUMP
@@ -127,9 +158,10 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
         // DIAG：只落盘官方运行时 dll（大数组），不替换、不崩
         if (isDll) DiagDumpDll(bytes, len, head);
 #else
-        if (g_replaceArmed.load(std::memory_order_relaxed)
-                && (len == kOrigDllLen || len == kLegacyDllLen) && isDll) {
-            // 精确命中当前官方版长度：替换为内置 patched dll
+        const DllVariant* var = PickDllVariant(len);
+        const bool forced = ForceMismatch();
+        if (g_replaceArmed.load(std::memory_order_relaxed) && var && isDll && !forced) {
+            // 命中某个已知官方版长度：替换为该版本对应的内置 patched dll
             // 深过滤：全数组内必须出现程序集名（实测名字在 BSJB 元数据 ~0x19 万字节处，
             // 原先 256KB 窗口永远扫不到 → 从未替换。一次性装载，1.9MB memmem 开销可忽略）
                 size_t scan = (size_t)len;
@@ -139,41 +171,41 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
                     if (bytes[o] == 't' && memcmp(bytes + o, kDllNameKey, klen) == 0) { found = true; break; }
                 }
                 if (found) {
-                    const uint8_t* pStart = _binary_targetfuntional_dll_bin_start;
-                    size_t pLen = (size_t)(_binary_targetfuntional_dll_bin_end - _binary_targetfuntional_dll_bin_start);
+                    const uint8_t* pStart = var->start;
+                    size_t pLen = (size_t)(var->end - var->start);
                     if (pLen > 0 && pLen <= (size_t)len) {
                         memcpy((void*)bytes, pStart, pLen);
                         memset((void*)(bytes + pLen), 0, (size_t)len - pLen);  // 原长度不变，尾零填充
                         int h = g_hits.fetch_add(1) + 1;
-                        LOGI(WXSJ_LOG " patched dll injected (hit #%d, patched=%zu pad=%d)",
-                             h, pLen, (int)(len - (int32_t)pLen));
+                        LOGI(WXSJ_LOG " patched dll injected (hit #%d, variant=%s patched=%zu pad=%d)",
+                             h, var->tag, pLen, (int)(len - (int32_t)pLen));
                         WXSJ_TRACE("dll replaced");
                     } else {
-                        LOGE(WXSJ_LOG " embedded dll size %zu > array %d, skip", pLen, len);
+                        LOGE(WXSJ_LOG " embedded dll size %zu > array %d (%s), skip", pLen, len, var->tag);
                     }
                 }
             }
-        else if (g_replaceArmed.load(std::memory_order_relaxed) && isDll && !g_mismatchAborted.load()) {
-            // 官方已热更（装载 dll 长度/内容与当前适配版不一致）：
-            // 屏蔽/执法拦截全部失效 → 玩家脏存档会被原样上传 → 当场崩溃保护账号（不裸奔）。
-            // 崩前：toast 提示 + 落标记文件 + 留足 toast 渲染时间，再 abort。
-            if (g_mismatchAborted.exchange(true)) return orig(self, data, outP, mi);
-            LOGE(WXSJ_LOG " HOTFIX MISMATCH: loaded dll len=%d expected=%d -> ABORT", len, kOrigDllLen);
-            StarryShowToast("[无限升级] 检测到游戏已更新(热更), 当前补丁不匹配, 为避免封号已停止运行, 请更新补丁后再进入");
+        else if (g_replaceArmed.load(std::memory_order_relaxed) && isDll && (!var || forced) && !g_mismatchBlocked.load()) {
+            // 官方已热更（装载 dll 长度未适配，补丁打不上）⇒ v7.13：**不崩**，改为「禁止进入游戏」。
+            // 做法：不调 orig ⇒ 热更程序集根本不执行 ⇒ 游戏进不了世界、官方逻辑也不会跑起来上传脏数据；
+            // 菜单与 App 仍存活，玩家可直接到菜单「游戏补丁 → 检查更新」拉新 so，重开即恢复。
+            if (g_mismatchBlocked.exchange(true)) return 0;  // 已处置：后续调用继续拦
+            LOGE(WXSJ_LOG " HOTFIX MISMATCH: loaded dll len=%d known={%d,%d} forced=%d -> BLOCK ENTRY",
+                 len, kOrigDllLen, kPrevDllLen, forced ? 1 : 0);
+            StarryShowToast("[无限升级] 游戏已热更，当前补丁不匹配，已禁止进入游戏。请到菜单「游戏补丁 → 检查更新」下载新补丁后重开");
             std::string pkg = PkgName();
             if (!pkg.empty()) {
                 std::string dp = "/data/user/0/" + pkg + "/files/starry_hotfix_mismatch";
                 FILE* f = fopen(dp.c_str(), "wb");
                 if (f) {
-                    fprintf(f, "mismatch len=%d expect=%d\n", len, kOrigDllLen);
+                    fprintf(f, "blocked len=%d known=%d,%d forced=%d\n", len, kOrigDllLen, kPrevDllLen, forced ? 1 : 0);
                     fclose(f);
                 }
             }
-            usleep(1200 * 1000);  // 1.2s 让 toast 闪现
-            abort();
+            return 0;  // 不调 orig：热更程序集不执行
         }
 #endif  // WXSJ_DIAG_DUMP
-        if (g_mismatchAborted.load()) return orig(self, data, outP, mi);  // 已处置（竞态窗口）
+        if (g_mismatchBlocked.load()) return 0;  // 已处置（竞态窗口）
     }
     return orig(self, data, outP, mi);
 }
@@ -194,8 +226,9 @@ static bool TryHookOnce() {
     g_origExec = (Exec_t)orig;
     g_hooked.store(true);
     size_t pLen = (size_t)(_binary_targetfuntional_dll_bin_end - _binary_targetfuntional_dll_bin_start);
-    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p embedded=%zuB",
-         (void*)base, kExecRva, orig, pLen);
+    size_t pLen711 = (size_t)(_binary_targetfuntional_dll_v711_bin_end - _binary_targetfuntional_dll_v711_bin_start);
+    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p embedded=%zuB(%d) %zuB(%d)",
+         (void*)base, kExecRva, orig, pLen, kOrigDllLen, pLen711, kPrevDllLen);
     // v7.2：屏蔽封号执法为基线功能——无条件武装字节替换（清数据/首装同样生效）。
     // 旧逻辑「配置里有功能开启才武装」在清数据后导致原版 dll 运行，封号弹窗+COS上传全链复活。
     g_replaceArmed.store(true);
