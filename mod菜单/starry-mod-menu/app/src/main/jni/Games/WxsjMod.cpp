@@ -42,8 +42,8 @@ static const uint8_t kExecPrologue[16] = {
     0xfe, 0x0f, 0x1c, 0xf8, 0xf8, 0x5f, 0x01, 0xa9,
     0xf6, 0x57, 0x02, 0xa9, 0xf4, 0x4f, 0x03, 0xa9,
 };
-static constexpr int32_t kOrigDllLen = 1960960;   // 官方热更 targetfuntional.dll 字节数（2026-09-21 运行时 dump 实测）
-static constexpr int32_t kLegacyDllLen = 1955840; // 官方上一版 dll（未拉到最新热更的玩家放行替换，避免误伤）
+static constexpr int32_t kOrigDllLen = 2030080;   // 官方热更 targetfuntional.dll 字节数（2026-09-23 二次热更，真机 DIAG dump 实测）
+static constexpr int32_t kLegacyDllLen = 1955840; // 官方上一版 dll（未拉到最新热更的玩家：内置补丁装不进旧数组，走 skip 分支=跑官方 dll，不崩）
 static const char kDllNameKey[] = "targetfuntional";
 
 // ---- 内置 patched dll（llvm-objcopy 生成，Android.mk 链接）----

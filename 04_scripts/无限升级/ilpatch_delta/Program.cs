@@ -28,9 +28,9 @@ using System.Linq;
 //
 // 铁律：有过滤（block_report 门控，缺失=原版行为）；调原函数；不碰未列出 IL。
 
-// 2026-09-23 12.10701 适配：官方热更 dll 与上版逐字节相同（sha256 1cecb470…）；
-// SRC 换成含「无限挑战秘境 mijing_free」的新 v1（= 旧 v1 + 184B 代码，.text 段布局一致）
-const string SRC = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260923.dll";
+// 2026-09-23 二次热更适配：官方 dll 1960960 → 2030080 B（sha256 66866590…），
+// SRC = 用新官方 dll 重打出的 v1（30 patches）；DST = 最终补丁 dll（必须 ≤ kOrigDllLen=2030080）
+const string SRC = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260923_hotfix2.dll";
 const string DST = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional.dll";
 
 string[] Blacklist = {
@@ -181,6 +181,8 @@ var mNote = cfgType.Methods.FirstOrDefault(x => x.Name == "NoteBlockedRpc")
 string[] SendDeny = {
     // 反作弊 / 举报 / 封号上报
     "AddPlayerReport", "CheckBanReport", "CheckBan", "OnRecordNewCheckCode", "AddActiveRecord",
+    // 2026-09-23 二次热更新增：道具来源异常上报（配合 InfinityCore.ItemAddSourceAnomalyMonitor）
+    "RecordItemAddSourceAnomaly",
     // 设备与在线状态外发
     "SendDeviceInfoBack", "PlayerToBackGround", "PlayerToFrontGround",
     // 日志外发

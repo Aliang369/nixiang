@@ -33,6 +33,7 @@ internal static class Patcher
 
         // ===== 六、上报屏蔽（key=block_report）=====
         P(() => EarlyReturnVoid(FindM(mod.GetType("InfinityCore.ItemUseAnomalyMonitor"), "CheckAmount"), "block_report"), "上报 ItemUseAnomalyMonitor.CheckAmount");
+        P(() => EarlyReturnVoid(FindM(mod.GetType("InfinityCore.ItemAddSourceAnomalyMonitor"), "CheckAddSource"), "block_report"), "上报 ItemAddSourceAnomalyMonitor.CheckAddSource(道具来源异常监控·2026-09-23 二次热更新增)");
         P(() => EarlyReturnVoid(FindM(mod.GetType("DamageCheatRecordData"), "Record"), "block_report"), "上报 DamageCheatRecordData.Record");
         var npm = mod.GetType("NetWorkPlayerMgr");
         P(() => EarlyReturnVoid(FindM(npm, "CheckBan"), "block_report"), "上报 CheckBan");
@@ -53,7 +54,14 @@ internal static class Patcher
         P(() => EarlyReturnVoid(FindM(mod.GetType("SkillDetialWindow"), "QuickUpgrade"), "skill_free"), "技能免费 禁用一键升级(原生路径tagged-pointer崩溃,规避)");
         P(() => EarlyReturnBool(FindM(mod.GetType("SkillDetialWindow"), "CanLevelUp"), "skill_free", true), "技能合成 CanLevelUp→true");
         P(() => EarlyReturnVoid(FindM(mod.GetType("GameData"), "MinusItem"), "item_keep"), "物品不减 MinusItem 入口返回");
-        P(() => AddItemDouble(FindM(mod.GetType("GameData"), "AddItem", 2)), "物品翻倍 AddItem 数量×2");
+        // 2026-09-23 二次热更：官方把 AddItem(string,long) 改成 4 参数（新增「道具来源」字符串），
+        //   锚点改为「参数1=Int64 且 参数2=Boolean 且 指令数>40」= 真实主路径（另一 4 参数版只是转发壳）。
+        var mAddItemMain = mod.GetType("GameData").Methods.Single(x => x.Name == "AddItem"
+            && x.Parameters.Count == 4
+            && x.Parameters[1].ParameterType.FullName == "System.Int64"
+            && x.Parameters[2].ParameterType.FullName == "System.Boolean"
+            && x.Body != null && x.Body.Instructions.Count > 40);
+        P(() => AddItemDouble(mAddItemMain), "物品翻倍 AddItem(string,long,bool,string) 数量×2（新签名主路径）");
         P(() => AdsRewardMultiply(FindM(npm, "GetAdsRewardCallBack")), "广告奖励倍数 GetAdsRewardCallBack×N");
         P(() => ShowAdsFree(), "免广告 ShowAdsNewFlow.Show→AdsFree 原路径");
         P(() => MijingFree(FindM(mod.GetType("EnemyGroupData"), "CanChanllage", 3)), "无限挑战秘境 CanChanllage→result=true");

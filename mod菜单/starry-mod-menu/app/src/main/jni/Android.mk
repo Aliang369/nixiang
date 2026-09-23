@@ -271,9 +271,9 @@ LOCAL_ARM_MODE  := arm
 # LOCAL_SRC_FILES := Main.cpp Games/Es2Mod.cpp Unity/Il2CppApi.cpp
 # 超维进化（cwjh）— Cocos2djs se::evalString splice（20260921 0.3.5 热更：doDmg 14 参/前缀动态匹配）
 # 防御·抗性新增形态C锚点（o/c + StatusDef.getMinEdr）；回血回蓝×4、暴击+60pp、闪避+35pp
-# 无限升级 12.10701 / vc1644 — 热更 dll 字节替换（2026-09-23 正式包）
-# 2026-09-23：DIAG 取证已完成（官方热更 dll 与上版逐字节相同，sha256 1cecb470…），
-#   正式构建 = 内置 patched dll（含 mijing_free）+ 4 个新开关；DIAG 宏已移除
+# 无限升级 12.10701 / vc1644 — 热更 dll 字节替换（2026-09-23 二次热更正式包）
+# 2026-09-23 白天：官方再推热更，dll 1960960 → 2030080 B；已用 DIAG 包抓到新 dll 并重打补丁，
+#   kOrigDllLen 已改 2030080，DIAG 开关按约定移除（勿再打开，否则 release 构建被脚本拒绝）。
 LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
 LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
 # 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
