@@ -1,0 +1,14 @@
+{
+  "template_id": "mygwzd",
+  "name": "命运-冠位指定",
+  "package": "com.bilibili.fatego",
+  "source": "Games/MygwzdEntry.cpp kMygwzd_Features / MygwzdMod.h MYGWZD_FEAT_*",
+  "features": [
+    {"feat_num": 0, "name": "战斗"},
+    {"feat_num": 1, "name": "攻击倍率", "type": "slider", "min": 1, "max": 100, "default": 1},
+    {"feat_num": 2, "name": "无敌", "type": "toggle"},
+    {"feat_num": 3, "name": "战斗加速", "type": "slider", "min": 1, "max": 10, "default": 1},
+    {"feat_num": 4, "name": "无限技能", "type": "toggle"}
+  ],
+  "note": "game_id/tag/authGameId = mygwzd（违反 skill/starry-mod 的『官名拼音首字母』规则——按规则应为 mygzzd；已定形于四件套与注册表 tag，改名需同步 Android_mygwzd.mk / MygwzdEntry.cpp / MygwzdMod.cpp 三处标签）"
+}

@@ -1,0 +1,113 @@
+PID=19436
+aa180000-aa181000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa200000-aa201000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa254000-aa255000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa28c000-aa28d000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aadb4000-aadb5000 rw-p 00000000 00:00 0                                  [anon:.bss]
+ab0cc000-ab0cd000 rw-p 00000000 00:00 0                                  [anon:.bss]
+ab234000-ab235000 rw-p 00000000 00:00 0                                  [anon:.bss]
+6e72b0a000-6e72b85000 rw-p 00000000 00:00 0                              [anon:.bss]
+6e7a233000-6e80000000 r--p 00000000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f86d89000-6f87150000 r--p 00000000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f87151000-6f88d9f000 r--p 003c8000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f88da2000-6f8c3fa000 r-xp 02015000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f8c3fd000-6f8c730000 rw-p 0566c000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f8c733000-6f8cb4b000 rw-p 0599e000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f8cb4b000-6f8cd81000 rw-p 00000000 00:00 0                              [anon:.bss]
+6f8cd81000-6f8cd85000 r-xp 05db8000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f8cd85000-6f8cd89000 rw-p 05db8000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f8cd89000-6f8cd8e000 rw-p 05db8000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f8cd91000-6f8cda1000 rw-p 05dbc000 fe:48 332119                         /data/app/~~M2jRNl-YaZPgpNYPr8nB3w==/com.bilibili.fatego-6zrJpzDW-pBaLg_scCeyBA==/lib/arm64/libil2cpp.so
+6f8f8b7000-6f8f9a2000 rw-p 00000000 00:00 0                              [anon:.bss]
+6fc2761000-6fc2763000 rw-p 00000000 00:00 0                              [anon:.bss]
+6fc87b4000-6fc87bb000 rw-p 00000000 00:00 0                              [anon:.bss]
+6fd6962000-6fd6963000 rw-p 00000000 00:00 0                              [anon:.bss]
+6fdf883000-6fdf8bb000 rw-p 00000000 00:00 0                              [anon:.bss]
+6fe6f96000-6fe6f97000 r--p 00000000 00:00 0                              [anon:.bss]
+6fe6f9b000-6fe6f9f000 rw-p 00000000 00:00 0                              [anon:.bss]
+6fed16d000-6fed1df000 rw-p 00000000 00:00 0                              [anon:.bss]
+6ff019a000-6ff019d000 r--p 00000000 00:00 0                              [anon:.bss]
+6ff4d59000-6ff4d5b000 rw-p 00000000 00:00 0                              [anon:.bss]
+7416f41000-7416f58000 rw-p 00000000 00:00 0                              [anon:.bss]
+7416fe9000-7416fea000 rw-p 00000000 00:00 0                              [anon:.bss]
+7418b6b000-7418b6c000 rw-p 00000000 00:00 0                              [anon:.bss]
+74370ea000-74370fa000 rw-p 00000000 00:00 0                              [anon:.bss]
+743ae7b000-743c377000 r-xp 00000000 fe:48 291772                         /data/app/~~sg2RcoQ4ey60rm9-oEtSbQ==/com.bilibili.BGfatego-HAZM-0d5GqO9Pu3MRyP3IA==/lib/arm64/libSDKloading.so
+743c377000-743c518000 r--p 014fb000 fe:48 291772                         /data/app/~~sg2RcoQ4ey60rm9-oEtSbQ==/com.bilibili.BGfatego-HAZM-0d5GqO9Pu3MRyP3IA==/lib/arm64/libSDKloading.so
+743c518000-743c519000 rw-p 0169c000 fe:48 291772                         /data/app/~~sg2RcoQ4ey60rm9-oEtSbQ==/com.bilibili.BGfatego-HAZM-0d5GqO9Pu3MRyP3IA==/lib/arm64/libSDKloading.so
+743c519000-743c54f000 rw-p 00000000 00:00 0                              [anon:.bss]
+743c54f000-743c55d000 rwxp 00000000 00:00 0                              [anon:.bss]
+743c55d000-743c55f000 rw-p 00000000 00:00 0                              [anon:.bss]
+743eae6000-743eb25000 r-xp 00000000 00:00 0                              [anon:.bss]
+743eb25000-743eb26000 rw-p 00000000 00:00 0                              [anon:.bss]
+743eb26000-743eb2a000 r--p 00000000 00:00 0                              [anon:.bss]
+743eb2a000-743eb2d000 rw-p 00000000 00:00 0                              [anon:.bss]
+74515a7000-74515ab000 rw-p 00000000 00:00 0                              [anon:.bss]
+745578b000-74557a5000 rw-p 00000000 00:00 0                              [anon:.bss]
+74732b1000-74736b6000 rw-p 00000000 00:00 0                              [anon:.bss]
+74736b6000-74736c4000 rwxp 00000000 00:00 0                              [anon:.bss]
+750f2f0000-750f4a9000 rw-p 00000000 00:00 0                              [anon:.bss]
+750f4c4000-750f4c8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7544d52000-7544d53000 rw-p 00000000 00:00 0                              [anon:.bss]
+75453b7000-75453bf000 rw-p 00000000 00:00 0                              [anon:.bss]
+75463b5000-75463bd000 rw-p 00000000 00:00 0                              [anon:.bss]
+75496be000-75496bf000 rw-p 00000000 00:00 0                              [anon:.bss]
+75499c6000-75499f9000 rw-p 00000000 00:00 0                              [anon:.bss]
+7549e90000-7549eb1000 rw-p 00000000 00:00 0                              [anon:.bss]
+7549f67000-7549f6a000 rw-p 00000000 00:00 0                              [anon:.bss]
+7549fd8000-7549fd9000 rw-p 00000000 00:00 0                              [anon:.bss]
+754a296000-754a297000 rw-p 00000000 00:00 0                              [anon:.bss]
+754a333000-754a334000 rw-p 00000000 00:00 0                              [anon:.bss]
+754a590000-754a591000 rw-p 00000000 00:00 0                              [anon:.bss]
+754ae6a000-754ae6b000 rw-p 00000000 00:00 0                              [anon:.bss]
+754af2f000-754af31000 rw-p 00000000 00:00 0                              [anon:.bss]
+754b265000-754b268000 rw-p 00000000 00:00 0                              [anon:.bss]
+754b6d4000-754b6d7000 rw-p 00000000 00:00 0                              [anon:.bss]
+754b76e000-754b76f000 rw-p 00000000 00:00 0                              [anon:.bss]
+754b810000-754b811000 rw-p 00000000 00:00 0                              [anon:.bss]
+754b8d6000-754b8d8000 rw-p 00000000 00:00 0                              [anon:.bss]
+754c6fd000-754c6fe000 rw-p 00000000 00:00 0                              [anon:.bss]
+754c7ad000-754c7ae000 rw-p 00000000 00:00 0                              [anon:.bss]
+754c7fe000-754c7ff000 rw-p 00000000 00:00 0                              [anon:.bss]
+754e2fd000-754e2fe000 rw-p 00000000 00:00 0                              [anon:.bss]
+75523de000-75523e5000 rw-p 00000000 00:00 0                              [anon:.bss]
+75541d9000-75541e1000 rw-p 00000000 00:00 0                              [anon:.bss]
+7554367000-755436f000 rw-p 00000000 00:00 0                              [anon:.bss]
+75560f6000-75560f7000 rw-p 00000000 00:00 0                              [anon:.bss]
+7560755000-7560756000 rw-p 00000000 00:00 0                              [anon:.bss]
+756078c000-756078d000 rw-p 00000000 00:00 0                              [anon:.bss]
+75607fa000-75607fb000 rw-p 00000000 00:00 0                              [anon:.bss]
+756606e000-7566071000 rw-p 00000000 00:00 0                              [anon:.bss]
+75660ca000-75660cb000 rw-p 00000000 00:00 0                              [anon:.bss]
+DUMP sdk_rx_1.bin 0x743ae7b000-0x743c377000 size=22003712
+-rw-r--r-- 1 root root 22003712 2026-09-21 23:26 /data/local/tmp/binge_memdump/sdk_rx_1.bin
+DUMP sdk_ro.bin 0x743c377000-0x743c518000 size=1708032
+-rw-r--r-- 1 root root 1708032 2026-09-21 23:26 /data/local/tmp/binge_memdump/sdk_ro.bin
+DUMP sdk_rw.bin 0x743c518000-0x743c519000 size=4096
+-rw-r--r-- 1 root root 4096 2026-09-21 23:26 /data/local/tmp/binge_memdump/sdk_rw.bin
+DUMP shell_rw_bss_743c519000_743c54f000.bin 0x743c519000-0x743c54f000 size=221184
+-rw-r--r-- 1 root root 221184 2026-09-21 23:26 /data/local/tmp/binge_memdump/shell_rw_bss_743c519000_743c54f000.bin
+DUMP shell_rwx_bss_743c54f000_743c55d000.bin 0x743c54f000-0x743c55d000 size=57344
+-rw-r--r-- 1 root root 57344 2026-09-21 23:26 /data/local/tmp/binge_memdump/shell_rwx_bss_743c54f000_743c55d000.bin
+DUMP shell_rw_bss_743c55d000_743c55f000.bin 0x743c55d000-0x743c55f000 size=8192
+-rw-r--r-- 1 root root 8192 2026-09-21 23:26 /data/local/tmp/binge_memdump/shell_rw_bss_743c55d000_743c55f000.bin
+DUMP il2cpp_rx_1.bin 0x6f88da2000-0x6f8c3fa000 size=56983552
+-rw-r--r-- 1 root root 56983552 2026-09-21 23:26 /data/local/tmp/binge_memdump/il2cpp_rx_1.bin
+DUMP il2cpp_rx_2.bin 0x6f8cd81000-0x6f8cd85000 size=16384
+-rw-r--r-- 1 root root 16384 2026-09-21 23:26 /data/local/tmp/binge_memdump/il2cpp_rx_2.bin
+DUMP anon_rwx_1.bin 0x6fb66e0000-0x6fb6801000 size=1183744
+-rw-r--r-- 1 root root 1183744 2026-09-21 23:26 /data/local/tmp/binge_memdump/anon_rwx_1.bin
+total 78K
+drwxr-xr-x  2 root  root  3.3K 2026-09-21 23:26 .
+drwxrwx--x 22 shell shell  56K 2026-09-21 23:26 ..
+-rw-r--r--  1 root  root  1.1M 2026-09-21 23:26 anon_rwx_1.bin
+-rw-r--r--  1 root  root   54M 2026-09-21 23:26 il2cpp_rx_1.bin
+-rw-r--r--  1 root  root   16K 2026-09-21 23:26 il2cpp_rx_2.bin
+-rw-r--r--  1 root  root    74 2026-09-21 23:26 il2cpp_rx_segs.txt
+-rw-r--r--  1 root  root  1.6M 2026-09-21 23:26 sdk_ro.bin
+-rw-r--r--  1 root  root  4.0K 2026-09-21 23:26 sdk_rw.bin
+-rw-r--r--  1 root  root   21M 2026-09-21 23:26 sdk_rx_1.bin
+-rw-r--r--  1 root  root  216K 2026-09-21 23:26 shell_rw_bss_743c519000_743c54f000.bin
+-rw-r--r--  1 root  root  8.0K 2026-09-21 23:26 shell_rw_bss_743c55d000_743c55f000.bin
+-rw-r--r--  1 root  root   56K 2026-09-21 23:26 shell_rwx_bss_743c54f000_743c55d000.bin
+DONE

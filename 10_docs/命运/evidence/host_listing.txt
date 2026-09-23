@@ -1,0 +1,17 @@
+total 161888
+drwxr-xr-x@ 16 aliang  staff   512B Sep 21 23:28 .
+drwxr-xr-x@  4 aliang  staff   128B Sep 21 23:26 ..
+-rw-r--r--@  1 aliang  staff   1.1M Sep 21 23:28 anon_rwx_1.bin
+-rw-r--r--@  1 aliang  staff    10K Sep 21 23:28 dump_log.txt
+-rw-r--r--@  1 aliang  staff     0B Sep 21 23:28 host_listing.txt
+-rw-r--r--@  1 aliang  staff    54M Sep 21 23:28 il2cpp_rx_1.bin
+-rw-r--r--@  1 aliang  staff    16K Sep 21 23:28 il2cpp_rx_2.bin
+-rw-r--r--@  1 aliang  staff    74B Sep 21 23:28 il2cpp_rx_segs.txt
+-rw-r--r--@  1 aliang  staff   666K Sep 21 23:26 maps.txt
+drwxr-xr-x@ 12 aliang  staff   384B Sep 21 23:28 raw
+-rw-r--r--@  1 aliang  staff   1.6M Sep 21 23:28 sdk_ro.bin
+-rw-r--r--@  1 aliang  staff   4.0K Sep 21 23:28 sdk_rw.bin
+-rw-r--r--@  1 aliang  staff    21M Sep 21 23:28 sdk_rx_1.bin
+-rw-r--r--@  1 aliang  staff   216K Sep 21 23:28 shell_rw_bss_743c519000_743c54f000.bin
+-rw-r--r--@  1 aliang  staff   8.0K Sep 21 23:28 shell_rw_bss_743c55d000_743c55f000.bin
+-rw-r--r--@  1 aliang  staff    56K Sep 21 23:28 shell_rwx_bss_743c54f000_743c55d000.bin
