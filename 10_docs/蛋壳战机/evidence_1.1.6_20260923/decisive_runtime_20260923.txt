@@ -1,0 +1,44 @@
+# 修复后局内运行决定性行（转抄自设备 logcat，2026-09-23 21:03 ~ 21:08，serial f9a116a2）
+#
+# 来源说明：以下行是本次会话用
+#   adb -s f9a116a2 shell 'logcat -b main -d -v time' | grep '[dkzj]'
+# 在设备上直接抓取到的原始输出。设备 logcat 环形缓冲已被后续 Unity 日志冲掉，
+# 无法再次回放，故以转抄形式留档；完整原始转储在本地忽略目录
+#   09_test/蛋壳战机/evidence_1.1.6_20260923/
+#
+# ── 修复版进程 pid=27511（21:02:47 冷启动）───────────────────────────
+09-23 21:02:47.946 27511 27555 I Mod_Menu: [dkzj] lib ready; hooks file-offset + by-name fallback
+09-23 21:03:49.230 27511 27544 I Mod_Menu: [Il2Cpp] api loaded from libil2cpp.so (xdl+dynsym)
+09-23 21:03:49.239 27511 27544 I Mod_Menu: [dkzj] steal picked=10001501 granted=2 (of 3 candidates)
+09-23 21:04:09.213 27511 27544 I Mod_Menu: [dkzj] steal picked=11000601 granted=2 (of 3 candidates)
+09-23 21:04:45.991 27511 27544 I Mod_Menu: [dkzj] steal picked=10401601 granted=2 (of 3 candidates)
+#
+# ── 用户自行复玩进程 pid=29615（21:06 之后，多次冷启动）─────────────
+09-23 21:07:22.389 29615 29650 I/Mod_Menu: [dkzj] steal picked=10400102 granted=2 (of 3 candidates)
+09-23 21:07:25.601 29615 29650 I/Mod_Menu: [dkzj] steal picked=10401502 granted=2 (of 3 candidates)
+09-23 21:07:37.451 29615 29650 I/Mod_Menu: [dkzj] steal picked=10400101 granted=2 (of 3 candidates)
+09-23 21:07:43.286 29615 29650 I/Mod_Menu: [dkzj] god blocked hero hp delta=-175
+09-23 21:07:45.221 29615 29650 I/Mod_Menu: [dkzj] god blocked hero hp delta=-175
+09-23 21:07:46.821 29615 29650 I/Mod_Menu: [dkzj] god blocked hero hp delta=-175
+09-23 21:07:48.584 29615 29650 I/Mod_Menu: [dkzj] god blocked hero hp delta=-175
+09-23 21:07:50.355 29615 29650 I/Mod_Menu: [dkzj] god blocked hero hp delta=-175
+09-23 21:07:52.290 29615 29650 I/Mod_Menu: [dkzj] god blocked hero hp delta=-175
+09-23 21:08:00.273 29615 29650 I/Mod_Menu: [dkzj] steal picked=10400602 granted=2 (of 3 candidates)
+09-23 21:08:25.523 29615 29650 I/Mod_Menu: [dkzj] steal picked=10000106 granted=2 (of 3 candidates)
+09-23 21:08:27.307 29615 29650 I/Mod_Menu: [dkzj] steal picked=10100102 granted=1 (of 2 candidates)
+#
+# ── 攻击倍率（同一进程 27511）────────────────────────────────────
+09-23 21:03:30.811 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -360 -> -36000
+09-23 21:03:30.999 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -288 -> -28800
+09-23 21:03:31.032 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -230 -> -23000
+09-23 21:03:32.033 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -214 -> -21400
+09-23 21:03:32.266 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -214 -> -21400
+09-23 21:03:32.401 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -214 -> -21400
+09-23 21:03:32.670 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -360 -> -36000
+09-23 21:03:32.831 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -288 -> -28800
+09-23 21:03:33.002 27511 27544 I Mod_Menu: [dkzj] god blocked hero hp delta=-175
+#
+# ── 反证：修复后 exit-info 无新增崩溃（最后一条崩溃仍是修复前 20:56:37）──
+#   21:06:30.870 pid=27511 reason=13 (OTHER KILLS BY SYSTEM) status=0   ← 系统回收，非崩溃
+#   20:56:37.630 pid=26050 reason=2 (SIGNALED) status=11               ← 修复前
+#   20:55:53.083 pid=25834 reason=2 (SIGNALED) status=11               ← 修复前

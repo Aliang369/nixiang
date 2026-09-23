@@ -1,0 +1,11 @@
+09-23 20:36:06.956 21957 21957 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=dkzj)
+09-23 20:36:06.956 21957 21957 I StarryInitProvider: native ensureLoaded=true path=loadLibrary(starry_magic)
+09-23 20:36:07.022 21957 21957 I IL2CPP  : JNI_OnLoad
+09-23 20:36:07.092 21957 21957 I StarryMagic: ===== 星光魔法 MOD 菜单初始化（modern/dkzj）=====
+09-23 20:36:07.092 21957 22006 I StarryMagic: MOD 后台线程已启动 tag=dkzj
+09-23 20:36:07.096 21957 22006 I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked file=0x6BB9D44
+09-23 20:36:07.099 21957 22006 I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked file=0x6CAF970
+09-23 20:36:07.103 21957 22006 I Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill hooked file=0x6E72E40
+09-23 20:36:07.107 21957 22006 I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked file=0x776EDBC
+09-23 20:36:07.109 21957 22006 I Mod_Menu: [dkzj] AddSkillToCharacter resolved @0x78c969b534
+09-23 20:36:07.110 21957 22006 I Mod_Menu: [Il2Cpp] api loaded from libil2cpp.so (xdl+dynsym)

@@ -37,6 +37,12 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
 LOCAL_SRC_FILES := MainModern.cpp Games/DkzjMod.cpp Games/DkzjEntry.cpp Unity/Il2CppApi.cpp
 
+# MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad
+# （2026-09-22 起）。弹壳战机无 ACE（无 libtprt.so）且菜单 dex 已打包进 APK，
+# 故用 no-op 兜底而不编译 SignalQuarantine.cpp / FgoBoot.cpp
+# （避免装 seccomp / 屏蔽致命信号 / 重复注入 dex）。漏掉即 ld.lld: undefined symbol。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

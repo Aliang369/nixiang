@@ -1,0 +1,29 @@
+09-23 21:02:47.781 27511 27511 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=dkzj)
+09-23 21:02:47.782 27511 27511 I StarryInitProvider: native ensureLoaded=true path=loadLibrary(starry_magic)
+09-23 21:02:47.840 27511 27511 I IL2CPP  : JNI_OnLoad
+09-23 21:02:47.931 27511 27511 I StarryMagic: ===== 星光魔法 MOD 菜单初始化（modern/dkzj）=====
+09-23 21:02:47.932 27511 27555 I StarryMagic: MOD 后台线程已启动 tag=dkzj
+09-23 21:02:47.937 27511 27555 I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked file=0x6BB9D44
+09-23 21:02:47.940 27511 27555 I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked file=0x6CAF970
+09-23 21:02:47.942 27511 27555 I Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill hooked file=0x6E72E40
+09-23 21:02:47.944 27511 27555 I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked file=0x776EDBC
+09-23 21:02:47.946 27511 27555 I Mod_Menu: [dkzj] AddSkillToCharacter resolved @0x78c9760534
+09-23 21:02:47.946 27511 27555 I Mod_Menu: [dkzj] lib ready; hooks file-offset + by-name fallback
+09-23 21:02:47.946 27511 27555 I StarryMagic: [dkzj] 初始化成功
+09-23 21:02:47.946 27511 27555 I StarryMagic: MOD 已就绪 tag=dkzj ready=1
+09-23 21:03:21.900 27511 27544 W Mod_Menu: [dkzj] steal skill=1 hero=0x79a5ff75a0 but ShowSkills count=0
+09-23 21:03:21.900 27511 27544 W Mod_Menu: [dkzj] steal skill=10000101 hero=0x79a5ff75a0 but ShowSkills count=0
+09-23 21:03:21.903 27511 27544 W Mod_Menu: [dkzj] steal skill=10601011 hero=0x79a5ff75a0 but ShowSkills count=0
+09-23 21:03:21.903 27511 27544 W Mod_Menu: [dkzj] steal skill=10400102 hero=0x79a5ff75a0 but ShowSkills count=0
+09-23 21:03:21.903 27511 27544 W Mod_Menu: [dkzj] steal skill=10400105 hero=0x79a5ff75a0 but ShowSkills count=0
+09-23 21:03:21.903 27511 27544 W Mod_Menu: [dkzj] steal skill=10000601 hero=0x79a5ff75a0 but ShowSkills count=0
+09-23 21:03:21.903 27511 27544 W Mod_Menu: [dkzj] steal skill=10000102 hero=0x79a5ff75a0 but ShowSkills count=0
+09-23 21:03:30.811 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -360 -> -36000
+09-23 21:03:30.999 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -288 -> -28800
+09-23 21:03:31.032 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -230 -> -23000
+09-23 21:03:32.033 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -214 -> -21400
+09-23 21:03:32.266 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -214 -> -21400
+09-23 21:03:32.401 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -214 -> -21400
+09-23 21:03:32.670 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -360 -> -36000
+09-23 21:03:32.831 27511 27544 I Mod_Menu: [dkzj] attack x100 hpdelta -288 -> -28800
+09-23 21:03:33.002 27511 27544 I Mod_Menu: [dkzj] god blocked hero hp delta=-175

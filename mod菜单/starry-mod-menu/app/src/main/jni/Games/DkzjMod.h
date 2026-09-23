@@ -1,10 +1,10 @@
 /* ================================================================
- *  弹壳战机 1.1.5 (com.survivor.acecn) — 星光 Mod
+ *  蛋壳战机 1.1.6 (com.survivor.acecn) — 星光 Mod
  *
  *  功能：
  *    1 Slider_攻击倍率:1:100:1  EntityCharacter.ChangeHp
  *    2 Toggle_上帝模式           EntityHero.ChangeHp 标记 + 基类拦截
- *    3 Toggle_偷盗技能           HeroComponentRandomSkill.OnAddSkill
+ *    3 Toggle_偷盗技能           BattleWorldContext.PostProcessLearnedSkill
  *    4 Toggle_免广告             ADModuleMgr.CheckAndPlayVideo
  * ================================================================ */
 #ifndef STARRY_DKZJ_MOD_H

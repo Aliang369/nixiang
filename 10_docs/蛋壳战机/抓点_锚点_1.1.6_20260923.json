@@ -1,0 +1,216 @@
+{
+  "game": "蛋壳战机",
+  "actual_app_label": "弹壳战机",
+  "package": "com.survivor.acecn",
+  "version_name": "1.1.6",
+  "version_code": 27,
+  "serial": "f9a116a2",
+  "engine": "Unity IL2CPP",
+  "date": "2026-09-23",
+  "note": "1.1.6 锚点重抓。1.1.5 的 file offset 全部作废（包体与代码布局已变）。",
+  "elf": {
+    "file": "lib/arm64-v8a/libil2cpp.so",
+    "text_section_file_offset": "0x364dc64",
+    "text_section_va": "0x3651c64",
+    "text_section_size": "0x59a7cec",
+    "rva_to_file_offset_delta": "0x4000"
+  },
+  "apk": {
+    "path": "02_apks/蛋壳战机/蛋壳战机_1.1.6_official_from_device.apk",
+    "size": 204423483,
+    "md5": "6bd3f3dea5eb38fce6be8d8038d70fb3",
+    "sha256": "7db02abcac5df5976b5e61ac886871d0678b002392c07ad13157c69cc310d20b",
+    "signer": "O=gorilla",
+    "signer_cert_sha256": "4c999c6ac30fde9c5d6c72e2d48e643a9044c26ff353ce53c46a3d4e91a18994",
+    "app_component_factory": "androidx.core.app.CoreComponentFactory",
+    "dex_entries": ["classes.dex", "classes2.dex", "classes3.dex", "classes4.dex"]
+  },
+  "core_entry_sha256": {
+    "libil2cpp.so": "f7d52c5b0e201d7c507b8eea27a303a6300591d7ff99cc2ee867ef33895a3f32",
+    "libunity.so": "d419ae8ed7677c61b25e82173037546a7cb04cd2e57bb7fbc285a7c07262642a",
+    "libmain.so": "9348cd29bcdec5b677c7124b111a2ebb285bfd6550282619c8fd178f2982eb5d",
+    "global-metadata.dat": "b72da38337555c6fc237aa38132f4c4b4b7263a32fe29c57496d73f32753f0af",
+    "classes.dex": "0020cee11e61b753080561e0a91172ac61f3c936a1726f6d47000e0eaac616fe",
+    "classes2.dex": "6b0fe3f0dbffe9d490ea08d4c9e05d73ab5d5ece0aacda47db459cc9daf12f74",
+    "classes3.dex": "92d79d55f9b3fa3fdf9cea49cf9c9a24d16523d4a7b67005ff91ff1f00e1c0f2",
+    "classes4.dex": "6d5ac6750281fd938e03f4490d0a22f2a8a0b169f16fa694687973b6d94633e2",
+    "resources.arsc": "a506640c7bb18865d4b5a93e3f3ce1bf1d184c8adabb4b98545be65ebb075477"
+  },
+  "menu": {
+    "template": "10_docs/蛋壳战机/dkzj_menu_template.json",
+    "features": [
+      { "button": "Slider_攻击倍率", "feature": 1, "name": "攻击倍率", "type": "range", "range": "1-100" },
+      { "button": "Toggle_上帝模式", "feature": 2, "name": "上帝模式", "type": "toggle" },
+      { "button": "Toggle_偷盗技能", "feature": 3, "name": "偷盗技能", "type": "toggle" },
+      { "button": "Toggle_免广告", "feature": 4, "name": "免广告", "type": "toggle" }
+    ]
+  },
+  "hooks": [
+    {
+      "feature": "攻击倍率",
+      "feature_id": 1,
+      "method": "HotFix.BattleLogic.EntityCharacter.ChangeHp(long)",
+      "rva": "0x6bbdd44",
+      "file_offset": "0x6bb9d44",
+      "prologue_word": "0xA9BB6FFE",
+      "semantics": "非英雄路径开启时 hp 按倍率饱和相乘；英雄负向 HP 在上帝模式下归零"
+    },
+    {
+      "feature": "上帝模式",
+      "feature_id": 2,
+      "method": "HotFix.BattleLogic.EntityHero.ChangeHp(long)",
+      "rva": "0x6cb3970",
+      "file_offset": "0x6caf970",
+      "prologue_word": "0xF81D0FFE",
+      "semantics": "英雄 ChangeHp 调用深度 +1/-1，基础 ChangeHp 据此走无敌过滤"
+    },
+    {
+      "feature": "偷盗技能",
+      "feature_id": 3,
+      "method": "HotFix.BattleLogic.BattleWorldContext.PostProcessLearnedSkill(EntityCharacter,int,Skill_Main,bool,HeroComponentRandomSkill)",
+      "argc": 5,
+      "rva": "0x6e76e40",
+      "file_offset": "0x6e72e40",
+      "prologue_word": "0xD10303FF",
+      "semantics": "授予链收敛点。放行原版后读 heroSkill._randomSkillResult.ShowSkills，对其余候选调用 AddSkillToCharacter 回灌，使重复同名技能走游戏自身 checkIfReplaced 升级逻辑",
+      "replaced_1_1_5_hook": {
+        "method": "HotFix.BattleLogic.HeroComponentRandomSkill.OnAddSkill(int)",
+        "file_offset_1_1_5": "0x6c4c9a4",
+        "reason_abandoned": "旧路径补授调用 AddSkillSurvior(int)，该方法体仅 `_allSkills.Add(id); OnAddSkill(id);`，只改 UI 列表、不实例化技能、不触发升级，故表现为纯 UI 修改"
+      }
+    },
+    {
+      "feature": "免广告",
+      "feature_id": 4,
+      "method": "HotFix.ADModuleMgr.CheckAndPlayVideo(string, Action<bool>)",
+      "rva": "0x7772dbc",
+      "file_offset": "0x776edbc",
+      "prologue_word": "0xA9BC67FE",
+      "semantics": "开启时用 il2cpp_runtime_invoke 调 Action<bool>.Invoke(true)，失败回退原流程"
+    }
+  ],
+  "resolved_by_name": [
+    {
+      "method": "HotFix.BattleLogic.BattleWorldContext.AddSkillToCharacter(EntityCharacter,int,bool)",
+      "argc": 3,
+      "rva": "0x6e67534",
+      "file_offset": "0x6e63534",
+      "prologue_word": "0xF81C0FFE",
+      "purpose": "偷盗技能回灌入口；用 ResolveMethodPtr 按名解析 MethodInfo（抗混淆改名）"
+    }
+  ],
+  "skill_grant_chain": {
+    "entry": "HotFix.BaseSkillSelectViewModule.OnSelectSkill(int)",
+    "chain": [
+      { "method": "HotFix.BattleLogic.SelectSlotCommand.Exec", "rva": "0x6a19944" },
+      { "method": "HotFix.BattleLogic.BattleWorldContext.ApplySelectedSkillsToPlayer", "rva": "0x6e7ada0" },
+      { "method": "HotFix.BattleLogic.BattleWorldContext.AddSkillToCharacter", "rva": "0x6e67534", "file_offset": "0x6e63534" },
+      { "method": "HotFix.BattleLogic.BattleWorldContext.AddSkillToCharacterInSTG", "rva": "0x6e675d4", "file_offset": "0x6e635d4" },
+      { "method": "HotFix.BattleLogic.HeroComponentRandomSkill.checkIfReplaced", "rva": "0x6e76c44", "role": "重复/升级判定" },
+      { "method": "HotFix.BattleLogic.BattleWorldContext.PostProcessLearnedSkill", "rva": "0x6e76e40", "file_offset": "0x6e72e40", "role": "技能实例化 + flags + 派发" },
+      { "method": "HotFix.BattleLogic.BattleWorldContext.DispatchAddSkill", "rva": "0x6e75b88" },
+      { "method": "HotFix.BattleLogic.EntityCharacter.OnSkillLearned", "rva": "0x6bc7478" }
+    ],
+    "list_path_only": [
+      {
+        "method": "HotFix.BattleLogic.HeroComponentRandomSkill.AddSkill(int)",
+        "rva": "0x6c99ad0",
+        "file_offset": "0x6c95ad0",
+        "body": "_allSkills.Add(id); OnAddSkill(id);"
+      },
+      {
+        "method": "HotFix.BattleLogic.HeroComponentRandomSkill.AddSkillSurvior(int)",
+        "rva": "0x6c99bbc",
+        "file_offset": "0x6c95bbc",
+        "body": "_allSkills.Add(id); OnAddSkill(id);",
+        "note": "与 AddSkill(int) 逐指令等价；1.1.5 误用为补授入口"
+      }
+    ],
+    "helpers": [
+      { "method": "HotFix.BattleLogic.HeroComponentRandomSkill.AddSkillFlags", "rva": "0x6c9bb2c" },
+      { "method": "HotFix.BattleLogic.HeroComponentRandomSkill.AddSkillRejectFlags", "rva": "0x6c9bbec" },
+      { "method": "HotFix.BattleLogic.HeroComponentRandomSkill.AddNeedSkill", "rva": "0x6c9bc70" },
+      { "method": "HotFix.BattleLogic.HeroComponentRandomSkill.AddRejectSkills", "rva": "0x6c9bcf4" },
+      { "method": "HotFix.BattleLogic.BattleWorldContext.IsDankeSkill", "rva": "0x6e5ccd8" },
+      { "method": "HotFix.LocalModelManager.GetSkill_Main", "rva": "0x6873638" },
+      { "method": "UnityEngine.EntityBase<object>.GetComponent<object>", "rva": "0x4464990" }
+    ]
+  },
+  "field_offsets": {
+    "HeroComponentRandomSkill._replaceSkillDic": "0x40",
+    "HeroComponentRandomSkill._skills": "0x48",
+    "HeroComponentRandomSkill._allBattleSkills": "0x50",
+    "HeroComponentRandomSkill._allSkills": "0x58",
+    "HeroComponentRandomSkill._learnedSkillHistory": "0x60",
+    "HeroComponentRandomSkill._boxSkillResult": "0x68",
+    "HeroComponentRandomSkill._randomSkillResult": "0x88",
+    "HeroComponentRandomSkill._skillCreator": "0xA8",
+    "HeroComponentRandomSkill.isInSpecialSkill": "0xB0",
+    "HeroComponentRandomSkill.MaxStarSkill": "0xB8",
+    "HeroComponentRandomSkill._skillList": "0xC0",
+    "HeroComponentBase.uniqueSkillId": "0x10",
+    "HeroComponentBase.currentSkillItem": "0x18",
+    "RandomSkillResult.<ShowSkills>k__BackingField": "0x60",
+    "RandomSkillResult.<AllSkills>k__BackingField": "0x30",
+    "RandomSkillResult.<OwnSkills>k__BackingField": "0x58",
+    "RandomSkillResult.Level": "0x1C",
+    "RandomSkillResult.Star": "0x20",
+    "RandomSkillResult.IsInitSkill": "0x24",
+    "RandomSkillResult.NeedSelectCount": "0x74",
+    "RandomSkillResult.BanSkills": "0x78",
+    "List<int>.items": "0x10",
+    "List<int>.size": "0x18",
+    "Il2CppArray.length": "0x18",
+    "Il2CppArray.data": "0x20"
+  },
+  "artifacts": {
+    "so": {
+      "path": "mod菜单/starry-mod-menu/libs_dkzj/arm64-v8a/libstarry_magic.so",
+      "size": 153208,
+      "md5": "4196135574ac234bef804e36442968b1",
+      "sha256": "01b924400c09d6bec82e9f00e83091e4935aa4b6df9644df8d9ca14ca9c43cff"
+    },
+    "classes5_dex": {
+      "path": "07_patched/蛋壳战机/surgical/classes5.dex",
+      "size": 445604,
+      "md5": "ef36bcf32faaad06370de5f969a0765b",
+      "sha256": "488da3a0615b2aa9cfa175f884d24ee5790d3f2bb21ebccffc4703503bc85b93"
+    },
+    "unsigned_apk": {
+      "path": "08_output/蛋壳战机/蛋壳战机_1.1.6_starry-unsigned.apk",
+      "size": 206579045,
+      "md5": "df1f8a0f9a182aa49f64af4864749ed3"
+    },
+    "signed_apk": {
+      "path": "08_output/蛋壳战机/蛋壳战机_1.1.6_starry-releaseSigned.apk",
+      "size": 206906150,
+      "md5": "ecbf80c4ea9c4828e7fc7f5ebf705f9c",
+      "sha256": "8f00e4e519ec8b05fe4c0df20116343e596c7eba905bcb376ed81304ce09b4fd",
+      "signer": "CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN",
+      "signer_cert_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
+    }
+  },
+  "build_notes": {
+    "android_mk_fix": "Android_dkzj.mk 补 LOCAL_SRC_FILES += Games/NoAceStubs.cpp；MainModern.cpp:647-663 自 2026-09-22 起无条件引用 SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad，漏编译即 ld.lld undefined symbol",
+    "noace_stubs": "mod菜单/starry-mod-menu/app/src/main/jni/Games/NoAceStubs.cpp（no-op 兜底，本作无 ACE、无 libtprt.so，菜单类已在 classes5.dex）",
+    "pitfalls": [
+      "`cmd | tail` 吃掉退出码，构建失败会伪装成 exit 0",
+      "macOS `strings` 不把 UTF-8 中文当可打印字符，验中文串须用 `LC_ALL=C grep -ac`"
+    ]
+  },
+  "device_verification": {
+    "date": "2026-09-23T20:36:06",
+    "pid": 21957,
+    "installed_base_apk_md5": "ecbf80c4ea9c4828e7fc7f5ebf705f9c",
+    "hooks_installed": [
+      "EntityCharacter.ChangeHp file=0x6BB9D44",
+      "EntityHero.ChangeHp file=0x6CAF970",
+      "BattleWorldContext.PostProcessLearnedSkill file=0x6E72E40",
+      "ADModuleMgr.CheckAndPlayVideo file=0x776EDBC"
+    ],
+    "resolved": ["AddSkillToCharacter @0x78c969b534"],
+    "crash": "none (no FATAL / tombstone / SIGSEGV)",
+    "in_game_acceptance": "NOT PROVEN — 需用户进局验收（见 功能验收_偷盗技能_1.1.6_20260923.md §5）"
+  },
+  "status": "1.1.6 已装机；四项 Hook 命中、无崩溃；局内功能待用户验收"
+}
