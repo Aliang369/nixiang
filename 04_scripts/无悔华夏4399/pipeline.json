@@ -1,7 +1,7 @@
 {
   "game": "无悔华夏4399",
   "version": "3.8.280 / vc33",
-  "notes": "4399 渠道 com.yhhy.whrhx.m4399 独立分析线。第一步只读提取真机现装单一 base APK；后续检查、dump、锚点与实现阶段按实际包分析结果追加。",
+  "notes": "4399 渠道 com.yhhy.whrhx.m4399 独立分析线。第一步只读提取真机现装单一 base APK；后续检查、dump、锚点与实现阶段按实际包分析结果追加。\n\n2026-09-23 续修：与九游同批——热更后科研立即完成修复（RVA 重校）、科研「资源不足」无条件执行（与 feat#9 同开关）、补做名臣科研、游戏内菜单换新版。4399 侧因真机已装星光包，改为「真机拉取底包 + 外科增量替换 classes4.dex 与 so」，运行时 libil2cpp.so 与九游同源 ⇒ RVA 直接复用。详见 10_docs/无悔华夏4399/实现进度_3.8.280_20260914.md §6。",
   "params": {
     "game_id": "whhx4399",
     "package": "com.yhhy.whrhx.m4399",
@@ -214,7 +214,8 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk"
         }
       ],
-      "status": "pending"
+      "status": "skipped",
+      "notes": "本轮（2026-09-23）产物被 menu_latest_repack / install_menu_latest 取代：设备现装已是 09-15 的 whhx4399 无壳包，本轮走「真机拉取底包 + 外科增量」路线，未再卸载重装（改为 install -r 保留存档）。"
     },
     {
       "id": "cleanup",
@@ -245,6 +246,62 @@
         }
       ],
       "status": "pending"
+    },
+    {
+      "id": "menu_latest_repack",
+      "name": "4399 同步九游本轮成果：新版菜单 dex（LBApplication 壳父类回改）+ 科研热更修复 so，外科增量重签",
+      "requires": [
+        "so_only"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_menu_latest_repack.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_menu_latest_repack.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-23 22:31:47",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk": {
+          "md5": "c8f5d8ddc74f9d2c8405e85297586bb6"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/无悔华夏4399/menu_latest_20260923/classes4.dex": {
+          "md5": "dae5d4974299035bec606ee8a98c9706"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": "3ee2ed06b17f36e4eee64fe9cc067ee4"
+      },
+      "notes": "底包 = 真机拉取的 06_dumped/无悔华夏4399/current_20260923/pkg/base_installed_20260923.apk (sha256 6b51ee7f…, md5 e146f03c…)。只换 classes4.dex + lib/arm64-v8a/libstarry_magic.so；审计 only those two changed、签名 delta 空、包内 dex 157 类；APK sha256 fd2ef14b8768217c8d294e176c2012283813beada71afb29a553490d976400fd。"
+    },
+    {
+      "id": "install_menu_latest",
+      "name": "覆盖安装本轮 4399 新版菜单包（install -r --no-incremental，保留存档）",
+      "requires": [
+        "menu_latest_repack"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_uninstall_install.sh"
+      ],
+      "command": "WHRHX4399_APK=\"/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk\" bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_uninstall_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-23 22:31:47",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk": {
+          "md5": "c8f5d8ddc74f9d2c8405e85297586bb6"
+        }
+      },
+      "notes": "Streamed Install Success；verify_installed_apk --su 设备 base.apk md5 == c8f5d8dd… ✓（未清数据）。装机后已加 Doze 白名单 + force-stop 重启，等乐变回填热更负载（libil2cpp.so md5 76e44189…、libstarry_magic.so md5 3ee2ed06…）；负载未回填前功能静默无效。"
     }
   ]
 }

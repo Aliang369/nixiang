@@ -22,7 +22,7 @@
 | 镇邪人 | 2026-09-23 | ✅ 已收尾：启动即崩（`Cocos2dxDownloader$3.run:154` NPE；旧路由补丁把远端 src 指成相对路径 + 服务器 src 漂到 ca0d4）已修——改以官方原版包为底重建、回滚 `jsb-engine.js`/`main.js` 路由补丁、包内钉 ca0d4+d5507 双份；菜单回补星空面板 `MagicRes$PanelBgDrawable`（源码已 push `cdcd46c`）；正式包 `镇邪人_1.0.3_ca0d4_star-releaseSigned.apk`（sha256 `48979c9d…`），真机 f9a116a2 冷启动零崩溃、授权 grant ok；`08_output/镇邪人` 已按 `AGENTS.md:69` 裁剪为唯一正式包（删 7 项约 320MB，清单 `10_docs/镇邪人/正式包裁剪清单_1.0.3_20260923.json`），并完成 06/07 滚动物清理（约 54.5MB） | [摘要](games/镇邪人.md) |
 | 黑暗领域 | 2026-09-15 | 已收尾 | [摘要](games/黑暗领域.md) |
 | 追迹迷城 | 2026-09-15 | 已交付/待核验 | [摘要](games/追迹迷城.md) |
-| 无悔华夏4399 | 2026-09-15 | 已交付/待核验 | [摘要](games/无悔华夏4399.md) |
+| 无悔华夏4399 | 2026-09-23 | ✅ 已同步九游本轮成果并覆盖装机（保留存档）：新版菜单 dex（`classes4.dex` 445,648B md5 `dae5d497…` sha256 `817c9b69…`，157 类；`StarryApp` 壳父类回改 `Lcom/excelliance/open/LBApplication;`）+ 科研热更修复 so（`3ee2ed06…`/182,336B，含 `PolicyDataMgr.GetPolicyItemShowState` 真门钩子、名臣科研覆盖、资源不足无条件执行，与 feat#9 同一开关）；底包 = 真机拉取的现装 4399 无壳包（sha256 `6b51ee7f…` md5 `e146f03c…`），只换这两条目（审计 only those two changed、签名 delta 空、包内 dex 157 类）；正式包 `08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk`（1,614,512,048B sha256 `fd2ef14b…` md5 `c8f5d8dd…`），`install -r --no-incremental` 装机 + 设备 base.apk md5 校验 ✓；4399 运行时 `libil2cpp.so` 与九游同源（md5 `76e44189…`）⇒ 九游校订 RVA 直接复用；**待用户开 #9 实测**（新版菜单外观 + 资源不足可直接执行 + 名臣科研） | [摘要](games/无悔华夏4399.md) |
 | 勇士之心 | 2026-09-21 | ✅ 已收尾：热更 res 1.0.98.10 重抓+自动战斗指纹修复（`bVs(`→明文 `BuffTableEnum` 两级指纹）；新包装机（so `9bf52c07…`/apk `4175178f…`）+ 六钩子全部安装 + 用户实测五项功能全部可用 | [摘要](games/勇士之心.md) |
 | 偶像梦幻祭2 | 2026-09-15 | 已交付/待核验 | [摘要](games/偶像梦幻2.md) |
 | 大话蜀山 | 2026-09-14 | 已交付/待核验 | [摘要](games/大话蜀山.md) |

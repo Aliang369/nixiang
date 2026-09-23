@@ -7,7 +7,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SERIAL="${SERIAL:-f9a116a2}"
 PKG="${PKG:-com.yhhy.whrhx.m4399}"
 ADB_BIN="${ADB_BIN:-adb}"
-APK="$NIXIANG_ROOT/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk"
+APK="${WHRHX4399_APK:-$NIXIANG_ROOT/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk}"
 VERIFY="$NIXIANG_ROOT/04_scripts/_common/verify_installed_apk.sh"
 
 [[ -f "$APK" ]] || { echo "ERROR: missing APK: $APK" >&2; exit 1; }
