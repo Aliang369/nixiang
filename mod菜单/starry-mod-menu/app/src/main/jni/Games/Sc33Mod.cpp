@@ -10,6 +10,7 @@
 #include <atomic>
 #include <cstdio>
 #include <cstring>
+#include <dlfcn.h>
 #include <pthread.h>
 #include <string>
 #include <unistd.h>
@@ -88,6 +89,15 @@ static void LogAnchorScanOnce(const char* script, size_t n) {
     static const char* kNeedles[] = {
         "baseDmg",
         "Math.max(e",
+        /* 1.0.24 锚点实锤 */
+        "d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;",
+        "t = u.baseDmg;",
+        "t = u.baseDmg",
+        "var p = o && o.force, d = o && o.trueDmg",
+        "e = Math.min(e, i);",
+        "return Math.max(e, .01);",
+        "this.CalcFinalAtkSpeedValue(o, i);",
+        "prototype.FightChangeEntityHp = function",
         "getAtk",
         "o.force, d = o && o.trueDmg",
         "_norSpeed) < .01 && (e = .01)",
@@ -316,7 +326,7 @@ static bool NeedsCombatSplice(const char* s) {
     if (strstr(s, "isChecked_RET_dmg100")) return false; // 已拼
     return strstr(s, "baseDmg") || strstr(s, "FightChangeEntityHp") ||
            strstr(s, "CalcFinalAtkSpeedValue") ||
-           strstr(s, "t = c.baseDmg");
+           strstr(s, "t = c.baseDmg") || strstr(s, "t = u.baseDmg");
 }
 
 static void ReplaceOnce(std::string& s, const char* from, const char* to) {
@@ -339,59 +349,93 @@ static bool InsertBeforeOnce(std::string& s, const char* anchor, const char* ins
     return true;
 }
 
-/* 1.0.23 Trace 实锤：FightChangeEntityHp @8304848，f.EntityManager，五参 (t,e,i,o,n) */
+/* FightChangeEntityHp 钩子体：em=EntityManager 模块别名，neg=(i<0) 变量名
+ * 1.0.24: em=h neg=f   1.0.23: em=f neg=h */
+static std::string BuildFightHook(const char* em, const char* neg) {
+    const std::string E(em), N(neg);
+    std::string h;
+    h += "var isChecked_RET_aoeAll=jsb.reflection.callStaticMethod("
+         "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",3);"
+         "if(isChecked_RET_aoeAll&&!this._aoeAllEnemiesRunning&&" + N + "&&t&&t.monsterCfg){"
+         "var aoeCaster=" + E + ".EntityManager.Inst().GetEntity(e);"
+         "if(aoeCaster&&aoeCaster.heroCfg){this._aoeAllEnemiesRunning=!0;try{"
+         "var aoeMap=" + E + ".EntityManager.Inst().entityMap;"
+         "aoeMap&&aoeMap.forEach(function(aoeEnt){"
+         "if(aoeEnt&&aoeEnt!==t&&!aoeEnt.IsDead&&aoeEnt.monsterCfg)"
+         "this.FightChangeEntityHp(aoeEnt,e,i,o,n);},this);"
+         "}finally{this._aoeAllEnemiesRunning=!1;}}}";
+    h += "var isChecked_RET_dmg100=jsb.reflection.callStaticMethod("
+         "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",1);"
+         "var isChecked_RET_dmg0=jsb.reflection.callStaticMethod("
+         "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",2);"
+         "var _sc33Fc=" + E + ".EntityManager.Inst().GetEntity(e);"
+         "if(isChecked_RET_dmg100&&_sc33Fc&&_sc33Fc.heroCfg&&" + N + "&&t&&t.monsterCfg)i*=100;"
+         "if(isChecked_RET_dmg0&&t&&t.heroCfg&&" + N + ")i=0;";
+    return h;
+}
+
+/* Trace 实锤锚点（1.0.24 优先，1.0.23 兜底）：
+ * 1.0.24 @9014501  var p = o && o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;  (EntityManager=h)
+ * 1.0.23 @8304848  var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;  (EntityManager=f) */
 static bool TryInsert1023FightHooks(std::string& s) {
-    static const char* kAnchor =
-        "var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;";
-
-    static const char* kHook =
-        "var isChecked_RET_aoeAll=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",3);"
-        "if(isChecked_RET_aoeAll&&!this._aoeAllEnemiesRunning&&h&&t&&t.monsterCfg){"
-        "var aoeCaster=f.EntityManager.Inst().GetEntity(e);"
-        "if(aoeCaster&&aoeCaster.heroCfg){this._aoeAllEnemiesRunning=!0;try{"
-        "var aoeMap=f.EntityManager.Inst().entityMap;"
-        "aoeMap&&aoeMap.forEach(function(aoeEnt){"
-        "if(aoeEnt&&aoeEnt!==t&&!aoeEnt.IsDead&&aoeEnt.monsterCfg)"
-        "this.FightChangeEntityHp(aoeEnt,e,i,o,n);},this);"
-        "}finally{this._aoeAllEnemiesRunning=!1;}}}"
-        "var isChecked_RET_dmg100=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",1);"
-        "var isChecked_RET_dmg0=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",2);"
-        "var _sc33Fc=f.EntityManager.Inst().GetEntity(e);"
-        "if(isChecked_RET_dmg100&&_sc33Fc&&_sc33Fc.heroCfg&&h&&t&&t.monsterCfg)i*=100;"
-        "if(isChecked_RET_dmg0&&t&&t.heroCfg&&h)i=0;";
-
     if (s.find("isChecked_RET_aoeAll") != std::string::npos) return true;
-    if (InsertAfterOnce(s, kAnchor, kHook)) {
-        LOGI("[Sc33] fight hook after FightChangeEntityHp anchor");
-        return true;
-    }
-    /* 兼容 minify 变体（无 var p） */
-    static const char* kAnchorAlt =
-        "o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;";
-    if (InsertAfterOnce(s, kAnchorAlt, kHook)) {
-        LOGI("[Sc33] fight hook after FightChangeEntityHp alt anchor");
-        return true;
+
+    static const struct {
+        const char* anchor;
+        const char* em;
+        const char* neg;
+    } kVar[] = {
+        {"var p = o && o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f"},
+        {"var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;", "f", "h"},
+        {"o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f"},
+        {"o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;", "f", "h"},
+    };
+    for (size_t k = 0; k < sizeof(kVar) / sizeof(kVar[0]); ++k) {
+        if (s.find(kVar[k].anchor) == std::string::npos) continue;
+        std::string hook = BuildFightHook(kVar[k].em, kVar[k].neg);
+        if (InsertAfterOnce(s, kVar[k].anchor, hook.c_str())) {
+            LOGI("[Sc33] fight hook anchor#%zu em=%s neg=%s", k, kVar[k].em, kVar[k].neg);
+            return true;
+        }
     }
     return false;
 }
 
-/* 1.0.23 Trace 实锤：t = c.baseDmg; @19760498 */
-static bool TryInsertBaseDmgHook(std::string& s) {
-    static const char* kHook =
-        "var isChecked_RET_dmg100=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",1);"
-        "if(isChecked_RET_dmg100&&n&&n.heroCfg&&r&&r.monsterCfg)t*=100;"
-        "var isChecked_RET_dmg0=jsb.reflection.callStaticMethod("
-        "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",2);"
-        "if(isChecked_RET_dmg0&&r&&r.heroCfg)t=0;";
+/* 伤害终算 baseDmg 钩子体：tgt=目标实体变量名
+ * 1.0.24 DamageCommonCalcFinal(t,e,i,o,n,a,r,s,l): n=casterEntity, a=targetEntity, t=伤害
+ * 1.0.23 同名函数:                              n=casterEntity, r=targetEntity, t=伤害 */
+static std::string BuildBaseDmgHook(const char* tgt) {
+    const std::string T(tgt);
+    return std::string(
+               "var isChecked_RET_dmg100=jsb.reflection.callStaticMethod("
+               "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",1);"
+               "if(isChecked_RET_dmg100&&n&&n.heroCfg&&") +
+           T + "&&" + T +
+           ".monsterCfg)t*=100;"
+           "var isChecked_RET_dmg0=jsb.reflection.callStaticMethod("
+           "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",2);"
+           "if(isChecked_RET_dmg0&&" +
+           T + "&&" + T + ".heroCfg)t=0;";
+}
 
+/* Trace 实锤：伤害终算后的 baseDmg 赋值（1.0.24 @22058889 / 1.0.23 @19760498） */
+static bool TryInsertBaseDmgHook(std::string& s) {
     if (s.find("isChecked_RET_dmg100&&n&&n.heroCfg") != std::string::npos) return true;
-    if (InsertAfterOnce(s, "t = c.baseDmg;", kHook)) {
-        LOGI("[Sc33] baseDmg hook after t = c.baseDmg");
-        return true;
+
+    static const struct {
+        const char* anchor;
+        const char* tgt;
+    } kVar[] = {
+        {"t = u.baseDmg;", "a"},
+        {"t = c.baseDmg;", "r"},
+    };
+    for (size_t k = 0; k < sizeof(kVar) / sizeof(kVar[0]); ++k) {
+        if (s.find(kVar[k].anchor) == std::string::npos) continue;
+        std::string hook = BuildBaseDmgHook(kVar[k].tgt);
+        if (InsertAfterOnce(s, kVar[k].anchor, hook.c_str())) {
+            LOGI("[Sc33] baseDmg hook anchor#%zu tgt=%s", k, kVar[k].tgt);
+            return true;
+        }
     }
     return false;
 }
@@ -584,12 +628,42 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
     return ok;
 }
 
+/* 符号解析：优先 dlopen+dlsym（符号在 .dynsym 导出），
+ * DobbySymbolResolver 在部分 ROM 上会在 tinystl/ProcessRuntimeUtility 内部
+ * 触发 invalid free（SIGABRT），故默认关闭，仅作可选兜底。 */
+#ifndef SC33_ALLOW_DOBBY_RESOLVER
+#define SC33_ALLOW_DOBBY_RESOLVER 0
+#endif
+
+static void* ResolveLibSymbol(const char* lib, const char* sym) {
+    if (!lib || !sym || !*sym) return nullptr;
+    void* h = dlopen(lib, RTLD_NOW | RTLD_NOLOAD);
+    if (!h) h = dlopen(lib, RTLD_NOW);
+    if (h) {
+        void* p = dlsym(h, sym);
+        if (p) {
+            LOGI("[Sc33] dlsym ok %s @%p", sym, p);
+            return p;
+        }
+        LOGW("[Sc33] dlsym miss %s in %s", sym, lib);
+    } else {
+        LOGW("[Sc33] dlopen(%s) failed: %s", lib, dlerror());
+    }
+#if SC33_ALLOW_DOBBY_RESOLVER
+    void* d = DobbySymbolResolver(lib, sym);
+    if (d) LOGI("[Sc33] DobbySymbolResolver %s @%p", sym, d);
+    return d;
+#else
+    return nullptr;
+#endif
+}
+
 static void TryHookEvalString() {
     const char* lib = GameCocos::TARGET_LIB;
     if (!isLibraryLoaded(lib)) return;
 
     if (!g_seHooked) {
-        void* sym = DobbySymbolResolver(lib, GameCocos::Symbols::SE_EVAL_STRING);
+        void* sym = ResolveLibSymbol(lib, GameCocos::Symbols::SE_EVAL_STRING);
         if (sym &&
             DobbyHook(sym, (dobby_dummy_func_t)hooked_seEval,
                       (dobby_dummy_func_t*)&orig_seEval) == 0) {
@@ -602,7 +676,7 @@ static void TryHookEvalString() {
     }
 
     if (!g_jniHooked) {
-        void* jni = DobbySymbolResolver(lib, GameCocos::Symbols::EVAL_STRING);
+        void* jni = ResolveLibSymbol(lib, GameCocos::Symbols::EVAL_STRING);
         if (jni &&
             DobbyHook(jni, (dobby_dummy_func_t)hooked_jniEval,
                       (dobby_dummy_func_t*)&orig_jniEval) == 0) {
