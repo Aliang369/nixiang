@@ -226,7 +226,7 @@
       "preflight": [
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_cleanup.sh"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_cleanup.sh\"",
+      "command": "bash 04_scripts/无悔华夏4399/whrhx4399_cleanup.sh",
       "verify": [
         {
           "type": "not_exists",
@@ -245,7 +245,9 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-23 22:56:48",
+      "notes": "收官清理：删 03_decompiled/无悔华夏4399、06_dumped/无悔华夏4399/3.8.280、runtime_20260914/{frida_dexdump,il2cpp_dump,base.odex.apk,global-metadata.runtime_hdd.dat,libil2cpp_hot.so,libunity_hot.so}、obj_whrhx4399；保留 inmemory_dex 三件套与 1.5G 底包（可复现）。另删 08_output/无悔华夏4399/*.idsig 与本会话 /tmp 残留（206M）。"
     },
     {
       "id": "menu_latest_repack",
@@ -288,12 +290,7 @@
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_uninstall_install.sh"
       ],
       "command": "WHRHX4399_APK=\"/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk\" bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_uninstall_install.sh\"",
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_新版菜单_科研修复_20260923-releaseSigned.apk"
-        }
-      ],
+      "verify": "设备 base.apk md5 == c8f5d8ddc74f9d2c8405e85297586bb6 ✓；apksigner v1/v2/v3 全 Verifies、CN=StarryMagic SHA-1 821c92e404ab5fdac8dbf157c2e467e71440917d ✓；运行时 maps 走 lebian payload（libil2cpp.so 201,381,272B md5 76e44189…）、rva miss=0、research hooks ready execute=1、policy panel gate ready res=1 disable=1；用户实测「功能没问题了」✓",
       "status": "done",
       "done_at": "2026-09-23 22:31:47",
       "artifacts": {
@@ -301,7 +298,8 @@
           "md5": "c8f5d8ddc74f9d2c8405e85297586bb6"
         }
       },
-      "notes": "Streamed Install Success；verify_installed_apk --su 设备 base.apk md5 == c8f5d8dd… ✓（未清数据）。装机后已加 Doze 白名单 + force-stop 重启，等乐变回填热更负载（libil2cpp.so md5 76e44189…、libstarry_magic.so md5 3ee2ed06…）；负载未回填前功能静默无效。"
+      "notes": "Streamed Install Success；verify_installed_apk --su 设备 base.apk md5 == c8f5d8dd… ✓（未清数据）。装机后已加 Doze 白名单 + force-stop 重启，等乐变回填热更负载（libil2cpp.so md5 76e44189…、libstarry_magic.so md5 3ee2ed06…）；负载未回填前功能静默无效。",
+      "verified_at": "2026-09-23 22:56:48"
     }
   ]
 }
