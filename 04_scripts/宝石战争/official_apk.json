@@ -2,15 +2,15 @@
   "package": "com.acing.gow.adv",
   "game": "宝石战争",
   "kind": "official_from_device",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/宝石战争/宝石战争_6.0.012_official_from_device.apk",
-  "version_name": "6.0.012",
-  "version_code": 6000012,
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/宝石战争/宝石战争_6.0.013_official_from_device.apk",
+  "version_name": "6.0.013",
+  "version_code": 6000013,
   "installer": "com.android.packageinstaller",
   "originating_package": "com.taptap",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~pybh9NUV3sCprmNTCL8Flw==/com.acing.gow.adv-RuBsSKdI6jkEgKGpGfgq1A==/base.apk",
-  "size": 529494836,
-  "sha256": "8ba59a1c27e15eb6d998840913a53c55c38eeaf102d78702624a1f0cece53969",
-  "md5": "f207fc9d5b62b1a956a72c35c6a56def"
+  "remote_path": "/data/app/~~4M9X_g8VwTNyUwqql3RDIA==/com.acing.gow.adv-wGRtMxV8FMN06puWp5_waw==/base.apk",
+  "size": 541498257,
+  "sha256": "a497d2f24b669e0811eb78fa4dd4fa01b64508912c779c67162683f48ecf1c6d",
+  "md5": "cca417cc6bb0e0f19574fbbbd7e51bfe"
 }

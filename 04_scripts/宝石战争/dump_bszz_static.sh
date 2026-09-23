@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-OUT="$NIXIANG_ROOT/06_dumped/宝石战争/6.0.012/static"
+OUT="$NIXIANG_ROOT/06_dumped/宝石战争/${BSZZ_VERSION:-6.0.013}/static"
 HOT_DIR="${BSZZ_HOTUPDATE_DIR:-}"
 
 if [[ -n "${BSZZ_SOURCE_APK:-}" ]]; then

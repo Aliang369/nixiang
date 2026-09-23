@@ -7,7 +7,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 PKG="com.acing.gow.adv"
 ADB_BIN="${ADB_BIN:-adb}"
-OUT_DIR="$NIXIANG_ROOT/06_dumped/宝石战争/6.0.012/current"
+OUT_DIR="$NIXIANG_ROOT/06_dumped/宝石战争/${BSZZ_VERSION:-6.0.013}/current"
 BASE_OUT="$OUT_DIR/base.apk"
 HOT_OUT="$OUT_DIR/hotupdate/Android"
 META_OUT="$OUT_DIR/current_inputs.json"
@@ -19,8 +19,10 @@ DUMP="$("$ADB_BIN" -s "$SERIAL" shell dumpsys package "$PKG" | tr -d '\r')"
 VERSION_NAME="$(printf '%s\n' "$DUMP" | sed -n 's/^[[:space:]]*versionName=//p' | head -1)"
 VERSION_CODE="$(printf '%s\n' "$DUMP" | sed -n 's/^[[:space:]]*versionCode=//p' | head -1 | awk '{print $1}')"
 PACKAGE_PATHS="$("$ADB_BIN" -s "$SERIAL" shell pm path "$PKG" | tr -d '\r' | sed -n 's/^package://p')"
-[[ "$VERSION_NAME" == "6.0.012" && "$VERSION_CODE" == "6000012" ]] || {
-  echo "ERROR: 版本不符，期望 6.0.012/vc6000012，实际 ${VERSION_NAME}/${VERSION_CODE}" >&2
+EXPECT_VERSION_NAME="${BSZZ_EXPECT_VERSION_NAME:-6.0.013}"
+EXPECT_VERSION_CODE="${BSZZ_EXPECT_VERSION_CODE:-6000013}"
+[[ "$VERSION_NAME" == "$EXPECT_VERSION_NAME" && "$VERSION_CODE" == "$EXPECT_VERSION_CODE" ]] || {
+  echo "ERROR: 版本不符，期望 ${EXPECT_VERSION_NAME}/vc${EXPECT_VERSION_CODE}，实际 ${VERSION_NAME}/${VERSION_CODE}" >&2
   exit 1
 }
 [[ "$(printf '%s\n' "$PACKAGE_PATHS" | sed '/^$/d' | wc -l | tr -d ' ')" -eq 1 ]] || {
@@ -53,13 +55,13 @@ pull_file "$REMOTE_HOT/Dlls/System.Platform.dll.bytes" "$HOT_OUT/Dlls/System.Pla
 pull_file "$REMOTE_HOT/manifest.json" "$HOT_OUT/manifest.json"
 pull_file "$REMOTE_HOT/RuntimeAssembliesReceipt.json" "$HOT_OUT/RuntimeAssembliesReceipt.json"
 
-python3 - "$META_OUT" "$BASE_OUT" "$HOT_OUT" "$SERIAL" "$REMOTE_BASE" "$REMOTE_HOT" <<'PY'
+python3 - "$META_OUT" "$BASE_OUT" "$HOT_OUT" "$SERIAL" "$REMOTE_BASE" "$REMOTE_HOT" "$VERSION_NAME" "$VERSION_CODE" <<'PY'
 from pathlib import Path
 import hashlib
 import json
 import sys
 
-meta, base, hot, serial, remote_base, remote_hot = sys.argv[1:]
+meta, base, hot, serial, remote_base, remote_hot, VERSION_NAME, VERSION_CODE = sys.argv[1:]
 base = Path(base)
 hot = Path(hot)
 
@@ -75,8 +77,8 @@ manifest = json.loads((hot / "manifest.json").read_text(encoding="utf-8"))
 data = {
     "game": "宝石战争",
     "package": "com.acing.gow.adv",
-    "version": "6.0.012",
-    "version_code": 6000012,
+    "version": VERSION_NAME,
+    "version_code": int(VERSION_CODE),
     "serial": serial,
     "remote_base_apk": remote_base,
     "remote_hotupdate_dir": remote_hot,

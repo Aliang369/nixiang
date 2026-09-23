@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-APK="${BSZZ_OTA_SOURCE_APK:-$NIXIANG_ROOT/08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk}"
+APK="${BSZZ_OTA_SOURCE_APK:-$NIXIANG_ROOT/08_output/宝石战争/宝石战争_${BSZZ_VERSION:-6.0.013}_surgical-releaseSigned.apk}"
 OUT_DIR="$NIXIANG_ROOT/08_output/宝石战争/ota/bszz"
 OUT="$OUT_DIR/libstarry_magic.so"
 EXPECTED_APK_MD5="${BSZZ_OTA_APK_MD5:-746a21fb844654100df9dffabbd11326}"
@@ -40,16 +40,16 @@ LC_ALL=C grep -aFq 'BEGIN CERTIFICATE' "$OUT" || { echo "错误: OTA so 缺少�
 
 printf '%s  %s\n' "$SO_MD5" "libstarry_magic.so" > "$OUT_DIR/libstarry_magic.so.md5"
 printf '%s  %s\n' "$SO_SHA256" "libstarry_magic.so" > "$OUT_DIR/libstarry_magic.so.sha256"
-python3 - "$OUT_DIR/ota_meta.json" "$APK" "$SO_MD5" "$SO_SHA256" "$SO_SIZE" "$EXPECTED_APK_MD5" <<'PY'
+python3 - "$OUT_DIR/ota_meta.json" "$APK" "$SO_MD5" "$SO_SHA256" "$SO_SIZE" "$EXPECTED_APK_MD5" "${BSZZ_VERSION:-6.0.013}" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-meta_path, apk, so_md5, so_sha256, so_size, source_apk_md5 = sys.argv[1:]
+meta_path, apk, so_md5, so_sha256, so_size, source_apk_md5, version = sys.argv[1:]
 data = {
     "game": "宝石战争",
     "game_id": "bszz",
-    "version": "6.0.012",
+    "version": version,
     "fix": "unlimited_skill_full_mana",
     "source_apk": apk,
     "source_apk_md5": source_apk_md5,

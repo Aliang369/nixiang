@@ -4,9 +4,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-STATIC="$NIXIANG_ROOT/06_dumped/宝石战争/6.0.012/static"
-DUMP="$NIXIANG_ROOT/06_dumped/宝石战争/6.0.012/il2cpp_dump"
-OUT="$NIXIANG_ROOT/07_patched/宝石战争/6.0.012"
+VERSION="${BSZZ_VERSION:-6.0.013}"
+STATIC="$NIXIANG_ROOT/06_dumped/宝石战争/$VERSION/static"
+DUMP="$NIXIANG_ROOT/06_dumped/宝石战争/$VERSION/il2cpp_dump"
+OUT="$NIXIANG_ROOT/07_patched/宝石战争/$VERSION"
 ASSETS="$OUT/assets/Android"
 PATCH_TOOL="$SCRIPT_DIR/dllpatch"
 DUMPER="$NIXIANG_ROOT/01_tools/Il2CppDumper/Il2CppDumper.dll"

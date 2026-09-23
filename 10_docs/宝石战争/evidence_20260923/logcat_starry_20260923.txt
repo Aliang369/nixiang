@@ -1,0 +1,55 @@
+09-23 17:50:11.016 I/AppsFilter( 3152): interaction: PackageSetting{ca8f165 com.starry.magic/10589} -> PackageSetting{898e199 com.acing.gow.adv/10876} BLOCKED
+09-23 17:50:11.332 I/ActivityManager( 3152): Background started FGS: Allowed [callingPackage: com.acing.gow.adv; callingUid: 10876; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=com.acing.gow.adv/com.starry.magic.menu.MenuService mCallingUid=10876 }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:30; callerTargetSdkVersion:30; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+09-23 17:50:11.337 I/ActivityManager( 3152): Deferring FGS notification in legacy app com.acing.gow.adv/u0a876 : Notification(channel=starry_magic_menu shortcut=null contentView=null vibrate=null sound=null defaults=0 flags=ONGOING_EVENT|FOREGROUND_SERVICE color=0x00000000 vis=PRIVATE)
+09-23 17:50:23.365 I/AppsFilter( 3152): interaction: PackageSetting{ca8f165 com.starry.magic/10589} -> PackageSetting{d4cc5db com.acing.gow.adv/10876} BLOCKED
+09-23 17:52:02.843 I/AppsFilter( 3152): interaction: PackageSetting{ca8f165 com.starry.magic/10589} -> PackageSetting{a6df1f7 com.acing.gow.adv/10876} BLOCKED
+09-23 17:52:05.357 I/AppsFilter( 3152): interaction: PackageSetting{ca8f165 com.starry.magic/10589} -> PackageSetting{6358106 com.acing.gow.adv/10876} BLOCKED
+09-23 17:52:05.455 D/nativeloader(32167): Load /data/app/~~ovnMmeDZLwIpEnC103HAWw==/com.acing.gow.adv-2qIIRaJ6XZGd1ePA8YKaVw==/lib/arm64/libstarry_magic.so using class loader ns clns-9 (caller=/data/app/~~ovnMmeDZLwIpEnC103HAWw==/com.acing.gow.adv-2qIIRaJ6XZGd1ePA8YKaVw==/base.apk!classes3.dex): ok
+09-23 17:52:05.455 W/StarryMagic(32167): [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+09-23 17:52:05.456 I/StarryMagic(32167): [桥接] RegisterNatives 19/19 全部成功
+09-23 17:52:05.456 I/StarryMagic(32167): 星光魔法 MOD 菜单已加载 (MainModern tag=Bszz)
+09-23 17:52:05.456 I/ModBridge(32167): native via StarryNativeLoad: loadLibrary(starry_magic)
+09-23 17:52:05.456 I/StarryMagic(32167): [验证] flag=false live=0
+09-23 17:52:05.456 I/Mod_Menu(32167): [Bszz] feature 0=0
+09-23 17:52:05.456 I/StarryMagic(32167): [开关] #0 selftest = OFF
+09-23 17:52:05.456 W/StarryMagic(32167): [数值] 拒绝 #0（未授权）
+09-23 17:52:05.456 I/StarryMagic(32167): [长整] #0 = 0
+09-23 17:52:05.456 W/StarryMagic(32167): [文本] 拒绝 #0（未授权）
+09-23 17:52:05.456 W/StarryMagic(32167): [验证] grant rejected
+09-23 17:52:05.456 W/StarryMagic(32167): [OTA] 补丁签名校验失败
+09-23 17:52:05.456 I/StarryInitProvider(32167): native ensureLoaded=true path=loadLibrary(starry_magic)
+09-23 17:52:05.777 I/ActivityManager( 3152): Background started FGS: Allowed [callingPackage: com.acing.gow.adv; callingUid: 10876; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=com.acing.gow.adv/com.starry.magic.menu.MenuService mCallingUid=10876 }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:30; callerTargetSdkVersion:30; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+09-23 17:52:05.779 I/ModBridge(32167): auth game_id synced from native: bszz
+09-23 17:52:05.780 I/ModBridge(32167): auth game_id synced from native: bszz
+09-23 17:52:05.780 I/ModBridge(32167): auth game_id synced from native: bszz
+09-23 17:52:05.782 I/ModBridge(32167): auth game_id synced from native: bszz
+09-23 17:52:05.814 I/StarryMagic(32167): ===== 星光魔法 MOD 菜单初始化（modern/Bszz）=====
+09-23 17:52:05.814 I/ModBridge(32167): auth game_id synced from native: bszz
+09-23 17:52:05.815 I/StarryMagic(32167): MOD 后台线程已启动 tag=Bszz
+09-23 17:52:05.815 I/StarryMagic(32167): MOD 已就绪 tag=Bszz ready=1
+09-23 17:52:05.822 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Android/starry_magic/device_id is denied
+09-23 17:52:05.826 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/.starry_magic/device_id is denied
+09-23 17:52:05.829 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied
+09-23 17:52:05.866 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Android/starry_magic is denied
+09-23 17:52:05.894 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Android/starry_magic is denied
+09-23 17:52:05.897 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Android/starry_magic/device_id is denied
+09-23 17:52:05.899 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Android/starry_magic/device_id is denied
+09-23 17:52:05.899 W/DeviceFingerprint(32167): shared id write fail @/storage/emulated/0/Android/starry_magic/device_id: /storage/emulated/0/Android/starry_magic/device_id: open failed: EACCES (Permission denied)
+09-23 17:52:05.902 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/.starry_magic is denied
+09-23 17:52:05.912 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/.starry_magic is denied
+09-23 17:52:05.916 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/.starry_magic/device_id is denied
+09-23 17:52:05.918 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/.starry_magic/device_id is denied
+09-23 17:52:05.919 W/DeviceFingerprint(32167): shared id write fail @/storage/emulated/0/.starry_magic/device_id: /storage/emulated/0/.starry_magic/device_id: open failed: EACCES (Permission denied)
+09-23 17:52:05.920 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Download/.starry_magic is denied
+09-23 17:52:05.931 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Download/.starry_magic is denied
+09-23 17:52:05.934 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied
+09-23 17:52:05.936 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied
+09-23 17:52:05.936 W/DeviceFingerprint(32167): shared id write fail @/storage/emulated/0/Download/.starry_magic/device_id: /storage/emulated/0/Download/.starry_magic/device_id: open failed: EACCES (Permission denied)
+09-23 17:52:05.936 I/DeviceFingerprint(32167): fingerprint v4 id=dev_760f1cc7de536cd8c34dd8f79c6f62b4 source=shared sources={/data/local/tmp/starry_magic/device_id=dev_760f1cc7de536cd8c34dd8f79c6f62b4}
+09-23 17:52:06.072 I/GameSpaceUI.COSASDKManager(14940): getManagerInfoList_1790157126071 getPrintAppInfoString AppInfo{mPackageName='com.starry.magic', mType=7, mUserMarkType=-1}
+09-23 17:52:06.077 I/GameSpaceUI.COSASDKManager(14940):  getPrintAppInfoString AppInfo{mPackageName='com.starry.magic', mType=7, mUserMarkType=-1}
+09-23 17:52:06.156 I/GameSpaceUI.COSASDKManager(14940): getManagerInfoList_1790157126156 getPrintAppInfoString AppInfo{mPackageName='com.starry.magic', mType=7, mUserMarkType=-1}
+09-23 17:52:06.157 I/GameSpaceUI.COSASDKManager(14940):  getPrintAppInfoString AppInfo{mPackageName='com.starry.magic', mType=7, mUserMarkType=-1}
+09-23 17:52:06.179 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Android/starry_magic/device_id is denied
+09-23 17:52:06.184 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/.starry_magic/device_id is denied
+09-23 17:52:06.188 E/MediaProvider( 5511): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied

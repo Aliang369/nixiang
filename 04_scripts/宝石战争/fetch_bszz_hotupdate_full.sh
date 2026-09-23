@@ -4,8 +4,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-MANIFEST="${BSZZ_HOTUPDATE_MANIFEST:-$NIXIANG_ROOT/06_dumped/宝石战争/6.0.012/static/manifest.json}"
-OUT_ROOT="${BSZZ_HOTUPDATE_FULL_ROOT:-$NIXIANG_ROOT/07_patched/宝石战争/6.0.012/official_hotupdate}"
+MANIFEST="${BSZZ_HOTUPDATE_MANIFEST:-$NIXIANG_ROOT/06_dumped/宝石战争/${BSZZ_VERSION:-6.0.013}/static/manifest.json}"
+OUT_ROOT="${BSZZ_HOTUPDATE_FULL_ROOT:-$NIXIANG_ROOT/07_patched/宝石战争/${BSZZ_VERSION:-6.0.013}/official_hotupdate}"
 META="$OUT_ROOT/download_summary.json"
 
 [[ -f "$MANIFEST" ]] || { echo "ERROR: missing manifest: $MANIFEST" >&2; exit 1; }

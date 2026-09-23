@@ -19,7 +19,9 @@ INSTALLER="$(printf '%s\n' "$DUMP" | sed -n 's/^[[:space:]]*installerPackageName
 ORIGINATING="$(printf '%s\n' "$DUMP" | sed -n 's/^[[:space:]]*originatingPackageName=//p' | head -1)"
 PRIMARY_ABI="$(printf '%s\n' "$DUMP" | sed -n 's/^[[:space:]]*primaryCpuAbi=//p' | head -1)"
 PACKAGE_PATHS="$("$ADB_BIN" -s "$SERIAL" shell pm path "$PKG" | tr -d '\r' | sed -n 's/^package://p')"
-[[ -n "$VERSION_NAME" && "$VERSION_CODE" == "6000012" ]] || { echo "错误: 版本不符，期望 6.0.012/vc6000012" >&2; exit 1; }
+EXPECT_VERSION_NAME="${BSZZ_EXPECT_VERSION_NAME:-6.0.013}"
+EXPECT_VERSION_CODE="${BSZZ_EXPECT_VERSION_CODE:-6000013}"
+[[ -n "$VERSION_NAME" && "$VERSION_CODE" == "$EXPECT_VERSION_CODE" ]] || { echo "错误: 版本不符，期望 ${EXPECT_VERSION_NAME}/vc${EXPECT_VERSION_CODE}，实际 ${VERSION_NAME}/${VERSION_CODE}" >&2; exit 1; }
 [[ "$(printf '%s\n' "$PACKAGE_PATHS" | sed '/^$/d' | wc -l | tr -d ' ')" -eq 1 ]] || { echo "错误: 非单 base APK，拒绝" >&2; exit 1; }
 REMOTE_APK="$(printf '%s\n' "$PACKAGE_PATHS" | sed -n '1p')"
 

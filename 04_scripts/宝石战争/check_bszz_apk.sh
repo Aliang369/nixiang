@@ -11,7 +11,8 @@ BT="$(ls -d "$HOME"/Library/Android/sdk/build-tools/* 2>/dev/null | sort -V | ta
 APKSIGNER="$BT/apksigner"
 [[ -f "$APK" ]] || { echo "ERROR: missing $APK" >&2; exit 1; }
 [[ -x "$APKSIGNER" ]] || { echo "ERROR: apksigner missing" >&2; exit 1; }
-[[ "$(md5 -q "$APK")" == "f207fc9d5b62b1a956a72c35c6a56def" ]] || { echo "ERROR: APK md5 mismatch" >&2; exit 1; }
+EXPECT_MD5="${BSZZ_OFFICIAL_MD5:-$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["md5"])' "$META")}"
+[[ "$(md5 -q "$APK")" == "$EXPECT_MD5" ]] || { echo "ERROR: APK md5 mismatch" >&2; exit 1; }
 
 unzip -tq "$APK" >/dev/null
 unzip -Z1 "$APK" > "$SCRIPT_DIR/apk_entries.txt"

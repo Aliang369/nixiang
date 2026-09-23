@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 PKG="com.acing.gow.adv"
-SIGNED="$NIXIANG_ROOT/08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk"
+SIGNED="${BSZZ_SIGNED_APK:-$NIXIANG_ROOT/08_output/宝石战争/宝石战争_${BSZZ_VERSION:-6.0.013}_surgical-releaseSigned.apk}"
 RESULT="$SCRIPT_DIR/install_result.txt"
 ADB_BIN="${ADB_BIN:-adb}"
 

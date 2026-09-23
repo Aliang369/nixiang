@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/宝石战争",
+  "keep": "宝石战争_6.0.013_surgical-releaseSigned.apk",
+  "keep_size": 520621296,
+  "keep_md5": "81472a9e8933d6563a243325a79277da",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "宝石战争_6.0.013_surgical-unsigned.apk",
+      "size": 520508030,
+      "md5": "e79d10447c50335573305bcc76d33094"
+    },
+    {
+      "name": "宝石战争_6.0.013_surgical-releaseSigned.apk.idsig",
+      "size": 4109851,
+      "md5": "76ae48c60e06f44cb23981f96694cbff"
+    }
+  ],
+  "removed_count": 2
+}

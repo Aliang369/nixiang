@@ -1,7 +1,7 @@
 {
   "game": "宝石战争",
-  "version": "6.0.012",
-  "notes": "2026-09-20：修复 HotUpdate 1.0.0.01 导致登录卡死与补丁失效。下载并校验全量 142 个资源，外科替换 APK 内全部 assets/Android；包内保留官方 manifest/receipt，仅替换注入后的 System.Network.dll.bytes，避免热更回写覆盖补丁。",
+  "version": "6.0.013",
+  "notes": "2026-09-23：官方已升级到 6.0.013（热更 1.0.0.04）。沿用 6.0.012 的外科路线复刻星光三项功能：全量 142 个 1.0.0.04 资源（114 个来自包内 1.0.0.01、28 个来自设备已下发的差分文件，逐条 md5 对齐官方 1.0.0.04 manifest），包内保留官方 manifest/receipt（版本 1.0.0.04、Network 官方 hash 3e49c9876a6c4b394c552f71adbebf9d），仅替换注入后的 System.Network.dll.bytes。",
   "params": {
     "game_id": "bszz",
     "package": "com.acing.gow.adv",
@@ -11,9 +11,17 @@
     "PKG": "com.acing.gow.adv",
     "GAME": "宝石战争",
     "SERIAL": "f9a116a2",
-    "BSZZ_SOURCE_APK": "06_dumped/宝石战争/6.0.012/current/base.apk",
-    "BSZZ_SOURCE_APK_MD5": "dd806e695ec1a1521c9902a280d0aa46",
-    "BSZZ_HOTUPDATE_DIR": "06_dumped/宝石战争/6.0.012/current/hotupdate/Android"
+    "BSZZ_VERSION": "6.0.013",
+    "BSZZ_EXPECT_VERSION_NAME": "6.0.013",
+    "BSZZ_EXPECT_VERSION_CODE": "6000013",
+    "BSZZ_EXPECT_HOTUPDATE_VERSION": "1.0.0.04",
+    "BSZZ_EXPECT_NETWORK_HASH": "3e49c9876a6c4b394c552f71adbebf9d",
+    "BSZZ_SOURCE_APK": "06_dumped/宝石战争/6.0.013/current/base.apk",
+    "BSZZ_SOURCE_APK_MD5": "cca417cc6bb0e0f19574fbbbd7e51bfe",
+    "BSZZ_HOTUPDATE_DIR": "06_dumped/宝石战争/6.0.013/current/hotupdate/Android",
+    "BSZZ_OTA_APK_MD5": "81472a9e8933d6563a243325a79277da",
+    "BSZZ_OTA_SO_MD5": "2fc2873da7f268866502ce0feaaefa5c",
+    "BSZZ_ALLOW_UNINSTALL": "1"
   },
   "workdir": "/Users/aliang/Documents/nixiang",
   "stages": [
@@ -41,7 +49,7 @@
     },
     {
       "id": "pull_official",
-      "name": "真机只读提取 TapTap 官方单 base APK",
+      "name": "真机只读提取 TapTap 官方单 base APK（6.0.013）",
       "requires": [
         "device_ready"
       ],
@@ -56,10 +64,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 21:20:33",
+      "done_at": "2026-09-23 17:39:34",
       "artifacts": {
         "04_scripts/宝石战争/official_apk.json": {
-          "md5": "8044bfd721e432972f40117b34814033"
+          "md5": "c1d8b8645f0d546a9cdda04d1319b32a"
         }
       },
       "inputs": {
@@ -83,19 +91,19 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-16 21:21:35",
+      "done_at": "2026-09-23 17:40:04",
       "artifacts": {
         "04_scripts/宝石战争/official_check.json": {
-          "md5": "bd6afc028c239a5b12a4dd111a5db610"
+          "md5": "36dd58ee9df5c672d1df0972579bdd2c"
         }
       },
       "inputs": {
-        "04_scripts/宝石战争/official_apk.json": "8044bfd721e432972f40117b34814033"
+        "04_scripts/宝石战争/official_apk.json": "c1d8b8645f0d546a9cdda04d1319b32a"
       }
     },
     {
       "id": "pull_current",
-      "name": "只读提取当前 base APK 与 HotUpdate 1.0.0.01 输入",
+      "name": "只读提取当前 base APK 与 HotUpdate 1.0.0.04 输入",
       "requires": [
         "device_ready"
       ],
@@ -106,18 +114,19 @@
       "verify": [
         {
           "type": "not_exists",
-          "path": "06_dumped/宝石战争/6.0.012/current/base.apk"
+          "path": "06_dumped/宝石战争/6.0.013/current/base.apk"
         }
       ],
       "status": "done",
-      "note": "正式包完成后已清理 current 大文件；原始输入可重新从设备只读提取。原 base.apk md5=dd806e695ec1a1521c9902a280d0aa46。",
-      "failed_at": "2026-09-20 17:36:55",
-      "error": "产物校验未通过（详见上方校验输出）",
-      "done_at": "2026-09-20 17:37:22"
+      "done_at": "2026-09-23 17:58:26",
+      "artifacts": {},
+      "inputs": {
+        "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
     },
     {
       "id": "dump_static",
-      "name": "提取并解密 System.Network.dll/System.Platform.dll",
+      "name": "提取并解密 System.Network.dll/System.Platform.dll（1.0.0.04）",
       "requires": [
         "pull_current"
       ],
@@ -128,21 +137,20 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "06_dumped/宝石战争/6.0.012/static/static_inputs.json"
+          "path": "06_dumped/宝石战争/6.0.013/static/static_inputs.json"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-20 17:37:29",
+      "done_at": "2026-09-23 17:58:28",
       "artifacts": {
-        "06_dumped/宝石战争/6.0.012/static/static_inputs.json": {
-          "md5": "b46a73ee2d2bc546e3277c93eb123fcf"
+        "06_dumped/宝石战争/6.0.013/static/static_inputs.json": {
+          "md5": "e86a2a143a88f410478cb642a942b526"
         }
-      },
-      "note": "已清理可再生成的解密 DLL/libil2cpp/global-metadata；保留 static_inputs.json 作为锁文件。"
+      }
     },
     {
       "id": "fetch_hotupdate_full",
-      "name": "下载并校验 HotUpdate 1.0.0.01 全量资源",
+      "name": "下载并校验 HotUpdate 1.0.0.04 全量资源",
       "requires": [
         "dump_static"
       ],
@@ -153,12 +161,15 @@
       "verify": [
         {
           "type": "not_exists",
-          "path": "07_patched/宝石战争/6.0.012/official_hotupdate/download_summary.json"
+          "path": "07_patched/宝石战争/6.0.013/official_hotupdate/download_summary.json"
         }
       ],
       "status": "done",
-      "note": "全量 142 文件已完成校验并打入正式 APK；热更缓存已清理，可重新下载。原 download_summary md5=cfbea035420b998397aa8f97b3891cf1。",
-      "done_at": "2026-09-20 17:49:55"
+      "done_at": "2026-09-23 17:58:30",
+      "artifacts": {},
+      "inputs": {
+        "06_dumped/宝石战争/6.0.013/static/static_inputs.json": "e86a2a143a88f410478cb642a942b526"
+      }
     },
     {
       "id": "impl_mod",
@@ -253,13 +264,20 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
-          "path": "07_patched/宝石战争/6.0.012/assets/Android/Dlls/System.Network.dll.bytes"
+          "type": "file_exists",
+          "path": "07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes"
         }
       ],
       "status": "done",
-      "note": "补丁 DLL 已打入正式 APK；07_patched 中间产物已清理。原 patched bytes md5=679459180901a75f9f0cd9640bcd12ee。",
-      "done_at": "2026-09-20 17:38:02"
+      "done_at": "2026-09-23 17:41:46",
+      "artifacts": {
+        "07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes": {
+          "md5": "8a9ff224ba7473238b693008970735cb"
+        }
+      },
+      "inputs": {
+        "06_dumped/宝石战争/6.0.013/static/static_inputs.json": "e86a2a143a88f410478cb642a942b526"
+      }
     },
     {
       "id": "surgical",
@@ -269,21 +287,22 @@
         "patch_dll",
         "fetch_hotupdate_full"
       ],
-      "command": "bash 04_scripts/宝石战争/bszz_surgical_6.0.012.sh",
+      "command": "bash 04_scripts/宝石战争/bszz_surgical_6.0.013.sh",
       "preflight": [
-        "04_scripts/宝石战争/bszz_surgical_6.0.012.sh"
+        "04_scripts/宝石战争/bszz_surgical_6.0.013.sh"
       ],
       "verify": [
         {
           "type": "not_exists",
-          "path": "08_output/宝石战争/宝石战争_6.0.012_surgical-unsigned.apk"
+          "path": "08_output/宝石战争/宝石战争_6.0.013_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "note": "unsigned 中间包已清理；正式签名包保留。原 unsigned md5=140db0b92912c7f909656a33f3ec26ee。",
-      "done_at": "2026-09-20 17:51:06",
+      "done_at": "2026-09-23 17:58:31",
+      "artifacts": {},
       "inputs": {
-        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": "2fc2873da7f268866502ce0feaaefa5c"
+        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": "2fc2873da7f268866502ce0feaaefa5c",
+        "07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes": "8a9ff224ba7473238b693008970735cb"
       }
     },
     {
@@ -299,14 +318,14 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk"
+          "path": "08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-20 17:51:52",
+      "done_at": "2026-09-23 17:58:33",
       "artifacts": {
-        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": {
-          "md5": "746a21fb844654100df9dffabbd11326"
+        "08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk": {
+          "md5": "81472a9e8933d6563a243325a79277da"
         }
       }
     },
@@ -327,14 +346,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-20 17:55:14",
+      "done_at": "2026-09-23 17:48:54",
       "artifacts": {
         "08_output/宝石战争/ota/bszz/libstarry_magic.so": {
           "md5": "2fc2873da7f268866502ce0feaaefa5c"
         }
       },
       "inputs": {
-        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": "746a21fb844654100df9dffabbd11326"
+        "08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk": "81472a9e8933d6563a243325a79277da"
       }
     },
     {
@@ -355,20 +374,20 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-20 17:53:01",
+      "done_at": "2026-09-23 17:49:49",
       "artifacts": {
         "04_scripts/宝石战争/install_result.txt": {
-          "md5": "30c0b6d9bb3643ccf7c1332cf1213089"
+          "md5": "fd3371465027ad3e43994ca839725a53"
         }
       },
       "inputs": {
-        "08_output/宝石战争/宝石战争_6.0.012_surgical-releaseSigned.apk": "746a21fb844654100df9dffabbd11326",
+        "08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk": "81472a9e8933d6563a243325a79277da",
         "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },
     {
       "id": "publish_hotupdate",
-      "name": "备份并发布 HotUpdate 1.0.0.01 补丁",
+      "name": "备份并发布 HotUpdate 补丁",
       "requires": [
         "install",
         "patch_dll",
@@ -385,7 +404,7 @@
         }
       ],
       "status": "skipped",
-      "note": "正式包已内嵌完整 1.0.0.01 资源并保持外部 HotUpdate 为空；此阶段仅保留为手动发布外置补丁的备选路径，不参与 next 自动推进。"
+      "note": "正式包已内嵌完整 1.0.0.04 资源并保持外部 HotUpdate 为空；此阶段仅保留为手动发布外置补丁的备选路径，不参与 next 自动推进。"
     },
     {
       "id": "install_official",
@@ -403,17 +422,8 @@
           "path": "04_scripts/宝石战争/install_official_result.txt"
         }
       ],
-      "done_at": "2026-09-16 23:20:35",
       "status": "skipped",
-      "note": "对照/回退专用：只手动 run，不参与 next 自动推进（2026-09-16 被 next 连跑误触发一次）",
-      "artifacts": {
-        "04_scripts/宝石战争/install_official_result.txt": {
-          "md5": "3fb279088bc0473d6c36106deb638528"
-        }
-      },
-      "inputs": {
-        "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
-      }
+      "note": "对照/回退专用：只手动 run，不参与 next 自动推进。6.0.013 底包已存 02_apks/宝石战争/宝石战争_6.0.013_official_from_device.apk。"
     }
   ]
 }
