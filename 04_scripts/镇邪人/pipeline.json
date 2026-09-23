@@ -265,7 +265,7 @@
       ],
       "status": "done",
       "done_at": "2026-09-23 16:52:00",
-      "note": "用户口令「收尾+正式包+清理+git」2026-09-23 二次确认（首轮漏做第 2 步裁剪）。收官事实：08_output/镇邪人 只留正式包 镇邪人_1.0.3_ca0d4_star-releaseSigned.apk（106,069,153B，md5 59a6e755e8ddea2232c6a9e3ee375f62，sha256 48979c9dfb149505946b4fa778711cb8de390df4619b191da5c2ec233058142c，签名 starry-release 83c5cc0b…）；裁剪清单=10_docs/镇邪人/正式包裁剪清单_1.0.3_20260923.json（删 7 项 / 约 320MB）；滚动物清单=10_docs/镇邪人/滚动物清理清单_20260923.json（删 06 明文 25,147,378B + 07_patched/ca0d4 29,391,742B，约 54.5MB，不可再生输入全保留）；git 提交=见 archive_close 补记。",
+      "note": "用户口令「收尾+正式包+清理+git」2026-09-23 二次确认（首轮漏做第 2 步裁剪）。收官事实：08_output/镇邪人 只留正式包 镇邪人_1.0.3_ca0d4_star-releaseSigned.apk（106,069,153B，md5 59a6e755e8ddea2232c6a9e3ee375f62，sha256 48979c9dfb149505946b4fa778711cb8de390df4619b191da5c2ec233058142c，签名 starry-release 83c5cc0b…）；裁剪清单=10_docs/镇邪人/正式包裁剪清单_1.0.3_20260923.json（删 7 项 / 约 320MB）；滚动物清单=10_docs/镇邪人/滚动物清理清单_20260923.json（删 06 明文 25,147,378B + 07_patched/ca0d4 29,391,742B，约 54.5MB，不可再生输入全保留）；git 提交=106f496（8b95e74..106f496，9 files；含 `_common/pipeline_record_cleanup.py` 的 KeyError 修复，本阶段状态由 archive_close_git 收口提交）。",
       "artifacts": {
         "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md": {
           "md5": "5537ae070cde3e970031fe86509003f3"
