@@ -1,0 +1,226 @@
+{
+ "meta": {
+  "game": "圣翼传说",
+  "pkg": "com.aiyue.wscq",
+  "version": "7.5.10(7510)",
+  "apk": "/tmp/wscq_base.apk",
+  "apk_size": 180398549,
+  "libil2cpp_md5": "563b40a81370833858ef2d4452f8dc3f",
+  "libil2cpp_size": 45759720,
+  "libSDKloading_md5": "c1182047eead0d5b78d09b0e34dfd254",
+  "libSDKloading_size": 23776328,
+  "game_id": 1189,
+  "menu_url": "https://menu-1255602259.file.myqcloud.com/game/1189.html",
+  "il2cpp_base_runtime": "0x7821e2a000",
+  "so_bias_rva_minus_fileoff": "0x4000",
+  "shell_flag_page": "0x782D766000",
+  "flag_base_off": "0x4E0",
+  "hook_count": 15,
+  "captured": "2026-09-24",
+  "pid": 30935
+ },
+ "flags": {
+  "功能1 百倍伤害": {
+   "odd": 1248,
+   "abs": "0x782D7664E0"
+  },
+  "功能2 玩家无敌": {
+   "off": 1252,
+   "abs": "0x782D7664E4"
+  },
+  "功能3 战斗速度": {
+   "off": 1256,
+   "abs": "0x782D7664E8"
+  },
+  "功能4 怪物+BOSS瞬刷": {
+   "off": 1260,
+   "abs": "0x782D7664EC"
+  },
+  "功能5 全屏攻击": {
+   "off": 1264,
+   "abs": "0x782D7664F0"
+  }
+ },
+ "sites": [
+  {
+   "rva": "0x11D226C",
+   "file_off": "0x11CE26C",
+   "class": "CameraCtr",
+   "method": "公用封杀并退出游戏()",
+   "group": "反作弊",
+   "feature": "拆反作弊-封杀退出(会重写存档)",
+   "gate_flag": null,
+   "trampoline": "0x782C3921FC",
+   "prologue16": "ff4301d1fe0b00f9f85f02a9f65703a9",
+   "install": true
+  },
+  {
+   "rva": "0x11D261C",
+   "file_off": "0x11CE61C",
+   "class": "CameraCtr",
+   "method": "封杀并退出游戏()",
+   "group": "反作弊",
+   "feature": "拆反作弊-封杀退出(会重写存档)",
+   "gate_flag": null,
+   "trampoline": "0x782C3920A4",
+   "prologue16": "ff8301d1fe0b00f9fa6702a9f85f03a9",
+   "install": true
+  },
+  {
+   "rva": "0x11DE744",
+   "file_off": "0x11DA744",
+   "class": "CameraCtr.<五秒检测a>d__44",
+   "method": "MoveNext()",
+   "group": "反作弊",
+   "feature": "链B 吞掉绝杀冻结 timeScale=0",
+   "gate_flag": null,
+   "trampoline": "0x782C391E1C",
+   "prologue16": "fe0f1df8f65701a9f44f02a993ce00b0",
+   "install": true
+  },
+  {
+   "rva": "0x11FA374",
+   "file_off": "0x11F6374",
+   "class": "tishi_text",
+   "method": "OnEnable()",
+   "group": "常驻-屏蔽",
+   "feature": "置空Q群/微信链接 → 游戏自己隐藏按钮",
+   "gate_flag": null,
+   "trampoline": "0x782C391BCC",
+   "prologue16": "fe0f1df8f65701a9f44f02a9b6cd00b0",
+   "install": true
+  },
+  {
+   "rva": "0x11FB564",
+   "file_off": "0x11F7564",
+   "class": "tishi_text",
+   "method": "加QQ群()",
+   "group": "常驻-屏蔽",
+   "feature": "点了也不跳转",
+   "gate_flag": null,
+   "trampoline": "0x782C391C7C",
+   "prologue16": "fe0f1ef8f44f01a9b4cd009088ba5039",
+   "install": true
+  },
+  {
+   "rva": "0x132AC34",
+   "file_off": "0x1326C34",
+   "class": "EnemiesCtr",
+   "method": "复活BOSS()",
+   "group": "功能4",
+   "feature": "BOSS瞬刷(借复活CD,用完还)",
+   "gate_flag": "0x782D7664EC",
+   "trampoline": "0x782C391574",
+   "prologue16": "ffc301d1ea1300fde9a3026dfe1f00f9",
+   "install": true
+  },
+  {
+   "rva": "0x132C3D8",
+   "file_off": "0x13283D8",
+   "class": "EnemiesCtr",
+   "method": "FixedUpdate()",
+   "group": "功能4",
+   "feature": "小怪倒计时钉0(0秒刷怪)",
+   "gate_flag": "0x782D7664EC",
+   "trampoline": "0x782C3914DC",
+   "prologue16": "e80f1efcfe0700f9f44f01a914c400f0",
+   "install": true
+  },
+  {
+   "rva": "0x132E634",
+   "file_off": "0x132A634",
+   "class": "EnemiesCtr.<检测是否使用变速器>d__60",
+   "method": "MoveNext()",
+   "group": "反作弊",
+   "feature": "链A 变速检测协程直接结束",
+   "gate_flag": null,
+   "trampoline": "0x782C391C94",
+   "prologue16": "fe0f1df8f65701a9f44f02a914c400b0",
+   "install": true
+  },
+  {
+   "rva": "0x132FC80",
+   "file_off": "0x132BC80",
+   "class": "Enemy",
+   "method": "GetHurt(long,bool,bool,bool,string)",
+   "group": "功能1+功能5",
+   "feature": "百倍伤害 ×100 ／ 全屏伤害扩散(活体登记表)",
+   "gate_flag": "0x782D7664E0",
+   "trampoline": "0x782C391014",
+   "prologue16": "ec0f17fceb2b016de923026dfd7b03a9",
+   "install": true
+  },
+  {
+   "rva": "0x13892D8",
+   "file_off": "0x13852D8",
+   "class": "EnemyCtr2",
+   "method": "FixedUpdate()",
+   "group": "功能5",
+   "feature": "维护活体登记表(≤0x100, LRU淘汰) — 无条件常驻",
+   "gate_flag": null,
+   "trampoline": "0x782C3916CC",
+   "prologue16": "ed33ba6deb2b016de923026dfe5f03a9",
+   "install": true
+  },
+  {
+   "rva": "0x13C7318",
+   "file_off": "0x13C3318",
+   "class": "PlayerCtr",
+   "method": "GetHurt(float,string)",
+   "group": "功能2",
+   "feature": "玩家无敌: 负伤害改判 0",
+   "gate_flag": "0x782D7664E4",
+   "trampoline": "0x782C39129C",
+   "prologue16": "eb2bb96de923016dfe1300f9fa6703a9",
+   "install": true
+  },
+  {
+   "rva": "0x13C91A0",
+   "file_off": "0x13C51A0",
+   "class": "PlayerCtr",
+   "method": "FixedUpdate()",
+   "group": "功能3",
+   "feature": "速度心跳: 主动钉住 timeScale",
+   "gate_flag": "0x782D7664E8",
+   "trampoline": "0x782C3913E0",
+   "prologue16": "e923bb6dfe6701a9f85f02a9f65703a9",
+   "install": true
+  },
+  {
+   "rva": "0x265A22C",
+   "file_off": "0x265622C",
+   "class": "UnityEngine.Application",
+   "method": "OpenURL(string)",
+   "group": "常驻-屏蔽",
+   "feature": "拦 qq.com 跳转",
+   "gate_flag": null,
+   "trampoline": "0x782C3918F8",
+   "prologue16": "fe0f1ef8f44f01a9f42a0090814646f9",
+   "install": true
+  },
+  {
+   "rva": "0x2684AA8",
+   "file_off": "0x2680AA8",
+   "class": "UnityEngine.Time",
+   "method": "set_timeScale(float)",
+   "group": "功能3",
+   "feature": "战斗速度 ×N",
+   "gate_flag": "0x782D7664E8",
+   "trampoline": "0x782C391384",
+   "prologue16": "e80f1efcfe4f01a9932900f0607245f9",
+   "install": true
+  },
+  {
+   "rva": "0x286A528",
+   "file_off": "0x2866528",
+   "class": "UnityEngine.UI.Text",
+   "method": "set_text(string)",
+   "group": "常驻-屏蔽",
+   "feature": "按内容过滤客服微信文字",
+   "gate_flag": null,
+   "trampoline": "0x782C391794",
+   "prologue16": "fe57bea9f44f01a9951a0090a8224639",
+   "install": true
+  }
+ ]
+}

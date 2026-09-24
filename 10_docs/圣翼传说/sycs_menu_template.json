@@ -1,0 +1,14 @@
+{
+  "template_id": "sycs",
+  "name": "圣翼传说",
+  "package": "com.aiyue.wscq",
+  "source": "Games/WscqEntry.cpp kWscq_Features / Games/WscqMod.h WscqFeat / authGameId=sycs @ v7.5.10 (versionCode 7510)",
+  "features": [
+    {"feat_num": 0, "name": "战斗", "note": "分类占位（Category_战斗）"},
+    {"feat_num": 1, "name": "伤害倍率", "type": "slider", "min": 1, "max": 1000, "default": 1, "note": "1=关，2..1000=倍率（原「百倍伤害」改名并滑块化）"},
+    {"feat_num": 2, "name": "玩家无敌"},
+    {"feat_num": 3, "name": "战斗加速", "type": "slider", "min": 1, "max": 10, "default": 1, "note": "1=关，2..10=倍速（timeScale 钉住）"},
+    {"feat_num": 4, "name": "怪物BOSS瞬刷"},
+    {"feat_num": 5, "name": "全屏攻击"}
+  ]
+}

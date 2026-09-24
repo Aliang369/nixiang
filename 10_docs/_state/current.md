@@ -1,12 +1,13 @@
 # 跨游戏状态索引
 
-> 更新：2026-09-23。此文件只保留摘要；长状态见 `games/{游戏}.md`。
+> 更新：2026-09-24。此文件只保留摘要；长状态见 `games/{游戏}.md`。
 > 读取时先定位目标游戏，只加载对应摘要，不默认通读全部记录。
 
 ## 游戏索引
 
 | 游戏 | 最近更新 | 状态 | 详情 |
 |---|---|---|---|
+| 圣翼传说 | 2026-09-24 | ✅ sycs 星空版已交付，**用户实机验收「功能没问题」**：Unity IL2CPP + TapTap 渠道官包（`com.aiyue.wscq` 7.5.10/7510，198,631,316 B md5 `66b979b2…`）为底；先抓斌哥改包（签名 `CN=binge2.keystore`、瘦壳 `libSDKloading.so`）→ 磁盘 vs 内存 memdiff 得 **15 处 Dobby 跳桩**（`ADRP X17/ADD X17/BR X17`），Il2CppDumper dump.cs 反查定位 15 个方法；本作移植 5 功能＝**伤害倍率滑块 1..1000**（原「百倍伤害」改名）/ **玩家无敌**（负伤归零）/ **战斗加速滑块 1..10**（timeScale 钉住 ×N）/ **怪物BOSS瞬刷**（CreatTime 归零 + 借复活 CD）/ **全屏攻击**（自持 256 槽登记表 + `Enemy::GetHurt` 扩散，防重入）；10 HookSlot 全懒装、**全部走 RVA 序言校验命中**（冒烟包 10/10）；免广告**不做**（本作无广告位，斌哥包亦无该桩）；登录＝TapTap SSO `signature not match`（与 Phigros 同构），已用 `SignSpoof` 回灌官方证书 MD5 `364ce198…` + `TapLoginForceWeb`/`YnttLoginRequest` 强制**包内内嵌网页登录**修复（实测 `MenuService: TapTapActivity` 起在本进程、未跳客户端）；正式包 `08_output/圣翼传说/圣翼传说_7.5.10_surgical-releaseSigned.apk`（202,857,123 B md5 `621644ee…` sha256 `4c61d412…`，v1/v2/v3 Verified `CN=StarryMagic` SHA-1 `821c92e4…`），设备 base.apk md5 一致 ✓ + 悬浮窗 appops ✓ + 卡密已激活（`sycs`，expire 2026-10-01）；管线 **10/10 done**；坑：新增 dex 必须用**最小空闲下标**（单 dex 官包 → `classes2.dex`；写死 `classes8.dex` → ART 遇缺口停止加载 → StarryInitProvider ClassNotFoundException 启动即崩）、模块日志 tag 是 `Mod_Menu`；不可再生输入已显式保留到 `02_apks/圣翼传说/`（官方底包 + 斌哥改包） | [摘要](games/圣翼传说.md) |
 | 我的勇者 | 2026-09-20 | 已收尾 | [摘要](games/我的勇者.md) |
 | 生存33天 | 2026-09-23 | ✅ 1.0.24 星光版**五项功能真机进局实测全部通过**（百倍伤害/无敌/全屏秒杀/攻速滑条/免广告；免广告日志 `starry skip ad → success`），已收尾裁剪。本轮最大坑已修：启动 2s SIGABRT 根因 = Dobby `libdobby.a` 符号解析器内部 tinystl 指针非法 → 改用 `dlopen`+`dlsym` 绕开 `DobbySymbolResolver`；**锚点 4 个失效 2 个**（`h=i<0`→`f=i<0`/`g=0`→`m=0`、EntityManager 别名 `f`→**`h`**；`t = c.baseDmg;`→**`t = u.baseDmg;`**、目标实体变量 `r`→**`a`**），已参数化兼容两版；底包 MD5 `8fa00ae1397609e5e09ff34cc43030e3`（与 1.0.23 同 → 同签覆盖未卸载）、补丁 dex 由 `classes10` 变 **`classes8`**、新增 dex 由 `classes11` 变 **`classes9`**；唯一正式包 `08_output/生存33天/生存33天_1.0.24_surgical-releaseSigned.apk`（1,179,952,150 B · MD5 `5042c1eb7eb3d888524b590d8083e0ba`） | [摘要](games/生存33天.md) |
 | 蛋壳战机 | 2026-09-23 | ✅ 1.1.6/vc27 已装机：**偷盗技能根因已定位并重做且真机 PROVEN**（旧路径 `AddSkillSurvior(int)` 方法体只有 `_allSkills.Add(id); OnAddSkill(id);` ⇒ 纯 UI 修改、不实例化、不升级；新路径 Hook `BattleWorldContext.PostProcessLearnedSkill` file `0x6E72E40` + `AddSkillToCharacter` 回灌，重复技能曾交回游戏 `checkIfReplaced` 升级（**该假设已被真机否定**，见下）；九次真实三选一均 `steal picked=… granted=N (of M candidates)`）；**并修复 1.1.6「启动即闪退」**（根因=启动期调 `il2cpp_domain_get_assemblies`，`il2cpp_init` 未就绪 + 后台线程未 `thread_attach` ⇒ 静默 SIGSEGV 无 tombstone；修复=启动期零 il2cpp 调用 + MethodInfo 惰性解析 + `AttachCurrentThreadToIl2Cpp()`）；底包 `6bd3f3de…`、so `3984ad3c…`、classes5 `0756064a…`、正式包 `c8944f45…`/206,906,150B；真机 f9a116a2 同签覆盖装机、四项 Hook 全命中、存活 ≥105s、攻击倍率/上帝模式实测生效；已收尾（08_output 裁剪为唯一正式包、释放 554 MB、提交 `0769827`+`3613ae0` 已推送、远端同步）。**用户确认：免广告 PASS、偷盗「选 1 得其余」PASS、「重复同名技能不升级」= 确认缺陷待修 —— 下次会话第一优先级，候选线索见功能验收卡 §5.4** | [摘要](games/蛋壳战机.md) |

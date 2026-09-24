@@ -105,8 +105,9 @@ modern 的 `Games/*Mod.cpp` 同样从生成器产出（防闪退骨架 v3，内�
 | QLFH | qlfh | 青鸾繁华录 |
 | BJDW | bjdw | 伯吉的温馨厨房 |
 | ENDFIELD | mrfzzmd | 明日方舟：终末地 |
+| WSCQ | sycs | 圣翼传说 |
 
-以 `GameConfig.h` / `SWITCH_GAME.md` 为准；上表落后时以头文件为准并回写本表（2026-09-03 已按 GameConfig.h 回写至 33 款）。
+以 `GameConfig.h` / `SWITCH_GAME.md` 为准；上表落后时以头文件为准并回写本表（2026-09-03 已按 GameConfig.h 回写至 33 款；2026-09-24 增补圣翼传说 = `sycs`，modern 注册表 `Games/WscqEntry.cpp`）。
 
 ### 验证
 
@@ -131,6 +132,8 @@ adb logcat -s StarryApp:V StarryMagic:V | grep "auth game_id synced from native"
 | 快速试改 smali | MT MCP |
 
 **已注册管线的一律走 `04_scripts/pipeline.sh`**（status/next/reset/verify），2026-09-10 起自动防旧产物直装：上游产物变化 → 过期下游阶段自动回退 pending；过期链路上 `run` 下游会被陈旧度门禁拒绝。构建后端四件套（绝对路径/obj stamp/链接活动保险/菜单串字节校验）范本 = `04_scripts/魂坠深境/hzsj_build_so.sh`；install 阶段末尾接 `04_scripts/_common/verify_installed_apk.sh` 校验设备包 md5 == 本地 APK。
+
+★ **外科组装 dex 落位铁律（2026-09-24 圣翼传说实测踩坑）**：新增 smali 编出的 dex 名必须是 base.apk 里**最小的空闲下标**（跑脚本求 `classesN.dex` 未被占用的最小 N，单 dex 官包 → `classes2.dex`）。写死 `classes8.dex` 时 ART 的 `BaseDexClassLoader` 从 `classes.dex` 顺序扫、遇到第一个缺口即停止 → 星光 dex 永不加载 → `StarryInitProvider` `ClassNotFoundException` **启动即崩**。SDK 侧另有两条：① 官包无 `libtprt.so`/ACE 时 `Android_<tag>.mk` 必须含 `Games/NoAceStubs.cpp`（否则 `ld.lld: undefined symbol: SignalQuarantine_Start`）；② hook 日志 tag 是 `Mod_Menu`（`Includes/Logger.h` 的 `TAG=OBFUSCATE("Mod_Menu")`），不是 `StarryMagic`。
 
 ### 构建环境
 

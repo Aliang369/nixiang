@@ -6,6 +6,7 @@ Reports changed prologues / ARM64 B/BL stubs typical of Dobby inline hooks.
 from __future__ import annotations
 
 import argparse
+import re
 import struct
 import sys
 import zipfile
@@ -65,7 +66,6 @@ def build_mem_image(outdir: Path, so: bytes) -> tuple[bytearray, list[tuple[int,
             if len(parts) >= 3:
                 segs.append((int(parts[0], 16), int(parts[1], 16), int(parts[2], 16)))
     elif maps_path.exists():
-        import re
         for line in maps_path.read_text().splitlines():
             if "libil2cpp.so" not in line or "r-xp" not in line:
                 continue
@@ -73,9 +73,15 @@ def build_mem_image(outdir: Path, so: bytes) -> tuple[bytearray, list[tuple[int,
             if m:
                 segs.append((int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16)))
 
-    bins = sorted(outdir.glob("il2cpp_rx_*.bin"))
+    # NOTE: 必须按数字序号排序，不能字典序 —— 否则 rx_10 会排在 rx_2 前面，
+    # 与 segs.txt 的行序错配，导致整段 overlay 错位（报告会出现百万级假差异）。
+    def _rx_idx(p: Path) -> int:
+        m = re.search(r"il2cpp_rx_(\d+)\.bin$", p.name)
+        return int(m.group(1)) if m else 0
+
+    bins = sorted(outdir.glob("il2cpp_rx_*.bin"), key=_rx_idx)
     if not bins and (outdir / "raw").is_dir():
-        bins = sorted((outdir / "raw").glob("il2cpp_rx_*.bin"))
+        bins = sorted((outdir / "raw").glob("il2cpp_rx_*.bin"), key=_rx_idx)
     if not bins:
         raise FileNotFoundError("no il2cpp_rx_*.bin in outdir")
 

@@ -1,0 +1,298 @@
+{
+  "game": "圣翼传说",
+  "version": "7.5.10",
+  "notes": "2026-09-24 首版星空版移植（TapTap 渠道，底包 = 官方 7.5.10 com.aiyue.wscq）。抓点来源：斌哥改包内存 diff（15 处 Dobby 跳桩，见 10_docs/圣翼传说/斌哥改包抓点_20260924.md）；官包 libil2cpp.so 与斌哥包 md5 完全一致（563b40a81370833858ef2d4452f8dc3f）→ 15 个 RVA 锚点直接沿用。5 功能：伤害倍率(滑块1..1000)/玩家无敌/战斗加速(滑块1..10)/怪物BOSS瞬刷/全屏攻击；登录走 TapLoginForceWeb + yntt_smali（强制包内网页登录，绕开 TapTap 客户端 SSO 的 signature not match）。install 阶段必须卸载官方包（签名冲突，破坏性，须用户确认）。",
+  "params": {
+    "game_id": "sycs",
+    "package": "com.aiyue.wscq",
+    "mk": "Android_wscq.mk（modern 注册表管线）",
+    "tag": "wscq",
+    "serial": "f9a116a2",
+    "il2cpp_md5": "563b40a81370833858ef2d4452f8dc3f",
+    "global_metadata_md5": "ef84cf230a6f4be6858f13cc47e2ab5b"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（真机 f9a116a2，KSU root，官方版已装）",
+      "requires": [],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/device_ready_wscq.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:18:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "check_apk",
+      "name": "底包核对（TapTap 官方 7.5.10，198,631,316 B / md5 66b979b2bef80dce1bcc6223f57cc4ed）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "ls -lh \"$NIXIANG/02_apks/圣翼传说/圣翼传说_7.5.10_taptap_official_from_device.apk\" && md5 -q \"$NIXIANG/02_apks/圣翼传说/圣翼传说_7.5.10_taptap_official_from_device.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/圣翼传说/圣翼传说_7.5.10_taptap_official_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "note": "02_apks/ 由用户手动管理；本轮出包用 /tmp/wscq_orig.apk（WSCQ_BASE_APK= 覆盖）。用户把底包归档到上述路径后可 run 本阶段。",
+      "done_at": "2026-09-24 14:26:33",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/圣翼传说/圣翼传说_7.5.10_taptap_official_from_device.apk": {
+          "md5": "66b979b2bef80dce1bcc6223f57cc4ed"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "dump",
+      "name": "斌哥改包内存 dump（KSU 直读 /proc/<pid>/mem，无 Frida）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/dump_binge_shell_mem.sh\" com.aiyue.wscq \"$NIXIANG/06_dumped/圣翼传说/mem_20260924\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/mem_20260924/raw/il2cpp_rx_segs.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:18:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/mem_20260924/raw/il2cpp_rx_segs.txt": {
+          "md5": "49cfeb25e2be8dd608b5d43132e241dc"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "抓点锚定（磁盘 so vs 内存 memdiff → 15 跳桩 + 方法名反查 + trampoline 反汇编）",
+      "requires": [
+        "dump"
+      ],
+      "command": "python3 \"$NIXIANG/04_scripts/_common/diff_il2cpp_mem.py\" \"$NIXIANG/06_dumped/圣翼传说/mem_20260924\" --apk /tmp/wscq_base.apk",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥hook锚点_20260924.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥改包抓点_20260924.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:18:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥hook锚点_20260924.json": {
+          "md5": "eb1d64d2a3edc6cbaa944d2ac0d2d546"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥改包抓点_20260924.md": {
+          "md5": "b371752fe8da8d9af1271f2a66c245e8"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/mem_20260924/raw/il2cpp_rx_segs.txt": "49cfeb25e2be8dd608b5d43132e241dc"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（Games/WscqMod.cpp：10 HookSlot / 6 懒装组 / AOE 自持登记表 / 反作弊兜底）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/scan_mod_cpp.sh\" Games/WscqMod.cpp",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:18:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp": {
+          "md5": "642b2511e4fc705805b0c164ae26b028"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp": {
+          "md5": "45d36d50df262ad3f5c60c69fddf7f96"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥hook锚点_20260924.json": "eb1d64d2a3edc6cbaa944d2ac0d2d546"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（ndk-build Android_wscq.mk，绝对 NDK_OUT/NDK_LIBS_OUT）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/wscq_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so",
+          "pattern": "SeekBar_"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so",
+          "pattern": "JNI_OnLoad"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:18:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so": {
+          "md5": "109425618e54bed1c4398fdc1d1e21ed"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp": "642b2511e4fc705805b0c164ae26b028",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp": "45d36d50df262ad3f5c60c69fddf7f96"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（min-free classesN.dex + Manifest + starry so + libc++_shared，官包条目字节不变）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "WSCQ_BASE_APK=/tmp/wscq_orig.apk bash \"$NIXIANG/04_scripts/圣翼传说/surgical_wscq_7.5.10.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-unsigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:18:25",
+      "note": "check_apk 尚未归档时用 WSCQ_BASE_APK=/tmp/wscq_orig.apk；用户归档后去掉该 env 即用 02_apks 路径。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-unsigned.apk": {
+          "md5": "25d085c98c0281b54cb6bd57473f029b"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical/AndroidManifest.xml": {
+          "md5": "612efb7d4a109917fdc5e10670f18830"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so": "109425618e54bed1c4398fdc1d1e21ed"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（zipalign + apksigner，starry_release.jks / CN=StarryMagic）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:18:26",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-releaseSigned.apk": {
+          "md5": "621644ee72659ea4c3ca6b99574745f1"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-unsigned.apk": "25d085c98c0281b54cb6bd57473f029b",
+        "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical/AndroidManifest.xml": "612efb7d4a109917fdc5e10670f18830"
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机（须用户确认：签名冲突必须卸载官方包，本地数据清除）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "WSCQ_ALLOW_UNINSTALL=1 bash \"$NIXIANG/04_scripts/圣翼传说/wscq_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok"
+        }
+      ],
+      "status": "done",
+      "note": "未取得用户对卸载的明确授权前不得 run（默认不带 WSCQ_ALLOW_UNINSTALL=1 只会报错退出）。",
+      "done_at": "2026-09-24 14:18:26",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok": {
+          "md5": "09de79f6cd9944faeaeb1af2d337b68d"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-releaseSigned.apk": "621644ee72659ea4c3ca6b99574745f1",
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（移植记录文档 + game_id 回填 + 索引）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/移植记录_星空版_7.5.10_20260924.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 14:19:29",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/移植记录_星空版_7.5.10_20260924.md": {
+          "md5": "82941f2f1c9877921384862d5e40fd70"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok": "09de79f6cd9944faeaeb1af2d337b68d"
+      }
+    }
+  ]
+}
