@@ -60,9 +60,17 @@ chk "ysjyz"
 chk "Toggle_免广告"
 chk "Toggle_无限技能"
 chk "Toggle_无敌"
-chk "Toggle_吸血拉满"
-chk "SeekBar_伤害倍率秒杀"
+chk "SeekBar_伤害倍率"
 chk "SeekBar_游戏倍速"
+# v7 负向防呆：删除项/旧串绝不能残留（旧名还在 = 拿了旧源码或没改干净）
+no() {
+  local n
+  n="$(LC_ALL=C grep -ac "$1" "$SO" || true)"
+  [[ "$n" -eq 0 ]] || { echo "ERROR: $SO 仍含已删除串 [$1] ×$n" >&2; exit 1; }
+}
+no "Toggle_吸血拉满"
+no "伤害倍率秒杀"
+no "S.leech"
 chk "clampResult"
 chk "YsjYzHooks"
 chk "starry_ysjyz_v1"

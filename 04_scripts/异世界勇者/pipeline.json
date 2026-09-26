@@ -1,7 +1,7 @@
 {
   "game": "异世界勇者",
   "version": "8.1.1",
-  "notes": "2026-09-11 新游戏接手（modern 注册表路线 game_id=ysjyz）：Cocos Creator 2.4.2（libcocos2djs.so + .jsc），se::ScriptEngine::evalString splice 注入。**v5 = 6 项功能 / 7 个菜单位（单一 Category_基础功能，用户要求不做多分类）**：免广告、无限技能（零CD+不耗蓝合并）、无敌、吸血拉满、伤害倍率秒杀、游戏倍速。战斗类全部落在 JS AddHp 结算层（this=受击方 / 末参 o=攻击方，判据 y30529）；本包无任何改面板功能 → result 的 Hp/Atk/Def/Free/Php/Patk/Pdef 天然与官包一致，CheckResult 与 Php/Pdef 伪装层整体删除；唯一照看 Dam：StatDam 按放大系数 1:1 折回（同步链，精确）+ Mhp×100 宽松兜底限幅（Dam 是整章累计、Mhp 只是当前怪）。离线行为回归=04_scripts/异世界勇者/ysjyz_js_regression.js（66 断言全过，含已删功能的负向断言）。设备=MuMu 127.0.0.1:5555；功能项已由用户实测确认通过；仅剩 archive 收官。",
+  "notes": "2026-09-11 新游戏接手（modern 注册表路线 game_id=ysjyz）：Cocos Creator 2.4.2（libcocos2djs.so + .jsc），se::ScriptEngine::evalString splice 注入。**v5 = 6 项功能 / 7 个菜单位（单一 Category_基础功能）**：免广告、无限技能（零CD+不耗蓝合并）、无敌、吸血拉满、伤害倍率秒杀、游戏倍速。战斗类全部落在 JS AddHp 结算层（this=受击方 / 末参 o=攻击方，判据 y30529）；本包无任何改面板功能 → result 的 Hp/Atk/Def/Free/Php/Patk/Pdef 天然与官包一致；唯一照看 Dam：StatDam 按放大系数 1:1 折回（同步链，精确）+ Mhp×100 宽松兜底限幅。离线行为回归=04_scripts/异世界勇者/ysjyz_js_regression.js（**v6 起 73 断言**）。设备：真机 f9a116a2（MuMu 127.0.0.1:5555 已弃用）。 | **2026-09-27 v6 = 修复「人物等级≥199 后打怪恒 1 滴血」**：病因=官方 Damage 先做护甲减法（main.index.js:29158 `d -= E`），再由 main.index.js:29807 `d < 1 && (d = 1)` 把 ≤0 的战前伤害钳成 1，而 v5 的 ×amp 作用在 AddHp 收到的这个 −1 上 ⇒ 滑块多少就打出多少（1×N 的本质）。修法=新增 Damage/GetDef 两个包装：我方出刀时记忆本刀攻强 S.ax，对 grp===2 目标把护甲上限压到 0.8×攻强 ⇒ 钳制永不触发；护甲本就 <80% 攻强的正常场景与「滑块=1/功能关」完全不介入。出包走 **so-swap 增量外科**（官包已被用户清空，02_apks/08_output 均无底包）：以设备现装 v5 为底只换 libstarry_magic.so，24,624 个非 so 条目 size/CRC 与 v5 全等。 | **2026-09-27 v7**：①删「吸血拉满」（enum 缩为 ADFREE=1/SKILL=2/INV=3/DMG=4/GSPD=5/COUNT=6，菜单元 6 项）；②伤害倍率改 `SeekBar_伤害倍率_1_100_1`（默认 1、上界 100，JS 侧 clampv 兜底）；③游戏倍速改 `SeekBar_游戏倍速_1_5_1`（默认 1）；④新增 build_menu_dex 阶段（mod 菜单框架 classes3.dex 换新构建：159 个 smali，classes2 patch 引用的 8 个硬依赖签名已逐个核验一致）；⑤增量置换同时换 so + classes3.dex（其余 24,623 条逐条目 size/CRC 与底包全等）。回归脚本 v7 = **77/77 PASS**。反检测调查见 10_docs/异世界勇者/反检测调查_ysjyz_20260927.md（要点：客户端零本地校验、判罚全在服务端 ErrCode、无云存档上传接口、倍速最危险）。",
   "params": {
     "game_id": "ysjyz",
     "package": "com.mudamuda.idlewow",
@@ -9,12 +9,12 @@
     "tag": "ysjyz",
     "obj_dir": "obj_ysjyz",
     "libs_dir": "libs_ysjyz",
-    "serial": "127.0.0.1:5555"
+    "serial": "f9a116a2"
   },
   "env": {
     "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
     "NIXIANG": "/Users/aliang/Documents/nixiang",
-    "SERIAL": "127.0.0.1:5555"
+    "SERIAL": "f9a116a2"
   },
   "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
   "stages": [
@@ -181,18 +181,98 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 17:08:21",
+      "done_at": "2026-09-27 02:40:00",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so": {
-          "md5": "54cc06236f7d04bbf070131f60979b22"
+          "md5": "8aa06587c7b63b925fcecef8d58c78c1",
+          "size": 129688,
+          "note": "v7：删吸血 + 伤害倍率 1-100/默认 1 + 倍速默认 1（clampv 上界夹取）；含 v6 的 Damage/GetDef 护甲上限修复 + Games/NoAceStubs.cpp"
         }
       },
       "inputs": {
-        "Games/YsjYzMod.cpp": "9a4c4c42aa483fb37b260b149dbfd613",
-        "Games/YsjYzEntry.cpp": "876af4a74303d83e9721ce282c6dd172",
-        "Android_ysjyz.mk": "151e2af70dcae9441764029fad346047",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/YsjYzHooks.java": "cb134255e7b0cb7678a4dccc34a79efa",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh": "d22400c12562f71e8c21d96363e644cb"
+        "Games/YsjYzMod.cpp": "ff5c885181a5254c6ee0efb6e4882eee",
+        "Games/YsjYzMod.h": "acc9b9f1746da74b7a402bf7828968f4",
+        "Games/YsjYzEntry.cpp": "bbde8e1a454fe98a1c44feb3f4f094d4",
+        "Android_ysjyz.mk": "57a44b7a4e3f18f46e91e6fa6fe1ebcc",
+        "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/ysjyz_build_so.sh": "ac636a987e87130d22900f9e145b7978",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/YsjYzHooks.java": "cb134255e7b0cb7678a4dccc34a79efa"
+      }
+    },
+    {
+      "id": "build_menu_dex",
+      "name": "重建 mod 菜单框架 dex（classes3.dex：gradle assembleRelease → apktool d → 合并 com/starry smali → smali assemble）",
+      "requires": [
+        "impl_mod"
+      ],
+      "why": "用户要求 v7 顺便把 mod 菜单框架换成新构建。旧路径 surgical_ysjyz_8.1.1.sh 硬依赖官包（02_apks/异世界勇者/…official.apk md5 710d1cfe…，已被用户清空）⇒ 本轮只重建框架 dex 本体，classes2.dex patch 与 AndroidManifest.xml 沿用设备 v5 包（置换式）。",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/ysjyz_build_menu_dex.sh",
+        "/Users/aliang/Documents/nixiang/07_patched/异世界勇者/base_v5_from_device.apk"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/异世界勇者/ysjyz_build_menu_dex.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/异世界勇者/classes3_menu.dex"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 02:45:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/07_patched/异世界勇者/classes3_menu.dex": {
+          "md5": "d9767e0928e058960c14a82f340e8318",
+          "size": 454328,
+          "note": "159 个 smali（v5 为 129）；脚本内用 baksmali 回验 8 个硬依赖签名（SignSpoof.install / MenuService.start+notifyHostResumed+notifyHostLeaving / YsjYzHooks.getRet+getVal+setRet+setVal）。同输入两次 assemble 大小相同但 md5 不同（153ef836…）——dex 内部序/校验字段非确定性，内容等价。"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/build/outputs/apk/release/app-release.apk": {
+          "md5": "4972cdd6c28ec806f27a36b48d36a145",
+          "size": 1454201
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/ysjyz_build_menu_dex.sh": "a9861e62d484f9f67075ef7c5dedd7f9",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_ysjyz_8.1.1.sh": "d22400c12562f71e8c21d96363e644cb",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsjYzEntry.cpp": "bbde8e1a454fe98a1c44feb3f4f094d4"
+      }
+    },
+    {
+      "id": "surgical_so_swap",
+      "name": "外科注入（增量置换模式：底包=设备现装 v5，只换 libstarry_magic.so + classes3.dex，逐条目 size/CRC 核验）",
+      "requires": [
+        "build_so",
+        "build_menu_dex"
+      ],
+      "why": "AGENTS.md 的 02_apks/异世界勇者/ 与 08_output/异世界勇者/ 已被用户手动清空 ⇒ 官包 md5 710d1cfe… 校验跑不了，全量外科（surgical 阶段）本轮不可复跑；v6/v7 只动 so（v7 另动框架 dex），故以设备 /data/app/…/base.apk（= v5 内容，md5 680a3d2c… 或 94bdd897…）为底做最小替换。可用 YSJYZ_SKIP_CLASSES3=1 退化为纯 so-swap。",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/ysjyz_so_swap.sh",
+        "/Users/aliang/Documents/nixiang/07_patched/异世界勇者/base_v5_from_device.apk",
+        "/Users/aliang/Documents/nixiang/07_patched/异世界勇者/classes3_menu.dex"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/异世界勇者/ysjyz_so_swap.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 02:53:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": {
+          "md5": "46874b728a5176a70a9c3ce4b0338caf",
+          "size": 543564957,
+          "note": "v7：换 so(8aa06587…) + classes3.dex(d9767e09…)；消失条目仅 META-INF/{MANIFEST.MF,STARRY.RSA,STARRY.SF}，新增 0，其余 24,623 条 size/CRC 与底包全等"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/异世界勇者/base_v5_from_device.apk": {
+          "md5": "680a3d2c0e67175149c2ecdc8a8df1a9",
+          "size": 546432039,
+          "note": "设备 /data/app/~~NYo4kj5FYawLO-e9HqD6IA==/com.mudamuda.idlewow-NX4MvBG81kwNAnh7IrxxTQ==/base.apk（su cat 拉回，设备侧 md5 == 本地 md5）；包内 classes3.dex 必须是 916bdd49…、so 必须是 54cc0623…"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysjyz/arm64-v8a/libstarry_magic.so": "8aa06587c7b63b925fcecef8d58c78c1",
+        "/Users/aliang/Documents/nixiang/07_patched/异世界勇者/classes3_menu.dex": "d9767e0928e058960c14a82f340e8318",
+        "/Users/aliang/Documents/nixiang/04_scripts/异世界勇者/ysjyz_so_swap.sh": "c8f36cf6d9815e0e4ad59b8c1941fe01"
       }
     },
     {
@@ -236,14 +316,17 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 18:13:41",
+      "done_at": "2026-09-27 02:54:00",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": {
-          "md5": "94bdd89714236311496c09bd352f0bf6"
+          "md5": "cc44d8b918b999c2cd1be76b4890094d",
+          "size": 546464855,
+          "signer": "CN=StarryMagic (apksigner, 01_tools/starry_release.jks)",
+          "note": "v7 包（含删吸血 + 伤害倍率 1-100 + 倍速默认 1 + 新菜单框架 classes3.dex）；包内 so=8aa06587… / classes3= d9767e09… / classes2=974858bf…"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": "0acd6b9497c000af911c31f37fb43df8"
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-unsigned.apk": "46874b728a5176a70a9c3ce4b0338caf"
       }
     },
     {
@@ -276,14 +359,15 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-11 18:14:08",
+      "done_at": "2026-09-27 02:33:52",
+      "run_note": "v6 覆盖安装（同签名，未卸载、未清数据）：push → am force-stop → pm install -r -d --user 0 → rm；设备 base.apk md5 == 产物 7ac89939… ✓（04_scripts/_common/verify_installed_apk.sh）。pipeline.json 里的 command 保留了「覆盖失败才卸载重装」兜底分支，本轮未触发（若触发会清数据，需先确认）。待用户进游戏实测 199 级伤害。",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": {
-          "md5": "94bdd89714236311496c09bd352f0bf6"
+          "md5": "7ac89939c9b1f31cb27cff4b7454f3a4"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "94bdd89714236311496c09bd352f0bf6"
+        "/Users/aliang/Documents/nixiang/08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk": "7ac89939c9b1f31cb27cff4b7454f3a4"
       }
     },
     {

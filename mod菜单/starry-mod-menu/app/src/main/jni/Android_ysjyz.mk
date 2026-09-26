@@ -33,6 +33,13 @@ LOCAL_ARM_MODE  := arm
 # 源文件三件套：现代入口 + 游戏 Mod + 注册表 Entry
 LOCAL_SRC_FILES := MainModern.cpp Games/YsjYzMod.cpp Games/YsjYzEntry.cpp
 
+# MainModern.cpp:653/663 的 JNI_OnLoad 自 2026-09-22 起无条件引用
+# SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad。异世界勇者官方包
+# lib/arm64/ 内无 libtprt.so（无 ACE 看门狗），菜单 dex 已在 classes3.dex 并由
+# Manifest 直接拉起 → 走 B 类：加 NoAceStubs.cpp 兜底为 no-op，
+# 不编 SignalQuarantine.cpp / FgoBoot.cpp。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

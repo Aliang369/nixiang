@@ -64,7 +64,8 @@ static const char* kPatchJs = R"YSJYZJS(
   window.__ysjyz = 1;
   var ACT = "org/cocos2dx/javascript/AppActivity";
   var S = window.__ysjyz_s = {
-    adfree: 0, skill: 0, inv: 0, leech: 0, dmg: 1, gspd: 1, sc: 1, n: 0
+    adfree: 0, skill: 0, inv: 0, dmg: 1, gspd: 1, sc: 1, n: 0,
+    ax: 0, clip: 0
   };
   function REF() { return (typeof jsb !== "undefined") && jsb.reflection && jsb.reflection.callStaticMethod; }
   function RET(n) {
@@ -77,14 +78,16 @@ static const char* kPatchJs = R"YSJYZJS(
     } catch (e) { return 0; }
   }
   function clamp1(v) { return v > 1 ? v : 1; }
+  // 上界夹取：滑块范围由菜单声明（伤害倍率 1-100 / 游戏倍速 1-5），
+  // 这里再兜一层 —— 防止旧偏好/异常输入把倍率顶到病态值（v7 起 gspd 默认 1）。
+  function clampv(v, hi) { v = clamp1(v); return v > hi ? hi : v; }
   function refresh() {
     if (!REF()) { return; }
     S.adfree = RET(1) ? 1 : 0;
     S.skill  = RET(2) ? 1 : 0;
     S.inv    = RET(3) ? 1 : 0;
-    S.leech  = RET(4) ? 1 : 0;
-    S.dmg    = clamp1(VAL(5));
-    S.gspd   = clamp1(VAL(6));
+    S.dmg    = clampv(VAL(4), 100);
+    S.gspd   = clampv(VAL(5), 5);
   }
   function wrap(o, name, maker) {
     try {
@@ -168,25 +171,56 @@ static const char* kPatchJs = R"YSJYZJS(
           if (d < 0) {
             if (this.grp === 1) {
               if (S.inv) { return; }                       // 无敌：我方免伤，不结算
-            } else if (S.dmg > 1 || S.leech > 0) {         // 对敌放大（含秒杀）+ 吸血
+            } else if (S.dmg > 1) {                        // 对敌放大（v7 起不再含吸血）
               var pv = S.sc;
-              var amp = S.dmg > 1 ? S.dmg : 1;
+              var amp = S.dmg;
               var hp0 = this.hp ? this.hp.cur : 0;
-              if (amp > 1) { S.sc = amp; }
+              S.sc = amp;
               var res;
               try {
                 res = orig.call(this, d * amp, 0, i, c, o, nn, s, r, l, a);
               } finally { S.sc = pv; }
-              // 吸血：按"折回原版"的实伤回血（只改 hp.cur，不进任何上报字段）
-              if (S.leech > 0 && o && o.grp === 1 && o.hp && hp0 > this.hp.cur) {
-                var dealt = (hp0 - this.hp.cur) / amp;
-                try { o.AddHp(dealt * S.leech, 0, !1, null, null, null, null, null, null, !0); } catch (e2) {}
-              }
               return res;
             }
           }
         } catch (x) {}
         return orig.apply(this, arguments);
+      };
+    });
+    // ---- 修复「人物等级≥199 后打怪恒 1 滴血」（y29158 减护甲 + y29807 钳制）------
+    // 病因链：官方 Damage 用 `d = GetAtk() - E`（E=目标护甲，y29158）先做减法，
+    //         再在 y29807 用 `d < 1 && (d = 1)` 把 ≤0 的战前伤害钳成 1；
+    //         本补丁的 ×amp 只把这个"1"放大 ⇒ 滑块拉到 N 就正好打 N（1×N 的本质）。
+    // 修法：我方（grp===1）出刀期间，让 grp===2 目标的护甲上限 = 本次攻击的 80%
+    //       ⇒ 反推 d ≥ 20%×攻击 > 0，y29807 永不触发，滑块乘的是真伤害。
+    //       若目标护甲本来就低于 80% 攻击（正常高攻玩家），此上限不生效、完全走原公式。
+    //       仅在滑块 >1（功能开启）时介入，滑块=1 保持官包原味。
+    n += wrap(P, "Damage", function (orig) {
+      return function (t, i, c, o, nn, s, r) {
+        var pv = S.ax, av = 0;
+        try {
+          if (S.dmg > 1 && this && this.grp === 1 && typeof this.GetAtk === "function") {
+            av = this.GetAtk(o);
+            if (!(av > 0)) { av = 0; }
+          }
+        } catch (e) { av = 0; }
+        S.ax = av;
+        try { return orig.apply(this, arguments); } finally { S.ax = pv; }
+      };
+    });
+    n += wrap(P, "GetDef", function (orig) {
+      return function () {
+        var v = orig.call(this);
+        try {
+          if (S.ax > 0 && this && this.grp === 2 && typeof v === "number" && v > S.ax * 0.8) {
+            if (S.clip < 8) {
+              S.clip++;
+              cc.log("[ysjyz] armor-clip atk=" + S.ax + " def=" + v + " -> " + (S.ax * 0.8));
+            }
+            return S.ax * 0.8;
+          }
+        } catch (e) {}
+        return v;
       };
     });
     n += wrap(P, "Extneds", function (orig) {

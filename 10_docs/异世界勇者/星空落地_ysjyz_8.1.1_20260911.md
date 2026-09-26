@@ -344,3 +344,114 @@ node 04_scripts/异世界勇者/ysjyz_js_regression.js
    造成 `SyntaxError`。教训：**改完 JS 先单独 `node --check` 抽取出来的补丁块**，再跑行为回归 ——
    这一步能把语法级错误与逻辑级错误分开定位。且**每删一个功能都补一条负向断言**，
    否则"删掉了"只是阅读代码的印象，不是证据。
+
+---
+
+## 2026-09-27 v6：修复「人物等级 ≥199 后打怪恒 1 滴血」
+
+> 用户报障：**人物等级到 199 后，打怪一直是 1 滴血；伤害倍率拉几倍就是多少（拉 1000 倍就造成 1000 伤害）。**
+> 详析另见 [分析_199级伤害恒1_修复_20260927.md](分析_199级伤害恒1_修复_20260927.md)。
+
+### 病因（一串行号就够）
+
+| 环节 | 位置 | 代码 | 后果 |
+| --- | --- | --- | --- |
+| 护甲减法 | main.index.js:29158 | `d -= E;` | **唯一**能把战前伤害打到 ≤0 的运算 |
+| 最低伤害钳制 | main.index.js:29807 | `d < 1 && (d = 1);` | d ≤ 0 → 强制 **1** |
+| v5 的放大 | `YsjYzMod.cpp` `applyProto` 包 `AddHp` | `orig.call(this, d * amp, …)` | 放大的是**已钳成 −1 的值** ⇒ 伤害恰=滑块值（1×N） |
+
+其余所有对 d 的运算都有下限：暴击 `ke ≥ 1`（main.index.js:29399）、减伤 `1 - Ze ∈ [0.15, 1]`（main.index.js:29723 封顶 .85）、招架只减半（main.index.js:29229-29232）。**所以 v5 的 AddHp 侧无论乘多大都修不了「恒 1」。**
+
+### 为什么恰好卡在 199 级
+
+JS 里**没有** 199/200 的等级常量（`grep 199` 只有 3 处无关命中）。真身是数据侧交叉：怪物战斗属性 = 配置表值 × `Ratio`，`Ratio = 1 + .2 × (怪等级 − 1)`（main.index.js:32228，落点 main.index.js:13638-13640；怪等级由服务端下发，main.index.js:31786/31815 → `LoadMonsters` main.index.js:32171）。设备配置表实测：`Chapter35` OpenLevel=195、Levels=196-200（黑暗森林），怪 mlvl≈200 ⇒ 有效护甲 = cfgDef 49 × 40.8 ≈ **1,999**。玩家靠倍率速升到 199 级、装备没跟上（攻强 ≈2,000 量级）时，`护甲 ≥ 攻强` ⇒ d ≤ 0 ⇒ 恒 1。
+
+### 修法（`Games/YsjYzMod.cpp`，`applyProto` 里 `AddHp` 包装之后）
+
+```js
+// ① 我方出刀时记住本刀攻强（o 与 main.index.js:29001 同参）
+wrap(P, "Damage", function (orig) { return function (t, i, c, o) {
+  var av = 0;
+  if (S.dmg > 1 && this && this.grp === 1 && typeof this.GetAtk === "function") av = this.GetAtk(o) || 0;
+  var pv = S.ax; S.ax = av;
+  try { return orig.apply(this, arguments); } finally { S.ax = pv; }
+};});
+// ② 只对受击的怪做护甲上限 ⇒ main.index.js:29158 后 d ≥ 20%×攻强 > 0，钳制永不触发
+wrap(P, "GetDef", function (orig) { return function () {
+  var v = orig.call(this);
+  if (S.ax > 0 && this && this.grp === 2 && v > S.ax * 0.8) return S.ax * 0.8;
+  return v;
+};});
+```
+
+不介入的情形（刻意保留官包行为）：护甲本就 < 80% 攻强（正常高攻玩家，公式分毫不差）、`S.dmg ≤ 1`（功能关 / 倍率 1）、怪物打我（攻击方 `grp===2` ⇒ `S.ax=0`）。官方旁路 `limitDam` / `igrDam`（铁壁）/ `DefenseBuff` 护盾 / `aiScript.OnSubDamage` 一律不动。
+
+### 验证与出包
+
+- 离线回归 `node 04_scripts/异世界勇者/ysjyz_js_regression.js` → **73/73 PASS**（v5 的 66 条 + 新 7 条）。新增断言用 mock 复刻官方链路 `GetAtk → d -= GetDef() → d<1→1 → ShareDamage`：倍率关仍 1；倍率 50 → 实伤 20000（400×50）且上报 `Dam` 折回 400；倍率 1000 → 秒杀 23134 血；高攻玩家 98000×50 公式原样；怪打我方（5000 vs 护甲 100）实伤 4900 护甲不被削。
+- **构建坑**：共享 `MainModern.cpp` 自 2026-09-22 起在 `JNI_OnLoad` 无条件引用 `SignalQuarantine_Start`(MainModern.cpp:653) 与 `FgoBoot_InjectEarlyFromOnLoad`(MainModern.cpp:663)，而 `Android_ysjyz.mk` 是 09-11 写的 ⇒ `ld.lld: error: undefined symbol`。本包无 `libtprt.so`（无 ACE）、菜单 dex 已在 `classes3.dex` ⇒ 属 **B 类**，把 `Games/NoAceStubs.cpp` 加进 `LOCAL_SRC_FILES` 即可（不编 `SignalQuarantine.cpp`/`FgoBoot.cpp`）。
+- **出包=so-swap 增量外科**：`02_apks/异世界勇者/` 与 `08_output/异世界勇者/` 已被用户清空，官包 md5 校验跑不了；v6 只动 so，遂以**设备现装的 v5 包为底，只替换 `lib/arm64-v8a/libstarry_magic.so`**（新脚本 `04_scripts/异世界勇者/ysjyz_so_swap.sh`）：
+  - 底包 `07_patched/异世界勇者/base_v5_from_device.apk`（设备 `/data/app/…/base.apk`，md5 `680a3d2c…`；注意这是 v5 内容、只是当时外科重跑过，另一个合法 md5 是 `94bdd897…`，见本文第 221-222/336 行）+ 包内 so md5 == `54cc0623…` ✓ + `classes3.dex` 在 ✓
+  - 新 so **130,000 B / md5 `1cd91a19…`**（v5 为 128,048 B）；unsigned md5 `eee30862…`
+  - 逐条目核验：**24,624 个非 so 条目 size/CRC 与 v5 全等**，只有 so 变化；旧 `META-INF/{MANIFEST.MF,STARRY.RSA,STARRY.SF}` 剥离后由 `starry_release.jks` 重签（CN=StarryMagic）
+  - 正式包 `08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk` = **546,432,063 B / md5 `7ac89939c9b1f31cb27cff4b7454f3a4`**
+- **装机**：真机 `f9a116a2`（MuMu 127.0.0.1:5555 已弃用，pipeline.json 的 serial/env 已更新）覆盖安装成功，未卸载、未清数据；`verify_installed_apk.sh` 报「设备 base.apk md5 == 本地产物」✓。
+- **待用户实测**：进游戏打怪，确认倍率拉 N 打出「真实伤害 × N」而不是 N。
+
+## v7（2026-09-27）— 删吸血 + 伤害倍率 1-100 + 默认值回 1 + 菜单框架换新
+
+用户要求（v6 装机后）：①删「吸血拉满」；②伤害倍率改 **1-100** 并改名「伤害倍率」（去「秒杀」）；③伤害倍率默认 **1**、游戏倍速默认 **1**；④调查本游戏反检测（防封号/屏蔽上报/存档上传上传）；⑤mod 菜单框架 dex 一并换新构建。
+
+### 菜单现状（6 项 / featNum 0..5）
+
+| featNum | 名称 | JS 侧读法 |
+|---|---|---|
+| 0 | `Category_基础功能` | — |
+| 1 | `Toggle_免广告` | `RET(1)` |
+| 2 | `Toggle_无限技能` | `RET(2)` |
+| 3 | `Toggle_无敌` | `RET(3)` |
+| 4 | `SeekBar_伤害倍率_1_100_1` | `S.dmg = clampv(VAL(4), 100)` |
+| 5 | `SeekBar_游戏倍速_1_5_1` | `S.gspd = clampv(VAL(5), 5)` |
+
+enum 缩为 `YSJYZ_FEAT_ADFREE=1, SKILL=2, INV=3, DMG=4, GSPD=5, COUNT=6`（`Games/YsjYzMod.h`）。
+
+### 改名/重编号为什么安全
+
+- 滑块默认值 = **菜单名里第三个数**（缺省 = min）：`FeatureListParser.java:93-114` 解析 `SeekBar_名_min_max[_default]`，`FeatureListParser.java:117-141` 无偏好时取该 default 并夹到 `[min,max]`。
+- `Preferences` 以 featNum 字符串为 key（`Preferences.java:20-22, 199-229`），但 **`ModBridge` 构造函数每次菜单初始化都 `Preferences.clearFeaturePrefs();`（`ModBridge.java:189-202`，注释「功能列表随 so 切换；丢掉旧 featNum 偏好，默认全关」）** ⇒ 旧值不继承，v6→v7 重编号不会串档。
+- JS 侧仍加 `clampv(v, hi)` 兜底（防 UI 层给越界值）。
+
+### JS 补丁改动（`Games/YsjYzMod.cpp`）
+
+`S` 去掉 `leech`（`{adfree:0,skill:0,inv:0,dmg:1,gspd:1,sc:1,n:0,ax:0,clip:0}`）；`refresh()` 的 `S.dmg = clampv(VAL(4), 100)`、`S.gspd = clampv(VAL(5), 5)`；`AddHp` 对敌分支由 `S.dmg > 1 || S.leech > 0` 改为 `S.dmg > 1`，吸血回血块整体删除。v6 的 `Damage`/`GetDef` 护甲上限修复保持不变。
+
+### 菜单框架 dex 换新（新增阶段 build_menu_dex）
+
+- 链路：`gradle assembleRelease` → `apktool d` → 合并 `com/starry/**` smali（**159 个**，v5 为 129）→ `smali assemble` → `07_patched/异世界勇者/classes3_menu.dex`（**454,328 B / md5 `d9767e09…`**）。脚本 `04_scripts/异世界勇者/ysjyz_build_menu_dex.sh`，末尾用 `baksmali` 回验硬依赖签名。同输入两次 assemble **大小相同、md5 不同**（dex 内部序/校验字段非确定性，内容等价）。
+- **兼容性核验（结论：可整包置换）**：classes2.dex patch 只引用 **3 个类的 8 个方法** —— `Lcom/starry/magic/sign/SignSpoof;->install()V`、`Lcom/starry/magic/menu/MenuService;->start(Landroid/content/Context;)V` / `notifyHostResumed(Landroid/app/Activity;)V` / `notifyHostLeaving()V`、`Lcom/starry/magic/cocos/YsjYzHooks;->getRet(I)Z` / `getVal(I)I` / `setRet(IZ)V` / `setVal(II)V`；新旧 `MenuService` 方法清单逐行一致，新 dex 全部满足。新框架新增 `com/starry/magic/{conch,dwdlm,h5box}/`、`cocos/{Dwdlm,Gyzw,Rsjy,Ysxz,Zzbx2}Hooks`、`menu/{MenuSafeHandler,StateMirror}`、`ota/OtaSoStamp`、`sign/SignSpoofAppComponentFactory` 等。
+- ⚠️ 本游戏**不用 `StarryInitProvider`**（其它游戏用 provider），走 classes2 patch：LocalApplication.onCreate 注入 `SignSpoof.install()` + `System.loadLibrary("starry_magic")`，AppActivity 注入 MenuService 生命周期与 `get_ret/get_val/set_ret/set_val`。
+
+### 出包（增量置换，同时换 so + classes3.dex）
+
+`04_scripts/异世界勇者/ysjyz_so_swap.sh` 重写为 v7 双重置换（底包 md5 白名单 `{680a3d2c…, 94bdd897…}`，底包内 so 须 `54cc0623…`、classes3.dex 须 `916bdd49…`；`YSJYZ_SKIP_CLASSES3=1` 可退化为纯 so-swap）：
+
+- 新 so（build_so）= **129,688 B / md5 `8aa06587c7b63b925fcecef8d58c78c1`**
+- unsigned = `46874b72…` / 543,564,957 B（消失条目仅旧签名 `META-INF/{MANIFEST.MF,STARRY.RSA,STARRY.SF}`，新增 **0**，内容变化恰 2 条，其余 **24,623 条** size/CRC 与底包全等）
+- 签名后正式包 = `08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk` **546,464,855 B / md5 `cc44d8b918b999c2cd1be76b4890094d`**（包内 so=`8aa06587…`、classes3=`d9767e09…`、classes2=`974858bf…`，CN=StarryMagic）
+
+### 回归与装机冒烟
+
+- 离线回归 `node 04_scripts/异世界勇者/ysjyz_js_regression.js` → **77/77 PASS**（新增：吸血删除后打怪不回血、倍率 1000 被夹到 100 等）。
+- 装机：真机 `f9a116a2` 覆盖安装（未卸载、未清数据），`verify_installed_apk.sh` 报「设备 base.apk md5 == 本地产物」✓。
+- 冒烟：启动 45s 进程存活（`pid 2428`），无 FATAL；日志 `[YsjYz] bundle splice #1 len 3152175->3161770 file=assets/main/index.jsc`（注入命中）、`JS: [ysjyz] patch applied n=7`、菜单读到 6 项且 **#4 伤害倍率=1 / #5 游戏倍速=1**（新默认值生效）、吸血项消失。
+- 观察：新框架自带 `AuthClient` 访问 `https://47.100.216.101:8443/v1/bootstrap?game_id=ysjyz&device_id=…`（mod 自身授权通道，与游戏上报无关）。
+
+### 反检测调查（独立报告）
+
+`10_docs/异世界勇者/反检测调查_ysjyz_20260927.md`。核心结论：网络层为**明文 WebSocket**（`send(api, JSON.stringify(body))`，无 sign/时间戳/nonce/加密），JS 层可按 api 名完全拦截请求与响应；**客户端零本地校验**，判罚全在服务端 `ErrCode`（`errData`→「审判之眼」+踢回登录；`invalidData`→禁入团本；`ban/tokenBan`）；**不存在云存档上传接口**（纯服务端权威，本地只存 token）；第三方 SDK 全在 Java/native（JS 唯一可屏蔽自有埋点 `cc.UIHelper.Stat`）；风险排序 **倍速＞无限技能＞伤害滑块＞无敌＞免广告**。
+
+### 实测结论与待办
+
+**2026-09-27 用户实测通过（「游戏没问题」）**：菜单 6 项、伤害倍率/游戏倍速默认 1、199 级打怪伤害修复均正常 ⇒ 已按「收尾+正式包+清理+git」口令收尾，`08_output/异世界勇者/` 裁剪为唯一正式包。
+
+反检测五条建议尚未实施：倍速加发送时刻门限并限 ≤2、静默 `cc.UIHelper.Stat`、`clampResult` 换「期望 DPS × 实测耗时」基准、无限技能按 `GetBattleMode()` 分场景自动关闭、调试期 `errData` 只记日志。

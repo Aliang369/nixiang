@@ -4,15 +4,18 @@
  *  Cocos Creator 2.4.2 / libcocos2djs.so + assets/main/index.jsc，
  *  se::ScriptEngine::evalString 运行时拼接 JS 补丁块。
  *
- *  菜单（数组下标 = featNum）—— 用户要求只保留**一个**分类，6 项功能平铺：
+ *  菜单（数组下标 = featNum）—— 用户要求只保留**一个**分类，5 项功能平铺：
  *    0  Category_基础功能
  *    1  Toggle_免广告          挂 cc.UIHelper.ShowAD → 直接回调（含"快速挂机免费"）
  *    2  Toggle_无限技能        合并项：GetSkillCDDuration=0 + UpdateSkillCD 强制充满
  *                              + GetSkillCost=0（原本的"零CD"与"不耗蓝"两项）
  *    3  Toggle_无敌            AddHp 我方受击 → 不结算
- *    4  Toggle_吸血拉满        按折回后的实伤 100% 回血
- *    5  SeekBar_伤害倍率秒杀   1-1000，默认 1（=关）
- *    6  SeekBar_游戏倍速       1-5，默认 1（=关）
+ *    4  SeekBar_伤害倍率       1-100，默认 1（=关）
+ *    5  SeekBar_游戏倍速       1-5，默认 1（=关）
+ *
+ *  版本沿革：v7 删除「吸血拉满」（用户要求）；伤害倍率上限 1000→100、默认 50→1；
+ *            游戏倍速默认 2→1。因 featNum 重编号，Java 侧偏好由 ModBridge 每次
+ *            初始化 clearFeaturePrefs() 清空，无旧值继承问题。
  *
  *  ⚠️ 上报一致性设计：
  *    本包**没有任何"改面板"的功能**，所有战斗增益都落在 AddHp 结算层，因此
@@ -34,9 +37,8 @@ static const char* kYsjYzFeatures[] = {
     "Toggle_免广告",              // 1 YSJYZ_FEAT_ADFREE
     "Toggle_无限技能",            // 2 YSJYZ_FEAT_SKILL（零CD + 不耗蓝，合并项）
     "Toggle_无敌",                // 3 YSJYZ_FEAT_INV
-    "Toggle_吸血拉满",            // 4 YSJYZ_FEAT_LEECH
-    "SeekBar_伤害倍率秒杀_1_1000_50",   // 5 YSJYZ_FEAT_DMG
-    "SeekBar_游戏倍速_1_5_2",     // 6 YSJYZ_FEAT_GSPD
+    "SeekBar_伤害倍率_1_100_1",   // 4 YSJYZ_FEAT_DMG（v7：1-100，默认 1）
+    "SeekBar_游戏倍速_1_5_1",     // 5 YSJYZ_FEAT_GSPD（v7：默认 1）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

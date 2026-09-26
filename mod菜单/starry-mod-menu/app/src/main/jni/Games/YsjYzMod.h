@@ -18,10 +18,9 @@ enum YsjYzFeat : int {
     YSJYZ_FEAT_ADFREE = 1,   // Toggle_免广告
     YSJYZ_FEAT_SKILL  = 2,   // Toggle_无限技能（零CD + 不耗蓝，合并项）
     YSJYZ_FEAT_INV    = 3,   // Toggle_无敌
-    YSJYZ_FEAT_LEECH  = 4,   // Toggle_吸血拉满
-    YSJYZ_FEAT_DMG    = 5,   // SeekBar_伤害倍率秒杀
-    YSJYZ_FEAT_GSPD   = 6,   // SeekBar_游戏倍速
-    YSJYZ_FEAT_COUNT  = 7,   // = featureList 长度
+    YSJYZ_FEAT_DMG    = 4,   // SeekBar_伤害倍率（1-100，默认 1）
+    YSJYZ_FEAT_GSPD   = 5,   // SeekBar_游戏倍速（1-5，默认 1）
+    YSJYZ_FEAT_COUNT  = 6,   // = featureList 长度
 };
 
 bool YsjYz_TryInit(JavaVM* jvm);

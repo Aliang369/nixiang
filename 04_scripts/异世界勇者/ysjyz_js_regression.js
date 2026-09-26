@@ -4,16 +4,17 @@
 //  用法: node 04_scripts/异世界勇者/ysjyz_js_regression.js [YsjYzMod.cpp 路径]
 //
 //  做的是"纯离线行为回归"：mock 掉 cc / jsb / BattleHero，把补丁块 eval 进来，
-//  逐项断言 6 个功能的开/关行为、上报折回、Dam 限幅、怪物侧不受影响，
+//  逐项断言 5 个功能的开/关行为、上报折回、Dam 限幅、怪物侧不受影响，
 //  以及**已删除功能确实不再生效**（负向断言）。
 //  覆盖的 y 行号对应 06_dumped/异世界勇者/jsc_decrypted/main.index.js。
 //
 //  ⚠️ 这只证明"补丁逻辑正确"，不证明"游戏里生效"——后者只能由真机实测确认。
 //
-//  菜单（数组下标 = featNum）：
+//  菜单（数组下标 = featNum，v7 起）：
 //    0 Category_基础功能（唯一分类，用户要求不做多分类）
 //    1 Toggle_免广告   2 Toggle_无限技能(零CD+不耗蓝)   3 Toggle_无敌
-//    4 Toggle_吸血拉满 5 SeekBar_伤害倍率秒杀          6 SeekBar_游戏倍速
+//    4 SeekBar_伤害倍率 1-100 默认 1    5 SeekBar_游戏倍速 1-5 默认 1
+//  v7 变更：删除「吸血拉满」(原 4)；伤害倍率 1-1000→1-100、默认 50→1；倍速默认 2→1
 // ================================================================
 
 global.window = global;   // 补丁块按 Cocos/JSB 环境写，这里把 window 指回 global
@@ -84,6 +85,22 @@ BattleHeroCls.prototype.AddHp = function (e, t, i, c, o) {
   return d;
 };
 BattleHeroCls.prototype.Move = function (dt) { this.__moved = (this.__moved || 0) + dt; return dt; };
+
+// ---- 官方伤害链路 mock（对齐 y28952 GetAtk / y28985 GetDef / y28994 Damage）----
+// y29001 d = GetAtk(o) → y29158 d -= E(E=目标护甲) → y29798 d *= i(技能系数)
+// → y29807 `d < 1 && (d = 1)` 钳制 → y29809 ShareDamage(-d) → 目标 AddHp
+BattleHeroCls.prototype.GetAtk = function (sid) { return this.atk.value; };
+BattleHeroCls.prototype.GetDef = function () { return this.def; };
+BattleHeroCls.prototype.ShareDamage = function (e, t, i, c, o) { this.AddHp(e, t, i, c, o); return e; };
+BattleHeroCls.prototype.Damage = function (t, i, c, o) {
+  if (!t || !t.hp) { return false; }
+  let d = this.GetAtk(o);
+  d -= t.GetDef();                        // y29158
+  d *= (i || 1);                          // y29798
+  if (d < 1) { d = 1; }                   // y29807 ← 「恒 1 滴血」的唯一来源
+  t.ShareDamage(-d, 0, 0, null, this);    // y29809
+  return true;
+};
 
 global.cc = {
   director: { getScheduler: () => ({ schedule: () => {} }) },
@@ -185,48 +202,86 @@ clear(); ap();
   clear(); ap();
 }
 
-// ================= 功能 5：吸血拉满 =================
-// AddHp 的 this = 受击方、o = 攻击方；我方打怪 → m.AddHp(..., h)
-{ const h = hero(1), m = hero(2);
-  m.hp = { max: 100000, cur: 100000 };
-  RET[4] = false; ap(); h.hp.cur = 50; m.AddHp(-10, 0, 0, 0, h);
-  check('吸血 OFF → 不回血', r4(h.hp.cur), 50);
-  RET[4] = true; ap(); h.hp.cur = 50; m.AddHp(-10, 0, 0, 0, h);
-  check('吸血 ON → 按实伤 100% 回血', r4(h.hp.cur), 60);
-  // 怪物打我方：不该给怪物回血
-  m.hp.cur = 100000; h.hp.cur = 100;
-  h.AddHp(-10, 0, 0, 0, m);
-  check('吸血 → 怪物打我时怪物不回血', r4(m.hp.cur), 100000);
-  clear(); ap();
-}
-
-// ================= 功能 6：伤害倍率秒杀（含 StatDam 上报 1:1 折回）=================
+// ================= 功能 4：伤害倍率（1-100，含 StatDam 上报 1:1 折回）=================
 { const h = hero(1), m = hero(2);
   h.hp = { max: 100000, cur: 100000 };
   m.hp = { max: 100000, cur: 100000 };
-  VAL[5] = 50; RET[5] = true; ap();
+  VAL[4] = 50; ap();
   m.hp.cur = 100000; calls.statDam.length = 0;
   m.AddHp(-30, 0, 0, 0, h);
   check('伤害倍率 → 实伤 ×50', r4(m.hp.cur), 98500);
   check('伤害倍率 → 上报 Dam 折回原版', r4(calls.statDam[0]), 30);
   // 滑块=1（最小值即"关"）必须透传
-  VAL[5] = 1; ap(); m.hp.cur = 100000; calls.statDam.length = 0;
+  VAL[4] = 1; ap(); m.hp.cur = 100000; calls.statDam.length = 0;
   m.AddHp(-30, 0, 0, 0, h);
   check('倍率=1 → 实伤透传', r4(m.hp.cur), 99970);
   check('倍率=1 → 上报原样', r4(calls.statDam[0]), 30);
-  // 越界夹取
-  VAL[5] = 0; ap(); m.hp.cur = 100000; m.AddHp(-30, 0, 0, 0, h);
+  // 越界夹取（下界 / v7 新增上界 100）
+  VAL[4] = 0; ap(); m.hp.cur = 100000; m.AddHp(-30, 0, 0, 0, h);
   check('倍率=0 → clamp 到 1（透传）', r4(m.hp.cur), 99970);
+  VAL[4] = 1000; ap(); m.hp.cur = 100000; calls.statDam.length = 0;
+  m.AddHp(-30, 0, 0, 0, h);
+  check('倍率=1000 → 上界夹到 100', r4(100000 - m.hp.cur), 3000);
+  check('倍率超界 → 上报仍折回原版 30', r4(calls.statDam[0]), 30);
+  VAL[4] = 100; ap(); m.hp.cur = 100000; calls.statDam.length = 0;
+  m.AddHp(-30, 0, 0, 0, h);
+  check('倍率=100（滑块上限）→ 实伤 ×100', r4(100000 - m.hp.cur), 3000);
   // 怪物打我方：不放大我方受到的伤害
-  VAL[5] = 50; ap(); h.hp.cur = 100000; h.AddHp(-30, 0, 0, 0, m);
+  VAL[4] = 50; ap(); h.hp.cur = 100000; h.AddHp(-30, 0, 0, 0, m);
   check('伤害倍率 → 不放大我方受到的伤害', r4(h.hp.cur), 99970);
   clear(); ap();
 }
 
-// ================= 功能 8：游戏倍速 =================
-RET[6] = false; ap(); check('游戏倍速 OFF', cc.Service.Battle.Update(1), 1);
-VAL[6] = 5; ap(); check('游戏倍速 ×5', cc.Service.Battle.Update(1), 5);
-VAL[6] = 0; ap(); check('游戏倍速=0 → clamp 到 1', cc.Service.Battle.Update(1), 1);
+// ================= 修复断言：人物等级≥199「打怪恒 1 滴血」=================
+// 场景：速升到 199 级、装备没跟上，我方面板攻强 ≈ 关卡怪护甲（Chapter35 mlvl≈200：
+//       cfgDef 49 × Ratio 40.8 ≈ 1999；怪 HP ≈ 23134）。官方公式 d = 攻强 − 护甲 ≤ 0
+//       → y29807 钳成 1 → 补丁 ×amp 把"1"放大 ⇒ 滑块多少就多少。
+{ const h = hero(1), m = hero(2);
+  h.atk.value = 2000;
+  m.def = 2000;
+  m.hp = { max: 23134, cur: 23134 };
+
+  // 滑块=1（功能等价关闭）：绝不介入官方公式，仍是官包的 1 点
+  VAL[4] = 1; ap();
+  m.hp.cur = 23134; calls.statDam.length = 0;
+  h.Damage(m, 1, !1, '普攻');
+  check('等级≥199 · 倍率关 → 保持官包 1 点（修复不越权）', r4(23134 - m.hp.cur), 1);
+
+  // 滑块=50：护甲被压到 0.8×攻击 ⇒ d = 400 → ×50 = 20000（真伤害，不再是 1×50）
+  VAL[4] = 50; ap();
+  m.hp.cur = 23134; calls.statDam.length = 0;
+  h.Damage(m, 1, !1, '普攻');
+  check('等级≥199 · 倍率=50 → 400×50 真伤害', r4(23134 - m.hp.cur), 20000);
+  check('等级≥199 · 上报 Dam 折回 = 400（非 1）', r4(calls.statDam[0]), 400);
+
+  // 滑块=100（v7 上限）：40000 → 秒杀 2.3 万血的怪
+  VAL[4] = 100; ap();
+  m.hp.cur = 23134; calls.statDam.length = 0;
+  h.Damage(m, 1, !1, '普攻');
+  check('等级≥199 · 倍率=100（上限）→ 秒杀', m.hp.cur <= 0, true);
+  check('等级≥199 · 秒杀上报折回 = 400', r4(calls.statDam[0]), 400);
+
+  // 高攻玩家（攻击 ≫ 护甲）：上限不生效，官方公式分毫不差
+  VAL[4] = 50; ap();
+  h.atk.value = 100000; m.def = 2000; m.hp.cur = 100000000;
+  h.Damage(m, 1, !1, '普攻');
+  check('高攻玩家 · 护甲仅 2% 攻击 → 公式原样 98000×50', r4(100000000 - m.hp.cur), 98000 * 50);
+
+  // 怪物打我方：攻击方是 grp2 ⇒ 绝不替我方的护甲做任何手脚
+  h.atk.value = 1000; h.def = 100; h.hp = { max: 100000, cur: 100000 };
+  m.atk.value = 5000;
+  m.Damage(h, 1, !1, '普攻');
+  check('怪物打我 · 我方护甲不被削', r4(100000 - h.hp.cur), 4900);
+  clear(); ap();
+}
+
+
+// ================= 功能 5：游戏倍速（1-5，默认 1）=================
+VAL[5] = 0; ap(); check('游戏倍速 未设/0 → clamp 到 1（默认即关）', cc.Service.Battle.Update(1), 1);
+VAL[5] = 1; ap(); check('游戏倍速=1 → dt 原样', cc.Service.Battle.Update(1), 1);
+VAL[5] = 5; ap(); check('游戏倍速 ×5', cc.Service.Battle.Update(1), 5);
+VAL[5] = 3; ap(); check('游戏倍速 ×3', cc.Service.Battle.Update(1), 3);
+VAL[5] = 99; ap(); check('游戏倍速=99 → 上界夹到 5', cc.Service.Battle.Update(1), 5);
 clear(); ap();
 
 // ================= chapter/result 出口：Dam 兜底限幅 =================
@@ -259,7 +314,7 @@ clear(); ap();
 
 // ================= 上报字段与官包一致（本包无"改面板"功能）=================
 { const h = hero(1), m = hero(2);
-  RET[3] = true; RET[4] = true; VAL[5] = 50; VAL[6] = 3; ap();
+  RET[3] = true; VAL[4] = 50; VAL[5] = 3; ap();
   h.LoadHero(); m.LoadHero();
   const e = res(); h.node.CheckResult(e);
   check('我方 Hp 上报 = 面板原值', e.Hp, 100);
@@ -280,7 +335,15 @@ clear(); ap();
 // ================= 负向断言：已删除的功能确实不再生效 =================
 { const h = hero(1), m = hero(2);
   // 只打开"保留下来的"功能，其余网关应全部保持原样
-  RET[1] = true; RET[2] = true; RET[3] = true; RET[4] = true; VAL[5] = 50; VAL[6] = 3; ap();
+  RET[1] = true; RET[2] = true; RET[3] = true; VAL[4] = 50; VAL[5] = 3; ap();
+
+  // v7 删除「吸血拉满」：全功能开启 + 旧开关位 RET(4) 置 true，打怪也不回血
+  RET[4] = true; ap();
+  h.hp.cur = 50; m.hp = { max: 100000, cur: 100000 };
+  m.AddHp(-10, 0, 0, 0, h);
+  check('已删除 · 吸血拉满 → 打怪不回血（hp.cur 不变）', r4(h.hp.cur), 50);
+  check('已删除 · 吸血拉满 → 打怪 10 点仍被伤害倍率放大 ×50', r4(100000 - m.hp.cur), 500);
+  h.LoadHero();
 
   check('已删除 · 广告CD清零 → GetAdCD 仍为 30', cc.Service.Store.GetAdCD(), 30);
   check('已删除 · 广告特权一键领取 → IsNoNeedAd 仍 false', cc.Service.Store.IsNoNeedAd(), false);
