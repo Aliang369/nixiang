@@ -1,0 +1,205 @@
+{
+  "meta": {
+    "game": "光阴之外",
+    "pkg": "com.shbq.gyzw.ppyx",
+    "version": "1.0.3(103)",
+    "apk": "02_apks/光阴之外/光阴之外_1.0.3_binge2.apk",
+    "apk_size": 530678596,
+    "apk_md5": "ebab193edc592b94e5c1e109ca93e36d",
+    "apk_sha256": "90d2d10984d9b885093e1ff7067a6e64fd8ce29bbddd4fb54f05671d9b92b5e1",
+    "engine": "Cocos Creator 3.x (JSB / libcocos2djs.so)",
+    "shell_variant": "全壳·无内嵌原包（APK 内无 assets/base.apk，但 shared_prefs 有 shell_config.xml / shell_protected.xml / shell_protectedother.xml / dialog_close_log.xml；Java 侧 com.android.support.BinGe + Menu + Preferences 全在 classes6.dex）",
+    "binge_signature": "CN=binge2.keystore, OU=binge2, O=binge2, L/ST/C=binge2 (SHA1 DD:E5:C4:A3:89:C4:5D:64:C3:80:2D:F7:FC:91:11:71:F3:53:70:19, 1024-bit RSA, SHA256withRSA)",
+    "binge_disclaimer_email": "bg888@188.com 未在本包出现（grep 8 个 dex + 全内存 dump 均 0 命中）—— 本变体不携带该邮箱",
+    "libSDKloading_md5": "a747d21e00d97b0f2c6fabcacd4b33f1",
+    "libSDKloading_size": 3914232,
+    "libtoolChecker_md5": "3c4724ce3faeda4f890c0136ebddd514",
+    "libtoolChecker_size": 5512,
+    "libcocos2djs_md5": "f198a55491ce3ec553043910796c5d93",
+    "libcocos2djs_size": 31883424,
+    "game_id": "1191",
+    "menu_url": "https://menu-1255602259.file.myqcloud.com/game/1191.html",
+    "menu_asset_domain": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/",
+    "hotfix_arch": "Cocos Creator 3.x 原生热更（assets/project.manifest + assets/assets/*/config.json 的 remote manifest）",
+    "hotfix_cdn": "https://gyzw-cdn.douyou888.cn/hot_res/mianyou_qudaoEx/",
+    "hotfix_version_apk": "0.0.0.18",
+    "hotfix_version_device": "0.0.0.23",
+    "hook_mechanism": "se::ScriptEngine::evalString(char const*, long, se::Value*, se::Value*) inline hook（dlsym 优先，失败回落特征扫描；序言校验不过则放弃 Hook）→ 在 boot JS 执行前注入 MOD_boot 安装器（改写 browserify 模块表）",
+    "disk_patch": "零 —— 斌哥壳不修改任何磁盘资源；设备 files/remotePath 与官方 CDN hot_res 逐位一致（见 remotePath_verification）",
+    "feature_count": 3,
+    "ad_feature_present": true,
+    "ad_feature_in_binge_menu": false,
+    "device_script_index_jsc_size": 1869344,
+    "device_script_index_jsc_md5": "1515a4cf545fbfd74b7f5923efa8fb3a",
+    "device_cocos2d_jsb_jsc_size": 293292,
+    "device_cocos2d_jsb_jsc_md5": "ee02097a5587f68675fd5686451182bd",
+    "apk_script_index_jsc_size": 1847884,
+    "apk_script_index_jsc_md5_head": "02a16608",
+    "captured": "2026-09-26",
+    "pid": 24265,
+    "device_serial": "f9a116a2",
+    "dumped": "06_dumped/光阴之外/binge_mem_20260926/",
+    "dump_script": "04_scripts/_common/dump_binge_shell_mem.sh com.shbq.gyzw.ppyx 06_dumped/光阴之外/binge_mem_20260926"
+  },
+
+  "remotePath_verification": {
+    "claim": "设备 /data/data/com.shbq.gyzw.ppyx/files/remotePath/* 是官方热更新产物，不是斌哥壳改的盘",
+    "evidence": [
+      "remotePath/assets/script/index.jsc = 1869344 B md5 1515a4cf545fbfd74b7f5923efa8fb3a",
+      "CDN https://gyzw-cdn.douyou888.cn/hot_res/mianyou_qudaoEx/project.manifest 内 assets/script/index.jsc = md5 1515a4cf545fbfd74b7f5923efa8fb3a size 1869344 —— 逐位一致",
+      "remotePath/src/cocos2d-jsb.jsc = 293292 B md5 ee02097a5587f68675fd5686451182bd，CDN manifest 同 md5/size",
+      "CDN version.manifest = 0.0.0.23；APK 内 assets/project.manifest = 0.0.0.18"
+    ],
+    "conclusion": "所有 mod 功能都是运行时 evalString hook 注入，盘上零改动 ⇒ 移植与渠道包/热更新无关"
+  },
+
+  "hook_target": {
+    "symbol": "_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_",
+    "demangled": "se::ScriptEngine::evalString(char const*, long, se::Value*, se::Value*)",
+    "found_in": "06_dumped/光阴之外/binge_mem_20260926/shell_rx_bss_7820623000_7820720000.bin",
+    "runtime_error_strings": [
+      "evalString 定位失败（dlsym 与特征扫描都没命中）：",
+      "定位到的首指令不是序言，放弃 Hook：",
+      "HOOK失败",
+      "内存分配失败",
+      "ScriptEngine::evalString script ",
+      "ScriptEngine::evalString catch exception:"
+    ],
+    "note": "双路定位：dlsym 优先，失败回落特征扫描；两路都空才报失败"
+  },
+
+  "flags": {
+    "壳侧配置表": {
+      "path": "/data/data/com.shbq.gyzw.ppyx/files/mod_sw.txt",
+      "real_value_at_capture": "{\"f\":\"000000000000000\",\"blood\":1,\"atk\":1,\"spd\":1,\"slider\":1}",
+      "size": 60,
+      "format": "{\"f\":\"%s\",\"blood\":%d,\"atk\":%d,\"spd\":%d,\"slider\":%d}  —— f 为 15 位 feature 位串（charAt(n-1)==='1' 即 featureN 开）",
+      "write_api": "MOD_BRIDGE 注入的 window.MOD（200ms 节流读文件 + JSON.parse）"
+    },
+    "备选路径前缀": "/sdcard/Android/data/com.shbq.gyzw.ppyx/files/1/（MOD_BRIDGE 的 %s；本机不存在）",
+    "prefs_开关": {
+      "path": "/data/data/com.shbq.gyzw.ppyx/shared_prefs/",
+      "files": ["shell_config.xml（空 map）", "shell_protected.xml（last_url_index=0 / last_url_source=post）", "shell_protectedother.xml（message_system_SystemText1834 / html_Html5722 时间戳）", "dialog_close_log.xml"],
+      "0": {"off": 0, "feature": "百倍伤害", "type": "boolean", "default": false},
+      "1": {"off": 4, "feature": "超级无敌", "type": "boolean", "default": false},
+      "2": {"off": 8, "feature": "战斗加速", "type": "boolean", "default": false}
+    },
+    "说明": "斌哥包仅 3 个开关（0/1/2），无第 4 个 —— 斌哥版未实现免广告（已用菜单 exp 解密 + boot JS 全文双重确认）"
+  },
+
+  "sites": [
+    {
+      "feature": "功能1 百倍伤害",
+      "group": "战斗伤害结算",
+      "gate_flag": 0,
+      "gate_expr": "MOD.feature1（= mod_sw.txt 的 f.charAt(0)==='1'）",
+      "class": "BtDmgMgr",
+      "member": "updateTargetHp(t, e, o)",
+      "kind": "method-body-replace",
+      "anchor": "var u = t.isDie();",
+      "binding_capture": "/(\\w+)\\.BtConst\\.EUnitType\\./.exec(out) → RV（捕不到就放弃安装）",
+      "file": "内存注入 JS（06_dumped/光阴之外/binge_mem_20260926/shell_rw_bss_7820728000_7820751000.bin，offset 150560–167000）",
+      "apply": "e < 0 且 o.type ∈ {RV.BtConst.EUnitType.Hero, RV.BtConst.EUnitType.Lord} 且 t.type === RV.BtConst.EUnitType.Monster ⇒ e = Math.floor(100 * e)（MUL=100）",
+      "note": "只对「英雄/领主 打 怪物」放大；打敌方英雄不放大（防 PVP）"
+    },
+    {
+      "feature": "功能2 超级无敌",
+      "group": "玩家血量",
+      "gate_flag": 4,
+      "gate_expr": "MOD.feature2（= f.charAt(1)==='1'）",
+      "class": "BtRoleData",
+      "member": "updateHp(e, t)",
+      "kind": "method-body-replace",
+      "anchor": "this.setCurHp(this.curHp + e, t);",
+      "binding_capture": "/(\\w+)\\.BtConst\\.EUnitType\\./.exec(out) → IV",
+      "apply": "e < 0 且 this.type === IV.BtConst.EUnitType.Hero ⇒ 血量地板 = Math.floor(this.maxHp * (0.91 + 0.04*Math.random()))（每只英雄首次随机一次，存 this.__mfl）；e = Math.max(e, Math.min(0, _mFloor - this.curHp))",
+      "note": "不做硬无敌（不写 0），留 91%~95% 血量，降低被服务端对账概率；FLOOR=0.91 FLOOR_SPAN=0.04"
+    },
+    {
+      "feature": "功能3a 战斗加速（倍率）",
+      "group": "战斗节奏",
+      "gate_flag": 8,
+      "gate_expr": "MOD.feature3（= f.charAt(2)==='1'）",
+      "class": "BattleViewHelper",
+      "member": "getBattleSpeed",
+      "kind": "method-body-replace",
+      "anchor": "return r && r[o] || this._oneSpeed;",
+      "binding_capture": "无（纯字符串锚点）",
+      "apply": "命中时返回新对象 { trueSpeed: Math.max(_mBs.trueSpeed * 5, 5), displaySpeed: _mBs.displaySpeed, openId: _mBs.openId }（SPEED=5）",
+      "note": "原实现返回 r && r[o] || this._oneSpeed；替换后无绑定依赖，最稳"
+    },
+    {
+      "feature": "功能3b 战斗加速（逻辑步上限）",
+      "group": "战斗节奏",
+      "gate_flag": 8,
+      "gate_expr": "MOD.feature3",
+      "class": "BattleView",
+      "member": "逻辑帧循环（update 内）",
+      "kind": "statement-replace",
+      "anchor": "for (var e = Math.min(3, Math.floor(this._logicAccumulator / this._logicFrameRate)), t = 0; t < e; t++) {",
+      "binding_capture": "无（纯字符串锚点）",
+      "apply": "Math.min(3, ...) ⇒ Math.min(MOD.feature3 ? 8 : 3, ...)（LOGICSTEP=8）",
+      "note": "不装这条，3a 的 5× 会被逻辑步 min(3) 卡在约 3×"
+    }
+  ],
+
+  "patcher": {
+    "entry": "window.__require = MOD_wrap(function ...)(模块表, {}, [入口])",
+    "generator": "make_boot.py 从 apply.py 的补丁文本机械生成；参数在 apply.py 顶部 MUL / SPEED / LOGICSTEP / FLOOR / FLOOR_SPAN",
+    "rebuild": "MOD_rebuild(src)：正则 /^function\\s*[\\w$]*\\s*\\(([^)]*)\\)\\s*\\{/ 取形参 → body = src.slice(m[0].length, src.lastIndexOf('}') ) → Function.apply(null, args.concat([body]))",
+    "wrap": "MOD_wrap(fn) = function(){ try{ MOD_boot(arguments[0]) }catch(x){ MOD_log('hook 异常 '+x) } return fn.apply(this, arguments) }",
+    "prescreen": "MOD_SCREEN = [\"var u = t.isDie();\", \"this.setCurHp(this.curHp + e, t);\", \"return r && r[o] || this._oneSpeed;\", \"for (var e = Math.min(3, Math.floor(this._logicAccumulator / this._logicFrameRate)), t = 0; t < e; t++) {\"]",
+    "idempotence_gate": "MOD_patchSource 开头 `if (/\\b_mOn[1-3]\\b/.test(src)) return null;` —— 百倍/无敌注入码带 _mOn1/_mOn2/_mOn3，速度两处锚点替换后自然消失故天然幂等",
+    "force_switch": "var MOD_FORCE = false;（true = 不看 MOD 硬开三功能；apply.py -nosw 会改成 true）",
+    "native_check": "MOD_boot 探测首个 reg[k][0]，Function.prototype.toString 若含 [native code] 则整套失效并打 ☠☠☠",
+    "selfheal": "游戏更新换绑定字母/行号也能自愈：锚点串 + 运行时正则捕获 BtConst 绑定字母"
+  },
+
+  "anti_debug": {
+    "string": "HTML 实体编码，解码为「操你妈！调试你爹的程序呢？是不是你在调试你爹的游戏呢，死孩子」",
+    "source": "shell_rx_bss_7820623000_7820720000.bin"
+  },
+
+  "menu_java_layer": {
+    "dex": "classes6.dex (425744 B, mtime 2026-09-25 22:13)",
+    "classes": ["com.android.support.BinGe", "com.android.support.Main", "com.android.support.Menu", "com.android.support.Preferences", "Menu$1..$20"],
+    "members": ["GetFeatureList", "SettingsList", "featureList", "ShowMenu", "ToggleON", "ToggleOFF", "changeFeatureBool", "changeFeatureInt", "changeFeatureString", "saveInputValue", "exitMenu", "set_ret", "Icon", "IconWebViewData", "IsGameLibLoaded", "Init", "getGoHomeUrl", "getNotNetworkMessage", "getStringEX", "getVersion", "CheckOverlayPermission", "requestWindowFeature", "setAdapter"],
+    "note": "classes.dex 只有 1 处 com/android/support/Main + 1 处 get_ret（壳对菜单的引用）"
+  },
+
+  "menu_features_decoded": {
+    "source": "https://menu-1255602259.file.myqcloud.com/game/1191.html 的 var exp（708 字符），用 app1.js 的 strencode 逆算法解出",
+    "decoded_file": "/tmp/menu_features.txt",
+    "plaintext_len": 321,
+    "items": [
+      {"idx": 0, "kind": "btn", "name": "百倍伤害", "icon": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/爽剑.png", "toast": "开启成功", "maps_to": "feature1"},
+      {"idx": 1, "kind": "btn", "name": "超级无敌", "icon": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/翅膀.png", "toast": "开启成功", "maps_to": "feature2"},
+      {"idx": 2, "kind": "btn", "name": "战斗加速", "icon": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/龙.png", "toast": "开启成功", "extra": "1-100", "maps_to": "feature3"},
+      {"idx": 3, "kind": "// input", "name": "未添加", "note": "被注释掉的 input 占位，不可用"}
+    ],
+    "conclusion": "斌哥菜单对外只有 3 个功能，无免广告项；菜单自身 .ad_box + #dtime 30s 倒计时 + closeAD() 是斌哥菜单自己的广告，与游戏内广告无关"
+  },
+
+  "ad_sites": [
+    {"module": "com.sp.mod.tapad", "registrar": "com.sp.mod.tapad.TapAdModRegistrar", "classes": ["Lcom/sp/mod/tapad/manager/TapAdRewardManager", "Lcom/sp/mod/tapad/view/TapAdRewardVideo", "Lcom/sp/mod/tapad/view/TapAdRewardVideo$1", "Lcom/sp/mod/tapad/view/TapAdRewardVideo$2", "Lcom/sp/mod/tapad/TapAdModImpl", "Lcom/sp/mod/tapad/config/TapAdManagerHolder"], "found_in": "classes3.dex"},
+    {"media_id": "1108734", "media_name": "光阴之外", "space_id": "1065279", "media_key": "yez3PZjByPhojfrkFFjWQ6PsR6pETBHeUsuGxFRsKuhaK88yAKK6mxgTTruhIJ6d", "from": "assets/game_config.properties"}
+  ],
+
+  "ad_config_table": {
+    "file": "assets/game_config.properties",
+    "AD_CONFIG": 0,
+    "GAME_ID": 5382,
+    "SP_CHANNEL": "gyzwtap",
+    "GAME_ACTIVITY": "org.cocos2dx.javascript.AppActivity",
+    "GAME_URL": "https://cdn-jzsj.gankh5.com/index.html?weiduan=sp",
+    "ad_sdk_version": "1.4.12-beta1 (feature-cd#23918)",
+    "note": "AD_CONFIG=0 的中文注释在源文件里字节已是字面 '?'（encoding 丢失，iconv GBK 亦不可恢复）⇒ 无法从文件判定该键语义；广告链路存在性由 TapAD 模块 + SpaceID 齐备 + classes3 的 TapAdRewardManager 综合判定"
+  },
+
+  "open_questions": [
+    "坑1：游戏 JS 全加密（assets/**/*.jsc 头为 02a16608/17883af7/bc9d6966/f36570cb…），盘上 grep 不到任何广告锚点；免广告具体 hook 点须在**运行时 dump 解密后的 JS**（evalString 入参）或解 .jsc 加密后定位。已知 Java 侧落点 = com.sp.mod.tapad 的 TapAdRewardManager / TapAdRewardVideo。",
+    "坑2：Shell 内存里那段 isChecked_RET1..5 + `if (isChecked_RET4 && t === \"SkipAd\") return 1;`（callStaticMethod com.sanqi.jmybt.game37.JMYBTActivity.get_ret）是**其它游戏模板残留** —— `jmybt` / `com/sanqi` 在 8 个 dex 中 0 命中，对本游戏不生效，不可照抄。",
+    "坑3：斌哥壳 hook 的是 `se::ScriptEngine::evalString`，把 boot JS 整段改写；星空版若沿用此路线，需自己实现同款 hook（Dobby 或 inline），不能依赖斌哥壳。",
+    "待办：等用户下载**官方原版 APK（同版本 1.0.3 / vc103）**后进入星空版移植；移植需在 boot JS 上新增免广告（feature4）并在菜单模板加第 4 项。"
+  ]
+}

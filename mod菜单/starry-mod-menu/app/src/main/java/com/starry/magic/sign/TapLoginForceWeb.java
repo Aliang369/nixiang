@@ -114,7 +114,18 @@ public final class TapLoginForceWeb {
                     // 圣翼传说：TapTap 旧版路径（包内 com.taptap/sdk/ui/TapTapActivity +
                     //  UI/LoginClient/WebViewHandler 存在，TapSignKit 不存在）。玩家只会在
                     //  「点击跳转」式 SSO 里被 signature not match 拦住 → 强制内嵌网页登录。
-                    "com.aiyue.wscq"));
+                    "com.aiyue.wscq",
+                    // 爆裂防线：TapSDK 新版路径（TapTapLoginActivity + LoginRequest.loginType +
+                    //  DefaultTapLoginFragmentProvider + fallbackToWeb / embedded_web；包内无旧版
+                    //  com.taptap.sdk.ui.TapTapActivity）。改签包会被 TapTap 客户端 SSO 以
+                    //  signature not match 拒绝 → 必须强制内嵌网页登录。
+                    "com.muyegame.blfx",
+                    // 光阴之外（com.shbq.gyzw.ppyx）TapTap 渠道原版：
+                    // 包内实证走 TapSDK 新版路径 —— com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity
+                    // + LoginRequest(impl/data/model) + LoginTypes$WEB + DefaultTapLoginFragmentProvider
+                    // + WebLoginFragment + TapSignKit 全部存在，且无旧版 com.taptap.sdk.ui.TapTapActivity。
+                    // 改签包被 TapTap 客户端 SSO 以 signature not match 拒绝 ⇒ 固定 embedded_web。
+                    "com.shbq.gyzw.ppyx"));
 
     private TapLoginForceWeb() {}
 
