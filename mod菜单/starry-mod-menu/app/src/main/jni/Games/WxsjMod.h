@@ -30,12 +30,14 @@ enum WxsjFeat : int {
     WXSJ_FEAT_MIJINGFREE = 9,  // Toggle_无限挑战秘境  -> mijing_free
     WXSJ_FEAT_SKINUNLOCK = 10, // Toggle_皮肤全解锁    -> skin_unlock
     WXSJ_FEAT_FUNCUNLOCK = 11, // Toggle_功能全解锁    -> func_unlock
+    WXSJ_FEAT_EXPMULTI   = 12, // Slider_经验倍率:1:10 -> exp_multi（1=原逻辑）
     // 静默防封（出站 RPC 白名单）无编号、无菜单开关：δ 层无条件生效
 };
 
 bool Wxsj_TryInit();
 bool Wxsj_IsReady();
 void Wxsj_OnFeatureChanged(int featNum, bool enabled);
+void Wxsj_OnValueChanged(int featNum, int value);
 void Wxsj_ForceClear();
 
 #endif  // STARRY_WXSJ_MOD_H

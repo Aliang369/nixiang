@@ -69,7 +69,8 @@ static constexpr uint64_t kOrigDllHash = 0x91f9acbd064fa875ULL;
 //   「第一次登录能进，第二次（换号/重登录/二次装载）提示补丁不匹配，禁止进入游戏」。
 // 该常数 = FNV1a64(官方 2,030,080 缓冲区被覆盖后的字节)；由 scripts/wxsj_hash_check.py 复算校门，
 // 手算：python3 -c "…" 见 ModBridge.java:155 注释与本文件 84dfc3b5 注释。
-static constexpr uint64_t kPatchedBufHash = 0x84dfc3b57075f048ULL;
+// ⚠️ 每次重出补丁 dll（补丁内容/length 变化）都必须复算本常数，否则「二次装载」会被误封。
+static constexpr uint64_t kPatchedBufHash = 0x07917338bdd390f3ULL;
 static const char kDllNameKey[] = "targetfuntional";
 
 // ---- 内置 patched dll（llvm-objcopy 生成，Android.mk 链接）----
@@ -408,4 +409,20 @@ void Wxsj_OnFeatureChanged(int featNum, bool enabled) {
     }
     // 任一功能开启 → 武装字节替换（未开过 = 纯原版基线）
     if (enabled) g_replaceArmed.store(true);
+}
+
+void Wxsj_OnValueChanged(int featNum, int value) {
+    // 滑块通道：只写配置文件（dll 2s 内生效），禁碰 IL2CPP/UI
+    switch (featNum) {
+    // 经验倍率：dll 侧 GetInt("exp_multi",1)，<=1 走原逻辑
+    case WXSJ_FEAT_EXPMULTI: {
+        if (value < 1) value = 1;
+        if (value > 10) value = 10;
+        char buf[8];
+        snprintf(buf, sizeof(buf), "%d", value);
+        WriteConfigKey("exp_multi", buf);
+        break;
+    }
+    default: break;
+    }
 }

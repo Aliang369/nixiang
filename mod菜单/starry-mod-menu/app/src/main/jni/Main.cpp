@@ -155,6 +155,7 @@ bool Wxsj_IsReady();
 bool Wxsj_TryInit();
 void Wxsj_ForceClear();
 void Wxsj_OnFeatureChanged(int featNum, bool enabled);
+void Wxsj_OnValueChanged(int featNum, int value);
 #elif defined(STARRY_GAME_YQZD)
 void Yqzd_OnFeatureChanged(int featNum, bool enabled);
 void Yqzd_OnValueChanged(int featNum, int value);
@@ -660,6 +661,7 @@ static const char* g_featureList[] = {
     "Toggle_无限挑战秘境",               // 9  WXSJ_FEAT_MIJINGFREE
     "Toggle_皮肤全解锁",                 // 10 WXSJ_FEAT_SKINUNLOCK
     "Toggle_功能全解锁",                 // 11 WXSJ_FEAT_FUNCUNLOCK
+    "Slider_经验倍率:1:10",              // 12 WXSJ_FEAT_EXPMULTI（滑块 1-10，配置键 exp_multi）
     // 静默防封（出站 RPC 白名单）不设按钮：与 block_report / COS 断链 / 执法 no-op 一样
     // 无条件生效（δ 层 ilpatch_delta 里直接插门），玩家无需也无法关闭。
 #elif defined(STARRY_GAME_WGGLS)
@@ -2593,6 +2595,9 @@ static void mb_nativeSetValue(JNIEnv* env, jclass clazz,
 #endif
 #if defined(ENABLE_UNITY_HOOK) && defined(STARRY_GAME_ZMXS)
     Zmxs_OnValueChanged(featNum, value);
+#endif
+#if defined(ENABLE_UNITY_HOOK) && defined(STARRY_GAME_WXSJ)
+    Wxsj_OnValueChanged(featNum, value);
 #endif
     LOGI("[数值] #%d %s = %d", featNum, name, value);
     env->ReleaseStringUTFChars(featName, name);

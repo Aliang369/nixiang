@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级",
+  "keep": "无限升级_12.10701_surgical-final-releaseSigned.apk",
+  "keep_size": 121333639,
+  "keep_md5": "b941a84b45d6ff7df0542729680af3ef",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "无限升级_12.10701_surgical-final-releaseSigned.apk.idsig",
+      "size": 964123,
+      "md5": "55c56990638ccd654b89593ddad4fa65"
+    }
+  ],
+  "removed_count": 1
+}

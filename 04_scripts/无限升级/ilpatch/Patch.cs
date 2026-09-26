@@ -63,6 +63,7 @@ internal static class Patcher
             && x.Body != null && x.Body.Instructions.Count > 40);
         P(() => AddItemDouble(mAddItemMain), "物品翻倍 AddItem(string,long,bool,string) 数量×2（新签名主路径）");
         P(() => AdsRewardMultiply(FindM(npm, "GetAdsRewardCallBack")), "广告奖励倍数 GetAdsRewardCallBack×N");
+        P(() => AddExpMultiply(FindM(mod.GetType("DataManager"), "AddExp")), "经验倍率 AddExp×N(值为1走原逻辑, 玩家与宠物经验同步放大)");
         P(() => ShowAdsFree(), "免广告 ShowAdsNewFlow.Show→AdsFree 原路径");
         P(() => MijingFree(FindM(mod.GetType("EnemyGroupData"), "CanChanllage", 3)), "无限挑战秘境 CanChanllage→result=true");
 
@@ -639,6 +640,52 @@ internal static class Patcher
             Instruction.Create(OpCodes.Mul),
             Instruction.Create(OpCodes.Starg_S, m.Parameters[1]),
             orig,
+        };
+        InsertAt(m, 0, seq);
+    }
+
+    /// 经验倍率：入口 exp(LargeNumber) ×N（N=GetInt("exp_multi",1)，<=1 走原逻辑）
+    /// 目标 = DataManager::AddExp(LargeNumbers.LargeNumber)，是全游戏唯一低级经验入口：
+    ///   杀怪经验(EnemyGenerate::OnEnemyDead，药水生效时该入口被调两次 ⇒ 双倍药水最终 = N×2)、
+    ///   离线收益(OffLineRewardWindow::CalculateReward / ::Double) 全部经过这里。
+    /// ⚠️ AddExp 会把同一份入参同时加到 GameData::currentPet.currentExp ⇒ 宠物经验同步放大。
+    /// 用 op_Multiply(LargeNumber,Double) 而非改 currentExpFix（后者在 Character::Refresh 里
+    /// 累加+连乘，非幂等，改动会污染装备/成就/升法加成链路）。
+    static void AddExpMultiply(MethodDefinition m)
+    {
+        var pExp = m.Parameters[0];          // LargeNumbers.LargeNumber
+        var tLnMod = pExp.ParameterType;     // 模块内引用（scope=com.votrubec.largenumbers）
+        var scLn = AsmRef("com.votrubec.largenumbers");
+        // 重建一个显式带 scope 的 TypeReference（跨程序集调用必须，WithScope 在本版 Cecil 不可用）
+        var tLn = new TypeReference(tLnMod.Namespace, tLnMod.Name, mod, scLn);
+
+        // LargeNumber op_Multiply(LargeNumber, Double)
+        var mMul = new MethodReference("op_Multiply", tLn, tLn) { HasThis = false };
+        mMul.Parameters.Add(new ParameterDefinition(tLn));
+        mMul.Parameters.Add(new ParameterDefinition(mod.TypeSystem.Double));
+
+        var vMult = new VariableDefinition(tI32);
+        m.Body.Variables.Add(vMult);
+        m.Body.InitLocals = true;
+
+        var first = m.Body.Instructions[0];
+        var orig = Instruction.Create(OpCodes.Nop);
+        var seq = new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldstr, "exp_multi"),
+            Instruction.Create(OpCodes.Ldc_I4_1),
+            Instruction.Create(OpCodes.Call, mGetInt),
+            Instruction.Create(OpCodes.Stloc, vMult),
+            Instruction.Create(OpCodes.Ldloc, vMult),
+            Instruction.Create(OpCodes.Ldc_I4_1),
+            Instruction.Create(OpCodes.Ble, orig),
+            Instruction.Create(OpCodes.Ldarg_1),                 // exp
+            Instruction.Create(OpCodes.Ldloc, vMult),
+            Instruction.Create(OpCodes.Conv_R8),                 // (double)N
+            Instruction.Create(OpCodes.Call, mMul),              // exp * N
+            Instruction.Create(OpCodes.Starg_S, pExp),           // arg1 = exp * N
+            orig,
+            Instruction.Create(OpCodes.Br, first),               // 落回原体
         };
         InsertAt(m, 0, seq);
     }
