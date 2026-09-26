@@ -62,6 +62,14 @@ static constexpr int32_t kOrigDllLen = 2030080;
 // 那种情况下把旧补丁 dll 盖进去 = 灾难（类型/方法 token 错位 → 崩或静默异常）。
 // 脚本 wxsj_so_only.sh 会用同一份官方 dll 复算此常数，不一致直接拒绝出包。
 static constexpr uint64_t kOrigDllHash = 0x91f9acbd064fa875ULL;
+// ---- v7.16「原地补丁后缓冲区」的整包 FNV-1a 64 ----
+// 我们把补丁 dll（2,024,960 B）原地 memcpy 进宿主数组、尾部补 5,120 个 0，长度仍是 2,030,080。
+// 于是**同一个数组被第二次执行**时：长度对得上、哈希却既不是官方值也不是补丁 dll 自身值，
+// 当场被下面的哈希门判成「官方换版」⇒ 误封入口。现场表现就是
+//   「第一次登录能进，第二次（换号/重登录/二次装载）提示补丁不匹配，禁止进入游戏」。
+// 该常数 = FNV1a64(官方 2,030,080 缓冲区被覆盖后的字节)；由 scripts/wxsj_hash_check.py 复算校门，
+// 手算：python3 -c "…" 见 ModBridge.java:155 注释与本文件 84dfc3b5 注释。
+static constexpr uint64_t kPatchedBufHash = 0x84dfc3b57075f048ULL;
 static const char kDllNameKey[] = "targetfuntional";
 
 // ---- 内置 patched dll（llvm-objcopy 生成，Android.mk 链接）----
@@ -193,6 +201,15 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
         if (g_replaceArmed.load(std::memory_order_relaxed) && isDll && ContainsDllNameKey(bytes, (size_t)len)) {
             const size_t pLen = (size_t)(_binary_targetfuntional_dll_bin_end - _binary_targetfuntional_dll_bin_start);
             const uint64_t h = Fnv1a64(bytes, (size_t)len);
+            // 【v7.16】同一装载缓冲区被二次执行：内容已经是我们的补丁（长度仍是官方 2030080，
+            // 但整包哈希 = kPatchedBufHash）。不认这一条 ⇒ 第二次装载（换号/重登录/程序集重执行）
+            // 会被当成「官方换版」误封入口——现场表现正是「第一次登录能进、第二次禁止进入」。
+            // 放行是安全的：缓冲区里本就是官方底包 + 我们的补丁，与第一次注入后的内容逐字节相同。
+            if (len == kOrigDllLen && h == kPatchedBufHash) {
+                LOGI(WXSJ_LOG " Exec call re-enter: buffer already carries our patch (hit#%d fnv=%016llx) -> passthrough",
+                     g_hits.load(), (unsigned long long)h);
+                return orig(self, data, outP, mi);
+            }
             const bool forced = ForceMismatch();
             // 命中条件 = 长度 + 整包哈希（或应急跳过）+ 未被测试钩子强制
             const bool match = (len == kOrigDllLen) && (h == kOrigDllHash || SkipHashGate()) && !forced;
@@ -212,7 +229,14 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
                 // 做法：不调 orig ⇒ 热更程序集根本不执行 ⇒ 进不了世界、官方逻辑也不会上传脏数据。
                 LOGE(WXSJ_LOG " HOTFIX MISMATCH: loaded len=%d fnv=%016llx (expect len=%d fnv=%016llx) forced=%d -> BLOCK ENTRY",
                      len, (unsigned long long)h, kOrigDllLen, (unsigned long long)kOrigDllHash, forced ? 1 : 0);
-                StarryShowToast("[无限升级] 游戏已热更，当前补丁不匹配，已禁止进入游戏。请到菜单「游戏补丁 → 检查更新」下载新补丁后重开");
+                // 【v7.16】现场取证：客户机基本无 root，files/starry_hotfix_mismatch 抓不到，
+                // 把实际装载的 len/fnv 打进 toast ⇒ 玩家截图一条即可判定是哪一版官方 dll。
+                char tb[320];
+                snprintf(tb, sizeof(tb),
+                         "[无限升级] 热更补丁不匹配（len=%d fnv=%016llx），已禁止进入游戏。"
+                         "请到菜单「游戏补丁 → 检查更新」下载新补丁后完全重启",
+                         len, (unsigned long long)h);
+                StarryShowToast(tb);
                 std::string pkg = PkgName();
                 if (!pkg.empty()) {
                     std::string dp = "/data/user/0/" + pkg + "/files/starry_hotfix_mismatch";

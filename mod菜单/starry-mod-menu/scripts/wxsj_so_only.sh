@@ -44,6 +44,24 @@ fi
 
 PRE_MD5="$(md5 -q "$SO_OUT" 2>/dev/null || echo none)"
 
+# 🩸 血案(2026-09-27 v7.16)：构建戳 ≈ HEAD 提交时间（Application.mk:8 -DSTARRY_BUILD_EPOCH），
+# 但它被编译进 Includes/Utils.cpp 的 .rodata。CFG_HASH 只哈希 Android.mk/Application.mk 的**文件内容**，
+# 换提交时文件内容不变 ⇒ make 判定 Utils.o 是新的，戳被沿用旧值（实测：HEAD 已到 09-27 00:02:35，
+# so 里仍是 09-26 21:09:19 的戳）。后果：Java 侧 PlayOtaManager.invalidateOtaIfApkUpdated
+# 用 `apkStamp > otaStamp` 决定是否清掉玩家机上的 files/starry_ota/**/libstarry_magic.so ——
+# 戳陈旧/相等 ⇒ 玩家机上的旧 OTA so 永远顶掉包内新 so（旧门禁常数对不上新官方 dll ⇒ 「第二次启动禁止进入」）。
+# ⇒ 戳变化时只 touch 承载它的 Utils.cpp（单文件重编），不再让戳随 obj 缓存烂掉。
+STAMP_SRC="$JNI/Includes/Utils.cpp"
+CUR_EPOCH="$(cd "$JNI" && git log -1 --format=%ct 2>/dev/null || true)"
+if [[ -n "$CUR_EPOCH" && -f "$STAMP_SRC" ]]; then
+  PREV_EPOCH="$(cat "$OBJ/.stamp_epoch" 2>/dev/null || echo none)"
+  if [[ "$PREV_EPOCH" != "$CUR_EPOCH" ]]; then
+    echo "[wxsj-so] 构建戳变化（${PREV_EPOCH} -> ${CUR_EPOCH}）=> touch Includes/Utils.cpp 强制重编"
+    touch "$STAMP_SRC"
+    printf '%s\n' "$CUR_EPOCH" > "$OBJ/.stamp_epoch"
+  fi
+fi
+
 # 🩸 血案(2026-09-23 二次热更)：`jni/Games/WxsjPatchedDll.a` 是**手工 objcopy 产物**，不随
 # `jni/targetfuntional_dll.bin` 自动更新 → bin 换了新 dll 但 .a 还是旧版，ndk-build 照旧链旧数据，
 # so 里内嵌的仍是旧 dll（且体积/校验全看不出），装机后「用旧补丁 dll 覆盖新官方 dll」= 灾难。
