@@ -8,9 +8,13 @@
  *  替换发生在游戏 bootstrap 线程（非渲染线程），单次装载触发。
  * ================================================================ */
 /* v7.14 (2026-09-26)：单一版本重做。
- * 废弃 v7.13 的「双版本内置 + PickDllVariant + 失配禁止进入游戏」；
- * 改为只绑定现网官方 hotfix2 / 2,030,080 一个版本，且用整包 FNV-1a 64
- * 逐字节校验底包（同长度换版也拦得住）；失配时放行原版 dll（游戏照常可进）。 */
+ * 废弃 v7.13 的「双版本内置 + PickDllVariant」，只绑定现网官方 hotfix2 /
+ * 2,030,080 一个版本，且用整包 FNV-1a 64 逐字节校验底包（同长度换版也拦得住）。
+ * ❗失配仍「禁止进入游戏」（v7.15 恢复，见下）：这是**防封号基线**，不是可选项——
+ * 失配意味着补丁一个字节都没打上（上报拦截/执法 RPC no-op/封号弹窗压制全失效），
+ * 放行 = 玩家裸奔进游戏 ⇒ 真被对账封号（2026-09-26 实测反馈：外人安装后弹封号窗）。
+ * 处置：不调 orig ⇒ 热更程序集不执行 ⇒ 进不了世界、官方上报逻辑也跑不起来；
+ * 菜单/App 存活，玩家可去「游戏补丁 → 检查更新」拉新 so，重开即恢复。 */
 #include "WxsjMod.h"
 #include "Includes/SecStrings.hpp"
 
@@ -117,10 +121,11 @@ static uintptr_t Il2CppBase() {
 
 extern "C" void StarryShowToast(const char* text);  // Main.cpp 导出，崩前提示
 
-static std::atomic<bool> g_mismatchNotified{false};  // 官方热更失配：只提示一次（v7.14 起改为「放行原版」而非 v7.13 的「禁止进入」）
+static std::atomic<bool> g_mismatchBlocked{false};  // 官方热更失配：只处置一次（v7.15 恢复 v7.13 的「禁止进入」）
+                                                   // 放行原版 = 防封链全失效 ⇒ 裸奔被封，绝不 PASSTHROUGH
 
 // ---- 测试钩子：files/starry_force_mismatch 存在 ⇒ 强制走失配分支 ----
-// 用途：不等官方真热更也能验证「失配时游戏照常可进、补丁不生效」的行为（删文件即恢复）
+// 用途：不等官方真热更也能验证「失配时禁止进入游戏」的行为（删文件即恢复）
 static bool ForceMismatch() {
     static std::atomic<int> cached{-1};  // -1 未查 / 0 无 / 1 有
     int c = cached.load(std::memory_order_relaxed);
@@ -200,19 +205,20 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
                 WXSJ_TRACE("dll replaced");
             } else if (match) {
                 LOGE(WXSJ_LOG " embedded dll %zu > array %d, skip", pLen, len);
-            } else if (!g_mismatchNotified.exchange(true)) {
-                // v7.14：官方已热更（装载 dll 不是已知底包）⇒ **放行原版**，绝不拦路。
-                // v7.13 的「不调 orig ⇒ 禁止进入游戏」已废弃：官方一推新热更玩家就进不去游戏，
-                // 比 bug 更糟；现在游戏照常可玩、补丁不生效（= 纯原版行为），一次性提示 + 落盘标记，等 OTA 新 so。
-                LOGE(WXSJ_LOG " HOTFIX MISMATCH: loaded len=%d fnv=%016llx (expect len=%d fnv=%016llx) -> PASSTHROUGH official dll",
-                     len, (unsigned long long)h, kOrigDllLen, (unsigned long long)kOrigDllHash);
-                StarryShowToast("[无限升级] 官方已更新热更包，当前补丁未适配，本次以原版运行（补丁不生效）。请到菜单「游戏补丁 → 检查更新」获取新补丁");
+            } else if (!g_mismatchBlocked.exchange(true)) {
+                // v7.15：官方已热更（装载 dll 不是已知底包）⇒ **禁止进入游戏**。
+                // 绝不能 PASSTHROUGH：补丁一个字节都没打上，而 APK/菜单/签名伪装仍在，
+                // 官方反外挂照常跑 ⇒ 玩家直接暴露（2026-09-26 外来安装实测弹封号窗）。
+                // 做法：不调 orig ⇒ 热更程序集根本不执行 ⇒ 进不了世界、官方逻辑也不会上传脏数据。
+                LOGE(WXSJ_LOG " HOTFIX MISMATCH: loaded len=%d fnv=%016llx (expect len=%d fnv=%016llx) forced=%d -> BLOCK ENTRY",
+                     len, (unsigned long long)h, kOrigDllLen, (unsigned long long)kOrigDllHash, forced ? 1 : 0);
+                StarryShowToast("[无限升级] 游戏已热更，当前补丁不匹配，已禁止进入游戏。请到菜单「游戏补丁 → 检查更新」下载新补丁后重开");
                 std::string pkg = PkgName();
                 if (!pkg.empty()) {
                     std::string dp = "/data/user/0/" + pkg + "/files/starry_hotfix_mismatch";
                     FILE* f = fopen(dp.c_str(), "wb");
                     if (f) {
-                        fprintf(f, "passthrough len=%d fnv=%016llx expect_len=%d expect_fnv=%016llx forced=%d\n",
+                        fprintf(f, "blocked len=%d fnv=%016llx expect_len=%d expect_fnv=%016llx forced=%d\n",
                                 len, (unsigned long long)h, kOrigDllLen, (unsigned long long)kOrigDllHash, forced ? 1 : 0);
                         fclose(f);
                     }
@@ -220,6 +226,7 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
             }
         }
 #endif  // WXSJ_DIAG_DUMP
+        if (g_mismatchBlocked.load()) return 0;  // 已处置：后续调用继续拦（竞态窗口）
     }
     return orig(self, data, outP, mi);
 }
