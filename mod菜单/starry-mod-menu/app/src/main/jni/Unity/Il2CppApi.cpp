@@ -417,7 +417,24 @@ static void* ResolveIl2CppSym(void* handle, const char* name) {
     if (!handle || !name) return nullptr;
     void* p = xdl_sym(handle, name, nullptr);
     if (!p) p = xdl_dsym(handle, name, nullptr);
-    if (!p) p = DynsymLookup(name);  // TP 符号隐藏对策
+    /* TP 重排 dynsym 但未重建 GNU hash 表 → xdl_sym 可能「静默返回错误的非空
+     * 地址」（不是 null，所以旧的 miss 兜底永不触发）。恒取自解析表结果做对照，
+     * 首次解析时打一行 diag（xdl/self 双方地址 + 前 8 字节）。 */
+    void* self = DynsymLookup(name);  // TP 符号隐藏对策
+    if (!p) p = self;
+    {
+        static std::unordered_set<std::string> loggedDiag;
+        if (loggedDiag.insert(name).second) {
+            char h1[20] = "none", h2[20] = "none";
+            uint8_t b1[8] = {0}, b2[8] = {0};
+            if (p && SafeProbe([&] { memcpy(b1, p, 8); return true; }))
+                for (int i = 0; i < 8; i++) snprintf(h1 + i * 2, 3, "%02x", b1[i]);
+            if (self && SafeProbe([&] { memcpy(b2, self, 8); return true; }))
+                for (int i = 0; i < 8; i++) snprintf(h2 + i * 2, 3, "%02x", b2[i]);
+            LOGI("[Il2Cpp] diag %s xdl=%p[%s] self=%p[%s] %s", name, p, h1, self, h2,
+                 (self && self != p) ? "MISMATCH" : "same");
+        }
+    }
     if (!p) {
         static std::unordered_set<std::string> loggedMiss;
         if (loggedMiss.insert(name).second) LOGI("[Il2Cpp] miss %s", name);
@@ -545,6 +562,43 @@ bool Api::Load(const char* libName) {
     return true;
 }
 
+/* TP 场景自愈：用自解析 dynsym 表（strtab 明文反查，见 BuildDynsymMap）覆盖
+ * 核心符号。仅当 xdl_sym 静默给错地址时才会改变结果，逐条打日志。 */
+bool Api::ReprobeCore() {
+    struct { const char* name; void** slot; } k[] = {
+        { "il2cpp_class_from_name",           (void**)&class_from_name },
+        { "il2cpp_class_get_field_from_name", (void**)&class_get_field },
+        { "il2cpp_field_get_offset",          (void**)&field_offset },
+        { "il2cpp_field_static_get_value",    (void**)&field_static_get },
+        { "il2cpp_domain_get",                (void**)&domain_get },
+        { "il2cpp_domain_get_assemblies",     (void**)&domain_assemblies },
+        { "il2cpp_domain_assembly_open",      (void**)&domain_assembly_open },
+        { "il2cpp_assembly_get_image",        (void**)&assembly_image },
+        { "il2cpp_object_get_class",          (void**)&object_class },
+        { "il2cpp_class_get_name",            (void**)&class_name },
+        { "il2cpp_class_get_method_from_name",(void**)&class_method },
+        { "il2cpp_runtime_invoke",            (void**)&runtime_invoke },
+        { "il2cpp_string_new",                (void**)&string_new },
+        { "il2cpp_image_get_class_count",     (void**)&image_class_count },
+        { "il2cpp_image_get_class",           (void**)&image_class },
+        { "il2cpp_method_get_name",           (void**)&method_get_name },
+        { "il2cpp_value_box",                 (void**)&value_box },
+        { "il2cpp_get_corlib",                (void**)&get_corlib },
+    };
+    int changed = 0, missing = 0;
+    for (auto& e : k) {
+        void* self = detail::DynsymLookup(e.name);
+        if (!self) { missing++; continue; }
+        if (self != *e.slot) {
+            LOGI("[Il2Cpp] reprobe %s: %p -> %p", e.name, *e.slot, self);
+            *e.slot = self;
+            changed++;
+        }
+    }
+    LOGI("[Il2Cpp] reprobe done changed=%d missing=%d", changed, missing);
+    return changed > 0;
+}
+
 void* Api::Domain() const {
     return domain_get ? domain_get() : nullptr;
 }
@@ -553,19 +607,33 @@ void** Api::Assemblies(size_t* count) const {
     if (!count) return nullptr;
     void* domain = Domain();
     if (!domain) return nullptr;
-    if (domain_assemblies) return domain_assemblies(domain, count);
-    /* 降级（终末地 1.5.3 实测）：TP 从运行时 dynsym 删除 il2cpp_domain_get_assemblies
-     * 条目且 δ 内插/调用验证均无法定位真址，改用 il2cpp_domain_assembly_open
-     * 按名逐个开程序集（该符号运行时在表，0x9a0b3f0）。名单取自原包
-     * global-metadata.dat 程序集表中的游戏逻辑层。返回 Il2CppAssembly* 数组，
-     * 与枚举路径同构，ImageOf/FindClass 链路不变。 */
+    if (domain_assemblies) {
+        size_t n = 0;
+        void** a = domain_assemblies(domain, &n);
+        if (a && n > 0) { *count = n; return a; }
+        /* 境界刀鸣实测（1.39.211507 / libil2cpp.so 100MB）：该枚举接口返回
+         * 「非空指针 + count=0」——既不是 null 也没有数据。旧代码 `if (a) return a`
+         * 会静默把 count=0 交回调用方，TryInit 因此永久失败且无任何日志。
+         * 这里改判为「枚举失效」，落到按名 open 的降级路径。 */
+        static bool s_enumDead = false;
+        if (!s_enumDead) {
+            s_enumDead = true;
+            LOGI("[Il2Cpp] domain_assemblies -> %p count=%zu 枚举失效 → 转按名 open",
+                 (void*)a, n);
+        }
+    }
     if (!domain_assembly_open) return nullptr;
     if (!asm_fallback_done_) {
+        /* 名单覆盖本仓库两款 TP 包：境界刀鸣（Assembly-CSharp 内含
+         * GameFramework.LuaManager，已由 runtime global-metadata 反查确认）
+         * 与终末地（*.Beyond）。open 失败只打 miss，不影响其它名字。 */
         static const char* kNames[] = {
-            "Assembly-CSharp", "Gameplay.Beyond",
-            "AbilityUnsafe.Gameplay.Beyond", "DynamicSceneUnsafe.Gameplay.Beyond",
-            "FactoryUnsafe.Gameplay.Beyond", "Entry.Beyond", "Base.Beyond",
-            "Audio.Beyond", "Input.Beyond", "Lua.Beyond", "mscorlib"};
+            "Assembly-CSharp", "GameCore.Runtime", "PX.API",
+            "PXUtils.Runtime.AppCtrlr", "UtilTool", "XLog.Runtime", "mscorlib",
+            "Gameplay.Beyond", "AbilityUnsafe.Gameplay.Beyond",
+            "DynamicSceneUnsafe.Gameplay.Beyond", "FactoryUnsafe.Gameplay.Beyond",
+            "Entry.Beyond", "Base.Beyond", "Audio.Beyond", "Input.Beyond",
+            "Lua.Beyond"};
         for (const char* n : kNames) {
             void* a = nullptr;
             bool ok = SafeProbe([&] { a = domain_assembly_open(domain, n); return true; });
@@ -584,17 +652,40 @@ void** Api::Assemblies(size_t* count) const {
 }
 
 void* Api::ImageOf(void* assembly) const {
-    if (!assembly || !assembly_image) return nullptr;
-    return const_cast<void*>(assembly_image(assembly));
+    if (!assembly || !IsValidHeapPtr(assembly)) return nullptr;
+    /* 境界刀鸣 1.39.211507 实测：调 il2cpp_assembly_get_image 必崩
+     * （SIGSEGV/SEGV_ACCERR，fault-pc=libil2cpp.so+0x25a1c48，lr=libstarry_magic.so+0x1cfa4）。
+     * 而 domain_assembly_open 的返回值本身有效（7 个真实程序集 open ok、9 个不存在的 miss）。
+     * 故直接读 Il2CppAssembly 首字段（Il2CppImage*）绕过该导出；用 SafeProbe 包住解引用，
+     * 万一 asm 是坏指针也只是返回 nullptr 并打日志，不会把进程带崩。 */
+    void* img = nullptr;
+    if (!SafeProbe([&] { img = *(void**)assembly; return true; })) return nullptr;
+    static int s_log = 0;
+    if (s_log < 12) {
+        s_log++;
+        LOGI("[Il2Cpp] ImageOf asm=%p -> img=%p", assembly, img);
+        if (img && IsValidHeapPtr(img)) {
+            const char* nm = nullptr;
+            SafeProbe([&] { nm = *(const char**)img; return true; });
+            if (nm && IsValidHeapPtr((void*)nm))
+                LOGI("[Il2Cpp] ImageOf img=%p name=%.24s", img, nm);
+        }
+    }
+    if (!img || !IsValidHeapPtr(img)) return nullptr;
+    return img;
 }
 
 void* Api::FindClassInImage(void* image, const char* shortName) const {
     if (!image || !image_class_count || !image_class || !class_name || !shortName) return nullptr;
     uint32_t n = image_class_count(image);
+    static int s_dbg = 0;
+    bool dbg = (s_dbg < 4);
+    if (dbg) { s_dbg++; LOGI("[Il2Cpp] FindClassInImage image=%p n=%u want=%s", image, n, shortName); }
     for (uint32_t i = 0; i < n; i++) {
         void* k = image_class(image, i);
         if (!k) continue;
         const char* cn = class_name(k);
+        if (dbg && i < 4) LOGI("[Il2Cpp] class[%u]=%p name=%.40s", i, k, cn ? cn : "(null)");
         if (cn && strcmp(cn, shortName) == 0) return k;
     }
     return nullptr;

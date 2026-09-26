@@ -1,0 +1,35 @@
+public class zbDungeonCellStyleCsvTable
+{
+	private zbDungeonCellStyleCsvTableData tableData;
+
+	public void Init()
+	{
+		tableData = zbTableLoader.Instance.LoadTableConfig("config/dungeon/dungeonCellStyleCsv", zbDungeonCellStyleCsvTableData.ReadBin);
+		if (tableData != null)
+		{
+			_ = tableData.records;
+		}
+	}
+
+	public zbDungeonCellStyleCsvTableData GetRecords()
+	{
+		if (tableData == null || tableData.records == null)
+		{
+			return null;
+		}
+		return tableData;
+	}
+
+	public zbDungeonCellStyleCsvRecord GetRecordByKey(int key)
+	{
+		if (tableData == null || tableData.records == null)
+		{
+			return null;
+		}
+		if (tableData.records.TryGetValue(key, out var value))
+		{
+			return value;
+		}
+		return null;
+	}
+}

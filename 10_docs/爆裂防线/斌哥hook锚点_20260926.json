@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "game": "爆裂防线",
+    "pkg": "com.muyegame.blfx",
+    "version": "1.01.06(10106)",
+    "apk": "02_apks/爆裂防线/爆裂防线_1.01.06_binge_from_device.apk",
+    "apk_size": 349132281,
+    "apk_md5": "dda75d4f8466b2b2992ddd2c3e928901",
+    "apk_sha256": "a1ae0e3f6d0dcefa9fdebc635849ab821f55e53db1bdf66cd36d203c7796ea8f",
+    "engine": "Unity IL2CPP (团结引擎 Tuanjie)",
+    "shell_variant": "瘦壳 libSDKloading.so（无 assets/base.apk、无 shell_config.xml、无 SRPatch）",
+    "binge_signature": "CN=binge2.keystore, OU=binge2, O=binge2, L/ST/C=binge2",
+    "binge_disclaimer_email": "bg888@188.com",
+    "libil2cpp_md5": "30563544a2a74351cef4378cae66cfe2",
+    "libil2cpp_size": 75723488,
+    "libSDKloading_md5": "8727ac27f586432e4bebd43bc5d911ac",
+    "libSDKloading_size": 3889656,
+    "global_metadata_md5": "1712cdbaa5a019f46e4797ca70654e9d",
+    "global_metadata_size": 10824436,
+    "game_id": 1190,
+    "menu_url": "https://menu-1255602259.file.myqcloud.com/game/1190.html",
+    "hotfix_arch": "HybridCLR",
+    "hook_mechanism": "il2cpp 反射按名解析（il2cpp_class_get_field_from_name + il2cpp_field_static_get_value/set_value）；il2cpp 代码段零 patch、零 Dobby 跳桩",
+    "il2cpp_memdiff": "overlay_total_bytes=40656896, patch_regions=1, 唯一 4 字节差异 file_off=0x213e900（非功能相关）；Dobby 跳桩模式 ADRP X17/ADD X17,X17,#imm/BR X17 全段命中数 = 0",
+    "hotfix_dll_size": 11895296,
+    "hotfix_dll_md5": "3a45bad804ed4ba4a6255c1671048166",
+    "device_scriptdll_ab_size": 4414850,
+    "device_scriptdll_ab_md5": "359a1d0fb7dbcbd6bff56433bce0507b",
+    "apk_scriptdll_ab_size": 4408348,
+    "hotfix_download_dir": "/storage/emulated/0/Android/data/com.muyegame.blfx/files/autopatch23940/assetbundle/hotfixdlls/android/scriptdll/",
+    "feature_count": 3,
+    "ad_feature_present": true,
+    "captured": "2026-09-26",
+    "pid": 17834,
+    "device_serial": "f9a116a2"
+  },
+  "flags": {
+    "壳侧配置表（依据 shell_rw_bss 内存，owner_pid=17985）": [
+      "ChangeHp", "zbMonster", "SetSpeed", "zbCombatSpeed",
+      "il2cpp_method_get_class", "il2cpp_class_get_field_from_name",
+      "il2cpp_field_static_get_value", "il2cpp_field_static_set_value",
+      "speed1", "speed2", "speed3"
+    ],
+    "prefs 开关（/data/data/com.muyegame.blfx/shared_prefs/com.muyegame.blfx_preferences.xml）": {
+      "0": {
+        "off": 0,
+        "feature": "百倍伤害",
+        "type": "boolean",
+        "default": false
+      },
+      "1": {
+        "off": 4,
+        "feature": "无敌",
+        "type": "boolean",
+        "default": false
+      },
+      "2": {
+        "off": 8,
+        "feature": "战斗加速",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "说明": "斌哥包仅 3 个开关（0/1/2），无第 4 个 —— 斌哥版未实现免广告"
+  },
+  "sites": [
+    {
+      "feature": "功能1 百倍伤害",
+      "group": "伤害结算",
+      "class": "zbMonster",
+      "member": "ChangeHp(zbAttackerBase hero, zbCombatDefense defense, long value, bool violent = false, bool instantKill = false)",
+      "kind": "method",
+      "file": "06_dumped/爆裂防线/hotfix/csout/zbMonster.cs:1567",
+      "typedef_index": 78,
+      "flist": 545,
+      "mlist": 668,
+      "apply": "放大入参 value（伤害倍率），或在方法体内对 damage 做 >1 倍放大；`long damage = Math.Min(curHp, Math.Abs(value))`",
+      "gate_flag": 0,
+      "note": "伤害/回血唯一入口；zbMonster 无伤害倍率静态字段，只能改方法行为"
+    },
+    {
+      "feature": "功能2 无敌",
+      "group": "伤害结算",
+      "class": "zbMonster",
+      "member": "ChangeHp(...) 同功能1（另一重载 target=zbCombatDefense）",
+      "kind": "method",
+      "file": "06_dumped/爆裂防线/hotfix/csout/zbMonster.cs:1567 / csout/zbCombatDefense.cs:204",
+      "apply": "负值伤害归零（value<0 → 0），或直接 SetCurHp 回补；护盾/城墙侧用 zbCombatDefense.ChangeHp(float positionX, long value)",
+      "gate_flag": 4,
+      "note": "两个 ChangeHp 重载覆盖「怪物受击」与「城墙/护盾受击」"
+    },
+    {
+      "feature": "功能3 战斗加速",
+      "group": "战斗节奏",
+      "class": "zbCombatSpeed",
+      "member": "static readonly float speed1=1f / speed2=1.5f / speed3=2.5f",
+      "kind": "field",
+      "file": "06_dumped/爆裂防线/hotfix/csout/zbCombatSpeed.cs:10,12,14",
+      "apply": "用 il2cpp_field_static_set_value 覆写 speed1/2/3（static readonly 亦可写），SetSpeed 内 Time.timeScale = GetSpeedByEnum(e) 即变倍速",
+      "gate_flag": 8,
+      "note": "应用点 SetSpeed(ECombatSpeed) :43 / GetSpeedByEnum(ECombatSpeed) :65；持久化键 `m_strConfig = \"combatSpeed_\" + zbSelf.Instance.GetRoleId()` :23"
+    }
+  ],
+  "ad_sites": [
+    {"proto": "AdvertisementBarDrawReq/Ack", "feature": "进度条抽奖看广告"},
+    {"proto": "AdvertisementBossSubRouletteReq/Ack", "feature": "BOSS 子转盘看广告", "ack_handler": "csout/zbBossSubjectRouletteWnd.cs:384"},
+    {"proto": "AdvertisementChapterOneBarReq/Ack", "feature": "章节一条看广告", "ack_handler": "csout/zbJourneyOneBarWnd.cs:473"},
+    {"proto": "AdvertisementChapterTwoBarReq/Ack", "feature": "章节二条看广告", "ack_handler": "csout/zbJourneyTwoBarWnd.cs:466"},
+    {"proto": "AdvertisementChapterThreeBarReq/Ack", "feature": "章节三条看广告", "ack_handler": "csout/zbJourneyThreeBarWnd.cs:418"},
+    {"proto": "AdvertisementDataReq/Ack", "feature": "广告数据同步"},
+    {"proto": "AdvertisementGiftAwardReq/Ack", "feature": "看广告免费领礼包", "ui": "EWndId.AdvertisementGift (csout/EWndId.cs:291)"},
+    {"proto": "AdvertisementLegionDonateReq/Ack", "feature": "军团捐献看广告"},
+    {"proto": "AdvertisementLimitTimeRouletteReq/Ack", "feature": "限时转盘看广告", "ui": "EWndId.LimitTimeRoulette (csout/EWndId.cs:250)"},
+    {"proto": "AdvertisementLimitTimeTreasureReq/Ack", "feature": "限时宝箱看广告"},
+    {"proto": "AdvertisementLimitTimeVendorReq/Ack", "feature": "限时商店看广告"},
+    {"proto": "AdvertisementMainAwardDoubleReq/Ack", "feature": "主线奖励翻倍看广告"},
+    {"proto": "AdvertisementMechaSubjectRouletteReq/Ack", "feature": "机甲子转盘看广告", "ack_handler": "csout/zbMechaSubjectTabRoulette.cs:302"},
+    {"proto": "AdvertisementWallSubjectRouletteReq/Ack", "feature": "城墙子转盘看广告", "ack_handler": "csout/zbWallSubjectTabRoulette.cs:302"}
+  ],
+  "ad_config_table": {
+    "path": "config/common/advertisementCsv",
+    "record": "zbAdvertisementCsvRecord { id, type, refresh, limitNum, awardList:int[][], admobType, tempParam1, tempParam2 }",
+    "loaded_by": "csout/zbDataConfig.cs:17 (field) / :605 (new) / :895 (Init)",
+    "note": "awardList 即看广告发放的奖励清单 —— 免广告要绕过的发放链"
+  },
+  "open_questions": [
+    "坑1：广告 Req 在热更 C# 内无任何构造/发送点（grep 0 命中），zbSdkHelper.cs 21 个方法零广告成员，zbSDKBridge 类型无 .cs（运行时 JNI/原生类型）→ 看广告触发在原生/Java 桥或服务端下发，免广告抓点须落原生桥或 ack 链，不在热更 C# 层",
+    "坑2：壳用反射找到 MethodInfo 后改 methodPointer 或改热更程序集内存 IL，两种都不在 il2cpp 磁盘/内存 diff 留痕（待移植时用『原版 DLL vs 斌哥 DLL』或『运行时匿名内存热更镜像 vs DLL』对比定案）",
+    "待办：等待用户下载原版 APK（同版本 1.01.06）后进入星空版移植"
+  ]
+}

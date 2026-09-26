@@ -1,0 +1,17 @@
+{
+  "package": "com.muyegame.blfx",
+  "game": "爆裂防线",
+  "tag": "binge",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/爆裂防线/爆裂防线_1.01.06_binge_from_device.apk",
+  "version_name": "1.01.06",
+  "version_code": 10106,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~5_6fR_KP4Ws4o-YfG7LCWg==/com.muyegame.blfx-nXfDwVaqBEbLpURfMytJaQ==/base.apk",
+  "first_install_time": "2026-09-26 14:54:18",
+  "last_update_time": "2026-09-26 14:54:18",
+  "size": 349132281,
+  "sha256": "a1ae0e3f6d0dcefa9fdebc635849ab821f55e53db1bdf66cd36d203c7796ea8f",
+  "md5": "dda75d4f8466b2b2992ddd2c3e928901"
+}

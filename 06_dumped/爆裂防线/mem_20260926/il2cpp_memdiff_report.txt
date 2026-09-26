@@ -1,0 +1,2 @@
+file_size=75723488 patch_regions=1 b_or_bl_prologues≈1 reported=1
+[0] file_off=0x213e900 va=0x2142900 len=4 B/BL imm=-0x8000000 file=fe0f1df8 mem=00000016

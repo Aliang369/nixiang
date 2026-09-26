@@ -1,0 +1,339 @@
+{
+  "game": "爆裂防线",
+  "version": "1.01.06",
+  "notes": "2026-09-26 星空版移植首版管线。底包 = 官方原版 1.01.06（02_apks/爆裂防线/爆裂防线_1.01.06_original_from_device.apk，344,109,163 B md5 1a57be4509b55582f4aae5475aeaf6c6）；斌哥改包（md5 dda75d4f8466b2b2992ddd2c3e928901）仅作对照物，不得当底包。抓点来源：10_docs/爆裂防线/斌哥hook锚点_20260926.json + 斌哥改包分析报告_20260926.md。★本作机制与圣翼传说完全不同：斌哥包是 HybridCLR 热更 DLL + 壳按名反射读写游戏静态字段（il2cpp 代码段 memdiff 零 patch、Dobby 跳桩 0），故锚点形态是 C# 类型/方法/字段名而非 so RVA。三功能：伤害倍率（滑块，对应原「百倍伤害」）/ 无敌 / 战斗加速（滑块）。★dex 落位：底包是 classes.dex + classes2.dex 双 dex ⇒ 星光 dex 必须落 classes3.dex（最小空闲下标）。★登录：本作 TapSDK 走新版路径（TapTapLoginActivity + LoginRequest.loginType + fallbackToWeb），不用旧版 yntt_smali；改签后必须让 TapLoginForceWeb 的 PKG_WHITELIST 含 com.muyegame.blfx，否则 TapTap SSO 会 signature not match（surgical 脚本对此有硬门禁）。★install 阶段签名冲突（设备上官方版/斌哥版都非本包签名）→ 默认停手报错，需用户明确授权后加 BLFX_ALLOW_UNINSTALL=1。",
+  "params": {
+    "game_id": "blfx",
+    "package": "com.muyegame.blfx",
+    "mk": "Android_blfx.mk（modern 注册表管线）",
+    "tag": "blfx",
+    "serial": "f9a116a2",
+    "version_code": 10106,
+    "min_sdk": 23,
+    "target_sdk": 34,
+    "menu_game_id": 1190,
+    "il2cpp_md5": "30563544a2a74351cef4378cae66cfe2",
+    "il2cpp_size": 75723488,
+    "libSDKloading_md5": "8727ac27f586432e4bebd43bc5d911ac",
+    "global_metadata_md5": "1712cdbaa5a019f46e4797ca70654e9d",
+    "hotfix_dll_md5": "3a45bad804ed4ba4a6255c1671048166",
+    "engine": "Unity IL2CPP (团结引擎 Tuanjie) + HybridCLR"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "底包核对（官方原版 1.01.06，344,109,163 B / md5 1a57be4509b55582f4aae5475aeaf6c6）",
+      "requires": [],
+      "command": "ls -lh \"$NIXIANG/02_apks/爆裂防线/爆裂防线_1.01.06_original_from_device.apk\" && md5 -q \"$NIXIANG/02_apks/爆裂防线/爆裂防线_1.01.06_original_from_device.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/爆裂防线/爆裂防线_1.01.06_original_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-26 15:30:00",
+      "note": "02_apks/ 由用户手动管理；原版与斌哥包均已归档（均为不可再生输入，勿删）。抓取脚本 04_scripts/爆裂防线/fetch_original_apk.sh / fetch_binge_apk.sh。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/爆裂防线/爆裂防线_1.01.06_original_from_device.apk": {
+          "md5": "1a57be4509b55582f4aae5475aeaf6c6"
+        }
+      }
+    },
+    {
+      "id": "dump",
+      "name": "斌哥改包内存 dump（KSU 直读 /proc/<pid>/mem，无 Frida）+ 热更 DLL 提取",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/dump_binge_shell_mem.sh\" com.muyegame.blfx \"$NIXIANG/06_dumped/爆裂防线/mem_20260926\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/爆裂防线/mem_20260926/maps.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/爆裂防线/hotfix/hotfix_script.dll"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-26 15:07:00",
+      "note": "热更 DLL 自有纯 Python UnityFS 解包器（04_scripts/_common/unityfs_extract.py，含手写 LZ4）提取；ILSpy 全量反编译落 06_dumped/爆裂防线/hotfix/csout/（6,898 个 .cs）。本阶段为历史记录，重跑会覆盖 mem_20260926。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/爆裂防线/mem_20260926/maps.txt": {
+          "md5": "7c62d4766d296d9771092b76fcf6f714"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "抓点锚定（分析性阶段：HybridCLR 热更 DLL 反射抓点，非 so RVA）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/斌哥hook锚点_20260926.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/斌哥改包分析报告_20260926.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-26 15:24:00",
+      "note": "分析性阶段命令为 true（产物是 AI 的逆向结论，不是脚本输出）。抓点三功能：百倍伤害/无敌 → zbMonster.ChangeHp（csout/zbMonster.cs:1567；另重载 csout/zbCombatDefense.cs:204）；战斗加速 → zbCombatSpeed.speed1|2|3（csout/zbCombatSpeed.cs:10,12,14，应用点 SetSpeed:43）。prefs 铁证：com.muyegame.blfx_preferences.xml 恰好三开关 0/1/2 ⇒ 斌哥版未做免广告；本作有 14 组 Advertisement*Req/Ack 广告换奖励玩法。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/斌哥hook锚点_20260926.json": {
+          "md5": "e2b19dc000d87417631c619c9a3885cc"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/斌哥改包分析报告_20260926.md": {
+          "md5": "6fc095024509d1d55da244b894817b8b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/06_dumped/爆裂防线/mem_20260926/maps.txt": "7c62d4766d296d9771092b76fcf6f714"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（Games/BlfxMod.cpp + BlfxEntry.cpp：三功能＝伤害倍率滑块 / 无敌 / 战斗加速滑块）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/scan_mod_cpp.sh\" Games/BlfxMod.cpp",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.h"
+        }
+      ],
+      "status": "done",
+      "note": "三件套已落盘（mk 侧 LOCAL_SRC_FILES = MainModern.cpp + Games/BlfxMod.cpp + Games/BlfxEntry.cpp + Unity/Il2CppApi.cpp + Games/NoAceStubs.cpp，见 app/src/main/jni/Android_blfx.mk）。★若再改这三个源文件，本阶段的产物指纹会失配并自动回退 pending（管线陈旧度门禁），重跑 next 即可。",
+      "done_at": "2026-09-26 16:10:10",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.cpp": {
+          "md5": "c772f2729c0a4159b9ee59451a1e64e1"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxEntry.cpp": {
+          "md5": "b233a0843ec3da1d18e482a691aa80c1"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.h": {
+          "md5": "bc70d329e4ca6ceec7fbc663d812c5ca"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/斌哥hook锚点_20260926.json": "e2b19dc000d87417631c619c9a3885cc"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 so（ndk-build Android_blfx.mk，绝对 NDK_OUT/NDK_LIBS_OUT + obj_blfx stamp）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/blfx_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/爆裂防线/blfx_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so",
+          "pattern": "SeekBar_伤害倍率_1_100_1"
+        },
+        {
+          "type": "file_contains",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so",
+          "pattern": "JNI_OnLoad"
+        }
+      ],
+      "status": "done",
+      "note": "已构建（libs_blfx/arm64-v8a/libstarry_magic.so，2,181,416 B，md5 2226dba263523bbcef437f2980c551c7）。后端自带防呆四件套（绝对路径 NDK_OUT/LIBS_OUT、obj stamp、链接活动保险、菜单串按字节校验）；实测 so 内命中：SeekBar_伤害倍率_1_1000_1 / Toggle_无敌 / SeekBar_战斗加速_1_10_1 / Category_战斗 / JNI_OnLoad ✓。探针构建：BLFX_PROBE=1 bash 04_scripts/爆裂防线/blfx_build_so.sh（0 hook / 0 写入，结果落 /data/data/com.muyegame.blfx/files/blfx_probe.txt）。",
+      "done_at": "2026-09-26 17:50:47",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so": {
+          "md5": "973c24ce0ae0c9e4f297b7d6736080a3"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.cpp": "c0f86813e977a5a0210f71b4c259b261",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxEntry.cpp": "dc2ecd1f547e5b1114872791cc4e9cfb",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.h": "bc70d329e4ca6ceec7fbc663d812c5ca"
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（classes3.dex 最小空闲下标 + Manifest + starry so + libc++_shared，底包条目字节不变）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/surgical_blfx_1.01.06.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/爆裂防线/surgical_blfx_1.01.06.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.01.06_surgical-unsigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/爆裂防线/surgical/AndroidManifest.xml"
+        }
+      ],
+      "status": "done",
+      "note": "已组装（unsigned 348,046,812 B md5 9a781c1361f9f664864c55cf90b8ae78）。实测落位：classes3.dex（451,196 B md5 60052ff8def3188e21dfb9f3256480df）+ 07_patched/爆裂防线/surgical/AndroidManifest.xml。底包 md5 硬校验（1a57be45…）+ 包内 libstarry_magic.so md5 == build_so 产物 + 原 dex/arsc/assets/lib 逐条 sha256 不变 + manifest 回读校验（含官方 launcher com.unity3d.player.MyMainActivity）全部通过。★本作底包双 dex ⇒ 星光 dex 自动落 classes3.dex。★登录硬门禁：TapLoginForceWeb 的 PKG_WHITELIST 已含 com.muyegame.blfx（TapLoginForceWeb.java:122）✓；可用 BLFX_SKIP_LOGIN_WHITELIST_GATE=1 显式跳过。可用 BLFX_BASE_APK= / BLFX_SO= 覆盖路径。★并发注意：脚本有 /tmp/blfx_surgical.lockdir 互斥锁，同一时刻只能跑一个实例。",
+      "done_at": "2026-09-26 17:51:16",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.01.06_surgical-unsigned.apk": {
+          "md5": "d93fabb515d078d897f8ae73899fdd30"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/爆裂防线/surgical/AndroidManifest.xml": {
+          "md5": "a634b4749c6573157eaa18ed3574895d"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so": "973c24ce0ae0c9e4f297b7d6736080a3"
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（zipalign + apksigner，starry_release.jks / CN=StarryMagic）",
+      "requires": [
+        "surgical"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/blfx_sign.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/爆裂防线/blfx_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.01.06_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "已签名（348,312,823 B md5 f70fe82b64f16d752939dd8425b6fc68）。apksigner 实测证书 CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN ／ SHA-1 821c92e404ab5fdac8dbf157c2e467e71440917d ／ SHA-256 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d（与其它星光包同证书 ✓）。签名脚本自带校验全部通过：dex 编号无缺口（classes.dex + classes2.dex + classes3.dex）、StarryInitProvider/MenuService/TapLoginForceWeb 三类必备、包内 so md5 == build_so 产物、libil2cpp.so md5 == 30563544…、global-metadata.dat md5 == 1712cdba…。同目录另有 apksigner 产出的 .idsig（收尾裁剪时随包清理）。",
+      "done_at": "2026-09-26 17:51:40",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.01.06_surgical-releaseSigned.apk": {
+          "md5": "61e6da8e3ac940d72a5fbfaacfae7c33"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.01.06_surgical-unsigned.apk": "d93fabb515d078d897f8ae73899fdd30",
+        "/Users/aliang/Documents/nixiang/07_patched/爆裂防线/surgical/AndroidManifest.xml": "a634b4749c6573157eaa18ed3574895d"
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（真机 f9a116a2，KSU root，官方原版已装）",
+      "requires": [],
+      "command": "bash \"$NIXIANG/04_scripts/爆裂防线/device_ready_blfx.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-26 15:56:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      },
+      "note": "实测输出：serial=f9a116a2 / model=OPD2404 / android=16 / abi=arm64-v8a / package_path=/data/app/~~iVuC-2EaxmbunmmBWXqp2w==/com.muyegame.blfx-pccDrEy8l0G4hbUpr3SR0Q==/base.apk / device_apk_md5=1a57be4509b55582f4aae5475aeaf6c6（设备上现装＝官方原版 1.01.06，斌哥包已被换掉）/ root=uid=0(root) context=u:r:ksu:s0。"
+    },
+    {
+      "id": "install",
+      "name": "装机验证（签名冲突必须用户授权卸载，不自动清数据）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/blfx_install.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/爆裂防线/blfx_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/.install_ok"
+        }
+      ],
+      "status": "done",
+      "note": "已装机并闭环验证：设备 base.apk = /data/app/~~HAB030_l4AMFH2GFgMunJw==/com.muyegame.blfx-Xn0_kAkrWmHzyKWmN_yO1Q==/base.apk，md5 == 本地产物 f70fe82b64f16d752939dd8425b6fc68 ✓；.install_ok = 「f70fe82b64f16d752939dd8425b6fc68 2026-09-26 15:59:06」。★签名冲突路径已按设计生效：设备原装官方原版（同签名方不同签名）⇒ pm install -r -d 报 INSTALL_FAILED_UPDATE_INCOMPATIBLE，脚本 heredoc 打印授权方式与回退路径后 exit 1，**未自动卸载/未清数据**；经用户明确授权后才以 BLFX_ALLOW_UNINSTALL=1 卸载重装。同包重装（签名一致）走快速路径，直接 Success 且不丢数据。install 阶段会自动跑 verify_installed_apk.sh（设备 base.apk md5 == 本地产物）。",
+      "done_at": "2026-09-26 17:51:59",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/.install_ok": {
+          "md5": "c70775a61712b5e44f73a51403ee9b57"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.01.06_surgical-releaseSigned.apk": "61e6da8e3ac940d72a5fbfaacfae7c33",
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（移植记录文档 + 游戏摘要 + current.md 单行索引 + 唯一正式包 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/移植记录_星空版_1.01.06.md"
+        }
+      ],
+      "status": "pending",
+      "note": "用户说「收尾+正式包+清理+git」时才执行。届时：① 写 10_docs/爆裂防线/移植记录_星空版_1.01.06.md + 10_docs/_state/games/爆裂防线.md + current.md 单行；② bash 04_scripts/_common/prune_output_final.sh 08_output/爆裂防线 爆裂防线_1.01.06_surgical-releaseSigned.apk --apply --manifest 10_docs/爆裂防线/正式包裁剪清单_1.01.06.json；③ 清理 03/06/07 滚动物前先跑 pipeline_record_cleanup.py dry-run（否则 archive 会被陈旧度门禁拒绝）；④ bash 04_scripts/_common/archive_scoped_git.sh --path ... --message ...（默认推送 origin/main）。"
+    },
+    {
+      "id": "archive_close",
+      "name": "管线状态收口提交（只提交 pipeline.json 状态变化并推送）",
+      "requires": [
+        "archive"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/_common/archive_close_git.sh"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/archive_close_git.sh' --game '爆裂防线'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/pipeline.json"
+        }
+      ],
+      "status": "pending",
+      "note": "在 archive 写回 done 之后运行，收口 pipeline.json 的状态变化（避免手工补第二次提交）。"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/爆裂防线",
+  "keep": "爆裂防线_1.01.06_surgical-releaseSigned.apk",
+  "keep_size": 348312823,
+  "keep_md5": "61e6da8e3ac940d72a5fbfaacfae7c33",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "爆裂防线_1.01.06_surgical-unsigned.apk",
+      "size": 348048533,
+      "md5": "d93fabb515d078d897f8ae73899fdd30"
+    },
+    {
+      "name": "爆裂防线_1.01.06_surgical-releaseSigned.apk.idsig",
+      "size": 2754075,
+      "md5": "63388d666701df1e21867222604ad664"
+    }
+  ],
+  "removed_count": 2
+}

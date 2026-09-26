@@ -1,0 +1,72 @@
+using System;
+using System.Collections.Generic;
+using Proto.Types;
+using UnityEngine.UIElements;
+
+public class zbLegionBossRecordWnd : zbBaseWnd
+{
+	private VisualTreeAsset m_itemTA;
+
+	private Button m_btnBack;
+
+	private Label m_title;
+
+	private Label m_player;
+
+	private Label m_dmg;
+
+	private Label m_lbTime;
+
+	private Label m_record;
+
+	private List<Label> m_lbs;
+
+	private ListView m_listView;
+
+	private VisualElement m_NoListView;
+
+	protected override void OnEnable()
+	{
+		base.OnEnable();
+		m_itemTA = zbAssetLoader.Instance.LoadResouce<VisualTreeAsset>("ui/uxml/sub/tb_legionBossRecord.uxml");
+		m_btnBack = UQueryExtensions.Q<Button>(m_RootElement, "btn_back", (string)null);
+		m_title = UQueryExtensions.Q<Label>(m_RootElement, "title", (string)null);
+		m_player = UQueryExtensions.Q<Label>(m_RootElement, "lb_player", (string)null);
+		m_dmg = UQueryExtensions.Q<Label>(m_RootElement, "lb_dmg", (string)null);
+		m_lbTime = UQueryExtensions.Q<Label>(m_RootElement, "lb_time", (string)null);
+		m_record = UQueryExtensions.Q<Label>(m_RootElement, "lb_record", (string)null);
+		m_lbs = new List<Label> { m_player, m_dmg, m_lbTime };
+		m_listView = UQueryExtensions.Q<ListView>(m_RootElement, "listView", (string)null);
+		((BaseVerticalCollectionView)m_listView).fixedItemHeight = 117f;
+		((BaseVerticalCollectionView)m_listView).virtualizationMethod = (CollectionVirtualizationMethod)0;
+		UQueryExtensions.Q<ScrollView>((VisualElement)(object)m_listView, (string)null, (string)null).touchScrollBehavior = (TouchScrollBehavior)1;
+		UQueryExtensions.Q<ScrollView>((VisualElement)(object)m_listView, (string)null, (string)null).verticalScrollerVisibility = (ScrollerVisibility)2;
+		m_NoListView = UQueryExtensions.Q<VisualElement>(m_RootElement, "noListView", (string)null);
+		m_uiEvent.RegisterCallback<ClickEvent>((VisualElement)(object)m_btnBack, (Action<ClickEvent>)OnClose, "", (TrickleDown)0);
+	}
+
+	public void refreshCustom(LegionBossKillRecordDetail[] items)
+	{
+		UpdateListView(items);
+	}
+
+	private void UpdateListView(LegionBossKillRecordDetail[] items)
+	{
+		bool flag = items.Length != 0;
+		((VisualElement)m_listView).Clear();
+		((VisualElement)m_listView).visible = flag;
+		m_NoListView.visible = !flag;
+		m_listView.makeItem = () => (VisualElement)(object)new zbLegionBossRecordItem(m_itemTA, this);
+		m_listView.bindItem = delegate(VisualElement element, int index)
+		{
+			(element as zbLegionBossRecordItem).Init(items[index]);
+		};
+		((BaseVerticalCollectionView)m_listView).itemsSource = null;
+		((BaseVerticalCollectionView)m_listView).itemsSource = items;
+	}
+
+	private void OnClose(ClickEvent evt)
+	{
+		Hide();
+	}
+}

@@ -84,6 +84,11 @@ struct Api {
 
     bool Load(const char* libName = sec_lib_il2cpp());
 
+    /* xdl_sym 在 TP 重排 dynsym 后会静默返回「错误的非空地址」。
+     * 本方法用进程内自解析的 dynsym 表重取核心符号并覆盖；返回是否有改动。
+     * 仅由游戏模块在 Domain()/Assemblies() 失败时按需调用（opt-in，不影响其它游戏）。 */
+    bool ReprobeCore();
+
     void* Domain() const;
     void** Assemblies(size_t* count) const;
     void* ImageOf(void* assembly) const;

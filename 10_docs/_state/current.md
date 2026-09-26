@@ -1,6 +1,6 @@
 # 跨游戏状态索引
 
-> 更新：2026-09-24。此文件只保留摘要；长状态见 `games/{游戏}.md`。
+> 更新：2026-09-26。此文件只保留摘要；长状态见 `games/{游戏}.md`。
 > 读取时先定位目标游戏，只加载对应摘要，不默认通读全部记录。
 
 ## 游戏索引
@@ -55,6 +55,7 @@
 | 冰晶菜单旁路 | 历史 | 已交付/待核验 | [摘要](games/旁路菜单.md) |
 | 元启世界 | 历史 | 纯分析 | [摘要](games/元启世界.md) |
 | Phigros | 20260921 修复 | ✅ TapTap 强制内嵌网页登录已修复+实机登录跑通（出包待交付） | [摘要](games/phigros.md) |
+| 爆裂防线 | 2026-09-26 | ✅ **星空版已交付（1.01.06 / vc10106）**：底包＝官方原版（344,109,163 B md5 `1a57be45…`，签名 `CN=my`），斌哥包 `dda75d4f…`；斌哥机制 = **HybridCLR 热更 DLL 反射按名读写**（il2cpp 代码段 memdiff 跳桩 **0**，与同作者圣翼传说 15 处跳桩完全不同）；**实测 Dobby 在本作永久无效**（装桩 rc=0 但 141 次采样 `hits` 恒 `0/0/0` —— HybridCLR 解释器分发不走 `methodPointer`）⇒ 三功能**零 hook 字段路线**：伤害倍率滑块 **1..100**（`zbMonster.curHp` 钳到 `maxHp/mul`；用户观感「秒杀」是设计必然：怪 maxHp≈503、单击伤害~50，mul≥10 即一击必杀）/ 无敌（`zbCombatDefense.curHp` 钉回 maxHp）/ 战斗加速滑块 **1..10**（写 `zbCombatSpeed.speed1/2/3` 静态 + `Time.timeScale`，静态字段取 `field_static_get_value` dynsym 邻址 +4）；`zbSafeLong` 必须**双副本同写**（`_obfValue@0 _key@8 _shadowObf@16 _shadowKey@24`），只写一份会触发 `zbCheatContext.ReportCheat` **主动上报服务器**；v1 的 L3 全内存扫描（1545MB/s ×4s 跑游戏线程）是启动闪退根因、已整体删除；**免广告不做**（本作零可达广告换奖励入口）；**反作弊/防封号/屏蔽上报一行未做**（`zbCheatContext.ReportCheat` 与 `zbCombatHandler.Abnormal_ClientReportOnce` 两条通道都会真发服务器）；斌哥独有 `libtoolChecker.so`(5,512 B，RootBeer) 未移植；正式包 `08_output/爆裂防线/爆裂防线_1.01.06_surgical-releaseSigned.apk`（`CN=StarryMagic` SHA-1 `821c92e4…`），菜单模板 `blfx`，图标 `icon_爆裂防线_{144,192,256,512}.png`；⚠ **遗留未闭环**：游戏内弹窗「[lang.10668+\"_6\"]／系统检测到异常行为，禁止作弊」＝ `IsZuobi()` 返回 true（全局仅 `csout/zbModSelectWnd.cs:387` 与 `csout/zbEndlessHordeFightForwardWnd.cs:400`；`zbCombatState_Balance.cs:39` 结算处命中即**跳过战斗结果上报丢奖励**），逐项审计后我方写点均不落在任何检查项上，1Hz 取证埋点已装（回读 `combatHandler.outString`）待复现定案。详情 [移植记录](../爆裂防线/移植记录_星空版_1.01.06_20260926.md) · [分析报告](../爆裂防线/斌哥改包分析报告_20260926.md) · [锚点](../爆裂防线/斌哥hook锚点_20260926.json) | [摘要](games/爆裂防线.md) |
 | 命运-冠位指定 | 2026-09-22 | ⏸ **ACE 卡点，用户要求暂停（晚上继续）**：装机后启动=灰屏、~10–20s 一轮 SIGBUS(7)/SIGSEGV(11) 崩溃循环（无 tombstone/无应用日志/`I Unity`=0）。单变量 AB 实测：只重签 **ALIVE ✓**、全包 3531 条目重压 **ALIVE ✓**、只加 `classes15.dex` **KILLED ✗**、只加 `lib/arm64-v8a/libstarry_magic.so` **KILLED ✗** → **标准外科 APK 路线在 FGO 2.129.0 被否决**。待跑 AB-7/8/9（中性 asset / 中性 dex / 中性 so，三包已构建）定判读树：无出口→转 KSU 注入或斌哥 VM；内容级检测→清洗载荷可救。设备现存 `ab8-minidex` 探针包、已 force-stop；星光正式包 md5 `4882e58f446a351e5609a4fa294b2762` 不在设备上。AB 工具 `04_scripts/命运/{ace_ab_probe.sh,ab_zipmerge.py}`；详情 [AB 实验](../../命运/ACE_AB实验_20260922.md) | [AB 实验](../../命运/ACE_AB实验_20260922.md) · [摘要](games/命运.md) |
 
 ## 基础设施与经验

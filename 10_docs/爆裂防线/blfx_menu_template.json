@@ -1,0 +1,19 @@
+{
+  "template_id": "blfx",
+  "name": "爆裂防线",
+  "package": "com.muyegame.blfx",
+  "source": "Games/BlfxEntry.cpp kBlfx_Features / Games/BlfxMod.h BlfxFeat / authGameId=blfx @ 1.01.06 (versionCode 10106)",
+  "features": [
+    {"feat_num": 0, "name": "战斗", "note": "分类占位（Category_战斗，不可交互）"},
+    {"feat_num": 1, "name": "伤害倍率", "type": "slider", "min": 1, "max": 100, "default": 1, "note": "1=关，2..100=倍率。实现：每 200ms 把每只活怪 curHp 钳到 maxHp/倍率（有效血量 1/N，等效 N 倍伤害）。上限 100 由用户 20260926 指定"},
+    {"feat_num": 2, "name": "无敌", "type": "toggle", "default": false, "note": "开关；每 200ms 把防线 zbCombatDefense.curHp 钉回 maxHp"},
+    {"feat_num": 3, "name": "战斗加速", "type": "slider", "min": 1, "max": 10, "default": 1, "note": "1=关，2..10=倍速；写 zbCombatSpeed.speed1/speed2/speed3 三个 static float（游戏自身据此设 Time.timeScale）+ 一次性设 Time.timeScale"}
+  ],
+  "notes": [
+    "技术路线：本作热更程序集内部调用绕过 MethodInfo->methodPointer（实测 141 次采样 hits 恒 0/0/0），Dobby 行不通 ⇒ 三功能全部走「字段写入」路线，零 hook。",
+    "免广告：本作无任何可达的「看广告得奖励」入口（AdvertisementGift 未登记 / advertisementCsvTable 无消费者 / zbSDKBridge 零广告成员 / 客户端零发送 Advertisement*Req），按用户规则「没有则不加」⇒ 不做。",
+    "反作弊提醒：zbCheatContext.ReportCheat / zbCombatHandler.Abnormal_ClientReportOnce 会向服务端上报（属性快照、选 MOD 数、战斗时长、zbSafeLong 双影子不一致）。因此 zbSafeLong 型的 curHp/maxHp 绝不可只写单副本（_obfValue 与 _shadowObf 必须一起改）。",
+    "未闭环：游戏内 `IsZuobi()` 曾弹出 [lang.10668+\"_6\"]「系统检测到异常行为，禁止作弊」。已内置取证开关（正式包默认零写盘；`touch <游戏私有目录>/blfx_diag` 后启动即恢复 1Hz 打印 `zbCombatHandler.outString` 判定理由）。装机后一轮实战 537 条样本显示 outString 始终只有 UUID 前缀、无任何检查项后缀 ⇒ 我方写点确实不落在任何检查项上；弹窗根因待复现确认。",
+    "兼容性：本包用星空证书（CN=StarryMagic）签名，与官方签名不兼容，装机需先卸载官方版（会丢本地存档，已获用户授权）。"
+  ]
+}
