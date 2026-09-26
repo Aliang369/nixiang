@@ -22,7 +22,7 @@ VN=$(sed -n "s/^package:.*versionName='\([^']*\)'.*/\1/p" "$BAD" | head -1)
 VC=$(sed -n "s/^package:.*versionCode='\([^']*\)'.*/\1/p" "$BAD" | head -1)
 DN=$(sed -n 's/^Signer #1 certificate DN: //p' "$SIG" | head -1)
 SHA=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$SIG" | head -1)
-[[ "$PKG" == "com.openew.monster" && "$VN" == "1.7" ]] || { echo "错误: 包名/版本不符: $PKG $VN" >&2; exit 1; }
+[[ "$PKG" == "com.openew.monster" && -n "$VN" ]] || { echo "错误: 包名/版本不符: $PKG $VN" >&2; exit 1; }
 python3 - "$APK" "$OUT" "$TXT" "$PKG" "$VN" "$VC" "$DN" "$SHA" <<'PY'
 import json, sys, zipfile
 from pathlib import Path

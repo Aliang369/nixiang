@@ -1,5 +1,5 @@
 {
-  "source": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js",
+  "source": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/GameLogic.js",
   "needles": {
     "BaseObjectComponent": true,
     "getBuffCanBeAttack": true,
@@ -12,7 +12,20 @@
     "adsPlay": true,
     "startAdverView": true,
     "finishAdverViewed": true,
-    "C2S_WATCH_ADVERT": true
+    "C2S_WATCH_ADVERT": true,
+    "ShopVipMgr": true,
+    "outStatusAdvip": true,
+    "setOutStatusVip": true,
+    "_outStatusAdvip": true,
+    "VipType": true,
+    "SpeedUpBtn": true,
+    "_speedTyep": true,
+    "setSpeed": true,
+    "getSpeed": true,
+    "SPEED_BTN": true,
+    "BattleDataKey": true,
+    "BattleGameType": true,
+    "AtOnce": true
   },
   "missing": [],
   "ready": true

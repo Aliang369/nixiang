@@ -29,6 +29,13 @@ endif
 
 LOCAL_SRC_FILES := MainModern.cpp Games/Zzbx2Mod.cpp Games/Zzbx2Entry.cpp
 
+# MainModern.cpp:653/663 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
+# FgoBoot_InjectEarlyFromOnLoad（2026-09-22 起）。正中靶心2 官方 1.9 无 ACE
+# （包内无 libtprt.so），且菜单 dex 已由外科 zip 打进 APK ⇒ B 类，用 no-op 桩
+# 兜底，不编 SignalQuarantine.cpp / FgoBoot.cpp（避免装 seccomp / 重复注入 dex）。
+# 漏掉即 ld.lld: undefined symbol。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

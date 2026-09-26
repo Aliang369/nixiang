@@ -1,8 +1,8 @@
 package=com.openew.monster
-versionName=1.7
-versionCode=8
-signerDN=CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
-signerSHA256=83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d
+versionName=1.9
+versionCode=10
+signerDN=CN=elliot lee, OU=Openew. Inc, O=Openew, L=GuangZhou, ST=GuangDong, C=gd
+signerSHA256=57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58
 has_libil2cpp=0
 has_libcocos2djs=1
 has_libSDKloading=0

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# 正中靶心2 1.6 — 签名阶段。
+# 正中靶心2 1.9 — 签名阶段。
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
-UNSIGNED="$NIXIANG/07_patched/正中靶心2/正中靶心2_1.7_starry-unsigned.apk"
+VER="${ZZBX2_VER:-1.9}"
+UNSIGNED="${ZZBX2_UNSIGNED:-$NIXIANG/07_patched/正中靶心2/正中靶心2_${VER}_starry-unsigned.apk}"
 OUT="$NIXIANG/08_output/正中靶心2"
-SIGNED="$OUT/正中靶心2_1.7_starry-releaseSigned.apk"
+SIGNED="$OUT/正中靶心2_${VER}_starry-releaseSigned.apk"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"
@@ -41,6 +42,8 @@ LC_ALL=C grep -aq "starry_zzbx2_v1" "$WORK/packed_starry.so" \
   || { echo "ERROR: signed apk missing evalString patch marker in so" >&2; exit 1; }
 unzip -l "$SIGNED" > "$WORK/entries.txt"
 grep -q "classes5.dex" "$WORK/entries.txt" || { echo "ERROR: classes5.dex missing" >&2; exit 1; }
+LC_ALL=C grep -aq "Toggle_解锁月卡特权" "$WORK/packed_starry.so" \
+  || { echo "ERROR: signed apk so missing Toggle_解锁月卡特权" >&2; exit 1; }
 grep -q "lib/arm64-v8a/libstarry_magic.so" "$WORK/entries.txt" || { echo "ERROR: starry so missing" >&2; exit 1; }
 
 echo "[sign] done → $SIGNED"

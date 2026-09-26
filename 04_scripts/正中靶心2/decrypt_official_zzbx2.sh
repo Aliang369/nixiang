@@ -3,8 +3,13 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SRC="$NIXIANG_ROOT/06_dumped/正中靶心2/official_1.7/apk_assets"
-OUT="$NIXIANG_ROOT/06_dumped/正中靶心2/official_1.7/decrypted_js"
+VERSION_NAME="$(python3 - "$SCRIPT_DIR/official_apk.json" <<'PY'
+import json,sys
+print(json.load(open(sys.argv[1],encoding='utf-8'))['version_name'])
+PY
+)"
+SRC="$NIXIANG_ROOT/06_dumped/正中靶心2/official_${VERSION_NAME}/apk_assets"
+OUT="$NIXIANG_ROOT/06_dumped/正中靶心2/official_${VERSION_NAME}/decrypted_js"
 PYTHON_BIN="${NIXIANG_PYTHON:-/opt/homebrew/bin/python3.11}"
 [[ -d "$SRC/assets/src" ]] || { echo "错误: 缺少官方 dump" >&2; exit 1; }
 [[ -x "$PYTHON_BIN" ]] || PYTHON_BIN="$(command -v python3)"

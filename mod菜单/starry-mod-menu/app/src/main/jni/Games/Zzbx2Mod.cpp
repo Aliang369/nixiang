@@ -114,7 +114,7 @@ static void SyncJavaRets() {
         env->CallStaticVoidMethod(g_hooksCls, g_setVal,
                                   ZZBX2_FEAT_ATK, g_atkValue.load());
         env->CallStaticVoidMethod(g_hooksCls, g_setVal,
-                                  ZZBX2_FEAT_SPD, g_speedValue.load());
+                                  ZZBX2_FEAT_VIP, g_speedValue.load());
     }
     if (env->ExceptionCheck()) env->ExceptionClear();
     if (detach) g_jvm->DetachCurrentThread();
@@ -241,7 +241,7 @@ void Zzbx2_Tick(const bool* features, const int* values) {
         if (atk >= ZZBX2_ATK_MIN && atk <= ZZBX2_ATK_MAX) {
             g_atkValue.store(atk);
         }
-        int speed = values[ZZBX2_FEAT_SPD];
+        int speed = values[ZZBX2_FEAT_VIP];
         if (speed >= ZZBX2_SPEED_MIN && speed <= ZZBX2_SPEED_MAX) {
             g_speedValue.store(speed);
         }
@@ -257,7 +257,7 @@ void Zzbx2_OnValueChanged(int featNum, int value) {
         if (atk > ZZBX2_ATK_MAX) atk = ZZBX2_ATK_MAX;
         g_atkValue.store(atk);
         LOGI("%s attack slider=%d", ZZBX2_LOG, atk);
-    } else if (featNum == ZZBX2_FEAT_SPD) {
+    } else if (featNum == ZZBX2_FEAT_VIP) {
         int speed = value;
         if (speed < ZZBX2_SPEED_MIN) speed = ZZBX2_SPEED_MIN;
         if (speed > ZZBX2_SPEED_MAX) speed = ZZBX2_SPEED_MAX;
@@ -282,7 +282,7 @@ void Zzbx2_ForceClear() {
             env->CallStaticVoidMethod(g_hooksCls, g_setVal,
                                       ZZBX2_FEAT_ATK, ZZBX2_ATK_DEFAULT);
             env->CallStaticVoidMethod(g_hooksCls, g_setVal,
-                                      ZZBX2_FEAT_SPD, ZZBX2_SPEED_DEFAULT);
+                                      ZZBX2_FEAT_VIP, ZZBX2_SPEED_DEFAULT);
         }
         if (detach) g_jvm->DetachCurrentThread();
     }

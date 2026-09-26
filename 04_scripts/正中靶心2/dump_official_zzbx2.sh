@@ -4,12 +4,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 META="$SCRIPT_DIR/official_apk.json"
-OUT="$NIXIANG_ROOT/06_dumped/正中靶心2/official_1.7"
 [[ -f "$META" ]] || { echo "错误: 缺少 $META" >&2; exit 1; }
-APK="$(python3 - "$META" <<'PY'
-import json,sys; print(json.load(open(sys.argv[1],encoding='utf-8'))['apk_path'])
+eval "$(python3 - "$META" <<'PY'
+import json,shlex,sys
+d=json.load(open(sys.argv[1],encoding='utf-8'))
+print('APK='+shlex.quote(d['apk_path']))
+print('VERSION_NAME='+shlex.quote(d['version_name']))
 PY
 )"
+OUT="$NIXIANG_ROOT/06_dumped/正中靶心2/official_${VERSION_NAME}"
 [[ -f "$APK" ]] || { echo "错误: APK 不存在: $APK" >&2; exit 1; }
 rm -rf "$OUT"; mkdir -p "$OUT/apk_assets" "$OUT/apk_libs" "$OUT/dex"
 python3 - "$APK" "$OUT" <<'PY'

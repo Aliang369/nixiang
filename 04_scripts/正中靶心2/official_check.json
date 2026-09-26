@@ -1,10 +1,10 @@
 {
-  "apk": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.7_official.apk",
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.9_official.apk",
   "package": "com.openew.monster",
-  "version_name": "1.7",
-  "version_code": 8,
-  "signer_dn": "CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN",
-  "signer_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "version_name": "1.9",
+  "version_code": 10,
+  "signer_dn": "CN=elliot lee, OU=Openew. Inc, O=Openew, L=GuangZhou, ST=GuangDong, C=gd",
+  "signer_sha256": "57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58",
   "markers": {
     "has_libil2cpp": false,
     "has_libcocos2djs": true,

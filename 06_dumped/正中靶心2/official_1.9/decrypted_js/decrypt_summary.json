@@ -1,0 +1,188 @@
+{
+  "key": "d5ea8a9c17716f1a",
+  "decrypted_count": 30,
+  "error_count": 0,
+  "records": [
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/Native.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/Native.js",
+      "decrypted_size": 3538,
+      "sha256": "1350f0a3f6b6998e84864d47710fe826c215baef70c6a07864739531e3299e6d"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/HabbyDyLoginCore.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/HabbyDyLoginCore.js",
+      "decrypted_size": 2799,
+      "sha256": "238816e2466e5b2dba4806b0eb0b339a016f88fe83c57727cd663dde13c87149"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/HabbyWxLoginCore.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/HabbyWxLoginCore.js",
+      "decrypted_size": 2685,
+      "sha256": "b87689747a160b722fd9030f0d643b37bd3f4e86cfa9d518f68b8dfdb6655a69"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/XMaiMD5.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/XMaiMD5.js",
+      "decrypted_size": 5949,
+      "sha256": "1df653bc0980151245425264ff5b0ab826b01facf5a13f1c0b70b586d9f9864f"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/XMaiMiniXyx_v2.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/XMaiMiniXyx_v2.js",
+      "decrypted_size": 81608,
+      "sha256": "9ee11471315bd83f71f93f83b133ded1da9df73afcad0d1b5be8e5d2018e2235"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/asmcrypto.all.es5.min.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/asmcrypto.all.es5.min.js",
+      "decrypted_size": 288500,
+      "sha256": "2f74c2548e10a9fda56b4991513d67a9137c417d9712f825b26691bedb14eea1"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/big.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/big.js",
+      "decrypted_size": 9313,
+      "sha256": "e182874952d8f8f6fd97b994859f5bbd11076db96786d458f752f56af59744c3"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/decimal.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/decimal.js",
+      "decrypted_size": 42202,
+      "sha256": "2ef532ab69e03ed5fb12eb4b9b2347b5d55d13b5faff08c332c12f694489d92d"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/dn-sdk-minigame.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/dn-sdk-minigame.js",
+      "decrypted_size": 76783,
+      "sha256": "61b430efd4a919f950463fc28663e2841cb351b23683ef5edac963c431895c71"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/fzstd.min.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/fzstd.min.js",
+      "decrypted_size": 11599,
+      "sha256": "4e3a5a28c9174b74baa19f3ba054a93f3e781e901b745bca06739369256b8886"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/gravityengine.mg.cocoscreator.min.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/gravityengine.mg.cocoscreator.min.js",
+      "decrypted_size": 101078,
+      "sha256": "7a4e1031ed51620b03def113fb67301d2b685e58ae2ceeb6c91af5611477bba0"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/habby-http-sdk.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/habby-http-sdk.js",
+      "decrypted_size": 14445,
+      "sha256": "06013bcd38d40007f569afc8d3f4c2a5e978e4e745da4a94e9d416be59eb6a57"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/habbyid-sdk.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/habbyid-sdk.js",
+      "decrypted_size": 372230,
+      "sha256": "35ff12763b9f59edeef9e14a028148748f5ae470b549b480260b361cdac72799"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/habbystore-sdk.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/habbystore-sdk.js",
+      "decrypted_size": 6370,
+      "sha256": "9b25997a5e47764f4520f7addc7fd3fe8d0c1802c88512238ce811e9756381f6"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/k-cocos.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/k-cocos.js",
+      "decrypted_size": 3236,
+      "sha256": "a736f307ede2e97b8c04a9c0224e9baff049d5e8a7b05f316c9d8ad2004cdcae"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/md5.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/md5.js",
+      "decrypted_size": 8916,
+      "sha256": "948196d29d19e9707f1bbbdd76f17ec8f61fd22a59eca06baba0e4604287ddda"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/nacl-fast.min.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/nacl-fast.min.js",
+      "decrypted_size": 44702,
+      "sha256": "bfd66d7df5822b05280292357e90407d9771642d056a3378bb0cf2cb9a1c857c"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/protobuf-library.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/protobuf-library.js",
+      "decrypted_size": 768006,
+      "sha256": "0de4feb2b7038cfd1960f50c362bfe020d002552796eb2ddf6299da0a7a5de7e"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/qrcode.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/qrcode.js",
+      "decrypted_size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/qunheiSDK.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/qunheiSDK.js",
+      "decrypted_size": 20161,
+      "sha256": "a7f71339e15ea231643e97549537fe7a854d9b49e26cfcba73d985ac573c658f"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/seedrandom.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/seedrandom.js",
+      "decrypted_size": 2223,
+      "sha256": "6aa9cb6e4cf63c34b45a47bcb48ed08fbc171efbbb9478bf06a4c893e28a19fc"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/tdanalytics.mg.wx.min.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/tdanalytics.mg.wx.min.js",
+      "decrypted_size": 82236,
+      "sha256": "5d7bb3ba9e50a3d4c88d4c30a8f9c00ed61f0213da33289e4a60e502dfd083b4"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/tracker-core.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/tracker-core.js",
+      "decrypted_size": 210861,
+      "sha256": "2541e3a8040f6d4bb056e06063433242e455ef2c6125d063af20f7d3865315db"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/tttfsdk.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/tttfsdk.js",
+      "decrypted_size": 3593,
+      "sha256": "64c4435a344ea6b50e552af827e43e6e54151d5a38f58ad43c73e8a3575624fb"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/lib/wxtfsdk.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/lib/wxtfsdk.js",
+      "decrypted_size": 3858,
+      "sha256": "bee65f5fc49d63b88d47ce710f10e7aa7f75b03f82d5c295c8faaaec1df37275"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/src/FileUpload.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/FileUpload.js",
+      "decrypted_size": 1960,
+      "sha256": "7ef2ab7ced4db7218899ca8c6a69c6f467d22215377c1606528aae1395ccf41d"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/src/GameLogic.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/GameLogic.js",
+      "decrypted_size": 6154927,
+      "sha256": "9f7f535299d2ec55497079723a3d754800c78385a4bc7d6bfb92e03fef387eaf"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/cocos2d-jsb.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/cocos2d-jsb.js",
+      "decrypted_size": 1690266,
+      "sha256": "7346a9227ebc5b0a2345bcfbe4d951e9c5005d3d4a0924b9452d25ea53f779d3"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/project.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/project.js",
+      "decrypted_size": 102562,
+      "sha256": "376ee50e9f815bbaf5fbbba547473a574a7dc6fc62ce9b411b7e6b16ef2afffc"
+    },
+    {
+      "jsc": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/settings.jsc",
+      "js": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/settings.js",
+      "decrypted_size": 33717,
+      "sha256": "d60cc996acd01c84e193655beef3b9269bb4beb6ae59a59c4f03cad01642deac"
+    }
+  ],
+  "errors": []
+}

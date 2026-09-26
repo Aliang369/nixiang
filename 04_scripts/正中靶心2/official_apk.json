@@ -1,17 +1,17 @@
 {
   "package": "com.openew.monster",
   "game": "正中靶心2",
-  "kind": "starry_rebuild_base",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.7_official.apk",
-  "version_name": "1.7",
-  "version_code": 8,
+  "kind": "official",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.9_official.apk",
+  "version_name": "1.9",
+  "version_code": 10,
   "installer": "com.android.packageinstaller",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~AT8vfQCGnKGcQOKuZM9hVw==/com.openew.monster-MpJZl0h6lkelhj3Xfcy5hQ==/base.apk",
-  "size": 203628965,
-  "sha256": "f3d77863ec312468835465eb9561e7e67640f10dbda6c06830c6430e54e41d87",
-  "md5": "4a27592877bed5e9ce149e1acfa5da62",
-  "signer_dn": "CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN",
-  "signer_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
+  "remote_path": "/data/app/~~fO7xcgyvS-xDIIn5DzGbaw==/com.openew.monster-CjHacBIR0YTEPKp-eeIPZg==/base.apk",
+  "size": 208712666,
+  "sha256": "4b51e2cfc367d09934f2c79bcd0a9cd0bfb0663f629313ecdefc3fd6018661c9",
+  "md5": "3b126e42a931d712ceef85b0c9b8ec05",
+  "signer_dn": "CN=elliot lee, OU=Openew. Inc, O=Openew, L=GuangZhou, ST=GuangDong, C=gd",
+  "signer_sha256": "57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58"
 }

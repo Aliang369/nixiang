@@ -5,10 +5,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GAME="正中靶心2"
+VER="${ZZBX2_VER:-1.9}"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 SUMMARY="$SCRIPT_DIR/cleanup_summary.json"
-FINAL_APK="$NIXIANG_ROOT/08_output/$GAME/${GAME}_1.7_starry-releaseSigned.apk"
-FINAL_MD5="353f6767585f780f35352455f47cc9dc"
+FINAL_APK="$NIXIANG_ROOT/08_output/$GAME/${GAME}_${VER}_starry-releaseSigned.apk"
+FINAL_MD5="${ZZBX2_FINAL_MD5:-01f214e8ea4d92fbe57204925d43602f}"
 ADB_BIN="${ADB_BIN:-adb}"
 
 cd "$NIXIANG_ROOT"
@@ -17,10 +18,14 @@ cd "$NIXIANG_ROOT"
 [[ -f "$FINAL_APK" ]] || { echo "错误: 缺少正式包 $FINAL_APK" >&2; exit 1; }
 [[ "$(md5 -q "$FINAL_APK")" == "$FINAL_MD5" ]] || { echo "错误: 正式包指纹与收尾记录不符" >&2; exit 1; }
 
-for keep in \
-  "06_dumped/$GAME/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js" \
-  "06_dumped/$GAME/official_1.7/decrypted_js/decrypt_summary.json" \
-  "06_dumped/$GAME/official_1.7/zip_manifest.txt"; do
+KEEP_TEXTS=(
+  "06_dumped/$GAME/official_${VER}/decrypted_js/src/assets/Script/src/GameLogic.js"
+  "06_dumped/$GAME/official_${VER}/decrypted_js/decrypt_summary.json"
+  "06_dumped/$GAME/official_${VER}/zip_manifest.txt"
+  "06_dumped/$GAME/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js"
+  "06_dumped/$GAME/official_1.7/decrypted_js/decrypt_summary.json"
+)
+for keep in "${KEEP_TEXTS[@]}"; do
   [[ -f "$keep" ]] || { echo "错误: 缺少需保留文本 $keep" >&2; exit 1; }
 done
 
@@ -43,9 +48,9 @@ git clean -xdf -- "07_patched/$GAME"
 git clean -xdf -- "06_dumped/$GAME"
 git clean -xdf -- "09_test/$GAME" 2>/dev/null || true
 
-[[ -f "06_dumped/$GAME/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js" ]] || { echo "错误: GameLogic.js 被误删" >&2; exit 1; }
-[[ -f "06_dumped/$GAME/official_1.7/decrypted_js/decrypt_summary.json" ]] || { echo "错误: decrypt_summary.json 被误删" >&2; exit 1; }
-[[ -f "06_dumped/$GAME/official_1.7/zip_manifest.txt" ]] || { echo "错误: zip_manifest.txt 被误删" >&2; exit 1; }
+for keep in "${KEEP_TEXTS[@]}"; do
+  [[ -f "$keep" ]] || { echo "错误: 被误删 $keep" >&2; exit 1; }
+done
 [[ -d "08_output/$GAME" ]] || { echo "错误: 08_output 被误删" >&2; exit 1; }
 
 find /tmp -maxdepth 1 -name 'zzbx2_surgical.*' -print -exec rm -rf {} + 2>/dev/null || true
@@ -57,7 +62,7 @@ if [[ -f "$STATE_FILE" ]]; then
 fi
 if [[ -n "$SERIAL" ]] && "$ADB_BIN" -s "$SERIAL" get-state >/dev/null 2>&1; then
   echo "==> 设备本次临时文件（只清理明确路径）"
-  "$ADB_BIN" -s "$SERIAL" shell rm -f /data/local/tmp/zzbx2_1.7_starry.apk || true
+  "$ADB_BIN" -s "$SERIAL" shell rm -f /data/local/tmp/zzbx2_${VER}_starry.apk || true
   "$ADB_BIN" -s "$SERIAL" shell rm -f /data/local/tmp/zzbx2_probe.bin || true
   "$ADB_BIN" -s "$SERIAL" shell ls -1 /data/local/tmp 2>/dev/null | tr -d '\r' | grep -E '^zzbx2_' || true
 else
@@ -66,14 +71,15 @@ fi
 
 AFTER_KB="$( (du -sk "03_decompiled/$GAME" "06_dumped/$GAME" "07_patched/$GAME" 2>/dev/null || true) | awk '{s+=$1} END {print s+0}')"
 AFTER_AT="$(date '+%Y-%m-%d %H:%M:%S')"
-python3 - "$SUMMARY" "$GAME" "$BEFORE_KB" "$AFTER_KB" "$BEFORE_AT" "$AFTER_AT" <<'PY'
+python3 - "$SUMMARY" "$GAME" "$VER" "$BEFORE_KB" "$AFTER_KB" "$BEFORE_AT" "$AFTER_AT" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-out, game, before_kb, after_kb, before_at, after_at = sys.argv[1:]
+out, game, ver, before_kb, after_kb, before_at, after_at = sys.argv[1:]
 data = {
     "game": game,
+    "version": ver,
     "before_kb": int(before_kb),
     "after_kb": int(after_kb),
     "released_kb": max(0, int(before_kb) - int(after_kb)),

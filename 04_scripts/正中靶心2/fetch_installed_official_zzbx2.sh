@@ -22,7 +22,7 @@ INSTALLER="$(printf '%s\n' "$DUMP" | sed -n 's/^[[:space:]]*installerPackageName
 PRIMARY_ABI="$(printf '%s\n' "$DUMP" | sed -n 's/^[[:space:]]*primaryCpuAbi=//p' | head -1)"
 PACKAGE_PATHS="$("$ADB_BIN" -s "$SERIAL" shell pm path "$PKG" | tr -d '\r' | sed -n 's/^package://p')"
 
-[[ "$VERSION_NAME" == "1.7" ]] || { echo "错误: 真机版本不是 1.7: $VERSION_NAME" >&2; exit 1; }
+[[ -n "$VERSION_NAME" && "$VERSION_NAME" =~ ^[0-9]+(\.[0-9]+)*$ ]] || { echo "错误: 真机版本号异常: $VERSION_NAME" >&2; exit 1; }
 [[ -n "$VERSION_CODE" && "$PACKAGE_PATHS" ]] || { echo "错误: 包信息不完整" >&2; exit 1; }
 PATH_COUNT="$(printf '%s\n' "$PACKAGE_PATHS" | sed '/^$/d' | wc -l | tr -d ' ')"
 [[ "$PATH_COUNT" -eq 1 ]] || { echo "错误: 检测到 $PATH_COUNT 个 APK 路径" >&2; exit 1; }
@@ -55,6 +55,7 @@ SIGNER_DN="$(printf '%s\n' "$SIG" | sed -n 's/^Signer #1 certificate DN: //p' | 
 SIGNER_SHA256="$(printf '%s\n' "$SIG" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"
 if [[ "$SIGNER_DN" == *"CN=StarryMagic"* ]]; then
   KIND="starry_rebuild_base"
+  echo "警告: 真机当前是星空签名包（非官方原包），只能作为星空重建基线" >&2
 else
   KIND="official"
 fi

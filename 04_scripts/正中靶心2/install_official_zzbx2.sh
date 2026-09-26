@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
-# 正中靶心2 官方 1.7 星空包安装阶段。
-# 用户 2026-09-14 明确授权：卸载官方 1.7，不保留数据，安装星空包。
-# 首轮卸载官方数据已由用户单独授权；后续星空重建包只允许同签名覆盖，不卸载/不清数据。
+# 正中靶心2 官方 1.9 星空包安装阶段。
+# 设备现有官方 1.9（CN=elliot lee）与本星空包（CN=StarryMagic）异签名，
+# `pm install -r` 必然 INSTALL_FAILED_UPDATE_INCOMPATIBLE；
+# 按 AGENTS.md「异签名先报告、不自动转卸载」：本脚本只尝试覆盖，
+# 失败即停并保留现场，卸载官方包（丢本地数据）须用户另行确认后单独执行。
+# 后续星空重建包之间同签名，只允许覆盖，不卸载/不清数据。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
-APK="$NIXIANG_ROOT/08_output/正中靶心2/正中靶心2_1.7_starry-releaseSigned.apk"
+VER="${ZZBX2_VER:-1.9}"
+APK="${ZZBX2_SIGNED:-$NIXIANG_ROOT/08_output/正中靶心2/正中靶心2_${VER}_starry-releaseSigned.apk}"
 PKG="com.openew.monster"
 ADB_BIN="${ADB_BIN:-adb}"
-REMOTE_APK="/data/local/tmp/zzbx2_1.7_starry.apk"
+REMOTE_APK="/data/local/tmp/zzbx2_${VER}_starry.apk"
 
 [[ -f "$STATE_FILE" ]] || { echo "ERROR: 缺少 $STATE_FILE" >&2; exit 1; }
 [[ -f "$APK" ]] || { echo "ERROR: 缺少星空包 $APK" >&2; exit 1; }
@@ -23,7 +27,7 @@ command -v "$ADB_BIN" >/dev/null || { echo "ERROR: adb 不可用" >&2; exit 1; }
 INSTALLED_PATH="$("$ADB_BIN" -s "$SERIAL" shell pm path "$PKG" 2>/dev/null | tr -d '\r' || true)"
 echo "[install] force-stop: $PKG"
 if [[ "$INSTALLED_PATH" == package:* ]]; then
-  echo "[install] 检测到已安装星空包，执行同签名覆盖更新（不卸载、不清数据）"
+  echo "[install] 检测到已安装 com.openew.monster，尝试同签名覆盖更新（不卸载、不清数据）"
 else
   echo "[install] 未安装，执行首次安装"
 fi

@@ -9,7 +9,7 @@ cd "$NIXIANG_ROOT"
 git config core.quotepath false
 
 [[ -f "04_scripts/正中靶心2/cleanup_summary.json" ]] || { echo "错误: 缺少 cleanup_summary.json，先跑清理阶段" >&2; exit 1; }
-[[ -f "10_docs/正中靶心2/收尾与最小复现清单_1.7_20260915.md" ]] || { echo "错误: 缺少本作收尾清单" >&2; exit 1; }
+[[ -f "10_docs/正中靶心2/收尾与最小复现清单_1.9_20260926.md" ]] || { echo "错误: 缺少本作收尾清单" >&2; exit 1; }
 
 git add -- \
   "04_scripts/正中靶心2" \
@@ -64,7 +64,7 @@ while IFS= read -r path; do
 done <<< "$STAGED"
 
 printf '%s\n' "$STAGED"
-git commit -m "正中靶心2 1.7 二次登录签名修复与验收"
+git commit -m "正中靶心2 1.9 星空版重建：解锁月卡特权（战斗加速+免广告）菜单定稿"
 git push git@github.com:Aliang369/nixiang.git main
 
 echo "==> 本作相关状态"
