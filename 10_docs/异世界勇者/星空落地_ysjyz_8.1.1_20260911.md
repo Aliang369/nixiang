@@ -2,7 +2,7 @@
 
 > 更新：2026-09-11 · 设备 MuMu `127.0.0.1:5555` · 路线：modern 注册表（`MainModern.cpp` + `Games/YsjYzEntry.cpp`）
 > 上游分析：[分析_可逆向功能清单_20260911.md](分析_可逆向功能清单_20260911.md)
-> 菜单模板（后台用）：[菜单模板_ysjyz.json](菜单模板_ysjyz.json)
+> 菜单模板（后台用）：[ysjyz_menu_template.json](ysjyz_menu_template.json)
 
 ---
 
@@ -308,7 +308,7 @@ node 04_scripts/异世界勇者/ysjyz_js_regression.js
 ## 9. 遗留 / 待办
 
 1. ~~运行实测~~ —— **✅ 已完成**（§7.2，用户 2026-09-11 实测确认通过）。
-2. 后台 `game_id = ysjyz` 注册 + 菜单 JSON 上传（[菜单模板_ysjyz.json](菜单模板_ysjyz.json)，9 项）—— 用户侧运营操作。
+2. 后台 `game_id = ysjyz` 注册 + 菜单 JSON 上传（[ysjyz_menu_template.json](ysjyz_menu_template.json)，6 项）—— 用户侧运营操作。
 3. `libthemis.so`（TapTap themis-lite 环境组件）行为未知；本次未触发异常，持续观察。
 4. 首跑 `surgical` 因 gradle 需写 `~/.gradle` 被文件沙箱拦截（`Operation not permitted`），
    改用 `danger-full-access` 单次放行后通过 —— 属环境限制，与脚本本身无关。
