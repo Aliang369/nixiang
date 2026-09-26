@@ -134,11 +134,15 @@ STARRY_DEX="classes$((OFFICIAL_DEX_COUNT + 1)).dex"
 echo "  official dex count = $OFFICIAL_DEX_COUNT ($(printf '%s ' $OFFICIAL_DEX_NAMES)) → starry $STARRY_DEX"
 
 # 菜单 dex 来源：优先用仓库内「已定型菜单模板」（= 装机在用那套 com/starry）。
-# 2026-09-23 事故：gradle 重建 app-debug.apk 后其 com/starry 与装机版不是同一套源码
-# （旧版独有的 MagicRes$PanelBgDrawable 等绘制类消失）→ 直接用 app-debug.apk 会让菜单外观变样。
+# 2026-09-26 已把模板按当前源码重建（scripts/wxsj_refresh_menu_tpl.sh，外科 zip 组装）：
+#   旧模板 wxsj_menu_20260922 落后于 so/Java → dex 未声明 nativeGetBuildStamp()
+#   → RegisterNatives NoSuchMethodError → JNI_OnLoad 失败 → 整条注入链不启动。
+#   新模板 wxsj_menu_20260926 相对旧模板是**严格超集**：242→244 类，0 删除，
+#   新增 GyzwHooks / OtaSoStamp；MagicRes$*Drawable 绘制类全在 ⇒ 无外观回归。
+#   （09-23 那次「重建就变样」的根因是**当时源码本身缺**这些绘制类，现源码已补齐。）
 # 模板目录内 classes2.dex 已含 StarryInitProvider 且 StarryApp.super 已改易盾壳类，故走模板时
 # 跳过 apktool/smali 组装与相关断言；libc++_shared.so / starlight.crt 也取自同一模板。
-MENU_TPL_DIR="${WXSJ_MENU_TPL:-$NIXIANG/mod菜单/starry-mod-menu/templates/wxsj_menu_20260922}"
+MENU_TPL_DIR="${WXSJ_MENU_TPL:-$NIXIANG/mod菜单/starry-mod-menu/templates/wxsj_menu_20260926}"
 MENU_FROM_TPL=0
 if [[ -s "$MENU_TPL_DIR/$STARRY_DEX" ]]; then
   MENU_FROM_TPL=1

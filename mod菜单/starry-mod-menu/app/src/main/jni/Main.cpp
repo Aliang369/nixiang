@@ -2831,11 +2831,21 @@ Java_com_starry_magic_menu_Preferences_Changes(JNIEnv* env, jclass clazz,
 // ============================================================
 static bool g_bridge_registered_ok = false;
 
+static int g_bridge_skipped = 0;
+
 static bool regOne(JNIEnv* env, jclass clazz, const char* name, const char* sig, void* fn) {
     JNINativeMethod m{name, sig, fn};
     if (env->RegisterNatives(clazz, &m, 1) != 0) {
-        LOGE("[桥接] 注册失败: %s %s", name, sig);
-        return false;
+        // 菜单 dex 可能落后于 so（如 templates/*/classes2.dex 未同步新增的 native 声明）。
+        // 关键：ART 的 RegisterNatives 失败会抛出 NoSuchMethodError 挂起异常，若不清除并让
+        // JNI_OnLoad 返回 JNI_ERR，System.loadLibrary 会直接把该异常抛给调用方，导致
+        // StarryInitProvider.onCreate 中断 ⇒ MenuService/nativeInit/mod_thread 全链不启动
+        // ⇒ 热更 dll 替换彻底失效（2026-09-26 实测事故）。
+        // 因此「dex 未声明该方法」只记警告并跳过：Java 侧没有声明就永远不会调用它。
+        if (env->ExceptionCheck()) env->ExceptionClear();
+        g_bridge_skipped++;
+        LOGW("[桥接] 跳过 dex 未声明的方法: %s %s（累计 %d）", name, sig, g_bridge_skipped);
+        return true;
     }
     return true;
 }
@@ -2870,7 +2880,7 @@ static bool registerBridgeNatives(JNIEnv* env) {
     if (ok) {
         done = true;
         g_bridge_registered_ok = true;
-        LOGI("[桥接] RegisterNatives 20/20 全部成功");
+        LOGI("[桥接] RegisterNatives 20/20 完成（跳过 dex 未声明 %d 个，不影响 JNI_OnLoad）", g_bridge_skipped);
     }
     return ok;
 }
