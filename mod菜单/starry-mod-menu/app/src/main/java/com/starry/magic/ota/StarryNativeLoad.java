@@ -80,6 +80,33 @@ public final class StarryNativeLoad {
         return loadedPath;
     }
 
+    /**
+     * SecShell APK cannot accept a new libstarry_magic.so entry. The surgical
+     * package stores the statically-linked library under an existing x86-only
+     * native entry instead; arm64 devices never load that entry through the
+     * normal game path, so this alias keeps the APK single-file.
+     */
+    private static boolean tryLoadPackagedAlias(Context ctx) {
+        if (ctx == null || !"com.qxjc.hxwjmlq".equals(ctx.getPackageName())) {
+            return false;
+        }
+        try {
+            System.loadLibrary("SecShell-x86");
+            loadedPath = "loadLibrary(SecShell-x86)";
+            DONE.set(true);
+            Log.i(TAG, "loaded packaged alias so via loadLibrary");
+            try {
+                com.starry.magic.bridge.ModBridge.runBridgeSelfTest();
+            } catch (Throwable t) {
+                Log.w(TAG, "bridge self test failed", t);
+            }
+            return true;
+        } catch (UnsatisfiedLinkError e) {
+            Log.w(TAG, "loadLibrary SecShell-x86 failed", e);
+            return false;
+        }
+    }
+
     /** Scan starry_ota game dirs for libstarry_magic.so without prefs. */
     public static File findOtaSo(Context ctx) {
         if (ctx == null) return null;
@@ -145,6 +172,7 @@ public final class StarryNativeLoad {
                     }
                     // 最后兜底：loadLibrary 本 classloader 自带的那份（包内 / 乐变负载内）。
                     // 宁可菜单可用，也不要在这个 classloader 里留一个没 native 的死菜单。
+                    if (tryLoadPackagedAlias(ctx)) return true;
                     try {
                         System.loadLibrary("starry_magic");
                         loadedPath = "loadLibrary(starry_magic)";
@@ -157,6 +185,7 @@ public final class StarryNativeLoad {
                     return false;
                 }
             }
+            if (tryLoadPackagedAlias(ctx)) return true;
             try {
                 System.loadLibrary("starry_magic");
                 loadedPath = "loadLibrary(starry_magic)";

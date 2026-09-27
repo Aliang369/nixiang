@@ -1,7 +1,7 @@
 {
   "game": "幻想武将模拟器",
   "date": "2026-09-27",
-  "reason": "收官滚动物清理：删除本游戏可再生的大型拆包/反编译/DummyDll 目录，保留官方底包、文本 dump.cs、分析文档与最终分体包",
+  "reason": "收官滚动物清理：删除本游戏可再生的大型拆包/反编译/DummyDll 目录，保留官方底包、文本 dump.cs、分析文档与最终单包",
   "removed_roots": [
     "03_decompiled/幻想武将模拟器/apktool_1.0.8",
     "03_decompiled/幻想武将模拟器/jadx_1.0.8",
@@ -19,12 +19,8 @@
       "why": "锚点/字段文本证据；可由官方底包重新 dump"
     },
     {
-      "path": "08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_base-resign.apk",
-      "why": "最终分体交付 base"
-    },
-    {
-      "path": "08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_split-starry.apk",
-      "why": "最终分体交付 split"
+      "path": "08_output/幻想武将模拟器/幻想武将模拟器_1.0.8.apk",
+      "why": "唯一正式交付单包（168,134,474 B md5 d3f9164e1cc764b4a3c0ee5f6f4b2033）"
     }
   ]
 }
