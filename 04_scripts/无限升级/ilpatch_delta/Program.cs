@@ -28,9 +28,9 @@ using System.Linq;
 //
 // 铁律：有过滤（block_report 门控，缺失=原版行为）；调原函数；不碰未列出 IL。
 
-// 2026-09-23 二次热更适配：官方 dll 1960960 → 2030080 B（sha256 66866590…），
-// SRC = 用新官方 dll 重打出的 v1（30 patches）；DST = 最终补丁 dll（必须 ≤ kOrigDllLen=2030080）
-const string SRC = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260923_hotfix2.dll";
+// 2026-09-27 三次热更适配：官方 dll 2030080 → 2028544 B（fnv1a64 0x43df8d0d87bf08b2），
+// SRC = 用新官方 dll 重打出的 v1（31 patches）；DST = 最终补丁 dll（必须 ≤ kOrigDllLen=2028544）
+const string SRC = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260927_hotfix3.dll";
 const string DST = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional.dll";
 
 string[] Blacklist = {
@@ -324,12 +324,16 @@ NoOpVoid(FindM("NetWorkPlayerMgr", "Warning"), "Warning(服务器任意弹窗)")
 NoOpVoid(FindM("NetWorkPlayerMgr", "ServerMsg"), "ServerMsg(服务器弹窗队列)");
 NoOpVoid(FindM("NetWorkPlayerMgr", "ServerMsgBig"), "ServerMsgBig(服务器弹窗队列)");
 NoOpVoid(FindM("NetWorkPlayerMgr", "BlockVersion"), "BlockVersion(版本封锁)");
-NoOpVoid(FindM("NetWorkPlayerMgr", "CheckCodeLocked"), "CheckCodeLocked(验证码锁+存档回滚)");
 // v7.1 补漏（2026-09-07 用户实测弹出「修改游戏数据 已进行封号处理」）：
 //   执法链=服务器推 UpDateBanStatu(true)→本地 ban=true→四处周期检查→CheckGamePlayerAction 冻结+弹窗
 NoOpVoid(FindM("InfinityCoreNormal.NetConver", "UpDateBanStatu"), "UpDateBanStatu(服务器写本地封禁标志)");
 NoOpVoid(FindM("InfinityCoreNormal.NetConver", "CheckGamePlayerAction"), "CheckGamePlayerAction(冻结+修改游戏数据弹窗,static)");
-NoOpVoid(FindM("NetWorkPlayerMgr", "OnSaveGuardFailed"), "OnSaveGuardFailed(存档校验失败冻结+上报)");
+// 【v7.18 血案修复】OnSaveGuardFailed 曾被 no-op —— 「存档校验失败冻结」是**安全气囊**，不是执法。
+// 后果（2026-09-27 实测）：存档校验失败时无人冻结写入 ⇒ 新档直接原地覆写主档
+// files/gfldhdsbadbcvc ⇒ 玩家回档到 0 级、旧档永久丢失。
+// 现在改为「只屏蔽上报、保留冻结与提示」：SendBA("CheckCodeFiled") 已被 SendBA 名单拦掉，
+// 故整个方法**不再 no-op**（恢复原版：saveGuardFailed=true 冻结 + 弹「存档安全校验不通过…点击确认」）。
+// 注意：弹窗文案会让玩家紧张，但「能看见的冻结 + 可回滚」远胜「静默丢档」——这是用户明确要求的取舍。
 
 // ⑦c v7.9（2026-09-23 用户实测「涉嫌修改封禁」「您的账号已被封禁」两条提示漏出）：
 //   原实现全部挂 block_report 门控，一旦菜单把 block_report 关掉（或被清档/改配置）提示就复活。
