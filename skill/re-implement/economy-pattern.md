@@ -5,6 +5,46 @@
 
 ---
 
+## 第零步：消费路径全覆盖清单（2026-09-28 新增）
+
+**改任何资源前先走本清单，不要只 hook 一个方法就开写。**
+
+以 Unity IL2CPP 游戏为例，同一个资源（如铜币/元宝）通常会在 dump.cs 里同时出现在三套类：
+
+- **Protocol 层**（static 方法）：`ItemProtocol.CheckItemEnough` / `ForceRemoveMoney` / `ForceRemoveCopper` / `AddItem` 等入口
+- **Manager 层**（instance 方法）：`ItemManager.CheckItemEnough` / `ForceRemoveMoney` / `ForceRemoveCopper` / `TryRemoveItem` / `GetCount` / `PreviewAdd` 等
+- **Component 层**（数据存储）：`ItemMoneyComponent.GetCount` / `Add` / `Remove` / `ForceRemove` / `moneyDict` 字段
+
+UI 显示、消费判定、扣费执行可能分别走不同层——只 hook 一层就会出现
+"显示大数但判定不够花"或"判定通过但扣掉真实余额"的假成功。
+
+### 操作步骤
+
+1. 在 dump.cs 里 `rg 'class ItemProtocol' 'class ItemManager' 'class ItemMoneyComponent'`
+   找到该资源相关的三个类的完整范围
+2. 对每个类列出所有与该资源相关的读/判/扣方法：
+   - 读：`GetCount` / `get_XXX` / `get_Money` / `GetGoods` / `get_Res`
+   - 判：`CheckItemEnough` / `IsEnough` / `CanAfford` / `IsApEnough`
+   - 扣：`ForceRemove` / `Remove` / `TryRemoveItem` / `Consume` / `Deduct`
+   - 增：`Add` / `AddItem` / `Modify` / `ModifyResearchPoints`
+3. 对每个需要拦截的方法提取 RVA + 真实序言（用 `extract_il2cpp_preambles.py`）
+4. 判断每个方法是 static 还是 instance，instance 需要加 self 参数（见 il2cpp-abi-pitfalls.md）
+5. 开写代码前把完整方法清单贴在代码注释里，防止后续维护时漏 hook
+
+### 常见反例
+
+我本布衣世家录 2026-09-28：只 hook `ItemProtocol` 的 4 个 static 方法，漏了
+`ItemManager` instance 的 7 个方法（CheckItemEnough / ForceRemoveMoney / ForceRemoveCopper /
+TryRemoveItem×2 / ItemMoneyComponent.GetCount / ForceRemove），结果：用户看到 UI 显示 10 万铜币，
+买东西判定依然不够。一轮完整返工。
+
+**最省 token 的一条：一次列全再写代码，少一轮构建-装机-用户操作循环。**
+
+如果知道某个功能的调用链不是本清单覆盖的标准模式，宁可先写一个 frida/trace 探针
+确认每层被调用时机再动手，不要猜。
+
+---
+
 ## 模式一：货币 XOR 加密修改
 
 **适用游戏**：战魂铭人（Unity IL2CPP / HybridCLR）

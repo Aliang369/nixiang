@@ -56,6 +56,21 @@ if [[ -n "$BT" && -x "$BT/apksigner" ]]; then
   "$BT/apksigner" verify "$SIGNED" >/dev/null 2>&1 || { echo "ERROR: apksigner verify failed" >&2; exit 1; }
 fi
 
+# 同签名检测：如果上次证书指纹一致，提示用 install -r 覆盖安装，避免误卸载丢数据
+if [[ -n "$BT" && -x "$BT/apksigner" ]]; then
+  CURRENT_SHA1=$("$BT/apksigner" verify --print-certs "$SIGNED" 2>/dev/null | grep 'SHA-1 digest' | awk '{print $NF}' | head -1)
+  PREV_SHA1_FILE="/tmp/.wbjy_last_cert_sha1"
+  if [[ -f "$PREV_SHA1_FILE" ]]; then
+    PREV=$(cat "$PREV_SHA1_FILE")
+    if [[ "$CURRENT_SHA1" == "$PREV" ]]; then
+      echo ""
+      echo "[同签名提示] 本次与上次证书 SHA-1 一致 ($CURRENT_SHA1)"
+      echo "           无需卸载，用覆盖安装：adb install -r --no-incremental $SIGNED"
+    fi
+  fi
+  echo -n "$CURRENT_SHA1" > "$PREV_SHA1_FILE"
+fi
+
 echo "signed_md5=$(md5 -q "$SIGNED")"
 echo "signed_sha256=$(shasum -a 256 "$SIGNED" | awk '{print $1}')"
 ls -lh "$SIGNED"
