@@ -101,7 +101,9 @@ static std::mutex g_mtx;
 static Exec_t g_origExec = nullptr;
 static std::atomic<bool> g_hooked{false};
 static std::atomic<int> g_hits{0};
-static std::atomic<bool> g_replaceArmed{false};  // 任一功能开过才武装替换（缺省=完全原版）
+// v7.2 起：钩子装上即无条件武装（TryHookOnce 末尾 store(true)，本文件 :308 附近），与「玩家开不开功能」无关。
+// 玩家装包后打开游戏就生效，无需任何菜单操作 —— 不要照旧注释以为要先开个功能。
+static std::atomic<bool> g_replaceArmed{false};
 
 static bool ReadFileLines(const std::string& path, std::vector<std::string>* out);
 static std::string PkgName();
@@ -298,6 +300,10 @@ static bool TryHookOnce() {
          (int)(kOrigDllLen - (int32_t)pLen));
     // v7.2：屏蔽封号执法为基线功能——无条件武装字节替换（清数据/首装同样生效）。
     // 旧逻辑「配置里有功能开启才武装」在清数据后导致原版 dll 运行，封号弹窗+COS上传全链复活。
+    // ★玩家不需要任何操作：钩子装上即武装。触发链与菜单无关：
+    //   StarryInitProvider.onCreate(应用进程启动) → mb_nativeInit → mod_thread
+    //   → Wxsj_TryInit → FastRetryThread(每 100ms 重试, 上限 60s) → 本函数 → 此处武装。
+    //   开功能按钮只写 starry_config.ini，不再参与武装判定（旧注释已删，勿再引入「要先开功能」）。
     g_replaceArmed.store(true);
     // block_report 默认开：键缺失时补 1（玩家菜单可关，关闭后保持关）
     std::string pkg = PkgName();
@@ -428,8 +434,10 @@ void Wxsj_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJ_FEAT_FUNCUNLOCK: WriteConfigKey("func_unlock", on); break;
     default: break;
     }
-    // 任一功能开启 → 武装字节替换（未开过 = 纯原版基线）
-    if (enabled) g_replaceArmed.store(true);
+    // 【v7.19】删掉冗余的 `if (enabled) g_replaceArmed.store(true);`
+    // 旧注释「任一功能开启 → 武装字节替换（未开过 = 纯原版基线）」是 v7.2 前的口径，早已不成立：
+    // v7.2 起 TryHookOnce 末尾（本文件 :308 附近）已经无条件 store(true)，故此处是焊死在 true 上的空操作。
+    // 留着只会让读代码的人以为「得先开个功能才生效」——实测玩家无需任何菜单操作。
 }
 
 void Wxsj_OnValueChanged(int featNum, int value) {
