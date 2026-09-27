@@ -28,8 +28,8 @@ using System.Linq;
 //
 // 铁律：有过滤（block_report 门控，缺失=原版行为）；调原函数；不碰未列出 IL。
 
-// 2026-09-27 三次热更适配：官方 dll 2030080 → 2028544 B（fnv1a64 0x43df8d0d87bf08b2），
-// SRC = 用新官方 dll 重打出的 v1（31 patches）；DST = 最终补丁 dll（必须 ≤ kOrigDllLen=2028544）
+// 2026-09-27 晚间回滚适配：官方 dll 从 2028544 回滚到 2030080（fnv1a64 0x91f9acbd064fa875）。
+// SRC = 用当前官方 dll 重打出的 v1（31 patches）；DST = 最终补丁 dll（必须 ≤ kOrigDllLen=2030080）
 const string SRC = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260927_hotfix3.dll";
 const string DST = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional.dll";
 

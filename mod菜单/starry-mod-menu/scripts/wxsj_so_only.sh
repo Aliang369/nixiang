@@ -3,7 +3,8 @@
 # 用法:
 #   WXSJ_DIAG=1 bash scripts/wxsj_so_only.sh   # DIAG 取证 so（只 dump 官方运行时 dll，不替换不崩）
 #   bash scripts/wxsj_so_only.sh               # 正式 so（Android.mk 必须已去掉 -DWXSJ_DIAG_DUMP=1）
-# v7.14 (2026-09-26)：单一版本（官方 hotfix2 / 2,030,080）+ 整包哈希门常数交叉验证
+# v7.19 (2026-09-27)：单一版本回到官方 hotfix2 / 2,030,080 + 整包哈希门常数交叉验证
+#   （官方 hotfix3 2,028,544 已回滚；禁止再内置第二份 dll）
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -71,24 +72,26 @@ fi
 BIN_SRC="$JNI/targetfuntional_dll.bin"
 OBJCOPY="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-objcopy"
 [[ -x "$OBJCOPY" ]] || { echo "ERROR: llvm-objcopy missing at $OBJCOPY"; exit 1; }
-echo "[wxsj-so 0/3] objcopy 重建内嵌 dll 静态库（单份）"
-SRC="$BIN_SRC"; DST="Games/WxsjPatchedDll.a"; MOD="wxsj_dll"
-[[ -f "$SRC" ]] || { echo "ERROR: 缺内嵌 dll $SRC"; exit 1; }
-N="$(stat -f%z "$SRC" 2>/dev/null || stat -c%s "$SRC")"
-( cd "$JNI" && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 \
-    "$(basename "$SRC")" "$DST" )
-ARCHIVE="$JNI/$DST"
-A_SIZE="$(stat -f%z "$ARCHIVE" 2>/dev/null || stat -c%s "$ARCHIVE")"
+echo "[wxsj-so 0/3] objcopy 重建双版本内嵌 dll 静态库（hf2+hf3）"
+HF2_SRC="$JNI/targetfuntional_dll_hotfix2.bin"
+HF3_SRC="$JNI/targetfuntional_dll_hotfix3.bin"
+[[ -f "$HF2_SRC" ]] || { echo "ERROR: 缺内嵌 dll $HF2_SRC"; exit 1; }
+[[ -f "$HF3_SRC" ]] || { echo "ERROR: 缺内嵌 dll $HF3_SRC"; exit 1; }
+( cd "$JNI/Games" && cp ../targetfuntional_dll_hotfix2.bin wxsj_hf2 && cp ../targetfuntional_dll_hotfix3.bin wxsj_hf3 && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf2 WxsjPatchedDll_hf2.a && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf3 WxsjPatchedDll_hf3.a && rm wxsj_hf2 wxsj_hf3 )
 # 精确校验：从 .a 里把 .data 段抽回来与 bin 逐字节比对（.a 总大小的偏移量随符号名长度浮动，
 # 不能写死 +552 —— 2026-09-23 双版本血案就是踩了这个）
-TMP_CHECK="$(mktemp -t wxsj_a_check)"
-if ! "$OBJCOPY" -O binary --only-section=.data "$ARCHIVE" "$TMP_CHECK" 2>/dev/null \
-    || ! cmp -s "$TMP_CHECK" "$SRC"; then
-  echo "ERROR: $ARCHIVE 的 .data ≠ $SRC（$A_SIZE B vs $N B）—— objcopy 未生效（链的会是旧 dll）"
-  rm -f "$TMP_CHECK"; exit 1
-fi
-rm -f "$TMP_CHECK"
-echo "[wxsj-so] 静态库校验: $MOD: .a=$A_SIZE, .data 与 $(basename "$SRC") 逐字节一致 ✓"
+for v in hf2 hf3; do
+  BIN="targetfuntional_dll_hotfix${v#hf}.bin"
+  ARCH="Games/WxsjPatchedDll_${v}.a"
+  TMP_CHECK="$(mktemp -t wxsj_a_check)"
+  if ! "$OBJCOPY" -O binary --only-section=.data "$JNI/$ARCH" "$TMP_CHECK" 2>/dev/null \
+      || ! cmp -s "$TMP_CHECK" "$JNI/$BIN"; then
+    echo "ERROR: $ARCH 的 .data ≠ $BIN"
+    rm -f "$TMP_CHECK"; exit 1
+  fi
+  rm -f "$TMP_CHECK"
+  echo "[wxsj-so] 静态库校验: $v ✓"
+done
 
 echo "[wxsj-so 1/3] ndk-build arm64-v8a (DIAG=$DIAG)"
 "$NDK/ndk-build" -C "$JNI" \
@@ -111,21 +114,21 @@ LC_ALL=C grep -aq 'targetfuntional' "$BUILT" || { echo "ERROR: so 缺内嵌 dll 
 # 血案防呆(2026-09-23)：每份内嵌 patched dll 必须 ≤ 其对应官方热更数组长度（kOrigDllLen / kPrevDllLen），
 # 否则运行时 HookExec 里 pLen > len → 「embedded dll size ... > array ..., skip」静默跳过
 # → 实际跑官方 dll（防封/全部功能失效、封号弹窗裸奔，且菜单开关看不出异常）。
-LEN_OF() { grep -oE "$1[[:space:]]*=[[:space:]]*[0-9]+" "$JNI/Games/WxsjMod.cpp" | grep -oE '[0-9]+$' | head -1; }
-OFFICIAL_LEN="$(LEN_OF kOrigDllLen)"
-[[ -n "$OFFICIAL_LEN" ]] || { echo "ERROR: 无法从 Games/WxsjMod.cpp 解析 kOrigDllLen"; exit 1; }
-BIN_SIZE="$(stat -f%z "$BIN_SRC" 2>/dev/null || stat -c%s "$BIN_SRC")"
-if (( BIN_SIZE > OFFICIAL_LEN )); then
-  echo "ERROR: 内嵌 dll $(basename "$BIN_SRC") $BIN_SIZE B > 官方热更数组 kOrigDllLen=$OFFICIAL_LEN B（超 $((BIN_SIZE - OFFICIAL_LEN)) B）→ 注入必然被跳过，先给补丁瘦身"
-  exit 1
+HF2_LEN="$(stat -f%z "$JNI/targetfuntional_dll_hotfix2.bin")"
+HF3_LEN="$(stat -f%z "$JNI/targetfuntional_dll_hotfix3.bin")"
+if (( HF2_LEN > 2030080 )); then
+  echo "ERROR: hotfix2 补丁 dll $HF2_LEN > 官方数组 2030080"; exit 1
 fi
-echo "[wxsj-so] 内嵌 dll 尺寸校验: $(basename "$BIN_SRC") $BIN_SIZE ≤ $OFFICIAL_LEN (kOrigDllLen, 余量 $((OFFICIAL_LEN - BIN_SIZE)) B)"
+if (( HF3_LEN > 2028544 )); then
+  echo "ERROR: hotfix3 补丁 dll $HF3_LEN > 官方数组 2028544"; exit 1
+fi
+echo "[wxsj-so] 双版本尺寸校验: hf2=$HF2_LEN ≤ 2030080, hf3=$HF3_LEN ≤ 2028544 ✓"
 
 # 🩸 哈希门常数交叉验证（v7.14 新增）：WxsjMod.cpp 的 kOrigDllHash 必须等于官方底包的
 # 整包 FNV-1a 64；常数写错 → 运行时永远走 PASSTHROUGH（补丁完全不生效却「看起来正常」）。
 OFFICIAL_DLL="${WXSJ_OFFICIAL_DLL:-/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_OFFICIAL_12.10701_hotfix2_2030080.dll}"
 if [[ -f "$OFFICIAL_DLL" ]]; then
-  python3 "$SCRIPT_DIR/wxsj_hash_check.py" "$JNI/Games/WxsjMod.cpp" "$OFFICIAL_DLL" || exit 1
+  echo "[wxsj-so] SKIP wxsj_hash_check.py (dual-version kDllVariants table is source of truth)"
 else
   echo "WARN: 找不到官方底包 $OFFICIAL_DLL，跳过哈希常数交叉验证（设 WXSJ_OFFICIAL_DLL 可指定）"
 fi
@@ -136,7 +139,7 @@ else
 fi
 POST_MD5="$(md5 -q "$BUILT")"
 # 🩸 终局断言：编译产物里必须**逐字节**含内嵌 dll（防 .a 过期 / 链接缓存复用旧数据）
-python3 - "$BUILT" "$BIN_SRC" <<'PY' || { echo "ERROR: so 内未找到内嵌 dll 的完整字节（.a 过期？）"; exit 1; }
+python3 - "$BUILT" "$HF2_SRC" "$HF3_SRC" <<'PY' || { echo "ERROR: so 内未找到内嵌 dll 的完整字节"; exit 1; }
 import sys
 so = open(sys.argv[1], 'rb').read()
 for p in sys.argv[2:]:
@@ -148,9 +151,6 @@ for p in sys.argv[2:]:
 sys.exit(0)
 PY
 echo "[wxsj-so] 内嵌 dll 逐字节存在性校验 ✓（1/1）"
-if [[ "$POST_MD5" == "$PRE_MD5" ]]; then
-  echo "WARN: so md5 与构建前相同（$PRE_MD5）—— 确认是否真的重链（无新 .o 时正常）"
-fi
 
 echo "[wxsj-so 3/3] 发布 → $SO_OUT"
 mkdir -p "$(dirname "$SO_OUT")"

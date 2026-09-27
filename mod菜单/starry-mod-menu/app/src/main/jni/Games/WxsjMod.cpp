@@ -50,35 +50,32 @@ static const uint8_t kExecPrologue[16] = {
     0xfe, 0x0f, 0x1c, 0xf8, 0xf8, 0x5f, 0x01, 0xa9,
     0xf6, 0x57, 0x02, 0xa9, 0xf4, 0x4f, 0x03, 0xa9,
 };
-// 单一版本绑定：官方热更 targetfuntional.dll = hotfix3 / 2,028,544 B
-// 来源：2026-09-27 14:30 真机 DIAG dump（`files/wxsj_dump_2028544_4d5a9000.bin`）——
-//   官方第三次热更（hotfix2 2,030,080 → hotfix3 2,028,544，−1,536 B）。
-//   归档：`07_patched/无限升级/targetfuntional_OFFICIAL_12.10701_hotfix3_2028544.dll`
-//   （fnv1a64 0x43df8d0d87bf08b2 / sha256 b2d186a4d3e3a0ba…）。
-// 判据：运行时 hook 实测 `Exec call len=2028544` + `fnv=43df8d0d87bf08b2`，与本归档逐字节一致。
-static constexpr int32_t kOrigDllLen = 2028544;
-// 官方 2028544 整包 FNV-1a 64（= 07_patched/无限升级/targetfuntional_OFFICIAL_12.10701_hotfix3_2028544.dll）
-// 【v7.18 起：仅供参考，无约束力】旧逻辑用它判定「是否已知底包」并据此 BLOCK —— 该 BLOCK 正是
-// 2026-09-27 丢档元凶。新逻辑无条件覆写为嵌补丁版，本常数只剩两个用途：
-//   ① 日志/toast 里告诉玩家「你装载的是哪一版官方包」；② stars_so_only.sh 的出包体检。
-// 脚本 wxsj_so_only.sh 仍会用同一份官方 dll 复算此常数。
-static constexpr uint64_t kOrigDllHash = 0x43df8d0d87bf08b2ULL;
-// ---- v7.18「原地补丁后缓冲区」的整包 FNV-1a 64 ----
-// 我们把补丁 dll（2,022,912 B）原地 memcpy 进宿主数组、尾部补 5,632 个 0，长度仍是 2,028,544。
-// 于是**同一个数组被第二次执行**时：长度对得上、哈希既不是官方值也不是补丁 dll 自身值。
-// 旧逻辑据此判「官方换版」⇒ 第一次能进、第二次被拦（v7.16 修过）；v7.18 起该常数用于
-// **避免对同一缓冲区重复覆写**（内容已是我们注入过的，直接放行）。
-// 该常数 = FNV1a64(官方长度缓冲区被覆盖后的字节)；由 scripts/wxsj_hash_check.py 复算校门。
-// ⚠️ 每次重出补丁 dll（补丁内容/length 变化）都必须复算本常数，否则「二次装载」会被重复覆写。
-// v7.18 重算：补丁 dll 2,022,912 B（fnv1a64 0xe7aeb2094b4fd074）+ 尾零 5,632 ⇒ 整包 2,028,544
-static constexpr uint64_t kPatchedBufHash = 0x8104d06951efb074ULL;
+// ---- v7.19 双版本：hotfix2 2030080 + hotfix3 2028544，按运行时长度/哈希自动选 ----
 static const char kDllNameKey[] = "targetfuntional";
-
-// ---- 内置 patched dll（llvm-objcopy 生成，Android.mk 链接）----
-// 单一版本：只内置「官方 2030080 → v1 30 补丁 → δ 补丁」的成品（2,024,960 B ≤ 2,030,080）。
-// v7.13 的「双版本内置 + 按运行时长度 PickDllVariant」已整体废弃。
-extern const uint8_t _binary_targetfuntional_dll_bin_start[];
-extern const uint8_t _binary_targetfuntional_dll_bin_end[];
+struct DllVariant {
+    int32_t officialLen;
+    uint64_t officialHash;
+    uint64_t patchedBufHash;
+    const uint8_t* dataStart;
+    const uint8_t* dataEnd;
+};
+extern "C" const uint8_t _binary_wxsj_hf2_start[];
+extern "C" const uint8_t _binary_wxsj_hf2_end[];
+extern "C" const uint8_t _binary_wxsj_hf3_start[];
+extern "C" const uint8_t _binary_wxsj_hf3_end[];
+static constexpr DllVariant kDllVariants[] = {
+    {2030080, 0x91f9acbd064fa875ULL, 0x839daa17e05c50ceULL, _binary_wxsj_hf2_start, _binary_wxsj_hf2_end},
+    {2028544, 0x43df8d0d87bf08b2ULL, 0x8104d06951efb074ULL, _binary_wxsj_hf3_start, _binary_wxsj_hf3_end},
+};
+static const DllVariant* PickDllVariant(int32_t len, uint64_t h) {
+    for (const auto& v : kDllVariants) {
+        if (v.officialLen == len && v.officialHash == h) return &v;
+    }
+    for (const auto& v : kDllVariants) {
+        if (v.officialLen == len) return &v;
+    }
+    return nullptr;
+}
 
 // ---- 小工具 ----
 static uint64_t Fnv1a64(const uint8_t* p, size_t n) {
@@ -208,13 +205,25 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
         // 深过滤：全数组内必须出现程序集名（实测名字在 BSJB 元数据 ~0x19 万字节处；
         // 一次性装载，2MB 扫描开销可忽略）。用它把 targetfuntional 与其它热更程序集（mscorlib 等）分开。
         if (g_replaceArmed.load(std::memory_order_relaxed) && isDll && ContainsDllNameKey(bytes, (size_t)len)) {
-            const size_t pLen = (size_t)(_binary_targetfuntional_dll_bin_end - _binary_targetfuntional_dll_bin_start);
             const uint64_t h = Fnv1a64(bytes, (size_t)len);
+            const DllVariant* v = PickDllVariant(len, h);
+            if (!v) {
+                LOGE(WXSJ_LOG " no variant for len=%d fnv=%016llx : PASSTHROUGH official", len, (unsigned long long)h);
+                if (g_hotfixForced.fetch_add(1) == 0) {
+                    StarryShowToast("[无限升级] 游戏热更版本未识别，本次以官方版本运行（存档安全）。新功能请等人工更新安装包");
+                }
+                return orig(self, data, outP, mi);
+            }
+            const size_t pLen = (size_t)(v->dataEnd - v->dataStart);
             // 【v7.16】同一装载缓冲区被二次执行：内容已经是我们的补丁（长度仍是官方 2030080，
             // 但整包哈希 = kPatchedBufHash）。不认这一条 ⇒ 第二次装载（换号/重登录/程序集重执行）
             // 会被当成「官方换版」误封入口——现场表现正是「第一次登录能进、第二次禁止进入」。
             // 放行是安全的：缓冲区里本就是官方底包 + 我们的补丁，与第一次注入后的内容逐字节相同。
-            if (len == kOrigDllLen && h == kPatchedBufHash) {
+            bool matchedPatchedBuf = false;
+            for (const auto& cv : kDllVariants) {
+                if (cv.officialLen == len && cv.patchedBufHash == h) { matchedPatchedBuf = true; break; }
+            }
+            if (matchedPatchedBuf) {
                 LOGI(WXSJ_LOG " Exec call re-enter: buffer already carries our patch (hit#%d fnv=%016llx) -> passthrough",
                      g_hits.load(), (unsigned long long)h);
                 return orig(self, data, outP, mi);
@@ -224,14 +233,14 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
             // 这正是用户定策「不让游戏热更生效，等人工换安装包」的落地：装载什么进来都无所谓。
             // （kPatchedBufHash 已在上面放行，避免二次装载时重复覆写同一缓冲区。）
             if (pLen > 0 && pLen <= (size_t)len) {
-                memcpy((void*)bytes, _binary_targetfuntional_dll_bin_start, pLen);
+                memcpy((void*)bytes, v->dataStart, pLen);
                 memset((void*)(bytes + pLen), 0, (size_t)len - pLen);  // 原长度不变，尾零填充
                 int n = g_hits.fetch_add(1) + 1;
                 // 【v7.18 修复】v7.18 重写时把 ForceMismatch() 的调用点删掉了，导致
                 //   ① 测试钩子 files/starry_force_mismatch 变成死代码（放不放都走正常路径）
                 //   ② 真机上无法复现「官方热更到新版」的失配分支，只能靠等官方真热更
                 // 现接回：钩子存在 ⇒ 强制认定失配，用于复现「非已知底包」场景。
-                const bool wasMismatch = !(len == kOrigDllLen && h == kOrigDllHash)
+                const bool wasMismatch = !(len == v->officialLen && h == v->officialHash)
                                          || SkipHashGate() || ForceMismatch();
                 if (wasMismatch) g_hotfixForced.fetch_add(1);
                 LOGI(WXSJ_LOG " patched dll injected (hit #%d, loaded=official-%d fnv=%016llx patched=%zu pad=%d%s)",
@@ -254,7 +263,7 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
                         if (f) {
                             fprintf(f, "forced len=%d fnv=%016llx expect_len=%d expect_fnv=%016llx"
                                        " embedded=%zu action=forced-patch\n",
-                                    len, (unsigned long long)h, kOrigDllLen, (unsigned long long)kOrigDllHash, pLen);
+                                    len, (unsigned long long)h, v->officialLen, (unsigned long long)v->officialHash, pLen);
                             fclose(f);
                         }
                     }
@@ -294,10 +303,10 @@ static bool TryHookOnce() {
     }
     g_origExec = (Exec_t)orig;
     g_hooked.store(true);
-    size_t pLen = (size_t)(_binary_targetfuntional_dll_bin_end - _binary_targetfuntional_dll_bin_start);
-    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p embedded=%zuB(official=%d fnv=%016llx pad=%d)",
-         (void*)base, kExecRva, orig, pLen, kOrigDllLen, (unsigned long long)kOrigDllHash,
-         (int)(kOrigDllLen - (int32_t)pLen));
+    size_t hf2Len = (size_t)(_binary_wxsj_hf2_end - _binary_wxsj_hf2_start);
+    size_t hf3Len = (size_t)(_binary_wxsj_hf3_end - _binary_wxsj_hf3_start);
+    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p dual=hf2:%zuB+hf3:%zuB",
+         (void*)base, kExecRva, orig, hf2Len, hf3Len);
     // v7.2：屏蔽封号执法为基线功能——无条件武装字节替换（清数据/首装同样生效）。
     // 旧逻辑「配置里有功能开启才武装」在清数据后导致原版 dll 运行，封号弹窗+COS上传全链复活。
     // ★玩家不需要任何操作：钩子装上即武装。触发链与菜单无关：

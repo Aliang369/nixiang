@@ -35,8 +35,12 @@ include $(PREBUILT_STATIC_LIBRARY)
 #  （v7.13 的 wxsj_dll_v711 / 第二份内置已废弃：官方灰度切换窗口已结束）
 # ============================================================
 include $(CLEAR_VARS)
-LOCAL_MODULE := wxsj_dll
-LOCAL_SRC_FILES := Games/WxsjPatchedDll.a
+LOCAL_MODULE := wxsj_dll_hf2
+LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf2.a
+include $(PREBUILT_STATIC_LIBRARY)
+include $(CLEAR_VARS)
+LOCAL_MODULE := wxsj_dll_hf3
+LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf3.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # ============================================================
@@ -320,6 +324,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll
+LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll_hf2 wxsj_dll_hf3
 
 include $(BUILD_SHARED_LIBRARY)
