@@ -1,0 +1,19 @@
+{
+  "template_id": "wxsj",
+  "name": "无限升级",
+  "package": "com.xingzuodaoshi.infinityUpgrade",
+  "source": "Games/WxsjMod.h WxsjFeat / Main.cpp g_featureList(STARRY_GAME_WXSJ) @ v7.18",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "秒杀"},
+    {"feat_num": 4, "name": "免广告"},
+    {"feat_num": 5, "name": "物品不减"},
+    {"feat_num": 6, "name": "技能免费升级"},
+    {"feat_num": 7, "name": "广告奖励翻倍"},
+    {"feat_num": 8, "name": "物品翻倍"},
+    {"feat_num": 9, "name": "无限挑战秘境"},
+    {"feat_num": 10, "name": "皮肤全解锁"},
+    {"feat_num": 11, "name": "功能全解锁"},
+    {"feat_num": 12, "name": "经验倍率"}
+  ]
+}
