@@ -3,7 +3,7 @@
   "version": "1.0.8",
   "notes": "2026-09-27 CTF 逆向单机游戏星空版移植管线。最终交付 = 唯一单包 幻想武将模拟器_1.0.8.apk（不是分体、不是两包）。官方 TapTap 原版 1.0.8（02_apks/幻想武将模拟器/幻想武将模拟器_1.0.8_taptap_original.apk，168,327,054 B md5 68ed2632579329c3700559447aba77f0）由用户授权真机只读拉取（serial f9a116a2），为不可再生输入。引擎 = Unity IL2CPP（libil2cpp.so sha256 9bd65a76…），官方只有 1 个 classes.dex（20,504 B，SecShell 壳），应用代码在加密 assets/classes0.jar。SecShell 校验的是 ZIP 条目名集合 + local header/central directory 的 CRC 字段，不重算内容 CRC：非 META-INF 条目名集合必须完全不变（1055 个），替换既有条目后把 CRC 字段回填原值即可通过，assets/meta-data/* 必须逐字节原样。据此在官方包内原位替换三个既有条目完成单包：classes.dex（官方壳 dex + 星光 dex d8 合并）、AndroidManifest.xml（星光 Provider/Service 分支 B）、lib/arm64-v8a/libSecShell-x86.so（静态链接 libc++ 的星光 so，arm64 真机不加载该 x86 条目，安装器仍会解压到 lib/arm64/）。StarryNativeLoad 增加限定包名 com.qxjc.hxwjmlq 的 System.loadLibrary(\"SecShell-x86\") 别名加载路径。单包真机验证：存活 >40s、RegisterNatives 19/19、StarryBridgeTest PASS=15 FAIL=0、native ensureLoaded=true path=loadLibrary(SecShell-x86)、overlayVisible=true、越过 CheckSignature()、MOD 已就绪 tag=hxwj ready=1。用户 2026-09-27 实机反馈「功能没问题」，菜单、去签名 / 强制网页登录与三项玩法按用户验收通过。收尾已完成：08_output 裁剪为唯一正式包，历史分体 base/split、未签名中间包、idsig 已清理，03 拆包 / DummyDll 滚动物已清理；菜单模板 = 10_docs/幻想武将模拟器/hxwj_menu_template.json。",
   "params": {
-    "game_id": "hxwj",
+    "game_id": "hxwjmlq",
     "package": "com.qxjc.hxwjmlq",
     "mk": "Android_hxwj.mk（modern 注册表管线，含 Games/NoAceStubs.cpp）",
     "application_mk": "Application_hxwj_static.mk（APP_STL := c++_static，单包不额外占 so 条目）",
