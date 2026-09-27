@@ -1,0 +1,53 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器",
+  "mode": "--apply",
+  "reason": "分体交付必须同时保留 base-resign.apk 与 split-starry.apk；删除历史单包、未签名中间包和全部 idsig",
+  "kept": [
+    {
+      "name": "幻想武将模拟器_1.0.8_base-resign.apk",
+      "size": 168327058,
+      "md5": "65106606f2de237c26182f95c5f9752f",
+      "sha256": "a91e2418658cce12993c69d1414e23e283d8ea3e5b162df479c8e8bca8848425"
+    },
+    {
+      "name": "幻想武将模拟器_1.0.8_split-starry.apk",
+      "size": 807537,
+      "md5": "e157c929db864fb1ea8ceaf2eb617f08",
+      "sha256": "8390b46eaaa319d058d9022aa1cbc695fb91871ceb29088c0ca6e62a41cc2e84"
+    }
+  ],
+  "removed": [
+    {
+      "name": "幻想武将模拟器_1.0.8_surgical-releaseSigned.apk",
+      "size": 169113558,
+      "md5": "5c08794717b0097d211b16bcb5645b5f",
+      "note": "历史单包路线，被 SecShell 整体校验否决，不可交付"
+    },
+    {
+      "name": "幻想武将模拟器_1.0.8_surgical-releaseSigned.apk.idsig",
+      "size": 1340955,
+      "md5": "c8c29b7a956f12d046922778ba147a5b",
+      "note": "历史单包签名边车"
+    },
+    {
+      "name": "幻想武将模拟器_1.0.8_surgical-unsigned.apk",
+      "size": 169022262,
+      "md5": "eebf31035ae29102d521980d4af1d1ad",
+      "note": "split 载荷来源，最终 split 已生成，可清理"
+    },
+    {
+      "name": "幻想武将模拟器_1.0.8_base-resign.apk.idsig",
+      "size": 1336859,
+      "md5": "32e8aea2365701e417ee1e7ca581c557",
+      "note": "最终 base 的签名边车，正式交付不需要"
+    },
+    {
+      "name": "幻想武将模拟器_1.0.8_split-starry.apk.idsig",
+      "size": 13851,
+      "md5": "19afeb5797490aa2256ab0261ea80a5f",
+      "note": "最终 split 的签名边车，正式交付不需要"
+    }
+  ],
+  "removed_count": 5,
+  "removed_bytes": 340827485
+}

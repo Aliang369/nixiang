@@ -1,0 +1,11 @@
+{
+  "template_id": "hxwj",
+  "name": "幻想武将模拟器",
+  "package": "com.qxjc.hxwjmlq",
+  "source": "Games/HxwjEntry.cpp kHxwjFeatures",
+  "features": [
+    {"feat_num": 1, "name": "秒杀"},
+    {"feat_num": 2, "name": "百分百掉落"},
+    {"feat_num": 3, "name": "免广告"}
+  ]
+}

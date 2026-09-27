@@ -856,6 +856,26 @@ public final class SignSpoof {
             + "ayxR+S02eYGHYj71BDI+TAx1Tfl0qLm1QksUR2hG6QPJ15aUvcwryiqAuOIGS4KE"
             + "aq59ibKnNkafuA0FDCStmCY/BeSyPXo=";
 
+    // 幻想武将模拟器（com.qxjc.hxwjmlq）TapTap 原版签名证书
+    // 取自设备原版 base.apk；subject/issuer: C=86, ST=gz, L=qx, O=jc, OU=jc, CN=sy
+    // SHA-256: 467b2806d7dddcbdb40b59eea241c63a1f804dfdc498fc26a9723792c5bde550
+    // SHA-1:   8a31d12c6dfab0a8e740868ddfe3b2c117d905e4
+    // MD5:     e25d1786e86fd8b3503fa8f28c9d5eb0
+    private static final String HXWJ_PKG = "com.qxjc.hxwjmlq";
+    private static final String HXWJ_CERT_B64 =
+            "MIIDPTCCAiWgAwIBAgIEdwa75zANBgkqhkiG9w0BAQsFADBOMQswCQYDVQQGEwI4NjELMAkGA1UECBMCZ3oxCzAJBgNVBAcT"
+            + "AnF4MQswCQYDVQQKEwJqYzELMAkGA1UECxMCamMxCzAJBgNVBAMTAnN5MCAXDTI1MTIxNjA2MzYwNFoYDzIxMjUxMTIyMDYz"
+            + "NjA0WjBOMQswCQYDVQQGEwI4NjELMAkGA1UECBMCZ3oxCzAJBgNVBAcTAnF4MQswCQYDVQQKEwJqYzELMAkGA1UECxMCamMx"
+            + "CzAJBgNVBAMTAnN5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkzw8vht5Rj93qiFChRPkr39r9IFx1Vd1J1gU"
+            + "rtROMXRG8O9Xf6yOznthmS3PCiqm4pbRb7ElExth8tLrQ5t0kp2TfPaD2U/xWY7IZSRKNanaNVP9VmpLgr/lpI0badKoM/ln"
+            + "BosttYrvPvMqbSnRDNaMDPQgR0UkeSfz2MgteOoeyIrgUu79S170CXd3E4A70mixu8oNOImAUNVIROkLPKYC+BTK88K36uwC"
+            + "Bj1mbAZ2BnRvDJwjRSIefFJ5fPMeIYeJwFEPv4Ph3Wx51PkGlWXnnlJly/vZXvu+ioe0RU/WQAnnt6Q+TJY3dSj1DBOtHvbc"
+            + "vhJNvFjazXvZ8jpuqQIDAQABoyEwHzAdBgNVHQ4EFgQUED1f5t9f0p03pZ8sR4W5w7QgM+8wDQYJKoZIhvcNAQELBQADggEB"
+            + "AC8IXQqYklzgEXCRHoX8VhSckq+539y2Tkl9Tda8v7MiKr7HJAxMWHL3b8Qr5Kw/w7dCZRoX/9i+NWeLALouWnZxVhYxJhHp"
+            + "FVCr+4yYZDFoAqCb0JenzARAz54LCCOH0IPu6Br9OXq/ISXso592Q1jwO3uwdrH8V6Sb/8HQvxDBYAT0YvSkn1X7KWHsPl/f"
+            + "iIU6w2uN8sg+En5ARLT8v9nLnbcMVB/jHLQJhPxZgqYjYGsj+U/acQ6poSS5xpG6N4IA61gKY2VAr1G1sMkHog8Whb7/nW5x"
+            + "YlafWYsB7bZUC4K5YVqjcLhYeiKe2zi4Q3MqMicwiVp29lqjbg8mDUc=";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -913,6 +933,7 @@ public final class SignSpoof {
                 fakes.put(WSCQ_PKG, new Signature(Base64.decode(WSCQ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(BLFX_PKG, new Signature(Base64.decode(BLFX_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GYZW_PKG, new Signature(Base64.decode(GYZW_CERT_B64, Base64.DEFAULT)));
+                fakes.put(HXWJ_PKG, new Signature(Base64.decode(HXWJ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

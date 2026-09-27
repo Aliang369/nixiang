@@ -76,6 +76,10 @@ public final class TapLoginForceWeb {
                     // DefaultTapLoginFragmentProvider → WebLoginFragment 全部存在，走新版反射路径。
                     // 不加白名单时实测走 mobile_client（拉起 TapTap 客户端 SSO），改签包必失败。
                     "com.qxjc.fcxyxzj",
+                    // 幻想武将模拟器：同一工作室的 TapSDK 新版路径（TapTapLoginActivity +
+                    // LoginRequest/loginType + fallbackToWeb + WebLoginFragment）。改签包固定走
+                    // embedded_web，避免拉起 TapTap 客户端 SSO 校验真签。
+                    "com.qxjc.hxwjmlq",
                     // 我的修仙世界：TapSDK 4.7.0，LoginActivityImpl.loginHandlers
                     // = [CloudLoginHandler, ClientLoginHandler]，走旧版 handler 清洗路径。
                     "com.lingsi.xiuxiandanji",

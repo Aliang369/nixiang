@@ -1,0 +1,275 @@
+{
+  "game": "幻想武将模拟器",
+  "version": "1.0.8",
+  "notes": "2026-09-27 CTF 逆向单机游戏星空版移植管线。最终交付 = base-resign.apk + split-starry.apk，不是单包。官方 TapTap 原版 1.0.8（02_apks/幻想武将模拟器/幻想武将模拟器_1.0.8_taptap_original.apk，168,327,054 B md5 68ed2632579329c3700559447aba77f0）由用户授权真机只读拉取（serial f9a116a2），为不可再生输入。引擎 = Unity IL2CPP（libil2cpp.so sha256 9bd65a76…），官方只有 1 个 classes.dex（20,504 B，SecShell 壳），应用代码在加密 assets/classes0.jar。SecShell 对 base 的非 META-INF 载荷做整体完整性校验：纯重签通过，但新增 assets/classes2.dex/lib 或改写 classes0.jar/libSecShell.so 均会在启动约 1 秒后 SIGBUS BUS_ADRALN。最终 base 保持官方非 META-INF 载荷逐字节原始，只重签；星光 dex/so/cert/Provider/Service 放入 split-starry.apk。旧分体组合已实测 RegisterNatives 19/19、StarryBridgeTest PASS=15 FAIL=0、MOD 已就绪 tag=hxwj ready=1，菜单显示秒杀/百分百掉落/免广告。最终 base+split 已装机且设备双 md5 与本地产物一致；用户 2026-09-27 实机反馈「功能没问题」，菜单、去签名 / 强制网页登录与三项玩法按用户验收通过。收尾已完成：正式包仅保留 base+split，历史单包 / 未签名中间包 / idsig 已清理，03 拆包 / DummyDll 滚动物已清理；菜单模板 = 10_docs/幻想武将模拟器/hxwj_menu_template.json。",
+  "params": {
+    "game_id": "hxwj",
+    "package": "com.qxjc.hxwjmlq",
+    "mk": "Android_hxwj.mk（modern 注册表管线，含 Games/NoAceStubs.cpp）",
+    "tag": "hxwj",
+    "serial": "f9a116a2",
+    "version_code": 8,
+    "min_sdk": 22,
+    "target_sdk": 35,
+    "engine": "Unity IL2CPP (libil2cpp.so)",
+    "shell": "SecShell（classes.dex 壳 + 加密 assets/classes0.jar）",
+    "signature_official": "CN=sy / SHA-1 8a31d12c6dfab0a8e740868ddfe3b2c117d905e4",
+    "signature_final": "CN=StarryMagic / SHA-1 821c92e404ab5fdac8dbf157c2e467e71440917d",
+    "so_sha256": "9bd65a76bb74045247e576780de36d4a66873cd5a2a6ecd42fcc9eab645b535c",
+    "original_apk_md5": "68ed2632579329c3700559447aba77f0",
+    "final_base_md5": "65106606f2de237c26182f95c5f9752f",
+    "final_split_md5": "e157c929db864fb1ea8ceaf2eb617f08"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/04_scripts/幻想武将模拟器",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "底包核对（官方 TapTap 原版 1.0.8，168,327,054 B / md5 68ed2632…）",
+      "requires": [],
+      "command": "ls -lh \"$NIXIANG/02_apks/幻想武将模拟器/幻想武将模拟器_1.0.8_taptap_original.apk\" && md5 -q \"$NIXIANG/02_apks/幻想武将模拟器/幻想武将模拟器_1.0.8_taptap_original.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/幻想武将模拟器/幻想武将模拟器_1.0.8_taptap_original.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 16:00:00",
+      "note": "02_apks/ 由用户手动管理；官方原版由用户授权真机只读拉取，不可再生输入，勿删。设备原安装 md5 68ed2632579329c3700559447aba77f0 与本地产物一致。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/幻想武将模拟器/幻想武将模拟器_1.0.8_taptap_original.apk": {
+          "md5": "68ed2632579329c3700559447aba77f0"
+        }
+      }
+    },
+    {
+      "id": "dump",
+      "name": "IL2CPP dump（Il2CppDumper → dump.cs）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/幻想武将模拟器/1.0.8_il2cpp/dump.cs"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 15:00:00",
+      "note": "libil2cpp.so + global-metadata.dat → dump.cs。关键类型：FightGwItem（TypeDefIndex 3495，self=victim / xxOtherGw=attacker，fightType@0x64，useZbGwInfo@0x30）、XxGwInfo（curHp@0x80 / hp@0x84）、XxDiaoLuo（getNum@0x20 作权重）、ToponVideo（topon_video_id_CSJ@0x20 / TX@0x28）、ATAdEventArgs（placementId@0x10）。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/幻想武将模拟器/1.0.8_il2cpp/dump.cs": {}
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "抓点锚定（libil2cpp.so 静态反汇编 + 真机序言核对）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/03_decompiled/幻想武将模拟器/apktool_1.0.8/lib/arm64-v8a/libil2cpp.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 15:30:00",
+      "note": "ELF LOAD 实测 VirtAddr = FileOffset + 0x4000；运行时地址 = dl_iterate_phdr dlpi_addr + dump.cs RVA。锚点（RVA + 序言）：AttackDamage 0x1A733C8/0xD10143FF，AttackDamageOnce 0x1A756B8/0xF81D0FFE，SkillDamage 0x1A7695C/0xD10183FF，Random.Range(int) 0x35BD284/0xA9BE57FE，ToponVideo showAd 0x1A91F08、isReady 0x1A91FA0、onReward 0x1A923EC/0xF81C0FFE。掉落白名单返回地址：0x1A7C3A4（主权重池 Range(0,100000)）/0x1A7D634（Range(0,10000)，结果未使用）/0x1A7D714（Range(0,10000)，rand>99 跳过）/0x1A7DDB0（Range(0,1000)，难度相关）/0x1A7E94C（第二权重池 Range(0,100000)）。\n2026-09-27 收尾清理: /Users/aliang/Documents/nixiang/03_decompiled/幻想武将模拟器/apktool_1.0.8"
+    },
+    {
+      "id": "impl_mod",
+      "name": "星空侧实现（HxwjMod/HxwjEntry/SignSpoof/TapLoginForceWeb）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/HxwjMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/HxwjEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_hxwj.mk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 16:20:00",
+      "note": "菜单三项 kHxwjFeatures[] = {Category_功能, Toggle_秒杀, Toggle_百分百掉落, Toggle_免广告}（Category 占下标 0，功能位 HXWJ_FEAT_DMG=1/DROP=2/AD=3）。HxwjMod：懒装（开关全关 0 hook）+ RVA 优先序言校验 + 按名兜底 + 幂等 + orig 必调。秒杀写 curHp=1（非 0，理由见源码注释）。掉落只拦 5 个白名单返回地址。免广告 showAd 命中构造栈上假 event 直接调官方 onReward。SignSpoof 加 HXWJ_PKG + HXWJ_CERT_B64；TapLoginForceWeb 白名单加 com.qxjc.hxwjmlq。"
+    },
+    {
+      "id": "build_so",
+      "name": "native 编译（私有 Android_hxwj.mk，modern 注册表）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/幻想武将模拟器/hxwj_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hxwj/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 16:35:00",
+      "note": "产物 155,744 B md5 54b1f773b88384d6e54ea7318d0cbef7。归属防呆：[hxwj] 必须在、[Gyzw]/[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在；Toggle_秒杀/百分百掉落/免广告/hxwjmlq/FightGwItem/ToponVideo 均在。jniLibs 已同步。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hxwj/arm64-v8a/libstarry_magic.so": {
+          "md5": "54b1f773b88384d6e54ea7318d0cbef7"
+        }
+      }
+    },
+    {
+      "id": "surgical",
+      "name": "外科中间物（classes2.dex + Manifest 分支 B + so + libc++_shared；历史单包载荷来源）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_hxwj_1.0.8.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 17:17:49",
+      "note": "产物 169,022,262 B md5 eebf31035ae29102d521980d4af1d1ad sha256 59721d5bb6a9233d19f37d330b7120878a246e5beed9a2367d7e34ab7440e847。新增 = classes2.dex（455,816 B，含 MenuService FGS 权限降级）+ libstarry_magic.so + libc++_shared.so + assets/certs/starlight.crt；改写 = AndroidManifest.xml（StarryInitProvider + MenuService + FOREGROUND_SERVICE(_SPECIAL_USE)）。零改动硬校验通过 = classes.dex / resources.arsc / libil2cpp.so。该包不能单独安装交付，split 只取其中的星光载荷。\n2026-09-27 收尾清理: /Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_surgical-unsigned.apk\n2026-09-27 收尾清理: /Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_surgical-unsigned.apk; 原 md5=eebf31035ae29102d521980d4af1d1ad"
+    },
+    {
+      "id": "sign",
+      "name": "历史单包签名（星空证书 starry_release.jks，CN=StarryMagic）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/幻想武将模拟器/hxwj_sign.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 16:38:00",
+      "note": "历史单包产物 169,113,558 B md5 5c08794717b0097d211b16bcb5645b5f sha256 d5771378af1a4bae667cc32844e7f876f29b2d43adbd9dab6ffd0bba0e3c9828，v1/v2/v3 Verified，CN=StarryMagic SHA-1 821c92e4…。该路线被 SecShell 整体校验否决，保留仅作对照，不可交付。\n2026-09-27 收尾清理: /Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_surgical-releaseSigned.apk\n2026-09-27 收尾清理: /Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_surgical-releaseSigned.apk; 原 md5=5c08794717b0097d211b16bcb5645b5f"
+    },
+    {
+      "id": "pre_install_gate",
+      "name": "装机前门禁（JNI 配套关，按 split 载荷来源 dex/so 校验）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --cpp app/src/main/jni/Games/HxwjMod.cpp --cpp app/src/main/jni/MainModern.cpp --dex classes2.dex --so libstarry_magic.so",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-09-27 16:40:00",
+      "note": "PASS=1 FAIL=0 WARN=0：19 个动态注册方法名在 classes2.dex 中全部有声明。split 直接复用该 dex/so 组合，build_split 内再次硬校验 StarryInitProvider/MenuService/SignSpoof/TapLoginForceWeb 与 [hxwj] 归属串。"
+    },
+    {
+      "id": "build_split",
+      "name": "SecShell 兼容分体（base 纯重签 + split_starry）",
+      "requires": [
+        "surgical",
+        "pre_install_gate"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/幻想武将模拟器/hxwj_build_split.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_base-resign.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_split-starry.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 17:17:58",
+      "note": "最终交付。base 168,327,058 B md5 65106606f2de237c26182f95c5f9752f sha256 a91e2418658cce12993c69d1414e23e283d8ea3e5b162df479c8e8bca8848425；split 807,537 B md5 e157c929db864fb1ea8ceaf2eb617f08 sha256 8390b46eaaa319d058d9022aa1cbc695fb91871ceb29088c0ca6e62a41cc2e84。脚本硬校验 base 非 META-INF 载荷与原包逐字节一致；split 内含 classes.dex 455,816 B + libstarry_magic.so + libc++_shared.so + cert + Provider/Service。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_base-resign.apk": {
+          "md5": "65106606f2de237c26182f95c5f9752f",
+          "sha256": "a91e2418658cce12993c69d1414e23e283d8ea3e5b162df479c8e8bca8848425"
+        },
+        "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_split-starry.apk": {
+          "md5": "e157c929db864fb1ea8ceaf2eb617f08",
+          "sha256": "8390b46eaaa319d058d9022aa1cbc695fb91871ceb29088c0ca6e62a41cc2e84"
+        }
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "真机就位（serial 锁定 + root 校验 + 只读识别现装版本）",
+      "requires": [],
+      "command": "bash \"$NIXIANG/04_scripts/幻想武将模拟器/device_ready_hxwj.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/幻想武将模拟器/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 16:36:00",
+      "note": "设备 OPD2404 / serial f9a116a2 / Android 16 / arm64-v8a / KernelSU uid=0。安装前设备现装官方 TapTap 原版 1.0.8（md5 68ed2632579329c3700559447aba77f0，签名 CN=sy）；安装后当前为星光分体。"
+    },
+    {
+      "id": "install",
+      "name": "分体安装（base + split_starry；用户已授权卸载重装）",
+      "requires": [
+        "build_split",
+        "device_ready"
+      ],
+      "command": "HXWJ_ALLOW_UNINSTALL=1 bash \"$NIXIANG/04_scripts/幻想武将模拟器/hxwj_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/幻想武将模拟器/.install_ok"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-27 17:22:55",
+      "note": "用户授权卸载重装。设备 pm path 同时存在 base.apk / split_starry.apk；dumpsys splits=[base, starry]，versionCode=8，versionName=1.0.8；设备 base md5=65106606f2de237c26182f95c5f9752f、split md5=e157c929db864fb1ea8ceaf2eb617f08，与本地产物一致。安装脚本只 force-stop 后安装，没有启动游戏、没有代点屏幕。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/幻想武将模拟器/.install_ok": {
+          "content": "65106606f2de237c26182f95c5f9752f e157c929db864fb1ea8ceaf2eb617f08 2026-09-27 17:22:55"
+        }
+      }
+    },
+    {
+      "id": "runtime_verify",
+      "name": "真机运行验证（用户自行操作屏幕）",
+      "requires": [
+        "install"
+      ],
+      "command": "adb -s f9a116a2 logcat -s hxwj Mod_Menu StarryMagic MenuService",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-09-27 17:35:00",
+      "note": "用户 2026-09-27 实机反馈「功能没问题」，菜单、去签名 / 强制网页登录与秒杀 / 百分百掉落 / 免广告按用户验收通过。AI 未启动游戏、未操作屏幕；未保留逐功能 logcat 明细。"
+    },
+    {
+      "id": "archive",
+      "name": "归档（写 10_docs 分析总览 + 状态索引）",
+      "requires": [
+        "runtime_verify"
+      ],
+      "command": "true",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-09-27 17:35:00",
+      "note": "已更新 10_docs/幻想武将模拟器/分析_总览_1.0.8_20260927.md、10_docs/_state/games/幻想武将模拟器.md、10_docs/_state/current.md；最终交付为 base + split，用户实机反馈「功能没问题」；历史包 / idsig 已裁剪，03 拆包 / DummyDll 已清理，菜单模板已生成。git 收口提交号见本轮提交记录。"
+    }
+  ]
+}

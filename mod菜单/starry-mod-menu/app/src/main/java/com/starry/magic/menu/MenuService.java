@@ -10,6 +10,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -1136,6 +1137,15 @@ public class MenuService extends Service {
 
     @SuppressWarnings("DEPRECATION")
     private void startForegroundCompat() {
+        // Split APK 的 uses-permission 不会并入部分 ROM 的 requested permissions。
+        // MenuService 由普通 startService 启动，没有 5 秒前台化义务；无权限时保持
+        // 普通 Service 即可，避免 SecurityException 污染启动日志。
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(android.Manifest.permission.FOREGROUND_SERVICE)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "FOREGROUND_SERVICE not granted; menu continues as plain service");
+            return;
+        }
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         Notification notification;
 
