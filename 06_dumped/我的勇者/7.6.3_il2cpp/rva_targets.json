@@ -27,8 +27,8 @@
       "class": "HeroCore",
       "method": "SettleDamage",
       "argc": 5,
-      "offset": "0x47915E4",
-      "rva": "0x47955E4",
+      "offset": "0x4794970",
+      "rva": "0x4798970",
       "prologue_le": "0x6DBC2BEB",
       "prologue_bytes": "eb 2b bc 6d",
       "insn": "stp d11, d10, [sp, #-0x40]!",
@@ -46,7 +46,7 @@
       "prologue_le": "0xD10503FF",
       "prologue_bytes": "ff 03 05 d1",
       "insn": "sub sp, sp, #0x140",
-      "role": "五倍攻击：敌 core value ×5；无敌：己 core 归零（按 object_class 类名分派）",
+      "role": "五倍攻击：敌 core value ×5；无敌：己 core 归零（优先精确 IL2CPP 类指针分派）",
       "dump_line": 587172
     },
     {
@@ -60,7 +60,7 @@
       "prologue_le": "0x6DBB2BEB",
       "prologue_bytes": "eb 2b bb 6d",
       "insn": "stp d11, d10, [sp, #-0x50]!",
-      "role": "诊断对照槽（只观察入参，不改倍率）",
+      "role": "五倍攻击：DamageCollectionBoss type 7 在覆盖入口提前返回，需在此放大 value",
       "dump_line": 592101
     }
   ],
@@ -75,11 +75,12 @@
     },
     "symptom": "MonsterSettle 日志有命中，BaseSettle 无命中；进关卡卡「正在连接」",
     "cause": "7.6.3 重 dump 时把 HeroCore.get_CanSettleCallback / MonsterCore..ctor 的 Offset 误当 SettleDamage Offset",
-    "fix": "按 dump.cs 中实际 SettleDamage Offset 回填 0x47915E4 / 0x47BF274，序言校验通过"
+    "fix": "按 dump.cs 中实际 SettleDamage Offset 回填 0x4794970 / 0x47BF274，序言校验通过",
+    "wrong_commonbattleobj": "0x47915E4 是 CommonBattleObj.SettleDamage（RVA 0x47955E4），不是 HeroCore；HeroCore 实际 Offset=0x4794970 / RVA=0x4798970。该错挂会打印 @rva hooked 但无敌入口不命中。"
   },
   "verified": {
     "static": "在 Offset 处 xxd 命中上表序言字节（2026-09-28）",
-    "runtime": "用户实测功能生效（无敌/五倍攻击）；@rva 挂钩日志已确认命中 0x47915E4 / 0x47748A4 / 0x47BF274",
+    "runtime": "2026-09-28 修正后通过：@rva 日志命中 HeroSettle 0x4794970 / MonsterSettle 0x47BF274 / BaseSettle 0x47748A4；HERO raw value=+167.411 name=HeroCore 进入 HERO inv 归零，MonsterCore 精确识别并在 BASE enemy x5 处理；用户确认“测试完了，没问题”",
     "il2cpp_exports": "12/12 在（domain_get_assemblies / class_from_name / class_get_method_from_name / class_get_fields / field_get_offset / object_get_class / class_get_name / thread_attach …）"
   }
 }

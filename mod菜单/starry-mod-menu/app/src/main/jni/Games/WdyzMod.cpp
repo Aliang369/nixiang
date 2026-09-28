@@ -3,8 +3,8 @@
  *
  *  路线（2026-09-07 星光自注入验证，替代 frida）：
  *    仅挂 Battle 结算层两个函数（§10.1-4 证 monSettle hook 安全）：
- *      - 五倍攻击：BattleObjectCore.SettleDamage 基类，敌 core value ×5
- *      - 无敌：HeroCore.SettleDamage + 基类己方 core，value 归 0（免伤）
+ *      - 五倍攻击：BattleObjectCore.SettleDamage 基类处理普通怪；类型 7 在 MonsterCore 覆盖入口处理
+ *      - 无敌：HeroCore.SettleDamage value/shield 归 0；基类仅作己方兜底
  *  2026-09-28 7.6.3(vc205) 版本重定位（重 dump 实证）：
  *    - 类/方法名与参数个数保持 7.6.1 形态（HeroCore/BattleObjectCore/MonsterCore.SettleDamage 均 5 参）
  *    - il2cpp 12 个导出（domain_get_assemblies/class_from_name/…）全在 → 按名路径可用
@@ -37,14 +37,13 @@ using Il2Cpp::GetApi;
 // ============================================================
 static std::atomic<bool> g_libReady{false};  // il2cpp 已映射（≠ 已 hook）
 static std::atomic<bool> g_anyHooked{false};
-static std::atomic<bool> g_dmg{false};  // 秒杀
+static std::atomic<bool> g_dmg{false};  // 五倍攻击
 static std::atomic<bool> g_inv{false};  // 无敌
-static std::atomic<bool> g_reenter{false};
 
 // BattleObjectCore.SettleDamage(value, shield, toughness, energy, fromgroup) 的函数签名：
-//   MonsterCore.SettleDamage override（7.6.3 Offset 0x47BF274，仅诊断对照）
-//   HeroCore.SettleDamage   override（7.6.3 Offset 0x47915E4，无敌用）
-//   BattleObjectCore.SettleDamage 基类（7.6.3 Offset 0x47748A4，五倍攻击/无敌落地点）
+//   MonsterCore.SettleDamage override（7.6.3 Offset 0x47BF274，五倍攻击）
+//   HeroCore.SettleDamage   override（7.6.3 Offset 0x4794970，无敌）
+//   BattleObjectCore.SettleDamage 基类（7.6.3 Offset 0x47748A4，仅无敌兜底）
 // 参数寄存器：s0=value s1=shield s2=toughness s3=energy w4=fromgroup（7.6.3 ABI 不变）
 typedef void (*SettleDamage_t)(void* self, float value, float shield, float toughness,
                                float energy, int fromgroup);
@@ -57,13 +56,13 @@ static SettleDamage_t g_origBaseSettle = nullptr;
 //   地址口径 = dump.cs 的 Offset（文件偏移），供 FileOffToVa 在 /proc/self/maps 里换算 VA。
 //   RVA 序言首 4 字节（小端 memcpy 值）：
 //     MonsterCore.SettleDamage      Offset 0x47BF274  "eb 2b bb 6d" → 0x6DBB2BEB（stp d11,d10,[sp,#-0x50]!）
-//     HeroCore.SettleDamage         Offset 0x47915E4  "eb 2b bc 6d" → 0x6DBC2BEB（stp d11,d10,[sp,#-0x40]!）
+//     HeroCore.SettleDamage         Offset 0x4794970  "eb 2b bc 6d" → 0x6DBC2BEB（stp d11,d10,[sp,#-0x40]!）
 //     BattleObjectCore.SettleDamage Offset 0x47748A4  "ff 03 05 d1" → 0xD10503FF（sub sp,sp,#0x140）
 //   任一序言不符（热更/漂移）→ 自动转按名，不挂错地址。
 // ============================================================
 enum : size_t {
     kRvaMonsterSettle = 0x47BF274,
-    kRvaHeroSettle    = 0x47915E4,
+    kRvaHeroSettle    = 0x4794970,
     kRvaBaseSettle    = 0x47748A4,
 };
 
@@ -199,84 +198,168 @@ static bool HookSlotInstall(const HookSlot& s) {
 // ============================================================
 // ⑤ hook 函数与挂点表（仅 Battle 结算层；绝不挂技能/CD 簇函数）
 // ============================================================
-// 采样日志（确认 value 符号/量级；挂点测试期间小采样，避免热路径刷屏）
-static int g_monSamp = 0;
-static int g_heroSamp = 0;
+// 采样日志：raw* 在过滤前记录，确保能区分“Hook 未进入”和“类别过滤未命中”。
+static std::atomic<int> g_monSamp{0};
+static std::atomic<int> g_heroSamp{0};
+static std::atomic<int> g_rawBaseSamp{0};
+static std::atomic<int> g_rawHeroSamp{0};
+static std::atomic<int> g_rawMonSamp{0};
 
-// 敌我/类别判定（热路径：object_class 读对象头 O(1) + 类名缓存）
+static void* g_monsterCoreClass = nullptr;
+static void* g_heroCoreClass = nullptr;
+static std::atomic<bool> g_classCacheReady{false};
+
+static bool IsSameOrSubclass(void* klass, void* base) {
+    if (!klass || !base) return false;
+    if (klass == base) return true;
+    auto& api = GetApi();
+    if (!api.class_parent) return false;
+    for (int i = 0; i < 32 && klass; i++) {
+        klass = api.class_parent(klass);
+        if (klass == base) return true;
+    }
+    return false;
+}
+
+static void ResolveBattleClasses() {
+    if (g_classCacheReady.load() || !EnsureApi()) return;
+    void* monster = FindClassNs("Battle", "MonsterCore");
+    void* hero = FindClassNs("Battle", "HeroCore");
+    if (monster) g_monsterCoreClass = monster;
+    if (hero) g_heroCoreClass = hero;
+    if (monster && hero) {
+        g_classCacheReady.store(true);
+        LOGI(WDYZ_LOG " class cache MonsterCore=%p HeroCore=%p", monster, hero);
+    }
+}
+
+static const char* ClassNameOf(void* self) {
+    auto& api = GetApi();
+    if (!self || !api.object_class || !api.class_name) return "?";
+    void* k = api.object_class(self);
+    const char* n = k ? api.class_name(k) : nullptr;
+    return n ? n : "?";
+}
+
+// 敌我/类别判定：优先用安装时缓存的精确 IL2CPP 类与父类链，类名仅作兜底。
 static int ClassTagOf(void* self) {
     auto& api = GetApi();
     if (!api.object_class || !self) return 0;
     void* k = api.object_class(self);
-    if (!k || !api.class_name) return 0;
+    if (!k) return 0;
+    if (IsSameOrSubclass(k, g_monsterCoreClass)) return 1;
+    if (IsSameOrSubclass(k, g_heroCoreClass)) return 2;
+    if (!api.class_name) return 0;
     const char* n = api.class_name(k);
     if (!n) return 0;
-    if (strstr(n, "Monster") || strstr(n, "Boss") || strstr(n, "mob")) return 1;
+    if (strstr(n, "Monster") || strstr(n, "Boss") || strstr(n, "mob") ||
+        strstr(n, "Mob")) return 1;
     if (strstr(n, "Hero")) return 2;
     return 0;
 }
 
+// 敌我/类别判定（热路径：object_class 读对象头 O(1) + 类名缓存）
+// MonsterCore.monster @0xD8 -> Monster.<monsterType>k__BackingField @0x60。
+// 只读字段，不调 IL2CPP 方法；普通怪仍走基类落地点，类型 7 才需在覆盖入口处理。
+static int MonsterTypeOf(void* self) {
+    if (!self) return -1;
+    auto* core = static_cast<uint8_t*>(self);
+    void* monster = *reinterpret_cast<void**>(core + 0xD8);
+    if (!monster) return -1;
+    auto* obj = static_cast<uint8_t*>(monster);
+    return *reinterpret_cast<int*>(obj + 0x60);
+}
+
 // 基类 BattleObjectCore.SettleDamage — 真正 HP 落地点（override 重算后再经此转发）
-// 五倍攻击：敌 core value ×5；无敌：己 core value 归零（双保险，HeroSettle 已灵）
+// 普通怪的五倍攻击必须在这里改：MonsterCore 覆盖入口会重算 value，改入口参数无效。
+// 同时兼任无敌兜底：HeroCore 覆盖钩若失败，仍按精确类指针识别己方 core 并清零两个分量。
 static void Wdyz_HookedBaseSettle(void* self, float value, float shield, float toughness,
                                   float energy, int fromgroup) {
-    if (!g_reenter.load()) {
-        int tag = ClassTagOf(self);
-        if (tag == 1 && g_dmg.load()) {
-            // 用户定稿：保持"五倍攻击"语义（×5），勿放大过度（护盾/多段血表现已实测）
-            if (++g_monSamp <= 6) {
-                LOGI(WDYZ_LOG "BASE enemy v=%+.3f -> %+.3f g=%d self=%p", value, value * 5.0f, fromgroup, self);
-            }
-            value *= 5.0f;
-        } else if (tag == 2 && g_inv.load()) {
-            if (++g_heroSamp <= 6) {
-                LOGI(WDYZ_LOG "BASE hero v=%+.3f -> 0 g=%d self=%p", value, fromgroup, self);
-            }
-            value = 0.0f;
+    if (g_rawBaseSamp.fetch_add(1) < 12) {
+        LOGI(WDYZ_LOG "BASE raw v=%+.3f sh=%+.3f tg=%+.3f g=%d self=%p class=%p tag=%d name=%s",
+             value, shield, toughness, fromgroup, self,
+             GetApi().object_class ? GetApi().object_class(self) : nullptr,
+             ClassTagOf(self), ClassNameOf(self));
+    }
+    const int tag = ClassTagOf(self);
+    if (tag == 1 && g_dmg.load()) {
+        const float inValue = value;
+        if (value != 0.0f) value *= 5.0f;
+        if (g_monSamp.fetch_add(1) < 12) {
+            LOGI(WDYZ_LOG "BASE enemy x5 v=%+.3f->%+.3f sh=%+.3f g=%d self=%p",
+                 inValue, value, shield, fromgroup, self);
         }
+    } else if (tag == 2 && g_inv.load()) {
+        if (g_heroSamp.fetch_add(1) < 12) {
+            LOGI(WDYZ_LOG "BASE hero inv v=%+.3f->0 sh=%+.3f->0 g=%d self=%p",
+                 value, shield, fromgroup, self);
+        }
+        value = 0.0f;
+        shield = 0.0f;
     }
     if (g_origBaseSettle) g_origBaseSettle(self, value, shield, toughness, energy, fromgroup);
 }
 
-// 旧槽（菜单早期"秒杀"位）[保留作诊断对照，倍率逻辑已迁基类]
+// 五倍攻击：仅处理 DamageCollectionBoss=7。它在覆盖入口内提前返回，不走基类。
 static void Wdyz_HookedMonsterSettle(void* self, float value, float shield, float toughness,
                                      float energy, int fromgroup) {
-    if (++g_monSamp <= 4) {
-        LOGI(WDYZ_LOG "MON raw v=%+.3f sh=%+.3f tg=%+.3f g=%d self=%p",
-             value, shield, toughness, fromgroup, self);
+    const int monsterType = MonsterTypeOf(self);
+    if (g_rawMonSamp.fetch_add(1) < 12) {
+        LOGI(WDYZ_LOG "MON raw v=%+.3f sh=%+.3f tg=%+.3f g=%d type=%d self=%p class=%p name=%s",
+             value, shield, toughness, fromgroup, monsterType, self,
+             GetApi().object_class ? GetApi().object_class(self) : nullptr,
+             ClassNameOf(self));
+    }
+    if (g_dmg.load() && monsterType == 7) {
+        const float inValue = value;
+        if (value != 0.0f) value *= 5.0f;
+        if (g_monSamp.fetch_add(1) < 12) {
+            LOGI(WDYZ_LOG "MON type7 x5 v=%+.3f->%+.3f sh=%+.3f tg=%+.3f g=%d self=%p",
+                 inValue, value, shield, toughness, fromgroup, self);
+        }
     }
     if (g_origMonsterSettle) g_origMonsterSettle(self, value, shield, toughness, energy, fromgroup);
 }
 
-// 无敌：HeroCore.SettleDamage — 玩家受击结算 value 无条件归零
+// 无敌：HeroCore.SettleDamage — value 与 shield 都是承伤分量，必须同时归零。
 static void Wdyz_HookedHeroSettle(void* self, float value, float shield, float toughness,
                                   float energy, int fromgroup) {
+    if (g_rawHeroSamp.fetch_add(1) < 12) {
+        LOGI(WDYZ_LOG "HERO raw v=%+.3f sh=%+.3f tg=%+.3f g=%d self=%p class=%p name=%s",
+             value, shield, toughness, fromgroup, self,
+             GetApi().object_class ? GetApi().object_class(self) : nullptr,
+             ClassNameOf(self));
+    }
     if (g_inv.load()) {
-        if (++g_heroSamp <= 4) {
-            LOGI(WDYZ_LOG "HERO settle v=%+.3f sh=%+.3f tg=%+.3f g=%d self=%p",
-                 value, shield, toughness, fromgroup, self);
+        if (value != 0.0f || shield != 0.0f) {
+            if (g_heroSamp.fetch_add(1) < 12) {
+                LOGI(WDYZ_LOG "HERO inv v=%+.3f->0 sh=%+.3f->0 tg=%+.3f g=%d self=%p",
+                     value, shield, toughness, fromgroup, self);
+            }
         }
         value = 0.0f;
+        shield = 0.0f;
     }
     if (g_origHeroSettle) g_origHeroSettle(self, value, shield, toughness, energy, fromgroup);
 }
 
 static const HookSlot kSlots[] = {
-    // 无敌：HeroCore.SettleDamage override（已实测有效）
+    // 无敌：HeroCore.SettleDamage override（主路径）
     {"HeroSettle",    kRvaHeroSettle,    0x6DBC2BEB, "Battle", "HeroCore",     "SettleDamage", 5,
      (void*)Wdyz_HookedHeroSettle,    (void**)&g_origHeroSettle},
-    // 五倍攻击/无敌落地点：BattleObjectCore.SettleDamage 基类（override 重算后的落地转发，按类名分派敌我）
-    {"BaseSettle",    kRvaBaseSettle,    0xD10503FF, "Battle", "BattleObjectCore", "SettleDamage", 5,
-     (void*)Wdyz_HookedBaseSettle,    (void**)&g_origBaseSettle},
-    // 诊断对照槽（仅观察原始入参，倍率不在这里改）
+    // 五倍攻击：MonsterCore.SettleDamage override（仅 DamageCollectionBoss 类型 7）
     {"MonsterSettle", kRvaMonsterSettle, 0x6DBB2BEB, "Battle", "MonsterCore",  "SettleDamage", 5,
      (void*)Wdyz_HookedMonsterSettle, (void**)&g_origMonsterSettle},
+    // 五倍攻击主路径 + 无敌兜底：BattleObjectCore.SettleDamage 基类
+    {"BaseSettle",    kRvaBaseSettle,    0xD10503FF, "Battle", "BattleObjectCore", "SettleDamage", 5,
+     (void*)Wdyz_HookedBaseSettle,    (void**)&g_origBaseSettle},
 };
 
 // ============================================================
 // ⑥ 分组安装 + 懒装（开关全关 = 0 hook）
 // ============================================================
 static void InstallBattleHooks() {
+    ResolveBattleClasses();
     for (const auto& s : kSlots) {
         if (HookSlotInstall(s)) g_anyHooked.store(true);
     }

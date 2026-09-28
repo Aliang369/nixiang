@@ -280,8 +280,10 @@ LOCAL_ARM_MODE  := arm
 # 无限升级 12.10701 / vc1644 — 热更 dll 字节替换（2026-09-23 二次热更正式包）
 # 2026-09-23 白天：官方再推热更，dll 1960960 → 2030080 B；已用 DIAG 包抓到新 dll 并重打补丁，
 #   kOrigDllLen 已改 2030080，DIAG 开关按约定移除（勿再打开，否则 release 构建被脚本拒绝）。
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
-LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
+LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
+# LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
 # 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
 # 20260908 SIGABRT 修复：类查齐后隔轮再读 offsets（热更 layout 中途 field_get_offset 必崩）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
