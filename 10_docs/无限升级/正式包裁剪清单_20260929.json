@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级",
+  "keep": "无限升级_12.10701_unshelled-menu-releaseSigned.apk",
+  "keep_size": 121243296,
+  "keep_md5": "952b540a6a6b8a9eddb0371eede971e7",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "无限升级_12.10701_unshelled-menu-releaseSigned.apk.idsig",
+      "size": 964123,
+      "md5": "ff3a9b64ee4a729b24f1b7ae205db87e"
+    }
+  ],
+  "removed_count": 1
+}
