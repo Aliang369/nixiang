@@ -1,0 +1,115 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/独奏骑士",
+  "keep": "独奏骑士_1.1.768_v6-releaseSigned.apk",
+  "keep_size": 580970776,
+  "keep_md5": "665b57ac0d0bc72493e41216e4447a5e",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "独奏骑士_1.1.768_v5fix7-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "c85e7cbf4ed3348cce138ce02d423c0a"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix5-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "8e36cbe175e9c1d6e87aa8d000b3af7e"
+    },
+    {
+      "name": "独奏骑士_1.1.768_surgical-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "d572a96bbe3ac38acfdd8c651b1b90b6"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "dadcdf99edc8a1ebc08caba70313d5ce"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "870838d44de916ffcb307e3eb46129b8"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix8-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "e1c9d799f7c81c19f319a8e385d47dc6"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix4-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "0889372af3c2498dd7e207eddbbcc6c8"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix3-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "949b4d52e87e19f9c0293f6b704b98d2"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix7-releaseSigned.apk",
+      "size": 580970776,
+      "md5": "16a5534242541e03ee67f31cbb544716"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix2-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "48b76386ac34a63a5d7b53759add93aa"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix6-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "74db89cce466a3c23a1695a313dce160"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix4-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "97c1766d620de5c36e14920676f569aa"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix3-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "a5449e4960b23d84a00a8f9ae1dd9657"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v6-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "4745ce513e0c25d55d9a84effe7e2371"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "5838c8e8c7e52d8a9d392c221e5dffdc"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix2-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "caeb05756ca3ac80b1d19dd5be0262dd"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix6-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "750144e3feb63e3ca2749821b27c488b"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix8-releaseSigned.apk",
+      "size": 580970776,
+      "md5": "1c5cd6e3afe15348b8d717271d074f31"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5fix5-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "fd88df332bc09400b921e5093f151a8d"
+    },
+    {
+      "name": "独奏骑士_1.1.768_v5-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "6927b6f95322aabcc645cf7ea74836f2"
+    },
+    {
+      "name": "独奏骑士_1.1.768_surgical-releaseSigned.apk",
+      "size": 580966680,
+      "md5": "7fceba7fd0baa92ca05ffb08977962e1"
+    }
+  ],
+  "removed_count": 21
+}

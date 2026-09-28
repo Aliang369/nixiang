@@ -282,6 +282,11 @@ LOCAL_ARM_MODE  := arm
 #   kOrigDllLen 已改 2030080，DIAG 开关按约定移除（勿再打开，否则 release 构建被脚本拒绝）。
 LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
 LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
+# 独奏骑士 1.1.768：仅当环境变量 STARRY_GAME_DZQS=1 时覆盖默认目标，避免影响其他游戏的激活分支。
+ifdef STARRY_GAME_DZQS
+LOCAL_CFLAGS    := $(filter-out -DSTARRY_GAME_WDYZ,$(LOCAL_CFLAGS)) -DENABLE_UNITY_HOOK -DSTARRY_GAME_DZQS
+LOCAL_SRC_FILES := Main.cpp Games/DzqsMod.cpp Unity/Il2CppApi.cpp
+endif
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
 # LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
 # 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
