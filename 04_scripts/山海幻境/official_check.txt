@@ -1,6 +1,6 @@
 package=com.chx.shhj
-versionName=4
-versionCode=54
+versionName=4.2
+versionCode=68
 cert_md5=86d1959875555021642fcf3b0d9c161d
 cert_dn=CN=shhjchx, OU=shhjchx, O=shhjchx, L=ShenZhen, ST=GuangDong, C=86
 signer_matches_history=true

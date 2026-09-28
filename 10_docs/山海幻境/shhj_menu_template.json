@@ -5,6 +5,7 @@
   "source": "Games/ShhjMod.h SHHJ_FEAT_* / Main.cpp STARRY_GAME_SHHJ",
   "features": [
     {"feat_num": 1, "name": "无敌"},
-    {"feat_num": 2, "name": "百倍伤害"}
+    {"feat_num": 2, "name": "百倍伤害"},
+    {"feat_num": 3, "name": "五倍伤害（BOSS）"}
   ]
 }

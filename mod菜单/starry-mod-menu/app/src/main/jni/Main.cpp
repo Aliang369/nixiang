@@ -742,10 +742,11 @@ static const char* g_featureList[] = {
     "Toggle_无敌",                       // 2  ZMXY_FEAT_INVINCIBLE
     "Toggle_无限技能",                   // 3  ZMXY_FEAT_ULTRA_SKILL（无CD+不耗蓝）
 #elif defined(STARRY_GAME_SHHJ)
-    // 山海幻境（菜单 1/2；JS get_ret 2=无敌 3=百倍）
+    // 山海幻境（JS get_ret 2=无敌 3=百倍 4=五倍BOSS）
     "Category_战斗",                     // 0
     "Toggle_无敌",                       // 1  SHHJ_FEAT_INVINCIBLE
     "Toggle_百倍伤害",                   // 2  SHHJ_FEAT_DMG100
+    "Toggle_五倍伤害（BOSS）",           // 3  SHHJ_FEAT_DMG5
 #elif defined(STARRY_GAME_QLFH)
     // 青鸾繁华录（QlfhMod.h v2：免广告三合一 + 客户端战斗模拟器 + 变速）
     "Category_功能",                     // 0

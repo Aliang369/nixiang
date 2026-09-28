@@ -1,0 +1,22 @@
+{
+  "apk_path": "/Users/aliang/Documents/nixiang/08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk",
+  "apk_md5": "47eebe7668a6ef133c0621839cc67520",
+  "apk_sha256": "5703c47996c9d5b62657efd5c7fec002ad7644aeb24fb57970b0135443142c7b",
+  "package": "com.chx.shhj",
+  "version_name": "4.2",
+  "version_code": 68,
+  "signer_cert_md5": "161fca32a36d3df274458682a44cb774",
+  "signer_cert_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "v1_verified": true,
+  "v2_verified": true,
+  "v3_verified": true,
+  "zipalign_verified": true,
+  "libstarry_magic_md5": "3ca6608284c3cf751a3dadfafe50cb77",
+  "manifest_starry_app": true,
+  "manifest_menu_service": true,
+  "classes3_package_sign_patch": true,
+  "official_common_entries_preserved": 34224,
+  "official_common_entries_changed": [],
+  "official_non_meta_removed": [],
+  "unexpected_added": []
+}

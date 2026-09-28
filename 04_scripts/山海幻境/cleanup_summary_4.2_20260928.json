@@ -1,0 +1,56 @@
+{
+  "game": "山海幻境",
+  "version": "4.2 / vc68",
+  "date": "2026-09-28",
+  "final_apk": "08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk",
+  "final_apk_size": 1236747605,
+  "final_apk_md5": "47eebe7668a6ef133c0621839cc67520",
+  "final_apk_sha256": "5703c47996c9d5b62657efd5c7fec002ad7644aeb24fb57970b0135443142c7b",
+  "official_apk_kept": "02_apks/山海幻境/山海幻境_4.2_official_from_device.apk",
+  "prune_manifest": "10_docs/山海幻境/正式包裁剪清单_4.2_20260928.json",
+  "removed": [
+    {
+      "path": "06_dumped/山海幻境/4.2_runtime/index.js",
+      "size": 10212093,
+      "reason": "可再生的 4.2 运行时明文 JS；锚点与 key 已写入落地文档"
+    },
+    {
+      "path": "06_dumped/山海幻境/4.2_runtime/decrypt_summary.json",
+      "size": 394,
+      "reason": "摘要已并入落地文档"
+    },
+    {
+      "path": "07_patched/山海幻境/build_4/libstarry_magic.so",
+      "size": 4225312,
+      "reason": "可由 build_shhj_so_4.sh 重建；正式包内已包含同 md5 的 so"
+    },
+    {
+      "path": "04_scripts/山海幻境/probe_42_xxtea_key.js",
+      "size": 1854,
+      "reason": "临时动态探针，已回收"
+    },
+    {
+      "path": "04_scripts/山海幻境/probe_42_xxtea_key.py",
+      "size": 2462,
+      "reason": "临时动态探针，已回收"
+    },
+    {
+      "path": "04_scripts/山海幻境/runtime_42_xxtea_key.json",
+      "size": 549,
+      "reason": "未成功记录 key 的临时结果，key 已写入落地文档"
+    },
+    {
+      "path": "04_scripts/山海幻境/candidate_verify_4.2_five.json",
+      "size": 883,
+      "reason": "改名前候选包验证报告，最终报告为 candidate_verify_4.2_five-boss.json"
+    }
+  ],
+  "removed_bytes": 14443547,
+  "kept": [
+    "07_patched/山海幻境/surgical_4.2/AndroidManifest.xml",
+    "04_scripts/山海幻境/candidate_verify_4.2_five-boss.json",
+    "10_docs/山海幻境/星光落地_4.2_20260928.md",
+    "10_docs/山海幻境/正式包裁剪清单_4.2_20260928.json",
+    "10_docs/山海幻境/shhj_menu_template.json"
+  ]
+}

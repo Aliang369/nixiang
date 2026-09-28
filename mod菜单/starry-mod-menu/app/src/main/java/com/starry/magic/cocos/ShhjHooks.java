@@ -4,7 +4,7 @@ import android.util.Log;
 
 /**
  * 山海幻境：JS jsb.reflection / AppActivity.get_ret
- * get_ret：2 无敌  3 百倍伤害（菜单 feat 1/2 映射到此）
+ * get_ret：2 无敌  3 百倍伤害  4 五倍伤害（BOSS）（菜单 feat 1/2/3 映射到此）
  */
 public final class ShhjHooks {
     private static final String TAG = "Shhj";

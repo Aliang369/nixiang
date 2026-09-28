@@ -10,8 +10,18 @@ APK="${1:-$NIXIANG_ROOT/08_output/山海幻境/山海幻境_4_surgical-releaseSi
 EXPECTED_C3_PATCH="${SHHJ_EXPECT_CLASSES3_PATCH:-0}"
 SO="$NIXIANG_ROOT/07_patched/山海幻境/build_4/libstarry_magic.so"
 PKG="com.chx.shhj"
-VERSION_NAME="4"
-VERSION_CODE="54"
+VERSION_NAME="$(python3 - "$META_FILE" <<'PY'
+import json
+import sys
+print(json.load(open(sys.argv[1], encoding="utf-8"))["version_name"])
+PY
+)"
+VERSION_CODE="$(python3 - "$META_FILE" <<'PY'
+import json
+import sys
+print(json.load(open(sys.argv[1], encoding="utf-8"))["version_code"])
+PY
+)"
 
 [[ -f "$META_FILE" ]] || { echo "错误: 缺少 $META_FILE" >&2; exit 1; }
 [[ -f "$APK" ]] || { echo "错误: 候选包不存在: $APK" >&2; exit 1; }
@@ -55,7 +65,7 @@ SO_MD5_EXPECTED="$(md5 -q "$SO")"
 SO_MD5_IN_APK="$(unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 [[ "$SO_MD5_IN_APK" == "$SO_MD5_EXPECTED" ]] || { echo "错误: 包内 so 与构建产物不一致" >&2; exit 1; }
 
-python3 - "$ORIG_APK" "$APK" "$OUT_FILE" "$SO_MD5_IN_APK" "$CERT_MD5" "$CERT_SHA256" "$EXPECTED_C3_PATCH" <<'PY'
+python3 - "$ORIG_APK" "$APK" "$OUT_FILE" "$SO_MD5_IN_APK" "$CERT_MD5" "$CERT_SHA256" "$EXPECTED_C3_PATCH" "$VERSION_NAME" "$VERSION_CODE" <<'PY'
 import hashlib
 import json
 import sys
@@ -69,7 +79,7 @@ def file_digest(path, algo):
             h.update(chunk)
     return h.hexdigest()
 
-orig_path, apk_path, out_path, so_md5, cert_md5, cert_sha256, expected_c3_patch = sys.argv[1:]
+orig_path, apk_path, out_path, so_md5, cert_md5, cert_sha256, expected_c3_patch, version_name, version_code = sys.argv[1:]
 expected_c3_patch = expected_c3_patch == "1"
 with zipfile.ZipFile(orig_path) as a, zipfile.ZipFile(apk_path) as b:
     an = set(a.namelist())
@@ -116,8 +126,8 @@ data = {
     "apk_md5": file_digest(apk_path, "md5"),
     "apk_sha256": file_digest(apk_path, "sha256"),
     "package": "com.chx.shhj",
-    "version_name": "4",
-    "version_code": 54,
+    "version_name": version_name,
+    "version_code": int(version_code),
     "signer_cert_md5": cert_md5,
     "signer_cert_sha256": cert_sha256,
     "v1_verified": True,

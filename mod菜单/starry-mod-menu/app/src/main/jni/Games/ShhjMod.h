@@ -10,6 +10,7 @@
 enum ShhjFeat : int {
     SHHJ_FEAT_INVINCIBLE = 1,  // 无敌     → get_ret(2) / GXR(2)
     SHHJ_FEAT_DMG100     = 2,  // 百倍伤害 → get_ret(3) / GXR(3)
+    SHHJ_FEAT_DMG5       = 3,  // 五倍伤害（BOSS） → get_ret(4) / GXR(4)
 };
 
 bool Shhj_TryInit(JavaVM* jvm);

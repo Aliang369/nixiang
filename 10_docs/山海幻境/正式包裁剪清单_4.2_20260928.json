@@ -1,0 +1,30 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/山海幻境",
+  "keep": "山海幻境_4.2_five-boss-releaseSigned.apk",
+  "keep_size": 1236747605,
+  "keep_md5": "47eebe7668a6ef133c0621839cc67520",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "山海幻境_4.2_starry.apk",
+      "size": 1236747605,
+      "md5": "47eebe7668a6ef133c0621839cc67520"
+    },
+    {
+      "name": "山海幻境_4.2_five-boss-releaseSigned.apk.idsig",
+      "size": 9745947,
+      "md5": "61e38c3d6f97afd22f194f97aafda98d"
+    },
+    {
+      "name": "山海幻境_4.2_five-releaseSigned.apk",
+      "size": 1236747605,
+      "md5": "a002ee8f282bf142e2f1eb671ae3fa10"
+    },
+    {
+      "name": "山海幻境_4.2_five-releaseSigned.apk.idsig",
+      "size": 9745947,
+      "md5": "f4ae34dce8243ded01788ebd9d04e25b"
+    }
+  ],
+  "removed_count": 4
+}

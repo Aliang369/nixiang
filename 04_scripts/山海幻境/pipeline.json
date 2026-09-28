@@ -1,13 +1,13 @@
 {
   "game": "山海幻境",
-  "version": "4 / vc54",
-  "notes": "2026-09-16：官方 4/vc54 已替换为星空包；登录 ret=5 非法客户端已修复，classes3 RSSDK.getMD5 回灌官方签名，修复包已同签覆盖并启动成功。无敌/百倍待用户实机验收。",
+  "version": "4.2 / vc68",
+  "notes": "2026-09-16：官方 4/vc54 已替换为星空包；登录 ret=5 非法客户端已修复，classes3 RSSDK.getMD5 回灌官方签名，修复包已同签覆盖并启动成功。无敌/百倍待用户实机验收。2026-09-28：官方 4.2/vc68 新增「五倍伤害（BOSS）」feat 3，静态门禁、正式包、裁剪和同签覆盖安装完成；真机 JS 拼接与战斗/服务端结算 NOT PROVEN。唯一正式包 08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk，md5 47eebe76…，sha256 5703c479…；详情见 10_docs/山海幻境/星光落地_4.2_20260928.md。",
   "params": {
     "game_id": "shhj",
     "package": "com.chx.shhj",
     "serial": "f9a116a2",
-    "version": "4",
-    "version_code": 54
+    "version": "4.2",
+    "version_code": 68
   },
   "env": {
     "PKG": "com.chx.shhj",

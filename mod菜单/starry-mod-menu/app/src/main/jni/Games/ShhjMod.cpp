@@ -1,5 +1,6 @@
 /* ================================================================
  *  山海幻境 MOD — 对齐斌哥 GXR/GXD（无敌 GXR(2) / 百倍 GXR(3)）
+ *  新增五倍伤害（BOSS）GXR(4)，在 RoleBase.getHurt 扣血前放大真实伤害值
  *  路径：se::ScriptEngine::evalString 明文拼接
  * ================================================================ */
 
@@ -32,8 +33,10 @@ static jmethodID g_hooksClear = nullptr;
 
 static volatile bool g_inv = false;
 static volatile bool g_dmg100 = false;
+static volatile bool g_dmg5 = false;
 static bool g_syncedInv = false;
 static bool g_syncedDmg100 = false;
+static bool g_syncedDmg5 = false;
 static std::atomic<int> g_spliceHits{0};
 
 static const char* kAct = "com.chx.shhj.AppActivity";
@@ -121,7 +124,9 @@ static void CacheJava(JNIEnv* env) {
 static void SyncJavaRets(bool force = false) {
     const bool inv = g_inv;
     const bool dmg100 = g_dmg100;
-    if (!force && inv == g_syncedInv && dmg100 == g_syncedDmg100) return;
+    const bool dmg5 = g_dmg5;
+    if (!force && inv == g_syncedInv && dmg100 == g_syncedDmg100 && dmg5 == g_syncedDmg5)
+        return;
 
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
@@ -131,8 +136,10 @@ static void SyncJavaRets(bool force = false) {
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 1, JNI_FALSE);
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 2, inv ? JNI_TRUE : JNI_FALSE);
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 3, dmg100 ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 4, dmg5 ? JNI_TRUE : JNI_FALSE);
         g_syncedInv = inv;
         g_syncedDmg100 = dmg100;
+        g_syncedDmg5 = dmg5;
     }
     if (detach) g_shhjJvm->DetachCurrentThread();
 }
@@ -153,7 +160,11 @@ static std::string SpliceCombatJs(const char* src) {
     std::string s(src);
     bool changed = false;
 
-    static char kPreamble[900];
+    static char kPreamble[1400];
+    static char kGetHurtFrom[100];
+    static char kGetHurtFromSp[100];
+    static char kGetHurtTo[1000];
+    static char kGetHurtToSp[1000];
     static char kCurHp[700];
     static char kCurHpSp[750];
     static char kCreate[900];
@@ -173,8 +184,27 @@ static std::string SpliceCombatJs(const char* src) {
             "if(!c.t[n]||m-c.t[n]>250){c.t[n]=m;try{c.v[n]=!!jsb.reflection."
             "callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",n)}catch(e){c.v[n]=!1}}"
             "return c.v[n];};"
-            "window.GXD=function(){return window.GXR(3)?100:1;};\n",
+            "window.GXD=function(){return window.GXR(3)?100:1;};"
+            "window.GX5=function(m){if(!window.GXR(4)||!m)return 1;"
+            "var b=m.ActivityWorldBoss||m.guildBoss||m.daoyun||m.waterFireBoss;"
+            "return window.GXR(3)&&!b?1:5;};\n",
             kAct);
+
+        snprintf(kGetHurtFrom, sizeof(kGetHurtFrom),
+                 "e.prototype.getHurt=function(t,e,i){");
+        snprintf(kGetHurtFromSp, sizeof(kGetHurtFromSp),
+                 "e.prototype.getHurt = function(t, e, i) {");
+        snprintf(
+            kGetHurtTo, sizeof(kGetHurtTo),
+            "e.prototype.getHurt=function(t,e,i){if(t&&t[2]<0&&t[3]&&"
+            "t[3].camp==d.default.SELFCAMP&&this.camp!=d.default.SELFCAMP){"
+            "var _m=window.GX5(E.default);_m>1&&(t[2]=Math.floor(_m*t[2]));}");
+        snprintf(
+            kGetHurtToSp, sizeof(kGetHurtToSp),
+            "e.prototype.getHurt = function(t, e, i) {if (t && t[2] < 0 && t[3] && "
+            "t[3].camp == d.default.SELFCAMP && this.camp != d.default.SELFCAMP) { "
+            "var _m = window.GX5(E.default); _m > 1 && "
+            "(t[2] = Math.floor(_m * t[2])); }");
 
         snprintf(
             kCurHp, sizeof(kCurHp),
@@ -224,11 +254,23 @@ static std::string SpliceCombatJs(const char* src) {
         if (p != std::string::npos) {
             s.insert(p, kPreamble);
             changed = true;
-            LOGI("[Shhj] spliced GXR/GXD preamble");
+            LOGI("[Shhj] spliced GXR/GXD/GX5 preamble");
         }
     }
 
-    // 2) 扣血（仅未拼接过的原版 `curHp += f`）
+    // 2) RoleBase 在真实扣血 / 跳字 / 伤害累计前放大五倍
+    if (s.find("window.GX5(") == std::string::npos) {
+        if (ReplaceAll(s, kGetHurtFrom, kGetHurtTo)) {
+            changed = true;
+            LOGI("[Shhj] spliced getHurt dmg5 (compact)");
+        }
+        if (ReplaceAll(s, kGetHurtFromSp, kGetHurtToSp)) {
+            changed = true;
+            LOGI("[Shhj] spliced getHurt dmg5 (spaced)");
+        }
+    }
+
+    // 3) 扣血（仅未拼接过的原版 `curHp += f`）
     if (ReplaceAll(s, "this.curHp+=f;", kCurHp)) {
         changed = true;
         LOGI("[Shhj] spliced curHp (compact)");
@@ -238,7 +280,7 @@ static std::string SpliceCombatJs(const char* src) {
         LOGI("[Shhj] spliced curHp (spaced)");
     }
 
-    // 3) 跳字 createNum
+    // 4) 跳字 createNum
     if (ReplaceAll(s, "createNum(t[0],t[1],t[2],t[4]", kCreate)) {
         changed = true;
         LOGI("[Shhj] spliced createNum (compact)");
@@ -248,7 +290,7 @@ static std::string SpliceCombatJs(const char* src) {
         LOGI("[Shhj] spliced createNum (spaced)");
     }
 
-    // 4) 无敌 tHurt
+    // 5) 无敌 tHurt
     if (s.find("window.GXR(2)") == std::string::npos) {
         if (ReplaceAll(s, kInvFrom, kInvTo)) {
             changed = true;
@@ -266,7 +308,7 @@ static std::string SpliceCombatJs(const char* src) {
         }
     }
 
-    // 5) Boss 斩杀辅助倍率
+    // 6) Boss 斩杀辅助倍率
     if (s.find("this.view.isBoss") != std::string::npos &&
         s.find("window.GXD()") == std::string::npos) {
         if (ReplaceAll(s, kBossFrom, kBossTo)) {
@@ -429,13 +471,14 @@ bool Shhj_IsReady() { return g_ready; }
 void Shhj_OnFeatureChanged(int featNum, bool enabled) {
     if (featNum == SHHJ_FEAT_INVINCIBLE) g_inv = enabled;
     if (featNum == SHHJ_FEAT_DMG100) g_dmg100 = enabled;
+    if (featNum == SHHJ_FEAT_DMG5) g_dmg5 = enabled;
     SyncJavaRets(true);
-    LOGI("[Shhj] feature #%d=%s inv=%d dmg100=%d", featNum,
-         enabled ? "ON" : "OFF", g_inv ? 1 : 0, g_dmg100 ? 1 : 0);
+    LOGI("[Shhj] feature #%d=%s inv=%d dmg100=%d dmg5=%d", featNum,
+         enabled ? "ON" : "OFF", g_inv ? 1 : 0, g_dmg100 ? 1 : 0, g_dmg5 ? 1 : 0);
 }
 
 void Shhj_ForceClear() {
-    g_inv = g_dmg100 = false;
+    g_inv = g_dmg100 = g_dmg5 = false;
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
     if (env) {
@@ -443,6 +486,7 @@ void Shhj_ForceClear() {
         if (g_hooksCls && g_hooksClear) env->CallStaticVoidMethod(g_hooksCls, g_hooksClear);
         g_syncedInv = false;
         g_syncedDmg100 = false;
+        g_syncedDmg5 = false;
         if (detach) g_shhjJvm->DetachCurrentThread();
     }
 }
@@ -451,6 +495,7 @@ void Shhj_Tick(const bool* features) {
     if (!features) return;
     g_inv = features[SHHJ_FEAT_INVINCIBLE];
     g_dmg100 = features[SHHJ_FEAT_DMG100];
+    g_dmg5 = features[SHHJ_FEAT_DMG5];
     if (!g_ready) return;
     if (!g_evalHooked) TryHookEvalString();
     // 开关未变则跳过 JNI，避免菜单 tick 空转
