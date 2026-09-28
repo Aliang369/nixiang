@@ -1,0 +1,85 @@
+{
+  "game": "我的勇者",
+  "package": "com.rsg.wdyz",
+  "version": "7.6.3",
+  "versionCode": 205,
+  "engine": "Unity IL2CPP (libil2cpp.so 141,004,016 B, global-metadata.dat 30,558,096 B 未加密)",
+  "game_id": "wdyz",
+  "base_apk": "02_apks/我的勇者/我的勇者_7.6.3_base.apk",
+  "base_apk_md5": "77cbda72a841eacb06b2facfc5293cd6",
+  "base_apk_size": 1531204247,
+  "dump": "06_dumped/我的勇者/7.6.3_il2cpp/dump.cs",
+  "so_binding": {
+    "rule": "RVA/Offset 只在本 so 哈希下有效；换版本/渠道先比对 so 哈希，同源可直接复用（hook-rules.md §23）",
+    "libil2cpp_sha256": "8640f5faef481405b50b028a4ef5c380969eac262ebab720f1e2407840ff8b03",
+    "libil2cpp_size": 141004016,
+    "global_metadata_sha256": "2959d55b2b941955e1aca3233d8d52ef5cc3b9b412c014530b634fa5c9a0e961",
+    "global_metadata_size": 30558096,
+    "runtime_so_md5": "44c97f63d101241e7429ef9e969920d0",
+    "runtime_so_identical_to_apk": "已核对：真机运行时 /data/data/com.rsg.wdyz/files/update/current/lib/arm64-v8a/libil2cpp.so 与 APK 内置 so md5 相同（44c97f63d101241e7429ef9e969920d0）",
+    "starry_package_so_identical": "已核对：08_output 星光包内 lib/arm64-v8a/libil2cpp.so 与官包逐字节相同（cmp 通过），外科组装未触碰该 so"
+  },
+  "address_convention": "FileOffToVa 入参 = dump.cs 的 Offset 字段（文件偏移，= RVA - 0x4000）。禁止用 RVA/VA 字段。",
+  "targets": [
+    {
+      "tag": "HeroSettle",
+      "ns": "Battle",
+      "class": "HeroCore",
+      "method": "SettleDamage",
+      "argc": 5,
+      "offset": "0x47915E4",
+      "rva": "0x47955E4",
+      "prologue_le": "0x6DBC2BEB",
+      "prologue_bytes": "eb 2b bc 6d",
+      "insn": "stp d11, d10, [sp, #-0x40]!",
+      "role": "无敌：玩家承伤结算 value 归零",
+      "dump_line": 589567
+    },
+    {
+      "tag": "BaseSettle",
+      "ns": "Battle",
+      "class": "BattleObjectCore",
+      "method": "SettleDamage",
+      "argc": 5,
+      "offset": "0x47748A4",
+      "rva": "0x47788A4",
+      "prologue_le": "0xD10503FF",
+      "prologue_bytes": "ff 03 05 d1",
+      "insn": "sub sp, sp, #0x140",
+      "role": "五倍攻击：敌 core value ×5；无敌：己 core 归零（按 object_class 类名分派）",
+      "dump_line": 587172
+    },
+    {
+      "tag": "MonsterSettle",
+      "ns": "Battle",
+      "class": "MonsterCore",
+      "method": "SettleDamage",
+      "argc": 5,
+      "offset": "0x47BF274",
+      "rva": "0x47C3274",
+      "prologue_le": "0x6DBB2BEB",
+      "prologue_bytes": "eb 2b bb 6d",
+      "insn": "stp d11, d10, [sp, #-0x50]!",
+      "role": "诊断对照槽（只观察入参，不改倍率）",
+      "dump_line": 592101
+    }
+  ],
+  "pitfall_20260928": {
+    "wrong_initial_offsets": {
+      "HeroSettle": "0x47940AC",
+      "MonsterSettle": "0x47BBD30"
+    },
+    "wrong_functions": {
+      "HeroSettle": "HeroCore.get_CanSettleCallback",
+      "MonsterSettle": "MonsterCore..ctor"
+    },
+    "symptom": "MonsterSettle 日志有命中，BaseSettle 无命中；进关卡卡「正在连接」",
+    "cause": "7.6.3 重 dump 时把 HeroCore.get_CanSettleCallback / MonsterCore..ctor 的 Offset 误当 SettleDamage Offset",
+    "fix": "按 dump.cs 中实际 SettleDamage Offset 回填 0x47915E4 / 0x47BF274，序言校验通过"
+  },
+  "verified": {
+    "static": "在 Offset 处 xxd 命中上表序言字节（2026-09-28）",
+    "runtime": "用户实测功能生效（无敌/五倍攻击）；@rva 挂钩日志已确认命中 0x47915E4 / 0x47748A4 / 0x47BF274",
+    "il2cpp_exports": "12/12 在（domain_get_assemblies / class_from_name / class_get_method_from_name / class_get_fields / field_get_offset / object_get_class / class_get_name / thread_attach …）"
+  }
+}

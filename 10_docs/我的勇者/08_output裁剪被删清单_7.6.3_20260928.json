@@ -1,0 +1,10 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/我的勇者",
+  "keep": "我的勇者_7.6.3_surgical-releaseSigned.apk",
+  "keep_size": 1537196987,
+  "keep_md5": "d5fc959cc05226539c188076b6b4054e",
+  "mode": "--apply",
+  "removed": [],
+  "removed_count": 0,
+  "note": "第二次按清洁源码重建后仅保留唯一正式包；最终 keep md5 d5fc959cc05226539c188076b6b4054e"
+}
