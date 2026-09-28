@@ -1,4 +1,4 @@
-/* 弹壳战机 — 星光注册表入口。 */
+/* 蛋壳战机 — 星光注册表入口。 */
 #include "ModEntry.h"
 #include "DkzjMod.h"
 

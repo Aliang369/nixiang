@@ -1,0 +1,36 @@
+# 蛋壳战机 1.1.7 冷启动决定性行（2026-09-28 15:22:35，serial f9a116a2，pid 26011）
+#
+# 来源：设备 logcat 全量转抄，本文件只保留与「星光注入是否成立」直接相关的行。
+# 完整 logcat 已按 AGENTS 约定放在 09_test/蛋壳战机/evidence_1.1.7_20260928/logcat_startup_20260928.txt（不入库）。
+# 命令：am force-stop → logcat -c → monkey -p com.survivor.acecn -c android.intent.category.LAUNCHER 1
+
+09-28 15:22:35.531 26011 26011 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+09-28 15:22:35.532 26011 26011 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=dkzj)
+09-28 15:22:35.532 26011 26011 I StarryInitProvider: native ensureLoaded=true path=loadLibrary(starry_magic)
+09-28 15:22:35.612 26011 26011 I StarryInitProvider: MenuService.start scheduled (activity-resumed)
+09-28 15:22:35.627 26011 26011 I MenuService: startService (plain, no-FGS)
+09-28 15:22:35.655 26011 26011 I MenuService: MenuService created
+09-28 15:22:35.655 26011 26011 I MenuService: auth game_id=dkzj
+09-28 15:22:35.674 26011 26011 I StarryMagic: ===== 星光魔法 MOD 菜单初始化（modern/dkzj）=====
+09-28 15:22:35.674 26011 26011 I MenuService: native menu shown mode=ACTIVITY
+09-28 15:22:35.674 26011 26077 I StarryMagic: MOD 后台线程已启动 tag=dkzj
+09-28 15:22:35.679 26011 26077 I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked file=0x6C31EC0
+09-28 15:22:35.682 26011 26077 I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked file=0x6D1C3E4
+09-28 15:22:35.685 26011 26077 I Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill hooked file=0x6EDE058
+09-28 15:22:35.688 26011 26077 I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked file=0x77E2EF8
+09-28 15:22:35.690 26011 26077 I Mod_Menu: [dkzj] AddSkillToCharacter resolved @0x78c96d66ac
+09-28 15:22:35.692 26011 26077 I Mod_Menu: [dkzj] GetSkill_Main resolved @0x78c90e08a0
+09-28 15:22:35.694 26011 26077 I Mod_Menu: [dkzj] Game.get_Table resolved @0x78c9dbd390
+09-28 15:22:35.694 26011 26077 I Mod_Menu: [dkzj] lib ready; hooks file-offset + by-name fallback
+09-28 15:22:35.694 26011 26077 I StarryMagic: [dkzj] 初始化成功
+09-28 15:22:35.694 26011 26077 I StarryMagic: MOD 已就绪 tag=dkzj ready=1
+09-28 15:22:36.273 26011 26076 I StarryMagic: [验证] grant ok exp=1790666203
+09-28 15:22:37.077 26011 26011 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+09-28 15:22:37.077 26011 26011 I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+09-28 15:22:37.078 26011 26011 I StarryMagic: [开关] #3 Toggle_偷盗技能 = OFF
+09-28 15:22:37.078 26011 26011 I StarryMagic: [开关] #4 Toggle_免广告 = OFF
+
+# 负向检查（均为 0 命中）：
+#   grep -cE 'FATAL EXCEPTION|SIGSEGV|SIGABRT|am_crash|ANR in com.survivor' → 0
+#   菜单项自查：grep '宝箱' → 0（上一轮误加的「宝箱全拿」已撤）
+#   exit-info 最新 com.survivor.acecn 条目 = reason=10 (USER REQUESTED) / subreason=21 (FORCE STOP) → 本轮 force-stop 自造，非崩溃

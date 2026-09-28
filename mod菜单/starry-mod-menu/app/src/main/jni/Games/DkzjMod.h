@@ -1,5 +1,5 @@
 /* ================================================================
- *  蛋壳战机 1.1.6 (com.survivor.acecn) — 星光 Mod
+ *  蛋壳战机 1.1.7 (com.survivor.acecn) — 星光 Mod
  *
  *  功能：
  *    1 Slider_攻击倍率:1:100:1  EntityCharacter.ChangeHp

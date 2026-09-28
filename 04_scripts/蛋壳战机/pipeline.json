@@ -1,6 +1,6 @@
 {
   "game": "蛋壳战机",
-  "version": "1.1.5 / 1.1.6",
+  "version": "1.1.5 / 1.1.6 / 1.1.7",
   "notes": "2026-09-20：原版同源核对、星光四项功能（攻击倍率/上帝模式/偷盗技能/免广告）实现、构建、签名、装机前门禁和授权卸载安装均已完成。设备 base.apk 指纹一致，连续冷启动及新版覆盖后启动每次四项 Hook 与 grant ok 均通过，战斗/广告行为待进局验收。偷盗技能不会使重复同名技能升级，已按用户决定记录为已知限制、不再修复。\n2026-09-23 1.1.6 星空包交付（偷盗技能重做 + 启动闪退修复）：底包=真机只读拉取的原版 1.1.6/vc27 `02_apks/蛋壳战机/蛋壳战机_1.1.6_official_from_device.apk`（204,423,483B md5 6bd3f3dea5eb38fce6be8d8038d70fb3）。① 偷盗技能根因：1.1.5 补授用的 `HeroComponentRandomSkill.AddSkillSurvior(int)` 方法体只有 `_allSkills.Add(id); OnAddSkill(id);`，只改 UI 列表、不实例化技能、不触发升级 —— 正是用户反馈的「纯 UI 修改 / 不能升级 / 实际无效果」。1.1.6 改为 Hook `BattleWorldContext.PostProcessLearnedSkill`（file 0x6E72E40，1.1.5 的 `OnAddSkill` 锚点作废），读出该次 `RandomSkillResult.ShowSkills` 后对**其余候选**逐个回灌 `BattleWorldContext.AddSkillToCharacter(entity,id,true)`，重复同名技能交回游戏自身 `checkIfReplaced` 升级逻辑。真机实测 9 次真实三选一全部 `steal picked=… granted=N (of M candidates)`。② 随之引入并已修复的回归：1.1.6 新增的 `ResolveSkillAux()` 在**启动期**无条件调 `ResolveMethodPtr` → `il2cpp_domain_get_assemblies`，而 `il2cpp_init` 由 libunity 在 `nativeRender` 渲染循环里才跑完、MOD 后台线程又是裸 `std::thread`（未 `thread_attach`）⇒ **静默 SIGSEGV**（无 tombstone / 无 crash buffer / 无 `am_crash`，只有 `exit-info reason=2 status=11`）。修复 = 启动期零 il2cpp 调用 + MethodInfo 惰性解析 + `AttachCurrentThreadToIl2Cpp()` + `g_il2cppRuntimeUp` 门控。**通用铁律：启动期只允许 /proc/self/maps 换算。**③ 构建踩坑：`Android_dkzj.mk` 过时致 `ld.lld: undefined symbol: SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad`（`MainModern.cpp:647-663` 自 2026-09-22 起无条件引用）→ 加 `Games/NoAceStubs.cpp` no-op 兜底；`| tail` 会吃掉构建退出码；macOS `strings` 匹配不到 UTF-8 中文串（须 `LC_ALL=C grep -ac`）。另订正：原包**确有**腾讯安全组件 libsecsdk/libsgcore/libthemis 与字节 libpanglearmor，但无 libtprt.so；本次闪退与它们无关。④ 真机 f9a116a2（2026-09-23 21:02:47 pid 27511，同签覆盖安装、存档保留）：四项 Hook 全命中 + `lib ready` 正常打印，`[Il2Cpp] api loaded` 延后到 21:03:49（游戏线程），进程存活 ≥105s，`exit-info` 无新增条目；攻击倍率（`attack x100 hpdelta -360 -> -36000`）与上帝模式（`god blocked hero hp delta=-175`）亦实测生效。⑤ 文档=`10_docs/蛋壳战机/{星空落地_1.1.6_20260923.md,功能验收_偷盗技能_1.1.6_20260923.md,故障复盘_启动闪退_1.1.6_20260923.md,抓点_锚点_1.1.6_20260923.json}`，证据=`10_docs/蛋壳战机/evidence_1.1.6_20260923/`（完整 logcat 按约定不入库，存 09_test/）。⑥ 仍待用户确认：重复同名技能是否升级、免广告各入口发奖。",
   "params": {
     "package": "com.survivor.acecn",
@@ -532,6 +532,75 @@
       },
       "status": "done",
       "done_at": "2026-09-23 21:20:00"
+    },
+    {
+      "id": "archive_1.1.7",
+      "name": "1.1.7 星空包交付与收官（撤宝箱 + 偷盗重复同名升级修复）",
+      "requires": [
+        "archive_1.1.6"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_build_so.sh' && bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/surgical_dkzj_1.1.7.sh' && bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_sign_1.1.7.sh' && bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/install_dkzj_1.1.7.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_build_so.sh",
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/surgical_dkzj_1.1.7.sh",
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_sign_1.1.7.sh",
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/install_dkzj_1.1.7.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.7_starry-releaseSigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.7_starry-unsigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.7_starry-releaseSigned.apk.idsig"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/功能验收_偷盗技能_1.1.7_20260928.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.7_20260928.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/正式包裁剪清单_1.1.7_20260928.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/evidence_1.1.7_20260928/README.md"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dkzj"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/蛋壳战机"
+        }
+      ],
+      "note": "用户口令「进行收尾+正式包+清理+git」已下达（2026-09-28）。本轮不动 1.1.5 / 1.1.6 阶段记录（上一版机械留档）。08_output 裁剪为唯一正式包（删 unsigned + idsig）；清理 06_dumped/蛋壳战机/{il2cpp_dump_1.1.7/{script.json,il2cpp.h,DummyDll},il2cpp_dump_1.1.7.tool,static_inspect_1.1.7}、07_patched/蛋壳战机、mod菜单/starry-mod-menu/{obj_dkzj,libs_dkzj}；按用户明确要求删除全部 09_test/蛋壳战机/backup_*（1.1.5/1.1.6/1.1.7），今后不再产生数据备份；合计释放约 770 MB（1,196,448 → 408,432 KiB）。不可再生输入 02_apks/蛋壳战机/蛋壳战机_1.1.7_official_from_device.apk 保留。完整 logcat 按 AGENTS 约定不入库，在 09_test/蛋壳战机/evidence_1.1.7_20260928/，10_docs 下只留决定性行。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.7_starry-releaseSigned.apk": {
+          "md5": "5fd08acb6ffa9725c117dcb6a13a3658"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/正式包裁剪清单_1.1.7_20260928.json": {
+          "md5": "b879f153ea23bdfa83dfc0edcb370f77"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.7_20260928.md": {
+          "md5": "773ac788abd005f0f8ee42f6240d66bf"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.7_official_from_device.apk": "713d5655d4628b667faaa8e6701a062a"
+      },
+      "status": "done",
+      "done_at": "2026-09-28 15:30:00"
     }
   ]
 }

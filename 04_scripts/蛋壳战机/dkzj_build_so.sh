@@ -55,7 +55,7 @@ for tag in "dkzj" "[dkzj]"; do
   HIT="$(LC_ALL=C grep -ac "$tag" "$SO" || true)"
   [[ "$HIT" -ge 1 ]] || { echo "ERROR: $SO 不含标签 $tag" >&2; exit 1; }
 done
-for bad in "Toggle_拿全部技能" "Slider_伤害倍率:1:10:1"; do
+for bad in "Toggle_宝箱全拿" "Toggle_拿全部技能" "Slider_伤害倍率:1:10:1"; do
   HIT="$(LC_ALL=C grep -ac "$bad" "$SO" || true)"
   [[ "$HIT" -eq 0 ]] || { echo "ERROR: $SO 含其它游戏菜单串 $bad" >&2; exit 1; }
 done

@@ -1,34 +1,50 @@
 {
   "game": "蛋壳战机",
-  "before_kb": 917524,
-  "after_kb": 66604,
-  "released_kb": 850920,
-  "before_at": "2026-09-20 21:52:00",
-  "after_at": "2026-09-20 21:52:30",
+  "round": "1.1.7",
+  "before_kb": 1196448,
+  "after_kb": 408432,
+  "released_kb": 788016,
+  "before_at": "2026-09-28 15:20:00",
+  "after_at": "2026-09-28 15:23:00",
+  "before_detail_kb": {
+    "08_output/蛋壳战机": 428592,
+    "06_dumped/蛋壳战机": 755548,
+    "07_patched/蛋壳战机": 688,
+    "mod菜单/starry-mod-menu/obj_dkzj": 5524,
+    "mod菜单/starry-mod-menu/libs_dkzj": 1916,
+    "09_test/蛋壳战机": 4180
+  },
+  "after_detail_kb": {
+    "08_output/蛋壳战机": 213304,
+    "06_dumped/蛋壳战机": 191348,
+    "09_test/蛋壳战机": 3780
+  },
   "kept": [
     "02_apks/蛋壳战机 official source APK (user managed)",
     "08_output/蛋壳战机 final APK only",
-    "06_dumped/蛋壳战机/dump.cs + stringliteral.json + inputs.sha256",
-    "06_dumped/蛋壳战机/static_inspect text and identity evidence",
-    "06_dumped/蛋壳战机/binge_mem_baseline text/menu/disassembly evidence",
-    "06_dumped/蛋壳战机/jadx_bridge source snippets",
-    "09_test/蛋壳战机 private-data backup",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.7/{dump.cs,stringliteral.json,inputs.sha256}",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5 + il2cpp_dump_1.1.6 (previous-version trace)",
+    "06_dumped/蛋壳战机/static_inspect + binge_mem_baseline + jadx_bridge",
+    "09_test/蛋壳战机/evidence_1.1.6_20260923 + evidence_1.1.7_20260928 (logcat evidence, gitignored)",
     "04_scripts/蛋壳战机",
     "10_docs/蛋壳战机",
     "mod菜单 Dkzj sources"
   ],
   "removed_roots": [
-    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5/DummyDll",
-    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5/il2cpp.h",
-    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5/script.json",
-    "06_dumped/蛋壳战机/il2cpp_dump_1.1.5.tool",
-    "06_dumped/蛋壳战机/static_inspect/key_files",
-    "06_dumped/蛋壳战机/binge_mem_baseline_20260920/raw",
-    "06_dumped/蛋壳战机/binge_mem_baseline_20260920/*.bin",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.7/DummyDll",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.7/il2cpp.h",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.7/script.json",
+    "06_dumped/蛋壳战机/il2cpp_dump_1.1.7.tool",
+    "06_dumped/蛋壳战机/static_inspect_1.1.7",
     "07_patched/蛋壳战机",
     "mod菜单/starry-mod-menu/obj_dkzj",
     "mod菜单/starry-mod-menu/libs_dkzj",
-    "08_output/蛋壳战机 unsigned APK and idsig (prune_output_final)"
+    "08_output/蛋壳战机 unsigned APK and idsig (prune_output_final)",
+    "09_test/蛋壳战机/backup_1.1.5_20260920_212733 (user requested: no backups)",
+    "09_test/蛋壳战机/backup_1.1.6_20260923_203414 (user requested: no backups)",
+    "09_test/蛋壳战机/backup_1.1.7_20260928_142959 (empty; user requested: no backups)"
   ],
-  "device_backup_kept": "09_test/蛋壳战机/backup_1.1.5_20260920_212733/private_data.tgz"
+  "device_backup_kept": null,
+  "device_backup_note": "用户明确「不需要你备份，我没有说让你备份就别备份」；install_dkzj_1.1.7.sh 本身不备份，历次 backup_* 已全部删除。",
+  "prune_manifest": "10_docs/蛋壳战机/正式包裁剪清单_1.1.7_20260928.json"
 }
