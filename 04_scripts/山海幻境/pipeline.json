@@ -406,6 +406,7 @@
       ],
       "status": "done",
       "done_at": "2026-09-16 20:08:14",
+      "note": "2026-09-28 二次收尾（用户口令「收尾+正式包+清理+git」）：4.2/vc68 唯一正式包 08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk（md5 47eebe7668a6ef133c0621839cc67520，sha256 5703c47996c9d5b62657efd5c7fec002ad7644aeb24fb57970b0135443142c7b）；08_output 已裁剪，清理台账见 cleanup_summary_4.2_20260928.json；git 本地提交=2c6b0b9（16 files，current.md 仅本作 hunk）。GitHub 推送本轮因网络超时待重试，本地提交已保留、未强推；真机战斗/服务端结算仍 NOT PROVEN。archive_summary.json 仍是 4.0 历史记录，未覆盖。",
       "artifacts": {
         "04_scripts/山海幻境/archive_summary.json": {
           "md5": "9d8c4c4fc8947865343788ae1d7e6664"
