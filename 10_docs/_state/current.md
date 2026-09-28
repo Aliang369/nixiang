@@ -62,6 +62,7 @@
 
 | 幻想武将模拟器 | 2026-09-27 | ✅ 已交付并收尾（TapTap 1.0.8 / vc8 / `com.qxjc.hxwjmlq`，Unity IL2CPP，SecShell；官包 md5 `68ed2632…`）。SecShell 实测校验的是非 META-INF 条目名集合（1055）+ local/central CRC 字段（不重算内容 CRC），据此原位替换三个既有条目（classes.dex 合并 dex / AndroidManifest.xml 分支 B / libSecShell-x86.so 静态 so）并回填 CRC，**最终交付 = 唯一单包 `幻想武将模拟器_1.0.8.apk`**（168,134,474 B md5 `d3f9164e…`，CN=StarryMagic，v1/v2/v3 Verified），无分体。真机 f9a116a2 已静默覆盖安装，仅 `base.apk`、`splits=[base]`、设备 md5 与产物一致；单包实测存活 >40s、`RegisterNatives 19/19`、`StarryBridgeTest PASS=15 FAIL=0`、`ensureLoaded=true path=loadLibrary(SecShell-x86)`、`overlayVisible=true`、越过 `CheckSignature()`、`MOD 已就绪 tag=hxwj ready=1`；用户 2026-09-27 实机反馈「功能没问题」，去签名 / 强制网页登录 / 秒杀 / 百分百掉落 / 免广告按用户验收通过。收尾已清理历史分体 base/split、未签名中间包、idsig 与可再生拆包滚动物；菜单模板 = `10_docs/幻想武将模拟器/hxwj_menu_template.json`。 | [摘要](games/幻想武将模拟器.md) |
 | 我本布衣世家录 | 2026-09-28 | 🔧 **v3 修复中（免广告独立生效 + 7 个 instance hook + GetMaxAP/CanAffordBuyLand ABI 修正）**：v2 首轮崩在 delegate 对象指针被当函数指针；v3 改 runtime_invoke 并加 ItemManager instance 7 hook，24 个 @rva 全命中，无崩溃。so md5 `cd53e11b…`，TapTap 1.1.46/vc55。详情 [摘要](games/我本布衣世家录.md) |
+| 独奏骑士 | 2026-09-28 | ✅ 1.1.768 v6 星光包覆盖安装，数据保留；无限技能修正为 `zCd[81]/+0x2AC` 且恢复尾调用原函数，用户确认三项功能可用 | [摘要](games/独奏骑士.md) |
 ## 基础设施与经验
 
 - [状态目录规则](games/README.md)
