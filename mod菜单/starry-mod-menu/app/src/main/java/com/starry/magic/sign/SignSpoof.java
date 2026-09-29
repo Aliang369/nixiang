@@ -894,6 +894,27 @@ public final class SignSpoof {
                     + "AAEwDQYJKoZIhvcNAQEFBQADgYEALocex2TnGFoNVzmTLykJ0Lc5Nx64ik53xYEz6RDOnGjoZPKCSK9Pnifpubj3bW7fSo4kMdl2"
                     + "B5UBD0Y0lnooa4IpgFd+cb0ylzh/6bjTGkOqch4jz9yO8xLTM+WSrxWZwr1e7LwfQfzjI3kX2U8mrlnglvmgLyLSXd6H3Z9PpDc=";
 
+    /** 潮汐守望者 TapTap 渠道原版（com.gf.cxswz 1.2.56.375.3）
+     *  自签证书 subject/issuer: C=US, ST=SH, L=MH, O=FS, OU=FS, CN=LF
+     *  MD5=cae2157529a81b6839e0a76ca90a49a4 / SHA-256=3442cd90c455ee9e30aae52f60b49c2b4aaead0a36cfba325cd93486c3291027
+     *  2026-09-30 取自官包 META-INF/MUF.RSA（PKCS#7 → X.509 DER）。
+     *  本作签名校验全走 Java PackageManager：QuickSDK 的 libqkcheck（getSignInfo /
+     *  getAPKCharacteristic）与 TapSignKit.getSign 同源 ⇒ 回灌此证书即可对齐原签。 */
+    private static final String CXSWZ_PKG = "com.gf.cxswz";
+    private static final String CXSWZ_CERT_B64 =
+            "MIIDPTCCAiWgAwIBAgIEBpUSrjANBgkqhkiG9w0BAQsFADBOMQswCQYDVQQGEwJVUzELMAkGA1UECBMCU0gxCzAJBgNVBAcTAk1I"
+                    + "MQswCQYDVQQKEwJGUzELMAkGA1UECxMCRlMxCzAJBgNVBAMTAkxGMCAXDTIwMTEwMzAzMDUxNVoYDzIxMjAxMDEwMDMwNTE1WjBO"
+                    + "MQswCQYDVQQGEwJVUzELMAkGA1UECBMCU0gxCzAJBgNVBAcTAk1IMQswCQYDVQQKEwJGUzELMAkGA1UECxMCRlMxCzAJBgNVBAMT"
+                    + "AkxGMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2V7fOewmLLYoQoxki12UtnaaaekBPEoGsfbIs4DQ+ssAgbydxVA4"
+                    + "RtITZ44I33PMQTTfz7s4iLcvgBynJ5N8ItxCTkeiV06En/sz52+lXJfX3LgoTh0Yk7rhkd/uO3PC44mhNt2LCF/d6GF33KNC4LBu"
+                    + "Mn9Ty07GwKv1qHk93uUerhRIWAkX+pZtkoLJsEd7aCKxidBwRPDZcqk631r1VovV36Ai+hl/mJBEmBroeZ9BWhNm3yYAXpMSu93S"
+                    + "E4qhpckvsouq3C3bcNf1q9YlQl0q0sZlEeuvgTgA6/MBMZ0+pT4yC7Xc/O9X/JY6zQz1hxy7FMDNIurtO6J31De8mQIDAQABoyEw"
+                    + "HzAdBgNVHQ4EFgQUhgn+VZiWT+418GZYqG8uvJdBqqowDQYJKoZIhvcNAQELBQADggEBAFICZBjF2gds4q4Dsyc5ge0mql9eBhmM"
+                    + "nc3PU5TUUF0S2eBTaSKRNt/7UWissPJQG7Ch3I7gvjCZ1PBjB1wgpe2+Ns7tqfOeglFLq0x9GJatcGX6T6bjOTlaKO8Rr3zgP3Y1"
+                    + "MNqsISLDbx4vd1GF4u4TBJV80ZW8jV9a0bk3I7pdQKZ0hjHLR4QNZk0h7FOJtWUCCR1pCwvLpKRIxiDmPAisULLvojSRQ3LwogCx"
+                    + "IAFM33Fb5NTVWQRkkGEH7gLA0ZblVaT4JV5rFAXsYSg4V3NZzf8sODVwo7EmrS9WFYXkF6VCxrDXD67wbBBkzJvn7yEUsFBPkLJH"
+                    + "IM2Y3Up0vlE=";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -954,6 +975,7 @@ public final class SignSpoof {
                 fakes.put(HXWJ_PKG, new Signature(Base64.decode(HXWJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WBJY_PKG, new Signature(Base64.decode(WBJY_CERT_B64, Base64.DEFAULT)));
                 fakes.put(SJZZ_PKG, new Signature(Base64.decode(SJZZ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(CXSWZ_PKG, new Signature(Base64.decode(CXSWZ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

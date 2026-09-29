@@ -1,0 +1,10 @@
+{
+  "template_id": "cxswz",
+  "name": "潮汐守望者",
+  "package": "com.gf.cxswz",
+  "source": "Games/CxswzEntry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "伤害倍率"}
+  ]
+}
