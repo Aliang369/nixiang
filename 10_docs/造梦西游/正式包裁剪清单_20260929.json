@@ -1,0 +1,9 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/造梦西游",
+  "keep": "造梦西游_1.1.0_surgical-releaseSigned.apk",
+  "keep_size": 671615938,
+  "keep_md5": "67a517369fa93235613fb682ebefd696",
+  "mode": "--apply",
+  "removed": [],
+  "removed_count": 0
+}

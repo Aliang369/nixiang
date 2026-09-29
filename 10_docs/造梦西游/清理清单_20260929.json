@@ -1,0 +1,43 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang______20260929_20260929_233105",
+  "timestamp": "20260929_233105",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "09_test/造梦西游/base_official_1.1.0_20260929/classes.dex",
+      "type": "file",
+      "size_kib": 2336,
+      "source": "/Users/aliang/Documents/nixiang/09_test/造梦西游/base_official_1.1.0_20260929/classes.dex",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20260929_20260929_233105/09_test/造梦西游/base_official_1.1.0_20260929/classes.dex"
+    },
+    {
+      "path": "09_test/造梦西游/base_official_1.1.0_20260929/dex",
+      "type": "dir",
+      "size_kib": 14220,
+      "source": "/Users/aliang/Documents/nixiang/09_test/造梦西游/base_official_1.1.0_20260929/dex",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20260929_20260929_233105/09_test/造梦西游/base_official_1.1.0_20260929/dex"
+    },
+    {
+      "path": "09_test/造梦西游/base_official_1.1.0_20260929/smali_c4",
+      "type": "dir",
+      "size_kib": 16128,
+      "source": "/Users/aliang/Documents/nixiang/09_test/造梦西游/base_official_1.1.0_20260929/smali_c4",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20260929_20260929_233105/09_test/造梦西游/base_official_1.1.0_20260929/smali_c4"
+    },
+    {
+      "path": "09_test/造梦西游/base_official_1.1.0_20260929/smali_c5",
+      "type": "dir",
+      "size_kib": 18244,
+      "source": "/Users/aliang/Documents/nixiang/09_test/造梦西游/base_official_1.1.0_20260929/smali_c5",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20260929_20260929_233105/09_test/造梦西游/base_official_1.1.0_20260929/smali_c5"
+    },
+    {
+      "path": "09_test/造梦西游/base_official_1.1.0_20260929/libcocos2djs.so",
+      "type": "file",
+      "size_kib": 28608,
+      "source": "/Users/aliang/Documents/nixiang/09_test/造梦西游/base_official_1.1.0_20260929/libcocos2djs.so",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20260929_20260929_233105/09_test/造梦西游/base_official_1.1.0_20260929/libcocos2djs.so"
+    }
+  ]
+}
