@@ -1,5 +1,5 @@
 /* ================================================================
- *  长生：天机降世 0.9.10
+ *  长生：天机降世 1.0.2 / vc1020
  *
  *  0.9.9 壳挂点 ABI：x1=MethodInfo, x2=args[+0]=CBRole* [+8]=int64 delta
  *  那不是 Execute 入口，是 HybridCLR InterpFrameGroup::EnterFrameFromInterpreter：
@@ -7,10 +7,10 @@
  *    源码：AllocStackSlot(maxStack - argStackObjectSize)，不拷参数
  *  C#→C# 走 CallInterp → 本函数；独桩/Execute 只承接 native→C#，战斗扣血看不见。
  *
- *  0.9.10 磁盘：
- *    EnterFrameFromInterpreter  file 0x2656920
- *    EnterFrameFromNative       file 0x2656A58（Execute 只调这个，不要钩）
- *    Interpreter::Execute       file 0x265875C（已否：interp live 但 Health 名 0）
+ *  1.0.2 磁盘（真机官方 base.apk）：
+ *    EnterFrameFromInterpreter  file 0x2657350（VA 0x265b350）
+ *    Interpreter::Execute       VA 0x265d1a8（已否：interp live 但 Health 名 0）
+ *    历史：0.9.10 file 0x2656920 / 1.0.1 file 0x2657084；仅证明同一语义链，勿再沿用。
  *
  *  过滤只改 ET.CBRoleValueSystem.RoleValue_Health（0.9.9 已验）。
  *  禁止 ELF base+RVA；禁止再钩独桩 / Execute（会漏或双改）。
@@ -35,7 +35,7 @@ using Il2Cpp::GetApi;
 using Il2Cpp::IsValidHeapPtr;
 
 enum : uintptr_t {
-    FILE_ENTER_INTERP = 0x2657084,  // 1.0.1 EnterFrameFromInterpreter（VA 0x265b084）
+    FILE_ENTER_INTERP = 0x2657350,  // 1.0.2 EnterFrameFromInterpreter（VA 0x265b350）
 };
 enum : size_t {
     OFF_ROLE_SIDE_FALLBACK = 0x74,

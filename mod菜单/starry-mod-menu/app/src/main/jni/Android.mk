@@ -264,11 +264,11 @@ LOCAL_ARM_MODE  := arm
 # 2026-09-21 切走（超维进化 0.3.x 热更重校出包）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
 # LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
-# 长生天机降世 1.0.1 — EnterFrameFromInterpreter file 0x2657084（10_docs 20260908）
 # TryResolve 已加 Il2CppReady 门控（init 期半初始化 image SIGSEGV 实锤）
-# 长生天机降世 1.0.1 — CstjjsMod（Il2CppReady gating 已内置）
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
-# LOCAL_SRC_FILES := Main.cpp Games/CstjjsMod.cpp Unity/Il2CppApi.cpp
+# 长生天机降世 1.0.2 — EnterFrameFromInterpreter file 0x2657350（VA 0x265b350）
+# 2026-09-29 从真机 1.0.2 官方包重定位；CstjjsMod 的 Il2CppReady gating 原样复用
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
+LOCAL_SRC_FILES := Main.cpp Games/CstjjsMod.cpp Unity/Il2CppApi.cpp
 # 偶像梦幻祭2 4.4.8684 — Es2Mod 探测 v1（dump-only：il2cpp 全量枚举→判定函数定位）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ES2
 # ifdef STARRY_TRACE
@@ -280,8 +280,9 @@ LOCAL_ARM_MODE  := arm
 # 无限升级 12.10701 / vc1644 — 热更 dll 字节替换（2026-09-23 二次热更正式包）
 # 2026-09-23 白天：官方再推热更，dll 1960960 → 2030080 B；已用 DIAG 包抓到新 dll 并重打补丁，
 #   kOrigDllLen 已改 2030080，DIAG 开关按约定移除（勿再打开，否则 release 构建被脚本拒绝）。
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
-LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
+# 我的勇者 7.6.1（wdyz）— 2026-09-29 切走（长生天机降世 1.0.2 出包），恢复时取消下面两行注释
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
+# LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
 # 独奏骑士 1.1.768：仅当环境变量 STARRY_GAME_DZQS=1 时覆盖默认目标，避免影响其他游戏的激活分支。
 ifdef STARRY_GAME_DZQS
 LOCAL_CFLAGS    := $(filter-out -DSTARRY_GAME_WDYZ,$(LOCAL_CFLAGS)) -DENABLE_UNITY_HOOK -DSTARRY_GAME_DZQS

@@ -1,5 +1,5 @@
 /* ================================================================
- *  长生：天机降世 (com.netkuu.changsheng.tjjs) — 0.9.10 / vc200
+ *  长生：天机降世 (com.netkuu.changsheng.tjjs) — 1.0.2 / vc1020
  *  feat_num = Main.cpp g_featureList 下标（含 Category 占位）
  * ================================================================ */
 #ifndef STARRY_CSTJJS_MOD_H
