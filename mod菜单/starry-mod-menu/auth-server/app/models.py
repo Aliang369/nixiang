@@ -60,6 +60,8 @@ class CardKey(Base):
     expire_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     activated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     device_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
+    # v5 迁移后的旧设备 ID 别名（JSON 数组字符串）；仅用于过渡期兼容，不参与当前主绑定
+    legacy_device_ids: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     unbind_used: Mapped[bool] = mapped_column(Boolean, default=False)
     note: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -182,7 +184,7 @@ class AuthEvent(Base):
     __tablename__ = "auth_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    # login_ok | login_fail | activate
+    # login_ok | login_fail | activate | device_migrate
     event_type: Mapped[str] = mapped_column(String(32), index=True)
     game_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
     device_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)

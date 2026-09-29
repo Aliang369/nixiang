@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import secrets
 import string
@@ -50,6 +51,59 @@ def generate_card_keys(db: Session, count: int, prefix: str, **fields) -> list[C
 
 
 CUSTOM_KEY_RE = re.compile(r"^[A-Za-z0-9_-]{4,64}$")
+MAX_LEGACY_DEVICE_IDS = 16
+
+
+def _normalize_legacy_device_ids(raw: Optional[list[str]]) -> list[str]:
+    """清洗客户端迁移候选：去重、截断、忽略非法项，不把输入异常升级成登录失败。"""
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in raw or []:
+        if not isinstance(item, str):
+            continue
+        value = item.strip()
+        if not value or len(value) > 128 or value in seen:
+            continue
+        seen.add(value)
+        out.append(value)
+        if len(out) >= MAX_LEGACY_DEVICE_IDS:
+            break
+    return out
+
+
+def _load_legacy_device_ids(card: CardKey) -> list[str]:
+    raw = card.legacy_device_ids
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(data, list):
+        return []
+    return _normalize_legacy_device_ids(data)
+
+
+def _store_legacy_device_ids(card: CardKey, ids: list[str]) -> None:
+    clean = _normalize_legacy_device_ids(ids)
+    card.legacy_device_ids = (
+        json.dumps(clean, ensure_ascii=True, separators=(",", ":")) if clean else None
+    )
+
+
+def _authorize_device_binding(
+    card: CardKey,
+    device_id: str,
+    legacy_device_ids: Optional[list[str]],
+) -> Optional[str]:
+    """返回需要迁移的旧主绑定；None=无需迁移，不匹配则保持原 403 语义。"""
+    if not card.device_id or card.device_id == device_id:
+        return None
+    requested = _normalize_legacy_device_ids(legacy_device_ids)
+    known = _load_legacy_device_ids(card)
+    if card.device_id in requested or device_id in known:
+        return card.device_id
+    raise HTTPException(403, "卡密已绑定其他设备，请先解绑")
 
 
 def normalize_custom_keys(raw_keys: list[str]) -> list[str]:
@@ -158,16 +212,22 @@ def login_card(
     card_key: str,
     game_id: str,
     device_id: str,
+    legacy_device_ids: Optional[list[str]] = None,
 ) -> dict[str, Any]:
     settings = get_settings()
-    card = db.query(CardKey).filter(CardKey.key_code == card_key.strip()).first()
+    card = (
+        db.query(CardKey)
+        .filter(CardKey.key_code == card_key.strip())
+        .with_for_update()
+        .first()
+    )
     if not card:
         raise HTTPException(404, "卡密不存在")
 
     ensure_card_usable(card, game_id)
 
-    if card.device_id and card.device_id != device_id:
-        raise HTTPException(403, "卡密已绑定其他设备，请先解绑")
+    # 先验证迁移资格但不写库；后面次数检查失败时不能留下半迁移状态。
+    migration_from = _authorize_device_binding(card, device_id, legacy_device_ids)
 
     freshly_activated = activate_if_needed(card)
 
@@ -187,13 +247,25 @@ def login_card(
 
     if not card.device_id:
         card.device_id = device_id
+    elif migration_from:
+        known = _load_legacy_device_ids(card)
+        merged = [migration_from] + [x for x in known if x != device_id and x != migration_from]
+        _store_legacy_device_ids(card, merged)
+        card.device_id = device_id
 
-    # 撤销同设备旧会话
-    db.query(SessionToken).filter(
-        SessionToken.device_id == device_id,
-        SessionToken.game_id == game_id,
-        SessionToken.revoked.is_(False),
-    ).update({"revoked": True})
+    if migration_from:
+        # 主绑定迁移后旧设备会话全部失效，旧在线行不再挂这张卡。
+        revoke_card_sessions(db, card.id)
+        db.query(OnlinePresence).filter(OnlinePresence.card_id == card.id).update(
+            {"card_id": None}, synchronize_session=False
+        )
+    else:
+        # 撤销同设备旧会话
+        db.query(SessionToken).filter(
+            SessionToken.device_id == device_id,
+            SessionToken.game_id == game_id,
+            SessionToken.revoked.is_(False),
+        ).update({"revoked": True})
 
     token = secrets.token_urlsafe(32)
     expires_at = utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
@@ -212,6 +284,15 @@ def login_card(
 
     from .events import record_auth_event
 
+    if migration_from:
+        record_auth_event(
+            db,
+            "device_migrate",
+            game_id=game_id,
+            device_id=device_id,
+            card_id=card.id,
+            detail=f"{migration_from} -> {device_id}",
+        )
     if freshly_activated:
         record_auth_event(
             db, "activate", game_id=game_id, device_id=device_id, card_id=card.id, detail=card.key_code
@@ -265,6 +346,7 @@ def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
         deduct_msg = "（首次解绑不扣时间）"
 
     card.device_id = None
+    card.legacy_device_ids = None
     db.query(SessionToken).filter(SessionToken.card_id == card.id, SessionToken.revoked.is_(False)).update(
         {"revoked": True}
     )

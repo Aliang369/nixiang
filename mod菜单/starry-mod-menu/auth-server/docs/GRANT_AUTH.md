@@ -122,12 +122,20 @@ Native 验签字 + 是否过期 + 是否这个设备/游戏
 |------|------|------|
 | v1 | `ANDROID_ID` + Widevine | 包名隔离 → 换游戏必换设备 |
 | v2 | Widevine + `Build.*` | 部分 OEM（ColorOS 等）Widevine 仍按应用隔离 |
-| **v3**（当前） | **权威**=仅 `Build.*`/`FINGERPRINT`；共享文件尽力写但不覆盖 | 同机跨包一致；勿用 `Download/` 旧种子覆盖。升级/清旧种子后解绑一次 |
+| v3 | 仅 `Build.*`/`FINGERPRINT`；共享文件尽力写但不覆盖 | 系统 OTA 改变 `FINGERPRINT` 后整套 ID 漂移 |
+| v4 | 共享文件优先，缺失时回落稳定 `Build.*` | 外部存储不可读时仍会生成第二套 ID |
+| **v5**（当前） | **只用 SSAID**（`Settings.Secure.ANDROID_ID`） | 同签名、同系统用户跨包一致；清数据/恢复出厂/换签名才变化 |
 
 实现：`app/.../auth/DeviceFingerprint.java`。  
 经验卡片：`10_docs/_templates/经验_卡密设备指纹跨包一致.md`。
 
-真机（2026-08-10）：修前同机三包三 `dev_*`（v1/v2）；本地菜单装 v3 并对齐后登录 **已确认 OK**。后台**无需改代码**。
+v5 客户端首次登录会同时带上旧 prefs、旧共享种子、v4 Build 哈希作为
+`legacy_device_ids`。服务端命中旧绑定后把主绑定原子迁移到 v5，并把旧 ID
+保留在 `card_keys.legacy_device_ids`，因此升级期间无需用户手动解绑，旧客户端也不会
+因为主绑定已经迁移而立即全部失效。没有合法 legacy 证据的陌生设备仍返回原 403。
+
+SSAID 不可用（为空、非法或已知伪造值）时客户端显式报错，不再静默回落到随机 ID
+或共享文件，避免重新制造“一台机器两套 ID”。
 
 ### 3.2 谁在什么时候发票
 

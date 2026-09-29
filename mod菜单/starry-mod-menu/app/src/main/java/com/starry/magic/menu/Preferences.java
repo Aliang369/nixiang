@@ -7,8 +7,11 @@ import com.starry.magic.auth.DeviceFingerprint;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,6 +29,8 @@ public class Preferences {
     private static final String PREFS_NAME = "starry_magic_prefs";
     private static final String KEY_PERSIST_FEATURES = "persist_features";
     private static final String KEY_DEVICE_ID = "auth_device_id";
+    private static final String KEY_DEVICE_ID_VERSION = "auth_device_id_version";
+    private static final String KEY_LEGACY_DEVICE_IDS = "auth_legacy_device_ids";
     private static final String KEY_AUTH_BASE = "auth_base_url";
     private static final String KEY_AUTH_GAME_ID = "auth_game_id";
     private static final String KEY_AUTH_TOKEN = "auth_token";
@@ -265,25 +270,62 @@ public class Preferences {
     // ===== 网络验证会话 =====
 
     /**
-     * 设备指纹（见 {@link DeviceFingerprint} v4）：
-     * 同机跨游戏包一致；优先共享种子（含 /data/local/tmp），否则稳定硬件哈希。
+     * v5 优先，v4 兜底：两个版本每次都采集；命中任一稳定 ID 就放行。
+     * v5 可用时保存 v5；否则用 v4。两者都不可用时不造本地身份，让上层走解绑。
      */
-    public static String getOrCreateDeviceId() {
+    public static synchronized String getOrCreateDeviceId() {
         with(null);
         String stable = DeviceFingerprint.get(appContext);
         String cached = sharedPreferences.getString(KEY_DEVICE_ID, "");
-        if (stable != null && stable.startsWith("dev_")) {
-            if (!stable.equals(cached)) {
-                sharedPreferences.edit().putString(KEY_DEVICE_ID, stable).apply();
-            }
+        String v4 = DeviceFingerprint.getV4();
+
+        if (DeviceFingerprint.isValidDevId(stable)) {
+            saveDeviceId(stable, DeviceFingerprint.VERSION, legacyCandidates(cached, stable));
             return stable;
         }
-        if (cached != null && !cached.isEmpty()) {
-            return cached;
+
+        if (DeviceFingerprint.isValidDevId(v4)) {
+            saveDeviceId(v4, DeviceFingerprint.VERSION_LEGACY_V4, legacyCandidates(cached, v4));
+            return v4;
         }
-        String fallback = "dev_fallback_" + System.currentTimeMillis();
-        sharedPreferences.edit().putString(KEY_DEVICE_ID, fallback).apply();
-        return fallback;
+
+        throw new IllegalStateException("设备标识不可用：v5/v4 均缺失，需要解绑设备后重新绑定");
+    }
+
+    private static LinkedHashSet<String> legacyCandidates(String cached, String preferred) {
+        LinkedHashSet<String> legacy = new LinkedHashSet<>();
+        legacy.addAll(getLegacyDeviceIds());
+        if (DeviceFingerprint.isValidDevId(cached)) legacy.add(cached);
+        legacy.addAll(DeviceFingerprint.getLegacyIds(appContext));
+        legacy.remove(preferred);
+        return legacy;
+    }
+
+    private static void saveDeviceId(String id, String version, Set<String> legacy) {
+        saveLegacyDeviceIds(legacy);
+        sharedPreferences.edit()
+                .putString(KEY_DEVICE_ID, id)
+                .putString(KEY_DEVICE_ID_VERSION, version)
+                .apply();
+    }
+
+    /** v5 首次登录时上报的旧 ID 候选；服务端只在卡密当前绑定命中时接受迁移。 */
+    public static List<String> getLegacyDeviceIds() {
+        with(null);
+        Set<String> stored = sharedPreferences.getStringSet(KEY_LEGACY_DEVICE_IDS, null);
+        if (stored == null || stored.isEmpty()) return new ArrayList<>();
+        return new ArrayList<>(stored);
+    }
+
+    private static void saveLegacyDeviceIds(Set<String> ids) {
+        LinkedHashSet<String> clean = new LinkedHashSet<>();
+        if (ids != null) {
+            for (String id : ids) {
+                if (DeviceFingerprint.isValidDevId(id)) clean.add(id);
+                if (clean.size() >= 24) break;
+            }
+        }
+        sharedPreferences.edit().putStringSet(KEY_LEGACY_DEVICE_IDS, clean).apply();
     }
 
     public static String getAuthBaseUrl() {

@@ -243,6 +243,8 @@ public class ModBridge {
             // session_live() 只看 g_rt_ok，登录后永不过期
         } catch (UnsatisfiedLinkError e) {
             Log.w(TAG, "native grant APIs missing", e);
+        } catch (Throwable e) {
+            Log.w(TAG, "syncNativeAuthorized failed", e);
         }
     }
 

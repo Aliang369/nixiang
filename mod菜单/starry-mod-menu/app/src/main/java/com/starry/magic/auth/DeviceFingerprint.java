@@ -2,44 +2,37 @@ package com.starry.magic.auth;
 
 import android.content.Context;
 import android.os.Build;
-import android.os.Environment;
-import android.system.Os;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * 跨宿主包稳定的设备指纹（全游戏卡密绑定用）。
  *
- * <p>权威策略（防「修五次仍复发」）：
- * <ol>
- *   <li>先<strong>收集</strong>所有来源的合法 id（tmp / sdcard / su 读盘 / 其它包 prefs）。</li>
- *   <li>冲突时优先 sdcard，再 tmp，再 prefs；<strong>禁止</strong>用新算出的 hardware 覆盖已有种子。</li>
- *   <li>选中后写回各副本（只补齐空洞，不 clobber 不同值）。</li>
- *   <li>全无种子才用稳定硬件哈希；写盘失败不致命。</li>
- * </ol>
+ * <p>v5 主 ID 只使用 {@link Settings.Secure#ANDROID_ID}（SSAID）。Android 8+ 下，
+ * 同一签名证书、同一系统用户的多个应用会得到相同 SSAID，因此无需再依赖外部存储
+ * 种子或容易碰撞的 Build 硬件哈希。
  *
- * <p>历史坑：v1 ANDROID_ID / v2 Widevine 按包隔离；v3 含 OTA 可变 FINGERPRINT；
- * v4 早期只信 sdcard → 无存储权限宿主落到另一套 hardware，甚至可能把错误 id 写进 tmp 毒化全机。
+ * <p>v4 是 SSAID 缺失/异常时的降级信号；两个版本每次都采集，命中任一稳定 ID 即可用。
+ * 调用方还应把候选交给服务端做绑定迁移，避免在 v5/v4 之间反复漂移。
  */
 public final class DeviceFingerprint {
 
     private static final String TAG = "DeviceFingerprint";
-    private static final String FINGERPRINT_VER = "v4";
-    private static final String FILE_NAME = "device_id";
+    public static final String VERSION = "v5";
+    public static final String VERSION_LEGACY_V4 = "v4";
+
 
     private static final String[] SHARED_REL_DIRS = {
             "Android/starry_magic",
@@ -51,43 +44,91 @@ public final class DeviceFingerprint {
             "/data/local/tmp/starry_magic",
     };
 
+    private static final String[] BROKEN_SSAIDS = {
+            "9774d56d682e549c",
+            "0000000000000000",
+    };
+
     private DeviceFingerprint() {}
 
+
+    /** @return v5 SSAID 指纹；系统未提供合法 SSAID 时返回 null，由调用方降级。 */
     public static String get(Context context) {
-        if (context == null) return "unknown";
-
-        Map<String, String> found = collectAllIds();
-        String chosen = pickCanonical(found);
-        if (isValidDevId(chosen)) {
-            propagateFillGaps(chosen);
-            Log.i(TAG, "fingerprint " + FINGERPRINT_VER + " id=" + chosen
-                    + " source=shared sources=" + found);
-            return chosen;
+        if (context == null) return null;
+        try {
+            String ssaid = Settings.Secure.getString(
+                    context.getContentResolver(), Settings.Secure.ANDROID_ID);
+            if (!isUsableSsaid(ssaid)) {
+                Log.e(TAG, "SSAID unavailable or invalid; refuse silent fallback");
+                return null;
+            }
+            String raw = "ver=" + VERSION + "|ssaid=" + ssaid.trim().toLowerCase(Locale.ROOT);
+            String hash = sha256Hex(raw);
+            if (hash == null || hash.length() < 32) {
+                Log.e(TAG, "SSAID hash failed");
+                return null;
+            }
+            String id = "dev_" + hash.substring(0, 32);
+            Log.i(TAG, "fingerprint " + VERSION + " id=" + id + " source=ssaid");
+            return id;
+        } catch (Throwable t) {
+            Log.e(TAG, "read SSAID failed", t);
+            return null;
         }
-
-        String computed = computeHardwareId();
-        if (!isValidDevId(computed)) {
-            computed = "dev_" + sha256Hex("fallback|" + UUID.randomUUID()).substring(0, 32);
-            Log.w(TAG, "hardware hash failed, using random fallback (will break cross-app)");
-        }
-        // 再次确认：写之前若 su/盘上已出现种子，绝不覆盖
-        found = collectAllIds();
-        chosen = pickCanonical(found);
-        if (isValidDevId(chosen)) {
-            propagateFillGaps(chosen);
-            Log.i(TAG, "fingerprint " + FINGERPRINT_VER + " id=" + chosen
-                    + " source=shared-late sources=" + found);
-            return chosen;
-        }
-        propagateFillGaps(computed);
-        Log.i(TAG, "fingerprint " + FINGERPRINT_VER + " id=" + computed
-                + " source=hardware shared=none");
-        return computed;
     }
 
-    /** 仅稳定 Build 字段；不含 DISPLAY / FINGERPRINT（会随 OTA 变）。 */
-    private static String computeHardwareId() {
-        String raw = "ver=" + FINGERPRINT_VER
+    /** 当前设备的 v4 稳定 Build 指纹；与旧客户端算法逐字兼容。 */
+    public static String getV4() {
+        return computeLegacyV4HardwareId();
+    }
+
+    /**
+     * 采集本机历史 ID：共享种子、其它星光包 prefs，以及 v4 稳定 Build 哈希。
+     */
+    public static List<String> getLegacyIds(Context context) {
+        Set<String> out = new LinkedHashSet<>();
+        for (String path : legacySeedPaths()) {
+            String id = readFileTrimmed(new File(path));
+            if (!isValidDevId(id)) {
+                id = readFileViaSu(path);
+            }
+            if (isValidDevId(id)) {
+                out.add(id);
+            }
+        }
+        for (String id : readIdsFromOtherPrefsViaSu()) {
+            if (isValidDevId(id)) {
+                out.add(id);
+            }
+        }
+        String v4Hardware = computeLegacyV4HardwareId();
+        if (isValidDevId(v4Hardware)) {
+            out.add(v4Hardware);
+        }
+        return new ArrayList<>(out);
+    }
+
+    public static boolean isValidDevId(String id) {
+        return id != null && id.startsWith("dev_") && id.length() >= 8 && id.length() <= 96;
+    }
+
+    private static boolean isUsableSsaid(String raw) {
+        String value = raw == null ? "" : raw.trim().toLowerCase(Locale.ROOT);
+        if (value.length() != 16) return false;
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            boolean hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f');
+            if (!hex) return false;
+        }
+        for (String broken : BROKEN_SSAIDS) {
+            if (broken.equals(value)) return false;
+        }
+        return true;
+    }
+
+    /** 仅稳定 Build 字段，保持与 v4 hardware 算法逐字兼容，供旧绑定识别。 */
+    private static String computeLegacyV4HardwareId() {
+        String raw = "ver=v4"
                 + "|board=" + nullToEmpty(Build.BOARD)
                 + "|hw=" + nullToEmpty(Build.HARDWARE)
                 + "|manu=" + nullToEmpty(Build.MANUFACTURER)
@@ -100,125 +141,18 @@ public final class DeviceFingerprint {
         return "dev_" + hash.substring(0, Math.min(32, hash.length()));
     }
 
-    /** path → id；按发现顺序，后者不覆盖前者同 path。 */
-    private static Map<String, String> collectAllIds() {
-        Map<String, String> out = new LinkedHashMap<>();
-        for (String path : seedPathsPriority()) {
-            String id = readFileTrimmed(new File(path));
-            if (!isValidDevId(id)) {
-                id = readFileViaSu(path);
-            }
-            if (isValidDevId(id)) {
-                out.put(path, id);
-            }
-        }
-        // 其它已装星光包 prefs（Root）：种子文件全丢时仍能对齐已绑卡
-        for (String id : readIdsFromOtherPrefsViaSu()) {
-            out.put("prefs:" + id, id);
-        }
-        return out;
-    }
-
-    /**
-     * 冲突裁决：sdcard 路径优先于 tmp（tmp 更易被「无权限宿主 + 误写 hardware」毒化）；
-     * prefs 再次之。同优先级取先发现。
-     */
-    private static String pickCanonical(Map<String, String> found) {
-        if (found == null || found.isEmpty()) return null;
-        Set<String> distinct = new LinkedHashSet<>(found.values());
-        if (distinct.size() == 1) {
-            return distinct.iterator().next();
-        }
-        Log.w(TAG, "CONFLICT device_id seeds=" + found);
-        String best = null;
-        int bestScore = -1;
-        for (Map.Entry<String, String> e : found.entrySet()) {
-            int score = scorePath(e.getKey());
-            if (score > bestScore) {
-                bestScore = score;
-                best = e.getValue();
-            }
-        }
-        Log.w(TAG, "CONFLICT resolved → " + best + " (heal others if possible)");
-        return best;
-    }
-
-    private static int scorePath(String path) {
-        if (path == null) return 0;
-        if (path.contains("/Android/starry_magic/")) return 100;
-        if (path.contains("/.starry_magic/")) return 90;
-        if (path.contains("/Download/.starry_magic/")) return 70;
-        if (path.startsWith("/data/local/tmp/starry_magic")) return 40;
-        if (path.startsWith("prefs:")) return 30;
-        return 10;
-    }
-
-    /** 只补空洞；已有不同合法 id 的文件绝不覆盖。 */
-    private static void propagateFillGaps(String id) {
-        if (!isValidDevId(id)) return;
-        for (String abs : ABS_SHARED_DIRS) {
-            File f = new File(abs, FILE_NAME);
-            if (!writeOneFileNoClobber(f, id)) {
-                writeFileViaSuNoClobber(f.getAbsolutePath(), id);
-            }
-        }
-        File root = Environment.getExternalStorageDirectory();
-        if (root == null) return;
-        for (String rel : SHARED_REL_DIRS) {
-            writeOneFileNoClobber(new File(new File(root, rel), FILE_NAME), id);
-        }
-    }
-
-    private static List<String> seedPathsPriority() {
+    private static List<String> legacySeedPaths() {
         List<String> paths = new ArrayList<>();
-        File root = Environment.getExternalStorageDirectory();
-        // 收集时也按优先级：先 sdcard 再 tmp（裁决用 score；收集要全）
-        if (root != null) {
+        File external = android.os.Environment.getExternalStorageDirectory();
+        if (external != null) {
             for (String rel : SHARED_REL_DIRS) {
-                paths.add(new File(new File(root, rel), FILE_NAME).getAbsolutePath());
+                paths.add(new File(new File(external, rel), "device_id").getAbsolutePath());
             }
         }
         for (String abs : ABS_SHARED_DIRS) {
-            paths.add(new File(abs, FILE_NAME).getAbsolutePath());
+            paths.add(new File(abs, "device_id").getAbsolutePath());
         }
         return paths;
-    }
-
-    private static boolean writeOneFileNoClobber(File f, String id) {
-        try {
-            File dir = f.getParentFile();
-            if (dir != null) {
-                if (!dir.exists() && !dir.mkdirs()) {
-                    return false;
-                }
-                chmodBestEffort(dir, 0755);
-            }
-            String existing = readFileTrimmed(f);
-            if (isValidDevId(existing)) {
-                if (existing.equals(id)) {
-                    chmodBestEffort(f, 0666);
-                    return true;
-                }
-                Log.w(TAG, "refuse clobber " + f + " keep=" + existing + " skip=" + id);
-                return true; // 视为「已有种子」，不必 su 强写
-            }
-            try (FileOutputStream fos = new FileOutputStream(f)) {
-                fos.write(id.getBytes(StandardCharsets.UTF_8));
-                fos.flush();
-            }
-            //noinspection ResultOfMethodCallIgnored
-            f.setReadable(true, false);
-            //noinspection ResultOfMethodCallIgnored
-            f.setWritable(true, false);
-            chmodBestEffort(f, 0666);
-            if (isValidDevId(readFileTrimmed(f))) {
-                Log.i(TAG, "shared id written @" + f.getAbsolutePath());
-                return true;
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "shared id write fail @" + f + ": " + t.getMessage());
-        }
-        return false;
     }
 
     private static List<String> readIdsFromOtherPrefsViaSu() {
@@ -226,7 +160,10 @@ public final class DeviceFingerprint {
         try {
             Process p = Runtime.getRuntime().exec(new String[]{
                     "su", "-c",
-                    "grep -h auth_device_id /data/data/*/shared_prefs/starry_magic_prefs.xml 2>/dev/null"
+                    "grep -h auth_device_id "
+                            + "/data/data/*/shared_prefs/starry_magic_prefs.xml "
+                            + "/data/user/0/*/shared_prefs/starry_magic_prefs.xml "
+                            + "2>/dev/null"
             });
             try (BufferedReader br = new BufferedReader(
                     new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
@@ -248,7 +185,7 @@ public final class DeviceFingerprint {
         if (line == null) return null;
         int start = line.indexOf(">dev_");
         if (start < 0) return null;
-        start += 1; // skip '>'
+        start += 1;
         int end = line.indexOf('<', start);
         if (end < 0) end = line.length();
         return line.substring(start, end).trim();
@@ -277,50 +214,6 @@ public final class DeviceFingerprint {
         }
     }
 
-    private static void writeFileViaSuNoClobber(String path, String id) {
-        if (!isValidDevId(id) || path == null || !path.contains("starry_magic")) return;
-        if (path.contains("'") || path.contains("\n") || id.contains("'")) return;
-        try {
-            String existing = readFileViaSu(path);
-            if (isValidDevId(existing)) {
-                if (!existing.equals(id)) {
-                    Log.w(TAG, "refuse su clobber " + path + " keep=" + existing);
-                }
-                return;
-            }
-            String dir = new File(path).getParent();
-            String cmd = "mkdir -p '" + dir + "' && chmod 755 '" + dir + "'"
-                    + " && printf '%s' '" + id + "' > '" + path + "'"
-                    + " && chmod 666 '" + path + "'";
-            Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", cmd});
-            int code = p.waitFor();
-            if (code == 0 && isValidDevId(readFileTrimmed(new File(path)))) {
-                Log.i(TAG, "shared id written via su @" + path);
-            } else if (code == 0 && isValidDevId(readFileViaSu(path))) {
-                Log.i(TAG, "shared id written via su (readback su) @" + path);
-            } else {
-                Log.w(TAG, "shared id su write fail code=" + code + " @" + path);
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "shared id su write fail @" + path + ": " + t.getMessage());
-        }
-    }
-
-    private static void chmodBestEffort(File f, int mode) {
-        if (f == null) return;
-        try {
-            Os.chmod(f.getAbsolutePath(), mode);
-        } catch (Throwable ignored) {
-            try {
-                //noinspection ResultOfMethodCallIgnored
-                Runtime.getRuntime().exec(new String[]{
-                        "chmod", Integer.toOctalString(mode), f.getAbsolutePath()
-                }).waitFor();
-            } catch (Throwable ignored2) {
-            }
-        }
-    }
-
     private static String readFileTrimmed(File f) {
         if (f == null || !f.isFile() || f.length() == 0 || f.length() > 128) return null;
         try (FileInputStream in = new FileInputStream(f)) {
@@ -331,10 +224,6 @@ public final class DeviceFingerprint {
         } catch (Throwable ignored) {
             return null;
         }
-    }
-
-    private static boolean isValidDevId(String id) {
-        return id != null && id.startsWith("dev_") && id.length() >= 8 && id.length() <= 96;
     }
 
     private static String sha256Hex(String input) {

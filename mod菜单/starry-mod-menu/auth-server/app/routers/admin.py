@@ -884,6 +884,7 @@ def update_card(
         setattr(card, k, v)
     if force_unbind:
         card.device_id = None
+        card.legacy_device_ids = None
     if reset_unbind:
         card.unbind_used = False
     refresh_card_status(card)

@@ -1,0 +1,12 @@
+{
+  "template_id": "wzsjszb",
+  "name": "我在神界刷装备",
+  "package": "com.windforce.rg.offical",
+  "source": "Games/SjzzEntry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "伤害倍率"},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "免广告"},
+    {"feat_num": 4, "name": "游戏加速"}
+  ]
+}

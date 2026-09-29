@@ -18,7 +18,9 @@ router = APIRouter(prefix="/v1", tags=["client"])
 def login(body: LoginRequest, request: Request, db: Session = Depends(get_db)):
     assert_card_login_not_rate_limited(request)
     try:
-        data = auth_service.login_card(db, body.card_key, body.game_id, body.device_id)
+        data = auth_service.login_card(
+            db, body.card_key, body.game_id, body.device_id, body.legacy_device_ids
+        )
         clear_card_login_failures(request)
         return {"ok": True, "message": "登录成功", "data": data}
     except HTTPException as exc:

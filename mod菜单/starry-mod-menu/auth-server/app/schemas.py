@@ -16,6 +16,8 @@ class LoginRequest(BaseModel):
     card_key: str = Field(min_length=4, max_length=64)
     game_id: str = Field(min_length=1, max_length=64)
     device_id: str = Field(min_length=4, max_length=128)
+    # v5 首次迁移证据：旧 prefs / 共享种子 / v4 硬件哈希；旧客户端可省略
+    legacy_device_ids: Optional[list[str]] = Field(default=None, max_length=32)
 
 
 class HeartbeatRequest(BaseModel):

@@ -875,6 +875,24 @@ public final class SignSpoof {
             + "FVCr+4yYZDFoAqCb0JenzARAz54LCCOH0IPu6Br9OXq/ISXso592Q1jwO3uwdrH8V6Sb/8HQvxDBYAT0YvSkn1X7KWHsPl/f"
             + "iIU6w2uN8sg+En5ARLT8v9nLnbcMVB/jHLQJhPxZgqYjYGsj+U/acQ6poSS5xpG6N4IA61gKY2VAr1G1sMkHog8Whb7/nW5x"
             + "YlafWYsB7bZUC4K5YVqjcLhYeiKe2zi4Q3MqMicwiVp29lqjbg8mDUc=";
+    // 我本布衣：世家录（com.JAGames.TalesoftheClan）TapTap 原版签名证书
+    // 取自设备原版 base.apk v2 signing block；subject/issuer: O=JAGames
+    // SHA-256: 96c686ebcb34dc895f0ae022897084f677cab9e77c94b21c6d338074bd20a501
+    // SHA-1:   544309f4689084a4f7109a7bf742171bfd37cb8c
+    // MD5:     70ef798ccf0878b19a77d9ba60c35dc9
+    private static final String WBJY_PKG = "com.JAGames.TalesoftheClan";
+    private static final String WBJY_CERT_B64 =
+            "MIICojCCAYqgAwIBAgIEZC9K/zANBgkqhkiG9w0BAQUFADASMRAwDgYDVQQKDAdKQUdhbWVzMCAXDTI2MDExMzExNTQyOFoYDzIwNzYwMTAxMTE1NDI4WjASMRAwDgYDVQQKDAdKQUdhbWVzMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAg66OLI7cvrZ84tNGwEx9IsychVSI6y2XB1M57A2PltZ3kqlsZlvTamG8JfjGcY10Rz4Y/l9CZOdDyN2UEi1fWgpTVIxEMR/m8llkuQwQoqR/I/OjFYxJsj2QVtXKJ3jwatp5xHDilkRpR3EcLvURfOgaxpe50MTvXHgpDRLxMrezctUaVidspdHBPqimFFr4eIYkrHDMb5OSiuzKe+v53yTD2J/LPZUfTECIm0bUik8CBm6jLkmfcbIkG58p0S9UksaUOAk2piRTpj5OYo5z+JFAFYeablv+wBg+nBV5RC+8G8cNLHgkjVMLVPe0CyqLXIXNOT7QtTzW/qDGkeNWJQIDAQABMA0GCSqGSIb3DQEBBQUAA4IBAQBx1LlV+senvdxm1Ws/5O1jZf+y1SAdLPmKTXDWz+eFOvI5P4WQYVv32Gyxwlb5WPYqoBT3iS+lnnXOnM551AB3CvjMTJjmRMHGcc1wTJX33POb9l6O6mDGXNZzZtJOYocHZpDk5LD/H5ua3j8BIiBXDPtRv4Q1tomZUhlDHdQZN0OPNdTZj3SIXFwy12wnUumMX7odcpIaDIrGw0uOjgu3B7fMrGysW1PCqEffL5U8103sVWQ0w1tZ+/5MBqzyPEqoJMkbmAwge4sBGbZu3+OaifGwhR0X9fGi+RqnjkSihaRas1FAQdStGlDFFsj8LCzP24cK2rPLK/zATUh6/6QK";
+
+    /** 我在神界刷装备 Tap 渠道原版（MD5=e7685721… / SHA-256=927a475c… / CN=fire3d） */
+    private static final String SJZZ_PKG = "com.windforce.rg.offical";
+    private static final String SJZZ_CERT_B64 =
+            "MIIBvTCCASagAwIBAgIEJC0OdTANBgkqhkiG9w0BAQUFADAiMQ8wDQYDVQQDDAZmaXJlM2QxDzANBgNVBAoMBmNlYXBvbjAgFw0x"
+                    + "ODA2MTIxMTUzMzdaGA8yMTE4MDUxOTExNTMzN1owIjEPMA0GA1UEAwwGZmlyZTNkMQ8wDQYDVQQKDAZjZWFwb24wgZ8wDQYJKoZI"
+                    + "hvcNAQEBBQADgY0AMIGJAoGBAIpInd+FyuCGTYlkSF2MJrgBLQJifeFW5UkONNOlqDpYur0svRn/2osEnC57xIRqJRmWfDqml6So"
+                    + "R75STTw4FI4BzED2Ue06qq2hZM2JlpufkOjrcVyAbFjFTdRlHasvte/YOjgVC45APSdlnFe7Os3ypwqBHwWa/emIRAM1hyrJAgMB"
+                    + "AAEwDQYJKoZIhvcNAQEFBQADgYEALocex2TnGFoNVzmTLykJ0Lc5Nx64ik53xYEz6RDOnGjoZPKCSK9Pnifpubj3bW7fSo4kMdl2"
+                    + "B5UBD0Y0lnooa4IpgFd+cb0ylzh/6bjTGkOqch4jz9yO8xLTM+WSrxWZwr1e7LwfQfzjI3kX2U8mrlnglvmgLyLSXd6H3Z9PpDc=";
 
     public static void install() {
         if (sInstalled) return;
@@ -934,6 +952,8 @@ public final class SignSpoof {
                 fakes.put(BLFX_PKG, new Signature(Base64.decode(BLFX_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GYZW_PKG, new Signature(Base64.decode(GYZW_CERT_B64, Base64.DEFAULT)));
                 fakes.put(HXWJ_PKG, new Signature(Base64.decode(HXWJ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(WBJY_PKG, new Signature(Base64.decode(WBJY_CERT_B64, Base64.DEFAULT)));
+                fakes.put(SJZZ_PKG, new Signature(Base64.decode(SJZZ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

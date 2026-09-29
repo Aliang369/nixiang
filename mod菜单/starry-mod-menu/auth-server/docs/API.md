@@ -21,9 +21,14 @@ Base URL：`http://<服务器IP>:8000`
 {
   "card_key": "SG-XXXX-XXXX-XXXX-XXXX",
   "game_id": "starry_self",
-  "device_id": "设备唯一ID"
+  "device_id": "v5 设备唯一ID",
+  "legacy_device_ids": ["旧 v4/v3 设备ID"]
 }
 ```
+
+`legacy_device_ids` 可选，仅用于 v4 → v5 自动迁移。服务端只有当任一候选命中
+`card_keys.device_id` 或该卡已保留的旧绑定时才允许迁移，否则仍返回原 403。
+迁移成功后旧 ID 会保存在 `card_keys.legacy_device_ids`，供过渡期旧客户端继续登录。
 
 成功 `data`：
 
@@ -38,7 +43,7 @@ Base URL：`http://<服务器IP>:8000`
 
 规则摘要：
 
-- 单设备绑定；已绑其他设备则拒绝
+- 单设备绑定；已绑其他设备且未命中合法 legacy 候选则拒绝
 - 首次激活按类型写 `expire_at`（永久/次数可为 null）
 - `max_uses > 0` 或 `duration_type=count`：**每次登录扣 1 次**
 - `scope=global` 可用于任意 `game_id`；`scope=game` 仅匹配卡上的 `game_id`

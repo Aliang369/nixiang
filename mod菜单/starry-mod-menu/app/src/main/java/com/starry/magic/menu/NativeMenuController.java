@@ -3373,6 +3373,13 @@ public final class NativeMenuController {
                 body.put("card_key", card);
                 body.put("device_id", deviceId);
                 body.put("game_id", gameId);
+                JSONArray legacyIds = new JSONArray();
+                for (String legacyId : Preferences.getLegacyDeviceIds()) {
+                    legacyIds.put(legacyId);
+                }
+                if (legacyIds.length() > 0) {
+                    body.put("legacy_device_ids", legacyIds);
+                }
                 String loginRes = AuthClient.request(
                         Preferences.getAuthBaseUrl(), "POST", "/v1/auth/login", body.toString(), null);
                 JSONObject loginJson = new JSONObject(loginRes);

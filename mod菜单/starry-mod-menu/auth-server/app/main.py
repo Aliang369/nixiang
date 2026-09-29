@@ -119,6 +119,11 @@ def ensure_schema() -> None:
                 )
             if "channel" not in game_cols:
                 conn.execute(text("ALTER TABLE games ADD COLUMN channel VARCHAR(64)"))
+            card_cols = {
+                r[1] for r in conn.execute(text("PRAGMA table_info(card_keys)")).fetchall()
+            }
+            if "legacy_device_ids" not in card_cols:
+                conn.execute(text("ALTER TABLE card_keys ADD COLUMN legacy_device_ids TEXT"))
             ann_cols = {
                 r[1] for r in conn.execute(text("PRAGMA table_info(announcements)")).fetchall()
             }
@@ -177,6 +182,9 @@ def ensure_schema() -> None:
             )
             conn.execute(
                 text("ALTER TABLE games ADD COLUMN IF NOT EXISTS channel VARCHAR(64)")
+            )
+            conn.execute(
+                text("ALTER TABLE card_keys ADD COLUMN IF NOT EXISTS legacy_device_ids TEXT")
             )
             conn.execute(
                 text(

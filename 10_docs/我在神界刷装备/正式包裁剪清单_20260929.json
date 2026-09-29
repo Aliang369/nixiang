@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/我在神界刷装备",
+  "keep": "我在神界刷装备_157.0_surgical-releaseSigned.apk",
+  "keep_size": 416576568,
+  "keep_md5": "a76696281dee1dfff2eb8b224b70d082",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "我在神界刷装备_157.0_surgical-releaseSigned.apk.idsig",
+      "size": 3290651,
+      "md5": "6ee99b3c9dd0651354a427e390ddef5c"
+    }
+  ],
+  "removed_count": 1
+}
