@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BszzDllPatch")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7652237a937dd9a0e42bcfa0f088d5ea4746846e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7cc25babb9403f77e5d7f3de1c1f86decc0ac027")]
 [assembly: System.Reflection.AssemblyProductAttribute("BszzDllPatch")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BszzDllPatch")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

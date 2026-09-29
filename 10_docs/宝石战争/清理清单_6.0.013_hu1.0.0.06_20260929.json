@@ -1,0 +1,42 @@
+{
+  "game": "宝石战争",
+  "round": "6.0.013_hu1.0.0.06_20260929",
+  "date": "2026-09-29",
+  "removed_paths": [
+    "06_dumped/宝石战争/6.0.013/current/base.apk",
+    "06_dumped/宝石战争/6.0.013/current/hotupdate",
+    "06_dumped/宝石战争/6.0.013/static/libil2cpp.so",
+    "06_dumped/宝石战争/6.0.013/static/global-metadata.dat",
+    "06_dumped/宝石战争/6.0.013/static/System.Network.dll",
+    "06_dumped/宝石战争/6.0.013/static/System.Network.dll.bytes",
+    "06_dumped/宝石战争/6.0.013/static/System.Platform.dll",
+    "06_dumped/宝石战争/6.0.013/static/System.Platform.dll.bytes",
+    "06_dumped/宝石战争/6.0.013/il2cpp_dump/DummyDll",
+    "07_patched/宝石战争/6.0.013/hotupdate_1.0.0.06/System.Network.dll",
+    "07_patched/宝石战争/6.0.013/hotupdate_1.0.0.06/System.Network.patched.dll",
+    "07_patched/宝石战争/6.0.013/hotupdate_1.0.0.06/assets/Android/manifest.json",
+    "07_patched/宝石战争/6.0.013/hotupdate_1.0.0.06/assets/Android/RuntimeAssembliesReceipt.json"
+  ],
+  "keep_paths": [
+    "06_dumped/宝石战争/6.0.013/hotupdate_1.0.0.06/",
+    "06_dumped/宝石战争/6.0.013/static/static_inputs.json",
+    "06_dumped/宝石战争/6.0.013/static/manifest.json",
+    "06_dumped/宝石战争/6.0.013/static/RuntimeAssembliesReceipt.json",
+    "06_dumped/宝石战争/6.0.013/current/current_inputs.json",
+    "06_dumped/宝石战争/6.0.013/il2cpp_dump/dump.cs",
+    "07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes",
+    "07_patched/宝石战争/6.0.013/System.Network.patched.pinvoke.json",
+    "07_patched/宝石战争/6.0.013/patch_summary.json",
+    "07_patched/宝石战争/6.0.013/hotupdate_1.0.0.06/assets/Android/Dlls/System.Network.dll.bytes",
+    "07_patched/宝石战争/6.0.013/hotupdate_1.0.0.06/System.Network.patched.pinvoke.json",
+    "07_patched/宝石战争/6.0.013/hotupdate_1.0.0.06/patch_summary.json",
+    "07_patched/宝石战争/6.0.013_hu1.0.0.06/hotupdate_rebuild_summary.json"
+  ],
+  "notes": [
+    "current/base.apk（09-23 星光正式包 81472a9e…，520,621,296B）为设备只读拉回的上一版产物，已被本轮 1.0.0.06 新包取代（08_output 唯一正式包 de215c98…），按 09-23 先例清理。",
+    "current/hotupdate 与本轮 hotupdate_1.0.0.06/ 重复，保留后者（含官方 1.0.0.06 Network/Platform DLL、manifest、receipt 与 3 个差分 bundle）。",
+    "static 下 libil2cpp.so / global-metadata.dat / 两个 DLL 的明文与 bytes 可由保留的正式 APK + Il2CppDumper + unpack_network_dll.py 再生；小 JSON 保留。",
+    "il2cpp_dump/DummyDll 丢弃，可用 01_tools/Il2CppDumper + 正式 APK 再生；dump.cs（21M）按 09-23 先例保留（不入库）。",
+    "07_patched 本轮明文 DLL（官方明文 + 补丁明文）丢弃，保留补丁后的加密 bytes 与 pinvoke/patch_summary；被否定的 manifest/receipt 指纹实验副本一并丢弃（结论见热更修复_1.0.0.06_20260929.md §3）。"
+  ]
+}

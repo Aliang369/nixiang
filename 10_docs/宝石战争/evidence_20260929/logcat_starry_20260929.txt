@@ -1,0 +1,58 @@
+09-29 21:31:46.477 21066 21066 I Mod_Menu: [Bszz] attack multiplier=1
+09-29 21:31:46.477 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+09-29 21:31:46.479 21066 21066 I Mod_Menu: [Bszz] feature 2=0
+09-29 21:31:46.479 21066 21066 I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+09-29 21:31:46.480 21066 21066 I Mod_Menu: [Bszz] feature 3=0
+09-29 21:31:46.480 21066 21066 I StarryMagic: [开关] #3 Toggle_无限技能 = OFF
+09-29 21:31:46.480 21066 21066 I ModBridge: reapplied saved features to native
+09-29 21:31:48.188 21066 21293 I ModBridge: auth game_id synced from native: bszz
+09-29 21:31:48.760 21066 21066 I StarryMagic: [验证] grant ok exp=1790775107
+09-29 21:31:49.563 21066 21066 I Mod_Menu: [Bszz] attack multiplier=1
+09-29 21:31:49.564 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+09-29 21:31:49.565 21066 21066 I Mod_Menu: [Bszz] feature 2=0
+09-29 21:31:49.565 21066 21066 I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+09-29 21:31:49.565 21066 21066 I Mod_Menu: [Bszz] feature 3=0
+09-29 21:31:49.565 21066 21066 I StarryMagic: [开关] #3 Toggle_无限技能 = OFF
+09-29 21:31:49.565 21066 21066 I ModBridge: reapplied saved features to native
+09-29 21:32:10.497 21066 21293 I ModBridge: auth game_id synced from native: bszz
+09-29 21:32:11.261 21066 21066 I StarryMagic: [验证] grant ok exp=1790775129
+09-29 21:32:12.078 21066 21066 I Mod_Menu: [Bszz] attack multiplier=1
+09-29 21:32:12.079 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+09-29 21:32:12.080 21066 21066 I Mod_Menu: [Bszz] feature 2=0
+09-29 21:32:12.081 21066 21066 I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+09-29 21:32:12.081 21066 21066 I Mod_Menu: [Bszz] feature 3=0
+09-29 21:32:12.081 21066 21066 I StarryMagic: [开关] #3 Toggle_无限技能 = OFF
+09-29 21:32:12.081 21066 21066 I ModBridge: reapplied saved features to native
+09-29 21:32:13.060 21066 21066 I ModBridge: Toggle: #3 Toggle_无限技能 = true
+09-29 21:32:13.062 21066 21066 I Mod_Menu: [Bszz] feature 3=1
+09-29 21:32:13.062 21066 21066 I StarryMagic: [开关] #3 Toggle_无限技能 = ON
+09-29 21:32:13.376 21066 21066 I ModBridge: Toggle: #2 Toggle_上帝模式 = true
+09-29 21:32:13.378 21066 21066 I Mod_Menu: [Bszz] feature 2=1
+09-29 21:32:13.378 21066 21066 I StarryMagic: [开关] #2 Toggle_上帝模式 = ON
+09-29 21:32:13.790 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 53
+09-29 21:32:13.792 21066 21066 I Mod_Menu: [Bszz] attack multiplier=53
+09-29 21:32:13.792 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 53
+09-29 21:32:13.806 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 60
+09-29 21:32:13.807 21066 21066 I Mod_Menu: [Bszz] attack multiplier=60
+09-29 21:32:13.807 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 60
+09-29 21:32:13.822 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 69
+09-29 21:32:13.823 21066 21066 I Mod_Menu: [Bszz] attack multiplier=69
+09-29 21:32:13.823 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 69
+09-29 21:32:13.839 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 76
+09-29 21:32:13.840 21066 21066 I Mod_Menu: [Bszz] attack multiplier=76
+09-29 21:32:13.840 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 76
+09-29 21:32:13.856 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 80
+09-29 21:32:13.857 21066 21066 I Mod_Menu: [Bszz] attack multiplier=80
+09-29 21:32:13.857 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 80
+09-29 21:32:13.872 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 85
+09-29 21:32:13.873 21066 21066 I Mod_Menu: [Bszz] attack multiplier=85
+09-29 21:32:13.873 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 85
+09-29 21:32:13.888 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 90
+09-29 21:32:13.889 21066 21066 I Mod_Menu: [Bszz] attack multiplier=90
+09-29 21:32:13.889 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 90
+09-29 21:32:13.906 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 97
+09-29 21:32:13.907 21066 21066 I Mod_Menu: [Bszz] attack multiplier=97
+09-29 21:32:13.907 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 97
+09-29 21:32:13.922 21066 21066 I ModBridge: Slider: #1 Slider_攻击倍率:1:100:1 = 100
+09-29 21:32:13.923 21066 21066 I Mod_Menu: [Bszz] attack multiplier=100
+09-29 21:32:13.923 21066 21066 I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 100
