@@ -1,7 +1,7 @@
 {
   "game": "宝石战争",
   "version": "6.0.013",
-  "notes": "2026-09-23：官方已升级到 6.0.013（热更 1.0.0.04）。沿用 6.0.012 的外科路线复刻星光三项功能：全量 142 个 1.0.0.04 资源（114 个来自包内 1.0.0.01、28 个来自设备已下发的差分文件，逐条 md5 对齐官方 1.0.0.04 manifest），包内保留官方 manifest/receipt（版本 1.0.0.04、Network 官方 hash 3e49c9876a6c4b394c552f71adbebf9d），仅替换注入后的 System.Network.dll.bytes。\n\n2026-09-29：游戏内热更推进到 1.0.0.06 后三项功能全失效（外部官方 System.Network.dll.bytes 覆盖包内 1.0.0.04 补丁 DLL）；按 1.0.0.06 官方资产重注入（补丁 bytes 0f34ea7f…）并用 bszz_surgical_hotupdate_only.sh 只换热更资产重建，唯一正式包=宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…，520,625,392B）；同签覆盖安装未清数据，G2 ✓（用户实测三项功能没问题）。新增阶段 hotupdate_1.0.0.06_repair；设备侧两条轻量修复路径已被实测否定，细节见 10_docs/宝石战争/热更修复_1.0.0.06_20260929.md。",
+  "notes": "2026-09-23：官方已升级到 6.0.013（热更 1.0.0.04）。沿用 6.0.012 的外科路线复刻星光三项功能：全量 142 个 1.0.0.04 资源（114 个来自包内 1.0.0.01、28 个来自设备已下发的差分文件，逐条 md5 对齐官方 1.0.0.04 manifest），包内保留官方 manifest/receipt（版本 1.0.0.04、Network 官方 hash 3e49c9876a6c4b394c552f71adbebf9d），仅替换注入后的 System.Network.dll.bytes。\n\n2026-09-29：游戏内热更推进到 1.0.0.06 后三项功能全失效（外部官方 System.Network.dll.bytes 覆盖包内 1.0.0.04 补丁 DLL）；按 1.0.0.06 官方资产重注入（补丁 bytes 0f34ea7f…）并用 bszz_surgical_hotupdate_only.sh 只换热更资产重建，唯一正式包=宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…，520,625,392B）；同签覆盖安装未清数据，G2 ✓（用户实测三项功能没问题）。新增阶段 hotupdate_1.0.0.06_repair；设备侧两条轻量修复路径已被实测否定，细节见 10_docs/宝石战争/热更修复_1.0.0.06_20260929.md。\n\n收官（2026-09-29）：提交 70085f6 已推送 origin/main（7cc25ba..70085f6）；08_output 裁剪为唯一正式包 宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…）；06_dumped 633M→33M、07_patched 34M→16M（清理清单=10_docs/宝石战争/清理清单_6.0.013_hu1.0.0.06_20260929.json，Trash 隔离区 /Users/aliang/.Trash/nixiang______20260929_20260929_213952，618M 可恢复）；新增阶段 hotupdate_1.0.0.06_repair（done，产物指纹 ✓）。",
   "params": {
     "game_id": "bszz",
     "package": "com.acing.gow.adv",
@@ -408,7 +408,7 @@
         "06_dumped/宝石战争/6.0.013/static/static_inputs.json": "e3bca7be79f7c1f2c006b37eb8ab831d",
         "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
       },
-      "note": "2026-09-29：热更 1.0.0.06 漂移修复。设备外部 HotUpdate 的官方 System.Network.dll.bytes（f982199e…）覆盖包内 1.0.0.04 补丁 DLL 导致三项功能全失效；实测否定设备侧两条轻量路径（只换外部 DLL→45s 被回写；同步外部 manifest/receipt 指纹→目录被清空重建）。按 1.0.0.06 官方 DLL 重注入（补丁明文 ed80d1f2…→补丁 bytes 0f34ea7f…/8,559,616B），bszz_surgical_hotupdate_only.sh 只换热更资产重建（142 项=136 取自 09-23 正式包逐项校验 + 6 个 1.0.0.06 官方文件，Network 用补丁版），包内 manifest 保持官方 1.0.0.06。覆盖安装未卸载未清数据，设备 base.apk 指纹一致，G2 ✓。"
+      "note": "2026-09-29：热更 1.0.0.06 漂移修复。设备外部 HotUpdate 的官方 System.Network.dll.bytes（f982199e…）覆盖包内 1.0.0.04 补丁 DLL 导致三项功能全失效；实测否定设备侧两条轻量路径（只换外部 DLL→45s 被回写；同步外部 manifest/receipt 指纹→目录被清空重建）。按 1.0.0.06 官方 DLL 重注入（补丁明文 ed80d1f2…→补丁 bytes 0f34ea7f…/8,559,616B），bszz_surgical_hotupdate_only.sh 只换热更资产重建（142 项=136 取自 09-23 正式包逐项校验 + 6 个 1.0.0.06 官方文件，Network 用补丁版），包内 manifest 保持官方 1.0.0.06。覆盖安装未卸载未清数据，设备 base.apk 指纹一致，G2 ✓。 收官（2026-09-29）：提交 70085f6 已推送 origin/main（7cc25ba..70085f6）；08_output 已裁剪为唯一正式包；06/07 中间产物清理清单=10_docs/宝石战争/清理清单_6.0.013_hu1.0.0.06_20260929.json（Trash 隔离区 nixiang______20260929_20260929_213952，618M，可原路恢复）。"
     },
     {
       "id": "publish_hotupdate",
