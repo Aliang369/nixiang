@@ -71,6 +71,11 @@ cp /tmp/joor_d8/classes.dex \
 
 ## 正式包
 
+> 2026-09-29 更新：本轮 B 线（11.266018/vc1637）收官时按「收尾+正式包」口令重新裁剪了
+> `08_output/无限升级`，本段这份 12.10701 包已被删除（目录只保留当日唯一终包）。删除记录见
+> `10_docs/无限升级/正式包裁剪清单_vc1637_20260929.json`；该包仍可由
+> `04_scripts/无限升级/wxsj_surgical_unshelled.sh` 从 `07_patched/无限升级` 输入复现。
+
 - 路径：`08_output/无限升级/无限升级_12.10701_unshelled-menu-releaseSigned.apk`
 - 大小：`121243296` B
 - SHA-256：`a730e987a4a0c7949b7aab87947188457bbc185f016f2e5fb5a73915a319c39b`
