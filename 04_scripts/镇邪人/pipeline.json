@@ -1,7 +1,7 @@
 {
   "game": "镇邪人",
-  "version": "1.0.3-ca0d4-star",
-  "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。",
+  "version": "1.0.3-e4278-star",
+  "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。",
   "params": {
     "game_id": "zxr",
     "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
@@ -26,6 +26,12 @@
       "done_at": "2026-09-16 20:02:00",
       "notes": "从玩家星光底包只读解出 XXTEA key c25d728a-a9d9-4c，静态 patch DamageCommonCalcFinal/CalcFinalAtkSpeedValue/FightChangeEntityHp + 本地 src 路由保护（jsb-engine/main.js）→ 镇邪人_1.0.3_safe-releaseSigned.apk（125,361,805B，md5 7073581c16a2cb6123dae2081c80a09b）",
       "doc": "10_docs/镇邪人/镇邪人_1.0.3_安全重写_20260916.md"
+    },
+    {
+      "version": "1.0.3-e4278-star",
+      "done_at": "2026-09-29 15:05:00",
+      "notes": "e4278 热更指纹重钉 + 引擎包内优先缓存策略；用户实测秒杀/无敌/攻速/全屏秒杀正常。",
+      "doc": "10_docs/镇邪人/镇邪人_1.0.3_e4278_OTA收尾_20260929.md"
     }
   ],
   "stages": [
@@ -271,6 +277,45 @@
           "md5": "5537ae070cde3e970031fe86509003f3"
         }
       }
+    },
+    {
+      "id": "e4278_hotfix_closeout",
+      "name": "e4278 热更修复正式包 + OTA libstarry_magic.so + 08_output 裁剪",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash 04_scripts/镇邪人/verify_apk_e4278_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk && bash 04_scripts/镇邪人/extract_ota_so_zxr.sh && bash 04_scripts/_common/prune_output_final.sh 08_output/镇邪人 镇邪人_1.0.3_e4278_star-releaseSigned.apk --apply --manifest 10_docs/镇邪人/正式包裁剪清单_1.0.3_e4278_20260929.json",
+      "preflight": [
+        "04_scripts/镇邪人/verify_apk_e4278_zxr.sh",
+        "04_scripts/镇邪人/extract_ota_so_zxr.sh",
+        "10_docs/镇邪人/镇邪人_1.0.3_e4278_OTA收尾_20260929.md"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/游戏内/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-29 15:05:00",
+      "artifacts": {
+        "08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk": {
+          "size": 110316865,
+          "md5": "0cde8985655c30007b7bd65275f7742f",
+          "sha256": "83d49ea88ac7895cf2c065d0b895c70e5b480591d1c0977518442efb82886c7d",
+          "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
+        },
+        "08_output/镇邪人/游戏内/libstarry_magic.so": {
+          "size": 4160976,
+          "md5": "fef2fc5681804502b78718288a1ccf7b",
+          "sha256": "79bfb98cf31a33926a5b3ba1a5d581bcfbd68a6cfad2ee96ffca7ebdf6f0347b"
+        }
+      },
+      "note": "OTA 仅导出实际使用的 libstarry_magic.so；APK 根目录裁剪为唯一正式包，游戏内/ 为用户指定的 OTA 单文件目录。"
     }
   ]
 }
