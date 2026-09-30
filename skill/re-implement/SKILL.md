@@ -13,7 +13,7 @@
 
 | 功能类型 | 实现方式 | 理由 |
 |----------|----------|------|
-| **数据型**（无敌=HP 回写、属性增益、资源锁定） | 偏移定位 + SafeWrite 直写，Tick 轮询维持 | 零 hook 痕迹（未开功能=零改写，防封最优）；挂错不会闪退；范例=超维进化、5.0 无RVA便携模板 |
+| **数据型**（无敌=HP 回写、属性增益、资源锁定） | 偏移定位 + SafeWrite 直写，Tick 轮询维持 | 零 hook 痕迹（未开功能=零改写，防封最优）；挂错不会闪退；范例=超维进化、`mod菜单/starry-mod-menu/docs/reference/无RVA便携模板.cpp` |
 | **行为型**（改判定、伤害结算、拦截上报） | Dobby hook：RVA 优先（序言校验），失效自动转按名 | Dobby 是"RVA 定位后安全改函数"的工程化实现（trampoline 保 orig）；手写字节 patch 是死路 |
 | 字节 patch 改函数 | **默认禁用** | E15-E18 断闸全灭、1Hz 完整性校验、arm64 手编易错、RVA 漂移写错位置=闪退 |
 
@@ -35,7 +35,7 @@
 **同时必读标准框架（写 Games/*Mod.cpp 前）：**
 - 铁律全文：`mod菜单/starry-mod-menu/docs/GAME_MOD_GUIDE.md`（含 2026-09-09 定稿的功能实现分层）
 - 标准骨架（v3，注册表版防闪退默认实现）：`mod菜单/starry-mod-menu/app/src/main/jni/Games/_TemplateMod.h/.cpp`
-- 正面范例：`mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp`（按名 hook）、`Games/WhrhxMod.cpp`（RVA 双路径）、`Android-Mod-Menu-5.0-csh/无RVA便携模板.cpp`（纯数据直写）
+- 正面范例：`mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp`（按名 hook）、`Games/WhrhxMod.cpp`（RVA 双路径）、`mod菜单/starry-mod-menu/docs/reference/无RVA便携模板.cpp`（纯数据直写，仅作历史参考）
 - 反面教材：`mod菜单/starry-mod-menu/app/src/main/jni/Games/HzsjMod.cpp`（SafeProbe 热路径 + 共享跳板，闪退/掉帧教训）
 
 **新游戏（2026-09-09 起 modern 注册表路线）：**
