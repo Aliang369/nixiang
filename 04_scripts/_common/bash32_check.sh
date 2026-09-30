@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# ============================================================
+#  bash32_check.sh — macOS bash 3.2 兼容门禁（伊莫 1.0.1 会话复盘 P1-3）
+#
+#  用法: bash 04_scripts/_common/bash32_check.sh <脚本.sh> [...]
+#  退出码: 0 = 通过（可能含 ⚠ 提示）；1 = 有 ✗ 硬错误
+#
+#  为什么：本仓库所有 `04_scripts/**`、`mod菜单/**/scripts/**` 都在 macOS 自带
+#  bash 3.2 下跑。bash 4+ 的语法不是"降级"，是**整套脚本直接起不来**；
+#  而 `set -u` 与空数组/多字节变量名的组合会**静默少做一件事**（最难查）。
+#
+#  三类检查：
+#    ✗ ① `$VAR` 紧跟非 ASCII（bash 把中文并进变量名 ⇒ unbound variable。
+#         实测 `$HAS_CXXSHARED（` ：行 91 unbound variable。修法：`${VAR}（`）
+#    ✗ ② bash 4+ 语法：mapfile / readarray / declare -A / local -n / ${v^^} / ${v,,}
+#         / ;;& / &>> / [[ -v x ]] / &>  （bash 4 才有）
+#    ⚠ ③ `set -u` 下的裸空数组展开 `"${arr[@]}"`、`${#arr[@]}`：
+#         数组为空即 unbound variable。修法 `${arr[@]+"${arr[@]}"}` 或用显式计数器。
+#         （⚠ 不判 FAIL：数组确定非空时是合法写法，需要人看一眼）
+# ============================================================
+set -uo pipefail
+
+[ $# -ge 1 ] || { echo "用法: bash 04_scripts/_common/bash32_check.sh <脚本.sh>"; exit 1; }
+
+hard=0; soft=0
+for f in "$@"; do
+  [ -f "$f" ] || { echo "✗ 缺文件 $f"; hard=$((hard+1)); continue; }
+  out=$(python3 - "$f" <<'PY'
+import re, sys
+p = sys.argv[1]
+lines = open(p, encoding="utf-8", errors="replace").read().splitlines()
+hard, soft = [], []
+in_comment_block = False
+for i, line in enumerate(lines, 1):
+    code = line
+    # 粗略剔除注释（够用：本仓库脚本无复杂嵌套）
+    if in_comment_block:
+        if '*/' in code: code = code.split('*/', 1)[1]; in_comment_block = False
+        else: continue
+    if '/*' in code and '*/' not in code.split('/*', 1)[1]:
+        code = code.split('/*', 1)[0]; in_comment_block = True
+    code = re.sub(r'(?<!:)#.*$', '', code)          # 行注释（跳过 ${#x} 里的 # 由 (?<!:) 兜）
+    if not code.strip(): continue
+    # ⓵ $VAR 紧跟非 ASCII
+    # (?<!\\) ：`\$VAR（` 是转义的字面量，不展开，不报错
+    for m in re.finditer(r'(?<!\\)\$([A-Za-z_][A-Za-z_0-9]*)([^\x00-\x7F])', code):
+        hard.append("L%d: `$%s%s` —— bash 会把 %r 并进变量名 ⇒ 未定义变量报错；改成 `${%s}`"
+                    % (i, m.group(1), m.group(2), m.group(2), m.group(1)))
+    # ⓶ bash 4+ 语法
+    for pat, why in [(r'\bmapfile\b', 'mapfile 是 bash 4 才有'),
+                     (r'\breadarray\b', 'readarray 是 bash 4 才有'),
+                     (r'\bdeclare\s+-A\b', '关联数组是 bash 4 才有'),
+                     (r'\blocal\s+-n\b', 'nameref 是 bash 4.3 才有'),
+                     (r'\$\{[A-Za-z_][A-Za-z_0-9]*(\^\^|,,)\}', '${v^^}/${v,,} 是 bash 4 才有'),
+                     (r';;&', '`;;&` 是 bash 4 才有'),
+                     (r'&>>', '`&>>` 是 bash 4 才有'),
+                     (r'&>\s', '`&>` 是 bash 4 才有'),
+                     (r'\[\[\s+-v\s+', '`[[ -v ]]` 是 bash 4.2 才有'),
+                     (r'\bdeclare\s+-n\b', 'declaure -n 是 bash 4 才有')]:
+        if re.search(pat, code):
+            hard.append("L%d: %s —— %s" % (i, code.strip()[:70], why))
+    # ⓷ 裸空数组展开（仅在脚本有 set -u 时提示）
+    if re.search(r'(?<!\+)\$\{[A-Za-z_][A-Za-z_0-9]*\[@\]\}', code) and '+${' not in code and '[@]+' not in code:
+        soft.append("L%d: 裸 `${arr[@]}` 展开 —— 若数组可能为空，`set -u` 下会 unbound；"
+                    "改 `${arr[@]+\"${arr[@]}\"}` 或用计数器  (%s)" % (i, code.strip()[:60]))
+    if re.search(r'\$\{#[A-Za-z_][A-Za-z_0-9]*\[@\]\}', code):
+        soft.append("L%d: `${#arr[@]}` —— 空数组 + `set -u` 会 unbound；改用计数器  (%s)"
+                    % (i, code.strip()[:60]))
+has_u = any(re.search(r'^\s*set\s+-[a-z]*u', l) for l in lines)
+for h in hard: print("✗ " + h)
+if has_u:
+    for s in soft: print("⚠ " + s)
+elif soft:
+    print("⚠ 本脚本未 `set -u`，空数组展开风险降低（仍建议统一写法）")
+print("__COUNTS__ %d %d" % (len(hard), len(soft)))
+PY
+)
+  counts=$(echo "$out" | grep '^__COUNTS__' | awk '{print $2, $3}')
+  body=$(echo "$out" | grep -v '^__COUNTS__')
+  [ -n "$body" ] && echo "$body" | sed "s|^|  [$f] |"
+  h=$(echo "$counts" | awk '{print $1}'); s=$(echo "$counts" | awk '{print $2}')
+  hard=$((hard + ${h:-0})); soft=$((soft + ${s:-0}))
+done
+
+if [ "$hard" -gt 0 ]; then
+  echo "✗ bash 3.2 门禁：$hard 处硬错误（必须修）$( [ "$soft" -gt 0 ] && echo "，另有 $soft 处提示")"
+  exit 1
+fi
+if [ "$soft" -gt 0 ]; then
+  echo "⚠ bash 3.2 门禁：无硬错误，$soft 处空数组展开提示（确认数组非空即可）"
+fi
+exit 0

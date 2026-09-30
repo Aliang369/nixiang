@@ -304,3 +304,48 @@ if (!f) {
   `setInterval` 轮询行整批丢掉（实测整轮结论不可用）。native 侧用 `__android_log_print`。
 - 拦截 native 退出/自检类行为时，先看 `re-analyze/anti-cheat-pattern.md`
   「原生退出拦截（seccomp）」一节，再决定钩 libc 还是拦 syscall。
+
+## 26. 诊断隔离与证据优先（2026-09-30 起）
+
+> 来源：伊莫 1.0.1 会话复盘（`10_docs/_state/规范优化_20260930_伊莫1.0.1会话复盘.md` P0）。
+> 背景：调试期诊断「先进包、最后手术拆除」——伊莫为此做了一轮 115 行/35 处手术
+> + 一整轮 389 MB 重建重装，而且手术本身会引入回归。本节点把「诊断」变成可开关的构件。
+
+**26.1 诊断必须编译期可整体关掉（不是运行时短路）**
+
+- native：`jni/ModDiag.h` 的 `DLOG/DLOGN/DWARN`。`#ifdef STARRY_DIAG` 时写 logcat
+  （TAG `StarryDiag`），否则宏展开成 `((void)0)` ⇒ 正式包 so 里**一个字节都不进**。
+- Lua：`jni/ModDiagLua.h` 的独立诊断 chunk，`MOD_DIAG_LUA_TEXT` 在正式包为空串。
+  **诊断 chunk 必须与功能补丁分开两次 `RunLua`**：拼成一段会把「诊断语法错」
+  放大成「整个补丁失效」（同 §「补丁与写开关必须独立 chunk」）。
+- 构建：`ndk-build ... STARRY_DIAG=1`（`Android_<tag>.mk` 里 `ifdef STARRY_DIAG`）；
+  脚本 `surgical_*.sh` 带 `STARRY_DIAG=1` ⇒ 产物名带 `-diag` 后缀、**不覆盖**正式包 alias。
+- ★**换模式必须换 `NDK_OUT` obj 目录**：ndk-build 不会因 CFLAGS 变化重编已有 `.o`，
+  两模式共用 obj 目录会让「诊断包静默退化成正式包」（伊莫实测：so 内没有诊断 chunk，
+  构建却报成功）。诊断包构建后要**硬校验** so 内存在诊断标记。
+- ★**`app/src/main/jniLibs/` 也会被模式污染**：脚本把 so 拷进 jniLibs 再给 Gradle 打包，
+  跑过一次诊断构建后 jniLibs 里留的是**诊断 so**。任何跳过 ndk-build 的 Gradle-only 构建
+  都会把诊断痕迹打进「正式包」——release 构建前必须重跑 ndk-build（脚本已强制），
+  收尾时重跑一次正式构建把 jniLibs 恢复成正式 so，别留着诊断 so 过夜。
+- 正式包门禁：`bash 04_scripts/_common/check_release_clean.sh --tag <Tag> --so <so>`
+  （块感知源码扫描 + so 二进制扫描）；内嵌 Lua chunk 用
+  `python3 04_scripts/_common/lua_struct_check.py` 做结构配平体检。
+
+**26.2 证据优先：先出 `-diag` 包采证，再改功能代码**
+
+- 症状不明时不要凭猜改代码：先出诊断包，把「装上没有 / 命中没有 / 值是多少」打出来。
+  伊莫「伤害倍率到底对谁生效」是靠 TRACE/RSLOG 定位到「只有宠物通道可放大」的，
+  改代码之前先花一轮采证，比盲改三轮便宜。
+- **「没装上」与「没命中」是两回事**：安装点必须有自检行（§25.2），
+  并在诊断启动时把关键前提打出来（目标 Lua 表是否存在、路径、上限等）。
+- **诊断每行带序号**（`#1 #2 #3`）：某个字段恒为常数时，先怀疑**诊断本身**错，
+  再怀疑功能错（伊莫实测：`plan=0.0` 恒成立是因为读了共享引用
+  `getPosition()` 的传送后值 ⇒ 自适应逻辑是死代码）。
+- 证据要能区分「行为正确」与「数值正确」：菜单里的勾选状态 ≠ 游戏里真的生效。
+
+**26.3 诊断上限放运行时，不写死**
+
+- 上限写在设备上的配置文件（伊莫：`/sdcard/.starry_magic/logcfg`，一行 `tag=上限`，
+  负数=不限），改完重启游戏即生效。别为把上限 5 改成 24 重建重装一轮。
+- 每 tag 独立计数（§25.2），诊断代码一律 `rawget/rawset`（xLua 全局表白名单式，
+  见 `../re-extract/xlua-from-scratch.md` §七）。

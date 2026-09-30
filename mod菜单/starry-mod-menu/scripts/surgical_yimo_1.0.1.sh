@@ -24,6 +24,8 @@
 #   bash scripts/surgical_yimo_1.0.1.sh
 #   STARRY_INSTALL=1 bash scripts/surgical_yimo_1.0.1.sh
 #   STARRY_ALLOW_UNINSTALL=1 ...        （签名不一致需卸载重装时显式给）
+#   STARRY_DIAG=1 ...                   （诊断包：DLOG/诊断 Lua chunk 进 so，
+#                                       产物名带 -diag，与正式包并存不覆盖 alias）
 set -euo pipefail
 
 BUILD_TYPE="${STARRY_BUILD_TYPE:-release}"
@@ -58,7 +60,12 @@ SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 KS="$NIXIANG/01_tools/starry_release.jks"
-SIGNED="$OUT/${GAME}_${VER}_surgical-${BUILD_TYPE}Signed.apk"
+DIAG_SUFFIX=""
+DIAG_MODE=0
+# STARRY_KEEP_DATA=1：签名不一致必须卸载时用 `pm uninstall -k` 保住应用数据与热更资源
+# （2026-09-30 实测 pm uninstall -k 会保留 /sdcard/Android/data/<pkg>）
+if [[ "${STARRY_DIAG:-0}" == "1" ]]; then DIAG_SUFFIX="-diag"; DIAG_MODE=1; fi
+SIGNED="$OUT/${GAME}_${VER}_surgical${DIAG_SUFFIX}-${BUILD_TYPE}Signed.apk"
 ALIAS_APK="$OUT/${GAME}_${VER}_starry.apk"
 MF_CACHE="$NIXIANG/07_patched/${GAME}/surgical_${VER}/AndroidManifest.xml"
 
@@ -111,11 +118,23 @@ PY
 )"
 echo "[check] 官方 dex 最大序号 → 注入 $INJECT_DEX"
 
-echo "[1/6] ndk-build（Android_yimo.mk → libs_yimo/，绝对路径）"
+echo "[1/6] ndk-build（Android_yimo.mk → libs_yimo/，绝对路径）STARRY_DIAG=$DIAG_MODE"
+NDK_DIAG_ARGS=()
+# ★ 诊断模式必须用**独立的 obj 目录**：ndk-build 不会因 CFLAGS 变化重编已有 .o，
+#   两种模式共用 obj 会让「诊断包静默退化成正式包」（2026-09-30 实测：so 内无诊断 chunk）。
+NDK_OBJ_DIR="$STARRY_SRC/obj_yimo"
+if [[ "$DIAG_MODE" == "1" ]]; then
+  NDK_DIAG_ARGS+=(STARRY_DIAG=1)
+  NDK_OBJ_DIR="$STARRY_SRC/obj_yimo_diag"
+fi
+# 注意：macOS bash 3.2 + set -u 下**空数组**的 "${arr[@]}" 会报 unbound variable，
+# 必须写成 ${arr[@]+"${arr[@]}"}（本仓库踩过同类坑，见 _state/规范优化_20260930_*
+# 与会话复盘 P1-3）。
 (cd "$STARRY_SRC/app/src/main/jni" && \
   "$NDK/ndk-build" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_yimo.mk \
   NDK_APPLICATION_MK=./Application.mk APP_ABI=arm64-v8a \
-  NDK_OUT="$STARRY_SRC/obj_yimo" NDK_LIBS_OUT="$STARRY_SRC/libs_yimo" \
+  NDK_OUT="$NDK_OBJ_DIR" NDK_LIBS_OUT="$STARRY_SRC/libs_yimo" \
+  ${NDK_DIAG_ARGS[@]+"${NDK_DIAG_ARGS[@]}"} \
   -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)" 2>&1 | grep -v 'Bad file descriptor' || true)
 SO_BUILT="$STARRY_SRC/libs_yimo/arm64-v8a/libstarry_magic.so"
 CXX_BUILT="$STARRY_SRC/libs_yimo/arm64-v8a/libc++_shared.so"
@@ -130,6 +149,26 @@ for m in '精灵攻击秒杀' '移速' '玩家无敌' '无限跳跃' '无限体�
   N=$(LC_ALL=C grep -a -c "$m" "$SO_BUILT" || true)
   [[ "${N:-0}" -ge 1 ]] || { echo "ERROR: so 内缺菜单串 $m"; exit 1; }
 done
+# 干净包门禁（P0-3，2026-09-30 伊莫复盘）：正式包必须零诊断代码/零日志通道
+if [[ "$DIAG_MODE" != "1" ]]; then
+  bash "$NIXIANG/04_scripts/_common/check_release_clean.sh" --so "$SO_BUILT" \
+    || { echo "ERROR: 干净包门禁未过 —— 诊断代码/日志通道泄漏进正式包（应包进 #ifdef STARRY_DIAG）"; exit 1; }
+  if grep -a -q 'moddiag\.log' "$SO_BUILT"; then
+    echo "ERROR: 正式包 so 内出现诊断 Lua chunk 标记（moddiag.log）"; exit 1
+  fi
+  echo "  [clean] 干净包门禁 ok（无诊断符号 / 无日志通道）"
+else
+  echo "  [diag] 诊断包：跳过干净包门禁"
+  if grep -a -q 'moddiag\.log' "$SO_BUILT"; then
+    echo "  [diag] so 内已含诊断 chunk 标记 moddiag.log ok"
+  elif grep -rq 'MOD_DIAG_LUA_TEXT' "$STARRY_SRC/app/src/main/jni/Games/${TAG}"*.cpp 2>/dev/null; then
+    # 源码声明了要用诊断 chunk ⇒ so 里没有就是构建没生效（换模式没换 obj 目录是常见死因）
+    echo "ERROR: 源码引用了 MOD_DIAG_LUA_TEXT，但 so 内无诊断 chunk —— 多半是 obj 目录串模式，"
+    echo "       删掉 \$NDK_OBJ_DIR（${NDK_OBJ_DIR}）重跑 STARRY_DIAG=1"; exit 1
+  else
+    echo "  [diag] 提示：so 内未见诊断 chunk（本游戏未接入 ModDiagLua，可忽略）"
+  fi
+fi
 echo "  so ok: $(md5 -q "$SO_BUILT") $(stat -f%z "$SO_BUILT") B (tag=$TAG cert=$CERT_N 中文串 ok)"
 mkdir -p "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a"
 cp -f "$SO_BUILT" "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so"
@@ -341,7 +380,11 @@ else
   java -jar "$SIGNER" -a "$ALIGNED" --out "$OUT" --allowResign \
     --ks "$KS" --ksAlias "$KS_ALIAS" --ksPass "$KS_PASS" --ksKeyPass "$KS_PASS"
 fi
-cp -f "$SIGNED" "$ALIAS_APK"
+if [[ "$DIAG_MODE" == "1" ]]; then
+  echo "  [diag] 诊断包不覆盖 alias（$ALIAS_APK 保持正式包）"
+else
+  cp -f "$SIGNED" "$ALIAS_APK"
+fi
 ls -lh "$SIGNED"
 
 unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so > "$WORK/final.so"
@@ -358,8 +401,15 @@ if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
     echo "[install] cover ok"
   else
     if [[ "${STARRY_ALLOW_UNINSTALL:-0}" == "1" ]]; then
-      echo "[install] signature mismatch → uninstall + reinstall"
-      adb shell "su -c 'pm uninstall $PKG'" 2>/dev/null || true
+      if [[ "${STARRY_KEEP_DATA:-0}" == "1" ]]; then
+        # -k = 保留 data/cache：实测保住 /sdcard/Android/data/<pkg>（含 GB 级热更数据），
+        # 避免重装后整包重下（伊莫第一轮不带 -k 丢了 12.98 GB）
+        echo "[install] signature mismatch → uninstall -k（保留数据/热更）+ reinstall"
+        adb shell "su -c 'pm uninstall -k --user 0 $PKG'" 2>/dev/null || true
+      else
+        echo "[install] signature mismatch → uninstall + reinstall（数据/热更会丢；要保住设 STARRY_KEEP_DATA=1）"
+        adb shell "su -c 'pm uninstall $PKG'" 2>/dev/null || true
+      fi
       adb shell "su -c 'pm install -r -d --user 0 \"$REMOTE\"'" || adb install -r "$SIGNED"
     else
       echo "ERROR: 签名与真机原版不一致，覆盖安装失败。确认后设 STARRY_ALLOW_UNINSTALL=1 再跑。"
@@ -367,6 +417,11 @@ if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
     fi
   fi
   adb shell "rm -f $REMOTE" 2>/dev/null || true
-  echo "log: adb logcat -s StarryInitProvider:V StarrySignSpoof:V StarryTapLogin:V StarryMagic:V MenuService:V Yimo:V"
+  echo "日志（★ logcat -s 是【前缀匹配】：'[Yimo]' 这类带括号的 TAG 用 -s 永远匹配不到，必须 grep）："
+  echo '  adb logcat -d | grep -E "\[Yimo\]|Mod_Menu|MenuService|StarryTapLogin"'
+  if [[ "$DIAG_MODE" == "1" ]]; then
+    echo '  adb logcat -d | grep "StarryDiag"                       # 诊断包（DLOG）'
+    echo '  adb shell cat /sdcard/.starry_magic/moddiag.log          # 诊断包（Lua 侧）'
+  fi
 fi
 echo "[done] $SIGNED"

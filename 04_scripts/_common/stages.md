@@ -39,6 +39,13 @@ bash 04_scripts/_common/pre_install_gate.sh ...   # 装机前产物四查门禁�
 - 改完 `.cpp/.mk` → preflight 会 REMIND：必须重跑管线构建阶段验证（C++ 无独立语法检查器，构建才是检查）
 - 管线阶段可在 json 里声明 `preflight` 文件列表（相对 workdir 或绝对路径）：执行阶段命令**前**自动过机器关，FAIL 即拦截——散装改脚本没过检查就跑，在管线侧不可能发生
 - 弱 AI 会话级注入纪律见 `weak-ai-system-prompt.md`（贴到 Cursor/Claude Code 等工具 Rules）
+- **bash 3.2 兼容门禁（2026-09-30 起）**：`preflight.sh` 对每个 `.sh` 追加调 `bash32_check.sh`，
+  `✗` 计入 FAIL、`⚠` 计 REMIND：
+  ① `$VAR` 紧跟非 ASCII（bash 把中文并进变量名 ⇒ `unbound variable`；一律写 `${VAR}`，
+     实测 `$HAS_CXXSHARED（` 就是这么炸的；被 `\` 转义的字面量不算）
+  ② bash 4+ 语法直接起不来：`mapfile` / `readarray` / `declare -A` / `local -n` / `${v^^}` / `${v,,}` / `;;&` / `&>>` / `&>` / `[[ -v x ]]`
+  ③ `set -u` 下裸空数组 `"${arr[@]}"` / `${#arr[@]}` ⇒ 写 `${arr[@]+"${arr[@]}"}` 或用显式计数器 `NSRC=$((NSRC+1))`
+  （另：`[[ … ]] && exit 0` 在 `set -e` 下会因假值退出 ⇒ 写成 `if … then exit 0; fi`）
 
 ### 装机前产物门禁 pre_install_gate.sh（2026-09-17 起，install 阶段必过）
 

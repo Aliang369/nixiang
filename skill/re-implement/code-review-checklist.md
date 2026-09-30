@@ -133,6 +133,12 @@
 
 - [ ] 使用采样/限频/缓冲，开发期也不默认逐调用 LOGI；错误诊断证据不能因过度限频丢失。
 - [ ] 交付日志量、线程竞争与缓冲区开销经核对？
+- [ ] **诊断是否编译期可整体关掉**（`ModDiag.h` 的 DLOG / `ModDiagLua.h` 的诊断 chunk）？
+      正式包允许保留的只有「证据日志」（`MOD_EVIDENCE`，如 `patch installed`）与错误路径。
+- [ ] 正式包构建是否过了干净包门禁
+      `bash 04_scripts/_common/check_release_clean.sh --tag <Tag> --so <so>`？
+      内嵌 Lua chunk 过 `04_scripts/_common/lua_struct_check.py`？（见 hook-rules §26）
+- [ ] 日志上限是否放运行时配置而不是写死？（避免为调上限重建重装一整轮）
 
 ---
 

@@ -53,6 +53,13 @@ ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif
 
+# 诊断脚手架编译期隔离（2026-09-30 伊莫复盘 P0-1）：
+#   带 STARRY_DIAG=1 构建 ⇒ DLOG/诊断 Lua chunk 进 so，产物名带 -diag
+#   不带（默认）        ⇒ so 内**零诊断代码**（宏展开 ((void)0)，chunk 为空串）
+ifdef STARRY_DIAG
+LOCAL_CFLAGS    += -DSTARRY_DIAG=1
+endif
+
 # ==== 公共区（勿动）====
 LOCAL_SRC_FILES += xDL/xdl.c \
                    xDL/xdl_iterate.c \

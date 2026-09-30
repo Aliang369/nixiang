@@ -96,4 +96,6 @@ SDK 类存在不证明当前登录一定经过它；界面提示也不自动证�
 □ 是否确需运行/用户协作，工具是否按问题选择？
 □ 输出 CLAIM + 适用范围 + 证据 + VERDICT，并列未覆盖范围。
 □ 首次受控测试走 G1；运行 G2、交付 G3 见 ../re-implement/code-review-checklist.md。
+□ 真机取证按 `device-forensics-batch.md` 批量取（一条命令一屏，禁逐条 adb 往返；`-s` 前缀匹配是坑）。
+□ 结论落盘：截图/日志进 `/tmp` 或 `09_test/{游戏}/`，不许只留在终端里。
 ```

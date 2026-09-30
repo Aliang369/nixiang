@@ -32,6 +32,9 @@
 
 ---
 
+| `10_docs/_templates/经验候选卡_xLua零il2cpp注入与Lua全局表_伊莫20260930.md` | 伊莫 1.0.1 2026-09-30（候选） | **xLua 游戏不必碰 il2cpp**：dlopen `libxlua.so` + dlsym + Dobby hook `lua_pcall`/`lua_gettop` 拿 `lua_State*`（天然主线程）即可；**Lua 全局表是白名单式 `__index`**：裸读未声明全局返回 nil **并记 error 不抛** ⇒ 一律 `rawget/rawset`，`Y = Y or {}` 是坑；自检 `logcat \| grep -c "undeclared global variable"` 必须 0 |
+| `10_docs/_templates/经验候选卡_诊断脚手架隔离与干净正式包_20260930.md` | 伊莫 1.0.1 2026-09-30（候选） | **诊断代码必须编译期隔离**（`-DSTARRY_DIAG` + `DLOG` 宏 + 独立 `-diag` 包），交付包由脚本门禁证明干净；★`ndk-build` **不因 CFLAGS 变化重编 `.o`** ⇒ 换模式必须换 `NDK_OUT` obj 目录，否则"诊断包"静默等于正式包 |
+
 ## 使用方式
 
 - 接手新游戏前扫一遍，看有没有同类坑

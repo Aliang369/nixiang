@@ -37,6 +37,8 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
    探针编进自家 so + logcat，含装配点/基址符号/自检行规范）
 5. `re-analyze/android-version-gotchas.md` — **Android 版本与厂商差异速查**
    （同一改包换机异常、隐藏 API 豁免失败、JNI 符号找不到、MIUI 不能注入点击等实证差异）
+6. `re-analyze/device-forensics-batch.md` — **真机批量取证**（一次一条命令拿一屏状态；
+   `logcat -d | grep` 取代匹配不到 `[Tag]` 的 `logcat -s`；清理前分类→保护→删除；`pm uninstall -k` 数据保留实测）
 
 ### 第二步：从斌哥包提取玩法（或从零抓点）
 1. `re-extract/SKILL.md` — 有没有斌哥包？→ 走对照还是从零
@@ -47,7 +49,7 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
    - `il2cpp-from-scratch.md` — Unity IL2CPP 从零抓点
    - `cocos-js-from-scratch.md` — Cocos JS 从零抓点 + jsc 解密
    - `hybridclr-runtime.md` — HybridCLR 热更抓点
-   - `xlua-from-scratch.md` — xLua 抓点
+   - `xlua-from-scratch.md` — xLua 抓点（**§六–§十一 已补**：零 il2cpp 注入路线 / 全局表白名单式 `__index` / 符号偏移与 hook 尺寸实测表 / 诊断与日志 / RPC 重发式伤害放大 / 坑清单）
 
 ### 第三步：把功能写出来
 1. `re-implement/SKILL.md` — 按 Hook 模式选择实现方式

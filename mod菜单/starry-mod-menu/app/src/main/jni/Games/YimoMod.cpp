@@ -37,6 +37,8 @@
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
 #include "Includes/SecStrings.hpp"
+#include "ModDiag.h"      // 诊断脚手架（正式包编译期清空，见文件头说明 P0-1）
+#include "ModDiagLua.h"   // Lua 侧诊断 chunk 模板（正式包 MOD_DIAG_LUA_TEXT == ""）
 
 #define YIMO_LOG "[Yimo]"
 
@@ -816,6 +818,21 @@ static bool IsTableGlobal(lua_State* L, const char* name) {
     return t == LUA_TTABLE;
 }
 
+/* 功能补丁文本（正式包与诊断包完全一致，不被诊断影响）。
+ * 诊断 chunk 走独立的 RunDiagChunk（下方）—— ★必须是独立 chunk：
+ * 拼进同一段会把「诊断语法错」放大成「整个补丁失效」（Jjdm 踩过同型坑）。 */
+static const char* YimoPatchText() { return kYimoPatch; }
+
+#if MOD_DIAG_LUA
+/* 诊断 chunk：独立、一次性、失败绝不影响功能补丁。仅 STARRY_DIAG=1 构建存在。 */
+static void RunDiagChunk(lua_State* L) {
+    static bool s_diagDone = false;
+    if (s_diagDone) return;
+    if (!RunLua(L, MOD_DIAG_LUA_TEXT)) return;   // 失败下次同步再试（不抛错）
+    s_diagDone = true;
+}
+#endif
+
 static void SyncOnLua(lua_State* L) {
     if (!g_luaReady.load() || !L) return;
     if (!IsTableGlobal(L, "pg")) return;   // 游戏环境未就绪，下次再试
@@ -824,7 +841,7 @@ static void SyncOnLua(lua_State* L) {
      *    我们的包装会随之丢失，这里自动重新包装（一次性安装会静默失效）。
      *    ★ 必须独立成 chunk：补丁命中守卫时会提前 return，
      *      把它和「写开关」拼在同一个 chunk 里会把写开关整段吃掉（Jjdm 真机踩过）。 */
-    if (!RunLua(L, kYimoPatch)) return;
+    if (!RunLua(L, YimoPatchText())) return;
 
     /* ② 写开关（独立 chunk，绝不能被 ① 的 return 吃掉） */
     const bool off = g_forceOff.load();
@@ -843,10 +860,16 @@ static void SyncOnLua(lua_State* L) {
              stam ? "true" : "false", tp ? "true" : "false");
     if (!RunLua(L, buf)) return;
 
+#if MOD_DIAG_LUA
+    RunDiagChunk(L);   /* 诊断 chunk（仅诊断构建存在；失败不影响上面两步功能） */
+#endif
+
     if (!g_patched) {
         g_patched = true;
         /* 全包唯一一条成功日志：既是装机验证锚点，也便于用户反馈问题时确认补丁已生效 */
         LOGI(YIMO_LOG " patch installed (state=%p)", (void*)L);
+        DLOG("yimo patch installed state=%p patchLen=%d", (void*)L,
+             (int)strlen(YimoPatchText()));
     }
     g_wantSync.store(false, std::memory_order_relaxed);
 

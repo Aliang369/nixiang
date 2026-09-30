@@ -6,7 +6,13 @@
 #    bash 04_scripts/_common/preflight.sh <文件1> [文件2 ...]
 #
 #  按扩展名自动路由检查器：
-#    .sh   → bash -n          （语法：多符号/少括号立刻抓）
+#    .sh   → bash -n + bash 3.2 兼容门禁（macOS 自带 bash 就是 3.2；见下 "bash 3.2 门禁"）
+#  bash 3.2 门禁（2026-09-30 起，伊莫复盘 P1-3）：本仓库一律在 macOS bash 3.2 下运行，
+#    bash 4+ 的语法会**整套脚本直接跑不起来**，`set -u` + 空数组/多字节变量名会**静默少做事**。
+#    检查项：① `$VAR` 紧跟非 ASCII 字符（bash 会把中文并进变量名 ⇒ unbound variable；
+#            实测 `$HAS_CXXSHARED（` 就是这么炸的）② 空数组展开 `${arr[@]}`/`${#arr[@]}`
+#            （提示改 `${arr[@]+"${arr[@]}"}` 或改计数器）③ bash 4+ 语法
+#            （`mapfile`/`readarray`/`declare -A`/`local -n`/`${v^^}`/`;;&`/`&>>`/`[[ -v x ]]`）。
 #    .py   → compile() 内存检查（不落 pyc 副作用）
 #    .js   → node --check     （node 缺失则 SKIP 提示）
 #    .json → json.tool 校验
@@ -40,6 +46,14 @@ check_one() {
         fail=$((fail+1))
       fi
       rm -f /tmp/pf_err_$$
+      # ---- bash 3.2 兼容门禁（macOS 默认 bash；bash 4+ 语法会整套脚本跑不起来）----
+      compat_out=$(bash "$SCRIPT_DIR/bash32_check.sh" "$f" 2>&1) || {
+        echo "$compat_out" | sed 's/^/       /'
+        case "$compat_out" in
+          *"✗"*) fail=$((fail+1)) ;;
+          *)     remind=$((remind+1)) ;;
+        esac
+      }
       ;;
     py)
       if python3 -c 'import sys; compile(open(sys.argv[1], encoding="utf-8").read(), sys.argv[1], "exec")' "$f" 2>/tmp/pf_err_$$; then
@@ -62,7 +76,7 @@ check_one() {
         fi
         rm -f /tmp/pf_err_$$
       else
-        echo "- SKIP  [js语法] $f（本机无 node，跳过检查）"; skip=$((skip+1))
+        echo "- SKIP  [js语法] ${f}（本机无 node，跳过检查）"; skip=$((skip+1))
       fi
       ;;
     json)
