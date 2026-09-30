@@ -8,7 +8,11 @@ the menu slider value to the movement multiplier.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "_common"))
+from gen_util import write_if_changed  # noqa: E402
 
 ROOT = Path("/Users/aliang/Documents/nixiang")
 SRC = ROOT / "10_docs/勇士之心/斌哥注入脚本_提取_999999_20260915.js"
@@ -269,14 +273,9 @@ def main() -> int:
         + text
         + "\n)YSXZJS\";\n"
     )
-    # 幂等写：内容未变化时不落盘，避免刷新 mtime 触发 ndk-build 无谓重编
-    # （重编但二进制逐字节相同会让 build_so 阶段「有新 .o 而 so 未变」门禁误判为陈旧包）
-    old = OUT.read_text(encoding="utf-8") if OUT.exists() else None
-    if old == header:
-        print(f"unchanged {OUT} bytes={len(header)}")
-    else:
-        OUT.write_text(header, encoding="utf-8")
-        print(f"wrote {OUT} bytes={len(header)}")
+    # 幂等写（见 04_scripts/_common/gen_util.py）：内容未变化时不落盘，避免刷新 mtime
+    # 触发 ndk-build 无谓重编（重编但二进制逐字节相同会让 build_so 阶段误判为陈旧包）
+    write_if_changed(OUT, header)
     return 0
 
 

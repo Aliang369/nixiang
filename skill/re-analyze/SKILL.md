@@ -47,6 +47,8 @@ bash 04_scripts/_common/decode_apk.sh <apk路径>
 
 **最小可区分实验**：先列至少能解释当前观察的合理候选，选择结果能区分候选且干预最小的下一步。例如先核对包集合/输入身份，再检查加载引用；若需要运行证据，先保存基线和故障现场，再做单变量对照。按问题选择归档检查、静态分析、日志、调试或已有探针，不强制特定工具。动态测试遵循授权、协作与清理规则。
 
+运行时观测通道与探针写法见 [native-probe-on-device.md](native-probe-on-device.md)（**目标机无 root 就跑不了 frida-server ⇒ 把探针编进自家 so 走 logcat**）；同一改包换机异常、隐藏 API 豁免失败、JNI 符号找不到、MIUI 不能注入点击等版本/厂商差异对照 [android-version-gotchas.md](android-version-gotchas.md)。
+
 ## 4. 登录方式初判
 
 | 线索 | 候选 | 区分证据 / 参考 |

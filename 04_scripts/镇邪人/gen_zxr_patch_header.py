@@ -6,6 +6,9 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "_common"))
+from gen_util import write_if_changed  # noqa: E402
+
 
 def c_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=True)
@@ -44,8 +47,8 @@ def main() -> int:
         "",
     ])
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text("\n".join(lines), encoding="ascii")
-    print(f"generated {out_path}")
+    # 幂等写（见 _common/gen_util.py）：内容未变不落盘，避免刷新 mtime 触发无谓重建
+    write_if_changed(out_path, "\n".join(lines), encoding="ascii")
     return 0
 
 

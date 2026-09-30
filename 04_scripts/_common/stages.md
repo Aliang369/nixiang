@@ -58,6 +58,14 @@ bash 04_scripts/_common/pre_install_gate.sh \
 - 查4 局限：只抓字面量索引调用（`getRet(4)` 形式）；变量传参（`getRet(n)`）靠人工核对
 - 检出 FAIL 若属故意保留（如兼容空实现），须在装机报告显式说明并经用户确认才可放行
 - 与 preflight 职责区分：preflight 管"改完源文件"的语法；本门禁管"装机前"的产物交叉核对
+- **装机脚本内建门禁（2026-09-30 起）**：`install_*.sh` 应自带门禁并"不过即 exit 1 阻止装机"，
+  避免依赖"记得手动跑"。先例 `04_scripts/勇士之心/install_ysxz.sh`：自己从 `Games/YsxzPatchJs.h`
+  用 `R"YSXZJS\((.*?)\)YSXZJS"` 提取注入 JS → `pre_install_gate.sh --js … --menu-json …`
+  → 失败直接 `exit 1`；要跳过必须显式 `SKIP_PRE_INSTALL_GATE=1`（并在装机报告说明原因）。
+- **双态支持（2026-09-30 起）**：`install_*.sh` 要同时支持 root 机与非 root 机——
+  非 root 读不到 `/data/app/**`，md5 校验不可用，改用组件指纹
+  （`VERIFY_MODE=sig`：`dumpsys package` 里本包独有组件 + 打印 `versionName=`/`signatures=`）；
+  序列号支持 `SERIAL` 环境变量覆盖，便于临时装到第二台测试机而不改 `.device_serial`。
 
 ## 标准阶段表（新游戏从模板生成后按此裁剪）
 
@@ -71,7 +79,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 6 | `surgical` | 外科注入 | 5 | surgical_{游戏}_{版本}.sh（迭代场景后端配 `*_so_only.sh`，见下方内循环） | 注入包存在 + so 标签复核 + **包内 so md5 == build_so 产物**（旧 so 混包直装防线） |
 | 7 | `sign` | 签名 | 6 | uber-apk-signer | 签名包存在 + hash 入 json |
 | 8 | `device_ready` | 设备准备 | — | adb devices / connect（MuMu `127.0.0.1:5555`，重启后端口可能变 16384）/ 端口转发（MT MCP `adb forward tcp:8787 tcp:8787`） | 目标设备在线 |
-| 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 四查**（JS 语法/JNI 配套/P/Invoke 符号/控件读取，见上方专节）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；防"装机成功"假象装旧包） |
+| 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 四查**（JS 语法/JNI 配套/P/Invoke 符号/控件读取，见上方专节；**优先由 `install_*.sh` 内建并自动阻止装机**）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载；非 root 机用组件指纹校验，见 `VERIFY_MODE=sig`） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；非 root 机改组件指纹；防"装机成功"假象装旧包） |
 | 10 | `archive` | 收官归档 | 9 | 文档/游戏摘要 + current.md 单行索引 + `_common/archive_scoped_git.sh` 白名单**提交并推送 origin/main**（用户口令「git」= 提交+推送连体；仅明确不想推送时才 `--no-push`） | 索引行存在 + 唯一正式包/裁剪清单存在 + 远端已同步 |
 | 11 | `archive_close` | 状态收口提交 | 10 | pipeline 写回 archive done 后，运行 `_common/archive_close_git.sh --game {游戏}`，只提交 `pipeline.json` 状态变化并推送（同上，`--no-push` 才关） | 本作路径无未提交状态 + 远端已同步 |
 
@@ -201,6 +209,12 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    对应 `artifacts`/下游 `inputs`，并把原 md5 追加到 stage `note`；`archive.verify`
    仍应显式声明应清理的中间产物。**顺序：清理 → 脚本修快照 → 跑 `archive`**。
 
+   **禁止手改 stage 的 `verify` 语义（2026-09-30 补，复盘 2.2，实测踩过）**：清理产物只能通过
+   `pipeline_record_cleanup.py` 登记；`verify` 永远保持"该阶段的真产物"语义。清理后下游显示
+   「⚠️上游已更新，本阶段过期（需重跑）」**属正常**，不要为了让界面好看把 `verify` 改成 `not_exists`
+   ——上轮这么改过一次，下一轮 `pipeline.sh {游戏} next` 直接报「仍存在 …libstarry_magic.so」自相矛盾，
+   白耗一轮定位。
+
    **manifest schema 对照（2026-09-21 补，实测）**：脚本认 `removed_paths` /
    `removed_roots` / `removed` 三种键，条目可以是字符串路径，也可以是带 `name` 的对象
    （`name` 会补成 `08_output/{游戏}/{name}`）。`prune_output_final.sh` 产出的裁剪清单
@@ -218,6 +232,24 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    不自动强推。
    如果已经用 `git add` 精确暂存，可加 `--staged-only`；该模式不会再次 `git add`，只校验暂存区全部落在显式白名单、过空白门禁后提交并推送。
    若白名单文件可能混有其它会话改动，加 `--require-clean-paths`。该检查会在提交前确认白名单路径没有未暂存改动；有混合改动时先做 hunk 级暂存，再走 `--staged-only`，禁止用路径级 `git add -A` 直接吞入无关改动。
+
+   **三条共享文件硬规则（2026-09-30 补，勇士之心收官实际踩过，提交 `9aed48b9` 混入他会话 17 行 → `7d5e331c` 修正）**：
+
+   a. **共享文件禁止路径级 add**：`mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java`、`10_docs/_state/current.md`、`10_docs/_state/底包再获取台账.md` 是多会话同时改的文件。
+   只能先内容级暂存再提交：
+   ```bash
+   python3 04_scripts/_common/stage_shared_file.py \
+     --path mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java \
+     --drop-block '伊莫 官方原版::^\s+"[A-Za-z0-9+/=]+";\s*$' \
+     --drop-pattern 'YIMO_' --assert-absent 伊莫
+   bash 04_scripts/_common/archive_scoped_git.sh --staged-only --message "…" --path <同名文件>
+   ```
+   `archive_scoped_git.sh` 已内置硬门禁：共享文件存在未暂存改动时，路径级 add 直接 exit 1 并给出上面两条命令。
+   `stage_shared_file.py` 只写索引、不动工作区（他人改动原样留在工作区），并自带**截断语句门禁**：被丢弃的行若以 `= + , ( \` 结尾且下一行被保留，报错 exit 4（防只按标记串丢弃、留下他人无标记续行）。
+
+   b. **共享文件核验必须逐行，禁止用「grep 标记串 = 0」代替**：实例如 `private static final String YIMO_CERT_B64 =` 后面跟 15 行 base64 字符串续行，续行里既无「伊莫」也无 `YIMO_` ⇒ `grep -c` 全为 0 但提交里躺着 17 行他人代码。正确做法：读 `git diff --cached`（或 `stage_shared_file.py` 打印的「索引 vs HEAD」差异与 `git show <commit>:<file>`）**逐行确认归属**，并回看 `git diff --cached --stat` 的改动量是否与预期一致。
+
+   c. **目录白名单会顺带纳入他会话新文件**：`git add -A -- <目录>` 实测把同目录下伊莫会话的 `YimoEntry.cpp`/`YimoMod.cpp`/`YimoMod.h` 一起暂存。提交前必须 `git diff --cached --diff-filter=A --name-only` 逐条确认归属，误入的用 `git restore --staged -- <path>` 撤下；脚本对非字面白名单的新增文件会打印「提醒: 目录白名单顺带纳入的新增文件」。**优先给字面文件路径，少用目录路径**。
    `--path` 只传**非忽略**路径（2026-09-20 实测）：传 `.gitignore` 覆盖的
    `mod菜单/**/app/src/libs*/` 下副本时，`git add -A` 打印「ignored by one of your
    .gitignore files」并返回非 0 → 脚本 `set -e` 中止，已暂存内容需 `git reset` 收拾

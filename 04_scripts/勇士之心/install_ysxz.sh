@@ -30,6 +30,40 @@ echo "serial=$SERIAL"
 echo "apk=$APK"
 echo "local_md5=$LOCAL_MD5"
 
+# 装机前产物门禁（stages.md「装机节」硬要求，见 _common/pre_install_gate.sh）：
+# 至少做 JS 语法关——注入 JS 是拼接产物，截断缺尾/语法错装机即废一轮实测。
+# SKIP_PRE_INSTALL_GATE=1 可显式跳过（需在装机报告里说明原因）。
+if [[ "${SKIP_PRE_INSTALL_GATE:-0}" != "1" ]]; then
+  PATCH_H="$NIXIANG_ROOT/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h"
+  if [[ -f "$PATCH_H" ]]; then
+    GATE_DIR="$(mktemp -d /tmp/ysxz_gate.XXXXXX)"
+    echo "==> 装机前门禁：从 patch 头提取注入 JS"
+    python3 - "$PATCH_H" "$GATE_DIR/patch.js" <<'PY'
+import pathlib, re, sys
+src = pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")
+m = re.search(r'R"YSXZJS\((.*?)\)YSXZJS"', src, re.S)
+if not m:
+    print("ERROR: 未能从 patch 头提取注入 JS", file=sys.stderr)
+    sys.exit(1)
+pathlib.Path(sys.argv[2]).write_text(m.group(1), encoding="utf-8")
+print(f"extracted {len(m.group(1))} bytes")
+PY
+    GATE_ARGS=(--js "$GATE_DIR/patch.js")
+    MENU_JSON="$NIXIANG_ROOT/10_docs/勇士之心/yszzx_menu_template.json"
+    if [[ -f "$MENU_JSON" ]]; then
+      GATE_ARGS+=(--menu-json "$MENU_JSON" --runtime-menu-json "$MENU_JSON")
+    fi
+    if ! bash "$NIXIANG_ROOT/04_scripts/_common/pre_install_gate.sh" "${GATE_ARGS[@]}"; then
+      echo "错误: 装机前门禁未通过（exit 1），已阻止装机：$APK" >&2
+      rm -rf "$GATE_DIR"
+      exit 1
+    fi
+    rm -rf "$GATE_DIR"
+  else
+    echo "警告: 找不到 $PATCH_H，跳过 JS 语法关" >&2
+  fi
+fi
+
 "$ADB_BIN" -s "$SERIAL" shell am force-stop "$PKG" >/dev/null 2>&1 || true
 
 echo "==> push 星光包"

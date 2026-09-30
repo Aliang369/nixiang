@@ -269,3 +269,38 @@ if (!f) {
 
 - 每加一条指纹，同步加一条**静态断言**（生成器/verify 脚本）禁止回退到写死标识符。
 - 菜单能开 ≠ 功能生效：功能失效优先按 §24 查指纹漂移，不要先怀疑 native 偏移。
+
+## 25. 生成器幂等 + 探针自检行（2026-09-30 起）
+
+> 来源：勇士之心 1.0.4 会话复盘。两类纯浪费被固化：①`gen_*.py` 每次运行都重写头文件，
+> mtime 变化让 `git status` 常驻噪声、pipeline 陈旧度门禁误判「上游已更新」；②探针装了
+> 却看不出「装没装上」，白跑一轮 Frida。
+
+**25.1 生成器必须幂等写**
+
+- 所有产出文件（patch 头、模板 JSON、spec 派生文件）统一走
+  `04_scripts/_common/gen_util.py` 的 `write_if_changed(path, text, encoding="utf-8")`：
+  内容相同**不落盘**并打印 `unchanged <path> bytes=N`，不同才写 `wrote …`。
+- 新写生成器一律用它；`04_scripts/{游戏}/gen_*.py` 里禁止裸 `open(...,"w")`。
+- 自检：连跑两次生成器，第二次必须全部 `unchanged` 且 `git status` 该文件为空。
+
+**25.2 探针必须自带装配自检行**
+
+- 每个安装点都要在 logcat 留一行可判定结果——`hook ok <库>.<符号>` /
+  `hook 失败 <库>.<符号>` / `符号未找到 <库>!<符号>`，并单独打一行「探针已安装」。
+- 目的：区分「没装上」和「装上了但没命中」。实例：`YsxzExitTrace` 打出
+  `hook ok libc.exit/_exit/abort/kill/pthread_exit` + `hook 失败 libc._Exit` +
+  `符号未找到 libandroid_runtime.so!Java_java_lang_System_exit__I`（Android 14 上这四个
+  JNI 符号本就不在导出表）⇒ 直接排除「Java 侧 System.exit/Runtime.exit/killProcess」路径，
+  少走一轮。
+- 探针行要带**独立计数**：多个调用点共用一个计数器时，首个命中会被计数门限吃掉、栈不打印，
+  反而掩盖真正的调用者（`YsxzExitTrace` 因此按符号分别计数）。
+
+**25.3 探针通道选择**
+
+- 非 root 机（无 `frida-server`）与需要长期驻留的场景，用**自家 so 内探针**写 logcat，
+  两机通用；不要先搭 Frida。
+- 探针输出不要只走缓冲 stdout：`frida -o logfile` 在 `kill` 收尾时把未 flush 的
+  `setInterval` 轮询行整批丢掉（实测整轮结论不可用）。native 侧用 `__android_log_print`。
+- 拦截 native 退出/自检类行为时，先看 `re-analyze/anti-cheat-pattern.md`
+  「原生退出拦截（seccomp）」一节，再决定钩 libc 还是拦 syscall。

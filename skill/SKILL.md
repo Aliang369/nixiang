@@ -32,6 +32,11 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
    - `taptap-web-login.md` — TapTap 强制网页登录（三种 SDK 版本）
    - `qq-wechat-sso.md` — QQ/微信 SSO 限制
    - `sign-spoof.md` — 运行时签名伪装（SignSpoof / MT Killer）
+   - `server-rejection-triage.md` — 服务端拒绝/设备检测类提示的分流
+4. `re-analyze/native-probe-on-device.md` — **真机探针范式**（非 root 机跑不了 Frida 时：
+   探针编进自家 so + logcat，含装配点/基址符号/自检行规范）
+5. `re-analyze/android-version-gotchas.md` — **Android 版本与厂商差异速查**
+   （同一改包换机异常、隐藏 API 豁免失败、JNI 符号找不到、MIUI 不能注入点击等实证差异）
 
 ### 第二步：从斌哥包提取玩法（或从零抓点）
 1. `re-extract/SKILL.md` — 有没有斌哥包？→ 走对照还是从零
