@@ -139,7 +139,15 @@ public final class TapLoginForceWeb {
                     // + LoginRequest(impl/data/model) + LoginTypes$WEB + DefaultTapLoginFragmentProvider
                     // + WebLoginFragment + TapSignKit 均存在，且无旧版 com.taptap.sdk.ui.TapTapActivity；
                     // 设备已装 TapTap 客户端（com.taptap），改签后客户端 SSO 必失败 ⇒ 固定 embedded_web。
-                    "com.gf.cxswz"));
+                    "com.gf.cxswz",
+                    // 伊莫（com.x.yimoo.official）FunPlus + TapTap 渠道原版 1.0.1：
+                    // 包内实证 TapSDK 新版路径 —— AndroidManifest 含
+                    // com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity +
+                    // com.taptap.sdk.kit.internal.TapTapKitInitProvider +
+                    // com.taptap.sdk.themis.lite.ThemisProvider，且无旧版
+                    // com.taptap.sdk.ui.TapTapActivity；设备已装 TapTap 客户端（com.taptap），
+                    // 改签后客户端 SSO 必以 signature not match 拒绝 ⇒ 固定 embedded_web。
+                    "com.x.yimoo.official"));
 
     private TapLoginForceWeb() {}
 

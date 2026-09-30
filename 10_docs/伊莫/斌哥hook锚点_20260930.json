@@ -1,0 +1,403 @@
+{
+  "meta": {
+    "game": "伊莫",
+    "pkg": "com.x.yimoo.official",
+    "version": "1.0.1 / vc4",
+    "min_sdk": 24,
+    "target_sdk": 36,
+    "abi": "arm64-v8a",
+    "unity_project_name": "worldx",
+    "engine": "Unity IL2CPP + xLua（Lua 侧全部玩法逻辑）",
+    "unity_activity": "com.funplus.sdk.fpx.bridge.FpxUnityPlayerActivity（FunPlus SDK 桥）",
+    "binge_apk_size": 398229020,
+    "binge_apk_md5": "e3b1334b4c0d3cd6a5159477ed936ecd",
+    "binge_apk_sha256": "c4acc2ac0cb65d29192f863a45c7021b6f653ebb31f943e71c0d43c4d6079dfa",
+    "binge_apk_pulled_from": "/data/app/~~ORrpuiQCQqH22lDnHYncsg==/com.x.yimoo.official-wXqjpj3enMgSlE2xOS9-RQ==/base.apk",
+    "libSDKloading_md5": "d5a4828dbdea2e4b59d8ee23415534e7",
+    "libSDKloading_sha256": "b1b999b69b526569808771c7934bbbaf18d5d93984f1ba5dc51ab3feb91d724a",
+    "libSDKloading_size": 1276256,
+    "libtoolChecker_present": true,
+    "libtoolChecker_size": 5512,
+    "libtoolChecker_note": "RootBeer 反 root 检测，斌哥壳自带，原版无 —— 移植时不要带",
+    "binge_repack_timestamp": "2026-09-30 02:35（libSDKloading.so 与 libtoolChecker.so 的 mtime）",
+    "shell_variant": "瘦壳变体（APK 内无嵌套 assets/base.apk；有 shell_config.xml / shell_protected.xml，shell_config.xml 为空 <map />；有 assets/shellinfo、assets/dexopt）",
+    "device": "f9a116a2（OnePlus OPD2404 / KernelSU root）",
+    "captured_at": "2026-09-30",
+    "captured_by": "静态反汇编 + 实机 logcat（进程 26378，tag [IMOMOD] 与 D/调试）",
+    "feature_count": 6,
+    "feature_count_note": "用户点名 6 项 = AN_1..AN_6，与斌哥菜单项一一对应；壳 native 写 7 路（多一个 AN_7），Lua 侧不声明不读 ⇒ 菜单实际 6 个开关"
+  },
+
+  "artifact": {
+    "lua_payload_path": "10_docs/伊莫/binge_lua_mod_20260930.lua",
+    "lua_payload_size": 134210,
+    "lua_payload_lines": 2932,
+    "work_copy": "09_test/伊莫/binge_lua_mod.txt（同内容文本，供 sed -n 切片）",
+    "lua_begin_marker": "-- ======================== IMO MOD BEGIN ========================  @ file 0xaf6e6",
+    "lua_end_marker": "-- ========================= IMO MOD END =========================  @ file 0xd02f6",
+    "lua_first_nul": "0xd0328",
+    "lua_payload_tail": "\\n\\nreturn Time  ← 补全 wrapper，两段合起来才是合法的 Time.lua 替换体"
+  },
+
+  "injection_mechanism": {
+    "summary": "不是 native hook 游戏逻辑，而是劫持 xLua 的 Lua 块加载，把游戏自己的 Core/Common/Time.lua 整份替换掉；MOD 源码以明文内嵌在 libSDKloading.so 的 .rodata。",
+    "steps": [
+      "① libSDKloading.so 的 .init_array 里用 DobbyHook 钩住 libdl.so 的 dlopen（字符串 'libdl.so'@0xd1ecc、'dlopen'@0xd1ed5；DobbyHook 调用 @0x40460；替换函数 @0x45890；原函数指针存 .bss 0x139878）。",
+      "② dlopen 替换函数打印 'SO被加载%s'，用 strstr(path, 'libxlua') 判断是不是 xLua；命中后置一次性标志 .bss 0x139870。",
+      "③ 解析 libxlua 基址：bl 0x4b5f8(x0=\"libxlua\", w1=1) → 返回内存基址（内部 mrs tpidr_el0 取栈保护、bl 0x3f7c0、栈上开 0x2800+0x8b0 缓冲、bl 0x4b7a0，形如读 /proc/self/maps 找 libxlua 行取基址）。",
+      "④ 版本指纹校验：*(u32*)base == 0x464c457f（ELF 魔数）；*(u32*)(base+0x010a41a8) == 0xd103c3ff（ARM64 'sub sp,sp,#0xf0'）。两处不符即放弃。",
+      "⑤ 硬编码偏移解析 lua API：lua_pushboolean = base + 0x01094430（存 .bss 0x139828）；lua_setglobal = base + 0x009a8ed4（存 .bss 0x139830）。★星空版改用 dlopen 钩子拿到的 handle + dlsym 即可，无需硬编码。",
+      "⑥ DobbyHook(base + 0x010a41a8 /* = luaL_loadbuffer，4 参 (lua_State*, buff, size, chunkname) */, 替换函数 0x455f0, 原函数存 .bss 0x139818)；返回非 0 = 失败。",
+      "⑦ 加载钩子 @0x455f0：snprintf(buf,2000,\"%s.lua\",chunkname) → strncpy(dst, \"/sdcard/Android/data/com.x.yimoo.official/files/nb/\", 0x400) 拼路径 → 打日志；判 strlen(chunkname)==0x11(17) 且 strcmp(chunkname, \"@Core/Common/Time\")==0。不等 → 用 .bss 0x139818 的原函数原样转发；相等 → 走替换分支。",
+      "⑧ 替换分支 @0x45740：str x20,[0x139838] 保存 lua_State* → 打 '替换成功:%s \\n 替换成功:%zu'（整份源码进 logcat，tag 调试）→ 把 .data 0x138000 里的源码指针当 chunk 交给真正的 luaL_loadbuffer。"
+    ],
+    "rodata_layout": {
+      "wrapper_lua_source": "@0xaf087..0xaf6e6（1,631 B）—— 内容是 Time.lua 的实现体 + 头部 ' AN_1 =false; AN_2 =false; AN_3 =false;'（只声明 3 个），末尾没有 return Time",
+      "imo_mod_payload": "@0xaf6e6..0xd0328（134,210 B）—— 与 wrapper 首尾相接（0xaf087+0x65f==0xaf6e6），末尾 '\\n\\nreturn Time'",
+      "data_pointer": ".data 起始 0x138000 处一条 R_AARCH64_RELATIVE(type 1027)，addend=0xaf087 ⇒ *(void**)0x138000 = wrapper 源码首址；.data+8 = 1",
+      "an_string_table": "AN_1\\0AN_2\\0AN_3\\0AN_4\\0AN_5\\0AN_6\\0AN_7\\0 @ .rodata 0xd1f13..0xd1f31（每个名字 5 字节），代码用 0xd1f13 + 5*(i-1) 直接寻址",
+      "chunkname_string": "@Core/Common/Time @0xd1e7a（17 字符）"
+    },
+    "elf_layout": {
+      "file": "09_test/伊莫/libSDKloading.so（1,276,256 B）",
+      "LOAD1": "off=0 vaddr=0 filesz=0x12f130 flags=5（★vaddr==file offset，无需换算）",
+      "LOAD2": "off=0x12fef8 vaddr=0x130ef8 memsz=0x56038 flags=6",
+      "sections": {
+        ".text": "0x408e0..0xae6fc",
+        ".rodata": "0xae6f0..0x1159dd",
+        ".data.rel.ro": "0x130f40",
+        ".data": "0x138000 (+0xc0)",
+        ".bss": "0x139000..0x186f30"
+      },
+      "init_array": "file 0x12fef8，7 项：0x45da4, 0x408e0, 0x41834, 0x41888, 0x418ac, 0x418e0, 0x41904"
+    },
+    "obfuscated_strings": {
+      "note": "壳所有日志 tag 都是 '调试'；密文以 8 字节步长放在 .rodata 0xae988 起，运行时拷进 .bss 后原地 XOR 解密。.so 里除 Lua 载荷注释外没有任何 lua API 名字符串（所以无法靠 strings 定位）。",
+      "entries": [
+        {"rodata": "0xae988", "cipher": "9b1956cde4661b", "bss": "0x177b48", "xor_key": "73a9d5254bf31b", "plain": "调试"},
+        {"rodata": "0xae990", "cipher": "59eb249bf00a1d", "bss": "0x177b58", "xor_key": "b15ba7735f9f1d", "plain": "调试"},
+        {"rodata": "0xae998", "cipher": "3dc516db741893", "bss": "0x177b68", "xor_key": "d5759533db8d93", "plain": "调试"},
+        {"rodata": "0xae9a0 / 0xae9a8", "cipher": "（供 0x177b88 / 0x177b78 使用）", "bss": "0x177b78..0x177b83 / 0x177b88..", "plain": "含 'libxlua' 等短串（就地解密，0x177b78 长度 ≤11）"}
+      ]
+    }
+  },
+
+  "switch_channel": {
+    "summary": "壳侧 7 个开关字节 → lua_pushboolean + lua_setglobal 写 Lua 全局 AN_1..AN_7",
+    "native_writer": "0x46b30..0x46ee8，i=1..7：ldr x8,[0x139828]; mov w1,wzr; blr x8（lua_pushboolean(L,0/1)）→ ldr x8,[0x139830]; ldr x0,[0x139838]; x1=0xd1f13+5*(i-1); blr x8（lua_setglobal(L,\"AN_i\")）→ ldrb w4,[x22,#0x7d8+4*(i-1)] → b 0x4711c",
+    "shell_flag_bytes": ".bss 0x1397d8/7dc/7e0/7e4/7e8/7ec/7f0（步长 4，7 个；写 @0x46b44..0x46c7c，读 @0x46d84..0x46ed4）",
+    "shell_flag_bytes_2": ".bss 0x1397f4/7f8/7fc/800/804/808/80c/810（另一组 8 个布尔，写 @0x46cb4..0x46d40）",
+    "lua_state_ptr": ".bss 0x139838（每次 hook 命中时由 0x45744 str x20,[x8,#0x838] 存入）",
+    "lua_side_declaration": "☠必须先声明：游戏 _G 装了严格 __newindex（@Core_Framework_Global.lua:105-122），不声明就写会被静默吞掉并刷 'Attempt to write an undeclared global variable'；不声明就读恒 nil 且每次读刷一条 ERROR 上报。Lua 侧 declareSwitches() 先 GLDeclare(name,false)（@Core_Framework_Global.lua:54），拿不到就 rawset(_G,n,false) 占位；已有值不覆盖。",
+    "lua_side_selfheal": "tickSwitches()（每秒）发现 AN_n == nil 就 rawset 补回 false（否则下次 native 写入会被严格 _G 静默吞掉），并打 [sw] ★开关变了 日志"
+  },
+
+  "menu": {
+    "window": "dumpsys window windows 里 com.x.yimoo.official 有 2 个窗口：Window #16 {3782808}（3000x2120 全屏 BASE_APPLICATION = Unity 游戏面）+ Window #14 {542341b}（118x144，位于 (0,100)，fl=NOT_FOCUSABLE LAYOUT_IN_SCREEN SECURE，fmt=TRANSPARENT = 壳的悬浮菜单按钮）",
+    "screen": "3000x2120 / ROTATION_270 / 420dpi / sw808dp",
+    "secure_flag": "☠菜单窗口带 FLAG_SECURE ⇒ adb screencap 里该区域恒为纯黑，菜单文字无法截图。点击 (59,172) 后黑色区域从 118x144 扩大到约 1860x930 = 菜单展开，但内容仍被屏蔽。",
+    "menu_backend": {
+      "shared_prefs": "/data/data/com.x.yimoo.official/shared_prefs/cl_jm_file.xml",
+      "cl_jm_b1": "gdapi.a5b.cc  ← 壳的卡密/菜单后台域名",
+      "cl_jm_a5": "2.3.7.6（壳版本）",
+      "cl_jm_c9": "tknjrQJJqMQ9wjIfddlUN6Ty4OwfHLXC（token）",
+      "cl_jm_a2": "ef12472878cc4dc4a9464b943b7e49261790750725405",
+      "cl_jm_c4": "6e76d064fd10a2082390827398782985",
+      "cl_jm_c3": "mV5xXH2b",
+      "cl_jm_a9": "300013285778",
+      "cl_jm_a8": "9345473455",
+      "cl_jm_g1": "cm / g2=ct / g3=cu",
+      "cl_jm_d7": "1,0",
+      "cl_jm_e3": "2 / e4=1 / e5=1 / e6=6 / e7=5 / e8=5",
+      "cl_jm_f2": "true / f4=false / a7=false",
+      "cl_jm_b2": "43200 / b4=10000 / b5=3600 / b6=3600 / b8=1000 / b9=600 / c6=3600"
+    },
+    "switch_persistence": {
+      "file": "/data/data/com.x.yimoo.official/shared_prefs/com.x.yimoo.official_preferences.xml",
+      "content": "<boolean name=\"2\" value=\"false\" /> + <boolean name=\"3\" value=\"false\" />（15:16 写入）",
+      "meaning": "菜单项以 0 起始索引持久化；用户只动过第 2、3 项；6 个菜单项 = 索引 0..5 ↔ AN_1..AN_6"
+    },
+    "webview": "壳菜单用系统 WebView（/data/data/com.x.yimoo.official/app_webview/，含 Default/Local Storage/leveldb/000003.log、Cookies、WebViewChromiumPrefs.xml）",
+    "not_a_lua_dir": "设备上不存在 /sdcard/Android/data/com.x.yimoo.official/files/nb/ ⇒ 壳代码拼的那个 nb/ 路径只用于写日志文件（目录不存在→静默失败），不是外部 Lua 覆盖目录；注入完全是内存内 chunk 替换。"
+  },
+
+  "features": [
+    {
+      "feat_num": 1,
+      "switch": "AN_1",
+      "name": "百倍伤害",
+      "lua_default": "MOD.dmgMul = 100",
+      "mechanism": "RPC 重发（同一份上报包重发 N-1 次）",
+      "anchors": [
+        {"site": "class.Component(\"ClientAoiComponent\") 的方法 serverMsg（每个实体类各有一份独立拷贝）", "wrap": "wrapServerMsg(orig)：name==\"RPC_CS_CastAbilityOnTarget\" and isMine(self) → _castResend=0；命中 dmgOutOn(name) and isMine(self) → resendBudget(MOD.dmgMul-1) 次 pcall(orig,self,name,...)，最后 return orig(...)", "lua_line": 1065},
+        {"site": "DMG_OUT 白名单", "value": "RPC_CS_DoActOnActorActions / RPC_CS_DoActOnSweepTargetsActions / RPC_CS_OnAbilityCollisionHitTarget / RPC_CS_ProjectileHitTarget", "lua_line": 794},
+        {"site": "DMG_OUT_SWITCH 可单独关闭项", "value": "{ RPC_CS_ProjectileHitTarget = \"ampProjectileHit\" }"},
+        {"site": "完整 wrapper 只装 4 个类（★顺序重要）", "value": "ClientMainPlayer, ClientPet, ClientPuppet, ClientCreation；其余实体类只上 wrapTraceOnly 只读追踪（上一版全量包装导致「技能百倍失效」）"},
+        {"site": "取方法必须 rawget(vt,\"serverMsg\") or cls.serverMsg", "why": "ClientPet 的 vtbl 很可能没有自己那份，退回 __index 拿继承的那份；上一轮就是这样漏掉宠物，而宠物才是本作主输出"},
+        {"site": "patchAllServerMsg(tag)", "detail": "扫 package.loaded 中 type(rawget(mod,\"typeName\"))==\"string\" 的表（约 200 个类表），pcall(_probeAndWrap,mod,acc)；实机装上 traceOnly 的是 33 个；_wrapMark（弱键）保证幂等；每秒 tick 补扫", "lua_line": 2280}
+      ],
+      "core_reason": "本作伤害数值 100% 服务器算，客户端连 processInstantDmgV 都不存在（attrProcessFun[instant_dmg_v=402] 恒 nil，modifyAttrib 直接 return false,0）⇒ 放大任何本地数值都是死码。而命中判定 100% 客户端算并上报（游戏自己的「翻滚无敌帧」就是这么实现的）⇒ 多报一次 = 服务器多算一次。",
+      "safety_valve": "resendBudget：MOD.maxResendPerCast = 500，每秒 tick 清一次 _castResend，语义 = 每秒最多 500 个重发包（projHit=64 × dmgMul=100 = 6400，不限制会一瞬间上万包打死连接）",
+      "trace": "MOD.traceBurst=25：RPC_CS_CastAbilityOnTarget 开窗口，BURST_INTEREST_WORDS={Hit,Act,Sweep,Projectile,Ability,Timeline,Knock,Damage,Cast,Tp,Buff,Attack} 过滤（★不放 \"Target\"，否则满屏 RPC_CS_LockTarget）；收尾打 '=== CAST <id> 结束: 被放大的上报 N 笔 = ... ==='；RPC_SUSPECT_WORDS={Hit,Actor,Sweep,Target,Conduct,Trigger,Attack,Damage} 标 <== SUSPECT",
+      "dead_ends": [
+        "RPC_CS_SetHitActionTimeline 放大已删除：实测重发 100 遍无连击，服务器不按每条算伤害；参数只有 finalHitTimelineId/attackForceType/combatContextId（后者是 targetEntity:genCombatContextId() 现生成）⇒ 普攻不走可放大的上报通道",
+        "RPC_CS_DoActOnActorActions(actionData.NodeID, dynamicInfo) 与 RPC_CS_DoActOnSweepTargetsActions(hitResults, NodeID, dynamicInfo) 的包里没有实例身份 ⇒ 重发 N 次真算 N 次（可用）",
+        "RPC_CS_ProjectileHitTarget(self.instanceId, combatHitResult, pos, rot, curTime, rebound) 第一参是投射物实例 id，且命中后紧跟 RPC_CS_ProjectileDestroy（同 id）⇒ 同颗弹重发只认第一次"
+      ],
+      "sub_feature_projectile_multihit": {
+        "name": "①-b 投射物多段命中（patchProjectileMultiHit）",
+        "principle": "正解 = 改行为不改上报：把我方投射物改成穿透 + 可重复命中",
+        "gates": [
+          "destroyOnHit（@Common_Ability_Projectile_Projectile.lua:35 默认 true）→ 置 false",
+          "maxHitNum（同文件 :767 默认 1，上限 ProjectileConst.MAX_PROJECTILE_HIT_COUNT_LIMIT = 64 @Common_Const_ProjectileConst.lua:4）→ math.min(LIMIT, MOD.projHit)",
+          "checkCanHitTarget（同文件 :971 return self.hitTargetSet[hitActorId] == nil）→ 直接 return true（不写 hitTargetSet，上限仍由 maxHitNum 兜）"
+        ],
+        "read_point": "ClientProjectile:raycastCallback @GameApp_Ability_ClientProjectile.lua:395-407",
+        "patched_classes": ["Common.Ability.Projectile.Projectile", "GameApp.Ability.ClientProjectile", "GameApp.Ability.EditorProjectile"],
+        "why_three": "LiteClass 继承是读一次就 rawset 缓存进子类表 ⇒ 三个都要各打一遍",
+        "only_for": "isMyProjectile(p) = isMine(p.owner) 或 isMyActorId(p.srcActorId)",
+        "lua_line": 1247
+      }
+    },
+    {
+      "feat_num": 2,
+      "switch": "AN_2",
+      "name": "玩家无敌",
+      "lua_default": "MOD.invin = true",
+      "mechanism": "★不是一个咽喉能包住的 —— 5 条独立通道",
+      "channels": [
+        {
+          "id": "a",
+          "kind": "函数级咽喉",
+          "site": "Utils.checkValidTarget(target, owner) @Common_Utils_Utils.lua:772",
+          "patch": "U.checkValidTarget = function(target,owner) ... end：AN_2 and MOD.invin and envOk() and owner~=nil and isMine(target) and not isMine(owner) 且 U.isEnemy(owner,target)==true → return false",
+          "pitfall": "Common.Utils.Utils 与 Utils.Utils 是同一份源码的两个 package.loaded 实例，两个都要补",
+          "log_tag": "invin"
+        },
+        {
+          "id": "b",
+          "kind": "数据级兜底",
+          "site": "dialoguePauseInvincibleEndTs（游戏自己的「对话暂停无敌」字段，全库只有 checkValidTarget 读它 :797-802，无 setter、不是 @Config_Config.lua 同步属性）",
+          "patch": "markInvincible() 每秒对 pg.me / pg.pawn / pg.me:getCurPetEntity() 写 4e12（关时写 0）",
+          "log_tag": "invin-ts"
+        },
+        {
+          "id": "c",
+          "kind": "摔落伤害（独立客户端自残链路）",
+          "site": "ClientSpace:checkImmuneFallDamage @Entities_SpaceEntities_ClientSpace.lua:1152",
+          "patch": "patchEntityClass(L(\"Entities.SpaceEntities.ClientSpace\"), \"checkImmuneFallDamage\", ...) → return true",
+          "log_tag": "invin-fall"
+        },
+        {
+          "id": "d",
+          "kind": "溺水/濒死",
+          "site": "RPC_CS_SpecialDamage（(bloodProportion, reason) 恒打自己）",
+          "patch": "HURT_IN 里值写 false = 无条件丢"
+        },
+        {
+          "id": "e",
+          "kind": "环境陷阱（荆棘/尖刺/导电）—— ★第三条完全独立的自伤通道，受害者自己发，全程不过 checkValidTarget",
+          "site": "VICTIM_REPORT = { RPC_CS_SetHitActionTimeline = true, RPC_CS_OnThornsCollision = true, RPC_CS_OnConductHit = true }",
+          "patch": "判据 isMine(self) → 丢弃上报（本地 self.actorTimeline:setTimeline(...) 受击动画照常播）",
+          "live_evidence": "[rpc:RPC_CS_OnThornsCollision] from=ClientMainPlayer(8353911) mine=true wrap=full AMP=no；用户反馈「怪物打我不掉血了 但是有些陷阱会掉血」"
+        }
+      ],
+      "hurt_in_table": {
+        "note": "按被打者 actorId 过滤，value = 从变参取受害者 id 的函数；返回 nil = 无条件丢",
+        "entries": {
+          "RPC_CS_NotifyActOnActor": "a1,a2,a3,a4 → a4.actorId（@Common_Ability_MultiTargetsInfo.lua:227）",
+          "RPC_CS_NotifyActOnSweepTargets": "a4.actorId or a4.hitActorId（@GameApp_Ability_ClientCombatAction.lua:3719）",
+          "RPC_CS_OnCSProjectileHit": "a3（同文件 7410/7496/7562）",
+          "RPC_CS_NotifyProjHit": "a5.hitActorId（@GameApp_Ability_ClientProjectile.lua:574）",
+          "RPC_CS_SpecialDamage": "false（无条件丢）",
+          "RPC_CS_OnPuppetThornsCollision": "a1（@...ClientAbilityComponent.lua:5028）—— ☠只能放 HURT_IN 不能放 VICTIM_REPORT：它结构反过来，发送者是 pg.me 而受害者是 a1 对应的怪，按名丢会让怪免疫荆棘"
+        },
+        "pitfall": "☠RPC_CS_OnCSProjectileHit 不能整条丢：第三个发送点是玩家自己的捕捉球命中（@GameApp_Ability_ClientCombatAction.lua:7551-7562，判据 ent.actorId ~= targetActorId），整条丢会静默废掉抓宠。"
+      },
+      "abandoned": {
+        "site": "RPC_SC_NotifyResetPositionInfo 包装",
+        "evidence": "[resetpos] FAIL RPC_SC_NotifyResetPositionInfo: not a function (table)（实机两轮）",
+        "root_cause": "框架把 @Config_Config.lua:11722 的 RPC 参数类型表按同名 key 塞进类，类表和 vtbl 里都是那张表 ⇒ 该游戏的 RPC_SC 处理器不走实体方法分发",
+        "replacement": "判瞬移是否被弹回改用 [tpcheck]"
+      }
+    },
+    {
+      "feat_num": 3,
+      "switch": "AN_3",
+      "name": "移速x3",
+      "lua_default": "MOD.speedMul = 3",
+      "mechanism": "改 getter 返回值（不写属性，不过 checkAttributeValue 钳制、不污染服务器同步的 entity.baseAttr）",
+      "anchor": {
+        "site": "ActorCombatAttribute:getAttribRatioValue(attributeId) @Common_Ability_Attribute_ActorCombatAttribute.lua:576",
+        "patch": "patchLite(ACA,\"getAttribRatioValue\",...)：AN_3 and MOD.speedMul and MOD.speedMul~=1 and attributeId==ATTR.speed_ratio_load_adjustment_v and isMine(self.entity) and envOk() → return v * MOD.speedMul",
+        "why_this_id": "该 id 在全部 11 个 *SpeedRatio getter 和 6 个绝对速度 getter 的公式里各出现恰好一次（同文件 :335~531）⇒ 乘一次 = 精确 xN，覆盖走/跑/冲刺/游泳/滑翔/冲刺闪避/蹲伏",
+        "pitfall": "☠不要按 speed_ratio_run_v / dash_v 做白名单（宠物冲刺是 ratio(sprint)*ratio(load)*ratio(dash)，会叠成 xN²）",
+        "log_tag": "spd"
+      },
+      "measured": "probe:motionAttr:getRunSpeedRatio = 3（5 条全是它，没有 getRunSpeed）⇒ C# 只拉倍率这一项，精确 x3，speedMul 不用改成 sqrt(3)",
+      "must_refresh": "改完必须 refreshSpeed() = me:onMotionAttrChange() + AICU.refreshAllSpeed(me)，让 C# 重新拉一次缓存"
+    },
+    {
+      "feat_num": 4,
+      "switch": "AN_4",
+      "name": "无限跳跃",
+      "lua_default": "MOD.infJump = true",
+      "anchor": {
+        "site": "PawnController:performJump(canJump, inFly) @GameApp_Controller_PawnController.lua:193（全库唯一跳跃出口）",
+        "patch": "patchLite(PC,\"performJump\",...) + ★额外把同一 wrapper 写进 PlayerController.performJump（LiteClass 继承缓存坑）",
+        "air_branch": "pawn:resetMotorTempState() → pawn:playRaiseUp(MOD.jumpRiseDist=3.2, MOD.jumpRiseTime=0.26, MOD.jumpUnGround=0.55)（= eModel:RaiseUp + eModel:ForceNotGroundCheck，@...ClientMotionComponent.lua:176）→ pawn.eModel:SetInputCommand(COMPONENT_INDEX_CHARACETER_CONTROLLER, IC.Jump) → return（不调 orig）",
+        "airborne_check": "airborne(pawn)：优先 pawn.eModel.IsOnGround，退化用 CharacterStateConst.isChildOfState(pawn.characterState, CSC.AIRING)",
+        "log_tag": "jumpin（★入口无条件日志：MLOG(\"jumpin\",\"按到跳跃 canJump=%s inFly=%s 开关[AN_1伤害=%s AN_2无敌=%s AN_3移速=%s AN_4跳跃=%s AN_5体力=%s AN_6(瞬移)=%s] pawn=%s isMine=%s\",...)，六个开关全打 —— 不这么打就分不清「开关没开」和「功能失效」）"
+      },
+      "pitfalls": [
+        "☠不硬改 canJump（会吃掉 :197 的 elseif inFly -> InputCommand.StopFly，飞行停不下来）",
+        "☠不用 forceUngrounded(true) 代替（锁存标志，不配对清会永久不着地）",
+        "☠self 可能是 ControllerSystem 代理 ⇒ 一律用 self.pawn"
+      ],
+      "order": "在 performJump wrapper 内：先 AN_6 瞬移分支，再 AN_4 无限跳，最后 orig"
+    },
+    {
+      "feat_num": 5,
+      "switch": "AN_5",
+      "name": "无限体力",
+      "lua_default": "MOD.infStamina = true",
+      "anchor": {
+        "site": "ActorCombatAttribute:changeStamina(value) @Common_Ability_Attribute_ActorCombatAttribute.lua:568",
+        "patch": "patchLite(ACA,\"changeStamina\",...)：AN_5 and MOD.infStamina and envOk() and type(value)==\"number\" and value<0 and isMine(self.entity) and self.entity.restoringLockedStamina~=true → return（拦截消耗，放行恢复）",
+        "log_tag": "stam"
+      },
+      "core_reason": "★体力是全作唯一零 RPC、纯客户端的数值（全库无 RPC_CS_*Stamina / RPC_SC_*Stamina；stamina_cur / add_cur_stamina_v / add_cur_stamina_max_p 正是 OnlyClientModifyAttributes 里仅有的三个 @Common_Ability_Attribute_ActorAttributeModifier.lua:21-25）⇒ 五个功能里唯一零服务器风险",
+      "all_callers": "全部体力变动都过这一个函数：ClientStaminaComponent:costStamina -> changeStamina(-cost)(:488)、ClientCombatAction 体力消耗节点 @GameApp_Ability_ClientCombatAction.lua:7971、recoverStamina/processAddCurStamina*（正数不拦）、restoreLockedStamina（可负，需放行）",
+  "pitfall": "☠不要用 gmMode = Const.NO_COST_MODE(=1)：那是整个 GM 总开关，还会连带技能免费 @Common_Components_AbilityComponent.lua:821、储水免费 @...ClientWaterStorageComponent.lua:228、无视等级解锁宠物控制 @...ClientPetsComponent.lua:1933/1961，且它是 @Config_Config.lua:13849 的服务器同步属性",
+      "top_up": "topUpStamina() 走正向通道补满一次：a:getRawAttribValue(ATTR.stamina_cur / ATTR.stamina_max_cur) → a:changeStamina(max-cur)"
+    },
+    {
+      "feat_num": 6,
+      "switch": "AN_6",
+      "name": "跳跃瞬移+自动开箱（含自动拾取）",
+      "lua_default": "MOD.autoChest=true, jumpToChest=true, jumpToChestRange=60, jumpToChestStand=0.8, jumpToChestUp=0, jumpToChestMaxDist=0, forceOpenChest=false, forceOpenTries=6, autoChestCost=false, autoChestEnvObj=false",
+      "sub_a_auto_interact": {
+        "name": "⑥ 自动开宝箱 / 自动拾取（借游戏自己的自动交互系统）",
+        "mechanism": "pg.game.interaction = InteractionSystem 每 0.3 秒 tick（@GameApp_Core_GameApp.lua:399-401 self:addSystem(self.interaction,0.3,true)）；InteractionUnitBase:checkIsAutoInteract() 判据只有一条 self.interactData.actWhenArrive == 1（@GameApp_Interaction_InteractionUnitBase.lua:742）；InteractionSystem:refreshInteractUnit 每 tick 重建自动交互名单（:714 table.clear(self.curAutoInteractUnit) → :747 重新收集）；:698 updateAutoInteracts -> unit:tryAutoInteract()（:731-743：1 秒节流 + canInteractive() + doInteract()）",
+        "implementation": "只把 unit.interactData.actWhenArrive 置 1（armAutoInteract()，0.3 秒快定时器 _armTick 调用），不碰 curAutoInteractUnit；_armed（弱键表）存原值以便还原（存 false 代表「原来是 nil」）",
+        "traversal": "IS.unitMap[IC.INTERACTION_TYPE_ENT_FUNC or 1]；过滤 autoChestPick(unit)：unit.needItem[1] > 0 且 not MOD.autoChestCost → 跳过（needItem[1]==1009 是体力 = Const.CommonEnergyType_Stamina @Common_Const_Const.lua:3270）；Utils.isChest(ent)(@Common_Utils_Utils.lua:1456) / Utils.isCollectItem(ent)(:1464) / 可选 Utils.isEnvObj（autoChestEnvObj，默认 false，因为「自动拉机关会开出你没打算开的门」）；退化判据 ent.isChest==true or ent.isCollectItem==true",
+        "safe": "actWhenArrive 写在 unit.interactData 上是安全的（每个 unit 自己的副本：self.interactData = InteractData[id] and lume.clone(InteractData[id]) or {}，:43）",
+        "pitfall": "☠客户端距离门绕开毫无意义：checkDistanceValid(:159-173) 走 C# 触发体积 ent.eModel:CheckTriggerDistanceValid(triggerId)，而 RPC_CS_Interact 包里不带坐标（@Config_RpcCSArgDict.lua:210-215）⇒ 服务器拿自己那份位置判距离 ⇒「开远处的箱子」只能真的把人挪过去。",
+        "lua_lines": {"autoChestPick": 1365, "disarmAutoInteract": 1412, "armAutoInteract": 1426}
+      },
+      "sub_b_teleport": {
+        "name": "⑦ 跳跃瞬移到最近宝箱（tpToChest(pawn)）",
+        "trigger": "在 performJump wrapper 内、infJump 之前（否则空中按跳会被无限跳吃掉）；AN_6 and MOD.jumpToChest and not inFly，tpToChest 返回 false（无目标）则一路落回原逻辑。☠inFly 时不接管（会抢掉 StopFly）。",
+        "legal_flow": "用游戏自己的合法传送流程（照抄 @GameApp_Sandbox_LevelItem.lua:302-317 LevelItem:playerFaceToInteractUnit）：① pg.me:forbidPositionCheck({ Const.FORBID_POSITION_REASON.LEVEL_ITEM_INTERACT, ent.id, target })（★报备走 pg.me，挪位置走 pg.pawn；参数是位置数组不是键值表，第 4 个 staticId 可省）② 可选 DialogueGraphUtils.forceChangeToIdle(pawn)（官方节点第③步，退化用 pawn.eModel:ForceChangeToState(COMPONENT_INDEX_CHARACETER_CONTROLLER, CSC2.IDLE)）③ pawn:forceSetPosRot(target, rot, true)（退化 pawn:forceSetPos(target,false)）——☠第三参 instant 只喂 setRotation，对位置是死参数 ④ p.world:setIsSyncPosThisFrame(pawn.actorId, true) 强制本帧上传位置 ④-b 可选浮空 pawn:forceUngrounded(true, CONST.ForceUnGroundReasons.Ability) + tickFloat 倒计时配对清除",
+        "coord_calc": "与游戏 InteractionUnitBase:getInteractPos() @GameApp_Interaction_InteractionUnitBase.lua:297-345 逐字同构：targetPos = entPos + dir*forceDist，dir = normalize(playerPos - entPos)（y 清零），落点 tx,ty,tz = ex+ux*stand, ey+up, ez+uz*stand；朝向 Quaternion.LookRotation(Vector3(-ux,0,-uz), Vector3.up)",
+        "pitfall_pos_ref": "☠ent:getPosition() 返回共享引用 self.posRef（@...ClientPosRotComponent.lua:112）⇒ 绝不能调 :Sub()/:Mul() 等原地改写方法，只读 x/y/z 标量再 Vector3(x,y,z) 造新的",
+        "landing_params": {
+          "jumpToChestStand": 0.8,
+          "jumpToChestStandMin": "0.3（硬下限）",
+          "jumpToChestUp": 0,
+          "jumpToChestMaxDist": "0（=不限制；实际生效半径 = min(jumpToChestRange=60, jumpToChestMaxDist)；曾设 25 = 游戏自己的 DialogueGraphConst.ENTITY_PLAYER_SET_POSITION_DISTANCE_MAX，怪是 40 @Const_DialogueGraphConst.lua:5，已回退为 0：距离不是判据，23:09 那轮 dist=8.1 米也被弹回）",
+          "verified": "stand=1.5 / up=0（22:38 实机 [tpcheck] kept offset=1.0）",
+          "falsified": "stand=0 + up=2.5（正上方）→ 服务器回 1002 ERROR_POSITION_VALID → 人被弹回原地（用户原话「瞬移过去 瞬间返回原地 说位置不行」）",
+          "tuning_rule": "[tpcheck] 打 kept（成）还是 SNAPPED-BACK（太近，往上调 0.8→1.0→1.2，每次只改一个数）"
+        },
+        "target_search": {
+          "root_cause_fix": "★22:24 实机根因修正：上一版搜交互 unit（pg.game.interaction.unitMap），而交互 unit 只在实体靠近时才创建 ⇒ 远处箱子没有 unit ⇒ nearestChestUnit 永远找不到 ⇒ 静默返回 false（用户现象「距离很近的话 跳过去 就开箱子了」）。改成搜宝箱实体本身。",
+          "source_A": "pg.me:GetRangeEntsChest()（游戏自己的宝箱追踪器，范围 SysConfigData.CHEST_TRACK_MAX_DISTANCE 默认 110 米，@Entities_SpaceEntities_PlayerComponent_ClientChestComponent.lua:82/:95，返回 ChestDetect.rangeEntsChest = actorId -> ent）",
+          "source_B": "pawn:entitiesInRange(range, Const.SEARCH_USR_TYPE_INTERACTOR=64, 0)（@...ClientAoiComponent.lua:204，range 单位米；★返回 actorId 数组不是实体数组 ⇒ 需 pg.getEntityByActorId 解一次，resolveEnt(v)）",
+          "entity_filter": "chestEntOk(ent) 返回 true/false + 原因串：needItem[1] > 0 → \"cost\"；Utils.isChest → 再查 ent:isChestOpened()（\"opened\"）与 Utils.isChestVisible(pg.me, ent)（含 openChestLimit 开启次数上限与归属判断，@Common_Utils_Utils.lua:8907，\"invisible\"）；Utils.isCollectItem 同理。☠不调 ent:checkCanInteract(nil)（ClientEnvObject 实现会解引用 unit 参数直接崩）",
+          "lua_lines": {"chestEntOk": 1550, "resolveEnt": 1614, "collectChestEnts": 1637, "nearestChestEnt": 1747, "tpToChest": 1778, "tickFloat": 2071}
+        },
+        "verify": "tpVerify()（2203）：_tpWatch = {tx,ty,tz,templateId, 出发点mx,my,mz, dist} 供下个 tick 复查。★必须记出发点，否则「落地滑了两步」会被误报成 SNAPPED-BACK（上一版把 14034 开箱成功误标）。判据：remainH<3 → 「到位 kept」；movedH<2 → 「☠弹回原地 SNAPPED-BACK(落点不是合法站位?)」；否则「△滑走了 DRIFTED」。日志 tag tpcheck 打「打算走%.1fm 实际走%.1fm 还差%.1fm 下落%.1fm」。"
+      },
+      "sub_c_force_open": {
+        "name": "⑦-b 强制开箱（forceOpenChest，默认 false）",
+        "implementation": "tickForceOpen()（2099）由 0.3 秒快定时器 + 主 tick 各兜一次；★第 2 个 tick（约 0.6 秒）才发第一次（留时间给 C# 触发体积注册 + 人从 2.5 米落地），forceOpenTries=6；直接调游戏自己的 p.me:startInteract(iact, ent.id, ent.actionPrototypeId, {}, cb) 绕过 canInteractive 整套客户端门",
+        "bypassed_gates": "交互角度 checkInteractAngle(:481) / 前向角度 / 空中阻挡 / 交互阻挡 / conditionId / 蛋形态白名单 / pawn 状态 / checkPrototypeId；ClientChest:checkCanInteract 的 levelCondition 和 attaching()（@...ClientChest.lua:209）",
+        "value": "回调能拿到服务器返回码",
+        "notice_map": {
+          "1002": "ERROR_POSITION_VALID 位置不通过",
+          "1026": "ERROR_INVALID_DISTANCE 距离不够（★唯一值得再试一次的码，代码里 ret==1026 时 f.sent=false 重发）",
+          "10022": "CHEST_INTERACT_COUNT_LIMIT",
+          "10024": "INTERACT_COND_CHECK_FAILED 前置条件不满足",
+          "200143": "CHEST_INTERACT_FAILED_OWNER_FARAWAY 归属者太远",
+          "103005": "INTERACT_ACTION_LOCKED 动作被锁",
+          "1014": "ERROR_INTERACT_EXEC_FAIL",
+          "1003": "ERROR_INVALID_STATUS",
+          "1007": "ERROR_IN_COOLDOWN",
+          "1008": "ERROR_ENTITY_NOT_EXIST",
+          "1010": "ERROR_INVALID_TARGET",
+          "1013": "ERROR_EXEC_COST",
+          "1019": "ERROR_CHECK_COND_FAILED",
+          "1001": "ERROR_SCENE_VALID",
+          "60001": "SANDBOX_INTERACT_FAILED_OWNER_LEAVE 沙盒主人离开",
+          "60002": "SANDBOX_INTERACT_FAILED_GUEST 访客无权限",
+          "200017": "INTERACT_ERROR_PLAYER"
+        },
+        "verdict": "☠强开是「位置不通过」的最大嫌疑，已关：22:38（无强开，只走游戏自己的 actWhenArrive）= 开箱成功；23:09 / 23:47（加强开）= 服务器回 1002。结构上也说得通：强开绕掉的门里包含 checkAirBlock（@GameApp_Interaction_InteractionUnitBase.lua:587，airBlock==1 且 pawn:FALL_ST() 时拒交互），而强开在落地后第 2 个 tick 就发包，人还在下落 ⇒ 服务器判位置不合法。结论：「绕客户端的门」在这里是有害的，因为那扇门不是在限制你，是在帮你等到服务器会同意的时刻。要用需配 jumpToChestFloat=true。",
+        "no_stamina_drain": "☠消耗型宝箱在上游 chestEntOk 就被挡掉，所以强开不会抽体力（startInteract 绕过成本闸门，成本检查在 unit 上 InteractionUnitEntFunc:checkNeedItemValid）"
+      }
+    }
+  ],
+
+  "framework_pitfalls": [
+    "_G 严格 __newindex（@Core_Framework_Global.lua:105-122）⇒ 导出开关表必须 rawset，且必须先声明 AN_1..AN_6",
+    "取模块用 package.loaded[...]（local function L(name) return package.loaded[name] end），不用 require（本文件加载极早，require 会造成半成品/循环依赖）",
+    "Class.Class 实体类 __newindex 遇重名 key 会 error(\"has repeat attr\")（@Core_Framework_Class.lua:402-420）⇒ 必须走 cls.getVtbl()(:431) 或先 cls.forceAttrRepeat(cls,key)(:496)；且 rawset 到类本体实例看不见（实例元表 classType.__objMetatable.__index = vtbl，:303-305）",
+    "Class.LiteClass 继承是读一次就 rawset 缓存进子类表(:739-745) ⇒ 只改父类会被已缓存的子类屏蔽（PawnController → PlayerController 两个都要写）",
+    "Component 方法在 AddComponents 时按值拷贝进实体类 vtbl(:904-906) ⇒ 改 Component 模块表对已建好的实体类零效果，必须改实体类",
+    "☠框架把 Config 里的 RPC 参数类型表按同名 key 放到类表上（@Config_Config.lua:11722 RPC_SC_NotifyResetPositionInfo = {\"int\",\"int\",\"int\"}），类表 rawget 优先于 __index ⇒ cls[key] 拿到的是表不是函数；拿不到函数时必须再问一次 cls.getVtbl()。实机原文 [resetpos] FAIL RPC_SC_NotifyResetPositionInfo: not a function (table)"
+  ],
+
+  "diagnostics": {
+    "log_router": "MLOG(tag, fmt, ...) → _emit → LM.getLogger(\"IMOMOD\"):warn(\"%s\", s)，前缀 [IMOMOD][tag][#n]；_logCnt 每 tag 条数上限（默认 5，LOG_CAP 点名放大被安装期日志挤掉的那些）",
+    "tags": ["install", "sw", "spd", "stam", "jumpin", "jump", "invin", "invin-ts", "invin-rpc", "invin-victim", "dmg", "dmgcap", "rpc:<name>", "cast<abilityId>", "burst<abilityId>#<seq>", "castend<abilityId>", "tp", "tpwhy", "tpcheck", "idle", "float", "chest", "chestwhy", "force", "projopen", "projhit", "probe:*", "resetpos"],
+    "install_sequence_observed": [
+      "[install][#1] start, actorId=3599338",
+      "[sw][#1] 开关声明(用 GLDeclare): AN_1=false AN_2=false AN_3=false AN_4=false AN_5=false AN_6=false",
+      "[probe][#1] patch getMotionAttr = true / [probe][#2] patch getAttributeSpeedRatio = true",
+      "[install][#2] full-wrap(放大/丢弃): ClientMainPlayer,ClientPet,ClientPuppet,ClientCreation",
+      "[install][#3] proj-multihit: Projectile,ClientProjectile,EditorProjectile (projHit=64, ampProjectileHit=true)",
+      "[install][#4] trace-only wrap on 33 other class(es), wrapAllEntities=false",
+      "[sw][#2] ★开关变了: AN_1(百倍伤害) nil -> false | ... AN_6(跳跃瞬移+自动开箱) nil -> false",
+      "[install][#5] done",
+      "[install][#6] repeat timer armed=true",
+      "[install][#7] fast arm timer(0.3s)=true",
+      "[install][#8] frame probe uninstalled"
+    ],
+    "timers": {
+      "_armTick (0.3s)": "armAutoInteract + tickForceOpen + tickFloat(0.3)",
+      "_tick (1s)": "tickSwitches → _castResend=0 → _burstAbility（连续 2 tick 无新施法则 flushBurstSummary）→ markInvincible → refreshSpeed → topUpStamina → armAutoInteract → tpVerify → tickForceOpen → tickFloat(1) → patchAllServerMsg(\"rpc-rescan\") → patchProjectileMultiHit"
+    },
+    "bootstrap": "包 Time.getTickSecond，每 0.5 s 试 install()；就绪判据 = pg.me 与 pg.global 存在且 ACA/ATTR/CONST/PC/IC/CMP 六个模块都在 package.loaded（Common.Ability.Attribute.ActorCombatAttribute / Common.Const.AttributeConst / Common.Const.Const / GameApp.Controller.PawnController / GameApp.Input.InputCommand / Entities.SpaceEntities.ClientMainPlayer）。装好后 TM.addRepeatTimer(1,_tick) + addRepeatTimer(0.3,_armTick)，并自卸帧探测器 Time.getTickSecond = _origGetTickSecond；拿不到 TimerManager 则回退帧 tick。",
+    "host_module": "宿主选择 = Core.Common.Time（1.7KB，被 373 个文件 require，启动必加载，全库只有一种 require 写法无重名副本）；@Main.lua:40 每帧调 Time.getTickSecond() ⇒ 白得启动探测器。install() 由 Time.getTickSecond 包装每 0.5 s 探测一次 pg.me/pg.global 就绪。幂等标记 _installed。",
+    "read_only_probes": "MOD.probe：patchEntityClass(CMP,\"getMotionAttr\",...) 打 probe:motionAttr:<prop>；patchEntityClass(CMP,\"getAttributeSpeedRatio\",...) 打 probe:speedRatio:<name>（这两函数全库零 Lua 调用方 = C#→Lua 入口）",
+    "rpc_trace": "patchEntityClass(CMP,\"serverSpaceMsg\",traceOnly(\"space\"),\"rpc-trace\") + \"reliableServerSpaceMsg\" → traceOnly(\"rspace\")（因为 serverSpaceMsg/reliableServerSpaceMsg 最终落到 serverMsg 但名字被包成 RPC_CS_SpaceMethod+rpcIndex，@...ClientDispatcherComponent.lua:490-498）"
+  },
+
+  "game_architecture_facts": {
+    "damage_is_server_side": "伤害数值 100% 服务器算：客户端包里连 processInstantDmgV 都不存在，attrProcessFun[instant_dmg_v=402] 恒 nil，modifyAttrib 直接 return false,0（@Common_Ability_Attribute_ActorAttributeModifier.lua:37-115/146-151；@GameApp_Ability_ClientActorAttributeModifier.lua:10-20 白名单只有 tp/stamina/water）；公式 3001/3067 各 33 个形参而客户端三条调用路径实参上限 5/9/8 ⇒ 放大任何数值都是死码",
+    "hit_detection_is_client_side": "命中判定 100% 客户端算并上报（游戏自己的「翻滚无敌帧」就这么实现：lastStartDashTime 只在客户端写 @...ClientAbilityComponent.lua:4814，判定在共享的 Utils.checkValidTarget @Common_Utils_Utils.lua:772）⇒ 多报一次 = 服务器多算一次（百倍伤害）；不报 = 服务器不扣血（无敌）",
+    "combat_is_pet_driven": "本作是宠物在战斗：整条战斗序列里没有一条 ClientMainPlayer 的战斗 RPC，全是 ClientPet —— 所谓「普攻」就是宠物的普攻",
+    "risk_self_assessment": "soloOnly（默认 false；只在单人 space 生效，理由是多人同屏最大风险是被举报 —— 本作没有自动反作弊但有完整举报→客服禁言/封号链路：RPC_CS_ReportChat @...ClientChatComponent.lua:641 + GM 的「违规分类」/「禁言或封号时长小时」@Utils_GmAnnotationI18nMap.lua:435/581）"
+  },
+
+  "not_proven": [
+    "服务器是否对「同一 ability 多份命中上报」做去重/频控 —— 百倍伤害依赖服务器逐条计算",
+    "jumpToChestStand=0.8 未经实机验证（2026-09-30 按用户要求从 1.5 改小；1.5/up=0 已验证可用）",
+    "AN_6 的「自动开箱」单独生效性：AN_6 必须同时管住自动开箱与瞬移（tpToChest 故意不自己开箱）",
+    "菜单 6 项与 AN_1..AN_6 的索引映射是从 prefs 键名 2/3 + 实机 logcat 开关名推断，未逐项点测",
+    "星空版移植尚未开始（等用户下载官方原版）"
+  ],
+
+  "open_questions": [
+    "官方原版 1.0.1/vc4 的 libxlua.so 是否与斌哥包同一版本（决定硬编码偏移是否可用；星空版计划改用 dlsym，可绕开）",
+    "斌哥壳的卡密后台 gdapi.a5b.cc 与菜单页 URL 未抓（菜单窗口 FLAG_SECURE，需走 WebView Local Storage / 网络层）",
+    "原版是否也带 libtoolChecker.so（若带则说明是官方包自带，若不带则是斌哥加的）"
+  ],
+
+  "port_plan_sketch": [
+    "星空版不需要复刻斌哥的「替换 Time.lua」机制：同样注入 xLua 但用自己的载荷（或直接在 libSDKloading.so 同位置替换 .rodata 载荷 + 改 wrapper 长度常量）。",
+    "更简的路径：仿照先例（光阴之外/爆裂防线）用 DobbyHook luaL_loadbuffer（dlopen 钩子拿 handle + dlsym(\"luaL_loadbuffer\")，避免硬编码偏移），命中 @Core/Common/Time 时注入星空载荷；开关通道改用星空菜单的 Java 静态数组 + lua_setglobal，不依赖斌哥的壳字节。",
+    "六个功能逐个移植，优先级建议：⑤无限体力（零服务器风险）→ ④无限跳跃 → ③移速 → ②无敌（5 条通道）→ ①百倍伤害（含投射物多段）→ ⑥瞬移开箱（最依赖服务器位置校验）。"
+  ]
+}

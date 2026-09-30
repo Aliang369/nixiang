@@ -211,7 +211,10 @@ git diff --cached --check -- . \
   ':(exclude,glob)**/*.bin' \
   ':(exclude,glob)**/*.dat' \
   ':(exclude,glob)**/*.dex' \
-  ':(exclude,glob)**/*.so'
+  ':(exclude,glob)**/*.so' \
+  `# 提取类原始载荷：保留字节原貌（含作者原有的行尾空白），不允许为了过空白门禁改写` \
+  ':(exclude,glob)**/*_raw.lua' \
+  ':(exclude,glob)10_docs/伊莫/binge_lua_mod_*.lua'
 
 printf '%s\n' "$STAGED"
 echo "--- 即将提交的改动量（共享文件请逐行核对归属，禁止只用 grep 标记串核验）---"
