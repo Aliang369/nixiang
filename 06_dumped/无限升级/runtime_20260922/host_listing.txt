@@ -1,0 +1,13 @@
+total 118448
+drwxr-xr-x  12 aliang  staff   384B  9月 22 23:23 .
+drwxr-xr-x@  4 aliang  staff   128B  9月 22 23:21 ..
+-rw-r--r--   1 aliang  staff   8.6K  9月 22 23:23 dump_log.txt
+-rw-r--r--   1 aliang  staff     0B  9月 22 23:23 host_listing.txt
+-rw-r--r--@  1 aliang  staff    12K  9月 22 23:23 il2cpp_rx_1.bin
+-rw-r--r--@  1 aliang  staff    55M  9月 22 23:23 il2cpp_rx_2.bin
+-rw-r--r--@  1 aliang  staff   2.4M  9月 22 23:23 il2cpp_rx_3.bin
+-rw-r--r--@  1 aliang  staff   4.0K  9月 22 23:23 il2cpp_rx_4.bin
+-rw-r--r--@  1 aliang  staff   4.0K  9月 22 23:23 il2cpp_rx_5.bin
+-rw-r--r--@  1 aliang  staff   185B  9月 22 23:23 il2cpp_rx_segs.txt
+-rw-r--r--   1 aliang  staff   541K  9月 22 23:21 maps.txt
+drwxr-xr-x   8 aliang  staff   256B  9月 22 23:23 raw

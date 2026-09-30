@@ -32,13 +32,18 @@ fi
 # ---- 装机前产物门禁（四查）----
 TMPDIR_GATE="$(mktemp -d /tmp/cxswz_gate.XXXXXX)"
 trap 'rm -rf "$TMPDIR_GATE"' EXIT
-unzip -p "$APK" classes16.dex > "$TMPDIR_GATE/classes16.dex"
+NEW_DEX="${CXSWZ_NEW_DEX:-classes16.dex}"
+unzip -p "$APK" "$NEW_DEX" > "$TMPDIR_GATE/$NEW_DEX"
 unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so > "$TMPDIR_GATE/libstarry_magic.so"
-bash "$NIXIANG/04_scripts/_common/pre_install_gate.sh" \
-  --cpp "$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/CxswzMod.cpp" \
-  --dex "$TMPDIR_GATE/classes16.dex" \
-  --so "$TMPDIR_GATE/libstarry_magic.so" \
+GATE_ARGS=(
+  --cpp "$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/CxswzMod.cpp"
+  --dex "$TMPDIR_GATE/$NEW_DEX"
+  --so "$TMPDIR_GATE/libstarry_magic.so"
   --menu-json "$NIXIANG/10_docs/潮汐守望者/cxswz_menu_template.json"
+)
+RUNTIME_MENU="$NIXIANG/10_docs/潮汐守望者/cxswz_runtime_menu.json"
+[[ -f "$RUNTIME_MENU" ]] && GATE_ARGS+=(--runtime-menu-json "$RUNTIME_MENU")
+bash "$NIXIANG/04_scripts/_common/pre_install_gate.sh" "${GATE_ARGS[@]}"
 
 adb -s "$SERIAL" shell am force-stop "$PKG" 2>/dev/null || true
 INSTALLED_PATH="$(adb -s "$SERIAL" shell pm path "$PKG" 2>/dev/null | tr -d '\r' || true)"

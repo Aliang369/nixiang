@@ -153,18 +153,13 @@
       "command": "bash \"$NIXIANG/04_scripts/光阴之外/gyzw_build_so.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gyzw/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-26 19:05:00",
-      "note": "产物 md5 f651697c66ffd02362aadf37e7d6c3c3（2,159,720 B）。归属防呆：[Gyzw]/Category_战斗/百倍伤害/超级无敌/战斗加速/免广告/starry_gyzw_v1/gyzw_boot.js/BtConst.EUnitType 必须在；[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。构建后同步到 app/src/main/jniLibs、app/src/main/libs、app/libs 三处并校验 md5（gradle 共享路径，2026-09-26 曾发生并行会话覆盖事故）。",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gyzw/arm64-v8a/libstarry_magic.so": {
-          "md5": "f651697c66ffd02362aadf37e7d6c3c3"
-        }
-      }
+      "note": "产物 md5 f651697c66ffd02362aadf37e7d6c3c3（2,159,720 B）。归属防呆：[Gyzw]/Category_战斗/百倍伤害/超级无敌/战斗加速/免广告/starry_gyzw_v1/gyzw_boot.js/BtConst.EUnitType 必须在；[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。构建后同步到 app/src/main/jniLibs、app/src/main/libs、app/libs 三处并校验 md5（gradle 共享路径，2026-09-26 曾发生并行会话覆盖事故）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gyzw/arm64-v8a/libstarry_magic.so; 原 md5=f651697c66ffd02362aadf37e7d6c3c3"
     },
     {
       "id": "surgical",
@@ -186,9 +181,6 @@
         "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.3_surgical-unsigned.apk": {
           "md5": "9ba42e6480baf0a0b60128dfdc26256a"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gyzw/arm64-v8a/libstarry_magic.so": "f651697c66ffd02362aadf37e7d6c3c3"
       }
     },
     {
@@ -211,8 +203,7 @@
         "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.3_surgical-releaseSigned.apk": {
           "md5": "305c00ae42a0979066f36f4177696bac"
         }
-      },
-      "inputs": {}
+      }
     },
     {
       "id": "device_ready",

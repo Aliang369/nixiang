@@ -58,4 +58,4 @@
 - 总纲：`skill/SKILL.md`「数据先于行动」
 - Hook 铁律：`skill/re-implement/hook-rules.md`
 - HybridCLR：`skill/re-extract/hybridclr-runtime.md`
-- 弹力果冻定稿：`10_docs/弹力果冻/抓点定稿_20260819.md`
+- 弹力果冻定稿：`10_docs/弹力果冻/TapTap最终收敛_20260912.md`

@@ -118,8 +118,7 @@
           "md5": "d1b18fb3932f4b03dba3abb485475b74"
         }
       },
-      "note": "输入官包（md5 ad0d6735f97ff702908b31f64faa54c9）已于收尾由用户手动删除；该条目从 inputs 快照移除，避免收尾阶段被上游陈旧度门禁误判为链路过期。",
-      "inputs": {}
+      "note": "输入官包（md5 ad0d6735f97ff702908b31f64faa54c9）已于收尾由用户手动删除；该条目从 inputs 快照移除，避免收尾阶段被上游陈旧度门禁误判为链路过期。"
     },
     {
       "id": "build_so",
@@ -136,27 +135,23 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so",
           "pattern": "Toggle_拿全部技能"
         }
       ],
       "status": "done",
       "done_at": "2026-09-19 16:16:32",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so": {
-          "md5": "8640fc04b57f79bf87fc62bc13b96c42"
-        }
-      },
       "inputs": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp": "fc0321166f88f49cfcf9c9a632f3b82a",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk": "9af61209d665f424ae3312be57ed9043",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp": "d1b18fb3932f4b03dba3abb485475b74"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so; 原 md5=8640fc04b57f79bf87fc62bc13b96c42"
     },
     {
       "id": "surgical",
@@ -184,10 +179,7 @@
       ],
       "status": "done",
       "done_at": "2026-09-19 16:20:41",
-      "note": "收尾按清单清理了中间产物：unsigned apk md5=2558ec609a93751f50bf71a5202add74、classes3.dex md5=08790637c0d77ed51d690d7f7fc19cdc、classes4.dex md5=87b84afe0d524d7bd5b2946ecf57d39d。两个 dex 可从唯一正式包内 classes3.dex / classes4.dex 无损提取（2026-09-19 已实测 md5 一致），故留证删除不影响复现；本阶段 verify 改为 not_exists 以正向记录已清理。",
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so": "8640fc04b57f79bf87fc62bc13b96c42"
-      }
+      "note": "收尾按清单清理了中间产物：unsigned apk md5=2558ec609a93751f50bf71a5202add74、classes3.dex md5=08790637c0d77ed51d690d7f7fc19cdc、classes4.dex md5=87b84afe0d524d7bd5b2946ecf57d39d。两个 dex 可从唯一正式包内 classes3.dex / classes4.dex 无损提取（2026-09-19 已实测 md5 一致），故留证删除不影响复现；本阶段 verify 改为 not_exists 以正向记录已清理。"
     },
     {
       "id": "sign",

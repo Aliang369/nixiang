@@ -216,17 +216,13 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-30 13:17:28",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so": {
-          "md5": "e15258fe186b244835dfd7a0adae3526"
-        }
-      }
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so; 原 md5=e15258fe186b244835dfd7a0adae3526"
     },
     {
       "id": "surgical",
@@ -246,9 +242,6 @@
       ],
       "status": "done",
       "done_at": "2026-09-30 12:03:17",
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so": "e15258fe186b244835dfd7a0adae3526"
-      },
       "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/08_output/一念通天/一念通天_739_surgical-unsigned.apk\n2026-09-30 收尾清理: 08_output/一念通天/一念通天_739_surgical-unsigned.apk; 原 md5=e66bc70622e4d685d3a72e8c5c65bb79"
     },
     {

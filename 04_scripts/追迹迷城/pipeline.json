@@ -186,13 +186,14 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "cleanup_note": "构建产物已用于 2026-09-15 免广告修复包与 OTA so；obj_zjmc/libs_zjmc 已按追加清理删除。",
-      "done_at": "2026-09-15 20:17:24"
+      "done_at": "2026-09-15 20:17:24",
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*"
     },
     {
       "id": "surgical",

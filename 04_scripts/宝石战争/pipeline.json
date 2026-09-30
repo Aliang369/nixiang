@@ -231,24 +231,20 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-20 17:37:41",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": {
-          "md5": "2fc2873da7f268866502ce0feaaefa5c"
-        }
-      },
       "inputs": {
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.cpp": "46e0a45d042138c05df1ccc66d6c644a",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzMod.h": "5392caa2737de0089ee7b3a7b58e151e",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/BszzEntry.cpp": "5467c3bc1c3d239d2a78a734965250eb",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android_bszz.mk": "c270c01dfa15d213b90e7c8814bc480d",
         "04_scripts/宝石战争/dllpatch/Program.cs": "b748d1e9f7d481d21ccf58b0f1af6041"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so; 原 md5=2fc2873da7f268866502ce0feaaefa5c"
     },
     {
       "id": "patch_dll",
@@ -298,7 +294,6 @@
       "status": "done",
       "done_at": "2026-09-23 17:58:31",
       "inputs": {
-        "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": "2fc2873da7f268866502ce0feaaefa5c",
         "07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes": "8a9ff224ba7473238b693008970735cb"
       }
     },
@@ -424,12 +419,12 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/宝石战争/hotupdate_backup_20260920/deploy_meta.json"
         }
       ],
       "status": "skipped",
-      "note": "正式包已内嵌完整 1.0.0.04 资源并保持外部 HotUpdate 为空；此阶段仅保留为手动发布外置补丁的备选路径，不参与 next 自动推进。"
+      "note": "正式包已内嵌完整 1.0.0.04 资源并保持外部 HotUpdate 为空；此阶段仅保留为手动发布外置补丁的备选路径，不参与 next 自动推进。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/宝石战争/hotupdate_backup_20260920"
     },
     {
       "id": "install_official",

@@ -2,7 +2,8 @@
 # 潮汐守望者 1.2.56.375.3 — 星光包签名阶段（starry_release.jks，与其他星光包同签）
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GAME="潮汐守望者"
 VERSION="1.2.56.375.3"
 UNSIGNED="$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_starry-unsigned.apk"

@@ -1,0 +1,38 @@
+{
+  "game": "宝石战争",
+  "package": "com.acing.gow.adv",
+  "version": "6.0.013",
+  "version_code": 6000013,
+  "serial": "f9a116a2",
+  "remote_base_apk": "/data/app/~~pbzajlahzK_a7g1gbLVOhw==/com.acing.gow.adv-S9P5_7lT66qfSZdXkyqB6w==/base.apk",
+  "remote_hotupdate_dir": "/storage/emulated/0/Android/data/com.acing.gow.adv/files/HotUpdate/Android",
+  "hotupdate_manifest_version": "1.0.0.06",
+  "base_apk": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/current/base.apk",
+  "base_apk_fingerprint": {
+    "size": 520621296,
+    "md5": "81472a9e8933d6563a243325a79277da",
+    "sha256": "bb589c636cd39fd5bffcc10a3e15154107079da5a31a3d4f317dc81f99556e1d"
+  },
+  "hotupdate": {
+    "system_network_bytes": {
+      "size": 8632832,
+      "md5": "f982199e1e575218f40b54e701ad7921",
+      "sha256": "278eaeafef20eb0ccfc9d1358400f15d1a78a5d267dd3efe200b3f507c1cf57b"
+    },
+    "system_platform_bytes": {
+      "size": 36864,
+      "md5": "48affeb9135d9b412ba8de59c3aaed03",
+      "sha256": "127586931d3751d5e150ef039bc11f93f962d0617b024368607daa43b43b93d4"
+    },
+    "manifest": {
+      "size": 15969,
+      "md5": "2abd1fda51dea9acf970ada0700ab415",
+      "sha256": "99ed325cf1bbfbbcec679b194fedef34d8f6c39f3ecd2bd2b09688f5c095c2c7"
+    },
+    "receipt": {
+      "size": 7158,
+      "md5": "c764d1b123f5f541e20c9b4d134b7253",
+      "sha256": "c85aa1f1f88cdc1a370875400a9e8f0b996ed0c83ad3b4d6199bb348d15e5afb"
+    }
+  }
+}

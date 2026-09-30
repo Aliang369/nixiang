@@ -1,0 +1,180 @@
+{
+  "game": "境界刀鸣",
+  "version": "1.39.211507",
+  "notes": "2026-09-22 首次接入机械管线。目标=用户真机 f9a116a2（OPD2404，已 root：SukiSU Ultra）上已安装的 TapTap 渠道原版（包 com.blade.bd，vc39 / versionName 1.39.211507，单 base.apk 1,986,468,431B，无 split，targetSdk 30，主 Activity com.unity3d.player.UnityPlayerActivity）。分析结论见 10_docs/境界刀鸣/分析_加固与星光直装可行性_20260922.md：①无 DEX 壳（14 个 classes*.dex 全明文）；②Application 被字节 Thanos 接管（com.bytedance.thanos.ThanosApplication）；③IL2CPP metadata 有反 dump 保护（MIRA / libmeta_reflector.so），静态 Il2CppDumper 三次尝试失败 → 本管线走运行时内存 dump；④hfso/originHfso.manifest 记录 libunity.so/libil2cpp.so 官方 md5 → 外科只允许新增 so，禁改这两支；⑤Md5List.txt 14692 行资源完整性清单；⑥逻辑层 = C# IL2CPP + XLua。用户授权范围（m00241/m00267）：从真机拉原版包、过签名（SignSpoof 回灌官方证书）+ 登录改强制网页（TapLoginForceWeb）、功能 = 伤害倍率 / 无敌 / 无限技能，全程做无 root 直装星光包（不做容器、不做需要用户 root 的方案）。game_id=jjdm（境·界 刀鸣 拼音首字母，modern 注册表）。后续阶段 impl_mod→archive 待功能实现时补齐。\n\n2026-09-24 收尾：三功能不生效根因定位并修复（4 个注入侧 bug：A 双同步标志 / B buf 截断 / C Lua 函数不能挂字段 / D 安装脚本 return 吃掉写开关），真机计数器铁证 state v=2 ok=true re=2 dmg=100 inv=true nocd=true wrap=yes hit=11 block=4 cd=6，用户实测「这次打完有效果了」。详见 10_docs/境界刀鸣/三功能不生效_根因与修复_20260924.md。正式包 08_output/境界刀鸣/境界刀鸣_1.39.211507_三功能_jjdm-releaseSigned.apk（1989368075B sha256 5de5692c188245b36f4b6fe3619eb6b5dd5d052fd5aaab49a7086329b0d4e3cb md5 2b0ec27636e666b350d0943d7f2dc816 内含 libstarry_magic.so md5 50024a19f712299640b9bdc4a9347f92），apksigner v2+v3 Verifies / CN=StarryMagic，hhld NOP 两 ABI 二次校验 OK。管线策略调整：本游戏走 04_scripts 外的 mod菜单/starry-mod-menu/scripts/surgical_jjdm_1.39.211507.sh 外科脚本（含 ndk-build + gradle + zip 合并 + hhld NOP + 签名），pipeline.json 仅记录收尾阶段。",
+  "params": {
+    "game_id": "jjdm",
+    "package": "com.blade.bd",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.blade.bd",
+    "GAME": "境界刀鸣",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "真机锁定与 root 只读检查",
+      "requires": [],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/境界刀鸣/device_ready_jjdm.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/境界刀鸣/device_ready_jjdm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/境界刀鸣/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-22 21:14:54",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/境界刀鸣/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      }
+    },
+    {
+      "id": "fetch_official",
+      "name": "TapTap 渠道原版真机只读拉取",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/境界刀鸣/fetch_official_jjdm.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/境界刀鸣/fetch_official_jjdm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/境界刀鸣/境界刀鸣_1.39.211507_taptap_official_from_device.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-22 21:17:13",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/境界刀鸣/境界刀鸣_1.39.211507_taptap_official_from_device.apk": {
+          "md5": "ccfde14aaeb9afd765427ae7349d33be"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/境界刀鸣/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "实现星光模块 Games/JjdmMod.cpp + JjdmEntry.cpp（Lua VM 入口 hook 路线）",
+      "requires": [
+        "fetch_official"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/JjdmMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/JjdmEntry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_jjdm.mk"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/JjdmMod.cpp"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 00:24:00",
+      "notes": "路线：Dobby hook libgame.so 的 lua_gettop(0x515e38, 28B) / lua_pcallk(0x518fec, 332B) → 拿 lua_State* → luaL_loadstring + lua_pcall 注入 Lua 补丁。永不 hook lua_pcall(size=12，16B patch 会踩坏紧随的 lua_tonumber → SIGILL)。放弃 il2cpp 按名路线（dynsym 名↔址被 TP 打乱）。功能：伤害倍率 Slider 1..100 / 无敌 Toggle / 无限技能 Toggle，默认全 OFF。最终 so md5 50024a19f712299640b9bdc4a9347f92。"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装正式包（classes15.dex + Manifest + hhld NOP + 签名）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_jjdm_1.39.211507.sh"
+      ],
+      "command": "bash /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_jjdm_1.39.211507.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣/境界刀鸣_1.39.211507_三功能_jjdm-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 00:46:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/境界刀鸣/境界刀鸣_1.39.211507_三功能_jjdm-releaseSigned.apk": {
+          "md5": "2b0ec27636e666b350d0943d7f2dc816",
+          "sha256": "5de5692c188245b36f4b6fe3619eb6b5dd5d052fd5aaab49a7086329b0d4e3cb",
+          "size": 1989368075
+        }
+      },
+      "notes": "hhld NOP：arm64 0x5c270 00013fd6→1f2003d5、x86_64 0x5f99d ff5308→0f1f00（签名后二次校验 OK）。官方 3109 条 sha256 全透传。apksigner v2+v3 Verifies、CN=StarryMagic SHA-256 83c5cc0b…。"
+    },
+    {
+      "id": "install",
+      "name": "装机（同签名 install -r，保留数据）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "adb -s f9a116a2 install -r -d <APK>",
+      "verify": "uid 10884 未变 ✓；libdir 内 libstarry_magic.so md5 == 50024a19f712299640b9bdc4a9347f92 ✓；冒烟日志 lua patch installed / state wrap=yes / sync 每 2s 一条 / 零报错 ✓",
+      "status": "done",
+      "done_at": "2026-09-24 00:50:00",
+      "notes": "用户选定「同签名 pm install -r，不卸载不丢数据」。装机后冒烟验证通过。注：00:53:03 用户在桌面把该包卸载了（uninstallSource=com.android.launcher，非我方操作），热更缓存随之清除。"
+    },
+    {
+      "id": "cleanup",
+      "name": "收官清理：/tmp 实验包与日志、设备 /data/local/tmp 与 sdcard 备份目录",
+      "requires": [
+        "install"
+      ],
+      "command": "bash -c 'rm -rf /tmp/jjdm_*'",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/tmp/jjdm_sign"
+        },
+        {
+          "type": "not_exists",
+          "path": "/tmp/jjdm_nohhld"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣/境界刀鸣_1.39.211507_三功能_jjdm-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-09-24 00:57:00",
+      "notes": "清理 8.0G /tmp 实验残留（jjdm_sign 3.7G 三份对照重签包、jjdm_iso 1.9G、jjdm_nohhld 1.8G、jjdm_libs 216M、大日志与截图）；设备 /data/local/tmp 与 /sdcard/Android/data/com.blade.bd.bak_* 三个备份目录已清；libgame.so 已归档进 06_dumped/境界刀鸣/apk_libs/lib/arm64-v8a/（md5 9b436aee01fdeab9b7a916e430fe8fa1）。"
+    }
+  ],
+  "menu_template": {
+    "template_id": "jjdm",
+    "name": "境界刀鸣",
+    "package": "com.blade.bd",
+    "features": [
+      {
+        "feat_num": 1,
+        "name": "伤害倍率"
+      },
+      {
+        "feat_num": 2,
+        "name": "无敌"
+      },
+      {
+        "feat_num": 3,
+        "name": "无限技能"
+      }
+    ],
+    "json": "10_docs/境界刀鸣/jjdm_menu_template.json"
+  },
+  "final_artifact": {
+    "path": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣/境界刀鸣_1.39.211507_三功能_jjdm-releaseSigned.apk",
+    "md5": "2b0ec27636e666b350d0943d7f2dc816",
+    "sha256": "5de5692c188245b36f4b6fe3619eb6b5dd5d052fd5aaab49a7086329b0d4e3cb",
+    "size": 1989368075,
+    "inner_so_md5": "50024a19f712299640b9bdc4a9347f92"
+  }
+}

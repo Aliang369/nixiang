@@ -304,23 +304,18 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so",
           "pattern": "ysxz"
         }
       ],
       "status": "done",
       "done_at": "2026-09-15 14:12:47",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": {
-          "md5": "9bf52c07974ff487a03e6889472f36f6"
-        }
-      },
-      "note": "2026-09-21 热更重抓轮：build_so 重跑，产物 md5=9bf52c07974ff487a03e6889472f36f6（自动战斗指纹改为明文 BuffTableEnum 两级指纹）。"
+      "note": "2026-09-21 热更重抓轮：build_so 重跑，产物 md5=9bf52c07974ff487a03e6889472f36f6（自动战斗指纹改为明文 BuffTableEnum 两级指纹）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so; 原 md5=9bf52c07974ff487a03e6889472f36f6"
     },
     {
       "id": "surgical",
@@ -340,10 +335,6 @@
       ],
       "status": "done",
       "done_at": "2026-09-15 14:13:20",
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": "9bf52c07974ff487a03e6889472f36f6",
-        "09_test/勇士之心/regrab_20260921/base.apk": "c20f70c8ba52032eae10574f846b88d1"
-      },
       "note": "2026-09-21 收尾清理: 08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk; 原 md5=923e2c526338ccf5430afde2131ae89e\n2026-09-21 热更重抓轮改用 04_scripts/勇士之心/ysxz_surgical_rebased.sh，底包=真机只读拉取的官方 base.apk（md5 c20f70c8ba52032eae10574f846b88d1，libcocos2djs.so 与旧原版字节一致）；旧底包 02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk 已不在工作区。"
     },
     {
@@ -414,13 +405,13 @@
           "path": "09_test/勇士之心/regrab_20260921/regrab_manifest.json"
         },
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/勇士之心/regrab_20260921/base.apk"
         }
       ],
       "status": "done",
       "done_at": "2026-09-21 13:49:00",
-      "note": "23 个 *.js 的 md5 与设备端 res_js_md5_remote.txt 全一致；res 版本 localResVsersion=1.0.98.10；base.apk md5=c20f70c8ba52032eae10574f846b88d1。产物为可再生（重跑脚本即可，但设备需先回到官方包状态）。"
+      "note": "23 个 *.js 的 md5 与设备端 res_js_md5_remote.txt 全一致；res 版本 localResVsersion=1.0.98.10；base.apk md5=c20f70c8ba52032eae10574f846b88d1。产物为可再生（重跑脚本即可，但设备需先回到官方包状态）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/勇士之心/regrab_20260921/base.apk"
     },
     {
       "id": "decrypt_hotupdate",

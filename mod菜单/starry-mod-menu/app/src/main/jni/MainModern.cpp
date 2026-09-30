@@ -34,6 +34,7 @@
 #include "Includes/SecStrings.hpp"
 
 #include "Includes/Macros.h"   // HOOK / PATCH / RESTORE 宏
+#include "Games/SignalQuarantine.h"   // 信号隔离（AB-30）：JNI_OnLoad 最早期屏蔽致命信号
 #include "Includes/obfuscate.h"
 #include "Includes/hmac_sha256.h"
 #include "Dobby/dobby.h"
@@ -551,7 +552,7 @@ static bool registerBridgeNatives(JNIEnv* env) {
     static bool done = false;
     if (done) return true;   // 可重入：dlopen 构造函数与 System.loadLibrary 都会进 JNI_OnLoad
     jclass bridge = env->FindClass(OBFUSCATE("com/starry/magic/bridge/ModBridge"));
-    if (!bridge) { LOGE("[桥接] FindClass ModBridge 失败"); return false; }
+    if (!bridge) { LOGE("[桥接] FindClass ModBridge 失败"); env->ExceptionClear(); return false; }   // 必须清异常：payload 形态（无菜单 dex）下 FindClass 会挂起 NoClassDefFoundError，不清则 System.loadLibrary 直接失败
     bool ok = true;
     ok = regOne(env, bridge, OBFUSCATE("nativeInit"),              OBFUSCATE("(Landroid/content/Context;)V"),                         (void*)mb_nativeInit) && ok;
     ok = regOne(env, bridge, OBFUSCATE("nativeSetFeature"),        OBFUSCATE("(ILjava/lang/String;Z)V"),                              (void*)mb_nativeSetFeature) && ok;
@@ -578,6 +579,19 @@ static bool registerBridgeNatives(JNIEnv* env) {
         LOGI("[桥接] RegisterNatives 19/19 全部成功");
     }
     return ok;
+}
+
+// 供 payload 形态使用（Games/FgoBoot.cpp）：菜单 dex 在运行时注入应用
+// PathClassLoader 之后，ModBridge 才对 FindClass 可见，需补注册 19 项 native。
+extern "C" void Starry_TryRegisterBridge(JNIEnv* env) {
+    if (!env) return;
+    if (g_bridge_registered_ok) return;
+    if (registerBridgeNatives(env)) {
+        LOGI("[桥接] 补注册成功（菜单 dex 注入后）");
+    } else {
+        env->ExceptionClear();
+        LOGW("[桥接] 补注册失败（菜单 dex 尚未注入？）");
+    }
 }
 
 // ============================================================
@@ -630,13 +644,31 @@ static void TryExemptHiddenApis(JNIEnv* env) {
     env->DeleteLocalRef(vm);
 }
 
+extern "C" void FgoBoot_InjectEarlyFromOnLoad(JNIEnv* env);   // Games/FgoBoot.cpp
+
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
+    // 必须是第一条：libtprt.so（ACE 的击杀执行者）随后才装载，此刻屏蔽才能挡住
+    // 它 ~10.8s 后“伪装崩溃”的静默击杀（SIGBUS/SIGSEGV，且不走 libc 导出）。
+#ifndef MYGWZD_NO_SIGNAL_QUARANTINE
+    SignalQuarantine_Start();
+#endif
     g_jvm = vm;
     {
         JNIEnv* env = nullptr;
         if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) == JNI_OK && env) {
             TryExemptHiddenApis(env);                 // 先豁免，SignSpoof.install 后续才有用
+            // payload 形态：必须在 installProvider() 之前把菜单 dex 挂进 PathClassLoader，
+            // 否则 Manifest 里的 StarryInitProvider 找不到类 → CNFE → 进程死在 Application 之前。
+            // JNI_OnLoad 是 <clinit> 里 loadLibrary 的返回点，比 AceApplication.initialize() 更早。
+            FgoBoot_InjectEarlyFromOnLoad(env);
             registerBridgeNatives(env);   // 失败可重试：下次 JNI_OnLoad（System.loadLibrary）再注册
+            // payload 形态（官方包内替换 libtersafe2.so，无菜单 dex）下，任何 FindClass(com/starry/…)
+            // 都会挂起 NoClassDefFoundError；若不清，JNI_OnLoad 返回时 ART 会抛
+            // ExceptionInInitializerError → AceApplication.<clinit> 失败 → 进程直接死在 Application 创建前。
+            if (env->ExceptionCheck()) {
+                LOGW("[桥接] JNI_OnLoad 尾部清理挂起异常（payload 无菜单 dex 场景）");
+                env->ExceptionClear();
+            }
         } else {
             LOGW("[桥接] JNI_OnLoad 无 JNIEnv，注册延后");
         }

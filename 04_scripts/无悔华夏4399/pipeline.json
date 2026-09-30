@@ -118,27 +118,23 @@
       "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_build_so.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so",
           "pattern": "target=m4399"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so",
           "pattern": "[Whrhx]"
         }
       ],
       "status": "done",
       "done_at": "2026-09-15 20:48:09",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": {
-          "md5": "947a5afe9e75e8cc60098ef3c0bd31e3"
-        }
-      }
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so; 原 md5=947a5afe9e75e8cc60098ef3c0bd31e3"
     },
     {
       "id": "surgical",
@@ -193,9 +189,6 @@
         "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/inmemory_dex/inmemory_L4_e1_8621488.dex": {
           "md5": "37fc180a43ac662ec12dde70f885abfb"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": "947a5afe9e75e8cc60098ef3c0bd31e3"
       }
     },
     {
@@ -274,9 +267,6 @@
         "/Users/aliang/Documents/nixiang/07_patched/无悔华夏4399/menu_latest_20260923/classes4.dex": {
           "md5": "dae5d4974299035bec606ee8a98c9706"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": "3ee2ed06b17f36e4eee64fe9cc067ee4"
       },
       "notes": "底包 = 真机拉取的 06_dumped/无悔华夏4399/current_20260923/pkg/base_installed_20260923.apk (sha256 6b51ee7f…, md5 e146f03c…)。只换 classes4.dex + lib/arm64-v8a/libstarry_magic.so；审计 only those two changed、签名 delta 空、包内 dex 157 类；APK sha256 fd2ef14b8768217c8d294e176c2012283813beada71afb29a553490d976400fd。"
     },

@@ -13,6 +13,7 @@
 | `经验_ART连续dex与客户端完整性黑名单.md` | 长生天机降世 | ART 缺中间 dex 不加载更高号；登录警告=体积阈值+黑名单路径双条件 |
 | `经验_卡密设备指纹跨包一致.md` | 造梦/雷霆（4次复发） | device_id 整卡绑定跨包必 403；v4 去掉 OTA 变化字段用共享种子；装机必须 seed |
 | `全游戏卡密_复现路径与防再发.md` | 活文档 | 10 条已证实复现 + 10 条潜在；发现合法 dev_* 只补空洞不覆盖；改指纹必须重打含菜单 DEX |
+| （见 `../04_scripts/_common/stages.md` 存量重打入口） | 我在神界刷装备 2026-09-29 | 重新签名后整个 APK md5 必变；不能用 APK md5 判断 dex/so 是否混包。必须从成品包重解 `classesN.dex`/so，分别比特征串与 md5，再看 Manifest/签名 |
 | （见 `starry-mod/SKILL.md` jniLibs 硬规则） | 弓箭传说2 2026-08-17 | Gradle 关 externalNativeBuild；只改 mk 不拷 jniLibs → 菜单仍是上一款；装机前 strings 自检 so 标签 |
 | `10_docs/公主连结/属性敌我过滤修复_20260817.md` | 公主连结 2026-08-17 | 属性敌我禁止「未登记全放行」；Total* 热路径禁 SafeProbe；so_only 不带菜单「游戏补丁」 |
 | `10_docs/_templates/经验_功能不对先Trace证实挂点偏移.md` | 弹力果冻 2026-08-20 | **功能不对先 Trace/log 证实挂点与偏移再写功能**；禁猜 MP/乱 +8/patch=0 当成功；HybridCLR 自注入 StarryTrace |

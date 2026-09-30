@@ -268,22 +268,17 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so",
           "pattern": "Slider_伤害倍率:1:10:1"
         }
       ],
       "status": "done",
       "done_at": "2026-09-20 20:14:34",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so": {
-          "md5": "62218946c5d81557d0996e0ba926288e"
-        }
-      },
       "inputs": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp": "66bc137c6d00f71370b31f30f12e0fdc",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.h": "e0377fe22f38c69eee8bb8f356a96fe1",
@@ -291,7 +286,8 @@
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_sf3.mk": "8c23e63ee732b08dec32e3e90281bd00",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp": "bdf44f0c676570735b826a51e4ad12a9",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": "77216953ad0280ef10b3c1e6b8f49757"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so; 原 md5=62218946c5d81557d0996e0ba926288e"
     },
     {
       "id": "surgical",
@@ -320,9 +316,6 @@
         "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex": {
           "md5": "1a53a0dedd3b9a1df4b688e9556d1cc7"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so": "62218946c5d81557d0996e0ba926288e"
       }
     },
     {

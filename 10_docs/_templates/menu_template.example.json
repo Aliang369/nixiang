@@ -1,0 +1,10 @@
+{
+  "template_id": "zzbx2",
+  "name": "正中靶心2",
+  "package": "com.openew.monster",
+  "source": "Games/Zzbx2Entry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "攻击倍率"},
+    {"feat_num": 2, "name": "解锁月卡特权"}
+  ]
+}

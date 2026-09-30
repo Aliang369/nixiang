@@ -19,6 +19,7 @@
 #      --cpp <Mod源码.cpp> --dex <dex文件> [--dex <更多dex>...] \
 #      --so <so文件> --pinvoke-json <EntryPoint清单.json> \
 #      --menu-json <菜单模板.json> --cpp <含getVal/getRet调用的源码>
+#      --runtime-menu-json <运行时控件清单.json>  # 可选；允许 Slider_/Toggle_ 等运行时名称，只用于控件类型检查
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
 #  注意: 与 preflight.sh 职责不同——preflight 管"改完源文件"的语法，
@@ -36,6 +37,7 @@ fail=0; pass=0; warn=0; skip=0
 
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
+runtime_menu_json=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -45,6 +47,7 @@ while [ $# -gt 0 ]; do
     --so)          so_file="$2"; shift 2 ;;
     --pinvoke-json) pinvoke_json="$2"; shift 2 ;;
     --menu-json)   menu_json="$2"; shift 2 ;;
+    --runtime-menu-json) runtime_menu_json="$2"; shift 2 ;;
     -h|--help)     sed -n '2,30p' "$0"; exit 0 ;;
     *) echo "✗ 未知参数: $1（--help 看用法）"; exit 1 ;;
   esac
@@ -189,24 +192,34 @@ PYEOF
 fi
 
 # ---------- 查4：控件读取一致性关（菜单 JSON vs getVal/getRet） ----------
-if [ -n "$menu_json" ] && [ -n "$cpp_files" ]; then
-  if [ ! -f "$menu_json" ]; then
-    echo "✗ FAIL  [控件] 菜单 JSON 缺失: $menu_json"; fail=$((fail+1))
+control_json="${runtime_menu_json:-$menu_json}"
+if [ -n "$control_json" ] && [ -n "$cpp_files" ]; then
+  if [ ! -f "$control_json" ]; then
+    echo "✗ FAIL  [控件] 控件清单缺失: $control_json"; fail=$((fail+1))
   else
-    # 4a. 菜单控件表：feat_num + type（无 type 默认 toggle）→ 临时文件 "num type"
+    # 4a. 控件表：优先读 --runtime-menu-json；无 type 时按 Slider_/Toggle_ 名称前缀推断
     ctrl="$TMPDIR_PF/controls.txt"; : > "$ctrl"
-    python3 - "$menu_json" >> "$ctrl" <<'PYEOF2'
+    python3 - "$control_json" >> "$ctrl" <<'PYEOF2'
 import json, sys
 try:
     with open(sys.argv[1], encoding="utf-8") as f:
         data = json.load(f)
     feats = data.get("features", data if isinstance(data, list) else [])
     for it in feats:
-        n = it.get("feat_num"); t = it.get("type", "toggle")
+        n = it.get("feat_num")
+        t = it.get("type")
+        name = it.get("name", "")
+        if not t:
+            low = name.lower()
+            if name.startswith("Slider_") or low.startswith("slider_"): t = "slider"
+            elif name.startswith("Spinner_") or low.startswith("spinner_"): t = "spinner"
+            elif name.startswith("Input_") or low.startswith("input_"): t = "input"
+            elif name.startswith("Button_") or low.startswith("button_"): t = "button"
+            else: t = "toggle"
         if n is not None:
             print(f"{n} {t}")
 except Exception as e:
-    sys.stderr.write(f"menu json 解析失败: {e}\n"); sys.exit(1)
+    sys.stderr.write(f"控件清单解析失败: {e}\n"); sys.exit(1)
 PYEOF2
     if [ ! -s "$ctrl" ]; then
       echo "- SKIP  [控件] 菜单 JSON 无 features/feat_num（格式不匹配，人工核对）"; skip=$((skip+1))

@@ -53,42 +53,38 @@
       "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_build_so.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "GetCountryDataById"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "GetCityData"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "identity api ready"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "research hooks ready"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "科研立即完成"
         }
       ],
       "status": "done",
       "done_at": "2026-09-23 20:09:08",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": {
-          "md5": "c34f9dc0c8b7970a621551c9345d32ea"
-        }
-      }
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so; 原 md5=c34f9dc0c8b7970a621551c9345d32ea"
     },
     {
       "id": "research_pair",
@@ -146,9 +142,6 @@
         "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_20260912-releaseSigned.apk": {
           "md5": "7385979e203e8073c1ff7ee96ca09884"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "49db511c9ca2f86f85f4bc618636283b"
       }
     },
     {
@@ -160,7 +153,6 @@
       "command": "adb -s \"$SERIAL\" install -r \"$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_20260912-releaseSigned.apk\"",
       "verify": [],
       "status": "skipped",
-      "artifacts": {},
       "inputs": {
         "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_20260912-releaseSigned.apk": "7385979e203e8073c1ff7ee96ca09884"
       }
@@ -197,7 +189,6 @@
       "command": "adb -s \"$SERIAL\" install -r \"$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk\"",
       "verify": [],
       "status": "skipped",
-      "artifacts": {},
       "inputs": {
         "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk": "52506806d0038a8e5fd856c991bccf42"
       }
@@ -210,8 +201,7 @@
       ],
       "command": "adb -s \"$SERIAL\" uninstall com.yhhy.whrhx.aligames",
       "verify": [],
-      "status": "skipped",
-      "artifacts": {}
+      "status": "skipped"
     },
     {
       "id": "install_clean",
@@ -221,8 +211,7 @@
       ],
       "command": "adb -s \"$SERIAL\" install \"$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_资源热更修复_dex配对_20260912-releaseSigned.apk\"",
       "verify": [],
-      "status": "skipped",
-      "artifacts": {}
+      "status": "skipped"
     },
     {
       "id": "surgical_so_only",
@@ -247,9 +236,6 @@
         "/Users/aliang/Documents/nixiang/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk": {
           "md5": "f54d7b32d581ca296bd6a81604fbd251"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "c34f9dc0c8b7970a621551c9345d32ea"
       }
     },
     {
@@ -303,7 +289,6 @@
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so": "c34f9dc0c8b7970a621551c9345d32ea",
         "/Users/aliang/Documents/nixiang/07_patched/无悔华夏/menu_latest_20260923/classes2.dex": "a211c99525684f4dc42a9223507e44b4"
       }
     },

@@ -55,6 +55,7 @@ bash 04_scripts/_common/decode_apk.sh <apk路径>
 | `com.tencent.tauth` | QQ SSO 集成 | 调用路径和回调配置；[qq-wechat-sso.md](login/qq-wechat-sso.md) |
 | `com.tencent.mm` | 微信集成 | 登录/分享用途及实际路径；同上 |
 | `SignSpoof` / `KillerApplication` | 可能有已有签名处理 | 类实现与初始化关系；[sign-spoof.md](login/sign-spoof.md) |
+| 登录页能进但登录服务器返回错误码，或用户描述像“设备被检测” | 服务端拒绝、账号/设备策略、客户端环境检测候选 | 原始返回码、客户端文案存在性、同账号换设备/同设备换账号；[server-rejection-triage.md](login/server-rejection-triage.md) |
 
 SDK 类存在不证明当前登录一定经过它；界面提示也不自动证明客户端完整性黑名单。
 

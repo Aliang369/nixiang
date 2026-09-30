@@ -1,0 +1,63 @@
+{
+ "states": [],
+ "reports": [],
+ "patched": [],
+ "modules": [],
+ "globals": [],
+ "hooks": [
+  {
+   "t": "wait",
+   "n": 1,
+   "lib": false,
+   "inst": false
+  },
+  {
+   "t": "wait",
+   "n": 11,
+   "lib": false,
+   "inst": false
+  },
+  {
+   "t": "wait",
+   "n": 21,
+   "lib": false,
+   "inst": false
+  },
+  {
+   "t": "wait",
+   "n": 31,
+   "lib": false,
+   "inst": false
+  },
+  {
+   "t": "info",
+   "base": "0x75a1e36000",
+   "size": 7749632
+  },
+  {
+   "t": "hook",
+   "sym": "lua_pcall"
+  }
+ ],
+ "errors": [
+  {
+   "t": "err",
+   "at": "install",
+   "m": "Error: unable to find module 'libgame.so'"
+  }
+ ],
+ "queries": [
+  {
+   "t": "q",
+   "n": 1,
+   "pcalls": 3000,
+   "v": "DCFDef:nil || CTXDefine:table ET[BLOCK_WALL=12,SCENE_OBJ=7,DESTRUCTABLE=6,HERO=2,EMITTER_MOUTH=10,AID_HERO=11,TRIGGER=5,SCENE_BROKEN_COLLIDER=15,LOCK_TARGET=102,OTHER_HERO=101,BULLET=8,EMITTER=9,MONSTER=3,DROP_TYPE=13,SPECTATOR=14,NPC=4] n=27 k=CONTEXT_MODE,RENDER_RESOURCE,PRELOAD_ENTITY_COUNT,RENDER_ATTR,RENDER_STAGE,BTN_TYPE,MODEL_COMPTYPE,PREDICTION_INPUT_TYPE,GAMEPLAY_ENTITY_UID,TRANS_INPUT_TYPE,E_AUTO_FIGHT_EXECUTE_TYPE,UI_TYPE,ANIM_INPUT_TYPE,E_SEND_TYPE || contextDefine:table n=3 k=CMD_TYPE,DEFAULT_OBJDATA,OBJDATA_BY_TYPE || logicDefine:table n=9 k=IsOpenPreviewBox,SHOW_COMP_TYPE,ATK_BOX_TYPES,FRAME_TIME,BLOCK_COLLISION_STEP_HEIGHT,LOGIC_FRAME,MODEL_CFG_KEY_NAME,SCENE_BROKEN_FLAG,IsShowFormation || worldLogicDefine:table n=2 k=E_ACTOR_TYPE,E_ACTOR_COMP_TYPE || gameConst:table n=52 k=IS_EDITOR_COMBAT_TAG,E_BT_NODE_TYPE,CLEAR_PATCH_FILE_LIST,E_GAME_STEP,LoadStep,SDK_ZONEID,ENGINE_FPS,E_FPS_TIME,DESIGN_SCREEN_W_2,E_FPS,LOD_LOWEST_LEVEL,APPSETTING_QUALITY,IS_PRE_LOAD_LOG,IS_OPEN_AI_RUNTIME_SHOW || heroConst:table n=25 k=SubSkillInfoItemPosList,SkillIconPosList,OBJ_ATTR,SKILL_TYPE,HERO_SORT_TYPE,CAMERA_INDEX,RARITY,HeroRankQualityColor,DefaultBtnType,HeroClassNameId,UpType,HERO_CLASS,SubSkillItem4PosList,BreakItemParam || skillConst:table n=1 k=E_SKILL_BTN_TYPE || logicDefine:table n=9 k=IsOpenPreviewBox,SHOW_COMP_TYPE,ATK_BOX_TYPES,FRAME_TIME,BLOCK_COLLISION_STEP_HEIGHT,LOGIC_FRAME,MODEL_CFG_KEY_NAME,SCENE_BROKEN_FLAG,IsShowFormation || E_WORLD_CONST:table n=1 k=NPC_ACTION_MODE || CombatFunc fields=199 fns=UpdatePlayGame,ChangeHeroLockMap,HandleSkillAnimEventEffect,UpdateSwitchHeroData,SetLockRenderProc,DoSubHp,UpdateDodgeEnergyData,AddPiece,LockTarget,SwitchHeroInitAidHero,UpdateIsCannotBePushed,ResetSatisfyUidList,IsCanHealCamp,GetTargetList,AddStateSkillFunc,UpdateMonsterSlotCd,ChangeSlowMotion,InitFighterFunc,SetCombatStrToBoolTagByName,ServerRebornHero,InitMonsterObjFunc,GetCombatStrToBoolTagByName,RotationCurve,SetAutoFightHeroTag,GetShortTarget,CleanIgnoreBulletHits,GetStateCfgById,SwitchHeroEnter,GetIsPushOther,ChangeScaleData,CompEquip,GetTargetAngle,UpdateWeight,GetMinLengthSummon,StakeResetMonster,UpdateSkillBtnClick,SpBreak,ChangeQTEValue,InitDestructableObjFunc,GetRandomFilterList,PassivityPlayerSkillExecute,CreateAOIData,AOIEnter,DropFloor,InitMonsterStageFunc,UpdateIsPushOther,IsInCamp,InitTriggerObjFunc,GetStoicLevel,CheckMonsterDropItem,GetBuffIdFilterList,MonsterSortByType,ComboHitTimeUpdate,GetIsCannotBePushed,AutoRecoverSpeEnergy,SwitchVirtualHero,SwitchHero,AfterInitMonsterObjFunc,DoSubUltEnergy,ModelNegative || hooks: DoSubHp=function SetHp=nil ChangeHp=function SetSkillCdNum=function SkillCdUpdate=function GetSkillCdDatas=nil GetCamp=nil GetEntityImplByUid=nil || globals: GetEntityImplByUid=nil commonFunc=table CS_CombatMgr=userdata clsAttrComp=table clsHeroComp=table clsAidHeroComp=table DCFProcFunc=table || WDATAS_ContextData ok=true type=nil"
+  },
+  {
+   "t": "q",
+   "n": 2,
+   "pcalls": 6000,
+   "v": "DCFDef:nil || CTXDefine:table ET[BLOCK_WALL=12,SCENE_OBJ=7,DESTRUCTABLE=6,HERO=2,EMITTER_MOUTH=10,AID_HERO=11,TRIGGER=5,SCENE_BROKEN_COLLIDER=15,LOCK_TARGET=102,OTHER_HERO=101,BULLET=8,EMITTER=9,MONSTER=3,DROP_TYPE=13,SPECTATOR=14,NPC=4] n=27 k=CONTEXT_MODE,RENDER_RESOURCE,PRELOAD_ENTITY_COUNT,RENDER_ATTR,RENDER_STAGE,BTN_TYPE,MODEL_COMPTYPE,PREDICTION_INPUT_TYPE,GAMEPLAY_ENTITY_UID,TRANS_INPUT_TYPE,E_AUTO_FIGHT_EXECUTE_TYPE,UI_TYPE,ANIM_INPUT_TYPE,E_SEND_TYPE || contextDefine:table n=3 k=CMD_TYPE,DEFAULT_OBJDATA,OBJDATA_BY_TYPE || logicDefine:table n=9 k=IsOpenPreviewBox,SHOW_COMP_TYPE,ATK_BOX_TYPES,FRAME_TIME,BLOCK_COLLISION_STEP_HEIGHT,LOGIC_FRAME,MODEL_CFG_KEY_NAME,SCENE_BROKEN_FLAG,IsShowFormation || worldLogicDefine:table n=2 k=E_ACTOR_TYPE,E_ACTOR_COMP_TYPE || gameConst:table n=52 k=IS_EDITOR_COMBAT_TAG,E_BT_NODE_TYPE,CLEAR_PATCH_FILE_LIST,E_GAME_STEP,LoadStep,SDK_ZONEID,ENGINE_FPS,E_FPS_TIME,DESIGN_SCREEN_W_2,E_FPS,LOD_LOWEST_LEVEL,APPSETTING_QUALITY,IS_PRE_LOAD_LOG,IS_OPEN_AI_RUNTIME_SHOW || heroConst:table n=25 k=SubSkillInfoItemPosList,SkillIconPosList,OBJ_ATTR,SKILL_TYPE,HERO_SORT_TYPE,CAMERA_INDEX,RARITY,HeroRankQualityColor,DefaultBtnType,HeroClassNameId,UpType,HERO_CLASS,SubSkillItem4PosList,BreakItemParam || skillConst:table n=1 k=E_SKILL_BTN_TYPE || logicDefine:table n=9 k=IsOpenPreviewBox,SHOW_COMP_TYPE,ATK_BOX_TYPES,FRAME_TIME,BLOCK_COLLISION_STEP_HEIGHT,LOGIC_FRAME,MODEL_CFG_KEY_NAME,SCENE_BROKEN_FLAG,IsShowFormation || E_WORLD_CONST:table n=1 k=NPC_ACTION_MODE || CombatFunc fields=199 fns=UpdatePlayGame,ChangeHeroLockMap,HandleSkillAnimEventEffect,UpdateSwitchHeroData,SetLockRenderProc,DoSubHp,UpdateDodgeEnergyData,AddPiece,LockTarget,SwitchHeroInitAidHero,UpdateIsCannotBePushed,ResetSatisfyUidList,IsCanHealCamp,GetTargetList,AddStateSkillFunc,UpdateMonsterSlotCd,ChangeSlowMotion,InitFighterFunc,SetCombatStrToBoolTagByName,ServerRebornHero,InitMonsterObjFunc,GetCombatStrToBoolTagByName,RotationCurve,SetAutoFightHeroTag,GetShortTarget,CleanIgnoreBulletHits,GetStateCfgById,SwitchHeroEnter,GetIsPushOther,ChangeScaleData,CompEquip,GetTargetAngle,UpdateWeight,GetMinLengthSummon,StakeResetMonster,UpdateSkillBtnClick,SpBreak,ChangeQTEValue,InitDestructableObjFunc,GetRandomFilterList,PassivityPlayerSkillExecute,CreateAOIData,AOIEnter,DropFloor,InitMonsterStageFunc,UpdateIsPushOther,IsInCamp,InitTriggerObjFunc,GetStoicLevel,CheckMonsterDropItem,GetBuffIdFilterList,MonsterSortByType,ComboHitTimeUpdate,GetIsCannotBePushed,AutoRecoverSpeEnergy,SwitchVirtualHero,SwitchHero,AfterInitMonsterObjFunc,DoSubUltEnergy,ModelNegative || hooks: DoSubHp=function SetHp=nil ChangeHp=function SetSkillCdNum=function SkillCdUpdate=function GetSkillCdDatas=nil GetCamp=nil GetEntityImplByUid=nil || globals: GetEntityImplByUid=nil commonFunc=table CS_CombatMgr=userdata clsAttrComp=table clsHeroComp=table clsAidHeroComp=table DCFProcFunc=table || WDATAS_ContextData ok=true type=nil"
+  }
+ ]
+}

@@ -14,7 +14,7 @@
 用指定 serial 的 adb logcat -b all -v threadtime -T 1 开始采集，再 am start -W 启动 SplashActivity；没有清空历史缓冲。命令输出 [launch.txt](launch.txt) 为 COLD / Status ok（仅表示 Activity 启动命令成功）。
 
 证据：
-- [live_logcat.txt](live_logcat.txt)：完整短窗口日志，含系统背景日志，仅用于本地诊断，不外传。
+- `live_logcat.txt`（已按工作区瘦身清理，可再生）：完整短窗口日志，含系统背景日志，仅用于本地诊断，不外传。
 - [target_process_timeline.txt](target_process_timeline.txt)：目标初始化、启动、死亡时间线，保留原日志行号。
 - [pid_samples.txt](pid_samples.txt)：主机时间的 PID 采样。注意主机时钟与设备日志时钟有偏差，不能跨时钟直接相减。
 - [exit_after.txt](exit_after.txt)：退出原因 reason=2 SIGNALED、status=9、description=exit_self_<pid>_10652。

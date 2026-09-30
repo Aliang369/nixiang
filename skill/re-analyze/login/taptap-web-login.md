@@ -3,6 +3,8 @@
 > 📍 re-analyze/login/taptap-web-login.md
 > 🎯 改签后 TapTap 客户端 SSO 失败（签名不一致），需要强制走 WebView 网页登录
 
+> 如果登录已经进到游戏登录服务器并返回错误码，先看 [server-rejection-triage.md](server-rejection-triage.md)，不要先把问题归因到 TapTap SSO 或 root 检测。
+
 ---
 
 ## 登录诊断与授权边界（合并 2026-09-05）

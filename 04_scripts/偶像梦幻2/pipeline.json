@@ -188,21 +188,17 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-15 18:25:41",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so": {
-          "md5": "b8a13063764f906a025646b81aa3c9fd"
-        }
-      },
       "inputs": {
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.cpp": "de81202c624b11edcb8ad4f5ec69d8b1",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.h": "45309abd5599a3275e98ad45b55cffc8"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so; 原 md5=b8a13063764f906a025646b81aa3c9fd"
     },
     {
       "id": "surgical",
@@ -226,9 +222,6 @@
         "08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-unsigned.apk": {
           "md5": "1fa54fbbd85255ee83583f40bf665e7e"
         }
-      },
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_es2/arm64-v8a/libstarry_magic.so": "b8a13063764f906a025646b81aa3c9fd"
       }
     },
     {

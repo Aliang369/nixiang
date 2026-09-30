@@ -47,12 +47,17 @@ case "$KEEP" in
 esac
 [[ "$KEEP" == *.apk ]] || { echo "ERROR: 保留文件必须是 .apk: $KEEP" >&2; exit 1; }
 
-APKSIGNER="${APKSIGNER:-$HOME/Library/Android/sdk/build-tools/36.0.0/apksigner}"
-if [[ -x "$APKSIGNER" ]]; then
-  "$APKSIGNER" verify "$KEEP" >/dev/null || { echo "ERROR: 保留 APK 签名校验失败: $KEEP" >&2; exit 1; }
-else
-  echo "WARN: apksigner 不可用，未做签名校验: $APKSIGNER" >&2
+APKSIGNER="${APKSIGNER:-}"
+if [[ -z "${APKSIGNER:-}" ]]; then
+  for v in 36.0.0 35.0.0 34.0.0; do
+    if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/apksigner" ]]; then
+      APKSIGNER="$HOME/Library/Android/sdk/build-tools/$v/apksigner"
+      break
+    fi
+  done
 fi
+[[ -x "$APKSIGNER" ]] || { echo "ERROR: 未找到 apksigner，拒绝裁剪: ${APKSIGNER:-未检测到}" >&2; exit 1; }
+"$APKSIGNER" verify "$KEEP" >/dev/null || { echo "ERROR: 保留 APK 签名校验失败: $KEEP" >&2; exit 1; }
 
 TMP="$(mktemp /tmp/prune_output.XXXXXX)"
 trap 'rm -f "$TMP"' EXIT

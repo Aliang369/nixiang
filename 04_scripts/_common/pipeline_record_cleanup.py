@@ -93,6 +93,8 @@ def main() -> int:
         notes: list[str] = []
 
         for rule in stage.get("verify", []):
+            if not isinstance(rule, dict):
+                continue
             for path in removed:
                 if matches(rule.get("path"), path):
                     if rule.get("type") != "not_exists":

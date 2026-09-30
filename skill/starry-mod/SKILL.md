@@ -131,9 +131,28 @@ adb logcat -s StarryApp:V StarryMagic:V | grep "auth game_id synced from native"
 | TSS/ACE 游戏 | **必须外科组装** |
 | 快速试改 smali | MT MCP |
 
+### 存量游戏快速重打（2026-09-29）
+
+已有可构建工程和既有 native so 时，按改动范围选最短路径，不走全套标准阶段：
+
+| 改动 | 动作 |
+|------|------|
+| Java / dex / Manifest / 菜单资源 | 复用现有 `libs_sjzz/.../libstarry_magic.so` 或对应游戏 so；直接跑该游戏 surgical 脚本完成构建、签名、验证、可选安装 |
+| C++ / Hook / 菜单 native 串 | 先跑该游戏 `*_build_so.sh`，确认 so 指纹和菜单串，再跑同一条 surgical 链 |
+| 只有现有正式包，要重装 | `STARRY_INSTALL_ONLY=1` 复用包，只跑验证+安装；禁止重新构建后再声称“只是重装” |
+
+```bash
+bash mod菜单/starry-mod-menu/scripts/surgical_<game>_<ver>.sh                 # 构建+签名+验证
+STARRY_INSTALL=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/surgical_<game>_<ver>.sh
+STARRY_INSTALL_ONLY=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/surgical_<game>_<ver>.sh
+```
+
+验证脚本必须从成品包重新解出目标 `classesN.dex` 和 so；不要把 `/tmp/sjzz_*` 这类上一轮残留当成新构建证据。完整 APK 重新签名后 md5 必变，混包判断只看 dex md5、so md5、Manifest/包结构和签名身份。
+
 **已注册管线的一律走 `04_scripts/pipeline.sh`**（status/next/reset/verify），2026-09-10 起自动防旧产物直装：上游产物变化 → 过期下游阶段自动回退 pending；过期链路上 `run` 下游会被陈旧度门禁拒绝。构建后端四件套（绝对路径/obj stamp/链接活动保险/菜单串字节校验）范本 = `04_scripts/魂坠深境/hzsj_build_so.sh`；install 阶段末尾接 `04_scripts/_common/verify_installed_apk.sh` 校验设备包 md5 == 本地 APK。
 
 ★ **外科组装 dex 落位铁律（2026-09-24 圣翼传说实测踩坑）**：新增 smali 编出的 dex 名必须是 base.apk 里**最小的空闲下标**（跑脚本求 `classesN.dex` 未被占用的最小 N，单 dex 官包 → `classes2.dex`）。写死 `classes8.dex` 时 ART 的 `BaseDexClassLoader` 从 `classes.dex` 顺序扫、遇到第一个缺口即停止 → 星光 dex 永不加载 → `StarryInitProvider` `ClassNotFoundException` **启动即崩**。SDK 侧另有两条：① 官包无 `libtprt.so`/ACE 时 `Android_<tag>.mk` 必须含 `Games/NoAceStubs.cpp`（否则 `ld.lld: undefined symbol: SignalQuarantine_Start`）；② hook 日志 tag 是 `Mod_Menu`（`Includes/Logger.h` 的 `TAG=OBFUSCATE("Mod_Menu")`），不是 `StarryMagic`。
+   - 可用 `python3 04_scripts/_common/next_free_dex.py <官包.apk>` 求最小空闲 N，再写 `classesN.dex`。
 
 ### 构建环境
 
@@ -177,6 +196,7 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 装机（首装或覆盖）前逐项过，缺一不装机：
 
 1. **产物机器关**：`bash 04_scripts/_common/pre_install_gate.sh`（JS 语法/JNI 配套/P/Invoke 符号/控件读取四查，见 stages.md 专节）
+   - 控件读取查优先传 `--runtime-menu-json`；后台菜单模板按规范不能带 `type`，不能单独用它判断 Slider/Toggle。
 2. **防封/上报审计**：按 `../re-implement/anti-ban-analysis.md` 输出标准结论（上报链清单 + 量级线 + 服务端权威判定），无审计结论不装机
 3. **异常兜底审计**：战斗代码 + 菜单 Java 侧（`ModBridge.safeCall` 包裹、native 缺失/偏好类型不符的降级路径）都要有 try/catch 兜底结论；HybridCLR 游戏热更侧调 native 一律文件镜像通道（`starry_state.txt` 模式），桥接调用必须 try/catch
 4. **TapTap 渠道游戏三查**（凡尘西游/山海幻境教训）：
@@ -186,8 +206,10 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（无悔华夏 4399 事故：临时复用 `whhx` 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）
 
 **收尾固定产出**（3 个会话收尾时被用户索要，固化为清单项）：
-- icon 提取：`02_apks/{游戏}/icon_{游戏}_{尺寸}.png`
+- icon 提取：交付副本放 `08_output/{游戏}/delivery_YYYYMMDD/icon_{游戏}_{512|144}.png`；`02_apks/` 只作为用户管理的不可再生输入，AI 不默认写入。
 - 菜单模板 JSON：`10_docs/{游戏}/{游戏拼音}_menu_template.json`（`template_id`=game_id）
+- 交付副本：`08_output/{游戏}/delivery_YYYYMMDD/menu_template.json`，字段严格按 `10_docs/_templates/菜单模板_规范与示例.md` 自检。
+- 交付目录生成：`bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --apply`。
 - 收尾清单：按 `10_docs/_templates/游戏收尾与最小复现清单.md` 填写，含生命周期场景矩阵已测/未测
 
 ---
@@ -278,9 +300,11 @@ adb logcat -s StarryApp:V StarryMagic:V AuthClient DeviceFingerprint | grep -E \
 收尾入口统一为：
 
 1. 清理后先跑 `04_scripts/_common/pipeline_record_cleanup.py` 修管线快照。
-2. Git 固化用 `04_scripts/_common/archive_scoped_git.sh` 白名单提交；只有明确
-   授权 push 时才加 `--push`。
+2. Git 固化用 `04_scripts/_common/archive_scoped_git.sh` 白名单提交；脚本默认提交后推送 `origin/main`，只有明确不想推送时才加 `--no-push`。
+   - 若白名单文件混有其它会话改动（常见于 `10_docs/_state/current.md` 和共享 Java 白名单），先做 hunk 级暂存，再跑 `--staged-only`。
+   - 建议加 `--require-clean-paths`：白名单路径仍有未暂存改动时直接停止，避免路径级 `git add -A` 误带无关内容。
 3. pipeline 写回 `archive=done` 后，用
    `04_scripts/_common/archive_close_git.sh --game {游戏}` 补状态提交。
 4. 游戏详情更新到 `10_docs/_state/games/{游戏}.md`，`current.md` 只保留一行；
    功能反复反馈和长证据分别补功能验收卡、证据 README。
+5. 收尾后用 `python3 04_scripts/_common/check_state_hash_sync.py --game {游戏} --manifest {裁剪清单}.json` 核对摘要、索引行与正式包 hash 一致。

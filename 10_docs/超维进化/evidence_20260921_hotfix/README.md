@@ -26,7 +26,7 @@ bash mod菜单/starry-mod-menu/scripts/cwjh_splice_hostsim.sh \
 
 | 文件 | 说明 | SHA-256 |
 |---|---|---|
-| `game_js_hotupdate_20260921.js` | 上午档 2,727,219 B（已被 0.3.5 取代） | `d3101b26cf153ed3ba4b0d55a39965803ddad6cf97847c503e0086bd13474b4b` |
+| ~~`game_js_hotupdate_20260921.js`~~ | 上午档 2,727,219 B（已被 0.3.5 取代；2026-09-30 按热更可删规则清理，可重拉） | `d3101b26cf153ed3ba4b0d55a39965803ddad6cf97847c503e0086bd13474b4b` |
 | `game_js_builtin_0.1.86.js` | APK 内置档 2,202,886 B（形态 A 回归基准） | `f1839bc2993723ab329d866252b5ad325944c3462ec67e79e3fccd397b60227c` |
 | `superseded_handwritten_splice_sim.py` / `…_0.3.3.py` | **已废**手写镜像。前者对 0.3.5 算出 +2423（真值 +2555）：转写掉了 `callStaticMethod(...)` 的收尾括号，语义变而语法仍合法，`node --check` 查不出。留档仅作方法论反例，**不得当参考实现**。 | — |
 

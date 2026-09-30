@@ -158,28 +158,23 @@
       "command": "bash \"$NIXIANG/04_scripts/爆裂防线/blfx_build_so.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so",
           "pattern": "SeekBar_伤害倍率_1_100_1"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so",
           "pattern": "JNI_OnLoad"
         }
       ],
       "status": "done",
-      "note": "已构建（libs_blfx/arm64-v8a/libstarry_magic.so，2,181,416 B，md5 2226dba263523bbcef437f2980c551c7）。后端自带防呆四件套（绝对路径 NDK_OUT/LIBS_OUT、obj stamp、链接活动保险、菜单串按字节校验）；实测 so 内命中：SeekBar_伤害倍率_1_1000_1 / Toggle_无敌 / SeekBar_战斗加速_1_10_1 / Category_战斗 / JNI_OnLoad ✓。探针构建：BLFX_PROBE=1 bash 04_scripts/爆裂防线/blfx_build_so.sh（0 hook / 0 写入，结果落 /data/data/com.muyegame.blfx/files/blfx_probe.txt）。",
+      "note": "已构建（libs_blfx/arm64-v8a/libstarry_magic.so，2,181,416 B，md5 2226dba263523bbcef437f2980c551c7）。后端自带防呆四件套（绝对路径 NDK_OUT/LIBS_OUT、obj stamp、链接活动保险、菜单串按字节校验）；实测 so 内命中：SeekBar_伤害倍率_1_1000_1 / Toggle_无敌 / SeekBar_战斗加速_1_10_1 / Category_战斗 / JNI_OnLoad ✓。探针构建：BLFX_PROBE=1 bash 04_scripts/爆裂防线/blfx_build_so.sh（0 hook / 0 写入，结果落 /data/data/com.muyegame.blfx/files/blfx_probe.txt）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so; 原 md5=973c24ce0ae0c9e4f297b7d6736080a3",
       "done_at": "2026-09-26 17:50:47",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so": {
-          "md5": "973c24ce0ae0c9e4f297b7d6736080a3"
-        }
-      },
       "inputs": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.cpp": "c0f86813e977a5a0210f71b4c259b261",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxEntry.cpp": "dc2ecd1f547e5b1114872791cc4e9cfb",
@@ -216,9 +211,6 @@
         "/Users/aliang/Documents/nixiang/07_patched/爆裂防线/surgical/AndroidManifest.xml": {
           "md5": "a634b4749c6573157eaa18ed3574895d"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so": "973c24ce0ae0c9e4f297b7d6736080a3"
       }
     },
     {

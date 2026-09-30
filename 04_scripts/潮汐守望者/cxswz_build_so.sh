@@ -8,7 +8,8 @@
 #   / 伤害倍率（对敌伤害乘倍率，1 = 关闭）；开关默认全关，关时行为等同只读探针。
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 JNI="$STARRY_SRC/app/src/main/jni"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"

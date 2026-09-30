@@ -122,24 +122,20 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_rsjy/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-18 23:27:37",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_rsjy/arm64-v8a/libstarry_magic.so": {
-          "md5": "96ab6a1993b6128fcfcf7ae0b04eb47e"
-        }
-      },
       "inputs": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyMod.cpp": "8e50fe0242783d328ffaedb88bcdffef",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/RsjyEntry.cpp": "34439257ae98b9c3686608ca93d18f04",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/RsjyHooks.java": "69b519c7772a98badc11a1ffe22dc9c0",
         "/Users/aliang/Documents/nixiang/04_scripts/燃烧纪元/patch_rsjy.js": "f4128217b0538a6a32ba4a2767136213",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_rsjy.mk": "dd4a1692ddf6e855fdb3548da805dca7"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_rsjy/arm64-v8a/libstarry_magic.so; 原 md5=96ab6a1993b6128fcfcf7ae0b04eb47e"
     },
     {
       "id": "surgical",
@@ -163,9 +159,6 @@
         "/Users/aliang/Documents/nixiang/07_patched/燃烧纪元/燃烧纪元_1.13.09_starry-unsigned.apk": {
           "md5": "0e45c7bc45b01af706ef833b81cf387e"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_rsjy/arm64-v8a/libstarry_magic.so": "96ab6a1993b6128fcfcf7ae0b04eb47e"
       }
     },
     {
@@ -208,7 +201,6 @@
       "verify": [],
       "status": "done",
       "done_at": "2026-09-18 23:32:44",
-      "artifacts": {},
       "inputs": {
         "/Users/aliang/Documents/nixiang/08_output/燃烧纪元/燃烧纪元_1.13.09_starry-releaseSigned.apk": "b5679e58f09ddcbe52a90da780765397"
       }

@@ -45,18 +45,13 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/镇邪人_orig_20260923/apk/orig_base.apk"
         }
       ],
       "status": "done",
       "done_at": "2026-09-23 15:39:00",
-      "artifacts": {
-        "09_test/镇邪人_orig_20260923/apk/orig_base.apk": {
-          "size": 99870824,
-          "md5": "0dab73812162a2cab8541431fb972af5"
-        }
-      }
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/镇邪人_orig_20260923/apk/orig_base.apk\n2026-09-30 收尾清理: 09_test/镇邪人_orig_20260923/apk/orig_base.apk; 原 md5=0dab73812162a2cab8541431fb972af5"
     },
     {
       "id": "dump_hotupdate",
@@ -70,7 +65,7 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "09_test/镇邪人_orig_20260923/hotupdate/gamecaches/src/17901492119032.jsc"
         }
       ],
@@ -81,7 +76,7 @@
           "size": 71034368
         }
       },
-      "note": "2026-09-23 收尾清理: 06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js"
+      "note": "2026-09-23 收尾清理: 06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/镇邪人_orig_20260923/hotupdate"
     },
     {
       "id": "patch_jsc_ca0d4",

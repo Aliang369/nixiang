@@ -1,0 +1,43 @@
+{
+ "states": [
+  {
+   "t": "state",
+   "n": 1,
+   "v": "CombatFunc=table ET.HERO=2 ET.AID=11 ET.MON=3 EnterSkillCd=function DoSubHp=function io=table"
+  }
+ ],
+ "reports": [
+  {
+   "t": "report",
+   "v": "dmg=10 inv=true nocd=true hit=8 block=1 cd=4 hero={2,11} cfg=dmg=10 inv=1 nocd=1 sample=24  errs= :: uid=111(3,hero=false) atk=1(2,hero=true) dmg=13 | uid=114(3,hero=false) atk=1(2,hero=true) dmg=12 | uid=113(3,hero=false) atk=1(2,hero=true) dmg=12 | uid=113(3,hero=false) atk=2(2,hero=true) dmg=20 | uid=113(3,hero=false) atk=2(2,hero=true) dmg=29 | uid=113(3,hero=false) atk=2(2,hero=true) dmg=20 | uid=113(3,hero=false) atk=2(2,hero=true) dmg=20 | uid=113(3,hero=false) atk=2(2,hero=true) dmg=60 | uid=2(2,hero=true) atk=113(3,hero=false) dmg=63"
+  }
+ ],
+ "patched": [
+  {
+   "t": "patched",
+   "attempts": 1,
+   "ticks": 500
+  }
+ ],
+ "modules": [],
+ "globals": [],
+ "hooks": [
+  {
+   "t": "wait",
+   "n": 1,
+   "lib": true,
+   "inst": false,
+   "pcalls": 0
+  },
+  {
+   "t": "info",
+   "base": "0x6e2ba62000",
+   "size": 7749632
+  },
+  {
+   "t": "hook",
+   "sym": "lua_pcall"
+  }
+ ],
+ "errors": []
+}

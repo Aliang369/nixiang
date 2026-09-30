@@ -26,7 +26,7 @@
 
 hook 通了之后 game.js 拼接首次真正执行，暴露两问题：
 1. **⑤号锚点括号 bug（实现期就存在，此前从未执行到）**：`return jsb…(4)||((e=…) >= …;` —— `||(` 的括号未闭合 → `SyntaxError: Unexpected token ';'` → game.js 求值失败 → 游戏自退（exit 2）。
-2. **锚点漂移**：设备实际运行的是热更 0.2.83 game.js（2,575,785 字节，SHA256 849104333d189266e7befe277dab7394864daae8cb77246024ca46d06fe40f3c，已取证 `evidence_20260905_resume/game_js_0.2.83.js`）。2.1 锚点中 `doDmg(e, n, r, …)` 与暴击 `Math.random() < Math.min(u, 1)` 已不存在；0.2.83 为 `doDmg(e, r, a, …, p = !1)`（攻击方=第3参 a）与 `t.Random.inst.next() < Math.min(i, 1)`（两处，玩家处用 `o *= c;` 前缀锁定）。
+2. **锚点漂移**：设备实际运行的是热更 0.2.83 game.js（2,575,785 字节，SHA256 849104333d189266e7befe277dab7394864daae8cb77246024ca46d06fe40f3c；档 `evidence_20260905_resume/game_js_0.2.83.js` 已按 2026-09-30 热更可删规则清理，hash 留在本文）。2.1 锚点中 `doDmg(e, n, r, …)` 与暴击 `Math.random() < Math.min(u, 1)` 已不存在；0.2.83 为 `doDmg(e, r, a, …, p = !1)`（攻击方=第3参 a）与 `t.Random.inst.next() < Math.min(i, 1)`（两处，玩家处用 `o *= c;` 前缀锁定）。
 
 **修复**（CwjhMod.cpp SpliceCombatJs）：⑤补右括号（`;`→`)` +`;`）；①/⑥ 新增 0.2.83 锚点（保留 2.1 旧锚回退）；NeedsCombatSplice 增加两套签名。全锚点唯一性核对=1；Python 严格模拟拼接 + `node --check` 语法通过。
 
@@ -44,7 +44,7 @@ hook 通了之后 game.js 拼接首次真正执行，暴露两问题：
 
 - 当前装机：`08_output/超维进化/超维进化_2.1_surgical-releaseSigned.apk`（含问题一/二/三修复）。
 - 改动文件：`Includes/Utils.cpp/.hpp`、`Main.cpp`（JNI_OnLoad CWJH 分支）、`Games/CwjhMod.cpp`（Cwjh_ResolveLibSym + SpliceCombatJs 0.2.83 锚点 + ⑤括号修复 + NeedsCombatSplice 双签名）、`sign/SignSpoof.java`（cwjh 证书）、`sign/TapLoginForceWeb.java`（白名单注释）、`scripts/surgical_cwjh_2.1.sh`（[3c/6] TapTap dex patch + classes.dex 断言）。
-- 证据：logcat_snapshot.txt（用户会话）、logcat2/3/4.txt（三轮修复验证）、launch*.txt、device maps 取证（正文）、game_js_0.2.83.js。
+- 证据：launch*.txt、pids*.txt、device maps 取证（正文）。（热更档 game_js_0.2.83.js 与全量 logcat2–7/snapshot 已按 2026-09-30 可再生规则清理，可重拉/重抓；隔离区 `~/.Trash/nixiang_slim_docs_20260930_20260930_140157`。）
 
 ## 问题四修复（20:18 装机，PROVEN）：反篡改 kill 原语单点中和
 

@@ -32,8 +32,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-13 20:14:59",
-      "artifacts": {}
+      "done_at": "2026-09-13 20:14:59"
     },
     {
       "id": "pull_device",
@@ -319,29 +318,25 @@
       "command": "bash 04_scripts/我的修仙世界/wdxsj_build_so.sh",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so",
           "pattern": "wdxsj"
         }
       ],
       "status": "done",
       "done_at": "2026-09-13 21:12:12",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so": {
-          "md5": "7b080c6876009ca1f09a3a36435f3f3c"
-        }
-      },
       "inputs": {
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjMod.cpp": "eeb9715daa45dd560c6b4b507d503199",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdxsjEntry.cpp": "b1694023e5ac8eb09e461a68a8e88058",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android_wdxsj.mk": "523bb7bb00ca7a0adaef008a2a1df110",
         "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java": "a80443aeac6ebb4d96ed88d5aa8b240e",
         "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": "4a87992c678ea4bd80d2cc12569fa461"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so; 原 md5=7b080c6876009ca1f09a3a36435f3f3c"
     },
     {
       "id": "surgical",
@@ -365,9 +360,6 @@
         "08_output/我的修仙世界/我的修仙世界_4.5_surgical-unsigned.apk": {
           "md5": "de5ef4ee23ab2918fd258de0b0aa6c1d"
         }
-      },
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so": "7b080c6876009ca1f09a3a36435f3f3c"
       }
     },
     {

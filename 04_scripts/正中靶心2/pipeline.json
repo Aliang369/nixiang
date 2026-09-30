@@ -229,11 +229,12 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so"
         }
       ],
-      "status": "pending"
+      "status": "pending",
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*"
     },
     {
       "id": "surgical",
@@ -410,20 +411,16 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-26 23:54:10",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so": {
-          "md5": "6dad1ea1e46427b642a17ae357a79b83"
-        }
-      },
       "inputs": {
         "04_scripts/正中靶心2/official_anchors.json": "5725d887dcfd9e65eeae461394e6a8e2"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so; 原 md5=6dad1ea1e46427b642a17ae357a79b83"
     },
     {
       "id": "surgical_official",
@@ -448,9 +445,6 @@
         "07_patched/正中靶心2/正中靶心2_1.9_starry-unsigned.apk": {
           "md5": "ac29570456a71e48c4b7ead982d30b8a"
         }
-      },
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so": "6dad1ea1e46427b642a17ae357a79b83"
       }
     },
     {
@@ -582,7 +576,17 @@
           "path": "10_docs/正中靶心2/收尾与最小复现清单_1.9_20260926.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-09-27 00:02:42",
+      "artifacts": {
+        "10_docs/正中靶心2/收尾与最小复现清单_1.9_20260926.md": {
+          "md5": "d92d80df8e829f63928059ccd26b9b37"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/cleanup_summary.json": "ac3875abaff999decdb55b452ffbaca8",
+        "06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/GameLogic.js": "1029bbd47ff049e578ee6fcce58b3fd8"
+      }
     }
   ]
 }

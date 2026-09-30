@@ -1,0 +1,149 @@
+PID=22068
+aa47c000-aa47d000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa4fc000-aa4fd000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa550000-aa551000 rw-p 00000000 00:00 0                                  [anon:.bss]
+aa588000-aa589000 rw-p 00000000 00:00 0                                  [anon:.bss]
+ab0b0000-ab0b1000 rw-p 00000000 00:00 0                                  [anon:.bss]
+ab3c8000-ab3c9000 rw-p 00000000 00:00 0                                  [anon:.bss]
+ab530000-ab531000 rw-p 00000000 00:00 0                                  [anon:.bss]
+7609d86000-7609d8c000 rw-p 00000000 00:00 0                              [anon:.bss]
+7611d2d000-7611d9f000 rw-p 00000000 00:00 0                              [anon:.bss]
+76219f5000-76219fa000 rw-p 00000000 00:00 0                              [anon:.bss]
+762437b000-76243b4000 rw-p 00000000 00:00 0                              [anon:.bss]
+7631fbf000-7631fc0000 rw-p 00000000 00:00 0                              [anon:.bss]
+76587fa000-76587ff000 rw-p 00000000 00:00 0                              [anon:.bss]
+76975ba000-76975bd000 rw-p 00000000 00:00 0                              [anon:.bss]
+76b6700000-76b6710000 rw-p 00000000 00:00 0                              [anon:.bss]
+7800abf000-7800ac0000 rw-p 00000000 00:00 0                              [anon:.bss]
+78062a1000-78062a2000 rw-p 00000000 00:00 0                              [anon:.bss]
+7808eb3000-7808eb4000 rw-p 00000000 00:00 0                              [anon:.bss]
+780a8ba000-780a8bb000 rw-p 00000000 00:00 0                              [anon:.bss]
+780bca7000-780bcaa000 rw-p 00000000 00:00 0                              [anon:.bss]
+7814b7e000-7814b80000 rw-p 00000000 00:00 0                              [anon:.bss]
+781509e000-78150a6000 rw-p 00000000 00:00 0                              [anon:.bss]
+7818ef7000-7818ef8000 rw-p 00000000 00:00 0                              [anon:.bss]
+7834e8a000-7834e8c000 r--p 00000000 00:00 0                              [anon:.bss]
+78d4f4e000-78d4f76000 rw-p 00000000 00:00 0                              [anon:.bss]
+78e6c86000-78e6cbe000 rw-p 00000000 00:00 0                              [anon:.bss]
+78e90bc000-78e90bd000 rw-p 00000000 00:00 0                              [anon:.bss]
+7909e2e000-7909fe7000 rw-p 00000000 00:00 0                              [anon:.bss]
+790a002000-790a006000 rw-p 00000000 00:00 0                              [anon:.bss]
+793f9ee000-793f9f6000 rw-p 00000000 00:00 0                              [anon:.bss]
+793ffad000-793ffb5000 rw-p 00000000 00:00 0                              [anon:.bss]
+7943b51000-7943b52000 rw-p 00000000 00:00 0                              [anon:.bss]
+7943bf3000-7943bf4000 rw-p 00000000 00:00 0                              [anon:.bss]
+7947724000-7947745000 rw-p 00000000 00:00 0                              [anon:.bss]
+79477a2000-79477a5000 rw-p 00000000 00:00 0                              [anon:.bss]
+79477fc000-79477fd000 rw-p 00000000 00:00 0                              [anon:.bss]
+794b788000-794b7bb000 rw-p 00000000 00:00 0                              [anon:.bss]
+794f292000-794f293000 rw-p 00000000 00:00 0                              [anon:.bss]
+794f2f1000-794f2f2000 rw-p 00000000 00:00 0                              [anon:.bss]
+794f59e000-794f59f000 rw-p 00000000 00:00 0                              [anon:.bss]
+7951fa9000-7951fac000 rw-p 00000000 00:00 0                              [anon:.bss]
+795203d000-7952040000 rw-p 00000000 00:00 0                              [anon:.bss]
+79523bd000-79523bf000 rw-p 00000000 00:00 0                              [anon:.bss]
+7952f7c000-7952f7d000 rw-p 00000000 00:00 0                              [anon:.bss]
+79531ee000-79531ef000 rw-p 00000000 00:00 0                              [anon:.bss]
+7953299000-795329a000 rw-p 00000000 00:00 0                              [anon:.bss]
+7953374000-7953376000 rw-p 00000000 00:00 0                              [anon:.bss]
+7953f35000-7953f36000 rw-p 00000000 00:00 0                              [anon:.bss]
+7953fea000-7953feb000 rw-p 00000000 00:00 0                              [anon:.bss]
+7954c7c000-7954c7d000 rw-p 00000000 00:00 0                              [anon:.bss]
+7958ee0000-7958ee1000 rw-p 00000000 00:00 0                              [anon:.bss]
+795c124000-795c12b000 rw-p 00000000 00:00 0                              [anon:.bss]
+795dfb1000-795dfb9000 rw-p 00000000 00:00 0                              [anon:.bss]
+7960bf3000-7960bfb000 rw-p 00000000 00:00 0                              [anon:.bss]
+79639ef000-79639f0000 rw-p 00000000 00:00 0                              [anon:.bss]
+796e02d000-796e02e000 rw-p 00000000 00:00 0                              [anon:.bss]
+796e0f5000-796e0f6000 rw-p 00000000 00:00 0                              [anon:.bss]
+796e111000-796e112000 rw-p 00000000 00:00 0                              [anon:.bss]
+796fd64000-796fd67000 rw-p 00000000 00:00 0                              [anon:.bss]
+796fdea000-796fdeb000 rw-p 00000000 00:00 0                              [anon:.bss]
+796fe90000-796fe91000 rw-p 00000000 00:00 0                              [anon:.bss]
+796ffc7000-796ffc8000 rw-p 00000000 00:00 0                              [anon:.bss]
+79737f6000-79737f7000 rw-p 00000000 00:00 0                              [anon:.bss]
+7976875000-7976876000 rw-p 00000000 00:00 0                              [anon:.bss]
+79769ef000-79769f0000 rw-p 00000000 00:00 0                              [anon:.bss]
+7976ae3000-7976ae4000 rw-p 00000000 00:00 0                              [anon:.bss]
+7976bb5000-7976bb6000 rw-p 00000000 00:00 0                              [anon:.bss]
+7977d77000-7977d7f000 rw-p 00000000 00:00 0                              [anon:.bss]
+79b6e66000-79b6e67000 rw-p 00000000 00:00 0                              [anon:.bss]
+79b6ecc000-79b6ecd000 rw-p 00000000 00:00 0                              [anon:.bss]
+79b8921000-79b8922000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c1204000-79c1232000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c20f2000-79c20f3000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c217f000-79c2180000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c218f000-79c2190000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c21d5000-79c21de000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c23cd000-79c23ce000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c4e58000-79c4e59000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c4ff4000-79c4ff5000 rw-p 00000000 00:00 0                              [anon:.bss]
+79c907f000-79c9080000 rw-p 00000000 00:00 0                              [anon:.bss]
+DUMP anon_rwx_1.bin 0x781c204000-0x781c23f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_1.bin
+DUMP anon_rwx_2.bin 0x781c244000-0x781c27f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_2.bin
+DUMP anon_rwx_3.bin 0x781c284000-0x781c2bf000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_3.bin
+DUMP anon_rwx_4.bin 0x781c2c4000-0x781c2ff000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_4.bin
+DUMP anon_rwx_5.bin 0x781c304000-0x781c33f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_5.bin
+DUMP anon_rwx_6.bin 0x781c344000-0x781c37f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_6.bin
+DUMP anon_rwx_7.bin 0x781c384000-0x781c3bf000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_7.bin
+DUMP anon_rwx_8.bin 0x781c3c4000-0x781c3ff000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_8.bin
+DUMP anon_rwx_9.bin 0x781c404000-0x781c43f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_9.bin
+DUMP anon_rwx_10.bin 0x781c444000-0x781c47f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_10.bin
+DUMP anon_rwx_11.bin 0x781c484000-0x781c4bf000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_11.bin
+DUMP anon_rwx_12.bin 0x781c4c4000-0x781c4ff000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_12.bin
+DUMP anon_rwx_13.bin 0x781c504000-0x781c53f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_13.bin
+DUMP anon_rwx_14.bin 0x781c544000-0x781c57f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_14.bin
+DUMP anon_rwx_15.bin 0x781c584000-0x781c5bf000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_15.bin
+DUMP anon_rwx_16.bin 0x781c5c4000-0x781c5ff000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_16.bin
+DUMP anon_rwx_17.bin 0x781c604000-0x781c63f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_17.bin
+DUMP anon_rwx_18.bin 0x781c644000-0x781c67f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_18.bin
+DUMP anon_rwx_19.bin 0x781c684000-0x781c6bf000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_19.bin
+DUMP anon_rwx_20.bin 0x781c6c4000-0x781c6ff000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_20.bin
+DUMP anon_rwx_21.bin 0x781c704000-0x781c73f000 size=241664
+-rw-r--r-- 1 root root 241664 2026-09-26 19:23 /data/local/tmp/binge_memdump/anon_rwx_21.bin
+total 4.8K
+drwxr-xr-x  2 root  root  3.3K 2026-09-26 19:23 .
+drwxrwx--x 31 shell shell  56K 2026-09-26 19:22 ..
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_1.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_10.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_11.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_12.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_13.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_14.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_15.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_16.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_17.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_18.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_19.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_2.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_20.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_21.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_3.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_4.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_5.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_6.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_7.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_8.bin
+-rw-r--r--  1 root  root  236K 2026-09-26 19:23 anon_rwx_9.bin
+-rw-r--r--  1 root  root     0 2026-09-26 19:22 il2cpp_rx_segs.txt
+DONE

@@ -29,8 +29,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 23:44:05",
-      "artifacts": {}
+      "done_at": "2026-09-12 23:44:05"
     },
     {
       "id": "pull_device",
@@ -193,22 +192,18 @@
       "command": "bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-14 20:29:33",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so": {
-          "md5": "c605bd6cc1a1fd8ffde06d2fad0a4b1f"
-        }
-      },
       "inputs": {
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjMod.cpp": "481203b227df49910c529dff9f4421bb",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjEntry.cpp": "02c3fd8503876ccaf10a611f7a549d4c",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android_fcxyxzj.mk": "2d6347510def9a1818acf0cca95adfdf"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so; 原 md5=c605bd6cc1a1fd8ffde06d2fad0a4b1f"
     },
     {
       "id": "surgical",
@@ -232,9 +227,6 @@
         "/Users/aliang/Documents/nixiang/08_output/凡尘西游修真记/凡尘西游修真记_1.1.0_surgical-unsigned.apk": {
           "md5": "991588cec7208d8018f782c2ff6ecc83"
         }
-      },
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so": "c605bd6cc1a1fd8ffde06d2fad0a4b1f"
       }
     },
     {

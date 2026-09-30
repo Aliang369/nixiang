@@ -1,1 +1,0 @@
-window._CCSettings={"platform":"android","groupList":["ui","battle","other"],"collisionMatrix":[[false],[false,false,false],[false,false,false]],"hasResourcesBundle":false,"hasStartSceneBundle":false,"remoteBundles":[],"subpackages":[],"launchScene":"db://assets/main/Main.fire","orientation":"","server":"","jsList":["assets/bingo/src/fgui/fairygui.js"]}

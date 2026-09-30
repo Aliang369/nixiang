@@ -8,7 +8,7 @@
 - **功能集（用户定稿终版，10 项）**：0超级回血 1超级回蓝（_timer 己方双跳 ×2）｜2高暴击率+40pp 3高暴击伤害（原倍率再×2）｜4高防御（AMR+15pp 钳后叠加+0.95 安全上限）5高抗性（净值×2 同前）6高闪避+15pp（以上仅己方）｜7免广告（原样）｜8秒杀（封号，dmg=HP+1 伪装）9无敌（封号，己方受击归零，doDmg 三签名）。8 项中间版（`60a51c1e…`）已被替代。所有增益为现有值加/乘叠加，任何情况不 nerf。
 - **运行验证（进程级）**：bomb fn + kill wrapper 双中和日志；splice `2627189→2628962`（+1773，与双文件模拟 node --check 预测一致）；无 anchors missed / SyntaxError / SIGKILL；进程存活（pid 21614）。证据：`logcat_cwjh_22_feature_rework.txt`、`pid_alive_final.txt`。
 - **战斗内功能实测**：待用户（回血/回蓝跳字频率、暴击频率与数值、承伤、关闭恢复）。
-- **清理台账**：/tmp cwjh* 全清（含 38M 工作目录+截图）；设备 /data/local/tmp 无残留；`08_output/超维进化/` 仅存正式包（alias+idsig 已删）；保留 `07_patched/超维进化/surgical_2.2/AndroidManifest.xml`（MF 缓存构建依赖）与热更基准档 `game_js_hotupdate_20260909.js`（sha256 `0df2ee83…`，盘上档 2,602,970 B；注意运行时求值档为 2,627,189 B，服务器持续更补丁，锚点双版验证）。
+- **清理台账**：/tmp cwjh* 全清（含 38M 工作目录+截图）；设备 /data/local/tmp 无残留；`08_output/超维进化/` 仅存正式包（alias+idsig 已删）；保留 `07_patched/超维进化/surgical_2.2/AndroidManifest.xml`（MF 缓存构建依赖）。热更基准档 `game_js_hotupdate_20260909.js`（sha256 `0df2ee83…`，盘上档 2,602,970 B）与其它历史热更 JS 已按 2026-09-30 热更可删规则清理（可从游戏热更服务器重拉或设备重抓，非不可再生）；当前校准基准见 `evidence_20260921_hotfix/README.md`。
 - **后台待办（用户侧）**：菜单模板重传（`10_docs/超维进化/菜单模板_cwjh.json`，10 项）。
 
 ## 1. 版本与包（2.2 基线）

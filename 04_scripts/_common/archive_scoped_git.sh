@@ -8,7 +8,9 @@ cd "$ROOT"
 MESSAGE=""
 # 默认提交后推送（用户口令「git」= 提交 + 推送连体）；--no-push 才关。
 PUSH=1
+STAGED_ONLY=0
 PATHS=()
+REQUIRE_CLEAN_PATHS=0
 
 usage() {
   cat >&2 <<'EOF'
@@ -16,6 +18,8 @@ usage() {
   bash 04_scripts/_common/archive_scoped_git.sh \
     --message "提交说明" \
     [--no-push] \
+    [--staged-only] \
+    [--require-clean-paths] \
     --path "04_scripts/{游戏}" \
     --path "10_docs/{游戏}" \
     [--path "..."]
@@ -23,6 +27,8 @@ usage() {
 说明:
   - 所有 path 都会用 `git add -A --` 暂存。
   - 暂存区出现白名单外路径时拒绝提交。
+  - --staged-only: 不执行 git add，只校验已有暂存区、提交并推送。
+  - --require-clean-paths: 白名单路径仍有未暂存改动时直接停止；用于防止混有其它会话改动的共享文件被路径级 add 误带。
   - 默认提交后推送 origin/main（用户口令「git」= 提交 + 推送连体）。
     只有明确不想推送时才加 --no-push，并在汇报里说明未推送。
   - push 失败/冲突则保留本地提交并报错，不自动强推。
@@ -44,6 +50,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-push)
       PUSH=0
+      shift
+      ;;
+    --staged-only)
+      STAGED_ONLY=1
+      shift
+      ;;
+    --require-clean-paths)
+      REQUIRE_CLEAN_PATHS=1
       shift
       ;;
     --path)
@@ -90,20 +104,38 @@ check_staged_scope() {
   done < <(git diff --cached --name-only)
 }
 
+check_clean_allowed_paths() {
+  local path
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    if is_allowed "$path"; then
+      echo "错误: 白名单路径仍有未暂存改动: $path" >&2
+      echo "       该文件可能混有其它会话改动；请先做 hunk 级暂存，再改用 --staged-only" >&2
+      exit 1
+    fi
+  done < <(git diff --name-only)
+}
+
 # 如果调用前已有其他会话的暂存内容，直接拒绝，避免误提交。
 check_staged_scope
 
-for path in "${PATHS[@]}"; do
-  # 已通过 git rm --cached 退库的 ignored 文件：保留 staged deletion，不再次 add。
-  if [[ -n "$(git diff --cached --name-only --diff-filter=D -- "$path")" ]]; then
-    continue
-  fi
-  if [[ ! -e "$path" ]] && [[ -z "$(git ls-files -- "$path")" ]]; then
-    echo "错误: 白名单路径不存在且未被 Git 跟踪: $path" >&2
-    exit 1
-  fi
-  git add -A -- "$path"
-done
+if [[ "$REQUIRE_CLEAN_PATHS" == "1" ]]; then
+  check_clean_allowed_paths
+fi
+
+if [[ "$STAGED_ONLY" == "0" ]]; then
+  for path in "${PATHS[@]}"; do
+    # 已通过 git rm --cached 退库的 ignored 文件：保留 staged deletion，不再次 add。
+    if [[ -n "$(git diff --cached --name-only --diff-filter=D -- "$path")" ]]; then
+      continue
+    fi
+    if [[ ! -e "$path" ]] && [[ -z "$(git ls-files -- "$path")" ]]; then
+      echo "错误: 白名单路径不存在且未被 Git 跟踪: $path" >&2
+      exit 1
+    fi
+    git add -A -- "$path"
+  done
+fi
 
 STAGED="$(git diff --cached --name-only)"
 if [[ -z "$STAGED" ]]; then

@@ -51,6 +51,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
   --cpp <Mod源码> --dex <包内dex> [--dex <更多>] \  # 查2 JNI配套（so注册方法 vs dex声明）
   --so <so> --pinvoke-json <EntryPoint清单> \  # 查3 P/Invoke符号 vs so导出表
   --menu-json <菜单模板> --cpp <含getVal/getRet的源码>  # 查4 控件类型 vs 读取方式
+  --runtime-menu-json <运行时控件清单>                     # 可选；用于查4，允许 Slider_/Toggle_ 前缀
 ```
 
 - 各查独立可选（传了才查），有 FAIL 即禁止装机（exit 1）
@@ -91,6 +92,25 @@ bash 04_scripts/_common/pre_install_gate.sh \
 bash 04_scripts/pipeline.sh <游戏> reset build_so   # 回退构建阶段
 bash 04_scripts/pipeline.sh <游戏> next             # 连跑到 install（build_so → surgical → device_ready → install）
 ```
+
+### 存量未接管线：已有星光包只重打 dex/APK/重装（2026-09-29）
+
+只改 Java/dex、Manifest 或菜单资源时，不需要重编 native，直接运行该游戏的外科脚本；脚本内部一次完成构建、签名、产物验证、可选安装。若 C++/so 改过，先跑该游戏的 `*_build_so.sh`，再走同一条外科链。
+
+```bash
+# 默认：构建+签名+验证，不安装
+bash mod菜单/starry-mod-menu/scripts/surgical_<game>_<ver>.sh
+
+# 构建+验证+覆盖安装（只做已授权的真机测试）
+STARRY_INSTALL=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/surgical_<game>_<ver>.sh
+
+# 复用现有正式包，只验证+安装；不跑 Gradle/apktool/smali/签名
+STARRY_INSTALL_ONLY=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/surgical_<game>_<ver>.sh
+```
+
+- 验证不要依赖 `/tmp` 里上一轮残留的 dex/JS：验证脚本应从 APK 重新解出 `classesN.dex` 和 so，按包内实际字节判定。
+- 重新签名后完整 APK md5 会变化；混合包判断必须比较 dex md5、so md5、包结构/Manifest，不得用整个 APK md5 代替。
+- 游戏提供独立验证入口（如 `sjzz_verify.sh`）时，外科脚本和装机单跑都应调用它，避免两套判定漂移。
 
 - **防旧包直装是自动的（2026-09-10 起）**：reset 上游后忘 reset 下游不再需要记——上游产物一变化，
   过期的下游 done 阶段自动回退 pending（终端会打 `⚠ 自动回退 [...]`），连跑 `next` 整条链刷新；
@@ -154,15 +174,20 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 
 ## 收官口令（用户说「收尾+正式包+清理+git」时，AI 展开此清单）
 
+压缩顺序：**验证正式包 → 裁剪 `08_output` → 清理滚动物（`trash_paths.sh` dry-run→apply）→ 修 pipeline 快照 → 文档状态 → `archive_scoped_git.sh` 提交推送**。每一步先打印实际路径/影响；缺底包、缺正式包或签名校验失败即停止。
+
 1. 文档收尾：游戏文档更新（结论/证据/遗留）；详情写入
    `10_docs/_state/games/{游戏}.md`，`current.md` 只同步一行摘要。反复反馈的
    功能补 `10_docs/_templates/功能验收卡.md`，多日志证据补
    `evidence_日期/README.md`。
+   文档 hash 同步自检：`python3 04_scripts/_common/check_state_hash_sync.py --game {游戏} --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json`。
 2. 正式包：**先确认当前 `08_output/{游戏}` 里有哪些包**（用户手动增删，可能已空）。
    核对指定正式包签名/哈希后，执行 `bash 04_scripts/_common/prune_output_final.sh 08_output/{游戏} {正式包} --apply --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json`；最终目录只保留一个正式 APK，被删候选包/idsig 的 hash/大小入清单。
    目录为空或正式包不存在 → 报告并停下，不要从 `09_test` 里翻中间包冒充正式包。
+   若同时需要 icon 和菜单模板交付，优先用 `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --apply`；脚本会生成 `08_output/{游戏}/delivery_日期/`、复制菜单 JSON、自检字段，并可选调用裁剪清单。
 3. 官包归位：`02_apks`（用户手动管理，AI 不探测不整理）；本轮是否有原版以**用户声明**为准。
 4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；只清理本游戏路径；删前逐项核对再生依据；中文路径先 `git config core.quotepath false`）。
+   优先用 `bash 04_scripts/_common/trash_paths.sh --tag {游戏}_{日期} --path 03_decompiled/{游戏} ...`；默认 dry-run，核对路径/大小/Trash 目标后再加 `--apply`。只清理本游戏可再生路径（03/06 大二进制、07 大包、09_test），中文路径先 `git config core.quotepath false`。
    - **先看摘要的「本地产物与关键输入」表**：标"不可再生"的输入（设备拉取的官方底包、
      唯一热更样本、已被用户删除的原包对应的解密产物）**一律保留**。
    - **清理后必须同步修正 `{游戏}/pipeline.json` 快照**（2026-09-19 补，弓箭传说2 踩坑；2026-09-20 起脚本化）：`archive` 执行前的 `check_stale` 会遍历**所有祖先阶段**的 `inputs` 快照逐个比对 md5，被清理删掉的中间产物（unsigned APK、`07_patched` 留证、用户手动删除的 `02_apks` 官包）会让它判定「上游链路过期」并拒绝执行——**清理越彻底越跑不过**。先跑 dry-run：
@@ -191,6 +216,8 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    不需要再问「要不要推」）。仅当明确不想推送时才加 `--no-push`，且必须在汇报里写明
    「已提交未推送 + 远端落后几个提交」。push 冲突/网络失败则保留本地提交并明确报告，
    不自动强推。
+   如果已经用 `git add` 精确暂存，可加 `--staged-only`；该模式不会再次 `git add`，只校验暂存区全部落在显式白名单、过空白门禁后提交并推送。
+   若白名单文件可能混有其它会话改动，加 `--require-clean-paths`。该检查会在提交前确认白名单路径没有未暂存改动；有混合改动时先做 hunk 级暂存，再走 `--staged-only`，禁止用路径级 `git add -A` 直接吞入无关改动。
    `--path` 只传**非忽略**路径（2026-09-20 实测）：传 `.gitignore` 覆盖的
    `mod菜单/**/app/src/libs*/` 下副本时，`git add -A` 打印「ignored by one of your
    .gitignore files」并返回非 0 → 脚本 `set -e` 中止，已暂存内容需 `git reset` 收拾

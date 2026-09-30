@@ -126,18 +126,13 @@
       "command": "bash \"$NIXIANG/04_scripts/幻想武将模拟器/hxwj_build_so_static.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hxwj_static/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-09-27 20:26:00",
-      "note": "Application_hxwj_static.mk：APP_STL := c++_static，避免再引入 libc++_shared.so 条目。产物 461,048 B md5 ce73d21a6a5758c6a9a1a3cdffd58b68；llvm-readelf -d 无 libc++_shared.so 依赖；归属防呆 [hxwj] 必须在、[Gyzw]/[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。该 so 作为 lib/arm64-v8a/libSecShell-x86.so 的原位替换载荷。",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hxwj_static/arm64-v8a/libstarry_magic.so": {
-          "md5": "ce73d21a6a5758c6a9a1a3cdffd58b68"
-        }
-      }
+      "note": "Application_hxwj_static.mk：APP_STL := c++_static，避免再引入 libc++_shared.so 条目。产物 461,048 B md5 ce73d21a6a5758c6a9a1a3cdffd58b68；llvm-readelf -d 无 libc++_shared.so 依赖；归属防呆 [hxwj] 必须在、[Gyzw]/[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。该 so 作为 lib/arm64-v8a/libSecShell-x86.so 的原位替换载荷。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hxwj_static/arm64-v8a/libstarry_magic.so; 原 md5=ce73d21a6a5758c6a9a1a3cdffd58b68"
     },
     {
       "id": "surgical",

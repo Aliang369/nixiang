@@ -1,0 +1,11 @@
+{
+  "template_id": "jjdm",
+  "name": "境界刀鸣",
+  "package": "com.blade.bd",
+  "source": "Games/JjdmEntry.cpp kJjdm_Features / Games/JjdmMod.h enum JjdmFeat",
+  "features": [
+    {"feat_num": 1, "name": "伤害倍率"},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "无限技能"}
+  ]
+}

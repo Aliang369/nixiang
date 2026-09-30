@@ -130,6 +130,10 @@ public final class TapLoginForceWeb {
                     // + WebLoginFragment + TapSignKit 全部存在，且无旧版 com.taptap.sdk.ui.TapTapActivity。
                     // 改签包被 TapTap 客户端 SSO 以 signature not match 拒绝 ⇒ 固定 embedded_web。
                     "com.shbq.gyzw.ppyx",
+                    // 我本布衣：世家录（com.JAGames.TalesoftheClan）TapTap 渠道原版：
+                    // TapSDK 新版路径（TapTapLoginActivity + LoginRequest + LoginTypes$WEB）。
+                    // 改签包固定 embedded_web，避免客户端 SSO 校验真签。
+                    "com.JAGames.TalesoftheClan",
                     // 潮汐守望者（com.gf.cxswz）TapTap 渠道原版 1.2.56.375.3：
                     // 包内实证 TapSDK 新版路径 —— com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity
                     // + LoginRequest(impl/data/model) + LoginTypes$WEB + DefaultTapLoginFragmentProvider

@@ -2,26 +2,9 @@
   "template_id": "zzbx2",
   "name": "正中靶心2",
   "package": "com.openew.monster",
-  "version": "1.9",
-  "version_code": 10,
-  "source": "Games/Zzbx2Entry.cpp kZzbx2_Features",
+  "source": "Games/Zzbx2Entry.cpp GameMod_Get",
   "features": [
-    {
-      "feat_num": 1,
-      "name": "攻击倍率",
-      "type": "slider",
-      "min": 1,
-      "max": 10,
-      "default": 1,
-      "note": "1=关，2..10=最终伤害倍率（只乘敌方承伤）；对应 Slider_攻击倍率:1:10:1"
-    },
-    {
-      "feat_num": 2,
-      "name": "解锁月卡特权",
-      "type": "toggle",
-      "default": 0,
-      "note": "ON = 放行 Shop.ShopVipMgr.inst.outStatusAdvip（服务端 StatusId=advip 的月卡态）。纯客户端判定项连带可用：战斗加速 1x/1.8x（SpeedUpBtn）、广告直接跳过播放（AdvertMgr.adsPlay case 3）、自动战斗/体力上限/广告特权入口；对应 Toggle_解锁月卡特权"
-    }
-  ],
-  "note": "2026-09-26 1.9 轮最终形态：菜单 2 项。原「战斗加速」滑块改为「解锁月卡特权」开关（曾名「解锁战斗加速」）；攻击倍率上限由 100 收到 10；原「无敌」「免广告」两项已删除——月卡门本身即覆盖广告跳过（GameLogic.js @4207803 AdvertMgr.adsPlay case 3 首条件即 outStatusAdvip）。不含扫荡：扫荡经服务端 C2S_SPEED_PASS_LEVEL 发奖，客户端放行只能把请求发出去、服务端 errcode!=0 直接拒绝，实测无效，已停止实现。"
+    {"feat_num": 1, "name": "攻击倍率"},
+    {"feat_num": 2, "name": "解锁月卡特权"}
+  ]
 }

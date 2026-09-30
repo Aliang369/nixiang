@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+# 安全隔离清理：默认只预演；--apply 才把显式路径移动到 macOS Trash 下的隔离目录。
+# 不处理 02_apks/ 与 08_output/，避免误触用户手动管理的输入和正式包。
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+MODE="dry-run"
+TAG="cleanup"
+MANIFEST=""
+PATHS=()
+
+usage() {
+  cat >&2 <<'EOF'
+用法:
+  bash 04_scripts/_common/trash_paths.sh [--apply] [--tag 名称] [--manifest 文件] \
+    --path 03_decompiled/{游戏} [--path ...]
+
+说明:
+  - 默认 dry-run，只列出路径、大小和目标隔离位置。
+  - --apply 后移动到 ~/.Trash/nixiang_<tag>_<时间>/<仓库相对路径>。
+  - 强制拒绝仓库根、.git、01_tools、02_apks、08_output。
+  - 例外：01_tools 下工具自身的构建/运行输出按 TOOLS_REGEN_ALLOW 白名单放行（规则见 TOOLBOOK.md）。
+  - --manifest 可指定 JSON 清单；apply 且未指定时写入隔离目录内的 manifest.json。
+  - apply 前会打印同样的 dry-run 清单并要求路径显式传入。
+EOF
+  exit 2
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --apply)
+      MODE="apply"
+      shift
+      ;;
+    --dry-run)
+      MODE="dry-run"
+      shift
+      ;;
+    --tag)
+      [[ $# -ge 2 ]] || usage
+      TAG="$2"
+      shift 2
+      ;;
+    --manifest)
+      [[ $# -ge 2 ]] || usage
+      MANIFEST="$2"
+      shift 2
+      ;;
+    --path)
+      [[ $# -ge 2 ]] || usage
+      PATHS+=("$2")
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+[[ ${#PATHS[@]} -gt 0 ]] || usage
+[[ -n "$TAG" ]] || TAG="cleanup"
+TAG="$(printf '%s' "$TAG" | tr -c 'A-Za-z0-9._-' '_' | sed 's/_*$//')"
+[[ -n "$TAG" ]] || TAG="cleanup"
+
+STAMP="$(date '+%Y%m%d_%H%M%S')"
+TRASH_PARENT="${NIXIANG_TRASH_DIR:-$HOME/.Trash}"
+QUARANTINE="$TRASH_PARENT/nixiang_${TAG}_${STAMP}"
+
+is_banned_rel() {
+  case "$1" in
+    ""|.|.git|.git/*|01_tools|01_tools/*|02_apks|02_apks/*|08_output|08_output/*)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+# 01_tools 可再生输出白名单（2026-09-30 定；规则见 TOOLBOOK.md「01_tools 可再生输出」）。
+# 只放行工具自身的「构建产物」与「运行输出」，其余 01_tools 内容仍硬拒绝；不接受通配，新增须显式列入。
+TOOLS_REGEN_ALLOW=(
+  "01_tools/Il2CppDumper/Il2CppDumper/bin"
+  "01_tools/Il2CppDumper/Il2CppDumper/obj"
+  "01_tools/Il2CppDumper/dump.cs"
+  "01_tools/Il2CppDumper/script.json"
+  "01_tools/Il2CppDumper/il2cpp.h"
+  "01_tools/Il2CppDumper/stringliteral.json"
+  "01_tools/Il2CppDumper/DummyDll"
+  # Cpp2IL 源码 clone 内的上游测试素材（未被本地改动、可由 clone 自身 git 恢复）
+  "01_tools/Cpp2IL_src/TestFiles"
+)
+is_tools_regen_allow() {
+  local p="$1" a
+  for a in "${TOOLS_REGEN_ALLOW[@]}"; do
+    [[ "$p" == "$a" ]] && return 0
+  done
+  return 1
+}
+
+TMP="$(mktemp /tmp/trash_paths.XXXXXX)"
+trap 'rm -f "$TMP"' EXIT
+
+for input in "${PATHS[@]}"; do
+  if [[ "$input" == /* ]]; then
+    abs="$input"
+  else
+    abs="$ROOT/$input"
+  fi
+  [[ -e "$abs" || -L "$abs" ]] || { echo "ERROR: 路径不存在: $abs" >&2; exit 1; }
+
+  parent="$(cd "$(dirname "$abs")" && pwd -P)"
+  abs="$parent/$(basename "$abs")"
+  case "$abs" in
+    "$ROOT"/*) ;;
+    *) echo "ERROR: 路径不在工作区: $abs" >&2; exit 1 ;;
+  esac
+  rel="${abs#"$ROOT"/}"
+  if is_banned_rel "$rel" && ! is_tools_regen_allow "$rel"; then
+    echo "ERROR: 安全禁止清理: $rel" >&2; exit 1
+  fi
+
+  if [[ -d "$abs" && ! -L "$abs" ]]; then
+    size_kib="$(du -sk "$abs" | awk '{print $1}')"
+    kind="dir"
+  else
+    size_kib="$(du -k "$abs" | awk '{print $1}')"
+    kind="file"
+  fi
+  dest="$QUARANTINE/$rel"
+  printf '%s\t%s\t%s\t%s\t%s\n' "$rel" "$kind" "$size_kib" "$abs" "$dest" >> "$TMP"
+done
+
+echo "[trash_paths] mode=$MODE quarantine=$QUARANTINE"
+while IFS=$'\t' read -r rel kind size_kib abs dest; do
+  echo "  $rel  type=$kind size=${size_kib}KiB  -> $dest"
+done < "$TMP"
+
+if [[ "$MODE" != "apply" ]]; then
+  echo "[trash_paths] dry-run，未移动任何文件；确认后加 --apply。"
+  exit 0
+fi
+
+mkdir -p "$QUARANTINE"
+[[ -n "$MANIFEST" ]] || MANIFEST="$QUARANTINE/manifest.json"
+if [[ "$MANIFEST" != /* ]]; then
+  MANIFEST="$ROOT/$MANIFEST"
+fi
+
+while IFS=$'\t' read -r rel kind size_kib abs dest; do
+  mkdir -p "$(dirname "$dest")"
+  mv -- "$abs" "$dest"
+  echo "[trash_paths] moved: $rel"
+done < "$TMP"
+
+python3.11 - "$MANIFEST" "$ROOT" "$QUARANTINE" "$STAMP" "$TMP" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest, root, quarantine, stamp, listing = sys.argv[1:]
+items = []
+for line in Path(listing).read_text(encoding="utf-8").splitlines():
+    if not line.strip():
+        continue
+    rel, kind, size_kib, source, destination = line.split("\t")
+    items.append({
+        "path": rel,
+        "type": kind,
+        "size_kib": int(size_kib),
+        "source": source,
+        "quarantine": destination,
+    })
+data = {
+    "root": root,
+    "quarantine": quarantine,
+    "timestamp": stamp,
+    "mode": "apply",
+    "items": items,
+}
+Path(manifest).parent.mkdir(parents=True, exist_ok=True)
+Path(manifest).write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+print(f"[trash_paths] manifest={manifest}")
+PY
+
+echo "[trash_paths] apply 完成；恢复时将 quarantine 内对应路径移回原位置。"

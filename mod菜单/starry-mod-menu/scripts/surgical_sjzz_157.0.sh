@@ -3,11 +3,26 @@
 #
 # 产物：08_output/我在神界刷装备/我在神界刷装备_157.0_surgical-releaseSigned.apk
 # 用法：
-#   bash scripts/surgical_sjzz_157.0.sh
-#   STARRY_INSTALL=1 SERIAL=f9a116a2 bash scripts/surgical_sjzz_157.0.sh
+#   bash scripts/surgical_sjzz_157.0.sh                         # 构建+签名，不安装
+#   STARRY_INSTALL=1 SERIAL=f9a116a2 bash scripts/surgical_sjzz_157.0.sh  # 构建+门禁+安装
+#   STARRY_BUILD_ONLY=1 ...                                   # 只构建，等价于默认路径
+#   STARRY_INSTALL_ONLY=1 SERIAL=f9a116a2 ...                  # 复用正式包，只门禁+安装
 #   STARRY_INSTALL=1 STARRY_UNINSTALL_FIRST=1 STARRY_ALLOW_DATA_LOSS=1 SERIAL=f9a116a2 \
 #     bash scripts/surgical_sjzz_157.0.sh
 set -euo pipefail
+
+INSTALL_ONLY="${STARRY_INSTALL_ONLY:-0}"
+BUILD_ONLY="${STARRY_BUILD_ONLY:-0}"
+if [[ "$INSTALL_ONLY" == "1" && "$BUILD_ONLY" == "1" ]]; then
+  echo "ERROR: STARRY_INSTALL_ONLY=1 与 STARRY_BUILD_ONLY=1 不能同时使用"; exit 1
+fi
+INSTALL="${STARRY_INSTALL:-0}"
+if [[ "$BUILD_ONLY" == "1" ]]; then
+  INSTALL=0
+fi
+if [[ "$INSTALL_ONLY" == "1" ]]; then
+  INSTALL=1
+fi
 
 BUILD_TYPE="${STARRY_BUILD_TYPE:-release}"
 if [[ "$BUILD_TYPE" != "release" && "$BUILD_TYPE" != "debug" ]]; then
@@ -35,22 +50,75 @@ PKG="com.windforce.rg.offical"
 SERIAL="${SERIAL:-f9a116a2}"
 SIGNED="$OUT/我在神界刷装备_157.0_surgical-releaseSigned.apk"
 [[ "$BUILD_TYPE" == "debug" ]] && SIGNED="$OUT/我在神界刷装备_157.0_surgical-debugSigned.apk"
+VERIFY_SCRIPT="$NIXIANG/04_scripts/我在神界刷装备/sjzz_verify.sh"
 MF_CACHE="$NIXIANG/07_patched/我在神界刷装备/surgical/AndroidManifest.xml"
+SO_PREBUILT="$STARRY_SRC/libs_sjzz/arm64-v8a/libstarry_magic.so"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
 BT=""
 for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
+  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" && \
+        -x "$HOME/Library/Android/sdk/build-tools/$v/apksigner" && \
+        -x "$HOME/Library/Android/sdk/build-tools/$v/aapt2" ]]; then
     BT="$HOME/Library/Android/sdk/build-tools/$v"; break
   fi
 done
+[[ -n "$BT" ]] || { echo "ERROR: 未找到可用的 Build Tools（需 apksigner/zipalign/aapt2）"; exit 1; }
+
+run_install() {
+  local uninstall_first="${STARRY_UNINSTALL_FIRST:-0}"
+  local install_args="-r -d"
+
+  if [[ "$uninstall_first" == "1" ]]; then
+    [[ "${STARRY_ALLOW_DATA_LOSS:-0}" == "1" ]] \
+      || { echo "ERROR: STARRY_UNINSTALL_FIRST=1 需同时显式授权 STARRY_ALLOW_DATA_LOSS=1"; exit 1; }
+    install_args="-d"
+  fi
+
+  echo "[install] push + pm install ($install_args) → $SERIAL"
+  adb -s "$SERIAL" wait-for-device
+  adb -s "$SERIAL" push "$SIGNED" /data/local/tmp/sjzz_surgical.apk >/dev/null
+  adb -s "$SERIAL" shell am force-stop "$PKG" 2>/dev/null || true
+
+  if [[ "$uninstall_first" == "1" ]]; then
+    echo "[install] uninstall existing package (data loss authorized)"
+    if ! adb -s "$SERIAL" shell "pm uninstall $PKG"; then
+      adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk || true
+      echo "ERROR: 卸载失败；设备临时包已清理"
+      exit 1
+    fi
+    if adb -s "$SERIAL" shell "pm path $PKG" 2>/dev/null | grep -q .; then
+      adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk || true
+      echo "ERROR: 卸载后仍能查到 $PKG；设备临时包已清理"
+      exit 1
+    fi
+    echo "[install] uninstall ok"
+  fi
+
+  if ! adb -s "$SERIAL" shell "pm install $install_args --user 0 /data/local/tmp/sjzz_surgical.apk"; then
+    adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk || true
+    echo "ERROR: 安装失败；设备临时包已清理"
+    exit 1
+  fi
+  adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk
+  bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" "$PKG" "$SIGNED" --su \
+    || { echo "ERROR: 装机指纹校验失败"; exit 1; }
+  echo "[install] done"
+}
+
+if [[ "$INSTALL_ONLY" == "1" ]]; then
+  echo "[install-only] 复用正式包: $SIGNED"
+  [[ -f "$VERIFY_SCRIPT" ]] || { echo "ERROR: missing $VERIFY_SCRIPT"; exit 1; }
+  bash "$VERIFY_SCRIPT" "$SIGNED"
+  run_install
+  exit 0
+fi
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
-SO_PREBUILT="$STARRY_SRC/libs_sjzz/arm64-v8a/libstarry_magic.so"
 [[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing modern so $SO_PREBUILT"; exit 1; }
 ACTUAL_MD5=$(md5 -q "$ORIG_APK")
 [[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符 $ACTUAL_MD5"; exit 1; }
@@ -276,55 +344,9 @@ else
 fi
 MD5_SIGNED=$(md5 -q "$SIGNED")
 echo "[6/6] done → $SIGNED (md5 $MD5_SIGNED)"
+[[ -f "$VERIFY_SCRIPT" ]] || { echo "ERROR: missing $VERIFY_SCRIPT"; exit 1; }
+bash "$VERIFY_SCRIPT" "$SIGNED"
 
-echo "[verify] 包内 so md5 闭环"
-unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so > "$WORK/extracted.so"
-SO_BUILD_MD5=$(md5 -q "$SO_PREBUILT")
-SO_PKG_MD5=$(md5 -q "$WORK/extracted.so")
-[[ "$SO_BUILD_MD5" == "$SO_PKG_MD5" ]] \
-  || { echo "ERROR: 包内 so != 构建产物 md5 ($SO_BUILD_MD5 vs $SO_PKG_MD5)"; exit 1; }
-echo "[verify] so md5 ok = $SO_BUILD_MD5"
-
-if [[ -n "$BT" && -x "$BT/apksigner" ]]; then
-  "$BT/apksigner" verify --print-certs "$SIGNED" | sed -n '1,12p'
-fi
-
-if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
-  UNINSTALL_FIRST="${STARRY_UNINSTALL_FIRST:-0}"
-  INSTALL_ARGS="-r -d"
-  if [[ "$UNINSTALL_FIRST" == "1" ]]; then
-    [[ "${STARRY_ALLOW_DATA_LOSS:-0}" == "1" ]] \
-      || { echo "ERROR: STARRY_UNINSTALL_FIRST=1 需同时显式授权 STARRY_ALLOW_DATA_LOSS=1"; exit 1; }
-    INSTALL_ARGS="-d"
-  fi
-
-  echo "[install] push + pm install ($INSTALL_ARGS) → $SERIAL"
-  adb -s "$SERIAL" wait-for-device
-  adb -s "$SERIAL" push "$SIGNED" /data/local/tmp/sjzz_surgical.apk >/dev/null
-  adb -s "$SERIAL" shell am force-stop "$PKG" 2>/dev/null || true
-
-  if [[ "$UNINSTALL_FIRST" == "1" ]]; then
-    echo "[install] uninstall existing package (data loss authorized)"
-    if ! adb -s "$SERIAL" shell "pm uninstall $PKG"; then
-      adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk || true
-      echo "ERROR: 卸载失败；设备临时包已清理"
-      exit 1
-    fi
-    if adb -s "$SERIAL" shell "pm path $PKG" 2>/dev/null | grep -q .; then
-      adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk || true
-      echo "ERROR: 卸载后仍能查到 $PKG；设备临时包已清理"
-      exit 1
-    fi
-    echo "[install] uninstall ok"
-  fi
-
-  if ! adb -s "$SERIAL" shell "pm install $INSTALL_ARGS --user 0 /data/local/tmp/sjzz_surgical.apk"; then
-    adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk || true
-    echo "ERROR: 安装失败；设备临时包已清理"
-    exit 1
-  fi
-  adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk
-  bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" "$PKG" "$SIGNED" --su \
-    || { echo "ERROR: 装机指纹校验失败"; exit 1; }
-  echo "[install] done"
+if [[ "$INSTALL" == "1" ]]; then
+  run_install
 fi

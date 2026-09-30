@@ -160,31 +160,27 @@
       "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_build_so.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so",
           "pattern": "SeekBar_"
         },
         {
-          "type": "file_contains",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so",
           "pattern": "JNI_OnLoad"
         }
       ],
       "status": "done",
       "done_at": "2026-09-24 14:18:25",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so": {
-          "md5": "109425618e54bed1c4398fdc1d1e21ed"
-        }
-      },
       "inputs": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp": "642b2511e4fc705805b0c164ae26b028",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp": "45d36d50df262ad3f5c60c69fddf7f96"
-      }
+      },
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so; 原 md5=109425618e54bed1c4398fdc1d1e21ed"
     },
     {
       "id": "surgical",
@@ -213,9 +209,6 @@
         "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical/AndroidManifest.xml": {
           "md5": "612efb7d4a109917fdc5e10670f18830"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so": "109425618e54bed1c4398fdc1d1e21ed"
       }
     },
     {
