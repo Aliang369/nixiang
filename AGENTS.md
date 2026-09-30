@@ -82,7 +82,7 @@
   - 收官汇报必须显式写出 git 结果：提交号 + 是否已推送 + 远端是否同步（`git status -sb` 无 `ahead`）。
 - `10_docs/` 是复现入口，不是源码替代；保留小源码、自写脚本、配置规则、密钥与必要输入，按可再生性逐项判断，不按目录整删。本次规范修改授权不等于任何产物删除授权。
 - **构建产物不留本地（2026-09-30 定，2026-09-30 加强）**：NDK 中间件与暂存 `.so`（`mod菜单/**/app/src/**/obj_*`、`libs_*`、`jniLibs`、`app/src/**/libs`）、Gradle 输出（`mod菜单/**/build/`、`.gradle/`、`.gradle-home/`）、.NET 输出（`04_scripts/**/{bin,obj}`、`06_dumped/**/{bin,obj}`）、脚本生成清单/缓存（`apk_entries.txt`、`rva_map.pkl`）都由源码 + 工具重建，收尾时清理，既不留在工作区也不入库。**唯一例外**：当前构建链直接引用的那一份（如 `jni/targetfuntional_dll*.bin`、`Games/WxsjPatchedDll*.a`、`Games/WxsjVc1637PatchedDll.a`）保留到该游戏收尾。
-- **dump 入库默认收紧（2026-09-28 起，2026-09-30 加强）**：默认**不把 `06_dumped/**/{dump.cs,script.json,stringliteral.json,il2cpp.h,DummyDll}` 入库**（单份 dump.cs ~60 MB、script.json ~69 MB；曾使 `.git` 膨胀到 279 MB），改为入库「锚点摘录」（被引用的类/方法名 + RVA/file offset + 证据行）。`.gitignore` 已硬排除这些大产物。**2026-09-30 已授权重写历史**：`git filter-repo` 清除历史大 blob；此后新增大 dump 一律不入库。
+- **dump 入库默认收紧（2026-09-28 起，2026-09-30 加强）**：默认**不把 `06_dumped/**/{dump.cs,script.json,stringliteral.json,il2cpp.h,DummyDll}` 入库**（单份 dump.cs ~60 MB、script.json ~69 MB；曾使 `.git` 膨胀到 279 MB），改为入库「锚点摘录」（被引用的类/方法名 + RVA/file offset + 证据行）。`.gitignore` 已硬排除这些大产物。**2026-09-30 已授权重写历史**：`git filter-repo` 清除历史大 blob；此后新增大 dump 一律不入库。**JS 解密产物同样按大 dump 处理（2026-09-30 追加）**：`06_dumped/**/*.js`（热更/主包解密出的明文 JS，单轮常达 10 MB 且每次重抓整片更换）默认不入库，`.gitignore` 已硬排除；复现依据改为入库 `decrypt_summary.json` 锚点（含 key/count/逐文件尺寸）+ 重抓与解密脚本，确需入库时用 `git add -f` 并在当轮说明理由。
 - 真机会话结束/暂停/切换时先回收证据，再按设备 serial 和本次变更处理残留，不影响其他会话；无设备操作不清设备。会话清理、基于修改前快照的环境恢复、深度修复分开授权与记录。
 - 不默认运行 `04_scripts/_common/cleanup_device_re_residue.sh`：现有脚本有全局副作用，dry-run 非完整预演，且未实现新会话协议；范围无法约束时禁止默认跑，报告待处理项。工作区保留/清理、设备职责及执行记录统一见 [TOOLBOOK.md](TOOLBOOK.md)「清理规则」「真机残留清理」。
 

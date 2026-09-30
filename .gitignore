@@ -46,7 +46,6 @@
 !06_dumped/**/*.json
 !06_dumped/**/*.md
 !06_dumped/**/*.py
-!06_dumped/**/*.js
 !06_dumped/**/*.tsv
 !06_dumped/**/*.csv
 # 2026-09-30：大体积 dump 产物一律不入库（即使扩展名在上方白名单内）。
@@ -59,6 +58,10 @@
 06_dumped/**/*.decompiled.cs
 06_dumped/**/*.decrypted.js
 06_dumped/**/*.pretty.js
+# 2026-09-30：JS 解密产物同样按「大 dump」处理，不入库（勇士之心热更单轮 24 份 ≈10 MB，
+# 且每次重抓都产生整片新 JS）。复现只需 `decrypt_summary.json` 锚点（含 key/count/逐文件尺寸）
+# + 重抓与解密脚本即可完整重建；确需入库时用 `git add -f` 并当轮说明理由。
+06_dumped/**/*.js
 
 # ===== mod菜单：构建产物不入库（源码/模板/脚本全入）=====
 mod菜单/**/app/src/**/obj*/
