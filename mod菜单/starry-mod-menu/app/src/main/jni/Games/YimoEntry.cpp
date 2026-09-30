@@ -13,12 +13,12 @@
 
 static const char* kYimo_Features[] = {
     "Category_战斗",                 // 0（占位，不是 featNum）
-    "Slider_伤害倍率:1:100:1",        // 1  YIMO_FEAT_DMG（1 = 关闭；默认必须为 1，禁止默认开）
+    "Toggle_精灵攻击秒杀",            // 1  YIMO_FEAT_DMG（开 = 精灵命中上报重发 100 段；关 = 1 段）
     "Slider_移速:1:10:1",            // 2  YIMO_FEAT_SPD（1 = 关闭；过高会与服务器位置校验打架）
     "Toggle_玩家无敌",                // 3  YIMO_FEAT_INV
     "Toggle_无限跳跃",                // 4  YIMO_FEAT_JUMP
     "Toggle_无限体力",                // 5  YIMO_FEAT_STAM
-    "Toggle_瞬移开箱",                // 6  YIMO_FEAT_TP（跳跃键接管：有宝箱就飞过去，没有就正常跳）
+    "Toggle_瞬移采集",                // 6  YIMO_FEAT_TP（跳跃键接管：有采集物就飞过去，没有就正常跳）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

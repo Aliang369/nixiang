@@ -57,7 +57,12 @@ static std::atomic<bool> g_inHook{false};     // 防重入
 /* 唯一同步标志：菜单/滑块/Tick 置 true，Lua 侧写成功后置 false。
  * （Jjdm 的教训：曾经分裂成 g_wantSync / g_needSync 两个变量，
  *   首次同步后读侧永远 false，菜单开关再也传不到 Lua。） */
-static std::atomic<int>  g_dmgMult{1};        // 伤害倍率（1 = 关闭；默认必须为 1）
+/* ① 精灵攻击秒杀：命中上报的【重发段数】。
+ *   斌哥 MOD.dmgMul = 100（他自己的默认档，实机验证有效）；1 = 关闭。
+ *   ☠上限受 Lua 侧 MAX_RESEND_PER_SEC = 500（每秒重发预算）约束，
+ *     别再无脑加大：挤爆预算反而会饿死精灵那条真正有效的 DoActOnActorActions。 */
+static constexpr int kKillResend = 100;
+static std::atomic<int>  g_dmgMult{1};        // 重发段数（1 = 关闭；默认必须为 1）
 static std::atomic<int>  g_spdMult{1};        // 移速倍率（1 = 关闭）
 static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_jump{false};
@@ -191,10 +196,15 @@ static bool RunLua(lua_State* L, const char* chunk) {
 // ============================================================
 /* 说明（抓点来自斌哥包逆向，见 10_docs/伊莫/抓点总结_斌哥mod_20260930.md）：
  *   开关表 YM 由 native 侧写入（只改字段，绝不替换表 —— 本脚本只捕获一次引用）。
- *   ① 伤害倍率：包 ClientMainPlayer/ClientPet/ClientPuppet/ClientCreation 的
- *      serverMsg，命中 DMG_OUT 白名单时把上报重发 (N-1) 次。
+ *   ① 精灵攻击秒杀（原「伤害倍率」滑块，2026-10 改开关直实现）：包
+ *      ClientMainPlayer/ClientPet/ClientPuppet/ClientCreation 的
+ *      serverMsg，命中 DMG_OUT 白名单时把上报重发 (N-1) 次（开 = 重发 100 段）。
  *      依据：伤害值 100% 服务器算（客户端改本地数值是死码），
  *            而命中判定 100% 客户端算并上报 ⇒ 多报一次 = 服务器多算一次。
+ *      ☠ 对人物（ClientMainPlayer）几乎无效：它只发 RPC_CS_ProjectileHitTarget，
+ *         首参是投射物实例 id、命中后紧接 ProjectileDestroy ⇒「同颗弹只认第一次」；
+ *         真正吃到倍率的是精灵（ClientPet 的 RPC_CS_DoActOnActorActions）。
+ *         所以这一项的正名就是「精灵攻击秒杀」。
  *      ☠ 只包这 4 个类；其余实体类不上包装（斌哥全量包装导致过「技能百倍失效」）。
  *      ☠ 安全阀：每秒最多 500 个重发包（否则 64 段投射物 × 100 倍 = 上万包打死连接）。
  *   ② 移速：ActorCombatAttribute:getAttribRatioValue，attributeId ==
@@ -212,8 +222,10 @@ static bool RunLua(lua_State* L, const char* chunk) {
  *      ☠ 不硬改 canJump（会吃掉 StopFly）；☠ 不用 forceUngrounded（锁存标志，会永久不着地）。
  *   ⑤ 无限体力：ActorCombatAttribute:changeStamina，value < 0 时拦截（放行恢复）。
  *      本作唯一零 RPC 的纯客户端数值 ⇒ 五个功能里唯一零服务器风险。
- *   ⑥ 瞬移开箱：在 performJump 内、无限跳之前接管；走游戏自己的
+ *   ⑥ 瞬移采集：在 performJump 内、无限跳之前接管；走游戏自己的
  *      forbidPositionCheck → forceSetPosRot 合法传送流程。
+ *      ★距离闸门：服务器对强搬人有真实距离上限（超限位置校验失败、人被弹回原点），
+ *        所以超限不瞬移、落回普通跳跃，并由 1 秒 tick 复查落点自适应调上限。
  */
 static const char kYimoPatch[] = R"LUA(
 -- ================= 星空·伊莫 补丁 v1 =================
@@ -274,11 +286,13 @@ YM.stam = YM.stam == true
 YM.tp   = YM.tp   == true
 
 -- ---------- 日志（每 tag 限 5 条，防刷爆 logcat）----------
+-- 瞬移相关 tag 放宽到 24 条：距离上限要按实机数据调，「5 条」看不出趋势
+local LOG_LIMIT_EXTRA = { tp = 24, tpwhy = 24, tpcheck = 24 }
 local _cnt = {}
 local function LOG(tag, fmt, ...)
   local n = (_cnt[tag] or 0) + 1
   _cnt[tag] = n
-  if n > 5 then return end
+  if n > (LOG_LIMIT_EXTRA[tag] or 5) then return end
   local ok, s = pcall(string.format, "[YM][" .. tag .. "][#" .. n .. "] " .. fmt, ...)
   s = ok and s or ("[YM][" .. tag .. "] format error")
   _dbg(s)                       -- 文件 + print 双通道（保证 logcat 可见）
@@ -341,7 +355,7 @@ local function patchEntityClass(cls, key, wrap, tag)
 end
 
 ---------------------------------------------------------------------
--- ① 伤害倍率：重发命中上报
+-- ① 精灵攻击秒杀：重发命中上报（菜单名；原「伤害倍率」滑块）
 ---------------------------------------------------------------------
 local DMG_OUT = {
   RPC_CS_DoActOnActorActions = true,
@@ -431,7 +445,7 @@ fullWrap(L("Entities.SpaceEntities.ClientCreation"),   "ClientCreation")
 ---------------------------------------------------------------------
 -- ①-b 投射物多段命中 —— ★正式包已移除（2026-09-30 21:5x 决策）
 ---------------------------------------------------------------------
--- 背景（实机取证，伤害倍率=56）：人物 ME 只发 RPC_CS_ProjectileHitTarget，
+-- 背景（实机取证，当时滑块值 56）：人物 ME 只发 RPC_CS_ProjectileHitTarget，
 --   精灵 PET 发 RPC_CS_DoActOnActorActions；人物唯一通道的弹「同颗重发只认
 --   第一次」⇒ 重发式倍率对人物无效、只对精灵有效。曾据此实现 ①-b
 --   （destroyOnHit=false / maxHitNum / checkCanHitTarget 恒真）。
@@ -446,7 +460,7 @@ fullWrap(L("Entities.SpaceEntities.ClientCreation"),   "ClientCreation")
 --   3) 若要给人物加伤，正确做法是按**实例**判定 owner 后再改实例字段，
 --      且必须同时保证敌方弹走原逻辑 —— 本轮不做（用户已点名不做）。
 --
--- ⇒ 正式包回到斌哥原始设计：伤害倍率 = 按来源身份重发上报包（见 DMG_OUT）。
+-- ⇒ 正式包回到斌哥原始设计：按来源身份重发上报包（见 DMG_OUT；菜单名「精灵攻击秒杀」）。
 --   投射物相关字段名与 ①-b 实现思路保留在此备查：
 --     destroyOnHit / maxHitNum / checkCanHitTarget / hitTargetSet / owner / srcActorId
 --     （源路径 XAndPublish/.../LuaScripts/Common/Ability/Projectile/Projectile.lua）
@@ -552,15 +566,37 @@ local function topUpStamina()
 end
 
 ---------------------------------------------------------------------
--- ⑥ 瞬移开箱（走游戏自己的合法传送流程）
+-- ⑥ 瞬移采集（走游戏自己的合法传送流程）
+--   ★「瞬移完被弹回原地」的根因是【距离】：服务器对客户端强行搬人有真实的
+--     距离上限，超限就位置校验失败(1002)把人弹回原点。斌哥实测 6.5m 成功 /
+--     15.1m 被弹回；我们实机 10.4m 成功。⇒ 本实现三重处理：
+--       ① 选中目标后先量距离，超限【不瞬移】、落回普通跳跃（打 tpwhy 说明原因，
+--          不再白吃掉这一次跳跃，也不再产生「飞过去又弹回来」的体验）；
+--       ② 每次瞬移后由 1 秒 tick 复查落点（tpcheck，斌哥判据：记出发点，
+--          remainH<3 到位 / movedH<2 弹回 / 否则滑走）；
+--       ③ 自适应上限：到位且贴着上限就往上试（×1.3），被弹回就收窄（×0.6），
+--          「只有成功才涨」⇒ 永不主动冒险。硬顶 25 米＝官方 EntityPlayerSetPos
+--          的搬运上限（@GameApp_DialogueGraph_DialogueGraphRuntime_Node_
+--          DialogueGraphEntitySetPosAndRotNode.lua:24-39）。
 ---------------------------------------------------------------------
 local U = U1 or U2
 local STAND = 1.0   -- 落点半径：1.5 已验证可用；正上方(0,+2.5) 已证伪(服务器 1002 弹回)
 
+local TP_MAX_DIST      = 10.0   -- 10 米 = 我们自己实测 10.4m 成功的安全侧
+local TP_MAX_DIST_HARD = 25.0   -- 官方搬运硬上限，自适应不越过
+local TP_MAX_DIST_MIN  = 3.0
+local tpMaxDist = TP_MAX_DIST
+local tpWatch   = nil           -- {mx,mz,tx,tz,plan}：出发点 / 落点 / 计划水平距离
+
+-- 返回 (ok, kind)：kind = "chest" | "collect" | "env"
+--   ★"env" = EnvObject（门/机关/采集点，Utils.isEnvObj）。当前菜单叫「瞬移采集」，
+--     所以采集点也要能当目标；但我们【没有】自动开箱/自动拉机关，只是把人挪过去，
+--     因此瞬到门口没有副作用。为了不让门抢走宝箱，env 只在【没有】宝箱/掉落物时用
+--     （见 nearestChest 的两级选择）。
 local function chestEntOk(ent)
-  if type(ent) ~= "table" then return false end
-  if type(ent.needItem) == "table" and (ent.needItem[1] or 0) > 0 then return false end
-  local isChest, isCollect = false, false
+  if type(ent) ~= "table" then return false, nil end
+  if type(ent.needItem) == "table" and (ent.needItem[1] or 0) > 0 then return false, nil end
+  local isChest, isCollect, isEnv = false, false, false
   if U then
     if type(U.isChest) == "function" then
       local ok, r = pcall(U.isChest, ent); isChest = ok and r == true
@@ -568,26 +604,32 @@ local function chestEntOk(ent)
     if type(U.isCollectItem) == "function" then
       local ok, r = pcall(U.isCollectItem, ent); isCollect = ok and r == true
     end
+    if type(U.isEnvObj) == "function" then
+      local ok, r = pcall(U.isEnvObj, ent); isEnv = ok and r == true
+    end
   end
   if not isChest and not isCollect then
     isChest, isCollect = ent.isChest == true, ent.isCollectItem == true
   end
-  if not (isChest or isCollect) then return false end
-  if isChest and type(ent.isChestOpened) == "function" then
-    local ok, o = pcall(ent.isChestOpened, ent); if ok and o == true then return false end
-  end
-  if isCollect and type(ent.isCollectItemOpened) == "function" then
-    local ok, o = pcall(ent.isCollectItemOpened, ent); if ok and o == true then return false end
-  end
-  if U and pg.me then
-    if isChest and type(U.isChestVisible) == "function" then
-      local ok, v = pcall(U.isChestVisible, pg.me, ent); if ok and v == false then return false end
+  if isChest or isCollect then
+    if isChest and type(ent.isChestOpened) == "function" then
+      local ok, o = pcall(ent.isChestOpened, ent); if ok and o == true then return false, nil end
     end
-    if isCollect and type(U.isCollectItemVisible) == "function" then
-      local ok, v = pcall(U.isCollectItemVisible, pg.me, ent); if ok and v == false then return false end
+    if isCollect and type(ent.isCollectItemOpened) == "function" then
+      local ok, o = pcall(ent.isCollectItemOpened, ent); if ok and o == true then return false, nil end
     end
+    if U and pg.me then
+      if isChest and type(U.isChestVisible) == "function" then
+        local ok, v = pcall(U.isChestVisible, pg.me, ent); if ok and v == false then return false, nil end
+      end
+      if isCollect and type(U.isCollectItemVisible) == "function" then
+        local ok, v = pcall(U.isCollectItemVisible, pg.me, ent); if ok and v == false then return false, nil end
+      end
+    end
+    return true, (isChest and "chest" or "collect")
   end
-  return true
+  if isEnv then return true, "env" end
+  return false, nil
 end
 
 local function nearestChest(pawn)
@@ -619,23 +661,47 @@ local function nearestChest(pawn)
     end
   end
 
-  local best, bestD2 = nil, nil
+  local best, bestD2, bestKind = nil, nil, nil
+  local envBest, envD2 = nil, nil
   for i = 1, #cand do
     local ent = cand[i]
     if type(ent) == "table" and not seen[ent] then
       seen[ent] = true
-      if chestEntOk(ent) and type(ent.getPosition) == "function" then
+      local okK, kind = chestEntOk(ent)
+      if okK and type(ent.getPosition) == "function" then
         local ok, pos = pcall(ent.getPosition, ent)
         if ok and type(pos) == "table" then
           local okD, d = pcall(V3.SqrDistance, pos, myPos)
-          if okD and type(d) == "number" and (not bestD2 or d < bestD2) then
-            best, bestD2 = ent, d
+          if okD and type(d) == "number" then
+            if kind == "env" then
+              if not envD2 or d < envD2 then envBest, envD2 = ent, d end
+            elseif not bestD2 or d < bestD2 then
+              best, bestD2, bestKind = ent, d, kind
+            end
           end
         end
       end
     end
   end
-  return best
+
+  -- ★距离闸门：超限就【不瞬移】（服务器会位置校验失败把人弹回）。
+  --   宁愿这一次老老实实普通跳，也不要「飞过去 → 被弹回原点」。
+  if best then
+    local dist = math.sqrt(bestD2)
+    if dist <= tpMaxDist then return best, dist, bestKind end
+    if envBest then
+      local d2 = math.sqrt(envD2)
+      if d2 <= tpMaxDist then return envBest, d2, "env" end
+    end
+    LOG("tpwhy", "最近目标 %s(kind=%s) %.1fm 超过上限 %.1fm，本次落回普通跳跃",
+        tostring(best.id), tostring(bestKind), dist, tpMaxDist)
+    return nil
+  end
+  if envBest then
+    local d2 = math.sqrt(envD2)
+    if d2 <= tpMaxDist then return envBest, d2, "env" end
+  end
+  return nil
 end
 
 local function tpToChest(pawn)
@@ -643,20 +709,25 @@ local function tpToChest(pawn)
   if type(CONST.FORBID_POSITION_REASON) ~= "table" then return false end
   local V3 = _rg(_G, "Vector3")
   if type(V3) ~= "function" and type(V3) ~= "table" then return false end
-  local ent = nearestChest(pawn)
+  local ent, dist, kind = nearestChest(pawn)
   if not ent then return false end
 
   local okE, ePos = pcall(ent.getPosition, ent)
   local okM, myPos = pcall(pawn.getPosition, pawn)
   if not (okE and okM and type(ePos) == "table" and type(myPos) == "table") then return false end
 
-  -- ☠getPosition 返回共享引用 self.posRef ⇒ 只读 x/y/z 标量，自己造新向量
-  local dx, dz = myPos.x - ePos.x, myPos.z - ePos.z
+  -- ☠☠getPosition 返回【共享引用】self.posRef（@...ClientPosRotComponent.lua:112）：
+  --   传送成功后就地改写 ⇒ 传送【之后】再读 myPos.x/z 拿到的是【落点】而不是出发点。
+  --   实测后果：plan 恒为 0.0m、tpcheck 的「弹回原地」判据退化成死代码、自适应上限永远不动。
+  --   ⇒ 必须在这里（传送之前）立刻取标量快照 mx/mz/ex/ez。
+  local mx, mz = myPos.x, myPos.z
+  local ex, ez = ePos.x, ePos.z
+  local dx, dz = mx - ex, mz - ez
   local len = math.sqrt(dx * dx + dz * dz)
   if len < 0.0001 then dx, dz, len = 1, 0, 1 end
   local ux, uz = dx / len, dz / len
 
-  local okT, target = pcall(V3, ePos.x + ux * STAND, ePos.y, ePos.z + uz * STAND)
+  local okT, target = pcall(V3, ex + ux * STAND, ePos.y, ez + uz * STAND)
   if not okT or type(target) ~= "table" then return false end
 
   local rot
@@ -693,8 +764,50 @@ local function tpToChest(pawn)
   if pg.world and type(pg.world.setIsSyncPosThisFrame) == "function" and pawn.actorId then
     pcall(pg.world.setIsSyncPosThisFrame, pawn.actorId, true)
   end
-  LOG("tp", "tp to chest id=%s dist=%.1f stand=%.2f", tostring(ent.id), len, STAND)
+
+  -- ★记【出发点 / 落点 / 计划水平距离】交给下一拍 tick 复查
+  --   （斌哥教训：必须记出发点，否则「落地后滑了两步」会被误判成弹回）
+  local tx, tz = ex + ux * STAND, ez + uz * STAND
+  local pdx, pdz = tx - mx, tz - mz
+  local plan = math.sqrt(pdx * pdx + pdz * pdz)
+  tpWatch = { mx, mz, tx, tz, plan }
+
+  LOG("tp", "tp to kind=%s id=%s dist=%.1f stand=%.2f 上限=%.1f",
+      tostring(kind or "?"), tostring(ent.id), dist, STAND, tpMaxDist)
   return true
+end
+
+-- 落点复查（每秒 tick 调）：判 kept / SNAPPED-BACK / DRIFTED，并自适应调整距离上限
+local function tpVerify()
+  local w = tpWatch
+  if not w then return end
+  tpWatch = nil
+  if not (pg.me and type(pg.me.getPosition) == "function") then return end
+  local ok, pos = pcall(pg.me.getPosition, pg.me)
+  if not ok or type(pos) ~= "table" or type(pos.x) ~= "number" then return end
+  local mdx, mdz = pos.x - w[1], pos.z - w[2]
+  local movedH = math.sqrt(mdx * mdx + mdz * mdz)
+  local rdx, rdz = pos.x - w[3], pos.z - w[4]
+  local remainH = math.sqrt(rdx * rdx + rdz * rdz)
+  local plan = w[5]
+  if remainH < 3.0 then
+    -- 到位：贴着上限就往上试一档（「只有成功才涨」⇒ 永不主动冒险）
+    if plan > tpMaxDist * 0.8 then
+      local nxt = math.min(TP_MAX_DIST_HARD, plan * 1.3)
+      if nxt > tpMaxDist then
+        tpMaxDist = nxt
+        LOG("tpcheck", "kept 计划=%.1fm 离目标=%.1fm ⇒ 上限上调到 %.1fm", plan, remainH, tpMaxDist)
+        return
+      end
+    end
+    LOG("tpcheck", "kept 计划=%.1fm 离目标=%.1fm 上限=%.1fm", plan, remainH, tpMaxDist)
+  elseif movedH < 2.0 then
+    -- ☠被弹回原点：收窄上限（这一次失败正是服务器在告诉我们真实边界在哪）
+    tpMaxDist = math.max(TP_MAX_DIST_MIN, plan * 0.6)
+    LOG("tpcheck", "☠弹回原地 计划=%.1fm 实际=%.1fm ⇒ 上限收窄到 %.1fm", plan, movedH, tpMaxDist)
+  else
+    LOG("tpcheck", "△滑走了 计划=%.1fm 实际=%.1fm 离目标=%.1fm", plan, movedH, remainH)
+  end
 end
 
 ---------------------------------------------------------------------
@@ -765,6 +878,7 @@ Yimo.tick = function()
   if YM.inv then markInvincible() end
   if YM.spd ~= 1 then refreshSpeed() end
   if YM.stam then topUpStamina() end
+  tpVerify()                 -- ⑥ 瞬移落点复查 + 自适应距离上限
 end
 
 rawset(_G, "__YM_V", 1)
@@ -948,7 +1062,7 @@ void Yimo_OnFeatureChanged(int featNum, bool enabled) {
         case YIMO_FEAT_JUMP: g_jump.store(enabled); break;
         case YIMO_FEAT_STAM: g_stam.store(enabled); break;
         case YIMO_FEAT_TP:   g_tp.store(enabled);   break;
-        case YIMO_FEAT_DMG:  break;  // 滑块：值只由 OnValueChanged/Tick 提供，禁止在此改写
+        case YIMO_FEAT_DMG:  g_dmgMult.store(enabled ? kKillResend : 1); break;  // 秒杀：开关直实现
         case YIMO_FEAT_SPD:  break;
         default: break;
     }
@@ -958,11 +1072,9 @@ void Yimo_OnFeatureChanged(int featNum, bool enabled) {
 
 void Yimo_OnValueChanged(int featNum, int value) {
     if (featNum == YIMO_FEAT_DMG) {
-        if (value < 1) value = 1;
-        if (value > 100) value = 100;
-        g_dmgMult.store(value);
-        LOGI(YIMO_LOG " dmg mult = %d", value);
-        g_wantSync.store(true);
+        // ① 精灵攻击秒杀已由 Toggle 直实现（见 OnFeatureChanged）；
+        //    旧菜单缓存若还按滑块回调带值过来，一律忽略，避免把开关状态改回去。
+        LOGI(YIMO_LOG " dmg value ignored (toggle-only) value=%d", value);
     } else if (featNum == YIMO_FEAT_SPD) {
         if (value < 1) value = 1;
         if (value > 10) value = 10;
@@ -980,14 +1092,15 @@ void Yimo_Tick(const bool* features, const int* values) {
     }
     // 只做开关同步；禁止扫堆/遍历对象
     if (features) {
+        // ① 是 Toggle：以 Tick 的 features[] 为准（自愈，防漏一次回调就永久不同步）
+        g_dmgMult.store(features[YIMO_FEAT_DMG] ? kKillResend : 1);
         g_inv.store(features[YIMO_FEAT_INV]);
         g_jump.store(features[YIMO_FEAT_JUMP]);
         g_stam.store(features[YIMO_FEAT_STAM]);
         g_tp.store(features[YIMO_FEAT_TP]);
     }
     if (values) {
-        const int d = values[YIMO_FEAT_DMG];
-        if (d >= 1 && d <= 100) g_dmgMult.store(d);
+        // ☠不读 values[YIMO_FEAT_DMG]：① 是 Toggle 不是滑块，值由 OnFeatureChanged 直接给
         const int s = values[YIMO_FEAT_SPD];
         if (s >= 1 && s <= 10) g_spdMult.store(s);
     }

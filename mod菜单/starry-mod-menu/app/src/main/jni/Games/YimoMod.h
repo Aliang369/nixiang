@@ -19,12 +19,12 @@
 
 // 功能位号：必须与 YimoEntry.cpp 的 featureList 数组下标一一对应
 enum YimoFeat : int {
-    YIMO_FEAT_DMG  = 1,  // Slider_伤害倍率:1:100:1（1 = 关闭；原「百倍伤害」改名）
+    YIMO_FEAT_DMG  = 1,  // Toggle_精灵攻击秒杀（开 = 重发段数 kKillResend=100；关 = 1 段）
     YIMO_FEAT_SPD  = 2,  // Slider_移速:1:10:1（1 = 关闭；原「移速x3」改滑块）
     YIMO_FEAT_INV  = 3,  // Toggle_玩家无敌
     YIMO_FEAT_JUMP = 4,  // Toggle_无限跳跃
     YIMO_FEAT_STAM = 5,  // Toggle_无限体力
-    YIMO_FEAT_TP   = 6,  // Toggle_瞬移开箱
+    YIMO_FEAT_TP   = 6,  // Toggle_瞬移采集（跳跃键接管）
 };
 
 // 签名与 ModEntry.h 回调一致

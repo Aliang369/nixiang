@@ -6,8 +6,8 @@
 #   官方 appComponentFactory 保持原样
 #
 # 注入 dex：官方只有 classes.dex → 星光 dex 落在 classes2.dex（脚本动态推算）
-# lib/arm64-v8a：新增 libstarry_magic.so（Yimo 模块：伤害倍率 / 移速 / 玩家无敌 / 无限跳跃 /
-#   无限体力 / 瞬移开箱，xLua 玩法层注入 —— Dobby hook libxlua.so 的 lua_pcall / lua_gettop）
+# lib/arm64-v8a：新增 libstarry_magic.so（Yimo 模块：精灵攻击秒杀 / 移速 / 玩家无敌 / 无限跳跃 /
+#   无限体力 / 瞬移采集，xLua 玩法层注入 —— Dobby hook libxlua.so 的 lua_pcall / lua_gettop）
 #   ★官方包内**没有** libc++_shared.so，而 libstarry_magic.so 的 DT_NEEDED 含 libc++_shared.so
 #     ⇒ 本脚本必须额外注入 lib/arm64-v8a/libc++_shared.so（取自同一次 ndk-build 产物）
 # 官方 classes*.dex / resources.arsc 原样保留（resources.arsc 必须 STORED）
@@ -126,7 +126,7 @@ for stale in '\[Jjdm\]' '\[Cxswz\]' '\[Gyzw\]' '\[Hxwj\]' '\[Sjzz\]' '\[Blfx\]';
 done
 CERT_N=$(grep -a -c 'BEGIN CERTIFICATE' "$SO_BUILT" || true)
 [[ "${CERT_N:-0}" -ge 1 ]] || { echo "ERROR: so 内无烘焙证书（授权 fail-closed）"; exit 1; }
-for m in '伤害倍率' '移速' '玩家无敌' '无限跳跃' '无限体力' '瞬移开箱'; do
+for m in '精灵攻击秒杀' '移速' '玩家无敌' '无限跳跃' '无限体力' '瞬移采集'; do
   N=$(LC_ALL=C grep -a -c "$m" "$SO_BUILT" || true)
   [[ "${N:-0}" -ge 1 ]] || { echo "ERROR: so 内缺菜单串 $m"; exit 1; }
 done
