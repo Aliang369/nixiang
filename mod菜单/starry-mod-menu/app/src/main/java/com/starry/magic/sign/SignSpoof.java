@@ -923,23 +923,6 @@ public final class SignSpoof {
                     + "IAFM33Fb5NTVWQRkkGEH7gLA0ZblVaT4JV5rFAXsYSg4V3NZzf8sODVwo7EmrS9WFYXkF6VCxrDXD67wbBBkzJvn7yEUsFBPkLJH"
                     + "IM2Y3Up0vlE=";
 
-    private static final String YIMO_CERT_B64 =
-            "MIIDeTCCAmGgAwIBAgIEIwz5eTANBgkqhkiG9w0BAQsFADBsMRAwDgYDVQQGEwdGVU5QTFVTMRAw" +
-            "DgYDVQQIEwdGVU5QTFVTMRAwDgYDVQQHEwdGVU5QTFVTMRAwDgYDVQQKEwdGVU5QTFVTMRAwDgYD" +
-            "VQQLEwdGVU5QTFVTMRAwDgYDVQQDEwdGVU5QTFVTMCAXDTIzMTEyOTA5NTczOFoYDzIwNzgwOTAx" +
-            "MDk1NzM4WjBsMRAwDgYDVQQGEwdGVU5QTFVTMRAwDgYDVQQIEwdGVU5QTFVTMRAwDgYDVQQHEwdG" +
-            "VU5QTFVTMRAwDgYDVQQKEwdGVU5QTFVTMRAwDgYDVQQLEwdGVU5QTFVTMRAwDgYDVQQDEwdGVU5Q" +
-            "TFVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApQUn3rhWq6eXD0PJpRqPbkdkBGEH" +
-            "v820Dl2Qq6CpklQIR7extzmX4U28xzu7dUAkwId3DQH3fEoQDV1kmZLA2CRdD3FlOp+6QmiJ7lO0" +
-            "iBYaVyxz7dn2nJU/ON4RQwQB2QH6S7POWF/UEPPodQ0a8tsdN+DRvD/H0IXGe47marMwYEA6E0dd" +
-            "+gf5n+q3Hk01keExxRuTya6JrgX+WHy58YQa0nN6VVUsbxVE4HRW761aHZZN9SMD9jJO/xnZvtJH" +
-            "/MfwlxpwBR/rUwmO0z7+DWb/2RAGwEm6NNmSelofd6j7FLIyIcBggP0fbrdobfVWgUTtLKohqMHd" +
-            "30uWQdv9EQIDAQABoyEwHzAdBgNVHQ4EFgQUxR58+FfVX04AAaZ22eS4pOf30xEwDQYJKoZIhvcN" +
-            "AQELBQADggEBAJT/ECFTbfiNPUbTz4M7BLVI80yDn1HmNGVRVzSLVbr6qruVkt3kuzlG1FDsE8wh" +
-            "BYzy49VQnXzv224nNclAlLfuwK27SVX6Q2ipzmgSbkWfgdXqcC5W18CDTwID3oAsSSL25RTUKXad" +
-            "GW6O+Gosz8N03fKvvS+MOXGGT0bYvZHvmUP/OUQZL6bVy7bk0uw23B/pN0ohWJlzcG+hh269kEXg" +
-            "il1RNRYIv0OWfAu2aLgQ4Pqa5MZNkZrJTol+568oCIpaQffvBITH+tO3NP/bIIb9cDql8FSujldw" +
-            "FZZUISLvh7lKwPtfud//6bRU3nKYDjBxhpICJa3UugQf700Tkz0=";
 
     public static void install() {
         if (sInstalled) return;
