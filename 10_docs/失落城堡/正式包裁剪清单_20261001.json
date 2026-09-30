@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/失落城堡",
+  "keep": "失落城堡_1.26.0.331_starry.apk",
+  "keep_size": 342953992,
+  "keep_md5": "eb43e327fd2d4d795b8538c17ff3a267",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "失落城堡_1.26.0.331_surgical-debugSigned.apk.idsig",
+      "size": 2713115,
+      "md5": "1f19424b1e5ff539d4398bb465501d27"
+    },
+    {
+      "name": "失落城堡_1.26.0.331_surgical-debugSigned.apk",
+      "size": 342953992,
+      "md5": "eb43e327fd2d4d795b8538c17ff3a267"
+    }
+  ],
+  "removed_count": 2
+}

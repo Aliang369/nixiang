@@ -1,0 +1,14 @@
+{
+  "template_id": "slcb",
+  "name": "失落城堡",
+  "package": "com.leiting.lostcastle.leiting",
+  "source": "Games/SlcbEntry.cpp kSlcb_Features + Games/SlcbMod.h SlcbFeat @ 1.26.0.331",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "伤害倍率"},
+    {"feat_num": 3, "name": "无限技能"},
+    {"feat_num": 5, "name": "无限金币"},
+    {"feat_num": 6, "name": "无限魂石"},
+    {"feat_num": 7, "name": "免广告"}
+  ]
+}

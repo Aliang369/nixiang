@@ -949,6 +949,31 @@ public final class SignSpoof {
             "il1RNRYIv0OWfAu2aLgQ4Pqa5MZNkZrJTol+568oCIpaQffvBITH+tO3NP/bIIb9cDql8FSujldw" +
             "FZZUISLvh7lKwPtfud//6bRU3nKYDjBxhpICJa3UugQf700Tkz0=";
 
+    /** 失落城堡（雷霆渠道）官方原版 com.leiting.lostcastle.leiting 1.26.0.331 / vc231
+     *  自签证书 subject=issuer: C=CN, ST=Guangdong, L=Guangzhou, O=Hunter Studio, OU=Hunter, CN=HB
+     *  MD5=4c6f8f0aa4506f3db70ffe02c2399d0e / SHA1=67faae98111f01b09a580231043b9a9fc59855a4
+     *  SHA-256=3fcbf98e1ef6d660e52c75c52716324865a4a14174dd8b689f06b467db5746ce
+     *  2026-10-01 取自官包 v1 签名块 META-INF/LC.RSA（openssl pkcs7 -print_certs）；
+     *  与 keytool -printcert -jarfile / apksigner --print-certs 三方对齐。 */
+    private static final String SLCB_PKG = "com.leiting.lostcastle.leiting";
+    private static final String SLCB_CERT_B64 =
+            "MIIDVDCCAjygAwIBAgIECLMS9DANBgkqhkiG9w0BAQUFADBrMQswCQYDVQQDDAJIQjEPMA0GA1UE" +
+            "CwwGSHVudGVyMRYwFAYDVQQKDA1IdW50ZXIgU3R1ZGlvMRIwEAYDVQQHDAlHdWFuZ3pob3UxEjAQ" +
+            "BgNVBAgMCUd1YW5nZG9uZzELMAkGA1UEBhMCQ04wIBcNMTgxMTE1MDMxMzAwWhgPMjA2ODExMDIw" +
+            "MzEzMDBaMGsxCzAJBgNVBAMMAkhCMQ8wDQYDVQQLDAZIdW50ZXIxFjAUBgNVBAoMDUh1bnRlciBT" +
+            "dHVkaW8xEjAQBgNVBAcMCUd1YW5nemhvdTESMBAGA1UECAwJR3Vhbmdkb25nMQswCQYDVQQGEwJD" +
+            "TjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK1L0/FEQuIGFgqBrd9U9k1LeuQSVk09" +
+            "L49UdT/XGwNadBeykhyd4phpB7JSs0ebBkhVF+mYZPfZb94o0zvISMVFxHLn3mQdvvHzZjBgElR0" +
+            "BagswEt9ZQwYIg6hDbd6e8kmoEK13yqoypXPBSNQkLPmmwZTD/OlaFA1RDrH0Bc4lY5lipKpZ9+G" +
+            "qE/8AKd1l4P2KsRx0OOEMpCb1PWaV/9oenI7U3g7kURfLIUm/VN1CBdN5i0iWbD8lhXxe0YdOHjd" +
+            "zoz4/ZdDacY/BOQy6L5ZoiyOXOYKXAJP2ZBOTKch8kavMSEmEehZMk4izp5lv8GxVIQN6KhQ+xQZ" +
+            "PXJ76vcCAwEAATANBgkqhkiG9w0BAQUFAAOCAQEANJZaho1mu1IiS30kD7Mfq111YAgedFQQ2Log" +
+            "HT6A0YLezox4zvCBLiAPlZiNsiwmkSWRY6ovBaG+7vXdU7Gh+Y0rbRQPClvE0NavrM615qXatCKN" +
+            "Ro4JL6msZ7VaZU1LLfRL27WbWdBuGugawXgCmdYR1Ap9Tey/uGk5j9HeWJSkm/VocrpNAH65DkJg" +
+            "eU+1gvLCCOlqOXNMFnE3z0IjA2HZKMVh8aWMw20xSJBXxYGsG5Y/1hLnL4CkLTupzQXjGSbVNase" +
+            "pdZEeRbIsc3qvQdr7QSPl2Vehg61YVxtqt9N0+FfnD6ZP6DegkLeG5iBzAPy/atzKe9Ctn5bGK+y" +
+            "bQ==";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1012,6 +1037,7 @@ public final class SignSpoof {
                 fakes.put(SJZZ_PKG, new Signature(Base64.decode(SJZZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(CXSWZ_PKG, new Signature(Base64.decode(CXSWZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YIMO_PKG, new Signature(Base64.decode(YIMO_CERT_B64, Base64.DEFAULT)));
+                fakes.put(SLCB_PKG, new Signature(Base64.decode(SLCB_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());
