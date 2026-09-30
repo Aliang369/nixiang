@@ -11,6 +11,7 @@ MENU_TEMPLATE=""
 DATE="$(date +%Y%m%d)"
 MODE="dry-run"
 PRUNE=0
+SYNC_DOC=0
 
 usage() {
   cat >&2 <<'EOF'
@@ -22,12 +23,15 @@ usage() {
     [--menu-template 10_docs/潮汐守望者/cxswz_menu_template.json] \
     [--date YYYYMMDD] \
     [--prune] \
+    [--sync-doc] \
     [--apply]
 
 说明:
   - 默认 dry-run，只检查并打印将生成的交付路径。
   - --apply 才创建 08_output/{游戏}/delivery_{日期}/。
   - --prune 才调用 prune_output_final.sh 裁剪 08_output/{游戏} 为唯一 APK。
+  - --sync-doc 打印「粘到游戏摘要 + current.md」的文档同步片段（**只打印，不自动改文件**：
+    `10_docs/_state/current.md` 与游戏摘要是多会话共享文件，须手工粘贴后按 AGENTS.md 内容级暂存）。
   - icon 源图存在时生成 512/144 PNG；菜单模板会做字段严格自检并复制一份。
 EOF
   exit 2
@@ -41,6 +45,7 @@ while [[ $# -gt 0 ]]; do
     --menu-template) MENU_TEMPLATE="${2:-}"; shift 2 ;;
     --date) DATE="${2:-}"; shift 2 ;;
     --prune) PRUNE=1; shift ;;
+    --sync-doc) SYNC_DOC=1; shift ;;
     --apply) MODE="apply"; shift ;;
     -h|--help) usage ;;
     *) echo "ERROR: 未知参数 $1" >&2; usage ;;
@@ -132,6 +137,21 @@ if [[ -n "$ICON_SOURCE" ]]; then
   echo "[finalize] icon_out=icon_${GAME}_512.png, icon_${GAME}_144.png"
 else
   echo "[finalize] icon_source=(未提供，跳过 icon 生成)"
+fi
+
+if [[ "$SYNC_DOC" == "1" ]]; then
+  APK_BASE="$(basename "$APK")"
+  APK_SHA="$(sha256_of "$APK")"
+  APK_SIZE="$(stat -f%z "$APK" 2>/dev/null || stat -c%s "$APK")"
+  echo "[finalize] ─── 文档同步片段（--sync-doc，仅打印；共享文件请手工粘贴后按 AGENTS.md 内容级暂存）───"
+  echo "# ① 追加到 10_docs/_state/games/${GAME}.md 的「本地产物与关键输入」表："
+  echo "| \`08_output/${GAME}/delivery_${DATE}/\` | 交付物：icon_${GAME}_512.png / icon_${GAME}_144.png + menu_template.json | 最终交付 |"
+  if [[ "$PRUNE" == "1" ]]; then
+    echo "| \`10_docs/${GAME}/正式包裁剪清单_${DATE}.json\` | 裁剪清单（保留 ${APK_BASE}） | 最终交付 |"
+  fi
+  echo "# ② 追加到 10_docs/_state/current.md 该游戏行末尾（整行 ≤400 字符）："
+  echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）+ delivery_${DATE}/（icon 512/144 + 菜单模板）"
+  echo "[finalize] ─── 片段结束（脚本不改任何文档文件）───"
 fi
 
 if [[ "$MODE" != "apply" ]]; then

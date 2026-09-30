@@ -2,7 +2,7 @@
 
 > 📍 路径：`re-implement/il2cpp-abi-pitfalls.md`
 > 🎯 触发场景：写 Dobby hook 前，对照本清单核对函数签名与 delegate 调用方式
-> 来源：我本布衣世家录 2026-09-28 会话三轮返工总结
+> 来源：我本布衣世家录 2026-09-28 会话三轮返工总结；失落城堡 2026-10-01（坑 6）
 
 ---
 
@@ -146,12 +146,38 @@ static void Hooked_ModifyResearch(int32_t delta, void* method) {
 
 ---
 
+## 坑 6：值类型（struct）参数用 `runtime_invoke` 传「装箱对象」→ 静默写坏内存（2026-10-01 失落城堡事故）
+
+**症状**：hook 装上了、调用没抛异常、日志显示「写入成功」，但游戏内毫无效果；更糟的是**随后会触发游戏自己的反作弊**（本次弹「档案数据存在异常，即将退出游戏!如有错误检测，请联系客服!」）。
+
+**根因**：`il2cpp_runtime_invoke(methodInfo, obj, void** params, &exc)` 里，**值类型参数必须传「未装箱的结构体数据指针」**，引用类型参数才传「对象指针」。两者在同一参数位上无法靠类型自动区分。
+
+本次场景：`Tera_NF.ContentUnlockCtrl.set_PrivilegeLevel(ACTk 的 ObscuredInt)`、`set_isCanPlayXxx(ObscuredBool)` —— 参数是 struct。我用 `api.BoxInt32()` / 手写装箱把值做成 `Il2CppObject*` 再塞进 `params[]`，il2cpp 把**对象头 16 B（`Il2CppClass* klass` + `void* monitor`）当成结构体内容**写进了后备字段。不报错、不崩溃，只是字段值变垃圾，随后随存档一起被校验抓到。
+
+**判断规则**：
+
+- 参数类型是 C# `struct` / 枚举的**装箱形态**（`ObscuredInt`、`Vector3`、`DateTime`…）→ 传 `&value`（结构体在栈上的地址）
+- 参数类型是 class / interface / string / 数组 / delegate → 传对象指针
+- 如果只拿到一个「装箱对象」但又必须按值传：`il2cpp_object_unbox(obj)` 取回内联数据指针（对应 `api` 里没有现成封装时需自行 `class_get_field` 求偏移，**不要**假设对象头后面紧跟数据）
+- 拿不准时**放弃这个 hook**：换一个参数全是引用类型/int 的挂点，或改走「读侧」路线
+
+**读回值类型字段**：只读方向有可靠办法 —— `ObscuredInt.GetDecrypted() -> int`（argc=0，唯一名）。**写方向不要碰**：
+
+> 🔴 **ACTk（CodeStage Anti-Cheat Toolkit）的 `Obscured*` 字段只读不写。** 它的 `hiddenValue`/`currentCryptoKey`/`fakeValue` 是一套自校验结构，写错不是「功能无效」而是「反作弊自爆」。详见 `anti-cheat-pattern.md` 模式六。
+
+**验证手段**：写值类型字段的功能，必须靠**游戏内可见状态**验收（打开对应 UI 看数字/图标），不能只靠 logcat 的「已写入」日志 —— 本次正是「日志说成功、界面无变化」拖了几轮。
+
+---
+
 ## 装机前快速自检
 
 写完 hook 后过一遍：
 
 - [ ] 每个非 static 方法的 typedef 首参是 `void* self`
 - [ ] 每个带 C# struct 参数的方法确认了是拆寄存器还是传引用
+- [ ] **每个值类型（struct / 枚举装箱形态，如 `ObscuredInt`）参数按值传 `&value`，绝不传装箱对象指针**
+- [ ] **没有对 ACTk `Obscured*` 字段做写操作**（只读方向走 `GetDecrypted()`）
+- [ ] 写值类型字段的功能用**游戏内可见状态**验收，不只靠 logcat 的「已写入」日志
 - [ ] 每个返回 void 的方法 typedef 是 void 而不是 int
 - [ ] 每个接收 delegate 参数的方法用 runtime_invoke 而不是直接跳函数指针
 - [ ] 每个序言值来自 `extract_il2cpp_preambles.py` 而不是手抄

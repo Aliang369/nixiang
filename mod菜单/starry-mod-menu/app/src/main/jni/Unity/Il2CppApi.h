@@ -31,6 +31,7 @@ typedef const void* (*assembly_get_image_t)(const void*);
 typedef void* (*object_get_class_t)(void*);
 typedef const char* (*class_get_name_t)(void*);
 typedef void* (*class_get_method_from_name_t)(void*, const char*, int);
+typedef void* (*class_get_methods_t)(void*, void**);  // 迭代器：iter 初始 *iter=nullptr（可空：老包无此导出）
 typedef void* (*runtime_invoke_t)(void*, void*, void**, void**);
 typedef void* (*string_new_t)(const char*);
 typedef const char* (*method_get_name_t)(void*);
@@ -48,6 +49,15 @@ typedef void* (*method_get_return_type_t)(void*);     // MethodInfo -> Il2CppTyp
 typedef void* (*method_get_param_t)(void*, uint32_t); // MethodInfo, idx -> Il2CppType*
 typedef uint32_t (*method_get_flags_t)(void*);        // MethodInfo -> flags（0x10=static）
 
+/* ⚠️ 成员实名速查（写游戏模块时最易记错；2026-10-01 失落城堡因写 `class_get` 编译失败）：
+ *   class_get_field      ← 不是 class_get / class_get_field_from_name（底层 typedef 才长那样）
+ *   class_method         ← 不是 class_get_method
+ *   class_name / class_parent / class_fields
+ *   field_offset / field_static_get / field_name / field_type
+ *   method_get_name / method_ret_type / method_param / method_flags
+ *   object_class / runtime_invoke / value_box / type_name / thread_attach
+ *   domain_get / domain_assemblies / domain_assembly_open / assembly_image
+ *   string_new / get_corlib / image_class_count / image_class */
 struct Api {
     class_from_name_t            class_from_name = nullptr;
     class_get_field_from_name_t  class_get_field = nullptr;
@@ -68,6 +78,7 @@ struct Api {
     method_get_name_t            method_get_name = nullptr;
     get_corlib_t                 get_corlib = nullptr;
     class_get_fields_t           class_fields = nullptr;   // 可空：老包无此导出
+    class_get_methods_t          class_methods = nullptr;  // 可空：GetMethodBySig 的重载消歧用
     field_get_name_t             field_name = nullptr;     // 可空
     class_get_parent_t           class_parent = nullptr;   // 可空
     field_get_type_t             field_type = nullptr;     // 可空
@@ -97,6 +108,21 @@ struct Api {
     void* FindClassByShortName(const char* shortName) const;
     void* ClassFromName(void* image, const char* ns, const char* name) const;
     void* GetMethod(void* klass, const char* name, int argc) const;
+    /** 重载消歧（2026-10-01 增加）。`GetMethod(name, argc)` 只能返回匹配 argc 的**第一个**候选，
+     *  同参数个数的重载无法区分 —— 失落城堡实测 `op_Implicit` 有 4 个 argc=1 重载，选错静默行为异常。
+     *
+     *  本方法先遍历类方法按 name 收候选，再用「类型全名后缀」筛：
+     *    retSuffix  期望的**返回类型**名后缀（空/null 表示不校验）
+     *    p0Suffix   期望的**第 0 个参数**类型名后缀（空/null 表示不校验）
+     *  后缀比较用尾部子串（如 `"ObscuredInt"` 可匹配 `CodeStage.AntiCheat.ObscuredTypes.ObscuredInt`）。
+     *
+     *  返回规则：唯一命中 → 该 MethodInfo；0 命中 / 多命中 / 迭代器或类型 API 不可用
+     *  → **退回 `GetMethod(klass, name, argc)`**（行为与改造前一致，不引入新的不确定性，
+     *  但调用方应按需自行校验拿到的方法，别假定一定对）。两个后缀都为空时直接走 GetMethod。
+     *  ⚠️ 不校验 argc：`class_methods` 迭代器没有配套的 param_count 导出，只有 name 是可靠判据。
+     *  例：`api.GetMethodBySig(k, "op_Implicit", 1, "ObscuredInt", "Int32")` */
+    void* GetMethodBySig(void* klass, const char* name, int argc,
+                         const char* retSuffix, const char* p0Suffix) const;
     size_t FieldOffset(void* klass, const char* name, size_t bias = 0) const;
     /** 读引用类型静态字段（如 SceneInfoSingleton.instance） */
     void* StaticRefField(void* klass, const char* name) const;

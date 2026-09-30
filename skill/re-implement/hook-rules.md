@@ -349,3 +349,28 @@ if (!f) {
   负数=不限），改完重启游戏即生效。别为把上限 5 改成 24 重建重装一轮。
 - 每 tag 独立计数（§25.2），诊断代码一律 `rawget/rawset`（xLua 全局表白名单式，
   见 `../re-extract/xlua-from-scratch.md` §七）。
+
+---
+
+## 27. 按名取 MethodInfo 的「同 argc 重载」消歧（2026-10-01 失落城堡）
+
+- **问题**：`il2cpp_class_get_method_from_name(klass, name, argc)` 只按「名字 + 参数个数」匹配，
+  返回**第一个**命中项，同一个类里同名且参数个数相同的重载它区分不了。失落城堡
+  `Tera_NF.ContentUnlockCtrl` 的 ACTk `ObscuredInt.op_Implicit` 有 **4 个 argc=1 重载**
+  （`int→ObscuredInt`、`float→ObscuredInt`、`bool→ObscuredBool`…），取错一个既不报错也不崩，
+  只静默走错分支 —— 当轮表现就是「日志说写入成功，游戏里毫无变化」。
+- **判定**：`GetMethod(k, name, argc)` 返回非空 **不代表选对了**，只代表「存在这个参数个数的重载」。
+  只要目标方法名在 metadata 里同 name+argc 出现多行（`01_tools/MetadataSearch` 的 `methods` / `sig` 模式可直接看），
+  就必须消歧；唯一命中的普通方法不受影响。
+- **正确做法**：用 `Il2Cpp::Api::GetMethodBySig(klass, name, argc, retSuffix, p0Suffix)`
+  （`mod菜单/starry-mod-menu/app/src/main/jni/Unity/Il2CppApi.h`，2026-10-01 增加）——
+  先按 name 遍历类方法，再用「返回类型名后缀 / 第 0 参类型名后缀」筛，**唯一命中才返回**，
+  0 命中或多命中一律退回 `GetMethod` 原行为（不猜）。
+  例：`api.GetMethodBySig(k, "op_Implicit", 1, "ObscuredInt", "Int32")`。
+- **实现前提**：`class_methods`（`il2cpp_class_get_methods` 迭代器）与
+  `method_ret_type` / `method_param` / `type_name` 都是**可空导出**，任一缺失该方法自动退回旧行为；
+  用之前先确认这几个符号解析到了（`Il2Cpp::Api` 成员，见头文件「成员实名速查」注释）。
+- **仍然歧义时**：改为**运行时实参类型判断**（在 hook 里看传入对象的 `object_class`/`class_name`），
+  或换一个同名唯一的方法当锚点。宁可少做一个功能，也不要挂错重载。
+- 顺带一条相关约束：`type_name()` 返回的串由 il2cpp 分配、按约定要 `free`；
+  但**判等用的短名串可故意不 free**（每次解析只跑一遍，泄漏有界），别为省内存去 free 一个不确定归属的指针。

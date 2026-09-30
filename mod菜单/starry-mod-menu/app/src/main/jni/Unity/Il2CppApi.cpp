@@ -6,6 +6,7 @@
 #include <link.h>
 
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <dlfcn.h>
 #include <mutex>
@@ -548,6 +549,8 @@ bool Api::Load(const char* libName) {
     method_get_name   = (method_get_name_t)detail::ResolveIl2CppSym(handle, "il2cpp_method_get_name");
     value_box         = (value_box_t)detail::ResolveIl2CppSym(handle, "il2cpp_value_box");
     get_corlib        = (get_corlib_t)detail::ResolveIl2CppSym(handle, "il2cpp_get_corlib");
+    /* 可空：仅 GetMethodBySig 的重载消歧用，缺了也不影响 ready */
+    class_methods     = (class_get_methods_t)detail::ResolveIl2CppSym(handle, "il2cpp_class_get_methods");
 
     if (!class_from_name || !class_get_field || !field_offset ||
         !domain_get || (!domain_assemblies && !domain_assembly_open) ||
@@ -584,6 +587,7 @@ bool Api::ReprobeCore() {
         { "il2cpp_method_get_name",           (void**)&method_get_name },
         { "il2cpp_value_box",                 (void**)&value_box },
         { "il2cpp_get_corlib",                (void**)&get_corlib },
+        { "il2cpp_class_get_methods",         (void**)&class_methods },
     };
     int changed = 0, missing = 0;
     for (auto& e : k) {
@@ -712,6 +716,47 @@ void* Api::ClassFromName(void* image, const char* ns, const char* name) const {
 void* Api::GetMethod(void* klass, const char* name, int argc) const {
     if (!class_method || !klass || !name) return nullptr;
     return class_method(klass, name, argc);
+}
+
+/* 重载消歧：见头文件注释。核心约束是「宁可退回旧行为，也不猜」——
+ * 多个候选都满足后缀条件时不挑第一个，而是退回 GetMethod，让调用方自己复核。 */
+void* Api::GetMethodBySig(void* klass, const char* name, int argc,
+                          const char* retSuffix, const char* p0Suffix) const {
+    if (!klass || !name) return nullptr;
+
+    const bool needRet = (retSuffix && *retSuffix);
+    const bool needP0  = (p0Suffix  && *p0Suffix);
+    if (!needRet && !needP0) return GetMethod(klass, name, argc);
+
+    if (!class_methods || !method_get_name || !method_ret_type ||
+        !method_param  || !type_name)
+        return GetMethod(klass, name, argc);
+
+    /* idx < 0 → 返回类型；idx >= 0 → 第 idx 个参数。后缀子串比较。 */
+    auto TypeEndsWith = [this](void* mi, int idx, const char* suffix) -> bool {
+        void* ty = (idx < 0) ? method_ret_type(mi) : method_param(mi, (uint32_t)idx);
+        if (!ty) return false;
+        char* full = type_name(ty);           /* il2cpp 分配，按约定需 free */
+        if (!full) return false;
+        const size_t lf = strlen(full), ls = strlen(suffix);
+        const bool ok = (lf >= ls) && (memcmp(full + (lf - ls), suffix, ls) == 0);
+        free(full);
+        return ok;
+    };
+
+    void* iter = nullptr;
+    void* hit  = nullptr;
+    int   hits = 0;
+    while (void* mi = class_methods(klass, &iter)) {
+        const char* mn = method_get_name(mi);
+        if (!mn || strcmp(mn, name) != 0) continue;
+        if (needRet && !TypeEndsWith(mi, -1, retSuffix)) continue;
+        if (needP0  && !TypeEndsWith(mi,  0, p0Suffix))  continue;
+        hit = mi;
+        if (++hits > 1) break;                /* 仍有歧义 → 不猜 */
+    }
+    if (hits == 1) return hit;
+    return GetMethod(klass, name, argc);
 }
 
 size_t Api::FieldOffset(void* klass, const char* name, size_t bias) const {

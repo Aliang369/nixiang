@@ -19,6 +19,7 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
 0. `../10_docs/_state/current.md` — 先查目标游戏的一行索引；只按该行链接读取
    `../10_docs/_state/games/{游戏}.md`，不通读全部状态。
 1. `re-analyze/SKILL.md` — 拆包→引擎判定→保护识别→登录方式→能不能改的总判断
+   - `re-analyze/environment-min-path.md` — **「先过环境」最小路径**（用户说「先别做功能、菜单进游戏能正常玩才算完成」时先读：五步最小充分集 + 每步退出条件 + 「推迟到第二阶段」清单）
 2. `re-analyze/protection/` — 保护组件识别与既有案例：
    - `_总纲_加固与校验全体系.md` — **分层模型 + 死法分类学 + 排查决策树（拿新游戏/卡点无思路时先读）**
    - `baidu-shell.md` — 百度 Sagittarius 加固

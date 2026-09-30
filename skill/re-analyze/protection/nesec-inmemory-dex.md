@@ -20,6 +20,8 @@
 
 不要只依赖全内存搜 `dex\n035\0`：无悔华夏 4399 实测 root 全局盲扫命中 0，而 Frida 枚举 ClassLoader 后能直接看到 3 个 `InMemoryDexFile`；用 cookie 全量导出后 dexdump/jadx 均正常。
 
+> ⚠️ **目标同时是 Unity IL2CPP 时，先读 §9**：NIS 会把 metadata 加密、节表销毁、dynsym 全随机化，`Il2CppDumper` / `Cpp2IL` 均为死路；正解是 dump 内存态 metadata → 按名枚举 → `HookByName`。
+
 ## 1. 适用与不适用
 
 ### 适用
@@ -188,3 +190,37 @@ wrapper:      com.starry.magic.StarryApp -> LBApplication
    - 游戏 SDK 的签名/渠道校验是否走 `PackageManager`（可配 SignSpoof）还是读 APK 文件（要另处理）。
 
 不要把“4399 成功”直接外推成“所有易盾都能 cookie dump”：先验证是否真的存在 `InMemoryDexFile`。若没有，回到 native OpenMemory / FART 路线。
+
+## 9. 易盾 + Unity IL2CPP：静态 dump 必走死路（2026-10-01 失落城堡实测）
+
+触发场景：NIS 壳的包同时是 Unity IL2CPP（`libil2cpp.so` + `assets/bin/Data/Managed/Metadata/global-metadata.dat`），需要 IL2CPP 侧类/方法名。**不要在恢复符号、重建 RVA 上花时间 —— 直接跳到「按名 Hook」。**
+
+实机：失落城堡 `com.leiting.lostcastle.leiting` 1.26.0.331，`assets/shellinfo` = `4.22.117 … JarVersion::5.1.11-private`（与本文基线 `7.6.1_857` **不是同一版本**，但 IL2CPP 侧的封锁行为一致）。
+
+### 三层封锁与对应症状
+
+| 层 | 封锁手段 | 症状 |
+|---|---|---|
+| metadata | 磁盘上的 `global-metadata.dat` 头为 `HTPX`（非 `AF 1B B1 FA`），运行时才原地解密 | `Il2CppDumper` → `ERROR: Metadata file not found or encrypted.` |
+| so 符号 | 节表被销毁；dynsym 全部改名为随机短名（`il2cpp_*` 命中数为 **0**） | `Il2CppDumper` 换用「运行时解密 metadata + 内存态 so」后 → `Searching... CodeRegistration : 0 / MetadataRegistration : 0` → `Can't use auto mode`；或 `System.InvalidOperationException: Sequence contains no matching element @ Il2CppDumper/ExecutableFormats/Elf64.cs:73 MapVATR` |
+| so 段 | 页 0 在内存中被替换；首个 `PT_LOAD` 段整体加密（本例仅 `[0, 0x3993000)` 被加密，占文件 69.9%） | `Cpp2IL` → `[Fail] Exception reading dynamic symbol for rel of type R_AARCH64_RELATIVE at pointer 0x6CC2990` → `System.IO.EndOfStreamException @ LibCpp2IL/Elf/ElfFile.cs:300 ProcessRelocations()`（把 `DT_SYMTAB` 的 vaddr 当文件偏移） |
+
+旁证：内存 dump 出的 `libil2cpp.so` 与磁盘版相差 51,583,232 B（69.9%），且 page 0 不是 ELF 头 —— 拼回 `disk[0,0x1000) + mem[0x1000,…)` 也救不回来，因为符号表本身已被随机化。
+
+### 正确路线
+
+1. **metadata 照旧在内存里解密后 dump**（本路线仍然需要，见 §3-§4 的 `/proc/<pid>/mem` 手法）——它是**唯一可读的类/方法/字段名来源**。
+2. 用 metadata **静态枚举名字**（自写解析器或按名检索），**不要求解出 RVA**。
+3. 运行时用**按名挂载**（星光框架 `HookSlot` 的 `HookByName` 路径）完成 Hook —— 它只需要 `class_from_name` + `class_get_method_from_name(name, argc)`，与符号恢复无关。
+4. 只有在按名也匹配不到（同名重载无法区分、或方法被内联）时，才回头考虑 native 层手段，且要重新评估成本。
+
+### 停止条件（避免重复踩）
+
+看到下列任一症状，**立即停止静态 dump**，转按名路线，不再换工具重试：
+- `ERROR: Metadata file not found or encrypted.`
+- `Sequence contains no matching element`
+- `Can't use auto mode to process file, try manual mode.`
+- `EndOfStreamException ... ProcessRelocations()`
+- 对 `libil2cpp.so` 数 dynsym 时 `il2cpp_*` 命中为 0
+
+同一结论已并入 `re-extract/il2cpp-from-scratch.md` §0 的前置判定。

@@ -179,12 +179,56 @@ signal(SIGSYS, ...);  // SA_SIGINFO
 
 ---
 
+## 模式六：自己写坏 `Obscured*` 字段 → 游戏反作弊自爆（2026-10-01 失落城堡）
+
+### 症状
+
+- 功能「logcat 说写入成功」但游戏内毫无变化；
+- 随后（下次读档 / 结算时）弹出**游戏自己的**警告并退出。失落城堡实测原文：
+  「档案数据存在异常，即将退出游戏!如有错误检测，请联系客服!」
+  （注意游戏自己把 `exception` 拼成了 `execption`，按 `execption` 搜才搜得到）
+- **logcat 里没有任何作弊/校验字样** —— 该事件不落日志，容易误判成「服务器校验」或「未知原因」。
+
+### 判定：目标包带 ACTk
+
+包内有 **ACTk（CodeStage Anti-Cheat Toolkit）** 即高度可疑：
+
+- `CodeStage.AntiCheat.ObscuredTypes.*`（`ObscuredInt` / `ObscuredBool` / `ObscuredFloat`…）
+- `CodeStage.AntiCheat.Detectors.{ObscuredCheatingDetector, TimeCheatingDetector, SpeedHackDetector, InjectionDetector, WallHackDetector}`
+- `CodeStage.AntiCheat.Utils.xxHash`、`CodeStage.AntiCheat.Common.*`
+- 游戏侧中央惩罚器通常是游戏自己写的类（失落城堡是 `Teran.DDSystem`：`OnCheaterDetectedForObscured()` / `ForSpeed()` / `ForInjection(int)`、`RecoverDetectCheating(int)`、`TurnToMainMenuBecauseCheating()`、`QuitGame()`、`ShowQuitGameTips()`）。
+
+### 根因
+
+`Obscured*` 是**值类型 struct**，内部为 `hiddenValue` + `currentCryptoKey` + `fakeValue` + `fakeValueActive` + `inited` 的自校验结构。用 `runtime_invoke` 传「装箱对象」调用它的 setter 时，il2cpp 会把**对象头 16 B（`klass*` + `monitor*`）当成结构体内容**写进后备字段 —— 不抛异常、不崩溃，字段值变垃圾，随后随存档一起被校验抓到。完整 ABI 说明见 `il2cpp-abi-pitfalls.md` 坑 6。
+
+### 三条识别线索
+
+1. 包内含 `ACTk.Runtime.dll` / `CodeStage.AntiCheat.*` 类；
+2. 你要写的字段类型是 `ObscuredInt` / `ObscuredBool` 一类（后备字段常命名 `<属性名>k__BackingField`）；
+3. 弹窗文案能在 metadata 字符串区搜到（失落城堡在 `Teran.UITextCtrl.gamedata_execption_str`）。
+
+### 正确做法
+
+1. **只读不写。** 读方向有可靠办法：`ObscuredInt.GetDecrypted() -> int`（argc=0 唯一名）。
+2. 要改数值就**换挂点**：改上层业务方法（结算入口 / 消费路径 / 普通 getter 返回值），不写它的序列化字段。
+3. 已经在写的：**当轮删掉该功能**，不要试图「写对」。失落城堡删掉执照功能后弹窗立即消失，即归因的实测确认。
+
+### 验证
+
+- 删改后重启游戏，连续读档 / 结算 2~3 次，确认不再弹。
+- **不要用「日志说写入成功」当证据** —— 本模式的特征恰恰是日志正常而内存已坏；必须用游戏内可见状态（UI 数字 / 图标）验收。
+
+---
+
 ## 反作弊应对决策表
 
 | 症状 | 原因 | 应对 |
 |------|------|------|
 | 结算失败 (78) | 服务端重放校验 | 降低功能量级 / 关功能打结算关 |
 | "数据异常"弹窗 | BuildPassCheckInfo | Hook 旁路，与战斗 hook 同批 |
+| **"档案数据存在异常"弹窗（游戏自己的文案，logcat 无痕迹）** | **自己写坏了 ACTk `Obscured*` 字段** | **删掉写操作，改挂上游业务方法（模式六）** |
+| **功能"日志成功但界面无变化"** | **可能同上 —— 值类型参数被当装箱对象传** | **先查 `il2cpp-abi-pitfalls.md` 坑 6，改用游戏内可见状态验收** |
 | 作弊上报 | JS addCheat/onStageCheat | evalString splice 屏蔽 |
 | 其他腾讯游戏闪退 | ACE 残留 | 跑 cleanup 脚本 |
 | 登录弹"非法登录" | APK 完整性黑名单 | 参考外科组装法 |

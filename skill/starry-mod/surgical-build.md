@@ -52,7 +52,11 @@ Gradle **不**编 native。跑 `assemble*` / 抽小模板 so 之前必须：
 
 1. `ndk-build`——modern 游戏：`APP_BUILD_SCRIPT=./Android_{tag}.mk NDK_OUT=<starry根>/obj_{tag} NDK_LIBS_OUT=<starry根>/libs_{tag}`（私有 mk + 独立 obj；**必须绝对路径**，相对路径被 `-C` 解析到 app/ 下 → 校验到旧 so 假成功，2026-09-10 事故）
 2. 覆盖 `app/src/main/jniLibs/arm64-v8a/libstarry_magic.so`
-3. 标签自检：英文标签可 `strings`（如 `[Gjc2]`）；中文菜单串必须 `LC_ALL=C grep -ac '菜单名' <so>` 按字节搜（strings 默认 ASCII 不认 UTF-8 中文，会漏报）。禁止上一款残留
+3. 标签自检：英文标签可 `strings`（如 `[Gjc2]`）；中文菜单串必须 `LC_ALL=C grep -ac '菜单名' <so>` 按字节搜（strings 默认 ASCII 不认 UTF-8 中文，会漏报）。禁止上一款残留。
+   **门禁串三条铁律（2026-10-01 失落城堡踩坑）**：
+   - **必须取二进制里真实存在的字符串字面量**。静态 C++ 函数名会被内联/优化掉、名字不进 `.rodata`，拿它当门禁串会报「不含 hook 点」而源码其实已编译成功。失落城堡曾把 `SetLicInt`（静态函数名）写成门禁串导致误报，换成源码里真出现过的 `"set_PrivilegeLevel"` 才对。
+   - **大小写与源码字面量逐字符一致**：`op_Implicit` 不能写成 `Op_Implicit`（il2cpp 反射名以小写开头）。
+   - **串要跟着功能一起增删**：功能整块被删掉（如某开关撤销）时门禁串必须同步删，否则门禁变成永久失败的死锁。
 4. 出包后闭环：包内 so md5 == 构建产物 md5（`unzip -p 成品.apk lib/arm64-v8a/libstarry_magic.so | md5 -q` 对比 `md5 -q libs_{tag}/arm64-v8a/libstarry_magic.so`），不一致=旧 so 混包，禁止交付
 
 否则成品菜单/鉴权会错成上一款游戏。**不影响** OTA 热更链路（OTA 另下 so）。
