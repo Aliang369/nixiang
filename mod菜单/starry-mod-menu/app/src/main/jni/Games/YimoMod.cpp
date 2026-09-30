@@ -121,14 +121,7 @@ static bool LoadLuaApi() {
     if (p_luaL_loadstring && p_lua_pcall) return true;
     void* h = dlopen(YIMO_LUA_LIB, RTLD_NOW);
     if (!h) h = dlopen(YIMO_LUA_LIB, RTLD_NOLOAD | RTLD_NOW);
-    if (!h) {
-        static int s_dl = 0;
-        if ((++s_dl % 20) == 1) {
-            const char* e = dlerror();
-            LOGI(YIMO_LOG " dlopen(%s) 未成功（第 %d 次）：%s", YIMO_LUA_LIB, s_dl, e ? e : "?");
-        }
-        return false;
-    }
+    if (!h) return false;
     p_luaL_loadstring = (luaL_loadstring_t)dlsym(h, "luaL_loadstring");
     p_lua_pcall       = (lua_pcall_t)dlsym(h, "lua_pcall");
     p_lua_tolstring   = (lua_tolstring_t)dlsym(h, "lua_tolstring");
@@ -146,8 +139,6 @@ static bool LoadLuaApi() {
         return false;
     }
     g_luaReady.store(true);
-    LOGI(YIMO_LOG " lua C api ready gettop=%p pcall=%p setglobal=%p",
-         (void*)p_lua_gettop, (void*)p_lua_pcall, (void*)p_lua_setglobal);
     return true;
 }
 
@@ -232,35 +223,10 @@ static const char kYimoPatch[] = R"LUA(
 local _rg = rawget
 if _rg(_G, "__YM_V") then return end
 
--- ---------- 诊断通道（★游戏 LoggerManager 不进 logcat，直接写文件 + print）----------
-local function _dbg(s)
-  local io2 = _rg(_G, "io")
-  if type(io2) ~= "table" then
-    local ok3, v = pcall(function() return io end)
-    if ok3 and type(v) == "table" then io2 = v end
-  end
-  if type(io2) == "table" and io2.open then
-    pcall(function()
-      local f = io2.open("/sdcard/Android/data/com.x.yimoo.official/files/ym.log", "a")
-      if f then f:write(s, "\n") f:close() end
-    end)
-  end
-  local P = _rg(_G, "print")
-  if type(P) == "function" then pcall(P, s) end
-end
-local function _dbgN(s)
-  local n = (_rg(_G, "__YM_N") or 0) + 1
-  rawset(_G, "__YM_N", n)
-  if n <= 8 then _dbg(s) end
-end
-
 local function L(n) return package.loaded[n] end
 
 local pg = _rg(_G, "pg")
-if type(pg) ~= "table" or pg.me == nil or pg.global == nil then
-  _dbgN("[YM][early] pg 未就绪 pg=" .. tostring(pg))
-  return
-end
+if type(pg) ~= "table" or pg.me == nil or pg.global == nil then return end
 
 local ACA   = L("Common.Ability.Attribute.ActorCombatAttribute")
 local ATTR  = L("Common.Const.AttributeConst")
@@ -268,12 +234,7 @@ local CONST = L("Common.Const.Const")
 local PC    = L("GameApp.Controller.PawnController")
 local IC    = L("GameApp.Input.InputCommand")
 local CMP   = L("Entities.SpaceEntities.ClientMainPlayer")
-if not (ACA and ATTR and CONST and PC and IC and CMP) then
-  _dbgN("[YM][early] 模块缺失 ACA=" .. tostring(ACA ~= nil) .. " ATTR=" .. tostring(ATTR ~= nil) ..
-        " CONST=" .. tostring(CONST ~= nil) .. " PC=" .. tostring(PC ~= nil) ..
-        " IC=" .. tostring(IC ~= nil) .. " CMP=" .. tostring(CMP ~= nil))
-  return
-end
+if not (ACA and ATTR and CONST and PC and IC and CMP) then return end
 
 -- ---------- 开关表（native 只改字段，不替换表）----------
 local YM = _rg(_G, "YM")
@@ -284,24 +245,6 @@ YM.inv  = YM.inv  == true
 YM.jump = YM.jump == true
 YM.stam = YM.stam == true
 YM.tp   = YM.tp   == true
-
--- ---------- 日志（每 tag 限 5 条，防刷爆 logcat）----------
--- 瞬移相关 tag 放宽到 24 条：距离上限要按实机数据调，「5 条」看不出趋势
-local LOG_LIMIT_EXTRA = { tp = 24, tpwhy = 24, tpcheck = 24 }
-local _cnt = {}
-local function LOG(tag, fmt, ...)
-  local n = (_cnt[tag] or 0) + 1
-  _cnt[tag] = n
-  if n > (LOG_LIMIT_EXTRA[tag] or 5) then return end
-  local ok, s = pcall(string.format, "[YM][" .. tag .. "][#" .. n .. "] " .. fmt, ...)
-  s = ok and s or ("[YM][" .. tag .. "] format error")
-  _dbg(s)                       -- 文件 + print 双通道（保证 logcat 可见）
-  local LM = package.loaded["Core.Log.LoggerManager"]
-  if type(LM) == "table" and LM.getLogger then
-    local ok2, lg = pcall(LM.getLogger, "YIMO")
-    if ok2 and lg then pcall(function() lg:warn("%s", s) end) end
-  end
-end
 
 local function isMine(e)
   if type(e) ~= "table" then return false end
@@ -322,35 +265,33 @@ local function isMyActorId(id)
 end
 
 -- LiteClass / 普通模块表：直接赋值
-local function patchLite(cls, key, wrap, tag)
-  if type(cls) ~= "table" then LOG(tag, "FAIL %s: class nil", key) return nil end
+local function patchLite(cls, key, wrap)
+  if type(cls) ~= "table" then return nil end
   local orig = cls[key]
-  if type(orig) ~= "function" then LOG(tag, "FAIL %s: not fn (%s)", key, type(orig)) return nil end
+  if type(orig) ~= "function" then return nil end
   local wrapped = wrap(orig)
-  local ok, err = pcall(function() cls[key] = wrapped end)
-  LOG(tag, "patch %s ok=%s %s", key, tostring(ok), tostring(err or ""))
+  local ok = pcall(function() cls[key] = wrapped end)
   return ok and wrapped or nil
 end
 
 -- Class.Class 实体类：优先写 vtbl；☠类表 rawget 可能被 Config 的 RPC 参数表遮蔽
-local function patchEntityClass(cls, key, wrap, tag)
-  if type(cls) ~= "table" then LOG(tag, "FAIL %s: class nil", key) return false end
+local function patchEntityClass(cls, key, wrap)
+  if type(cls) ~= "table" then return false end
   local orig = cls[key]
   if type(orig) ~= "function" and type(cls.getVtbl) == "function" then
     local okV, vt = pcall(cls.getVtbl)
     if okV and type(vt) == "table" and type(vt[key]) == "function" then orig = vt[key] end
   end
-  if type(orig) ~= "function" then LOG(tag, "FAIL %s: not fn (%s)", key, type(orig)) return false end
+  if type(orig) ~= "function" then return false end
   local wrapped = wrap(orig)
-  local ok, err
+  local ok
   if type(cls.getVtbl) == "function" then
-    ok, err = pcall(function() cls.getVtbl()[key] = wrapped end)
+    ok = pcall(function() cls.getVtbl()[key] = wrapped end)
   end
   if not ok then
     if type(cls.forceAttrRepeat) == "function" then pcall(cls.forceAttrRepeat, cls, key) end
-    ok, err = pcall(function() cls[key] = wrapped end)
+    ok = pcall(function() cls[key] = wrapped end)
   end
-  LOG(tag, "patch %s ok=%s %s", key, tostring(ok), tostring(err or ""))
   return ok
 end
 
@@ -420,8 +361,8 @@ local function wrapServerMsg(orig)
 end
 
 local _wrapMark = {}
-local function fullWrap(cls, label)
-  if type(cls) ~= "table" then LOG("rpc", "full-wrap %s: class nil", label) return end
+local function fullWrap(cls)
+  if type(cls) ~= "table" then return end
   local vt = cls
   if type(cls.getVtbl) == "function" then
     local ok, t = pcall(cls.getVtbl)
@@ -429,18 +370,17 @@ local function fullWrap(cls, label)
   end
   -- ★必须退回 __index 拿继承的那份，否则漏掉 ClientPet（而宠物才是本作主输出）
   local target = rawget(vt, "serverMsg") or cls.serverMsg
-  if type(target) ~= "function" then LOG("rpc", "full-wrap %s: no serverMsg", label) return end
+  if type(target) ~= "function" then return end
   if _wrapMark[target] then return end
   local wrapped = wrapServerMsg(target)
   _wrapMark[wrapped] = true
-  local ok = pcall(function() vt.serverMsg = wrapped end)
-  LOG("rpc", "full-wrap %s ok=%s", label, tostring(ok))
+  pcall(function() vt.serverMsg = wrapped end)
 end
 
-fullWrap(L("Entities.SpaceEntities.ClientMainPlayer"), "ClientMainPlayer")
-fullWrap(L("Entities.SpaceEntities.ClientPet"),        "ClientPet")
-fullWrap(L("Entities.SpaceEntities.ClientPuppet"),     "ClientPuppet")
-fullWrap(L("Entities.SpaceEntities.ClientCreation"),   "ClientCreation")
+fullWrap(L("Entities.SpaceEntities.ClientMainPlayer"))
+fullWrap(L("Entities.SpaceEntities.ClientPet"))
+fullWrap(L("Entities.SpaceEntities.ClientPuppet"))
+fullWrap(L("Entities.SpaceEntities.ClientCreation"))
 
 ---------------------------------------------------------------------
 -- ①-b 投射物多段命中 —— ★正式包已移除（2026-09-30 21:5x 决策）
@@ -482,7 +422,7 @@ patchLite(ACA, "getAttribRatioValue", function(orig)
     end
     return v
   end
-end, "spd")
+end)
 
 ---------------------------------------------------------------------
 -- ⑤ 无限体力（拦截消耗，放行恢复）
@@ -496,16 +436,13 @@ patchLite(ACA, "changeStamina", function(orig)
     end
     return orig(self, value)
   end
-end, "stam")
+end)
 
 ---------------------------------------------------------------------
 -- ③ 无敌
 ---------------------------------------------------------------------
-local function hookCheckValidTarget(U, key)
-  if type(U) ~= "table" or type(U.checkValidTarget) ~= "function" then
-    LOG("invin", "skip %s.checkValidTarget", key)
-    return
-  end
+local function hookCheckValidTarget(U)
+  if type(U) ~= "table" or type(U.checkValidTarget) ~= "function" then return end
   local orig = U.checkValidTarget
   U.checkValidTarget = function(target, owner)
     if YM.inv and owner ~= nil and isMine(target) and not isMine(owner)
@@ -515,21 +452,20 @@ local function hookCheckValidTarget(U, key)
     end
     return orig(target, owner)
   end
-  LOG("invin", "hooked %s.checkValidTarget", key)
 end
 
 -- ☠ Common.Utils.Utils 与 Utils.Utils 是同一份源码的两个 package.loaded 实例，两个都要补
 local U1 = L("Common.Utils.Utils")
 local U2 = L("Utils.Utils")
-hookCheckValidTarget(U1, "Common.Utils.Utils")
-if U2 and U2 ~= U1 then hookCheckValidTarget(U2, "Utils.Utils") end
+hookCheckValidTarget(U1)
+if U2 and U2 ~= U1 then hookCheckValidTarget(U2) end
 
 patchEntityClass(L("Entities.SpaceEntities.ClientSpace"), "checkImmuneFallDamage", function(orig)
   return function(self, ...)
     if YM.inv then return true end
     return orig(self, ...)
   end
-end, "invin-fall")
+end)
 
 local function markInvincible()
   local v = YM.inv and 4e12 or 0
@@ -693,8 +629,6 @@ local function nearestChest(pawn)
       local d2 = math.sqrt(envD2)
       if d2 <= tpMaxDist then return envBest, d2, "env" end
     end
-    LOG("tpwhy", "最近目标 %s(kind=%s) %.1fm 超过上限 %.1fm，本次落回普通跳跃",
-        tostring(best.id), tostring(bestKind), dist, tpMaxDist)
     return nil
   end
   if envBest then
@@ -756,10 +690,7 @@ local function tpToChest(pawn)
     local ok = pcall(pawn.forceSetPos, pawn, target, false)
     moved = ok
   end
-  if not moved then
-    LOG("tp", "FAIL 挪不动 pawn（forceSetPosRot/forceSetPos 都不可用）")
-    return false
-  end
+  if not moved then return false end
 
   if pg.world and type(pg.world.setIsSyncPosThisFrame) == "function" and pawn.actorId then
     pcall(pg.world.setIsSyncPosThisFrame, pawn.actorId, true)
@@ -772,8 +703,6 @@ local function tpToChest(pawn)
   local plan = math.sqrt(pdx * pdx + pdz * pdz)
   tpWatch = { mx, mz, tx, tz, plan }
 
-  LOG("tp", "tp to kind=%s id=%s dist=%.1f stand=%.2f 上限=%.1f",
-      tostring(kind or "?"), tostring(ent.id), dist, STAND, tpMaxDist)
   return true
 end
 
@@ -794,19 +723,11 @@ local function tpVerify()
     -- 到位：贴着上限就往上试一档（「只有成功才涨」⇒ 永不主动冒险）
     if plan > tpMaxDist * 0.8 then
       local nxt = math.min(TP_MAX_DIST_HARD, plan * 1.3)
-      if nxt > tpMaxDist then
-        tpMaxDist = nxt
-        LOG("tpcheck", "kept 计划=%.1fm 离目标=%.1fm ⇒ 上限上调到 %.1fm", plan, remainH, tpMaxDist)
-        return
-      end
+      if nxt > tpMaxDist then tpMaxDist = nxt end
     end
-    LOG("tpcheck", "kept 计划=%.1fm 离目标=%.1fm 上限=%.1fm", plan, remainH, tpMaxDist)
   elseif movedH < 2.0 then
     -- ☠被弹回原点：收窄上限（这一次失败正是服务器在告诉我们真实边界在哪）
     tpMaxDist = math.max(TP_MAX_DIST_MIN, plan * 0.6)
-    LOG("tpcheck", "☠弹回原地 计划=%.1fm 实际=%.1fm ⇒ 上限收窄到 %.1fm", plan, movedH, tpMaxDist)
-  else
-    LOG("tpcheck", "△滑走了 计划=%.1fm 实际=%.1fm 离目标=%.1fm", plan, movedH, remainH)
   end
 end
 
@@ -828,11 +749,7 @@ end
 
 local jumpWrapper = patchLite(PC, "performJump", function(orig)
   return function(self, canJump, inFly)
-    -- ★入口无条件日志：否则「按了没反应」是个哑谜，分不清开关没开还是功能失效
     local pawn = self and self.pawn
-    LOG("jumpin", "按到跳跃 canJump=%s inFly=%s 开关[伤害=%s 移速=%s 无敌=%s 跳跃=%s 体力=%s 瞬移=%s]",
-        tostring(canJump), tostring(inFly), tostring(YM.dmg), tostring(YM.spd),
-        tostring(YM.inv), tostring(YM.jump), tostring(YM.stam), tostring(YM.tp))
 
     -- ⑥ 必须在无限跳【之前】接管，否则空中按跳会被无限跳吃掉；inFly 时不接管（会抢 StopFly）
     if YM.tp and not inFly then
@@ -854,13 +771,12 @@ local jumpWrapper = patchLite(PC, "performJump", function(orig)
 
     return orig(self, canJump, inFly)
   end
-end, "jump")
+end)
 
 -- ☠LiteClass 继承会把父类方法 rawset 缓存进子类 ⇒ PlayerController 也要写一遍
 local PLC = L("GameApp.Controller.PlayerController")
 if jumpWrapper and type(PLC) == "table" and rawget(PLC, "performJump") ~= jumpWrapper then
-  local ok, err = pcall(function() PLC.performJump = jumpWrapper end)
-  LOG("jump", "patch PlayerController.performJump ok=%s %s", tostring(ok), tostring(err or ""))
+  pcall(function() PLC.performJump = jumpWrapper end)
 end
 
 ---------------------------------------------------------------------
@@ -882,9 +798,6 @@ Yimo.tick = function()
 end
 
 rawset(_G, "__YM_V", 1)
-LOG("install", "done v=%s dmg=%s spd=%s inv=%s jump=%s stam=%s tp=%s",
-    tostring(Yimo.v), tostring(YM.dmg), tostring(YM.spd), tostring(YM.inv),
-    tostring(YM.jump), tostring(YM.stam), tostring(YM.tp))
 )LUA";
 
 // 每秒调一次的 Lua 维护入口（★必须 rawget：游戏全局表是白名单式 __index，裸读会刷错误日志）
@@ -932,18 +845,8 @@ static void SyncOnLua(lua_State* L) {
 
     if (!g_patched) {
         g_patched = true;
-        LOGI(YIMO_LOG " lua patch installed (state=%p)", (void*)L);
-    }
-    {
-        static uint64_t s_lastMs = 0;
-        struct timespec ts;
-        clock_gettime(CLOCK_MONOTONIC, &ts);
-        const uint64_t nowMs = (uint64_t)ts.tv_sec * 1000ull + (uint64_t)ts.tv_nsec / 1000000ull;
-        if ((nowMs - s_lastMs) >= 3000) {
-            s_lastMs = nowMs;
-            LOGI(YIMO_LOG " sync dmg=%d spd=%d inv=%d jump=%d stam=%d tp=%d",
-                 dmg, spd, (int)inv, (int)jump, (int)stam, (int)tp);
-        }
+        /* 全包唯一一条成功日志：既是装机验证锚点，也便于用户反馈问题时确认补丁已生效 */
+        LOGI(YIMO_LOG " patch installed (state=%p)", (void*)L);
     }
     g_wantSync.store(false, std::memory_order_relaxed);
 
@@ -967,19 +870,9 @@ static inline uint64_t YimoNowMs() {
 
 static inline void SyncFromLuaEntry(lua_State* L) {
     if (g_inHook.exchange(true, std::memory_order_acq_rel)) return;
-    /* 记录见过的 lua_State：游戏可能有多套 VM（战斗 VM ≠ 加载 VM），
-     * 那样补丁装在 A 上、战斗跑在 B 上，表现为「补丁装上了但没效果」 */
-    static void* s_states[8] = {0};
-    static int s_nstates = 0;
-    bool known = false;
-    for (int i = 0; i < s_nstates; ++i) if (s_states[i] == (void*)L) { known = true; break; }
-    if (!known && s_nstates < 8) {
-        s_states[s_nstates++] = (void*)L;
-        LOGI(YIMO_LOG " lua state #%d = %p", s_nstates, (void*)L);
-    }
+    /* ★游戏可能有多套 lua_State（战斗 VM ≠ 加载 VM）：补丁装在 A 上、战斗跑在 B 上
+     *  会表现为「装上了但没效果」。这里只靠 g_wantSync 驱动，每个 state 各自同步。 */
     const uint32_t c = g_hookCalls.fetch_add(1, std::memory_order_relaxed);
-    if (c == 0) LOGI(YIMO_LOG " lua hook 首次触发 state=%p", (void*)L);
-    else if ((c % 3000) == 0) LOGI(YIMO_LOG " lua hook calls=%u patched=%d nstates=%d", c, (int)g_patched, s_nstates);
 
     bool want = g_wantSync.load(std::memory_order_relaxed);
     if (!g_patched) {
@@ -1019,17 +912,13 @@ static bool InstallLuaHooks() {
     if (g_hooksInstalled) return true;
 
     /* 只 hook 本体 >= 16 字节的入口；并做序言指纹校验（漂移即拒挂） */
-    if (p_lua_pcall && FingerprintOk((void*)p_lua_pcall, kPcallFp) &&
-        DobbyHook((void*)p_lua_pcall, (void*)Hook_lua_pcall, (void**)&g_origPcall) == 0) {
-        LOGI(YIMO_LOG " hooked lua_pcall @ %p", (void*)p_lua_pcall);
-    } else {
+    if (!(p_lua_pcall && FingerprintOk((void*)p_lua_pcall, kPcallFp) &&
+          DobbyHook((void*)p_lua_pcall, (void*)Hook_lua_pcall, (void**)&g_origPcall) == 0)) {
         LOGE(YIMO_LOG " hook lua_pcall 失败（fp=%d）", (int)FingerprintOk((void*)p_lua_pcall, kPcallFp));
     }
 
-    if (p_lua_gettop && FingerprintOk((void*)p_lua_gettop, kGetTopFp) &&
-        DobbyHook((void*)p_lua_gettop, (void*)Hook_lua_gettop, (void**)&g_origGettop) == 0) {
-        LOGI(YIMO_LOG " hooked lua_gettop @ %p", (void*)p_lua_gettop);
-    } else {
+    if (!(p_lua_gettop && FingerprintOk((void*)p_lua_gettop, kGetTopFp) &&
+          DobbyHook((void*)p_lua_gettop, (void*)Hook_lua_gettop, (void**)&g_origGettop) == 0)) {
         LOGW(YIMO_LOG " hook lua_gettop 未成功（fp=%d）—— lua_pcall 仍可用",
              (int)FingerprintOk((void*)p_lua_gettop, kGetTopFp));
     }
@@ -1041,7 +930,6 @@ static bool InstallLuaHooks() {
     g_hooksInstalled = true;
     g_ready.store(true);
     g_wantSync.store(true);
-    LOGI(YIMO_LOG " init ok（xLua 路线，零 il2cpp 依赖）");
     return true;
 }
 
@@ -1066,7 +954,6 @@ void Yimo_OnFeatureChanged(int featNum, bool enabled) {
         case YIMO_FEAT_SPD:  break;
         default: break;
     }
-    LOGI(YIMO_LOG " feature #%d -> %d", featNum, (int)enabled);
     g_wantSync.store(true);
 }
 
@@ -1074,12 +961,10 @@ void Yimo_OnValueChanged(int featNum, int value) {
     if (featNum == YIMO_FEAT_DMG) {
         // ① 精灵攻击秒杀已由 Toggle 直实现（见 OnFeatureChanged）；
         //    旧菜单缓存若还按滑块回调带值过来，一律忽略，避免把开关状态改回去。
-        LOGI(YIMO_LOG " dmg value ignored (toggle-only) value=%d", value);
     } else if (featNum == YIMO_FEAT_SPD) {
         if (value < 1) value = 1;
         if (value > 10) value = 10;
         g_spdMult.store(value);
-        LOGI(YIMO_LOG " spd mult = %d", value);
         g_wantSync.store(true);
     }
 }
