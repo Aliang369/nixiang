@@ -1,0 +1,27 @@
+{
+ "game_dir": "/Users/aliang/Documents/nixiang/08_output/勇士之心",
+ "keep": "勇士之心_1.0.4_surgical-releaseSigned.apk",
+ "keep_size": 67119895,
+ "keep_md5": "e45a5a2e0efe3913a50a2058458c0e81",
+ "mode": "--apply",
+ "removed": [
+  {
+   "name": "勇士之心_1.0.4_surgical-unsigned.apk",
+   "size": 66972215,
+   "md5": "9f03e4d6c80a5c2c7b88e0aacc52e000"
+  },
+  {
+   "name": "勇士之心_1.0.4_surgical-releaseSigned.apk.idsig",
+   "size": 542235,
+   "md5": "5e52f06f0baeed6b5aaed6e805c968bf"
+  }
+ ],
+ "removed_count": 2,
+ "base_apk_removed": {
+  "path": "09_test/勇士之心/regrab_20260930/base.apk",
+  "size": 65472824,
+  "md5": "03857f4c71544ba32d625ce445af378b",
+  "sha256": "c9b65e5c0e0f921a6a8687c629802a0e8b16cb44ea4e89b22033aa2b3fb9e62d",
+  "reason": "官方 1.0.4 底包用完即删；再获取见 10_docs/_state/底包再获取台账.md"
+ }
+}

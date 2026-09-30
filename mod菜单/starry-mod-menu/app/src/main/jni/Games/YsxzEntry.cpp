@@ -11,11 +11,12 @@
 
 static const char* kYsxz_Features[] = {
     "Category_基础功能",       // 0
-    "Toggle_秒杀",             // 1  YSXZ_FEAT_KILL
-    "Toggle_无敌",             // 2  YSXZ_FEAT_INV
-    "Toggle_无限技能",         // 3  YSXZ_FEAT_SKILL
-    "Slider_移动速度:1:5:1",     // 4  YSXZ_FEAT_MOVE（1=关，2..5=倍率）
-    "Toggle_自动战斗",         // 5  YSXZ_FEAT_AUTO（金卡特权解锁）
+    "Slider_伤害倍率:1:50:1",    // 1  YSXZ_FEAT_DAMAGE（1=原倍率，2..50=我方对敌伤害乘数）
+    "Toggle_秒杀",             // 2  YSXZ_FEAT_KILL（与伤害倍率换位：滑块置顶）
+    "Toggle_无敌",             // 3  YSXZ_FEAT_INV
+    "Toggle_无限技能",         // 4  YSXZ_FEAT_SKILL
+    "Slider_移动速度:1:10:1",    // 5  YSXZ_FEAT_MOVE（1=关，2..10=倍率）
+    "Toggle_自动战斗",         // 6  YSXZ_FEAT_AUTO（金卡特权解锁）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

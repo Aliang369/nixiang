@@ -702,6 +702,14 @@ public final class SignSpoof {
                     + "6+B2JhhYsnNDyGe3CuK/XAEOo242gqe/uOAAh5jMdtzX3SibHsEEjOFMuh0W/1djI9lpKUtoQ9jj"
                     + "Z3wLOd6bPDpgQeeul8GVY4Vo5J/X33ooWzAYukJlL/Ur3+10JcsPFDBLVwj5gG+eBR9GtsJoRfUF"
                     + "3qcqVP1rpIumaNfiwEMOfzzZmbNv+w==";
+    /** 勇士之心 TapTap 官方（com.fightingstars.games.warrior，CN=shan / O=bingo）。
+     *  与 动物大联盟 com.fightingstars.games.animal 为同一张证书：2026-09-30 用
+     *  apksigner verify --print-certs 核对官方 1.0.4 base.apk 得
+     *  SHA-256=de8a75d30a1831f3ddc83f38f285513110fde9ab919fb4e471653f86b5083e0a、
+     *  SHA-1=33e2c8612b3efbdbb1d0d5b18b7fefbb8c9cc05d、MD5=79a6a62f1c189d911b2dff8324be384b，
+     *  与 DWDLM 的证书 DER 完全一致，故直接复用其 base64 常量。 */
+    private static final String YSXZ_PKG = "com.fightingstars.games.warrior";
+    private static final String YSXZ_CERT_B64 = DWDLM_CERT_B64;
     /** 宝石战争 TapTap 官方（com.acing.gow.adv，MD5=d7dec28ad1785e76c9b912b19ad62d4c）。
      *  2026-09-16 从官方 6.0.012 的 v2 签名证书导出，供 TapSDK 签名读取回灌。 */
     private static final String BSZZ_PKG = "com.acing.gow.adv";
@@ -915,6 +923,24 @@ public final class SignSpoof {
                     + "IAFM33Fb5NTVWQRkkGEH7gLA0ZblVaT4JV5rFAXsYSg4V3NZzf8sODVwo7EmrS9WFYXkF6VCxrDXD67wbBBkzJvn7yEUsFBPkLJH"
                     + "IM2Y3Up0vlE=";
 
+    private static final String YIMO_CERT_B64 =
+            "MIIDeTCCAmGgAwIBAgIEIwz5eTANBgkqhkiG9w0BAQsFADBsMRAwDgYDVQQGEwdGVU5QTFVTMRAw" +
+            "DgYDVQQIEwdGVU5QTFVTMRAwDgYDVQQHEwdGVU5QTFVTMRAwDgYDVQQKEwdGVU5QTFVTMRAwDgYD" +
+            "VQQLEwdGVU5QTFVTMRAwDgYDVQQDEwdGVU5QTFVTMCAXDTIzMTEyOTA5NTczOFoYDzIwNzgwOTAx" +
+            "MDk1NzM4WjBsMRAwDgYDVQQGEwdGVU5QTFVTMRAwDgYDVQQIEwdGVU5QTFVTMRAwDgYDVQQHEwdG" +
+            "VU5QTFVTMRAwDgYDVQQKEwdGVU5QTFVTMRAwDgYDVQQLEwdGVU5QTFVTMRAwDgYDVQQDEwdGVU5Q" +
+            "TFVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApQUn3rhWq6eXD0PJpRqPbkdkBGEH" +
+            "v820Dl2Qq6CpklQIR7extzmX4U28xzu7dUAkwId3DQH3fEoQDV1kmZLA2CRdD3FlOp+6QmiJ7lO0" +
+            "iBYaVyxz7dn2nJU/ON4RQwQB2QH6S7POWF/UEPPodQ0a8tsdN+DRvD/H0IXGe47marMwYEA6E0dd" +
+            "+gf5n+q3Hk01keExxRuTya6JrgX+WHy58YQa0nN6VVUsbxVE4HRW761aHZZN9SMD9jJO/xnZvtJH" +
+            "/MfwlxpwBR/rUwmO0z7+DWb/2RAGwEm6NNmSelofd6j7FLIyIcBggP0fbrdobfVWgUTtLKohqMHd" +
+            "30uWQdv9EQIDAQABoyEwHzAdBgNVHQ4EFgQUxR58+FfVX04AAaZ22eS4pOf30xEwDQYJKoZIhvcN" +
+            "AQELBQADggEBAJT/ECFTbfiNPUbTz4M7BLVI80yDn1HmNGVRVzSLVbr6qruVkt3kuzlG1FDsE8wh" +
+            "BYzy49VQnXzv224nNclAlLfuwK27SVX6Q2ipzmgSbkWfgdXqcC5W18CDTwID3oAsSSL25RTUKXad" +
+            "GW6O+Gosz8N03fKvvS+MOXGGT0bYvZHvmUP/OUQZL6bVy7bk0uw23B/pN0ohWJlzcG+hh269kEXg" +
+            "il1RNRYIv0OWfAu2aLgQ4Pqa5MZNkZrJTol+568oCIpaQffvBITH+tO3NP/bIIb9cDql8FSujldw" +
+            "FZZUISLvh7lKwPtfud//6bRU3nKYDjBxhpICJa3UugQf700Tkz0=";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -962,6 +988,7 @@ public final class SignSpoof {
                 fakes.put(YNTT_PKG, new Signature(Base64.decode(YNTT_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ES2_PKG, new Signature(Base64.decode(ES2_CERT_B64, Base64.DEFAULT)));
                 fakes.put(DWDLM_PKG, new Signature(Base64.decode(DWDLM_CERT_B64, Base64.DEFAULT)));
+                fakes.put(YSXZ_PKG, new Signature(Base64.decode(YSXZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(BSZZ_PKG, new Signature(Base64.decode(BSZZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(RSJY_PKG, new Signature(Base64.decode(RSJY_CERT_B64, Base64.DEFAULT)));
                 fakes.put(SF3_PKG, new Signature(Base64.decode(SF3_CERT_B64, Base64.DEFAULT)));

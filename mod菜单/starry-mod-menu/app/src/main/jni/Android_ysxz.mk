@@ -42,6 +42,20 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
 LOCAL_SRC_FILES := MainModern.cpp Games/YsxzMod.cpp Games/YsxzEntry.cpp
 
+# MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
+# FgoBoot_InjectEarlyFromOnLoad，不加本文件即 ld.lld undefined symbol。
+# 本作包内只有 libsecsdk/libthemis/libtapsdkcore/libBugly_Native/libsecret（无 libtprt.so），
+# 菜单 dex 由外科 zip 打进 APK，故用 B 类 no-op 桩。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
+# SecShell（libsecret.so）运行态净化看门狗：壳自检失败置 dirty=1 → 跳过真实
+# Application.onCreate → bingo SDK 未初始化 → AppInfo.parameters NPE 闪退。
+# 看门狗必须先于壳自检（~413ms）启动，故由 appComponentFactory
+# com.starry.magic.ysxz.YsxzAppComponentFactory 的最早入口触发（~365ms）。
+LOCAL_SRC_FILES += Games/YsxzSecShell.cpp
+# 退出探针：启动 5~13s 后进程 exit(0)，需定位是壳/游戏/保护组件谁调的。
+LOCAL_SRC_FILES += Games/YsxzExitTrace.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

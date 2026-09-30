@@ -1,0 +1,54 @@
+# 勇士之心 1.0.4 星光复刻 — 决定性日志行（2026-09-30）
+# 设备：小米 Mi 11 M2102K1AC（serial 96f0d883，Android 14，无 root）
+# 产物：08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk md5 e45a5a2e0efe3913a50a2058458c0e81
+#       so md5 5e0d30c366fdf167086f08b809ccf4d9
+# 采集：adb -s 96f0d883 logcat -d -v time | grep -E "..."；完整 logcat 不入库
+
+## 1) 保护壳健康 + 签名伪造（未命中官方证书就解不开加密 cocos so）
+09-30 20:47:35.145 I/YsxzAppFactory: SecShell watchdog started before application=dev.mars.secure.ProxyApplication
+09-30 20:47:35.146 E/StarrySignSpoof: exemptHiddenApis(meta) failed
+09-30 20:47:35.146 E/StarrySignSpoof: Caused by: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+09-30 20:47:35.146 E/StarrySignSpoof: exemptHiddenApis(declared) failed   # Android 14 该方法已改名/改签名，豁免失败
+09-30 20:47:35.167 I/StarrySignSpoof: spoof hit pkg=com.fightingstars.games.warrior md5=79a6a62f1c189d911b2dff8324be384b
+                                                                    # ↑ 官方证书 MD5（CN=shan），伪造生效
+## 2) boot 链走通（旧版的 AppInfo.parameters NPE 已不再出现）
+09-30 20:47:35.413 I/StarryBridgeTest: === 桥接自检结束: PASS=15 FAIL=0 === ✓
+09-30 20:47:35.631 I/System.out: ------------------onCreate 初始化-------------------
+09-30 20:47:35.632 I/dev_mars_native: [secure] phase app-ready 484 ms
+09-30 20:47:35.920 D/main: cocos_android_app_init
+## 3) evalString 钩子自适应定位 + JS 热插
+09-30 20:47:35.777 I/Mod_Menu: [Ysxz] hooked se::evalString @0x712cd232dc rva=0x3152DC
+09-30 20:47:35.777 I/Mod_Menu: [Ysxz] early hook ok iter=28
+09-30 20:47:42.792 I/Mod_Menu: [Ysxz] logic splice #1 len 6403389->6425415 file=assets/game/index.js
+09-30 20:48:32.271 I/Mod_Menu: [Ysxz] logic splice #2 len 312776->334802 file=assets/battleLogic/index.js
+## 4) 退出拦截（关键：保护线程 _exit(0) 被内核级陷阱拦下，进程存活）
+09-30 20:47:34.763 I/Mod_Menu: [YsxzExit] hook ok libc.exit (libc.so:exit @0x729e0fd3c0)
+09-30 20:47:34.763 I/Mod_Menu: [YsxzExit] hook ok libc._exit (libc.so:_exit @0x729e0fd3a4)
+09-30 20:47:34.763 W/Mod_Menu: [YsxzExit] hook 失败 libc._Exit
+09-30 20:47:34.763 I/Mod_Menu: [YsxzExit] hook ok libc.abort (libc.so:abort @0x729e09f128)
+09-30 20:47:34.763 I/Mod_Menu: [YsxzExit] hook ok libc.kill (libc.so:kill @0x729e0f26f0)
+09-30 20:47:34.763 I/Mod_Menu: [YsxzExit] hook ok libc.pthread_exit (libc.so:pthread_exit @0x729e107678)
+09-30 20:47:34.763 I/Mod_Menu: [YsxzExit] hook ok libc.syscall (libc.so:syscall @0x729e09b3a0)
+09-30 20:47:34.954 W/Mod_Menu: [YsxzExit] 符号未找到 libandroid_runtime.so!Java_java_lang_System_exit__I
+09-30 20:47:34.996 W/Mod_Menu: [YsxzExit] 符号未找到 libandroid_runtime.so!Java_java_lang_Runtime_exit__I
+09-30 20:47:35.056 W/Mod_Menu: [YsxzExit] 符号未找到 libandroid_runtime.so!Java_java_lang_Runtime_exitInternal__I
+09-30 20:47:35.130 W/Mod_Menu: [YsxzExit] 符号未找到 libandroid_runtime.so!Java_android_os_Process_killProcess__I
+                              # ↑ Android 14 上这些 JNI 符号不在 libandroid_runtime.so 导出表；libc 钩子已足够
+09-30 20:47:35.130 I/Mod_Menu: [YsxzExit] 致命信号现场探针已安装（SIGILL/SEGV/BUS/ABRT/FPE）
+09-30 20:47:35.131 I/Mod_Menu: [YsxzExit] 内核级退出陷阱已安装（exit_group(94) → SIGSYS；命中打印调用点后仅结束该线程）
+09-30 20:47:49.229 W/Mod_Menu: [YsxzExit] _exit 被调用 code=0 (#101)
+09-30 20:47:49.229 W/Mod_Menu: [YsxzExit] 该线程=s.games.warrior tid=20967 已被单独结束（进程存活）
+09-30 20:47:49.229 W/Mod_Menu: [YsxzExit] syscall(nr=93 code=0) 直调退出 (#102)
+                              # ↑ 保护线程主动 _exit(0)：libc 钩子命中 → bionic 内联 exit_group(94)
+                              #   → seccomp SECCOMP_RET_TRAP → SIGSYS 处理器只结束该线程 → 进程存活
+## 5) 菜单就绪 + 用户实机拖动（新顺序：伤害倍率=#1 滑块 1..50，秒杀=#2）
+09-30 20:47:36.034 I/MenuService: native menu shown mode=ACTIVITY
+09-30 20:47:36.037 I/StarryMagic: MOD 已就绪 tag=ysxz ready=1
+09-30 20:49:02.952 I/StarryMagic: [数值] #1 Slider_伤害倍率:1:50:1 = 26
+09-30 20:49:03.177 I/StarryMagic: [数值] #1 Slider_伤害倍率:1:50:1 = 35
+09-30 20:49:07.867 I/StarryMagic: [开关] #3 Toggle_无敌 = ON
+09-30 20:49:08.670 I/StarryMagic: [开关] #2 Toggle_秒杀 = OFF
+09-30 20:49:08.671 I/StarryMagic: [开关] #4 Toggle_无限技能 = OFF
+09-30 20:49:08.671 I/StarryMagic: [数值] #5 Slider_移动速度:1:10:1 = 1
+09-30 20:49:08.672 I/StarryMagic: [开关] #6 Toggle_自动战斗 = OFF
+09-30 20:49:12.606 I/StarryMagic: [数值] #1 Slider_伤害倍率:1:50:1 = 50     # 滑块上限 50 可达

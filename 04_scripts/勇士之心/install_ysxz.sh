@@ -8,7 +8,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 ADB_BIN="${ADB_BIN:-adb}"
 PKG="${PKG:-com.fightingstars.games.warrior}"
-APK="${APK:-$NIXIANG_ROOT/08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk}"
+APK="${APK:-$NIXIANG_ROOT/08_output/勇士之心/勇士之心_${VERSION:-1.0.4}_surgical-releaseSigned.apk}"
 REMOTE_APK="/data/local/tmp/ysxz_starry_signed.apk"
 
 [[ "${ALLOW_UNINSTALL:-0}" == "1" ]] || {
@@ -17,7 +17,8 @@ REMOTE_APK="/data/local/tmp/ysxz_starry_signed.apk"
 }
 [[ -f "$STATE_FILE" ]] || { echo "错误: 缺少 .device_serial" >&2; exit 1; }
 [[ -f "$APK" ]] || { echo "错误: 星光包不存在: $APK" >&2; exit 1; }
-SERIAL="$(tr -d '[:space:]' < "$STATE_FILE")"
+# SERIAL 可由环境变量覆盖（例如临时装到另一台测试机，不改 .device_serial）。
+SERIAL="${SERIAL:-$(tr -d '[:space:]' < "$STATE_FILE")}"
 [[ -n "$SERIAL" ]] || { echo "错误: serial 为空" >&2; exit 1; }
 command -v "$ADB_BIN" >/dev/null || { echo "错误: adb 不可用" >&2; exit 1; }
 "$ADB_BIN" -s "$SERIAL" get-state >/dev/null
@@ -52,7 +53,21 @@ fi
 "$ADB_BIN" -s "$SERIAL" shell rm -f "$REMOTE_APK" >/dev/null 2>&1 || true
 
 echo "==> 设备包指纹校验"
-bash "$NIXIANG_ROOT/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" "$PKG" "$APK" --su
+if [[ "${VERIFY_MODE:-md5}" == "sig" ]]; then
+  # 非 root 设备读不到 /data/app：改用 dumpsys 里只有星光包才有的组件做指纹
+  # （官方包没有 StarryInitProvider / MenuService），并打印实际签名供比对。
+  DUMP="$("$ADB_BIN" -s "$SERIAL" shell "dumpsys package $PKG" 2>/dev/null | tr -d '\r')"
+  echo "$DUMP" | grep -m1 -E "versionName=" || true
+  echo "$DUMP" | grep -i -m1 -E "signatures=\[" || true
+  if echo "$DUMP" | grep -q -E "com\.starry\.magic\.(StarryInitProvider|menu\.MenuService)"; then
+    echo "[install-verify] 设备已注册星光组件 (StarryInitProvider/MenuService) ✓ 非 md5 模式"
+  else
+    echo "ERROR: dumpsys 未看到星光组件 —— 装上的可能不是星光包" >&2
+    exit 1
+  fi
+else
+  bash "$NIXIANG_ROOT/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" "$PKG" "$APK" --su
+fi
 
 echo "install_ok=true"
 echo "device_md5=$LOCAL_MD5"

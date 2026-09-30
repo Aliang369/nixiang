@@ -42,12 +42,15 @@ SHIM = r'''
     } catch (e) { return false; }
   }
   var M = {};
-  Object.defineProperty(M, "feature1", { get: function () { return R(1); } });
-  Object.defineProperty(M, "feature2", { get: function () { return R(2); } });
-  Object.defineProperty(M, "feature3", { get: function () { return R(3); } });
-  Object.defineProperty(M, "feature4", { get: function () { return R(4); } });
-  Object.defineProperty(M, "feature5", { get: function () { return R(5); } });
-  Object.defineProperty(M, "speed", { get: function () { return V(4); } });
+  /* 序号 = 菜单里的位置（0=分类标题），必须与 Games/YsxzEntry.cpp::kYsxz_Features 严格一致。
+     2026-09-30 调整：伤害倍率(滑块)与秒杀换位，伤害倍率 1..50、移动速度 1..10。 */
+  Object.defineProperty(M, "feature1", { get: function () { return R(2); } });   /* 秒杀 */
+  Object.defineProperty(M, "feature2", { get: function () { return R(3); } });   /* 无敌 */
+  Object.defineProperty(M, "feature3", { get: function () { return R(4); } });   /* 无限技能 */
+  Object.defineProperty(M, "feature4", { get: function () { return R(0); } });   /* 占位：移动速度是滑块，仅状态日志用 */
+  Object.defineProperty(M, "feature5", { get: function () { return R(6); } });   /* 自动战斗 */
+  Object.defineProperty(M, "speed", { get: function () { return V(5); } });      /* 移动速度 1..10 */
+  Object.defineProperty(M, "damage", { get: function () { return V(1); } });     /* 伤害倍率 1..50 */
   globalThis.__starry_nlog = J;
   globalThis.MOD = M;
 })();
@@ -99,6 +102,36 @@ def main() -> int:
     if body.count("if (MOD.feature4) {") != 1:
         raise SystemExit("expected exactly one feature4 condition")
     body = body.replace("if (MOD.feature4) {", "if (MOD.speed > 1) {")
+
+    # feature6 伤害倍率（滑块 1..100，1=原倍率）：与秒杀同点（唯一伤害数值公式），
+    # 秒杀改由 MOD.feature1 单独把关，两条互不依赖。
+    old_f1 = """            try {
+                if (MOD.feature1) {
+                //// 玩家*100伤害的代码逻辑
+                // 咽喉 = 唯一伤害数值公式(指纹: 明文 maxApDefRate + baseCritDamage)。
+                // 在公式里放大而不是在扣血口放大, 飘字/结算数值才会同步 x100。
+                // 命中上下文的 atkEntity / target 本身是明文字段, 不需要发现。
+                if (hit && d > 0 && isMine(hit.atkEntity) && !isMine(hit.target)) {
+                    d = Math.ceil(d * 100);
+                    if (d > 1e9) d = 1e9;          /* 上限, 防数值溢出 */
+                }
+                }
+            } catch (e) {}"""
+    new_f1 = """            try {
+                if (hit && d > 0 && isMine(hit.atkEntity) && !isMine(hit.target)) {
+                // 咽喉 = 唯一伤害数值公式(指纹: 明文 maxApDefRate + baseCritDamage)。
+                // 在公式里放大而不是在扣血口放大, 飘字/结算数值才会同步。
+                // 命中上下文的 atkEntity / target 本身是明文字段, 不需要发现。
+                var _f1 = false, _dm = 1;
+                try { _f1 = !!MOD.feature1; _dm = MOD.damage; } catch (readErr) {}
+                if (_dm > 1) d = d * _dm;            /* 1 伤害倍率滑块 1..50, 1=原倍率 */
+                if (_f1) d = Math.ceil(d * 100);     /* 2 秒杀: 玩家 x100 伤害 */
+                if (d > 1e9) d = 1e9;                /* 上限, 防数值溢出 */
+                }
+            } catch (e) {}"""
+    if body.count(old_f1) != 1:
+        raise SystemExit("expected exactly one feature1 damage block")
+    body = body.replace(old_f1, new_f1)
 
     old_cost = r'''        if (fg && N.cd) {
             var oFg = K[fg];
@@ -220,7 +253,7 @@ def main() -> int:
         raise SystemExit("expected exactly one report line")
     body = body.replace(old_report, new_report)
     old_mod_report = "                (\"f1=\" + MOD.feature1 + \" f2=\" + MOD.feature2 + \" f3=\" + MOD.feature3 + \" f4=\" + MOD.feature4)));"
-    new_mod_report = "                (\"f1=\" + MOD.feature1 + \" f2=\" + MOD.feature2 + \" f3=\" + MOD.feature3 + \" f4=\" + MOD.feature4 + \" f5=\" + MOD.feature5)));"
+    new_mod_report = "                (\"f1=\" + MOD.feature1 + \" f2=\" + MOD.feature2 + \" f3=\" + MOD.feature3 + \" f4=\" + MOD.feature4 + \" f5=\" + MOD.feature5 + \" dmg=\" + MOD.damage)));"
     if body.count(old_mod_report) != 1:
         raise SystemExit("expected exactly one MOD report line")
     body = body.replace(old_mod_report, new_mod_report)
@@ -236,8 +269,14 @@ def main() -> int:
         + text
         + "\n)YSXZJS\";\n"
     )
-    OUT.write_text(header, encoding="utf-8")
-    print(f"wrote {OUT} bytes={len(header)}")
+    # 幂等写：内容未变化时不落盘，避免刷新 mtime 触发 ndk-build 无谓重编
+    # （重编但二进制逐字节相同会让 build_so 阶段「有新 .o 而 so 未变」门禁误判为陈旧包）
+    old = OUT.read_text(encoding="utf-8") if OUT.exists() else None
+    if old == header:
+        print(f"unchanged {OUT} bytes={len(header)}")
+    else:
+        OUT.write_text(header, encoding="utf-8")
+        print(f"wrote {OUT} bytes={len(header)}")
     return 0
 
 

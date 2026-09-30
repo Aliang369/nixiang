@@ -27,12 +27,15 @@ static const char* kYsxzPatchJs = R"YSXZJS(
     } catch (e) { return false; }
   }
   var M = {};
-  Object.defineProperty(M, "feature1", { get: function () { return R(1); } });
-  Object.defineProperty(M, "feature2", { get: function () { return R(2); } });
-  Object.defineProperty(M, "feature3", { get: function () { return R(3); } });
-  Object.defineProperty(M, "feature4", { get: function () { return R(4); } });
-  Object.defineProperty(M, "feature5", { get: function () { return R(5); } });
-  Object.defineProperty(M, "speed", { get: function () { return V(4); } });
+  /* 序号 = 菜单里的位置（0=分类标题），必须与 Games/YsxzEntry.cpp::kYsxz_Features 严格一致。
+     2026-09-30 调整：伤害倍率(滑块)与秒杀换位，伤害倍率 1..50、移动速度 1..10。 */
+  Object.defineProperty(M, "feature1", { get: function () { return R(2); } });   /* 秒杀 */
+  Object.defineProperty(M, "feature2", { get: function () { return R(3); } });   /* 无敌 */
+  Object.defineProperty(M, "feature3", { get: function () { return R(4); } });   /* 无限技能 */
+  Object.defineProperty(M, "feature4", { get: function () { return R(0); } });   /* 占位：移动速度是滑块，仅状态日志用 */
+  Object.defineProperty(M, "feature5", { get: function () { return R(6); } });   /* 自动战斗 */
+  Object.defineProperty(M, "speed", { get: function () { return V(5); } });      /* 移动速度 1..10 */
+  Object.defineProperty(M, "damage", { get: function () { return V(1); } });     /* 伤害倍率 1..50 */
   globalThis.__starry_nlog = J;
   globalThis.MOD = M;
 })();
@@ -164,15 +167,15 @@ function MOD_boot(REG) {
         K[fv] = function (ctx, hit, ratio, canCrit) {
             var d = oFV.apply(this, arguments);
             try {
-                if (MOD.feature1) {
-                //// 玩家*100伤害的代码逻辑
-                // 咽喉 = 唯一伤害数值公式(指纹: 明文 maxApDefRate + baseCritDamage)。
-                // 在公式里放大而不是在扣血口放大, 飘字/结算数值才会同步 x100。
-                // 命中上下文的 atkEntity / target 本身是明文字段, 不需要发现。
                 if (hit && d > 0 && isMine(hit.atkEntity) && !isMine(hit.target)) {
-                    d = Math.ceil(d * 100);
-                    if (d > 1e9) d = 1e9;          /* 上限, 防数值溢出 */
-                }
+                // 咽喉 = 唯一伤害数值公式(指纹: 明文 maxApDefRate + baseCritDamage)。
+                // 在公式里放大而不是在扣血口放大, 飘字/结算数值才会同步。
+                // 命中上下文的 atkEntity / target 本身是明文字段, 不需要发现。
+                var _f1 = false, _dm = 1;
+                try { _f1 = !!MOD.feature1; _dm = MOD.damage; } catch (readErr) {}
+                if (_dm > 1) d = d * _dm;            /* 1 伤害倍率滑块 1..50, 1=原倍率 */
+                if (_f1) d = Math.ceil(d * 100);     /* 2 秒杀: 玩家 x100 伤害 */
+                if (d > 1e9) d = 1e9;                /* 上限, 防数值溢出 */
                 }
             } catch (e) {}
             return d;
@@ -461,7 +464,7 @@ function MOD_boot(REG) {
             log("REPORT  formula=" + N.FV + " apply=" + N.hX + " gate=" + N.Ff +
                 " cost=" + N.Fg + " death=" + N.GJ + " movesys=" + (N.sysDone ? "yes" : "NO") + " auto=" + (N.autoDone ? "yes" : "NO"));
             log("REPORT  MOD=" + (typeof MOD === "undefined" ? "undefined" :
-                ("f1=" + MOD.feature1 + " f2=" + MOD.feature2 + " f3=" + MOD.feature3 + " f4=" + MOD.feature4 + " f5=" + MOD.feature5)));
+                ("f1=" + MOD.feature1 + " f2=" + MOD.feature2 + " f3=" + MOD.feature3 + " f4=" + MOD.feature4 + " f5=" + MOD.feature5 + " dmg=" + MOD.damage)));
         }, 3000);
     } catch (e) {}
 }

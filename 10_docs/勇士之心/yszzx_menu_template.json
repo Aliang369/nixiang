@@ -4,18 +4,11 @@
   "package": "com.fightingstars.games.warrior",
   "source": "Games/YsxzEntry.cpp kYsxz_Features",
   "features": [
-    {"feat_num": 1, "name": "秒杀"},
-    {"feat_num": 2, "name": "无敌"},
-    {"feat_num": 3, "name": "无限技能"},
-    {
-      "feat_num": 4,
-      "name": "移动速度",
-      "type": "slider",
-      "min": 1,
-      "max": 5,
-      "default": 1,
-      "note": "1=关，2..5=移动倍率；对应 Slider_移动速度:1:5:1"
-    },
-    {"feat_num": 5, "name": "自动战斗"}
+    {"feat_num": 1, "name": "伤害倍率"},
+    {"feat_num": 2, "name": "秒杀"},
+    {"feat_num": 3, "name": "无敌"},
+    {"feat_num": 4, "name": "无限技能"},
+    {"feat_num": 5, "name": "移动速度"},
+    {"feat_num": 6, "name": "自动战斗"}
   ]
 }

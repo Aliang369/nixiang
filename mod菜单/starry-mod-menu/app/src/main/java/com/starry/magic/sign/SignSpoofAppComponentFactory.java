@@ -16,8 +16,11 @@ import android.util.Log;
  * providers have already started, which is too late for cold-start TapTap token
  * refresh. This factory preserves the original Application class and delegates
  * every non-Application component to the game's original CoreComponentFactory.
+ *
+ * 非 final：勇士之心 1.0.4 用子类 {@code com.starry.magic.ysxz.YsxzAppComponentFactory}
+ * 在本入口之上追加 SecShell 净化看门狗（必须早于壳自检，见该类注释）。
  */
-public final class SignSpoofAppComponentFactory extends AppComponentFactory {
+public class SignSpoofAppComponentFactory extends AppComponentFactory {
     private static final String TAG = "StarrySignFactory";
     private static final String ORIGINAL_FACTORY = "androidx.core.app.CoreComponentFactory";
 

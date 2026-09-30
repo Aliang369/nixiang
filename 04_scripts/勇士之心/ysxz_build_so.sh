@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 勇士之心 1.0.3 管线 build_so 后端：Android_ysxz.mk 直编。
+# 勇士之心 1.0.4 管线 build_so 后端：Android_ysxz.mk 直编。
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
@@ -47,7 +47,7 @@ if [[ -n "$NEW_O" && "$(md5 -q "$SO")" == "$SO_MD5_BEFORE" ]]; then
 fi
 mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 
-for token in "ysxz" "yszzx" "starry_ysxz_v1" "Toggle_秒杀" "Toggle_无敌" "Toggle_无限技能" "Slider_移动速度" "Toggle_自动战斗"; do
+for token in "ysxz" "yszzx" "starry_ysxz_v1" "Toggle_秒杀" "Toggle_无敌" "Toggle_无限技能" "Slider_移动速度" "Toggle_自动战斗" "Slider_伤害倍率"; do
   HITS=$(LC_ALL=C grep -ac "$token" "$SO" || true)
   [[ "$HITS" -ge 1 ]] || { echo "ERROR: $SO 不含 $token" >&2; exit 1; }
 done

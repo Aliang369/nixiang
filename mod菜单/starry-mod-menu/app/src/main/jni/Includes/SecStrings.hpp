@@ -26,6 +26,12 @@ inline const char* sec_lib_cocosjs() {
     static const std::string s = OBFUSCATE("libcocos2djs.so");
     return s.c_str();
 }
+// cocos2dx JSB 求值桥的导出符号名；用于在已 strip（无 se:: 符号）的 so 中反查 evalString
+inline const char* sec_sym_cocos_jsb_eval() {
+    static const std::string s =
+        OBFUSCATE("Java_org_cocos2dx_lib_Cocos2dxJavascriptJavaBridge_evalString");
+    return s.c_str();
+}
 inline const char* sec_lib_mygame() {
     static const std::string s = OBFUSCATE("libMyGame.so");
     return s.c_str();

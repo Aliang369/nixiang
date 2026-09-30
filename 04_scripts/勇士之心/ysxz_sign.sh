@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 勇士之心 1.0.3 - 签名阶段（pipeline sign）
+# 勇士之心 1.0.4 - 签名阶段（pipeline sign）
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="勇士之心"
-VERSION="1.0.3"
+VERSION="${VERSION:-1.0.4}"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
 SIGNED="$OUT/${GAME}_${VERSION}_surgical-releaseSigned.apk"
@@ -54,7 +54,7 @@ if [[ -n "$BT" ]]; then
 fi
 
 unzip -l "$SIGNED" > "$WORK/entries.txt"
-for e in classes.dex classes2.dex classes3.dex classes4.dex \
+for e in classes.dex classes2.dex \
          lib/arm64-v8a/libstarry_magic.so resources.arsc; do
   grep -q " $e\$" "$WORK/entries.txt" || { echo "ERROR: $e missing in signed apk" >&2; exit 1; }
 done

@@ -304,38 +304,46 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so"
-        },
-        {
-          "type": "not_exists",
-          "path": "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so",
-          "pattern": "ysxz"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 14:12:47",
-      "note": "2026-09-21 热更重抓轮：build_so 重跑，产物 md5=9bf52c07974ff487a03e6889472f36f6（自动战斗指纹改为明文 BuffTableEnum 两级指纹）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so; 原 md5=9bf52c07974ff487a03e6889472f36f6"
+      "note": "2026-09-21 热更重抓轮：build_so 重跑，产物 md5=9bf52c07974ff487a03e6889472f36f6（自动战斗指纹改为明文 BuffTableEnum 两级指纹）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so; 原 md5=9bf52c07974ff487a03e6889472f36f6\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": {
+          "md5": "5e0d30c366fdf167086f08b809ccf4d9"
+        }
+      },
+      "done_at": "2026-09-30 20:42:44"
     },
     {
       "id": "surgical",
-      "name": "TapTap 1.0.3 外科组装（保留官方 dex/arsc/so/assets）",
+      "name": "TapTap 1.0.4 外科组装（保留官方 dex/arsc/so/assets）",
       "requires": [
         "build_so"
       ],
-      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh",
+      "command": "bash 04_scripts/勇士之心/ysxz_surgical_rebased.sh",
       "preflight": [
-        "mod菜单/starry-mod-menu/scripts/surgical_ysxz_1.0.3.sh"
+        "04_scripts/勇士之心/ysxz_surgical_rebased.sh"
       ],
       "verify": [
         {
-          "type": "not_exists",
-          "path": "08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk"
+          "type": "file_exists",
+          "path": "08_output/勇士之心/勇士之心_1.0.4_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 14:13:20",
-      "note": "2026-09-21 收尾清理: 08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk; 原 md5=923e2c526338ccf5430afde2131ae89e\n2026-09-21 热更重抓轮改用 04_scripts/勇士之心/ysxz_surgical_rebased.sh，底包=真机只读拉取的官方 base.apk（md5 c20f70c8ba52032eae10574f846b88d1，libcocos2djs.so 与旧原版字节一致）；旧底包 02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk 已不在工作区。"
+      "note": "2026-09-21 收尾清理: 08_output/勇士之心/勇士之心_1.0.3_surgical-unsigned.apk; 原 md5=923e2c526338ccf5430afde2131ae89e\n2026-09-21 热更重抓轮改用 04_scripts/勇士之心/ysxz_surgical_rebased.sh，底包=真机只读拉取的官方 base.apk（md5 c20f70c8ba52032eae10574f846b88d1，libcocos2djs.so 与旧原版字节一致）；旧底包 02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk 已不在工作区。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。",
+      "artifacts": {
+        "08_output/勇士之心/勇士之心_1.0.4_surgical-unsigned.apk": {
+          "md5": "9f03e4d6c80a5c2c7b88e0aacc52e000"
+        }
+      },
+      "done_at": "2026-09-30 20:43:00",
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": "5e0d30c366fdf167086f08b809ccf4d9"
+      }
     },
     {
       "id": "sign",
@@ -350,21 +358,24 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk"
+          "path": "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 14:13:43",
       "artifacts": {
-        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": {
-          "md5": "4175178fe6f9663556efe21541726f6e"
+        "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk": {
+          "md5": "e45a5a2e0efe3913a50a2058458c0e81"
         }
       },
-      "note": "2026-09-21 热更重抓轮重签：md5=4175178fe6f9663556efe21541726f6e，sha256=2846e57b0577bd4561a387d56b7e8ce1f98d6a5a3e4ed31c1df20427eea93a8d，size=64642859，签名 CN=StarryMagic；unsigned 中间包已按收官口令裁剪。"
+      "note": "2026-09-21 热更重抓轮重签：md5=4175178fe6f9663556efe21541726f6e，sha256=2846e57b0577bd4561a387d56b7e8ce1f98d6a5a3e4ed31c1df20427eea93a8d，size=64642859，签名 CN=StarryMagic；unsigned 中间包已按收官口令裁剪。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。",
+      "done_at": "2026-09-30 20:43:03",
+      "inputs": {
+        "08_output/勇士之心/勇士之心_1.0.4_surgical-unsigned.apk": "9f03e4d6c80a5c2c7b88e0aacc52e000"
+      }
     },
     {
       "id": "install",
-      "name": "已授权卸载原版并安装星光包 + 设备 MD5 校验",
+      "name": "覆盖安装星光包到 root 真机 + 设备 MD5 校验",
       "requires": [
         "sign",
         "device_ready"
@@ -376,21 +387,22 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk"
+          "path": "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 14:13:59",
       "artifacts": {
-        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": {
-          "md5": "4175178fe6f9663556efe21541726f6e"
+        "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk": {
+          "md5": "e45a5a2e0efe3913a50a2058458c0e81"
         }
       },
       "inputs": {
-        "08_output/勇士之心/勇士之心_1.0.3_surgical-releaseSigned.apk": "4175178fe6f9663556efe21541726f6e",
-        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037"
+        "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk": "e45a5a2e0efe3913a50a2058458c0e81",
+        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/勇士之心/device_info.json": "dc6f554a110bfc685d48fdd00c5d79b7"
       },
-      "note": "2026-09-21 热更重抓轮装机：官方包 CN=shan 与星光包 CN=StarryMagic 签名不同，覆盖安装返回 INSTALL_FAILED_UPDATE_INCOMPATIBLE，按用户明确指示（无需备份）卸载重装；设备 base.apk md5=4175178fe6f9663556efe21541726f6e 与产物一致；冷启动日志：hooked se::evalString rva=0x3138E4、game/battleLogic 两个 bundle 各自 splice、六钩子 + auto=yes 全部安装、无闪退；用户实机测试五项功能全部可用。"
+      "note": "2026-09-21 热更重抓轮装机：官方包 CN=shan 与星光包 CN=StarryMagic 签名不同，覆盖安装返回 INSTALL_FAILED_UPDATE_INCOMPATIBLE，按用户明确指示（无需备份）卸载重装；设备 base.apk md5=4175178fe6f9663556efe21541726f6e 与产物一致；冷启动日志：hooked se::evalString rva=0x3138E4、game/battleLogic 两个 bundle 各自 splice、六钩子 + auto=yes 全部安装、无闪退；用户实机测试五项功能全部可用。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。",
+      "done_at": "2026-09-30 20:43:08"
     },
     {
       "id": "regrab_hotupdate",
