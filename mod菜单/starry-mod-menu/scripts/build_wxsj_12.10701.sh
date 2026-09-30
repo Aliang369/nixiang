@@ -94,13 +94,20 @@ existing_app = app.get(q("name"))
 if existing_app != "com.netease.nis.wrapper.MyApplication":
     print(f"  WARN: 官方 application@name = {existing_app}（预期 易盾 MyApplication）")
 
-providers = {e.get(q("name")) for e in app.findall("provider")}
-if "com.starry.magic.StarryInitProvider" not in providers:
-    ET.SubElement(app, "provider", {
+providers = {e.get(q("name")): e for e in app.findall("provider")}
+sp = providers.get("com.starry.magic.StarryInitProvider")
+if sp is None:
+    sp = ET.SubElement(app, "provider", {
         q("name"): "com.starry.magic.StarryInitProvider",
         q("authorities"): "com.xingzuodaoshi.infinityUpgrade.starryinit",
         q("exported"): "false",
     })
+# 【2026-09-30 修复 tapsdk 包名/签名误报】initOrder=MAX：声明位置保持最后一位，但由系统最先初始化，
+# 使 StarryInitProvider.onCreate 里的 SignSpoof.install() 早于所有 TapTap provider（TapTapKitInitProvider/
+# ThemisProvider）与 TapSDK init；TapSDK 的 TapInitializer 读 PackageManager 签名校验应用配置，
+# 伪装未生效时打「应用的包名、签名未在 TapTap 开发者中心正确配置」⇒ 二次启动无法进入游戏。
+# 禁用替代方案：把 provider 声明挪到第 1 位会被易盾壳静默跳过（整个 onCreate 不执行，2026-09-30 实测）。
+sp.set(q("initOrder"), "2147483647")
 
 services = {e.get(q("name")) for e in app.findall("service")}
 if "com.starry.magic.menu.MenuService" not in services:
@@ -117,7 +124,7 @@ if "com.starry.magic.menu.MenuService" not in services:
     })
 
 tree.write(path, encoding="utf-8", xml_declaration=True)
-print(f"  manifest: application@name={existing_app} 保持 + StarryInitProvider + MenuService + 3 permissions")
+print(f"  manifest: application@name={existing_app} 保持 + StarryInitProvider(initOrder=2147483647) + MenuService + 3 permissions")
 PY
 
 echo "[3/7] rebuild resources/manifest only"
@@ -226,6 +233,9 @@ LC_ALL=C grep -aq 'com/starry/magic/StarryInitProvider' "$WORK/stage/$STARRY_DEX
 echo "[5/7] verify merged structure"
 "$BT/aapt2" dump xmltree "$WORK/rebuilt.apk" --file AndroidManifest.xml > "$WORK/mf_tree.txt" 2>&1
 grep -q 'com.starry.magic.StarryInitProvider' "$WORK/mf_tree.txt" || { echo "ERROR: StarryInitProvider missing"; exit 1; }
+# 【2026-09-30】必须带 initOrder=2147483647：否则星空层晚于 TapTap provider 初始化，TapSDK 会误报包名/签名错误
+grep -q 'android:initOrder(0x0101001a)=2147483647' "$WORK/mf_tree.txt" \
+  || { echo "ERROR: StarryInitProvider 缺 android:initOrder=2147483647（签名伪装将晚于 TapSDK init）"; exit 1; }
 grep -q 'com.starry.magic.menu.MenuService' "$WORK/mf_tree.txt" || { echo "ERROR: MenuService missing"; exit 1; }
 grep -q 'com.netease.nis.wrapper.MyApplication' "$WORK/mf_tree.txt" || { echo "ERROR: 易盾 Application 丢失（禁）"; exit 1; }
 if grep -q 'com.starry.magic.StarryApp' "$WORK/mf_tree.txt"; then

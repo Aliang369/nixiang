@@ -1,0 +1,9 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级",
+  "keep": "无限升级_12.10701_v7.20_tapsdk-signfix-releaseSigned.apk",
+  "keep_size": 122062727,
+  "keep_md5": "221a1fb5c473397a5b65a7947a3d502a",
+  "mode": "--apply",
+  "removed": [],
+  "removed_count": 0
+}

@@ -98,13 +98,17 @@ app_name = app.get(q("name"))
 if app_name is not None:
     print(f"  WARN: 官方 application@name = {app_name}（vc1637 预期无此属性）")
 
-providers = {e.get(q("name")) for e in app.findall("provider")}
-if "com.starry.magic.StarryInitProvider" not in providers:
-    ET.SubElement(app, "provider", {
+providers = {e.get(q("name")): e for e in app.findall("provider")}
+sp = providers.get("com.starry.magic.StarryInitProvider")
+if sp is None:
+    sp = ET.SubElement(app, "provider", {
         q("name"): "com.starry.magic.StarryInitProvider",
         q("authorities"): "com.xingzuodaoshi.infinityUpgrade.starryinit",
         q("exported"): "false",
     })
+# 【2026-09-30】initOrder=MAX：让 SignSpoof.install() 早于 TapTap provider/TapSDK init，
+# 否则 TapSDK 的 TapInitializer 会读到真实签名并误报「包名/签名未在 TapTap 开发者中心正确配置」。
+sp.set(q("initOrder"), "2147483647")
 
 services = {e.get(q("name")) for e in app.findall("service")}
 if "com.starry.magic.menu.MenuService" not in services:
@@ -147,6 +151,8 @@ zip -d "$WORK/unsigned.apk" 'META-INF/*' >/dev/null || true
 echo "[5/6] verify merged structure"
 "$BT/aapt2" dump xmltree "$WORK/rebuilt.apk" --file AndroidManifest.xml > "$WORK/mf_tree.txt" 2>&1
 grep -q 'com.starry.magic.StarryInitProvider' "$WORK/mf_tree.txt" || { echo "ERROR: StarryInitProvider missing"; exit 1; }
+grep -q 'android:initOrder(0x0101001a)=2147483647' "$WORK/mf_tree.txt" \
+  || { echo "ERROR: StarryInitProvider 缺 android:initOrder=2147483647（签名伪装将晚于 TapSDK init）"; exit 1; }
 grep -q 'com.starry.magic.menu.MenuService' "$WORK/mf_tree.txt" || { echo "ERROR: MenuService missing"; exit 1; }
 if grep -q 'com.starry.magic.StarryApp' "$WORK/mf_tree.txt"; then
   echo "ERROR: manifest 把 StarryApp 当 application@name（本方案禁）"; exit 1
