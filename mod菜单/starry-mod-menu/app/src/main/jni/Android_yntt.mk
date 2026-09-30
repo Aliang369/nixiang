@@ -42,6 +42,12 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
 LOCAL_SRC_FILES := MainModern.cpp Games/YnttMod.cpp Games/YnttEntry.cpp Unity/Il2CppApi.cpp
 
+# MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad
+# （2026-09-22 起）。一念通天无 ACE（包内无 libtprt.so/libtersafe2.so）且菜单 dex 已打包进
+# classes3.dex（Manifest StarryInitProvider 拉起），故用 no-op 兜底而不编译
+# SignalQuarantine.cpp / FgoBoot.cpp。漏掉即 ld.lld: undefined symbol。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

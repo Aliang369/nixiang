@@ -1,15 +1,17 @@
 {
   "game": "一念通天",
-  "before_kb": 488296,
-  "after_kb": 291748,
-  "released_kb": 196548,
-  "before_at": "2026-09-20 00:24:31",
-  "after_at": "2026-09-20 00:24:31",
+  "version": "739",
+  "before_kb": 601644,
+  "after_kb": 291756,
+  "released_kb": 309888,
+  "before_at": "2026-09-30 13:13:26",
+  "after_at": "2026-09-30 13:13:27",
   "kept": [
-    "02_apks/一念通天",
+    "02_apks/一念通天（用户管理，未动）",
     "08_output/一念通天（正式包由 prune_output_final.sh 单独裁剪）",
     "06_dumped/一念通天 text archives (official_728 + official_720 + binge_719)",
-    "09_test/一念通天 卸载前数据备份",
+    "06_dumped/一念通天/official_739/rva_targets.json 锚点摘录",
+    "09_test/一念通天（728 卸载前备份 + 739 证据）",
     "04_scripts/一念通天",
     "10_docs/一念通天",
     "mod菜单 Yntt sources"
@@ -17,7 +19,7 @@
   "removed_roots": [
     "03_decompiled/一念通天",
     "07_patched/一念通天",
-    "06_dumped/一念通天 ignored binaries",
+    "06_dumped/一念通天/official_739 ignored binaries (dump.cs/script.json/il2cpp.h/stringliteral.json/DummyDll)",
     "tmp yntt analysis directories"
   ]
 }

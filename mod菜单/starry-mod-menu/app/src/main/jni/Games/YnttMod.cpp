@@ -55,10 +55,10 @@ static std::mutex g_installMutex;
 static thread_local bool t_inCombatHook = false;
 static thread_local bool t_inShowAd = false;
 
-// 728: monsterStatus.ReduceHP 新增 bool isAreaDamge 参数；
-// NpcStatus.ReduceHP 仍是 4 参数，两者不能共用函数指针类型。
-typedef void (*MonsterReduceHp_t)(void* self, void* skillCfg, double damage, bool isAreaDamage, void* method);
-typedef void (*NpcReduceHp_t)(void* self, void* skillCfg, double damage, void* method);
+// 739: monsterStatus.ReduceHP 在 728 的 bool isAreaDamge 后新增 bool zhanlijue；
+// NpcStatus.ReduceHP 在 728 的两参后新增 bool zhanlijue。两者仍不能共用函数指针类型。
+typedef void (*MonsterReduceHp_t)(void* self, void* skillCfg, double damage, bool isAreaDamage, bool zhanlijue, void* method);
+typedef void (*NpcReduceHp_t)(void* self, void* skillCfg, double damage, bool zhanlijue, void* method);
 typedef void (*OnDamageBuff_t)(void* self, int32_t buffId, int32_t overLayer, void* method);
 typedef void (*PlayerOnDamage_t)(void* self, int64_t hate, void* skillOwner, void* method);
 typedef void (*SetTimeScale_t)(float value, void* method);
@@ -90,7 +90,7 @@ enum : size_t {
     kOffMoney         = 0xC0,
     kOffNpcData       = 0x2E8,
     kOffFuMoData      = 0x2F0,
-    kOffAdRequest     = 0x438,
+    kOffAdRequest     = 0x448,
     kOffFuMoTili      = 0x28,
     kOffFuMoTiliZq    = 0x48,
     kOffFuMoTiliGq    = 0x80,
@@ -98,18 +98,18 @@ enum : size_t {
 };
 
 enum : uintptr_t {
-    kRvaMonsterReduce = 0x12AB52C,
-    kRvaNpcReduce     = 0xFF94F0,
-    kRvaMonsterDot    = 0x129D074,
-    kRvaNpcDot        = 0xFEECD4,
-    kRvaPlayerDamage  = 0x111E50C,
-    kRvaSetTimeScale  = 0x2E6EC94,
-    kRvaGameUpdate    = 0x1231804,
-    kRvaShowAD        = 0x122FE20,
+    kRvaMonsterReduce = 0x12BBE68,
+    kRvaNpcReduce     = 0x10113A8,
+    kRvaMonsterDot    = 0x12AD6C8,
+    kRvaNpcDot        = 0x1006740,
+    kRvaPlayerDamage  = 0x1136060,
+    kRvaSetTimeScale  = 0x2E8762C,
+    kRvaGameUpdate    = 0x124B8E4,
+    kRvaShowAD        = 0x1249F00,
 };
 
 enum : uint32_t {
-    kInsMonsterReduce = 0xD102C3FF,
+    kInsMonsterReduce = 0xD10303FF,
     kInsNpcReduce     = 0xD102C3FF,
     kInsMonsterDot    = 0xD103C3FF,
     kInsNpcDot        = 0xD10383FF,
@@ -364,19 +364,19 @@ static void InstallTable(const HookSlot* slots, size_t count) {
 // ============================================================
 // ⑤ hook 函数与挂点表（TODO：一个具体方法一个槽；绝不 hook 共享 invoke 入口）
 // ============================================================
-static void Hooked_MonsterReduce(void* self, void* cfg, double damage, bool isAreaDamage, void* method) {
+static void Hooked_MonsterReduce(void* self, void* cfg, double damage, bool isAreaDamage, bool zhanlijue, void* method) {
     if (g_kill.load() && !t_inCombatHook) {
         t_inCombatHook = true;
-        if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, ScaleDamage(damage), isAreaDamage, method);
+        if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, ScaleDamage(damage), isAreaDamage, zhanlijue, method);
         t_inCombatHook = false;
         return;
     }
-    if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, damage, isAreaDamage, method);
+    if (g_origMonsterReduce) g_origMonsterReduce(self, cfg, damage, isAreaDamage, zhanlijue, method);
 }
 
-static void Hooked_NpcReduce(void* self, void* cfg, double damage, void* method) {
+static void Hooked_NpcReduce(void* self, void* cfg, double damage, bool zhanlijue, void* method) {
     const bool scale = g_kill.load() && IsEnemyNpc(self) && !t_inCombatHook;
-    if (g_origNpcReduce) g_origNpcReduce(self, cfg, scale ? ScaleDamage(damage) : damage, method);
+    if (g_origNpcReduce) g_origNpcReduce(self, cfg, scale ? ScaleDamage(damage) : damage, zhanlijue, method);
 }
 
 static void Hooked_MonsterDot(void* self, int32_t buffId, int32_t overLayer, void* method) {
@@ -453,9 +453,9 @@ static void Hooked_ShowAd(void* self, void* request, void* method) {
 }
 
 static const HookSlot kKillSlots[] = {
-    {"MonsterReduceHP", kRvaMonsterReduce, kInsMonsterReduce, "", "monsterStatus", "ReduceHP", 3,
+    {"MonsterReduceHP", kRvaMonsterReduce, kInsMonsterReduce, "", "monsterStatus", "ReduceHP", 4,
      (void*)Hooked_MonsterReduce, (void**)&g_origMonsterReduce},
-    {"NpcReduceHP", kRvaNpcReduce, kInsNpcReduce, "", "NpcStatus", "ReduceHP", 2,
+    {"NpcReduceHP", kRvaNpcReduce, kInsNpcReduce, "", "NpcStatus", "ReduceHP", 3,
      (void*)Hooked_NpcReduce, (void**)&g_origNpcReduce},
     {"MonsterOnDamageBuff", kRvaMonsterDot, kInsMonsterDot, "", "monsterStatus", "OnDamageBuff", 2,
      (void*)Hooked_MonsterDot, (void**)&g_origMonsterDot},
