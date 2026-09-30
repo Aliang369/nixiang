@@ -573,7 +573,7 @@ nixiang/
 |---|---|---|
 | `03_decompiled/{游戏}` | 删 | 管线 dump 阶段从原包重建（02_apks 原包在或渠道重下） |
 | `06_dumped/{游戏}` ignored 大二进制 | `git clean -xdn` dry-run 核对后 `git clean -xdf` | 可再生（重跑 dump） |
-| `06_dumped/{游戏}` 文本（已入 git） | 留 | dump.cs/反编译/解密产物 = 版本档案，更新时 RVA 对照复用 |
+| `06_dumped/{游戏}` 锚点/文本摘录 | 留 | 只留锚点、脚本、小证据与必要输入；`dump.cs`/`script.json`/`stringliteral.json`/`il2cpp.h`/`DummyDll`/反编译/解密/pretty 产物不入库，按原包 + 工具重跑。 |
 | `07_patched/{游戏}` | 删 | surgical 复现 = 重跑管线；删后须按 `stages.md` 收官清单第 4 条同步修正 `{游戏}/pipeline.json` 快照，否则 `archive` 被上游陈旧度门禁拦截 |
 | `09_test/{游戏}` | 删 | 可再生 |
 | `08_output/{游戏}` | 收尾口令时裁剪为唯一正式 APK | 用户已定：收尾+正式包+清理时，用 `_common/prune_output_final.sh` 校验并保留指定正式包，删除其它候选 APK/idsig，被删清单入 10_docs；被删的 unsigned/idsig 属门禁依赖产物，须按 `stages.md` 收官清单第 4 条同步修正 `pipeline.json` 快照 |
@@ -584,6 +584,8 @@ nixiang/
 **热更样本一律可再生、可删（2026-09-30 用户定，推翻旧例外）**：官方 CDN/热更目录的下发物（`targetfuntional*.dll`、`index.js`/`.jsc`、差分清单等）可随时重新下发或由 DIAG in-hook dump 重取；旧版被滚动覆盖不构成不可再生。补丁 dll（`ilpatch*` 产物）同样由源码 + 官方 dll 重放。清理时保留"当前构建链直接引用的那一份"即可，历史版本样本可删。
 
 git 入库纪律（2026-09-12 实清后定，勿再犯）：过程日志（`dump_log.txt`/`maps.txt`）不入库；游戏资源提取物（语言 CSV/atlas/skel 等非分析产物）不入库；重试堆积目录（同分钟多份 dump_out）须确认互异且无引用后才决定去留。
+
+**构建产物与生成清单不入库（2026-09-30 定）**：`mod菜单/**/app/src/**/{obj*,libs*,jniLibs}`、`mod菜单/**/{build,.gradle,.gradle-home}`、`04_scripts/**/{bin,obj}`、`06_dumped/**/{bin,obj}` 均由源码 + 工具重建；`apk_entries.txt`、`rva_map.pkl`、热更/拼接 JS 样本属于脚本生成物，不保留本地、不入库。仅当前构建链直接引用的 `targetfuntional_dll*.bin`、`Games/WxsjPatchedDll*.a`、`Games/WxsjVc1637PatchedDll.a` 和第三方预编译 Dobby/Keystone `.a` 例外。
 
 **保留与候选按内容判断，不按目录整删**
 

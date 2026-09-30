@@ -42,6 +42,10 @@ validation-report.json
 !*.json
 
 # 构建产物再排除（根 .gitignore 的 obj*/libs* 规则被 !app/src/** 覆盖）
+app/src/**/obj*/
+app/src/**/libs*/
+app/src/**/jniLibs/
+.gradle-home/
 app/src/obj*/
 app/src/libs*/
 obj*/

@@ -5,18 +5,21 @@
 
 ## 0.3.5（本节为准）
 
+> 2026-09-30：热更样本与拼接产物按「可再生」清理，本地不保留；下方 SHA-256 用于重取后校验。
+
 | 文件 | 说明 | SHA-256 |
 |---|---|---|
-| `game_js_hotupdate_0.3.5_20260921.js` | 设备热更档 2,767,392 B，**当前校准基准** | `2fa45bc4188f49823e39fb53c36ccb6c2156772b04928f77923f1bb0ccb1dd90` |
-| `spliced_0.3.5_hostsim.js` | 真 C++（主机编译）splice 产物，2,769,947 B，`node --check` PASS | `34705171232e0e75acc79e0bdf3bdc84649850aee0809a2769083b419e48d5ae` |
+| `game_js_hotupdate_0.3.5_20260921.js` | 设备热更档 2,767,392 B，**当前校准基准；本地不保留，重取后先校验** | `2fa45bc4188f49823e39fb53c36ccb6c2156772b04928f77923f1bb0ccb1dd90` |
+| `spliced_0.3.5_hostsim.js` | 真 C++（主机编译）splice 产物，2,769,947 B，`node --check` PASS；**生成物不保留** | `34705171232e0e75acc79e0bdf3bdc84649850aee0809a2769083b419e48d5ae` |
 
 漂移：`doDmg` 14 参（+`C = -1`）；④⑤ 钳制行变量改名 `o`/`c`、上限改 `t.StatusDef.getMinEdr(this)`；② 暴击 3 副本、③ 暴伤 2 副本。①⑥⑦ 未漂移。
 
 **最短复现（离线，权威）**
 
 ```bash
-bash mod菜单/starry-mod-menu/scripts/cwjh_splice_hostsim.sh \
-  10_docs/超维进化/evidence_20260921_hotfix/game_js_hotupdate_0.3.5_20260921.js /tmp/out.js
+# 先从设备热更目录/官方 CDN 重取 game_js_hotupdate_0.3.5_20260921.js，并校验上表 SHA-256
+INPUT=/tmp/game_js_hotupdate_0.3.5_20260921.js
+bash mod菜单/starry-mod-menu/scripts/cwjh_splice_hostsim.sh "$INPUT" /tmp/out.js
 # 期望：in=2767392 out=2769947 delta=+2555，node --check PASS
 ```
 
@@ -27,7 +30,7 @@ bash mod菜单/starry-mod-menu/scripts/cwjh_splice_hostsim.sh \
 | 文件 | 说明 | SHA-256 |
 |---|---|---|
 | ~~`game_js_hotupdate_20260921.js`~~ | 上午档 2,727,219 B（已被 0.3.5 取代；2026-09-30 按热更可删规则清理，可重拉） | `d3101b26cf153ed3ba4b0d55a39965803ddad6cf97847c503e0086bd13474b4b` |
-| `game_js_builtin_0.1.86.js` | APK 内置档 2,202,886 B（形态 A 回归基准） | `f1839bc2993723ab329d866252b5ad325944c3462ec67e79e3fccd397b60227c` |
+| `game_js_builtin_0.1.86.js` | APK 内置档 2,202,886 B（形态 A 回归基准）；**本地不保留，从 APK 重新提取** | `f1839bc2993723ab329d866252b5ad325944c3462ec67e79e3fccd397b60227c` |
 | `superseded_handwritten_splice_sim.py` / `…_0.3.3.py` | **已废**手写镜像。前者对 0.3.5 算出 +2423（真值 +2555）：转写掉了 `callStaticMethod(...)` 的收尾括号，语义变而语法仍合法，`node --check` 查不出。留档仅作方法论反例，**不得当参考实现**。 | — |
 
 ## 运行时证据（设备 f9a116a2，2026-09-21 13:09）

@@ -61,12 +61,14 @@
 06_dumped/**/*.pretty.js
 
 # ===== mod菜单：构建产物不入库（源码/模板/脚本全入）=====
-mod菜单/**/app/src/obj*/
-mod菜单/**/app/src/libs*/
+mod菜单/**/app/src/**/obj*/
+mod菜单/**/app/src/**/libs*/
+mod菜单/**/app/src/**/jniLibs/
 mod菜单/**/build/
 mod_menu/
 # gradle 缓存
 mod菜单/**/.gradle/
+mod菜单/**/.gradle-home/
 mod菜单/**/.externalNativeBuild/
 # 依赖缓存
 mod菜单/**/node_modules/
@@ -87,10 +89,18 @@ __pycache__/
 # ===== 构建中间产物（.NET / NDK，可再生；由源码 + 工具重建）=====
 04_scripts/**/bin/
 04_scripts/**/obj/
+06_dumped/**/bin/
+06_dumped/**/obj/
 mod菜单/**/app/src/obj/
 mod菜单/**/app/src/libs/
 mod菜单/**/obj_*/
 mod菜单/**/libs_*/
+
+# 生成式分析缓存/清单（由脚本重建，不入库）
+04_scripts/**/apk_entries.txt
+04_scripts/**/rva_map.pkl
+10_docs/**/evidence_*/game_js_*.js
+10_docs/**/evidence_*/spliced_*.js
 
 # ===== 装机成功戳（设备侧状态，每次装机重写）=====
 04_scripts/*/.install_ok
@@ -106,9 +116,17 @@ mod菜单/**/libs_*/
 *.dex
 *.i64
 *.idb
+*.a
+*.dll
+*.pdb
+*.dylib
+*.pkl
+*.idsig
 
 # ===== 例外：复现必要资产（构建直接引用，勿删勿忽略）=====
-!mod菜单/**/Games/WxsjPatchedDll.a
-!mod菜单/**/targetfuntional_dll.bin
-!mod菜单/**/jniLibs/**
+!mod菜单/**/jni/Dobby/**/*.a
+!mod菜单/**/jni/KittyMemory/Deps/Keystone/**/*.a
+!mod菜单/**/Games/WxsjPatchedDll*.a
+!mod菜单/**/Games/WxsjVc1637PatchedDll.a
+!mod菜单/**/targetfuntional_dll*.bin
 mod菜单/starry-mod-menu_111/
