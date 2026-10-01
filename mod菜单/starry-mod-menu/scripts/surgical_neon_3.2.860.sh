@@ -10,6 +10,9 @@
 # - 删除 assets/web；替换 libstarry_magic.so + assets/certs
 # - 2026-10-02 迁移 modern 注册表：ndk-build 走 Android_neon.mk
 #     （MainModern.cpp + Games/NeonMod.cpp + Games/NeonEntry.cpp + Games/NoAceStubs.cpp）
+# - 2026-10-01 签名改为工作区 release 证书（01_tools/starry_release.jks，CN=StarryMagic）
+#     原因：菜单 v5 设备指纹只用 SSAID，而 SSAID 按签名证书隔离 —— 与其它星光包
+#     不同证书会算出不同 dev_*，服务端按整张卡绑 device_id ⇒ 403「卡密已绑定其他设备」。
 #
 # 产物：08_output/霓虹深渊/霓虹深渊_3.2.860_surgical-releaseSigned.apk
 #
@@ -17,6 +20,9 @@
 #   bash scripts/surgical_neon_3.2.860.sh
 #   STARRY_INSTALL=1 bash scripts/surgical_neon_3.2.860.sh
 #   NEON_BASE_APK=/path/to/base.apk bash scripts/surgical_neon_3.2.860.sh
+#   换签不改内容（不需要官方底包）:
+#   NEON_RESIGN_APK=08_output/霓虹深渊/xxx.apk [STARRY_INSTALL=1] bash scripts/surgical_neon_3.2.860.sh
+#   换别的 keystore: NEON_SIGN_KS=/path/xx.jks STARRY_KS_ALIAS=xx STARRY_KS_PASS=xx
 set -euo pipefail
 
 BUILD_TYPE="${STARRY_BUILD_TYPE:-release}"
@@ -63,7 +69,9 @@ for v in 36.0.0 35.0.0 34.0.0; do
   fi
 done
 
-if [[ ! -f "$ORIG_APK" ]]; then
+RESIGN_FROM="${NEON_RESIGN_APK:-}"
+
+if [[ -z "$RESIGN_FROM" && ! -f "$ORIG_APK" ]]; then
   echo "ERROR: 缺少 TapTap 官方原包。" >&2
   echo "" >&2
   echo "  1) 下载（任选）：" >&2
@@ -77,7 +85,10 @@ if [[ ! -f "$ORIG_APK" ]]; then
   echo "  或: NEON_BASE_APK=/path/to/official.apk bash $0" >&2
   exit 1
 fi
-if [[ -n "$APKSIGNER" ]]; then
+if [[ -n "$RESIGN_FROM" ]]; then
+  [[ -f "$RESIGN_FROM" ]] || { echo "ERROR: NEON_RESIGN_APK 不存在: $RESIGN_FROM" >&2; exit 1; }
+  echo "[resign] 换签模式：跳过 [1/6]..[4/6]，不需官方底包；输入 $RESIGN_FROM"
+elif [[ -n "$APKSIGNER" ]]; then
   set +e
   APK_MD5="$("$APKSIGNER" verify --print-certs "$ORIG_APK" 2>/dev/null | awk '/MD5 digest/ {print $NF; exit}')"
   set -e
@@ -110,6 +121,9 @@ WORK="$(mktemp -d /tmp/neon_surgical.XXXXXX)"
 trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK"
 
+if [[ -n "$RESIGN_FROM" ]]; then
+  cp -f "$RESIGN_FROM" "$WORK/unsigned.apk"
+else
 echo "[1/6] ndk-build (Android_neon.mk -> libs_neon) ([Neon] 自检)"
 NDK_BUILD="$NDK/ndk-build"
 [[ -x "$NDK_BUILD" ]] || { echo "ERROR: missing $NDK_BUILD"; exit 1; }
@@ -686,6 +700,8 @@ zin2.close()
 zout2.close()
 PY
 
+fi
+
 echo "[5/6] zipalign + sign → $SIGNED"
 ALIGNED="$WORK/aligned.apk"
 if [[ -n "$BT" ]]; then
@@ -694,27 +710,20 @@ else
   cp "$WORK/unsigned.apk" "$ALIGNED"
 fi
 mkdir -p "$OUT"
-# 与旧 inject_neon 一致：uber-apk-signer 内置 debug 证书（MD5 ffd6314a…），否则覆盖安装失败
-UBER_ARGS=(-a "$ALIGNED" --overwrite --allowResign)
-[[ -n "$BT" ]] && UBER_ARGS+=(--zipAlignPath "$BT/zipalign")
-if [[ -n "${NEON_SIGN_KS:-}" && -f "${NEON_SIGN_KS}" ]]; then
-  KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
-  KS_PASS="${STARRY_KS_PASS:-starry2026}"
-  java -jar "$SIGNER" -a "$ALIGNED" --out "$OUT" --allowResign \
-    --ks "$NEON_SIGN_KS" --ksAlias "$KS_ALIAS" --ksPass "$KS_PASS" --ksKeyPass "$KS_PASS"
-  CAND=$(ls -t "$OUT"/*surgical*Signed*.apk 2>/dev/null | head -1 || true)
-  [[ -n "${CAND:-}" ]] && cp -f "$CAND" "$SIGNED"
-else
-  java -jar "$SIGNER" "${UBER_ARGS[@]}"
-  for c in \
-    "${ALIGNED%.apk}-aligned-debugSigned.apk" \
-    "${ALIGNED%.apk}-aligned-releaseSigned.apk" \
-    "${ALIGNED%.apk}-debugSigned.apk" \
-    "${ALIGNED%.apk}-releaseSigned.apk" \
-    "$ALIGNED"; do
-    if [[ -f "$c" ]]; then cp -f "$c" "$SIGNED"; break; fi
-  done
-fi
+# 统一用工作区 release 证书（CN=StarryMagic）：v5 指纹只用 SSAID，SSAID 按签名证书隔离，
+# 与其它星光包同证书才能算出同一个 dev_*（否则卡密 403 已绑定其他设备）。
+SIGN_KS="${NEON_SIGN_KS:-$KS}"
+[[ -f "$SIGN_KS" ]] || { echo "ERROR: keystore 不存在: $SIGN_KS" >&2; exit 1; }
+[[ -n "$APKSIGNER" ]] || { echo "ERROR: 找不到 apksigner" >&2; exit 1; }
+KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
+KS_PASS="${STARRY_KS_PASS:-starry2026}"
+"$APKSIGNER" sign \
+  --ks "$SIGN_KS" --ks-key-alias "$KS_ALIAS" \
+  --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
+  --out "$SIGNED" "$ALIGNED"
+CERT_MD5="$("$APKSIGNER" verify --print-certs "$SIGNED" 2>/dev/null | awk '/MD5 digest/ {print $NF; exit}')"
+CERT_SHA1="$("$APKSIGNER" verify --print-certs "$SIGNED" 2>/dev/null | awk '/SHA-1 digest/ {print $NF; exit}')"
+echo "[sign] ks=$(basename "$SIGN_KS") alias=$KS_ALIAS certMD5=$CERT_MD5 certSHA1=$CERT_SHA1"
 cp -f "$SIGNED" "$ALIAS_APK"
 ls -lh "$SIGNED"
 if unzip -l "$SIGNED" | grep -q 'assets/web/'; then
