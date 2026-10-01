@@ -43,6 +43,8 @@ usage() {
 
 说明:
   - 所有 path 都会用 `git add -A --` 暂存。
+  - 路径下若已有 `git rm --cached` 退库的文件：照常 add 整条路径，再把被加回的退库文件
+    复原为删除；**不会**像旧版那样跳过整条路径（旧版会连带漏掉同目录的合法改动）。
   - 暂存区出现白名单外路径时拒绝提交。
   - --staged-only: 不执行 git add，只校验已有暂存区、提交并推送。
   - --require-clean-paths: 白名单路径仍有未暂存改动时直接停止；用于防止混有其它会话改动的共享文件被路径级 add 误带。
@@ -168,15 +170,41 @@ fi
 
 if [[ "$STAGED_ONLY" == "0" ]]; then
   for path in "${PATHS[@]}"; do
-    # 已通过 git rm --cached 退库的 ignored 文件：保留 staged deletion，不再次 add。
-    if [[ -n "$(git diff --cached --name-only --diff-filter=D -- "$path")" ]]; then
-      continue
-    fi
     if [[ ! -e "$path" ]] && [[ -z "$(git ls-files -- "$path")" ]]; then
       echo "错误: 白名单路径不存在且未被 Git 跟踪: $path" >&2
       exit 1
     fi
+
+    # 本次 add 之前该路径下已有的 staged deletion（例如 git rm --cached 退库的 ignored 文件）。
+    # 不能像旧写法那样"看到删除就整条路径 continue"：那会连带跳过同一目录下其它合法改动。
+    # 2026-10-01 实际发生：--path 04_scripts 因 26 个退库删除，静默漏掉了
+    # 04_scripts/_common/env.sh 的修改（提交后复查才发现）。
+    # 正确做法：照常 add，再把被重新加回的退库文件复原为删除。
+    # 注意 bash 3.2 兼容（mac 侧是 3.2.57）：只用 while read + here-string，不用 bash 4+ 内建。
+    KEEP_DELETED=""
+    while IFS= read -r _f; do
+      [[ -n "$_f" ]] || continue
+      KEEP_DELETED="${KEEP_DELETED}${_f}"$'\n'
+    done < <(git diff --cached --name-only --diff-filter=D -- "$path")
+
     git add -A -- "$path"
+
+    if [[ -n "$KEEP_DELETED" ]]; then
+      while IFS= read -r _f; do
+        [[ -n "$_f" ]] || continue
+        # 目标：add 之前已是 staged deletion 的文件，add 之后必须仍是 staged deletion。
+        # 不用 --diff-filter=A 判断：文件若与 HEAD 内容相同，重新加回后相对 HEAD 是"无变化"，
+        # 不会显示为 A（实测踩过），只能反过来查"删除是否还在"。
+        if [[ -z "$(git diff --cached --name-only --diff-filter=D -- "$_f")" ]]; then
+          if ! git rm --cached -q -- "$_f"; then
+            echo "错误: 无法复原 $_f 的退库状态，请手工检查暂存区" >&2
+            exit 1
+          fi
+          echo "注意: $_f 此前已 git rm --cached 退库，路径级 add 后已复原为删除（本地文件保留）" >&2
+        fi
+      done <<< "$KEEP_DELETED"
+    fi
+    unset KEEP_DELETED
   done
 
   # 目录白名单顺带纳入的新增文件：逐条提醒核对归属（同目录可能有别的会话的新文件）。
