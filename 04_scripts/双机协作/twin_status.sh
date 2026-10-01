@@ -2,7 +2,7 @@
 # ============================================================================
 # twin_status.sh - 双机协作一键体检 (mac / win 通用, bash 3.2 兼容)
 #
-# 用法:  bash 04_scripts/_common/twin_status.sh
+# 用法:  bash 04_scripts/双机协作/twin_status.sh
 # 退出码: 0 = 全绿 / 1 = 有 FAIL / 2 = 仅 WARN
 #
 # 覆盖: 仓库定位与兼容路径 / git 状态与远端 / 换行符白名单 / mac 命令垫片
