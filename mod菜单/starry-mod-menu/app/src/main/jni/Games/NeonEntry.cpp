@@ -20,11 +20,10 @@ static const char* kNeon_Features[] = {
     "Toggle_秒杀",             // 2  NEON_FEAT_SECKILL（伤害放大 + 目标 CurrentHp 归零）
     "Toggle_技能无CD",         // 3  NEON_FEAT_NO_CD（IsSkillCD/SetSkillCD/SecCool* 6 处）
     "Slider_移速:1:5",         // 4  NEON_FEAT_MOVE_SPEED（1 = 关，2/3/4/5 → 1.5/2/3/4 倍）
-    "Slider_近战攻速:1:5",     // 5  NEON_FEAT_MELEE_SPEED（刀/球棒/拳套/指虎挥砍 CD 缩短）
-    "Slider_远程攻速:1:5",     // 6  NEON_FEAT_RANGED_SPEED（枪/弓射击间隔缩短）
-    "Toggle_无限金币",         // 7  NEON_FEAT_INF_COIN（对局内金币：UseCoin 拦截 + HasCoin 恒真）
-    "Toggle_无限钥匙",         // 8  NEON_FEAT_INF_KEY（对局内钥匙：UseKey 拦截 + HasKey 恒真）
-    "Toggle_无限彩色钥匙",     // 9  NEON_FEAT_INF_GKEY（GameplayKey＝彩色钥匙，SpecialKeyPowerUp 拾取）
+    "Slider_攻速:1:5",         // 5  NEON_FEAT_ATTACK_SPEED（枪械射击间隔 + 多段近战挥砍 CD 统一加速）
+    "Toggle_金币使用不减",         // 6  NEON_FEAT_INF_COIN（对局内金币：UseCoin 拦截 + HasCoin 恒真）
+    "Toggle_钥匙使用不减",         // 7  NEON_FEAT_INF_KEY（对局内钥匙：UseKey 拦截 + HasKey 恒真）
+    "Toggle_彩色钥匙使用不减",     // 8  NEON_FEAT_INF_GKEY（GameplayKey＝彩色钥匙，SpecialKeyPowerUp 拾取）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

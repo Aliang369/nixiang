@@ -2,7 +2,7 @@
   "template_id": "neon",
   "name": "霓虹深渊",
   "package": "com.shangyoo.neon",
-  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（2026-10-02 第二轮）",
+  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（2026-10-02 第四轮：近战/远程攻速合并为单一「攻速」）",
   "features": [
     {
       "feat_num": 1,
@@ -22,23 +22,19 @@
     },
     {
       "feat_num": 5,
-      "name": "近战攻速"
+      "name": "攻速"
     },
     {
       "feat_num": 6,
-      "name": "远程攻速"
+      "name": "金币使用不减"
     },
     {
       "feat_num": 7,
-      "name": "无限金币"
+      "name": "钥匙使用不减"
     },
     {
       "feat_num": 8,
-      "name": "无限钥匙"
-    },
-    {
-      "feat_num": 9,
-      "name": "无限彩色钥匙"
+      "name": "彩色钥匙使用不减"
     }
   ]
 }

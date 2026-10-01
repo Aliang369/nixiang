@@ -1,39 +1,40 @@
 /* ================================================================
  *  霓虹深渊 3.2.860 — 仅战斗（便利功能已移除）
- *  无敌 / 秒杀 / 技能无CD / 移速 / 近战攻速 / 远程攻速
+ *  无敌 / 秒杀 / 技能无CD / 移速 / 攻速（统一一刀切：枪械 + 多段近战）
  *  RVA 一律 dump.cs；禁止 Il2Cpp::Api::Load；禁止非主线程调 timeScale
  *
  *  2026-10-02 迁移 modern 注册表：库名改走 sec_lib_il2cpp()（不再依赖
  *  GameConfig.h，那是 legacy 配置中心）。地址解析机制不变（file_off）。
  *
- *  新增两项攻速（逆向证据，ARM64 反汇编 + dump.cs 双向核对）：
- *    ⑤ 近战攻速 0x2929E78 Gun.<MeleeCheck>d__85::MoveNext
- *        挥砍后 timer = [Gun+0x370]BaseMeleeCD + [Gun+0x374]ExtraMeleeCD
- *        或 [Gun+0x30]kanonBaseMeleeCd + [Gun+0x374]，写回 [sm+0x28]<timer>5__2
- *        → 直接缩小该 timer（两路都覆盖，不必动 Gun 字段）
- *    ⑥ 远程攻速 0x292B190 GunGraph.<AttackRoutineWithEvents>d__46::MoveNext
- *        [枪图＝真节奏] 逐帧 timer([sm+0x58]) -= deltaTime，归零后
- *          timer = graph.output.FireDelay；FireDelay(0x3A8F3F4) = 60.0f / RPM
- *          → 缩小新赋值的 timer（帧内判「突然变大」），只影响玩家（[sm+0x50]
- *            ＝<neonPlayerState>5__2 非空才算玩家路径，怪物走别的协程）
- *        [旧点保留] 0x292AB08 Gun.<shootingInterval>d__96::MoveNext
- *          2026-10-02 实测该协程在真机武器上未被启动（日志零命中）：
- *          玩家枪由枪械蓝图 GunGraph 驱动，shootingInterval 无直接调用者
- *          （protected virtual Slot:10），故仅作后备。
- *    ⑤' 近战攻速（主）＝ 同一支枪图协程 d__46：d__46 的反汇编里分支条件是
- *        GunGraph.firing(0x90)!=0 && GGEvents.meleeEvent(0x38)!=0 → 走近战，
- *        yield GunGraph.meleeDelegate::Invoke()(0x292B4E0)；否则走 GunOutput::Attack。
- *        两者共用同一个 <timer>5__3（初值 = GunOutput::get_FireDelay = 60/RPM）
- *        ⇒ 按 meleeEvent 是否为空选近战/远程倍率，机制与已验证的远程完全一致。
- *        Gun.<MeleeCheck>d__85 那条协程保留为后备（Gun::MeleeCheck() 0x3960168
- *        实测 0 个 BL 调用者，与 shootingInterval 同病，疑似不参与实战）。
+ *  【攻速】单一滑条（2026-10-02 第四轮，按用户要求把原「近战攻速/远程攻速」合并）：
+ *    g_atkLvl(1..5) → AtkMul()=LvlMul(档位)；枪械与多段近战统一按同一倍率加速。
+ *    原因：分开做要先判定「手上这把武器是近战还是远程」，而真机上该判定不可靠
+ *    （实测近战滑条会把玩家的枪一起加速），合并后既无串扰又省一套分流逻辑。
+ *
+ *    (1) 枪械/枪图武器：GunGraph.<AttackRoutine>d__45/d__46::MoveNext
+ *        0x292AE4C（无事件版，玩家枪械实际走的这条）/ 0x292B190（带事件版）
+ *        节奏＝每帧 timer -= deltaTime，归零后 timer = GunOutput::get_FireDelay
+ *        → 缩放「新赋值的 timer」（帧内判突然变大），只影响玩家路径
+ *          （d__46 由 [sm+0x50]＝<neonPlayerState>5__2 非空门控；d__45 走
+ *           GunGraphBase.netPlayer(0x28) 非空且非 isActorShadow(0x68)）。
+ *    (2) 多段近战（梅那把刀＝FireWeaponSlot_MeleeMultiSegGun，: DeputyWeaponSlot_MeleeMultiSeg）
+ *        真节奏＝ _busyTime(0x98) 这个「剩余忙碌倒计时」（满值实测 0.75s）：
+ *          OnUpdate(0x3DAB76C)：if(_busyTimePaused) return;
+ *                               b=get_BusyTime(); if(b>0){ set_BusyTime(b-deltaTime);
+ *                                 if(get_BusyTime()<0) OnBusyTimePassed(); }
+ *          ⇒ 每帧写回「剩余秒数」，倒计时归零后由 OnBusyTimePassed 写入满值。
+ *        → 只缩放「上升跳变」（＝新一轮窗口起点）÷mul，逐帧递减原样透传；
+ *          AsBusyTime(0x3DABB30) 的 get+add+set 累加也走同一函数，天然覆盖。
+ *    (3) 真身＝ get_FireDelay 0x3A8F3F4（= 60/RPM，枪械）+ set_BusyTime 0x3DA9D70（多段近战）。
+ *        旧点仍保留为后备：0x292AB08 shootingInterval d__96、0x2929E78 MeleeCheck d__85
+ *        （实测两者在真机武器上零命中，玩家武器由枪图协程/副武器槽驱动）。
  *
  *  对局内资源（2026-10-02 第二轮，dump.cs + 反汇编双向核对）：
- *    ⑦ 无限金币   NEONPlayerState.UseCoin(0x289295C) / HasCoin(0x28928EC)
+ *    ⑦ 金币使用不减   NEONPlayerState.UseCoin(0x289295C) / HasCoin(0x28928EC)
  *                 / GetCoinNum(0x28952AC)；数值字段 Coin(PlayerStateInt 0x30)
- *    ⑧ 无限钥匙   NEONPlayerState.UseKey(0x2894094) / HasKey()(0x28921C4)
+ *    ⑧ 钥匙使用不减   NEONPlayerState.UseKey(0x2894094) / HasKey()(0x28921C4)
  *                 / HasKey(int)(0x2893FB0)；数值字段 Key(PlayerStateInt 0x380)
- *    ⑨ 无限彩色钥匙 NEONPlayerState.UseGameplayKey(0x2894EC8)
+ *    ⑨ 彩色钥匙使用不减 NEONPlayerState.UseGameplayKey(0x2894EC8)
  *                 / HasGameplayKey(0x28951C4)；GameplayKey 不是 PlayerStateInt，
  *                 而是属性(attrid)：HasGameplayKey 走
  *                 Global::get_PlayerState→[+0x48]→EhiEntity::GetAttri；
@@ -54,6 +55,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
+#include <unwind.h>
 #include <utility>
 
 #include "Dobby/dobby.h"
@@ -88,7 +91,12 @@ enum : uintptr_t {
     // 武器攻速（2026-10-02 dump.cs + 反汇编核对）
     RVA_SHOOT_INTERVAL_MN = 0x292AB08,  // Gun.<shootingInterval>d__96::MoveNext（后备）
     RVA_MELEE_CHECK_MN    = 0x2929E78,  // Gun.<MeleeCheck>d__85::MoveNext
-    RVA_GRAPH_ATTACK_MN   = 0x292B190,  // GunGraph.<AttackRoutineWithEvents>d__46::MoveNext
+    RVA_GRAPH_ATTACK_MN   = 0x292B190,  // GunGraph.<AttackRoutineWithEvents>d__46::MoveNext（近战在此）
+    // 2026-10-02 实测定位：玩家枪械走的是「无事件」版 <AttackRoutine>d__45（d__46 零命中）。
+    // 依据：GunOutput::NeedCharge/Attack/MuzzleFlash::Fire 的调用点全在 d__45/d__46/d__47；
+    //       而 GunGraph.meleeDelegate::Invoke 全场只有 1 个调用点 0x292B3C8＝d__46 内部
+    //       ⇒ 近战必走 d__46，d__45 只可能是枪械（远程）。
+    RVA_GRAPH45_ATTACK_MN = 0x292AE4C,  // GunGraph.<AttackRoutine>d__45::MoveNext
 
     // 对局内资源（NEONPlayerState，2026-10-02 dump.cs 行号→RVA 核对）
     RVA_PS_USE_COIN       = 0x289295C,  // void UseCoin(int amount)
@@ -163,6 +171,17 @@ enum : size_t {
     OFF_SM_GRAPH_TIMER = 0x58,  // private float <timer>5__3（射击间隔倒计时）
     OFF_SM_MELEE_EVENT = 0x38,  // GunGraphEvents.meleeEvent（0x38 处 struct 的首字段；非空=近战图）
 
+    // GunGraph.<AttackRoutine>d__45 状态机布局（无 timer / 无 GGEvents / 无 ps 缓存）
+    OFF_SM45_THIS      = 0x30,  // public GunGraph <>4__this
+    OFF_SM45_CURRENT   = 0x18,  // <>2__current（此处唯一 yield = WaitForSeconds(FireDelay)）
+    OFF_SM45_INSTIG    = 0x28,  // public MonoBehaviour Instigator
+
+    // GunGraphBase / GunGraph 上的「是不是玩家这把枪」
+    OFF_GRAPH_NETPLAYER = 0x28,  // GunGraphBase.netPlayer（NetPlayerActor；非空＝玩家自己的枪）
+    OFF_GRAPH_SHADOW    = 0x68,  // GunGraph.isActorShadow（技能复制出来的影子枪，不算）
+    OFF_GRAPH_OUTPUT    = 0x80,  // GunGraph.output
+    OFF_GRAPH_FIRING    = 0x90,  // GunGraph.firing
+
     // SecSkillPowerUp 冷却字段（35 个门共用同一基类布局）
     OFF_SEC_COOLING_TIME = 0x25C,
     OFF_SEC_LAST_COOL    = 0x260,
@@ -173,11 +192,20 @@ static std::atomic<bool> g_invincible{false};
 static std::atomic<bool> g_seckill{false};
 static std::atomic<bool> g_noCd{false};
 static std::atomic<int>  g_moveLvl{1};
-static std::atomic<int>  g_meleeLvl{1};   // 近战攻速档位 1..5（1 = 关）
-static std::atomic<int>  g_rangedLvl{1};  // 远程攻速档位 1..5（1 = 关）
-static std::atomic<bool> g_infCoin{false};  // 无限金币
-static std::atomic<bool> g_infKey{false};   // 无限钥匙
-static std::atomic<bool> g_infGkey{false};  // 无限彩色钥匙（GameplayKey）
+// ---------------------------------------------------------------------------
+// 临时诊断开关（NEON_DIAG）：排查真机攻击走哪条路时置 1；正式包必须为 0。
+//  2026-10-02 第五轮收尾：真身已定位且实测通过（枪 + 多段近战同一把滑条生效）→ 置 0。
+//  历史：第三/四轮置 1 抓到 d__45/d__46 分流、GunOutput::get_FireDelay、
+//  DeputyWeaponSlot_MeleeMultiSeg._busyTime(0x98) 三条关键证据。
+// ---------------------------------------------------------------------------
+#define NEON_DIAG 0
+
+// 攻速档位 1..5（1 = 关）：2026-10-02 第四轮按用户要求，把原「近战攻速/远程攻速」
+// 两把滑条合并为一把「攻速」，所有玩家攻击节奏统一按 LvlMul 缩放（不再分流判断）。
+static std::atomic<int>  g_atkLvl{1};
+static std::atomic<bool> g_infCoin{false};  // 金币使用不减
+static std::atomic<bool> g_infKey{false};   // 钥匙使用不减
+static std::atomic<bool> g_infGkey{false};  // 彩色钥匙使用不减（GameplayKey）
 
 typedef bool (*DeductHP_t)(void* thiz, void* damage, int32_t count, void* method);
 typedef void (*DoDeduct_t)(void* thiz, void* damage, void* method);
@@ -214,6 +242,7 @@ static SpeedFn_t g_origMaxSpeed = nullptr;
 static MoveNext_t g_origShootIntervalMn = nullptr;
 static MoveNext_t g_origMeleeCheckMn = nullptr;
 static MoveNext_t g_origGraphAttackMn = nullptr;
+static MoveNext_t g_origGraph45Mn = nullptr;
 
 // 对局内资源（NEONPlayerState 成员方法；x0=this，尾参 = MethodInfo*）
 typedef void    (*UseCoin_t)(void* thiz, int32_t amount, void* method);
@@ -275,6 +304,193 @@ static float LvlMul(int lvl) {
 }
 
 static float MoveMul() { return LvlMul(g_moveLvl.load()); }
+static float AtkMul()  { return LvlMul(g_atkLvl.load()); }   // 攻速统一倍率（近战/远程同一把滑条）
+
+// ==================================================================
+//  栈回溯：用来按「调用者身份」区分玩家武器 / 怪物 / 仆从
+//  （get_FireDelay 被玩家枪图协程、炮塔、仆从、短剑 RPM 共用，
+//    不能全局改；只能看栈里有没有玩家那条协程）
+// ==================================================================
+static uintptr_t g_libBase = 0;   // libil2cpp 基址（由已解析的钩子地址反推）
+static uintptr_t g_libEnd  = 0;
+
+struct NeonStack {
+    uintptr_t pc[24];
+    int n;
+};
+
+static _Unwind_Reason_Code NeonStackCb(struct _Unwind_Context* ctx, void* arg) {
+    NeonStack* s = reinterpret_cast<NeonStack*>(arg);
+    uintptr_t pc = reinterpret_cast<uintptr_t>(_Unwind_GetIP(ctx));
+    if (pc && s->n < (int)(sizeof(s->pc) / sizeof(s->pc[0]))) s->pc[s->n++] = pc;
+    return (s->n >= (int)(sizeof(s->pc) / sizeof(s->pc[0]))) ? _URC_END_OF_STACK : _URC_NO_REASON;
+}
+
+static int NeonCapture(NeonStack* s) {
+    s->n = 0;
+    _Unwind_Backtrace(NeonStackCb, s);
+    return s->n;
+}
+
+// 栈里第一个落在 [lo,hi) 的 RVA；找不到返回 0
+static uintptr_t NeonStackHit(const NeonStack* s, uintptr_t lo, uintptr_t hi) {
+    if (!g_libBase || !s) return 0;
+    for (int i = 0; i < s->n; ++i) {
+        if (s->pc[i] < g_libBase || s->pc[i] >= g_libEnd) continue;
+        uintptr_t rva = s->pc[i] - g_libBase;
+        if (rva >= lo && rva < hi) return rva;
+    }
+    return 0;
+}
+
+#if NEON_DIAG
+static void NeonLogStack(const char* tag, const NeonStack* s) {
+    char buf[320];
+    int off = 0;
+    for (int i = 0; i < s->n && off < 270; ++i) {
+        if (s->pc[i] < g_libBase || s->pc[i] >= g_libEnd) continue;
+        off += snprintf(buf + off, sizeof(buf) - (size_t)off, " %lx",
+                        (unsigned long)(s->pc[i] - g_libBase));
+    }
+    LOGI("[Neon][stk] %s%s", tag, buf);
+}
+#endif
+
+// 玩家枪械协程地址带：Gun.<MeleeCheck>d__85 / <shootingInterval>d__96 /
+// GunGraph.<AttackRoutine>d__45 / <AttackRoutineWithEvents>d__46 / <ChargeRoutine>d__47
+#define RVA_GUNROUTINE_LO  0x2929E78UL
+#define RVA_GUNROUTINE_HI  0x292C100UL
+// Long_Active_001::RefreshShortSwordRPM（短剑 RPM 写入点，属近战路）
+#define RVA_SHORTSWORD_LO  0x32E7100UL
+#define RVA_SHORTSWORD_HI  0x32E7400UL
+
+// ==================================================================
+//  攻速真身（2026-10-02 第三轮）
+//    FireDelay(0x3A8F3F4) = 60/RPM：所有枪图协程取间隔都走这里，
+//      按栈里是不是玩家枪械协程决定缩放（远程滑条）/ 短剑 RPM（近战滑条）。
+//      零残留：只改本次返回值，不写任何字段。
+//    AsBusyTime(0x3DABB30)：多段近战副武器槽的「本段忙碌时间」累加器，
+//      传入的是增量秒数 ⇒ 只缩放这个增量（挂 set_BusyTime 会因累加器
+//      被反复整值除法而崩成 0，故 set_BusyTime 只做观测）。
+// ==================================================================
+#define RVA_OUT_FIRE_DELAY   0x3A8F3F4UL  // GunOutput::get_FireDelay()
+#define RVA_MELEE_AS_BUSY    0x3DABB30UL  // DeputyWeaponSlot_MeleeMultiSeg::AsBusyTime(float)
+
+typedef float (*FireDelay_t)(void*, void*);
+typedef void  (*AsBusy_t)(void*, float, void*);
+
+static FireDelay_t g_origFireDelay = nullptr;
+static AsBusy_t    g_origMeleeAsBusy = nullptr;
+
+#if NEON_DIAG
+static unsigned g_fdDiagN = 0;
+static unsigned g_busyDiagN = 0;
+#endif
+
+static float Hooked_GetFireDelay(void* thiz, void* method) {
+    float v = g_origFireDelay ? g_origFireDelay(thiz, method) : 0.f;
+    if (!(v > 0.f) || v > 600.f) return v;
+
+    const float mul = AtkMul();
+    const bool needScale = (mul > 1.001f);
+#if NEON_DIAG
+    const bool wantDiag = (g_fdDiagN < 60u);
+#else
+    const bool wantDiag = false;
+#endif
+    if (!needScale && !wantDiag) return v;
+
+    NeonStack st;
+    NeonCapture(&st);
+    const uintptr_t hitGun = NeonStackHit(&st, RVA_GUNROUTINE_LO, RVA_GUNROUTINE_HI);
+    if (hitGun) {
+        if (needScale) {
+            float nv = v / mul;
+            static unsigned n = 0;
+            if ((n++ % 6u) == 0u)
+                LOGI("[Neon] 攻速(60/RPM·玩家枪) x%.2f 间隔 %.4f->%.4f @0x%lx", mul, v, nv,
+                     (unsigned long)hitGun);
+            return nv;
+        }
+#if NEON_DIAG
+        if (wantDiag && (g_fdDiagN++ % 3u) == 0u) NeonLogStack("fire.gun", &st);
+#endif
+        return v;
+    }
+
+    const uintptr_t hitSw = NeonStackHit(&st, RVA_SHORTSWORD_LO, RVA_SHORTSWORD_HI);
+    if (hitSw) {
+        if (needScale) {
+            float nv = v / mul;
+            static unsigned n = 0;
+            if ((n++ % 4u) == 0u)
+                LOGI("[Neon] 攻速(短剑RPM) x%.2f 间隔 %.4f->%.4f @0x%lx", mul, v, nv,
+                     (unsigned long)hitSw);
+            return nv;
+        }
+        return v;
+    }
+
+#if NEON_DIAG
+    if (wantDiag && (g_fdDiagN++ % 3u) == 0u) {
+        LOGI("[Neon][diag] fire 非玩家路 v=%.4f", v);
+        NeonLogStack("fire.other", &st);
+    }
+#endif
+    return v;
+}
+
+static void Hooked_MeleeAsBusyTime(void* thiz, float sec, void* method) {
+    const float ml = AtkMul();
+    if (ml > 1.001f && sec > 0.0001f && sec < 60.f) {
+        float ns = sec / ml;
+        static unsigned n = 0;
+        if ((n++ % 4u) == 0u) {
+            LOGI("[Neon] 攻速(多段近战·累加) x%.2f busy %.3f->%.3f", ml, sec, ns);
+#if NEON_DIAG
+            if (g_busyDiagN++ < 8u) { NeonStack st; NeonCapture(&st); NeonLogStack("asBusy", &st); }
+#endif
+        }
+        sec = ns;
+    }
+    if (g_origMeleeAsBusy) g_origMeleeAsBusy(thiz, sec, method);
+}
+
+// ==================================================================
+//  ⑤ 攻速·近战真身（2026-10-02 第四轮真机定位 + 用户实测）
+//    梅那把「刀」＝ FireWeaponSlot_MeleeMultiSegGun（: DeputyWeaponSlot_MeleeMultiSeg），
+//    挥砍节奏由 _busyTime(0x98) 这个「剩余忙碌倒计时」控制：
+//      OnUpdate(0x3DAB76C)：if (_busyTimePaused) return;
+//                            b = get_BusyTime();
+//                            if (b > 0) { set_BusyTime(b - Time.deltaTime);
+//                                         if (get_BusyTime() < 0) OnBusyTimePassed(); }
+//      ⇒ 每帧写回「剩余秒数」，归零后由 OnBusyTimePassed 重新写入满值（实测 0.75s）。
+//    做法：只缩放「上升跳变」（＝新窗口起点），逐帧递减按原样透传 ⇒
+//      窗口线性缩短 mul 倍，不污染累加器（AsBusyTime 的 get+add+set 也走本函数，天然覆盖）。
+// ==================================================================
+#define RVA_MELEE_SET_BUSY   0x3DA9D70UL  // DeputyWeaponSlot_MeleeMultiSeg::set_BusyTime(float)
+typedef void (*SetBusy_t)(void*, float, void*);
+
+static SetBusy_t g_origSetBusy = nullptr;
+static void*     g_lastBusyObj = nullptr;
+static float     g_lastBusyRaw = -999.f;   // 上一次「透传/写入」的原始秒数（用于识别新一轮）
+
+static void Hooked_SetBusyTime(void* thiz, float sec, void* method) {
+    float out = sec;
+    const float mul = AtkMul();
+    if (mul > 1.001f && thiz && sec > 0.30f && sec < 60.f) {
+        // 同一对象：只有比上次值高出 0.30 以上才算「新一轮起点」（逐帧递减不会触发）
+        const bool same = (thiz == g_lastBusyObj);
+        if (!same || sec > g_lastBusyRaw + 0.30f) {
+            out = sec / mul;
+            static unsigned n = 0;
+            if ((n++ % 4u) == 0u)
+                LOGI("[Neon] 攻速(多段近战CD) x%.2f 忙碌 %.3f->%.3f", mul, sec, out);
+        }
+    }
+    if (sec > 0.0001f) { g_lastBusyObj = thiz; g_lastBusyRaw = sec; }
+    if (g_origSetBusy) g_origSetBusy(thiz, out, method);
+}
 
 static void AmplifyDamage(void* damage) {
     if (!damage) return;
@@ -455,12 +671,12 @@ struct NeonSlots {
 
 static unsigned g_speedLogN = 0;
 
-// ⑤ 近战攻速：MeleeCheck 每次挥砍后把「冷却」写进 <timer>5__2，逐帧减 deltaTime。
+// ⑤ 攻速·近战后备：MeleeCheck 每次挥砍后把「冷却」写进 <timer>5__2，逐帧减 deltaTime。
 static NeonSlots<16> g_meleeSlots;
 
 static bool Hooked_MeleeCheckMoveNext(void* self, void* method) {
     bool r = g_origMeleeCheckMn ? g_origMeleeCheckMn(self, method) : false;
-    float mul = LvlMul(g_meleeLvl.load());
+    float mul = AtkMul();
     if (!self || mul <= 1.01f) return r;
     if (!PlayerGunOf(self, nullptr)) return r;
 
@@ -474,36 +690,52 @@ static bool Hooked_MeleeCheckMoveNext(void* self, void* method) {
         *timer = nt;
         g_meleeSlots.tab[idx].prev = nt;
         if ((++g_speedLogN % 20u) == 1u)
-            LOGI("[Neon] 近战攻速 x%.2f CD %.3f->%.3f", mul, t, nt);
+            LOGI("[Neon] 攻速(挥砍CD) x%.2f %.3f->%.3f", mul, t, nt);
     } else {
         g_meleeSlots.tab[idx].prev = t;
     }
     return r;
 }
 
-// ⑤⑥ 武器攻速（主）：枪械蓝图协程 <timer>5__3，初值 = graph.output.FireDelay(60/RPM)，
+// ⑤ 攻速（主）：枪械蓝图协程 <timer>5__3，初值 = graph.output.FireDelay(60/RPM)，
 //     逐帧减 deltaTime，归零即出刀/开枪。缩放新赋值的 timer ＝ 整条节奏 ×mul。
 //     玩家门控：[sm+0x50]<neonPlayerState>5__2 非空才算玩家路径。
-//     近战/远程分流：[sm+0x38]＝GunGraphEvents.meleeEvent；反汇编里 d__46 正是用
-//     `if (firing!=0 && meleeEvent!=null) → yield meleeDelegate::Invoke()` 走近战，
-//     否则走 GunOutput::Attack ⇒ 该指针是否为空就是官方自己的分流条件。
+//     [sm+0x38]＝GunGraphEvents.meleeEvent（官方自己的近战/远程分流条件），
+//     第四轮合并成一把「攻速」后仍保留它，仅用于日志区分两种分支。
 static NeonSlots<24> g_graphSlots;
 
 static bool Hooked_GraphAttackMoveNext(void* self, void* method) {
     bool r = g_origGraphAttackMn ? g_origGraphAttackMn(self, method) : false;
     if (!self) return r;
+#if NEON_DIAG
+    {
+        static std::atomic<unsigned> dn{0};
+        if ((dn.fetch_add(1) % 20u) == 0u) {
+            const uintptr_t p = reinterpret_cast<uintptr_t>(self);
+            void* graph = *reinterpret_cast<void**>(p + 0x20);   // <>4__this = GunGraph
+            void* mev   = *reinterpret_cast<void**>(p + 0x38);   // GGEvents.meleeEvent
+            void* ps    = *reinterpret_cast<void**>(p + 0x50);   // <neonPlayerState>5__2
+            const float tm = *reinterpret_cast<float*>(p + 0x58); // <timer>5__3
+            const int firing = graph ? (int)*reinterpret_cast<unsigned char*>(
+                                    reinterpret_cast<uintptr_t>(graph) + 0x90) : -1;
+            void* dmp = mev ? *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(mev) + 0x10) : nullptr;
+            LOGI("[Neon][diag] d__46 sm=%p state=%d firing=%d meleeEv=%p dMethod=%p ps=%p timer=%.3f atkLvl=%d",
+                 self, *reinterpret_cast<int*>(p + 0x10), firing, mev, dmp, ps, tm,
+                 g_atkLvl.load());
+        }
+    }
+#endif
     if (!*reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(self) + OFF_SM_NEON_PS)) return r;
 
     const bool isMelee = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(self) +
                                                    OFF_SM_MELEE_EVENT) != nullptr;
 
-    const float mul = LvlMul(isMelee ? g_meleeLvl.load() : g_rangedLvl.load());
+    const float mul = AtkMul();
     if (mul <= 1.01f) {
-        // 诊断：滑块没开时也记一笔，用来确认近战武器是否真走枪图
+        // 诊断：滑条没开时也记一笔，用来确认近战武器是否真走枪图
         static std::atomic<unsigned> diag{0};
         if (isMelee && (diag.fetch_add(1) % 200u) == 0u)
-            LOGI("[Neon] 枪图近战分支命中(未加速) meleeLvl=%d rangedLvl=%d",
-                 g_meleeLvl.load(), g_rangedLvl.load());
+            LOGI("[Neon] 枪图近战分支命中(未加速) atkLvl=%d", g_atkLvl.load());
         return r;
     }
 
@@ -518,9 +750,9 @@ static bool Hooked_GraphAttackMoveNext(void* self, void* method) {
         g_graphSlots.tab[idx].prev = nt;
         if ((++g_speedLogN % 20u) == 1u) {
             if (isMelee)
-                LOGI("[Neon] 近战攻速(枪图) x%.2f 挥砍间隔 %.3f->%.3f", mul, t, nt);
+                LOGI("[Neon] 攻速(枪图·近战分支) x%.2f 挥砍间隔 %.3f->%.3f", mul, t, nt);
             else
-                LOGI("[Neon] 远程攻速(枪图) x%.2f 间隔 %.3f->%.3f", mul, t, nt);
+                LOGI("[Neon] 攻速(枪图) x%.2f 间隔 %.3f->%.3f", mul, t, nt);
         }
     } else {
         g_graphSlots.tab[idx].prev = t;
@@ -528,11 +760,11 @@ static bool Hooked_GraphAttackMoveNext(void* self, void* method) {
     return r;
 }
 
-// ⑥b 远程攻速（后备）：shootingInterval 唯一 yield = WaitForSeconds(60/RPM)。
+// ⑤b 攻速（后备）：shootingInterval 唯一 yield = WaitForSeconds(60/RPM)。
 //     实测该协程在玩家武器上未被启动，留着以防个别武器走这条老路。
 static bool Hooked_ShootIntervalMoveNext(void* self, void* method) {
     bool r = g_origShootIntervalMn ? g_origShootIntervalMn(self, method) : false;
-    float mul = LvlMul(g_rangedLvl.load());
+    float mul = AtkMul();
     if (!r || !self || mul <= 1.01f) return r;
     if (!PlayerGunOf(self, nullptr)) return r;
 
@@ -543,7 +775,77 @@ static bool Hooked_ShootIntervalMoveNext(void* self, void* method) {
     if (v > 0.0001f && v < 60.f) {
         *sec = v / mul;
         if ((++g_speedLogN % 20u) == 1u)
-            LOGI("[Neon] 远程攻速(协程) x%.2f 间隔 %.3f->%.3f", mul, v, v / mul);
+            LOGI("[Neon] 攻速(协程) x%.2f 间隔 %.3f->%.3f", mul, v, v / mul);
+    }
+    return r;
+}
+
+// ⑤c 攻速（主·2026-10-02 真机定位）：玩家枪械实际走「无事件」版
+//     GunGraph.<AttackRoutine>d__45::MoveNext(0x292AE4C)，而不是 d__46。
+//     依据：GunOutput::NeedCharge/Attack、MuzzleFlash::Fire 的调用点全部落在
+//     d__45/d__46/d__47 内；而 GunGraph.meleeDelegate::Invoke 全场只有 1 个调用点
+//       0x292B3C8＝d__46 内部 ⇒ 近战必走 d__46，d__45 只能是枪械（远程）。
+//     d__45 没有 timer 字段，它的节奏是 `yield return new WaitForSeconds(FireDelay)`：
+//     反汇编 0x292AFB0 get_FireDelay → 0x5249C6C WaitForSeconds::.ctor → 存 <>2__current(0x18)。
+//     做法：照跑 MoveNext，再把它刚 yield 出来的 WaitForSeconds.m_Seconds ÷ mul。
+//     只认「玩家自己这把枪」：GunGraphBase.netPlayer(0x28) 非空且非 isActorShadow(0x68)。
+static bool IsWaitForSecondsObj(void* obj) {
+    if (!obj) return false;
+    void* klass = *reinterpret_cast<void**>(obj);   // Il2CppObject.klass
+    if (!klass) return false;
+    const char* name = *reinterpret_cast<const char**>(
+        reinterpret_cast<uintptr_t>(klass) + 0x10);  // Il2CppClass.name
+    if (!name) return false;
+    return strcmp(name, "WaitForSeconds") == 0 || strcmp(name, "WaitForSecondsRealtime") == 0;
+}
+
+// 返回：1 = 玩家枪（np 非空且非影子），0 = np 为空，2 = 影子枪，-1 = graph 为空
+static bool IsPlayerGunGraph(void* graph, int* dbg) {
+    if (!graph) { if (dbg) *dbg = -1; return false; }
+    const uintptr_t g = reinterpret_cast<uintptr_t>(graph);
+    void* np = *reinterpret_cast<void**>(g + OFF_GRAPH_NETPLAYER);
+    const bool shadow = *reinterpret_cast<uint8_t*>(g + OFF_GRAPH_SHADOW) != 0;
+    if (dbg) *dbg = np ? (shadow ? 2 : 1) : 0;
+    return np != nullptr && !shadow;
+}
+
+static void* g_lastScaledWfs = nullptr;   // 同一个等待对象只缩放一次
+
+static bool Hooked_Graph45AttackMoveNext(void* self, void* method) {
+    bool r = g_origGraph45Mn ? g_origGraph45Mn(self, method) : false;
+    if (!self) return r;
+    const uintptr_t p = reinterpret_cast<uintptr_t>(self);
+    void* graph = *reinterpret_cast<void**>(p + OFF_SM45_THIS);
+    int dbg = -1;
+    const bool playerGun = IsPlayerGunGraph(graph, &dbg);
+    const float mul = AtkMul();
+#if NEON_DIAG
+    {
+        static std::atomic<unsigned> dn{0};
+        if ((dn.fetch_add(1) % 60u) == 0u) {
+            void* cur0 = *reinterpret_cast<void**>(p + OFF_SM45_CURRENT);
+            const uintptr_t g = reinterpret_cast<uintptr_t>(graph);
+            LOGI("[Neon][diag] d__45 sm=%p state=%d graph=%p gate=%d(1=玩家枪) output=%p firing=%d cur=%p wfs=%d mul=%.2f",
+                 self, *reinterpret_cast<int*>(p + 0x10), graph, dbg,
+                 graph ? *reinterpret_cast<void**>(g + OFF_GRAPH_OUTPUT) : nullptr,
+                 graph ? (int)*reinterpret_cast<uint8_t*>(g + OFF_GRAPH_FIRING) : -1,
+                 cur0, IsWaitForSecondsObj(cur0) ? 1 : 0, mul);
+        }
+    }
+#endif
+    if (!r || !playerGun || mul <= 1.01f) return r;
+
+    void* cur = *reinterpret_cast<void**>(p + OFF_SM45_CURRENT);
+    if (!IsWaitForSecondsObj(cur)) return r;
+    if (cur == g_lastScaledWfs) return r;   // 防同一等待对象被反复除
+    float* sec = reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(cur) + OFF_WFS_SECONDS);
+    const float v = *sec;
+    if (v > 0.0001f && v < 60.f) {
+        const float nv = v / mul;
+        *sec = nv;
+        g_lastScaledWfs = cur;
+        if ((++g_speedLogN % 20u) == 1u)
+            LOGI("[Neon] 攻速(枪图45) x%.2f 间隔 %.3f->%.3f", mul, v, nv);
     }
     return r;
 }
@@ -555,7 +857,7 @@ static bool Hooked_ShootIntervalMoveNext(void* self, void* method) {
 static void Hooked_UseCoin(void* thiz, int32_t amount, void* method) {
     if (g_infCoin.load()) {
         static std::atomic<unsigned> n{0};
-        if ((n.fetch_add(1) % 40u) == 0u) LOGI("[Neon] 无限金币: UseCoin(%d) 已拦截", amount);
+        if ((n.fetch_add(1) % 40u) == 0u) LOGI("[Neon] 金币使用不减: UseCoin(%d) 已拦截", amount);
         return;
     }
     if (g_origUseCoin) g_origUseCoin(thiz, amount, method);
@@ -564,7 +866,7 @@ static void Hooked_UseCoin(void* thiz, int32_t amount, void* method) {
 static bool Hooked_HasCoin(void* thiz, int32_t amount, void* method) {
     if (g_infCoin.load()) {
         static std::atomic<unsigned> n{0};
-        if ((n.fetch_add(1) % 40u) == 0u) LOGI("[Neon] 无限金币: HasCoin(%d) -> true", amount);
+        if ((n.fetch_add(1) % 40u) == 0u) LOGI("[Neon] 金币使用不减: HasCoin(%d) -> true", amount);
         return true;
     }
     return g_origHasCoin ? g_origHasCoin(thiz, amount, method) : false;
@@ -578,7 +880,7 @@ static int32_t Hooked_GetCoinNum(void* thiz, void* method) {
 static void Hooked_UseKey(void* thiz, void* method) {
     if (g_infKey.load()) {
         static std::atomic<unsigned> n{0};
-        if ((n.fetch_add(1) % 20u) == 0u) LOGI("[Neon] 无限钥匙: UseKey() 已拦截");
+        if ((n.fetch_add(1) % 20u) == 0u) LOGI("[Neon] 钥匙使用不减: UseKey() 已拦截");
         return;
     }
     if (g_origUseKey) g_origUseKey(thiz, method);
@@ -593,7 +895,7 @@ static bool Hooked_HasKeyN(void* thiz, int32_t needCount, void* method) {
     if (g_infKey.load()) {
         static std::atomic<unsigned> n{0};
         if ((n.fetch_add(1) % 40u) == 0u)
-            LOGI("[Neon] 无限钥匙: HasKey(%d) -> true", needCount);
+            LOGI("[Neon] 钥匙使用不减: HasKey(%d) -> true", needCount);
         return true;
     }
     return g_origHasKeyN ? g_origHasKeyN(thiz, needCount, method) : false;
@@ -602,7 +904,7 @@ static bool Hooked_HasKeyN(void* thiz, int32_t needCount, void* method) {
 static void Hooked_UseGKey(void* thiz, void* method) {
     if (g_infGkey.load()) {
         static std::atomic<unsigned> n{0};
-        if ((n.fetch_add(1) % 20u) == 0u) LOGI("[Neon] 无限彩色钥匙: UseGameplayKey() 已拦截");
+        if ((n.fetch_add(1) % 20u) == 0u) LOGI("[Neon] 彩色钥匙使用不减: UseGameplayKey() 已拦截");
         return;
     }
     if (g_origUseGKey) g_origUseGKey(thiz, method);
@@ -611,11 +913,191 @@ static void Hooked_UseGKey(void* thiz, void* method) {
 static bool Hooked_HasGKey(void* thiz, void* method) {
     if (g_infGkey.load()) {
         static std::atomic<unsigned> n{0};
-        if ((n.fetch_add(1) % 40u) == 0u) LOGI("[Neon] 无限彩色钥匙: HasGameplayKey() -> true");
+        if ((n.fetch_add(1) % 40u) == 0u) LOGI("[Neon] 彩色钥匙使用不减: HasGameplayKey() -> true");
         return true;
     }
     return g_origHasGKey ? g_origHasGKey(thiz, method) : false;
 }
+
+#if NEON_DIAG
+// ===================== 临时诊断（NEON_DIAG）BEGIN =====================
+// 只有观测、不改行为：全部 log-then-forward。收尾整块删除。
+#define RVA_DIAG_MF_FIRE      0x462BBE0UL  // MuzzleFlash::Fire()              开枪视觉
+#define RVA_DIAG_NEED_CHARGE  0x3A933F8UL  // GunOutput::NeedCharge()           枪是否蓄力
+#define RVA_DIAG_GUN_MELEE    0x3961F28UL  // Gun::Melee()                      近战旧路径
+#define RVA_DIAG_KNIFE_JUDGE  0x3960208UL  // Gun::JudgeCanKnifeAttack()        近战判定
+#define RVA_DIAG_MELEE_INVOKE 0x292B4E0UL  // GunGraph.meleeDelegate::Invoke()  枪图内近战委托
+
+// 第三轮加的近战真身候选（set_BusyTime 0x3DA9D70 已在第四轮转为正式缩放钩，见 Hooked_SetBusyTime）
+#define RVA_DIAG_MSEG_GETBUSY 0x3DA9D18UL  // DeputyWeaponSlot_MeleeMultiSeg::get_BusyTime()
+#define RVA_DIAG_MSEG_UPDATE  0x3DAB76CUL  // DeputyWeaponSlot_MeleeMultiSeg::OnUpdate()
+#define RVA_DIAG_MSEG_TRIGGER 0x3DAC248UL  // DeputyWeaponSlot_MeleeMultiSeg::TriggerShoot(PlayerActor)
+#define RVA_DIAG_NETGUN_MELEE 0x36AE1DCUL  // NetGun::MeleeLauncherAttack_NetPlayer(NetPlayerActor)
+#define RVA_DIAG_GUN_LAUNCH   0x39625B0UL  // Gun::MeleeLauncherAttack()
+#define RVA_DIAG_HERO_ANIM    0x2EFA614UL  // HeroAnimationEvents::MeleeLauncherAttack()
+#define RVA_DIAG_CAPMELEE_ATK 0x3BE2B84UL  // CapabilityControl_Melee::Attack(CapabilityMeleeContext)
+#define RVA_DIAG_CAPMELEE_HIT 0x3BE87BCUL  // CapabilityControl_MeleeAgent::SwordHitEvent()
+#define RVA_DIAG_OUT_ATTACK   0x3A93520UL  // GunOutput::Attack(Transform,MonoBehaviour,PayLoadExtraInfo)
+
+typedef void  (*DiagFire_t)(void*, void*);
+typedef bool  (*DiagBool_t)(void*, void*);
+typedef void* (*DiagInvoke_t)(void*, void*);
+typedef void  (*DiagSetF_t)(void*, float, void*);
+typedef float (*DiagRetF_t)(void*, void*);
+typedef void  (*DiagVoid2_t)(void*, void*, void*);
+typedef void* (*DiagAtt4_t)(void*, void*, void*, void*, void*);
+
+static DiagFire_t   g_origDiagFire = nullptr;
+static DiagBool_t   g_origDiagCharge = nullptr;
+static DiagBool_t   g_origDiagGunMelee = nullptr;
+static DiagBool_t   g_origDiagKnife = nullptr;
+static DiagInvoke_t g_origDiagMeleeInvoke = nullptr;
+static DiagRetF_t   g_origDiagMGetBusy = nullptr;
+static DiagFire_t   g_origDiagMUpdate = nullptr;
+static DiagVoid2_t  g_origDiagMTrigger = nullptr;
+static DiagVoid2_t  g_origDiagNetGunMelee = nullptr;
+static DiagFire_t   g_origDiagGunLaunch = nullptr;
+static DiagFire_t   g_origDiagHeroAnim = nullptr;
+static DiagVoid2_t  g_origDiagCapAtk = nullptr;
+static DiagFire_t   g_origDiagCapHit = nullptr;
+static DiagAtt4_t   g_origDiagOutAttack = nullptr;
+
+static void Hooked_DiagFire(void* thiz, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 4u) == 0u)
+        LOGI("[Neon][diag] 开枪路 MuzzleFlash.Fire() thiz=%p", thiz);
+    if (g_origDiagFire) g_origDiagFire(thiz, method);
+}
+static bool Hooked_DiagCharge(void* thiz, void* method) {
+    bool r = g_origDiagCharge ? g_origDiagCharge(thiz, method) : false;
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 8u) == 0u)
+        LOGI("[Neon][diag] 枪路 NeedCharge()=%d", (int)r);
+    return r;
+}
+static bool Hooked_DiagGunMelee(void* thiz, void* method) {
+    bool r = g_origDiagGunMelee ? g_origDiagGunMelee(thiz, method) : false;
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 2u) == 0u)
+        LOGI("[Neon][diag] 近战路 Gun.Melee()=%d thiz=%p", (int)r, thiz);
+    return r;
+}
+static bool Hooked_DiagKnife(void* thiz, void* method) {
+    bool r = g_origDiagKnife ? g_origDiagKnife(thiz, method) : false;
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 8u) == 0u)
+        LOGI("[Neon][diag] 近战判定 JudgeCanKnifeAttack()=%d", (int)r);
+    return r;
+}
+static void* Hooked_DiagMeleeInvoke(void* dlg, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 2u) == 0u) {
+        void* mp = dlg ? *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(dlg) + 0x10) : nullptr;
+        void* tg = dlg ? *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(dlg) + 0x20) : nullptr;
+        LOGI("[Neon][diag] 近战委托 Invoke dlg=%p method_ptr=%p target=%p", dlg, mp, tg);
+    }
+    return g_origDiagMeleeInvoke ? g_origDiagMeleeInvoke(dlg, method) : nullptr;
+}
+
+// ---- 第三轮：近战真身候选（全部 log-then-forward，不改行为）----
+// （原 set_BusyTime 探针已升级为正式缩放钩 Hooked_SetBusyTime，此处只留只读探针）
+static float Hooked_DiagMGetBusy(void* thiz, void* method) {
+    float r = g_origDiagMGetBusy ? g_origDiagMGetBusy(thiz, method) : 0.f;
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 240u) == 0u)
+        LOGI("[Neon][diag] 副武器槽 get_BusyTime()=%.4f thiz=%p", r, thiz);
+    return r;
+}
+static void Hooked_DiagMUpdate(void* thiz, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 600u) == 0u)
+        LOGI("[Neon][diag] 副武器槽 OnUpdate thiz=%p", thiz);
+    if (g_origDiagMUpdate) g_origDiagMUpdate(thiz, method);
+}
+static void Hooked_DiagMTrigger(void* thiz, void* pla, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 4u) == 0u) {
+        LOGI("[Neon][diag] 副武器槽 TriggerShoot thiz=%p player=%p", thiz, pla);
+        NeonStack st; NeonCapture(&st); NeonLogStack("meleeTrigger", &st);
+    }
+    if (g_origDiagMTrigger) g_origDiagMTrigger(thiz, pla, method);
+}
+static void Hooked_DiagNetGunMelee(void* thiz, void* npa, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 4u) == 0u) {
+        LOGI("[Neon][diag] NetGun.MeleeLauncherAttack_NetPlayer thiz=%p npa=%p", thiz, npa);
+        NeonStack st; NeonCapture(&st); NeonLogStack("netGunMelee", &st);
+    }
+    if (g_origDiagNetGunMelee) g_origDiagNetGunMelee(thiz, npa, method);
+}
+static void Hooked_DiagGunLaunch(void* thiz, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 4u) == 0u)
+        LOGI("[Neon][diag] Gun.MeleeLauncherAttack thiz=%p", thiz);
+    if (g_origDiagGunLaunch) g_origDiagGunLaunch(thiz, method);
+}
+static void Hooked_DiagHeroAnim(void* thiz, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 4u) == 0u) {
+        LOGI("[Neon][diag] HeroAnimationEvents.MeleeLauncherAttack thiz=%p", thiz);
+        NeonStack st; NeonCapture(&st); NeonLogStack("heroAnimMelee", &st);
+    }
+    if (g_origDiagHeroAnim) g_origDiagHeroAnim(thiz, method);
+}
+static void Hooked_DiagCapAtk(void* thiz, void* ctx, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 4u) == 0u) {
+        LOGI("[Neon][diag] CapabilityControl_Melee.Attack ctx=%p", ctx);
+        NeonStack st; NeonCapture(&st); NeonLogStack("capMeleeAtk", &st);
+    }
+    if (g_origDiagCapAtk) g_origDiagCapAtk(thiz, ctx, method);
+}
+static void Hooked_DiagCapHit(void* thiz, void* method) {
+    static std::atomic<unsigned> n{0};
+    if ((n.fetch_add(1) % 4u) == 0u)
+        LOGI("[Neon][diag] MeleeAgent.SwordHitEvent thiz=%p", thiz);
+    if (g_origDiagCapHit) g_origDiagCapHit(thiz, method);
+}
+static void* Hooked_DiagOutAttack(void* thiz, void* tr, void* mb, void* payload, void* method) {
+    static std::atomic<unsigned> n{0};
+    unsigned k = n.fetch_add(1);
+    if (k < 40u && (k % 2u) == 0u) {
+        LOGI("[Neon][diag] GunOutput.Attack thiz=%p", thiz);
+        NeonStack st; NeonCapture(&st); NeonLogStack("outAttack", &st);
+    }
+    return g_origDiagOutAttack ? g_origDiagOutAttack(thiz, tr, mb, payload, method) : nullptr;
+}
+static void InstallDiagHooks() {
+    HookOneQ(RVA_DIAG_MF_FIRE,      (void*)Hooked_DiagFire,        (void**)&g_origDiagFire);
+    HookOneQ(RVA_DIAG_NEED_CHARGE,  (void*)Hooked_DiagCharge,      (void**)&g_origDiagCharge);
+    HookOneQ(RVA_DIAG_GUN_MELEE,    (void*)Hooked_DiagGunMelee,    (void**)&g_origDiagGunMelee);
+    HookOneQ(RVA_DIAG_KNIFE_JUDGE,  (void*)Hooked_DiagKnife,       (void**)&g_origDiagKnife);
+    HookOneQ(RVA_DIAG_MELEE_INVOKE, (void*)Hooked_DiagMeleeInvoke, (void**)&g_origDiagMeleeInvoke);
+
+    // 第三轮：近战真身候选（多段近战副武器槽 + 发射器/动画事件 + 近战能力控制）
+    // （set_BusyTime 已转为正式缩放钩，见 Hooked_SetBusyTime，不再重复挂诊断）
+    HookOneQ(RVA_DIAG_MSEG_GETBUSY,  (void*)Hooked_DiagMGetBusy,    (void**)&g_origDiagMGetBusy);
+    HookOneQ(RVA_DIAG_MSEG_UPDATE,   (void*)Hooked_DiagMUpdate,     (void**)&g_origDiagMUpdate);
+    HookOneQ(RVA_DIAG_MSEG_TRIGGER,  (void*)Hooked_DiagMTrigger,    (void**)&g_origDiagMTrigger);
+    HookOneQ(RVA_DIAG_NETGUN_MELEE,  (void*)Hooked_DiagNetGunMelee, (void**)&g_origDiagNetGunMelee);
+    HookOneQ(RVA_DIAG_GUN_LAUNCH,    (void*)Hooked_DiagGunLaunch,   (void**)&g_origDiagGunLaunch);
+    HookOneQ(RVA_DIAG_HERO_ANIM,     (void*)Hooked_DiagHeroAnim,    (void**)&g_origDiagHeroAnim);
+    HookOneQ(RVA_DIAG_CAPMELEE_ATK,  (void*)Hooked_DiagCapAtk,      (void**)&g_origDiagCapAtk);
+    HookOneQ(RVA_DIAG_CAPMELEE_HIT,  (void*)Hooked_DiagCapHit,      (void**)&g_origDiagCapHit);
+    HookOneQ(RVA_DIAG_OUT_ATTACK,    (void*)Hooked_DiagOutAttack,   (void**)&g_origDiagOutAttack);
+
+    LOGI("[Neon][diag] diag hooks fire=%d charge=%d gunMelee=%d knife=%d invoke=%d "
+         "| mgetbusy=%d mupdate=%d mtrigger=%d netgun=%d launch=%d hero=%d "
+         "capAtk=%d capHit=%d outAtk=%d",
+         g_origDiagFire ? 1 : 0, g_origDiagCharge ? 1 : 0, g_origDiagGunMelee ? 1 : 0,
+         g_origDiagKnife ? 1 : 0, g_origDiagMeleeInvoke ? 1 : 0,
+         g_origDiagMGetBusy ? 1 : 0, g_origDiagMUpdate ? 1 : 0,
+         g_origDiagMTrigger ? 1 : 0, g_origDiagNetGunMelee ? 1 : 0, g_origDiagGunLaunch ? 1 : 0,
+         g_origDiagHeroAnim ? 1 : 0, g_origDiagCapAtk ? 1 : 0, g_origDiagCapHit ? 1 : 0,
+         g_origDiagOutAttack ? 1 : 0);
+}
+// ====================== 临时诊断（NEON_DIAG）END ======================
+#endif
 
 bool Neon_TryInit(JavaVM* vm) {
     (void)vm;
@@ -624,6 +1106,16 @@ bool Neon_TryInit(JavaVM* vm) {
 
     LOGI("[Neon] init combat-only (3.2.860)");
     g_buildPassBase = reinterpret_cast<BuildPass_t>(Abs(RVA_BUILD_PASS_BASE));
+
+    // libil2cpp 基址（栈回溯换算用）：由已能解析的固定 RVA 反推，不依赖 getAbsoluteAddress 语义
+    {
+        void* anchor = Abs(RVA_GRAPH_ATTACK_MN);
+        if (anchor) {
+            g_libBase = reinterpret_cast<uintptr_t>(anchor) - RVA_GRAPH_ATTACK_MN;
+            g_libEnd  = g_libBase + 0x8000000UL;   // 128MB 上界，仅用于挡野指针
+            LOGI("[Neon] libil2cpp base=0x%lx", (unsigned long)g_libBase);
+        }
+    }
 
     if (!HookOne("HitPoints.DeductHP", RVA_HITPOINTS_DEDUCT,
                  (void*)Hooked_HitPoints_DeductHP, (void**)&g_origHitDeduct))
@@ -659,6 +1151,8 @@ bool Neon_TryInit(JavaVM* vm) {
     // 新增：武器攻速（挂不上不影响上面 4 项，只丢新功能）
     HookOne("GunGraph.AttackRoutineWithEvents.MoveNext", RVA_GRAPH_ATTACK_MN,
             (void*)Hooked_GraphAttackMoveNext, (void**)&g_origGraphAttackMn);
+    HookOne("GunGraph.AttackRoutine.MoveNext", RVA_GRAPH45_ATTACK_MN,
+            (void*)Hooked_Graph45AttackMoveNext, (void**)&g_origGraph45Mn);
     HookOne("Gun.shootingInterval.MoveNext", RVA_SHOOT_INTERVAL_MN,
             (void*)Hooked_ShootIntervalMoveNext, (void**)&g_origShootIntervalMn);
     HookOne("Gun.MeleeCheck.MoveNext", RVA_MELEE_CHECK_MN,
@@ -674,12 +1168,23 @@ bool Neon_TryInit(JavaVM* vm) {
     HookOne("NEONPlayerState.UseGameplayKey", RVA_PS_USE_GKEY, (void*)Hooked_UseGKey, (void**)&g_origUseGKey);
     HookOne("NEONPlayerState.HasGameplayKey", RVA_PS_HAS_GKEY, (void*)Hooked_HasGKey, (void**)&g_origHasGKey);
 
+    // 第四轮真身（用户实测定位）：
+    //   FireDelay 缩放（枪械）＋ 多段近战 AsBusyTime 增量缩放 ＋ 多段近战 set_BusyTime 窗口缩放
+    HookOne("GunOutput.FireDelay", RVA_OUT_FIRE_DELAY, (void*)Hooked_GetFireDelay, (void**)&g_origFireDelay);
+    HookOne("MeleeMultiSeg.AsBusyTime", RVA_MELEE_AS_BUSY, (void*)Hooked_MeleeAsBusyTime, (void**)&g_origMeleeAsBusy);
+    HookOne("MeleeMultiSeg.SetBusyTime", RVA_MELEE_SET_BUSY, (void*)Hooked_SetBusyTime, (void**)&g_origSetBusy);
+
+#if NEON_DIAG
+    InstallDiagHooks();
+#endif
+
     g_ready.store(true);
-    LOGI("[Neon] init ok combat cd=%d move=%d ranged=%d rangedgraph=%d melee=%d coin=%d key=%d gkey=%d",
+    LOGI("[Neon] init ok combat cd=%d move=%d ranged=%d rangedgraph=%d graph45=%d melee=%d coin=%d key=%d gkey=%d firedelay=%d meleeBusy=%d setbusy=%d",
          g_origIsSkillCD ? 1 : 0, g_origDictMove ? 1 : 0,
-         g_origShootIntervalMn ? 1 : 0, g_origGraphAttackMn ? 1 : 0,
+         g_origShootIntervalMn ? 1 : 0, g_origGraphAttackMn ? 1 : 0, g_origGraph45Mn ? 1 : 0,
          g_origMeleeCheckMn ? 1 : 0,
-         g_origUseCoin ? 1 : 0, g_origUseKey ? 1 : 0, g_origUseGKey ? 1 : 0);
+         g_origUseCoin ? 1 : 0, g_origUseKey ? 1 : 0, g_origUseGKey ? 1 : 0,
+         g_origFireDelay ? 1 : 0, g_origMeleeAsBusy ? 1 : 0, g_origSetBusy ? 1 : 0);
     return true;
 }
 
@@ -702,23 +1207,20 @@ void Neon_OnFeatureChanged(int featNum, bool enabled) {
         case NEON_FEAT_MOVE_SPEED:
             if (!enabled) g_moveLvl.store(1);
             break;
-        case NEON_FEAT_MELEE_SPEED:
-            if (!enabled) g_meleeLvl.store(1);
-            break;
-        case NEON_FEAT_RANGED_SPEED:
-            if (!enabled) g_rangedLvl.store(1);
+        case NEON_FEAT_ATTACK_SPEED:
+            if (!enabled) g_atkLvl.store(1);
             break;
         case NEON_FEAT_INF_COIN:
             g_infCoin.store(enabled);
-            LOGI("[Neon] 无限金币=%s", enabled ? "ON" : "OFF");
+            LOGI("[Neon] 金币使用不减=%s", enabled ? "ON" : "OFF");
             break;
         case NEON_FEAT_INF_KEY:
             g_infKey.store(enabled);
-            LOGI("[Neon] 无限钥匙=%s", enabled ? "ON" : "OFF");
+            LOGI("[Neon] 钥匙使用不减=%s", enabled ? "ON" : "OFF");
             break;
         case NEON_FEAT_INF_GKEY:
             g_infGkey.store(enabled);
-            LOGI("[Neon] 无限彩色钥匙=%s", enabled ? "ON" : "OFF");
+            LOGI("[Neon] 彩色钥匙使用不减=%s", enabled ? "ON" : "OFF");
             break;
         default:
             break;
@@ -737,16 +1239,10 @@ void Neon_OnValueChanged(int featNum, int value) {
         LOGI("[Neon] 移速 lvl=%d mul=%.1f", ClampLvl(value), MoveMul());
         return;
     }
-    if (featNum == NEON_FEAT_MELEE_SPEED) {
+    if (featNum == NEON_FEAT_ATTACK_SPEED) {
         int lvl = ClampLvl(value);
-        g_meleeLvl.store(lvl);
-        LOGI("[Neon] 近战攻速 lvl=%d mul=%.1f", lvl, LvlMul(lvl));
-        return;
-    }
-    if (featNum == NEON_FEAT_RANGED_SPEED) {
-        int lvl = ClampLvl(value);
-        g_rangedLvl.store(lvl);
-        LOGI("[Neon] 远程攻速 lvl=%d mul=%.1f", lvl, LvlMul(lvl));
+        g_atkLvl.store(lvl);
+        LOGI("[Neon] 攻速 lvl=%d mul=%.1f", lvl, AtkMul());
         return;
     }
 }
@@ -756,8 +1252,7 @@ void Neon_ForceClear() {
     g_seckill.store(false);
     g_noCd.store(false);
     g_moveLvl.store(1);
-    g_meleeLvl.store(1);
-    g_rangedLvl.store(1);
+    g_atkLvl.store(1);
     g_infCoin.store(false);
     g_infKey.store(false);
     g_infGkey.store(false);
@@ -774,8 +1269,15 @@ void Neon_Tick(const bool* features, const int* values) {
     if (values) {
         // 滑块值每轮由框架同步（未动过时 = 下限 1 = 关）
         g_moveLvl.store(ClampLvl(values[NEON_FEAT_MOVE_SPEED]));
-        g_meleeLvl.store(ClampLvl(values[NEON_FEAT_MELEE_SPEED]));
-        g_rangedLvl.store(ClampLvl(values[NEON_FEAT_RANGED_SPEED]));
+        g_atkLvl.store(ClampLvl(values[NEON_FEAT_ATTACK_SPEED]));
     }
+#if NEON_DIAG
+    {
+        static unsigned tk = 0;
+        if ((tk++ % 5u) == 0u)
+            LOGI("[Neon][diag] tick f5=%d v5=%d gA=%d", (int)features[NEON_FEAT_ATTACK_SPEED],
+                 values ? values[NEON_FEAT_ATTACK_SPEED] : -1, g_atkLvl.load());
+    }
+#endif
     if (!g_ready.load()) Neon_TryInit();
 }
