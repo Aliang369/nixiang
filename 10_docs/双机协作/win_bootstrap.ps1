@@ -20,6 +20,9 @@
       -MacRoot    the mac host's literal root. It must match the paths
                   hardcoded inside 364 repo scripts; step 6 replays it as an
                   MSYS junction so those scripts run verbatim on Windows.
+      -RewriteShims   force-rewrite the marker blocks in ~/.bashrc and
+                  ~/.nx_shims.sh from this script's template. Normally they
+                  converge on their own whenever the template text changes.
 #>
 param(
     [string]$RepoRoot    = "E:\nixiang",
@@ -27,7 +30,8 @@ param(
     [string]$MacRoot     = "/Users/aliang/Documents/nixiang",
     [switch]$SkipPackages,
     [switch]$SkipClone,
-    [switch]$SkipJunction
+    [switch]$SkipJunction,
+    [switch]$RewriteShims
 )
 
 $ErrorActionPreference = "Stop"
@@ -148,6 +152,21 @@ try {
 # ------------------------------------------------------------------
 Step 3 "Git global config - must be identical on mac and win"
 # ------------------------------------------------------------------
+# A running PowerShell process never refreshes PATH, so on a host where step 1
+# really did install git for the first time, `git config` below would abort the
+# whole script with a terminating error. Re-read the two persistent PATH values
+# into this process once, then fail with a usable instruction if git is still gone.
+if (-not (Has git)) {
+    $env:PATH = (@([Environment]::GetEnvironmentVariable('Path','Machine'),
+                    [Environment]::GetEnvironmentVariable('Path','User')) |
+                 Where-Object { $_ }) -join ';'
+    if (Has git) { Ok "git appeared after reloading PATH from the registry" }
+}
+if (-not (Has git)) {
+    Fail "git is not on PATH in this process"
+    Warn "Close and reopen the terminal (a new process picks up the new PATH), then re-run."
+    exit 1
+}
 $gitCfg = @{
     "core.autocrlf"    = "false"   # let .gitattributes decide; never let git guess
     "core.ignorecase"  = "false"   # case-only renames must not be silently swallowed
@@ -210,26 +229,33 @@ else {
     $restOfPath    = $RepoRoot.Substring(2).TrimStart('\','/').Replace('\','/')
     $bashRootPosix = "/$driveLetter/$restOfPath"
     $bashrcPath = Join-Path $env:USERPROFILE ".bashrc"
-    $marker = "# --- nixiang dual-host block (win_bootstrap.ps1) ---"
-    $block = @'
+    $marker    = "# --- nixiang dual-host block (win_bootstrap.ps1) ---"
+    $endMarker = "# endif"
 
-# --- nixiang dual-host block (win_bootstrap.ps1) ---
-export NIXIANG_ROOT="__ROOT__"
-export NIXIANG_HOST=win
-# mac keeps its absolute root; win uses this one. Never commit host paths.
-alias nixst='git -C "$NIXIANG_ROOT" status -sb'
-alias nxpull='git -C "$NIXIANG_ROOT" pull --rebase --autostash'
-alias nxfetch='git -C "$NIXIANG_ROOT" fetch --prune'
-alias nxlog='git -C "$NIXIANG_ROOT" log --oneline -10'
-alias nxclean='git -C "$NIXIANG_ROOT" status --porcelain'
-
-# --- mac-command shims (2026-10-01) ---
-# This repo was written on macOS. Measured call sites in 04_scripts + mod_menu:
-#   512 x `md5 -q <file>`      16 x `stat -f %z`     1 x `stat -f %Sm`
-#   234 x `shasum -a <n>`       35 x `stat -c %s` (GNU, already fine here)
+    # The three shims live in their OWN file so that one source serves both entry
+    # points: ~/.bashrc sources it (interactive Git Bash) and the User BASH_ENV
+    # variable points straight at it (any bash started from PowerShell / an IDE,
+    # which never reads .bashrc). This string must stay byte-identical to what is
+    # written to ~/.nx_shims.sh, or the convergence check below rewrites it every run.
+    $shimsBlock = @'
+# nixiang mac-command shims - single source of truth (2026-10-01)
+#
+# Sourced by BOTH:
+#   1. ~/.bashrc                  -> interactive Git Bash
+#   2. Windows User env BASH_ENV  -> every non-interactive bash, whatever its parent
+#      (PowerShell / IDE task / git hook / scheduled task)
+#
 # Git Bash ships md5sum / sha256sum and a GNU stat, but there is NO `md5`, and its
-# `stat` rejects the BSD `-f` form. Shimming the three commands below keeps every
-# existing repo script working verbatim on Windows, with ZERO edits to the repo.
+# `stat` rejects the BSD `-f` form. These three functions keep the repo's existing
+# call sites working verbatim, with ZERO edits to the repo:
+#   512 x `md5 -q <file>`   16 x `stat -f %z`   1 x `stat -f %Sm`   234 x `shasum -a <n>`
+#
+# Constraints: must stay bash 3.2 compatible (mac side), must be SILENT and cheap
+# (it runs on every non-interactive bash), and must be idempotent (re-sourcing just
+# redefines the same functions).
+
+[ -n "${BASH_VERSION:-}" ] || return 0 2>/dev/null
+
 md5() {
     case "$1" in
         -q) shift; md5sum "$@" | awk '{print $1}' ;;
@@ -253,30 +279,75 @@ stat() {
         command stat "$@"
     fi
 }
-if ! command -v shasum >/dev/null 2>&1; then
-    shasum() {
-        case "$1" in
-            -a) _alg="$2"; shift 2 ;;
-            *)  _alg=256 ;;
-        esac
-        case "$_alg" in
-            1|sha1)     sha1sum "$@" ;;
-            256|sha256) sha256sum "$@" ;;
-            512|sha512) sha512sum "$@" ;;
-            *) echo "shasum shim: unsupported -a $_alg" >&2; unset _alg; return 2 ;;
-        esac
-        unset _alg
+shasum() {
+    case "$1" in
+        -a) _alg="$2"; shift 2 ;;
+        *)  _alg=256 ;;
+    esac
+    case "$_alg" in
+        1|sha1)     sha1sum "$@" ;;
+        256|sha256) sha256sum "$@" ;;
+        512|sha512) sha512sum "$@" ;;
+        *) echo "shasum shim: unsupported -a $_alg" >&2; unset _alg; return 2 ;;
+    esac
+    unset _alg
+}
+
+# export -f so that non-interactive children (`bash 04_scripts/xxx.sh` does NOT
+# source .bashrc) still inherit the shims through the function environment.
+export -f md5 stat shasum 2>/dev/null || true
+'@ -replace "`r`n", "`n"
+    # A PowerShell here-string drops the newline in front of the closing delimiter, so
+    # re-add it - the file must end WITH a newline like every other text file here.
+    $shimsBlock = $shimsBlock + "`n"
+    $shimsPath  = Join-Path $env:USERPROFILE ".nx_shims.sh"
+    $shimsPosix = ToPosix $shimsPath
+    $shimsNeed  = (-not (Test-Path $shimsPath)) -or $RewriteShims
+    if (-not $shimsNeed) {
+        $shimsNeed = ([System.IO.File]::ReadAllText($shimsPath) -ne $shimsBlock)
     }
-    # Export it HERE, inside the guard. Once the function exists, `command -v
-    # shasum` answers with the function itself, so doing the export after this
-    # block always looks like "a native shasum is present" and the export is
-    # skipped - which silently cost every non-interactive child shell
-    # (bash 04_scripts/xxx.sh) its 234 `shasum -a` call sites.
-    export -f shasum 2>/dev/null || true
+    if ($shimsNeed) {
+        [System.IO.File]::WriteAllText($shimsPath, $shimsBlock, (New-Object System.Text.UTF8Encoding($false)))
+        Ok "wrote $shimsPath (LF, no BOM)"
+    } else {
+        Ok "~/.nx_shims.sh up to date"
+    }
+    # BASH_ENV hands the same shims to a `bash x.sh` launched from PowerShell / an IDE
+    # / a scheduled task - none of which ever read ~/.bashrc. Takes effect in NEW
+    # processes only (the running explorer keeps its stale environment block).
+    $wantBashEnv = $shimsPosix
+    $haveBashEnv = [Environment]::GetEnvironmentVariable('BASH_ENV', 'User')
+    if ($haveBashEnv -ne $wantBashEnv) {
+        $wasBashEnv = if ($haveBashEnv) { $haveBashEnv } else { '<unset>' }
+        [Environment]::SetEnvironmentVariable('BASH_ENV', $wantBashEnv, 'User')
+        Ok "BASH_ENV (User) = $wantBashEnv   [was: $wasBashEnv - new shells only]"
+    } else {
+        Ok "BASH_ENV (User) up to date: $wantBashEnv"
+    }
+
+    # ~/.bashrc itself only needs NIXIANG_ROOT, the aliases and the source line. The
+    # shim bodies used to be inlined here, so every later shim fix needed another
+    # hand-written point patch (see $shasumBad below) and a machine could keep running
+    # a stale shim indefinitely with no signal. With the split, the whole marker region
+    # is rewritten whenever its text differs from this template.
+    $block = @'
+
+# --- nixiang dual-host block (win_bootstrap.ps1) ---
+export NIXIANG_ROOT="__ROOT__"
+export NIXIANG_HOST=win
+# mac keeps its absolute root; win uses this one. Never commit host paths.
+alias nixst='git -C "$NIXIANG_ROOT" status -sb'
+alias nxpull='git -C "$NIXIANG_ROOT" pull --rebase --autostash'
+alias nxfetch='git -C "$NIXIANG_ROOT" fetch --prune'
+alias nxlog='git -C "$NIXIANG_ROOT" log --oneline -10'
+alias nxclean='git -C "$NIXIANG_ROOT" status --porcelain'
+
+# --- mac-command shims: single source of truth is ~/.nx_shims.sh ---
+if [ -f "$HOME/.nx_shims.sh" ]; then
+    . "$HOME/.nx_shims.sh"
+else
+    echo "warning: ~/.nx_shims.sh missing - md5/stat/shasum shims NOT loaded" >&2
 fi
-# export -f so that non-interactive children (`bash 04_scripts/xxx.sh`, which does
-# NOT source .bashrc) still inherit the shims. Verified by step 8.
-export -f md5 stat 2>/dev/null || true
 # endif
 '@.Replace('__ROOT__', $bashRootPosix)
 
@@ -285,12 +356,18 @@ export -f md5 stat 2>/dev/null || true
     # Git Bash start print   line 1: $'\357\273\277': command not found   and CRLF
     # makes this host-private file differ from the mac side for no reason.
     # Write explicit UTF-8 (no BOM), LF only.
-    $blockLf   = $block -replace "`r`n", "`n"
+    # Trailing "`n`n": PowerShell here-strings drop the final newline before the closing
+    # delimiter, and the host-owned section that follows "# endif" needs one blank line
+    # in between or the two blocks read as one.
+    $blockLf   = ($block -replace "`r`n", "`n") + "`n`n"
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
     if ((Test-Path $bashrcPath) -and (Select-String -Path $bashrcPath -SimpleMatch $marker -Quiet)) {
-        Ok "~/.bashrc already has the nixiang block (left untouched)"
-        Ok "expected NIXIANG_ROOT = $bashRootPosix"
+        # Content is reconciled just below: the marker region is rewritten whenever it
+        # differs from this template. Printing "left untouched" here was true at the
+        # time but became a lie as soon as the template changed - which is exactly how
+        # a host keeps running a stale shim for months with no signal.
+        Ok "~/.bashrc has the nixiang block (reconciling against the template below)"
     } else {
         [System.IO.File]::AppendAllText($bashrcPath, $blockLf, $utf8NoBom)
         Ok "appended nixiang block to $bashrcPath (NIXIANG_ROOT=$bashRootPosix)"
@@ -306,6 +383,35 @@ export -f md5 stat 2>/dev/null || true
         if ($hadBom) { $rcText = $rcText.TrimStart([char]0xFEFF) }
         $rcLfOnly = $rcText -replace "`r`n", "`n"
         $hadCrlf  = ($rcLfOnly -ne $rcText)
+        # Converge the marker region to this template. Without it, every change to the
+        # block needed another hand-written point patch ($shasumBad below is exactly
+        # that scar) and a host could silently keep running an old shim forever.
+        # -RewriteShims forces it; otherwise a byte difference is enough.
+        $blockRewritten = $false
+        $blockStale     = $rcLfOnly.Contains($marker) -and ((-not $rcLfOnly.Contains($blockLf)) -or $RewriteShims)
+        if ($blockStale) {
+            $bStart = $rcLfOnly.IndexOf($marker)
+            $bEnd   = $rcLfOnly.IndexOf($endMarker, $bStart)
+            if ($bEnd -ge 0) {
+                $bAfter = $bEnd + $endMarker.Length
+            } else {
+                # A hand-written ~/.bashrc has no end marker; its block ends on the `fi`
+                # that closes the "source ~/.nx_shims.sh" stanza. Recover that boundary so
+                # such a block can still be replaced instead of being left running.
+                $rxLegacy = [regex]::Match($rcLfOnly.Substring($bStart), '(?m)^fi[ \t]*$')
+                if ($rxLegacy.Success) {
+                    $bEnd   = $bStart + $rxLegacy.Index
+                    $bAfter = $bEnd + $rxLegacy.Length
+                }
+            }
+            if ($bEnd -lt 0) {
+                Warn "~/.bashrc has the marker but neither '$endMarker' nor a legacy 'fi' - block left as-is"
+            } else {
+                if (($bAfter -lt $rcLfOnly.Length) -and ($rcLfOnly[$bAfter] -eq "`n")) { $bAfter++ }
+                $rcLfOnly = $rcLfOnly.Substring(0, $bStart) + $blockLf.TrimStart("`n") + $rcLfOnly.Substring($bAfter)
+                $blockRewritten = $true
+            }
+        }
         $wantLine = 'export NIXIANG_ROOT="' + $bashRootPosix + '"'
         $haveLine = ([regex]::Match($rcLfOnly, '(?m)^export NIXIANG_ROOT=.*$')).Value
         $rootBad  = ($haveLine -ne '' -and $haveLine -ne $wantLine)
@@ -317,14 +423,16 @@ export -f md5 stat 2>/dev/null || true
         $newShasum = 'export -f shasum 2>/dev/null || true'
         $shasumBad = $rcLfOnly.Contains($oldShasum)
         if ($shasumBad) { $rcLfOnly = $rcLfOnly.Replace($oldShasum, $newShasum) }
-        if ($hadBom -or $hadCrlf -or $rootBad -or $shasumBad) {
+        if ($hadBom -or $hadCrlf -or $rootBad -or $shasumBad -or $blockRewritten) {
             [System.IO.File]::WriteAllText($bashrcPath, $rcLfOnly, $utf8NoBom)
             if ($hadBom)    { Ok "~/.bashrc repaired: UTF-8 BOM stripped" }
+            if ($blockRewritten) { Ok "~/.bashrc repaired: nixiang block rewritten from template" }
             if ($hadCrlf)   { Ok "~/.bashrc repaired: CRLF -> LF" }
             if ($rootBad)   { Ok ("~/.bashrc repaired: NIXIANG_ROOT  " + $haveLine + "  ->  " + $wantLine) }
             if ($shasumBad) { Ok "~/.bashrc repaired: 'export -f shasum' now runs inside the guard" }
         } else {
-            Ok "~/.bashrc clean (no BOM, LF only, NIXIANG_ROOT correct)"
+            if ($blockStale) { Warn "~/.bashrc: nixiang block is STALE and was NOT replaced (see the warning above)" }
+            else { Ok "~/.bashrc clean (no BOM, LF only, block current, NIXIANG_ROOT correct)" }
         }
     }
 }
@@ -401,7 +509,12 @@ if (Test-Path $RepoRoot) {
 }
 if ($gitBashRoot) {
     Write-Host "  mac-path shim inside Git Bash:"
-    & $gitBashRoot -lc "cd /Users/aliang/Documents/nixiang 2>/dev/null && pwd && git rev-parse --short HEAD"
+    # MUST use $MacRoot: step 6 builds the junction FROM $MacRoot, so hardcoding the
+    # default literal here probed a path unrelated to the one actually created
+    # (silent no-op with the default, false alarm with a custom -MacRoot).
+    $macProbe = & $gitBashRoot -lc "cd '$MacRoot' 2>/dev/null && pwd && git rev-parse --short HEAD" 2>$null
+    if ($macProbe) { $macProbe | ForEach-Object { Write-Host ("    " + $_) } }
+    else { Warn "cannot cd $MacRoot inside Git Bash - step 6 junction is missing or broken" }
     Write-Host "  mac-command shims (expect: 32-hex / digits / sha256 / 32-hex from a child bash):"
     # Do NOT pass this as `bash -c "<multiline string>"`: Windows PowerShell 5.1 does
     # not escape embedded double quotes when it builds a native command line, so bash
