@@ -1,9 +1,12 @@
 /* ================================================================
  *  镇邪人 MOD
  *
- *  战斗主路径：静态 patch 解密后的 assets/src/index.d5507.jsc。
- *  native se::evalString hook 只作为热更兜底：只有脚本不含安全版本标记时，
- *  才在内存中注入同源补丁；锚点不足或执行失败立即停用，不再反复改脚本。
+ *  战斗主路径：静态 patch 解密后的热更 src bundle（index.<ver>.jsc）并钉进包内，
+ *  由 jsb-engine 的「包内命中优先」规则加载。
+ *  native se::evalString hook 是热更兜底：**按内容指纹判定**（体积窗口 +
+ * 三个战斗函数名 + 三个锚点各命中一次），不吃 bundle 版本号、不吃落盘文件名——
+ *  热更缓存是 gamecaches/<数字>.jsc，按文件名白名单永远匹配不上（2026-10-01 事故）。
+ *  命中即在内存中注入同源补丁；锚点不足直接放行原脚本，执行失败先停用再回退原脚本。
  * ================================================================ */
 
 #include "ZxrMod.h"
@@ -287,14 +290,10 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    if (fileName && !strstr(fileName, "index.d5507") &&
-        !strstr(fileName, "assets/src/index") &&
-        !strstr(fileName, "assets/assets/src") &&
-        !strstr(fileName, "index.b5278") &&
-        !strstr(fileName, "assets/remote/src/index")) {
-        return orig_seEval(thiz, script, length, ret, fileName);
-    }
-
+    // 不按文件名/版本号放行：热更 bundle 在设备上落盘为
+    // files/gamecaches/<数字>.jsc，evalString 收到的 fileName 既不含 index.<ver>
+    // 也不是包内路径，旧白名单会把热更脚本整个挡掉（2026-10-01 事故根因）。
+    // 判定完全交给下面的内容指纹。
     int calls = ++g_seCalls;
 #if defined(STARRY_TRACE)
     if (calls <= 8 || calls % 200 == 0) {
@@ -322,8 +321,11 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    LOGI("[Zxr] hotfallback splice #%d len=%ld->%zu file=%s",
-         ++g_spliceHits, n, patched.size(), fileName ? fileName : "(null)");
+    int hit = ++g_spliceHits;
+    if (hit <= 5) {
+        LOGI("[Zxr] hotfallback splice #%d len=%ld->%zu file=%s", hit, n,
+             patched.size(), fileName ? fileName : "(null)");
+    }
     t_inEvalSplice = true;
     bool ok = false;
     try {
@@ -334,8 +336,17 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
     }
     t_inEvalSplice = false;
     if (!ok) {
+        // 补丁脚本跑不起来就停用兜底，并立刻用原脚本重跑一次：
+        // 宁可战斗功能不生效，也不能让整个 bundle 加载失败（会黑屏）。
         g_spliceDisabled.store(true);
-        LOGW("[Zxr] hotfallback disabled after eval failure");
+        LOGW("[Zxr] hotfallback splice eval failed, retry original script");
+        t_inEvalSplice = true;
+        try {
+            ok = orig_seEval(thiz, script, length, ret, fileName);
+        } catch (...) {
+            ok = false;
+        }
+        t_inEvalSplice = false;
     }
     return ok;
 }

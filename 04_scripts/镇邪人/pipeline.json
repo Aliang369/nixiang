@@ -1,7 +1,7 @@
 {
   "game": "镇邪人",
-  "version": "1.0.3-e4278-star",
-  "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。",
+  "version": "1.0.3-0d1ae-star",
+  "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。\n\n2026-10-01：服务器热更 src 又从 e4278 漂到 0d1ae（同 09-29 根因重演：包内只钉 e4278/ca0d4/d5507，引擎「包内命中优先」落空后走未修补热更缓存）。修复两路：① 用同一套 zxr_patch_spec_b5278.json 给 0d1ae 重打补丁并钉进包内（四份 pin 齐全）；② native 兜底去版本化——删除 Games/ZxrMod.cpp 里只认 5 个固定 bundle 文件名的白名单（热更缓存落盘名是 gamecaches/<数字>.jsc，按文件名永远匹配不上，兜底从未生效），改为纯内容指纹判定（1MB~48MB 体积窗口 + 不含 starry_zxr_safe_v2 + 含 FightChangeEntityHp/DamageCommonCalcFinal/CalcFinalAtkSpeedValue + 三个战斗符号名齐全），并新增「补丁脚本 eval 失败则用原脚本重跑」的回退分支。同时用工作区当前 HEAD 的 mod菜单/starry-mod-menu 重编 classes8.dex 与 libstarry_magic.so 换进游戏。底包=设备上安装的 09-29 星光正式包（md5 0cde8985655c30007b7bd65275f7742f）。jsb-engine.js 与 main.js 与底包逐字节一致，SyncJsState() 的 bundleGuard 故意未动。",
   "params": {
     "game_id": "zxr",
     "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
@@ -311,6 +311,61 @@
         }
       },
       "note": "OTA 仅导出实际使用的 libstarry_magic.so；APK 根目录裁剪为唯一正式包，游戏内/ 为用户指定的 OTA 单文件目录。"
+    },
+    {
+      "id": "0d1ae_menu_latest_closeout",
+      "name": "0d1ae 热更重校 + 菜单源码换新 + OTA libstarry_magic.so",
+      "requires": [
+        "e4278_hotfix_closeout"
+      ],
+      "command": "/opt/homebrew/bin/python3.11 04_scripts/镇邪人/patch_jsc_zxr.py <decrypted_0d1ae.js> 04_scripts/镇邪人/zxr_patch_spec_b5278.json /tmp/index.0d1ae.patched.js 07_patched/镇邪人/0d1ae/index.0d1ae.jsc && ZXR_BASE_APK=<设备在装星光包> ZXR_USE_RELEASE_KS=1 ZXR_OUTPUT_NAME='镇邪人_1.0.3_0d1ae_star-releaseSigned.apk' bash mod菜单/starry-mod-menu/scripts/surgical_zxr_0d1ae_menu_latest.sh && bash 04_scripts/镇邪人/verify_apk_0d1ae_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk && SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk && ZXR_OTA_SOURCE_APK=08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk ZXR_OTA_APK_SHA256=da3c320e3a2dd97b727371921e41f9527cd99c73e097fd3821b90fe811678989 ZXR_OTA_SO_SHA256=b5d7c8dce1e6ff62af60eaee091c26dbaf02d9dfb84e78533e38fd7d29ae4580 bash 04_scripts/镇邪人/extract_ota_so_zxr.sh",
+      "preflight": [
+        "04_scripts/镇邪人/patch_jsc_zxr.py",
+        "04_scripts/镇邪人/zxr_patch_spec_b5278.json",
+        "04_scripts/镇邪人/verify_apk_0d1ae_zxr.sh",
+        "mod菜单/starry-mod-menu/scripts/surgical_zxr_0d1ae_menu_latest.sh",
+        "07_patched/镇邪人/0d1ae/index.0d1ae.jsc",
+        "10_docs/镇邪人/镇邪人_1.0.3_0d1ae_热更重校与菜单换新_20261001.md"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/游戏内/libstarry_magic.so"
+        },
+        {
+          "type": "file_exists",
+          "path": "07_patched/镇邪人/0d1ae/index.0d1ae.jsc"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-01 19:30:00",
+      "artifacts": {
+        "08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk": {
+          "size": 114597345,
+          "md5": "026d99d15cb1c9cebdc452ead8043086",
+          "sha256": "da3c320e3a2dd97b727371921e41f9527cd99c73e097fd3821b90fe811678989",
+          "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
+        },
+        "08_output/镇邪人/游戏内/libstarry_magic.so": {
+          "size": 4230784,
+          "md5": "c2b9bf52d1c1ffc396bc13d97a02ee02",
+          "sha256": "b5d7c8dce1e6ff62af60eaee091c26dbaf02d9dfb84e78533e38fd7d29ae4580"
+        },
+        "07_patched/镇邪人/0d1ae/index.0d1ae.jsc": {
+          "size": 4243540,
+          "sha256": "6392402f4bc5ebe67910793c07404c123b8dfb224768560f1aee5e41f521950d"
+        },
+        "07_patched/镇邪人/menu_latest/classes8.dex": {
+          "size": 462232,
+          "md5": "69bcfff79e9dfc206e3ba5b369a30751",
+          "sha256": "3e56ad3eaf77a685d7044dfca68a5e0beadf28af3625e7a6c6757116af2ed505"
+        }
+      },
+      "note": "真机 f9a116a2 同签覆盖安装成功（firstInstallTime 保持 2026-10-01 19:05:50，未卸载未清数据），冷启动 35s 零 FATAL/SIGSEGV/Cocos2dxDownloader，[Zxr] 初始化链完整。G2 功能实测（19:34）：#1/#2/#3/#4/#6 全开 + #8 加速=5，进战斗四项战斗功能全部正常，用户确认「功能都没问题」；日志每一行都是 `[Zxr] feature #N=ON noAd=1 splice=0`、无 `hotfallback splice` ⇒ native 兜底未介入，走的是包内钉入的修补 0d1ae（引擎包内命中优先 = 预期路径）。注意：`SyncJsState()` 的 `zxr jsstate patched=` 行本轮没出现（菜单走 nativeSetFeature 即时路径），后续复查以 `splice=0` + 功能实测为准。未测场景（NOT PROVEN）：同局内关→再开、换章节/重开战斗、跨进程开→关→再开、登录/登出。日志 09_test/镇邪人_0d1ae_20261001/logcat_runtime_toggle.txt。"
     }
   ]
 }
