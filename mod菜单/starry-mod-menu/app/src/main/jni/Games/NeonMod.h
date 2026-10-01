@@ -3,7 +3,7 @@
  *  feat_num = featureList 数组下标（含 Category 占位）
  *
  *  2026-10-02 迁移 modern 注册表（NeonEntry.cpp + Android_neon.mk），
- *  并新增两项武器攻速：
+ *  并新增两项武器攻速、三项对局内资源（2026-10-02 第二轮）：
  *    ⑤ 近战武器攻速 → Gun.<MeleeCheck>d__85::MoveNext 的 <timer>（挥砍 CD）
  *    ⑥ 远程武器攻速 → Gun.<shootingInterval>d__96::MoveNext 的 WaitForSeconds
  *
@@ -22,6 +22,9 @@ enum NeonFeat : int {
     NEON_FEAT_MOVE_SPEED   = 4,  // Slider_移速:1:5
     NEON_FEAT_MELEE_SPEED  = 5,  // Slider_近战攻速:1:5（刀/球棒/拳套/指虎）
     NEON_FEAT_RANGED_SPEED = 6,  // Slider_远程攻速:1:5（枪/弓）
+    NEON_FEAT_INF_COIN     = 7,  // Toggle_无限金币（NEONPlayerState.UseCoin/HasCoin）
+    NEON_FEAT_INF_KEY      = 8,  // Toggle_无限钥匙（NEONPlayerState.UseKey/HasKey）
+    NEON_FEAT_INF_GKEY     = 9,  // Toggle_无限彩色钥匙（NEONPlayerState.Use/HasGameplayKey）
 };
 
 bool Neon_TryInit(JavaVM* vm = nullptr);
