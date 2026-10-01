@@ -21,7 +21,25 @@ export NIXIANG_HOST
 # Prefer brew python3.11 for RE libs (pycryptodome/xxtea/keystone/yara)
 # Git Bash 没有 brew，用 PATH 上的 python3（winget 装的 Python 3.11）。
 if [ "$NIXIANG_HOST" = "win" ]; then
-  export NIXIANG_PYTHON="$(command -v python3 || command -v python)"
+  # 2026-10-01 双机协作实测修正：%LOCALAPPDATA%\Microsoft\WindowsApps\ 下的
+  # python3.exe 是 App Execution Alias 存根（0 字节 ReparsePoint），执行它会弹
+  # Microsoft Store、退出码 9009、`--version` 无输出。旧写法 `command -v python3`
+  # 恰好命中它，于是 NIXIANG_PYTHON 不可用 —— 而下面的 `${NIXIANG_PYTHON:-...}`
+  # 兜底是 macOS 路径，在 Win 上救不回来。
+  # 逐个候选解析，跳过落在 WindowsApps 下的那个；都没有就留空（比指向存根好）。
+  NIXIANG_PYTHON=""
+  for _pc in python3 python python3.11 python3.12; do
+    _pv="$(command -v "$_pc" 2>/dev/null || true)"
+    [ -n "$_pv" ] || continue
+    case "$_pv" in
+      *Microsoft/WindowsApps/*)    continue ;;
+      *Microsoft\\WindowsApps\\*)  continue ;;
+    esac
+    NIXIANG_PYTHON="$_pv"
+    break
+  done
+  unset _pc _pv
+  export NIXIANG_PYTHON
 elif [ -x /opt/homebrew/bin/python3.11 ]; then
   export NIXIANG_PYTHON=/opt/homebrew/bin/python3.11
 else
@@ -84,22 +102,42 @@ export NIXIANG_UBER_SIGNER="$NIXIANG_ROOT/01_tools/uber-apk-signer.jar"
 # Mod-menu / Gradle builds need JDK 17
 # Win：/usr/libexec/java_home 不存在，改从 JAVA_HOME / winget 安装位置 / PATH 探测，
 #      并强制要求同级目录有 javac（可过滤掉 C:\Windows\System32\java.exe 这个存根）。
+# 2026-10-01 双机协作实测修正：旧写法只校验 bin/javac 存在、并且把 ${JAVA_HOME:-} 当
+#      第一候选 —— 于是 JAVA_HOME 指向 JDK 25 时它也会被当作 17。本机当初"解析正确"
+#      纯粹是 MSI 装 JDK 17 时顺手改了 JAVA_HOME 的巧合，不是这个函数的功劳。
+#      现在每个候选都必须能证明自己是 17：目录名含 17，或 bin/java -version 首行含 "17."。
+_is_win_jdk17() {
+  local d first
+  d="${1//\\//}"          # JAVA_HOME 可能是 C:\...\ 这种反斜杠 + 尾斜杠写法
+  d="${d%/}"
+  [ -n "$d" ] || return 1
+  { [ -f "$d/bin/javac" ] || [ -f "$d/bin/javac.exe" ]; } || return 1
+  case "$(basename "$d")" in
+    *17*) return 0 ;;
+  esac
+  first="$("$d/bin/java" -version 2>&1 | head -1)"
+  case "$first" in
+    *17.*) return 0 ;;
+  esac
+  return 1
+}
+
 _find_win_jdk17() {
-  local cand jb
-  cand="${JAVA_HOME:-}"
-  for cand in "$cand" \
+  local cand
+  for cand in "${JAVA_HOME:-}" \
               "/c/Program Files/Microsoft/jdk-17"* \
               "/c/Program Files/Eclipse Adoptium/jdk-17"* \
               "/c/Program Files/Java/jdk-17"* ; do
-    if [ -n "$cand" ] && { [ -f "$cand/bin/javac" ] || [ -f "$cand/bin/javac.exe" ]; }; then
-      echo "$cand"
+    if _is_win_jdk17 "$cand"; then
+      cand="${cand//\\//}"
+      echo "${cand%/}"
       return 0
     fi
   done
-  jb="$(command -v java || true)"
-  if [ -n "$jb" ]; then
-    cand="$(cd "$(dirname "$jb")/.." 2>/dev/null && pwd)"
-    if [ -n "$cand" ] && { [ -f "$cand/bin/javac" ] || [ -f "$cand/bin/javac.exe" ]; }; then
+  cand="$(command -v java || true)"
+  if [ -n "$cand" ]; then
+    cand="$(cd "$(dirname "$cand")/.." 2>/dev/null && pwd)"
+    if _is_win_jdk17 "$cand"; then
       echo "$cand"
       return 0
     fi
