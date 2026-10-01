@@ -145,6 +145,54 @@ _find_win_jdk17() {
   return 1
 }
 
+_is_mac_jdk17() {
+  local d first
+  d="${1:-}"
+  d="${d%/}"
+  [ -n "$d" ] || return 1
+  [ -f "$d/bin/javac" ] || return 1
+  case "$(basename "$d")" in
+    *17*) return 0 ;;
+  esac
+  first="$("$d/bin/java" -version 2>&1 | head -1)"
+  case "$first" in
+    *17.*) return 0 ;;
+  esac
+  return 1
+}
+
+_find_mac_jdk17() {
+  local cand
+  if _is_mac_jdk17 "${JAVA_HOME:-}"; then
+    echo "${JAVA_HOME%/}"
+    return 0
+  fi
+  cand="$(/usr/libexec/java_home -v 17 2>/dev/null || true)"
+  if _is_mac_jdk17 "$cand"; then
+    echo "${cand%/}"
+    return 0
+  fi
+  for cand in /Library/Java/JavaVirtualMachines/*17*/Contents/Home \
+              "$HOME/Library/Java/JavaVirtualMachines/"*17*/Contents/Home \
+              /opt/homebrew/opt/openjdk@17 \
+              /usr/local/opt/openjdk@17 \
+              "$HOME"/jdk*17* ; do
+    if _is_mac_jdk17 "$cand"; then
+      echo "${cand%/}"
+      return 0
+    fi
+  done
+  cand="$(command -v java || true)"
+  if [ -n "$cand" ]; then
+    cand="$(cd "$(dirname "$cand")/.." 2>/dev/null && pwd)"
+    if _is_mac_jdk17 "$cand"; then
+      echo "$cand"
+      return 0
+    fi
+  fi
+  return 1
+}
+
 if [ "$NIXIANG_HOST" = "win" ]; then
   _jdk="$( _find_win_jdk17 || true )"
   if [ -n "$_jdk" ]; then
@@ -152,9 +200,9 @@ if [ "$NIXIANG_HOST" = "win" ]; then
   fi
   unset _jdk
 else
-  if [ -z "${JAVA_HOME:-}" ] || ! java -version 2>&1 | head -1 | grep -q '17\.'; then
-    if JAVA17="$(/usr/libexec/java_home -v 17 2>/dev/null)"; then
-      export NIXIANG_JAVA17="$JAVA17"
-    fi
+  _jdk="$( _find_mac_jdk17 || true )"
+  if [ -n "$_jdk" ]; then
+    export NIXIANG_JAVA17="$_jdk"
   fi
+  unset _jdk
 fi
