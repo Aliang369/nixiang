@@ -8,6 +8,8 @@
 # - 旧版 Tap SDK：ActivityHandler.authorize → 抛 starry_force_web_login
 #     → LoginClient catch → WebViewHandler（强制网页登录）
 # - 删除 assets/web；替换 libstarry_magic.so + assets/certs
+# - 2026-10-02 迁移 modern 注册表：ndk-build 走 Android_neon.mk
+#     （MainModern.cpp + Games/NeonMod.cpp + Games/NeonEntry.cpp + Games/NoAceStubs.cpp）
 #
 # 产物：08_output/霓虹深渊/霓虹深渊_3.2.860_surgical-releaseSigned.apk
 #
@@ -91,10 +93,13 @@ else
 fi
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
-MK="$STARRY_SRC/app/src/main/jni/Android.mk"
-grep -E '^\s*LOCAL_CFLAGS\s*\+=\s*-DENABLE_UNITY_HOOK\s+-DSTARRY_GAME_NEON' "$MK" \
-  || { echo "ERROR: Android.mk must enable STARRY_GAME_NEON"; exit 1; }
-echo "[check] Android.mk target=neon"
+MK="$STARRY_SRC/app/src/main/jni/Android_neon.mk"
+[[ -f "$MK" ]] || { echo "ERROR: missing $MK (modern 注册表私有 mk)"; exit 1; }
+grep -q 'Games/NeonEntry.cpp' "$MK" \
+  || { echo "ERROR: Android_neon.mk 未编译 Games/NeonEntry.cpp"; exit 1; }
+grep -q 'Games/NeonMod.cpp' "$MK" \
+  || { echo "ERROR: Android_neon.mk 未编译 Games/NeonMod.cpp"; exit 1; }
+echo "[check] Android_neon.mk target=neon (modern 注册表)"
 
 LOCK_DIR="/tmp/neon_surgical.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -105,13 +110,17 @@ WORK="$(mktemp -d /tmp/neon_surgical.XXXXXX)"
 trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK"
 
-echo "[1/6] ndk-build -> jniLibs ([Neon] 自检)"
+echo "[1/6] ndk-build (Android_neon.mk -> libs_neon) ([Neon] 自检)"
 NDK_BUILD="$NDK/ndk-build"
 [[ -x "$NDK_BUILD" ]] || { echo "ERROR: missing $NDK_BUILD"; exit 1; }
-(cd "$STARRY_SRC/app/src/main/jni" && \
-  "$NDK_BUILD" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk \
+JNI_DIR="$STARRY_SRC/app/src/main/jni"
+OBJ_OUT="$STARRY_SRC/app/src/obj_neon"
+LIBS_OUT="$STARRY_SRC/app/src/libs_neon"
+(cd "$JNI_DIR" && \
+  "$NDK_BUILD" NDK_PROJECT_PATH="$STARRY_SRC/app" APP_BUILD_SCRIPT=./Android_neon.mk \
+  NDK_APPLICATION_MK=./Application.mk NDK_OUT="$OBJ_OUT" NDK_LIBS_OUT="$LIBS_OUT" \
   -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
-SO_BUILT="$STARRY_SRC/app/src/libs/arm64-v8a/libstarry_magic.so"
+SO_BUILT="$LIBS_OUT/arm64-v8a/libstarry_magic.so"
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT"; exit 1; }
 if ! grep -a -q '\[Neon\]' "$SO_BUILT"; then
   echo "ERROR: so 不是 NEON — strings 未见 [Neon]" >&2

@@ -1,0 +1,14 @@
+{
+  "template_id": "neon",
+  "name": "霓虹深渊",
+  "package": "com.shangyoo.neon",
+  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "秒杀"},
+    {"feat_num": 3, "name": "技能无CD"},
+    {"feat_num": 4, "name": "移速"},
+    {"feat_num": 5, "name": "近战攻速"},
+    {"feat_num": 6, "name": "远程攻速"}
+  ]
+}
