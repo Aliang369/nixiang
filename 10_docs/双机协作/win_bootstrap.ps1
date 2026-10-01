@@ -37,6 +37,12 @@ function Ok($m)   { Write-Host ("  [OK]   " + $m) -ForegroundColor Green }
 function Warn($m) { Write-Host ("  [WARN] " + $m) -ForegroundColor Yellow }
 function Fail($m) { Write-Host ("  [FAIL] " + $m) -ForegroundColor Red }
 function Has($c)  { return [bool](Get-Command $c -ErrorAction SilentlyContinue) }
+# C:\Users\x\a.sh -> /c/Users/x/a.sh  (needed whenever a Windows path is handed to bash.exe)
+function ToPosix($p) {
+    $q = $p -replace '\\', '/'
+    if ($q -match '^([A-Za-z]):/(.*)$') { return "/" + $Matches[1].ToLower() + "/" + $Matches[2] }
+    return $q
+}
 
 # ------------------------------------------------------------------
 Step 0 "Preflight: privileges, drive, path shape"
@@ -164,7 +170,7 @@ else {
     Ok "Git Bash: $gitBashRoot"
     # E:\nixiang  ->  /e/nixiang
     $driveLetter   = $RepoRoot.Substring(0,1).ToLower()
-    $restOfPath    = $RepoRoot.Substring(2).Replace('\','/')
+    $restOfPath    = $RepoRoot.Substring(2).TrimStart('\','/').Replace('\','/')
     $bashRootPosix = "/$driveLetter/$restOfPath"
     $bashrcPath = Join-Path $env:USERPROFILE ".bashrc"
     $marker = "# --- nixiang dual-host block (win_bootstrap.ps1) ---"
@@ -232,12 +238,44 @@ command -v shasum >/dev/null 2>&1 || export -f shasum 2>/dev/null || true
 # endif
 '@.Replace('__ROOT__', $bashRootPosix)
 
+    # Encoding / line endings matter here. Windows PowerShell 5.1's `-Encoding UTF8`
+    # writes a UTF-8 BOM, and Add-Content writes CRLF. A BOM on line 1 makes every
+    # Git Bash start print   line 1: $'\357\273\277': command not found   and CRLF
+    # makes this host-private file differ from the mac side for no reason.
+    # Write explicit UTF-8 (no BOM), LF only.
+    $blockLf   = $block -replace "`r`n", "`n"
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
     if ((Test-Path $bashrcPath) -and (Select-String -Path $bashrcPath -SimpleMatch $marker -Quiet)) {
         Ok "~/.bashrc already has the nixiang block (left untouched)"
         Ok "expected NIXIANG_ROOT = $bashRootPosix"
     } else {
-        Add-Content -Path $bashrcPath -Value $block -Encoding UTF8
+        [System.IO.File]::AppendAllText($bashrcPath, $blockLf, $utf8NoBom)
         Ok "appended nixiang block to $bashrcPath (NIXIANG_ROOT=$bashRootPosix)"
+    }
+
+    # Repair whatever older runs of this script left behind, in place, preserving all
+    # other content: strip a leading UTF-8 BOM, normalise CRLF -> LF, and fix a stale
+    # NIXIANG_ROOT line (builds before 2026-10-01 wrote the double-slash "/e//nixiang").
+    if (Test-Path $bashrcPath) {
+        $rcBytes  = [System.IO.File]::ReadAllBytes($bashrcPath)
+        $hadBom   = ($rcBytes.Length -ge 3 -and $rcBytes[0] -eq 0xEF -and $rcBytes[1] -eq 0xBB -and $rcBytes[2] -eq 0xBF)
+        $rcText   = [System.IO.File]::ReadAllText($bashrcPath)
+        if ($hadBom) { $rcText = $rcText.TrimStart([char]0xFEFF) }
+        $rcLfOnly = $rcText -replace "`r`n", "`n"
+        $hadCrlf  = ($rcLfOnly -ne $rcText)
+        $wantLine = 'export NIXIANG_ROOT="' + $bashRootPosix + '"'
+        $haveLine = ([regex]::Match($rcLfOnly, '(?m)^export NIXIANG_ROOT=.*$')).Value
+        $rootBad  = ($haveLine -ne '' -and $haveLine -ne $wantLine)
+        if ($rootBad) { $rcLfOnly = [regex]::Replace($rcLfOnly, '(?m)^export NIXIANG_ROOT=.*$', $wantLine.Replace('$','$$')) }
+        if ($hadBom -or $hadCrlf -or $rootBad) {
+            [System.IO.File]::WriteAllText($bashrcPath, $rcLfOnly, $utf8NoBom)
+            if ($hadBom)  { Ok "~/.bashrc repaired: UTF-8 BOM stripped" }
+            if ($hadCrlf) { Ok "~/.bashrc repaired: CRLF -> LF" }
+            if ($rootBad) { Ok ("~/.bashrc repaired: NIXIANG_ROOT  " + $haveLine + "  ->  " + $wantLine) }
+        } else {
+            Ok "~/.bashrc clean (no BOM, LF only, NIXIANG_ROOT correct)"
+        }
     }
 }
 
@@ -315,17 +353,36 @@ if ($gitBashRoot) {
     Write-Host "  mac-path shim inside Git Bash:"
     & $gitBashRoot -lc "cd /Users/aliang/Documents/nixiang 2>/dev/null && pwd && git rev-parse --short HEAD"
     Write-Host "  mac-command shims (expect: 32-hex / digits / sha256 / 32-hex from a child bash):"
-    $shimCmd = '. "$HOME/.bashrc" 2>/dev/null; f=/tmp/.nx_shim_probe; printf x > $f; ' +
-               'echo "    md5 -q     -> $(md5 -q $f)"; ' +
-               'echo "    stat -f %z -> $(stat -f %z $f)"; ' +
-               'echo "    shasum     -> $(shasum -a 256 $f | cut -c1-16)..."; ' +
-               'echo "    child bash -> $(bash -c "md5 -q $f")"; ' +
-               'command -v shasum >/dev/null 2>&1 && echo "    (native shasum present)" || echo "    (shasum shim active)"; ' +
-               'rm -f $f'
-    & $gitBashRoot -c $shimCmd
+    # Do NOT pass this as `bash -c "<multiline string>"`: Windows PowerShell 5.1 does
+    # not escape embedded double quotes when it builds a native command line, so bash
+    # receives a mangled command and silently prints nothing. That made this
+    # self-check a no-op which would hide real shim regressions. Write a temp .sh
+    # file (LF, no BOM) and run the file instead - no quoting involved.
+    $shimProbe = @'
+. "$HOME/.bashrc" 2>/dev/null
+f=/tmp/.nx_shim_probe
+printf x > $f
+echo "    md5 -q     -> $(md5 -q $f)"
+echo "    stat -f %z -> $(stat -f %z $f)"
+echo "    shasum     -> $(shasum -a 256 $f | cut -c1-16)..."
+echo "    child bash -> $(bash -c "md5 -q $f")"
+command -v shasum >/dev/null 2>&1 && echo "    (native shasum present)" || echo "    (shasum shim active)"
+rm -f $f
+'@ -replace "`r`n", "`n"
+    $probeWin = Join-Path $env:TEMP ".nx_shim_probe.sh"
+    [System.IO.File]::WriteAllText($probeWin, $shimProbe, (New-Object System.Text.UTF8Encoding($false)))
+    & $gitBashRoot (ToPosix $probeWin)
+    Remove-Item -LiteralPath $probeWin -Force -ErrorAction SilentlyContinue
 }
 Write-Host ""
 Write-Host "  Remaining manual steps:" -ForegroundColor Cyan
-Write-Host "    1. ssh-keygen -t ed25519 -C win-nixiang   -> add public key to GitHub"
-Write-Host "    2. close and reopen the terminal so PATH is fresh"
-Write-Host "    3. run the acceptance checklist in section 7 of the sibling markdown doc"
+$sshPub = @(Get-ChildItem -Path (Join-Path $env:USERPROFILE ".ssh") -Filter "id_*.pub" -ErrorAction SilentlyContinue)
+$n = 0
+if ($sshPub.Count -eq 0) {
+    $n++
+    Write-Host ("    {0}. ssh-keygen -t ed25519 -C win-nixiang   -> add the PUBLIC key to GitHub" -f $n)
+} else {
+    Write-Host ("    -  SSH key already present ({0} found) - clone/pull over SSH works as-is" -f $sshPub.Count) -ForegroundColor DarkGray
+}
+$n++; Write-Host ("    {0}. close and reopen the terminal so PATH is fresh" -f $n)
+$n++; Write-Host ("    {0}. run the acceptance checklist in section 7 of the sibling markdown doc" -f $n)
