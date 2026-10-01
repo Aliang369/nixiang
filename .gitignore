@@ -108,6 +108,19 @@ mod菜单/**/libs_*/
 # ===== 装机成功戳（设备侧状态，每次装机重写）=====
 04_scripts/*/.install_ok
 
+# ===== 机器私有状态（2026-10-01 双机协作：每机一份，永不入库）=====
+# 理由：两台机器会各自写入不同的设备序列号与本地绝对路径（/Users/aliang/... 只对 mac 有意义），
+#       入库必然互相覆盖与冲突。
+# 处置：已跟踪的 28 个已用 git rm --cached 移出跟踪（本地文件保留，内容仍留在 git 历史里）。
+#       这些文件由 04_scripts/<游戏>/install_*.sh 在本机自行生成，不需要从仓库获取；
+#       新克隆的机器上它们理应是"不存在"的状态。
+# 注：10_docs 里个别历史文档曾引用 04_scripts/<游戏>/install_result_*.json 作为装机证据，
+#     那些引用在新克隆的机器上会指向不存在的文件（历史记录，不追溯修改）。
+04_scripts/*/.device_serial
+04_scripts/*/install_result*.json
+04_scripts/*/install_result*.txt
+04_scripts/*/installed_mod_apk.json
+
 # ===== 通用大二进制（兜底；例外见下）=====
 *.apk
 *.ap_

@@ -1,5 +1,0 @@
-installed=true
-serial=f9a116a2
-package=com.happyelements.es2
-apk=/Users/aliang/Documents/nixiang/08_output/偶像梦幻2/偶像梦幻2_4.5.8861_surgical-releaseSigned.apk
-md5=29598948a08e234b83cca24a4a7fbd1c

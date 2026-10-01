@@ -50,3 +50,8 @@ app/src/obj*/
 app/src/libs*/
 obj*/
 libs*/
+
+# 构建产物再排除（根 .gitignore 的 __pycache__/ 与 *.pyc 规则被上面的 !scripts/** 覆盖）
+scripts/__pycache__/
+scripts/**/__pycache__/
+scripts/**/*.pyc

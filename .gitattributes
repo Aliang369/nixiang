@@ -1,0 +1,94 @@
+# ================================================================
+#  nixiang 跨机协作 .gitattributes（Mac ↔ Windows 双机同步）
+#
+#  目的：让两台机器（macOS / Windows，文件系统均大小写不敏感）签出
+#        字节级一致的工作区，消除 CRLF 差异噪声与二进制被"文本化"损坏。
+#
+#  配套（两台机器都要跑，缺一不可）：
+#      git config --global core.autocrlf false
+#      git config --global core.ignorecase false
+#      git config --global core.longpaths true      # Windows 侧必须
+#
+#  规则优先级：文件靠后的匹配覆盖靠前的，因此 `-text` 例外段必须放在最后。
+#
+#  新增本文件当天实测：`git status` 未因它产生任何变化（原有 2 个已修改文件
+#  是 mtime 更早的真实内容改动，与换行无关）。
+#  若日后出现大批"已修改"，先跑：
+#      git ls-files --eol | grep -E 'i/(crlf|mixed)'
+#  逐个核对来源，不要盲目 `git add --renormalize .`（会产生巨型 diff 掩盖真实改动）。
+# ================================================================
+
+# ---- 默认：文本用 LF 存储，签出后仍是 LF（两台机器一致）----
+* text=auto eol=lf
+
+# ---- 仓库核心资产：700+ 个 .sh。CRLF 会让 bash 报 $'\r': command not found ----
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.zsh   text eol=lf
+*.py    text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.c     text eol=lf
+*.cc    text eol=lf
+*.cpp   text eol=lf
+*.h     text eol=lf
+*.hpp   text eol=lf
+*.mk    text eol=lf
+*.txt   text eol=lf
+
+# ---- Windows 原生脚本：必须 CRLF，否则 PowerShell 5.1 / cmd 解析异常 ----
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# ---- 二进制：禁止任何换行/编码转换（否则 APK、dex、so 直接损坏）----
+*.apk    binary
+*.aab    binary
+*.jar    binary
+*.dex    binary
+*.class  binary
+*.so     binary
+*.a      binary
+*.o      binary
+*.bin    binary
+*.dat    binary
+*.pak    binary
+*.i64    binary
+*.id0    binary
+*.id1    binary
+*.id2    binary
+*.nam    binary
+*.til    binary
+*.pyc    binary
+*.zip    binary
+*.7z     binary
+*.gz     binary
+*.tar    binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.webp   binary
+*.ttf    binary
+*.otf    binary
+*.keystore binary
+*.jks    binary
+*.p12    binary
+
+# ================================================================
+#  例外段：dump / 解包得到的"第三方原始字节"，一律不转换
+#  （必须放在所有 text 规则之后才会生效）
+#
+#  实测依据：加本文件当天，索引中已有 15 个文件是 CRLF：
+#    06_dumped/大话蜀山/il2cpp_dump_2.5.tool/Il2CppDumper.{deps,runtimeconfig}.json
+#    06_dumped/正中靶心2/{binge_1.6,official_1.7,official_1.9}/apk_assets/assets/supplierconfig.json
+#    10_docs/掌门下山/lua_dump/starry_dump/*.lua  (10 个)
+#  这些是工具/游戏资源里的原样字节，被 normalise 会破坏与真机资源的可比性，
+#  也会让"解包前后 hash 一致"这类断言失效。
+# ================================================================
+06_dumped/**/apk_assets/**   -text -eol
+06_dumped/**/il2cpp_dump_*/** -text -eol
+10_docs/**/apk_assets/**     -text -eol
+10_docs/**/lua_dump/**       -text -eol
