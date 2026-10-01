@@ -3,7 +3,7 @@
 #  霓虹深渊 — 仅换 libstarry_magic.so（modern 注册表构建）
 #  底包须已是「星光成品」（含 classes5.dex 菜单 + SignSpoof + 过签 P 补丁）
 #
-#  2026-10-02 迁移 modern：ndk-build 走 Android_neon.mk
+#  2026-10-01 迁移 modern：ndk-build 走 Android_neon.mk
 #    （MainModern.cpp + Games/NeonMod.cpp + Games/NeonEntry.cpp + Games/NoAceStubs.cpp）
 #    不再要求公共 Android.mk 里的 -DSTARRY_GAME_NEON 处于启用态
 #

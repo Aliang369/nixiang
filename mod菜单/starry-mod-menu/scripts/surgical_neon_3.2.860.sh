@@ -8,7 +8,7 @@
 # - 旧版 Tap SDK：ActivityHandler.authorize → 抛 starry_force_web_login
 #     → LoginClient catch → WebViewHandler（强制网页登录）
 # - 删除 assets/web；替换 libstarry_magic.so + assets/certs
-# - 2026-10-02 迁移 modern 注册表：ndk-build 走 Android_neon.mk
+# - 2026-10-01 迁移 modern 注册表：ndk-build 走 Android_neon.mk
 #     （MainModern.cpp + Games/NeonMod.cpp + Games/NeonEntry.cpp + Games/NoAceStubs.cpp）
 # - 2026-10-01 签名改为工作区 release 证书（01_tools/starry_release.jks，CN=StarryMagic）
 #     原因：菜单 v5 设备指纹只用 SSAID，而 SSAID 按签名证书隔离 —— 与其它星光包

@@ -2,7 +2,7 @@
   "template_id": "neon",
   "name": "霓虹深渊",
   "package": "com.shangyoo.neon",
-  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（2026-10-02 第四轮：近战/远程攻速合并为单一「攻速」）",
+  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（2026-10-01 第四轮：近战/远程攻速合并为单一「攻速」）",
   "features": [
     {
       "feat_num": 1,
