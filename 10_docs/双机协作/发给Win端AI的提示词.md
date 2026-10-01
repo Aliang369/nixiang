@@ -83,7 +83,8 @@
     python3 --version
     adb devices
 
-期望：① pwd 输出 `/Users/aliang/Documents/nixiang`（不是 No such file）② HEAD 与 mac 端一致、
+期望：① pwd 输出 `/Users/aliang/Documents/nixiang`（不是 No such file）② HEAD 与 mac 端一致
+（2026-10-01 交付时 Mac 端基线与跟踪文件数见文末「Mac 端基线值」；HEAD 会随新提交变化，以实时 `git rev-parse` 为准）、
 工作区干净无 ahead/behind ③ 第 3 条**最多只有 15 行**（都是 `06_dumped/**/apk_assets`、
 `06_dumped/**/il2cpp_dump_*/**`、`10_docs/掌门下山/lua_dump/**` 里的 dump 原始字节，
 `.gitattributes` 已豁免；若多出别的路径，停下并原文报告，**不要自己改换行**）
@@ -171,3 +172,19 @@ git log --oneline -5
 ```
 
 **双机首轮对接的顺序建议**：Mac 先 `git push` 一次干净的 main → Win 端 clone + bootstrap → Win 端回报验收清单 → 你确认 Win 能 `pull` 到 Mac 的新提交 → 再开始分游戏（`双机协作同步方案.md` §2.1）。
+
+## Mac 端基线值（2026-10-01 实测，Win 端用来对照验收）
+
+| 项 | Mac 端实测值 | Win 端应为 |
+|---|---|---|
+| `git rev-parse --short HEAD` | `507183a1`（会随新提交变化，以实时为准） | **完全相同** |
+| 跟踪文件数 `git ls-files \| wc -l` | **2319** | **完全相同** |
+| `git ls-files --eol \| grep -cE 'i/(crlf\|mixed)'` | **15** | **完全相同**（且必须都是 `attr/-text`，即 dump 原始资产） |
+| `preflight.sh` | `PASS=1 FAIL=0 REMIND=0 SKIP=0`，退出码 0 | **相同** |
+| env.sh 六项 | `mac\|/opt/homebrew/bin/python3.11\|.../build-tools/36.0.0\|.../zipalign\|.../apksigner\|（空）` | 首项为 **`win`**，**六项全部非空**（含 JAVA17，这是唯一与 Mac 不同的地方） |
+| `printf x > f; md5 -q f` | `9dd4e461268c8034f5c8564e155c67a6` | **完全相同的 32 位 hash** |
+| `stat -f %z f` | `1` | `1` |
+| `shasum -a 256 f` | `2d711642b726b044...` | 同一个 sha256 |
+
+> Mac 端换行符那 15 行不是问题，是**故意的**：它们是 dump/反编译出来的原始字节，
+> `.gitattributes` 用 `-text -eol` 明确豁免（共 4 条规则）。Win 端只要数量一致、路径一致就算过。
