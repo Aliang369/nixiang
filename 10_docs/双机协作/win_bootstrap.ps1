@@ -37,6 +37,28 @@ function Ok($m)   { Write-Host ("  [OK]   " + $m) -ForegroundColor Green }
 function Warn($m) { Write-Host ("  [WARN] " + $m) -ForegroundColor Yellow }
 function Fail($m) { Write-Host ("  [FAIL] " + $m) -ForegroundColor Red }
 function Has($c)  { return [bool](Get-Command $c -ErrorAction SilentlyContinue) }
+
+# Some entries must be a SPECIFIC version: the repo targets Python 3.11 and
+# JDK 17. A bare "is there a command named python/java" test silently accepts
+# 3.13 or JDK 25 and then the package is NEVER installed - which is exactly
+# what happened on the first real Win host (python3 resolved to the Store
+# stub, JAVA_HOME to JDK 25). $Want is matched against the tool's own
+# --version output; "" means any version will do.
+function ToolVersion($c) {
+    # $ErrorActionPreference is "Stop" at the top of this script, and in
+    # PowerShell 5.1 a native exe writing to stderr is turned into a
+    # terminating error - java -version writes to stderr, so without this
+    # the probe would always come back empty.
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        switch ($c) {
+            "python" { return ((& python --version 2>&1) | Out-String) }
+            "java"   { return ((& java -version 2>&1) | Out-String) }
+            default  { return "" }
+        }
+    } catch { return "" } finally { $ErrorActionPreference = $prev }
+}
 # C:\Users\x\a.sh -> /c/Users/x/a.sh  (needed whenever a Windows path is handed to bash.exe)
 function ToPosix($p) {
     $q = $p -replace '\\', '/'
@@ -72,13 +94,13 @@ Ok "target root: $RepoRoot"
 Step 1 "Install base toolchain via winget"
 # ------------------------------------------------------------------
 $pkgs = @(
-    @{ Id = "Git.Git";                  Cmd = "git";      Why = "repo + Git Bash (the only shell used for .sh here)" },
-    @{ Id = "Python.Python.3.11";       Cmd = "python";   Why = "04_scripts/**/*.py (repo targets 3.11)" },
-    @{ Id = "Microsoft.OpenJDK.17";     Cmd = "java";     Why = "apktool / apksigner / gradle all need JDK 17" },
-    @{ Id = "Google.PlatformTools";     Cmd = "adb";      Why = "device access (if this host owns a phone)" },
-    @{ Id = "7zip.7zip";                Cmd = "7z";       Why = "archive surgery" },
-    @{ Id = "jqlang.jq";                Cmd = "jq";       Why = "a few scripts pipe JSON through jq" },
-    @{ Id = "Syncthing.Syncthing";      Cmd = "syncthing";Why = "LAN sync of the gitignored bulk dirs" }
+    @{ Id = "Git.Git";                  Cmd = "git";      Want = "";     Why = "repo + Git Bash (the only shell used for .sh here)" },
+    @{ Id = "Python.Python.3.11";       Cmd = "python";   Want = "3.11"; Why = "04_scripts/**/*.py (repo targets 3.11)" },
+    @{ Id = "Microsoft.OpenJDK.17";     Cmd = "java";     Want = "17.";  Why = "apktool / apksigner / gradle all need JDK 17" },
+    @{ Id = "Google.PlatformTools";     Cmd = "adb";      Want = "";     Why = "device access (if this host owns a phone)" },
+    @{ Id = "7zip.7zip";                Cmd = "7z";       Want = "";     Why = "archive surgery" },
+    @{ Id = "jqlang.jq";                Cmd = "jq";       Want = "";     Why = "a few scripts pipe JSON through jq" },
+    @{ Id = "Syncthing.Syncthing";      Cmd = "syncthing";Want = "";     Why = "LAN sync of the gitignored bulk dirs" }
 )
 
 if ($SkipPackages) {
@@ -87,11 +109,26 @@ if ($SkipPackages) {
     Fail "winget not available. Install 'App Installer' from Microsoft Store, then re-run."
 } else {
     foreach ($p in $pkgs) {
-        if (Has $p.Cmd) { Ok ("already present: {0} ({1})" -f $p.Id, $p.Cmd); continue }
+        if (Has $p.Cmd) {
+            if ((-not $p.Want) -or ((ToolVersion $p.Cmd) -match [regex]::Escape($p.Want))) {
+                Ok ("already present: {0} ({1})" -f $p.Id, $p.Cmd)
+                continue
+            }
+            Warn ("{0} is on PATH but NOT version {1}: {2}" -f $p.Cmd, $p.Want, (ToolVersion $p.Cmd).Trim())
+        }
         Write-Host ("  installing {0} ... ({1})" -f $p.Id, $p.Why)
         try {
             winget install --id $p.Id -e --accept-source-agreements --accept-package-agreements --silent | Out-Null
-            Ok "installed $($p.Id)"
+            $wingetCode = $LASTEXITCODE
+            if ($wingetCode -eq 0) {
+                Ok "installed $($p.Id)"
+            } else {
+                # winget is a native exe: a non-zero exit does NOT throw, and
+                # PS 5.1 never turns it into a catchable error. Reporting [OK]
+                # here is how jq/Syncthing were silently "installed" on the
+                # first Win host while winget had actually failed to download.
+                Warn ("winget FAILED for {0} (exit 0x{1:X}) - '{2}' is still missing" -f $p.Id, $wingetCode, $p.Cmd)
+            }
         } catch {
             Warn "winget failed for $($p.Id): $($_.Exception.Message)"
         }
@@ -230,11 +267,16 @@ if ! command -v shasum >/dev/null 2>&1; then
         esac
         unset _alg
     }
+    # Export it HERE, inside the guard. Once the function exists, `command -v
+    # shasum` answers with the function itself, so doing the export after this
+    # block always looks like "a native shasum is present" and the export is
+    # skipped - which silently cost every non-interactive child shell
+    # (bash 04_scripts/xxx.sh) its 234 `shasum -a` call sites.
+    export -f shasum 2>/dev/null || true
 fi
 # export -f so that non-interactive children (`bash 04_scripts/xxx.sh`, which does
 # NOT source .bashrc) still inherit the shims. Verified by step 8.
 export -f md5 stat 2>/dev/null || true
-command -v shasum >/dev/null 2>&1 || export -f shasum 2>/dev/null || true
 # endif
 '@.Replace('__ROOT__', $bashRootPosix)
 
@@ -268,11 +310,19 @@ command -v shasum >/dev/null 2>&1 || export -f shasum 2>/dev/null || true
         $haveLine = ([regex]::Match($rcLfOnly, '(?m)^export NIXIANG_ROOT=.*$')).Value
         $rootBad  = ($haveLine -ne '' -and $haveLine -ne $wantLine)
         if ($rootBad) { $rcLfOnly = [regex]::Replace($rcLfOnly, '(?m)^export NIXIANG_ROOT=.*$', $wantLine.Replace('$','$$')) }
-        if ($hadBom -or $hadCrlf -or $rootBad) {
+        # Builds before this one exported the shasum shim AFTER its guard, where
+        # `command -v shasum` already matched the function itself - so the export
+        # never happened and non-interactive children silently lost shasum.
+        $oldShasum = 'command -v shasum >/dev/null 2>&1 || export -f shasum 2>/dev/null || true'
+        $newShasum = 'export -f shasum 2>/dev/null || true'
+        $shasumBad = $rcLfOnly.Contains($oldShasum)
+        if ($shasumBad) { $rcLfOnly = $rcLfOnly.Replace($oldShasum, $newShasum) }
+        if ($hadBom -or $hadCrlf -or $rootBad -or $shasumBad) {
             [System.IO.File]::WriteAllText($bashrcPath, $rcLfOnly, $utf8NoBom)
-            if ($hadBom)  { Ok "~/.bashrc repaired: UTF-8 BOM stripped" }
-            if ($hadCrlf) { Ok "~/.bashrc repaired: CRLF -> LF" }
-            if ($rootBad) { Ok ("~/.bashrc repaired: NIXIANG_ROOT  " + $haveLine + "  ->  " + $wantLine) }
+            if ($hadBom)    { Ok "~/.bashrc repaired: UTF-8 BOM stripped" }
+            if ($hadCrlf)   { Ok "~/.bashrc repaired: CRLF -> LF" }
+            if ($rootBad)   { Ok ("~/.bashrc repaired: NIXIANG_ROOT  " + $haveLine + "  ->  " + $wantLine) }
+            if ($shasumBad) { Ok "~/.bashrc repaired: 'export -f shasum' now runs inside the guard" }
         } else {
             Ok "~/.bashrc clean (no BOM, LF only, NIXIANG_ROOT correct)"
         }
@@ -365,8 +415,14 @@ printf x > $f
 echo "    md5 -q     -> $(md5 -q $f)"
 echo "    stat -f %z -> $(stat -f %z $f)"
 echo "    shasum     -> $(shasum -a 256 $f | cut -c1-16)..."
-echo "    child bash -> $(bash -c "md5 -q $f")"
-command -v shasum >/dev/null 2>&1 && echo "    (native shasum present)" || echo "    (shasum shim active)"
+echo "    child bash -> $(bash -c "md5 -q $f") $(bash -c "shasum -a 256 $f | cut -c1-8")"
+# `command -v shasum` answers with the FUNCTION name once the shim is defined, so it
+# can never tell a shim from a real binary. type -t can.
+case "$(type -t shasum 2>/dev/null)" in
+    function) echo "    (shasum shim active, inherited by child bash)" ;;
+    file)     echo "    (native shasum present)" ;;
+    *)        echo "    (WARN: no shasum shim AND no native shasum)" ;;
+esac
 rm -f $f
 '@ -replace "`r`n", "`n"
     $probeWin = Join-Path $env:TEMP ".nx_shim_probe.sh"
