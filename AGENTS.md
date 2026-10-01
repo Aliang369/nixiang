@@ -25,6 +25,26 @@
 4. 多代理协作先划定文件归属和禁止修改项；不覆盖他人改动，跨归属改动先协调，最终汇总改动与证据。
 5. 外部方法论引用已收敛（2026-09-10）：原 `/Users/aliang/Documents/reverse-skill` 外部库经评估整体与本工作区低相关，唯一有价值的 ida-pro-mcp 工具速查已择录进 `skill/ida-plugin-flow/references/ida-mcp-cheatsheet.md`，外部库本体已删除（可从 github.com/zhaoxuya520/reverse-skill 重新克隆）。不再引用外部路由，一切以本入口与 `skill/` 为准。
 
+## 双机协作（每台机器，每轮开工第一步）
+
+本仓由 **mac 端**与 **Windows 端**共用同一个仓库（`git@github.com:Aliang369/nixiang.git`，分支 `main`）。
+**任何机器上的任何 AI，接手任务后的第一步先做本节，再读其它内容。**
+
+```bash
+cd "$NIXIANG_ROOT"                 # Win 端在 Git Bash 里；mac 端在 zsh 里
+git status -sb                     # 必须干净；不干净先报告处理，不要 pull
+git pull --rebase --autostash      # 拿到另一台机器已推送的提交
+git log --oneline -5               # 确认拿到了什么
+```
+
+- **顺序不可颠倒**：先 `status` 再 `pull`。工作区不干净时 pull/rebase 会把未提交改动卷进去。
+- **一机一游戏**（`10_docs/双机协作/双机协作同步方案.md` §2.1）：同一轮只由一台机器写同一个游戏；开工前先划定归属（如 `mac → 游戏 A`，`win → 游戏 B`）。两台要改同一游戏须先协调，否则会产生真实合并冲突。
+- **状态索引单一写者**（§2.2）：`10_docs/_state/current.md` 与 `10_docs/_state/games/{游戏}.md` 由本轮动了该游戏的那台机器写，另一台只读。
+- **push 被拒**（另一台已先推）→ `git pull --rebase --autostash` 后再 push；**禁止 `push --force`**（§6.3）。
+- **收工**（§6.2）走现成口令对应的 `04_scripts/_common/archive_scoped_git.sh`：只按本机归属范围做白名单 `git add`，禁止 `git add -A`。
+- Git Bash 里可直接用：`nixst` / `nxfetch` / `nxpull` / `nxlog` / `nxclean`。
+- 完整规则（终端分流、兼容垫片、Syncthing 大头层同步、验收清单）见 `10_docs/双机协作/双机协作同步方案.md`。
+
 ## 授权与测试边界
 
 - 以用户明确指定的目标、文件、设备、账户、版本和测试范围为边界；本地阅读、检索、构建、离线测试及范围内低成本可逆探索无需逐次请示。真机安装、运行、抓取仅在相应设备与测试范围已授权时开展；文档任务不自动授权真机操作。
