@@ -149,6 +149,12 @@ STARRY_INSTALL_ONLY=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/sur
 
 验证脚本必须从成品包重新解出目标 `classesN.dex` 和 so；不要把 `/tmp/sjzz_*` 这类上一轮残留当成新构建证据。完整 APK 重新签名后 md5 必变，混包判断只看 dex md5、so md5、Manifest/包结构和签名身份。
 
+★ **dex-only「菜单源码换新」路径（2026-10-01 独奏骑士实测，脚本 `dzqs_menu_latest_1.1.768.sh`）**：机身包正常、只想把旧菜单 dex 换成 HEAD 版时，**不必重打 so**，但必须先证明 native 面没动，再外科置换唯一 `classesN.dex`：
+1. 先证「只换 dex 安全」——`git diff <底包提交> HEAD -- app/src/main/java` 看改动文件，**且**新旧 dex 反编译后 `bridge/ModBridge`、`menu/NativeMenuController` 这类 native 面/登录体类必须逐指令相同（`baksmali` 两侧 `diff -rq`，只有业务 hook 类不同即可）。
+2. 脚本六段：底包校验（zip 结构 + `classes2.dex` 含 `StarryApp`）→ HEAD `gradlew assembleRelease --offline` 取 dex → `apktool d` + `StarryApp.smali` 宿主改写（四处：`.super`/`<init>`/`attachBaseContext`/`onCreate` → `Lcom/sgsdk/core/SGGlobalApplication;`）→ `smali assemble` 出新 dex + 断言 → zip 外科置换只换 `classes2.dex`（逐条目 sha256 审计 + so 与底包逐字节相同断言）→ `zipalign`/`apksigner` + 证书钉 + 门禁 + 可选装机。
+3. 两个必踩的坑：① **证书钉要归一化**——`apksigner` 输出小写无冒号，`keytool` 指纹大写带冒号，直接比会假失败（`tr -d ':' | tr 'A-Z' 'a-z'` 后再比）。② **判 dex 里的中文串一律用 `python3.11` 字节断言，不要 `grep -aq '中文'`**（本机 locale 下会假失败）；并且别把脚本接 `| tail`（pipeline 退出码取 tail，脚本 die 了也显示 0，会误判成功）。
+4. 反例记录：旧 dex 只有 v5 SSAID 单路径、SSAID 不可用即抛错 ⇒ 菜单整块不可用；换新后 `DeviceFingerprint.getOrCreateDeviceId()` 变 v5 优先 + v4 硬件指纹兜底。凡是「取号/授权类」单点路径，都要检查有没有兜底分支。
+
 **已注册管线的一律走 `04_scripts/pipeline.sh`**（status/next/reset/verify），2026-09-10 起自动防旧产物直装：上游产物变化 → 过期下游阶段自动回退 pending；过期链路上 `run` 下游会被陈旧度门禁拒绝。构建后端四件套（绝对路径/obj stamp/链接活动保险/菜单串字节校验）范本 = `04_scripts/魂坠深境/hzsj_build_so.sh`；install 阶段末尾接 `04_scripts/_common/verify_installed_apk.sh` 校验设备包 md5 == 本地 APK。
 
 ★ **外科组装 dex 落位铁律（2026-09-24 圣翼传说实测踩坑）**：新增 smali 编出的 dex 名必须是 base.apk 里**最小的空闲下标**（跑脚本求 `classesN.dex` 未被占用的最小 N，单 dex 官包 → `classes2.dex`）。写死 `classes8.dex` 时 ART 的 `BaseDexClassLoader` 从 `classes.dex` 顺序扫、遇到第一个缺口即停止 → 星光 dex 永不加载 → `StarryInitProvider` `ClassNotFoundException` **启动即崩**。SDK 侧另有两条：① 官包无 `libtprt.so`/ACE 时 `Android_<tag>.mk` 必须含 `Games/NoAceStubs.cpp`（否则 `ld.lld: undefined symbol: SignalQuarantine_Start`）；② hook 日志 tag 是 `Mod_Menu`（`Includes/Logger.h` 的 `TAG=OBFUSCATE("Mod_Menu")`），不是 `StarryMagic`。

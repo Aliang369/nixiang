@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/独奏骑士",
+  "keep": "独奏骑士_1.1.768_v7-releaseSigned.apk",
+  "keep_size": 580970776,
+  "keep_md5": "4fea23b0b518ca5449384bd634b89b3f",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "独奏骑士_1.1.768_v7-releaseSigned.apk.idsig",
+      "size": 4584987,
+      "md5": "85a861164a2ce91f1e0e8072849887e7"
+    }
+  ],
+  "removed_count": 1
+}
