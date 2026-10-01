@@ -177,7 +177,7 @@ git log --oneline -5
 
 | 项 | Mac 端实测值 | Win 端应为 |
 |---|---|---|
-| `git rev-parse --short HEAD` | `507183a1`（会随新提交变化，以实时为准） | **完全相同** |
+| `git rev-parse --short HEAD` | 不写死：两台机器**实时比对**（都指向同一个远端 main，必然相等） | **完全相同** |
 | 跟踪文件数 `git ls-files \| wc -l` | **2319** | **完全相同** |
 | `git ls-files --eol \| grep -cE 'i/(crlf\|mixed)'` | **15** | **完全相同**（且必须都是 `attr/-text`，即 dump 原始资产） |
 | `preflight.sh` | `PASS=1 FAIL=0 REMIND=0 SKIP=0`，退出码 0 | **相同** |
