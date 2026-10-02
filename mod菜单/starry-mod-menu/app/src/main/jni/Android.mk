@@ -248,8 +248,8 @@ LOCAL_ARM_MODE  := arm
 # LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
 # LOCAL_SRC_FILES := Main.cpp Games/ZxrMod.cpp
 # 消消英雄2 1.2.26 · xLua AN_1/2/3；Trace 用 STARRY_LUA_DUMP_TRACE=1 + APP_CFLAGS
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
-# LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
+LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
 # 我嘎嘎乱杀 1.3.6 · BattleUtility CalculateDamage/ApplyDamage + BattleTimeMgr
 # Trace：ndk-build 传 STARRY_TRACE=1
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WGGLS
@@ -267,8 +267,8 @@ LOCAL_ARM_MODE  := arm
 # TryResolve 已加 Il2CppReady 门控（init 期半初始化 image SIGSEGV 实锤）
 # 长生天机降世 1.0.2 — EnterFrameFromInterpreter file 0x2657350（VA 0x265b350）
 # 2026-09-29 从真机 1.0.2 官方包重定位；CstjjsMod 的 Il2CppReady gating 原样复用
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
-LOCAL_SRC_FILES := Main.cpp Games/CstjjsMod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
+# LOCAL_SRC_FILES := Main.cpp Games/CstjjsMod.cpp Unity/Il2CppApi.cpp
 # 偶像梦幻祭2 4.4.8684 — Es2Mod 探测 v1（dump-only：il2cpp 全量枚举→判定函数定位）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ES2
 # ifdef STARRY_TRACE

@@ -791,7 +791,7 @@ static const char* g_featureList[] = {
     "Category_战斗",                     // 0
     "Toggle_无敌",                       // 1  AN_2
     "Toggle_十倍伤害",                   // 2  AN_1 (*10)
-    "Toggle_瞬间结束战斗",               // 3  AN_3
+    "Toggle_解锁自动战斗",               // 3  AN_3
 #elif defined(STARRY_GAME_ZMXS)
     // 掌门下山（Games/ZmxsMod.h）
     "Category_战斗",                     // 0

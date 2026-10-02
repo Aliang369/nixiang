@@ -151,7 +151,14 @@ public final class TapLoginForceWeb {
                     // com.taptap.sdk.themis.lite.ThemisProvider，且无旧版
                     // com.taptap.sdk.ui.TapTapActivity；设备已装 TapTap 客户端（com.taptap），
                     // 改签后客户端 SSO 必以 signature not match 拒绝 ⇒ 固定 embedded_web。
-                    "com.x.yimoo.official"));
+                    "com.x.yimoo.official",
+                    // 消消英雄2（com.blina.match2.tt）TapTap 渠道原版 1.2.27/vc188：
+                    // 包内实证 TapSDK 新版路径 —— TapTapLoginActivity + LoginTypes$WEB +
+                    // WebLoginFragment + fallbackToWeb / embedded_web + TapSignKit 均存在
+                    // （classes.dex），无旧版 com.taptap.sdk.ui.TapTapActivity；设备已装
+                    // TapTap 客户端（com.taptap），改签后客户端 SSO 必被 signature not match
+                    // 拒绝 ⇒ 固定 embedded_web 网页登录。
+                    "com.blina.match2.tt"));
 
     private TapLoginForceWeb() {}
 

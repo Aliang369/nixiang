@@ -11,7 +11,7 @@
 enum Match2Feat : int {
     MATCH2_FEAT_INVINCIBLE = 1,  // Toggle_无敌  → AN_2
     MATCH2_FEAT_ONESHOT    = 2,  // Toggle_十倍伤害 → AN_1 (*10)
-    MATCH2_FEAT_FASTEND    = 3,  // Toggle_瞬间结束战斗 → AN_3
+    MATCH2_FEAT_AUTOUNLOCK = 3,  // Toggle_解锁自动战斗 → AN_3（自动战斗 + 3 倍速门控）
 };
 
 bool Match2_TryInit();

@@ -3,7 +3,7 @@
  *  不用 il2cpp DoString（会 SIGSEGV），改走 libxlua C API
  *
  *  功能（改包 AN_* 同款）：
- *    AN_1 十倍伤害 · AN_2 无敌 · AN_3 瞬间结束战斗
+ *    AN_1 十倍伤害 · AN_2 无敌 · AN_3 解锁自动战斗（游戏内自动战斗 + 3 倍速）
  *  过检测 / ReplayInput / AntiCheat 补丁：本版不写（有问题，暂关）
  * ================================================================ */
 
@@ -41,7 +41,7 @@ static Update_t g_origUpdate = nullptr;
 
 static bool g_match2_inv = false;
 static bool g_match2_one = false;
-static bool g_match2_fast = false;
+static bool g_match2_unlock = false;
 static bool g_patched = false;
 
 // ---- libxlua ----
@@ -64,7 +64,7 @@ static lua_type_t p_lua_type = nullptr;
 static lua_settop_t p_lua_settop = nullptr;
 static lua_tolstring_t p_lua_tolstring = nullptr;
 
-enum { LUA_TNIL = 0, LUA_TTABLE = 5 };
+enum { LUA_TNIL = 0, LUA_TSTRING = 4, LUA_TTABLE = 5 };
 
 #ifndef MATCH2_LUA_DUMP_TRACE
 #define MATCH2_LUA_DUMP_TRACE 0
@@ -118,7 +118,15 @@ static bool ReadByteArray(void* arr, const uint8_t** data, size_t* len) {
     });
 }
 
+// 诊断期开关：把**所有**已解密 Lua 模块落盘（只影响 -DMATCH2_LUA_DUMP_TRACE=1 的诊断包），
+// 用于定位菜单功能对应的 Lua 门控（例如「通关主线 4-10 后解锁自动战斗」）。
+#define MATCH2_DUMP_ALL 1
+
 static bool ShouldDumpModule(const char* path) {
+#if MATCH2_DUMP_ALL
+    (void)path;
+    return true;
+#endif
     if (!path || !path[0]) return false;
     if (path[0] == 'r' && strncmp(path, "return", 6) == 0) return false;
     if (strncmp(path, "@Modules.", 9) == 0) {
@@ -200,7 +208,7 @@ static luaL_loadbufferx_t g_origLoadBufferX = nullptr;
 static void TraceLuaLoad(const char* tag, const char* name, size_t sz) {
     static std::atomic<uint32_t> s_log{0};
     uint32_t n = ++s_log;
-    if (n <= 40 || (name && ShouldDumpModule(name))) {
+    if (n <= 400 || (name && ShouldDumpModule(name))) {   // MATCH2_DUMP_ALL 下 cap 住日志量
         MATCH2_TRACE("%s #%u name=%s sz=%zu", tag, n, name ? name : "?", sz);
     }
 }
@@ -269,7 +277,7 @@ static void* Hooked_LoadAndVerify(void* thiz, void** filepathRef, void* method) 
         });
     }
 
-    if (n <= 30 || (n % 100) == 1 || (path[0] && ShouldDumpModule(path))) {
+    if (n <= 400 || (n % 500) == 1) {
         MATCH2_TRACE("load_and_verify #%u ret=%p path=%s", n, ret, path[0] ? path : "?");
     }
     if (!ret || !thiz || !filepathRef || !path[0]) return ret;
@@ -337,13 +345,37 @@ __attribute__((constructor)) static void Match2_XluaHookCtor() {
 }
 #endif // MATCH2_LUA_DUMP_TRACE
 
-// 幂等：CFightSystem 重载后 __starry_patched 丢失时再挂一次；已挂则 rawget 直接 return
+// 幂等：CFightSystem / UserInfoManager 重载后标记丢失时再挂一次；已挂则 rawget 直接 return
+// 完成标记由 Lua 写回 __starry_fight / __starry_unlock（字符串 "1"），C++ 侧据此判定是否装齐
 static const char* kInstallScript = R"LUA(
 AN_1 = AN_1 or false
 AN_2 = AN_2 or false
 AN_3 = AN_3 or false
+
+-- [[1]] AN_3 解锁自动战斗 + 3 倍速（唯一门控 UserInfoManager.HasUnlockSpeed3）
+--   GameViewUpperUI:OnAutoPlayButtonClicked 未解锁时弹 auto_play_open_tip
+--   （"通关主线4-10后解锁自动战斗功能和3倍速功能"）并 return；
+--   GameViewUpperUI:OnSpeedUpButtonClicked 首句同样查它 → 自动战斗与 3 倍速同一门控。
+--   原实现：MainLevel.Create(GameConfig.GetAutoPlayOpenChapter(), GetAutoPlayOpenSection())
+--           <= UserInfoManager._accountMaxMainLevel
+--   覆盖成每次调用读 AN_3 的包装：关开关即回退原判定，不用重载模块。
+if type(UserInfoManager) == "table" then
+	if not rawget(UserInfoManager, "__starry_unlock") then
+		local _HasUnlockSpeed3 = UserInfoManager.HasUnlockSpeed3
+		if type(_HasUnlockSpeed3) == "function" then
+			UserInfoManager.HasUnlockSpeed3 = function(...)
+				if AN_3 then return true end
+				return _HasUnlockSpeed3(...)
+			end
+			UserInfoManager.__starry_unlock = true
+		end
+	end
+	if rawget(UserInfoManager, "__starry_unlock") then __starry_unlock = "1" end
+end
+
+-- [[2]] 战斗数值补丁（AN_1 十倍伤害 / AN_2 无敌）
 if type(CFightSystem) ~= "table" then return end
-if rawget(CFightSystem, "__starry_patched") then return end
+if rawget(CFightSystem, "__starry_patched") then __starry_fight = "1" return end
 
 local _DoAfterTaxDamage = CFightSystem.DoAfterTaxDamage
 if type(_DoAfterTaxDamage) ~= "function" then return end
@@ -361,26 +393,8 @@ function CFightSystem:DoAfterTaxDamage(args)
 	return _DoAfterTaxDamage(self, args)
 end
 
-local _DispatchGemMessage = CFightSystem.DispatchGemMessage
-if type(_DispatchGemMessage) == "function" then
-	function CFightSystem:DispatchGemMessage(type, ...)
-		if type == CGemMessageType.FightBegan and AN_3 then
-			if TimeScaleManager ~= nil and InputManager ~= nil
-				and InputManager.GetPlayerMode() == PlayerMode.SinglePlayer
-				and (TutorialManager == nil or TutorialManager.GetExecuter() == nil) then
-				TimeScaleManager.SetTimeScale(TimeScaleType.TestFastPlay, 5)
-				if GameConfig ~= nil then GameConfig.SetFastPlayMode(true) end
-				if InputManager.GetCurrentMode() == InputMode.Human then
-					InputManager.SetCurrentMode(InputMode.Autoplay)
-					InputManager.SetAutoCastSkill(true)
-				end
-			end
-		end
-		return _DispatchGemMessage(self, type, ...)
-	end
-end
-
 CFightSystem.__starry_patched = true
+__starry_fight = "1"
 )LUA";
 
 static bool LoadXLuaApi() {
@@ -437,11 +451,24 @@ static void SetGlobalBool(lua_State* L, const char* name, bool v) {
     p_lua_setglobal(L, name);
 }
 
-static bool IsFightSystemTable(lua_State* L) {
-    p_lua_getglobal(L, "CFightSystem");
+static bool GlobalIsTable(lua_State* L, const char* name) {
+    p_lua_getglobal(L, name);
     int t = p_lua_type(L, -1);
     p_lua_settop(L, -2);
     return t == LUA_TTABLE;
+}
+
+// Lua 写回的字符串完成标记（"1"）；nil / 非串（表未就绪）均视为未完成
+static bool GlobalStrFlag(lua_State* L, const char* name) {
+    if (!p_lua_tolstring) return false;
+    p_lua_getglobal(L, name);
+    bool ok = false;
+    if (p_lua_type(L, -1) == LUA_TSTRING) {
+        const char* v = p_lua_tolstring(L, -1, nullptr);
+        ok = (v != nullptr && v[0] == '1');
+    }
+    p_lua_settop(L, -2);
+    return ok;
 }
 
 static bool RunLua(lua_State* L, const char* chunk) {
@@ -469,7 +496,7 @@ static void SyncOnMain(void* luaManager) {
     if (!g_forceOff.load()) {
         inv = g_match2_inv;
         one = g_match2_one;
-        fast = g_match2_fast;
+        fast = g_match2_unlock;
     }
 
     // 仅在需要功能或已打补丁时写全局，避免启动期乱动 Lua
@@ -479,18 +506,24 @@ static void SyncOnMain(void* luaManager) {
         SetGlobalBool(L, "AN_3", fast);
     }
 
-    // 幂等 install：不依赖易丢的全局 flag；CFightSystem 重载后可再挂
+    // 幂等 install：不依赖易丢的全局 flag；表重载后可再挂
+    // 完成判定读 Lua 写回的 __starry_fight / __starry_unlock：
+    // 只有两项都装齐才清 wantInstall，避免 UserInfoManager 晚于 CFightSystem 就绪时提前放弃
     if (g_wantInstall.load() || inv || one || fast) {
-        if (IsFightSystemTable(L)) {
+        if (GlobalIsTable(L, "CFightSystem") || GlobalIsTable(L, "UserInfoManager")) {
             if (RunLua(L, kInstallScript)) {
-                if (!g_patched) {
-                    g_patched = true;
-                    LOGI("[Match2] fight patch installed");
+                bool fightDone = GlobalStrFlag(L, "__starry_fight");
+                bool unlockDone = GlobalStrFlag(L, "__starry_unlock");
+                if (fightDone && unlockDone) {
+                    g_wantInstall.store(false);
+                    if (!g_patched) {
+                        g_patched = true;
+                        LOGI("[Match2] patch installed (fight=1 unlock=1)");
+                    }
                 }
-                g_wantInstall.store(false);
             }
         }
-        // CFightSystem 未就绪：保留 wantInstall，下次 Update 再试
+        // 两张表都未就绪：保留 wantInstall，下次 Update 再试
     }
 
     g_forceOff.store(false);
@@ -590,7 +623,7 @@ void Match2_OnFeatureChanged(int featNum, bool enabled) {
 void Match2_ForceClear() {
     g_match2_inv = false;
     g_match2_one = false;
-    g_match2_fast = false;
+    g_match2_unlock = false;
     g_forceOff.store(true);
     g_wantSync.store(true);
 }
@@ -599,11 +632,11 @@ void Match2_Tick(const bool* features) {
     if (!features || !g_ready.load()) return;
     bool inv = features[MATCH2_FEAT_INVINCIBLE];
     bool one = features[MATCH2_FEAT_ONESHOT];
-    bool fast = features[MATCH2_FEAT_FASTEND];
-    if (inv != g_match2_inv || one != g_match2_one || fast != g_match2_fast || g_forceOff.load()) {
+    bool fast = features[MATCH2_FEAT_AUTOUNLOCK];
+    if (inv != g_match2_inv || one != g_match2_one || fast != g_match2_unlock || g_forceOff.load()) {
         g_match2_inv = inv;
         g_match2_one = one;
-        g_match2_fast = fast;
+        g_match2_unlock = fast;
         if (inv || one || fast) g_wantInstall.store(true);
         g_wantSync.store(true);
     }

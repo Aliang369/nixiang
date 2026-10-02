@@ -1,0 +1,11 @@
+{
+  "template_id": "xxh2",
+  "name": "消消英雄2",
+  "package": "com.blina.match2.tt",
+  "source": "Games/Match2Mod.h MATCH2_FEAT_* + jni/Main.cpp:790 特性表",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "十倍伤害"},
+    {"feat_num": 3, "name": "解锁自动战斗"}
+  ]
+}
