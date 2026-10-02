@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# ============================================================
+#  lua53_dis.py — 运行时解密 Lua 5.3 chunk 反汇编器（通用）
+#  来源：2026-10-02《消消英雄2》1.2.27 会话（原 04_scripts/消消英雄2/xxh2_luadis.py 提升为通用工具）
+#  用法：python3 04_scripts/_common/lua/lua53_dis.py <m_xxx.lua.bin> > dis.txt
+#        解析完打印 consumed/total —— 必须相等，否则说明头或结构判断错了。
+#  配套：04_scripts/_common/lua/lua53_fn.py（按函数名从 dis.txt 提块）、
+#        04_scripts/_common/lua_struct_check.py --disasm（同一解析器入口）
+#  易错点见 skill/re-extract/xlua-from-scratch.md §十二（头 format=0x01、4 个 size 字节、
+#        sBx 偏移 131071、class 方法 CLOSURE 在 SETTABLE 名字行 k-1、opcode 序须自证未混淆）。
+# ============================================================
+# -*- coding: utf-8 -*-
 """消消英雄2 定制 Lua 5.3 字节码 反汇编器（诊断用）
 
 格式（实测）:

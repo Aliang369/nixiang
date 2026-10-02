@@ -115,3 +115,65 @@ size_t isUnlock_offset = il2cpp_field_get_offset(isUnlock_field);
 - 「同一轮候选内去重」和「跳过已拥有 id」是两件事：前者要做，后者会把升级场景整条挡掉。
 - 打点日志直接把 `requested -> granted` 打出来，这是唯一能区分「没被调用」与「被原函数跳过」的证据。
 - 本模式靠运行时按名解析 `MethodInfo`（`AddSkillToCharacter` / `GetSkill_Main` / `Game.get_Table`），只把 Hook 落点写死为 file offset；见 `hook-rules.md` §24。
+
+---
+
+## 模式三：门控判定函数「幂等覆盖」（Lua / 游戏内置功能的解锁）★2026-10-02 消消英雄2
+
+**适用**：游戏**本来就有**这个功能，只是被进度/等级/任务门控按下去了
+（消消英雄2 1.2.27：自动战斗 + 3 倍速，提示「通关主线4-10后解锁…」）。
+用户要的是「解锁」，**不是**替玩家操作（旧做法「开战强制 `InputMode.Autoplay` + 改
+`TimeScaleManager` 5 倍速」已被用户否掉并删除）。
+
+### 定位（门控只有一个函数，通常很好找）
+
+1. **从提示文案反查**：先拿到弹窗文案的 key（如 `auto_play_open_tip`）及其调用点
+   —— 静态面无 Lua 时先做运行时 dump（`re-extract/xlua-from-scratch.md` §十二），
+   dump 出来的字节码里源码路径串能直接认出模块（`.../Fight/View/GameViewUpperUI.lua.txt`）。
+2. **顺着调用点看判定分支**：`UserInfoManager.HasUnlockSpeed3()` → `TEST/JMP`
+   为假则弹提示 `return`，为真才执行真正的切换 ⇒ **这个函数就是唯一门控**。
+3. **反查它是「纯判定」**：`HasUnlockSpeed3` 体 =
+   `return MainLevel.Create(GetAutoPlayOpenChapter(), GetAutoPlayOpenSection()) <= _accountMaxMainLevel`
+   ⇒ 无副作用，可以安全覆盖。
+4. **确认共用**：`OnAutoPlayButtonClicked`（proto#14）与 `OnSpeedUpButtonClicked`（proto#12）
+   首句都调它 ⇒ 覆盖一处，两个功能同时解锁（3 倍速与自动战斗同一门控）。
+
+### 实现（Lua 侧，幂等 + 可回退）
+
+```lua
+if type(UserInfoManager) == "table" then
+  if not rawget(UserInfoManager, "__starry_unlock") then
+    local _orig = UserInfoManager.HasUnlockSpeed3
+    if type(_orig) == "function" then
+      UserInfoManager.HasUnlockSpeed3 = function(...)
+        if AN_3 then return true end      -- 开关为真：直接放行
+        return _orig(...)                 -- 关掉：逐帧回退原判定
+      end
+      UserInfoManager.__starry_unlock = true
+      __starry_unlock = "1"               -- C++ 侧据此判定「本段已生效」
+    end
+  end
+end
+```
+
+C++ 侧完成判定别只看「RunLua 成功」：**两个目标表可能先后就绪**
+（`CFightSystem` 先、`UserInfoManager` 后）⇒ 读 Lua 置下的
+`__starry_fight` / `__starry_unlock` 字符串标记，两者都到位才清 `g_wantInstall`，
+否则会在目标表没就绪时提前收工（消消英雄2 实际踩到，改成双标记后才稳）。
+
+### 判据与坑
+
+| 项 | 结论 |
+|---|---|
+| 边界 | **只解锁门控，不注入/不替换/不仿写游戏内置逻辑**（消消英雄2 用户明确要求）；dump 只为定位那个函数 |
+| 覆盖对象 | 必须确认原函数是纯判定；带副作用（建表/发消息/初始化）的函数覆盖会出连锁问题 |
+| 共用门控 | 先全库统计调用点（`grep` 反汇编文本），一个函数常被多个入口共用 ⇒ 只覆盖一处 |
+| 重入 | `rawget` 守卫 + 标志位；别用 `X = X or {}`（xLua 全局表白名单式 `__index`，见 xlua §七） |
+| 回退 | 开关关掉即回退原判定（原函数逐帧仍在），不要做「一次性改存档」 |
+| 验证 | 打开开关：不再弹提示、按钮直接可用；关掉开关：提示恢复 |
+
+### 与「数值/替玩家操作」的分界
+
+- 需求说「解锁/可以使用」→ 本模式；
+- 需求说「自动帮我打/加速战斗」→ 属于**替玩家操作**，先跟用户确认是否真的需要
+  （多数会被否掉：与游戏自身状态机打架，且属超出功能边界的扩张）。

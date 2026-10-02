@@ -124,7 +124,7 @@
 - [`damage-pattern.md`](damage-pattern.md) — 伤害修改模式
 - [`economy-pattern.md`](economy-pattern.md) — 经济修改模式（含消费路径全覆盖清单）
 - [`il2cpp-abi-pitfalls.md`](il2cpp-abi-pitfalls.md) — IL2CPP ABI 坑清单（delegate/Vector3Int/instance self/void 返回值；写 Dobby hook 前对照）
-- [`unlock-pattern.md`](unlock-pattern.md) — 解锁修改模式
+- [`unlock-pattern.md`](unlock-pattern.md) — 解锁修改模式（模式三＝**门控判定函数幂等覆盖**：游戏内置功能被进度门控时的「解锁」『消消英雄2 自动战斗/3倍速』）
 - [`utility-pattern.md`](utility-pattern.md) — 工具模式
 - [`hotfix-dll-replace-pattern.md`](hotfix-dll-replace-pattern.md) — 授权热更程序集变更的项目模式（合并 2026-09-05；适用范围、无限升级历史证据及事实/NOT PROVEN 边界见正文，非官方解法，非全命题已证明）
 - [`anti-cheat-pattern.md`](anti-cheat-pattern.md) — 反作弊应对

@@ -3,6 +3,8 @@
 #  lua_struct_check.py — xLua 内嵌 Lua chunk 结构体检（非完整语法检查）
 #
 #  来源：2026-09-30 伊莫 1.0.1 会话复盘（P0-1 附带工具）
+#        2026-10-02 新增 --disasm 分流（消消英雄2 1.2.27 会话：复用同一套 Lua 认知，
+#        运行时 dump 的字节码直接用 `04_scripts/_common/lua/lua53_dis.py` 反汇编）
 #  用途：游戏模块里以 R"LUA( ... )LUA" 内嵌的 Lua 补丁/chunk，编译期不受任何
 #        检查——写错一个 end，真机表现为「补丁静默不生效」，排查代价极高。
 #        本工具做**结构配平**体检，可在装机前抓到绝大多数低级错误。
@@ -11,6 +13,9 @@
 #    python3 04_scripts/_common/lua_struct_check.py <文件.cpp|.h> ...
 #    python3 04_scripts/_common/lua_struct_check.py            # 默认扫 jni/Games/*.{cpp,h}
 #    python3 04_scripts/_common/lua_struct_check.py --all      # 扫 jni 下全部 .cpp/.h
+#    python3 04_scripts/_common/lua_struct_check.py --disasm m_xxx.lua.bin
+#        # ↑ 反汇编运行时 dump 的 chunk（转调 04_scripts/_common/lua/lua53_dis.py；
+#        #   定制头/易错点见 skill/re-extract/xlua-from-scratch.md §十二）
 #
 #  检查项（计数法，见下）:
 #    · end 数量 == function + if + do（for/while 各带一个 do，其 end 已计入 do；
@@ -74,6 +79,16 @@ def check(name, chunk):
     return not errs
 
 if __name__ == '__main__':
+    if '--disasm' in sys.argv:
+        import subprocess
+        i = sys.argv.index('--disasm')
+        tgt = sys.argv[i + 1] if i + 1 < len(sys.argv) else ''
+        if not tgt:
+            sys.exit('用法: python3 04_scripts/_common/lua_struct_check.py --disasm <m_xxx.lua.bin>')
+        tool = Path(__file__).resolve().parent / 'lua' / 'lua53_dis.py'
+        if not Path(tool).exists():
+            sys.exit('找不到反汇编器: %s' % tool)
+        sys.exit(subprocess.call([sys.executable, str(tool), tgt]))
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if not args:
         jni = Path(__file__).resolve().parents[2] / 'mod菜单/starry-mod-menu/app/src/main/jni'

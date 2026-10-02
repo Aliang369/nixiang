@@ -215,7 +215,11 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 - icon 提取：交付副本放 `08_output/{游戏}/delivery_YYYYMMDD/icon_{游戏}_{512|144}.png`；`02_apks/` 只作为用户管理的不可再生输入，AI 不默认写入。
 - 菜单模板 JSON：`10_docs/{游戏}/{游戏拼音}_menu_template.json`（`template_id`=game_id）
 - 交付副本：`08_output/{游戏}/delivery_YYYYMMDD/menu_template.json`，字段严格按 `10_docs/_templates/菜单模板_规范与示例.md` 自检。
-- 交付目录生成：`bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --apply`。
+- 交付目录生成（**★收尾一律走这条，禁手工重造，2026-10-02 消消英雄2 定**）：先读 `04_scripts/_common/stages.md` 收尾节，再跑
+  `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --prune --sync-doc --apply`
+  —— 一次完成 delivery 目录（icon 512/144 + 模板副本 + 字段自检）、裁剪唯一正式包、**打印**文档同步片段（共享文件仍需手动粘，脚本不自动改）。
+  （历史浪费：2026-10-02 手工 PIL 放大 icon、手调 `prune_output_final.sh`、手写游戏摘要与 `current.md` 行 —— 三件都是它的本职。）
+- icon 无 512 源时：官方资源常只到 192×192，必须放大并在交付记录里注明「由官方最高密度 XX 放大」，不谎称原生 512。
 - 收尾清单：按 `10_docs/_templates/游戏收尾与最小复现清单.md` 填写，含生命周期场景矩阵已测/未测
 
 ---

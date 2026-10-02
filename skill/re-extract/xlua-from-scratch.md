@@ -155,6 +155,11 @@ Y.dmg = 100
 6. 正式包门禁：`bash 04_scripts/_common/check_release_clean.sh --tag <Tag> --so <so>`
    （源码块感知 + so 二进制双重检查），`surgical_*.sh` 已内置调用。
    内嵌 Lua chunk 的结构体检：`python3 04_scripts/_common/lua_struct_check.py`。
+7. **诊断脚手架一律复用现成机制，禁新造平行宏**（2026-10-02 消消英雄2 教训）：
+   统一走 `jni/ModDiag.h`（`DLOG/DLOGN/DWARN` + `-DSTARRY_DIAG=1` 编译期整体关掉）
+   与运行时 `/sdcard/.starry_magic/logcfg` 上限；运行时解密 dump 的开关（§十二）
+   也挂在同一宏体系下，不要再造 `XXX_DUMP_TRACE` / `XXX_DUMP_ALL` 这类平行宏
+   ——本次为此重造了一套日志封顶与开关，纯属重复劳动。
 
 ---
 
@@ -188,3 +193,76 @@ Y.dmg = 100
 | 注册表/对象接口返回**共享引用** | 传送后读位置得到的是落点 ⇒ 判据恒假、自适应逻辑永不触发 | 当值用之前先取标量快照（伊莫 `getPosition()` 返回共享 `posRef`，`ClientPosRotComponent.lua:112`） |
 | 重签名换 CN | `INSTALL_FAILED_UPDATE_INCOMPATIBLE`（原版 CN=FUNPLUS vs 改包 CN=StarryMagic），且 TapTap SSO 必然失败 | `-r` 装不上时只能卸载重装；**带 `-k` 可保住数据**（`pm uninstall -k --user 0 <pkg>` 实测保留 `/sdcard/Android/data/<pkg>`，伊莫第一轮没带 `-k` 丢掉 12.98 GB 热更数据重下）；登录路径强制网页登录 |
 | 官方包缺 `libc++_shared.so` | 注入的 so `dlopen` 失败 | 探测并在打包时注入（伊莫：官方无此库，stripped 1,292,896 B） |
+
+---
+
+## 十二、运行时解密 Lua dump + 定制头 Lua 5.3 字节码解析（2026-10-02 消消英雄2 1.2.27）
+
+> 适用：静态面**拿不到** Lua（`assets/*` 里没有 `.lua`、中文串零命中、打包产物是哈希名 bundle），
+> 或需要**读判定逻辑**（不只是写开关）时。伊莫走的是「写开关 + 重发」；这一节是「读懂」那条路。
+
+### 12.1 第一步永远是「先看头，再选工具」
+
+```bash
+xxd -l 32 m_xxx.lua.bin        # ← 先看这 32 字节，别急着找 luac / 反编译器
+```
+
+**定制头格式（消消英雄2 实测，与标准 5.3 的差异就是这些）**：
+
+| 字段 | 值 | 标准 5.3 |
+|---|---|---|
+| magic | `1b 4c 75 61`（`\x1bLua`） | 同 |
+| version | `0x53` | 同 |
+| **format** | **`0x01`** | `0x00`（⇒ `luac -l` 必报 `format mismatch in precompiled chunk`） |
+| 校验串 | `19 93 0d 0a 1a 0a` | 同 |
+| **size 字节** | **4 个 `04 04 08 08`** | 5 个 `04 08 04 08 08` |
+| `LUAC_INT` / `LUAC_NUM` | `0x5678`(8B) / `370.5`(8B) | 同 |
+| 头长 | **32 B**，body 从 `0x20` 起 | 33 B |
+
+- body 起始＝`sizeupvalues`(1B) + source 串（1B 短长度，`0xFF` 转 8B 长长度）。
+- code 段前是 **4 字节 `int32` 计数**（标准 5.3 是 size_t）；指令 4B。
+- 常量 tag：`0`nil `1`bool `3`float8 `19`int8 `4`短串 `20`长串。
+- `sBx` = `GETARG_Bx - 131071`（`MAXARG_sBx = MAXARG_Bx>>1`）。
+- class 方法表编译形态：`CLOSURE R -> proto#N` 紧邻 `SETTABLE R R "名字"`
+  ⇒ **名字行 k 对应 CLOSURE 行 k-1**（按 k+1..k+3 找会整体错位，本次踩过一轮）。
+
+### 12.2 opcode 序「未混淆」自证（别凭记忆抄 5.3 表）
+
+```bash
+nm -D -S lib/arm64-v8a/libxlua.so | grep -i opname    # 未 strip 时 .symtab 里就有
+```
+消消英雄2 实测：`luaP_opnames`@`0x666e8`（384 B = 48 指针）+ `luaP_opmodes`@`0x10888`（47 B），
+`.rela.dyn` 提供 addend ⇒ 读出的名字序 = 标准 5.3（`0 MOVE … 44 CLOSURE 45 VARARG 46 EXTRAARG`）。
+**5.3 第 25 位是 `UNM`，不是 BNOT**（漏掉会全表错位）。
+
+### 12.3 工具（已入仓，别再重写）
+
+```bash
+python3 04_scripts/_common/lua/lua53_dis.py m_xxx.lua.bin > dis.txt   # 整模块反汇编（解析完必须 consumed == total）
+python3 04_scripts/_common/lua/lua53_fn.py dis.txt <函数名>            # 从反汇编里提某个函数的块
+python3 04_scripts/_common/lua_struct_check.py --disasm m_xxx.lua.bin   # 同一解析器的体检入口
+```
+
+> 工具住 `04_scripts/_common/lua/`（**入库、两机可复用**）。**别放 `01_tools/`** —— `.gitignore:23` 忽略整个
+> `01_tools/`（本地重装麻烦的工具不进 git），2026-10-02 曾先落那里、提交前才发现不入库。
+> 选落点目录前先 `git check-ignore -v <路径>` 确认。
+
+### 12.4 dump 怎么来（静态面无 Lua 时）
+
+- 在 mod so 里挂**编译期可整体关掉**的 dump：`#if XX_LUA_DUMP_TRACE` + `XX_DUMP_ALL`，
+  目录 `/sdcard/Android/data/<pkg>/files/starry_lua_dump`，
+  文件名 `m_<fnv1a32(源路径)>_<len>.lua.bin`（同名 `.path` 仅
+  `SignatureLoader.load_and_verify` 路径才有）。
+- 模块内嵌**源路径串**（如 `Assets/Application/Scripts/Lua/Application/Fight/View/GameViewUpperUI.lua.txt`）
+  ⇒ 用它反查模块用途；中文 UI 文案**不在 Lua**（在 C#/文本表侧，别在 Lua 里死找）。
+- **dump 收窄纪律（2026-10-02 新增）**：先按模块路径白名单（如 `Fight|Input|UserData`）收窄
+  `ShouldDumpModule()`，再决定要不要全量；全量 1102 模块 ≈ 16 MB，只有 `grep` 价值。
+  大产物一律落 `/tmp`，只把「候选模块清单 + 命中函数名」写回上下文（别把 dump 内容贴进对话）。
+- 日志量必须封顶（`n <= 400 || ShouldDumpModule(name)`、`n <= 400 || (n % 500) == 1`），
+  否则刷屏丢事件；上限优先走运行时 `logcfg`（§九.4）。
+
+### 12.5 读出门控之后怎么落地
+
+判定类需求（「解锁某功能」）**不要改数值、不要替换逻辑**，见
+`re-implement/unlock-pattern.md` **模式三**：幂等覆盖判定函数（`rawget` 守卫 + `AN_x` 为真时恒真），
+开关关掉逐帧回退原判定。

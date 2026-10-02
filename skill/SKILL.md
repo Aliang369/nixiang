@@ -50,7 +50,8 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
    - `il2cpp-from-scratch.md` — Unity IL2CPP 从零抓点
    - `cocos-js-from-scratch.md` — Cocos JS 从零抓点 + jsc 解密
    - `hybridclr-runtime.md` — HybridCLR 热更抓点
-   - `xlua-from-scratch.md` — xLua 抓点（**§六–§十一 已补**：零 il2cpp 注入路线 / 全局表白名单式 `__index` / 符号偏移与 hook 尺寸实测表 / 诊断与日志 / RPC 重发式伤害放大 / 坑清单）
+   - `xlua-from-scratch.md` — xLua 抓点（**§六–§十一 已补**：零 il2cpp 注入路线 / 全局表白名单式 `__index` / 符号偏移与 hook 尺寸实测表 / 诊断与日志 / RPC 重发式伤害放大 / 坑清单；**§十二**＝运行时解密 dump + **定制头 Lua 5.3 字节码**解析，工具 `04_scripts/_common/lua/lua53_dis.py`）
+   - 静态面无 Lua、要「读懂判定逻辑」时：`xlua-from-scratch.md` §十二 → 门控型需求转 `re-implement/unlock-pattern.md` 模式三
 
 ### 第三步：把功能写出来
 1. `re-implement/SKILL.md` — 按 Hook 模式选择实现方式

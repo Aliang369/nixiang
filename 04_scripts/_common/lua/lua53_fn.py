@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# ============================================================
+#  lua53_fn.py — 从 lua53_dis.py 的反汇编输出里按函数名提块
+#  来源：2026-10-02《消消英雄2》1.2.27 会话（原 04_scripts/消消英雄2/xxh2_luafn.py 提升为通用工具）
+#  用法：python3 04_scripts/_common/lua/lua53_dis.py m_xxx.lua.bin > dis.txt
+#        python3 04_scripts/_common/lua/lua53_fn.py dis.txt HasUnlockSpeed3 OnAutoPlayButtonClicked
+#  依据：class 方法表 = CLOSURE R -> proto#N 紧邻 SETTABLE R R "名字"
+#        ⇒ 名字所在行 k 对应 CLOSURE 行 k-1（故这里查 CLOSURE 的下一行）。
+# ============================================================
 import re,sys
 dis=open(sys.argv[1]).read().split("\n")
 names=sys.argv[2:]

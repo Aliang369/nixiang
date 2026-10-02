@@ -54,6 +54,11 @@
 | `libcocos2djs.so` + `.jsc` | Cocos Creator JS | evalString hook | [cocos-js-from-scratch.md](./cocos-js-from-scratch.md) |
 | `libxlua.so` + `.bundle` | Unity + xLua | LuaEnv.DoString | [xlua-from-scratch.md](./xlua-from-scratch.md) |
 
+> xLua 且**静态面无 Lua**（打包产物是哈希名 bundle / 中文串零命中）或要「读懂判定逻辑」而不只是写开关时，
+> 直接看 [xlua-from-scratch.md](./xlua-from-scratch.md) **§十二 运行时解密 dump + 定制头 Lua 5.3 字节码**
+> （先 `xxd -l 32` 看头 → `04_scripts/_common/lua/lua53_dis.py` 反汇编 → 定位门控后走
+> [../re-implement/unlock-pattern.md](../re-implement/unlock-pattern.md) **模式三**）。
+
 ### HybridCLR 检测（重要！）
 
 **检测条件**：`libil2cpp.so` + `global-metadata.dat` 都在，但 Il2CppDumper dump 后找不到玩法相关方法（如 `ChangeHP`、`DeductHP`、`GenerateDamage` 等）。
@@ -89,4 +94,4 @@
 | `il2cpp-from-scratch.md` | Unity IL2CPP 从零抓点 |
 | `cocos-js-from-scratch.md` | Cocos JS 从零抓点 + jsc 解密 |
 | `hybridclr-runtime.md` | HybridCLR 热更抓点 |
-| `xlua-from-scratch.md` | xLua 抓点 |
+| `xlua-from-scratch.md` | xLua 抓点（§十二＝运行时解密 dump + 定制头 Lua 5.3 字节码 + 工具 `04_scripts/_common/lua/`） |

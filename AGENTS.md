@@ -21,6 +21,12 @@
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（扫描与插件按具体问题触发，不作无差别全扫）
    - 经验查阅 → `skill/re-lessons/SKILL.md`
    - 纯评估 / 文档维护 → 只读待评估文档及直接引用，不自动进入游戏执行流程。
+2.5 **动手前先查「现成能力」**（2026-10-02 消消英雄2 教训，最省 token 的一条）：
+   `ls 04_scripts/_common` + `grep -rn "<关键词>" skill/ 04_scripts/_common/`，
+   命中就直接用，**禁止重造**。已存在且被重复造过的例子：`bash32_check.sh`（bash 3.2 三坑机检）、
+   `lua_struct_check.py`（内嵌 Lua chunk 体检，`--disasm` 可反汇编运行时 dump）、
+   `finalize_game_delivery.sh`（收尾交付一键）、`prune_output_final.sh`、`stage_shared_file.py`、
+   `pre_install_gate.sh`、`check_release_clean.sh`；技能侧先读 `skill/SKILL.md` 索引再决定自研。
 3. 流程细节按需读 `PLAYBOOK.md`（接手）、`WORKFLOW.md`（日常）、`TOOLBOOK.md`（工具/目录），不是串行必读链。
 4. 多代理协作先划定文件归属和禁止修改项；不覆盖他人改动，跨归属改动先协调，最终汇总改动与证据。
 5. 外部方法论引用已收敛（2026-09-10）：原 `/Users/aliang/Documents/reverse-skill` 外部库经评估整体与本工作区低相关，唯一有价值的 ida-pro-mcp 工具速查已择录进 `skill/ida-plugin-flow/references/ida-mcp-cheatsheet.md`，外部库本体已删除（可从 github.com/zhaoxuya520/reverse-skill 重新克隆）。不再引用外部路由，一切以本入口与 `skill/` 为准。
@@ -81,7 +87,9 @@ git log --oneline -5               # 确认拿到了什么
   再同步索引的一行，不把详细内容堆回索引。
 - **索引行硬上限**：`current.md` 每个游戏行 ≤ 400 字符（最近更新 + 一句状态 + 链接），超出部分必须写进 `games/{游戏}.md`；该文件整体目标 < 15 KB。单游戏摘要文件 > 约 12 KB 时，把旧轮次下沉到 `10_docs/_state/history/`，当前摘要只留最近 1–2 轮。
 - 单一功能反复反馈、跨会话续查或证据日志较多时，使用
-  `10_docs/_templates/功能验收卡.md`。`evidence_日期/` 目录优先放
+  `10_docs/_templates/功能验收卡.md`。会话收尾的复盘与规范优化提案使用
+  `10_docs/_templates/会话复盘模板.md`（五节：实际动作表 / token·时间黑洞 top-N / 已验证可复用事实 /
+  P0～P2 提案（每项必带 `[落点]`）/ 落地状态回填表）。`evidence_日期/` 目录优先放
   `README.md`，只列决定性证据、最短复现命令和 NOT PROVEN 项；不要让后续会话
   默认通读完整日志。
 - 纯评估、规则/文档维护且未改变游戏执行状态时，不改游戏状态或索引；用户指定不碰的游戏、文件与产物保持不动。
@@ -101,6 +109,12 @@ git log --oneline -5               # 确认拿到了什么
   - 需要底包而用户未提供时，优先询问用户提供；若设备上还装着官方原版，可只读拉取 `base.apk` 当临时底包。**APK 一律不留本地（2026-09-30 定）**：官方包 / 渠道包 / 上一轮星光包都能重新下载或从设备只读拉取，属可再生输入；用完即删，只在 `10_docs/_state/底包再获取台账.md` 登记「包名 + 版本 + 体积 + md5/sha256 + 再获取路径」，不保留 `.apk` 文件。唯一例外：设备已被星光包覆盖、官方包再也拉不回时，可**当轮**申请保留一份并写明理由。
   - **热更样本不属不可再生**（2026-09-30 定）：官方 CDN/热更目录下发的 dll/js/差分清单可由游戏重新下发或 DIAG 重取，可删，只保留当前构建链直接引用的那一份。
 - `08_output/` 默认按用户管理，不自动整理；但当用户明确执行「收尾+正式包+清理+git」口令时，应将该次游戏的 `08_output/{游戏}` 裁剪为**唯一正式最终 APK**，使用 `04_scripts/_common/prune_output_final.sh` 保留指定包并记录被删清单，删除前校验签名与 hash。单独出包、普通清理或文档任务不得推定此项授权。
+  - **收尾一律走一键脚本，禁手工重造（2026-10-02 消消英雄2 定）**：动手前先读
+    `04_scripts/_common/stages.md` 的收尾节，然后跑
+    `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --prune --sync-doc --apply`
+    —— 它一次生成 `08_output/{游戏}/delivery_日期/`（icon 512/144 + 菜单模板副本 + 字段自检）、
+    `--prune` 裁剪为唯一正式包、`--sync-doc` 打印「粘到游戏摘要 + `current.md`」的同步片段。
+    （历史浪费：2026-10-02 手工 PIL 放大 icon、手调 `prune_output_final.sh`、手写文档行 —— 三件都是它的本职。）
   - 口令中的 **「git」= 白名单提交 + 推送 origin/main 连体**（`archive_scoped_git.sh` 默认已推送），不需要再问「要不要推」；仅当用户明确说不要推时才 `--no-push`，并在汇报里写明「已提交未推送 + 远端落后 N 个提交」。push 冲突/网络失败保留本地提交并报告，不自动强推。
   - 收官汇报必须显式写出 git 结果：提交号 + 是否已推送 + 远端是否同步（`git status -sb` 无 `ahead`）。
 - `10_docs/` 是复现入口，不是源码替代；保留小源码、自写脚本、配置规则、密钥与必要输入，按可再生性逐项判断，不按目录整删。本次规范修改授权不等于任何产物删除授权。

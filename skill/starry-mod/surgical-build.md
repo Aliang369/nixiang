@@ -59,6 +59,13 @@ Gradle **不**编 native。跑 `assemble*` / 抽小模板 so 之前必须：
    - **串要跟着功能一起增删**：功能整块被删掉（如某开关撤销）时门禁串必须同步删，否则门禁变成永久失败的死锁。
 4. 出包后闭环：包内 so md5 == 构建产物 md5（`unzip -p 成品.apk lib/arm64-v8a/libstarry_magic.so | md5 -q` 对比 `md5 -q libs_{tag}/arm64-v8a/libstarry_magic.so`），不一致=旧 so 混包，禁止交付
 
+5. **出包/外科脚本写完先跑 bash 3.2 机检（2026-10-02 消消英雄2 定）**：
+   `bash 04_scripts/_common/bash32_check.sh <脚本.sh> [...]`（退出码 0=通过，1=有 ✗ 硬错误）。
+   本仓所有 `04_scripts/**`、`mod菜单/**/scripts/**` 都在 macOS 自带 bash 3.2 下跑，
+   新语法不是"降级"而是整套脚本起不来；三类坑：`$VAR` 紧跟非 ASCII（中文被并进变量名 → unbound）、
+   bash 4+ 语法（`mapfile`/`declare -A`/`${v^^}`）、`set -u` 下裸空数组展开。
+   **不要靠首跑来发现**——2026-10-02 曾把这三条全部用首跑踩了一遍。
+
 否则成品菜单/鉴权会错成上一款游戏。**不影响** OTA 热更链路（OTA 另下 so）。
 
 > **沙箱/权限前置（2026-09-20 实测）**：第 4 步的 gradle 出包要写家目录缓存 `~/.gradle`；
