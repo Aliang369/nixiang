@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ================================================================
-#  光阴之外 1.0.3 (com.shbq.gyzw.ppyx) — 管线 install 后端
+#  光阴之外 1.0.5 (com.shbq.gyzw.ppyx) — 管线 install 后端
 #
 #  签名语义：本包用 01_tools/starry_release.jks 签名，与官方签名（CN=binqi）
 #  以及设备上现装的斌哥包（CN=binge2.keystore）都不同。
@@ -11,8 +11,7 @@
 #    默认      = 只做同签名覆盖安装（pm install -r -d）；失败即报告并 exit 1。
 #    GYZW_ALLOW_UNINSTALL=1
 #                = 用户已明确授权「卸载设备上现装的那一版（丢本地数据/存档）+ 全新安装」。
-#                  回退包：02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk（官方原版）
-#                          02_apks/光阴之外/光阴之外_1.0.3_binge2.apk（斌哥改包，对照物）
+#                  回退包：02_apks/光阴之外/光阴之外_1.0.5_taptap_original.apk（官方原版，需从设备重拉）
 #
 #  装机后闭环：verify_installed_apk.sh 比对设备 base.apk 与本地产物 md5。
 #
@@ -24,7 +23,7 @@ set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="光阴之外"
-VERSION="1.0.3"
+VERSION="1.0.5"
 PKG="com.shbq.gyzw.ppyx"
 SERIAL_FILE="$NIXIANG/04_scripts/$GAME/.device_serial"
 APK="$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_surgical-releaseSigned.apk"
@@ -58,6 +57,7 @@ fi
 case "$DEV_MD5" in
   ebab193edc592b94e5c1e109ca93e36d) echo "[install] 设备现存 = 斌哥改包 1.0.3" ;;
   363ac0e6926b3b7a1ea71f804500d1fd) echo "[install] 设备现存 = 官方 TapTap 原版 1.0.3" ;;
+  f9013af0ed1a51d624b30f94602968e4) echo "[install] 设备现存 = 官方 TapTap 原版 1.0.5" ;;
   "$APK_MD5")                        echo "[install] 设备现存 = 本星光包（同包重装，不会丢数据）" ;;
   "")                                echo "[install] 设备未安装 ${PKG}（将全新安装）" ;;
   *)                                 echo "[install] 设备现存 md5=${DEV_MD5}（未知版本）" ;;
@@ -79,15 +79,13 @@ ERROR: 覆盖安装失败（签名冲突）——设备上现装的包与本星�
 本脚本不会自动卸载：卸载会清掉游戏本地数据/存档，属破坏性操作，需要用户明确授权。
 
 设备上可能现装的是：
-  · 斌哥改包  com.shbq.gyzw.ppyx 1.0.3（签名 CN=binge2.keystore）← 本轮拉取时的状态
-  · 官方原版  com.shbq.gyzw.ppyx 1.0.3（签名 CN=binqi，TapTap 渠道）
+  · 官方原版  com.shbq.gyzw.ppyx 1.0.5（签名 CN=binqi，TapTap 渠道）← 本轮拉取时的状态
 
 用户确认「可以卸载设备上现装的那一版、接受本地数据/存档丢失」后重跑：
     GYZW_ALLOW_UNINSTALL=1 bash 04_scripts/光阴之外/gyzw_install.sh
 
-回退路径（不可再生输入，勿删）：
-  斌哥改包  02_apks/光阴之外/光阴之外_1.0.3_binge2.apk
-  官方原版  02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk
+回退路径（官方 1.0.5 底包，可从设备 /data/app 重拉）：
+  md5 f9013af0ed1a51d624b30f94602968e4（586,154,965 B）
 EOM
     exit 1
   fi

@@ -60,7 +60,8 @@ for s in "Category_战斗" "百倍伤害" "超级无敌" "战斗加速" "免广�
 done
 n="$(LC_ALL=C grep -ac -- "\[Gyzw\]" "$SO" || true)"
 [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含 [Gyzw] 日志标签" >&2; exit 1; }
-for s in "[Ysxz]" "[Dwct]" "[Tlgd]" "[Blfx]"; do
+# 注意：必须转义方括号，否则 "[Ysxz]" 被 grep 当正则字符类，匹配任意 Y/s/x/z 字节 → 恒真误报
+for s in "\[Ysxz\]" "\[Dwct\]" "\[Tlgd\]" "\[Blfx\]"; do
   if LC_ALL=C grep -aq -- "$s" "$SO"; then
     echo "ERROR: $SO 含别家标签 ${s}（libs_gyzw 被并行会话覆盖）" >&2
     exit 1

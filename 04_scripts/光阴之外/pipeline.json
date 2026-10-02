@@ -1,24 +1,35 @@
 {
   "game": "光阴之外",
-  "version": "1.0.3",
-  "notes": "2026-09-26 星空版移植管线。底包 = 官方 TapTap 原版 1.0.3（02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk，530,678,596 B md5 363ac0e6926b3b7a1ea71f804500d1fd）；斌哥改包（md5 ebab193edc592b94e5c1e109ca93e36d）仅作对照物，不得当底包。抓点来源：10_docs/光阴之外/斌哥hook锚点_20260926.json + 斌哥改包分析报告_20260926.md。★本作引擎 = Cocos Creator 3.x / libcocos2djs.so（非 IL2CPP），斌哥壳对磁盘资源零改动、三功能全由运行时 se::ScriptEngine::evalString 注入 boot JS 实现 ⇒ 星空侧同路线：hook evalString，splice 已解密脚本，锚点形态是 JS 源码串而非 so RVA/字段名。四功能：百倍伤害 / 超级无敌 / 战斗加速（滑块 1-10）/ ★免广告（斌哥包无此项，本次新增）。★dex 落位：底包 4 个 dex（classes/2/3/4），com.sp.mod.tapad.* 只在 classes3.dex ⇒ 免广告门控改写 classes3.dex，星光 dex 落 classes5.dex（最小空闲下标）。★Manifest 走分支 B（StarryInitProvider，不替换官方 Application com.sp.sdk.core.GameApplication）。★登录：本作 TapSDK 走新版路径（com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity + LoginRequest/LoginTypes$WEB + DefaultTapLoginFragmentProvider + WebLoginFragment + TapSignKit），无旧版 com.taptap.sdk.ui.TapTapActivity ⇒ 不注入 yntt_smali，登录修复载体 = 星光 dex 内 TapLoginForceWeb。★改签后必须让 TapLoginForceWeb 的 PKG_WHITELIST 与 SignSpoof 的证书表同时含 com.shbq.gyzw.ppyx（原厂证书 CN=binqi，SHA-1 F7:92:2D:79:DF:DB:13:9F:A7:59:6D:D9:80:D7:6B:65:3A:7B:BC:E3），否则 TapTap SSO 报 signature not match；surgical/sign 脚本对此有硬门禁。★install 阶段签名冲突（设备上斌哥版非本包签名）→ 默认停手报错，需用户明确授权后加 GYZW_ALLOW_UNINSTALL=1（会清本地存档）。★并发警示：jniLibs/arm64-v8a/libstarry_magic.so 被所有并行游戏会话共享，build_so 会同步三处并在 surgical 后按字节校验归属（[Gyzw] 必须在、[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在），禁止凭 mtime/大小判断。",
+  "version": "1.0.5",
+  "notes": "2026-10-02 第二轮：官方更新到 1.0.5（vc105）→ 星空版复刻并上机（真机实测通过）。底包 = 设备现装官方 1.0.5 只读拉取（586,154,965 B md5 f9013af0ed1a51d624b30f94602968e4，sha256 57cc3bcbc438ef97942a5b477f9ea64c12a3fdeb28b9c76dbee907d0381be547），02_apks 无本地件；classes3/classes4 md5 = 7f7064d4f798ad06a6872cda2e5a7193 / e444783f65074199411d8fac99716f47；免广告三处门控 .registers 仍 3/4/5，1.0.3 注入体原样复用；boot JS 11,799,732 B（1.0.3 为 11,769,666 B），四条锚点各命中 1 次；设备日志 `[Gyzw] splice #1 len=11799732->11801832`（+2100 B，与 1.0.3 完全一致）；装机需卸载重装（异签名，已获用户授权，清本地存档）。★修复 gyzw_build_so.sh:63 归属防呆 `[Ysxz]`/`[Dwct]`/`[Tlgd]`/`[Blfx]` 方括号未转义 → 被 grep 当正则字符类 → 恒真误报（commit 27d6308b 引入）。\n2026-09-26 星空版移植管线。底包 = 官方 TapTap 原版 1.0.3（02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk，530,678,596 B md5 363ac0e6926b3b7a1ea71f804500d1fd）；斌哥改包（md5 ebab193edc592b94e5c1e109ca93e36d）仅作对照物，不得当底包。抓点来源：10_docs/光阴之外/斌哥hook锚点_20260926.json + 斌哥改包分析报告_20260926.md。★本作引擎 = Cocos Creator 3.x / libcocos2djs.so（非 IL2CPP），斌哥壳对磁盘资源零改动、三功能全由运行时 se::ScriptEngine::evalString 注入 boot JS 实现 ⇒ 星空侧同路线：hook evalString，splice 已解密脚本，锚点形态是 JS 源码串而非 so RVA/字段名。四功能：百倍伤害 / 超级无敌 / 战斗加速（滑块 1-10）/ ★免广告（斌哥包无此项，本次新增）。★dex 落位：底包 4 个 dex（classes/2/3/4），com.sp.mod.tapad.* 只在 classes3.dex ⇒ 免广告门控改写 classes3.dex，星光 dex 落 classes5.dex（最小空闲下标）。★Manifest 走分支 B（StarryInitProvider，不替换官方 Application com.sp.sdk.core.GameApplication）。★登录：本作 TapSDK 走新版路径（com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity + LoginRequest/LoginTypes$WEB + DefaultTapLoginFragmentProvider + WebLoginFragment + TapSignKit），无旧版 com.taptap.sdk.ui.TapTapActivity ⇒ 不注入 yntt_smali，登录修复载体 = 星光 dex 内 TapLoginForceWeb。★改签后必须让 TapLoginForceWeb 的 PKG_WHITELIST 与 SignSpoof 的证书表同时含 com.shbq.gyzw.ppyx（原厂证书 CN=binqi，SHA-1 F7:92:2D:79:DF:DB:13:9F:A7:59:6D:D9:80:D7:6B:65:3A:7B:BC:E3），否则 TapTap SSO 报 signature not match；surgical/sign 脚本对此有硬门禁。★install 阶段签名冲突（设备上斌哥版非本包签名）→ 默认停手报错，需用户明确授权后加 GYZW_ALLOW_UNINSTALL=1（会清本地存档）。★并发警示：jniLibs/arm64-v8a/libstarry_magic.so 被所有并行游戏会话共享，build_so 会同步三处并在 surgical 后按字节校验归属（[Gyzw] 必须在、[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在），禁止凭 mtime/大小判断。",
   "params": {
     "game_id": "gyzw",
     "package": "com.shbq.gyzw.ppyx",
     "mk": "Android_gyzw.mk（modern 注册表管线，含 Games/NoAceStubs.cpp）",
     "tag": "Gyzw",
     "serial": "f9a116a2",
-    "version_code": 103,
+    "version_code": 105,
     "min_sdk": 23,
     "target_sdk": 30,
     "menu_game_id": 1191,
     "binge_apk_md5": "ebab193edc592b94e5c1e109ca93e36d",
     "binge_signature": "CN=binge2.keystore（libSDKloading.so + libtoolChecker.so/RootBeer）",
-    "libcocos2djs_md5": "f198a55491ce3ec553043910796c5d93",
-    "so_md5": "f651697c66ffd02362aadf37e7d6c3c3",
+    "libcocos2djs_md5": "e84d55c2b216d95161c15fe66e1117b2",
+    "so_md5": "5937f56b538f1c10f66f5ca71757c52f",
     "engine": "Cocos Creator 3.x (libcocos2djs.so)",
     "shell_variant": "全壳型：运行时 evalString 注入 boot JS，磁盘资源零改动",
-    "hook_mechanism": "DobbyHook se::ScriptEngine::evalString 后 splice 已解密脚本"
+    "hook_mechanism": "DobbyHook se::ScriptEngine::evalString 后 splice 已解密脚本",
+    "base_apk_1_0_5": {
+      "path": "/tmp/gyzw105/base_1.0.5.apk",
+      "size": 586154965,
+      "md5": "f9013af0ed1a51d624b30f94602968e4",
+      "sha256": "57cc3bcbc438ef97942a5b477f9ea64c12a3fdeb28b9c76dbee907d0381be547",
+      "source": "设备只读拉取 /data/app/~~D59Gj1wKAxxd2rn8VKi3sQ==/com.shbq.gyzw.ppyx-fjNJIB9gGCqobXKK8HaTgg==/base.apk"
+    },
+    "classes3_md5": "7f7064d4f798ad06a6872cda2e5a7193",
+    "classes4_md5": "e444783f65074199411d8fac99716f47",
+    "boot_js_size": 11799732,
+    "splice_delta_bytes": 2100
   },
   "env": {
     "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
@@ -29,30 +40,14 @@
   "stages": [
     {
       "id": "check_apk",
-      "name": "底包核对（官方 TapTap 原版 1.0.3，530,678,596 B / md5 363ac0e6…）",
+      "name": "底包核对（官方 TapTap 原版 1.0.5，586,154,965 B / md5 f9013af0…）",
       "requires": [],
-      "command": "ls -lh \"$NIXIANG/02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk\" && md5 -q \"$NIXIANG/02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk\"",
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk"
-        },
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/02_apks/光阴之外/光阴之外_1.0.3_binge2.apk"
-        }
-      ],
+      "command": "adb -s $SERIAL shell pm path com.shbq.gyzw.ppyx && adb -s $SERIAL shell \"su -c 'cat /data/app/~~D59Gj1wKAxxd2rn8VKi3sQ==/com.shbq.gyzw.ppyx-fjNJIB9gGCqobXKK8HaTgg==/base.apk'\" > /tmp/gyzw105/base_1.0.5.apk && md5 -q /tmp/gyzw105/base_1.0.5.apk   # 期望 f9013af0ed1a51d624b30f94602968e4",
+      "verify": [],
       "status": "done",
-      "done_at": "2026-09-26 15:00:00",
-      "note": "02_apks/ 由用户手动管理；官方原版（用户自行下载）与斌哥改包（真机拉取，设备 md5 ebab193edc592b94e5c1e109ca93e36d 一致）均已归档，均为不可再生输入，勿删。",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/02_apks/光阴之外/光阴之外_1.0.3_taptap_original.apk": {
-          "md5": "363ac0e6926b3b7a1ea71f804500d1fd"
-        },
-        "/Users/aliang/Documents/nixiang/02_apks/光阴之外/光阴之外_1.0.3_binge2.apk": {
-          "md5": "ebab193edc592b94e5c1e109ca93e36d"
-        }
-      }
+      "done_at": "2026-10-02 22:30:00",
+      "note": "1.0.5 轮底包**无 02_apks 本地件**，由设备只读拉取（当时设备仍为官方包；装机后此路已断，再获取须走 TapTap 重下）。已登记 10_docs/_state/底包再获取台账.md（md5 f9013af0… / sha256 57cc3bcb…）。1.0.3 历史：官方原版 530,678,596 B md5 363ac0e6926b3b7a1ea71f804500d1fd + 斌哥改包 ebab193edc592b94e5c1e109ca93e36d（仅对照物，不得当底包）。",
+      "artifacts": {}
     },
     {
       "id": "dump",
@@ -68,7 +63,7 @@
         }
       ],
       "status": "done",
-      "note": "shell BSS 集群（libSDKloading.so 之后）：r-xp anon .bss / rw-p bss / rwxp bss（Dobby 桩区）。2026-09-26 19:24 重跑（设备重启后地址段漂移，maps 段基址已变，内容结论不变）。",
+      "note": "1.0.3 轮专属：斌哥改包内存 dump（设备现装斌哥包时 KSU 直读 /proc/<pid>/mem 抓 exp 解码表）。★1.0.5 轮不需要（设备装的是官方包，无斌哥包；锚点沿用 1.0.3 结论）。",
       "done_at": "2026-09-26 19:24:28",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/06_dumped/光阴之外/binge_mem_20260926/maps.txt": {
@@ -98,7 +93,7 @@
       ],
       "status": "done",
       "done_at": "2026-09-26 16:30:00",
-      "note": "★抓点路径 = skill/re-extract/binge-memdiff.md 的路径 A（注入 JS）：进程 maps 内加载 libcocos2djs.so（Cocos 而非 IL2CPP）。三件事定案：①斌哥菜单 exp 解码成功 —— men 页面 https://menu-1255602259.file.myqcloud.com/game/1191.html，app1.js 的 strencode 用 key 原文 vjashjrbgouqhorqwe1235xac 但实际 XOR key = 其 base64 dmphc2hqcmJnb3VxaG9ycXdlMTIzNXhhYw==；解出 3 个可用功能（0 百倍伤害 / 1 超级无敌 / 2 战斗加速 1-100，第 4 项是注释掉的 input 占位）⇒ 斌哥菜单无免广告项。②remotePath = 官方热更新（CDN project.manifest 0.0.0.23 与设备 index.jsc md5 1515a4cf545fbfd74b7f5923efa8fb3a 逐位一致）⇒ 壳对磁盘资源零改动。③shell 全内存唯一 URL = https://menu-1255602259.file.cloud/game/1191.html；无免广告锚点。分析产物 md5：斌哥hook锚点_20260926.json = 806cd853401c13c50eac723b67d0bf92。",
+      "note": "1.0.3 轮专属：从斌哥壳菜单反推 exp 解码与 shell BSS 中文串，确定 4 条 JS 锚点与 BtConst 别名。★1.0.5 轮不需要：四条锚点在 1.0.5 boot JS 中各命中 1 次，直接复用（见 params.boot_js_size / splice_delta_bytes）。",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/10_docs/光阴之外/斌哥hook锚点_20260926.json": {
           "md5": "806cd853401c13c50eac723b67d0bf92"
@@ -158,28 +153,28 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 19:05:00",
-      "note": "产物 md5 f651697c66ffd02362aadf37e7d6c3c3（2,159,720 B）。归属防呆：[Gyzw]/Category_战斗/百倍伤害/超级无敌/战斗加速/免广告/starry_gyzw_v1/gyzw_boot.js/BtConst.EUnitType 必须在；[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。构建后同步到 app/src/main/jniLibs、app/src/main/libs、app/libs 三处并校验 md5（gradle 共享路径，2026-09-26 曾发生并行会话覆盖事故）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gyzw/arm64-v8a/libstarry_magic.so; 原 md5=f651697c66ffd02362aadf37e7d6c3c3"
+      "done_at": "2026-10-02 22:52:00",
+      "note": "产物 md5 5937f56b538f1c10f66f5ca71757c52f（2,159,720 B）。归属防呆：[Gyzw]/Category_战斗/百倍伤害/超级无敌/战斗加速/免广告/starry_gyzw_v1/gyzw_boot.js/BtConst.EUnitType 必须在；[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。★2026-10-02 修：负向检查方括号未转义 → grep 正则字符类恒真误报（`[Ysxz]` 匹配任意 Y/s/x/z 字节），已改为 `\\[Ysxz\\]` 等，见 04_scripts/光阴之外/gyzw_build_so.sh:63。构建后同步到 app/src/main/jniLibs、app/src/main/… 三处；`libs_gyzw/` 每轮清理后需重编。"
     },
     {
       "id": "surgical",
-      "name": "外科组装（classes5.dex + classes3.dex 免广告门控 + Manifest 分支 B + so）",
+      "name": "外科组装（classes5.dex + classes3/classes4 免广告门控 + Manifest 分支 B + so）",
       "requires": [
         "build_so"
       ],
-      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_gyzw_1.0.3.sh\"",
+      "command": "ORIG_APK=/tmp/gyzw105/base_1.0.5.apk bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_gyzw_1.0.5.sh\"",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.3_surgical-unsigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.5_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "note": "产物 584,930,333 B md5 0d8ae661b41f190b596749a162a1ad68，22968 条目。改动物 = classes3.dex（9,851,980 B，TapAdModImpl.getRewardVideo 前置 GyzwHooks.shouldSkipAd 门控，命中则发同形假回调 onResult(0,\"视频观看完成\")+onAdClose(\"广告页面已关闭\")后 return-void）/ classes5.dex（454,328 B）/ AndroidManifest.xml（分支 B：加 StarryInitProvider + MenuService + SYSTEM_ALERT_WINDOW/FOREGROUND_SERVICE/FOREGROUND_SERVICE_SPECIAL_USE；保留官方 com.sp.sdk.core.GameApplication 与 androidx.core.app.CoreComponentFactory）/ lib/arm64-v8a/{libstarry_magic.so,libc++_shared.so}/assets/certs/*。UNTOUCHED 白名单逐条 sha256 断言：classes.dex/classes2.dex/classes4.dex/resources.arsc/lib/arm64-v8a/libcocos2djs.so。classes3.dex 类集合 8080 类一致性断言通过；aapt2 xmltree 官方节点零丢失。Manifest 缓存 07_patched/光阴之外/surgical/AndroidManifest.xml md5 fe5045667393c4b7b0b0896bfeb42cf6。",
-      "done_at": "2026-09-26 20:37:46",
+      "note": "1.0.5 实测：classes3.patched.dex 9,854,156 B（类集合一致）/ classes4.patched.dex 7,415,128 B（6580 类，`SPBaseController.getRewardVideo registers 3 -> 5`）/ Manifest 分支 B mini apk 2,487,321 B（aapt2 校验通过，官方节点零丢失，缓存 07_patched/光阴之外/surgical/AndroidManifest.xml 46,876 B）/ merge `entries=22899; classes5.dex=463332; untouched 4 verified`。未触碰件 classes.dex/classes2.dex/resources.arsc/libcocos2djs.so 保持原字节。",
+      "done_at": "2026-10-02 23:21:00",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.3_surgical-unsigned.apk": {
-          "md5": "9ba42e6480baf0a0b60128dfdc26256a"
+        "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.5_surgical-unsigned.apk": {
+          "md5": "ed726778df412d7f0beacf930551b46d"
         }
       }
     },
@@ -193,15 +188,16 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.3_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.5_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "note": "产物 587,580,932 B md5 ffededbdbabf7b55b49e80593a8d6e8e，sha256 f9e25d3ec749ef9b8574877dcc0eaefaa5bfe8e0796ffd82166f0793d6f8bdac。签发证书实测 CN=StarryMagic / SHA-1 821c92e404ab5fdac8dbf157c2e467e71440917d。官包零改动硬校验：libcocos2djs.so md5 f198a55491ce3ec553043910796c5d93、classes.dex 7287635231a9e5e5dc45c6eb345be58e、classes2.dex 6ba8ba52e0430f8cfeebc9b3bbe446c4、classes4.dex 6c9ab10baa1e34a7930206813d17a4de、resources.arsc 70d00c2a720b10d23ce75cd6190e471c。dex 编号无缺口断言（classes5.dex 必须是最小空闲下标）。apksigner 会报 WARNING: META-INF/services/javax.ws.rs.ext.* not protected by signature（原包自带条目，无害）。 | ★产物对齐：磁盘正式包已替换为「设备实测通过的那份」(md5 305c00ae42a0979066f36f4177696bac)。smali 2.5.2 汇编非确定性（-j 默认 8 线程，无 --deterministic），重建版与验证版 classes3/4/5.dex 字节不同但反汇编文本 diff=0、类集合一致、功能等价；按「归档已验证产物」原则以设备回拉包为准。",
-      "done_at": "2026-09-26 20:39:26",
+      "note": "产物 587,318,509 B md5 dcdb3fd0df12a5c06e46779549aac35b，sha256 7ee84fb534bbd06231a992fcb76fb9d8c3148300aeda89c934f1d17fc3c7f821。v1+v2+v3 全 true，签发证书 CN=StarryMagic（MD5 161fca32a36d3df274458682a44cb774）。badging versionCode=105 versionName=1.0.5，pkg com.shbq.gyzw.ppyx，minSdk 23 / compileSdk 34。包内 libstarry_magic.so md5 == 5937f56b…；classes3.dex md5 04ce1be06a814736775b61785163e93b、classes4.dex md5 f6db59a047d014e0679f9d4d195c899f。",
+      "done_at": "2026-10-02 23:21:00",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.3_surgical-releaseSigned.apk": {
-          "md5": "305c00ae42a0979066f36f4177696bac"
+        "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.5_surgical-releaseSigned.apk": {
+          "md5": "dcdb3fd0df12a5c06e46779549aac35b",
+          "sha256": "7ee84fb534bbd06231a992fcb76fb9d8c3148300aeda89c934f1d17fc3c7f821"
         }
       }
     },
@@ -217,8 +213,8 @@
         }
       ],
       "status": "done",
-      "note": "设备 OPD2404 / serial f9a116a2 / KernelSU uid=0 context=u:r:ksu:s0。只读识别设备现装版本 md5：斌哥改包 ebab193edc592b94e5c1e109ca93e36d / 官方原版 363ac0e6926b3b7a1ea71f804500d1fd / 本星光包 ffededbdbabf7b55b49e80593a8d6e8e。",
-      "done_at": "2026-09-26 19:21:48",
+      "note": "设备 OPD2404 / serial f9a116a2 / KernelSU uid=0 context=u:r:ksu:s0。1.0.5 轮只读识别设备现装版本 md5：官方 1.0.5 f9013af0ed1a51d624b30f94602968e4（= 本底包）/ 星光包 dcdb3fd0df12a5c06e46779549aac35b。1.0.3 历史：斌哥改包 ebab193edc592b94e5c1e109ca93e36d / 官方原版 363ac0e6926b3b7a1ea71f804500d1fd / 星光包 ffededbdbabf7b55b49e80593a8d6e8e。",
+      "done_at": "2026-10-02 23:18:00",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/光阴之外/.device_serial": {
           "md5": "0bc47570b06495af1a544933783b7037"
@@ -240,15 +236,15 @@
         }
       ],
       "status": "done",
-      "note": "★未执行。设备上现装的是斌哥改包（签名 CN=binge2.keystore），与本星光包 CN=StarryMagic 不同 ⇒ 覆盖安装必然 INSTALL_FAILED_UPDATE_INCOMPATIBLE。按项目政策不默认卸载（卸载清本地存档），需用户明确授权后 GYZW_ALLOW_UNINSTALL=1 重跑。装机后闭环 = verify_installed_apk.sh 比对设备 base.apk md5。首启确认清单：悬浮球六项菜单可拉起 + logcat -s Gyzw StarryMagic MenuService + 三功能对齐斌哥基线 + 免广告为新项验证。",
-      "done_at": "2026-09-26 20:52:01",
+      "note": "★1.0.5 轮**已执行**（用户明确授权卸载重装）：GYZW_ALLOW_UNINSTALL=1 → 覆盖安装报 `INSTALL_FAILED_UPDATE_INCOMPATIBLE`（官方 CN=binqi vs 星空 CN=StarryMagic，预期）→ 卸载（**本地存档已清**）→ 全新安装 → `[install-verify] 设备 base.apk md5 == 本地产物 (dcdb3fd0df12a5c06e46779549aac35b) ✓`。新 codePath /data/app/~~X45q0l243JoapnVrnBIsfg==/com.shbq.gyzw.ppyx-KVw91Y-4Fb78EWi2xEyhzQ==/base.apk。权限：`appops set com.shbq.gyzw.ppyx SYSTEM_ALERT_WINDOW allow`（悬浮窗必需）。首启确认：`[Gyzw] hooked se::evalString` + `[Gyzw] splice #1 len=11799732->11801832`（+2100 B）+ 无 anchor missing；用户实机确认六项菜单与功能。",
+      "done_at": "2026-10-02 23:25:00",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/光阴之外/.install_ok": {
           "md5": "b5ecfc4276d15ca0b10087c383ed72ee"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.3_surgical-releaseSigned.apk": "305c00ae42a0979066f36f4177696bac",
+        "/Users/aliang/Documents/nixiang/08_output/光阴之外/光阴之外_1.0.5_surgical-releaseSigned.apk": "dcdb3fd0df12a5c06e46779549aac35b",
         "/Users/aliang/Documents/nixiang/04_scripts/光阴之外/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },
@@ -262,12 +258,12 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/10_docs/光阴之外/移植记录_星空版_1.0.3_20260926.md"
+          "path": "/Users/aliang/Documents/nixiang/10_docs/光阴之外/移植记录_星空版_1.0.5_20261002.md"
         }
       ],
       "status": "done",
-      "note": "待装机验证通过后写 10_docs/光阴之外/移植记录_星空版_1.0.3_20260926.md（格式对齐先例 10_docs/爆裂防线/移植记录_星空版_1.01.06_20260926.md，含「结论先行」到「遗留项」各节），并更新 10_docs/_state/current.md 与 10_docs/_state/games/光阴之外.md。",
-      "done_at": "2026-09-26 21:05:54"
+      "note": "写 10_docs/光阴之外/移植记录_星空版_1.0.5_20261002.md（格式对齐 1.0.3 版：结论先行 / 关键身份 / 为何走 evalString splice / 实现要点 / 反作弊审计 / 产物与构建 / 遗留项），并更新 10_docs/_state/current.md 与 10_docs/_state/games/光阴之外.md，登记 10_docs/_state/底包再获取台账.md。",
+      "done_at": "2026-10-02 23:40:00"
     },
     {
       "id": "archive_close",
@@ -279,7 +275,7 @@
       "verify": [],
       "status": "done",
       "note": "",
-      "done_at": "2026-09-26 21:05:54"
+      "done_at": "2026-10-02 23:45:00"
     }
   ]
 }
