@@ -33,6 +33,34 @@ bash 04_scripts/_common/decode_apk.sh <apk路径>
 | `Assembly-CSharp.dll` | Mono、热更或未使用资源 | Mono/其他运行时装载及程序集用途 |
 | 未见 `libil2cpp`/`libcocos` | split 缺失、改名、动态加载、自研/其他引擎，或壳/容器 | 包集合完整性、Manifest/DEX 加载引用、运行时模块/进程；不得直接定性为壳/双开 |
 
+### 玩法层定位决策树（引擎定完后立刻做，别先写补丁）
+
+> 要改的功能逻辑存在与否、在哪一层，决定后面所有工作量。**选错层的代价**：整套补丁写完才发现目标类型根本不在这个程序集里（2026-10-02 案例：先按 IL2CPP 静态 RVA 方向做了两轮探索，才发现玩法类全在 HybridCLR 热更 DLL 里）。
+> 大体积反编译产物（`dump.cs`、整包反编译 `.cs`）怎么读，见 [large-decompile-index.md](large-decompile-index.md)。
+
+按顺序问，问到「是」即停：
+
+1. **目标类型/字符串能在 AOT metadata 里查到吗？**（`global-metadata.dat` + Il2CppDumper 出的 `dump.cs`）
+   - 能 → 逻辑在 `libil2cpp.so`，走 **native RVA hook**；注意 AOT 优化/内联会让同一逻辑散落多处。
+   - 不能 → 往下。**判据不是「有没有 `libil2cpp.so`」**：实测某 HybridCLR 游戏 `dump.cs` 有 7,533 类 / 40 image，却**完全没有 `Assembly-CSharp.dll` 这个 image**，玩法类一个都不在里面。
+2. **有热更程序集吗？**（HybridCLR / `*.dll.bytes` / 运行时能 dump 出 `Assembly-CSharp.dll`）
+   - 有 → 逻辑在热更 DLL，走 [../re-implement/hotfix-dll-replace-pattern.md](../re-implement/hotfix-dll-replace-pattern.md)：先找**唯一加载边界**（`System.Reflection.Assembly.Load(byte[])` 命中几次？）→ hook 它 → 塞 Cecil 补丁过的 DLL。
+   - ⚠ HybridCLR 下的热更类**无法用静态 RVA**（见 [../re-extract/hybridclr-runtime.md](../re-extract/hybridclr-runtime.md)），别去 `libil2cpp.so` 里找它们的地址。
+3. **Lua 里有吗？**（`libxlua.so` / `*.luac` / `xLua` 资源包）
+   - 有 → Lua 层注入；只 hook `luaL_loadbufferx`（`libxlua.so` 的 Lua 5.3.5 **不导出** `luaL_loadbuffer`）。
+   - 没有 → 往下。**先查清再决定**：实测某游戏 106 个 Lua 模块里零伤害/技能/血量逻辑，在 Lua 方向耗的每一分钟都是净损失。
+4. **配置表 / 资源里有吗？**（Excel 导出的 `json`/`bytes`、AssetBundle 里的 `TextAsset`）
+   - 有 → 改资源，最省事；注意热更会覆盖本地资源，要同时看服务端是否下发。
+5. **都不是** → 逻辑可能在**服务端**（服务器权威模式）或自研 VM。此时先写明「客户端改动只影响表现」，再决定做不做。
+
+**定层证据必须含运行时观测，不能只有静态推断**：
+
+- 静态：`dump.cs`/反编译产物搜索、`strings`、程序集清单、Lua 模块列表。
+- 运行时（决定性）：hook 候选入口打印参数、加载边界命中次数、日志（探针写法与三条约定见 [native-probe-on-device.md](native-probe-on-device.md)）。
+- **一条铁律：hook 能拿到的明文，就不要去破壳。** 案例：热更包 `Assembly-CSharp.assetbundle` 带 8 字节头 + `0x6000` 加密前缀，AES-CBC / `abconfig` / YAES 三条破译路线全错；而**内存 dump 出来的 DLL 本来就是明文**，直接 hook 加载入口即可 —— 破壳的时间全是沉没成本。
+
+**退出条件**：能用一句话回答「这条逻辑在 ⟨层⟩，证据是 ⟨某条运行时观测⟩」。答不出就继续补证据，不要开写补丁。
+
 ## 3. 保护初判
 
 按“线索 → 候选 → 区分证据”记录。仅在候选需要时查阅对应案例；历史分类和死法表不是诊断结论，也不要求先扫描全部组件。

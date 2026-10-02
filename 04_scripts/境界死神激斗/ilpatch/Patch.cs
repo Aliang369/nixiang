@@ -26,14 +26,30 @@ internal static class Patcher
 
     public static void Run(string srcPath, string dstPath)
     {
-        var resolver = new DefaultAssemblyResolver();
+        // ★ 宽容解析链（TolerantRefs.cs）：缺引用程序集时不能整包写盘失败。
+        //   Cecil 建 Param/Field 表会对**每个**成员走 GetConstantType → 强制 Resolve 其类型，
+        //   任何一处解析不到就抛 AssemblyResolutionException 中止 Write（与本次补丁无关也会炸）。
+        var resolver = new TolerantAssemblyResolver();
         foreach (var d in RefDirs(srcPath))
-            if (Directory.Exists(d)) resolver.AddSearchDirectory(d);
+            if (Directory.Exists(d)) { resolver.AddSearchDirectory(d); Console.WriteLine($"[ref] {d}"); }
+        var metaResolver = new TolerantMetadataResolver(resolver);
         var asm = AssemblyDefinition.ReadAssembly(srcPath,
-            new ReaderParameters { AssemblyResolver = resolver, ReadSymbols = false });
+            new ReaderParameters {
+                AssemblyResolver = resolver,
+                MetadataResolver = metaResolver,
+                ReadSymbols = false,
+            });
         mod = asm.MainModule;
         Console.WriteLine($"[in ] {srcPath}  ({new FileInfo(srcPath).Length} B)");
         Console.WriteLine($"[in ] assembly={asm.Name.Name}  types={mod.Types.Count}");
+
+        // ★ 垫片：把「有真默认值、但类型解析不到」的枚举补成真 dll，保证常量不丢。
+        //   必须在任何解析发生之前做完（Discover 用独立的探测解析器，不受本 resolver 影响）。
+        var realDirs = RefDirs(srcPath).Where(Directory.Exists).ToList();
+        var needs = ShimFactory.Discover(mod, realDirs);
+        var shimDir = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(srcPath)), "refs_shim");
+        var nShim = ShimFactory.Materialize(shimDir, needs);
+        if (nShim > 0) { resolver.AddSearchDirectory(shimDir); Console.WriteLine($"[shim] {nShim} 个垫片程序集已就绪 → {shimDir}"); }
 
         BuildStarryConfig();
 
@@ -53,15 +69,142 @@ internal static class Patcher
         P(() => PatchSkillState(sk), "SkillInstance.get_iSkillState      [nocd]");
         P(() => PatchSkillCdLeft(sk), "SkillInstance.get_CDLeftTimeUs     [nocd]");
 
+        // 写盘前后复核「真实常量」没有被宽容解析吞掉
+        var constantsBefore = ConstantAudit.Snapshot(mod);
         var wp = new WriterParameters { WriteSymbols = false };
         asm.Write(dstPath, wp);
         asm.Dispose();
         Console.WriteLine($"[out] {dstPath}  ({new FileInfo(dstPath).Length} B)");
         Console.WriteLine($"[ok ] patches={nPatch}");
+
+        using (var back = AssemblyDefinition.ReadAssembly(dstPath,
+                   new ReaderParameters { AssemblyResolver = resolver, MetadataResolver = metaResolver, ReadSymbols = false }))
+        {
+            var lost = ConstantAudit.Diff(constantsBefore, back.MainModule);
+            Console.WriteLine(lost.Count == 0
+                ? $"[gate] 常量台账 PASS（{constantsBefore.Count} 条真实默认值全部保留）"
+                : $"[gate] 常量台账 FAIL（丢失 {lost.Count} 条）：\n  " + string.Join("\n  ", lost));
+            if (lost.Count != 0) Environment.Exit(1);
+        }
     }
 
-    // Cecil 写元数据时要解析参数常量类型 → 必须有被引用程序集的宿主 DLL。
-    // 这里按顺序搜：dump 同级 refs/、Il2CppDumper 的 DummyDll、/tmp/ssjd2/refs。
+    // ───────────────────────────────────────────────────────────────────────
+    // 出包门禁
+    // ───────────────────────────────────────────────────────────────────────
+    // 被补丁的方法清单（Program.cs 据此打印完整 IL）。
+    public static readonly (string Type, string Method)[] Targets =
+    {
+        ("BleachBattle.ActorDataControl", "get_IsInvincible"),
+        ("BleachBattle.ActorDataControl", "ModifyHealth"),
+        ("BleachBattle.ActorDataControl", "_finalAttrImpl"),
+        ("BleachBattle.SkillInstance",    "get_iSkillState"),
+        ("BleachBattle.SkillInstance",    "get_CDLeftTimeUs"),
+    };
+
+    // 逐补丁**意图断言**（不是「跑通没报错」的通过，而是「注入的语义对不对」的通过）。
+    // 任一 FAIL → 调用方 Environment.Exit(1) 阻断出包。
+    // 2026-10-02 事故（见 skill/re-implement/hotfix-dll-replace-pattern.md 第 5 项）的回归测试在这里。
+    public static void Gate(ModuleDefinition mm, List<string> fails)
+    {
+        void A(string name, bool ok, string detail)
+        {
+            Console.WriteLine($"[assert] {(ok ? "OK  " : "FAIL")} {name}: {detail}");
+            if (!ok) fails.Add($"{name}: {detail}");
+        }
+        MethodDefinition Need(string tn, string mn)
+        {
+            var t = mm.GetType(tn);
+            var m = t?.Methods.FirstOrDefault(x => x.Name == mn);
+            if (m == null) fails.Add($"{tn}::{mn} NOT FOUND（补丁未落到该方法）");
+            return m;
+        }
+        // Cecil 里 `ldarg.N` 的 N 是 arg slot（含 this），Parameters[i].Index **不含** this。
+        static int SlotToParamIndex(MethodDefinition x, int slot) => x.HasThis ? slot - 1 : slot;
+        static bool HeadIsLdstr(MethodDefinition m, string s) =>
+            m.Body.Instructions.Count > 0 && m.Body.Instructions[0].OpCode == OpCodes.Ldstr &&
+            (string?)m.Body.Instructions[0].Operand == s;
+        static bool Calls(MethodDefinition m, string owner, string name) =>
+            m.Body.Instructions.Any(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference r &&
+                                         r.Name == name && r.DeclaringType.FullName == owner);
+
+        const string tAdc = "BleachBattle.ActorDataControl";
+        const string tSk = "BleachBattle.SkillInstance";
+        const string tCfg = "Starry.StarryConfig";
+
+        // ── 1. get_IsInvincible [inv_full] ─────────────────────────────────────
+        var mInv = Need(tAdc, "get_IsInvincible");
+        if (mInv != null)
+            A("get_IsInvincible", HeadIsLdstr(mInv, "inv_full") && Calls(mInv, tCfg, "GetBool") &&
+                mInv.Body.Instructions.Any(i => i.OpCode == OpCodes.Ldc_I4_1 && i.Next?.OpCode == OpCodes.Ret),
+              "门控 ldstr \"inv_full\" + call GetBool + 命中即 `ldc.i4.1; ret`");
+
+        // ── 2. ModifyHealth [inv] ──────────────────────────────────────────────
+        var mHp = Need(tAdc, "ModifyHealth");
+        if (mHp != null)
+        {
+            // delta<0 才拦 ⇒ 注入块里必须出现 conv.i8 / bge（正 delta=治疗 走原版）
+            bool shape = mHp.Body.Instructions.Take(60).Any(i => i.OpCode == OpCodes.Conv_I8)
+                         && mHp.Body.Instructions.Take(60).Any(i => i.OpCode == OpCodes.Bge || i.OpCode == OpCodes.Bge_S)
+                         && mHp.Body.Instructions.Take(60).Any(i => i.OpCode == OpCodes.Ret);
+            A("ModifyHealth", HeadIsLdstr(mHp, "inv") && Calls(mHp, tCfg, "GetBool") && shape,
+              "门控 ldstr \"inv\" + call GetBool + delta<0 判定(conv.i8/bge) + 注入块内 ret（正 delta=治疗走原版）");
+        }
+
+        // ── 3. _finalAttrImpl [dmg_mul] —— 本断言即 2026-10-02 事故的回归测试 ──
+        var mFa = Need(tAdc, "_finalAttrImpl");
+        if (mFa != null)
+        {
+            A("_finalAttrImpl", Calls(mFa, tCfg, "GetInt"), "含 call StarryConfig.GetInt(\"dmg_mul\")");
+            // 读侧 slot 3（finalDamage），写侧必须落到**同一个** ParameterDefinition
+            var ld = mFa.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Ldarg_3);
+            var st = mFa.Body.Instructions.FirstOrDefault(i => i.OpCode == OpCodes.Starg || i.OpCode == OpCodes.Starg_S);
+            if (ld == null || st == null)
+                A("_finalAttrImpl.参数对齐", false, $"找不到注入块的 Ldarg_3(st={st != null})/Starg(ld={ld != null})");
+            else
+            {
+                const int readSlot = 3;
+                int expectIdx = SlotToParamIndex(mFa, readSlot);
+                var wp = st.Operand as ParameterDefinition;
+                var rp = mFa.Parameters[expectIdx];
+                A("_finalAttrImpl.参数对齐", wp != null && wp.Index == expectIdx && rp.ParameterType.FullName == "System.Int64",
+                  $"读 Ldarg_{readSlot} → Parameters[{expectIdx}]={rp.Name}({rp.ParameterType.Name})；" +
+                  $"注入 Starg 落点={(wp == null ? "非参数" : $"Parameters[{wp.Index}]={wp.Name}({wp.ParameterType.Name})")}" +
+                  (wp != null && wp.Index == expectIdx ? " ✅ 一致" : " ❌ 不一致（写错参数！）"));
+                A("_finalAttrImpl.参数名", rp.Name == "finalDamage", $"Parameters[{expectIdx}].Name = {rp.Name}（期望 finalDamage）");
+            }
+        }
+
+        // ── 4. get_iSkillState [nocd] ─────────────────────────────────────────
+        var mSs = Need(tSk, "get_iSkillState");
+        if (mSs != null)
+            A("get_iSkillState", HeadIsLdstr(mSs, "nocd") && Calls(mSs, tCfg, "GetBool") &&
+                mSs.Body.Instructions.Any(i => i.OpCode == OpCodes.Ldc_I4 && (int)i.Operand == -12) &&
+                mSs.Body.Instructions.Any(i => i.OpCode == OpCodes.And),
+              "门控 ldstr \"nocd\" + call GetBool + 掩码 ldc.i4 -12 + and（清 Cooling|NotEnoughMp|NotEnoughFury）");
+
+        // ── 5. get_CDLeftTimeUs [nocd] ────────────────────────────────────────
+        var mCd = Need(tSk, "get_CDLeftTimeUs");
+        if (mCd != null)
+            A("get_CDLeftTimeUs", HeadIsLdstr(mCd, "nocd") && Calls(mCd, tCfg, "GetBool") &&
+                mCd.Body.Instructions.Any(i => i.OpCode == OpCodes.Ldc_I4_0 && i.Next?.OpCode == OpCodes.Conv_I8),
+              "门控 ldstr \"nocd\" + call GetBool + ldc.i4.0; conv.i8（返回 0L）");
+
+        // ── 6. Starry.StarryConfig 本体 ────────────────────────────────────────
+        var cfg = mm.GetType(tCfg);
+        if (cfg == null) A("StarryConfig", false, "注入类型缺失");
+        else
+        {
+            var names = cfg.Methods.Select(x => x.Name).ToList();
+            bool ok = names.Contains("Get") && names.Contains("GetBool") && names.Contains("GetInt");
+            bool path = cfg.Methods.Where(x => x.HasBody)
+                            .SelectMany(x => x.Body.Instructions.AsEnumerable())
+                            .Any(i => i.OpCode == OpCodes.Ldstr && ((string?)i.Operand ?? "").Contains("/files/"));
+            A("StarryConfig", ok && path, $"方法={string.Join(",", names)}；硬编码配置路径已内联={path}");
+        }
+    }
+
+    // 引用程序集搜索目录。Cecil 写盘期需要解析成员类型（见 TolerantRefs.cs 的说明），
+    // 有真实 DummyDll 时保真度最高；没有则由 TolerantAssemblyResolver 合成空壳兜底。
     static IEnumerable<string> RefDirs(string srcPath)
     {
         var dir = Path.GetDirectoryName(Path.GetFullPath(srcPath));

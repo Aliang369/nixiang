@@ -40,6 +40,9 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
    （同一改包换机异常、隐藏 API 豁免失败、JNI 符号找不到、MIUI 不能注入点击等实证差异）
 6. `re-analyze/device-forensics-batch.md` — **真机批量取证**（一次一条命令拿一屏状态；
    `logcat -d | grep` 取代匹配不到 `[Tag]` 的 `logcat -s`；清理前分类→保护→删除；`pm uninstall -k` 数据保留实测）
+7. `re-analyze/large-decompile-index.md` — **大体积反编译产物（>10MB）索引化读法**
+   （先建类型索引 + 锚点表（带文件哈希）→ 之后 `sed -n` 切片读；有 DLL 时用 `ilspycmd -t` 按类型取；
+   大产物不入库、只登记再生成命令）。定位「功能逻辑在哪一层」见 `re-analyze/SKILL.md` §2 玩法层定位决策树
 
 ### 第二步：从斌哥包提取玩法（或从零抓点）
 1. `re-extract/SKILL.md` — 有没有斌哥包？→ 走对照还是从零

@@ -9,6 +9,7 @@ MESSAGE=""
 # 默认提交后推送（用户口令「git」= 提交 + 推送连体）；--no-push 才关。
 PUSH=1
 STAGED_ONLY=0
+DRY_RUN=0
 PATHS=()
 REQUIRE_CLEAN_PATHS=0
 
@@ -47,12 +48,17 @@ usage() {
     复原为删除；**不会**像旧版那样跳过整条路径（旧版会连带漏掉同目录的合法改动）。
   - 暂存区出现白名单外路径时拒绝提交。
   - --staged-only: 不执行 git add，只校验已有暂存区、提交并推送。
+  - --dry-run: 只校验**当前暂存区**的范围与内容并打印将提交的清单，不提交不推送（隐含 --staged-only）。
+               真提交前先跑一次，避免「提交完才发现范围不对」。
   - --require-clean-paths: 白名单路径仍有未暂存改动时直接停止；用于防止混有其它会话改动的共享文件被路径级 add 误带。
   - 共享文件硬门禁: 下列多会话共享文件永远不做路径级 git add（只能内容级暂存后 --staged-only）：
       mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java
       10_docs/_state/current.md
       10_docs/_state/底包再获取台账.md
+    这些文件出现在**暂存区**时自动放行，**不需要**额外传 --path；
+    它们也不参与 --require-clean-paths（别的写者留下的未暂存改动不算本任务的问题）。
     内容级暂存工具: python3 04_scripts/_common/stage_shared_file.py --path <file> --drop-pattern ...
+    被拒时报错会打印「本次 --path 清单 + 自动放行清单 + 两条处置命令」，照做即可。
   - 目录白名单顺带纳入的新增文件会逐条打印提醒（确认是否属于本任务，例如同目录下别的会话的新文件）。
   - 默认提交后推送 origin/main（用户口令「git」= 提交 + 推送连体）。
     只有明确不想推送时才加 --no-push，并在汇报里说明未推送。
@@ -81,6 +87,10 @@ while [[ $# -gt 0 ]]; do
       STAGED_ONLY=1
       shift
       ;;
+    --dry-run)
+      DRY_RUN=1
+      shift
+      ;;
     --require-clean-paths)
       REQUIRE_CLEAN_PATHS=1
       shift
@@ -106,10 +116,21 @@ done
 [[ -n "$MESSAGE" ]] || usage
 [[ ${#PATHS[@]} -gt 0 ]] || usage
 
+# --dry-run：只校验**当前暂存区**的范围与内容并打印将提交的清单；不改暂存区、不提交、不推送。
+# 用于「先确认范围对不对」再真提交（尤其是共享文件内容级暂存之后）。
+if [[ "$DRY_RUN" == "1" ]]; then
+  STAGED_ONLY=1
+fi
+
 git config core.quotepath false
 
 is_allowed() {
   local path="$1" allowed
+  # 共享文件自动放行（无需 --path）：它们只可能经 stage_shared_file.py 内容级暂存进来，
+  # 路径级 add 已被下方共享门禁拦住，故放行不会带入别会话内容。
+  # 2026-10-02 实际摩擦：调用方忘了额外传 --path 10_docs/_state/current.md，
+  # 内容级暂存明明成功，却在此处被拒，且报错没说清「它其实是允许的」。
+  is_shared_file "$path" && return 0
   for allowed in "${PATHS[@]}"; do
     case "$path" in
       "$allowed"|"$allowed"/*) return 0 ;;
@@ -123,7 +144,16 @@ check_staged_scope() {
   while IFS= read -r path; do
     [[ -n "$path" ]] || continue
     if ! is_allowed "$path"; then
-      echo "错误: 暂存区出现白名单外路径，拒绝提交: $path" >&2
+      {
+        echo "错误: 暂存区出现白名单外路径，拒绝提交: $path"
+        echo "       本次 --path 白名单只有:"
+        printf '         %s\n' "${PATHS[@]}"
+        echo "       自动放行的共享文件（不需要 --path）:"
+        printf '         %s\n' "${SHARED_FILES[@]}"
+        echo "       处置:"
+        echo "         · $path 确属本任务 → 追加 --path '$path' 重跑"
+        echo "         · $path 属于其它工作 → git restore --staged -- '$path' 后再提交"
+      } >&2
       exit 1
     fi
   done < <(git diff --cached --name-only)
@@ -133,6 +163,9 @@ check_clean_allowed_paths() {
   local path
   while IFS= read -r path; do
     [[ -n "$path" ]] || continue
+    # 共享文件不走路径级 add（见上方共享门禁），故不参与本检查；
+    # 否则会话期间别的写者留下的 current.md 未暂存改动会让本检查永远失败。
+    is_shared_file "$path" && continue
     if is_allowed "$path"; then
       echo "错误: 白名单路径仍有未暂存改动: $path" >&2
       echo "       该文件可能混有其它会话改动；请先做 hunk 级暂存，再改用 --staged-only" >&2
@@ -247,6 +280,12 @@ git diff --cached --check -- . \
 printf '%s\n' "$STAGED"
 echo "--- 即将提交的改动量（共享文件请逐行核对归属，禁止只用 grep 标记串核验）---"
 git diff --cached --stat
+
+if [[ "$DRY_RUN" == "1" ]]; then
+  echo "(dry-run: 未提交、未推送)"
+  exit 0
+fi
+
 git commit -m "$MESSAGE"
 
 if [[ "$PUSH" == "1" ]]; then

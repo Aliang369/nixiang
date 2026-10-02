@@ -142,8 +142,8 @@ mod菜单/**/libs_*/
 # ===== 例外：复现必要资产（构建直接引用，勿删勿忽略）=====
 !mod菜单/**/jni/Dobby/**/*.a
 !mod菜单/**/jni/KittyMemory/Deps/Keystone/**/*.a
-!mod菜单/**/Games/WxsjPatchedDll*.a
-!mod菜单/**/Games/WxsjVc1637PatchedDll.a
-!mod菜单/**/Games/JjssjdPatchedDll.a
+# 内嵌补丁 DLL 的静态库（llvm-objcopy -I binary 产物）。命名统一为 *PatchedDll*.a，
+# 新增游戏不必再改本文件。
+!mod菜单/**/Games/*PatchedDll*.a
 !mod菜单/**/targetfuntional_dll*.bin
 mod菜单/starry-mod-menu_111/
