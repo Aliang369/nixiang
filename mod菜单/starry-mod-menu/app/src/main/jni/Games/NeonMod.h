@@ -25,6 +25,9 @@ enum NeonFeat : int {
     NEON_FEAT_INF_COIN     = 6,  // Toggle_金币使用不减（NEONPlayerState.UseCoin/HasCoin）
     NEON_FEAT_INF_KEY      = 7,  // Toggle_钥匙使用不减（NEONPlayerState.UseKey/HasKey）
     NEON_FEAT_INF_GKEY     = 8,  // Toggle_彩色钥匙使用不减（NEONPlayerState.Use/HasGameplayKey）
+    NEON_FEAT_INF_JUMP     = 9,  // Toggle_无限跳跃（PlayerActor.get_multipleJumpCount 返回 -1000）
+    NEON_FEAT_DAMAGE_MUL   = 10, // Slider_伤害倍率:1:50（HitPoints.DeductHP 内缩放 DamageInfo+0x18）
+    NEON_FEAT_LAST_HEART   = 11, // Toggle_丝血无敌（Hearts.DeductHP 拦致命伤，锁血到 1）
 };
 
 bool Neon_TryInit(JavaVM* vm = nullptr);

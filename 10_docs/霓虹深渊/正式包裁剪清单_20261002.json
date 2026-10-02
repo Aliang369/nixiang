@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/霓虹深渊",
+  "keep": "霓虹深渊_3.2.860_surgical-releaseSigned.apk",
+  "keep_size": 1348768037,
+  "keep_md5": "3f0dcc93440442a628577ea8ab7d0970",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "霓虹深渊_3.2.860_starry-releaseSigned.apk",
+      "size": 1348768037,
+      "md5": "3f0dcc93440442a628577ea8ab7d0970"
+    },
+    {
+      "name": "霓虹深渊_3.2.860_surgical-releaseSigned.apk.idsig",
+      "size": 10630683,
+      "md5": "e607f61fdb7ce099be31a03278723846"
+    }
+  ],
+  "removed_count": 2
+}

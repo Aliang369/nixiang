@@ -2,7 +2,7 @@
   "template_id": "neon",
   "name": "霓虹深渊",
   "package": "com.shangyoo.neon",
-  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（2026-10-01 第四轮：近战/远程攻速合并为单一「攻速」）",
+  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（2026-10-01 第四轮：近战/远程攻速合并为单一「攻速」；2026-10-02 第六轮新增 ⑨无限跳跃 ⑩伤害倍率 ⑪丝血无敌）",
   "features": [
     {
       "feat_num": 1,
@@ -35,6 +35,18 @@
     {
       "feat_num": 8,
       "name": "彩色钥匙使用不减"
+    },
+    {
+      "feat_num": 9,
+      "name": "无限跳跃"
+    },
+    {
+      "feat_num": 10,
+      "name": "伤害倍率"
+    },
+    {
+      "feat_num": 11,
+      "name": "丝血无敌"
     }
   ]
 }

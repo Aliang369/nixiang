@@ -107,6 +107,27 @@ enum : uintptr_t {
     RVA_PS_HAS_KEY_N      = 0x2893FB0,  // bool HasKey(int needCount)
     RVA_PS_USE_GKEY       = 0x2894EC8,  // void UseGameplayKey()
     RVA_PS_HAS_GKEY       = 0x28951C4,  // bool HasGameplayKey()
+
+    // ＝＝ 2026-10-02 第六轮新增：⑨无限跳跃 / ⑩伤害倍率 / ⑪丝血无敌 ＝＝
+    // ⑨ 无限跳跃：MultipleJump 里的门槛是 `if (get_multipleJumpCount() >= multipleJumpCountLimit) return;`
+    //     （0x264FD84 bl getter → 0x264FDA4 cmp/b.ge），跳完再 `set_multipleJumpCount(count + 2)`。
+    //     把 getter 恒返回负数即恒过门槛，且 +2 后仍为负（另一读点在 PlayerActor::Jump 0x264F98C）。
+    RVA_MULTI_JUMP_COUNT  = 0x26472BC,  // PlayerActor::get_multipleJumpCount() -> int
+    // ⑪ 丝血无敌：Hearts 的心数是 int（set_currentHearts 走 w1），且 get_currentHearts 自身
+    //     不使用第 2 个参数（反汇编里 x1 未被读）⇒ 以 (thiz, nullptr) 调用安全。
+    RVA_HEARTS_GET_CURRENT = 0x3541E54, // Hearts::get_currentHearts() -> int
+    RVA_HEARTS_SET_CURRENT = 0x3542000, // Hearts::set_currentHearts(int)
+
+    // 第六轮实测补充（2026-10-02 晚）：⑨ 的三个附加闸门 + ⑪ 的四个扣血/死亡落点
+    RVA_OP_IMPLICIT      = 0x30DABD0, // PlayerStateInt::op_Implicit(PlayerStateInt) -> int（跳跃次数上限）
+    RVA_CAN_NOT_JUMP     = 0x3345630, // PlayerActorBase::get_canNotJump() -> bool
+    RVA_CAN_MULTI_JUMP   = 0x3CB2AA4, // BaseMechaControl::CanMultipleJump() -> bool
+    RVA_HEARTS_GET_ARMOR = 0x3545344, // Hearts::get_currentArmor() -> int
+    RVA_HEARTS_GET_SANE  = 0x35440C0, // Hearts::get_Sane() -> int
+    RVA_HEART_FIRST      = 0x3547218, // Hearts::DeductHeartFirst(DamageInfo*)（心数真正扣减点 set_currentHearts(cur-w22)）
+    RVA_ARMOR_FIRST      = 0x35475EC, // Hearts::DeductArmorFirst(DamageInfo*)
+    RVA_HEART_APPORTION  = 0x3547824, // Hearts::DeductHeart_ApplyApportion(DamageInfo*)
+    RVA_FORCE_DIE        = 0x3547AFC, // Hearts::ForceDie()（死亡入口，不死兜底）
 };
 
 // 技能可用性门：dump.cs 里 CanUseSkill 共 35 个实现，全部派生自 SecSkillPowerUp
@@ -207,6 +228,11 @@ static std::atomic<bool> g_infCoin{false};  // 金币使用不减
 static std::atomic<bool> g_infKey{false};   // 钥匙使用不减
 static std::atomic<bool> g_infGkey{false};  // 彩色钥匙使用不减（GameplayKey）
 
+// ＝＝ 2026-10-02 第六轮新增：⑨无限跳跃 / ⑩伤害倍率 / ⑪丝血无敌 ＝＝
+static std::atomic<bool> g_noJumpLimit{false};  // ⑨ 无限跳跃（get_multipleJumpCount 恒返回负数）
+static std::atomic<int>  g_dmgMul{1};           // ⑩ 伤害倍率 1..50（1 = 关）
+static std::atomic<bool> g_lastHeart{false};    // ⑪ 丝血无敌（致命一击不结算，锁血到 1）
+
 typedef bool (*DeductHP_t)(void* thiz, void* damage, int32_t count, void* method);
 typedef void (*DoDeduct_t)(void* thiz, void* damage, void* method);
 typedef void* (*BuildPass_t)(void* thiz, void* method);
@@ -220,6 +246,13 @@ typedef float (*CoolFn_t)(void* thiz, void* method);
 typedef double (*DictMove_t)(void* inst, void* method);
 typedef float (*SpeedFn_t)(void* thiz, void* method);
 typedef bool (*MoveNext_t)(void* self, void* method);  // IEnumerator.MoveNext
+typedef int  (*GetJumpCount_t)(void* thiz, void* method);             // PlayerActor::get_multipleJumpCount
+typedef int  (*GetCurHearts_t)(void* thiz, void* method);             // Hearts::get_currentHearts
+typedef void (*SetCurHearts_t)(void* thiz, int32_t v, void* method);  // Hearts::set_currentHearts
+// 第六轮补充：⑨ 门槛链 / ⑪ 扣血链（IL2CPP 实例方法：x0=this，尾参 = MethodInfo*）
+typedef int  (*IntFn_t)(void* thiz, void* method);                  // op_Implicit / get_*() -> int
+typedef bool (*BoolFn_t)(void* thiz, void* method);                 // get_canNotJump / CanMultipleJump
+typedef void (*HeartDmg_t)(void* thiz, void* damage, void* method); // DeductHeartFirst / ArmorFirst / ApplyApportion
 
 static DeductHP_t g_origHitDeduct = nullptr;
 static DeductHP_t g_origHitFix = nullptr;
@@ -262,6 +295,21 @@ static HasKey0_t   g_origHasKey0 = nullptr;
 static HasKeyN_t   g_origHasKeyN = nullptr;
 static UseGKey_t   g_origUseGKey = nullptr;
 static HasGKey_t   g_origHasGKey = nullptr;
+
+// 第六轮：⑨ 只替换 getter；⑪ 的血量读写只“直调”（不做 Dobby 替换，避免扰动正常扣血）
+static GetJumpCount_t g_origGetJumpCount = nullptr;
+static GetCurHearts_t g_fnGetCurHearts = nullptr;
+static SetCurHearts_t g_fnSetCurHearts = nullptr;
+// 第六轮补充：⑨ 门槛链 / ⑪ 扣血链
+static IntFn_t    g_origOpImplicit   = nullptr;
+static BoolFn_t   g_origCanNotJump   = nullptr;
+static BoolFn_t   g_origCanMultiJump = nullptr;
+static HeartDmg_t g_origHeartFirst   = nullptr;
+static HeartDmg_t g_origArmorFirst   = nullptr;
+static HeartDmg_t g_origApportion    = nullptr;
+static void     (*g_origForceDie)(void* thiz, void* method) = nullptr;
+static IntFn_t    g_fnGetArmor       = nullptr;
+static IntFn_t    g_fnGetSane        = nullptr;
 
 static void* Abs(uintptr_t rva) {
     char buf[32];
@@ -505,7 +553,55 @@ static void ForceKillHp(void* thiz) {
     *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(thiz) + OFF_HP_CUR) = 0.f;
 }
 
+// ⑨ 无限跳跃：MultipleJump 的门槛是 if (get_multipleJumpCount() >= multipleJumpCountLimit) return;
+//    返回负数即可永远通过；跳完 set_multipleJumpCount(count + 2) 依然为负，不会回正。
+static int Hooked_GetMultipleJumpCount(void* thiz, void* method) {
+    if (g_noJumpLimit.load()) return -1000;
+    return g_origGetJumpCount ? g_origGetJumpCount(thiz, method) : 0;
+}
+
+// ⑨ 无限跳跃（补）：UpdateJump / MultipleJump 都用 op_Implicit(multipleJumpCountLimit) 取上限，
+//    玩家没有二段跳道具时上限 = 0，`cmp w0,#1 / b.lt` 直接 return —— 这才是“只能跳一次”的真凶。
+//    栈窄带只在跳跃门槛那两条返回地址上生效，其它 PlayerStateInt 转换原样透传。
+static int Hooked_PlayerStateInt_OpImplicit(void* thiz, void* method) {
+    if (g_noJumpLimit.load()) {
+        NeonStack st; NeonCapture(&st);
+        if (NeonStackHit(&st, 0x2652F60UL, 0x2652F90UL) ||   // PlayerActor::UpdateJump 多跳分支
+            NeonStackHit(&st, 0x264FD90UL, 0x264FDACUL)) {   // PlayerActor::MultipleJump 次数闸
+            static unsigned jn = 0;
+            if ((jn++ % 20u) == 0u) LOGI("[Neon] 无限跳跃：次数上限 -> 999");
+            return 999;
+        }
+    }
+    return g_origOpImplicit ? g_origOpImplicit(thiz, method) : 0;
+}
+
+// ⑨ 无限跳跃（补）：输入层每帧写 [inputData+0x4C] = !get_canNotJump，MultipleJump 末尾也查它
+static bool Hooked_GetCanNotJump(void* thiz, void* method) {
+    if (g_noJumpLimit.load()) return false;
+    return g_origCanNotJump ? g_origCanNotJump(thiz, method) : false;
+}
+
+// ⑨ 无限跳跃（补）：MultipleJump 内唯一调用点（全游戏仅此一处）
+static bool Hooked_CanMultipleJump(void* thiz, void* method) {
+    if (g_noJumpLimit.load()) return true;
+    return g_origCanMultiJump ? g_origCanMultiJump(thiz, method) : false;
+}
+
 static bool Hooked_HitPoints_DeductHP(void* thiz, void* damage, int32_t count, void* method) {
+    // ⑩ 伤害倍率：DeductHP 会把 DamageInfo 复制 0xD0 字节后交给 DoDeductHP，
+    //    DoDeductHP 实际读取的伤害浮点是 DamageInfo+0x18（FINAL）。只在这一处缩放，
+    //    绝不在 DoDeduct 钩子里再缩放一次（否则倍率被平方）。
+    const int dmul = g_dmgMul.load();
+    if (dmul > 1 && !g_seckill.load() && damage) {
+        auto dp = reinterpret_cast<uintptr_t>(damage);
+        *reinterpret_cast<float*>(dp + OFF_DMG_BASE)   *= static_cast<float>(dmul);
+        *reinterpret_cast<float*>(dp + OFF_DMG_FINAL)  *= static_cast<float>(dmul);
+        *reinterpret_cast<float*>(dp + OFF_DMG_DAMAGE) *= static_cast<float>(dmul);
+        static unsigned dn = 0;
+        if ((dn++ % 20u) == 0u)
+            LOGI("[Neon] 伤害倍率 x%d（damage+0x18 已放大）", dmul);
+    }
     if (g_seckill.load()) {
         AmplifyDamage(damage);
         ForceKillHp(thiz);
@@ -527,6 +623,19 @@ static void Hooked_HitPoints_DoDeduct(void* thiz, void* damage, void* method) {
 }
 
 static bool Hooked_Hearts_DeductHP(void* thiz, void* damage, int32_t count, void* method) {
+    // ⑪ 丝血无敌：改写点在下面三处「扣血叶函数」（见 LastStandClamp）。
+    //    旧实现用第三参 count 当“要扣的心数”是错的——Hearts::DeductHP 里 w21 早被 hearts 覆盖，
+    //    条件是恒假的，所以真机一条日志都没出。这里只留诊断探针：心/甲/理智/本次伤害。
+    if (g_lastHeart.load() && thiz && damage) {
+        static unsigned sn = 0;
+        if ((sn++ % 20u) == 0u) {
+            const int cur   = g_fnGetCurHearts ? g_fnGetCurHearts(thiz, nullptr) : -1;
+            const int armor = g_fnGetArmor    ? g_fnGetArmor(thiz, nullptr)    : -1;
+            const int sane  = g_fnGetSane     ? g_fnGetSane(thiz, nullptr)     : -1;
+            const float f   = *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(damage) + 0x10);
+            LOGI("[Neon] 丝血无敌[入口] 心=%d 甲=%d 理智=%d 伤害=%.2f", cur, armor, sane, f);
+        }
+    }
     if (g_invincible.load()) {
         if (thiz) {
             *reinterpret_cast<uint8_t*>(reinterpret_cast<uintptr_t>(thiz) + OFF_HEARTS_INV) = 1;
@@ -535,6 +644,55 @@ static bool Hooked_Hearts_DeductHP(void* thiz, void* damage, int32_t count, void
         return false;
     }
     return g_origHeartDeduct ? g_origHeartDeduct(thiz, damage, count, method) : false;
+}
+
+// ⑪ 丝血无敌（补）：真正的心数扣减发生在 Hearts::DeductHeartFirst 的
+//    `set_currentHearts(get_currentHearts() - w22)`，而 w22 = (int)(DamageInfo+0x10)。
+//    所以直接截断 DamageInfo+0x10，让总血量（心+甲）最低只掉到 1：
+//      · 已经只剩 1 点 → 伤害写 0，完全免伤
+//      · 这一击本该打死 → 只允许扣到剩 1 点
+//    护甲分支 / 分摊分支同签名，一并处理。
+static void LastStandClamp(void* thiz, void* damage, const char* tag) {
+    if (!thiz || !damage) return;
+    float* pf = reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(damage) + 0x10);
+    const int dmg = static_cast<int>(*pf);
+    if (dmg <= 0) return;
+    const int hearts = g_fnGetCurHearts ? g_fnGetCurHearts(thiz, nullptr) : 1;
+    const int armor  = g_fnGetArmor    ? g_fnGetArmor(thiz, nullptr)    : 0;
+    const int tot = (hearts > 0 ? hearts : 0) + (armor > 0 ? armor : 0);
+    if (tot >= 1 && tot - dmg < 1) {
+        const int allowed = (tot > 1) ? (tot - 1) : 0;   // 最低保留 1 点
+        *pf = static_cast<float>(allowed);
+        static unsigned ln = 0;
+        if ((ln++ % 10u) == 0u)
+            LOGI("[Neon] 丝血无敌(%s)：心=%d 甲=%d 伤害 %d->%d", tag, hearts, armor, dmg, allowed);
+    }
+}
+
+static void Hooked_HeartFirst(void* thiz, void* damage, void* method) {
+    if (g_lastHeart.load()) LastStandClamp(thiz, damage, "心");
+    if (g_origHeartFirst) g_origHeartFirst(thiz, damage, method);
+}
+
+static void Hooked_ArmorFirst(void* thiz, void* damage, void* method) {
+    if (g_lastHeart.load()) LastStandClamp(thiz, damage, "甲");
+    if (g_origArmorFirst) g_origArmorFirst(thiz, damage, method);
+}
+
+static void Hooked_HeartApportion(void* thiz, void* damage, void* method) {
+    if (g_lastHeart.load()) LastStandClamp(thiz, damage, "分摊");
+    if (g_origApportion) g_origApportion(thiz, damage, method);
+}
+
+// ⑪ 兜底：心/甲归零后的死亡入口（内部按 (心+甲)×5 造伤害再 TakeDamage），直接不执行并钉回 1 心
+static void Hooked_Hearts_ForceDie(void* thiz, void* method) {
+    if (g_lastHeart.load()) {
+        if (thiz && g_fnSetCurHearts) g_fnSetCurHearts(thiz, 1, nullptr);
+        static unsigned fn = 0;
+        if ((fn++ % 5u) == 0u) LOGI("[Neon] 丝血无敌：拦截 ForceDie");
+        return;
+    }
+    if (g_origForceDie) g_origForceDie(thiz, method);
 }
 
 static void* Hooked_BuildPassCheckInfo(void* thiz, void* method) {
@@ -1174,6 +1332,32 @@ bool Neon_TryInit(JavaVM* vm) {
     HookOne("MeleeMultiSeg.AsBusyTime", RVA_MELEE_AS_BUSY, (void*)Hooked_MeleeAsBusyTime, (void**)&g_origMeleeAsBusy);
     HookOne("MeleeMultiSeg.SetBusyTime", RVA_MELEE_SET_BUSY, (void*)Hooked_SetBusyTime, (void**)&g_origSetBusy);
 
+    // ＝＝ 第六轮新增 ＝＝
+    //   ⑨ 无限跳跃：替换 PlayerActor.get_multipleJumpCount
+    //   ⑩ 伤害倍率：复用上面的 HitPoints.DeductHP 钩子，无需新钩
+    //   ⑪ 丝血无敌：Hearts 血量读写只直调，不进 Dobby
+    HookOne("PlayerActor.get_multipleJumpCount", RVA_MULTI_JUMP_COUNT,
+            (void*)Hooked_GetMultipleJumpCount, (void**)&g_origGetJumpCount);
+    g_fnGetCurHearts = reinterpret_cast<GetCurHearts_t>(Abs(RVA_HEARTS_GET_CURRENT));
+    g_fnSetCurHearts = reinterpret_cast<SetCurHearts_t>(Abs(RVA_HEARTS_SET_CURRENT));
+    LOGI("[Neon] round6 jump=%d heartGet=%d heartSet=%d",
+         g_origGetJumpCount ? 1 : 0, g_fnGetCurHearts ? 1 : 0, g_fnSetCurHearts ? 1 : 0);
+
+    // ＝＝ 第六轮补丁（2026-10-02 晚）：⑨ 门槛链补齐 + ⑪ 改成在扣血叶函数截断伤害 ＝＝
+    HookOne("PlayerStateInt.op_Implicit", RVA_OP_IMPLICIT, (void*)Hooked_PlayerStateInt_OpImplicit, (void**)&g_origOpImplicit);
+    HookOne("PlayerActorBase.get_canNotJump", RVA_CAN_NOT_JUMP, (void*)Hooked_GetCanNotJump, (void**)&g_origCanNotJump);
+    HookOne("BaseMechaControl.CanMultipleJump", RVA_CAN_MULTI_JUMP, (void*)Hooked_CanMultipleJump, (void**)&g_origCanMultiJump);
+    HookOne("Hearts.DeductHeartFirst", RVA_HEART_FIRST, (void*)Hooked_HeartFirst, (void**)&g_origHeartFirst);
+    HookOne("Hearts.DeductArmorFirst", RVA_ARMOR_FIRST, (void*)Hooked_ArmorFirst, (void**)&g_origArmorFirst);
+    HookOne("Hearts.DeductHeart_ApplyApportion", RVA_HEART_APPORTION, (void*)Hooked_HeartApportion, (void**)&g_origApportion);
+    HookOne("Hearts.ForceDie", RVA_FORCE_DIE, (void*)Hooked_Hearts_ForceDie, (void**)&g_origForceDie);
+    g_fnGetArmor = reinterpret_cast<IntFn_t>(Abs(RVA_HEARTS_GET_ARMOR));
+    g_fnGetSane  = reinterpret_cast<IntFn_t>(Abs(RVA_HEARTS_GET_SANE));
+    LOGI("[Neon] round6b jumpChain=%d/%d/%d heartChain=%d/%d/%d die=%d armor=%d sane=%d",
+         g_origOpImplicit ? 1 : 0, g_origCanNotJump ? 1 : 0, g_origCanMultiJump ? 1 : 0,
+         g_origHeartFirst ? 1 : 0, g_origArmorFirst ? 1 : 0, g_origApportion ? 1 : 0,
+         g_origForceDie ? 1 : 0, g_fnGetArmor ? 1 : 0, g_fnGetSane ? 1 : 0);
+
 #if NEON_DIAG
     InstallDiagHooks();
 #endif
@@ -1222,6 +1406,14 @@ void Neon_OnFeatureChanged(int featNum, bool enabled) {
             g_infGkey.store(enabled);
             LOGI("[Neon] 彩色钥匙使用不减=%s", enabled ? "ON" : "OFF");
             break;
+        case NEON_FEAT_INF_JUMP:
+            g_noJumpLimit.store(enabled);
+            LOGI("[Neon] 无限跳跃=%s", enabled ? "ON" : "OFF");
+            break;
+        case NEON_FEAT_LAST_HEART:
+            g_lastHeart.store(enabled);
+            LOGI("[Neon] 丝血无敌=%s", enabled ? "ON" : "OFF");
+            break;
         default:
             break;
     }
@@ -1230,6 +1422,13 @@ void Neon_OnFeatureChanged(int featNum, bool enabled) {
 static int ClampLvl(int v) {
     if (v < 1) return 1;
     if (v > 5) return 5;
+    return v;
+}
+
+// ⑩ 伤害倍率单独限幅 1..50（不复用 ClampLvl 的 1..5）
+static int DmgClamp(int v) {
+    if (v < 1) return 1;
+    if (v > 50) return 50;
     return v;
 }
 
@@ -1245,6 +1444,12 @@ void Neon_OnValueChanged(int featNum, int value) {
         LOGI("[Neon] 攻速 lvl=%d mul=%.1f", lvl, AtkMul());
         return;
     }
+    if (featNum == NEON_FEAT_DAMAGE_MUL) {
+        int d = DmgClamp(value);
+        g_dmgMul.store(d);
+        LOGI("[Neon] 伤害倍率 x%d", d);
+        return;
+    }
 }
 
 void Neon_ForceClear() {
@@ -1256,6 +1461,9 @@ void Neon_ForceClear() {
     g_infCoin.store(false);
     g_infKey.store(false);
     g_infGkey.store(false);
+    g_noJumpLimit.store(false);
+    g_dmgMul.store(1);
+    g_lastHeart.store(false);
 }
 
 void Neon_Tick(const bool* features, const int* values) {
@@ -1266,10 +1474,13 @@ void Neon_Tick(const bool* features, const int* values) {
     g_infCoin.store(features[NEON_FEAT_INF_COIN]);
     g_infKey.store(features[NEON_FEAT_INF_KEY]);
     g_infGkey.store(features[NEON_FEAT_INF_GKEY]);
+    g_noJumpLimit.store(features[NEON_FEAT_INF_JUMP]);
+    g_lastHeart.store(features[NEON_FEAT_LAST_HEART]);
     if (values) {
         // 滑块值每轮由框架同步（未动过时 = 下限 1 = 关）
         g_moveLvl.store(ClampLvl(values[NEON_FEAT_MOVE_SPEED]));
         g_atkLvl.store(ClampLvl(values[NEON_FEAT_ATTACK_SPEED]));
+        g_dmgMul.store(DmgClamp(values[NEON_FEAT_DAMAGE_MUL]));
     }
 #if NEON_DIAG
     {

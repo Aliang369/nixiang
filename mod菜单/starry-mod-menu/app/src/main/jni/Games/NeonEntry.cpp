@@ -24,6 +24,9 @@ static const char* kNeon_Features[] = {
     "Toggle_金币使用不减",         // 6  NEON_FEAT_INF_COIN（对局内金币：UseCoin 拦截 + HasCoin 恒真）
     "Toggle_钥匙使用不减",         // 7  NEON_FEAT_INF_KEY（对局内钥匙：UseKey 拦截 + HasKey 恒真）
     "Toggle_彩色钥匙使用不减",     // 8  NEON_FEAT_INF_GKEY（GameplayKey＝彩色钥匙，SpecialKeyPowerUp 拾取）
+    "Toggle_无限跳跃",             // 9  NEON_FEAT_INF_JUMP（PlayerActor.get_multipleJumpCount 返回 -1000）
+    "Slider_伤害倍率:1:50",        // 10 NEON_FEAT_DAMAGE_MUL（1 = 关；HitPoints.DeductHP 内缩放 DamageInfo+0x18）
+    "Toggle_丝血无敌",             // 11 NEON_FEAT_LAST_HEART（Hearts.DeductHP 拦致命伤，锁血到 1）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
