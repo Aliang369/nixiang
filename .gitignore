@@ -62,6 +62,11 @@
 # 且每次重抓都产生整片新 JS）。复现只需 `decrypt_summary.json` 锚点（含 key/count/逐文件尺寸）
 # + 重抓与解密脚本即可完整重建；确需入库时用 `git add -f` 并当轮说明理由。
 06_dumped/**/*.js
+# 2026-10-03：冒险与征途 method 全表同属「大 dump」，不入库（hotupdate_methods 11.5MB + metadata_methods 6.2MB）。
+# 复现依据＝本地保留同一份文件 + `06_dumped/冒险与征途/aot/_tgt_q.py`（IL 查询）/`_meta_parse.py`（metadata 解析）
+# + 入库的锚点摘录（`aot/_tgt_il_*.txt`、`aot/hotupdate_*hits.txt`、`metadata_hits.txt`）。
+06_dumped/冒险与征途/aot/hotupdate_methods.txt
+06_dumped/冒险与征途/metadata_methods.txt
 
 # ===== mod菜单：构建产物不入库（源码/模板/脚本全入）=====
 mod菜单/**/app/src/**/obj*/

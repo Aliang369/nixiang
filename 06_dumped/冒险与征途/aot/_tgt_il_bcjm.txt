@@ -1,0 +1,79 @@
+
+
+############ TYPE ActionGameLibrary.BattleContextJudgeModule ############
+
+ActionGameLibrary.BattleContextJudgeModule :: .ctor(ActionGameLibrary.BattleContextModuleMediator, ActionGameLibrary.BattleContextData, ActionGameLibrary.BattleContextNet) -> void 0x0601DBC5
+   IL_0000: ldarg.0      
+   IL_0001: newobj       0x060175EA method proto_ff.Proto_CSReq :: .ctor() -> void 0x060175EA
+   IL_0006: stfld        0x04016EC0 field ActionGameLibrary.BattleContextJudgeModule::_req : proto_ff.Proto_CSReq
+   IL_000B: ldarg.0      
+   IL_000C: newobj       0x06010B9A method proto_ff.Proto_CSCheatReportReq :: .ctor() -> void 0x06010B9A
+   IL_0011: stfld        0x04016EC1 field ActionGameLibrary.BattleContextJudgeModule::_cheatReport : proto_ff.Proto_CSCheatReportReq
+   IL_0016: ldarg.0      
+   IL_0017: ldarg.1      
+   IL_0018: ldarg.2      
+   IL_0019: ldarg.3      
+   IL_001A: call         0x0601DAE0 method ActionGameLibrary.BattleContextModule :: .ctor(ActionGameLibrary.BattleContextModuleMediator, ActionGameLibrary.BattleContextData, ActionGameLibrary.BattleContextNet) -> void 0x0601DAE0
+   IL_001F: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnRegister() -> void 0x0601DBC6
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601DAE8 method ActionGameLibrary.BattleContextModule :: OnRegister() -> void 0x0601DAE8
+   IL_0006: ldarg.0      
+   IL_0007: call         0x0601DAE3 method ActionGameLibrary.BattleContextModule :: get_net() -> ActionGameLibrary.BattleContextNet 0x0601DAE3
+   IL_000C: ldc.i4       1696
+   IL_0011: ldarg.0      
+   IL_0012: FEldftn      
+   IL_0014: 0xC8         
+   IL_0015: sub.ovf.un   
+   IL_0016: break        
+   IL_0017: ldloc.0      
+   IL_0018: newobj       0x06021158 method ProtocolManager.callback :: .ctor(object, IntPtr) -> void 0x06021158
+   IL_001D: ldc.i4.s     100
+   IL_001F: callvirt     0x0601DB3D method ActionGameLibrary.BattleContextNet :: RegProto(proto_ff.Proto_CS_CMD, ProtocolManager.callback, int) -> void 0x0601DB3D
+   IL_0024: ldstr        0x700893E5 string "ReporCheat"
+   IL_0029: ldarg.0      
+   IL_002A: FEldftn      
+   IL_002C: 0xC9         
+   IL_002D: sub.ovf.un   
+   IL_002E: break        
+   IL_002F: ldloc.0      
+   IL_0030: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0035: ldc.i4.0     
+   IL_0036: call         0x0601E7F0 method ActionGameLibrary.BattleElementCenter :: AddEventListener(string, ActionGameLibrary.EventHandler, bool) -> void 0x0601E7F0
+   IL_003B: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnUnRegister() -> void 0x0601DBC7
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601DAE9 method ActionGameLibrary.BattleContextModule :: OnUnRegister() -> void 0x0601DAE9
+   IL_0006: ldstr        0x700893E5 string "ReporCheat"
+   IL_000B: ldarg.0      
+   IL_000C: FEldftn      
+   IL_000E: 0xC9         
+   IL_000F: sub.ovf.un   
+   IL_0010: break        
+   IL_0011: ldloc.0      
+   IL_0012: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0017: call         0x0601E7F1 method ActionGameLibrary.BattleElementCenter :: RemoveEventListener(string, ActionGameLibrary.EventHandler) -> void 0x0601E7F1
+   IL_001C: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnCheatPunish(proto_ff.Proto_CSRsp) -> void 0x0601DBC8
+   IL_0000: ldstr        0x700893FB string "OnCheatPunish OnCheatPunish"
+   IL_0005: call         0x2B000036 TOKEN 0x2B000036
+   IL_000A: call         0x0600096B method Log :: infoError(string, object[]) -> void 0x0600096B
+   IL_000F: ldc.i4       223
+   IL_0014: call         0x06008173 method UiTools :: GetLanguageDescById(uint) -> string 0x06008173
+   IL_0019: call         0x060023C9 method DS_TSsdk :: ForceQuit(string) -> void 0x060023C9
+   IL_001E: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnJudgeCheat(ActionGameLibrary.Event) -> void 0x0601DBC9
+   IL_0000: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnConnectSuccess() -> void 0x0601DBCA
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601DAEA method ActionGameLibrary.BattleContextModule :: OnConnectSuccess() -> void 0x0601DAEA
+   IL_0006: ldstr        0x70089433 string "OnReconnect"
+   IL_000B: ldnull       
+   IL_000C: call         0x2B000AA9 TOKEN 0x2B000AA9
+   IL_0011: call         0x0601E7F3 method ActionGameLibrary.BattleElementCenter :: Dispath(ActionGameLibrary.Event) -> void 0x0601E7F3
+   IL_0016: ret          

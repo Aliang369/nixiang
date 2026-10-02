@@ -1,0 +1,1291 @@
+
+
+############ TYPE DS_Advertising ############
+
+DS_Advertising :: init() -> void 0x06001247
+   IL_0000: ldarg.0      
+   IL_0001: call         0x06001758 method DS_Base :: init() -> void 0x06001758
+   IL_0006: ldarg.0      
+   IL_0007: ldc.i4       2763
+   IL_000C: ldarg.0      
+   IL_000D: FEldftn      0x06001257 method DS_Advertising :: RspADVideoResult(proto_ff.Proto_CSRsp) -> void 0x06001257
+   IL_0013: newobj       0x06021158 method ProtocolManager.callback :: .ctor(object, IntPtr) -> void 0x06021158
+   IL_0018: ldc.i4.s     100
+   IL_001A: call         0x0600100D method EventManagerBase :: regProto(proto_ff.Proto_CS_CMD, ProtocolManager.callback, int) -> void 0x0600100D
+   IL_001F: ldarg.0      
+   IL_0020: ldc.i4       2761
+   IL_0025: ldarg.0      
+   IL_0026: FEldftn      0x06001253 method DS_Advertising :: OnGetADInfoRsp(proto_ff.Proto_CSRsp) -> void 0x06001253
+   IL_002C: newobj       0x06021158 method ProtocolManager.callback :: .ctor(object, IntPtr) -> void 0x06021158
+   IL_0031: ldc.i4.s     100
+   IL_0033: call         0x0600100D method EventManagerBase :: regProto(proto_ff.Proto_CS_CMD, ProtocolManager.callback, int) -> void 0x0600100D
+   IL_0038: ldsfld       0x04000B2F field GameEvent::Game_Login_Finish : string
+   IL_003D: ldarg.0      
+   IL_003E: FEldftn      0x06001254 method DS_Advertising :: OnLoginFinish(GEvent) -> void 0x06001254
+   IL_0044: newobj       0x06020A02 method EventManager.callback :: .ctor(object, IntPtr) -> void 0x06020A02
+   IL_0049: call         0x0600093A method EventManager :: addListener(string, EventManager.callback) -> void 0x0600093A
+   IL_004E: ldstr        0x7000CB9E string "Event_HideLoginOnceTip"
+   IL_0053: ldarg.0      
+   IL_0054: FEldftn      0x06001249 method DS_Advertising :: OnRefreshLoginOnceTip(GEvent) -> void 0x06001249
+   IL_005A: newobj       0x06020A02 method EventManager.callback :: .ctor(object, IntPtr) -> void 0x06020A02
+   IL_005F: call         0x0600093A method EventManager :: addListener(string, EventManager.callback) -> void 0x0600093A
+   IL_0064: ret          
+
+DS_Advertising :: clear() -> void 0x06001248
+   IL_0000: ldarg.0      
+   IL_0001: call         0x06001759 method DS_Base :: clear() -> void 0x06001759
+   IL_0006: ldarg.0      
+   IL_0007: call         0x0600124C method DS_Advertising :: ResetLoginOnceTips() -> void 0x0600124C
+   IL_000C: ret          
+
+DS_Advertising :: OnRefreshLoginOnceTip(GEvent) -> void 0x06001249
+   IL_0000: ldarg.1      
+   IL_0001: ldc.i4.0     
+   IL_0002: callvirt     0x2B000160 TOKEN 0x2B000160
+   IL_0007: stloc.0      
+   IL_0008: ldarg.1      
+   IL_0009: ldc.i4.1     
+   IL_000A: callvirt     0x2B00011A TOKEN 0x2B00011A
+   IL_000F: stloc.1      
+   IL_0010: ldarg.0      
+   IL_0011: ldloc.0      
+   IL_0012: ldloc.1      
+   IL_0013: call         0x0600124A method DS_Advertising :: MarkLoginOnceTip(RedTipManager.TipType, int) -> void 0x0600124A
+   IL_0018: ret          
+
+DS_Advertising :: MarkLoginOnceTip(RedTipManager.TipType, int) -> void 0x0600124A
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0006: ldarg.1      
+   IL_0007: callvirt     0x0A000AED memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::ContainsKey
+   IL_000C: brtrue.s     17
+   IL_000E: ldarg.0      
+   IL_000F: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0014: ldarg.1      
+   IL_0015: newobj       0x0A000AEE memberref System.Collections.Generic.HashSet`1<int>::.ctor
+   IL_001A: callvirt     0x0A000AEF memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::set_Item
+   IL_001F: ldarg.0      
+   IL_0020: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0025: ldarg.1      
+   IL_0026: callvirt     0x0A000AF0 memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::get_Item
+   IL_002B: ldarg.2      
+   IL_002C: callvirt     0x0A000AC1 memberref System.Collections.Generic.HashSet`1<int>::Add
+   IL_0031: pop          
+   IL_0032: call         0x0A0009B5 memberref SingletonClass`1<RedTipManager>::get_Instance
+   IL_0037: ldarg.1      
+   IL_0038: ldc.i4.0     
+   IL_0039: ldarg.2      
+   IL_003A: callvirt     0x06007F48 method RedTipManager :: Notice(RedTipManager.TipType, bool, int) -> void 0x06007F48
+   IL_003F: ldstr        0x7000CBCC string "{0}_{1}_{2}_{3}"
+   IL_0044: ldc.i4.4     
+   IL_0045: newarr       0x01000019 typespec SingletonClass`1<RoleInfoMange>
+   IL_004A: dup          
+   IL_004B: ldc.i4.0     
+   IL_004C: ldstr        0x7000CBEC string "DS_Advertising_LoginOnceTips"
+   IL_0051: stelem.ref   
+   IL_0052: dup          
+   IL_0053: ldc.i4.1     
+   IL_0054: ldsfld       0x04000EC4 field DataService::roleData : DS_RoleData
+   IL_0059: ldfld        0x04000DDB field DS_RoleData::roleId : ulong
+   IL_005E: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_0063: stelem.ref   
+   IL_0064: dup          
+   IL_0065: ldc.i4.2     
+   IL_0066: ldarg.1      
+   IL_0067: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_006C: stelem.ref   
+   IL_006D: dup          
+   IL_006E: ldc.i4.3     
+   IL_006F: ldarg.2      
+   IL_0070: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0075: stelem.ref   
+   IL_0076: call         0x0A000353 memberref System.String::Format
+   IL_007B: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_0080: conv.i4      
+   IL_0081: stloc.0      
+   IL_0082: ldloc.0      
+   IL_0083: call         0x06003923 method LocalDataSave :: SaveData(string, int) -> void 0x06003923
+   IL_0088: ret          
+
+DS_Advertising :: HasLoginOnceTip(RedTipManager.TipType, int) -> bool 0x0600124B
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0006: ldarg.1      
+   IL_0007: callvirt     0x0A000AED memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::ContainsKey
+   IL_000C: brtrue.s     78
+   IL_000E: ldstr        0x7000CBCC string "{0}_{1}_{2}_{3}"
+   IL_0013: ldc.i4.4     
+   IL_0014: newarr       0x01000019 typespec SingletonClass`1<RoleInfoMange>
+   IL_0019: dup          
+   IL_001A: ldc.i4.0     
+   IL_001B: ldstr        0x7000CBEC string "DS_Advertising_LoginOnceTips"
+   IL_0020: stelem.ref   
+   IL_0021: dup          
+   IL_0022: ldc.i4.1     
+   IL_0023: ldsfld       0x04000EC4 field DataService::roleData : DS_RoleData
+   IL_0028: ldfld        0x04000DDB field DS_RoleData::roleId : ulong
+   IL_002D: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_0032: stelem.ref   
+   IL_0033: dup          
+   IL_0034: ldc.i4.2     
+   IL_0035: ldarg.1      
+   IL_0036: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_003B: stelem.ref   
+   IL_003C: dup          
+   IL_003D: ldc.i4.3     
+   IL_003E: ldarg.2      
+   IL_003F: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0044: stelem.ref   
+   IL_0045: call         0x0A000353 memberref System.String::Format
+   IL_004A: ldc.i4.0     
+   IL_004B: call         0x06003926 method LocalDataSave :: GetIntData(string, int) -> int 0x06003926
+   IL_0050: conv.i8      
+   IL_0051: call         0x06001059 method RTTClock :: IsSameDay2(long) -> bool 0x06001059
+   IL_0056: brfalse.s    2
+   IL_0058: ldc.i4.1     
+   IL_0059: ret          
+   IL_005A: ldc.i4.0     
+   IL_005B: ret          
+   IL_005C: ldarg.0      
+   IL_005D: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0062: ldarg.1      
+   IL_0063: callvirt     0x0A000AF0 memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::get_Item
+   IL_0068: ldarg.2      
+   IL_0069: callvirt     0x0A000ADD memberref System.Collections.Generic.HashSet`1<int>::Contains
+   IL_006E: ret          
+
+DS_Advertising :: ResetLoginOnceTips() -> void 0x0600124C
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0006: callvirt     0x0A000AF1 memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::Clear
+   IL_000B: ret          
+
+DS_Advertising :: get_FunctionEnable() -> bool 0x0600124D
+   IL_0000: call         0x06003309 method ExamineVerUIHelper :: get_WatchADSystemOpen() -> bool 0x06003309
+   IL_0005: ret          
+
+DS_Advertising :: GetADTimes(int) -> int 0x0600124E
+   IL_0000: call         0x06019748 method GameConfigData.ConfigData :: get_CFG_WatchAdvertisement() -> System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement> 0x06019748
+   IL_0005: ldarg.1      
+   IL_0006: ldloca.s     0
+   IL_0008: callvirt     0x0A000AF2 memberref System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement>::TryGetValue
+   IL_000D: pop          
+   IL_000E: ldloc.0      
+   IL_000F: brtrue.s     2
+   IL_0011: ldc.i4.0     
+   IL_0012: ret          
+   IL_0013: ldloc.0      
+   IL_0014: callvirt     0x0601CE9B method GameConfigData.WatchAdvertisement :: get_adtimes() -> int 0x0601CE9B
+   IL_0019: ret          
+
+DS_Advertising :: GetADSysParam(int) -> string 0x0600124F
+   IL_0000: call         0x06019748 method GameConfigData.ConfigData :: get_CFG_WatchAdvertisement() -> System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement> 0x06019748
+   IL_0005: ldarg.1      
+   IL_0006: ldloca.s     0
+   IL_0008: callvirt     0x0A000AF2 memberref System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement>::TryGetValue
+   IL_000D: pop          
+   IL_000E: ldloc.0      
+   IL_000F: brtrue.s     6
+   IL_0011: ldstr        0x700003A1 string ""
+   IL_0016: ret          
+   IL_0017: ldloc.0      
+   IL_0018: callvirt     0x0601CE99 method GameConfigData.WatchAdvertisement :: get_sysyemparam() -> string 0x0601CE99
+   IL_001D: ret          
+
+DS_Advertising :: GetADCdsParam(int) -> int 0x06001250
+   IL_0000: call         0x06019748 method GameConfigData.ConfigData :: get_CFG_WatchAdvertisement() -> System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement> 0x06019748
+   IL_0005: ldarg.1      
+   IL_0006: ldloca.s     0
+   IL_0008: callvirt     0x0A000AF2 memberref System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement>::TryGetValue
+   IL_000D: pop          
+   IL_000E: ldloc.0      
+   IL_000F: brtrue.s     2
+   IL_0011: ldc.i4.0     
+   IL_0012: ret          
+   IL_0013: ldloc.0      
+   IL_0014: callvirt     0x0601CE9D method GameConfigData.WatchAdvertisement :: get_WatchCd() -> int 0x0601CE9D
+   IL_0019: ret          
+
+DS_Advertising :: WatchAdvertisements(int) -> void 0x06001251
+   IL_0000: newobj       0x06020B30 method DS_Advertising.<>c__DisplayClass15_0 :: .ctor() -> void 0x06020B30
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: ldarg.0      
+   IL_0008: stfld        0x04019112 field DS_Advertising.<>c__DisplayClass15_0::<>4__this : DS_Advertising
+   IL_000D: ldloc.0      
+   IL_000E: ldarg.1      
+   IL_000F: stfld        0x04019113 field DS_Advertising.<>c__DisplayClass15_0::adid : int
+   IL_0014: ldsfld       0x04000F06 field DataService::privilege : DS_Privilege
+   IL_0019: callvirt     0x06007E5F method DS_Privilege :: MonthCardSkipAD() -> bool 0x06007E5F
+   IL_001E: brtrue.s     12
+   IL_0020: ldsfld       0x04000F1F field DataService::advertising : DS_Advertising
+   IL_0025: callvirt     0x0600124D method DS_Advertising :: get_FunctionEnable() -> bool 0x0600124D
+   IL_002A: brtrue.s     13
+   IL_002C: ldarg.0      
+   IL_002D: ldloc.0      
+   IL_002E: ldfld        0x04019113 field DS_Advertising.<>c__DisplayClass15_0::adid : int
+   IL_0033: call         0x06001252 method DS_Advertising :: StartWatchAdReq(int) -> void 0x06001252
+   IL_0038: ret          
+   IL_0039: ldstr        0x7000CC26 string "是否确认进入广告系统 观看广告获取奖励
+开通月卡可无限制的[d57917]免看广告[-]直接领取"
+   IL_003E: ldstr        0x70006855 string "提示"
+   IL_0043: ldloc.0      
+   IL_0044: FEldftn      0x06020B31 method DS_Advertising.<>c__DisplayClass15_0 :: <WatchAdvertisements>b__0(object) -> void 0x06020B31
+   IL_004A: newobj       0x06020A30 method DelegateEnums.DataParam :: .ctor(object, IntPtr) -> void 0x06020A30
+   IL_004F: ldnull       
+   IL_0050: ldsfld       0x04019110 field DS_Advertising.<>c::<>9__15_1 : DelegateEnums.DataParam
+   IL_0055: dup          
+   IL_0056: brtrue.s     23
+   IL_0058: pop          
+   IL_0059: ldsfld       0x0401910F field DS_Advertising.<>c::<>9 : DS_Advertising.<>c
+   IL_005E: FEldftn      0x06020B2E method DS_Advertising.<>c :: <WatchAdvertisements>b__15_1(object) -> void 0x06020B2E
+   IL_0064: newobj       0x06020A30 method DelegateEnums.DataParam :: .ctor(object, IntPtr) -> void 0x06020A30
+   IL_0069: dup          
+   IL_006A: stsfld       0x04019110 field DS_Advertising.<>c::<>9__15_1 : DelegateEnums.DataParam
+   IL_006F: ldnull       
+   IL_0070: ldstr        0x7000CC88 string "进入广告"
+   IL_0075: ldstr        0x7000CC92 string "前往开通"
+   IL_007A: ldc.i4.0     
+   IL_007B: ldc.i4.0     
+   IL_007C: ldstr        0x70002D5B string "none"
+   IL_0081: ldnull       
+   IL_0082: ldc.i4.0     
+   IL_0083: ldsfld       0x04019111 field DS_Advertising.<>c::<>9__15_2 : System.Action`1<MW_Confirm>
+   IL_0088: dup          
+   IL_0089: brtrue.s     23
+   IL_008B: pop          
+   IL_008C: ldsfld       0x0401910F field DS_Advertising.<>c::<>9 : DS_Advertising.<>c
+   IL_0091: FEldftn      0x06020B2F method DS_Advertising.<>c :: <WatchAdvertisements>b__15_2(MW_Confirm) -> void 0x06020B2F
+   IL_0097: newobj       0x0A000AF3 memberref System.Action`1<MW_Confirm>::.ctor
+   IL_009C: dup          
+   IL_009D: stsfld       0x04019111 field DS_Advertising.<>c::<>9__15_2 : System.Action`1<MW_Confirm>
+   IL_00A2: call         0x06007D49 method MsgCenter :: Confirm(string, string, DelegateEnums.DataParam, object, DelegateEnums.DataParam, object, string, string, int, int, string, DelegateEnums.DataParamT`1<bool>, bool, System.Action`1<MW_Confirm>) -> void 0x06007D49
+   IL_00A7: ret          
+
+DS_Advertising :: StartWatchAdReq(int) -> void 0x06001252
+   IL_0000: newobj       0x060175EA method proto_ff.Proto_CSReq :: .ctor() -> void 0x060175EA
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: newobj       0x06017281 method proto_ff.Proto_CSStartWatchAdReq :: .ctor() -> void 0x06017281
+   IL_000C: callvirt     0x06017D16 method proto_ff.Proto_CSReq :: set_start_watch_ad_req(proto_ff.Proto_CSStartWatchAdReq) -> void 0x06017D16
+   IL_0011: ldloc.0      
+   IL_0012: callvirt     0x06017D15 method proto_ff.Proto_CSReq :: get_start_watch_ad_req() -> proto_ff.Proto_CSStartWatchAdReq 0x06017D15
+   IL_0017: ldarg.1      
+   IL_0018: callvirt     0x06017284 method proto_ff.Proto_CSStartWatchAdReq :: set_ad_id(int) -> void 0x06017284
+   IL_001D: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0022: ldc.i4       2760
+   IL_0027: ldloc.0      
+   IL_0028: ldnull       
+   IL_0029: callvirt     0x0600339E method NetBase :: SendPackge(uint, object, MessageCallback) -> void 0x0600339E
+   IL_002E: ret          
+
+DS_Advertising :: OnGetADInfoRsp(proto_ff.Proto_CSRsp) -> void 0x06001253
+   IL_0000: ldarg.1      
+   IL_0001: brfalse.s    8
+   IL_0003: ldarg.1      
+   IL_0004: callvirt     0x060186E6 method proto_ff.Proto_CSRsp :: get_start_watch_ad_rsp() -> proto_ff.Proto_SCStartWatchAdRsp 0x060186E6
+   IL_0009: brtrue.s     1
+   IL_000B: ret          
+   IL_000C: ldarg.1      
+   IL_000D: callvirt     0x060186E6 method proto_ff.Proto_CSRsp :: get_start_watch_ad_rsp() -> proto_ff.Proto_SCStartWatchAdRsp 0x060186E6
+   IL_0012: stloc.0      
+   IL_0013: ldstr        0x7000CC9C string "DS_Advertising OnGetADInfoRsp, adid:{0}, adname:{1} result:{2}"
+   IL_0018: ldloc.0      
+   IL_0019: callvirt     0x06017291 method proto_ff.Proto_SCStartWatchAdRsp :: get_ad_id() -> int 0x06017291
+   IL_001E: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0023: ldloc.0      
+   IL_0024: callvirt     0x06017294 method proto_ff.Proto_SCStartWatchAdRsp :: get_uuid() -> ulong 0x06017294
+   IL_0029: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_002E: ldloc.0      
+   IL_002F: callvirt     0x06017297 method proto_ff.Proto_SCStartWatchAdRsp :: get_result() -> int 0x06017297
+   IL_0034: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0039: call         0x0A000236 memberref System.String::Format
+   IL_003E: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_0043: ldloc.0      
+   IL_0044: callvirt     0x06017297 method proto_ff.Proto_SCStartWatchAdRsp :: get_result() -> int 0x06017297
+   IL_0049: brtrue.s     31
+   IL_004B: ldsfld       0x040024D5 field SDKProxy::Instance : BaseSDKAdapter
+   IL_0050: ldloc.0      
+   IL_0051: callvirt     0x06017291 method proto_ff.Proto_SCStartWatchAdRsp :: get_ad_id() -> int 0x06017291
+   IL_0056: ldloc.0      
+   IL_0057: callvirt     0x06017294 method proto_ff.Proto_SCStartWatchAdRsp :: get_uuid() -> ulong 0x06017294
+   IL_005C: stloc.1      
+   IL_005D: ldloca.s     1
+   IL_005F: call         0x0A00057A memberref System.UInt64::ToString
+   IL_0064: callvirt     0x060035FF method BaseSDKAdapter :: PlayADVideo(int, string) -> void 0x060035FF
+   IL_0069: ret          
+   IL_006A: ldarg.0      
+   IL_006B: ldloc.0      
+   IL_006C: callvirt     0x06017291 method proto_ff.Proto_SCStartWatchAdRsp :: get_ad_id() -> int 0x06017291
+   IL_0071: ldc.i4.1     
+   IL_0072: call         0x06001258 method DS_Advertising :: DispatchResult(int, bool) -> void 0x06001258
+   IL_0077: ldloc.0      
+   IL_0078: callvirt     0x06017297 method proto_ff.Proto_SCStartWatchAdRsp :: get_result() -> int 0x06017297
+   IL_007D: ldc.i4.2     
+   IL_007E: bne.un.s     19
+   IL_0080: ldstr        0x7000CD1A string "已使用免广告特权跳过观看"
+   IL_0085: ldloca.s     2
+   IL_0087: FEinitobj    0x01000024 typespec System.IEquatable`1<SoundKey>
+   IL_008D: ldloc.2      
+   IL_008E: call         0x06007D51 method MsgCenter :: SimpleTip(string, UnityEngine.Vector3) -> void 0x06007D51
+   IL_0093: ret          
+
+DS_Advertising :: OnLoginFinish(GEvent) -> void 0x06001254
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0006: callvirt     0x0A000AF4 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::get_Count
+   IL_000B: ldc.i4.0     
+   IL_000C: ble.s        118
+   IL_000E: ldstr        0x7000CD34 string "DS_Advertising OnLoginFinish, resend cached ads count:{0}"
+   IL_0013: ldarg.0      
+   IL_0014: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0019: callvirt     0x0A000AF4 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::get_Count
+   IL_001E: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0023: call         0x0A0005F1 memberref System.String::Format
+   IL_0028: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_002D: ldarg.0      
+   IL_002E: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0033: newobj       0x0A000AF5 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::.ctor
+   IL_0038: ldarg.0      
+   IL_0039: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_003E: callvirt     0x0A000AF6 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::Clear
+   IL_0043: callvirt     0x0A000AF7 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::GetEnumerator
+   IL_0048: stloc.0      
+   IL_0049: br.s         32
+   IL_004B: ldloca.s     0
+   IL_004D: call         0x0A000AF8 memberref Enumerator<DS_Advertising.AdCacheData>::get_Current
+   IL_0052: stloc.1      
+   IL_0053: ldarg.0      
+   IL_0054: ldloc.1      
+   IL_0055: ldfld        0x0401910C field DS_Advertising.AdCacheData::ret : bool
+   IL_005A: ldloc.1      
+   IL_005B: ldfld        0x0401910D field DS_Advertising.AdCacheData::adid : int
+   IL_0060: ldloc.1      
+   IL_0061: ldfld        0x0401910E field DS_Advertising.AdCacheData::uuid : ulong
+   IL_0066: call         0x06001256 method DS_Advertising :: ReqADVideoResult(bool, int, ulong) -> void 0x06001256
+   IL_006B: ldloca.s     0
+   IL_006D: call         0x0A000AF9 memberref Enumerator<DS_Advertising.AdCacheData>::MoveNext
+   IL_0072: brtrue.s     -41
+   IL_0074: leave.s      14
+   IL_0076: ldloca.s     0
+   IL_0078: FEconstrained. 0x1B000228 methodspec Enumerator<proto_ff.GachaActivitySkillRuneInfo>::MoveNext
+   IL_007E: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_0083: endfinally   
+   IL_0084: ret          
+
+DS_Advertising :: OnADVideoResult(bool, int, ulong) -> void 0x06001255
+   IL_0000: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0005: brfalse.s    12
+   IL_0007: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_000C: callvirt     0x0600338F method NetBase :: IsConnected() -> bool 0x0600338F
+   IL_0011: brtrue.s     67
+   IL_0013: ldstr        0x7000CDA8 string "DS_Advertising OnADVideoResult Not Connected, Cache it. adid:{0}, uuid:{1}"
+   IL_0018: ldarg.2      
+   IL_0019: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_001E: ldarg.3      
+   IL_001F: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_0024: call         0x0A000332 memberref System.String::Format
+   IL_0029: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_002E: newobj       0x06020B2B method DS_Advertising.AdCacheData :: .ctor() -> void 0x06020B2B
+   IL_0033: stloc.0      
+   IL_0034: ldloc.0      
+   IL_0035: ldarg.1      
+   IL_0036: stfld        0x0401910C field DS_Advertising.AdCacheData::ret : bool
+   IL_003B: ldloc.0      
+   IL_003C: ldarg.2      
+   IL_003D: stfld        0x0401910D field DS_Advertising.AdCacheData::adid : int
+   IL_0042: ldloc.0      
+   IL_0043: ldarg.3      
+   IL_0044: stfld        0x0401910E field DS_Advertising.AdCacheData::uuid : ulong
+   IL_0049: ldarg.0      
+   IL_004A: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_004F: ldloc.0      
+   IL_0050: callvirt     0x0A000AFA memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::Add
+   IL_0055: ret          
+   IL_0056: ldarg.0      
+   IL_0057: ldarg.1      
+   IL_0058: ldarg.2      
+   IL_0059: ldarg.3      
+   IL_005A: call         0x06001256 method DS_Advertising :: ReqADVideoResult(bool, int, ulong) -> void 0x06001256
+   IL_005F: ret          
+
+DS_Advertising :: ReqADVideoResult(bool, int, ulong) -> void 0x06001256
+   IL_0000: newobj       0x060175EA method proto_ff.Proto_CSReq :: .ctor() -> void 0x060175EA
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: newobj       0x060172A3 method proto_ff.Proto_CSFinishWatchAdReq :: .ctor() -> void 0x060172A3
+   IL_000C: callvirt     0x06017D19 method proto_ff.Proto_CSReq :: set_finish_watch_ad_req(proto_ff.Proto_CSFinishWatchAdReq) -> void 0x06017D19
+   IL_0011: ldloc.0      
+   IL_0012: callvirt     0x06017D18 method proto_ff.Proto_CSReq :: get_finish_watch_ad_req() -> proto_ff.Proto_CSFinishWatchAdReq 0x06017D18
+   IL_0017: ldarg.2      
+   IL_0018: callvirt     0x060172A6 method proto_ff.Proto_CSFinishWatchAdReq :: set_ad_id(int) -> void 0x060172A6
+   IL_001D: ldloc.0      
+   IL_001E: callvirt     0x06017D18 method proto_ff.Proto_CSReq :: get_finish_watch_ad_req() -> proto_ff.Proto_CSFinishWatchAdReq 0x06017D18
+   IL_0023: ldarg.3      
+   IL_0024: callvirt     0x060172A9 method proto_ff.Proto_CSFinishWatchAdReq :: set_uuid(ulong) -> void 0x060172A9
+   IL_0029: ldloc.0      
+   IL_002A: callvirt     0x06017D18 method proto_ff.Proto_CSReq :: get_finish_watch_ad_req() -> proto_ff.Proto_CSFinishWatchAdReq 0x06017D18
+   IL_002F: ldarg.1      
+   IL_0030: brtrue.s     3
+   IL_0032: ldc.i4.1     
+   IL_0033: br.s         1
+   IL_0035: ldc.i4.0     
+   IL_0036: callvirt     0x060172AC method proto_ff.Proto_CSFinishWatchAdReq :: set_result(int) -> void 0x060172AC
+   IL_003B: ldstr        0x7000CE3F string "DS_Advertising OnADVideoResult, adid:{0}, uuid:{1}, result:{2}"
+   IL_0040: ldarg.2      
+   IL_0041: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0046: ldarg.3      
+   IL_0047: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_004C: ldarg.1      
+   IL_004D: box          0x010001AA typespec System.Collections.Generic.List`1<System.Collections.Generic.KeyValuePair`2<GameConfigData.ItemData,int>>
+   IL_0052: call         0x0A000236 memberref System.String::Format
+   IL_0057: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_005C: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0061: ldc.i4       2762
+   IL_0066: ldloc.0      
+   IL_0067: ldnull       
+   IL_0068: callvirt     0x0600339E method NetBase :: SendPackge(uint, object, MessageCallback) -> void 0x0600339E
+   IL_006D: ret          
+
+DS_Advertising :: RspADVideoResult(proto_ff.Proto_CSRsp) -> void 0x06001257
+   IL_0000: ldarg.1      
+   IL_0001: brfalse.s    8
+   IL_0003: ldarg.1      
+   IL_0004: callvirt     0x060186E9 method proto_ff.Proto_CSRsp :: get_finish_watch_ad_rsp() -> proto_ff.Proto_SCFinishWatchAdRsp 0x060186E9
+   IL_0009: brtrue.s     1
+   IL_000B: ret          
+   IL_000C: ldarg.1      
+   IL_000D: callvirt     0x060186E9 method proto_ff.Proto_CSRsp :: get_finish_watch_ad_rsp() -> proto_ff.Proto_SCFinishWatchAdRsp 0x060186E9
+   IL_0012: stloc.0      
+   IL_0013: ldarg.0      
+   IL_0014: ldloc.0      
+   IL_0015: callvirt     0x060172BC method proto_ff.Proto_SCFinishWatchAdRsp :: get_ad_id() -> int 0x060172BC
+   IL_001A: ldloc.0      
+   IL_001B: callvirt     0x060172C2 method proto_ff.Proto_SCFinishWatchAdRsp :: get_result() -> int 0x060172C2
+   IL_0020: ldc.i4.0     
+   IL_0021: FEceq        
+   IL_0023: call         0x06001258 method DS_Advertising :: DispatchResult(int, bool) -> void 0x06001258
+   IL_0028: ret          
+
+DS_Advertising :: DispatchResult(int, bool) -> void 0x06001258
+   IL_0000: ldarg.2      
+   IL_0001: brfalse.s    25
+   IL_0003: ldstr        0x7000CEBD string "Event_WatchADResult"
+   IL_0008: ldc.i4.1     
+   IL_0009: newarr       0x01000019 typespec SingletonClass`1<RoleInfoMange>
+   IL_000E: dup          
+   IL_000F: ldc.i4.0     
+   IL_0010: ldarg.1      
+   IL_0011: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0016: stelem.ref   
+   IL_0017: call         0x0600093D method EventManager :: send(string, object[]) -> void 0x0600093D
+   IL_001C: ret          
+
+DS_Advertising :: .ctor() -> void 0x06001259
+   IL_0000: ldarg.0      
+   IL_0001: newobj       0x0A000AFB memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::.ctor
+   IL_0006: stfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_000B: ldarg.0      
+   IL_000C: newobj       0x0A000AFC memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::.ctor
+   IL_0011: stfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0016: ldarg.0      
+   IL_0017: call         0x06001756 method DS_Base :: .ctor() -> void 0x06001756
+   IL_001C: ret          
+
+
+############ TYPE ActionGameLibrary.BattleContextJudgeModule ############
+
+ActionGameLibrary.BattleContextJudgeModule :: .ctor(ActionGameLibrary.BattleContextModuleMediator, ActionGameLibrary.BattleContextData, ActionGameLibrary.BattleContextNet) -> void 0x0601DBC5
+   IL_0000: ldarg.0      
+   IL_0001: newobj       0x060175EA method proto_ff.Proto_CSReq :: .ctor() -> void 0x060175EA
+   IL_0006: stfld        0x04016EC0 field ActionGameLibrary.BattleContextJudgeModule::_req : proto_ff.Proto_CSReq
+   IL_000B: ldarg.0      
+   IL_000C: newobj       0x06010B9A method proto_ff.Proto_CSCheatReportReq :: .ctor() -> void 0x06010B9A
+   IL_0011: stfld        0x04016EC1 field ActionGameLibrary.BattleContextJudgeModule::_cheatReport : proto_ff.Proto_CSCheatReportReq
+   IL_0016: ldarg.0      
+   IL_0017: ldarg.1      
+   IL_0018: ldarg.2      
+   IL_0019: ldarg.3      
+   IL_001A: call         0x0601DAE0 method ActionGameLibrary.BattleContextModule :: .ctor(ActionGameLibrary.BattleContextModuleMediator, ActionGameLibrary.BattleContextData, ActionGameLibrary.BattleContextNet) -> void 0x0601DAE0
+   IL_001F: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnRegister() -> void 0x0601DBC6
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601DAE8 method ActionGameLibrary.BattleContextModule :: OnRegister() -> void 0x0601DAE8
+   IL_0006: ldarg.0      
+   IL_0007: call         0x0601DAE3 method ActionGameLibrary.BattleContextModule :: get_net() -> ActionGameLibrary.BattleContextNet 0x0601DAE3
+   IL_000C: ldc.i4       1696
+   IL_0011: ldarg.0      
+   IL_0012: FEldftn      0x0601DBC8 method ActionGameLibrary.BattleContextJudgeModule :: OnCheatPunish(proto_ff.Proto_CSRsp) -> void 0x0601DBC8
+   IL_0018: newobj       0x06021158 method ProtocolManager.callback :: .ctor(object, IntPtr) -> void 0x06021158
+   IL_001D: ldc.i4.s     100
+   IL_001F: callvirt     0x0601DB3D method ActionGameLibrary.BattleContextNet :: RegProto(proto_ff.Proto_CS_CMD, ProtocolManager.callback, int) -> void 0x0601DB3D
+   IL_0024: ldstr        0x700893E5 string "ReporCheat"
+   IL_0029: ldarg.0      
+   IL_002A: FEldftn      0x0601DBC9 method ActionGameLibrary.BattleContextJudgeModule :: OnJudgeCheat(ActionGameLibrary.Event) -> void 0x0601DBC9
+   IL_0030: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0035: ldc.i4.0     
+   IL_0036: call         0x0601E7F0 method ActionGameLibrary.BattleElementCenter :: AddEventListener(string, ActionGameLibrary.EventHandler, bool) -> void 0x0601E7F0
+   IL_003B: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnUnRegister() -> void 0x0601DBC7
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601DAE9 method ActionGameLibrary.BattleContextModule :: OnUnRegister() -> void 0x0601DAE9
+   IL_0006: ldstr        0x700893E5 string "ReporCheat"
+   IL_000B: ldarg.0      
+   IL_000C: FEldftn      0x0601DBC9 method ActionGameLibrary.BattleContextJudgeModule :: OnJudgeCheat(ActionGameLibrary.Event) -> void 0x0601DBC9
+   IL_0012: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0017: call         0x0601E7F1 method ActionGameLibrary.BattleElementCenter :: RemoveEventListener(string, ActionGameLibrary.EventHandler) -> void 0x0601E7F1
+   IL_001C: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnCheatPunish(proto_ff.Proto_CSRsp) -> void 0x0601DBC8
+   IL_0000: ldstr        0x700893FB string "OnCheatPunish OnCheatPunish"
+   IL_0005: call         0x2B000036 TOKEN 0x2B000036
+   IL_000A: call         0x0600096B method Log :: infoError(string, object[]) -> void 0x0600096B
+   IL_000F: ldc.i4       223
+   IL_0014: call         0x06008173 method UiTools :: GetLanguageDescById(uint) -> string 0x06008173
+   IL_0019: call         0x060023C9 method DS_TSsdk :: ForceQuit(string) -> void 0x060023C9
+   IL_001E: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnJudgeCheat(ActionGameLibrary.Event) -> void 0x0601DBC9
+   IL_0000: ret          
+
+ActionGameLibrary.BattleContextJudgeModule :: OnConnectSuccess() -> void 0x0601DBCA
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601DAEA method ActionGameLibrary.BattleContextModule :: OnConnectSuccess() -> void 0x0601DAEA
+   IL_0006: ldstr        0x70089433 string "OnReconnect"
+   IL_000B: ldnull       
+   IL_000C: call         0x2B000AA9 TOKEN 0x2B000AA9
+   IL_0011: call         0x0601E7F3 method ActionGameLibrary.BattleElementCenter :: Dispath(ActionGameLibrary.Event) -> void 0x0601E7F3
+   IL_0016: ret          
+
+
+############ TYPE ActionGameLibrary.BattleJudgeRule_Hit ############
+
+ActionGameLibrary.BattleJudgeRule_Hit :: OnClear() -> void 0x0601E812
+   IL_0000: ldarg.0      
+   IL_0001: ldc.i4.0     
+   IL_0002: stfld        0x0401754A field ActionGameLibrary.BattleJudgeRule_Hit::frameCount : int
+   IL_0007: ldarg.0      
+   IL_0008: ldc.i4.0     
+   IL_0009: stfld        0x0401754B field ActionGameLibrary.BattleJudgeRule_Hit::nowReportDelayFrame : int
+   IL_000E: ldarg.0      
+   IL_000F: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_0014: callvirt     0x0A005765 memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::Clear
+   IL_0019: ldarg.0      
+   IL_001A: ldfld        0x0401754D field ActionGameLibrary.BattleJudgeRule_Hit::_objectMapKeyList : System.Collections.Generic.List`1<int>
+   IL_001F: callvirt     0x0A0006AD memberref System.Collections.Generic.List`1<int>::Clear
+   IL_0024: ldarg.0      
+   IL_0025: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_002A: callvirt     0x0A005766 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::Clear
+   IL_002F: ldarg.0      
+   IL_0030: ldfld        0x0401754F field ActionGameLibrary.BattleJudgeRule_Hit::_cheatHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0035: callvirt     0x0A005766 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::Clear
+   IL_003A: ldarg.0      
+   IL_003B: ldfld        0x04017550 field ActionGameLibrary.BattleJudgeRule_Hit::_removeKeyList : System.Collections.Generic.List`1<int>
+   IL_0040: callvirt     0x0A0006AD memberref System.Collections.Generic.List`1<int>::Clear
+   IL_0045: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: OnStartJudge() -> void 0x0601E813
+   IL_0000: ldstr        0x7008E26B string "JudgeHitted"
+   IL_0005: ldarg.0      
+   IL_0006: FEldftn      0x0601E81B method ActionGameLibrary.BattleJudgeRule_Hit :: OnJudgeHitted(ActionGameLibrary.Event) -> void 0x0601E81B
+   IL_000C: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0011: ldc.i4.0     
+   IL_0012: call         0x0601E7F0 method ActionGameLibrary.BattleElementCenter :: AddEventListener(string, ActionGameLibrary.EventHandler, bool) -> void 0x0601E7F0
+   IL_0017: ldstr        0x70018584 string "OnSynHit"
+   IL_001C: ldarg.0      
+   IL_001D: FEldftn      0x0601E81C method ActionGameLibrary.BattleJudgeRule_Hit :: OnSynHit(ActionGameLibrary.Event) -> void 0x0601E81C
+   IL_0023: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0028: ldc.i4.0     
+   IL_0029: call         0x0601E7F0 method ActionGameLibrary.BattleElementCenter :: AddEventListener(string, ActionGameLibrary.EventHandler, bool) -> void 0x0601E7F0
+   IL_002E: ldstr        0x70009FA5 string "OnDead"
+   IL_0033: ldarg.0      
+   IL_0034: FEldftn      0x0601E81D method ActionGameLibrary.BattleJudgeRule_Hit :: OnDead(ActionGameLibrary.Event) -> void 0x0601E81D
+   IL_003A: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_003F: ldc.i4.0     
+   IL_0040: call         0x0601E7F0 method ActionGameLibrary.BattleElementCenter :: AddEventListener(string, ActionGameLibrary.EventHandler, bool) -> void 0x0601E7F0
+   IL_0045: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: OnStopJudge() -> void 0x0601E814
+   IL_0000: ldstr        0x7008E26B string "JudgeHitted"
+   IL_0005: ldarg.0      
+   IL_0006: FEldftn      0x0601E81B method ActionGameLibrary.BattleJudgeRule_Hit :: OnJudgeHitted(ActionGameLibrary.Event) -> void 0x0601E81B
+   IL_000C: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0011: call         0x0601E7F1 method ActionGameLibrary.BattleElementCenter :: RemoveEventListener(string, ActionGameLibrary.EventHandler) -> void 0x0601E7F1
+   IL_0016: ldstr        0x70018584 string "OnSynHit"
+   IL_001B: ldarg.0      
+   IL_001C: FEldftn      0x0601E81C method ActionGameLibrary.BattleJudgeRule_Hit :: OnSynHit(ActionGameLibrary.Event) -> void 0x0601E81C
+   IL_0022: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0027: call         0x0601E7F1 method ActionGameLibrary.BattleElementCenter :: RemoveEventListener(string, ActionGameLibrary.EventHandler) -> void 0x0601E7F1
+   IL_002C: ldstr        0x70009FA5 string "OnDead"
+   IL_0031: ldarg.0      
+   IL_0032: FEldftn      0x0601E81D method ActionGameLibrary.BattleJudgeRule_Hit :: OnDead(ActionGameLibrary.Event) -> void 0x0601E81D
+   IL_0038: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_003D: call         0x0601E7F1 method ActionGameLibrary.BattleElementCenter :: RemoveEventListener(string, ActionGameLibrary.EventHandler) -> void 0x0601E7F1
+   IL_0042: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: Run() -> void 0x0601E815
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.0      
+   IL_0002: ldfld        0x0401754B field ActionGameLibrary.BattleJudgeRule_Hit::nowReportDelayFrame : int
+   IL_0007: ldc.i4.1     
+   IL_0008: add          
+   IL_0009: stfld        0x0401754B field ActionGameLibrary.BattleJudgeRule_Hit::nowReportDelayFrame : int
+   IL_000E: ldarg.0      
+   IL_000F: ldarg.0      
+   IL_0010: ldfld        0x0401754A field ActionGameLibrary.BattleJudgeRule_Hit::frameCount : int
+   IL_0015: ldc.i4.1     
+   IL_0016: add          
+   IL_0017: stfld        0x0401754A field ActionGameLibrary.BattleJudgeRule_Hit::frameCount : int
+   IL_001C: ldarg.0      
+   IL_001D: ldfld        0x0401754A field ActionGameLibrary.BattleJudgeRule_Hit::frameCount : int
+   IL_0022: ldc.i4       480
+   IL_0027: blt.s        13
+   IL_0029: ldarg.0      
+   IL_002A: call         0x0601E816 method ActionGameLibrary.BattleJudgeRule_Hit :: ClearJudgeHit() -> void 0x0601E816
+   IL_002F: ldarg.0      
+   IL_0030: ldc.i4.0     
+   IL_0031: stfld        0x0401754A field ActionGameLibrary.BattleJudgeRule_Hit::frameCount : int
+   IL_0036: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: ClearJudgeHit() -> void 0x0601E816
+   IL_0000: ldc.i4.6     
+   IL_0001: newobj       0x0A000F1B memberref System.Collections.Generic.List`1<int>::.ctor
+   IL_0006: stloc.0      
+   IL_0007: ldarg.0      
+   IL_0008: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_000D: callvirt     0x0A005767 memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::GetEnumerator
+   IL_0012: stloc.1      
+   IL_0013: br.s         41
+   IL_0015: ldloca.s     1
+   IL_0017: call         0x0A005768 memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::get_Current
+   IL_001C: stloc.2      
+   IL_001D: ldloca.s     2
+   IL_001F: call         0x0A005769 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::get_Value
+   IL_0024: dup          
+   IL_0025: callvirt     0x0602A280 method ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData :: ClearTimeOutData() -> void 0x0602A280
+   IL_002A: callvirt     0x0602A27F method ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData :: get_isEmpty() -> bool 0x0602A27F
+   IL_002F: brfalse.s    13
+   IL_0031: ldloc.0      
+   IL_0032: ldloca.s     2
+   IL_0034: call         0x0A00576A memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::get_Key
+   IL_0039: callvirt     0x0A000305 memberref System.Collections.Generic.List`1<int>::Add
+   IL_003E: ldloca.s     1
+   IL_0040: call         0x0A00576B memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::MoveNext
+   IL_0045: brtrue.s     -50
+   IL_0047: leave.s      14
+   IL_0049: ldloca.s     1
+   IL_004B: FEconstrained. 0x1B001962 TOKEN 0x1B001962 (err list index out of range)
+   IL_0051: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_0056: endfinally   
+   IL_0057: ldc.i4.0     
+   IL_0058: stloc.3      
+   IL_0059: br.s         23
+   IL_005B: ldarg.0      
+   IL_005C: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_0061: ldloc.0      
+   IL_0062: ldloc.3      
+   IL_0063: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0068: callvirt     0x0A00576C memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::Remove
+   IL_006D: pop          
+   IL_006E: ldloc.3      
+   IL_006F: ldc.i4.1     
+   IL_0070: add          
+   IL_0071: stloc.3      
+   IL_0072: ldloc.3      
+   IL_0073: ldloc.0      
+   IL_0074: callvirt     0x0A000301 memberref System.Collections.Generic.List`1<int>::get_Count
+   IL_0079: blt.s        -32
+   IL_007B: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: SetResult(ActionGameLibrary.JudgeEvent) -> void 0x0601E817
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601E819 method ActionGameLibrary.BattleJudgeRule_Hit :: UpdateHitList() -> void 0x0601E819
+   IL_0006: ldarg.1      
+   IL_0007: ldarg.0      
+   IL_0008: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_000D: stfld        0x04017BF1 field ActionGameLibrary.JudgeEvent::cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0012: ldarg.1      
+   IL_0013: ldarg.0      
+   IL_0014: ldfld        0x0401754F field ActionGameLibrary.BattleJudgeRule_Hit::_cheatHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0019: stfld        0x04017BF2 field ActionGameLibrary.JudgeEvent::cheatHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_001E: ldarg.1      
+   IL_001F: ldarg.0      
+   IL_0020: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_0025: stfld        0x04017BF3 field ActionGameLibrary.JudgeEvent::cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_002A: ldc.i4.0     
+   IL_002B: stloc.0      
+   IL_002C: br.s         76
+   IL_002E: ldarg.0      
+   IL_002F: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0034: ldloc.0      
+   IL_0035: callvirt     0x0A00576D memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Item
+   IL_003A: stloc.1      
+   IL_003B: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_0040: ldloc.1      
+   IL_0041: ldfld        0x0401CD3B field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::accepterObjId : int
+   IL_0046: callvirt     0x0601E986 method ActionGameLibrary.GameObjectManager :: GetUnit_ByObjId(int) -> ActionGameLibrary.IActionGameObject 0x0601E986
+   IL_004B: stloc.2      
+   IL_004C: ldstr        0x7008E283 string "检测到无敌作弊："
+   IL_0051: ldloc.1      
+   IL_0052: ldflda       0x0401CD39 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::accepterRoleID : ulong
+   IL_0057: call         0x0A00057A memberref System.UInt64::ToString
+   IL_005C: ldstr        0x70000419 string " "
+   IL_0061: ldloc.2      
+   IL_0062: callvirt     0x0601F0F2 method ActionGameLibrary.IActionGameObject :: get_name() -> string 0x0601F0F2
+   IL_0067: call         0x0A0001AB memberref System.String::Concat
+   IL_006C: call         0x2B000036 TOKEN 0x2B000036
+   IL_0071: call         0x0600096B method Log :: infoError(string, object[]) -> void 0x0600096B
+   IL_0076: ldloc.0      
+   IL_0077: ldc.i4.1     
+   IL_0078: add          
+   IL_0079: stloc.0      
+   IL_007A: ldloc.0      
+   IL_007B: ldarg.0      
+   IL_007C: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0081: callvirt     0x0A00576E memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Count
+   IL_0086: blt.s        -90
+   IL_0088: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: OnReportOver() -> void 0x0601E818
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0006: callvirt     0x0A005766 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::Clear
+   IL_000B: ldarg.0      
+   IL_000C: ldfld        0x0401754F field ActionGameLibrary.BattleJudgeRule_Hit::_cheatHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0011: callvirt     0x0A005766 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::Clear
+   IL_0016: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: UpdateHitList() -> void 0x0601E819
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_0006: callvirt     0x0A005767 memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::GetEnumerator
+   IL_000B: stloc.0      
+   IL_000C: br           IL_013C
+   IL_0011: ldloca.s     0
+   IL_0013: call         0x0A005768 memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::get_Current
+   IL_0018: stloc.1      
+   IL_0019: ldloca.s     1
+   IL_001B: call         0x0A005769 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::get_Value
+   IL_0020: ldfld        0x0401CD36 field ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData::attackerMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OneObjectData>
+   IL_0025: callvirt     0x0A00576F memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OneObjectData>::GetEnumerator
+   IL_002A: stloc.2      
+   IL_002B: br           IL_0120
+   IL_0030: ldloca.s     2
+   IL_0032: call         0x0A005770 memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.OneObjectData>::get_Current
+   IL_0037: stloc.3      
+   IL_0038: ldloca.s     3
+   IL_003A: call         0x0A005771 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OneObjectData>::get_Value
+   IL_003F: ldfld        0x0401CD37 field ActionGameLibrary.BattleJudgeRule_Hit.OneObjectData::seqMap : System.Collections.Generic.Dictionary`2<int,System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>>
+   IL_0044: callvirt     0x0A005772 memberref System.Collections.Generic.Dictionary`2<int,System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>>::GetEnumerator
+   IL_0049: stloc.s      4
+   IL_004B: br           IL_0104
+   IL_0050: ldloca.s     4
+   IL_0052: call         0x0A005773 memberref Enumerator<int,System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>>::get_Current
+   IL_0057: stloc.s      5
+   IL_0059: ldloca.s     5
+   IL_005B: call         0x0A005774 memberref System.Collections.Generic.KeyValuePair`2<int,System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>>::get_Value
+   IL_0060: callvirt     0x0A005775 memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::GetEnumerator
+   IL_0065: stloc.s      6
+   IL_0067: br.s         127
+   IL_0069: ldloca.s     6
+   IL_006B: call         0x0A005776 memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Current
+   IL_0070: stloc.s      7
+   IL_0072: ldloca.s     7
+   IL_0074: call         0x0A005777 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Value
+   IL_0079: stloc.s      8
+   IL_007B: call         0x0A0000F5 memberref UnityEngine.Time::get_time
+   IL_0080: ldloc.s      8
+   IL_0082: ldfld        0x0401CD41 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::lastHitTime : float
+   IL_0087: sub          
+   IL_0088: ldc.r4       5.0
+   IL_008D: ble.un.s     89
+   IL_008F: ldloc.s      8
+   IL_0091: ldfld        0x0401CD44 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::localHitTimes : int
+   IL_0096: ldloc.s      8
+   IL_0098: ldfld        0x0401CD45 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::netHitTimes : int
+   IL_009D: ble.s        73
+   IL_009F: ldarg.0      
+   IL_00A0: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_00A5: ldloca.s     7
+   IL_00A7: call         0x0A005777 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Value
+   IL_00AC: callvirt     0x0A005778 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::Add
+   IL_00B1: ldarg.0      
+   IL_00B2: ldloca.s     7
+   IL_00B4: call         0x0A005777 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Value
+   IL_00B9: ldfld        0x0401CD39 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::accepterRoleID : ulong
+   IL_00BE: ldloc.s      8
+   IL_00C0: ldfld        0x0401CD44 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::localHitTimes : int
+   IL_00C5: ldloc.s      8
+   IL_00C7: ldfld        0x0401CD45 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::netHitTimes : int
+   IL_00CC: sub          
+   IL_00CD: call         0x0601E823 method ActionGameLibrary.BattleJudgeRule_Hit :: AddCheatNoHit(ulong, int) -> ActionGameLibrary.CheatCountData 0x0601E823
+   IL_00D2: stloc.s      9
+   IL_00D4: ldloca.s     7
+   IL_00D6: call         0x0A005777 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Value
+   IL_00DB: ldarg.0      
+   IL_00DC: ldloc.s      9
+   IL_00DE: call         0x0601E81A method ActionGameLibrary.BattleJudgeRule_Hit :: CheckNeedReport(ActionGameLibrary.CheatCountData) -> bool 0x0601E81A
+   IL_00E3: stfld        0x0401CD46 field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::needReport : bool
+   IL_00E8: ldloca.s     6
+   IL_00EA: call         0x0A005779 memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::MoveNext
+   IL_00EF: brtrue       IL_0069
+   IL_00F4: leave.s      14
+   IL_00F6: ldloca.s     6
+   IL_00F8: FEconstrained. 0x1B00196B TOKEN 0x1B00196B (err list index out of range)
+   IL_00FE: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_0103: endfinally   
+   IL_0104: ldloca.s     4
+   IL_0106: call         0x0A00577A memberref Enumerator<int,System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>>::MoveNext
+   IL_010B: brtrue       IL_0050
+   IL_0110: leave.s      14
+   IL_0112: ldloca.s     4
+   IL_0114: FEconstrained. 0x1B001968 TOKEN 0x1B001968 (err list index out of range)
+   IL_011A: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_011F: endfinally   
+   IL_0120: ldloca.s     2
+   IL_0122: call         0x0A00577B memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.OneObjectData>::MoveNext
+   IL_0127: brtrue       IL_0030
+   IL_012C: leave.s      14
+   IL_012E: ldloca.s     2
+   IL_0130: FEconstrained. 0x1B001965 TOKEN 0x1B001965 (err list index out of range)
+   IL_0136: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_013B: endfinally   
+   IL_013C: ldloca.s     0
+   IL_013E: call         0x0A00576B memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::MoveNext
+   IL_0143: brtrue       IL_0011
+   IL_0148: leave.s      14
+   IL_014A: ldloca.s     0
+   IL_014C: FEconstrained. 0x1B001962 TOKEN 0x1B001962 (err list index out of range)
+   IL_0152: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_0157: endfinally   
+   IL_0158: ldc.i4.0     
+   IL_0159: stloc.s      10
+   IL_015B: ldarg.0      
+   IL_015C: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0161: callvirt     0x0A00576E memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Count
+   IL_0166: stloc.s      11
+   IL_0168: br.s         55
+   IL_016A: ldarg.0      
+   IL_016B: ldfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0170: ldloc.s      10
+   IL_0172: callvirt     0x0A00576D memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::get_Item
+   IL_0177: stloc.s      12
+   IL_0179: ldarg.0      
+   IL_017A: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_017F: ldloc.s      12
+   IL_0181: ldfld        0x0401CD3B field ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData::accepterObjId : int
+   IL_0186: ldloca.s     13
+   IL_0188: callvirt     0x0A00577C memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::TryGetValue
+   IL_018D: pop          
+   IL_018E: ldloc.s      13
+   IL_0190: brfalse.s    9
+   IL_0192: ldloc.s      13
+   IL_0194: ldloc.s      12
+   IL_0196: callvirt     0x0602A27D method ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData :: RemoveOnceHitData(ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData) -> void 0x0602A27D
+   IL_019B: ldloc.s      10
+   IL_019D: ldc.i4.1     
+   IL_019E: add          
+   IL_019F: stloc.s      10
+   IL_01A1: ldloc.s      10
+   IL_01A3: ldloc.s      11
+   IL_01A5: blt.s        -61
+   IL_01A7: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: CheckNeedReport(ActionGameLibrary.CheatCountData) -> bool 0x0601E81A
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x0401754B field ActionGameLibrary.BattleJudgeRule_Hit::nowReportDelayFrame : int
+   IL_0006: ldc.i4       1800
+   IL_000B: ble.s        14
+   IL_000D: ldarg.1      
+   IL_000E: ldfld        0x04017554 field ActionGameLibrary.CheatCountData::totalJudgeAcceptHit : float
+   IL_0013: ldc.r4       15.0
+   IL_0018: FEcgt        
+   IL_001A: ret          
+   IL_001B: ldc.i4.0     
+   IL_001C: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: OnJudgeHitted(ActionGameLibrary.Event) -> void 0x0601E81B
+   IL_0000: ldarg.1      
+   IL_0001: isinst       0x02002125 type ActionGameLibrary.JudgeEvent
+   IL_0006: stloc.0      
+   IL_0007: ldarg.0      
+   IL_0008: ldloc.0      
+   IL_0009: call         0x0601E81E method ActionGameLibrary.BattleJudgeRule_Hit :: AddJudgeHitData(ActionGameLibrary.JudgeEvent) -> void 0x0601E81E
+   IL_000E: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: OnSynHit(ActionGameLibrary.Event) -> void 0x0601E81C
+   IL_0000: ldarg.1      
+   IL_0001: isinst       0x02002125 type ActionGameLibrary.JudgeEvent
+   IL_0006: stloc.0      
+   IL_0007: ldarg.0      
+   IL_0008: ldloc.0      
+   IL_0009: call         0x0601E820 method ActionGameLibrary.BattleJudgeRule_Hit :: CheckJudgeHitData(ActionGameLibrary.JudgeEvent) -> void 0x0601E820
+   IL_000E: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: OnDead(ActionGameLibrary.Event) -> void 0x0601E81D
+   IL_0000: ldarg.1      
+   IL_0001: isinst       0x02002035 type ActionGameLibrary.BattleEvent
+   IL_0006: ldfld        0x040176B8 field ActionGameLibrary.BattleEvent::actionGameObject : ActionGameLibrary.IActionGameObject
+   IL_000B: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0010: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0015: stloc.0      
+   IL_0016: ldarg.0      
+   IL_0017: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_001C: ldloc.0      
+   IL_001D: callvirt     0x0A00577D memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::ContainsKey
+   IL_0022: brfalse.s    26
+   IL_0024: ldarg.0      
+   IL_0025: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_002A: ldloc.0      
+   IL_002B: callvirt     0x0A00576C memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::Remove
+   IL_0030: pop          
+   IL_0031: ldarg.0      
+   IL_0032: ldfld        0x0401754D field ActionGameLibrary.BattleJudgeRule_Hit::_objectMapKeyList : System.Collections.Generic.List`1<int>
+   IL_0037: ldloc.0      
+   IL_0038: callvirt     0x0A0009DE memberref System.Collections.Generic.List`1<int>::Remove
+   IL_003D: pop          
+   IL_003E: ldarg.0      
+   IL_003F: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_0044: callvirt     0x0A005767 memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::GetEnumerator
+   IL_0049: stloc.1      
+   IL_004A: br.s         21
+   IL_004C: ldloca.s     1
+   IL_004E: call         0x0A005768 memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::get_Current
+   IL_0053: stloc.2      
+   IL_0054: ldloca.s     2
+   IL_0056: call         0x0A005769 memberref System.Collections.Generic.KeyValuePair`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::get_Value
+   IL_005B: ldloc.0      
+   IL_005C: callvirt     0x0602A27E method ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData :: OnCharacterDead(int) -> void 0x0602A27E
+   IL_0061: ldloca.s     1
+   IL_0063: call         0x0A00576B memberref Enumerator<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::MoveNext
+   IL_0068: brtrue.s     -30
+   IL_006A: leave.s      14
+   IL_006C: ldloca.s     1
+   IL_006E: FEconstrained. 0x1B001962 TOKEN 0x1B001962 (err list index out of range)
+   IL_0074: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_0079: endfinally   
+   IL_007A: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: AddJudgeHitData(ActionGameLibrary.JudgeEvent) -> void 0x0601E81E
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.1      
+   IL_0002: call         0x0601E81F method ActionGameLibrary.BattleJudgeRule_Hit :: NeedJudge(ActionGameLibrary.JudgeEvent) -> bool 0x0601E81F
+   IL_0007: brtrue.s     1
+   IL_0009: ret          
+   IL_000A: ldarg.1      
+   IL_000B: ldfld        0x04017BEA field ActionGameLibrary.JudgeEvent::accepter : ActionGameLibrary.InteractiveGameObject
+   IL_0010: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0015: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_001A: stloc.1      
+   IL_001B: ldarg.0      
+   IL_001C: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_0021: ldloc.1      
+   IL_0022: ldloca.s     0
+   IL_0024: callvirt     0x0A00577C memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::TryGetValue
+   IL_0029: pop          
+   IL_002A: ldloc.0      
+   IL_002B: brtrue.s     31
+   IL_002D: ldarg.0      
+   IL_002E: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_0033: ldloc.1      
+   IL_0034: newobj       0x0602A281 method ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData :: .ctor() -> void 0x0602A281
+   IL_0039: dup          
+   IL_003A: stloc.0      
+   IL_003B: callvirt     0x0A00577E memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::set_Item
+   IL_0040: ldarg.0      
+   IL_0041: ldfld        0x0401754D field ActionGameLibrary.BattleJudgeRule_Hit::_objectMapKeyList : System.Collections.Generic.List`1<int>
+   IL_0046: ldloc.1      
+   IL_0047: callvirt     0x0A000305 memberref System.Collections.Generic.List`1<int>::Add
+   IL_004C: ldloc.0      
+   IL_004D: ldarg.1      
+   IL_004E: ldfld        0x04017BE8 field ActionGameLibrary.JudgeEvent::attackCharacter : ActionGameLibrary.InteractiveGameObject
+   IL_0053: ldarg.1      
+   IL_0054: ldfld        0x04017BE9 field ActionGameLibrary.JudgeEvent::attacker : ActionGameLibrary.InteractiveGameObject
+   IL_0059: ldarg.1      
+   IL_005A: ldfld        0x04017BEA field ActionGameLibrary.JudgeEvent::accepter : ActionGameLibrary.InteractiveGameObject
+   IL_005F: ldarg.1      
+   IL_0060: ldfld        0x04017BED field ActionGameLibrary.JudgeEvent::attackData : ActionGameLibrary.AttackData
+   IL_0065: ldarg.1      
+   IL_0066: ldfld        0x04017BEF field ActionGameLibrary.JudgeEvent::acceptActionIndex : int
+   IL_006B: callvirt     0x0602A27B method ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData :: AddOnceLocalHitData(ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.AttackData, int) -> bool 0x0602A27B
+   IL_0070: brfalse.s    38
+   IL_0072: ldarg.0      
+   IL_0073: ldarg.1      
+   IL_0074: ldfld        0x04017BE8 field ActionGameLibrary.JudgeEvent::attackCharacter : ActionGameLibrary.InteractiveGameObject
+   IL_0079: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_007E: ldfld        0x04017D2F field ActionGameLibrary.ActionGameObjectData::ulRoleId : ulong
+   IL_0083: ldarg.1      
+   IL_0084: ldfld        0x04017BEA field ActionGameLibrary.JudgeEvent::accepter : ActionGameLibrary.InteractiveGameObject
+   IL_0089: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_008E: ldfld        0x04017D2F field ActionGameLibrary.ActionGameObjectData::ulRoleId : ulong
+   IL_0093: call         0x0601E822 method ActionGameLibrary.BattleJudgeRule_Hit :: AddJudeHit(ulong, ulong) -> void 0x0601E822
+   IL_0098: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: NeedJudge(ActionGameLibrary.JudgeEvent) -> bool 0x0601E81F
+   IL_0000: ldc.i4.0     
+   IL_0001: stloc.0      
+   IL_0002: ldarg.1      
+   IL_0003: ldfld        0x04017BEA field ActionGameLibrary.JudgeEvent::accepter : ActionGameLibrary.InteractiveGameObject
+   IL_0008: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_000D: ldfld        0x04017D2F field ActionGameLibrary.ActionGameObjectData::ulRoleId : ulong
+   IL_0012: brfalse.s    2
+   IL_0014: ldc.i4.1     
+   IL_0015: stloc.0      
+   IL_0016: ldloc.0      
+   IL_0017: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: CheckJudgeHitData(ActionGameLibrary.JudgeEvent) -> void 0x0601E820
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_0006: ldarg.1      
+   IL_0007: ldfld        0x04017BEC field ActionGameLibrary.JudgeEvent::accepterCharacterObjId : int
+   IL_000C: ldloca.s     0
+   IL_000E: callvirt     0x0A00577C memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::TryGetValue
+   IL_0013: pop          
+   IL_0014: ldloc.0      
+   IL_0015: brfalse.s    35
+   IL_0017: ldloc.0      
+   IL_0018: ldarg.1      
+   IL_0019: ldfld        0x04017BEB field ActionGameLibrary.JudgeEvent::attackerCharacterObjId : int
+   IL_001E: ldarg.1      
+   IL_001F: ldfld        0x04017BED field ActionGameLibrary.JudgeEvent::attackData : ActionGameLibrary.AttackData
+   IL_0024: ldfld        0x040175BE field ActionGameLibrary.AttackData::actionUsedCount : int
+   IL_0029: ldarg.1      
+   IL_002A: ldfld        0x04017BED field ActionGameLibrary.JudgeEvent::attackData : ActionGameLibrary.AttackData
+   IL_002F: ldfld        0x040175BF field ActionGameLibrary.AttackData::hitBoxGroupIndex : int
+   IL_0034: callvirt     0x0602A27C method ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData :: AddOnceNetHitData(int, int, int) -> bool 0x0602A27C
+   IL_0039: pop          
+   IL_003A: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: LogInfo() -> void 0x0601E821
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_0006: callvirt     0x0A00577F memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::GetEnumerator
+   IL_000B: stloc.0      
+   IL_000C: br           IL_00CE
+   IL_0011: ldloca.s     0
+   IL_0013: call         0x0A005780 memberref Enumerator<ulong,ActionGameLibrary.CheatCountData>::get_Current
+   IL_0018: stloc.1      
+   IL_0019: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_001E: ldloca.s     1
+   IL_0020: call         0x0A005781 memberref System.Collections.Generic.KeyValuePair`2<ulong,ActionGameLibrary.CheatCountData>::get_Key
+   IL_0025: callvirt     0x0601E989 method ActionGameLibrary.GameObjectManager :: GetUnitByRoleid(ulong) -> ActionGameLibrary.IActionGameObject 0x0601E989
+   IL_002A: stloc.2      
+   IL_002B: ldc.i4.s     11
+   IL_002D: newarr       0x010001A3 typespec Enumerator<string,ResManager.AssetBundleCache>
+   IL_0032: dup          
+   IL_0033: ldc.i4.0     
+   IL_0034: ldstr        0x7008E295 string "角色: "
+   IL_0039: stelem.ref   
+   IL_003A: dup          
+   IL_003B: ldc.i4.1     
+   IL_003C: ldloc.2      
+   IL_003D: callvirt     0x0601F0F2 method ActionGameLibrary.IActionGameObject :: get_name() -> string 0x0601F0F2
+   IL_0042: stelem.ref   
+   IL_0043: dup          
+   IL_0044: ldc.i4.2     
+   IL_0045: ldstr        0x70000419 string " "
+   IL_004A: stelem.ref   
+   IL_004B: dup          
+   IL_004C: ldc.i4.3     
+   IL_004D: ldloc.2      
+   IL_004E: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0053: ldflda       0x04017D2F field ActionGameLibrary.ActionGameObjectData::ulRoleId : ulong
+   IL_0058: call         0x0A00057A memberref System.UInt64::ToString
+   IL_005D: stelem.ref   
+   IL_005E: dup          
+   IL_005F: ldc.i4.4     
+   IL_0060: ldstr        0x7008E29F string " 被击数: "
+   IL_0065: stelem.ref   
+   IL_0066: dup          
+   IL_0067: ldc.i4.5     
+   IL_0068: ldloca.s     1
+   IL_006A: call         0x0A005782 memberref System.Collections.Generic.KeyValuePair`2<ulong,ActionGameLibrary.CheatCountData>::get_Value
+   IL_006F: ldflda       0x04017554 field ActionGameLibrary.CheatCountData::totalJudgeAcceptHit : float
+   IL_0074: call         0x0A000618 memberref System.Single::ToString
+   IL_0079: stelem.ref   
+   IL_007A: dup          
+   IL_007B: ldc.i4.6     
+   IL_007C: ldstr        0x7008E2AD string " 无敌作弊数: "
+   IL_0081: stelem.ref   
+   IL_0082: dup          
+   IL_0083: ldc.i4.7     
+   IL_0084: ldloca.s     1
+   IL_0086: call         0x0A005782 memberref System.Collections.Generic.KeyValuePair`2<ulong,ActionGameLibrary.CheatCountData>::get_Value
+   IL_008B: ldflda       0x04017555 field ActionGameLibrary.CheatCountData::totalCheatNoHit : float
+   IL_0090: call         0x0A000618 memberref System.Single::ToString
+   IL_0095: stelem.ref   
+   IL_0096: dup          
+   IL_0097: ldc.i4.8     
+   IL_0098: ldstr        0x7008E2BF string "  作弊率: "
+   IL_009D: stelem.ref   
+   IL_009E: dup          
+   IL_009F: ldc.i4.s     9
+   IL_00A1: ldloca.s     1
+   IL_00A3: call         0x0A005782 memberref System.Collections.Generic.KeyValuePair`2<ulong,ActionGameLibrary.CheatCountData>::get_Value
+   IL_00A8: callvirt     0x0601E826 method ActionGameLibrary.CheatCountData :: GetCheatNoHitRate() -> float 0x0601E826
+   IL_00AD: stloc.3      
+   IL_00AE: ldloca.s     3
+   IL_00B0: call         0x0A000618 memberref System.Single::ToString
+   IL_00B5: stelem.ref   
+   IL_00B6: dup          
+   IL_00B7: ldc.i4.s     10
+   IL_00B9: ldstr        0x70001DBA string "%"
+   IL_00BE: stelem.ref   
+   IL_00BF: call         0x0A00037C memberref System.String::Concat
+   IL_00C4: call         0x2B000036 TOKEN 0x2B000036
+   IL_00C9: call         0x0600096B method Log :: infoError(string, object[]) -> void 0x0600096B
+   IL_00CE: ldloca.s     0
+   IL_00D0: call         0x0A005783 memberref Enumerator<ulong,ActionGameLibrary.CheatCountData>::MoveNext
+   IL_00D5: brtrue       IL_0011
+   IL_00DA: leave.s      14
+   IL_00DC: ldloca.s     0
+   IL_00DE: FEconstrained. 0x1B00196E TOKEN 0x1B00196E (err list index out of range)
+   IL_00E4: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_00E9: endfinally   
+   IL_00EA: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: AddJudeHit(ulong, ulong) -> void 0x0601E822
+   IL_0000: ldarg.1      
+   IL_0001: brfalse.s    62
+   IL_0003: ldarg.0      
+   IL_0004: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_0009: ldarg.1      
+   IL_000A: ldloca.s     0
+   IL_000C: callvirt     0x0A005784 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::TryGetValue
+   IL_0011: pop          
+   IL_0012: ldloc.0      
+   IL_0013: brtrue.s     26
+   IL_0015: ldarg.0      
+   IL_0016: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_001B: ldarg.1      
+   IL_001C: newobj       0x0601E828 method ActionGameLibrary.CheatCountData :: .ctor() -> void 0x0601E828
+   IL_0021: dup          
+   IL_0022: ldarg.1      
+   IL_0023: stfld        0x04017552 field ActionGameLibrary.CheatCountData::roleId : ulong
+   IL_0028: dup          
+   IL_0029: stloc.0      
+   IL_002A: callvirt     0x0A005785 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::set_Item
+   IL_002F: ldloc.0      
+   IL_0030: dup          
+   IL_0031: ldfld        0x04017553 field ActionGameLibrary.CheatCountData::totalJudgeAttackHit : float
+   IL_0036: ldc.r4       1.0
+   IL_003B: add          
+   IL_003C: stfld        0x04017553 field ActionGameLibrary.CheatCountData::totalJudgeAttackHit : float
+   IL_0041: ldarg.2      
+   IL_0042: brfalse.s    62
+   IL_0044: ldarg.0      
+   IL_0045: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_004A: ldarg.2      
+   IL_004B: ldloca.s     0
+   IL_004D: callvirt     0x0A005784 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::TryGetValue
+   IL_0052: pop          
+   IL_0053: ldloc.0      
+   IL_0054: brtrue.s     26
+   IL_0056: ldarg.0      
+   IL_0057: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_005C: ldarg.2      
+   IL_005D: newobj       0x0601E828 method ActionGameLibrary.CheatCountData :: .ctor() -> void 0x0601E828
+   IL_0062: dup          
+   IL_0063: ldarg.2      
+   IL_0064: stfld        0x04017552 field ActionGameLibrary.CheatCountData::roleId : ulong
+   IL_0069: dup          
+   IL_006A: stloc.0      
+   IL_006B: callvirt     0x0A005785 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::set_Item
+   IL_0070: ldloc.0      
+   IL_0071: dup          
+   IL_0072: ldfld        0x04017554 field ActionGameLibrary.CheatCountData::totalJudgeAcceptHit : float
+   IL_0077: ldc.r4       1.0
+   IL_007C: add          
+   IL_007D: stfld        0x04017554 field ActionGameLibrary.CheatCountData::totalJudgeAcceptHit : float
+   IL_0082: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: AddCheatNoHit(ulong, int) -> ActionGameLibrary.CheatCountData 0x0601E823
+   IL_0000: ldarg.1      
+   IL_0001: brtrue.s     2
+   IL_0003: ldnull       
+   IL_0004: ret          
+   IL_0005: ldarg.0      
+   IL_0006: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_000B: ldarg.1      
+   IL_000C: ldloca.s     0
+   IL_000E: callvirt     0x0A005784 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::TryGetValue
+   IL_0013: pop          
+   IL_0014: ldloc.0      
+   IL_0015: brtrue.s     26
+   IL_0017: ldarg.0      
+   IL_0018: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_001D: ldarg.1      
+   IL_001E: newobj       0x0601E828 method ActionGameLibrary.CheatCountData :: .ctor() -> void 0x0601E828
+   IL_0023: dup          
+   IL_0024: ldarg.1      
+   IL_0025: stfld        0x04017552 field ActionGameLibrary.CheatCountData::roleId : ulong
+   IL_002A: dup          
+   IL_002B: stloc.0      
+   IL_002C: callvirt     0x0A005785 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::set_Item
+   IL_0031: ldloc.0      
+   IL_0032: dup          
+   IL_0033: ldfld        0x04017555 field ActionGameLibrary.CheatCountData::totalCheatNoHit : float
+   IL_0038: ldarg.2      
+   IL_0039: conv.r4      
+   IL_003A: add          
+   IL_003B: stfld        0x04017555 field ActionGameLibrary.CheatCountData::totalCheatNoHit : float
+   IL_0040: ldloc.0      
+   IL_0041: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: AddCheatHit(ulong) -> void 0x0601E824
+   IL_0000: ldarg.1      
+   IL_0001: brtrue.s     1
+   IL_0003: ret          
+   IL_0004: ldarg.0      
+   IL_0005: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_000A: ldarg.1      
+   IL_000B: ldloca.s     0
+   IL_000D: callvirt     0x0A005784 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::TryGetValue
+   IL_0012: pop          
+   IL_0013: ldloc.0      
+   IL_0014: brtrue.s     26
+   IL_0016: ldarg.0      
+   IL_0017: ldfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_001C: ldarg.1      
+   IL_001D: newobj       0x0601E828 method ActionGameLibrary.CheatCountData :: .ctor() -> void 0x0601E828
+   IL_0022: dup          
+   IL_0023: ldarg.1      
+   IL_0024: stfld        0x04017552 field ActionGameLibrary.CheatCountData::roleId : ulong
+   IL_0029: dup          
+   IL_002A: stloc.0      
+   IL_002B: callvirt     0x0A005785 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::set_Item
+   IL_0030: ldloc.0      
+   IL_0031: dup          
+   IL_0032: ldfld        0x04017556 field ActionGameLibrary.CheatCountData::totalCheatHit : float
+   IL_0037: ldc.r4       1.0
+   IL_003C: add          
+   IL_003D: stfld        0x04017556 field ActionGameLibrary.CheatCountData::totalCheatHit : float
+   IL_0042: ret          
+
+ActionGameLibrary.BattleJudgeRule_Hit :: .ctor() -> void 0x0601E825
+   IL_0000: ldarg.0      
+   IL_0001: ldc.i4.s     20
+   IL_0003: newobj       0x0A005786 memberref System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>::.ctor
+   IL_0008: stfld        0x0401754C field ActionGameLibrary.BattleJudgeRule_Hit::_objectMap : System.Collections.Generic.Dictionary`2<int,ActionGameLibrary.BattleJudgeRule_Hit.JudgeHitData>
+   IL_000D: ldarg.0      
+   IL_000E: ldc.i4.s     20
+   IL_0010: newobj       0x0A000F1B memberref System.Collections.Generic.List`1<int>::.ctor
+   IL_0015: stfld        0x0401754D field ActionGameLibrary.BattleJudgeRule_Hit::_objectMapKeyList : System.Collections.Generic.List`1<int>
+   IL_001A: ldarg.0      
+   IL_001B: newobj       0x0A005787 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::.ctor
+   IL_0020: stfld        0x0401754E field ActionGameLibrary.BattleJudgeRule_Hit::_cheatNoHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0025: ldarg.0      
+   IL_0026: newobj       0x0A005787 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>::.ctor
+   IL_002B: stfld        0x0401754F field ActionGameLibrary.BattleJudgeRule_Hit::_cheatHitList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule_Hit.OnceHitData>
+   IL_0030: ldarg.0      
+   IL_0031: newobj       0x0A000303 memberref System.Collections.Generic.List`1<int>::.ctor
+   IL_0036: stfld        0x04017550 field ActionGameLibrary.BattleJudgeRule_Hit::_removeKeyList : System.Collections.Generic.List`1<int>
+   IL_003B: ldarg.0      
+   IL_003C: newobj       0x0A005788 memberref System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>::.ctor
+   IL_0041: stfld        0x04017551 field ActionGameLibrary.BattleJudgeRule_Hit::_cheatCount : System.Collections.Generic.Dictionary`2<ulong,ActionGameLibrary.CheatCountData>
+   IL_0046: ldarg.0      
+   IL_0047: call         0x0601E811 method ActionGameLibrary.BattleJudgeRule :: .ctor() -> void 0x0601E811
+   IL_004C: ret          

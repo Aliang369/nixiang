@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <!-- 必须的 meta 标签 -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap 的 CSS 文件 -->
+    <link rel="stylesheet" href="https://menu-1255602259.file.myqcloud.com/public/Game/bootstrap.min.css">
+    <link rel="stylesheet" href="https://menu-1255602259.file.myqcloud.com/public/Game/app.css?var=0517">
+    <title>Hello, world!</title>
+    <style type="text/css">
+        body{
+            background: transparent;
+            background-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="">
+    <div onclick="tiaozheng()">
+        <ul class="nav my-nav list-unstyled pl-3 pr-4" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-toggle="tab" href="#home" id="tab-home">
+                    <div class="title">首页</div>
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" data-toggle="tab" href="#user" id="tab-user">
+                    <div class="title">用户中心</div>
+                </a>
+            </li>
+            <li class="nav-item ">
+                <a class="nav-link" data-toggle="tab" href="#aboud" id="tab-aboud">
+                    <div class="title">设置</div>
+                </a>
+            </li>
+        </ul>
+    </div>
+   
+    <div class="tab-content" id="myTabContent">
+        <div class=" tab-pane p-3  fade show active" id="home" role="tabpanel">
+            <div class="home d-flex flex-row" id="home-box">
+                
+            </div>
+        </div>
+        <div class="tab-pane p-3" id="user" role="tabpanel">
+            
+        </div>
+        <div class="tab-pane p-3" id="aboud" role="tabpanel">
+
+        </div>
+    </div>
+
+    
+
+    <style type="text/css">
+        .dd .btn{
+            border-radius: 20px;
+                background: #FFF;
+    color: #000;
+    font-size: 14px;
+        }
+    </style>
+    <div class="ad_box">
+        <div style="position: absolute;right: 0;top: 0;background: transparent;padding: 10px;">
+            <div class="btn-group btn-group-sm dd" role="group" aria-label="Basic example">
+              <button type="button" class="btn btn-dark" style="padding: 3px 10px;" id="dtime">30 秒</button>
+              <button type="button" class="btn btn-dark" style="font-size: 22px;padding: 0 10px;display: flex;justify-items: center;align-items: center;" onclick="closeAD()">
+                  <svg t="1652348531842" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2927" width="18" height="18"><path d="M557.312 513.248l265.28-263.904c12.544-12.48 12.608-32.704 0.128-45.248-12.512-12.576-32.704-12.608-45.248-0.128l-265.344 263.936-263.04-263.84C236.64 191.584 216.384 191.52 203.84 204 191.328 216.48 191.296 236.736 203.776 249.28l262.976 263.776L201.6 776.8c-12.544 12.48-12.608 32.704-0.128 45.248 6.24 6.272 14.464 9.44 22.688 9.44 8.16 0 16.32-3.104 22.56-9.312l265.216-263.808 265.44 266.24c6.24 6.272 14.432 9.408 22.656 9.408 8.192 0 16.352-3.136 22.592-9.344 12.512-12.48 12.544-32.704 0.064-45.248L557.312 513.248z" p-id="2928"></path></svg>
+              </button>
+            </div>
+        </div>
+        <div style="width: 100%;height: 100%;" onclick="openUrl(window.ad_url2)">
+            <iframe src="" id="ad-iframe" style="width: 100%;height: 100%;"  ></iframe>
+        </div>
+        
+        <!-- <img src="/dc54564e9258d1090637e492d047bbb76d814de5.jpeg" style="max-width: 100%;"> -->
+    </div>
+    <div class="modal fade" tabindex="-1" id="dialogConfirm" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="padding:10px 19px;border-bottom:0;padding-bottom:0">
+                    <h5 class="modal-title" id="dialogConfirm-title"></h5>
+                </div>
+                <div class="modal-body pb-0" id="dialogConfirm-body">
+                </div>
+                <div class="modal-footer" style="border-top:0;display: block;">
+                    <div class="row">
+                        <div class="col-6" id="dialogConfirm-ok">
+                        </div>
+                        <div class="col-6" id="dialogConfirm-no">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loading" class="position-fixed" style="left: 0;right: 0;top: 0;bottom: 0;display: none;z-index: 999999">
+        <div class="d-flex align-items-center justify-content-center flex-fill h-100" style="background-color: #0000003d;">
+            <div class="d-flex flex-column align-items-center justify-content-center" style="background: #f1f1f1;padding: 20px 40px;border-radius: 4px;">
+                <div class="spinner-border" style="width: 3rem; height: 3rem;" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <div class="mt-3" id="loading-text">加载中...</div>
+                <div class="mt-3" id="loading-ggs" style="
+    text-align: center;
+">60</div>
+            </div>
+        </div>
+    </div>
+
+
+
+    
+
+    
+    <script src="https://menu-1255602259.file.myqcloud.com/public/Game/jquery.min.js"></script>
+    <script src="https://menu-1255602259.file.myqcloud.com/public/Game/bootstrap.bundle.min.js"></script>
+        <script src="https://menu-1255602259.file.myqcloud.com/public/Game/app1.js?var=0517"></script>
+        <script type="text/javascript">
+
+        
+        function loading(text){
+        $('#loading').show();
+        $('#loading-text').text(text);
+    }
+    function loading_close(){
+        $('#loading').hide();
+    }
+    
+        loading("全模式秒杀 需要你吧技能 学完大概 才能实现秒杀 ，这个秒杀特殊  需要配合所有技能");
+    setTimeout(function() {
+        loading_close();
+        
+    }, 60000);
+    var ggs = 60;
+    
+    var timme = setInterval(function(){
+        if(ggs-- <= 0){
+            
+            clearInterval(timme);
+        }
+        $('#loading-ggs').html(ggs+" s");
+    },1000);
+        
+        
+
+
+
+        var exp = "PQMiHTtIKhdWWy89V0NkOVQleilWNycdFWYhSioQKhIWHgVLBjomHQdhWAkuBx9fLFkXASwtbEwvNSoaLi18Ei0bWR0AIAhMBTpFBi9fWUQAOgQdAAAAEy0qdw8BC11cKQMDChcPUB4TImgOLjkXXClnIjQpOB9fKGcxTSsTUgEvNiYZF2VmFjgRLAQyPBJQDSc0BApCUBsqFAQHBnRjHiwRFhYXNzwCOCUvFyJuLAU1LkVbBSUiWAB6JUcvFHMaOGRjSS0TfAAtDDFeABAAAwAMAx0ARQRHKAA2Hy9lXRkBADoeAF41DQMfVQE6ahwaKQMYDxdqURwVRG8MPQAcAAFLUB0xOSkCM1gPFC4DbBUxDAMAAhAQFgEcKR06MAhTPEYnUAR9PyARRisnCXwBMw8%2BdBMqai5cLzhxAxZzPy4oOFxSCwgnUAkZDR8IGCsKBXVvFwUPaw4AIgsaAWZ4Fiw2PRwUI3QMKjkpHy5YIUAsPn8EAAAbDTgfeA0BNSIZLDklDxQhXRw8L3tXBipJWTlxXRsBX3oYBnsAEQAQfw8vITIqAgcfORwLPV0WJAhKBgAUDlZQETBWNwkYV1w%2FKVQeSB8vFzdUPRseDz1zCQ8sElxzFhgjUQx9CTsKRisNF0Y3ORFsUD0VPQUIPQcNETttCgU0PBJQDiQ4BhYEWx0WJn0FFFISCAlzSxQPFFMBJDsNFSlvWwQ2BwpWEiYkHhV7Eh0WDygFF3kCExcmVxQKFDABIx0nFThtXwQxQEtTCQIkBQpdLB4EWnkFFHgCFBM1aQkSbQ4aOx0zFiY6DgMvLW1TCQIkBRdrHhoVJh4CEEEbH1QeD05VE1IYeGM8PnsCEV5sBWpxUiZbPlZ%2BATBWISMiVGodElQLUAhWNxUtex0GQ3sUEQNsFgtHUgwFMVZQKwlVJgUoV1IFMFcechNWFA0dFS4MDgEMA10WI1FbAAAcHypLJRsvFHMHBnRjHix2FhQPbiAcIA4NFyc3LAc%2BQAxbBSUiWAB6JUcvFHMaOGRjSS0TfAAtDDFeABAAAwAMAx0ARQRHKAA2Hy9lXRkBADoeAF41DQMfVQE6ahwaKQMYDxdqURwVRG8MPQAcAAFLUB0xOSECM1gDFC4TUgwAH1ECFX8eQikXPzkrXFx0DyInIw1LJRsqFHIYO10EDTk9ax9WKAELew4kK3s3GSlvPnIEPF8YWAd6KgssBHIYAGQADQUUCQEuMjFdAz4IAwMyPV0VGnNLBxRFAABxWQQ6On8fA2RjFi0qCEwADyofL2cfEQI1Jh47JAQNADo6GDplUAcpOB9bKGYcPisTUkwvNiYZF2VmFjgRLAQyPBJQDSc0BApCUBsqFAcYLkoUCAMpe0gHHlwWFX8oGT8tCVssXGp2CytfBA4FXx8KNCwCDH8SFA8eex9WOh0teA4KDHs3ATlsLkxb";
+        window.game_id = "1194";
+        window.version = "1";
+        window.version_tip = "";
+        window.tUrl = "";
+        
+        
+                    onload=function(){
+                initGame(exp);
+                
+            }
+        
+
+    </script>
+</body>
+</html>�A�Eo���'��r�eG��=j�/Տ@j�/�HTTP/1.1 200date:Fri, 02 Oct 2026 04:19:11 GMTlast-modified:Thu, 01 Oct 2026 15:04:47 GMTserver:tencent-cosx-cos-hash-crc64ecma:11321052775245441304x-cos-request-id:NmFiZjMwYmZfOGQ3NzgxMGJfZjhkOV8xYjdlNGVhZg==x-cos-version-id:MTg0NDQ5NTMyMDY2MjE1NjEyMjUx-cache-lookup:Cache Missx-cache-lookup:Cache Missx-nws-log-uuid:12835638518199605649cache-control:max-age=0content-type:text/htmlaccept-ranges:bytesetag:"531c15232255c017c73bd9907aebf8de"age:0content-length:8050�	0�	�0��
+�s�s랃��Z:F��0	*�H��0J10	UCN10U
+WoTrus CA Limited10UWoTrus RSA DV SSL CA 20260513000000Z261127235959Z010U*.cdn.myqcloud.com0�"0	*�H���0�
+�ǝ<㌈�^�����oSp�RYf���鞩������Å�V}�}�d��z4�U�.�}<,x��'P������bz=e��Xw%t�G����b�����Ai�˞y��O����Y�v8�Y�<ʰXxU�Q������o�d@�� [E6�a��8��������\�6��u�Y��׶�PN�ϗ���r,��P�_4��2�UZ�:֟H3)�C����.Yl���w��(z~���>[d��HO�q�
+������?0�;0U#0�س��L]TCC�&�Ej����0U0��E�W~X�	��P�f�-��0U��0U�00U%0
++0U 0
+0g�0k+_0]07+0�+http://crt.crlocsp.cn/WoTrusRSADVSSLCA2.crt0"+0�http://ocsp.crlocsp.cn0��
++�y�v�rpv�m}ѧ�w���_�����3Ze�гs���iw� �1jG0E m
+J�h�B��ceGʳX�}��H�=e�Y�6�+!�%@�%�#]9�BZ7�l����s�O�^ʃ^./vwȣ�ǳ��5k?jzm�:NC��F���9u�Ϛ� �1�H0F!�2[2$PpM�a����Ȅ`��ʰ(.=�;-�pr!��R�u�g��wfE�x�o�w�ڪ�	]d�}l�PC�^��R�3����A}%� �s���:� �1�F�F0D +���fY��Y��ɜG�(� �8��lt�٠2�w !/�����Ԓ`&�K�zl���R�:�?K�0��U��0���*.cdn.myqcloud.com�	*.2144.cn�
+*.2144.com�
+*.4399.com�*.5054399.com�*.58cdn.com.cn�*.bldimg.com�*.cdn-go.cn�*.cntv.qcloudcdn.com�*.danmu.com�*.dd.cdntips.net�*.dd.qq.com�*.dianping.com�*.dl.txcdns.com�*.dlied1.cdntips.net�*.dpfile.com�*.ffnews.cn�*.file.myqcloud.com�*.flash.2144.com�
+*.flash.cn�*.geetest.com�
+*.gtimg.cn�*.gtimg.com�*.hls.cdn.myqcloud.com�*.image.myqcloud.com�*.img4399.com�*.jsbchina.cn�
+*.lof3.xyz�*.meituan.net�*.myapp.com�*.mykeeta.net�*.qcloudcdn.com�	*.qpic.cn�*.sogoucdn.com�*.suyinwealth.com�*.ugdtimg.com�*.uniqlo.cn�*.vda.v.qcloudcdn.com�*.video.myqcloud.com�*.vip.cdngot.com�*.vod-qcloud.com�*.vod.cdn.myqcloud.com�*.vod.myqcloud.com�*.vod2.myqcloud.com�*.wanyabox.com�*.weishi.qq.com�*.wx.qq.com�*.zhongcheng818.com�*.zservey.net�cdn.myqcloud.com�flash.cn�nitrome.com.4399.com�www.miniclip.com.4399pk.com�www.tencentwm.com�www.txfund.com�xpdl999.aiwan4399.com0	*�H�����@��=~��������{��g���(�L���B�XO�uk���E��D9t��z]��ꌗ�?����u�UH���*�KI�g�.�⾉\1��
+w(+���&�����Vň4Y�i��"��{����|�w�"�b���ʱT��.7 ��{�_!�,B��F�(�bQ�L�!�B����-~	�_�	�Ce�.���X��~"�.w]��G4�ٿ�mo"�՝Ol4� �J�����l�=6y0127޺�v�qI/^�ׁj2�dW�	�5ȇL�u��S����\.j�����G���}(׌�~��Ը���w�7{�*h[�A��ڹ���Q��w���L����Ev��0�O���3-�iϮ_��@F�h��L9��5���J�썖O)0�%0�����)�3M�-�e�@60	*�H��0_10	UGB10U
+Sectigo Limited1604U-Sectigo Public Server Authentication Root R460250820000000Z350819235959Z0J10	UCN10U
+WoTrus CA Limited10UWoTrus RSA DV SSL CA 20��0	*�H����0��������8l�O�>�&u�������A��[s>�C�8���d���g�0���Ux�AŲN�Tw܀�e��,EƠ������xc���@3|�&CE���:43�1�(<�^Ȥ^��]s���j����qobq1w���1U�o:q1����:=}s�w��:���3��Q�ĉ.K��:��_����ǒ���(.�:b�Pg��r/v0D@As�4u���VVsBP�@+����q"lCY�7x�Cm=��EbT��e��=��eʣ��*o��O�E��͡������B�O^���꽺���/
+5G���l�
+A��e"OA�ze���@���5�%1���Z4���W�;������9듴�+�b�k�]�,�A���o0�k0U#0�VsXd����*by�@�!I0Uس��L]TCC�&�Ej����0U��0U�0�0U%0
++0U 0
+0g�0TUM0K0I�G�E�Chttp://crl.sectigo.com/SectigoPublicServerAuthenticationRootR46.crl0��+x0v0O+0�Chttp://crt.sectigo.com/SectigoPublicServerAuthenticationRootR46.p7c0#+0�http://ocsp.sectigo.com0	*�H�����;�*��@�u2�6�~�r���}��s�]Y���4m���}E�X�K���{k�2Á%�F*H~���k��,�-�?�p�vU9��򧁪�,ri��� ���[?���L-,"$3�i��uI4��)����I�����A�)}(d�=�c�v�R$I�VJ!3=�T�����1H�z12��A��4�ьJV0�J4q�#���.��ͪ�;a������Uq��љ�s �X��d�8�eUa،��6;�Z�������R�<^T#A�|s�eLK��;8&7��=z��V�孚���(��	+'X�~�|��Îݏ^�}j����j���Q��k�3�=�E�a��|`���?<�r�ſ#I7���&�����o)����a�O�^�N<��H�/�i�I��#��Ʈ!s��eBpu��<d�Ol�ItL�;e�^_���bQ�4'!	�Xb-&���400Ojt6��v1�'aa����B�ac�ӿb�#��cZ/��+�`�"����l�o3�r��0��0�r�u����|��%��ǭ0	*�H��0_10	UGB10U
+Sectigo Limited1604U-Sectigo Public Server Authentication Root R460210322000000Z460321235959Z0_10	UGB10U
+Sectigo Limited1604U-Sectigo Public Server Authentication Root R460�"0	*�H���0�
+����6Ru�#�GBI�c��!�ĕ�H+&|S�y�+�-��,��2�I¹�H={Z�T��]1tO�P!ݤ�hOcm%�L*��H0a��|�J�>+Lq�5���n�;J��։��m�O3�P�7�3�_��T�H�C�f��8C�Q��#][�K�����7��9�!Q0��m�0N�[��p$��E�dC�!:/<�� �B'��o��d0�9͓e�!1�#P37"�8��10�E�b��]2yB��j�V@MΪ���vI��'������c���U��;f�9�-������M�]Wr�;GV�����a��M��4[��u��H���(���ʧ��V�{ILY� ��)�8�i�I��y�z������x(��D��}&�Xr�y�_��8b4h��0���a�2l�6͢Ln�6���Dp�|��9���k��%#W���I�u���T(�!<�|
+��{ku������+�B�8�����=����N��)��V饖��Ð�����ԦGC|m��B0@0UVsXd����*by�@�!I0U��0U�0�0	*�H���/\�<�^��.p��21���Qռ
+�d�^��shdz����]�-�7E�(��P`�I~��6)DGj�U <؛�2��@�sꃡ�D������~ʦv�6=��3&em�~���X8{������c���L�k���(��@�{}^9�S�~2B�!��N|��������Q�6G?��Ǽ�[OH�%��
+?��3'��"l$�A�X�%h"�Z<|l�uH��fgnL���W�.��ؠk����h��L?E�R���'y��1<��:"�ɏf�[�Mց%�v�
+>��5���8�`S�(BADW設�E�%��>eA����ty��WG��/��F��&ZVc�b`n��'"����4���Ñr����.�DQ�W�4�H!���f%CR�p"6͟�u �crc'��j��9��vz�\��II-U7h�:�>T�T�'P�{ /?����JG��+{I>�)F`B�3)��)��ӈ�9A;�����`c��-U�/�P2409:8c5c:110:38::165�h2e�2$�����On�:M�'t�,O�gQ�U�A�Eo���Ч��

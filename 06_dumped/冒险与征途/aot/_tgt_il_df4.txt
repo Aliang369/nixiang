@@ -1,0 +1,2269 @@
+
+
+############ TYPE ActionGameLibrary.DamageFactory ############
+
+ActionGameLibrary.DamageFactory :: Init() -> void 0x0601E56D
+   IL_0000: ldsfld       0x0401740E field ActionGameLibrary.DamageFactory::_inited : bool
+   IL_0005: brtrue.s     6
+   IL_0007: ldc.i4.1     
+   IL_0008: stsfld       0x0401740E field ActionGameLibrary.DamageFactory::_inited : bool
+   IL_000D: ret          
+
+ActionGameLibrary.DamageFactory :: Clear(bool, System.Collections.Generic.List`1<string>) -> void 0x0601E56E
+   IL_0000: ldc.i4.0     
+   IL_0001: stsfld       0x0401740E field ActionGameLibrary.DamageFactory::_inited : bool
+   IL_0006: ret          
+
+ActionGameLibrary.DamageFactory :: GetOriginalDamage(ActionGameLibrary.AttackData, ActionGameLibrary.CharacterData, ActionGameLibrary.CharacterData, ActionGameLibrary.ActionState, bool, int, string, int) -> ActionGameLibrary.DamageInfo 0x0601E56F
+   IL_0000: ldnull       
+   IL_0001: stloc.2      
+   IL_0002: ldnull       
+   IL_0003: stloc.3      
+   IL_0004: ldarg.s      4
+   IL_0006: brtrue.s     42
+   IL_0008: ldsfld       0x04000EBA field DataService::skillData : DS_SkillData
+   IL_000D: ldarg.0      
+   IL_000E: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0013: ldarg.0      
+   IL_0014: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0019: ldc.i4.0     
+   IL_001A: callvirt     0x06001605 method DS_SkillData :: GetSkillData(int, int, bool) -> GameConfigData.SkillData 0x06001605
+   IL_001F: stloc.2      
+   IL_0020: ldloc.2      
+   IL_0021: brtrue.s     6
+   IL_0023: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0028: ret          
+   IL_0029: ldloc.2      
+   IL_002A: callvirt     0x0601C40D method GameConfigData.SkillData :: get_skillType() -> int 0x0601C40D
+   IL_002F: stloc.1      
+   IL_0030: br.s         29
+   IL_0032: ldsfld       0x04000EBD field DataService::projectileData : DS_ProjectileData
+   IL_0037: ldarg.s      5
+   IL_0039: callvirt     0x0600152E method DS_ProjectileData :: GetProjectileData(uint) -> GameConfigData.ProjectileData 0x0600152E
+   IL_003E: stloc.3      
+   IL_003F: ldloc.3      
+   IL_0040: brtrue.s     6
+   IL_0042: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0047: ret          
+   IL_0048: ldloc.3      
+   IL_0049: callvirt     0x0601BAA4 method GameConfigData.ProjectileData :: get_skillType() -> int 0x0601BAA4
+   IL_004E: stloc.1      
+   IL_004F: ldarg.3      
+   IL_0050: ldfld        0x04017E2D field ActionGameLibrary.ActionState::immuneDamage : bool
+   IL_0055: brtrue.s     27
+   IL_0057: ldloc.1      
+   IL_0058: ldc.i4.1     
+   IL_0059: bne.un.s     8
+   IL_005B: ldarg.3      
+   IL_005C: ldfld        0x04017E2E field ActionGameLibrary.ActionState::immunePhysicalDamage : bool
+   IL_0061: brtrue.s     15
+   IL_0063: ldloc.1      
+   IL_0064: ldc.i4.2     
+   IL_0065: bne.un.s     8
+   IL_0067: ldarg.3      
+   IL_0068: ldfld        0x04017E2F field ActionGameLibrary.ActionState::immuneMagicDamage : bool
+   IL_006D: br.s         4
+   IL_006F: ldc.i4.0     
+   IL_0070: br.s         1
+   IL_0072: ldc.i4.1     
+   IL_0073: brfalse.s    44
+   IL_0075: ldloca.s     10
+   IL_0077: FEinitobj    0x02002009 type ActionGameLibrary.DamageInfo
+   IL_007D: ldloca.s     10
+   IL_007F: ldc.i4.1     
+   IL_0080: stfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_0085: ldloca.s     10
+   IL_0087: ldc.i4.1     
+   IL_0088: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_008D: ldloca.s     10
+   IL_008F: ldc.i4.0     
+   IL_0090: conv.i8      
+   IL_0091: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_0096: ldloca.s     10
+   IL_0098: ldc.i4.1     
+   IL_0099: stfld        0x04017525 field ActionGameLibrary.DamageInfo::invalidDamage : bool
+   IL_009E: ldloc.s      10
+   IL_00A0: ret          
+   IL_00A1: ldloca.s     4
+   IL_00A3: FEinitobj    0x02002009 type ActionGameLibrary.DamageInfo
+   IL_00A9: ldc.i4.1     
+   IL_00AA: stloc.s      5
+   IL_00AC: ldloca.s     4
+   IL_00AE: ldloc.s      5
+   IL_00B0: stfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_00B5: ldc.r4       0.3499999940395355
+   IL_00BA: stloc.s      6
+   IL_00BC: call         0x0A0001EC memberref UnityEngine.Random::get_value
+   IL_00C1: ldloc.s      6
+   IL_00C3: FEclt        
+   IL_00C5: stloc.s      7
+   IL_00C7: ldloca.s     4
+   IL_00C9: ldloc.s      7
+   IL_00CB: stfld        0x04017522 field ActionGameLibrary.DamageInfo::isCrit : bool
+   IL_00D0: ldc.r8       0.0
+   IL_00D9: stloc.s      8
+   IL_00DB: ldc.r8       0.0
+   IL_00E4: stloc.s      9
+   IL_00E6: ldarg.s      4
+   IL_00E8: brtrue.s     127
+   IL_00EA: ldsfld       0x04000EBB field DataService::skillEffect : DS_SkillEffectData
+   IL_00EF: ldarg.1      
+   IL_00F0: ldfld        0x04017D24 field ActionGameLibrary.ActionGameObjectData::modelID : string
+   IL_00F5: ldarg.0      
+   IL_00F6: ldfld        0x040175AB field ActionGameLibrary.AttackData::hitId : int
+   IL_00FB: ldarg.0      
+   IL_00FC: ldfld        0x040175C3 field ActionGameLibrary.AttackData::actionLabel : string
+   IL_0101: callvirt     0x06001675 method DS_SkillEffectData :: GetSkillEffectData(string, int, string) -> GameConfigData.SkillEffectData 0x06001675
+   IL_0106: stloc.s      11
+   IL_0108: ldloc.s      11
+   IL_010A: brtrue.s     6
+   IL_010C: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0111: ret          
+   IL_0112: ldloc.2      
+   IL_0113: ldarg.0      
+   IL_0114: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0119: ldarg.0      
+   IL_011A: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_011F: call         0x0601C48B method GameConfigData.SkillDataConfig :: GetDamageFactorA(GameConfigData.SkillData, int, int) -> float 0x0601C48B
+   IL_0124: stloc.s      12
+   IL_0126: ldloc.2      
+   IL_0127: ldarg.0      
+   IL_0128: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_012D: ldarg.0      
+   IL_012E: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0133: call         0x0601C48C method GameConfigData.SkillDataConfig :: GetDamageFactorB(GameConfigData.SkillData, int, int) -> float 0x0601C48C
+   IL_0138: stloc.s      13
+   IL_013A: ldarg.1      
+   IL_013B: ldarg.2      
+   IL_013C: ldloc.2      
+   IL_013D: callvirt     0x0601C3EF method GameConfigData.SkillData :: get_damageFomulaID() -> int 0x0601C3EF
+   IL_0142: ldloc.2      
+   IL_0143: callvirt     0x0601C3F1 method GameConfigData.SkillData :: get_damageParameter_A() -> string 0x0601C3F1
+   IL_0148: ldloc.2      
+   IL_0149: callvirt     0x0601C3F3 method GameConfigData.SkillData :: get_damageParameter_B() -> string 0x0601C3F3
+   IL_014E: ldloc.2      
+   IL_014F: callvirt     0x0601C3F5 method GameConfigData.SkillData :: get_damageConst() -> float 0x0601C3F5
+   IL_0154: ldloc.s      12
+   IL_0156: ldloc.s      13
+   IL_0158: call         0x06000D79 method GameFormula :: GetResult(ActionGameLibrary.InteractiveGameObjectData, ActionGameLibrary.InteractiveGameObjectData, int, string, string, float, float, float) -> double 0x06000D79
+   IL_015D: stloc.s      8
+   IL_015F: ldloc.s      11
+   IL_0161: callvirt     0x0601C49D method GameConfigData.SkillEffectData :: get_functionType() -> int 0x0601C49D
+   IL_0166: stloc.0      
+   IL_0167: br.s         117
+   IL_0169: ldsfld       0x04000EBE field DataService::projectileEffect : DS_ProjectileEffectData
+   IL_016E: ldarg.s      6
+   IL_0170: ldarg.0      
+   IL_0171: ldfld        0x040175AB field ActionGameLibrary.AttackData::hitId : int
+   IL_0176: callvirt     0x06001536 method DS_ProjectileEffectData :: GetProjectileEffectData(string, int) -> GameConfigData.ProjectileEffectData 0x06001536
+   IL_017B: stloc.s      14
+   IL_017D: ldloc.s      14
+   IL_017F: brtrue.s     6
+   IL_0181: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0186: ret          
+   IL_0187: ldarg.s      5
+   IL_0189: ldarg.0      
+   IL_018A: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_018F: ldloc.3      
+   IL_0190: callvirt     0x0601BAB6 method GameConfigData.ProjectileData :: get_damageFactor_A() -> float 0x0601BAB6
+   IL_0195: call         0x0601BAD2 method GameConfigData.ProjectileDataConfig :: GetDamageFactorA(uint, int, float) -> float 0x0601BAD2
+   IL_019A: stloc.s      15
+   IL_019C: ldarg.s      5
+   IL_019E: ldarg.0      
+   IL_019F: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_01A4: ldloc.3      
+   IL_01A5: callvirt     0x0601BABA method GameConfigData.ProjectileData :: get_damageFactor_B() -> float 0x0601BABA
+   IL_01AA: call         0x0601BAD3 method GameConfigData.ProjectileDataConfig :: GetDamageFactorB(uint, int, float) -> float 0x0601BAD3
+   IL_01AF: stloc.s      16
+   IL_01B1: ldarg.1      
+   IL_01B2: ldarg.2      
+   IL_01B3: ldloc.3      
+   IL_01B4: callvirt     0x0601BAAE method GameConfigData.ProjectileData :: get_damageFomulaID() -> int 0x0601BAAE
+   IL_01B9: ldloc.3      
+   IL_01BA: callvirt     0x0601BAB0 method GameConfigData.ProjectileData :: get_damageParameter_A() -> string 0x0601BAB0
+   IL_01BF: ldloc.3      
+   IL_01C0: callvirt     0x0601BAB2 method GameConfigData.ProjectileData :: get_damageParameter_B() -> string 0x0601BAB2
+   IL_01C5: ldloc.3      
+   IL_01C6: callvirt     0x0601BAB4 method GameConfigData.ProjectileData :: get_damageConst() -> float 0x0601BAB4
+   IL_01CB: ldloc.s      15
+   IL_01CD: ldloc.s      16
+   IL_01CF: call         0x06000D79 method GameFormula :: GetResult(ActionGameLibrary.InteractiveGameObjectData, ActionGameLibrary.InteractiveGameObjectData, int, string, string, float, float, float) -> double 0x06000D79
+   IL_01D4: stloc.s      8
+   IL_01D6: ldloc.s      14
+   IL_01D8: callvirt     0x0601BAE3 method GameConfigData.ProjectileEffectData :: get_functionType() -> int 0x0601BAE3
+   IL_01DD: stloc.0      
+   IL_01DE: ldloc.s      8
+   IL_01E0: stloc.s      9
+   IL_01E2: ldloc.s      7
+   IL_01E4: brfalse.s    11
+   IL_01E6: ldloc.s      9
+   IL_01E8: ldarg.1      
+   IL_01E9: ldarg.2      
+   IL_01EA: call         0x06000D7A method GameFormula :: GetCriticalResult(double, ActionGameLibrary.InteractiveGameObjectData, ActionGameLibrary.InteractiveGameObjectData) -> double 0x06000D7A
+   IL_01EF: stloc.s      9
+   IL_01F1: ldloca.s     4
+   IL_01F3: ldloc.s      9
+   IL_01F5: conv.i8      
+   IL_01F6: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_01FB: ldloc.s      4
+   IL_01FD: ldfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_0202: ldc.i4.1     
+   IL_0203: conv.i8      
+   IL_0204: bge.s        9
+   IL_0206: ldloca.s     4
+   IL_0208: ldc.i4.1     
+   IL_0209: conv.i8      
+   IL_020A: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_020F: ldloc.0      
+   IL_0210: ldc.i4.1     
+   IL_0211: beq.s        6
+   IL_0213: ldloc.0      
+   IL_0214: ldc.i4.2     
+   IL_0215: beq.s        12
+   IL_0217: br.s         20
+   IL_0219: ldloca.s     4
+   IL_021B: ldc.i4.1     
+   IL_021C: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_0221: br.s         18
+   IL_0223: ldloca.s     4
+   IL_0225: ldc.i4.2     
+   IL_0226: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_022B: br.s         8
+   IL_022D: ldloca.s     4
+   IL_022F: ldc.i4.1     
+   IL_0230: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_0235: ldloc.s      4
+   IL_0237: ret          
+
+ActionGameLibrary.DamageFactory :: ProcDamageByClient(ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, bool, int, string, int) -> void 0x0601E570
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040175BC field ActionGameLibrary.AttackData::showDamage : bool
+   IL_0006: brtrue.s     1
+   IL_0008: ret          
+   IL_0009: ldnull       
+   IL_000A: stloc.0      
+   IL_000B: ldnull       
+   IL_000C: stloc.1      
+   IL_000D: ldarg.s      4
+   IL_000F: brtrue.s     37
+   IL_0011: ldsfld       0x04000EBA field DataService::skillData : DS_SkillData
+   IL_0016: ldarg.0      
+   IL_0017: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_001C: ldarg.0      
+   IL_001D: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0022: ldc.i4.0     
+   IL_0023: callvirt     0x06001605 method DS_SkillData :: GetSkillData(int, int, bool) -> GameConfigData.SkillData 0x06001605
+   IL_0028: stloc.0      
+   IL_0029: ldloc.0      
+   IL_002A: brtrue.s     1
+   IL_002C: ret          
+   IL_002D: ldloc.0      
+   IL_002E: callvirt     0x0601C40D method GameConfigData.SkillData :: get_skillType() -> int 0x0601C40D
+   IL_0033: pop          
+   IL_0034: br.s         24
+   IL_0036: ldsfld       0x04000EBD field DataService::projectileData : DS_ProjectileData
+   IL_003B: ldarg.s      5
+   IL_003D: callvirt     0x0600152E method DS_ProjectileData :: GetProjectileData(uint) -> GameConfigData.ProjectileData 0x0600152E
+   IL_0042: stloc.1      
+   IL_0043: ldloc.1      
+   IL_0044: brtrue.s     1
+   IL_0046: ret          
+   IL_0047: ldloc.1      
+   IL_0048: callvirt     0x0601BAA4 method GameConfigData.ProjectileData :: get_skillType() -> int 0x0601BAA4
+   IL_004D: pop          
+   IL_004E: ldloca.s     2
+   IL_0050: FEinitobj    0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0056: ldloca.s     2
+   IL_0058: ldarg.0      
+   IL_0059: ldarg.1      
+   IL_005A: ldarg.2      
+   IL_005B: ldarg.3      
+   IL_005C: ldarg.s      4
+   IL_005E: ldarg.s      5
+   IL_0060: ldarg.s      6
+   IL_0062: ldarg.s      7
+   IL_0064: call         0x0601E539 method ActionGameLibrary.CSpellUtil :: MakeHitPara(ref ActionGameLibrary.TSpellHitPara, ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, bool, int, string, int) -> void 0x0601E539
+   IL_0069: ldloca.s     2
+   IL_006B: call         0x0601E580 method ActionGameLibrary.DamageFactory :: DoSpellHit(ref ActionGameLibrary.TSpellHitPara) -> int 0x0601E580
+   IL_0070: stloc.3      
+   IL_0071: ldloc.3      
+   IL_0072: pop          
+   IL_0073: ldloca.s     2
+   IL_0075: call         0x0601E53F method ActionGameLibrary.TSpellHitPara :: Clear() -> void 0x0601E53F
+   IL_007A: ret          
+
+ActionGameLibrary.DamageFactory :: ExecDamageCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E571
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_0006: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_000B: stloc.0      
+   IL_000C: ldarg.0      
+   IL_000D: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_0012: ldarg.1      
+   IL_0013: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0018: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_001D: stloc.1      
+   IL_001E: ldloc.0      
+   IL_001F: brtrue.s     2
+   IL_0021: ldc.i4.m1    
+   IL_0022: ret          
+   IL_0023: ldloc.1      
+   IL_0024: brtrue.s     2
+   IL_0026: ldc.i4.m1    
+   IL_0027: ret          
+   IL_0028: ldarg.0      
+   IL_0029: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_002E: ldarg.1      
+   IL_002F: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_0034: dup          
+   IL_0035: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_003A: stloc.2      
+   IL_003B: ldloc.0      
+   IL_003C: ldloc.1      
+   IL_003D: ldloca.s     2
+   IL_003F: ldc.i4.1     
+   IL_0040: ldarg.2      
+   IL_0041: ldarg.3      
+   IL_0042: ldarg.0      
+   IL_0043: call         0x0601E57A method ActionGameLibrary.DamageFactory :: CalDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref bool, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, ref ActionGameLibrary.TSpellHitPara) -> BigInt 0x0601E57A
+   IL_0048: stloc.3      
+   IL_0049: ldloc.2      
+   IL_004A: callvirt     0x0600FB92 method proto_ff.Proto_PvpAccepterData :: set_IsCrit(bool) -> void 0x0600FB92
+   IL_004F: ldloc.3      
+   IL_0050: stloc.s      4
+   IL_0052: ldloc.0      
+   IL_0053: ldc.i4       186
+   IL_0058: call         0x0601E500 method ActionGameLibrary.CSpellUtil :: GetAttribRealValue(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> double 0x0601E500
+   IL_005D: stloc.s      5
+   IL_005F: ldloc.0      
+   IL_0060: ldarg.2      
+   IL_0061: callvirt     0x0601C464 method GameConfigData.SkillData :: get_enDamageType() -> int 0x0601C464
+   IL_0066: call         0x0601E4FC method ActionGameLibrary.CSpellUtil :: IsPhyDmg(ActionGameLibrary.IActionGameObject, proto_ff.enDamageType) -> bool 0x0601E4FC
+   IL_006B: stloc.s      6
+   IL_006D: ldloc.0      
+   IL_006E: ldloc.1      
+   IL_006F: ldloca.s     5
+   IL_0071: ldarg.2      
+   IL_0072: ldarg.3      
+   IL_0073: ldarg.0      
+   IL_0074: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0079: ldloc.2      
+   IL_007A: ldloc.s      6
+   IL_007C: ldc.i4       186
+   IL_0081: call         0x0601E4F4 method ActionGameLibrary.CSpellUtil :: CalcIncMoreDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, ActionGameLibrary.TSpellHitPara, bool, bool, proto_ff.AttrType) -> int 0x0601E4F4
+   IL_0086: pop          
+   IL_0087: ldloc.s      5
+   IL_0089: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_008E: conv.r.un    
+   IL_008F: conv.r8      
+   IL_0090: mul          
+   IL_0091: conv.i8      
+   IL_0092: stloc.s      7
+   IL_0094: ldloc.s      4
+   IL_0096: ldloc.s      7
+   IL_0098: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_009D: call         0x06000BEE method BigInt :: op_Multiply(BigInt, BigInt) -> BigInt 0x06000BEE
+   IL_00A2: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_00A7: conv.u8      
+   IL_00A8: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_00AD: call         0x06000BEF method BigInt :: op_Division(BigInt, BigInt) -> BigInt 0x06000BEF
+   IL_00B2: stloc.s      8
+   IL_00B4: ldloc.0      
+   IL_00B5: ldc.i4       187
+   IL_00BA: call         0x0601E503 method ActionGameLibrary.CSpellUtil :: GetAttribBigInt(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> BigInt 0x0601E503
+   IL_00BF: stloc.s      9
+   IL_00C1: ldloc.s      4
+   IL_00C3: ldloc.s      9
+   IL_00C5: call         0x06000BEE method BigInt :: op_Multiply(BigInt, BigInt) -> BigInt 0x06000BEE
+   IL_00CA: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_00CF: conv.u8      
+   IL_00D0: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_00D5: call         0x06000BEF method BigInt :: op_Division(BigInt, BigInt) -> BigInt 0x06000BEF
+   IL_00DA: stloc.s      10
+   IL_00DC: ldc.r8       0.0
+   IL_00E5: stloc.s      11
+   IL_00E7: ldloc.0      
+   IL_00E8: ldloc.1      
+   IL_00E9: ldloca.s     10
+   IL_00EB: ldloca.s     11
+   IL_00ED: ldarg.2      
+   IL_00EE: ldc.i4.0     
+   IL_00EF: call         0x0601E4ED method ActionGameLibrary.CSpellUtil :: CalcElementFixDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref BigInt, ref double, GameConfigData.SkillData, bool) -> int 0x0601E4ED
+   IL_00F4: pop          
+   IL_00F5: ldloc.s      4
+   IL_00F7: ldloc.s      8
+   IL_00F9: call         0x06000BEB method BigInt :: op_Addition(BigInt, BigInt) -> BigInt 0x06000BEB
+   IL_00FE: ldloc.s      10
+   IL_0100: call         0x06000BEB method BigInt :: op_Addition(BigInt, BigInt) -> BigInt 0x06000BEB
+   IL_0105: stloc.3      
+   IL_0106: ldloc.1      
+   IL_0107: ldc.i4.4     
+   IL_0108: call         0x0601E26B method ActionGameLibrary.CBattleActorUtil :: IsActorStateSetted(ActionGameLibrary.IActionGameObject, int) -> bool 0x0601E26B
+   IL_010D: brtrue.s     10
+   IL_010F: ldloc.1      
+   IL_0110: ldc.i4.s     14
+   IL_0112: call         0x0601E26B method ActionGameLibrary.CBattleActorUtil :: IsActorStateSetted(ActionGameLibrary.IActionGameObject, int) -> bool 0x0601E26B
+   IL_0117: br.s         1
+   IL_0119: ldc.i4.1     
+   IL_011A: stloc.s      12
+   IL_011C: ldloc.1      
+   IL_011D: callvirt     0x0601F0DD method ActionGameLibrary.IActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601F0DD
+   IL_0122: ldfld        0x04017E2D field ActionGameLibrary.ActionState::immuneDamage : bool
+   IL_0127: brtrue.s     13
+   IL_0129: ldloc.1      
+   IL_012A: callvirt     0x0601F0DD method ActionGameLibrary.IActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601F0DD
+   IL_012F: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0134: br.s         1
+   IL_0136: ldc.i4.1     
+   IL_0137: ldloc.s      12
+   IL_0139: or           
+   IL_013A: brfalse.s    31
+   IL_013C: ldc.i4.0     
+   IL_013D: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0142: stloc.3      
+   IL_0143: ldc.i4.0     
+   IL_0144: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0149: stloc.s      4
+   IL_014B: ldc.i4.0     
+   IL_014C: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0151: stloc.s      8
+   IL_0153: ldc.i4.0     
+   IL_0154: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0159: stloc.s      10
+   IL_015B: ldarg.0      
+   IL_015C: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_0161: ldarg.1      
+   IL_0162: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_0167: ldloc.3      
+   IL_0168: call         0x06000A74 method ToolKit :: ToMsgInt128(BigInt) -> proto_ff.MsgInt128 0x06000A74
+   IL_016D: callvirt     0x0600FB95 method proto_ff.Proto_PvpAccepterData :: set_Damage(proto_ff.MsgInt128) -> void 0x0600FB95
+   IL_0172: ldarg.0      
+   IL_0173: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_0178: ldarg.1      
+   IL_0179: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_017E: ldloc.2      
+   IL_017F: callvirt     0x0600FB92 method proto_ff.Proto_PvpAccepterData :: set_IsCrit(bool) -> void 0x0600FB92
+   IL_0184: ldloc.0      
+   IL_0185: callvirt     0x2B00013F TOKEN 0x2B00013F
+   IL_018A: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_018F: ldloc.1      
+   IL_0190: callvirt     0x2B00013F TOKEN 0x2B00013F
+   IL_0195: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_019A: ldarg.2      
+   IL_019B: call         0x0601E8B6 method ActionGameLibrary.LocalHitCheck :: CheckHit(ActionGameLibrary.SecondaryAttribute, ActionGameLibrary.SecondaryAttribute, GameConfigData.SkillData) -> bool 0x0601E8B6
+   IL_01A0: brtrue.s     91
+   IL_01A2: ldarg.0      
+   IL_01A3: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_01A8: call         0x0601E44C method ActionGameLibrary.CHitNotifier :: InitBySpell(ActionGameLibrary.TSpellHitPara) -> int 0x0601E44C
+   IL_01AD: pop          
+   IL_01AE: call         0x0A005668 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Get
+   IL_01B3: stloc.s      13
+   IL_01B5: ldarg.0      
+   IL_01B6: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_01BB: ldarg.1      
+   IL_01BC: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_01C1: ldc.i4.0     
+   IL_01C2: ldc.i4.0     
+   IL_01C3: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_01C8: ldloca.s     13
+   IL_01CA: ldc.i4.0     
+   IL_01CB: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_01D0: ldc.i4.0     
+   IL_01D1: ldarg.0      
+   IL_01D2: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_01D7: ldarg.1      
+   IL_01D8: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_01DD: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_01E2: ldc.i4.1     
+   IL_01E3: ldc.i4.0     
+   IL_01E4: ldc.i4.0     
+   IL_01E5: ldc.i4.0     
+   IL_01E6: ldc.i4.0     
+   IL_01E7: ldc.i4.0     
+   IL_01E8: ldnull       
+   IL_01E9: call         0x0601E456 method ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, proto_ff.CSHurtType, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, BigInt, bool, bool, bool, bool, int, proto_ff.CSHurtAdditionType, proto_ff.enNoDamageType, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E456
+   IL_01EE: pop          
+   IL_01EF: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_01F4: ldloc.s      13
+   IL_01F6: call         0x0A005669 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Release
+   IL_01FB: ldc.i4.0     
+   IL_01FC: ret          
+   IL_01FD: ldloc.1      
+   IL_01FE: callvirt     0x0601F0DD method ActionGameLibrary.IActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601F0DD
+   IL_0203: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0208: brtrue       IL_029F
+   IL_020D: ldloc.3      
+   IL_020E: ldc.i4.0     
+   IL_020F: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0214: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_0219: brfalse      IL_029F
+   IL_021E: ldloc.3      
+   IL_021F: stloc.s      14
+   IL_0221: ldc.i4.0     
+   IL_0222: stloc.s      15
+   IL_0224: call         0x0A005668 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Get
+   IL_0229: stloc.s      16
+   IL_022B: ldloc.0      
+   IL_022C: ldloc.s      4
+   IL_022E: ldloc.s      8
+   IL_0230: ldloc.s      10
+   IL_0232: ldloca.s     16
+   IL_0234: call         0x0601E284 method ActionGameLibrary.CBattleAdapterUtil :: Adapt4DamageShow(ActionGameLibrary.IActionGameObject, BigInt, BigInt, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>) -> int 0x0601E284
+   IL_0239: pop          
+   IL_023A: ldloc.0      
+   IL_023B: ldloc.1      
+   IL_023C: ldarg.0      
+   IL_023D: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0242: ldloc.s      14
+   IL_0244: ldloca.s     16
+   IL_0246: ldloca.s     15
+   IL_0248: ldarg.1      
+   IL_0249: call         0x0601E578 method ActionGameLibrary.DamageFactory :: ProcDmgHit(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, ref bool, int) -> int 0x0601E578
+   IL_024E: pop          
+   IL_024F: ldarg.0      
+   IL_0250: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0255: call         0x0601E44C method ActionGameLibrary.CHitNotifier :: InitBySpell(ActionGameLibrary.TSpellHitPara) -> int 0x0601E44C
+   IL_025A: pop          
+   IL_025B: ldloc.0      
+   IL_025C: ldloc.3      
+   IL_025D: call         0x06000BFF method BigInt :: op_Explicit(BigInt) -> long 0x06000BFF
+   IL_0262: call         0x0601E57B method ActionGameLibrary.DamageFactory :: ProcVampire(ActionGameLibrary.IActionGameObject, long) -> int 0x0601E57B
+   IL_0267: pop          
+   IL_0268: ldloc.0      
+   IL_0269: ldarg.0      
+   IL_026A: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_026F: ldloc.3      
+   IL_0270: call         0x06000BFF method BigInt :: op_Explicit(BigInt) -> long 0x06000BFF
+   IL_0275: call         0x0601E57C method ActionGameLibrary.DamageFactory :: ProcSkillVampire(ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, long) -> int 0x0601E57C
+   IL_027A: pop          
+   IL_027B: ldloc.0      
+   IL_027C: ldloc.1      
+   IL_027D: ldloc.3      
+   IL_027E: call         0x06000BFF method BigInt :: op_Explicit(BigInt) -> long 0x06000BFF
+   IL_0283: call         0x0601E57D method ActionGameLibrary.DamageFactory :: ProcHitAddtionalVampire(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, long) -> int 0x0601E57D
+   IL_0288: pop          
+   IL_0289: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_028E: ldarg.2      
+   IL_028F: ldarg.0      
+   IL_0290: ldloc.0      
+   IL_0291: ldloc.1      
+   IL_0292: call         0x0601E572 method ActionGameLibrary.DamageFactory :: ExecCheckHitTriggerBuff(GameConfigData.SkillData, ref ActionGameLibrary.TSpellHitPara, ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject) -> int 0x0601E572
+   IL_0297: pop          
+   IL_0298: ldloc.s      16
+   IL_029A: call         0x0A005669 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Release
+   IL_029F: ldloc.0      
+   IL_02A0: ldarg.0      
+   IL_02A1: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_02A6: ldarg.3      
+   IL_02A7: call         0x0601E577 method ActionGameLibrary.DamageFactory :: ProcRecoveryHP(ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E577
+   IL_02AC: pop          
+   IL_02AD: ldc.i4.0     
+   IL_02AE: ret          
+
+ActionGameLibrary.DamageFactory :: ExecCheckHitTriggerBuff(GameConfigData.SkillData, ref ActionGameLibrary.TSpellHitPara, ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject) -> int 0x0601E572
+   IL_0000: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_0005: callvirt     0x0A00566A memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::Clear
+   IL_000A: ldarg.0      
+   IL_000B: callvirt     0x0601C43B method GameConfigData.SkillData :: get_trigger_buff_list_1_ID() -> int 0x0601C43B
+   IL_0010: ldc.i4.0     
+   IL_0011: ble.s        97
+   IL_0013: ldloca.s     4
+   IL_0015: FEinitobj    0x02001FB6 type ActionGameLibrary.SkillTriggerBuffDesc
+   IL_001B: ldloca.s     4
+   IL_001D: ldarg.0      
+   IL_001E: callvirt     0x0601C43B method GameConfigData.SkillData :: get_trigger_buff_list_1_ID() -> int 0x0601C43B
+   IL_0023: stfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_0028: ldloca.s     4
+   IL_002A: ldarg.0      
+   IL_002B: callvirt     0x0601C441 method GameConfigData.SkillData :: get_trigger_buff_list_1_hitID() -> string 0x0601C441
+   IL_0030: call         0x0601E4D7 method ActionGameLibrary.SkillTriggerBuffDesc :: set_HitIdModTenString(string) -> void 0x0601E4D7
+   IL_0035: ldloca.s     4
+   IL_0037: ldarg.0      
+   IL_0038: callvirt     0x0601C43D method GameConfigData.SkillData :: get_trigger_buff_list_1_rate() -> float 0x0601C43D
+   IL_003D: stfld        0x040172EE field ActionGameLibrary.SkillTriggerBuffDesc::rate : float
+   IL_0042: ldloca.s     4
+   IL_0044: ldarg.0      
+   IL_0045: callvirt     0x0601C43F method GameConfigData.SkillData :: get_trigger_buff_list_1_duration() -> float 0x0601C43F
+   IL_004A: stfld        0x040172EF field ActionGameLibrary.SkillTriggerBuffDesc::duration : float
+   IL_004F: ldarg.0      
+   IL_0050: callvirt     0x0601C443 method GameConfigData.SkillData :: get_buffLimit() -> System.Collections.Generic.List`1<string> 0x0601C443
+   IL_0055: ldc.i4.0     
+   IL_0056: callvirt     0x0A000284 memberref System.Collections.Generic.List`1<string>::get_Item
+   IL_005B: ldloca.s     4
+   IL_005D: ldflda       0x040172F2 field ActionGameLibrary.SkillTriggerBuffDesc::buff_limit_id : int
+   IL_0062: call         0x0A000381 memberref System.Int32::TryParse
+   IL_0067: pop          
+   IL_0068: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_006D: ldloc.s      4
+   IL_006F: callvirt     0x0A00566B memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::Add
+   IL_0074: ldarg.0      
+   IL_0075: callvirt     0x0601C444 method GameConfigData.SkillData :: get_trigger_buff_list_2_ID() -> int 0x0601C444
+   IL_007A: ldc.i4.0     
+   IL_007B: ble.s        97
+   IL_007D: ldloca.s     5
+   IL_007F: FEinitobj    0x02001FB6 type ActionGameLibrary.SkillTriggerBuffDesc
+   IL_0085: ldloca.s     5
+   IL_0087: ldarg.0      
+   IL_0088: callvirt     0x0601C444 method GameConfigData.SkillData :: get_trigger_buff_list_2_ID() -> int 0x0601C444
+   IL_008D: stfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_0092: ldloca.s     5
+   IL_0094: ldarg.0      
+   IL_0095: callvirt     0x0601C44A method GameConfigData.SkillData :: get_trigger_buff_list_2_hitID() -> string 0x0601C44A
+   IL_009A: call         0x0601E4D7 method ActionGameLibrary.SkillTriggerBuffDesc :: set_HitIdModTenString(string) -> void 0x0601E4D7
+   IL_009F: ldloca.s     5
+   IL_00A1: ldarg.0      
+   IL_00A2: callvirt     0x0601C446 method GameConfigData.SkillData :: get_trigger_buff_list_2_rate() -> float 0x0601C446
+   IL_00A7: stfld        0x040172EE field ActionGameLibrary.SkillTriggerBuffDesc::rate : float
+   IL_00AC: ldloca.s     5
+   IL_00AE: ldarg.0      
+   IL_00AF: callvirt     0x0601C448 method GameConfigData.SkillData :: get_trigger_buff_list_2_duration() -> float 0x0601C448
+   IL_00B4: stfld        0x040172EF field ActionGameLibrary.SkillTriggerBuffDesc::duration : float
+   IL_00B9: ldarg.0      
+   IL_00BA: callvirt     0x0601C443 method GameConfigData.SkillData :: get_buffLimit() -> System.Collections.Generic.List`1<string> 0x0601C443
+   IL_00BF: ldc.i4.1     
+   IL_00C0: callvirt     0x0A000284 memberref System.Collections.Generic.List`1<string>::get_Item
+   IL_00C5: ldloca.s     5
+   IL_00C7: ldflda       0x040172F2 field ActionGameLibrary.SkillTriggerBuffDesc::buff_limit_id : int
+   IL_00CC: call         0x0A000381 memberref System.Int32::TryParse
+   IL_00D1: pop          
+   IL_00D2: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_00D7: ldloc.s      5
+   IL_00D9: callvirt     0x0A00566B memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::Add
+   IL_00DE: ldarg.0      
+   IL_00DF: callvirt     0x0601C44C method GameConfigData.SkillData :: get_trigger_buff_list_3_ID() -> int 0x0601C44C
+   IL_00E4: ldc.i4.0     
+   IL_00E5: ble.s        97
+   IL_00E7: ldloca.s     6
+   IL_00E9: FEinitobj    0x02001FB6 type ActionGameLibrary.SkillTriggerBuffDesc
+   IL_00EF: ldloca.s     6
+   IL_00F1: ldarg.0      
+   IL_00F2: callvirt     0x0601C44C method GameConfigData.SkillData :: get_trigger_buff_list_3_ID() -> int 0x0601C44C
+   IL_00F7: stfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_00FC: ldloca.s     6
+   IL_00FE: ldarg.0      
+   IL_00FF: callvirt     0x0601C452 method GameConfigData.SkillData :: get_trigger_buff_list_3_hitID() -> string 0x0601C452
+   IL_0104: call         0x0601E4D7 method ActionGameLibrary.SkillTriggerBuffDesc :: set_HitIdModTenString(string) -> void 0x0601E4D7
+   IL_0109: ldloca.s     6
+   IL_010B: ldarg.0      
+   IL_010C: callvirt     0x0601C44E method GameConfigData.SkillData :: get_trigger_buff_list_3_rate() -> float 0x0601C44E
+   IL_0111: stfld        0x040172EE field ActionGameLibrary.SkillTriggerBuffDesc::rate : float
+   IL_0116: ldloca.s     6
+   IL_0118: ldarg.0      
+   IL_0119: callvirt     0x0601C450 method GameConfigData.SkillData :: get_trigger_buff_list_3_duration() -> float 0x0601C450
+   IL_011E: stfld        0x040172EF field ActionGameLibrary.SkillTriggerBuffDesc::duration : float
+   IL_0123: ldarg.0      
+   IL_0124: callvirt     0x0601C443 method GameConfigData.SkillData :: get_buffLimit() -> System.Collections.Generic.List`1<string> 0x0601C443
+   IL_0129: ldc.i4.2     
+   IL_012A: callvirt     0x0A000284 memberref System.Collections.Generic.List`1<string>::get_Item
+   IL_012F: ldloca.s     6
+   IL_0131: ldflda       0x040172F2 field ActionGameLibrary.SkillTriggerBuffDesc::buff_limit_id : int
+   IL_0136: call         0x0A000381 memberref System.Int32::TryParse
+   IL_013B: pop          
+   IL_013C: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_0141: ldloc.s      6
+   IL_0143: callvirt     0x0A00566B memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::Add
+   IL_0148: ldarg.0      
+   IL_0149: callvirt     0x0601C454 method GameConfigData.SkillData :: get_trigger_buff_list_4_ID() -> int 0x0601C454
+   IL_014E: ldc.i4.0     
+   IL_014F: ble.s        97
+   IL_0151: ldloca.s     7
+   IL_0153: FEinitobj    0x02001FB6 type ActionGameLibrary.SkillTriggerBuffDesc
+   IL_0159: ldloca.s     7
+   IL_015B: ldarg.0      
+   IL_015C: callvirt     0x0601C454 method GameConfigData.SkillData :: get_trigger_buff_list_4_ID() -> int 0x0601C454
+   IL_0161: stfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_0166: ldloca.s     7
+   IL_0168: ldarg.0      
+   IL_0169: callvirt     0x0601C45A method GameConfigData.SkillData :: get_trigger_buff_list_4_hitID() -> string 0x0601C45A
+   IL_016E: call         0x0601E4D7 method ActionGameLibrary.SkillTriggerBuffDesc :: set_HitIdModTenString(string) -> void 0x0601E4D7
+   IL_0173: ldloca.s     7
+   IL_0175: ldarg.0      
+   IL_0176: callvirt     0x0601C456 method GameConfigData.SkillData :: get_trigger_buff_list_4_rate() -> float 0x0601C456
+   IL_017B: stfld        0x040172EE field ActionGameLibrary.SkillTriggerBuffDesc::rate : float
+   IL_0180: ldloca.s     7
+   IL_0182: ldarg.0      
+   IL_0183: callvirt     0x0601C458 method GameConfigData.SkillData :: get_trigger_buff_list_4_duration() -> float 0x0601C458
+   IL_0188: stfld        0x040172EF field ActionGameLibrary.SkillTriggerBuffDesc::duration : float
+   IL_018D: ldarg.0      
+   IL_018E: callvirt     0x0601C443 method GameConfigData.SkillData :: get_buffLimit() -> System.Collections.Generic.List`1<string> 0x0601C443
+   IL_0193: ldc.i4.3     
+   IL_0194: callvirt     0x0A000284 memberref System.Collections.Generic.List`1<string>::get_Item
+   IL_0199: ldloca.s     7
+   IL_019B: ldflda       0x040172F2 field ActionGameLibrary.SkillTriggerBuffDesc::buff_limit_id : int
+   IL_01A0: call         0x0A000381 memberref System.Int32::TryParse
+   IL_01A5: pop          
+   IL_01A6: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_01AB: ldloc.s      7
+   IL_01AD: callvirt     0x0A00566B memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::Add
+   IL_01B2: ldarg.0      
+   IL_01B3: callvirt     0x0601C45C method GameConfigData.SkillData :: get_trigger_buff_list_5_ID() -> int 0x0601C45C
+   IL_01B8: ldc.i4.0     
+   IL_01B9: ble.s        97
+   IL_01BB: ldloca.s     8
+   IL_01BD: FEinitobj    0x02001FB6 type ActionGameLibrary.SkillTriggerBuffDesc
+   IL_01C3: ldloca.s     8
+   IL_01C5: ldarg.0      
+   IL_01C6: callvirt     0x0601C45C method GameConfigData.SkillData :: get_trigger_buff_list_5_ID() -> int 0x0601C45C
+   IL_01CB: stfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_01D0: ldloca.s     8
+   IL_01D2: ldarg.0      
+   IL_01D3: callvirt     0x0601C462 method GameConfigData.SkillData :: get_trigger_buff_list_5_hitID() -> string 0x0601C462
+   IL_01D8: call         0x0601E4D7 method ActionGameLibrary.SkillTriggerBuffDesc :: set_HitIdModTenString(string) -> void 0x0601E4D7
+   IL_01DD: ldloca.s     8
+   IL_01DF: ldarg.0      
+   IL_01E0: callvirt     0x0601C45E method GameConfigData.SkillData :: get_trigger_buff_list_5_rate() -> float 0x0601C45E
+   IL_01E5: stfld        0x040172EE field ActionGameLibrary.SkillTriggerBuffDesc::rate : float
+   IL_01EA: ldloca.s     8
+   IL_01EC: ldarg.0      
+   IL_01ED: callvirt     0x0601C460 method GameConfigData.SkillData :: get_trigger_buff_list_5_duration() -> float 0x0601C460
+   IL_01F2: stfld        0x040172EF field ActionGameLibrary.SkillTriggerBuffDesc::duration : float
+   IL_01F7: ldarg.0      
+   IL_01F8: callvirt     0x0601C443 method GameConfigData.SkillData :: get_buffLimit() -> System.Collections.Generic.List`1<string> 0x0601C443
+   IL_01FD: ldc.i4.4     
+   IL_01FE: callvirt     0x0A000284 memberref System.Collections.Generic.List`1<string>::get_Item
+   IL_0203: ldloca.s     8
+   IL_0205: ldflda       0x040172F2 field ActionGameLibrary.SkillTriggerBuffDesc::buff_limit_id : int
+   IL_020A: call         0x0A000381 memberref System.Int32::TryParse
+   IL_020F: pop          
+   IL_0210: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_0215: ldloc.s      8
+   IL_0217: callvirt     0x0A00566B memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::Add
+   IL_021C: ldc.i4.0     
+   IL_021D: stloc.0      
+   IL_021E: ldloca.s     1
+   IL_0220: FEinitobj    0x02001FB6 type ActionGameLibrary.SkillTriggerBuffDesc
+   IL_0226: ldc.i4.0     
+   IL_0227: stloc.2      
+   IL_0228: ldc.i4.0     
+   IL_0229: stloc.3      
+   IL_022A: ldc.i4.0     
+   IL_022B: stloc.s      9
+   IL_022D: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_0232: callvirt     0x0A00566C memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::get_Count
+   IL_0237: stloc.s      10
+   IL_0239: br           IL_035A
+   IL_023E: ldc.i4.0     
+   IL_023F: stloc.0      
+   IL_0240: ldsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_0245: ldloc.s      9
+   IL_0247: callvirt     0x0A00566D memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::get_Item
+   IL_024C: stloc.s      11
+   IL_024E: ldc.i4.0     
+   IL_024F: stloc.s      12
+   IL_0251: ldloc.s      11
+   IL_0253: ldfld        0x040172F1 field ActionGameLibrary.SkillTriggerBuffDesc::hit_id_mod_ten_list : System.Collections.Generic.List`1<int>
+   IL_0258: callvirt     0x0A000301 memberref System.Collections.Generic.List`1<int>::get_Count
+   IL_025D: stloc.s      13
+   IL_025F: br.s         63
+   IL_0261: ldloc.s      11
+   IL_0263: ldfld        0x040172F1 field ActionGameLibrary.SkillTriggerBuffDesc::hit_id_mod_ten_list : System.Collections.Generic.List`1<int>
+   IL_0268: ldloc.s      12
+   IL_026A: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_026F: ldc.i4.0     
+   IL_0270: blt.s        28
+   IL_0272: ldarg.1      
+   IL_0273: ldfld        0x040173B2 field ActionGameLibrary.TSpellHitPara::iHitID : int
+   IL_0278: ldsfld       0x040173A7 field ActionGameLibrary.CSpellUtil::HITPHASE_MOD : int
+   IL_027D: rem          
+   IL_027E: ldloc.s      11
+   IL_0280: ldfld        0x040172F1 field ActionGameLibrary.SkillTriggerBuffDesc::hit_id_mod_ten_list : System.Collections.Generic.List`1<int>
+   IL_0285: ldloc.s      12
+   IL_0287: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_028C: bne.un.s     12
+   IL_028E: ldc.i4.1     
+   IL_028F: stloc.0      
+   IL_0290: ldloc.s      11
+   IL_0292: stloc.1      
+   IL_0293: ldloc.s      9
+   IL_0295: ldc.i4.1     
+   IL_0296: add          
+   IL_0297: stloc.2      
+   IL_0298: br.s         12
+   IL_029A: ldloc.s      12
+   IL_029C: ldc.i4.1     
+   IL_029D: add          
+   IL_029E: stloc.s      12
+   IL_02A0: ldloc.s      12
+   IL_02A2: ldloc.s      13
+   IL_02A4: blt.s        -69
+   IL_02A6: ldloc.0      
+   IL_02A7: brfalse      IL_0354
+   IL_02AC: call         0x0601E53A method ActionGameLibrary.CSpellUtil :: RandRandHundred() -> int 0x0601E53A
+   IL_02B1: stloc.3      
+   IL_02B2: ldloc.s      11
+   IL_02B4: ldfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_02B9: ldc.i4.0     
+   IL_02BA: ble.s        59
+   IL_02BC: ldloc.3      
+   IL_02BD: conv.r4      
+   IL_02BE: ldloc.s      11
+   IL_02C0: ldfld        0x040172EE field ActionGameLibrary.SkillTriggerBuffDesc::rate : float
+   IL_02C5: ldsfld       0x040173A8 field ActionGameLibrary.CSpellUtil::ONE_HUNDRED : int
+   IL_02CA: conv.r4      
+   IL_02CB: mul          
+   IL_02CC: bge.un.s     41
+   IL_02CE: ldarg.1      
+   IL_02CF: ldarg.3      
+   IL_02D0: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_02D5: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_02DA: call         0x0601E540 method ActionGameLibrary.TSpellHitPara :: GetHitKey(int) -> ActionGameLibrary.HitKey 0x0601E540
+   IL_02DF: ldarg.1      
+   IL_02E0: ldfld        0x040173AD field ActionGameLibrary.TSpellHitPara::iSeq : int
+   IL_02E5: ldloc.s      11
+   IL_02E7: ldfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_02EC: call         0x0601E542 method ActionGameLibrary.TSpellHitPara :: IsLimitTrigger(ActionGameLibrary.HitKey, int, int) -> bool 0x0601E542
+   IL_02F1: brfalse.s    6
+   IL_02F3: ldc.i4.0     
+   IL_02F4: stloc.0      
+   IL_02F5: br.s         2
+   IL_02F7: ldc.i4.0     
+   IL_02F8: stloc.0      
+   IL_02F9: ldloc.0      
+   IL_02FA: brfalse.s    88
+   IL_02FC: ldarg.1      
+   IL_02FD: ldfld        0x040173B9 field ActionGameLibrary.TSpellHitPara::isProjectile : bool
+   IL_0302: brtrue.s     13
+   IL_0304: ldarg.2      
+   IL_0305: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_030A: ldfld        0x04017D2D field ActionGameLibrary.ActionGameObjectData::id : uint
+   IL_030F: br.s         6
+   IL_0311: ldarg.1      
+   IL_0312: ldfld        0x040173BB field ActionGameLibrary.TSpellHitPara::iProjectileDescID : int
+   IL_0317: stloc.s      14
+   IL_0319: ldarg.1      
+   IL_031A: ldarg.3      
+   IL_031B: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0320: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0325: ldloc.s      14
+   IL_0327: ldloca.s     1
+   IL_0329: ldloc.3      
+   IL_032A: ldloc.2      
+   IL_032B: call         0x0601E469 method ActionGameLibrary.CHitNotifier :: HittriggerSkillAddBuffToServer(ref ActionGameLibrary.TSpellHitPara, int, int, ref ActionGameLibrary.SkillTriggerBuffDesc, int, int) -> void 0x0601E469
+   IL_0330: ldarg.1      
+   IL_0331: ldarg.1      
+   IL_0332: ldarg.3      
+   IL_0333: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0338: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_033D: call         0x0601E540 method ActionGameLibrary.TSpellHitPara :: GetHitKey(int) -> ActionGameLibrary.HitKey 0x0601E540
+   IL_0342: ldc.i4.1     
+   IL_0343: ldloc.1      
+   IL_0344: ldfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_0349: ldloc.1      
+   IL_034A: ldfld        0x040172F2 field ActionGameLibrary.SkillTriggerBuffDesc::buff_limit_id : int
+   IL_034F: call         0x0601E541 method ActionGameLibrary.TSpellHitPara :: FlushTriggerBuff(ActionGameLibrary.HitKey, bool, int, int) -> void 0x0601E541
+   IL_0354: ldloc.s      9
+   IL_0356: ldc.i4.1     
+   IL_0357: add          
+   IL_0358: stloc.s      9
+   IL_035A: ldloc.s      9
+   IL_035C: ldloc.s      10
+   IL_035E: blt          IL_023E
+   IL_0363: ldc.i4.0     
+   IL_0364: ret          
+
+ActionGameLibrary.DamageFactory :: ExecHealCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E573
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_0006: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_000B: stloc.0      
+   IL_000C: ldarg.0      
+   IL_000D: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_0012: ldarg.1      
+   IL_0013: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0018: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_001D: stloc.1      
+   IL_001E: ldloc.0      
+   IL_001F: brtrue.s     2
+   IL_0021: ldc.i4.m1    
+   IL_0022: ret          
+   IL_0023: ldloc.1      
+   IL_0024: brtrue.s     2
+   IL_0026: ldc.i4.m1    
+   IL_0027: ret          
+   IL_0028: ldarg.0      
+   IL_0029: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_002E: ldarg.1      
+   IL_002F: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_0034: dup          
+   IL_0035: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_003A: stloc.2      
+   IL_003B: ldloc.0      
+   IL_003C: ldloc.1      
+   IL_003D: ldloca.s     2
+   IL_003F: ldc.i4.1     
+   IL_0040: ldarg.2      
+   IL_0041: ldarg.3      
+   IL_0042: ldarg.0      
+   IL_0043: call         0x0601E57A method ActionGameLibrary.DamageFactory :: CalDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref bool, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, ref ActionGameLibrary.TSpellHitPara) -> BigInt 0x0601E57A
+   IL_0048: stloc.3      
+   IL_0049: ldloc.2      
+   IL_004A: callvirt     0x0600FB92 method proto_ff.Proto_PvpAccepterData :: set_IsCrit(bool) -> void 0x0600FB92
+   IL_004F: ldloc.3      
+   IL_0050: ldc.i4.0     
+   IL_0051: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0056: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_005B: brfalse.s    65
+   IL_005D: ldarg.0      
+   IL_005E: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0063: call         0x0601E44C method ActionGameLibrary.CHitNotifier :: InitBySpell(ActionGameLibrary.TSpellHitPara) -> int 0x0601E44C
+   IL_0068: pop          
+   IL_0069: ldloc.1      
+   IL_006A: ldloc.0      
+   IL_006B: ldloc.3      
+   IL_006C: ldarg.0      
+   IL_006D: ldfld        0x040173AB field ActionGameLibrary.TSpellHitPara::iSpellID : int
+   IL_0072: ldc.i4.1     
+   IL_0073: ldloca.s     3
+   IL_0075: call         0x0601E25C method ActionGameLibrary.CBattleActorUtil :: HealHp(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, BigInt, int, bool, ref BigInt) -> int 0x0601E25C
+   IL_007A: pop          
+   IL_007B: ldloc.1      
+   IL_007C: callvirt     0x0601F116 method ActionGameLibrary.IActionGameObject :: get_active() -> bool 0x0601F116
+   IL_0081: brfalse.s    27
+   IL_0083: ldloc.1      
+   IL_0084: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0089: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_008E: ldloc.3      
+   IL_008F: ldc.i4.0     
+   IL_0090: ldc.i4.1     
+   IL_0091: ldc.i4.s     23
+   IL_0093: call         0x0601E454 method ActionGameLibrary.CHitNotifier :: AddOneHitHeal(int, BigInt, bool, proto_ff.enHealReason, proto_ff.AttrType) -> int 0x0601E454
+   IL_0098: pop          
+   IL_0099: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_009E: ldc.i4.0     
+   IL_009F: ret          
+
+ActionGameLibrary.DamageFactory :: ExecBuffCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E574
+   IL_0000: ldc.i4.0     
+   IL_0001: ret          
+
+ActionGameLibrary.DamageFactory :: ExecSPCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E575
+   IL_0000: ldc.i4.0     
+   IL_0001: ret          
+
+ActionGameLibrary.DamageFactory :: ExecBreakPabodyCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E576
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_0006: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_000B: stloc.0      
+   IL_000C: ldarg.0      
+   IL_000D: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_0012: ldarg.1      
+   IL_0013: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0018: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_001D: stloc.1      
+   IL_001E: ldloc.0      
+   IL_001F: brtrue.s     2
+   IL_0021: ldc.i4.m1    
+   IL_0022: ret          
+   IL_0023: ldloc.1      
+   IL_0024: brtrue.s     2
+   IL_0026: ldc.i4.m1    
+   IL_0027: ret          
+   IL_0028: ldarg.0      
+   IL_0029: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_002E: ldarg.1      
+   IL_002F: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_0034: callvirt     0x0600FB94 method proto_ff.Proto_PvpAccepterData :: get_Damage() -> proto_ff.MsgInt128 0x0600FB94
+   IL_0039: call         0x06000C2C method Int128Convert :: ToBigInt(proto_ff.MsgInt128) -> BigInt 0x06000C2C
+   IL_003E: stloc.2      
+   IL_003F: ldloc.0      
+   IL_0040: ldc.i4.s     90
+   IL_0042: call         0x0601E502 method ActionGameLibrary.CSpellUtil :: GetAttrib(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> long 0x0601E502
+   IL_0047: stloc.3      
+   IL_0048: ldloc.2      
+   IL_0049: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_004E: conv.u8      
+   IL_004F: ldloc.3      
+   IL_0050: add          
+   IL_0051: conv.r4      
+   IL_0052: ldarg.2      
+   IL_0053: callvirt     0x0601C409 method GameConfigData.SkillData :: get_breakPabodyFactor() -> float 0x0601C409
+   IL_0058: mul          
+   IL_0059: conv.i8      
+   IL_005A: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_005F: call         0x06000BEE method BigInt :: op_Multiply(BigInt, BigInt) -> BigInt 0x06000BEE
+   IL_0064: stloc.2      
+   IL_0065: ldloc.2      
+   IL_0066: ldc.i4.0     
+   IL_0067: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_006C: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_0071: brfalse.s    29
+   IL_0073: ldloc.1      
+   IL_0074: ldc.i4       191
+   IL_0079: call         0x0601E502 method ActionGameLibrary.CSpellUtil :: GetAttrib(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> long 0x0601E502
+   IL_007E: brtrue.s     16
+   IL_0080: ldarg.0      
+   IL_0081: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_0086: ldloc.1      
+   IL_0087: ldloc.2      
+   IL_0088: ldc.i4.1     
+   IL_0089: ldc.i4.0     
+   IL_008A: call         0x0601E25F method ActionGameLibrary.CBattleActorUtil :: HurtPabody(int, ActionGameLibrary.IActionGameObject, BigInt, bool, ActionGameLibrary.enDecPabodyType) -> int 0x0601E25F
+   IL_008F: pop          
+   IL_0090: ldc.i4.0     
+   IL_0091: ret          
+
+ActionGameLibrary.DamageFactory :: ProcRecoveryHP(ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E577
+   IL_0000: ldarg.1      
+   IL_0001: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_0006: brtrue.s     2
+   IL_0008: ldc.i4.0     
+   IL_0009: ret          
+   IL_000A: ldarg.2      
+   IL_000B: ldfld        0x040172C1 field ActionGameLibrary.SkillEffectDesc::recover_times : int
+   IL_0010: ldc.i4.0     
+   IL_0011: bgt.s        2
+   IL_0013: ldc.i4.0     
+   IL_0014: ret          
+   IL_0015: ldarg.1      
+   IL_0016: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_001B: ldfld        0x040170D0 field ActionGameLibrary.SkillData::iRecoverHpCnt : int
+   IL_0020: ldarg.2      
+   IL_0021: ldfld        0x040172C1 field ActionGameLibrary.SkillEffectDesc::recover_times : int
+   IL_0026: blt.s        2
+   IL_0028: ldc.i4.0     
+   IL_0029: ret          
+   IL_002A: ldarg.1      
+   IL_002B: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_0030: dup          
+   IL_0031: ldfld        0x040170D0 field ActionGameLibrary.SkillData::iRecoverHpCnt : int
+   IL_0036: ldc.i4.1     
+   IL_0037: add          
+   IL_0038: stfld        0x040170D0 field ActionGameLibrary.SkillData::iRecoverHpCnt : int
+   IL_003D: ldarg.0      
+   IL_003E: ldarg.2      
+   IL_003F: ldfld        0x040172C0 field ActionGameLibrary.SkillEffectDesc::recover_fatcor : float
+   IL_0044: call         0x0601E266 method ActionGameLibrary.CBattleActorUtil :: ActorOnHitRecover(ActionGameLibrary.IActionGameObject, float) -> int 0x0601E266
+   IL_0049: pop          
+   IL_004A: ldc.i4.0     
+   IL_004B: ret          
+
+ActionGameLibrary.DamageFactory :: ProcDmgHit(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, ref bool, int) -> int 0x0601E578
+   IL_0000: ldarg.0      
+   IL_0001: brfalse.s    3
+   IL_0003: ldarg.1      
+   IL_0004: brtrue.s     2
+   IL_0006: ldc.i4.m1    
+   IL_0007: ret          
+   IL_0008: ldarg.2      
+   IL_0009: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_000E: brtrue.s     2
+   IL_0010: ldc.i4.m1    
+   IL_0011: ret          
+   IL_0012: ldarg.2      
+   IL_0013: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_0018: brfalse.s    43
+   IL_001A: ldarg.2      
+   IL_001B: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_0020: brfalse.s    35
+   IL_0022: ldarg.s      6
+   IL_0024: ldc.i4.0     
+   IL_0025: blt.s        30
+   IL_0027: ldarg.s      6
+   IL_0029: ldarg.2      
+   IL_002A: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_002F: callvirt     0x0A00437C memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Count
+   IL_0034: bge.s        15
+   IL_0036: ldarg.s      6
+   IL_0038: ldarg.2      
+   IL_0039: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_003E: callvirt     0x0A000301 memberref System.Collections.Generic.List`1<int>::get_Count
+   IL_0043: blt.s        2
+   IL_0045: ldc.i4.m1    
+   IL_0046: ret          
+   IL_0047: ldarg.1      
+   IL_0048: ldarg.0      
+   IL_0049: ldarg.3      
+   IL_004A: ldarg.2      
+   IL_004B: ldfld        0x040173AB field ActionGameLibrary.TSpellHitPara::iSpellID : int
+   IL_0050: ldc.i4.1     
+   IL_0051: ldc.i4.0     
+   IL_0052: call         0x0601E558 method ActionGameLibrary.CtagHurtHPPara :: Alloc(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, BigInt, int, ActionGameLibrary.enHurtType, int) -> ActionGameLibrary.CtagHurtHPPara 0x0601E558
+   IL_0057: stloc.0      
+   IL_0058: ldloc.0      
+   IL_0059: ldarg.2      
+   IL_005A: call         0x0601E287 method ActionGameLibrary.CBattleAdapterUtil :: Adapt4DamageSubType(ActionGameLibrary.TSpellHitPara) -> ActionGameLibrary.enHurtSubType 0x0601E287
+   IL_005F: stfld        0x040173FA field ActionGameLibrary.CtagHurtHPPara::m_eHurtSubType : ActionGameLibrary.enHurtSubType
+   IL_0064: ldloc.0      
+   IL_0065: ldc.i4.0     
+   IL_0066: stfld        0x040173F8 field ActionGameLibrary.CtagHurtHPPara::m_bEffectTriggerByEquip : bool
+   IL_006B: ldloc.0      
+   IL_006C: ldc.i4.0     
+   IL_006D: stfld        0x040173F9 field ActionGameLibrary.CtagHurtHPPara::m_bEffectTriggerBySpell : bool
+   IL_0072: ldloc.0      
+   IL_0073: ldarg.2      
+   IL_0074: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_0079: ldfld        0x040170B6 field ActionGameLibrary.SkillData::id : int
+   IL_007E: stfld        0x040173EF field ActionGameLibrary.CtagHurtHPPara::m_iInstSrcSpellID : int
+   IL_0083: ldc.i4.0     
+   IL_0084: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0089: stloc.1      
+   IL_008A: ldloca.s     0
+   IL_008C: ldarg.s      5
+   IL_008E: ldc.i4.1     
+   IL_008F: ldloca.s     1
+   IL_0091: ldc.i4.0     
+   IL_0092: call         0x0601E25A method ActionGameLibrary.CBattleActorUtil :: Hurt(ref ActionGameLibrary.CtagHurtHPPara, ref bool, bool, ref BigInt, bool) -> int 0x0601E25A
+   IL_0097: pop          
+   IL_0098: ldarg.0      
+   IL_0099: ldarg.1      
+   IL_009A: ldarg.2      
+   IL_009B: ldarg.3      
+   IL_009C: ldarg.2      
+   IL_009D: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_00A2: ldarg.s      6
+   IL_00A4: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_00A9: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_00AE: call         0x0601E579 method ActionGameLibrary.DamageFactory :: ProcPabody(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, BigInt, bool) -> int 0x0601E579
+   IL_00B3: pop          
+   IL_00B4: ldarg.1      
+   IL_00B5: callvirt     0x0601F116 method ActionGameLibrary.IActionGameObject :: get_active() -> bool 0x0601F116
+   IL_00BA: brfalse      IL_01BF
+   IL_00BF: ldarg.2      
+   IL_00C0: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_00C5: callvirt     0x0601DFFB method ActionGameLibrary.SkillData :: GetBuffByEquip() -> int 0x0601DFFB
+   IL_00CA: ldc.i4.0     
+   IL_00CB: ble.s        9
+   IL_00CD: ldarg.2      
+   IL_00CE: call         0x0601E450 method ActionGameLibrary.CHitNotifier :: InitByEquipHit(ActionGameLibrary.TSpellHitPara) -> int 0x0601E450
+   IL_00D3: pop          
+   IL_00D4: br.s         7
+   IL_00D6: ldarg.2      
+   IL_00D7: call         0x0601E44C method ActionGameLibrary.CHitNotifier :: InitBySpell(ActionGameLibrary.TSpellHitPara) -> int 0x0601E44C
+   IL_00DC: pop          
+   IL_00DD: ldloc.1      
+   IL_00DE: ldc.i4.0     
+   IL_00DF: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_00E4: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_00E9: brfalse.s    38
+   IL_00EB: ldarg.1      
+   IL_00EC: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_00F1: brfalse      IL_01BA
+   IL_00F6: ldarg.1      
+   IL_00F7: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_00FC: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0101: ldloc.1      
+   IL_0102: ldc.i4.0     
+   IL_0103: ldc.i4.3     
+   IL_0104: ldc.i4.s     23
+   IL_0106: call         0x0601E454 method ActionGameLibrary.CHitNotifier :: AddOneHitHeal(int, BigInt, bool, proto_ff.enHealReason, proto_ff.AttrType) -> int 0x0601E454
+   IL_010B: pop          
+   IL_010C: br           IL_01BA
+   IL_0111: ldc.i4.0     
+   IL_0112: stloc.2      
+   IL_0113: ldarg.0      
+   IL_0114: call         0x0601E28B method ActionGameLibrary.CBattleAdapterUtil :: Adapt4BattleStatisticComb(ActionGameLibrary.IActionGameObject) -> bool 0x0601E28B
+   IL_0119: brfalse.s    71
+   IL_011B: ldarg.0      
+   IL_011C: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0121: dup          
+   IL_0122: ldfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_0127: ldarg.3      
+   IL_0128: call         0x06000BEB method BigInt :: op_Addition(BigInt, BigInt) -> BigInt 0x06000BEB
+   IL_012D: stfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_0132: ldarg.0      
+   IL_0133: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0138: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_013D: conv.i4      
+   IL_013E: ldc.i4       1000
+   IL_0143: mul          
+   IL_0144: conv.i8      
+   IL_0145: stfld        0x04017D4F field ActionGameLibrary.ActionGameObjectData::lastComboTime : long
+   IL_014A: ldarg.0      
+   IL_014B: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0150: ldfld        0x04017D4D field ActionGameLibrary.ActionGameObjectData::comboCount : int
+   IL_0155: ldarg.2      
+   IL_0156: ldfld        0x040173B3 field ActionGameLibrary.TSpellHitPara::iTargetNum : int
+   IL_015B: sub          
+   IL_015C: ldarg.s      6
+   IL_015E: add          
+   IL_015F: ldc.i4.1     
+   IL_0160: add          
+   IL_0161: stloc.2      
+   IL_0162: ldarg.2      
+   IL_0163: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_0168: ldarg.s      6
+   IL_016A: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_016F: ldc.i4.0     
+   IL_0170: ldloc.0      
+   IL_0171: callvirt     0x0601E55B method ActionGameLibrary.CtagHurtHPPara :: GetValue() -> BigInt 0x0601E55B
+   IL_0176: ldarg.s      4
+   IL_0178: ldloc.0      
+   IL_0179: callvirt     0x0601E562 method ActionGameLibrary.CtagHurtHPPara :: GetAbsorbValue() -> long 0x0601E562
+   IL_017E: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_0183: ldarg.s      5
+   IL_0185: ldind.u1     
+   IL_0186: ldarg.2      
+   IL_0187: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_018C: ldarg.s      6
+   IL_018E: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_0193: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_0198: ldc.i4.0     
+   IL_0199: ldloc.0      
+   IL_019A: callvirt     0x0601E563 method ActionGameLibrary.CtagHurtHPPara :: GetDamageCounted() -> bool 0x0601E563
+   IL_019F: ldc.i4.1     
+   IL_01A0: ldloc.2      
+   IL_01A1: call         0x0A00054A memberref System.Math::Max
+   IL_01A6: ldarg.2      
+   IL_01A7: ldfld        0x040173C5 field ActionGameLibrary.TSpellHitPara::ehurtadd : proto_ff.CSHurtAdditionType
+   IL_01AC: ldloc.0      
+   IL_01AD: callvirt     0x0601E564 method ActionGameLibrary.CtagHurtHPPara :: GetNoDamageType() -> proto_ff.enNoDamageType 0x0601E564
+   IL_01B2: ldc.i4.0     
+   IL_01B3: ldnull       
+   IL_01B4: call         0x0601E456 method ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, proto_ff.CSHurtType, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, BigInt, bool, bool, bool, bool, int, proto_ff.CSHurtAdditionType, proto_ff.enNoDamageType, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E456
+   IL_01B9: pop          
+   IL_01BA: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_01BF: ldloc.0      
+   IL_01C0: call         0x0601E559 method ActionGameLibrary.CtagHurtHPPara :: Release(ActionGameLibrary.CtagHurtHPPara) -> void 0x0601E559
+   IL_01C5: ldc.i4.0     
+   IL_01C6: ret          
+
+ActionGameLibrary.DamageFactory :: ProcPabody(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, BigInt, bool) -> int 0x0601E579
+   IL_0000: ldarg.3      
+   IL_0001: ldc.i4.1     
+   IL_0002: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0007: call         0x06000BF7 method BigInt :: op_LessThan(BigInt, BigInt) -> bool 0x06000BF7
+   IL_000C: brfalse.s    2
+   IL_000E: ldc.i4.0     
+   IL_000F: ret          
+   IL_0010: call         0x0A00566E memberref ActionGameLibrary.ListPool`1<ActionGameLibrary.enDecPabodyType>::Get
+   IL_0015: stloc.0      
+   IL_0016: ldc.i4.0     
+   IL_0017: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_001C: stloc.1      
+   IL_001D: ldarg.1      
+   IL_001E: ldc.i4       191
+   IL_0023: call         0x0601E502 method ActionGameLibrary.CSpellUtil :: GetAttrib(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> long 0x0601E502
+   IL_0028: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_002D: conv.u8      
+   IL_002E: div          
+   IL_002F: conv.i4      
+   IL_0030: stloc.3      
+   IL_0031: ldloc.3      
+   IL_0032: ldc.i4.1     
+   IL_0033: sub          
+   IL_0034: switch       IL_0053 IL_0098 IL_007B IL_005E IL_00A8 IL_00BE
+   IL_0051: br.s         116
+   IL_0053: ldloc.0      
+   IL_0054: ldc.i4.1     
+   IL_0055: callvirt     0x0A00566F memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::Add
+   IL_005A: ldarg.3      
+   IL_005B: stloc.1      
+   IL_005C: br.s         105
+   IL_005E: ldarg.2      
+   IL_005F: ldfld        0x040173C5 field ActionGameLibrary.TSpellHitPara::ehurtadd : proto_ff.CSHurtAdditionType
+   IL_0064: ldc.i4.4     
+   IL_0065: beq.s        9
+   IL_0067: ldarg.2      
+   IL_0068: ldfld        0x040173C5 field ActionGameLibrary.TSpellHitPara::ehurtadd : proto_ff.CSHurtAdditionType
+   IL_006D: ldc.i4.5     
+   IL_006E: bne.un.s     87
+   IL_0070: ldloc.0      
+   IL_0071: ldc.i4.1     
+   IL_0072: callvirt     0x0A00566F memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::Add
+   IL_0077: ldarg.3      
+   IL_0078: stloc.1      
+   IL_0079: br.s         76
+   IL_007B: ldarg.2      
+   IL_007C: ldfld        0x040173C5 field ActionGameLibrary.TSpellHitPara::ehurtadd : proto_ff.CSHurtAdditionType
+   IL_0081: ldc.i4.3     
+   IL_0082: beq.s        9
+   IL_0084: ldarg.2      
+   IL_0085: ldfld        0x040173C5 field ActionGameLibrary.TSpellHitPara::ehurtadd : proto_ff.CSHurtAdditionType
+   IL_008A: ldc.i4.5     
+   IL_008B: bne.un.s     58
+   IL_008D: ldloc.0      
+   IL_008E: ldc.i4.1     
+   IL_008F: callvirt     0x0A00566F memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::Add
+   IL_0094: ldarg.3      
+   IL_0095: stloc.1      
+   IL_0096: br.s         47
+   IL_0098: ldloc.0      
+   IL_0099: ldc.i4.3     
+   IL_009A: callvirt     0x0A00566F memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::Add
+   IL_009F: ldc.i4.1     
+   IL_00A0: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_00A5: stloc.1      
+   IL_00A6: br.s         31
+   IL_00A8: ldloc.0      
+   IL_00A9: ldc.i4.1     
+   IL_00AA: callvirt     0x0A00566F memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::Add
+   IL_00AF: ldarg.s      4
+   IL_00B1: brfalse.s    7
+   IL_00B3: ldloc.0      
+   IL_00B4: ldc.i4.2     
+   IL_00B5: callvirt     0x0A00566F memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::Add
+   IL_00BA: ldarg.3      
+   IL_00BB: stloc.1      
+   IL_00BC: br.s         9
+   IL_00BE: ldloc.0      
+   IL_00BF: ldc.i4.1     
+   IL_00C0: callvirt     0x0A00566F memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::Add
+   IL_00C5: ldarg.3      
+   IL_00C6: stloc.1      
+   IL_00C7: ldarg.2      
+   IL_00C8: call         0x0601E51E method ActionGameLibrary.CSpellUtil :: GetSpellDesc(ActionGameLibrary.TSpellHitPara) -> GameConfigData.SkillData 0x0601E51E
+   IL_00CD: stloc.2      
+   IL_00CE: ldloc.2      
+   IL_00CF: brtrue.s     8
+   IL_00D1: ldloc.0      
+   IL_00D2: call         0x0A005670 memberref ActionGameLibrary.ListPool`1<ActionGameLibrary.enDecPabodyType>::Release
+   IL_00D7: ldc.i4.0     
+   IL_00D8: ret          
+   IL_00D9: ldloc.2      
+   IL_00DA: callvirt     0x0601C409 method GameConfigData.SkillData :: get_breakPabodyFactor() -> float 0x0601C409
+   IL_00DF: ldc.r4       0.0
+   IL_00E4: ble.un.s     61
+   IL_00E6: ldloc.1      
+   IL_00E7: call         0x06000BE8 method BigInt :: op_Implicit(BigInt) -> System.Numerics.BigInteger 0x06000BE8
+   IL_00EC: call         0x06000C44 method BigNumber :: op_Implicit(System.Numerics.BigInteger) -> BigNumber 0x06000C44
+   IL_00F1: stloc.s      4
+   IL_00F3: ldloc.s      4
+   IL_00F5: ldc.r4       1.0
+   IL_00FA: call         0x06000C46 method BigNumber :: op_Implicit(float) -> BigNumber 0x06000C46
+   IL_00FF: call         0x06000C60 method BigNumber :: op_Multiply(BigNumber, BigNumber) -> BigNumber 0x06000C60
+   IL_0104: ldloc.2      
+   IL_0105: callvirt     0x0601C409 method GameConfigData.SkillData :: get_breakPabodyFactor() -> float 0x0601C409
+   IL_010A: call         0x06000C46 method BigNumber :: op_Implicit(float) -> BigNumber 0x06000C46
+   IL_010F: call         0x06000C60 method BigNumber :: op_Multiply(BigNumber, BigNumber) -> BigNumber 0x06000C60
+   IL_0114: stloc.s      4
+   IL_0116: ldloca.s     4
+   IL_0118: call         0x06000C5C method BigNumber :: ToBigInteger() -> System.Numerics.BigInteger 0x06000C5C
+   IL_011D: call         0x06000BE7 method BigInt :: op_Implicit(System.Numerics.BigInteger) -> BigInt 0x06000BE7
+   IL_0122: stloc.1      
+   IL_0123: ldloc.0      
+   IL_0124: callvirt     0x0A005671 memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::get_Count
+   IL_0129: ldc.i4.0     
+   IL_012A: ble.s        62
+   IL_012C: ldloc.1      
+   IL_012D: ldc.i4.0     
+   IL_012E: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0133: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_0138: brfalse.s    48
+   IL_013A: ldc.i4.0     
+   IL_013B: stloc.s      5
+   IL_013D: ldloc.0      
+   IL_013E: callvirt     0x0A005671 memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::get_Count
+   IL_0143: stloc.s      6
+   IL_0145: br.s         29
+   IL_0147: ldarg.2      
+   IL_0148: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_014D: ldarg.1      
+   IL_014E: ldloc.1      
+   IL_014F: ldc.i4.1     
+   IL_0150: ldloc.0      
+   IL_0151: ldloc.s      5
+   IL_0153: callvirt     0x0A005672 memberref System.Collections.Generic.List`1<ActionGameLibrary.enDecPabodyType>::get_Item
+   IL_0158: call         0x0601E25F method ActionGameLibrary.CBattleActorUtil :: HurtPabody(int, ActionGameLibrary.IActionGameObject, BigInt, bool, ActionGameLibrary.enDecPabodyType) -> int 0x0601E25F
+   IL_015D: pop          
+   IL_015E: ldloc.s      5
+   IL_0160: ldc.i4.1     
+   IL_0161: add          
+   IL_0162: stloc.s      5
+   IL_0164: ldloc.s      5
+   IL_0166: ldloc.s      6
+   IL_0168: blt.s        -35
+   IL_016A: ldloc.0      
+   IL_016B: call         0x0A005670 memberref ActionGameLibrary.ListPool`1<ActionGameLibrary.enDecPabodyType>::Release
+   IL_0170: ldc.i4.0     
+   IL_0171: ret          
+
+ActionGameLibrary.DamageFactory :: CalDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref bool, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, ref ActionGameLibrary.TSpellHitPara) -> BigInt 0x0601E57A
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.s      4
+   IL_0003: callvirt     0x0601C464 method GameConfigData.SkillData :: get_enDamageType() -> int 0x0601C464
+   IL_0008: call         0x0601E4FC method ActionGameLibrary.CSpellUtil :: IsPhyDmg(ActionGameLibrary.IActionGameObject, proto_ff.enDamageType) -> bool 0x0601E4FC
+   IL_000D: stloc.0      
+   IL_000E: ldarg.0      
+   IL_000F: ldarg.s      4
+   IL_0011: callvirt     0x0601C464 method GameConfigData.SkillData :: get_enDamageType() -> int 0x0601C464
+   IL_0016: call         0x0601E4FE method ActionGameLibrary.CSpellUtil :: IsPhyDef(ActionGameLibrary.IActionGameObject, proto_ff.enDamageType) -> bool 0x0601E4FE
+   IL_001B: stloc.1      
+   IL_001C: ldc.r4       0.0
+   IL_0021: call         0x06000BEA method BigInt :: op_Implicit(float) -> BigInt 0x06000BEA
+   IL_0026: stloc.2      
+   IL_0027: ldc.r4       1.0
+   IL_002C: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_0031: conv.r.un    
+   IL_0032: conv.r4      
+   IL_0033: mul          
+   IL_0034: conv.r8      
+   IL_0035: stloc.3      
+   IL_0036: ldarg.0      
+   IL_0037: ldarg.1      
+   IL_0038: ldloca.s     2
+   IL_003A: ldarg.s      4
+   IL_003C: ldarg.s      5
+   IL_003E: ldarg.s      6
+   IL_0040: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0045: ldloc.0      
+   IL_0046: ldloc.1      
+   IL_0047: call         0x0601E4EA method ActionGameLibrary.CSpellUtil :: CalcSpellInitDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref BigInt, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, ActionGameLibrary.TSpellHitPara, bool, bool) -> int 0x0601E4EA
+   IL_004C: pop          
+   IL_004D: ldarg.0      
+   IL_004E: ldarg.1      
+   IL_004F: ldloca.s     3
+   IL_0051: ldarg.s      4
+   IL_0053: ldarg.s      5
+   IL_0055: ldloc.0      
+   IL_0056: ldloc.1      
+   IL_0057: call         0x0601E4EB method ActionGameLibrary.CSpellUtil :: CalcSpellAmplifyDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, bool, bool) -> int 0x0601E4EB
+   IL_005C: pop          
+   IL_005D: ldc.r8       0.0
+   IL_0066: stloc.s      4
+   IL_0068: ldarg.s      6
+   IL_006A: ldfld        0x040173B9 field ActionGameLibrary.TSpellHitPara::isProjectile : bool
+   IL_006F: brtrue.s     9
+   IL_0071: ldarg.s      6
+   IL_0073: ldfld        0x040173AB field ActionGameLibrary.TSpellHitPara::iSpellID : int
+   IL_0078: br.s         7
+   IL_007A: ldarg.s      6
+   IL_007C: ldfld        0x040173BB field ActionGameLibrary.TSpellHitPara::iProjectileDescID : int
+   IL_0081: stloc.s      5
+   IL_0083: ldarg.0      
+   IL_0084: ldarg.1      
+   IL_0085: ldloca.s     3
+   IL_0087: ldloca.s     4
+   IL_0089: ldarg.s      4
+   IL_008B: ldc.i4.0     
+   IL_008C: ldloc.s      5
+   IL_008E: call         0x0601E4E8 method ActionGameLibrary.CSpellUtil :: CalcElementFixDamageFactor(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, ref double, GameConfigData.SkillData, bool, int) -> int 0x0601E4E8
+   IL_0093: pop          
+   IL_0094: ldarg.0      
+   IL_0095: ldarg.1      
+   IL_0096: ldloca.s     3
+   IL_0098: ldarg.s      6
+   IL_009A: ldflda       0x040173C5 field ActionGameLibrary.TSpellHitPara::ehurtadd : proto_ff.CSHurtAdditionType
+   IL_009F: call         0x0601E4EF method ActionGameLibrary.CSpellUtil :: CalcActionFixDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, ref proto_ff.CSHurtAdditionType) -> int 0x0601E4EF
+   IL_00A4: pop          
+   IL_00A5: ldarg.0      
+   IL_00A6: ldarg.1      
+   IL_00A7: ldloca.s     3
+   IL_00A9: ldarg.s      4
+   IL_00AB: ldarg.s      5
+   IL_00AD: ldarg.s      6
+   IL_00AF: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_00B4: ldarg.2      
+   IL_00B5: call         0x0601E4F0 method ActionGameLibrary.CSpellUtil :: CalcCritDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, ActionGameLibrary.TSpellHitPara, ref bool) -> int 0x0601E4F0
+   IL_00BA: pop          
+   IL_00BB: ldarg.0      
+   IL_00BC: ldarg.1      
+   IL_00BD: ldloca.s     3
+   IL_00BF: ldarg.s      6
+   IL_00C1: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_00C6: call         0x0601E4F1 method ActionGameLibrary.CSpellUtil :: CalcHurtFixDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, ActionGameLibrary.TSpellHitPara) -> int 0x0601E4F1
+   IL_00CB: pop          
+   IL_00CC: ldarg.0      
+   IL_00CD: ldarg.1      
+   IL_00CE: ldloca.s     3
+   IL_00D0: ldarg.s      6
+   IL_00D2: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_00D7: call         0x0601E4F2 method ActionGameLibrary.CSpellUtil :: CalcPvpIncDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, ActionGameLibrary.TSpellHitPara) -> int 0x0601E4F2
+   IL_00DC: pop          
+   IL_00DD: ldarg.0      
+   IL_00DE: ldarg.1      
+   IL_00DF: ldloca.s     3
+   IL_00E1: ldarg.s      4
+   IL_00E3: ldarg.s      5
+   IL_00E5: ldarg.s      6
+   IL_00E7: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_00EC: ldarg.2      
+   IL_00ED: ldind.u1     
+   IL_00EE: ldloc.0      
+   IL_00EF: ldc.i4.0     
+   IL_00F0: call         0x0601E4F4 method ActionGameLibrary.CSpellUtil :: CalcIncMoreDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc, ActionGameLibrary.TSpellHitPara, bool, bool, proto_ff.AttrType) -> int 0x0601E4F4
+   IL_00F5: pop          
+   IL_00F6: ldarg.0      
+   IL_00F7: ldarg.1      
+   IL_00F8: ldloca.s     3
+   IL_00FA: call         0x0601E4F8 method ActionGameLibrary.CSpellUtil :: CalcRandomDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double) -> int 0x0601E4F8
+   IL_00FF: pop          
+   IL_0100: ldarg.0      
+   IL_0101: ldarg.1      
+   IL_0102: ldloca.s     3
+   IL_0104: call         0x0601E4F9 method ActionGameLibrary.CSpellUtil :: CalcOneShotPromoteDamage(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref double) -> int 0x0601E4F9
+   IL_0109: pop          
+   IL_010A: ldloc.2      
+   IL_010B: ldloc.3      
+   IL_010C: call         0x06000BE9 method BigInt :: op_Implicit(double) -> BigInt 0x06000BE9
+   IL_0111: call         0x06000BEE method BigInt :: op_Multiply(BigInt, BigInt) -> BigInt 0x06000BEE
+   IL_0116: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_011B: conv.u8      
+   IL_011C: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_0121: call         0x06000BEF method BigInt :: op_Division(BigInt, BigInt) -> BigInt 0x06000BEF
+   IL_0126: stloc.2      
+   IL_0127: ldloc.2      
+   IL_0128: ldc.i4.0     
+   IL_0129: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_012E: call         0x0601E516 method ActionGameLibrary.CSpellUtil :: DEBUG_EXPR_CHECK_OP_2_PLUS(BigInt, BigInt) -> void 0x0601E516
+   IL_0133: ldloc.2      
+   IL_0134: ldc.i4.1     
+   IL_0135: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_013A: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_013F: brtrue.s     8
+   IL_0141: ldc.i4.1     
+   IL_0142: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0147: br.s         1
+   IL_0149: ldloc.2      
+   IL_014A: stloc.2      
+   IL_014B: ldloc.2      
+   IL_014C: ret          
+
+ActionGameLibrary.DamageFactory :: ProcVampire(ActionGameLibrary.IActionGameObject, long) -> int 0x0601E57B
+   IL_0000: ldc.i4.0     
+   IL_0001: ret          
+
+ActionGameLibrary.DamageFactory :: ProcSkillVampire(ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, long) -> int 0x0601E57C
+   IL_0000: ldarg.0      
+   IL_0001: brtrue.s     2
+   IL_0003: ldc.i4.0     
+   IL_0004: ret          
+   IL_0005: ldarg.1      
+   IL_0006: ldfld        0x040173AB field ActionGameLibrary.TSpellHitPara::iSpellID : int
+   IL_000B: call         0x0601E586 method ActionGameLibrary.DamageFactory :: IS_VALID_SKILL_ID(int) -> bool 0x0601E586
+   IL_0010: brfalse.s    87
+   IL_0012: ldc.r4       0.0
+   IL_0017: stloc.0      
+   IL_0018: ldloc.0      
+   IL_0019: call         0x0601E585 method ActionGameLibrary.DamageFactory :: IsFloatZero(float) -> bool 0x0601E585
+   IL_001E: brtrue.s     73
+   IL_0020: ldloc.0      
+   IL_0021: ldarg.2      
+   IL_0022: conv.r4      
+   IL_0023: mul          
+   IL_0024: conv.i8      
+   IL_0025: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_002A: stloc.1      
+   IL_002B: ldloc.1      
+   IL_002C: ldc.i4.0     
+   IL_002D: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0032: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_0037: brfalse.s    48
+   IL_0039: ldarg.0      
+   IL_003A: ldarg.0      
+   IL_003B: ldloc.1      
+   IL_003C: ldarg.1      
+   IL_003D: ldfld        0x040173AB field ActionGameLibrary.TSpellHitPara::iSpellID : int
+   IL_0042: ldc.i4.1     
+   IL_0043: ldloca.s     1
+   IL_0045: call         0x0601E25C method ActionGameLibrary.CBattleActorUtil :: HealHp(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, BigInt, int, bool, ref BigInt) -> int 0x0601E25C
+   IL_004A: pop          
+   IL_004B: ldarg.0      
+   IL_004C: callvirt     0x0601F116 method ActionGameLibrary.IActionGameObject :: get_active() -> bool 0x0601F116
+   IL_0051: brfalse.s    22
+   IL_0053: ldarg.0      
+   IL_0054: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0059: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_005E: ldloc.1      
+   IL_005F: ldc.i4.1     
+   IL_0060: ldc.i4.1     
+   IL_0061: ldc.i4.s     23
+   IL_0063: call         0x0601E454 method ActionGameLibrary.CHitNotifier :: AddOneHitHeal(int, BigInt, bool, proto_ff.enHealReason, proto_ff.AttrType) -> int 0x0601E454
+   IL_0068: pop          
+   IL_0069: ldc.i4.0     
+   IL_006A: ret          
+
+ActionGameLibrary.DamageFactory :: ProcHitAddtionalVampire(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, long) -> int 0x0601E57D
+   IL_0000: ldarg.0      
+   IL_0001: brfalse.s    3
+   IL_0003: ldarg.1      
+   IL_0004: brtrue.s     2
+   IL_0006: ldc.i4.0     
+   IL_0007: ret          
+   IL_0008: ldc.i4.0     
+   IL_0009: ldc.i4.0     
+   IL_000A: ble.s        65
+   IL_000C: ldc.i4.0     
+   IL_000D: conv.i8      
+   IL_000E: dup          
+   IL_000F: ldarg.2      
+   IL_0010: mul          
+   IL_0011: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_0016: conv.u8      
+   IL_0017: div          
+   IL_0018: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_001D: stloc.0      
+   IL_001E: ldc.i4.0     
+   IL_001F: conv.i8      
+   IL_0020: ble.s        43
+   IL_0022: ldarg.0      
+   IL_0023: ldarg.0      
+   IL_0024: ldloc.0      
+   IL_0025: ldc.i4.0     
+   IL_0026: ldc.i4.1     
+   IL_0027: ldloca.s     0
+   IL_0029: call         0x0601E25C method ActionGameLibrary.CBattleActorUtil :: HealHp(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, BigInt, int, bool, ref BigInt) -> int 0x0601E25C
+   IL_002E: pop          
+   IL_002F: ldarg.0      
+   IL_0030: callvirt     0x0601F116 method ActionGameLibrary.IActionGameObject :: get_active() -> bool 0x0601F116
+   IL_0035: brfalse.s    22
+   IL_0037: ldarg.0      
+   IL_0038: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_003D: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0042: ldloc.0      
+   IL_0043: ldc.i4.1     
+   IL_0044: ldc.i4.3     
+   IL_0045: ldc.i4.s     23
+   IL_0047: call         0x0601E454 method ActionGameLibrary.CHitNotifier :: AddOneHitHeal(int, BigInt, bool, proto_ff.enHealReason, proto_ff.AttrType) -> int 0x0601E454
+   IL_004C: pop          
+   IL_004D: ldc.i4.0     
+   IL_004E: ret          
+
+ActionGameLibrary.DamageFactory :: ProcReflect(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, long, bool, int) -> int 0x0601E57E
+   IL_0000: ldarg.0      
+   IL_0001: brfalse.s    15
+   IL_0003: ldarg.1      
+   IL_0004: brfalse.s    12
+   IL_0006: ldarg.s      4
+   IL_0008: brfalse.s    8
+   IL_000A: ldc.i4.0     
+   IL_000B: call         0x0601E58B method ActionGameLibrary.DamageFactory :: IsValidBattle(int) -> bool 0x0601E58B
+   IL_0010: brtrue.s     2
+   IL_0012: ldc.i4.0     
+   IL_0013: ret          
+   IL_0014: ldarg.1      
+   IL_0015: ldc.i4.s     48
+   IL_0017: call         0x0601E502 method ActionGameLibrary.CSpellUtil :: GetAttrib(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> long 0x0601E502
+   IL_001C: stloc.0      
+   IL_001D: ldloc.0      
+   IL_001E: ldc.i4.0     
+   IL_001F: conv.i8      
+   IL_0020: ble          IL_00D3
+   IL_0025: ldarg.2      
+   IL_0026: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_002B: ldarg.s      5
+   IL_002D: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0032: ldc.i4.0     
+   IL_0033: ldc.i4.0     
+   IL_0034: ldc.i4.0     
+   IL_0035: ldc.i4.0     
+   IL_0036: ldc.i4.0     
+   IL_0037: call         0x0601E44D method ActionGameLibrary.CHitNotifier :: InitBySpell(int, int, int, int, int, int) -> int 0x0601E44D
+   IL_003C: pop          
+   IL_003D: ldloc.0      
+   IL_003E: ldarg.3      
+   IL_003F: mul          
+   IL_0040: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_0045: conv.u8      
+   IL_0046: div          
+   IL_0047: ldc.i4.1     
+   IL_0048: conv.i8      
+   IL_0049: call         0x0A000A7F memberref System.Math::Max
+   IL_004E: stloc.1      
+   IL_004F: ldarg.0      
+   IL_0050: ldarg.1      
+   IL_0051: ldloc.1      
+   IL_0052: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_0057: ldarg.2      
+   IL_0058: ldfld        0x040173AB field ActionGameLibrary.TSpellHitPara::iSpellID : int
+   IL_005D: ldc.i4.1     
+   IL_005E: ldc.i4.0     
+   IL_005F: call         0x0601E558 method ActionGameLibrary.CtagHurtHPPara :: Alloc(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, BigInt, int, ActionGameLibrary.enHurtType, int) -> ActionGameLibrary.CtagHurtHPPara 0x0601E558
+   IL_0064: stloc.2      
+   IL_0065: ldc.i4.0     
+   IL_0066: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_006B: stloc.3      
+   IL_006C: ldc.i4.0     
+   IL_006D: stloc.s      4
+   IL_006F: ldloca.s     2
+   IL_0071: ldarga.s     4
+   IL_0073: ldc.i4.1     
+   IL_0074: ldloca.s     3
+   IL_0076: ldloc.s      4
+   IL_0078: call         0x0601E25A method ActionGameLibrary.CBattleActorUtil :: Hurt(ref ActionGameLibrary.CtagHurtHPPara, ref bool, bool, ref BigInt, bool) -> int 0x0601E25A
+   IL_007D: pop          
+   IL_007E: ldarg.1      
+   IL_007F: callvirt     0x0601F116 method ActionGameLibrary.IActionGameObject :: get_active() -> bool 0x0601F116
+   IL_0084: brfalse.s    71
+   IL_0086: call         0x0A005668 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Get
+   IL_008B: stloc.s      5
+   IL_008D: ldarg.0      
+   IL_008E: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0093: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0098: ldc.i4.0     
+   IL_0099: ldloc.1      
+   IL_009A: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_009F: ldloca.s     5
+   IL_00A1: ldloc.2      
+   IL_00A2: callvirt     0x0601E562 method ActionGameLibrary.CtagHurtHPPara :: GetAbsorbValue() -> long 0x0601E562
+   IL_00A7: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_00AC: ldarg.s      4
+   IL_00AE: ldc.i4.0     
+   IL_00AF: ldc.i4.0     
+   IL_00B0: ldloc.2      
+   IL_00B1: callvirt     0x0601E563 method ActionGameLibrary.CtagHurtHPPara :: GetDamageCounted() -> bool 0x0601E563
+   IL_00B6: ldc.i4.0     
+   IL_00B7: ldc.i4.0     
+   IL_00B8: ldc.i4.0     
+   IL_00B9: ldc.i4.0     
+   IL_00BA: ldnull       
+   IL_00BB: call         0x0601E456 method ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, proto_ff.CSHurtType, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, BigInt, bool, bool, bool, bool, int, proto_ff.CSHurtAdditionType, proto_ff.enNoDamageType, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E456
+   IL_00C0: pop          
+   IL_00C1: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_00C6: ldloc.s      5
+   IL_00C8: call         0x0A005669 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Release
+   IL_00CD: ldloc.2      
+   IL_00CE: call         0x0601E559 method ActionGameLibrary.CtagHurtHPPara :: Release(ActionGameLibrary.CtagHurtHPPara) -> void 0x0601E559
+   IL_00D3: ldc.i4.0     
+   IL_00D4: ret          
+
+ActionGameLibrary.DamageFactory :: ProcSpecialEffectCold(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, int, bool, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E57F
+   IL_0000: ldarg.0      
+   IL_0001: brfalse.s    27
+   IL_0003: ldarg.1      
+   IL_0004: brfalse.s    24
+   IL_0006: ldarg.s      4
+   IL_0008: brfalse.s    20
+   IL_000A: ldarg.s      5
+   IL_000C: ldfld        0x040172AF field ActionGameLibrary.SkillEffectDesc::id : int
+   IL_0011: brfalse.s    11
+   IL_0013: ldarg.3      
+   IL_0014: brfalse.s    8
+   IL_0016: ldc.i4.0     
+   IL_0017: call         0x0601E58B method ActionGameLibrary.DamageFactory :: IsValidBattle(int) -> bool 0x0601E58B
+   IL_001C: brtrue.s     2
+   IL_001E: ldc.i4.0     
+   IL_001F: ret          
+   IL_0020: ldarg.0      
+   IL_0021: ldc.i4       223
+   IL_0026: call         0x0601E500 method ActionGameLibrary.CSpellUtil :: GetAttribRealValue(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> double 0x0601E500
+   IL_002B: stloc.0      
+   IL_002C: ldarg.1      
+   IL_002D: ldc.i4       224
+   IL_0032: call         0x0601E500 method ActionGameLibrary.CSpellUtil :: GetAttribRealValue(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> double 0x0601E500
+   IL_0037: stloc.1      
+   IL_0038: ldarg.s      4
+   IL_003A: ldarg.0      
+   IL_003B: call         0x0601E27A method ActionGameLibrary.CBattleAdapterUtil :: Adapt4SpellDmgFactorA(GameConfigData.SkillData, ActionGameLibrary.IActionGameObject) -> double 0x0601E27A
+   IL_0040: stloc.2      
+   IL_0041: ldarg.0      
+   IL_0042: ldarg.1      
+   IL_0043: ldloca.s     7
+   IL_0045: FEinitobj    0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_004B: ldloc.s      7
+   IL_004D: ldarg.2      
+   IL_004E: ldc.i4.0     
+   IL_004F: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0054: ldc.i4.0     
+   IL_0055: call         0x0601E27D method ActionGameLibrary.CBattleAdapterUtil :: Adapt4SpellFix(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, int, BigInt, proto_ff.enSkillFixType) -> BigInt 0x0601E27D
+   IL_005A: stloc.3      
+   IL_005B: ldarg.0      
+   IL_005C: ldarg.1      
+   IL_005D: ldloca.s     7
+   IL_005F: FEinitobj    0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0065: ldloc.s      7
+   IL_0067: ldarg.2      
+   IL_0068: ldc.i4.0     
+   IL_0069: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_006E: ldc.i4.4     
+   IL_006F: call         0x0601E27D method ActionGameLibrary.CBattleAdapterUtil :: Adapt4SpellFix(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ActionGameLibrary.TSpellHitPara, int, BigInt, proto_ff.enSkillFixType) -> BigInt 0x0601E27D
+   IL_0074: stloc.s      4
+   IL_0076: ldarg.s      5
+   IL_0078: call         0x0601E27E method ActionGameLibrary.CBattleAdapterUtil :: Adapt4SpellEffectDmgWeight(ActionGameLibrary.SkillEffectDesc) -> double 0x0601E27E
+   IL_007D: ldloc.2      
+   IL_007E: ldloca.s     3
+   IL_0080: call         0x06000C03 method BigInt :: ToDouble() -> double 0x06000C03
+   IL_0085: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_008A: conv.r.un    
+   IL_008B: conv.r8      
+   IL_008C: div          
+   IL_008D: ldc.r8       1.0
+   IL_0096: add          
+   IL_0097: mul          
+   IL_0098: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_009D: conv.r.un    
+   IL_009E: conv.r8      
+   IL_009F: ldloca.s     4
+   IL_00A1: call         0x06000C03 method BigInt :: ToDouble() -> double 0x06000C03
+   IL_00A6: add          
+   IL_00A7: mul          
+   IL_00A8: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_00AD: conv.r.un    
+   IL_00AE: conv.r8      
+   IL_00AF: div          
+   IL_00B0: stloc.s      5
+   IL_00B2: ldloc.s      5
+   IL_00B4: mul          
+   IL_00B5: ldc.r8       1.0
+   IL_00BE: ldloc.0      
+   IL_00BF: add          
+   IL_00C0: ldloc.1      
+   IL_00C1: sub          
+   IL_00C2: mul          
+   IL_00C3: call         0x0601E509 method ActionGameLibrary.CSpellUtil :: get_ATTR_VALUE_MULTI() -> uint 0x0601E509
+   IL_00C8: conv.r.un    
+   IL_00C9: conv.r8      
+   IL_00CA: mul          
+   IL_00CB: call         0x06000BE9 method BigInt :: op_Implicit(double) -> BigInt 0x06000BE9
+   IL_00D0: stloc.s      6
+   IL_00D2: ldloc.s      6
+   IL_00D4: ldc.i4.0     
+   IL_00D5: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_00DA: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+   IL_00DF: brfalse.s    10
+   IL_00E1: ldarg.0      
+   IL_00E2: ldarg.1      
+   IL_00E3: ldloc.s      6
+   IL_00E5: call         0x0601E59B method ActionGameLibrary.CSpecialEffectUtil :: ChangeColdValue(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, BigInt) -> int 0x0601E59B
+   IL_00EA: pop          
+   IL_00EB: ldc.i4.0     
+   IL_00EC: ret          
+
+ActionGameLibrary.DamageFactory :: DoSpellHit(ref ActionGameLibrary.TSpellHitPara) -> int 0x0601E580
+   IL_0000: ldc.i4.0     
+   IL_0001: stloc.0      
+   IL_0002: ldc.i4.0     
+   IL_0003: call         0x0601E58B method ActionGameLibrary.DamageFactory :: IsValidBattle(int) -> bool 0x0601E58B
+   IL_0008: brtrue.s     3
+   IL_000A: ldc.i4.1     
+   IL_000B: br.s         1
+   IL_000D: ldc.i4.0     
+   IL_000E: stloc.0      
+   IL_000F: ldloc.0      
+   IL_0010: brtrue.s     12
+   IL_0012: ldarg.0      
+   IL_0013: call         0x0601E581 method ActionGameLibrary.DamageFactory :: ProcSpellEffect(ref ActionGameLibrary.TSpellHitPara) -> int 0x0601E581
+   IL_0018: stloc.0      
+   IL_0019: ldloc.0      
+   IL_001A: brfalse.s    2
+   IL_001C: ldloc.0      
+   IL_001D: ret          
+   IL_001E: ldc.i4.0     
+   IL_001F: ret          
+
+ActionGameLibrary.DamageFactory :: ProcSpellEffect(ref ActionGameLibrary.TSpellHitPara) -> int 0x0601E581
+   IL_0000: ldc.i4.m1    
+   IL_0001: stloc.0      
+   IL_0002: ldc.i4.1     
+   IL_0003: stloc.1      
+   IL_0004: ldc.i4.1     
+   IL_0005: stloc.2      
+   IL_0006: ldloca.s     3
+   IL_0008: FEinitobj    0x02001FB3 type ActionGameLibrary.SkillEffectDesc
+   IL_000E: ldarg.0      
+   IL_000F: ldfld        0x040173B9 field ActionGameLibrary.TSpellHitPara::isProjectile : bool
+   IL_0014: brfalse.s    20
+   IL_0016: ldarg.0      
+   IL_0017: ldfld        0x040173BC field ActionGameLibrary.TSpellHitPara::iProjectilePrototypeID : int
+   IL_001C: ldarg.0      
+   IL_001D: ldfld        0x040173B2 field ActionGameLibrary.TSpellHitPara::iHitID : int
+   IL_0022: call         0x0601E4C1 method ActionGameLibrary.CSheetConfig :: GetProjectileEffectDesc(int, int) -> ActionGameLibrary.SkillEffectDesc 0x0601E4C1
+   IL_0027: stloc.3      
+   IL_0028: br.s         74
+   IL_002A: ldarg.0      
+   IL_002B: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_0030: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_0035: stloc.s      8
+   IL_0037: ldloc.s      8
+   IL_0039: brtrue.s     2
+   IL_003B: ldc.i4.m1    
+   IL_003C: ret          
+   IL_003D: ldarg.0      
+   IL_003E: ldfld        0x040173B0 field ActionGameLibrary.TSpellHitPara::iHitActorID : int
+   IL_0043: ldloc.s      8
+   IL_0045: call         0x0601E291 method ActionGameLibrary.CBattleAdapterUtil :: GetModelId(int, ActionGameLibrary.IActionGameObject) -> int 0x0601E291
+   IL_004A: stloc.0      
+   IL_004B: ldloc.0      
+   IL_004C: ldc.i4.1     
+   IL_004D: blt.s        37
+   IL_004F: ldloc.0      
+   IL_0050: ldarg.0      
+   IL_0051: ldfld        0x040173B1 field ActionGameLibrary.TSpellHitPara::iActionIndex : int
+   IL_0056: ldarg.0      
+   IL_0057: ldfld        0x040173B2 field ActionGameLibrary.TSpellHitPara::iHitID : int
+   IL_005C: ldloc.s      8
+   IL_005E: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0063: ldfld        0x04017D24 field ActionGameLibrary.ActionGameObjectData::modelID : string
+   IL_0068: ldarg.0      
+   IL_0069: ldfld        0x040173C1 field ActionGameLibrary.TSpellHitPara::sActionLabel : string
+   IL_006E: call         0x0601E4C2 method ActionGameLibrary.CSheetConfig :: GetSkillEffectDesc(int, int, int, string, string) -> ActionGameLibrary.SkillEffectDesc 0x0601E4C2
+   IL_0073: stloc.3      
+   IL_0074: ldloc.3      
+   IL_0075: ldfld        0x040172AF field ActionGameLibrary.SkillEffectDesc::id : int
+   IL_007A: brtrue.s     2
+   IL_007C: ldc.i4.0     
+   IL_007D: stloc.2      
+   IL_007E: ldarg.0      
+   IL_007F: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0084: call         0x0601E51E method ActionGameLibrary.CSpellUtil :: GetSpellDesc(ActionGameLibrary.TSpellHitPara) -> GameConfigData.SkillData 0x0601E51E
+   IL_0089: stloc.s      4
+   IL_008B: ldloc.s      4
+   IL_008D: brtrue.s     2
+   IL_008F: ldc.i4.0     
+   IL_0090: stloc.1      
+   IL_0091: ldloc.1      
+   IL_0092: ldloc.2      
+   IL_0093: beq.s        2
+   IL_0095: ldc.i4.m1    
+   IL_0096: ret          
+   IL_0097: ldloc.1      
+   IL_0098: brfalse.s    3
+   IL_009A: ldloc.2      
+   IL_009B: brtrue.s     2
+   IL_009D: ldc.i4.m1    
+   IL_009E: ret          
+   IL_009F: ldarg.0      
+   IL_00A0: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_00A5: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_00AA: stloc.s      5
+   IL_00AC: ldloc.s      5
+   IL_00AE: brtrue.s     2
+   IL_00B0: ldc.i4.m1    
+   IL_00B1: ret          
+   IL_00B2: ldloc.s      5
+   IL_00B4: ldarg.0      
+   IL_00B5: call         0x0601E583 method ActionGameLibrary.DamageFactory :: DoHitCheck(ActionGameLibrary.IActionGameObject, ref ActionGameLibrary.TSpellHitPara) -> int 0x0601E583
+   IL_00BA: pop          
+   IL_00BB: call         0x06001050 method RTTClock :: GetMapSvrSec() -> long 0x06001050
+   IL_00C0: ldc.i4       1000
+   IL_00C5: conv.i8      
+   IL_00C6: mul          
+   IL_00C7: call         0x0601E53B method ActionGameLibrary.CSpellUtil :: RangeRand10K() -> int 0x0601E53B
+   IL_00CC: conv.i8      
+   IL_00CD: add          
+   IL_00CE: stloc.s      6
+   IL_00D0: ldloc.s      5
+   IL_00D2: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_00D7: ldloc.s      6
+   IL_00D9: stfld        0x04017D5D field ActionGameLibrary.ActionGameObjectData::ullHitFlag : ulong
+   IL_00DE: ldarg.0      
+   IL_00DF: ldloc.s      6
+   IL_00E1: stfld        0x040173C4 field ActionGameLibrary.TSpellHitPara::ullHitFlag : ulong
+   IL_00E6: ldc.i4.0     
+   IL_00E7: stloc.s      7
+   IL_00E9: ldc.i4.0     
+   IL_00EA: stloc.s      9
+   IL_00EC: br           IL_039A
+   IL_00F1: ldarg.0      
+   IL_00F2: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_00F7: ldloc.s      9
+   IL_00F9: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_00FE: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_0103: stloc.s      10
+   IL_0105: ldloc.s      10
+   IL_0107: brtrue       IL_01F7
+   IL_010C: ldloc.3      
+   IL_010D: ldfld        0x040172B3 field ActionGameLibrary.SkillEffectDesc::effect_type : ActionGameLibrary.enSkillEffectType
+   IL_0112: ldc.i4.1     
+   IL_0113: bne.un       IL_0394
+   IL_0118: ldarg.0      
+   IL_0119: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_011E: call         0x0601E44C method ActionGameLibrary.CHitNotifier :: InitBySpell(ActionGameLibrary.TSpellHitPara) -> int 0x0601E44C
+   IL_0123: pop          
+   IL_0124: ldc.i4.0     
+   IL_0125: stloc.s      11
+   IL_0127: ldloc.s      5
+   IL_0129: call         0x0601E28B method ActionGameLibrary.CBattleAdapterUtil :: Adapt4BattleStatisticComb(ActionGameLibrary.IActionGameObject) -> bool 0x0601E28B
+   IL_012E: brfalse.s    14
+   IL_0130: ldloc.s      5
+   IL_0132: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0137: ldfld        0x04017D4D field ActionGameLibrary.ActionGameObjectData::comboCount : int
+   IL_013C: stloc.s      11
+   IL_013E: call         0x0A005668 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Get
+   IL_0143: stloc.s      12
+   IL_0145: ldarg.0      
+   IL_0146: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_014B: ldloc.s      9
+   IL_014D: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_0152: callvirt     0x0600FB94 method proto_ff.Proto_PvpAccepterData :: get_Damage() -> proto_ff.MsgInt128 0x0600FB94
+   IL_0157: call         0x06000C2C method Int128Convert :: ToBigInt(proto_ff.MsgInt128) -> BigInt 0x06000C2C
+   IL_015C: stloc.s      13
+   IL_015E: ldloc.s      13
+   IL_0160: ldc.i4.0     
+   IL_0161: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0166: call         0x06000BF9 method BigInt :: op_LessThanOrEqual(BigInt, BigInt) -> bool 0x06000BF9
+   IL_016B: brfalse.s    8
+   IL_016D: ldc.i4.1     
+   IL_016E: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0173: stloc.s      13
+   IL_0175: ldarg.0      
+   IL_0176: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_017B: ldloc.s      9
+   IL_017D: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0182: ldc.i4.0     
+   IL_0183: ldloc.s      13
+   IL_0185: ldloca.s     12
+   IL_0187: ldc.i4.0     
+   IL_0188: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_018D: ldc.i4.1     
+   IL_018E: ldarg.0      
+   IL_018F: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_0194: ldloc.s      9
+   IL_0196: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_019B: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_01A0: ldc.i4.0     
+   IL_01A1: ldc.i4.0     
+   IL_01A2: ldc.i4.0     
+   IL_01A3: ldloc.s      11
+   IL_01A5: call         0x0A00054A memberref System.Math::Max
+   IL_01AA: ldc.i4.0     
+   IL_01AB: ldc.i4.0     
+   IL_01AC: ldc.i4.0     
+   IL_01AD: ldnull       
+   IL_01AE: call         0x0601E456 method ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, proto_ff.CSHurtType, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, BigInt, bool, bool, bool, bool, int, proto_ff.CSHurtAdditionType, proto_ff.enNoDamageType, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E456
+   IL_01B3: pop          
+   IL_01B4: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_01B9: ldloc.s      5
+   IL_01BB: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_01C0: dup          
+   IL_01C1: ldfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_01C6: ldloc.s      13
+   IL_01C8: call         0x06000BEB method BigInt :: op_Addition(BigInt, BigInt) -> BigInt 0x06000BEB
+   IL_01CD: stfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_01D2: ldloc.s      5
+   IL_01D4: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_01D9: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_01DE: conv.i4      
+   IL_01DF: ldc.i4       1000
+   IL_01E4: mul          
+   IL_01E5: conv.i8      
+   IL_01E6: stfld        0x04017D4F field ActionGameLibrary.ActionGameObjectData::lastComboTime : long
+   IL_01EB: ldloc.s      12
+   IL_01ED: call         0x0A005669 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Release
+   IL_01F2: br           IL_0394
+   IL_01F7: ldloc.s      10
+   IL_01F9: callvirt     0x0601F0F5 method ActionGameLibrary.IActionGameObject :: get_isAllReady() -> bool 0x0601F0F5
+   IL_01FE: brtrue       IL_02DD
+   IL_0203: ldarg.0      
+   IL_0204: ldobj        0x02001FC1 type ActionGameLibrary.TSpellHitPara
+   IL_0209: call         0x0601E44C method ActionGameLibrary.CHitNotifier :: InitBySpell(ActionGameLibrary.TSpellHitPara) -> int 0x0601E44C
+   IL_020E: pop          
+   IL_020F: ldc.i4.0     
+   IL_0210: stloc.s      14
+   IL_0212: ldloc.s      5
+   IL_0214: call         0x0601E28B method ActionGameLibrary.CBattleAdapterUtil :: Adapt4BattleStatisticComb(ActionGameLibrary.IActionGameObject) -> bool 0x0601E28B
+   IL_0219: brfalse.s    14
+   IL_021B: ldloc.s      5
+   IL_021D: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0222: ldfld        0x04017D4D field ActionGameLibrary.ActionGameObjectData::comboCount : int
+   IL_0227: stloc.s      14
+   IL_0229: call         0x0A005668 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Get
+   IL_022E: stloc.s      15
+   IL_0230: ldloc.s      10
+   IL_0232: call         0x0601E584 method ActionGameLibrary.DamageFactory :: GetFixDmg(ActionGameLibrary.IActionGameObject) -> BigInt 0x0601E584
+   IL_0237: stloc.s      16
+   IL_0239: ldarg.0      
+   IL_023A: ldfld        0x040173B4 field ActionGameLibrary.TSpellHitPara::iTargetList : System.Collections.Generic.List`1<int>
+   IL_023F: ldloc.s      9
+   IL_0241: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0246: ldc.i4.0     
+   IL_0247: ldloc.s      16
+   IL_0249: ldloca.s     15
+   IL_024B: ldc.i4.0     
+   IL_024C: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0251: ldc.i4.1     
+   IL_0252: ldarg.0      
+   IL_0253: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_0258: ldloc.s      9
+   IL_025A: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_025F: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_0264: ldc.i4.0     
+   IL_0265: ldc.i4.0     
+   IL_0266: ldc.i4.0     
+   IL_0267: ldloc.s      14
+   IL_0269: call         0x0A00054A memberref System.Math::Max
+   IL_026E: ldc.i4.0     
+   IL_026F: ldc.i4.0     
+   IL_0270: ldc.i4.0     
+   IL_0271: ldnull       
+   IL_0272: call         0x0601E456 method ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, proto_ff.CSHurtType, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, BigInt, bool, bool, bool, bool, int, proto_ff.CSHurtAdditionType, proto_ff.enNoDamageType, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E456
+   IL_0277: pop          
+   IL_0278: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_027D: ldloc.s      5
+   IL_027F: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0284: dup          
+   IL_0285: ldfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_028A: ldloc.s      16
+   IL_028C: call         0x06000BEB method BigInt :: op_Addition(BigInt, BigInt) -> BigInt 0x06000BEB
+   IL_0291: stfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_0296: ldloc.s      5
+   IL_0298: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_029D: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_02A2: conv.i4      
+   IL_02A3: ldc.i4       1000
+   IL_02A8: mul          
+   IL_02A9: conv.i8      
+   IL_02AA: stfld        0x04017D4F field ActionGameLibrary.ActionGameObjectData::lastComboTime : long
+   IL_02AF: ldloc.s      15
+   IL_02B1: call         0x0A005669 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Release
+   IL_02B6: ldstr        0x7008C092 string "hit....dmg = {0} {1}"
+   IL_02BB: ldloc.s      16
+   IL_02BD: box          0x020000CB type BigInt
+   IL_02C2: ldloc.s      10
+   IL_02C4: callvirt     0x0601F0F2 method ActionGameLibrary.IActionGameObject :: get_name() -> string 0x0601F0F2
+   IL_02C9: call         0x0A000332 memberref System.String::Format
+   IL_02CE: call         0x2B000036 TOKEN 0x2B000036
+   IL_02D3: call         0x0600096B method Log :: infoError(string, object[]) -> void 0x0600096B
+   IL_02D8: br           IL_0394
+   IL_02DD: ldloc.s      5
+   IL_02DF: ldloc.s      10
+   IL_02E1: ldarg.0      
+   IL_02E2: call         0x0601E28D method ActionGameLibrary.CBattleAdapterUtil :: OnSpellHitBefore(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref ActionGameLibrary.TSpellHitPara) -> int 0x0601E28D
+   IL_02E7: pop          
+   IL_02E8: ldloc.3      
+   IL_02E9: ldfld        0x040172B3 field ActionGameLibrary.SkillEffectDesc::effect_type : ActionGameLibrary.enSkillEffectType
+   IL_02EE: ldc.i4.1     
+   IL_02EF: bne.un.s     14
+   IL_02F1: ldarg.0      
+   IL_02F2: ldloc.s      9
+   IL_02F4: ldloc.s      4
+   IL_02F6: ldloc.3      
+   IL_02F7: call         0x0601E571 method ActionGameLibrary.DamageFactory :: ExecDamageCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E571
+   IL_02FC: pop          
+   IL_02FD: br.s         21
+   IL_02FF: ldloc.3      
+   IL_0300: ldfld        0x040172B3 field ActionGameLibrary.SkillEffectDesc::effect_type : ActionGameLibrary.enSkillEffectType
+   IL_0305: ldc.i4.2     
+   IL_0306: bne.un.s     12
+   IL_0308: ldarg.0      
+   IL_0309: ldloc.s      9
+   IL_030B: ldloc.s      4
+   IL_030D: ldloc.3      
+   IL_030E: call         0x0601E573 method ActionGameLibrary.DamageFactory :: ExecHealCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E573
+   IL_0313: pop          
+   IL_0314: ldloc.3      
+   IL_0315: ldfld        0x040172AF field ActionGameLibrary.SkillEffectDesc::id : int
+   IL_031A: ldc.i4.0     
+   IL_031B: ble.s        12
+   IL_031D: ldarg.0      
+   IL_031E: ldloc.s      9
+   IL_0320: ldloc.s      4
+   IL_0322: ldloc.3      
+   IL_0323: call         0x0601E575 method ActionGameLibrary.DamageFactory :: ExecSPCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E575
+   IL_0328: pop          
+   IL_0329: ldloc.3      
+   IL_032A: ldfld        0x040172B3 field ActionGameLibrary.SkillEffectDesc::effect_type : ActionGameLibrary.enSkillEffectType
+   IL_032F: ldc.i4.1     
+   IL_0330: bne.un.s     34
+   IL_0332: ldloc.s      10
+   IL_0334: ldc.i4.s     88
+   IL_0336: call         0x0601E502 method ActionGameLibrary.CSpellUtil :: GetAttrib(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> long 0x0601E502
+   IL_033B: ldc.i4.0     
+   IL_033C: conv.i8      
+   IL_033D: ble.s        21
+   IL_033F: ldloc.3      
+   IL_0340: ldfld        0x040172AF field ActionGameLibrary.SkillEffectDesc::id : int
+   IL_0345: ldc.i4.0     
+   IL_0346: ble.s        12
+   IL_0348: ldarg.0      
+   IL_0349: ldloc.s      9
+   IL_034B: ldloc.s      4
+   IL_034D: ldloc.3      
+   IL_034E: call         0x0601E576 method ActionGameLibrary.DamageFactory :: ExecBreakPabodyCalc(ref ActionGameLibrary.TSpellHitPara, int, GameConfigData.SkillData, ActionGameLibrary.SkillEffectDesc) -> int 0x0601E576
+   IL_0353: pop          
+   IL_0354: ldloc.s      5
+   IL_0356: ldloc.s      10
+   IL_0358: ldarg.0      
+   IL_0359: ldloc.s      9
+   IL_035B: call         0x0601E582 method ActionGameLibrary.DamageFactory :: ProcSpellCatch(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref ActionGameLibrary.TSpellHitPara, int) -> int 0x0601E582
+   IL_0360: pop          
+   IL_0361: ldloc.s      7
+   IL_0363: ldarg.0      
+   IL_0364: ldfld        0x040173B7 field ActionGameLibrary.TSpellHitPara::astTargetList : System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>
+   IL_0369: ldloc.s      9
+   IL_036B: callvirt     0x0A00437D memberref System.Collections.Generic.List`1<proto_ff.Proto_PvpAccepterData>::get_Item
+   IL_0370: callvirt     0x0600FB91 method proto_ff.Proto_PvpAccepterData :: get_IsCrit() -> bool 0x0600FB91
+   IL_0375: or           
+   IL_0376: stloc.s      7
+   IL_0378: call         0x0A005578 memberref SingletonClass`1<ActionGameLibrary.CBuffTriggerManager>::get_Instance
+   IL_037D: ldloc.s      5
+   IL_037F: ldloc.s      10
+   IL_0381: ldarg.0      
+   IL_0382: ldloc.s      7
+   IL_0384: callvirt     0x0601E302 method ActionGameLibrary.CBuffTriggerManager :: OnActorHit(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref ActionGameLibrary.TSpellHitPara, bool) -> int 0x0601E302
+   IL_0389: pop          
+   IL_038A: ldloc.s      5
+   IL_038C: ldloc.s      10
+   IL_038E: call         0x0601E59C method ActionGameLibrary.CSpecialEffectUtil :: TriggerLight(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject) -> int 0x0601E59C
+   IL_0393: pop          
+   IL_0394: ldloc.s      9
+   IL_0396: ldc.i4.1     
+   IL_0397: add          
+   IL_0398: stloc.s      9
+   IL_039A: ldloc.s      9
+   IL_039C: ldarg.0      
+   IL_039D: ldfld        0x040173B3 field ActionGameLibrary.TSpellHitPara::iTargetNum : int
+   IL_03A2: bge.s        12
+   IL_03A4: ldloc.s      9
+   IL_03A6: call         0x0601E587 method ActionGameLibrary.DamageFactory :: get_MAX_TARGET_NUM() -> int 0x0601E587
+   IL_03AB: blt          IL_00F1
+   IL_03B0: ldc.i4.0     
+   IL_03B1: ret          
+
+ActionGameLibrary.DamageFactory :: ProcSpellCatch(ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, ref ActionGameLibrary.TSpellHitPara, int) -> int 0x0601E582
+   IL_0000: ldc.i4.0     
+   IL_0001: ret          
+
+ActionGameLibrary.DamageFactory :: DoHitCheck(ActionGameLibrary.IActionGameObject, ref ActionGameLibrary.TSpellHitPara) -> int 0x0601E583
+   IL_0000: ldc.i4.0     
+   IL_0001: ret          
+
+ActionGameLibrary.DamageFactory :: GetFixDmg(ActionGameLibrary.IActionGameObject) -> BigInt 0x0601E584
+   IL_0000: ldarg.0      
+   IL_0001: brtrue.s     7
+   IL_0003: ldc.i4.1     
+   IL_0004: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0009: ret          
+   IL_000A: ldarg.0      
+   IL_000B: ldc.i4.s     22
+   IL_000D: call         0x0601E500 method ActionGameLibrary.CSpellUtil :: GetAttribRealValue(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> double 0x0601E500
+   IL_0012: stloc.0      
+   IL_0013: ldloc.0      
+   IL_0014: ldc.r8       0.0
+   IL_001D: bgt.un.s     7
+   IL_001F: ldc.i4.1     
+   IL_0020: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0025: ret          
+   IL_0026: ldloc.0      
+   IL_0027: call         0x06000C26 method Int128Convert :: ToBigInteger(double) -> System.Numerics.BigInteger 0x06000C26
+   IL_002C: ldc.i4.1     
+   IL_002D: call         0x0A00077B memberref System.Numerics.BigInteger::op_RightShift
+   IL_0032: call         0x06000BE7 method BigInt :: op_Implicit(System.Numerics.BigInteger) -> BigInt 0x06000BE7
+   IL_0037: ret          
+
+ActionGameLibrary.DamageFactory :: IsFloatZero(float) -> bool 0x0601E585
+   IL_0000: ldarg.0      
+   IL_0001: ldc.r4       0.0
+   IL_0006: FEceq        
+   IL_0008: ret          
+
+ActionGameLibrary.DamageFactory :: IS_VALID_SKILL_ID(int) -> bool 0x0601E586
+   IL_0000: ldarg.0      
+   IL_0001: ldc.i4.0     
+   IL_0002: FEcgt        
+   IL_0004: ret          
+
+ActionGameLibrary.DamageFactory :: get_MAX_TARGET_NUM() -> int 0x0601E587
+   IL_0000: ldc.i4.s     20
+   IL_0002: ret          
+
+ActionGameLibrary.DamageFactory :: get_IsPVPBattleMode() -> bool 0x0601E588
+   IL_0000: ldsfld       0x04017410 field ActionGameLibrary.DamageFactory::<IsPVPBattleMode>k__BackingField : bool
+   IL_0005: ret          
+
+ActionGameLibrary.DamageFactory :: set_IsPVPBattleMode(bool) -> void 0x0601E589
+   IL_0000: ldarg.0      
+   IL_0001: stsfld       0x04017410 field ActionGameLibrary.DamageFactory::<IsPVPBattleMode>k__BackingField : bool
+   IL_0006: ret          
+
+ActionGameLibrary.DamageFactory :: BattleMode() -> proto_ff.enLevelMode 0x0601E58A
+   IL_0000: call         0x0601DB60 method ActionGameLibrary.BattleContext :: get_current() -> ActionGameLibrary.BattleContext 0x0601DB60
+   IL_0005: callvirt     0x0601DB68 method ActionGameLibrary.BattleContextFacade :: get_data() -> ActionGameLibrary.BattleContextData 0x0601DB68
+   IL_000A: ldfld        0x04016E5E field ActionGameLibrary.BattleContextData::roomBaseInfo : ActionGameLibrary.RoomBaseInfoAdapter
+   IL_000F: ldfld        0x04016E7D field ActionGameLibrary.RoomBaseInfoAdapter::level_mode : proto_ff.enLevelMode
+   IL_0014: ret          
+
+ActionGameLibrary.DamageFactory :: IsValidBattle(int) -> bool 0x0601E58B
+   IL_0000: call         0x0601E7E9 method ActionGameLibrary.BattleElementCenter :: get_isInBattle() -> bool 0x0601E7E9
+   IL_0005: ret          
+
+ActionGameLibrary.DamageFactory :: .ctor() -> void 0x0601E58C
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0A0000AF memberref System.Object::.ctor
+   IL_0006: ret          
+
+ActionGameLibrary.DamageFactory :: .cctor() -> void 0x0601E58D
+   IL_0000: ldc.i4.5     
+   IL_0001: newobj       0x0A005673 memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>::.ctor
+   IL_0006: stsfld       0x0401740F field ActionGameLibrary.DamageFactory::s_checkDataCache : System.Collections.Generic.List`1<ActionGameLibrary.SkillTriggerBuffDesc>
+   IL_000B: ret          

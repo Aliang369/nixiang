@@ -1,0 +1,1627 @@
+
+
+############ TYPE ActionGameLibrary.CHitNotifier ############
+
+ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_0000: ldsfld       0x04017258 field ActionGameLibrary.CHitNotifier::_stEffectNotifyComboHurt : proto_ff.Proto_CSRsp
+   IL_0005: brtrue.s     11
+   IL_0007: ldc.i4.1     
+   IL_0008: call         0x2B00014F TOKEN 0x2B00014F
+   IL_000D: stsfld       0x04017258 field ActionGameLibrary.CHitNotifier::_stEffectNotifyComboHurt : proto_ff.Proto_CSRsp
+   IL_0012: ldsfld       0x04017258 field ActionGameLibrary.CHitNotifier::_stEffectNotifyComboHurt : proto_ff.Proto_CSRsp
+   IL_0017: ret          
+
+ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0000: ldsfld       0x04017259 field ActionGameLibrary.CHitNotifier::_stEffectNotify : proto_ff.Proto_CSRsp
+   IL_0005: brtrue.s     11
+   IL_0007: ldc.i4.1     
+   IL_0008: call         0x2B00014F TOKEN 0x2B00014F
+   IL_000D: stsfld       0x04017259 field ActionGameLibrary.CHitNotifier::_stEffectNotify : proto_ff.Proto_CSRsp
+   IL_0012: ldsfld       0x04017259 field ActionGameLibrary.CHitNotifier::_stEffectNotify : proto_ff.Proto_CSRsp
+   IL_0017: ret          
+
+ActionGameLibrary.CHitNotifier :: ResetEffectNotify() -> void 0x0601E442
+   IL_0000: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0005: brfalse.s    12
+   IL_0007: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_000C: ldc.i4.1     
+   IL_000D: ldc.i4.1     
+   IL_000E: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_0013: ret          
+
+ActionGameLibrary.CHitNotifier :: get_stEffectNotifySkillInfo() -> proto_ff.Proto_CSRsp 0x0601E443
+   IL_0000: ldsfld       0x0401725A field ActionGameLibrary.CHitNotifier::_stEffectNotifySkillInfo : proto_ff.Proto_CSRsp
+   IL_0005: brtrue.s     11
+   IL_0007: ldc.i4.1     
+   IL_0008: call         0x2B00014F TOKEN 0x2B00014F
+   IL_000D: stsfld       0x0401725A field ActionGameLibrary.CHitNotifier::_stEffectNotifySkillInfo : proto_ff.Proto_CSRsp
+   IL_0012: ldsfld       0x0401725A field ActionGameLibrary.CHitNotifier::_stEffectNotifySkillInfo : proto_ff.Proto_CSRsp
+   IL_0017: ret          
+
+ActionGameLibrary.CHitNotifier :: ResetEffectNotifySkillInfo() -> void 0x0601E444
+   IL_0000: ldsfld       0x0401725A field ActionGameLibrary.CHitNotifier::_stEffectNotifySkillInfo : proto_ff.Proto_CSRsp
+   IL_0005: brfalse.s    12
+   IL_0007: ldsfld       0x0401725A field ActionGameLibrary.CHitNotifier::_stEffectNotifySkillInfo : proto_ff.Proto_CSRsp
+   IL_000C: ldc.i4.1     
+   IL_000D: ldc.i4.1     
+   IL_000E: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_0013: ret          
+
+ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0000: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0005: callvirt     0x06017E04 method proto_ff.Proto_CSRsp :: get_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x06017E04
+   IL_000A: brtrue.s     16
+   IL_000C: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0011: ldc.i4.1     
+   IL_0012: call         0x2B000AE8 TOKEN 0x2B000AE8
+   IL_0017: callvirt     0x06017E05 method proto_ff.Proto_CSRsp :: set_effect_ntf(proto_ff.Proto_CSEffectNtf) -> void 0x06017E05
+   IL_001C: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0021: callvirt     0x06017E04 method proto_ff.Proto_CSRsp :: get_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x06017E04
+   IL_0026: ret          
+
+ActionGameLibrary.CHitNotifier :: mutable_comboHurt_ntf() -> proto_ff.Proto_CSCombosTotalHurtNtf 0x0601E446
+   IL_0000: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_0005: callvirt     0x06017E22 method proto_ff.Proto_CSRsp :: get_combos_total_hurt_ntf() -> proto_ff.Proto_CSCombosTotalHurtNtf 0x06017E22
+   IL_000A: brtrue.s     16
+   IL_000C: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_0011: ldc.i4.1     
+   IL_0012: call         0x2B000AE9 TOKEN 0x2B000AE9
+   IL_0017: callvirt     0x06017E23 method proto_ff.Proto_CSRsp :: set_combos_total_hurt_ntf(proto_ff.Proto_CSCombosTotalHurtNtf) -> void 0x06017E23
+   IL_001C: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_0021: callvirt     0x06017E22 method proto_ff.Proto_CSRsp :: get_combos_total_hurt_ntf() -> proto_ff.Proto_CSCombosTotalHurtNtf 0x06017E22
+   IL_0026: ret          
+
+ActionGameLibrary.CHitNotifier :: ResetComboHurtNotify() -> void 0x0601E447
+   IL_0000: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_0005: brfalse.s    12
+   IL_0007: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_000C: ldc.i4.1     
+   IL_000D: ldc.i4.1     
+   IL_000E: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_0013: ret          
+
+ActionGameLibrary.CHitNotifier :: mutable_SkillInfo_ntf() -> proto_ff.Proto_CSSkillInfoNtf 0x0601E448
+   IL_0000: call         0x0601E443 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifySkillInfo() -> proto_ff.Proto_CSRsp 0x0601E443
+   IL_0005: callvirt     0x06017F57 method proto_ff.Proto_CSRsp :: get_skill_info_ntf() -> proto_ff.Proto_CSSkillInfoNtf 0x06017F57
+   IL_000A: brtrue.s     16
+   IL_000C: call         0x0601E443 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifySkillInfo() -> proto_ff.Proto_CSRsp 0x0601E443
+   IL_0011: ldc.i4.1     
+   IL_0012: call         0x2B000AAB TOKEN 0x2B000AAB
+   IL_0017: callvirt     0x06017F58 method proto_ff.Proto_CSRsp :: set_skill_info_ntf(proto_ff.Proto_CSSkillInfoNtf) -> void 0x06017F58
+   IL_001C: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_0021: callvirt     0x06017F57 method proto_ff.Proto_CSRsp :: get_skill_info_ntf() -> proto_ff.Proto_CSSkillInfoNtf 0x06017F57
+   IL_0026: ret          
+
+ActionGameLibrary.CHitNotifier :: ResetSkillInfoNotify() -> void 0x0601E449
+   IL_0000: call         0x0601E443 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifySkillInfo() -> proto_ff.Proto_CSRsp 0x0601E443
+   IL_0005: brfalse.s    12
+   IL_0007: call         0x0601E443 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifySkillInfo() -> proto_ff.Proto_CSRsp 0x0601E443
+   IL_000C: ldc.i4.1     
+   IL_000D: ldc.i4.1     
+   IL_000E: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_0013: ret          
+
+ActionGameLibrary.CHitNotifier :: mutable_ExtralSkillInfo_ntf() -> proto_ff.Proto_CSSkillExtraInfoNtf 0x0601E44A
+   IL_0000: call         0x0601E443 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifySkillInfo() -> proto_ff.Proto_CSRsp 0x0601E443
+   IL_0005: callvirt     0x06017F42 method proto_ff.Proto_CSRsp :: get_skill_extra_info_ntf() -> proto_ff.Proto_CSSkillExtraInfoNtf 0x06017F42
+   IL_000A: brtrue.s     16
+   IL_000C: call         0x0601E443 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifySkillInfo() -> proto_ff.Proto_CSRsp 0x0601E443
+   IL_0011: ldc.i4.1     
+   IL_0012: call         0x2B000AEA TOKEN 0x2B000AEA
+   IL_0017: callvirt     0x06017F43 method proto_ff.Proto_CSRsp :: set_skill_extra_info_ntf(proto_ff.Proto_CSSkillExtraInfoNtf) -> void 0x06017F43
+   IL_001C: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_0021: callvirt     0x06017F42 method proto_ff.Proto_CSRsp :: get_skill_extra_info_ntf() -> proto_ff.Proto_CSSkillExtraInfoNtf 0x06017F42
+   IL_0026: ret          
+
+ActionGameLibrary.CHitNotifier :: BroadSkillExtraInfoNtf(ActionGameLibrary.IActionGameObject, System.Collections.Generic.List`1<ActionGameLibrary.SkillData>) -> int 0x0601E44B
+   IL_0000: call         0x0601E44A method ActionGameLibrary.CHitNotifier :: mutable_ExtralSkillInfo_ntf() -> proto_ff.Proto_CSSkillExtraInfoNtf 0x0601E44A
+   IL_0005: stloc.0      
+   IL_0006: ldc.i4.0     
+   IL_0007: stloc.1      
+   IL_0008: ldarg.1      
+   IL_0009: callvirt     0x0A003682 memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillData>::get_Count
+   IL_000E: stloc.2      
+   IL_000F: br           IL_00AC
+   IL_0014: ldarg.1      
+   IL_0015: ldloc.1      
+   IL_0016: callvirt     0x0A0024ED memberref System.Collections.Generic.List`1<ActionGameLibrary.SkillData>::get_Item
+   IL_001B: stloc.3      
+   IL_001C: ldloc.3      
+   IL_001D: brfalse      IL_00A8
+   IL_0022: ldc.i4.1     
+   IL_0023: call         0x2B000AEB TOKEN 0x2B000AEB
+   IL_0028: stloc.s      4
+   IL_002A: ldloc.s      4
+   IL_002C: ldc.i4.1     
+   IL_002D: call         0x2B000AEC TOKEN 0x2B000AEC
+   IL_0032: callvirt     0x0601055A method proto_ff.SkillExtraInfoNode :: set_extra_info(proto_ff.SkillExtraInfo) -> void 0x0601055A
+   IL_0037: ldloc.s      4
+   IL_0039: callvirt     0x06010559 method proto_ff.SkillExtraInfoNode :: get_extra_info() -> proto_ff.SkillExtraInfo 0x06010559
+   IL_003E: callvirt     0x060104D3 method proto_ff.SkillExtraInfo :: get_fix_list() -> System.Collections.Generic.List`1<proto_ff.SkillFixInfo> 0x060104D3
+   IL_0043: callvirt     0x0A00440E memberref System.Collections.Generic.List`1<proto_ff.SkillFixInfo>::Clear
+   IL_0048: ldloc.s      4
+   IL_004A: callvirt     0x06010559 method proto_ff.SkillExtraInfoNode :: get_extra_info() -> proto_ff.SkillExtraInfo 0x06010559
+   IL_004F: callvirt     0x060104D3 method proto_ff.SkillExtraInfo :: get_fix_list() -> System.Collections.Generic.List`1<proto_ff.SkillFixInfo> 0x060104D3
+   IL_0054: ldloc.3      
+   IL_0055: callvirt     0x0601DFEF method ActionGameLibrary.SkillData :: get_fixList() -> System.Collections.Generic.List`1<proto_ff.SkillFixInfo> 0x0601DFEF
+   IL_005A: callvirt     0x0A00551F memberref System.Collections.Generic.List`1<proto_ff.SkillFixInfo>::AddRange
+   IL_005F: ldloc.s      4
+   IL_0061: ldarg.0      
+   IL_0062: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0067: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_006C: callvirt     0x06010554 method proto_ff.SkillExtraInfoNode :: set_obj_id(int) -> void 0x06010554
+   IL_0071: ldloc.s      4
+   IL_0073: ldloc.3      
+   IL_0074: ldfld        0x040170B6 field ActionGameLibrary.SkillData::id : int
+   IL_0079: callvirt     0x06010557 method proto_ff.SkillExtraInfoNode :: set_skill_id(int) -> void 0x06010557
+   IL_007E: ldloc.s      4
+   IL_0080: callvirt     0x06010559 method proto_ff.SkillExtraInfoNode :: get_extra_info() -> proto_ff.SkillExtraInfo 0x06010559
+   IL_0085: ldc.r4       -0.4000000059604645
+   IL_008A: ldloc.3      
+   IL_008B: ldfld        0x040170BC field ActionGameLibrary.SkillData::costMpPoint : int
+   IL_0090: conv.r4      
+   IL_0091: call         0x0A0008C8 memberref System.Math::Max
+   IL_0096: callvirt     0x060104D2 method proto_ff.SkillExtraInfo :: set_sp_cost_amplify(float) -> void 0x060104D2
+   IL_009B: ldloc.0      
+   IL_009C: callvirt     0x06010566 method proto_ff.Proto_CSSkillExtraInfoNtf :: get_skill_info_node() -> System.Collections.Generic.List`1<proto_ff.SkillExtraInfoNode> 0x06010566
+   IL_00A1: ldloc.s      4
+   IL_00A3: callvirt     0x0A0055FE memberref System.Collections.Generic.List`1<proto_ff.SkillExtraInfoNode>::Add
+   IL_00A8: ldloc.1      
+   IL_00A9: ldc.i4.1     
+   IL_00AA: add          
+   IL_00AB: stloc.1      
+   IL_00AC: ldloc.1      
+   IL_00AD: ldloc.2      
+   IL_00AE: blt          IL_0014
+   IL_00B3: ldc.i4.0     
+   IL_00B4: ret          
+
+ActionGameLibrary.CHitNotifier :: InitBySpell(ActionGameLibrary.TSpellHitPara) -> int 0x0601E44C
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_0006: brtrue.s     2
+   IL_0008: ldc.i4.0     
+   IL_0009: ret          
+   IL_000A: ldarg.0      
+   IL_000B: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_0010: ldarg.0      
+   IL_0011: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_0016: callvirt     0x0601DFF8 method ActionGameLibrary.SkillData :: get_HurtSpellID() -> int 0x0601DFF8
+   IL_001B: ldarg.0      
+   IL_001C: ldfld        0x040173AD field ActionGameLibrary.TSpellHitPara::iSeq : int
+   IL_0021: ldarg.0      
+   IL_0022: ldfld        0x040173B1 field ActionGameLibrary.TSpellHitPara::iActionIndex : int
+   IL_0027: ldarg.0      
+   IL_0028: ldfld        0x040173AE field ActionGameLibrary.TSpellHitPara::iHitSeq : int
+   IL_002D: ldarg.0      
+   IL_002E: ldfld        0x040173AF field ActionGameLibrary.TSpellHitPara::iUniqueID : int
+   IL_0033: call         0x0601E44D method ActionGameLibrary.CHitNotifier :: InitBySpell(int, int, int, int, int, int) -> int 0x0601E44D
+   IL_0038: ret          
+
+ActionGameLibrary.CHitNotifier :: InitBySpell(int, int, int, int, int, int) -> int 0x0601E44D
+   IL_0000: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0005: ldc.i4.1     
+   IL_0006: ldc.i4.0     
+   IL_0007: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_000C: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0011: stloc.0      
+   IL_0012: ldloc.0      
+   IL_0013: ldarg.0      
+   IL_0014: callvirt     0x0601015A method proto_ff.Proto_CSEffectNtf :: set_caster_id(int) -> void 0x0601015A
+   IL_0019: ldloc.0      
+   IL_001A: ldc.i4.0     
+   IL_001B: callvirt     0x0601015D method proto_ff.Proto_CSEffectNtf :: set_trigger_type(proto_ff.CsEffectTriggerType) -> void 0x0601015D
+   IL_0020: ldloc.0      
+   IL_0021: ldarg.1      
+   IL_0022: callvirt     0x06010160 method proto_ff.Proto_CSEffectNtf :: set_trigger_id(int) -> void 0x06010160
+   IL_0027: ldloc.0      
+   IL_0028: ldarg.2      
+   IL_0029: callvirt     0x06010166 method proto_ff.Proto_CSEffectNtf :: set_seq(int) -> void 0x06010166
+   IL_002E: ldloc.0      
+   IL_002F: ldarg.3      
+   IL_0030: callvirt     0x0601016C method proto_ff.Proto_CSEffectNtf :: set_hit_phase(int) -> void 0x0601016C
+   IL_0035: ldloc.0      
+   IL_0036: ldarg.s      4
+   IL_0038: callvirt     0x06010169 method proto_ff.Proto_CSEffectNtf :: set_hit_seq(int) -> void 0x06010169
+   IL_003D: ldloc.0      
+   IL_003E: ldarg.s      5
+   IL_0040: callvirt     0x06010163 method proto_ff.Proto_CSEffectNtf :: set_unique_id(int) -> void 0x06010163
+   IL_0045: ldarg.0      
+   IL_0046: ldloca.s     0
+   IL_0048: ldc.i4.0     
+   IL_0049: call         0x0601E453 method ActionGameLibrary.CHitNotifier :: CheckSetDieState(int, ref proto_ff.Proto_CSEffectNtf, bool) -> void 0x0601E453
+   IL_004E: ldc.i4.0     
+   IL_004F: ret          
+
+ActionGameLibrary.CHitNotifier :: InitByBuff(int, int, int, int, int, int) -> int 0x0601E44E
+   IL_0000: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0005: ldc.i4.1     
+   IL_0006: ldc.i4.1     
+   IL_0007: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_000C: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0011: stloc.0      
+   IL_0012: ldloc.0      
+   IL_0013: ldarg.0      
+   IL_0014: callvirt     0x0601015A method proto_ff.Proto_CSEffectNtf :: set_caster_id(int) -> void 0x0601015A
+   IL_0019: ldloc.0      
+   IL_001A: ldc.i4.1     
+   IL_001B: callvirt     0x0601015D method proto_ff.Proto_CSEffectNtf :: set_trigger_type(proto_ff.CsEffectTriggerType) -> void 0x0601015D
+   IL_0020: ldloc.0      
+   IL_0021: ldarg.1      
+   IL_0022: callvirt     0x06010160 method proto_ff.Proto_CSEffectNtf :: set_trigger_id(int) -> void 0x06010160
+   IL_0027: ldloc.0      
+   IL_0028: ldarg.s      4
+   IL_002A: callvirt     0x06010172 method proto_ff.Proto_CSEffectNtf :: set_buff_effect_index(int) -> void 0x06010172
+   IL_002F: ldloc.0      
+   IL_0030: ldarg.3      
+   IL_0031: callvirt     0x06010175 method proto_ff.Proto_CSEffectNtf :: set_buff_owner_id(int) -> void 0x06010175
+   IL_0036: ldloc.0      
+   IL_0037: ldarg.2      
+   IL_0038: callvirt     0x06010181 method proto_ff.Proto_CSEffectNtf :: set_buff_object_id(int) -> void 0x06010181
+   IL_003D: ldarg.s      5
+   IL_003F: brfalse.s    8
+   IL_0041: ldloc.0      
+   IL_0042: ldarg.s      5
+   IL_0044: callvirt     0x06010166 method proto_ff.Proto_CSEffectNtf :: set_seq(int) -> void 0x06010166
+   IL_0049: ldarg.0      
+   IL_004A: ldloca.s     0
+   IL_004C: ldc.i4.0     
+   IL_004D: call         0x0601E453 method ActionGameLibrary.CHitNotifier :: CheckSetDieState(int, ref proto_ff.Proto_CSEffectNtf, bool) -> void 0x0601E453
+   IL_0052: ldc.i4.0     
+   IL_0053: ret          
+
+ActionGameLibrary.CHitNotifier :: InitBySpecialEffect(int, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E44F
+   IL_0000: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0005: ldc.i4.1     
+   IL_0006: ldc.i4.0     
+   IL_0007: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_000C: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0011: stloc.0      
+   IL_0012: ldloc.0      
+   IL_0013: ldarg.0      
+   IL_0014: callvirt     0x0601015A method proto_ff.Proto_CSEffectNtf :: set_caster_id(int) -> void 0x0601015A
+   IL_0019: ldloc.0      
+   IL_001A: ldc.i4.2     
+   IL_001B: callvirt     0x0601015D method proto_ff.Proto_CSEffectNtf :: set_trigger_type(proto_ff.CsEffectTriggerType) -> void 0x0601015D
+   IL_0020: ldloc.0      
+   IL_0021: ldc.i4.0     
+   IL_0022: callvirt     0x06010160 method proto_ff.Proto_CSEffectNtf :: set_trigger_id(int) -> void 0x06010160
+   IL_0027: ldloc.0      
+   IL_0028: ldarg.1      
+   IL_0029: callvirt     0x0601017B method proto_ff.Proto_CSEffectNtf :: set_special_effect_type(proto_ff.enSpecialEffectType) -> void 0x0601017B
+   IL_002E: ldloc.0      
+   IL_002F: callvirt     0x0601017C method proto_ff.Proto_CSEffectNtf :: get_special_effect_param() -> System.Collections.Generic.List`1<int> 0x0601017C
+   IL_0034: ldarg.2      
+   IL_0035: callvirt     0x0A0009EC memberref System.Collections.Generic.List`1<int>::AddRange
+   IL_003A: ldarg.0      
+   IL_003B: ldloca.s     0
+   IL_003D: ldc.i4.0     
+   IL_003E: call         0x0601E453 method ActionGameLibrary.CHitNotifier :: CheckSetDieState(int, ref proto_ff.Proto_CSEffectNtf, bool) -> void 0x0601E453
+   IL_0043: ldc.i4.0     
+   IL_0044: ret          
+
+ActionGameLibrary.CHitNotifier :: InitByEquipHit(ActionGameLibrary.TSpellHitPara) -> int 0x0601E450
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_0006: brtrue.s     2
+   IL_0008: ldc.i4.0     
+   IL_0009: ret          
+   IL_000A: ldarg.0      
+   IL_000B: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_0010: ldarg.0      
+   IL_0011: ldfld        0x040173B6 field ActionGameLibrary.TSpellHitPara::pInst : ActionGameLibrary.SkillData
+   IL_0016: callvirt     0x0601DFF8 method ActionGameLibrary.SkillData :: get_HurtSpellID() -> int 0x0601DFF8
+   IL_001B: ldarg.0      
+   IL_001C: ldfld        0x040173AD field ActionGameLibrary.TSpellHitPara::iSeq : int
+   IL_0021: ldarg.0      
+   IL_0022: ldfld        0x040173B1 field ActionGameLibrary.TSpellHitPara::iActionIndex : int
+   IL_0027: ldarg.0      
+   IL_0028: ldfld        0x040173AE field ActionGameLibrary.TSpellHitPara::iHitSeq : int
+   IL_002D: ldarg.0      
+   IL_002E: ldfld        0x040173AF field ActionGameLibrary.TSpellHitPara::iUniqueID : int
+   IL_0033: call         0x0601E452 method ActionGameLibrary.CHitNotifier :: InitByEquipHit(int, int, int, int, int, int) -> int 0x0601E452
+   IL_0038: ret          
+
+ActionGameLibrary.CHitNotifier :: InitByEquipAddBuffToTarget(int, int, int, int, int, int) -> int 0x0601E451
+   IL_0000: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0005: ldc.i4.1     
+   IL_0006: ldc.i4.1     
+   IL_0007: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_000C: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0011: stloc.0      
+   IL_0012: ldloc.0      
+   IL_0013: ldarg.0      
+   IL_0014: callvirt     0x0601015A method proto_ff.Proto_CSEffectNtf :: set_caster_id(int) -> void 0x0601015A
+   IL_0019: ldloc.0      
+   IL_001A: ldc.i4.3     
+   IL_001B: callvirt     0x0601015D method proto_ff.Proto_CSEffectNtf :: set_trigger_type(proto_ff.CsEffectTriggerType) -> void 0x0601015D
+   IL_0020: ldloc.0      
+   IL_0021: ldarg.1      
+   IL_0022: callvirt     0x06010160 method proto_ff.Proto_CSEffectNtf :: set_trigger_id(int) -> void 0x06010160
+   IL_0027: ldloc.0      
+   IL_0028: ldarg.s      4
+   IL_002A: callvirt     0x06010172 method proto_ff.Proto_CSEffectNtf :: set_buff_effect_index(int) -> void 0x06010172
+   IL_002F: ldloc.0      
+   IL_0030: ldarg.3      
+   IL_0031: callvirt     0x06010175 method proto_ff.Proto_CSEffectNtf :: set_buff_owner_id(int) -> void 0x06010175
+   IL_0036: ldloc.0      
+   IL_0037: ldarg.2      
+   IL_0038: callvirt     0x06010181 method proto_ff.Proto_CSEffectNtf :: set_buff_object_id(int) -> void 0x06010181
+   IL_003D: ldarg.s      5
+   IL_003F: brfalse.s    8
+   IL_0041: ldloc.0      
+   IL_0042: ldarg.s      5
+   IL_0044: callvirt     0x06010166 method proto_ff.Proto_CSEffectNtf :: set_seq(int) -> void 0x06010166
+   IL_0049: ldarg.0      
+   IL_004A: ldloca.s     0
+   IL_004C: ldc.i4.0     
+   IL_004D: call         0x0601E453 method ActionGameLibrary.CHitNotifier :: CheckSetDieState(int, ref proto_ff.Proto_CSEffectNtf, bool) -> void 0x0601E453
+   IL_0052: ldc.i4.0     
+   IL_0053: ret          
+
+ActionGameLibrary.CHitNotifier :: InitByEquipHit(int, int, int, int, int, int) -> int 0x0601E452
+   IL_0000: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0005: ldc.i4.1     
+   IL_0006: ldc.i4.1     
+   IL_0007: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_000C: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0011: stloc.0      
+   IL_0012: ldloc.0      
+   IL_0013: ldarg.0      
+   IL_0014: callvirt     0x0601015A method proto_ff.Proto_CSEffectNtf :: set_caster_id(int) -> void 0x0601015A
+   IL_0019: ldloc.0      
+   IL_001A: ldc.i4.3     
+   IL_001B: callvirt     0x0601015D method proto_ff.Proto_CSEffectNtf :: set_trigger_type(proto_ff.CsEffectTriggerType) -> void 0x0601015D
+   IL_0020: ldloc.0      
+   IL_0021: ldarg.1      
+   IL_0022: callvirt     0x06010160 method proto_ff.Proto_CSEffectNtf :: set_trigger_id(int) -> void 0x06010160
+   IL_0027: ldloc.0      
+   IL_0028: ldarg.2      
+   IL_0029: callvirt     0x06010166 method proto_ff.Proto_CSEffectNtf :: set_seq(int) -> void 0x06010166
+   IL_002E: ldloc.0      
+   IL_002F: ldarg.3      
+   IL_0030: callvirt     0x0601016C method proto_ff.Proto_CSEffectNtf :: set_hit_phase(int) -> void 0x0601016C
+   IL_0035: ldloc.0      
+   IL_0036: ldarg.s      4
+   IL_0038: callvirt     0x06010169 method proto_ff.Proto_CSEffectNtf :: set_hit_seq(int) -> void 0x06010169
+   IL_003D: ldloc.0      
+   IL_003E: ldarg.s      5
+   IL_0040: callvirt     0x06010163 method proto_ff.Proto_CSEffectNtf :: set_unique_id(int) -> void 0x06010163
+   IL_0045: ldarg.0      
+   IL_0046: ldloca.s     0
+   IL_0048: ldc.i4.0     
+   IL_0049: call         0x0601E453 method ActionGameLibrary.CHitNotifier :: CheckSetDieState(int, ref proto_ff.Proto_CSEffectNtf, bool) -> void 0x0601E453
+   IL_004E: ldc.i4.0     
+   IL_004F: ret          
+
+ActionGameLibrary.CHitNotifier :: CheckSetDieState(int, ref proto_ff.Proto_CSEffectNtf, bool) -> void 0x0601E453
+   IL_0000: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_0005: ldarg.0      
+   IL_0006: callvirt     0x0601E986 method ActionGameLibrary.GameObjectManager :: GetUnit_ByObjId(int) -> ActionGameLibrary.IActionGameObject 0x0601E986
+   IL_000B: stloc.0      
+   IL_000C: ldloc.0      
+   IL_000D: brfalse.s    69
+   IL_000F: ldloc.0      
+   IL_0010: callvirt     0x0601F0F3 method ActionGameLibrary.IActionGameObject :: get_disposed() -> bool 0x0601F0F3
+   IL_0015: brtrue.s     42
+   IL_0017: ldloc.0      
+   IL_0018: callvirt     0x0601F0DD method ActionGameLibrary.IActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601F0DD
+   IL_001D: ldfld        0x04017E20 field ActionGameLibrary.ActionState::isDead : bool
+   IL_0022: brtrue.s     29
+   IL_0024: ldloc.0      
+   IL_0025: callvirt     0x2B00013F TOKEN 0x2B00013F
+   IL_002A: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_002F: callvirt     0x0601DF4A method ActionGameLibrary.SecondaryAttribute :: get_healthPointNowBigInt() -> BigInt 0x0601DF4A
+   IL_0034: ldc.i4.0     
+   IL_0035: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_003A: call         0x06000BF9 method BigInt :: op_LessThanOrEqual(BigInt, BigInt) -> bool 0x06000BF9
+   IL_003F: br.s         1
+   IL_0041: ldc.i4.1     
+   IL_0042: ldarg.2      
+   IL_0043: or           
+   IL_0044: brfalse.s    14
+   IL_0046: ldarg.1      
+   IL_0047: ldind.ref    
+   IL_0048: ldc.i4.1     
+   IL_0049: callvirt     0x06010178 method proto_ff.Proto_CSEffectNtf :: set_is_caster_dead(int) -> void 0x06010178
+   IL_004E: ldarg.0      
+   IL_004F: call         0x0601E462 method ActionGameLibrary.CHitNotifier :: AddDieCast(int) -> void 0x0601E462
+   IL_0054: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneHitHeal(int, BigInt, bool, proto_ff.enHealReason, proto_ff.AttrType) -> int 0x0601E454
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AED TOKEN 0x2B000AED
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.1      
+   IL_0009: call         0x06000A74 method ToolKit :: ToMsgInt128(BigInt) -> proto_ff.MsgInt128 0x06000A74
+   IL_000E: callvirt     0x060100D9 method proto_ff.CSEffectHeal :: set_value(proto_ff.MsgInt128) -> void 0x060100D9
+   IL_0013: ldloc.0      
+   IL_0014: ldarg.2      
+   IL_0015: callvirt     0x060100DC method proto_ff.CSEffectHeal :: set_vampire(bool) -> void 0x060100DC
+   IL_001A: ldloc.0      
+   IL_001B: ldarg.s      4
+   IL_001D: callvirt     0x060100DF method proto_ff.CSEffectHeal :: set_attr_type(proto_ff.AttrType) -> void 0x060100DF
+   IL_0022: ldloc.0      
+   IL_0023: ldarg.3      
+   IL_0024: callvirt     0x060100E2 method proto_ff.CSEffectHeal :: set_reason(proto_ff.enHealReason) -> void 0x060100E2
+   IL_0029: ldarg.0      
+   IL_002A: ldloca.s     0
+   IL_002C: call         0x0601E455 method ActionGameLibrary.CHitNotifier :: AddOneHitHeal(int, ref proto_ff.CSEffectHeal) -> int 0x0601E455
+   IL_0031: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneHitHeal(int, ref proto_ff.CSEffectHeal) -> int 0x0601E455
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.s     32
+   IL_000E: bge.s        34
+   IL_0010: ldc.i4.1     
+   IL_0011: call         0x2B000AEE TOKEN 0x2B000AEE
+   IL_0016: stloc.1      
+   IL_0017: ldloc.1      
+   IL_0018: ldarg.0      
+   IL_0019: callvirt     0x06010137 method proto_ff.CSOneEffect :: set_obj_id(int) -> void 0x06010137
+   IL_001E: ldloc.0      
+   IL_001F: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_0024: ldloc.1      
+   IL_0025: callvirt     0x0A0055FF memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Add
+   IL_002A: ldloc.1      
+   IL_002B: ldarg.1      
+   IL_002C: ldind.ref    
+   IL_002D: callvirt     0x06010140 method proto_ff.CSOneEffect :: set_heal(proto_ff.CSEffectHeal) -> void 0x06010140
+   IL_0032: ldc.i4.0     
+   IL_0033: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, proto_ff.CSHurtType, BigInt, ref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>, BigInt, bool, bool, bool, bool, int, proto_ff.CSHurtAdditionType, proto_ff.enNoDamageType, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E456
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AEF TOKEN 0x2B000AEF
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.1      
+   IL_0009: callvirt     0x06010085 method proto_ff.CSEffectHurt :: set_hurt_type(proto_ff.CSHurtType) -> void 0x06010085
+   IL_000E: ldloc.0      
+   IL_000F: ldarg.2      
+   IL_0010: call         0x06000A74 method ToolKit :: ToMsgInt128(BigInt) -> proto_ff.MsgInt128 0x06000A74
+   IL_0015: callvirt     0x06010088 method proto_ff.CSEffectHurt :: set_value(proto_ff.MsgInt128) -> void 0x06010088
+   IL_001A: ldloc.0      
+   IL_001B: ldarg.s      5
+   IL_001D: callvirt     0x0601008B method proto_ff.CSEffectHurt :: set_die(bool) -> void 0x0601008B
+   IL_0022: ldloc.0      
+   IL_0023: ldarg.s      6
+   IL_0025: callvirt     0x06010094 method proto_ff.CSEffectHurt :: set_crit(bool) -> void 0x06010094
+   IL_002A: ldloc.0      
+   IL_002B: ldarg.s      7
+   IL_002D: callvirt     0x06010091 method proto_ff.CSEffectHurt :: set_miss(bool) -> void 0x06010091
+   IL_0032: ldloc.0      
+   IL_0033: ldarg.s      8
+   IL_0035: callvirt     0x06010097 method proto_ff.CSEffectHurt :: set_damage_counted(bool) -> void 0x06010097
+   IL_003A: ldloc.0      
+   IL_003B: ldarg.s      9
+   IL_003D: callvirt     0x0601009A method proto_ff.CSEffectHurt :: set_combos(int) -> void 0x0601009A
+   IL_0042: ldloc.0      
+   IL_0043: ldarg.s      4
+   IL_0045: call         0x06000A74 method ToolKit :: ToMsgInt128(BigInt) -> proto_ff.MsgInt128 0x06000A74
+   IL_004A: callvirt     0x0601008E method proto_ff.CSEffectHurt :: set_absorb_value(proto_ff.MsgInt128) -> void 0x0601008E
+   IL_004F: ldloc.0      
+   IL_0050: ldarg.s      10
+   IL_0052: callvirt     0x0601009D method proto_ff.CSEffectHurt :: set_hurt_addition(proto_ff.CSHurtAdditionType) -> void 0x0601009D
+   IL_0057: ldloc.0      
+   IL_0058: ldarg.s      11
+   IL_005A: callvirt     0x060100A3 method proto_ff.CSEffectHurt :: set_no_damage_type(proto_ff.enNoDamageType) -> void 0x060100A3
+   IL_005F: ldloc.0      
+   IL_0060: callvirt     0x060100A4 method proto_ff.CSEffectHurt :: get_hurt_show_list() -> System.Collections.Generic.List`1<proto_ff.HurtShowInfo> 0x060100A4
+   IL_0065: ldarg.3      
+   IL_0066: ldind.ref    
+   IL_0067: callvirt     0x0A005600 memberref System.Collections.Generic.List`1<proto_ff.HurtShowInfo>::AddRange
+   IL_006C: ldarg.0      
+   IL_006D: ldloca.s     0
+   IL_006F: ldarg.s      12
+   IL_0071: ldarg.s      13
+   IL_0073: call         0x0601E457 method ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, ref proto_ff.CSEffectHurt, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E457
+   IL_0078: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneHitHurt(int, ref proto_ff.CSEffectHurt, proto_ff.enSpecialEffectType, System.Collections.Generic.List`1<int>) -> int 0x0601E457
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.s     32
+   IL_000E: bge.s        124
+   IL_0010: ldc.i4.1     
+   IL_0011: call         0x2B000AEE TOKEN 0x2B000AEE
+   IL_0016: stloc.1      
+   IL_0017: ldloc.1      
+   IL_0018: ldarg.0      
+   IL_0019: callvirt     0x06010137 method proto_ff.CSOneEffect :: set_obj_id(int) -> void 0x06010137
+   IL_001E: ldloc.0      
+   IL_001F: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_0024: ldloc.1      
+   IL_0025: callvirt     0x0A0055FF memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Add
+   IL_002A: ldloc.1      
+   IL_002B: ldarg.1      
+   IL_002C: ldind.ref    
+   IL_002D: callvirt     0x0601013A method proto_ff.CSOneEffect :: set_hurt(proto_ff.CSEffectHurt) -> void 0x0601013A
+   IL_0032: ldarg.0      
+   IL_0033: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_0038: stloc.2      
+   IL_0039: ldloc.2      
+   IL_003A: brfalse.s    25
+   IL_003C: ldloc.2      
+   IL_003D: call         0x0601E504 method ActionGameLibrary.CSpellUtil :: GetAttribSumLife(ActionGameLibrary.IActionGameObject) -> BigInt 0x0601E504
+   IL_0042: ldarg.1      
+   IL_0043: ldind.ref    
+   IL_0044: callvirt     0x06010087 method proto_ff.CSEffectHurt :: get_value() -> proto_ff.MsgInt128 0x06010087
+   IL_0049: call         0x06000C2C method Int128Convert :: ToBigInt(proto_ff.MsgInt128) -> BigInt 0x06000C2C
+   IL_004E: call         0x06000BF9 method BigInt :: op_LessThanOrEqual(BigInt, BigInt) -> bool 0x06000BF9
+   IL_0053: br.s         1
+   IL_0055: ldc.i4.0     
+   IL_0056: stloc.3      
+   IL_0057: ldarg.1      
+   IL_0058: ldind.ref    
+   IL_0059: callvirt     0x0601008A method proto_ff.CSEffectHurt :: get_die() -> bool 0x0601008A
+   IL_005E: ldloc.3      
+   IL_005F: or           
+   IL_0060: brfalse.s    9
+   IL_0062: ldarg.0      
+   IL_0063: ldloca.s     0
+   IL_0065: ldc.i4.1     
+   IL_0066: call         0x0601E453 method ActionGameLibrary.CHitNotifier :: CheckSetDieState(int, ref proto_ff.Proto_CSEffectNtf, bool) -> void 0x0601E453
+   IL_006B: ldloc.0      
+   IL_006C: ldarg.2      
+   IL_006D: callvirt     0x0601017B method proto_ff.Proto_CSEffectNtf :: set_special_effect_type(proto_ff.enSpecialEffectType) -> void 0x0601017B
+   IL_0072: ldarg.3      
+   IL_0073: brfalse.s    23
+   IL_0075: ldloc.0      
+   IL_0076: callvirt     0x0601017C method proto_ff.Proto_CSEffectNtf :: get_special_effect_param() -> System.Collections.Generic.List`1<int> 0x0601017C
+   IL_007B: callvirt     0x0A0006AD memberref System.Collections.Generic.List`1<int>::Clear
+   IL_0080: ldloc.0      
+   IL_0081: callvirt     0x0601017C method proto_ff.Proto_CSEffectNtf :: get_special_effect_param() -> System.Collections.Generic.List`1<int> 0x0601017C
+   IL_0086: ldarg.3      
+   IL_0087: callvirt     0x0A0009EC memberref System.Collections.Generic.List`1<int>::AddRange
+   IL_008C: ldc.i4.0     
+   IL_008D: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneTriggerProjectile(int, ref proto_ff.CSEffectTriggerProjectile) -> int 0x0601E458
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.s     32
+   IL_000E: bge.s        51
+   IL_0010: ldc.i4.1     
+   IL_0011: call         0x2B000AEE TOKEN 0x2B000AEE
+   IL_0016: stloc.1      
+   IL_0017: ldloc.1      
+   IL_0018: ldarg.0      
+   IL_0019: callvirt     0x06010137 method proto_ff.CSOneEffect :: set_obj_id(int) -> void 0x06010137
+   IL_001E: ldloc.0      
+   IL_001F: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_0024: ldloc.1      
+   IL_0025: callvirt     0x0A0055FF memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Add
+   IL_002A: ldloc.1      
+   IL_002B: ldc.i4.1     
+   IL_002C: call         0x2B000AF0 TOKEN 0x2B000AF0
+   IL_0031: callvirt     0x06010143 method proto_ff.CSOneEffect :: set_trigger_projectile(proto_ff.CSEffectTriggerProjectile) -> void 0x06010143
+   IL_0036: ldarg.1      
+   IL_0037: ldind.ref    
+   IL_0038: ldloc.1      
+   IL_0039: callvirt     0x06010142 method proto_ff.CSOneEffect :: get_trigger_projectile() -> proto_ff.CSEffectTriggerProjectile 0x06010142
+   IL_003E: call         0x2B000AF1 TOKEN 0x2B000AF1
+   IL_0043: ldc.i4.0     
+   IL_0044: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneSummon(int, ref proto_ff.CSEffectSummon) -> int 0x0601E459
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.s     32
+   IL_000E: bge.s        51
+   IL_0010: ldc.i4.1     
+   IL_0011: call         0x2B000AEE TOKEN 0x2B000AEE
+   IL_0016: stloc.1      
+   IL_0017: ldloc.1      
+   IL_0018: ldarg.0      
+   IL_0019: callvirt     0x06010137 method proto_ff.CSOneEffect :: set_obj_id(int) -> void 0x06010137
+   IL_001E: ldloc.0      
+   IL_001F: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_0024: ldloc.1      
+   IL_0025: callvirt     0x0A0055FF memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Add
+   IL_002A: ldloc.1      
+   IL_002B: ldc.i4.1     
+   IL_002C: call         0x2B000AF2 TOKEN 0x2B000AF2
+   IL_0031: callvirt     0x06010146 method proto_ff.CSOneEffect :: set_summon(proto_ff.CSEffectSummon) -> void 0x06010146
+   IL_0036: ldarg.1      
+   IL_0037: ldind.ref    
+   IL_0038: ldloc.1      
+   IL_0039: callvirt     0x06010145 method proto_ff.CSOneEffect :: get_summon() -> proto_ff.CSEffectSummon 0x06010145
+   IL_003E: call         0x2B000AF3 TOKEN 0x2B000AF3
+   IL_0043: ldc.i4.0     
+   IL_0044: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneDisplay() -> int 0x0601E45A
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.s     32
+   IL_000E: bge.s        38
+   IL_0010: ldc.i4.1     
+   IL_0011: call         0x2B000AEE TOKEN 0x2B000AEE
+   IL_0016: stloc.1      
+   IL_0017: ldloc.1      
+   IL_0018: ldc.i4.0     
+   IL_0019: callvirt     0x06010137 method proto_ff.CSOneEffect :: set_obj_id(int) -> void 0x06010137
+   IL_001E: ldloc.0      
+   IL_001F: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_0024: ldloc.1      
+   IL_0025: callvirt     0x0A0055FF memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Add
+   IL_002A: ldloc.1      
+   IL_002B: ldc.i4.1     
+   IL_002C: call         0x2B000AED TOKEN 0x2B000AED
+   IL_0031: callvirt     0x06010140 method proto_ff.CSOneEffect :: set_heal(proto_ff.CSEffectHeal) -> void 0x06010140
+   IL_0036: ldc.i4.0     
+   IL_0037: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneRecoverMp(int, long) -> int 0x0601E45B
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AF4 TOKEN 0x2B000AF4
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.1      
+   IL_0009: conv.i4      
+   IL_000A: callvirt     0x060100F3 method proto_ff.CSEffectRecoverMp :: set_value(int) -> void 0x060100F3
+   IL_000F: ldarg.0      
+   IL_0010: ldloca.s     0
+   IL_0012: call         0x0601E45C method ActionGameLibrary.CHitNotifier :: AddOneRecoverMp(int, ref proto_ff.CSEffectRecoverMp) -> int 0x0601E45C
+   IL_0017: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneRecoverMp(int, ref proto_ff.CSEffectRecoverMp) -> int 0x0601E45C
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.s     32
+   IL_000E: bge.s        34
+   IL_0010: ldc.i4.1     
+   IL_0011: call         0x2B000AEE TOKEN 0x2B000AEE
+   IL_0016: stloc.1      
+   IL_0017: ldloc.1      
+   IL_0018: ldarg.0      
+   IL_0019: callvirt     0x06010137 method proto_ff.CSOneEffect :: set_obj_id(int) -> void 0x06010137
+   IL_001E: ldloc.0      
+   IL_001F: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_0024: ldloc.1      
+   IL_0025: callvirt     0x0A0055FF memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Add
+   IL_002A: ldloc.1      
+   IL_002B: ldarg.1      
+   IL_002C: ldind.ref    
+   IL_002D: callvirt     0x06010149 method proto_ff.CSOneEffect :: set_recover_mp(proto_ff.CSEffectRecoverMp) -> void 0x06010149
+   IL_0032: ldc.i4.0     
+   IL_0033: ret          
+
+ActionGameLibrary.CHitNotifier :: AddOneHitBeatBack(int, ref proto_ff.CSEffectBeatBack) -> int 0x0601E45D
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.s     32
+   IL_000E: bge.s        51
+   IL_0010: ldc.i4.1     
+   IL_0011: call         0x2B000AEE TOKEN 0x2B000AEE
+   IL_0016: stloc.1      
+   IL_0017: ldloc.1      
+   IL_0018: ldarg.0      
+   IL_0019: callvirt     0x06010137 method proto_ff.CSOneEffect :: set_obj_id(int) -> void 0x06010137
+   IL_001E: ldloc.0      
+   IL_001F: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_0024: ldloc.1      
+   IL_0025: callvirt     0x0A0055FF memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Add
+   IL_002A: ldloc.1      
+   IL_002B: ldc.i4.1     
+   IL_002C: call         0x2B000AF5 TOKEN 0x2B000AF5
+   IL_0031: callvirt     0x0601013D method proto_ff.CSOneEffect :: set_beat_back(proto_ff.CSEffectBeatBack) -> void 0x0601013D
+   IL_0036: ldarg.1      
+   IL_0037: ldind.ref    
+   IL_0038: ldloc.1      
+   IL_0039: callvirt     0x0601013C method proto_ff.CSOneEffect :: get_beat_back() -> proto_ff.CSEffectBeatBack 0x0601013C
+   IL_003E: call         0x2B000AF6 TOKEN 0x2B000AF6
+   IL_0043: ldloc.0      
+   IL_0044: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_0049: ldc.i4.s     32
+   IL_004B: blt.s        5
+   IL_004D: call         0x0601E45F method ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_0052: ldc.i4.0     
+   IL_0053: ret          
+
+ActionGameLibrary.CHitNotifier :: AddComboHurtCount(ActionGameLibrary.IActionGameObject) -> int 0x0601E45E
+   IL_0000: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_0005: brtrue.s     16
+   IL_0007: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_000C: ldarg.0      
+   IL_000D: ldc.i4.0     
+   IL_000E: callvirt     0x0601E977 method ActionGameLibrary.GameObjectManager :: IsPlayer(ActionGameLibrary.IActionGameObject, bool) -> bool 0x0601E977
+   IL_0013: brtrue.s     2
+   IL_0015: ldc.i4.m1    
+   IL_0016: ret          
+   IL_0017: call         0x0601E446 method ActionGameLibrary.CHitNotifier :: mutable_comboHurt_ntf() -> proto_ff.Proto_CSCombosTotalHurtNtf 0x0601E446
+   IL_001C: ldarg.0      
+   IL_001D: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0022: ldfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_0027: call         0x06000BFE method BigInt :: op_Explicit(BigInt) -> int 0x06000BFE
+   IL_002C: callvirt     0x0601018F method proto_ff.Proto_CSCombosTotalHurtNtf :: set_value(int) -> void 0x0601018F
+   IL_0031: ldarg.0      
+   IL_0032: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0037: ldc.i4.0     
+   IL_0038: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_003D: stfld        0x04017D4E field ActionGameLibrary.ActionGameObjectData::combosHurt : BigInt
+   IL_0042: ldarg.0      
+   IL_0043: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0048: ldc.i4.0     
+   IL_0049: stfld        0x04017D4D field ActionGameLibrary.ActionGameObjectData::comboCount : int
+   IL_004E: ldc.i4.1     
+   IL_004F: call         0x0601E460 method ActionGameLibrary.CHitNotifier :: SendToClient(bool) -> void 0x0601E460
+   IL_0054: call         0x0601E447 method ActionGameLibrary.CHitNotifier :: ResetComboHurtNotify() -> void 0x0601E447
+   IL_0059: ldc.i4.0     
+   IL_005A: ret          
+
+ActionGameLibrary.CHitNotifier :: Broadcast() -> void 0x0601E45F
+   IL_0000: call         0x0601F3DF method ActionGameLibrary.StarsEngineManager :: get_fixedUpdateCount() -> int 0x0601F3DF
+   IL_0005: ldsfld       0x0401725B field ActionGameLibrary.CHitNotifier::lastSendFrame : int
+   IL_000A: ble.s        15
+   IL_000C: call         0x0601F3DF method ActionGameLibrary.StarsEngineManager :: get_fixedUpdateCount() -> int 0x0601F3DF
+   IL_0011: ldsfld       0x0401725B field ActionGameLibrary.CHitNotifier::lastSendFrame : int
+   IL_0016: sub          
+   IL_0017: ldc.i4.2     
+   IL_0018: bgt.s        1
+   IL_001A: ret          
+   IL_001B: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0020: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_0025: ldc.i4.0     
+   IL_0026: ble.s        11
+   IL_0028: ldc.i4.0     
+   IL_0029: call         0x0601E460 method ActionGameLibrary.CHitNotifier :: SendToClient(bool) -> void 0x0601E460
+   IL_002E: call         0x0601E461 method ActionGameLibrary.CHitNotifier :: EffectToCast() -> void 0x0601E461
+   IL_0033: call         0x0601E442 method ActionGameLibrary.CHitNotifier :: ResetEffectNotify() -> void 0x0601E442
+   IL_0038: call         0x0601F3DF method ActionGameLibrary.StarsEngineManager :: get_fixedUpdateCount() -> int 0x0601F3DF
+   IL_003D: stsfld       0x0401725B field ActionGameLibrary.CHitNotifier::lastSendFrame : int
+   IL_0042: ret          
+
+ActionGameLibrary.CHitNotifier :: SendToClient(bool) -> void 0x0601E460
+   IL_0000: ldstr        0x70026707 string "AFK_LOCAL_DAMAGE_EFFECT"
+   IL_0005: ldnull       
+   IL_0006: call         0x2B00011C TOKEN 0x2B00011C
+   IL_000B: dup          
+   IL_000C: ldarg.0      
+   IL_000D: brtrue.s     7
+   IL_000F: call         0x0601E441 method ActionGameLibrary.CHitNotifier :: get_stEffectNotify() -> proto_ff.Proto_CSRsp 0x0601E441
+   IL_0014: br.s         5
+   IL_0016: call         0x0601E440 method ActionGameLibrary.CHitNotifier :: get_stEffectNotifyComboHurt() -> proto_ff.Proto_CSRsp 0x0601E440
+   IL_001B: stfld        0x040178DF field ActionGameLibrary.Event::data : object
+   IL_0020: dup          
+   IL_0021: ldarg.0      
+   IL_0022: stfld        0x040178E1 field ActionGameLibrary.Event::bComboHurt : bool
+   IL_0027: call         0x0601E7F3 method ActionGameLibrary.BattleElementCenter :: Dispath(ActionGameLibrary.Event) -> void 0x0601E7F3
+   IL_002C: ret          
+
+ActionGameLibrary.CHitNotifier :: EffectToCast() -> void 0x0601E461
+   IL_0000: call         0x0601E445 method ActionGameLibrary.CHitNotifier :: mutable_effect_ntf() -> proto_ff.Proto_CSEffectNtf 0x0601E445
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_000C: ldc.i4.0     
+   IL_000D: ble          IL_00A1
+   IL_0012: ldc.i4.0     
+   IL_0013: stloc.1      
+   IL_0014: br.s         119
+   IL_0016: ldloc.0      
+   IL_0017: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_001C: ldloc.1      
+   IL_001D: callvirt     0x0A0043C6 memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::get_Item
+   IL_0022: stloc.2      
+   IL_0023: ldloc.2      
+   IL_0024: brfalse.s    99
+   IL_0026: ldloc.2      
+   IL_0027: callvirt     0x06010136 method proto_ff.CSOneEffect :: get_obj_id() -> int 0x06010136
+   IL_002C: call         0x0601E28E method ActionGameLibrary.CBattleAdapterUtil :: GetActor(int) -> ActionGameLibrary.IActionGameObject 0x0601E28E
+   IL_0031: stloc.3      
+   IL_0032: ldloc.3      
+   IL_0033: brfalse.s    84
+   IL_0035: ldloc.2      
+   IL_0036: callvirt     0x06010139 method proto_ff.CSOneEffect :: get_hurt() -> proto_ff.CSEffectHurt 0x06010139
+   IL_003B: brfalse.s    31
+   IL_003D: ldloc.3      
+   IL_003E: isinst       0x02002143 type ActionGameLibrary.Character
+   IL_0043: ldloc.2      
+   IL_0044: callvirt     0x06010139 method proto_ff.CSOneEffect :: get_hurt() -> proto_ff.CSEffectHurt 0x06010139
+   IL_0049: callvirt     0x06010087 method proto_ff.CSEffectHurt :: get_value() -> proto_ff.MsgInt128 0x06010087
+   IL_004E: call         0x06000C2C method Int128Convert :: ToBigInt(proto_ff.MsgInt128) -> BigInt 0x06000C2C
+   IL_0053: ldc.i4.1     
+   IL_0054: ldc.i4.1     
+   IL_0055: callvirt     0x0601F132 method ActionGameLibrary.Character :: Damage(BigInt, DamageEnumerate.DamageType, bool) -> void 0x0601F132
+   IL_005A: br.s         37
+   IL_005C: ldloc.2      
+   IL_005D: callvirt     0x06010148 method proto_ff.CSOneEffect :: get_recover_mp() -> proto_ff.CSEffectRecoverMp 0x06010148
+   IL_0062: brfalse.s    29
+   IL_0064: ldloc.3      
+   IL_0065: isinst       0x02002143 type ActionGameLibrary.Character
+   IL_006A: ldloc.2      
+   IL_006B: callvirt     0x06010148 method proto_ff.CSOneEffect :: get_recover_mp() -> proto_ff.CSEffectRecoverMp 0x06010148
+   IL_0070: callvirt     0x060100F2 method proto_ff.CSEffectRecoverMp :: get_value() -> int 0x060100F2
+   IL_0075: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_007A: ldc.i4.4     
+   IL_007B: ldc.i4.1     
+   IL_007C: callvirt     0x0601F132 method ActionGameLibrary.Character :: Damage(BigInt, DamageEnumerate.DamageType, bool) -> void 0x0601F132
+   IL_0081: ldloc.2      
+   IL_0082: ldc.i4.1     
+   IL_0083: ldc.i4.1     
+   IL_0084: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_0089: ldloc.1      
+   IL_008A: ldc.i4.1     
+   IL_008B: add          
+   IL_008C: stloc.1      
+   IL_008D: ldloc.1      
+   IL_008E: ldloc.0      
+   IL_008F: callvirt     0x0601016E method proto_ff.Proto_CSEffectNtf :: get_effectsCount() -> int 0x0601016E
+   IL_0094: blt.s        -128
+   IL_0096: ldloc.0      
+   IL_0097: callvirt     0x0601016D method proto_ff.Proto_CSEffectNtf :: get_effects() -> System.Collections.Generic.List`1<proto_ff.CSOneEffect> 0x0601016D
+   IL_009C: callvirt     0x0A0043CA memberref System.Collections.Generic.List`1<proto_ff.CSOneEffect>::Clear
+   IL_00A1: ret          
+
+ActionGameLibrary.CHitNotifier :: AddDieCast(int) -> void 0x0601E462
+   IL_0000: ldsfld       0x04017262 field ActionGameLibrary.CHitNotifier::dieActor : System.Collections.Generic.List`1<int>
+   IL_0005: ldarg.0      
+   IL_0006: callvirt     0x0A0006CA memberref System.Collections.Generic.List`1<int>::Contains
+   IL_000B: brtrue.s     11
+   IL_000D: ldsfld       0x04017262 field ActionGameLibrary.CHitNotifier::dieActor : System.Collections.Generic.List`1<int>
+   IL_0012: ldarg.0      
+   IL_0013: callvirt     0x0A000305 memberref System.Collections.Generic.List`1<int>::Add
+   IL_0018: ret          
+
+ActionGameLibrary.CHitNotifier :: get_LastSyncFrames() -> long 0x0601E463
+   IL_0000: ldsfld       0x0401725C field ActionGameLibrary.CHitNotifier::_frames : long
+   IL_0005: ret          
+
+ActionGameLibrary.CHitNotifier :: set_LastSyncFrames(long) -> void 0x0601E464
+   IL_0000: ldarg.0      
+   IL_0001: stsfld       0x0401725C field ActionGameLibrary.CHitNotifier::_frames : long
+   IL_0006: ret          
+
+ActionGameLibrary.CHitNotifier :: SyncDieStateToServer(int) -> void 0x0601E465
+   IL_0000: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_0005: ldarg.0      
+   IL_0006: callvirt     0x0A0006CA memberref System.Collections.Generic.List`1<int>::Contains
+   IL_000B: brtrue.s     11
+   IL_000D: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_0012: ldarg.0      
+   IL_0013: callvirt     0x0A000305 memberref System.Collections.Generic.List`1<int>::Add
+   IL_0018: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_001D: ldsfld       0x0401CCCE field ActionGameLibrary.CHitNotifier.<>c::<>9__46_0 : System.Predicate`1<int>
+   IL_0022: dup          
+   IL_0023: brtrue.s     23
+   IL_0025: pop          
+   IL_0026: ldsfld       0x0401CCCD field ActionGameLibrary.CHitNotifier.<>c::<>9 : ActionGameLibrary.CHitNotifier.<>c
+   IL_002B: FEldftn      0x0602A241 method ActionGameLibrary.CHitNotifier.<>c :: <SyncDieStateToServer>b__46_0(int) -> bool 0x0602A241
+   IL_0031: newobj       0x0A0009E9 memberref System.Predicate`1<int>::.ctor
+   IL_0036: dup          
+   IL_0037: stsfld       0x0401CCCE field ActionGameLibrary.CHitNotifier.<>c::<>9__46_0 : System.Predicate`1<int>
+   IL_003C: callvirt     0x0A000B02 memberref System.Collections.Generic.List`1<int>::FindAll
+   IL_0041: stsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_0046: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_004B: callvirt     0x0A000301 memberref System.Collections.Generic.List`1<int>::get_Count
+   IL_0050: ldc.i4.1     
+   IL_0051: bge.s        1
+   IL_0053: ret          
+   IL_0054: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_0059: callvirt     0x0601E971 method ActionGameLibrary.GameObjectManager :: get_player() -> ActionGameLibrary.SimpleCharacter 0x0601E971
+   IL_005E: stloc.0      
+   IL_005F: ldloc.0      
+   IL_0060: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0065: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_006A: stloc.1      
+   IL_006B: ldc.i4.1     
+   IL_006C: call         0x2B000AF7 TOKEN 0x2B000AF7
+   IL_0071: stloc.2      
+   IL_0072: ldloc.2      
+   IL_0073: ldloc.1      
+   IL_0074: ldc.i4.0     
+   IL_0075: bgt.s        3
+   IL_0077: ldc.i4.0     
+   IL_0078: br.s         20
+   IL_007A: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_007F: callvirt     0x0601E971 method ActionGameLibrary.GameObjectManager :: get_player() -> ActionGameLibrary.SimpleCharacter 0x0601E971
+   IL_0084: callvirt     0x0601E063 method ActionGameLibrary.ActionGameObject :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E063
+   IL_0089: callvirt     0x0601EF74 method ActionGameLibrary.IModel :: get_direction() -> int 0x0601EF74
+   IL_008E: callvirt     0x06010B43 method proto_ff.Proto_PvpSynActorDie :: set_role_dir(int) -> void 0x06010B43
+   IL_0093: ldloc.2      
+   IL_0094: ldloc.1      
+   IL_0095: ldc.i4.0     
+   IL_0096: bgt.s        7
+   IL_0098: newobj       0x0600A4EE method proto_ff.Proto_Vector3 :: .ctor() -> void 0x0600A4EE
+   IL_009D: br.s         16
+   IL_009F: ldloc.0      
+   IL_00A0: callvirt     0x0601F0DB method ActionGameLibrary.IActionGameObject :: get_model() -> ActionGameLibrary.IModelUnity 0x0601F0DB
+   IL_00A5: callvirt     0x0601EF84 method ActionGameLibrary.IModel :: get_position() -> UnityEngine.Vector3 0x0601EF84
+   IL_00AA: call         0x06000A2F method ToolKit :: GetProtoVector3(UnityEngine.Vector3) -> proto_ff.Proto_Vector3 0x06000A2F
+   IL_00AF: callvirt     0x06010B46 method proto_ff.Proto_PvpSynActorDie :: set_role_pos(proto_ff.Proto_Vector3) -> void 0x06010B46
+   IL_00B4: ldloc.2      
+   IL_00B5: ldloc.1      
+   IL_00B6: callvirt     0x06010B49 method proto_ff.Proto_PvpSynActorDie :: set_attacket_id(int) -> void 0x06010B49
+   IL_00BB: ldloc.2      
+   IL_00BC: callvirt     0x06010B4A method proto_ff.Proto_PvpSynActorDie :: get_die_target_list() -> System.Collections.Generic.List`1<proto_ff.Proto_DieTarget> 0x06010B4A
+   IL_00C1: callvirt     0x0A00444D memberref System.Collections.Generic.List`1<proto_ff.Proto_DieTarget>::Clear
+   IL_00C6: ldc.i4.0     
+   IL_00C7: stloc.s      4
+   IL_00C9: br.s         68
+   IL_00CB: ldc.i4.1     
+   IL_00CC: call         0x2B000AF8 TOKEN 0x2B000AF8
+   IL_00D1: stloc.s      5
+   IL_00D3: ldloc.s      5
+   IL_00D5: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_00DA: ldloc.s      4
+   IL_00DC: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_00E1: callvirt     0x06010B35 method proto_ff.Proto_DieTarget :: set_obj_id(int) -> void 0x06010B35
+   IL_00E6: ldloc.2      
+   IL_00E7: callvirt     0x06010B4A method proto_ff.Proto_PvpSynActorDie :: get_die_target_list() -> System.Collections.Generic.List`1<proto_ff.Proto_DieTarget> 0x06010B4A
+   IL_00EC: ldloc.s      5
+   IL_00EE: callvirt     0x0A005601 memberref System.Collections.Generic.List`1<proto_ff.Proto_DieTarget>::Add
+   IL_00F3: ldsfld       0x04017260 field ActionGameLibrary.CHitNotifier::dieSyncActorLog : System.Collections.Generic.List`1<int>
+   IL_00F8: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_00FD: ldloc.s      4
+   IL_00FF: callvirt     0x0A000302 memberref System.Collections.Generic.List`1<int>::get_Item
+   IL_0104: callvirt     0x0A000305 memberref System.Collections.Generic.List`1<int>::Add
+   IL_0109: ldloc.s      4
+   IL_010B: ldc.i4.1     
+   IL_010C: add          
+   IL_010D: stloc.s      4
+   IL_010F: ldloc.s      4
+   IL_0111: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_0116: callvirt     0x0A000301 memberref System.Collections.Generic.List`1<int>::get_Count
+   IL_011B: blt.s        -82
+   IL_011D: ldc.i4.1     
+   IL_011E: call         0x2B00013A TOKEN 0x2B00013A
+   IL_0123: stloc.3      
+   IL_0124: ldloc.3      
+   IL_0125: ldc.i4.1     
+   IL_0126: call         0x2B000AF9 TOKEN 0x2B000AF9
+   IL_012B: callvirt     0x06017C4A method proto_ff.Proto_CSReq :: set_fight_actor_die_req(proto_ff.Proto_CSFightActorDieReq) -> void 0x06017C4A
+   IL_0130: ldloc.3      
+   IL_0131: callvirt     0x06017C49 method proto_ff.Proto_CSReq :: get_fight_actor_die_req() -> proto_ff.Proto_CSFightActorDieReq 0x06017C49
+   IL_0136: ldloc.1      
+   IL_0137: callvirt     0x060164ED method proto_ff.Proto_CSFightActorDieReq :: set_obj_id(int) -> void 0x060164ED
+   IL_013C: ldloc.3      
+   IL_013D: callvirt     0x06017C49 method proto_ff.Proto_CSReq :: get_fight_actor_die_req() -> proto_ff.Proto_CSFightActorDieReq 0x06017C49
+   IL_0142: ldloc.2      
+   IL_0143: callvirt     0x060164F3 method proto_ff.Proto_CSFightActorDieReq :: set_actorDie(proto_ff.Proto_PvpSynActorDie) -> void 0x060164F3
+   IL_0148: ldloc.3      
+   IL_0149: callvirt     0x06017C49 method proto_ff.Proto_CSReq :: get_fight_actor_die_req() -> proto_ff.Proto_CSFightActorDieReq 0x06017C49
+   IL_014E: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_0153: ldc.i4       1000
+   IL_0158: conv.i8      
+   IL_0159: mul          
+   IL_015A: callvirt     0x060164F0 method proto_ff.Proto_CSFightActorDieReq :: set_timeStamp(ulong) -> void 0x060164F0
+   IL_015F: call         0x0601DB60 method ActionGameLibrary.BattleContext :: get_current() -> ActionGameLibrary.BattleContext 0x0601DB60
+   IL_0164: callvirt     0x0601DB69 method ActionGameLibrary.BattleContextFacade :: get_net() -> ActionGameLibrary.BattleContextNet 0x0601DB69
+   IL_0169: ldc.i4       940
+   IL_016E: ldloc.3      
+   IL_016F: callvirt     0x0601DB40 method ActionGameLibrary.BattleContextNet :: SendPackge(proto_ff.Proto_CS_CMD, proto_ff.Proto_CSReq) -> void 0x0601DB40
+   IL_0174: ldloc.3      
+   IL_0175: ldc.i4.1     
+   IL_0176: ldc.i4.1     
+   IL_0177: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_017C: ldsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_0181: callvirt     0x0A0006AD memberref System.Collections.Generic.List`1<int>::Clear
+   IL_0186: ldsfld       0x04017260 field ActionGameLibrary.CHitNotifier::dieSyncActorLog : System.Collections.Generic.List`1<int>
+   IL_018B: callvirt     0x0A000301 memberref System.Collections.Generic.List`1<int>::get_Count
+   IL_0190: ldc.i4.s     100
+   IL_0192: ble.s        13
+   IL_0194: ldsfld       0x04017260 field ActionGameLibrary.CHitNotifier::dieSyncActorLog : System.Collections.Generic.List`1<int>
+   IL_0199: ldc.i4.0     
+   IL_019A: ldc.i4.s     20
+   IL_019C: callvirt     0x0A005602 memberref System.Collections.Generic.List`1<int>::RemoveRange
+   IL_01A1: call         0x0A000082 memberref UnityEngine.Time::get_frameCount
+   IL_01A6: conv.i8      
+   IL_01A7: call         0x0601E464 method ActionGameLibrary.CHitNotifier :: set_LastSyncFrames(long) -> void 0x0601E464
+   IL_01AC: ret          
+
+ActionGameLibrary.CHitNotifier :: CheckMonsterRefresh(int, int, int) -> void 0x0601E466
+   IL_0000: call         0x0601E467 method ActionGameLibrary.CHitNotifier :: CheckMonsterRecyle() -> void 0x0601E467
+   IL_0005: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_000A: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_000F: brfalse.s    1
+   IL_0011: ret          
+   IL_0012: call         0x0601E463 method ActionGameLibrary.CHitNotifier :: get_LastSyncFrames() -> long 0x0601E463
+   IL_0017: ldc.i4.0     
+   IL_0018: conv.i8      
+   IL_0019: ble          IL_0131
+   IL_001E: call         0x0A000082 memberref UnityEngine.Time::get_frameCount
+   IL_0023: conv.i8      
+   IL_0024: call         0x0601E463 method ActionGameLibrary.CHitNotifier :: get_LastSyncFrames() -> long 0x0601E463
+   IL_0029: sub          
+   IL_002A: call         0x0A001C19 memberref UnityEngine.Application::get_targetFrameRate
+   IL_002F: ldc.i4.s     10
+   IL_0031: mul          
+   IL_0032: conv.i8      
+   IL_0033: ble          IL_0131
+   IL_0038: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_003D: callvirt     0x0601E971 method ActionGameLibrary.GameObjectManager :: get_player() -> ActionGameLibrary.SimpleCharacter 0x0601E971
+   IL_0042: brfalse      IL_0131
+   IL_0047: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_004C: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_0051: callvirt     0x0601E971 method ActionGameLibrary.GameObjectManager :: get_player() -> ActionGameLibrary.SimpleCharacter 0x0601E971
+   IL_0056: ldnull       
+   IL_0057: ldc.r4       1000.0
+   IL_005C: ldnull       
+   IL_005D: callvirt     0x0601E9A7 method ActionGameLibrary.GameObjectManager :: GetNearestEnemyByH(ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.InteractiveGameObject, float, System.Collections.Generic.List`1<ActionGameLibrary.IActionGameObject>) -> ActionGameLibrary.InteractiveGameObject 0x0601E9A7
+   IL_0062: brtrue       IL_012A
+   IL_0067: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_006C: callvirt     0x0601E971 method ActionGameLibrary.GameObjectManager :: get_player() -> ActionGameLibrary.SimpleCharacter 0x0601E971
+   IL_0071: stloc.0      
+   IL_0072: ldloc.0      
+   IL_0073: callvirt     0x0601E063 method ActionGameLibrary.ActionGameObject :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E063
+   IL_0078: callvirt     0x0601EF84 method ActionGameLibrary.IModel :: get_position() -> UnityEngine.Vector3 0x0601EF84
+   IL_007D: call         0x0A000098 memberref UnityEngine.Vector3::get_zero
+   IL_0082: call         0x0A000099 memberref UnityEngine.Vector3::op_Equality
+   IL_0087: brfalse.s    1
+   IL_0089: ret          
+   IL_008A: ldc.i4.1     
+   IL_008B: call         0x2B00013A TOKEN 0x2B00013A
+   IL_0090: stloc.1      
+   IL_0091: ldloc.1      
+   IL_0092: ldc.i4.1     
+   IL_0093: call         0x2B000AFA TOKEN 0x2B000AFA
+   IL_0098: callvirt     0x06017C7A method proto_ff.Proto_CSReq :: set_fight_refresh_monster_req(proto_ff.Proto_CSFightRefreshMonsterReq) -> void 0x06017C7A
+   IL_009D: ldloc.1      
+   IL_009E: callvirt     0x06017C79 method proto_ff.Proto_CSReq :: get_fight_refresh_monster_req() -> proto_ff.Proto_CSFightRefreshMonsterReq 0x06017C79
+   IL_00A3: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_00A8: ldc.i4       1000
+   IL_00AD: conv.i8      
+   IL_00AE: mul          
+   IL_00AF: callvirt     0x06016501 method proto_ff.Proto_CSFightRefreshMonsterReq :: set_last_monster_clean_time(ulong) -> void 0x06016501
+   IL_00B4: ldloc.1      
+   IL_00B5: callvirt     0x06017C79 method proto_ff.Proto_CSReq :: get_fight_refresh_monster_req() -> proto_ff.Proto_CSFightRefreshMonsterReq 0x06017C79
+   IL_00BA: ldloc.0      
+   IL_00BB: callvirt     0x0601E063 method ActionGameLibrary.ActionGameObject :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E063
+   IL_00C0: callvirt     0x0601EF74 method ActionGameLibrary.IModel :: get_direction() -> int 0x0601EF74
+   IL_00C5: callvirt     0x06016504 method proto_ff.Proto_CSFightRefreshMonsterReq :: set_role_dir(int) -> void 0x06016504
+   IL_00CA: ldloc.1      
+   IL_00CB: callvirt     0x06017C79 method proto_ff.Proto_CSReq :: get_fight_refresh_monster_req() -> proto_ff.Proto_CSFightRefreshMonsterReq 0x06017C79
+   IL_00D0: ldloc.0      
+   IL_00D1: callvirt     0x0601E063 method ActionGameLibrary.ActionGameObject :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E063
+   IL_00D6: callvirt     0x0601EF84 method ActionGameLibrary.IModel :: get_position() -> UnityEngine.Vector3 0x0601EF84
+   IL_00DB: call         0x06000A2F method ToolKit :: GetProtoVector3(UnityEngine.Vector3) -> proto_ff.Proto_Vector3 0x06000A2F
+   IL_00E0: callvirt     0x06016507 method proto_ff.Proto_CSFightRefreshMonsterReq :: set_role_pos(proto_ff.Proto_Vector3) -> void 0x06016507
+   IL_00E5: ldloc.1      
+   IL_00E6: callvirt     0x06017C79 method proto_ff.Proto_CSReq :: get_fight_refresh_monster_req() -> proto_ff.Proto_CSFightRefreshMonsterReq 0x06017C79
+   IL_00EB: ldarg.0      
+   IL_00EC: callvirt     0x0601650A method proto_ff.Proto_CSFightRefreshMonsterReq :: set_cur_room_id(int) -> void 0x0601650A
+   IL_00F1: ldloc.1      
+   IL_00F2: callvirt     0x06017C79 method proto_ff.Proto_CSReq :: get_fight_refresh_monster_req() -> proto_ff.Proto_CSFightRefreshMonsterReq 0x06017C79
+   IL_00F7: ldarg.1      
+   IL_00F8: callvirt     0x0601650D method proto_ff.Proto_CSFightRefreshMonsterReq :: set_last_room_id(int) -> void 0x0601650D
+   IL_00FD: ldloc.1      
+   IL_00FE: callvirt     0x06017C79 method proto_ff.Proto_CSReq :: get_fight_refresh_monster_req() -> proto_ff.Proto_CSFightRefreshMonsterReq 0x06017C79
+   IL_0103: ldarg.2      
+   IL_0104: callvirt     0x06016510 method proto_ff.Proto_CSFightRefreshMonsterReq :: set_room_num(int) -> void 0x06016510
+   IL_0109: call         0x0601DB60 method ActionGameLibrary.BattleContext :: get_current() -> ActionGameLibrary.BattleContext 0x0601DB60
+   IL_010E: callvirt     0x0601DB69 method ActionGameLibrary.BattleContextFacade :: get_net() -> ActionGameLibrary.BattleContextNet 0x0601DB69
+   IL_0113: ldc.i4       941
+   IL_0118: ldloc.1      
+   IL_0119: callvirt     0x0601DB40 method ActionGameLibrary.BattleContextNet :: SendPackge(proto_ff.Proto_CS_CMD, proto_ff.Proto_CSReq) -> void 0x0601DB40
+   IL_011E: call         0x0A000082 memberref UnityEngine.Time::get_frameCount
+   IL_0123: conv.i8      
+   IL_0124: call         0x0601E464 method ActionGameLibrary.CHitNotifier :: set_LastSyncFrames(long) -> void 0x0601E464
+   IL_0129: ret          
+   IL_012A: ldc.i4.0     
+   IL_012B: conv.i8      
+   IL_012C: call         0x0601E464 method ActionGameLibrary.CHitNotifier :: set_LastSyncFrames(long) -> void 0x0601E464
+   IL_0131: ret          
+
+ActionGameLibrary.CHitNotifier :: CheckMonsterRecyle() -> void 0x0601E467
+   IL_0000: call         0x0601E7E9 method ActionGameLibrary.BattleElementCenter :: get_isInBattle() -> bool 0x0601E7E9
+   IL_0005: brfalse      IL_008B
+   IL_000A: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_000F: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_0014: brtrue.s     94
+   IL_0016: ldsfld       0x0401725D field ActionGameLibrary.CHitNotifier::__lastCheckTime : float
+   IL_001B: ldc.r4       0.0
+   IL_0020: bne.un.s     10
+   IL_0022: call         0x0601F3E1 method ActionGameLibrary.StarsEngineManager :: get_CombatTime() -> float 0x0601F3E1
+   IL_0027: stsfld       0x0401725D field ActionGameLibrary.CHitNotifier::__lastCheckTime : float
+   IL_002C: call         0x0601F3E1 method ActionGameLibrary.StarsEngineManager :: get_CombatTime() -> float 0x0601F3E1
+   IL_0031: ldsfld       0x0401725D field ActionGameLibrary.CHitNotifier::__lastCheckTime : float
+   IL_0036: sub          
+   IL_0037: stsfld       0x0401725E field ActionGameLibrary.CHitNotifier::__diff : float
+   IL_003C: ldsfld       0x0401725E field ActionGameLibrary.CHitNotifier::__diff : float
+   IL_0041: ldc.r4       120.0
+   IL_0046: blt.un.s     77
+   IL_0048: call         0x0601EAA8 method ActionGameLibrary.ActionGameObjectPool :: Recyle() -> void 0x0601EAA8
+   IL_004D: ldsfld       0x0401725F field ActionGameLibrary.CHitNotifier::__steps : int
+   IL_0052: dup          
+   IL_0053: ldc.i4.1     
+   IL_0054: add          
+   IL_0055: stsfld       0x0401725F field ActionGameLibrary.CHitNotifier::__steps : int
+   IL_005A: ldc.i4.5     
+   IL_005B: ble.s        12
+   IL_005D: ldc.i4.0     
+   IL_005E: call         0x06000CDC method BattleManager :: PerformanceGC(bool) -> void 0x06000CDC
+   IL_0063: ldc.i4.0     
+   IL_0064: stsfld       0x0401725F field ActionGameLibrary.CHitNotifier::__steps : int
+   IL_0069: ldc.r4       0.0
+   IL_006E: stsfld       0x0401725D field ActionGameLibrary.CHitNotifier::__lastCheckTime : float
+   IL_0073: ret          
+   IL_0074: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_0079: callvirt     0x06004913 method DS_AFKBattle :: get_IsEndlessBattle() -> bool 0x06004913
+   IL_007E: brtrue.s     21
+   IL_0080: ldc.r4       0.0
+   IL_0085: stsfld       0x0401725D field ActionGameLibrary.CHitNotifier::__lastCheckTime : float
+   IL_008A: ret          
+   IL_008B: ldc.r4       0.0
+   IL_0090: stsfld       0x0401725D field ActionGameLibrary.CHitNotifier::__lastCheckTime : float
+   IL_0095: ret          
+
+ActionGameLibrary.CHitNotifier :: GetDamageInfo(int) -> ActionGameLibrary.DamageInfo 0x0601E468
+   IL_0000: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0005: stloc.0      
+   IL_0006: ldsfld       0x04017262 field ActionGameLibrary.CHitNotifier::dieActor : System.Collections.Generic.List`1<int>
+   IL_000B: ldarg.0      
+   IL_000C: callvirt     0x0A0006CA memberref System.Collections.Generic.List`1<int>::Contains
+   IL_0011: brfalse.s    37
+   IL_0013: ldsfld       0x04017262 field ActionGameLibrary.CHitNotifier::dieActor : System.Collections.Generic.List`1<int>
+   IL_0018: ldarg.0      
+   IL_0019: callvirt     0x0A0009DE memberref System.Collections.Generic.List`1<int>::Remove
+   IL_001E: pop          
+   IL_001F: ldloca.s     0
+   IL_0021: ldc.i4.1     
+   IL_0022: stfld        0x04017526 field ActionGameLibrary.DamageInfo::bLocalDie : bool
+   IL_0027: ldloca.s     0
+   IL_0029: ldc.i4.1     
+   IL_002A: conv.i8      
+   IL_002B: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_0030: ldloca.s     0
+   IL_0032: ldc.i4.1     
+   IL_0033: stfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_0038: ldloc.0      
+   IL_0039: ret          
+
+ActionGameLibrary.CHitNotifier :: HittriggerSkillAddBuffToServer(ref ActionGameLibrary.TSpellHitPara, int, int, ref ActionGameLibrary.SkillTriggerBuffDesc, int, int) -> void 0x0601E469
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AFB TOKEN 0x2B000AFB
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.0      
+   IL_0009: ldfld        0x040173AA field ActionGameLibrary.TSpellHitPara::iCasterID : int
+   IL_000E: callvirt     0x0601628E method proto_ff.Proto_FightHitAddBuffTarget :: set_attacket_obj_id(int) -> void 0x0601628E
+   IL_0013: ldloc.0      
+   IL_0014: ldarg.0      
+   IL_0015: ldfld        0x040173AB field ActionGameLibrary.TSpellHitPara::iSpellID : int
+   IL_001A: callvirt     0x06016291 method proto_ff.Proto_FightHitAddBuffTarget :: set_spell_id(int) -> void 0x06016291
+   IL_001F: ldloc.0      
+   IL_0020: ldarg.0      
+   IL_0021: ldfld        0x040173AC field ActionGameLibrary.TSpellHitPara::iSpellLv : int
+   IL_0026: callvirt     0x06016294 method proto_ff.Proto_FightHitAddBuffTarget :: set_spell_level(int) -> void 0x06016294
+   IL_002B: ldloc.0      
+   IL_002C: ldarg.0      
+   IL_002D: ldfld        0x040173B2 field ActionGameLibrary.TSpellHitPara::iHitID : int
+   IL_0032: conv.i8      
+   IL_0033: callvirt     0x06016297 method proto_ff.Proto_FightHitAddBuffTarget :: set_hit_id(ulong) -> void 0x06016297
+   IL_0038: ldloc.0      
+   IL_0039: ldarg.0      
+   IL_003A: ldfld        0x040173B9 field ActionGameLibrary.TSpellHitPara::isProjectile : bool
+   IL_003F: callvirt     0x0601629A method proto_ff.Proto_FightHitAddBuffTarget :: set_is_flight_skill(bool) -> void 0x0601629A
+   IL_0044: ldloc.0      
+   IL_0045: ldc.i4.0     
+   IL_0046: callvirt     0x0601629D method proto_ff.Proto_FightHitAddBuffTarget :: set_is_phantom_skill(bool) -> void 0x0601629D
+   IL_004B: ldloc.0      
+   IL_004C: ldarg.2      
+   IL_004D: callvirt     0x060162A0 method proto_ff.Proto_FightHitAddBuffTarget :: set_attacker_desc_id(int) -> void 0x060162A0
+   IL_0052: ldloc.0      
+   IL_0053: ldarg.0      
+   IL_0054: ldfld        0x040173B1 field ActionGameLibrary.TSpellHitPara::iActionIndex : int
+   IL_0059: callvirt     0x060162A3 method proto_ff.Proto_FightHitAddBuffTarget :: set_action_index(int) -> void 0x060162A3
+   IL_005E: ldc.i4.1     
+   IL_005F: call         0x2B000AFC TOKEN 0x2B000AFC
+   IL_0064: stloc.1      
+   IL_0065: ldloc.1      
+   IL_0066: ldarg.s      5
+   IL_0068: callvirt     0x06016277 method proto_ff.FightHitAddBuffTarget :: set_trig_index(int) -> void 0x06016277
+   IL_006D: ldloc.1      
+   IL_006E: ldarg.3      
+   IL_006F: ldfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_0074: callvirt     0x0601627A method proto_ff.FightHitAddBuffTarget :: set_buff_id(int) -> void 0x0601627A
+   IL_0079: ldloc.1      
+   IL_007A: ldarg.s      4
+   IL_007C: callvirt     0x0601627D method proto_ff.FightHitAddBuffTarget :: set_rand_rate(int) -> void 0x0601627D
+   IL_0081: ldloc.1      
+   IL_0082: callvirt     0x0601627E method proto_ff.FightHitAddBuffTarget :: get_target_obj_id() -> System.Collections.Generic.List`1<int> 0x0601627E
+   IL_0087: ldarg.1      
+   IL_0088: callvirt     0x0A000305 memberref System.Collections.Generic.List`1<int>::Add
+   IL_008D: ldloc.0      
+   IL_008E: callvirt     0x060162A4 method proto_ff.Proto_FightHitAddBuffTarget :: get_target_list() -> System.Collections.Generic.List`1<proto_ff.FightHitAddBuffTarget> 0x060162A4
+   IL_0093: ldloc.1      
+   IL_0094: callvirt     0x0A005603 memberref System.Collections.Generic.List`1<proto_ff.FightHitAddBuffTarget>::Add
+   IL_0099: ldsfld       0x04017263 field ActionGameLibrary.CHitNotifier::_waitSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>
+   IL_009E: ldloc.0      
+   IL_009F: callvirt     0x0A005604 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>::Add
+   IL_00A4: ret          
+
+ActionGameLibrary.CHitNotifier :: CheckHittriggerSkillAddBuffToServer() -> void 0x0601E46A
+   IL_0000: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_0005: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_000A: brfalse.s    1
+   IL_000C: ret          
+   IL_000D: call         0x06001050 method RTTClock :: GetMapSvrSec() -> long 0x06001050
+   IL_0012: ldc.i4       1000
+   IL_0017: conv.i8      
+   IL_0018: mul          
+   IL_0019: ldsfld       0x04017264 field ActionGameLibrary.CHitNotifier::_lastSendTime : long
+   IL_001E: blt.s        13
+   IL_0020: ldsfld       0x04017263 field ActionGameLibrary.CHitNotifier::_waitSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>
+   IL_0025: callvirt     0x0A004698 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>::get_Count
+   IL_002A: ldc.i4.1     
+   IL_002B: bge.s        1
+   IL_002D: ret          
+   IL_002E: call         0x06001050 method RTTClock :: GetMapSvrSec() -> long 0x06001050
+   IL_0033: ldc.i4       1000
+   IL_0038: conv.i8      
+   IL_0039: mul          
+   IL_003A: ldc.i4       500
+   IL_003F: conv.i8      
+   IL_0040: add          
+   IL_0041: stsfld       0x04017264 field ActionGameLibrary.CHitNotifier::_lastSendTime : long
+   IL_0046: ldc.i4.1     
+   IL_0047: call         0x2B00013A TOKEN 0x2B00013A
+   IL_004C: stloc.0      
+   IL_004D: ldloc.0      
+   IL_004E: newobj       0x060162B1 method proto_ff.Proto_CSFightHitAddBuffReq :: .ctor() -> void 0x060162B1
+   IL_0053: callvirt     0x06017C47 method proto_ff.Proto_CSReq :: set_fight_hit_add_buff_req(proto_ff.Proto_CSFightHitAddBuffReq) -> void 0x06017C47
+   IL_0058: ldloc.0      
+   IL_0059: callvirt     0x06017C46 method proto_ff.Proto_CSReq :: get_fight_hit_add_buff_req() -> proto_ff.Proto_CSFightHitAddBuffReq 0x06017C46
+   IL_005E: callvirt     0x060162B2 method proto_ff.Proto_CSFightHitAddBuffReq :: get_target_list() -> System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget> 0x060162B2
+   IL_0063: ldsfld       0x04017263 field ActionGameLibrary.CHitNotifier::_waitSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>
+   IL_0068: callvirt     0x0A005605 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>::AddRange
+   IL_006D: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0072: ldc.i4       934
+   IL_0077: ldloc.0      
+   IL_0078: ldnull       
+   IL_0079: callvirt     0x0600339F method NetBase :: SendPackge(proto_ff.Proto_CS_CMD, object, MessageCallback) -> void 0x0600339F
+   IL_007E: ldsfld       0x04017263 field ActionGameLibrary.CHitNotifier::_waitSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>
+   IL_0083: callvirt     0x0A00469D memberref System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>::Clear
+   IL_0088: ret          
+
+ActionGameLibrary.CHitNotifier :: BufftriggerSkillAddBuffToServer(ref ActionGameLibrary.TSpellHitPara, int, int, ref ActionGameLibrary.SkillTriggerBuffDesc, int, int, int, int) -> void 0x0601E46B
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AFD TOKEN 0x2B000AFD
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.3      
+   IL_0009: ldfld        0x040172ED field ActionGameLibrary.SkillTriggerBuffDesc::buff_id : int
+   IL_000E: callvirt     0x060162D3 method proto_ff.FightBuffTriggerAddBuffTarget :: set_buff_id(int) -> void 0x060162D3
+   IL_0013: ldloc.0      
+   IL_0014: ldarg.1      
+   IL_0015: callvirt     0x060162D6 method proto_ff.FightBuffTriggerAddBuffTarget :: set_target_obj_id(int) -> void 0x060162D6
+   IL_001A: ldloc.0      
+   IL_001B: ldarg.s      6
+   IL_001D: callvirt     0x060162D9 method proto_ff.FightBuffTriggerAddBuffTarget :: set_reason(int) -> void 0x060162D9
+   IL_0022: ldloc.0      
+   IL_0023: ldc.i4.0     
+   IL_0024: callvirt     0x060162DC method proto_ff.FightBuffTriggerAddBuffTarget :: set_spkill_id(int) -> void 0x060162DC
+   IL_0029: ldloc.0      
+   IL_002A: ldc.i4.0     
+   IL_002B: callvirt     0x060162DF method proto_ff.FightBuffTriggerAddBuffTarget :: set_is_crit(bool) -> void 0x060162DF
+   IL_0030: ldc.i4.1     
+   IL_0031: call         0x2B000AFE TOKEN 0x2B000AFE
+   IL_0036: stloc.1      
+   IL_0037: ldloc.1      
+   IL_0038: ldarg.2      
+   IL_0039: callvirt     0x060162F9 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_attacket_obj_id(int) -> void 0x060162F9
+   IL_003E: ldloc.1      
+   IL_003F: ldarg.s      7
+   IL_0041: callvirt     0x060162FC method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_trigger_buff_id(int) -> void 0x060162FC
+   IL_0046: ldloc.1      
+   IL_0047: callvirt     0x060162FD method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: get_target_list() -> System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget> 0x060162FD
+   IL_004C: ldloc.0      
+   IL_004D: callvirt     0x0A005606 memberref System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget>::Add
+   IL_0052: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_0057: ldloc.1      
+   IL_0058: callvirt     0x0A005607 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::Add
+   IL_005D: ret          
+
+ActionGameLibrary.CHitNotifier :: BufftriggerSkillAddBuffToServer(int, int, int, int, bool, int, int, int, int, int, proto_ff.BuffEffectType) -> void 0x0601E46C
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AFD TOKEN 0x2B000AFD
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.0      
+   IL_0009: callvirt     0x060162D3 method proto_ff.FightBuffTriggerAddBuffTarget :: set_buff_id(int) -> void 0x060162D3
+   IL_000E: ldloc.0      
+   IL_000F: ldarg.1      
+   IL_0010: callvirt     0x060162D6 method proto_ff.FightBuffTriggerAddBuffTarget :: set_target_obj_id(int) -> void 0x060162D6
+   IL_0015: ldloc.0      
+   IL_0016: ldarg.2      
+   IL_0017: callvirt     0x060162D9 method proto_ff.FightBuffTriggerAddBuffTarget :: set_reason(int) -> void 0x060162D9
+   IL_001C: ldloc.0      
+   IL_001D: ldarg.3      
+   IL_001E: callvirt     0x060162DC method proto_ff.FightBuffTriggerAddBuffTarget :: set_spkill_id(int) -> void 0x060162DC
+   IL_0023: ldloc.0      
+   IL_0024: ldarg.s      4
+   IL_0026: callvirt     0x060162DF method proto_ff.FightBuffTriggerAddBuffTarget :: set_is_crit(bool) -> void 0x060162DF
+   IL_002B: ldloc.0      
+   IL_002C: ldarg.s      10
+   IL_002E: callvirt     0x060162E5 method proto_ff.FightBuffTriggerAddBuffTarget :: set_effect_type(proto_ff.BuffEffectType) -> void 0x060162E5
+   IL_0033: ldloc.0      
+   IL_0034: ldarg.s      9
+   IL_0036: callvirt     0x060162E8 method proto_ff.FightBuffTriggerAddBuffTarget :: set_buff_stack(int) -> void 0x060162E8
+   IL_003B: ldc.i4.1     
+   IL_003C: call         0x2B000AFE TOKEN 0x2B000AFE
+   IL_0041: stloc.1      
+   IL_0042: ldloc.1      
+   IL_0043: ldarg.s      5
+   IL_0045: callvirt     0x060162F9 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_attacket_obj_id(int) -> void 0x060162F9
+   IL_004A: ldloc.1      
+   IL_004B: ldarg.s      6
+   IL_004D: callvirt     0x060162FC method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_trigger_buff_id(int) -> void 0x060162FC
+   IL_0052: ldloc.1      
+   IL_0053: ldarg.s      7
+   IL_0055: callvirt     0x06016302 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_effect_index(int) -> void 0x06016302
+   IL_005A: ldloc.1      
+   IL_005B: ldarg.s      8
+   IL_005D: callvirt     0x06016305 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_has_buff_obj_id(int) -> void 0x06016305
+   IL_0062: ldloc.1      
+   IL_0063: callvirt     0x060162FD method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: get_target_list() -> System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget> 0x060162FD
+   IL_0068: ldloc.0      
+   IL_0069: callvirt     0x0A005606 memberref System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget>::Add
+   IL_006E: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_0073: ldloc.1      
+   IL_0074: callvirt     0x0A005607 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::Add
+   IL_0079: ret          
+
+ActionGameLibrary.CHitNotifier :: BufftriggerSkillAddBuffToServer(int, int, int, int, bool, int, int, proto_ff.enActorStateType, int, int, proto_ff.BuffEffectType) -> void 0x0601E46D
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AFD TOKEN 0x2B000AFD
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.0      
+   IL_0009: callvirt     0x060162D3 method proto_ff.FightBuffTriggerAddBuffTarget :: set_buff_id(int) -> void 0x060162D3
+   IL_000E: ldloc.0      
+   IL_000F: ldarg.1      
+   IL_0010: callvirt     0x060162D6 method proto_ff.FightBuffTriggerAddBuffTarget :: set_target_obj_id(int) -> void 0x060162D6
+   IL_0015: ldloc.0      
+   IL_0016: ldarg.2      
+   IL_0017: callvirt     0x060162D9 method proto_ff.FightBuffTriggerAddBuffTarget :: set_reason(int) -> void 0x060162D9
+   IL_001C: ldloc.0      
+   IL_001D: ldarg.3      
+   IL_001E: callvirt     0x060162DC method proto_ff.FightBuffTriggerAddBuffTarget :: set_spkill_id(int) -> void 0x060162DC
+   IL_0023: ldloc.0      
+   IL_0024: ldarg.s      4
+   IL_0026: callvirt     0x060162DF method proto_ff.FightBuffTriggerAddBuffTarget :: set_is_crit(bool) -> void 0x060162DF
+   IL_002B: ldloc.0      
+   IL_002C: ldarg.s      7
+   IL_002E: callvirt     0x060162E2 method proto_ff.FightBuffTriggerAddBuffTarget :: set_actor_state(proto_ff.enActorStateType) -> void 0x060162E2
+   IL_0033: ldloc.0      
+   IL_0034: ldarg.s      10
+   IL_0036: callvirt     0x060162E5 method proto_ff.FightBuffTriggerAddBuffTarget :: set_effect_type(proto_ff.BuffEffectType) -> void 0x060162E5
+   IL_003B: ldloc.0      
+   IL_003C: ldarg.s      9
+   IL_003E: callvirt     0x060162E8 method proto_ff.FightBuffTriggerAddBuffTarget :: set_buff_stack(int) -> void 0x060162E8
+   IL_0043: ldc.i4.1     
+   IL_0044: call         0x2B000AFE TOKEN 0x2B000AFE
+   IL_0049: stloc.1      
+   IL_004A: ldloc.1      
+   IL_004B: ldarg.s      5
+   IL_004D: callvirt     0x060162F9 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_attacket_obj_id(int) -> void 0x060162F9
+   IL_0052: ldloc.1      
+   IL_0053: ldarg.s      6
+   IL_0055: callvirt     0x060162FC method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_trigger_buff_id(int) -> void 0x060162FC
+   IL_005A: ldloc.1      
+   IL_005B: ldarg.s      8
+   IL_005D: callvirt     0x06016305 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_has_buff_obj_id(int) -> void 0x06016305
+   IL_0062: ldloc.1      
+   IL_0063: callvirt     0x060162FD method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: get_target_list() -> System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget> 0x060162FD
+   IL_0068: ldloc.0      
+   IL_0069: callvirt     0x0A005606 memberref System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget>::Add
+   IL_006E: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_0073: ldloc.1      
+   IL_0074: callvirt     0x0A005607 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::Add
+   IL_0079: ret          
+
+ActionGameLibrary.CHitNotifier :: BufftriggerSkillRemoveBuffToServer(int, int, int, int, bool, int, int, int, int, int, int) -> void 0x0601E46E
+   IL_0000: ldc.i4.1     
+   IL_0001: call         0x2B000AFD TOKEN 0x2B000AFD
+   IL_0006: stloc.0      
+   IL_0007: ldloc.0      
+   IL_0008: ldarg.0      
+   IL_0009: callvirt     0x060162D3 method proto_ff.FightBuffTriggerAddBuffTarget :: set_buff_id(int) -> void 0x060162D3
+   IL_000E: ldloc.0      
+   IL_000F: ldarg.1      
+   IL_0010: callvirt     0x060162D6 method proto_ff.FightBuffTriggerAddBuffTarget :: set_target_obj_id(int) -> void 0x060162D6
+   IL_0015: ldloc.0      
+   IL_0016: ldarg.2      
+   IL_0017: callvirt     0x060162D9 method proto_ff.FightBuffTriggerAddBuffTarget :: set_reason(int) -> void 0x060162D9
+   IL_001C: ldloc.0      
+   IL_001D: ldarg.3      
+   IL_001E: callvirt     0x060162DC method proto_ff.FightBuffTriggerAddBuffTarget :: set_spkill_id(int) -> void 0x060162DC
+   IL_0023: ldloc.0      
+   IL_0024: ldarg.s      4
+   IL_0026: callvirt     0x060162DF method proto_ff.FightBuffTriggerAddBuffTarget :: set_is_crit(bool) -> void 0x060162DF
+   IL_002B: ldloc.0      
+   IL_002C: ldc.i4.6     
+   IL_002D: callvirt     0x060162E5 method proto_ff.FightBuffTriggerAddBuffTarget :: set_effect_type(proto_ff.BuffEffectType) -> void 0x060162E5
+   IL_0032: ldloc.0      
+   IL_0033: ldarg.s      9
+   IL_0035: callvirt     0x060162E8 method proto_ff.FightBuffTriggerAddBuffTarget :: set_buff_stack(int) -> void 0x060162E8
+   IL_003A: ldloc.0      
+   IL_003B: ldarg.s      10
+   IL_003D: callvirt     0x060162EB method proto_ff.FightBuffTriggerAddBuffTarget :: set_remove_reason(int) -> void 0x060162EB
+   IL_0042: ldc.i4.1     
+   IL_0043: call         0x2B000AFE TOKEN 0x2B000AFE
+   IL_0048: stloc.1      
+   IL_0049: ldloc.1      
+   IL_004A: ldarg.s      5
+   IL_004C: callvirt     0x060162F9 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_attacket_obj_id(int) -> void 0x060162F9
+   IL_0051: ldloc.1      
+   IL_0052: ldarg.s      6
+   IL_0054: callvirt     0x060162FC method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_trigger_buff_id(int) -> void 0x060162FC
+   IL_0059: ldloc.1      
+   IL_005A: ldarg.s      7
+   IL_005C: callvirt     0x06016302 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_effect_index(int) -> void 0x06016302
+   IL_0061: ldloc.1      
+   IL_0062: ldarg.s      8
+   IL_0064: callvirt     0x06016305 method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: set_has_buff_obj_id(int) -> void 0x06016305
+   IL_0069: ldloc.1      
+   IL_006A: callvirt     0x060162FD method proto_ff.Proto_FightBuffTriggerAddBuffTarget :: get_target_list() -> System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget> 0x060162FD
+   IL_006F: ldloc.0      
+   IL_0070: callvirt     0x0A005606 memberref System.Collections.Generic.List`1<proto_ff.FightBuffTriggerAddBuffTarget>::Add
+   IL_0075: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_007A: ldloc.1      
+   IL_007B: callvirt     0x0A005607 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::Add
+   IL_0080: ret          
+
+ActionGameLibrary.CHitNotifier :: CheckBufftriggerSkillAddBuffToServer() -> void 0x0601E46F
+   IL_0000: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_0005: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_000A: brfalse.s    1
+   IL_000C: ret          
+   IL_000D: call         0x06001050 method RTTClock :: GetMapSvrSec() -> long 0x06001050
+   IL_0012: ldc.i4       1000
+   IL_0017: conv.i8      
+   IL_0018: mul          
+   IL_0019: ldsfld       0x04017266 field ActionGameLibrary.CHitNotifier::_lastBuffSendTime : long
+   IL_001E: blt.s        13
+   IL_0020: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_0025: callvirt     0x0A0046A6 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::get_Count
+   IL_002A: ldc.i4.1     
+   IL_002B: bge.s        1
+   IL_002D: ret          
+   IL_002E: call         0x06001050 method RTTClock :: GetMapSvrSec() -> long 0x06001050
+   IL_0033: ldc.i4       1000
+   IL_0038: conv.i8      
+   IL_0039: mul          
+   IL_003A: ldc.i4       500
+   IL_003F: conv.i8      
+   IL_0040: add          
+   IL_0041: stsfld       0x04017266 field ActionGameLibrary.CHitNotifier::_lastBuffSendTime : long
+   IL_0046: ldc.i4.1     
+   IL_0047: call         0x2B00013A TOKEN 0x2B00013A
+   IL_004C: stloc.0      
+   IL_004D: ldloc.0      
+   IL_004E: newobj       0x06016310 method proto_ff.Proto_CSFightBuffTriggerAddBuffReq :: .ctor() -> void 0x06016310
+   IL_0053: callvirt     0x06017CC8 method proto_ff.Proto_CSReq :: set_fight_buff_trigger_add_buff_req(proto_ff.Proto_CSFightBuffTriggerAddBuffReq) -> void 0x06017CC8
+   IL_0058: ldloc.0      
+   IL_0059: callvirt     0x06017CC7 method proto_ff.Proto_CSReq :: get_fight_buff_trigger_add_buff_req() -> proto_ff.Proto_CSFightBuffTriggerAddBuffReq 0x06017CC7
+   IL_005E: callvirt     0x06016311 method proto_ff.Proto_CSFightBuffTriggerAddBuffReq :: get_target_list() -> System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget> 0x06016311
+   IL_0063: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_0068: callvirt     0x0A005608 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::AddRange
+   IL_006D: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0072: ldc.i4       943
+   IL_0077: ldloc.0      
+   IL_0078: ldnull       
+   IL_0079: callvirt     0x0600339F method NetBase :: SendPackge(proto_ff.Proto_CS_CMD, object, MessageCallback) -> void 0x0600339F
+   IL_007E: ldc.i4.0     
+   IL_007F: stloc.1      
+   IL_0080: br.s         22
+   IL_0082: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_0087: ldloc.1      
+   IL_0088: callvirt     0x0A0046A7 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::get_Item
+   IL_008D: ldc.i4.1     
+   IL_008E: ldc.i4.1     
+   IL_008F: callvirt     0x0601FE58 method Google.ProtocolBuffers.AbstractMessageLite :: Reset(bool, bool) -> void 0x0601FE58
+   IL_0094: ldloc.1      
+   IL_0095: ldc.i4.1     
+   IL_0096: add          
+   IL_0097: stloc.1      
+   IL_0098: ldloc.1      
+   IL_0099: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_009E: callvirt     0x0A0046A6 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::get_Count
+   IL_00A3: blt.s        -35
+   IL_00A5: ldsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_00AA: callvirt     0x0A0046AB memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::Clear
+   IL_00AF: ret          
+
+ActionGameLibrary.CHitNotifier :: CheckRecover() -> void 0x0601E470
+   IL_0000: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_0005: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_000A: brfalse.s    1
+   IL_000C: ret          
+   IL_000D: call         0x0A005609 memberref ActionGameLibrary.ActorMgr`1<ActionGameLibrary.CRecoverMgr>::UpdateAll
+   IL_0012: ret          
+
+ActionGameLibrary.CHitNotifier :: SyncPlayerAttrForLocalBattle(System.Collections.Generic.List`1<proto_ff.CSAttr>, int) -> void 0x0601E471
+   IL_0000: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_0005: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_000A: brfalse.s    1
+   IL_000C: ret          
+   IL_000D: ldc.i4.1     
+   IL_000E: call         0x2B00013A TOKEN 0x2B00013A
+   IL_0013: stloc.0      
+   IL_0014: ldloc.0      
+   IL_0015: ldc.i4.1     
+   IL_0016: call         0x2B000AFF TOKEN 0x2B000AFF
+   IL_001B: callvirt     0x060176E9 method proto_ff.Proto_CSReq :: set_battle_svr_attr_sync_req(proto_ff.Proto_CSBattleSvrAttrSyncReq) -> void 0x060176E9
+   IL_0020: ldc.i4.1     
+   IL_0021: call         0x2B000B00 TOKEN 0x2B000B00
+   IL_0026: stloc.1      
+   IL_0027: ldloc.1      
+   IL_0028: ldarg.1      
+   IL_0029: callvirt     0x0600FF12 method proto_ff.Proto_CSBattleSvrActorAttrChangeOne :: set_obj_id(int) -> void 0x0600FF12
+   IL_002E: ldloc.1      
+   IL_002F: callvirt     0x0600FF13 method proto_ff.Proto_CSBattleSvrActorAttrChangeOne :: get_attr_list() -> System.Collections.Generic.List`1<proto_ff.CSAttr> 0x0600FF13
+   IL_0034: ldarg.0      
+   IL_0035: callvirt     0x0A0026A7 memberref System.Collections.Generic.List`1<proto_ff.CSAttr>::AddRange
+   IL_003A: ldloc.0      
+   IL_003B: callvirt     0x060176E8 method proto_ff.Proto_CSReq :: get_battle_svr_attr_sync_req() -> proto_ff.Proto_CSBattleSvrAttrSyncReq 0x060176E8
+   IL_0040: callvirt     0x0600FF5F method proto_ff.Proto_CSBattleSvrAttrSyncReq :: get_change_list() -> System.Collections.Generic.List`1<proto_ff.Proto_CSBattleSvrActorAttrChangeOne> 0x0600FF5F
+   IL_0045: ldloc.1      
+   IL_0046: callvirt     0x0A00560A memberref System.Collections.Generic.List`1<proto_ff.Proto_CSBattleSvrActorAttrChangeOne>::Add
+   IL_004B: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0050: ldc.i4       400
+   IL_0055: ldloc.0      
+   IL_0056: ldnull       
+   IL_0057: callvirt     0x0600339F method NetBase :: SendPackge(proto_ff.Proto_CS_CMD, object, MessageCallback) -> void 0x0600339F
+   IL_005C: ldsfld       0x04017263 field ActionGameLibrary.CHitNotifier::_waitSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>
+   IL_0061: callvirt     0x0A00469D memberref System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>::Clear
+   IL_0066: ret          
+
+ActionGameLibrary.CHitNotifier :: .ctor() -> void 0x0601E472
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0A0000AF memberref System.Object::.ctor
+   IL_0006: ret          
+
+ActionGameLibrary.CHitNotifier :: .cctor() -> void 0x0601E473
+   IL_0000: ldnull       
+   IL_0001: stsfld       0x04017258 field ActionGameLibrary.CHitNotifier::_stEffectNotifyComboHurt : proto_ff.Proto_CSRsp
+   IL_0006: ldnull       
+   IL_0007: stsfld       0x04017259 field ActionGameLibrary.CHitNotifier::_stEffectNotify : proto_ff.Proto_CSRsp
+   IL_000C: ldnull       
+   IL_000D: stsfld       0x0401725A field ActionGameLibrary.CHitNotifier::_stEffectNotifySkillInfo : proto_ff.Proto_CSRsp
+   IL_0012: ldc.i4.0     
+   IL_0013: stsfld       0x0401725B field ActionGameLibrary.CHitNotifier::lastSendFrame : int
+   IL_0018: ldc.i4.0     
+   IL_0019: conv.i8      
+   IL_001A: stsfld       0x0401725C field ActionGameLibrary.CHitNotifier::_frames : long
+   IL_001F: ldc.r4       0.0
+   IL_0024: stsfld       0x0401725D field ActionGameLibrary.CHitNotifier::__lastCheckTime : float
+   IL_0029: ldc.r4       0.0
+   IL_002E: stsfld       0x0401725E field ActionGameLibrary.CHitNotifier::__diff : float
+   IL_0033: ldc.i4.0     
+   IL_0034: stsfld       0x0401725F field ActionGameLibrary.CHitNotifier::__steps : int
+   IL_0039: newobj       0x0A000303 memberref System.Collections.Generic.List`1<int>::.ctor
+   IL_003E: stsfld       0x04017260 field ActionGameLibrary.CHitNotifier::dieSyncActorLog : System.Collections.Generic.List`1<int>
+   IL_0043: newobj       0x0A000303 memberref System.Collections.Generic.List`1<int>::.ctor
+   IL_0048: stsfld       0x04017261 field ActionGameLibrary.CHitNotifier::dieSyncActor : System.Collections.Generic.List`1<int>
+   IL_004D: newobj       0x0A000303 memberref System.Collections.Generic.List`1<int>::.ctor
+   IL_0052: stsfld       0x04017262 field ActionGameLibrary.CHitNotifier::dieActor : System.Collections.Generic.List`1<int>
+   IL_0057: newobj       0x0A004697 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>::.ctor
+   IL_005C: stsfld       0x04017263 field ActionGameLibrary.CHitNotifier::_waitSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightHitAddBuffTarget>
+   IL_0061: ldc.i4.0     
+   IL_0062: conv.i8      
+   IL_0063: stsfld       0x04017264 field ActionGameLibrary.CHitNotifier::_lastSendTime : long
+   IL_0068: newobj       0x0A0046A5 memberref System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>::.ctor
+   IL_006D: stsfld       0x04017265 field ActionGameLibrary.CHitNotifier::_waitBuffSendPkgData : System.Collections.Generic.List`1<proto_ff.Proto_FightBuffTriggerAddBuffTarget>
+   IL_0072: ldc.i4.0     
+   IL_0073: conv.i8      
+   IL_0074: stsfld       0x04017266 field ActionGameLibrary.CHitNotifier::_lastBuffSendTime : long
+   IL_0079: ret          

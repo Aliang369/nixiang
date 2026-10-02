@@ -1,0 +1,493 @@
+
+
+############ TYPE DS_Advertising ############
+
+DS_Advertising :: init() -> void 0x06001247
+   IL_0000: ldarg.0      
+   IL_0001: call         0x06001758 method DS_Base :: init() -> void 0x06001758
+   IL_0006: ldarg.0      
+   IL_0007: ldc.i4       2763
+   IL_000C: ldarg.0      
+   IL_000D: FEldftn      0x06001257 method DS_Advertising :: RspADVideoResult(proto_ff.Proto_CSRsp) -> void 0x06001257
+   IL_0013: newobj       0x06021158 method ProtocolManager.callback :: .ctor(object, IntPtr) -> void 0x06021158
+   IL_0018: ldc.i4.s     100
+   IL_001A: call         0x0600100D method EventManagerBase :: regProto(proto_ff.Proto_CS_CMD, ProtocolManager.callback, int) -> void 0x0600100D
+   IL_001F: ldarg.0      
+   IL_0020: ldc.i4       2761
+   IL_0025: ldarg.0      
+   IL_0026: FEldftn      0x06001253 method DS_Advertising :: OnGetADInfoRsp(proto_ff.Proto_CSRsp) -> void 0x06001253
+   IL_002C: newobj       0x06021158 method ProtocolManager.callback :: .ctor(object, IntPtr) -> void 0x06021158
+   IL_0031: ldc.i4.s     100
+   IL_0033: call         0x0600100D method EventManagerBase :: regProto(proto_ff.Proto_CS_CMD, ProtocolManager.callback, int) -> void 0x0600100D
+   IL_0038: ldsfld       0x04000B2F field GameEvent::Game_Login_Finish : string
+   IL_003D: ldarg.0      
+   IL_003E: FEldftn      0x06001254 method DS_Advertising :: OnLoginFinish(GEvent) -> void 0x06001254
+   IL_0044: newobj       0x06020A02 method EventManager.callback :: .ctor(object, IntPtr) -> void 0x06020A02
+   IL_0049: call         0x0600093A method EventManager :: addListener(string, EventManager.callback) -> void 0x0600093A
+   IL_004E: ldstr        0x7000CB9E string "Event_HideLoginOnceTip"
+   IL_0053: ldarg.0      
+   IL_0054: FEldftn      0x06001249 method DS_Advertising :: OnRefreshLoginOnceTip(GEvent) -> void 0x06001249
+   IL_005A: newobj       0x06020A02 method EventManager.callback :: .ctor(object, IntPtr) -> void 0x06020A02
+   IL_005F: call         0x0600093A method EventManager :: addListener(string, EventManager.callback) -> void 0x0600093A
+   IL_0064: ret          
+
+DS_Advertising :: clear() -> void 0x06001248
+   IL_0000: ldarg.0      
+   IL_0001: call         0x06001759 method DS_Base :: clear() -> void 0x06001759
+   IL_0006: ldarg.0      
+   IL_0007: call         0x0600124C method DS_Advertising :: ResetLoginOnceTips() -> void 0x0600124C
+   IL_000C: ret          
+
+DS_Advertising :: OnRefreshLoginOnceTip(GEvent) -> void 0x06001249
+   IL_0000: ldarg.1      
+   IL_0001: ldc.i4.0     
+   IL_0002: callvirt     0x2B000160 TOKEN 0x2B000160
+   IL_0007: stloc.0      
+   IL_0008: ldarg.1      
+   IL_0009: ldc.i4.1     
+   IL_000A: callvirt     0x2B00011A TOKEN 0x2B00011A
+   IL_000F: stloc.1      
+   IL_0010: ldarg.0      
+   IL_0011: ldloc.0      
+   IL_0012: ldloc.1      
+   IL_0013: call         0x0600124A method DS_Advertising :: MarkLoginOnceTip(RedTipManager.TipType, int) -> void 0x0600124A
+   IL_0018: ret          
+
+DS_Advertising :: MarkLoginOnceTip(RedTipManager.TipType, int) -> void 0x0600124A
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0006: ldarg.1      
+   IL_0007: callvirt     0x0A000AED memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::ContainsKey
+   IL_000C: brtrue.s     17
+   IL_000E: ldarg.0      
+   IL_000F: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0014: ldarg.1      
+   IL_0015: newobj       0x0A000AEE memberref System.Collections.Generic.HashSet`1<int>::.ctor
+   IL_001A: callvirt     0x0A000AEF memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::set_Item
+   IL_001F: ldarg.0      
+   IL_0020: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0025: ldarg.1      
+   IL_0026: callvirt     0x0A000AF0 memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::get_Item
+   IL_002B: ldarg.2      
+   IL_002C: callvirt     0x0A000AC1 memberref System.Collections.Generic.HashSet`1<int>::Add
+   IL_0031: pop          
+   IL_0032: call         0x0A0009B5 memberref SingletonClass`1<RedTipManager>::get_Instance
+   IL_0037: ldarg.1      
+   IL_0038: ldc.i4.0     
+   IL_0039: ldarg.2      
+   IL_003A: callvirt     0x06007F48 method RedTipManager :: Notice(RedTipManager.TipType, bool, int) -> void 0x06007F48
+   IL_003F: ldstr        0x7000CBCC string "{0}_{1}_{2}_{3}"
+   IL_0044: ldc.i4.4     
+   IL_0045: newarr       0x01000019 typespec SingletonClass`1<RoleInfoMange>
+   IL_004A: dup          
+   IL_004B: ldc.i4.0     
+   IL_004C: ldstr        0x7000CBEC string "DS_Advertising_LoginOnceTips"
+   IL_0051: stelem.ref   
+   IL_0052: dup          
+   IL_0053: ldc.i4.1     
+   IL_0054: ldsfld       0x04000EC4 field DataService::roleData : DS_RoleData
+   IL_0059: ldfld        0x04000DDB field DS_RoleData::roleId : ulong
+   IL_005E: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_0063: stelem.ref   
+   IL_0064: dup          
+   IL_0065: ldc.i4.2     
+   IL_0066: ldarg.1      
+   IL_0067: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_006C: stelem.ref   
+   IL_006D: dup          
+   IL_006E: ldc.i4.3     
+   IL_006F: ldarg.2      
+   IL_0070: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0075: stelem.ref   
+   IL_0076: call         0x0A000353 memberref System.String::Format
+   IL_007B: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_0080: conv.i4      
+   IL_0081: stloc.0      
+   IL_0082: ldloc.0      
+   IL_0083: call         0x06003923 method LocalDataSave :: SaveData(string, int) -> void 0x06003923
+   IL_0088: ret          
+
+DS_Advertising :: HasLoginOnceTip(RedTipManager.TipType, int) -> bool 0x0600124B
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0006: ldarg.1      
+   IL_0007: callvirt     0x0A000AED memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::ContainsKey
+   IL_000C: brtrue.s     78
+   IL_000E: ldstr        0x7000CBCC string "{0}_{1}_{2}_{3}"
+   IL_0013: ldc.i4.4     
+   IL_0014: newarr       0x01000019 typespec SingletonClass`1<RoleInfoMange>
+   IL_0019: dup          
+   IL_001A: ldc.i4.0     
+   IL_001B: ldstr        0x7000CBEC string "DS_Advertising_LoginOnceTips"
+   IL_0020: stelem.ref   
+   IL_0021: dup          
+   IL_0022: ldc.i4.1     
+   IL_0023: ldsfld       0x04000EC4 field DataService::roleData : DS_RoleData
+   IL_0028: ldfld        0x04000DDB field DS_RoleData::roleId : ulong
+   IL_002D: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_0032: stelem.ref   
+   IL_0033: dup          
+   IL_0034: ldc.i4.2     
+   IL_0035: ldarg.1      
+   IL_0036: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_003B: stelem.ref   
+   IL_003C: dup          
+   IL_003D: ldc.i4.3     
+   IL_003E: ldarg.2      
+   IL_003F: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0044: stelem.ref   
+   IL_0045: call         0x0A000353 memberref System.String::Format
+   IL_004A: ldc.i4.0     
+   IL_004B: call         0x06003926 method LocalDataSave :: GetIntData(string, int) -> int 0x06003926
+   IL_0050: conv.i8      
+   IL_0051: call         0x06001059 method RTTClock :: IsSameDay2(long) -> bool 0x06001059
+   IL_0056: brfalse.s    2
+   IL_0058: ldc.i4.1     
+   IL_0059: ret          
+   IL_005A: ldc.i4.0     
+   IL_005B: ret          
+   IL_005C: ldarg.0      
+   IL_005D: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0062: ldarg.1      
+   IL_0063: callvirt     0x0A000AF0 memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::get_Item
+   IL_0068: ldarg.2      
+   IL_0069: callvirt     0x0A000ADD memberref System.Collections.Generic.HashSet`1<int>::Contains
+   IL_006E: ret          
+
+DS_Advertising :: ResetLoginOnceTips() -> void 0x0600124C
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_0006: callvirt     0x0A000AF1 memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::Clear
+   IL_000B: ret          
+
+DS_Advertising :: get_FunctionEnable() -> bool 0x0600124D
+   IL_0000: call         0x06003309 method ExamineVerUIHelper :: get_WatchADSystemOpen() -> bool 0x06003309
+   IL_0005: ret          
+
+DS_Advertising :: GetADTimes(int) -> int 0x0600124E
+   IL_0000: call         0x06019748 method GameConfigData.ConfigData :: get_CFG_WatchAdvertisement() -> System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement> 0x06019748
+   IL_0005: ldarg.1      
+   IL_0006: ldloca.s     0
+   IL_0008: callvirt     0x0A000AF2 memberref System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement>::TryGetValue
+   IL_000D: pop          
+   IL_000E: ldloc.0      
+   IL_000F: brtrue.s     2
+   IL_0011: ldc.i4.0     
+   IL_0012: ret          
+   IL_0013: ldloc.0      
+   IL_0014: callvirt     0x0601CE9B method GameConfigData.WatchAdvertisement :: get_adtimes() -> int 0x0601CE9B
+   IL_0019: ret          
+
+DS_Advertising :: GetADSysParam(int) -> string 0x0600124F
+   IL_0000: call         0x06019748 method GameConfigData.ConfigData :: get_CFG_WatchAdvertisement() -> System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement> 0x06019748
+   IL_0005: ldarg.1      
+   IL_0006: ldloca.s     0
+   IL_0008: callvirt     0x0A000AF2 memberref System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement>::TryGetValue
+   IL_000D: pop          
+   IL_000E: ldloc.0      
+   IL_000F: brtrue.s     6
+   IL_0011: ldstr        0x700003A1 string ""
+   IL_0016: ret          
+   IL_0017: ldloc.0      
+   IL_0018: callvirt     0x0601CE99 method GameConfigData.WatchAdvertisement :: get_sysyemparam() -> string 0x0601CE99
+   IL_001D: ret          
+
+DS_Advertising :: GetADCdsParam(int) -> int 0x06001250
+   IL_0000: call         0x06019748 method GameConfigData.ConfigData :: get_CFG_WatchAdvertisement() -> System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement> 0x06019748
+   IL_0005: ldarg.1      
+   IL_0006: ldloca.s     0
+   IL_0008: callvirt     0x0A000AF2 memberref System.Collections.Generic.Dictionary`2<uint,GameConfigData.WatchAdvertisement>::TryGetValue
+   IL_000D: pop          
+   IL_000E: ldloc.0      
+   IL_000F: brtrue.s     2
+   IL_0011: ldc.i4.0     
+   IL_0012: ret          
+   IL_0013: ldloc.0      
+   IL_0014: callvirt     0x0601CE9D method GameConfigData.WatchAdvertisement :: get_WatchCd() -> int 0x0601CE9D
+   IL_0019: ret          
+
+DS_Advertising :: WatchAdvertisements(int) -> void 0x06001251
+   IL_0000: newobj       0x06020B30 method DS_Advertising.<>c__DisplayClass15_0 :: .ctor() -> void 0x06020B30
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: ldarg.0      
+   IL_0008: stfld        0x04019112 field DS_Advertising.<>c__DisplayClass15_0::<>4__this : DS_Advertising
+   IL_000D: ldloc.0      
+   IL_000E: ldarg.1      
+   IL_000F: stfld        0x04019113 field DS_Advertising.<>c__DisplayClass15_0::adid : int
+   IL_0014: ldsfld       0x04000F06 field DataService::privilege : DS_Privilege
+   IL_0019: callvirt     0x06007E5F method DS_Privilege :: MonthCardSkipAD() -> bool 0x06007E5F
+   IL_001E: brtrue.s     12
+   IL_0020: ldsfld       0x04000F1F field DataService::advertising : DS_Advertising
+   IL_0025: callvirt     0x0600124D method DS_Advertising :: get_FunctionEnable() -> bool 0x0600124D
+   IL_002A: brtrue.s     13
+   IL_002C: ldarg.0      
+   IL_002D: ldloc.0      
+   IL_002E: ldfld        0x04019113 field DS_Advertising.<>c__DisplayClass15_0::adid : int
+   IL_0033: call         0x06001252 method DS_Advertising :: StartWatchAdReq(int) -> void 0x06001252
+   IL_0038: ret          
+   IL_0039: ldstr        0x7000CC26 string "是否确认进入广告系统 观看广告获取奖励
+开通月卡可无限制的[d57917]免看广告[-]直接领取"
+   IL_003E: ldstr        0x70006855 string "提示"
+   IL_0043: ldloc.0      
+   IL_0044: FEldftn      0x06020B31 method DS_Advertising.<>c__DisplayClass15_0 :: <WatchAdvertisements>b__0(object) -> void 0x06020B31
+   IL_004A: newobj       0x06020A30 method DelegateEnums.DataParam :: .ctor(object, IntPtr) -> void 0x06020A30
+   IL_004F: ldnull       
+   IL_0050: ldsfld       0x04019110 field DS_Advertising.<>c::<>9__15_1 : DelegateEnums.DataParam
+   IL_0055: dup          
+   IL_0056: brtrue.s     23
+   IL_0058: pop          
+   IL_0059: ldsfld       0x0401910F field DS_Advertising.<>c::<>9 : DS_Advertising.<>c
+   IL_005E: FEldftn      0x06020B2E method DS_Advertising.<>c :: <WatchAdvertisements>b__15_1(object) -> void 0x06020B2E
+   IL_0064: newobj       0x06020A30 method DelegateEnums.DataParam :: .ctor(object, IntPtr) -> void 0x06020A30
+   IL_0069: dup          
+   IL_006A: stsfld       0x04019110 field DS_Advertising.<>c::<>9__15_1 : DelegateEnums.DataParam
+   IL_006F: ldnull       
+   IL_0070: ldstr        0x7000CC88 string "进入广告"
+   IL_0075: ldstr        0x7000CC92 string "前往开通"
+   IL_007A: ldc.i4.0     
+   IL_007B: ldc.i4.0     
+   IL_007C: ldstr        0x70002D5B string "none"
+   IL_0081: ldnull       
+   IL_0082: ldc.i4.0     
+   IL_0083: ldsfld       0x04019111 field DS_Advertising.<>c::<>9__15_2 : System.Action`1<MW_Confirm>
+   IL_0088: dup          
+   IL_0089: brtrue.s     23
+   IL_008B: pop          
+   IL_008C: ldsfld       0x0401910F field DS_Advertising.<>c::<>9 : DS_Advertising.<>c
+   IL_0091: FEldftn      0x06020B2F method DS_Advertising.<>c :: <WatchAdvertisements>b__15_2(MW_Confirm) -> void 0x06020B2F
+   IL_0097: newobj       0x0A000AF3 memberref System.Action`1<MW_Confirm>::.ctor
+   IL_009C: dup          
+   IL_009D: stsfld       0x04019111 field DS_Advertising.<>c::<>9__15_2 : System.Action`1<MW_Confirm>
+   IL_00A2: call         0x06007D49 method MsgCenter :: Confirm(string, string, DelegateEnums.DataParam, object, DelegateEnums.DataParam, object, string, string, int, int, string, DelegateEnums.DataParamT`1<bool>, bool, System.Action`1<MW_Confirm>) -> void 0x06007D49
+   IL_00A7: ret          
+
+DS_Advertising :: StartWatchAdReq(int) -> void 0x06001252
+   IL_0000: newobj       0x060175EA method proto_ff.Proto_CSReq :: .ctor() -> void 0x060175EA
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: newobj       0x06017281 method proto_ff.Proto_CSStartWatchAdReq :: .ctor() -> void 0x06017281
+   IL_000C: callvirt     0x06017D16 method proto_ff.Proto_CSReq :: set_start_watch_ad_req(proto_ff.Proto_CSStartWatchAdReq) -> void 0x06017D16
+   IL_0011: ldloc.0      
+   IL_0012: callvirt     0x06017D15 method proto_ff.Proto_CSReq :: get_start_watch_ad_req() -> proto_ff.Proto_CSStartWatchAdReq 0x06017D15
+   IL_0017: ldarg.1      
+   IL_0018: callvirt     0x06017284 method proto_ff.Proto_CSStartWatchAdReq :: set_ad_id(int) -> void 0x06017284
+   IL_001D: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0022: ldc.i4       2760
+   IL_0027: ldloc.0      
+   IL_0028: ldnull       
+   IL_0029: callvirt     0x0600339E method NetBase :: SendPackge(uint, object, MessageCallback) -> void 0x0600339E
+   IL_002E: ret          
+
+DS_Advertising :: OnGetADInfoRsp(proto_ff.Proto_CSRsp) -> void 0x06001253
+   IL_0000: ldarg.1      
+   IL_0001: brfalse.s    8
+   IL_0003: ldarg.1      
+   IL_0004: callvirt     0x060186E6 method proto_ff.Proto_CSRsp :: get_start_watch_ad_rsp() -> proto_ff.Proto_SCStartWatchAdRsp 0x060186E6
+   IL_0009: brtrue.s     1
+   IL_000B: ret          
+   IL_000C: ldarg.1      
+   IL_000D: callvirt     0x060186E6 method proto_ff.Proto_CSRsp :: get_start_watch_ad_rsp() -> proto_ff.Proto_SCStartWatchAdRsp 0x060186E6
+   IL_0012: stloc.0      
+   IL_0013: ldstr        0x7000CC9C string "DS_Advertising OnGetADInfoRsp, adid:{0}, adname:{1} result:{2}"
+   IL_0018: ldloc.0      
+   IL_0019: callvirt     0x06017291 method proto_ff.Proto_SCStartWatchAdRsp :: get_ad_id() -> int 0x06017291
+   IL_001E: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0023: ldloc.0      
+   IL_0024: callvirt     0x06017294 method proto_ff.Proto_SCStartWatchAdRsp :: get_uuid() -> ulong 0x06017294
+   IL_0029: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_002E: ldloc.0      
+   IL_002F: callvirt     0x06017297 method proto_ff.Proto_SCStartWatchAdRsp :: get_result() -> int 0x06017297
+   IL_0034: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0039: call         0x0A000236 memberref System.String::Format
+   IL_003E: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_0043: ldloc.0      
+   IL_0044: callvirt     0x06017297 method proto_ff.Proto_SCStartWatchAdRsp :: get_result() -> int 0x06017297
+   IL_0049: brtrue.s     31
+   IL_004B: ldsfld       0x040024D5 field SDKProxy::Instance : BaseSDKAdapter
+   IL_0050: ldloc.0      
+   IL_0051: callvirt     0x06017291 method proto_ff.Proto_SCStartWatchAdRsp :: get_ad_id() -> int 0x06017291
+   IL_0056: ldloc.0      
+   IL_0057: callvirt     0x06017294 method proto_ff.Proto_SCStartWatchAdRsp :: get_uuid() -> ulong 0x06017294
+   IL_005C: stloc.1      
+   IL_005D: ldloca.s     1
+   IL_005F: call         0x0A00057A memberref System.UInt64::ToString
+   IL_0064: callvirt     0x060035FF method BaseSDKAdapter :: PlayADVideo(int, string) -> void 0x060035FF
+   IL_0069: ret          
+   IL_006A: ldarg.0      
+   IL_006B: ldloc.0      
+   IL_006C: callvirt     0x06017291 method proto_ff.Proto_SCStartWatchAdRsp :: get_ad_id() -> int 0x06017291
+   IL_0071: ldc.i4.1     
+   IL_0072: call         0x06001258 method DS_Advertising :: DispatchResult(int, bool) -> void 0x06001258
+   IL_0077: ldloc.0      
+   IL_0078: callvirt     0x06017297 method proto_ff.Proto_SCStartWatchAdRsp :: get_result() -> int 0x06017297
+   IL_007D: ldc.i4.2     
+   IL_007E: bne.un.s     19
+   IL_0080: ldstr        0x7000CD1A string "已使用免广告特权跳过观看"
+   IL_0085: ldloca.s     2
+   IL_0087: FEinitobj    0x01000024 typespec System.IEquatable`1<SoundKey>
+   IL_008D: ldloc.2      
+   IL_008E: call         0x06007D51 method MsgCenter :: SimpleTip(string, UnityEngine.Vector3) -> void 0x06007D51
+   IL_0093: ret          
+
+DS_Advertising :: OnLoginFinish(GEvent) -> void 0x06001254
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0006: callvirt     0x0A000AF4 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::get_Count
+   IL_000B: ldc.i4.0     
+   IL_000C: ble.s        118
+   IL_000E: ldstr        0x7000CD34 string "DS_Advertising OnLoginFinish, resend cached ads count:{0}"
+   IL_0013: ldarg.0      
+   IL_0014: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0019: callvirt     0x0A000AF4 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::get_Count
+   IL_001E: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0023: call         0x0A0005F1 memberref System.String::Format
+   IL_0028: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_002D: ldarg.0      
+   IL_002E: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0033: newobj       0x0A000AF5 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::.ctor
+   IL_0038: ldarg.0      
+   IL_0039: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_003E: callvirt     0x0A000AF6 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::Clear
+   IL_0043: callvirt     0x0A000AF7 memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::GetEnumerator
+   IL_0048: stloc.0      
+   IL_0049: br.s         32
+   IL_004B: ldloca.s     0
+   IL_004D: call         0x0A000AF8 memberref Enumerator<DS_Advertising.AdCacheData>::get_Current
+   IL_0052: stloc.1      
+   IL_0053: ldarg.0      
+   IL_0054: ldloc.1      
+   IL_0055: ldfld        0x0401910C field DS_Advertising.AdCacheData::ret : bool
+   IL_005A: ldloc.1      
+   IL_005B: ldfld        0x0401910D field DS_Advertising.AdCacheData::adid : int
+   IL_0060: ldloc.1      
+   IL_0061: ldfld        0x0401910E field DS_Advertising.AdCacheData::uuid : ulong
+   IL_0066: call         0x06001256 method DS_Advertising :: ReqADVideoResult(bool, int, ulong) -> void 0x06001256
+   IL_006B: ldloca.s     0
+   IL_006D: call         0x0A000AF9 memberref Enumerator<DS_Advertising.AdCacheData>::MoveNext
+   IL_0072: brtrue.s     -41
+   IL_0074: leave.s      14
+   IL_0076: ldloca.s     0
+   IL_0078: FEconstrained. 0x1B000228 methodspec Enumerator<proto_ff.GachaActivitySkillRuneInfo>::MoveNext
+   IL_007E: callvirt     0x0A00001A memberref System.IDisposable::Dispose
+   IL_0083: endfinally   
+   IL_0084: ret          
+
+DS_Advertising :: OnADVideoResult(bool, int, ulong) -> void 0x06001255
+   IL_0000: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0005: brfalse.s    12
+   IL_0007: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_000C: callvirt     0x0600338F method NetBase :: IsConnected() -> bool 0x0600338F
+   IL_0011: brtrue.s     67
+   IL_0013: ldstr        0x7000CDA8 string "DS_Advertising OnADVideoResult Not Connected, Cache it. adid:{0}, uuid:{1}"
+   IL_0018: ldarg.2      
+   IL_0019: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_001E: ldarg.3      
+   IL_001F: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_0024: call         0x0A000332 memberref System.String::Format
+   IL_0029: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_002E: newobj       0x06020B2B method DS_Advertising.AdCacheData :: .ctor() -> void 0x06020B2B
+   IL_0033: stloc.0      
+   IL_0034: ldloc.0      
+   IL_0035: ldarg.1      
+   IL_0036: stfld        0x0401910C field DS_Advertising.AdCacheData::ret : bool
+   IL_003B: ldloc.0      
+   IL_003C: ldarg.2      
+   IL_003D: stfld        0x0401910D field DS_Advertising.AdCacheData::adid : int
+   IL_0042: ldloc.0      
+   IL_0043: ldarg.3      
+   IL_0044: stfld        0x0401910E field DS_Advertising.AdCacheData::uuid : ulong
+   IL_0049: ldarg.0      
+   IL_004A: ldfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_004F: ldloc.0      
+   IL_0050: callvirt     0x0A000AFA memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::Add
+   IL_0055: ret          
+   IL_0056: ldarg.0      
+   IL_0057: ldarg.1      
+   IL_0058: ldarg.2      
+   IL_0059: ldarg.3      
+   IL_005A: call         0x06001256 method DS_Advertising :: ReqADVideoResult(bool, int, ulong) -> void 0x06001256
+   IL_005F: ret          
+
+DS_Advertising :: ReqADVideoResult(bool, int, ulong) -> void 0x06001256
+   IL_0000: newobj       0x060175EA method proto_ff.Proto_CSReq :: .ctor() -> void 0x060175EA
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: newobj       0x060172A3 method proto_ff.Proto_CSFinishWatchAdReq :: .ctor() -> void 0x060172A3
+   IL_000C: callvirt     0x06017D19 method proto_ff.Proto_CSReq :: set_finish_watch_ad_req(proto_ff.Proto_CSFinishWatchAdReq) -> void 0x06017D19
+   IL_0011: ldloc.0      
+   IL_0012: callvirt     0x06017D18 method proto_ff.Proto_CSReq :: get_finish_watch_ad_req() -> proto_ff.Proto_CSFinishWatchAdReq 0x06017D18
+   IL_0017: ldarg.2      
+   IL_0018: callvirt     0x060172A6 method proto_ff.Proto_CSFinishWatchAdReq :: set_ad_id(int) -> void 0x060172A6
+   IL_001D: ldloc.0      
+   IL_001E: callvirt     0x06017D18 method proto_ff.Proto_CSReq :: get_finish_watch_ad_req() -> proto_ff.Proto_CSFinishWatchAdReq 0x06017D18
+   IL_0023: ldarg.3      
+   IL_0024: callvirt     0x060172A9 method proto_ff.Proto_CSFinishWatchAdReq :: set_uuid(ulong) -> void 0x060172A9
+   IL_0029: ldloc.0      
+   IL_002A: callvirt     0x06017D18 method proto_ff.Proto_CSReq :: get_finish_watch_ad_req() -> proto_ff.Proto_CSFinishWatchAdReq 0x06017D18
+   IL_002F: ldarg.1      
+   IL_0030: brtrue.s     3
+   IL_0032: ldc.i4.1     
+   IL_0033: br.s         1
+   IL_0035: ldc.i4.0     
+   IL_0036: callvirt     0x060172AC method proto_ff.Proto_CSFinishWatchAdReq :: set_result(int) -> void 0x060172AC
+   IL_003B: ldstr        0x7000CE3F string "DS_Advertising OnADVideoResult, adid:{0}, uuid:{1}, result:{2}"
+   IL_0040: ldarg.2      
+   IL_0041: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0046: ldarg.3      
+   IL_0047: box          0x010001E5 typespec Enumerator<uint,GameConfigData.AlchemyUnit>
+   IL_004C: ldarg.1      
+   IL_004D: box          0x010001AA typespec System.Collections.Generic.List`1<System.Collections.Generic.KeyValuePair`2<GameConfigData.ItemData,int>>
+   IL_0052: call         0x0A000236 memberref System.String::Format
+   IL_0057: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_005C: call         0x06003475 method NetGame :: instance() -> NetGame 0x06003475
+   IL_0061: ldc.i4       2762
+   IL_0066: ldloc.0      
+   IL_0067: ldnull       
+   IL_0068: callvirt     0x0600339E method NetBase :: SendPackge(uint, object, MessageCallback) -> void 0x0600339E
+   IL_006D: ret          
+
+DS_Advertising :: RspADVideoResult(proto_ff.Proto_CSRsp) -> void 0x06001257
+   IL_0000: ldarg.1      
+   IL_0001: brfalse.s    8
+   IL_0003: ldarg.1      
+   IL_0004: callvirt     0x060186E9 method proto_ff.Proto_CSRsp :: get_finish_watch_ad_rsp() -> proto_ff.Proto_SCFinishWatchAdRsp 0x060186E9
+   IL_0009: brtrue.s     1
+   IL_000B: ret          
+   IL_000C: ldarg.1      
+   IL_000D: callvirt     0x060186E9 method proto_ff.Proto_CSRsp :: get_finish_watch_ad_rsp() -> proto_ff.Proto_SCFinishWatchAdRsp 0x060186E9
+   IL_0012: stloc.0      
+   IL_0013: ldarg.0      
+   IL_0014: ldloc.0      
+   IL_0015: callvirt     0x060172BC method proto_ff.Proto_SCFinishWatchAdRsp :: get_ad_id() -> int 0x060172BC
+   IL_001A: ldloc.0      
+   IL_001B: callvirt     0x060172C2 method proto_ff.Proto_SCFinishWatchAdRsp :: get_result() -> int 0x060172C2
+   IL_0020: ldc.i4.0     
+   IL_0021: FEceq        
+   IL_0023: call         0x06001258 method DS_Advertising :: DispatchResult(int, bool) -> void 0x06001258
+   IL_0028: ret          
+
+DS_Advertising :: DispatchResult(int, bool) -> void 0x06001258
+   IL_0000: ldarg.2      
+   IL_0001: brfalse.s    25
+   IL_0003: ldstr        0x7000CEBD string "Event_WatchADResult"
+   IL_0008: ldc.i4.1     
+   IL_0009: newarr       0x01000019 typespec SingletonClass`1<RoleInfoMange>
+   IL_000E: dup          
+   IL_000F: ldc.i4.0     
+   IL_0010: ldarg.1      
+   IL_0011: box          0x010001A8 typespec System.Collections.Generic.Dictionary`2<string,UnityEngine.RuntimeAnimatorController>
+   IL_0016: stelem.ref   
+   IL_0017: call         0x0600093D method EventManager :: send(string, object[]) -> void 0x0600093D
+   IL_001C: ret          
+
+DS_Advertising :: .ctor() -> void 0x06001259
+   IL_0000: ldarg.0      
+   IL_0001: newobj       0x0A000AFB memberref System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>::.ctor
+   IL_0006: stfld        0x04000C70 field DS_Advertising::loginOnceTips : System.Collections.Generic.Dictionary`2<RedTipManager.TipType,System.Collections.Generic.HashSet`1<int>>
+   IL_000B: ldarg.0      
+   IL_000C: newobj       0x0A000AFC memberref System.Collections.Generic.List`1<DS_Advertising.AdCacheData>::.ctor
+   IL_0011: stfld        0x04000C72 field DS_Advertising::m_cacheAds : System.Collections.Generic.List`1<DS_Advertising.AdCacheData>
+   IL_0016: ldarg.0      
+   IL_0017: call         0x06001756 method DS_Base :: .ctor() -> void 0x06001756
+   IL_001C: ret          

@@ -1,0 +1,332 @@
+
+
+############ TYPE ActionGameLibrary.InteractiveGameObject ############
+
+ActionGameLibrary.InteractiveGameObject :: GetServerCamp() -> proto_ff.enCampType 0x0601E0B2
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601E0BB method ActionGameLibrary.InteractiveGameObject :: get_camp() -> int 0x0601E0BB
+   IL_0006: call         0x06000B90 method CampTool :: ConvertCamp(int) -> proto_ff.enCampType 0x06000B90
+   IL_000B: ret          
+
+ActionGameLibrary.InteractiveGameObject :: SetServerCamp(proto_ff.enCampType) -> void 0x0601E0B3
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.1      
+   IL_0002: call         0x06000B91 method CampTool :: ConvertCamp(proto_ff.enCampType) -> int 0x06000B91
+   IL_0007: call         0x0601E0BC method ActionGameLibrary.InteractiveGameObject :: set_camp(int) -> void 0x0601E0BC
+   IL_000C: ret          
+
+ActionGameLibrary.InteractiveGameObject :: Invincible(float, UnityEngine.Color) -> void 0x0601E0B4
+   IL_0000: newobj       0x0601EA08 method ActionGameLibrary.Buff :: .ctor() -> void 0x0601EA08
+   IL_0005: stloc.0      
+   IL_0006: newobj       0x0601EA40 method ActionGameLibrary.BuffFragment :: .ctor() -> void 0x0601EA40
+   IL_000B: stloc.1      
+   IL_000C: ldloc.1      
+   IL_000D: newobj       0x0601DE78 method ActionGameLibrary.BuffFragmentTigger_Add :: .ctor() -> void 0x0601DE78
+   IL_0012: callvirt     0x0601EA4B method ActionGameLibrary.BuffFragment :: set_buffFragmentTigger(ActionGameLibrary.BuffFragmentTigger) -> void 0x0601EA4B
+   IL_0017: ldloc.1      
+   IL_0018: newobj       0x0601DDE8 method ActionGameLibrary.BuffFragmentEffect_BeGod :: .ctor() -> void 0x0601DDE8
+   IL_001D: callvirt     0x0601EA45 method ActionGameLibrary.BuffFragment :: AddBuffFragmentEffect(ActionGameLibrary.BuffFragmentEffect) -> void 0x0601EA45
+   IL_0022: ldloc.0      
+   IL_0023: ldloc.1      
+   IL_0024: callvirt     0x0601EA10 method ActionGameLibrary.Buff :: AddBuffFragment(ActionGameLibrary.BuffFragment) -> void 0x0601EA10
+   IL_0029: newobj       0x0601EA40 method ActionGameLibrary.BuffFragment :: .ctor() -> void 0x0601EA40
+   IL_002E: stloc.1      
+   IL_002F: ldloc.1      
+   IL_0030: newobj       0x0601DE78 method ActionGameLibrary.BuffFragmentTigger_Add :: .ctor() -> void 0x0601DE78
+   IL_0035: callvirt     0x0601EA4B method ActionGameLibrary.BuffFragment :: set_buffFragmentTigger(ActionGameLibrary.BuffFragmentTigger) -> void 0x0601EA4B
+   IL_003A: ldloc.1      
+   IL_003B: newobj       0x0601DEA0 method ActionGameLibrary.BuffFragmentView_ChangeColor :: .ctor() -> void 0x0601DEA0
+   IL_0040: dup          
+   IL_0041: ldarg.2      
+   IL_0042: stfld        0x04016FD7 field ActionGameLibrary.BuffFragmentView_ChangeColor::color : UnityEngine.Color
+   IL_0047: callvirt     0x0601EA45 method ActionGameLibrary.BuffFragment :: AddBuffFragmentEffect(ActionGameLibrary.BuffFragmentEffect) -> void 0x0601EA45
+   IL_004C: ldloc.0      
+   IL_004D: ldloc.1      
+   IL_004E: callvirt     0x0601EA10 method ActionGameLibrary.Buff :: AddBuffFragment(ActionGameLibrary.BuffFragment) -> void 0x0601EA10
+   IL_0053: newobj       0x0601EA40 method ActionGameLibrary.BuffFragment :: .ctor() -> void 0x0601EA40
+   IL_0058: stloc.1      
+   IL_0059: ldloc.1      
+   IL_005A: newobj       0x0601DE78 method ActionGameLibrary.BuffFragmentTigger_Add :: .ctor() -> void 0x0601DE78
+   IL_005F: callvirt     0x0601EA4B method ActionGameLibrary.BuffFragment :: set_buffFragmentTigger(ActionGameLibrary.BuffFragmentTigger) -> void 0x0601EA4B
+   IL_0064: ldloc.1      
+   IL_0065: newobj       0x0601DEC6 method ActionGameLibrary.BuffFragmentView_Flash :: .ctor() -> void 0x0601DEC6
+   IL_006A: dup          
+   IL_006B: ldc.i4.1     
+   IL_006C: stfld        0x04016FFB field ActionGameLibrary.BuffFragmentView_Flash::itv : int
+   IL_0071: callvirt     0x0601EA45 method ActionGameLibrary.BuffFragment :: AddBuffFragmentEffect(ActionGameLibrary.BuffFragmentEffect) -> void 0x0601EA45
+   IL_0076: ldloc.0      
+   IL_0077: ldloc.1      
+   IL_0078: callvirt     0x0601EA10 method ActionGameLibrary.Buff :: AddBuffFragment(ActionGameLibrary.BuffFragment) -> void 0x0601EA10
+   IL_007D: ldloc.0      
+   IL_007E: ldarg.1      
+   IL_007F: callvirt     0x0601EA18 method ActionGameLibrary.Buff :: set_duration(float) -> void 0x0601EA18
+   IL_0084: ldloc.0      
+   IL_0085: ldc.i4       2147483564
+   IL_008A: stfld        0x04017769 field ActionGameLibrary.Buff::id : uint
+   IL_008F: ldarg.0      
+   IL_0090: ldfld        0x04017108 field ActionGameLibrary.InteractiveGameObject::_buffContext : ActionGameLibrary.BuffContext
+   IL_0095: ldloc.0      
+   IL_0096: ldnull       
+   IL_0097: callvirt     0x0601DDA4 method ActionGameLibrary.BuffContext :: AddBuff(ActionGameLibrary.Buff, ActionGameLibrary.InteractiveGameObject) -> void 0x0601DDA4
+   IL_009C: ret          
+
+ActionGameLibrary.InteractiveGameObject :: .ctor() -> void 0x0601E0B5
+   IL_0000: ldarg.0      
+   IL_0001: ldnull       
+   IL_0002: call         0x0601E0B6 method ActionGameLibrary.InteractiveGameObject :: .ctor(UnityEngine.GameObject) -> void 0x0601E0B6
+   IL_0007: ret          
+
+ActionGameLibrary.InteractiveGameObject :: .ctor(UnityEngine.GameObject) -> void 0x0601E0B6
+   IL_0000: ldarg.0      
+   IL_0001: ldc.i4.1     
+   IL_0002: stfld        0x04017107 field ActionGameLibrary.InteractiveGameObject::bOnLine : bool
+   IL_0007: ldarg.0      
+   IL_0008: ldarg.1      
+   IL_0009: call         0x0601E037 method ActionGameLibrary.ActionGameObject :: .ctor(UnityEngine.GameObject) -> void 0x0601E037
+   IL_000E: ldarg.0      
+   IL_000F: ldarg.0      
+   IL_0010: FEldftn      0x0601E0C7 method ActionGameLibrary.InteractiveGameObject :: Handle_DamageProtectCountdown() -> void 0x0601E0C7
+   IL_0016: newobj       0x0601F3BB method ActionGameLibrary.RevolveDelegate :: .ctor(object, IntPtr) -> void 0x0601F3BB
+   IL_001B: stfld        0x0401710C field ActionGameLibrary.InteractiveGameObject::_revolveDelegate_Handle_DamageProtectCountdown : ActionGameLibrary.RevolveDelegate
+   IL_0020: ret          
+
+ActionGameLibrary.InteractiveGameObject :: Reset() -> void 0x0601E0B7
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601E03A method ActionGameLibrary.ActionGameObject :: Reset() -> void 0x0601E03A
+   IL_0006: ldsfld       0x040180E1 field ActionGameLibrary.StarsEngineManager::globalEngine : ActionGameLibrary.StarsEngine
+   IL_000B: ldarg.0      
+   IL_000C: ldfld        0x0401710C field ActionGameLibrary.InteractiveGameObject::_revolveDelegate_Handle_DamageProtectCountdown : ActionGameLibrary.RevolveDelegate
+   IL_0011: callvirt     0x0601F3D6 method ActionGameLibrary.StarsEngine :: RemoveDriveMethod(ActionGameLibrary.RevolveDelegate) -> void 0x0601F3D6
+   IL_0016: ret          
+
+ActionGameLibrary.InteractiveGameObject :: Dispose() -> void 0x0601E0B8
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040170E3 field ActionGameLibrary.ActionGameObject::_disposed : bool
+   IL_0006: brfalse.s    1
+   IL_0008: ret          
+   IL_0009: ldarg.0      
+   IL_000A: call         0x0601E03B method ActionGameLibrary.ActionGameObject :: Dispose() -> void 0x0601E03B
+   IL_000F: ldarg.0      
+   IL_0010: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0015: brfalse.s    11
+   IL_0017: ldarg.0      
+   IL_0018: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_001D: callvirt     0x0601EF07 method ActionGameLibrary.Hitter :: Dispose() -> void 0x0601EF07
+   IL_0022: ldarg.0      
+   IL_0023: ldfld        0x04017108 field ActionGameLibrary.InteractiveGameObject::_buffContext : ActionGameLibrary.BuffContext
+   IL_0028: brfalse.s    11
+   IL_002A: ldarg.0      
+   IL_002B: ldfld        0x04017108 field ActionGameLibrary.InteractiveGameObject::_buffContext : ActionGameLibrary.BuffContext
+   IL_0030: callvirt     0x0601DD8B method ActionGameLibrary.BuffContext :: Dispose() -> void 0x0601DD8B
+   IL_0035: ldsfld       0x040180E1 field ActionGameLibrary.StarsEngineManager::globalEngine : ActionGameLibrary.StarsEngine
+   IL_003A: ldarg.0      
+   IL_003B: ldfld        0x0401710C field ActionGameLibrary.InteractiveGameObject::_revolveDelegate_Handle_DamageProtectCountdown : ActionGameLibrary.RevolveDelegate
+   IL_0040: callvirt     0x0601F3D6 method ActionGameLibrary.StarsEngine :: RemoveDriveMethod(ActionGameLibrary.RevolveDelegate) -> void 0x0601F3D6
+   IL_0045: ret          
+
+ActionGameLibrary.InteractiveGameObject :: Damage(long, DamageEnumerate.DamageType, bool) -> void 0x0601E0B9
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.3      
+   IL_0002: ldc.i4.0     
+   IL_0003: ldc.i4.0     
+   IL_0004: ldc.i4.0     
+   IL_0005: callvirt     0x0601E0BA method ActionGameLibrary.InteractiveGameObject :: CheckDead(bool, bool, bool, bool) -> bool 0x0601E0BA
+   IL_000A: pop          
+   IL_000B: ret          
+
+ActionGameLibrary.InteractiveGameObject :: CheckDead(bool, bool, bool, bool) -> bool 0x0601E0BA
+   IL_0000: ldc.i4.0     
+   IL_0001: ret          
+
+ActionGameLibrary.InteractiveGameObject :: get_camp() -> int 0x0601E0BB
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0006: brtrue.s     2
+   IL_0008: ldc.i4.0     
+   IL_0009: ret          
+   IL_000A: ldarg.0      
+   IL_000B: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0010: callvirt     0x0601EEFD method ActionGameLibrary.Hitter :: get_camp() -> int 0x0601EEFD
+   IL_0015: ret          
+
+ActionGameLibrary.InteractiveGameObject :: set_camp(int) -> void 0x0601E0BC
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0006: brfalse.s    12
+   IL_0008: ldarg.0      
+   IL_0009: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_000E: ldarg.1      
+   IL_000F: callvirt     0x0601EEFE method ActionGameLibrary.Hitter :: set_camp(int) -> void 0x0601EEFE
+   IL_0014: ret          
+
+ActionGameLibrary.InteractiveGameObject :: get_belong_camp() -> int 0x0601E0BD
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0006: brtrue.s     2
+   IL_0008: ldc.i4.0     
+   IL_0009: ret          
+   IL_000A: ldarg.0      
+   IL_000B: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0010: callvirt     0x0601EEFF method ActionGameLibrary.Hitter :: get_belong_camp() -> int 0x0601EEFF
+   IL_0015: ret          
+
+ActionGameLibrary.InteractiveGameObject :: set_belong_camp(int) -> void 0x0601E0BE
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0006: brfalse.s    12
+   IL_0008: ldarg.0      
+   IL_0009: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_000E: ldarg.1      
+   IL_000F: callvirt     0x0601EF00 method ActionGameLibrary.Hitter :: set_belong_camp(int) -> void 0x0601EF00
+   IL_0014: ret          
+
+ActionGameLibrary.InteractiveGameObject :: get_ZAxis() -> float 0x0601E0BF
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x0401710D field ActionGameLibrary.InteractiveGameObject::<ZAxis>k__BackingField : float
+   IL_0006: ret          
+
+ActionGameLibrary.InteractiveGameObject :: set_ZAxis(float) -> void 0x0601E0C0
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.1      
+   IL_0002: stfld        0x0401710D field ActionGameLibrary.InteractiveGameObject::<ZAxis>k__BackingField : float
+   IL_0007: ret          
+
+ActionGameLibrary.InteractiveGameObject :: get_buffContext() -> ActionGameLibrary.BuffContext 0x0601E0C1
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017108 field ActionGameLibrary.InteractiveGameObject::_buffContext : ActionGameLibrary.BuffContext
+   IL_0006: ret          
+
+ActionGameLibrary.InteractiveGameObject :: get_hitter() -> ActionGameLibrary.Hitter 0x0601E0C2
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017109 field ActionGameLibrary.InteractiveGameObject::_hitter : ActionGameLibrary.Hitter
+   IL_0006: ret          
+
+ActionGameLibrary.InteractiveGameObject :: SetActive(bool, bool) -> void 0x0601E0C3
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.1      
+   IL_0002: ldarg.2      
+   IL_0003: call         0x0601E03E method ActionGameLibrary.ActionGameObject :: SetActive(bool, bool) -> void 0x0601E03E
+   IL_0008: ldarg.0      
+   IL_0009: ldfld        0x04017108 field ActionGameLibrary.InteractiveGameObject::_buffContext : ActionGameLibrary.BuffContext
+   IL_000E: brfalse.s    17
+   IL_0010: ldarg.0      
+   IL_0011: ldfld        0x04017108 field ActionGameLibrary.InteractiveGameObject::_buffContext : ActionGameLibrary.BuffContext
+   IL_0016: ldarg.0      
+   IL_0017: ldfld        0x040170E5 field ActionGameLibrary.ActionGameObject::_active : bool
+   IL_001C: callvirt     0x0601DD92 method ActionGameLibrary.BuffContext :: SetActive(bool) -> void 0x0601DD92
+   IL_0021: ret          
+
+ActionGameLibrary.InteractiveGameObject :: get_interactiveGameObjectData() -> ActionGameLibrary.InteractiveGameObjectData 0x0601E0C4
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040170D8 field ActionGameLibrary.ActionGameObject::_data : ActionGameLibrary.ActionGameObjectData
+   IL_0006: isinst       0x02001EE3 type ActionGameLibrary.InteractiveGameObjectData
+   IL_000B: ret          
+
+ActionGameLibrary.InteractiveGameObject :: DamageProtect(BigInt, bool) -> void 0x0601E0C5
+   IL_0000: ret          
+
+ActionGameLibrary.InteractiveGameObject :: RefreshDamageProtectCountdown() -> void 0x0601E0C6
+   IL_0000: ldarg.0      
+   IL_0001: ldc.i4       150
+   IL_0006: stfld        0x0401710B field ActionGameLibrary.InteractiveGameObject::_GravityProtectFrame : int
+   IL_000B: ldsfld       0x040180E1 field ActionGameLibrary.StarsEngineManager::globalEngine : ActionGameLibrary.StarsEngine
+   IL_0010: ldarg.0      
+   IL_0011: ldfld        0x0401710C field ActionGameLibrary.InteractiveGameObject::_revolveDelegate_Handle_DamageProtectCountdown : ActionGameLibrary.RevolveDelegate
+   IL_0016: ldsfld       0x040180B3 field ActionGameLibrary.RunPriority::DATA : int
+   IL_001B: ldnull       
+   IL_001C: callvirt     0x0601F3D4 method ActionGameLibrary.StarsEngine :: DriveMethod(ActionGameLibrary.RevolveDelegate, int, ActionGameLibrary.IStarsForce) -> void 0x0601F3D4
+   IL_0021: ret          
+
+ActionGameLibrary.InteractiveGameObject :: Handle_DamageProtectCountdown() -> void 0x0601E0C7
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x0401710B field ActionGameLibrary.InteractiveGameObject::_GravityProtectFrame : int
+   IL_0006: ldc.i4.0     
+   IL_0007: bgt.s        22
+   IL_0009: ldsfld       0x040180E1 field ActionGameLibrary.StarsEngineManager::globalEngine : ActionGameLibrary.StarsEngine
+   IL_000E: ldarg.0      
+   IL_000F: ldfld        0x0401710C field ActionGameLibrary.InteractiveGameObject::_revolveDelegate_Handle_DamageProtectCountdown : ActionGameLibrary.RevolveDelegate
+   IL_0014: callvirt     0x0601F3D6 method ActionGameLibrary.StarsEngine :: RemoveDriveMethod(ActionGameLibrary.RevolveDelegate) -> void 0x0601F3D6
+   IL_0019: ldarg.0      
+   IL_001A: call         0x0601E0C9 method ActionGameLibrary.InteractiveGameObject :: ResetProtectRate() -> void 0x0601E0C9
+   IL_001F: ldarg.0      
+   IL_0020: ldarg.0      
+   IL_0021: ldfld        0x0401710B field ActionGameLibrary.InteractiveGameObject::_GravityProtectFrame : int
+   IL_0026: ldc.i4.1     
+   IL_0027: sub          
+   IL_0028: stfld        0x0401710B field ActionGameLibrary.InteractiveGameObject::_GravityProtectFrame : int
+   IL_002D: ldarg.0      
+   IL_002E: call         0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0033: ldfld        0x04017D38 field ActionGameLibrary.ActionGameObjectData::modelData : ActionGameLibrary.ModelData
+   IL_0038: ldfld        0x04017D62 field ActionGameLibrary.ModelData::damageProtectRate : float
+   IL_003D: ldc.r4       3.0
+   IL_0042: blt.un.s     42
+   IL_0044: ldarg.0      
+   IL_0045: call         0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_004A: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_004F: brfalse.s    29
+   IL_0051: ldarg.0      
+   IL_0052: call         0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0057: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_005C: ldc.i4.s     12
+   IL_005E: beq.s        14
+   IL_0060: ldarg.0      
+   IL_0061: ldarg.0      
+   IL_0062: ldfld        0x0401710B field ActionGameLibrary.InteractiveGameObject::_GravityProtectFrame : int
+   IL_0067: ldc.i4.6     
+   IL_0068: sub          
+   IL_0069: stfld        0x0401710B field ActionGameLibrary.InteractiveGameObject::_GravityProtectFrame : int
+   IL_006E: ret          
+
+ActionGameLibrary.InteractiveGameObject :: ChangeProtectRate(float, bool) -> void 0x0601E0C8
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x040170D8 field ActionGameLibrary.ActionGameObject::_data : ActionGameLibrary.ActionGameObjectData
+   IL_0006: ldfld        0x04017D38 field ActionGameLibrary.ActionGameObjectData::modelData : ActionGameLibrary.ModelData
+   IL_000B: ldarg.1      
+   IL_000C: stfld        0x04017D62 field ActionGameLibrary.ModelData::damageProtectRate : float
+   IL_0011: ldarg.0      
+   IL_0012: ldfld        0x040170D8 field ActionGameLibrary.ActionGameObject::_data : ActionGameLibrary.ActionGameObjectData
+   IL_0017: ldfld        0x04017D38 field ActionGameLibrary.ActionGameObjectData::modelData : ActionGameLibrary.ModelData
+   IL_001C: ldfld        0x04017D62 field ActionGameLibrary.ModelData::damageProtectRate : float
+   IL_0021: ldc.r4       3.0
+   IL_0026: blt.un.s     80
+   IL_0028: ldc.r4       0.0
+   IL_002D: stloc.0      
+   IL_002E: ldarg.0      
+   IL_002F: call         0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0034: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_0039: stloc.1      
+   IL_003A: ldloc.1      
+   IL_003B: brfalse.s    7
+   IL_003D: ldloc.1      
+   IL_003E: ldc.i4.s     12
+   IL_0040: beq.s        10
+   IL_0042: br.s         16
+   IL_0044: ldc.r4       2.5
+   IL_0049: stloc.0      
+   IL_004A: br.s         14
+   IL_004C: ldc.r4       2.5
+   IL_0051: stloc.0      
+   IL_0052: br.s         6
+   IL_0054: ldc.r4       1.5
+   IL_0059: stloc.0      
+   IL_005A: ldarg.2      
+   IL_005B: brtrue.s     27
+   IL_005D: ldarg.0      
+   IL_005E: ldloc.0      
+   IL_005F: ldc.r4       0.0
+   IL_0064: ldc.r4       0.0
+   IL_0069: ldc.r4       0.0
+   IL_006E: newobj       0x0A00037B memberref UnityEngine.Color::.ctor
+   IL_0073: call         0x0601E0B4 method ActionGameLibrary.InteractiveGameObject :: Invincible(float, UnityEngine.Color) -> void 0x0601E0B4
+   IL_0078: ret          
+
+ActionGameLibrary.InteractiveGameObject :: ResetProtectRate() -> void 0x0601E0C9
+   IL_0000: ldarg.0      
+   IL_0001: ldc.r8       0.0
+   IL_000A: stfld        0x0401710A field ActionGameLibrary.InteractiveGameObject::_totalDamageForGravityProtect : double
+   IL_000F: ldarg.0      
+   IL_0010: ldfld        0x040170D8 field ActionGameLibrary.ActionGameObject::_data : ActionGameLibrary.ActionGameObjectData
+   IL_0015: ldfld        0x04017D38 field ActionGameLibrary.ActionGameObjectData::modelData : ActionGameLibrary.ModelData
+   IL_001A: ldc.r4       1.0
+   IL_001F: stfld        0x04017D62 field ActionGameLibrary.ModelData::damageProtectRate : float
+   IL_0024: ret          

@@ -1,0 +1,293 @@
+# metadata 方法名关键词命中（每关键词 <=60 行；游戏程序集优先：Launch.dll, Assembly-CSharp-firstpass.dll, HelpAssemble.dll, DestMath.dll, CString.dll, MeshFusionPro.Runtime.dll, spine-unity.dll, DOTween.dll, Unity.Mathematics.dll）
+
+# Damage —— 命中 0 条（游戏程序集 0 条）
+
+# Hurt —— 命中 0 条（游戏程序集 0 条）
+
+# Hp —— 命中 0 条（游戏程序集 0 条）
+
+# Health —— 命中 4 条（游戏程序集 4 条）
+0x022EB714	Assembly-CSharp-firstpass.dll   	UnityEditor.iOS.Xcode1.Custom.ProjectCapabilityManager::AddHealthKit
+0x03E772EC	Launch.dll                      	LaunchHealthNoticeView::FadeHealthAlpha
+0x03E77E88	Launch.dll                      	LoadDll::MarkLaunchHealthNoticeShown
+0x03E78674	Launch.dll                      	LoadDll::get_LaunchHealthNoticeShown
+
+# Invincible —— 命中 0 条（游戏程序集 0 条）
+
+# Immortal —— 命中 0 条（游戏程序集 0 条）
+
+# God —— 命中 0 条（游戏程序集 0 条）
+
+# Notice —— 命中 4 条（游戏程序集 2 条）
+0x03E77E88	Launch.dll                      	LoadDll::MarkLaunchHealthNoticeShown
+0x03E78674	Launch.dll                      	LoadDll::get_LaunchHealthNoticeShown
+0x025D8038	BouncyCastle.Crypto.dll         	Org.BouncyCastle.Asn1.X509.NoticeReference::GetNoticeNumbers
+0x025DF6F4	BouncyCastle.Crypto.dll         	Org.BouncyCastle.Asn1.X509.UserNotice::get_NoticeRef
+
+# Announce —— 命中 0 条（游戏程序集 0 条）
+
+# Bulletin —— 命中 0 条（游戏程序集 0 条）
+
+# Ad —— 命中 0 条（游戏程序集 0 条）
+
+# Reward —— 命中 0 条（游戏程序集 0 条）
+
+# Drop —— 命中 53 条（游戏程序集 0 条）
+0x0437CAC0	Sirenix.OdinInspector.Attributes.dll	Sirenix.OdinInspector.ValueDropdownItem::Sirenix.OdinInspector.IValueDropdownItem.GetText
+0x0437CAC8	Sirenix.OdinInspector.Attributes.dll	Sirenix.OdinInspector.ValueDropdownItem::Sirenix.OdinInspector.IValueDropdownItem.GetValue
+0x049EC594	UnityEngine.AIModule.dll        	UnityEngine.AI.NavMeshBuildSettings::get_ledgeDropHeight
+0x049EC59C	UnityEngine.AIModule.dll        	UnityEngine.AI.NavMeshBuildSettings::set_ledgeDropHeight
+0x04AAC1DC	UnityEngine.CoreModule.dll      	UnityEngine.Playables.FrameRate::get_dropFrame
+0x04B5FBDC	UnityEngine.UI.dll              	UnityEngine.UI.DefaultControls::CreateDropdown
+0x04B622A8	UnityEngine.UI.dll              	UnityEngine.UI.Dropdown::ImmediateDestroyDropdownList
+0x04B64590	UnityEngine.UI.dll              	UnityEngine.UI.Dropdown::CreateDropdownList
+0x04B645FC	UnityEngine.UI.dll              	UnityEngine.UI.Dropdown::DestroyDropdownList
+0x04B647F8	UnityEngine.UI.dll              	UnityEngine.UI.Dropdown::DelayedDestroyDropdownList
+0x04CE2350	UnityEngine.UI.dll              	UnityEngine.EventSystems.EventTrigger::OnDrop
+0x04CE37B8	UnityEngine.UI.dll              	UnityEngine.EventSystems.ExecuteEvents::get_dropHandler
+0x04B86230	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.BaseListView::CreateDragAndDropController
+0x04B86FB0	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.BaseTreeView::CreateDragAndDropController
+0x04B88324	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.BaseVerticalCollectionView::RaiseSetupDragAndDrop
+0x04B883F4	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.BaseVerticalCollectionView::RaiseHandleDragAndDrop
+0x04B88468	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.BaseVerticalCollectionView::RaiseDrop
+0x04B89264	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.BaseVerticalCollectionView::InitializeDragAndDropController
+0x04B99F6C	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.GenericDropdownMenu::get_isSingleSelectionDropdown
+0x04B99F74	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.GenericDropdownMenu::set_isSingleSelectionDropdown
+0x04B9B7A0	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.GenericDropdownMenu::DropDown
+0x04BE38D0	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.StyleSheets.BaseStyleMatcher::DropContext
+0x04C1D4F0	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.BaseReorderableDragAndDropController::SetupDragAndDrop
+0x04C1DE68	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DragAndDropUtility::GetDragAndDrop
+0x04C1E9F8	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DragEventsProcessor::get_dragAndDrop
+0x04C1F614	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DragEventsProcessor::GetDropTarget
+0x04C1FD28	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DragAndDropArgs::get_dragAndDropPosition
+0x04C1FD30	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DragAndDropArgs::set_dragAndDropPosition
+0x04C1FD38	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DragAndDropArgs::get_dragAndDropData
+0x04C1FD40	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DragAndDropArgs::set_dragAndDropData
+0x04C1FF44	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDragger::get_dragAndDropController
+0x04C1FF4C	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDragger::set_dragAndDropController
+0x04C20ED8	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDragger::ApplyDragAndDropUI
+0x04C2176C	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDragger::MakeDragAndDropArgs
+0x04C218C4	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDragger::OnDrop
+0x04C232E8	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDragger::ClearDragAndDropUI
+0x04C23958	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDragger::<ApplyDragAndDropUI>g__GeometryChangedCallback|27_0
+0x04C24F2C	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDraggerAnimated::OnDrop
+0x04C2535C	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewDraggerAnimated::ClearDragAndDropUI
+0x04C253D0	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewReorderableDragAndDropController::HandleDragAndDrop
+0x04C25518	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.ListViewReorderableDragAndDropController::OnDrop
+0x04C25EFC	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.TreeViewReorderableDragAndDropController::SetupDragAndDrop
+0x04C25FAC	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.TreeViewReorderableDragAndDropController::HandleDragAndDrop
+0x04C26094	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.TreeViewReorderableDragAndDropController::OnDrop
+0x04C26E20	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.TreeViewReorderableDragAndDropController::DelayExpandDropItem
+0x04C27044	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.TreeViewReorderableDragAndDropController::ExpandDropItem
+0x04C27E6C	UnityEngine.UIElementsModule.dll	UnityEngine.UIElements.DropdownUtility::CreateDropdown
+0x04CF68E8	UnityEngine.VideoModule.dll     	UnityEngine.Video.VideoPlayer::get_canSetSkipOnDrop
+0x04CF6924	UnityEngine.VideoModule.dll     	UnityEngine.Video.VideoPlayer::get_skipOnDrop
+0x04CF6960	UnityEngine.VideoModule.dll     	UnityEngine.Video.VideoPlayer::set_skipOnDrop
+0x04CF74F8	UnityEngine.VideoModule.dll     	UnityEngine.Video.VideoPlayer::add_frameDropped
+0x04CF7594	UnityEngine.VideoModule.dll     	UnityEngine.Video.VideoPlayer::remove_frameDropped
+0x04CF7C64	UnityEngine.VideoModule.dll     	UnityEngine.Video.VideoPlayer::InvokeFrameDroppedCallback_Internal
+
+# Kill —— 命中 15 条（游戏程序集 14 条）
+0x0274F1C0	DOTween.dll                     	DG.Tweening.DOTween::CompleteAndReturnKilledTot
+0x0274F22C	DOTween.dll                     	DG.Tweening.DOTween::CompleteAndReturnKilledTot
+0x0274F2B0	DOTween.dll                     	DG.Tweening.DOTween::CompleteAndReturnKilledTotExceptFor
+0x0274F524	DOTween.dll                     	DG.Tweening.DOTween::KillAll
+0x0274F5B8	DOTween.dll                     	DG.Tweening.DOTween::KillAll
+0x0274F6C0	DOTween.dll                     	DG.Tweening.DOTween::Kill
+0x02750FEC	DOTween.dll                     	DG.Tweening.TweenExtensions::Kill
+0x02751C84	DOTween.dll                     	DG.Tweening.TweenExtensions::WaitForKill
+0x0275D35C	DOTween.dll                     	DG.Tweening.ShortcutExtensions::DOKill
+0x0275D3C0	DOTween.dll                     	DG.Tweening.ShortcutExtensions::DOKill
+0x0275FB1C	DOTween.dll                     	DG.Tweening.TweenParams::SetAutoKill
+0x0275FF24	DOTween.dll                     	DG.Tweening.TweenParams::OnKill
+0x0276D9B4	DOTween.dll                     	DG.Tweening.Core.DOTweenComponent::WaitForKill
+0x0276FC70	DOTween.dll                     	DG.Tweening.Core.TweenManager::MarkForKilling
+0x04860314	System.dll                      	System.Net.WebRequestStream::KillBuffer
+
+# Monster —— 命中 0 条（游戏程序集 0 条）
+
+# Enemy —— 命中 0 条（游戏程序集 0 条）
+
+# Bullet —— 命中 0 条（游戏程序集 0 条）
+
+# Projectile —— 命中 0 条（游戏程序集 0 条）
+
+# Skill —— 命中 0 条（游戏程序集 0 条）
+
+# Attack —— 命中 0 条（游戏程序集 0 条）
+
+# Hit —— 命中 18 条（游戏程序集 0 条）
+0x023051BC	BehaviorDesigner.Runtime.dll    	BehaviorDesigner.Runtime.Behavior::OnControllerColliderHit
+0x023052BC	BehaviorDesigner.Runtime.dll    	BehaviorDesigner.Runtime.BehaviorManager::BehaviorOnControllerColliderHit
+0x0232A73C	BehaviorDesigner.Runtime.dll    	BehaviorDesigner.Runtime.Tasks.Task::OnControllerColliderHit
+0x04AD5140	UnityEngine.IMGUIModule.dll     	UnityEngine.GUIUtility::HitTest
+0x04AD518C	UnityEngine.IMGUIModule.dll     	UnityEngine.GUIUtility::HitTest
+0x04AD51D4	UnityEngine.IMGUIModule.dll     	UnityEngine.GUIUtility::HitTest
+0x04AF4C2C	UnityEngine.Physics2DModule.dll 	UnityEngine.Physics2D::get_queriesHitTriggers
+0x04AF4C54	UnityEngine.Physics2DModule.dll 	UnityEngine.Physics2D::set_queriesHitTriggers
+0x04B01558	UnityEngine.Physics2DModule.dll 	UnityEngine.Physics2D::get_raycastsHitTriggers
+0x04B01560	UnityEngine.Physics2DModule.dll 	UnityEngine.Physics2D::set_raycastsHitTriggers
+0x04B09864	UnityEngine.PhysicsModule.dll   	UnityEngine.Physics::get_queriesHitTriggers
+0x04B0988C	UnityEngine.PhysicsModule.dll   	UnityEngine.Physics::set_queriesHitTriggers
+0x04B098C8	UnityEngine.PhysicsModule.dll   	UnityEngine.Physics::get_queriesHitBackfaces
+0x04B098F0	UnityEngine.PhysicsModule.dll   	UnityEngine.Physics::set_queriesHitBackfaces
+0x04B6A924	UnityEngine.UI.dll              	UnityEngine.UI.Image::<set_sprite>g__ResetAlphaHitThresholdIfNeeded|11_0
+0x04B6AF08	UnityEngine.UI.dll              	UnityEngine.UI.Image::set_alphaHitTestMinimumThreshold
+0x04B6B048	UnityEngine.UI.dll              	UnityEngine.UI.Image::get_alphaHitTestMinimumThreshold
+0x04B6F65C	UnityEngine.UI.dll              	UnityEngine.UI.Image::<set_sprite>g__SpriteSupportsAlphaHitTest|11_1
+
+# Dead —— 命中 0 条（游戏程序集 0 条）
+
+# Die —— 命中 0 条（游戏程序集 0 条）
+
+# Win —— 命中 13 条（游戏程序集 0 条）
+0x041CD440	Sentry.System.Reflection.Metadata.dll	System.SR::get_WinMDMissingMscorlibRef
+0x041E7504	Sentry.System.Reflection.Metadata.dll	System.Reflection.Metadata.StringHandle::WithWinRTPrefix
+0x041F4F84	Sentry.System.Reflection.Metadata.dll	System.Reflection.Metadata.MetadataReader::NeedsWinRTPrefix
+0x03FC74F4	mscorlib.dll                    	System.Runtime.InteropServices.Marshal::GetHRForLastWin32Error
+0x03FC7C6C	mscorlib.dll                    	System.Runtime.InteropServices.Marshal::GetLastWin32Error
+0x03FCAC60	mscorlib.dll                    	System.Runtime.InteropServices.Marshal::SetLastWin32Error
+0x03FCAC68	mscorlib.dll                    	System.Runtime.InteropServices.Marshal::GetHRForException_WinRT
+0x04055D48	mscorlib.dll                    	System.IO.__Error::WinIOError
+0x04068200	mscorlib.dll                    	System.IO.Enumeration.FileSystemName::TranslateWin32Expression
+0x04068828	mscorlib.dll                    	System.IO.Enumeration.FileSystemName::MatchesWin32Expression
+0x0409293C	mscorlib.dll                    	System.Globalization.CultureData::ReescapeWin32Strings
+0x04092940	mscorlib.dll                    	System.Globalization.CultureData::ReescapeWin32String
+0x041405B8	mscorlib.dll                    	System.Environment::get_IsWinRTSupported
+
+# Battle —— 命中 2 条（游戏程序集 0 条）
+0x049DDCD8	Unity.Postprocessing.Runtime.dll	UnityEngine.Rendering.PostProcessing.PostProcessManager::get_IsInBattle
+0x049DDD20	Unity.Postprocessing.Runtime.dll	UnityEngine.Rendering.PostProcessing.PostProcessManager::set_IsInBattle
+
+# Level —— 命中 152 条（游戏程序集 2 条）
+0x022FAADC	Assembly-CSharp-firstpass.dll   	UnityEditor.iOS.Xcode1.Custom.PBX.PropertyCommentChecker::NextLevel
+0x0444E350	spine-unity.dll                 	Spine.Unity.SkeletonRootMotionBase::GatherTopLevelBones
+0x0257E718	BouncyCastle.Crypto.dll         	Org.BouncyCastle.Bcpg.TrustPacket::GetLevelAndTrustAmount
+0x03EC7F48	Mono.Security.dll               	Mono.Security.Protocol.Ntlm.NtlmSettings::get_DefaultAuthLevel
+0x03EC95EC	Mono.Security.dll               	Mono.Security.Interface.Alert::get_Level
+0x03EC9668	Mono.Security.dll               	Mono.Security.Interface.Alert::inferAlertLevel
+0x042C785C	Sentry.Unity.Android.dll        	Sentry.Unity.Android.BreadcrumbExtensions::ToJavaSentryLevel
+0x042D341C	Sentry.Unity.dll                	Sentry.Unity.MainThreadData::get_GraphicsShaderLevel
+0x042D3424	Sentry.Unity.dll                	Sentry.Unity.MainThreadData::set_GraphicsShaderLevel
+0x042D5044	Sentry.Unity.dll                	Sentry.Unity.ScriptableSentryUnityOptions::get_DiagnosticLevel
+0x042D504C	Sentry.Unity.dll                	Sentry.Unity.ScriptableSentryUnityOptions::set_DiagnosticLevel
+0x042D8B38	Sentry.Unity.dll                	Sentry.Unity.SentryUnityOptions::get_RequestBodyCompressionLevel
+0x042D8B40	Sentry.Unity.dll                	Sentry.Unity.SentryUnityOptions::set_RequestBodyCompressionLevel
+0x042DB21C	Sentry.Unity.dll                	Sentry.Unity.SentrySystemInfoAdapter::get_GraphicsShaderLevel
+0x042E32FC	Sentry.Unity.dll                	Sentry.Unity.Integrations.UnityLogHandlerIntegration::ToBreadcrumbLevel
+0x0417E324	Sentry.dll                      	Sentry.BindableSentryOptions::get_RequestBodyCompressionLevel
+0x0417E32C	Sentry.dll                      	Sentry.BindableSentryOptions::set_RequestBodyCompressionLevel
+0x0417E364	Sentry.dll                      	Sentry.BindableSentryOptions::get_DiagnosticLevel
+0x0417E36C	Sentry.dll                      	Sentry.BindableSentryOptions::set_DiagnosticLevel
+0x0417F1AC	Sentry.dll                      	Sentry.Breadcrumb::get_Level
+0x04190E30	Sentry.dll                      	Sentry.Scope::get_Level
+0x04190E38	Sentry.dll                      	Sentry.Scope::set_Level
+0x042EF5A4	Sentry.dll                      	Sentry.SentryEvent::get_Level
+0x042EF5AC	Sentry.dll                      	Sentry.SentryEvent::set_Level
+0x042F7644	Sentry.dll                      	Sentry.SentryOptions::get_RequestBodyCompressionLevel
+0x042F764C	Sentry.dll                      	Sentry.SentryOptions::set_RequestBodyCompressionLevel
+0x042F7700	Sentry.dll                      	Sentry.SentryOptions::get_DiagnosticLevel
+0x042F7708	Sentry.dll                      	Sentry.SentryOptions::set_DiagnosticLevel
+0x043040F0	Sentry.dll                      	Sentry.SentryTransaction::get_Level
+0x043040F8	Sentry.dll                      	Sentry.SentryTransaction::set_Level
+0x0430CEC0	Sentry.dll                      	Sentry.TransactionTracer::get_Level
+0x0430CEC8	Sentry.dll                      	Sentry.TransactionTracer::set_Level
+0x043118F0	Sentry.dll                      	Sentry.Protocol.Device::get_BatteryLevel
+0x043118F8	Sentry.dll                      	Sentry.Protocol.Device::set_BatteryLevel
+0x04314100	Sentry.dll                      	Sentry.Protocol.Gpu::get_GraphicsShaderLevel
+0x04314108	Sentry.dll                      	Sentry.Protocol.Gpu::set_GraphicsShaderLevel
+0x04341ED0	Sentry.dll                      	Sentry.Internal.NoOpTransaction::get_Level
+0x04341ED8	Sentry.dll                      	Sentry.Internal.NoOpTransaction::set_Level
+0x04589F6C	System.Runtime.Serialization.dll	System.Runtime.Serialization.DataContract::get_TopLevelElementName
+0x04589F8C	System.Runtime.Serialization.dll	System.Runtime.Serialization.DataContract::get_TopLevelElementNamespace
+0x04596788	System.Runtime.Serialization.dll	DataContractCriticalHelper::get_TopLevelElementName
+0x04596790	System.Runtime.Serialization.dll	DataContractCriticalHelper::get_TopLevelElementNamespace
+0x045A89EC	System.Runtime.Serialization.dll	System.Runtime.Serialization.PrimitiveDataContract::get_TopLevelElementNamespace
+0x045A91EC	System.Runtime.Serialization.dll	System.Runtime.Serialization.PrimitiveDataContract::TryReadNullAtTopLevel
+0x045AF18C	System.Runtime.Serialization.dll	System.Runtime.Serialization.XmlDataContract::get_TopLevelElementName
+0x045AF1AC	System.Runtime.Serialization.dll	System.Runtime.Serialization.XmlDataContract::get_TopLevelElementNamespace
+0x045AFA30	System.Runtime.Serialization.dll	XmlDataContractCriticalHelper::get_TopLevelElementName
+0x045AFA38	System.Runtime.Serialization.dll	XmlDataContractCriticalHelper::get_TopLevelElementNamespace
+0x045BE41C	System.Runtime.Serialization.dll	System.Runtime.Serialization.XmlObjectSerializerWriteContext::SerializeWithXsiTypeAtTopLevel
+0x045BF070	System.Runtime.Serialization.dll	System.Runtime.Serialization.XmlObjectSerializerWriteContext::HandleGraphAtTopLevel
+0x045D60D4	System.Runtime.Serialization.dll	System.Runtime.Serialization.Json.JsonDataContract::TryReadNullAtTopLevel
+0x045EB01C	System.Runtime.Serialization.dll	System.Runtime.Serialization.Json.XmlObjectSerializerWriteContextComplexJson::SerializeWithXsiTypeAtTopLevel
+0x045F65DC	System.ServiceModel.Internals.dll	System.Runtime.Fx::UpdateLevel
+0x045F6E64	System.ServiceModel.Internals.dll	System.Runtime.Fx::UpdateLevel
+0x045FB088	System.ServiceModel.Internals.dll	System.Runtime.Diagnostics.DiagnosticTraceBase::FixLevel
+0x045FB0C8	System.ServiceModel.Internals.dll	System.Runtime.Diagnostics.DiagnosticTraceBase::OnSetLevel
+0x045FB0CC	System.ServiceModel.Internals.dll	System.Runtime.Diagnostics.DiagnosticTraceBase::SetLevel
+0x045FB1AC	System.ServiceModel.Internals.dll	System.Runtime.Diagnostics.DiagnosticTraceBase::get_Level
+0x04601590	System.ServiceModel.Internals.dll	System.Runtime.Diagnostics.EventDescriptor::get_Level
+0x0462B5F4	System.Xml.dll                  	System.Xml.XmlTextReaderImpl::ParseRootLevelWhitespace
+
+# Stage —— 命中 4 条（游戏程序集 0 条）
+0x0481ED28	System.dll                      	System.Net.FtpWebRequest::FinishRequestStage
+0x04A98900	UnityEngine.CoreModule.dll      	UnityEngine.Rendering.GraphicsFence::TranslateSynchronizationStageToFlags
+0x03F0F59C	mscorlib.dll                    	System.Threading.Tasks.Task::FinishStageTwo
+0x03F0FDAC	mscorlib.dll                    	System.Threading.Tasks.Task::FinishStageThree
+
+# Wave —— 命中 0 条（游戏程序集 0 条）
+
+# TOP（游戏程序集优先，去重）
+0x03E77E88	Launch.dll                      	Notice        	LoadDll::MarkLaunchHealthNoticeShown
+0x03E78674	Launch.dll                      	Notice        	LoadDll::get_LaunchHealthNoticeShown
+0x022EB714	Assembly-CSharp-firstpass.dll   	Health        	UnityEditor.iOS.Xcode1.Custom.ProjectCapabilityManager::AddHealthKit
+0x03E772EC	Launch.dll                      	Health        	LaunchHealthNoticeView::FadeHealthAlpha
+0x0274F1C0	DOTween.dll                     	Kill          	DG.Tweening.DOTween::CompleteAndReturnKilledTot
+0x0274F2B0	DOTween.dll                     	Kill          	DG.Tweening.DOTween::CompleteAndReturnKilledTotExceptFor
+0x0274F524	DOTween.dll                     	Kill          	DG.Tweening.DOTween::KillAll
+0x0274F6C0	DOTween.dll                     	Kill          	DG.Tweening.DOTween::Kill
+0x02750FEC	DOTween.dll                     	Kill          	DG.Tweening.TweenExtensions::Kill
+0x02751C84	DOTween.dll                     	Kill          	DG.Tweening.TweenExtensions::WaitForKill
+0x0275D35C	DOTween.dll                     	Kill          	DG.Tweening.ShortcutExtensions::DOKill
+0x0275FB1C	DOTween.dll                     	Kill          	DG.Tweening.TweenParams::SetAutoKill
+0x0275FF24	DOTween.dll                     	Kill          	DG.Tweening.TweenParams::OnKill
+0x0276D9B4	DOTween.dll                     	Kill          	DG.Tweening.Core.DOTweenComponent::WaitForKill
+0x0276FC70	DOTween.dll                     	Kill          	DG.Tweening.Core.TweenManager::MarkForKilling
+0x025D8038	BouncyCastle.Crypto.dll         	Notice        	Org.BouncyCastle.Asn1.X509.NoticeReference::GetNoticeNumbers
+0x025DF6F4	BouncyCastle.Crypto.dll         	Notice        	Org.BouncyCastle.Asn1.X509.UserNotice::get_NoticeRef
+0x0437CAC0	Sirenix.OdinInspector.Attributes.dll	Drop          	Sirenix.OdinInspector.ValueDropdownItem::Sirenix.OdinInspector.IValueDropdownItem.GetText
+0x0437CAC8	Sirenix.OdinInspector.Attributes.dll	Drop          	Sirenix.OdinInspector.ValueDropdownItem::Sirenix.OdinInspector.IValueDropdownItem.GetValue
+0x049EC594	UnityEngine.AIModule.dll        	Drop          	UnityEngine.AI.NavMeshBuildSettings::get_ledgeDropHeight
+0x049EC59C	UnityEngine.AIModule.dll        	Drop          	UnityEngine.AI.NavMeshBuildSettings::set_ledgeDropHeight
+0x04AAC1DC	UnityEngine.CoreModule.dll      	Drop          	UnityEngine.Playables.FrameRate::get_dropFrame
+0x04B5FBDC	UnityEngine.UI.dll              	Drop          	UnityEngine.UI.DefaultControls::CreateDropdown
+0x04B622A8	UnityEngine.UI.dll              	Drop          	UnityEngine.UI.Dropdown::ImmediateDestroyDropdownList
+0x04B64590	UnityEngine.UI.dll              	Drop          	UnityEngine.UI.Dropdown::CreateDropdownList
+0x04B645FC	UnityEngine.UI.dll              	Drop          	UnityEngine.UI.Dropdown::DestroyDropdownList
+0x04B647F8	UnityEngine.UI.dll              	Drop          	UnityEngine.UI.Dropdown::DelayedDestroyDropdownList
+0x04CE2350	UnityEngine.UI.dll              	Drop          	UnityEngine.EventSystems.EventTrigger::OnDrop
+0x04CE37B8	UnityEngine.UI.dll              	Drop          	UnityEngine.EventSystems.ExecuteEvents::get_dropHandler
+0x04B86230	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.BaseListView::CreateDragAndDropController
+0x04B86FB0	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.BaseTreeView::CreateDragAndDropController
+0x04B88324	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.BaseVerticalCollectionView::RaiseSetupDragAndDrop
+0x04B883F4	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.BaseVerticalCollectionView::RaiseHandleDragAndDrop
+0x04B88468	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.BaseVerticalCollectionView::RaiseDrop
+0x04B89264	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.BaseVerticalCollectionView::InitializeDragAndDropController
+0x04B99F6C	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.GenericDropdownMenu::get_isSingleSelectionDropdown
+0x04B99F74	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.GenericDropdownMenu::set_isSingleSelectionDropdown
+0x04B9B7A0	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.GenericDropdownMenu::DropDown
+0x04BE38D0	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.StyleSheets.BaseStyleMatcher::DropContext
+0x04C1D4F0	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.BaseReorderableDragAndDropController::SetupDragAndDrop
+0x04C1DE68	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.DragAndDropUtility::GetDragAndDrop
+0x04C1E9F8	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.DragEventsProcessor::get_dragAndDrop
+0x04C1F614	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.DragEventsProcessor::GetDropTarget
+0x04C1FD28	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.DragAndDropArgs::get_dragAndDropPosition
+0x04C1FD30	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.DragAndDropArgs::set_dragAndDropPosition
+0x04C1FD38	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.DragAndDropArgs::get_dragAndDropData
+0x04C1FD40	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.DragAndDropArgs::set_dragAndDropData
+0x04C1FF44	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDragger::get_dragAndDropController
+0x04C1FF4C	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDragger::set_dragAndDropController
+0x04C20ED8	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDragger::ApplyDragAndDropUI
+0x04C2176C	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDragger::MakeDragAndDropArgs
+0x04C218C4	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDragger::OnDrop
+0x04C232E8	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDragger::ClearDragAndDropUI
+0x04C23958	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDragger::<ApplyDragAndDropUI>g__GeometryChangedCallback|27_0
+0x04C24F2C	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDraggerAnimated::OnDrop
+0x04C2535C	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewDraggerAnimated::ClearDragAndDropUI
+0x04C253D0	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewReorderableDragAndDropController::HandleDragAndDrop
+0x04C25518	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.ListViewReorderableDragAndDropController::OnDrop
+0x04C25EFC	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.TreeViewReorderableDragAndDropController::SetupDragAndDrop
+0x04C25FAC	UnityEngine.UIElementsModule.dll	Drop          	UnityEngine.UIElements.TreeViewReorderableDragAndDropController::HandleDragAndDrop
+

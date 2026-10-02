@@ -1,0 +1,630 @@
+APK entries: 5638, total 1006389080 bytes
+META-INF/CERT.SF                                                       size=736587     libSDKloading=1
+META-INF/MANIFEST.MF                                                   size=736511     libSDKloading=1
+assets/bin/Data/2f8801354fcacba489845f681ad806af                       size=7604       Character=1
+assets/bin/Data/80d761923fa0bc8428c87cb377242b80                       size=816        Character=1
+assets/bin/Data/Managed/Metadata/global-metadata.dat                   size=13324172   Character=301
+assets/bin/Data/Managed/Resources/Sentry.System.Memory.dll-resources.dat size=1811       Character=1
+assets/bin/Data/Managed/Resources/Sentry.System.Reflection.Metadata.dll-resources.dat size=12602      Character=2
+assets/bin/Data/Managed/Resources/Sentry.System.Text.Json.dll-resources.dat size=26393      Character=5
+assets/bin/Data/globalgamemanagers                                     size=325468     Character=3
+assets/bin/Data/globalgamemanagers.assets.split0                       size=1048576    AddProjectile=6, Character=210, Damage=64, MW_GameNotice=2, StarsCollider=2
+assets/dataroot/074c2db1a6d28e79c373ed8779b8fadc.unity3d               size=14880      Character=1
+assets/dataroot/0be6b5ddae259b346a69c974920f3052.unity3d               size=24855      Character=1
+assets/dataroot/137c717c3075d0ee7dbf9b4c30cca2e5.unity3d               size=62263      Character=1
+assets/dataroot/1452906ebc9e4ff6b17e54d19f001207.unity3d               size=7303       Character=1
+assets/dataroot/151979caedd587336407eab98f353075.unity3d               size=44212      Character=1
+assets/dataroot/248e8366b3c932b8bddaa05b5a8c19f2.unity3d               size=228709     Character=1
+assets/dataroot/2be3f37a6639bb4636561db91d5859f5.unity3d               size=23526      Damage=1
+assets/dataroot/2f1a543a7d2a25af8fcfc7a6ea7a5616.unity3d               size=115406     Character=3
+assets/dataroot/3210afaf484e56375cc13c27e72d4daa.unity3d               size=20659      Character=1
+assets/dataroot/324e90d2e4db7d45bb8c86d0cd1b989e.unity3d               size=28047      Character=1
+assets/dataroot/364dfd5215b58132c8e13db045310130.unity3d               size=15029      Damage=1
+assets/dataroot/3b58e0179903acb168fd8f26e2f794a6.unity3d               size=101602     Character=2
+assets/dataroot/44244ea29b17887e963b29a87ece9b9f.unity3d               size=12874      Character=1
+assets/dataroot/461c6bc76c42e1a35f40d6b288b8ff09.unity3d               size=28778      Damage=1
+assets/dataroot/48989b3cf008aa8ee578e4e54255076f.unity3d               size=96336      Character=1
+assets/dataroot/49efc4d2487a8db33f3bcffca8a86a74.unity3d               size=17090      CN:无敌=1
+assets/dataroot/4dfde120da2ab488360c8f3889d0153e.unity3d               size=46131      Character=1
+assets/dataroot/5e89f68b85fce9843b022ab35cd695f4.unity3d               size=927839     AddProjectile=10, CN:无敌=1, CN:秒杀=5, Character=6
+assets/dataroot/6122d4871b058711ad5fe583b09d4919.unity3d               size=194563     Damage=3
+assets/dataroot/65585e0cae66b29f6dc4318f16707c68.unity3d               size=103965     Character=2
+assets/dataroot/6580769f1ce1da3fc6d6caaf4e01a061.unity3d               size=5602       Character=1
+assets/dataroot/705c4015cd7cf474b7a138401fbda2c1.unity3d               size=11931      Character=1
+assets/dataroot/7203225c4ef62e28c885bc2da56059f2.unity3d               size=110102     Character=1
+assets/dataroot/75b603cefb6e5a7d7cdd54193c46ad12.unity3d               size=167506     Character=1
+assets/dataroot/76e21e1eeb2cff98a74206f731e7a85e.unity3d               size=40208      Character=1
+assets/dataroot/79cf252bb79f08997eafc650cdb7ebea.unity3d               size=225252     Character=1
+assets/dataroot/7a8acdf9b8b7746f7cd98972c000fc13.unity3d               size=100682     Character=1
+assets/dataroot/854550939e290cfc1c1659a98af8f796.unity3d               size=17323      Character=1
+assets/dataroot/891f90480e9256401c9345ed358bba20.unity3d               size=6891       Damage=1
+assets/dataroot/896d46d5c963ce9020161a377fbeae9a.unity3d               size=2833928    CN:无敌=1
+assets/dataroot/8a91a343aec7b1ada37f8f72e3cc132c.unity3d               size=396388     Character=2
+assets/dataroot/8f9b2b44a04e09d4e9640e734d913a23.unity3d               size=12310      Damage=1
+assets/dataroot/9172c1837f231d3ce82df8611f3c9c13.unity3d               size=24158      Damage=1
+assets/dataroot/93e7f0bfc3d8f4e8865d63938fa07581.unity3d               size=85429      Character=1, Damage=2
+assets/dataroot/95d30e2bdf8fbf25564bd77272c8c242.unity3d               size=9133368    Character=11, Damage=10
+assets/dataroot/98d39799d216526fb6177f08a0cf63c0.unity3d               size=5968       Character=1
+assets/dataroot/9c336cce749f4dbf7ce08a554fe3ae6b.unity3d               size=25149      Character=1
+assets/dataroot/9e48ecb80dd232c68c7db392b237e3ac.unity3d               size=18466      Damage=1
+assets/dataroot/a973f18b484944f962b1127129ca71c0.unity3d               size=401233     Character=4, Damage=3
+assets/dataroot/adventruetower_buffa_59c729b2c96285dd779dac17b29d3481.bytes size=4298       AddProjectile=19, Character=4
+assets/dataroot/adventruetower_buffb_896a18448a5761156b48c2b1d38a1815.bytes size=723        Character=1
+assets/dataroot/b0d606b8c64ce1b0a14382184c711a4e.unity3d               size=134086     Character=1, Damage=1
+assets/dataroot/b4c049756ccb18b575831c1b49a4127a.unity3d               size=23777      Character=1
+assets/dataroot/bdb0873a7a3cacbdc33000a1457274af.unity3d               size=17536      Character=1
+assets/dataroot/blackguy_1_c148d564d46d28f8b5cde5c0194ad0ce.bytes      size=3199       Character=3
+assets/dataroot/d074a809eca7de47725ddfbcdf17dfa2.unity3d               size=34823      Damage=2
+assets/dataroot/dbc6085a59f1629baebfa5abfe6ac38b.unity3d               size=5568       Damage=1
+assets/dataroot/ddf54ad500ef15c42afeeba4bcd5cd83.unity3d               size=40588      Character=2
+assets/dataroot/de05242b97a35ca8623b55113ba19da8.unity3d               size=43193      Character=1
+assets/dataroot/e2c69dc6a2fe05a3e4277b4b75b229e2.unity3d               size=16211      Damage=1
+assets/dataroot/e4d9753fb6225c0f5448529ec0c823b9.unity3d               size=28580      Character=1
+assets/dataroot/e4e3109871085919a3974d4ad001e8e7.unity3d               size=27363      Character=1
+assets/dataroot/eb684fbd4a8b1a0abae5758c6cc6695d.unity3d               size=396515     Character=3
+assets/dataroot/ed9e4270a1c5b4852e23ad2c732ad572.unity3d               size=376490     Character=1
+assets/dataroot/eee504dc8b7bf8eb8848ba0d7431f4c0.unity3d               size=65215      Character=1
+assets/dataroot/f400d811ebddbac8edbe3b1e84d857f9.unity3d               size=25486      Character=1
+assets/dataroot/fca7f2f27a078d95c203b23a92048c7b.unity3d               size=24926      Damage=1
+assets/dataroot/feiying_0c3e352b7d7959b8092a7adecf729d7c.bytes         size=47743      AddProjectile=9, Character=7
+assets/dataroot/h_demonf_6ced6a31b5684a7dac0ecc0af32ce9f1.bytes        size=458567     AddProjectile=272, Character=21, Damage=1
+assets/dataroot/h_demonf_guide_ec9875c86d023e5147865f140066c363.bytes  size=3275       AddProjectile=1, Character=1
+assets/dataroot/h_demonm_d51abc6a7e7ad379c4e5a8b577ffe846.bytes        size=174332     AddProjectile=135, Character=33
+assets/dataroot/h_humanf_233b7d40022b1df907bff5c690b641a9.bytes        size=382355     AddProjectile=115, Character=22
+assets/dataroot/h_humanm_10654b1da8cf7927717b5f32e5e019a5.bytes        size=321377     AddProjectile=186, Character=18
+assets/dataroot/h_spiritf_43d3073de77c227a5625b63887ece3ea.bytes       size=249404     AddProjectile=180, Character=22
+assets/dataroot/h_spiritm_aedce999548f35f40e25ea32a18fc662.bytes       size=226495     AddProjectile=33, Character=3
+assets/dataroot/hpm_1031_zayulieren3_3_80fcfe408b724990291ddc19e4cd9632.bytes size=23476      AddProjectile=4, Character=14
+assets/dataroot/hpm_1124_guanjia_3_0685bde375612b12034dbe95422e5937.bytes size=6082       AddProjectile=5
+assets/dataroot/hpm_1134_nvdoushi1_3_1_74f60d544312ccb726cfdb4544f85b9d.bytes size=21112      AddProjectile=1, Character=11
+assets/dataroot/hpm_1134_nvdoushi1_3_607a236a0ac23b17895fcadb0cddc5cb.bytes size=20601      AddProjectile=1, Character=11
+assets/dataroot/hpm_1164_underling70lily_1_de5889f5f773060732b815e2c1bfbdd7.bytes size=17376      AddProjectile=23, Character=5
+assets/dataroot/hpm_1192_acicentkeeper_2_11d804258671c25adb2120a321b6b43d.bytes size=14405      Character=2
+assets/dataroot/hpm_1194_acientshielder_2_4f1c6a046c8b1752d786d0658870f2c6.bytes size=13065      Character=4
+assets/dataroot/hpm_1195_acientsaber_2_b324aefb3708d4151b95f53b62271785.bytes size=10292      AddProjectile=9, Character=4
+assets/dataroot/hpm_1244_marionettequeen_2_26a67aa50f14416f15c69c165142c636.bytes size=40551      AddProjectile=10
+assets/dataroot/hpm_1246_dollrabbit_1_08a7d5dc9f75f255adfc1aff829105bc.bytes size=5124       Character=4
+assets/dataroot/hpm_1246_dollrabbit_white_61fc41f7a88541bdbef3dcd2eec62961.bytes size=32359      AddProjectile=32, Character=21
+assets/dataroot/hpm_1252_guardball_1_8d38d1ee6a6ce0b2eb834a9066b4bbb5.bytes size=14290      AddProjectile=18
+assets/dataroot/hpm_1252_guardball_4_c441d20b7bb8883cd9bad314363fd8be.bytes size=8269       AddProjectile=1
+assets/dataroot/hpm_1256_crystal_3_9a1f4f0255128c2d03fec1f4f173f267.bytes size=15429      AddProjectile=20, Character=1
+assets/dataroot/hpm_2029_baokuer_3_e5fc058e02d44b3302b420886f65eb21.bytes size=7544       AddProjectile=4
+assets/dataroot/hpm_humanm_an_a0f11f12f58130427053ecfe310f64c5.bytes   size=36801      AddProjectile=5, Character=5
+assets/dataroot/hpm_spirit_an_cbc9536ea00a56fc51a19bd44e59c618.bytes   size=132836     AddProjectile=241
+assets/dataroot/konghezi_10000_jump01_c116ff4959c9a169d4d6fe0a9321dac8.bytes size=5634       AddProjectile=2
+assets/dataroot/konghezi_10032_lunch_14d6d111ae443a8b96d7493abca3086c.bytes size=7488       AddProjectile=1
+assets/dataroot/konghezi_10064_jialouluo_1_6ab9250f09aec3b33c62156a2affcaa9.bytes size=2799       AddProjectile=1
+assets/dataroot/konghezi_10064_jialouluo_2_4527dc37e71dac6b2934668e069e7d32.bytes size=2754       AddProjectile=1
+assets/dataroot/konghezi_10064_jialouluo_3_2b6f810c219303892752c5afd665ac0a.bytes size=2754       AddProjectile=1
+assets/dataroot/konghezi_10064_jialouluo_4_c0741b8caf10c6a0040a6b11de6a54f4.bytes size=2754       AddProjectile=1
+assets/dataroot/konghezi_10066_cavalry_82ae1e9206bda172c40149bb50ec7512.bytes size=2260       AddProjectile=9, Character=3
+assets/dataroot/konghezi_10066_cavalry_minigame_2bf6f3ae3a5b08ab5b5ff4c20b82c4a3.bytes size=2038       Character=6
+assets/dataroot/konghezi_10067_jonesleft_a5a48e28091741452bca161075bc9500.bytes size=1619       Character=1
+assets/dataroot/konghezi_10067_jonesmiddle_2eec4f87c273ba0f751e49443a8e8ebb.bytes size=760        Character=1
+assets/dataroot/konghezi_10067_jonesright_a5a48e28091741452bca161075bc9500.bytes size=1619       Character=1
+assets/dataroot/konghezi_10072_seaswordmiddle_c6b144b06f0c4a1f38d7677b82d585f9.bytes size=994        Character=1
+assets/dataroot/konghezi_10073_darkseaboss_1_669f7e0646147132b06f2452e30d9296.bytes size=6273       AddProjectile=11, Character=10
+assets/dataroot/konghezi_10073_darkseaboss_2_40428e5c1a4f1742b9264ceec15c02f5.bytes size=5092       AddProjectile=8, Character=12
+assets/dataroot/konghezi_10073_darkseaboss_3_a6b8f87c10237a07119ffa8ce9c56fc4.bytes size=3762       AddProjectile=6, Character=6
+assets/dataroot/konghezi_10073_darkseaboss_4_d9d938cb2bf23682b773b7ec4d8fd414.bytes size=3572       AddProjectile=4, Character=8
+assets/dataroot/konghezi_10073_darkseaboss_startowerleft_153680c1a7b845fe39bda8325d0df227.bytes size=4093       Character=1
+assets/dataroot/konghezi_10073_darkseaboss_startowermid_b2e47c8a7335c6b86452d67c88e8bdd4.bytes size=3007       AddProjectile=2, Character=3
+assets/dataroot/konghezi_10073_darkseaboss_startowerright_2c1942f280034de9d6d0ca4e20e83e2d.bytes size=4134       Character=1
+assets/dataroot/konghezi_10074_holylight_b84df3f4868c55e42353fe5372578c6b.bytes size=9624       AddProjectile=9, Character=10
+assets/dataroot/konghezi_10074_incantation_07f101d6153f95fbc1270bd533592783.bytes size=1077       Character=3
+assets/dataroot/konghezi_10074_summon_83373bb3cd9659fb40cf22bb6973b386.bytes size=21130      Character=22
+assets/dataroot/konghezi_10075_redseaboss_1_doorto4_3bf4a6d3367b99460cdf91683c6c9962.bytes size=2302       AddProjectile=2
+assets/dataroot/konghezi_10075_redseaboss_1_doorto5_c7f9abdd9e7ffae06ff9747f0abb7813.bytes size=1986       AddProjectile=1
+assets/dataroot/konghezi_10075_redseaboss_1_location_aa7ca7a5564da4826b04c5e0b6ee3ace.bytes size=2521       Character=1
+assets/dataroot/konghezi_10076_deadseaboss_1_a2377b2ff7052bf2ff121cf6e3a56807.bytes size=772        Character=1
+assets/dataroot/konghezi_10076_deadseaboss_2_d57ed40c99c3eaf1dcb36a447e28d304.bytes size=19009      AddProjectile=4, Character=1
+assets/dataroot/konghezi_10076_deadseaboss_scenefire_206f7797ce4212a7e27bb90ab6fdbfaa.bytes size=18659      Character=1
+assets/dataroot/konghezi_10077_hades_center_f02eb768fb29ddcd19fbd7f7da783970.bytes size=6457       AddProjectile=5
+assets/dataroot/konghezi_10082_stargoddess_1_0348d96f0da214cece6625422a013b2f.bytes size=3743       Character=14
+assets/dataroot/konghezi_10082_stargoddess_2_66f172d028098e8de405f45512102424.bytes size=3743       Character=14
+assets/dataroot/konghezi_10082_stargoddess_82367d248f66cc4189e56fddf7b06bb9.bytes size=4150       AddProjectile=2, Character=11
+assets/dataroot/konghezi_10082_zhongyang_025a70d0330c2b0dea2b246e5ec0747b.bytes size=18300      AddProjectile=8, Character=12
+assets/dataroot/konghezi_1091_scenethunder_77aa61899fdc27221c468df09855cccb.bytes size=2966       AddProjectile=10, Character=3
+assets/dataroot/konghezi_1091_thunderball_2413d141d01ca03ca9c2a46e3e54d542.bytes size=1296       Character=3
+assets/dataroot/konghezi_1091_thunderspear_0ca0f8aebd9a8a9c3640162a3b1451cb.bytes size=1815       AddProjectile=1, Character=4
+assets/dataroot/konghezi_1205_c385a9817583196755cda6cae2f35699.bytes   size=4548       AddProjectile=21, Character=1
+assets/dataroot/konghezi_1213_location2_c200afd4a045f192fc7eecebdc15cff4.bytes size=5009       AddProjectile=2
+assets/dataroot/konghezi_1213_location_0a66c0202af28885439b9011b22ed469.bytes size=4999       AddProjectile=2
+assets/dataroot/konghezi_1244_left_01_ec3312f53f18330c9d9f855344d2207b.bytes size=738        Character=1
+assets/dataroot/konghezi_1244_left_02_1c5c7e517ec60bb69eeb83067768f291.bytes size=731        Character=1
+assets/dataroot/konghezi_1244_left_03_1c5c7e517ec60bb69eeb83067768f291.bytes size=731        Character=1
+assets/dataroot/konghezi_1244_right_01_1c5c7e517ec60bb69eeb83067768f291.bytes size=731        Character=1
+assets/dataroot/konghezi_1244_right_02_1c5c7e517ec60bb69eeb83067768f291.bytes size=731        Character=1
+assets/dataroot/konghezi_1244_right_03_1c5c7e517ec60bb69eeb83067768f291.bytes size=731        Character=1
+assets/dataroot/konghezi_2004_n4_1a9e298f9b74862d71573bc67cf2aebf.bytes size=1197       AddProjectile=2
+assets/dataroot/konghezi_6014_348b297e1c207f36bc2e40824257fdd5.bytes   size=2952       Character=1
+assets/dataroot/konghezi_6024_b1f6925356ec9f21797fc4ac60ed80f9.bytes   size=2361       AddProjectile=1, Character=3
+assets/dataroot/konghezi_6024_tower_3e21c3cd4109b5976cecd8ee5a265f20.bytes size=4357       AddProjectile=3
+assets/dataroot/konghezi_6024ass_down_b6047a360f97bd71d689210b2c03c3df.bytes size=2385       AddProjectile=1
+assets/dataroot/konghezi_6024ass_up_8a4ca9c53e385e12a18056421fb053df.bytes size=2415       AddProjectile=1
+assets/dataroot/konghezi_6058bronpos_1a72badfcd37ea7078461fd9b341b9dd.bytes size=4922       AddProjectile=1
+assets/dataroot/konghezi_6058musictr_a57bfa5e3a19cb2ead3a6697db034329.bytes size=12590      AddProjectile=3
+assets/dataroot/konghezi_6058s1center_b273f38b39bfd88d7ab6672f003305c4.bytes size=12355      Character=5
+assets/dataroot/konghezi_adventuretowerscene_68e27efad260ac24a49222735ecbd539.bytes size=2902       AddProjectile=16
+assets/dataroot/konghezi_anspirit_ice_3470559b3d7153f8ff8274e44ad57498.bytes size=2664       Character=1
+assets/dataroot/konghezi_cirrus_27b73d054e0882c064a42faea733c48d.bytes size=5864       AddProjectile=1
+assets/dataroot/konghezi_dead_35d4f6146b473cab18cbfe31562d6ee4.bytes   size=767        Character=1
+assets/dataroot/konghezi_e48ce1628d9962191b382d722b2910d0.bytes        size=31405      AddProjectile=44
+assets/dataroot/konghezi_emperorself_661a23c028f461b09e213f24f765b6dc.bytes size=1367       AddProjectile=1, Character=3
+assets/dataroot/konghezi_femaledevil_centerup_1_900922a721d8e9cc37906dd7e30997d7.bytes size=4072       CN:秒杀=1
+assets/dataroot/konghezi_fishcharge_bbb0784151c7410fa75972942530632d.bytes size=4266       AddProjectile=25
+assets/dataroot/konghezi_gonghui_5f858fc8db3b1949113853f1092e2eb5.bytes size=1150       AddProjectile=1
+assets/dataroot/konghezi_gonghuiraid_c68b1598718876349bc27cacde2ceb9f.bytes size=10580      AddProjectile=15, Character=4
+assets/dataroot/konghezi_guardball_02_c00db757e94cc6f73af3118c76cfca48.bytes size=2591       AddProjectile=2
+assets/dataroot/konghezi_guardball_03_ba1ca52216c2b597595c4b94a8bf780b.bytes size=1321       AddProjectile=1
+assets/dataroot/konghezi_harpie_1_5e5e564e6d743aba7a8ccc6e823b6a79.bytes size=943        Character=1
+assets/dataroot/konghezi_honey_5769f7b49dc7f9c1107477dc7011d995.bytes  size=6750       Character=1
+assets/dataroot/konghezi_humanman_d806672cdabc0879cd48f6afe0aba257.bytes size=2393       Character=1
+assets/dataroot/konghezi_icebird_e158e9011b705bc876e0b68080c9b72b.bytes size=3634       Character=1
+assets/dataroot/konghezi_icewall_105f376f6b3523a97e6f62e784a15107.bytes size=1195       Character=1
+assets/dataroot/konghezi_jishui_1d78df7ed6e0499e7a9825db8d61511e.bytes size=1185       AddProjectile=3
+assets/dataroot/konghezi_konghai_qizi_0aa60bec692e871ac728c0db9c01848e.bytes size=1134       CN:秒杀=1
+assets/dataroot/konghezi_liexi_01_6942c28b5ac2170d54ea8f4816b280f4.bytes size=6932       AddProjectile=16
+assets/dataroot/konghezi_m_1111_kastro_3_locate_e71848930f0b1a874da9802cdccc675d.bytes size=1659       Character=1
+assets/dataroot/konghezi_m_8003_shootsun_locate_b370306259e529bf36203653e6131bbf.bytes size=723        Character=1
+assets/dataroot/konghezi_m_emperor_d7187bc522a47a9a4f3926b9c9384dfa.bytes size=9121       AddProjectile=17
+assets/dataroot/konghezi_m_putridsword_buff_cc843452966300cb20eaf92fc44719f9.bytes size=1304       Character=1
+assets/dataroot/konghezi_m_putridsword_light_d2b438c09faf13112e9f5bd2bd2a75cd.bytes size=1066       Character=1
+assets/dataroot/konghezi_maincity_6c335fd0cc3b2b912b47b0b802f379bf.bytes size=2296       AddProjectile=1
+assets/dataroot/konghezi_minister_center_1eec49a57c727795af8383c43eb48ba2.bytes size=765        Character=1
+assets/dataroot/konghezi_missile_594cd0c1fb1ba0a73af5fc0b8158c494.bytes size=5777       AddProjectile=31
+assets/dataroot/konghezi_patajiguan_eba77a775d6912d5cc03ddfdba055931.bytes size=7376       AddProjectile=4
+assets/dataroot/konghezi_projectileemitter_d0956b34c264af5e857a69d7b1068810.bytes size=4084       AddProjectile=20
+assets/dataroot/konghezi_protal_be0973650152430b8cd22ceac6bf1919.bytes size=5410       AddProjectile=1
+assets/dataroot/konghezi_qiangzhe_63b9b615ddf1ab1dfd806aa8c916a57c.bytes size=4756       AddProjectile=9
+assets/dataroot/konghezi_qiulong_cd407d161c4247826ed01806dfc0933f.bytes size=1247       AddProjectile=2
+assets/dataroot/konghezi_rockfall_a067b491b8f15c3538363cf25915918d.bytes size=5306       AddProjectile=1
+assets/dataroot/konghezi_rouge_binglin_b4df1febdd1b7ce9d30a7437e236d77d.bytes size=2954       AddProjectile=1
+assets/dataroot/konghezi_rouge_dihuo_0b8254d849a1b507af358baeaccd4a81.bytes size=2951       AddProjectile=1
+assets/dataroot/konghezi_rouge_heidong_1dcd58decad931d689499a4a8268986f.bytes size=2955       AddProjectile=1
+assets/dataroot/konghezi_rouge_tianlei_2b006e09123d9cb54f37347d214b5f56.bytes size=2955       AddProjectile=1
+assets/dataroot/konghezi_rouge_zibao_2b7aa30f78bdc5fe767330d779aa8c51.bytes size=2953       AddProjectile=1
+assets/dataroot/konghezi_shunyi_a07dea83482dd6947404d1c978bb6db4.bytes size=9393       AddProjectile=24
+assets/dataroot/konghezi_sickle_13f724f2d2e01bdd5d95258dc318122a.bytes size=13904      AddProjectile=1
+assets/dataroot/konghezi_sickle_3_9e7d16d76bfeae05d39dd1e47e501871.bytes size=1873       AddProjectile=3
+assets/dataroot/konghezi_sickle_tower_55d88f8f48ca14bfd731eef9080981ef.bytes size=5496       AddProjectile=37
+assets/dataroot/konghezi_spacelord_1_f142c6b2700b160c5916a3a7fe54a8b3.bytes size=1824       Character=2
+assets/dataroot/konghezi_spacelord_2_2f88bf0523fe8e7f5d1e32f3137f3a87.bytes size=944        Character=1
+assets/dataroot/konghezi_spacelord_3_89a1cae67ebff2d54bc2be4b8116fe2b.bytes size=7013       AddProjectile=42
+assets/dataroot/konghezi_spacelord_ring3_b3699d6d2db829ecb962e000305bc611.bytes size=2269       AddProjectile=4
+assets/dataroot/konghezi_spider_1fa249fd99b195841b7e48caf86a4588.bytes size=1287       Character=2
+assets/dataroot/konghezi_towermiyuki_bec930b2728c249fd72d5c956c27ab1e.bytes size=2164       AddProjectile=1
+assets/dataroot/konghezi_towershuanglongwang_337388987592b0dfb0659a851f36f438.bytes size=4669       AddProjectile=24, Character=6
+assets/dataroot/konghezi_wangyh_9c0a50e9261cc4a200b3695f507cc703.bytes size=35256      AddProjectile=159
+assets/dataroot/konghezi_yinli_e9996dfdd9864b615ee80c5f21c8eed2.bytes  size=1199       AddProjectile=3
+assets/dataroot/konghezi_yunshi_d772ee8a8e9e2acb2b294762aef519f8.bytes size=964        AddProjectile=1
+assets/dataroot/konghezim10081_skillchek02_8ffb09ce1a4e85c4aba51f6e001dc622.bytes size=4642       AddProjectile=1, Character=6
+assets/dataroot/kurapoka_51e1afd777bf6b7d7497e5763076ce34.bytes        size=17404      AddProjectile=5
+assets/dataroot/m_10000_yuren_04_051b559b9d66f83e2bc10c788f121739.bytes size=29843      AddProjectile=22, Character=2
+assets/dataroot/m_10000_yuren_04_1_e1818b49731362a800b3883a5b6a4869.bytes size=26321      AddProjectile=15, Character=2
+assets/dataroot/m_10000_yurenfs_01_f74f060a686c4ca477435730597ebe04.bytes size=15271      AddProjectile=2, Character=17
+assets/dataroot/m_10002_pangxie_01_3324d2393e7f1c0cd2e380087b8abe03.bytes size=20385      AddProjectile=21
+assets/dataroot/m_10002_pangxie_04_fb5192842ef6203045bd650a35393a2c.bytes size=36398      AddProjectile=15, Character=9
+assets/dataroot/m_10003_jijuxie_01_09341fe5a9a5c8651a7d8d95709f1d76.bytes size=17688      AddProjectile=6, Character=13
+assets/dataroot/m_10003_jijuxie_03_fb94b2e29c6311984c88685a5e792fb6.bytes size=16579      AddProjectile=2, Character=7
+assets/dataroot/m_10003_jijuxieke_01_d4e0b79064b6b7f1d143c2f37e96a9b3.bytes size=4569       AddProjectile=3
+assets/dataroot/m_10003_jijuxieke_02_53e0663f541a1855df87fcbd1bcbf405.bytes size=4444       AddProjectile=3
+assets/dataroot/m_10003_jijuxieke_03_cc2b78129e487c6008d0f42f6e8fdd53.bytes size=4362       AddProjectile=3
+assets/dataroot/m_10004_najia_01_1f9f4019032a6bbe9d47d380a406032a.bytes size=16101      AddProjectile=8
+assets/dataroot/m_10004_najia_02_dafea694dd29cf2259e8abc28dfd5a91.bytes size=23443      Character=1
+assets/dataroot/m_10004_najia_03_c71a23b4bd95323cd23a2c8eb80dbc39.bytes size=13456      AddProjectile=7
+assets/dataroot/m_10004_najia_05_1275a595935ca8f1acd206d5629ac851.bytes size=31078      AddProjectile=8, Character=1
+assets/dataroot/m_10005_najianw_01_121ed643be3cfc7a064f91d1b1868403.bytes size=21359      AddProjectile=21
+assets/dataroot/m_10006_shujing_01_1_c0b12a20bb88c8c7340960f84961163d.bytes size=11812      AddProjectile=4
+assets/dataroot/m_10006_shujing_01_bff7f1d324f9f6c3700d5728577a90d6.bytes size=11173      AddProjectile=4
+assets/dataroot/m_10007_shujing_01_2805135d240358156993a3f83eb4e337.bytes size=12433      AddProjectile=9
+assets/dataroot/m_10007_shujing_02_24afc0ddc87ad300d791b3b9d7706319.bytes size=16270      AddProjectile=9
+assets/dataroot/m_10008_shujingweishi_01_002c01d801c398731ba18780f8a1307f.bytes size=24922      AddProjectile=16
+assets/dataroot/m_10009_hua_01_aaacbc7eb8be9111c6d427e8dec67756.bytes  size=11326      AddProjectile=12
+assets/dataroot/m_10010_huayao_01_e95e9688bc0b745d7d73a4d49b290755.bytes size=26307      AddProjectile=33, Character=1
+assets/dataroot/m_10011_xiong_01_db5700b61a4c990e15ffa40d51690c12.bytes size=21627      Character=4
+assets/dataroot/m_10011_xiong_04_eb97a40c619b31ec9e0b163025d3c3cb.bytes size=18071      AddProjectile=2, Character=25
+assets/dataroot/m_10012_xiong_02_7889187fc14abf9f1f7dac5f370e6e9e.bytes size=20013      AddProjectile=19
+assets/dataroot/m_10013_niutouren_02_d99907588f6368cef6ca8182339e6396.bytes size=28820      AddProjectile=2, Character=8
+assets/dataroot/m_10013_niutouren_03_dc8f4f2a6ff6ec21ece01b5cd4202f58.bytes size=12513      AddProjectile=4
+assets/dataroot/m_10013_niutouren_04_dfe7338eec6c7ea1d5fdd06d6bcf5d3f.bytes size=15464      AddProjectile=1
+assets/dataroot/m_10013_niutouren_06_9b2c338a7b358f29648b0330ce40bca8.bytes size=9414       AddProjectile=1, Character=5
+assets/dataroot/m_10014_spirit_01_ad083adf84ca8f02e0bbeb225edeea8d.bytes size=17577      AddProjectile=11
+assets/dataroot/m_10014_spirit_06_0e837ed126eaf048a3c63ddffa3b7be5.bytes size=17497      CN:秒杀=1, Character=15
+assets/dataroot/m_10015_highspirit_01_b528f966b9a83ba59bff409a37b01a56.bytes size=30877      AddProjectile=33, Character=11
+assets/dataroot/m_10016_fenglong_02_4378af583933bb5f2e82051280bc0651.bytes size=38619      AddProjectile=7
+assets/dataroot/m_10016_starlong_6b48a6bebb7e88bd461b1795f30cc2bb.bytes size=38268      AddProjectile=39
+assets/dataroot/m_10017_shuanglongwang_01_e27ea5abb181786b569bcfc5376d1f90.bytes size=21818      AddProjectile=8
+assets/dataroot/m_10017_shuanglongwang_02_ecad2d54a79b4e35dee96b94dcb49d57.bytes size=14801      AddProjectile=6
+assets/dataroot/m_10018_lutts_01_a1f249f6f9d14508aacdcc941c528ac4.bytes size=13265      AddProjectile=2
+assets/dataroot/m_10018_star_bb3ac9b940dd61d0b26a61b8416327f3.bytes    size=19200      AddProjectile=1, Character=4
+assets/dataroot/m_10020_jushiguai_01_1_6f648205c6b23ab40f08e05657a2b0a7.bytes size=17677      AddProjectile=2
+assets/dataroot/m_10020_jushiguai_01_cbfe41e4de24b815dd17b90969cc22de.bytes size=18607      AddProjectile=2
+assets/dataroot/m_10021_jushiguai_01_fbde8fe401a83e28e6cee581ed7ad673.bytes size=34011      AddProjectile=12, Character=3
+assets/dataroot/m_10022_buluonan_01_cd981ca1db7da24b4aaf96cbce68f003.bytes size=22317      AddProjectile=2, Character=16
+assets/dataroot/m_10023_buluonv_01_78940e9dd2ab07c611dfaeecb52b3c63.bytes size=30236      AddProjectile=17
+assets/dataroot/m_10024_zhuanghan_02_1_1f45dbc0d0b150bafb7aa039ac3004f4.bytes size=24039      AddProjectile=6
+assets/dataroot/m_10024_zhuanghan_02_e516deed4a1a72ae591f39214903e230.bytes size=23626      AddProjectile=6
+assets/dataroot/m_10025_dazuzhang_01_71200034b1496069616bfa5f6a1cdc2e.bytes size=41732      AddProjectile=34
+assets/dataroot/m_10026_lang_01_eaff28c99ef5d1041a50fab37a1c1a26.bytes size=30175      AddProjectile=10
+assets/dataroot/m_10027_diguojun_02_8946d14eae5fe516087a597c4cb0b9a5.bytes size=19318      Character=2
+assets/dataroot/m_10027_diguojun_03_47b9ed18309d2263e65b8d3c8769b6d2.bytes size=14281      AddProjectile=1, Character=2
+assets/dataroot/m_10027_diguojun_04_4a2040b660e8d55b7beea405b10f2ff0.bytes size=24967      AddProjectile=2
+assets/dataroot/m_10028_desertlizzard_01_80d48ed90a59864269ce160f2d7e37de.bytes size=21434      Character=2
+assets/dataroot/m_10029_desertinsec_01_6edf3c4036fa82af25cbeee71f1b5f10.bytes size=14793      AddProjectile=2, Character=2
+assets/dataroot/m_10030_desertvulture_01_f34339f9e64961f6024ca55ac54668ae.bytes size=34077      AddProjectile=22, Character=12
+assets/dataroot/m_10031_banditmale_02_1_a088efa33f413851a15b3a0a10c14ecf.bytes size=13086      AddProjectile=1
+assets/dataroot/m_10031_banditmale_02_87b9ee7e8aed345e643ff52348ec626e.bytes size=12681      AddProjectile=1
+assets/dataroot/m_10032_banditfemale_01_175b4b38f52404356f0580a37a83fddc.bytes size=26027      AddProjectile=6
+assets/dataroot/m_10032_banditfemale_02_fffb0559bd7ffcb8e6621c8b247de61e.bytes size=58911      AddProjectile=54, Character=6
+assets/dataroot/m_10033_cultist_01_63ee2c977da3f34e183acdc3629c0b8e.bytes size=20160      AddProjectile=6, Character=14
+assets/dataroot/m_10034_ghoul_01_8b517f77e0c14b02275266bceeed44cb.bytes size=19318      AddProjectile=1, Character=2
+assets/dataroot/m_10034_ghoul_03_0efbacbe15c54fba2a1f9146bce6f75d.bytes size=13866      AddProjectile=1, Character=3
+assets/dataroot/m_10035_banditleader_01_3c103a37658a42432aac09a9ffc4cdbb.bytes size=34249      AddProjectile=1
+assets/dataroot/m_10036_banditexecutioner_01_46da924a717a204cf2f392d9651c57e7.bytes size=25054      AddProjectile=19
+assets/dataroot/m_10037_spawningpool_01_a96bd92c0ccf412cbbd4db0be86a1d33.bytes size=4358       AddProjectile=11, Character=3
+assets/dataroot/m_10038_zergbreeder_01_b99e0d260ed0988e0b1df375ea4a0189.bytes size=19205      AddProjectile=1, Character=1
+assets/dataroot/m_10039_greatserpent_01_94f205f1141bc3cec06273fce09d0865.bytes size=84775      AddProjectile=64, Character=10
+assets/dataroot/m_10039_greatserpent_01_locate_r_fa04a52c98ec18e88c6d5ba0cf997049.bytes size=2420       Character=5
+assets/dataroot/m_10039_greatserpent_bigbone_1_836261d93bd8d02725f9e0c90d3a4f5f.bytes size=3884       AddProjectile=2, CN:秒杀=1, Character=5
+assets/dataroot/m_10039_greatserpent_bigbone_2_75f223e2e07456b9d5decbed229d6b0c.bytes size=3027       AddProjectile=2, CN:秒杀=1, Character=5
+assets/dataroot/m_10039_greatserpent_smallbone_1_7356d3e378a559db138cc3ce305ba4e9.bytes size=8631       CN:秒杀=1, Character=4
+assets/dataroot/m_10039_greatserpent_smallbone_2_1adb60a6c0d43b4879525b8c3f94851d.bytes size=2286       CN:秒杀=1, Character=5
+assets/dataroot/m_10039_greatserpent_smallbone_3_0d0527ff0902f144cb3aae0c87418cec.bytes size=2280       CN:秒杀=1, Character=5
+assets/dataroot/m_10042_poisonstatue_01_299d2955d4b5a6b963f66df29eca1b08.bytes size=12051      AddProjectile=20
+assets/dataroot/m_10042_poisonstatue_02tower_f7492d26ce606b21857597136769688a.bytes size=10784      AddProjectile=20
+assets/dataroot/m_10044_wugui_1_a2ae3b1dd5a5dabbd89ac6c4421dccf7.bytes size=87361      AddProjectile=126, Character=23
+assets/dataroot/m_10045_yitushizhe_1_f08d28a80d791e5369e6e0b36a6d0bbe.bytes size=42493      AddProjectile=53, Character=15
+assets/dataroot/m_10053_devil_01_457db7d11eab67451731894f1ecc7525.bytes size=16854      AddProjectile=1, Character=2
+assets/dataroot/m_10054_devil_01_7a82cfbcf88fedcdea6380a7d91a0409.bytes size=33664      AddProjectile=8, Character=2
+assets/dataroot/m_10055_devilboss_02_7a82cfbcf88fedcdea6380a7d91a0409.bytes size=33664      AddProjectile=8, Character=2
+assets/dataroot/m_10058_star_5d8b0f24625da4427ae022ed2ea0c673.bytes    size=28248      AddProjectile=27
+assets/dataroot/m_10059_stardevil_4b06eb90a0e5903b378d01ed455c5e42.bytes size=57639      AddProjectile=32, Character=53
+assets/dataroot/m_10060_star_36fdd034f01f858b029cf4774e045d96.bytes    size=26308      AddProjectile=20
+assets/dataroot/m_10061_star_01_9d602ac4118a398eb9aeb31ddfe62967.bytes size=15011      Character=2
+assets/dataroot/m_10062_icebird_01_8e4e0330b9488ea1fb2f12b6f1dfce57.bytes size=33257      AddProjectile=28, Character=6
+assets/dataroot/m_10063_snowman_02_2951fe36d32aac3eec840432e0fc7795.bytes size=4746       AddProjectile=3, Character=2
+assets/dataroot/m_10064_jialouluo_1_5116ee2b0dc75309f4d8c9fb4b8fc598.bytes size=62770      AddProjectile=20
+assets/dataroot/m_10064_jialouluo_2_cc382bd972bbe299e93bf853e2374e92.bytes size=11411      AddProjectile=1
+assets/dataroot/m_10065_loyallady_1_5d8c40185abd6b55f4a1dda397991a94.bytes size=12739      AddProjectile=2, Character=2
+assets/dataroot/m_10065_loyallady_3@phantomcontrol_346dd2b7dfa829a4953ec14319cb366b.bytes size=7710       Character=19
+assets/dataroot/m_10065_loyallady_3_2fe91b644721a04541084443be72c661.bytes size=14359      AddProjectile=2, Character=12
+assets/dataroot/m_10066_cavalry_1_01db04605a388bb261d35cc91e9c0bfc.bytes size=73960      AddProjectile=5, CN:无敌=1, Character=38
+assets/dataroot/m_10067_jones_1_0b2464c5fa831e0bdefb9279c5c10401.bytes size=18527      AddProjectile=12, Character=8
+assets/dataroot/m_10068_mermaidn_01_bba5f4cc68070e0fd9cf67a2e603f65c.bytes size=22744      AddProjectile=7, Character=10
+assets/dataroot/m_10069_emperor_1_5017ab3b761fcb1391c72e7d6e79d438.bytes size=6385       AddProjectile=4
+assets/dataroot/m_10070_minister_1_1f1b543b6b18c7a188364cc39ad670df.bytes size=24981      AddProjectile=10, Character=19
+assets/dataroot/m_10071_hydra_1_58ab3cb348321dedae7a0b84af336eb0.bytes size=40694      AddProjectile=98, CN:秒杀=1
+assets/dataroot/m_10071_hydra_shizijia_7725d30859fe9aa7b78bd6e9e3ef382c.bytes size=1444       AddProjectile=1
+assets/dataroot/m_10072_seasword_1_c553973064bf0296ba00f81d0fa98f74.bytes size=15749      AddProjectile=7, Character=6
+assets/dataroot/m_10073_darkseaboss_1_c64461f84111db799f3a991b7445c027.bytes size=21613      AddProjectile=7
+assets/dataroot/m_10073_darkseabossarm_l1_d3ece504873a1c673024779684f1e57b.bytes size=32878      AddProjectile=11, Character=6
+assets/dataroot/m_10073_darkseabossarm_l2_71214ef0d036be7064d1aa744e8babe0.bytes size=5648       AddProjectile=4
+assets/dataroot/m_10073_darkseabossarm_r1_1cdc7d65da10e1fbb63a08f1a99723df.bytes size=32563      AddProjectile=11, Character=6
+assets/dataroot/m_10073_darkseabossarm_r2_2df5583611bff50498cda630af22bb2a.bytes size=6076       AddProjectile=4
+assets/dataroot/m_10074_hloy_1_e4258d491db47849566d9f1af42e0e5e.bytes  size=16334      AddProjectile=8, Character=9
+assets/dataroot/m_10075_redseaboss_1_c6d1345d3c414026a99c2199d5b0cb8e.bytes size=47621      AddProjectile=33, Character=14
+assets/dataroot/m_10075_redseabosstail_1_f10983038847a1baf84b63f6efb8d2dd.bytes size=3864       Character=3
+assets/dataroot/m_10076_deadseaboss_1_1aac633f29d62e029e74e73a6ea289bc.bytes size=35093      AddProjectile=53, CN:秒杀=1
+assets/dataroot/m_10077_hades_1_52bb433eb529f7a1391b22f1ac5a0a4a.bytes size=53637      AddProjectile=28
+assets/dataroot/m_10078_reefprotector_1_2_7f755201483bef00c4b67626fe958eb7.bytes size=13151      AddProjectile=2
+assets/dataroot/m_10078_reefprotector_1_32f96fcad4314e41c9f1db2ce84a2460.bytes size=14649      AddProjectile=4
+assets/dataroot/m_10079_tentacle_1_1_d0deb32c65c6b46a7f88cb111a63a00c.bytes size=10876      AddProjectile=5
+assets/dataroot/m_10079_tentacle_1_2_c3bb601d0d079bb7d7d9f188ec312c26.bytes size=6292       AddProjectile=2
+assets/dataroot/m_10081_heinrich_1_2_173c835bddc808fe7b701f7e208f7c91.bytes size=13853      AddProjectile=3, Character=10
+assets/dataroot/m_10081_heinrich_1_46f59cd7219407d0ff3978db031f344f.bytes size=82165      AddProjectile=102, Character=23
+assets/dataroot/m_10082_stargoddess_1_ec2f826a7c3ed93a39aed5f6a18eac51.bytes size=51006      AddProjectile=53, Character=16
+assets/dataroot/m_10082_stargoddess_2_a2fa8bff227fe9ab007c731bb80fa9b0.bytes size=12494      AddProjectile=3, Character=4
+assets/dataroot/m_10082_stargoddess_3_acaf10b3c1fedea58fb1d56cd6b2835c.bytes size=13243      AddProjectile=6, Character=4
+assets/dataroot/m_10083_bishopeight_01_17341c0ec7464cc1306e23fba70d3e8e.bytes size=12215      AddProjectile=13, Character=7
+assets/dataroot/m_104_gonzo_2_16b4c57a3a458a347bf56c7412f2712d.bytes   size=21508      AddProjectile=2
+assets/dataroot/m_1085_ruinthiefmaster_n1_c06ab5ce7990cf9fce483fd1d71c1c29.bytes size=12238      AddProjectile=4
+assets/dataroot/m_1088_chifuqiangdao_1_571e6aa40f31e6cc2cb6218a8fc9185b.bytes size=30743      AddProjectile=16
+assets/dataroot/m_1091_guildboss_2_cc7d708e3c67f58b9b24264e1e3adfce.bytes size=13984      AddProjectile=7
+assets/dataroot/m_1091_guildboss_bdcc5d56047d656531d2a2614f076927.bytes size=71421      AddProjectile=88
+assets/dataroot/m_1093_eliteb_1_34579d0932f627eba62708784fa8ae3c.bytes size=55024      AddProjectile=35
+assets/dataroot/m_1093_eliteb_1_maincity_bb817385f13d619ed00481b63d823ed0.bytes size=60809      AddProjectile=39
+assets/dataroot/m_1096_traptowerc_1_adf1160357bfeb0ce674adb8704e30ec.bytes size=20001      AddProjectile=2
+assets/dataroot/m_1096_traptowerc_3_2597e86149a64973d974338dbab2da53.bytes size=28308      AddProjectile=1, Character=4
+assets/dataroot/m_1096_traptowerc_n1_b55c1680740a115552ad8ede7c4c8300.bytes size=22503      AddProjectile=2
+assets/dataroot/m_1096_traptowerc_n2_fdfb3f3045d03f5c150cf4d5cd4332ca.bytes size=20254      AddProjectile=1
+assets/dataroot/m_1096_traptowerc_n3_d9dffa7bed2580e7760d741ce8aa90d3.bytes size=18947      AddProjectile=1
+assets/dataroot/m_1096_traptowerc_n4_d7a1d1f7e0dd4162ffb58f2867823d17.bytes size=23497      AddProjectile=2
+assets/dataroot/m_1100_kaosheng_02_ceb1f95088eae508f72ccea370b9b191.bytes size=69573      AddProjectile=50, Character=12
+assets/dataroot/m_1111_kastro_3_afc210de7b5340f622e14d9ce32aeb54.bytes size=18428      Character=4
+assets/dataroot/m_1122_qiangdaogongjian_2_67305bbe98086af6378d97aebf469f1e.bytes size=6583       AddProjectile=2
+assets/dataroot/m_1122_qiangdaogongjian_n1_c044972fc2f0aab8a2d3652ca05418e0.bytes size=22001      AddProjectile=9
+assets/dataroot/m_1144_zhuanghan_1_5fd702d022d69c3922e11c539016755b.bytes size=19789      AddProjectile=6, Character=4
+assets/dataroot/m_1150_shuangmudao_1_dad57b6f400192a1ad2a2266011bb1c2.bytes size=26534      AddProjectile=2, Character=2
+assets/dataroot/m_1155_alertwolf_1_fa68b6820dd7876309be2c45d0697a71.bytes size=20176      Character=2
+assets/dataroot/m_1161_boss70theold2_n1_2be2187e1c83022290601b85e583e644.bytes size=39646      AddProjectile=10
+assets/dataroot/m_1161_boss70theold_1_74df3287505f7b2eb6789a5605cf4e9b.bytes size=39338      AddProjectile=69, Character=1
+assets/dataroot/m_1161_boss70theold_2_9d137ee933f174efee41c1fa99ab4bcc.bytes size=36890      AddProjectile=10
+assets/dataroot/m_1170_desertvultuie_1_11506f1be5f7e791fac29c11c78e542d.bytes size=30772      AddProjectile=20, Character=12
+assets/dataroot/m_117_misha_1_ec20751c170dd0c9636fb2ac5e2a13ee.bytes   size=8854       AddProjectile=3
+assets/dataroot/m_1188_musashi_1_43843b6c3c66c0b35949d5c2d931219e.bytes size=22385      AddProjectile=4, Character=10
+assets/dataroot/m_1195_acientsaber_1_6ee2d1ad8d258a12c1047c4bea0c8c38.bytes size=27408      AddProjectile=2, Character=8
+assets/dataroot/m_1195_acientsaber_2_e2acde56fa59da1cfde68284ddf0d319.bytes size=9453       AddProjectile=1
+assets/dataroot/m_1195_acientsaber_n1_ddd0800d85a5939f034730a40ad74b13.bytes size=25455      AddProjectile=1, Character=2
+assets/dataroot/m_1205_wugui_1_e80a15566b328fb9e79a46ed533111d7.bytes  size=41004      AddProjectile=44, Character=16
+assets/dataroot/m_1212_huoshizi_1_b06c7610a72bf9d086e26d9c72d9d548.bytes size=17797      AddProjectile=2
+assets/dataroot/m_1213_fishman_1_28413af4c3ea6b54874295b878bba9c3.bytes size=29393      AddProjectile=6, Character=13
+assets/dataroot/m_1217_chuanjiashou_n1_0416805e21c04aac0cc19e0cb91d518f.bytes size=17918      AddProjectile=12, Character=1
+assets/dataroot/m_1217_chuanjiashou_n2_93ce14d7d058dafecca5eb2149c231c9.bytes size=11627      AddProjectile=4
+assets/dataroot/m_1219_deer_1_1fe916e6208dbd446158c70873b21615.bytes   size=19776      AddProjectile=7, Character=1
+assets/dataroot/m_1222_heiju_1_20f68611edc597e0e6e1ac6663e8a954.bytes  size=73072      AddProjectile=37, Character=64
+assets/dataroot/m_1223_zhanduanzhijian_1_94427a4c4c714fd40d04d92819aa3ccf.bytes size=109360     AddProjectile=17, Character=2
+assets/dataroot/m_1223_zhanduanzhijian_n1_47fed030216840aba3b0339d723fd72f.bytes size=92904      AddProjectile=30, Character=14
+assets/dataroot/m_1224_xuebengzhiqiang_1_8994142fb2d05a053bc37528c31cba5f.bytes size=75295      AddProjectile=36, Character=6
+assets/dataroot/m_124_lili_1_ec170aeaa56799421e6702b5bd5bd529.bytes    size=4659       AddProjectile=1
+assets/dataroot/m_137_konghai_1_ae38ee396cdbea2ea15ca872c02ef88c.bytes size=83071      AddProjectile=73, CN:秒杀=5, Character=7
+assets/dataroot/m_20001_gebulinfs_01_a3bb64b87097ab72f4b80c0bffaeb337.bytes size=11385      AddProjectile=3
+assets/dataroot/m_20002_gebulinsl_01_d5e1585bcfa71fc40c2352ebdf6f1170.bytes size=10526      AddProjectile=7
+assets/dataroot/m_20003_gebulinzbb_01_58cc5f26e7285e73b6ca3783ed1b8b2b.bytes size=9947       AddProjectile=1
+assets/dataroot/m_2001_bat_1_20c9308fb0155b37b079427ef2aff651.bytes    size=31477      AddProjectile=2
+assets/dataroot/m_2002_byakko_1_d16bc2577ba57d5e6a56f9c7c84a5568.bytes size=37331      AddProjectile=8, Character=5
+assets/dataroot/m_2002_star_6a576b53d76595af6b4da8b2eef05235.bytes     size=28599      AddProjectile=7, Character=2
+assets/dataroot/m_2004_genbu_1_6ad1288d3d21fe79fa59db9a54ac8aee.bytes  size=63448      AddProjectile=20, Character=23
+assets/dataroot/m_2004_genbu_n1_a32efc5bd8097f626078103fbb521e43.bytes size=68085      AddProjectile=38
+assets/dataroot/m_2005_goki_1_9b9bb9ba77c93740de2caeb9d48c5190.bytes   size=76013      AddProjectile=4, Character=8
+assets/dataroot/m_2005_goki_1_maincity_f1340ccfff7926931ba8b63e4709b4ac.bytes size=76188      AddProjectile=5, Character=8
+assets/dataroot/m_2006_hiei_jaganshi_1_2640bfc61d373b7ba3c00008b38060b6.bytes size=50180      AddProjectile=6
+assets/dataroot/m_2007_kazemaru_1_7941057dd000eabe51e00837c6a6d4d4.bytes size=54957      AddProjectile=4, Character=2
+assets/dataroot/m_2010_musashi_1_896906a9e4ee7b6f0a7e740fce2c4d3f.bytes size=34233      Character=3
+assets/dataroot/m_2012_seiryu_1_7e95f5f131450d0da3ceffed7d0646ae.bytes size=38153      AddProjectile=41, Character=15
+assets/dataroot/m_2013_shangdian_1_maincity_facf05df58f061cd934024a76ef856cb.bytes size=1259       Character=7
+assets/dataroot/m_2018_damijing_3_f553cf9bd8502d68642d8c30cbdde496.bytes size=1231       Character=7
+assets/dataroot/m_2018_damijing_3_maincity_f553cf9bd8502d68642d8c30cbdde496.bytes size=1231       Character=7
+assets/dataroot/m_2023_shiyuezhijing_3_e3491e3bcadd03ff3fd87c73754f03a3.bytes size=1253       Character=7
+assets/dataroot/m_2023_shiyuezhijing_3_maincity_f7cb4c6361a556812849888bfc5fa4f1.bytes size=1322       Character=7
+assets/dataroot/m_3001_stonepile_a1_19c87bc0baed8915f795e100fffec4b6.bytes size=3097       Character=2
+assets/dataroot/m_3005_gokumonki_11_da7b90caf7301cc158a1ad34532a43cc.bytes size=26768      AddProjectile=5
+assets/dataroot/m_3005_gokumonki_1_e30323e35bcec0f8985eb7bd446de0bf.bytes size=32442      AddProjectile=17, Character=4
+assets/dataroot/m_3006_hirue_1_661a4cc38f2d87ce1851547b5fbe3c43.bytes  size=19027      AddProjectile=23, Character=5
+assets/dataroot/m_3006_miruetentacle_1_a4ccaf6fd0bc597fab731f3fa32d072f.bytes size=5907       Character=1
+assets/dataroot/m_3007_helen_1_7c641ce9218fb7fd4dfca2c12b931e2e.bytes  size=33957      AddProjectile=2
+assets/dataroot/m_3009_inmaki_1_15a3a093ac658c9be7ade4c0784dae05.bytes size=40642      Character=52
+assets/dataroot/m_3028_miyuki_1_4b5dd51dd5546499e1f578568a1f2fa6.bytes size=25900      AddProjectile=1
+assets/dataroot/m_3039_shenyuanzhu_1_c0cae4174e6bf44ab0c98123b551694a.bytes size=1798       Character=5
+assets/dataroot/m_3039_shenyuanzhu_2_c7204bfebfd3b185515de5abd4658ffc.bytes size=1953       Character=5
+assets/dataroot/m_3039_shenyuanzhu_2_maincity_c7204bfebfd3b185515de5abd4658ffc.bytes size=1953       Character=5
+assets/dataroot/m_3039_shenyuanzhu_3_1232fa5d14ee2fa1fa71ca5cf0ea2231.bytes size=1747       Character=5
+assets/dataroot/m_5011_devilwolf_1_f2efb0fccb7fec0f3ac724450c8256bb.bytes size=30082      AddProjectile=10
+assets/dataroot/m_5011_devilwolf_1_maincity_5c56e3f3a54748850a94837792fe4fb3.bytes size=28189      AddProjectile=10
+assets/dataroot/m_5012_devilbat_1_maincity_9b29dc780aaa9ba30116b7d400f58540.bytes size=43816      AddProjectile=1
+assets/dataroot/m_5015_monk_1_e1c16e166a05b1e31c610f99d9e83011.bytes   size=19260      AddProjectile=6
+assets/dataroot/m_5017_soulfightera_1_c94ca3a6feada557b4dc218b6b455689.bytes size=15333      AddProjectile=3
+assets/dataroot/m_5019_roguea_1_3170275c09d6e647c66847c43c2271ea.bytes size=19729      AddProjectile=3, Character=1
+assets/dataroot/m_5020_rogueb_1_cd0d97e42324b072e62cf3659bbb5db0.bytes size=19897      AddProjectile=1, Character=1
+assets/dataroot/m_5021_oneeyedbat_1_ff08224f79dffa7399331dc9e6784878.bytes size=21762      AddProjectile=10, Character=10
+assets/dataroot/m_5021_oneeyedbat_2_559f0f06e78a05fc8e20750235ace995.bytes size=18241      AddProjectile=6, Character=4
+assets/dataroot/m_5021_oneeyedbat_n3_04bce4b3258814b4e657b13138393d1f.bytes size=21064      AddProjectile=8, Character=10
+assets/dataroot/m_5023_infectedhuman_1_38598cbdc52c37c62b18f67d2092ceb6.bytes size=14657      AddProjectile=1
+assets/dataroot/m_5024_akguard_1_28e92f272cb59ef364021f49cbe87dbe.bytes size=20772      AddProjectile=17
+assets/dataroot/m_5032_maskedmonster_1_9957427cac602e153744f0022cca0284.bytes size=22201      AddProjectile=9, Character=5
+assets/dataroot/m_5032_maskedmonster_n1_f2b56e8fe1d99b8a1206a06fa5293bd6.bytes size=24846      AddProjectile=9, Character=5
+assets/dataroot/m_5032_star_01_2121cdd73464187006d20f94990aa77f.bytes  size=15758      AddProjectile=4, Character=7
+assets/dataroot/m_5033_pistolguard_1_2729514ab9b2f114904a8d88420016cb.bytes size=27985      AddProjectile=41
+assets/dataroot/m_5034_spidermonster_1_8d39d11fc6688020228e8a00652ab97a.bytes size=23017      AddProjectile=9
+assets/dataroot/m_5043_leaderstudent_1_890e73a74eb329244137f07ff4e992d2.bytes size=30769      AddProjectile=1
+assets/dataroot/m_5048_toguro_young3_1_eb1af539d91c08e20c97939229696516.bytes size=64302      AddProjectile=4, Character=9
+assets/dataroot/m_5048_toguro_young3_n1_f91bffeb09b2c1f6097a1ea856278ede.bytes size=82534      AddProjectile=11, Character=21
+assets/dataroot/m_5051_remotezombie_1_0f845ca3112133ff0e381adb47f92d79.bytes size=12397      AddProjectile=3
+assets/dataroot/m_5053_disguisemonster_1_32a4f058d3f7d4e2052b1d3b53b1d794.bytes size=18664      AddProjectile=5
+assets/dataroot/m_5055_jacketstudent_1_a4a6fd4fbb36bdf84ff580dfc0ebf53a.bytes size=19703      AddProjectile=1
+assets/dataroot/m_5056_streetrogue_1_dcf41472e82ee2c9cfd2f73c4046b5fb.bytes size=18677      AddProjectile=4
+assets/dataroot/m_5057_remotebat_1_5fd803a1230b327ae66896e90fbf7e80.bytes size=28311      AddProjectile=2
+assets/dataroot/m_5059_soulfighterc_1_f1914c10f70c8b9d172ebabfed69c922.bytes size=35556      AddProjectile=5, Character=3
+assets/dataroot/m_5059_soulfighterc_1_maincity_36d77e0b5a5fc8bbf3c4b3811f40376f.bytes size=31080      AddProjectile=5, Character=2
+assets/dataroot/m_5059_soulfighterc_n1_1ad18b9a5d72053166af5b332f828223.bytes size=33808      AddProjectile=5, Character=3
+assets/dataroot/m_5060_birdmonster_1_4ec5616a973d43f2c9616b9bca2ccfe0.bytes size=17905      AddProjectile=8, Character=5
+assets/dataroot/m_5061_cloakmonster_1_eb8caa816526f06787883a1882e0c879.bytes size=10139      AddProjectile=3
+assets/dataroot/m_5065_foresteif_1_af9f5e8e51807da52cf0adee1ce4fa65.bytes size=21657      AddProjectile=11, Character=9
+assets/dataroot/m_5065_foresteif_n1_eca597d3850052cac349785cff5ec661.bytes size=20186      AddProjectile=7, Character=2
+assets/dataroot/m_5065_star_4ec9b951bfae7aa617fcf3414d70ddd9.bytes     size=20366      AddProjectile=7, Character=2
+assets/dataroot/m_5067_bullshieldwarrior_1_94d7dd702d1ed60f2f95f0935373465b.bytes size=35868      AddProjectile=2, Character=2
+assets/dataroot/m_5068_wolfwarrior_1_71052ba66d8aeea607098f86f3d04d0e.bytes size=21505      Character=2
+assets/dataroot/m_5068_wolfwarrior_n1_fc3f431fd4f080d78db64ebe70e5acf3.bytes size=21401      Character=2
+assets/dataroot/m_5072_treemonster_1_f0f63466240768e9db99b728c56808f2.bytes size=25331      AddProjectile=9, Character=3
+assets/dataroot/m_5075_maskedlanded_1_9dfead198c98ddb4a1e8ce06a878971e.bytes size=24334      AddProjectile=2, Character=6
+assets/dataroot/m_5079_maskedcandy_1_93fccc63b2a3ed71027bdbecf4826452.bytes size=11259      AddProjectile=1
+assets/dataroot/m_5080_maskedhairyf_1_336e62a7bc184ffe572896e3cb36e667.bytes size=17171      Character=31
+assets/dataroot/m_5083_motorogue_1_4813d84434e68ced1c98ddf709d26e4c.bytes size=26996      Character=7
+assets/dataroot/m_5084_zombiecontrol_1_2e5cf21919b6bf7726e15513f75e3ec2.bytes size=16120      AddProjectile=5, Character=6
+assets/dataroot/m_5085_zombieltorch_1_dc625f9118f3c3d41c9ab59ea4e96c94.bytes size=21068      AddProjectile=4, Character=2
+assets/dataroot/m_5087_zombielclaw_1_d737f4ba2f5db26ddd2ceebb42fbb630.bytes size=32290      AddProjectile=2, Character=4
+assets/dataroot/m_5095_zombielsoul_1_80ec257df61d2e02e57543e69a529b86.bytes size=26455      AddProjectile=16, Character=10
+assets/dataroot/m_5095_zombielsoul_n1_0537935fa11219d9f77bd1df4e46a6f0.bytes size=63708      AddProjectile=48, Character=30
+assets/dataroot/m_5106_insectlgrasshopper_1_ce1244fb2732f2b73001f3b56354014d.bytes size=14611      AddProjectile=6
+assets/dataroot/m_5110_mdginat_1_c7396a3011177631cf348fc76c8b5f90.bytes size=18858      AddProjectile=5
+assets/dataroot/m_5145_beatera_1_f3e293dd5e7b2f76a4b5b40f8d79d66b.bytes size=16813      AddProjectile=1, Character=2
+assets/dataroot/m_5146_beater_c_1_de7955a73c79e5216d6c6fe23bad65de.bytes size=17721      AddProjectile=2, Character=4
+assets/dataroot/m_5147_beaterb_1_54f4e799813e652ed9d5a1acbf11772c.bytes size=15419      Character=4
+assets/dataroot/m_5152_roguegirl_1_564c991561ffa0d858742fec41f693aa.bytes size=21376      AddProjectile=9
+assets/dataroot/m_5158_flowerfairy_1_14c3803e944f8ba84cbe186c908d8073.bytes size=13449      AddProjectile=7, Character=1
+assets/dataroot/m_6000_gaozhonga_1_1a96ef6d5fe77057231d3af9258a47e5.bytes size=18406      AddProjectile=1, Character=7
+assets/dataroot/m_6000_gaozhonga_1_maincity_e71d5ffbb7e2488db209bd621fd20dec.bytes size=18336      AddProjectile=1, Character=7
+assets/dataroot/m_6002_gaozhongc_1_454859944e75ccee57dc487aebfed403.bytes size=15987      Character=7
+assets/dataroot/m_6002_gaozhongc_1_maincity_a4124e637cd9c50246940df773d8318f.bytes size=16073      Character=7
+assets/dataroot/m_6003_gaozhongd_1_47b130cf7178534fe00c6d3098fdd354.bytes size=18383      AddProjectile=5
+assets/dataroot/m_6003_gaozhongd_1_maincity_9d18928891f7bd2544bbde4728a0a4d6.bytes size=18469      AddProjectile=5
+assets/dataroot/m_6004_gaozhonge_1_b20cc9cf1792a87761bd8d93157f50ac.bytes size=33645      AddProjectile=13
+assets/dataroot/m_6007_xiaogui_1_d7ab27dce47f8d79b486099c3c9eddfa.bytes size=66380      AddProjectile=11, Character=23
+assets/dataroot/m_6007_xiaogui_1_maincity_cc301b0c1b4fe8c5817f8672d27b9107.bytes size=62709      AddProjectile=3, Character=16
+assets/dataroot/m_6009_leiyuanmaleboss_1_d9f95a54c625e67ea2f4a25a3a530bea.bytes size=54814      AddProjectile=51, Character=4
+assets/dataroot/m_6010_leiyuanfemaleboss_1_330aa9c035f804a0e0bbb1a193d95b02.bytes size=44873      AddProjectile=3, Character=7
+assets/dataroot/m_6011_streetmotoboss_1_0f40b351f55a844b87246ae2ace89b07.bytes size=20147      Character=5
+assets/dataroot/m_6011_streetmotoboss_1_maincity_ef56590796a3d5666fbe36207b5d62e0.bytes size=20126      Character=5
+assets/dataroot/m_6014_rottenboss_1_76e7567a0b3c9a901ff21e72b192bf52.bytes size=116374     AddProjectile=107, CN:秒杀=1, Character=61
+assets/dataroot/m_6016_genkaifollower_1_cb471a6eac591fd84945ba8d42de839d.bytes size=39786      AddProjectile=26, Character=1
+assets/dataroot/m_6019_giantzombie_1_515a575c7a82bce53779f893d82d37d4.bytes size=40147      AddProjectile=11
+assets/dataroot/m_6019_gianzombie_1_7e430e82ce8495c630874d07e10d2058.bytes size=20270      AddProjectile=8
+assets/dataroot/m_6020_hidingmonster_1_e2645592d1e1f7fc155b6225c7a1f2bc.bytes size=39579      AddProjectile=63, Character=8
+assets/dataroot/m_6022_crowldragon_1_013c4282b80266c23b62d79b7c4e8fe4.bytes size=133806     AddProjectile=121, Character=8
+assets/dataroot/m_6022_crowldragon_2_fd0f878e85de8854b98dfdf9c27dff35.bytes size=130695     AddProjectile=102, CN:秒杀=1, Character=1
+assets/dataroot/m_6023_sickle_1_e18707b2bd50aca5da95667159cea6ca.bytes size=188114     AddProjectile=54, Character=25
+assets/dataroot/m_6023_sickle_2_0442af47ebcf6f871d891edafc063a10.bytes size=108358     AddProjectile=76, Character=36
+assets/dataroot/m_6023_sickle_3_1a1d87266f03a03d46fdfbdd2e6b2625.bytes size=116291     AddProjectile=61, Character=22
+assets/dataroot/m_6023_sickle_4_759f68fd8f93d9861830957c7cbe35d2.bytes size=86794      AddProjectile=32, Character=14
+assets/dataroot/m_6024_harpie_1_cadb2ccd96f0fb5f664e8de873feaf8b.bytes size=44634      AddProjectile=82, Character=8
+assets/dataroot/m_6024_harpie_2_06b30d9cb94e1562b1f6a12f84fb1d3b.bytes size=22634      AddProjectile=10, Character=6
+assets/dataroot/m_6024_harpie_3_5a5d53a74f4b163b599706c64d5cc124.bytes size=74217      AddProjectile=170, Character=20
+assets/dataroot/m_6024_harpie_4_add9d8a4d8c1db93dd9abf491527288d.bytes size=20784      AddProjectile=13, Character=33
+assets/dataroot/m_6025_schoolgirl_1_fe2f81ccbb86727b3f41be41e5581c01.bytes size=25396      AddProjectile=3
+assets/dataroot/m_6029_apesghost_1_7f94d9c8eb7ce70c6068b9fcc86cb7c9.bytes size=41061      AddProjectile=10, Character=1
+assets/dataroot/m_6029_apesghost_3_e4f00edbaee38f9ad889ba4a9edd034d.bytes size=21458      AddProjectile=1
+assets/dataroot/m_6030_guard_1_9af17fac541439ff4ba76044728202d5.bytes  size=21698      Character=4
+assets/dataroot/m_6031_bigrogue_1_b84f8414446696b55c6248522f90b20a.bytes size=37520      AddProjectile=13
+assets/dataroot/m_6032_boomrogue_1_ef5fb18cbb77137a1eb19c1f8503eff6.bytes size=29932      AddProjectile=18
+assets/dataroot/m_6034_spiritghost_1_22706dd48fa107866474fea1dcae69be.bytes size=75797      AddProjectile=42, Character=16
+assets/dataroot/m_6034_spiritghost_1_maincity_905cb8bcf9276419066b9b7e5bbda64d.bytes size=40931      AddProjectile=23, Character=12
+assets/dataroot/m_6034_spiritghost_3_de887673d697083b1cc8e314de9bccf4.bytes size=30198      AddProjectile=11, Character=5
+assets/dataroot/m_6034_spiritghost_n1_9e28c229ed7c791838b2c792a684f9a4.bytes size=50921      AddProjectile=23, Character=7
+assets/dataroot/m_6034_spiritghost_n2_5fe36e0ca416a53e678ad2a1ddba8ea3.bytes size=19260      AddProjectile=1, Character=14
+assets/dataroot/m_6038_violentdog_1_e5e2d844f98a64dacc652a438d5cc32a.bytes size=25459      Character=2
+assets/dataroot/m_6039_daggerguard_1_7c0b509e42acb25a1dc13166c0d34df1.bytes size=15661      AddProjectile=3, Character=4
+assets/dataroot/m_6040_guardhead_1_ee0443eeb59f9d7676aea7a5ce32b78b.bytes size=28702      AddProjectile=6, Character=19
+assets/dataroot/m_6041_shouleibaobiao_1_e087f760a59df78dd398415b98a2d6d0.bytes size=17231      AddProjectile=6
+assets/dataroot/m_6042_yitushizhe_1_42ef5b04694c9b4a51cf30c5901f4d11.bytes size=43777      AddProjectile=78, Character=15
+assets/dataroot/m_6043_yixingxiyi_1_51067ee36799da11cfc1c69b1ac92895.bytes size=15740      AddProjectile=7, Character=2
+assets/dataroot/m_6044_treemonsterb_1_1de5b9ac4dfa9ef77d6df97ef95c1186.bytes size=47535      AddProjectile=30, Character=3
+assets/dataroot/m_6044_treemonsterb_4_80cd95bcb698fd2fe67144a1725be9a4.bytes size=9519       Character=2
+assets/dataroot/m_6046_femalethief_1_77ae3e63eabb111c63238b938175c838.bytes size=25667      AddProjectile=11
+assets/dataroot/m_6049_piper_01_8ba88dc937b33aef708fd70df2807ea4.bytes size=26375      AddProjectile=9, Character=8
+assets/dataroot/m_6050_hypnosisa_1_6ebce51d27e9a0306a2dc4d305645707.bytes size=17877      Character=7
+assets/dataroot/m_6050_hypnosisa_2_935f93db1a53ad474314fdd77da1725a.bytes size=22087      Character=11
+assets/dataroot/m_6051_femalepublic_1_d64762980c7aff6a678d3b2a5dd933b1.bytes size=15373      AddProjectile=1
+assets/dataroot/m_6052_sealsickle_1_f4a543cd009d61ffd007a599aad3f32d.bytes size=16037      AddProjectile=8, Character=2
+assets/dataroot/m_6052_sealsickle_2_d9bd8ad04d83e0da116b25157da45db0.bytes size=16025      AddProjectile=8, Character=2
+assets/dataroot/m_6052_sealsickle_3_a8886d0ec843b933059e5659b1557cec.bytes size=16035      AddProjectile=8, Character=2
+assets/dataroot/m_6052_sealsickle_4_522e4eaaf3ee461a5d319471a70a5106.bytes size=16025      AddProjectile=8, Character=2
+assets/dataroot/m_6052_sealsickle_n1_e46abebeb7258b0e799e792f977c795c.bytes size=24929      AddProjectile=14, Character=11
+assets/dataroot/m_6053_fightrobot_1_4ae53a263ee3e3d9b7ed68698236ab8f.bytes size=17978      AddProjectile=24
+assets/dataroot/m_6055_spacelord_1_661af5d3598da81b36c6564fe1e002ca.bytes size=56053      AddProjectile=126, Character=2
+assets/dataroot/m_6055_spacelord_2_8708bc051a241e8c4ff69f323a9a0532.bytes size=88232      AddProjectile=82, Character=20
+assets/dataroot/m_6057_doomdrones_1_7eb9dd5205f46f6a061bb3ead12a47da.bytes size=17067      AddProjectile=2
+assets/dataroot/m_6057_lightingtower_1_90c0a201d5a4753eea65abbe05bdcc01.bytes size=10544      AddProjectile=6
+assets/dataroot/m_6057_lightingtower_2_d0e40700f67e448b3eba3268e665c3bb.bytes size=5231       AddProjectile=6
+assets/dataroot/m_6057_lightingtower_3_5047b864b7204ddee4223fac85122ec0.bytes size=5287       AddProjectile=4
+assets/dataroot/m_6058_dragonadam_1_e80534b4f575393eba35c5d8a052e286.bytes size=101788     AddProjectile=61
+assets/dataroot/m_6058_dragonadam_s1_89e4bc5ddb0a3fa7ed08f5440a059870.bytes size=20106      AddProjectile=12, Character=7
+assets/dataroot/m_6058_dragonadam_z1_aba454d60431b1a0b5314b84533a28a5.bytes size=21867      Character=1
+assets/dataroot/m_6058_nebulafly_1_443729513d19cba6145fdf69ae2ccea3.bytes size=27743      AddProjectile=62, Character=20
+assets/dataroot/m_6059_astrology_1_c5a0f504661bd5703ba01e90ef14eded.bytes size=15389      AddProjectile=30, Character=2
+assets/dataroot/m_6070_lunarfiend_1_bb90556845930da8a04e3a42b94eca88.bytes size=122855     AddProjectile=17, Character=4
+assets/dataroot/m_6070_planet_1_463188feaa7d667b02711b115d5bee36.bytes size=16201      AddProjectile=33, Character=1
+assets/dataroot/m_7001_tyre_a1_7f95c7e33b5ace7d9104f851e9d8f6e5.bytes  size=4964       Character=2
+assets/dataroot/m_7002_car_a2_44c8a66840e0745b655c84e30dff2903.bytes   size=6886       Character=5
+assets/dataroot/m_7008_plane_a1_f43414f81d81ba104212c2f4f437a1b4.bytes size=15338      AddProjectile=12
+assets/dataroot/m_7010_cybercar_a1_5b72bb9242e01830d33f406b356301f1.bytes size=6729       Character=5
+assets/dataroot/m_8001_spirit_1_8b78b3ca71a66c39e5d71f86141dda07.bytes size=81185      AddProjectile=38, Character=4
+assets/dataroot/m_8002_devil_1_053419ff717711bd7c012b31f0e4859b.bytes  size=31402      AddProjectile=56, CN:秒杀=5, Character=6
+assets/dataroot/m_8003_shootsun_1_26c5dd1665a929238ab6f56bf7d0dbb0.bytes size=34099      AddProjectile=38
+assets/dataroot/m_baishiguanyin_a5ed90abeb8065dbceede79e78a01b62.bytes size=10111      AddProjectile=17
+assets/dataroot/m_devileye_b8c7c4bdbc078877b0d0698c3a30ace5.bytes      size=17164      AddProjectile=41
+assets/dataroot/m_emperor_85cfb94a8acedd6802cc3e8636466d8b.bytes       size=106240     AddProjectile=81, Character=54
+assets/dataroot/m_galland_1_b3b6959b53cb4383c4ce856de6fce3a8.bytes     size=35605      AddProjectile=3, Character=3
+assets/dataroot/m_galland_2_76ca3e95b32bd220f2f845ddf9d33c8f.bytes     size=37365      AddProjectile=2
+assets/dataroot/m_justin_7ee77548d2bb45d8c868d9af105c955c.bytes        size=50023      AddProjectile=98
+assets/dataroot/m_putridsword_1_e3c8a0c94b970197aba3b0aa73a55427.bytes size=2750       Character=3
+assets/dataroot/m_putridsword_2_05b874b71e3198c8d9b7b38e8d36a0c1.bytes size=2069       Character=1
+assets/dataroot/m_shantotto_n1_2e190d1bb1b657c4f627abe2cc52bb3f.bytes  size=31745      AddProjectile=16, Character=8
+assets/dataroot/m_tifa_1_aafad07cee064f1e17009ad24830c093.bytes        size=111048     Character=1
+assets/dataroot/m_whitebear_ce31b811899cb1ae2e4291c3388c1a2c.bytes     size=52675      AddProjectile=17, Character=21
+assets/dataroot/m_yuansu_minigame_628015f1ba7c9386a5a97c6b64b3c423.bytes size=168753     AddProjectile=135, Character=10
+assets/dataroot/m_yuna_fd98cb97a815873d0ffe1a6e02512063.bytes          size=56945      AddProjectile=106
+assets/dataroot/m_yuna_n1_8cdb7e64356b2b102a57e47412a725fd.bytes       size=24677      AddProjectile=3
+assets/dataroot/m_yuna_n2_1271fd52f3a7283100203fcdd4cc1cac.bytes       size=23266      AddProjectile=5, Character=7
+assets/dataroot/m_zhuque_1_b37b5382c09a5236947bb5fb13ee7823.bytes      size=49943      AddProjectile=36, Character=8
+assets/dataroot/m_zhuque_2_15aa4c2a8306171d0ea4bebc200c969d.bytes      size=49943      AddProjectile=36, Character=8
+assets/dataroot/m_zhuque_ab50cfcb4719dae49476337448b446b2.bytes        size=58248      AddProjectile=39, Character=8
+assets/dataroot/m_zidane_9a567d192ab13e22e0c03d9f9d15a5af.bytes        size=132570     AddProjectile=24
+assets/dataroot/o_1004_garbagecan_e7acf1a240b1489be9fae9abcdc38ba2.bytes size=3025       Character=3
+assets/dataroot/o_1005_bookshelf_d8f0187a729fb7dfcfdf6f96877444fd.bytes size=2850       Character=2
+assets/dataroot/o_1006_tyre_507293df0e571fab574711a1ad916349.bytes     size=7565       Character=1
+assets/dataroot/o_1007_barrel_1_2914ea70f9b7a07b099f4c6bde7e10a9.bytes size=3161       AddProjectile=1, Character=9
+assets/dataroot/o_1007_barrel_2_ecebcc3db24d916c3fb0866ef75863b3.bytes size=2280       Character=9
+assets/dataroot/o_10082_chuanghu_0a1eafe7dfceb505a40e545222819ce4.bytes size=883        Character=1
+assets/dataroot/o_1008_branch_1_b6b522c10171f19700fb8cdab0421273.bytes size=3609       Character=2
+assets/dataroot/o_1010_woodbox_1_9e2041ceaa051460a4215ec2700cc984.bytes size=4347       Character=3
+assets/dataroot/o_1035_diaoxiang_a239d1d2083c4f22e7a0eecb8ad49a20.bytes size=1777       AddProjectile=1
+assets/dataroot/o_1036_deadlink_051e6d0faf3fe25ae7c8c89adfab1488.bytes size=1412       AddProjectile=1
+assets/dataroot/o_1122_mnlfkonghezi_73ad799b3b0eec2a7cc6aed32346cd25.bytes size=7044       Character=9
+assets/dataroot/o_1122_monengzuduan_1_38043e0e3147fddf4313a6c71c7ce61a.bytes size=19941      Character=15
+assets/dataroot/o_1130_hangedcocoon_01_ec931bb54a2fed9d3f38a17e1a48d54d.bytes size=1580       Character=1
+assets/dataroot/o_1131_zergegg_01_4f7a690b36b93df8c8b0dc350d7bdaad.bytes size=2154       Character=2
+assets/dataroot/o_1131_zergegg_02_7b00919a02caae6376091acae735ea98.bytes size=1807       Character=1
+assets/dataroot/o_1142_woodchest_01_e0da91a84aedfa21650a9a8aa52f4b25.bytes size=3372       AddProjectile=2
+assets/dataroot/o_pen_59b65b89dc3f4494b50f30390e7f9d69.bytes           size=10382      AddProjectile=27
+assets/dataroot/p_aili_34788322b731db209bbc8c5ffd966768.bytes          size=9355       AddProjectile=4
+assets/dataroot/p_chaishen_df601a0a1ec17b0150b24523b9419984.bytes      size=37457      AddProjectile=42
+assets/dataroot/p_duanzuiling_598e9ae4182cc8e8193b6ab85fc3b1a9.bytes   size=25585      AddProjectile=19
+assets/dataroot/p_emperor_5358b7c5f46dd76ac277dff38671113a.bytes       size=30325      AddProjectile=6
+assets/dataroot/p_hasegawa_8ea3ac93a455c67ed542b6b53ec1791a.bytes      size=5567       AddProjectile=2
+assets/dataroot/p_hasegawa_n2_cc8411183217de3dce22a298ae583326.bytes   size=6400       Character=6
+assets/dataroot/p_hongye_75ef76f875913f97e6bfb5d445d58095.bytes        size=16838      AddProjectile=12, Character=1
+assets/dataroot/p_huizhang_e3d16cf09f07890c97ca325536385b62.bytes      size=10592      AddProjectile=6
+assets/dataroot/p_hyld_2017f38a591d5ce3d9763abb944e5b13.bytes          size=9109       Character=1
+assets/dataroot/p_hyzangma_2c25ab414b6f00e47cb226b594b96065.bytes      size=6203       Character=2
+assets/dataroot/p_konghai_ca4b05f6f78f9d85064ffbfb126b1c63.bytes       size=8803       AddProjectile=2
+assets/dataroot/p_liangya_510ebc94f2c51b3fbca567387d2ae4b5.bytes       size=14190      AddProjectile=6
+assets/dataroot/p_liangya_maincity_1c31d010e457321ca61c10321dbba368.bytes size=8677       AddProjectile=3
+assets/dataroot/p_m6020_2b971bae301353143a2d0ce6b3c7ce33.bytes         size=13052      AddProjectile=28, Character=4
+assets/dataroot/p_m6031_824344ecb30c79ffa46ace8953c7dada.bytes         size=9811       AddProjectile=8
+assets/dataroot/p_myuna_6893ef7d345c7760c25bac4c22fbe603.bytes         size=9980       AddProjectile=1
+assets/dataroot/p_qianji_696cda0dd372fd298fc08d3e4e252f7a.bytes        size=19067      Character=2
+assets/dataroot/p_renzaoren18_4a5ea0d68750c4c6fd278cf7dfc6d454.bytes   size=8834       AddProjectile=3
+assets/dataroot/p_shantotto_189e2ea8a13a5b24dd01ce7e986d1506.bytes     size=37742      AddProjectile=33
+assets/dataroot/p_sl_deadsoul_9187a15d5f79ecd6e9ff23ecf3ea2cad.bytes   size=4969       AddProjectile=2
+assets/dataroot/p_sl_shuangzi_c7bdca01eab6f8b6b39d3bde6b36dffb.bytes   size=34428      Character=32
+assets/dataroot/p_sl_spectre_c586c30353a9462fc327effc88c5057b.bytes    size=12634      Character=2
+assets/dataroot/p_tifa_f58a818cb36c3f345a62b6b339970c5f.bytes          size=111020     Character=1
+assets/dataroot/p_wuming_8ddf8862dda04e081587459c868c2c07.bytes        size=8281       AddProjectile=6
+assets/dataroot/p_wuming_maincity_04c0b42f05ee39a17bb47f52214cd93c.bytes size=5330       AddProjectile=4
+assets/dataroot/p_wunvmengling_a372b2949cc688cd9125d52406e29e55.bytes  size=13627      AddProjectile=9
+assets/dataroot/p_xingshuang_915dcd0d7e0bca5be32b15a12a0cd8a2.bytes    size=20387      AddProjectile=1
+assets/dataroot/p_zhenxiao_da6b1bbddc4f1e2d8e844576e24051a9.bytes      size=14748      AddProjectile=22
+assets/dataroot/pet_a_04_eb2775b35575f026a05b88d65af85b4c.bytes        size=6279       AddProjectile=6
+assets/dataroot/pet_a_05_f0ba3f60a162a442782ea5723ebae6c8.bytes        size=8814       AddProjectile=5
+assets/dataroot/pet_a_07_b41825d54e1d5124893f73bdfbfdae0c.bytes        size=16463      AddProjectile=28, Character=6
+assets/dataroot/pet_a_08_b19cffb5fc089ff236c3c9eb96fac9a8.bytes        size=7021       Character=24
+assets/dataroot/pet_a_09_76a4ca6af3f72b95c2924036c4be6cda.bytes        size=6663       AddProjectile=12
+assets/dataroot/pet_a_13_28548c28637a7184cad5dc3aa7f4daca.bytes        size=8213       AddProjectile=1
+assets/dataroot/pet_a_13_b_5d48654a3dc775bd3b3e4b557e248461.bytes      size=4512       AddProjectile=2
+assets/dataroot/pet_b_08_6b9cbef4b61986ca211d5dba3c438469.bytes        size=9157       Character=2
+assets/dataroot/pet_c_01_30942a3484c9d27bc3b2047ed736b136.bytes        size=4414       Character=6
+assets/dataroot/pet_c_02_cbaf09107671ad761c7a9bb1b235ef50.bytes        size=8504       Character=20
+assets/dataroot/pet_c_03_35333702eb4dafc7218089b731e0c77f.bytes        size=5652       Character=10
+assets/dataroot/realm_emitterforestenergyball_3530bb0ab932de11be0e5e66a3330297.bytes size=1053       AddProjectile=1
+assets/dataroot/realm_forestenergyball_b2882662418333a0dae3ce02aea3dc52.bytes size=5647       AddProjectile=7
+assets/dataroot/realm_scenebuff_bubbles_a952d7a700e5cd946e7fcf757056d0b9.bytes size=1931       AddProjectile=1
+assets/dataroot/realm_scenebuff_bubblessummoner_0ce3a37d685e04bd007d19ca4d010854.bytes size=991        AddProjectile=1, Character=1
+assets/dataroot/realm_scenebuff_ice_81819c6381c39bc0ad6a096022e97fe9.bytes size=1141       Character=2
+assets/dataroot/realm_scenebuff_luoyeguigen_694fe110a63e35b8f6a752ad1f662cb2.bytes size=1188       AddProjectile=1, Character=2
+assets/dataroot/realm_scenebuff_shabao_605e86d95c9efb66611fcca1d3e1d447.bytes size=2697       AddProjectile=8
+assets/dataroot/startower_spritf_3650ee162e33816747f4564bb39c0f2a.bytes size=7764       AddProjectile=15, Character=9
+assets/dataroot/yuyu_maincity_02_cat_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_02_cat_maincity_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_03_cat_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_03_cat_maincity_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_04_cat_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_04_cat_maincity_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_05_cat_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_05_cat_maincity_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_cat_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/yuyu_maincity_cat_maincity_b95d425bafdcb0b529c668f7ea53e100.bytes size=1409       Character=3
+assets/dataroot/z_0007_zhongdian_5_417b671a74e267201d70de55b993cfed.bytes size=1994       AddProjectile=2
+assets/dataroot/z_empty_54712c65f880a291cda96d751df26405.bytes         size=5248       Character=1
+assets/dataroot/z_empty_game_6a2d0de83ff296a2a459fb5e639c7997.bytes    size=1357       AddProjectile=2
+assets/dataroot/z_empty_icesummon_c488a50826fb46c31577e08328381248.bytes size=2043       AddProjectile=3, Character=1
+assets/dataroot/z_soilstone_812226f19f2c00711d0cbf5439c4926e.bytes     size=4165       AddProjectile=2
+classes.dex                                                            size=8770180    Character=38
+classes2.dex                                                           size=7168940    Character=4
+classes4.dex                                                           size=13884      Character=1
+classes5.dex                                                           size=446136     GetFeatureList=1, startFunction=1
+classes6.dex                                                           size=3461512    Character=3
+classes7.dex                                                           size=460936     Character=4
+lib/arm64-v8a/libSDKloading.so                                         size=3893752    libSDKloading=2
+lib/arm64-v8a/libil2cpp.so                                             size=87013984   Character=32, il2cpp_method_get_name=1
+lib/arm64-v8a/libttmplayer_lite.so                                     size=1502480    Character=2
+lib/arm64-v8a/libunity.so                                              size=21037864   Character=48, il2cpp_method_get_name=2

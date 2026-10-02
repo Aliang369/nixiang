@@ -1,0 +1,68 @@
+# 字符串 xref 命中点 —— libil2cpp.so
+# 目标串： "AllocFrame"(0xD1CA18) / "AllocStackSlot"(0xCF2929)   均在 .rodata，delta=0
+# 代码段： PT_LOAD2 R-X   file 0x1D7308C..0x4CFF290   RVA 0x1D7408C..0x4CFF290  delta=0x1000
+#          共扫描 12,463,233 条 AArch64 指令（.text + il2cpp AOT + .plt）
+# 解码器： 自写（ADRP / ADD|SUB-imm / MOVZ+MOVK / MOV(ORR) / LDR-STR 类），无 capstone
+# 扫描法： ①仅 ADRP 落在目标页（214 条）②函数内寄存器值追踪（完整，无窗口限制）
+# 结论：   精确命中串首地址的引用 **只有 2 处**，且都在同一个函数族里
+# ============================================================================
+
+[1] 字符串本体（全文件 whole-word 唯一命中）
+--------------------------------------------------------------------------
+pattern 'AllocFrame'     -> 1 hit
+  off=0x00D1CA18  va=0x00D1CA18  串长=10  NUL 结尾  section=.rodata
+     full_string = "AllocFrame"
+     上下文 = "...|Object|unused table type.|<Module>|image can't be inited again.!.|AllocFrame|bad delegate.u|JNI_OnLoad|Enum|System.IO.Compression|Unable to create an array of type '|..."
+
+pattern 'AllocStackSlot' -> 1 hit
+  off=0x00CF2929  va=0x00CF2929  串长=14  NUL 结尾  section=.rodata
+     full_string = "AllocStackSlot"
+     上下文 = "...|Could not load type '|reloading placeholder assembly is not supported!.|GetManaged2NativeMethodPointer| sinature:%s not support..|AllocStackSlot|StackTraceUtility.v.i.|%s|ThreadStaticAttribute|Image::ReadTypeFromResolutionScope|..."
+
+pattern 'alloc_frame' / 'alloc_stack_slot' -> 0 hit（无下划线变体、无 -fno-rtti 类附加串）
+
+[2] 数据侧引用（全部为 0）
+--------------------------------------------------------------------------
+.rela.dyn 条目 = 550,609（off=0x35E68 size=0xC9A398）
+  addend == 0x00D1CA18 的重定位: 0 条
+  addend == 0x00CF2929 的重定位: 0 条
+.data.rel.ro 里 8 字节裸指针 == 0x00D1CA18: 0 处
+.data.rel.ro 里 8 字节裸指针 == 0x00CF2929: 0 处
+=> 两串不是任何 vtbl / 函数指针表 / 异常类型表的成员，只可能被代码内联引用。
+
+[3] 代码侧 xref —— 精确落到串首地址的指令序列
+--------------------------------------------------------------------------
+HIT #1  AllocStackSlot  ADRP+ADD      ADRP RVA 0x207DD98   ADD RVA 0x207DD9C
+  0x207DD98: b0ff63a0  adrp  x0, 0xCF2000
+  0x207DD9C: 9124a400  add   x0, x0, #0x929          <== 0xCF2000+0x929 = 0x00CF2929 "AllocStackSlot"
+  0x207DDA0: 94013030  bl    0x20C9E60
+  0x207DDA4: aa1f03e1  mov   x1, xzr
+  0x207DDA8: 94012a9d  bl    0x20C881C                (尾部 __cxa_throw，noreturn)
+  所属函数入口：0x207DD40（= AllocStackSlot 本体；该冷路径块紧跟其 ret 之后，
+                由函数体内 0x207DD7C `b.gt 0x207DD98` 跳入）
+
+HIT #2  AllocFrame      ADRP+ADD      ADRP RVA 0x207DDF0   ADD RVA 0x207DDF4
+  0x207DDF0: f0ff64e0  adrp  x0, 0xD1C000
+  0x207DDF4: 91286000  add   x0, x0, #0xa18          <== 0xD1C000+0xA18 = 0x00D1CA18 "AllocFrame"
+  0x207DDF8: 9401301a  bl    0x20C9E60
+  0x207DDFC: aa1f03e1  mov   x1, xzr
+  0x207DE00: 94012a87  bl    0x20C881C
+  所属函数入口：0x207DDAC（= AllocFrame 本体；冷路径块紧跟其 ret 之后，
+                由函数体内 0x207DDC4 `cbnz x8, 0x207DDF0` 跳入）
+
+（寄存器追踪另在 0x207DDB4/0x207DDC8（mov x19,x0 / mov x0,x19 转发 AllocStackSlot 串值）
+  和 0x207DE14（mov x23,x0 转发 AllocFrame 串值）看到同值传播 —— 同属上面两个函数，非独立 xref。）
+
+[4] 页级 ADRP 命中统计（214 条）说明
+--------------------------------------------------------------------------
+0xCF2000 页与 0xD1C000 页是**大串池页**，页内其它字符串被大量代码引用（214 条 ADRP 落在这两页）。
+但把 ADD/LDR 立即数算进去后，精确落到 0xCF2929 / 0xD1CA18 的**只有上表 2 处**。
+=> 壳的「找引用字符串的指令」判据在这份 so 上唯一成立，没有歧义。
+
+[5] 复现
+--------------------------------------------------------------------------
+C:\Users\Administrator\AppData\Local\Programs\Python\Python311\python.exe .\_find_strings.py
+C:\Users\Administrator\AppData\Local\Programs\Python\Python311\python.exe .\_region_char.py
+C:\Users\Administrator\AppData\Local\Programs\Python\Python311\python.exe .\_trace_xrefs.py
+E:\...\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe ^
+    -d --start-address=0x207dd80 --stop-address=0x207de40 libil2cpp.so

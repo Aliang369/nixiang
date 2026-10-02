@@ -1,0 +1,351 @@
+# hotupdate_hits.txt — 目标名字（精确匹配，区分大小写）在 Assembly-CSharp.dll 中的归属
+# 说明：7 个名字里另含 2 个"类名"（Character / StarsCollider / MW_GameNotice 见下），
+#       凡方法名 0 命中的名字，会在「类名命中」小节给出该 TypeDef 及其方法清单。
+# 程序集：Assembly-CSharp（HybridCLR 热更 DLL，非 AOT）
+# 每条：类全名 :: 签名 | MethodDef token=0x06XXXXXX | 特征标签
+
+==============================================================================
+## 目标名 `Damage`
+==============================================================================
+--- 方法名精确命中：3 处 ---
+  ActionGameLibrary.InteractiveGameObject :: Damage(long, DamageEnumerate.DamageType, bool) -> void
+      token=0x0601E0B9 (rid=123065) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  ActionGameLibrary.Character :: Damage(long, DamageEnumerate.DamageType, bool) -> void
+      token=0x0601F131 (rid=127281) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  ActionGameLibrary.Character :: Damage(BigInt, DamageEnumerate.DamageType, bool) -> void
+      token=0x0601F132 (rid=127282) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+--- 同名【类】命中：0 个 ---
+
+==============================================================================
+## 目标名 `Character`
+==============================================================================
+--- 方法名精确命中：0 处 ---
+  (无同名的具体方法)
+--- 同名/后缀同名【类】命中：1 个 ---
+  类型 ActionGameLibrary.Character  [31 methods]  标签=BATTLE-LIKE
+      ActionGameLibrary.Character :: Init() -> void | token=0x0601F12D
+      ActionGameLibrary.Character :: Clear() -> void | token=0x0601F12E
+      ActionGameLibrary.Character :: .ctor(UnityEngine.GameObject) -> void | token=0x0601F12F
+      ActionGameLibrary.Character :: Dispose() -> void | token=0x0601F130
+      ActionGameLibrary.Character :: Damage(long, DamageEnumerate.DamageType, bool) -> void | token=0x0601F131
+      ActionGameLibrary.Character :: Damage(BigInt, DamageEnumerate.DamageType, bool) -> void | token=0x0601F132
+      ActionGameLibrary.Character :: CheckDead(bool, bool, bool, bool) -> bool | token=0x0601F133
+      ActionGameLibrary.Character :: OnSheildValueChange(ActionGameLibrary.Event) -> void | token=0x0601F134
+      ActionGameLibrary.Character :: UpdateSheildValue(long, long, float, int) -> void | token=0x0601F135
+      ActionGameLibrary.Character :: ToDeadActionProcess(float, string, bool) -> void | token=0x0601F136
+      ActionGameLibrary.Character :: doDeadAction() -> void | token=0x0601F137
+      ActionGameLibrary.Character :: ToAcceptActionProcess(bool) -> void | token=0x0601F138
+      ActionGameLibrary.Character :: brokenToPeace() -> void | token=0x0601F139
+      ActionGameLibrary.Character :: checkIsCanBeBroken() -> bool | token=0x0601F13A
+      ActionGameLibrary.Character :: StartSubCharacterLink() -> void | token=0x0601F13B
+      ActionGameLibrary.Character :: StopSubCharacterLink() -> void | token=0x0601F13C
+      ActionGameLibrary.Character :: AddSubCharacter(ActionGameLibrary.Character, System.Collections.Generic.List`1<ActionGameLibrary.CharacterGroupLinker>) -> void | token=0x0601F13D
+      ActionGameLibrary.Character :: IsExistsSubCharacter(ActionGameLibrary.Character) -> bool | token=0x0601F13E
+      ActionGameLibrary.Character :: RemoveSubCharacter(ActionGameLibrary.Character) -> void | token=0x0601F13F
+      ActionGameLibrary.Character :: RemoveAllSubCharacter() -> void | token=0x0601F140
+      ActionGameLibrary.Character :: GetSubCharacter(int) -> ActionGameLibrary.Character | token=0x0601F141
+      ActionGameLibrary.Character :: LinkRun() -> void | token=0x0601F142
+      ActionGameLibrary.Character :: LinkRunForCharacter() -> void | token=0x0601F143
+      ActionGameLibrary.Character :: CharacterGroupLinker(ActionGameLibrary.CharacterGroupLinkerType) -> ActionGameLibrary.CharacterGroupLinker | token=0x0601F144
+      ActionGameLibrary.Character :: FortSteering(UnityEngine.Vector3, float, System.Action`1<object>, object) -> void | token=0x0601F145
+      ActionGameLibrary.Character :: Revive(UnityEngine.Vector3, bool) -> void | token=0x0601F146
+      ActionGameLibrary.Character :: Sleep() -> void | token=0x0601F147
+      ActionGameLibrary.Character :: ReSleep() -> void | token=0x0601F148
+      ActionGameLibrary.Character :: TweenAlpha(float, float, float) -> void | token=0x0601F149
+      ActionGameLibrary.Character :: RestoreAlpha() -> void | token=0x0601F14A
+      ActionGameLibrary.Character :: .cctor() -> void | token=0x0601F14B
+
+==============================================================================
+## 目标名 `DoAttack`
+==============================================================================
+--- 方法名精确命中：1 处 ---
+  ActionGameLibrary.StarsCollider :: DoAttack(ActionGameLibrary.IAttack, ActionGameLibrary.IAccept, ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, UnityEngine.Vector3, int, ActionGameLibrary.SynHitData) -> void
+      token=0x0601E8D9 (rid=125145) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+--- 同名【类】命中：0 个 ---
+
+==============================================================================
+## 目标名 `StarsCollider`
+==============================================================================
+--- 方法名精确命中：0 处 ---
+  (无同名的具体方法)
+--- 同名/后缀同名【类】命中：1 个 ---
+  类型 ActionGameLibrary.StarsCollider  [45 methods]  标签=BATTLE-LIKE
+      ActionGameLibrary.StarsCollider :: .ctor() -> void | token=0x0601E8BE
+      ActionGameLibrary.StarsCollider :: get_isDebugMode() -> bool | token=0x0601E8BF
+      ActionGameLibrary.StarsCollider :: set_isDebugMode(bool) -> void | token=0x0601E8C0
+      ActionGameLibrary.StarsCollider :: CreatHitBoxPainter() -> void | token=0x0601E8C1
+      ActionGameLibrary.StarsCollider :: ClearHitBoxPainter() -> void | token=0x0601E8C2
+      ActionGameLibrary.StarsCollider :: Dispose() -> void | token=0x0601E8C3
+      ActionGameLibrary.StarsCollider :: Revolve() -> void | token=0x0601E8C4
+      ActionGameLibrary.StarsCollider :: get_revolveDelegate() -> ActionGameLibrary.RevolveDelegate | token=0x0601E8C5
+      ActionGameLibrary.StarsCollider :: AddAttacker(ActionGameLibrary.IAttack) -> void | token=0x0601E8C6
+      ActionGameLibrary.StarsCollider :: AddAttacker(ActionGameLibrary.ActionGameObject) -> void | token=0x0601E8C7
+      ActionGameLibrary.StarsCollider :: RemoveAttacker(ActionGameLibrary.IAttack) -> void | token=0x0601E8C8
+      ActionGameLibrary.StarsCollider :: RemoveAttacker(ActionGameLibrary.ActionGameObject) -> void | token=0x0601E8C9
+      ActionGameLibrary.StarsCollider :: AddAccepter(ActionGameLibrary.IAccept) -> void | token=0x0601E8CA
+      ActionGameLibrary.StarsCollider :: AddAccepter(ActionGameLibrary.ActionGameObject) -> void | token=0x0601E8CB
+      ActionGameLibrary.StarsCollider :: RemoveAccepter(ActionGameLibrary.IAccept) -> void | token=0x0601E8CC
+      ActionGameLibrary.StarsCollider :: RemoveAccepter(ActionGameLibrary.ActionGameObject) -> void | token=0x0601E8CD
+      ActionGameLibrary.StarsCollider :: CheckInAttatkerList(ActionGameLibrary.IAttack) -> bool | token=0x0601E8CE
+      ActionGameLibrary.StarsCollider :: CheckInAccepterList(ActionGameLibrary.IAccept) -> bool | token=0x0601E8CF
+      ActionGameLibrary.StarsCollider :: DrawHitBox() -> void | token=0x0601E8D0
+      ActionGameLibrary.StarsCollider :: HitTest() -> void | token=0x0601E8D1
+      ActionGameLibrary.StarsCollider :: ShapeIntersect(ActionGameLibrary.AttackData, ActionGameLibrary.HitArea.AreaShape, ref ActionGameLibrary.BoxData, ref ActionGameLibrary.SphereData, ref ActionGameLibrary.HollowCylinderData, ref ActionGameLibrary.BoxData, ref float, ref UnityEngine.Vector3) -> bool | token=0x0601E8D2
+      ActionGameLibrary.StarsCollider :: UpdateHitPoint(ActionGameLibrary.AttackData, ref UnityEngine.Vector3, ref Dest.Math.Box3, ref Dest.Math.Box3, ref float) -> void | token=0x0601E8D3
+      ActionGameLibrary.StarsCollider :: UpdateHitPoint(ActionGameLibrary.AttackData, ref UnityEngine.Vector3, ref Dest.Math.Sphere3, ref Dest.Math.Box3, ref float) -> void | token=0x0601E8D4
+      ActionGameLibrary.StarsCollider :: CheckSynHit() -> void | token=0x0601E8D5
+      ActionGameLibrary.StarsCollider :: GetHitPoint(ref Dest.Math.Box3, ref Dest.Math.Box3, ref float) -> UnityEngine.Vector3 | token=0x0601E8D6
+      ActionGameLibrary.StarsCollider :: GetHitPoint(ref Dest.Math.Sphere3, ref Dest.Math.Box3, ref float) -> UnityEngine.Vector3 | token=0x0601E8D7
+      ActionGameLibrary.StarsCollider :: CheckHitType(ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData) -> bool | token=0x0601E8D8
+      ActionGameLibrary.StarsCollider :: DoAttack(ActionGameLibrary.IAttack, ActionGameLibrary.IAccept, ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, UnityEngine.Vector3, int, ActionGameLibrary.SynHitData) -> void | token=0x0601E8D9
+      ActionGameLibrary.StarsCollider :: RecordHited(ActionGameLibrary.IAttack, ActionGameLibrary.IAccept, ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, UnityEngine.Vector3, float) -> void | token=0x0601E8DA
+      ActionGameLibrary.StarsCollider :: GetDistanceStrength(UnityEngine.Vector3) -> float | token=0x0601E8DB
+      ActionGameLibrary.StarsCollider :: AddShock(ActionData.LShakeCamera, float) -> void | token=0x0601E8DC
+      ActionGameLibrary.StarsCollider :: AddReboundShock(UnityEngine.Vector3) -> void | token=0x0601E8DD
+      ActionGameLibrary.StarsCollider :: ClearComboCount() -> void | token=0x0601E8DE
+      ActionGameLibrary.StarsCollider :: DamageTo(ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.InteractiveGameObject, long, DamageEnumerate.DamageType, bool, bool, UnityEngine.Vector3, bool, int, bool, bool, bool) -> void | token=0x0601E8DF
+      ActionGameLibrary.StarsCollider :: CreatHitSound(System.Collections.Generic.List`1<ActionGameLibrary.AttackSoundData>, float) -> void | token=0x0601E8E0
+      ActionGameLibrary.StarsCollider :: CreatHitEffects(ref UnityEngine.Vector3, ActionGameLibrary.AttackData, UnityEngine.Vector3, ActionGameLibrary.IAccept, bool, ActionGameLibrary.IAttack) -> void | token=0x0601E8E1
+      ActionGameLibrary.StarsCollider :: CheckHitEffect(string, UnityEngine.Vector3) -> bool | token=0x0601E8E2
+      ActionGameLibrary.StarsCollider :: RemoveHitEffect(ActionGameLibrary.ActionGameEffect) -> void | token=0x0601E8E3
+      ActionGameLibrary.StarsCollider :: HitEffectLimit() -> void | token=0x0601E8E4
+      ActionGameLibrary.StarsCollider :: CreatHitEffect(ref UnityEngine.Vector3, UnityEngine.Vector3, ActionGameLibrary.IAccept, ActionGameLibrary.AttackEffectData, bool) -> void | token=0x0601E8E5
+      ActionGameLibrary.StarsCollider :: GetOriginalDamage(ActionGameLibrary.AttackData, ActionGameLibrary.CharacterData, ActionGameLibrary.CharacterData, ActionGameLibrary.ActionState, bool, int, string, int) -> ActionGameLibrary.DamageInfo | token=0x0601E8E6
+      ActionGameLibrary.StarsCollider :: CheckActionRange(ActionGameLibrary.Action, ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject) -> bool | token=0x0601E8E7
+      ActionGameLibrary.StarsCollider :: CheckActionRange(ActionGameLibrary.Action, ActionGameLibrary.IActionGameObject, UnityEngine.Vector3) -> bool | token=0x0601E8E8
+      ActionGameLibrary.StarsCollider :: HitTestClientLocal(ActionGameLibrary.Hitter, int) -> bool | token=0x0601E8E9
+      ActionGameLibrary.StarsCollider :: .cctor() -> void | token=0x0601E8EA
+
+==============================================================================
+## 目标名 `AddProjectile`
+==============================================================================
+--- 方法名精确命中：3 处 ---
+  BaseUIMiniMap :: AddProjectile(ActionGameLibrary.Event) -> void
+      token=0x060040B4 (rid=16564) | 程序集=Assembly-CSharp | 标签=-
+  ActionGameLibrary.GameObjectManager :: AddProjectile(ActionGameLibrary.ActionGameProjectile) -> void
+      token=0x0601E994 (rid=125332) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  ActionGameLibrary.ActionCommand_AddProjectile :: AddProjectile(ActionGameLibrary.Character, ActionGameLibrary.ActionGameObject, ActionData.LAddProjectile, int, UnityEngine.Vector3, UnityEngine.Vector3, ActionGameLibrary.Action, int, int, ActionGameLibrary.IActionGameObject, int, bool, int, int, bool, int, int) -> ActionGameLibrary.ActionGameProjectile
+      token=0x0601EB9A (rid=125850) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+--- 同名【类】命中：0 个 ---
+
+==============================================================================
+## 目标名 `ShowWin`
+==============================================================================
+--- 方法名精确命中：94 处 ---
+  MW_RoleTitleAttrib :: ShowWin() -> void
+      token=0x06002A45 (rid=10821) | 程序集=Assembly-CSharp | 标签=-
+  MW_LuckykoiJoin :: ShowWin(int) -> void
+      token=0x06002E95 (rid=11925) | 程序集=Assembly-CSharp | 标签=-
+  MW_LuckykoiReward :: ShowWin(int) -> void
+      token=0x06002E9E (rid=11934) | 程序集=Assembly-CSharp | 标签=GAME-REWARD
+  MW_TeamExploration :: ShowWin(int) -> void
+      token=0x06003070 (rid=12400) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamExplorationDoor :: ShowWin(System.Action) -> void
+      token=0x060030DC (rid=12508) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamExplorationDoorEvent :: ShowWin(GameConfigData.MapEvent, System.Action) -> void
+      token=0x060030E6 (rid=12518) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamExplorationEvent :: ShowWin(GameConfigData.MapEvent) -> void
+      token=0x060030F0 (rid=12528) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamExplorationFund :: ShowWin(int, int) -> void
+      token=0x060030FE (rid=12542) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamExplorationRecord :: ShowWin() -> void
+      token=0x06003137 (rid=12599) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamExplorationShop :: ShowWin(int, int) -> void
+      token=0x0600315A (rid=12634) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamExplorationSpcEvent :: ShowWin(GameConfigData.MapEvent) -> void
+      token=0x06003165 (rid=12645) | 程序集=Assembly-CSharp | 标签=-
+  MW_GMSimple :: ShowWin(string) -> bool
+      token=0x060042EB (rid=17131) | 程序集=Assembly-CSharp | 标签=-
+  MW_AbyssDropAtlas :: ShowWin(int) -> void
+      token=0x0600454C (rid=17740) | 程序集=Assembly-CSharp | 标签=-
+  MW_CelebrationShop :: ShowWin(int) -> void
+      token=0x0600462F (rid=17967) | 程序集=Assembly-CSharp | 标签=-
+  MW_AFKTeamBattleWin :: ShowWin() -> void
+      token=0x06004997 (rid=18839) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_EquipDropAtlas :: ShowWin(int, int) -> void
+      token=0x06004A35 (rid=18997) | 程序集=Assembly-CSharp | 标签=-
+  MW_AFKSkillGachaNewWishSelect :: ShowWin(int, int, int) -> void
+      token=0x06004EDC (rid=20188) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_AFKSkillGachaWishSelect :: ShowWin(int, int, int) -> void
+      token=0x06004EE8 (rid=20200) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  UI_BossBuffShow :: ShowWin(GameConfigData.StateData, UnityEngine.Vector3, UnityEngine.Vector3, bool) -> void
+      token=0x06005374 (rid=21364) | 程序集=Assembly-CSharp | 标签=-
+  MW_SeceretRealmDropAtlas :: ShowWin(int, int) -> void
+      token=0x06005601 (rid=22017) | 程序集=Assembly-CSharp | 标签=-
+  MW_AFKAchievement :: ShowWin(int, string) -> void
+      token=0x060056B4 (rid=22196) | 程序集=Assembly-CSharp | 标签=-
+  MW_DarkEnergyDropAtlas :: ShowWin() -> void
+      token=0x06005786 (rid=22406) | 程序集=Assembly-CSharp | 标签=-
+  MW_EquipmentInheritResult :: ShowWin(ulong) -> void
+      token=0x060057C2 (rid=22466) | 程序集=Assembly-CSharp | 标签=-
+  MW_EquipmentInheritSelect :: ShowWin(SystemKey, UnityEngine.Vector3, System.Action`1<EquipInfo>, EquipInfo, EquipInfo) -> void
+      token=0x060057C6 (rid=22470) | 程序集=Assembly-CSharp | 标签=-
+  MW_EquipmentInheritVerify :: ShowWin(EquipInfo, EquipInfo, System.Action, int, bool, bool) -> void
+      token=0x060057D2 (rid=22482) | 程序集=Assembly-CSharp | 标签=-
+  MW_SingleArenaDamage :: ShowWin(bool, int, int) -> void
+      token=0x060058EE (rid=22766) | 程序集=Assembly-CSharp | 标签=-
+  MW_SingleArenaRank :: ShowWin(int) -> void
+      token=0x060058F4 (rid=22772) | 程序集=Assembly-CSharp | 标签=-
+  MW_SingleArenaRecord :: ShowWin() -> void
+      token=0x060058FA (rid=22778) | 程序集=Assembly-CSharp | 标签=-
+  MW_SingleArena_BattleDefense :: ShowWin(int, System.Collections.Generic.List`1<proto_ff.Item>) -> void
+      token=0x0600590A (rid=22794) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_MagicCardComposeConfirm :: ShowWin(System.Collections.Generic.List`1<int>, System.Action) -> void
+      token=0x060059BE (rid=22974) | 程序集=Assembly-CSharp | 标签=-
+  MW_MagicCardComposeResult :: ShowWin(int, proto_ff.BindStatus) -> void
+      token=0x060059C3 (rid=22979) | 程序集=Assembly-CSharp | 标签=-
+  MW_MagicCardLevelUp :: ShowWin(ItemInfo, GameConfigData.ItemCard, ulong) -> void
+      token=0x060059C8 (rid=22984) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_MagicCardLevelUpResult :: ShowWin(int, int) -> void
+      token=0x060059ED (rid=23021) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_MagicCardLevelUpSelect :: ShowWin(System.Action`3<ItemInfo,GameConfigData.ItemCard,ulong>, ItemInfo, GameConfigData.ItemCard, ulong, int) -> void
+      token=0x060059F1 (rid=23025) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_EquipIdentify :: ShowWin(EquipInfo) -> void
+      token=0x06005A8F (rid=23183) | 程序集=Assembly-CSharp | 标签=-
+  MW_EquipRecastLibrary :: ShowWin(EquipInfo) -> void
+      token=0x06005ABC (rid=23228) | 程序集=Assembly-CSharp | 标签=-
+  MW_EquipRecastResult :: ShowWin(EquipInfo) -> void
+      token=0x06005AC0 (rid=23232) | 程序集=Assembly-CSharp | 标签=-
+  MW_ExchangeActShop :: ShowWin(int) -> void
+      token=0x06005BD7 (rid=23511) | 程序集=Assembly-CSharp | 标签=-
+  MW_RelicAttrFilter :: ShowWin(System.Action`4<int,int,int,int>, int, int, int, int) -> void
+      token=0x06005C68 (rid=23656) | 程序集=Assembly-CSharp | 标签=-
+  MW_FriendGetGift :: ShowWin() -> void
+      token=0x06005DB3 (rid=23987) | 程序集=Assembly-CSharp | 标签=GAME-REWARD
+  UI_FriendPrivateChatTips :: ShowWin() -> void
+      token=0x06005E2C (rid=24108) | 程序集=Assembly-CSharp | 标签=-
+  UI_SystemOpenFlyEffect :: ShowWin(System.Collections.Generic.List`1<GameConfigData.SysAddress>, System.Collections.Generic.List`1<UnityEngine.Vector3>) -> void
+      token=0x06005F07 (rid=24327) | 程序集=Assembly-CSharp | 标签=-
+  UI_SystemOpenFlyEffect :: ShowWin(System.Collections.Generic.List`1<GameConfigData.PlayerTransferTree>, System.Collections.Generic.List`1<UnityEngine.Vector3>) -> void
+      token=0x06005F08 (rid=24328) | 程序集=Assembly-CSharp | 标签=-
+  UI_SystemOpenFlyEffect :: ShowWin(System.Collections.Generic.List`1<MW_TaskComplete.FunctionItem>, System.Collections.Generic.List`1<UnityEngine.Vector3>) -> void
+      token=0x06005F09 (rid=24329) | 程序集=Assembly-CSharp | 标签=-
+  MW_SectSetMissRecord :: ShowWin() -> void
+      token=0x06005F56 (rid=24406) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBossDamageRank :: ShowWin() -> void
+      token=0x06006032 (rid=24626) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBossRank :: ShowWin(int) -> void
+      token=0x06006039 (rid=24633) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBossResult :: ShowWin() -> void
+      token=0x0600603E (rid=24638) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBossReward :: ShowWin() -> void
+      token=0x06006045 (rid=24645) | 程序集=Assembly-CSharp | 标签=GAME-REWARD
+  MW_GuildRaidShop :: ShowWin(int) -> void
+      token=0x0600621A (rid=25114) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildRecharge :: ShowWin(int) -> void
+      token=0x06006275 (rid=25205) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildActivityMemberDetail :: ShowWin() -> void
+      token=0x060063C9 (rid=25545) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildAltar :: ShowWin() -> void
+      token=0x060063D7 (rid=25559) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildApply :: ShowWin(proto_ff.NewGuildQueryGuildListInfo, bool) -> void
+      token=0x060063E9 (rid=25577) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildApply :: ShowWin(ulong, string) -> void
+      token=0x060063EA (rid=25578) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildApplyList :: ShowWin() -> void
+      token=0x060063F3 (rid=25587) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildAvatarSetting :: ShowWin() -> void
+      token=0x06006400 (rid=25600) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBargain :: ShowWin() -> void
+      token=0x06006406 (rid=25606) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBargainConfirm :: ShowWin(int, long) -> void
+      token=0x06006414 (rid=25620) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBaseInfo :: ShowWin() -> void
+      token=0x0600641B (rid=25627) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBlessHelp :: ShowWin() -> void
+      token=0x0600642C (rid=25644) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildBuildList :: ShowWin() -> void
+      token=0x06006435 (rid=25653) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildCreate :: ShowWin() -> void
+      token=0x06006440 (rid=25664) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildInviteList :: ShowWin() -> void
+      token=0x06006460 (rid=25696) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildJobPermissions :: ShowWin() -> void
+      token=0x06006466 (rid=25702) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildLog :: ShowWin() -> void
+      token=0x0600646A (rid=25706) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildMemberList :: ShowWin() -> void
+      token=0x06006472 (rid=25714) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildNotice :: ShowWin() -> void
+      token=0x06006482 (rid=25730) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildRank :: ShowWin() -> void
+      token=0x06006487 (rid=25735) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildRename :: ShowWin() -> void
+      token=0x0600648D (rid=25741) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildSignIn :: ShowWin() -> void
+      token=0x06006492 (rid=25746) | 程序集=Assembly-CSharp | 标签=-
+  MW_GuildUnBargainMember :: ShowWin() -> void
+      token=0x0600649B (rid=25755) | 程序集=Assembly-CSharp | 标签=-
+  HelpDefaultTips :: ShowWin(GameConfigData.SysHelp) -> void
+      token=0x06006562 (rid=25954) | 程序集=Assembly-CSharp | 标签=-
+  HelpDefaultTips :: ShowWin(string, string) -> void
+      token=0x06006563 (rid=25955) | 程序集=Assembly-CSharp | 标签=-
+  MW_KingRacingGuildScoreInfo :: ShowWin() -> void
+      token=0x060067CB (rid=26571) | 程序集=Assembly-CSharp | 标签=-
+  MW_KingRacingLimitedTimeSprint :: ShowWin(int) -> void
+      token=0x060067D8 (rid=26584) | 程序集=Assembly-CSharp | 标签=-
+  MW_LimitedTimeSprintTaskTips :: ShowWin() -> void
+      token=0x06006886 (rid=26758) | 程序集=Assembly-CSharp | 标签=-
+  MW_GameNotice :: ShowWin(string, string) -> void
+      token=0x06006975 (rid=26997) | 程序集=Assembly-CSharp | 标签=-
+  MW_Privacy :: ShowWin(string, System.Collections.Generic.List`1<PrivacyTextBlock>) -> void
+      token=0x06006984 (rid=27012) | 程序集=Assembly-CSharp | 标签=-
+  MW_RewardShow :: ShowWin(int) -> void
+      token=0x06006B60 (rid=27488) | 程序集=Assembly-CSharp | 标签=GAME-REWARD
+  MW_NumberRunResult :: ShowWin(bool) -> void
+      token=0x06006CF6 (rid=27894) | 程序集=Assembly-CSharp | 标签=-
+  MW_PartnerIntoBattle :: ShowWin(int, PartnerInfo) -> void
+      token=0x06006F54 (rid=28500) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_PartnerLibInfo :: ShowWin(PartnerInfo, int, bool) -> void
+      token=0x06006F66 (rid=28518) | 程序集=Assembly-CSharp | 标签=-
+  MW_PartnerLibScoreTips :: ShowWin() -> void
+      token=0x06006F6D (rid=28525) | 程序集=Assembly-CSharp | 标签=-
+  MW_PartnerLibUpgrade :: ShowWin() -> void
+      token=0x06006F70 (rid=28528) | 程序集=Assembly-CSharp | 标签=-
+  MW_PartnerSkillVideo :: ShowWin(string) -> void
+      token=0x06006F7B (rid=28539) | 程序集=Assembly-CSharp | 标签=BATTLE-LIKE
+  MW_PartnerStarResult :: ShowWin(ulong, bool, int) -> void
+      token=0x06006F7F (rid=28543) | 程序集=Assembly-CSharp | 标签=-
+  MW_RelicGachaResult :: ShowWin(System.Collections.Generic.List`1<proto_ff.Item>, System.Collections.Generic.List`1<proto_ff.TransedItem>, GameConfigData.Gacha) -> void
+      token=0x06007193 (rid=29075) | 程序集=Assembly-CSharp | 标签=-
+  MW_RelicImprovePanelNew :: ShowWin(int, int) -> void
+      token=0x06007232 (rid=29234) | 程序集=Assembly-CSharp | 标签=-
+  MW_SpaceTimeDropAtlas :: ShowWin(int) -> void
+      token=0x0600771F (rid=30495) | 程序集=Assembly-CSharp | 标签=-
+  MW_TeamTarget_Set :: ShowWin(GameConfigData.TeamPlatform) -> void
+      token=0x06007856 (rid=30806) | 程序集=Assembly-CSharp | 标签=-
+  MW_ActivityTimesBuy :: ShowWin(int) -> void
+      token=0x06007B55 (rid=31573) | 程序集=Assembly-CSharp | 标签=-
+  MW_MallQuiteBuy :: ShowWin(int, int, int, int, int, DelegateEnums.DataParamT`2<int,int>) -> void
+      token=0x06007B87 (rid=31623) | 程序集=Assembly-CSharp | 标签=-
+  MW_WardrobeAttr :: ShowWin() -> void
+      token=0x06007BD9 (rid=31705) | 程序集=Assembly-CSharp | 标签=-
+--- 同名【类】命中：0 个 ---
+
+==============================================================================
+## 目标名 `MW_GameNotice`
+==============================================================================
+--- 方法名精确命中：0 处 ---
+  (无同名的具体方法)
+--- 同名/后缀同名【类】命中：1 个 ---
+  类型 MW_GameNotice  [5 methods]  标签=-
+      MW_GameNotice :: ShowWin(string, string) -> void | token=0x06006975
+      MW_GameNotice :: SetData(System.Collections.Generic.List`1<string>, System.Collections.Generic.List`1<string>) -> void | token=0x06006976
+      MW_GameNotice :: OnChangeToggle() -> void | token=0x06006977
+      MW_GameNotice :: OnClickOpenUrl(UILabel) -> void | token=0x06006978
+      MW_GameNotice :: .ctor() -> void | token=0x06006979
+
+##############################################################################
+# 附加说明：AddProjectile 的重载/多类情况
+##############################################################################
+  BaseUIMiniMap :: AddProjectile(ActionGameLibrary.Event) -> void  (token=0x060040B4, 标签=-)
+  ActionGameLibrary.GameObjectManager :: AddProjectile(ActionGameLibrary.ActionGameProjectile) -> void  (token=0x0601E994, 标签=BATTLE-LIKE)
+  ActionGameLibrary.ActionCommand_AddProjectile :: AddProjectile(ActionGameLibrary.Character, ActionGameLibrary.ActionGameObject, ActionData.LAddProjectile, int, UnityEngine.Vector3, UnityEngine.Vector3, ActionGameLibrary.Action, int, int, ActionGameLibrary.IActionGameObject, int, bool, int, int, bool, int, int) -> ActionGameLibrary.ActionGameProjectile  (token=0x0601EB9A, 标签=BATTLE-LIKE)
+  # 说明（实测：共 3 处，不是 2 处；三处是三个不同类里的三个不同签名，无同签名重载）：
+  #   1) BaseUIMiniMap::AddProjectile(ActionGameLibrary.Event)  —— 小地图 UI 的「事件图标」添加，与投射物无关（非战斗逻辑）
+  #   2) ActionGameLibrary.GameObjectManager::AddProjectile(ActionGameLibrary.ActionGameProjectile)
+  #      —— 战斗对象池/管理器登记投射物实例（真实投射物进入世界时的收口点，最像「发射物」语义）
+  #   3) ActionGameLibrary.ActionCommand_AddProjectile::AddProjectile(Character, ActionGameObject, ActionData.LAddProjectile, ...) -> ActionGameProjectile
+  #      —— 战斗指令「添加投射物」的执行体：输入发射者 Character + 行为数据 LAddProjectile，输出新建的投射物
+  # 若目标是"游戏里射出子弹/箭矢"的逻辑，看 2)+3)（都在 ActionGameLibrary 战斗命名空间、标签 BATTLE-LIKE）；
+  # 1) 只是 UI 事件标记，可忽略。三者属于同一个程序集 Assembly-CSharp 的三个不同 TypeDef。

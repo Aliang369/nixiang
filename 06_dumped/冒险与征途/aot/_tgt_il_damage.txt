@@ -1,0 +1,2041 @@
+
+
+########## StarsCollider.DoAttack ##########
+
+ActionGameLibrary.StarsCollider :: DoAttack(ActionGameLibrary.IAttack, ActionGameLibrary.IAccept, ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, UnityEngine.Vector3, int, ActionGameLibrary.SynHitData) -> void 0x0601E8D9
+body: ok len=4619
+   IL_0000: ldarg.0      
+   IL_0001: ldc.i4.0     
+   IL_0002: stfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_0007: ldarg.0      
+   IL_0008: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_000D: ldc.r4       0.0
+   IL_0012: ldc.r4       1.0
+   IL_0017: ldc.r4       1.0
+   IL_001C: call         0x0A005442 memberref UnityEngine.Vector3::Set
+   IL_0021: ldarg.0      
+   IL_0022: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0027: stfld        0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_002C: ldarg.1      
+   IL_002D: brtrue.s     3
+   IL_002F: ldnull       
+   IL_0030: br.s         6
+   IL_0032: ldarg.1      
+   IL_0033: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0038: stloc.0      
+   IL_0039: ldarg.2      
+   IL_003A: brfalse.s    8
+   IL_003C: ldarg.2      
+   IL_003D: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0042: brtrue.s     1
+   IL_0044: ret          
+   IL_0045: ldloc.0      
+   IL_0046: ldnull       
+   IL_0047: FEceq        
+   IL_0049: stloc.1      
+   IL_004A: ldloc.0      
+   IL_004B: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0050: brtrue.s     8
+   IL_0052: ldarg.3      
+   IL_0053: ldfld        0x040175C9 field ActionGameLibrary.AttackData::isProjectile : bool
+   IL_0058: br.s         1
+   IL_005A: ldc.i4.1     
+   IL_005B: stloc.2      
+   IL_005C: ldarg.2      
+   IL_005D: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0062: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0067: ldnull       
+   IL_0068: FEcgt.un     
+   IL_006A: stloc.3      
+   IL_006B: ldnull       
+   IL_006C: stloc.s      4
+   IL_006E: ldarg.1      
+   IL_006F: brfalse.s    99
+   IL_0071: ldloc.2      
+   IL_0072: brfalse.s    46
+   IL_0074: ldloc.1      
+   IL_0075: brtrue.s     15
+   IL_0077: ldloc.0      
+   IL_0078: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_007D: ldfld        0x04017DE6 field ActionGameLibrary.ActionGameProjectile::character : ActionGameLibrary.Character
+   IL_0082: stloc.s      4
+   IL_0084: br.s         78
+   IL_0086: ldarg.3      
+   IL_0087: ldfld        0x040175CA field ActionGameLibrary.AttackData::projectileOwnerObj : ActionGameLibrary.InteractiveGameObject
+   IL_008C: brfalse.s    70
+   IL_008E: ldarg.3      
+   IL_008F: ldfld        0x040175CA field ActionGameLibrary.AttackData::projectileOwnerObj : ActionGameLibrary.InteractiveGameObject
+   IL_0094: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0099: ldfld        0x04017DE6 field ActionGameLibrary.ActionGameProjectile::character : ActionGameLibrary.Character
+   IL_009E: stloc.s      4
+   IL_00A0: br.s         50
+   IL_00A2: ldarg.1      
+   IL_00A3: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_00A8: isinst       0x02002143 type ActionGameLibrary.Character
+   IL_00AD: stloc.s      4
+   IL_00AF: ldloc.s      4
+   IL_00B1: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_00B6: ldfld        0x04017D3E field ActionGameLibrary.ActionGameObjectData::isPhantom : bool
+   IL_00BB: brfalse.s    23
+   IL_00BD: ldloc.s      4
+   IL_00BF: callvirt     0x0601E023 method ActionGameLibrary.ActionGameObject :: get_mainBody() -> ActionGameLibrary.IActionGameObject 0x0601E023
+   IL_00C4: brfalse.s    14
+   IL_00C6: ldloc.s      4
+   IL_00C8: callvirt     0x0601E023 method ActionGameLibrary.ActionGameObject :: get_mainBody() -> ActionGameLibrary.IActionGameObject 0x0601E023
+   IL_00CD: isinst       0x02002143 type ActionGameLibrary.Character
+   IL_00D2: stloc.s      4
+   IL_00D4: ldarg.3      
+   IL_00D5: ldarg.0      
+   IL_00D6: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_00DB: callvirt     0x0601E85E method ActionGameLibrary.AttackData :: FillTargetData(ActionGameLibrary.AttackData) -> void 0x0601E85E
+   IL_00E0: ldarg.0      
+   IL_00E1: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_00E6: ldloc.s      4
+   IL_00E8: callvirt     0x0601E85D method ActionGameLibrary.AttackData :: FillExtraPower(ActionGameLibrary.Character) -> void 0x0601E85D
+   IL_00ED: ldarg.s      4
+   IL_00EF: ldarg.0      
+   IL_00F0: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_00F5: callvirt     0x0601E84D method ActionGameLibrary.AcceptData :: Fill(ActionGameLibrary.AcceptData) -> void 0x0601E84D
+   IL_00FA: ldarg.1      
+   IL_00FB: brfalse      IL_019B
+   IL_0100: ldarg.0      
+   IL_0101: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0106: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_010B: dup          
+   IL_010C: ldfld        0x0401759A field ActionGameLibrary.AttackBehaviorData::breakLevel : int
+   IL_0111: ldarg.0      
+   IL_0112: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0117: ldfld        0x040175C4 field ActionGameLibrary.AttackData::excessBreakLevel : int
+   IL_011C: ldarg.1      
+   IL_011D: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0122: callvirt     0x2B0002DF TOKEN 0x2B0002DF
+   IL_0127: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_012C: callvirt     0x0601DF91 method ActionGameLibrary.SecondaryAttribute :: get_EN_ATTR_BONUS_ATK_NUMB() -> long 0x0601DF91
+   IL_0131: conv.i4      
+   IL_0132: add          
+   IL_0133: add          
+   IL_0134: stfld        0x0401759A field ActionGameLibrary.AttackBehaviorData::breakLevel : int
+   IL_0139: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_013E: ldarg.1      
+   IL_013F: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0144: isinst       0x02001EED type ActionGameLibrary.SimpleCharacter
+   IL_0149: callvirt     0x0601E979 method ActionGameLibrary.GameObjectManager :: IsPartner(ActionGameLibrary.SimpleCharacter) -> bool 0x0601E979
+   IL_014E: brfalse.s    48
+   IL_0150: ldarg.0      
+   IL_0151: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0156: ldfld        0x040175C5 field ActionGameLibrary.AttackData::isANormalttack : bool
+   IL_015B: brfalse.s    35
+   IL_015D: ldarg.2      
+   IL_015E: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0163: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0168: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_016D: brtrue.s     17
+   IL_016F: ldarg.0      
+   IL_0170: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0175: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_017A: ldc.i4.0     
+   IL_017B: stfld        0x0401759A field ActionGameLibrary.AttackBehaviorData::breakLevel : int
+   IL_0180: ldarg.0      
+   IL_0181: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0186: ldarg.0      
+   IL_0187: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_018C: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0191: ldfld        0x0401759A field ActionGameLibrary.AttackBehaviorData::breakLevel : int
+   IL_0196: stfld        0x040175C6 field ActionGameLibrary.AttackData::superArmorLevel : int
+   IL_019B: ldarg.0      
+   IL_019C: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_01A1: ldarg.0      
+   IL_01A2: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_01A7: ldfld        0x0401756A field ActionGameLibrary.AcceptData::excessSuperArmorLevel : int
+   IL_01AC: ldarg.0      
+   IL_01AD: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_01B2: ldfld        0x04017562 field ActionGameLibrary.AcceptData::superArmorLevel : int
+   IL_01B7: call         0x0A00054A memberref System.Math::Max
+   IL_01BC: ldarg.2      
+   IL_01BD: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_01C2: callvirt     0x2B0002DF TOKEN 0x2B0002DF
+   IL_01C7: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01CC: callvirt     0x0601DF93 method ActionGameLibrary.SecondaryAttribute :: get_EN_ATTR_BONUS_NUMB_DEF() -> long 0x0601DF93
+   IL_01D1: conv.i4      
+   IL_01D2: call         0x0A00054A memberref System.Math::Max
+   IL_01D7: stfld        0x04017562 field ActionGameLibrary.AcceptData::superArmorLevel : int
+   IL_01DC: ldarg.0      
+   IL_01DD: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_01E2: ldc.i4.0     
+   IL_01E3: ldarg.0      
+   IL_01E4: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_01E9: ldfld        0x04017562 field ActionGameLibrary.AcceptData::superArmorLevel : int
+   IL_01EE: ldarg.2      
+   IL_01EF: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_01F4: ldc.i4       161
+   IL_01F9: call         0x0601E500 method ActionGameLibrary.CSpellUtil :: GetAttribRealValue(ActionGameLibrary.IActionGameObject, proto_ff.AttrType) -> double 0x0601E500
+   IL_01FE: conv.i4      
+   IL_01FF: add          
+   IL_0200: call         0x0A00054A memberref System.Math::Max
+   IL_0205: stfld        0x04017562 field ActionGameLibrary.AcceptData::superArmorLevel : int
+   IL_020A: ldarg.2      
+   IL_020B: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0210: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0215: callvirt     0x0601F1B6 method ActionGameLibrary.ActionState :: get_isFrozen() -> bool 0x0601F1B6
+   IL_021A: brfalse.s    16
+   IL_021C: ldarg.0      
+   IL_021D: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_0222: ldc.i4       2147483647
+   IL_0227: stfld        0x04017562 field ActionGameLibrary.AcceptData::superArmorLevel : int
+   IL_022C: ldarg.0      
+   IL_022D: ldfld        0x04017649 field ActionGameLibrary.StarsCollider::syn : bool
+   IL_0232: brfalse.s    13
+   IL_0234: ldarg.2      
+   IL_0235: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_023A: callvirt     0x0601E01D method ActionGameLibrary.ActionGameObject :: get_isMain() -> bool 0x0601E01D
+   IL_023F: br.s         1
+   IL_0241: ldc.i4.0     
+   IL_0242: stloc.s      5
+   IL_0244: ldarg.0      
+   IL_0245: ldfld        0x04017649 field ActionGameLibrary.StarsCollider::syn : bool
+   IL_024A: pop          
+   IL_024B: ldarg.s      7
+   IL_024D: ldnull       
+   IL_024E: FEcgt.un     
+   IL_0250: stloc.s      6
+   IL_0252: ldloc.s      6
+   IL_0254: brtrue       IL_0585
+   IL_0259: ldarg.0      
+   IL_025A: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_025F: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0264: ldfld        0x0401758B field ActionGameLibrary.AttackBehaviorData::isCenterPower : bool
+   IL_0269: brfalse      IL_0316
+   IL_026E: ldarg.0      
+   IL_026F: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_0274: ldarg.2      
+   IL_0275: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_027A: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_027F: callvirt     0x0A0000B3 memberref UnityEngine.Transform::get_position
+   IL_0284: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_0289: ldarg.1      
+   IL_028A: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_028F: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_0294: callvirt     0x0A0000B3 memberref UnityEngine.Transform::get_position
+   IL_0299: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_029E: ldarg.0      
+   IL_029F: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_02A4: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_02A9: ldflda       0x04017599 field ActionGameLibrary.AttackBehaviorData::locator : UnityEngine.Vector3
+   IL_02AE: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_02B3: add          
+   IL_02B4: bgt.s        3
+   IL_02B6: ldc.i4.m1    
+   IL_02B7: br.s         1
+   IL_02B9: ldc.i4.1     
+   IL_02BA: conv.i1      
+   IL_02BB: conv.r4      
+   IL_02BC: stfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_02C1: ldarg.0      
+   IL_02C2: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_02C7: ldarg.2      
+   IL_02C8: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_02CD: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_02D2: callvirt     0x0A0000B3 memberref UnityEngine.Transform::get_position
+   IL_02D7: ldfld        0x0A0000A1 memberref UnityEngine.Vector3::z
+   IL_02DC: ldarg.1      
+   IL_02DD: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_02E2: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_02E7: callvirt     0x0A0000B3 memberref UnityEngine.Transform::get_position
+   IL_02EC: ldfld        0x0A0000A1 memberref UnityEngine.Vector3::z
+   IL_02F1: ldarg.0      
+   IL_02F2: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_02F7: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_02FC: ldflda       0x04017599 field ActionGameLibrary.AttackBehaviorData::locator : UnityEngine.Vector3
+   IL_0301: ldfld        0x0A0000A1 memberref UnityEngine.Vector3::z
+   IL_0306: add          
+   IL_0307: bgt.s        3
+   IL_0309: ldc.i4.m1    
+   IL_030A: br.s         1
+   IL_030C: ldc.i4.1     
+   IL_030D: conv.i1      
+   IL_030E: conv.r4      
+   IL_030F: stfld        0x0A0000A1 memberref UnityEngine.Vector3::z
+   IL_0314: br.s         31
+   IL_0316: ldarg.0      
+   IL_0317: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_031C: ldarg.1      
+   IL_031D: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_0322: callvirt     0x0601EF74 method ActionGameLibrary.IModel :: get_direction() -> int 0x0601EF74
+   IL_0327: ldc.i4.0     
+   IL_0328: bgt.s        3
+   IL_032A: ldc.i4.m1    
+   IL_032B: br.s         1
+   IL_032D: ldc.i4.1     
+   IL_032E: conv.i1      
+   IL_032F: conv.r4      
+   IL_0330: stfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_0335: ldnull       
+   IL_0336: stloc.s      11
+   IL_0338: ldloc.2      
+   IL_0339: brtrue.s     27
+   IL_033B: ldsfld       0x04000EBA field DataService::skillData : DS_SkillData
+   IL_0340: ldarg.3      
+   IL_0341: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0346: ldarg.3      
+   IL_0347: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_034C: ldc.i4.0     
+   IL_034D: callvirt     0x06001605 method DS_SkillData :: GetSkillData(int, int, bool) -> GameConfigData.SkillData 0x06001605
+   IL_0352: stloc.s      11
+   IL_0354: br.s         65
+   IL_0356: ldloc.1      
+   IL_0357: brtrue.s     13
+   IL_0359: ldloc.0      
+   IL_035A: castclass    0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_035F: ldfld        0x04017DED field ActionGameLibrary.ActionGameProjectile::sourceSkillID : int
+   IL_0364: br.s         6
+   IL_0366: ldarg.3      
+   IL_0367: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_036C: stloc.s      12
+   IL_036E: ldloc.1      
+   IL_036F: brtrue.s     13
+   IL_0371: ldloc.0      
+   IL_0372: castclass    0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0377: ldfld        0x04017DEE field ActionGameLibrary.ActionGameProjectile::sourceSkillLevel : int
+   IL_037C: br.s         6
+   IL_037E: ldarg.3      
+   IL_037F: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0384: stloc.s      13
+   IL_0386: ldsfld       0x04000EBA field DataService::skillData : DS_SkillData
+   IL_038B: ldloc.s      12
+   IL_038D: ldloc.s      13
+   IL_038F: ldc.i4.0     
+   IL_0390: callvirt     0x06001605 method DS_SkillData :: GetSkillData(int, int, bool) -> GameConfigData.SkillData 0x06001605
+   IL_0395: stloc.s      11
+   IL_0397: ldloc.s      11
+   IL_0399: brfalse.s    26
+   IL_039B: ldarg.2      
+   IL_039C: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_03A1: callvirt     0x2B0000FB TOKEN 0x2B0000FB
+   IL_03A6: ldloc.s      11
+   IL_03A8: callvirt     0x0601C3DE method GameConfigData.SkillData :: get_skillID() -> int 0x0601C3DE
+   IL_03AD: callvirt     0x0601DF1E method ActionGameLibrary.CharacterData :: CanAccepter(int) -> bool 0x0601DF1E
+   IL_03B2: brtrue.s     1
+   IL_03B4: ret          
+   IL_03B5: ldarg.0      
+   IL_03B6: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_03BB: ldarg.0      
+   IL_03BC: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_03C1: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_03C6: conv.i1      
+   IL_03C7: stfld        0x04017651 field ActionGameLibrary.SynHitData::directionX : sbyte
+   IL_03CC: ldarg.0      
+   IL_03CD: ldfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_03D2: brtrue.s     17
+   IL_03D4: ldsfld       0x04017507 field ActionGameLibrary.ActionGameLibraryConfig::IsEditorMode : bool
+   IL_03D9: brtrue.s     10
+   IL_03DB: call         0x0601E7FB method ActionGameLibrary.BattleElementCenter :: get_localDamage() -> bool 0x0601E7FB
+   IL_03E0: brfalse      IL_04B0
+   IL_03E5: ldc.i4.0     
+   IL_03E6: stloc.s      14
+   IL_03E8: ldnull       
+   IL_03E9: stloc.s      15
+   IL_03EB: ldloc.2      
+   IL_03EC: brfalse.s    26
+   IL_03EE: ldarg.1      
+   IL_03EF: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_03F4: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_03F9: dup          
+   IL_03FA: ldfld        0x04017DEF field ActionGameLibrary.ActionGameProjectile::projectileId : int
+   IL_03FF: stloc.s      14
+   IL_0401: ldfld        0x04017DF0 field ActionGameLibrary.ActionGameProjectile::modelId : string
+   IL_0406: stloc.s      15
+   IL_0408: ldarg.0      
+   IL_0409: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_040E: ldarg.s      4
+   IL_0410: ldarg.1      
+   IL_0411: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0416: ldarg.2      
+   IL_0417: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_041C: ldloc.2      
+   IL_041D: ldloc.s      14
+   IL_041F: ldloc.s      15
+   IL_0421: ldc.i4.0     
+   IL_0422: call         0x0601E570 method ActionGameLibrary.DamageFactory :: ProcDamageByClient(ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, ActionGameLibrary.IActionGameObject, ActionGameLibrary.IActionGameObject, bool, int, string, int) -> void 0x0601E570
+   IL_0427: ldarg.0      
+   IL_0428: ldarg.2      
+   IL_0429: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_042E: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0433: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0438: call         0x0601E468 method ActionGameLibrary.CHitNotifier :: GetDamageInfo(int) -> ActionGameLibrary.DamageInfo 0x0601E468
+   IL_043D: stfld        0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0442: ldsfld       0x04017507 field ActionGameLibrary.ActionGameLibraryConfig::IsEditorMode : bool
+   IL_0447: brfalse.s    62
+   IL_0449: ldarg.0      
+   IL_044A: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_044F: ldfld        0x040175BC field ActionGameLibrary.AttackData::showDamage : bool
+   IL_0454: brfalse.s    49
+   IL_0456: ldarg.0      
+   IL_0457: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_045C: ldc.i4.s     100
+   IL_045E: ldc.i4       2000
+   IL_0463: call         0x0A0001C9 memberref UnityEngine.Random::Range
+   IL_0468: conv.i8      
+   IL_0469: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_046E: ldarg.0      
+   IL_046F: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0474: call         0x0A0001EC memberref UnityEngine.Random::get_value
+   IL_0479: ldc.r4       0.4000000059604645
+   IL_047E: FEcgt        
+   IL_0480: stfld        0x04017522 field ActionGameLibrary.DamageInfo::isCrit : bool
+   IL_0485: br.s         29
+   IL_0487: ldarg.0      
+   IL_0488: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_048D: ldfld        0x040175BC field ActionGameLibrary.AttackData::showDamage : bool
+   IL_0492: brtrue.s     16
+   IL_0494: ldarg.0      
+   IL_0495: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_049A: ldc.i4.0     
+   IL_049B: conv.i8      
+   IL_049C: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_04A1: ldc.i4.0     
+   IL_04A2: stloc.s      5
+   IL_04A4: ldarg.0      
+   IL_04A5: ldc.i4.1     
+   IL_04A6: stfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_04AB: br           IL_0572
+   IL_04B0: ldc.i4.0     
+   IL_04B1: stloc.s      16
+   IL_04B3: ldloc.2      
+   IL_04B4: brfalse.s    43
+   IL_04B6: ldarg.1      
+   IL_04B7: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_04BC: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_04C1: stloc.s      17
+   IL_04C3: ldsfld       0x04000EBE field DataService::projectileEffect : DS_ProjectileEffectData
+   IL_04C8: ldloc.s      17
+   IL_04CA: ldfld        0x04017DF0 field ActionGameLibrary.ActionGameProjectile::modelId : string
+   IL_04CF: ldarg.3      
+   IL_04D0: ldfld        0x040175AB field ActionGameLibrary.AttackData::hitId : int
+   IL_04D5: callvirt     0x06001536 method DS_ProjectileEffectData :: GetProjectileEffectData(string, int) -> GameConfigData.ProjectileEffectData 0x06001536
+   IL_04DA: ldnull       
+   IL_04DB: FEcgt.un     
+   IL_04DD: stloc.s      16
+   IL_04DF: br.s         49
+   IL_04E1: ldsfld       0x04000EBB field DataService::skillEffect : DS_SkillEffectData
+   IL_04E6: ldloc.s      4
+   IL_04E8: callvirt     0x0601E0CF method ActionGameLibrary.SimpleCharacter :: get_characterData() -> ActionGameLibrary.CharacterData 0x0601E0CF
+   IL_04ED: ldfld        0x04017D24 field ActionGameLibrary.ActionGameObjectData::modelID : string
+   IL_04F2: ldarg.0      
+   IL_04F3: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_04F8: ldfld        0x040175AB field ActionGameLibrary.AttackData::hitId : int
+   IL_04FD: ldarg.0      
+   IL_04FE: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0503: ldfld        0x040175C3 field ActionGameLibrary.AttackData::actionLabel : string
+   IL_0508: callvirt     0x06001675 method DS_SkillEffectData :: GetSkillEffectData(string, int, string) -> GameConfigData.SkillEffectData 0x06001675
+   IL_050D: ldnull       
+   IL_050E: FEcgt.un     
+   IL_0510: stloc.s      16
+   IL_0512: ldloc.s      16
+   IL_0514: brfalse.s    92
+   IL_0516: ldarg.0      
+   IL_0517: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_051C: ldloc.s      4
+   IL_051E: callvirt     0x0601E0CF method ActionGameLibrary.SimpleCharacter :: get_characterData() -> ActionGameLibrary.CharacterData 0x0601E0CF
+   IL_0523: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0528: ldarg.2      
+   IL_0529: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_052E: callvirt     0x2B0000FB TOKEN 0x2B0000FB
+   IL_0533: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0538: ldloc.s      11
+   IL_053A: call         0x0601E8B7 method ActionGameLibrary.LocalHitCheck :: CheckCrit(ActionGameLibrary.SecondaryAttribute, ActionGameLibrary.SecondaryAttribute, GameConfigData.SkillData) -> bool 0x0601E8B7
+   IL_053F: stfld        0x04017522 field ActionGameLibrary.DamageInfo::isCrit : bool
+   IL_0544: ldarg.0      
+   IL_0545: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_054A: ldloc.s      4
+   IL_054C: callvirt     0x0601E0CF method ActionGameLibrary.SimpleCharacter :: get_characterData() -> ActionGameLibrary.CharacterData 0x0601E0CF
+   IL_0551: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0556: ldarg.2      
+   IL_0557: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_055C: callvirt     0x2B0000FB TOKEN 0x2B0000FB
+   IL_0561: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0566: ldloc.s      11
+   IL_0568: call         0x0601E8B6 method ActionGameLibrary.LocalHitCheck :: CheckHit(ActionGameLibrary.SecondaryAttribute, ActionGameLibrary.SecondaryAttribute, GameConfigData.SkillData) -> bool 0x0601E8B6
+   IL_056D: stfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_0572: ldarg.0      
+   IL_0573: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_0578: ldarg.0      
+   IL_0579: ldfld        0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_057E: stfld        0x0401765B field ActionGameLibrary.SynHitData::damageInfo : ActionGameLibrary.DamageInfo
+   IL_0583: br.s         45
+   IL_0585: ldarg.0      
+   IL_0586: ldarg.s      7
+   IL_0588: ldfld        0x0401765B field ActionGameLibrary.SynHitData::damageInfo : ActionGameLibrary.DamageInfo
+   IL_058D: stfld        0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0592: ldarg.0      
+   IL_0593: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_0598: ldarg.s      7
+   IL_059A: ldfld        0x04017651 field ActionGameLibrary.SynHitData::directionX : sbyte
+   IL_059F: conv.r4      
+   IL_05A0: stfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_05A5: ldarg.0      
+   IL_05A6: ldarg.s      7
+   IL_05A8: ldfld        0x0401765A field ActionGameLibrary.SynHitData::isNumb : bool
+   IL_05AD: stfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_05B2: ldarg.2      
+   IL_05B3: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_05B8: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_05BD: stloc.s      7
+   IL_05BF: ldarg.0      
+   IL_05C0: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_05C5: ldarg.0      
+   IL_05C6: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_05CB: ldfld        0x04017562 field ActionGameLibrary.AcceptData::superArmorLevel : int
+   IL_05D0: stfld        0x04017659 field ActionGameLibrary.SynHitData::superArmorLevel : int
+   IL_05D5: ldarg.0      
+   IL_05D6: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_05DB: ldloc.s      7
+   IL_05DD: callvirt     0x0601F1A9 method ActionGameLibrary.ActionState :: get_isLying() -> bool 0x0601F1A9
+   IL_05E2: stfld        0x04017654 field ActionGameLibrary.SynHitData::isLying : bool
+   IL_05E7: ldarg.0      
+   IL_05E8: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_05ED: ldloc.s      7
+   IL_05EF: callvirt     0x0601F1AB method ActionGameLibrary.ActionState :: get_isNumbing() -> bool 0x0601F1AB
+   IL_05F4: stfld        0x04017653 field ActionGameLibrary.SynHitData::isNumbing : bool
+   IL_05F9: ldarg.0      
+   IL_05FA: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_05FF: ldloc.s      7
+   IL_0601: ldfld        0x04017E28 field ActionGameLibrary.ActionState::inLowFloat : bool
+   IL_0606: stfld        0x04017655 field ActionGameLibrary.SynHitData::inLowFloat : bool
+   IL_060B: ldarg.0      
+   IL_060C: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_0611: ldloc.s      7
+   IL_0613: callvirt     0x0601F1B1 method ActionGameLibrary.ActionState :: get_inAir() -> bool 0x0601F1B1
+   IL_0618: stfld        0x04017656 field ActionGameLibrary.SynHitData::inAir : bool
+   IL_061D: ldarg.0      
+   IL_061E: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_0623: ldloc.s      7
+   IL_0625: ldfld        0x04017E29 field ActionGameLibrary.ActionState::inRebound : bool
+   IL_062A: stfld        0x04017657 field ActionGameLibrary.SynHitData::inRebound : bool
+   IL_062F: ldarg.0      
+   IL_0630: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_0635: ldloc.s      7
+   IL_0637: ldfld        0x04017E2C field ActionGameLibrary.ActionState::reboundCount : int
+   IL_063C: stfld        0x04017658 field ActionGameLibrary.SynHitData::reboundCount : int
+   IL_0641: ldarg.0      
+   IL_0642: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0647: ldfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_064C: brfalse      IL_0C87
+   IL_0651: ldarg.1      
+   IL_0652: brfalse      IL_06F8
+   IL_0657: ldarg.1      
+   IL_0658: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_065D: callvirt     0x0601E03F method ActionGameLibrary.ActionGameObject :: get_active() -> bool 0x0601E03F
+   IL_0662: brfalse      IL_06F8
+   IL_0667: ldarg.1      
+   IL_0668: ldarg.3      
+   IL_0669: callvirt     0x0601E8B0 method ActionGameLibrary.IAttack :: Attacked(ActionGameLibrary.AttackData) -> void 0x0601E8B0
+   IL_066E: ldstr        0x700065D9 string "OnAttack"
+   IL_0673: ldnull       
+   IL_0674: call         0x2B000AAA TOKEN 0x2B000AAA
+   IL_0679: stloc.s      19
+   IL_067B: ldloc.s      19
+   IL_067D: ldarg.3      
+   IL_067E: stfld        0x04017C4C field ActionGameLibrary.StateChangeEvent::attackData : ActionGameLibrary.AttackData
+   IL_0683: ldarg.1      
+   IL_0684: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0689: ldloc.s      19
+   IL_068B: callvirt     0x0601E055 method ActionGameLibrary.ActionGameObject :: Dispath(ActionGameLibrary.Event) -> void 0x0601E055
+   IL_0690: ldloc.s      4
+   IL_0692: brfalse.s    48
+   IL_0694: ldstr        0x70029D6E string "OnAttackTotal"
+   IL_0699: ldnull       
+   IL_069A: call         0x2B000AAA TOKEN 0x2B000AAA
+   IL_069F: stloc.s      20
+   IL_06A1: ldloc.s      20
+   IL_06A3: ldarg.3      
+   IL_06A4: stfld        0x04017C4C field ActionGameLibrary.StateChangeEvent::attackData : ActionGameLibrary.AttackData
+   IL_06A9: ldloc.s      4
+   IL_06AB: ldloc.s      20
+   IL_06AD: callvirt     0x0601E055 method ActionGameLibrary.ActionGameObject :: Dispath(ActionGameLibrary.Event) -> void 0x0601E055
+   IL_06B2: ldloc.s      4
+   IL_06B4: callvirt     0x0601E061 method ActionGameLibrary.ActionGameObject :: get_subData() -> ActionGameLibrary.SubData 0x0601E061
+   IL_06B9: ldarg.2      
+   IL_06BA: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_06BF: callvirt     0x0601F0CF method ActionGameLibrary.SubData :: setLastHitTarget(ActionGameLibrary.ActionGameObject) -> void 0x0601F0CF
+   IL_06C4: ldstr        0x70029D62 string "OnHit"
+   IL_06C9: ldnull       
+   IL_06CA: call         0x2B00011C TOKEN 0x2B00011C
+   IL_06CF: dup          
+   IL_06D0: ldarg.0      
+   IL_06D1: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_06D6: stfld        0x040176BA field ActionGameLibrary.BattleEvent::attackData : ActionGameLibrary.AttackData
+   IL_06DB: dup          
+   IL_06DC: ldarg.1      
+   IL_06DD: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_06E2: stfld        0x040176BC field ActionGameLibrary.BattleEvent::onHitAttacker : ActionGameLibrary.InteractiveGameObject
+   IL_06E7: dup          
+   IL_06E8: ldarg.2      
+   IL_06E9: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_06EE: stfld        0x040176BD field ActionGameLibrary.BattleEvent::onHitAccepter : ActionGameLibrary.InteractiveGameObject
+   IL_06F3: call         0x0601E7F3 method ActionGameLibrary.BattleElementCenter :: Dispath(ActionGameLibrary.Event) -> void 0x0601E7F3
+   IL_06F8: ldloc.3      
+   IL_06F9: brtrue       IL_0B8E
+   IL_06FE: ldarg.0      
+   IL_06FF: ldfld        0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0704: call         0x0601E7D0 method ActionGameLibrary.DamageInfo :: isDamage(ActionGameLibrary.DamageInfo) -> bool 0x0601E7D0
+   IL_0709: brfalse      IL_0B71
+   IL_070E: ldloc.s      4
+   IL_0710: brtrue.s     3
+   IL_0712: ldc.i4.0     
+   IL_0713: br.s         33
+   IL_0715: ldloc.s      4
+   IL_0717: callvirt     0x0601E0CF method ActionGameLibrary.SimpleCharacter :: get_characterData() -> ActionGameLibrary.CharacterData 0x0601E0CF
+   IL_071C: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_0721: ldc.i4.2     
+   IL_0722: beq.s        17
+   IL_0724: ldloc.s      4
+   IL_0726: callvirt     0x0601E0CF method ActionGameLibrary.SimpleCharacter :: get_characterData() -> ActionGameLibrary.CharacterData 0x0601E0CF
+   IL_072B: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_0730: ldc.i4.3     
+   IL_0731: FEceq        
+   IL_0733: br.s         1
+   IL_0735: ldc.i4.1     
+   IL_0736: stloc.s      21
+   IL_0738: ldarg.0      
+   IL_0739: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_073E: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0743: ldfld        0x04017598 field ActionGameLibrary.AttackBehaviorData::enforceLocate : bool
+   IL_0748: brfalse      IL_0A15
+   IL_074D: ldarg.1      
+   IL_074E: brfalse      IL_0A15
+   IL_0753: ldarg.2      
+   IL_0754: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0759: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_075E: ldfld        0x04017D38 field ActionGameLibrary.ActionGameObjectData::modelData : ActionGameLibrary.ModelData
+   IL_0763: ldfld        0x04017D79 field ActionGameLibrary.ModelData::isBuilding : bool
+   IL_0768: brtrue       IL_0A15
+   IL_076D: ldarg.2      
+   IL_076E: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0773: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0778: ldfld        0x04017E3C field ActionGameLibrary.ActionState::immunityLocate : bool
+   IL_077D: brtrue       IL_0A15
+   IL_0782: ldarg.2      
+   IL_0783: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0788: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_078D: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_0792: ldc.i4.s     30
+   IL_0794: beq          IL_0A15
+   IL_0799: ldarg.2      
+   IL_079A: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_079F: ldarg.0      
+   IL_07A0: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_07A5: ldarg.0      
+   IL_07A6: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_07AB: ldloc.s      6
+   IL_07AD: ldarg.0      
+   IL_07AE: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_07B3: ldfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_07B8: brfalse.s    8
+   IL_07BA: ldarg.0      
+   IL_07BB: ldfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_07C0: br.s         1
+   IL_07C2: ldc.i4.0     
+   IL_07C3: ldarg.0      
+   IL_07C4: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_07C9: ldfld        0x04017522 field ActionGameLibrary.DamageInfo::isCrit : bool
+   IL_07CE: ldloc.s      21
+   IL_07D0: call         0x0601EF0D method ActionGameLibrary.Hitter :: CheckNumb(ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, bool, bool, bool, bool) -> bool 0x0601EF0D
+   IL_07D5: brfalse      IL_0A15
+   IL_07DA: ldarg.2      
+   IL_07DB: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_07E0: callvirt     0x2B000B46 TOKEN 0x2B000B46
+   IL_07E5: ldloca.s     22
+   IL_07E7: ldarg.0      
+   IL_07E8: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_07ED: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_07F2: ldflda       0x04017599 field ActionGameLibrary.AttackBehaviorData::locator : UnityEngine.Vector3
+   IL_07F7: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_07FC: ldarg.1      
+   IL_07FD: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_0802: callvirt     0x0601EF74 method ActionGameLibrary.IModel :: get_direction() -> int 0x0601EF74
+   IL_0807: conv.r4      
+   IL_0808: mul          
+   IL_0809: ldarg.0      
+   IL_080A: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_080F: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0814: ldflda       0x04017599 field ActionGameLibrary.AttackBehaviorData::locator : UnityEngine.Vector3
+   IL_0819: ldfld        0x0A0000CE memberref UnityEngine.Vector3::y
+   IL_081E: ldarg.0      
+   IL_081F: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0824: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0829: ldflda       0x04017599 field ActionGameLibrary.AttackBehaviorData::locator : UnityEngine.Vector3
+   IL_082E: ldfld        0x0A0000A1 memberref UnityEngine.Vector3::z
+   IL_0833: call         0x0A0000C1 memberref UnityEngine.Vector3::.ctor
+   IL_0838: ldarg.1      
+   IL_0839: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_083E: callvirt     0x0601EFCA method ActionGameLibrary.IModelUnity :: get_vectorRotation() -> UnityEngine.Quaternion 0x0601EFCA
+   IL_0843: ldloc.s      22
+   IL_0845: call         0x0A00017D memberref UnityEngine.Quaternion::op_Multiply
+   IL_084A: pop          
+   IL_084B: ldarg.0      
+   IL_084C: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0851: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0856: ldfld        0x040175A6 field ActionGameLibrary.AttackBehaviorData::enforceLocateIgnoreCollider : bool
+   IL_085B: brfalse.s    78
+   IL_085D: ldarg.2      
+   IL_085E: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_0863: ldarg.1      
+   IL_0864: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_0869: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_086E: callvirt     0x0A0000B3 memberref UnityEngine.Transform::get_position
+   IL_0873: ldarg.1      
+   IL_0874: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_0879: callvirt     0x0601EFCA method ActionGameLibrary.IModelUnity :: get_vectorRotation() -> UnityEngine.Quaternion 0x0601EFCA
+   IL_087E: ldloc.s      22
+   IL_0880: ldarg.1      
+   IL_0881: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_0886: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_088B: callvirt     0x0A00012D memberref UnityEngine.Transform::get_localScale
+   IL_0890: ldfld        0x0A0000CE memberref UnityEngine.Vector3::y
+   IL_0895: call         0x0A0000E3 memberref UnityEngine.Vector3::op_Multiply
+   IL_089A: call         0x0A00017D memberref UnityEngine.Quaternion::op_Multiply
+   IL_089F: call         0x0A0000CA memberref UnityEngine.Vector3::op_Addition
+   IL_08A4: callvirt     0x0601EF85 method ActionGameLibrary.IModel :: set_position(UnityEngine.Vector3) -> void 0x0601EF85
+   IL_08A9: br.s         78
+   IL_08AB: ldarg.2      
+   IL_08AC: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_08B1: ldarg.1      
+   IL_08B2: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_08B7: callvirt     0x0601EF84 method ActionGameLibrary.IModel :: get_position() -> UnityEngine.Vector3 0x0601EF84
+   IL_08BC: ldarg.2      
+   IL_08BD: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_08C2: callvirt     0x0601EF84 method ActionGameLibrary.IModel :: get_position() -> UnityEngine.Vector3 0x0601EF84
+   IL_08C7: call         0x0A0000B4 memberref UnityEngine.Vector3::op_Subtraction
+   IL_08CC: callvirt     0x0601EFC1 method ActionGameLibrary.IModelUnity :: TranslateOriginal(UnityEngine.Vector3) -> void 0x0601EFC1
+   IL_08D1: ldarg.2      
+   IL_08D2: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_08D7: ldloc.s      22
+   IL_08D9: ldarg.1      
+   IL_08DA: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_08DF: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_08E4: callvirt     0x0A00012D memberref UnityEngine.Transform::get_localScale
+   IL_08E9: ldfld        0x0A0000CE memberref UnityEngine.Vector3::y
+   IL_08EE: call         0x0A0000E3 memberref UnityEngine.Vector3::op_Multiply
+   IL_08F3: ldc.i4.1     
+   IL_08F4: callvirt     0x0601EFC0 method ActionGameLibrary.IModelUnity :: Translate(UnityEngine.Vector3, bool) -> void 0x0601EFC0
+   IL_08F9: ldarg.0      
+   IL_08FA: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_08FF: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0904: ldfld        0x040175A5 field ActionGameLibrary.AttackBehaviorData::locatorFrame : int
+   IL_0909: ldc.i4.0     
+   IL_090A: ble          IL_0A15
+   IL_090F: ldarg.0      
+   IL_0910: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0915: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_091A: ldfld        0x04017599 field ActionGameLibrary.AttackBehaviorData::locator : UnityEngine.Vector3
+   IL_091F: stloc.s      23
+   IL_0921: ldloc.s      23
+   IL_0923: ldarg.1      
+   IL_0924: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_0929: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_092E: callvirt     0x0A00012D memberref UnityEngine.Transform::get_localScale
+   IL_0933: ldfld        0x0A0000CE memberref UnityEngine.Vector3::y
+   IL_0938: call         0x0A0000E3 memberref UnityEngine.Vector3::op_Multiply
+   IL_093D: stloc.s      23
+   IL_093F: ldloca.s     23
+   IL_0941: ldflda       0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_0946: dup          
+   IL_0947: ldind.r4     
+   IL_0948: ldarg.0      
+   IL_0949: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_094E: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_0953: mul          
+   IL_0954: stind.r4     
+   IL_0955: call         0x2B0001CF TOKEN 0x2B0001CF
+   IL_095A: stloc.s      24
+   IL_095C: ldloc.s      24
+   IL_095E: ldarg.2      
+   IL_095F: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0964: ldarg.2      
+   IL_0965: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_096A: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_096F: ldarg.1      
+   IL_0970: callvirt     0x0601E8AB method ActionGameLibrary.IAttack :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E8AB
+   IL_0975: callvirt     0x0601EFBF method ActionGameLibrary.IModelUnity :: get_transform() -> UnityEngine.Transform 0x0601EFBF
+   IL_097A: ldloc.s      23
+   IL_097C: ldc.i4.0     
+   IL_097D: ldarg.0      
+   IL_097E: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_0983: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_0988: conv.i4      
+   IL_0989: ldarg.2      
+   IL_098A: callvirt     0x0601E89E method ActionGameLibrary.IAccept :: get_model() -> ActionGameLibrary.IModelUnity 0x0601E89E
+   IL_098F: ldc.i4.0     
+   IL_0990: callvirt     0x0601F357 method ActionGameLibrary.Resonator_Position :: Fill(ActionGameLibrary.IResonator, UnityEngine.Transform, UnityEngine.Transform, UnityEngine.Vector3, bool, int, ActionGameLibrary.IModelUnity, bool) -> void 0x0601F357
+   IL_0995: ldloc.s      24
+   IL_0997: ldc.i4.1     
+   IL_0998: stfld        0x04018086 field ActionGameLibrary.Resonator_Position::withCollider : bool
+   IL_099D: ldloc.s      24
+   IL_099F: newobj       0x0A0057D1 memberref System.Collections.Generic.List`1<ActionGameLibrary.IJudge>::.ctor
+   IL_09A4: dup          
+   IL_09A5: ldarg.1      
+   IL_09A6: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_09AB: callvirt     0x0601E065 method ActionGameLibrary.ActionGameObject :: get_actionManager() -> ActionGameLibrary.ActionManager 0x0601E065
+   IL_09B0: ldarg.1      
+   IL_09B1: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_09B6: callvirt     0x0601E065 method ActionGameLibrary.ActionGameObject :: get_actionManager() -> ActionGameLibrary.ActionManager 0x0601E065
+   IL_09BB: callvirt     0x0601ECA1 method ActionGameLibrary.ActionManager :: get_currentAction() -> ActionGameLibrary.Action 0x0601ECA1
+   IL_09C0: ldfld        0x04016F2A field ActionGameLibrary.Action::skillIndex : int
+   IL_09C5: ldc.i4.1     
+   IL_09C6: newobj       0x0601F285 method ActionGameLibrary.JudgeSkillChange :: .ctor(ActionGameLibrary.ActionManager, int, bool) -> void 0x0601F285
+   IL_09CB: callvirt     0x0A0057D2 memberref System.Collections.Generic.List`1<ActionGameLibrary.IJudge>::Add
+   IL_09D0: dup          
+   IL_09D1: ldarg.0      
+   IL_09D2: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_09D7: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_09DC: ldfld        0x040175A5 field ActionGameLibrary.AttackBehaviorData::locatorFrame : int
+   IL_09E1: newobj       0x0601F27F method ActionGameLibrary.JudgeFrame :: .ctor(int) -> void 0x0601F27F
+   IL_09E6: callvirt     0x0A0057D2 memberref System.Collections.Generic.List`1<ActionGameLibrary.IJudge>::Add
+   IL_09EB: dup          
+   IL_09EC: ldarg.2      
+   IL_09ED: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_09F2: newobj       0x0601F283 method ActionGameLibrary.JudgeInvincible :: .ctor(ActionGameLibrary.InteractiveGameObject) -> void 0x0601F283
+   IL_09F7: callvirt     0x0A0057D2 memberref System.Collections.Generic.List`1<ActionGameLibrary.IJudge>::Add
+   IL_09FC: callvirt     0x0601F393 method ActionGameLibrary.Resonator :: set_overJudge(System.Collections.Generic.List`1<ActionGameLibrary.IJudge>) -> void 0x0601F393
+   IL_0A01: ldarg.2      
+   IL_0A02: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A07: ldloc.s      24
+   IL_0A09: callvirt     0x0601E070 method ActionGameLibrary.ActionGameObject :: AddResonator(ActionGameLibrary.Resonator) -> void 0x0601E070
+   IL_0A0E: ldloc.s      24
+   IL_0A10: callvirt     0x0601F390 method ActionGameLibrary.Resonator :: Resonance() -> void 0x0601F390
+   IL_0A15: ldarg.3      
+   IL_0A16: ldfld        0x040175BC field ActionGameLibrary.AttackData::showDamage : bool
+   IL_0A1B: brfalse      IL_0AB5
+   IL_0A20: ldarg.1      
+   IL_0A21: brfalse      IL_0AB5
+   IL_0A26: ldarg.1      
+   IL_0A27: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0A2C: brfalse      IL_0AB5
+   IL_0A31: ldarg.2      
+   IL_0A32: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A37: brfalse.s    124
+   IL_0A39: ldarg.2      
+   IL_0A3A: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A3F: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0A44: brfalse.s    111
+   IL_0A46: ldarg.2      
+   IL_0A47: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A4C: isinst       0x02002143 type ActionGameLibrary.Character
+   IL_0A51: brfalse.s    98
+   IL_0A53: ldarg.2      
+   IL_0A54: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A59: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0A5E: ldarg.1      
+   IL_0A5F: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0A64: call         0x06000A34 method ToolKit :: getActGameObjCenterPos(ActionGameLibrary.InteractiveGameObject) -> UnityEngine.Vector3 0x06000A34
+   IL_0A69: stfld        0x04017D4B field ActionGameLibrary.ActionGameObjectData::lastHitPoint : UnityEngine.Vector3
+   IL_0A6E: ldarg.2      
+   IL_0A6F: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A74: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0A79: dup          
+   IL_0A7A: ldfld        0x04017D4C field ActionGameLibrary.ActionGameObjectData::hitCount : int
+   IL_0A7F: ldc.i4.1     
+   IL_0A80: add          
+   IL_0A81: stfld        0x04017D4C field ActionGameLibrary.ActionGameObjectData::hitCount : int
+   IL_0A86: ldarg.2      
+   IL_0A87: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A8C: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0A91: ldfld        0x04017E20 field ActionGameLibrary.ActionState::isDead : bool
+   IL_0A96: brfalse.s    29
+   IL_0A98: ldarg.2      
+   IL_0A99: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0A9E: isinst       0x02002143 type ActionGameLibrary.Character
+   IL_0AA3: stloc.s      25
+   IL_0AA5: ldloc.s      25
+   IL_0AA7: callvirt     0x0601F13A method ActionGameLibrary.Character :: checkIsCanBeBroken() -> bool 0x0601F13A
+   IL_0AAC: brfalse.s    7
+   IL_0AAE: ldloc.s      25
+   IL_0AB0: callvirt     0x0601F139 method ActionGameLibrary.Character :: brokenToPeace() -> void 0x0601F139
+   IL_0AB5: ldarg.1      
+   IL_0AB6: brfalse.s    80
+   IL_0AB8: ldarg.0      
+   IL_0AB9: ldarg.2      
+   IL_0ABA: ldarg.0      
+   IL_0ABB: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_0AC0: ldarg.0      
+   IL_0AC1: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0AC6: ldarg.0      
+   IL_0AC7: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_0ACC: ldarg.1      
+   IL_0ACD: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0AD2: callvirt     0x0A0000B1 memberref System.Object::GetHashCode
+   IL_0AD7: ldloc.s      6
+   IL_0AD9: ldarg.0      
+   IL_0ADA: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0ADF: ldfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_0AE4: brfalse.s    8
+   IL_0AE6: ldarg.0      
+   IL_0AE7: ldfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_0AEC: br.s         1
+   IL_0AEE: ldc.i4.0     
+   IL_0AEF: ldarg.0      
+   IL_0AF0: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0AF5: ldfld        0x04017522 field ActionGameLibrary.DamageInfo::isCrit : bool
+   IL_0AFA: ldarg.s      6
+   IL_0AFC: ldloc.s      21
+   IL_0AFE: callvirt     0x0601E8A3 method ActionGameLibrary.IAccept :: Accept(ref UnityEngine.Vector3, ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData, int, bool, bool, bool, int, bool) -> bool 0x0601E8A3
+   IL_0B03: stfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_0B08: ldarg.2      
+   IL_0B09: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0B0E: callvirt     0x0601E061 method ActionGameLibrary.ActionGameObject :: get_subData() -> ActionGameLibrary.SubData 0x0601E061
+   IL_0B13: ldarg.0      
+   IL_0B14: ldflda       0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_0B19: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_0B1E: conv.i4      
+   IL_0B1F: stfld        0x04017D97 field ActionGameLibrary.SubData::lastHitDirection : int
+   IL_0B24: ldarg.2      
+   IL_0B25: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0B2A: callvirt     0x0601E061 method ActionGameLibrary.ActionGameObject :: get_subData() -> ActionGameLibrary.SubData 0x0601E061
+   IL_0B2F: ldarg.0      
+   IL_0B30: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0B35: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0B3A: ldfld        0x0401759A field ActionGameLibrary.AttackBehaviorData::breakLevel : int
+   IL_0B3F: stfld        0x04017D9B field ActionGameLibrary.SubData::lastAcceptBreakLevel : int
+   IL_0B44: ldarg.0      
+   IL_0B45: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0B4A: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0B4F: ldfld        0x040175A9 field ActionGameLibrary.AttackBehaviorData::controlLevel : ActionGameLibrary.AttackBehaviorData.ControlLevel
+   IL_0B54: brfalse.s    34
+   IL_0B56: ldarg.0      
+   IL_0B57: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0B5C: ldc.i4.1     
+   IL_0B5D: stfld        0x04017525 field ActionGameLibrary.DamageInfo::invalidDamage : bool
+   IL_0B62: ldarg.0      
+   IL_0B63: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0B68: ldc.i4.0     
+   IL_0B69: conv.i8      
+   IL_0B6A: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_0B6F: br.s         7
+   IL_0B71: ldarg.0      
+   IL_0B72: ldc.i4.0     
+   IL_0B73: stfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_0B78: ldarg.0      
+   IL_0B79: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_0B7E: ldarg.0      
+   IL_0B7F: ldfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_0B84: stfld        0x0401765A field ActionGameLibrary.SynHitData::isNumb : bool
+   IL_0B89: br           IL_0C60
+   IL_0B8E: ldarg.1      
+   IL_0B8F: brfalse      IL_0C60
+   IL_0B94: ldarg.0      
+   IL_0B95: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0B9A: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0B9F: ldfld        0x040175A2 field ActionGameLibrary.AttackBehaviorData::destroyLevel : short
+   IL_0BA4: ldc.i4.0     
+   IL_0BA5: ble.s        115
+   IL_0BA7: ldarg.0      
+   IL_0BA8: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0BAD: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0BB2: ldfld        0x040175A2 field ActionGameLibrary.AttackBehaviorData::destroyLevel : short
+   IL_0BB7: ldarg.0      
+   IL_0BB8: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_0BBD: ldfld        0x04017569 field ActionGameLibrary.AcceptData::destroyLevel : short
+   IL_0BC2: ble.s        86
+   IL_0BC4: ldarg.2      
+   IL_0BC5: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0BCA: callvirt     0x0601E065 method ActionGameLibrary.ActionGameObject :: get_actionManager() -> ActionGameLibrary.ActionManager 0x0601E065
+   IL_0BCF: ldarg.2      
+   IL_0BD0: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0BD5: callvirt     0x0601E065 method ActionGameLibrary.ActionGameObject :: get_actionManager() -> ActionGameLibrary.ActionManager 0x0601E065
+   IL_0BDA: callvirt     0x0601ECE3 method ActionGameLibrary.ActionManager :: get_basicAction() -> ActionGameLibrary.BasicActionConfiguration 0x0601ECE3
+   IL_0BDF: ldfld        0x04017B6F field ActionGameLibrary.BasicActionConfiguration::dead : string
+   IL_0BE4: callvirt     0x0601ECAE method ActionGameLibrary.ActionManager :: GetAction(string) -> ActionGameLibrary.Action 0x0601ECAE
+   IL_0BE9: stloc.s      26
+   IL_0BEB: ldloc.s      26
+   IL_0BED: brfalse.s    32
+   IL_0BEF: ldarg.2      
+   IL_0BF0: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0BF5: callvirt     0x0601E065 method ActionGameLibrary.ActionGameObject :: get_actionManager() -> ActionGameLibrary.ActionManager 0x0601E065
+   IL_0BFA: ldloc.s      26
+   IL_0BFC: ldc.i4.1     
+   IL_0BFD: ldc.i4.0     
+   IL_0BFE: ldc.r4       -1.0
+   IL_0C03: ldc.i4.m1    
+   IL_0C04: ldc.i4.1     
+   IL_0C05: ldc.i4.1     
+   IL_0C06: ldc.i4.0     
+   IL_0C07: ldc.i4.0     
+   IL_0C08: callvirt     0x0601EC99 method ActionGameLibrary.ActionManager :: DoAction(ActionGameLibrary.Action, bool, int, float, int, bool, bool, int, bool) -> void 0x0601EC99
+   IL_0C0D: br.s         11
+   IL_0C0F: ldarg.2      
+   IL_0C10: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0C15: callvirt     0x0601E03B method ActionGameLibrary.ActionGameObject :: Dispose() -> void 0x0601E03B
+   IL_0C1A: ldarg.0      
+   IL_0C1B: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0C20: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0C25: ldfld        0x040175A1 field ActionGameLibrary.AttackBehaviorData::bounceLevel : short
+   IL_0C2A: ldc.i4.0     
+   IL_0C2B: ble.s        51
+   IL_0C2D: ldarg.0      
+   IL_0C2E: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0C33: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0C38: ldfld        0x040175A1 field ActionGameLibrary.AttackBehaviorData::bounceLevel : short
+   IL_0C3D: ldarg.0      
+   IL_0C3E: ldfld        0x04017636 field ActionGameLibrary.StarsCollider::_acceptData : ActionGameLibrary.AcceptData
+   IL_0C43: ldfld        0x04017568 field ActionGameLibrary.AcceptData::bounceLevel : short
+   IL_0C48: ble.s        22
+   IL_0C4A: ldarg.2      
+   IL_0C4B: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0C50: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0C55: ldarg.1      
+   IL_0C56: callvirt     0x0601E8AC method ActionGameLibrary.IAttack :: get_camp() -> int 0x0601E8AC
+   IL_0C5B: callvirt     0x0601F18C method ActionGameLibrary.ActionGameProjectile :: Bounce(int) -> void 0x0601F18C
+   IL_0C60: ldstr        0x700065C7 string "OnAccept"
+   IL_0C65: ldnull       
+   IL_0C66: call         0x2B000AAA TOKEN 0x2B000AAA
+   IL_0C6B: stloc.s      18
+   IL_0C6D: ldloc.s      18
+   IL_0C6F: ldarg.0      
+   IL_0C70: ldfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_0C75: stfld        0x04017C53 field ActionGameLibrary.StateChangeEvent::isNumb : bool
+   IL_0C7A: ldarg.2      
+   IL_0C7B: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0C80: ldloc.s      18
+   IL_0C82: callvirt     0x0601E055 method ActionGameLibrary.ActionGameObject :: Dispath(ActionGameLibrary.Event) -> void 0x0601E055
+   IL_0C87: ldarg.3      
+   IL_0C88: ldarg.2      
+   IL_0C89: ldarg.0      
+   IL_0C8A: ldfld        0x0401763E field ActionGameLibrary.StarsCollider::_isNumb : bool
+   IL_0C8F: ldarg.0      
+   IL_0C90: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0C95: ldfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_0C9A: ldc.i4.1     
+   IL_0C9B: callvirt     0x0601E858 method ActionGameLibrary.AttackData :: AddHitted(ActionGameLibrary.IAccept, bool, bool, bool) -> ActionGameLibrary.CheakHittedData 0x0601E858
+   IL_0CA0: pop          
+   IL_0CA1: call         0x0601E7FB method ActionGameLibrary.BattleElementCenter :: get_localDamage() -> bool 0x0601E7FB
+   IL_0CA6: brfalse.s    6
+   IL_0CA8: ldsfld       0x04017507 field ActionGameLibrary.ActionGameLibraryConfig::IsEditorMode : bool
+   IL_0CAD: pop          
+   IL_0CAE: ldloc.s      5
+   IL_0CB0: brfalse      IL_0FC0
+   IL_0CB5: ldarg.1      
+   IL_0CB6: brfalse      IL_0FC0
+   IL_0CBB: ldarg.0      
+   IL_0CBC: ldarg.0      
+   IL_0CBD: ldfld        0x04017644 field ActionGameLibrary.StarsCollider::_synHitCacheCount : int
+   IL_0CC2: ldc.i4.1     
+   IL_0CC3: add          
+   IL_0CC4: stfld        0x04017644 field ActionGameLibrary.StarsCollider::_synHitCacheCount : int
+   IL_0CC9: ldarg.0      
+   IL_0CCA: ldfld        0x04017643 field ActionGameLibrary.StarsCollider::_synHitCache : System.Collections.Generic.List`1<ActionGameLibrary.SynEvent.AcceptData>
+   IL_0CCF: callvirt     0x0A0057D3 memberref System.Collections.Generic.List`1<ActionGameLibrary.SynEvent.AcceptData>::get_Count
+   IL_0CD4: ldarg.0      
+   IL_0CD5: ldfld        0x04017644 field ActionGameLibrary.StarsCollider::_synHitCacheCount : int
+   IL_0CDA: bge.s        16
+   IL_0CDC: ldarg.0      
+   IL_0CDD: ldfld        0x04017643 field ActionGameLibrary.StarsCollider::_synHitCache : System.Collections.Generic.List`1<ActionGameLibrary.SynEvent.AcceptData>
+   IL_0CE2: newobj       0x0602A310 method ActionGameLibrary.SynEvent.AcceptData :: .ctor() -> void 0x0602A310
+   IL_0CE7: callvirt     0x0A0057D4 memberref System.Collections.Generic.List`1<ActionGameLibrary.SynEvent.AcceptData>::Add
+   IL_0CEC: ldarg.0      
+   IL_0CED: ldfld        0x04017643 field ActionGameLibrary.StarsCollider::_synHitCache : System.Collections.Generic.List`1<ActionGameLibrary.SynEvent.AcceptData>
+   IL_0CF2: ldarg.0      
+   IL_0CF3: ldfld        0x04017644 field ActionGameLibrary.StarsCollider::_synHitCacheCount : int
+   IL_0CF8: ldc.i4.1     
+   IL_0CF9: sub          
+   IL_0CFA: callvirt     0x0A00546B memberref System.Collections.Generic.List`1<ActionGameLibrary.SynEvent.AcceptData>::get_Item
+   IL_0CFF: stloc.s      27
+   IL_0D01: ldloc.s      27
+   IL_0D03: ldarg.2      
+   IL_0D04: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0D09: stfld        0x0401CE41 field ActionGameLibrary.SynEvent.AcceptData::accepter : ActionGameLibrary.InteractiveGameObject
+   IL_0D0E: ldloc.2      
+   IL_0D0F: brfalse      IL_0D9E
+   IL_0D14: ldarg.1      
+   IL_0D15: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0D1A: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0D1F: stloc.s      28
+   IL_0D21: ldarg.0      
+   IL_0D22: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0D27: ldloc.s      28
+   IL_0D29: ldfld        0x04017DE6 field ActionGameLibrary.ActionGameProjectile::character : ActionGameLibrary.Character
+   IL_0D2E: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0D33: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0D38: stfld        0x04017C70 field ActionGameLibrary.SynEvent::attackerInstanceId : int
+   IL_0D3D: ldarg.0      
+   IL_0D3E: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0D43: ldc.i4.1     
+   IL_0D44: stfld        0x04017C71 field ActionGameLibrary.SynEvent::attackerIsProjectile : bool
+   IL_0D49: ldarg.0      
+   IL_0D4A: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0D4F: ldarg.0      
+   IL_0D50: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0D55: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0D5A: stfld        0x04017C76 field ActionGameLibrary.SynEvent::skillId : int
+   IL_0D5F: ldarg.0      
+   IL_0D60: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0D65: ldarg.0      
+   IL_0D66: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0D6B: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0D70: stfld        0x04017C77 field ActionGameLibrary.SynEvent::skillLevel : int
+   IL_0D75: ldarg.0      
+   IL_0D76: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0D7B: ldloc.s      28
+   IL_0D7D: ldfld        0x04017DE8 field ActionGameLibrary.ActionGameProjectile::instanceId : int
+   IL_0D82: stfld        0x04017C83 field ActionGameLibrary.SynEvent::instanceId : int
+   IL_0D87: ldarg.0      
+   IL_0D88: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0D8D: ldloc.s      28
+   IL_0D8F: ldfld        0x04017DEF field ActionGameLibrary.ActionGameProjectile::projectileId : int
+   IL_0D94: stfld        0x04017C74 field ActionGameLibrary.SynEvent::descId : int
+   IL_0D99: br           IL_0E34
+   IL_0D9E: ldarg.0      
+   IL_0D9F: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0DA4: ldarg.0      
+   IL_0DA5: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0DAA: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0DAF: stfld        0x04017C76 field ActionGameLibrary.SynEvent::skillId : int
+   IL_0DB4: ldarg.0      
+   IL_0DB5: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0DBA: ldarg.0      
+   IL_0DBB: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0DC0: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0DC5: stfld        0x04017C77 field ActionGameLibrary.SynEvent::skillLevel : int
+   IL_0DCA: ldarg.1      
+   IL_0DCB: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0DD0: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0DD5: ldfld        0x04017D3E field ActionGameLibrary.ActionGameObjectData::isPhantom : bool
+   IL_0DDA: brtrue.s     29
+   IL_0DDC: ldarg.0      
+   IL_0DDD: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0DE2: ldarg.1      
+   IL_0DE3: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0DE8: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0DED: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0DF2: stfld        0x04017C70 field ActionGameLibrary.SynEvent::attackerInstanceId : int
+   IL_0DF7: br.s         32
+   IL_0DF9: ldarg.0      
+   IL_0DFA: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0DFF: ldarg.1      
+   IL_0E00: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0E05: callvirt     0x0601E023 method ActionGameLibrary.ActionGameObject :: get_mainBody() -> ActionGameLibrary.IActionGameObject 0x0601E023
+   IL_0E0A: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0E0F: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0E14: stfld        0x04017C70 field ActionGameLibrary.SynEvent::attackerInstanceId : int
+   IL_0E19: ldarg.0      
+   IL_0E1A: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0E1F: ldarg.1      
+   IL_0E20: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0E25: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0E2A: ldfld        0x04017D2D field ActionGameLibrary.ActionGameObjectData::id : uint
+   IL_0E2F: stfld        0x04017C74 field ActionGameLibrary.SynEvent::descId : int
+   IL_0E34: ldloc.3      
+   IL_0E35: brfalse.s    118
+   IL_0E37: ldarg.2      
+   IL_0E38: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0E3D: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0E42: stloc.s      29
+   IL_0E44: ldloc.s      27
+   IL_0E46: ldarg.2      
+   IL_0E47: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0E4C: isinst       0x0200214C type ActionGameLibrary.ActionGameProjectile
+   IL_0E51: callvirt     0x0601F163 method ActionGameLibrary.ActionGameEffect :: get_sourceObject() -> ActionGameLibrary.IActionGameObject 0x0601F163
+   IL_0E56: callvirt     0x0601F0E3 method ActionGameLibrary.IActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601F0E3
+   IL_0E5B: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0E60: stfld        0x0401CE42 field ActionGameLibrary.SynEvent.AcceptData::accepterInstanceId : int
+   IL_0E65: ldloc.s      27
+   IL_0E67: ldc.i4.1     
+   IL_0E68: stfld        0x0401CE44 field ActionGameLibrary.SynEvent.AcceptData::accepterIsProjectile : bool
+   IL_0E6D: ldarg.0      
+   IL_0E6E: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0E73: ldarg.0      
+   IL_0E74: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0E79: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0E7E: stfld        0x04017C76 field ActionGameLibrary.SynEvent::skillId : int
+   IL_0E83: ldarg.0      
+   IL_0E84: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0E89: ldarg.0      
+   IL_0E8A: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0E8F: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0E94: stfld        0x04017C77 field ActionGameLibrary.SynEvent::skillLevel : int
+   IL_0E99: ldarg.0      
+   IL_0E9A: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0E9F: ldloc.s      29
+   IL_0EA1: ldfld        0x04017DE8 field ActionGameLibrary.ActionGameProjectile::instanceId : int
+   IL_0EA6: stfld        0x04017C83 field ActionGameLibrary.SynEvent::instanceId : int
+   IL_0EAB: br.s         67
+   IL_0EAD: ldarg.0      
+   IL_0EAE: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0EB3: ldarg.0      
+   IL_0EB4: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0EB9: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0EBE: stfld        0x04017C76 field ActionGameLibrary.SynEvent::skillId : int
+   IL_0EC3: ldarg.0      
+   IL_0EC4: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0EC9: ldarg.0      
+   IL_0ECA: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0ECF: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0ED4: stfld        0x04017C77 field ActionGameLibrary.SynEvent::skillLevel : int
+   IL_0ED9: ldloc.s      27
+   IL_0EDB: ldarg.2      
+   IL_0EDC: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0EE1: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0EE6: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_0EEB: stfld        0x0401CE42 field ActionGameLibrary.SynEvent.AcceptData::accepterInstanceId : int
+   IL_0EF0: ldarg.0      
+   IL_0EF1: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0EF6: ldarg.0      
+   IL_0EF7: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0EFC: ldfld        0x040175BE field ActionGameLibrary.AttackData::actionUsedCount : int
+   IL_0F01: stfld        0x04017C78 field ActionGameLibrary.SynEvent::sequence : int
+   IL_0F06: ldarg.0      
+   IL_0F07: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0F0C: ldarg.0      
+   IL_0F0D: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0F12: ldfld        0x040175BF field ActionGameLibrary.AttackData::hitBoxGroupIndex : int
+   IL_0F17: stfld        0x04017C7F field ActionGameLibrary.SynEvent::hitBoxGroupIndex : int
+   IL_0F1C: ldloc.s      27
+   IL_0F1E: ldarg.s      5
+   IL_0F20: stfld        0x0401CE43 field ActionGameLibrary.SynEvent.AcceptData::hitPoint : UnityEngine.Vector3
+   IL_0F25: ldloc.s      27
+   IL_0F27: ldfld        0x0401CE45 field ActionGameLibrary.SynEvent.AcceptData::synHitData : ActionGameLibrary.SynHitData
+   IL_0F2C: ldarg.0      
+   IL_0F2D: ldfld        0x04017639 field ActionGameLibrary.StarsCollider::_synHitData : ActionGameLibrary.SynHitData
+   IL_0F32: callvirt     0x0601E8EB method ActionGameLibrary.SynHitData :: FillFrom(ActionGameLibrary.SynHitData) -> void 0x0601E8EB
+   IL_0F37: ldloc.s      27
+   IL_0F39: ldfld        0x0401CE45 field ActionGameLibrary.SynEvent.AcceptData::synHitData : ActionGameLibrary.SynHitData
+   IL_0F3E: ldarg.s      6
+   IL_0F40: stfld        0x04017652 field ActionGameLibrary.SynHitData::seed : int
+   IL_0F45: ldarg.0      
+   IL_0F46: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0F4B: ldarg.0      
+   IL_0F4C: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0F51: ldfld        0x040175AB field ActionGameLibrary.AttackData::hitId : int
+   IL_0F56: stfld        0x04017C73 field ActionGameLibrary.SynEvent::attackDataId : int
+   IL_0F5B: ldarg.0      
+   IL_0F5C: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0F61: ldarg.0      
+   IL_0F62: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0F67: ldfld        0x040175C2 field ActionGameLibrary.AttackData::actionIndex : int
+   IL_0F6C: stfld        0x04017C69 field ActionGameLibrary.SynEvent::actionIndex : int
+   IL_0F71: ldarg.0      
+   IL_0F72: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0F77: ldarg.0      
+   IL_0F78: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0F7D: ldfld        0x040175C1 field ActionGameLibrary.AttackData::linkActionIndex : int
+   IL_0F82: stfld        0x04017C6B field ActionGameLibrary.SynEvent::linkActionIndex : int
+   IL_0F87: ldarg.0      
+   IL_0F88: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0F8D: ldarg.1      
+   IL_0F8E: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_0F93: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0F98: ldfld        0x04017D3E field ActionGameLibrary.ActionGameObjectData::isPhantom : bool
+   IL_0F9D: stfld        0x04017C72 field ActionGameLibrary.SynEvent::isPhantom : bool
+   IL_0FA2: ldarg.0      
+   IL_0FA3: ldfld        0x04017645 field ActionGameLibrary.StarsCollider::_synEvent : ActionGameLibrary.SynEvent
+   IL_0FA8: ldarg.0      
+   IL_0FA9: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_0FAE: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0FB3: ldfld        0x040175A9 field ActionGameLibrary.AttackBehaviorData::controlLevel : ActionGameLibrary.AttackBehaviorData.ControlLevel
+   IL_0FB8: ldc.i4.0     
+   IL_0FB9: FEcgt.un     
+   IL_0FBB: stfld        0x04017C75 field ActionGameLibrary.SynEvent::withControl : bool
+   IL_0FC0: ldloc.3      
+   IL_0FC1: brtrue       IL_10EF
+   IL_0FC6: ldc.i4.0     
+   IL_0FC7: stloc.s      30
+   IL_0FC9: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_0FCE: ldloc.s      4
+   IL_0FD0: ldc.i4.0     
+   IL_0FD1: callvirt     0x0601E977 method ActionGameLibrary.GameObjectManager :: IsPlayer(ActionGameLibrary.IActionGameObject, bool) -> bool 0x0601E977
+   IL_0FD6: brfalse.s    91
+   IL_0FD8: ldarg.0      
+   IL_0FD9: ldarg.0      
+   IL_0FDA: ldfld        0x0401764B field ActionGameLibrary.StarsCollider::comboCount : int
+   IL_0FDF: ldc.i4.1     
+   IL_0FE0: add          
+   IL_0FE1: stfld        0x0401764B field ActionGameLibrary.StarsCollider::comboCount : int
+   IL_0FE6: ldarg.0      
+   IL_0FE7: ldfld        0x0401764B field ActionGameLibrary.StarsCollider::comboCount : int
+   IL_0FEC: stloc.s      30
+   IL_0FEE: call         0x0601E7FB method ActionGameLibrary.BattleElementCenter :: get_localDamage() -> bool 0x0601E7FB
+   IL_0FF3: brfalse.s    38
+   IL_0FF5: ldloc.s      4
+   IL_0FF7: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0FFC: ldloc.s      30
+   IL_0FFE: stfld        0x04017D4D field ActionGameLibrary.ActionGameObjectData::comboCount : int
+   IL_1003: ldloc.s      4
+   IL_1005: callvirt     0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_100A: call         0x0600104F method RTTClock :: GetSvrSec() -> long 0x0600104F
+   IL_100F: ldc.i4       1000
+   IL_1014: conv.i8      
+   IL_1015: mul          
+   IL_1016: stfld        0x04017D4F field ActionGameLibrary.ActionGameObjectData::lastComboTime : long
+   IL_101B: ldc.r4       2.0
+   IL_1020: ldarg.0      
+   IL_1021: ldfld        0x0401763B field ActionGameLibrary.StarsCollider::_delegate_ClearComboCount : DelegateEnums.NoneParam
+   IL_1026: ldc.i4       1070
+   IL_102B: ldc.i4.0     
+   IL_102C: ldc.i4.0     
+   IL_102D: call         0x060009FD method ToolKit :: delayCall(float, DelegateEnums.NoneParam, int, bool, bool) -> int 0x060009FD
+   IL_1032: pop          
+   IL_1033: ldarg.0      
+   IL_1034: ldfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_1039: brtrue.s     21
+   IL_103B: ldarg.2      
+   IL_103C: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_1041: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_1046: ldfld        0x04017E20 field ActionGameLibrary.ActionState::isDead : bool
+   IL_104B: brfalse      IL_10EF
+   IL_1050: ldarg.0      
+   IL_1051: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_1056: ldfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_105B: brfalse.s    35
+   IL_105D: ldarg.1      
+   IL_105E: brfalse.s    29
+   IL_1060: ldarg.1      
+   IL_1061: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_1066: brfalse.s    21
+   IL_1068: ldarg.1      
+   IL_1069: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_106E: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_1073: callvirt     0x0601F1E5 method ActionGameLibrary.ActionState :: get_hideLogic() -> bool 0x0601F1E5
+   IL_1078: ldc.i4.0     
+   IL_1079: FEceq        
+   IL_107B: br.s         4
+   IL_107D: ldc.i4.1     
+   IL_107E: br.s         1
+   IL_1080: ldc.i4.0     
+   IL_1081: brfalse.s    108
+   IL_1083: ldarg.0      
+   IL_1084: ldloc.1      
+   IL_1085: brtrue.s     3
+   IL_1087: ldloc.0      
+   IL_1088: br.s         6
+   IL_108A: ldarg.3      
+   IL_108B: ldfld        0x040175CA field ActionGameLibrary.AttackData::projectileOwnerObj : ActionGameLibrary.InteractiveGameObject
+   IL_1090: ldarg.2      
+   IL_1091: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_1096: ldarg.0      
+   IL_1097: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_109C: ldfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_10A1: ldarg.0      
+   IL_10A2: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_10A7: ldfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_10AC: ldarg.0      
+   IL_10AD: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_10B2: ldfld        0x04017522 field ActionGameLibrary.DamageInfo::isCrit : bool
+   IL_10B7: ldarg.0      
+   IL_10B8: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_10BD: ldfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_10C2: ldarg.s      5
+   IL_10C4: ldc.i4.1     
+   IL_10C5: ldloc.s      30
+   IL_10C7: ldsfld       0x04017507 field ActionGameLibrary.ActionGameLibraryConfig::IsEditorMode : bool
+   IL_10CC: ldarg.0      
+   IL_10CD: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_10D2: ldfld        0x040175BC field ActionGameLibrary.AttackData::showDamage : bool
+   IL_10D7: ldc.i4.0     
+   IL_10D8: FEceq        
+   IL_10DA: ldarg.2      
+   IL_10DB: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_10E0: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_10E5: ldfld        0x04017E20 field ActionGameLibrary.ActionState::isDead : bool
+   IL_10EA: call         0x0601E8DF method ActionGameLibrary.StarsCollider :: DamageTo(ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.InteractiveGameObject, long, DamageEnumerate.DamageType, bool, bool, UnityEngine.Vector3, bool, int, bool, bool, bool) -> void 0x0601E8DF
+   IL_10EF: ldarg.0      
+   IL_10F0: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_10F5: ldfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_10FA: brtrue.s     1
+   IL_10FC: ret          
+   IL_10FD: ldarg.1      
+   IL_10FE: brfalse.s    18
+   IL_1100: ldarg.1      
+   IL_1101: callvirt     0x0601E8A8 method ActionGameLibrary.IAttack :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E8A8
+   IL_1106: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_110B: callvirt     0x0601F1E5 method ActionGameLibrary.ActionState :: get_hideLogic() -> bool 0x0601F1E5
+   IL_1110: brtrue.s     18
+   IL_1112: ldarg.2      
+   IL_1113: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_1118: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_111D: callvirt     0x0601F1E5 method ActionGameLibrary.ActionState :: get_hideLogic() -> bool 0x0601F1E5
+   IL_1122: brfalse.s    1
+   IL_1124: ret          
+   IL_1125: ldarg.0      
+   IL_1126: ldarg.0      
+   IL_1127: ldfld        0x04017634 field ActionGameLibrary.StarsCollider::_hitPoint : UnityEngine.Vector3
+   IL_112C: call         0x0601E8DB method ActionGameLibrary.StarsCollider :: GetDistanceStrength(UnityEngine.Vector3) -> float 0x0601E8DB
+   IL_1131: stloc.s      8
+   IL_1133: ldarg.0      
+   IL_1134: ldloc.s      8
+   IL_1136: stfld        0x04017646 field ActionGameLibrary.StarsCollider::_distanceStrength : float
+   IL_113B: ldarg.1      
+   IL_113C: brfalse.s    14
+   IL_113E: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_1143: callvirt     0x0601E973 method ActionGameLibrary.GameObjectManager :: get_focus() -> ActionGameLibrary.InteractiveGameObject 0x0601E973
+   IL_1148: ldloc.s      4
+   IL_114A: beq.s        20
+   IL_114C: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_1151: callvirt     0x0601E973 method ActionGameLibrary.GameObjectManager :: get_focus() -> ActionGameLibrary.InteractiveGameObject 0x0601E973
+   IL_1156: ldarg.2      
+   IL_1157: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_115C: FEceq        
+   IL_115E: br.s         1
+   IL_1160: ldc.i4.1     
+   IL_1161: stloc.s      9
+   IL_1163: ldarg.1      
+   IL_1164: brfalse.s    14
+   IL_1166: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_116B: ldloc.s      4
+   IL_116D: callvirt     0x0601E978 method ActionGameLibrary.GameObjectManager :: IsMyPartner(ActionGameLibrary.IActionGameObject) -> bool 0x0601E978
+   IL_1172: br.s         1
+   IL_1174: ldc.i4.0     
+   IL_1175: stloc.s      10
+   IL_1177: ldsfld       0x04017510 field ActionGameLibrary.ActionGameLibraryConfig::hitShakeStrength : float
+   IL_117C: conv.r8      
+   IL_117D: ldc.r8       0.5
+   IL_1186: ble.un.s     42
+   IL_1188: ldloc.s      9
+   IL_118A: ldloc.s      10
+   IL_118C: or           
+   IL_118D: brfalse.s    35
+   IL_118F: ldarg.0      
+   IL_1190: ldarg.0      
+   IL_1191: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_1196: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_119B: ldfld        0x0401759C field ActionGameLibrary.AttackBehaviorData::hitEffect : ActionGameLibrary.AttackEffectsData
+   IL_11A0: ldfld        0x040175E2 field ActionGameLibrary.AttackEffectsData::shockData : ActionData.LShakeCamera
+   IL_11A5: ldloc.s      8
+   IL_11A7: ldsfld       0x04017510 field ActionGameLibrary.ActionGameLibraryConfig::hitShakeStrength : float
+   IL_11AC: mul          
+   IL_11AD: call         0x0601E8DC method ActionGameLibrary.StarsCollider :: AddShock(ActionData.LShakeCamera, float) -> void 0x0601E8DC
+   IL_11B2: ldc.i4.1     
+   IL_11B3: call         0x060010B6 method PerformanceSet :: GetEffectQuality(bool) -> int 0x060010B6
+   IL_11B8: ldc.i4.2     
+   IL_11B9: beq.s        7
+   IL_11BB: ldloc.s      9
+   IL_11BD: ldc.i4.0     
+   IL_11BE: FEceq        
+   IL_11C0: br.s         1
+   IL_11C2: ldc.i4.0     
+   IL_11C3: brtrue.s     36
+   IL_11C5: ldarg.0      
+   IL_11C6: ldarga.s     5
+   IL_11C8: ldarg.0      
+   IL_11C9: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_11CE: ldarg.0      
+   IL_11CF: ldfld        0x0401763D field ActionGameLibrary.StarsCollider::_direction : UnityEngine.Vector3
+   IL_11D4: ldarg.2      
+   IL_11D5: ldsfld       0x04017534 field ActionGameLibrary.BattleElementCenter::gameObjectManager : ActionGameLibrary.GameObjectManager
+   IL_11DA: callvirt     0x0601E973 method ActionGameLibrary.GameObjectManager :: get_focus() -> ActionGameLibrary.InteractiveGameObject 0x0601E973
+   IL_11DF: ldloc.s      4
+   IL_11E1: FEceq        
+   IL_11E3: ldarg.1      
+   IL_11E4: call         0x0601E8E1 method ActionGameLibrary.StarsCollider :: CreatHitEffects(ref UnityEngine.Vector3, ActionGameLibrary.AttackData, UnityEngine.Vector3, ActionGameLibrary.IAccept, bool, ActionGameLibrary.IAttack) -> void 0x0601E8E1
+   IL_11E9: ldarg.0      
+   IL_11EA: ldarg.0      
+   IL_11EB: ldfld        0x04017635 field ActionGameLibrary.StarsCollider::_attackData : ActionGameLibrary.AttackData
+   IL_11F0: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_11F5: ldfld        0x0401759C field ActionGameLibrary.AttackBehaviorData::hitEffect : ActionGameLibrary.AttackEffectsData
+   IL_11FA: ldfld        0x040175E4 field ActionGameLibrary.AttackEffectsData::seList : System.Collections.Generic.List`1<ActionGameLibrary.AttackSoundData>
+   IL_11FF: ldarg.0      
+   IL_1200: ldfld        0x04017646 field ActionGameLibrary.StarsCollider::_distanceStrength : float
+   IL_1205: call         0x0601E8E0 method ActionGameLibrary.StarsCollider :: CreatHitSound(System.Collections.Generic.List`1<ActionGameLibrary.AttackSoundData>, float) -> void 0x0601E8E0
+   IL_120A: ret          
+
+
+########## StarsCollider.DamageTo ##########
+
+ActionGameLibrary.StarsCollider :: DamageTo(ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.InteractiveGameObject, long, DamageEnumerate.DamageType, bool, bool, UnityEngine.Vector3, bool, int, bool, bool, bool) -> void 0x0601E8DF
+body: ok len=148
+   IL_0000: ldarg.s      10
+   IL_0002: brtrue.s     23
+   IL_0004: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_0009: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_000E: brfalse.s    11
+   IL_0010: ldarg.2      
+   IL_0011: ldarg.3      
+   IL_0012: ldarg.s      4
+   IL_0014: ldarg.s      8
+   IL_0016: callvirt     0x0601E0B9 method ActionGameLibrary.InteractiveGameObject :: Damage(long, DamageEnumerate.DamageType, bool) -> void 0x0601E0B9
+   IL_001B: ldarg.2      
+   IL_001C: callvirt     0x2B0002DF TOKEN 0x2B0002DF
+   IL_0021: stloc.0      
+   IL_0022: ldarg.0      
+   IL_0023: ldflda       0x0401763F field ActionGameLibrary.StarsCollider::_damageInfo : ActionGameLibrary.DamageInfo
+   IL_0028: ldfld        0x04017526 field ActionGameLibrary.DamageInfo::bLocalDie : bool
+   IL_002D: brfalse.s    1
+   IL_002F: ret          
+   IL_0030: ldarg.0      
+   IL_0031: ldfld        0x04017637 field ActionGameLibrary.StarsCollider::_damageUIInfo : ActionGameLibrary.StarsCollider.DamageUIInfo
+   IL_0036: ldarg.1      
+   IL_0037: ldarg.2      
+   IL_0038: ldarg.3      
+   IL_0039: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_003E: ldarg.s      4
+   IL_0040: ldc.i4.0     
+   IL_0041: ldarg.s      5
+   IL_0043: ldarg.s      6
+   IL_0045: ldarg.s      7
+   IL_0047: ldloc.0      
+   IL_0048: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_004D: callvirt     0x0601DF4A method ActionGameLibrary.SecondaryAttribute :: get_healthPointNowBigInt() -> BigInt 0x0601DF4A
+   IL_0052: ldloc.0      
+   IL_0053: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0058: callvirt     0x0601DF45 method ActionGameLibrary.SecondaryAttribute :: get_healthPointBigInt() -> BigInt 0x0601DF45
+   IL_005D: ldarg.s      9
+   IL_005F: ldloc.0      
+   IL_0060: ldfld        0x04017076 field ActionGameLibrary.InteractiveGameObjectData::hpBarLength : int
+   IL_0065: ldarg.s      11
+   IL_0067: ldc.i4.0     
+   IL_0068: ldarg.s      12
+   IL_006A: ldc.r4       0.0
+   IL_006F: ldnull       
+   IL_0070: ldc.i4.0     
+   IL_0071: callvirt     0x0602A290 method ActionGameLibrary.StarsCollider.DamageUIInfo :: Set(ActionGameLibrary.InteractiveGameObject, ActionGameLibrary.InteractiveGameObject, BigInt, DamageEnumerate.DamageType, ActionGameLibrary.StarsCollider.HitType, bool, bool, UnityEngine.Vector3, BigInt, BigInt, int, int, bool, DamageEnumerate.DamageSourceType, bool, float, System.Collections.Generic.List`1<proto_ff.MsgInt128>, proto_ff.enSpecialEffectType) -> void 0x0602A290
+   IL_0076: ldarg.s      11
+   IL_0078: brtrue.s     25
+   IL_007A: ldsfld       0x04000B3A field GameEvent::Damage : string
+   IL_007F: ldc.i4.1     
+   IL_0080: newarr       0x01000019 typespec SingletonClass`1<RoleInfoMange>
+   IL_0085: dup          
+   IL_0086: ldc.i4.0     
+   IL_0087: ldarg.0      
+   IL_0088: ldfld        0x04017637 field ActionGameLibrary.StarsCollider::_damageUIInfo : ActionGameLibrary.StarsCollider.DamageUIInfo
+   IL_008D: stelem.ref   
+   IL_008E: call         0x0600093D method EventManager :: send(string, object[]) -> void 0x0600093D
+   IL_0093: ret          
+
+
+########## StarsCollider.GetOriginalDamage ##########
+
+ActionGameLibrary.StarsCollider :: GetOriginalDamage(ActionGameLibrary.AttackData, ActionGameLibrary.CharacterData, ActionGameLibrary.CharacterData, ActionGameLibrary.ActionState, bool, int, string, int) -> ActionGameLibrary.DamageInfo 0x0601E8E6
+body: ok len=596
+   IL_0000: ldnull       
+   IL_0001: stloc.2      
+   IL_0002: ldnull       
+   IL_0003: stloc.3      
+   IL_0004: ldarg.s      4
+   IL_0006: brtrue.s     42
+   IL_0008: ldsfld       0x04000EBA field DataService::skillData : DS_SkillData
+   IL_000D: ldarg.0      
+   IL_000E: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0013: ldarg.0      
+   IL_0014: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0019: ldc.i4.0     
+   IL_001A: callvirt     0x06001605 method DS_SkillData :: GetSkillData(int, int, bool) -> GameConfigData.SkillData 0x06001605
+   IL_001F: stloc.2      
+   IL_0020: ldloc.2      
+   IL_0021: brtrue.s     6
+   IL_0023: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0028: ret          
+   IL_0029: ldloc.2      
+   IL_002A: callvirt     0x0601C40D method GameConfigData.SkillData :: get_skillType() -> int 0x0601C40D
+   IL_002F: stloc.1      
+   IL_0030: br.s         29
+   IL_0032: ldsfld       0x04000EBD field DataService::projectileData : DS_ProjectileData
+   IL_0037: ldarg.s      5
+   IL_0039: callvirt     0x0600152E method DS_ProjectileData :: GetProjectileData(uint) -> GameConfigData.ProjectileData 0x0600152E
+   IL_003E: stloc.3      
+   IL_003F: ldloc.3      
+   IL_0040: brtrue.s     6
+   IL_0042: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0047: ret          
+   IL_0048: ldloc.3      
+   IL_0049: callvirt     0x0601BAA4 method GameConfigData.ProjectileData :: get_skillType() -> int 0x0601BAA4
+   IL_004E: stloc.1      
+   IL_004F: ldarg.3      
+   IL_0050: ldfld        0x04017E2D field ActionGameLibrary.ActionState::immuneDamage : bool
+   IL_0055: brtrue.s     27
+   IL_0057: ldloc.1      
+   IL_0058: ldc.i4.1     
+   IL_0059: bne.un.s     8
+   IL_005B: ldarg.3      
+   IL_005C: ldfld        0x04017E2E field ActionGameLibrary.ActionState::immunePhysicalDamage : bool
+   IL_0061: brtrue.s     15
+   IL_0063: ldloc.1      
+   IL_0064: ldc.i4.2     
+   IL_0065: bne.un.s     8
+   IL_0067: ldarg.3      
+   IL_0068: ldfld        0x04017E2F field ActionGameLibrary.ActionState::immuneMagicDamage : bool
+   IL_006D: br.s         4
+   IL_006F: ldc.i4.0     
+   IL_0070: br.s         1
+   IL_0072: ldc.i4.1     
+   IL_0073: brfalse.s    44
+   IL_0075: ldloca.s     10
+   IL_0077: FEinitobj    0x02002009 type ActionGameLibrary.DamageInfo
+   IL_007D: ldloca.s     10
+   IL_007F: ldc.i4.1     
+   IL_0080: stfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_0085: ldloca.s     10
+   IL_0087: ldc.i4.1     
+   IL_0088: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_008D: ldloca.s     10
+   IL_008F: ldc.i4.0     
+   IL_0090: conv.i8      
+   IL_0091: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_0096: ldloca.s     10
+   IL_0098: ldc.i4.1     
+   IL_0099: stfld        0x04017525 field ActionGameLibrary.DamageInfo::invalidDamage : bool
+   IL_009E: ldloc.s      10
+   IL_00A0: ret          
+   IL_00A1: ldloca.s     4
+   IL_00A3: FEinitobj    0x02002009 type ActionGameLibrary.DamageInfo
+   IL_00A9: ldc.i4.1     
+   IL_00AA: stloc.s      5
+   IL_00AC: ldloca.s     4
+   IL_00AE: ldloc.s      5
+   IL_00B0: stfld        0x04017521 field ActionGameLibrary.DamageInfo::isHit : bool
+   IL_00B5: ldc.r4       0.3499999940395355
+   IL_00BA: stloc.s      6
+   IL_00BC: call         0x0A0001EC memberref UnityEngine.Random::get_value
+   IL_00C1: ldloc.s      6
+   IL_00C3: FEclt        
+   IL_00C5: stloc.s      7
+   IL_00C7: ldloca.s     4
+   IL_00C9: ldloc.s      7
+   IL_00CB: stfld        0x04017522 field ActionGameLibrary.DamageInfo::isCrit : bool
+   IL_00D0: ldc.r8       0.0
+   IL_00D9: stloc.s      8
+   IL_00DB: ldc.r8       0.0
+   IL_00E4: stloc.s      9
+   IL_00E6: ldarg.s      4
+   IL_00E8: brtrue.s     127
+   IL_00EA: ldsfld       0x04000EBB field DataService::skillEffect : DS_SkillEffectData
+   IL_00EF: ldarg.1      
+   IL_00F0: ldfld        0x04017D24 field ActionGameLibrary.ActionGameObjectData::modelID : string
+   IL_00F5: ldarg.0      
+   IL_00F6: ldfld        0x040175AB field ActionGameLibrary.AttackData::hitId : int
+   IL_00FB: ldarg.0      
+   IL_00FC: ldfld        0x040175C3 field ActionGameLibrary.AttackData::actionLabel : string
+   IL_0101: callvirt     0x06001675 method DS_SkillEffectData :: GetSkillEffectData(string, int, string) -> GameConfigData.SkillEffectData 0x06001675
+   IL_0106: stloc.s      11
+   IL_0108: ldloc.s      11
+   IL_010A: brtrue.s     6
+   IL_010C: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0111: ret          
+   IL_0112: ldloc.2      
+   IL_0113: ldarg.0      
+   IL_0114: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_0119: ldarg.0      
+   IL_011A: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_011F: call         0x0601C48B method GameConfigData.SkillDataConfig :: GetDamageFactorA(GameConfigData.SkillData, int, int) -> float 0x0601C48B
+   IL_0124: stloc.s      12
+   IL_0126: ldloc.2      
+   IL_0127: ldarg.0      
+   IL_0128: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+   IL_012D: ldarg.0      
+   IL_012E: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_0133: call         0x0601C48C method GameConfigData.SkillDataConfig :: GetDamageFactorB(GameConfigData.SkillData, int, int) -> float 0x0601C48C
+   IL_0138: stloc.s      13
+   IL_013A: ldarg.1      
+   IL_013B: ldarg.2      
+   IL_013C: ldloc.2      
+   IL_013D: callvirt     0x0601C3EF method GameConfigData.SkillData :: get_damageFomulaID() -> int 0x0601C3EF
+   IL_0142: ldloc.2      
+   IL_0143: callvirt     0x0601C3F1 method GameConfigData.SkillData :: get_damageParameter_A() -> string 0x0601C3F1
+   IL_0148: ldloc.2      
+   IL_0149: callvirt     0x0601C3F3 method GameConfigData.SkillData :: get_damageParameter_B() -> string 0x0601C3F3
+   IL_014E: ldloc.2      
+   IL_014F: callvirt     0x0601C3F5 method GameConfigData.SkillData :: get_damageConst() -> float 0x0601C3F5
+   IL_0154: ldloc.s      12
+   IL_0156: ldloc.s      13
+   IL_0158: call         0x06000D79 method GameFormula :: GetResult(ActionGameLibrary.InteractiveGameObjectData, ActionGameLibrary.InteractiveGameObjectData, int, string, string, float, float, float) -> double 0x06000D79
+   IL_015D: stloc.s      8
+   IL_015F: ldloc.s      11
+   IL_0161: callvirt     0x0601C49D method GameConfigData.SkillEffectData :: get_functionType() -> int 0x0601C49D
+   IL_0166: stloc.0      
+   IL_0167: br.s         117
+   IL_0169: ldsfld       0x04000EBE field DataService::projectileEffect : DS_ProjectileEffectData
+   IL_016E: ldarg.s      6
+   IL_0170: ldarg.0      
+   IL_0171: ldfld        0x040175AB field ActionGameLibrary.AttackData::hitId : int
+   IL_0176: callvirt     0x06001536 method DS_ProjectileEffectData :: GetProjectileEffectData(string, int) -> GameConfigData.ProjectileEffectData 0x06001536
+   IL_017B: stloc.s      14
+   IL_017D: ldloc.s      14
+   IL_017F: brtrue.s     6
+   IL_0181: ldsfld       0x0401751F field ActionGameLibrary.DamageInfo::DefaultDamage : ActionGameLibrary.DamageInfo
+   IL_0186: ret          
+   IL_0187: ldarg.s      5
+   IL_0189: ldarg.0      
+   IL_018A: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_018F: ldloc.3      
+   IL_0190: callvirt     0x0601BAB6 method GameConfigData.ProjectileData :: get_damageFactor_A() -> float 0x0601BAB6
+   IL_0195: call         0x0601BAD2 method GameConfigData.ProjectileDataConfig :: GetDamageFactorA(uint, int, float) -> float 0x0601BAD2
+   IL_019A: stloc.s      15
+   IL_019C: ldarg.s      5
+   IL_019E: ldarg.0      
+   IL_019F: ldfld        0x040175AE field ActionGameLibrary.AttackData::level : int
+   IL_01A4: ldloc.3      
+   IL_01A5: callvirt     0x0601BABA method GameConfigData.ProjectileData :: get_damageFactor_B() -> float 0x0601BABA
+   IL_01AA: call         0x0601BAD3 method GameConfigData.ProjectileDataConfig :: GetDamageFactorB(uint, int, float) -> float 0x0601BAD3
+   IL_01AF: stloc.s      16
+   IL_01B1: ldarg.1      
+   IL_01B2: ldarg.2      
+   IL_01B3: ldloc.3      
+   IL_01B4: callvirt     0x0601BAAE method GameConfigData.ProjectileData :: get_damageFomulaID() -> int 0x0601BAAE
+   IL_01B9: ldloc.3      
+   IL_01BA: callvirt     0x0601BAB0 method GameConfigData.ProjectileData :: get_damageParameter_A() -> string 0x0601BAB0
+   IL_01BF: ldloc.3      
+   IL_01C0: callvirt     0x0601BAB2 method GameConfigData.ProjectileData :: get_damageParameter_B() -> string 0x0601BAB2
+   IL_01C5: ldloc.3      
+   IL_01C6: callvirt     0x0601BAB4 method GameConfigData.ProjectileData :: get_damageConst() -> float 0x0601BAB4
+   IL_01CB: ldloc.s      15
+   IL_01CD: ldloc.s      16
+   IL_01CF: call         0x06000D79 method GameFormula :: GetResult(ActionGameLibrary.InteractiveGameObjectData, ActionGameLibrary.InteractiveGameObjectData, int, string, string, float, float, float) -> double 0x06000D79
+   IL_01D4: stloc.s      8
+   IL_01D6: ldloc.s      14
+   IL_01D8: callvirt     0x0601BAE3 method GameConfigData.ProjectileEffectData :: get_functionType() -> int 0x0601BAE3
+   IL_01DD: stloc.0      
+   IL_01DE: ldloc.s      8
+   IL_01E0: stloc.s      9
+   IL_01E2: ldloc.s      7
+   IL_01E4: brfalse.s    11
+   IL_01E6: ldloc.s      9
+   IL_01E8: ldarg.1      
+   IL_01E9: ldarg.2      
+   IL_01EA: call         0x06000D7A method GameFormula :: GetCriticalResult(double, ActionGameLibrary.InteractiveGameObjectData, ActionGameLibrary.InteractiveGameObjectData) -> double 0x06000D7A
+   IL_01EF: stloc.s      9
+   IL_01F1: ldloca.s     4
+   IL_01F3: ldloc.s      9
+   IL_01F5: conv.i8      
+   IL_01F6: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_01FB: ldloc.s      4
+   IL_01FD: ldfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_0202: ldc.i4.1     
+   IL_0203: conv.i8      
+   IL_0204: bge.s        9
+   IL_0206: ldloca.s     4
+   IL_0208: ldc.i4.1     
+   IL_0209: conv.i8      
+   IL_020A: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_020F: ldsfld       0x0401762C field ActionGameLibrary.StarsCollider::godMode : bool
+   IL_0214: brfalse.s    21
+   IL_0216: ldarg.1      
+   IL_0217: ldfld        0x04017D35 field ActionGameLibrary.ActionGameObjectData::characterType : CharacterType
+   IL_021C: brtrue.s     13
+   IL_021E: ldloca.s     4
+   IL_0220: ldc.i4       999999
+   IL_0225: conv.i8      
+   IL_0226: stfld        0x04017523 field ActionGameLibrary.DamageInfo::damage : long
+   IL_022B: ldloc.0      
+   IL_022C: ldc.i4.1     
+   IL_022D: beq.s        6
+   IL_022F: ldloc.0      
+   IL_0230: ldc.i4.2     
+   IL_0231: beq.s        12
+   IL_0233: br.s         20
+   IL_0235: ldloca.s     4
+   IL_0237: ldc.i4.1     
+   IL_0238: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_023D: br.s         18
+   IL_023F: ldloca.s     4
+   IL_0241: ldc.i4.2     
+   IL_0242: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_0247: br.s         8
+   IL_0249: ldloca.s     4
+   IL_024B: ldc.i4.1     
+   IL_024C: stfld        0x04017524 field ActionGameLibrary.DamageInfo::damageType : DamageEnumerate.DamageType
+   IL_0251: ldloc.s      4
+   IL_0253: ret          
+
+
+########## StarsCollider.HitTestClientLocal ##########
+
+ActionGameLibrary.StarsCollider :: HitTestClientLocal(ActionGameLibrary.Hitter, int) -> bool 0x0601E8E9
+body: ok len=65
+   IL_0000: ldarg.1      
+   IL_0001: callvirt     0x0601EEFC method ActionGameLibrary.Hitter :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601EEFC
+   IL_0006: callvirt     0x0601E042 method ActionGameLibrary.ActionGameObject :: get_IsHitClientChkRet() -> bool 0x0601E042
+   IL_000B: brfalse.s    26
+   IL_000D: ldarg.1      
+   IL_000E: callvirt     0x0601EEFC method ActionGameLibrary.Hitter :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601EEFC
+   IL_0013: ldc.i4.0     
+   IL_0014: callvirt     0x0601E043 method ActionGameLibrary.ActionGameObject :: set_IsHitClientChkRet(bool) -> void 0x0601E043
+   IL_0019: ldarg.1      
+   IL_001A: callvirt     0x0601EEFC method ActionGameLibrary.Hitter :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601EEFC
+   IL_001F: ldc.i4.0     
+   IL_0020: callvirt     0x0601E041 method ActionGameLibrary.ActionGameObject :: set_IsHitting(int) -> void 0x0601E041
+   IL_0025: ldc.i4.1     
+   IL_0026: ret          
+   IL_0027: ldarg.1      
+   IL_0028: callvirt     0x0601EEFC method ActionGameLibrary.Hitter :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601EEFC
+   IL_002D: ldc.i4.0     
+   IL_002E: callvirt     0x0601E043 method ActionGameLibrary.ActionGameObject :: set_IsHitClientChkRet(bool) -> void 0x0601E043
+   IL_0033: ldarg.1      
+   IL_0034: callvirt     0x0601EEFC method ActionGameLibrary.Hitter :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601EEFC
+   IL_0039: ldarg.2      
+   IL_003A: callvirt     0x0601E041 method ActionGameLibrary.ActionGameObject :: set_IsHitting(int) -> void 0x0601E041
+   IL_003F: ldc.i4.0     
+   IL_0040: ret          
+
+
+########## StarsCollider.CheckHitType ##########
+
+ActionGameLibrary.StarsCollider :: CheckHitType(ActionGameLibrary.AttackData, ActionGameLibrary.AcceptData) -> bool 0x0601E8D8
+body: ok len=58
+   IL_0000: ldarg.1      
+   IL_0001: ldfld        0x040175B3 field ActionGameLibrary.AttackData::attackBehavior : ActionGameLibrary.AttackBehaviorData
+   IL_0006: stloc.0      
+   IL_0007: ldarg.2      
+   IL_0008: ldfld        0x04017565 field ActionGameLibrary.AcceptData::middle : bool
+   IL_000D: brfalse.s    8
+   IL_000F: ldloc.0      
+   IL_0010: ldfld        0x0401759E field ActionGameLibrary.AttackBehaviorData::middle : bool
+   IL_0015: brtrue.s     33
+   IL_0017: ldarg.2      
+   IL_0018: ldfld        0x04017566 field ActionGameLibrary.AcceptData::low : bool
+   IL_001D: brfalse.s    8
+   IL_001F: ldloc.0      
+   IL_0020: ldfld        0x0401759F field ActionGameLibrary.AttackBehaviorData::low : bool
+   IL_0025: brtrue.s     17
+   IL_0027: ldarg.2      
+   IL_0028: ldfld        0x04017564 field ActionGameLibrary.AcceptData::high : bool
+   IL_002D: brfalse.s    7
+   IL_002F: ldloc.0      
+   IL_0030: ldfld        0x0401759D field ActionGameLibrary.AttackBehaviorData::high : bool
+   IL_0035: ret          
+   IL_0036: ldc.i4.0     
+   IL_0037: ret          
+   IL_0038: ldc.i4.1     
+   IL_0039: ret          
+
+
+########## Character.Damage_long ##########
+
+ActionGameLibrary.Character :: Damage(long, DamageEnumerate.DamageType, bool) -> void 0x0601F131
+body: ok len=10
+   IL_0000: ldarg.0      
+   IL_0001: ldarg.1      
+   IL_0002: ldarg.2      
+   IL_0003: ldarg.3      
+   IL_0004: call         0x0601E0B9 method ActionGameLibrary.InteractiveGameObject :: Damage(long, DamageEnumerate.DamageType, bool) -> void 0x0601E0B9
+   IL_0009: ret          
+
+ActionGameLibrary.Character :: Damage(BigInt, DamageEnumerate.DamageType, bool) -> void 0x0601F132
+body: ok len=610
+   IL_0000: ldarg.1      
+   IL_0001: call         0x06000BFF method BigInt :: op_Explicit(BigInt) -> long 0x06000BFF
+   IL_0006: stloc.0      
+   IL_0007: ldarg.0      
+   IL_0008: ldfld        0x040170D8 field ActionGameLibrary.ActionGameObject::_data : ActionGameLibrary.ActionGameObjectData
+   IL_000D: isinst       0x02001EE2 type ActionGameLibrary.CharacterData
+   IL_0012: stloc.1      
+   IL_0013: ldarg.2      
+   IL_0014: ldc.i4.1     
+   IL_0015: bne.un       IL_0158
+   IL_001A: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_001F: callvirt     0x06004913 method DS_AFKBattle :: get_IsEndlessBattle() -> bool 0x06004913
+   IL_0024: brfalse      IL_00D2
+   IL_0029: ldloc.1      
+   IL_002A: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_002F: callvirt     0x0601DF71 method ActionGameLibrary.SecondaryAttribute :: get_dkShieldNow() -> long 0x0601DF71
+   IL_0034: ldc.i4.0     
+   IL_0035: conv.i8      
+   IL_0036: ble.s        67
+   IL_0038: ldloc.1      
+   IL_0039: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_003E: dup          
+   IL_003F: callvirt     0x0601DF71 method ActionGameLibrary.SecondaryAttribute :: get_dkShieldNow() -> long 0x0601DF71
+   IL_0044: ldloc.0      
+   IL_0045: sub          
+   IL_0046: callvirt     0x0601DF72 method ActionGameLibrary.SecondaryAttribute :: set_dkShieldNow(long) -> void 0x0601DF72
+   IL_004B: ldloc.1      
+   IL_004C: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0051: callvirt     0x0601DF71 method ActionGameLibrary.SecondaryAttribute :: get_dkShieldNow() -> long 0x0601DF71
+   IL_0056: ldc.i4.0     
+   IL_0057: conv.i8      
+   IL_0058: bge.s        30
+   IL_005A: ldloc.1      
+   IL_005B: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0060: callvirt     0x0601DF71 method ActionGameLibrary.SecondaryAttribute :: get_dkShieldNow() -> long 0x0601DF71
+   IL_0065: ldc.i4.m1    
+   IL_0066: conv.i8      
+   IL_0067: mul          
+   IL_0068: stloc.0      
+   IL_0069: ldloc.1      
+   IL_006A: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_006F: ldc.i4.0     
+   IL_0070: conv.i8      
+   IL_0071: callvirt     0x0601DF72 method ActionGameLibrary.SecondaryAttribute :: set_dkShieldNow(long) -> void 0x0601DF72
+   IL_0076: br.s         3
+   IL_0078: ldc.i4.0     
+   IL_0079: conv.i8      
+   IL_007A: stloc.0      
+   IL_007B: ldloc.1      
+   IL_007C: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0081: callvirt     0x0601DF6D method ActionGameLibrary.SecondaryAttribute :: get_absorbShieldNow() -> long 0x0601DF6D
+   IL_0086: ldc.i4.0     
+   IL_0087: conv.i8      
+   IL_0088: ble.s        72
+   IL_008A: ldloc.0      
+   IL_008B: ldc.i4.0     
+   IL_008C: conv.i8      
+   IL_008D: ble.s        67
+   IL_008F: ldloc.1      
+   IL_0090: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0095: dup          
+   IL_0096: callvirt     0x0601DF6D method ActionGameLibrary.SecondaryAttribute :: get_absorbShieldNow() -> long 0x0601DF6D
+   IL_009B: ldloc.0      
+   IL_009C: sub          
+   IL_009D: callvirt     0x0601DF6E method ActionGameLibrary.SecondaryAttribute :: set_absorbShieldNow(long) -> void 0x0601DF6E
+   IL_00A2: ldloc.1      
+   IL_00A3: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_00A8: callvirt     0x0601DF6D method ActionGameLibrary.SecondaryAttribute :: get_absorbShieldNow() -> long 0x0601DF6D
+   IL_00AD: ldc.i4.0     
+   IL_00AE: conv.i8      
+   IL_00AF: bge.s        30
+   IL_00B1: ldloc.1      
+   IL_00B2: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_00B7: callvirt     0x0601DF6D method ActionGameLibrary.SecondaryAttribute :: get_absorbShieldNow() -> long 0x0601DF6D
+   IL_00BC: ldc.i4.m1    
+   IL_00BD: conv.i8      
+   IL_00BE: mul          
+   IL_00BF: stloc.0      
+   IL_00C0: ldloc.1      
+   IL_00C1: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_00C6: ldc.i4.0     
+   IL_00C7: conv.i8      
+   IL_00C8: callvirt     0x0601DF6E method ActionGameLibrary.SecondaryAttribute :: set_absorbShieldNow(long) -> void 0x0601DF6E
+   IL_00CD: br.s         3
+   IL_00CF: ldc.i4.0     
+   IL_00D0: conv.i8      
+   IL_00D1: stloc.0      
+   IL_00D2: ldloc.1      
+   IL_00D3: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_00D8: callvirt     0x0601DF67 method ActionGameLibrary.SecondaryAttribute :: get_healthSuperNow() -> long 0x0601DF67
+   IL_00DD: ldc.i4.0     
+   IL_00DE: conv.i8      
+   IL_00DF: ble.s        67
+   IL_00E1: ldloc.1      
+   IL_00E2: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_00E7: dup          
+   IL_00E8: callvirt     0x0601DF67 method ActionGameLibrary.SecondaryAttribute :: get_healthSuperNow() -> long 0x0601DF67
+   IL_00ED: ldloc.0      
+   IL_00EE: sub          
+   IL_00EF: callvirt     0x0601DF68 method ActionGameLibrary.SecondaryAttribute :: set_healthSuperNow(long) -> void 0x0601DF68
+   IL_00F4: ldloc.1      
+   IL_00F5: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_00FA: callvirt     0x0601DF67 method ActionGameLibrary.SecondaryAttribute :: get_healthSuperNow() -> long 0x0601DF67
+   IL_00FF: ldc.i4.0     
+   IL_0100: conv.i8      
+   IL_0101: bge.s        30
+   IL_0103: ldloc.1      
+   IL_0104: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0109: callvirt     0x0601DF67 method ActionGameLibrary.SecondaryAttribute :: get_healthSuperNow() -> long 0x0601DF67
+   IL_010E: ldc.i4.m1    
+   IL_010F: conv.i8      
+   IL_0110: mul          
+   IL_0111: stloc.0      
+   IL_0112: ldloc.1      
+   IL_0113: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0118: ldc.i4.0     
+   IL_0119: conv.i8      
+   IL_011A: callvirt     0x0601DF68 method ActionGameLibrary.SecondaryAttribute :: set_healthSuperNow(long) -> void 0x0601DF68
+   IL_011F: br.s         3
+   IL_0121: ldc.i4.0     
+   IL_0122: conv.i8      
+   IL_0123: stloc.0      
+   IL_0124: ldloc.1      
+   IL_0125: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_012A: dup          
+   IL_012B: callvirt     0x0601DF48 method ActionGameLibrary.SecondaryAttribute :: get_healthPointNow() -> long 0x0601DF48
+   IL_0130: ldloc.0      
+   IL_0131: sub          
+   IL_0132: callvirt     0x0601DF49 method ActionGameLibrary.SecondaryAttribute :: set_healthPointNow(long) -> void 0x0601DF49
+   IL_0137: ldloc.1      
+   IL_0138: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_013D: dup          
+   IL_013E: callvirt     0x0601DF4A method ActionGameLibrary.SecondaryAttribute :: get_healthPointNowBigInt() -> BigInt 0x0601DF4A
+   IL_0143: ldloc.0      
+   IL_0144: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_0149: call         0x06000BED method BigInt :: op_Subtraction(BigInt, BigInt) -> BigInt 0x06000BED
+   IL_014E: callvirt     0x0601DF4B method ActionGameLibrary.SecondaryAttribute :: set_healthPointNowBigInt(BigInt) -> void 0x0601DF4B
+   IL_0153: br           IL_01E8
+   IL_0158: ldarg.2      
+   IL_0159: ldc.i4.2     
+   IL_015A: bne.un.s     49
+   IL_015C: ldloc.1      
+   IL_015D: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0162: dup          
+   IL_0163: callvirt     0x0601DF48 method ActionGameLibrary.SecondaryAttribute :: get_healthPointNow() -> long 0x0601DF48
+   IL_0168: ldloc.0      
+   IL_0169: add          
+   IL_016A: callvirt     0x0601DF49 method ActionGameLibrary.SecondaryAttribute :: set_healthPointNow(long) -> void 0x0601DF49
+   IL_016F: ldloc.1      
+   IL_0170: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0175: dup          
+   IL_0176: callvirt     0x0601DF4A method ActionGameLibrary.SecondaryAttribute :: get_healthPointNowBigInt() -> BigInt 0x0601DF4A
+   IL_017B: ldloc.0      
+   IL_017C: call         0x06000BE6 method BigInt :: op_Implicit(long) -> BigInt 0x06000BE6
+   IL_0181: call         0x06000BEB method BigInt :: op_Addition(BigInt, BigInt) -> BigInt 0x06000BEB
+   IL_0186: callvirt     0x0601DF4B method ActionGameLibrary.SecondaryAttribute :: set_healthPointNowBigInt(BigInt) -> void 0x0601DF4B
+   IL_018B: br.s         91
+   IL_018D: ldarg.2      
+   IL_018E: ldc.i4.4     
+   IL_018F: bne.un.s     87
+   IL_0191: ldloc.1      
+   IL_0192: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0197: dup          
+   IL_0198: callvirt     0x0601DFB5 method ActionGameLibrary.SecondaryAttribute :: get_mpNow() -> long 0x0601DFB5
+   IL_019D: ldloc.0      
+   IL_019E: add          
+   IL_019F: callvirt     0x0601DFB6 method ActionGameLibrary.SecondaryAttribute :: set_mpNow(long) -> void 0x0601DFB6
+   IL_01A4: ldloc.1      
+   IL_01A5: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01AA: callvirt     0x0601DFB5 method ActionGameLibrary.SecondaryAttribute :: get_mpNow() -> long 0x0601DFB5
+   IL_01AF: ldc.i4.0     
+   IL_01B0: conv.i8      
+   IL_01B1: bge.s        15
+   IL_01B3: ldloc.1      
+   IL_01B4: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01B9: ldc.i4.0     
+   IL_01BA: conv.i8      
+   IL_01BB: callvirt     0x0601DFB6 method ActionGameLibrary.SecondaryAttribute :: set_mpNow(long) -> void 0x0601DFB6
+   IL_01C0: br.s         38
+   IL_01C2: ldloc.1      
+   IL_01C3: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01C8: ldloc.1      
+   IL_01C9: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01CE: callvirt     0x0601DFB5 method ActionGameLibrary.SecondaryAttribute :: get_mpNow() -> long 0x0601DFB5
+   IL_01D3: ldloc.1      
+   IL_01D4: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01D9: callvirt     0x0601DF97 method ActionGameLibrary.SecondaryAttribute :: get_maxMP() -> long 0x0601DF97
+   IL_01DE: call         0x0A0009BC memberref System.Math::Min
+   IL_01E3: callvirt     0x0601DFB6 method ActionGameLibrary.SecondaryAttribute :: set_mpNow(long) -> void 0x0601DFB6
+   IL_01E8: ldloc.1      
+   IL_01E9: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01EE: callvirt     0x0601DF48 method ActionGameLibrary.SecondaryAttribute :: get_healthPointNow() -> long 0x0601DF48
+   IL_01F3: ldc.i4.0     
+   IL_01F4: conv.i8      
+   IL_01F5: bge.s        13
+   IL_01F7: ldloc.1      
+   IL_01F8: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_01FD: ldc.i4.0     
+   IL_01FE: conv.i8      
+   IL_01FF: callvirt     0x0601DF49 method ActionGameLibrary.SecondaryAttribute :: set_healthPointNow(long) -> void 0x0601DF49
+   IL_0204: ldloc.1      
+   IL_0205: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_020A: callvirt     0x0601DF4A method ActionGameLibrary.SecondaryAttribute :: get_healthPointNowBigInt() -> BigInt 0x0601DF4A
+   IL_020F: ldc.i4.0     
+   IL_0210: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0215: call         0x06000BF7 method BigInt :: op_LessThan(BigInt, BigInt) -> bool 0x06000BF7
+   IL_021A: brfalse.s    17
+   IL_021C: ldloc.1      
+   IL_021D: ldfld        0x04017075 field ActionGameLibrary.InteractiveGameObjectData::secondaryAttribute : ActionGameLibrary.SecondaryAttribute
+   IL_0222: ldc.i4.0     
+   IL_0223: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0228: callvirt     0x0601DF4B method ActionGameLibrary.SecondaryAttribute :: set_healthPointNowBigInt(BigInt) -> void 0x0601DF4B
+   IL_022D: ldarg.0      
+   IL_022E: ldarg.3      
+   IL_022F: ldc.i4.0     
+   IL_0230: ldc.i4.0     
+   IL_0231: ldc.i4.0     
+   IL_0232: callvirt     0x0601E0BA method ActionGameLibrary.InteractiveGameObject :: CheckDead(bool, bool, bool, bool) -> bool 0x0601E0BA
+   IL_0237: pop          
+   IL_0238: ldsfld       0x04000F17 field DataService::afkBattle : DS_AFKBattle
+   IL_023D: callvirt     0x06004916 method DS_AFKBattle :: get_IsRemoteBattle() -> bool 0x06004916
+   IL_0242: brtrue.s     29
+   IL_0244: ldarg.0      
+   IL_0245: call         0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_024A: ldfld        0x04017E20 field ActionGameLibrary.ActionState::isDead : bool
+   IL_024F: brfalse.s    16
+   IL_0251: ldarg.0      
+   IL_0252: call         0x0601E05C method ActionGameLibrary.ActionGameObject :: get_data() -> ActionGameLibrary.ActionGameObjectData 0x0601E05C
+   IL_0257: ldfld        0x04017D31 field ActionGameLibrary.ActionGameObjectData::obj_id : int
+   IL_025C: call         0x0601E465 method ActionGameLibrary.CHitNotifier :: SyncDieStateToServer(int) -> void 0x0601E465
+   IL_0261: ret          

@@ -1,0 +1,195 @@
+﻿##### Act_ChangeCharacterVisiable :: OnUpdate   0x06002622
+   IL_008C: callvirt     0x0601EF72 method ActionGameLibrary.IModel :: set_visible(bool) -> void 0x0601EF72
+   IL_0091: ldloc.0      
+   IL_0092: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0097: ldarg.0      
+   IL_0098: ldfld        0x04001763 field Act_ChangeCharacterVisiable::notAttacked : bool
+   IL_009D: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_00A2: ldc.i4.2     
+   IL_00A3: ret          
+     ---
+##### ActionGameLibrary.BuffFragmentEffect_EX_Invincible :: Effective   0x0601DE1F
+   IL_0011: stfld        0x04016FAA field ActionGameLibrary.BuffFragmentEffect_EX_Invincible::target : ActionGameLibrary.InteractiveGameObject
+   IL_0016: ldarg.0      
+   IL_0017: ldfld        0x04016FAA field ActionGameLibrary.BuffFragmentEffect_EX_Invincible::target : ActionGameLibrary.InteractiveGameObject
+   IL_001C: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0021: ldc.i4.1     
+   IL_0022: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0027: ret          
+     ---
+##### ActionGameLibrary.BuffFragmentEffect_EX_Invincible :: Invalid   0x0601DE20
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04016FAA field ActionGameLibrary.BuffFragmentEffect_EX_Invincible::target : ActionGameLibrary.InteractiveGameObject
+   IL_0006: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_000B: ldc.i4.0     
+   IL_000C: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0011: ldarg.0      
+   IL_0012: ldnull       
+   IL_0013: stfld        0x04016FAA field ActionGameLibrary.BuffFragmentEffect_EX_Invincible::target : ActionGameLibrary.InteractiveGameObject
+   IL_0018: ret          
+     ---
+##### ActionGameLibrary.DamageFactory :: ExecDamageCalc   0x0601E571
+   IL_011D: callvirt     0x0601F0DD method ActionGameLibrary.IActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601F0DD
+   IL_0122: ldfld        0x04017E2D field ActionGameLibrary.ActionState::immuneDamage : bool
+   IL_0127: brtrue.s     13
+   IL_0129: ldloc.1      
+   IL_012A: callvirt     0x0601F0DD method ActionGameLibrary.IActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601F0DD
+   IL_012F: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0134: br.s         1
+   IL_0136: ldc.i4.1     
+   IL_0137: ldloc.s      12
+   IL_0139: or           
+   IL_013A: brfalse.s    31
+     ---
+   IL_01F6: call         0x0A005669 memberref ActionGameLibrary.ListPool`1<proto_ff.HurtShowInfo>::Release
+   IL_01FB: ldc.i4.0     
+   IL_01FC: ret          
+   IL_01FD: ldloc.1      
+   IL_01FE: callvirt     0x0601F0DD method ActionGameLibrary.IActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601F0DD
+   IL_0203: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0208: brtrue       IL_029F
+   IL_020D: ldloc.3      
+   IL_020E: ldc.i4.0     
+   IL_020F: call         0x06000BE5 method BigInt :: op_Implicit(int) -> BigInt 0x06000BE5
+   IL_0214: call         0x06000BF6 method BigInt :: op_GreaterThan(BigInt, BigInt) -> bool 0x06000BF6
+     ---
+##### ActionGameLibrary.Command_PartnerUseSupportSkill :: Execute   0x0601E72B
+   IL_018F: call         0x060009FF method ToolKit :: stopDelayCall(int) -> void 0x060009FF
+   IL_0194: ldarg.0      
+   IL_0195: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+   IL_019A: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_019F: ldc.i4.0     
+   IL_01A0: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_01A5: ldarg.0      
+   IL_01A6: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+   IL_01AB: ldc.i4.0     
+   IL_01AC: callvirt     0x0601E028 method ActionGameLibrary.ActionGameObject :: set_isPausedNetCtrl(bool) -> void 0x0601E028
+   IL_01B1: ldsfld       0x04000ED8 field DataService::partner : DS_Partner
+     ---
+   IL_0360: pop          
+   IL_0361: ldarg.0      
+   IL_0362: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+   IL_0367: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_036C: ldc.i4.1     
+   IL_036D: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0372: ldarg.0      
+   IL_0373: ldfld        0x040174AD field ActionGameLibrary.Command_PartnerUseSupportSkill::sourceObject : ActionGameLibrary.Character
+   IL_0378: callvirt     0x2B0001DA TOKEN 0x2B0001DA
+   IL_037D: brtrue.s     20
+   IL_037F: ldarg.0      
+     ---
+   IL_061E: callvirt     0x0601EF7A method ActionGameLibrary.IModel :: ChangeDirection(int) -> void 0x0601EF7A
+   IL_0623: ldarg.0      
+   IL_0624: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+   IL_0629: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_062E: ldc.i4.1     
+   IL_062F: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0634: ldarg.0      
+   IL_0635: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+   IL_063A: call         0x0601E09A method ActionGameLibrary.ActionGameObjectExpand :: PlaceOnGround(ActionGameLibrary.IActionGameObject) -> void 0x0601E09A
+   IL_063F: ldarg.0      
+   IL_0640: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+     ---
+##### ActionGameLibrary.Command_PartnerUseSupportSkill :: OnSkillOver   0x0601E72F
+   IL_0006: brfalse.s    71
+   IL_0008: ldarg.0      
+   IL_0009: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+   IL_000E: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0013: ldc.i4.0     
+   IL_0014: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0019: ldarg.0      
+   IL_001A: ldfld        0x040174AE field ActionGameLibrary.Command_PartnerUseSupportSkill::partner : ActionGameLibrary.Character
+   IL_001F: ldc.i4.0     
+   IL_0020: callvirt     0x0601E028 method ActionGameLibrary.ActionGameObject :: set_isPausedNetCtrl(bool) -> void 0x0601E028
+   IL_0025: ldarg.0      
+     ---
+##### ActionGameLibrary.StarsCollider :: HitTest   0x0601E8D1
+   IL_0672: callvirt     0x0601E8A4 method ActionGameLibrary.IAccept :: get_acceptEnabled() -> bool 0x0601E8A4
+   IL_0677: brfalse.s    19
+   IL_0679: ldloc.s      28
+   IL_067B: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_0680: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0685: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_068A: brfalse.s    124
+   IL_068C: ldloc.s      24
+   IL_068E: brfalse      IL_0F98
+   IL_0693: ldstr        0x7008E48A string "accepter:{0} !accepter.acceptEnabled={1} || accepter.interactiveGameObject.state.invincible={2}"
+   IL_0698: ldloc.s      28
+     ---
+   IL_06A6: callvirt     0x0601E8A4 method ActionGameLibrary.IAccept :: get_acceptEnabled() -> bool 0x0601E8A4
+   IL_06AB: box          0x010001AA typespec System.Collections.Generic.List`1<System.Collections.Generic.KeyValuePair`2<GameConfigData.ItemData,int>>
+   IL_06B0: ldloc.s      28
+   IL_06B2: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_06B7: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_06BC: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_06C1: box          0x010001AA typespec System.Collections.Generic.List`1<System.Collections.Generic.KeyValuePair`2<GameConfigData.ItemData,int>>
+   IL_06C6: call         0x0A000236 memberref System.String::Format
+   IL_06CB: ldstr        0x7008E54B string "  attackdata={0},lv={1},hitId={2}"
+   IL_06D0: ldloc.s      12
+   IL_06D2: ldfld        0x040175B8 field ActionGameLibrary.AttackData::bindSkillId : int
+     ---
+##### ActionGameLibrary.GameObjectManager :: IsSearchableEnemy   0x0601E9AD
+   IL_0059: brtrue.s     2
+   IL_005B: ldc.i4.0     
+   IL_005C: ret          
+   IL_005D: ldarg.2      
+   IL_005E: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0063: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0068: brfalse.s    2
+   IL_006A: ldc.i4.0     
+   IL_006B: ret          
+   IL_006C: ldarg.2      
+   IL_006D: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+     ---
+##### ActionGameLibrary.Force :: CheckTargetUnit   0x0601EEF1
+   IL_004A: brfalse.s    2
+   IL_004C: ldc.i4.0     
+   IL_004D: ret          
+   IL_004E: ldarg.1      
+   IL_004F: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0054: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0059: brfalse.s    10
+   IL_005B: ldarg.0      
+   IL_005C: ldfld        0x04017CA2 field ActionGameLibrary.Force::ignoreImmunity : bool
+   IL_0061: brtrue.s     2
+   IL_0063: ldc.i4.0     
+     ---
+##### ActionGameLibrary.JudgeInvincible :: DoJudge   0x0601F284
+   IL_0000: ldc.i4.1     
+   IL_0001: stloc.0      
+   IL_0002: ldarg.0      
+   IL_0003: ldfld        0x04017FB5 field ActionGameLibrary.JudgeInvincible::_interactiveGameObject : ActionGameLibrary.InteractiveGameObject
+   IL_0008: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_000D: ldfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0012: brtrue.s     28
+   IL_0014: ldarg.0      
+   IL_0015: ldfld        0x04017FB5 field ActionGameLibrary.JudgeInvincible::_interactiveGameObject : ActionGameLibrary.InteractiveGameObject
+   IL_001A: callvirt     0x0601E0C2 method ActionGameLibrary.InteractiveGameObject :: get_hitter() -> ActionGameLibrary.Hitter 0x0601E0C2
+   IL_001F: callvirt     0x0601EF09 method ActionGameLibrary.Hitter :: GetCurrentAcceptData() -> ActionGameLibrary.AcceptDataGroup 0x0601EF09
+     ---
+##### ActionGameLibrary.LocalRoleAIManager :: StartAI   0x0601F420
+   IL_0040: stfld        0x040180F7 field ActionGameLibrary.LocalRoleAIManager::m_role : ActionGameLibrary.SimpleCharacter
+   IL_0045: ldarg.0      
+   IL_0046: ldfld        0x040180F7 field ActionGameLibrary.LocalRoleAIManager::m_role : ActionGameLibrary.SimpleCharacter
+   IL_004B: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0050: ldc.i4.0     
+   IL_0051: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0056: ldarg.0      
+   IL_0057: ldfld        0x040180F7 field ActionGameLibrary.LocalRoleAIManager::m_role : ActionGameLibrary.SimpleCharacter
+   IL_005C: callvirt     0x0601E0C2 method ActionGameLibrary.InteractiveGameObject :: get_hitter() -> ActionGameLibrary.Hitter 0x0601E0C2
+   IL_0061: ldc.i4.1     
+   IL_0062: callvirt     0x0601EF0F method ActionGameLibrary.Hitter :: set_acceptEnabled(bool) -> void 0x0601EF0F
+     ---
+##### ActionGameLibrary.LocalRoleAIManager :: EndAI   0x0601F421
+   IL_0056: brfalse.s    34
+   IL_0058: ldarg.0      
+   IL_0059: ldfld        0x040180F7 field ActionGameLibrary.LocalRoleAIManager::m_role : ActionGameLibrary.SimpleCharacter
+   IL_005E: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+   IL_0063: ldc.i4.1     
+   IL_0064: stfld        0x04017E34 field ActionGameLibrary.ActionState::invincible : bool
+   IL_0069: ldarg.0      
+   IL_006A: ldfld        0x040180F7 field ActionGameLibrary.LocalRoleAIManager::m_role : ActionGameLibrary.SimpleCharacter
+   IL_006F: callvirt     0x0601E0C2 method ActionGameLibrary.InteractiveGameObject :: get_hitter() -> ActionGameLibrary.Hitter 0x0601E0C2
+   IL_0074: ldc.i4.0     
+   IL_0075: callvirt     0x0601EF0F method ActionGameLibrary.Hitter :: set_acceptEnabled(bool) -> void 0x0601EF0F
+     ---

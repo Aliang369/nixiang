@@ -1,0 +1,92 @@
+{
+  "source": "menu_1194.html (window.game_id=1194, window.version=1) -> initGame(exp)",
+  "exp_cipher_len": 1448,
+  "exp_plain_len": 580,
+  "algorithm": "strencode: key=b64(\"vjashjrbgouqhorqwe1235xac\"); data=utf8dec(b64dec(unescape(exp))); code[i]=chr(ord(data[i])^ord(key[i%36])); return utf8dec(b64dec(filter(code)))",
+  "segment_sep": "###",
+  "field_sep": "_",
+  "field_order": "类型_id_名称_图标URL_提示[_价格金币][_vip][_ad]",
+  "record_count": 6,
+  "active_count": 3,
+  "native_call": "window.injectedObject.startFunction(id, 1|0)  # 菜单只传数字 id，不含目标方法名",
+  "features": [
+    {
+      "index": 0,
+      "active": true,
+      "raw": "btn_0_秒杀小怪_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%88%BD%E5%89%91.png_开启成功",
+      "类型": "btn",
+      "id": "0",
+      "名称": "秒杀小怪",
+      "图标URL": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%88%BD%E5%89%91.png",
+      "提示": "开启成功",
+      "价格/金币": "",
+      "vip": "",
+      "ad": ""
+    },
+    {
+      "index": 1,
+      "active": true,
+      "raw": "btn_1_超级无敌_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%BF%85%E8%86%80.png_开启成功",
+      "类型": "btn",
+      "id": "1",
+      "名称": "超级无敌",
+      "图标URL": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%BF%85%E8%86%80.png",
+      "提示": "开启成功",
+      "价格/金币": "",
+      "vip": "",
+      "ad": ""
+    },
+    {
+      "index": 2,
+      "active": true,
+      "raw": "btn_2_全模式秒杀_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png_开启成功,伤害根据你手机性能来 他是持续帮你释放技能增伤，并且佩戴有连击的技能伤害高，具体的测伤害 去训练场测试一下那个技能伤害高就装备那个_1-99999_vip",
+      "类型": "btn",
+      "id": "2",
+      "名称": "全模式秒杀",
+      "图标URL": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png",
+      "提示": "开启成功,伤害根据你手机性能来 他是持续帮你释放技能增伤，并且佩戴有连击的技能伤害高，具体的测伤害 去训练场测试一下那个技能伤害高就装备那个",
+      "价格/金币": "1-99999",
+      "vip": "vip",
+      "ad": ""
+    },
+    {
+      "index": 3,
+      "active": false,
+      "raw": "//btn_3_无限技能_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png_开启成功",
+      "类型": "//btn",
+      "id": "3",
+      "名称": "无限技能",
+      "图标URL": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png",
+      "提示": "开启成功",
+      "价格/金币": "",
+      "vip": "",
+      "ad": ""
+    },
+    {
+      "index": 4,
+      "active": false,
+      "raw": "//btn_4_无限技能_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png_开启成功",
+      "类型": "//btn",
+      "id": "4",
+      "名称": "无限技能",
+      "图标URL": "https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png",
+      "提示": "开启成功",
+      "价格/金币": "",
+      "vip": "",
+      "ad": ""
+    },
+    {
+      "index": 5,
+      "active": false,
+      "raw": "// input_3_未添加_图片地址_开启成功",
+      "类型": "// input",
+      "id": "3",
+      "名称": "未添加",
+      "图标URL": "图片地址",
+      "提示": "开启成功",
+      "价格/金币": "",
+      "vip": "",
+      "ad": ""
+    }
+  ]
+}

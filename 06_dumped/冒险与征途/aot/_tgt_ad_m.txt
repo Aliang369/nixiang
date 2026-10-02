@@ -1,0 +1,269 @@
+﻿=== DS_Advertising   [0x0200016B]  methods=19
+    M DS_Advertising :: init() -> void 0x06001247
+    M DS_Advertising :: clear() -> void 0x06001248
+    M DS_Advertising :: OnRefreshLoginOnceTip(GEvent) -> void 0x06001249
+    M DS_Advertising :: MarkLoginOnceTip(RedTipManager.TipType, int) -> void 0x0600124A
+    M DS_Advertising :: HasLoginOnceTip(RedTipManager.TipType, int) -> bool 0x0600124B
+    M DS_Advertising :: ResetLoginOnceTips() -> void 0x0600124C
+    M DS_Advertising :: get_FunctionEnable() -> bool 0x0600124D
+    M DS_Advertising :: GetADTimes(int) -> int 0x0600124E
+    M DS_Advertising :: GetADSysParam(int) -> string 0x0600124F
+    M DS_Advertising :: GetADCdsParam(int) -> int 0x06001250
+    M DS_Advertising :: WatchAdvertisements(int) -> void 0x06001251
+    M DS_Advertising :: StartWatchAdReq(int) -> void 0x06001252
+    M DS_Advertising :: OnGetADInfoRsp(proto_ff.Proto_CSRsp) -> void 0x06001253
+    M DS_Advertising :: OnLoginFinish(GEvent) -> void 0x06001254
+    M DS_Advertising :: OnADVideoResult(bool, int, ulong) -> void 0x06001255
+    M DS_Advertising :: ReqADVideoResult(bool, int, ulong) -> void 0x06001256
+    M DS_Advertising :: RspADVideoResult(proto_ff.Proto_CSRsp) -> void 0x06001257
+    M DS_Advertising :: DispatchResult(int, bool) -> void 0x06001258
+    M DS_Advertising :: .ctor() -> void 0x06001259
+=== BaseSDKAdapter   [0x02000409]  methods=80
+    M BaseSDKAdapter :: .ctor() -> void 0x060035DB
+    M BaseSDKAdapter :: get_isConnect() -> bool 0x060035DC
+    M BaseSDKAdapter :: get_isSupportEmulatorforIos() -> bool 0x060035DD
+    M BaseSDKAdapter :: get_GetPrivateUrl() -> string 0x060035DE
+    M BaseSDKAdapter :: get_GetAgreementUrl() -> string 0x060035DF
+    M BaseSDKAdapter :: get_isEmulatorforIos() -> bool 0x060035E0
+    M BaseSDKAdapter :: EmulatorForIosPay() -> bool 0x060035E1
+    M BaseSDKAdapter :: OnLoginRet(SDKDefine.SDKLoginRet) -> void 0x060035E2
+    M BaseSDKAdapter :: get_sdkType() -> SDKDefine.SDKType 0x060035E3
+    M BaseSDKAdapter :: get_loginRet() -> SDKDefine.SDKLoginRet 0x060035E4
+    M BaseSDKAdapter :: Init() -> void 0x060035E5
+    M BaseSDKAdapter :: LoginAuto() -> void 0x060035E6
+    M BaseSDKAdapter :: Login(SDKDefine.ePlatform) -> void 0x060035E7
+    M BaseSDKAdapter :: Login(System.Action) -> void 0x060035E8
+    M BaseSDKAdapter :: LogOut(System.Action) -> void 0x060035E9
+    M BaseSDKAdapter :: GetFriendsInfo() -> System.Collections.Generic.List`1<SDKDefine.PersonInfo> 0x060035EA
+    M BaseSDKAdapter :: GetMyPlayerInfo() -> SDKDefine.PersonInfo 0x060035EB
+    M BaseSDKAdapter :: GetGuestId() -> string 0x060035EC
+    M BaseSDKAdapter :: hasLocalInfo() -> bool 0x060035ED
+    M BaseSDKAdapter :: GetAppId() -> string 0x060035EE
+    M BaseSDKAdapter :: IsInPlatform() -> bool 0x060035EF
+    M BaseSDKAdapter :: IsInQQ() -> bool 0x060035F0
+    M BaseSDKAdapter :: IsInWX() -> bool 0x060035F1
+    M BaseSDKAdapter :: IsGuest() -> bool 0x060035F2
+    M BaseSDKAdapter :: GetSessionID() -> string 0x060035F3
+    M BaseSDKAdapter :: GetSessionType() -> string 0x060035F4
+    M BaseSDKAdapter :: GetPf() -> string 0x060035F5
+    M BaseSDKAdapter :: GetPfKey() -> string 0x060035F6
+    M BaseSDKAdapter :: GetChannelId() -> string 0x060035F7
+    M BaseSDKAdapter :: GetRegisterChannelId() -> string 0x060035F8
+    M BaseSDKAdapter :: GetAccessToken() -> string 0x060035F9
+    M BaseSDKAdapter :: GetPayToken() -> string 0x060035FA
+    M BaseSDKAdapter :: GetUserId() -> string 0x060035FB
+    M BaseSDKAdapter :: IsPlatformInstalled(SDKDefine.ePlatform) -> bool 0x060035FC
+    M BaseSDKAdapter :: SwitchUser(bool) -> bool 0x060035FD
+    M BaseSDKAdapter :: DoStructShare(int, string, WakeupCMD) -> void 0x060035FE
+    M BaseSDKAdapter :: PlayADVideo(int, string) -> void 0x060035FF
+    M BaseSDKAdapter :: pushLocakMessage(string, string) -> void 0x06003600
+    M BaseSDKAdapter :: clearLocalNotifications() -> void 0x06003601
+    M BaseSDKAdapter :: setPushTag(string) -> void 0x06003602
+    M BaseSDKAdapter :: DeletePushTag(string) -> void 0x06003603
+    M BaseSDKAdapter :: ShareFudai(string, bool) -> void 0x06003604
+    M BaseSDKAdapter :: WGOpenWeiXinDeeplink(string) -> void 0x06003605
+    M BaseSDKAdapter :: OpenUrlJson(string) -> void 0x06003606
+    M BaseSDKAdapter :: OpenUrl(string) -> void 0x06003607
+    M BaseSDKAdapter :: WGGetNoticeData(string) -> System.Collections.Generic.List`1<SDKDefine.NoticeInfo> 0x06003608
+    M BaseSDKAdapter :: HttpsInit() -> void 0x06003609
+    M BaseSDKAdapter :: GetAddrByName(string) -> string[] 0x0600360A
+    M BaseSDKAdapter :: GetWakeUpCMD(SDKDefine.SDKWakeupRet) -> WakeupCMD 0x0600360B
+    M BaseSDKAdapter :: GetPrivlegeInfo(SDKDefine.SDKWakeupRet, ref bool, ref bool) -> bool 0x0600360C
+    M BaseSDKAdapter :: SharePhoto(byte[], string, bool, uint) -> void 0x0600360D
+    M BaseSDKAdapter :: SharePartnerImage() -> void 0x0600360E
+    M BaseSDKAdapter :: ShareSkinImage() -> void 0x0600360F
+    M BaseSDKAdapter :: GetRealNameFlag() -> string 0x06003610
+    M BaseSDKAdapter :: GetMapplePlat() -> string 0x06003611
+    M BaseSDKAdapter :: SetUserInfo(string, bool, bool) -> void 0x06003612
+    M BaseSDKAdapter :: SubmitEvent(string, string) -> void 0x06003613
+    M BaseSDKAdapter :: Quit() -> void 0x06003614
+    M BaseSDKAdapter :: GetSdkQuitConfirm() -> bool 0x06003615
+    M BaseSDKAdapter :: OnPrivatePermission() -> void 0x06003616
+    M BaseSDKAdapter :: DeleteAccount() -> void 0x06003617
+    M BaseSDKAdapter :: GetNoticeUrl() -> string 0x06003618
+    M BaseSDKAdapter :: MsgSecCheck(int, string, System.Action, System.Action) -> void 0x06003619
+    M BaseSDKAdapter :: Share() -> void 0x0600361A
+    M BaseSDKAdapter :: OpenCustomerService() -> void 0x0600361B
+    M BaseSDKAdapter :: WxGetGameClubData(int, System.Action`1<string>) -> void 0x0600361C
+    M BaseSDKAdapter :: SubscribeMessage(string[]) -> void 0x0600361D
+    M BaseSDKAdapter :: WxArmSubscribeOnNextTouch(string[]) -> void 0x0600361E
+    M BaseSDKAdapter :: GetPfUserInfo() -> void 0x0600361F
+    M BaseSDKAdapter :: GetUserRiskRank(int) -> void 0x06003620
+    M BaseSDKAdapter :: OrtherGdtSdkReport(string) -> void 0x06003621
+    M BaseSDKAdapter :: GameClubButtonControl(int, int, UnityEngine.Transform, string, string) -> void 0x06003622
+    M BaseSDKAdapter :: OpenGameClub(string) -> void 0x06003623
+    M BaseSDKAdapter :: CreateShortcut(System.Action) -> void 0x06003624
+    M BaseSDKAdapter :: CheckScene(System.Action`2<bool,bool>) -> void 0x06003625
+    M BaseSDKAdapter :: NavigateToScene(System.Action, string) -> void 0x06003626
+    M BaseSDKAdapter :: GetGameId() -> string 0x06003627
+    M BaseSDKAdapter :: GetPkgId() -> int 0x06003628
+    M BaseSDKAdapter :: GetPkgBnd() -> string 0x06003629
+    M BaseSDKAdapter :: GetCertId() -> int 0x0600362A
+=== MiaoYueADCallBack   [0x0200040A]  methods=2
+    M MiaoYueADCallBack :: .ctor() -> void 0x0600362B
+    M MiaoYueADCallBack :: onRewardArrived(bool, UnityEngine.AndroidJavaObject) -> void 0x0600362C
+=== MiaoYueSDKGameObject   [0x0200040C]  methods=71
+    M MiaoYueSDKGameObject :: get_Instance() -> MiaoYueSDKGameObject 0x06003635
+    M MiaoYueSDKGameObject :: Init() -> void 0x06003636
+    M MiaoYueSDKGameObject :: Login(System.Action) -> void 0x06003637
+    M MiaoYueSDKGameObject :: Pay(System.Collections.Hashtable) -> void 0x06003638
+    M MiaoYueSDKGameObject :: SwitchAccount() -> void 0x06003639
+    M MiaoYueSDKGameObject :: Logout(System.Action) -> void 0x0600363A
+    M MiaoYueSDKGameObject :: Quit() -> void 0x0600363B
+    M MiaoYueSDKGameObject :: DeleteAccount() -> void 0x0600363C
+    M MiaoYueSDKGameObject :: PlayADVideo(System.Collections.Hashtable) -> void 0x0600363D
+    M MiaoYueSDKGameObject :: SubmitExtendData(System.Collections.Hashtable) -> void 0x0600363E
+    M MiaoYueSDKGameObject :: TrackGamePoint(string, string) -> void 0x0600363F
+    M MiaoYueSDKGameObject :: OnInit(string) -> void 0x06003640
+    M MiaoYueSDKGameObject :: OnLoginSuccess(string) -> void 0x06003641
+    M MiaoYueSDKGameObject :: FinishLoginSuccess(string, string) -> void 0x06003642
+    M MiaoYueSDKGameObject :: OnLoginFail(string) -> void 0x06003643
+    M MiaoYueSDKGameObject :: OnLogoutSuccess(string) -> void 0x06003644
+    M MiaoYueSDKGameObject :: OnPay(string) -> void 0x06003645
+    M MiaoYueSDKGameObject :: OnSDKEvent(string) -> void 0x06003646
+    M MiaoYueSDKGameObject :: OnShareResult(string) -> void 0x06003647
+    M MiaoYueSDKGameObject :: OnWindMillAd(string) -> void 0x06003648
+    M MiaoYueSDKGameObject :: OnExit() -> void 0x06003649
+    M MiaoYueSDKGameObject :: ClearSdkLoginState() -> void 0x0600364A
+    M MiaoYueSDKGameObject :: OnADVideoResult(string) -> void 0x0600364B
+    M MiaoYueSDKGameObject :: runOnUiThread(System.Action) -> void 0x0600364C
+    M MiaoYueSDKGameObject :: MsgSecCheck(System.Collections.Hashtable, System.Action, System.Action) -> void 0x0600364D
+    M MiaoYueSDKGameObject :: OnMsgSecCheck(string) -> void 0x0600364E
+    M MiaoYueSDKGameObject :: Share() -> void 0x0600364F
+    M MiaoYueSDKGameObject :: OpenCustomerService() -> void 0x06003650
+    M MiaoYueSDKGameObject :: QrCodeLogin() -> void 0x06003651
+    M MiaoYueSDKGameObject :: OnQrCodeLogin(string) -> void 0x06003652
+    M MiaoYueSDKGameObject :: OnQrCodeLoginFail(string) -> void 0x06003653
+    M MiaoYueSDKGameObject :: ScanLoginQrCode() -> void 0x06003654
+    M MiaoYueSDKGameObject :: OnScanLoginQrCode(string) -> void 0x06003655
+    M MiaoYueSDKGameObject :: CreateShortcut(System.Action) -> void 0x06003656
+    M MiaoYueSDKGameObject :: OnCreateShortcut(string) -> void 0x06003657
+    M MiaoYueSDKGameObject :: CheckScene(System.Action`2<bool,bool>) -> void 0x06003658
+    M MiaoYueSDKGameObject :: OnCheckScene(string) -> void 0x06003659
+    M MiaoYueSDKGameObject :: NavigateToScene(System.Action, string) -> void 0x0600365A
+    M MiaoYueSDKGameObject :: OnNavigateToScene(string) -> void 0x0600365B
+    M MiaoYueSDKGameObject :: RequestFeedSubscribe(string) -> void 0x0600365C
+    M MiaoYueSDKGameObject :: OnRequestFeedSubscribe(string) -> void 0x0600365D
+    M MiaoYueSDKGameObject :: StoreFeedData(string) -> void 0x0600365E
+    M MiaoYueSDKGameObject :: OnStoreFeedData(string) -> void 0x0600365F
+    M MiaoYueSDKGameObject :: BindFeedStatusChange() -> void 0x06003660
+    M MiaoYueSDKGameObject :: OnFeedStatusChange(string) -> void 0x06003661
+    M MiaoYueSDKGameObject :: ShowFavoriteGuide(string) -> void 0x06003662
+    M MiaoYueSDKGameObject :: OnShowFavoriteGuide(string) -> void 0x06003663
+    M MiaoYueSDKGameObject :: WxGetGameClubData(int, System.Action`1<string>) -> void 0x06003664
+    M MiaoYueSDKGameObject :: OnWxGetGameClubData(string) -> void 0x06003665
+    M MiaoYueSDKGameObject :: SubscribeMessage(string[]) -> void 0x06003666
+    M MiaoYueSDKGameObject :: WxArmSubscribeOnNextTouch(string[]) -> void 0x06003667
+    M MiaoYueSDKGameObject :: OnSubscribeMessage(string) -> void 0x06003668
+    M MiaoYueSDKGameObject :: GetPfUserInfo() -> void 0x06003669
+    M MiaoYueSDKGameObject :: OnGetPfUserInfo(string) -> void 0x0600366A
+    M MiaoYueSDKGameObject :: GetUserRiskRank(int) -> void 0x0600366B
+    M MiaoYueSDKGameObject :: OnGetUserRiskRank(string) -> void 0x0600366C
+    M MiaoYueSDKGameObject :: OrtherGdtSdkReport(string) -> void 0x0600366D
+    M MiaoYueSDKGameObject :: OnOrtherGdtSdkReport(string) -> void 0x0600366E
+    M MiaoYueSDKGameObject :: GameClubButtonControl(int, int, UnityEngine.Transform, string, string) -> void 0x0600366F
+    M MiaoYueSDKGameObject :: OpenGameClub(string) -> void 0x06003670
+    M MiaoYueSDKGameObject :: OnGetZdConfig(string) -> void 0x06003671
+    M MiaoYueSDKGameObject :: LoadIosSdkConfigFromStreamingAssets() -> void 0x06003672
+    M MiaoYueSDKGameObject :: ConvertModuleExportsJsToJson(string) -> string 0x06003673
+    M MiaoYueSDKGameObject :: OnGetSdkConfig(string) -> void 0x06003674
+    M MiaoYueSDKGameObject :: .ctor() -> void 0x06003675
+    M MiaoYueSDKGameObject :: <Init>b__16_0() -> void 0x06003676
+    M MiaoYueSDKGameObject :: <Login>b__17_0() -> void 0x06003677
+    M MiaoYueSDKGameObject :: <SwitchAccount>b__19_0() -> void 0x06003678
+    M MiaoYueSDKGameObject :: <Logout>b__20_0() -> void 0x06003679
+    M MiaoYueSDKGameObject :: <Quit>b__21_0() -> void 0x0600367A
+    M MiaoYueSDKGameObject :: <DeleteAccount>b__22_0() -> void 0x0600367B
+=== MiaoYueSDKProxy   [0x0200040D]  methods=46
+    M MiaoYueSDKProxy :: get_sdkType() -> SDKDefine.SDKType 0x0600367C
+    M MiaoYueSDKProxy :: get_isConnect() -> bool 0x0600367D
+    M MiaoYueSDKProxy :: get_GetPrivateUrl() -> string 0x0600367E
+    M MiaoYueSDKProxy :: get_GetAgreementUrl() -> string 0x0600367F
+    M MiaoYueSDKProxy :: GetUserId() -> string 0x06003680
+    M MiaoYueSDKProxy :: GetAccessToken() -> string 0x06003681
+    M MiaoYueSDKProxy :: GetChannelId() -> string 0x06003682
+    M MiaoYueSDKProxy :: GetRegisterChannelId() -> string 0x06003683
+    M MiaoYueSDKProxy :: Init() -> void 0x06003684
+    M MiaoYueSDKProxy :: OnCreateRole(proto_ff.Proto_CSRsp) -> void 0x06003685
+    M MiaoYueSDKProxy :: OnLoginRole(GEvent) -> void 0x06003686
+    M MiaoYueSDKProxy :: OnLevelUp(GEvent) -> void 0x06003687
+    M MiaoYueSDKProxy :: SubmitLevelUp(int) -> void 0x06003688
+    M MiaoYueSDKProxy :: Login(System.Action) -> void 0x06003689
+    M MiaoYueSDKProxy :: OnBuyGoodsRsp(proto_ff.Proto_CSRsp) -> void 0x0600368A
+    M MiaoYueSDKProxy :: LogOut(System.Action) -> void 0x0600368B
+    M MiaoYueSDKProxy :: DeleteAccount() -> void 0x0600368C
+    M MiaoYueSDKProxy :: PlayADVideo(int, string) -> void 0x0600368D
+    M MiaoYueSDKProxy :: SubmitEvent(string, string) -> void 0x0600368E
+    M MiaoYueSDKProxy :: GetSubmitType(string) -> int 0x0600368F
+    M MiaoYueSDKProxy :: GetSubmitString(string) -> string 0x06003690
+    M MiaoYueSDKProxy :: GetVipData() -> GameConfigData.ActivityRecharge 0x06003691
+    M MiaoYueSDKProxy :: MsgSecCheck(int, string, System.Action, System.Action) -> void 0x06003692
+    M MiaoYueSDKProxy :: Share() -> void 0x06003693
+    M MiaoYueSDKProxy :: OpenCustomerService() -> void 0x06003694
+    M MiaoYueSDKProxy :: QrCodeLogin() -> void 0x06003695
+    M MiaoYueSDKProxy :: ScanLoginQrCode() -> void 0x06003696
+    M MiaoYueSDKProxy :: WxGetGameClubData(int, System.Action`1<string>) -> void 0x06003697
+    M MiaoYueSDKProxy :: SubscribeMessage(string[]) -> void 0x06003698
+    M MiaoYueSDKProxy :: WxArmSubscribeOnNextTouch(string[]) -> void 0x06003699
+    M MiaoYueSDKProxy :: GetPfUserInfo() -> void 0x0600369A
+    M MiaoYueSDKProxy :: GetUserRiskRank(int) -> void 0x0600369B
+    M MiaoYueSDKProxy :: OrtherGdtSdkReport(string) -> void 0x0600369C
+    M MiaoYueSDKProxy :: GameClubButtonControl(int, int, UnityEngine.Transform, string, string) -> void 0x0600369D
+    M MiaoYueSDKProxy :: OpenGameClub(string) -> void 0x0600369E
+    M MiaoYueSDKProxy :: CreateShortcut(System.Action) -> void 0x0600369F
+    M MiaoYueSDKProxy :: CheckScene(System.Action`2<bool,bool>) -> void 0x060036A0
+    M MiaoYueSDKProxy :: NavigateToScene(System.Action, string) -> void 0x060036A1
+    M MiaoYueSDKProxy :: GetGameId() -> string 0x060036A2
+    M MiaoYueSDKProxy :: GetPkgId() -> int 0x060036A3
+    M MiaoYueSDKProxy :: GetPkgBnd() -> string 0x060036A4
+    M MiaoYueSDKProxy :: GetCertId() -> int 0x060036A5
+    M MiaoYueSDKProxy :: Quit() -> void 0x060036A6
+    M MiaoYueSDKProxy :: GetSdkQuitConfirm() -> bool 0x060036A7
+    M MiaoYueSDKProxy :: GetNoticeUrl() -> string 0x060036A8
+    M MiaoYueSDKProxy :: .ctor() -> void 0x060036A9
+=== AdMascotManager   [0x02000535]  methods=45
+    M AdMascotManager :: Init() -> void 0x06004363
+    M AdMascotManager :: Destroy() -> void 0x06004364
+    M AdMascotManager :: get_GetInstance() -> AdMascotManager 0x06004365
+    M AdMascotManager :: Awake() -> void 0x06004366
+    M AdMascotManager :: Initialize() -> void 0x06004367
+    M AdMascotManager :: UpdateAdRewardData() -> void 0x06004368
+    M AdMascotManager :: GetNextRewardTime() -> uint 0x06004369
+    M AdMascotManager :: CanClaimReward() -> bool 0x0600436A
+    M AdMascotManager :: CreateMascotUI() -> void 0x0600436B
+    M AdMascotManager :: InitMascotEffect() -> void 0x0600436C
+    M AdMascotManager :: SetMascotEffectActive(bool) -> void 0x0600436D
+    M AdMascotManager :: ShowNotice() -> void 0x0600436E
+    M AdMascotManager :: HideNotice() -> void 0x0600436F
+    M AdMascotManager :: ControlNoticeDisplay(float) -> System.Collections.IEnumerator 0x06004370
+    M AdMascotManager :: CalculateAnimationPositions() -> void 0x06004371
+    M AdMascotManager :: WaitForNextRewardTime() -> System.Collections.IEnumerator 0x06004372
+    M AdMascotManager :: CheckDisplayCondition() -> System.Collections.IEnumerator 0x06004373
+    M AdMascotManager :: CanShowMascot() -> bool 0x06004374
+    M AdMascotManager :: IsInValidScene() -> bool 0x06004375
+    M AdMascotManager :: StartMascotAnimation() -> void 0x06004376
+    M AdMascotManager :: PlayAnimationLoop() -> System.Collections.IEnumerator 0x06004377
+    M AdMascotManager :: PlaySingleLoop(bool) -> System.Collections.IEnumerator 0x06004378
+    M AdMascotManager :: PlayDisappearAnimation() -> System.Collections.IEnumerator 0x06004379
+    M AdMascotManager :: StopMascotAnimation() -> void 0x0600437A
+    M AdMascotManager :: OnFloatingAdRewardDataChanged(GEvent) -> void 0x0600437B
+    M AdMascotManager :: OnSceneChanged(GEvent) -> void 0x0600437C
+    M AdMascotManager :: DelayedSceneCheck() -> System.Collections.IEnumerator 0x0600437D
+    M AdMascotManager :: SetRewardClaimed(bool) -> void 0x0600437E
+    M AdMascotManager :: ForceShowMascot() -> void 0x0600437F
+    M AdMascotManager :: ForceHideMascot() -> void 0x06004380
+    M AdMascotManager :: RefreshAdRewardData() -> void 0x06004381
+    M AdMascotManager :: GetAdRewardInfo(ref int, ref int, ref bool) -> void 0x06004382
+    M AdMascotManager :: OnClickWatchAd() -> void 0x06004383
+    M AdMascotManager :: UnLoad() -> void 0x06004384
+    M AdMascotManager :: OnDestroy() -> void 0x06004385
+    M AdMascotManager :: ResetPanelDepth() -> void 0x06004386
+    M AdMascotManager :: OnUpdateAdMascotShowState(GEvent) -> void 0x06004387
+    M AdMascotManager :: .ctor() -> void 0x06004388
+    M AdMascotManager :: <InitMascotEffect>b__34_0(object) -> void 0x06004389
+    M AdMascotManager :: <ShowNotice>b__36_0() -> float 0x0600438A
+    M AdMascotManager :: <ShowNotice>b__36_1(float) -> void 0x0600438B
+    M AdMascotManager :: <HideNotice>b__37_0() -> float 0x0600438C
+    M AdMascotManager :: <HideNotice>b__37_1(float) -> void 0x0600438D
+    M AdMascotManager :: <PlayDisappearAnimation>b__47_0() -> float 0x0600438E
+    M AdMascotManager :: <PlayDisappearAnimation>b__47_1(float) -> void 0x0600438F

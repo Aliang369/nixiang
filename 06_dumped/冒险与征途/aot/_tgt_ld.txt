@@ -1,0 +1,47 @@
+﻿##### ActionGameLibrary.BattleElementCenter :: set_localDamage   0x0601E7FA
+   IL_0000: ldsfld       0x04017537 field ActionGameLibrary.BattleElementCenter::collider : ActionGameLibrary.StarsCollider
+   IL_0005: brfalse.s    11
+   IL_0007: ldsfld       0x04017537 field ActionGameLibrary.BattleElementCenter::collider : ActionGameLibrary.StarsCollider
+   IL_000C: ldarg.0      
+   IL_000D: stfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_0012: ret          
+     ---
+##### ActionGameLibrary.BattleElementCenter :: get_localDamage   0x0601E7FB
+   IL_0005: brtrue.s     2
+   IL_0007: ldc.i4.0     
+   IL_0008: ret          
+   IL_0009: ldsfld       0x04017537 field ActionGameLibrary.BattleElementCenter::collider : ActionGameLibrary.StarsCollider
+   IL_000E: ldfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_0013: ret          
+     ---
+##### ActionGameLibrary.StarsCollider :: DoAttack   0x0601E8D9
+   IL_03C1: ldfld        0x0A0000A0 memberref UnityEngine.Vector3::x
+   IL_03C6: conv.i1      
+   IL_03C7: stfld        0x04017651 field ActionGameLibrary.SynHitData::directionX : sbyte
+   IL_03CC: ldarg.0      
+   IL_03CD: ldfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_03D2: brtrue.s     17
+   IL_03D4: ldsfld       0x04017507 field ActionGameLibrary.ActionGameLibraryConfig::IsEditorMode : bool
+   IL_03D9: brtrue.s     10
+   IL_03DB: call         0x0601E7FB method ActionGameLibrary.BattleElementCenter :: get_localDamage() -> bool 0x0601E7FB
+     ---
+   IL_04A1: ldc.i4.0     
+   IL_04A2: stloc.s      5
+   IL_04A4: ldarg.0      
+   IL_04A5: ldc.i4.1     
+   IL_04A6: stfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_04AB: br           IL_0572
+   IL_04B0: ldc.i4.0     
+   IL_04B1: stloc.s      16
+   IL_04B3: ldloc.2      
+     ---
+   IL_102C: ldc.i4.0     
+   IL_102D: call         0x060009FD method ToolKit :: delayCall(float, DelegateEnums.NoneParam, int, bool, bool) -> int 0x060009FD
+   IL_1032: pop          
+   IL_1033: ldarg.0      
+   IL_1034: ldfld        0x0401764D field ActionGameLibrary.StarsCollider::localDamage : bool
+   IL_1039: brtrue.s     21
+   IL_103B: ldarg.2      
+   IL_103C: callvirt     0x0601E89B method ActionGameLibrary.IAccept :: get_interactiveGameObject() -> ActionGameLibrary.InteractiveGameObject 0x0601E89B
+   IL_1041: callvirt     0x0601E066 method ActionGameLibrary.ActionGameObject :: get_state() -> ActionGameLibrary.ActionState 0x0601E066
+     ---

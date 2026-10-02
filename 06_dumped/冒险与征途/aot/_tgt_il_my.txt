@@ -1,0 +1,31 @@
+
+
+############ TYPE MiaoYueADCallBack ############
+
+MiaoYueADCallBack :: .ctor() -> void 0x0600362B
+   IL_0000: ldarg.0      
+   IL_0001: ldstr        0x70022175 string "com.hnyl.core.YLAPI$ADTTCallback"
+   IL_0006: call         0x0A0022FA memberref UnityEngine.AndroidJavaProxy::.ctor
+   IL_000B: ret          
+
+MiaoYueADCallBack :: onRewardArrived(bool, UnityEngine.AndroidJavaObject) -> void 0x0600362C
+   IL_0000: newobj       0x06021166 method MiaoYueADCallBack.<>c__DisplayClass1_0 :: .ctor() -> void 0x06021166
+   IL_0005: stloc.0      
+   IL_0006: ldloc.0      
+   IL_0007: ldarg.2      
+   IL_0008: stfld        0x040197AE field MiaoYueADCallBack.<>c__DisplayClass1_0::ylAdParams : UnityEngine.AndroidJavaObject
+   IL_000D: ldloc.0      
+   IL_000E: ldarg.1      
+   IL_000F: stfld        0x040197AF field MiaoYueADCallBack.<>c__DisplayClass1_0::isRewardValid : bool
+   IL_0014: ldstr        0x700221B7 string "MiaoYue AD callBack resultCode:{0}"
+   IL_0019: ldloc.0      
+   IL_001A: ldfld        0x040197AF field MiaoYueADCallBack.<>c__DisplayClass1_0::isRewardValid : bool
+   IL_001F: box          0x010001AA typespec System.Collections.Generic.List`1<System.Collections.Generic.KeyValuePair`2<GameConfigData.ItemData,int>>
+   IL_0024: call         0x0A0005F1 memberref System.String::Format
+   IL_0029: call         0x06000970 method Log :: infoPhone(string) -> void 0x06000970
+   IL_002E: call         0x060081BE method UnityMainThreadDispatcher :: Instance() -> UnityMainThreadDispatcher 0x060081BE
+   IL_0033: ldloc.0      
+   IL_0034: FEldftn      0x06021167 method MiaoYueADCallBack.<>c__DisplayClass1_0 :: <onRewardArrived>b__0() -> void 0x06021167
+   IL_003A: newobj       0x0A00060F memberref System.Action::.ctor
+   IL_003F: callvirt     0x060081BC method UnityMainThreadDispatcher :: Enqueue(System.Action) -> void 0x060081BC
+   IL_0044: ret          

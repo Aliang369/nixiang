@@ -1,0 +1,245 @@
+
+
+############ TYPE ActionGameLibrary.BattleJudge ############
+
+ActionGameLibrary.BattleJudge :: .ctor() -> void 0x0601E7FF
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0A0000AF memberref System.Object::.ctor
+   IL_0006: ldarg.0      
+   IL_0007: newobj       0x0A005762 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::.ctor
+   IL_000C: stfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0011: ldarg.0      
+   IL_0012: call         0x0601E802 method ActionGameLibrary.BattleJudge :: StartJudge() -> void 0x0601E802
+   IL_0017: ret          
+
+ActionGameLibrary.BattleJudge :: Clear() -> void 0x0601E800
+   IL_0000: ldc.i4.0     
+   IL_0001: stloc.0      
+   IL_0002: ldarg.0      
+   IL_0003: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0008: callvirt     0x0A005763 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Count
+   IL_000D: stloc.1      
+   IL_000E: br.s         21
+   IL_0010: ldarg.0      
+   IL_0011: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0016: ldloc.0      
+   IL_0017: callvirt     0x0A005764 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Item
+   IL_001C: callvirt     0x0601E80A method ActionGameLibrary.BattleJudgeRule :: OnClear() -> void 0x0601E80A
+   IL_0021: ldloc.0      
+   IL_0022: ldc.i4.1     
+   IL_0023: add          
+   IL_0024: stloc.0      
+   IL_0025: ldloc.0      
+   IL_0026: ldloc.1      
+   IL_0027: blt.s        -25
+   IL_0029: ret          
+
+ActionGameLibrary.BattleJudge :: Dispose() -> void 0x0601E801
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601E803 method ActionGameLibrary.BattleJudge :: StopJudge() -> void 0x0601E803
+   IL_0006: ret          
+
+ActionGameLibrary.BattleJudge :: StartJudge() -> void 0x0601E802
+   IL_0000: ldstr        0x70089433 string "OnReconnect"
+   IL_0005: ldarg.0      
+   IL_0006: FEldftn      
+   IL_0008: ldloc.2      
+   IL_0009: 0xE8         
+   IL_000A: break        
+   IL_000B: ldloc.0      
+   IL_000C: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0011: ldc.i4.0     
+   IL_0012: call         0x0601E7F0 method ActionGameLibrary.BattleElementCenter :: AddEventListener(string, ActionGameLibrary.EventHandler, bool) -> void 0x0601E7F0
+   IL_0017: ldsfld       0x040180E4 field ActionGameLibrary.StarsEngineManager::checkEngine : ActionGameLibrary.StarsEngine
+   IL_001C: ldarg.0      
+   IL_001D: ldsfld       0x040180C9 field ActionGameLibrary.RunPriority::AFTER_HIT_TEST : int
+   IL_0022: callvirt     0x0601F3C5 method ActionGameLibrary.StarsEngine :: Drive(ActionGameLibrary.IStarsForce, int) -> void 0x0601F3C5
+   IL_0027: ldc.i4.0     
+   IL_0028: stloc.0      
+   IL_0029: ldarg.0      
+   IL_002A: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_002F: callvirt     0x0A005763 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Count
+   IL_0034: stloc.1      
+   IL_0035: br.s         21
+   IL_0037: ldarg.0      
+   IL_0038: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_003D: ldloc.0      
+   IL_003E: callvirt     0x0A005764 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Item
+   IL_0043: callvirt     0x0601E80B method ActionGameLibrary.BattleJudgeRule :: OnStartJudge() -> void 0x0601E80B
+   IL_0048: ldloc.0      
+   IL_0049: ldc.i4.1     
+   IL_004A: add          
+   IL_004B: stloc.0      
+   IL_004C: ldloc.0      
+   IL_004D: ldloc.1      
+   IL_004E: blt.s        -25
+   IL_0050: ret          
+
+ActionGameLibrary.BattleJudge :: StopJudge() -> void 0x0601E803
+   IL_0000: ldstr        0x70089433 string "OnReconnect"
+   IL_0005: ldarg.0      
+   IL_0006: FEldftn      
+   IL_0008: ldloc.2      
+   IL_0009: 0xE8         
+   IL_000A: break        
+   IL_000B: ldloc.0      
+   IL_000C: newobj       0x0601EA8B method ActionGameLibrary.EventHandler :: .ctor(object, IntPtr) -> void 0x0601EA8B
+   IL_0011: call         0x0601E7F1 method ActionGameLibrary.BattleElementCenter :: RemoveEventListener(string, ActionGameLibrary.EventHandler) -> void 0x0601E7F1
+   IL_0016: ldsfld       0x040180E4 field ActionGameLibrary.StarsEngineManager::checkEngine : ActionGameLibrary.StarsEngine
+   IL_001B: ldarg.0      
+   IL_001C: callvirt     0x0601F3CA method ActionGameLibrary.StarsEngine :: RemoveDrive(ActionGameLibrary.IStarsForce) -> void 0x0601F3CA
+   IL_0021: ldc.i4.0     
+   IL_0022: stloc.0      
+   IL_0023: ldarg.0      
+   IL_0024: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0029: callvirt     0x0A005763 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Count
+   IL_002E: stloc.1      
+   IL_002F: br.s         21
+   IL_0031: ldarg.0      
+   IL_0032: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0037: ldloc.0      
+   IL_0038: callvirt     0x0A005764 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Item
+   IL_003D: callvirt     0x0601E80C method ActionGameLibrary.BattleJudgeRule :: OnStopJudge() -> void 0x0601E80C
+   IL_0042: ldloc.0      
+   IL_0043: ldc.i4.1     
+   IL_0044: add          
+   IL_0045: stloc.0      
+   IL_0046: ldloc.0      
+   IL_0047: ldloc.1      
+   IL_0048: blt.s        -25
+   IL_004A: ret          
+
+ActionGameLibrary.BattleJudge :: Revolve() -> void 0x0601E804
+   IL_0000: ldc.i4.0     
+   IL_0001: stloc.0      
+   IL_0002: ldarg.0      
+   IL_0003: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0008: callvirt     0x0A005763 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Count
+   IL_000D: stloc.1      
+   IL_000E: br.s         21
+   IL_0010: ldarg.0      
+   IL_0011: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0016: ldloc.0      
+   IL_0017: callvirt     0x0A005764 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Item
+   IL_001C: callvirt     0x0601E80D method ActionGameLibrary.BattleJudgeRule :: Run() -> void 0x0601E80D
+   IL_0021: ldloc.0      
+   IL_0022: ldc.i4.1     
+   IL_0023: add          
+   IL_0024: stloc.0      
+   IL_0025: ldloc.0      
+   IL_0026: ldloc.1      
+   IL_0027: blt.s        -25
+   IL_0029: ldarg.0      
+   IL_002A: ldarg.0      
+   IL_002B: ldfld        0x04017543 field ActionGameLibrary.BattleJudge::_frameCount : int
+   IL_0030: ldc.i4.1     
+   IL_0031: add          
+   IL_0032: stfld        0x04017543 field ActionGameLibrary.BattleJudge::_frameCount : int
+   IL_0037: ldarg.0      
+   IL_0038: ldfld        0x04017543 field ActionGameLibrary.BattleJudge::_frameCount : int
+   IL_003D: ldsfld       0x04017542 field ActionGameLibrary.BattleJudge::ReportInterval : int
+   IL_0042: blt.s        13
+   IL_0044: ldarg.0      
+   IL_0045: ldc.i4.0     
+   IL_0046: stfld        0x04017543 field ActionGameLibrary.BattleJudge::_frameCount : int
+   IL_004B: ldarg.0      
+   IL_004C: call         0x0601E806 method ActionGameLibrary.BattleJudge :: Report() -> void 0x0601E806
+   IL_0051: ret          
+
+ActionGameLibrary.BattleJudge :: get_revolveDelegate() -> ActionGameLibrary.RevolveDelegate 0x0601E805
+   IL_0000: ldarg.0      
+   IL_0001: ldfld        0x04017545 field ActionGameLibrary.BattleJudge::_revolveDelegate : ActionGameLibrary.RevolveDelegate
+   IL_0006: brtrue.s     19
+   IL_0008: ldarg.0      
+   IL_0009: ldarg.0      
+   IL_000A: dup          
+   IL_000B: FEldvirtftn  
+   IL_000D: ldarg.2      
+   IL_000E: 0xE8         
+   IL_000F: break        
+   IL_0010: ldloc.0      
+   IL_0011: newobj       0x0601F3BB method ActionGameLibrary.RevolveDelegate :: .ctor(object, IntPtr) -> void 0x0601F3BB
+   IL_0016: stfld        0x04017545 field ActionGameLibrary.BattleJudge::_revolveDelegate : ActionGameLibrary.RevolveDelegate
+   IL_001B: ldarg.0      
+   IL_001C: ldfld        0x04017545 field ActionGameLibrary.BattleJudge::_revolveDelegate : ActionGameLibrary.RevolveDelegate
+   IL_0021: ret          
+
+ActionGameLibrary.BattleJudge :: Report() -> void 0x0601E806
+   IL_0000: ldstr        0x700893E5 string "ReporCheat"
+   IL_0005: ldnull       
+   IL_0006: call         0x2B000AA9 TOKEN 0x2B000AA9
+   IL_000B: stloc.0      
+   IL_000C: ldc.i4.0     
+   IL_000D: stloc.1      
+   IL_000E: ldarg.0      
+   IL_000F: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0014: callvirt     0x0A005763 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Count
+   IL_0019: stloc.2      
+   IL_001A: br.s         22
+   IL_001C: ldarg.0      
+   IL_001D: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0022: ldloc.1      
+   IL_0023: callvirt     0x0A005764 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Item
+   IL_0028: ldloc.0      
+   IL_0029: callvirt     0x0601E80E method ActionGameLibrary.BattleJudgeRule :: SetResult(ActionGameLibrary.JudgeEvent) -> void 0x0601E80E
+   IL_002E: ldloc.1      
+   IL_002F: ldc.i4.1     
+   IL_0030: add          
+   IL_0031: stloc.1      
+   IL_0032: ldloc.1      
+   IL_0033: ldloc.2      
+   IL_0034: blt.s        -26
+   IL_0036: ldloc.0      
+   IL_0037: call         0x0601E7F3 method ActionGameLibrary.BattleElementCenter :: Dispath(ActionGameLibrary.Event) -> void 0x0601E7F3
+   IL_003C: ldc.i4.0     
+   IL_003D: stloc.3      
+   IL_003E: ldarg.0      
+   IL_003F: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0044: callvirt     0x0A005763 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Count
+   IL_0049: stloc.s      4
+   IL_004B: br.s         21
+   IL_004D: ldarg.0      
+   IL_004E: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0053: ldloc.3      
+   IL_0054: callvirt     0x0A005764 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Item
+   IL_0059: callvirt     0x0601E80F method ActionGameLibrary.BattleJudgeRule :: OnReportOver() -> void 0x0601E80F
+   IL_005E: ldloc.3      
+   IL_005F: ldc.i4.1     
+   IL_0060: add          
+   IL_0061: stloc.3      
+   IL_0062: ldloc.3      
+   IL_0063: ldloc.s      4
+   IL_0065: blt.s        -26
+   IL_0067: ret          
+
+ActionGameLibrary.BattleJudge :: LogInfo() -> void 0x0601E807
+   IL_0000: ldc.i4.0     
+   IL_0001: stloc.0      
+   IL_0002: ldarg.0      
+   IL_0003: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0008: callvirt     0x0A005763 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Count
+   IL_000D: stloc.1      
+   IL_000E: br.s         21
+   IL_0010: ldarg.0      
+   IL_0011: ldfld        0x04017544 field ActionGameLibrary.BattleJudge::_ruleList : System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>
+   IL_0016: ldloc.0      
+   IL_0017: callvirt     0x0A005764 memberref System.Collections.Generic.List`1<ActionGameLibrary.BattleJudgeRule>::get_Item
+   IL_001C: callvirt     0x0601E810 method ActionGameLibrary.BattleJudgeRule :: LogInfo() -> void 0x0601E810
+   IL_0021: ldloc.0      
+   IL_0022: ldc.i4.1     
+   IL_0023: add          
+   IL_0024: stloc.0      
+   IL_0025: ldloc.0      
+   IL_0026: ldloc.1      
+   IL_0027: blt.s        -25
+   IL_0029: ret          
+
+ActionGameLibrary.BattleJudge :: OnReconnect(ActionGameLibrary.Event) -> void 0x0601E808
+   IL_0000: ldarg.0      
+   IL_0001: call         0x0601E800 method ActionGameLibrary.BattleJudge :: Clear() -> void 0x0601E800
+   IL_0006: ret          
+
+ActionGameLibrary.BattleJudge :: .cctor() -> void 0x0601E809
+   IL_0000: ldc.i4       480
+   IL_0005: stsfld       0x04017542 field ActionGameLibrary.BattleJudge::ReportInterval : int
+   IL_000A: ret          

@@ -1,0 +1,143 @@
+{
+  "game": "冒险与征途",
+  "version": "1.5.9 / vc159",
+  "notes": "2026-10-02 首次接手（本机 win）。官包 com.mxyzt.gzmy 1.5.9(159) 由用户装入 MuMu 后本地只读拉取；斌哥改包（binge2.keystore 签名）已抓点完毕，见 10_docs/冒险与征途/斌哥包抓点_20261002.md。引擎 Unity IL2CPP 2022.3.14f1 + HybridCLR 热更（业务逻辑解释执行），官包与斌哥包 libil2cpp.so md5 完全一致（ab8935f6…），故斌哥抓点里的 RVA 在官包上可直接复用。star 版 = modern 注册表四件套（Games/MxytzMod.* + Games/MxytzEntry.cpp + Android_mxyzt.mk），game_id=mxyzt。四项功能：秒杀小怪 / 无敌 / 全模式技能伤害增加 / 免广告。",
+  "params": {
+    "game_id": "mxyzt",
+    "package": "com.mxyzt.gzmy",
+    "tag": "mxyzt",
+    "serial": "127.0.0.1:16384",
+    "version": "1.5.9",
+    "version_code": "159"
+  },
+  "env": {
+    "NIXIANG": "E:/nixiang",
+    "SERIAL": "127.0.0.1:16384",
+    "ANDROID_NDK_HOME": "C:/Users/Administrator/AppData/Local/Android/Sdk/ndk/27.0.12077973"
+  },
+  "workdir": "E:/nixiang/04_scripts/冒险与征途",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（1.5.9/vc159，用户装入 MuMu 后本地只读拉取）",
+      "requires": [],
+      "command": "ls -lh \"$NIXIANG/02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk\" && { command -v sha256sum >/dev/null 2>&1 && sha256sum \"$NIXIANG/02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk\" || shasum -a 256 \"$NIXIANG/02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk\"; }",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk"},
+        {"type": "file_exists", "path": "$NIXIANG/02_apks/冒险与征途/冒险与征途_1.5.9_binge_base.apk"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "dump",
+      "name": "取证与解包（斌哥壳内存抓点 + 官包逐条目对比 + 热更 DLL 提取）",
+      "requires": ["check_apk"],
+      "command": "true",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/10_docs/冒险与征途/斌哥包抓点_20261002.md"},
+        {"type": "file_exists", "path": "$NIXIANG/06_dumped/冒险与征途/aot/Assembly-CSharp.dll"},
+        {"type": "file_exists", "path": "$NIXIANG/06_dumped/冒险与征途/aot/_aot_report.md"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "anchor",
+      "name": "锚点：四功能 hook 目标与语义（类/方法/argc/玩家判定/免广告点）",
+      "requires": ["dump"],
+      "command": "true",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/10_docs/冒险与征途/_钩子目标与语义.md"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（Games/MxytzMod.cpp + MxytzEntry.cpp 菜单四开关）",
+      "requires": ["anchor"],
+      "command": "true",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/MxytzMod.cpp"},
+        {"type": "file_exists", "path": "$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/MxytzEntry.cpp"},
+        {"type": "file_contains", "path": "$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/MxytzEntry.cpp", "pattern": "Toggle_免广告"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "build_menu_dex",
+      "name": "构建菜单 dex（win 无 gradle，走 javac + d8 离线：源 → ASCII 暂存 → classes4.dex）",
+      "requires": ["impl_mod"],
+      "preflight": ["$NIXIANG/04_scripts/冒险与征途/mxyzt_build_dex.sh"],
+      "command": "bash \"$NIXIANG/04_scripts/冒险与征途/mxyzt_build_dex.sh\"",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/mod菜单/starry-mod-menu/templates/mxyzt_menu_20261002/classes4.dex"},
+        {"type": "file_contains", "path": "$NIXIANG/mod菜单/starry-mod-menu/templates/mxyzt_menu_20261002/classes4.dex", "pattern": "com/mxyzt/gzmy"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（私有 mk + 独立 obj_mxyzt）",
+      "requires": ["impl_mod"],
+      "preflight": ["$NIXIANG/04_scripts/冒险与征途/mxyzt_build_so.sh"],
+      "command": "bash \"$NIXIANG/04_scripts/冒险与征途/mxyzt_build_so.sh\"",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/mod菜单/starry-mod-menu/libs_mxyzt/arm64-v8a/libstarry_magic.so"},
+        {"type": "file_contains", "path": "$NIXIANG/mod菜单/starry-mod-menu/libs_mxyzt/arm64-v8a/libstarry_magic.so", "pattern": "mxyzt"},
+        {"type": "file_contains", "path": "$NIXIANG/mod菜单/starry-mod-menu/libs_mxyzt/arm64-v8a/libstarry_magic.so", "pattern": "Toggle_全模式技能伤害增加"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "surgical",
+      "name": "外科注入 + 签名（surgical_mxyzt_1.5.9.sh，so 来自 build_so）",
+      "requires": ["build_so"],
+      "preflight": ["$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_mxyzt_1.5.9.sh"],
+      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_mxyzt_1.5.9.sh\"",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/08_output/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（MuMu 127.0.0.1:16384）",
+      "requires": [],
+      "command": "adb -s $SERIAL get-state && adb devices -l",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/04_scripts/冒险与征途/pipeline.json"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "install",
+      "name": "装机（须用户确认：异签必须先卸载官包，会清数据）",
+      "requires": ["surgical", "device_ready"],
+      "command": "STARRY_INSTALL=1 SERIAL=$SERIAL bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_mxyzt_1.5.9.sh\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.mxyzt.gzmy \"$NIXIANG/08_output/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk\"",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/08_output/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive",
+      "name": "收尾归档（文档 + 菜单模板 + 索引 + git）",
+      "requires": ["install"],
+      "command": "true",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/10_docs/冒险与征途/星空版落地_1.5.9_20261002.md"},
+        {"type": "file_exists", "path": "$NIXIANG/10_docs/冒险与征途/mxyzt_menu_template.json"}
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive_close",
+      "name": "归档关闭（git 推送 origin/main + 状态同步）",
+      "requires": ["archive"],
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_scoped_git.sh\" 冒险与征途",
+      "verify": [
+        {"type": "file_exists", "path": "$NIXIANG/04_scripts/冒险与征途/pipeline.json"}
+      ],
+      "status": "pending"
+    }
+  ]
+}

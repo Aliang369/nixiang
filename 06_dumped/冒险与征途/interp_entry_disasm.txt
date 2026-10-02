@@ -1,0 +1,415 @@
+# 候选解释器入口 / 帧管理函数的反汇编 —— libil2cpp.so
+#
+# 【llvm-objdump 正确调用姿势（实测确认）】
+#   llvm-objdump 对本 so 吃的是 **ELF 虚拟地址（= RVA = 节 sh_addr）**，
+#   直接 --start-address=<RVA> 即可；**不要**再减 0x1000 的段 delta。
+#   反例：传 file offset（减 0x1000）会得到整体错位一帧的伪反汇编。
+#   --adjust-vma 不需要；不加也正确。
+#
+#   命令原文：
+#   "C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d \
+#       --start-address=0x207F798 --stop-address=0x207F820 \
+#       "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+#
+# 校验：0x207DD98 行必须显示 `adrp x0, 0xcf2000` 且下一行 `add x0, x0, #0x929`；
+#       0x207DDF0 行必须显示 `adrp x0, 0xd1c000` 且下一行 `add x0, x0, #0xa18`。
+#       这两行证明 objdump 的寻址模型与本文件的 RVA 一致。
+#
+# 运行时换算：vaddr = 0x400023200000 + RVA
+#
+====================================================================================
+
+====================================================================================
+## ① HybridCLR 解释器入口 —— 函数头（前 16 条指令）
+
+RVA 0x207f798 .. 0x207f820   (运行时 0x40002527F798 .. 0x40002527F820)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x207f798 --stop-address=0x207f820 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     207f798: a9ba7bfd     	stp	x29, x30, [sp, #-0x60]!
+     207f79c: a9016ffc     	stp	x28, x27, [sp, #0x10]
+     207f7a0: a90267fa     	stp	x26, x25, [sp, #0x20]
+     207f7a4: a9035ff8     	stp	x24, x23, [sp, #0x30]
+     207f7a8: a90457f6     	stp	x22, x21, [sp, #0x40]
+     207f7ac: a9054ff4     	stp	x20, x19, [sp, #0x50]
+     207f7b0: 910003fd     	mov	x29, sp
+     207f7b4: d13103ff     	sub	sp, sp, #0xc40
+     207f7b8: 910003f3     	mov	x19, sp
+     207f7bc: d53bd048     	mrs	x8, TPIDR_EL0
+     207f7c0: f9001e68     	str	x8, [x19, #0x38]
+     207f7c4: f9401508     	ldr	x8, [x8, #0x28]
+     207f7c8: aa0203f4     	mov	x20, x2
+     207f7cc: aa0103f5     	mov	x21, x1
+     207f7d0: aa0003f6     	mov	x22, x0
+     207f7d4: f81f03a8     	stur	x8, [x29, #-0x10]
+     207f7d8: 97ff81cb     	bl	0x205ff04 <.text+0x2ebe78>
+     207f7dc: b9400c09     	ldr	w9, [x0, #0xc]
+     207f7e0: b9402008     	ldr	w8, [x0, #0x20]
+     207f7e4: f9002e60     	str	x0, [x19, #0x58]
+     207f7e8: 29112269     	stp	w9, w8, [x19, #0x88]
+     207f7ec: f9402ec8     	ldr	x8, [x22, #0x58]
+     207f7f0: a9078268     	stp	x8, x0, [x19, #0x78]
+     207f7f4: b5000088     	cbnz	x8, 0x207f804 <_ZNSt6__ndk117bad_function_callD0Ev+0x16594>
+     207f7f8: aa1603e0     	mov	x0, x22
+     207f7fc: 94003aeb     	bl	0x208e3a8 <_ZNSt6__ndk117bad_function_callD0Ev+0x25138>
+     207f800: f9003e60     	str	x0, [x19, #0x78]
+     207f804: f94012c0     	ldr	x0, [x22, #0x20]
+     207f808: b940e008     	ldr	w8, [x0, #0xe0]
+     207f80c: 35000048     	cbnz	w8, 0x207f814 <_ZNSt6__ndk117bad_function_callD0Ev+0x165a4>
+     207f810: 9400d0eb     	bl	0x20b3bbc <mono_class_get_checked+0x1a78>
+     207f814: 91020260     	add	x0, x19, #0x80
+     207f818: aa1603e1     	mov	x1, x22
+     207f81c: aa1503e2     	mov	x2, x21
+
+====================================================================================
+## ② HybridCLR 解释器入口 —— 第二个帧初始化调用点
+
+RVA 0x207f814 .. 0x207f830   (运行时 0x40002527F814 .. 0x40002527F830)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x207f814 --stop-address=0x207f830 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     207f814: 91020260     	add	x0, x19, #0x80
+     207f818: aa1603e1     	mov	x1, x22
+     207f81c: aa1503e2     	mov	x2, x21
+     207f820: 97fff979     	bl	0x207de04 <_ZNSt6__ndk117bad_function_callD0Ev+0x14b94>
+     207f824: f9403e6e     	ldr	x14, [x19, #0x78]
+     207f828: f9000c14     	str	x20, [x0, #0x18]
+     207f82c: 9106a268     	add	x8, x19, #0x1a8
+
+====================================================================================
+## ③ 帧初始化 A：0x207DCCC（调用 AllocStackSlot + AllocFrame）
+
+<!-- 帧初始化 A 全函数（ret 于 0x207DD3C） -->
+RVA 0x207dccc .. 0x207dd44   (运行时 0x40002527DCCC .. 0x40002527DD44)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x207dccc --stop-address=0x207dd44 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     207dccc: f81d0ffe     	str	x30, [sp, #-0x30]!
+     207dcd0: a90157f6     	stp	x22, x21, [sp, #0x10]
+     207dcd4: a9024ff4     	stp	x20, x19, [sp, #0x20]
+     207dcd8: aa0003f5     	mov	x21, x0
+     207dcdc: aa0103e0     	mov	x0, x1
+     207dce0: aa0203f3     	mov	x19, x2
+     207dce4: aa0103f4     	mov	x20, x1
+     207dce8: 9400d7fc     	bl	0x20b3cd8 <mono_class_get_checked+0x1b94>
+     207dcec: f9402e88     	ldr	x8, [x20, #0x58]
+     207dcf0: f94002a0     	ldr	x0, [x21]
+     207dcf4: b9402d09     	ldr	w9, [x8, #0x2c]
+     207dcf8: b9402108     	ldr	w8, [x8, #0x20]
+     207dcfc: b9400c16     	ldr	w22, [x0, #0xc]
+     207dd00: 4b080121     	sub	w1, w9, w8
+     207dd04: 9400000f     	bl	0x207dd40 <_ZNSt6__ndk117bad_function_callD0Ev+0x14ad0>
+     207dd08: f94002a0     	ldr	x0, [x21]
+     207dd0c: 94000028     	bl	0x207ddac <_ZNSt6__ndk117bad_function_callD0Ev+0x14b3c>
+     207dd10: f94002a8     	ldr	x8, [x21]
+     207dd14: 6f00e400     	movi	v0.2d, #0000000000000000
+     207dd18: b9401108     	ldr	w8, [x8, #0x10]
+     207dd1c: a9004c14     	stp	x20, x19, [x0]
+     207dd20: b9001016     	str	w22, [x0, #0x10]
+     207dd24: a9424ff4     	ldp	x20, x19, [sp, #0x20]
+     207dd28: a94157f6     	ldp	x22, x21, [sp, #0x10]
+     207dd2c: 3c818000     	stur	q0, [x0, #0x18]
+     207dd30: 3c828000     	stur	q0, [x0, #0x28]
+     207dd34: b9003808     	str	w8, [x0, #0x38]
+     207dd38: f84307fe     	ldr	x30, [sp], #0x30
+     207dd3c: d65f03c0     	ret
+     207dd40: f81e0ffe     	str	x30, [sp, #-0x20]!
+
+====================================================================================
+## ④ 帧初始化 B：0x207DE04（调用 AllocStackSlot + AllocFrame）
+
+<!-- 帧初始化 B 全函数 -->
+RVA 0x207de04 .. 0x207de6c   (运行时 0x40002527DE04 .. 0x40002527DE6C)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x207de04 --stop-address=0x207de6c "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     207de04: a9bc67fe     	stp	x30, x25, [sp, #-0x40]!
+     207de08: a9015ff8     	stp	x24, x23, [sp, #0x10]
+     207de0c: a90257f6     	stp	x22, x21, [sp, #0x20]
+     207de10: a9034ff4     	stp	x20, x19, [sp, #0x30]
+     207de14: aa0003f7     	mov	x23, x0
+     207de18: aa0103e0     	mov	x0, x1
+     207de1c: aa0203f3     	mov	x19, x2
+     207de20: aa0103f6     	mov	x22, x1
+     207de24: 9400d7ad     	bl	0x20b3cd8 <mono_class_get_checked+0x1b94>
+     207de28: f9402ed8     	ldr	x24, [x22, #0x58]
+     207de2c: f94002e0     	ldr	x0, [x23]
+     207de30: b9402f01     	ldr	w1, [x24, #0x2c]
+     207de34: b9400c19     	ldr	w25, [x0, #0xc]
+     207de38: 97ffffc2     	bl	0x207dd40 <_ZNSt6__ndk117bad_function_callD0Ev+0x14ad0>
+     207de3c: f94002e8     	ldr	x8, [x23]
+     207de40: aa0003f5     	mov	x21, x0
+     207de44: aa0803e0     	mov	x0, x8
+     207de48: 97ffffd9     	bl	0x207ddac <_ZNSt6__ndk117bad_function_callD0Ev+0x14b3c>
+     207de4c: f94002e8     	ldr	x8, [x23]
+     207de50: 6f00e400     	movi	v0.2d, #0000000000000000
+     207de54: aa0003f4     	mov	x20, x0
+     207de58: b9401108     	ldr	w8, [x8, #0x10]
+     207de5c: a9005416     	stp	x22, x21, [x0]
+     207de60: b9001019     	str	w25, [x0, #0x10]
+     207de64: 3c818000     	stur	q0, [x0, #0x18]
+     207de68: 3c828000     	stur	q0, [x0, #0x28]
+
+====================================================================================
+## ⑤ AllocStackSlot 本体 0x207DD40（含引用 "AllocStackSlot" 串的冷路径）
+
+<!-- AllocStackSlot 全函数 + 冷路径 -->
+RVA 0x207dd40 .. 0x207ddb0   (运行时 0x40002527DD40 .. 0x40002527DDB0)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x207dd40 --stop-address=0x207ddb0 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     207dd40: f81e0ffe     	str	x30, [sp, #-0x20]!
+     207dd44: a9014ff4     	stp	x20, x19, [sp, #0x10]
+     207dd48: 2941a808     	ldp	w8, w10, [x0, #0xc]
+     207dd4c: aa0003f3     	mov	x19, x0
+     207dd50: 0b010109     	add	w9, w8, w1
+     207dd54: 6b0a013f     	cmp	w9, w10
+     207dd58: 5400014d     	b.le	0x207dd80 <_ZNSt6__ndk117bad_function_callD0Ev+0x14b10>
+     207dd5c: f940026b     	ldr	x11, [x19]
+     207dd60: b50000cb     	cbnz	x11, 0x207dd78 <_ZNSt6__ndk117bad_function_callD0Ev+0x14b08>
+     207dd64: aa1303e0     	mov	x0, x19
+     207dd68: 2a0103f4     	mov	w20, w1
+     207dd6c: 9400452c     	bl	0x208f21c <_ZNSt6__ndk117bad_function_callD0Ev+0x25fac>
+     207dd70: 2941aa68     	ldp	w8, w10, [x19, #0xc]
+     207dd74: 0b140109     	add	w9, w8, w20
+     207dd78: 6b0a013f     	cmp	w9, w10
+     207dd7c: 540000ec     	b.gt	0x207dd98 <_ZNSt6__ndk117bad_function_callD0Ev+0x14b28>
+     207dd80: f940026a     	ldr	x10, [x19]
+     207dd84: b9000e69     	str	w9, [x19, #0xc]
+     207dd88: a9414ff4     	ldp	x20, x19, [sp, #0x10]
+     207dd8c: 8b28cd40     	add	x0, x10, w8, sxtw #3
+     207dd90: f84207fe     	ldr	x30, [sp], #0x20
+     207dd94: d65f03c0     	ret
+     207dd98: b0ff63a0     	adrp	x0, 0xcf2000
+     207dd9c: 9124a400     	add	x0, x0, #0x929
+     207dda0: 94013030     	bl	0x20c9e60 <DllCanUnloadNow+0x1afc>
+     207dda4: aa1f03e1     	mov	x1, xzr
+     207dda8: 94012a9d     	bl	0x20c881c <DllCanUnloadNow+0x4b8>
+     207ddac: a9bf4ffe     	stp	x30, x19, [sp, #-0x10]!
+
+====================================================================================
+## ⑥ AllocFrame 本体 0x207DDAC（含引用 "AllocFrame" 串的冷路径）
+
+<!-- AllocFrame 全函数 + 冷路径 -->
+RVA 0x207ddac .. 0x207de04   (运行时 0x40002527DDAC .. 0x40002527DE04)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x207ddac --stop-address=0x207de04 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     207ddac: a9bf4ffe     	stp	x30, x19, [sp, #-0x10]!
+     207ddb0: 29442408     	ldp	w8, w9, [x0, #0x20]
+     207ddb4: aa0003f3     	mov	x19, x0
+     207ddb8: 6b09011f     	cmp	w8, w9
+     207ddbc: 540000cb     	b.lt	0x207ddd4 <_ZNSt6__ndk117bad_function_callD0Ev+0x14b64>
+     207ddc0: f9400e68     	ldr	x8, [x19, #0x18]
+     207ddc4: b5000168     	cbnz	x8, 0x207ddf0 <_ZNSt6__ndk117bad_function_callD0Ev+0x14b80>
+     207ddc8: aa1303e0     	mov	x0, x19
+     207ddcc: 94004530     	bl	0x208f28c <_ZNSt6__ndk117bad_function_callD0Ev+0x2601c>
+     207ddd0: b9402268     	ldr	w8, [x19, #0x20]
+     207ddd4: f9400e69     	ldr	x9, [x19, #0x18]
+     207ddd8: 1100050a     	add	w10, w8, #0x1
+     207dddc: 93407d08     	sxtw	x8, w8
+     207dde0: b900226a     	str	w10, [x19, #0x20]
+     207dde4: 8b081920     	add	x0, x9, x8, lsl #6
+     207dde8: a8c14ffe     	ldp	x30, x19, [sp], #0x10
+     207ddec: d65f03c0     	ret
+     207ddf0: f0ff64e0     	adrp	x0, 0xd1c000
+     207ddf4: 91286000     	add	x0, x0, #0xa18
+     207ddf8: 9401301a     	bl	0x20c9e60 <DllCanUnloadNow+0x1afc>
+     207ddfc: aa1f03e1     	mov	x1, xzr
+     207de00: 94012a87     	bl	0x20c881c <DllCanUnloadNow+0x4b8>
+
+====================================================================================
+## ⑦ 异常构造链（两处冷路径共同调用）
+
+<!-- 0x20C9E60 —— 用 (namespace, name, msg) 构造异常对象 -->
+RVA 0x20c9e60 .. 0x20c9e88   (运行时 0x4000252C9E60 .. 0x4000252C9E88)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x20c9e60 --stop-address=0x20c9e88 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    00000000020c8364 <DllCanUnloadNow>:
+     20c9e60: a9bf4ffe     	stp	x30, x19, [sp, #-0x10]!
+     20c9e64: aa0003f3     	mov	x19, x0
+     20c9e68: 9405172e     	bl	0x220fb20 <DllCanUnloadNow+0x1477bc>
+     20c9e6c: b0ff6061     	adrp	x1, 0xcd6000
+     20c9e70: d0ff6262     	adrp	x2, 0xd17000
+     20c9e74: 913d2421     	add	x1, x1, #0xf49
+     20c9e78: 912f6042     	add	x2, x2, #0xbd8
+     20c9e7c: aa1303e3     	mov	x3, x19
+     20c9e80: a8c14ffe     	ldp	x30, x19, [sp], #0x10
+     20c9e84: 17fffd26     	b	0x20c931c <DllCanUnloadNow+0xfb8>
+
+<!-- 0x20C881C —— __cxa_allocate_exception(8) + __cxa_throw，noreturn -->
+RVA 0x20c881c .. 0x20c8844   (运行时 0x4000252C881C .. 0x4000252C8844)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x20c881c --stop-address=0x20c8844 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    00000000020c8364 <DllCanUnloadNow>:
+     20c881c: a9bf4ffe     	stp	x30, x19, [sp, #-0x10]!
+     20c8820: aa0003f3     	mov	x19, x0
+     20c8824: 97ffff62     	bl	0x20c85ac <DllCanUnloadNow+0x248>
+     20c8828: 52800100     	mov	w0, #0x8                // =8
+     20c882c: 94b0d155     	bl	0x4cfcd80 <__cxa_allocate_exception@plt>
+     20c8830: 900161c1     	adrp	x1, 0x4d00000 <pthread_rwlock_wrlock@plt+0xd80>
+     20c8834: 910a6021     	add	x1, x1, #0x298
+     20c8838: aa1f03e2     	mov	x2, xzr
+     20c883c: f9000013     	str	x19, [x0]
+     20c8840: 94b0d154     	bl	0x4cfcd90 <__cxa_throw@plt>
+
+====================================================================================
+## ⑧ 入口的调用者之一：全部入口调用的 2 个非 AOT 调用点
+
+<!-- 调用点 0x207F640（属于函数 0x207F5D4 的 fast path） -->
+RVA 0x207f630 .. 0x207f648   (运行时 0x40002527F630 .. 0x40002527F648)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x207f630 --stop-address=0x207f648 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     207f630: 794002c8     	ldrh	w8, [x22]
+     207f634: aa1303e0     	mov	x0, x19
+     207f638: aa1403e2     	mov	x2, x20
+     207f63c: 8b080ea1     	add	x1, x21, x8, lsl #3
+     207f640: 94000056     	bl	0x207f798 <_ZNSt6__ndk117bad_function_callD0Ev+0x16528>
+     207f644: 1400001d     	b	0x207f6b8 <_ZNSt6__ndk117bad_function_callD0Ev+0x16448>
+
+<!-- 调用点 0x208E018 -->
+RVA 0x208dff0 .. 0x208e030   (运行时 0x40002528DFF0 .. 0x40002528E030)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x208dff0 --stop-address=0x208e030 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000002069270 <_ZNSt6__ndk117bad_function_callD0Ev>:
+     208dff0: d344fd29     	lsr	x9, x9, #4
+     208dff4: d2400129     	eor	x9, x9, #0x1
+     208dff8: 8b090f00     	add	x0, x24, x9, lsl #3
+     208dffc: 8b090902     	add	x2, x8, x9, lsl #2
+     208e000: aa1403e1     	mov	x1, x20
+     208e004: aa1503e3     	mov	x3, x21
+     208e008: 940002f9     	bl	0x208ebec <_ZNSt6__ndk117bad_function_callD0Ev+0x2597c>
+     208e00c: aa1403e0     	mov	x0, x20
+     208e010: aa1803e1     	mov	x1, x24
+     208e014: aa1303e2     	mov	x2, x19
+     208e018: 97ffc5e0     	bl	0x207f798 <_ZNSt6__ndk117bad_function_callD0Ev+0x16528>
+     208e01c: f9401728     	ldr	x8, [x25, #0x28]
+     208e020: f85f83a9     	ldur	x9, [x29, #-0x8]
+     208e024: eb09011f     	cmp	x8, x9
+     208e028: 54000101     	b.ne	0x208e048 <_ZNSt6__ndk117bad_function_callD0Ev+0x24dd8>
+     208e02c: 910003bf     	mov	sp, x29
+
+====================================================================================
+## ⑨ 入口的调用者之二：AOT 解释器桩（样例 2 个，共 5221 个调用点）
+
+<!-- AOT 桩样例 1（0x21C7950）与样例 2（0x21C7974） -->
+RVA 0x21c7950 .. 0x21c7998   (运行时 0x4000253C7950 .. 0x4000253C7998)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x21c7950 --stop-address=0x21c7998 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    00000000020c8364 <DllCanUnloadNow>:
+     21c7950: d10083ff     	sub	sp, sp, #0x20
+     21c7954: f9000bfe     	str	x30, [sp, #0x10]
+     21c7958: 910063e1     	add	x1, sp, #0x18
+     21c795c: 910033e2     	add	x2, sp, #0xc
+     21c7960: 97fadf8e     	bl	0x207f798 <_ZNSt6__ndk117bad_function_callD0Ev+0x16528>
+     21c7964: 394033e0     	ldrb	w0, [sp, #0xc]
+     21c7968: f9400bfe     	ldr	x30, [sp, #0x10]
+     21c796c: 910083ff     	add	sp, sp, #0x20
+     21c7970: d65f03c0     	ret
+     21c7974: d10083ff     	sub	sp, sp, #0x20
+     21c7978: a90103fe     	stp	x30, x0, [sp, #0x10]
+     21c797c: aa0103e8     	mov	x8, x1
+     21c7980: 910063e1     	add	x1, sp, #0x18
+     21c7984: 910033e2     	add	x2, sp, #0xc
+     21c7988: aa0803e0     	mov	x0, x8
+     21c798c: 97fadf83     	bl	0x207f798 <_ZNSt6__ndk117bad_function_callD0Ev+0x16528>
+     21c7990: 394033e0     	ldrb	w0, [sp, #0xc]
+     21c7994: f9400bfe     	ldr	x30, [sp, #0x10]
+
+<!-- AOT 桩样例 3：最后一个调用点 0x220BA00 -->
+RVA 0x220b9f0 .. 0x220ba08   (运行时 0x40002540B9F0 .. 0x40002540BA08)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x220b9f0 --stop-address=0x220ba08 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    00000000020c8364 <DllCanUnloadNow>:
+     220b9f0: 910003e1     	mov	x1, sp
+     220b9f4: aa0403e0     	mov	x0, x4
+     220b9f8: aa1f03e2     	mov	x2, xzr
+     220b9fc: a901fbe9     	stp	x9, x30, [sp, #0x18]
+     220ba00: 97f9cf66     	bl	0x207f798 <_ZNSt6__ndk117bad_function_callD0Ev+0x16528>
+     220ba04: f94013fe     	ldr	x30, [sp, #0x20]
+
+====================================================================================
+## ⑩ 入口内部首次调用 0x205FF04（每线程帧池取用）
+
+<!-- 0x205FF04 —— pthread_getspecific 取每线程帧池（0x68 字节对象） -->
+RVA 0x205ff04 .. 0x205ff60   (运行时 0x40002525FF04 .. 0x40002525FF60)
+
+### 命令原文（可直接复制执行）
+
+"C:\Users\Administrator\AppData\Local\Android\Sdk\ndk\27.0.12077973\toolchains\llvm\prebuilt\windows-x86_64\bin\llvm-objdump.exe" -d --start-address=0x205ff04 --stop-address=0x205ff60 "E:\nixiang\06_dumped\冒险与征途\apk_extract\lib\arm64-v8a\libil2cpp.so"
+
+    E:\nixiang\06_dumped\鍐掗櫓涓庡緛閫擻apk_extract\lib\arm64-v8a\libil2cpp.so:	file format elf64-littleaarch64
+    0000000001d7408c <.text>:
+     205ff04: f81e0ffe     	str	x30, [sp, #-0x20]!
+     205ff08: a9014ff4     	stp	x20, x19, [sp, #0x10]
+     205ff0c: d0017f34     	adrp	x20, 0x5045000
+     205ff10: f9465a94     	ldr	x20, [x20, #0xcb0]
+     205ff14: f9400288     	ldr	x8, [x20]
+     205ff18: b9400100     	ldr	w0, [x8]
+     205ff1c: 94b2752d     	bl	0x4cfd3d0 <pthread_getspecific@plt>
+     205ff20: aa0003f3     	mov	x19, x0
+     205ff24: b50002c0     	cbnz	x0, 0x205ff7c <.text+0x2ebef0>
+     205ff28: 52800d00     	mov	w0, #0x68               // =104
+     205ff2c: 94b274a1     	bl	0x4cfd1b0 <_Znwm@plt>
+     205ff30: 6f00e400     	movi	v0.2d, #0000000000000000
+     205ff34: f9400289     	ldr	x9, [x20]
+     205ff38: 3c838000     	stur	q0, [x0, #0x38]
+     205ff3c: 3c848000     	stur	q0, [x0, #0x48]
+     205ff40: 3c858000     	stur	q0, [x0, #0x58]
+     205ff44: 2f00e5e0     	movi	d0, #0x000000ffffffff
+     205ff48: 12800008     	mov	w8, #-0x1               // =-1
+     205ff4c: fd000400     	str	d0, [x0, #0x8]
+     205ff50: 2f07e600     	movi	d0, #0xffffffff00000000
+     205ff54: f900001f     	str	xzr, [x0]
+     205ff58: f9000c1f     	str	xzr, [x0, #0x18]
+     205ff5c: b9001008     	str	w8, [x0, #0x10]
+

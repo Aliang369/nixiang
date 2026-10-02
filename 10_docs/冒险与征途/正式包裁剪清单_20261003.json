@@ -1,0 +1,15 @@
+{
+  "game_dir": "E:\\nixiang\\08_output\\冒险与征途",
+  "keep": "冒险与征途_1.5.9_starry-final-releaseSigned.apk",
+  "keep_size": 885310399,
+  "keep_md5": "b4e5ccb5f1010b5de33cceb53bbb9a9e",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "冒险与征途_1.5.9_starry-final-releaseSigned.apk.idsig",
+      "size": 6981147,
+      "md5": "38d9f301cea350348a00e749a7261a0d"
+    }
+  ],
+  "removed_count": 1
+}
