@@ -69,7 +69,7 @@
 | 爆裂防线 | 2026-09-26 | ✅ **星空版已交付（1.01.06 / vc10106）**：底包＝官方原版（344,109,163 B md5 `1a57be45…`，签名 `CN=my`），斌哥包 `dda75d4f…` （完整结论见游戏摘要「2026-09-28 索引行归档」） | [摘要](games/爆裂防线.md) |
 | 命运-冠位指定 | 2026-09-22 | ⏸ **ACE 卡点，用户要求暂停（晚上继续）**：装机后启动=灰屏、~10–20s 一轮 SIGBUS(7)/SIGSEGV(11) 崩溃循环（无 tombstone/无应用日志/`I Unity`=0） （完整结论见游戏摘要「2026-09-28 索引行归档」） | [AB 实验](../命运/ACE_AB实验_20260922.md) · [摘要](games/命运.md) |
 
-| 光阴之外 | 2026-10-02 | ✅ **星空版已更新到 1.0.5 / vc105，用户实机验收「功能都没问题」**（Cocos Creator 3.x JSB；异签名已授权卸载重装）：正式包 `光阴之外_1.0.5_surgical-releaseSigned.apk` 587,318,509 B md5 `dcdb3fd0…`，真机 `[Gyzw] splice +2100 B`（与 1.0.3 相同）、四锚点各 1 次、免广告门控 `.registers` 3/4/5 未变；收尾已交付 `delivery_20261002/` | [摘要](games/光阴之外.md) · [记录](../光阴之外/移植记录_星空版_1.0.5_20261002.md) |
+| 光阴之外 | 2026-10-02 | ✅ **星空版已更新到 1.0.5 / vc105，用户实机验收「功能都没问题」**（Cocos Creator 3.x JSB；异签名已授权卸载重装）：正式包 `光阴之外_1.0.5_surgical-releaseSigned.apk` 587,318,509 B md5 `dcdb3fd0…` sha256 `7ee84fb5…`，真机 `[Gyzw] splice +2100 B`（与 1.0.3 相同）、四锚点各 1 次、免广告门控 `.registers` 3/4/5 未变；收尾已交付 `delivery_20261002/` | [摘要](games/光阴之外.md) · [记录](../光阴之外/移植记录_星空版_1.0.5_20261002.md) |
 
 | 幻想武将模拟器 | 2026-09-27 | ✅ 已交付并收尾（TapTap 1.0.8 / vc8 / `com.qxjc.hxwjmlq`，Unity IL2CPP，SecShell （完整结论见游戏摘要「2026-09-28 索引行归档」） | [摘要](games/幻想武将模拟器.md) |
 | 我本布衣世家录 | 2026-09-28 | 🔧 **v3 修复中（免广告独立生效 + 7 个 instance hook + GetMaxAP/CanAffordBuyLand ABI 修正）**：v2 首轮崩在 delegate 对象指针被当函数指针；v3 改 runtime_invoke 并加 ItemManager instance 7 hook，24 个 @rva 全命中，无崩溃。so md5 `cd53e11b…`，TapTap 1.1.46/vc55。详情 [摘要](games/我本布衣世家录.md) |
