@@ -1,0 +1,25 @@
+{
+  "template_id": "jfqs",
+  "name": "疾风骑士",
+  "package": "com.emay.wxsy.topon",
+  "source": "星空版 60.0.1(vc116) —— Games/JfqsEntry.cpp 的 kJfqs_Features[]（下标 = featNum，Category_ 占下标）+ Games/JfqsMod.h 的 enum JfqsFeat + authGameId=\"jfqs\"。对照物：斌哥改包 60.0.1 内存抓点（见 10_docs/疾风骑士/抓点总结_斌哥mod_20261002.md）。免广告、技能无限、移动速度、解锁类、百分百改造成功为星空版新增。",
+  "features": [
+    { "feat_num": 0, "name": "战斗" },
+    { "feat_num": 1, "name": "伤害倍率" },
+    { "feat_num": 2, "name": "超级无敌" },
+    { "feat_num": 3, "name": "无限货币" },
+    { "feat_num": 4, "name": "移动速度" },
+    { "feat_num": 5, "name": "技能无限" },
+    { "feat_num": 6, "name": "无限跳跃" },
+    { "feat_num": 7, "name": "免广告" },
+    { "feat_num": 8, "name": "解锁" },
+    { "feat_num": 9, "name": "解锁全角色" },
+    { "feat_num": 10, "name": "解锁全皮肤" },
+    { "feat_num": 11, "name": "解锁全武器" },
+    { "feat_num": 12, "name": "解锁全宠物" },
+    { "feat_num": 13, "name": "解锁全神器" },
+    { "feat_num": 14, "name": "解锁全部技能" },
+    { "feat_num": 15, "name": "解锁协同" },
+    { "feat_num": 16, "name": "百分百改造成功" }
+  ]
+}

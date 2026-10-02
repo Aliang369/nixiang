@@ -1,0 +1,9 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/疾风骑士",
+  "keep": "疾风骑士_60.0.1_surgical-releaseSigned.apk",
+  "keep_size": 625404073,
+  "keep_md5": "d4e2507eb74db349a1550fd756e861a9",
+  "mode": "--apply",
+  "removed": [],
+  "removed_count": 0
+}

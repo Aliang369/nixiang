@@ -1,0 +1,83 @@
+# 疾风骑士 60.0.1 星光版 — 决定性 logcat 行（2026-10-02，设备 f9a116a2，pid 5147）
+# 抓取命令：adb -s f9a116a2 logcat -d -s Mod_Menu:V StarryApp:V MenuService:V
+
+10-02 20:39:36.974  5147  5147 I StarryApp: onCreate proc=com.emay.wxsy.topon
+10-02 20:39:37.386  5147  5147 I MenuService: auth game_id=jfqs
+10-02 20:39:37.427  5147  5147 I MenuService: native menu shown mode=ACTIVITY
+10-02 20:39:37.433  5147  5828 I Mod_Menu: [jfqs] lib ready (dual-path, lazy hooks)
+10-02 20:40:40.354  5147  5147 I Mod_Menu: [jfqs] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)
+10-02 20:40:40.354  5147  5147 I Mod_Menu: [jfqs] PA_GetNormalAttackDamage hooked PlayerAttackColl.GetNormalAttackDamage(argc=0)
+10-02 20:40:40.354  5147  5147 I Mod_Menu: [jfqs] Proj_GetNormalAttackDamage hooked CharacterProjectile.GetNormalAttackDamage(argc=0)
+10-02 20:40:40.354  5147  5147 I Mod_Menu: [jfqs] PD_TakeDamage hooked PlayerData.TakeDamage(argc=2)
+10-02 20:40:40.354  5147  5147 I Mod_Menu: [jfqs] DC_LoadGem hooked DataController.LoadGem(argc=0)
+10-02 20:40:40.354  5147  5147 I Mod_Menu: [jfqs] DC_LoadSoulStone hooked DataController.LoadSoulStone(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] DC_LoadPrayerStone hooked DataController.LoadPrayerStone(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] DC_LoadBreachStone hooked DataController.LoadBreachStone(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] DC_LoadMileagePoint hooked DataController.LoadMileagePoint(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PD_UseGold hooked PlayerData.UseGold(argc=1)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PM_GetMoveSpeedPower hooked PlayerMovement.GetMoveSpeedPower(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckMainSkillAble hooked PlayerSkillManager.CheckMainSkillAble(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckCanAllSkill hooked PlayerSkillManager.CheckCanAllSkill(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckCanSubSkillByCoolTime hooked PlayerSkillManager.CheckCanSubSkillByCoolTime(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckCanSubSkill hooked PlayerSkillManager.CheckCanSubSkill(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckCanAttackSkill hooked PlayerSkillManager.CheckCanAttackSkill(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckCanBuffSkill hooked PlayerSkillManager.CheckCanBuffSkill(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckSkillReady hooked PlayerSkillManager.CheckSkillReady(argc=1)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] SM_SkillCoolTime hooked SkillManager.SkillCoolTime(argc=3)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] SM_SkillCoolTimeRealtime hooked SkillManager.SkillCoolTimeRealtime(argc=3)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckCanSubSkillByAttack hooked PlayerSkillManager.CheckCanSubSkillByAttack(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PSM_CheckUse hooked PlayerSkillManager.CheckUse(argc=1)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PM_get_WeaponSkillCoolTime hooked PlayerMovement.get_WeaponSkillCoolTime(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] PM_GetWeaponSkillCoolTime hooked PlayerMovement.GetWeaponSkillCoolTime(argc=0)
+10-02 20:40:40.355  5147  5147 I Mod_Menu: [jfqs] WS_GetWeaponSkillCoolTime hooked WeaponSkill.GetWeaponSkillCoolTime(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] CIS_GetWeaponSkillCoolTime hooked CharacterInfoSelector.GetWeaponSkillCoolTime(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] HR_GetWeaponSkillCoolTimeFillAmount hooked HighRollerScript.GetWeaponSkillCoolTimeFillAmount(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] SUM_get_WeaponSkillCoolTime hooked SummonerScript.get_WeaponSkillCoolTime(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] SUM_GetWeaponSkillCoolTime hooked SummonerScript.GetWeaponSkillCoolTime(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] PM_SetWeaponSkillCoolTime hooked PlayerMovement.SetWeaponSkillCoolTime(argc=1)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] PM_SetPlusWeaponSkillCoolTime hooked PlayerMovement.SetPlusWeaponSkillCoolTime(argc=1)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] PM_GetMaxMoreJumpCount hooked PlayerMovement.GetMaxMoreJumpCount(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] GS_IsNoAd hooked GameSetting.IsNoAd(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] DC_LoadRemoveAds hooked DataController.LoadRemoveAds(argc=0)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] ADX_ShowRewardedAd hooked ADXManager.ShowRewardedAd(argc=1)
+10-02 20:40:40.356  5147  5147 I Mod_Menu: [jfqs] ADX_ShowInterstitialAd hooked ADXManager.ShowInterstitialAd(argc=1)
+10-02 20:40:40.360  5147  5147 W Mod_Menu: [jfqs] MRSDK_ShowReward6 class miss MarSDKManager — degrade
+10-02 20:40:40.360  5147  5147 I Mod_Menu: [jfqs] MRSDK_ShowReward6 hooked MarSDKManager.ShowReward(argc=6)
+10-02 20:40:40.361  5147  5147 W Mod_Menu: [jfqs] MRSDK_ShowReward7 class miss MarSDKManager — degrade
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] MRSDK_ShowReward7 hooked MarSDKManager.ShowReward(argc=7)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] DC_LoadPlayerUnlock hooked DataController.LoadPlayerUnlock(argc=1)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] DC_IsCharacterUnlockedForPurchase hooked DataController.IsCharacterUnlockedForPurchase(argc=2)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] DC_IsAllCharacterOwned hooked DataController.IsAllCharacterOwned(argc=0)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] DC_LoadPlayerSkinUnlock hooked DataController.LoadPlayerSkinUnlock(argc=2)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] DC_LoadLobbySkinUnlock hooked DataController.LoadLobbySkinUnlock(argc=1)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] DC_LoadPlayerWeaponUnlock hooked DataController.LoadPlayerWeaponUnlock(argc=2)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] DC_LoadPetUnlock hooked DataController.LoadPetUnlock(argc=1)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] AM_CheckHaveArtifact hooked ArtifactManager.CheckHaveArtifact(argc=3)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] AM_CheckHaveArtifactAll hooked ArtifactManager.CheckHaveArtifactAll(argc=2)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] AM_GetIsDefaultUnlockArtifact hooked ArtifactManager.GetIsDefaultUnlockArtifact(argc=1)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] UM_UnlockSkillsCheck hooked UnlockManager.UnlockSkillsCheck(argc=1)
+10-02 20:40:40.361  5147  5147 I Mod_Menu: [jfqs] UM_CheckUnlock hooked UnlockManager.CheckUnlock(argc=1)
+10-02 20:40:40.362  5147  5147 I Mod_Menu: [jfqs] SYN_CheckHaveSynergy hooked SynergyManager.CheckHaveSynergy(argc=1)
+10-02 20:40:40.362  5147  5147 I Mod_Menu: [jfqs] SYN_CheckUseSynergy hooked SynergyManager.CheckUseSynergy(argc=1)
+10-02 20:40:40.362  5147  5147 I Mod_Menu: [jfqs] SYN_CheckHaveItemSynergy hooked SynergyManager.CheckHaveItemSynergy(argc=1)
+10-02 20:40:40.362  5147  5147 I Mod_Menu: [jfqs] SYN_CheckCanObtainSynergyBySkill hooked SynergyManager.CheckCanObtainSynergyBySkill(argc=1)
+10-02 20:40:40.362  5147  5147 I Mod_Menu: [jfqs] SOE_GetChance hooked StatueofEnhancement.GetChance(argc=0)
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanAllSkill orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanAllSkill orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanAttackSkill orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanAllSkill orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanAttackSkill orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanAttackSkill orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkillByAttack orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkillByCoolTime orig=1
+10-02 20:40:40.364  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkill orig=1
+10-02 20:40:40.416  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkillByAttack orig=1
+10-02 20:40:40.416  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkillByCoolTime orig=1
+10-02 20:40:40.416  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkill orig=1
+10-02 20:40:40.465  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkillByAttack orig=1
+10-02 20:40:40.466  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkillByCoolTime orig=1
+10-02 20:40:40.466  5147  5423 I Mod_Menu: [jfqs] trace PSM_CheckCanSubSkill orig=1
+10-02 20:40:44.106  5147  5423 I Mod_Menu: [jfqs] trace PM_GetMaxMoreJumpCount orig=1
+10-02 20:40:48.306  5147  5423 I Mod_Menu: [jfqs] trace PM_GetMaxMoreJumpCount orig=1
+10-02 20:40:52.907  5147  5423 I Mod_Menu: [jfqs] trace PM_GetMaxMoreJumpCount orig=1
+10-02 20:57:16.805  5147  5423 I Mod_Menu: [jfqs] ad skipped (MarSDKManager.ShowReward/6) → invoke callbacks

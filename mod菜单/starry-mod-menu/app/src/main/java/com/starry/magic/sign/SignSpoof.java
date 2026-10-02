@@ -992,6 +992,31 @@ public final class SignSpoof {
                     + "UKQsRSpLp+HhFPBmDNKBiG3JUuLJg8eH6i2kRu2QCIEgvdoJ+IQ5qEqgrMcUTfUuLDhV9Pn0EbNI44xzJROS4DRh94q6/gPh40of"
                     + "MzhSrW6H7n7tguVBJWkrtJfP6scZs3BXxN5a0A==";
 
+    // 疾风骑士（com.emay.wxsy.topon）TapTap 渠道原版签名证书
+    // 取自官包 v60.0.1 META-INF/SG3_KEYS.RSA（openssl pkcs7 -print_certs → DER）
+    // subject/issuer: C=CN, ST=Shanghai, L=Shanghai, O=Morefuntek Inc,
+    //                 OU=Morefuntek Inc, CN=Morefuntek
+    // MD5:    e28a5f390ab1a7590a032f05b3fde72a   ← TapSignKit.getSign 回灌值
+    // SHA-1:  540054eae363f2621b6fec5fcfef0517a87c4299
+    // SHA-256:80fadb3241d3084163079a7e988cb4ec4155fae099ca38cea9f53d0f26d0e42e
+    // 有效期: 2015-01-06 → 2069-10-09；DER 921 B
+    // 注：与伯吉的温馨厨房（com.hnyg.bjdwxcf.topon）同一张 Morefuntek 证书。
+    private static final String JFQS_PKG = "com.emay.wxsy.topon";
+    private static final String JFQS_CERT_B64 =
+            "MIIDlTCCAn2gAwIBAgIEXMfwgzANBgkqhkiG9w0BAQsFADB6MQswCQYDVQQGEwJDTjERMA8GA1UECBMIU2hhbmdoYWkxETAPBgNV"
+                    + "BAcTCFNoYW5naGFpMRcwFQYDVQQKEw5Nb3JlZnVudGVrIEluYzEXMBUGA1UECxMOTW9yZWZ1bnRlayBJbmMxEzARBgNVBAMTCk1v"
+                    + "cmVmdW50ZWswIBcNMTUwMTA2MTc1OTE2WhgPMjA2OTEwMDkxNzU5MTZaMHoxCzAJBgNVBAYTAkNOMREwDwYDVQQIEwhTaGFuZ2hh"
+                    + "aTERMA8GA1UEBxMIU2hhbmdoYWkxFzAVBgNVBAoTDk1vcmVmdW50ZWsgSW5jMRcwFQYDVQQLEw5Nb3JlZnVudGVrIEluYzETMBEG"
+                    + "A1UEAxMKTW9yZWZ1bnRlazCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJkTDcjfXLhfQp8nS2J8EpcN1zTCtrb2mvH7"
+                    + "IrQ6yT+ltutFYk6Fzl9VThtryBmKasqazx2uT0t9eAF429kPhE2IT2VuJONFAoC5NyWtKlg9LF/acY+bXPumjqzS3kb6bi2WqRDo"
+                    + "BnzBLlsNF9P+vEHguHLQrkyA6gZEfQm48voIpm2Z28yXwE2PnJHk4nbROFiHz5jRYdXlEfKeMKlBKD4sBcCHTHnWhsqEaJI/tqp3"
+                    + "NlfyrNrq2gIaAIKKxWh8jtpoCeUby/QGFAfagLICqx5w2n7Gft352yt4vSr8KfpexYQ+Jvsb3Qa17UTqFpMSxMErZCbqodv9KVfY"
+                    + "jH3GyPkCAwEAAaMhMB8wHQYDVR0OBBYEFLDmJXKgqKCZO51E7bNvVCfgtQgqMA0GCSqGSIb3DQEBCwUAA4IBAQAb5+ytwT5GTt/U"
+                    + "F5D6cQpAdcnPDqoW7S9QCyCdcIFG8tKQQoP0lsFR/KbLZUOBQHGgtvdu35cMLhbfiZ8WkYt1j2kCdBvUorV46v4F82FkYzWJCoxh"
+                    + "g0yDyqgZWIvTfUM5vDdJCzdRhKGA9k6BJRDkF+DLVhNojXSXCLIIF40rOUzHF287KY7+qCogIl32WiXWytNSoft+y2j7TwLQeYCn"
+                    + "utugiC0QKuCtShylN6iz9BnlzLqPVAb71fws2lQF7Wxecw/VMHVCxkraXJbpSoXl4FNVxCxjPSNQBHkdcKQZyfvNHWw+ox9J46wk"
+                    + "3X2tgcGZ+oPnFD0XQ2o7dx6l2uqw";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1057,6 +1082,7 @@ public final class SignSpoof {
                 fakes.put(YIMO_PKG, new Signature(Base64.decode(YIMO_CERT_B64, Base64.DEFAULT)));
                 fakes.put(SLCB_PKG, new Signature(Base64.decode(SLCB_CERT_B64, Base64.DEFAULT)));
                 fakes.put(JJSSJD_PKG, new Signature(Base64.decode(JJSSJD_CERT_B64, Base64.DEFAULT)));
+                fakes.put(JFQS_PKG, new Signature(Base64.decode(JFQS_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

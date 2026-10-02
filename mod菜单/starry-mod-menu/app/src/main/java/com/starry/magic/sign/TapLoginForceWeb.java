@@ -158,7 +158,20 @@ public final class TapLoginForceWeb {
                     // （classes.dex），无旧版 com.taptap.sdk.ui.TapTapActivity；设备已装
                     // TapTap 客户端（com.taptap），改签后客户端 SSO 必被 signature not match
                     // 拒绝 ⇒ 固定 embedded_web 网页登录。
-                    "com.blina.match2.tt"));
+                    "com.blina.match2.tt",
+                    // 疾风骑士（com.emay.wxsy.topon）MAR SDK + TapTap 渠道原版 60.0.1/vc116：
+                    // 包内实证 TapSDK 新版路径 —— AndroidManifest 含
+                    // com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity +
+                    // com.taptap.sdk.kit.internal.TapTapKitInitProvider +
+                    // com.taptap.sdk.themis.lite.ThemisProvider；classes14.dex 含
+                    // TapSignKit + com.taptap.sdk.login.impl.utils.ClientLoginUtils +
+                    // impl/ui/fragment/WebLoginFragment，且**无**旧版
+                    // com.taptap.sdk.login.internal.handlers.client.ClientLoginHandler
+                    // 与 com.taptap.sdk.ui.TapTapActivity（⇒ ClientLoginUtils 版路径，
+                    // 已由 patch_jfqs_smali.py 把 isClientLogin 改恒 false 回落 WebLoginFragment）；
+                    // 设备已装 TapTap 客户端（com.taptap），改签后客户端 SSO 必被
+                    // signature not match 拒绝 ⇒ 固定 embedded_web 网页登录。
+                    "com.emay.wxsy.topon"));
 
     private TapLoginForceWeb() {}
 
