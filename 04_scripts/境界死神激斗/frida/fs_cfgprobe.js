@@ -23,7 +23,7 @@ if (!k || k.isNull()) { console.log('[X] not found'); }
 else {
   var gb = getMethod(k, Memory.allocUtf8String('GetBool'), 1);
   var gi = getMethod(k, Memory.allocUtf8String('GetInt'), 2);
-  ['inv', 'inv_full', 'nocd'].forEach(function (key) {
+  ['inv', 'inv_full', 'nocd', 'kill'].forEach(function (key) {
     var a = Memory.alloc(8);
     a.writePointer(strNew(Memory.allocUtf8String(key)));
     var r = invoke(gb, NULL, a, NULL);

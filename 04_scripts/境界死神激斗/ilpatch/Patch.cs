@@ -10,6 +10,8 @@ using Mono.Cecil.Cil;
 //   伤害倍率 dmg_mul=N    ActorDataControl._finalAttrImpl 入口 finalDamage *= N（仅当攻击者 Camp==Player）
 //   无限技能 nocd=1       SkillInstance.get_iSkillState 抹掉 Cooling|NotEnoughMp|NotEnoughFury 位；
 //                         SkillInstance.get_CDLeftTimeUs → 0（UI 不显示 CD）
+//   秒杀     kill=1       ActorDataControl._finalAttrImpl 入口直接 suffer.ModifyHealth(-suffer.Health,
+//                         ignoreHpExValue:true) 后 return（我方命中即致死；见 PatchKill 的边界说明）
 //
 // 铁律：全部经 StarryConfig 开关，配置缺失 = 原版行为（关 → 原 IL 原样执行）。
 internal static class Patcher
@@ -66,6 +68,9 @@ internal static class Patcher
         P(() => PatchInvincible(adc, mGetCamp, campPlayer), "ActorDataControl.get_IsInvincible  [inv_full]");
         P(() => PatchModifyHealth(adc, mGetCamp, campPlayer), "ActorDataControl.ModifyHealth      [inv]");
         P(() => PatchFinalAttr(adc, mGetCamp, campPlayer), "ActorDataControl._finalAttrImpl    [dmg_mul]");
+        // ⚠️ 顺序敏感：PatchKill 也插在 _finalAttrImpl 的 index 0，必须在 PatchFinalAttr 之后，
+        //    这样 Instructions[0] == ldstr "kill"，Gate 的 HeadIsLdstr(mFa,"kill") 才成立。
+        P(() => PatchKill(adc, mGetCamp, campPlayer), "ActorDataControl._finalAttrImpl    [kill 秒杀]");
         P(() => PatchSkillState(sk), "SkillInstance.get_iSkillState      [nocd]");
         P(() => PatchSkillCdLeft(sk), "SkillInstance.get_CDLeftTimeUs     [nocd]");
 
@@ -174,7 +179,28 @@ internal static class Patcher
             }
         }
 
-        // ── 4. get_iSkillState [nocd] ─────────────────────────────────────────
+        // ── 4. _finalAttrImpl [秒杀 kill] ──────────────────────────────────────
+        // 秒杀块必须整体排在最前（PatchKill 在 PatchFinalAttr 之后插入 index 0）：
+        // 头部即 ldstr "kill" 才说明它是第一条门控（否则 patch 顺序被打乱）。
+        if (mFa != null)
+        {
+            var killHead = HeadIsLdstr(mFa, "kill");
+            bool bNeg = false, bGetHp = false, bModify = false, bRet = false;
+            foreach (var i in mFa.Body.Instructions.Take(30))
+            {
+                if (i.OpCode == OpCodes.Neg) bNeg = true;
+                if (i.OpCode == OpCodes.Callvirt && i.Operand is MethodReference g &&
+                    g.Name == "get_Health" && g.DeclaringType.FullName == tAdc) bGetHp = true;
+                if (i.OpCode == OpCodes.Callvirt && i.Operand is MethodReference md &&
+                    md.Name == "ModifyHealth" && md.DeclaringType.FullName == tAdc) bModify = true;
+                if (i.OpCode == OpCodes.Ret) bRet = true;
+            }
+            A("_finalAttrImpl.秒杀", killHead && bNeg && bGetHp && bModify && bRet,
+              $"头=ldstr \"kill\"({killHead}) + neg({bNeg}) + callvirt get_Health({bGetHp}) + " +
+              $"callvirt ModifyHealth({bModify}) + ret({bRet})；前 30 条内 SelfCalls={bNeg && bGetHp && bModify}");
+        }
+
+        // ── 5. get_iSkillState [nocd] ─────────────────────────────────────────
         var mSs = Need(tSk, "get_iSkillState");
         if (mSs != null)
             A("get_iSkillState", HeadIsLdstr(mSs, "nocd") && Calls(mSs, tCfg, "GetBool") &&
@@ -182,14 +208,14 @@ internal static class Patcher
                 mSs.Body.Instructions.Any(i => i.OpCode == OpCodes.And),
               "门控 ldstr \"nocd\" + call GetBool + 掩码 ldc.i4 -12 + and（清 Cooling|NotEnoughMp|NotEnoughFury）");
 
-        // ── 5. get_CDLeftTimeUs [nocd] ────────────────────────────────────────
+        // ── 6. get_CDLeftTimeUs [nocd] ────────────────────────────────────────
         var mCd = Need(tSk, "get_CDLeftTimeUs");
         if (mCd != null)
             A("get_CDLeftTimeUs", HeadIsLdstr(mCd, "nocd") && Calls(mCd, tCfg, "GetBool") &&
                 mCd.Body.Instructions.Any(i => i.OpCode == OpCodes.Ldc_I4_0 && i.Next?.OpCode == OpCodes.Conv_I8),
               "门控 ldstr \"nocd\" + call GetBool + ldc.i4.0; conv.i8（返回 0L）");
 
-        // ── 6. Starry.StarryConfig 本体 ────────────────────────────────────────
+        // ── 7. Starry.StarryConfig 本体 ────────────────────────────────────────
         var cfg = mm.GetType(tCfg);
         if (cfg == null) A("StarryConfig", false, "注入类型缺失");
         else
@@ -358,6 +384,59 @@ internal static class Patcher
             //    映射到 arg slot 3，与上面的 Ldarg_3 对齐。写成 Parameters[3] 会写坏 attackerSkillId
             //    （紧随其后就是 `if (attackerSkillId > 0) mainAttackerDataCtrl.GetSkill(attackerSkillId)`）
             Instruction.Create(OpCodes.Starg, m.Parameters[2]),
+        });
+    }
+
+    // _finalAttrImpl(): 秒杀 —— if (GetBool("kill") && 攻击者是我方 && 承受者不是我方)
+    //                       { suffer.ModifyHealth(-suffer.Health, false,false, ignoreHpExValue:true, false, attacker); return; }
+    //
+    // 落点理由（2026-10-02 读反编译源码 /tmp/jjssjd_r2/ActorDataControl.cs 后确定）：
+    //   · _finalAttrImpl 是本作唯一被 Hurt(3746) 调用的收尾方法，而 Hurt 是「命中」的唯一入口；
+    //     在它入口处直接致死 ⇒ 每次落地命中即死，且**不受 IsDefending 影响**
+    //     （原版 _finalAttrImpl 内部 `if (!suffer.IsDefending || IsDefenceBroken)` 才扣血，
+    //      格挡中的敌人原本一滴不掉；我们插在分支之前，所以格挡也照样死）。
+    //   · 这里不走 dmg_mul，所以「伤害倍率」开不开都不影响秒杀的致死性。
+    //   · ignoreHpExValue:true 是必须的：否则 ModifyHealth 内 `_injuryHpExValue(-delta,…)`
+    //     会先拿 hpEx 护盾抵扣（hpEx=5000、Health=1000 时 delta 归零 ⇒ 完全不掉血）。
+    //   · 明确**不覆盖**的两类情况（保留游戏自身机制，避免打乱脚本化阶段）：
+    //     ① Hurt 入口的 _hitDodgeCalcImpl 判定「闪避」的命中根本到不了这里；
+    //     ② Hurt 里 IsUnbeatable / _unBeatableImpl 分支（Boss 无敌阶段）不经过 _finalAttrImpl；
+    //        另外 ModifyHealth 内的 _minHealth 下限（SetMinHealth 设置的锁血）仍会生效。
+    static void PatchKill(TypeDefinition adc, MethodReference mGetCamp, int campPlayer)
+    {
+        var m = FindM(adc, "_finalAttrImpl", 10);
+        var mGetHealth = FindM(adc, "get_Health", 0);          // public long Health => BasicAttr.getAttributeValue(_health)
+        var mModifyHealth = FindM(adc, "ModifyHealth", 6);     // (long,bool,bool,bool,bool,ActorDataControl)
+        var orig = m.Body.Instructions[0];
+        InsertAt(m, 0, new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldstr, "kill"),
+            Instruction.Create(OpCodes.Call, mGetBool),
+            Instruction.Create(OpCodes.Brfalse, orig),
+            Instruction.Create(OpCodes.Ldarg_1),           // mainAttackerDataCtrl
+            Instruction.Create(OpCodes.Brfalse, orig),     // 无攻击者 → 原版
+            Instruction.Create(OpCodes.Ldarg_1),
+            Instruction.Create(OpCodes.Callvirt, mGetCamp),
+            Instruction.Create(OpCodes.Ldc_I4, campPlayer),
+            Instruction.Create(OpCodes.Bne_Un, orig),      // 攻击者非我方（敌人打敌人/敌人打我们）→ 原版
+            Instruction.Create(OpCodes.Ldarg_2),           // sufferDataCtrl
+            Instruction.Create(OpCodes.Brfalse, orig),
+            Instruction.Create(OpCodes.Ldarg_2),
+            Instruction.Create(OpCodes.Callvirt, mGetCamp),
+            Instruction.Create(OpCodes.Ldc_I4, campPlayer),
+            Instruction.Create(OpCodes.Beq, orig),         // 承受者是我方 → 绝不杀（防误伤/友军）
+            // suffer.ModifyHealth(-suffer.Health, false, false, ignoreHpExValue:true, false, attacker)
+            Instruction.Create(OpCodes.Ldarg_2),           // receiver
+            Instruction.Create(OpCodes.Ldarg_2),
+            Instruction.Create(OpCodes.Callvirt, mGetHealth),
+            Instruction.Create(OpCodes.Neg),               // delta = -Health ⇒ 落地即 0 血
+            Instruction.Create(OpCodes.Ldc_I4_0),          // isCritHurt
+            Instruction.Create(OpCodes.Ldc_I4_0),          // isSwitchActorRecover
+            Instruction.Create(OpCodes.Ldc_I4_1),          // ignoreHpExValue = true（绕 hpEx 护盾）
+            Instruction.Create(OpCodes.Ldc_I4_0),          // isBackInjury
+            Instruction.Create(OpCodes.Ldarg_1),           // attacker
+            Instruction.Create(OpCodes.Callvirt, mModifyHealth),
+            Instruction.Create(OpCodes.Ret),
         });
     }
 

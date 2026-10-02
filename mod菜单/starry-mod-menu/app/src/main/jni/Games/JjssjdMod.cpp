@@ -66,6 +66,7 @@ static std::atomic<bool> g_reenter{false};
 static std::atomic<bool> g_invuln{false};     // JJSSJD_FEAT_INVULN
 static std::atomic<int>  g_dmgMul{1};         // JJSSJD_FEAT_DMG_MUL（1 = 原版）
 static std::atomic<bool> g_infSkill{false};   // JJSSJD_FEAT_INF_SKILL
+static std::atomic<bool> g_kill{false};       // JJSSJD_FEAT_KILL（秒杀）
 
 // ============================================================
 // ② 目标常量（实测值，换包必须重测）
@@ -404,8 +405,9 @@ static void WriteConfig(bool force) {
     char buf[160];
     const int inv = g_invuln.load() ? 1 : 0;
     const int n = snprintf(buf, sizeof(buf),
-                           "inv=%d\ninv_full=%d\ndmg_mul=%d\nnocd=%d\n",
-                           inv, inv, g_dmgMul.load(), g_infSkill.load() ? 1 : 0);
+                           "inv=%d\ninv_full=%d\ndmg_mul=%d\nnocd=%d\nkill=%d\n",
+                           inv, inv, g_dmgMul.load(), g_infSkill.load() ? 1 : 0,
+                           g_kill.load() ? 1 : 0);
     if (n <= 0 || (size_t)n >= sizeof(buf)) return;
     if (!force && strcmp(buf, s_last) == 0) return;
     FILE* fp = fopen(kCfgPath, "wt");
@@ -446,6 +448,7 @@ void Jjssjd_OnFeatureChanged(int featNum, bool enabled) {
     switch (featNum) {
         case JJSSJD_FEAT_INVULN:    g_invuln.store(enabled); break;
         case JJSSJD_FEAT_INF_SKILL: g_infSkill.store(enabled); break;
+        case JJSSJD_FEAT_KILL:      g_kill.store(enabled); break;
         case JJSSJD_FEAT_DMG_MUL:   g_dmgMul.store(enabled ? 100 : 1); break;  // 开关语义兜底
         default: break;
     }
@@ -466,6 +469,7 @@ void Jjssjd_Tick(const bool* features, const int* values) {
     if (features) {
         g_invuln.store(features[JJSSJD_FEAT_INVULN]);
         g_infSkill.store(features[JJSSJD_FEAT_INF_SKILL]);
+        g_kill.store(features[JJSSJD_FEAT_KILL]);
     }
     if (values) {
         int v = values[JJSSJD_FEAT_DMG_MUL];
@@ -479,5 +483,6 @@ void Jjssjd_ForceClear() {
     g_invuln.store(false);
     g_dmgMul.store(1);
     g_infSkill.store(false);
+    g_kill.store(false);
     WriteConfig(true);  // 授权失效 → 立刻回原版行为
 }

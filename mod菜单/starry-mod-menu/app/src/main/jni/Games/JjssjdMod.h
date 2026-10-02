@@ -20,6 +20,7 @@ enum JjssjdFeat : int {
     JJSSJD_FEAT_INVULN    = 1,  // Toggle_无敌
     JJSSJD_FEAT_DMG_MUL   = 2,  // Slider_伤害倍率:1:100:1（1 = 原版）
     JJSSJD_FEAT_INF_SKILL = 3,  // Toggle_无限技能
+    JJSSJD_FEAT_KILL      = 4,  // Toggle_秒杀（我方每次落地命中直接致死）
 };
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）

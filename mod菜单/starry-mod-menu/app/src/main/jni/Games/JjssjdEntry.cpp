@@ -19,6 +19,7 @@ static const char* kJjssjd_Features[] = {
     "Toggle_无敌",             // 1  JJSSJD_FEAT_INVULN
     "Slider_伤害倍率:1:100:1", // 2  JJSSJD_FEAT_DMG_MUL（默认 1 = 原版）
     "Toggle_无限技能",         // 3  JJSSJD_FEAT_INF_SKILL
+    "Toggle_秒杀",             // 4  JJSSJD_FEAT_KILL
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
