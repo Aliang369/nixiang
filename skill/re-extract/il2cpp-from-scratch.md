@@ -63,6 +63,27 @@ readelf --dyn-syms lib/arm64-v8a/libil2cpp.so | grep -c il2cpp
 - 不同编译器/链接器 bias 不同
 - 验证方法：找一个已知函数（如 `il2cpp_init`），对比 IDA 中的 file offset 和 dump.cs 中的 RVA
 
+### 2.1 索引文件列序（**必读前置**，2026-10-02 疾风骑士踩过 2 次）
+
+`methods.txt` / `classes.txt` 是 dump.cs 的行索引，由
+`python3 04_scripts/_common/extract_il2cpp_preambles.py --dump <dump.cs> --index-out <dir>`
+生成（生成时**首行写死列序注释头**）：
+
+- `methods.txt` 列序 = `# RVA|file_off|cid|class decl|method sig`
+- `classes.txt` 列序 = `# cid:class decl`
+
+| 列 | 含义 | 用错会怎样 |
+|----|------|-----------|
+| 1 `RVA` | 运行时虚拟地址，**hook / IDA / Ghidra 用的就是它** | — |
+| 2 `file_off` | ELF 文件偏移，`file_off = RVA − 段加载差`（该 so 实测 `0x4000`） | 拿它当 RVA ⇒ 整体错位 `0x4000`，**反汇编必错**（本轮错位 2 次） |
+| 3 `cid` | 该 class 声明在 **dump.cs 里的行号**（1-based） | 当成地址用 ⇒ 定位到无关位置 |
+| 4/5 | `class decl` / `method sig` | — |
+
+- **第 1 列才是 RVA**。手抄/脚本取列前先确认列号；`awk -F'|' '{print $1}'` 取 RVA、`$2` 取 file_off。
+- 消费侧一律跳过 `#` 开头的行：`grep -v '^#' methods.txt`，或直接跑
+  `extract_il2cpp_preambles.py --index-verify <file>` 复读自检（列序头缺失即 exit 1）。
+- 反汇编前先自检一次；`file_off` 与 RVA 差 0x4000 说明确实读到了第 2 列。
+
 ---
 
 ## 三、运行时 VA 计算

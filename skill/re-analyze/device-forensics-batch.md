@@ -8,6 +8,15 @@
 
 ## 0. 总原则
 
+> 🚨 **铁律（2026-10-02 定，疾风骑士踩过）：`logcat -c` 之前必须先落盘。**
+> 任何 `logcat -c` / `adb logcat -c` 之前，**先**执行
+> `adb -s $SERIAL logcat -d > /tmp/<game>_<round>.log`（`<round>` 从 `1` 起**递增，绝不覆盖上一轮**）。
+> **证据文件是唯一事后可回溯物，`-c` 不可逆** —— 本轮先清后抓，把上一轮的决定性崩溃栈洗掉了，
+> 之后只能靠回忆复述，白跑一次往返。
+> 需要"从干净状态开始"时也**先落盘再清**：`adb -s $SERIAL logcat -d > /tmp/<game>_1.log && adb -s $SERIAL logcat -c`；
+> 顺序颠倒即违规。落盘文件是本地可再生 scratch（不入库），决定性行再摘进
+> `10_docs/{游戏}/evidence_日期/README.md`。
+
 1. **一次 adb 往返拿一屏信息**：把多条查询塞进 `su -c '...'` 的一条 heredoc/多行命令里，
    别十次 `adb shell`（每次 ~200 ms，且中间状态会变）。
 2. **取证先分类、再删除**：设备上混着「我们的测试物」和「用户自己的东西」，
@@ -28,8 +37,9 @@ adb shell "ps -A | grep -E 'yimoo|com.x.yimoo'" ; adb shell dumpsys window | gre
 # ② 启动（不用手点）
 adb shell monkey -p com.x.yimoo.official -c android.intent.category.LAUNCHER 1
 
-# ③ 日志（★ 注意 -s 的前缀匹配陷阱）
-adb logcat -c && adb logcat -d > /tmp/lc.txt && grep -E "\[Yimo\]|Mod_Menu|MenuService|StarryTapLogin" /tmp/lc.txt
+# ③ 日志（★ 注意 -s 的前缀匹配陷阱；★ 清空前先落盘，见 §0 铁律）
+adb -s $SERIAL logcat -d > /tmp/yimoo_1.log && adb -s $SERIAL logcat -c   # 先 dump 再 -c，顺序不可反
+grep -E "\[Yimo\]|Mod_Menu|MenuService|StarryTapLogin" /tmp/yimoo_1.log
 
 # ④ 清空「昨天的日志」再启动，才能证明"本轮不再写日志"
 adb shell "rm -f /sdcard/Android/data/com.x.yimoo.official/files/ym.log"

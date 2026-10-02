@@ -12,6 +12,7 @@ DATE="$(date +%Y%m%d)"
 MODE="dry-run"
 PRUNE=0
 SYNC_DOC=0
+ALLOW_LEGACY_TEMPLATE=0
 
 usage() {
   cat >&2 <<'EOF'
@@ -24,6 +25,7 @@ usage() {
     [--date YYYYMMDD] \
     [--prune] \
     [--sync-doc] \
+    [--allow-legacy-template] \
     [--apply]
 
 说明:
@@ -33,6 +35,9 @@ usage() {
   - --sync-doc 打印「粘到游戏摘要 + current.md」的文档同步片段（**只打印，不自动改文件**：
     `10_docs/_state/current.md` 与游戏摘要是多会话共享文件，须手工粘贴后按 AGENTS.md 内容级暂存）。
   - icon 源图存在时生成 512/144 PNG；菜单模板会做字段严格自检并复制一份。
+  - 菜单模板自检含分组行门禁（features 不得出现 Category_* 或纯分组名）+ feat_num 升序/去重/
+    缺口提示，依据 `10_docs/_templates/菜单模板_规范与示例.md` §2。遗留模板确实带分组行时
+    可加 --allow-legacy-template 把该门禁降级为 WARN。
 EOF
   exit 2
 }
@@ -46,6 +51,7 @@ while [[ $# -gt 0 ]]; do
     --date) DATE="${2:-}"; shift 2 ;;
     --prune) PRUNE=1; shift ;;
     --sync-doc) SYNC_DOC=1; shift ;;
+    --allow-legacy-template) ALLOW_LEGACY_TEMPLATE=1; shift ;;
     --apply) MODE="apply"; shift ;;
     -h|--help) usage ;;
     *) echo "ERROR: 未知参数 $1" >&2; usage ;;
@@ -116,13 +122,38 @@ if [[ -n "$ICON_SOURCE" ]]; then
   command -v sips >/dev/null 2>&1 || { echo "ERROR: 需要 sips 生成 icon" >&2; exit 1; }
 fi
 
-python3 - "$MENU_TEMPLATE" <<'PY'
+python3 - "$MENU_TEMPLATE" "$ALLOW_LEGACY_TEMPLATE" <<'PY'
 import json, sys
-p = sys.argv[1]
+p, allow_legacy = sys.argv[1], sys.argv[2] == '1'
 d = json.load(open(p, encoding='utf-8'))
 assert set(d) == {'template_id', 'name', 'package', 'source', 'features'}, sorted(d)
 assert all(set(x) == {'feat_num', 'name'} for x in d['features'])
-print('menu_template OK', d['template_id'], [x['name'] for x in d['features']])
+feats = d['features']
+# feat_num：整数、严格升序、无重复（规范 §2：feat_num = C++ featureList[] 真实下标，不得重编号）
+nums = [x['feat_num'] for x in feats]
+assert all(isinstance(n, int) and not isinstance(n, bool) for n in nums), nums
+assert nums == sorted(nums), f'feat_num 未升序: {nums}'
+assert len(set(nums)) == len(nums), f'feat_num 重复: {nums}'
+# 分组行门禁（规范 §2：Category_* 是运行时占位，不得写进模板 features）
+GROUP_NAMES = {'战斗', '解锁', '基础功能', '功能', '其他', '通用', '玩法', '数值',
+               '战斗功能', '解锁功能', '功能开关', '修改功能', '游戏功能'}
+bad = [x for x in feats if x['name'].startswith('Category_') or x['name'] in GROUP_NAMES]
+if bad:
+    msg = 'features 含分组行（规范 §2 禁止）: ' + str([(x['feat_num'], x['name']) for x in bad])
+    if allow_legacy:
+        print('menu_template WARN ' + msg, file=sys.stderr)
+    else:
+        print('ERROR: ' + msg, file=sys.stderr)
+        print('ERROR: 分组行只是菜单里的 Category_ 占位，不属于模板内容；请从 features 删除。'
+              '若是历史遗留模板暂不修，显式加 --allow-legacy-template 降级为 WARN。', file=sys.stderr)
+        print('ERROR: 规范见 10_docs/_templates/菜单模板_规范与示例.md §2', file=sys.stderr)
+        sys.exit(1)
+# 缺口提示：feat_num 断档处 = Category_ 占用的下标
+gaps = [n for n in range(min(nums), max(nums) + 1) if n not in set(nums)]
+if gaps:
+    print(f'NOTE: 检测到 feat_num 缺口 {gaps} —— 确认这是 Category_ 分组下标；'
+          '录入后台时必须带缺口（从 0 连续填会把后面所有开关串位）', file=sys.stderr)
+print('menu_template OK', d['template_id'], len(feats), '项', [x['name'] for x in feats])
 PY
 
 DELIVERY="$GAME_DIR/delivery_$DATE"
@@ -151,6 +182,15 @@ if [[ "$SYNC_DOC" == "1" ]]; then
   fi
   echo "# ② 追加到 10_docs/_state/current.md 该游戏行末尾（整行 ≤400 字符）："
   echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）+ delivery_${DATE}/（icon 512/144 + 菜单模板）"
+  echo "# ③ 回扫提示（--apply 会重写下列产物，请回头核对已写过的摘要行）："
+  echo "#   - 08_output/${GAME}/delivery_${DATE}/icon_${GAME}_512.png、icon_${GAME}_144.png"
+  echo "#   - 08_output/${GAME}/delivery_${DATE}/menu_template.json（内容来自 10_docs/${GAME}/$(basename "$MENU_TEMPLATE")）"
+  echo "#     ★ 若本次修正了源模板（增删功能项 / feat_num 变化 / source 改写），10_docs/_state/games/${GAME}.md 的"
+  echo "#       「本地产物与关键输入」表里该模板行的「N 项」与指纹摘要已过期，必须同步改写。"
+  echo "#       （历史事故：模板 17 项→15 项后 games/疾风骑士.md:39 仍写 17 项）"
+  if [[ "$PRUNE" == "1" ]]; then
+    echo "#   - 10_docs/${GAME}/正式包裁剪清单_${DATE}.json"
+  fi
   echo "[finalize] ─── 片段结束（脚本不改任何文档文件）───"
 fi
 

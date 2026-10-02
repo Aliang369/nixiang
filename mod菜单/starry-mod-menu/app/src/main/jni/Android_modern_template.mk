@@ -42,6 +42,15 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
 LOCAL_SRC_FILES := MainModern.cpp Games/{GAME}Mod.cpp Games/{GAME}Entry.cpp Unity/Il2CppApi.cpp
 
+# MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
+# FgoBoot_InjectEarlyFromOnLoad，不加本文件即 ld.lld: undefined symbol。
+# 默认按 B 类（无 libtprt.so / 无 ACE，菜单 dex 由 Manifest 的 StarryInitProvider
+# 拉起）用 no-op 桩：不装 seccomp、不屏蔽致命信号、不做早期 dex 注入。
+# A 类（包内含 libtprt.so / ACE 加固）改为下面两行，删掉 NoAceStubs.cpp：
+#   LOCAL_SRC_FILES += Games/SignalQuarantine.cpp Games/FgoBoot.cpp
+# 参考已落地样例：Android_jfqs.mk（B 类）、Android_jjdm.mk / Android_mygwzd.mk（A 类）。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

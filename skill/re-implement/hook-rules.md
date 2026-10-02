@@ -15,10 +15,28 @@ bash mod菜单/starry-mod-menu/scripts/new_game_mod.sh {Game}
 ```
 
 - 框架参考：`mod菜单/starry-mod-menu/docs/GAME_MOD_GUIDE.md`
-- 骨架：`Games/_TemplateMod.h/.cpp`
-- 实例参考：`Games/Archero2Mod.cpp`、`Games/WhrhxMod.cpp`
+- 骨架：`Games/_TemplateMod.h/.cpp`（**v3.1，2026-10-02 起**）
+- 实例参考：`Games/Archero2Mod.cpp`、`Games/WhrhxMod.cpp`、`Games/JfqsMod.cpp`
 - 历史事故参考：`Games/HzsjMod.cpp`；只迁移有相同前提且有证据的经验。
 - 存量模块不全量回改；新增部分及直接影响面适用本规则。
+
+### 0.1 骨架 v3.1 的 §④「并发 + 致命信号兜底 + 槽位熔断」
+
+来源：疾风骑士 60.0.1 两次真机闪退。三件设施是**代码**而非文档约定，删任一段都会复现事故：
+
+| 设施 | 防的事故 | 关键实现 |
+|------|----------|----------|
+| `g_installMutex` 串行化 + double-check | UI 线程与游戏线程同入 `SyncHooks()`；`HookSlotInstall` 的 `if (origPtr && *origPtr)` 是 check-then-act 非原子 ⇒ 同址两次 `DobbyHook` ⇒ `DobbyCodePatch` 越界 memcpy ⇒ `SIGSEGV(SEGV_ACCERR)`（栈 `__memcpy_aarch64_simd ← DobbyCodePatch+96 ← DobbyHook+216`） | `SyncHooks()` 快路径 `g_installedCount >= kSlotsCount` 直接 return；否则加锁后 double-check |
+| `sigsetjmp` 保护区（`DobbyHookGuarded` / `ReadU32Guarded` / `RunGuarded`）+ `sigaltstack` | `DobbyHook` 返回码接不住 Dobby 内部进程级 SIGSEGV；hook 体内会跑游戏/第三方代码（如免广告直接 Invoke 发奖回调，回调读未填充字段 ⇒ null-deref） | 保护区必须包住「装钩」「读序言」「回调」三处；longjmp 回来必须 `if (orig) *orig = nullptr;` 清掉可能被半写的 orig |
+| `g_slotDead[]` 槽位熔断 | 同一槽位每轮 Tick 重试 ⇒ 每 5 s 一次闪退 | 装钩期出致命信号即标记该槽位本次会话不再重试；日志 `slot[%d] %s 已熔断` |
+
+`sigaltstack` 与全部故障态（`t_faultJmp`/`t_inGuard`/`t_faultDepth`/`t_faultSig`/`t_faultAddr`/`t_altStack`）**必须 `thread_local`** —— hook 体在 UI 线程、游戏线程、SDK 回调线程并发执行。诚实边界：Dobby 炸后内部状态可能已不一致，熔断只保证不再重试，不回滚。
+
+### 0.2 构建脚本差异区默认带 `Games/NoAceStubs.cpp`
+
+`Android_modern_template.mk` 自 2026-10-02 起默认加入。原因：`MainModern.cpp` 的 `JNI_OnLoad` 无条件引用 `SignalQuarantine_Start` / `FgoBoot_InjectEarlyFromOnLoad`，缺它即 `ld.lld: undefined symbol`。B 类（包内无 `libtprt.so`、无 ACE，菜单 dex 由 Manifest 的 `StarryInitProvider` 拉起）用 no-op 桩；A 类改为 `Games/SignalQuarantine.cpp Games/FgoBoot.cpp`（样例 `Android_jjdm.mk`/`Android_mygwzd.mk`）。
+
+生成新模块后必须做一次 **copy-and-build-clean** 验证：`new_game_mod.sh` 生成 scratch 模块 → `ndk-build` 到**链接**通过（只看编译通过不够，符号缺失是链接期错误）→ 删除 scratch 产物（`Games/{Scratch}*`、`Android_<tag>.mk`、`obj_<tag>/`、`libs_<tag>/`），不得入库。唯一可用的 ndk-build 在 `$HOME/Library/Android/sdk/ndk/27.0.12077973/ndk-build`（`26.1.10909125/` 是空目录）；`NDK_OUT`/`NDK_LIBS_OUT` 必须绝对路径，相对路径会被解析到 `app/` 下导致旧 so 顶包假成功。
 
 ## 1. Dobby inline hook 标准模式
 
@@ -95,6 +113,34 @@ Il2CppDumper `dump.cs` 的三个字段里，**`Offset` 才是 file offset**（`R
 - 共享跳板须有可验证的方法身份过滤、正确 ABI 与原调用转发、并发安全且可失效的分类缓存。
 - 不按一个历史游戏的 MethodPointer 失败断言所有 HybridCLR 方法不可直接 hook。
 - 共用入口无过滤不放行；方法名可能重名，须核对类、程序集、签名等身份。
+
+### 8.1 广告 / 内购类挂点的定位法（2026-10-02 疾风骑士）
+
+> 来源：疾风骑士会话复盘黑洞 #3 —— 「免广告」第一版挂在了 `ADXManager`（一套**从未被启用**的
+> 广告系统，logcat 里 `ShowRewardedAd` 一次都没被调用），白跑一轮。真实广告走的是
+> MarSDK 的 Java 侧 `com.mar.sdk.gg.topon.ToponAd`。**同一款游戏里存在多套广告系统是常态。**
+
+按顺序做，别跳步：
+
+1. **先查服务端下发的开关**。渠道 SDK 的广告位通常由服务端配置控制，客户端只执行。
+   疾风骑士实测 `MARSDK-MggControl: adSwitch` 只有 `videoSwitch:true`，
+   `intersSwitch` / `splashSwitch` / `bannerSwitch` 全 false ⇒ 直接排除插屏/开屏/横幅，
+   **只剩激励视频一条路**，候选面立刻缩小。
+2. **再查 logcat 确认哪一套 SDK 真的在跑**。判据是「哪个类被调用了」而不是「哪个类存在」：
+   存在但从不被调用的类（`ADXManager`）是陷阱。**没有调用日志 = 不挂它。**
+3. **再选挂点**。优先「发奖回调链」而非「展示函数」：拦截展示（`Show*`）只是不弹窗，
+   但奖励也不会发；要拦的是**展示 + 发奖**这条链，按顺序补发回调
+   （疾风骑士：`InvokeAction(onShow) → success → onClosed`）。
+4. **Java 侧 vs native 侧**：真实广告可能在 Java（渠道 SDK）而不在 `libil2cpp.so`。
+   IL2CPP 侧能找到的 `MarSDKManager` 类**可能不在 `Assembly-CSharp.dll`**，
+   需要跨 image 的 `FindClass` 回退；这一条属于**未证明的前提**，版本升级后要重新验证。
+5. **顺手找「内置后门」**。渠道 SDK 里常有调试/白名单分支（疾风骑士在
+   `MarSDKManager.ShowReward` 内有一处 `PlayerPrefs.HasKey(<key>)` 为真就**直接调 success
+   回调、完全不弹广告**的分支）。这类分支比 hook 更干净，但 key 名可能是运行时 interned 槽
+   填充的、静态搜不到 —— **能挖到就用，挖不到不要为它多耗一轮**。
+
+反面教训：`IsNoAd` / `LoadRemoveAds` 这种**名字最像**的函数往往只是本地开关/UI 状态，
+恒真不改变真实广告路径（疾风骑士两条都挂了、用户实测仍弹广告）。
 
 ## 9. 不将堆扫描命中当作托管对象证明
 
@@ -374,3 +420,103 @@ if (!f) {
   或换一个同名唯一的方法当锚点。宁可少做一个功能，也不要挂错重载。
 - 顺带一条相关约束：`type_name()` 返回的串由 il2cpp 分配、按约定要 `free`；
   但**判等用的短名串可故意不 free**（每次解析只跑一遍，泄漏有界），别为省内存去 free 一个不确定归属的指针。
+
+## 28. 谓词 / 门禁恒真陷阱：「无限 X」只改数量上限（2026-10-02 疾风骑士）
+
+> 来源：疾风骑士 60.0.1 会话复盘（`10_docs/_state/规范优化_20261002_疾风骑士60.0.1会话复盘.md`）。
+> 无限跳跃从 v2 改到 v6 共三轮返工，每轮都走完整「改代码 → 构建 → 装机 → 用户实测」周期；
+> 用户自己在 m02751 说出正解「跳跃本身是限制只能跳两次，让不限制不就可以无限跳了」，
+> 反汇编随后证实用户判断正确。**这类函数名高度相似、语义却分三类，只看名字必错。**
+
+### 28.1 三类函数必须分开（先分类，再动手）
+
+| 类别 | 语义 | 恒真后果 | 处理 |
+|---|---|---|---|
+| **数量上限** | 告诉引擎「这一轮最多允许几次」 | 上限变大 = 行为正确 | ✅ **只改这一类** |
+| **判定谓词** | 纯派生判断「现在还剩几次 / 还能不能」 | 与真实计数脱钩，状态机与 UI 不一致 | ❌ 交回 orig |
+| **状态门禁** | 「此刻是否处于允许触发的状态」 | **每帧都判定为允许 ⇒ 自动连发** | ❌ 交回 orig |
+
+**核心判据**：恒真一个「此刻能不能做」的门禁，等于把「用户操作触发的时机判断」删掉，
+状态机每帧调用它就每帧放行 ⇒ 表现为**玩家没操作，角色自己在动**（自动连跳/自动攻击）。
+这不是「功能太强」，是**挂错了函数**。
+
+### 28.2 「无限 X」的定位套路（先反汇编找上限来源，别先挂谓词）
+
+1. 先找**读计数器并写回**的那个函数（通常是「重置/初始化/补充」语义），
+   从它 `bl` 出去的第一个「取上限」调用就是候选；
+2. 反汇编该上限函数，确认形态是
+   `条件 ? (等级/参数 + 1) : 默认值` 或直接读某个计数字段 —— 这类才是**数量上限**；
+3. 再反汇编名字最像的那几个（`CanXxx` / `CheckXxx` / `XxxCooltime`），确认它们是
+   「读计数比 0」「读状态位」的纯谓词/门禁 ⇒ **明确排除**；
+4. 只 hook 第 2 步那个函数，返回一个大常数。谓词与门禁一律交回 orig。
+
+### 28.3 实例对照表（疾风骑士 `PlayerMovement`，RVA 仅注释、实现全 by-name）
+
+| 函数 | RVA | 反汇编语义 | 判定 |
+|---|---|---|---|
+| `GetMaxMoreJumpCount()` | `0x37C4728` | `CheckEquipNormalArtifact(0x6d) ? level+1 : 1` | ✅ 唯一正解（默认 1 ⇒ 地面 1 + 空中 1 = 共 2 跳，与用户描述完全一致） |
+| `CanMoreJump()` | `0x37C47E4` | 读 `[this+0x440]` 计数器 → `> 0` | ❌ 纯派生谓词 |
+| `CheckCanJump()` | `0x37BB970` | 读三个状态位 + 内部状态机调用 | ❌ 状态门禁（恒真 ⇒ **自动连跳**） |
+| `PlayerJumpCooltime(float)` | `0x37C47A4` | `(Time.time - [this+0x838]) > (offset+const)` | ❌ 起跳节流（恒真 ⇒ **每帧允许起跳**） |
+| `PlayerMoreJumpCountReset(int)` | `0x37C46C0` | `w0 = GetMaxMoreJumpCount() + moreCount` 写回 `[this+0x440]` | 不必 hook（改上限即自动生效） |
+
+### 28.4 通用化
+
+- 「无限技能/无限怒气/无限连击/无限弹药」同构：找**上限来源**（`GetMax*Count` / `Get*Capacity` /
+  `CheckEquip* ? level+n : 默认值`），不是找 `Can*`。
+- 「冷却归零」是另一类问题，见 §28.5，别与上限混为一谈。
+- 数据型资源锁定（HP/属性/货币）仍按 §21 走偏移直写，不适用本节。
+
+### 28.5 相关：冷却类功能的真门禁往往不是名字带 `CoolTime` 的函数
+
+同一会话里「技能无限」也翻过一次车：名字最像的 `CheckCanSubSkillByCoolTime()` 实际是
+`CheckCanAttackSkill() && !CheckEquipNormalArtifact(0x23) && !CheckEquipNormalArtifact(0x15b)`，
+**与冷却无关**；真正的冷却只有一个计时字段，由少数几个写入点维护。
+⇒ 判据：**先找「计时字段的写入点」，再找读它的 getter**，而不是找名字。
+
+| 角色 | 疾风骑士实例 | RVA |
+|---|---|---|
+| 唯一计时字段 | `PlayerMovement + 0x588`（`float`，`get_WeaponSkillCoolTime()` = `ldr s0,[x0,#0x588]; ret`） | `0x37AA27C` |
+| 写入点（填满） | `SetWeaponSkillCoolTime(bool)` | `0x37B596C` |
+| 写入点（加减） | `SetPlusWeaponSkillCoolTime(float)` | `0x37D3D6C` |
+| 假门禁（名字骗人） | `CheckCanSubSkillByCoolTime()` | `0x3817E6C` |
+
+做法：拦写入点 + `SafeWriteF32(self, 0x588, 0.0f)`，并把各冷却 getter 返 0；
+**不要**去恒真那些 `CheckCan*` 谓词（会连带改掉攻击判定，见 §28.1）。
+
+## 29. 功能无效先探针，别先改代码（2026-10-02 疾风骑士）
+
+> 来源：疾风骑士会话复盘黑洞 #1 —— 54 个 hook 在 logcat 里**全部**打出 `hooked`，
+> 但用户实测有 5 个功能毫无效果；直到 v5 才加探针，一轮定位。
+> 承接 §22「挂点四步门禁」的第 2 步，本节把它落成**默认动作**。
+> 也承接 §26「证据优先」——但 §26 面向 Lua/诊断包，本节面向 native hook。
+
+### 29.1 铁律
+
+**「装钩成功」与「打中真实调用路径」是两件事。**
+`HookSlotInstall` 返回 true 只证明 `DobbyHook` 装上了、方法名解析到了；
+它**不证明**游戏真的走这条路径（内部调用可能绕过该入口、可能有另一个未启用的同类系统、
+可能挂的是被同名字段遮蔽的旧实现）。
+
+### 29.2 默认动作
+
+1. **写功能 hook 的同时写探针**，不要等功能报无效再补。每功能配一个编译期可关的
+   探针宏（`#ifdef`，参见 §26.1 的 `ModDiag.h` 思路；本仓 native 侧用 `JFQS_TRACE` 式宏）。
+2. 探针只在**前 N 次（N=3 足够）**打一行，格式固定：
+   `trace <函数名> orig=<原返回值>`（有参数就打参数），避免刷爆 logcat。
+3. **首次装机后先读这一行，再判断功能是否有效**：
+   - 没有 `trace` 行 ⇒ 该挂点**从未被调用**（挂点错，或功能路径不经此入口）⇒ 换挂点，别改逻辑；
+   - 有 `trace` 行但游戏内无变化 ⇒ **被调用了但语义不符**（返回值被上层丢弃、改了副本、
+     被另一处覆盖）⇒ 才轮到改逻辑/换返回值位置。
+4. 多槽共用一条路径时，探针**按槽独立计数**（承 §25.2：共用计数器会被首个命中吃掉）。
+
+### 29.3 反面教训
+
+- 「日志说 hooked 就是好了」⇒ 5 个功能白跑一轮用户实测。
+- 「功能无效就再多挂几个同类谓词」⇒ 正是 §28 的坑，会从「无效」变成「行为错乱」。
+- 探针未装就宣称「已验证」= §22 第 4 步明确禁止的假成功。
+
+### 29.4 与正式包的关系
+
+探针宏默认**关闭**，出货二进制里不留探针代码；诊断期打开时建议同时换 `NDK_OUT` obj 目录
+（§26.1：ndk-build 不因 CFLAGS 变化重编 `.o`，共用 obj 目录会让诊断包静默退化成正式包）。

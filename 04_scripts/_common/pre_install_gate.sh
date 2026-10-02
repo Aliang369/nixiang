@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ================================================================
-#  pre_install_gate.sh — 装机前产物机器关（四查）
+#  pre_install_gate.sh — 装机前产物机器关（五查）
 #
 #  背景（2026-09-17 会话记录审计定案）：多游戏装机失败属于机器可拦截错误，
-#  每次都浪费一整轮装机+用户实测。本脚本在 install 阶段前强制拦截四类：
+#  每次都浪费一整轮装机+用户实测。本脚本在 install 阶段前强制拦截五类：
 #    查1 JS语法关   ：注入 JS（拼接产物）node --check，防截断缺尾/语法错
 #    查2 JNI配套关  ：Mod 源码动态注册的方法名（含 OBFUSCATE("…") 写法）vs dex 字符串池，
 #                     防"新 so 注册 19 个方法、旧 dex 只有 17 个声明"装机即闪退；
@@ -12,6 +12,11 @@
 #                     防 DllImport 名与 so 导出不符（调用即 EntryPointNotFoundException）
 #    查4 控件读取关 ：菜单 JSON 控件类型 vs getVal/getRet 调用，
 #                     防滑块被当布尔读（getRet 读 Slider → 永远 0/1）
+#    查5 门禁串字面量存在性关（2026-10-02 起，P2-1）：声明的门禁串（类名/方法名/
+#                     const-string）逐个在**已构建产物**里做二进制安全存在性检查
+#                     （-F 固定串 + -a 二进制当文本 + -c 计数，APK 走 unzip -p classes*.dex），
+#                     计数 0 即 FAIL ⇒ 防"门禁串被写成 smali `#` 注释、汇编器丢弃后
+#                     产物里根本没有该字面量、门禁却显示通过"（本轮因此失败 2 轮）
 #
 #  用法（各查独立可选，传了才查；至少传一项）：
 #    bash 04_scripts/_common/pre_install_gate.sh \
@@ -20,6 +25,12 @@
 #      --so <so文件> --pinvoke-json <EntryPoint清单.json> \
 #      --menu-json <菜单模板.json> --cpp <含getVal/getRet调用的源码>
 #      --runtime-menu-json <运行时控件清单.json>  # 可选；允许 Slider_/Toggle_ 等运行时名称，只用于控件类型检查
+#      --apk <目标APK> --needle '<门禁串>' [--needle '...'...]  # 查5；也可 --dex 当目标
+#      --needle-file <门禁串清单.txt>            # 查5；每行一条，'#' 开头的整行注释被跳过
+#
+#  ⚠️ 查5 门禁串必须是**产物中真实存在的字面量**（类名/方法名/const-string）。
+#     **不要用 smali 的 `#` 注释当门禁串**——汇编器会把注释整行丢弃，产物里根本
+#     没有该字面量，只有"二进制字面量存在性机检"才能抓到这类假通过。
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
 #  注意: 与 preflight.sh 职责不同——preflight 管"改完源文件"的语法，
@@ -37,7 +48,8 @@ fail=0; pass=0; warn=0; skip=0
 
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
-runtime_menu_json=""
+runtime_menu_json=""; apk_file=""
+NEEDLES="$TMPDIR_PF/needles.txt"; : > "$NEEDLES"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -48,10 +60,36 @@ while [ $# -gt 0 ]; do
     --pinvoke-json) pinvoke_json="$2"; shift 2 ;;
     --menu-json)   menu_json="$2"; shift 2 ;;
     --runtime-menu-json) runtime_menu_json="$2"; shift 2 ;;
-    -h|--help)     sed -n '2,30p' "$0"; exit 0 ;;
+    --apk)         apk_file="$2"; shift 2 ;;
+    --needle)      printf '%s\n' "$2" >> "$NEEDLES"; shift 2 ;;
+    --needle-file)
+      if [ ! -f "$2" ]; then echo "✗ 门禁串清单缺失: $2"; exit 1; fi
+      grep -v '^[[:space:]]*#' "$2" 2>/dev/null >> "$NEEDLES" || true
+      shift 2 ;;
+    -h|--help)     sed -n '2,/^set -u$/p' "$0"; exit 0 ;;
     *) echo "✗ 未知参数: $1（--help 看用法）"; exit 1 ;;
   esac
 done
+
+# ---------- 共用：二进制安全「字面量存在性」检查（查2 / 查5 共用，勿另起一套） ----------
+# 用法：dex_literal_count <needle> <目标...>   → stdout 打印命中总次数
+#   目标可为 APK（自动 unzip -p 'classes*.dex' 后统计）或裸 dex 文件。
+#   选项固定 -F（固定串，不当正则） -a（把二进制当文本） -c（计数）；
+#   BSD grep 兼容：不用 -P / -oP（本仓 macOS 无 rg、无 grep -P）。
+dex_literal_count() {
+  needle="$1"; shift
+  total=0
+  for src in "$@"; do
+    [ -f "$src" ] || continue
+    case "$src" in
+      *.apk|*.zip) n="$(unzip -p "$src" 'classes*.dex' 2>/dev/null | grep -c -F -a -- "$needle" 2>/dev/null)" ;;
+      *)           n="$(grep -c -F -a -- "$needle" "$src" 2>/dev/null)" ;;
+    esac
+    case "$n" in ''|*[!0-9]*) n=0 ;; esac
+    total=$((total + n))
+  done
+  echo "$total"
+}
 
 # ---------- 查1：JS 语法关 ----------
 for f in $js_files; do
@@ -95,10 +133,8 @@ if [ -n "$cpp_files" ] && [ -n "$dex_files" ]; then
     while read -r name; do
       [ -n "$name" ] || continue
       total=$((total+1))
-      found=0
-      for d in $dex_files; do
-        if [ -f "$d" ] && grep -aqF "$name" "$d" 2>/dev/null; then found=1; break; fi
-      done
+      # 二进制安全字面量存在性（走共用 helper，勿另写一套 grep）
+      if [ "$(dex_literal_count "$name" $dex_files)" -gt 0 ]; then found=1; else found=0; fi
       if [ "$found" -eq 0 ]; then
         echo "✗ FAIL  [JNI配套] regOne 注册的方法『${name}』在所有 dex 中都找不到（RegisterNatives 即抛 NoSuchMethodError/SIGABRT）"
         miss=$((miss+1))
@@ -121,10 +157,8 @@ if [ -n "$cpp_files" ] && [ -n "$dex_files" ]; then
       [ -n "$sym" ] || continue
       mth="${sym##*_}"
       [ -n "$mth" ] || continue
-      found=0
-      for d in $dex_files; do
-        if [ -f "$d" ] && grep -aqF "$mth" "$d" 2>/dev/null; then found=1; break; fi
-      done
+      # 二进制安全字面量存在性（走共用 helper，勿另写一套 grep）
+      if [ "$(dex_literal_count "$mth" $dex_files)" -gt 0 ]; then found=1; else found=0; fi
       if [ "$found" -eq 0 ]; then dead="$dead $mth"; fi
     done < "$stat_syms"
     if [ -n "$dead" ]; then
@@ -264,6 +298,41 @@ PYEOF2
       else
         fail=$((fail+1))
       fi
+    fi
+  fi
+fi
+
+# ---------- 查5：门禁串字面量存在性关（2026-10-02 起，P2-1） ----------
+# 背景：外科出包时曾把「门禁串」（要求产物里必须出现的类名/方法名/const-string）写成
+#   smali 的 "#" 注释行 —— 汇编器把注释整行丢弃，产物里根本没有该字面量，而旧门禁只做
+#   「文本包含」不做「二进制字面量存在性」机检，于是门禁显示通过（本轮失败 2 轮）。
+# ⚠️ 门禁串必须是**产物中真实存在的字面量**（类名/方法名/const-string）；
+#    **不要用 smali 的 "#" 注释当门禁串**——汇编器会丢弃，本查必然计数 0。
+# 目标可为 APK（unzip -p 'classes*.dex'）或裸 dex；计数 0 ⇒ FAIL ⇒ 脚本末尾 exit 1 拦装机。
+gate_targets=""
+if [ -n "$apk_file" ]; then gate_targets="$gate_targets $apk_file"; fi
+if [ -n "$dex_files" ]; then gate_targets="$gate_targets $dex_files"; fi
+if [ -s "$NEEDLES" ]; then
+  if [ -z "$gate_targets" ]; then
+    echo "✗ FAIL  [门禁串] 传了 --needle/--needle-file 但没有检查目标（需 --apk 或 --dex）"
+    fail=$((fail+1))
+  else
+    sort -u "$NEEDLES" -o "$NEEDLES"
+    miss=0; total=0
+    while IFS= read -r needle; do
+      [ -n "$needle" ] || continue
+      total=$((total+1))
+      cnt="$(dex_literal_count "$needle" $gate_targets)"
+      if [ "$cnt" -eq 0 ]; then
+        echo "✗ FAIL  [门禁串] 字面量『${needle}』在产物中不存在（检查目标:${gate_targets}）"
+        echo "        ⇒ 若该串写在 smali 里，先确认它不是被写成了 # 注释行（汇编器会丢弃，二进制里根本不存在该字面量）"
+        miss=$((miss+1))
+      fi
+    done < "$NEEDLES"
+    if [ "$miss" -eq 0 ]; then
+      echo "✓ PASS  [门禁串] $total 个门禁串在产物中均为真实存在的字面量"; pass=$((pass+1))
+    else
+      fail=$((fail+1))
     fi
   fi
 fi

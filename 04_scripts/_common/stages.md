@@ -134,6 +134,28 @@ STARRY_INSTALL_ONLY=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/sur
 - 装机后的**观测采集属分析操作**（非管线阶段，AI 按诊断需要执行并记录）：
   - `adb logcat -s StarryMagic StarryTrace`（功能/hook 日志）
 
+### Manifest / 资源查看：aapt2 正确形态（2026-10-02 起，写死别再猜）
+
+查看包内 `AndroidManifest.xml`（注入后核对 `application@name`、Activity、权限、`usesCleartextTraffic` 等）：
+
+```bash
+# ✅ 正确：xmltree 必须配 --file 指定包内路径
+"$AAPT2" dump xmltree --file AndroidManifest.xml <apk>
+
+# ✅ 正确：图标/启动 Activity/版本 一眼看
+"$AAPT2" dump badging <apk> | grep -E "^(package|launchable-activity|application-icon)"
+
+# ❌ 错误形态（会直接报错，别再试）
+"$AAPT2" xmltree <apk>              # 缺 dump 子命令
+"$AAPT2" dump xmltree <apk>         # 缺 --file AndroidManifest.xml
+```
+
+- `AAPT2` 默认取 `$HOME/Library/Android/sdk/build-tools/<ver>/aapt2`（macOS）；先 `ls` 取最新版本号，不要写死。
+- **门禁串必须能在包内二进制里查到**：`unzip -p <apk> 'classes*.dex' | grep -c -F -a -- '<字面量>'`。
+  **绝不要把门禁串写成 smali `#` 注释**——汇编器会丢弃注释，产物里根本没有该字面量，
+  而"文本包含"式门禁仍显示通过（2026-10-02 疾风骑士为此连续 2 轮装机失败）。
+  机检入口：`04_scripts/_common/pre_install_gate.sh --apk <apk> --needle '<字面量>'`（查5）。
+
 ### 日志采集铁律（2026-09-21 起：省 token + 保信号）
 
 系统日志里存在**单行数千字符**的输出（如 `AppOrder{...}`、`ContextAware_*`），
