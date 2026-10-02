@@ -974,6 +974,24 @@ public final class SignSpoof {
             "pdZEeRbIsc3qvQdr7QSPl2Vehg61YVxtqt9N0+FfnD6ZP6DegkLeG5iBzAPy/atzKe9Ctn5bGK+y" +
             "bQ==";
 
+    // 境界-死神激斗（com.cmge.ssjd.x7sy）小七渠道原版签名证书
+    // 取自设备原版 base.apk META-INF/X7GAME.RSA（openssl pkcs7 -print_certs → DER）
+    // subject/issuer: C=86, ST=guangdong, L=zhuhai, O=smwl, OU=smwl, CN=x7game.keystore
+    // SHA-256: 4df5673be6d80ca5629bc8f9608a01212136ee92974aafa251cb40c6abc1611d
+    // SHA-1:   414bd6e7290ff1da2af1ce46c9d9a19d31828ff3
+    // MD5:     f3f6e551fa38a7afa613ad3a58eaa7c5
+    private static final String JJSSJD_PKG = "com.cmge.ssjd.x7sy";
+    private static final String JJSSJD_CERT_B64 =
+            "MIICcDCCAdmgAwIBAgIEBMbH/jANBgkqhkiG9w0BAQsFADBqMQswCQYDVQQGEwI4NjESMBAGA1UECBMJZ3Vhbmdkb25nMQ8wDQYD"
+                    + "VQQHEwZ6aHVoYWkxDTALBgNVBAoTBHNtd2wxDTALBgNVBAsTBHNtd2wxGDAWBgNVBAMTD3g3Z2FtZS5rZXlzdG9yZTAgFw0yMzA1"
+                    + "MDUwODM0MDdaGA8yMjk3MDIxNzA4MzQwN1owajELMAkGA1UEBhMCODYxEjAQBgNVBAgTCWd1YW5nZG9uZzEPMA0GA1UEBxMGemh1"
+                    + "aGFpMQ0wCwYDVQQKEwRzbXdsMQ0wCwYDVQQLEwRzbXdsMRgwFgYDVQQDEw94N2dhbWUua2V5c3RvcmUwgZ8wDQYJKoZIhvcNAQEB"
+                    + "BQADgY0AMIGJAoGBAKhiFOn1QaAmFNFCRh2RaSDbNcAcr2J/lyIQulx7W48/fnMeaOQaUNUk2Ksa2JN862Ewjm6x2xa2tCHVNoQw"
+                    + "OKr93lhGmyynd0ed2FDNveLx6NkEgbIiQIqKSUGlZcy6ieiuJ70P7UAqWd/RnP7dNUZCr3xZP7/cNOn2+goO1WGpAgMBAAGjITAf"
+                    + "MB0GA1UdDgQWBBRp8v4Xq18jaSv59iSvlHf+NHrxSDANBgkqhkiG9w0BAQsFAAOBgQAyl5Zrq1vKrOnfswilbwxqZlF/HGEikQyf"
+                    + "UKQsRSpLp+HhFPBmDNKBiG3JUuLJg8eH6i2kRu2QCIEgvdoJ+IQ5qEqgrMcUTfUuLDhV9Pn0EbNI44xzJROS4DRh94q6/gPh40of"
+                    + "MzhSrW6H7n7tguVBJWkrtJfP6scZs3BXxN5a0A==";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1038,6 +1056,7 @@ public final class SignSpoof {
                 fakes.put(CXSWZ_PKG, new Signature(Base64.decode(CXSWZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YIMO_PKG, new Signature(Base64.decode(YIMO_CERT_B64, Base64.DEFAULT)));
                 fakes.put(SLCB_PKG, new Signature(Base64.decode(SLCB_CERT_B64, Base64.DEFAULT)));
+                fakes.put(JJSSJD_PKG, new Signature(Base64.decode(JJSSJD_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

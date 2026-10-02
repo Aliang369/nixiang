@@ -1,0 +1,11 @@
+{
+  "template_id": "jjssjd",
+  "name": "境界死神激斗",
+  "package": "com.cmge.ssjd.x7sy",
+  "source": "Games/JjssjdEntry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "伤害倍率"},
+    {"feat_num": 3, "name": "无限技能"}
+  ]
+}

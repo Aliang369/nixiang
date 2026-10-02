@@ -144,5 +144,6 @@ mod菜单/**/libs_*/
 !mod菜单/**/jni/KittyMemory/Deps/Keystone/**/*.a
 !mod菜单/**/Games/WxsjPatchedDll*.a
 !mod菜单/**/Games/WxsjVc1637PatchedDll.a
+!mod菜单/**/Games/JjssjdPatchedDll.a
 !mod菜单/**/targetfuntional_dll*.bin
 mod菜单/starry-mod-menu_111/
