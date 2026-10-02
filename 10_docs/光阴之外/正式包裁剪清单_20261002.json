@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/光阴之外",
+  "keep": "光阴之外_1.0.5_surgical-releaseSigned.apk",
+  "keep_size": 587318509,
+  "keep_md5": "dcdb3fd0df12a5c06e46779549aac35b",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "光阴之外_1.0.5_surgical-unsigned.apk",
+      "size": 584680656,
+      "md5": "ed726778df412d7f0beacf930551b46d"
+    },
+    {
+      "name": "光阴之外_1.0.5_surgical-releaseSigned.apk.idsig",
+      "size": 4634139,
+      "md5": "ecd686dbb57b25e9b1345e04006c91f7"
+    }
+  ],
+  "removed_count": 2
+}

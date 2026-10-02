@@ -2,32 +2,11 @@
   "template_id": "gyzw",
   "name": "光阴之外",
   "package": "com.shbq.gyzw.ppyx",
-  "source": "星空版实现（1.0.3 / vc103）—— 来自 mod菜单/starry-mod-menu/app/src/main/jni/Games/GyzwEntry.cpp 的 kGyzw_Features[] 数组 + Games/GyzwMod.h 的 enum GyzwFeat + authGameId=\"gyzw\"。对照物：斌哥改包 1.0.3(vc103) 内存抓点（boot JS feature1/2/3 + 菜单页 https://menu-1255602259.file.myqcloud.com/game/1191.html 的 exp 解密）；斌哥菜单对外只有 3 项，第 4 项免广告为**星空版新增**。",
+  "source": "Games/GyzwEntry.cpp kGyzw_Features[] + Games/GyzwMod.h enum GyzwFeat",
   "features": [
-    {"feat_num": 0, "name": "战斗", "type": "category",
-     "note": "分组占位，不可交互。对应 GyzwEntry.cpp featureList[0] = \"Category_战斗\"。"},
-    {"feat_num": 1, "name": "百倍伤害", "type": "toggle", "default": false,
-     "note": "boot JS 锚点 BtDmgMgr.updateTargetHp（锚点串 `var u = t.isDie();`）。仅对「英雄/领主 → 怪物」的负伤害 ×100（Math.floor(100*e)），怪物打英雄不放大以防 PVP 对账。依赖运行时捕获的 BtConst 模块别名（本作实测 = `r`），捕获失败即整体放弃 splice。"},
-    {"feat_num": 2, "name": "超级无敌", "type": "toggle", "default": false,
-     "note": "boot JS 锚点 BtRoleData.updateHp（锚点串 `this.setCurHp(this.curHp + e, t);`）。**不硬写 0**：每只英雄首次随机取地板 0.91~0.95×maxHp 并夹住扣血，沿用斌哥的「降可疑度」策略。"},
-    {"feat_num": 3, "name": "战斗加速", "type": "slider", "min": 1, "max": 10, "default": 1,
-     "note": "双锚点：BattleViewHelper.getBattleSpeed（`return r && r[o] || this._oneSpeed;` 返回 trueSpeed×N）+ BattleView 逻辑步 `Math.min(3,…)` → `Math.min(max(N,3),…)`（不装逻辑步会被卡在约 3×）。**1 = 关闭**（滑块值 ≤1 视为关）。斌哥版是固定 ×5，星空版改为 1..10 可调。"},
-    {"feat_num": 4, "name": "广告", "type": "category",
-     "note": "分组占位，不可交互。对应 GyzwEntry.cpp featureList[4] = \"Category_广告\"。"},
-    {"feat_num": 5, "name": "免广告", "type": "toggle", "default": false,
-     "note": "★星空版新增（斌哥包未实现）。**不是 JS 补丁，而是 smali 门控**：3 处 `invoke-static GyzwHooks;->shouldSkipAd()Z` + `if-eqz v0, :gyzw_*_orig`，命中即直接发假回调 `onResult(0,\"视频观看完成\")` + `onAdClose(\"广告页面已关闭\")` 后 return-void。落点：classes4 `com.sp.common.SPBaseController.getRewardVideo`（真入口）+ classes3 `com.sp.mod.tapad.TapAdModImpl.getRewardVideo` / `com.sp.mod.tapad.manager.TapAdRewardManager.showRewardVideoAutoAd`。★极性铁律：必须 `if-eqz`（noAd 为 false 才走原广告逻辑），写成 `if-nez` 会反过来。"}
-  ],
-  "notes": [
-    "开关通道（星空侧）：菜单 → native GyzwMod.cpp g_features[]/g_values[] → Java com.starry.magic.cocos.GyzwHooks 的 RET/VAL 静态数组（AtomicIntegerArray，长度 16）→ JS 侧 window.__starryGyzwOn(n) / __starryGyzwVal(n) 经 jsb.reflection.callStaticMethod 读取，并带内存镜像 g.__starryGyzwState 缓存。与斌哥的 window.MOD + mod_sw.txt 15 位位串是两套独立实现，星空版**不依赖** mod_sw.txt。",
-    "本作引擎 Cocos Creator 3.x（JSB），无 libil2cpp.so / 无 global-metadata.dat ⇒ 先例爆裂防线/圣翼传说的 il2cpp 字段路线完全不适用。星空机制 = DobbyHook `se::ScriptEngine::evalString`（符号 `_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_`，在 libcocos2djs.so 的 dynsym 里）后对已解密 boot JS 文本做前缀追加 + 4 处锚点原地替换；不改盘、不改 dex（广告门控除外）、不碰 so。",
-    "游戏 JS 全加密（assets/**/*.jsc 头部 02a16608/17883af7/bc9d6966/f36570cb…），xxtea key 编译期注入、so 内无 UUID 形式 key ⇒ 离线解密不可行；唯一看明文途径 = 运行时落盘 getFilesDir()/gyzw_boot.js（实测 11,650,461 B）。",
-    "斌哥壳对磁盘零改动：设备 files/remotePath/* 与官方 CDN https://gyzw-cdn.douyou888.cn/hot_res/mianyou_qudaoEx/ 逐 md5/size 一致（设备已热更到 0.0.0.23）⇒ 移植与渠道包/热更无关。",
-    "风险：斌哥 boot JS 头注释自注「竞技场有 replay 战报上报 + 战斗种子确定性 ⇒ PVP 大概率服务器可对账」，且无敌刻意留 91~95% 血而非硬无敌 ⇒ 本作服务端可能有属性侧校验。星空版保持同样保守策略（功能 1 只放大一个方向、功能 2 留地板），**未做任何屏蔽上报/防封号**。",
-    "免广告的额外风险：客户端伪造激励视频回调（直接 onResult(0,\"视频观看完成\")），若服务端校验发放，理论上可对账。",
-    "反作弊/反 root：斌哥独有的 libtoolChecker.so（5,512 B，RootBeer）**不要移植**（原版与本作均无）。",
-    "登录：本作 TapSDK 走新版路径（TapTapLoginActivity + LoginRequest + LoginTypes$WEB），**没有**旧版 com.taptap.sdk.ui.TapTapActivity ⇒ 不注入 yntt_smali；修复载体 = 星光 dex 内 SignSpoof（回放原厂 CN=binqi 证书）+ TapLoginForceWeb（强制包内内嵌网页登录），两者必须成对生效。",
-    "签名：星空证书 CN=StarryMagic（SHA-1 821c92e4…），与官方 CN=binqi / 斌哥 CN=binge2.keystore 均不兼容 ⇒ 装机需先卸载（会丢本地存档，须用户明确授权，用 GYZW_ALLOW_UNINSTALL=1）。",
-    "菜单图标：已从原包 res/mipmap-xxxhdpi/ic_launcher.png 提取并生成四档，位于 08_output/光阴之外/icon_光阴之外_{144,192,256,512}.png。斌哥菜单页的 cos 域名图标（tubiao/爽剑.png、翅膀.png、龙.png）可作功能项图标参考。",
-    "热更兼容性：锚点是 boot JS 源码串，游戏热更改动这几行时对应功能会静默失效（替换体自带 try/catch 兜住，不会崩游戏）；届时重跑管线 dump 阶段取新 gyzw_boot.js 重核锚点。广告门控依赖 classes3/4.dex 的具体方法体，游戏更新 dex 后需重跑 surgical。"
+    {"feat_num": 1, "name": "百倍伤害"},
+    {"feat_num": 2, "name": "超级无敌"},
+    {"feat_num": 3, "name": "战斗加速"},
+    {"feat_num": 5, "name": "免广告"}
   ]
 }
