@@ -6,6 +6,12 @@
 #   bash 04_scripts/境界守望者/wor_launch.sh gate [秒数，默认 30]   短闸门：只回答"会不会立刻崩"
 #   SERIAL=<序列号> bash 04_scripts/境界守望者/wor_launch.sh 240
 #
+# 环境变量覆盖（2026-10-04 加，Mac 复验提的：跑一次就得往仓库里写日志）:
+#   NIXIANG_WOR_LOGDIR  日志落盘目录（默认 06_dumped/境界守望者/device_logs）
+#   NIXIANG_WOR_PKG     包名（默认 com.ap.watcherofrealms）
+#   SERIAL              设备序列号（默认 96f0d883）
+#   例：NIXIANG_WOR_LOGDIR=/tmp/wor_logs bash …/wor_launch.sh gate 30
+#
 # 两段式验证（为什么这么设计）:
 #   ① gate 短闸门 —— 只否掉立刻崩的版本（FATAL/SIGABRT/SIGSEGV/F DEBUG），30 秒够；
 #   ② full 长跑 —— 必须走到功能真正触发（开开关 / 进战斗 / 第一次 hook 命中）才算验完。
@@ -25,7 +31,7 @@
 set -uo pipefail
 
 SER="${SERIAL:-96f0d883}"
-PKG="com.ap.watcherofrealms"
+PKG="${NIXIANG_WOR_PKG:-com.ap.watcherofrealms}"
 GAME_DIR="境界守望者"
 ADB="/c/windows/system32/adb.exe"
 [[ -x "$ADB" ]] || ADB="adb"
@@ -48,7 +54,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 win_path() {
   if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s' "$1"; fi
 }
-LOGDIR="$ROOT/06_dumped/$GAME_DIR/device_logs"
+LOGDIR="${NIXIANG_WOR_LOGDIR:-$ROOT/06_dumped/$GAME_DIR/device_logs}"
 mkdir -p "$LOGDIR"
 STAMP="$(date +%Y%m%d_%H%M%S)"
 RAW="$LOGDIR/wor_${STAMP}_raw.log"
