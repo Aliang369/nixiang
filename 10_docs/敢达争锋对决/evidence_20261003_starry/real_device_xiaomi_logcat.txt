@@ -1,0 +1,1106 @@
+# 真机证据：Xiaomi M2102K1AC / Android 14 (SDK 34) / arm64-v8a
+# 采集：adb -s 96f0d883 shell "logcat -d -v time"  (2026-10-03)
+# 安装包 sha256 1b4e9a3b1e00f32f16234e345ef585903a8c1387f6a300791de70f96b9689bdc（与 08_output 交付物逐字节一致）
+# 关键结论：4/4 抓点走 RVA 快路 hooked @rva（真机无 MuMu/houdini 的 r-- 干扰），install pass: ok=4 dead=0/4
+
+10-03 15:58:42.158 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:42.183 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 15:58:42.198 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:42.278 E/StarrySignSpoof(13849): exemptHiddenApis(meta) failed
+10-03 15:58:42.278 E/StarrySignSpoof(13849): java.lang.reflect.InvocationTargetException
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1147)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2636)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2602)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8355)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:7859)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7511)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2382)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Looper.loopOnce(Looper.java:224)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Looper.loop(Looper.java:318)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.main(ActivityThread.java:8790)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): Caused by: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.Class.getMethod(Class.java:2937)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.Class.getDeclaredMethod(Class.java:2914)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	... 18 more
+10-03 15:58:42.278 E/StarrySignSpoof(13849): exemptHiddenApis(declared) failed
+10-03 15:58:42.278 E/StarrySignSpoof(13849): java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.Class.getMethod(Class.java:2937)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.Class.getDeclaredMethod(Class.java:2914)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1161)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2636)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2602)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8355)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:7859)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7511)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2382)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Looper.loopOnce(Looper.java:224)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Looper.loop(Looper.java:318)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.main(ActivityThread.java:8790)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): exemptHiddenApis(public) failed
+10-03 15:58:42.278 E/StarrySignSpoof(13849): java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.Class.getMethod(Class.java:2937)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.Class.getMethod(Class.java:2449)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1172)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2636)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2602)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8355)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:7859)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7511)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2382)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Looper.loopOnce(Looper.java:224)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.os.Looper.loop(Looper.java:318)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at android.app.ActivityThread.main(ActivityThread.java:8790)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561)
+10-03 15:58:42.278 E/StarrySignSpoof(13849): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+10-03 15:58:42.278 W/StarrySignSpoof(13849): exemptHiddenApis all failed: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:58:42.278 I/StarrySignSpoof(13849): installed pkgs=[com.rsg.wdyz, com.muyegame.blfx, com.xr.wgdzztap, com.emay.wxsy.topon, com.hypergryph.arknights, com.cmge.ssjd.x7sy, com.qxjc.fcxyxzj, com.openew.monster, com.gf.cxswz, com.netkuu.changsheng.tjjs, com.grinning.beta.yszl, com.hypergryph.endfield, com.wjtxdtt.zy, com.shbq.gyzw.ppyx, com.wanda.sf3.wd, com.JAGames.TalesoftheClan, com.a5game.ltzj.jj, com.happyelements.es2, com.acing.gow.adv, com.fattoy.gyws.android, com.xq.archeroii.ua, com.bilibili.fatego, com.leiting.lostcastle.leiting, com.shangyoo.neon, com.uniugame.ywgn, com.bilibili.priconne, com.yofijoy.zmxs, com.xm4399.zmws.m4399, com.xm4399.zmxy6hj, com.qinglv.Immortal, com.chx.shhj, com.survivor.acecn, com.kingnet.gundam.mg.normal, com.Shimmer.SoloKnight.cn, com.mudamuda.idlewow, com.windforce.rg.offical, com.sixag.gaga, com.bantu.trssgshz2, com.syyx.whrhx, com.mxyzt.gzmy, com.lingsi.xiuxiandanji, com.blina.match2.tt, com.yhhy.neon.aligames, com.rsjy.yf, com.hortor.yqzd, com.yhhy.whrhx.m4399, com.blade.bd, com.hortor.mwdl, com.fightingstars.games.warrior, com.hnyg.bjdwxcf.topon, com.cylj.rogue.tp479, com.facai.archeroii, com.xingzuodaoshi.infinityUpgrade, com.chillyroom.containerofsoul.yw, com.qxjc.hxwjmlq, com.ginicat.sweet.m4399, com.aiyue.wscq, com.x.yimoo.official, com.TeaMelo.DungeonChasers, com.ginicat.sweet, com.fightingstars.games.animal]
+10-03 15:58:42.280 W/StarryMagic(13849): [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+10-03 15:58:42.281 I/StarryMagic(13849): [桥接] RegisterNatives 19/19 全部成功
+10-03 15:58:42.281 I/StarryMagic(13849): 星光魔法 MOD 菜单已加载 (MainModern tag=gdzfdj)
+10-03 15:58:42.281 I/StarryNativeLoad(13849): loaded apk so via loadLibrary
+10-03 15:58:42.281 I/ModBridge(13849): native via StarryNativeLoad: loadLibrary(starry_magic)
+10-03 15:58:42.281 I/StarryBridgeTest(13849): === 桥接自检开始 ===
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeBridgeRegistered = PASS
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeGetAuthGameId = PASS
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeIsGameLibLoaded = PASS
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeHasLiveSession = PASS
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeGetAceGateRemainSec = PASS
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeGetFeatureList = PASS
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeGetSettingsList = PASS
+10-03 15:58:42.281 I/StarryMagic(13849): [验证] flag=false live=0
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeSetAuthorized(false) = PASS
+10-03 15:58:42.281 I/StarryMagic(13849): [开关] #0 selftest = OFF
+10-03 15:58:42.281 I/StarryBridgeTest(13849): nativeSetFeature(0,off) = PASS
+10-03 15:58:42.282 W/StarryMagic(13849): [数值] 拒绝 #0（未授权）
+10-03 15:58:42.282 I/StarryBridgeTest(13849): nativeSetValue(0,0) = PASS
+10-03 15:58:42.282 I/StarryMagic(13849): [长整] #0 = 0
+10-03 15:58:42.282 I/StarryBridgeTest(13849): nativeSetLongValue(0,0) = PASS
+10-03 15:58:42.282 W/StarryMagic(13849): [文本] 拒绝 #0（未授权）
+10-03 15:58:42.282 I/StarryBridgeTest(13849): nativeSetText(0,empty) = PASS
+10-03 15:58:42.282 W/StarryMagic(13849): [验证] grant rejected
+10-03 15:58:42.282 I/StarryBridgeTest(13849): nativeApplyGrant(垃圾票→拒绝) = PASS
+10-03 15:58:42.282 W/StarryMagic(13849): [OTA] 补丁签名校验失败
+10-03 15:58:42.282 I/StarryBridgeTest(13849): nativeVerifyOtaSig(垃圾→false) = PASS
+10-03 15:58:42.283 I/StarryBridgeTest(13849): nativeGetPinnedCert = PASS
+10-03 15:58:42.283 I/StarryBridgeTest(13849): === 桥接自检结束: PASS=15 FAIL=0 === ✓
+10-03 15:58:42.283 I/StarryInitProvider(13849): native ensureLoaded=true path=loadLibrary(starry_magic)
+10-03 15:58:42.396 I/StarrySignSpoof(13849): spoof hit pkg=com.kingnet.gundam.mg.normal md5=28185fbfd55a46a024bd75bd1569fd72
+10-03 15:58:42.460 I/StarryInitProvider(13849): MenuService.start scheduled (activity-resumed)
+10-03 15:58:42.632 I/MenuService(13849): startService (plain, no-FGS)
+10-03 15:58:42.633 I/StarryInitProvider(13849): MenuService.start ok (activity-resumed)
+10-03 15:58:42.643 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:42.659 I/StarryCrash(13849): initialized, log dir: /storage/emulated/0/Android/media/com.kingnet.gundam.mg.normal/files/crash_logs
+10-03 15:58:42.661 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.kingnet.gundam.mg.normal; callingUid: 10256; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=com.kingnet.gundam.mg.normal/com.starry.magic.menu.MenuService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:31; callerTargetSdkVersion:31; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 15:58:42.662 I/MenuService(13849): MenuService created
+10-03 15:58:42.662 I/ModBridge(13849): auth game_id synced from native: gdzfdj
+10-03 15:58:42.662 I/MenuService(13849): auth game_id=gdzfdj
+10-03 15:58:42.662 I/MenuService(13849): lifecycleWatcher registered (resume + background hide)
+10-03 15:58:42.663 I/MenuService(13849): host lifecycle primed (start-thread-scan) started=1 resumed=1
+10-03 15:58:42.665 I/ModBridge(13849): auth game_id synced from native: gdzfdj
+10-03 15:58:42.666 I/ModBridge(13849): auth game_id synced from native: gdzfdj
+10-03 15:58:42.666 I/ModBridge(13849): auth game_id synced from native: gdzfdj
+10-03 15:58:42.714 I/StarryMagic(13849): ===== 星光魔法 MOD 菜单初始化（modern/gdzfdj）=====
+10-03 15:58:42.714 I/StarryMagic(13849): MOD 后台线程已启动 tag=gdzfdj
+10-03 15:58:42.714 I/PlayOta (13849): applyLocalPatch skip: no patch.json for gdzfdj
+10-03 15:58:42.714 I/MenuService(13849): native menu shown mode=ACTIVITY
+10-03 15:58:42.714 I/ModBridge(13849): auth game_id synced from native: gdzfdj
+10-03 15:58:42.716 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:58:42.716 I/MenuService(13849): prime:start-thread-scan → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:58:42.717 I/Mod_Menu(13849): [gdzfdj] probe: nav=Category_战斗 dmg=Slider_伤害倍率:1:100:1 root=Toggle_超级定怪 spd=Slider_全局加速:1:10:1
+10-03 15:58:42.717 I/Mod_Menu(13849): [gdzfdj] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)
+10-03 15:58:42.717 I/Mod_Menu(13849): [gdzfdj] lib ready (dual-path, lazy hooks)
+10-03 15:58:42.717 I/StarryMagic(13849): [gdzfdj] 初始化成功
+10-03 15:58:42.717 I/StarryMagic(13849): MOD 已就绪 tag=gdzfdj ready=1
+10-03 15:58:42.748 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:58:42.755 I/NativeMenu(13849): bootstrap fetch game_id=gdzfdj
+10-03 15:58:42.760 I/AuthClient(13849): GET https://47.100.216.101:8443/v1/bootstrap?game_id=gdzfdj&device_id=dev_1f09f3e600a77bd752dceaec463dd19c&logged_in=false
+10-03 15:58:42.835 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:42.885 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:42.895 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:42.923 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:58:42.923 I/MenuService(13849): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:58:43.025 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:43.091 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:43.134 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:43.197 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:58:43.202 W/StarryMagic(13849): [验证] grant rejected
+10-03 15:58:43.684 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:43.725 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:43.875 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:44.107 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:46.125 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:46.162 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:48.412 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 60
+10-03 15:58:48.414 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:48.437 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:48.465 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 15:58:48.465 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:50.711 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 60
+10-03 15:58:51.484 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:51.497 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:51.513 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 15:58:51.513 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:53.708 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 60
+10-03 15:58:53.736 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:53.753 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:53.770 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 15:58:53.770 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:58:56.111 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 60
+10-03 15:59:06.108 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from switchToNewFps
+10-03 15:59:26.959 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:26.960 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:26.963 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from FpsUpdatePreAction
+10-03 15:59:26.982 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 15:59:27.466 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:27.482 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:27.520 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:59:27.520 I/MenuService(13849): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:27.875 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:59:27.875 I/MenuService(13849): host window focus gained (deferred) → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:27.901 D/audioserver( 1375): FGS Logger Transaction failed
+10-03 15:59:28.253 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:28.685 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:28.950 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:29.854 W/ProcessStats( 2059): Tracking association SourceState{43c1bd3 com.miui.securitycenter.remote/1000 Fgs #12059} whose proc state 3 is better than process ProcessState{77a0b17 com.miui.guardprovider/10155 pkg=com.miui.guardprovider} proc state 6 (33 skipped)
+10-03 15:59:30.511 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:30.577 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:31.714 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:32.170 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:32.760 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:33.109 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:33.117 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:34.237 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:34.320 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:34.409 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:59:34.409 I/MenuService(13849): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:34.724 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:59:34.724 I/MenuService(13849): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:35.241 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:35.326 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:35.330 I/MenuService(13849): host focus lost ignored (overlay IME)
+10-03 15:59:35.333 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:35.349 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:35.725 I/MiMediaCodec(13849): fps video to display enabled
+10-03 15:59:35.725 I/MiMediaCodec(13849): The Fps from player is 30.000000  frameRateFloat 30.000000 frameRateInt 30
+10-03 15:59:35.765 I/MiMediaCodec(13849): send fps to display with mFpsFromPlayer:30.000000 state:1 id:0
+10-03 15:59:35.767 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 15:59:35.767 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 15:59:35.767 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 0
+10-03 15:59:35.767 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 15:59:35.767 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 15:59:35.767 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 15:59:35.767 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 15:59:35.767 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 15:59:35.767 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:35.767 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 15:59:35.767 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:0
+10-03 15:59:35.815 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:35.972 I/MiMediaCodec(13849): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:0
+10-03 15:59:35.973 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 15:59:35.973 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 15:59:35.973 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:0
+10-03 15:59:35.996 I/QC2Comp ( 1195): [avcD_20] Stats: Pending(0) i/p-done(0) Works: Q: 11/Done 13|Work-Rate: Q(37.0/s Avg=37.0/s) Done(43.766/s Avg=43.766/s)| Stream: 30.00fps 893.6Kbps
+10-03 15:59:36.056 I/MiMediaCodec(13849): fps video to display enabled
+10-03 15:59:36.056 I/MiMediaCodec(13849): The Fps from player is 30.000000  frameRateFloat 30.000000 frameRateInt 30
+10-03 15:59:36.089 I/MiMediaCodec(13849): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 15:59:36.090 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 15:59:36.090 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 15:59:36.090 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 15:59:36.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 15:59:36.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 15:59:36.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 15:59:36.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 15:59:36.090 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 15:59:36.090 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:36.090 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 15:59:36.090 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 15:59:36.146 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:36.162 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:36.179 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:36.201 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:59:36.201 I/MenuService(13849): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:36.579 I/QC2Comp ( 1195): [avcD_21] Stats: Pending(7) i/p-done(3) Works: Q: 33/Done 28|Work-Rate: Q(61.3/s Avg=61.3/s) Done(52.047/s Avg=52.047/s)| Stream: 30.00fps 6.0Mbps
+10-03 15:59:37.316 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:37.358 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:37.391 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:39.863 W/ProcessStats( 2059): Tracking association SourceState{43c1bd3 com.miui.securitycenter.remote/1000 Fgs #12112} whose proc state 3 is better than process ProcessState{77a0b17 com.miui.guardprovider/10155 pkg=com.miui.guardprovider} proc state 6 (83 skipped)
+10-03 15:59:41.110 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:41.209 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:41.579 I/QC2Comp ( 1195): [avcD_21] Stats: Pending(7) i/p-done(3) Works: Q: 180/Done 175|Work-Rate: Q(29.4/s Avg=32.5/s) Done(29.398/s Avg=31.598/s)| Stream: 30.00fps 6.5Mbps
+10-03 15:59:42.338 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:43.541 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:45.243 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:45.824 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:46.580 I/QC2Comp ( 1195): [avcD_21] Stats: Pending(8) i/p-done(4) Works: Q: 330/Done 324|Work-Rate: Q(30.0/s Avg=31.3/s) Done(29.798/s Avg=30.744/s)| Stream: 30.00fps 3.4Mbps
+10-03 15:59:47.550 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:47.584 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:47.592 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:47.631 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:59:47.631 I/MenuService(13849): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:47.774 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:48.299 I/ModBridge(13849): auth game_id synced from native: gdzfdj
+10-03 15:59:48.311 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:59:48.324 I/NativeMenu(13849): login with game_id=gdzfdj
+10-03 15:59:48.330 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:48.782 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:59:48.789 I/StarryMagic(13849): [验证] grant ok exp=1791100789
+10-03 15:59:48.812 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:48.838 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:48.845 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:49.293 I/MenuService(13849): overlayVisible=true attached=true
+10-03 15:59:49.293 I/MenuService(13849): host window focus gained (deferred) → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:49.605 I/StarryMagic(13849): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:59:49.606 I/StarryMagic(13849): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:59:49.606 I/StarryMagic(13849): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:59:49.606 I/ModBridge(13849): reapplied saved features to native
+10-03 15:59:50.073 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:50.322 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:51.044 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:51.409 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:51.580 I/QC2Comp ( 1195): [avcD_21] Stats: Pending(7) i/p-done(3) Works: Q: 480/Done 475|Work-Rate: Q(30.0/s Avg=30.9/s) Done(30.198/s Avg=30.568/s)| Stream: 30.00fps 6.7Mbps
+10-03 15:59:52.463 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:52.732 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10256 packageName: com.kingnet.gundam.mg.normal processName:com.kingnet.gundam.mg.normal ChannelId:starry_magic_menu foregroundNotiWhen:1791014322714 Notiflags:66
+10-03 15:59:52.782 D/audioserver( 1375): FGS Logger Transaction failed
+10-03 15:59:52.797 D/audioserver( 1375): FGS Logger Transaction failed
+10-03 15:59:52.826 E/StarrySignSpoof(13850): exemptHiddenApis(meta) failed
+10-03 15:59:52.826 E/StarrySignSpoof(13850): java.lang.reflect.InvocationTargetException
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1147)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2636)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2602)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8355)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:7859)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7511)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2382)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Looper.loopOnce(Looper.java:224)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Looper.loop(Looper.java:318)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.main(ActivityThread.java:8790)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): Caused by: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.Class.getMethod(Class.java:2937)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.Class.getDeclaredMethod(Class.java:2914)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	... 18 more
+10-03 15:59:52.826 E/StarrySignSpoof(13850): exemptHiddenApis(declared) failed
+10-03 15:59:52.826 E/StarrySignSpoof(13850): java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.Class.getMethod(Class.java:2937)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.Class.getDeclaredMethod(Class.java:2914)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1161)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2636)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2602)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8355)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:7859)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7511)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2382)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Looper.loopOnce(Looper.java:224)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Looper.loop(Looper.java:318)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.main(ActivityThread.java:8790)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): exemptHiddenApis(public) failed
+10-03 15:59:52.826 E/StarrySignSpoof(13850): java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.Class.getMethod(Class.java:2937)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.Class.getMethod(Class.java:2449)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1172)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2636)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2602)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8355)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:7859)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7511)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2382)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Looper.loopOnce(Looper.java:224)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.os.Looper.loop(Looper.java:318)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at android.app.ActivityThread.main(ActivityThread.java:8790)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:561)
+10-03 15:59:52.826 E/StarrySignSpoof(13850): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1013)
+10-03 15:59:52.826 W/StarrySignSpoof(13850): exemptHiddenApis all failed: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:59:52.827 I/StarrySignSpoof(13850): installed pkgs=[com.rsg.wdyz, com.muyegame.blfx, com.xr.wgdzztap, com.emay.wxsy.topon, com.hypergryph.arknights, com.cmge.ssjd.x7sy, com.qxjc.fcxyxzj, com.openew.monster, com.gf.cxswz, com.netkuu.changsheng.tjjs, com.grinning.beta.yszl, com.hypergryph.endfield, com.wjtxdtt.zy, com.shbq.gyzw.ppyx, com.wanda.sf3.wd, com.JAGames.TalesoftheClan, com.a5game.ltzj.jj, com.happyelements.es2, com.acing.gow.adv, com.fattoy.gyws.android, com.xq.archeroii.ua, com.bilibili.fatego, com.leiting.lostcastle.leiting, com.shangyoo.neon, com.uniugame.ywgn, com.bilibili.priconne, com.yofijoy.zmxs, com.xm4399.zmws.m4399, com.xm4399.zmxy6hj, com.qinglv.Immortal, com.chx.shhj, com.survivor.acecn, com.kingnet.gundam.mg.normal, com.Shimmer.SoloKnight.cn, com.mudamuda.idlewow, com.windforce.rg.offical, com.sixag.gaga, com.bantu.trssgshz2, com.syyx.whrhx, com.mxyzt.gzmy, com.lingsi.xiuxiandanji, com.blina.match2.tt, com.yhhy.neon.aligames, com.rsjy.yf, com.hortor.yqzd, com.yhhy.whrhx.m4399, com.blade.bd, com.hortor.mwdl, com.fightingstars.games.warrior, com.hnyg.bjdwxcf.topon, com.cylj.rogue.tp479, com.facai.archeroii, com.xingzuodaoshi.infinityUpgrade, com.chillyroom.containerofsoul.yw, com.qxjc.hxwjmlq, com.ginicat.sweet.m4399, com.aiyue.wscq, com.x.yimoo.official, com.TeaMelo.DungeonChasers, com.ginicat.sweet, com.fightingstars.games.animal]
+10-03 15:59:52.830 W/StarryMagic(13850): [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+10-03 15:59:52.830 I/StarryMagic(13850): [桥接] RegisterNatives 19/19 全部成功
+10-03 15:59:52.830 I/StarryMagic(13850): 星光魔法 MOD 菜单已加载 (MainModern tag=gdzfdj)
+10-03 15:59:52.830 I/StarryNativeLoad(13850): loaded apk so via loadLibrary
+10-03 15:59:52.830 I/ModBridge(13850): native via StarryNativeLoad: loadLibrary(starry_magic)
+10-03 15:59:52.830 I/StarryBridgeTest(13850): === 桥接自检开始 ===
+10-03 15:59:52.830 I/StarryBridgeTest(13850): nativeBridgeRegistered = PASS
+10-03 15:59:52.830 I/StarryBridgeTest(13850): nativeGetAuthGameId = PASS
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeIsGameLibLoaded = PASS
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeHasLiveSession = PASS
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeGetAceGateRemainSec = PASS
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeGetFeatureList = PASS
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeGetSettingsList = PASS
+10-03 15:59:52.831 I/StarryMagic(13850): [验证] flag=false live=0
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeSetAuthorized(false) = PASS
+10-03 15:59:52.831 I/StarryMagic(13850): [开关] #0 selftest = OFF
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeSetFeature(0,off) = PASS
+10-03 15:59:52.831 W/StarryMagic(13850): [数值] 拒绝 #0（未授权）
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeSetValue(0,0) = PASS
+10-03 15:59:52.831 I/StarryMagic(13850): [长整] #0 = 0
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeSetLongValue(0,0) = PASS
+10-03 15:59:52.831 W/StarryMagic(13850): [文本] 拒绝 #0（未授权）
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeSetText(0,empty) = PASS
+10-03 15:59:52.831 W/StarryMagic(13850): [验证] grant rejected
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeApplyGrant(垃圾票→拒绝) = PASS
+10-03 15:59:52.831 W/StarryMagic(13850): [OTA] 补丁签名校验失败
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeVerifyOtaSig(垃圾→false) = PASS
+10-03 15:59:52.831 I/StarryBridgeTest(13850): nativeGetPinnedCert = PASS
+10-03 15:59:52.831 I/StarryBridgeTest(13850): === 桥接自检结束: PASS=15 FAIL=0 === ✓
+10-03 15:59:52.831 I/StarryInitProvider(13850): native ensureLoaded=true path=loadLibrary(starry_magic)
+10-03 15:59:52.883 I/StarrySignSpoof(13850): spoof hit pkg=com.kingnet.gundam.mg.normal md5=28185fbfd55a46a024bd75bd1569fd72
+10-03 15:59:52.924 I/StarryInitProvider(13850): MenuService.start scheduled (activity-resumed)
+10-03 15:59:52.943 I/MenuService(13850): startService (plain, no-FGS)
+10-03 15:59:52.943 I/StarryInitProvider(13850): MenuService.start ok (activity-resumed)
+10-03 15:59:52.970 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:52.978 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:52.992 I/StarryCrash(13850): initialized, log dir: /storage/emulated/0/Android/media/com.kingnet.gundam.mg.normal/files/crash_logs
+10-03 15:59:52.998 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.kingnet.gundam.mg.normal; callingUid: 10256; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=com.kingnet.gundam.mg.normal/com.starry.magic.menu.MenuService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:31; callerTargetSdkVersion:31; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 15:59:52.999 I/MenuService(13850): MenuService created
+10-03 15:59:53.000 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 15:59:53.000 I/MenuService(13850): auth game_id=gdzfdj
+10-03 15:59:53.000 I/MenuService(13850): lifecycleWatcher registered (resume + background hide)
+10-03 15:59:53.000 I/MenuService(13850): host lifecycle primed (start-thread-scan) started=1 resumed=1
+10-03 15:59:53.001 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 15:59:53.001 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 15:59:53.001 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 15:59:53.039 I/StarryMagic(13850): ===== 星光魔法 MOD 菜单初始化（modern/gdzfdj）=====
+10-03 15:59:53.039 I/StarryMagic(13850): MOD 后台线程已启动 tag=gdzfdj
+10-03 15:59:53.040 I/PlayOta (13850): applyLocalPatch skip: no patch.json for gdzfdj
+10-03 15:59:53.040 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 15:59:53.040 I/MenuService(13850): native menu shown mode=ACTIVITY
+10-03 15:59:53.043 I/Mod_Menu(13850): [gdzfdj] probe: nav=Category_战斗 dmg=Slider_伤害倍率:1:100:1 root=Toggle_超级定怪 spd=Slider_全局加速:1:10:1
+10-03 15:59:53.043 I/Mod_Menu(13850): [gdzfdj] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)
+10-03 15:59:53.043 I/Mod_Menu(13850): [gdzfdj] lib ready (dual-path, lazy hooks)
+10-03 15:59:53.043 I/StarryMagic(13850): [gdzfdj] 初始化成功
+10-03 15:59:53.043 I/StarryMagic(13850): MOD 已就绪 tag=gdzfdj ready=1
+10-03 15:59:53.047 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:59:53.050 I/NativeMenu(13850): bootstrap fetch game_id=gdzfdj
+10-03 15:59:53.051 I/AuthClient(13850): GET https://47.100.216.101:8443/v1/bootstrap?game_id=gdzfdj&device_id=dev_1f09f3e600a77bd752dceaec463dd19c&logged_in=false
+10-03 15:59:53.059 I/MenuService(13850): overlayVisible=true attached=true
+10-03 15:59:53.059 I/MenuService(13850): prime:start-thread-scan → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:53.070 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.111 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.119 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.127 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.157 I/MenuService(13850): overlayVisible=true attached=true
+10-03 15:59:53.157 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:53.177 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.280 D/audioserver( 1375): FGS Logger Transaction failed
+10-03 15:59:53.390 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:59:53.393 I/StarryMagic(13850): [验证] grant ok exp=1791100789
+10-03 15:59:53.401 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.501 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.510 I/MenuService(13850): overlayVisible=true attached=true
+10-03 15:59:53.510 I/MenuService(13850): host window focus gained (deferred) → show ACTIVITY overlay host=MainActivity alive=true
+10-03 15:59:53.517 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.634 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:53.643 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:54.032 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:54.195 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:59:54.195 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:59:54.195 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:59:54.196 I/ModBridge(13850): reapplied saved features to native
+10-03 15:59:54.322 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:54.588 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:55.510 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:56.012 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:56.040 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 15:59:56.046 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:59:56.315 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:56.602 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 15:59:56.605 I/StarryMagic(13850): [验证] grant ok exp=1791100797
+10-03 15:59:57.408 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:59:57.409 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:59:57.409 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:59:57.409 I/ModBridge(13850): reapplied saved features to native
+10-03 15:59:57.801 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:58.615 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:59.519 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 15:59:59.567 I/MenuService(13850): overlayVisible=true attached=true
+10-03 15:59:59.567 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:00:00.101 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:00.132 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:00:00.132 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:00:00.520 I/MiMediaCodec(13850): fps video to display enabled
+10-03 16:00:00.520 I/MiMediaCodec(13850): The Fps from player is 30.000000  frameRateFloat 30.000000 frameRateInt 30
+10-03 16:00:00.532 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:0
+10-03 16:00:00.532 D/MI-SF   ( 1401): updateVideoDecoderInfo clear video fps
+10-03 16:00:00.533 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:00:00.533 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:00:00.533 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 0
+10-03 16:00:00.533 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:00:00.533 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:00:00.533 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:00:00.533 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:00:00.533 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:00:00.533 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:00.533 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:00:00.533 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:0
+10-03 16:00:00.590 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:0
+10-03 16:00:00.590 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:00:00.590 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:00:00.590 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:0
+10-03 16:00:00.602 I/QC2Comp ( 1195): [avcD_22] Stats: Pending(0) i/p-done(0) Works: Q: 11/Done 13|Work-Rate: Q(121.1/s Avg=121.1/s) Done(143.090/s Avg=143.090/s)| Stream: 30.00fps 893.6Kbps
+10-03 16:00:00.631 I/MiMediaCodec(13850): fps video to display enabled
+10-03 16:00:00.631 I/MiMediaCodec(13850): The Fps from player is 30.000000  frameRateFloat 30.000000 frameRateInt 30
+10-03 16:00:00.641 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:00:00.641 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:00:00.641 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:00:00.641 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:00:00.641 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:00:00.641 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:00:00.641 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:00:00.641 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:00:00.641 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:00:00.641 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:00.641 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:00:00.641 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:00:01.136 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(4) i/p-done(3) Works: Q: 32/Done 30|Work-Rate: Q(62.3/s Avg=62.3/s) Done(58.411/s Avg=58.411/s)| Stream: 30.00fps 6.4Mbps
+10-03 16:00:01.661 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:02.519 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:03.114 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:06.136 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(4) i/p-done(2) Works: Q: 179/Done 177|Work-Rate: Q(29.4/s Avg=32.5/s) Done(29.399/s Avg=32.102/s)| Stream: 30.00fps 5.6Mbps
+10-03 16:00:11.136 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 335/Done 330|Work-Rate: Q(31.2/s Avg=31.9/s) Done(30.598/s Avg=31.387/s)| Stream: 30.00fps 4.0Mbps
+10-03 16:00:11.516 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:16.137 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 485/Done 479|Work-Rate: Q(30.0/s Avg=31.3/s) Done(29.795/s Avg=30.874/s)| Stream: 30.00fps 3.9Mbps
+10-03 16:00:16.630 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:00:21.137 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(5) i/p-done(3) Works: Q: 633/Done 630|Work-Rate: Q(29.6/s Avg=30.9/s) Done(30.198/s Avg=30.709/s)| Stream: 30.00fps 6.4Mbps
+10-03 16:00:26.138 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 779/Done 780|Work-Rate: Q(29.2/s Avg=30.5/s) Done(29.996/s Avg=30.569/s)| Stream: 30.00fps 2.8Mbps
+10-03 16:00:31.138 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 931/Done 924|Work-Rate: Q(30.4/s Avg=30.5/s) Done(28.798/s Avg=30.279/s)| Stream: 30.00fps 5.8Mbps
+10-03 16:00:36.139 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(4) i/p-done(3) Works: Q: 1082/Done 1080|Work-Rate: Q(30.2/s Avg=30.5/s) Done(31.198/s Avg=30.408/s)| Stream: 30.00fps 6.6Mbps
+10-03 16:00:41.139 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(3) i/p-done(3) Works: Q: 1231/Done 1230|Work-Rate: Q(29.8/s Avg=30.4/s) Done(29.997/s Avg=30.358/s)| Stream: 30.00fps 4.2Mbps
+10-03 16:00:46.139 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 1385/Done 1380|Work-Rate: Q(30.8/s Avg=30.4/s) Done(29.998/s Avg=30.318/s)| Stream: 30.00fps 8.7Mbps
+10-03 16:00:51.140 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(6) i/p-done(3) Works: Q: 1531/Done 1527|Work-Rate: Q(29.2/s Avg=30.3/s) Done(29.396/s Avg=30.227/s)| Stream: 30.00fps 7.0Mbps
+10-03 16:00:56.140 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 1685/Done 1680|Work-Rate: Q(30.8/s Avg=30.4/s) Done(30.598/s Avg=30.260/s)| Stream: 30.00fps 7.3Mbps
+10-03 16:01:01.141 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 1829/Done 1824|Work-Rate: Q(28.8/s Avg=30.2/s) Done(28.797/s Avg=30.139/s)| Stream: 30.00fps 7.7Mbps
+10-03 16:01:06.141 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(5) i/p-done(2) Works: Q: 1981/Done 1978|Work-Rate: Q(30.4/s Avg=30.2/s) Done(30.798/s Avg=30.190/s)| Stream: 30.00fps 2.5Mbps
+10-03 16:01:10.162 I/MiMediaCodec(13850): VideoToDisplayRealtimeFramerate send fps to display when stop
+10-03 16:01:10.162 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:01:10.162 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:01:10.162 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:01:10.162 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:01:10.992 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:01:10.993 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:01:10.993 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:01:10.993 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:01:10.993 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:01:10.993 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:01:10.993 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:01:10.993 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:01:10.993 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:01:10.993 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:01:10.993 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:01:10.993 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:01:11.141 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 2139/Done 2134|Work-Rate: Q(31.6/s Avg=30.3/s) Done(31.198/s Avg=30.261/s)| Stream: 30.00fps 5.7Mbps
+10-03 16:01:16.142 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 2288/Done 2283|Work-Rate: Q(29.8/s Avg=30.3/s) Done(29.798/s Avg=30.231/s)| Stream: 30.00fps 6.5Mbps
+10-03 16:01:21.142 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 2438/Done 2432|Work-Rate: Q(30.0/s Avg=30.3/s) Done(29.797/s Avg=30.204/s)| Stream: 30.00fps 3.4Mbps
+10-03 16:01:26.143 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 2588/Done 2583|Work-Rate: Q(30.0/s Avg=30.3/s) Done(30.197/s Avg=30.203/s)| Stream: 30.00fps 6.7Mbps
+10-03 16:01:31.143 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 2738/Done 2733|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.998/s Avg=30.192/s)| Stream: 30.00fps 10.1Mbps
+10-03 16:01:36.144 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 2888/Done 2883|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.997/s Avg=30.182/s)| Stream: 30.00fps 3.4Mbps
+10-03 16:01:41.144 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 3039/Done 3033|Work-Rate: Q(30.2/s Avg=30.2/s) Done(29.997/s Avg=30.173/s)| Stream: 30.00fps 5.8Mbps
+10-03 16:01:46.144 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 3190/Done 3183|Work-Rate: Q(30.2/s Avg=30.2/s) Done(29.998/s Avg=30.164/s)| Stream: 30.00fps 6.6Mbps
+10-03 16:01:51.145 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 3338/Done 3333|Work-Rate: Q(29.6/s Avg=30.2/s) Done(29.998/s Avg=30.157/s)| Stream: 30.00fps 3.6Mbps
+10-03 16:01:56.145 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 3488/Done 3481|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.598/s Avg=30.133/s)| Stream: 30.00fps 9.5Mbps
+10-03 16:02:01.145 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 3639/Done 3633|Work-Rate: Q(30.2/s Avg=30.2/s) Done(30.397/s Avg=30.144/s)| Stream: 30.00fps 7.0Mbps
+10-03 16:02:06.146 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 3789/Done 3783|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.997/s Avg=30.138/s)| Stream: 30.00fps 7.2Mbps
+10-03 16:02:11.147 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 3938/Done 3933|Work-Rate: Q(29.8/s Avg=30.2/s) Done(29.997/s Avg=30.132/s)| Stream: 30.00fps 7.7Mbps
+10-03 16:02:16.147 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 4088/Done 4083|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.997/s Avg=30.127/s)| Stream: 30.00fps 2.3Mbps
+10-03 16:02:20.209 I/MiMediaCodec(13850): VideoToDisplayRealtimeFramerate send fps to display when stop
+10-03 16:02:20.209 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:02:20.209 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:02:20.209 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:02:20.210 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:02:21.053 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:02:21.053 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:02:21.053 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:02:21.053 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:02:21.053 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:02:21.053 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:02:21.053 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:02:21.053 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:02:21.053 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:02:21.053 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:02:21.054 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:02:21.054 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:02:21.147 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(5) i/p-done(2) Works: Q: 4247/Done 4244|Work-Rate: Q(31.8/s Avg=30.2/s) Done(32.198/s Avg=30.201/s)| Stream: 30.00fps 6.6Mbps
+10-03 16:02:26.080 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: RCVR; uidBFSL: n/a; intent: Intent { act=org.rcs.service.bfl.sip.action.register.STATE_CHANGED flg=0x10 pkg=com.android.mms cmp=com.android.mms/com.xiaomi.rcs.im.CMRcsMessageProcessService (has extras) }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:02:26.105 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014546103 Notiflags:64
+10-03 16:02:26.116 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: CEM ; uidBFSL: n/a; intent: Intent { act=com.xiaomi.rcs.MARK_ALL_UNFINISH_MESSAGE_FAILED cmp=com.android.mms/com.xiaomi.rcs.im.RcsImSenderService }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:02:26.147 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 4396/Done 4391|Work-Rate: Q(29.8/s Avg=30.2/s) Done(29.398/s Avg=30.173/s)| Stream: 30.00fps 5.6Mbps
+10-03 16:02:26.150 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014546133 Notiflags:64
+10-03 16:02:31.148 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 4546/Done 4540|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.798/s Avg=30.161/s)| Stream: 30.00fps 2.9Mbps
+10-03 16:02:31.448 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: RCVR; uidBFSL: n/a; intent: Intent { act=org.rcs.service.bfl.sip.action.register.STATE_CHANGED flg=0x10 pkg=com.android.mms cmp=com.android.mms/com.xiaomi.rcs.im.CMRcsMessageProcessService (has extras) }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:02:31.464 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014551460 Notiflags:64
+10-03 16:02:31.480 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: CEM ; uidBFSL: n/a; intent: Intent { act=com.xiaomi.rcs.SEND_RCS_MESSAGE cmp=com.android.mms/com.xiaomi.rcs.im.RcsImSenderService }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:02:31.512 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: FGS ; uidBFSL: [BFSL]; intent: Intent { act=com.xiaomi.mms.mx.ACTION_START_TRACK pkg=com.android.mms }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:02:31.612 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014551580 Notiflags:64
+10-03 16:02:31.613 I/NotificationService( 2059): Cancel FGS notification CallingUid: 10136 CallingPid: 22359 Pkg: com.android.mms Id:114 Tag:null UserId:0 MustHaveFlags:0 MustNotHaveFlags:0 Reason:8 foregroundNotiWhen:1791014551494 foregroundNotiFlags:64 foregroundNotiChannelId:Channel_Foreground_Service
+10-03 16:02:36.148 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 4696/Done 4691|Work-Rate: Q(30.0/s Avg=30.2/s) Done(30.198/s Avg=30.162/s)| Stream: 30.00fps 6.9Mbps
+10-03 16:02:41.149 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 4846/Done 4841|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.996/s Avg=30.157/s)| Stream: 30.00fps 9.0Mbps
+10-03 16:02:46.149 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 4996/Done 4991|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.998/s Avg=30.152/s)| Stream: 30.00fps 2.8Mbps
+10-03 16:02:51.150 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 5148/Done 5141|Work-Rate: Q(30.4/s Avg=30.2/s) Done(29.998/s Avg=30.148/s)| Stream: 30.00fps 5.8Mbps
+10-03 16:02:56.150 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 5296/Done 5291|Work-Rate: Q(29.6/s Avg=30.2/s) Done(29.998/s Avg=30.143/s)| Stream: 30.00fps 7.4Mbps
+10-03 16:03:01.150 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 5446/Done 5441|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.997/s Avg=30.139/s)| Stream: 30.00fps 4.5Mbps
+10-03 16:03:06.151 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 5596/Done 5589|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.598/s Avg=30.125/s)| Stream: 30.00fps 9.5Mbps
+10-03 16:03:11.151 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 5748/Done 5741|Work-Rate: Q(30.4/s Avg=30.2/s) Done(30.396/s Avg=30.132/s)| Stream: 30.00fps 7.0Mbps
+10-03 16:03:16.152 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 5898/Done 5891|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.998/s Avg=30.128/s)| Stream: 30.00fps 7.2Mbps
+10-03 16:03:21.152 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 6046/Done 6041|Work-Rate: Q(29.6/s Avg=30.2/s) Done(29.998/s Avg=30.125/s)| Stream: 30.00fps 7.7Mbps
+10-03 16:03:26.153 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 6196/Done 6190|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.795/s Avg=30.117/s)| Stream: 30.00fps 2.4Mbps
+10-03 16:03:30.292 I/MiMediaCodec(13850): VideoToDisplayRealtimeFramerate send fps to display when stop
+10-03 16:03:30.292 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:03:30.292 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:03:30.292 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:03:30.292 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:03:31.089 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:03:31.090 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:03:31.090 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:03:31.090 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:03:31.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:03:31.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:03:31.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:03:31.090 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:03:31.090 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:03:31.090 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:03:31.090 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:03:31.090 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:03:31.153 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(2) i/p-done(1) Works: Q: 6348/Done 6348|Work-Rate: Q(30.4/s Avg=30.2/s) Done(31.598/s Avg=30.152/s)| Stream: 30.00fps 9.9Mbps
+10-03 16:03:36.153 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 6500/Done 6495|Work-Rate: Q(30.4/s Avg=30.2/s) Done(29.398/s Avg=30.135/s)| Stream: 30.00fps 5.1Mbps
+10-03 16:03:41.154 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 6650/Done 6645|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.998/s Avg=30.132/s)| Stream: 30.00fps 6.4Mbps
+10-03 16:03:46.154 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 6800/Done 6795|Work-Rate: Q(30.0/s Avg=30.2/s) Done(29.998/s Avg=30.129/s)| Stream: 30.00fps 9.1Mbps
+10-03 16:03:51.155 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 6950/Done 6945|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.126/s)| Stream: 30.00fps 10.8Mbps
+10-03 16:03:56.155 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 7100/Done 7095|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.123/s)| Stream: 30.00fps 1.8Mbps
+10-03 16:04:01.155 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 7250/Done 7245|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.997/s Avg=30.121/s)| Stream: 30.00fps 9.9Mbps
+10-03 16:04:06.156 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 7400/Done 7395|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.118/s)| Stream: 30.00fps 7.1Mbps
+10-03 16:04:11.156 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 7550/Done 7545|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.997/s Avg=30.116/s)| Stream: 30.00fps 7.0Mbps
+10-03 16:04:16.157 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 7700/Done 7693|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.598/s Avg=30.106/s)| Stream: 30.00fps 9.4Mbps
+10-03 16:04:21.157 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(5) i/p-done(2) Works: Q: 7850/Done 7847|Work-Rate: Q(30.0/s Avg=30.1/s) Done(30.797/s Avg=30.119/s)| Stream: 30.00fps 6.8Mbps
+10-03 16:04:26.157 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 8002/Done 7995|Work-Rate: Q(30.4/s Avg=30.1/s) Done(29.598/s Avg=30.109/s)| Stream: 30.00fps 7.2Mbps
+10-03 16:04:31.158 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 8150/Done 8145|Work-Rate: Q(29.6/s Avg=30.1/s) Done(29.998/s Avg=30.107/s)| Stream: 30.00fps 7.5Mbps
+10-03 16:04:36.158 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 8302/Done 8295|Work-Rate: Q(30.4/s Avg=30.1/s) Done(29.998/s Avg=30.105/s)| Stream: 30.00fps 2.1Mbps
+10-03 16:04:40.468 I/MiMediaCodec(13850): VideoToDisplayRealtimeFramerate send fps to display when stop
+10-03 16:04:40.468 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:04:40.469 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:04:40.469 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:04:40.469 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:04:41.132 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:04:41.133 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:04:41.133 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:04:41.133 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:04:41.133 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:04:41.133 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:04:41.133 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:04:41.133 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:04:41.133 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:04:41.133 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:04:41.133 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:04:41.133 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:04:41.133 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:04:41.134 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:04:41.134 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:04:41.134 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:04:41.158 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(0) i/p-done(0) Works: Q: 8433/Done 8435|Work-Rate: Q(26.2/s Avg=30.1/s) Done(27.998/s Avg=30.067/s)| Stream: 30.00fps 0.0Kbps
+10-03 16:04:41.168 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:04:41.168 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:04:41.168 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:04:41.168 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:04:41.168 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:04:41.168 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:04:41.168 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:04:41.168 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:04:41.168 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:04:41.168 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:04:41.169 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:04:41.169 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:04:46.159 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 8604/Done 8599|Work-Rate: Q(34.2/s Avg=30.1/s) Done(32.798/s Avg=30.115/s)| Stream: 30.00fps 4.9Mbps
+10-03 16:04:51.159 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 8754/Done 8749|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.113/s)| Stream: 30.00fps 6.8Mbps
+10-03 16:04:56.160 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 8904/Done 8899|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.996/s Avg=30.111/s)| Stream: 30.00fps 6.2Mbps
+10-03 16:05:01.160 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(5) i/p-done(2) Works: Q: 9054/Done 9051|Work-Rate: Q(30.0/s Avg=30.1/s) Done(30.396/s Avg=30.116/s)| Stream: 30.00fps 6.5Mbps
+10-03 16:05:06.161 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 9204/Done 9199|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.598/s Avg=30.108/s)| Stream: 30.00fps 1.5Mbps
+10-03 16:05:11.161 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 9354/Done 9349|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.106/s)| Stream: 30.00fps 10.0Mbps
+10-03 16:05:16.161 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 9504/Done 9499|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.104/s)| Stream: 30.00fps 6.5Mbps
+10-03 16:05:21.162 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 9654/Done 9649|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.997/s Avg=30.102/s)| Stream: 30.00fps 10.1Mbps
+10-03 16:05:26.162 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 9804/Done 9797|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.598/s Avg=30.095/s)| Stream: 30.00fps 8.9Mbps
+10-03 16:05:31.163 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 9954/Done 9949|Work-Rate: Q(30.0/s Avg=30.1/s) Done(30.396/s Avg=30.099/s)| Stream: 30.00fps 6.4Mbps
+10-03 16:05:36.163 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(2) i/p-done(2) Works: Q: 10105/Done 10105|Work-Rate: Q(30.2/s Avg=30.1/s) Done(31.197/s Avg=30.116/s)| Stream: 30.00fps 7.7Mbps
+10-03 16:05:41.164 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 10254/Done 10249|Work-Rate: Q(29.8/s Avg=30.1/s) Done(28.797/s Avg=30.096/s)| Stream: 30.00fps 7.5Mbps
+10-03 16:05:46.164 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 10404/Done 10399|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.095/s)| Stream: 30.00fps 4.7Mbps
+10-03 16:05:50.457 I/MiMediaCodec(13850): VideoToDisplayRealtimeFramerate send fps to display when stop
+10-03 16:05:50.457 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:05:50.457 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:05:50.457 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:05:50.457 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:05:51.164 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(0) i/p-done(0) Works: Q: 10540/Done 10542|Work-Rate: Q(27.2/s Avg=30.1/s) Done(28.598/s Avg=30.073/s)| Stream: 30.00fps 8.4Mbps
+10-03 16:05:51.217 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:05:51.218 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:05:51.218 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:05:51.218 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:05:51.218 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:05:51.218 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:05:51.218 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:05:51.218 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:05:51.218 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:05:51.218 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:05:51.218 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:05:51.218 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:05:56.165 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 10711/Done 10706|Work-Rate: Q(34.2/s Avg=30.1/s) Done(32.798/s Avg=30.112/s)| Stream: 30.00fps 4.9Mbps
+10-03 16:06:01.165 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 10861/Done 10856|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.997/s Avg=30.110/s)| Stream: 30.00fps 6.8Mbps
+10-03 16:06:06.165 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 11011/Done 11006|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.109/s)| Stream: 30.00fps 6.2Mbps
+10-03 16:06:11.166 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 11161/Done 11156|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.107/s)| Stream: 30.00fps 6.5Mbps
+10-03 16:06:16.166 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 11311/Done 11306|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.997/s Avg=30.106/s)| Stream: 30.00fps 1.5Mbps
+10-03 16:06:21.167 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 11461/Done 11456|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.104/s)| Stream: 30.00fps 10.0Mbps
+10-03 16:06:26.167 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 11611/Done 11606|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.997/s Avg=30.103/s)| Stream: 30.00fps 6.5Mbps
+10-03 16:06:31.167 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 11761/Done 11756|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.101/s)| Stream: 30.00fps 10.1Mbps
+10-03 16:06:36.168 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(9) i/p-done(5) Works: Q: 11911/Done 11904|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.596/s Avg=30.095/s)| Stream: 30.00fps 8.9Mbps
+10-03 16:06:41.169 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 12061/Done 12056|Work-Rate: Q(30.0/s Avg=30.1/s) Done(30.398/s Avg=30.099/s)| Stream: 30.00fps 6.4Mbps
+10-03 16:06:46.169 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(8) i/p-done(4) Works: Q: 12212/Done 12206|Work-Rate: Q(30.2/s Avg=30.1/s) Done(29.998/s Avg=30.098/s)| Stream: 30.00fps 7.7Mbps
+10-03 16:06:51.169 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 12361/Done 12356|Work-Rate: Q(29.8/s Avg=30.1/s) Done(29.998/s Avg=30.096/s)| Stream: 30.00fps 7.5Mbps
+10-03 16:06:56.170 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 12511/Done 12506|Work-Rate: Q(30.0/s Avg=30.1/s) Done(29.998/s Avg=30.095/s)| Stream: 30.00fps 4.7Mbps
+10-03 16:06:57.921 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:06:57.921 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:06:57.922 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:06:57.922 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:06:57.961 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:06:57.961 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:06:57.961 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:06:57.961 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:06:57.961 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:06:57.961 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:06:57.962 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:06:57.962 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:06:57.962 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:06:57.962 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:06:57.962 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:06:57.962 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:07:00.383 I/MiMediaCodec(13850): send last fps
+10-03 16:07:00.383 I/MiMediaCodec(13850): send fps to display with mLastSendedFps:30.000000 state:1 id:2
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo clear video fps
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:07:00.383 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:07:00.383 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:07:00.383 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:00.384 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:07:00.384 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:07:00.644 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:07:00.644 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:07:00.644 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:07:00.645 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:07:00.679 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:07:00.679 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:07:00.680 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:07:00.680 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:07:00.680 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:07:00.680 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:07:00.680 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:07:00.680 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:07:00.680 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:07:00.680 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:00.680 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:07:00.680 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:07:01.170 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(23.4/s Avg=30.0/s) Done(24.598/s Avg=30.030/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:02.359 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:02.384 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:02.468 D/audioserver( 1375): FGS Logger Transaction failed
+10-03 16:07:02.488 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:07:02.488 I/MenuService(13850): activity-resumed:LoginActivity → show ACTIVITY overlay host=LoginActivity alive=false
+10-03 16:07:02.517 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:02.597 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:07:02.597 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:07:02.882 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:02.889 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:07:02.889 I/MenuService(13850): resume delayed 400 → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:07:02.922 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:07:02.922 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:07:03.018 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:07:03.018 I/MenuService(13850): host window focus gained (deferred) → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:07:03.689 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:07:03.689 I/MenuService(13850): resume delayed 1200 → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:07:04.895 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 60
+10-03 16:07:06.170 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=29.7/s) Done(0.000/s Avg=29.677/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:11.170 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=29.3/s) Done(0.000/s Avg=29.332/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:14.889 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from switchToNewFps
+10-03 16:07:16.171 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=29.0/s) Done(0.000/s Avg=28.996/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:21.171 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=28.7/s) Done(0.000/s Avg=28.667/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:26.172 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=28.3/s) Done(0.000/s Avg=28.345/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:31.173 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=28.0/s) Done(0.000/s Avg=28.030/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:32.803 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:32.804 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from FpsUpdatePreAction
+10-03 16:07:32.808 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:07:36.173 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=27.7/s) Done(0.000/s Avg=27.722/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:41.174 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=27.4/s) Done(0.000/s Avg=27.421/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:42.810 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from switchToNewFps
+10-03 16:07:46.174 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=27.1/s) Done(0.000/s Avg=27.127/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:51.175 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=26.8/s) Done(0.000/s Avg=26.839/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:07:56.175 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=26.6/s) Done(0.000/s Avg=26.556/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:01.176 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=26.3/s) Done(0.000/s Avg=26.280/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:06.176 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=26.0/s) Done(0.000/s Avg=26.009/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:11.177 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=25.7/s) Done(0.000/s Avg=25.744/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:16.178 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=25.5/s) Done(0.000/s Avg=25.485/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:18.894 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:18.896 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from FpsUpdatePreAction
+10-03 16:08:18.927 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 16:08:18.969 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:19.003 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:08:19.003 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:08:20.973 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 60
+10-03 16:08:21.179 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=25.2/s) Done(0.000/s Avg=25.230/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:26.179 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=25.0/s) Done(0.000/s Avg=24.980/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:30.966 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from switchToNewFps
+10-03 16:08:31.180 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=24.7/s) Done(0.000/s Avg=24.736/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:36.181 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=24.5/s) Done(0.000/s Avg=24.496/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:41.181 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=24.3/s) Done(0.000/s Avg=24.260/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:46.182 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=24.0/s) Done(0.000/s Avg=24.030/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:47.433 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:47.435 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from FpsUpdatePreAction
+10-03 16:08:47.465 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 16:08:48.076 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:49.477 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:49.512 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:49.724 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:08:49.724 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:08:49.736 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:49.744 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:49.952 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:50.276 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:51.065 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:51.182 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=23.8/s) Done(0.000/s Avg=23.803/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:51.688 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:53.744 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:53.778 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:53.786 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:53.799 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:08:53.800 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:08:53.894 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:53.977 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:54.015 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:08:54.015 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:08:54.316 I/MenuService(13850): host focus lost ignored (ACTIVITY mode)
+10-03 16:08:54.325 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:54.592 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:54.600 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:54.616 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:55.069 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:08:55.069 I/MenuService(13850): host window focus gained (deferred) → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:08:55.086 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:55.106 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:55.164 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: RCVR; uidBFSL: n/a; intent: Intent { act=org.rcs.service.bfl.sip.action.register.STATE_CHANGED flg=0x10 pkg=com.android.mms cmp=com.android.mms/com.xiaomi.rcs.im.CMRcsMessageProcessService (has extras) }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:08:55.181 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:55.185 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014935184 Notiflags:64
+10-03 16:08:55.196 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: CEM ; uidBFSL: n/a; intent: Intent { act=com.xiaomi.rcs.MARK_ALL_UNFINISH_MESSAGE_FAILED cmp=com.android.mms/com.xiaomi.rcs.im.RcsImSenderService }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:08:55.202 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:08:55.202 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:08:55.225 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014935213 Notiflags:64
+10-03 16:08:55.225 I/NotificationService( 2059): Cancel FGS notification CallingUid: 10136 CallingPid: 22359 Pkg: com.android.mms Id:114 Tag:null UserId:0 MustHaveFlags:0 MustNotHaveFlags:0 Reason:8 foregroundNotiWhen:1791014935207 foregroundNotiFlags:64 foregroundNotiChannelId:Channel_Foreground_Service
+10-03 16:08:56.183 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=23.6/s) Done(0.000/s Avg=23.581/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:08:56.618 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:56.717 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:56.949 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:58.028 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:58.617 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:58.626 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 60
+10-03 16:08:58.627 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:08:58.634 I/DisplayDeviceRepository( 2059): Display device changed: DisplayDeviceInfo{"内置屏幕": uniqueId="local:4630946736638489730", 1440 x 3200, modeId 3, renderFrameRate 60.000004, defaultModeId 1, supportedModes [{id=1, width=1440, height=3200, fps=120.00001, alternativeRefreshRates=[60.000004, 90.0], supportedHdrTypes=[1, 2, 3, 4]}, {id=2, width=1440, height=3200, fps=90.0, alternativeRefreshRates=[60.000004, 120.00001], supportedHdrTypes=[1, 2, 3, 4]}, {id=3, width=1440, height=3200, fps=60.000004, alternativeRefreshRates=[90.0, 120.00001], supportedHdrTypes=[1, 2, 3, 4]}], colorMode 0, supportedColorModes [0, 7, 9], hdrCapabilities HdrCapabilities{mSupportedHdrTypes=[1, 2, 3, 4], mMaxLuminance=420.0, mMaxAverageLuminance=210.1615, mMinLuminance=0.323}, allmSupported false, gameContentTypeSupported false, density 560, 515.154 x 515.082 dpi, appVsyncOff 1000000, presDeadline 16666666, cutout DisplayCutout{insets=Rect(0, 137 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(0, 0 - 232, 137), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1440 displayHeight=3200 physicalDisplayWidth=1440 physicalDisplayHeight=3200 density={3.5} cutoutSpec={M 0,0 H 232 V 137 H 0 V 0 Z @left} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}}}, touch INTERNAL, rotation 0, type INTERNAL, address {port=130, model=0x40446d856b1774}, deviceProductInfo DeviceProductInfo{name=, manufacturerPnpId=QCM, productId=1, modelYear=null, manufactureDate=ManufactureDate{week=27, year=2006}, connectionToSinkType=0}, state ON, committedState ON, frameRateOverride , brightnessMinimum 0.0, brightnessMaximum 1.0, brightnessDefault 0.07484738, hdrSdrRatio NaN, roundedCorners RoundedCorners{[RoundedCorner{position=TopLeft, radius=196, center=Point(196, 196)}, RoundedCorner{position=TopRight, radius=196, center=Point(1244, 196)}, RoundedCorner{position=BottomRight, radius=172, center=Point(1268, 3028)}, RoundedCorner{position=BottomLeft, radius=172, center=Point(172, 3028)}]}, FLAG_ALLOWED_TO_BE_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS, FLAG_TRUSTED, installOrientation 0, displayShape DisplayShape{ spec=1540528011 displayWidth=1440 displayHeight=3200 physicalPixelDisplaySizeRatio=1.0 rotation=0 offsetX=0 offsetY=0 scale=1.0}}
+10-03 16:09:00.524 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: RCVR; uidBFSL: n/a; intent: Intent { act=org.rcs.service.bfl.sip.action.register.STATE_CHANGED flg=0x10 pkg=com.android.mms cmp=com.android.mms/com.xiaomi.rcs.im.CMRcsMessageProcessService (has extras) }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:09:00.537 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014940536 Notiflags:64
+10-03 16:09:00.544 I/NotificationService( 2059): Cancel FGS notification CallingUid: 10136 CallingPid: 22359 Pkg: com.android.mms Id:114 Tag:null UserId:0 MustHaveFlags:0 MustNotHaveFlags:0 Reason:8 foregroundNotiWhen:1791014940535 foregroundNotiFlags:64 foregroundNotiChannelId:Channel_Foreground_Service
+10-03 16:09:00.546 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: CEM ; uidBFSL: n/a; intent: Intent { act=com.xiaomi.rcs.SEND_RCS_MESSAGE cmp=com.android.mms/com.xiaomi.rcs.im.RcsImSenderService }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:09:00.562 I/ActivityManager( 2059): Background started FGS: Allowed [callingPackage: com.android.mms; callingUid: 10136; uidState: FGS ; uidBFSL: [BFSL]; intent: Intent { act=com.xiaomi.mms.mx.ACTION_START_TRACK pkg=com.android.mms }; code:BACKGROUND_ACTIVITY_PERMISSION; tempAllowListReason:<,reasonCode:SYSTEM_ALLOW_LISTED,duration:9223372036854775807,callingUid:-1>; targetSdkVersion:33; callerTargetSdkVersion:33; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 16:09:00.596 I/ActivityManager( 2059): Cancel FGS notification userId: 0 definingUid: 10136 packageName: com.android.mms processName:com.android.mms ChannelId:Channel_Foreground_Service foregroundNotiWhen:1791014940585 Notiflags:64
+10-03 16:09:00.596 I/NotificationService( 2059): Cancel FGS notification CallingUid: 10136 CallingPid: 22359 Pkg: com.android.mms Id:114 Tag:null UserId:0 MustHaveFlags:0 MustNotHaveFlags:0 Reason:8 foregroundNotiWhen:1791014940554 foregroundNotiFlags:64 foregroundNotiChannelId:Channel_Foreground_Service
+10-03 16:09:01.183 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=23.4/s) Done(0.000/s Avg=23.363/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:06.183 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=23.1/s) Done(0.000/s Avg=23.149/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:08.619 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from switchToNewFps
+10-03 16:09:11.184 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=22.9/s) Done(0.000/s Avg=22.938/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:16.184 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=22.7/s) Done(0.000/s Avg=22.732/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:21.185 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=22.5/s) Done(0.000/s Avg=22.529/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:26.185 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=22.3/s) Done(0.000/s Avg=22.330/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:31.186 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=22.1/s) Done(0.000/s Avg=22.134/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:32.122 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:32.124 E/ANDR-PERF-HINTEXT( 1149): Offload new thread from FpsUpdatePreAction
+10-03 16:09:32.132 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:32.171 I/SurfaceFlinger( 1401): SurfaceFlingerFunctionTimer noticeTimerFps displayid:4630946736638489730, fps: 120
+10-03 16:09:32.172 I/DisplayDeviceRepository( 2059): Display device changed: DisplayDeviceInfo{"内置屏幕": uniqueId="local:4630946736638489730", 1440 x 3200, modeId 1, renderFrameRate 120.00001, defaultModeId 1, supportedModes [{id=1, width=1440, height=3200, fps=120.00001, alternativeRefreshRates=[60.000004, 90.0], supportedHdrTypes=[1, 2, 3, 4]}, {id=2, width=1440, height=3200, fps=90.0, alternativeRefreshRates=[60.000004, 120.00001], supportedHdrTypes=[1, 2, 3, 4]}, {id=3, width=1440, height=3200, fps=60.000004, alternativeRefreshRates=[90.0, 120.00001], supportedHdrTypes=[1, 2, 3, 4]}], colorMode 0, supportedColorModes [0, 7, 9], hdrCapabilities HdrCapabilities{mSupportedHdrTypes=[1, 2, 3, 4], mMaxLuminance=420.0, mMaxAverageLuminance=210.1615, mMinLuminance=0.323}, allmSupported false, gameContentTypeSupported false, density 560, 515.154 x 515.082 dpi, appVsyncOff 1000000, presDeadline 13333332, cutout DisplayCutout{insets=Rect(0, 137 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(0, 0 - 232, 137), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1440 displayHeight=3200 physicalDisplayWidth=1440 physicalDisplayHeight=3200 density={3.5} cutoutSpec={M 0,0 H 232 V 137 H 0 V 0 Z @left} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}}}, touch INTERNAL, rotation 0, type INTERNAL, address {port=130, model=0x40446d856b1774}, deviceProductInfo DeviceProductInfo{name=, manufacturerPnpId=QCM, productId=1, modelYear=null, manufactureDate=ManufactureDate{week=27, year=2006}, connectionToSinkType=0}, state ON, committedState ON, frameRateOverride , brightnessMinimum 0.0, brightnessMaximum 1.0, brightnessDefault 0.07484738, hdrSdrRatio NaN, roundedCorners RoundedCorners{[RoundedCorner{position=TopLeft, radius=196, center=Point(196, 196)}, RoundedCorner{position=TopRight, radius=196, center=Point(1244, 196)}, RoundedCorner{position=BottomRight, radius=172, center=Point(1268, 3028)}, RoundedCorner{position=BottomLeft, radius=172, center=Point(172, 3028)}]}, FLAG_ALLOWED_TO_BE_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS, FLAG_TRUSTED, installOrientation 0, displayShape DisplayShape{ spec=1540528011 displayWidth=1440 displayHeight=3200 physicalPixelDisplaySizeRatio=1.0 rotation=0 offsetX=0 offsetY=0 scale=1.0}}
+10-03 16:09:32.173 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:32.786 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:33.574 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:34.082 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:34.267 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:34.296 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:34.327 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:34.327 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:09:34.504 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:34.528 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:34.542 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:34.542 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:09:35.584 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:35.682 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:35.688 I/MenuService(13850): host focus lost ignored (ACTIVITY mode)
+10-03 16:09:35.691 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.006 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.187 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(1) i/p-done(1) Works: Q: 12628/Done 12629|Work-Rate: Q(0.0/s Avg=21.9/s) Done(0.000/s Avg=21.942/s)| Stream: 30.00fps 71.5Kbps
+10-03 16:09:36.504 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:36.504 I/MenuService(13850): host window focus gained (deferred) → show ACTIVITY overlay host=LoginActivity alive=true
+10-03 16:09:36.570 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.670 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.701 I/MenuService(13850): bound host destroyed: LoginActivity → schedule rebind
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.NativeMenuController.tryAttachActivity(NativeMenuController.java:805)
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.NativeMenuController.ensureAliveOrRebindInner(NativeMenuController.java:335)
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.NativeMenuController.ensureAliveOrRebind(NativeMenuController.java:273)
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.MenuService.syncOverlayForHost(MenuService.java:475)
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.MenuService.-$$Nest$msyncOverlayForHost(Unknown Source:0)
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.MenuService$2.lambda$onActivityResumed$2$com-starry-magic-menu-MenuService$2(MenuService.java:638)
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.MenuService$2$$ExternalSyntheticLambda1.run(D8$$SyntheticClass:0)
+10-03 16:09:36.709 E/WindowManager(13850): 	at com.starry.magic.menu.MenuSafeHandler.dispatchMessage(MenuSafeHandler.java:22)
+10-03 16:09:36.712 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.715 I/MenuService(13850): host focus lost ignored (ACTIVITY mode)
+10-03 16:09:36.722 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:36.722 I/MenuService(13850): activity-resumed:MainActivity → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:09:36.737 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:36.737 I/MenuService(13850): host-destroyed→MainActivity → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:09:36.745 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:36.745 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:09:36.750 D/audioserver( 1375): FGS Logger Transaction failed
+10-03 16:09:36.755 I/MiMediaCodec(13850): send last fps
+10-03 16:09:36.755 I/MiMediaCodec(13850): send fps to display with mLastSendedFps:30.000000 state:1 id:2
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo clear video fps
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:09:36.756 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:09:36.756 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:09:36.756 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.756 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:09:36.756 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:09:36.786 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.828 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:09:36.828 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:09:36.828 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:09:36.828 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:09:36.856 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:09:36.856 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:09:36.856 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:09:36.856 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:09:36.856 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:09:36.856 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:09:36.856 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:09:36.856 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:09:36.856 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:09:36.856 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.856 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:09:36.856 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:09:36.893 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:09:36.893 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:09:36.893 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:09:36.893 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:09:36.916 I/MiMediaCodec(13850): send fps to display with mFpsFromPlayer:30.000000 state:1 id:2
+10-03 16:09:36.916 D/MI-SF   ( 1401): updateVideoDecoderInfo empty, add the first new video fps
+10-03 16:09:36.916 D/MI-SF   ( 1401): updateVideoDecoderInfo find same tid, update new video fps
+10-03 16:09:36.916 D/MI-SF   ( 1401): after updateVideoDecoderInfo fps= 30,  tid = 2
+10-03 16:09:36.916 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 60
+10-03 16:09:36.916 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 90
+10-03 16:09:36.916 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator double fps= 30.00, 120
+10-03 16:09:36.916 D/MI-SF   ( 1401): updateVideoDecoderInfo iterator fps= 30.00, 60
+10-03 16:09:36.916 D/MI-SF   ( 1401): updateVideoDecoderInfo find fps= 60.00
+10-03 16:09:36.916 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:36.916 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:09:36.916 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:1 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:09:37.123 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:37.123 I/MenuService(13850): resume delayed 400 → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:09:37.161 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:37.161 I/MenuService(13850): host window focus gained (deferred) → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:09:37.890 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:09:37.923 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:09:37.923 I/MenuService(13850): resume delayed 1200 → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:09:41.187 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(7) i/p-done(3) Works: Q: 12678/Done 12673|Work-Rate: Q(10.0/s Avg=21.8/s) Done(8.799/s Avg=21.829/s)| Stream: 30.00fps 7.6Mbps
+10-03 16:09:42.464 I/MiMediaCodec(13850): send fps to display when stop, state:0 mLastSendedFps:30.000000 id:2
+10-03 16:09:42.464 D/MI-SF   ( 1401): updateVideoDecoderInfo erase fps 30
+10-03 16:09:42.464 D/MI-SF   ( 1401): ShotVideoFlag 0,VideoHighFpsFlag 0,mVideoFrameRate 30,60.000000
+10-03 16:09:42.464 D/SurfaceFlinger( 1401): setFrameRateVideoToDisplay state:0 intfps:30  floatfps:30.000000 fromplayer:1 tid:2
+10-03 16:09:42.489 I/QC2Comp ( 1195): [avcD_23] Stats: Pending(0) i/p-done(0) Works: Q: 12678/Done 12680|Work-Rate: Q(0.0/s Avg=21.8/s) Done(5.376/s Avg=21.792/s)| Stream: 30.00fps 12.2Mbps
+10-03 16:09:44.409 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:19.994 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:25.636 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 16:10:25.669 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:25.669 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:10:25.676 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:26.168 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:10:26.173 I/StarryMagic(13850): [验证] grant ok exp=1791101426
+10-03 16:10:26.206 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:26.994 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 16:10:26.997 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = OFF
+10-03 16:10:26.997 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 16:10:26.997 I/ModBridge(13850): reapplied saved features to native
+10-03 16:10:28.222 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:30.167 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:30.557 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:32.172 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:32.230 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:33.633 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:37.892 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:39.631 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:44.102 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:46.888 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:50.910 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 16:10:50.922 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:10:50.929 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:50.936 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:51.337 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:10:51.343 I/StarryMagic(13850): [验证] grant ok exp=1791101451
+10-03 16:10:52.155 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 16:10:52.156 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = OFF
+10-03 16:10:52.156 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 16:10:52.156 I/ModBridge(13850): reapplied saved features to native
+10-03 16:10:52.642 I/Mod_Menu(13850): [gdzfdj] UpdateAI hooked @rva 0x3D9CF54
+10-03 16:10:52.645 I/Mod_Menu(13850): [gdzfdj] CalcDamage6 hooked @rva 0x3DB99CC
+10-03 16:10:52.649 I/Mod_Menu(13850): [gdzfdj] get_deltaTime hooked @rva 0x67BE180
+10-03 16:10:52.652 I/Mod_Menu(13850): [gdzfdj] set_timeScale hooked @rva 0x67BE458
+10-03 16:10:52.652 I/Mod_Menu(13850): [gdzfdj] install pass: ok=4 dead=0/4
+10-03 16:10:52.652 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 5
+10-03 16:10:52.701 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 6
+10-03 16:10:52.909 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 7
+10-03 16:10:56.231 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:57.972 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:58.200 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:58.215 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:58.264 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:10:59.684 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:01.201 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:07.520 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:11.072 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:11.138 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:11.984 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:12.862 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:23.577 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 16:11:23.589 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:23.593 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:11:23.597 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:23.933 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:11:23.937 I/StarryMagic(13850): [验证] grant ok exp=1791101484
+10-03 16:11:24.466 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 26
+10-03 16:11:24.475 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 27
+10-03 16:11:24.483 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 28
+10-03 16:11:24.491 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 29
+10-03 16:11:24.499 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 31
+10-03 16:11:24.508 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 32
+10-03 16:11:24.516 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 33
+10-03 16:11:24.525 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 34
+10-03 16:11:24.533 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 35
+10-03 16:11:24.541 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 36
+10-03 16:11:24.558 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 37
+10-03 16:11:24.566 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 38
+10-03 16:11:24.591 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 39
+10-03 16:11:24.616 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 40
+10-03 16:11:24.657 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 41
+10-03 16:11:24.707 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 42
+10-03 16:11:24.732 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 43
+10-03 16:11:24.753 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 43
+10-03 16:11:24.754 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = OFF
+10-03 16:11:24.754 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 7
+10-03 16:11:24.754 I/ModBridge(13850): reapplied saved features to native
+10-03 16:11:25.075 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = ON
+10-03 16:11:25.537 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:26.926 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:33.607 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:33.615 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:34.401 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 37
+10-03 16:11:34.410 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 35
+10-03 16:11:34.418 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 32
+10-03 16:11:34.426 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 29
+10-03 16:11:34.435 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 26
+10-03 16:11:34.443 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 23
+10-03 16:11:34.451 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 21
+10-03 16:11:34.465 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 18
+10-03 16:11:34.469 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 16
+10-03 16:11:34.476 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 15
+10-03 16:11:34.485 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 14
+10-03 16:11:34.493 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 13
+10-03 16:11:34.501 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 12
+10-03 16:11:34.509 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 11
+10-03 16:11:34.518 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 10
+10-03 16:11:34.551 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 9
+10-03 16:11:34.692 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 10
+10-03 16:11:34.718 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 11
+10-03 16:11:34.725 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 12
+10-03 16:11:34.733 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 13
+10-03 16:11:35.076 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = OFF
+10-03 16:11:35.607 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:36.994 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:57.138 I/ModBridge(13850): auth game_id synced from native: gdzfdj
+10-03 16:11:57.153 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:11:57.153 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:57.161 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:11:57.569 E/MediaProvider( 6648): Permission to access file: /storage/emulated/0/Download/.starry_magic/device_id is denied uid = 10256 forWrite = false
+10-03 16:11:57.573 I/StarryMagic(13850): [验证] grant ok exp=1791101518
+10-03 16:11:58.378 I/StarryMagic(13850): [数值] #1 Slider_伤害倍率:1:100:1 = 13
+10-03 16:11:58.379 I/StarryMagic(13850): [开关] #2 Toggle_超级定怪 = OFF
+10-03 16:11:58.379 I/StarryMagic(13850): [数值] #3 Slider_全局加速:1:10:1 = 7
+10-03 16:11:58.379 I/ModBridge(13850): reapplied saved features to native
+10-03 16:11:59.402 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:00.813 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:09.242 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:44.010 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:44.576 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.342 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.348 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.356 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.367 I/MenuService(13850): host focus lost ignored (ACTIVITY mode)
+10-03 16:12:45.380 I/MenuService(13850): overlayVisible=true attached=true
+10-03 16:12:45.380 I/MenuService(13850): host layout changed → show ACTIVITY overlay host=MainActivity alive=true
+10-03 16:12:45.390 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.411 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.427 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.452 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.485 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.527 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.551 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.577 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.610 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.643 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.676 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.726 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.742 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.784 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.937 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:45.974 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:46.008 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0
+10-03 16:12:46.041 D/MI-SF   ( 1401): mIsSupportAutomodeForMaxFpsSetting is 0(0), getCurrentBrightness() = 4095(880), mIsKeepAutoMode 0

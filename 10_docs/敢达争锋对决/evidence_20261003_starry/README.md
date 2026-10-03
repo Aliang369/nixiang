@@ -1,8 +1,8 @@
 # 敢达争锋对决 · 星空版实测证据索引（2026-10-03）
 
-> 结论一句话：**星空版 4 个抓点全部命中**（`[gdzfdj] install pass: ok=4 dead=0/4`），内存落点实测为星空自己的 16 字节绝对 veneer，指向 `libstarry_magic.so` 内的 Dobby trampoline；功能全开下登录链跑通、无崩溃。
+> 结论一句话：**星空版 4 个抓点全部命中**（`[gdzfdj] install pass: ok=4 dead=0/4`），内存落点实测为星空自己的 16 字节绝对 veneer，指向 `libstarry_magic.so` 内的 Dobby trampoline；功能全开下登录链跑通、无崩溃；**真机（Xiaomi M2102K1AC / Android 14 / arm64-v8a）另证 4/4 走 RVA 快路 `hooked @rva`**。
 > 关联文档：[移植记录_星空版_9.3.0_20261003.md](../移植记录_星空版_9.3.0_20261003.md) · [星空hook锚点_20261003.json](../星空hook锚点_20261003.json) · [斌哥抓点](../斌哥hook锚点_20261003.json) · [斌哥证据目录](../evidence_20261003/README.md)
-> 设备/进程：MuMu `emulator-5554`，`com.kingnet.gundam.mg.normal` pid **63814**（2026-10-03 15:27 启动）
+> 设备/进程：① MuMu `emulator-5554`，`com.kingnet.gundam.mg.normal` pid **63814**（2026-10-03 15:27 启动）② 真机 Xiaomi `M2102K1AC`（serial `96f0d883`，Android 14 / SDK 34 / arm64-v8a，2026-10-03 15:58 安装、16:10 装钩）
 
 ## 1. 决定性证据
 
@@ -20,6 +20,8 @@
 | 10 | 稳定性 | 同文件内含 `OnLoginSucc` / `run_client.php err_no:0` / `session.php` / `Msg_Login_VerifyAccount_CS`，且无 `SIGSEGV` / `FATAL` |
 | 11 | 被验包 == 交付物 | `08_output/敢达争锋对决/敢达争锋对决_9.3.0_surgical-starSigned.apk` 336,405,961 B，APK sha256 `1b4e9a3b1e00f32f16234e345ef585903a8c1387f6a300791de70f96b9689bdc`，与设备已装 `/data/app/~~ULq5Ycd4GBvIAi_P3ZcTqQ==/com.kingnet.gundam.mg.normal-VJJB1tcpZf_AhKDbh68sOA==/base.apk` 的 `sha256sum` **逐字节一致** ⇒ 本目录所有实测都跑在这一份产物上 |
 | 12 | 签名可用 | `apksigner verify --print-certs -v` → Verifies，v1/v2/v3 = true；DN `CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN`；证书 SHA-256 `83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d`、SHA-1 `821c92e404ab5fdac8dbf157c2e467e71440917d`、MD5 `161fca32a36d3df274458682a44cb774`（RSA 2048） |
+| 13 | **真机 RVA 快路 4/4** | `real_device_xiaomi_logcat.txt`：`UpdateAI/CalcDamage6/get_deltaTime/set_timeScale hooked @rva 0x3D9CF54/0x3DB99CC/0x67BE180/0x67BE458` + `install pass: ok=4 dead=0/4` ⇒ 无 by-name 降级，**证明模拟器降级纯属 MuMu/houdini 把 guest 代码页标 `r--` 的环境差异** |
+| 14 | 真机被验包 == 交付物 | 真机 `/data/app/~~61wZCf9nIetCvc8-YrDHQg==/com.kingnet.gundam.mg.normal-NHWVnKodg4zPsLAuS6fUxA==/base.apk` 的 `sha256sum` = `1b4e9a3b…9bdc`（与 `08_output` 交付物同 hash） |
 
 ## 2. 复现命令
 
@@ -51,8 +53,8 @@ adb -s emulator-5554 shell "sha256sum $(adb -s emulator-5554 shell pm path com.k
 
 | 项 | 状态 |
 |---|---|
-| RVA 快路（`hooked @rva 0x…`） | ⏳ 未验证 —— MuMu/houdini 下降级 by-name；真机 arm64 应命中，两路径功能等价 |
-| 三项功能实战效果 | ✅ 用户已实测正常（伤害倍率 / 超级定怪 / 全局加速），2026-10-03 结案 |
+| RVA 快路（`hooked @rva 0x…`） | ✅ 真机已验证 4/4（`real_device_xiaomi_logcat.txt`）；模拟器因 MuMu/houdini 的 `r--` 降级 by-name，两路径命中同一批方法、功能等价 |
+| 三项功能实战效果 | ✅ 用户已实测正常（伤害倍率 / 超级定怪 / 全局加速），**模拟器与真机均可用**（2026-10-03 结案） |
 | 关闭功能后是否需要卸载钩子 | ✅ 已证**不需要也不支持**：OFF 后四点仍是 veneer，靠 handler `mul<=1` 透传 |
 | 菜单卡密验证 / 后台功能门控 | ⚪ **范围外** —— 由后台管理，本工程不涉及服务端登记或验证 |
 
@@ -61,6 +63,7 @@ adb -s emulator-5554 shell "sha256sum $(adb -s emulator-5554 shell pm path com.k
 | 文件 | 内容 |
 |---|---|
 | `starry_logcat_verified.txt` | 849 行现场 logcat（自检 / 装钩 / 授权 / 登录 / il2cpp by-name 解析全量行） |
+| `real_device_xiaomi_logcat.txt` | 真机 Xiaomi M2102K1AC（Android 14 / arm64-v8a）logcat 摘录：`hooked @rva` 4/4、`install pass: ok=4 dead=0/4`、spoof hit、provider/MenuService/桥自检 |
 | `hookprobe_on_state.txt` | `gdzfdj_hookprobe.py --pid 63814` 原始输出（guest_base + 四点内存字与判定） |
 | `../星空hook锚点_20261003.json` | 机读版锚点（4 钩 / 注入机制 / 验证结果 / 复现命令 / 遗留项） |
 | `../移植记录_星空版_9.3.0_20261003.md` | 人类可读版移植记录（含构建与装机铁律、踩坑表） |
