@@ -101,12 +101,19 @@ bash 04_scripts/_common/pre_install_gate.sh \
 
 ## 调试内循环（最高频场景：改 Mod → 重打 → 装机 → 看日志 → 再改）
 
-已有外科底包的迭代**不需要重走完整标准阶段**，管线标准动作：
+已有外科底包的迭代**不需要重走完整标准阶段**，管线标准动作（**2026-10-03 起优先用包装器**）：
 
 ```bash
-bash 04_scripts/pipeline.sh <游戏> reset build_so   # 回退构建阶段
-bash 04_scripts/pipeline.sh <游戏> next             # 连跑到 install（build_so → surgical → device_ready → install）
+# 推荐：包装器只转发 pipeline.sh 的官方动词，另做三件事：日志尾 40 行 / 装机前轮次门禁 / 状态钉硬约束
+bash 04_scripts/_common/stage_next.sh <游戏> status        # 开工第一步：硬约束生效条目 + 管线状态 + 轮次台账
+bash 04_scripts/pipeline.sh <游戏> reset build_so          # 回退构建阶段（动词与 pipeline.sh 完全一致）
+bash 04_scripts/_common/stage_next.sh <游戏> auto 4        # 连跑最多 4 个 next（内部即 build_so→surgical→device_ready→install）
+bash 04_scripts/_common/stage_next.sh <游戏> log 40        # 只回显日志尾 40 行
+bash 04_scripts/_common/stage_next.sh <游戏> round 1 无效 "改了 X"   # 记一轮「改→装→实测」结果
 ```
+
+- **轮次门禁（P4）**：同一功能连续 3 轮「改代码→装机→用户实测仍无效」时，包装器对含 `install` 的阶段**直接拒绝执行**（exit 3）并打印假设矩阵；先跑 `rounds` 把矩阵填完贴给用户定方向，再谈继续。仅当用户当轮明确要求「再试一次」才用 `STAGE_NEXT_FORCE=1` 放行（会大声留痕）。
+- **Windows 编码垫片**：`pipeline.sh` 状态输出含 ⬜/✅，Windows 侧 python3 默认 cp936 会 `UnicodeEncodeError` 崩掉；`pipeline.sh` 有指纹锁禁改 ⇒ 包装器统一注入 `PYTHONIOENCODING=utf-8`、`PYTHONUTF8=1`。手动跑 pipeline.sh 前也请先 `export PYTHONIOENCODING=utf-8`。
 
 ### 存量未接管线：已有星光包只重打 dex/APK/重装（2026-09-29）
 
@@ -300,3 +307,18 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 
 113 个存量脚本（surgical_* / *_so_only / inject_*）是各游戏各阶段的**后端**，pipeline 只做
 路由/状态/校验，不重写。存量游戏可逐步接入（出包时顺手），新游戏出生即接入。
+
+`_common/` 下与「跑管线」直接相关的现成能力（**动手前先看这里，禁止重造**）：
+
+| 脚本 | 角色 | 触发场景 |
+|---|---|---|
+| `stage_next.sh` | pipeline.sh 的**包装器/内循环驱动**（P4 轮次门禁 + P5 日志尾 + 状态钉硬约束） | 日常 `status` / `auto N` / 记轮次 |
+| `pipeline.sh` + `pipeline.lock` | 状态机本体（**指纹锁定，禁改**；lock 是机器本地文件） | 所有机械动词 |
+| `preflight.sh` | 阶段执行前的语法/格式机器关 | 阶段声明 `preflight` 时自动调用 |
+| `bash32_check.sh` | macOS bash 3.2 兼容门禁（本仓脚本都要在 3.2 下跑） | 新增/改 `*.sh` 后 |
+| `pre_install_gate.sh` | 装机前产物门禁 | 装机前 |
+| `finalize_game_delivery.sh` | 收尾交付一键（delivery 目录 + prune + 文档片段） | 用户说「收尾」 |
+| `prune_output_final.sh` / `archive_scoped_git.sh` / `stage_shared_file.py` | 08 裁剪 / 白名单提交推送 / 共享文件入库 | 收尾 |
+| `trash_paths.sh` | 受控删除（**拒绝仓库根/.git/01_tools/02_apks/08_output**） | 清理 |
+
+- **清理禁通配符（P9）**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库 tracked 脚本，靠 `git checkout` 才救回）。

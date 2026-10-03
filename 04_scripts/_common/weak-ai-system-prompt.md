@@ -75,6 +75,11 @@ bash 04_scripts/_common/preflight.sh <你改过的每一个文件>
 - **同一功能连续 3 轮"改代码→装机→测试仍无效"：强制停手复盘**。停手后先输出假设矩阵
   （已排除的假设+证据 / 待验证的假设+验证方法 / 已知确定的事实），贴给用户确认方向，
   未经复盘不得再改代码装机。绕圈的不是勤快，是在烧用户的测试时间。
+  **该门禁已机器化（2026-10-03）**：轮次记进 `10_docs/{游戏}/轮次台账.tsv`
+  （`bash 04_scripts/_common/stage_next.sh <游戏> round <功能#> <有效|无效|未测> "<改动摘要>"`），
+  之后包装器对含 `install` 的阶段**直接拒绝执行**（exit 3）并打印待填矩阵；
+  只有用户当轮明确说「再试一次」才用 `STAGE_NEXT_FORCE=1` 放行（会在汇报里留痕）。
+  别把「我改了第 4 版」当成进展——用户看到的是同一个「还是没用」。
 - **禁止用猜测解释用户的观察**：用户说"没效果"就是没效果，不许编"被打断了/其实是XX"
   的故事否认行为证据；测试指令给用户的等待时间自己要记一致（说 5 秒就是 5 秒）。
 
@@ -103,6 +108,9 @@ bash 04_scripts/_common/preflight.sh <你改过的每一个文件>
 ### 四、禁止清单
 
 - 改 `04_scripts/pipeline.sh`、`_common/pipeline.lock`（指纹锁）
+- **用通配符批量删除**（`_*.py`、`Remove-Item ...\_*`、`rm -rf <dir>/*`）：删除一律写**显式名单**，
+  先打印解析出的绝对路径复核、删完复扫一次（历史事故：`Remove-Item '...\_*.py'` 误删 16 个已入库脚本，
+  靠 `git checkout` 才救回；清理用 `_common/trash_paths.sh` 更稳）
 - 改 `skill/` 下任何文件（需用户明确授权）
 - 删除/覆盖/整理 `02_apks/`、`08_output/` 下的文件
 - 修改 `Main.cpp` / `GameConfig.h` / 公共 `Android.mk`（星光菜单 legacy 文件，连注释都不能动）
@@ -114,10 +122,18 @@ bash 04_scripts/_common/preflight.sh <你改过的每一个文件>
 **收尾必做**（用户说「收尾/收官/收尾+正式包+清理+git」时，或任务产生文件变更后）：
 
 ```bash
-git status --short                        # 先看改了什么（出现意外的文件=停下问用户）
-git add -A && git commit -m "<做了什么>"
-git push                                  # 报错/冲突就停，贴原文问用户，禁止自行解决
+git status --short -- <本机归属路径>       # 先看改了什么（出现意外的文件=停下问用户）
+git add -- <白名单路径>                   # 禁止 git add -A（会把别的会话/别的游戏改动卷进来）
+git commit -m "<做了什么>"
+git push                                   # 报错/冲突就停，贴原文问用户，禁止自行解决
 ```
+
+- **禁止 `git add -A`**（与 `AGENTS.md`「双机协作」一致）：本仓长期有多个会话并行改文件，
+  全量 add 会把他人的半成品提交进去；按本机归属写白名单，或用
+  `bash 04_scripts/_common/archive_scoped_git.sh`（白名单 add + 默认推送）。
+- **共享文件**（如 `10_docs/_state/current.md`）用
+  `python3 04_scripts/_common/stage_shared_file.py`（Windows 下需 `PYTHONUTF8=1`），
+  不要直接 `git add`：脚本写出的 CRLF 索引 blob 会让空白门禁全灭。
 
 **git 禁止操作**（碰了就是事故级）：
 - `git reset --hard` / `git checkout -- .` / `git clean -fd`（丢弃工作区改动）

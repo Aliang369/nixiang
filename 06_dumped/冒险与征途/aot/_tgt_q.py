@@ -13,6 +13,11 @@ Usage:  _tgt_q.py <cmd> [args...]
   iluse <TypeRegex> <MethRegex>  dump IL + resolved field/method/string refs
   strrefs <substr>               find #US strings containing substr + their offsets
   callers <TypeRegex> <MethRegex> find methods whose IL references that member
+  dump-class <TypeRegex> [MethRegex]
+                                 ONE-SHOT: class header (token/base/flags) + all fields
+                                 + all methods (token/RVA/sig) + IL of methods matching
+                                 [MethRegex].  Use this instead of running
+                                 fields/methods/il/iluse three times for one class.
 """
 import sys, os, re, struct, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -386,6 +391,56 @@ def cmd_fields(pat):
             fr = m.tbl['Field'][fid - 1]
             print('    F 0x%08X  %-30s %-46s flags=0x%04X' % (0x04000000 | fid, m.s(fr[1]), field_type_str(fr[2]), fr[0]))
 
+def cmd_dump_class(pat, mpat=None):
+    """P7 一次到位：类头 + 字段 + 方法(token/RVA/签名) + 可选方法 IL。
+
+    旧会话为同一个类反复跑 fields/methods/il/iluse ≈40 次；一次调用即可拿全。
+    [偏移口径] 本工具只出 metadata 事实（token / 签名 / RVA / IL），**不给运行时字段偏移**：
+    运行时偏移以 dump.cs 的 +0xNN 或实测为准，且必须按 hook-rules.md §24 指纹铁律复核，禁止猜。
+    """
+    rx = re.compile(pat)
+    mrx = re.compile(mpat) if mpat else None
+    hit = 0
+    for i, r in enumerate(m.tbl['TypeDef']):
+        full = TDN[i]
+        if not rx.search(full):
+            continue
+        hit += 1
+        fl, ml = r[4], r[5]
+        nxt_f = m.tbl['TypeDef'][i + 1][4] if i + 1 < len(m.tbl['TypeDef']) else len(m.tbl['Field']) + 1
+        nxt_m = m.tbl['TypeDef'][i + 1][5] if i + 1 < len(m.tbl['TypeDef']) else len(m.tbl['MethodDef']) + 1
+        base = m.type_from_defref(r[3]) if r[3] else '-'
+        print('=' * 72)
+        print('类 %s   token=0x%08X  fields=%d methods=%d' % (full, 0x02000000 | (i + 1), nxt_f - fl, nxt_m - ml))
+        print('   flags=0x%04X  extends=%s' % (r[0], base))
+        print('-- 字段(%d):' % (nxt_f - fl))
+        for fid in range(fl, nxt_f):
+            fr = m.tbl['Field'][fid - 1]
+            print('   F 0x%08X  %-28s %-44s flags=0x%04X'
+                  % (0x04000000 | fid, m.s(fr[1]), field_type_str(fr[2]), fr[0]))
+        print('-- 方法(%d):' % (nxt_m - ml))
+        for mid in range(ml, nxt_m):
+            nm, ret, params, rva = method_sig_row(mid)
+            print('   M 0x%08X  rva=0x%08X  %s(%s) -> %s'
+                  % (0x06000000 | mid, rva, nm, ', '.join(params), ret))
+        if mrx:
+            for mid in range(ml, nxt_m):
+                nm = m.s(m.tbl['MethodDef'][mid - 1][3])
+                if not mrx.search(nm):
+                    continue
+                print('-- IL %s (0x%08X):' % (nm, 0x06000000 | mid))
+                code, st = method_body(mid)
+                print('   body:', st, 'len', len(code) if code else 0)
+                if code:
+                    for l in il_disasm(code):
+                        print('   ' + l)
+        if hit >= 20:
+            print('... 命中 ≥20 个类，已停（请收窄正则）')
+            break
+    print('== dump-class 命中 %d 个类 ==' % hit)
+    print('[偏移口径] token/签名/RVA/IL 来自 metadata；运行时字段偏移以 dump.cs 的 +0xNN 或实测为准'
+          '（hook-rules.md §24 指纹铁律，禁止猜偏移）。')
+
 def cmd_props(pat):
     rx = re.compile(pat)
     for i, r in enumerate(m.tbl['TypeDef']):
@@ -514,4 +569,4 @@ def cmd_callers(tpat, mpat):
 if __name__ == '__main__':
     cmd = sys.argv[1]
     a = sys.argv[2:]
-    globals()['cmd_' + cmd](*a)
+    globals()['cmd_' + cmd.replace('-', '_')](*a)   # 子命令名里的 '-' 映到 '_'（如 dump-class）
