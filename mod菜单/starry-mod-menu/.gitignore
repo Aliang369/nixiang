@@ -55,3 +55,7 @@ libs*/
 scripts/__pycache__/
 scripts/**/__pycache__/
 scripts/**/*.pyc
+
+# 构建产物再排除（根 .gitignore 的 .gradle/ 规则被上面的 !*.gradle 覆盖：
+# !*.gradle 的 * 可匹配空串，于是把名为 .gradle 的缓存目录本身也重新纳入）
+.gradle/
