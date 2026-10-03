@@ -7,6 +7,7 @@
 #
 # 覆盖: 仓库定位与兼容路径 / git 状态与远端 / 换行符白名单 / mac 命令垫片
 #       env.sh 六项 / python / adb 设备 / SMB 共享 / Syncthing 进程与 GUI
+#       AI 入口文件规范一致性 (防 CLAUDE.md 类入口复制正文后静默脱队)
 #
 # 说明: 本脚本是唯一被允许做"整仓 git status"的地方(体检用途, 只读)。
 #       手工排查时仍按 AGENTS.md 纪律带 pathspec。
@@ -219,6 +220,40 @@ if [ "$HOST" = win ]; then
   # 注意: MSYS 会把 /query 当成路径改写掉, 必须写 //query
   if schtasks //query //tn nixiang-syncthing >/dev/null 2>&1; then pass "自启任务 nixiang-syncthing 已注册"; else warn "自启任务 nixiang-syncthing 不存在"; fi
 fi
+
+# --------------------------------------------------------------------------
+sect "9. AI 入口文件规范一致性 (防入口漂移)"
+# AGENTS.md「工具专属文件」节: 入口只放指针, 不复制政策正文。
+# 指纹: 文件含 "git pull --rebase" 或 "git status -sb" 即视为复制了开工正文;
+#       复制正文的入口必须带齐现行开工关键口令 (口令清单随 AGENTS.md 升级维护)。
+# 背景: 2026-10-04 发现 CLAUDE.md 停在 10-02 老三步开工, 架空了本体检与心跳。
+if [ -f "$ROOT/AGENTS.md" ]; then
+  if grep -q 'twin_status' "$ROOT/AGENTS.md" 2>/dev/null; then
+    pass "AGENTS.md 源头含 twin_status 开工口令"
+  else
+    fail "AGENTS.md 缺 twin_status 开工口令 (源头被改坏? 本节检查失效)"
+  fi
+else
+  fail "AGENTS.md 不存在"
+fi
+n_ptr=0
+for ef in "$ROOT/CLAUDE.md" "$ROOT/.trae/rules/project_rules.md" "$ROOT"/.cursor/rules/*.mdc; do
+  [ -f "$ef" ] || continue
+  if ! grep -q -E 'git pull --rebase|git status -sb' "$ef" 2>/dev/null; then
+    n_ptr=$((n_ptr + 1))
+    continue
+  fi
+  miss_t=""
+  for tok in twin_status claim_game; do
+    grep -q "$tok" "$ef" 2>/dev/null || miss_t="$miss_t $tok"
+  done
+  if [ -n "$miss_t" ]; then
+    warn "入口复制开工正文但缺口令:$miss_t -> ${ef#"$ROOT"/} (照 AGENTS.md「双机协作」节更新)"
+  else
+    pass "入口正文口令齐全: ${ef#"$ROOT"/}"
+  fi
+done
+pass "纯指针入口 $n_ptr 个, 不承载正文不漂移"
 
 # --------------------------------------------------------------------------
 # 心跳: 重写本机心跳文件 (只写本机那台, 收工随 git 提交; 对方 pull 后可见本机最近体检)
