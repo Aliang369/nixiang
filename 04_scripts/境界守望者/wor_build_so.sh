@@ -168,7 +168,7 @@ if [[ "$SO_ENV_N" -ge 1 ]]; then
     || { echo "ERROR: 环境阶段 so 里混进了功能阶段标记（feature stage）" >&2; exit 1; }
   for s in "DMG x%d" "INV e=%p"; do
     LC_ALL=C grep -aqF -- "$s" "$SO" \
-      && { echo "ERROR: 环境阶段 so 里混进了功能阶段日志（$s）" >&2; exit 1; }
+      && { echo "ERROR: 环境阶段 so 里混进了功能阶段日志（${s}）" >&2; exit 1; }
   done
   if LC_ALL=C grep -aqF -- "Slider_伤害倍率:1:100:1" "$SO"; then
     echo "ERROR: $SO 仍含旧 1:100 滑条" >&2; exit 1

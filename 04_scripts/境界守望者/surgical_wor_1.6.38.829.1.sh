@@ -114,8 +114,8 @@ command -v apktool >/dev/null 2>&1 \
   || { echo "ERROR: apktool 不在 PATH（01_tools/apktool 应由 wor_env.sh 加进 PATH）" >&2; exit 1; }
 command -v java >/dev/null 2>&1 || { echo "ERROR: java 不在 PATH（设 JAVA_HOME）" >&2; exit 1; }
 SO_PREBUILT="${WOR_SO:-$STARRY_SRC/libs_wor/arm64-v8a/libstarry_magic.so}"
-[[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing starry so $SO_PREBUILT（先跑 04_scripts/境界守望者/wor_build_so.sh）" >&2; exit 1; }
-[[ -n "$NDK_CXX" && -f "$NDK_CXX" ]] || { echo "ERROR: libc++_shared.so 未找到（ANDROID_NDK_HOME=$NDK）" >&2; exit 1; }
+[[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing starry so ${SO_PREBUILT}（先跑 04_scripts/境界守望者/wor_build_so.sh）" >&2; exit 1; }
+[[ -n "$NDK_CXX" && -f "$NDK_CXX" ]] || { echo "ERROR: libc++_shared.so 未找到（ANDROID_NDK_HOME=${NDK}）" >&2; exit 1; }
 if [[ -f "$SPLIT_APK" ]]; then
   echo "  split present（只剥签名，.so/manifest 字节不动）: $SPLIT_APK"
 else
@@ -124,7 +124,7 @@ else
 fi
 
 ACTUAL_MD5="$(md5_of "$ORIG_APK")"
-[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符（$ACTUAL_MD5 != $ORIG_MD5）" >&2; exit 1; }
+[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符（$ACTUAL_MD5 != ${ORIG_MD5}）" >&2; exit 1; }
 
 NEW_DEX_NUM="$("$PY" "$NIXIANG/04_scripts/_common/next_free_dex.py" "$ORIG_APK")"
 NEW_DEX="classes${NEW_DEX_NUM}.dex"
@@ -542,7 +542,7 @@ zipcat "$UNSIGNED" "$NEW_DEX" > "$WORK/${NEW_DEX%.dex}_check.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c6_check" "$WORK/${NEW_DEX%.dex}_check.dex" >/dev/null
 for f in com/starry/magic/StarryInitProvider.smali com/starry/magic/menu/MenuService.smali \
          com/starry/magic/sign/SignSpoof.smali; do
-  [[ -f "$WORK/c6_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 $f（smali 未打进包）" >&2; exit 1; }
+  [[ -f "$WORK/c6_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 ${f}（smali 未打进包）" >&2; exit 1; }
 done
 # 包名在 smali 里是 const-string 常量 ⇒ **点分形式**（com.ap.watcherofrealms）；
 # 斜杠形式只在类型描述符 Lcom/ap/watcherofrealms/... 里出现，本处没有。两种都认。

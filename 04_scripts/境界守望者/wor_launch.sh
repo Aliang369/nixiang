@@ -158,12 +158,12 @@ if [ "$_V_FATAL" -eq 0 ] && [ "$_V_SEGV" -eq 0 ] && [ "$_V_ABRT" -eq 0 ]; then
     echo "VERDICT: GATE-PASS — 无 FATAL/SIGSEGV/SIGABRT，这一版不会立刻崩。"
     echo "         但 gate 通过 ≠ 可用：必须再跑 full 长跑，并走到功能真正触发（开开关/进战斗/第一次 hook 命中）。"
   elif [ "$_V_LIBOK" -gt 0 ]; then
-    echo "VERDICT: FULL-PASS(取证完成) — 无崩溃且 [Wor] lib ready 已出现；功能是否生效看 INV=$_V_INV / DMG=$_V_DMG。"
+    echo "VERDICT: FULL-PASS(取证完成) — 无崩溃且 [Wor] lib ready 已出现；功能是否生效看 INV=${_V_INV} / DMG=${_V_DMG}。"
   else
     echo "VERDICT: FULL-NO-INIT — 无崩溃但没等到 [Wor] lib ready（抓取窗口太短，或库没被游戏 dlopen）。"
   fi
 else
-  echo "VERDICT: CRASH — 有崩溃（FATAL=$_V_FATAL SIGSEGV=$_V_SEGV SIGABRT=$_V_ABRT）⇒ 立刻回滚本版，不要往下走。"
+  echo "VERDICT: CRASH — 有崩溃（FATAL=$_V_FATAL SIGSEGV=$_V_SEGV SIGABRT=${_V_ABRT}）⇒ 立刻回滚本版，不要往下走。"
   echo "         崩溃栈看上面的「崩溃/异常」段；需要符号化就用 NDK llvm-symbolizer + 未 strip 的 obj/ 产物。"
 fi
 

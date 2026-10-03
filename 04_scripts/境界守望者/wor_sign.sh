@@ -45,8 +45,8 @@ if command -v /usr/libexec/java_home >/dev/null 2>&1; then
 fi
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED（先跑 surgical_wor_1.6.38.829.1.sh）" >&2; exit 1; }
-[[ -f "$SPLIT_UNSIGNED" ]] || { echo "ERROR: missing $SPLIT_UNSIGNED（split 不重签会 Inconsistent certificates）" >&2; exit 1; }
+[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing ${UNSIGNED}（先跑 surgical_wor_1.6.38.829.1.sh）" >&2; exit 1; }
+[[ -f "$SPLIT_UNSIGNED" ]] || { echo "ERROR: missing ${SPLIT_UNSIGNED}（split 不重签会 Inconsistent certificates）" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 mkdir -p "$OUT"
 
@@ -89,7 +89,7 @@ A_SPLIT="$WORK/split-signed.apk"
 sign_one() {  # $1=unsigned  $2=输出(ASCII)  $3=label
   local in="$1" out="$2" label="$3"
   rm -f "$out" "$WORK/${label}-aligned.apk" "$WORK/${label}-unsigned.apk"
-  # 输入也先搬进 ASCII 的 $WORK：zipalign.exe / apksigner.bat 都不保证能吃非 ASCII 路径
+  # 输入也先搬进 ASCII 的 ${WORK}：zipalign.exe / apksigner.bat 都不保证能吃非 ASCII 路径
   cp -f "$in" "$WORK/${label}-unsigned.apk"
   "$ZIPALIGN" -f -p 4 "$WORK/${label}-unsigned.apk" "$WORK/${label}-aligned.apk"
   "$APKSIGNER" sign \
@@ -97,7 +97,7 @@ sign_one() {  # $1=unsigned  $2=输出(ASCII)  $3=label
     --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
     --out "$out" "$WORK/${label}-aligned.apk"
   "$APKSIGNER" verify "$out" >/dev/null
-  echo "[sign] $label 已签（ASCII 暂存 $out）"
+  echo "[sign] $label 已签（ASCII 暂存 ${out}）"
 }
 
 sign_one "$UNSIGNED" "$A_BASE" "base"

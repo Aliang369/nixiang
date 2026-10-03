@@ -36,7 +36,7 @@ NEW_DEX="${WOR_NEW_DEX:-classes6.dex}"
 # （历史遗留）曾经用 adb push + 设备侧 pm install-multiple，现已改为宿主侧 adb install-multiple
 REMOTE_DIR="/data/local/tmp/wor_${VERSION}_starry"
 
-[[ -f "$APK" ]] || { echo "ERROR: 缺少星空包 $APK（先跑 surgical + wor_sign）" >&2; exit 1; }
+[[ -f "$APK" ]] || { echo "ERROR: 缺少星空包 ${APK}（先跑 surgical + wor_sign）" >&2; exit 1; }
 [[ -n "$SERIAL" ]] || { echo "ERROR: 必须显式指定 SERIAL=<adb 设备序列号>（本作国际服测试机未在脚本里硬编码）" >&2; exit 1; }
 adb -s "$SERIAL" get-state >/dev/null 2>&1 || { echo "ERROR: 设备 $SERIAL 不在线" >&2; exit 1; }
 if [[ ! -f "$SPLIT" ]]; then
@@ -60,11 +60,11 @@ echo "[install] device=$SERIAL model=$MODEL abi=$ABI sdk=$SDK"
 echo "[install] base=$APK"
 echo "[install] split=$SPLIT"
 if [[ -n "${WOR_EXPECT_MODEL:-}" && "$MODEL" != "$WOR_EXPECT_MODEL" ]]; then
-  echo "ERROR: 目标机型不是约定测试机（$MODEL != $WOR_EXPECT_MODEL）" >&2
+  echo "ERROR: 目标机型不是约定测试机（$MODEL != ${WOR_EXPECT_MODEL}）" >&2
   exit 1
 fi
 if [[ "$ABI" != "arm64-v8a" ]]; then
-  echo "ERROR: 设备 ABI=$ABI，本包只含 arm64-v8a" >&2
+  echo "ERROR: 设备 ABI=${ABI}，本包只含 arm64-v8a" >&2
   exit 1
 fi
 
