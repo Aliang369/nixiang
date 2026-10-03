@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# ==============================================================================
+#  win_shims/python3.11 — Windows(Git Bash) 上的 `python3.11` 垫片
+# ==============================================================================
+#  为什么存在
+#  ----------
+#  macOS 侧脚本统一调用 `python3.11`（brew 安装，带 pycryptodome / xxtea /
+#  keystone / yara 等逆向库），全仓 43 个 .sh 里共 81 处。Windows 上没有这个
+#  命令名（只有 python.exe / py），于是这些调用全部 `command not found`。
+#
+#  两条路：
+#    A) 把 81 处调用改成 `$NIXIANG_PYTHON` —— 要动 43 个文件（散在 60 个游戏
+#       目录里），而且 mac 侧本来跑得好好的，会制造大规模跨机冲突。
+#    B) 造这个垫片并放到 PATH 上 —— 81 处一行不改，mac 侧零 diff。
+#  选了 B。mac 侧永远不会把这个目录放进 PATH，所以对 mac 完全透明。
+#
+#  用法
+#  ----
+#    # 方式 ① 仓库内（env.sh 在 NIXIANG_HOST=win 时把本目录前置进 PATH）
+#    # 方式 ② 装到机器 PATH 目录，覆盖那些不 source env.sh 的脚本：
+#    bash 04_scripts/_common/win_shims/install_win_shims.sh
+#
+#    # 诊断（绕过缓存，实时重探并打印选中的解释器与库打分）：
+#    NIXIANG_SHIM_INFO=1 python3.11
+#
+#  契约
+#  ----
+#  1. 必须透明转发 argv 与 stdin（大量调用点是 `python3.11 - <<'PY'`），并原样
+#     透传退出码。
+#  2. 绝不递归调 `python3.11` 自己（候选表里不含该名字）。
+#  3. 优选顺序按「真导入」打分，不靠模块名存在性 —— `import PIL` 会假阳性
+#     （本机 `py` 启动的 D:\Python313 就属于 PIL 装坏：`import PIL` 能过，
+#     但 `from PIL import Image` 抛 cannot import name '_imaging'）。
+#     同理 `import elftools` 能过而 `from elftools.elf.elffile import ELFFile` 不能。
+#  4. 结果缓存到临时文件，避免每次调用都探测（循环里会反复调用）。
+# ==============================================================================
+set -uo pipefail
+
+_cache="${TMPDIR:-/tmp}/.nixiang_win_py311"
+_self_dir="$(cd "$(dirname "$0")" && pwd)"
+
+# ---- 打分：真导入才算数（capstone 34 处、lz4 4 处、Crypto 3 处、PIL 若干）----
+_py_score() {
+  "$1" -c 'n=0
+for s in ("from capstone import Cs", "from Crypto.Cipher import AES", "import lz4.block", "from PIL import Image"):
+    try:
+        exec(s); n += 1
+    except Exception:
+        pass
+print(n)' 2>/dev/null || echo -1
+}
+
+# ---- 名字/相对路径 → 绝对路径；剔除垫片自身与 WindowsApps 存根 ----
+_resolve() {
+  _c="$1"
+  [ -n "$_c" ] || return 0
+  case "$_c" in
+    */*|*\\*) _p="$_c" ;;
+    *)        _p="$(command -v "$_c" 2>/dev/null || true)" ;;
+  esac
+  [ -n "$_p" ] || return 0
+  case "$_p" in
+    *win_shims*|*Microsoft/WindowsApps/*|*Microsoft\\WindowsApps\\*) return 0 ;;
+  esac
+  printf '%s\n' "$_p"
+}
+
+# ---- 候选发现（顺序只在同分时才有意义）----
+_candidates() {
+  [ -n "${NIXIANG_WIN_PY:-}" ] && printf '%s\n' "$NIXIANG_WIN_PY"
+  [ -n "${NIXIANG_PYTHON:-}" ] && printf '%s\n' "$NIXIANG_PYTHON"
+  printf '%s\n' python3 python py
+  # 常见安装位（含 DSH 自带运行时）；glob 不展开时原样输出，_resolve 会滤掉
+  printf '%s\n' \
+    "${LOCALAPPDATA:-/c/Users/Administrator/AppData/Local}/Programs/Python/Python3"*/python.exe \
+    /c/Python3*/python.exe /d/Python3*/python.exe /e/Python3*/python.exe \
+    "$HOME"/.dsh/dsh-runtimes/*/dependencies/python/python.exe
+}
+
+# ---- 缓存命中则直接用；启动失败(126/127)则删缓存重探 ----
+# 注意：NIXIANG_SHIM_INFO=1 时**必须绕过缓存**——缓存里只存了解释器路径，没有
+# 分数，走缓存分支会直接 `"$_cached" "$@"` 退出（无参数时落进交互式 REPL，
+# 在 Windows 上还会崩 OSError WinError 6），诊断横幅根本打不出来。
+if [ -z "${NIXIANG_WIN_PY:-}" ] && [ -z "${NIXIANG_SHIM_INFO:-}" ] && [ -f "$_cache" ]; then
+  _cached="$(cat "$_cache" 2>/dev/null || true)"
+  if [ -n "$_cached" ] && [ -f "$_cached" ]; then
+    "$_cached" "$@"
+    _rc=$?
+    if [ "$_rc" -ne 126 ] && [ "$_rc" -ne 127 ]; then exit "$_rc"; fi
+    rm -f "$_cache" 2>/dev/null || true
+  fi
+fi
+
+# ---- 探测：取分数最高者；同分保留先出现的 ----
+_best=""; _best_score=-1
+for _c in $(_candidates); do
+  _p="$(_resolve "$_c")"
+  [ -n "$_p" ] || continue
+  [ -f "$_p" ] || continue
+  _s="$(_py_score "$_p")"
+  [ "$_s" -gt "$_best_score" ] 2>/dev/null || continue
+  _best_score="$_s"; _best="$_p"
+  [ "$_best_score" -ge 4 ] && break      # 满分即止，别再多起进程
+done
+
+if [ -z "$_best" ]; then
+  echo "win_shims/python3.11: 找不到可用的 python 解释器。" >&2
+  echo "  候选: $(_candidates | tr '\n' ' ')" >&2
+  echo "  请设 NIXIANG_WIN_PY=<python.exe 绝对路径> 或运行 04_scripts/_common/win_shims/install_win_shims.sh" >&2
+  exit 127
+fi
+
+printf '%s\n' "$_best" > "$_cache" 2>/dev/null || true
+
+if [ -n "${NIXIANG_SHIM_INFO:-}" ]; then
+  echo "win_shims/python3.11 → $_best (libs score=$_best_score)"
+  "$_best" --version 2>&1
+  exit 0
+fi
+
+"$_best" "$@"
+exit $?

@@ -25,7 +25,9 @@ set -uo pipefail
 hard=0; soft=0
 for f in "$@"; do
   [ -f "$f" ] || { echo "✗ 缺文件 $f"; hard=$((hard+1)); continue; }
-  out=$(python3 - "$f" <<'PY'
+  # PYTHONIOENCODING=utf-8：Windows 控制台是 GBK，python 打印 '✗' 会抛
+  # UnicodeEncodeError 并只吐半截输出 —— 那会让本脚本**误报通过**（见下方空 counts 兜底）
+  out=$(PYTHONIOENCODING=utf-8 python3 - "$f" <<'PY'
 import re, sys
 p = sys.argv[1]
 lines = open(p, encoding="utf-8", errors="replace").read().splitlines()
@@ -76,6 +78,14 @@ print("__COUNTS__ %d %d" % (len(hard), len(soft)))
 PY
 )
   counts=$(echo "$out" | grep '^__COUNTS__' | awk '{print $2, $3}')
+  # 没拿到 __COUNTS__ ⇒ 探测进程崩了（如 GBK 控制台 UnicodeEncodeError 只吐半截），
+  # 此时 h/s 都取默认 0，会**静默误报通过**。宁可误报 FAIL，也不放过。
+  if [ -z "$counts" ]; then
+    echo "  [$f] ✗ 兼容性探测未产出结果（python 探测进程异常退出）——按 FAIL 处理，请人工检查该文件"
+    echo "$out" | sed "s|^|  [$f] 探测输出: |"
+    hard=$((hard + 1))
+    continue
+  fi
   body=$(echo "$out" | grep -v '^__COUNTS__')
   [ -n "$body" ] && echo "$body" | sed "s|^|  [$f] |"
   h=$(echo "$counts" | awk '{print $1}'); s=$(echo "$counts" | awk '{print $2}')

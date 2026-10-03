@@ -18,9 +18,41 @@ case "$(uname -s 2>/dev/null || echo unknown)" in
 esac
 export NIXIANG_HOST
 
+# --- 路径转换 helper（双机 2026-10-04）---
+# 把 POSIX 路径转成"交给原生 Windows 程序"用的形式。mac 上没有 cygpath，直接原样
+# 返回；win 上 cygpath 也必须用 command -v 守护（不能无条件调）。
+# 为什么需要它：脚本一旦 `export MSYS_NO_PATHCONV=1`（为了阻止 Git Bash 擅自改写
+# 传给 adb.exe / java.exe 的参数），argv 里的 POSIX 路径就会被原生程序当成
+# 当前盘根路径 —— 典型报错：java FileNotFoundException: \e\nixiang\...
+# 或 python FileNotFoundError: '\tmp\trash_paths.XXXXXX'。
+nixiang_win_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -m "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
 # Prefer brew python3.11 for RE libs (pycryptodome/xxtea/keystone/yara)
 # Git Bash 没有 brew，用 PATH 上的 python3（winget 装的 Python 3.11）。
 if [ "$NIXIANG_HOST" = "win" ]; then
+  # --- 2026-10-04 双机：`python3.11` 垫片 ---
+  # 全仓 43 个 .sh 里共 81 处直接调 `python3.11`（mac 侧由 brew 提供，带
+  # pycryptodome/xxtea/keystone/yara）。Windows 上没有这个命令名，那些脚本
+  # 全部 command not found。改 81 处会动 43 个文件、且与 mac 侧大范围冲突，
+  # 因此改为把一个垫片目录前置进 PATH：81 处一行不改，mac 侧永不进这个分支。
+  # 垫片本体 = 04_scripts/_common/win_shims/python3.11（按"真导入"打分挑
+  # 可用 python，并透明转发 argv/stdin/退出码）。
+  # 不 source env.sh 的脚本看不到这个前置，需要机器级安装：
+  #   bash 04_scripts/_common/win_shims/install_win_shims.sh
+  NIXIANG_SHIM_DIR="$NIXIANG_ROOT/04_scripts/_common/win_shims"
+  if [ -d "$NIXIANG_SHIM_DIR" ]; then
+    case ":$PATH:" in
+      *":$NIXIANG_SHIM_DIR:"*) : ;;
+      *) PATH="$NIXIANG_SHIM_DIR:$PATH" ;;
+    esac
+  fi
+  export NIXIANG_SHIM_DIR PATH
   # 2026-10-01 双机协作实测修正：%LOCALAPPDATA%\Microsoft\WindowsApps\ 下的
   # python3.exe 是 App Execution Alias 存根（0 字节 ReparsePoint），执行它会弹
   # Microsoft Store、退出码 9009、`--version` 无输出。旧写法 `command -v python3`

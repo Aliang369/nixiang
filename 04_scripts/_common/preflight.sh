@@ -4,6 +4,13 @@
 #
 #  用法:
 #    bash 04_scripts/_common/preflight.sh <文件1> [文件2 ...]
+#    bash 04_scripts/_common/preflight.sh --env <文件...>        # 顺带跑环境体检
+#    bash 04_scripts/_common/preflight.sh --env                 # 只跑环境体检
+#
+#  --env：额外执行 `04_scripts/_common/env_deps.sh` —— 检查 bash 版本、宿主判定、
+#    NIXIANG_* 解析、python/Pillow、python3.11（win 侧垫片）、apksigner/zipalign/
+#    adb/java、cygpath/sips/md5/stat 的可用性与 mac 优先序。用于"动真格前"确认机器，
+#    环境有 FAIL 时整体 rc=1（与文件检查同样挡关）。
 #
 #  按扩展名自动路由检查器：
 #    .sh   → bash -n + bash 3.2 兼容门禁（macOS 自带 bash 就是 3.2；见下 "bash 3.2 门禁"）
@@ -99,16 +106,49 @@ check_one() {
   esac
 }
 
-[ $# -ge 1 ] || { echo "用法: bash 04_scripts/_common/preflight.sh <文件...>（改过什么文件就传什么）"; exit 1; }
+[ $# -ge 1 ] || { echo "用法: bash 04_scripts/_common/preflight.sh [--env] <文件...>（改过什么文件就传什么）"; exit 1; }
+
+# --- 参数解析（bash 3.2 安全）---
+# --env：额外跑一遍环境依赖体检（env_deps.sh）。用于"动真格前先确认机器没问题"
+#        —— 收官链在 Win 上曾被 apksigner/python3.11/stat 三个环境问题分三次打断。
+ENV_CHECK=0
+FILE_ARGS=0
+for _a in "$@"; do
+  case "$_a" in
+    --env)      ENV_CHECK=1 ;;
+    -h|--help)  echo "用法: bash 04_scripts/_common/preflight.sh [--env] <文件...>"; exit 0 ;;
+    --*)        echo "✗ FAIL  [参数] 未知选项 $_a"; exit 2 ;;
+    *)          FILE_ARGS=$((FILE_ARGS+1)) ;;
+  esac
+done
+if [ "$ENV_CHECK" = "0" ] && [ "$FILE_ARGS" -lt 1 ]; then
+  echo "用法: bash 04_scripts/_common/preflight.sh [--env] <文件...>（改过什么文件就传什么）"
+  exit 1
+fi
 
 for f in "$@"; do
+  case "$f" in --*) continue ;; esac
   check_one "$f"
 done
+
+env_rc=0
+if [ "$ENV_CHECK" = "1" ]; then
+  echo
+  if [ -f "$SCRIPT_DIR/env_deps.sh" ]; then
+    bash "$SCRIPT_DIR/env_deps.sh" || env_rc=$?
+  else
+    echo "⚠ 未找到 $SCRIPT_DIR/env_deps.sh，跳过环境体检"
+  fi
+fi
 
 echo "────────────────────────────────"
 echo "汇总: PASS=$pass  FAIL=$fail  REMIND=$remind  SKIP=$skip"
 if [ "$fail" -gt 0 ]; then
   echo "❌ 存在 FAIL：必须修复后再继续下一步（这就是你改完代码的机器关）。"
+  exit 1
+fi
+if [ "$env_rc" != "0" ]; then
+  echo "❌ 环境体检未通过（env_deps.sh rc=${env_rc}）：先修环境再继续。"
   exit 1
 fi
 if [ "$remind" -gt 0 ]; then
