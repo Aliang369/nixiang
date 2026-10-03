@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# archive 后端 commit 后，pipeline.sh 会再把阶段写为 done。
-# 本脚本只提交该状态变化，消除“补一次手工提交”的重复步骤。
+# archive_close：生成机器交付 manifest，并把 manifest 与管线状态一起收口。
+# archive 阶段的源码/文档应先由 archive_scoped_git.sh 提交；本脚本拒绝遗漏的游戏范围脏改动。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -48,25 +48,49 @@ done
 
 [[ -n "$GAME" ]] || usage
 STATE="04_scripts/$GAME/pipeline.json"
+MANIFEST="10_docs/$GAME/delivery_manifest.json"
 [[ -f "$STATE" ]] || { echo "错误: 缺少管线状态文件: $STATE" >&2; exit 1; }
+
+# 未暂存修改和暂存修改都拒绝（STATE/MANIFEST 仅允许本脚本稍后生成/暂存）。
+while IFS= read -r path; do
+  [[ -n "$path" ]] || continue
+  echo "错误: archive_close 前交付范围仍有未暂存改动: $path" >&2
+  echo "       先用 archive_scoped_git.sh 完成源码/文档白名单提交，再执行 archive_close。" >&2
+  exit 1
+done < <(git diff --name-only -- "10_docs/$GAME" "04_scripts/$GAME")
+while IFS= read -r path; do
+  [[ -n "$path" ]] || continue
+  echo "错误: archive_close 前交付范围仍有未提交的暂存改动: $path" >&2
+  echo "       archive_close 仅能提交本脚本生成的管线状态与 manifest。" >&2
+  exit 1
+done < <(git diff --cached --name-only -- "10_docs/$GAME" "04_scripts/$GAME")
+while IFS= read -r path; do
+  [[ -n "$path" ]] || continue
+  [[ "$path" == "$MANIFEST" ]] && continue
+  echo "错误: archive_close 前存在未跟踪的交付文件: $path" >&2
+  echo "       请先确认归属并通过 archive_scoped_git.sh 纳入源码/文档提交。" >&2
+  exit 1
+done < <(git ls-files --others --exclude-standard -- "10_docs/$GAME" "04_scripts/$GAME")
 
 git config core.quotepath false
 
 while IFS= read -r path; do
   [[ -n "$path" ]] || continue
-  [[ "$path" == "$STATE" ]] || {
+  [[ "$path" == "$STATE" || "$path" == "$MANIFEST" ]] || {
     echo "错误: archive_close 前已有其他暂存改动，拒绝提交: $path" >&2
     exit 1
   }
 done < <(git diff --cached --name-only)
 
-git add -- "$STATE"
-if git diff --cached --quiet -- "$STATE"; then
-  echo "管线状态无变化，无需补提交"
+# manifest 读取归档提交的源码/文档事实；不要求在生成时预测自己的 commit hash。
+python3 04_scripts/_common/delivery_manifest.py --game "$GAME" --output "$MANIFEST"
+git add -- "$STATE" "$MANIFEST"
+if git diff --cached --quiet -- "$STATE" "$MANIFEST"; then
+  echo "管线状态与 manifest 无变化，无需补提交"
   exit 0
 fi
 
-git diff --cached --check -- "$STATE"
+git diff --cached --check -- "$STATE" "$MANIFEST"
 [[ -n "$MESSAGE" ]] || MESSAGE="$GAME 管线状态收口"
 git commit -m "$MESSAGE"
 
@@ -75,3 +99,5 @@ if [[ "$PUSH" == "1" ]]; then
 fi
 
 echo "==> 状态提交完成: $(git log -1 --oneline)"
+echo "==> 交付 manifest: $MANIFEST"
+python3 04_scripts/_common/delivery_manifest.py --game "$GAME" --output "$MANIFEST" --check

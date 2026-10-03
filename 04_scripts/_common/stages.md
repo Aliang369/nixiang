@@ -94,7 +94,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 8 | `device_ready` | 设备准备 | — | adb devices / connect（MuMu `127.0.0.1:5555`，重启后端口可能变 16384）/ 端口转发（MT MCP `adb forward tcp:8787 tcp:8787`） | 目标设备在线 |
 | 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 四查**（JS 语法/JNI 配套/P/Invoke 符号/控件读取，见上方专节；**优先由 `install_*.sh` 内建并自动阻止装机**）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载；非 root 机用组件指纹校验，见 `VERIFY_MODE=sig`） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；非 root 机改组件指纹；防"装机成功"假象装旧包） |
 | 10 | `archive` | 收官归档 | 9 | 文档/游戏摘要 + current.md 单行索引 + `_common/archive_scoped_git.sh` 白名单**提交并推送 origin/main**（用户口令「git」= 提交+推送连体；仅明确不想推送时才 `--no-push`） | 索引行存在 + 唯一正式包/裁剪清单存在 + 远端已同步 |
-| 11 | `archive_close` | 状态收口提交 | 10 | pipeline 写回 archive done 后，运行 `_common/archive_close_git.sh --game {游戏}`，只提交 `pipeline.json` 状态变化并推送（同上，`--no-push` 才关） | 本作路径无未提交状态 + 远端已同步 |
+| 11 | `archive_close` | 状态收口提交 | 10 | pipeline 写回 archive done 后，运行 `_common/archive_close_git.sh --game {游戏}`；校验游戏范围无漏提交/未跟踪文件，自动生成 `10_docs/{游戏}/delivery_manifest.json`，与 `pipeline.json` 状态一并提交并推送 | manifest 存在且 APK/artifact hash 可核对；本作路径无未提交状态 + 远端已同步 |
 
 规则：
 - **顺序执行**：`next` 只取第一个 pending 阶段；跳步=用 `run` 显式指定（会做前置检查，前置未满足直接拒绝）。
