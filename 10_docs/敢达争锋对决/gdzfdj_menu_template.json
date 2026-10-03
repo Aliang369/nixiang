@@ -1,0 +1,11 @@
+{
+  "template_id": "gdzfdj",
+  "name": "敢达争锋对决",
+  "package": "com.kingnet.gundam.mg.normal",
+  "source": "Games/GdzfdjEntry.cpp kGdzfdj_Features + Games/GdzfdjMod.h GdzfdjFeat @ 9.3.0（已落地装机，抓点见 斌哥hook锚点_20261003.json，实测见 星空hook锚点_20261003.json）",
+  "features": [
+    {"feat_num": 1, "name": "伤害倍率"},
+    {"feat_num": 2, "name": "超级定怪"},
+    {"feat_num": 3, "name": "全局加速"}
+  ]
+}

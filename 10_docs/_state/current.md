@@ -10,6 +10,7 @@
 
 | 游戏 | 最近更新 | 状态 | 详情 |
 |---|---|---|---|
+| 敢达争锋对决 | 2026-10-03 | ✅ **星空版已装机、4/4 抓点命中**：9.3.0/vc830，官方原版与斌哥包 `libil2cpp.so`/metadata **逐字节相同 ⇒ RVA 零重定位**。三项：伤害倍率(1–100)/超级定怪/全局加速(1–10)；lazy 装钩，`install pass: ok=4 dead=0/4`（MuMu 走 by-name，真机应命中 RVA）；四点=16B veneer。产物 `敢达争锋对决_9.3.0_surgical-starSigned.apk`（md5 `27381dad` / sha256 `1b4e9a3b…`=设备已装包）+ `delivery_20261003/`（icon 512/144+菜单模板）。**用户实测三项正常、结案** | [摘要](games/敢达争锋对决.md) |
 | 冒险与征途 | 2026-10-03 | ✅ **1.5.9/vc159 收官**（HybridCLR 热更解释执行：只能 hook 解释器入口 `0x207F798` + pushframe `0x207DCCC`，按「类名::方法名」分发）：秒杀小怪(BigInt×100 仅 MONSTER)/无敌(`DoAttack` accepter 置 null＝斌哥机制)/技能伤害增加(`AddProjectile` count×5＋发送者闸)/免广告(代回调 `OnADVideoResult`)；身份判据 `ulRoleId`。**用户 2026-10-03 实测四项通过、正式包结案**（sha256 `74147b36…`，885310399 B，包内 so md5 `a97d27d4…`） | [摘要](games/冒险与征途.md) |
 | 咻咻勇者 | 2026-10-03 | ⛔ **已终止/已清理（仅留 10_docs）**：`com.xxyz.sdc` 1.3.67 TapTap，Cocos 3.x + JS 热更。去签名烧进 APK ✅、本地【无敌/伤害倍率】✅，但结算 `ret=260001` 由**服务端按自己的战斗记录重放**判定 ⇒ 客户端无解（清空结算上报仍失败）；协议层布尔/漏帧/GM 指令/扫荡全部实测无效。工程代码 + APK + 中间物已按用户口径清理 | [摘要](games/咻咻勇者.md) |
 | 疾风骑士 | 2026-10-02 | ✅ 60.0.1/vc116 星光版已交付（实测通过）：`com.emay.wxsy.topon` TapTap，Unity IL2CPP v31。★原版/斌哥包 `libil2cpp.so`+`global-metadata.dat` 逐字节相同 ⇒ RVA 零重定位。注入 `application@name`→`StarryApp`；SignSpoof 回灌原厂证书 + 强制网页登录。菜单 17 项/54 槽全 by-name：伤害/无敌/货币/移速/技能无限/跳跃/免广告/解锁/改造；铁律：解锁真写存档、状态门禁不可恒真。正式包 `疾风骑士_60.0.1_surgical-releaseSigned.apk`（sha256 `6800c619…`）+ `delivery_20261002/` | [摘要](games/疾风骑士.md) |

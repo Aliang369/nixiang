@@ -1,0 +1,7 @@
+[*] pid=63814 guest_base=0x400023600000
+抓点                    guest_addr        内存字         原始字         判定
+xRole$$UpdateAI       0x40002739cf54    D0FCA3B1    F81D0FFE    ★已挂钩 (非 B：D0FCA3B1)
+xRole$$CalcDamage     0x4000273b99cc    B0FCA2D1    D10383FF    ★已挂钩 (非 B：B0FCA2D1)
+Time$$get_deltaTime   0x400029dbe180    90FB52B1    A9BF4FFE    ★已挂钩 (非 B：90FB52B1)
+Time$$set_timeScale   0x400029dbe458    90FB52B1    FC1E0FE8    ★已挂钩 (非 B：90FB52B1)
+[*] 汇总：已挂钩 4 / 原始 0 / 读取失败 0（功能全关时应为 已挂钩 0）

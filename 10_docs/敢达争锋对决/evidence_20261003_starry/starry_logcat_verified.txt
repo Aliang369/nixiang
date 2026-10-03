@@ -1,0 +1,849 @@
+﻿10-03 15:27:39.154 E/StarrySignSpoof(63814): exemptHiddenApis(meta) failed
+10-03 15:27:39.154 E/StarrySignSpoof(63814): java.lang.reflect.InvocationTargetException
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1147)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2662)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2631)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8546)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8061)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7719)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2511)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Handler.dispatchMessage(Handler.java:109)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Looper.loopOnce(Looper.java:232)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Looper.loop(Looper.java:317)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.main(ActivityThread.java:8971)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:597)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:919)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): Caused by: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.Class.getMethod(Class.java:2950)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.Class.getDeclaredMethod(Class.java:2929)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	... 18 more
+10-03 15:27:39.154 E/StarrySignSpoof(63814): exemptHiddenApis(declared) failed
+10-03 15:27:39.154 E/StarrySignSpoof(63814): java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.Class.getMethod(Class.java:2950)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.Class.getDeclaredMethod(Class.java:2929)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1161)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2662)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2631)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8546)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8061)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7719)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2511)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Handler.dispatchMessage(Handler.java:109)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Looper.loopOnce(Looper.java:232)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Looper.loop(Looper.java:317)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.main(ActivityThread.java:8971)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:597)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:919)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): exemptHiddenApis(public) failed
+10-03 15:27:39.154 E/StarrySignSpoof(63814): java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.Class.getMethod(Class.java:2950)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.Class.getMethod(Class.java:2450)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.sign.SignSpoof.exemptHiddenApis(SignSpoof.java:1172)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.sign.SignSpoof.install(SignSpoof.java:1065)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.starry.magic.StarryInitProvider.onCreate(StarryInitProvider.java:71)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2662)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.content.ContentProvider.attachInfo(ContentProvider.java:2631)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.installProvider(ActivityThread.java:8546)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:8061)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:7719)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2511)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Handler.dispatchMessage(Handler.java:109)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Looper.loopOnce(Looper.java:232)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.os.Looper.loop(Looper.java:317)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at android.app.ActivityThread.main(ActivityThread.java:8971)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at java.lang.reflect.Method.invoke(Native Method)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:597)
+10-03 15:27:39.154 E/StarrySignSpoof(63814): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:919)
+10-03 15:27:39.154 W/StarrySignSpoof(63814): exemptHiddenApis all failed: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]
+10-03 15:27:39.154 I/StarrySignSpoof(63814): installed pkgs=[com.rsg.wdyz, com.muyegame.blfx, com.xr.wgdzztap, com.emay.wxsy.topon, com.hypergryph.arknights, com.cmge.ssjd.x7sy, com.qxjc.fcxyxzj, com.openew.monster, com.gf.cxswz, com.netkuu.changsheng.tjjs, com.grinning.beta.yszl, com.hypergryph.endfield, com.wjtxdtt.zy, com.shbq.gyzw.ppyx, com.wanda.sf3.wd, com.JAGames.TalesoftheClan, com.a5game.ltzj.jj, com.happyelements.es2, com.acing.gow.adv, com.fattoy.gyws.android, com.xq.archeroii.ua, com.bilibili.fatego, com.leiting.lostcastle.leiting, com.shangyoo.neon, com.uniugame.ywgn, com.bilibili.priconne, com.yofijoy.zmxs, com.xm4399.zmws.m4399, com.xm4399.zmxy6hj, com.qinglv.Immortal, com.chx.shhj, com.survivor.acecn, com.kingnet.gundam.mg.normal, com.Shimmer.SoloKnight.cn, com.mudamuda.idlewow, com.windforce.rg.offical, com.sixag.gaga, com.bantu.trssgshz2, com.syyx.whrhx, com.mxyzt.gzmy, com.lingsi.xiuxiandanji, com.blina.match2.tt, com.yhhy.neon.aligames, com.rsjy.yf, com.hortor.yqzd, com.yhhy.whrhx.m4399, com.blade.bd, com.hortor.mwdl, com.fightingstars.games.warrior, com.hnyg.bjdwxcf.topon, com.cylj.rogue.tp479, com.facai.archeroii, com.xingzuodaoshi.infinityUpgrade, com.chillyroom.containerofsoul.yw, com.qxjc.hxwjmlq, com.ginicat.sweet.m4399, com.aiyue.wscq, com.x.yimoo.official, com.TeaMelo.DungeonChasers, com.ginicat.sweet, com.fightingstars.games.animal]
+10-03 15:27:39.323 W/StarryMagic(63814): [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+10-03 15:27:39.323 I/StarryMagic(63814): [桥接] RegisterNatives 19/19 全部成功
+10-03 15:27:39.323 I/StarryMagic(63814): 星光魔法 MOD 菜单已加载 (MainModern tag=gdzfdj)
+10-03 15:27:39.323 I/StarryNativeLoad(63814): loaded apk so via loadLibrary
+10-03 15:27:39.323 I/ModBridge(63814): native via StarryNativeLoad: loadLibrary(starry_magic)
+10-03 15:27:39.323 I/StarryBridgeTest(63814): === 桥接自检开始 ===
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeBridgeRegistered = PASS
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeGetAuthGameId = PASS
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeIsGameLibLoaded = PASS
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeHasLiveSession = PASS
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeGetAceGateRemainSec = PASS
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeGetFeatureList = PASS
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeGetSettingsList = PASS
+10-03 15:27:39.323 I/StarryMagic(63814): [验证] flag=false live=0
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeSetAuthorized(false) = PASS
+10-03 15:27:39.323 I/StarryMagic(63814): [开关] #0 selftest = OFF
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeSetFeature(0,off) = PASS
+10-03 15:27:39.323 W/StarryMagic(63814): [数值] 拒绝 #0（未授权）
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeSetValue(0,0) = PASS
+10-03 15:27:39.323 I/StarryMagic(63814): [长整] #0 = 0
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeSetLongValue(0,0) = PASS
+10-03 15:27:39.323 W/StarryMagic(63814): [文本] 拒绝 #0（未授权）
+10-03 15:27:39.323 I/StarryBridgeTest(63814): nativeSetText(0,empty) = PASS
+10-03 15:27:39.324 W/StarryMagic(63814): [验证] grant rejected
+10-03 15:27:39.324 I/StarryBridgeTest(63814): nativeApplyGrant(垃圾票→拒绝) = PASS
+10-03 15:27:39.324 W/StarryMagic(63814): [OTA] 补丁签名校验失败
+10-03 15:27:39.324 I/StarryBridgeTest(63814): nativeVerifyOtaSig(垃圾→false) = PASS
+10-03 15:27:39.324 I/StarryBridgeTest(63814): nativeGetPinnedCert = PASS
+10-03 15:27:39.324 I/StarryBridgeTest(63814): === 桥接自检结束: PASS=15 FAIL=0 === ✓
+10-03 15:27:39.324 I/StarryInitProvider(63814): native ensureLoaded=true path=loadLibrary(starry_magic)
+10-03 15:27:39.680 I/StarrySignSpoof(63814): spoof hit pkg=com.kingnet.gundam.mg.normal md5=28185fbfd55a46a024bd75bd1569fd72
+10-03 15:27:39.740 I/StarryInitProvider(63814): MenuService.start scheduled (activity-resumed)
+10-03 15:27:39.745 I/StarryInitProvider(63814): MenuService.start ok (activity-resumed)
+10-03 15:27:39.880 I/StarryCrash(63814): initialized, log dir: /storage/emulated/0/Android/media/com.kingnet.gundam.mg.normal/files/crash_logs
+10-03 15:27:39.880 I/ActivityManager(  836): Background started FGS: Allowed [callingPackage: com.kingnet.gundam.mg.normal; callingUid: 10064; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { cmp=com.kingnet.gundam.mg.normal/com.starry.magic.menu.MenuService }; code:PROC_STATE_TOP; tempAllowListReason:<null>; targetSdkVersion:31; callerTargetSdkVersion:31; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-03 15:27:39.882 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:27:39.882 I/MenuService(63814): auth game_id=gdzfdj
+10-03 15:27:39.883 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:27:39.883 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:27:39.883 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:27:39.896 I/NativeMenu(63814): attached ACTIVITY host=MainActivity
+10-03 15:27:39.896 I/NativeMenu(63814): cold-start renew scheduled (bounded, no periodic heartbeat)
+10-03 15:27:39.896 I/StarryMagic(63814): ===== 星光魔法 MOD 菜单初始化（modern/gdzfdj）=====
+10-03 15:27:39.896 I/PlayOta (63814): applyLocalPatch skip: no patch.json for gdzfdj
+10-03 15:27:39.896 I/StarryMagic(63814): MOD 后台线程已启动 tag=gdzfdj
+10-03 15:27:39.896 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:27:39.899 I/Mod_Menu(63814): [gdzfdj] probe: nav=Category_战斗 dmg=Slider_伤害倍率:1:100:1 root=Toggle_超级定怪 spd=Slider_全局加速:1:10:1
+10-03 15:27:39.899 I/Mod_Menu(63814): [gdzfdj] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)
+10-03 15:27:39.899 I/Mod_Menu(63814): [gdzfdj] lib ready (dual-path, lazy hooks)
+10-03 15:27:39.899 I/StarryMagic(63814): [gdzfdj] 初始化成功
+10-03 15:27:39.899 I/StarryMagic(63814): MOD 已就绪 tag=gdzfdj ready=1
+10-03 15:27:39.904 I/NativeMenu(63814): bootstrap fetch game_id=gdzfdj
+10-03 15:27:39.909 I/AuthClient(63814): GET https://47.100.216.101:8443/v1/bootstrap?game_id=gdzfdj&device_id=dev_24acb3e7318cc85c0ba9ef53ca819ab1&logged_in=false
+10-03 15:27:40.129 I/StarryMagic(63814): [验证] grant ok exp=1791098349
+10-03 15:27:40.933 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:27:40.933 I/StarryMagic(63814): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:27:40.933 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:27:40.934 I/ModBridge(63814): reapplied saved features to native
+10-03 15:27:42.896 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:27:43.101 I/StarryMagic(63814): [验证] grant ok exp=1791098861
+10-03 15:27:43.103 I/NativeMenu(63814): renew ok (cold-start)
+10-03 15:27:43.906 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:27:43.906 I/StarryMagic(63814): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:27:43.906 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:27:43.906 I/ModBridge(63814): reapplied saved features to native
+10-03 15:27:47.491 I/Unity   (63814): [XGAME]Cur GameRuntime version = 9.3.0.15
+10-03 15:27:47.496 I/Unity   (63814): [XGAME]AssetFilterFile:Base
+10-03 15:27:47.497 I/Unity   (63814): [XGAME]Current AssetFilter:Base
+10-03 15:27:49.986 I/Unity   (63814): [XGAME]已同意隐私协议
+10-03 15:27:50.057 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:27:50.057 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:27:50.062 I/Unity   (63814): [XGAME]OnInitSucc 
+10-03 15:27:50.067 I/Unity   (63814): [XGAME]CheckUpdate
+10-03 15:27:50.091 I/Unity   (63814): [XGAME]OnCheckResUpdate : {"needUpdateApp":"true"}
+10-03 15:27:50.612 I/Unity   (63814): [XGAME]patch version code:9.3.0.15, local version code:9.3.0.15
+10-03 15:27:50.854 I/Unity   (63814): [XGAME]当前数据表资源版本:<color=green>9.3.29</color>
+10-03 15:27:51.231 I/Unity   (63814): [XGAME]服务器数据表版本:9.3.29
+10-03 15:27:51.245 I/Unity   (63814): [XGAME]Finish Update Tables【Not Update】
+10-03 15:27:51.549 I/Unity   (63814): [XGAME]<color=yellow>读取数据表资源Ver9.3.29成功! Elapsed:267</color>
+10-03 15:27:51.723 I/Unity   (63814): [XGAME]Error reading tablesize Rows is 0 and _nColumns is 15.
+10-03 15:27:52.106 I/Unity   (63814): [XGAME]Error reading tablesize Rows is 0 and _nColumns is 3.
+10-03 15:27:52.795 I/Unity   (63814): [XGAME]svc 预热用时：0.0804153
+10-03 15:27:52.887 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:27:52.889 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:27:52.903 I/Unity   (63814): [XGAME]100 Enable input False
+10-03 15:27:52.903 I/Unity   (63814): [XGAME]100 Enable input True
+10-03 15:27:54.254 I/Unity   (63814): [XGAME]deviceId : e18a1fa145facc49e7fe8f7ed8bffa7d
+10-03 15:27:54.299 I/Unity   (63814): [XGAME]Application Paused:True
+10-03 15:27:54.348 I/NativeMenu(63814): ensureAliveOrRebind → LoginActivity alive=true was=MainActivity expanded=false
+10-03 15:27:54.360 I/NativeMenu(63814): attached ACTIVITY host=LoginActivity
+10-03 15:27:54.360 I/NativeMenu(63814): ensureAliveOrRebind → LoginActivity alive=false was=LoginActivity expanded=false
+10-03 15:27:54.362 I/NativeMenu(63814): attached ACTIVITY host=LoginActivity
+10-03 15:29:28.756 W/Mod_Menu(63814): [gdzfdj] UpdateAI rva 0x3D9CF54 not in RX — try by-name
+10-03 15:29:28.756 I/Mod_Menu(63814): [Il2Cpp] phdr match: /data/app/~~ULq5Ycd4GBvIAi_P3ZcTqQ==/com.kingnet.gundam.mg.normal-VJJB1tcpZf_AhKDbh68sOA==/lib/arm64/libil2cpp.so base=0x400023600000
+10-03 15:29:28.757 I/Mod_Menu(63814): [Il2Cpp] dynsym ctx: base=0x400023600000 sym=0x400023600330 str=0x40002361a8a4 strsz=112281 nsyms=2698
+10-03 15:29:28.761 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_class_from_name sa=0x40002d00a98c map=0 rt=0x4000261b2538
+10-03 15:29:28.761 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_class_from_name disk=+0x9a0a98c[nomap] runtime=0x4000261b2538[6fb6f7177eadf717] -> KEEP-RUNTIME
+10-03 15:29:28.762 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_class_get_field_from_name sa=0x40002d00aabc map=0 rt=0x4000261b2558
+10-03 15:29:28.762 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_class_get_field_from_name disk=+0x9a0aabc[nomap] runtime=0x4000261b2558[e3adf71743aef717] -> KEEP-RUNTIME
+10-03 15:29:28.763 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_field_get_offset sa=0x40002d00b5a8 map=0 rt=0x4000261b2c00
+10-03 15:29:28.763 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_field_get_offset disk=+0x9a0b5a8[nomap] runtime=0x4000261b2c00[c08af717a62af717] -> KEEP-RUNTIME
+10-03 15:29:28.764 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_field_static_get_value sa=0x40002d00b698 map=0 rt=0x4000261b2c1c
+10-03 15:29:28.765 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_field_static_get_value disk=+0x9a0b698[nomap] runtime=0x4000261b2c1c[b68cf717e28cf717] -> KEEP-RUNTIME
+10-03 15:29:28.766 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_domain_get sa=0x40002d00b3e0 map=0 rt=0x4000261b2a30
+10-03 15:29:28.766 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_domain_get disk=+0x9a0b3e0[nomap] runtime=0x4000261b2a30[3550fb17e00301aa] -> KEEP-RUNTIME
+10-03 15:29:28.767 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_domain_get_assemblies sa=0x40002d00b420 map=0 rt=0x4000261b2a3c
+10-03 15:29:28.767 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_domain_get_assemblies disk=+0x9a0b420[nomap] runtime=0x4000261b2a3c[fe4fbfa9f30301aa] -> KEEP-RUNTIME
+10-03 15:29:28.768 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_assembly_get_image sa=0x40002d00a8bc map=0 rt=0x4000261b2500
+10-03 15:29:28.768 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_assembly_get_image disk=+0x9a0a8bc[nomap] runtime=0x4000261b2500[c428f7178eadf717] -> KEEP-RUNTIME
+10-03 15:29:28.768 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_object_get_class sa=0x40002d00b984 map=0 rt=0x4000261b2e00
+10-03 15:29:28.769 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_object_get_class disk=+0x9a0b984[nomap] runtime=0x4000261b2e00[8426f7178c11f817] -> KEEP-RUNTIME
+10-03 15:29:28.769 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_class_get_name sa=0x40002d00ac34 map=0 rt=0x4000261b2564
+10-03 15:29:28.770 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_class_get_name disk=+0x9a0ac34[nomap] runtime=0x4000261b2564[0526f7174b2cf717] -> KEEP-RUNTIME
+10-03 15:29:28.771 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_class_get_method_from_name sa=0x40002d00ac2c map=0 rt=0x4000261b2560
+10-03 15:29:28.771 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_class_get_method_from_name disk=+0x9a0ac2c[nomap] runtime=0x4000261b2560[76aef7170526f717] -> KEEP-RUNTIME
+10-03 15:29:28.771 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_runtime_invoke sa=0x40002d00bba0 map=0 rt=0x4000261b2e54
+10-03 15:29:28.772 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_runtime_invoke disk=+0x9a0bba0[nomap] runtime=0x4000261b2e54[7392f717f48af717] -> KEEP-RUNTIME
+10-03 15:29:28.772 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_string_new sa=0x40002d00bc04 map=0 rt=0x4000261b2e70
+10-03 15:29:28.773 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_string_new disk=+0x9a0bc04[nomap] runtime=0x4000261b2e70[d9ebf717d8ebf717] -> KEEP-RUNTIME
+10-03 15:29:28.773 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_string_new_wrapper sa=0x40002d00bc00 map=0 rt=0x4000261b2e74
+10-03 15:29:28.773 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_string_new_wrapper disk=+0x9a0bc00[nomap] runtime=0x4000261b2e74[d8ebf71703ecf717] -> KEEP-RUNTIME
+10-03 15:29:28.774 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_image_get_class_count sa=0x40002d00be1c map=0 rt=0x4000261b3118
+10-03 15:29:28.774 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_image_get_class_count disk=+0x9a0be1c[nomap] runtime=0x4000261b3118[fe0f1ff81827f797] -> KEEP-RUNTIME
+10-03 15:29:28.774 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_image_get_class sa=0x40002d00beb0 map=0 rt=0x4000261b312c
+10-03 15:29:28.775 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_image_get_class disk=+0x9a0beb0[nomap] runtime=0x4000261b312c[4127f717055dfb17] -> KEEP-RUNTIME
+10-03 15:29:28.775 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_method_get_name sa=0x40002d00b8ac map=0 rt=0x4000261b2d74
+10-03 15:29:28.775 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_method_get_name disk=+0x9a0b8ac[nomap] runtime=0x4000261b2d74[482af7170e60fb17] -> KEEP-RUNTIME
+10-03 15:29:28.777 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_value_box sa=0x40002d00bac0 map=0 rt=0x4000261b2e30
+10-03 15:29:28.777 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_value_box disk=+0x9a0bac0[nomap] runtime=0x4000261b2e30[2611f8170861fb17] -> KEEP-RUNTIME
+10-03 15:29:28.778 I/Mod_Menu(63814): [Il2Cpp] probe[>] il2cpp_get_corlib sa=0x40002d00a868 map=0 rt=0x4000261b24c8
+10-03 15:29:28.778 I/Mod_Menu(63814): [Il2Cpp] probe[D] il2cpp_get_corlib disk=+0x9a0a868[nomap] runtime=0x4000261b24c8[b728f7175c81f817] -> KEEP-RUNTIME
+10-03 15:29:28.778 I/Mod_Menu(63814): [Il2Cpp] probe[D] applied=0 keep=18
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[0] @+2306 il2cpp_array_element_size
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[1] @+2332 il2cpp_string_new
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[2] @+3063 il2cpp_class_from_il2cpp_type
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[3] @+3081 il2cpp_type
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[4] @+3093 il2cpp_method_get_object
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[5] @+3778 il2cpp_array_class_get
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[6] @+3801 il2cpp_array_new_specific
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[7] @+3827 il2cpp_class_from_type
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[8] @+3850 il2cpp_object_unbox
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_[9] @+3870 il2cpp_raise_exception
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab plaintext il2cpp_ count=242
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_class_from_name: PLAINTEXT
+10-03 15:29:28.779 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_class_get_field_from_name: PLAINTEXT
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_field_get_offset: PLAINTEXT
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_domain_get: PLAINTEXT
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_domain_get_assemblies: PLAINTEXT
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_object_get_class: PLAINTEXT
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] strtab il2cpp_class_get_name: PLAINTEXT
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[00] il2cpp_profiler_install_fileio = +0x2bb2de4
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[01] il2cpp_current_thread_walk_frame_stack = +0x2bb2e9c
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[02] il2cpp_field_get_flags = +0x2bb2bf8
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[03] il2cpp_set_commandline_arguments_utf16 = +0x2bb24a4
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[04] il2cpp_gc_is_disabled = +0x2bb2c48
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[05] il2cpp_gc_set_external_wbarrier_tracker = +0x2bb2d24
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[06] il2cpp_register_log_callback = +0x2bb313c
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[07] il2cpp_runtime_invoke = +0x2bb2e54
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[08] il2cpp_allocation_granularity = +0x2bb2d4c
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[09] il2cpp_offset_of_array_bounds_in_array_object_header = +0x2bb2d44
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[10] il2cpp_class_get_fields = +0x2bb2544
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[11] il2cpp_is_vm_thread = +0x2bb2e98
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[12] il2cpp_class_get_assemblyname = +0x2bb260c
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[13] il2cpp_monitor_try_enter = +0x2bb2e38
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[14] il2cpp_set_config_dir = +0x2bb2488
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[15] il2cpp_monitor_pulse = +0x2bb2e40
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[16] il2cpp_class_get_field_from_name = +0x2bb2558
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[17] il2cpp_field_has_attribute = +0x2bb2c10
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[18] il2cpp_assembly_get_image = +0x2bb2500
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[19] il2cpp_class_get_bitmap = +0x2bb262c
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[20] il2cpp_class_get_image = +0x2bb2608
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[21] il2cpp_set_temp_dir = +0x2bb2490
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[22] il2cpp_class_from_il2cpp_type = +0x2bb2530
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[23] il2cpp_array_get_byte_length = +0x2bb24e4
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[24] il2cpp_object_get_size = +0x2bb2e04
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[25] il2cpp_type_get_type = +0x2bb2ee8
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[26] il2cpp_string_chars = +0x2bb2e6c
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[27] il2cpp_class_from_name = +0x2bb2538
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[28] il2cpp_class_from_system_type = +0x2bb2508
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map[29] il2cpp_register_debugger_agent_transport = +0x2bb3148
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] map il2cpp_ sample: 30
+10-03 15:29:28.780 I/Mod_Menu(63814): [Il2Cpp] dynsym self-parse: 2388 syms (probe=ok)
+10-03 15:29:28.781 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_class_from_name xdl=0x4000261b2538[6fb6f7177eadf717] self=0x4000261b2538[6fb6f7177eadf717] same
+10-03 15:29:28.782 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_class_get_field_from_name xdl=0x4000261b2558[e3adf71743aef717] self=0x4000261b2558[e3adf71743aef717] same
+10-03 15:29:28.783 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_field_get_offset xdl=0x4000261b2c00[c08af717a62af717] self=0x4000261b2c00[c08af717a62af717] same
+10-03 15:29:28.784 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_field_static_get_value xdl=0x4000261b2c1c[b68cf717e28cf717] self=0x4000261b2c1c[b68cf717e28cf717] same
+10-03 15:29:28.785 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_domain_get xdl=0x4000261b2a30[3550fb17e00301aa] self=0x4000261b2a30[3550fb17e00301aa] same
+10-03 15:29:28.786 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_domain_get_assemblies xdl=0x4000261b2a3c[fe4fbfa9f30301aa] self=0x4000261b2a3c[fe4fbfa9f30301aa] same
+10-03 15:29:28.787 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_domain_assembly_open xdl=0x4000261b2a34[e00301aa7311f817] self=0x4000261b2a34[e00301aa7311f817] same
+10-03 15:29:28.788 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_assembly_get_image xdl=0x4000261b2500[c428f7178eadf717] self=0x4000261b2500[c428f7178eadf717] same
+10-03 15:29:28.788 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_object_get_class xdl=0x4000261b2e00[8426f7178c11f817] self=0x4000261b2e00[8426f7178c11f817] same
+10-03 15:29:28.790 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_class_get_fields xdl=0x4000261b2544[b7adf717c5aef717] self=0x4000261b2544[b7adf717c5aef717] same
+10-03 15:29:28.791 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_field_get_name xdl=0x4000261b2bf4[0727f717bf8af717] self=0x4000261b2bf4[0727f717bf8af717] same
+10-03 15:29:28.792 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_class_get_parent xdl=0x4000261b256c[f9aef71737b9f717] self=0x4000261b256c[f9aef71737b9f717] same
+10-03 15:29:28.793 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_field_get_type xdl=0x4000261b2c04[a62af717c08af717] self=0x4000261b2c04[a62af717c08af717] same
+10-03 15:29:28.793 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_type_get_name xdl=0x4000261b2ef0[ff0301d1fe1300f9] self=0x4000261b2ef0[ff0301d1fe1300f9] same
+10-03 15:29:28.794 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_thread_attach xdl=0x4000261b2e8c[5863fb177f63fb17] self=0x4000261b2e8c[5863fb177f63fb17] same
+10-03 15:29:28.795 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_method_get_return_type xdl=0x4000261b2d68[0224f7170324f717] self=0x4000261b2d68[0224f7170324f717] same
+10-03 15:29:28.796 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_method_get_param xdl=0x4000261b2d88[3760fb17b95ffb17] self=0x4000261b2d88[3760fb17b95ffb17] same
+10-03 15:29:28.797 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_method_get_flags xdl=0x4000261b2d98[fe0f1ef8f44f01a9] self=0x4000261b2d98[fe0f1ef8f44f01a9] same
+10-03 15:29:28.798 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_class_get_name xdl=0x4000261b2564[0526f7174b2cf717] self=0x4000261b2564[0526f7174b2cf717] same
+10-03 15:29:28.799 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_class_get_method_from_name xdl=0x4000261b2560[76aef7170526f717] self=0x4000261b2560[76aef7170526f717] same
+10-03 15:29:28.799 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_runtime_invoke xdl=0x4000261b2e54[7392f717f48af717] self=0x4000261b2e54[7392f717f48af717] same
+10-03 15:29:28.801 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_string_new xdl=0x4000261b2e70[d9ebf717d8ebf717] self=0x4000261b2e70[d9ebf717d8ebf717] same
+10-03 15:29:28.802 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_image_get_class_count xdl=0x4000261b3118[fe0f1ff81827f797] self=0x4000261b3118[fe0f1ff81827f797] same
+10-03 15:29:28.803 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_image_get_class xdl=0x4000261b312c[4127f717055dfb17] self=0x4000261b312c[4127f717055dfb17] same
+10-03 15:29:28.804 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_method_get_name xdl=0x4000261b2d74[482af7170e60fb17] self=0x4000261b2d74[482af7170e60fb17] same
+10-03 15:29:28.805 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_value_box xdl=0x4000261b2e30[2611f8170861fb17] self=0x4000261b2e30[2611f8170861fb17] same
+10-03 15:29:28.805 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_get_corlib xdl=0x4000261b24c8[b728f7175c81f817] self=0x4000261b24c8[b728f7175c81f817] same
+10-03 15:29:28.806 I/Mod_Menu(63814): [Il2Cpp] diag il2cpp_class_get_methods xdl=0x4000261b255c[43aef71776aef717] self=0x4000261b255c[43aef71776aef717] same
+10-03 15:29:28.806 I/Mod_Menu(63814): [Il2Cpp] api loaded from libil2cpp.so (xdl+dynsym)
+10-03 15:29:28.811 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240b20 -> img=0x7a884023f000
+10-03 15:29:28.812 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f000 name=mscorlib.dll
+10-03 15:29:28.812 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240b90 -> img=0x7a884023f050
+10-03 15:29:28.814 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f050 name=UnityEngine.UIElementsMo
+10-03 15:29:28.814 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240c00 -> img=0x7a884023f0a0
+10-03 15:29:28.815 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f0a0 name=BulletEngine.dll
+10-03 15:29:28.816 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240c70 -> img=0x7a884023f0f0
+10-03 15:29:28.816 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f0f0 name=UnityEngine.CoreModule.d
+10-03 15:29:28.817 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240ce0 -> img=0x7a884023f140
+10-03 15:29:28.817 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f140 name=System.dll
+10-03 15:29:28.818 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240d50 -> img=0x7a884023f190
+10-03 15:29:28.818 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f190 name=Unity.RenderPipelines.Un
+10-03 15:29:28.819 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240dc0 -> img=0x7a884023f1e0
+10-03 15:29:28.820 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f1e0 name=Unity.Mathematics.dll
+10-03 15:29:28.821 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240e30 -> img=0x7a884023f230
+10-03 15:29:28.821 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f230 name=System.Xml.dll
+10-03 15:29:28.822 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240ea0 -> img=0x7a884023f280
+10-03 15:29:28.822 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f280 name=Unity.RenderPipelines.Co
+10-03 15:29:28.823 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240f10 -> img=0x7a884023f2d0
+10-03 15:29:28.824 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f2d0 name=Unity.TextMeshPro.dll
+10-03 15:29:28.824 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240f80 -> img=0x7a884023f320
+10-03 15:29:28.825 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f320 name=Cinemachine.dll
+10-03 15:29:28.826 I/Mod_Menu(63814): [Il2Cpp] ImageOf asm=0x7a8840240ff0 -> img=0x7a884023f370
+10-03 15:29:28.826 I/Mod_Menu(63814): [Il2Cpp] ImageOf img=0x7a884023f370 name=Unity.Burst.dll
+10-03 15:29:28.967 I/Mod_Menu(63814): [gdzfdj] UpdateAI hooked by-name xRole.UpdateAI(argc=0)
+10-03 15:29:28.970 W/Mod_Menu(63814): [gdzfdj] CalcDamage6 rva 0x3DB99CC not in RX — try by-name
+10-03 15:29:29.020 I/Mod_Menu(63814): [gdzfdj] CalcDamage6 hooked by-name xRole.CalcDamage(argc=6)
+10-03 15:29:29.022 W/Mod_Menu(63814): [gdzfdj] get_deltaTime rva 0x67BE180 not in RX — try by-name
+10-03 15:29:29.026 I/Mod_Menu(63814): [gdzfdj] get_deltaTime hooked by-name Time.get_deltaTime(argc=0)
+10-03 15:29:29.028 W/Mod_Menu(63814): [gdzfdj] set_timeScale rva 0x67BE458 not in RX — try by-name
+10-03 15:29:29.032 I/Mod_Menu(63814): [gdzfdj] set_timeScale hooked by-name Time.set_timeScale(argc=1)
+10-03 15:29:29.032 I/Mod_Menu(63814): [gdzfdj] install pass: ok=4 dead=0/4
+10-03 15:29:29.032 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 20
+10-03 15:29:29.032 I/StarryMagic(63814): [开关] #2 Toggle_超级定怪 = ON
+10-03 15:29:29.032 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 3
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.NativeMenuController.tryAttachActivity(NativeMenuController.java:805)
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.NativeMenuController.ensureAliveOrRebindInner(NativeMenuController.java:335)
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.NativeMenuController.ensureAliveOrRebind(NativeMenuController.java:273)
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.MenuService.syncOverlayForHost(MenuService.java:475)
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.MenuService.-$$Nest$msyncOverlayForHost(Unknown Source:0)
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.MenuService$2.lambda$onActivityResumed$2$com-starry-magic-menu-MenuService$2(MenuService.java:638)
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.MenuService$2$$ExternalSyntheticLambda1.run(D8$$SyntheticClass:0)
+10-03 15:29:41.455 E/WindowManager(63814): 	at com.starry.magic.menu.MenuSafeHandler.dispatchMessage(MenuSafeHandler.java:22)
+10-03 15:29:41.470 I/NativeMenu(63814): ensureAliveOrRebind → MainActivity alive=false was=LoginActivity expanded=false
+10-03 15:29:41.473 I/Unity   (63814): [XGAME]Application Paused:False
+10-03 15:29:41.488 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:29:41.490 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:29:41.496 I/NativeMenu(63814): attached ACTIVITY host=MainActivity
+10-03 15:29:41.506 I/Unity   (63814): [XGAME]102 Enable input True
+10-03 15:29:41.512 I/Unity   (63814): [XGAME]OnLoginSucc : {"accountId":"102272732","token":"840d842f2d238a9fa0fd1b5409c3645d"} 
+10-03 15:29:41.589 I/Unity   (63814): [XGAME]ProtoPhpLogin
+10-03 15:29:41.616 I/Unity   (63814): [XGAME]https://apios3.gundambattle.com//gd_gmws/run_client.php?dev=%65%31%38%61%31%66%61%31%34%35%66%61%63%63%34%39%65%37%66%65%38%66%37%65%64%38%62%66%66%61%37%64&channel=%6d%67%5f%74%61%70%74%61%70&t=%31%37%39%31%30%34%31%33%38%31&k=f5283a6400e3a9f3613f8e83c96b7420
+10-03 15:29:42.038 I/Unity   (63814): [XGAME]{"err_no":0,"acc_id":9489117,"token":"39395ea8682caa77269625ef6670fad1","visitor":0,"gm_level":0,"user_protocol":"0","data":{"sdk_account_id":"102272732"},"server":{"id":4,"svr_name":"\u6b96\u6c11\u536b\u661f04","svr_ip":"111.231.111.122","svr_port":"18301","state":"2","role":0,"index":"0","open_time":1513224000},"msg":"","online_time":0,"is_certification":0,"is_adult":0,"disable_certification":"1","disable_antiaddiction":"1","custom_level":0}
+10-03 15:29:54.087 I/Unity   (63814): [XGAME]OnGetCertificationInfo AgeState:Adult
+10-03 15:29:54.187 I/Unity   (63814): [XGAME]seasion url = https://apios3.gundambattle.com//gd_gmws/session.php?k=%61%36%30%31%64%31%34%34%30%63%31%38%64%30%30%30%36%39%39%37%37%61%32%63%34%36%65%36%36%64%66%36&dev=%65%31%38%61%31%66%61%31%34%35%66%61%63%63%34%39%65%37%66%65%38%66%37%65%64%38%62%66%66%61%37%64&acc_id=9489117&p=%33%39%33%39%35%65%61%38%36%38%32%63%61%61%37%37%32%36%39%36%32%35%65%66%36%36%37%30%66%61%64%31&id=4&channel=%6d%67%5f%74%61%70%74%61%70&baseVer=%39%2e%33%2e%32%38&platform=android&version=%39%2e%33%2e%30&is_adult=1&is_certification=1&patchVersion=9.3.0.15
+10-03 15:29:54.496 I/Unity   (63814): [XGAME]strHost = 111.231.111.122
+10-03 15:29:54.691 I/Unity   (63814): [XGAME]↑Msg=Msg_Login_VerifyAccount_CS, Module=Login, Seq.1
+10-03 15:29:54.774 I/Unity   (63814): [XGAME]↓Msg=Msg_Login_VerifyAccount_SC, Module=Login, ResultCode=Code_Login_NoRole, Seq.1
+10-03 15:29:54.855 I/Unity   (63814): [XGAME]Set EncryKey:bfe4aa37
+10-03 15:29:54.855 I/Unity   (63814): [XGAME]Set Rand Seed:1297715975
+10-03 15:29:54.857 I/Unity   (63814): [XGAME]初始化防沉迷: 成年:True 当前时间:2026/10/3 15:29:52 当前在线时长:0 剩余在线时长:0
+10-03 15:29:54.858 I/Unity   (63814): [XGAME]curent server time = 2026-10-03 15:29:52, dayOfWeek = 6, zone = 8, date = 2026/10/3 15:29:52
+10-03 15:29:54.877 I/Unity   (63814): [XGAME]<color=yellow><b>491[新手引导]</b>:<b>打开节点:</b>1001</color>
+10-03 15:29:54.879 I/Unity   (63814): [XGAME]<color=yellow><b>491[新手引导]</b>:<b>进入节点:</b>1001</color>
+10-03 15:29:54.887 I/Unity   (63814): [XGAME]491 Enable input True
+10-03 15:29:54.901 I/Unity   (63814): [XGAME]491 Enable input False
+10-03 15:29:54.902 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:29:54.984 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:29:55.224 I/Unity   (63814): [XGAME]Players:1 Level:000_PVP_Tutorial RandSeed:1752483068 
+10-03 15:29:55.225 I/Unity   (63814): [XGAME]ClearReconnect
+10-03 15:29:56.406 I/Unity   (63814): [XGAME]Sub Ai Count:0
+10-03 15:29:59.428 I/Unity   (63814): [XGAME]Load Scene Elapsed:714
+10-03 15:30:00.380 I/Unity   (63814): [XGAME][读取手柄配置信息成功]
+10-03 15:30:01.039 I/Unity   (63814): [XGAME]生成机体ID0, 机体名P_1GgndA1
+10-03 15:30:01.214 I/Unity   (63814): [XGAME]Set RealStartTime:133733
+10-03 15:30:01.640 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:30:01.642 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:30:01.660 I/Unity   (63814): [XGAME]625 Enable input True
+10-03 15:30:31.739 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:30:31.739 I/StarryMagic(63814): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:30:31.739 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:30:45.159 I/Unity   (63814): [XGAME]生成机体ID1, 机体名P_1GzksB1
+10-03 15:30:50.331 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:30:50.392 I/NativeMenu(63814): clampWindowOnScreen → (5,175)
+10-03 15:30:50.552 I/StarryMagic(63814): [验证] grant ok exp=1791099049
+10-03 15:30:50.583 I/NativeMenu(63814): renew ok (expand)
+10-03 15:30:51.245 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 19
+10-03 15:30:51.245 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 19
+10-03 15:30:51.262 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 25
+10-03 15:30:51.263 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 25
+10-03 15:30:51.278 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 29
+10-03 15:30:51.279 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 29
+10-03 15:30:51.294 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 35
+10-03 15:30:51.295 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 35
+10-03 15:30:51.311 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 40
+10-03 15:30:51.312 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 40
+10-03 15:30:51.329 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 42
+10-03 15:30:51.330 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 42
+10-03 15:30:51.345 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 44
+10-03 15:30:51.346 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 44
+10-03 15:30:51.362 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 45
+10-03 15:30:51.362 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 45
+10-03 15:30:51.383 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 45
+10-03 15:30:51.384 I/StarryMagic(63814): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:30:51.384 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:30:51.384 I/ModBridge(63814): reapplied saved features to native
+10-03 15:31:02.578 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 38
+10-03 15:31:02.579 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 38
+10-03 15:31:02.595 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 26
+10-03 15:31:02.596 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 26
+10-03 15:31:02.612 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 12
+10-03 15:31:02.613 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 12
+10-03 15:31:02.628 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:31:02.628 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:31:07.368 I/Unity   (63814): [XGAME]销毁机体ID1, 机体名P_1GzksB1
+10-03 15:31:32.563 I/Unity   (63814): [XGAME]初始化角色5 AI:ZakuIICmd_LV1
+10-03 15:31:32.993 I/Unity   (63814): [XGAME]生成机体ID5, 机体名P_1GczkA1
+10-03 15:31:33.576 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:31:33.850 I/StarryMagic(63814): [验证] grant ok exp=1791099092
+10-03 15:31:33.866 I/NativeMenu(63814): renew ok (expand)
+10-03 15:31:34.667 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:31:34.668 I/StarryMagic(63814): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:31:34.668 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:31:34.668 I/ModBridge(63814): reapplied saved features to native
+10-03 15:31:35.395 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 8
+10-03 15:31:35.396 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 8
+10-03 15:31:35.411 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 9
+10-03 15:31:35.412 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 9
+10-03 15:31:35.445 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 10
+10-03 15:31:35.446 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 10
+10-03 15:31:44.278 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 9
+10-03 15:31:44.279 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 9
+10-03 15:31:44.294 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 8
+10-03 15:31:44.294 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 8
+10-03 15:31:44.311 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 7
+10-03 15:31:44.313 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 7
+10-03 15:31:44.328 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 6
+10-03 15:31:44.330 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 6
+10-03 15:31:44.346 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 5
+10-03 15:31:44.347 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 5
+10-03 15:31:44.362 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 4
+10-03 15:31:44.362 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 4
+10-03 15:31:44.378 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 3
+10-03 15:31:44.378 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 3
+10-03 15:31:44.396 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 2
+10-03 15:31:44.396 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 2
+10-03 15:31:44.428 I/ModBridge(63814): Slider: #3 Slider_全局加速:1:10:1 = 1
+10-03 15:31:44.429 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:31:53.051 I/ModBridge(63814): auth game_id synced from native: gdzfdj
+10-03 15:31:53.275 I/StarryMagic(63814): [验证] grant ok exp=1791099111
+10-03 15:31:53.323 I/NativeMenu(63814): renew ok (expand)
+10-03 15:31:53.778 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 13
+10-03 15:31:53.779 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 13
+10-03 15:31:53.795 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 15
+10-03 15:31:53.796 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 15
+10-03 15:31:53.812 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 17
+10-03 15:31:53.813 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 17
+10-03 15:31:53.829 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 18
+10-03 15:31:53.830 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 18
+10-03 15:31:54.124 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 18
+10-03 15:31:54.125 I/StarryMagic(63814): [开关] #2 Toggle_超级定怪 = OFF
+10-03 15:31:54.125 I/StarryMagic(63814): [数值] #3 Slider_全局加速:1:10:1 = 1
+10-03 15:31:54.125 I/ModBridge(63814): reapplied saved features to native
+10-03 15:31:57.562 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 19
+10-03 15:31:57.562 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 19
+10-03 15:31:57.578 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 9
+10-03 15:31:57.579 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 9
+10-03 15:31:57.595 I/ModBridge(63814): Slider: #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:31:57.596 I/StarryMagic(63814): [数值] #1 Slider_伤害倍率:1:100:1 = 1
+10-03 15:32:00.667 I/Unity   (63814): [XGAME]销毁机体ID0, 机体名P_1GgndA1
+10-03 15:32:00.670 I/Unity   (63814): [XGAME]销毁机体ID5, 机体名P_1GczkA1
+10-03 15:32:00.683 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:00.831 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:00.853 I/Unity   (63814): [XGAME]4167 Enable input False
+10-03 15:32:00.985 I/Unity   (63814): [XGAME]↑Msg=Msg_RollName_CS, Module=Login, Seq.141
+10-03 15:32:01.127 I/Unity   (63814): [XGAME]↓Msg=Msg_RollName_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.141
+10-03 15:32:01.137 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:01.138 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:01.154 I/Unity   (63814): [XGAME]4168 Enable input True
+10-03 15:32:01.396 I/Unity   (63814): [XGAME]↑Msg=Msg_CreateRole_CS, Module=Login, Seq.142
+10-03 15:32:01.463 I/Unity   (63814): [XGAME]↓Msg=Msg_CreateRole_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.142
+10-03 15:32:01.480 I/Unity   (63814): [XGAME]4173 Enable input False
+10-03 15:32:01.481 I/Unity   (63814): [XGAME]↓Msg=Msg_ItemList_PUSH, Module=Login, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:01.487 I/Unity   (63814): [XGAME]↓Msg=Msg_ActivityList_PushData, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:01.840 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadVip_CS, Module=Mall, Seq.143
+10-03 15:32:01.912 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadVip_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.143
+10-03 15:32:01.963 I/Unity   (63814): [XGAME]↑Msg=Msg_RoleList_REQ, Module=Login, Seq.144
+10-03 15:32:02.012 I/Unity   (63814): [XGAME]↓Msg=Msg_RoleList_PUSH, Module=Login, ResultCode=Code_Common_Succeed, Seq.144
+10-03 15:32:02.162 I/Unity   (63814): [XGAME]↑Msg=Msg_CrewsPackage_REQ, Module=Develop, Seq.145
+10-03 15:32:02.228 I/Unity   (63814): [XGAME]↓Msg=Msg_CrewsPackage_ACK, Module=Develop, ResultCode=Code_Common_Succeed, Seq.145
+10-03 15:32:02.268 I/Unity   (63814): [XGAME]↑Msg=Msg_MachinePackage_REQ, Module=Develop, Seq.146
+10-03 15:32:02.339 I/Unity   (63814): [XGAME]↓Msg=Msg_MachinePackage_PUSH, Module=Develop, ResultCode=Code_Common_Succeed, Seq.146
+10-03 15:32:02.421 I/Unity   (63814): [XGAME]↑Msg=Msg_Gundam_LoadSkin_CS, Module=Develop, Seq.147
+10-03 15:32:02.478 I/Unity   (63814): [XGAME]↓Msg=Msg_Gundam_LoadSkin_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.147
+10-03 15:32:02.516 I/Unity   (63814): [XGAME]↑Msg=Msg_LimitedTimeGundam_CS, Module=Login, Seq.148
+10-03 15:32:02.580 I/Unity   (63814): [XGAME]↓Msg=Msg_LimitedTimeGundam_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.148
+10-03 15:32:02.615 I/Unity   (63814): [XGAME]↑Msg=Msg_ReqLimitedTimeGundam_CS, Module=Matched, Seq.149
+10-03 15:32:02.679 I/Unity   (63814): [XGAME]↓Msg=Msg_ReqLimitedTimeGundam_SC, Module=Matched, ResultCode=Code_Common_Succeed, Seq.149
+10-03 15:32:02.719 I/Unity   (63814): [XGAME]↑Msg=Msg_ReqLimitedTimeCard_CS, Module=Matched, Seq.150
+10-03 15:32:02.780 I/Unity   (63814): [XGAME]↓Msg=Msg_ReqLimitedTimeCard_SC, Module=Matched, ResultCode=Code_Common_Succeed, Seq.150
+10-03 15:32:02.856 I/Unity   (63814): [XGAME]↑Msg=Msg_WarshipPackage_REQ, Module=Develop, Seq.151
+10-03 15:32:02.912 I/Unity   (63814): [XGAME]↓Msg=Msg_WarshipPackage_ACK, Module=Develop, ResultCode=Code_Common_Succeed, Seq.151
+10-03 15:32:02.948 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadPartPage_CS, Module=Develop, Seq.152
+10-03 15:32:03.011 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadPartPage_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.152
+10-03 15:32:03.063 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadTalentBack_CS, Module=Develop, Seq.153
+10-03 15:32:03.112 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadTalentBack_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.153
+10-03 15:32:03.161 I/Unity   (63814): [XGAME]↑Msg=Msg_Task_LoadMissionControl_CS, Module=Task, Seq.154
+10-03 15:32:03.212 I/Unity   (63814): [XGAME]↓Msg=Msg_Task_LoadMissionControl_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.154
+10-03 15:32:03.263 I/Unity   (63814): [XGAME]↑Msg=Msg_Task_LoadCenterOfCommander_CS, Module=Task, Seq.155
+10-03 15:32:03.312 I/Unity   (63814): [XGAME]↓Msg=Msg_Task_LoadCenterOfCommander_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.155
+10-03 15:32:03.365 I/Unity   (63814): [XGAME]↑Msg=Msg_GetFriApplyList_CS, Module=Friend, Seq.156
+10-03 15:32:03.412 I/Unity   (63814): [XGAME]↓Msg=Msg_GetFriApplyList_SC, Module=Friend, ResultCode=Code_Common_Succeed, Seq.156
+10-03 15:32:03.473 I/Unity   (63814): [XGAME]↑Msg=Msg_GetFriendList_CS, Module=Friend, Seq.157
+10-03 15:32:03.558 I/Unity   (63814): [XGAME]↓Msg=Msg_GetFriendList_SC, Module=Friend, ResultCode=Code_Common_Succeed, Seq.157
+10-03 15:32:03.585 I/Unity   (63814): [XGAME]↑Msg=Msg_GetSelfApplyList_CS, Module=Friend, Seq.158
+10-03 15:32:03.646 I/Unity   (63814): [XGAME]↓Msg=Msg_GetSelfApplyList_SC, Module=Friend, ResultCode=Code_Common_Succeed, Seq.158
+10-03 15:32:03.684 I/Unity   (63814): [XGAME]↑Msg=Msg_GetFriendInviteAward_CS, Module=Friend, Seq.159
+10-03 15:32:03.746 I/Unity   (63814): [XGAME]↓Msg=Msg_GetFriendInviteAward_SC, Module=Friend, ResultCode=Code_Common_Succeed, Seq.159
+10-03 15:32:03.792 I/Unity   (63814): [XGAME]↑Msg=Msg_GetBlackList_CS, Module=Friend, Seq.160
+10-03 15:32:03.845 I/Unity   (63814): [XGAME]↓Msg=Msg_GetBlackList_SC, Module=Friend, ResultCode=Code_Common_Succeed, Seq.160
+10-03 15:32:03.882 I/Unity   (63814): [XGAME]↑Msg=Msg_CheckNewMail_CS, Module=Mail, Seq.161
+10-03 15:32:03.946 I/Unity   (63814): [XGAME]↓Msg=Msg_CheckNewMail_SC, Module=Mail, ResultCode=Code_Common_Succeed, Seq.161
+10-03 15:32:03.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:04.009 I/Unity   (63814): [XGAME]↑Msg=Msg_ItemList_REQ, Module=Login, Seq.162
+10-03 15:32:04.080 I/Unity   (63814): [XGAME]↓Msg=Msg_ItemList_ACK, Module=Login, ResultCode=Code_Common_Succeed, Seq.162
+10-03 15:32:04.118 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadSysAnnounce_CS, Module=Mail, Seq.163
+10-03 15:32:04.180 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadSysAnnounce_SC, Module=Mail, ResultCode=Code_Common_Succeed, Seq.163
+10-03 15:32:04.237 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadTaskList_CS, Module=Task, Seq.164
+10-03 15:32:04.312 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadTaskList_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.164
+10-03 15:32:04.357 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadAwardCount_CS, Module=Task, Seq.165
+10-03 15:32:04.412 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadAwardCount_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.165
+10-03 15:32:04.449 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadSpaceColony_CS, Module=SpaceColony, Seq.166
+10-03 15:32:04.513 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadSpaceColony_SC, Module=SpaceColony, ResultCode=Code_Common_Succeed, Seq.166
+10-03 15:32:04.613 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadThumbsUp_CS, Module=SpaceColony, Seq.167
+10-03 15:32:04.679 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadThumbsUp_SC, Module=SpaceColony, ResultCode=Code_Common_Succeed, Seq.167
+10-03 15:32:04.779 I/Unity   (63814): [XGAME]↑Msg=Msg_GetGamePad_CS, Module=Login, Seq.168
+10-03 15:32:04.846 I/Unity   (63814): [XGAME]↓Msg=Msg_GetGamePad_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.168
+10-03 15:32:04.894 I/Unity   (63814): [XGAME]↑Msg=Msg_GetFightQuicklyMsg_CS, Module=Login, Seq.169
+10-03 15:32:04.946 I/Unity   (63814): [XGAME]↓Msg=Msg_GetFightQuicklyMsg_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.169
+10-03 15:32:04.987 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadAchievement_CS, Module=Task, Seq.170
+10-03 15:32:05.047 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadAchievement_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.170
+10-03 15:32:05.096 I/Unity   (63814): [XGAME]↑Msg=Msg_GetCurTaskProcess_CS, Module=Task, Seq.171
+10-03 15:32:05.145 I/Unity   (63814): [XGAME]↓Msg=Msg_GetCurTaskProcess_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.171
+10-03 15:32:05.186 I/Unity   (63814): [XGAME]↑Msg=Msg_GetClimbingTowerData_CS, Module=Match, Seq.173
+10-03 15:32:05.247 I/Unity   (63814): [XGAME]↓Msg=Msg_GetClimbingTowerData_SC, Module=Match, ResultCode=Code_Common_Succeed, Seq.173
+10-03 15:32:05.288 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadTraining_CS, Module=Login, Seq.174
+10-03 15:32:05.346 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadTraining_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.174
+10-03 15:32:05.388 I/Unity   (63814): [XGAME]↑Msg=Msg_Task_LoadDailyTask_CS, Module=Task, Seq.175
+10-03 15:32:05.445 I/Unity   (63814): [XGAME]↓Msg=Msg_Task_LoadDailyTask_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.175
+10-03 15:32:05.496 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadBattlePass_CS, Module=Task, Seq.176
+10-03 15:32:05.546 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadBattlePass_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.176
+10-03 15:32:05.604 I/Unity   (63814): [XGAME]↑Msg=Msg_Task_LoadWeeklyTask_CS, Module=Task, Seq.177
+10-03 15:32:05.679 I/Unity   (63814): [XGAME]↓Msg=Msg_Task_LoadWeeklyTask_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.177
+10-03 15:32:05.720 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadMeisterHalfExSkill_CS, Module=Develop, Seq.178
+10-03 15:32:05.779 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadMeisterHalfExSkill_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.178
+10-03 15:32:05.819 I/Unity   (63814): [XGAME]↑Msg=Msg_MeisterPackage_REQ, Module=Develop, Seq.179
+10-03 15:32:05.880 I/Unity   (63814): [XGAME]↓Msg=Msg_MeisterPackage_PUSH, Module=Develop, ResultCode=Code_Common_Succeed, Seq.179
+10-03 15:32:05.943 I/Unity   (63814): [XGAME]↑Msg=Msg_GetActivityMachine_CS, Module=Develop, Seq.180
+10-03 15:32:05.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:05.983 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:06.012 I/Unity   (63814): [XGAME]↓Msg=Msg_GetActivityMachine_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.180
+10-03 15:32:06.057 I/Unity   (63814): [XGAME]↑Msg=Msg_GetActivityMeister_CS, Module=Develop, Seq.181
+10-03 15:32:06.113 I/Unity   (63814): [XGAME]↓Msg=Msg_GetActivityMeister_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.181
+10-03 15:32:06.151 I/Unity   (63814): [XGAME]↑Msg=Msg_GetActivitySkin_CS, Module=Develop, Seq.182
+10-03 15:32:06.212 I/Unity   (63814): [XGAME]↓Msg=Msg_GetActivitySkin_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.182
+10-03 15:32:06.250 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadCommonShop_CS, Module=Mall, Seq.183
+10-03 15:32:06.311 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadCommonShop_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.183
+10-03 15:32:06.394 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadCommonShop_CS, Module=Mall, Seq.184
+10-03 15:32:06.463 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadCommonShop_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.184
+10-03 15:32:06.496 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadCommonShop_CS, Module=Mall, Seq.185
+10-03 15:32:06.562 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadCommonShop_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.185
+10-03 15:32:06.600 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadActivityNotice_CS, Module=Mail, Seq.186
+10-03 15:32:06.662 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadActivityNotice_SC, Module=Mail, ResultCode=Code_Common_Succeed, Seq.186
+10-03 15:32:06.729 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadAllLottery_CS, Module=Mall, Seq.187
+10-03 15:32:06.795 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadAllLottery_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.187
+10-03 15:32:06.863 I/Unity   (63814): [XGAME]↑Msg=Msg_ArenaBox_CS, Module=Match, Seq.188
+10-03 15:32:06.930 I/Unity   (63814): [XGAME]↓Msg=Msg_ArenaBox_SC, Module=Match, ResultCode=Code_Common_Succeed, Seq.188
+10-03 15:32:06.972 I/Unity   (63814): [XGAME]↑Msg=Msg_GetRoleMessager_CS, Module=Login, Seq.189
+10-03 15:32:07.029 I/Unity   (63814): [XGAME]↓Msg=Msg_GetRoleMessager_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.189
+10-03 15:32:07.064 I/Unity   (63814): [XGAME]↑Msg=Msg_GetRolePortrait_CS, Module=Login, Seq.190
+10-03 15:32:07.129 I/Unity   (63814): [XGAME]↓Msg=Msg_GetRolePortrait_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.190
+10-03 15:32:07.165 I/Unity   (63814): [XGAME]↑Msg=Msg_GetBackground_CS, Module=Login, Seq.191
+10-03 15:32:07.228 I/Unity   (63814): [XGAME]↓Msg=Msg_GetBackground_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.191
+10-03 15:32:07.264 I/Unity   (63814): [XGAME]↑Msg=Msg_GetTitle_CS, Module=Login, Seq.192
+10-03 15:32:07.329 I/Unity   (63814): [XGAME]↓Msg=Msg_GetTitle_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.192
+10-03 15:32:07.364 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadTitleRarity_CS, Module=Login, Seq.193
+10-03 15:32:07.430 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadTitleRarity_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.193
+10-03 15:32:07.469 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadShowFlag_CS, Module=Login, Seq.194
+10-03 15:32:07.529 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadShowFlag_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.194
+10-03 15:32:07.567 I/Unity   (63814): [XGAME]↑Msg=Msg_Activity_LoadRemoved_CS, Module=Activity, Seq.195
+10-03 15:32:07.628 I/Unity   (63814): [XGAME]↓Msg=Msg_Activity_LoadRemoved_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.195
+10-03 15:32:07.670 I/Unity   (63814): [XGAME]↑Msg=Msg_Activity_LoadStartTime_CS, Module=Activity, Seq.196
+10-03 15:32:07.728 I/Unity   (63814): [XGAME]↓Msg=Msg_Activity_LoadStartTime_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.196
+10-03 15:32:07.821 I/Unity   (63814): [XGAME]↑Msg=Msg_Activity_LoadRecharge_CS, Module=Activity, Seq.197
+10-03 15:32:07.878 I/Unity   (63814): [XGAME]↓Msg=Msg_Activity_LoadRecharge_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.197
+10-03 15:32:07.961 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadSignTask_CS, Module=Activity, Seq.198
+10-03 15:32:08.028 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadSignTask_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.198
+10-03 15:32:08.083 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadMonthSign_CS, Module=Activity, Seq.199
+10-03 15:32:08.162 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadMonthSign_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.199
+10-03 15:32:08.203 I/Unity   (63814): [XGAME]↑Msg=Msg_Activity_LoadQuestion_CS, Module=Activity, Seq.200
+10-03 15:32:08.261 I/Unity   (63814): [XGAME]↓Msg=Msg_Activity_LoadQuestion_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.200
+10-03 15:32:08.303 I/Unity   (63814): [XGAME]↑Msg=Msg_Activity_LoadComment_CS, Module=Activity, Seq.201
+10-03 15:32:08.362 I/Unity   (63814): [XGAME]↓Msg=Msg_Activity_LoadComment_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.201
+10-03 15:32:08.398 I/Unity   (63814): [XGAME]↑Msg=Msg_Activity_LoadDropItemInCenter_CS, Module=Activity, Seq.202
+10-03 15:32:08.462 I/Unity   (63814): [XGAME]↓Msg=Msg_Activity_LoadDropItemInCenter_SC, Module=Activity, ResultCode=Code_Common_Succeed, Seq.202
+10-03 15:32:08.578 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.203
+10-03 15:32:08.628 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.203
+10-03 15:32:09.680 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:09.712 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.204
+10-03 15:32:09.779 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.204
+10-03 15:32:09.878 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.205
+10-03 15:32:09.945 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.205
+10-03 15:32:09.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:10.044 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.206
+10-03 15:32:10.114 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.206
+10-03 15:32:10.213 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.208
+10-03 15:32:10.346 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.208
+10-03 15:32:10.447 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.209
+10-03 15:32:10.515 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.209
+10-03 15:32:10.613 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.210
+10-03 15:32:10.678 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.210
+10-03 15:32:10.779 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.211
+10-03 15:32:10.845 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.211
+10-03 15:32:10.944 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.212
+10-03 15:32:11.013 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.212
+10-03 15:32:11.112 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.213
+10-03 15:32:11.178 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.213
+10-03 15:32:11.280 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.214
+10-03 15:32:11.345 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.214
+10-03 15:32:11.446 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.215
+10-03 15:32:11.512 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.215
+10-03 15:32:11.613 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.216
+10-03 15:32:11.678 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.216
+10-03 15:32:11.778 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.217
+10-03 15:32:11.845 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.217
+10-03 15:32:11.946 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.218
+10-03 15:32:11.978 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:12.012 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.218
+10-03 15:32:12.112 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.219
+10-03 15:32:12.178 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.219
+10-03 15:32:12.278 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.220
+10-03 15:32:12.347 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.220
+10-03 15:32:12.446 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.221
+10-03 15:32:12.512 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.221
+10-03 15:32:12.613 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.222
+10-03 15:32:12.679 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.222
+10-03 15:32:12.748 I/Unity   (63814): [XGAME]↑Msg=Msg_Activity_GetGatePassInfo_CS, Module=Activity, Seq.223
+10-03 15:32:12.778 I/Unity   (63814): [XGAME]↑Msg=Msg_RP_Load_Activity_CS, Module=RedPacket, Seq.224
+10-03 15:32:12.812 I/Unity   (63814): [XGAME]↓Msg=Msg_Activity_GatePass_PUSH, Module=Activity, ResultCode=Code_Common_Succeed, Seq.223
+10-03 15:32:12.845 I/Unity   (63814): [XGAME]↓Msg=Msg_ActivityList_PushData, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:12.887 I/Unity   (63814): [XGAME]Activity update:Msg_Update_UnionValue_PUSH
+10-03 15:32:12.888 I/Unity   (63814): [XGAME]↓Msg=Msg_RP_Load_Activity_SC, Module=RedPacket, ResultCode=Code_Common_Succeed, Seq.224
+10-03 15:32:12.916 I/Unity   (63814): [XGAME]↑Msg=Msg_GetGuidenceInfo_CS, Module=Login, Seq.225
+10-03 15:32:12.979 I/Unity   (63814): [XGAME]↓Msg=Msg_GetGuidenceInfo_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.225
+10-03 15:32:13.043 I/Unity   (63814): [XGAME]<color=yellow><b>4474[新手引导]</b>:<b>打开节点:</b>1002</color>
+10-03 15:32:13.045 I/Unity   (63814): [XGAME]↑Msg=Msg_GetRankMatchRecord_CS, Module=RankMatch, Seq.226
+10-03 15:32:13.112 I/Unity   (63814): [XGAME]↓Msg=Msg_GetRankMatchRecord_SC, Module=RankMatch, ResultCode=Code_Common_Succeed, Seq.226
+10-03 15:32:13.172 I/Unity   (63814): [XGAME]↑Msg=Msg_Buff_LoadBuff_CS, Module=Buff, Seq.227
+10-03 15:32:13.248 I/Unity   (63814): [XGAME]↓Msg=Msg_Buff_LoadBuff_SC, Module=Buff, ResultCode=Code_Common_Succeed, Seq.227
+10-03 15:32:13.298 I/Unity   (63814): [XGAME]↑Msg=Msg_GetCopyBossMall_CS, Module=Match, Seq.228
+10-03 15:32:13.345 I/Unity   (63814): [XGAME]↓Msg=Msg_GetCopyBossMall_SC, Module=Match, ResultCode=Code_Common_Succeed, Seq.228
+10-03 15:32:13.390 I/Unity   (63814): [XGAME]↑Msg=Msg_GetSocietyInfo_CS, Module=Society, Seq.229
+10-03 15:32:13.445 I/Unity   (63814): [XGAME]↓Msg=Msg_GetSocietyInfo_SC, Module=Society, ResultCode=Code_Common_Succeed, Seq.229
+10-03 15:32:13.547 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadTitleCount_CS, Module=Login, Seq.230
+10-03 15:32:13.614 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadTitleCount_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.230
+10-03 15:32:13.664 I/Unity   (63814): [XGAME]↑Msg=Msg_Get1v1ArenaAward_CS, Module=Match, Seq.231
+10-03 15:32:13.712 I/Unity   (63814): [XGAME]↓Msg=Msg_Get1v1ArenaAward_SC, Module=Match, ResultCode=Code_Common_Succeed, Seq.231
+10-03 15:32:13.759 I/Unity   (63814): [XGAME]↑Msg=Msg_GetLevelRewarded_CS, Module=Login, Seq.232
+10-03 15:32:13.814 I/Unity   (63814): [XGAME]↓Msg=Msg_GetLevelRewarded_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.232
+10-03 15:32:13.851 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadGundamShow_CS, Module=Login, Seq.233
+10-03 15:32:13.913 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadGundamShow_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.233
+10-03 15:32:13.914 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:13.953 I/Unity   (63814): [XGAME]↑Msg=Msg_ReqLeisureNodeInfo_CS, Module=Matched, Seq.234
+10-03 15:32:14.012 I/Unity   (63814): [XGAME]↓Msg=Msg_ReqLeisureNodeInfo_SC, Module=Matched, ResultCode=Code_Common_Succeed, Seq.234
+10-03 15:32:14.059 I/Unity   (63814): [XGAME]↑Msg=Msg_GetThemeArenaCostGundamTalent_CS, Module=Matched, Seq.235
+10-03 15:32:14.112 I/Unity   (63814): [XGAME]↓Msg=Msg_GetThemeArenaCostGundamTalent_SC, Module=Matched, ResultCode=Code_Common_Succeed, Seq.235
+10-03 15:32:14.157 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadPowerMachineList_CS, Module=Matched, Seq.236
+10-03 15:32:14.212 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadPowerMachineList_SC, Module=Matched, ResultCode=Code_Common_Succeed, Seq.236
+10-03 15:32:14.266 I/Unity   (63814): [XGAME]↑Msg=Msg_GetRoleCardCardBackground_CS, Module=Login, Seq.237
+10-03 15:32:14.313 I/Unity   (63814): [XGAME]↓Msg=Msg_GetRoleCardCardBackground_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.237
+10-03 15:32:14.351 I/Unity   (63814): [XGAME]↑Msg=Msg_GetRoleCardCardDesign_CS, Module=Login, Seq.238
+10-03 15:32:14.414 I/Unity   (63814): [XGAME]↓Msg=Msg_GetRoleCardCardDesign_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.238
+10-03 15:32:14.450 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadTpsMachineList_CS, Module=Matched, Seq.239
+10-03 15:32:14.512 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadTpsMachineList_SC, Module=Matched, ResultCode=Code_Common_Succeed, Seq.239
+10-03 15:32:14.570 I/Unity   (63814): [XGAME]msg.uiMachineTeam = 1
+10-03 15:32:14.573 I/Unity   (63814): [XGAME]↑Msg=Msg_GetMatchBlackList_CS, Module=Matched, Seq.240
+10-03 15:32:14.649 I/Unity   (63814): [XGAME]↓Msg=Msg_GetMatchBlackList_SC, Module=Matched, ResultCode=Code_Common_Succeed, Seq.240
+10-03 15:32:14.717 I/Unity   (63814): [XGAME]RestorePurchase
+10-03 15:32:14.728 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:14.729 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:14.754 I/Unity   (63814): [XGAME]4524 Enable input False
+10-03 15:32:14.755 I/Unity   (63814): [XGAME]4524 Enable input True
+10-03 15:32:14.821 I/Unity   (63814): [XGAME]开始异步加载场景Menu
+10-03 15:32:15.679 I/Unity   (63814): [XGAME]加载背景UI_Background_Menu03
+10-03 15:32:15.778 I/Unity   (63814): [XGAME]成功异步场景Menu
+10-03 15:32:15.779 I/Unity   (63814): [XGAME]等待时间 1.042297
+10-03 15:32:15.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:15.980 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:16.579 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:16.919 I/Unity   (63814): [XGAME]播放UI背景音效:Main_Menu_2 Bgm音量:1 Bgm状态:Opening
+10-03 15:32:17.438 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadActivityTask_CS, Module=Task, Seq.243
+10-03 15:32:17.443 I/Unity   (63814): [XGAME]<color=yellow><b>4585[新手引导]</b>:销毁引导:1001</color>
+10-03 15:32:17.444 I/Unity   (63814): [XGAME]<color=yellow><b>4585[新手引导]</b>:<b>进入节点:</b>1002</color>
+10-03 15:32:17.447 I/Unity   (63814): [XGAME]↑Msg=Msg_FinishGuidence_CS, Module=Login, Seq.244
+10-03 15:32:17.448 I/Unity   (63814): [XGAME]↑Msg=Msg_GetGuidenceInfo_CS, Module=Login, Seq.245
+10-03 15:32:17.558 I/Unity   (63814): [XGAME]GundamShow model: P_GD330A1_Menu(Clone) (UnityEngine.GameObject)
+10-03 15:32:17.916 I/Unity   (63814): [XGAME]Gundam has animation: True
+10-03 15:32:18.028 I/Unity   (63814): [XGAME]Enable GM:False GMLevel:0 ENV:eDist GM:True
+10-03 15:32:18.043 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:18.044 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:18.064 I/Unity   (63814): [XGAME]4585 Enable input True
+10-03 15:32:18.302 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:18.303 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:18.304 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadActivityTask_SC, Module=Task, ResultCode=Code_Common_Succeed, Seq.243
+10-03 15:32:18.337 I/Unity   (63814): [XGAME]↓Msg=Msg_FinishGuidence_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.244
+10-03 15:32:18.339 I/Unity   (63814): [XGAME]<color=yellow><b>4586[新手引导]</b>:<b>完成节点:</b>1002</color>
+10-03 15:32:18.342 I/Unity   (63814): [XGAME]↓Msg=Msg_GetGuidenceInfo_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.245
+10-03 15:32:18.343 I/Unity   (63814): [XGAME]<color=yellow><b>4586[新手引导]</b>:销毁引导:1002</color>
+10-03 15:32:18.346 I/Unity   (63814): [XGAME]<color=yellow><b>4586[新手引导]</b>:<b>打开节点:</b>1003</color>
+10-03 15:32:18.346 I/Unity   (63814): [XGAME]<color=yellow><b>4586[新手引导]</b>:<b>进入节点:</b>1003</color>
+10-03 15:32:18.413 I/Unity   (63814): [XGAME]↑Msg=Msg_Mall_LoadSurpriseStore_CS, Module=Mall, Seq.247
+10-03 15:32:18.462 I/Unity   (63814): [XGAME]↓Msg=Msg_Mall_LoadSurpriseStore_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.247
+10-03 15:32:18.995 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:18.996 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:18.996 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:18.997 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:19.532 I/Unity   (63814): [XGAME]<color=yellow><b>4621[新手引导]</b>:创建特效:0时候找不到节点:PageHome(Clone)/BottomBar/Content/Btn_/</color>
+10-03 15:32:19.535 I/Unity   (63814): [XGAME]<color=yellow><b>4621[新手引导]</b>:节点0 路径找不到PageHome(Clone)/BottomBar/Content/Btn_/</color>
+10-03 15:32:19.995 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:19.996 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:20.766 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadLottery_CS, Module=Mall, Seq.253
+10-03 15:32:20.829 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadLottery_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.253
+10-03 15:32:20.874 I/Unity   (63814): [XGAME]↑Msg=Msg_Mall_Load_LotteryPoint_CS, Module=Mall, Seq.254
+10-03 15:32:20.946 I/Unity   (63814): [XGAME]↓Msg=Msg_Mall_Load_LotteryPoint_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.254
+10-03 15:32:20.953 I/Unity   (63814): [XGAME]4663 Enable input False
+10-03 15:32:21.154 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:21.155 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:21.178 I/Unity   (63814): [XGAME]ClearAdvertisement
+10-03 15:32:21.179 I/Unity   (63814): [XGAME]4664 Enable input True
+10-03 15:32:21.182 I/Unity   (63814): [XGAME]................新机体补给
+10-03 15:32:21.183 I/Unity   (63814): [XGAME]................新机体补给
+10-03 15:32:21.187 I/Unity   (63814): [XGAME]SupplyBanner Path: Icon/MallBanner/Patch_287@SupplyBanner_LimitGundam_287
+10-03 15:32:21.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:21.980 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:22.585 I/Unity   (63814): [XGAME]↑Msg=Msg_DrawLottery_CS, Module=Mall, Seq.257
+10-03 15:32:22.646 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.649 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.657 I/Unity   (63814): [XGAME]↓Msg=Msg_DrawLottery_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.257
+10-03 15:32:22.748 I/Unity   (63814): [XGAME]↑Msg=Msg_FinishGuidence_CS, Module=Login, Seq.259
+10-03 15:32:22.749 I/Unity   (63814): [XGAME]↓Msg=Msg_MachinePackage_PUSH, Module=Develop, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.750 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.751 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.752 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.752 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.753 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.753 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.754 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.755 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.755 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.756 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.756 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.757 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.758 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.758 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.759 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.760 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.760 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.761 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.762 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.762 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.763 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.763 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.764 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.765 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.765 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.766 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.766 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.767 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.768 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.768 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.769 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.769 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.770 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.770 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.771 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.771 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.772 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.772 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.773 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.773 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.774 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.775 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.775 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.776 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.776 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.777 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.778 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.778 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.779 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.779 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.780 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.780 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.781 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.781 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.782 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.783 I/Unity   (63814): [XGAME]↓Msg=Msg_UpdateAchievement_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.783 I/Unity   (63814): [XGAME]↓Msg=Msg_ReloadShop_PUSH, Module=Mall, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.784 I/Unity   (63814): [XGAME]↑Msg=Msg_LoadCommonShop_CS, Module=Mall, Seq.261
+10-03 15:32:22.784 I/Unity   (63814): [XGAME]↓Msg=Msg_Task_UpdateGundamFragment_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.787 I/Unity   (63814): [XGAME]↓Msg=Msg_Task_UpdateGundamCard_PUSH, Module=Task, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:22.809 I/Unity   (63814): [XGAME]↓Msg=Msg_FinishGuidence_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.259
+10-03 15:32:22.809 I/Unity   (63814): [XGAME]<color=yellow><b>4705[新手引导]</b>:<b>完成节点:</b>1003</color>
+10-03 15:32:22.864 I/Unity   (63814): [XGAME]↓Msg=Msg_LoadCommonShop_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.261
+10-03 15:32:23.998 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:23.999 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:24.000 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:24.000 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:25.980 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:25.980 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:25.981 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:25.982 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:26.947 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:26.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:26.979 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:26.980 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:26.982 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:27.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:27.980 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:29.980 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:29.980 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:29.981 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:29.982 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:30.979 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:30.979 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:33.249 I/Unity   (63814): [XGAME]5014 Enable input False
+10-03 15:32:33.258 I/Unity   (63814): [XGAME]↑Msg=Msg_Mall_LoadSurpriseStore_CS, Module=Mall, Seq.268
+10-03 15:32:33.267 I/Unity   (63814): [XGAME]↑Msg=Msg_GetGuidenceInfo_CS, Module=Login, Seq.270
+10-03 15:32:33.269 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:33.270 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:33.298 I/Unity   (63814): [XGAME]GundamShow model: P_GD330A1_Menu(Clone) (UnityEngine.GameObject)
+10-03 15:32:33.322 I/Unity   (63814): [XGAME]Gundam has animation: True
+10-03 15:32:33.331 I/Unity   (63814): [XGAME]5014 Enable input True
+10-03 15:32:33.332 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:33.332 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:33.500 I/Unity   (63814): [XGAME]↓Msg=Msg_Mall_LoadSurpriseStore_SC, Module=Mall, ResultCode=Code_Common_Succeed, Seq.268
+10-03 15:32:33.500 I/Unity   (63814): [XGAME]↓Msg=Msg_GetGuidenceInfo_SC, Module=Login, ResultCode=Code_Common_Succeed, Seq.270
+10-03 15:32:33.501 I/Unity   (63814): [XGAME]<color=yellow><b>5015[新手引导]</b>:销毁引导:1003</color>
+10-03 15:32:33.504 I/Unity   (63814): [XGAME]<color=yellow><b>5015[新手引导]</b>:<b>打开节点:</b>1004</color>
+10-03 15:32:33.505 I/Unity   (63814): [XGAME]<color=yellow><b>5015[新手引导]</b>:<b>进入节点:</b>1004</color>
+10-03 15:32:33.598 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:33.599 I/Unity   (63814): [XGAME].........................  恭喜<color=#00FF21FF>有蜜蜂</color>通过<color=#00FF21FF>补给</color>获得完整机体<color=#00FF21FF>拜亚兰改装型</color>！, count = 1
+10-03 15:32:33.996 I/Unity   (63814): [XGAME]↓Msg=Msg_AL_Update_GlobalEvaluation_PUSH, Module=ActivityList, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:33.997 I/Unity   (63814): [XGAME]Activity update:Msg_AL_Update_GlobalEvaluation_PUSH
+10-03 15:32:34.671 I/Unity   (63814): [XGAME]<color=yellow><b>5049[新手引导]</b>:创建特效:0时候找不到节点:PageHome(Clone)/BottomBar/Content/Btn_/</color>
+10-03 15:32:34.673 I/Unity   (63814): [XGAME]<color=yellow><b>5049[新手引导]</b>:节点0 路径找不到PageHome(Clone)/BottomBar/Content/Btn_/</color>
+10-03 15:32:35.831 I/Unity   (63814): [XGAME]5084 Enable input False
+10-03 15:32:35.831 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:35.832 I/Unity   (63814): [XGAME]↓Msg=Msg_SystemAnnounce_PUSH, Module=Mail, ResultCode=Code_Common_Succeed, Seq.0
+10-03 15:32:35.834 I/Unity   (63814): [XGAME]↑Msg=Msg_GetActivityMachine_CS, Module=Develop, Seq.277
+10-03 15:32:35.835 I/Unity   (63814): [XGAME]↑Msg=Msg_GetActivitySkin_CS, Module=Develop, Seq.278
+10-03 15:32:35.835 I/Unity   (63814): [XGAME]↑Msg=Msg_GetActivityMeister_CS, Module=Develop, Seq.279
+10-03 15:32:35.867 I/Unity   (63814): [XGAME]播放UI背景音效:Hunger_Menu_2 Bgm音量:1 Bgm状态:Opening
+10-03 15:32:35.895 I/Unity   (63814): [XGAME]↓Msg=Msg_GetActivityMachine_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.277
+10-03 15:32:35.897 I/Unity   (63814): [XGAME]↓Msg=Msg_GetActivitySkin_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.278
+10-03 15:32:35.898 I/Unity   (63814): [XGAME]↓Msg=Msg_GetActivityMeister_SC, Module=Develop, ResultCode=Code_Common_Succeed, Seq.279
+10-03 15:32:35.942 I/Unity   (63814): [XGAME]Start UnloadUnusedAssets
+10-03 15:32:35.943 I/Unity   (63814): [XGAME]End UnloadUnusedAssets
+10-03 15:32:35.968 I/Unity   (63814): [XGAME]ClearAdvertisement
+10-03 15:32:35.969 I/Unity   (63814): [XGAME]5086 Enable input True
+10-03 15:32:36.101 I/Unity   (63814): [XGAME]sortType = Fighting

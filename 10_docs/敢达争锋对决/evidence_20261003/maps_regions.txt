@@ -1,0 +1,27 @@
+﻿400020800000-400020828000 r--p 00000000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+400020828000-400020849000 r--p 00028000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+400020849000-40002089d000 r--p 00049000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+40002089d000-4000208a0000 r--p 0009d000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+4000208a0000-400020af0000 r--p 000a0000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+400020aff000-400020b03000 r--p 002ef000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+400020b03000-40002111c000 rw-p 002f3000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+40002111c000-400022616000 r--p 00000000 00:00 0 
+400022617000-4000227b8000 r--p 00000000 00:00 0 
+4000227b8000-4000227f1000 rw-p 00000000 00:00 0 
+4000227f1000-4000227f4000 r--p 0090c000 08:23 1703948                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libSDKloading.so
+400023400000-4000237bf000 r--p 00000000 08:23 1703949                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libunity.so
+4000237bf000-4000237c0000 r--p 00000000 00:00 0 
+400025000000-4000276e5000 r--p 00000000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+4000276e8000-400028d9c000 r--p 026e4000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+400028d9c000-400028d9d000 r--p 03d98000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+400028d9d000-400028db9000 r--p 03d99000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+400028db9000-400028dba000 r--p 03db5000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+400028dba000-40002b7be000 r--p 03db6000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+40002b7be000-40002b7bf000 r--p 067ba000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+40002b7bf000-40002baab000 r--p 067bb000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+40002baae000-40002bf11000 r--p 06aa6000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+40002bf14000-40002c3c8000 rw-p 06f08000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+7a8975834000-7a897703c000 r--p 00000000 08:23 1703949                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libunity.so
+7a897703c000-7a897e3f8000 r--p 00000000 08:23 1704079                    /data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/lib/arm64/libil2cpp.so
+7a8c46e7b000-7a8c46e83000 rw-p 00000000 00:00 0                          [anon:thread signal stack]
+7a8c46e83000-7a8c46e84000 r--p 00000000 00:00 0 

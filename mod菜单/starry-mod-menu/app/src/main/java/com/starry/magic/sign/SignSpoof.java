@@ -1035,6 +1035,28 @@ public final class SignSpoof {
                     + "utugiC0QKuCtShylN6iz9BnlzLqPVAb71fws2lQF7Wxecw/VMHVCxkraXJbpSoXl4FNVxCxjPSNQBHkdcKQZyfvNHWw+ox9J46wk"
                     + "3X2tgcGZ+oPnFD0XQ2o7dx6l2uqw";
 
+
+    // 敢达争锋对决（com.kingnet.gundam.mg.normal）官包签名证书
+    // 取自官包 base.apk META-INF（keytool -printcert -rfc -jarfile）
+    // subject/issuer: C=zh, ST=sh, L=sh, O=kingnet, OU=qmqj, CN=qmqj
+    // MD5:     28185fbfd55a46a024bd75bd1569fd72
+    // SHA-1:   767e4adea7709285ff828e83bd93dc8a87301cca
+    // SHA-256: c1ace7c113c98d8ebfe370d0e1e75da8c504d98b853504751a8cb5ed8bc23185
+    // 有效期: 2015-01-16 → 2069-10-19；DER 852 B / RSA-2048 / SHA256withRSA
+    // 用途: 模组包自签后回灌官签，喂给游戏的完整性/渠道校验
+    private static final String GDZFDJ_PKG = "com.kingnet.gundam.mg.normal";
+    private static final String GDZFDJ_CERT_B64 =
+            "MIIDTzCCAjegAwIBAgIEAdAOjTANBgkqhkiG9w0BAQsFADBXMQswCQYDVQQGEwJ6aDELMAkGA1UECBMCc2gxCzAJBgNVBAcTAnNoMRAwDgYDVQQKEwdraW"
+                    + "5nbmV0MQ0wCwYDVQQLEwRxbXFqMQ0wCwYDVQQDEwRxbXFqMCAXDTE1MDExNjExMDYyMFoYDzIwNjkxMDE5MTEwNjIwWjBXMQswCQYDVQQGEwJ6aDELMAkG"
+                    + "A1UECBMCc2gxCzAJBgNVBAcTAnNoMRAwDgYDVQQKEwdraW5nbmV0MQ0wCwYDVQQLEwRxbXFqMQ0wCwYDVQQDEwRxbXFqMIIBIjANBgkqhkiG9w0BAQEFAA"
+                    + "OCAQ8AMIIBCgKCAQEAtuj+WCjNXQDZI7TEsGSd12ocfbCEawdQAiXXTQS1ysfospezGZVrMTVFN+eBZo5jcNXQzfwgA+MIbpDXKdt7L7D1MLy+28cNxnZi"
+                    + "HhYCQR0UrTOReoZh9EysXDiHn1Yre3Wj82bJMhIdzH44vBaVlbwbBCFjcNlFkVEL2fE0MixlgY0mZsm3NMq4wKrdfXOGA4SF3Ey5vlPR7+SFHGnkYEP4MC"
+                    + "maYZ7gFuJPrZNQG12qWlzPirTuLU6oeAlnZ/Z4YYj/qbWXXesfJErdkNAh+13xAf8putfLDU7d4r4toXK7oGFA8peGYkDLK0BOHnlJbBMd2sMxRvTX+gO3"
+                    + "L/qVxQIDAQABoyEwHzAdBgNVHQ4EFgQUW0P8UhAZuAP3wIlD11+v3yaZz8UwDQYJKoZIhvcNAQELBQADggEBAGLDQGH8ig0StR19pJZIBSwzEqGr8aQGOs"
+                    + "l8dQackBx0Lwv00F4Q19mVBMpmGq92ekBlJqBq7EA3CVhIBm7YpgiMecWTA0FfrXURdVT1QBp0HhY/LNJedRj643m2RA/cS/m3UV6VzQqjI6jA0OIvwzcR"
+                    + "KKfBKObzthUuC4p1RRbYWVR4SJzNXhxw22p9qZXjJ+s/k00qq7NxYtbYMSFpCVAyJxsQ+B/CwrD4ocnlcFZL0DaWnnKqqXe+ec2pcigPnDETZsiwGZZIpc"
+                    + "oSypFJxqUCPFfXdUhA/c6c+pcc7+y77CDGnt4i7vIsrStmDjdSagWbgnfEyrcMfRTU3Eeev0Q=";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1102,6 +1124,7 @@ public final class SignSpoof {
                 fakes.put(SLCB_PKG, new Signature(Base64.decode(SLCB_CERT_B64, Base64.DEFAULT)));
                 fakes.put(JJSSJD_PKG, new Signature(Base64.decode(JJSSJD_CERT_B64, Base64.DEFAULT)));
                 fakes.put(JFQS_PKG, new Signature(Base64.decode(JFQS_CERT_B64, Base64.DEFAULT)));
+                fakes.put(GDZFDJ_PKG, new Signature(Base64.decode(GDZFDJ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

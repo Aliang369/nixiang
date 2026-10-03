@@ -1,0 +1,405 @@
+{
+  "meta": {
+    "game": "敢达争锋对决",
+    "pkg": "com.kingnet.gundam.mg.normal",
+    "version_name": "9.3.0",
+    "version_code": 830,
+    "min_sdk": 23,
+    "target_sdk": 31,
+    "abi": "arm64-v8a（宿主 x86_64 + libhoudini 翻译执行 arm64）",
+    "engine": "Unity IL2CPP",
+    "il2cpp_metadata_version": 31,
+    "unity_version": "2022.3.62f3c1_1623fc0bbb97",
+    "unity_activity": "com.kingnet.gundam.mg.MainActivity",
+    "binge_apk_pulled_from": "/data/app/~~J-LOiKlB30u55KGGT1Dc0A==/com.kingnet.gundam.mg.normal-oUY4tYTfYQAncaf_OUyaPA==/base.apk",
+    "binge_apk_size": 297860686,
+    "binge_apk_md5": "3e6d32482af8c3e2388b9f52aabc029b",
+    "binge_apk_sha256": "0f11484d9f7767aa516b60196fd1cbc24cf527f352fe2a93d49eebf9f8d0f267",
+    "binge_apk_local": "07_patched/敢达争锋对决/apk/base.apk（临时，按「APK 不留本地」待清）",
+    "binge_repack_timestamp": "2026-10-02 12:15:53（= firstInstallTime = lastUpdateTime）",
+    "signature": {
+      "subject_dn": "CN=binge2.keystore, OU=binge2, O=binge2, L=binge2, ST=binge2, C=binge2",
+      "sha256": "11491cb602665c768f565bc2ae530bddbdf8365af5628d9fdb5ced80238b5eba",
+      "sha1": "dde5c4a389c45d64c3802df7fc911171f3537019",
+      "serial": "be9d68f74318590",
+      "algorithm": "SHA256withRSA / 1024-bit RSA（weak）",
+      "validity": "2026-01-24 ~ 2108-03-15",
+      "verdict": "斌哥签名改包判据命中：与 疾风骑士 60.0.1 斌哥包 sha256/sha1 逐字节一致（同一 keystore）"
+    },
+    "libSDKloading_path": "lib/arm64-v8a/libSDKloading.so",
+    "libSDKloading_size": 9497080,
+    "libSDKloading_md5": "cbee003b16fc969b0ad2a8923651d50b",
+    "libSDKloading_sha256": "834ef0de9291c39e0f47c0e754ee231c6f629795ea991c0a81da51e904965a9e",
+    "libtoolChecker_present": true,
+    "libtoolChecker_size": 5512,
+    "libtoolChecker_md5": "3c4724ce3faeda4f890c0136ebddd514",
+    "libtoolChecker_note": "RootBeer 反 root，斌哥壳自带，移植时不要带；**与疾风骑士斌哥包内同一份 md5**",
+    "libil2cpp_size": 121354928,
+    "libil2cpp_md5": "ac7a2363a07991bce2b569d8a772d118",
+    "libil2cpp_sha256": "5816eb815fa11a471e32db1529e999b805c2422adbe346cc276822f9771c28ce",
+    "libil2cpp_stripped": true,
+    "libmain_is_official": "true（libmain.so 6736 B，md5 ce5cebd305c3ecd9120930e7f3d422dc，字符串含 libil2cpp.so/libunity.so/JNI_OnLoad ⇒ 斌哥未改 libmain）",
+    "device": "MuMu 模拟器 emulator-5554（ro.product.model=HBP-AL00 / brand=HUAWEI 伪装，Android 15 / SDK 35，物理 900x1600，宿主 abi x86_64）",
+    "capture_pid": 5716,
+    "captured_at": "2026-10-03",
+    "captured_by": "运行态 /proc/<pid>/mem dump（guest 别名镜像）+ 磁盘 libil2cpp.so 逐段 4 字节 diff（capstone 解码）+ Il2CppDumper v6.7.46 符号解析 + 壳 rw 页/stub 页/trampoline 页 live dump",
+    "feature_count_declared": 3,
+    "feature_count_note": "菜单 exp 共 4 槽，启用 3 槽（输入伤害 input / 超级定怪 btn / 全局加速 input）；槽 3「未添加」被 // 注释。运行态实际 4 个内联钩：3 个功能钩 + 1 个 set_timeScale 透传附带钩。"
+  },
+
+  "artifact": {
+    "apk_member_metadata": "**无**（assets 内不含 global-metadata.dat）",
+    "metadata_path_device": "/storage/emulated/0/Android/data/com.kingnet.gundam.mg.normal/files/il2cpp/Metadata/global-metadata.dat",
+    "metadata_size": 28788552,
+    "metadata_md5": "6040ae279f84e6a172d3bcb2cd5f067e",
+    "metadata_sha256": "25840a7709cceb506158851a8d6b1e229c41ca659ad0a82f68ec89f66778d17e",
+    "metadata_note": "外置到 /sdcard 应用私有目录（同目录另有 mscorlib.dll-resources.dat）。这是本包与 疾风骑士 最大的结构差异：Il2CppDumper 必须另行 adb pull，APK 内直接找会落空。",
+    "il2cpp_dumper": "01_tools/il2cppdumper/Il2CppDumper.dll（v6.7.46 net6，本轮新下载解压）",
+    "il2cpp_dumper_cmd": "dotnet 01_tools/il2cppdumper/Il2CppDumper.dll 07_patched/敢达争锋对决/work/libil2cpp.so 07_patched/敢达争锋对决/lib/global-metadata.dat 07_patched/敢达争锋对决/dump_out",
+    "dumper_log": [
+      "Metadata Version: 31",
+      "WARNING: find JNI_OnLoad",
+      "ERROR: This file may be protected.",
+      "CodeRegistration : 6aaec70",
+      "MetadataRegistration : 6c44aa0",
+      "Done!"
+    ],
+    "dump_out": {
+      "dump.cs": {"size": 46276959, "lines": 1358435},
+      "script.json": {"size": 127816238},
+      "il2cpp.h": {"size": 95386580},
+      "stringliteral.json": {"size": 2664393},
+      "DummyDll": {"files": 79},
+      "i2d.log": {"size": 2112}
+    },
+    "work_dir": "07_patched/敢达争锋对决/work/（libil2cpp.so，从 base.apk 的 lib/arm64-v8a/libil2cpp.so 解出）",
+    "guest_image_dump": "07_patched/敢达争锋对决/memdump2/（il2_mem_image.bin 121,354,928 + il2/ 8 段 + sdk/ + anon/）",
+    "dumper_note": "CodeRegistration 值可疑（疑似自动搜索失败），但 4 个 hook 的 RVA 与内存 diff 的 file_off、以及 trampoline 跳转目标（guest 原函数体 = base+RVA+4）三方逐字节吻合 ⇒ dump 与锚点可信。",
+    "dump_trust": "HIGH（三方交叉验证）"
+  },
+
+  "injection_mechanism": {
+    "summary": "斌哥壳 libSDKloading.so（9.5 MB，比疾风骑士的 976 KB 大近 10 倍）在启动时：① 把 4 个 libil2cpp 方法的序言首 4 字节改写成 4 字节 `B <imm26>` 内联跳；② 把被覆盖的原序言复制进自建 trampoline 页（Dobby/MemoryPatch 型跳板）；③ 把「原函数跳板指针」与「菜单参数槽」写进一块 233,472 B 的匿名 rw 页（flag 页）。菜单（classes4.dex 的 com.android.support.Menu + 云菜单页 578.html）经 Java 桥写 flag 页 → handler 读 flag 页决定行为。",
+    "patch_form": {
+      "bytes": "4 字节 ARM64 `B <imm26>`（不是疾风骑士的 16 字节 `LDR X17;BR X17`）",
+      "decode": "每条只覆盖目标方法序言的第 1 条指令（4 B），其余序言之首 4 字节在 trampoline 页里原样重放",
+      "hook3_hook4_extra_hop": "UnityEngine.Time 的两个钩不是直跳 handler，而是先 `B` 到 4 KB 匿名页 0x4000237bf000（+0x00 / +0x0c）的 12 字节 stub：`adrp x17,#0x4000213e7000 ; add x17,x17,#0x70c(或#0x74c) ; br x17` ⇒ 2 级跳。该 stub 页夹在 libunity.so 两段之间（`4000237bf000-4000237c0000 r--p`，anon），疑为壳留的可运行时重写入口。"
+    },
+    "trampoline_page": {
+      "range": "0x7a8c46e83000-0x7a8c46e84000（4 KB anon r--p，紧邻 [anon:thread signal stack]）",
+      "entry_stride": "0x18（24 字节）",
+      "entries": {
+        "CalcDamage_orig": {"slot": "0x7a8c46e83018", "stolen_prologue": "sub sp,sp,#0xe0", "jump_target": "0x400028db99d0（= guest 0x400028db99cc + 4）"},
+        "UpdateAI_orig": {"slot": "0x7a8c46e83030", "stolen_prologue": "str x30,[sp,#-0x30]!", "jump_target": "0x400028d9cf58"},
+        "get_deltaTime_orig": {"slot": "0x7a8c46e83048", "stolen_prologue": "stp x30,x19,[sp,#-0x10]!", "jump_target": "0x40002b7be184"},
+        "set_timeScale_orig": {"slot": "0x7a8c46e83060", "stolen_prologue": "str d8,[sp,#-0x20]!", "jump_target": "0x40002b7be45c"}
+      },
+      "entry_form": "被窃取的原始序言（4 B）+ `ldr x17,#8 ; br x17` + 8 字节小端绝对目标",
+      "evidence": "10_docs/敢达争锋对决/evidence_20261003/tramp_7a8c46e83000.bin（md5 64b303f6a619084060ff6435a60162f4）"
+    },
+    "b_stub_page": {
+      "range": "0x4000237bf000-0x4000237c0000（4 KB anon r--p，libunity.so 两段之间）",
+      "entries": {
+        "0x4000237bf000": "→ 0x4000213e770c（get_deltaTime handler）",
+        "0x4000237bf00c": "→ 0x4000213e774c（set_timeScale handler）"
+      },
+      "padding": "0x4000237bf018 起为 udf #0（12 字节/条）",
+      "evidence": "10_docs/敢达争锋对决/evidence_20261003/stub237bf000.bin（md5 2489ad5708ad81dd4c2dabe1809311b9）"
+    },
+    "load_bias": {
+      "guest_libil2cpp": "0x400025000000（guest VA = 0x400025000000 + RVA；ELF vaddr = file_off + 0x4000 ⇒ file_off = RVA - 0x4000）",
+      "host_alias_libil2cpp": "0x7a897703c000（121,356,288 B，**与磁盘逐字节一致** ⇒ 补丁只写在 guest 别名，比对 host 别名会误判 patch=0）",
+      "guest_libSDKloading": "0x400020800000（r--p ×5 + 0x400020b03000-0x40002111c000 rw-p file off 0x2f3000）",
+      "handler_code_region": "0x40002111c000-0x400022616000（22,007,808 B anon r--p，紧跟 libSDKloading rw 段之后；4 个 handler 全在此段内）"
+    },
+    "flag_page": {
+      "base": "0x4000227b8000",
+      "mapping": "**anon rw-p** 0x4000227b8000-0x4000227f1000（233,472 B）——注意：疾风骑士的 flag 页是 libSDKloading file-backed rw-p 段，本包是纯匿名页",
+      "evidence": "10_docs/敢达争锋对决/evidence_20261003/flagpage_227b8000.bin（md5 da2659f77c3f07117f380c3787d3482d，233,472 B，与 07_patched 内 shell_rw.bin 逐字节相同）",
+      "slots": {
+        "0x0000": "u32 = 1 —— 语义未证（疑为「菜单已加载」/总开关），三槽中唯一无 handler 直接引用",
+        "0x0004": "u32 = 1 —— 输入伤害加值（H0 直接 `add w0,w8,w0` 到 CalcDamage 返回值）",
+        "0x0008": "u32 = 1 —— 全局加速倍率（H2 每帧 `scvtf s0` 后写入 Time.set_timeScale）",
+        "0x232c": "u8 = 0 —— 超级定怪开关（非 0 ⇒ UpdateAI handler 立即 `ret`，原函数不执行＝冻结）",
+        "0x2390": "qword 0x7a8c46e83018 —— CalcDamage 原函数跳板",
+        "0x2398": "qword 0x7a8c46e83030 —— UpdateAI 原函数跳板",
+        "0x23a0": "qword 0x7a8c46e83060 —— Time.set_timeScale 原函数跳板",
+        "0x23a8": "qword 0x7a8c46e83048 —— Time.get_deltaTime 原函数跳板"
+      },
+      "adrp_offset_pitfall": "handler 里读槽位写的是 `adrp x8,#0x4000227ba000 ; ldr x8,[x8,#0x390]`，实际绝对地址 = 0x4000227ba390 = flag 基址 + **0x2390**。若按基址直接加 0x390 会读到全 0（差 0x2000），本会话踩过此坑并已修正。",
+      "string_table": "+0x25240 起为 ASCII 串表（菜单 URL / md5 / 反外挂探测串 / hook 描述三件套 / 控件名 / Java 桥签名），全表见 evidence_20261003/shell_rw_strings.txt",
+      "string_table_highlights": [
+        "+0x025240  https://menu-1255602259.file.myqcloud.com/game/578.html（game_id = 578）",
+        "+0x025370  9999",
+        "+0x025380  c8d531894261daf1fbd49a738932a702（md5 门禁串）",
+        "+0x0253b0  /data/local/tmp/fha（反外挂探测：自身注入物路径）",
+        "+0x0253d0  com.fate.AGTool（反外挂探测：竞品/工具包名）",
+        "+0x0023b8  /proc/self/maps（壳自读 maps 求 load bias）",
+        "+0x0258e0  GameRuntime.dll / xRole / CalcDamage",
+        "+0x025990  UnityEngine.CoreModule.dll / UnityEngine / Time / get_deltaTime",
+        "+0x025a00  UnityEngine.CoreModule.dll / UnityEngine / Time / set_timeScale",
+        "+0x025a68  libil2cpp.so",
+        "+0x025b90  Category_1 / Toggle_000×4 / Category_1 / Toggle_2（壳模板 4 个按钮位，本游戏只用 1 个）",
+        "+0x025ed0  com/android/support/Menu / Changes(Landroid/content/Context;ILjava/lang/String;IZLjava/lang/String;)V",
+        "+0x025f60  com/android/support/Preferences / CheckOverlayPermission(Landroid/content/Context;)V",
+        "+0x025fe0  com/android/support/Main / IconWebViewData / IsGameLibLoaded / SettingsList / GetFeatureList / getGoHomeUrl / getNotNetworkMessage / getStringEX / getVersion"
+      ],
+      "hook_descriptor_table_note": "串表里 4 组「dll+namespace+class+method」描述与本会话内存 diff 出的 4 个钩一一对应（双向确认抓点集合就是这 4 个，无遗漏钩）。"
+    },
+    "shell_symbols": {
+      "available": false,
+      "note": "本包壳 payload（22 MB anon r--p）无明文符号/字符串（非零率 98.9% 但无 URL、无函数名），也无疾风骑士那份 patchOffset/MSHookFunction/伤害1..11 通用补丁池清单 ⇒ handler 语义只能靠反汇编取证，不能靠壳符号表交叉验证。"
+    }
+  },
+
+  "hooks": [
+    {
+      "id": "H0",
+      "feature": "输入伤害",
+      "feature_slot": 0,
+      "feature_type": "input",
+      "feature_enabled": true,
+      "target_method": "xRole.CalcDamage",
+      "target_signature": "protected int CalcDamage(xRoleStateHit.Param param, xRole attacker, xRole takeDamage, bool hasExecuted, bool absorbed, double injuryReduction)",
+      "target_class": "public class xRole : xEntity, AIAgent",
+      "type_def_index": 913,
+      "dump_cs_line": 43036,
+      "class_decl_line": 39344,
+      "rva": "0x3DB99CC",
+      "file_off": "0x3DB59CC",
+      "runtime_va_guest": "0x400028DB99CC",
+      "runtime_va_host_alias": "0x7A897ADF19CC",
+      "orig_bytes_16": "ff8303d1ef3b046ded33056deb2b066d",
+      "orig_prologue": "ff8303d1 = sub sp, sp, #0xe0",
+      "patched_bytes_64": "2eb71816",
+      "patch_target": "0x4000213E7684",
+      "handler_va": "0x4000213E7684",
+      "handler_file_off_in_shell_code": "0x2cb684",
+      "handler_size": 48,
+      "orig_trampoline": "0x7a8c46e83018",
+      "flag_slots_used": {
+        "orig_fn_ptr": "flag+0x2390 -> 0x7a8c46e83018（原函数跳板）",
+        "add_value_int": "flag+0x0004（u32，取证时 = 1）"
+      },
+      "handler_semantics": "stp/mov 建帧 → x8 = *(flag+0x2390) → `and w4,w4,#1` / `and w5,w5,#1`（bool 参数规范化）→ `blr x8` 调原 CalcDamage → `w8 = *(u32*)(flag+0x0004)` → `add w0,w8,w0` → 返回。**返回值 = 原伤害 + 用户输入整数**（直接加在返回值上，不改伤害公式、不写参数）。",
+      "handler_disasm": "stp x29,x30,[sp,#-0x10]! ; mov x29,sp ; adrp x8,#0x4000227ba000 ; ldr x8,[x8,#0x390] ; and w4,w4,#1 ; and w5,w5,#1 ; blr x8 ; adrp x8,#0x4000227b8000 ; ldr w8,[x8,#4] ; add w0,w8,w0 ; ldp x29,x30,[sp],#0x10 ; ret",
+      "switch_byte": null,
+      "switch_byte_note": "无开关；参数即 flag+0x0004 的 int（菜单「输入伤害」文本框 → 壳写该槽）。取值为 1 时是「+1 伤害」，用户输入多少就加多少。",
+      "port_note": "星空版移植：同款 4 字节 `B` 内联跳（或改用本仓 Dobby/hook-by-name 设施），handler 内取自定义值 int 后 `add w0,w8,w0`；慎用更大倍率（返回 int，溢出会变负数）⇒ 建议菜单用整数加法或改成 mul。"
+    },
+    {
+      "id": "H1",
+      "feature": "超级定怪",
+      "feature_slot": 1,
+      "feature_type": "btn",
+      "feature_enabled": true,
+      "target_method": "xRole.UpdateAI",
+      "target_signature": "public void UpdateAI()",
+      "target_class": "public class xRole : xEntity, AIAgent",
+      "type_def_index": 913,
+      "dump_cs_line": 42201,
+      "class_decl_line": 39344,
+      "rva": "0x3D9CF54",
+      "file_off": "0x3D98F54",
+      "runtime_va_guest": "0x400028D9CF54",
+      "runtime_va_host_alias": "0x7A897ADD4F54",
+      "orig_bytes_16": "fe0f1df8f65701a9f44f02a9f4b101b0",
+      "orig_prologue": "fe0f1df8 = str x30, [sp, #-0x30]!",
+      "patched_bytes_64": "d8291916",
+      "patch_target": "0x4000213E76B4",
+      "handler_va": "0x4000213E76B4",
+      "handler_file_off_in_shell_code": "0x2cb6b4",
+      "handler_size": 28,
+      "orig_trampoline": "0x7a8c46e83030",
+      "flag_slots_used": {
+        "switch_byte": "flag+0x232c -> 0x4000227ba32c（u8，取证时 = 0）",
+        "orig_fn_ptr": "flag+0x2398 -> 0x7a8c46e83030（原函数跳板）"
+      },
+      "handler_semantics": "`w8 = *(u8*)(flag+0x232c)`；`cbz` → 0 时走 `x1 = *(flag+0x2398) ; br x1` 调原 UpdateAI；非 0 时直接 `ret`（**UpdateAI 整个函数被跳过 ⇒ 敌人 AI 不再刷新「定怪」**）。无返回值改写、无参数改写。",
+      "handler_disasm": "adrp x8,#0x4000227ba000 ; ldrb w8,[x8,#0x32c] ; cbz w8,#0x4000213e76c4 ; ret ; <0x4000213e76c4> adrp x8,#0x4000227ba000 ; ldr x1,[x8,#0x398] ; br x1",
+      "switch_byte": "0x4000227ba32c",
+      "switch_byte_observed": 0,
+      "port_note": "星空版移植：同款内联钩 + `ret` 短路即可。注意这是「跳过整函数」型开关，等价于疾风骑士的超级无敌（返回常量）思路但更省事；若目标游戏里 UpdateAI 兼做必要的状态收尾，跳过可能引起卡死/穿模，需实机验证（本包斌哥做法即如此）。"
+    },
+    {
+      "id": "H2",
+      "feature": "全局加速",
+      "feature_slot": 2,
+      "feature_type": "input",
+      "feature_enabled": true,
+      "target_method": "UnityEngine.Time.get_deltaTime",
+      "target_signature": "public static float get_deltaTime()",
+      "target_class": "public class Time // TypeDefIndex: 19109",
+      "type_def_index": 19109,
+      "dump_cs_line": 1054903,
+      "class_decl_line": 1054850,
+      "rva": "0x67BE180",
+      "file_off": "0x67BA180",
+      "runtime_va_guest": "0x40002B7BE180",
+      "runtime_va_host_alias": "0x7A897D7F6180",
+      "orig_bytes_16": "fe4fbfa9b36100f060a241f9a00000b5",
+      "orig_prologue": "fe4fbfa9 = stp x30, x19, [sp, #-0x10]!",
+      "patched_bytes_64": "a0030016",
+      "patch_target": "0x4000237BF000（12 B stub）→ 0x4000213E770C",
+      "handler_va": "0x4000213E770C",
+      "handler_file_off_in_shell_code": "0x2cb70c",
+      "handler_size": 64,
+      "orig_trampoline": "0x7a8c46e83048",
+      "flag_slots_used": {
+        "speed_int": "flag+0x0008 -> 0x4000227b8008（u32，取证时 = 1）",
+        "callee_ptr": "flag+0x23a0 -> 0x7a8c46e83060（= 原 Time.set_timeScale）",
+        "orig_fn_ptr": "flag+0x23a8 -> 0x7a8c46e83048（= 原 get_deltaTime）"
+      },
+      "handler_semantics": "每帧每次取 deltaTime：`s0 = (float)*(int*)(flag+0x0008)`；`x8 = *(flag+0x23a0)`；`blr x8` ⇒ **强制 Time.timeScale = 菜单输入的倍率**；随后 `x1 = *(flag+0x23a8)`，恢复 x0 后 `br x1` 尾调原 get_deltaTime 并返回其值（deltaTime 数值本身不被改写，靠 timeScale 生效 ⇒ 全局时间加速）。",
+      "handler_disasm": "str x19,[sp,#-0x20]! ; stp x29,x30,[sp,#0x10] ; add x29,sp,#0x10 ; adrp x9,#0x4000227b8000 ; adrp x8,#0x4000227ba000 ; ldr s0,[x9,#8] ; ldr x8,[x8,#0x3a0] ; mov x19,x0 ; scvtf s0,s0 ; blr x8 ; adrp x8,#0x4000227ba000 ; ldr x1,[x8,#0x3a8] ; ldp x29,x30,[sp,#0x10] ; mov x0,x19 ; ldr x19,[sp],#0x20 ; br x1",
+      "switch_byte": null,
+      "switch_byte_note": "无独立开关；倍率 = flag+0x0008 的 int（菜单「全局加速」文本框）。取证时 = 1（1× 正常速度）。"
+    },
+    {
+      "id": "H3",
+      "feature": "全局加速（附带透传钩）",
+      "feature_slot": 2,
+      "feature_type": "internal",
+      "feature_enabled": true,
+      "exposed_in_menu": false,
+      "target_method": "UnityEngine.Time.set_timeScale",
+      "target_signature": "public static void set_timeScale(float value)",
+      "target_class": "public class Time // TypeDefIndex: 19109",
+      "type_def_index": 19109,
+      "dump_cs_line": 1054954,
+      "class_decl_line": 1054850,
+      "rva": "0x67BE458",
+      "file_off": "0x67BA458",
+      "runtime_va_guest": "0x40002B7BE458",
+      "runtime_va_host_alias": "0x7A897D7F6458",
+      "orig_bytes_16": "e80f1efcfe4f01a9b36100f060e641f9",
+      "orig_prologue": "e80f1efc = str d8, [sp, #-0x20]!",
+      "patched_bytes_64": "ed020016",
+      "patch_target": "0x4000237BF00C（12 B stub）→ 0x4000213E774C",
+      "handler_va": "0x4000213E774C",
+      "handler_file_off_in_shell_code": "0x2cb74c",
+      "handler_size": 12,
+      "orig_trampoline": "0x7a8c46e83060",
+      "flag_slots_used": {
+        "orig_fn_ptr": "flag+0x23a0 -> 0x7a8c46e83060（= 原 set_timeScale）"
+      },
+      "handler_semantics": "`x0 = *(flag+0x23a0) ; br x0` —— **纯透传**：参数与返回值都不动，行为等于没钩。",
+      "handler_disasm": "adrp x8,#0x4000227ba000 ; ldr x0,[x8,#0x3a0] ; br x0",
+      "switch_byte": null,
+      "switch_byte_note": "无。取证到的语义即透传；疑为壳的通用模板占位（或为将来「锁死 timeScale」预留的入口）。",
+      "port_note": "星空版可不移植（对行为无影响）。若要实现「锁定时间缩放」，在此 handler 里丢弃入参、改写成自定义常量即可。"
+    }
+  ],
+
+  "uninstalled_handlers": [],
+
+  "anti_mod_surface": {
+    "libtoolChecker_so": "RootBeer 反 root（md5 3c4724ce3faeda4f890c0136ebddd514，与疾风骑士同款），在场但未见触发；移植时不要带",
+    "shell_self_checks": [
+      "flag 页 +0x23b8 存 `/proc/self/maps`（壳自读自身 maps 求 load bias/检查注入）",
+      "flag 页 +0x253b0 存 `/data/local/tmp/fha`（探测本仓/同类工具在 /data/local/tmp 的落点，`fha` 疑为某注入工具名；该路径当前不存在）",
+      "flag 页 +0x253d0 存 `com.fate.AGTool`（探测竞品/工具包是否安装）",
+      "flag 页 +0x25380 md5 门禁串 c8d531894261daf1fbd49a738932a702"
+    ],
+    "note": "以上均为壳自检表面，本会话只做静态取证，未做绕过；星空版若带自建壳注入，需注意这些探测点。"
+  },
+
+  "menu": {
+    "dex": "classes4.dex",
+    "dex_size": 442028,
+    "dex_md5": "1a361c376cbada435e04dd85b7b383b5",
+    "dex_package": "com.android.support（含 Menu / BinGe / Preferences / Main）",
+    "dex_survey": "APK 内共 6 个 dex：classes.dex 7,690,644 / classes2 1,860 / classes3 13,944 / **classes4 442,028（菜单壳）** / classes5 3,462,280 / classes6 460,936",
+    "form": "WebView + @JavascriptInterface（原生菜单 ID 由壳下发：Category_1 / Toggle_000×4 / Toggle_2）",
+    "native_libs_loaded": ["SDKloading"],
+    "menu_url": "https://menu-1255602259.file.myqcloud.com/game/578.html",
+    "menu_cdn": "menu-1255602259.file.myqcloud.com",
+    "menu_icon_cdn": "menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/",
+    "menu_page_size": 6902,
+    "menu_page_md5": "0552fcb13574478e16925e5e86c80d8e",
+    "menu_app1_js": "public/Game/app1.js?var=0517",
+    "menu_app1_js_size": 122962,
+    "menu_app1_js_md5": "4bcbc4ca601655d000f0ecbf274dc842",
+    "game_id": "578",
+    "window_version": "1",
+    "exp_blob_length": 712,
+    "exp_decoded_length": 319,
+    "exp_decode_chain": "base64-decode → 与重复的 base64 编码 key 逐字节 XOR → 再 base64-decode（= app1.js 的 `strencode()`，已在 node + vm 沙箱中直接调用复现，无需完整 DOM）",
+    "exp_decoded_raw": "input_0_输入伤害_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%88%BD%E5%89%91.png_开启成功###btn_1_超级定怪_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%BF%85%E8%86%80.png_开启成功###input_2_全局加速_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png_开启成功###// input_3_未添加_图片地址_开启成功",
+    "exp_format": "<type>_<featNum>_<名称>_<图标URL>_<成功提示>，条目以 `###` 分隔；type ∈ {input, btn}；前导 `//` = 该槽被注释禁用",
+    "slots": [
+      {"featNum": 0, "type": "input", "name": "输入伤害", "icon": "爽剑.png", "success_msg": "开启成功", "enabled": true, "hook": "H0"},
+      {"featNum": 1, "type": "btn", "name": "超级定怪", "icon": "翅膀.png", "success_msg": "开启成功", "enabled": true, "hook": "H1"},
+      {"featNum": 2, "type": "input", "name": "全局加速", "icon": "龙.png", "success_msg": "开启成功", "enabled": true, "hook": "H2"},
+      {"featNum": 3, "type": "input", "name": "未添加", "icon": "图片地址", "success_msg": "开启成功", "enabled": false, "hook": null}
+    ],
+    "app1_js_function_surface": ["strencode", "initGame", "Base64", "btn", "btnSwitch", "btnSwitchPx", "openInput", "openInput2", "javaClickInput", "editInput", "saveInputValue", "javacalljs", "addBoxBtn", "addBoxInput", "exitApp", "exitMenu", "openUrl", "login", "isLogin", "outUser", "reloadUserInfo", "reloadGameBuyInfo", "enterBuy", "radioBuyChange", "submitBuyQuery", "getAdData", "showAD", "closeAD", "openAdUrl", "icon_free", "icon_noBuy", "icon_outTime", "addAbaoud", "addUserBox", "addTiaokuan", "addTip", "addDaShang", "hyConfirm", "viewVersion"],
+    "prefs": {
+      "shell_config.xml": "空 <map />",
+      "shell_protected.xml": "last_url_index=0 (int), last_url_source=\"post\" (string)",
+      "shell_protectedother.xml": "message_system_SystemText1834=1791007586750, html_Html5722=1791007584817",
+      "solar_engine_sp.xml": "空",
+      "dialog_close_log.xml": "免责弹窗全文：此程序免费测试BUG-仅供交流学习…与斌哥游戏宝盒和作者无关 联系邮箱:bg888@188.com ⇒ 壳归属「斌哥游戏宝盒」确认"
+    },
+    "ui_observed": {
+      "method": "未做人工交互（用户硬约束：真机界面操作由用户执行，禁截图/点屏）。功能清单来自菜单页 exp 明文 + 壳 rw 串表。",
+      "feature_list_source": "云菜单页 578.html 的 exp 明文（3 启用槽）",
+      "float_icon": "由壳自绘（Toggle_000 模板位），位置未取证"
+    }
+  },
+
+  "forensics_method": [
+    "adb -s emulator-5554 root（默认 shell 无 su）；pid = `ps -A | grep kingnet` => 5716",
+    "dump guest 别名镜像：/proc/5716/mem 按 maps 段逐段 dd（生成 07_patched/敢达争锋对决/memdump2/）",
+    "python memdiff3.py：guest 镜像 vs 磁盘 libil2cpp.so 按 ELF PT_LOAD 4 字节 diff（RX 段得 4 处；rw 段 147,779 处为运行态重定位噪声）",
+    "python bdecode.py：capstone(md.detail=True) 解码 4 条补丁指令 = `B <imm26>`，得 handler 地址",
+    "python findname.py：在 Il2CppDumper 的 script.json（ScriptMethod[].Address 为十进制、与 RVA 精确相等）反查 4 个 RVA → 方法名",
+    "python findmethod.py：在 dump.cs 取方法签名行 / 类声明行 / TypeDefIndex",
+    "adb shell dd 取 flag 页 233,472 B、stub 页 4 KB、trampoline 页 4 KB（bs=1 skip=<十进制> count=N iflag=skip_bytes,count_bytes）",
+    "python collect_evidence.py：反汇编 4 个 handler + 解析 stub 的 adrp/add 目标 + flag 槽位取值 + flag 页串表",
+    "node menu_decode.js：vm 沙箱 + 自返回 Proxy 假 DOM，直调 app1.js 的 strencode() 解出菜单 exp 明文",
+    "keytool -printcert -jarfile apk/base.apk（sha256/sha1 比对斌哥签名判据）"
+  ],
+
+  "pitfalls": [
+    "★ flag 槽位必须按 handler 内的 `adrp` 页对齐换算：例 `adrp x8,#0x4000227ba000 ; ldr x8,[x8,#0x390]` ⇒ 0x4000227ba390 = flag 基址 + 0x2390。按基址直接加 0x390 会读到全 0（差 0x2000），本会话踩过并已修正（先误判为「跳板指针为 0」）。",
+    "斌哥补丁只写在 guest 别名；host 别名（0x7a897703c000）与磁盘逐字节相同 ⇒ 必须 dump guest 镜像做 diff，比 host 别名会得出 patch=0 的假结论。",
+    "guest 侧所有代码段在 maps 里都标 **r--p**（houdini/Intel Bridge 不在 guest 页上标 X）⇒「无 r-xp 段」不能作为「无 hook」的判据，且执行 guest 代码不需要 X 位。",
+    "rw 数据段 diff 有 147,779 处差异，全是「磁盘 0 → 内存绝对指针」的运行态重定位，属噪声；只看 PT_LOAD(RX) 段才干净。",
+    "capstone：读 `ins.operands` 前必须 `md.detail=True`（否则 CS_ERR_DETAIL）；全量扫 payload 需 `md.skipdata=True`，否则遇首个非法指令即停、返回 0 条。",
+    "Il2CppDumper 的 script.json 里 ScriptMethod[].Address 是**十进制**且与 RVA 精确相等（不需要 ±0x4000），按十六进制字符串找会全部落空。",
+    "本包 global-metadata.dat **不在 APK 内**（外置 /sdcard/Android/data/<pkg>/files/il2cpp/Metadata/），必须另行 pull。",
+    "adb 默认无 su（必须 `adb root`）；多设备并存时必须 `-s emulator-5554`（否则 `more than one device/emulator`）。",
+    "Windows 侧算大地址用 `[Convert]::ToInt64('<hex>',16)`，手算 0x4000_xxxx_xxxx 极易错（本次手算偏差 0x2800）。",
+    "真机 UI 取证严禁自行点屏/截图（用户硬约束），界面状态一律请用户人工配合。"
+  ],
+
+  "precedents": [
+    {"game": "疾风骑士", "pkg": "com.emay.wxsy.topon", "shell": "同一斌哥壳（签名/keystore 逐字节一致、libtoolChecker 同款）", "form": "libil2cpp 内 3 处 **16 字节** LDR X17;BR X17 内联钩，flag 页为 libSDKloading file-backed rw-p", "doc": "10_docs/疾风骑士/斌哥hook锚点_20261002.json"},
+    {"game": "敢达争锋对决（本包）", "shell": "同一斌哥壳，但补丁形态 = 4 字节 `B <imm26>`；flag 页为 anon rw-p；libSDKloading 9.5 MB（≈10×）；metadata 外置", "form": "libil2cpp 内 4 处 B 内联跳（2 条直跳 handler，2 条经 4 KB stub 页二级跳）", "doc": "本文件"}
+  ],
+
+  "conclusions": [
+    "斌哥对 敢达争锋对决 的 mod **确实生效且抓点完备**：全 RX 段逐字节 diff 只有 4 处改动，与壳串表里的 4 组 hook 描述（GameRuntime.dll/xRole/CalcDamage、GameRuntime.dll/xRole/UpdateAI、UnityEngine.CoreModule.dll/UnityEngine/Time/get_deltaTime、…/set_timeScale）**一一对应、无遗漏、无多余**。",
+    "菜单声明的 3 个功能 ↔ 4 个钩的映射已闭合：输入伤害 ↔ H0（返回值 + flag+4 整数）；超级定怪 ↔ H1（开关 flag+0x232c 非 0 则跳过 UpdateAI）；全局加速 ↔ H2（每帧把 flag+8 的整数写进 Time.timeScale），H3 为纯透传附带钩。",
+    "被钩的 4 个方法序言各被覆盖 4 字节，原始序言在 trampoline 页（stride 0x18）原样保留并跳回 guest 原函数体（base+RVA+4）⇒ 移植时可 100% 还原原函数行为。",
+    "移植到星空版只需 3 个功能钩（H0/H1/H2）；H3 可省。H2 的机制（钉 timeScale）是「全局加速」在 Unity 里最省事的做法，但会影响 UI 动画/物理步进，属可接受副作用（与斌哥一致）。",
+    "本包壳比疾风骑士更大（9.5 MB vs 976 KB）且**无符号/无明文补丁池**，取证只能靠反汇编 + 内存 diff；反之也说明抓点结论更硬（三方交叉验证）。"
+  ],
+
+  "open_items": [
+    "flag+0x0000 = 1 的语义未证（无 handler 直接引用；疑为「菜单已加载/壳初始化完成」标记或总开关）。",
+    "未做人工交互交叉验证（用户硬约束）：开「超级定怪」后 0x4000227ba32c 是否 0→1、输入伤害值后 0x4000227b8004 是否随输入变化、全局加速值是否写进 +0x0008。当前结论已由 handler 反汇编闭合，此项仅为交叉验证。",
+    "原版 APK 尚未获取（用户下一步下载）⇒ 「原版与斌哥包的 libil2cpp.so / global-metadata.dat 是否逐字节相同（RVA 零重定位）」未证；这是星空版移植的前置条件（若版本不同则 4 个 RVA 需全部重算）。",
+    "22 MB anon payload（handler 所在段）除 4 个 handler 外还承载什么未分析（无明文串，疑为壳主体/资源）；壳的补丁池是否还有「未安装的钩」无法静态排除，但 RX 段全量 diff 只有 4 处 ⇒ 运行态确定只装了 4 个钩。",
+    "反外挂探测（/data/local/tmp/fha、com.fate.AGTool、/proc/self/maps、md5 门禁串）的触发时机与实际后果未验证。",
+    "菜单 Java 侧（classes4.dex 的 com.android.support.Menu/BinGe）未反编译细读（本会话只做字符串级确认其承担 Java 桥与控件创建）。"
+  ],
+
+  "next_steps": [
+    "用户下载官方原版 APK（com.kingnet.gundam.mg.normal 9.3.0 / vc830）放入 02_apks/（用户自管目录）。",
+    "对原版 libil2cpp.so + 外置 global-metadata.dat 重跑 Il2CppDumper，逐字节校验 4 个 RVA（file_off = RVA − 0x4000）与原版是否一致；若原版版本不同，全部锚点重算。",
+    "星空版移植：自建菜单（输入伤害 input / 定怪 btn / 全局加速 input）+ 3 个抓点（H0 加法伤害 / H1 ret 短路 / H2 钉 timeScale）；不要带 libtoolChecker.so、不要带斌哥菜单页自带广告浮层。",
+    "产出 移植记录_星空版_*.md（范本：10_docs/伊莫/移植记录_星空版_1.0.1_20260930.md）与正式菜单模板（待星空版功能落地后按 _templates/菜单模板_规范与示例.md 重出）。"
+  ]
+}

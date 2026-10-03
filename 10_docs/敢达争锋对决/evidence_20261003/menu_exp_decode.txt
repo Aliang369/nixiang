@@ -1,0 +1,4 @@
+﻿## game_id = 578  exp len = 712
+## strencode(exp) => input_0_输入伤害_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%88%BD%E5%89%91.png_开启成功###btn_1_超级定怪_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E7%BF%85%E8%86%80.png_开启成功###input_2_全局加速_https://menu-1255602259.cos.ap-nanjing.myqcloud.com/tubiao/%E9%BE%99.png_开启成功###// input_3_未添加_图片地址_开启成功
+## initGame threw: window.addEventListener is not a function
+## captured calls: 62

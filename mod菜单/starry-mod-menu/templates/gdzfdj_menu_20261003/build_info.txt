@@ -1,0 +1,8 @@
+game      : 敢达争锋对决 (gdzfdj)
+dex       : classes3.dex
+built_at  : 2026-10-03 15:00:42
+javac     : C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/javac.exe
+d8        : C:\Users\Administrator\AppData\Local/Android/Sdk/build-tools/35.0.0/d8.bat
+androidjar: /c/Users/Administrator/AppData/Local/Android/Sdk/platforms/android-36/android.jar
+source    : /e/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256    : e4d3daaecad3b9e45282186eacfbfcc554ae43dc5686147730d7a383b1bda75e

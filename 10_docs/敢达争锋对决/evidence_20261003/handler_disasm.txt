@@ -1,0 +1,170 @@
+== 1. shell handler 反汇编（源 shell_code.bin，VA 基址 0x40002111c000）==
+
+H_CalcDamage    va=0x4000213e7684 file_off_in_shell=0x2cb684 size=48(0x30)
+  +0x000  0x4000213e7684  stp      x29, x30, [sp, #-0x10]!
+  +0x004  0x4000213e7688  mov      x29, sp
+  +0x008  0x4000213e768c  adrp     x8, #0x4000227ba000
+  +0x00c  0x4000213e7690  ldr      x8, [x8, #0x390]
+  +0x010  0x4000213e7694  and      w4, w4, #1
+  +0x014  0x4000213e7698  and      w5, w5, #1
+  +0x018  0x4000213e769c  blr      x8
+  +0x01c  0x4000213e76a0  adrp     x8, #0x4000227b8000
+  +0x020  0x4000213e76a4  ldr      w8, [x8, #4]
+  +0x024  0x4000213e76a8  add      w0, w8, w0
+  +0x028  0x4000213e76ac  ldp      x29, x30, [sp], #0x10
+  +0x02c  0x4000213e76b0  ret      
+
+H_UpdateAI      va=0x4000213e76b4 file_off_in_shell=0x2cb6b4 size=88(0x58)
+  +0x000  0x4000213e76b4  adrp     x8, #0x4000227ba000
+  +0x004  0x4000213e76b8  ldrb     w8, [x8, #0x32c]
+  +0x008  0x4000213e76bc  cbz      w8, #0x4000213e76c4
+  +0x00c  0x4000213e76c0  ret      
+  +0x010  0x4000213e76c4  adrp     x8, #0x4000227ba000
+  +0x014  0x4000213e76c8  ldr      x1, [x8, #0x398]
+  +0x018  0x4000213e76cc  br       x1
+  +0x01c  0x4000213e76d0  str      x19, [sp, #-0x20]!
+  +0x020  0x4000213e76d4  stp      x29, x30, [sp, #0x10]
+  +0x024  0x4000213e76d8  add      x29, sp, #0x10
+  +0x028  0x4000213e76dc  adrp     x8, #0x4000227b7000
+  +0x02c  0x4000213e76e0  ldr      x8, [x8, #0x728]
+  +0x030  0x4000213e76e4  mov      x19, x0
+  +0x034  0x4000213e76e8  add      x9, x8, #0x18
+  +0x038  0x4000213e76ec  add      x8, x8, #0x40
+  +0x03c  0x4000213e76f0  str      x9, [x0], #8
+  +0x040  0x4000213e76f4  str      x8, [x19, #0xb0]!
+  +0x044  0x4000213e76f8  bl       #0x4000213ec088
+  +0x048  0x4000213e76fc  ldp      x29, x30, [sp, #0x10]
+  +0x04c  0x4000213e7700  mov      x0, x19
+  +0x050  0x4000213e7704  ldr      x19, [sp], #0x20
+  +0x054  0x4000213e7708  b        #0x4000213ddcf0
+
+H_get_deltaTime va=0x4000213e770c file_off_in_shell=0x2cb70c size=64(0x40)
+  +0x000  0x4000213e770c  str      x19, [sp, #-0x20]!
+  +0x004  0x4000213e7710  stp      x29, x30, [sp, #0x10]
+  +0x008  0x4000213e7714  add      x29, sp, #0x10
+  +0x00c  0x4000213e7718  adrp     x9, #0x4000227b8000
+  +0x010  0x4000213e771c  adrp     x8, #0x4000227ba000
+  +0x014  0x4000213e7720  ldr      s0, [x9, #8]
+  +0x018  0x4000213e7724  ldr      x8, [x8, #0x3a0]
+  +0x01c  0x4000213e7728  mov      x19, x0
+  +0x020  0x4000213e772c  scvtf    s0, s0
+  +0x024  0x4000213e7730  blr      x8
+  +0x028  0x4000213e7734  adrp     x8, #0x4000227ba000
+  +0x02c  0x4000213e7738  ldr      x1, [x8, #0x3a8]
+  +0x030  0x4000213e773c  ldp      x29, x30, [sp, #0x10]
+  +0x034  0x4000213e7740  mov      x0, x19
+  +0x038  0x4000213e7744  ldr      x19, [sp], #0x20
+  +0x03c  0x4000213e7748  br       x1
+
+H_set_timeScale va=0x4000213e774c file_off_in_shell=0x2cb74c size=128(0x80)
+  +0x000  0x4000213e774c  adrp     x8, #0x4000227ba000
+  +0x004  0x4000213e7750  ldr      x0, [x8, #0x3a0]
+  +0x008  0x4000213e7754  br       x0
+  +0x00c  0x4000213e7758  stp      d9, d8, [sp, #-0x70]!
+  +0x010  0x4000213e775c  stp      x28, x27, [sp, #0x10]
+  +0x014  0x4000213e7760  stp      x26, x25, [sp, #0x20]
+  +0x018  0x4000213e7764  stp      x24, x23, [sp, #0x30]
+  +0x01c  0x4000213e7768  stp      x22, x21, [sp, #0x40]
+  +0x020  0x4000213e776c  stp      x20, x19, [sp, #0x50]
+  +0x024  0x4000213e7770  stp      x29, x30, [sp, #0x60]
+  +0x028  0x4000213e7774  add      x29, sp, #0x60
+  +0x02c  0x4000213e7778  bl       #0x4000213df860
+  +0x030  0x4000213e777c  mov      w0, #0x14
+  +0x034  0x4000213e7780  bl       #0x4000213dedf0
+  +0x038  0x4000213e7784  adrp     x8, #0x4000227dd000
+  +0x03c  0x4000213e7788  add      x8, x8, #0x8f8
+  +0x040  0x4000213e778c  ldarb    w8, [x8]
+  +0x044  0x4000213e7790  tbz      w8, #0, #0x4000213e80d4
+  +0x048  0x4000213e7794  adrp     x0, #0x4000227dd000
+  +0x04c  0x4000213e7798  add      x0, x0, #0x8e0
+  +0x050  0x4000213e779c  bl       #0x4000213edac8
+  +0x054  0x4000213e77a0  adrp     x8, #0x4000227dd000
+  +0x058  0x4000213e77a4  add      x8, x8, #0x908
+  +0x05c  0x4000213e77a8  ldarb    w8, [x8]
+  +0x060  0x4000213e77ac  adrp     x19, #0x4000227dd000
+  +0x064  0x4000213e77b0  add      x19, x19, #0x900
+  +0x068  0x4000213e77b4  tbz      w8, #0, #0x4000213e8138
+  +0x06c  0x4000213e77b8  adrp     x8, #0x4000227dd000
+  +0x070  0x4000213e77bc  ldrb     w8, [x8, #0x901]
+  +0x074  0x4000213e77c0  cbz      w8, #0x4000213e77d8
+  +0x078  0x4000213e77c4  ldrb     w8, [x19]
+  +0x07c  0x4000213e77c8  mov      w9, #0xc5
+
+== 2. B-stub 页 0x4000237bf000（live dump stub237bf000.bin，4096B）==
+stub[0] @0x4000237bf000
+  +0x000  0x4000237bf000  adrp     x17, #0x4000213e7000
+  +0x004  0x4000237bf004  add      x17, x17, #0x70c
+  +0x008  0x4000237bf008  br       x17
+  +0x00c  0x4000237bf00c  adrp     x17, #0x4000213e7000
+stub[1] @0x4000237bf00c
+  +0x00c  0x4000237bf00c  adrp     x17, #0x4000213e7000
+  +0x010  0x4000237bf010  add      x17, x17, #0x74c
+  +0x014  0x4000237bf014  br       x17
+  +0x018  0x4000237bf018  udf      #0
+  stub[0x0] -> 0x4000213e770c
+  stub[0xc] -> 0x4000213e774c
+
+== 3. flag 页 0x4000227b8000（live dump flagpage_227b8000.bin，233472B）==
+  +0x0000 u32 = 1 (menu 总开关/状态?)
+  +0x0004 u32 = 1 (伤害加值 int)
+  +0x0008 u32 = 1 (加速倍率 int)
+  +0x232c u8  = 0 (超级定怪 开关字节)
+  +0x390 qword = 0x0  (CalcDamage 原函数跳板)
+  +0x398 qword = 0x0  (UpdateAI 原函数跳板)
+  +0x3a0 qword = 0x0  (Time.set_timeScale 原函数跳板)
+  +0x3a8 qword = 0x0  (Time.get_deltaTime 原函数跳板)
+
+== 4. flag 页字符串表（>=6 可打印，UTF-8/ASCII）==
+  抽到 53 条 ASCII 串 -> evidence/shell_rw_strings.txt
+  --- 0x24000-0x26000 区间（菜单/hook 描述区）---
+  +0x025240  https://menu-1255602259.file.myqcloud.com/game/578.html
+  +0x025380  c8d531894261daf1fbd49a738932a702
+  +0x0253b0  /data/local/tmp/fha
+  +0x0253d0  com.fate.AGTool
+  +0x0253f0  /data/local/tmp/
+  +0x025410  android/widget/Toast
+  +0x025430  makeText
+  +0x025450  (Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;
+  +0x0258e0  GameRuntime.dll
+  +0x025920  CalcDamage
+  +0x025938  GameRuntime.dll
+  +0x025978  UpdateAI
+  +0x025990  UnityEngine.CoreModule.dll
+  +0x0259b8  UnityEngine
+  +0x0259e0  get_deltaTime
+  +0x025a00  UnityEngine.CoreModule.dll
+  +0x025a28  UnityEngine
+  +0x025a50  set_timeScale
+  +0x025a68  libil2cpp.so
+  +0x025b90  Category_1
+  +0x025ba8  Toggle_000
+  +0x025bc0  Toggle_000
+  +0x025bd8  Toggle_000
+  +0x025bf0  Toggle_000
+  +0x025c08  Category_1
+  +0x025c20  Toggle_2
+  +0x025c38  java/lang/String
+  +0x025c68  ()Ljava/lang/String;
+  +0x025c88  IconWebViewData
+  +0x025ca8  ()Ljava/lang/String;
+  +0x025cc8  IsGameLibLoaded
+  +0x025d18  SettingsList
+  +0x025d30  ()[Ljava/lang/String;
+  +0x025d50  GetFeatureList
+  +0x025d70  (Landroid/content/Context;)[Ljava/lang/String;
+  +0x025da8  getGoHomeUrl
+  +0x025dc0  ()Ljava/lang/String;
+  +0x025de0  getNotNetworkMessage
+  +0x025e00  ()Ljava/lang/String;
+  +0x025e30  ()Ljava/lang/String;
+  +0x025e50  getStringEX
+  +0x025e70  (I)Ljava/lang/String;
+  +0x025e90  getVersion
+  +0x025ea8  ()Ljava/lang/String;
+  +0x025ed0  com/android/support/Menu
+  +0x025ef8  Changes
+  +0x025f10  (Landroid/content/Context;ILjava/lang/String;IZLjava/lang/String;)V
+  +0x025f60  com/android/support/Preferences
+  +0x025f90  CheckOverlayPermission
+  +0x025fb0  (Landroid/content/Context;)V
+  +0x025fe0  com/android/support/Main
