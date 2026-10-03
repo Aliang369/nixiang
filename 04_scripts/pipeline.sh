@@ -5,18 +5,34 @@
 #  铁律（详见 _common/stages.md）：
 #    1. 机械操作（拆/打/注/移/签/装/清理）唯一合法入口=本脚本；
 #       禁止直接敲 adb/apktool/zip/ndk-build 等命令序列。
-#    2. 本文件与 pipeline.lock 禁止修改：启动即校验 sha256 指纹。
+#    2. 本文件与 pipeline.lock 禁止【弱 AI】修改：启动即校验 sha256 指纹。
+#       唯一合法改法＝同一提交内改本文件 + 刷新 _common/pipeline.lock 的
+#       `shasum -a 256` 并 push（另一台 git pull 后即一致；只改不推会让另一台
+#       经 Syncthing 先拿到新脚本而 lock 仍旧 ⇒ 那台所有命令 die「指纹不匹配」）。
+#       详见 _common/stages.md「真要改 pipeline.sh 时的跨机姿势」。
 #    3. 阶段失败即停：读日志修原因，禁止换命令绕过。
 #    4. 合法参数修改走 04_scripts/{游戏}/pipeline.json 的 params。
 #
 #  用法：
-#    bash 04_scripts/pipeline.sh <游戏> status          # 查看状态（开工第一步）
+#    bash 04_scripts/pipeline.sh <游戏> status          # 查看状态（开工第一步；同时钉硬约束 + 台账）
 #    bash 04_scripts/pipeline.sh <游戏> next            # 执行下一阶段
+#    bash 04_scripts/pipeline.sh <游戏> next --loop 4   # 连跑最多 4 个阶段，逐次回显日志尾 40 行（失败即停）
 #    bash 04_scripts/pipeline.sh <游戏> run <stage_id> # 显式执行某阶段
 #    bash 04_scripts/pipeline.sh <游戏> reset <stage_id># 状态回退 pending
 #    bash 04_scripts/pipeline.sh <游戏> verify <stage_id># 只校验产物不执行
+#    bash 04_scripts/pipeline.sh <游戏> log [N]         # 只回显 pipeline.log 尾 N 行（默认 40）
+#    bash 04_scripts/pipeline.sh <游戏> round <功能#> <有效|无效|未测> [摘要]   # 记一轮实测结果
+#    bash 04_scripts/pipeline.sh <游戏> rounds          # 打假设矩阵（被轮次门禁拦住时照它填）
+#    bash 04_scripts/pipeline.sh <游戏> gate <stage_id> # 只跑装机前轮次门禁，不执行阶段
 # ================================================================
 set -uo pipefail
+
+# ---------- 输出编码（2026-10-03） ----------
+# Windows 侧 python3 默认 cp936 stdout：打印状态符号 ⬜/✅ 时会直接
+# UnicodeEncodeError 崩掉（'gbk' codec can't encode '\u2b1c'）⇒ 统一强制 UTF-8
+# 输出（macOS/Linux 无副作用；已有显式设置时不覆盖）。
+export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
+export PYTHONUTF8="${PYTHONUTF8:-1}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 COMMON_DIR="${SCRIPT_DIR}/_common"
@@ -24,6 +40,148 @@ LOCK_FILE="${COMMON_DIR}/pipeline.lock"
 LOG_SEP="────────────────────────────────────────────"
 
 die() { echo "❌ $*" >&2; exit 1; }
+
+# ---------- 内循环 / 轮次门禁 / 硬约束 公共设施（2026-10-03，P1/P4/P5） ----------
+# 逻辑原生放在本文件；04_scripts/_common/stage_next.sh 只做同义转发（兼容旧命令）。
+#   P1 硬约束钉行：status 时把用户「必须/禁止/照 XX 做」的生效条目钉在屏幕上。
+#   P4 轮次门禁：同一功能「改代码→装机→用户实测」连续 3 轮仍「无效」⇒ 拒绝装机阶段（exit 3）。
+#   P5 内循环：next --loop N（逐次只回显日志尾 TAIL_LINES 行）+ log 动词。
+# 覆盖开关：STAGE_NEXT_FORCE=1（仅用户当轮明确要求「再试一次」时用，会大声留痕）。
+# 覆盖路径：STAGE_NEXT_DOC_DIR / STAGE_NEXT_LEDGER / STAGE_NEXT_TAIL（自检与跨目录文档用）。
+TAIL_LINES="${STAGE_NEXT_TAIL:-40}"
+
+doc_dir_of() {  # 文档目录名可能与管线游戏键不同名：优先同名，其次唯一模糊命中
+  local game="$1" d cand
+  d="$(cd "${SCRIPT_DIR}/.." && pwd)/10_docs/${game}"
+  if [ ! -d "$d" ]; then
+    cand="$(ls -d "${SCRIPT_DIR}/../10_docs/"*"${game}"* 2>/dev/null | grep -v -e '^.*/_[^/]*$' | head -1)"
+    [ -n "${cand:-}" ] && [ -d "$cand" ] && d="$cand"
+  fi
+  if [ -n "${STAGE_NEXT_DOC_DIR:-}" ] && [ -d "${STAGE_NEXT_DOC_DIR}" ]; then d="$STAGE_NEXT_DOC_DIR"; fi
+  echo "$d"
+}
+
+constraints_path() { echo "$(doc_dir_of "$1")/硬约束.md"; }
+
+ledger_path() {
+  if [ -n "${STAGE_NEXT_LEDGER:-}" ]; then
+    echo "$STAGE_NEXT_LEDGER"
+  else
+    echo "$(doc_dir_of "$1")/轮次台账.tsv"
+  fi
+}
+
+pin_constraints() {  # P1：开工第一步 / 装机前把用户硬约束钉在屏幕上
+  local game="$1" f
+  f="$(constraints_path "$game")"
+  if [ ! -f "$f" ]; then
+    echo "⚠  缺 ${f}（用户下达的「必须/禁止/照 XX 做」未落盘；模板 10_docs/_templates/硬约束.md）"
+    return 0
+  fi
+  echo "──── 硬约束（生效条目，原文见 ${f}）────"
+  grep -n '生效' "$f" | grep -v '已失效' | head -8
+  echo "  （改功能代码前、装机前各回读一次；该文件永不删行，失效只改状态）"
+}
+
+ensure_ledger() {
+  local game="$1" l
+  l="$(ledger_path "$game")"
+  [ -f "$l" ] && return 0
+  [ -d "$(dirname "$l")" ] || die "文档目录不存在: $(dirname "$l")（无法记轮次台账）"
+  {
+    echo "# 轮次台账 — 同一功能「改代码 → 装机 → 用户实测」逐轮结果（pipeline.sh <游戏> round 追加）"
+    echo "# 门禁规则：同一功能连续 3 轮「无效」⇒ 拒绝装机，先填假设矩阵（pipeline.sh <游戏> rounds）"
+    printf '日期\t功能#\t轮次\t改动摘要\t装机结果\t用户结果\n'
+  } > "$l"
+  echo "▶ 已新建台账: ${l}"
+}
+
+ledger_round() {  # ledger_round <游戏> <功能#> <有效|无效|未测> [改动摘要]
+  local game="$1" feat="$2" verdict="$3" note="${4:-}" l n
+  case "$verdict" in 有效|无效|未测) ;; *) die "结果只能填 有效 / 无效 / 未测（收到: ${verdict}）";; esac
+  l="$(ledger_path "$game")"
+  ensure_ledger "$game"
+  n="$(awk -F'\t' -v f="$feat" 'NR>3 && $2==f {c++} END{print (c+0)+1}' "$l")"
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$(date '+%Y-%m-%d %H:%M')" "$feat" "$n" "$note" "pipeline.log" "$verdict" >> "$l"
+  echo "✅ 已记：功能#${feat} 第 ${n} 轮 → ${verdict}${note:+（${note}）}"
+  if ledger_block_check "$game" "$feat"; then
+    echo "⛔ 功能#${feat} 已连续 3 轮无效 —— 下次装机将被拒绝。先跑 pipeline.sh ${game} rounds 填假设矩阵并贴给用户。"
+  fi
+  return 0
+}
+
+ledger_block_check() {  # 0 = 已被门禁盯上（连续 >=3 轮无效）；1 = 未触发
+  local game="$1" feat="$2" l streak
+  l="$(ledger_path "$game")"
+  [ -f "$l" ] || return 1
+  streak="$(awk -F'\t' -v f="$feat" '
+    NR>3 && $2==f {v[++n]=$6}
+    END{ c=0; for(i=n;i>=1;i--){ if(v[i]=="无效") c++; else break } print c }' "$l")"
+  [ "${streak:-0}" -ge 3 ] && return 0
+  return 1
+}
+
+ledger_summary() {
+  local game="$1" l
+  l="$(ledger_path "$game")"
+  if [ ! -f "$l" ]; then
+    echo "──── 轮次台账：尚未建立（当前管线轮次无记录 ⇒ 门禁不会拦）────"
+    return 0
+  fi
+  echo "──── 轮次台账 ${l} ────"
+  awk -F'\t' 'NR>3' "$l" | tail -n 12 | while IFS= read -r line; do
+    printf '  %s\n' "$(printf '%s' "$line" | tr '\t' ' ')"
+  done
+  echo "  连续无效轮次统计:"
+  awk -F'\t' '
+    NR>3 {f[$2]=1; v[$2"|"++n[$2]]=$6}
+    END{ for (k in f) { c=0
+           for(i=n[k];i>=1;i--){ if(v[k"|"i]=="无效") c++; else break }
+           printf "    功能#%-4s 第 %d 轮后连续无效 %d 轮\n", k, n[k], c } }' "$l" | sort
+}
+
+print_matrix() {  # P4：被门禁拦住时照它填，填完贴给用户确认方向
+  local game="$1"
+  echo ""
+  echo "════════ 假设矩阵（必须先填完再谈继续装机；pipeline.sh <游戏> rounds 生成）════════"
+  ledger_summary "$game"
+  echo ""
+  echo "【已排除的假设】假设 / 反证证据行（文件:行 或 logcat 行）"
+  echo "  1. "
+  echo "  2. "
+  echo "【待验证的假设】假设 / 验证方法（命令） / 代价（分钟）"
+  echo "  1. "
+  echo "  2. "
+  echo "【已确定的事实】事实 / 证据行"
+  echo "  1. "
+  echo "════════ 填完贴给用户确认方向；确认前禁止再装机（第 3 轮起）════════"
+}
+
+gate_before_stage() {  # P4：只拦「装机」阶段；被拦即 exit 3（STAGE_NEXT_FORCE=1 放行）
+  local game="$1" sid="$2" l blocked="" feat
+  case "$sid" in
+    *install*|*Install*) ;;
+    *) return 0 ;;
+  esac
+  l="$(ledger_path "$game")"
+  [ -f "$l" ] || return 0
+  for feat in $(awk -F'\t' 'NR>3 {print $2}' "$l" | sort -u); do
+    if ledger_block_check "$game" "$feat"; then blocked="${blocked} ${feat}"; fi
+  done
+  [ -n "$blocked" ] || return 0
+  echo "" >&2
+  echo "⛔ 轮次门禁：功能#${blocked# } 已连续 3 轮「改动→装机→仍无效」—— 拒绝执行装机阶段 [${sid}]。" >&2
+  echo "   绕圈不是勤快，是烧用户的测试时间（AGENTS.md「执行纪律补充」P4）。" >&2
+  print_matrix "$game" >&2
+  if [ "${STAGE_NEXT_FORCE:-0}" = "1" ]; then
+    echo "" >&2
+    echo "⚠  STAGE_NEXT_FORCE=1：用户当轮明确要求再试一次 ⇒ 放行本次装机（已在日志与汇报中留痕）。" >&2
+    return 0
+  fi
+  echo "   若用户当轮明确要求「再试一次」，用 STAGE_NEXT_FORCE=1 显式放行。" >&2
+  exit 3
+}
 
 # ---------- 0. 指纹自检（防改脚本） ----------
 self_check() {
@@ -47,12 +205,28 @@ list_games() {
 
 usage() {
   cat <<EOF
-用法: bash 04_scripts/pipeline.sh <游戏> <status|next|run|reset|verify> [stage_id]
+用法: bash 04_scripts/pipeline.sh <游戏> <动作> [参数]
+
+动作:
+  status                        查看状态（开工第一步；同时钉出硬约束生效条目与轮次台账）
+  next [--loop N]               # 执行下一阶段；--loop N 连跑最多 N 个阶段（逐次回显日志尾 ${TAIL_LINES} 行）
+  run <stage_id>                # 显式执行某阶段
+  reset <stage_id>              # 状态回退 pending
+  verify <stage_id>             # 只校验产物不执行
+  log [N]                       # 只回显 pipeline.log 尾 N 行（默认 ${TAIL_LINES}）
+  round <功能#> <有效|无效|未测> [摘要]   # 记一轮「改代码→装机→用户实测」结果（写 10_docs/<游戏>/轮次台账.tsv）
+  rounds                        # 打假设矩阵（被轮次门禁拦住时照它填，填完贴给用户确认方向）
+  gate <stage_id>               # 只跑装机前轮次门禁（不执行阶段；被拦时退出码 3）
 
 已注册游戏（04_scripts/*/pipeline.json）:
 $(list_games | sed 's/^/  - /')
 
 规则见 ${COMMON_DIR}/stages.md（操作二分 / 阶段表 / 失败即停）
+
+轮次门禁（P4，2026-10-03）:
+  - 同一功能「改代码→装机→用户实测」连续 3 轮仍「无效」时，含 install 的阶段直接拒绝
+    （退出码 3）并打印假设矩阵；仅当用户当轮明确要求「再试一次」时用 STAGE_NEXT_FORCE=1 放行。
+  - 结果由 AI 用 `round` 动词逐轮登记，别靠记忆（AGENTS.md「执行纪律补充」P4）。
 
 防旧产物直装机制（自动生效，无需记忆）:
   - 上游阶段产物变化后，仍处 done 的下游阶段自动回退 pending（next 连跑即刷新）
@@ -325,6 +499,9 @@ run_stage() {
   local jf="${SCRIPT_DIR}/${game}/pipeline.json"
   local log="${SCRIPT_DIR}/${game}/pipeline.log"
 
+  # 装机前轮次门禁（P4）：同一功能连续 3 轮无效 ⇒ 拒绝装机阶段（exit 3，除非 STAGE_NEXT_FORCE=1）
+  gate_before_stage "$game" "$sid"
+
   # 前置检查
   if ! json_py "$jf" check_prereq "$sid"; then
     die "阶段 ${sid} 前置未满足（顺序执行是铁律；确需重跑请先 reset 前置阶段）"
@@ -428,13 +605,35 @@ main() {
 
   case "$action" in
     status)
+      pin_constraints "$game"
+      echo ""
       json_py "$jf" status
+      echo ""
+      ledger_summary "$game"
       ;;
     next)
-      local sid
-      sid="$(json_py "$jf" get_next)" || die "无待执行阶段（全部完成/失败）。查看状态: pipeline.sh ${game} status"
-      echo "下一阶段: ${sid}"
-      run_stage "$game" "$sid"
+      local sid i=0 loop=1
+      case "${3:-}" in
+        --loop|-n) loop="${4:-0}" ;;
+        "") ;;
+        *) die "用法: pipeline.sh ${game} next [--loop N]" ;;
+      esac
+      case "$loop" in ''|*[!0-9]*) die "用法: pipeline.sh ${game} next [--loop N]（N 为正整数）" ;; esac
+      [ "$loop" -ge 1 ] || die "用法: pipeline.sh ${game} next [--loop N]（N 为正整数）"
+      while [ "$i" -lt "$loop" ]; do
+        i=$((i + 1))
+        sid="$(json_py "$jf" get_next)" || { echo "无待执行阶段（全部完成/失败）。查看状态: pipeline.sh ${game} status"; break; }
+        if [ "$loop" -gt 1 ]; then
+          echo ""
+          echo "──── next --loop ${i}/${loop} ────"
+        fi
+        echo "下一阶段: ${sid}"
+        run_stage "$game" "$sid"
+        if [ "$loop" -gt 1 ]; then
+          echo "──── pipeline.log 尾 ${TAIL_LINES} 行 ────"
+          tail -n "$TAIL_LINES" "${SCRIPT_DIR}/${game}/pipeline.log"
+        fi
+      done
       ;;
     run)
       [ $# -ge 3 ] || die "用法: pipeline.sh ${game} run <stage_id>"
@@ -448,6 +647,26 @@ main() {
     verify)
       [ $# -ge 3 ] || die "用法: pipeline.sh ${game} verify <stage_id>"
       json_py "$jf" verify "$3"
+      ;;
+    log)
+      local logf="${SCRIPT_DIR}/${game}/pipeline.log" ln
+      ln="${3:-$TAIL_LINES}"
+      case "$ln" in ''|*[!0-9]*) die "用法: pipeline.sh ${game} log [N]" ;; esac
+      [ -f "$logf" ] || die "无日志: ${logf}（本游戏尚无阶段执行记录）"
+      echo "──── pipeline.log 尾 ${ln} 行 ────"
+      tail -n "$ln" "$logf"
+      ;;
+    rounds)
+      print_matrix "$game"
+      ;;
+    round)
+      [ $# -ge 4 ] || die "用法: pipeline.sh ${game} round <功能#> <有效|无效|未测> [改动摘要]"
+      ledger_round "$game" "$3" "$4" "${5:-}"
+      ;;
+    gate)
+      [ $# -ge 3 ] || die "用法: pipeline.sh ${game} gate <stage_id>  # 只跑装机前轮次门禁，不执行阶段"
+      gate_before_stage "$game" "$3"
+      echo "✅ 轮次门禁：阶段 [${3}] 未被拦（无功能连续 3 轮无效）"
       ;;
     *)
       usage; die "未知动作: ${action}"

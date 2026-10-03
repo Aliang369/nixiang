@@ -19,7 +19,7 @@
    - 写功能 / Hook → `skill/re-implement/SKILL.md`（指纹铁律见 `re-implement/hook-rules.md` §24：禁止写死会被混淆器改名的短标识符；**挂点五步门禁见 §22**，第 5 步＝`10_docs/{游戏}/路线锁定.md` 填满且无「未确认偏离」才准装机，模板 `10_docs/_templates/路线锁定.md`）
    - 星光落地 / 切游戏 / 出包 → `skill/starry-mod/SKILL.md`
    - **已有星光包，只重打 dex/APK/重装 → 游戏摘要 + `skill/starry-mod/SKILL.md`「存量游戏快速重打」+ `04_scripts/_common/stages.md` 收尾入口**（只改 Java/dex 不重编 native；复用正式包用 `STARRY_INSTALL_ONLY=1`）
-   - 机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`（第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在→走 `pipeline.sh`；不存在→用该游戏的 `surgical_*/inject_*` 脚本，仍禁直接敲 adb/apktool/zip/ndk-build；分析操作照常推理产出落 `10_docs/`）。**有 `pipeline.json` 的游戏优先用包装器** `bash 04_scripts/_common/stage_next.sh <游戏> [status|next|auto N]`（内部只调 `pipeline.sh`，另带轮次门禁与状态钉行；见「执行纪律补充」）
+   - 机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`（第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在→走 `pipeline.sh`；不存在→用该游戏的 `surgical_*/inject_*` 脚本，仍禁直接敲 adb/apktool/zip/ndk-build；分析操作照常推理产出落 `10_docs/`）。**有 `pipeline.json` 的游戏直接用 pipeline.sh 的原生动词**：`bash 04_scripts/pipeline.sh <游戏> status`（钉硬约束 + 台账）/ `next --loop N`（连跑，逐次回显日志尾 40 行）/ `log [N]` / `round`+`rounds`（轮次门禁，见「执行纪律补充」）；旧写法 `bash 04_scripts/_common/stage_next.sh <游戏> [status|next|auto N|rounds]` 仍在，但已缩成同义转发器。
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（扫描与插件按具体问题触发，不作无差别全扫）
    - 经验查阅 → `skill/re-lessons/SKILL.md`
    - 纯评估 / 文档维护 → 只读待评估文档及直接引用，不自动进入游戏执行流程。
@@ -139,8 +139,8 @@ git log --oneline -5               # 确认拿到了什么
 > 本节只放**机器可执行/可审查**的增量；技术正文在 `skill/re-implement/hook-rules.md`（§22 五步门禁、§29.5 三段判定、§30 模拟器装钩判据）。
 
 - **硬约束与路线锁定落盘**：用户下达「必须 / 禁止 / 照 XX 做」时，**当轮**抄其原话（带消息号）进 `10_docs/{游戏}/硬约束.md`（模板 `10_docs/_templates/硬约束.md`）；有对照包的移植必须维护 `10_docs/{游戏}/路线锁定.md`（模板 `_templates/路线锁定.md`），表内存在「未确认偏离」即禁止装机。约束文件**永不删行**，失效只改状态。
-- **迭代轮次门禁（P4）**：同一功能「改代码 → 装机 → 用户实测」第 3 轮仍无效果时**拒绝再装机**，先按 `stage_next.sh rounds` 打出假设矩阵（已排除的假设+证据 / 待验证的假设+验证方法 / 已知确定的事实），贴给用户确认方向；台账落在 `10_docs/{游戏}/轮次台账.tsv`。绕圈不是勤快，是烧用户的测试时间。
-- **机械操作包装器（P5）**：`bash 04_scripts/_common/stage_next.sh <游戏> [status|next|auto N|rounds]` —— 只做三件事：调 `04_scripts/pipeline.sh` 的官方动词、把日志尾 40 行回显、在 install 阶段前检查轮次门禁；`status` 额外钉出 `硬约束.md` 的生效条目与台账摘要。**它不替代 pipeline.sh，也不改 pipeline.sh**（后者与 `pipeline.lock` 有指纹锁，禁改）。
+- **迭代轮次门禁（P4，已并入 pipeline.sh 本体）**：同一功能「改代码 → 装机 → 用户实测」第 3 轮仍无效果时**拒绝再装机**：`bash 04_scripts/pipeline.sh <游戏> round <功能#> <有效|无效|未测> "摘要"` 记轮次，含 `install` 的阶段会被**直接拒绝（退出码 3）**并打印假设矩阵，先跑 `rounds` 把矩阵（已排除的假设+证据 / 待验证的假设+验证方法 / 已知确定的事实）填完贴给用户确认方向；仅当用户当轮明确要求再试一次才用 `STAGE_NEXT_FORCE=1` 放行。台账落在 `10_docs/{游戏}/轮次台账.tsv`。绕圈不是勤快，是烧用户的测试时间。
+- **管线原生内循环（P5，2026-10-03 起）**：`bash 04_scripts/pipeline.sh <游戏> status`（钉硬约束生效条目 + 台账摘要）/ `next --loop N`（连跑最多 N 个阶段，逐次只回显日志尾 40 行，失败即停）/ `log [N]` / `round` / `rounds` / `gate <阶段id>`。旧命令 `bash 04_scripts/_common/stage_next.sh <游戏> [status|next|auto N|rounds]` 保留但**已缩成同义转发器**（不再自己实现逻辑）。**pipeline.sh 是弱 AI 禁改文件**（指纹锁 `_common/pipeline.lock`）；强 AI 确需改时唯一姿势＝同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push，另一台 `git pull --rebase --autostash`（见 `_common/stages.md` 文末「真要改 pipeline.sh 时的跨机姿势」）。
 - **会话规模预算（P6）**：单个会话的机械行为预算 —— 工具调用 ≈600 次、装机 ≈40 次、prune 阴影 token ≈150K。任一触顶即**交接**：把「已确认事实 / 未决问题 / 下一步 / 证据落点」写进 `10_docs/_state/games/{游戏}.md`，然后开新会话，不硬撑（旧会话实测 2428 次调用 / 380K 阴影 / 99 条用户消息，后段全靠压缩维持）。
 - **清理禁通配符（P9）**：删除操作**禁止**用通配符批量匹配（`_*.py`、`Remove-Item ...\[a-z]*`、`rm -rf <dir>/*`）；一律写显式名单，先打印解析出的绝对路径复核，删后复扫一次。历史事故：`Remove-Item '...\06_dumped\冒险与征途\_*.py'` 误删 16 个已入库 tracked 脚本。
 - **IL 查询一次到位（P7）**：`06_dumped/{游戏}/aot/_tgt_q.py dump-class <类名正则>` 一次打印「类头 + 字段（含偏移口径）+ 方法（token/RVA）+ 关键方法 IL 摘要」，避免为同一个类反复跑 `fields`/`methods`/`il`/`iluse` 三四次（旧会话同一 IL 查询 ≈40 次）。

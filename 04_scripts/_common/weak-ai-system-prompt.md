@@ -16,12 +16,15 @@
 
 本会话立即生效的硬纪律（即使你没读到上面的文件也要遵守）：
 - 机械操作（拆包/打包/注入/移植/签名/装机/清理）只许用：
-  bash 04_scripts/pipeline.sh <游戏> status / next / verify <阶段> / reset <阶段>
+  bash 04_scripts/pipeline.sh <游戏> status / next / next --loop N / log [N]
+                                / round / rounds / verify <阶段> / reset <阶段>
   禁止直接敲 adb / apktool / zip / ndk-build / jarsigner 等命令序列
 - 改完任何文件必跑机器关：bash 04_scripts/_common/preflight.sh <你改过的文件>
   有 FAIL 必须修复；C++/mk 改动必须重跑管线构建阶段才算完成
-- 管线报错：读 04_scripts/<游戏>/pipeline.log 尾部，修复原因后重跑；
-  禁止换命令绕过，禁止改 pipeline.sh / pipeline.lock / skill/ 下任何文件
+- 管线报错：读 04_scripts/<游戏>/pipeline.log 尾部（或 `... log 40`），修复原因后重跑；
+  禁止换命令绕过；禁止改 pipeline.sh / pipeline.lock / skill/ 下任何文件
+  （弱 AI 禁改 pipeline.sh 与 _common/pipeline.lock；强 AI 确需改时唯一合法姿势＝同一提交
+   改脚本 + 刷新 lock 的 `shasum -a 256` + push，另一台 `git pull` 后才一致，见 stages.md 文末）
 - 分析操作（逆向/找锚点/读代码）照常推理，产出写 10_docs/{游戏}/，注明证据来源
 - 改代码同一文件必须串行编辑：一条消息只发一个 Edit，看到结果再发下一个
   （同消息多个 Edit 会读-改-写互相覆盖丢改动，2026-09-10 事故×3）
@@ -44,18 +47,23 @@
 
 ### 一、机械操作只走管线（拆包/打包/注入/移植/签名/装机/清理）
 
-只允许三个命令，**禁止直接敲** adb/apktool/zip/ndk-build/jarsigner/keytool 等命令序列：
+只允许下列命令（全部是 `04_scripts/pipeline.sh` 的原生动词），**禁止直接敲** adb/apktool/zip/ndk-build/jarsigner/keytool 等命令序列：
 
 ```bash
-bash 04_scripts/pipeline.sh <游戏> status        # 开工第一步：看当前在哪
-bash 04_scripts/pipeline.sh <游戏> next          # 干下一阶段
-bash 04_scripts/pipeline.sh <游戏> verify <阶段>  # 只校验产物（含指纹比对）
+bash 04_scripts/pipeline.sh <游戏> status          # 开工第一步：钉硬约束生效条目 + 台账 + 当前在哪
+bash 04_scripts/pipeline.sh <游戏> next            # 干下一阶段
+bash 04_scripts/pipeline.sh <游戏> next --loop 4   # 连跑最多 4 个阶段（逐次回显日志尾 40 行）
+bash 04_scripts/pipeline.sh <游戏> log [N]          # 只看日志尾 N 行（默认 40）
+bash 04_scripts/pipeline.sh <游戏> round <功能#> <有效|无效|未测> "摘要"   # 记一轮迭代
+bash 04_scripts/pipeline.sh <游戏> rounds           # 轮次门禁假设矩阵（第 3 轮无效后必看）
+bash 04_scripts/pipeline.sh <游戏> verify <阶段>    # 只校验产物（含指纹比对）
 ```
 
 阶段失败时：
-1. 读日志尾部：`04_scripts/<游戏>/pipeline.log`
+1. 读日志尾部：`04_scripts/<游戏>/pipeline.log`（或 `... log 40`）
 2. 修复原因后重跑该阶段
-3. **禁止**换命令绕过、**禁止**改 pipeline.sh / pipeline.lock（自检锁会拒绝执行）
+3. **禁止**换命令绕过；**禁止**改 pipeline.sh / pipeline.lock（弱 AI 禁改，指纹锁会拒绝执行；强 AI 唯一合法改法＝同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push，见 `stages.md` 文末）
+4. 同一功能「改代码 → 装机 → 用户实测」第 3 轮仍无效：含 `install` 的阶段会被**直接拒绝（退出码 3）**，先跑 `rounds` 把假设矩阵贴给我确认方向，别硬试（`STAGE_NEXT_FORCE=1` 只在用户当轮明确要求时用）
 
 ### 二、改完任何文件，必跑机器关（无例外）
 
@@ -107,7 +115,9 @@ bash 04_scripts/_common/preflight.sh <你改过的每一个文件>
 
 ### 四、禁止清单
 
-- 改 `04_scripts/pipeline.sh`、`_common/pipeline.lock`（指纹锁）
+- 改 `04_scripts/pipeline.sh`、`_common/pipeline.lock`（弱 AI 禁改，指纹锁；**强 AI 确需改时唯一合法姿势**＝
+  同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push，另一台 `git pull --rebase --autostash` 后才一致，
+  详见 `stages.md` 文末「真要改 pipeline.sh 时的跨机姿势」。**弱 AI 永远不许碰这两个文件**）
 - **用通配符批量删除**（`_*.py`、`Remove-Item ...\_*`、`rm -rf <dir>/*`）：删除一律写**显式名单**，
   先打印解析出的绝对路径复核、删完复扫一次（历史事故：`Remove-Item '...\_*.py'` 误删 16 个已入库脚本，
   靠 `git checkout` 才救回；清理用 `_common/trash_paths.sh` 更稳）

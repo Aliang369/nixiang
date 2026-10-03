@@ -17,21 +17,27 @@
 | **机械操作**（拆包/打包/注入/移植/签名/构建/装机/清理） | `bash 04_scripts/pipeline.sh <游戏> <动作>` | 弱模型禁止直接敲 adb/apktool/zip/ndk-build/jarsigner 等命令序列；报错时读日志与校验输出，禁止换命令试错 |
 | **分析操作**（逆向/锚点抓取/反作弊研判/方案设计） | 照常自由推理 | 产出必须落 `10_docs/{游戏}/` 文档（证据闭环不变）；状态机的"锚点抓取"阶段产出入文档、指针记录入 pipeline.json |
 
-机械管线文件（pipeline.sh / pipeline.lock）**禁止修改**：入口启动即校验 sha256 指纹（登记于
+机械管线文件（pipeline.sh / pipeline.lock）**弱 AI 禁止修改**：入口启动即校验 sha256 指纹（登记于
 `_common/pipeline.lock`），被改动直接拒绝执行。合法参数修改走 pipeline.json 的 `params`
 字段（game_id/版本/设备 serial 等——该改的给它改，脚本本体不动）。
+强 AI 确需改本体时，唯一合法姿势＝**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的
+`shasum -a 256` 并 push（见文末「真要改 `pipeline.sh` 时的跨机姿势」）。
 
-## 弱 AI 使用词汇表（全部操作只此四个动词）
+## 弱 AI 使用词汇表（全部操作只此几个动词）
 
 ```bash
-bash 04_scripts/pipeline.sh <游戏> status        # 开工第一步：看当前在哪
-bash 04_scripts/pipeline.sh <游戏> next          # 执行下一阶段（自动路由）
-bash 04_scripts/pipeline.sh <游戏> run <stage_id> # 显式重跑某阶段（重跑前建议先 reset）
-bash 04_scripts/_common/preflight.sh <文件...>    # 改完任何文件必跑的机器关
-bash 04_scripts/_common/pre_install_gate.sh ...   # 装机前产物四查门禁（见下方专节）
+bash 04_scripts/pipeline.sh <游戏> status          # 开工第一步：看当前在哪（同时钉硬约束 + 轮次台账）
+bash 04_scripts/pipeline.sh <游戏> next            # 执行下一阶段（自动路由）
+bash 04_scripts/pipeline.sh <游戏> next --loop 4   # 连跑最多 4 个阶段（逐次回显日志尾 40 行；失败即停）
+bash 04_scripts/pipeline.sh <游戏> run <stage_id>  # 显式重跑某阶段（重跑前建议先 reset）
+bash 04_scripts/_common/preflight.sh <文件...>     # 改完任何文件必跑的机器关
+bash 04_scripts/_common/pre_install_gate.sh ...    # 装机前产物四查门禁（见下方专节）
 ```
 
-辅助：`reset <stage_id>`（状态回退 pending）、`verify <stage_id>`（只校验产物不执行）。
+辅助：`reset <stage_id>`（状态回退 pending）、`verify <stage_id>`（只校验产物不执行）、
+`log [N]`（只回显 `pipeline.log` 尾 N 行，默认 40）、
+`round <功能#> <有效|无效|未测> [摘要]` + `rounds`（记迭代轮次 / 打假设矩阵，见「调试内循环」的轮次门禁）、
+`gate <stage_id>`（只跑装机前轮次门禁，不执行阶段）。
 
 ### preflight 机器关（改完文件的必经之点，2026-09-09 起）
 
@@ -101,19 +107,20 @@ bash 04_scripts/_common/pre_install_gate.sh \
 
 ## 调试内循环（最高频场景：改 Mod → 重打 → 装机 → 看日志 → 再改）
 
-已有外科底包的迭代**不需要重走完整标准阶段**，管线标准动作（**2026-10-03 起优先用包装器**）：
+已有外科底包的迭代**不需要重走完整标准阶段**，管线标准动作（**2026-10-03 起动词已原生在 pipeline.sh**）：
 
 ```bash
-# 推荐：包装器只转发 pipeline.sh 的官方动词，另做三件事：日志尾 40 行 / 装机前轮次门禁 / 状态钉硬约束
-bash 04_scripts/_common/stage_next.sh <游戏> status        # 开工第一步：硬约束生效条目 + 管线状态 + 轮次台账
-bash 04_scripts/pipeline.sh <游戏> reset build_so          # 回退构建阶段（动词与 pipeline.sh 完全一致）
-bash 04_scripts/_common/stage_next.sh <游戏> auto 4        # 连跑最多 4 个 next（内部即 build_so→surgical→device_ready→install）
-bash 04_scripts/_common/stage_next.sh <游戏> log 40        # 只回显日志尾 40 行
-bash 04_scripts/_common/stage_next.sh <游戏> round 1 无效 "改了 X"   # 记一轮「改→装→实测」结果
+bash 04_scripts/pipeline.sh <游戏> status                  # 开工第一步：硬约束生效条目 + 管线状态 + 轮次台账
+bash 04_scripts/pipeline.sh <游戏> reset build_so          # 回退构建阶段
+bash 04_scripts/pipeline.sh <游戏> next --loop 4           # 连跑最多 4 个阶段（build_so→surgical→device_ready→install）
+bash 04_scripts/pipeline.sh <游戏> log 40                  # 只回显日志尾 40 行
+bash 04_scripts/pipeline.sh <游戏> round 1 无效 "改了 X"    # 记一轮「改→装→实测」结果
 ```
 
-- **轮次门禁（P4）**：同一功能连续 3 轮「改代码→装机→用户实测仍无效」时，包装器对含 `install` 的阶段**直接拒绝执行**（exit 3）并打印假设矩阵；先跑 `rounds` 把矩阵填完贴给用户定方向，再谈继续。仅当用户当轮明确要求「再试一次」才用 `STAGE_NEXT_FORCE=1` 放行（会大声留痕）。
-- **Windows 编码垫片**：`pipeline.sh` 状态输出含 ⬜/✅，Windows 侧 python3 默认 cp936 会 `UnicodeEncodeError` 崩掉；`pipeline.sh` 有指纹锁禁改 ⇒ 包装器统一注入 `PYTHONIOENCODING=utf-8`、`PYTHONUTF8=1`。手动跑 pipeline.sh 前也请先 `export PYTHONIOENCODING=utf-8`。
+- 旧命令形态（`_common/stage_next.sh <游戏> status|next|auto N|log N|rounds|round|gate`）仍可用：
+  它现在是**同义转发器**，只转发到上面的原生动词，不再自己实现逻辑（P1/P4/P5 已并入 pipeline.sh 本体）。
+- **轮次门禁（P4）**：同一功能连续 3 轮「改代码→装机→用户实测仍无效」时，含 `install` 的阶段**直接拒绝执行**（exit 3）并打印假设矩阵；先跑 `rounds` 把矩阵填完贴给用户定方向，再谈继续。仅当用户当轮明确要求「再试一次」才用 `STAGE_NEXT_FORCE=1` 放行（会大声留痕）。台账落在 `10_docs/<文档游戏名>/轮次台账.tsv`。
+- **Windows 编码（2026-10-03 已根治）**：`pipeline.sh` 顶部固定 `PYTHONIOENCODING=utf-8` / `PYTHONUTF8=1`，Windows 侧不会再因状态符号 ⬜/✅ 触发 `UnicodeEncodeError: 'gbk' codec ...`（旧版靠包装器注入垫片绕过，现已进本体）。
 
 ### 存量未接管线：已有星光包只重打 dex/APK/重装（2026-09-29）
 
@@ -312,8 +319,8 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 
 | 脚本 | 角色 | 触发场景 |
 |---|---|---|
-| `stage_next.sh` | pipeline.sh 的**包装器/内循环驱动**（P4 轮次门禁 + P5 日志尾 + 状态钉硬约束） | 日常 `status` / `auto N` / 记轮次 |
-| `pipeline.sh` + `pipeline.lock` | 状态机本体（**指纹锁定，禁改**；lock 由 git 跟踪、被 Syncthing 忽略，见下注） | 所有机械动词 |
+| `pipeline.sh` + `pipeline.lock` | 状态机本体（**弱 AI 禁改 / 强 AI 只按「同一提交 + 刷新 lock + push」改**；lock 由 git 跟踪、被 Syncthing 忽略，见下注）。**2026-10-03 起原生带**：硬约束钉行（P1）/ 轮次门禁（P4）/ 内循环 `next --loop N` + `log`（P5）/ UTF-8 输出垫片 | 所有机械动词 |
+| `stage_next.sh` | pipeline.sh 的**同义转发器**（旧命令形态兼容层，不再自己实现逻辑） | 旧习惯命令 / 文档里的旧写法 |
 | `preflight.sh` | 阶段执行前的语法/格式机器关 | 阶段声明 `preflight` 时自动调用 |
 | `bash32_check.sh` | macOS bash 3.2 兼容门禁（本仓脚本都要在 3.2 下跑） | 新增/改 `*.sh` 后 |
 | `pre_install_gate.sh` | 装机前产物门禁 | 装机前 |
@@ -322,4 +329,5 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 | `trash_paths.sh` | 受控删除（**拒绝仓库根/.git/01_tools/02_apks/08_output**） | 清理 |
 
 - **清理禁通配符（P9）**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库 tracked 脚本，靠 `git checkout` 才救回）。
-- **真要改 `pipeline.sh` 时的跨机姿势（2026-10-03 澄清）**：`pipeline.sh` 与 `_common/pipeline.lock` 都是 **git 跟踪文件**（`git ls-files 04_scripts/_common/pipeline.lock` 命中），只是 `_common/pipeline.lock` 被 Syncthing `.stignore` 忽略（`10_docs/双机协作/双机协作同步方案.md:482`，避免双通道冲突），而 `pipeline.sh` 本身走 Syncthing。所以改法是：**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的 `shasum -a 256`，然后 push，另一台 `git pull --rebase --autostash` 后即一致（不必手工碰 lock）；**禁止**只改一边或两端同时改 —— Syncthing 会先把新 `pipeline.sh` 送到另一台而那边 lock 还是旧的，该机任何 `pipeline.sh` 命令都会 die「指纹不匹配」，`git pull` 一次即恢复。
+- **真要改 `pipeline.sh` 时的跨机姿势（2026-10-03 澄清，当日已按此流程改过一次）**：`pipeline.sh` 与 `_common/pipeline.lock` 都是 **git 跟踪文件**（`git ls-files 04_scripts/_common/pipeline.lock` 命中），只是 `_common/pipeline.lock` 被 Syncthing `.stignore` 忽略（`10_docs/双机协作/双机协作同步方案.md:482`，避免双通道冲突），而 `pipeline.sh` 本身走 Syncthing。所以改法是：**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的 `shasum -a 256`，然后 push，另一台 `git pull --rebase --autostash` 后即一致（不必手工碰 lock）；**禁止**只改一边或两端同时改 —— Syncthing 会先把新 `pipeline.sh` 送到另一台而那边 lock 还是旧的，该机任何 `pipeline.sh` 命令都会 die「指纹不匹配」，`git pull` 一次即恢复。
+  - 2026-10-03 实例（P1/P4/P5 并入 + UTF-8 垫片）：新指纹 `pipeline_sh_sha256=1bf3e07b9486b9a8b5b596df3823c78e65c4a58b2cffc31e5fd0a16d25233b42`（旧 `0a2e133157760ce0b4a715b293d3718574b495772a46b48cac81fc089f72a435`），`stage_next.sh` 同批缩为转发器；另一台机器拉取后先跑一次 `bash 04_scripts/pipeline.sh <游戏> status` 确认不再 die 即为同步成功。
