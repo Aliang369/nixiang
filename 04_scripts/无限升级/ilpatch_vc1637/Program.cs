@@ -94,13 +94,17 @@ internal static class Program
     {
         string variantName = "v1960960";
         bool scanOnly = false;
+        bool scanAll = false;
         bool incremental = false;
         bool noReverse = false;  // 复现性自检用：跳过 item_reverse
+        bool dumpMinus = false;
         var rest = new List<string>();
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--variant" && i + 1 < args.Length) variantName = args[++i];
             else if (args[i] == "--scan") scanOnly = true;
+            else if (args[i] == "--scan2") scanAll = true;
+            else if (args[i] == "--dump-minus") dumpMinus = true;
             else if (args[i] == "--incremental") incremental = true;
             else if (args[i] == "--no-item-reverse") noReverse = true;
             else rest.Add(args[i]);
@@ -114,12 +118,14 @@ internal static class Program
         var srcLen = new FileInfo(src).Length;
 
         // 盘点模式：只列出所有 MinusItem 调用点（类型::方法 + IL 偏移），不改文件。
-        if (scanOnly)
+        if (scanOnly || scanAll || dumpMinus)
         {
             var sc = AssemblyDefinition.ReadAssembly(src);
             mod = sc.MainModule;
             Console.WriteLine($"[scan] {src} ({srcLen} B)");
-            ScanMinusItemCalls();
+            if (dumpMinus) { ResolveStarryOnly(); DumpMinusItemBody(); }
+            else if (scanAll) ScanAllMinusItemCalls();
+            else ScanMinusItemCalls();
             sc.Dispose();
             return 0;
         }
@@ -138,10 +144,10 @@ internal static class Program
             Console.WriteLine($"[load] {src} ({srcLen} B)");
             Console.WriteLine($"[mode] incremental：只追加 item_reverse，其余补丁不动");
             ResolveStarryOnly();
-            int newSites = PatchItemUseReverse(allowExisting: true);
-            int negFix = PatchMinusItemNegativeBypass(allowExisting: true);
+            int newSites = PatchItemReverse(allowExisting: true);
+            int bodyFix = PatchMinusItemBody(allowExisting: true);
             Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
-            if (newSites == 0 && negFix == 0)
+            if (newSites == 0 && bodyFix == 0)
             {
                 // 幂等：产物已经带门，原样复制（不重写，避免字节漂移）。
                 asmI.Dispose();
@@ -158,7 +164,7 @@ internal static class Program
             if (outLenI > spec.OfficialArrayLen)
                 throw new InvalidDataException($"补丁 DLL {outLenI} B 超过官方数组 {spec.OfficialArrayLen} B");
             VerifyItemReverse(dst);
-            VerifyMinusItemNegativeBypass(dst);
+            VerifyMinusItemReverseBodyAt(dst);
             return 0;
         }
 
@@ -172,8 +178,8 @@ internal static class Program
         Console.WriteLine($"[variant] {spec.Name} (full={spec.FullPatchSet}, official={spec.OfficialArrayLen})");
 
         ResolveCommonRefs();
-        if (!noReverse) PatchItemUseReverse(allowExisting: false);
-        if (!noReverse) PatchMinusItemNegativeBypass(allowExisting: false);
+        if (!noReverse) PatchItemReverse(allowExisting: false);
+        if (!noReverse) PatchMinusItemBody(allowExisting: false);
         PatchShopAdsUnlimited();
         PatchVersionPin();
         PatchBanGame();
@@ -200,7 +206,7 @@ internal static class Program
             throw new InvalidDataException($"补丁 DLL {outLen} B 超过官方数组 {spec.OfficialArrayLen} B");
 
         if (!noReverse) VerifyItemReverse(dst);
-        if (!noReverse) VerifyMinusItemNegativeBypass(dst);
+        if (!noReverse) VerifyMinusItemReverseBodyAt(dst);
         Verify(dst);
         return 0;
     }
@@ -209,25 +215,247 @@ internal static class Program
     {
         tStarryConfig = FindType("StarryConfig");
         mGetBool = tStarryConfig.Methods.Single(x => x.Name == "GetBool" && x.Parameters.Count == 1);
+        mGetInt = tStarryConfig.Methods.Single(x => x.Name == "GetInt" && x.Parameters.Count == 2);
     }
 
     // =====================================================================
-    // 物品使用反增（item_reverse）：使用物品时不是扣掉，而是 ×1000 加上去。
+    // 物品/材料/货币使用反增（item_reverse）
     //
-    // 只打「使用物品」链路（ItemDetialWindow 的 OnUse/OnUseAll/OnUseMulti 及其里
-    // 的编译器闭包方法、SelectLegacyPetItemUse.Use、SelectMiFaItemUse.Use）。
-    // 绝不能打 GameData::MinusItem 本体：DLL 里存在
-    //   while (GameData.I.Enough("纯净之灵", upgradeChunJingZhiLing)) { GameData.I.MinusItem("纯净之灵", ...); ... }
-    // 这类「消耗驱动循环」，整体反转会永不退出 ⇒ 真机卡死。
+    // 作用域：DLL 内**所有** GameData::MinusItem(string,int64) 调用点都会反增
+    // （物品使用、材料消耗、货币扣减全覆盖），但下面两类强制排除：
     //
-    // 注入位置 = 每个 callvirt MinusItem(string,int64) 之前，栈上此刻正好是 (id, amount)：
-    //   ldstr "item_reverse"        ┐
-    //   call  StarryConfig.GetBool  │ 门关着就原样走原逻辑
-    //   brfalse -> callvirt         ┘
-    //   ldc.i8 1000 / mul / neg     ⇒ MinusItem(id, -1000*amount) ⇒ 数量 +1000*amount
+    //   1) 「库存驱动循环」内的调用点 —— 例如
+    //        while (GameData.I.Enough("纯净之灵", cost)) { GameData.I.MinusItem("纯净之灵", cost); ...升级... }
+    //      循环体里再查库存 ⇒ 反增后数量只增不减 ⇒ 永不退出 ⇒ 真机卡死。
+    //      判据：调用点所在循环体内出现 GameData::Enough / GameData::GetAmount 等「查库存」调用。
+    //      （ItemData::get_ItemAmount 之类「静态配置数量」的取值器不算，那些是有界 for/foreach。）
+    //   2) 存档链（GameDatas.FixSave / DataManager::Load）：反增会写坏存档修复与读档逻辑。
+    //
+    // 倍率可配置：读 starry_config.ini 的 item_reverse_x（int，缺省 1000，菜单输入框写入）。
+    //
+    // 实现分两半（体积最小化：base 变体的官方数组只有 1,960,960 B，DLL 必须装得下）：
+    //   ① 调用点（112 处）只插 8 条：把 amount 取负，表示「这次是反增请求」
+    //        ldstr "item_reverse"            ┐ 门关着就原样走原逻辑
+    //        call  StarryConfig.GetBool      │
+    //        brfalse -> callvirt             ┘
+    //        dup / ldc.i4.0 / conv.i8 / ble -> callvirt   ← amount <= 0 不反增（「返还」语义不能翻成扣减）
+    //        neg                             ⇒ MinusItem(id, -amount)
+    //   ② MinusItem 本体（1 处）认负额：target < 0 且 item_reverse 开 ⇒ target *= item_reverse_x
+    //      然后按原逻辑 `count -= target` ⇒ 数量 +|target|×倍率。
+    //      同时这一段兼作 fix D：负额跳过 skin_unlock / item_keep 两道门（否则 item_keep=1 时整方法 no-op）。
+    //
+    // 为什么倍率放本体：调用点 ×倍率 要 12 条指令（≈54 B/处 × 112 = 6 KB ⇒ 撑爆官方数组），
+    // 放本体只写一次，每个调用点省下 ≈36 B。
     // =====================================================================
+    const int kItemReverseDefaultX = 1000;
+    const int kGateInstrCount = 8;   // 调用点之前的门指令数（不含 callvirt 本身）
+
+    // 强制排除的类型（沿 DeclaringType 链上溯）
+    static readonly string[] kReverseSkipTypes = { "FixSave", "DataManager" };
+
+    sealed class ReverseSite
+    {
+        public MethodDefinition Method;
+        public Instruction Call;
+        public string Skip;   // null = 可打
+    }
+
+    static List<ReverseSite> CollectReverseSites()
+    {
+        var list = new List<ReverseSite>();
+        foreach (var t in AllTypes(mod.Types))
+        {
+            foreach (var m in t.Methods)
+            {
+                if (!m.HasBody) continue;
+                var il = m.Body.Instructions.ToList();
+                var loops = LoopRanges(il);
+                for (int i = 0; i < il.Count; i++)
+                {
+                    var ins = il[i];
+                    if (ins.OpCode.Code != Code.Call && ins.OpCode.Code != Code.Callvirt) continue;
+                    if (ins.Operand is not MethodReference mr || mr.Name != "MinusItem") continue;
+                    if (mr.DeclaringType.Name != "GameData") continue;
+                    if (mr.Parameters.Count != 2 || mr.Parameters[1].ParameterType.FullName != "System.Int64")
+                        throw new Exception($"{t.FullName}::{m.Name} 的 MinusItem 重载不是 (string,int64)：{mr.FullName}");
+                    list.Add(new ReverseSite { Method = m, Call = ins, Skip = SkipReason(t, il, loops, i) });
+                }
+            }
+        }
+        return list;
+    }
+
+    static string SkipReason(TypeDefinition t, List<Instruction> il, List<int[]> loops, int i)
+    {
+        for (var cur = t; cur != null; cur = cur.DeclaringType)
+            if (Array.IndexOf(kReverseSkipTypes, cur.Name) >= 0)
+                return "存档链(" + cur.Name + ")";
+        foreach (var l in loops)
+        {
+            if (l[0] > i || i > l[1]) continue;
+            for (int k = l[0]; k <= l[1]; k++)
+            {
+                if (il[k].OpCode.Code != Code.Call && il[k].OpCode.Code != Code.Callvirt) continue;
+                if (il[k].Operand is MethodReference cr
+                    && cr.DeclaringType.Name == "GameData"
+                    && Array.IndexOf(kStockQueryNames, cr.Name) >= 0)
+                    return $"库存驱动循环({cr.Name})";
+            }
+        }
+        return null;
+    }
+
+    static List<Instruction> TakeBack(Instruction call, int n, bool includeCall)
+    {
+        var res = new LinkedList<Instruction>();
+        for (var p = call.Previous; p != null && res.Count < n; p = p.Previous) res.AddFirst(p);
+        if (includeCall) res.AddLast(call);
+        return res.ToList();
+    }
+
+    // 0 = 没门；1 = 新形态（只把 amount 取负）；2 = 旧形态（调用点自带 ×1000，可原地升级）
+    static int GateState(Instruction call)
+    {
+        var seq = TakeBack(call, kGateInstrCount, includeCall: true);
+        if (seq.Count == kGateInstrCount + 1
+            && seq[0].OpCode.Code == Code.Ldstr && (string)seq[0].Operand == "item_reverse"
+            && seq[1].OpCode.Code == Code.Call && ((MethodReference)seq[1].Operand).Name == "GetBool"
+            && seq[2].OpCode.Code == Code.Brfalse && ReferenceEquals(seq[2].Operand, call)
+            && seq[3].OpCode.Code == Code.Dup
+            && seq[4].OpCode.Code == Code.Ldc_I4_0
+            && seq[5].OpCode.Code == Code.Conv_I8
+            && seq[6].OpCode.Code == Code.Ble && ReferenceEquals(seq[6].Operand, call)
+            && seq[7].OpCode.Code == Code.Neg)
+            return 1;
+
+        // 旧形态（2026-10-03 首版）：ldstr/GetBool/brfalse/ldc.i8 1000/mul/neg
+        var old = TakeBack(call, 6, includeCall: false);
+        if (old.Count == 6
+            && old[0].OpCode.Code == Code.Ldstr && (string)old[0].Operand == "item_reverse"
+            && old[1].OpCode.Code == Code.Call && ((MethodReference)old[1].Operand).Name == "GetBool"
+            && old[2].OpCode.Code == Code.Brfalse
+            && old[3].OpCode.Code == Code.Ldc_I8 && (long)old[3].Operand == 1000L
+            && old[4].OpCode.Code == Code.Mul
+            && old[5].OpCode.Code == Code.Neg)
+            return 2;
+        return 0;
+    }
+
+    static void EmitGate(MethodDefinition m, Instruction call)
+    {
+        var proc = m.Body.GetILProcessor();
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Ldstr, "item_reverse"));
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Call, mGetBool));
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Brfalse, call));
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Dup));
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Ldc_I4_0));
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Conv_I8));
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Ble, call));
+        proc.InsertBefore(call, Instruction.Create(OpCodes.Neg));
+        m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 4);
+    }
+
+    // 旧形态 → 新形态：调用点自带 ldc.i8 1000 / mul（倍率已挪进本体），删掉并补上正额判定。
+    //   …/brfalse/ [ldc.i8 1000] [mul] neg  ⇒  …/brfalse/ dup/ldc.i4.0/conv.i8/ble neg
+    static void UpgradeGate(MethodDefinition m, Instruction call)
+    {
+        var seq = TakeBack(call, 6, includeCall: false);
+        var neg = seq[5];
+        var proc = m.Body.GetILProcessor();
+        proc.Remove(seq[3]);   // ldc.i8 1000
+        proc.Remove(seq[4]);   // mul
+        proc.InsertBefore(neg, Instruction.Create(OpCodes.Dup));
+        proc.InsertBefore(neg, Instruction.Create(OpCodes.Ldc_I4_0));
+        proc.InsertBefore(neg, Instruction.Create(OpCodes.Conv_I8));
+        proc.InsertBefore(neg, Instruction.Create(OpCodes.Ble, call));
+        m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 4);
+    }
+
+    static int PatchItemReverse(bool allowExisting)
+    {
+        var sites = CollectReverseSites();
+        int patched = 0, upgraded = 0, existing = 0, skipped = 0;
+        foreach (var s in sites)
+        {
+            var where = $"{s.Method.DeclaringType.FullName}::{s.Method.Name} @IL_{s.Call.Offset:X4}";
+            if (s.Skip != null)
+            {
+                skipped++;
+                Console.WriteLine($"[skip] item_reverse <- {where}  ({s.Skip})");
+                continue;
+            }
+            int st = GateState(s.Call);
+            if (st == 1)
+            {
+                if (!allowExisting)
+                    throw new Exception($"{where} 已带 item_reverse 门（基线不该是已打过补丁的 DLL）");
+                existing++;
+                continue;
+            }
+            if (st == 2)
+            {
+                if (!allowExisting)
+                    throw new Exception($"{where} 是旧形态 item_reverse 门（×1000 挂在调用点），必须从干净基线重打或走 --incremental");
+                UpgradeGate(s.Method, s.Call);
+                upgraded++;
+                continue;
+            }
+            EmitGate(s.Method, s.Call);
+            patched++;
+        }
+        if (patched + existing == 0) throw new Exception("未找到任何可反增的 MinusItem 调用点（基线变了？）");
+        Console.WriteLine($"[patch] item_reverse -> 负额门(倍率在本体 item_reverse_x，缺省 {kItemReverseDefaultX})，新注入 {patched} 处 / 旧形态升级 {upgraded} 处 / 已存在 {existing} 处 / 排除 {skipped} 处（共 {sites.Count} 处调用点）");
+        return patched;
+    }
+
+    static void VerifyItemReverse(string path)
+    {
+        var asm = AssemblyDefinition.ReadAssembly(path);
+        mod = asm.MainModule;
+        ResolveStarryOnly();
+        var sites = CollectReverseSites();
+        int ok = 0, skip = 0, bad = 0;
+        foreach (var s in sites)
+        {
+            if (s.Skip != null) { skip++; continue; }
+            if (GateState(s.Call) == 1) ok++;
+            else bad++;
+        }
+        if (ok == 0) throw new Exception("verify failed: item_reverse 无有效注入点");
+        if (bad != 0) throw new Exception($"verify failed: {bad} 处可反增调用点缺门");
+        VerifyMinusItemReverseBody();
+        Console.WriteLine($"[verify] item_reverse 门（缺省 ×{kItemReverseDefaultX}，item_reverse_x 可调）@ {ok} 处；排除 {skip} 处");
+        asm.Dispose();
+    }
+
+
+    // 「使用物品」三族类型：仅供 --scan 打 [USE-PATH] 标记参考（真实的打点范围见 CollectReverseSites）。
     static readonly string[] kItemUseTypeNames = { "ItemDetialWindow", "SelectLegacyPetItemUse", "SelectMiFaItemUse" };
-    const long kItemReverseMul = 1000L;
+
+    // 调试用：打印 GameData::MinusItem(string,int64) 的完整 IL（参数/局部变量索引一目了然）。
+    static void DumpMinusItemBody()
+    {
+        var m = FindMinusItemBody();
+        Console.WriteLine($"[dump] {m.FullName}  HasThis={m.HasThis} params={m.Parameters.Count} locals={m.Body.Variables.Count} maxstack={m.Body.MaxStackSize}");
+        for (int i = 0; i < m.Parameters.Count; i++)
+            Console.WriteLine($"[dump]   param[{i}] index={m.Parameters[i].Index} {m.Parameters[i].ParameterType.FullName} {m.Parameters[i].Name}");
+        for (int i = 0; i < m.Body.Variables.Count; i++)
+            Console.WriteLine($"[dump]   local[{i}] {m.Body.Variables[i].VariableType.FullName}");
+        var il = m.Body.Instructions;
+        for (int i = 0; i < il.Count; i++)
+        {
+            var x = il[i];
+            string op = x.Operand switch
+            {
+                null => "",
+                ParameterDefinition pd => $"param#{pd.Index}({pd.Name})",
+                VariableDefinition vd => $"local#{vd.Index}({vd.VariableType.Name})",
+                Instruction t => $"IL_{t.Offset:X4}",
+                _ => x.Operand.ToString()
+            };
+            Console.WriteLine($"[dump]   {i,4} IL_{x.Offset:X4} {x.OpCode.Code,-14} {op}");
+        }
+    }
 
     static bool InUseFamily(TypeDefinition t)
     {
@@ -236,13 +464,75 @@ internal static class Program
         return false;
     }
 
-    static IEnumerable<MethodDefinition> UseFamilyMethods()
+    // 循环区间检测：每条「向后跳转」的回边 (tgtIdx -> srcIdx) 构成一个循环体 [tgtIdx, srcIdx]。
+    // 用途：判定某个 MinusItem 调用点是否落在循环里（循环里消耗→反增会永不退出）。
+    static List<int[]> LoopRanges(ICollection<Instruction> il)
     {
+        var list = il.ToList();
+        var idx = new Dictionary<Instruction, int>();
+        for (int i = 0; i < list.Count; i++) idx[list[i]] = i;
+        var res = new List<int[]>();
+        for (int j = 0; j < list.Count; j++)
+        {
+            if (list[j].Operand is Instruction tgt)
+            {
+                if (idx.TryGetValue(tgt, out int t) && t < j) res.Add(new[] { t, j });
+            }
+            else if (list[j].Operand is Instruction[] tgs)
+            {
+                foreach (var tt in tgs)
+                    if (idx.TryGetValue(tt, out int t2) && t2 < j) res.Add(new[] { t2, j });
+            }
+        }
+        return res;
+    }
+
+    // 「再查库存」类调用：循环体里若出现这些，说明该循环由库存驱动 ⇒ 反增会让它永不退出。
+    static readonly string[] kStockQueryNames =
+    {
+        "Enough", "GetAmount", "GetItemAmount", "GetItemNum", "GetNum", "GetCount",
+        "GetItemCount", "HaveItem", "IsEnough", "GetItemSum",
+    };
+
+    static void ScanAllMinusItemCalls()
+    {
+        int n = 0, inLoop = 0, danger = 0;
         foreach (var t in AllTypes(mod.Types))
         {
-            if (!InUseFamily(t)) continue;
-            foreach (var m in t.Methods) yield return m;
+            foreach (var m in t.Methods)
+            {
+                if (!m.HasBody) continue;
+                var il = m.Body.Instructions.ToList();
+                var loops = LoopRanges(il);
+                for (int i = 0; i < il.Count; i++)
+                {
+                    var ins = il[i];
+                    if (ins.OpCode.Code != Code.Call && ins.OpCode.Code != Code.Callvirt) continue;
+                    if (ins.Operand is not MethodReference mr || mr.Name != "MinusItem") continue;
+                    n++;
+                    var marks = new List<string>();
+                    if (InUseFamily(t)) marks.Add("USE-PATH");
+                    var enc = loops.Where(l => l[0] <= i && i <= l[1]).ToList();
+                    if (enc.Count > 0) { marks.Add($"LOOPx{enc.Count}"); inLoop++; }
+                    var skip = SkipReason(t, il, loops, i);
+                    if (skip != null) { danger++; marks.Add("SKIP(" + skip + ")"); }
+                    else marks.Add("PATCH");
+                    Console.WriteLine($"[scan2] {t.FullName}::{m.Name} @IL_{ins.Offset:X4}  {(marks.Count > 0 ? string.Join(" ", marks) : "-")}");
+                    if (enc.Count > 0)
+                    {
+                        var names = new SortedSet<string>();
+                        foreach (var l in enc)
+                            for (int k = l[0]; k <= l[1]; k++)
+                            {
+                                if (il[k].OpCode.Code != Code.Call && il[k].OpCode.Code != Code.Callvirt) continue;
+                                if (il[k].Operand is MethodReference cr) names.Add(cr.DeclaringType.Name + "::" + cr.Name);
+                            }
+                        Console.WriteLine($"[scan2-loop]   calls = {string.Join(", ", names)}");
+                    }
+                }
+            }
         }
+        Console.WriteLine($"[scan2] total={n} inLoop={inLoop} stockDriven={danger}");
     }
 
     static void ScanMinusItemCalls()
@@ -265,160 +555,205 @@ internal static class Program
         Console.WriteLine($"[scan] total MinusItem call sites = {n}");
     }
 
-    static int PatchItemUseReverse(bool allowExisting)
-    {
-        int sites = 0;
-        int existing = 0;
-        foreach (var m in UseFamilyMethods())
-        {
-            if (!m.HasBody) continue;
-            foreach (var ins in m.Body.Instructions.ToArray())
-            {
-                if (ins.OpCode.Code != Code.Call && ins.OpCode.Code != Code.Callvirt) continue;
-                if (ins.Operand is not MethodReference mr || mr.Name != "MinusItem") continue;
-                if (mr.DeclaringType.Name != "GameData") continue;
-                if (mr.Parameters.Count != 2 || mr.Parameters[1].ParameterType.FullName != "System.Int64")
-                    throw new Exception($"{m.FullName} 的 MinusItem 重载不是 (string,int64)：{mr.FullName}");
-
-                if (AlreadyGated(ins))
-                {
-                    if (!allowExisting)
-                        throw new Exception($"{m.FullName} @IL_{ins.Offset:X4} 已带 item_reverse 门（基线不该是已打过补丁的 DLL）");
-                    existing++;
-                    continue;
-                }
-
-                var proc = m.Body.GetILProcessor();
-                proc.InsertBefore(ins, Instruction.Create(OpCodes.Ldstr, "item_reverse"));
-                proc.InsertBefore(ins, Instruction.Create(OpCodes.Call, mGetBool));
-                proc.InsertBefore(ins, Instruction.Create(OpCodes.Brfalse, ins));
-                proc.InsertBefore(ins, Instruction.Create(OpCodes.Ldc_I8, kItemReverseMul));
-                proc.InsertBefore(ins, Instruction.Create(OpCodes.Mul));
-                proc.InsertBefore(ins, Instruction.Create(OpCodes.Neg));
-                sites++;
-                Console.WriteLine($"[patch] item_reverse -> {m.DeclaringType.FullName}::{m.Name} @IL_{ins.Offset:X4}");
-            }
-        }
-        if (sites + existing == 0) throw new Exception("未找到任何使用路径的 MinusItem 调用点（基线变了？）");
-        Console.WriteLine($"[patch] item_reverse -> 使用反增 ×{kItemReverseMul}，新注入 {sites} 处 / 已存在 {existing} 处");
-        return sites;
-    }
-
-    static bool AlreadyGated(Instruction call)
-    {
-        for (var p = call.Previous; p != null; p = p.Previous)
-        {
-            if (p.OpCode.Code == Code.Ldstr && (string)p.Operand == "item_reverse") return true;
-            if (p.OpCode.Code == Code.Ret || p.OpCode.Code == Code.Br || p.OpCode.Code == Code.Br_S) break;
-        }
-        return false;
-    }
-
-    static void VerifyItemReverse(string path)
-    {
-        var asm = AssemblyDefinition.ReadAssembly(path);
-        mod = asm.MainModule;
-        int sites = 0, mul = 0;
-        foreach (var m in UseFamilyMethods())
-        {
-            if (!m.HasBody) continue;
-            var il = m.Body.Instructions;
-            for (int i = 0; i < il.Count; i++)
-            {
-                if (il[i].OpCode.Code != Code.Call && il[i].OpCode.Code != Code.Callvirt) continue;
-                if (il[i].Operand is not MethodReference mr || mr.Name != "MinusItem" || mr.DeclaringType.Name != "GameData") continue;
-                if (i < 6) throw new Exception($"verify: {m.FullName} @IL_{il[i].Offset:X4} 前导指令不足 6 条");
-                if (!(il[i - 6].OpCode.Code == Code.Ldstr && (string)il[i - 6].Operand == "item_reverse")) continue;
-                if (!(il[i - 5].OpCode.Code == Code.Call && ((MethodReference)il[i - 5].Operand).Name == "GetBool")) continue;
-                if (il[i - 4].OpCode.Code != Code.Brfalse) continue;
-                if (il[i - 3].OpCode.Code != Code.Ldc_I8 || (long)il[i - 3].Operand != kItemReverseMul) continue;
-                if (il[i - 2].OpCode.Code != Code.Mul) continue;
-                if (il[i - 1].OpCode.Code != Code.Neg) continue;
-                sites++;
-                mul += 1;
-            }
-        }
-        if (sites == 0) throw new Exception("verify failed: item_reverse 无有效注入点");
-        Console.WriteLine($"[verify] item_reverse gate ×{kItemReverseMul} @ {sites} 处使用路径");
-        asm.Dispose();
-    }
-
     // ------------------------------------------------------------------
-    // fix D：item_keep（物品不减）与 skin_unlock（皮肤全解锁）会让 GameData::MinusItem
-    // 在方法入口直接 ret（整个方法变成 no-op），于是 item_reverse 注入的「负额扣减」
-    // 什么也不会发生（真机实测 item_keep=1 ⇒ 使用物品毫无变化）。
+    // item_reverse 的本体端：GameData::MinusItem(string targetItem, long target)
     //
-    // 这里只给「负额」开后门：amount < 0 时跳过 skin_unlock / item_keep 两道门，
-    // 直接落到原本的 ContainsKey 检查 + 扣减（减去负数 = 数量增加）。
-    //   · 正向扣减完全不受影响 ⇒ 消耗驱动的 while 循环（如「纯净之灵」）行为不变，不会卡死。
-    //   · ContainsKey 检查保留 ⇒ 不在 _allItemCode 里的特殊物品不会被写坏（只是不生效）。
-    //   · 只有 item_reverse 注入的那 7 处使用路径才会传负额，其余调用点绝不触发。
+    // 调用点侧只把 amount 取负（-target 表示「这次是反增请求」），倍率与守卫绕过都在这里：
+    //   target >= 0  ⇒ 完全走原逻辑（含 skin_unlock / item_keep 两道门）——正向扣减零影响，
+    //                  消耗驱动的 while 循环（如「纯净之灵」）行为不变，不会卡死。
+    //   target <  0  ⇒ 跳过 skin_unlock / item_keep（这两道门开着时整个方法是 no-op，真机
+    //                  item_keep=1 ⇒ 反增注入的负额扣减什么也不发生 = 首轮「没效果」的根因）；
+    //                  再乘 item_reverse_x（缺省 1000）⇒ 原逻辑 count -= target ⇒ 数量 +|target|×倍率。
+    //                  ContainsKey 检查保留 ⇒ 不在 _allItemCode 里的特殊物品不会被写坏。
+    //
+    // 这里不引入任何新的外部方法引用（System.Math.Max 之类可能被 AOT 裁剪），夹取下限用自家分支。
     // ------------------------------------------------------------------
-    static int PatchMinusItemNegativeBypass(bool allowExisting)
+    const int kItemReverseMinX = 1;
+    const int kItemReverseMaxX = 1000000;   // 与菜单侧 WxsjVc1637Mod.cpp 的夹取保持一致
+
+    static MethodDefinition FindMinusItemBody()
     {
-        var t = FindType("GameData");
-        var m = t.Methods.SingleOrDefault(x => x.Name == "MinusItem"
+        return FindType("GameData").Methods.SingleOrDefault(x => x.Name == "MinusItem"
                 && x.Parameters.Count == 2
                 && x.Parameters[1].ParameterType.FullName == "System.Int64"
                 && x.HasBody)
             ?? throw new Exception("GameData::MinusItem(string,int64) 未找到（基线变了？）");
-        var il = m.Body.Instructions;
+    }
 
-        // 幂等：方法开头已是 ldarg.2 / ldc.i8 0 / clt 即为已打过。
-        bool patched = il.Count >= 3
+    // 本体状态：head = 「负额跳过 skin_unlock/item_keep 守卫链」的序言；scale = 「target<0 时乘 item_reverse_x」的取数块。
+    //   都没有       → 干净基线（还没打过 item_reverse）
+    //   只有 head    → 旧形态（首版：倍率硬编码在调用点的 ldc.i8 1000 / mul）
+    //   head + scale → 新形态（本版：调用点只取负，倍率在本体里读 item_reverse_x）
+    static (bool head, bool scale) MinusItemBodyState(MethodDefinition m)
+    {
+        var il = m.Body.Instructions;
+        bool head = il.Count >= 4
             && il[0].OpCode.Code == Code.Ldarg_2
             && il[1].OpCode.Code == Code.Ldc_I8 && (long)il[1].Operand == 0L
-            && il[2].OpCode.Code == Code.Clt;
-        if (patched)
-        {
-            if (!allowExisting)
-                throw new Exception($"{m.FullName} 已带负额绕过（基线不该是已打过补丁的 DLL）");
-            Console.WriteLine("[patch] minus_item_neg_bypass 已存在，跳过");
-            return 0;
-        }
+            && il[2].OpCode.Code == Code.Clt
+            && (il[3].OpCode.Code == Code.Brtrue || il[3].OpCode.Code == Code.Brfalse);
+        bool scale = false;
+        foreach (var x in il)
+            if (x.OpCode.Code == Code.Ldstr && (string)x.Operand == "item_reverse_x") { scale = true; break; }
+        return (head, scale);
+    }
 
-        // 守卫链出口 = 最后一条 `call GetBool` 之后那个条件跳转的落点（即守卫链之后的第一条指令）。
+    // 读 target 参数（IL 参数槽 2 = 第 2 个形参，因为 HasThis）的指令。
+    static bool IsTargetRead(Instruction x)
+    {
+        if (x.OpCode.Code == Code.Ldarg_2) return true;
+        if ((x.OpCode.Code == Code.Ldarg_S || x.OpCode.Code == Code.Ldarg)
+            && x.Operand is ParameterDefinition pd && pd.Index == 1) return true;
+        return false;
+    }
+
+    // 方法体里真正「读 target」的位置，跳过开头 4 条负额序言（那里也有一条 ldarg.2）。
+    static List<Instruction> TargetReads(MethodDefinition m)
+    {
+        var il = m.Body.Instructions.ToList();
+        int skip = 0;
+        if (il.Count >= 4
+            && il[0].OpCode.Code == Code.Ldarg_2
+            && il[1].OpCode.Code == Code.Ldc_I8 && (long)il[1].Operand == 0L
+            && il[2].OpCode.Code == Code.Clt
+            && (il[3].OpCode.Code == Code.Brtrue || il[3].OpCode.Code == Code.Brfalse)) skip = 4;
+        var res = new List<Instruction>();
+        for (int i = skip; i < il.Count; i++)
+            if (IsTargetRead(il[i])) res.Add(il[i]);
+        return res;
+    }
+
+    // 守卫链出口 = 最后一条 `call GetBool` 之后那个条件跳转的落点（即守卫链之后的第一条指令）。
+    static Instruction FindGuardExit(ICollection<Instruction> il)
+    {
+        var a = il.ToList();
         Instruction exit = null;
-        for (int i = 0; i + 1 < il.Count; i++)
+        for (int i = 0; i + 1 < a.Count; i++)
         {
-            if (il[i].OpCode.Code != Code.Call) continue;
-            if (il[i].Operand is not MethodReference gb || gb.Name != "GetBool") continue;
-            var nx = il[i + 1];
+            if (a[i].OpCode.Code != Code.Call) continue;
+            if (a[i].Operand is not MethodReference gb || gb.Name != "GetBool") continue;
+            var nx = a[i + 1];
             if (nx.OpCode.Code != Code.Brfalse && nx.OpCode.Code != Code.Brfalse_S) continue;
             if (nx.Operand is Instruction tgt) exit = tgt;
         }
-        if (exit == null)
-            throw new Exception("未找到 GameData::MinusItem 的 skin_unlock/item_keep 守卫链（基线变了？）");
-
-        var first = il[0];
-        var proc = m.Body.GetILProcessor();
-        proc.InsertBefore(first, Instruction.Create(OpCodes.Ldarg_2));
-        proc.InsertBefore(first, Instruction.Create(OpCodes.Ldc_I8, 0L));
-        proc.InsertBefore(first, Instruction.Create(OpCodes.Clt));
-        proc.InsertBefore(first, Instruction.Create(OpCodes.Brtrue, exit));
-        m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 4);
-        Console.WriteLine($"[patch] minus_item_neg_bypass -> {m.FullName} 负额绕过 item_keep/skin_unlock，落点 IL_{exit.Offset:X4}");
-        return 1;
+        return exit;
     }
 
-    static void VerifyMinusItemNegativeBypass(string path)
+    static int PatchMinusItemBody(bool allowExisting)
+    {
+        var m = FindMinusItemBody();
+        var (hasHead, hasScale) = MinusItemBodyState(m);
+
+        if (hasHead && hasScale)
+        {
+            if (!allowExisting)
+                throw new Exception($"{m.FullName} 已带 item_reverse 本体补丁（基线不该是已打过补丁的 DLL）");
+            Console.WriteLine("[patch] minus_item_reverse_body 已存在，跳过");
+            return 0;
+        }
+        if (hasHead && !hasScale && !allowExisting)
+            throw new Exception($"{m.FullName} 是旧形态 fix D 序言（负额不乘倍率），必须走 --incremental 原地升级");
+
+        int ops = 0;
+        // 顺序要紧：先在「干净的」方法体上定位守卫链出口，再插取数块。
+        // 反过来会把取数块里的 `call GetBool / brfalse` 误当成守卫链的最后一跳，
+        // 负额序言就会直接跳到 `Sub` 上（空栈 ⇒ 非法 IL）。
+        Instruction exit = null;
+        if (!hasHead)
+        {
+            exit = FindGuardExit(m.Body.Instructions)
+                ?? throw new Exception("未找到 GameData::MinusItem 的 skin_unlock/item_keep 守卫链（基线变了？）");
+            var first = m.Body.Instructions.First();
+            var proc = m.Body.GetILProcessor();
+            proc.InsertBefore(first, Instruction.Create(OpCodes.Ldarg_2));
+            proc.InsertBefore(first, Instruction.Create(OpCodes.Ldc_I8, 0L));
+            proc.InsertBefore(first, Instruction.Create(OpCodes.Clt));
+            proc.InsertBefore(first, Instruction.Create(OpCodes.Brtrue, exit));   // target<0 ⇒ 跳过 skin_unlock/item_keep
+            m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 4);
+            Console.WriteLine($"[patch] minus_item_neg_bypass -> {m.FullName} 负额跳过 item_keep/skin_unlock，落点 IL_{exit.Offset:X4}");
+            ops++;
+        }
+        if (!hasScale) ops += EmitScaleBlocks(m);
+        return ops;
+    }
+
+    // 在每处「读 target 参数」的指令之后，把刚压栈的 target 就地换成「需要时 ×item_reverse_x」的版本：
+    //   ldarg.2                                   ← 原指令，栈: [.., t]
+    //   dup / ldc.i8 0 / clt / brfalse_S done     ← 正额：原样透传（原逻辑完全不受影响）
+    //   ldstr "item_reverse" / call GetBool / brfalse_S done
+    //   ldstr "item_reverse_x" / ldc.i4 1000 / call GetInt(string,int)
+    //   dup / ldc.i4.1 / bge ok / pop / ldc.i4.1                    ← x < 1 时夹到 1
+    //   dup / ldc.i4.1000000 / ble ok2 / pop / ldc.i4.1000000        ← x > 1e6 时夹到 1e6（防溢出成负）
+    //   ok: conv.i8 / mul                         ← [.., t×X]
+    //   done:                                     ← 调用方原逻辑 `_allItemCode[item] = 原值 - 这个值`
+    // 不引入任何新的外部方法引用（System.Math.Max 之类可能被 AOT 裁剪），夹取下限用自家分支。
+    static int EmitScaleBlocks(MethodDefinition m)
+    {
+        var reads = TargetReads(m);
+        if (reads.Count == 0)
+            throw new Exception("GameData::MinusItem 里找不到 target 参数的读取（基线变了？）");
+        foreach (var rd in reads)
+        {
+            var anchor = rd.Next
+                ?? throw new Exception("GameData::MinusItem: target 读取之后没有指令（基线变了？）");
+            var proc = m.Body.GetILProcessor();
+            var done = Instruction.Create(OpCodes.Nop);
+            var conv = Instruction.Create(OpCodes.Conv_I8);
+            var bge = Instruction.Create(OpCodes.Bge, conv);    // 占位
+            var ble = Instruction.Create(OpCodes.Ble, conv);    // 占位
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Dup));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldc_I8, 0L));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Clt));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Brfalse_S, done));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldstr, "item_reverse"));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Call, mGetBool));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Brfalse_S, done));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldstr, "item_reverse_x"));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldc_I4, kItemReverseDefaultX));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Call, mGetInt));
+            var maxHead = Instruction.Create(OpCodes.Dup);   // 高限段的起头（也是低限段的落点）
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Dup));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldc_I4, kItemReverseMinX));
+            proc.InsertBefore(anchor, bge);
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Pop));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldc_I4, kItemReverseMinX));
+            proc.InsertBefore(anchor, maxHead);
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldc_I4, kItemReverseMaxX));
+            proc.InsertBefore(anchor, ble);
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Pop));
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Ldc_I4, kItemReverseMaxX));
+            proc.InsertBefore(anchor, conv);
+            proc.InsertBefore(anchor, Instruction.Create(OpCodes.Mul));
+            proc.InsertBefore(anchor, done);
+            bge.Operand = maxHead;
+            ble.Operand = conv;
+        }
+        m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 6);
+        Console.WriteLine($"[patch] minus_item_reverse_x -> {m.FullName} 负额 ×item_reverse_x(缺省 {kItemReverseDefaultX}) @ {reads.Count} 处取数点");
+        return reads.Count;
+    }
+
+    static void VerifyMinusItemReverseBody()
+    {
+        var m = FindMinusItemBody();
+        var (hasHead, hasScale) = MinusItemBodyState(m);
+        if (!hasHead) throw new Exception("verify failed: minus_item_reverse_body 负额跳过守卫链的序言不在");
+        if (!hasScale) throw new Exception("verify failed: minus_item_reverse_body 缺 ×item_reverse_x 取数块（旧形态？）");
+        var reads = TargetReads(m);
+        if (reads.Count == 0) throw new Exception("verify failed: minus_item_reverse_body 找不到 target 取数点");
+        int ok = 0;
+        foreach (var rd in reads)
+            if (rd.Next != null && rd.Next.OpCode.Code == Code.Dup) ok++;
+        if (ok != reads.Count)
+            throw new Exception($"verify failed: target 取数点 {ok}/{reads.Count} 包上了 ×item_reverse_x 块");
+        Console.WriteLine($"[verify] minus_item_reverse_body @ {m.FullName}（负额 ×item_reverse_x，正额走原逻辑）@ {ok} 处取数点");
+    }
+
+    static void VerifyMinusItemReverseBodyAt(string path)
     {
         var asm = AssemblyDefinition.ReadAssembly(path);
         mod = asm.MainModule;
-        var t = FindType("GameData");
-        var m = t.Methods.SingleOrDefault(x => x.Name == "MinusItem"
-                && x.Parameters.Count == 2
-                && x.Parameters[1].ParameterType.FullName == "System.Int64"
-                && x.HasBody)
-            ?? throw new Exception("verify: GameData::MinusItem(string,int64) 未找到");
-        var il = m.Body.Instructions;
-        if (il.Count < 4
-            || il[0].OpCode.Code != Code.Ldarg_2
-            || il[1].OpCode.Code != Code.Ldc_I8 || (long)il[1].Operand != 0L
-            || il[2].OpCode.Code != Code.Clt
-            || il[3].OpCode.Code != Code.Brtrue)
-            throw new Exception("verify failed: minus_item_neg_bypass 未生效");
-        Console.WriteLine($"[verify] minus_item_neg_bypass @ {m.FullName}（负额跳过 item_keep/skin_unlock）");
+        VerifyMinusItemReverseBody();
         asm.Dispose();
     }
 

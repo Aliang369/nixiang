@@ -59,20 +59,36 @@ local_backup() {   # $1 = host dir
 
 # ① 全开 ini（键名 ←→ 菜单号：1 无敌/2 秒杀/4 免广告/5 物品不减/6 技能免费升级/
 #    7 广告奖励翻倍(ads_reward_x=2)/8 物品翻倍/9 无限挑战秘境/10 皮肤全解锁/11 功能全解锁）
+# 【2026-10-03 修】原实现用固定模板**整体覆盖** ini ⇒ 模板里没有的键（`item_reverse`/
+#   `item_reverse_x`/`exp_multi`/`shop_ads_unlimited` 等后加功能）会被静默删掉，
+#   表现为「点了 --all-on 反而把反增关了」。改为：读设备现状 → 强制下面 11 个键 → 其余键原样保留。
 gen_ini() {
-  cat > "$1" <<'EOF'
-block_report=1
-god=1
-oneshot=1
-free_ads=1
-item_keep=1
-skill_free=1
-ads_reward_x=2
-item_double=1
-mijing_free=1
-skin_unlock=1
-func_unlock=1
-EOF
+  read_f "$INI" > "$1.cur" 2>/dev/null || true
+  python3 - "$1" <<'PY'
+import sys
+out = sys.argv[1]
+FORCE = [("block_report","1"),("god","1"),("oneshot","1"),("free_ads","1"),("item_keep","1"),
+         ("skill_free","1"),("ads_reward_x","2"),("item_double","1"),("mijing_free","1"),
+         ("skin_unlock","1"),("func_unlock","1")]
+fk = {k for k, _ in FORCE}
+keep, seen = [], set()
+try:
+    cur = open(out + ".cur", encoding="utf-8").read().splitlines()
+except OSError:
+    cur = []
+for ln in cur:
+    if "=" not in ln:
+        continue
+    k = ln.split("=", 1)[0].strip()
+    if k in fk or k in seen:
+        continue
+    seen.add(k)
+    keep.append(ln.strip())
+open(out, "w", encoding="utf-8").write(
+    "\n".join(["%s=%s" % kv for kv in FORCE] + keep) + "\n")
+print("[ini] 强制开关键 %d 个；保留既有键 %d 个：%s"
+      % (len(FORCE), len(keep), ",".join(sorted(seen)) or "-"))
+PY
 }
 
 # ② 全开 prefs：保留鉴权条目，只补/改 boolean 键（3 = Category_功能 非开关，跳过）
@@ -122,6 +138,16 @@ case "$MODE" in
     do_write() { write_f "$SRC_INI" ini "$INI"; write_f "$SRC_PREF" prefs "$PREF"; }
     do_verify() {
       OK=1
+      # 【2026-10-03 修】--restore 恢复的可能是「部分开关」的现状，不能用 --all-on 的清单校验
+      #   （否则必然报一堆「校验失败」且 --restart 永远不执行）；改为与备份文件逐字节比对。
+      if [ "$MODE" = "restore" ]; then
+        read_f "$INI"  > /tmp/wxsj_restore_ini.chk  2>/dev/null || true
+        read_f "$PREF" > /tmp/wxsj_restore_pref.chk 2>/dev/null || true
+        if ! cmp -s "$SRC_INI" /tmp/wxsj_restore_ini.chk; then echo "❌ ini 与备份不一致"; OK=0; fi
+        if ! cmp -s "$SRC_PREF" /tmp/wxsj_restore_pref.chk; then echo "❌ prefs 与备份不一致"; OK=0; fi
+        read_f "$PREF" | grep -q 'auth_token' || { echo "❌ 鉴权条目丢失！立刻用 $BK 回滚"; OK=0; }
+        return $((1 - OK))
+      fi
       for kv in god=1 oneshot=1 free_ads=1 item_keep=1 skill_free=1 ads_reward_x=2 item_double=1 mijing_free=1 skin_unlock=1 func_unlock=1 block_report=1; do
         read_f "$INI" | grep -qx "$kv" || { echo "❌ ini 校验失败：$kv"; OK=0; }
       done
@@ -146,7 +172,11 @@ case "$MODE" in
         sh_su 'setenforce 1' >/dev/null 2>&1; trap - EXIT INT TERM
         echo "[step] SELinux 已还原为 $(sh_su 'getenforce' | tr -d '\r')"
       fi
-      echo "✅ 恢复完成：① ini 全开（DLL ~2s 内生效，无需重启）；② prefs 全开（重启后菜单按钮显示为开）"
+      if [ "$MODE" = "restore" ]; then
+        echo "✅ 恢复完成：① ini / ② prefs 已按备份逐字节还原（DLL ~2s 内生效）"
+      else
+        echo "✅ 恢复完成：① ini 全开（DLL ~2s 内生效，无需重启）；② prefs 全开（重启后菜单按钮显示为开）"
+      fi
     else
       sh_su 'setenforce 1' >/dev/null 2>&1
       echo "❌ 恢复失败（上面是未通过的校验项）——现状已备份在 ${BK}，可先 --no-stop 重试或改菜单手点"

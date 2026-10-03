@@ -22,13 +22,15 @@ enum WxsjVc1637Feat : int {
     WXSJVC_FEAT_FUNCUNLOCK = 11, // Toggle_功能全解锁    -> func_unlock
     WXSJVC_FEAT_EXPMULTI   = 12, // Slider_经验倍率:1:10 -> exp_multi（1=原逻辑）
     WXSJVC_FEAT_SHOPADS    = 13, // Toggle_商店广告无限  -> shop_ads_unlimited
-    WXSJVC_FEAT_ITEMREVERSE = 14, // Toggle_物品使用反增 -> item_reverse（使用 N 个反增 N*1000）
+    WXSJVC_FEAT_ITEMREVERSE = 14, // Toggle_物品使用反增 -> item_reverse（使用 N 个反增 N×倍率）
+    WXSJVC_FEAT_ITEMREVERSEX = 15, // InputValue_1000:物品反增倍率 -> item_reverse_x（缺省 1000，1..1000000）
 };
 
 bool WxsjVc1637_TryInit();
 bool WxsjVc1637_IsReady();
 void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled);
 void WxsjVc1637_OnValueChanged(int featNum, int value);
+void WxsjVc1637_OnInputChanged(int featNum, const char* text);
 void WxsjVc1637_ForceClear();
 
 #endif  // STARRY_WXSJ_VC1637_MOD_H

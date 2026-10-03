@@ -92,6 +92,10 @@ static bool ReadFileLines(const std::string& path, std::vector<std::string>* out
 static std::string PkgName();
 static void WriteConfigKey(const char* key, const std::string& val);
 
+// 与 DLL 内 kItemReverseMinX / kItemReverseMaxX 保持一致（两边都夹取，防手改配置溢出）
+static const long long kWxsjItemReverseMinX = 1;
+static const long long kWxsjItemReverseMaxX = 1000000;
+
 static bool OkPtr(void* p) {
     uintptr_t v = (uintptr_t)p;
     return p && v >= 0x100000000ULL && v < 0x800000000000ULL;
@@ -354,6 +358,22 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJVC_FEAT_ITEMREVERSE: WriteConfigKey("item_reverse", on); break;
     default: break;
     }
+}
+
+// 输入框：物品反增倍率（DLL 侧读 item_reverse_x，缺省 1000；本体里只做 1..上限 夹取）
+void WxsjVc1637_OnInputChanged(int featNum, const char* text) {
+    if (featNum != WXSJVC_FEAT_ITEMREVERSEX) return;
+    if (text == nullptr || *text == '\0') return;
+    // 只收纯数字：输入途中/非法串一律不落盘，避免把半成品写进配置
+    for (const char* p = text; *p != '\0'; ++p) {
+        if (*p < '0' || *p > '9') return;
+    }
+    long long v = strtoll(text, nullptr, 10);
+    if (v < kWxsjItemReverseMinX) v = kWxsjItemReverseMinX;
+    if (v > kWxsjItemReverseMaxX) v = kWxsjItemReverseMaxX;
+    char buf[24];
+    snprintf(buf, sizeof(buf), "%lld", v);
+    WriteConfigKey("item_reverse_x", buf);
 }
 
 void WxsjVc1637_OnValueChanged(int featNum, int value) {

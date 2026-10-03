@@ -16,6 +16,7 @@
     {"feat_num": 11, "name": "功能全解锁"},
     {"feat_num": 12, "name": "经验倍率"},
     {"feat_num": 13, "name": "商店广告无限"},
-    {"feat_num": 14, "name": "物品使用反增"}
+    {"feat_num": 14, "name": "物品使用反增"},
+    {"feat_num": 15, "name": "物品反增倍率"}
   ]
 }

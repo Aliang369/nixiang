@@ -22,7 +22,8 @@ static const char* kWxsjVc1637_Features[] = {
     "Toggle_功能全解锁",             // 11 WXSJVC_FEAT_FUNCUNLOCK
     "Slider_经验倍率:1:10",          // 12 WXSJVC_FEAT_EXPMULTI
     "Toggle_商店广告无限",           // 13 WXSJVC_FEAT_SHOPADS
-    "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×1000）
+    "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×倍率）
+    "InputValue_1000:物品反增倍率",  // 15 WXSJVC_FEAT_ITEMREVERSEX（输入框，写 item_reverse_x）
 };
 
 static bool WxsjVc1637_TryInitEntry(JavaVM* /*vm*/) {
@@ -48,7 +49,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .tick = nullptr,
         .onFeatureChanged = WxsjVc1637_OnFeatureChanged,
         .onValueChanged = WxsjVc1637_OnValueChanged,
-        .onInputChanged = nullptr,
+        .onInputChanged = WxsjVc1637_OnInputChanged,
         .forceClear = WxsjVc1637_ForceClear,
         .onApplyPlayPatch = nullptr,
     };
