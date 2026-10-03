@@ -129,6 +129,16 @@ bash 04_scripts/_common/preflight.sh <你改过的每一个文件>
 
 ### 五、git 纪律（资产固化与危险操作边界）
 
+**双机开工必做**（本仓 mac/win 两台共用，全文见 `AGENTS.md`「双机协作」）：
+
+```bash
+bash 04_scripts/双机协作/twin_status.sh     # 有 FAIL 先修再开工；自动写本机心跳
+```
+
+- pull 后看对方心跳 `10_docs/_state/机器心跳/{对方}.md`：超 7 天或含 FAIL → 报告用户，勿默认对方环境正常
+- 写某游戏前先认领：`bash 04_scripts/双机协作/claim_game.sh <游戏>`；对方已认领未释放 → 停下报告（退出码 3）
+- `.sh` 改动不过 preflight 会被 pre-push 机器关拦下（`git push --no-verify` 仅应急，用了必须在汇报写明）
+
 **收尾必做**（用户说「收尾/收官/收尾+正式包+清理+git」时，或任务产生文件变更后）：
 
 ```bash

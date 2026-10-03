@@ -33,15 +33,31 @@ p = sys.argv[1]
 lines = open(p, encoding="utf-8", errors="replace").read().splitlines()
 hard, soft = [], []
 in_comment_block = False
+# heredoc 状态: <<TAG 启动后, 到顶格 TAG 行之前的内容是字面/待展开文本 ——
+# ① 其中的 `#` 不是注释(2026-10-04 实测: 心跳 heredoc 里 `# 机器心跳: $HOST（`
+#   被注释剔除放过, 真跑 unbound variable); ② unquoted heredoc 里 $VAR 会展开, 必须检查
+heredoc_tag = None
+heredoc_quoted = False
 for i, line in enumerate(lines, 1):
-    code = line
-    # 粗略剔除注释（够用：本仓库脚本无复杂嵌套）
-    if in_comment_block:
-        if '*/' in code: code = code.split('*/', 1)[1]; in_comment_block = False
-        else: continue
-    if '/*' in code and '*/' not in code.split('/*', 1)[1]:
-        code = code.split('/*', 1)[0]; in_comment_block = True
-    code = re.sub(r'(?<!:)#.*$', '', code)          # 行注释（跳过 ${#x} 里的 # 由 (?<!:) 兜）
+    if heredoc_tag is not None:
+        if line.strip() == heredoc_tag or line == heredoc_tag:
+            heredoc_tag = None
+            continue
+        if heredoc_quoted:
+            continue                      # <<'TAG' 字面量, 不展开, 无风险
+        code = line                       # 待展开内容: 不剔注释, 整行检查
+    else:
+        code = line
+        # 粗略剔除注释（够用：本仓库脚本无复杂嵌套）
+        if in_comment_block:
+            if '*/' in code: code = code.split('*/', 1)[1]; in_comment_block = False
+            else: continue
+        if '/*' in code and '*/' not in code.split('/*', 1)[1]:
+            code = code.split('/*', 1)[0]; in_comment_block = True
+        code = re.sub(r'(?<!:)#.*$', '', code)          # 行注释（跳过 ${#x} 里的 # 由 (?<!:) 兜）
+        m = re.search(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1\s*$", code)
+        if m:
+            heredoc_tag = m.group(2); heredoc_quoted = (m.group(1) != '')
     if not code.strip(): continue
     # ⓵ $VAR 紧跟非 ASCII
     # (?<!\\) ：`\$VAR（` 是转义的字面量，不展开，不报错

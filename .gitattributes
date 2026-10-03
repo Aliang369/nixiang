@@ -38,6 +38,12 @@
 *.mk    text eol=lf
 *.txt   text eol=lf
 
+# ---- 双机协作: 两端各自 append 行的高频公共文件, union 合并自动并存 ----
+# (merge=union 是 git 内置 driver, 零配置; 同一行被两台改 → 双行并存,
+#  那是"单一写者被违反"的可见信号, 人工合并即可, 比阻塞式冲突好处理)
+10_docs/_state/current.md             merge=union
+10_docs/双机协作/本轮归属.tsv         merge=union
+
 # ---- Windows 原生脚本：必须 CRLF，否则 PowerShell 5.1 / cmd 解析异常 ----
 *.ps1   text eol=crlf
 *.psm1  text eol=crlf

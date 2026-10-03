@@ -215,6 +215,19 @@ if ($SkipClone) {
 }
 
 # ------------------------------------------------------------------
+# repo-level pre-push machine gate (bash 3.2 door for .sh changes)
+# lives IN the repo, so this only points git at it; re-run any time.
+# ------------------------------------------------------------------
+if (Test-Path (Join-Path $RepoRoot ".git")) {
+    if (Test-Path (Join-Path $RepoRoot "04_scripts\_common\git-hooks\pre-push")) {
+        git -C $RepoRoot config core.hooksPath "04_scripts/_common/git-hooks"
+        Ok "core.hooksPath -> 04_scripts/_common/git-hooks (pre-push machine gate armed)"
+    } else {
+        Warn "04_scripts/_common/git-hooks/pre-push missing - pre-push gate NOT armed (git pull the repo first, then re-run)"
+    }
+}
+
+# ------------------------------------------------------------------
 Step 5 "Git Bash convenience layer (~/.bashrc)"
 # ------------------------------------------------------------------
 $gitBashRoot = $null

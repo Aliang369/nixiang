@@ -188,3 +188,74 @@ git log --oneline -5
 
 > Mac 端换行符那 15 行不是问题，是**故意的**：它们是 dump/反编译出来的原始字节，
 > `.gitattributes` 用 `-text -eol` 明确豁免（共 4 条规则）。Win 端只要数量一致、路径一致就算过。
+
+---
+
+# 2026-10-04 增量提示词：双机协作强化包接入（本轮用这个，不用上面首轮的）
+
+> 背景：mac 端 2026-10-04 推送了「双机协作强化包」（开工体检强制化 / 机器心跳 / 游戏归属登记 /
+> pre-push 机器关 / union merge / bash32 门禁 heredoc 漏抓修复）。Win 端已完成首轮接入，
+> 本轮只需拉取 + 一次配置 + 验证。**整段复制下面框内内容发给 Win 端 AI。**
+
+````text
+# 任务：拉取 mac 端「双机协作强化包」并在本机（Windows）完成接入验证
+
+你在一台 Windows 机器上，仓库在 E:\nixiang（Git Bash 中 /e/nixiang），
+唯一合法脚本执行环境是 Git Bash。mac 端刚推送了一批双机协作机制增强，
+你的任务：拉取 → 一次性配置 → 验证 → 回报。不要做任务之外的任何事。
+
+## 第 1 步：开工 SOP（AGENTS.md「双机协作」节原文，照抄执行）
+    cd /e/nixiang
+    bash 04_scripts/双机协作/twin_status.sh   # 有 FAIL 先修再开工；结束自动写本机心跳
+    git status -sb                            # 必须干净；不干净先报告不要 pull
+    git pull --rebase --autostash
+    git log --oneline -5                      # 应看到 mac 端「双机协作强化包」提交
+    sed -n '1,6p' "10_docs/_state/机器心跳/mac.md"   # mac 心跳应为近期、FAIL=0；超 7 天或含 FAIL → 报告用户
+
+## 第 2 步：启用 pre-push 机器关（本机一次性配置）
+    git config core.hooksPath 04_scripts/_common/git-hooks
+    git config core.hooksPath                 # 应回显 04_scripts/_common/git-hooks
+（等价做法：重跑 win_bootstrap.ps1，其 Step 4 末尾已自动配置）
+
+## 第 3 步：验证三个新机制（Git Bash，逐条贴原始输出）
+    # 3a. 本机心跳已生成（第 1 步体检自动写的）
+    cat 10_docs/_state/机器心跳/win.md
+    # 3b. 游戏归属登记工具可用
+    bash 04_scripts/双机协作/claim_game.sh --list
+    # 3c. pre-push 门禁真实拦截（测完恢复原状，不留 commit 不留文件）
+    printf '#!/usr/bin/env bash\nmapfile -t x < /dev/null\n' > 04_scripts/双机协作/_gate_test.sh
+    git add 04_scripts/双机协作/_gate_test.sh && git commit -m "temp: gate test"
+    git push --dry-run 2>&1        # 期望：[pre-push] 跑 preflight，报 mapfile 是 bash 4 才有，push 被阻断
+    git reset -q HEAD~1 && rm 04_scripts/双机协作/_gate_test.sh
+    git status -sb                 # 应恢复干净
+
+## 本轮落地的新规则（后续必须遵守，全文见 AGENTS.md「双机协作」）
+1. 开工第 0 步 = twin_status.sh 体检，有 FAIL 禁止开工。
+2. 机器心跳：twin_status.sh 自动重写 10_docs/_state/机器心跳/win.md，收工随 git 提交；
+   开工 pull 后看 mac.md，超 7 天未更新或含 FAIL → 提醒用户，勿默认对方环境正常。
+3. 一机一游戏：写某游戏前先 bash 04_scripts/双机协作/claim_game.sh <游戏> 认领；
+   对方已认领未释放 → 禁止写（脚本 exit 3 拒绝）；收工 --done 释放。认领/释放都要随 git 提交。
+4. pre-push 机器关：push 涉及的 .sh 自动过 preflight（bash 3.2 门禁），FAIL 阻断；
+   应急逃生门 git push --no-verify 仅限紧急，用了必须在汇报里写明。
+5. 跨机接手游戏先看 games/{游戏}.md 摘要的「接手重建：」行（dump 产物不入库，按历史路径找会扑空）。
+
+## 重要已知事项（不是你的活，禁止主动修）
+- 全仓有 93 处 bash32 存量债（71 个老脚本里 `$VAR` 紧跟全角标点，多无 set -u，不炸但输出静默缺值；
+  清单：10_docs/_state/bash32_存量债_20261004.md）。按「改哪个文件修哪个」纪律：
+  你下次改到某个上榜脚本时，pre-push 门禁会要求把**该文件**的存量错误顺手修掉
+  （`$VAR（` → `${VAR}（`，一行改动）才能 push。这是预期行为，不是故障；
+  禁止本轮主动批量修复 71 个文件。
+
+## 回报格式（严格按此输出）
+1. 第 1/2/3 步逐条原始输出（失败的也要贴全文）
+2. CLAIM / VERDICT / EVIDENCE 表：
+   | 断言 | 判定(PROVEN/NOT PROVEN) | 证据 |
+   |---|---|---|
+   | pull 到强化包提交且工作区干净 | | |
+   | mac 心跳正常（近期/FAIL=0） | | |
+   | core.hooksPath 已配置 | | |
+   | 本机心跳 win.md 已生成 | | |
+   | claim_game --list 可用 | | |
+   | pre-push 门禁成功拦截坏脚本 | | |
+3. 阻塞项（若有）：现象 + 需要的用户动作
+````

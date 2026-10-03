@@ -221,6 +221,23 @@ if [ "$HOST" = win ]; then
 fi
 
 # --------------------------------------------------------------------------
+# 心跳: 重写本机心跳文件 (只写本机那台, 收工随 git 提交; 对方 pull 后可见本机最近体检)
+if [ "$HOST" = mac ] || [ "$HOST" = win ]; then
+  HB_DIR="$ROOT/10_docs/_state/机器心跳"
+  if mkdir -p "$HB_DIR" 2>/dev/null; then
+    hb_head="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+    cat > "$HB_DIR/$HOST.md" <<HBEOF
+# 机器心跳: ${HOST}（twin_status.sh 每次运行自动重写，勿手改）
+- 体检时间: $(date '+%Y-%m-%d %H:%M')
+- HEAD: $hb_head
+- 结果: PASS=$PASS_N WARN=$WARN_N FAIL=$FAIL_N
+- 对方机器看这里: 超 7 天未更新或含 FAIL → 先提醒本机复检，勿默认本机环境正常
+HBEOF
+    printf '心跳已更新: 10_docs/_state/机器心跳/%s.md (收工时记得随 git 提交)\n' "$HOST"
+  fi
+fi
+
+# --------------------------------------------------------------------------
 printf '\n== 汇总 ==\n'
 printf 'PASS=%s  WARN=%s  FAIL=%s\n' "$PASS_N" "$WARN_N" "$FAIL_N"
 if [ "$FAIL_N" -gt 0 ]; then

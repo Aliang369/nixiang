@@ -40,13 +40,17 @@
 
 ```bash
 cd "$NIXIANG_ROOT"                 # Win 端在 Git Bash 里；mac 端在 zsh 里
+bash 04_scripts/双机协作/twin_status.sh   # 双机体检：有 FAIL 先修再开工（同时自动重写本机心跳）
 git status -sb                     # 必须干净；不干净先报告处理，不要 pull
 git pull --rebase --autostash      # 拿到另一台机器已推送的提交
 git log --oneline -5               # 确认拿到了什么
+sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看对方心跳（win 端则看 mac.md）：超 7 天未更新或含 FAIL → 先提醒对方复检
 ```
 
 - **顺序不可颠倒**：先 `status` 再 `pull`。工作区不干净时 pull/rebase 会把未提交改动卷进去。
-- **一机一游戏**（`10_docs/双机协作/双机协作同步方案.md` §2.1）：同一轮只由一台机器写同一个游戏；开工前先划定归属（如 `mac → 游戏 A`，`win → 游戏 B`）。两台要改同一游戏须先协调，否则会产生真实合并冲突。
+- **一机一游戏**（`10_docs/双机协作/双机协作同步方案.md` §2.1）：同一轮只由一台机器写同一个游戏；开工前先划定归属（如 `mac → 游戏 A`，`win → 游戏 B`），登记 `bash 04_scripts/双机协作/claim_game.sh <游戏>`（收工 `--done` 释放，占用表 `10_docs/双机协作/本轮归属.tsv`）；pull 后发现对方已认领未释放的游戏禁止写。两台要改同一游戏须先协调，否则会产生真实合并冲突。
+- **机器心跳**：`twin_status.sh` 每次运行自动重写 `10_docs/_state/机器心跳/{mac|win}.md`（只写本机那台，收工随 git 提交）。对方心跳超 7 天未更新或含 FAIL 时，先提醒对方复检，不默认其环境正常。
+- **跨机接手先看重建行**：接手另一台机器分析过的游戏时，先核对该游戏 `games/{游戏}.md` 摘要里的「接手重建：」行（需重新 dump/下载的产物与再生成命令）；没有就先补写再动手——dump 产物不入库，按历史路径找文件会扑空。
 - **状态索引单一写者**（§2.2）：`10_docs/_state/current.md` 与 `10_docs/_state/games/{游戏}.md` 由本轮动了该游戏的那台机器写，另一台只读。
 - **push 被拒**（另一台已先推）→ `git pull --rebase --autostash` 后再 push；**禁止 `push --force`**（§6.3）。
 - **收工**（§6.2）走现成口令对应的 `04_scripts/_common/archive_scoped_git.sh`：只按本机归属范围做白名单 `git add`，禁止 `git add -A`。

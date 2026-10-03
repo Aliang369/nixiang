@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# ================================================================
+#  pre-push 机器关 — 本次 push 涉及的 .sh 必须过 preflight
+#  （bash 3.2 门禁: Win 上顺手写的 bash 4+ 语法在这里被拦下,
+#    不再依赖"自觉回 Mac 跑一次 preflight"的纪律）
+#
+#  安装(两台各一次): git config core.hooksPath 04_scripts/_common/git-hooks
+#  (win_bootstrap.ps1 Step 4 末尾已自动配置)
+#  逃生门: git push --no-verify (仅应急, 用了必须在汇报里写明)
+#
+#  只查 .sh —— 本仓最高频的静默雷是 bash 语法 / 3.2 兼容;
+#  其他扩展名的机器关仍按 AGENTS.md "改完必跑 preflight" 纪律执行。
+# ================================================================
+set -u
+ZERO=0000000000000000000000000000000000000000
+
+cd "$(git rev-parse --show-toplevel 2>/dev/null)" || exit 1
+
+all_sh=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$local_sha" = "$ZERO" ] && continue
+  if [ "$remote_sha" = "$ZERO" ]; then
+    base="origin/main"
+    if ! git rev-parse --verify -q "$base" >/dev/null 2>&1; then
+      echo "[pre-push] 新分支且无 origin/main 基准, 跳过检查"
+      continue
+    fi
+  else
+    base="$remote_sha"
+  fi
+  files="$(git diff --name-only "$base" "$local_sha" -- '*.sh' 2>/dev/null)"
+  if [ -n "$files" ]; then
+    all_sh="$all_sh
+$files"
+  fi
+done
+
+all_sh="$(printf '%s\n' "$all_sh" | awk 'NF && !seen[$0]++')"
+
+[ -n "$all_sh" ] || exit 0
+
+echo "[pre-push] 本次 push 涉及以下 .sh, 跑机器关 (preflight):"
+printf '%s\n' "$all_sh" | sed 's/^/       /'
+# 本仓文件名不含空格; 不加引号做 word splitting 是刻意的
+# shellcheck disable=SC2086
+if bash 04_scripts/_common/preflight.sh $all_sh; then
+  echo "[pre-push] 机器关 PASS"
+  exit 0
+else
+  echo "[pre-push] 机器关 FAIL — 修复后再 push (应急: git push --no-verify, 汇报须写明)"
+  exit 1
+fi
