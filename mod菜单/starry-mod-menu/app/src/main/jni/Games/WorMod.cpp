@@ -41,11 +41,11 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <cerrno>
 #include <cstring>
 #include <ctime>
 #include <dlfcn.h>
 #include <pthread.h>
+#include <sys/stat.h>   // C1 热重载：stat(mtime/size) 判定配置文件是否被改
 
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
@@ -61,7 +61,7 @@ using Il2Cpp::GetApi;
 #define TPL_TARGET_LIB "liblogic.so"
 
 // 构建身份（出包/装机/真机日志三处对账用；改功能时同步递增）
-#define WOR_BUILD_TAG "wor-e2-20261004a"
+#define WOR_BUILD_TAG "wor-e2-20261004b"
 
 // ============================================================
 // ★★ C2：诊断总开关（2026-10-04 加）★★
@@ -251,9 +251,18 @@ static std::atomic<int>  g_modCount{0};     // 功能生效日志计数（有界
 // 动机：下面这些值「最可能要调」，但改动前全是编译期常量 ⇒ 调一个数字要走
 //   wor_build_so.sh → surgical_wor_1.6.38.829.1.sh（6 步）→ wor_sign.sh →
 //   wor_install.sh → 手点菜单，一轮十几分钟且必须重装重签名。
-// 现在：往 /sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt 写一行，
-//   force-stop + 重启游戏即生效（一分钟内、不重编、不重装、不重签）。
+// 现在：往 /sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt 写一行即生效
+//   （不重编、不重装、不重签，也不用重启游戏 —— 见下面的「热重载」）。
 //   通道是现成的：wor_tables.txt 就写在同一个目录，读/写/pull 都已在真机验证过。
+//
+// ★ 热重载（2026-10-04 加）：每 `cfg_poll_ms` 毫秒 stat 一次该文件，mtime/size 变了就重读，
+//   改完约 2 秒生效。三条边界（缺一条这个模式就会从「省事」变成「埋雷」）：
+//     ① 缺键 = 内建默认：重载时先把上一次的覆盖**还原到基线**再套新文件 ⇒ 删掉一个键也生效，
+//        配置语义不会退化成「只增不减」；
+//     ② 写错不致命：值越界 / 非数字 / 未知键一律只 LOGW 忽略，绝不报错退出；
+//     ③ 只在初始化期被读取的键（layout_min_asm / layout_min_ms / scan_max_classes /
+//        scan_max_sec / tbl_path）改完**必须重启游戏**才用得上 —— 重载会明确打「需重启」告警，
+//        不要以为它当场生效了。
 //
 // 文件格式（纯文本；`#` 起首到行尾为注释；`键 = 值`；未知键只告警不致命）：
 //   diag             = 1|0        诊断日志总闸（不重编即可静音排障构建；默认 = WOR_DIAG_FULL）
@@ -264,6 +273,8 @@ static std::atomic<int>  g_modCount{0};     // 功能生效日志计数（有界
 //   scan_max_classes = <int>      S3 结构扫描类数上限（默认 40000）
 //   scan_max_sec     = <int>      S3 结构扫描秒数上限（默认 60）
 //   tbl_path         = <路径>     覆盖 wor_tables.txt 落盘路径（默认走候选表）
+//   cfg_poll_ms      = <int>      热重载轮询间隔毫秒（默认 2000；0 = 关闭热重载，
+//                                且关掉后改回非 0 需重启游戏 —— 不轮询就读不到这一行）
 //   off.<key>        = 0x..       覆盖 15 个字段偏移（换版本必变的那批）
 //     键名：sys_com_hp sys_hdata sys_matk sys_fdamage hpcomp_lvalues
 //           hpd_fvalue hpd_src hpd_settle hpd_show hpd_atk_euid hpd_atk_cuid
@@ -274,6 +285,11 @@ static std::atomic<int>  g_modCount{0};     // 功能生效日志计数（有界
 // ============================================================
 #define WOR_CFG_PRIMARY "/sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt"
 #define WOR_CFG_ALT     "/storage/emulated/0/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt"
+// 候选路径表：首载与热重载共用同一份，避免两处顺序不一致导致「首载读 A、重载读 B」
+static const char* const kWorCfgCands[2] = { WOR_CFG_PRIMARY, WOR_CFG_ALT };
+
+// 热重载轮询间隔内建默认（0 = 关闭热重载，退回「只在 Wor_TryInit 读一次」的老行为）
+#define WOR_CFG_POLL_MS_DEFAULT 2000
 
 static bool    g_cfgLoaded  = false;                      // 已尝试加载（只做一次）
 static bool    g_cfgOk      = false;                      // 文件存在且至少解析成功一项
@@ -285,6 +301,14 @@ static int64_t g_cfgMinElapsedMs = 1500;                  // 同 WOR_LAYOUT_MIN_
 static int     g_cfgScanMaxClasses = 40000;               // 同 WOR_SCAN_MAX_CLASSES
 static int     g_cfgScanMaxSec     = 60;                  // 同 WOR_SCAN_MAX_SEC
 static char    g_cfgTblPath[256] = {0};                   // 非空则覆盖 wor_tables.txt 路径
+
+// ---- C1 热重载状态（2026-10-04 加）----
+static int     g_cfgPollMs     = WOR_CFG_POLL_MS_DEFAULT; // 热重载轮询间隔（0 = 关）
+static char    g_cfgPath[256]  = {0};                     // 实际解析成功的路径（热重载盯它）
+static int64_t g_cfgMtime      = -1;                      // 上次读到的 mtime
+static int64_t g_cfgSize       = -1;                      // 上次读到的 size
+static int64_t g_cfgLastPollMs = 0;                       // 上次轮询时刻（WorMonoMs）
+static int     g_cfgReloadN    = 0;                       // 已成功重载次数（日志用）
 
 struct WorCfgOff { const char* key; int32_t* dst; const char* what; };
 static const WorCfgOff kWorCfgOffs[] = {
@@ -309,6 +333,11 @@ static const WorCfgOff kWorCfgOffs[] = {
 // 故显式命名，防止以后插入/重排键名时静默错位。
 #define WOR_CFG_OFFIDX_HDATA 1
 static bool g_cfgOffSet[WOR_CFG_OFF_N] = {false};   // 该项是否被 cfg 显式覆盖
+// 覆盖前的基线值（= 运行时对账/国服真值的最终结果）。
+// ★ 热重载必须靠它把 g_off_* 还原干净再重新套覆盖：否则「新文件删掉某个键」会残留上一次的
+//   覆盖值，配置语义退化成「只增不减」，与「缺键 = 内建默认」的兜底原则自相矛盾。
+static int32_t g_offBase[WOR_CFG_OFF_N] = {0};
+static bool    g_cfgOffBaseTaken = false;           // 基线只取一次
 
 // 就地去首尾空白，返回新起点
 static char* CfgTrim(char* s) {
@@ -367,6 +396,8 @@ static bool WorCfgLoadFile(const char* path) {
             if (isNum && iv > 0 && iv <= 5000000) { g_cfgScanMaxClasses = (int)iv; handled = true; }
         } else if (strcmp(key, "scan_max_sec") == 0) {
             if (isNum && iv > 0 && iv <= 3600) { g_cfgScanMaxSec = (int)iv; handled = true; }
+        } else if (strcmp(key, "cfg_poll_ms") == 0) {
+            if (isNum && iv >= 0 && iv <= 600000) { g_cfgPollMs = (int)iv; handled = true; }
         } else if (strcmp(key, "tbl_path") == 0) {
             if (val && *val && strlen(val) < sizeof(g_cfgTblPath)) {
                 snprintf(g_cfgTblPath, sizeof(g_cfgTblPath), "%s", val);
@@ -397,24 +428,41 @@ static bool WorCfgLoadFile(const char* path) {
     return true;
 }
 
+// 记录一个路径的 mtime/size（热重载的「有没有变」判据）；失败则置 -1（视为「不存在」）
+static bool WorCfgStamp(const char* path, int64_t* mtimeOut, int64_t* sizeOut) {
+    *mtimeOut = -1;
+    *sizeOut  = -1;
+    if (!path || !*path) return false;
+    struct stat st;
+    if (stat(path, &st) != 0) return false;
+    if (!S_ISREG(st.st_mode)) return false;
+    *mtimeOut = (int64_t)st.st_mtime;
+    *sizeOut  = (int64_t)st.st_size;
+    return true;
+}
+
 // 尝试两个候选路径；只做一次。失败 → 全部保持内建默认值（不影响启动）
 static void WorCfgLoad() {
     if (g_cfgLoaded) return;
     g_cfgLoaded = true;
-    const char* cands[2];
-    cands[0] = WOR_CFG_PRIMARY;
-    cands[1] = WOR_CFG_ALT;
     for (int i = 0; i < 2; i++) {
-        if (WorCfgLoadFile(cands[i])) { g_cfgOk = true; break; }
+        if (WorCfgLoadFile(kWorCfgCands[i])) {
+            g_cfgOk = true;
+            snprintf(g_cfgPath, sizeof(g_cfgPath), "%s", kWorCfgCands[i]);
+            break;
+        }
     }
     if (!g_cfgOk) {
-        LOGI(TPL_LOG " cfg: 未发现 wor_cfg.txt（全部使用内建默认值）");
+        LOGI(TPL_LOG " cfg: 未发现 wor_cfg.txt（全部使用内建默认值；热重载每 %dms 轮询一次，"
+                     "push 上去后无需重启即生效）", g_cfgPollMs);
         return;
     }
+    WorCfgStamp(g_cfgPath, &g_cfgMtime, &g_cfgSize);
     LOGI(TPL_LOG " cfg: diag=%d probe_max=%d raw_sane_max=%lld min_asm=%d min_ms=%lld "
-                 "scan_cls=%d scan_sec=%d tier=%s",
+                 "scan_cls=%d scan_sec=%d poll_ms=%d tier=%s",
          g_cfgDiag ? 1 : 0, g_cfgProbeMax, (long long)g_rawSaneMax, (int)g_cfgMinAsm,
-         (long long)g_cfgMinElapsedMs, g_cfgScanMaxClasses, g_cfgScanMaxSec, WOR_DIAG_TIER);
+         (long long)g_cfgMinElapsedMs, g_cfgScanMaxClasses, g_cfgScanMaxSec, g_cfgPollMs,
+         WOR_DIAG_TIER);
 }
 
 
@@ -1783,6 +1831,12 @@ static void DumpTargetFields() {
 //   为什么放在这里而不是解析时：ApplyRuntimeOffsets() 内部会**强制恢复国服真值**
 //   （HybridCLR 的 il2cpp_field_get_offset 对值类型多报 0x10），所以 cfg 必须最后落。
 static void WorCfgApplyOffsets() {
+    // ★ 基线只取一次，且必须在套用任何覆盖之前取：此时 g_off_* 还是「运行时对账/国服真值」。
+    //   热重载靠它还原干净，否则删键不生效（见 g_offBase 的注释）。
+    if (!g_cfgOffBaseTaken) {
+        for (int i = 0; i < WOR_CFG_OFF_N; i++) g_offBase[i] = *kWorCfgOffs[i].dst;
+        g_cfgOffBaseTaken = true;
+    }
     int n = 0;
     for (int i = 0; i < WOR_CFG_OFF_N; i++) {
         if (!g_cfgOffSet[i]) continue;
@@ -2059,6 +2113,149 @@ static int64_t WorMonoMs() {
                std::chrono::steady_clock::now().time_since_epoch()).count();
 }
 
+// ============================================================
+// ★ C1 热重载（2026-10-04 加）
+// ------------------------------------------------------------
+// 问题：没有它，改一行 wor_cfg.txt 仍要 force-stop + 重启游戏 —— C1 只省掉了「重编+重装」，
+//   没省掉「重启」；而调偏移/阈值恰恰是要反复试的活。
+// 方案：每 g_cfgPollMs 毫秒 stat 一次配置文件，mtime 或 size 变了就整体重读。
+//   · 判据用 mtime+size 而非内容哈希：sdcardfs/FUSE 上 stat 只是一次元数据读，而每次轮询
+//     读全文+哈希是要付 I/O 的。残留漏判风险：同一秒内改成**同长度**内容才会漏（本场景改的
+//     都是数值文本，长度几乎必变）。要绝对确定就把 cfg_poll_ms 调大些、或改完 touch 一下。
+//   · 为什么先还原基线再解析：见 g_offBase 注释 —— 「缺键 = 内建默认」要求删键也生效。
+//   · 线程安全：只在 Wor_Tick（Unity 主线程）调用；hook 侧只读 g_off_*（int32_t，ARM64 上
+//     对齐 32 位读写不撕裂）。最坏是某帧读到半新半旧的偏移，此时写闸门 rawSane 大概率拒绝
+//     ⇒ 表现为「那一帧没效果」，不会崩。
+//   · 本函数只做 fopen/stat/字符串解析，绝不在这里做任何 il2cpp 调用 / 扫描 / 遍历对象。
+// ============================================================
+static void WorCfgReloadCheck() {
+    if (g_cfgPollMs <= 0) return;                       // 0 = 关闭热重载
+    const int64_t now = WorMonoMs();
+    if (g_cfgLastPollMs != 0 && (now - g_cfgLastPollMs) < (int64_t)g_cfgPollMs) return;
+    g_cfgLastPollMs = now;
+
+    // 1) 现在有没有文件、指纹多少（首载失败也照样轮询 ⇒ push 上去即生效，连第一次都不用重启）
+    const char* found = nullptr;
+    int64_t mt = -1, sz = -1;
+    for (int i = 0; i < 2; i++) {
+        if (WorCfgStamp(kWorCfgCands[i], &mt, &sz)) { found = kWorCfgCands[i]; break; }
+    }
+    if (!found && !g_cfgOk) return;                     // 一直没有、现在也还是没有 → 无事
+    if (found && g_cfgOk && strcmp(found, g_cfgPath) == 0 &&
+        mt == g_cfgMtime && sz == g_cfgSize) return;     // 有、且指纹没变 → 无事
+
+    // 2) 变更前快照（只为打「什么变了」的对账日志）
+    const bool    oldDiag     = g_cfgDiag;
+    const int     oldProbe    = g_cfgProbeMax;
+    const int64_t oldRawSane  = g_rawSaneMax;
+    const size_t  oldMinAsm   = g_cfgMinAsm;
+    const int64_t oldMinMs    = g_cfgMinElapsedMs;
+    const int     oldScanCls  = g_cfgScanMaxClasses;
+    const int     oldScanSec  = g_cfgScanMaxSec;
+    char          oldTbl[256];
+    snprintf(oldTbl, sizeof(oldTbl), "%s", g_cfgTblPath);
+    int32_t       before[WOR_CFG_OFF_N];
+    for (int i = 0; i < WOR_CFG_OFF_N; i++) before[i] = *kWorCfgOffs[i].dst;
+
+    // 3) 全部回内建默认值（这一步是「缺键 = 默认」的实现；不做它，配置就变成只增不减）
+    //    g_cfgPollMs 也一起回默认 —— 语义一致：文件里没写就用内建 2000ms。
+    const bool applyOff = g_cfgOffBaseTaken;            // 布局已解析过才需要动偏移
+    g_cfgOk            = false;
+    g_cfgDiag          = (WOR_DIAG_FULL != 0);
+    g_cfgProbeMax      = PROBE_MAX;
+    g_rawSaneMax       = RAW_SANE_MAX_DEFAULT;
+    g_cfgMinAsm        = 6;
+    g_cfgMinElapsedMs  = 1500;
+    g_cfgScanMaxClasses = 40000;
+    g_cfgScanMaxSec    = 60;
+    g_cfgPollMs        = WOR_CFG_POLL_MS_DEFAULT;
+    g_cfgTblPath[0]    = 0;
+    g_cfgPath[0]       = 0;
+    if (applyOff) {
+        // 偏移先还原到基线（= 运行时对账/国服真值），再让下面的解析套新覆盖
+        for (int i = 0; i < WOR_CFG_OFF_N; i++) *kWorCfgOffs[i].dst = g_offBase[i];
+    }
+    for (int i = 0; i < WOR_CFG_OFF_N; i++) g_cfgOffSet[i] = false;
+
+    // 4) 重新解析
+    if (found) {
+        if (WorCfgLoadFile(found)) {
+            g_cfgOk = true;
+            snprintf(g_cfgPath, sizeof(g_cfgPath), "%s", found);
+        } else {
+            LOGW(TPL_LOG " cfg-reload: %s 打开失败（保持内建默认值）", found);
+        }
+        g_cfgMtime = mt;
+        g_cfgSize  = sz;
+    } else {
+        g_cfgMtime = -1;
+        g_cfgSize  = -1;
+    }
+    // g_offHdataRuntime 是「只置真」的闩（ApplyRuntimeOffsets 解析到 hData 也会置真），这里不动它。
+    if (applyOff) WorCfgApplyOffsets();
+
+    // 5) 对账日志：什么变了、哪些立即生效、哪些必须重启
+    g_cfgReloadN++;
+    LOGI(TPL_LOG " cfg-reload #%d: %s 已重载（mtime=%lld size=%lld）", g_cfgReloadN,
+         found ? found : "(文件已删除)", (long long)mt, (long long)sz);
+    if (!found)
+        LOGW(TPL_LOG " cfg-reload: 配置文件已消失 → 全部回退内建默认值");
+
+    if (g_cfgDiag != oldDiag)
+        LOGI(TPL_LOG " cfg-reload: diag %d→%d（立即生效）", (int)oldDiag, (int)g_cfgDiag);
+    if (g_cfgProbeMax != oldProbe)
+        LOGI(TPL_LOG " cfg-reload: probe_max %d→%d（立即生效；当前已打印 %d 条）",
+             oldProbe, g_cfgProbeMax, g_probeCount.load());
+    if (g_rawSaneMax != oldRawSane)
+        LOGI(TPL_LOG " cfg-reload: raw_sane_max %lld→%lld（立即生效）",
+             (long long)oldRawSane, (long long)g_rawSaneMax);
+
+    int nRestart = 0;
+    if (g_cfgMinAsm != oldMinAsm) {
+        nRestart++;
+        LOGW(TPL_LOG " cfg-reload: layout_min_asm %d→%d 属「仅初始化期生效」→ 需重启游戏",
+             (int)oldMinAsm, (int)g_cfgMinAsm);
+    }
+    if (g_cfgMinElapsedMs != oldMinMs) {
+        nRestart++;
+        LOGW(TPL_LOG " cfg-reload: layout_min_ms %lld→%lld 属「仅初始化期生效」→ 需重启游戏",
+             (long long)oldMinMs, (long long)g_cfgMinElapsedMs);
+    }
+    if (g_cfgScanMaxClasses != oldScanCls) {
+        nRestart++;
+        LOGW(TPL_LOG " cfg-reload: scan_max_classes %d→%d 属「仅初始化期生效」→ 需重启游戏",
+             oldScanCls, g_cfgScanMaxClasses);
+    }
+    if (g_cfgScanMaxSec != oldScanSec) {
+        nRestart++;
+        LOGW(TPL_LOG " cfg-reload: scan_max_sec %d→%d 属「仅初始化期生效」→ 需重启游戏",
+             oldScanSec, g_cfgScanMaxSec);
+    }
+    if (strcmp(oldTbl, g_cfgTblPath) != 0) {
+        nRestart++;
+        LOGW(TPL_LOG " cfg-reload: tbl_path '%s'→'%s' 属「仅初始化期生效」→ 需重启游戏",
+             oldTbl, g_cfgTblPath);
+    }
+    if (nRestart > 0)
+        LOGW(TPL_LOG " cfg-reload: 共 %d 项属「仅初始化期生效」，本次运行不再使用"
+                     "（改这些键请重启游戏）", nRestart);
+
+    if (applyOff) {
+        int nOff = 0;
+        for (int i = 0; i < WOR_CFG_OFF_N; i++) {
+            const int32_t nv = *kWorCfgOffs[i].dst;
+            if (nv == before[i]) continue;
+            nOff++;
+            LOGW(TPL_LOG " cfg-reload: off.%-18s 0x%X→0x%X（当帧起生效）",
+                 kWorCfgOffs[i].what, (unsigned)before[i], (unsigned)nv);
+        }
+        if (nOff > 0)
+            LOGW(TPL_LOG " cfg-reload: %d 项字段偏移已变更 —— 偏移是热路径直接寻址，写错只会"
+                         "「没效果」不会越界（有写闸门 + raw_sane_max 兜底），"
+                         "但请在有掉血/治疗的场景验证，别在对局中途盲改", nOff);
+    }
+}
+
 static std::atomic<int64_t> g_firstContactMs{0};
 static std::atomic<int64_t> g_lastRetryMs{0};
 static std::atomic<int>     g_diagRuns{0};
@@ -2265,6 +2462,10 @@ void Wor_Tick(const bool* features, const int* values) {
         g_dmgMul.store(v < 1 ? 1 : (v > DMG_MUL_MAX ? DMG_MUL_MAX : v));
     }
     if (!g_libReady.load() && isLibraryLoaded(TPL_TARGET_LIB)) g_libReady.store(true);
+    // ★ C1 热重载（2026-10-04 加）：改 wor_cfg.txt 不用重启游戏。
+    //   内部按 g_cfgPollMs 节流 —— 绝大多数帧只是一次 WorMonoMs 比较就返回；
+    //   到点才 stat 一次文件；只有 mtime/size 真变了才 fopen 重解析。全程不碰游戏内存。
+    WorCfgReloadCheck();
     // ★缺陷1修复兜底：il2cpp 域晚就绪时补解析（未就绪时开销≈一次原子读，不碰游戏内存）
     if (!g_layoutOk.load()) EnsureLayout();
     SyncHooks();

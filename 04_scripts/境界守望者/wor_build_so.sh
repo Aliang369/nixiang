@@ -5,7 +5,9 @@
 # 母本：04_scripts/潮汐守望者/cxswz_build_so.sh
 #
 # 阶段（2026-10-03）：e2 功能阶段（WOR_ENV_STAGE=0）= 无敌 + 伤害倍率，真机验收要看到
-#   `[Wor] lib ready (liblogic.so, feature stage) hooked=N tag=wor-e2-20261004a`。
+#   `[Wor] lib ready (liblogic.so, feature stage) hooked=N tag=wor-e2-20261004b`。
+# C1 热重载（2026-10-04 加）：wor_cfg.txt 每 cfg_poll_ms（默认 2000ms）轮询一次，mtime/size 变了
+#   就整体重读 ⇒ 改配置连重启游戏都不用。重载日志锚点 `[Wor] cfg-reload`。
 # 诊断开关（C2，2026-10-04 加）：STARRY_WOR_DIAG=1（默认）= 排障构建；=0 = 正式构建
 #   （S1~S6 诊断与 S3 扫描整段编掉 ⇒ Android_wor.mk 翻成 -DWOR_DIAG_FULL=）。两种构建
 #   so 里的 tier 串分别是 `diag-tier=FULL` / `diag-tier=RELEASE`，本脚本按 so 内容核对（见文末）。

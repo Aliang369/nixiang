@@ -17,17 +17,19 @@
 
 | 产物 | 大小 | md5 | sha256 |
 |---|---|---|---|
-| **单 APK 正式交付包** `08_output/境界守望者/境界守望者_1.6.38.829.1_starry-single.apk` | 206,066,487 B | `e7fcfa4565e756329c18ca39bedb98a2` | `a707b39aeb003fd0c0065987fb5f3ad02e78add768a1ec8097f5548618e2338c` |
-| 开发形态 base `..._starry-releaseSigned.apk` | 173,181,186 B | `c80726911ddbfdbfc247abd9154d9a38` | — |
+| **单 APK 正式交付包** `08_output/境界守望者/境界守望者_1.6.38.829.1_starry-single.apk` | 206,070,583 B | `fd554c37718424fdc5735859f5534eb6` | `6774aeb08c98e3a7d2661db993e560583ddf5477c17ddb5802ea032a33d2ef29` |
+| 开发形态 base `..._starry-releaseSigned.apk` | 173,185,282 B | `ae42dedc616a20b6e029954664677888` | — |
 | 开发形态 split `..._starry-splitSigned.apk` | 33,393,563 B | `abd232c22858887094c6d5ab8581f0d5` | — |
-| 星光 so·**正式档 RELEASE**（构建产物三副本一致）| 2,217,480 B | `7b754b2c1e1d594a1afe3b03a400ad79` | — |
-| 星光 so·排障档 FULL | 2,240,856 B | `904d0673cebbb92470cfdb0c77550d61` | — |
+| 星光 so·**正式档 RELEASE**（构建产物三副本一致）| 2,224,616 B | `fef9cb7ee510d65a1448b9169748ac33` | — |
+| 星光 so·排障档 FULL（tag `wor-e2-20261004a`，**未随热重载重编**）| 2,240,856 B | `904d0673cebbb92470cfdb0c77550d61` | — |
 
-- **单 APK 内 `lib/arm64-v8a/libstarry_magic.so` 的 md5 已实测 = `7b754b2c…`**，与契约路径 `mod菜单/starry-mod-menu/libs_wor/arm64-v8a/` 一致（2026-10-04 核对）。
+- **单 APK 内 `lib/arm64-v8a/libstarry_magic.so` 的 md5 已实测 = `fef9cb7e…`**，与契约路径 `mod菜单/starry-mod-menu/libs_wor/arm64-v8a/` 一致（2026-10-04 核对）。
 - 签名证书 SHA-256：`83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d`（DN `CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN`）
 - 原包签名（`WOR_CERT_B64`）：DER 708 B / RSA-2048 / SHA1withRSA / MD5 `714d7927b0e8041ee55a40eaefa56adb`
-- 构建 tag：`WOR_BUILD_TAG "wor-e2-20261004a"`（`Games/WorMod.cpp`，**行号会漂移，用符号名 grep**）
-- 历史产物（2026-10-03，已被上表取代，仅供对照）：单 APK 206,074,679 B / md5 `88f5d479…`；so `c67ab0c0…` 2,233,888 B / tag `wor-e2-20261003c`
+- 构建 tag：`WOR_BUILD_TAG "wor-e2-20261004b"`（`Games/WorMod.cpp`，**行号会漂移，用符号名 grep**）
+- 历史产物（已被上表取代，仅供对照）：
+  - tag `wor-e2-20261004a`（C1+C2 首版，**无热重载**）：单 APK 206,066,487 B / md5 `e7fcfa45…` / sha256 `a707b39a…`；so `7b754b2c…` 2,217,480 B；base `c8072691…` 173,181,186 B
+  - tag `wor-e2-20261003c`（2026-10-03）：单 APK 206,074,679 B / md5 `88f5d479…`；so `c67ab0c0…` 2,233,888 B
 
 ## 3. 设备/包信息
 
@@ -123,6 +125,26 @@
   二者是 `if/else if` ⇒ **倍率调到 5 时我方常被秒不到、`INV` 天然 0 条**。验无敌要**把倍率调回 1**、只留无敌开。
 - **时序假象（勿当真）**：`lib ready … hooked=0` 与 `feature stage: 运行时布局未解析(hData miss) — 拒绝装机` 都是**首帧**打的，布局要 ~1.6 s 后由 `Wor_Tick` 重试路径才解析完。判定以 `runtime layout end … hdataRT=1` + `hasComponent bound` 为准。
 
+### 7.3 2026-10-04 续（tag `wor-e2-20261004b`，**C1 热重载** + e2 回归复验）
+
+- 新能力：改 `wor_cfg.txt` **不重启游戏**，约 2 s 生效；删文件回退内建默认值。
+  实现在 `Wor_Tick()` 里调 `WorCfgReloadCheck()`，用 `WorCfgStamp()` 取 `(mtime, size)` 判定是否变化（变了才 fopen）。
+- 真机证据（非侵入式抓取，**不 force-stop、不重装**）：
+  ```
+  [Wor] cfg-reload #1: …/wor_cfg.txt 已重载（mtime=1791052867 size=457）
+  [Wor] cfg-reload #2: …/wor_cfg.txt 已重载（mtime=… size=219）
+  [Wor] cfg-reload: diag 0→1（立即生效）
+  [Wor] cfg-reload: probe_max 33→999（立即生效）
+  [Wor] cfg-reload: raw_sane_max 8796093022208→17592186044416（立即生效）
+  [Wor] cfg-reload: layout_min_ms 1600→1800 属「仅初始化期生效」→ 需重启游戏
+  [Wor] cfg-reload #3: (文件已删除)
+  [Wor] cfg-reload: 配置文件已消失 → 全部回退内建默认值
+  ```
+- 汇总：`lib ready=1`、`cfg-reload=13`、回退=1、`FATAL EXCEPTION`/`SIGSEGV`/`SIGABRT`=0/0/0 ⇒ `VERDICT: RELOAD-PASS`。日志 `…/wor_reload_20261004_024107_raw.log`（5,454,731 B）。
+- **e2 无回归**（同一构建，验证 2 s 轮询不会在战斗中途把 `off.*` 重置回默认）：
+  `INV` 28 条（`raw=-31008->0` / `-860160->0` / `-499712->0`）、`DMG x5` 50 条（`raw=-131072->-655360` / `-532480->-2662400` / `-442368->-2211840`），同窗口 `cfg-reload` 13 条、崩溃 0。日志 `…/wor_e2chk_20261004_024223_raw.log`。
+- 详见 `境界守望者_C1热重载_20261004.md`
+
 ## 8. 已知限制：服务端战斗校验
 
 - 症状：开启功能后战斗结束弹「战斗校验结果异常」，**该局不算数、不给奖励**；关掉功能则不弹（用户实测）
@@ -133,7 +155,7 @@
 ## 9. 关键路径速查
 
 - 模块源码：`mod菜单/starry-mod-menu/app/src/main/jni/Games/WorMod.cpp`（core）、`WorMod.h`、`WorEntry.cpp`（**不改**）、`Android_wor.mk`
-- 设备侧配置：`/sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt`（C1，全键表见 `境界守望者_C1设备侧配置化与C2诊断分档_20261004.md`）
+- 设备侧配置：`/sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt`（C1，全键表见 `境界守望者_C1设备侧配置化与C2诊断分档_20261004.md`；**改完不用重启游戏**，约 2 s 热重载，键 `cfg_poll_ms`，见 `境界守望者_C1热重载_20261004.md`）
 - 出包链：`04_scripts/境界守望者/wor_build_so.sh`（`DIAG=0|1` 选 C2 档）→ `surgical_wor_1.6.38.829.1.sh` → `wor_sign.sh` → `wor_install.sh`；合并单包 `wor_merge_single.sh`；真机冒烟 `wor_launch.sh [秒数|gate [秒数]]`
 - **构建输出目录**：`$NIXIANG/.wor_build/{obj,libs}`（纯 ASCII，仓库根）⇒ 编完 `cp` 回填 `mod菜单/starry-mod-menu/libs_wor/arm64-v8a/libstarry_magic.so`。
   **绝不可把 `NDK_OUT` 指向 `mod菜单/…` 或经 `starry_link/`**：MSYS 会把 junction 解析回真实中文路径（`cygpath -w /e/nixiang/starry_link/obj_wor` → `E:\nixiang\mod菜单\starry-mod-menu\obj_wor`），make 与 clang 编码处理不一致 ⇒ 一边建目录、另一边写 `mod<乱码>/`。
@@ -144,6 +166,7 @@
 - 「战斗校验结果异常」是否仅部分玩法触发（未探测 `FightVerifyType_*`）
 - ~~`wor_cfg.txt` 设备侧配置化（C1）与 `WOR_DIAG_FULL` 开关（C2）落地后的真机行为~~ → **2026-10-04 已真机验收通过**，见 §7.2 与 `境界守望者_C1设备侧配置化与C2诊断分档_20261004.md`
 - 尚未验证：`wor_cfg.txt` 的 `off.*` 偏移覆盖**改成错值**时是否真能改变行为（本轮 12 项都写的是正确值，只证明了「值被采用」而非「值被使用后行为改变」）
+- 尚未验证：删文件回退时若恢复后的偏移**恰好等于基线值**，逐项 `cfg-reload: off.<key>` 差异行不会打印 —— 只有「配置文件已消失 → 全部回退内建默认值」一行。**不能以「没有 off 差异行」推断回退失败**
 
 ## 11. 工具链债（跨游戏，仅登记不立项）
 

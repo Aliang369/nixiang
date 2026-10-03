@@ -328,6 +328,12 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 | `prune_output_final.sh` / `archive_scoped_git.sh` / `stage_shared_file.py` | 08 裁剪 / 白名单提交推送 / 共享文件入库 | 收尾 |
 | `trash_paths.sh` | 受控删除（**拒绝仓库根/.git/01_tools/02_apks/08_output**） | 清理 |
 
+**游戏侧「配置化 + 诊断分档」（C1/C2）的通用规范见 [`GAME_CONFIG_PATTERN.md`](GAME_CONFIG_PATTERN.md)**：
+C1 = 把「会变的数值」抽成设备侧配置文件（读不到就回内建默认；**加键仍要重编**，所以首次要抽全）；
+C2 = 把只在排障时要的诊断/扫描代码抽成编译期开关（`STARRY_DIAG` / `WOR_DIAG_FULL`，整段 `#if` 才省体积）。
+给某款游戏加配置化**动手前先读它** —— 三条边界、两条互不兼容的接线路线（Mono 的 `StarryConfig` vs
+native 自读）、热重载做法、四条验收与可 grep 的日志锚点都在里面。
+
 - **清理禁通配符（P9）**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库 tracked 脚本，靠 `git checkout` 才救回）。
 - **真要改 `pipeline.sh` 时的跨机姿势（2026-10-03 澄清，当日已按此流程改过一次）**：`pipeline.sh` 与 `_common/pipeline.lock` 都是 **git 跟踪文件**（`git ls-files 04_scripts/_common/pipeline.lock` 命中），只是 `_common/pipeline.lock` 被 Syncthing `.stignore` 忽略（`10_docs/双机协作/双机协作同步方案.md:482`，避免双通道冲突），而 `pipeline.sh` 本身走 Syncthing。所以改法是：**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的 `shasum -a 256`，然后 push，另一台 `git pull --rebase --autostash` 后即一致（不必手工碰 lock）；**禁止**只改一边或两端同时改 —— Syncthing 会先把新 `pipeline.sh` 送到另一台而那边 lock 还是旧的，该机任何 `pipeline.sh` 命令都会 die「指纹不匹配」，`git pull` 一次即恢复。
   - 2026-10-03 实例（P1/P4/P5 并入 + UTF-8 垫片）：新指纹 `pipeline_sh_sha256=1bf3e07b9486b9a8b5b596df3823c78e65c4a58b2cffc31e5fd0a16d25233b42`（旧 `0a2e133157760ce0b4a715b293d3718574b495772a46b48cac81fc089f72a435`），`stage_next.sh` 同批缩为转发器；另一台机器拉取后先跑一次 `bash 04_scripts/pipeline.sh <游戏> status` 确认不再 die 即为同步成功。
