@@ -158,6 +158,13 @@ mod菜单/starry-mod-menu_111/
 # 打乱非 ASCII 路径」而建的纯 ASCII 目录 junction（指向 mod菜单/starry-mod-menu），构建时自动重建，
 # 收尾应删（删它必须用 `cmd /c rmdir` 解链，绝不能用 `rm -rf` 跟链删真项目）。
 starry_link/
+# .wor_build/：wor_build_so.sh 的纯 ASCII 构建输出目录（obj/ + libs/）。2026-10-04 加。
+# 理由：NDK_OUT/NDK_LIBS_OUT 既不能落在 mod菜单/（非 ASCII），也不能挂在 starry_link/ 下
+# ——cygpath 会把 junction 解析回真实中文路径（实测 cygpath -w /e/nixiang/starry_link/obj_wor
+# → E:\nixiang\mod菜单\starry-mod-menu\obj_wor），ndk-build 的 make 与 clang 对该路径的编码
+# 处理不一致 ⇒ 一边在 mod菜单/… 建目录、另一边去 mod<乱码>/… 写 .o。故落到仓库根下纯 ASCII
+# 目录，编完由脚本 cp 回填契约路径 mod菜单/starry-mod-menu/libs_wor/arm64-v8a/（可再生）。
+/.wor_build/
 # 顶层一次性驱动脚本（_tmp_e2build.sh / _tmp_e2chain.sh / _tmp_e2launch.sh / _tmp_deliver.sh …）。
 # 正式脚本一律落 04_scripts/{游戏}/，例如 _tmp_e2launch.sh 已正式化为
 # 04_scripts/境界守望者/wor_launch.sh（真机冒烟 + 双路 logcat 取证）。

@@ -8,23 +8,26 @@
 
 ## 1. 结论一句话
 
-国服星空版框架已复刻到国际服 `com.ap.watcherofrealms` 1.6.38.829.1：**e1（去签名 + 菜单进游戏）+ e2（无敌 / 伤害倍率）均真机验收通过**；正式交付包为**单 APK 无 root 直装**。
+国服星空版框架已复刻到国际服 `com.ap.watcherofrealms` 1.6.38.829.1：**e1（去签名 + 菜单进游戏）+ e2（无敌 / 伤害倍率）+ C1（设备侧 `wor_cfg.txt` 配置化）+ C2（`WOR_DIAG_FULL` 诊断两档）均真机验收通过**；正式交付包为**单 APK 无 root 直装**。
 已知限制：服务端战斗校验（`FightVerify` 子系统）——受校验玩法内该局不结算。
 
 ---
 
-## 2. 产物指纹（来源：`正式包裁剪清单_20261003.json` + 真机 `adb install` 回读）
+## 2. 产物指纹（来源：真机 `adb install` 回读 + `md5sum`/`sha256sum` 实算）
 
 | 产物 | 大小 | md5 | sha256 |
 |---|---|---|---|
-| **单 APK 正式交付包** `08_output/境界守望者/境界守望者_1.6.38.829.1_starry-single.apk` | 206,074,679 B | `88f5d479f163e82feb9f1921388acfd7` | `26771f350ddaf33179e8ddd48057fbc343bfeb3cfc38e0c0afbd9493ab978217` |
-| 开发形态 base `..._starry-releaseSigned.apk` | 173,189,378 B | `054bbb4258954404ebec2f39e9232978` | — |
+| **单 APK 正式交付包** `08_output/境界守望者/境界守望者_1.6.38.829.1_starry-single.apk` | 206,066,487 B | `e7fcfa4565e756329c18ca39bedb98a2` | `a707b39aeb003fd0c0065987fb5f3ad02e78add768a1ec8097f5548618e2338c` |
+| 开发形态 base `..._starry-releaseSigned.apk` | 173,181,186 B | `c80726911ddbfdbfc247abd9154d9a38` | — |
 | 开发形态 split `..._starry-splitSigned.apk` | 33,393,563 B | `abd232c22858887094c6d5ab8581f0d5` | — |
-| 星光 so（构建产物，三副本一致）| 2,233,888 B | `c67ab0c0693ced4900e0dbb7eb91f4c3` | — |
+| 星光 so·**正式档 RELEASE**（构建产物三副本一致）| 2,217,480 B | `7b754b2c1e1d594a1afe3b03a400ad79` | — |
+| 星光 so·排障档 FULL | 2,240,856 B | `904d0673cebbb92470cfdb0c77550d61` | — |
 
+- **单 APK 内 `lib/arm64-v8a/libstarry_magic.so` 的 md5 已实测 = `7b754b2c…`**，与契约路径 `mod菜单/starry-mod-menu/libs_wor/arm64-v8a/` 一致（2026-10-04 核对）。
 - 签名证书 SHA-256：`83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d`（DN `CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN`）
 - 原包签名（`WOR_CERT_B64`）：DER 708 B / RSA-2048 / SHA1withRSA / MD5 `714d7927b0e8041ee55a40eaefa56adb`
-- 构建 tag：`WOR_BUILD_TAG "wor-e2-20261003c"`（`Games/WorMod.cpp:62`）
+- 构建 tag：`WOR_BUILD_TAG "wor-e2-20261004a"`（`Games/WorMod.cpp`，**行号会漂移，用符号名 grep**）
+- 历史产物（2026-10-03，已被上表取代，仅供对照）：单 APK 206,074,679 B / md5 `88f5d479…`；so `c67ab0c0…` 2,233,888 B / tag `wor-e2-20261003c`
 
 ## 3. 设备/包信息
 
@@ -82,10 +85,12 @@
 - `HpChangeEntitySystem` 全字段 dump：`com_hp 0x50` / `hData 0x60` / `mAtkEntity 0xD8` / `fDamage 0xE0` / `lDamageResults 0x1C8`
 - `stHpChangeData` dump 值**带 +0x10 偏置**：`fValue 0x10`(真 0x00) / `eDamageSourceType 0x18`(真 0x08) / `eDamageSettleType 0x1C`(真 0x0C) / `eTextShowType 0x20`(真 0x10) / `iAttackSkillID 0x38`(真 0x28) / `iFormularID 0x3C`(真 0x2C) / `AtkRelationData 0x2C`
 - `HPChangeComponent`：`lValues 0x20` / `bSuicide 0x28` / `bSuicideNoShow 0x29`
-- 布局闸门常量：`WOR_LAYOUT_MIN_ELAPSED_MS = 1500`、`WOR_LAYOUT_MIN_ASM = 6`（`WorMod.cpp:~1780`，检查点 `:~1855`）
+- 布局闸门常量：`g_cfgMinAsm`（默认 6）、`g_cfgMinElapsedMs`（默认 1500）—— 2026-10-04 起由 `wor_cfg.txt` 的 `layout_min_asm` / `layout_min_ms` 覆盖（原 `WOR_LAYOUT_MIN_*` 已删）
 - 命名坑：`HPChangeComponent` **大写 HP**；`Entity` 无名前缀（`CSharpBattle.Battle.Entity` = 0 命中，**不可按名查找**，走 `mAtkEntity` 字段类型链）；`comHp`/`ComHp` = 0 命中
 
 ## 7. 真机验收实证
+
+### 7.1 2026-10-03（tag `wor-e2-20261003c`，split 形态）
 
 - 桥接自检：`[桥接] RegisterNatives 19/19 全部成功`、`StarryBridgeTest: === 桥接自检结束: PASS=15 FAIL=0 ===`
 - 写回：
@@ -97,6 +102,27 @@
 - 稳定性：pid 全程不变、200s 无 `FATAL`/`SIGABRT`/`SIGSEGV`
 - 日志：`06_dumped/境界守望者/device_logs/wor_e2_20261003_230844_{raw,filt}.log`；截图 `screenshots/wor_single_apk_20261003_235539.png`
 
+### 7.2 2026-10-04（tag `wor-e2-20261004a`，**正式档 RELEASE** 单 APK，C1+C2 落地后）
+
+- C1 生效（值均为配置文件里故意写的**非默认**测试值 ⇒ 不是假通过）：
+  ```
+  [Wor] cfg: /sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt ok=19 bad=0
+  [Wor] cfg: diag=0 probe_max=33 raw_sane_max=8796093022208 min_asm=6 min_ms=1600 scan_cls=40000 scan_sec=60 tier=diag-tier=RELEASE
+  [Wor] cfg-off: 12 项由 wor_cfg.txt 覆盖（优先于内建/国服真值）
+  ```
+- C2 生效：`[Wor] lib ready (liblogic.so, feature stage) hooked=0 tag=wor-e2-20261004a diag-tier=RELEASE`
+- 功能（RELEASE 档**无 `P#` 探针行**，仍能判定生效）：
+  ```
+  [Wor] DMG x5 e=0x744b5bbf50 uid=6 raw=-1142784->-5713920     ← 精确 ×5，共 35 条
+  [Wor] INV e=0x7455fb01e0 uid=9 raw=-860160->0                ← 我方承伤清零，共 10 条
+  ```
+  倍率整除验证：`-1142784→-5713920` / `-1114112→-5570560` / `-991232→-4956160` / `-868352→-4341760` / `-565248→-2826240` / `-442368→-2211840`
+- 稳定性：pid `20616` 全程不变，`FATAL EXCEPTION`/`SIGSEGV`/`SIGABRT`/`tombstone` **全 0**
+- 日志：`…/wor_20261004_015151_raw.log`（DMG 35 条）、`…/wor_20261004_020414_raw.log`（INV 10 条）
+- **运行分支语义**（`WorMod.cpp` `isFriendly = (twr==1||cs==1)`，`if(wantInv&&rawSane&&isFriendly)` / `else if(mul>1&&rawSane&&mon==1)`）：
+  二者是 `if/else if` ⇒ **倍率调到 5 时我方常被秒不到、`INV` 天然 0 条**。验无敌要**把倍率调回 1**、只留无敌开。
+- **时序假象（勿当真）**：`lib ready … hooked=0` 与 `feature stage: 运行时布局未解析(hData miss) — 拒绝装机` 都是**首帧**打的，布局要 ~1.6 s 后由 `Wor_Tick` 重试路径才解析完。判定以 `runtime layout end … hdataRT=1` + `hasComponent bound` 为准。
+
 ## 8. 已知限制：服务端战斗校验
 
 - 症状：开启功能后战斗结束弹「战斗校验结果异常」，**该局不算数、不给奖励**；关掉功能则不弹（用户实测）
@@ -107,13 +133,17 @@
 ## 9. 关键路径速查
 
 - 模块源码：`mod菜单/starry-mod-menu/app/src/main/jni/Games/WorMod.cpp`（core）、`WorMod.h`、`WorEntry.cpp`（**不改**）、`Android_wor.mk`
-- 出包链：`04_scripts/境界守望者/wor_build_so.sh` → `surgical_wor_1.6.38.829.1.sh` → `wor_sign.sh` → `wor_install.sh`；合并单包 `wor_merge_single.sh`；真机冒烟 `wor_launch.sh [秒数|gate [秒数]]`
+- 设备侧配置：`/sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt`（C1，全键表见 `境界守望者_C1设备侧配置化与C2诊断分档_20261004.md`）
+- 出包链：`04_scripts/境界守望者/wor_build_so.sh`（`DIAG=0|1` 选 C2 档）→ `surgical_wor_1.6.38.829.1.sh` → `wor_sign.sh` → `wor_install.sh`；合并单包 `wor_merge_single.sh`；真机冒烟 `wor_launch.sh [秒数|gate [秒数]]`
+- **构建输出目录**：`$NIXIANG/.wor_build/{obj,libs}`（纯 ASCII，仓库根）⇒ 编完 `cp` 回填 `mod菜单/starry-mod-menu/libs_wor/arm64-v8a/libstarry_magic.so`。
+  **绝不可把 `NDK_OUT` 指向 `mod菜单/…` 或经 `starry_link/`**：MSYS 会把 junction 解析回真实中文路径（`cygpath -w /e/nixiang/starry_link/obj_wor` → `E:\nixiang\mod菜单\starry-mod-menu\obj_wor`），make 与 clang 编码处理不一致 ⇒ 一边建目录、另一边写 `mod<乱码>/`。
 - 台账：`10_docs/_state/games/境界守望者.md`、`10_docs/_state/current.md`
 
 ## 10. 待验证 / 未定
 
 - 「战斗校验结果异常」是否仅部分玩法触发（未探测 `FightVerifyType_*`）
-- `wor_cfg.txt` 设备侧配置化（C1）与 `WOR_DIAG_FULL` 开关（C2）落地后的真机行为 —— 见对应提交
+- ~~`wor_cfg.txt` 设备侧配置化（C1）与 `WOR_DIAG_FULL` 开关（C2）落地后的真机行为~~ → **2026-10-04 已真机验收通过**，见 §7.2 与 `境界守望者_C1设备侧配置化与C2诊断分档_20261004.md`
+- 尚未验证：`wor_cfg.txt` 的 `off.*` 偏移覆盖**改成错值**时是否真能改变行为（本轮 12 项都写的是正确值，只证明了「值被采用」而非「值被使用后行为改变」）
 
 ## 11. 工具链债（跨游戏，仅登记不立项）
 

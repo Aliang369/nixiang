@@ -1,0 +1,52 @@
+{
+  "game_dir": "E:/nixiang/08_output/境界守望者",
+  "date": "20261004",
+  "supersedes": "正式包裁剪清单_20261003.json",
+  "reason": "C1（设备侧 wor_cfg.txt 配置化）+ C2（WOR_DIAG_FULL 诊断两档）落地后重出包，产物指纹整体刷新；同时删掉本轮 3 个 -unsigned 中间件。",
+  "keep": "境界守望者_1.6.38.829.1_starry-single.apk",
+  "keep_size": 206066487,
+  "keep_md5": "e7fcfa4565e756329c18ca39bedb98a2",
+  "keep_sha256": "a707b39aeb003fd0c0065987fb5f3ad02e78add768a1ec8097f5548618e2338c",
+  "keep_inner_so": {
+    "path": "lib/arm64-v8a/libstarry_magic.so",
+    "size": 2217480,
+    "md5": "7b754b2c1e1d594a1afe3b03a400ad79",
+    "build_tag": "wor-e2-20261004a",
+    "c2_tier": "RELEASE",
+    "note": "已实测 APK 内该 .so 的 md5 与契约路径 mod菜单/starry-mod-menu/libs_wor/arm64-v8a/libstarry_magic.so 一致。"
+  },
+  "keep_additional": [
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-releaseSigned.apk",
+      "size": 173181186,
+      "md5": "c80726911ddbfdbfc247abd9154d9a38",
+      "reason": "base+split 形态的 base（开发期 pm install-multiple 用）。星光逻辑与单 APK 完全相同，只是 .so 不在 base 里。"
+    },
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-splitSigned.apk",
+      "size": 33393563,
+      "md5": "abd232c22858887094c6d5ab8581f0d5",
+      "reason": "base+split 形态的 split（35 个 .so 的唯一载体）。保留是为了不动开发期的既有安装链路。本包与 20261003 一致（split 内不含星光 so，故不受 C1/C2 影响）。"
+    }
+  ],
+  "mode": "manual",
+  "note": "正式交付包 = 单 APK 无 root 直装包 境界守望者_1.6.38.829.1_starry-single.apk（见 10_docs/境界守望者/正式包_单APK合并_20261003.md §3，由 04_scripts/境界守望者/wor_merge_single.sh 从已签 base 外科换 manifest + 追加 split 的 35 个 .so 生成）。本作未走 prune_output_final.sh：该脚本语义是「目录只留 1 个 .apk」，会误删 base+split 开发形态。改为手工删 -unsigned 中间件（可由 04_scripts/境界守望者/ 的 surgical+sign+merge 从 02_apks 底包完整重生成）。设备已装包自证（2026-10-04）：单 APK adb install -r -d = Success，pm path 只剩 base.apk，splits=[base]，codePath/lib/arm64 下 36 个 .so。C1/C2 真机证据见 10_docs/境界守望者/境界守望者_C1设备侧配置化与C2诊断分档_20261004.md §5。",
+  "removed": [
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-unsigned.apk",
+      "size": 173089112,
+      "md5": "7c046fb537652ee536af0550e5120635"
+    },
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-split-unsigned.apk",
+      "size": 33384438,
+      "md5": "105d75bfbf028814d052283f2a6e9878"
+    },
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-single-unsigned.apk",
+      "size": 205973245,
+      "md5": "cc371d111184665500f22b2aeaeacf7f"
+    }
+  ],
+  "removed_count": 3
+}

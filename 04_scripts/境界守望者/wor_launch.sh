@@ -6,11 +6,22 @@
 #   bash 04_scripts/境界守望者/wor_launch.sh gate [秒数，默认 30]   短闸门：只回答"会不会立刻崩"
 #   SERIAL=<序列号> bash 04_scripts/境界守望者/wor_launch.sh 240
 #
-# 环境变量覆盖（2026-10-04 加，Mac 复验提的：跑一次就得往仓库里写日志）:
+# 环境变量覆盖:
 #   NIXIANG_WOR_LOGDIR  日志落盘目录（默认 06_dumped/境界守望者/device_logs）
 #   NIXIANG_WOR_PKG     包名（默认 com.ap.watcherofrealms）
-#   SERIAL              设备序列号（默认 96f0d883）
+#   SERIAL              设备序列号。**不设则自动选**（优先真机，跳过 emulator-*）；
+#                       显式传入的值会先校验是否处于 device 状态，不对就 exit 2。
 #   例：NIXIANG_WOR_LOGDIR=/tmp/wor_logs bash …/wor_launch.sh gate 30
+#
+# 退出码: 0 跑完（结论见 VERDICT 行） / 1 adb 基础操作失败 / 2 设备不可用 /
+#         3 NOT-LAUNCHED（包没起来 ⇒ gate 结论无效）
+#
+# 2026-10-04 双机修正（Mac 复验回报，P1/P2）:
+#   P1 旧写法 SER="${SERIAL:-96f0d883}" 把 Windows 那台机器号当默认值 —— mac 上
+#      `adb -s 96f0d883` 会吐 "waiting for device -" 并【永久阻塞】（不是报错退出），
+#      看起来像"一直在跑"。现在改为自动选设备 + device 状态预校验。
+#   P2 monkey 的退出码不可靠（包不存在也返回 0）⇒ 旧版对不存在的包也打 GATE-PASS。
+#      现在 monkey 之后用 pidof 实证进程真的起来了，否则打 NOT-LAUNCHED 并 exit 3。
 #
 # 两段式验证（为什么这么设计）:
 #   ① gate 短闸门 —— 只否掉立刻崩的版本（FATAL/SIGABRT/SIGSEGV/F DEBUG），30 秒够；
@@ -30,11 +41,38 @@
 #   ② 再开一路只订阅 MOD 自家 tag 的 logcat，保证证据链不断
 set -uo pipefail
 
-SER="${SERIAL:-96f0d883}"
+SER="${SERIAL:-}"
 PKG="${NIXIANG_WOR_PKG:-com.ap.watcherofrealms}"
 GAME_DIR="境界守望者"
 ADB="/c/windows/system32/adb.exe"
 [[ -x "$ADB" ]] || ADB="adb"
+
+# ★ P1 修正（2026-10-04，Mac 复验回报）：旧写法 SER="${SERIAL:-96f0d883}" 把 Windows
+#   那台机器的序列号当默认值 —— Mac 上跑就成了 `adb -s 96f0d883 …`，adb 会一直吐
+#   "- waiting for device -" 并永久阻塞（不报错、不退出，看起来像"还在跑"），只能 kill。
+#   改为：未显式给 SERIAL 就自动挑（优先真机，跳过 emulator-*），并且无论来源都先校验
+#   目标确实处于 device 状态，否则 exit 2。bash 3.2 兼容（只 awk/head，无数组/大小写转换）。
+pick_serial() {
+  "$ADB" devices 2>/dev/null | awk 'NR > 1 && $2 == "device" && $1 !~ /^emulator-/ { print $1 }' | head -n 1
+}
+serial_online() {
+  "$ADB" devices 2>/dev/null | awk -v s="$1" '$1 == s && $2 == "device" { found = 1 } END { exit(found ? 0 : 1) }'
+}
+if [ -z "$SER" ]; then
+  SER="$(pick_serial)"
+  if [ -z "$SER" ]; then
+    echo "ERROR: 未指定 SERIAL，且 adb devices 里没有可用真机（已跳过 emulator-*）" >&2
+    "$ADB" devices >&2 || true
+    echo "用法: SERIAL=<序列号> bash 04_scripts/境界守望者/wor_launch.sh [秒数|gate [秒数]]" >&2
+    exit 2
+  fi
+  echo "[launch] 未指定 SERIAL，自动选择真机: $SER"
+fi
+if ! serial_online "$SER"; then
+  echo "ERROR: 设备 $SER 不在 device 状态（继续跑会卡在 - waiting for device - 永久阻塞）" >&2
+  "$ADB" devices >&2 || true
+  exit 2
+fi
 
 # 抓取模式（bash 3.2 兼容：只用 case，不用数组/大小写转换）
 MODE="full"
@@ -76,7 +114,28 @@ FPID=$!
 sleep 1
 
 "$ADB" -s "$SER" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
-echo "[launch] 游戏已拉起，等待 ${DUR}s —— 请人工操作悬浮菜单（MIUI 禁 adb input tap，必须手点）"
+MONKEY_RC=$?
+
+# ★ P2 修正（2026-10-04，Mac 复验回报）：monkey 对**不存在的包**也返回 0 ⇒ 退出码不可靠，
+#   旧版因此对「根本没起来的包」照样打 VERDICT: GATE-PASS。改为用 pidof 实证进程真的起来了，
+#   否则打 NOT-LAUNCHED 并 exit 3（这样"gate 通过"才等价于"真的跑起来过、且没立刻崩"）。
+LAUNCH_OK=0
+_i=0
+while [ "$_i" -lt 10 ]; do
+  _pid="$("$ADB" -s "$SER" shell pidof "$PKG" 2>/dev/null | tr -d '\r\n ')"
+  if [ -n "$_pid" ]; then LAUNCH_OK=1; break; fi
+  sleep 1
+  _i=$((_i + 1))
+done
+if [ "$LAUNCH_OK" -ne 1 ]; then
+  echo "[launch] monkey rc=${MONKEY_RC}，但 ${PKG} 10 秒内未出现进程 —— 没起来" >&2
+  echo "VERDICT: NOT-LAUNCHED — 包 ${PKG} 没起来（未安装 / 包名不对 / monkey 失败 / SERIAL 不对）⇒ 本次结论无效"
+  "$ADB" -s "$SER" shell pm list packages 2>/dev/null | LC_ALL=C grep -F "$PKG" >&2 || true
+  kill "$LPID" "$FPID" 2>/dev/null
+  wait "$LPID" "$FPID" 2>/dev/null
+  exit 3
+fi
+echo "[launch] 游戏已拉起（pid=${_pid}），等待 ${DUR}s —— 请人工操作悬浮菜单（MIUI 禁 adb input tap，必须手点）"
 
 END=$(( $(date +%s) + DUR ))
 while [[ "$(date +%s)" -lt "$END" ]]; do sleep 5; printf '.'; done

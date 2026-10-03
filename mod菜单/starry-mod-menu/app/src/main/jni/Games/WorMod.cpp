@@ -40,6 +40,8 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
+#include <cerrno>
 #include <cstring>
 #include <ctime>
 #include <dlfcn.h>
@@ -59,7 +61,35 @@ using Il2Cpp::GetApi;
 #define TPL_TARGET_LIB "liblogic.so"
 
 // 构建身份（出包/装机/真机日志三处对账用；改功能时同步递增）
-#define WOR_BUILD_TAG "wor-e2-20261003c"
+#define WOR_BUILD_TAG "wor-e2-20261004a"
+
+// ============================================================
+// ★★ C2：诊断总开关（2026-10-04 加）★★
+// ------------------------------------------------------------
+// 改动前，诊断代码**永远编进 so**：WorClassLookupSelfTest / DumpBattleDiagnostics /
+// DumpTargetFields / ScanAllImages 及其全部调用点都是无条件编译，排障构建与正式构建
+// 出的是同一个 so。两个后果：
+//   ① 正式包日志被探针洪水灌满 16M 环形缓冲，[Wor] 关键行容易被回绕掉；
+//   ② so 里多一大批可被特征化的字符串（类名/字段名/probe 格式串）与额外代码面。
+//
+// 现在：
+//   WOR_DIAG_FULL=1（默认）→ 全部诊断编入 =「排障构建」（一次真机把所有假设打尽）
+//   WOR_DIAG_FULL=0        → 诊断函数与调用点全部编掉 =「正式构建」（so 更小、日志只留功能行）
+// 由 04_scripts/境界守望者/wor_build_so.sh 的 STARRY_WOR_DIAG=1|0 传进来，并写进
+// Android_wor.mk 的 CFG_HASH ⇒ 改档位会强制全量重建，杜绝拿到混档的 so。
+//
+// ★ Release 档下 WorMod.cpp 唯一保留的诊断代码是 ReconcileLog 的空壳 —— 它走运行时
+//   g_cfgDiag 门（见 C1），代码量为零，保留是为了让 OffOfField* 的调用点不用一起编掉。
+// ============================================================
+#ifndef WOR_DIAG_FULL
+#define WOR_DIAG_FULL 1
+#endif
+
+#if WOR_DIAG_FULL
+#define WOR_DIAG_TIER "diag-tier=FULL"
+#else
+#define WOR_DIAG_TIER "diag-tier=RELEASE"
+#endif
 
 // ============================================================
 // ★★ 目标库句柄解析（真机血证，勿删勿简化）★★
@@ -198,7 +228,9 @@ static int32_t g_off_ENTITY_MUID  = 0x10;  // <m_uID>k__BackingField
 // 写前合理性闸门（B5）：raw 是垃圾值时的护栏。
 // 偏移解析错误时 raw 会是任意 64bit 垃圾，直接写回游戏内存 = 必崩/必乱屏；
 // 正常承伤永远是「负数且量级远小于 2^44」，故只允许该区间被改写。
-#define RAW_SANE_MAX (1LL << 44)
+// ★ C1（2026-10-04）：实际比较用的是 g_rawSaneMax（运行时可被 wor_cfg.txt 覆盖），
+//   这里只留内建默认值。换版本后承伤量级若变化，改 cfg 即可，不用重编。
+#define RAW_SANE_MAX_DEFAULT (1LL << 44)
 
 // ============================================================
 // ============================================================
@@ -212,6 +244,178 @@ static std::atomic<bool> g_probeReady{false}; // ExcuteOnce 已成功挂上
 #define PROBE_MAX 400                     // 探针日志上限（防刷爆 logcat）
 static std::atomic<int>  g_modCount{0};     // 功能生效日志计数（有界）
 #define MOD_LOG_MAX 200                   // 功能生效日志上限
+
+// ============================================================
+// ★★ C1：设备侧配置化（wor_cfg.txt，2026-10-04 加）★★
+// ------------------------------------------------------------
+// 动机：下面这些值「最可能要调」，但改动前全是编译期常量 ⇒ 调一个数字要走
+//   wor_build_so.sh → surgical_wor_1.6.38.829.1.sh（6 步）→ wor_sign.sh →
+//   wor_install.sh → 手点菜单，一轮十几分钟且必须重装重签名。
+// 现在：往 /sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt 写一行，
+//   force-stop + 重启游戏即生效（一分钟内、不重编、不重装、不重签）。
+//   通道是现成的：wor_tables.txt 就写在同一个目录，读/写/pull 都已在真机验证过。
+//
+// 文件格式（纯文本；`#` 起首到行尾为注释；`键 = 值`；未知键只告警不致命）：
+//   diag             = 1|0        诊断日志总闸（不重编即可静音排障构建；默认 = WOR_DIAG_FULL）
+//   probe_max        = <int>      P# 探针行上限（默认 400）
+//   raw_sane_max     = <int64>    写闸门阈值（默认 2^44）
+//   layout_min_asm   = <int>      EnsureLayout 闸门2：最少程序集数（默认 6）
+//   layout_min_ms    = <int>      EnsureLayout 闸门2：最短等待毫秒（默认 1500）
+//   scan_max_classes = <int>      S3 结构扫描类数上限（默认 40000）
+//   scan_max_sec     = <int>      S3 结构扫描秒数上限（默认 60）
+//   tbl_path         = <路径>     覆盖 wor_tables.txt 落盘路径（默认走候选表）
+//   off.<key>        = 0x..       覆盖 15 个字段偏移（换版本必变的那批）
+//     键名：sys_com_hp sys_hdata sys_matk sys_fdamage hpcomp_lvalues
+//           hpd_fvalue hpd_src hpd_settle hpd_show hpd_atk_euid hpd_atk_cuid
+//           hpd_atk_unit hpd_skill hpd_formula entity_muid
+//
+// ★ 兜底原则（重要）：任何一项解析失败 / 越界 / 文件不存在 ⇒ **保持内建默认值**。
+//   绝不让「配置文件写错」升级成「布局解析错 ⇒ 崩溃」——写坏最多影响功能，不影响启动。
+// ============================================================
+#define WOR_CFG_PRIMARY "/sdcard/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt"
+#define WOR_CFG_ALT     "/storage/emulated/0/Android/data/com.ap.watcherofrealms/files/wor_cfg.txt"
+
+static bool    g_cfgLoaded  = false;                      // 已尝试加载（只做一次）
+static bool    g_cfgOk      = false;                      // 文件存在且至少解析成功一项
+static bool    g_cfgDiag    = (WOR_DIAG_FULL != 0);       // 诊断日志门（运行时可关）
+static int     g_cfgProbeMax = PROBE_MAX;                 // 探针上限（运行时可调）
+static int64_t g_rawSaneMax  = RAW_SANE_MAX_DEFAULT;      // 写闸门阈值（运行时可调）
+static size_t  g_cfgMinAsm       = 6;                     // 同 WOR_LAYOUT_MIN_ASM
+static int64_t g_cfgMinElapsedMs = 1500;                  // 同 WOR_LAYOUT_MIN_ELAPSED_MS
+static int     g_cfgScanMaxClasses = 40000;               // 同 WOR_SCAN_MAX_CLASSES
+static int     g_cfgScanMaxSec     = 60;                  // 同 WOR_SCAN_MAX_SEC
+static char    g_cfgTblPath[256] = {0};                   // 非空则覆盖 wor_tables.txt 路径
+
+struct WorCfgOff { const char* key; int32_t* dst; const char* what; };
+static const WorCfgOff kWorCfgOffs[] = {
+    {"off.sys_com_hp",     &g_off_SYS_COM_HP,     "SYS_COM_HP"},
+    {"off.sys_hdata",      &g_off_SYS_HDATA,      "SYS_HDATA"},
+    {"off.sys_matk",       &g_off_SYS_MATK,       "SYS_MATK"},
+    {"off.sys_fdamage",    &g_off_SYS_FDAMAGE,    "SYS_FDAMAGE"},
+    {"off.hpcomp_lvalues", &g_off_HPCOMP_LVALUES, "HPCOMP_LVALUES"},
+    {"off.hpd_fvalue",     &g_off_HPD_FVALUE,     "HPD_FVALUE"},
+    {"off.hpd_src",        &g_off_HPD_SRC,        "HPD_SRC"},
+    {"off.hpd_settle",     &g_off_HPD_SETTLE,     "HPD_SETTLE"},
+    {"off.hpd_show",       &g_off_HPD_SHOW,       "HPD_SHOW"},
+    {"off.hpd_atk_euid",   &g_off_HPD_ATK_EUID,   "HPD_ATK_EUID"},
+    {"off.hpd_atk_cuid",   &g_off_HPD_ATK_CUID,   "HPD_ATK_CUID"},
+    {"off.hpd_atk_unit",   &g_off_HPD_ATK_UNIT,   "HPD_ATK_UNIT"},
+    {"off.hpd_skill",      &g_off_HPD_SKILL,      "HPD_SKILL"},
+    {"off.hpd_formula",    &g_off_HPD_FORMULA,    "HPD_FORMULA"},
+    {"off.entity_muid",    &g_off_ENTITY_MUID,    "ENTITY_MUID"},
+};
+#define WOR_CFG_OFF_N ((int)(sizeof(kWorCfgOffs) / sizeof(kWorCfgOffs[0])))
+// kWorCfgOffs 里 SYS_HDATA 的下标 —— g_offHdataRuntime（装机闸门）必须跟它同步，
+// 故显式命名，防止以后插入/重排键名时静默错位。
+#define WOR_CFG_OFFIDX_HDATA 1
+static bool g_cfgOffSet[WOR_CFG_OFF_N] = {false};   // 该项是否被 cfg 显式覆盖
+
+// 就地去首尾空白，返回新起点
+static char* CfgTrim(char* s) {
+    while (*s == ' ' || *s == '\t' || *s == '\r' || *s == '\n') s++;
+    char* e = s + strlen(s);
+    while (e > s && (e[-1] == ' ' || e[-1] == '\t' || e[-1] == '\r' || e[-1] == '\n')) *--e = 0;
+    return s;
+}
+
+// 解析 int64（base=0 ⇒ 自动识别 0x 前缀）；只允许尾部空白，任何垃圾字符都算失败
+static bool CfgParseI64(const char* s, int64_t* out) {
+    if (!s || !*s) return false;
+    errno = 0;
+    char* end = nullptr;
+    const long long v = strtoll(s, &end, 0);
+    if (end == s || errno != 0) return false;
+    while (*end == ' ' || *end == '\t' || *end == '\r') end++;
+    if (*end != 0) return false;
+    *out = (int64_t)v;
+    return true;
+}
+
+// 读一个配置文件；文件存在即返回 true（解析失败项只告警，绝不致命）
+static bool WorCfgLoadFile(const char* path) {
+    FILE* fp = fopen(path, "r");
+    if (!fp) return false;
+    char line[512];
+    int nOk = 0, nBad = 0;
+    while (fgets(line, (int)sizeof(line), fp)) {
+        char* hash = strchr(line, '#');
+        if (hash) *hash = 0;                       // 整行/行内注释
+        char* s = CfgTrim(line);
+        if (!*s) continue;
+        char* eq = strchr(s, '=');
+        if (!eq) { nBad++; continue; }
+        *eq = 0;
+        char* key = CfgTrim(s);
+        char* val = CfgTrim(eq + 1);
+        if (!*key) { nBad++; continue; }
+
+        int64_t iv = 0;
+        const bool isNum = CfgParseI64(val, &iv);
+        bool handled = false;
+
+        if (strcmp(key, "diag") == 0) {
+            if (isNum) { g_cfgDiag = (iv != 0); handled = true; }
+        } else if (strcmp(key, "probe_max") == 0) {
+            if (isNum && iv > 0 && iv <= 100000) { g_cfgProbeMax = (int)iv; handled = true; }
+        } else if (strcmp(key, "raw_sane_max") == 0) {
+            if (isNum && iv > 0) { g_rawSaneMax = iv; handled = true; }
+        } else if (strcmp(key, "layout_min_asm") == 0) {
+            if (isNum && iv >= 1 && iv <= 4096) { g_cfgMinAsm = (size_t)iv; handled = true; }
+        } else if (strcmp(key, "layout_min_ms") == 0) {
+            if (isNum && iv >= 0 && iv <= 600000) { g_cfgMinElapsedMs = iv; handled = true; }
+        } else if (strcmp(key, "scan_max_classes") == 0) {
+            if (isNum && iv > 0 && iv <= 5000000) { g_cfgScanMaxClasses = (int)iv; handled = true; }
+        } else if (strcmp(key, "scan_max_sec") == 0) {
+            if (isNum && iv > 0 && iv <= 3600) { g_cfgScanMaxSec = (int)iv; handled = true; }
+        } else if (strcmp(key, "tbl_path") == 0) {
+            if (val && *val && strlen(val) < sizeof(g_cfgTblPath)) {
+                snprintf(g_cfgTblPath, sizeof(g_cfgTblPath), "%s", val);
+                handled = true;
+            }
+        } else {
+            for (int i = 0; i < WOR_CFG_OFF_N; i++) {     // off.<key>
+                if (strcmp(key, kWorCfgOffs[i].key) != 0) continue;
+                if (isNum && iv >= 0 && iv <= 0xFFFF) {
+                    *kWorCfgOffs[i].dst = (int32_t)iv;
+                    g_cfgOffSet[i] = true;
+                    handled = true;
+                }
+                break;
+            }
+        }
+
+        if (handled) {
+            nOk++;
+        } else {
+            nBad++;
+            LOGW(TPL_LOG " cfg: 忽略无效行 key='%s' val='%s'%s", key, val,
+                 isNum ? "（值越界）" : "（值非数字）");
+        }
+    }
+    fclose(fp);
+    LOGI(TPL_LOG " cfg: %s ok=%d bad=%d", path, nOk, nBad);
+    return true;
+}
+
+// 尝试两个候选路径；只做一次。失败 → 全部保持内建默认值（不影响启动）
+static void WorCfgLoad() {
+    if (g_cfgLoaded) return;
+    g_cfgLoaded = true;
+    const char* cands[2];
+    cands[0] = WOR_CFG_PRIMARY;
+    cands[1] = WOR_CFG_ALT;
+    for (int i = 0; i < 2; i++) {
+        if (WorCfgLoadFile(cands[i])) { g_cfgOk = true; break; }
+    }
+    if (!g_cfgOk) {
+        LOGI(TPL_LOG " cfg: 未发现 wor_cfg.txt（全部使用内建默认值）");
+        return;
+    }
+    LOGI(TPL_LOG " cfg: diag=%d probe_max=%d raw_sane_max=%lld min_asm=%d min_ms=%lld "
+                 "scan_cls=%d scan_sec=%d tier=%s",
+         g_cfgDiag ? 1 : 0, g_cfgProbeMax, (long long)g_rawSaneMax, (int)g_cfgMinAsm,
+         (long long)g_cfgMinElapsedMs, g_cfgScanMaxClasses, g_cfgScanMaxSec, WOR_DIAG_TIER);
+}
 
 
 // ============================================================
@@ -577,7 +781,7 @@ static bool Hook_ExcuteOnce(void* self, void* entity) {
 
     const bool wantInv = g_inv.load();
     const int  mul     = g_dmgMul.load();
-    const bool wantLog = g_probeReady.load() && g_probeCount.load() < PROBE_MAX;
+    const bool wantLog = g_cfgDiag && g_probeReady.load() && g_probeCount.load() < g_cfgProbeMax;
 
     if ((wantInv || mul > 1 || wantLog) && OkPtr(self)) {
         const int n = wantLog ? (g_probeCount.fetch_add(1) + 1) : 0;
@@ -629,13 +833,13 @@ static bool Hook_ExcuteOnce(void* self, void* entity) {
         //   真机 round-5 症状：`raw` 恒为 8589934593（正数、20 条不变）⇒ 写闸门 `raw<0`
         //   永不通过 ⇒ 功能形同未装。对策：把 `hData`（0x80 范围）与 `lValues._items`
         //   首区（0x180 范围）按 8 字节步进扫一遍，把所有落在「合理扣血」区间
-        //   (raw<0 && raw>-RAW_SANE_MAX) 的槽位连值打出来。真正的 fValue 必在其中，
+        //   (raw<0 && raw>-g_rawSaneMax) 的槽位连值打出来。真正的 fValue 必在其中，
         //   同时也能判明「hData 是模板 / 真数据在 lValues」以及 EN 的 stride 到底多少。
         if (n > 0 && n <= 16) {
             char lanes[1400]; lanes[0] = 0; int ln = 0;
             for (int o = 0; o < 0x80; o += 8) {
                 int64_t q = 0; memcpy(&q, hd + o, 8);
-                if (q < 0 && q > -RAW_SANE_MAX && ln < (int)sizeof(lanes) - 48)
+                if (q < 0 && q > -g_rawSaneMax && ln < (int)sizeof(lanes) - 48)
                     ln += snprintf(lanes + ln, (size_t)(sizeof(lanes) - ln),
                                    " [%02X]=%lld", o, (long long)q);
             }
@@ -644,7 +848,7 @@ static bool Hook_ExcuteOnce(void* self, void* entity) {
                 char lb[1400]; lb[0] = 0; int l2 = 0;
                 for (int o = 0; o < 0x180; o += 8) {
                     int64_t q = 0; memcpy(&q, reinterpret_cast<uint8_t*>(lvData) + o, 8);
-                    if (q < 0 && q > -RAW_SANE_MAX && l2 < (int)sizeof(lb) - 48)
+                    if (q < 0 && q > -g_rawSaneMax && l2 < (int)sizeof(lb) - 48)
                         l2 += snprintf(lb + l2, (size_t)(sizeof(lb) - l2),
                                        " [%02X]=%lld", o, (long long)q);
                 }
@@ -665,7 +869,7 @@ static bool Hook_ExcuteOnce(void* self, void* entity) {
         // ---- 写前合理性闸门（B5）：偏移解析错时 raw 会是垃圾值，垃圾值绝不能写回游戏内存 ----
         //   正常承伤 = 负数且量级远小于 2^44；超出范围只留探针日志，不改写。
         //   `raw < 0` 本身必须保留：负值 = 扣血，这是改装核心语义。
-        const bool rawSane = (raw < 0 && raw > -RAW_SANE_MAX);
+        const bool rawSane = (raw < 0 && raw > -g_rawSaneMax);
 
         // ---- 无敌：我方单位（Tower/CardSoldier）承伤清零 ----
         if (wantInv && rawSane && isFriendly) {
@@ -685,6 +889,11 @@ static bool Hook_ExcuteOnce(void* self, void* entity) {
                      (long long)rawIn, (long long)scaled);
         }
 
+        // ★ C2/C1 修正（2026-10-04）：探针行**只在真正处于探针窗口时**打。
+        //   原实现把 P# 行放在 if 块内无条件执行，`n` 到 0 之后仍每帧打 `P#0 …`
+        //   ⇒ 开关一打开就洪水日志（与「正式构建静音」的目标矛盾）。INV/DMG 行不受影响
+        //   （它们由 g_modCount < MOD_LOG_MAX 单独限流），故正式档仍能凭 INV/DMG 判定生效。
+        if (n > 0)
         LOGI(TPL_LOG " P#%d e=%p uid=%u mon=%d twr=%d cs=%d sz=%d raw=%lld v=%.3f "  // NOLINT
                     "src=%d set=%d show=%d atk=%u/%u u%d sk=%d fm=%d",
              n, entity, euid, mon, twr, cs, sz, (long long)rawIn, (double)rawIn / FIX64_ONE,
@@ -791,6 +1000,17 @@ static FILE* WorTblOpen(const char* mode) {
         "/data/data/com.ap.watcherofrealms/files/wor_tables.txt",  // 预期 deny
         "/data/data/com.ap.watcherofrealms/wor_tables.txt",        // 预期 deny
     };
+    // ★ C1：wor_cfg.txt 的 tbl_path 若给了，最优先试它（换设备/换包名时不用重编）
+    if (g_cfgTblPath[0]) {
+        FILE* fc = fopen(g_cfgTblPath, mode);
+        if (fc) {
+            if (!g_tblPath) g_tblPath = g_cfgTblPath;
+            LOGI(TPL_LOG " tables file open ok (cfg %s): %s", mode, g_cfgTblPath);
+            return fc;
+        }
+        LOGW(TPL_LOG " tables file: cfg tbl_path 打不开 %s errno=%d（回落候选表）",
+             g_cfgTblPath, errno);
+    }
     for (size_t i = 0; i < sizeof(kPaths) / sizeof(kPaths[0]); i++) {
         FILE* f = fopen(kPaths[i], mode);
         if (f) {
@@ -912,6 +1132,12 @@ static void* FieldTypeKlass(void* klass, const char* fname) {
 //   文件   : off %-24s cn=0x%-4X rt=0x%-4X %s %s        ← S6 对账表格式
 //   %s#2 = 命中段：name / alt-name / type-name / (未命中原因)
 static void ReconcileLog(const char* what, int32_t cn, int32_t rt, const char* how) {
+#if !WOR_DIAG_FULL
+    // ★ C2：正式构建下偏移对账整体编掉（连同它的格式串）。
+    //   调用点（OffOfField*）保持不变 —— 它们只是把参数传进来，这里直接丢弃。
+    (void)what; (void)cn; (void)rt; (void)how;
+#else
+    if (!g_cfgDiag) return;   // ★ C1：运行时总闸 —— 排障构建也能用 cfg 静音洪水日志
     const bool miss = ((uint32_t)rt == WOR_OFF_MISS);
     const char* verdict = miss ? "keep-cn(default)" : (rt == cn ? "match" : "DIFF");
     if (miss)
@@ -922,6 +1148,7 @@ static void ReconcileLog(const char* what, int32_t cn, int32_t rt, const char* h
              how ? how : "");
     WTBL(g_tblFile, "off %-24s cn=0x%-4X rt=0x%-4X %s %s\n", what, (unsigned)cn, (unsigned)rt,
          verdict, how ? how : "");
+#endif  // WOR_DIAG_FULL
 }
 
 // 按名解析字段偏移；找不到保持国服兜底值（功能降级但不崩）
@@ -998,7 +1225,10 @@ static int32_t OffOfNested(void* outerK, const char* outerF, void* innerK, const
     return rt;
 }
 
+#if WOR_DIAG_FULL
 // ---- 字段表 / 方法表 dump（S3 命中类与 S5 目标类共用）----
+// ★ C2：本段（DumpClassFields/DumpClassMethods）在 WOR_DIAG_FULL=0 时整段编掉。
+//   紧随其后的 CollectCandidates 是**功能代码**（ResolveHookCandidates 依赖），不在本段内。
 #define WOR_FIELD_DUMP_MAX 40
 static void DumpClassFields(FILE* fp, void* klass, const char* tag, bool toLog) {
     if (!klass) {
@@ -1071,6 +1301,7 @@ static void DumpClassMethods(FILE* fp, void* klass, const char* tag, bool toLog)
     if (toLog) LOGI(TPL_LOG " m %s total=%d", tag, n);
     WTBL(fp, "m %s total=%d\n", tag, n);
 }
+#endif  // WOR_DIAG_FULL（字段表/方法表 dump）
 
 // ---- 方法候选（含父类链：HasComponent 可能在 Entity 的基类上）----
 struct CandInfo {
@@ -1112,6 +1343,13 @@ static int CollectCandidates(void* klass, const char* name, CandInfo* out, int c
     return n;
 }
 
+#if WOR_DIAG_FULL
+// ============================================================
+// ★ C2：以下一直到 ScanAllImages 结束（S2 名探针 / S1 镜像诊断 / SELFTEST /
+//   S3 结构扫描与其预算全局量）**整段都是诊断**，WOR_DIAG_FULL=0 时全部编掉。
+//   功能路径不受影响：它只经过 FindSysClass / FieldTypeKlass / ApplyRuntimeOffsets /
+//   ResolveHookCandidates（这些都在本段之外）。
+// ============================================================
 // ---- S2 name-probe ----
 static void ProbeName(const char* ns, const char* name) {
     auto& api = GetApi();
@@ -1296,8 +1534,8 @@ static void DumpBattleDiagnostics(const char* why) {
 //   判据 C：类短名含 HpChange / HPChange / ChangeHp
 //   判据 D：类短名含 Battle 且（有 hData 字段 或 有含 xcute 的方法）
 // ============================================================
-#define WOR_SCAN_MAX_CLASSES 40000
-#define WOR_SCAN_MAX_SEC     60
+// ★ C1：扫描预算改为可运行时调（g_cfgScanMaxClasses / g_cfgScanMaxSec），
+//   内建默认值 40000 / 60s 写在上方 C1 段。
 static std::atomic<int> g_scanCls{0};
 static std::atomic<int> g_scanHits{0};
 static std::atomic<bool> g_scanStarted{false};
@@ -1317,12 +1555,12 @@ static void ScanOneImage(FILE* fp, void* img, int imgIdx, int imgTotal, time_t t
     const uint32_t cc = api.image_class_count(img);
     for (uint32_t i = 0; i < cc; i++) {
         const int scanned = g_scanCls.load();
-        if (scanned >= WOR_SCAN_MAX_CLASSES) {
+        if (scanned >= g_cfgScanMaxClasses) {
             LOGW(TPL_LOG " scan ABORT budget cls=%d (img#%d)", scanned, imgIdx);
             WTBL(fp, "scan ABORT budget cls=%d\n", scanned);
             return;
         }
-        if ((i & 0x3FF) == 0 && (time(nullptr) - t0) > WOR_SCAN_MAX_SEC) {
+        if ((i & 0x3FF) == 0 && (time(nullptr) - t0) > g_cfgScanMaxSec) {
             LOGW(TPL_LOG " scan ABORT budget time=%lds (img#%d/%d)", (long)(time(nullptr) - t0),
                  imgIdx, imgTotal);
             WTBL(fp, "scan ABORT budget time=%lds\n", (long)(time(nullptr) - t0));
@@ -1417,10 +1655,11 @@ static void ScanAllImages(FILE* fp) {
              g_scanHits.load());
         WTBL(fp, "scan img#%d/%d cls=%d hits=%d\n", imgN, (int)an, g_scanCls.load(),
              g_scanHits.load());
-        if (g_scanCls.load() >= WOR_SCAN_MAX_CLASSES) break;
-        if (time(nullptr) - t0 > WOR_SCAN_MAX_SEC) break;
+        if (g_scanCls.load() >= g_cfgScanMaxClasses) break;
+        if (time(nullptr) - t0 > g_cfgScanMaxSec) break;
     }
 }
+#endif  // WOR_DIAG_FULL（S2 名探针 / S1 镜像诊断 / S3 结构扫描）
 
 // ★缺陷2修复：非 il2cpp 线程 invoke 前必须 attach（Il2CppApi.h:47 语义）。
 //   本模块的解析路径跑在框架工作线程（Android/Java 线程），不是 il2cpp 线程；
@@ -1439,6 +1678,7 @@ static void EnsureThreadAttached() {
     LOGI(TPL_LOG " thread attached t=%p domain=%p", t, d);
 }
 
+#if WOR_DIAG_FULL
 static void* WorScanThread(void*) {
     Il2Cpp::SetScanThread(pthread_self());   // SEGV handler 按线程匹配，必须先登记
     EnsureThreadAttached();                  // 复用同一助手（幂等），不再自带一份
@@ -1455,13 +1695,14 @@ static void StartScanThread() {
     pthread_t t;
     if (pthread_create(&t, nullptr, WorScanThread, nullptr) == 0) {
         pthread_detach(t);
-        LOGI(TPL_LOG " scan thread started (budget cls=%d sec=%d)", WOR_SCAN_MAX_CLASSES,
-             WOR_SCAN_MAX_SEC);
+        LOGI(TPL_LOG " scan thread started (budget cls=%d sec=%d)", g_cfgScanMaxClasses,
+             g_cfgScanMaxSec);
     } else {
         g_scanStarted.store(false);
         LOGW(TPL_LOG " scan thread create failed — 跳过 S3（不阻塞主线程）");
     }
 }
+#endif  // WOR_DIAG_FULL（S3 扫描线程）
 
 // ============================================================
 // B3：运行时布局解析（零静态 RVA）
@@ -1500,6 +1741,7 @@ static void* FindSysClass(const char*& how) {
     return nullptr;
 }
 
+#if WOR_DIAG_FULL
 // S5：四个目标类的字段表（logcat 40 行上限，文件完整）
 static void DumpTargetFields() {
     auto& api = GetApi();
@@ -1534,6 +1776,24 @@ static void DumpTargetFields() {
             LOGW(TPL_LOG " off LIST_ITEMS/LIST_SIZE: lValues 类型链拿不到，保留国服宏");
         }
     }
+}
+#endif  // WOR_DIAG_FULL（S5 目标类字段表 dump）
+
+// ★ C1：把 wor_cfg.txt 里显式给出的偏移作为「最终真值」写回（优先级最高）。
+//   为什么放在这里而不是解析时：ApplyRuntimeOffsets() 内部会**强制恢复国服真值**
+//   （HybridCLR 的 il2cpp_field_get_offset 对值类型多报 0x10），所以 cfg 必须最后落。
+static void WorCfgApplyOffsets() {
+    int n = 0;
+    for (int i = 0; i < WOR_CFG_OFF_N; i++) {
+        if (!g_cfgOffSet[i]) continue;
+        LOGI(TPL_LOG " cfg-off %-18s = 0x%X（wor_cfg.txt 覆盖）", kWorCfgOffs[i].what,
+             (unsigned)*kWorCfgOffs[i].dst);
+        n++;
+    }
+    if (n > 0)
+        LOGI(TPL_LOG " cfg-off: %d 项由 wor_cfg.txt 覆盖（优先于内建/国服真值）", n);
+    // hData 是装机闸门的依据 —— 被 cfg 覆盖时必须同步闸门变量，否则 hook 会被拒绝装机
+    if (g_cfgOffSet[WOR_CFG_OFFIDX_HDATA] && g_off_SYS_HDATA != 0) g_offHdataRuntime = true;
 }
 
 // S6 + 覆盖：把运行时真值写进 g_off_*（解析到就覆盖，否则**保持国服兜底值**）
@@ -1641,6 +1901,7 @@ static void ApplyRuntimeOffsets() {
             o = OffOfField(g_entKlass, "m_uID", o, "ENTITY_MUID_ALT");
         g_off_ENTITY_MUID = o;
     }
+    WorCfgApplyOffsets();   // ★ C1：cfg 覆盖最后落，优先级高于上面的国服真值恢复
 }
 
 // S4 + 钩点候选：ExcuteOnce 必须 argc==1；HasComponent 必须 argc==1 且 p0 含 EComponentType
@@ -1697,6 +1958,7 @@ static void ResolveRuntimeLayout() {
     }
     LOGI(TPL_LOG " ===== runtime layout begin =====");
     WTBL(g_tblFile, "\n===== runtime layout begin =====\n");
+#if WOR_DIAG_FULL
     DumpBattleDiagnostics("resolve");
 
     // ---- S2 name-probe：3 个类名的全部合理写法都试（如实报告哪个 HIT）----
@@ -1712,6 +1974,7 @@ static void ResolveRuntimeLayout() {
     ProbeName("CSharpBattle.Battle", "HpChangeData");
     ProbeName("", "stHpChangeData");
     ProbeShortAll("Entity", 20);
+#endif  // WOR_DIAG_FULL（S1 镜像诊断 + S2 名探针）
 
     // ---- 定位系统类（唯一按名依赖）----
     const char* how = "MISS";
@@ -1740,12 +2003,16 @@ static void ResolveRuntimeLayout() {
         if (!g_entKlass) LOGE(TPL_LOG " mAtkEntity 类型链失败 —— Entity 禁止按名找，euid 读不到");
     }
 
+#if WOR_DIAG_FULL
     DumpTargetFields();
+#endif
     ApplyRuntimeOffsets();
     ResolveHookCandidates();
 
+#if WOR_DIAG_FULL
     // S3 全域结构扫描（后台线程，主线程立即返回）
     StartScanThread();
+#endif
 
     LOGI(TPL_LOG " ===== runtime layout end sys=%p data=%p com=%p ent=%p hdataRT=%d =====", g_sysKlass,
          g_dataKlass, g_comKlass, g_entKlass, g_offHdataRuntime ? 1 : 0);
@@ -1777,12 +2044,13 @@ static void RetryResolveOffsets() {
 //      时刻早已关闭，等于没重试。**必须按时间节流**（下见 WOR_LAYOUT_RETRY_MS）。
 //   2) 程序集尚未加载完时（asmN 很小）跑 S1~S6 会得到空表：S1 的 image 列表为空、
 //      FindSysClass 遍历 0 个程序集必然 MISS ⇒ wor_tables.txt 毫无价值、唯一的诊断机会被浪费。
-//      ⇒ 加程序集就绪闸门（WOR_LAYOUT_MIN_ASM + WOR_LAYOUT_MIN_ELAPSED_MS）；
+//      ⇒ 加程序集就绪闸门（默认 6 个程序集 + 至少 1500ms；见 C1 的
+//        layout_min_asm / layout_min_ms 两个 cfg 键）；
 //      并在「诊断跑过但仍未解析成功」时**允许再补一次**（上限 2 次，见 g_diagRuns）。
 static const int64_t WOR_LAYOUT_RETRY_MS        = 500;    // 轻量重试最小间隔
 static const int64_t WOR_LAYOUT_GIVEUP_MS       = 60000;  // 距首次接触超此值则停止重试
-static const int64_t WOR_LAYOUT_MIN_ELAPSED_MS  = 1500;   // 诊断前至少等这么久（等 il2cpp_init 跑完）
-static const size_t  WOR_LAYOUT_MIN_ASM         = 6;      // 程序集少于此数视为未加载完
+// ★ C1：上面两个闸门阈值已改为运行时变量 g_cfgMinElapsedMs / g_cfgMinAsm
+//   （内建默认 1500ms / 6，可用 wor_cfg.txt 的 layout_min_ms / layout_min_asm 覆盖）。
 static const int     WOR_LAYOUT_MAX_DIAG        = 2;      // 重量级诊断最多跑几次
 static const int64_t WOR_LAYOUT_DIAG_REARM_MS   = 10000;  // 首次诊断后仍未成功，满此时间允许补一次
 
@@ -1852,7 +2120,7 @@ static void EnsureLayout() {
         void** asms = api.Assemblies(&asmN);
         return asms != nullptr || asmN == 0;
     });
-    if (!probed || asmN < WOR_LAYOUT_MIN_ASM || elapsed < WOR_LAYOUT_MIN_ELAPSED_MS) {
+    if (!probed || asmN < g_cfgMinAsm || elapsed < g_cfgMinElapsedMs) {
         const int64_t last = g_lastRetryMs.load();
         if ((nowMs - last) >= WOR_LAYOUT_RETRY_MS) {
             g_lastRetryMs.store(nowMs);
@@ -1872,8 +2140,11 @@ static void EnsureLayout() {
         g_diagRuns.fetch_add(1);
         g_layoutDone.store(true);
         EnsureWorSyms();
-        if (!g_tblFile) g_tblFile = WorTblOpen("w");   // 主线程持有一份（诊断/对账）
-        if (g_tblFile) WTBL(g_tblFile, "===== WOR e2 layout run#%d %s =====\n", runs + 1, WOR_BUILD_TAG);
+        // ★ C1/C2：正式构建或 cfg diag=0 时连侦察表都不开（不留任何诊断落盘痕迹）
+        if (g_cfgDiag && !g_tblFile) g_tblFile = WorTblOpen("w");   // 主线程持有一份（诊断/对账）
+        if (g_tblFile)
+            WTBL(g_tblFile, "===== WOR e2 layout run#%d %s %s =====\n", runs + 1, WOR_BUILD_TAG,
+                 WOR_DIAG_TIER);
         LOGI(TPL_LOG " layout diag run#%d asm=%zu elapsed=%lldms", runs + 1, asmN, (long long)elapsed);
         ResolveRuntimeLayout();
     } else {
@@ -1950,16 +2221,18 @@ bool Wor_TryInit(JavaVM* /*vm*/) {
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
     g_libReady.store(true);
+    WorCfgLoad();   // ★ C1：读设备侧 wor_cfg.txt（不存在/写坏 ⇒ 全部保持内建默认值）
 #if WOR_ENV_STAGE
     // 环境阶段：不解析探针助手、不装任何 hook —— 只标记「真库已就位」
-    LOGI(TPL_LOG " lib ready (liblogic.so, ENV stage e1) hooked=0 tag=%s", WOR_BUILD_TAG);
+    LOGI(TPL_LOG " lib ready (liblogic.so, ENV stage e1) hooked=0 tag=%s %s", WOR_BUILD_TAG,
+         WOR_DIAG_TIER);
 #else
     // 功能阶段：先做**只读**运行时布局解析（S1~S6 诊断 + 后台 S3 扫描 + g_off_* 覆盖），
     // 再装 hook；布局解析失败时 InstallBattleHooks 内部会拒绝装机（功能降级但不崩）。
     EnsureLayout();
     InstallBattleHooks();
-    LOGI(TPL_LOG " lib ready (liblogic.so, feature stage) hooked=%d tag=%s",
-         g_anyHooked.load() ? 1 : 0, WOR_BUILD_TAG);
+    LOGI(TPL_LOG " lib ready (liblogic.so, feature stage) hooked=%d tag=%s %s",
+         g_anyHooked.load() ? 1 : 0, WOR_BUILD_TAG, WOR_DIAG_TIER);
 #endif
     return true;
 }
