@@ -26,6 +26,23 @@
   `伊莫` 也没有 `YIMO_`）。丢弃谓词只按标记串匹配时，声明行被丢、续行留下 ⇒
   提交里混入他人半截代码。本脚本因此加了「截断语句」检测：被丢弃的行若以
   `=` `+` `,` `(` `\\` 结尾且其下一行被保留，直接报错（用 --allow-truncated-statement 放行）。
+
+Windows 兼容（2026-10-03 Win 端实测补齐，mac 行为不变；两处都是真崩/真写错，不是洁癖）：
+  ① `git show` 等子进程输出必须显式 `encoding="utf-8"`。不写就按本机 locale 解码，Windows
+     上是 cp936 → 输出里的 UTF-8 字节抛 `UnicodeDecodeError: 'gbk' codec can't decode
+     byte 0xaa`；异常发生在 Popen 的读取线程里，主线程只看到 `res.stdout is None`，
+     报成 `AttributeError: 'NoneType' object has no attribute 'splitlines'`（head_lines）。
+     配 `errors="surrogateescape"` 保证字节级无损（含读工作区文件那一处）。
+  ② 写索引的 `hash-object --stdin` 必须走 **bytes 输入**（`input=data`，非文本模式），
+     并加 `--path` 让 checkin filter 生效。文本模式 stdin 会把 `\n` 翻成 `os.linesep`，
+     Windows 上即 `\r\n` → 索引里写出 CRLF blob（实测 CR=1251 / 111447 B，工作区仅
+     110196 B），`git diff --cached` 退化成整文件重写（1251+/1232−）并破坏「全仓 LF」。
+     mac 因 `os.linesep == "\n"` 无此问题，故此缺陷只在 Win 端暴露。
+  ③ `run_git` 只用于**读** git 输出；任何往 git 写字节的动作（`hash-object --stdin`）都必须
+     走 `hash_blob()` 的 bytes 通道。注意 `subprocess.Popen` **没有** `newline=` 参数
+     （Python 3.11 实测 `TypeError: Popen.__init__() got an unexpected keyword argument
+     'newline'`），文本模式的换行翻译关不掉 ⇒ 只能绕开文本模式。写入索引后再复核 blob
+     字节数（见 hash_blob），防止换行/编码被静默改写。
 """
 from __future__ import annotations
 
@@ -39,10 +56,50 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def run_git(args: list[str], text_input: str | None = None) -> subprocess.CompletedProcess:
+# 见文件头「Windows 兼容」①：显式编码，避免按本机 locale（Windows=cp936）解码
+GIT_TEXT_KW: dict[str, str] = {
+    "encoding": "utf-8",
+    "errors": "surrogateescape",
+}
+
+
+def run_git(args: list[str]) -> subprocess.CompletedProcess:
+    """只读调用 git（不传 stdin）。写对象请用 hash_blob。"""
     return subprocess.run(
-        ["git", *args], cwd=ROOT, capture_output=True, text=True, input=text_input
+        ["git", *args],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        **GIT_TEXT_KW,
     )
+
+
+def hash_blob(content: str, path: str) -> tuple[str | None, str]:
+    """把内容写成 git blob（字节级），返回 (blob sha, 错误信息)。
+
+    见文件头「Windows 兼容」②：bytes 输入 + `--path`（filter 生效），与 `git add`
+    的落库结果一致；写完用 `cat-file -s` 复核字节数，不符即拒绝写索引。
+    """
+    data = content.encode("utf-8", "surrogateescape")
+    res = subprocess.run(
+        ["git", "hash-object", "-w", "--path", path, "--stdin"],
+        cwd=ROOT,
+        capture_output=True,
+        input=data,
+    )
+    if res.returncode != 0:
+        return None, res.stderr.decode("utf-8", "replace").strip()
+    blob_sha = res.stdout.decode("ascii", "replace").strip()
+    size_res = run_git(["cat-file", "-s", blob_sha])
+    got = size_res.stdout.strip() if size_res.returncode == 0 else ""
+    # filter 归一化（CRLF→LF）是唯一允许的字节数变化，其余一律视为被改写
+    allowed = {len(data), len(data.replace(b"\r\n", b"\n"))}
+    if not got.isdigit() or int(got) not in allowed:
+        return None, (
+            f"blob 字节数不符：写入 {len(data)} B，git 报 {got or '?'} B —— "
+            "换行/编码被改写，拒绝写索引"
+        )
+    return blob_sha, ""
 
 
 def head_lines(path: str) -> list[str] | None:
@@ -72,6 +129,11 @@ def render_diff(before: list[str], after: list[str], path: str, limit: int) -> s
 
 
 def main() -> int:
+    # Windows 控制台默认 cp936：打印无法编码的字符（他人改动的原样字节）会抛
+    # UnicodeEncodeError，这里只把「无法编码」的字符降级为 \xNN，不影响正常输出。
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
     ap = argparse.ArgumentParser(description="共享文件内容级暂存（不动工作区）")
     ap.add_argument("--path", required=True, help="仓库相对路径（单个文件）")
     ap.add_argument("--drop-pattern", action="append", default=[], help="正则：命中该行的整行丢弃（可重复）")
@@ -117,7 +179,7 @@ def main() -> int:
         start, end = spec.split("::", 1)
         blocks.append((start, end))
 
-    lines = target.read_text(encoding="utf-8").splitlines(keepends=True)
+    lines = target.read_text(encoding="utf-8", errors="surrogateescape").splitlines(keepends=True)
 
     kept: list[str] = []
     dropped: list[tuple[str, int, str]] = []
@@ -191,11 +253,10 @@ def main() -> int:
         print("==> dry-run：未写索引（去掉 --dry-run 生效）")
         return 0
 
-    blob = run_git(["hash-object", "-w", "--stdin"], text_input=content)
-    if blob.returncode != 0:
-        print(f"错误: git hash-object 失败: {blob.stderr}", file=sys.stderr)
+    blob_sha, err = hash_blob(content, path)
+    if blob_sha is None:
+        print(f"错误: git hash-object 失败: {err}", file=sys.stderr)
         return 1
-    blob_sha = blob.stdout.strip()
     mode = file_mode(path)
     upd = run_git(["update-index", "--cacheinfo", f"{mode},{blob_sha},{path}"])
     if upd.returncode != 0:
