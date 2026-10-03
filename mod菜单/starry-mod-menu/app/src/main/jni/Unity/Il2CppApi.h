@@ -47,7 +47,15 @@ typedef char* (*type_get_name_t)(void*);              // Il2CppType* -> 全名�
 typedef void* (*thread_attach_t)(void*);              // domain -> Il2CppThread*（非 il2cpp 线程 invoke 前必须）
 typedef void* (*method_get_return_type_t)(void*);     // MethodInfo -> Il2CppType*
 typedef void* (*method_get_param_t)(void*, uint32_t); // MethodInfo, idx -> Il2CppType*
-typedef uint32_t (*method_get_flags_t)(void*);        // MethodInfo -> flags（0x10=static）
+/* ★2026-10-03 修正（MuMu 实机血证，务必不要再改回单参）：
+ *  `il2cpp_method_get_flags(const MethodInfo* method, uint32_t* iflags)` 是**双参** API，
+ *  第二参是「输出型 iflags 指针」。旧声明只有 `(void*)`，调用方只传 1 个参数 ⇒ callee 的 x1
+ *  带着**上一条指令留下的残留值**（可能是任何地址）→ callee 末尾 `str w0,[x20]` 写那个地址。
+ *  实测崩在 `il2cpp_method_get_flags+0x1c`（`str w0,[x20]`）SIGSEGV_ACCERR，x1 = libil2cpp 代码段
+ *  内的只读地址 `0x400020807ac6`（反汇编：`20b16b8 cbz x1,20b16cc` / `20b16c8 str w0,[x20]`）。
+ *  ⇒ 调用时第二参写 `nullptr` 是**安全**的：`cbz x1` 会跳过那次写入（同上反汇编实证）。
+ *  返回值为 `flags`（`0x10` = METHOD_ATTRIBUTE_STATIC），第二参只收 `iflags`，我们不关心。 */
+typedef uint32_t (*method_get_flags_t)(void*, uint32_t* iflags);  // MethodInfo -> flags（0x10=static）
 
 /* ⚠️ 成员实名速查（写游戏模块时最易记错；2026-10-01 失落城堡因写 `class_get` 编译失败）：
  *   class_get_field      ← 不是 class_get / class_get_field_from_name（底层 typedef 才长那样）
@@ -138,6 +146,13 @@ struct Api {
 Api& GetApi();
 
 bool IsValidHeapPtr(void* p);
+
+/** maps 级可读/可执行判定：[addr, addr+len) 必须完整落在单个映射内。
+ *  装 inline hook / 读目标方法前 12 字节之前必须先过这一关（HybridCLR 解释方法的
+ *  methodPointer 可能是 0x400000000000 这类「标记值」，直接解引用即致命故障）。
+ *  内部 fopen /proc/self/maps，仅低频/装钩路径可用。 */
+bool IsReadableRange(uintptr_t addr, size_t len);
+bool IsExecutableRange(uintptr_t addr, size_t len);
 
 inline int32_t ReadI32(void* p, size_t off) { return *(int32_t*)((uintptr_t)p + off); }
 inline void WriteI32(void* p, size_t off, int32_t v) { *(int32_t*)((uintptr_t)p + off) = v; }

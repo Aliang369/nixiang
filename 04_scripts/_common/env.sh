@@ -87,8 +87,11 @@ if [ -n "${NIXIANG_BUILD_TOOLS:-}" ]; then
   _za="$NIXIANG_BUILD_TOOLS/zipalign"
   [ -x "$_za" ] || _za="$NIXIANG_BUILD_TOOLS/zipalign.exe"
   _as="$NIXIANG_BUILD_TOOLS/apksigner"
-  [ -x "$_as" ] || _as="$NIXIANG_BUILD_TOOLS/apksigner.bat"
-  [ -x "$_as" ] || _as="$NIXIANG_BUILD_TOOLS/apksigner"
+  # Win 上 apksigner 只有 apksigner.bat，而 MSYS 对 .bat 的 [ -x ] 恒为假（实测
+  # zipalign.exe -x=yes / apksigner.bat -x=no,-f=yes），故这里一律用 [ -f ] 判定；
+  # 用 [ -x ] 会退回无扩展名路径，脚本里再 [-x] 校验就报 missing apksigner。
+  [ -f "$_as" ] || _as="$NIXIANG_BUILD_TOOLS/apksigner.bat"
+  [ -f "$_as" ] || _as="$NIXIANG_BUILD_TOOLS/apksigner.exe"
   export NIXIANG_ZIPALIGN="$_za"
   export NIXIANG_APKSIGNER="$_as"
   unset _za _as

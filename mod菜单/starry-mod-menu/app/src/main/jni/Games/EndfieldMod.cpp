@@ -772,7 +772,7 @@ static bool InstallCalcDamage() {
     if (!sigLogged) return false;  // 符号缺失打不出签名：保持不装
     // v14.3：按 CalcSig 实测签名配桩——ret=double、参数全 byref 指针。
     // static 判定 flags&0x10：static → (p0..p3, method)=5 槽；instance → +this=6 槽。
-    uint32_t flags = api.method_flags ? api.method_flags(mi) : 0;
+    uint32_t flags = api.method_flags ? api.method_flags(mi, nullptr) : 0;
     bool isStatic = (flags & 0x0010u) != 0;
     void* fn = MethodPtr(mi);
     void* hook = isStatic ? (void*)Hooked_CalcD5 : (void*)Hooked_CalcD6;
