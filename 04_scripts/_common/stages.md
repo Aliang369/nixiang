@@ -313,7 +313,7 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 | 脚本 | 角色 | 触发场景 |
 |---|---|---|
 | `stage_next.sh` | pipeline.sh 的**包装器/内循环驱动**（P4 轮次门禁 + P5 日志尾 + 状态钉硬约束） | 日常 `status` / `auto N` / 记轮次 |
-| `pipeline.sh` + `pipeline.lock` | 状态机本体（**指纹锁定，禁改**；lock 是机器本地文件） | 所有机械动词 |
+| `pipeline.sh` + `pipeline.lock` | 状态机本体（**指纹锁定，禁改**；lock 由 git 跟踪、被 Syncthing 忽略，见下注） | 所有机械动词 |
 | `preflight.sh` | 阶段执行前的语法/格式机器关 | 阶段声明 `preflight` 时自动调用 |
 | `bash32_check.sh` | macOS bash 3.2 兼容门禁（本仓脚本都要在 3.2 下跑） | 新增/改 `*.sh` 后 |
 | `pre_install_gate.sh` | 装机前产物门禁 | 装机前 |
@@ -322,3 +322,4 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 | `trash_paths.sh` | 受控删除（**拒绝仓库根/.git/01_tools/02_apks/08_output**） | 清理 |
 
 - **清理禁通配符（P9）**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库 tracked 脚本，靠 `git checkout` 才救回）。
+- **真要改 `pipeline.sh` 时的跨机姿势（2026-10-03 澄清）**：`pipeline.sh` 与 `_common/pipeline.lock` 都是 **git 跟踪文件**（`git ls-files 04_scripts/_common/pipeline.lock` 命中），只是 `_common/pipeline.lock` 被 Syncthing `.stignore` 忽略（`10_docs/双机协作/双机协作同步方案.md:482`，避免双通道冲突），而 `pipeline.sh` 本身走 Syncthing。所以改法是：**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的 `shasum -a 256`，然后 push，另一台 `git pull --rebase --autostash` 后即一致（不必手工碰 lock）；**禁止**只改一边或两端同时改 —— Syncthing 会先把新 `pipeline.sh` 送到另一台而那边 lock 还是旧的，该机任何 `pipeline.sh` 命令都会 die「指纹不匹配」，`git pull` 一次即恢复。

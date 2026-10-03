@@ -4,8 +4,9 @@
 #
 #  它与 pipeline.sh 的关系（铁律）：
 #    * 它 **不替代** pipeline.sh，也 **不修改** pipeline.sh / pipeline.lock
-#      （后者启动即校验 sha256 指纹，且 pipeline.lock 是机器本地文件，
-#        改 pipeline.sh 会让另一台机器的 lock 失配 ⇒ 全仓第一条命令不可用）。
+#      （后者启动即校验 sha256 指纹；两个文件都走 git 同步、lock 被 Syncthing
+#        忽略 ⇒ 真要改必须同一提交改 pipeline.sh + 刷新 lock 并 push，
+#        另一台 `git pull` 后才一致，否则那台会 die「指纹不匹配」）。
 #    * 所有机械动作仍由 `bash 04_scripts/pipeline.sh <游戏> <动词>` 执行；
 #      本脚本只做三件事：① 转发动词 ② 回显日志尾 40 行 ③ 装机前查轮次门禁。
 #
