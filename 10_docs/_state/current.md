@@ -84,7 +84,7 @@
 
 - [状态目录规则](games/README.md)
 - [基础设施与工作区历史](games/infrastructure.md)
-- [挂起与待审批经验](pending_experience.md)
+- [挂起与候选经验](pending_experience.md)
 
 ## 历史来源
 

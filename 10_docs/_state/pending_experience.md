@@ -4,11 +4,13 @@
 
 状态含义：
 
-- `candidate`：记录了可验证的候选经验，尚未获用户批准。
-- `approved`：用户已明确批准沉淀，但尚未合并到规范/skill。
+- `candidate`：候选经验，证据或落点还不齐。
+- `approved`：证据齐＋落点明确，已按自动门槛自批，待合并（2026-10-04 起不再等用户审批）。
 - `merged`：已经落入目标规则，必须记录实际目标位置与合并 commit。
-- `rejected`：用户明确决定不采纳，保留否定依据。
+- `rejected`：有充分反证不采纳（不要求用户逐条决定），保留否定依据。
 - `stale`：适用条件变化或被新证据推翻，保留历史与替代关系。
+
+2026-10-04 起审批语义改为证据门槛（见 AGENTS.md「规范/技能优化全自动」）；下文历史条目原文不改，其中的「待用户批准」按新门槛重新判定即可。
 
 新建经验卡请使用 `10_docs/_templates/经验候选卡.md` 的 YAML frontmatter，并运行：
 
@@ -18,7 +20,7 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 
 本工具只审计 `10_docs/_templates/经验*.md`，不自行审批经验、不改写卡片、不迁移历史内容。
 
-## 现有待审批/已合并记录
+## 现有候选/已合并记录
 
 - [证书嵌入 so 经验](../_templates/经验_证书嵌入so_20260906.md)：**已批准并合并**（2026-09-06）——证书固定改 so 烘焙（RegisterNatives 19/19），自测壳实测 200；已写入 SKILL.md 分发自检、surgical-build.md、auth-chain.md。跨样本 3 项 NOT PROVEN 随首个新游戏外科包回归，存量包/旧脚本不追溯。
 - 超维进化卡死、追迹迷城偶发闪退、无限升级运行与授权、旁路小屏验证：保留在各摘要，不自动恢复执行或操作设备。
@@ -28,4 +30,4 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - [收官工具链四处摩擦（2026-09-20）](../_templates/经验_收官工具链摩擦_20260920.md)：**已合并**（提交 `8d04780`，2026-09-20 用户「1234都改」）——落地于 `skill/starry-mod/SKILL.md`、`surgical-build.md`、`stages.md`、`pre_install_gate.sh` 和 `AGENTS.md`。
 - [splice 离线闭环 + early hook 超时（超维进化 0.3.5，2026-09-21）](../_templates/经验_splice离线闭环与earlyhook_20260921.md)：**候选，未审批**——splice 型改动的离线镜像需抽真源码、主机编译并逐字节比 delta；early hook timeout 的含义待适用条件验证。拟落 `hook-rules.md` + `starry-mod/SKILL.md`。
 - [热更指纹漂移与令牌浪费（勇士之心 1.0.3）](../_templates/经验_热更指纹漂移_20260921.md)：**已合并**（2026-09-21 用户明确授权）——已落入 `hook-rules.md` §24、`re-extract/hotupdate-fingerprint-recheck.md`、`AGENTS.md` 和 `stages.md`。
-- 新实验使用 [逆向实验记录](../_templates/逆向实验记录.md)；新经验使用 [经验候选卡](../_templates/经验候选卡.md)，审批前保持候选状态。
+- 新实验使用 [逆向实验记录](../_templates/逆向实验记录.md)；新经验使用 [经验候选卡](../_templates/经验候选卡.md)，证据与落点齐备前保持候选状态。
