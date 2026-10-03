@@ -185,6 +185,24 @@ public final class SignSpoof {
                     + "BcSj2pHWWshF0I5/izr9uauCrYs60OSmrz4rxVQeFZd/nRed2G8T02G63UXrxVaw9G2vM7FdqTsb"
                     + "TvxTYsXDsIfZwKGaWw3Gqj7EyDC+7Q8=";
 
+    /** 冒险与征途原版（DER MD5=75a45fe1ff40e82fc47b3e656463e463, SHA-256=f49c6ca5… O=miaoyue C=510000） */
+    private static final String MXYZT_PKG = "com.mxyzt.gzmy";
+    private static final String MXYZT_CERT_B64 =
+            "MIIDNjCCAh4CAQEwDQYJKoZIhvcNAQELBQAwYTEQMA4GA1UEAwwHbWlhb3l1ZTEQMA4GA1UECwwHbWlh"
+                    + "b3l1ZTEQMA4GA1UECgwHbWlhb3l1ZTELMAkGA1UEBwwCZ3oxCzAJBgNVBAgMAmdkMQ8wDQYDVQQGEwY1"
+                    + "MTAwMDAwHhcNMjQwNjEyMDgwMTM5WhcNNDkwNjA2MDgwMTM5WjBhMRAwDgYDVQQDDAdtaWFveXVlMRAw"
+                    + "DgYDVQQLDAdtaWFveXVlMRAwDgYDVQQKDAdtaWFveXVlMQswCQYDVQQHDAJnejELMAkGA1UECAwCZ2Qx"
+                    + "DzANBgNVBAYTBjUxMDAwMDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAPE9hzryzJYLhVTL"
+                    + "aMz5zFT5oKLeG5q07VV8iUHnSxbs7nMnYtKnUAW3XUcQ4blnAKGplJANzoNflnMPuEA7UJ9c1C2+OnYV"
+                    + "MDdeJ5nPL+5pVOPavcXrGxLdarmeEl/YG3meWSPh40Knc4oQhp1m+bO6kTCSd1Ao3JnJ1zehLJikWwu0"
+                    + "uE4wBPiPTUp80K8cGbnRILyz69ddgZhvdKGZGOFC/YRdwLzfZ+G/KlBnMd4nYKPBltlyvN/bF7Ed7mIf"
+                    + "QtdNQYt5K0Ruxx8k73gC2Om2xT4N9zztAwnGYctCTeHTtBYwCI8Un1Yy7AIMVwzgWa6TJmVJEVjTXgsZ"
+                    + "bPXJZQ8CAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAgxRznMdpc7iLC3qwcXS4MkBYzBzLSMsYj9wKKNVw"
+                    + "bIo8UlRfQhMS6Pkncq2kCVK5/PlFOmTH2Rv7+zdgedJV9Jv6FN71d1bYcfLgzkPvCQiUfcCH3c/gVtNt"
+                    + "l5e31WJ4/MBT78XhQbTPavasXwr9T2gjrpP2LiR3MIYdMdsRodQyvD2Sc6bl6GX0dJQHReZonAK43jnV"
+                    + "AbMwAFOKm9gcnSDJMNatDdEBwPHWy5cw+QxASXuT+IOSy1DQ48VubQ7DeLpBkVfr7Rrzbu7+lmhNdyXM"
+                    + "8JHh6EloxLvqrNtXoDVgRBvMzTU1bb8HTBLksLv2t731IWArs5pjVpKEeAYbug==";
+
     /** 魂坠深境原版（MD5=a3e3c07b… O=Chillyroom） */
     private static final String HZSJ_PKG = "com.chillyroom.containerofsoul.yw";
     private static final String HZSJ_CERT_B64 =
@@ -1034,6 +1052,7 @@ public final class SignSpoof {
                 fakes.put(NEON_TT_PKG, new Signature(Base64.decode(NEON_TT_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ZJMC_PKG, new Signature(Base64.decode(ZJMC_CERT_B64, Base64.DEFAULT)));
                 fakes.put(HZSJ_PKG, new Signature(Base64.decode(HZSJ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(MXYZT_PKG, new Signature(Base64.decode(MXYZT_CERT_B64, Base64.DEFAULT)));
                 fakes.put(CSTJJS_PKG, new Signature(Base64.decode(CSTJJS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(PCR_PKG, new Signature(Base64.decode(PCR_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GYWS_PKG, new Signature(Base64.decode(GYWS_CERT_B64, Base64.DEFAULT)));
