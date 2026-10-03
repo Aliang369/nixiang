@@ -1,0 +1,116 @@
+# 境界守望者 事实台账（`_facts.md`）
+
+> 用途：只记**已验证的硬事实**，供后续会话在上下文被压缩后快速恢复。
+> 规则：每条必须标来源；未验证的写进「待验证」，不要混进「已定案」。
+> 建立：2026-10-04（星光改造 e1+e2 收尾后）。
+
+---
+
+## 1. 结论一句话
+
+国服星空版框架已复刻到国际服 `com.ap.watcherofrealms` 1.6.38.829.1：**e1（去签名 + 菜单进游戏）+ e2（无敌 / 伤害倍率）均真机验收通过**；正式交付包为**单 APK 无 root 直装**。
+已知限制：服务端战斗校验（`FightVerify` 子系统）——受校验玩法内该局不结算。
+
+---
+
+## 2. 产物指纹（来源：`正式包裁剪清单_20261003.json` + 真机 `adb install` 回读）
+
+| 产物 | 大小 | md5 | sha256 |
+|---|---|---|---|
+| **单 APK 正式交付包** `08_output/境界守望者/境界守望者_1.6.38.829.1_starry-single.apk` | 206,074,679 B | `88f5d479f163e82feb9f1921388acfd7` | `26771f350ddaf33179e8ddd48057fbc343bfeb3cfc38e0c0afbd9493ab978217` |
+| 开发形态 base `..._starry-releaseSigned.apk` | 173,189,378 B | `054bbb4258954404ebec2f39e9232978` | — |
+| 开发形态 split `..._starry-splitSigned.apk` | 33,393,563 B | `abd232c22858887094c6d5ab8581f0d5` | — |
+| 星光 so（构建产物，三副本一致）| 2,233,888 B | `c67ab0c0693ced4900e0dbb7eb91f4c3` | — |
+
+- 签名证书 SHA-256：`83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d`（DN `CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN`）
+- 原包签名（`WOR_CERT_B64`）：DER 708 B / RSA-2048 / SHA1withRSA / MD5 `714d7927b0e8041ee55a40eaefa56adb`
+- 构建 tag：`WOR_BUILD_TAG "wor-e2-20261003c"`（`Games/WorMod.cpp:62`）
+
+## 3. 设备/包信息
+
+- 测试机序列号 `96f0d883`；包名 `com.ap.watcherofrealms`；`versionCode=16388291`、`versionName=1.6.38.829.1`、`minSdk=26`、`targetSdk=36`、`primaryCpuAbi=arm64-v8a`
+- 单 APK 装机后：`splits=[base]`，`codePath/lib/arm64` 下 **36** 个 `.so`（35 官方 + `libstarry_magic.so`）
+- 设备侧证据目录（可读可写可 pull）：`/sdcard/Android/data/com.ap.watcherofrealms/files/`
+  `/data/data/com.ap.watcherofrealms/` **不可读**；`run-as` 报 not debuggable
+- 关键输入（`06_dumped/境界守望者/base_1.6.38.829.1/`）：`liblogic.bytes` 137,648,336 B、`global-metadata.dat` 18,184,372 B（version 24 / magic `0xFAB11BAF`）
+
+## 4. 三个卡点（定论，来源：`正式包_单APK合并_20261003.md` §10 / 功能阶段文档 §10）
+
+1. **壳劫持 soname**：split 内 232,520 B 的 `libil2cpp.so` 转发壳与真 `liblogic.so` **同 DT_SONAME**；`Api::Load("libil2cpp.so")` 命中壳并把 `api.ready` 提前点亮 ⇒ 27 个指针全落在壳里。
+   → 修：`WorForceApiFromRealLib()` 用 maps-path 真句柄 `dlsym` 覆盖 **28** 个 `il2cpp_*` 成员（`Games/WorMod.cpp`）。
+2. **`Api::ImageOf()` 判空**：`Unity/Il2CppApi.cpp:895-909` 的 `IsValidHeapPtr()` 拒绝 Android 14+ tagged 堆指针（`0xb400…`）⇒ 63 个程序集全判空。
+   → 修：`WorImageOf()` 优先走真导出 `assembly_image`，失败退回 `asm` 自身；**不再直读首字段**。
+   （SELFTEST 实证：`rawFirst == export`，`mscorlib.dll cnt=1361`；`asm自身` 候选 `cnt=116 name='i???t'` 不可用。）
+3. **值类型 +0x10 偏置**：EN 环境 `il2cpp_field_get_offset` 对 `stHpChangeData` / `eRelationData` **统一多报 `0x10`**（HybridCLR 伪字段区）。
+   → 修：`ApplyRuntimeOffsets()` 对账后**强制恢复国服真值**，打日志 `HPD 值类型 +0x10 偏置已纠正`。
+   否则 `fValue` 读在 `show/eShowText` 上、`raw` 恒正、写闸门 `raw<0` 永不通过。
+
+另修：`EnsureLayout()` 两道硬闸门（①库已映射 ②`asmN>=6 && elapsed>=1500ms`）+ `EnsureThreadAttached()` 后移——早于 `il2cpp_init` 调 `il2cpp_thread_attach` 会 `abort()`（曾致无限重启）。
+
+## 5. 字段偏移（来源：`Games/WorMod.cpp:164-181` 声明值 + 真机对账日志）
+
+`WOR_ENV_STAGE 0`（`WorMod.cpp:137`）。
+
+| 变量 | 值 | 字段 |
+|---|---|---|
+| `g_off_SYS_COM_HP` | `0x50` | `HpChangeEntitySystem.com_hp : HPChangeComponent` |
+| `g_off_SYS_HDATA` | `0x60` | `HpChangeEntitySystem.hData : stHpChangeData` |
+| `g_off_SYS_MATK` | `0xD0` | `HpChangeEntitySystem.mAtkEntity : Entity` |
+| `g_off_SYS_FDAMAGE` | `0xD8` | `HpChangeEntitySystem.fDamage : Fix64` |
+| `g_off_HPCOMP_LVALUES` | `0x20` | `HPChangeComponent.lValues : List<stHpChangeData>` |
+| `g_off_HPD_FVALUE` | `0x00` | `stHpChangeData.fValue : Fix64` |
+| `g_off_HPD_SRC` | `0x08` | `eDamageSourceType` |
+| `g_off_HPD_SETTLE` | `0x0C` | `eDamageSettleType` |
+| `g_off_HPD_SHOW` | `0x10` | `eTextShowType` |
+| `g_off_HPD_ATK_EUID` | `0x1C` | `eRelationData.eUid` |
+| `g_off_HPD_ATK_CUID` | `0x20` | `eRelationData.cUid` |
+| `g_off_HPD_ATK_UNIT` | `0x24` | `eRelationData.iUnitID` |
+| `g_off_HPD_SKILL` | `0x28` | `iAttackSkillID` |
+| `g_off_HPD_FORMULA` | `0x2C` | `iFormularID` |
+| `g_off_ENTITY_MUID` | `0x10` | `<m_uID>k__BackingField` |
+
+- `FIX64_ONE 4096.0`（Q20.12，`WorMod.cpp:196`）；写闸门 `RAW_SANE_MAX (1LL<<44)`（`:201`）
+- 运行时解析：`OffOfField()` / `OffOfFieldChain()`（`WorMod.cpp:~1544-1642`）
+- 对账结论（真机）：`SYS_MATK rt=0xD8 cn=0xD0 DIFF`、`SYS_FDAMAGE rt=0xE0 cn=0xD8 DIFF`、`HPD_FVALUE rt=0x10 cn=0x00 DIFF`…；`LIST_ITEMS/LIST_SIZE/HPCOMP_LVALUES/ENTITY_MUID` **match**；`ARRAY_LEN` 运行时返回 `0xFFFFFFFF` ⇒ keep-cn `0x18`
+- ⚠️ **禁止**把带 `+0x10` 偏置的运行时值写回 `g_off_*`（历史 bug）
+
+## 6. 符号/运行时事实（来源：真机 `wor_tables_r5.txt` / `[Wor]` 日志）
+
+- `Api` 结构体偏移：`domain_get +0x20`、`thread_attach +0xC0`（反汇编认帧得出）
+- 程序集总数 **63**；`#61 Assembly-CSharp.dll cnt=7300`、`#62 Assembly-CSharp-firstpass.dll cnt=1626`、`#0 mscorlib.dll cnt=1361`
+- `HpChangeEntitySystem` 命名空间 `CSharpBattle.Battle`；`probe short Entity -> HIT`
+- `HpChangeEntitySystem` 全字段 dump：`com_hp 0x50` / `hData 0x60` / `mAtkEntity 0xD8` / `fDamage 0xE0` / `lDamageResults 0x1C8`
+- `stHpChangeData` dump 值**带 +0x10 偏置**：`fValue 0x10`(真 0x00) / `eDamageSourceType 0x18`(真 0x08) / `eDamageSettleType 0x1C`(真 0x0C) / `eTextShowType 0x20`(真 0x10) / `iAttackSkillID 0x38`(真 0x28) / `iFormularID 0x3C`(真 0x2C) / `AtkRelationData 0x2C`
+- `HPChangeComponent`：`lValues 0x20` / `bSuicide 0x28` / `bSuicideNoShow 0x29`
+- 布局闸门常量：`WOR_LAYOUT_MIN_ELAPSED_MS = 1500`、`WOR_LAYOUT_MIN_ASM = 6`（`WorMod.cpp:~1780`，检查点 `:~1855`）
+- 命名坑：`HPChangeComponent` **大写 HP**；`Entity` 无名前缀（`CSharpBattle.Battle.Entity` = 0 命中，**不可按名查找**，走 `mAtkEntity` 字段类型链）；`comHp`/`ComHp` = 0 命中
+
+## 7. 真机验收实证
+
+- 桥接自检：`[桥接] RegisterNatives 19/19 全部成功`、`StarryBridgeTest: === 桥接自检结束: PASS=15 FAIL=0 ===`
+- 写回：
+  ```
+  [Wor] INV e=0x73250db2d0 uid=9 raw=-446464->0
+  [Wor] DMG x5 e=0x73250dbdc0 uid=6 raw=-671744->-3358720
+  [Wor] DMG x10 e=0x732a1ff410 uid=32 raw=-806912->-8069120
+  ```
+- 稳定性：pid 全程不变、200s 无 `FATAL`/`SIGABRT`/`SIGSEGV`
+- 日志：`06_dumped/境界守望者/device_logs/wor_e2_20261003_230844_{raw,filt}.log`；截图 `screenshots/wor_single_apk_20261003_235539.png`
+
+## 8. 已知限制：服务端战斗校验
+
+- 症状：开启功能后战斗结束弹「战斗校验结果异常」，**该局不算数、不给奖励**；关掉功能则不弹（用户实测）
+- 定位：`FightVerify` 子系统 —— `CreateBattleVerifyFrames`（客户端录校验帧上报）→ 服务端 `ReplayEngine` 独立重放
+- 结论：**容差为 0**，客户端改多少都会被重放比出来；缩小倍率无效
+- 处置：功能保留在菜单，受校验玩法内不可用；用户决策「不做，就到这」
+
+## 9. 关键路径速查
+
+- 模块源码：`mod菜单/starry-mod-menu/app/src/main/jni/Games/WorMod.cpp`（core）、`WorMod.h`、`WorEntry.cpp`（**不改**）、`Android_wor.mk`
+- 出包链：`04_scripts/境界守望者/wor_build_so.sh` → `surgical_wor_1.6.38.829.1.sh` → `wor_sign.sh` → `wor_install.sh`；合并单包 `wor_merge_single.sh`；真机冒烟 `wor_launch.sh [秒数|gate [秒数]]`
+- 台账：`10_docs/_state/games/境界守望者.md`、`10_docs/_state/current.md`
+
+## 10. 待验证 / 未定
+
+- 「战斗校验结果异常」是否仅部分玩法触发（未探测 `FightVerifyType_*`）
+- `wor_cfg.txt` 设备侧配置化（C1）与 `WOR_DIAG_FULL` 开关（C2）落地后的真机行为 —— 见对应提交
