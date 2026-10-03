@@ -69,11 +69,17 @@ if [ -d "$ROOT/.git" ]; then
   branch_line="$(git status -sb 2>/dev/null | head -1)"
   info "HEAD    : $head_short"
   info "branch  : $branch_line"
-  dirty="$(git status --porcelain --untracked-files=no 2>/dev/null | wc -l | tr -d ' ')"
+  porcelain="$(git status --porcelain --untracked-files=no 2>/dev/null)"
+  # 心跳自指豁免: 心跳一写树就脏, 下一轮体检把自己记成 WARN 会污染心跳结果误导对方 (Win 端 2026-10-04 实测发现)
+  dirty="$(printf '%s\n' "$porcelain" | grep -v '10_docs/_state/机器心跳/' | grep -c . || true)"
+  hb_dirty="$(printf '%s\n' "$porcelain" | grep -c '10_docs/_state/机器心跳/' || true)"
   if [ "$dirty" = "0" ]; then
-    pass "已跟踪文件无改动"
+    pass "已跟踪文件无改动 (心跳文件豁免)"
   else
     warn "已跟踪文件有 $dirty 处未提交改动 (收尾前必须处理)"
+  fi
+  if [ "${hb_dirty:-0}" != "0" ]; then
+    info "心跳未提交 $hb_dirty 处 (收工时随 git 提交, 不计 WARN)"
   fi
   if git rev-parse --verify -q origin/main >/dev/null 2>&1; then
     behind="$(git rev-list --left-right --count origin/main...HEAD 2>/dev/null | awk '{print $1}')"
