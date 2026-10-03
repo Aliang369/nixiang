@@ -22,6 +22,7 @@ static const char* kWxsjVc1637_Features[] = {
     "Toggle_功能全解锁",             // 11 WXSJVC_FEAT_FUNCUNLOCK
     "Slider_经验倍率:1:10",          // 12 WXSJVC_FEAT_EXPMULTI
     "Toggle_商店广告无限",           // 13 WXSJVC_FEAT_SHOPADS
+    "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×1000）
 };
 
 static bool WxsjVc1637_TryInitEntry(JavaVM* /*vm*/) {

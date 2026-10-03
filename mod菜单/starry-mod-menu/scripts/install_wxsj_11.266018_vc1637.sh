@@ -24,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 APK="$NIXIANG/08_output/无限升级/无限升级_11.266018_vc1637_starry-releaseSigned.apk"
-EXPECT_SHA="32bb13cdc79b098539de18186091bfdf041656d7606bb679d429206febcfc176"
+EXPECT_SHA="822904be36e24f7886dcda4faea6eb859649745cbbadebfc548dd70487e468d9"
 SO="$STARRY_SRC/app/src/libs_wxsj_vc1637/arm64-v8a/libstarry_magic.so"
 CPP="$STARRY_SRC/app/src/main/jni/Games/WxsjVc1637Mod.cpp"
 MENU_JSON="$NIXIANG/10_docs/无限升级/wxsj_vc1637_menu_template.json"

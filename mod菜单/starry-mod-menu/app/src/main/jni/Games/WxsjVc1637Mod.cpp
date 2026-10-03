@@ -351,6 +351,7 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJVC_FEAT_SKINUNLOCK: WriteConfigKey("skin_unlock", on); break;
     case WXSJVC_FEAT_FUNCUNLOCK: WriteConfigKey("func_unlock", on); break;
     case WXSJVC_FEAT_SHOPADS:    WriteConfigKey("shop_ads_unlimited", on); break;
+    case WXSJVC_FEAT_ITEMREVERSE: WriteConfigKey("item_reverse", on); break;
     default: break;
     }
 }

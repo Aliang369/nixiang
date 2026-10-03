@@ -27,18 +27,29 @@ PDIR="$ROOT/07_patched/无限升级"
 [[ -x "$NDK/ndk-build" ]] || { echo "ERROR: ndk-build missing at $NDK"; exit 1; }
 [[ -x "$OBJCOPY" ]] || { echo "ERROR: llvm-objcopy missing at $OBJCOPY"; exit 1; }
 
-# 变体表：name|official_len|patched_dll|bin_name|static_lib
+# 变体表：name|official_len|patched_dll|bin_name|static_lib|baseline
+# baseline = 该变体的「未打补丁入口 DLL」。base 有（v7.11）；hf2/hf3 的 12.x v7.19 基线
+# 已随工作区瘦身丢失（git 里从来没有过），只能对 07_patched 里既有的补丁产物做增量补丁。
 VARIANTS=(
-  "v1960960|1960960|$PDIR/targetfuntional_vc1637_patched.dll|targetfuntional_dll_vc1637.bin|Games/WxsjVc1637PatchedDll.a"
-  "hf2|2030080|$PDIR/targetfuntional_vc1637_hf2_patched.dll|targetfuntional_dll_vc1637_hf2.bin|Games/WxsjVc1637Hf2Dll.a"
-  "hf3|2028544|$PDIR/targetfuntional_vc1637_hf3_patched.dll|targetfuntional_dll_vc1637_hf3.bin|Games/WxsjVc1637Hf3Dll.a"
+  "v1960960|1960960|$PDIR/targetfuntional_vc1637_patched.dll|targetfuntional_dll_vc1637.bin|Games/WxsjVc1637PatchedDll.a|$PDIR/targetfuntional_vc1637_v711.bin"
+  "hf2|2030080|$PDIR/targetfuntional_vc1637_hf2_patched.dll|targetfuntional_dll_vc1637_hf2.bin|Games/WxsjVc1637Hf2Dll.a|$PDIR/targetfuntional_v719_hotfix2_patched.dll"
+  "hf3|2028544|$PDIR/targetfuntional_vc1637_hf3_patched.dll|targetfuntional_dll_vc1637_hf3.bin|Games/WxsjVc1637Hf3Dll.a|$PDIR/targetfuntional_v719_hotfix3_patched.dll"
 )
 
 echo "[vc1637-so 1/5] IL patch（三变体）"
 for row in "${VARIANTS[@]}"; do
-  IFS='|' read -r name off dll bin lib <<< "$row"
+  IFS='|' read -r name off dll bin lib base_in <<< "$row"
   [[ -f "$dll" ]] || { echo "ERROR: missing $dll"; exit 1; }
-  dotnet run --project "$PATCHER" --configuration Release -- --variant "$name" >/dev/null
+  if [[ -f "$base_in" ]]; then
+    dotnet run --project "$PATCHER" --configuration Release -- --variant "$name" >/dev/null
+  else
+    # 基线缺失（hf2/hf3）：对既有补丁产物做增量补丁（幂等，已带门时原样保留）。
+    echo "[vc1637-so]   ${name} 基线缺失（${base_in}）→ 增量补丁既有产物"
+    INCR="$(mktemp -t wxsj_vc1637_incr)"
+    cp -f "$dll" "$INCR"
+    dotnet run --project "$PATCHER" --configuration Release -- --variant "$name" --incremental "$INCR" "$dll" >/dev/null
+    rm -f "$INCR"
+  fi
   PLEN="$(stat -f%z "$dll")"
   if (( PLEN > off )); then
     echo "ERROR: [$name] patched DLL $PLEN > official $off"; exit 1
@@ -50,11 +61,11 @@ done
 echo "[vc1637-so 2/5] rebuild embedded static libraries"
 # 必须在 $JNI 下用相对文件名，符号名才是 _binary_<bin>_start
 for row in "${VARIANTS[@]}"; do
-  IFS='|' read -r name off dll bin lib <<< "$row"
+  IFS='|' read -r name off dll bin lib base_in <<< "$row"
   ( cd "$JNI" && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 "$bin" "$lib" )
   sym="_binary_$(echo "$bin" | tr '.' '_')_start"
   if ! "$NM" "$JNI/$lib" 2>/dev/null | grep -q "$sym"; then
-    echo "ERROR: $lib 符号名不是 $sym（objcopy 输入名不对）"; exit 1
+    echo "ERROR: $lib 符号名不是 ${sym}（objcopy 输入名不对）"; exit 1
   fi
   TMP_CHECK="$(mktemp -t wxsj_vc1637_a_check)"
   if ! "$OBJCOPY" -O binary --only-section=.data "$JNI/$lib" "$TMP_CHECK" 2>/dev/null \
@@ -89,7 +100,7 @@ python3 - "$OUT" "${VARIANTS[@]}" <<'PY'
 import sys
 so = open(sys.argv[1], 'rb').read()
 for row in sys.argv[2:]:
-    name, off, dll, binname, lib = row.split('|')
+    name, off, dll, binname, lib = row.split('|')[:5]
     dll_bytes = open(dll, 'rb').read()
     pos = so.find(dll_bytes)
     if pos < 0:
@@ -101,6 +112,6 @@ echo "[vc1637-so 5/5] done"
 ls -lh "$OUT"
 shasum -a 256 "$OUT"
 for row in "${VARIANTS[@]}"; do
-  IFS='|' read -r name off dll bin lib <<< "$row"
+  IFS='|' read -r name off dll bin lib base_in <<< "$row"
   shasum -a 256 "$dll"
 done
