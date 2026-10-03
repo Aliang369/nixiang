@@ -2,13 +2,13 @@
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级",
   "keep": "无限升级_11.266018_vc1637_starry-releaseSigned.apk",
   "keep_size": 115904217,
-  "keep_md5": "c0445ef262dd2c9edbd8b61ee65e30ea",
+  "keep_md5": "8136cd3ee1eeb757945b1da42a50680c",
   "mode": "--apply",
   "removed": [
     {
       "name": "无限升级_11.266018_vc1637_starry-releaseSigned.apk.idsig",
       "size": 923163,
-      "md5": "a16387beb4ebc4438d8bb3eb931b523e"
+      "md5": "b76f6df33e3fb8979c23c5989c5fff87"
     }
   ],
   "removed_count": 1

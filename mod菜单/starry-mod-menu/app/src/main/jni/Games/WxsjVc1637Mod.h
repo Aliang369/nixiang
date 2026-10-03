@@ -24,6 +24,7 @@ enum WxsjVc1637Feat : int {
     WXSJVC_FEAT_SHOPADS    = 13, // Toggle_商店广告无限  -> shop_ads_unlimited
     WXSJVC_FEAT_ITEMREVERSE = 14, // Toggle_物品使用反增 -> item_reverse（使用 N 个反增 N×倍率）
     WXSJVC_FEAT_ITEMREVERSEX = 15, // InputValue_1000:物品反增倍率 -> item_reverse_x（缺省 1000，1..1000000）
+    WXSJVC_FEAT_ANTIBAN    = 16, // Toggle_防封          -> block_report（缺键=false=关；开=拦上报/云存档/COS/CLS/排行/作弊监控/封号执法）
 };
 
 bool WxsjVc1637_TryInit();

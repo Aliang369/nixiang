@@ -226,17 +226,9 @@ static bool TryHookOnce() {
          (size_t)(kDllVariants[1].end - kDllVariants[1].start),
          (size_t)(kDllVariants[2].end - kDllVariants[2].start));
 
-    std::string pkg = PkgName();
-    if (!pkg.empty()) {
-        std::vector<std::string> lines;
-        const std::string cfgPath = "/data/user/0/" + pkg + "/files/starry_config.ini";
-        ReadFileLines(cfgPath, &lines);
-        bool hasBr = false;
-        for (auto& l : lines) {
-            if (l.compare(0, 13, "block_report") == 0) hasBr = true;
-        }
-        if (!hasBr) WriteConfigKey("block_report", "1");
-    }
+    // 防封（block_report）默认关：每次冷启动显式落 0，只有用户在菜单里点开「防封」才生效。
+    // 旧版本这里是「缺键就补 block_report=1」（无条件常开），已按用户要求改为开关控制。
+    WriteConfigKey("block_report", "0");
     return true;
 }
 
@@ -356,6 +348,9 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJVC_FEAT_FUNCUNLOCK: WriteConfigKey("func_unlock", on); break;
     case WXSJVC_FEAT_SHOPADS:    WriteConfigKey("shop_ads_unlimited", on); break;
     case WXSJVC_FEAT_ITEMREVERSE: WriteConfigKey("item_reverse", on); break;
+    // 防封（默认关）：开=拦 上报/云存档/COS 直传/腾讯 CLS/排行同步/作弊监控/封号执法；
+    // 关=完全回落到官方行为（含官方封号处置）。版本拦截与救档链恒常开，不随此键。
+    case WXSJVC_FEAT_ANTIBAN:    WriteConfigKey("block_report", on); break;
     default: break;
     }
 }

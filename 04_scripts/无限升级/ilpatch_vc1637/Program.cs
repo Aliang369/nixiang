@@ -98,6 +98,11 @@ internal static class Program
         bool incremental = false;
         bool noReverse = false;  // 复现性自检用：跳过 item_reverse
         bool dumpMinus = false;
+        bool dumpKeys = false;
+        bool dumpMethods = false;
+        bool dumpRpc = false;
+        bool scanNoop = false;
+        var dumpSpecs = new List<string>();
         var rest = new List<string>();
         for (int i = 0; i < args.Length; i++)
         {
@@ -105,6 +110,11 @@ internal static class Program
             else if (args[i] == "--scan") scanOnly = true;
             else if (args[i] == "--scan2") scanAll = true;
             else if (args[i] == "--dump-minus") dumpMinus = true;
+            else if (args[i] == "--dump-keys") dumpKeys = true;
+            else if (args[i] == "--dump-rpc") dumpRpc = true;
+            else if (args[i] == "--scan-noop") scanNoop = true;
+            else if (args[i] == "--dump-methods") dumpMethods = true;
+            else if (dumpMethods && !args[i].StartsWith("--")) dumpSpecs.Add(args[i]);
             else if (args[i] == "--incremental") incremental = true;
             else if (args[i] == "--no-item-reverse") noReverse = true;
             else rest.Add(args[i]);
@@ -118,12 +128,16 @@ internal static class Program
         var srcLen = new FileInfo(src).Length;
 
         // 盘点模式：只列出所有 MinusItem 调用点（类型::方法 + IL 偏移），不改文件。
-        if (scanOnly || scanAll || dumpMinus)
+        if (scanOnly || scanAll || dumpMinus || dumpKeys || dumpMethods || dumpRpc || scanNoop)
         {
             var sc = AssemblyDefinition.ReadAssembly(src);
             mod = sc.MainModule;
             Console.WriteLine($"[scan] {src} ({srcLen} B)");
-            if (dumpMinus) { ResolveStarryOnly(); DumpMinusItemBody(); }
+            if (scanNoop) ScanEntryNoOps();
+            else if (dumpRpc) DumpRpcGates();
+            else if (dumpMethods) { foreach (var s in dumpSpecs) DumpMethodBySpec(s); }
+            else if (dumpKeys) DumpConfigKeys();
+            else if (dumpMinus) { ResolveStarryOnly(); DumpMinusItemBody(); }
             else if (scanAll) ScanAllMinusItemCalls();
             else ScanMinusItemCalls();
             sc.Dispose();
@@ -146,13 +160,15 @@ internal static class Program
             ResolveStarryOnly();
             int newSites = PatchItemReverse(allowExisting: true);
             int bodyFix = PatchMinusItemBody(allowExisting: true);
+            int anti = PatchAntiBanToggle();
+            bool banChanged = PatchBanGame();
             Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
-            if (newSites == 0 && bodyFix == 0)
+            if (newSites == 0 && bodyFix == 0 && anti == 0 && !banChanged)
             {
                 // 幂等：产物已经带门，原样复制（不重写，避免字节漂移）。
                 asmI.Dispose();
                 File.Copy(src, dst, overwrite: true);
-                Console.WriteLine("[done] item_reverse 已存在，原样复制（幂等跳过）");
+                Console.WriteLine("[done] item_reverse / anti-ban 已存在，原样复制（幂等跳过）");
             }
             else
             {
@@ -165,6 +181,7 @@ internal static class Program
                 throw new InvalidDataException($"补丁 DLL {outLenI} B 超过官方数组 {spec.OfficialArrayLen} B");
             VerifyItemReverse(dst);
             VerifyMinusItemReverseBodyAt(dst);
+            VerifyAntiBan(dst);
             return 0;
         }
 
@@ -183,6 +200,7 @@ internal static class Program
         PatchShopAdsUnlimited();
         PatchVersionPin();
         PatchBanGame();
+        PatchAntiBanToggle();
         if (spec.FullPatchSet)
         {
             PatchExpMulti();
@@ -207,6 +225,7 @@ internal static class Program
 
         if (!noReverse) VerifyItemReverse(dst);
         if (!noReverse) VerifyMinusItemReverseBodyAt(dst);
+        VerifyAntiBan(dst);
         Verify(dst);
         return 0;
     }
@@ -431,6 +450,118 @@ internal static class Program
 
     // 「使用物品」三族类型：仅供 --scan 打 [USE-PATH] 标记参考（真实的打点范围见 CollectReverseSites）。
     static readonly string[] kItemUseTypeNames = { "ItemDetialWindow", "SelectLegacyPetItemUse", "SelectMiFaItemUse" };
+
+    // 调试用：列出所有「入口 ret + 后面还留着原方法体」的方法 —— 这就是 δ 层「无条件 no-op」的指纹。
+    // 用来把防封族里「无开关」的那批全部找出来（改造成可切换前必须知道全量）。
+    static void ScanEntryNoOps()
+    {
+        int n = 0;
+        foreach (var t in mod.GetTypes())
+            foreach (var m in t.Methods)
+            {
+                if (!m.HasBody) continue;
+                var il = m.Body.Instructions;
+                if (il.Count < 2 || il[0].OpCode.Code != Code.Ret) continue;
+                n++;
+                var second = il[1];
+                string tag = second.OpCode.Code == Code.Ldstr ? $"ldstr \"{second.Operand}\"" : second.OpCode.ToString();
+                Console.WriteLine($"[noop] {t.FullName}::{m.Name}/{m.Parameters.Count}  il={il.Count}  第二条={tag}");
+            }
+        Console.WriteLine($"[noop] 共 {n} 个入口-ret 无条件 no-op");
+    }
+
+    static string Fmt(object o) => o switch
+    {
+        null => "",
+        ParameterDefinition pd => $"param#{pd.Index}({pd.Name})",
+        VariableDefinition vd => $"local#{vd.Index}({vd.VariableType.Name})",
+        Instruction t => $"IL_{t.Offset:X4}",
+        _ => o?.ToString() ?? ""
+    };
+
+    // 调试用：找出所有调用 StarryConfig::StrictBlockedRpc 的通道，打印门周围 IL。
+    static void DumpRpcGates()
+    {
+        int n = 0;
+        foreach (var t in mod.GetTypes())
+            foreach (var m in t.Methods)
+            {
+                if (!m.HasBody) continue;
+                var il = m.Body.Instructions;
+                int hit = -1;
+                for (int i = 0; i < il.Count; i++)
+                {
+                    if (il[i].OpCode.Code != Code.Call) continue;
+                    if (!(il[i].Operand is MethodReference mr)) continue;
+                    if (mr.Name == "StrictBlockedRpc") { hit = i; break; }
+                }
+                if (hit < 0) continue;
+                n++;
+                int lo = Math.Max(0, hit - 6), hi = Math.Min(il.Count - 1, hit + 10);
+                Console.WriteLine($"[rpc] #{n} {t.FullName}::{m.Name}  (调用点 idx={hit})");
+                for (int i = lo; i <= hi; i++)
+                    Console.WriteLine($"[rpc]   {i,4} IL_{il[i].Offset:X4} {il[i].OpCode.Code,-14} {Fmt(il[i].Operand)}");
+            }
+        Console.WriteLine($"[rpc] 共 {n} 个 StrictBlockedRpc 门");
+    }
+
+    // 调试用：按 "Type::Method"（可带参数个数后缀 "Type::Method/1"）打印方法 IL。
+    static void DumpMethodBySpec(string spec)
+    {
+        int argc = -1;
+        int slash = spec.LastIndexOf('/');
+        if (slash > 0 && int.TryParse(spec.Substring(slash + 1), out var n)) { argc = n; spec = spec.Substring(0, slash); }
+        int sep = spec.IndexOf("::", StringComparison.Ordinal);
+        var typeName = spec.Substring(0, sep);
+        var methName = spec.Substring(sep + 2);
+        var cands = new List<MethodDefinition>();
+        foreach (var t in mod.GetTypes())
+        {
+            if (t.Name != typeName && t.FullName != typeName) continue;
+            foreach (var m in t.Methods)
+                if (m.Name == methName && (argc < 0 || m.Parameters.Count == argc)) cands.Add(m);
+        }
+        if (cands.Count == 0) { Console.WriteLine($"[dump] !! 找不到 {spec}"); return; }
+        foreach (var m in cands)
+        {
+            Console.WriteLine($"[dump] === {m.FullName}  HasThis={m.HasThis} params={m.Parameters.Count} locals={(m.HasBody ? m.Body.Variables.Count : -1)} maxstack={(m.HasBody ? m.Body.MaxStackSize : -1)}");
+            if (!m.HasBody) { Console.WriteLine("[dump]   (无方法体)"); continue; }
+            var il = m.Body.Instructions;
+            for (int i = 0; i < il.Count; i++)
+                Console.WriteLine($"[dump]   {i,4} IL_{il[i].Offset:X4} {il[i].OpCode}  {Fmt(il[i].Operand)}");
+        }
+    }
+
+    // 调试用：盘点整个 DLL 里所有 StarryConfig.GetBool/GetInt/GetString("key") 读取点。
+    // 用来确认「哪些补丁已经是运行时可切换的」，以及防封族的实际门控键分布。
+    static void DumpConfigKeys()
+    {
+        var seen = new SortedDictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var t in mod.GetTypes())
+            foreach (var m in t.Methods)
+            {
+                if (!m.HasBody) continue;
+                var il = m.Body.Instructions;
+                for (int i = 0; i + 1 < il.Count; i++)
+                {
+                    if (il[i].OpCode.Code != Code.Ldstr) continue;
+                    var nx = il[i + 1];
+                    if (nx.OpCode.Code != Code.Call && nx.OpCode.Code != Code.Callvirt) continue;
+                    var mr = nx.Operand as MethodReference;
+                    if (mr == null || mr.DeclaringType?.Name != "StarryConfig") continue;
+                    if (mr.Name != "GetBool" && mr.Name != "GetInt" && mr.Name != "GetString") continue;
+                    var key = (string)il[i].Operand;
+                    if (!seen.TryGetValue(key, out var l)) { l = new List<string>(); seen[key] = l; }
+                    l.Add($"{mr.Name} @ {t.FullName}::{m.Name}");
+                }
+            }
+        Console.WriteLine($"[keys] 共 {seen.Count} 个配置键");
+        foreach (var kv in seen)
+        {
+            Console.WriteLine($"[key] {kv.Key}  ({kv.Value.Count} 处)");
+            foreach (var s in kv.Value) Console.WriteLine($"        {s}");
+        }
+    }
 
     // 调试用：打印 GameData::MinusItem(string,int64) 的完整 IL（参数/局部变量索引一目了然）。
     static void DumpMinusItemBody()
@@ -878,19 +1009,180 @@ internal static class Program
         Console.WriteLine("[patch] version pin -> 屏蔽强制更新/版本封锁/推荐更新链路");
     }
 
-    static void PatchBanGame()
+    // =====================================================================
+    // 防封开关（菜单 feat 16「防封」→ starry_config.ini 的 block_report）
+    //
+    // 基线里「防封」其实是三块，本方法把三块统一挂到同一个键上：
+    //   A) 37 处 `if (StarryConfig.GetBool("block_report")) return/throw;` 门
+    //      （上报 / 云存档 / COS 直传 / 腾讯 CLS / 排行与数据同步 / 作弊监控 /
+    //       执法 RPC / ItemAddSourceAnomalyMonitor）—— 天生跟键走，一条 IL 都不用改。
+    //   B) 6 处 δ 层「入口 ret + 原方法体还在」的无条件封号拦截（见 kAntiBanEntryRets，
+    //      第 6 处 NetWorkPlayerMgr::BanGame 由 PatchBanGame 单独处理）；
+    //      删掉入口那条 ret，就回落到它们体内自带的 block_report 门 ⇒ 随开关。
+    //   C) StarryConfig::StrictBlockedRpc（13 项「纯上报」名单，19 个 SendRT/Send/SendBA 通道共用）
+    //      —— 前插 `if (!block_report) return false;` ⇒ 关掉防封后出站过滤整体失效。
+    //
+    // 恒常开、**不**纳入开关（用户 m02113 点名「拦截更新的不适合做进去」）：
+    //   · 版本拦截族：PatchVersionPin 的 9 个 NoOpAlways + ResVersionApi.GetVersion→Int64.Max
+    //     + 3 处 ReplaceApplicationVersion。关掉它 ⇒ 游戏接受官方热更 DLL（长度变了）
+    //     ⇒ 内嵌补丁 DLL 与官方数组长度不匹配 ⇒ WxsjMod 的 `pLen <= len` 不成立 ⇒ 静默 skip
+    //     （跑官方 DLL、补丁全失效且菜单不报错）。
+    //   · 存档救命链：CheckCodeLocked（唯一回滚链）/ OnSaveGuardFailed（冻结气囊）
+    //     —— PatchSaveGuardChain 已删门（v7.18 丢档教训）。与防封正交，绝不能随开关。
+    //
+    // 语义：block_report 缺键 = false = 关（StarryConfig.GetBool 实现：Get() 返回 null → false）。
+    static readonly (string Type, string Method)[] kAntiBanEntryRets =
+    {
+        ("NetWorkPlayerMgr", "BanGameAciton"),
+        ("InfinityCoreNormal.NetConver", "CheckGamePlayerAction"),
+        ("InfinityCoreNormal.NetConver", "ForceBanGameAciton"),
+        ("InfinityCoreNormal.NetConver", "UpDateBanStatu"),
+        ("InfinityCore.NetDataCalculater", "PlayerOnLine"),
+    };
+
+    static int PatchAntiBanToggle()
+    {
+        int n = 0;
+        foreach (var spec in kAntiBanEntryRets)
+        {
+            var m = FindM(FindType(spec.Type), spec.Method);
+            var il = m.Body.Instructions;
+            if (il[0].OpCode == OpCodes.Ret)
+            {
+                il.RemoveAt(0);
+                RequireBlockReportGate(m, $"{spec.Type}::{spec.Method}");
+                n++;
+                Console.WriteLine($"[patch] anti-ban -> 解除 {spec.Type}::{spec.Method} 的无条件 no-op（回落到 block_report 门）");
+            }
+            else
+            {
+                RequireBlockReportGate(m, $"{spec.Type}::{spec.Method}");
+                Console.WriteLine($"[patch] anti-ban -> {spec.Type}::{spec.Method} 已是可切换形态（幂等跳过）");
+            }
+        }
+        PatchStrictBlockedRpcGate();
+        Console.WriteLine($"[patch] anti-ban -> 防封按钮就绪：本轮解除无条件 no-op {n} 处；键 block_report（缺键=false=关）");
+        return n;
+    }
+
+    // 删掉入口 ret 后必须真的能回落到体内的 block_report 门，否则防封关掉就没人挡了。
+    static void RequireBlockReportGate(MethodDefinition m, string tag)
+    {
+        bool found = m.Body.Instructions.Any(x => x.OpCode.Code == Code.Ldstr && (string)x.Operand == "block_report");
+        if (!found) throw new Exception($"{tag} 体内没有 block_report 门（防封关掉后无法回落，基线变了？）");
+    }
+
+    // δ v7.11 的 19 处出站通道共用这个判定（true=拦）：前插「防封关就一律不拦」。
+    static void PatchStrictBlockedRpcGate()
+    {
+        var m = FindType("StarryConfig").Methods.Single(x => x.Name == "StrictBlockedRpc" && x.Parameters.Count == 1);
+        var il = m.Body.Instructions;
+        if (il[0].OpCode.Code == Code.Ldstr && (string)il[0].Operand == "block_report")
+        {
+            Console.WriteLine("[patch] anti-ban -> StrictBlockedRpc 已带门（幂等跳过）");
+            return;
+        }
+        InsertAtStart(m, new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldstr, "block_report"),
+            Instruction.Create(OpCodes.Call, mGetBool),
+            Instruction.Create(OpCodes.Brtrue, il[0]),
+            Instruction.Create(OpCodes.Ldc_I4_0),
+            Instruction.Create(OpCodes.Ret),
+        });
+        m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 2);
+        Console.WriteLine("[patch] anti-ban -> StrictBlockedRpc 前插 `if(!block_report) return false`（19 通道纯上报名单随开关）");
+    }
+
+    // PatchBanGame：防封开 ⇒ 清 GameData.ban 并返回（不被锁死）；防封关 ⇒ 回落到原体
+    // （BanGameAciton → 官方封号表现：上传 ban 存档 + banMask + timeScale=0 + 提示）。
+    // vc1637 第2轮之前是无条件清 ban；升级时先拆掉旧插的那 4 条再重插门控版。
+    // 返回是否发生了改动（给 --incremental 判断幂等用）。
+    static bool PatchBanGame()
     {
         var m = FindM(FindType("NetWorkPlayerMgr"), "BanGame", 0);
-        var seq = new List<Instruction>
+        var il = m.Body.Instructions;
+
+        if (il[0].OpCode.Code == Code.Ldstr && (string)il[0].Operand == "block_report")
         {
-            Instruction.Create(OpCodes.Ldsfld, fGameDataI),
+            Console.WriteLine("[patch] ban -> BanGame 已是门控形态（幂等跳过）");
+            return false;
+        }
+        if (il[0].OpCode.Code == Code.Ldstr)
+            throw new Exception("BanGame 入口既不是 δ ret 也不是旧清 ban，基线变了？");
+
+        if (il[0].OpCode == OpCodes.Ldsfld && il.Count > 3 && il[3].OpCode == OpCodes.Ret)
+        {
+            for (int k = 0; k < 4; k++) il.RemoveAt(0);
+            Console.WriteLine("[patch] ban -> 拆除旧的无条件清 ban（4 条）");
+        }
+        if (il[0].OpCode == OpCodes.Ret)
+        {
+            il.RemoveAt(0);
+            Console.WriteLine("[patch] ban -> 解除 BanGame 的 δ 无条件 no-op");
+        }
+
+        var fI = FindType("GameData").Fields.Single(x => x.Name == "I");
+        var fB = FindType("GameData").Fields.Single(x => x.Name == "ban");
+        InsertAtStart(m, new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldstr, "block_report"),
+            Instruction.Create(OpCodes.Call, mGetBool),
+            Instruction.Create(OpCodes.Brfalse, il[0]),
+            Instruction.Create(OpCodes.Ldsfld, fI),
             Instruction.Create(OpCodes.Ldc_I4_0),
-            Instruction.Create(OpCodes.Stfld, fBan),
+            Instruction.Create(OpCodes.Stfld, fB),
             Instruction.Create(OpCodes.Ret),
-        };
-        InsertAtStart(m, seq);
-        Console.WriteLine("[patch] ban -> BanGame 清 GameData.ban=false");
+        });
+        Console.WriteLine("[patch] ban -> BanGame 清 GameData.ban=false（挂在 block_report 门下）");
+        return true;
     }
+
+    static void VerifyAntiBan(string path)
+    {
+        var asm = AssemblyDefinition.ReadAssembly(path);
+        mod = asm.MainModule;
+        try
+        {
+            ResolveStarryOnly();
+            foreach (var spec in kAntiBanEntryRets)
+            {
+                var m = FindM(FindType(spec.Type), spec.Method);
+                if (m.Body.Instructions[0].OpCode == OpCodes.Ret)
+                    throw new Exception($"[verify] {spec.Type}::{spec.Method} 仍是入口 ret 的无条件 no-op");
+                RequireBlockReportGate(m, $"{spec.Type}::{spec.Method}");
+            }
+            var bgl = FindM(FindType("NetWorkPlayerMgr"), "BanGame", 0).Body.Instructions;
+            if (!(bgl[0].OpCode.Code == Code.Ldstr && (string)bgl[0].Operand == "block_report" && bgl[1].OpCode.Code == Code.Call))
+                throw new Exception("[verify] BanGame 入口不是门控形态");
+            var sr = FindType("StarryConfig").Methods.Single(x => x.Name == "StrictBlockedRpc" && x.Parameters.Count == 1);
+            if (!(sr.Body.Instructions[0].OpCode.Code == Code.Ldstr && (string)sr.Body.Instructions[0].Operand == "block_report"))
+                throw new Exception("[verify] StrictBlockedRpc 未带 block_report 门");
+
+            foreach (var vt in new[] { ("NetWorkPlayerMgr", "BlockVersion", 0), ("NetWorkPlayerMgr", "Vch", 0), ("LowVersionMgr", "NeedUpdate", 0), ("LowVersionMgr", "OpenUrl", 1) })
+                if (FindM(FindType(vt.Item1), vt.Item2, vt.Item3).Body.Instructions[0].OpCode != OpCodes.Ret)
+                    throw new Exception($"[verify] {vt.Item1}::{vt.Item2} 版本拦截不是常开（入口 ret 丢了）");
+            foreach (var mm in new[] { "CheckCodeLocked", "OnSaveGuardFailed" })
+            {
+                var sm = FindM(FindType("NetWorkPlayerMgr"), mm, 1);
+                if (sm.Body.Instructions.Any(x => x.OpCode.Code == Code.Ldstr && (string)x.Operand == "block_report"))
+                    throw new Exception($"[verify] NetWorkPlayerMgr::{mm} 又出现 block_report 门（救档链会被防封开关关掉）");
+            }
+
+            int sites = 0;
+            foreach (var t in mod.GetTypes())
+                foreach (var m in t.Methods)
+                {
+                    if (!m.HasBody) continue;
+                    var q = m.Body.Instructions;
+                    for (int i = 0; i + 1 < q.Count; i++)
+                        if (q[i].OpCode.Code == Code.Ldstr && (string)q[i].Operand == "block_report") sites++;
+                }
+            Console.WriteLine($"[verify] anti-ban 门（block_report，缺键=false=关）@ {sites} 处；封号拦截 5 处已可切换；版本拦截族/救档链恒常开");
+        }
+        finally { asm.Dispose(); }
+    }
+
 
     // v7.18 教训（12.x 丢档事故根因之一）：v7.11 基线把两条「救命链」挂在 block_report 门下。
     // block_report 默认 = 1 ⇒ 整段被跳过：

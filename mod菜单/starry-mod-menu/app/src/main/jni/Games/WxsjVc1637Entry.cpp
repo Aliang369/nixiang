@@ -24,6 +24,7 @@ static const char* kWxsjVc1637_Features[] = {
     "Toggle_商店广告无限",           // 13 WXSJVC_FEAT_SHOPADS
     "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×倍率）
     "InputValue_1000:物品反增倍率",  // 15 WXSJVC_FEAT_ITEMREVERSEX（输入框，写 item_reverse_x）
+    "Toggle_防封",                   // 16 WXSJVC_FEAT_ANTIBAN（默认关；开=拦上报/云存档/排行/封号执法）
 };
 
 static bool WxsjVc1637_TryInitEntry(JavaVM* /*vm*/) {

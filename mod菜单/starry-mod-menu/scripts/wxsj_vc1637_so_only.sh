@@ -96,6 +96,7 @@ LC_ALL=C grep -aq '\[WxsjVC1637\]' "$OUT" || { echo "ERROR: so missing [WxsjVC16
 LC_ALL=C grep -aq 'Toggle_商店广告无限' "$OUT" || { echo "ERROR: so missing Toggle_商店广告无限"; exit 1; }
 LC_ALL=C grep -aq 'InputValue_1000:物品反增倍率' "$OUT" || { echo "ERROR: so missing InputValue_1000:物品反增倍率"; exit 1; }
 LC_ALL=C grep -aq 'item_reverse_x' "$OUT" || { echo "ERROR: so missing item_reverse_x"; exit 1; }
+LC_ALL=C grep -aq 'Toggle_防封' "$OUT" || { echo "ERROR: so missing Toggle_防封"; exit 1; }
 LC_ALL=C grep -aq 'targetfuntional' "$OUT" || { echo "ERROR: so missing targetfuntional"; exit 1; }
 
 python3 - "$OUT" "${VARIANTS[@]}" <<'PY'
