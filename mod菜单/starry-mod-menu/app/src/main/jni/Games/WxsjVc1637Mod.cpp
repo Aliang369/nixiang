@@ -90,11 +90,16 @@ static const char* g_lastVariant = "none";
 
 static bool ReadFileLines(const std::string& path, std::vector<std::string>* out);
 static std::string PkgName();
+static std::string ConfigPath();
 static void WriteConfigKey(const char* key, const std::string& val);
 
 // 与 DLL 内 kItemReverseMinX / kItemReverseMaxX 保持一致（两边都夹取，防手改配置溢出）
 static const long long kWxsjItemReverseMinX = 1;
 static const long long kWxsjItemReverseMaxX = 1000000;
+
+// 与 DLL 内 kExpMultiDefault = 1000 保持一致（输入框缺省值 / 夹取上限）
+static const long long kWxsjExpMultiMin = 1;
+static const long long kWxsjExpMultiMax = 1000;
 
 static bool OkPtr(void* p) {
     uintptr_t v = (uintptr_t)p;
@@ -300,14 +305,20 @@ static bool ReadFileLines(const std::string& path, std::vector<std::string>* out
     return true;
 }
 
-static void WriteConfigKey(const char* key, const std::string& val) {
+static std::string ConfigPath() {
     std::string pkg = PkgName();
-    if (pkg.empty()) {
+    if (pkg.empty()) return std::string();
+    return "/data/user/0/" + pkg + "/files/starry_config.ini";
+}
+
+static void WriteConfigKey(const char* key, const std::string& val) {
+    std::string path = ConfigPath();
+    if (path.empty()) {
         LOGE(WXSJVC_LOG " pkg name empty, config write skipped (%s)", key);
         return;
     }
-    std::string dir = "/data/user/0/" + pkg + "/files";
-    std::string path = dir + "/starry_config.ini";
+    std::string dir = path.substr(0, path.rfind('/'));
+    if (dir.empty()) return;
     mkdir(dir.c_str(), 0755);
     std::vector<std::string> lines;
     bool exists = ReadFileLines(path, &lines);
@@ -355,27 +366,37 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     }
 }
 
-// 输入框：物品反增倍率（DLL 侧读 item_reverse_x，缺省 1000；本体里只做 1..上限 夹取）
+// 输入框回调：feat 15 物品反增倍率 -> item_reverse_x（DLL 缺省 1000）。
+// InputValue_ 控件不走 nativeSetValue，冷启动不会覆写 ini，用户填的值能留住。
+// （feat 12 经验倍率是滑块，走 OnValueChanged -> exp_multi）
 void WxsjVc1637_OnInputChanged(int featNum, const char* text) {
-    if (featNum != WXSJVC_FEAT_ITEMREVERSEX) return;
+    const char* key = nullptr;
+    long long lo = 1, hi = 1;
+    switch (featNum) {
+    case WXSJVC_FEAT_ITEMREVERSEX:
+        key = "item_reverse_x"; lo = kWxsjItemReverseMinX; hi = kWxsjItemReverseMaxX; break;
+    default:
+        return;
+    }
     if (text == nullptr || *text == '\0') return;
     // 只收纯数字：输入途中/非法串一律不落盘，避免把半成品写进配置
     for (const char* p = text; *p != '\0'; ++p) {
         if (*p < '0' || *p > '9') return;
     }
     long long v = strtoll(text, nullptr, 10);
-    if (v < kWxsjItemReverseMinX) v = kWxsjItemReverseMinX;
-    if (v > kWxsjItemReverseMaxX) v = kWxsjItemReverseMaxX;
+    if (v < lo) v = lo;
+    if (v > hi) v = hi;
     char buf[24];
     snprintf(buf, sizeof(buf), "%lld", v);
-    WriteConfigKey("item_reverse_x", buf);
+    WriteConfigKey(key, buf);
 }
 
 void WxsjVc1637_OnValueChanged(int featNum, int value) {
     switch (featNum) {
     case WXSJVC_FEAT_EXPMULTI: {
-        if (value < 1) value = 1;
-        if (value > 10) value = 10;
+        // 滑块 1..1000（Entry 串声明默认 1000；启动时 Java 会把这个默认/上次值推下来）
+        if (value < (int)kWxsjExpMultiMin) value = (int)kWxsjExpMultiMin;
+        if (value > (int)kWxsjExpMultiMax) value = (int)kWxsjExpMultiMax;
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", value);
         WriteConfigKey("exp_multi", buf);

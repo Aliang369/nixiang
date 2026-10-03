@@ -17,6 +17,8 @@
 #   bash restore_wxsj_state.sh --backup DIR          # 只备份当前 ①+② 到 DIR
 #   bash restore_wxsj_state.sh --restore DIR [--restart]   # 用 DIR 里的备份覆盖回去
 #   bash restore_wxsj_state.sh --show                # 打印当前 ①+② 状态
+#   bash restore_wxsj_state.sh --set exp_multi=1000 [--restart]   # 只改 ini 里指定键（其余原样保留）
+#   bash restore_wxsj_state.sh --launch              # 只启动游戏（不改配置，用于装包后抓一轮 logcat）
 # 说明：① 写 ② 需要游戏停止，脚本默认先 force-stop（--no-stop 跳过）；
 #       ② 默认允许在直写被 SELinux 拒时临时 setenforce 0（写完立刻还原；--no-permissive 禁用）。
 set -uo pipefail
@@ -28,13 +30,17 @@ PREF="$DD/shared_prefs/starry_magic_prefs.xml"
 TMP="/data/local/tmp/wxsj_state_tool"
 ADB="${ADB:-adb}"
 
-MODE=""; DIR=""; RESTART=0; NO_STOP=0; PERMISSIVE=1
+MODE=""; DIR=""; RESTART=0; NO_STOP=0; PERMISSIVE=1; SETS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --all-on)  MODE="allon" ;;
     --backup)  MODE="backup"; DIR="${2:-}"; shift ;;
     --restore) MODE="restore"; DIR="${2:-}"; shift ;;
+    --set)     MODE="set"; shift
+               while [ $# -gt 0 ] && [ "${1#*=}" != "$1" ]; do SETS+=("$1"); shift; done
+               continue ;;
     --show)    MODE="show" ;;
+    --launch)  MODE="launch" ;;
     --restart) RESTART=1 ;;
     --no-stop) NO_STOP=1 ;;
     --no-permissive) PERMISSIVE=0 ;;
@@ -48,6 +54,22 @@ sh_su()  { "$ADB" shell su -c "$1"; }
 read_f() { sh_su "cat '$1'"; }
 # 就地覆盖写（> 重定向保留 inode/属主/SELinux 上下文；`sed -i`/`cp` 会因 app_data_file 目录禁写而失败）
 write_f() { "$ADB" push "$1" "$TMP/$2" >/dev/null && sh_su "cat '$TMP/$2' > '$3'"; }
+
+# 写 + 校验 +（若直写被 SELinux 拒）临时 permissive 重试一次；返回最终校验结果
+run_write_verify() {   # $1 = 写函数名，$2 = 校验函数名
+  "$1"
+  if ! "$2"; then
+    if [ "$PERMISSIVE" != "1" ]; then return 1; fi
+    ORIG_SE="$(sh_su 'getenforce' | tr -d '\r')"
+    echo "[step] 直写被 SELinux 拒绝 → 临时 permissive（原状态 ${ORIG_SE:-?}）"
+    sh_su 'setenforce 0' >/dev/null 2>&1
+    trap 'sh_su "setenforce 1" >/dev/null 2>&1' EXIT INT TERM
+    "$1"
+    "$2"
+    return $?
+  fi
+  return 0
+}
 
 local_backup() {   # $1 = host dir
   mkdir -p "$1"
@@ -113,6 +135,10 @@ case "$MODE" in
   show)
     echo "==== ① $INI ===="; read_f "$INI"
     echo "==== ② ${PREF}（仅 boolean） ===="; read_f "$PREF" | grep -o '<boolean name="[^"]*" value="[^"]*"' ;;
+  launch)
+    # 只启动游戏（装完包后让补丁/菜单跑一轮，便于抓 logcat 证据）；不改任何配置。
+    "$ADB" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+    echo "[launch] 已启动 $PKG" ;;
   backup)
     [ -n "$DIR" ] || { echo "--backup 需要目录参数"; exit 2; }
     local_backup "$DIR" ;;
@@ -157,17 +183,7 @@ case "$MODE" in
       read_f "$PREF" | grep -q 'auth_token' || { echo "❌ 鉴权条目丢失！立刻用 $BK 回滚"; OK=0; }
       [ "$OK" = "1" ]
     }
-    do_write
-    if ! do_verify; then
-      if [ "$PERMISSIVE" = "1" ]; then
-        ORIG_SE="$(sh_su 'getenforce' | tr -d '\r')"
-        echo "[step] 直写被 SELinux 拒绝 → 临时 permissive（原状态 ${ORIG_SE:-?}）"
-        sh_su 'setenforce 0' >/dev/null 2>&1
-        trap 'sh_su "setenforce 1" >/dev/null 2>&1' EXIT INT TERM
-        do_write
-      fi
-    fi
-    if do_verify; then
+    if run_write_verify do_write do_verify; then
       if [ "${PERMISSIVE:-0}" = "1" ] && sh_su 'getenforce' | grep -q Permissive; then
         sh_su 'setenforce 1' >/dev/null 2>&1; trap - EXIT INT TERM
         echo "[step] SELinux 已还原为 $(sh_su 'getenforce' | tr -d '\r')"
@@ -185,6 +201,78 @@ case "$MODE" in
     if [ "$RESTART" = "1" ]; then
       "$ADB" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
       echo "[step] 已重启游戏（菜单显示应与 ini 一致）"
+    fi
+    ;;
+  set)
+    # 只改 ini 里指定键（读现状 → 覆盖/追加 → 其余键原样保留），不动 prefs。
+    # 典型用途：给数字输入框类功能落一个初始值（如 exp_multi=1000 / item_reverse_x=1000）。
+    [ "${#SETS[@]}" -gt 0 ] || { echo "--set 需要 k=v 参数，例如 --set exp_multi=1000"; exit 2; }
+    read_f "$INI" > /tmp/wxsj_set_cur.ini 2>/dev/null || true
+    python3 - /tmp/wxsj_set_new.ini ${SETS[@]+"${SETS[@]}"} <<'PY'
+import sys
+out, kvs = sys.argv[1], sys.argv[2:]
+try:
+    cur = open('/tmp/wxsj_set_cur.ini', encoding='utf-8').read().splitlines()
+except OSError:
+    cur = []
+want, order = {}, []
+for kv in kvs:
+    k, v = kv.split('=', 1)
+    if k not in want:
+        order.append(k)
+    want[k] = v
+lines, seen = [], set()
+for ln in cur:
+    if '=' not in ln:
+        if ln.strip():
+            lines.append(ln.strip())
+        continue
+    k = ln.split('=', 1)[0].strip()
+    if k in want:
+        if k in seen:
+            continue
+        seen.add(k)
+        lines.append('%s=%s' % (k, want[k]))
+    else:
+        if k in seen:
+            continue
+        seen.add(k)
+        lines.append(ln.strip())
+for k in order:
+    if k not in seen:
+        lines.append('%s=%s' % (k, want[k]))
+open(out, 'w', encoding='utf-8').write('\n'.join(lines) + '\n')
+print('[ini] --set 写入 %d 个键：%s（其余键原样保留）'
+      % (len(want), ' '.join('%s=%s' % (k, want[k]) for k in order)))
+PY
+    BK="/tmp/wxsj_state_backup_$(date +%Y%m%d_%H%M%S)"; local_backup "$BK" >/dev/null
+    echo "[safe] 已备份现状 → $BK"
+    if [ "$NO_STOP" = "0" ]; then
+      "$ADB" shell am force-stop "$PKG" >/dev/null 2>&1
+      echo "[step] 已 force-stop 游戏"
+    fi
+    do_set_write() { write_f /tmp/wxsj_set_new.ini ini "$INI"; }
+    do_set_verify() {
+      OK=1
+      for kv in ${SETS[@]+"${SETS[@]}"}; do
+        read_f "$INI" | grep -qx "$kv" || { echo "❌ ini 校验失败：$kv"; OK=0; }
+      done
+      [ "$OK" = "1" ]
+    }
+    if run_write_verify do_set_write do_set_verify; then
+      if [ "${PERMISSIVE:-0}" = "1" ] && sh_su 'getenforce' | grep -q Permissive; then
+        sh_su 'setenforce 1' >/dev/null 2>&1; trap - EXIT INT TERM
+        echo "[step] SELinux 已还原为 $(sh_su 'getenforce' | tr -d '\r')"
+      fi
+      echo "✅ --set 完成：${SETS[*]}（DLL ~2s 内生效，无需重启）"
+    else
+      sh_su 'setenforce 1' >/dev/null 2>&1
+      echo "❌ --set 失败（上面是未通过的校验项）——现状已备份在 ${BK}"
+      exit 4
+    fi
+    if [ "$RESTART" = "1" ]; then
+      "$ADB" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+      echo "[step] 已重启游戏"
     fi
     ;;
 esac

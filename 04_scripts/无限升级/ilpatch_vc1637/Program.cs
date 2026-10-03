@@ -162,13 +162,14 @@ internal static class Program
             int bodyFix = PatchMinusItemBody(allowExisting: true);
             int anti = PatchAntiBanToggle();
             bool banChanged = PatchBanGame();
+            bool expChanged = PatchExpMulti();   // 12.x 基线缺省是 1，这里原地升到 1000
             Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
-            if (newSites == 0 && bodyFix == 0 && anti == 0 && !banChanged)
+            if (newSites == 0 && bodyFix == 0 && anti == 0 && !banChanged && !expChanged)
             {
                 // 幂等：产物已经带门，原样复制（不重写，避免字节漂移）。
                 asmI.Dispose();
                 File.Copy(src, dst, overwrite: true);
-                Console.WriteLine("[done] item_reverse / anti-ban 已存在，原样复制（幂等跳过）");
+                Console.WriteLine("[done] item_reverse / anti-ban / exp_multi 均已是目标形态，原样复制（幂等跳过）");
             }
             else
             {
@@ -182,6 +183,9 @@ internal static class Program
             VerifyItemReverse(dst);
             VerifyMinusItemReverseBodyAt(dst);
             VerifyAntiBan(dst);
+            if (!ExpMultiDefaultIs(kExpMultiDefault))
+                throw new Exception($"[verify] {dst}: exp_multi 缺省不是 {kExpMultiDefault}");
+            Console.WriteLine($"[verify] exp_multi 缺省 ×{kExpMultiDefault}(默认 1=不放大)");
             return 0;
         }
 
@@ -209,7 +213,8 @@ internal static class Program
         else
         {
             // hf2/hf3 基线（12.x v7.19）已含这两项，重复打会二次放大 / 抛错。
-            RequireAlreadyPresent("DataManager", "AddExp", 1, "exp_multi");
+            // exp_multi 走 PatchExpMulti()：它会识别既有补丁并只改写缺省操作数（旧的 1 → 1000）。
+            PatchExpMulti();
             RequireBlockReportGateAbsent("NetWorkPlayerMgr", "CheckCodeLocked", 1);
             RequireBlockReportGateAbsent("NetWorkPlayerMgr", "OnSaveGuardFailed", 1);
         }
@@ -951,9 +956,36 @@ internal static class Program
         return seq;
     }
 
-    static void PatchExpMulti()
+    // 经验倍率缺省值（菜单 feat 12 输入框同为 1000；DLL 侧 GetInt 缺键时取它）
+    const int kExpMultiDefault = 1;   // 默认 1 = 不放大（官方行为）；倍率由菜单滑块 1..1000 下发
+
+    // 目标形态：DataManager::AddExp(LargeNumber) 入口
+    //     int v = StarryConfig.GetInt("exp_multi", 1); if (v > 1) exp *= (double)v;
+    // 幂等 + 可升级：产物里已存在该补丁（12.x 时代默认写的是 1）时只改默认操作数，
+    // 绝不重复插入（重复插入会二次放大）。返回是否发生了改动（给 --incremental 判幂等）。
+    static bool PatchExpMulti()
     {
         var m = FindM(FindType("DataManager"), "AddExp", 1);
+
+        var exist = m.Body.Instructions.FirstOrDefault(
+            x => x.OpCode == OpCodes.Ldstr && (string)x.Operand == "exp_multi");
+        if (exist != null)
+        {
+            var il = m.Body.Instructions;
+            var ni = il[il.IndexOf(exist) + 1];
+            if (!ni.OpCode.Name.StartsWith("ldc.i4"))
+                throw new Exception($"DataManager::AddExp 的 exp_multi 补丁形态异常：ldstr 后不是 ldc.i4，而是 {ni.OpCode.Name}");
+            if (ni.OpCode == OpCodes.Ldc_I4 && ni.Operand is int cur && cur == kExpMultiDefault)
+            {
+                Console.WriteLine($"[patch] exp_multi -> 已是最新形态（缺省 ×{kExpMultiDefault}(默认 1=不放大)），原样保留");
+                return false;
+            }
+            ni.OpCode = OpCodes.Ldc_I4;
+            ni.Operand = kExpMultiDefault;
+            Console.WriteLine($"[patch] exp_multi -> 既有补丁原地升级：缺省倍率改写为 ×{kExpMultiDefault}");
+            return true;
+        }
+
         var pExp = m.Parameters[0];
         var scLn = mod.AssemblyReferences.FirstOrDefault(r => r.Name == "com.votrubec.largenumbers")
             ?? throw new Exception("com.votrubec.largenumbers 程序集引用不存在");
@@ -972,7 +1004,7 @@ internal static class Program
         var seq = new List<Instruction>
         {
             Instruction.Create(OpCodes.Ldstr, "exp_multi"),
-            Instruction.Create(OpCodes.Ldc_I4_1),
+            Instruction.Create(OpCodes.Ldc_I4, kExpMultiDefault),
             Instruction.Create(OpCodes.Call, mGetInt),
             Instruction.Create(OpCodes.Stloc, vMult),
             Instruction.Create(OpCodes.Ldloc, vMult),
@@ -987,7 +1019,20 @@ internal static class Program
             Instruction.Create(OpCodes.Br, first),
         };
         InsertAtStart(m, seq);
-        Console.WriteLine("[patch] exp_multi -> DataManager.AddExp(LargeNumber) 入口 ×N");
+        Console.WriteLine($"[patch] exp_multi -> DataManager.AddExp(LargeNumber) 入口 ×N（缺省 ×{kExpMultiDefault}(默认 1=不放大)）");
+        return true;
+    }
+
+    // 校验 DataManager::AddExp 的 exp_multi 缺省操作数（供 Verify 用）
+    static bool ExpMultiDefaultIs(int want)
+    {
+        var m = FindM(FindType("DataManager"), "AddExp", 1);
+        var il = m.Body.Instructions;
+        var i = il.IndexOf(il.FirstOrDefault(
+            x => x.OpCode == OpCodes.Ldstr && (string)x.Operand == "exp_multi"));
+        if (i < 0) return false;
+        var ni = il[i + 1];
+        return ni.OpCode == OpCodes.Ldc_I4 && ni.Operand is int v && v == want;
     }
 
     static void PatchVersionPin()
@@ -1387,6 +1432,7 @@ internal static class Program
         Check(HasString("AdsManager/ShowAdsNewFlow", "Show", "shop_ads_unlimited"), "shop_ads_unlimited show gate");
         Check(HasString("ShopWindow", "Refresh", "shop_ads_unlimited", 0), "shop_ads_unlimited refresh gate");
         Check(HasString("DataManager", "AddExp", "exp_multi", 1), "exp_multi gate");
+        Check(ExpMultiDefaultIs(kExpMultiDefault), $"exp_multi 缺省 ×{kExpMultiDefault}(默认 1=不放大)");
         Check(HasBanStore("NetWorkPlayerMgr", "BanGame"), "BanGame clears ban");
         Check(!HasString("NetWorkPlayerMgr", "CheckCodeLocked", "block_report", 1),
               "CheckCodeLocked 存档回滚链已恢复（无 block_report 门）");

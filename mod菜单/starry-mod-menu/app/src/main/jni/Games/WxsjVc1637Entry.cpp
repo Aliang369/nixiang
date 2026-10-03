@@ -20,7 +20,7 @@ static const char* kWxsjVc1637_Features[] = {
     "Toggle_无限挑战秘境",           // 9  WXSJVC_FEAT_MIJINGFREE
     "Toggle_皮肤全解锁",             // 10 WXSJVC_FEAT_SKINUNLOCK
     "Toggle_功能全解锁",             // 11 WXSJVC_FEAT_FUNCUNLOCK
-    "Slider_经验倍率:1:10",          // 12 WXSJVC_FEAT_EXPMULTI
+    "Slider_经验倍率:1:1000",        // 12 WXSJVC_FEAT_EXPMULTI（滑块 1..1000，默认 1=不放大，写 exp_multi）
     "Toggle_商店广告无限",           // 13 WXSJVC_FEAT_SHOPADS
     "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×倍率）
     "InputValue_1000:物品反增倍率",  // 15 WXSJVC_FEAT_ITEMREVERSEX（输入框，写 item_reverse_x）
