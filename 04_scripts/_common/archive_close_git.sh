@@ -85,6 +85,18 @@ done < <(git diff --cached --name-only)
 # manifest 读取归档提交的源码/文档事实；不要求在生成时预测自己的 commit hash。
 python3 04_scripts/_common/delivery_manifest.py --game "$GAME" --output "$MANIFEST"
 git add -- "$STATE" "$MANIFEST"
+
+# 生成/暂存之后再复核一次：提交前的最终暂存区仍只能包含 STATE 与 MANIFEST。
+# 这是第二道门，避免并发暂存或未来脚本改动让非允许文件漏进 commit。
+while IFS= read -r path; do
+  [[ -n "$path" ]] || continue
+  [[ "$path" == "$STATE" || "$path" == "$MANIFEST" ]] || {
+    echo "错误: 提交前暂存区含非收口文件，拒绝提交: $path" >&2
+    git diff --cached --name-only >&2
+    exit 1
+  }
+done < <(git diff --cached --name-only)
+
 if git diff --cached --quiet -- "$STATE" "$MANIFEST"; then
   echo "管线状态与 manifest 无变化，无需补提交"
   exit 0
