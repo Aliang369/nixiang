@@ -152,3 +152,13 @@ mod菜单/**/libs_*/
 !mod菜单/**/Games/*PatchedDll*.a
 !mod菜单/**/targetfuntional_dll*.bin
 mod菜单/starry-mod-menu_111/
+
+# ===== 2026-10-03：境界守望者（构建期临时物，可再生）=====
+# starry_link/：wor_build_so.sh:20-30 为规避「mod菜单/ 含中文 ⇒ ndk-build 的 make 在 Windows 下
+# 打乱非 ASCII 路径」而建的纯 ASCII 目录 junction（指向 mod菜单/starry-mod-menu），构建时自动重建，
+# 收尾应删（删它必须用 `cmd /c rmdir` 解链，绝不能用 `rm -rf` 跟链删真项目）。
+starry_link/
+# 顶层一次性驱动脚本（_tmp_e2build.sh / _tmp_e2chain.sh / _tmp_e2launch.sh / _tmp_deliver.sh …）。
+# 正式脚本一律落 04_scripts/{游戏}/，例如 _tmp_e2launch.sh 已正式化为
+# 04_scripts/境界守望者/wor_launch.sh（真机冒烟 + 双路 logcat 取证）。
+_tmp_*.sh

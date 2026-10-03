@@ -1,0 +1,40 @@
+===== WOR e2 layout run#1 wor-e2-20261003 =====
+
+===== runtime layout begin =====
+===== SECTION 1: images =====
+why=resolve ready=1 domain=0x75909effc0 core=1
+asm count=63
+===== SECTION 2: name-probe =====
+probe ns=CSharpBattle.Battle cls=HpChangeEntitySystem -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HPChangeEntitySystem -> 0x0 (MISS)
+probe ns= cls=HpChangeEntitySystem -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HPChangeComponent -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HpChangeComponent -> 0x0 (MISS)
+probe ns= cls=HPChangeComponent -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=stHpChangeData -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=StHpChangeData -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HpChangeData -> 0x0 (MISS)
+probe ns= cls=stHpChangeData -> 0x0 (MISS)
+probe short Entity hits=0
+sys class = 0x0 (MISS) ns=-
+===== runtime layout end =====
+===== WOR e2 layout run#2 wor-e2-20261003 =====
+
+===== runtime layout begin =====
+===== SECTION 1: images =====
+why=resolve ready=1 domain=0x75909effc0 core=1
+asm count=63
+===== SECTION 2: name-probe =====
+probe ns=CSharpBattle.Battle cls=HpChangeEntitySystem -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HPChangeEntitySystem -> 0x0 (MISS)
+probe ns= cls=HpChangeEntitySystem -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HPChangeComponent -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HpChangeComponent -> 0x0 (MISS)
+probe ns= cls=HPChangeComponent -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=stHpChangeData -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=StHpChangeData -> 0x0 (MISS)
+probe ns=CSharpBattle.Battle cls=HpChangeData -> 0x0 (MISS)
+probe ns= cls=stHpChangeData -> 0x0 (MISS)
+probe short Entity hits=0
+sys class = 0x0 (MISS) ns=-
+===== runtime layout end =====

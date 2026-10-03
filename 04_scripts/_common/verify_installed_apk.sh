@@ -33,7 +33,7 @@ else
 fi
 [ -n "$DEV_MD5" ] || { echo "ERROR: 设备侧 md5sum 失败（$BASE）；root 设备尝试加 --su" >&2; exit 1; }
 
-LOCAL_MD5="$(md5 -q "$LOCAL")"
+LOCAL_MD5="$( if command -v md5 >/dev/null 2>&1; then md5 -q "$LOCAL"; else md5sum "$LOCAL" | awk '{print $1}'; fi )"
 if [ "$DEV_MD5" != "$LOCAL_MD5" ]; then
   echo "ERROR: 设备包($DEV_MD5) != 本地产物($LOCAL_MD5) —— 装的是旧包/没装上，禁止宣称装机完成" >&2
   exit 1

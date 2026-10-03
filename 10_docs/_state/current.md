@@ -10,6 +10,7 @@
 
 | 游戏 | 最近更新 | 状态 | 详情 |
 |---|---|---|---|
+| 境界守望者 | 2026-10-03 | ✅ **国际服 1.6.38.829.1 星空版 e1+e2 双阶段完成、用户实测「功能没问题了」**：Google Play，Unity 2019.4 IL2CPP + **Split APK（Qigsaw base+split）**，真库＝运行时自解 `liblogic.so`(137.6MB)。①环境：去签名（证书 MD5 `714d7927…`）+菜单进游戏；②功能：无敌/伤害倍率(1-10)。三卡点＝split 内 232KB `libil2cpp.so` 转发壳**同 soname 劫持 Api 指针**／`IsValidHeapPtr()` 拒 Android14+ tagged 指针 `0xb400…`／值类型偏移 `+0x10` 偏置。正式包 base md5 `054bbb42…`＋split（**split 应用须成对保留**） | [摘要](games/境界守望者.md) |
 | 敢达争锋对决 | 2026-10-03 | ✅ **星空版已装机、4/4 抓点命中**：9.3.0/vc830，官方原版与斌哥包 `libil2cpp.so`/metadata **逐字节相同 ⇒ RVA 零重定位**。三项：伤害倍率(1–100)/超级定怪/全局加速(1–10)；lazy 装钩 `install pass: ok=4 dead=0/4`（真机 RVA 快路 4/4，MuMu 降 by-name）；四点=16B veneer。产物 `敢达争锋对决_9.3.0_surgical-starSigned.apk`（md5 `27381dad` / sha256 `1b4e9a3b…`=设备已装包）+ `delivery_20261003/`（icon 512/144+菜单模板）。**用户实测三项正常、机模均可用、结案** | [摘要](games/敢达争锋对决.md) |
 | 冒险与征途 | 2026-10-03 | ✅ **1.5.9/vc159 收官**（HybridCLR 热更解释执行：只能 hook 解释器入口 `0x207F798` + pushframe `0x207DCCC`，按「类名::方法名」分发）：秒杀小怪(BigInt×100 仅 MONSTER)/无敌(`DoAttack` accepter 置 null＝斌哥机制)/技能伤害增加(`AddProjectile` count×5＋发送者闸)/免广告(代回调 `OnADVideoResult`)；身份判据 `ulRoleId`。**用户 2026-10-03 实测四项通过、正式包结案**（sha256 `74147b36…`，885310399 B，包内 so md5 `a97d27d4…`） | [摘要](games/冒险与征途.md) |
 | 咻咻勇者 | 2026-10-03 | ⛔ **已终止/已清理（仅留 10_docs）**：`com.xxyz.sdc` 1.3.67 TapTap，Cocos 3.x + JS 热更。去签名烧进 APK ✅、本地【无敌/伤害倍率】✅，但结算 `ret=260001` 由**服务端按自己的战斗记录重放**判定 ⇒ 客户端无解（清空结算上报仍失败）；协议层布尔/漏帧/GM 指令/扫荡全部实测无效。工程代码 + APK + 中间物已按用户口径清理 | [摘要](games/咻咻勇者.md) |

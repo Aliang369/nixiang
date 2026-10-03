@@ -56,20 +56,31 @@ if [[ -z "${APKSIGNER:-}" ]]; then
     fi
   done
 fi
-[[ -x "$APKSIGNER" ]] || { echo "ERROR: 未找到 apksigner，拒绝裁剪: ${APKSIGNER:-未检测到}" >&2; exit 1; }
+[[ -f "$APKSIGNER" ]] || { echo "ERROR: 未找到 apksigner，拒绝裁剪: ${APKSIGNER:-未检测到}" >&2; exit 1; }
 "$APKSIGNER" verify "$KEEP" >/dev/null || { echo "ERROR: 保留 APK 签名校验失败: $KEEP" >&2; exit 1; }
+
+# 跨平台文件大小 / md5：macOS 是 stat -f '%z' / md5 -q；Linux+Git Bash 是 stat -c '%s' / md5sum。
+_file_size() { stat -f '%z' "$1" 2>/dev/null || stat -c '%s' "$1"; }
+_file_md5()  { md5 -q "$1" 2>/dev/null || md5sum "$1" | awk '{print $1}'; }
 
 TMP="$(mktemp /tmp/prune_output.XXXXXX)"
 trap 'rm -f "$TMP"' EXIT
 while IFS= read -r -d '' f; do
   [[ "$f" == "$KEEP" ]] && continue
-  printf '%s\t%s\t%s\n' "$(basename "$f")" "$(stat -f '%z' "$f")" "$(md5 -q "$f")" >> "$TMP"
+  printf '%s\t%s\t%s\n' "$(basename "$f")" "$(_file_size "$f")" "$(_file_md5 "$f")" >> "$TMP"
 done < <(find "$GAME_DIR" -maxdepth 1 -type f \( -name '*.apk' -o -name '*.apk.part' -o -name '*.idsig' -o -name '*.idsig.part' \) -print0)
 
 if [[ -n "$MANIFEST" ]]; then
   [[ "$MANIFEST" == /* ]] || MANIFEST="$ROOT/$MANIFEST"
   mkdir -p "$(dirname "$MANIFEST")"
-  python3.11 - "$MANIFEST" "$GAME_DIR" "$KEEP" "$MODE" "$TMP" <<'PY'
+PY="${PYTHON:-}"
+if [[ -z "$PY" ]]; then
+  for c in python3.11 python3 python py; do
+    command -v "$c" >/dev/null 2>&1 && { PY="$c"; break; }
+  done
+fi
+[[ -n "$PY" ]] || { echo "ERROR: 找不到 python，无法写裁剪清单（可设 PYTHON=/path/to/python）" >&2; exit 1; }
+"$PY" - "$MANIFEST" "$GAME_DIR" "$KEEP" "$MODE" "$TMP" <<'PYEOF'
 import hashlib
 import json
 import sys
@@ -92,7 +103,7 @@ data = {
     'removed_count': len(removed),
 }
 Path(manifest).write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-PY
+PYEOF
 fi
 
 if [[ "$MODE" == "--apply" ]]; then

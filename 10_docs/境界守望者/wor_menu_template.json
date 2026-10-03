@@ -1,0 +1,10 @@
+{
+  "template_id": "wor",
+  "name": "境界守望者",
+  "package": "com.ap.watcherofrealms",
+  "source": "Games/WorEntry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "伤害倍率"}
+  ]
+}

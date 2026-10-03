@@ -154,7 +154,17 @@ while IFS=$'\t' read -r rel kind size_kib abs dest; do
   echo "[trash_paths] moved: $rel"
 done < "$TMP"
 
-python3.11 - "$MANIFEST" "$ROOT" "$QUARANTINE" "$STAMP" "$TMP" <<'PY'
+# Windows 上没有 python3.11 这个名字（只有 python.exe / py），逐个探测；与
+# 04_scripts/_common/finalize_game_delivery.sh 的 PYTHON 探测保持同一姿势。
+PY="${PYTHON:-}"
+if [[ -z "$PY" ]]; then
+  for c in python3.11 python3 python py; do
+    command -v "$c" >/dev/null 2>&1 && { PY="$c"; break; }
+  done
+fi
+[[ -n "$PY" ]] || { echo "ERROR: 找不到 python，无法写 manifest（可设 PYTHON=/path/to/python）" >&2; exit 1; }
+
+"$PY" - "$MANIFEST" "$ROOT" "$QUARANTINE" "$STAMP" "$TMP" <<'PY'
 import json
 import sys
 from pathlib import Path

@@ -94,14 +94,20 @@ esac
 
 APKSIGNER="${APKSIGNER:-}"
 if [[ -z "$APKSIGNER" ]]; then
-  for v in 36.0.0 35.0.0 34.0.0; do
-    if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/apksigner" ]]; then
-      APKSIGNER="$HOME/Library/Android/sdk/build-tools/$v/apksigner"
-      break
-    fi
+  # Windows Git Bash 的默认位置（与 04_scripts/*/**_sign.sh 的 BUILD_TOOLS 探测保持一致）
+  for v in 36.0.0 36.1.0 35.0.0 34.0.0; do
+    for c in \
+      "$HOME/Library/Android/sdk/build-tools/$v/apksigner" \
+      "${ANDROID_SDK_ROOT:-$LOCALAPPDATA/Android/Sdk}/build-tools/$v/apksigner" \
+      "${ANDROID_SDK_ROOT:-$LOCALAPPDATA/Android/Sdk}/build-tools/$v/apksigner.bat"; do
+      if [[ -f "$c" ]]; then APKSIGNER="$c"; break 2; fi
+    done
   done
 fi
-[[ -x "$APKSIGNER" ]] || { echo "ERROR: 未找到 apksigner，拒绝交付: ${APKSIGNER:-未检测到}" >&2; exit 1; }
+# ⚠️ Windows 上 apksigner.bat 没有 x 位（-rw-r--r--），判可用性必须用 -f 不能用 -x ——
+#    用 -x 会误报「未找到 apksigner」。（同 04_scripts/境界守望者/wor_sign.sh:55-57 的教训）
+[[ -f "$APKSIGNER" ]] || { echo "ERROR: 未找到 apksigner，拒绝交付: ${APKSIGNER:-未检测到}" >&2; exit 1; }
+command -v cygpath >/dev/null 2>&1 && APKSIGNER="$(cygpath -m "$APKSIGNER" 2>/dev/null || printf '%s' "$APKSIGNER")"
 "$APKSIGNER" verify "$APK" >/dev/null || { echo "ERROR: 正式包签名校验失败: $APK" >&2; exit 1; }
 
 if [[ -z "$MENU_TEMPLATE" ]]; then
@@ -119,7 +125,12 @@ MENU_TEMPLATE="$(abs_path "$MENU_TEMPLATE")"
 if [[ -n "$ICON_SOURCE" ]]; then
   ICON_SOURCE="$(abs_path "$ICON_SOURCE")"
   [[ -f "$ICON_SOURCE" ]] || { echo "ERROR: icon 源图不存在: $ICON_SOURCE" >&2; exit 1; }
-  command -v sips >/dev/null 2>&1 || { echo "ERROR: 需要 sips 生成 icon" >&2; exit 1; }
+  # 生成器：macOS 用 sips；其它平台走 Pillow（apply 阶段真正调用，此处只做可用性预检）
+  if ! command -v sips >/dev/null 2>&1; then
+    _py="${PYTHON:-$(command -v python3 || command -v python || true)}"
+    [[ -n "$_py" ]] && "$_py" -c 'import PIL' >/dev/null 2>&1 \
+      || { echo "ERROR: 无 sips 且无可用的 python+Pillow 生成 icon（可设 PYTHON=/path/to/python）" >&2; exit 1; }
+  fi
 fi
 
 python3 - "$MENU_TEMPLATE" "$ALLOW_LEGACY_TEMPLATE" <<'PY'
@@ -201,8 +212,28 @@ fi
 
 mkdir -p "$DELIVERY"
 if [[ -n "$ICON_SOURCE" ]]; then
-  sips -z 512 512 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_512.png" >/dev/null
-  sips -z 144 144 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_144.png" >/dev/null
+  if command -v sips >/dev/null 2>&1; then
+    sips -z 512 512 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_512.png" >/dev/null
+    sips -z 144 144 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_144.png" >/dev/null
+  else
+    # Windows / Linux 无 sips ⇒ 走 Pillow（跨平台等价实现）
+    PYTHON="${PYTHON:-}"
+    if [[ -z "$PYTHON" ]]; then
+      for c in python python3 py; do
+        command -v "$c" >/dev/null 2>&1 && { PYTHON="$c"; break; }
+      done
+    fi
+    [[ -n "$PYTHON" ]] && "$PYTHON" -c 'import PIL' >/dev/null 2>&1 \
+      || { echo "ERROR: 无 sips 且无可用的 python+Pillow，无法生成 icon（可设 PYTHON=/path/to/python）" >&2; exit 1; }
+    "$PYTHON" - "$ICON_SOURCE" "$DELIVERY" "$GAME" <<'PYEOF' || { echo "ERROR: icon 生成失败" >&2; exit 1; }
+import sys
+from PIL import Image
+src, out_dir, game = sys.argv[1], sys.argv[2], sys.argv[3]
+im = Image.open(src).convert("RGBA")
+for edge in (512, 144):
+    im.resize((edge, edge), Image.LANCZOS).save(f"{out_dir}/icon_{game}_{edge}.png")
+PYEOF
+  fi
 fi
 cp -f "$MENU_TEMPLATE" "$DELIVERY/menu_template.json"
 

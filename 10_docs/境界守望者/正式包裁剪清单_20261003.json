@@ -1,0 +1,29 @@
+{
+  "game_dir": "E:/nixiang/08_output/境界守望者",
+  "keep": "境界守望者_1.6.38.829.1_starry-releaseSigned.apk",
+  "keep_size": 173189378,
+  "keep_md5": "054bbb4258954404ebec2f39e9232978",
+  "keep_additional": [
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-splitSigned.apk",
+      "size": 33393563,
+      "md5": "abd232c22858887094c6d5ab8581f0d5",
+      "reason": "本作是 Split APK（Qigsaw base+split）。split_config.arm64_v8a 是 35 个 .so 的唯一载体（base 里没有任何 .so），缺它无法安装，故必须与 base 成对保留；其余非 split 游戏的「唯一正式 APK」规则在此等价于「base+split 成对」"
+    }
+  ],
+  "mode": "manual",
+  "note": "本作未走 prune_output_final.sh：该脚本的语义是「目录只留 1 个 .apk」，对 Split APK 会删掉 split 使正式包不可安装。改为手工只删 -unsigned 中间件（可复用 04_scripts/境界守望者/ 的 surgical+sign 从 02_apks 底包完整重生成），保留 base+split 成对。交付物另见 delivery_20261003/（icon 512/144 + menu_template.json）与 境界守望者_icon.png。设备已装包自证：adb shell md5sum /data/app/.../base.apk == 054bbb4258954404ebec2f39e9232978",
+  "removed": [
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-unsigned.apk",
+      "size": 173096242,
+      "md5": "56717856a5f33c13fc0a7701db37d148"
+    },
+    {
+      "name": "境界守望者_1.6.38.829.1_starry-split-unsigned.apk",
+      "size": 33384438,
+      "md5": "105d75bfbf028814d052283f2a6e9878"
+    }
+  ],
+  "removed_count": 2
+}

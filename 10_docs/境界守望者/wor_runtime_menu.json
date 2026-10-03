@@ -1,0 +1,6 @@
+{
+  "features": [
+    {"feat_num": 1, "name": "Toggle_无敌"},
+    {"feat_num": 2, "name": "Slider_伤害倍率:1:10:1"}
+  ]
+}

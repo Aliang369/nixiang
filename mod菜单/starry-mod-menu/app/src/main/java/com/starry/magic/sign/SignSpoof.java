@@ -1057,6 +1057,23 @@ public final class SignSpoof {
                     + "KKfBKObzthUuC4p1RRbYWVR4SJzNXhxw22p9qZXjJ+s/k00qq7NxYtbYMSFpCVAyJxsQ+B/CwrD4ocnlcFZL0DaWnnKqqXe+ec2pcigPnDETZsiwGZZIpc"
                     + "oSypFJxqUCPFfXdUhA/c6c+pcc7+y77CDGnt4i7vIsrStmDjdSagWbgnfEyrcMfRTU3Eeev0Q=";
 
+    // 境界守望者（Watcher of Realms 国际服 / com.ap.watcherofrealms 1.6.38.829.1）
+    // 取自官包 base.apk META-INF（keytool -printcert -rfc -jarfile）
+    // subject/issuer: O=Watcher of Realms - AP
+    // MD5:     714d7927b0e8041ee55a40eaefa56adb
+    // 有效期: 2023-11-02 → 2073-10-20；DER 708 B / RSA-2048 / SHA1withRSA
+    // 用途: 模组包自签后回灌官签（喂给游戏的完整性/渠道校验；split 与本证书同签）
+    private static final String WOR_PKG = "com.ap.watcherofrealms";
+    private static final String WOR_CERT_B64 =
+            "MIICwDCCAaigAwIBAgIESOZ1sjANBgkqhkiG9w0BAQUFADAhMR8wHQYDVQQKDBZXYXRjaGVyIG9mIFJlYWxtcyAtIEFQMCAXDTIzMTEwMjEyNDQ1MloYDz"
+                    + "IwNzMxMDIwMTI0NDUyWjAhMR8wHQYDVQQKDBZXYXRjaGVyIG9mIFJlYWxtcyAtIEFQMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjNPUDBBs"
+                    + "/odolyCfPFvSmRs87jRwDgQSJjpl9lv5y/CA09+oeObRSAyUo8JW0Yy5/iZbqK0Kvixo8hhRHdF0wMB6ybWb8z1bZREpGiIrQcwXECTfc+89Y60i/RI4bX"
+                    + "D+zGJJQmHYpiDm+SfEbZv7RsLA2uMaSNbdzvHl33pubCrsJc3gviDKeY7RORbobRRKMt9BoFt9K0L8T6SL5+JjHpZpkw6fcaWxvuwhmJiWfJ9LOf8GzDdk"
+                    + "4lDt5qlGATWG52wkbcxOP3k04XC0ng/mIyM/qLtqDnkz6bTiVgPXQL9GGxr9ecF696MqabaFF0lmwGOtvG8uJehoqlLCo3JSbwIDAQABMA0GCSqGSIb3DQ"
+                    + "EBBQUAA4IBAQBSorX9AlzYLWTpbBLQj5RHuxNekortGpouCJ/RjAQrzBChhADWw2E0pHPjnRz2ggmhhIhoC4uTgBE6oM1oI+T3iaNPnJgWLDGMV3W4TGVN"
+                    + "efvpYVtDwRGJMwzM/zcVaD2O+jO0BXEQCPwAitBiONxXDjjGbRl60n93OTe26CV3cPXOBQtF0vHle7xg4ij/UDX1/1QF/41qwTlpJJ1ndEIoTM1j3F6F4p"
+                    + "qU4BA6AtYE1zRF07UfXsV4xcf8FB9Ggd4vTRLHEUPxcyENpemNwswqCmesrzCaSgsbPpjbFlhV5G7+KG5Ea9EM5j0AFvJgQE7jP+/FfIFTkSak+lbuLrHu";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1125,6 +1142,7 @@ public final class SignSpoof {
                 fakes.put(JJSSJD_PKG, new Signature(Base64.decode(JJSSJD_CERT_B64, Base64.DEFAULT)));
                 fakes.put(JFQS_PKG, new Signature(Base64.decode(JFQS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GDZFDJ_PKG, new Signature(Base64.decode(GDZFDJ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(WOR_PKG, new Signature(Base64.decode(WOR_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());
