@@ -86,6 +86,7 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
 
 ### 遇到坑 / 经验查阅
 1. `re-lessons/SKILL.md` — 经验卡索引
+2. `diagnosis-index.md` — 按症状选择最小诊断路径，再跳转专项技能；新建经验卡后可运行 `python3 -B ../04_scripts/_common/audit_experience_registry.py` 检查生命周期元数据。
 
 ---
 
