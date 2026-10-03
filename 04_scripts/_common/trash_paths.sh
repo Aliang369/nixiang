@@ -164,7 +164,21 @@ if [[ -z "$PY" ]]; then
 fi
 [[ -n "$PY" ]] || { echo "ERROR: 找不到 python，无法写 manifest（可设 PYTHON=/path/to/python）" >&2; exit 1; }
 
-"$PY" - "$MANIFEST" "$ROOT" "$QUARANTINE" "$STAMP" "$TMP" <<'PY'
+# ⚠️ 原生 Windows python 认不得 POSIX 路径：`/tmp/trash_paths.XXXXXX` 会被当成 `\tmp\…`（当前盘根），
+#    直接抛 FileNotFoundError: No such file or directory: '\tmp\trash_paths.XXXXXX'；manifest 同理。
+#    故只对**真正做文件 I/O 的两个参数**做 cygpath 转换，JSON 里记录的 root/quarantine 仍保留
+#    POSIX 形式（与历史清单一致，便于人读）。同一姿势见 finalize_game_delivery.sh 的 win_path()。
+win_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -m "$1" 2>/dev/null || printf '%s' "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+MANIFEST_WIN="$(win_path "$MANIFEST")"
+TMP_WIN="$(win_path "$TMP")"
+
+"$PY" - "$MANIFEST_WIN" "$ROOT" "$QUARANTINE" "$STAMP" "$TMP_WIN" <<'PY'
 import json
 import sys
 from pathlib import Path

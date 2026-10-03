@@ -1,0 +1,11 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "/c/Users/Administrator/.Trash/nixiang_wor_20261004_000254",
+  "timestamp": "20261004_000254",
+  "mode": "apply",
+  "note": "单 APK 合并验证轮（2026-10-03 23:53 装机后首次启动）拉回的侦察表转储。与已入库的 06_dumped/境界守望者/device_logs/wor_tables_r5.txt 内容等价：同为 63 个程序集、138 条 HIT-，逐行差异仅在运行时地址（only-A=2675 / only-B=2675 行，均为含指针的行）⇒ 判定为滚动物，不入库；结论（合并后布局不变）已写入 10_docs/境界守望者/正式包_单APK合并_20261003.md。",
+  "manifest_note": "trash_paths.sh 再次在 manifest 写入阶段失败：FileNotFoundError: [Errno 2] No such file or directory: '\\\\tmp\\\\trash_paths.cOWPmJ' —— 调用方 export MSYS_NO_PATHCONV=1 后，mktemp 产生的 /tmp/... POSIX 路径被原样交给原生 Windows python。文件已成功移动，本清单为事后手工补录。同轮已给 04_scripts/_common/trash_paths.sh 补 win_path()（cygpath -m）仅转换真正做文件 I/O 的 manifest/tmp 两个参数，JSON 内 root/quarantine 仍保持可读形式。",
+  "items": [
+    {"path": "06_dumped/境界守望者/device_logs/wor_20261003_235336_tables.txt", "type": "file", "size_kib": 348, "source": "06_dumped/境界守望者/device_logs/wor_20261003_235336_tables.txt", "quarantine": "/c/Users/Administrator/.Trash/nixiang_wor_20261004_000254/06_dumped/境界守望者/device_logs/wor_20261003_235336_tables.txt"}
+  ]
+}

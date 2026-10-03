@@ -108,7 +108,49 @@ fi
 #    用 -x 会误报「未找到 apksigner」。（同 04_scripts/境界守望者/wor_sign.sh:55-57 的教训）
 [[ -f "$APKSIGNER" ]] || { echo "ERROR: 未找到 apksigner，拒绝交付: ${APKSIGNER:-未检测到}" >&2; exit 1; }
 command -v cygpath >/dev/null 2>&1 && APKSIGNER="$(cygpath -m "$APKSIGNER" 2>/dev/null || printf '%s' "$APKSIGNER")"
-"$APKSIGNER" verify "$APK" >/dev/null || { echo "ERROR: 正式包签名校验失败: $APK" >&2; exit 1; }
+# ⚠️ apksigner(.bat) 是 Windows 程序（java 起家），**argv 里的文件路径也必须转 Windows 形式**。
+#    只转 APKSIGNER 自己不够：POSIX 路径 `/e/nixiang/…` 会让 java 抛
+#    FileNotFoundException: \e\nixiang\…（且经 .bat 转发后 CJK 还会乱码）。
+#    另注：若调用方 `export MSYS_NO_PATHCONV=1`，Git Bash 的自动转换会被禁掉，
+#    此时这里必须显式 cygpath。路径含空格/CJK，务必保留引号。
+win_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -m "$1" 2>/dev/null || printf '%s' "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+APK_WIN="$(win_path "$APK")"
+"$APKSIGNER" verify "$APK_WIN" >/dev/null || { echo "ERROR: 正式包签名校验失败: $APK" >&2; exit 1; }
+
+# 选一个**真能 `from PIL import Image`** 的 python。
+# ⚠️ 本机实况（2026-10-03 逐个实测）：
+#    python3 / python → …\Programs\Python\Python311 ：没有 PIL（ModuleNotFoundError）
+#    py (C:\windows\py.exe) → D:\Python313 ：`import PIL` **能过**，但 `from PIL import Image` 抛
+#        ImportError: cannot import name '_imaging' from 'PIL'（装坏了）—— 所以探测必须用真导入，
+#        只测 `import PIL` 会挑中它然后在 icon 生成处炸。
+#    ✅ 可用的：$HOME/.dsh/dsh-runtimes/*/dependencies/python/python.exe 与 D:\Python313\python.exe
+#        （都带 Pillow 12.3.0；注意 `py` 启动器和直接跑 D:\Python313\python.exe 的结果不一样）。
+pick_py_with_pil() {
+  local c
+  local -a cands=()
+  [[ -n "${PYTHON:-}" ]] && cands+=("$PYTHON")
+  cands+=(python3 python py)
+  # 绝对路径回退（PATH 上没有能用的 Pillow 时兜底）
+  cands+=(
+    "$HOME"/.dsh/dsh-runtimes/*/dependencies/python/python.exe
+    /d/Python313/python.exe
+    "$HOME"/AppData/Local/Programs/Python/Python3*/python.exe
+  )
+  for c in "${cands[@]}"; do
+    [[ -n "$c" ]] || continue
+    if [[ -e "$c" ]]; then :; else command -v "$c" >/dev/null 2>&1 || continue; fi
+    "$c" -c 'from PIL import Image' >/dev/null 2>&1 || continue
+    printf '%s' "$c"
+    return 0
+  done
+  return 1
+}
 
 if [[ -z "$MENU_TEMPLATE" ]]; then
   menus=()
@@ -127,13 +169,15 @@ if [[ -n "$ICON_SOURCE" ]]; then
   [[ -f "$ICON_SOURCE" ]] || { echo "ERROR: icon 源图不存在: $ICON_SOURCE" >&2; exit 1; }
   # 生成器：macOS 用 sips；其它平台走 Pillow（apply 阶段真正调用，此处只做可用性预检）
   if ! command -v sips >/dev/null 2>&1; then
-    _py="${PYTHON:-$(command -v python3 || command -v python || true)}"
-    [[ -n "$_py" ]] && "$_py" -c 'import PIL' >/dev/null 2>&1 \
+    pick_py_with_pil >/dev/null \
       || { echo "ERROR: 无 sips 且无可用的 python+Pillow 生成 icon（可设 PYTHON=/path/to/python）" >&2; exit 1; }
   fi
 fi
 
-python3 - "$MENU_TEMPLATE" "$ALLOW_LEGACY_TEMPLATE" <<'PY'
+# ⚠️ 校验器用的 python 也吃 Windows 路径（原生 Windows python 认不得 /e/… ）。
+_VALIDATOR_PY="${PYTHON:-$(command -v python3 || command -v python || command -v py || true)}"
+[[ -n "$_VALIDATOR_PY" ]] || { echo "ERROR: 未找到 python，无法校验菜单模板（可设 PYTHON=/path/to/python）" >&2; exit 1; }
+"$_VALIDATOR_PY" - "$(win_path "$MENU_TEMPLATE")" "$ALLOW_LEGACY_TEMPLATE" <<'PY'
 import json, sys
 p, allow_legacy = sys.argv[1], sys.argv[2] == '1'
 d = json.load(open(p, encoding='utf-8'))
@@ -217,15 +261,10 @@ if [[ -n "$ICON_SOURCE" ]]; then
     sips -z 144 144 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_144.png" >/dev/null
   else
     # Windows / Linux 无 sips ⇒ 走 Pillow（跨平台等价实现）
-    PYTHON="${PYTHON:-}"
-    if [[ -z "$PYTHON" ]]; then
-      for c in python python3 py; do
-        command -v "$c" >/dev/null 2>&1 && { PYTHON="$c"; break; }
-      done
-    fi
-    [[ -n "$PYTHON" ]] && "$PYTHON" -c 'import PIL' >/dev/null 2>&1 \
+    PYTHON="$(pick_py_with_pil)" \
       || { echo "ERROR: 无 sips 且无可用的 python+Pillow，无法生成 icon（可设 PYTHON=/path/to/python）" >&2; exit 1; }
-    "$PYTHON" - "$ICON_SOURCE" "$DELIVERY" "$GAME" <<'PYEOF' || { echo "ERROR: icon 生成失败" >&2; exit 1; }
+    [[ "$PYTHON" == */* ]] && PYTHON="$(win_path "$PYTHON")"
+    "$PYTHON" - "$(win_path "$ICON_SOURCE")" "$(win_path "$DELIVERY")" "$GAME" <<'PYEOF' || { echo "ERROR: icon 生成失败" >&2; exit 1; }
 import sys
 from PIL import Image
 src, out_dir, game = sys.argv[1], sys.argv[2], sys.argv[3]

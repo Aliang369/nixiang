@@ -4,7 +4,7 @@
   "timestamp": "20261003_232505",
   "mode": "apply",
   "note": "境界守望者收官滚动物清理：只删 06_dumped 下的完整 logcat（AGENTS「完整 logcat 不入库」）。MOD 自家 tag 的过滤日志（*_wor.log / *_filt.log）、落盘侦察表（wor_tables_r*.txt）、截图与 base_1.6.38.829.1/（设备拉取的真 liblogic.bytes + global-metadata.dat，属『本地产物与关键输入』表里的关键输入）一律保留。",
-  "node": "trash_paths.sh 的 manifest 由脚本生成，本轮因脚本硬编码 python3.11（Windows 无此名）在写入阶段失败（文件已成功移动）；此清单为事后按 dry-run/apply 的同一份列表手工补录，格式与脚本输出一致。已同步修复 04_scripts/_common/trash_paths.sh 的 PY 探测。",
+  "manifest_note": "trash_paths.sh 的 manifest 本应由脚本生成，本轮因脚本硬编码 python3.11（Windows 无此名）在写入阶段失败（文件已成功移动）；此清单为事后按 dry-run/apply 的同一份列表手工补录，格式与脚本输出一致。已同步修复 04_scripts/_common/trash_paths.sh 的 PY 探测。",
   "items": [
     {"path": "06_dumped/境界守望者/device_logs/wor_e2_20261003_224301_raw.log", "type": "file", "size_kib": 21520, "source": "06_dumped/境界守望者/device_logs/wor_e2_20261003_224301_raw.log", "quarantine": "/c/Users/Administrator/.Trash/nixiang_wor_20261003_232505/06_dumped/境界守望者/device_logs/wor_e2_20261003_224301_raw.log"},
     {"path": "06_dumped/境界守望者/device_logs/wor_e2_20261003_224814_raw.log", "type": "file", "size_kib": 2560, "source": "06_dumped/境界守望者/device_logs/wor_e2_20261003_224814_raw.log", "quarantine": "/c/Users/Administrator/.Trash/nixiang_wor_20261003_232505/06_dumped/境界守望者/device_logs/wor_e2_20261003_224814_raw.log"},
