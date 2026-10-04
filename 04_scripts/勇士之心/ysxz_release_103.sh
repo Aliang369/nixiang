@@ -174,15 +174,18 @@ PY
 h "6/7 归集到 $OUT"
 mkdir -p "$OUT" "$DELIVER"
 APKNAME="${GAME}_${VERSION}_starry-final-releaseSigned.apk"
-cp -f "$UNSIGNED" "$OUT/${GAME}_${VERSION}_starry-final-unsigned.apk"
-cp -f "$SIGNED"   "$OUT/$APKNAME"
-cp -f "$SO"  "$DELIVER/libstarry_magic.so"
-cp -f "$DEX" "$DELIVER/classes4.dex"
+# 只把**唯一正式包**放进 08_output；unsigned 属构建中间物，留在工作目录（收尾由
+# _common/finalize_game_delivery.sh --prune 裁成唯一 APK，见 AGENTS.md「收尾」节）。
+cp -f "$SIGNED" "$OUT/$APKNAME"
 # 清单里 apk 写相对路径 ../xxx.apk，这样在 delivery 目录里 sha256sum -c 可直接校验
 {
   echo "# ${GAME} ${VERSION} 星光正式包 ${STAGE} —— 交付清单 (sha256)"
   sha256sum "$OUT/$APKNAME" | sed "s#$OUT/#../#"
-  sha256sum "$DELIVER/libstarry_magic.so" "$DELIVER/classes4.dex" | sed "s#$DELIVER/##"
+  # 两个被替换条目不再复制副本进 delivery（构建产物不留本地，且可 --build 复现）；
+  # 只登记源文件哈希供核对 —— 条目内容已在上一步逐条与包内实测 md5 比对通过。
+  echo "# 被替换条目的源文件哈希（不入库、不复制副本）"
+  echo "#   $(basename "$SO")  sha256 $(sha256sum "$SO" | cut -d' ' -f1)"
+  echo "#   $(basename "$DEX") sha256 $(sha256sum "$DEX" | cut -d' ' -f1)"
 } > "$DELIVER/SHA256SUMS.txt"
 say "  清单："
 sed 's/^/    /' "$DELIVER/SHA256SUMS.txt"
@@ -206,8 +209,10 @@ cat > "$DELIVER/说明.md" <<EOF
 | classes4.dex | 菜单外观（星空面板/星光紫）+ 菜单授权链路 | ${DEX_MD5} |
 | lib/arm64-v8a/libstarry_magic.so | 菜单清单（7 行）+ 各功能原生实现 | ${SO_MD5} |
 
-同目录还放了这两个条目本身（classes4.dex / libstarry_magic.so），
-以及 SHA256SUMS.txt（在 delivery 目录里执行 sha256sum -c SHA256SUMS.txt 可校验）。
+同目录另有 icon_${GAME}_512.png / icon_${GAME}_144.png（由 finalize_game_delivery.sh 从
+10_docs/${GAME}/yszzx_icon.png 生成）、menu_template.json（菜单模板副本），以及
+SHA256SUMS.txt（在 delivery 目录里执行 sha256sum -c SHA256SUMS.txt 可校验主包）。
+两个被替换条目本身不复制副本（构建产物，可 --build 复现），哈希见 SHA256SUMS.txt 注释。
 
 ## 文件
 
@@ -257,6 +262,20 @@ cat > "$DELIVER/说明.md" <<EOF
 前置：02_apks/${GAME}_1.0.3.apk（底包）、01_tools/starry_release.jks（同一把钥匙）、JDK 17、Android SDK build-tools。
 EOF
 say "  说明：$DELIVER/说明.md"
+
+# 标准交付物（icon 512/144 + 菜单模板副本）+ 裁成唯一正式包。
+# 收尾一律走一键脚本、禁手工重造交付结构（AGENTS.md「收尾」节）；
+# --icon-source 缺失时 finalize 只跳过 icon，不报错。
+FINALIZE="$ROOT/04_scripts/_common/finalize_game_delivery.sh"
+if [[ -f "$FINALIZE" ]]; then
+  bash "$FINALIZE" --game "$GAME" --apk "$OUT/$APKNAME" \
+    --icon-source "$ROOT/10_docs/${GAME}/yszzx_icon.png" \
+    --menu-template "$ROOT/10_docs/${GAME}/yszzx_menu_template.json" \
+    --prune --apply \
+    || say "  ⚠ finalize 未全绿（见上）：正式包已就位 $OUT/$APKNAME，请按提示补 delivery/裁剪"
+else
+  say "  ⚠ 缺 $FINALIZE：跳过标准归集（icon/菜单模板/裁剪）"
+fi
 
 # ---------------- 7. 摘要 ----------------
 h "7/7 完成"

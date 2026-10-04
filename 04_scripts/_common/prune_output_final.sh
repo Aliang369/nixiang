@@ -48,16 +48,33 @@ esac
 [[ "$KEEP" == *.apk ]] || { echo "ERROR: 保留文件必须是 .apk: $KEEP" >&2; exit 1; }
 
 APKSIGNER="${APKSIGNER:-}"
-if [[ -z "${APKSIGNER:-}" ]]; then
-  for v in 36.0.0 35.0.0 34.0.0; do
-    if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/apksigner" ]]; then
-      APKSIGNER="$HOME/Library/Android/sdk/build-tools/$v/apksigner"
-      break
-    fi
+# Win 上 apksigner 只有 apksigner.bat（`[ -x ]` 对 .bat 恒假），SDK 默认根在 %LOCALAPPDATA%。
+# 旧写法只探 mac 路径 + `[ -x ]` ⇒ Windows 上收尾裁剪恒报「未找到 apksigner，拒绝裁剪」。
+# 统一复用 _common/env.sh 的探测（NIXIANG_APKSIGNER 已处理 .bat 与 win 根），再做本地兜底。
+if [[ -z "$APKSIGNER" && -f "$ROOT/04_scripts/_common/env.sh" ]]; then
+  # shellcheck disable=SC1091
+  . "$ROOT/04_scripts/_common/env.sh" >/dev/null 2>&1 || true
+  APKSIGNER="${NIXIANG_APKSIGNER:-}"
+fi
+if [[ -z "$APKSIGNER" ]]; then
+  for v in 36.1.0 36.0.0 35.0.0 34.0.0; do
+    for c in \
+      "$HOME/Library/Android/sdk/build-tools/$v/apksigner" \
+      "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-${LOCALAPPDATA:-$HOME/AppData/Local}/Android/Sdk}}/build-tools/$v/apksigner" \
+      "${ANDROID_HOME:-${ANDROID_SDK_ROOT:-${LOCALAPPDATA:-$HOME/AppData/Local}/Android/Sdk}}/build-tools/$v/apksigner.bat"; do
+      if [[ -f "$c" ]]; then APKSIGNER="$c"; break 2; fi
+    done
   done
 fi
 [[ -f "$APKSIGNER" ]] || { echo "ERROR: 未找到 apksigner，拒绝裁剪: ${APKSIGNER:-未检测到}" >&2; exit 1; }
-"$APKSIGNER" verify "$KEEP" >/dev/null || { echo "ERROR: 保留 APK 签名校验失败: $KEEP" >&2; exit 1; }
+# apksigner(.bat) 是 java 程序，argv 里的路径必须 Windows 形态（同 finalize_game_delivery.sh:111）
+if command -v cygpath >/dev/null 2>&1; then
+  APKSIGNER="$(cygpath -m "$APKSIGNER" 2>/dev/null || printf '%s' "$APKSIGNER")"
+  KEEP_APK="$(cygpath -m "$KEEP" 2>/dev/null || printf '%s' "$KEEP")"
+else
+  KEEP_APK="$KEEP"
+fi
+"$APKSIGNER" verify "$KEEP_APK" >/dev/null || { echo "ERROR: 保留 APK 签名校验失败: $KEEP" >&2; exit 1; }
 
 # 跨平台文件大小 / md5：macOS 是 stat -f '%z' / md5 -q；Linux+Git Bash 是 stat -c '%s' / md5sum。
 _file_size() { stat -f '%z' "$1" 2>/dev/null || stat -c '%s' "$1"; }
