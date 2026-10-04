@@ -4,7 +4,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/战魂铭人"
 # 真机当前为 3.5.0 外科包（starry 签名）
 SIGNED="$OUT/战魂铭人_3.5.0_surgical-releaseSigned.apk"

@@ -29,7 +29,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/魂坠深境/魂坠深境_1.1.1_device.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/魂坠深境/apktool_1.1.1_orig"
 FINAL_PATCH="$NIXIANG/07_patched/魂坠深境/apktool_1.1.1_modmenu"

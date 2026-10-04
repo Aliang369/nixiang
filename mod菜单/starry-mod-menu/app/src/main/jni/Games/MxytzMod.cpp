@@ -53,6 +53,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+#include "Includes/StarPtr.h"   // v28：设备无关指针判据（清 TBI/MTE 顶字节）
 #include "Includes/SecStrings.hpp"
 #include "Unity/Il2CppApi.h"
 
@@ -155,11 +156,12 @@ static bool OkPtr(void* p) { return p && Il2Cpp::IsValidHeapPtr(p); }
  *  为什么需要它：`Il2Cpp::IsValidHeapPtr` 内部走 `PermCached`，对 8192 条 maps 快照做线性扫
  *  （`mod菜单/starry-mod-menu/app/src/main/jni/Unity/Il2CppApi.cpp:727`）——在
  *  「每次热更方法调用都过一遍」的解释器入口路径、以及「每次受击都跑」的伤害策略里调用它是致命的。
- *  解释器路径只允许用这个函数：`0x100000000 ~ 0x800000000000` = ARM64 用户态堆/映射区。 */
-static inline bool LivePtr(const void* p) {
-    const uintptr_t u = reinterpret_cast<uintptr_t>(p);
-    return u >= 0x100000000ull && u < 0x800000000000ull;
-}
+ *  ★v28 设备无关修正：原先这里直接对**原始指针**判 `0x100000000 ~ 0x800000000000`，
+ *  没清顶字节。真机（arm64 + Android 12+）的 Scudo 堆在 `0xb4…` 段，指针形如
+ *  `0xb4000076c1646d58` ⇒ `>= 0x800000000000` ⇒ 恒 false ⇒ 全部 45 处调用点早退 ⇒
+ *  四项功能在真机上静默全灭（模拟器 x86_64+Houdini 地址不越界，所以那边正常）。
+ *  现统一走 `Includes/StarPtr.h`：先清 TBI/MTE 顶字节，再判 4GiB ~ 128TiB 用户态区间。 */
+static inline bool LivePtr(const void* p) { return starptr::LiveFastCounted(p); }
 
 static int32_t SafeReadI32(void* obj, size_t off, int32_t defv) {
     if (!obj) return defv;
@@ -1967,7 +1969,8 @@ struct InterpGateGuard {
 static inline uintptr_t RawWord(const void* p, size_t off) {
     return *reinterpret_cast<const uintptr_t*>(reinterpret_cast<const char*>(p) + off);
 }
-static inline bool PlausiblePtr(uintptr_t u) { return u != 0 && u < 0x800000000000ull; }
+// v28：同上，先清顶字节再判用户态区间（真机 0xb4… 指针原先直接越界被否）
+static inline bool PlausiblePtr(uintptr_t u) { return u != 0 && starptr::InUserVa(u); }
 
 
 /** v23：安全读「疑似对象」的类名。全程有界只读，绝不把野指针交给 il2cpp API（否则崩在 class_name 里）。
@@ -2105,7 +2108,9 @@ static void ActorOfferArgs(void* a1, size_t wordOff) {
          *   且 `+16=0xaa1f03e054fffe0b`（ARM64 `mov x0,xzr` 的机器码）—— 实参数组越界时会读到
          *   代码页，旧判据（非 0 + 可读）放行了一大堆这种垃圾，把 512 个名额占满。 */
         const uintptr_t k = *(const uint64_t*)v;
-        if (k < 0x100000000ull || k >= 0x800000000000ull || (k & 7ull)) continue;
+        // v28：klass 指针在真机上同样带 TBI 标签（0xb4…），必须先清标签再判区间，
+        //   否则真机上这一整段 actor 扫描永远 continue ⇒ 身份链断 ⇒ 功能全部无效果。
+        if (!starptr::InUserVa(k) || (k & 7ull)) continue;
         const uint32_t n = g_actorSeenN.load(std::memory_order_relaxed);
         if (n >= kSeenMax) return;
         uint32_t j = 0;

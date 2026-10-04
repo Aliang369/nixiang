@@ -4,7 +4,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/独奏骑士"
 SIGNED="$OUT/独奏骑士_1.1.760_surgical-releaseSigned.apk"
 PKG="com.Shimmer.SoloKnight.cn"

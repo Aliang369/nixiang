@@ -31,7 +31,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SRC_DECODE="$NIXIANG/03_decompiled/镇邪人/apktool_1.0.3_orig"
 FINAL_PATCH="$NIXIANG/07_patched/镇邪人/apktool_1.0.3_modmenu"
 OUT="$NIXIANG/08_output/镇邪人"
@@ -651,8 +651,7 @@ fi
 _NIXIANG="$(cd "$(dirname "$0")/../../.." && pwd)"
 # shellcheck source=/dev/null
 source "$_NIXIANG/04_scripts/_common/starry_post_install.sh"
-starry_post_install "$PKG"
-  || true
+starry_post_install "$PKG" || true
 adb shell am force-stop "$PKG" 2>/dev/null || true
 set +e
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1

@@ -7,7 +7,7 @@ import struct
 import zlib
 from pathlib import Path
 
-ROOT = Path("/Users/aliang/Documents/nixiang")
+ROOT = Path(__file__).resolve().parents[2]
 IN_ROOT = ROOT / "09_test/勇士之心/runtime/res/res"
 OUT_ROOT = ROOT / "06_dumped/勇士之心/jsc_decrypted"
 KEY = b"237GaogniB!@#$1sdf546685"

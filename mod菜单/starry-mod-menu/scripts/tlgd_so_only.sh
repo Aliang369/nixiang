@@ -4,7 +4,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/弹力果冻"
 SIGNED="$OUT/弹力果冻_2.4.0_surgical-releaseSigned.apk"
 PKG="com.ginicat.sweet.m4399"

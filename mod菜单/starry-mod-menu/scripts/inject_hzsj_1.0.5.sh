@@ -22,7 +22,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 # 优先官方包；没有则用真机抽出的包（可能已含旧星光，注入前会清 com/starry）
 ORIG_APK="$NIXIANG/02_apks/魂坠深境/魂坠深境_1.0.5_official.apk"
 if [[ ! -f "$ORIG_APK" ]]; then

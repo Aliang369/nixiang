@@ -28,7 +28,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/偶像梦幻2/es2_4.4.8684_orig_taptap.apk"
 MF_CACHE="$NIXIANG/07_patched/偶像梦幻2/surgical_4.4.8684/AndroidManifest.xml"
 OUT="$NIXIANG/08_output/偶像梦幻2"

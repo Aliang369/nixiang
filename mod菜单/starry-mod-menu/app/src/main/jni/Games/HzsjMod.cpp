@@ -21,6 +21,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 #include "GameConfig.h"
 #include "Unity/Il2CppApi.h"
 
@@ -144,8 +145,10 @@ static bool StrContains(const char* hay, const char* needle) {
 
 static bool SoftPtr(void* p) {
     if (!p) return false;
-    uintptr_t v = (uintptr_t)p & 0x00FFFFFFFFFFFFFFULL;
-    return v >= 0x1000000000ULL && v <= 0x8000000000ULL;
+    // ★设备无关修正：上界原为 0x8000000000（512GiB），真机 Scudo 堆清标签后可达 0x76…/0x78…，
+    //   越界即整片判否、只在真机暴露 ⇒ 改用共享区间 4GiB~128TiB。
+    const uintptr_t v = starptr::Untag((uintptr_t)p);
+    return v >= starptr::kUserVaMin && v < starptr::kUserVaMax;
 }
 
 static bool AnyGameplayOn() {
@@ -821,8 +824,10 @@ static size_t g_pnNodes;
 
 static void ProbeRecord(void* p) {
     if (!p) return;
-    uintptr_t a = (uintptr_t)p;
-    if (a < 0x100000000ULL || a > 0x8000000000ULL) return;
+    // ★设备无关修正：原判据用的是**原始指针**且上界 0x8000000000（512GiB），
+    //   真机堆指针 0xb4… 直接越界 ⇒ 探针永远记录不到（真机上诊断静默失效）。
+    if (!starptr::InUserVa(p)) return;
+    const uintptr_t a = starptr::Untag((uintptr_t)p);
     uint32_t b = (uint32_t)((a >> 3) & (kProbeBuckets - 1));
     uint32_t cur = g_pbuckets[b];
     while (cur) {

@@ -28,7 +28,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/阿瓦隆之王/阿瓦隆之王_24.7.21_taptap.apk"
 MF_CACHE="$NIXIANG/07_patched/阿瓦隆之王/surgical_24.7.21/AndroidManifest.xml"
 OUT="$NIXIANG/08_output/阿瓦隆之王"

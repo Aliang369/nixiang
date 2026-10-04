@@ -27,7 +27,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 PKG="game.taptap.morizero.milthm"
 ORIG_APK="${MILTHM_BASE_APK:-$NIXIANG/02_apks/milthm/milthm_6.0.5_orig_vc40060005.apk}"
 DEVICE_APK="$NIXIANG/02_apks/milthm/milthm_6.0.5_from_device.apk"

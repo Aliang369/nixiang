@@ -26,7 +26,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/消消英雄2/消消英雄2_1.2.26_orig.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/消消英雄2/apktool_1.2.26_orig"
 FINAL_PATCH="$NIXIANG/07_patched/消消英雄2/apktool_1.2.26_modmenu"

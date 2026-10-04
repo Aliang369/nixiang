@@ -10,7 +10,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/消消英雄2"
 PKG="com.blina.match2.tt"
 BASE="${STARRY_BASE_APK:-$OUT/消消英雄2_1.2.26_native-menu-releaseSigned.apk}"

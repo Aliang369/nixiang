@@ -12,7 +12,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"

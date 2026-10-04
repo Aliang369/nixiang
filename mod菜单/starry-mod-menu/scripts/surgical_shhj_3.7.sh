@@ -24,7 +24,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/山海幻境/山海幻境_3.7_taptap_official.apk"
 OUT="$NIXIANG/08_output/山海幻境"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"

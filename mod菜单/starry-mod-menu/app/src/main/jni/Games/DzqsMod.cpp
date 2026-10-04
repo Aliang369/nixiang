@@ -25,6 +25,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 #include "GameConfig.h"
 
 #define DZQS_TRACE(...) \
@@ -146,14 +147,17 @@ static void ClearMethCache() {
 
 static bool SoftPtr(void* p) {
     if (!p) return false;
-    uintptr_t u = (uintptr_t)p & 0x00FFFFFFFFFFFFFFULL;
+    const uintptr_t u = starptr::Untag((uintptr_t)p);
     if (u & 7) return false;
-    return u >= 0x1000000000ULL && u <= 0x8000000000ULL;
+    // ★设备无关修正：上界原为 0x8000000000（512GiB）——真机 Scudo 堆会落到 0x76…/0x78…
+    //   （0xb4000076c1646d58 清标签后 = 0x76c1646d58 ≈ 509.6GiB，逼近上界；0x78… 直接越界）
+    //   ⇒ 越界即整片判否，而模拟器地址小所以只在真机暴露。统一改用共享区间 4GiB~128TiB。
+    return u >= starptr::kUserVaMin && u < starptr::kUserVaMax;
 }
 
 static bool SoftHeapPtr(void* p) {
     if (!SoftPtr(p)) return false;
-    uintptr_t u = (uintptr_t)p & 0x00FFFFFFFFFFFFFFULL;
+    uintptr_t u = starptr::Untag((uintptr_t)p);
     const uintptr_t tag = u >> 40;
     return tag != 0x71 && tag != 0x2e;
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 # 无限升级 (wxsj) — 仅重编 libstarry_magic.so（不打包、不装机）→ app/src/libs/arm64-v8a/
 # 用法:
 #   WXSJ_DIAG=1 bash scripts/wxsj_so_only.sh   # DIAG 取证 so（只 dump 官方运行时 dll，不替换不崩）
@@ -126,7 +127,7 @@ echo "[wxsj-so] 双版本尺寸校验: hf2=$HF2_LEN ≤ 2030080, hf3=$HF3_LEN �
 
 # 🩸 哈希门常数交叉验证（v7.14 新增）：WxsjMod.cpp 的 kOrigDllHash 必须等于官方底包的
 # 整包 FNV-1a 64；常数写错 → 运行时永远走 PASSTHROUGH（补丁完全不生效却「看起来正常」）。
-OFFICIAL_DLL="${WXSJ_OFFICIAL_DLL:-/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_OFFICIAL_12.10701_hotfix2_2030080.dll}"
+OFFICIAL_DLL="${WXSJ_OFFICIAL_DLL:-${NIXIANG}/07_patched/无限升级/targetfuntional_OFFICIAL_12.10701_hotfix2_2030080.dll}"
 if [[ -f "$OFFICIAL_DLL" ]]; then
   echo "[wxsj-so] SKIP wxsj_hash_check.py (dual-version kDllVariants table is source of truth)"
 else

@@ -9,7 +9,7 @@ import sys
 import zipfile
 from pathlib import Path
 
-ROOT = Path("/Users/aliang/Documents/nixiang")
+ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_DIR = ROOT / "04_scripts/勇士之心"
 MOD_META = SCRIPT_DIR / "binge_apk.json"
 OFF_META = SCRIPT_DIR / "official_apk.json"
@@ -17,8 +17,8 @@ OUT_JSON = SCRIPT_DIR / "official_check.json"
 MANIFEST_TXT = SCRIPT_DIR / "official_manifest.txt"
 SIGNATURE_TXT = SCRIPT_DIR / "official_signature.txt"
 COMPARE_TXT = SCRIPT_DIR / "official_compare.txt"
-AAPT2 = Path("/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2")
-APKSIGNER = Path("/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner")
+AAPT2 = Path.home() / "Library" / "Android" / "sdk" / "build-tools" / "36.0.0" / "aapt2"
+APKSIGNER = Path.home() / "Library" / "Android" / "sdk" / "build-tools" / "36.0.0" / "apksigner"
 
 ENTRIES = [
     "lib/arm64-v8a/libcocos2djs.so",

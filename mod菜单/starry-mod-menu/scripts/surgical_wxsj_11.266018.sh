@@ -20,7 +20,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 # 原包已清理时可指向设备拉取的已装包（如 /tmp/wxsj_v2/installed_base.apk）；
 # 注意：换 so 时若 so 侧 native 接口有演进（如证书烘焙 19/19），必须让脚本走 gradle
 # 模板重合入 com/starry smali（本脚本本来就会做），保证 so/Java 同源。

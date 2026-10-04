@@ -25,7 +25,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SRC_DECODE="$NIXIANG/03_decompiled/物质与魔法/apktool_6.03_orig"
 FINAL_PATCH="$NIXIANG/07_patched/物质与魔法/apktool_6.03_modmenu"
 OUT="$NIXIANG/08_output/物质与魔法"

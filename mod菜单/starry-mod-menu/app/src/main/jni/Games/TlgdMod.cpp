@@ -32,6 +32,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 #include "GameConfig.h"
 #include "Unity/Il2CppApi.h"
 
@@ -136,15 +137,17 @@ struct DamageHandleBlob {
 
 static bool SoftPtr(void* p) {
     if (!p) return false;
-    uintptr_t u = (uintptr_t)p & 0x00FFFFFFFFFFFFFFULL;
+    // ★设备无关修正：上界原为 0x8000000000（512GiB），真机 Scudo 堆清标签后可达 0x76…/0x78…，
+    //   越界即整片判否、只在真机暴露 ⇒ 改用共享区间 4GiB~128TiB。
+    const uintptr_t u = starptr::Untag((uintptr_t)p);
     if (u & 7) return false;
-    return u >= 0x1000000000ULL && u <= 0x8000000000ULL;
+    return u >= starptr::kUserVaMin && u < starptr::kUserVaMax;
 }
 
 /** 拒 HybridCLR 标签指针（实锤 0x71… / 0x2e… 过 SoftPtr 但读字段 SIGSEGV） */
 static bool SoftHeapPtr(void* p) {
     if (!SoftPtr(p)) return false;
-    uintptr_t u = (uintptr_t)p & 0x00FFFFFFFFFFFFFFULL;
+    uintptr_t u = starptr::Untag((uintptr_t)p);
     const uintptr_t tag = u >> 40;
     return tag != 0x71 && tag != 0x2e;
 }

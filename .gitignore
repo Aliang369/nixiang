@@ -169,3 +169,15 @@ starry_link/
 # 正式脚本一律落 04_scripts/{游戏}/，例如 _tmp_e2launch.sh 已正式化为
 # 04_scripts/境界守望者/wor_launch.sh（真机冒烟 + 双路 logcat 取证）。
 _tmp_*.sh
+
+# ===== 2026-10-04：勇士之心构建中间物与安装暂存（可再生）=====
+# .ysxz_menu_dex/：ysxz_build_menu_dex.sh 的 gradle/apktool/smali 工作区（解包 smali、
+#   合成 classes4.dex，约 124 MB）。产物由脚本 cp 回契约路径
+#   mod菜单/starry-mod-menu/libs_ysxz/classes4.dex。
+/.ysxz_menu_dex/
+# .ysxz_103_build/：ysxz_build_so_103.sh 的纯 ASCII NDK 构建目录（同 .wor_build 的理由：
+#   中文路径会让 Windows 下的 make/clang 分叉到 mod<乱码>/）。产物回填
+#   mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so。
+/.ysxz_103_build/
+# _install_stage/：装机暂存（各游戏 apktool 解包 + 待装 APK，单包 200 MB 级）。
+_install_stage/

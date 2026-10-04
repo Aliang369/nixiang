@@ -28,7 +28,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/公主连结/公主连结_11.7.2_official.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/公主连结/apktool_11.7.2_orig"
 FINAL_PATCH="$NIXIANG/07_patched/公主连结/apktool_11.7.2_modmenu"

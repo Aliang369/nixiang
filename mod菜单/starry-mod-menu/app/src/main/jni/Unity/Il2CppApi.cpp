@@ -1,5 +1,6 @@
 /* Unity IL2CPP 公共实现 */
 #include "Includes/SecStrings.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节 + 用户态区间）
 #include "Unity/Il2CppApi.h"
 
 #include <elf.h>
@@ -716,12 +717,11 @@ Api& GetApi() {
 bool IsValidHeapPtr(void* p) {
     if (!p) return false;
     uintptr_t v = (uintptr_t)p;
-    // 清 top-byte / PAC 无关时的用户态掩码（部分机型）
-    uintptr_t u = v & 0x00FFFFFFFFFFFFFFULL;
+    // 清 top-byte / PAC 无关时的用户态掩码（部分机型）——掩码与区间只由 StarPtr.h 定义
+    uintptr_t u = starptr::Untag(v);
     // 旧假设 0x70–0x80 在部分机（物质与魔法实测 so/堆在 0x6c–0x6e）会把合法
     // Il2Cpp 对象全判否 → 功能全哑。放宽到常见 ARM64 用户态区间。
-    if (u < 0x100000000ULL) return false;          // <4GB：排除空/低地址
-    if (u >= 0x800000000000ULL) return false;     // 非用户态
+    if (!starptr::InUserVa(u)) return false;      // 4GiB ~ 128TiB，排除空/低地址与非用户态
     // v5（MuMu 实测）：纯区间判定会把 0x400000000000 这类「解释器标记值」判成合法，
     // 随后解引用 → SIGSEGV → 处理链回退即重执 → 无限风暴 → ANR。必须再确认落在可读映射内。
     if (detail::PermCached(u, 1, 1u)) return true;

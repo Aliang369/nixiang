@@ -20,7 +20,7 @@
 #   身份与再获取路径见 10_docs/_state/底包再获取台账.md。
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_APK="${ZXR_BASE_APK:-}"

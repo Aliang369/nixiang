@@ -9,7 +9,7 @@
 #   - 正式 so：app/src/libs/arm64-v8a/libstarry_magic.so（本脚本会先与 jniLibs 同步）
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/07_patched/无限升级/installed_orig_20260921/base.apk"
 STARRY_APK="$NIXIANG/mod菜单/starry-mod-menu/app/build/outputs/apk/debug/app-debug.apk"
 FINAL_SO="$NIXIANG/mod菜单/starry-mod-menu/app/src/libs/arm64-v8a/libstarry_magic.so"

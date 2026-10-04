@@ -2,7 +2,7 @@
 # 勇士之心 1.0.4 - 签名阶段（pipeline sign）
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 GAME="勇士之心"
 VERSION="${VERSION:-1.0.4}"
 OUT="$NIXIANG/08_output/$GAME"

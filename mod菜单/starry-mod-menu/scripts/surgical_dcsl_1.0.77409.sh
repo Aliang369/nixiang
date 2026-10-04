@@ -18,7 +18,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/地城狩猎/地城狩猎_1.0.77409_from_device.apk"
 OUT="$NIXIANG/08_output/地城狩猎"
 UNSIGNED="$NIXIANG/07_patched/地城狩猎/dcsl_1.0.77409_unsigned.apk"

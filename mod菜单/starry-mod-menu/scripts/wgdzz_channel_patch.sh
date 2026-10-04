@@ -6,7 +6,7 @@
 #   NO_RESIGN=1 STARRY_INSTALL=1 bash scripts/wgdzz_channel_patch.sh   # 签后扩展，禁止 apksigner 二次重签（会截回 920B）
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/王国大作战前线"
 DONOR="${WGDZZ_DONOR_APK:-$NIXIANG/02_apks/王国大作战前线/base_1.1.7646.apk}"
 BASE_APK="${BASE_APK:-$OUT/王国大作战前线_1.1.7646_surgical-kwK1-1sSigned.apk}"

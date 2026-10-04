@@ -35,7 +35,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/雷霆战机/雷霆战机_集结_1.25.31_orig_from_device.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/雷霆战机/apktool_1.25.31_orig"
 FINAL_PATCH="$NIXIANG/07_patched/雷霆战机/apktool_1.25.31_modmenu"

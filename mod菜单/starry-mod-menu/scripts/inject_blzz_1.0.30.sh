@@ -18,7 +18,7 @@ else
 fi
 
 STARRY="$(cd "$(dirname "$0")/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SRC_DECODE="$NIXIANG/03_decompiled/堡垒之战/apktool_1.0.30"
 PATCH="$NIXIANG/07_patched/堡垒之战/apktool_1.0.30_modmenu"
 OUT="$NIXIANG/08_output/堡垒之战"
@@ -84,7 +84,7 @@ python3 <<'PY'
 from pathlib import Path
 import re
 
-PATCH = Path("/Users/aliang/Documents/nixiang/07_patched/堡垒之战/apktool_1.0.30_modmenu")
+PATCH = Path("${NIXIANG}/07_patched/堡垒之战/apktool_1.0.30_modmenu")
 ORIG_MD5 = "f5aef50d3b3f626a8512bc1a87cad012"
 
 # --- Manifest ---
@@ -333,8 +333,7 @@ fi
 _NIXIANG="$(cd "$(dirname "$0")/../../.." && pwd)"
 # shellcheck source=/dev/null
 source "$_NIXIANG/04_scripts/_common/starry_post_install.sh"
-starry_post_install "$PKG"
-  || true
+starry_post_install "$PKG" || true
 adb shell am force-stop "$PKG" 2>/dev/null || true
 set +e
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1

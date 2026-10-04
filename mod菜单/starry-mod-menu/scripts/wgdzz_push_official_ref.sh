@@ -2,7 +2,7 @@
 # 推送官方 base.apk 到设备，供 kadp 验签 IO 重定向（一次性，约 509MB）
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OFFICIAL="${OFFICIAL_APK:-$NIXIANG/02_apks/王国大作战前线/base_1.1.7646.apk}"
 PKG="com.xr.wgdzztap"
 REMOTE_DIR="/data/user/0/$PKG/files/starry_ref"

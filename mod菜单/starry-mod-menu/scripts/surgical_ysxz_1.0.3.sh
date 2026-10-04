@@ -8,7 +8,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 GAME="勇士之心"
 VERSION="1.0.3"
 PKG="com.fightingstars.games.warrior"
@@ -28,6 +28,20 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
 SO_PREBUILT="${YSXZ_SO:-$STARRY_SRC/libs_ysxz/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing modern so $SO_PREBUILT" >&2; exit 1; }
+
+# 菜单表断言：1.0.3 用的是 1.0.4 的新序号（1 号位伤害倍率滑块），预置 so 必须是新版。
+# 旧菜单 so 一旦被打进 1.0.3，菜单序号会与 JS 补丁错位 ⇒ 无限技能/移速/自动战斗静默失效。
+for _tok in "Slider_伤害倍率:1:50:1" "Slider_移动速度:1:10:1" "Toggle_自动战斗"; do
+  LC_ALL=C grep -aq -- "$_tok" "$SO_PREBUILT" || {
+    echo "ERROR: $SO_PREBUILT 不含新菜单串 $_tok —— 这是旧菜单 so" >&2
+    echo "       先跑 bash 04_scripts/勇士之心/ysxz_build_so_103.sh 重建 1.0.3 菜单 so" >&2
+    exit 1
+  }
+done
+if LC_ALL=C grep -aq -- "Slider_移动速度:1:5:1" "$SO_PREBUILT"; then
+  echo "ERROR: $SO_PREBUILT 仍是旧菜单（含 Slider_移动速度:1:5:1），拒绝出 1.0.3 包" >&2
+  exit 1
+fi
 [[ "$(md5 -q "$ORIG_APK")" == "$ORIG_MD5" ]] || { echo "ERROR: 原包指纹不符" >&2; exit 1; }
 
 LOCK_DIR="/tmp/ysxz_surgical.lockdir"
@@ -64,8 +78,25 @@ for cls in StarryInitProvider MenuService ModBridge; do
     echo "ERROR: starry class missing: $cls" >&2; exit 1;
   }
 done
+# 1.0.4 的过检测类（自定义 appComponentFactory）不搬进 1.0.3：
+#   1.0.3 底包 Manifest 用的是 androidx.core.app.CoreComponentFactory，没有任何地方引用它。
+find "$SMALI_ROOT" -name 'YsxzAppComponentFactory*.smali' -delete 2>/dev/null || true
+find "$SMALI_ROOT" -type d -empty -delete 2>/dev/null || true
 "$SMALI_BIN" assemble -o "$WORK/$NEW_DEX" "$SMALI_ROOT"
 ls -la "$WORK/$NEW_DEX"
+
+# 菜单外观断言（外观在 dex，不在 so）：
+#  - 必须含星空面板 MagicRes$PanelBgDrawable（2026-09-22 星光紫新外观）
+#  - 必须不含 1.0.4 的过检测类 YsxzAppComponentFactory
+if ! LC_ALL=C grep -aq -- "MagicRes\$PanelBgDrawable" "$WORK/$NEW_DEX"; then
+  echo "ERROR: $NEW_DEX 里没有 MagicRes\$PanelBgDrawable —— 这是美化前的旧菜单外观" >&2
+  echo "       检查 $STARRY_SRC/app/src/main/java/com/starry/magic/menu/MagicRes.java 是否为新版" >&2
+  exit 1
+fi
+if LC_ALL=C grep -aq -- "YsxzAppComponentFactory" "$WORK/$NEW_DEX"; then
+  echo "ERROR: $NEW_DEX 里混进了 1.0.4 的过检测类 YsxzAppComponentFactory" >&2
+  exit 1
+fi
 
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/"

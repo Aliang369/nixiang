@@ -29,7 +29,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 VER="7.6.1"
 ORIG_APK="$NIXIANG/02_apks/我的勇者/我的勇者_${VER}_base.apk"
 [[ -f "$ORIG_APK" ]] || ORIG_APK="/tmp/game_id/wdyz_${VER}_base.apk"

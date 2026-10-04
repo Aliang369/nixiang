@@ -27,7 +27,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 BASE_APK="${WZYM_BASE_APK:-$NIXIANG/02_apks/物质与魔法/物质与魔法_6.03_starry_from_device.apk}"
 OUT="$NIXIANG/08_output/物质与魔法"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"

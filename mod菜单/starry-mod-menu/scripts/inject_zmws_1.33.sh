@@ -19,7 +19,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/造梦无双/造梦无双_1.33_official_4399.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/造梦无双/apktool_1.33_official"
 FINAL_PATCH="$NIXIANG/07_patched/造梦无双/apktool_1.33_modmenu"

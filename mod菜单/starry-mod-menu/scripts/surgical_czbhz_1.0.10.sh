@@ -30,7 +30,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/城主别慌张/城主别慌张_1.0.10_huawei_base.apk"
 OUT="$NIXIANG/08_output/城主别慌张"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"

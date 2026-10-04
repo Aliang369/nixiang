@@ -25,7 +25,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 PKG="com.sixag.gaga"
 ORIG_APK="${WGGLS_BASE_APK:-$NIXIANG/02_apks/我嘎嘎乱杀/official_v1.3.5.apk}"
 OUT="$NIXIANG/08_output/我嘎嘎乱杀"

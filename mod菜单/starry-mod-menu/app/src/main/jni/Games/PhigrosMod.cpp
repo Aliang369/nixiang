@@ -22,6 +22,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 #include "GameConfig.h"
 
 enum : uintptr_t {
@@ -59,12 +60,14 @@ static NoteFn_t g_origNoteFn = nullptr;
 static EnhanceFn_t g_enhanceFn = nullptr;
 static uintptr_t g_libBase = 0;  // 运行时 so 基址（vaddr0）
 
-/** 本地轻量堆指针校验（同 YwgnMod SoftPtr 思路；不依赖 Il2CppApi.cpp） */
+/** 本地轻量堆指针校验（同 YwgnMod SoftPtr 思路；不依赖 Il2CppApi.cpp）
+ *  ★设备无关修正：上界原为 0x8000000000（512GiB），真机 Scudo 堆清标签后可达 0x76…/0x78…，
+ *  越界即整片判否、只在真机暴露 ⇒ 改用共享区间 4GiB~128TiB。 */
 static bool HeapOk(void* p) {
     if (!p) return false;
-    uintptr_t u = (uintptr_t)p & 0x00FFFFFFFFFFFFFFULL;
+    const uintptr_t u = starptr::Untag((uintptr_t)p);
     if (u & 7) return false;
-    return u >= 0x1000000000ULL && u <= 0x8000000000ULL;
+    return u >= starptr::kUserVaMin && u < starptr::kUserVaMax;
 }
 
 static void* FileOffToVa(const char* lib, uintptr_t fileOff) {

@@ -22,7 +22,7 @@ OUT="${3:?output apk}"
 INSTALL="${4:-}"
 SERIAL="${PHIGROS_SERIAL:-f9a116a2}"
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"

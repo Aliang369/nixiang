@@ -18,7 +18,7 @@ else
 fi
 
 STARRY="$(cd "$(dirname "$0")/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 PATCH="$NIXIANG/07_patched/动物餐厅/apktool_12.37_modmenu"
 OUT="$NIXIANG/08_output/动物餐厅"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
@@ -30,7 +30,7 @@ for v in 36.0.0 35.0.0 34.0.0; do
     break
   fi
 done
-export JAVA_HOME="${JAVA_HOME:-/Users/aliang/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home}"
+export JAVA_HOME="${JAVA_HOME:-$HOME/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home}"
 export PATH="$JAVA_HOME/bin:$PATH"
 
 PKG="inland.twgame.restaurant"
@@ -76,7 +76,7 @@ echo "[4/7] patch Manifest / AppActivity / signature / ad hooks"
 python3 <<'PY'
 from pathlib import Path
 
-PATCH = Path("/Users/aliang/Documents/nixiang/07_patched/动物餐厅/apktool_12.37_modmenu")
+PATCH = Path("${NIXIANG}/07_patched/动物餐厅/apktool_12.37_modmenu")
 
 # --- Manifest ---
 manifest = PATCH / "AndroidManifest.xml"
@@ -410,8 +410,7 @@ fi
 _NIXIANG="$(cd "$(dirname "$0")/../../.." && pwd)"
 # shellcheck source=/dev/null
 source "$_NIXIANG/04_scripts/_common/starry_post_install.sh"
-starry_post_install "$PKG"
-  || true
+starry_post_install "$PKG" || true
 adb shell am force-stop "$PKG" 2>/dev/null || true
 # monkey 在部分机型返回非 0，勿令整脚本失败
 set +e

@@ -2,7 +2,7 @@
 # 勇士之心 1.0.4 管线 build_so 后端：Android_ysxz.mk 直编。
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 JNI="$STARRY_SRC/app/src/main/jni"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"

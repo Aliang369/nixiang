@@ -15,7 +15,7 @@
 # 与 12.x 完全隔离：输出名/中间目录/so/菜单模板/DLL 全部独立，不覆盖 12.x 产物。
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 STARRY="$NIXIANG/mod菜单/starry-mod-menu"
 ORIG_APK="${WXSJ_ORIG_APK:-$NIXIANG/07_patched/无限升级/installed_official_11.266018_vc1637_base.apk}"
 FINAL_SO="${WXSJ_SO:-$STARRY/app/src/libs_wxsj_vc1637/arm64-v8a/libstarry_magic.so}"

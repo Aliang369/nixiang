@@ -3,12 +3,12 @@
 set -euo pipefail
 
 STARRY="$(cd "$(dirname "$0")/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 PATCH="$NIXIANG/07_patched/动物餐厅/apktool_12.35_modmenu"
 OUT="$NIXIANG/08_output/动物餐厅"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 NDK_CXX="$HOME/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
-JAVA_HOME_DEFAULT="/Users/aliang/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home"
+JAVA_HOME_DEFAULT="${JAVA_HOME_DEFAULT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 export JAVA_HOME="${JAVA_HOME:-$JAVA_HOME_DEFAULT}"
 export PATH="$JAVA_HOME/bin:$PATH"
 
@@ -67,7 +67,7 @@ done
 echo "[5/7] Manifest + AppActivity hook"
 python3 - <<'PY'
 from pathlib import Path
-manifest = Path("/Users/aliang/Documents/nixiang/07_patched/动物餐厅/apktool_12.35_modmenu/AndroidManifest.xml")
+manifest = Path("${NIXIANG}/07_patched/动物餐厅/apktool_12.35_modmenu/AndroidManifest.xml")
 t = manifest.read_text(encoding="utf-8")
 
 perms = []
@@ -107,7 +107,7 @@ else:
 
 manifest.write_text(t, encoding="utf-8")
 
-act = Path("/Users/aliang/Documents/nixiang/07_patched/动物餐厅/apktool_12.35_modmenu/smali_classes3/org/cocos2dx/javascript/AppActivity.smali")
+act = Path("${NIXIANG}/07_patched/动物餐厅/apktool_12.35_modmenu/smali_classes3/org/cocos2dx/javascript/AppActivity.smali")
 s = act.read_text(encoding="utf-8")
 if "MenuService;->start" in s:
     print("hook: AppActivity already patched")

@@ -23,7 +23,7 @@ set -euo pipefail
 BUILD_TYPE="${STARRY_BUILD_TYPE:-release}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="${ORIG_APK:-}"
 if [[ -z "$ORIG_APK" ]]; then
   for c in \

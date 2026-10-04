@@ -6,7 +6,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/追迹迷城"
 PKG="com.TeaMelo.DungeonChasers"
 BASE="${STARRY_BASE_APK:-$OUT/追迹迷城_1.0.20260824_surgical-releaseSigned.apk}"

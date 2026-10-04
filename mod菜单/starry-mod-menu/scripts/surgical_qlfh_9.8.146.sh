@@ -25,7 +25,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/青鸾繁华录/青鸾繁华录_9.8.146_from_device.apk"
 OUT="$NIXIANG/08_output/青鸾繁华录"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"

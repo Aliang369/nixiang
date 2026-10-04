@@ -8,11 +8,11 @@
  */
 const fs = require('fs');
 const path = require('path');
-const pako = require('/Users/aliang/Documents/nixiang/11_proj_tools/动物餐厅/cocos_jsc_decrypt/node_modules/pako');
-const xxtea = require('/Users/aliang/Documents/nixiang/11_proj_tools/动物餐厅/cocos_jsc_decrypt/node_modules/xxtea-node');
+const pako = require((process.env.NIXIANG || require('os').homedir() + '/Documents/nixiang') + '/11_proj_tools' + '/动物餐厅' + '/cocos_jsc_decrypt' + '/node_modules' + '/pako');
+const xxtea = require((process.env.NIXIANG || require('os').homedir() + '/Documents/nixiang') + '/11_proj_tools' + '/动物餐厅' + '/cocos_jsc_decrypt' + '/node_modules' + '/xxtea-node');
 
 const KEY = '431FEWJOTe-gecTW';
-const ROOT = process.argv[2] || '/Users/aliang/Documents/nixiang/07_patched/动物餐厅/apktool_12.35_modmenu/assets/assets';
+const ROOT = process.argv[2] || (process.env.NIXIANG || require('os').homedir() + '/Documents/nixiang') + '/07_patched' + '/动物餐厅' + '/apktool_12.35_modmenu' + '/assets' + '/assets';
 
 function findMatchingBrace(s, openIdx) {
   let depth = 0, i = openIdx, q = null, esc = false, lineComment = false, blockComment = false;

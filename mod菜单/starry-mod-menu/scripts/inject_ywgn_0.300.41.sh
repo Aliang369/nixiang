@@ -23,7 +23,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/音舞光年/音舞光年_0.300.41_orig.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/音舞光年/apktool_0.300.41_orig"
 FINAL_PATCH="$NIXIANG/07_patched/音舞光年/apktool_0.300.41_modmenu"

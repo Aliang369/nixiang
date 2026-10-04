@@ -9,7 +9,7 @@
 # 用法：bash mod菜单/starry-mod-menu/scripts/surgical_zxr_ca0d4_menu_latest.sh
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 BASE_APK="${ZXR_BASE_APK:-$NIXIANG/09_test/镇邪人_crash_20260923/apk/base.apk}"

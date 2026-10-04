@@ -14,7 +14,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 NEW_APK="$NIXIANG/02_apks/雷霆战机/雷霆战机_原版.apk"
 BINGE_APK="$NIXIANG/02_apks/雷霆战机/雷霆战机_集结_999999_mod.apk"
 OUT="$NIXIANG/08_output/雷霆战机"

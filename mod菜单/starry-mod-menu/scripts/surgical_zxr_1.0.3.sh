@@ -25,7 +25,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 BASE_APK="${ZXR_BASE_APK:-$NIXIANG/02_apks/镇邪人/镇邪人_1.0.3_device_starry.apk}"
 OUT="$NIXIANG/08_output/镇邪人"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"

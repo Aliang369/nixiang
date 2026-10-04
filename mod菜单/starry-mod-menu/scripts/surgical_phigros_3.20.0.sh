@@ -39,7 +39,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/phigros/phigros_3.20.0_orig_base.apk"
 MF_CACHE="$NIXIANG/07_patched/phigros/surgical_3.20.0/AndroidManifest.xml"
 OUT="$NIXIANG/08_output/phigros"

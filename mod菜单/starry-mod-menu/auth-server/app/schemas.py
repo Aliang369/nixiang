@@ -24,6 +24,10 @@ class HeartbeatRequest(BaseModel):
     token: str
     game_id: str
     device_id: str
+    # 2026-10-04 云机修复：客户端把「历史设备 ID 候选」一并上报，服务端据此把
+    # 同一物理身份漂移后的新 ID 迁移到既有会话/绑定，而不是回 403 踢登录。
+    # 旧客户端不传（None）→ 行为与旧版逐字一致。
+    legacy_device_ids: Optional[list[str]] = Field(default=None, max_length=32)
 
 
 class UnbindRequest(BaseModel):

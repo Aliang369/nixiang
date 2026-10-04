@@ -32,6 +32,10 @@ public final class DeviceFingerprint {
     private static final String TAG = "DeviceFingerprint";
     public static final String VERSION = "v5";
     public static final String VERSION_LEGACY_V4 = "v4";
+    /** v5/v4 均不可用时的本地兜底号版本标记（Preferences 写入，见 getOrCreateDeviceId） */
+    public static final String VERSION_LOCAL = "local";
+    /** 共享种子文件名（与 ensure_starry_device_id_seed.sh / 旧客户端一致） */
+    private static final String SEED_FILE = "device_id";
 
 
     private static final String[] SHARED_REL_DIRS = {
@@ -110,6 +114,47 @@ public final class DeviceFingerprint {
 
     public static boolean isValidDevId(String id) {
         return id != null && id.startsWith("dev_") && id.length() >= 8 && id.length() <= 96;
+    }
+
+    /**
+     * 把已确定的设备号写一份到共享种子文件（外部存储 + {@code /data/local/tmp}），
+     * 供本包 prefs 被清/被重建后重新找回同一身份。全程 best-effort：
+     * 云机常常既无 su 也无可写外部存储，失败只记日志，绝不影响主流程。
+     */
+    public static void writeSeed(Context context, String id) {
+        if (!isValidDevId(id)) return;
+        int written = 0;
+        for (String path : legacySeedPaths()) {
+            if (writeSeedFile(path, id)) written++;
+        }
+        Log.i(TAG, "seed write id=" + id + " files=" + written);
+    }
+
+    private static boolean writeSeedFile(String path, String id) {
+        File f = new File(path);
+        try {
+            File dir = f.getParentFile();
+            if (dir != null && !dir.isDirectory() && !dir.mkdirs()) return false;
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(f, false)) {
+                out.write(id.getBytes(StandardCharsets.UTF_8));
+            }
+            return true;
+        } catch (Throwable t) {
+            String pkg = path == null ? "" : path;
+            // 直接写入失败时退到 su（仅作可选加速，云机无 su 就自然放弃）
+            if (!pkg.contains("starry_magic") || pkg.contains("'") || pkg.contains("\n")) {
+                return false;
+            }
+            try {
+                Process p = Runtime.getRuntime().exec(new String[]{
+                        "su", "-c", "mkdir -p '" + new File(pkg).getParent() + "' && echo -n '"
+                                + id + "' > '" + pkg + "'"
+                });
+                return p.waitFor() == 0;
+            } catch (Throwable ignored) {
+                return false;
+            }
+        }
     }
 
     private static boolean isUsableSsaid(String raw) {

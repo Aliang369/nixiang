@@ -24,7 +24,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/造梦西游/造梦西游_黎尤浩劫_orig_from_4399.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/造梦西游/apktool_1.1.0_orig"
 FINAL_PATCH="$NIXIANG/07_patched/造梦西游/apktool_1.1.0_modmenu"
@@ -362,8 +362,7 @@ fi
 _NIXIANG="$(cd "$(dirname "$0")/../../.." && pwd)"
 # shellcheck source=/dev/null
 source "$_NIXIANG/04_scripts/_common/starry_post_install.sh"
-starry_post_install "$PKG"
-  || true
+starry_post_install "$PKG" || true
 adb shell am force-stop "$PKG" 2>/dev/null || true
 set +e
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1

@@ -6,7 +6,7 @@ import re
 import subprocess
 from pathlib import Path
 
-ROOT = Path("/Users/aliang/Documents/nixiang")
+ROOT = Path(__file__).resolve().parents[2]
 HEADER = ROOT / "mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h"
 START = 'R"YSXZJS('
 END = ')YSXZJS";'

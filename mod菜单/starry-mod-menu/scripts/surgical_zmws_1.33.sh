@@ -21,7 +21,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/造梦无双/造梦无双_1.33_official_4399.apk"
 ORIG_MD5="41065dcf3c36e7dd37a04612965144a1"
 OUT="$NIXIANG/08_output/造梦无双"

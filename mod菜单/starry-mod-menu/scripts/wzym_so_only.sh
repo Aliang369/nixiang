@@ -4,7 +4,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/物质与魔法"
 BASE="$OUT/物质与魔法_6.03_surgical-nativeMenu-releaseSigned.apk"
 SIGNED="$OUT/物质与魔法_6.03_surgical-nativeMenu-releaseSigned.apk"

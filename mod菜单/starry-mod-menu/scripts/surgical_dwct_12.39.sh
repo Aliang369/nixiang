@@ -25,7 +25,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/动物餐厅/动物餐厅_12.39_official.apk"
 OUT="$NIXIANG/08_output/动物餐厅"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
@@ -492,8 +492,8 @@ node "$STARRY_SRC/scripts/patch_dwct_iap_gate.js" "$WORK/assets/assets"
 # 明文门控不会出现在加密 jsc；用解密校验
 node -e '
 const fs=require("fs");
-const pako=require("/Users/aliang/Documents/nixiang/11_proj_tools/动物餐厅/cocos_jsc_decrypt/node_modules/pako");
-const xxtea=require("/Users/aliang/Documents/nixiang/11_proj_tools/动物餐厅/cocos_jsc_decrypt/node_modules/xxtea-node");
+const pako=require("${NIXIANG}/11_proj_tools/动物餐厅/cocos_jsc_decrypt/node_modules/pako");
+const xxtea=require("${NIXIANG}/11_proj_tools/动物餐厅/cocos_jsc_decrypt/node_modules/xxtea-node");
 const KEY="431FEWJOTe-gecTW";
 const buf=fs.readFileSync(process.argv[1]);
 const d=xxtea.decrypt(buf, xxtea.toBytes(KEY));

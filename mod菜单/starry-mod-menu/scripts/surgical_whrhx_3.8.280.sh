@@ -23,7 +23,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/无悔华夏"
 ORIG_APK="${WHRHX_ORIG_APK:-$NIXIANG/02_apks/无悔华夏/无悔华夏_3.8.280_九游原版.apk}"
 if [[ ! -f "$ORIG_APK" && -f "$OUT/无悔华夏_3.8.280_surgical-releaseSigned.apk" ]]; then

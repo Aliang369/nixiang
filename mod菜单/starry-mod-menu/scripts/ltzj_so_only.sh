@@ -7,7 +7,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/雷霆战机"
 PKG="com.a5game.ltzj.jj"
 BASE="${STARRY_BASE_APK:-$OUT/雷霆战机_1.25.31_starry-zipAssets-menu-releaseSigned.apk}"

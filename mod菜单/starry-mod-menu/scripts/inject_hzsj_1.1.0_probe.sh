@@ -22,7 +22,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 # 真机官方原版 1.1.0（vc41，cert 与 1.0.5 相同）
 ORIG_APK="$NIXIANG/02_apks/魂坠深境/魂坠深境_1.1.0_device.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/魂坠深境/apktool_1.1.0_orig"

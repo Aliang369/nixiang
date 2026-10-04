@@ -20,7 +20,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/追迹迷城/追迹迷城_1.0.20260824_official.apk"
 OUT="$NIXIANG/08_output/追迹迷城"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"

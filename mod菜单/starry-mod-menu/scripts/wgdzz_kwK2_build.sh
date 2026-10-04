@@ -6,7 +6,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 PATCH_PY="$NIXIANG/work/wgdzz_b_route/kwprotect_k2_patch.py"
 K1="$NIXIANG/07_patched/王国大作战前线/libKwProtectSDK_sigkill_k1.so"
 K2="$NIXIANG/07_patched/王国大作战前线/libKwProtectSDK_exit_k2.so"

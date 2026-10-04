@@ -41,7 +41,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="${ZMXY_BASE_APK:-$NIXIANG/09_test/造梦西游/base_official_1.1.0_20260929/base.apk}"
 ORIG_MD5="d5ca19093f94b47b2cced7054d34177d"
 OUT="$NIXIANG/08_output/造梦西游"

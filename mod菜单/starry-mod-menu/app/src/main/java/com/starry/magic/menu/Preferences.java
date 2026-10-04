@@ -2,11 +2,13 @@ package com.starry.magic.menu;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.starry.magic.auth.DeviceFingerprint;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,10 +29,17 @@ import java.util.Set;
 public class Preferences {
 
     private static final String PREFS_NAME = "starry_magic_prefs";
+    private static final String TAG = "StarryPrefs";
     private static final String KEY_PERSIST_FEATURES = "persist_features";
     private static final String KEY_DEVICE_ID = "auth_device_id";
     private static final String KEY_DEVICE_ID_VERSION = "auth_device_id_version";
+    /** 设备号来源 cached|ssaid|v4|local（2026-10-04 云机存储链路裁决用） */
+    private static final String KEY_DEVICE_ID_SOURCE = "auth_device_id_source";
+    /** v5/v4 全不可用时的本地兜底号（只在无 SSAID/无 Build 字段的设备上出现） */
+    private static final String KEY_DEVICE_ID_LOCAL = "auth_device_id_local";
     private static final String KEY_LEGACY_DEVICE_IDS = "auth_legacy_device_ids";
+    /** 内存镜像：判定后立即可读，不必再落盘 */
+    private static volatile String lastDeviceIdSource = "";
     private static final String KEY_AUTH_BASE = "auth_base_url";
     private static final String KEY_AUTH_GAME_ID = "auth_game_id";
     private static final String KEY_AUTH_TOKEN = "auth_token";
@@ -42,6 +51,14 @@ public class Preferences {
     /** 服务端 HMAC 短票（功能放行依赖此票，而非仅 last_ok_at） */
     private static final String KEY_AUTH_GRANT = "auth_grant";
     private static final String KEY_AUTH_CARD_META = "auth_card_meta_json";
+    /**
+     * 2026-10-04：清档前留档。云机「第二次打开未授权」的根因之一是硬拒直接清档 ——
+     * 用户既看不到证据也无法恢复。这里把被清的会话整体备一份（auth_backup_*），
+     * 备份键不参与任何授权判定，只用于排障与「清档之后仍能回答刚才到底发生了什么」。
+     */
+    private static final String KEY_AUTH_BACKUP_PREFIX = "auth_backup_";
+    private static final String KEY_AUTH_BACKUP_AT = "auth_backup_at";
+    private static final String KEY_AUTH_BACKUP_REASON = "auth_backup_reason";
     /** 玩法 OTA 本地已应用版本：auth_ota_ver_{game_id} */
     private static final String KEY_OTA_VER_PREFIX = "auth_ota_ver_";
     /** 上次启动时记录的 APK lastUpdateTime；覆盖安装后变化则应清 starry_ota */
@@ -270,51 +287,215 @@ public class Preferences {
     // ===== 网络验证会话 =====
 
     /**
-     * v5 优先，v4 兜底：两个版本每次都采集；命中任一稳定 ID 就放行。
-     * v5 可用时保存 v5；否则用 v4。两者都不可用时不造本地身份，让上层走解绑。
+     * 设备标识解析（2026-10-04 云机修复 · 「存了不认」主因）。
+     *
+     * <p>旧实现（v5 起）每次都采集 SSAID 重算，<b>只把持久化的 cached 丢进
+     * legacyCandidates()</b>，返回值永远是当次采集值 ⇒ 一旦 SSAID 漂移（云实例重建、
+     * ROM 抹 ANDROID_ID、虚拟化实例不固定），本地「存了却认不出自己」：
+     * 本地 grant 的设备字段与当次 device 不等（`MainModern.cpp:143` 直接判否）、
+     * 心跳被判「会话与设备不匹配」⇒ 客户端当权威硬拒 ⇒ 清存档 ⇒ 菜单未授权。
+     *
+     * <p>现在的裁决顺序：
+     * <ol>
+     *   <li><b>cached 权威</b>：本地已存的合法 {@code auth_device_id} 直接作为结果返回，
+     *       不再采集、不再覆盖（存了就必须用），且此路径零 I/O 零 su 调用；</li>
+     *   <li>无缓存才采集：v5（SSAID）→ v4（Build 字段）；</li>
+     *   <li>都不行退本地兜底号（source=local），<b>绝不抛异常</b>——旧实现在
+     *       {@code :292} 抛 IllegalStateException，云机上等于整条授权链路直接崩。</li>
+     * </ol>
      */
     public static synchronized String getOrCreateDeviceId() {
         with(null);
-        String stable = DeviceFingerprint.get(appContext);
         String cached = sharedPreferences.getString(KEY_DEVICE_ID, "");
-        String v4 = DeviceFingerprint.getV4();
 
+        // 1) 存了就必须认：持久化值即权威，绝不因当次重算而漂移
+        if (DeviceFingerprint.isValidDevId(cached)) {
+            String ver = sharedPreferences.getString(KEY_DEVICE_ID_VERSION, "");
+            markDeviceIdSource("cached", ver);
+            return cached;
+        }
+
+        // 2) 首次定身份：v5 优先
+        String stable = DeviceFingerprint.get(appContext);
         if (DeviceFingerprint.isValidDevId(stable)) {
-            saveDeviceId(stable, DeviceFingerprint.VERSION, legacyCandidates(cached, stable));
+            saveDeviceId(stable, DeviceFingerprint.VERSION,
+                    legacyCandidates(cached, stable), "ssaid");
+            DeviceFingerprint.writeSeed(appContext, stable);
             return stable;
         }
 
+        // 2b) SSAID 不可用：v4（Build 字段）兜底
+        String v4 = DeviceFingerprint.getV4();
         if (DeviceFingerprint.isValidDevId(v4)) {
-            saveDeviceId(v4, DeviceFingerprint.VERSION_LEGACY_V4, legacyCandidates(cached, v4));
+            saveDeviceId(v4, DeviceFingerprint.VERSION_LEGACY_V4,
+                    legacyCandidates(cached, v4), "v4");
+            DeviceFingerprint.writeSeed(appContext, v4);
             return v4;
         }
 
-        throw new IllegalStateException("设备标识不可用：v5/v4 均缺失，需要解绑设备后重新绑定");
+        // 3) 终局兜底：本地随机号（不抛异常）
+        Log.w(TAG, "v5/v4 均不可用 → 使用本地兜底设备号 source=local");
+        String local = localFallbackDeviceId();
+        saveDeviceId(local, DeviceFingerprint.VERSION_LOCAL,
+                legacyCandidates(cached, local), "local");
+        return local;
+    }
+
+    /** 只在来源标记变化时落盘（cached 快路径：零 I/O）。 */
+    private static void markDeviceIdSource(String source, String version) {
+        lastDeviceIdSource = source;
+        String cur = sharedPreferences.getString(KEY_DEVICE_ID_SOURCE, "");
+        if (source.equals(cur)) return;
+        SharedPreferences.Editor ed = sharedPreferences.edit()
+                .putString(KEY_DEVICE_ID_SOURCE, source);
+        if (version != null && !version.isEmpty()) {
+            ed.putString(KEY_DEVICE_ID_VERSION, version);
+        }
+        commitChecked(ed, KEY_DEVICE_ID_SOURCE, source);
+    }
+
+    /** 设备号来源 cached|ssaid|v4|local；供 [auth] 存储链路裁决日志。 */
+    public static String getDeviceIdSource() {
+        String s = lastDeviceIdSource;
+        if (s != null && !s.isEmpty()) return s;
+        with(null);
+        String stored = sharedPreferences.getString(KEY_DEVICE_ID_SOURCE, "");
+        return stored == null ? "" : stored;
+    }
+
+    /** 本包授权存档 XML 绝对路径（排障日志用，不含敏感值）。 */
+    public static String getStorePath() {
+        try {
+            with(null);
+            String dir = appContext.getApplicationInfo().dataDir;
+            return new File(dir, "shared_prefs/" + PREFS_NAME + ".xml").getAbsolutePath();
+        } catch (Throwable t) {
+            return "shared_prefs/" + PREFS_NAME + ".xml";
+        }
+    }
+
+    /** 本地兜底设备号：同一安装内稳定（持久化），仅作 v5/v4 均缺失时的最后手段。 */
+    private static String localFallbackDeviceId() {
+        String stored = sharedPreferences.getString(KEY_DEVICE_ID_LOCAL, "");
+        if (DeviceFingerprint.isValidDevId(stored)) return stored;
+        String raw = java.util.UUID.randomUUID().toString().replace("-", "");
+        String id = "dev_" + raw + raw.substring(0, 8);
+        commitChecked(sharedPreferences.edit().putString(KEY_DEVICE_ID_LOCAL, id),
+                KEY_DEVICE_ID_LOCAL, id);
+        return id;
+    }
+
+    /** 已存 grant 里的设备字段（grant 格式 `1|device|game|exp|menu|card|kid.sig`）；无则空串。
+     *  这是服务端亲自签发过的设备号 ⇒ 一定是服务端认识的身份，最适合当迁移候选。 */
+    public static String grantDeviceId() {
+        with(null);
+        String grant = sharedPreferences.getString(KEY_AUTH_GRANT, "");
+        if (grant == null || grant.isEmpty()) return "";
+        int dot = grant.lastIndexOf('.');
+        String body = dot > 0 ? grant.substring(0, dot) : grant;
+        String[] parts = body.split("\\|");
+        if (parts.length < 2) return "";
+        String dev = parts[1] == null ? "" : parts[1].trim();
+        return DeviceFingerprint.isValidDevId(dev) ? dev : "";
+    }
+
+    /** 已存 grant 里的设备字段是否等于给定设备号（纯解析，判否只影响日志/自愈决策）。 */
+    public static boolean grantDeviceMatches(String deviceId) {
+        String dev = grantDeviceId();
+        return !dev.isEmpty() && deviceId != null && dev.equals(deviceId);
+    }
+
+    public static boolean hasStoredGrant() {
+        with(null);
+        String grant = sharedPreferences.getString(KEY_AUTH_GRANT, "");
+        return grant != null && !grant.isEmpty();
     }
 
     private static LinkedHashSet<String> legacyCandidates(String cached, String preferred) {
         LinkedHashSet<String> legacy = new LinkedHashSet<>();
         legacy.addAll(getLegacyDeviceIds());
         if (DeviceFingerprint.isValidDevId(cached)) legacy.add(cached);
+        String fromGrant = grantDeviceId();
+        if (!fromGrant.isEmpty()) legacy.add(fromGrant);
         legacy.addAll(DeviceFingerprint.getLegacyIds(appContext));
         legacy.remove(preferred);
         return legacy;
     }
-
-    private static void saveDeviceId(String id, String version, Set<String> legacy) {
+    private static void saveDeviceId(String id, String version, Set<String> legacy, String source) {
+        with(null);
+        String curId = sharedPreferences.getString(KEY_DEVICE_ID, "");
+        String curVer = sharedPreferences.getString(KEY_DEVICE_ID_VERSION, "");
+        String curSrc = sharedPreferences.getString(KEY_DEVICE_ID_SOURCE, "");
+        Set<String> curLegacy = sharedPreferences.getStringSet(KEY_LEGACY_DEVICE_IDS, null);
+        boolean sameLegacy = (curLegacy == null && (legacy == null || legacy.isEmpty()))
+                || (curLegacy != null && legacy != null && curLegacy.equals(legacy));
+        if (id.equals(curId) && version.equals(curVer) && source.equals(curSrc) && sameLegacy) {
+            lastDeviceIdSource = source;  // 值未变：不落盘
+            return;
+        }
         saveLegacyDeviceIds(legacy);
-        sharedPreferences.edit()
+        SharedPreferences.Editor ed = sharedPreferences.edit()
                 .putString(KEY_DEVICE_ID, id)
                 .putString(KEY_DEVICE_ID_VERSION, version)
-                .apply();
+                .putString(KEY_DEVICE_ID_SOURCE, source);
+        commitChecked(ed, KEY_DEVICE_ID, id);
+        lastDeviceIdSource = source;
     }
 
-    /** v5 首次登录时上报的旧 ID 候选；服务端只在卡密当前绑定命中时接受迁移。 */
+    /**
+     * 授权类键必须<b>同步</b>落盘（commit）+ 写后回读校验。
+     *
+     * <p>旧实现在 {@code :309} device_id、（legacy）{@code :328}、token/card {@code :576}、
+     * grant {@code :488}、bootstrap/card_meta {@code :420/:433} 全用 {@code apply()}：
+     * 异步刷盘，云机/低端机上进程被回收时可能还没落盘 ⇒ 下一次打开「像没存过」。
+     * 这里改为 commit + 回读，失败重试一次并留日志。
+     */
+    private static boolean commitChecked(SharedPreferences.Editor ed, String verifyKey,
+                                        Object expect) {
+        try {
+            if (!ed.commit()) {
+                Log.w(TAG, "commit failed key=" + verifyKey + " retry");
+                if (!ed.commit()) {
+                    Log.e(TAG, "commit FAILED after retry key=" + verifyKey);
+                    return false;
+                }
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "commit threw key=" + verifyKey, t);
+            return false;
+        }
+        try {
+            Object got = sharedPreferences.getAll().get(verifyKey);
+            if (expect == null) {
+                // expect=null 语义：该键应当已被移除
+                if (got != null) {
+                    Log.e(TAG, "remove not applied key=" + verifyKey + " got=" + got);
+                    return false;
+                }
+                return true;
+            }
+            if (!expect.equals(got)) {
+                Log.e(TAG, "write-back mismatch key=" + verifyKey
+                        + " expect=" + expect + " got=" + got);
+                return false;
+            }
+        } catch (Throwable ignored) {
+        }
+        return true;
+    }
+
+    /** v5 首次登录时上报的旧 ID 候选；服务端只在卡密当前绑定命中时接受迁移。
+     *  2026-10-04 补充：把「已存 grant 里的设备号」也算候选 —— 那是服务端亲自签发过的身份，
+     *  云机指纹漂移时正是它躺在卡密绑定上，不带它自愈必然 403（实测：缺这条时 login 报
+     *  「卡密已绑定其他设备」）。 */
     public static List<String> getLegacyDeviceIds() {
         with(null);
+        LinkedHashSet<String> all = new LinkedHashSet<>();
         Set<String> stored = sharedPreferences.getStringSet(KEY_LEGACY_DEVICE_IDS, null);
-        if (stored == null || stored.isEmpty()) return new ArrayList<>();
-        return new ArrayList<>(stored);
+        if (stored != null) all.addAll(stored);
+        String fromGrant = grantDeviceId();
+        if (!fromGrant.isEmpty()) all.add(fromGrant);
+        return new ArrayList<>(all);
     }
 
     private static void saveLegacyDeviceIds(Set<String> ids) {
@@ -325,7 +506,8 @@ public class Preferences {
                 if (clean.size() >= 24) break;
             }
         }
-        sharedPreferences.edit().putStringSet(KEY_LEGACY_DEVICE_IDS, clean).apply();
+        commitChecked(sharedPreferences.edit().putStringSet(KEY_LEGACY_DEVICE_IDS, clean),
+                KEY_LEGACY_DEVICE_IDS, clean);
     }
 
     public static String getAuthBaseUrl() {
@@ -415,9 +597,9 @@ public class Preferences {
 
     public static void saveBootstrapJson(String bootstrapJson) {
         with(null);
-        sharedPreferences.edit()
-                .putString(KEY_AUTH_BOOTSTRAP, bootstrapJson == null ? "{}" : bootstrapJson)
-                .apply();
+        String v = bootstrapJson == null ? "{}" : bootstrapJson;
+        commitChecked(sharedPreferences.edit().putString(KEY_AUTH_BOOTSTRAP, v),
+                KEY_AUTH_BOOTSTRAP, v);
     }
 
     public static String getAuthCardMetaJson() {
@@ -428,9 +610,9 @@ public class Preferences {
 
     public static void saveAuthCardMeta(String cardJson) {
         with(null);
-        sharedPreferences.edit()
-                .putString(KEY_AUTH_CARD_META, cardJson == null ? "{}" : cardJson)
-                .apply();
+        String v = cardJson == null ? "{}" : cardJson;
+        commitChecked(sharedPreferences.edit().putString(KEY_AUTH_CARD_META, v),
+                KEY_AUTH_CARD_META, v);
     }
 
     /** 会话是否在离线缓存窗口内有效（Native / Bridge 门控用） */
@@ -475,9 +657,10 @@ public class Preferences {
         with(null);
         int sec = cacheSec > 0 ? cacheSec : 600;
         if (sec > 600) sec = 600;
+        long nowMs = System.currentTimeMillis();
         SharedPreferences.Editor ed = sharedPreferences.edit()
                 .putBoolean(KEY_CARD_AUTH_REQUIRED, false)
-                .putLong(KEY_AUTH_LAST_OK, System.currentTimeMillis())
+                .putLong(KEY_AUTH_LAST_OK, nowMs)
                 .putInt(KEY_AUTH_CACHE_SEC, sec)
                 .putString(KEY_AUTH_BOOTSTRAP, bootstrapJson == null ? "{}" : bootstrapJson);
         if (grant != null && !grant.isEmpty()) {
@@ -485,7 +668,7 @@ public class Preferences {
         } else {
             ed.remove(KEY_AUTH_GRANT);
         }
-        ed.apply();
+        commitChecked(ed, KEY_AUTH_LAST_OK, nowMs);
     }
 
     /** @deprecated 请传 grant；保留重载避免旧 JS 直接崩 */
@@ -573,7 +756,11 @@ public class Preferences {
         if (cardKey != null && !cardKey.isEmpty()) {
             ed.putString(KEY_AUTH_CARD, cardKey);
         }
-        ed.apply();
+        // 会话键同步落盘 + 回读校验：云机上一次打开「存了但读不回」正是 apply() 未刷盘
+        boolean ok = commitChecked(ed, KEY_AUTH_TOKEN, token == null ? "" : token);
+        if (!ok) {
+            Log.e(TAG, "saveAuthSession write-back failed; device=" + getDeviceIdSource());
+        }
     }
 
     public static void saveAuthSession(String token, String cardKey, long lastOkAt, int cacheSec,
@@ -582,17 +769,65 @@ public class Preferences {
     }
 
     public static void clearAuthSession() {
+        clearAuthSession("unspecified");
+    }
+
+    /**
+     * 清档（带原因）：<b>先留档再清</b>。备份写 auth_backup_*，记录清档时间与触发原因，
+     * 然后才逐条 remove 会话键。备份失败不阻断清档（清档本身是安全动作）。
+     */
+    public static void clearAuthSession(String reason) {
         with(null);
+        try {
+            backupAuthSession(reason);
+        } catch (Throwable t) {
+            Log.w(TAG, "backup before clear failed: " + t);
+        }
         // 保留 card_auth_required，冷启动仍知是否显示账号 Tab
-        sharedPreferences.edit()
+        commitChecked(sharedPreferences.edit()
                 .remove(KEY_AUTH_TOKEN)
                 .remove(KEY_AUTH_CARD)
                 .remove(KEY_AUTH_LAST_OK)
                 .remove(KEY_AUTH_EXPIRE)
                 .remove(KEY_AUTH_BOOTSTRAP)
                 .remove(KEY_AUTH_GRANT)
-                .remove(KEY_AUTH_CARD_META)
-                .apply();
+                .remove(KEY_AUTH_CARD_META), KEY_AUTH_TOKEN, null);
+    }
+
+    /** 把当前会话快照写进 auth_backup_*（空值也写空串：键在即证明「当时看过」）。 */
+    public static void backupAuthSession(String reason) {
+        with(null);
+        long at = System.currentTimeMillis();
+        SharedPreferences.Editor ed = sharedPreferences.edit()
+                .putString(KEY_AUTH_BACKUP_PREFIX + "token", readStr(KEY_AUTH_TOKEN))
+                .putString(KEY_AUTH_BACKUP_PREFIX + "grant", readStr(KEY_AUTH_GRANT))
+                .putString(KEY_AUTH_BACKUP_PREFIX + "card", readStr(KEY_AUTH_CARD))
+                .putString(KEY_AUTH_BACKUP_PREFIX + "device_id", readStr(KEY_DEVICE_ID))
+                .putString(KEY_AUTH_BACKUP_PREFIX + "device_source", getDeviceIdSource())
+                .putString(KEY_AUTH_BACKUP_PREFIX + "expire_at", readStr(KEY_AUTH_EXPIRE))
+                .putString(KEY_AUTH_BACKUP_PREFIX + "card_meta", readStr(KEY_AUTH_CARD_META))
+                .putLong(KEY_AUTH_BACKUP_PREFIX + "last_ok_at",
+                        sharedPreferences.getLong(KEY_AUTH_LAST_OK, 0L))
+                .putString(KEY_AUTH_BACKUP_REASON, reason == null ? "" : reason)
+                .putLong(KEY_AUTH_BACKUP_AT, at);
+        commitChecked(ed, KEY_AUTH_BACKUP_AT, at);
+    }
+
+    /** 上次清档时间（0 = 从未清过）；排障用，不参与判定。 */
+    public static long getAuthBackupAt() {
+        with(null);
+        return sharedPreferences.getLong(KEY_AUTH_BACKUP_AT, 0L);
+    }
+
+    /** 上次清档原因；排障用，不参与判定。 */
+    public static String getAuthBackupReason() {
+        with(null);
+        return readStr(KEY_AUTH_BACKUP_REASON);
+    }
+
+    private static String readStr(String key) {
+        String v = sharedPreferences.getString(key, "");
+        return v == null ? "" : v;
     }
 
     public static String exportAuthJSON() {

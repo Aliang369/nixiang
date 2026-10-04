@@ -14,7 +14,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT_DIR="$NIXIANG/08_output/独奏骑士"
 BASE_APK="${DZQS_BASE_APK:-$OUT_DIR/独奏骑士_1.1.768_surgical-releaseSigned.apk}"
 OUT_APK="${DZQS_OUT_APK:-$OUT_DIR/独奏骑士_1.1.768_v5-releaseSigned.apk}"

@@ -24,7 +24,7 @@
 #   - libc++_shared.so / starlight.crt 与对照旧模板逐字节比对（不一致只 WARN，不拦截）
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 APP="$NIXIANG/mod菜单/starry-mod-menu"
 STARRY_APK="$APP/app/build/outputs/apk/debug/app-debug.apk"
 SMALI="$NIXIANG/01_tools/smali/smali"

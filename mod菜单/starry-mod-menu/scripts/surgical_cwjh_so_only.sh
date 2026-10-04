@@ -15,7 +15,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/超维进化"
 # 底包 = 上一次交付的星光外科包（其中的 so 会被本次新编的替换，classes4.dex 等保持不变）。
 # 不传参时自动取 08_output/超维进化 下最新的 *releaseSigned.apk，避免底包路径随版本失效。

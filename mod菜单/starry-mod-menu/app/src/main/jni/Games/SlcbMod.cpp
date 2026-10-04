@@ -27,6 +27,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 #include "Includes/SecStrings.hpp"
 #include "Unity/Il2CppApi.h"
 
@@ -250,11 +251,12 @@ static bool HookSlotInstall(const HookSlot& s) {
 // ============================================================
 
 // 热路径对象门闩：对齐 + 堆校验 + 高位区间（挡掉打包 int、tombstone 脏值）
+// ★设备无关修正：真机（arm64 + Android 12+）堆指针带 TBI 标签（形如 0xb4000076…），
+//   必须先清顶字节再判区间，否则合法对象被这行提前判否 ⇒ 真机功能静默全灭。
 static bool SafeObjPtr(void* p) {
     if (!p) return false;
-    uintptr_t u = reinterpret_cast<uintptr_t>(p);
-    if ((u & 7u) != 0) return false;
-    if (u < 0x100000000ULL || u > 0x800000000000ULL) return false;
+    if ((reinterpret_cast<uintptr_t>(p) & 7u) != 0) return false;
+    if (!starptr::InUserVa(p)) return false;
     return Il2Cpp::IsValidHeapPtr(p);
 }
 

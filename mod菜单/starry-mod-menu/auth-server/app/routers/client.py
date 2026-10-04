@@ -38,7 +38,9 @@ def login(body: LoginRequest, request: Request, db: Session = Depends(get_db)):
 
 @router.post("/auth/heartbeat")
 def heartbeat(body: HeartbeatRequest, db: Session = Depends(get_db)):
-    data = auth_service.heartbeat(db, body.token, body.game_id, body.device_id)
+    data = auth_service.heartbeat(
+        db, body.token, body.game_id, body.device_id, body.legacy_device_ids
+    )
     return {"ok": True, "message": "ok", "data": data}
 
 

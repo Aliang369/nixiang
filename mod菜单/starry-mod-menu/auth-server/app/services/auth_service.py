@@ -367,13 +367,26 @@ def heartbeat(
     token: str,
     game_id: str,
     device_id: str,
+    legacy_device_ids: Optional[list[str]] = None,
 ) -> dict[str, Any]:
     settings = get_settings()
     session = db.query(SessionToken).filter(SessionToken.token == token).first()
     if not session or session.revoked:
         raise HTTPException(401, "会话无效，请重新登录")
-    if session.device_id != device_id or session.game_id != game_id:
+    if session.game_id != game_id:
         raise HTTPException(401, "会话与设备/游戏不匹配")
+
+    # 2026-10-04 云机修复：设备指纹漂移（云实例 SSAID 重算 / 重装换实例）会让同一个
+    # 持卡人拿旧会话 + 新 device_id 打心跳，旧逻辑直接 401「会话与设备/游戏不匹配」，
+    # 客户端把它当权威硬拒 → hardKickAuth → 菜单「未授权」。
+    # 现在：仅当客户端自报的历史候选里含本会话原设备号（= 同一持有者的旧身份），
+    # 或新 ID 已在卡密的已知历史列表里，才认定为合法迁移；否则维持原 401 语义。
+    device_drift = False
+    if session.device_id != device_id:
+        requested = _normalize_legacy_device_ids(legacy_device_ids)
+        if session.device_id not in requested:
+            raise HTTPException(401, "会话与设备/游戏不匹配")
+        device_drift = True
 
     now = utcnow()
     exp = session.expires_at
@@ -399,9 +412,32 @@ def heartbeat(
         db.commit()
         raise
     if card.device_id and card.device_id != device_id:
-        session.revoked = True
-        db.commit()
-        raise HTTPException(403, "设备绑定已变更，请重新登录")
+        known = _load_legacy_device_ids(card)
+        migratable = device_drift and (
+            card.device_id == session.device_id or device_id in known
+        )
+        if not migratable:
+            session.revoked = True
+            db.commit()
+            raise HTTPException(403, "设备绑定已变更，请重新登录")
+        # 原子迁移：卡密主绑定与会话设备号一起换成漂移后的新 ID，旧 ID 进历史列表
+        old_id = card.device_id
+        merged = [old_id] + [x for x in known if x != device_id and x != old_id]
+        _store_legacy_device_ids(card, merged)
+        card.device_id = device_id
+    if device_drift:
+        session.device_id = device_id
+        # 审计：设备漂移迁移必须留痕（与客户端 [auth] store verdict 日志一一对应）。
+        # commit=False —— 由下面第 :441 行的统一 db.commit() 落库，避免中途提交半成品状态。
+        record_auth_event(
+            db,
+            "heartbeat_device_drift",
+            game_id=game_id,
+            device_id=device_id,
+            card_id=card.id,
+            detail=f"session={getattr(session, 'id', None)} migrated",
+            commit=False,
+        )
 
     session.last_seen_at = now
     session.expires_at = now + timedelta(minutes=settings.access_token_expire_minutes)

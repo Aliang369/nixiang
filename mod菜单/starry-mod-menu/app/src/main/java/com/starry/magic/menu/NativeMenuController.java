@@ -52,6 +52,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -165,6 +166,11 @@ public final class NativeMenuController {
     private boolean grantBgRenewStarted;
     /** 本进程冷启动续票已出结果（成功/硬拒/重试耗尽），hide/show 不再重开对账 */
     private boolean grantRenewCycleDone;
+    /**
+     * 本进程是否已尝试过「静默自愈重登」。设备指纹漂移 / 会话失效属可自愈类：
+     * 本地存着卡密时用已存卡密重登即可恢复，<b>不得清存档</b>（2026-10-04 云机修复）。
+     */
+    private boolean authSelfHealAttempted;
     private final Runnable grantBgRenewRunnable = new Runnable() {
         @Override
         public void run() {
@@ -3154,7 +3160,12 @@ public final class NativeMenuController {
         }
         if (Preferences.isCardAuthRequired()) {
             String token = Preferences.getAuthToken();
-            if (token == null || token.isEmpty()) return;
+            boolean hasToken = token != null && !token.isEmpty();
+            // 2026-10-04：token 被上一版误清、但卡密还在时也放行 —— 心跳会以「未登录」拒绝，
+            // 正好走静默自愈用卡密重登，把云机从「未授权死状态」救回来。
+            String card = Preferences.getAuthCardKey();
+            boolean hasCard = card != null && !card.isEmpty();
+            if (!hasToken && !hasCard) return;
         } else {
             String g = Preferences.getAuthGrant();
             if (g == null || g.isEmpty()) return;
@@ -3201,7 +3212,25 @@ public final class NativeMenuController {
                     Log.w(TAG, "renew auth fail (" + why + ", authoritative=" + authoritative
                             + "): " + json.optString("message", ""));
                     if (coldStart && authoritative) {
+                        // 2026-10-04：设备漂移/会话失效属可自愈类（本地存着卡密），
+                        // 先静默自愈重登；只有权威致命（封禁/用尽/过期/不存在）才踢。
+                        // 二次修正：可自愈类失败**永远不踢**——自愈已试过或不可用时也不清档。
+                        // 否则「自愈后仍失败」会在下一轮续票重试时落到踢人分支，
+                        // 把存档连同卡密一起清掉，变成永久未授权（实测已复现）。
+                        if (isSelfHealableFailureJson(json)) {
+                            boolean healed = trySilentSelfHeal(why, json);
+                            logAuthStoreVerdict(healed ? "relogin" : "heal-deferred");
+                            if (!healed) {
+                                Log.w(TAG, "[auth] healable-class failure, heal unavailable"
+                                        + " -> keep archive, retry next launch: "
+                                        + json.optString("message", ""));
+                                mainHandler.post(() -> refreshAuthStatus());
+                            }
+                            grantRenewCycleDone = true;
+                            return;
+                        }
                         grantRenewCycleDone = true;
+                        logAuthStoreVerdict("kick");
                         final String serverMsg = json.optString("message", "");
                         mainHandler.post(() -> hardKickAuth(serverMsg));
                     } else {
@@ -3265,6 +3294,7 @@ public final class NativeMenuController {
                     refreshAuthStatus();
                     refreshFeatures();
                     Log.i(TAG, "renew ok (" + why + ")");
+                    logAuthStoreVerdict("ok");
                 });
             } catch (Exception e) {
                 // 网络异常：不动功能，交给冷启动循环有界重试
@@ -3277,10 +3307,13 @@ public final class NativeMenuController {
     }
 
     private boolean shouldRunGrantBgRenew() {
-        // 存档里有登录态（卡密 token / grant）才值得对账；与会话是否活着无关
+        // 存档里有登录态（卡密 token / grant / 卡密本体）才值得对账；与会话是否活着无关
         if (Preferences.isCardAuthRequired()) {
             String token = Preferences.getAuthToken();
-            return token != null && !token.isEmpty();
+            if (token != null && !token.isEmpty()) return true;
+            // 只有卡密、没有 token：仍要对账一次，让静默自愈把身份重新对齐（2026-10-04）
+            String card = Preferences.getAuthCardKey();
+            return card != null && !card.isEmpty();
         }
         String grant = Preferences.getAuthGrant();
         return grant != null && !grant.isEmpty();
@@ -3311,7 +3344,9 @@ public final class NativeMenuController {
     private void hardKickAuth(String toastMsg) {
         Runnable kick = () -> {
             stopGrantBgRenew();
-            bridge.clearAuthSession();
+            // 2026-10-04：清档前会先留一份 auth_backup_*，原因一并写入（云机排障证据）
+            bridge.clearAuthSession("kick:" + (toastMsg == null || toastMsg.isEmpty()
+                    ? "授权已失效" : toastMsg));
             Preferences.saveAuthCardMeta("{}");
             refreshAuthStatus();
             refreshFeatures();
@@ -3356,6 +3391,99 @@ public final class NativeMenuController {
         return false;
     }
 
+    /**
+     * 可自愈类权威失败判定（2026-10-04 云机「第二次打开未授权」修复）。
+     *
+     * <p>服务端 heartbeat 的两条权威拒绝都属于「本机当前 device_id 与服务端记录不一致」，
+     * 本地存着卡密时可原样重登自愈（login 带 {@code legacy_device_ids[]}，服务端
+     * {@code _authorize_device_binding} 在卡密绑定的旧 id 命中时会把绑定迁到新 id）：
+     * <ul>
+     *   <li>401「会话与设备/游戏不匹配」——云机 SSAID 漂移导致 device_id 变了；</li>
+     *   <li>403「设备绑定已变更，请重新登录」——同上，服务端语义更重。</li>
+     * </ul>
+     * 这两类<b>不得据此清档</b>（清档即用户看到的「保存的地方没有」）。
+     *
+     * <p>真正致命、必须踢回登录的是：封禁 / 卡密用尽 / 卡密过期 / 卡密不存在 / 无权限。
+     */
+    private static boolean isSelfHealableFailureJson(JSONObject json) {
+        if (json == null) return false;
+        String m = (json.optString("detail", "") + " " + json.optString("message", ""))
+                .toLowerCase(Locale.ROOT);
+        if (m.isEmpty()) return false;
+        if (m.contains("封禁") || m.contains("用尽") || m.contains("不存在")
+                || m.contains("过期") || m.contains("权限") || m.contains("已删除")) {
+            return false;
+        }
+        if (m.contains("ban") || m.contains("exhaust") || m.contains("expired")
+                || m.contains("not found") || m.contains("forbidden")) {
+            return false;
+        }
+        return m.contains("设备") || m.contains("会话") || m.contains("未登录")
+                || m.contains("重新登录") || m.contains("device") || m.contains("session");
+    }
+
+    /**
+     * 冷启动静默自愈：本地还存着卡密就用它重登一次，让服务端把设备绑定重新对齐到本机当前
+     * {@code device_id}，并把新会话/新 grant 写回存档。<b>全程不动存档</b>（失败也不清）。
+     *
+     * @return true 表示已发起重登，调用方应立即 return，不要走硬踢
+     */
+    private boolean trySilentSelfHeal(String why, JSONObject json) {
+        if (authSelfHealAttempted) {
+            Log.i(TAG, "[auth] self-heal already attempted this process, skip");
+            return false;
+        }
+        if (!Preferences.isCardAuthRequired()) return false;
+        String card = Preferences.getAuthCardKey();
+        if (card == null || card.isEmpty()) {
+            Log.i(TAG, "[auth] self-heal unavailable: no stored card key");
+            return false;
+        }
+        authSelfHealAttempted = true;
+        Log.w(TAG, "[auth] cold-start self-heal: device/session mismatch (" + why
+                + ") → relogin with stored card, msg=" + json.optString("message", ""));
+        authLoginWithCard(card, true);
+        return true;
+    }
+
+    /** 静默自愈登录失败后的处置：非致命只记日志，致命（封禁/用尽/过期/卡不存在）才踢。 */
+    private void handleAuthLoginFailure(String err, boolean silent, boolean fatal) {
+        if (!silent) {
+            mainHandler.post(() -> showToast(err, "error"));
+            return;
+        }
+        if (fatal) {
+            Log.w(TAG, "[auth] silent self-heal fatal: " + err + " → hard kick");
+            mainHandler.post(() -> hardKickAuth(err));
+        } else {
+            Log.w(TAG, "[auth] silent self-heal non-fatal: " + err + " (keep archive, retry later)");
+        }
+    }
+
+    /**
+     * 存档裁决日志：授权键读写链路每一步都留证据（云机排障靠它定量，不再靠猜）。
+     * 输出不含 token/card/grant 明文，只给「有没有、匹不匹配、存在哪个文件」。
+     */
+    private void logAuthStoreVerdict(String verdict) {
+        try {
+            String device = Preferences.getOrCreateDeviceId();
+            Log.i(TAG, "[auth] store verdict=" + verdict
+                    + " device=" + device
+                    + " source=" + Preferences.getDeviceIdSource()
+                    + " has_grant=" + Preferences.hasStoredGrant()
+                    + " grant_match=" + Preferences.grantDeviceMatches(device)
+                    + " token=" + (Preferences.getAuthToken() == null
+                            || Preferences.getAuthToken().isEmpty() ? "none" : "set")
+                    + " card=" + (Preferences.getAuthCardKey() == null
+                            || Preferences.getAuthCardKey().isEmpty() ? "none" : "set")
+                    + " backup_at=" + Preferences.getAuthBackupAt()
+                    + " backup_reason=" + Preferences.getAuthBackupReason()
+                    + " path=" + Preferences.getStorePath());
+        } catch (Throwable t) {
+            Log.w(TAG, "[auth] store verdict log failed: " + t);
+        }
+    }
+
     private void doAuthLogin() {
         String card = cardInput != null ? cardInput.getText().toString().trim() : "";
         if (card.isEmpty()) {
@@ -3363,6 +3491,15 @@ public final class NativeMenuController {
             return;
         }
         showToast("登录中…", "info");
+        authLoginWithCard(card, false);
+    }
+
+    /**
+     * 登录主流程。silent=true 时是冷启动静默自愈（设备指纹漂移 / 存档票过期）：
+     * 不弹「登录中…/登录成功」，但致命失败（封禁/用尽/过期/卡不存在）仍会踢回登录并提示，
+     * 非致命失败（网络/网关）只记日志，交给冷启动重试循环。
+     */
+    private void authLoginWithCard(final String card, final boolean silent) {
         authExec.execute(() -> {
             try {
                 ModBridge.syncAuthGameIdFromNative();
@@ -3386,8 +3523,8 @@ public final class NativeMenuController {
 
                 // AuthClient / 网关失败：{ok:false,message}
                 if (loginJson.has("ok") && !loginJson.optBoolean("ok", true)) {
-                    String err = friendlyAuthError(loginJson, "登录失败");
-                    mainHandler.post(() -> showToast(err, "error"));
+                    handleAuthLoginFailure(friendlyAuthError(loginJson, "登录失败"), silent,
+                            isHardAuthFailureJson(loginJson) && !isSelfHealableFailureJson(loginJson));
                     return;
                 }
 
@@ -3395,14 +3532,13 @@ public final class NativeMenuController {
                 if (data == null) data = loginJson;
 
                 if (looksLikeAuthFailure(loginJson, data)) {
-                    String err = friendlyAuthError(loginJson, "登录失败");
-                    mainHandler.post(() -> showToast(err, "error"));
+                    handleAuthLoginFailure(friendlyAuthError(loginJson, "登录失败"), silent,
+                            isHardAuthFailureJson(loginJson) && !isSelfHealableFailureJson(loginJson));
                     return;
                 }
                 String token = data.optString("token", loginJson.optString("token", ""));
                 if (token.isEmpty()) {
-                    String err = friendlyAuthError(loginJson, "登录失败");
-                    mainHandler.post(() -> showToast(err, "error"));
+                    handleAuthLoginFailure(friendlyAuthError(loginJson, "登录失败"), silent, false);
                     return;
                 }
                 JSONObject cardObj = data.optJSONObject("card");
@@ -3471,7 +3607,10 @@ public final class NativeMenuController {
                     refreshFeatures();
                     // 登录即刚拿到新鲜 grant：不再触发冷启动对账，避免登录后立刻重复请求
                     grantRenewCycleDone = true;
-                    if (!Preferences.isMenuEnabled()) {
+                    if (silent) {
+                        // 静默自愈成功：不打扰用户，只留证据（云机第二次打开应直接回到「授权有效」）
+                        Log.i(TAG, "[auth] cold-start self-heal ok, session restored silently");
+                    } else if (!Preferences.isMenuEnabled()) {
                         showToast("游戏维护中，功能已关闭", "error");
                     } else {
                         showToast("登录成功", "success");
@@ -3479,7 +3618,7 @@ public final class NativeMenuController {
                 });
             } catch (Exception e) {
                 Log.e(TAG, "auth login", e);
-                mainHandler.post(() -> showToast(friendlyExceptionMessage(e), "error"));
+                handleAuthLoginFailure(friendlyExceptionMessage(e), silent, false);
             }
         });
     }

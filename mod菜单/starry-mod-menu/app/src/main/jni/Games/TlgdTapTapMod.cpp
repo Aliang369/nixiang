@@ -28,6 +28,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 #include "Includes/SecStrings.hpp"
 #include "Unity/Il2CppApi.h"
 
@@ -150,11 +151,13 @@ static_assert(sizeof(DamageHandleBlob) == 40, "DamageHandle blob layout mismatch
 static inline bool PtrOk(void* p) { return p && Il2Cpp::IsValidHeapPtr(p); }
 
 // 4399 实锤：0x71/0x2e 标签指针能过普通指针范围判断，但读字段会 SIGSEGV。
+// ★设备无关修正：上界原为 0x8000000000（512GiB），真机 Scudo 堆清标签后可达 0x76…/0x78…，
+//   越界即整片判否、只在真机暴露 ⇒ 改用共享区间 4GiB~128TiB。
 static inline bool SoftArgPtr(void* p) {
     if (!p) return false;
-    uintptr_t u = (uintptr_t)p & 0x00FFFFFFFFFFFFFFULL;
+    const uintptr_t u = starptr::Untag((uintptr_t)p);
     if (u & 7) return false;
-    if (u < 0x1000000000ULL || u > 0x8000000000ULL) return false;
+    if (u < starptr::kUserVaMin || u >= starptr::kUserVaMax) return false;
     const uintptr_t tag = u >> 40;
     return tag != 0x71 && tag != 0x2e;
 }

@@ -23,7 +23,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/霓虹深渊/霓虹深渊_3.2.860_jiuyou_vc104.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/霓虹深渊/apktool_3.2.860_jiuyou"
 FINAL_PATCH="$NIXIANG/07_patched/霓虹深渊/apktool_3.2.860_jiuyou_modmenu"

@@ -13,7 +13,7 @@
 # 断言：类集合与 12.x 模板【完全一致】（只改父类引用，不增删类）
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 APP="$NIXIANG/mod菜单/starry-mod-menu"
 SMALI="$NIXIANG/01_tools/smali/smali"
 BAKSMALI="$NIXIANG/01_tools/smali/baksmali"

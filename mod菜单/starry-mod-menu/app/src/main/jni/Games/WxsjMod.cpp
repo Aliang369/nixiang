@@ -35,6 +35,7 @@
 
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 
 #define WXSJ_LOG "[Wxsj]"
 #if defined(STARRY_TRACE) && STARRY_TRACE
@@ -106,10 +107,9 @@ static bool ReadFileLines(const std::string& path, std::vector<std::string>* out
 static std::string PkgName();
 static void WriteConfigKey(const char* key, const std::string& val);
 
-static bool OkPtr(void* p) {
-    uintptr_t v = (uintptr_t)p;
-    return p && v >= 0x100000000ULL && v < 0x800000000000ULL;
-}
+// ★设备无关修正：真机（arm64 + Android 12+）堆指针带 TBI 标签（形如 0xb4000076…），
+//   原先对原始指针判 <0x800000000000 会把合法对象判否 ⇒ 真机功能静默失效。
+static bool OkPtr(void* p) { return starptr::LiveFast(p); }
 
 // ---- libil2cpp.so 基址（dlpi_addr = 首映射 = VA 基准）----
 static int PhdrCb(struct dl_phdr_info* info, size_t, void* data) {

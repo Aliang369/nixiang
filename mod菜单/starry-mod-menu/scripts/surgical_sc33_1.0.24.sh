@@ -38,7 +38,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/生存33天/生存33天_1.0.24_taptap_official.apk"
 OUT="$NIXIANG/08_output/生存33天"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"

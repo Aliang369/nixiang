@@ -24,7 +24,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 VERSION="${SHHJ_VERSION:-3.8}"
 ORIG_APK="${SHHJ_ORIG_APK:-$NIXIANG/02_apks/山海幻境/山海幻境_${VERSION}_taptap_official.apk}"
 OUT="$NIXIANG/08_output/山海幻境"

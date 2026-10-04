@@ -13,7 +13,7 @@ import sys
 import zlib
 from pathlib import Path
 
-ROOT = Path("/Users/aliang/Documents/nixiang")
+ROOT = Path(__file__).resolve().parents[2]
 IN_ROOT = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "09_test/勇士之心/regrab_20260921"
 OUT_ROOT = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "06_dumped/勇士之心/hotupdate_20260921"
 KEY = b"237GaogniB!@#$1sdf546685"

@@ -696,7 +696,12 @@ public class ModBridge {
 
     @JavascriptInterface
     public void clearAuthSession() {
-        Preferences.clearAuthSession();
+        clearAuthSession("unspecified");
+    }
+
+    /** 清档（带原因）：先备份到 auth_backup_* 再清，见 Preferences.backupAuthSession。 */
+    public void clearAuthSession(String reason) {
+        Preferences.clearAuthSession(reason);
         try { nativeClearGrant(); } catch (UnsatisfiedLinkError ignored) {}
         syncNativeAuthorized();
         lockAllFeatures();

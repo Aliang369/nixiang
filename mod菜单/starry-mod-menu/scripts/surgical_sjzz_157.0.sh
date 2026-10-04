@@ -36,7 +36,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/我在神界刷装备/com.windforce.rg.offical_157.0_official_base.apk"
 ORIG_MD5="f9e1425bd1b4c0e27a362a7cd87c0f39"
 OUT="$NIXIANG/08_output/我在神界刷装备"

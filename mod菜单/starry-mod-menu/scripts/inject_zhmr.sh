@@ -19,16 +19,16 @@ fi
 STARRY="$(cd "$(dirname "$0")/.." && pwd)"
 ROOT="$(cd "$STARRY/../../.." && pwd 2>/dev/null || true)"
 # 若相对路径不对，用绝对锚定
-if [[ ! -d "/Users/aliang/Documents/nixiang/07_patched/战魂铭人/apktool_3.4.0_modmenu" ]]; then
+if [[ ! -d "${NIXIANG}/07_patched/战魂铭人/apktool_3.4.0_modmenu" ]]; then
   echo "ERROR: 找不到改包工作树 07_patched/战魂铭人/apktool_3.4.0_modmenu"
   exit 1
 fi
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 PATCH="$NIXIANG/07_patched/战魂铭人/apktool_3.4.0_modmenu"
 OUT="$NIXIANG/08_output/战魂铭人"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 NDK_CXX="$HOME/Library/Android/sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
-JAVA_HOME_DEFAULT="/Users/aliang/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home"
+JAVA_HOME_DEFAULT="${JAVA_HOME_DEFAULT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 export JAVA_HOME="${JAVA_HOME:-$JAVA_HOME_DEFAULT}"
 
 TMP="$(mktemp -d /tmp/starry_zhmr_inject.XXXXXX)"
@@ -102,7 +102,7 @@ if ! grep -q 'FOREGROUND_SERVICE_SPECIAL_USE' "$MANIFEST"; then
   if grep -q 'SYSTEM_ALERT_WINDOW' "$MANIFEST"; then
     python3 - <<'PY'
 from pathlib import Path
-p = Path("/Users/aliang/Documents/nixiang/07_patched/战魂铭人/apktool_3.4.0_modmenu/AndroidManifest.xml")
+p = Path("${NIXIANG}/07_patched/战魂铭人/apktool_3.4.0_modmenu/AndroidManifest.xml")
 t = p.read_text(encoding="utf-8")
 needle = '<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>'
 extra = needle + '''
@@ -121,7 +121,7 @@ fi
 if ! grep -q 'com.starry.magic.menu.MenuService' "$MANIFEST"; then
   python3 - <<'PY'
 from pathlib import Path
-p = Path("/Users/aliang/Documents/nixiang/07_patched/战魂铭人/apktool_3.4.0_modmenu/AndroidManifest.xml")
+p = Path("${NIXIANG}/07_patched/战魂铭人/apktool_3.4.0_modmenu/AndroidManifest.xml")
 t = p.read_text(encoding="utf-8")
 svc = '''
         <service
@@ -156,7 +156,7 @@ PRIV="$PATCH/smali/com/chillyroomsdk/sdkbridge/privacy/BasePrivacyActivity.smali
 if [[ -f "$PRIV" ]]; then
   python3 - <<'PY'
 from pathlib import Path
-p = Path("/Users/aliang/Documents/nixiang/07_patched/战魂铭人/apktool_3.4.0_modmenu/smali/com/chillyroomsdk/sdkbridge/privacy/BasePrivacyActivity.smali")
+p = Path("${NIXIANG}/07_patched/战魂铭人/apktool_3.4.0_modmenu/smali/com/chillyroomsdk/sdkbridge/privacy/BasePrivacyActivity.smali")
 t = p.read_text(encoding="utf-8")
 old = "    invoke-static {p0}, Lcom/android/support/Main;->Start(Landroid/content/Context;)V"
 new = """    const-string v0, \"starry_magic\"
@@ -180,7 +180,7 @@ PLAYER="$PATCH/smali/com/chillyroomsdk/sdkbridge/BasePlayerActivity.smali"
 if [[ -f "$PLAYER" ]]; then
   python3 - <<'PY'
 from pathlib import Path
-p = Path("/Users/aliang/Documents/nixiang/07_patched/战魂铭人/apktool_3.4.0_modmenu/smali/com/chillyroomsdk/sdkbridge/BasePlayerActivity.smali")
+p = Path("${NIXIANG}/07_patched/战魂铭人/apktool_3.4.0_modmenu/smali/com/chillyroomsdk/sdkbridge/BasePlayerActivity.smali")
 t = p.read_text(encoding="utf-8")
 if "MenuService;->start" in t:
     print("hook: BasePlayerActivity already patched")
@@ -256,8 +256,7 @@ fi
 _NIXIANG="$(cd "$(dirname "$0")/../../.." && pwd)"
 # shellcheck source=/dev/null
 source "$_NIXIANG/04_scripts/_common/starry_post_install.sh"
-starry_post_install "$PKG"
-  || true
+starry_post_install "$PKG" || true
 adb shell am force-stop "$PKG" 2>/dev/null || true
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
 echo "done"

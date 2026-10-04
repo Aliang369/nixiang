@@ -22,7 +22,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
-NIXIANG="/Users/aliang/Documents/nixiang"
+NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 ORIG_APK="$NIXIANG/02_apks/长生天机降世/长生天机降世_0.9.9_official.apk"
 SRC_DECODE="$NIXIANG/03_decompiled/长生天机降世/apktool_0.9.9_orig"
 FINAL_PATCH="$NIXIANG/07_patched/长生天机降世/apktool_0.9.9_modmenu"

@@ -12,7 +12,7 @@
 # 不覆盖 12.x 的 app/src/libs/arm64-v8a/libstarry_magic.so。
 set -euo pipefail
 
-ROOT="/Users/aliang/Documents/nixiang"
+ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 STARRY="$ROOT/mod菜单/starry-mod-menu"
 JNI="$STARRY/app/src/main/jni"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"

@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "_common"))
 from gen_util import write_if_changed  # noqa: E402
 
-ROOT = Path("/Users/aliang/Documents/nixiang")
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "10_docs/勇士之心/斌哥注入脚本_提取_999999_20260915.js"
 OUT = (
     ROOT

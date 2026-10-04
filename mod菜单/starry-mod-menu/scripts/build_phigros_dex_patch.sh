@@ -19,9 +19,9 @@ set -euo pipefail
 
 BASE="${1:?base apk}"
 OUT_DIR="${2:-/tmp/phbuild}"
-STARRY="/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu"
-SMALI_BIN="/Users/aliang/Documents/nixiang/01_tools/smali/smali"
-BAKSMALI_BIN="/Users/aliang/Documents/nixiang/01_tools/smali/baksmali"
+STARRY="${STARRY:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+SMALI_BIN="${SMALI_BIN:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+BAKSMALI_BIN="${BAKSMALI_BIN:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 YNTT="$STARRY/yntt_smali/com/starry/magic/sign"
 
 [[ -f "$BASE" ]] || { echo "ERROR: 缺少 base apk" >&2; exit 1; }

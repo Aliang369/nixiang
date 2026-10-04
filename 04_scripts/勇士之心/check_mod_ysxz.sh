@@ -8,8 +8,8 @@ CHECK_JSON="$SCRIPT_DIR/mod_check.json"
 MANIFEST_TXT="$SCRIPT_DIR/mod_manifest.txt"
 SIGNATURE_TXT="$SCRIPT_DIR/mod_signature.txt"
 ENTRIES_TXT="$SCRIPT_DIR/mod_entries.txt"
-AAPT2="${AAPT2:-/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2}"
-APKSIGNER="${APKSIGNER:-/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner}"
+AAPT2="${AAPT2:-$HOME/Library/Android/sdk/build-tools/36.0.0/aapt2}"
+APKSIGNER="${APKSIGNER:-$HOME/Library/Android/sdk/build-tools/36.0.0/apksigner}"
 
 [[ -f "$META_FILE" ]] || { echo "错误: 缺少 binge_apk.json" >&2; exit 1; }
 APK="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1],encoding="utf-8"))["apk_path"])' "$META_FILE")"
