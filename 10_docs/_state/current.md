@@ -10,6 +10,7 @@
 
 | 游戏 | 最近更新 | 状态 | 详情 |
 |---|---|---|---|
+| 鬼谷八荒 | 2026-10-04 | ✅ **1.1.329 星空版已装机，用户 L3 通过并收官**：TapTap 官包 Unity IL2CPP 无壳；斌哥包瘦壳（so/metadata 一致）⇒ RVA 零重定位（禁 base+RVA）。两项：①GM 菜单 `UISwitchPlayerMenu.get_IsCheatModeEnabled` `0x40A4D28` 恒真；②加速 `Time.get_deltaTime` `0x54553E4` 钉 timeScale（1–20）+ `set_timeScale` `0x5455560` 透传。唯一正式包 md5 `649e1811…` + `delivery_20261004/`（icon 512/144 + 菜单模板） | [摘要](games/鬼谷八荒.md) |
 | 境界守望者 | 2026-10-04 | ✅ **国际服 1.6.38.829.1 星空版 e1+e2+C1+C2 全部真机验收通过**：Google Play / Unity 2019.4 IL2CPP + Split(Qigsaw)。①去签名+菜单进游戏；②无敌/伤害倍率(1-10)；③设备侧 `wor_cfg.txt` 配置化（**含热重载：改文本不重启游戏**）；④`WOR_DIAG_FULL` 诊断两档。三卡点＝split 壳同 soname 劫持 Api／`IsValidHeapPtr()` 拒 tagged 指针／值类型偏移 `+0x10`。**正式包＝单 APK 直装 md5 `fd554c37…`**；限制＝服务端战斗校验 FightVerify（容差 0 无解） | [摘要](games/境界守望者.md) |
 | 仙逆：本尊 | 2026-10-04 | ⛔ **用户判停/已收尾**：`com.qqsy.xnbz` 0.0.14/vc14 TapTap 渠道，Cocos Creator 3.x（JSB）⇒ 功能全走运行期 JS 层补丁。环境三件（去签名 + 强制网页登录 + 菜单进游戏）✅；【无敌】【伤害倍率】【重试判胜】✅（客户端回放层生效）。判停＝奖励在 `game.fightbegin` 由服务端一次性定稿、无「客户端上报胜负」接口（380 个 `game.*` 接口普查）⇒ 改 `isWin` 只改显示；不做本地假奖励。已交付正式包 md5 `267c4be8…`（376975940 B）+ `delivery_20261004/`（icon+菜单模板） | [摘要](games/仙逆.md) |
 | 敢达争锋对决 | 2026-10-03 | ✅ **星空版已装机、4/4 抓点命中**：9.3.0/vc830，官方原版与斌哥包 `libil2cpp.so`/metadata **逐字节相同 ⇒ RVA 零重定位**。三项：伤害倍率(1–100)/超级定怪/全局加速(1–10)；lazy 装钩 `install pass: ok=4 dead=0/4`（真机 RVA 快路 4/4，MuMu 降 by-name）；四点=16B veneer。产物 `敢达争锋对决_9.3.0_surgical-starSigned.apk`（md5 `27381dad` / sha256 `1b4e9a3b…`=设备已装包）+ `delivery_20261003/`（icon 512/144+菜单模板）。**用户实测三项正常、机模均可用、结案** | [摘要](games/敢达争锋对决.md) |

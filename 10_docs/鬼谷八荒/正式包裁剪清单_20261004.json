@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/鬼谷八荒",
+  "keep": "鬼谷八荒_1.1.329_surgical-releaseSigned.apk",
+  "keep_size": 1683099111,
+  "keep_md5": "649e18117b735215e5a048f8ad53fe1b",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "鬼谷八荒_1.1.329_surgical-unsigned.apk",
+      "size": 1678405952,
+      "md5": "9ae89479ee189447959191e93bca0eef"
+    },
+    {
+      "name": "鬼谷八荒_1.1.329_surgical-releaseSigned.apk.idsig",
+      "size": 13264411,
+      "md5": "8365f79034a173e7b6a07b83a6731b3c"
+    }
+  ],
+  "removed_count": 2
+}

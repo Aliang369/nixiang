@@ -180,7 +180,17 @@ public final class TapLoginForceWeb {
                     // （⇒ ClientLoginUtils 版路径，由 patch_xnbz_smali.py 把 isClientLogin 改恒
                     // false 回落 WebLoginFragment）；设备已装 TapTap 客户端（com.taptap），
                     // 改签后客户端 SSO 必被 signature not match 拒绝 ⇒ 固定 embedded_web 网页登录。
-                    "com.qqsy.xnbz"));
+                    "com.qqsy.xnbz",
+                    // 鬼谷八荒（com.guigugame.guigubahuang）TapTap 渠道原版 1.1.329/vc329：
+                    // 包内实证 TapSDK **旧版路径** —— classes.dex 含
+                    // Lcom/taptap/sdk/ui/TapTapActivity; + Lcom/taptap/sdk/ui/LoginClient$1/$2
+                    // + Lcom/taptap/sdk/ui/WebViewHandler; + Lcom/taptap/sdk/TokenValidChecker;
+                    // + Lcom/taptap/sdk/ui/BlockActivity; + TapTapSignatureCheckException，
+                    // 且**无**新版 LoginActivityImpl / TapTapLoginActivity / ClientLoginHandler
+                    // （⇒ 与圣翼传说同构：无 loginType 分流，走 LoginClient + WebViewHandler）；
+                    // 设备已装 TapTap 客户端（com.taptap），改签后客户端 SSO 必被
+                    // signature not match 拒绝 ⇒ 固定 embedded_web 网页登录。特此列入白名单。
+                    "com.guigugame.guigubahuang"));
 
     private TapLoginForceWeb() {}
 

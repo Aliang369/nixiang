@@ -1091,6 +1091,23 @@ public final class SignSpoof {
                     + "h1aFk1+92x2DC1XmmvB/+YXQtgkjumXe1sg3e4Yr1MhOdb+zuxkNdE6lsgs7Nc7caczQPQlmbekJpR6lMPt1wcIceXLom/Txm+S0H/lQmP/Gstke0B7eDRqwC70lBxcVTC7mGcgjqe13dhp+9j+9afne5nJs/d"
                     + "KEUBN+wk3d3se+p9L7Jp5Bj17OXHzNzWltL/yM5wDiW9jBAewH4ovdArCljqM1F2rhspTCX7L/+hWLASYlGaMyMKnKQfMSRcnL8QW6G6rVgT6xxg8W7UWjPcz3c3SqQe6BUmgAQXwQffkojU9HWOFd5UaPHg==";
 
+    // com.guigugame.guigubahuang（鬼谷八荒 TapTap 官包，Unity IL2CPP）
+    // CN:      O=guigugame   serial=183982C3
+    // MD5:     ba61fbe7f5fbb708a43cc4527f2a2a51
+    // SHA-1:   f416bbd009e123e7f59762af0f0456d53866c097
+    // SHA-256: aff120fa55023db5a8fe45248756ddad05188d3fb7e0a5050a37290444a74148
+    // 有效期: 2024-08-14 → 2074-08-02；DER 682 B / RSA-2048
+    // 用途: 模组包自签后回灌官签，喂 TapSDK 的 TapTapSignatureCheckException 与渠道侧签名校验
+    private static final String GGBH_PKG = "com.guigugame.guigubahuang";
+    private static final String GGBH_CERT_B64 =
+            "MIICpjCCAY6gAwIBAgIEGDmCwzANBgkqhkiG9w0BAQUFADAUMRIwEAYDVQQKDAlndWlndWdhbWUwIBcNMjQwODE0MDgxMDExWhgPMjA3NDA4MDIwODEwMTNaMBQxEjAQBgNVBAoMCWd1aWd1Z2Ft"
+                    + "ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMpzbf9IKnfmnurJbmKaAjp2gWn0Wtt2eHn1zTO02rMIpgdTrSMOO4T+R03Ur25zf7pwFFUZpwub91HvLZqfSAP5UX3aim13mC78yh6W"
+                    + "ronk0ESHnP7T4fitg9K0tF2t5YSQ+i3l7v1xgWsHRbf42ltlWP6oxhq8M7Nr5je7HLEwRK4Hu4nRk71QGT3j3fqwrSpRJ3Oj0N06M86M++nFKBHsWMIA7Zs1xmoctFw6Gghjry+lfoZ5viSBCluX"
+                    + "VgTOJT6KrHI0zJu/Wd9tS0lFseNI7LnnaOTa1Q1sXugAm+2CBi7AdCEhbrAqI/sNdyslbXJ/3DO8JbNmL6kvohSyAY0CAwEAATANBgkqhkiG9w0BAQUFAAOCAQEAOTWL9ea+L/KTnUfyYiZGsmw+"
+                    + "F7j/znZViGFdd3jSAm3ZVMCuvv2WlCQAsrhcmqWKSxwmalA3vf3FYDDw0QlpVNdUdM+sDVqjMrwOBt+MLURTyYYNcKkccQg9r7I0Md1ZCXN6hx6CH8uk8pU9X9eo18Ctt551z7x7ndR3KEhKEnaI"
+                    + "ONbYK9hdtO18hIJcnudx7dR/4nyShBJYYwiJ1KhqSIj4ZEjLFv5HxlgfSE6qMbs0NmHVh/nwl4WMQZ2qqHZGbgu3YyNUu9d6TeMxpt4Gknutt2irNfED72XKKgZA6MknvmjxEL32+RcVMhNd0Q9x"
+                    + "aQDWGbyUnk+zTppOMdED5A==";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1161,6 +1178,7 @@ public final class SignSpoof {
                 fakes.put(GDZFDJ_PKG, new Signature(Base64.decode(GDZFDJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WOR_PKG, new Signature(Base64.decode(WOR_CERT_B64, Base64.DEFAULT)));
                 fakes.put(XNBZ_PKG, new Signature(Base64.decode(XNBZ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(GGBH_PKG, new Signature(Base64.decode(GGBH_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

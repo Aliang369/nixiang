@@ -1,0 +1,10 @@
+{
+  "template_id": "ggbh",
+  "name": "鬼谷八荒",
+  "package": "com.guigugame.guigubahuang",
+  "source": "Games/GgbhEntry.cpp kGgbh_Features + Games/GgbhMod.h GgbhFeat",
+  "features": [
+    {"feat_num": 1, "name": "GM菜单"},
+    {"feat_num": 2, "name": "加速倍率"}
+  ]
+}

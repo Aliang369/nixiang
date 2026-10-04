@@ -1,0 +1,50 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang______20261004_20261004_220850",
+  "timestamp": "20261004_220850",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "06_dumped/鬼谷八荒/il2cpp",
+      "type": "dir",
+      "size_kib": 173900,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/鬼谷八荒/il2cpp",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261004_20261004_220850/06_dumped/鬼谷八荒/il2cpp"
+    },
+    {
+      "path": "06_dumped/鬼谷八荒/il2cppdump",
+      "type": "dir",
+      "size_kib": 62208,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/鬼谷八荒/il2cppdump",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261004_20261004_220850/06_dumped/鬼谷八荒/il2cppdump"
+    },
+    {
+      "path": "07_patched/鬼谷八荒",
+      "type": "dir",
+      "size_kib": 480,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/鬼谷八荒",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261004_20261004_220850/07_patched/鬼谷八荒"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/libs_ggbh",
+      "type": "dir",
+      "size_kib": 3896,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ggbh",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261004_20261004_220850/mod菜单/starry-mod-menu/libs_ggbh"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/obj_ggbh",
+      "type": "dir",
+      "size_kib": 7448,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_ggbh",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261004_20261004_220850/mod菜单/starry-mod-menu/obj_ggbh"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so",
+      "type": "file",
+      "size_kib": 2140,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261004_20261004_220850/mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so"
+    }
+  ]
+}

@@ -1,0 +1,314 @@
+{
+  "game": "鬼谷八荒",
+  "version": "1.1.329",
+  "notes": "鬼谷八荒（TapTap 渠道官包，Unity IL2CPP）移植星空版。功能集仅两项：① GM 菜单（UISwitchPlayerMenu.get_IsCheatModeEnabled RVA 0x40A4D28 恒真）② 全局加速（Time.get_deltaTime RVA 0x54553E4 内钉 Time.timeScale + Time.set_timeScale RVA 0x5455560 透传）。照斌哥改包 1:1，不做功能扩张。官包无壳：libil2cpp.so / libunity.so / global-metadata.dat 与斌哥改包逐字节一致（瘦壳），RVA 可直接复用。",
+  "params": {
+    "game_id": "ggbh",
+    "package": "com.guigugame.guigubahuang",
+    "label": "鬼谷八荒",
+    "mk": "Android_ggbh.mk",
+    "tag": "Ggbh",
+    "serial": "f9a116a2",
+    "version_code": "329",
+    "min_sdk": "21",
+    "target_sdk": "34",
+    "engine": "Unity IL2CPP",
+    "shell": "无壳（与斌哥瘦壳等价：libil2cpp 142263576 B md5 188c796e6b53b6e520a327f259ca565f / libunity md5 fbaf76f43affdfbf56c0ace0ca0547ed / global-metadata md5 93c74718c98c04ac238ff0eae67d5c42）",
+    "manifest_variant": "androidx.core.app.CoreComponentFactory",
+    "new_dex": "classes2.dex",
+    "orig_sign_md5": "ba61fbe7f5fbb708a43cc4527f2a2a51",
+    "signature_official": "O=guigugame serial=183982C3 sha1 F416BBD009E123E7F59762AF0F0456D53866C097",
+    "base_apk": {
+      "path": "/tmp/ggbh_stock/ggbh_1.1.329_official_from_device.apk",
+      "size": 1678372111,
+      "md5": "f6cc1a4eb063bc0505cb93b68020d714",
+      "note": "用户下载的机上官包（firstInstallTime 2026-10-04 20:31:28）。临时位置；用完即删并登记 10_docs/_state/底包再获取台账.md。若要长期复用，移到 02_apks/鬼谷八荒/鬼谷八荒_1.1.329_taptap_official_from_device.apk 并同步更新本字段与 env.GGBH_BASE_APK。"
+    },
+    "menu_features": [
+      "Category_鬼谷功能",
+      "Toggle_GM菜单",
+      "SeekBar_加速倍率_1_20_1"
+    ],
+    "hook_rvas": {
+      "gmCheat_get_IsCheatModeEnabled": "0x40A4D28",
+      "gmCheat_set_IsCheatModeEnabled_unhooked": "0x40A4DC4",
+      "deltaTime": "0x54553E4",
+      "setTimeScale": "0x5455560"
+    },
+    "starry_so": {
+      "path": "mod菜单/starry-mod-menu/libs_ggbh/arm64-v8a/libstarry_magic.so",
+      "md5_expected": "b333dd6b8f834b1366dc1122ce3da8a3"
+    },
+    "signed_apk": "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-releaseSigned.apk",
+    "unsigned_apk": "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk",
+    "menu_template": null,
+    "conclusion": "待装机验证"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2",
+    "GGBH_BASE_APK": "/tmp/ggbh_stock/ggbh_1.1.329_official_from_device.apk"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "校底包指纹（官包）",
+      "requires": [],
+      "command": "[ -f \"$GGBH_BASE_APK\" ] || { echo \"缺底包 $GGBH_BASE_APK\"; exit 1; }; M=$(md5 -q \"$GGBH_BASE_APK\"); [ \"$M\" = \"f6cc1a4eb063bc0505cb93b68020d714\" ] || { echo \"底包 md5 不符: $M\"; exit 1; }; echo \"底包 ok $M $(stat -f '%z' \"$GGBH_BASE_APK\")\"",
+      "verify": [],
+      "status": "done",
+      "note": "官包无壳、extractNativeLibs=true；禁用任何含壳底包（例如 鬼谷八荒_10.3.apk）。",
+      "done_at": "2026-10-04 20:55:33"
+    },
+    {
+      "id": "anchor",
+      "name": "校验抓点锚点（3 个 hook RVA 的 so 指纹）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "M=$(md5 -q 06_dumped/鬼谷八荒/il2cpp/libil2cpp.so); [ \"$M\" = \"188c796e6b53b6e520a327f259ca565f\" ] || { echo \"libil2cpp 不符: $M\"; exit 1; }; M2=$(md5 -q 06_dumped/鬼谷八荒/il2cpp/global-metadata.dat); [ \"$M2\" = \"93c74718c98c04ac238ff0eae67d5c42\" ] || { echo \"global-metadata 不符: $M2\"; exit 1; }; echo \"锚点 ok（RVA 0x40A4D28 / 0x54553E4 / 0x5455560 可复用）\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "06_dumped/鬼谷八荒/il2cpp/libil2cpp.so"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/鬼谷八荒/斌哥包抓点_20261004.md"
+        }
+      ],
+      "status": "done",
+      "note": "官包与斌哥包 libil2cpp/libunity/global-metadata 逐字节一致 ⇒ 抓点 RVA 直接可用，无需重新差分。\n20261004 收尾清理: /Users/aliang/Documents/nixiang/06_dumped/鬼谷八荒/il2cpp\n20261004 收尾清理: 06_dumped/鬼谷八荒/il2cpp/libil2cpp.so; 原 md5=188c796e6b53b6e520a327f259ca565f",
+      "done_at": "2026-10-04 20:55:34",
+      "artifacts": {
+        "10_docs/鬼谷八荒/斌哥包抓点_20261004.md": {
+          "md5": "aa086859c48e6d76a73f8b3938cb6e82"
+        }
+      }
+    },
+    {
+      "id": "impl_mod",
+      "name": "校验 Mod 源码四件套",
+      "requires": [
+        "anchor"
+      ],
+      "command": "for f in app/src/main/jni/Android_ggbh.mk app/src/main/jni/Games/GgbhMod.h app/src/main/jni/Games/GgbhMod.cpp app/src/main/jni/Games/GgbhEntry.cpp; do [ -f \"mod菜单/starry-mod-menu/$f\" ] || { echo \"缺 $f\"; exit 1; }; done; grep -q 'Toggle_GM菜单' mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhEntry.cpp || { echo 'featureList 缺 Toggle_GM菜单'; exit 1; }; grep -q 'SeekBar_加速倍率_1_20_1' mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhEntry.cpp || { echo 'featureList 缺 SeekBar_加速倍率_1_20_1'; exit 1; }; echo 'Mod 源码 ok'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Android_ggbh.mk"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhEntry.cpp"
+        }
+      ],
+      "status": "done",
+      "preflight": [
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhMod.cpp",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhEntry.cpp",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhMod.h"
+      ],
+      "done_at": "2026-10-04 20:55:34",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_ggbh.mk": {
+          "md5": "3f61318fe17b1731fceeb51d69152efb"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhMod.cpp": {
+          "md5": "bccdde7fa8e17565ae9c4bb30ff8332c"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhEntry.cpp": {
+          "md5": "bb7727216c0fe72289a8cdcff60a0e49"
+        }
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "编译 libstarry_magic.so（ndk-build）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/鬼谷八荒/ggbh_build_so.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "mod菜单/starry-mod-menu/libs_ggbh/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "not_exists",
+          "path": "mod菜单/starry-mod-menu/libs_ggbh/arm64-v8a/libstarry_magic.so",
+          "pattern": "Toggle_GM菜单"
+        },
+        {
+          "type": "not_exists",
+          "path": "mod菜单/starry-mod-menu/libs_ggbh/arm64-v8a/libstarry_magic.so",
+          "pattern": "SeekBar_加速倍率_1_20_1"
+        }
+      ],
+      "status": "done",
+      "preflight": [
+        "04_scripts/鬼谷八荒/ggbh_build_so.sh"
+      ],
+      "done_at": "2026-10-04 20:58:04",
+      "inputs": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Android_ggbh.mk": "3f61318fe17b1731fceeb51d69152efb",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhMod.cpp": "5d78461d13b9b230cd10e7fd5442f683",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/GgbhEntry.cpp": "bb7727216c0fe72289a8cdcff60a0e49"
+      },
+      "note": "20261004 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ggbh\n20261004 收尾清理: mod菜单/starry-mod-menu/libs_ggbh/arm64-v8a/libstarry_magic.so; 原 md5=b333dd6b8f834b1366dc1122ce3da8a3"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（官包零改动 + Manifest + classes2.dex + so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_ggbh_1.1.329.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "07_patched/鬼谷八荒/surgical/AndroidManifest.xml"
+        },
+        {
+          "type": "not_exists",
+          "path": "07_patched/鬼谷八荒/surgical/classes2.dex"
+        }
+      ],
+      "status": "done",
+      "preflight": [
+        "mod菜单/starry-mod-menu/scripts/surgical_ggbh_1.1.329.sh"
+      ],
+      "note": "脚本内已断言：官包关键条目（classes.dex/resources.arsc/libil2cpp/libunity/libmain/lib_burst_generated/libbindings-csharp/libtapsdkcore/global-metadata）md5 与官包一致 + 全部未改动条目 sha256 不变。\n20261004 收尾清理: /Users/aliang/Documents/nixiang/07_patched/鬼谷八荒\n20261004 收尾清理: 07_patched/鬼谷八荒/surgical/AndroidManifest.xml; 原 md5=36ac8dc0b336e7fb074b6f40e1e75e78\n20261004 收尾清理: 07_patched/鬼谷八荒/surgical/classes2.dex; 原 md5=d8bb34fb74ebcb258dccfe10d3f9724c",
+      "done_at": "2026-10-04 21:00:16",
+      "artifacts": {
+        "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk": {
+          "md5": "9ae89479ee189447959191e93bca0eef"
+        }
+      }
+    },
+    {
+      "id": "sign",
+      "name": "对齐 + 签名（星光 release key）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/鬼谷八荒/ggbh_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "preflight": [
+        "04_scripts/鬼谷八荒/ggbh_sign.sh"
+      ],
+      "done_at": "2026-10-04 21:02:05",
+      "artifacts": {
+        "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-releaseSigned.apk": {
+          "md5": "649e18117b735215e5a048f8ad53fe1b"
+        }
+      },
+      "inputs": {
+        "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk": "9ae89479ee189447959191e93bca0eef"
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "设备就绪（serial/root/包路径）",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/鬼谷八荒/device_ready_ggbh.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/鬼谷八荒/.device_serial"
+        }
+      ],
+      "status": "done",
+      "preflight": [
+        "04_scripts/鬼谷八荒/device_ready_ggbh.sh"
+      ],
+      "done_at": "2026-10-04 21:02:39",
+      "artifacts": {
+        "04_scripts/鬼谷八荒/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        }
+      },
+      "inputs": {
+        "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-releaseSigned.apk": "649e18117b735215e5a048f8ad53fe1b"
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机（pm install -r -d + 官方署名回灌校验）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/鬼谷八荒/ggbh_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/鬼谷八荒/.install_ok"
+        }
+      ],
+      "status": "done",
+      "preflight": [
+        "04_scripts/鬼谷八荒/ggbh_install.sh"
+      ],
+      "note": "已装斌哥改包 ⇒ 签名不同必须卸载重装；禁用自动卸载，需 GGBH_ALLOW_UNINSTALL=1 显式授权。",
+      "done_at": "2026-10-04 21:55:03",
+      "artifacts": {
+        "04_scripts/鬼谷八荒/.install_ok": {
+          "md5": "7679b00a58a13633c9af3336aa25fbec"
+        }
+      },
+      "inputs": {
+        "04_scripts/鬼谷八荒/.device_serial": "0bc47570b06495af1a544933783b7037"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "留档与台账（删底包 + 登记）",
+      "requires": [
+        "install"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_stage.sh\" 2>/dev/null || echo '（archive_stage.sh 不适用，手工留档）'; echo '留档清单：10_docs/鬼谷八荒/{硬约束.md,路线锁定.md,斌哥包抓点_20261004.md,移植交付_1.1.329.md}'; test -f 10_docs/鬼谷八荒/移植交付_1.1.329.md || { echo '缺交付文档 10_docs/鬼谷八荒/移植交付_1.1.329.md'; exit 1; }; echo '留档 ok（底包删除需人工确认：/tmp/ggbh_stock/）'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/鬼谷八荒/移植交付_1.1.329.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/鬼谷八荒/路线锁定.md"
+        }
+      ],
+      "status": "done",
+      "note": "底包（可再生输入）用完即删，并在 10_docs/_state/底包再获取台账.md 登记来源/大小/md5/用途。",
+      "done_at": "2026-10-04 21:55:28",
+      "artifacts": {
+        "10_docs/鬼谷八荒/移植交付_1.1.329.md": {
+          "md5": "693fc8f1e4a7e065e42fb4c1309e416e"
+        },
+        "10_docs/鬼谷八荒/路线锁定.md": {
+          "md5": "3ed93d93a6d6e54ae599e98e1d12e222"
+        }
+      },
+      "inputs": {
+        "04_scripts/鬼谷八荒/.install_ok": "7679b00a58a13633c9af3336aa25fbec"
+      }
+    }
+  ]
+}
