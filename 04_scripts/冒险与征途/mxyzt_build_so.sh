@@ -84,7 +84,12 @@ BUILD_JNI="$JNI"; BUILD_OUT="$OBJ"; BUILD_LIBS="$OUT_LIBS"; STAGED=0
 # 注意 1：本机 Git Bash 的 grep 不接受 `[^ -~]`（Invalid regular expression）→ 用 tr 数非 ASCII 字节
 # 注意 2：中文在 $STARRY_SRC（mod菜单）而不在 $NIXIANG（仓库根是 ASCII）→ 必须测 $JNI
 if [ "$(printf '%s' "$JNI" | LC_ALL=C tr -d '\000-\177' | wc -c | tr -d ' ')" != "0" ]; then
-  STAGE_ROOT="$(cygpath -u "${LOCALAPPDATA:-/tmp}")/Temp/mxyzt_build"
+  # 双机：win 用 cygpath 把 %LOCALAPPDATA% 转 POSIX；mac/linux 直接用 /tmp（无 cygpath）。
+  if command -v cygpath >/dev/null 2>&1; then
+    STAGE_ROOT="$(cygpath -u "${LOCALAPPDATA:-/tmp}")/Temp/mxyzt_build"
+  else
+    STAGE_ROOT="/tmp/mxyzt_build"
+  fi
   BUILD_JNI="$STAGE_ROOT/jni"; BUILD_OUT="$STAGE_ROOT/obj"; BUILD_LIBS="$STAGE_ROOT/libs"
   STAGED=1
 fi

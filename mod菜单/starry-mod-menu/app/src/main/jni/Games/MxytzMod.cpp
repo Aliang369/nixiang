@@ -1554,20 +1554,116 @@ static void* g_interpOrig = nullptr;
 static std::atomic<bool> g_interpHooked{false};
 static std::atomic<uint32_t> g_interpCalls{0};  // v27：**慢路径**调用计数（不再是「每次调用」都自增）
 
-/** libil2cpp.so 加载基址：取 /proc/self/maps 中 offset=0 的那段（最小者）。 */
+/* ------------------------------------------------------------
+ * libil2cpp.so 加载基址（v45 修复：真机上同名双映射必须选「真身」）
+ * ------------------------------------------------------------
+ * ★ 2026-10-04 真机 (OPD2404 / ColorOS / arm64, com.mxyzt.gzmy 1.5.9) 血证：
+ *   `grep libil2cpp /proc/<pid>/maps` 出现**两份同 inode（fe:48 405147）映射**：
+ *     影子 A: 0x73268f3000  r--p off 0x0 + 两处孤立 r-xp 单页；**没有任何 rw-p 段**
+ *     真身 B: 0x7432c17000  r--p off 0x0 → r-xp off 0x1d73000 → r--p → **rw-p**
+ *   旧实现取「off==0 且地址最小」⇒ 恒定命中影子 A。在那里 Dobby 挂点照样 rc=0，
+ *   但 A 是**从不执行的副本**（游戏实际跑 B，B 尾部紧跟 [anon:.bss]）⇒ 解释器入口
+ *   hook 20 分钟 0 命中：`[mxyzt] interp learn 进行中 slow=0 已登记=0/14` +
+ *   `STATS ... 命中 打怪=0 无敌=0 技能=0 免广告=0` ⇒ 四项功能全体失效；免广告
+ *   开开关后还「像断网一样卡住」。
+ *   对照 Frida 17.16.4 权威读数（`Process.enumerateModules()`）：
+ *     `MOD libil2cpp.so base=0x7432c17000 size=89321472` = **真身 B**，
+ *   影子 A 根本不在 linker 模块表里。
+ *   win/MuMu 上只有单份映射 ⇒ 「win 做完在模拟器测都有用」完全自洽。
+ *
+ * ★ v45 判据（为什么是「同一映像组里出现 rw-p」而不是别的）：
+ *   真身必须由 linker 映射出**可写数据段**（全局变量/重定位/BSS，本包 rw-p ≈ 2780KB）；
+ *   影子副本是给扫描/反调用用的整段只读映像，**一条 rw-p 都没有**（实测 A 只有
+ *   `73288f3000-732dbef000 r--p 00000000` 一行、覆盖全文件）。
+ *   注意 A 与 B 的 `dev:inode` **完全相同**（fe:48 594484），所以不能用 inode 区分；
+ *   也不能取 rw-p 那段的**起点**当基址 —— rw-p 段是偏移 0x5045000 的第三个 LOAD，
+ *   起点不是模块基址（v45 初版就栽在这：base=0x7437700000 导致 entry 落到模块外、
+ *   rd=0、hook 写飞）。正确做法：按「同 dev:inode 且地址首尾相接」切出每份映像组，
+ *   在**含 rw-p 的那一组里取 off==0 那行的起点**才是模块基址。
+ *
+ * ⚠️ 不要改成 dl_iterate_phdr / xdl_info / dlsym 拿 dli_fbase 来「顺便修好」：
+ *   InstallInterpHook 跑在 mod 启动早期（此时游戏侧 libil2cpp 仍在热更/加载中），
+ *   进 linker 会抢 g_dl_mutex —— 有死锁风险，而 /proc/self/maps 解析是无锁的。
+ */
 static uintptr_t LibBaseFromMaps(const char* needle) {
     FILE* f = fopen("/proc/self/maps", "r");
     if (!f) return 0;
-    uintptr_t best = 0;
+    const size_t nlen = strlen(needle);
     char line[512];
+    uintptr_t best = 0;       // 含 rw-p 的那份映像里 off==0 的起点 = 模块基址
+    size_t bestWr = 0;        // 该组 rw-p 总字节数（多组时取最大者，更稳）
+    uintptr_t firstOff0 = 0;  // 兜底：第一份 off==0 映射
+
+    /* 当前「映像组」（同一份 so 的全部连续映射）累积状态 */
+    char gDev[24] = {0}, gIno[24] = {0};
+    uintptr_t gEnd = 0, gOff0 = 0, gFirst = 0;
+    size_t gWr = 0;
+    bool gHasWr = false, gOpen = false;
+
+    auto flushGroup = [&]() {
+        if (gOpen && gHasWr && gWr > bestWr) {
+            best = gOff0 ? gOff0 : gFirst;
+            bestWr = gWr;
+        }
+        gOpen = false; gHasWr = false; gWr = 0; gOff0 = 0; gFirst = 0; gEnd = 0;
+        gDev[0] = '\0'; gIno[0] = '\0';
+    };
+
     while (fgets(line, sizeof(line), f)) {
-        if (!strstr(line, needle)) continue;
+        char* p = strstr(line, needle);
+        if (!p) continue;
+        if (p[nlen] != '\n' && p[nlen] != '\0') continue;  // 后面还有字符 → 非同名 so
         unsigned long s = 0, e = 0, off = 0;
-        if (sscanf(line, "%lx-%lx %*s %lx", &s, &e, &off) != 3) continue;
-        if (off == 0 && (best == 0 || (uintptr_t)s < best)) best = (uintptr_t)s;
+        char perms[8] = {0}, dev[24] = {0}, ino[24] = {0};
+        if (sscanf(line, "%lx-%lx %7s %lx %23s %23s", &s, &e, perms, &off, dev, ino) != 6) continue;
+        if (off == 0 && firstOff0 == 0) firstOff0 = (uintptr_t)s;
+
+        // 同 dev:inode 且地址首尾相接 ⇒ 仍属同一份映像；否则开新组
+        const bool sameGroup = gOpen && strcmp(dev, gDev) == 0 && strcmp(ino, gIno) == 0 &&
+                               (uintptr_t)s == gEnd;
+        if (!sameGroup) {
+            flushGroup();
+            gOpen = true;
+            gFirst = (uintptr_t)s;
+            snprintf(gDev, sizeof(gDev), "%s", dev);
+            snprintf(gIno, sizeof(gIno), "%s", ino);
+        }
+        gEnd = (uintptr_t)e;
+        if (off == 0 && gOff0 == 0) gOff0 = (uintptr_t)s;
+        if (perms[0] == 'r' && perms[1] == 'w') { gHasWr = true; gWr += (size_t)(e - s); }
+    }
+    flushGroup();
+    fclose(f);
+    if (best) return best;
+    return firstOff0;  // 理论上到不了：真身必然有 rw-p
+}
+
+/** libil2cpp.so 基址（进程内缓存，只解析一次）。 */
+static uintptr_t LibBaseResolve() {
+    static std::atomic<uintptr_t> s_base{0};
+    uintptr_t b = s_base.load(std::memory_order_relaxed);
+    if (b) return b;
+    b = LibBaseFromMaps("libil2cpp.so");
+    if (b) s_base.store(b, std::memory_order_relaxed);
+    return b;
+}
+
+/* v45 取证：把该 so 的**每一份**映射逐行打到 logcat，用来一眼分辨「真身/影子」。
+ * 只在 InstallInterpHook 里打一次，不在热路径。判真身看该行有没有 rw-p。 */
+static void LogLibMaps(const char* needle) {
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) return;
+    const size_t nlen = strlen(needle);
+    char line[512];
+    int i = 0;
+    while (fgets(line, sizeof(line), f)) {
+        char* p = strstr(line, needle);
+        if (!p) continue;
+        if (p[nlen] != '\n' && p[nlen] != '\0') continue;
+        line[strcspn(line, "\n")] = '\0';
+        LOGI(TPL_LOG " maps[%d] %s", i++, line);
     }
     fclose(f);
-    return best;
 }
 
 typedef void* (*InterpFn)(void*, void*, void*);
@@ -3329,7 +3425,11 @@ static void InstallPushFrameHook(const uintptr_t base) {
 static void InstallInterpHook() {
     static std::atomic<bool> s_done{false};
     if (s_done.exchange(true)) return;
-    const uintptr_t base = LibBaseFromMaps("libil2cpp.so");
+    /* ★v45：改走 LibBaseResolve（「最大 rw-p」判据）。旧版是 LibBaseFromMaps 的
+     * 「off==0 且地址最小」，在真机上恒定命中只读影子副本 ⇒ 四项功能全灭。
+     * LogLibMaps 把每一份映射摊开打日志，便于对照 Frida 的模块表验收。 */
+    LogLibMaps("libil2cpp.so");
+    const uintptr_t base = LibBaseResolve();
     void* entry = base ? (void*)(base + kInterpEntryRva) : nullptr;
     const int rd = (entry && Il2Cpp::IsReadableRange((uintptr_t)entry, 16)) ? 1 : 0;
     LOGI(TPL_LOG " interp base=%p entry=%p rd=%d rva=0x%zx", (void*)base, entry, rd,
