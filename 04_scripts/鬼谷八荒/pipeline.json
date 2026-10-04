@@ -1,7 +1,7 @@
 {
   "game": "鬼谷八荒",
   "version": "1.1.329",
-  "notes": "鬼谷八荒（TapTap 渠道官包，Unity IL2CPP）移植星空版。功能集仅两项：① GM 菜单（UISwitchPlayerMenu.get_IsCheatModeEnabled RVA 0x40A4D28 恒真）② 全局加速（Time.get_deltaTime RVA 0x54553E4 内钉 Time.timeScale + Time.set_timeScale RVA 0x5455560 透传）。照斌哥改包 1:1，不做功能扩张。官包无壳：libil2cpp.so / libunity.so / global-metadata.dat 与斌哥改包逐字节一致（瘦壳），RVA 可直接复用。",
+  "notes": "鬼谷八荒（TapTap 渠道官包，Unity IL2CPP）移植星空版。功能集仅两项：① GM 菜单（UISwitchPlayerMenu.get_IsCheatModeEnabled RVA 0x40A4D28 恒真）② 全局加速（Time.get_deltaTime RVA 0x54553E4 内钉 Time.timeScale + Time.set_timeScale RVA 0x5455560 透传）。照斌哥改包 1:1，不做功能扩张。官包无壳：libil2cpp.so / libunity.so / global-metadata.dat 与斌哥改包逐字节一致（瘦壳），RVA 可直接复用。 2026-10-04 收官（用户口令 m01040）：唯一正式包 08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-releaseSigned.apk（1,683,099,111 B md5 649e18117b735215e5a048f8ad53fe1b sha256 af56f2dbc76012c81b90da68bc76514835d03bf9d37a97c9214faf10f1870ce1）+ delivery_20261004/（icon 512/144 + 菜单模板，模板 2 项）；08 裁剪清单 10_docs/鬼谷八荒/正式包裁剪清单_20261004.json，滚动物隔离清单 10_docs/鬼谷八荒/收尾清理清单_20261004{,_jnilibs}.json（8 条，Trash 隔离）；用户真机 L3 验收通过。主提交 0ca05e68。**本管线无 archive_close 阶段 ⇒ 无收口提交（降级路径）**。",
   "params": {
     "game_id": "ggbh",
     "package": "com.guigugame.guigubahuang",
@@ -296,7 +296,7 @@
         }
       ],
       "status": "done",
-      "note": "底包（可再生输入）用完即删，并在 10_docs/_state/底包再获取台账.md 登记来源/大小/md5/用途。",
+      "note": "（2026-10-04 收官）正式包已裁剪为唯一 APK 并出交付目录；滚动物清理后本阶段 verify 只指向文档，仍 done。底包 /tmp/ggbh_stock/ggbh_1.1.329_official_from_device.apk 留/删待用户答复（本轮未删）。",
       "done_at": "2026-10-04 21:55:28",
       "artifacts": {
         "10_docs/鬼谷八荒/移植交付_1.1.329.md": {
