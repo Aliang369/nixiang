@@ -1098,6 +1098,41 @@ static void* Hooked_LocalDamage(void* a0, void* a1, void* a2, void* a3, void* a4
     return orig ? orig(a0, a1, a2, a3, a4, a5, a6, a7) : nullptr;
 }
 
+/* ============================================================================
+ * ★v46 免广告代回调：**待办槽 + 帧外执行**（声明放这里的原因：路径A 的代码就在下面几行）
+ *
+ * 真机血证（`/data/tombstones/tombstone_11`，pid 31958 / tid 32007 UnityMain，560 帧）：
+ *   旧版有**两条互不知情的代回调路径**，且都在「我们自己 hook 的帧内」当场调托管方法：
+ *     路径A `Hooked_PlayADVideo2`（静态挂点 `kAdSlots` 的 `PlayAD2`，`required=true`）
+ *             → `CallOnAdResult` 拿 `g_onAdResultMP` 方法指针**直调**；
+ *     路径B `ApplyNoAdV43`（解释器入口分发 `kKinds` 的 `K_PLAYAD`）→ `api.runtime_invoke`。
+ *   一次广告请求因此发**两次** `OnADVideoResult`，而回调里游戏再触发广告请求时，
+ *   就与「仍在栈上的我们」互相递归 ⇒ UnityMain 栈 8MB 被涨破
+ *   （`Fatal signal 11 SIGSEGV SEGV_ACCERR fault addr 0x743401ffc8`，sp 距栈底仅 0x70 字节）。
+ *
+ * 现在：两条路径**只往同一个槽登记**，由 `DrainPendingAdV43` 在下一次解释器入口
+ * 取走一次、执行一次（覆盖式登记 ⇒ 天然的重复合并）。
+ * ============================================================================ */
+static std::atomic<uint32_t> g_pendAdReady{0};
+static std::atomic<int32_t> g_pendAdId{0};
+static std::atomic<uint64_t> g_pendAdUuid{0};
+static std::atomic<uint32_t> g_pendAdQueued{0};
+static std::atomic<uint64_t> g_adV43FuseUntilMs{0};
+static constexpr uint64_t kAdV43FuseCooldownMs = 30000ull;
+static thread_local int t_modInvoke = 0;  // >0 = 本线程正在执行 mod 主动发起的托管调用
+static bool Il2CppU64OfStringV43(void* s, uint64_t* out);  // 定义见 §⑦c（免广告 A2 段）
+
+/** 登记一次免广告代回调（覆盖式：同一时刻最多一个待办）。`src` = 哪条路径登记的。 */
+static void EnqueueNoAdV43(int32_t adId, uint64_t uuid, const char* src) {
+    g_pendAdId.store(adId, std::memory_order_relaxed);
+    g_pendAdUuid.store(uuid, std::memory_order_relaxed);
+    g_pendAdReady.store(1, std::memory_order_release);
+    const uint32_t q = g_pendAdQueued.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (q <= 10)
+        LOGI(TPL_LOG " AD43 登记待办#%u adid=%d uuid=%llu ← %s（改到帧外代回调）", q, adId,
+             (unsigned long long)uuid, src);
+}
+
 // ============================================================
 // ⑦ 广告路径（#4 免广告）：客户端放行 + 强制成功结果
 //    说明：服务端 start_watch_ad_req / finish_watch_ad_req 校验风险见文档 §10
@@ -1167,10 +1202,10 @@ static void Hooked_AdArg0TrueB(void* a0, void* a1, void* a2, void* a3, void* a4,
     if (orig) orig(a0, a1, a2, a3, a4, a5, a6, a7);
 }
 
-// —— ⑦b 主路径：MiaoYueSDKProxy::PlayADVideo(int ad_id, string uuid) argc=2 ——
-// 免广告开 → 不弹广告，直接以「成功」回调 DS_Advertising::OnADVideoResult(true, adid, uuid)，
-// 让 finish_watch_ad_req 照常带上 uuid（start 包必须真发，uuid 由 start_watch_ad_rsp 下发）。
-static void CallOnAdResult(void* adId, void* uuid) {
+// —— ⑦b 路径A：MiaoYueSDKProxy::PlayADVideo(int ad_id, string uuid) argc=2 ——
+// ★v46 起**不再使用**：拿方法指针在 hook 帧内直调托管方法，是 tombstone_11 递归放大的来源之一。
+// 保留仅为留证（真要复用必须 `t_modInvoke++/--` 包住）。
+[[maybe_unused]] static void CallOnAdResult(void* adId, void* uuid) {
     if (!g_onAdResultMP) return;
     AdVoid_t fn = reinterpret_cast<AdVoid_t>(g_onAdResultMP);
     fn(reinterpret_cast<void*>(1), adId, uuid, nullptr, nullptr, nullptr, nullptr, nullptr);
@@ -1185,10 +1220,17 @@ static void Hooked_PlayADVideo2(void* a0, void* a1, void* a2, void* a3, void* a4
     AdLogOnce("playad", g_adSeen.fetch_add(1, std::memory_order_relaxed));
     if (g_noAd.load(std::memory_order_relaxed)) {
         g_hitAd.fetch_add(1, std::memory_order_relaxed);
-        DBGLOG(TPL_LOG " AD bypass PlayADVideo adid=%p uuid=%p result=%p", adId, uuid,
-             g_onAdResultMP);
-        CallOnAdResult(adId, uuid);
-        return;  // 不调 orig = 不弹真实广告
+        uint64_t u = 0;
+        const bool parsed = Il2CppU64OfStringV43(uuid, &u);
+        DBGLOG(TPL_LOG " AD bypass PlayADVideo adid=%p uuid=%p 解析=%d", adId, uuid, parsed ? 1 : 0);
+        /* ★v46：只登记待办，帧外由 `DrainPendingAdV43` 统一发**一次**回调 —— 不再当场直调。 */
+        if (parsed) {
+            EnqueueNoAdV43((int32_t)(intptr_t)adId, u, "playad2");
+            return;  // 不调 orig = 不弹真实广告
+        }
+        /* uuid 解析不出来 ⇒ 登记出去的 uuid=0 服务端不认（玩家会卡在「等广告结果」），
+         *  宁可降级成「照常出真广告」也不要把玩法卡死。 */
+        LOGW(TPL_LOG " AD43 playad2 uuid 解析失败 → 降级出处真广告 a0=%p a1=%p a2=%p", a0, a1, a2);
     }
     if (orig) orig(a0, a1, a2, a3, a4, a5, a6, a7);
 }
@@ -1819,6 +1861,50 @@ static std::atomic<uint32_t> g_nestLogged{0};
 static std::atomic<uint32_t> g_interestLogged{0};
 static thread_local int t_interpDepth = 0;
 
+/* ============================================================================
+ * ★v46 重入闸 —— 真机闪退（免广告开启后玩法进不去 + SIGSEGV）的直接对策。
+ *
+ * 血证：`/data/tombstones/tombstone_11`（pid 31958 / tid 32007 `UnityMain`）
+ *   `Fatal signal 11 (SIGSEGV), code 2 (SEGV_ACCERR), fault addr 0x743401ffc8`
+ *   `Cause: stack pointer is not in a rw map; likely due to stack overflow.`
+ *   `pc 0x74364a77c0` − base `0x7434428000` = RVA `0x207F7C0` = 我们 DobbyHook 的
+ *   解释器入口 `0x207F798` + 0x28；崩溃线程共 **560 帧**，`#02 = libstarry_magic.so+0x199a8`
+ *   （我们的桩），其后 `libunity.so` 的 `0x74fa64` / `0x74f5a0` 严格交替 ~275 组；
+ *   栈内存里能读到 ASCII `"eoResult"` ⇒ 崩的就是 `OnADVideoResult` 这条链路。
+ *
+ * 机理：`ApplyNoAdV43` 在解释器帧内 `runtime_invoke(OnADVideoResult)`，被调方又走到
+ *   `PlayADVideo` ⇒ 再来一次代回调 ⇒ 两个方向互相递归，把 8MB 线程栈吃爆。
+ *
+ * 三道闸：
+ *   ① `t_modInvoke` —— mod **主动发起**的托管调用执行期间，任何派发一律跳过（纯透传）。
+ *      这是唯一真正必需的闸：它把「我们自己引发的再入」和「游戏正常的托管→托管嵌套」区分开。
+ *      后者**绝不能拦** —— `Hurt`/`DoAttack` 本来就出现在嵌套深度 >0 处，拦了 #1/#2/#3 全哑
+ *      （v30 已经踩过一次同型坑：`allowWrite=false` 让二级挂点什么都干不了）。
+ *   ② `t_interpDepth` —— 只统计**我们自己派发期间**的嵌套（进 `InterpDispatch` 前 +1，
+ *      调 `orig` **之前**就已 -1）⇒ 合法游戏嵌套永远看到 0，爬升只可能来自①漏网的再入，
+ *      所以它只作硬上限兜底（`kInterpMaxDepth`），不是常规闸。
+ *   ③ 免广告改**帧外执行**：`ApplyNoAdV43` 只登记待办，`DrainPendingAdV43` 在下一次解释器
+ *      入口（上一次派发的帧已退干净）才 invoke ⇒ 从根上不再出现「帧内 invoke 帧」。
+ * ============================================================================ */
+/* 注：`t_modInvoke` 的声明已上移到 ⑦ 广告路径之前（路径A `Hooked_PlayADVideo2` 也要用）。 */
+static const int kInterpMaxDepth = 24;    // 闸②的硬上限（正常路径永远到不了）
+static std::atomic<uint32_t> g_reentrySkip{0};  // 被闸拦下的派发次数（STATS 可见）
+
+struct InterpGateGuard {
+    bool pass;
+    InterpGateGuard() : pass(false) {
+        if (t_interpDepth < kInterpMaxDepth) {
+            t_interpDepth++;
+            pass = true;
+        }
+    }
+    ~InterpGateGuard() {
+        if (pass) t_interpDepth--;
+    }
+    InterpGateGuard(const InterpGateGuard&) = delete;
+    InterpGateGuard& operator=(const InterpGateGuard&) = delete;
+};
+
 static inline uintptr_t RawWord(const void* p, size_t off) {
     return *reinterpret_cast<const uintptr_t*>(reinterpret_cast<const char*>(p) + off);
 }
@@ -2240,8 +2326,14 @@ static std::atomic<uint32_t> g_adRegMaskV43{0};  // 预登记进度位（1/2/4/8
 static std::atomic<uint32_t> g_adRegTryV43{0};
 static std::atomic<uint32_t> g_adV43Seen{0};
 static std::atomic<uint32_t> g_adV43Done{0};
-static std::atomic<uint32_t> g_adV43Fuse{0};
+static std::atomic<uint32_t> g_adV43Fuse{0};        // 熔断**次数**（只作 STATS 可见性，不再永久关死）
 static constexpr uint32_t kAdV43MaxDone = 30;
+/* ★v46：熔断从「一次异常永久停用」改为「降级 30 秒自动重试」。
+ *  旧语义（`g_adV43Fuse.store(1)` 之后 `return`）一旦触发就把整条广告链路永久关死，
+ *  游戏侧再也等不到 `OnADVideoResult` ⇒ 玩家看到的是「点了广告玩法进不去」，
+ *  与「栈溢出闪退」是同一功能的两张面孔。
+ *  注：`g_adV43FuseUntilMs` / `kAdV43FuseCooldownMs` / 待办槽（`g_pendAd*`）与 `t_modInvoke`
+ *  的声明已上移到 ⑦ 广告路径之前 —— 路径A `Hooked_PlayADVideo2` 也要用它们。 */
 
 /** 读 Il2Cpp `String`（`klass|monitor|len@+0x10|utf16@+0x14`）转 uint64；非纯数字 → false。 */
 static bool Il2CppU64OfStringV43(void* s, uint64_t* out) {
@@ -2262,10 +2354,14 @@ static bool Il2CppU64OfStringV43(void* s, uint64_t* out) {
     return true;
 }
 
-/** A2 本体：`MiaoYueSDKProxy::PlayADVideo(int adid, string uuid)` 帧上代厂商 SDK 回调「成功」。
- *  走 `il2cpp_runtime_invoke`（本项目已实测：热更方法可用 runtime_invoke 直调，见 `CdInvoke` 注释），
- *  实参 = **声明参数**（`this` 单独传，与 `CdInvoke` 完全一致的口径）。
- *  熔断：一次异常即永久停用；累计成功回调上限 `kAdV43MaxDone`。 */
+/** A2 本体 —— ★v46 语义变更：这里**只登记待办，不再 invoke**。
+ *  目标帧：`MiaoYueSDKProxy::PlayADVideo(int adid, string uuid)`；把「该叫什么回调」记进待办槽，
+ *  真正的 `runtime_invoke` 由 `DrainPendingAdV43` 在**帧外**执行。
+ *  真机血证（`/data/tombstones/tombstone_11`，pid 31958 / tid 32007 UnityMain）：
+ *  旧版在这一帧内直接 `il2cpp_runtime_invoke(OnADVideoResult,…)`，被调方又走到 `PlayADVideo`
+ *  ⇒ 两个方向互相递归，UnityMain 560 帧把栈涨破 8MB 保护页
+ *  （`Fatal signal 11 SIGSEGV SEGV_ACCERR fault addr 0x743401ffc8`，sp 距栈顶仅 0x70 字节）。
+ *  熔断：一次异常降级 30 秒（不再永久停用整条链路）；累计成功回调上限 `kAdV43MaxDone`。 */
 static void ApplyNoAdV43(void* a1, uint8_t argBase) {
     if (!a1) return;
     /* 冷路径才允许做可读性检查（走 maps 快照，慢）：两个实参槽必须都在可读映射内。 */
@@ -2280,10 +2376,26 @@ static void ApplyNoAdV43(void* a1, uint8_t argBase) {
         LOGI(TPL_LOG " AD43 PlayADVideo 免广告=%d adid=%d uuidStr=%p uuid=%llu 解析=%d mi=%p",
              on ? 1 : 0, adId, ustr, (unsigned long long)uuid, parsed ? 1 : 0, g_miOnAdResultV43);
     if (!on || !parsed || !g_miOnAdResultV43) return;
-    if (g_adV43Fuse.load(std::memory_order_relaxed) != 0) return;
+    if (g_adV43FuseUntilMs.load(std::memory_order_relaxed) > NowMs()) return;
+    if (g_adV43Done.load(std::memory_order_relaxed) >= kAdV43MaxDone) return;
+    /* ★v46：登记待办（不 invoke）。同批多次 `PlayADVideo` 会被合并成一次回调 ——
+     *  这既省掉重复 invoke，也直接砍掉「一次调用变两次」的递归放大。 */
+    EnqueueNoAdV43(adId, uuid, "interp");
+}
+
+/** ★v46：免广告代回调的**帧外**执行体。
+ *  调用点 = 解释器入口/压帧桩（见 `Hooked_Interp` / `Hooked_PushFrame`），且必须在
+ *  `t_modInvoke == 0` 时执行 —— invoke 期间置位的 `t_modInvoke` 会让被调方内部的解释器入口
+ *  一律跳过派发，递归链在此断掉。
+ *  取待办用 `exchange(0, acq_rel)`：多线程同时进来也只有一个能拿到，且天然合并重复登记。 */
+static void DrainPendingAdV43() {
+    if (t_modInvoke != 0) return;  // mod 主动发起的托管调用里绝不再入
+    if (g_pendAdReady.exchange(0, std::memory_order_acq_rel) == 0) return;
+    if (!g_noAd.load(std::memory_order_relaxed)) return;
+    if (g_adV43FuseUntilMs.load(std::memory_order_relaxed) > NowMs()) return;
     if (g_adV43Done.load(std::memory_order_relaxed) >= kAdV43MaxDone) return;
     auto& api = GetApi();
-    if (!api.runtime_invoke) return;
+    if (!api.runtime_invoke || !g_miOnAdResultV43) return;
     /* 被调方是实例方法 ⇒ `this` = `DataService::advertising`（静态字段，与 `OnGetADInfoRsp` 同源）。 */
     if (!g_dataSvcKlassV43) g_dataSvcKlassV43 = FindClassAnywhere("DataService");
     void* adv = g_dataSvcKlassV43 ? api.StaticRefField(g_dataSvcKlassV43, "advertising") : nullptr;
@@ -2291,21 +2403,27 @@ static void ApplyNoAdV43(void* a1, uint8_t argBase) {
         LOGW(TPL_LOG " AD43 取不到 DataService::advertising klass=%p", g_dataSvcKlassV43);
         return;
     }
+    const int32_t adId = g_pendAdId.load(std::memory_order_relaxed);
+    const uint64_t uuid = g_pendAdUuid.load(std::memory_order_relaxed);
     uint8_t ret = 1;  // bool ret = true ⇒ cmd 2762 的 result = 0（服务端认定「看完了」）
     int32_t aid = adId;
     uint64_t uid = uuid;
     void* args[3] = {&ret, &aid, &uid};
     void* exc = nullptr;
+    t_modInvoke++;
     api.runtime_invoke(g_miOnAdResultV43, adv, args, &exc);
+    t_modInvoke--;
     if (exc) {
-        g_adV43Fuse.store(1, std::memory_order_relaxed);
-        LOGW(TPL_LOG " AD43 invoke 抛异常 → 永久熔断（不再碰这条链路）");
+        g_adV43Fuse.fetch_add(1, std::memory_order_relaxed);
+        g_adV43FuseUntilMs.store(NowMs() + kAdV43FuseCooldownMs, std::memory_order_relaxed);
+        LOGW(TPL_LOG " AD43 invoke 抛异常 → 熔断降级 %llu ms（到期自动重试，不再永久关死）",
+             (unsigned long long)kAdV43FuseCooldownMs);
         return;
     }
     const uint32_t k = g_adV43Done.fetch_add(1, std::memory_order_relaxed) + 1;
-    if (k <= 10)
+    if (k <= 10 || (k % 10) == 0)
         LOGI(TPL_LOG
-             " AD43 ★已代回调 OnADVideoResult(true,%d,%llu)★ 第%u次（不出画也照发 cmd2762，服务端发奖）",
+             " AD43 ★已代回调 OnADVideoResult(true,%d,%llu)★ 第%u次（帧外，不出画也照发 cmd2762）",
              adId, (unsigned long long)uuid, k);
 }
 
@@ -3268,8 +3386,25 @@ static void InterpDispatch(void* a0, void* a1, void* a2, bool allowWrite) {
  *  ⚠️ 不要在这里碰 `a1`（v26g 血证：入口热路径解 a1 → SIGSEGV 崩在 libstarry_magic.so+0x1a338）；
  *     实参只在 `InterpFire`（身份已确认为目标方法）里碰。 */
 static void* Hooked_Interp(void* a0, void* a1, void* a2) {
-    if (a0) InterpDispatch(a0, a1, a2, /*allowWrite=*/true);
-    return ((InterpFn)g_interpOrig)(a0, a1, a2);
+    /* ★v46：闸①`t_modInvoke`（mod 自己发起的托管调用里绝不再派发）+ 闸②`t_interpDepth` 硬上限。
+     *  注意 `InterpGateGuard` 的作用域**只包住 `InterpDispatch`** —— 调 `orig` 之前计数就已归零，
+     *  所以游戏正常的托管→托管嵌套（`Hurt`/`DoAttack` 就在那种深度上）看到的永远是 0，不受影响。 */
+    if (t_modInvoke != 0) {
+        g_reentrySkip.fetch_add(1, std::memory_order_relaxed);
+    } else {
+        InterpGateGuard gate;
+        if (!gate.pass) {
+            g_reentrySkip.fetch_add(1, std::memory_order_relaxed);
+        } else if (a0) {
+            InterpDispatch(a0, a1, a2, /*allowWrite=*/true);
+        }
+    }
+    void* r = ((InterpFn)g_interpOrig)(a0, a1, a2);
+    /* ★v46：免广告代回调**移到帧外**执行 —— `orig` 已返回，本线程上一次派发的解释器帧已经
+     *  退干净，不再有「帧内 invoke 帧」；被调方内部的解释器入口会被闸①挡住。
+     *  热路径成本：一次 relaxed load（无 RMW、不弄脏 cacheline），有活才进函数体。 */
+    if (t_modInvoke == 0 && g_pendAdReady.load(std::memory_order_relaxed) != 0) DrainPendingAdV43();
+    return r;
 #if 0  // —— v10 诊断体（每调用扫 maps + 15 路子串匹配，实测把游戏拖死，停用保命）——
     if ((n % 500u) == 0)
         DBGLOG(TPL_LOG " interp calls=%u census=%u", n,
@@ -3395,8 +3530,21 @@ static std::atomic<bool> g_pushFrameHooked{false};
 typedef void* (*PushFrameFn)(void*, void*, void*);
 
 static void* Hooked_PushFrame(void* ctx, void* mi, void* args) {
-    if (mi) InterpDispatch(mi, args, nullptr, /*allowWrite=*/true);
-    return ((PushFrameFn)g_pushFrameOrig)(ctx, mi, args);
+    /* ★v46：与 `Hooked_Interp` 同一套闸 —— 二级挂点同样是解释器帧内的派发点，
+     *  免广告那条 `runtime_invoke` 从这里进来时也必须被 `t_modInvoke` 挡住。 */
+    if (t_modInvoke != 0) {
+        g_reentrySkip.fetch_add(1, std::memory_order_relaxed);
+    } else {
+        InterpGateGuard gate;
+        if (!gate.pass) {
+            g_reentrySkip.fetch_add(1, std::memory_order_relaxed);
+        } else if (mi) {
+            InterpDispatch(mi, args, nullptr, /*allowWrite=*/true);
+        }
+    }
+    void* r = ((PushFrameFn)g_pushFrameOrig)(ctx, mi, args);
+    if (t_modInvoke == 0 && g_pendAdReady.load(std::memory_order_relaxed) != 0) DrainPendingAdV43();
+    return r;
 }
 
 static void InstallPushFrameHook(const uintptr_t base) {
@@ -5401,7 +5549,12 @@ static bool CdInvoke(void* mi, uintptr_t actor, bool* okOut) {
     uint8_t b[4] = {1, 0, 0, 0};  // CheckDead(true, false, false, false) —— 官方 Act_KillEnemy 的实参
     void* args[4] = {&b[0], &b[1], &b[2], &b[3]};
     void* exc = nullptr;
+    /* ★v46：本工程**所有** mod 主动发起的 `runtime_invoke` 都必须打这个标 ——
+     *  被调方内部再走到解释器入口时（`Hooked_Interp` / `Hooked_PushFrame`）会被闸①跳过派发，
+     *  否则就是「帧内 invoke 帧」的递归放大（免广告那条已用 tombstone_11 实证）。 */
+    t_modInvoke++;
     void* r = api.runtime_invoke(mi, (void*)actor, args, &exc);
+    t_modInvoke--;
     if (exc) return false;
     if (okOut) *okOut = (r && *(uint8_t*)r != 0);
     return true;
@@ -6035,6 +6188,14 @@ void Mxytz_OnFeatureChanged(int featNum, bool enabled) {
         default: return;  // 分类占位项不参与
     }
     LOGI(TPL_LOG " feat %d -> %d", featNum, enabled ? 1 : 0);
+    /* ★v46：免广告开关变化 ⇒ 清掉待办槽与熔断窗口。
+     *  关掉时不能让一条已登记的待办在关闭后还发出去；重开时应当**立刻**可重试，
+     *  而不是干等熔断窗口（那是「点了开关要等半天才生效」的一个来源）。 */
+    if (featNum == MXYTZ_FEAT_NO_AD) {
+        g_pendAdReady.store(0, std::memory_order_relaxed);
+        g_adV43FuseUntilMs.store(0, std::memory_order_relaxed);
+        LOGI(TPL_LOG " AD43 待办/熔断窗口已清（免广告=%d）", enabled ? 1 : 0);
+    }
     /* ★v27：功能一开就**重开学习期**。目标方法是「按需调用」的 —— 尤其广告链路
      *  （`PlayADVideo` / `OnADVideoResult` / `DispatchResult`）只在玩家点广告时才被调用。
      *  用户在点广告**之前**打开「免广告」，学习期就能把那个方法学进来；窗口到期后再开功能会重开。
@@ -6163,10 +6324,12 @@ void Mxytz_Tick(const bool* features, const int* /*values*/) {
         if (!s_statMs) s_statMs = nowSt;
         if (nowSt - s_statMs > 30000ull) {
             s_statMs = nowSt;
-            LOGI(TPL_LOG " STATS 开关 kill=%d inv=%d skill=%d ad=%d | 命中 打怪=%u 无敌=%u 技能=%u 免广告=%u | 分流 dmg=%u ad=%u 闸拒=%u",
+            LOGI(TPL_LOG " STATS 开关 kill=%d inv=%d skill=%d ad=%d | 命中 打怪=%u 无敌=%u 技能=%u 免广告=%u | 分流 dmg=%u ad=%u 闸拒=%u | AD43 见=%u 排队=%u 已回调=%u 熔断=%u 重入闸=%u",
                  g_killMob.load() ? 1 : 0, g_invincible.load() ? 1 : 0, g_skillDmg.load() ? 1 : 0,
                  g_noAd.load() ? 1 : 0, g_hitDmg.load(), g_hitInv.load(), g_hitSkill.load(),
-                 g_hitAd.load(), g_dmgSeen.load(), g_adSeen.load(), g_gateFail.load());
+                 g_hitAd.load(), g_dmgSeen.load(), g_adSeen.load(), g_gateFail.load(),
+                 g_adV43Seen.load(), g_pendAdQueued.load(), g_adV43Done.load(),
+                 g_adV43Fuse.load(), g_reentrySkip.load());
         }
     }
 
@@ -6185,6 +6348,8 @@ void Mxytz_ForceClear() {
     g_invincible.store(false);
     g_skillDmg.store(false);
     g_noAd.store(false);
+    g_pendAdReady.store(0, std::memory_order_relaxed);  // ★v46：清掉未执行的免广告待办
+    g_adV43FuseUntilMs.store(0, std::memory_order_relaxed);
     DBGLOG(TPL_LOG " ForceClear hits dmg=%u inv=%u skill=%u ad=%u", g_hitDmg.load(), g_hitInv.load(),
          g_hitSkill.load(), g_hitAd.load());
 }
