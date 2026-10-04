@@ -172,7 +172,7 @@
       "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_ggbh_1.1.329.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk"
         },
         {
@@ -188,13 +188,8 @@
       "preflight": [
         "mod菜单/starry-mod-menu/scripts/surgical_ggbh_1.1.329.sh"
       ],
-      "note": "脚本内已断言：官包关键条目（classes.dex/resources.arsc/libil2cpp/libunity/libmain/lib_burst_generated/libbindings-csharp/libtapsdkcore/global-metadata）md5 与官包一致 + 全部未改动条目 sha256 不变。\n20261004 收尾清理: /Users/aliang/Documents/nixiang/07_patched/鬼谷八荒\n20261004 收尾清理: 07_patched/鬼谷八荒/surgical/AndroidManifest.xml; 原 md5=36ac8dc0b336e7fb074b6f40e1e75e78\n20261004 收尾清理: 07_patched/鬼谷八荒/surgical/classes2.dex; 原 md5=d8bb34fb74ebcb258dccfe10d3f9724c",
-      "done_at": "2026-10-04 21:00:16",
-      "artifacts": {
-        "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk": {
-          "md5": "9ae89479ee189447959191e93bca0eef"
-        }
-      }
+      "note": "脚本内已断言：官包关键条目（classes.dex/resources.arsc/libil2cpp/libunity/libmain/lib_burst_generated/libbindings-csharp/libtapsdkcore/global-metadata）md5 与官包一致 + 全部未改动条目 sha256 不变。\n20261004 收尾清理: /Users/aliang/Documents/nixiang/07_patched/鬼谷八荒\n20261004 收尾清理: 07_patched/鬼谷八荒/surgical/AndroidManifest.xml; 原 md5=36ac8dc0b336e7fb074b6f40e1e75e78\n20261004 收尾清理: 07_patched/鬼谷八荒/surgical/classes2.dex; 原 md5=d8bb34fb74ebcb258dccfe10d3f9724c\n20261004 收尾清理: /Users/aliang/Documents/nixiang/08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk\n20261004 收尾清理: 08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk; 原 md5=9ae89479ee189447959191e93bca0eef",
+      "done_at": "2026-10-04 21:00:16"
     },
     {
       "id": "sign",
@@ -218,9 +213,6 @@
         "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-releaseSigned.apk": {
           "md5": "649e18117b735215e5a048f8ad53fe1b"
         }
-      },
-      "inputs": {
-        "08_output/鬼谷八荒/鬼谷八荒_1.1.329_surgical-unsigned.apk": "9ae89479ee189447959191e93bca0eef"
       }
     },
     {
