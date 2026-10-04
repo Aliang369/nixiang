@@ -1,0 +1,4 @@
+file_size=142263576 patch_regions=3 b_or_bl_prologues≈3 reported=3
+[0] file_off=0x40a4d28 va=0x40a4d28 len=4 B/BL imm=-0x7fffd1c file=f30f1ef8 mem=b9000016
+[1] file_off=0x54553e4 va=0x54553e4 len=4 B/BL imm=-0x7fff3d8 file=f30f1ef8 mem=0a030016
+[2] file_off=0x5455560 va=0x5455560 len=4 B/BL imm=-0x7fff534 file=e80f1efc mem=b3020016
