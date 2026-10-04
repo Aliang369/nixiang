@@ -12,10 +12,12 @@
 #
 #  底包解析顺序：
 #    1) $MXYTZ_BASE_APK
-#    2) 02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk（win 侧常驻）
-#    3) 02_apks/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk（v44 交付包）
-#    4) 本机缓存 ~/.cache/nixiang/mxyzt_1.5.9_starry.apk
-#       三个 sha256 都按 74147b36...（= v44 / 真机在装包，已实测同一文件）校验。
+#    2) 02_apks/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk（历史交付包）
+#    3) 02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk（win 侧常驻）
+#    4) 08_output/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk
+#       （★2026-10-04 收尾补：本机已按「不留 APK」清掉 02_apks 与缓存，唯一留存种子
+#         就是 08_output 的正式包 —— 只换 so 同签重打的容器身份与它逐位同源）
+#    5) 本机缓存 ~/.cache/nixiang/mxyzt_1.5.9_starry.apk
 #
 #  用法:
 #    bash 04_scripts/冒险与征途/mxyzt_so_only_1.5.9.sh              # 只打包
@@ -30,7 +32,6 @@ NIXIANG="$(cd "$SELF_DIR/../.." && pwd)"
 STARRY="$NIXIANG/mod菜单/starry-mod-menu"
 PKG="com.mxyzt.gzmy"
 SERIAL="${SERIAL:-}"
-APK_SHA="74147b363f9687139f14f73bb6c99ba82ccfe34aca5e11a6b2ea7bd9ece767ea"
 SO="$STARRY/libs_mxyzt/arm64-v8a/libstarry_magic.so"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
@@ -48,6 +49,7 @@ pick_base() {
     "${MXYTZ_BASE_APK:-}" \
     "$NIXIANG/02_apks/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk" \
     "$NIXIANG/02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk" \
+    "$NIXIANG/08_output/冒险与征途/冒险与征途_1.5.9_starry-final-releaseSigned.apk" \
     "$CACHE"; do
     [ -n "$c" ] && [ -f "$c" ] && { printf '%s' "$c"; return 0; }
   done
