@@ -107,7 +107,7 @@ ls -la "$WORK/classes4.dex"
 mkdir -p "$WORK/lib/arm64-v8a" "$WORK/assets/starry"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/"
 [[ -f "$NDK_CXX" ]] && cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so" \
-  || echo "  WARN: libc++_shared.so 未找到（$NDK_CXX），若启动崩再补"
+  || echo "  WARN: libc++_shared.so 未找到（${NDK_CXX}），若启动崩再补"
 PATCH_SRC="$WORK/starry_dec/assets/starry/czbhz_patch.js"
 [[ -f "$PATCH_SRC" ]] || PATCH_SRC="$STARRY_SRC/app/src/main/assets/starry/czbhz_patch.js"
 [[ -f "$PATCH_SRC" ]] || { echo "ERROR: czbhz_patch.js missing"; exit 1; }

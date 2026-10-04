@@ -50,7 +50,7 @@ done
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
 SO_PREBUILT="${MWDL_SO:-$STARRY_SRC/app/src/libs_mwdl/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 Android_mwdl.mk 构建）"; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 Android_mwdl.mk 构建）"; exit 1; }
 echo "[check] modern so = $SO_PREBUILT"
 
 LOCK_DIR="/tmp/mwdl_surgical.lockdir"

@@ -295,7 +295,7 @@ if [[ -x "$BAKSMALI_BIN" ]]; then
   unzip -p "$UNSIGNED" classes3.dex > "$WORK/classes3_check.dex"
   "$BAKSMALI_BIN" d -o "$WORK/c3_check" "$WORK/classes3_check.dex" >/dev/null
   for f in com/starry/magic/StarryInitProvider.smali com/starry/magic/menu/MenuService.smali; do
-    [[ -f "$WORK/c3_check/$f" ]] || { echo "ERROR: classes3.dex 缺 $f（smali 未打进包）" >&2; exit 1; }
+    [[ -f "$WORK/c3_check/$f" ]] || { echo "ERROR: classes3.dex 缺 ${f}（smali 未打进包）" >&2; exit 1; }
   done
   echo "[dex-verify] classes3.dex 含 StarryInitProvider / MenuService ✓"
 fi

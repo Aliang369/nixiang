@@ -131,7 +131,7 @@ OFFICIAL_DLL="${WXSJ_OFFICIAL_DLL:-${NIXIANG}/07_patched/无限升级/targetfunt
 if [[ -f "$OFFICIAL_DLL" ]]; then
   echo "[wxsj-so] SKIP wxsj_hash_check.py (dual-version kDllVariants table is source of truth)"
 else
-  echo "WARN: 找不到官方底包 $OFFICIAL_DLL，跳过哈希常数交叉验证（设 WXSJ_OFFICIAL_DLL 可指定）"
+  echo "WARN: 找不到官方底包 ${OFFICIAL_DLL}，跳过哈希常数交叉验证（设 WXSJ_OFFICIAL_DLL 可指定）"
 fi
 if [[ "$DIAG" == "1" ]]; then
   LC_ALL=C grep -aq 'DIAG dumped' "$BUILT" || { echo "ERROR: DIAG so 缺 dump 日志串"; exit 1; }

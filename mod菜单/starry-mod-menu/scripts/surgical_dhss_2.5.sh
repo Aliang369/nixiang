@@ -90,7 +90,7 @@ ls -la "$WORK/$NEW_DEX"
 
 # TapTap 强制网页白名单自检：本作包名必须编进 dex（否则登录仍走客户端 SSO）
 LC_ALL=C grep -aq "$PKG" "$WORK/$NEW_DEX" \
-  || { echo "ERROR: $NEW_DEX 内无 $PKG（TapLoginForceWeb 白名单未编译进包）" >&2; exit 1; }
+  || { echo "ERROR: $NEW_DEX 内无 ${PKG}（TapLoginForceWeb 白名单未编译进包）" >&2; exit 1; }
 
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/"
@@ -310,7 +310,7 @@ if [[ -x "$BAKSMALI_BIN" ]]; then
   unzip -p "$UNSIGNED" "$NEW_DEX" > "$WORK/${NEW_DEX%.dex}_check.dex"
   "$BAKSMALI_BIN" d -o "$WORK/c5_check" "$WORK/${NEW_DEX%.dex}_check.dex" >/dev/null
   for f in com/starry/magic/StarryInitProvider.smali com/starry/magic/menu/MenuService.smali; do
-    [[ -f "$WORK/c5_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 $f（smali 未打进包）" >&2; exit 1; }
+    [[ -f "$WORK/c5_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 ${f}（smali 未打进包）" >&2; exit 1; }
   done
   echo "[dex-verify] $NEW_DEX 含 StarryInitProvider / MenuService ✓"
 fi

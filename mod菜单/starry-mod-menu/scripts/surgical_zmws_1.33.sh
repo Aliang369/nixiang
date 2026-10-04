@@ -52,7 +52,7 @@ done
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
 SO_PREBUILT="${ZMWS_SO:-$STARRY_SRC/app/src/libs_zmws/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 Android_zmws.mk 构建）"; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 Android_zmws.mk 构建）"; exit 1; }
 echo "[check] modern so = $SO_PREBUILT"
 ACTUAL_MD5=$(md5 -q "$ORIG_APK")
 [[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符 $ACTUAL_MD5"; exit 1; }

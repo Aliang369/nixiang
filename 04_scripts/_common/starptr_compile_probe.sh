@@ -50,7 +50,7 @@ for TRIPLE in windows-x86_64 darwin-x86_64 linux-x86_64; do
   [ -x "$CLANG" ] || CLANG="$CLANG.exe"
   [ -x "$CLANG" ] && break
 done
-[ -x "$CLANG" ] || { echo "ERROR: 找不到 clang++（NDK=$NDK）" | tee -a "$LOG"; exit 1; }
+[ -x "$CLANG" ] || { echo "ERROR: 找不到 clang++（NDK=${NDK}）" | tee -a "$LOG"; exit 1; }
 echo "NDK  : $NDK" | tee -a "$LOG"
 echo "clang: $CLANG" | tee -a "$LOG"
 
@@ -93,7 +93,7 @@ OKC=0; BADC=0; BADLIST=""
 for ent in "${FILES[@]}"; do
   f="${ent%%|*}"; defs="${ent#*|}"
   if [ ! -f "$SJ/$f" ]; then
-    echo "MISS $f（源文件不存在）" | tee -a "$LOG"; BADC=$((BADC+1)); BADLIST="$BADLIST $f"; continue
+    echo "MISS ${f}（源文件不存在）" | tee -a "$LOG"; BADC=$((BADC+1)); BADLIST="$BADLIST $f"; continue
   fi
   out="$STAGE/$(basename "$f").o"
   # shellcheck disable=SC2086

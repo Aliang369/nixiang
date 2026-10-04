@@ -91,7 +91,7 @@ run_install() {
     fi
     if adb -s "$SERIAL" shell "pm path $PKG" 2>/dev/null | grep -q .; then
       adb -s "$SERIAL" shell rm -f /data/local/tmp/sjzz_surgical.apk || true
-      echo "ERROR: 卸载后仍能查到 $PKG；设备临时包已清理"
+      echo "ERROR: 卸载后仍能查到 ${PKG}；设备临时包已清理"
       exit 1
     fi
     echo "[install] uninstall ok"

@@ -151,7 +151,7 @@ json.dump({
 }, open(d / "backup_manifest.json", "w"), ensure_ascii=False, indent=2)
 PY
   say "backup_ok=$OUT/data_$TAG.tar"
-  say "设备端副本保留在 $REMOTE_TAR（还原时免 push）"
+  say "设备端副本保留在 ${REMOTE_TAR}（还原时免 push）"
 }
 
 # ---------------------------------------------------------------------------
@@ -160,7 +160,7 @@ PY
 cmd_restore() {
   [[ "${ALLOW_RESTORE:-0}" == "1" ]] || die "未设置 ALLOW_RESTORE=1（还原会覆盖现有数据，必须显式确认）"
   local tar="$OUT/data_$TAG.tar"
-  [[ -s "$tar" ]] || die "找不到备份 $tar（先跑 backup）"
+  [[ -s "$tar" ]] || die "找不到备份 ${tar}（先跑 backup）"
   mkdir -p "$OUT"
   say "[1/5] 包路径"
   "${A[@]}" shell "pm path $PKG" | tr -d '\r' | tee "$OUT/restore_pm_path.txt"
@@ -182,5 +182,5 @@ case "$MODE" in
   inspect) preflight; cmd_inspect ;;
   backup)  preflight; cmd_backup ;;
   restore) preflight; cmd_restore ;;
-  *) die "未知模式：$MODE（可用：inspect | backup | restore）" ;;
+  *) die "未知模式：${MODE}（可用：inspect | backup | restore）" ;;
 esac

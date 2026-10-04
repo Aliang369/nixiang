@@ -107,7 +107,7 @@ L1=$(grep -nF -- "if (isSelfHealableFailureJson(json)) {" "$NMC" | head -1 | cut
 LR=$(awk -v s="${L1:-1}" 'NR>s && /return;/ {print NR; exit}' "$NMC")
 LK=$(awk -v s="${L1:-1}" 'NR>s && /hardKickAuth\(serverMsg\)/ {print NR; exit}' "$NMC")
 if [[ -n "$L1" && -n "$LR" && -n "$LK" && "$LR" -lt "$LK" ]]; then
-  ok "A6 自愈分支先 return（行 $LR），永不穿透到 hardKickAuth（行 $LK）⇒ 可自愈类失败不清档"
+  ok "A6 自愈分支先 return（行 ${LR}），永不穿透到 hardKickAuth（行 ${LK}）⇒ 可自愈类失败不清档"
 else
   bad "A6 自愈分支会穿透到 hardKickAuth（L1=${L1:-?} ret=${LR:-?} kick=${LK:-?}）⇒ 一次自愈失败就毁档"
 fi

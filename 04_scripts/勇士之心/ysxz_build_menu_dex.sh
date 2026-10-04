@@ -24,7 +24,7 @@ APK="$WORK/starry/app/build/outputs/apk/release/app-release.apk"
 say() { printf '%s\n' "$*" >&2; }
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 
-[[ -d "$SRC/app/src/main/java/com/starry/magic/menu" ]] || die "找不到菜单源码目录（$SRC）"
+[[ -d "$SRC/app/src/main/java/com/starry/magic/menu" ]] || die "找不到菜单源码目录（${SRC}）"
 [[ -f "$ROOT/01_tools/apktool/apktool.jar" ]] || die "缺 $ROOT/01_tools/apktool/apktool.jar"
 
 # ---- JDK ----

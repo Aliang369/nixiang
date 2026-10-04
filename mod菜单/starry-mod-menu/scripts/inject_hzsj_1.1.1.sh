@@ -69,7 +69,7 @@ UNSIGNED="$OUT_ASCII/hzsj_starry_unsigned.apk"
 trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
-[[ -f "$MOD_SO" ]] || { echo "ERROR: missing $MOD_SO（先跑管线 build_so 阶段）"; exit 1; }
+[[ -f "$MOD_SO" ]] || { echo "ERROR: missing ${MOD_SO}（先跑管线 build_so 阶段）"; exit 1; }
 echo "[check] mod so: $(ls -lh "$MOD_SO" | awk '{print $5}') $(md5 -q "$MOD_SO")"
 mkdir -p "$OUT" "$OUT_ASCII" "$(dirname "$SRC_DECODE")" "$(dirname "$FINAL_PATCH")"
 

@@ -36,7 +36,7 @@ for a in "$@"; do
     --yes) DO_UNINSTALL=1 ;;
     --upgrade) DO_UNINSTALL=0; UPGRADE=1 ;;
     -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
-    *) echo "未知参数: $a（--help）" >&2; exit 1 ;;
+    *) echo "未知参数: ${a}（--help）" >&2; exit 1 ;;
   esac
 done
 UPGRADE="${UPGRADE:-0}"
@@ -78,7 +78,7 @@ if [[ "$UPGRADE" == "1" ]]; then
 else
   adb -s "$SERIAL" shell "su -c 'pm uninstall $PKG'" | sed 's/^/  /'
   if adb -s "$SERIAL" shell "pm path $PKG" 2>/dev/null | grep -q 'package:'; then
-    echo "ERROR: 卸载后仍能查到 $PKG，中止"; exit 1
+    echo "ERROR: 卸载后仍能查到 ${PKG}，中止"; exit 1
   fi
   echo "  已卸载 ✓"
 fi
