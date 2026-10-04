@@ -84,8 +84,16 @@ BASE_CERT="$("$BT/apksigner" verify --print-certs "$BASE_APK" 2>/dev/null | grep
 echo "      base SHA-256 = $BASE_CERT"
 [ -n "$BASE_CERT" ] || { echo "ERROR: 无法读取底包证书摘要" >&2; exit 1; }
 
+# APFS clonefile（macOS）＝秒级；其它平台回落普通复制。886MB 的包每轮省 1 次全量写。
+cp_fast() {
+  case "$(uname -s)" in
+    Darwin) cp -c "$1" "$2" 2>/dev/null && return 0 ;;
+  esac
+  cp -f "$1" "$2"
+}
+
 echo "[2/5] 复刻底包 → 仅替换 lib/arm64-v8a/libstarry_magic.so"
-cp -f "$BASE_APK" "$WORK/out.apk"
+cp_fast "$BASE_APK" "$WORK/out.apk"
 ( cd "$WORK" && zip -qu out.apk ) || true
 cp -f "$SO" "$WORK/libstarry_magic.so"
 
@@ -94,8 +102,8 @@ import sys, zipfile, shutil, zlib
 apk, so = sys.argv[1], sys.argv[2]
 tmp = apk + ".tmp"
 TARGET = 'lib/arm64-v8a/libstarry_magic.so'
-# 原 APK 里 lib/*.so 一律 ZIP_STORED（未压缩）⇒ 其余条目**原样搬压缩流**，
-# 不解压不重压：885MB 的包也能在几十秒内完成，且不动任何非目标 entry 的字节。
+# 目标条目写成 ZIP_STORED；其余条目按原 compress_type 重写（deflate 的会被解压后
+# 以默认级别重压 ⇒ 字节不保证与原包逐位相同，但仍是合法 zip）。实测整轮 6.5 秒。
 with open(so, 'rb') as f: newso = f.read()
 with zipfile.ZipFile(apk, 'r') as zin, zipfile.ZipFile(tmp, 'w', zipfile.ZIP_STORED) as zout:
     for it in zin.infolist():
@@ -115,13 +123,22 @@ shutil.move(tmp, apk)
 print("      replaced libstarry_magic.so inside apk")
 PY
 
-echo "[3/5] zipalign -p 4 + apksigner sign"
-"$BT/zipalign" -f -p 4 "$WORK/out.apk" "$WORK/aligned.apk" >/dev/null
+echo "[3/5] zipalign -p 4（已对齐则整轮跳过） + apksigner sign"
+# 先 -c 校验：能过就不做 zipalign 的读+写。★实测（2026-10-04，mxyzt 正式包）：
+# 重写一个 lib entry 后**必然失去 4 字节对齐**（后续条目整体位移），本游戏上该快路不触发；
+# zipalign 本身实测仅 1.46 秒 ⇒ 该分支只是给「改动落在包尾/尺寸不变」的包留的保险。
+ALIGNED="$WORK/aligned.apk"
+if "$BT/zipalign" -c -p 4 "$WORK/out.apk" >/dev/null 2>&1; then
+  echo "      已 4 字节对齐 ⇒ 跳过 zipalign（省一轮 886MB 读写）"
+  ALIGNED="$WORK/out.apk"
+else
+  "$BT/zipalign" -f -p 4 "$WORK/out.apk" "$WORK/aligned.apk" >/dev/null
+fi
 SIGNED="$OUT_DIR/冒险与征途_1.5.9_soonly-${SO_TAG}-releaseSigned.apk"
 "$BT/apksigner" sign --ks "$KS" --ks-key-alias "$KS_ALIAS" \
   --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
   --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
-  --out "$SIGNED" "$WORK/aligned.apk"
+  --out "$SIGNED" "$ALIGNED"
 "$BT/apksigner" verify --print-certs "$SIGNED" | head -3
 
 echo "[4/5] 同签断言（换证书 = 换设备 = 卡密 403，必须一致）"
