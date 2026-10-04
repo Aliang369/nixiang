@@ -1137,40 +1137,96 @@ static void EnqueueNoAdV43(int32_t adId, uint64_t uuid, const char* src) {
 // ⑦ 广告路径（#4 免广告）：客户端放行 + 强制成功结果
 //    说明：服务端 start_watch_ad_req / finish_watch_ad_req 校验风险见文档 §10
 // ============================================================
-static void AdLogOnce(const char* tag, uint32_t n) {
-    if (n < 20 || (n % 40) == 0) DBGLOG(TPL_LOG " AD hit %s n=%u", tag, n);
+/* ★v46b 每 tag 计数（诊断）：真机实测「开免广告后 canclaim/vresult 两条上游调用量从 180/s
+ *  飙到 1087/s（6 倍）」，但 `分流 ad` 只有总数、无法区分是哪一个 tag 在自激 ⇒ 这里把 6 个
+ *  HookSlot 的调用数分开累加，随 STATS 每 30 秒多打一行 `STATS-AD`。 */
+enum AdTagIdx {
+    kAdTagWatch = 0,
+    kAdTagWatch0,
+    kAdTagClick,
+    kAdTagCanClaim,
+    kAdTagResult,
+    kAdTagVResult,
+    kAdTagPlayAd,
+    kAdTagN
+};
+static const char* const kAdTagNames[kAdTagN] = {"watch", "watch0",      "click",     "canclaim",
+                                                 "result", "vresult",    "playad"};
+static std::atomic<uint32_t> g_adTagCnt[kAdTagN]{};
+
+static void AdLogOnce(int idx, uint32_t n) {
+    g_adTagCnt[idx].fetch_add(1, std::memory_order_relaxed);
+    if (n < 20 || (n % 40) == 0) DBGLOG(TPL_LOG " AD hit %s n=%u", kAdTagNames[idx], n);
+}
+
+/* ============================================================================
+ * ★v46b 一次性事件门 —— 治「开启免广告后跟断网一样」
+ *
+ * 语义：**一次广告请求只该产生一次「成功」**。凡是我们「改写返回值」的地方
+ * （canclaim / vresult / 解释器 ForceTrueArg）先过这道 2 秒门，关着就一律按原值透传 orig。
+ *
+ * 真机血证（v46 装机后 pid 5978）：
+ *   · 开免广告 17 秒内 `命中 免广告` 从 0 冲到 **25267（≈1087/s，免广告关闭时基线仅 ≈180/s）**；
+ *   · 而两条代回调路径**一次都没走到**（`AD43 见=0 排队=0 已回调=0` ⇒ `PlayADVideo` 根本没被调用）
+ *     ⇒ 卡顿与代回调无关，是「我们一直返回成功」让游戏侧上游陷入**自激轮询**
+ *        （面板永远认为可领奖、结果永远成功 ⇒ 无限重试 = 表现成「断网一样」）。
+ * 上锁后上游拿到的「成功」是稀疏的，自激环自然断；一次真实事件路径完全不受影响。
+ * ============================================================================ */
+enum AdGateIdx { kAdGateCanClaim = 0, kAdGateVResult, kAdGateInterp, kAdGateN };
+static std::atomic<uint64_t> g_adGateUntilMs[kAdGateN]{};
+static std::atomic<uint32_t> g_adGatePass[kAdGateN]{};
+static std::atomic<uint32_t> g_adGateSkip[kAdGateN]{};
+static constexpr uint64_t kAdGateCooldownMs = 2000ull;
+
+static bool AdForceGateOpen(int i) {
+    const uint64_t now = NowMs();
+    if (now < g_adGateUntilMs[i].load(std::memory_order_relaxed)) {
+        g_adGateSkip[i].fetch_add(1, std::memory_order_relaxed);
+        return false;
+    }
+    g_adGateUntilMs[i].store(now + kAdGateCooldownMs, std::memory_order_relaxed);
+    g_adGatePass[i].fetch_add(1, std::memory_order_relaxed);
+    return true;
+}
+
+/** 开/关免广告、ForceClear 时把门重新上膛（清掉冷却窗口）。 */
+static void AdForceGateReset() {
+    for (int i = 0; i < kAdGateN; i++) g_adGateUntilMs[i].store(0, std::memory_order_relaxed);
 }
 
 static void Hooked_AdVoid(void* a0, void* a1, void* a2, void* a3, void* a4, void* a5, void* a6,
                           void* a7) {
     AdVoid_t orig = reinterpret_cast<AdVoid_t>(g_origAdVoid);
-    AdLogOnce("watch", g_adSeen.fetch_add(1, std::memory_order_relaxed));
+    AdLogOnce(kAdTagWatch, g_adSeen.fetch_add(1, std::memory_order_relaxed));
     if (orig) orig(a0, a1, a2, a3, a4, a5, a6, a7);
 }
 
 static void Hooked_AdVoid2(void* a0, void* a1, void* a2, void* a3, void* a4, void* a5, void* a6,
                            void* a7) {
     AdVoid_t orig = reinterpret_cast<AdVoid_t>(g_origAdVoid2);
-    AdLogOnce("watch0", g_adSeen.fetch_add(1, std::memory_order_relaxed));
+    AdLogOnce(kAdTagWatch0, g_adSeen.fetch_add(1, std::memory_order_relaxed));
     if (orig) orig(a0, a1, a2, a3, a4, a5, a6, a7);
 }
 
 static void Hooked_AdVoid3(void* a0, void* a1, void* a2, void* a3, void* a4, void* a5, void* a6,
                            void* a7) {
     AdVoid_t orig = reinterpret_cast<AdVoid_t>(g_origAdVoid3);
-    AdLogOnce("click", g_adSeen.fetch_add(1, std::memory_order_relaxed));
+    AdLogOnce(kAdTagClick, g_adSeen.fetch_add(1, std::memory_order_relaxed));
     if (orig) orig(a0, a1, a2, a3, a4, a5, a6, a7);
 }
 
 static void* Hooked_AdBoolRet(void* a0, void* a1, void* a2, void* a3, void* a4, void* a5, void* a6,
                               void* a7) {
     AdBoolRet_t orig = reinterpret_cast<AdBoolRet_t>(g_origAdBoolRet);
-    AdLogOnce("canclaim", g_adSeen.fetch_add(1, std::memory_order_relaxed));
+    AdLogOnce(kAdTagCanClaim, g_adSeen.fetch_add(1, std::memory_order_relaxed));
     bool r = orig ? (reinterpret_cast<intptr_t>(orig(a0, a1, a2, a3, a4, a5, a6, a7)) != 0) : false;
     if (r) return reinterpret_cast<void*>(1);
     if (g_noAd.load(std::memory_order_relaxed)) {
-        g_hitAd.fetch_add(1, std::memory_order_relaxed);
-        return reinterpret_cast<void*>(1);  // 客户端侧直接放行领奖
+        g_hitAd.fetch_add(1, std::memory_order_relaxed);  // 计数语义不变（仍按「命中」记，便于跨版本对比）
+        /* ★v46b：改写返回值前过一次性门 —— 一次广告请求只该产生一次「可领奖」。
+         *  真机实测：开免广告后本钩调用量涨到基线 6 倍且 g_hitAd≈1087/s ⇒ 恒返回 1
+         *  让上游（奖池面板/红点）永远认为可领，陷入自激轮询 = 作者侧「跟断网一样」。 */
+        return AdForceGateOpen(kAdGateCanClaim) ? reinterpret_cast<void*>(1) : nullptr;
     }
     return nullptr;
 }
@@ -1178,7 +1234,7 @@ static void* Hooked_AdBoolRet(void* a0, void* a1, void* a2, void* a3, void* a4, 
 [[maybe_unused]] static void Hooked_AdArg0True(void* a0, void* a1, void* a2, void* a3, void* a4,
                                                void* a5, void* a6, void* a7) {
     AdVoid_t orig = reinterpret_cast<AdVoid_t>(g_origAdArg0);
-    AdLogOnce("result", g_adSeen.fetch_add(1, std::memory_order_relaxed));
+    AdLogOnce(kAdTagResult, g_adSeen.fetch_add(1, std::memory_order_relaxed));
     if (g_noAd.load(std::memory_order_relaxed)) {
         g_hitAd.fetch_add(1, std::memory_order_relaxed);
         a0 = reinterpret_cast<void*>(1);  // 结果标志位置成功（bool/int 同宽）
@@ -1191,13 +1247,16 @@ static void* Hooked_AdBoolRet(void* a0, void* a1, void* a2, void* a3, void* a4, 
 static void Hooked_AdArg0TrueB(void* a0, void* a1, void* a2, void* a3, void* a4, void* a5, void* a6,
                                void* a7) {
     AdVoid_t orig = reinterpret_cast<AdVoid_t>(g_origAdArg0b);
-    AdLogOnce("vresult", g_adSeen.fetch_add(1, std::memory_order_relaxed));
+    AdLogOnce(kAdTagVResult, g_adSeen.fetch_add(1, std::memory_order_relaxed));
     if (g_noAd.load(std::memory_order_relaxed)) {
         g_hitAd.fetch_add(1, std::memory_order_relaxed);
-        if (g_onResultStatic.load(std::memory_order_relaxed))
-            a0 = reinterpret_cast<void*>(1);
-        else
-            a1 = reinterpret_cast<void*>(1);
+        /* ★v46b：同样过一次性门；门关着一律按原值透传 orig（不做任何改写）。 */
+        if (AdForceGateOpen(kAdGateVResult)) {
+            if (g_onResultStatic.load(std::memory_order_relaxed))
+                a0 = reinterpret_cast<void*>(1);
+            else
+                a1 = reinterpret_cast<void*>(1);
+        }
     }
     if (orig) orig(a0, a1, a2, a3, a4, a5, a6, a7);
 }
@@ -1217,7 +1276,7 @@ static void Hooked_PlayADVideo2(void* a0, void* a1, void* a2, void* a3, void* a4
     const bool st = g_playAdStatic.load(std::memory_order_relaxed);
     void* adId = st ? a0 : a1;
     void* uuid = st ? a1 : a2;
-    AdLogOnce("playad", g_adSeen.fetch_add(1, std::memory_order_relaxed));
+    AdLogOnce(kAdTagPlayAd, g_adSeen.fetch_add(1, std::memory_order_relaxed));
     if (g_noAd.load(std::memory_order_relaxed)) {
         g_hitAd.fetch_add(1, std::memory_order_relaxed);
         uint64_t u = 0;
@@ -2295,6 +2354,8 @@ static void ForceTrueArg(void* a1, uint8_t argBase, int argIdx, const char* tag)
      *  写 1 字节在任何实现下都安全，且 0→1 的语义完全等价（小端下整型同样得到 1）。 */
     const uint8_t old = *reinterpret_cast<volatile uint8_t*>(slot);
     if (old == 1u) return;
+    /* ★v46b：解释器这条改写路径同样过一次性门（见 §⑦ 的 `AdForceGateOpen` 注释）。 */
+    if (!AdForceGateOpen(kAdGateInterp)) return;
     *reinterpret_cast<volatile uint8_t*>(slot) = 1u;
     const uint32_t n = g_hitAd.fetch_add(1, std::memory_order_relaxed);
     if (n < 20 || (n % 40) == 0)
@@ -6194,6 +6255,7 @@ void Mxytz_OnFeatureChanged(int featNum, bool enabled) {
     if (featNum == MXYTZ_FEAT_NO_AD) {
         g_pendAdReady.store(0, std::memory_order_relaxed);
         g_adV43FuseUntilMs.store(0, std::memory_order_relaxed);
+        AdForceGateReset();  // ★v46b：一次性门重新上膛
         LOGI(TPL_LOG " AD43 待办/熔断窗口已清（免广告=%d）", enabled ? 1 : 0);
     }
     /* ★v27：功能一开就**重开学习期**。目标方法是「按需调用」的 —— 尤其广告链路
@@ -6330,6 +6392,17 @@ void Mxytz_Tick(const bool* features, const int* /*values*/) {
                  g_hitAd.load(), g_dmgSeen.load(), g_adSeen.load(), g_gateFail.load(),
                  g_adV43Seen.load(), g_pendAdQueued.load(), g_adV43Done.load(),
                  g_adV43Fuse.load(), g_reentrySkip.load());
+            /* ★v46b 诊断行：区分到底是哪一个 tag 在自激（真机 v46 只能看到总数 1087/s）。
+             *  判读：开免广告前后两次 STATS-AD 的差值 / 30s 即为该 tag 的调用速率；
+             *  `门` 三列 = 上锁通过次数（应≈1/2s）、被门拦下次数（大就说明上游在空转）。 */
+            LOGI(TPL_LOG " STATS-AD watch=%u watch0=%u click=%u canclaim=%u vresult=%u playad=%u result=%u | 门 canclaim=%u/%u vresult=%u/%u interp=%u/%u",
+                 g_adTagCnt[kAdTagWatch].load(), g_adTagCnt[kAdTagWatch0].load(),
+                 g_adTagCnt[kAdTagClick].load(), g_adTagCnt[kAdTagCanClaim].load(),
+                 g_adTagCnt[kAdTagVResult].load(), g_adTagCnt[kAdTagPlayAd].load(),
+                 g_adTagCnt[kAdTagResult].load(), g_adGatePass[kAdGateCanClaim].load(),
+                 g_adGateSkip[kAdGateCanClaim].load(), g_adGatePass[kAdGateVResult].load(),
+                 g_adGateSkip[kAdGateVResult].load(), g_adGatePass[kAdGateInterp].load(),
+                 g_adGateSkip[kAdGateInterp].load());
         }
     }
 
@@ -6350,6 +6423,7 @@ void Mxytz_ForceClear() {
     g_noAd.store(false);
     g_pendAdReady.store(0, std::memory_order_relaxed);  // ★v46：清掉未执行的免广告待办
     g_adV43FuseUntilMs.store(0, std::memory_order_relaxed);
+    AdForceGateReset();                                  // ★v46b：一次性门重新上膛
     DBGLOG(TPL_LOG " ForceClear hits dmg=%u inv=%u skill=%u ad=%u", g_hitDmg.load(), g_hitInv.load(),
          g_hitSkill.load(), g_hitAd.load());
 }
