@@ -58,7 +58,7 @@ BASE_APK="$(pick_base)" || {
   exit 1
 }
 echo "[0] BASE = $BASE_APK"
-[ -f "$SO" ] || { echo "ERROR: 缺 $SO（先跑 04_scripts/冒险与征途/mxyzt_build_so.sh）" >&2; exit 1; }
+[ -f "$SO" ] || { echo "ERROR: 缺 ${SO}（先跑 04_scripts/冒险与征途/mxyzt_build_so.sh）" >&2; exit 1; }
 SO_MD5="$(md5f "$SO")"; SO_TAG="${SO_MD5:0:8}"
 echo "[0] SO   = $SO  md5=$SO_MD5"
 
