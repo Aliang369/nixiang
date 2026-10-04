@@ -1,0 +1,254 @@
+{
+  "game": "仙逆",
+  "version": "0.0.14",
+  "notes": "2026-10-04 首轮接入（新游戏）。底包 = 真机 f9a116a2 上安装的官方 TapTap 渠道原版 com.qqsy.xnbz 0.0.14（vc14），从 /data/app/~~j59OscXi9I9LPv6UFY6L0w==/com.qqsy.xnbz-Kydz2Egkx-5xnYjs4vPLqw==/base.apk 只读拉取，375,615,779 B md5 756df4d27ded491e00a865687571fc53 sha256 f175786c705a490d2a34994656297155d21719f2c256d34f27258d3b397248f4；按项目政策不留本地（用完即删），已登记 10_docs/_state/底包再获取台账.md。\n★引擎 = Cocos Creator 3.x + JSB（libcocos.so 28,798,216 B / assets/src/cocos-js/cc.js / assets/src/chunks/bundle.js / jsb-adapter），无 IL2CPP。★无加固壳（20 个 arm64 so 内无 libjiagu/libtup/libtprt/libmobisec/libDexHelper 等）⇒ 注入点本可改 application@name，但本作走分支 B（StarryInitProvider，不替换官方 com.cocos.game.GameApplication —— 它负责 System.loadLibrary(\"cocos\") 与引擎 native 初始化，且 game 清单无 appComponentFactory）。\n★主 Activity com.cocos.game.MyAppActivity 方法表只有 <init>/dispatchKeyEvent/onBackPressed/onRequestPermissionsResult（无 onResume / onUserLeaveHint）⇒ Activity 侧无 smali 锚点，菜单生命周期全靠 StarryInitProvider 的 registerActivityLifecycleCallbacks（框架已内建，不改游戏 smali）。\n★登录：本作 TapSDK 走新版路径（com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity + com.taptap.sdk.login.impl.utils.ClientLoginUtils + TapSignKit + WebLoginFragment + TapTapKitInitProvider），无旧版 com.taptap.sdk.ui.TapTapActivity ⇒ 不注入旧版 yntt_smali；登录修复载体 = 星光 dex 内 com.starry.magic.sign.TapLoginForceWeb + classes7.dex 两处 smali 补丁（TapSignKit.getSign 固定返回原厂证书 MD5 82c51c4ac68ac5d3197ef4c2b19e1ef6；ClientLoginUtils.isClientLogin 恒 false）。\n★改签后必须让 TapLoginForceWeb 的 PKG_WHITELIST 与 SignSpoof 证书表同时含 com.qqsy.xnbz（原厂证书 CN=qqian，MD5 82C51C4AC68AC5D3197EF4C2B19E1EF6 / SHA1 E8286C6D68AE6DE8F35683AA2336E545C5792A97 / SHA256 E7E23971C2D54AB791E33EADCA3BBF9E0D6540AEF8716706B85311B843D08878 / 有效期 2020-12-08→2120-11-14），否则 TapTap SSO 报 signature not match；surgical 脚本对此有硬门禁。\n★dex 落位：底包 10 dex（classes.dex + classes2..10）⇒ 星光菜单 dex = classes11.dex；TapTap SDK 新版路径类在 classes7.dex ⇒ 只改写 classes7.dex（其余 9 个 dex / resources.arsc / libcocos.so 逐字节不动）。\n★阶段闸门：用户明令「先不要直接做功能，先把 mod 菜单组装进游戏内、能正常玩游戏才算完成」⇒ 本轮 libstarry_magic.so 是零 hook 环境版（XnbzMod.cpp 只做库映射判定 + 开关记录 + 致命信号兜底，无任何 hook/内存改写/JS 注入）；【无敌】【伤害倍率】待用户放行后再填 §TODO。\n★并发警示：jniLibs/arm64-v8a/libstarry_magic.so 被所有并行游戏会话共享，xnbz_build_so.sh 会同步三处，surgical 在 gradle 之后按字节校验归属（[Xnbz] 必须在，[Gyzw]/[Jfqs]/[Ysxz]/[Dwct]/[Tlgd] 必须不在）。\n★装机语义：本包签名 CN=StarryMagic 与官方 CN=qqian 不同 ⇒ 覆盖安装必报 INSTALL_FAILED_UPDATE_INCOMPATIBLE，默认停手；需用户明确授权后 XNBZ_ALLOW_UNINSTALL=1（会清本地存档）。菜单为悬浮窗，装机后 appops set com.qqsy.xnbz SYSTEM_ALERT_WINDOW allow（脚本自动执行）。\n★阶段② 收尾（2026-10-04，用户 m01196 判停「没用这个游戏改不了」）：功能全部在 JS 层（kPatchJs v5，g.__xnbzPatchVer>=5），【无敌】= BattleUnit.updateState 本地血量账本 + isAlive/health getter；【伤害倍率】= applySequentialDamage / BattleManager.applyActionEffect[SegmentOnly] 的 scale(t)；【强制胜利】= 引擎 BattleManager.startBattle 改 br.result.winner=1（仅显示/回放分支）；【重试判胜】= BattleModule.startBattle 捕获 {type,id,extra} + Network.requestFightResult 结算后判断，服务端判负则 1.5s 重开本场（RETRY_MAX=3）。★服务端权威：奖励 = game.fightresult 回包的 changes.items，由 game.fightbegin 时的服务端结算定稿；ResponseUtil.checkResponse 只处理 messages 推送、不写本地账目 ⇒ 客户端改 isWin 只改显示；战斗相关服务端接口无「客户端上报胜负」通道 ⇒ 收案为「客户端可生效 / 服务端账目不可改」，不做本地假奖励。",
+  "params": {
+    "game_id": "xnbz",
+    "package": "com.qqsy.xnbz",
+    "label": "仙逆：本尊",
+    "mk": "Android_xnbz.mk（modern 注册表管线，Cocos 系 ⇒ 不含 Unity/Il2CppApi.cpp，含 Games/NoAceStubs.cpp）",
+    "tag": "Xnbz",
+    "serial": "f9a116a2",
+    "version_code": 14,
+    "min_sdk": 24,
+    "target_sdk": 30,
+    "engine": "Cocos Creator 3.x (libcocos.so, JSB)",
+    "shell": "无壳（可直接改 application@name；本作仍走分支 B StarryInitProvider）",
+    "manifest_variant": "分支 B：StarryInitProvider(initOrder=2147483647) + MenuService(specialUse) + SYSTEM_ALERT_WINDOW/FOREGROUND_SERVICE(_SPECIAL_USE)",
+    "new_dex": "classes11.dex",
+    "patched_dex": "classes7.dex（TapSignKit.getSign + ClientLoginUtils.isClientLogin）",
+    "orig_sign_md5": "82c51c4ac68ac5d3197ef4c2b19e1ef6",
+    "base_apk": {
+      "path": "/tmp/xnbz/base.apk",
+      "size": 375615779,
+      "md5": "756df4d27ded491e00a865687571fc53",
+      "sha256": "f175786c705a490d2a34994656297155d21719f2c256d34f27258d3b397248f4",
+      "source": "设备只读拉取 /data/app/~~j59OscXi9I9LPv6UFY6L0w==/com.qqsy.xnbz-Kydz2Egkx-5xnYjs4vPLqw==/base.apk",
+      "policy": "不留本地：用完即删，只登记 10_docs/_state/底包再获取台账.md"
+    },
+    "classes7_md5": "72625d77928cf78d6abe51cee789c71d",
+    "resources_arsc_md5": "614d4d7e58ad92bb2a5756f28b6997cb",
+    "libcocos_md5": "7ad5451d988a57b52e189d4fdc359e83",
+    "menu_features": [
+      "Category_战斗",
+      "Toggle_无敌",
+      "Slider_伤害倍率:1:100:1",
+      "Toggle_重试判胜"
+    ],
+    "stage_gate": "阶段②已结（用户 m01196 判停）：客户端功能生效、服务端权威奖励不可改；见 10_docs/仙逆/功能轮记录_0.0.14_20261004.md",
+    "starry_so_md5": "b66d63986094f6af343597da9c0fc8c1",
+    "starry_so_size": 2159568,
+    "signed_apk": {
+      "path": "/Users/aliang/Documents/nixiang/08_output/仙逆/仙逆_0.0.14_surgical-releaseSigned.apk",
+      "size": 376975940,
+      "md5": "267c4be89dacb907d1d04ba97dae105d",
+      "sha256": "4c53444ee665c5719aacf7cc6b77496be8bb8ae90bd503ad34814173fe4697bc",
+      "signer": "CN=StarryMagic SHA-256 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+      "patch_ver": 5,
+      "note": "v5 终版（hp-ledger + inv + dmg-mul + force-win + retry-until-server-win）；装机于 f9a116a2"
+    },
+    "patched_classes7_md5": "6d7cb0a78604d08195db84b7837cf4ec",
+    "new_dex_size": 467968,
+    "conclusion": "用户判停「没用这个游戏改不了」。奖励在 game.fightbegin 由服务端一次性定稿、客户端无上报胜负通道（380 个 game.* 接口全量普查）⇒ 无敌/伤害倍率只作用于客户端回放；重试判胜（重开本场让服务端重算）实测不翻盘。不做本地假奖励。",
+    "menu_template": "10_docs/仙逆/xnbz_menu_template.json"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/04_scripts/仙逆",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "底包核对（官方 TapTap 原版 0.0.14，375,615,779 B / md5 756df4d2…）",
+      "requires": [],
+      "command": "mkdir -p /tmp/xnbz && adb -s $SERIAL shell pm path com.qqsy.xnbz && adb -s $SERIAL exec-out \"su -c 'cat /data/app/~~j59OscXi9I9LPv6UFY6L0w==/com.qqsy.xnbz-Kydz2Egkx-5xnYjs4vPLqw==/base.apk'\" > /tmp/xnbz/base.apk && md5 -q /tmp/xnbz/base.apk   # 期望 756df4d27ded491e00a865687571fc53",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-10-04 16:40:00",
+      "note": "已拉取并核对：md5 756df4d27ded491e00a865687571fc53 / sha256 f175786c705a490d2a34994656297155d21719f2c256d34f27258d3b397248f4。底包不可再生输入不留本地（政策）：收尾删 /tmp/xnbz/*，再获取路径已登记 10_docs/_state/底包再获取台账.md。渠道 = TapTap（assets/mqaw_sub_channel_taptap.byte，com.mqw.appid=1521）。",
+      "artifacts": {}
+    },
+    {
+      "id": "dump",
+      "name": "内存 dump（本作不需要：无壳、无 IL2CPP，静态解码已足够）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "true",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-10-04 16:45:00",
+      "note": "无壳（20 个 arm64 so 无一加固件）、非 IL2CPP（Cocos Creator 3.x / JSB）⇒ 无 dump 需求。静态取证工具：aapt2 dump xmltree/badging、unzip -l、01_tools/smali/baksmali + smali。"
+    },
+    {
+      "id": "anchor",
+      "name": "静态定位（dex 归属 / TapSDK 新版路径方法签名 / manifest 组件 / 证书）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/仙逆/底包静态分析_0.0.14.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-04 17:10:00",
+      "note": "结论：TapSignKit + ClientLoginUtils 在 classes7.dex（方法签名 .method public final getSign(Landroid/content/Context;)Ljava/lang/String; / .method public final isClientLogin(Landroid/app/Activity;Lcom/taptap/sdk/login/impl/data/model/Actions;)Z，各命中 1 次）；com.cocos.game.GameApplication 在 classes10.dex；manifest 有 TapTapKitInitProvider(com.qqsy.xnbz.TapTapKitInitProvider) + ThemisProvider(com.qqsy.xnbz.themisLite) + TapTapLoginActivity；无 old com.taptap.sdk.ui.TapTapActivity / ClientLoginHandler（计数 0）。原厂证书 CN=qqian，MD5 82c51c4ac68ac5d3197ef4c2b19e1ef6。"
+    },
+    {
+      "id": "impl_mod",
+      "name": "星空侧实现（XnbzMod/XnbzEntry/h 三件套 + SignSpoof 证书表 + TapLoginForceWeb 白名单）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/scan_mod_cpp.sh\" Games/XnbzMod.cpp",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/XnbzMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/XnbzMod.h"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/XnbzEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-04 18:00:00",
+      "note": "菜单三项 kXnbz_Features[] = {Category_战斗, Toggle_无敌, Slider_伤害倍率:1:100:1}；enum XnbzFeat {INV=1, DMG=2}；tag=Xnbz / authGameId=xnbz / waitLib=libcocos.so。★本轮 so 是零 hook 环境版：XnbzMod.cpp 保留 §④ 致命信号兜底（ThreadLocal sigjmp 保护区 + sigaltstack + 装钩互斥 + 槽位熔断），InstallBattleHooks() 空实现；【无敌】【伤害倍率】实现留 §TODO，待用户放行。SignSpoof 新增 XNBZ_PKG/XNBZ_CERT_B64（148 字符×6 段拼接，解码自检 709 B md5 与官方 cert.der 一致）；TapLoginForceWeb PKG_WHITELIST 追加 com.qqsy.xnbz。Android_xnbz.mk 已去掉 Unity/Il2CppApi.cpp（Cocos 系）。",
+      "inputs": {}
+    },
+    {
+      "id": "build_so",
+      "name": "native 编译（私有 Android_xnbz.mk，modern 注册表，零 hook 环境版）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/仙逆/xnbz_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_xnbz/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "note": "产物 = mod菜单/starry-mod-menu/libs_xnbz/arm64-v8a/libstarry_magic.so，构建后同步 jniLibs（gradle 实际取用）。归属防呆：Category_战斗 / Slider_伤害倍率:1:100:1 / Toggle_无敌 / xnbz / [Xnbz] 必须在；[Gyzw]/[Jfqs]/[Ysxz]/[Dwct]/[Tlgd] 必须不在。",
+      "done_at": "2026-10-04 16:52:00"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（classes11.dex 星光 dex + classes7.dex TapSDK 补丁 + Manifest 分支 B + so）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "ORIG_APK=/tmp/xnbz/base.apk bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_xnbz_0.0.14.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/仙逆/仙逆_0.0.14_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "阶段：1/6 gradle assembleRelease（星空 APK → smali，校验内嵌 so 为 Xnbz 版）→ 2/6 com/starry smali → classes11.dex（必需类 StarryInitProvider/menu.MenuService/bridge.ModBridge/sign.SignSpoof/sign.TapLoginForceWeb，且两张表须含 com.qqsy.xnbz）→ 3/6 classes7.dex 两处方法体替换（用 .locals 不用 .registers，避免 outs_size>registers_size 导致 dex2oat 失败；类集合必须与原 dex 一致）→ 4/6 Manifest 分支 B（mini apk 解码 + 文字注入 + apktool b + aapt2 零丢失校验；缓存 07_patched/仙逆/surgical/AndroidManifest.xml）→ 5/6 zip 重建（删 META-INF 旧签名；classes.dex/2..6/8..10 + resources.arsc + libcocos.so 逐条 sha256 断言不变）→ 6/6 zipalign -p 4 + apksigner（starry_release.jks, alias starry）。",
+      "done_at": "2026-10-04 16:54:00"
+    },
+    {
+      "id": "sign",
+      "name": "签名（星空证书 starry_release.jks，CN=StarryMagic）+ 官包零改动硬校验",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/仙逆/xnbz_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/仙逆/仙逆_0.0.14_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "硬校验：dex 编号无缺口且顶部 = classes11.dex；classes11.dex 含 5 个必需类 + com.qqsy.xnbz；classes7.dex 必须被改过且含常量 82c51c4ac68ac5d3197ef4c2b19e1ef6；其余 9 个 dex + resources.arsc + libcocos.so md5 必须等于官方原值；包内 so md5 == build_so 产物且含 [Xnbz]。",
+      "done_at": "2026-10-04 16:55:00"
+    },
+    {
+      "id": "device_ready",
+      "name": "真机就位（serial 锁定 + root 校验 + 只读识别现装版本）",
+      "requires": [],
+      "command": "bash \"$NIXIANG/04_scripts/仙逆/device_ready_xnbz.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/仙逆/.device_serial"
+        }
+      ],
+      "status": "done",
+      "note": "设备 OPD2404 / serial f9a116a2 / OnePlus / Android（KernelSU com.sukisu.ultra）。装机前设备应为官方 0.0.14（md5 756df4d2…）。",
+      "done_at": "2026-10-04 16:56:00"
+    },
+    {
+      "id": "install",
+      "name": "装机（默认只做同签名覆盖；签名冲突需 XNBZ_ALLOW_UNINSTALL=1 明确授权）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/仙逆/xnbz_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/仙逆/.install_ok"
+        }
+      ],
+      "status": "done",
+      "note": "官方 CN=qqian vs 星空 CN=StarryMagic ⇒ 覆盖安装必失败（预期）；授权卸载会清本地存档。装机后自动 appops set com.qqsy.xnbz SYSTEM_ALERT_WINDOW allow，并跑 verify_installed_apk.sh 闭环校验。首次启动确认：菜单可拉起（三项）+ 登录出现 WebView 网页登录页 + 能正常进游戏玩（用户实测为准）。 已执行（用户授权 XNBZ_ALLOW_UNINSTALL=1，2026-10-04 16:57 装于 f9a116a2，设备侧 md5 闭环一致）。★appops 直设被 Android 16 拒（shell uid 2000 无 MANAGE_APP_OPS_MODES）⇒ 已改脚本走 `su -c appops set`，并已手动授权 allow。首启日志：StarrySignSpoof spoof hit pkg=com.qqsy.xnbz md5=82c51c4ac68ac5d3197ef4c2b19e1ef6；StarryMagic「MOD 菜单已加载 (MainModern tag=Xnbz)」「[Xnbz] lib ready (cocos jsb, zero-hook env build)」「MOD 已就绪 tag=Xnbz ready=1」；MenuService overlayVisible=true attached=true（菜单已挂）。当前停在用户实测环节：登录页已进入 TapTapLoginActivity（待确认是否 WebView 网页登录），菜单可见性与能否正常进游戏由用户口述验收。",
+      "done_at": "2026-10-04 16:57:00"
+    },
+    {
+      "id": "archive",
+      "name": "归档（文档落盘，范围限定本游戏）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/仙逆/环境轮记录_0.0.14_20261004.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/仙逆/功能轮记录_0.0.14_20261004.md"
+        }
+      ],
+      "status": "done",
+      "note": "已落盘 10_docs/仙逆/{硬约束.md,底包静态分析_0.0.14.md,环境轮记录_0.0.14_20261004.md,功能轮记录_0.0.14_20261004.md,xnbz_menu_template.json}；已更新 10_docs/_state/games/仙逆.md；底包已登记 10_docs/_state/底包再获取台账.md。",
+      "done_at": "2026-10-04"
+    },
+    {
+      "id": "archive_close",
+      "name": "归档收口（scoped git 提交 + 状态索引刷新）",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/archive_close_git.sh' --game '仙逆'",
+      "verify": [],
+      "status": "done",
+      "note": "共享文件（SignSpoof.java / TapLoginForceWeb.java / current.md / 底包再获取台账.md）须用 stage_shared_file.py 内容级暂存 + --staged-only。 2026-10-04 收尾：SignSpoof.java / TapLoginForceWeb.java / 底包再获取台账.md 用 stage_shared_file.py + --staged-only 提交并推送 origin/main。",
+      "done_at": "2026-10-04"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "template_id": "xnbz",
+  "name": "仙逆",
+  "package": "com.qqsy.xnbz",
+  "source": "Games/XnbzEntry.cpp kXnbz_Features + Games/XnbzMod.h XnbzFeat",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "伤害倍率"},
+    {"feat_num": 3, "name": "重试判胜"}
+  ]
+}

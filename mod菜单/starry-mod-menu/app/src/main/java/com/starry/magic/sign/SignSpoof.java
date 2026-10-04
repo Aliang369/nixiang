@@ -1074,6 +1074,23 @@ public final class SignSpoof {
                     + "efvpYVtDwRGJMwzM/zcVaD2O+jO0BXEQCPwAitBiONxXDjjGbRl60n93OTe26CV3cPXOBQtF0vHle7xg4ij/UDX1/1QF/41qwTlpJJ1ndEIoTM1j3F6F4p"
                     + "qU4BA6AtYE1zRF07UfXsV4xcf8FB9Ggd4vTRLHEUPxcyENpemNwswqCmesrzCaSgsbPpjbFlhV5G7+KG5Ea9EM5j0AFvJgQE7jP+/FfIFTkSak+lbuLrHu";
 
+    // 仙逆：本尊（com.qqsy.xnbz 0.0.14 TapTap 渠道）
+    // 取自官包 base.apk META-INF/QQSY.RSA（openssl pkcs7 -inform DER -print_certs）
+    // subject/issuer: CN=qqian（自签，无 C/ST/L/O/OU）
+    // MD5:     82c51c4ac68ac5d3197ef4c2b19e1ef6
+    // SHA-1:   e8286c6d68ae6de8f35683aa2336e545c5792a97
+    // SHA-256: e7e23971c2d54ab791e33eadca3bbf9e0d6540aef8716706b85311b843d08878
+    // 有效期: 2020-12-08 → 2120-11-14；DER 709 B / RSA-2048 / SHA256withRSA
+    // 用途: 模组包自签后回灌官签，喂 TapSignKit.getSign 与渠道侧签名校验
+    private static final String XNBZ_PKG = "com.qqsy.xnbz";
+    private static final String XNBZ_CERT_B64 =
+            "MIICwTCCAamgAwIBAgIENUV1dzANBgkqhkiG9w0BAQsFADAQMQ4wDAYDVQQDEwVxcWlhbjAgFw0yMDEyMDgwOTI5MDNaGA8yMTIwMTExNDA5MjkwM1owEDEOMAwGA1UEAxMFcXFpYW4wggEiMA0GCSqGSIb3DQ"
+                    + "EBAQUAA4IBDwAwggEKAoIBAQCzYnGt8KIGMw2eEQWJfrsbPcO0po7fU3WzQ3XPa3VoMW9CVL+3hmmeprSmt9Q8gB6ink2H1egyikHXpeMAUuI6f1QTBNgBElE88uTmr7cL698mjjiwtnEQSy3bP0YE3CLugjlK"
+                    + "GLXQPV4a+vZ/UF16jPIK3FTmzUih7YPZsCLbo8cCDCwSu8I8ohOyS62YS3UrKDj7hTtRdm8pwyCdjJVMp05yMCg05iX8o38bi8KK8py8QC8xyoaYF+Fd94OIlbJQu/cehCmkPXGJoEtVVjgApW7D0bfydkNw6G"
+                    + "Sld3WP3Ukw/TeFmte7oGVGXS/LIW2rJonsK2tVR0kXLiE2eydxAgMBAAGjITAfMB0GA1UdDgQWBBRlv5wazFzrL2ISb/0QMiRk5V16UTANBgkqhkiG9w0BAQsFAAOCAQEAPKTPZ1ue9tde7P+2PeJMynoRdv0D"
+                    + "h1aFk1+92x2DC1XmmvB/+YXQtgkjumXe1sg3e4Yr1MhOdb+zuxkNdE6lsgs7Nc7caczQPQlmbekJpR6lMPt1wcIceXLom/Txm+S0H/lQmP/Gstke0B7eDRqwC70lBxcVTC7mGcgjqe13dhp+9j+9afne5nJs/d"
+                    + "KEUBN+wk3d3se+p9L7Jp5Bj17OXHzNzWltL/yM5wDiW9jBAewH4ovdArCljqM1F2rhspTCX7L/+hWLASYlGaMyMKnKQfMSRcnL8QW6G6rVgT6xxg8W7UWjPcz3c3SqQe6BUmgAQXwQffkojU9HWOFd5UaPHg==";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1143,6 +1160,7 @@ public final class SignSpoof {
                 fakes.put(JFQS_PKG, new Signature(Base64.decode(JFQS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GDZFDJ_PKG, new Signature(Base64.decode(GDZFDJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WOR_PKG, new Signature(Base64.decode(WOR_CERT_B64, Base64.DEFAULT)));
+                fakes.put(XNBZ_PKG, new Signature(Base64.decode(XNBZ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

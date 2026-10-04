@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/仙逆",
+  "keep": "仙逆_0.0.14_surgical-releaseSigned.apk",
+  "keep_size": 376975940,
+  "keep_md5": "267c4be89dacb907d1d04ba97dae105d",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "仙逆_0.0.14_surgical-releaseSigned.apk.idsig",
+      "size": 2979355,
+      "md5": "841081d2bd16a28c2ad154d88222d09b"
+    },
+    {
+      "name": "仙逆_0.0.14_surgical-unsigned.apk",
+      "size": 375547718,
+      "md5": "7b07fee989d825c027544d87ed4b446d"
+    }
+  ],
+  "removed_count": 2
+}

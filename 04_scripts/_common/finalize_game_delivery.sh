@@ -98,8 +98,8 @@ if [[ -z "$APKSIGNER" ]]; then
   for v in 36.0.0 36.1.0 35.0.0 34.0.0; do
     for c in \
       "$HOME/Library/Android/sdk/build-tools/$v/apksigner" \
-      "${ANDROID_SDK_ROOT:-$LOCALAPPDATA/Android/Sdk}/build-tools/$v/apksigner" \
-      "${ANDROID_SDK_ROOT:-$LOCALAPPDATA/Android/Sdk}/build-tools/$v/apksigner.bat"; do
+      "${ANDROID_SDK_ROOT:-${LOCALAPPDATA:-}/Android/Sdk}/build-tools/$v/apksigner" \
+      "${ANDROID_SDK_ROOT:-${LOCALAPPDATA:-}/Android/Sdk}/build-tools/$v/apksigner.bat"; do
       if [[ -f "$c" ]]; then APKSIGNER="$c"; break 2; fi
     done
   done
