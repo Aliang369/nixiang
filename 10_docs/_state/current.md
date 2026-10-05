@@ -10,6 +10,7 @@
 
 | 游戏 | 最近更新 | 状态 | 详情 |
 |---|---|---|---|
+| 绝区零 | 2026-10-05 | 🔍 **池鸳改包 3.2.0 抓点完成，暂停等用户原版包**：非斌哥路线＝磁盘不改 + 运行时 12B 跳转桩；4 条指纹闸门全 MATCH → 3 个 hook（multi attack/invincible upstream/attack writeback update，handler 0x4de78/0x4e2c8/0x4e45c）；菜单 13 项全量；防御初判：保护 so 运行时全未加载、libtersafe2 时间戳异常（待官方对照） | [摘要](games/绝区零.md) |
 | 鬼谷八荒 | 2026-10-04 | ✅ **1.1.329 星空版已装机，用户 L3 通过并收官**：TapTap 官包 Unity IL2CPP 无壳；斌哥包瘦壳（so/metadata 一致）⇒ RVA 零重定位（禁 base+RVA）。两项：①GM 菜单 `UISwitchPlayerMenu.get_IsCheatModeEnabled` `0x40A4D28` 恒真；②加速 `Time.get_deltaTime` `0x54553E4` 钉 timeScale（1–20）+ `set_timeScale` `0x5455560` 透传。唯一正式包 md5 `649e1811…` sha256 `af56f2db…` + `delivery_20261004/`（icon 512/144 + 菜单模板） | [摘要](games/鬼谷八荒.md) |
 | 境界守望者 | 2026-10-04 | ✅ **国际服 1.6.38.829.1 星空版 e1+e2+C1+C2 全部真机验收通过**：Google Play / Unity 2019.4 IL2CPP + Split(Qigsaw)。①去签名+菜单进游戏；②无敌/伤害倍率(1-10)；③设备侧 `wor_cfg.txt` 配置化（**含热重载：改文本不重启游戏**）；④`WOR_DIAG_FULL` 诊断两档。三卡点＝split 壳同 soname 劫持 Api／`IsValidHeapPtr()` 拒 tagged 指针／值类型偏移 `+0x10`。**正式包＝单 APK 直装 md5 `fd554c37…`**；限制＝服务端战斗校验 FightVerify（容差 0 无解） | [摘要](games/境界守望者.md) |
 | 仙逆：本尊 | 2026-10-04 | ⛔ **用户判停/已收尾**：`com.qqsy.xnbz` 0.0.14/vc14 TapTap 渠道，Cocos Creator 3.x（JSB）⇒ 功能全走运行期 JS 层补丁。环境三件（去签名 + 强制网页登录 + 菜单进游戏）✅；【无敌】【伤害倍率】【重试判胜】✅（客户端回放层生效）。判停＝奖励在 `game.fightbegin` 由服务端一次性定稿、无「客户端上报胜负」接口（380 个 `game.*` 接口普查）⇒ 改 `isWin` 只改显示；不做本地假奖励。已交付正式包 md5 `267c4be8…`（376975940 B）+ `delivery_20261004/`（icon+菜单模板） | [摘要](games/仙逆.md) |
