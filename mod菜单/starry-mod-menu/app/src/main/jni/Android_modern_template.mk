@@ -29,9 +29,16 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := starry_magic
 
-LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
-LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
-LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
+# -fno-emulated-tls【2026-10-05 绝区零事故，默认带上】：
+#   Android clang 默认 emutls，任何 TU 用了 thread_local 就会生成 UND __emutls_get_address；
+#   而该符号只有 NDK 版 libc++_shared.so 弱定义 —— 游戏自带的旧 libc++_shared / MuMu 的
+#   arm64 垫片 libc 都没有 ⇒ dlopen 失败、菜单静默降级 Java 版、hook 全哑（日志特征：
+#   `StarryNativeLoad: loadLibrary starry_magic failed ... cannot locate symbol "__emutls_get_address"`）。
+#   自检：llvm-nm -D --undefined-only <so> | grep emutls（应为空）。
+# --exclude-libs,ALL 符号卫生（libChiy 类事故）：禁止静态库成员符号（Dobby* 等）进动态符号表。
+LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls
+LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls
+LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm

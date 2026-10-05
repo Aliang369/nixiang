@@ -31,3 +31,19 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - [splice 离线闭环 + early hook 超时（超维进化 0.3.5，2026-09-21）](../_templates/经验_splice离线闭环与earlyhook_20260921.md)：**候选，未审批**——splice 型改动的离线镜像需抽真源码、主机编译并逐字节比 delta；early hook timeout 的含义待适用条件验证。拟落 `hook-rules.md` + `starry-mod/SKILL.md`。
 - [热更指纹漂移与令牌浪费（勇士之心 1.0.3）](../_templates/经验_热更指纹漂移_20260921.md)：**已合并**（2026-09-21 用户明确授权）——已落入 `hook-rules.md` §24、`re-extract/hotupdate-fingerprint-recheck.md`、`AGENTS.md` 和 `stages.md`。
 - 新实验使用 [逆向实验记录](../_templates/逆向实验记录.md)；新经验使用 [经验候选卡](../_templates/经验候选卡.md)，证据与落点齐备前保持候选状态。
+- [emutls 静默降级：so 带 UND `__emutls_get_address` → 模拟器/真机 dlopen 失败，菜单静默降级 Java 版（绝区零 3.2.0，2026-10-05）](games/绝区零.md)：**已批准，待合并**（证据齐＋落点明确，自动门槛）——Android clang 默认 `-femulated-tls`，任何 TU 用 `thread_local`（本仓 30+ 个 `*Mod.cpp` 都在用）就会生成这条 UND；而它只有 **NDK 版 libc++_shared.so** 弱定义，游戏自带的旧 libc++_shared、MuMu 的 arm64 垫片 libc/libc++、真机 bionic libc **都没有**。失败时的坑＝菜单照弹（Java 降级 `native menu shown mode=ACTIVITY`）但 `ModBridge … Unavailable`、hook 全哑，极易误诊成“功能没实现”。修法＝mk 加 `-fno-emulated-tls` ＋ `-Wl,--exclude-libs,ALL`（后者防 libChiy 式静态库符号外露）；一行自检 `llvm-nm -D --undefined-only <so> | grep emutls` 必须为空。**模板已直接落地** `mod菜单/starry-mod-menu/app/src/main/jni/Android_modern_template.mk`；待并入 `skill/re-implement/hook-rules.md`（新节「so 装载硬门禁」）＋ `skill/starry-mod/SKILL.md` 出包自检清单。证据＝`10_docs/绝区零/出包记录_20261005.md` L2 节。
+  对存量游戏：旧 `libs_*/` so 可用同一行命令扫；命中即在下次重编时补上这两个标志（存量包不追改）。
+- [MuMu 早期假映射下的 VA 口径与装钩就绪门（绝区零 3.2.0，2026-10-06；原「转译缓存」条已更正）](games/绝区零.md)：**已批准，待合并**（证据齐＋落点明确）——
+  ⚠️ 原根因叙述「转译缓存不回读 guest 字节」**已被 2026-10-06 凌晨第三轮实测否定**（反证：同一函数 Dmg@0x40002f62a9f0
+  在激战中晚装钩——进程起 5 分钟后、函数热跑时——仍 30ms 内命中 10 条）；真因＝**VA 口径选错（假映射）**：
+  MuMu 启动早期 /proc/self/maps 会出现游戏**校验/预读 .so 的同名临时分块映射**（0x77xx 宿主堆区，
+  随后被回收/复用；本会话实测那些 VA 后来属于 Chrome 库或已 unmapped），isLibraryLoaded 名字命中＝假就绪；
+  桩全落假副本 ⇒ 功能全哑。修法（已入包，L2 实测四条 `src=phdr`）：就绪门用 `dl_iterate_phdr` 真模块＋目标站
+  序言交叉校验；VA＝`base + p_vaddr + (fileOff-p_offset)`（PT_LOAD 口径，maps 仅回退）；再加每 Tick
+  「序言重现 ⇒ 清 doneFlag 自动重挂」看护。修后同一站点 VA 与当年命中会话逐字节一致。
+  两条保留项：① **lib ready 即全量装钩**（开关只在 handler 内门控，关掉时原样转发原函数）；
+  ② 12B 原地桩的 `adrp` ±4GB 限制 ⇒ 目标与 handler 相距过远时需 target ±4GB 内的**近距跳板**
+  （`movz/movk ×4 + br x16`；或直接用 DobbyHook 自带 trampoline）。注意：口径修正后
+  target/handler 本就落在 ±4GB 内（∈同一片 0x4000 区），跳板转为安全冗余而非必需。
+  待并入 `skill/re-implement/hook-rules.md`「模拟器/转译层」节 ＋ `skill/starry-mod/SKILL.md` 出包自检。
+  证据＝`10_docs/绝区零/出包记录_20261006.md` §第三轮 ＋ `09_test/绝区零/precheck_20261006_010317/`

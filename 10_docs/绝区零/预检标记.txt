@@ -1,0 +1,17 @@
+# 绝区零 装机预检标记（post_install_precheck.sh 读）
+# 格式：类别|ERE
+pkg|com.miHoYo.Nap
+menu_load|StarryMagic
+menu_shown|native menu shown
+hook_hit|\[jql\]
+auth_fail|renew auth fail|authoritative=.*deny
+auth_ok|auth game_id synced from native|renew ok
+# crash 正则收窄（2026-10-05 L2 实测）：裸 tombstone 会撞 MuMu 审计噪音
+#   `I sh: avc: denied { open } for path="/data/tombstones" ... app=com.miHoYo.Nap`
+#   —— 那是 SELinux permissive 审计行，不是崩溃。
+# 第二次误报：自家信息日志 `[jql] fault guard armed (SIGSEGV/SIGBUS/SIGILL)` 被裸 SIGSEGV 命中
+#   ⇒ 去报裸信号名，只留真崩溃特征（tombstone 头 / Java 崩溃 / 进程死亡）。
+# 第三次误报：`Process .OAIDLoadService (pid 8129) has died`（系统服务正常退出），其后 6 行正好带
+#   本包名的遥测日志 ⇒ 过脚本的 PID|pkg 邻域闸门。`has died` 是弱信号且这里只能做邻域匹配，
+#   真实崩溃必定带 Fatal signal / DEBUGGERD / FATAL EXCEPTION ⇒ 直接去掉 has died。
+crash|FATAL EXCEPTION|Fatal signal|DEBUGGERD|crash_dump|am_crash
