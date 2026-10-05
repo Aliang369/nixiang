@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# 收官交付物打包：唯一正式 APK、icon 512/144、菜单模板副本、可选裁剪清单。
+# 收官交付物打包：唯一正式 APK、可选 icon 512/144、可选菜单模板副本、可选裁剪清单。
+# icon/菜单模板是**按需交付物**：只有显式传 --icon-source/--menu-template 才生成；两者都不传时
+# 不创建 delivery 目录。（使用时机：新游戏首次交付，或用户当轮明确说「图标和菜单模板」。2026-10-05 用户定）
 # 默认 dry-run；--apply 才写入 delivery 目录和裁剪 08_output。
 set -euo pipefail
 
@@ -34,7 +36,11 @@ usage() {
   - --prune 才调用 prune_output_final.sh 裁剪 08_output/{游戏} 为唯一 APK。
   - --sync-doc 打印「粘到游戏摘要 + current.md」的文档同步片段（**只打印，不自动改文件**：
     `10_docs/_state/current.md` 与游戏摘要是多会话共享文件，须手工粘贴后按 AGENTS.md 内容级暂存）。
-  - icon 源图存在时生成 512/144 PNG；菜单模板会做字段严格自检并复制一份。
+  - icon/菜单模板为**按需交付物**：显式传 --icon-source / --menu-template 才生成与自检；
+    都不传 ⇒ 本次不创建 delivery 目录、不生成任何文件（也不再自动扫描 10_docs 下的模板）。
+    使用时机：**新游戏首次交付**（08_output/{游戏} 下还没有 delivery_*）或用户当轮明确说
+    「图标和菜单模板」；其余收尾默认不传，避免每次都生成不需要的交付物。
+  - 传 --menu-template 时：字段严格自检 + 复制一份 menu_template.json 到 delivery 目录。
   - 菜单模板自检含分组行门禁（features 不得出现 Category_* 或纯分组名）+ feat_num 升序/去重/
     缺口提示，依据 `10_docs/_templates/菜单模板_规范与示例.md` §2。遗留模板确实带分组行时
     可加 --allow-legacy-template 把该门禁降级为 WARN。
@@ -152,17 +158,11 @@ pick_py_with_pil() {
   return 1
 }
 
-if [[ -z "$MENU_TEMPLATE" ]]; then
-  menus=()
-  while IFS= read -r -d '' f; do menus+=("$f"); done < <(find "$ROOT/10_docs/$GAME" -maxdepth 1 -type f -name '*_menu_template.json' -print0 2>/dev/null)
-  [[ "${#menus[@]}" -eq 1 ]] || {
-    echo "ERROR: 未找到唯一菜单模板，请显式传 --menu-template（当前命中 ${#menus[@]} 个）" >&2
-    exit 1
-  }
-  MENU_TEMPLATE="${menus[0]}"
+# 菜单模板**不再自动扫描**：不传就完全跳过（2026-10-05 用户定「按需交付」）。
+if [[ -n "$MENU_TEMPLATE" ]]; then
+  MENU_TEMPLATE="$(abs_path "$MENU_TEMPLATE")"
+  [[ -f "$MENU_TEMPLATE" ]] || { echo "ERROR: 菜单模板不存在: $MENU_TEMPLATE" >&2; exit 1; }
 fi
-MENU_TEMPLATE="$(abs_path "$MENU_TEMPLATE")"
-[[ -f "$MENU_TEMPLATE" ]] || { echo "ERROR: 菜单模板不存在: $MENU_TEMPLATE" >&2; exit 1; }
 
 if [[ -n "$ICON_SOURCE" ]]; then
   ICON_SOURCE="$(abs_path "$ICON_SOURCE")"
@@ -174,6 +174,7 @@ if [[ -n "$ICON_SOURCE" ]]; then
   fi
 fi
 
+if [[ -n "$MENU_TEMPLATE" ]]; then
 # ⚠️ 校验器用的 python 也吃 Windows 路径（原生 Windows python 认不得 /e/… ）。
 _VALIDATOR_PY="${PYTHON:-$(command -v python3 || command -v python || command -v py || true)}"
 [[ -n "$_VALIDATOR_PY" ]] || { echo "ERROR: 未找到 python，无法校验菜单模板（可设 PYTHON=/path/to/python）" >&2; exit 1; }
@@ -210,19 +211,51 @@ if gaps:
           '录入后台时必须带缺口（从 0 连续填会把后面所有开关串位）', file=sys.stderr)
 print('menu_template OK', d['template_id'], len(feats), '项', [x['name'] for x in feats])
 PY
+fi
 
 DELIVERY="$GAME_DIR/delivery_$DATE"
+# 首次交付判据：08_output/{游戏} 下是否已有 delivery_* 目录（2026-10-05 用户定「icon/模板按需交付」）。
+HAS_PRIOR_DELIVERY=0
+for d in "$GAME_DIR"/delivery_*; do
+  if [[ -d "$d" ]]; then HAS_PRIOR_DELIVERY=1; break; fi
+done
+# 本次实际产出的交付件描述（两个都空 ⇒ 不建 delivery 目录、不生成任何文件）
+DELIVERY_ASSETS=""
+DELIVERY_ASSETS_DESC=""
+if [[ -n "$ICON_SOURCE" ]]; then
+  DELIVERY_ASSETS="icon 512/144"
+  DELIVERY_ASSETS_DESC="icon_${GAME}_512.png / icon_${GAME}_144.png"
+fi
+if [[ -n "$MENU_TEMPLATE" ]]; then
+  if [[ -n "$DELIVERY_ASSETS" ]]; then
+    DELIVERY_ASSETS="${DELIVERY_ASSETS} + menu_template.json"
+    DELIVERY_ASSETS_DESC="${DELIVERY_ASSETS_DESC} + menu_template.json"
+  else
+    DELIVERY_ASSETS="menu_template.json"
+    DELIVERY_ASSETS_DESC="menu_template.json"
+  fi
+fi
+
 echo "[finalize] game=$GAME"
 echo "[finalize] apk=$APK"
 echo "[finalize] apk_md5=$(md5_of "$APK")"
 echo "[finalize] apk_sha256=$(sha256_of "$APK")"
-echo "[finalize] menu_template=$MENU_TEMPLATE"
+echo "[finalize] menu_template=${MENU_TEMPLATE:-（未提供，跳过菜单模板交付）}"
 echo "[finalize] delivery=$DELIVERY"
 if [[ -n "$ICON_SOURCE" ]]; then
   echo "[finalize] icon_source=$ICON_SOURCE"
   echo "[finalize] icon_out=icon_${GAME}_512.png, icon_${GAME}_144.png"
 else
   echo "[finalize] icon_source=(未提供，跳过 icon 生成)"
+fi
+if [[ -n "$DELIVERY_ASSETS" ]]; then
+  echo "[finalize] delivery_assets=$DELIVERY_ASSETS"
+else
+  echo "[finalize] delivery_assets=(无：本次不创建 delivery 目录)"
+  if [[ "$HAS_PRIOR_DELIVERY" == "0" ]]; then
+    echo "[finalize] NOTE: 这是 ${GAME} 的首次收尾（08_output/${GAME} 下无 delivery_*），但本次未传 --icon-source/--menu-template。" >&2
+    echo "[finalize]       新游戏首交付若需要 icon/菜单模板，请补传这两个参数后重跑；不需要则忽略本提示。" >&2
+  fi
 fi
 
 if [[ "$SYNC_DOC" == "1" ]]; then
@@ -231,18 +264,30 @@ if [[ "$SYNC_DOC" == "1" ]]; then
   APK_SIZE="$(stat -f%z "$APK" 2>/dev/null || stat -c%s "$APK")"
   echo "[finalize] ─── 文档同步片段（--sync-doc，仅打印；共享文件请手工粘贴后按 AGENTS.md 内容级暂存）───"
   echo "# ① 追加到 10_docs/_state/games/${GAME}.md 的「本地产物与关键输入」表："
-  echo "| \`08_output/${GAME}/delivery_${DATE}/\` | 交付物：icon_${GAME}_512.png / icon_${GAME}_144.png + menu_template.json | 最终交付 |"
+  if [[ -n "$DELIVERY_ASSETS" ]]; then
+    echo "| \`08_output/${GAME}/delivery_${DATE}/\` | 交付物：${DELIVERY_ASSETS_DESC} | 最终交付 |"
+  else
+    echo "#   （本次未生成 icon/菜单模板 ⇒ 不写 delivery 行，也不会创建 delivery 目录）"
+  fi
   if [[ "$PRUNE" == "1" ]]; then
     echo "| \`10_docs/${GAME}/正式包裁剪清单_${DATE}.json\` | 裁剪清单（保留 ${APK_BASE}） | 最终交付 |"
   fi
   echo "# ② 追加到 10_docs/_state/current.md 该游戏行末尾（整行 ≤400 字符）："
-  echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）+ delivery_${DATE}/（icon 512/144 + 菜单模板）"
+  if [[ -n "$DELIVERY_ASSETS" ]]; then
+    echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）+ delivery_${DATE}/（${DELIVERY_ASSETS}）"
+  else
+    echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）（本次未生成 icon/菜单模板）"
+  fi
   echo "# ③ 回扫提示（--apply 会重写下列产物，请回头核对已写过的摘要行）："
-  echo "#   - 08_output/${GAME}/delivery_${DATE}/icon_${GAME}_512.png、icon_${GAME}_144.png"
-  echo "#   - 08_output/${GAME}/delivery_${DATE}/menu_template.json（内容来自 10_docs/${GAME}/$(basename "$MENU_TEMPLATE")）"
-  echo "#     ★ 若本次修正了源模板（增删功能项 / feat_num 变化 / source 改写），10_docs/_state/games/${GAME}.md 的"
-  echo "#       「本地产物与关键输入」表里该模板行的「N 项」与指纹摘要已过期，必须同步改写。"
-  echo "#       （历史事故：模板 17 项→15 项后 games/疾风骑士.md:39 仍写 17 项）"
+  if [[ -n "$ICON_SOURCE" ]]; then
+    echo "#   - 08_output/${GAME}/delivery_${DATE}/icon_${GAME}_512.png、icon_${GAME}_144.png"
+  fi
+  if [[ -n "$MENU_TEMPLATE" ]]; then
+    echo "#   - 08_output/${GAME}/delivery_${DATE}/menu_template.json（内容来自 10_docs/${GAME}/$(basename "$MENU_TEMPLATE")）"
+    echo "#     ★ 若本次修正了源模板（增删功能项 / feat_num 变化 / source 改写），10_docs/_state/games/${GAME}.md 的"
+    echo "#       「本地产物与关键输入」表里该模板行的「N 项」与指纹摘要已过期，必须同步改写。"
+    echo "#       （历史事故：模板 17 项→15 项后 games/疾风骑士.md:39 仍写 17 项）"
+  fi
   if [[ "$PRUNE" == "1" ]]; then
     echo "#   - 10_docs/${GAME}/正式包裁剪清单_${DATE}.json"
   fi
@@ -254,7 +299,11 @@ if [[ "$MODE" != "apply" ]]; then
   exit 0
 fi
 
-mkdir -p "$DELIVERY"
+if [[ -n "$DELIVERY_ASSETS" ]]; then
+  mkdir -p "$DELIVERY"
+else
+  echo "[finalize] 未传 --icon-source/--menu-template：跳过 delivery 目录与图标/模板产物（--prune/--sync-doc 照常）。"
+fi
 if [[ -n "$ICON_SOURCE" ]]; then
   if command -v sips >/dev/null 2>&1; then
     sips -z 512 512 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_512.png" >/dev/null
@@ -274,7 +323,9 @@ for edge in (512, 144):
 PYEOF
   fi
 fi
-cp -f "$MENU_TEMPLATE" "$DELIVERY/menu_template.json"
+if [[ -n "$MENU_TEMPLATE" ]]; then
+  cp -f "$MENU_TEMPLATE" "$DELIVERY/menu_template.json"
+fi
 
 if [[ "$PRUNE" == "1" ]]; then
   MANIFEST="$ROOT/10_docs/$GAME/正式包裁剪清单_${DATE}.json"
@@ -282,4 +333,6 @@ if [[ "$PRUNE" == "1" ]]; then
 fi
 
 echo "[finalize] done"
-find "$DELIVERY" -maxdepth 1 -type f -print | sort
+if [[ -d "$DELIVERY" ]]; then
+  find "$DELIVERY" -maxdepth 1 -type f -print | sort
+fi

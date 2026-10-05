@@ -235,7 +235,7 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 2. 正式包：**先确认当前 `08_output/{游戏}` 里有哪些包**（用户手动增删，可能已空）。
    核对指定正式包签名/哈希后，执行 `bash 04_scripts/_common/prune_output_final.sh 08_output/{游戏} {正式包} --apply --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json`；最终目录只保留一个正式 APK，被删候选包/idsig 的 hash/大小入清单。
    目录为空或正式包不存在 → 报告并停下，不要从 `09_test` 里翻中间包冒充正式包。
-   若同时需要 icon 和菜单模板交付，优先用 `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --apply`；脚本会生成 `08_output/{游戏}/delivery_日期/`、复制菜单 JSON、自检字段，并可选调用裁剪清单。
+   icon / 菜单模板是**按需交付物**（2026-10-05 用户定）：仅「新游戏首次交付」（`08_output/{游戏}` 下无 `delivery_*`）或用户当轮点名「图标和菜单模板」时，才用 `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json [--prune --sync-doc] --apply` 生成 delivery 目录（icon 512/144 + 模板副本 + 字段自检）；其余收尾**不传这两个参数**（脚本默认跳过、不建 delivery 目录），裁剪与文档片段分别走上面的 `prune_output_final.sh` 与 `--sync-doc`。
 3. 官包归位：`02_apks`（用户手动管理，AI 不探测不整理）；本轮是否有原版以**用户声明**为准。
 4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；只清理本游戏路径；删前逐项核对再生依据；中文路径先 `git config core.quotepath false`）。
    优先用 `bash 04_scripts/_common/trash_paths.sh --tag {游戏}_{日期} --path 03_decompiled/{游戏} ...`；默认 dry-run，核对路径/大小/Trash 目标后再加 `--apply`。只清理本游戏可再生路径（03/06 大二进制、07 大包、09_test），中文路径先 `git config core.quotepath false`。

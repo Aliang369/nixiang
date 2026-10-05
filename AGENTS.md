@@ -72,6 +72,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
   - 2026-10-04（用户授权「按这个方案来」）：真机零截图节补录三条禁令根因（坐标定位歪烧流程与 token / 菜单授权墙机器过不去且易误诊服务端 / 人工实测比机器判定准）；新增「装机预检闸门＋飞行记录仪」条目与 `04_scripts/_common/post_install_precheck.sh`、`04_scripts/_common/flight_recorder.sh`，分工定死：人工＝终审＋标记，机器＝预检员＋记录仪。
   - 2026-10-04（用户明示「按照你说的进行调整」）：新增 `04_scripts/_common/device_profile.sh`（设备画像：对设备只读，八节报告落 `10_docs/_state/设备画像/<serial>.md`，含 libil2cpp 映射分组/基址判据、RVA 段权限与内存 vs 文件字节、`extractNativeLibs`/`ro.apk_verity.mode`）；`AGENTS.md` §授权与测试边界 新增「验收阶梯 L1/L2/L3」「设备画像先行」，§执行纪律补充 新增「诊断与最可能修复同包」「一轮一个变量、一轮只问一次」；`skill/re-implement/hook-rules.md` 新增 §31 设备无关单路径与 SELFCHECK。实测依据：真机 `f9a116a2` 画像 `组数=2 选中组=#1 rw-p=0x2b7000`、两条 RVA 均 `perm=r-xp inbest=yes`、`ro.apk_verity.mode=enforcing` ⇒ **D3 原地改包快路在该机不可用**。
   - 2026-10-04（同轮，出包提速 D1/D2）：`04_scripts/冒险与征途/mxyzt_so_only_1.5.9.sh` 复刻底包改 `cp -c`（APFS clonefile，实测 886MB 从 ≈5 秒降到 0.005 秒，失败回落 `cp -f`）、zipalign 前加 `-c -p 4` 预检（预检 rc=1 未对齐 ⇒ 本游戏不触发；zipalign 实测仅 1.46 秒）、订正「原样搬压缩流」的错误注释（实测会重压 deflate 条目）；`hook-rules.md` 追加 §31.7 出包提速实测表。结论：**打包不是瓶颈，大头是编译+装机 ⇒ 省时间靠减少轮次**。
+  - 2026-10-05（用户口述「生成图标和菜单模板不该每次收尾都做，新游戏首次、或我说了才生成」）：`04_scripts/_common/finalize_game_delivery.sh` 改为 icon/菜单模板**按需交付**——删掉菜单模板自动扫描（不传参不再报错/不再复制），两参数都不传时不创建 delivery 目录、`--sync-doc` 的 delivery 行/摘要行/回扫行全部条件化，首次交付未传时打 NOTE 提醒；`AGENTS.md` 收尾节、`04_scripts/_common/stages.md` 收官步 2、`skill/starry-mod/SKILL.md` 收尾产出三处同步改口径；冒烟 T1–T6（已交付游戏跳过/显式 icon+模板/首交付 NOTE/apply 产物/缺模板报错/apply 跳过）PASS。
 - 需要用户操作（进游戏、开菜单、打开工具等）时在聊天说明操作、成功标志和所需配合，等待确认并核对结果；只暂停依赖该结果的步骤，不假定用户已操作，独立且已授权工作可继续。
 - **真机交互零截图（2026-10-01 定）**：不做 `screencap` 猜坐标、不 `input tap`、不靠截图判断界面状态 —— 真机取证一律走 `logcat`、`/proc/<pid>/{mem,maps}`、frida。屏幕上的点按、输入、翻页**全部由用户完成**。（历史浪费：为算 `input tap` 坐标花掉 `wm size` + `screencap` 的调用，最终未用上。）
   **三条根因（2026-10-04 用户口述定案，禁止再提机器实测 / 自动点击类提案）**：① 坐标定位会歪，失败重试烧流程和 token；② 菜单授权墙机器过不去、还会误诊成服务端问题，而用户输一次账号即可解决；③ 人工实测比机器判定准——有些问题日志里看不出来，使用时才知道。分工由此定死：**人工＝终审＋标记，机器＝预检员＋记录仪**（工具见下条）。
@@ -131,9 +132,12 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - `08_output/` 默认按用户管理，不自动整理；但当用户明确执行「收尾+正式包+清理+git」口令时，应将该次游戏的 `08_output/{游戏}` 裁剪为**唯一正式最终 APK**，使用 `04_scripts/_common/prune_output_final.sh` 保留指定包并记录被删清单，删除前校验签名与 hash。单独出包、普通清理或文档任务不得推定此项授权。
   - **收尾一律走一键脚本，禁手工重造（2026-10-02 消消英雄2 定）**：动手前先读
     `04_scripts/_common/stages.md` 的收尾节，然后跑
-    `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --prune --sync-doc --apply`
-    —— 它一次生成 `08_output/{游戏}/delivery_日期/`（icon 512/144 + 菜单模板副本 + 字段自检）、
-    `--prune` 裁剪为唯一正式包、`--sync-doc` 打印「粘到游戏摘要 + `current.md`」的同步片段。
+    `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --prune --sync-doc --apply`
+    —— `--prune` 裁剪为唯一正式包、`--sync-doc` 打印「粘到游戏摘要 + `current.md`」的同步片段。
+    **icon / 菜单模板是按需交付物（2026-10-05 用户定，禁每次收尾都生成）**：只有「新游戏首次交付」
+    （`08_output/{游戏}` 下还没有 `delivery_*` 目录）或用户当轮明确说「图标和菜单模板」时，才追加
+    `--icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json`；其余收尾一律不传，
+    脚本默认跳过并**不创建 delivery 目录**（首次交付未传时脚本会打 NOTE 提醒）。
     （历史浪费：2026-10-02 手工 PIL 放大 icon、手调 `prune_output_final.sh`、手写文档行 —— 三件都是它的本职。）
   - 口令中的 **「git」= 白名单提交 + 推送 origin/main 连体**（`archive_scoped_git.sh` 默认已推送），不需要再问「要不要推」；仅当用户明确说不要推时才 `--no-push`，并在汇报里写明「已提交未推送 + 远端落后 N 个提交」。push 冲突/网络失败保留本地提交并报告，不自动强推。
   - 收官汇报必须显式写出 git 结果：提交号 + 是否已推送 + 远端是否同步（`git status -sb` 无 `ahead`）。

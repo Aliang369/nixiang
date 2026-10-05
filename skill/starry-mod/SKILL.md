@@ -211,13 +211,14 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
    - `TapLoginForceWeb` 白名单含本包名；旧版 TapSDK（如 3.30.2）注意 `TapTapActivity` 客户端 SSO 分支需单独处理（一念通天教训）
 5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（无悔华夏 4399 事故：临时复用 `whhx` 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）
 
-**收尾固定产出**（3 个会话收尾时被用户索要，固化为清单项）：
-- icon 提取：交付副本放 `08_output/{游戏}/delivery_YYYYMMDD/icon_{游戏}_{512|144}.png`；`02_apks/` 只作为用户管理的不可再生输入，AI 不默认写入。
+**收尾交付物（2026-10-05 起 icon / 菜单模板为按需产出：新游戏首次交付或用户点名时才生成）**：
+- icon 提取（按需）：交付副本放 `08_output/{游戏}/delivery_YYYYMMDD/icon_{游戏}_{512|144}.png`；`02_apks/` 只作为用户管理的不可再生输入，AI 不默认写入。
 - 菜单模板 JSON：`10_docs/{游戏}/{游戏拼音}_menu_template.json`（`template_id`=game_id）
-- 交付副本：`08_output/{游戏}/delivery_YYYYMMDD/menu_template.json`，字段严格按 `10_docs/_templates/菜单模板_规范与示例.md` 自检。
+- 交付副本（按需）：`08_output/{游戏}/delivery_YYYYMMDD/menu_template.json`，字段严格按 `10_docs/_templates/菜单模板_规范与示例.md` 自检。
 - 交付目录生成（**★收尾一律走这条，禁手工重造，2026-10-02 消消英雄2 定**）：先读 `04_scripts/_common/stages.md` 收尾节，再跑
-  `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json --prune --sync-doc --apply`
-  —— 一次完成 delivery 目录（icon 512/144 + 模板副本 + 字段自检）、裁剪唯一正式包、**打印**文档同步片段（共享文件仍需手动粘，脚本不自动改）。
+  `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --prune --sync-doc --apply`
+  —— 裁剪唯一正式包 + **打印**文档同步片段（共享文件仍需手动粘，脚本不自动改）。
+  **icon / 菜单模板按需**：仅「新游戏首次交付」（`08_output/{游戏}` 无 `delivery_*`）或用户当轮点名时才追加 `--icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json`，生成 delivery 目录（icon 512/144 + 模板副本 + 字段自检）；其余收尾不传，脚本默认跳过、不建 delivery 目录。
   （历史浪费：2026-10-02 手工 PIL 放大 icon、手调 `prune_output_final.sh`、手写游戏摘要与 `current.md` 行 —— 三件都是它的本职。）
 - icon 无 512 源时：官方资源常只到 192×192，必须放大并在交付记录里注明「由官方最高密度 XX 放大」，不谎称原生 512。
 - 收尾清单：按 `10_docs/_templates/游戏收尾与最小复现清单.md` 填写，含生命周期场景矩阵已测/未测
