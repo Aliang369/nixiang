@@ -1,0 +1,400 @@
+diff --git a/04_scripts/勇士之心/gen_ysxz_patch_header.py b/04_scripts/勇士之心/gen_ysxz_patch_header.py
+index fbd63088..36b98674 100644
+--- a/04_scripts/勇士之心/gen_ysxz_patch_header.py
++++ b/04_scripts/勇士之心/gen_ysxz_patch_header.py
+@@ -192,32 +192,55 @@ def main() -> int:
+ 
+     auto_impl = r'''
+     /* ---------- 6b. 自动战斗特权: 仅在开关开启时放行 AUTO_BATTLE 判定 ---------- */
+-    /* 指纹只依赖混淆器不动的明文: 枚举成员 AUTO_BATTLE / BuffTableEnum。
+-     * 2026-09-21 热更(res 1.0.98.10)把 buff 管理器方法 $fc.buff.bVy.bVs 改名为
+-     * bXP, 旧指纹写死 "bVs(" 后 tryAuto 全部落空 -> 自动战斗失效。
+-     * 现在两级指纹: 主指纹 BuffTableEnum.AUTO_BATTLE 结构, 兜底指纹 = 短函数里
+-     * 直接 return 一次 buff 查询调用; 并对"含 AUTO_BATTLE 但被拒"的函数留日志。 */
++    /* 指纹分级, 只用混淆器不动的明文, 兼顾模拟器旧 res 与真机新 res:
++     *   tier1 主指纹: AUTO_BATTLE + BuffTableEnum + return + 短函数(真机 res 1.1.x)
++     *   tier2 兜底:    短函数里 return 一次带点的调用(旧 res 的特权查询形态)
++     *   tier3 兜底:    短函数里 return 一个调用
++     *   tier4 兜底:    仅 AUTO_BATTLE + 短函数(旧 "bVs(" 指纹的严格超集, 不写死改名标识符)
++     * 2026-09-21 热更改名 bVs->bXP 打掉旧指纹; 2026-10-05 模拟器旧 res 无 BuffTableEnum
++     * 又打掉两级主指纹。所有档位落空时逐个打印候选名/长度/源码片断, 远端凭 logcat 定位。 */
+     function tryAuto(Cls) {
+         if (N.autoDone || !Cls || !Cls.prototype) return;
++        var tier = 1;
+         var f = findFn(Cls.prototype, function (s) {
+             return s.indexOf("AUTO_BATTLE") >= 0 && s.indexOf("BuffTableEnum") >= 0 &&
+                    s.indexOf("return") >= 0 && s.length < 600;
+         });
+         if (!f) {
++            tier = 2;
+             f = findFn(Cls.prototype, function (s) {
+                 return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 400 &&
+                        /return\s+[\w$.]+\.[\w$]+\s*\(/.test(s);
+             });
+         }
+         if (!f) {
+-            var cand = findFn(Cls.prototype, function (s) { return s.indexOf("AUTO_BATTLE") >= 0; });
+-            if (cand) {
+-                var clen = -1;
+-                try { clen = srcOf(Cls.prototype[cand]).length; } catch (e) {}
+-                log("!! auto-battle candidate .prototype." + cand + " rejected by fingerprint len=" + clen);
++            tier = 3;
++            f = findFn(Cls.prototype, function (s) {
++                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 600 &&
++                       /return\s+[^;{}]{0,200}\(/.test(s);
++            });
++        }
++        if (!f) {
++            tier = 4;
++            f = findFn(Cls.prototype, function (s) {
++                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 600;
++            });
++        }
++        if (!f) {
++            var shown = 0;
++            for (var k in Cls.prototype) {
++                if (!Object.prototype.hasOwnProperty.call(Cls.prototype, k)) continue;
++                var fn = Cls.prototype[k];
++                if (typeof fn !== "function") continue;
++                var cs = srcOf(fn);
++                if (cs.indexOf("AUTO_BATTLE") < 0) continue;
++                if (shown < 4) log("!! auto-battle candidate .prototype." + k + " rejected by fingerprint len=" + cs.length + " src=" + cs.slice(0, 64).replace(/\s+/g, " "));
++                shown++;
+             }
++            if (!shown) log("!! auto-battle: no AUTO_BATTLE candidate in class proto");
+             return;
+         }
++        if (tier > 1) log("auto-battle fallback fingerprint hit = .prototype." + f + " tier=" + tier);
+         if (!Object.prototype.hasOwnProperty.call(Cls.prototype, f)) return;
+         var orig = Cls.prototype[f];
+         if (typeof orig !== "function") return;
+diff --git a/04_scripts/勇士之心/simulate_ysxz_discovery.py b/04_scripts/勇士之心/simulate_ysxz_discovery.py
+index 52b8e33d..a3dd938a 100644
+--- a/04_scripts/勇士之心/simulate_ysxz_discovery.py
++++ b/04_scripts/勇士之心/simulate_ysxz_discovery.py
+@@ -10,10 +10,13 @@
+   3) tryLogic：伤害公式 / 技能消耗 / 技能门 / 死亡例程
+   4) tryEntity：唯一扣血口
+   5) trySystem：移动系统 update
+-  6) tryAuto：AUTO_BATTLE 金卡特权
++ 6) tryAuto：AUTO_BATTLE 金卡特权
+ 
+ 用法：
+-  python3.11 simulate_ysxz_discovery.py <decrypted_bundle_dir> [--auto-fp OLD|NEW]
++  python3.11 simulate_ysxz_discovery.py <decrypted_bundle_dir> [--auto-fp OLD|NEW|COMPAT]
++
++  --auto-fp COMPAT = 当前 so 的四级指纹链（tier1..tier4 任一命中即可），
++  用于验证「真机新 res + 模拟器旧 res 同包兼顾」。OLD/NEW 仅用于历史对照。
+ """
+ from __future__ import annotations
+ 
+@@ -36,6 +39,14 @@ RE_KILL_FP = lambda s: "maxApDefRate" in s and "baseCritDamage" in s
+ RE_AUTO_OLD = lambda s: "AUTO_BATTLE" in s and "bVs(" in s and len(s) < 600
+ RE_AUTO_NEW = lambda s: ("AUTO_BATTLE" in s and "BuffTableEnum" in s and "return" in s
+                          and len(s) < 600)
++RE_AUTO_T2 = lambda s: ("AUTO_BATTLE" in s and len(s) < 400
++                        and re.search(r"return\s+[\w$.]+\.[\w$]+\s*\(", s) is not None)
++RE_AUTO_T3 = lambda s: ("AUTO_BATTLE" in s and len(s) < 600
++                        and re.search(r"return\s+[^;{}]{0,200}\(", s) is not None)
++RE_AUTO_T4 = lambda s: "AUTO_BATTLE" in s and len(s) < 600
++RE_AUTO_COMPAT = lambda s: (RE_AUTO_NEW(s) or RE_AUTO_T2(s) or RE_AUTO_T3(s)
++                           or RE_AUTO_T4(s))
++AUTO_TESTS = {"OLD": RE_AUTO_OLD, "NEW": RE_AUTO_NEW, "COMPAT": RE_AUTO_COMPAT}
+ 
+ 
+ def extract_modules(text: str) -> list[tuple[str, str]]:
+@@ -84,7 +95,7 @@ def find_fn(obj_src: str, test) -> bool:
+ def simulate(root: Path, auto_mode: str = "NEW") -> dict:
+     bundles = ["assets/battleLogic/index.js", "assets/game/index.js",
+                "assets/battleRender/index.js", "assets/main/index.js"]
+-    auto_test = RE_AUTO_NEW if auto_mode == "NEW" else RE_AUTO_OLD
++    auto_test = AUTO_TESTS.get(auto_mode, RE_AUTO_COMPAT)
+     out: dict = {"root": str(root), "auto_fp": auto_mode, "bundles": {}}
+     names: dict = {}
+     order: list[tuple[str, str]] = []
+@@ -225,7 +236,7 @@ def extract_function_bodies(src: str) -> list[str]:
+ 
+ def fingerprint_stats(root: Path, auto_mode: str = "NEW") -> dict:
+     """按指纹统计“命中函数体”的数量，用于和上一版抓点做对照。"""
+-    auto_test = RE_AUTO_NEW if auto_mode == "NEW" else RE_AUTO_OLD
++    auto_test = AUTO_TESTS.get(auto_mode, RE_AUTO_COMPAT)
+     tests = {
+         "kill_formula": RE_KILL_FP,
+         "skill_cost": lambda s: "maxCdTime" in s and RE_SKILL_CHARGE.search(s) is not None,
+@@ -258,9 +269,11 @@ def main() -> int:
+     if len(sys.argv) < 2:
+         raise SystemExit(__doc__)
+     root = Path(sys.argv[1])
+-    auto_mode = "NEW"
++    auto_mode = "COMPAT"
+     if "--auto-fp" in sys.argv:
+         auto_mode = sys.argv[sys.argv.index("--auto-fp") + 1].upper()
++    if auto_mode not in AUTO_TESTS:
++        raise SystemExit(f"--auto-fp 只支持 OLD|NEW|COMPAT，收到 {auto_mode}")
+     rep = simulate(root, auto_mode)
+     if "--fingerprints" in sys.argv:
+         rep["fingerprint_stats"] = fingerprint_stats(root, auto_mode)
+diff --git a/04_scripts/勇士之心/verify_ysxz_patch_js.py b/04_scripts/勇士之心/verify_ysxz_patch_js.py
+index a141a870..9ee04223 100644
+--- a/04_scripts/勇士之心/verify_ysxz_patch_js.py
++++ b/04_scripts/勇士之心/verify_ysxz_patch_js.py
+@@ -32,6 +32,11 @@ def main() -> int:
+         raise SystemExit("auto-battle plaintext fingerprint BuffTableEnum missing")
+     if "auto-battle candidate" not in js:
+         raise SystemExit("auto-battle reject diagnostic missing")
++    # 2026-10-05 模拟器兼容：四级指纹链的兜底命中必须留日志（缺则无法远程区分 tier）
++    if "auto-battle fallback fingerprint hit" not in js:
++        raise SystemExit("auto-battle fallback-fingerprint log missing (emulator old res path)")
++    if '" tier=" + tier' not in js:
++        raise SystemExit("auto-battle fallback log does not report the matched tier")
+     if "restoreCosts" not in js:
+         raise SystemExit("skill-cost exception fallback missing")
+     if "try { touched[j][0].hTimeScale" not in js:
+diff --git a/04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h b/04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h
+index 683eb3a3..6abd5354 100644
+--- a/04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h
++++ b/04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h
+@@ -375,12 +375,56 @@ function MOD_boot(REG) {
+ 
+ 
+     /* ---------- 6b. 自动战斗特权: 仅在开关开启时放行 AUTO_BATTLE 判定 ---------- */
++    /* 指纹分级, 只用混淆器不动的明文, 兼顾模拟器旧 res 与真机新 res:
++     *   tier1 主指纹: AUTO_BATTLE + BuffTableEnum + return + 短函数(真机 res 1.1.x)
++     *   tier2 兜底:    短函数里 return 一次带点的调用(旧 res 的特权查询形态)
++     *   tier3 兜底:    短函数里 return 一个调用
++     *   tier4 兜底:    仅 AUTO_BATTLE + 短函数(旧 "bVs(" 指纹的严格超集, 不写死改名标识符)
++     * 2026-09-21 热更改名 bVs->bXP 打掉旧指纹; 2026-10-05 模拟器旧 res 无 BuffTableEnum
++     * 又打掉两级主指纹。所有档位落空时逐个打印候选名/长度/源码片断, 远端凭 logcat 定位。 */
+     function tryAuto(Cls) {
+         if (N.autoDone || !Cls || !Cls.prototype) return;
++        var tier = 1;
+         var f = findFn(Cls.prototype, function (s) {
+-            return s.indexOf("AUTO_BATTLE") >= 0 && s.indexOf("bVs(") >= 0 && s.length < 600;
++            return s.indexOf("AUTO_BATTLE") >= 0 && s.indexOf("BuffTableEnum") >= 0 &&
++                   s.indexOf("return") >= 0 && s.length < 600;
+         });
+-        if (!f || !Object.prototype.hasOwnProperty.call(Cls.prototype, f)) return;
++        if (!f) {
++            tier = 2;
++            f = findFn(Cls.prototype, function (s) {
++                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 400 &&
++                       /return\s+[\w$.]+\.[\w$]+\s*\(/.test(s);
++            });
++        }
++        if (!f) {
++            tier = 3;
++            f = findFn(Cls.prototype, function (s) {
++                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 600 &&
++                       /return\s+[^;{}]{0,200}\(/.test(s);
++            });
++        }
++        if (!f) {
++            tier = 4;
++            f = findFn(Cls.prototype, function (s) {
++                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 600;
++            });
++        }
++        if (!f) {
++            var shown = 0;
++            for (var k in Cls.prototype) {
++                if (!Object.prototype.hasOwnProperty.call(Cls.prototype, k)) continue;
++                var fn = Cls.prototype[k];
++                if (typeof fn !== "function") continue;
++                var cs = srcOf(fn);
++                if (cs.indexOf("AUTO_BATTLE") < 0) continue;
++                if (shown < 4) log("!! auto-battle candidate .prototype." + k + " rejected by fingerprint len=" + cs.length + " src=" + cs.slice(0, 64).replace(/\s+/g, " "));
++                shown++;
++            }
++            if (!shown) log("!! auto-battle: no AUTO_BATTLE candidate in class proto");
++            return;
++        }
++        if (tier > 1) log("auto-battle fallback fingerprint hit = .prototype." + f + " tier=" + tier);
++        if (!Object.prototype.hasOwnProperty.call(Cls.prototype, f)) return;
+         var orig = Cls.prototype[f];
+         if (typeof orig !== "function") return;
+         N.autoDone = 1;
+diff --git a/04_scripts/勇士之心/ysxz_release_103.sh b/04_scripts/勇士之心/ysxz_release_103.sh
+index 676b9c44..080faea9 100644
+--- a/04_scripts/勇士之心/ysxz_release_103.sh
++++ b/04_scripts/勇士之心/ysxz_release_103.sh
+@@ -87,8 +87,8 @@ if [[ "$DO_BUILD" == "1" ]]; then
+   bash "$HERE/ysxz_build_menu_dex.sh"
+ fi
+ [[ -f "$SRC_APK" ]] || die "缺底包 $SRC_APK"
+-[[ -f "$SO" ]]      || die "缺菜单 so $SO（跑 --build 或先执行 ysxz_build_so_103.sh）"
+-[[ -f "$DEX" ]]     || die "缺菜单 dex $DEX（跑 --build 或先执行 ysxz_build_menu_dex.sh）"
++[[ -f "$SO" ]]      || die "缺菜单 so ${SO}（跑 --build 或先执行 ysxz_build_so_103.sh）"
++[[ -f "$DEX" ]]     || die "缺菜单 dex ${DEX}（跑 --build 或先执行 ysxz_build_menu_dex.sh）"
+ say "  底包: $SRC_APK ($(wc -c <"$SRC_APK") B, md5 $(md5sum "$SRC_APK" | cut -d' ' -f1))"
+ say "  so  : $SO ($(wc -c <"$SO") B, md5 $(md5sum "$SO" | cut -d' ' -f1))"
+ say "  dex : $DEX ($(wc -c <"$DEX") B, md5 $(md5sum "$DEX" | cut -d' ' -f1))"
+@@ -102,6 +102,14 @@ done
+ LC_ALL=C grep -aqF -- "Slider_移动速度:1:5:1" "$SO" && die "so 仍是旧菜单（含 Slider_移动速度:1:5:1）"
+ say "  ✓ so 菜单表 = 新版 7 行"
+ 
++# 自动战斗指纹回归门禁（2026-10-05 事故：本脚本打包过未同步 09-21 修法的旧指纹 so，
++# 热更 res 1.1.4.0 改名后 tryAuto 静默跳过 → 自动战斗失效且无任何日志）。
++LC_ALL=C grep -aqF -- 'BuffTableEnum' "$SO" || die "so 自动战斗指纹是旧版（缺 BuffTableEnum）—— 检查 ysxz_1.0.3_menu/YsxzPatchJs.h 后 --build"
++LC_ALL=C grep -aqF -- 'rejected by fingerprint' "$SO" || die "so 缺自动战斗拒绝诊断日志（仍是旧指纹 so）"
++LC_ALL=C grep -aqF -- 'auto-battle fallback fingerprint hit' "$SO" || die "so 缺自动战斗兜底指纹日志（旧 res/模拟器会静默失效）—— 检查 ysxz_1.0.3_menu/YsxzPatchJs.h 后 --build"
++LC_ALL=C grep -aqF -- 'indexOf("bVs(")' "$SO" && die "so 仍写死旧混淆名 bVs( —— 自动战斗在热更后必失效"
++say "  ✓ so 自动战斗 = 四级指纹(兼容模拟器旧 res/真机新 res) + 兜底日志 + 拒绝诊断"
++
+ LC_ALL=C grep -aqF -- 'MagicRes$PanelBgDrawable' "$DEX" || die "dex 无 MagicRes\$PanelBgDrawable —— 菜单外观是美化前的旧版"
+ LC_ALL=C grep -aqF -- 'YsxzAppComponentFactory' "$DEX" && die "dex 混进 1.0.4 过检测类 YsxzAppComponentFactory"
+ for tok in "[auth] store verdict=" "cold-start self-heal" "auth_backup_"; do
+@@ -138,8 +146,8 @@ h "5/7 校验"
+ # 用 [0-9a-f:]{64,95} 同时兼容带/不带冒号两种写法；再加 || true 避免 set -e 静默退出。
+ CERT_OUT="$("$JAVA" -jar "$AS" verify --print-certs "$SIGNED" 2>&1 || true)"
+ GOT="$(printf '%s\n' "$CERT_OUT" | grep -i 'SHA-256 digest' | head -1 | grep -oiE '[0-9a-f:]{64,95}' | tr -d ':' | tr 'a-f' 'A-F' || true)"
+-[[ "$GOT" == "$WANT_CERT" ]] || die "证书指纹不一致（got=[$GOT] ≠ want=$WANT_CERT）⇒ install -r 会丢数据"
+-say "  ✓ 证书 SHA-256 $GOT（与线上包一致）"
++[[ "$GOT" == "$WANT_CERT" ]] || die "证书指纹不一致（got=[$GOT] ≠ want=${WANT_CERT}）⇒ install -r 会丢数据"
++say "  ✓ 证书 SHA-256 ${GOT}（与线上包一致）"
+ "$JAVA" -jar "$AS" verify -v "$SIGNED" 2>&1 | grep -iE 'Verified using|Number of signers' | sed 's/^/    /'
+ 
+ python3 - "$SIGNED" "$SO" "$DEX" <<'PY'
+@@ -272,9 +280,9 @@ if [[ -f "$FINALIZE" ]]; then
+     --icon-source "$ROOT/10_docs/${GAME}/yszzx_icon.png" \
+     --menu-template "$ROOT/10_docs/${GAME}/yszzx_menu_template.json" \
+     --prune --apply \
+-    || say "  ⚠ finalize 未全绿（见上）：正式包已就位 $OUT/$APKNAME，请按提示补 delivery/裁剪"
++    || say "  ⚠ finalize 未全绿（见上）：正式包已就位 $OUT/${APKNAME}，请按提示补 delivery/裁剪"
+ else
+-  say "  ⚠ 缺 $FINALIZE：跳过标准归集（icon/菜单模板/裁剪）"
++  say "  ⚠ 缺 ${FINALIZE}：跳过标准归集（icon/菜单模板/裁剪）"
+ fi
+ 
+ # ---------------- 7. 摘要 ----------------
+diff --git a/10_docs/_state/current.md b/10_docs/_state/current.md
+index 67f5aefe..8d3137ab 100644
+--- a/10_docs/_state/current.md
++++ b/10_docs/_state/current.md
+@@ -41,7 +41,7 @@
+ | 黑暗领域 | 2026-09-15 | 已收尾 | [摘要](games/黑暗领域.md) |
+ | 追迹迷城 | 2026-09-15 | 已交付/待核验 | [摘要](games/追迹迷城.md) |
+ | 无悔华夏4399 | 2026-09-23 | ✅ 已同步九游本轮成果并覆盖装机（保留存档）：新版菜单 dex（`classes4.dex` 445,648B md5 `dae5d497…` sha256 `817c9b69…`，157 类 （完整结论见游戏摘要「2026-09-28 索引行归档」） | [摘要](games/无悔华夏4399.md) |
+-| 勇士之心 | 2026-10-04 | ✅ 已收尾：**1.0.3 星光正式包**（同代 7 行菜单 + 云机「二次打开未授权」修复——存档设备号优先返回/冷启动静默自愈/`legacy_device_ids` 随心跳上报/清档前留档；MuMu 实测 `[auth] store verdict=ok`、`hardKickAuth` 0，云机待用户实测）；唯一正式包 `勇士之心_1.0.3_starry-final-releaseSigned.apk`（64,659,243B，sha256 `4d412f9b5591…`）+ `delivery_20261004/`（icon 512/144 + 菜单模板）；同轮指针判据收口到 `jni/Includes/StarPtr.h`（11 个 Games/*.cpp 迁移，编译探针 11/11）。上一轮 2026-09-30：官方 1.0.4/vc5 复刻（加密 cocos so 壳已破：SignSpoof + YsxzAppComponentFactory + SecShell watchdog；启动 5~13s 干净退出＝保护线程 `_exit(0)`，seccomp 只拦 `exit_group(94)`＋SIGSYS 只结束该线程解决）；**新增伤害倍率滑块 1–50**，菜单换位（伤害倍率#1／秒杀#2／无敌#3／无限技能#4／移速#5(1–10)／自动战斗#6）；小米非 root 机六项功能用户实测通过；apk md5 `e45a5a2e…` / so `5e0d30c3…`；⛔ root 机 OPD2404 被环境检测直接闪退（未定位） | [摘要](games/勇士之心.md) |
++| 勇士之心 | 2026-10-05 | ✅ 真机自动战斗已通（res 1.1.4.0 指纹修复）；双端兼容版四级指纹链已出包（旧 `bVs(` 指纹严格超集）：so `9deca884…` / 包 md5 `ccdbbc58…`（64,659,243B），真机 `f9a116a2` 同签名覆盖安装+预检通过，**模拟器 MuMu 待用户实测**；详见摘要（含 1.0.3 授权修复与 1.0.4 复刻） | [摘要](games/勇士之心.md) |
+ | 偶像梦幻祭2 | 2026-09-15 | 已交付/待核验 | [摘要](games/偶像梦幻2.md) |
+ | 大话蜀山 | 2026-09-14 | 已交付/待核验 | [摘要](games/大话蜀山.md) |
+ | 凡尘西游修真记 | 2026-09-14 | 已收尾 | [摘要](games/凡尘西游修真记.md) |
+diff --git a/10_docs/_state/games/勇士之心.md b/10_docs/_state/games/勇士之心.md
+index bcafe624..bde0af22 100644
+--- a/10_docs/_state/games/勇士之心.md
++++ b/10_docs/_state/games/勇士之心.md
+@@ -9,6 +9,14 @@
+ > 小米非 root 机六项功能用户实测通过）。之后又出了一轮 **1.0.3 星光正式包**（同代菜单 + 授权二次打开修复），见下第一条。
+ 
+ - **2026-10-04｜1.0.3 星光正式包（云机「二次打开未授权」修复 + 设备无关指针判据收口）**：
++- **2026-10-05｜自动战斗真机+模拟器双端兼容（四级指纹链）**：真机 res 1.1.4.0 修好后模拟器（旧 res）失效
++  ⇒ `tryAuto` 改四级：tier1 `AUTO_BATTLE`+`BuffTableEnum`+`return`+len<600；tier2 短函数(≤400) 里 `return a.b(`；
++  tier3 len≤600 里 `return …(`；tier4 仅 `AUTO_BATTLE`+len<600（旧 `bVs(` 指纹的严格超集，不写死混淆名）。
++  兜底命中打 `auto-battle fallback fingerprint hit … tier=N`；全落空逐个打候选名/长度/源码前 64 字（远端凭 logcat 定位）。
++  产物：so md5 `9deca8848eef0d33a214a128ffd13951`（141,464 B）、正式包 `勇士之心_1.0.3_starry-final-releaseSigned.apk`
++  md5 `ccdbbc58d9feb15de951ffec321c5385`；出包门禁新增「必须含 fallback 日志」。真机 `f9a116a2` 同签名覆盖
++  安装（保数据）成功，预检 so 加载/授权通过；**模拟器侧待用户实测**（MuMu 在 Win 端）。离线
++  `simulate_ysxz_discovery.py --auto-fp COMPAT` 对 hotupdate_20260930/20261005 全 OK（OLD=MISSING:auto）。
+   底包 `02_apks/勇士之心_1.0.3.apk`（md5 `4175178fe6f9663556efe21541726f6e`，1009 条目）外科替换 2 个条目后重签：
+   `classes4.dex`（授权修法；三断点＝**存了不认**（`getOrCreateDeviceId()` 每次重算 SSAID、持久化 `auth_device_id` 只当历史候选）、
+   **票据本地校验绑死当次设备号**、**心跳「设备」类失败被判权威硬拒 ⇒ `hardKickAuth()` 连卡密一起清**）
+diff --git a/10_docs/勇士之心/功能验收卡_自动战斗.md b/10_docs/勇士之心/功能验收卡_自动战斗.md
+index b92c8e3d..091d703c 100644
+--- a/10_docs/勇士之心/功能验收卡_自动战斗.md
++++ b/10_docs/勇士之心/功能验收卡_自动战斗.md
+@@ -9,6 +9,8 @@
+ - 功能菜单名：`Toggle_自动战斗`（feature #5）
+ - 用户预期：开启后战斗内点"自动战斗"不再提示"激活特权后解锁/月卡"，角色进入自动行动
+ - 当前状态：**已生效**（2026-09-21 用户实机确认）
++- 2026-10-05 状态：真机（新 res）与模拟器（旧 res）双端兼容版已出包并装入真机；**模拟器待用户实测**
++  （菜单位置 2026-09-30 起为 `Toggle_自动战斗` 第 #6 项，JS 属性名仍为 `feature5`，由 shim `R(6)` 映射）
+ 
+ ## 2. 实现点
+ 
+@@ -29,6 +31,8 @@
+ | 二次根因=指纹写死 `bVs(`，热更改名 `bXP` | `10_docs/勇士之心/evidence_20260921/README.md` §2 + 判定表 | 2026-09-21 / `f9a116a2` |
+ | 修复后钩子安装 | logcat `auto-battle privilege hooked = .prototype.fwW` | 2026-09-21 |
+ | 功能行为生效 | **用户实机反馈：五项功能全部可用** | 2026-09-21 |
++| 三发根因＝模拟器旧 res 无 `BuffTableEnum`，两级主指针全落空 | 离线 `simulate_ysxz_discovery.py --auto-fp OLD/NEW/COMPAT`（20260930、20261005 语料） | 2026-10-05 |
++| 双端兼容修法＝四级指纹链（tier1 主 + tier2/3/4 兜底，旧 `bVs(` 指纹的严格超集） | so md5 `9deca884…`；正式包 md5 `ccdbbc58…`；真机 `f9a116a2` 同签名覆盖安装，预检 so 加载/授权通过 | 2026-10-05 |
+ 
+ ## 4. NOT PROVEN
+ 
+@@ -44,6 +48,7 @@
+ - 若再失效，下一条最小区分实验：
+   1. 读 `files/res/version` 的 `localResVsersion` 判断是否资源漂移；
+   2. 跑 `simulate_ysxz_discovery.py <新解密目录> --auto-fp NEW --fingerprints`；
++     （双端兼容版本用 `--auto-fp COMPAT`；仍要看日志区分“主指针/兜底 tier”命中）
+   3. 若指纹命中失败 → 按 `skill/re-extract/hotupdate-fingerprint-recheck.md` §4 查漂移形态；
+   4. 看 `!! auto-battle candidate … rejected by fingerprint` 诊断行（修复时已加）。
+ 
+diff --git a/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h b/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h
+index ccc90870..bc1b29b9 100644
+--- a/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h
++++ b/mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h
+@@ -373,32 +373,55 @@ function MOD_boot(REG) {
+ 
+ 
+     /* ---------- 6b. 自动战斗特权: 仅在开关开启时放行 AUTO_BATTLE 判定 ---------- */
+-    /* 指纹只依赖混淆器不动的明文: 枚举成员 AUTO_BATTLE / BuffTableEnum。
+-     * 2026-09-21 热更(res 1.0.98.10)把 buff 管理器方法 $fc.buff.bVy.bVs 改名为
+-     * bXP, 旧指纹写死 "bVs(" 后 tryAuto 全部落空 -> 自动战斗失效。
+-     * 现在两级指纹: 主指纹 BuffTableEnum.AUTO_BATTLE 结构, 兜底指纹 = 短函数里
+-     * 直接 return 一次 buff 查询调用; 并对"含 AUTO_BATTLE 但被拒"的函数留日志。 */
++    /* 指纹分级, 只用混淆器不动的明文, 兼顾模拟器旧 res 与真机新 res:
++     *   tier1 主指纹: AUTO_BATTLE + BuffTableEnum + return + 短函数(真机 res 1.1.x)
++     *   tier2 兜底:    短函数里 return 一次带点的调用(旧 res 的特权查询形态)
++     *   tier3 兜底:    短函数里 return 一个调用
++     *   tier4 兜底:    仅 AUTO_BATTLE + 短函数(旧 "bVs(" 指纹的严格超集, 不写死改名标识符)
++     * 2026-09-21 热更改名 bVs->bXP 打掉旧指纹; 2026-10-05 模拟器旧 res 无 BuffTableEnum
++     * 又打掉两级主指纹。所有档位落空时逐个打印候选名/长度/源码片断, 远端凭 logcat 定位。 */
+     function tryAuto(Cls) {
+         if (N.autoDone || !Cls || !Cls.prototype) return;
++        var tier = 1;
+         var f = findFn(Cls.prototype, function (s) {
+             return s.indexOf("AUTO_BATTLE") >= 0 && s.indexOf("BuffTableEnum") >= 0 &&
+                    s.indexOf("return") >= 0 && s.length < 600;
+         });
+         if (!f) {
++            tier = 2;
+             f = findFn(Cls.prototype, function (s) {
+                 return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 400 &&
+                        /return\s+[\w$.]+\.[\w$]+\s*\(/.test(s);
+             });
+         }
+         if (!f) {
+-            var cand = findFn(Cls.prototype, function (s) { return s.indexOf("AUTO_BATTLE") >= 0; });
+-            if (cand) {
+-                var clen = -1;
+-                try { clen = srcOf(Cls.prototype[cand]).length; } catch (e) {}
+-                log("!! auto-battle candidate .prototype." + cand + " rejected by fingerprint len=" + clen);
++            tier = 3;
++            f = findFn(Cls.prototype, function (s) {
++                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 600 &&
++                       /return\s+[^;{}]{0,200}\(/.test(s);
++            });
++        }
++        if (!f) {
++            tier = 4;
++            f = findFn(Cls.prototype, function (s) {
++                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 600;
++            });
++        }
++        if (!f) {
++            var shown = 0;
++            for (var k in Cls.prototype) {
++                if (!Object.prototype.hasOwnProperty.call(Cls.prototype, k)) continue;
++                var fn = Cls.prototype[k];
++                if (typeof fn !== "function") continue;
++                var cs = srcOf(fn);
++                if (cs.indexOf("AUTO_BATTLE") < 0) continue;
++                if (shown < 4) log("!! auto-battle candidate .prototype." + k + " rejected by fingerprint len=" + cs.length + " src=" + cs.slice(0, 64).replace(/\s+/g, " "));
++                shown++;
+             }
++            if (!shown) log("!! auto-battle: no AUTO_BATTLE candidate in class proto");
+             return;
+         }
++        if (tier > 1) log("auto-battle fallback fingerprint hit = .prototype." + f + " tier=" + tier);
+         if (!Object.prototype.hasOwnProperty.call(Cls.prototype, f)) return;
+         var orig = Cls.prototype[f];
+         if (typeof orig !== "function") return;

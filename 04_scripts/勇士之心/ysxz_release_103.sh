@@ -87,8 +87,8 @@ if [[ "$DO_BUILD" == "1" ]]; then
   bash "$HERE/ysxz_build_menu_dex.sh"
 fi
 [[ -f "$SRC_APK" ]] || die "缺底包 $SRC_APK"
-[[ -f "$SO" ]]      || die "缺菜单 so $SO（跑 --build 或先执行 ysxz_build_so_103.sh）"
-[[ -f "$DEX" ]]     || die "缺菜单 dex $DEX（跑 --build 或先执行 ysxz_build_menu_dex.sh）"
+[[ -f "$SO" ]]      || die "缺菜单 so ${SO}（跑 --build 或先执行 ysxz_build_so_103.sh）"
+[[ -f "$DEX" ]]     || die "缺菜单 dex ${DEX}（跑 --build 或先执行 ysxz_build_menu_dex.sh）"
 say "  底包: $SRC_APK ($(wc -c <"$SRC_APK") B, md5 $(md5sum "$SRC_APK" | cut -d' ' -f1))"
 say "  so  : $SO ($(wc -c <"$SO") B, md5 $(md5sum "$SO" | cut -d' ' -f1))"
 say "  dex : $DEX ($(wc -c <"$DEX") B, md5 $(md5sum "$DEX" | cut -d' ' -f1))"
@@ -101,6 +101,13 @@ for tok in "Slider_伤害倍率:1:50:1" "Slider_移动速度:1:10:1" "Toggle_自
 done
 LC_ALL=C grep -aqF -- "Slider_移动速度:1:5:1" "$SO" && die "so 仍是旧菜单（含 Slider_移动速度:1:5:1）"
 say "  ✓ so 菜单表 = 新版 7 行"
+
+# 自动战斗指纹回归门禁（2026-10-05 事故：本脚本打包过未同步 09-21 修法的旧指纹 so，
+# 热更 res 1.1.4.0 改名后 tryAuto 静默跳过 → 自动战斗失效且无任何日志）。
+LC_ALL=C grep -aqF -- 'BuffTableEnum' "$SO" || die "so 自动战斗指纹是旧版（缺 BuffTableEnum）—— 检查 ysxz_1.0.3_menu/YsxzPatchJs.h 后 --build"
+LC_ALL=C grep -aqF -- 'rejected by fingerprint' "$SO" || die "so 缺自动战斗拒绝诊断日志（仍是旧指纹 so）"
+LC_ALL=C grep -aqF -- 'indexOf("bVs(")' "$SO" && die "so 仍写死旧混淆名 bVs( —— 自动战斗在热更后必失效"
+say "  ✓ so 自动战斗 = 两级指纹 + 拒绝诊断"
 
 LC_ALL=C grep -aqF -- 'MagicRes$PanelBgDrawable' "$DEX" || die "dex 无 MagicRes\$PanelBgDrawable —— 菜单外观是美化前的旧版"
 LC_ALL=C grep -aqF -- 'YsxzAppComponentFactory' "$DEX" && die "dex 混进 1.0.4 过检测类 YsxzAppComponentFactory"
@@ -138,8 +145,8 @@ h "5/7 校验"
 # 用 [0-9a-f:]{64,95} 同时兼容带/不带冒号两种写法；再加 || true 避免 set -e 静默退出。
 CERT_OUT="$("$JAVA" -jar "$AS" verify --print-certs "$SIGNED" 2>&1 || true)"
 GOT="$(printf '%s\n' "$CERT_OUT" | grep -i 'SHA-256 digest' | head -1 | grep -oiE '[0-9a-f:]{64,95}' | tr -d ':' | tr 'a-f' 'A-F' || true)"
-[[ "$GOT" == "$WANT_CERT" ]] || die "证书指纹不一致（got=[$GOT] ≠ want=$WANT_CERT）⇒ install -r 会丢数据"
-say "  ✓ 证书 SHA-256 $GOT（与线上包一致）"
+[[ "$GOT" == "$WANT_CERT" ]] || die "证书指纹不一致（got=[$GOT] ≠ want=${WANT_CERT}）⇒ install -r 会丢数据"
+say "  ✓ 证书 SHA-256 ${GOT}（与线上包一致）"
 "$JAVA" -jar "$AS" verify -v "$SIGNED" 2>&1 | grep -iE 'Verified using|Number of signers' | sed 's/^/    /'
 
 python3 - "$SIGNED" "$SO" "$DEX" <<'PY'
@@ -272,9 +279,9 @@ if [[ -f "$FINALIZE" ]]; then
     --icon-source "$ROOT/10_docs/${GAME}/yszzx_icon.png" \
     --menu-template "$ROOT/10_docs/${GAME}/yszzx_menu_template.json" \
     --prune --apply \
-    || say "  ⚠ finalize 未全绿（见上）：正式包已就位 $OUT/$APKNAME，请按提示补 delivery/裁剪"
+    || say "  ⚠ finalize 未全绿（见上）：正式包已就位 $OUT/${APKNAME}，请按提示补 delivery/裁剪"
 else
-  say "  ⚠ 缺 $FINALIZE：跳过标准归集（icon/菜单模板/裁剪）"
+  say "  ⚠ 缺 ${FINALIZE}：跳过标准归集（icon/菜单模板/裁剪）"
 fi
 
 # ---------------- 7. 摘要 ----------------

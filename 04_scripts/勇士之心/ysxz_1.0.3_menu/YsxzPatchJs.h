@@ -375,12 +375,33 @@ function MOD_boot(REG) {
 
 
     /* ---------- 6b. 自动战斗特权: 仅在开关开启时放行 AUTO_BATTLE 判定 ---------- */
+    /* 指纹只依赖混淆器不动的明文: 枚举成员 AUTO_BATTLE / BuffTableEnum。
+     * 2026-09-21 热更(res 1.0.98.10)把 buff 管理器方法改名为 bXP, 旧指纹写死 "bVs(" 后全部落空;
+     * 2026-10-05 本覆盖文件漏同步该修法 -> 1.0.3 正式包在热更 res 1.1.4.0 上再次失效($CBN)。
+     * 现在两级指纹: 主指纹 BuffTableEnum.AUTO_BATTLE 结构, 兜底指纹 = 短函数里
+     * 直接 return 一次 buff 查询调用; 并对"含 AUTO_BATTLE 但被拒"的函数留日志。 */
     function tryAuto(Cls) {
         if (N.autoDone || !Cls || !Cls.prototype) return;
         var f = findFn(Cls.prototype, function (s) {
-            return s.indexOf("AUTO_BATTLE") >= 0 && s.indexOf("bVs(") >= 0 && s.length < 600;
+            return s.indexOf("AUTO_BATTLE") >= 0 && s.indexOf("BuffTableEnum") >= 0 &&
+                   s.indexOf("return") >= 0 && s.length < 600;
         });
-        if (!f || !Object.prototype.hasOwnProperty.call(Cls.prototype, f)) return;
+        if (!f) {
+            f = findFn(Cls.prototype, function (s) {
+                return s.indexOf("AUTO_BATTLE") >= 0 && s.length < 400 &&
+                       /return\s+[\w$.]+\.[\w$]+\s*\(/.test(s);
+            });
+        }
+        if (!f) {
+            var cand = findFn(Cls.prototype, function (s) { return s.indexOf("AUTO_BATTLE") >= 0; });
+            if (cand) {
+                var clen = -1;
+                try { clen = srcOf(Cls.prototype[cand]).length; } catch (e) {}
+                log("!! auto-battle candidate .prototype." + cand + " rejected by fingerprint len=" + clen);
+            }
+            return;
+        }
+        if (!Object.prototype.hasOwnProperty.call(Cls.prototype, f)) return;
         var orig = Cls.prototype[f];
         if (typeof orig !== "function") return;
         N.autoDone = 1;
