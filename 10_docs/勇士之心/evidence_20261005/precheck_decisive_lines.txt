@@ -1,0 +1,31 @@
+# 勇士之心 1.0.3 双机装机预检决定性行（post_install_precheck.sh PASS_TO_HUMAN）
+# 来源: 09_test/勇士之心/precheck_20261005_191553/logcat.txt (MuMu 127.0.0.1:16384)
+#       09_test/勇士之心/precheck_20261005_193820/logcat.txt (真机 96f0d883)
+# 摘要日志: 09_test/勇士之心/_precheck_real96f0d883_20261005.log（保留）
+
+## MuMu 预检（19:15:57–19:16:02）
+10-05 19:15:57.384 29984 29984 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-05 19:15:57.906 29984 30084 I Mod_Menu: [Ysxz] hooked se::evalString @0x400020d138e4 rva=0x3138E4
+10-05 19:15:58.444 29984 29984 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:15:58.446 29984 29984 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:15:58.446 29984 29984 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:15:58.446 29984 29984 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:15:58.469 29984 30151 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:15:58.469 29984 29984 I MenuService: native menu shown mode=ACTIVITY
+
+## 真机 96f0d883 预检（19:38:22–19:38:51）
+10-05 19:38:22.282 31077 31077 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-05 19:38:23.274 31077 31077 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:38:23.275 31077 31077 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:38:23.275 31077 31077 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:38:23.275 31077 31077 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:38:23.329 31077 31077 I MenuService: native menu shown mode=ACTIVITY
+10-05 19:38:23.329 31077  2215 I ModBridge: auth game_id synced from native: yszzx
+10-05 19:38:51.215 31077  1602 I Mod_Menu: [Ysxz] hooked se::evalString @0x74271158e4 rva=0x3138E4
+
+## 结论行（来自 _precheck_real96f0d883_20261005.log，双机均含）
+✓ 包已安装: package:/data/app/~~kEbJq9nse3CdRtGLI2sqAg==/com.fightingstars.games.warrior-LssA3A6rhfj8r9Gp0kYiYg==/base.apk
+✓ 菜单 so 加载标记: 10-05 19:38:22.282 31077 31077 W StarryMagic: [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+✓ 菜单弹出标记: 10-05 19:38:23.329 31077 31077 I MenuService: native menu shown mode=ACTIVITY
+✓ 授权通过标记: 10-05 19:38:23.274 31077 31077 I ModBridge: auth game_id synced from native: yszzx
+✓ PASS_TO_HUMAN —— so 加载/菜单弹出/空转 2 分钟无崩溃，装机层证据齐

@@ -100,6 +100,13 @@ for tok in "Slider_伤害倍率:1:50:1" "Slider_移动速度:1:10:1" "Toggle_自
   LC_ALL=C grep -aqF -- "$tok" "$SO" || die "so 缺新菜单串 [$tok] —— 这是旧菜单 so，先跑 --build"
 done
 LC_ALL=C grep -aqF -- "Slider_移动速度:1:5:1" "$SO" && die "so 仍是旧菜单（含 Slider_移动速度:1:5:1）"
+# 2026-10-05：必须带可读段兜底，否则 MuMu/Houdini 上 evalString 恒 not mapped
+LC_ALL=C grep -aqF -- "readable-map fallback" "$SO" || die "so 缺可读段兜底（MuMu 会 not mapped）—— 先跑 --build 重建"
+# 2026-10-05 第二轮：MuMu 上原生 inline hook 装得上但从不命中 ⇒ 必须有 JS 自举两件套
+for tok in "boot self-heal" "ysxz_native_ok"; do
+  LC_ALL=C grep -aqF -- "$tok" "$SO" || die "so 缺 [$tok] —— 自举/证明代码没编进去，先跑 --build 重建"
+done
+say "  ✓ so 含模拟器自举（main.js 自愈 + ysxz_native_ok 判据）"
 say "  ✓ so 菜单表 = 新版 7 行"
 
 # 自动战斗指纹回归门禁（2026-10-05 事故：本脚本打包过未同步 09-21 修法的旧指纹 so，
@@ -239,6 +246,10 @@ SHA256SUMS.txt（在 delivery 目录里执行 sha256sum -c SHA256SUMS.txt 可校
    - 心跳带上历史设备号，服务端可把卡密绑定迁到新设备
    - 新增 [auth] store verdict= 一行日志，云机排障不用猜
 2. 菜单清单为 7 行版（伤害倍率 / 秒杀 / 无敌 / 无限技能 / 移动速度 / 自动战斗）。
+3. 模拟器（MuMu/Houdini）自动战斗修复——运行时自举（同一份包，无机型分叉）：
+   - so 截获到 evalString 时写 files/ysxz_native_ok（内容=pid）作为「原生已生效」证明；
+   - 90s 看门狗把 files/res/main.js 从 pristine 自愈成内嵌的自举版（陌生版本不动）；
+   - main.js 里的自举驱动读到同 pid 证明则让位（真机原生路线），读不到则接管（模拟器）。
 
 ## 装机与验收
 

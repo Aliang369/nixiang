@@ -71,27 +71,43 @@ static bool IsTargetBundle(const char* fileName) {
                         strstr(fileName, "assets/game/index."));
 }
 
-static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
-    FILE* fp = fopen("/proc/self/maps", "rt");
-    if (!fp) return nullptr;
-    char line[768];
-    void* found = nullptr;
-    size_t bestSpan = 0;
-    while (fgets(line, sizeof(line), fp)) {
-        if (!IsLibMapLine(line, lib)) continue;
-        unsigned long start = 0, end = 0, off = 0;
-        char perm[8] = {0};
-        if (sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
-        if (!strchr(perm, 'x') || end <= start) continue;
-        if (fileOff < off || fileOff - off >= static_cast<uintptr_t>(end - start)) continue;
-        const size_t span = static_cast<size_t>(end - start);
-        if (span > bestSpan) {
-            bestSpan = span;
-            found = reinterpret_cast<void*>(start + (fileOff - off));
+// 两轮探测：先 x 段（真机快路径），找不到再退到最大可读段
+// （MuMu/Houdini 下 ARM 代码段常为 r--p，无 x 位）。运行时判据，禁机型分叉。
+static void* FileOffToVa(const char* lib, uintptr_t fileOff, bool* viaReadable) {
+    if (viaReadable) *viaReadable = false;
+    for (int pass = 0; pass < 2; pass++) {
+        const bool wantExec = (pass == 0);
+        FILE* fp = fopen("/proc/self/maps", "rt");
+        if (!fp) return nullptr;
+        char line[768];
+        void* found = nullptr;
+        size_t bestSpan = 0;
+        while (fgets(line, sizeof(line), fp)) {
+            if (!IsLibMapLine(line, lib)) continue;
+            unsigned long start = 0, end = 0, off = 0;
+            char perm[8] = {0};
+            if (sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
+            if (end <= start) continue;
+            const bool hasX = strchr(perm, 'x') != nullptr;
+            const bool hasR = strchr(perm, 'r') != nullptr;
+            if (wantExec ? !hasX : (!hasR || hasX)) continue;
+            if (fileOff < off || fileOff - off >= static_cast<uintptr_t>(end - start)) continue;
+            const size_t span = static_cast<size_t>(end - start);
+            if (span > bestSpan) {
+                bestSpan = span;
+                found = reinterpret_cast<void*>(start + (fileOff - off));
+            }
+        }
+        fclose(fp);
+        if (found) {
+            if (!wantExec) {
+                LOGI("%s readable-map fallback engaged lib=%s", YSXZ_LOG, lib);
+                if (viaReadable) *viaReadable = true;
+            }
+            return found;
         }
     }
-    fclose(fp);
-    return found;
+    return nullptr;
 }
 
 // ---------------------------------------------------------------
@@ -264,18 +280,24 @@ static uintptr_t ResolveEvalViaJniBridge(const SoRange& r) {
     return 0;
 }
 
+static bool g_evalViaReadable = false;
+
 static uintptr_t LocateEvalString() {
     const char* lib = kTargetLib();
     SoRange r = GetLoadedRange(lib);
     if (r.ok) {
         uintptr_t va = ResolveEvalViaJniBridge(r);
-        if (va) return va;
+        if (va) {
+            g_evalViaReadable = false;
+            return va;
+        }
         LOGW("%s adaptive resolve failed span=%zu, fallback static rva", YSXZ_LOG, r.size);
     } else {
         LOGW("%s lib mapping not found in /proc/self/maps", YSXZ_LOG);
     }
     for (uintptr_t rva : kEvalRvaFallbacks) {
-        void* va = FileOffToVa(lib, rva);
+        bool viaReadable = false;
+        void* va = FileOffToVa(lib, rva, &viaReadable);
         if (!va) {
             LOGW("%s static rva 0x%lX not mapped", YSXZ_LOG, (unsigned long)rva);
             continue;
@@ -287,7 +309,9 @@ static uintptr_t LocateEvalString() {
                  got);
             continue;
         }
-        LOGI("%s evalString via static rva=0x%lX", YSXZ_LOG, (unsigned long)rva);
+        g_evalViaReadable = viaReadable;
+        LOGI("%s evalString via static rva=0x%lX perm=%s", YSXZ_LOG, (unsigned long)rva,
+             viaReadable ? "readable" : "rx");
         return reinterpret_cast<uintptr_t>(va);
     }
     return 0;
@@ -318,6 +342,8 @@ static bool HookEvalString() {
     }
     g_hooked.store(true);
     const unsigned long rva = (g_libBase && va > g_libBase) ? (unsigned long)(va - g_libBase) : 0;
+    LOGI("%s SELFCHECK evalString va=%p rva=0x%lX via=%s rd=1 hook=1", YSXZ_LOG, (void*)va,
+         rva, g_evalViaReadable ? "readable" : "rx");
     LOGI("%s hooked se::evalString @%p rva=0x%lX", YSXZ_LOG, (void*)va, rva);
     return true;
 }

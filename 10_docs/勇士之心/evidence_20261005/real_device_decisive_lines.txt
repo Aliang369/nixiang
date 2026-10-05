@@ -1,0 +1,69 @@
+# 真机 96f0d883 自动战斗实测决定性日志行（L3 用户验收通过）
+# 来源: 09_test/_recorder/20261005_193809/logcat.txt（飞行记录仪 --serial 96f0d883，非模拟器）
+# 包: com.fightingstars.games.warrior 1.0.3（与 MuMu 通过轮同一份，md5 4228fbcbff488aa7a97b64c557e151ac）
+# 用户结论（2026-10-05 会话原话）：功能都是没问题的
+
+## 录制窗口（events.log 原文）
+#   1791200290|2026-10-05 19:38:10|REC_START pkg=com.fightingstars.games.warrior sample_sec=10 out=/e/nixiang/09_test/_recorder/20261005_193809
+
+## 原生侧：x 段主路径直接命中（not mapped=0 次；readable-map fallback=0 次）
+10-05 19:38:51.215 31077  1602 I Mod_Menu: [Ysxz] hooked se::evalString @0x74271158e4 rva=0x3138E4
+
+## JS 侧：自动战斗挂点（game bundle 上下文）
+10-05 19:39:27.148 31077  2742 I Ysxz    : [MODMOD] auto-battle privilege hooked = .prototype.fDj
+10-05 19:39:52.837 31077  2742 I Ysxz    : [MODMOD] REPORT  formula=undefined apply=undefined gate=undefined cost=undefined death=undefined movesys=NO auto=yes
+
+## 用户实测窗口 19:40:26–19:40:46（逐项开关 + 滑条；真机 pid 31077）
+10-05 19:38:22.283 31077 31077 I StarryMagic: [开关] #0 selftest = OFF
+10-05 19:40:26.982 31077 31077 I StarryMagic: [开关] #2 Toggle_秒杀 = OFF
+10-05 19:40:26.982 31077 31077 I StarryMagic: [开关] #3 Toggle_无敌 = OFF
+10-05 19:40:26.983 31077 31077 I StarryMagic: [开关] #4 Toggle_无限技能 = OFF
+10-05 19:40:26.984 31077 31077 I StarryMagic: [开关] #6 Toggle_自动战斗 = OFF
+10-05 19:40:28.046 31077 31077 I ModBridge: Toggle: #6 Toggle_自动战斗 = true
+10-05 19:40:28.047 31077 31077 I StarryMagic: [开关] #6 Toggle_自动战斗 = ON
+10-05 19:40:35.406 31077 31077 I ModBridge: Toggle: #6 Toggle_自动战斗 = true
+10-05 19:40:35.406 31077 31077 I StarryMagic: [开关] #6 Toggle_自动战斗 = ON
+10-05 19:40:36.209 31077 31077 I StarryMagic: [开关] #2 Toggle_秒杀 = OFF
+10-05 19:40:36.209 31077 31077 I StarryMagic: [开关] #3 Toggle_无敌 = OFF
+10-05 19:40:36.209 31077 31077 I StarryMagic: [开关] #4 Toggle_无限技能 = OFF
+10-05 19:40:36.210 31077 31077 I StarryMagic: [开关] #6 Toggle_自动战斗 = ON
+10-05 19:40:36.306 31077 31077 I ModBridge: Toggle: #4 Toggle_无限技能 = true
+10-05 19:40:36.307 31077 31077 I StarryMagic: [开关] #4 Toggle_无限技能 = ON
+10-05 19:40:40.415 31077 31077 I ModBridge: Toggle: #3 Toggle_无敌 = true
+10-05 19:40:40.416 31077 31077 I StarryMagic: [开关] #3 Toggle_无敌 = ON
+10-05 19:40:41.558 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 29
+10-05 19:40:41.566 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 30
+10-05 19:40:41.574 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 31
+10-05 19:40:41.582 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 33
+10-05 19:40:41.591 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 34
+10-05 19:40:41.599 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 37
+10-05 19:40:41.607 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 39
+10-05 19:40:41.616 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 41
+10-05 19:40:41.624 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 44
+10-05 19:40:41.632 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 45
+10-05 19:40:41.641 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 47
+10-05 19:40:41.649 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 49
+10-05 19:40:41.657 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 50
+10-05 19:40:46.067 31077 31077 I ModBridge: Toggle: #2 Toggle_秒杀 = true
+10-05 19:40:46.068 31077 31077 I StarryMagic: [开关] #2 Toggle_秒杀 = ON
+10-05 19:40:46.306 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 45
+10-05 19:40:46.314 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 44
+10-05 19:40:46.331 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 42
+10-05 19:40:46.347 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 40
+10-05 19:40:46.356 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 39
+10-05 19:40:46.364 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 38
+10-05 19:40:46.372 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 37
+10-05 19:40:46.381 31077 31077 I ModBridge: Slider: #1 Slider_伤害倍率:1:50:1 = 35
+
+## 自动战斗余下证据（battleLogic 上下文 REPORT 与 feature1-4 挂点）
+10-05 19:39:52.837 31077  2742 I Ysxz    : [MODMOD] REPORT  formula=undefined apply=undefined gate=undefined cost=undefined death=undefined movesys=NO auto=yes
+10-05 19:40:27.517 31077  2742 I Ysxz    : [MODMOD] feature1 hooked
+10-05 19:40:27.519 31077  2742 I Ysxz    : [MODMOD] feature3 hooked (gate=true cost=true)
+10-05 19:40:27.521 31077  2742 I Ysxz    : [MODMOD] feature2 hooked
+10-05 19:40:27.522 31077  2742 I Ysxz    : [MODMOD] feature4 hooked
+10-05 19:40:28.104 31077  2742 I Ysxz    : [MODMOD] auto-battle privilege granted
+10-05 19:40:30.513 31077  2742 I Ysxz    : [MODMOD] REPORT  formula=GD apply=hY gate=FK cost=FL death=Hs movesys=yes auto=NO
+
+## 同型对照：MuMu 通过轮（09_test/_recorder/20261005_192428/logcat.txt）
+# MuMu 19:27:25.883 #6 自动战斗=ON → 19:27:27.153 auto-battle privilege granted；19:27:22.799 REPORT formula=GD ... auto=NO
+# 真机 19:40:28.046 #6=ON → 19:40:28.104 auto-battle privilege granted；19:40:30.513 REPORT formula=GD ... auto=NO —— 同型

@@ -1,0 +1,5 @@
+{
+  "_comment": "MuMu/模拟器自举驱动要探测的模块 id 并集（1.1.4.0 热更 res 离线抽取）。仅用于 window.__require(id) 试探模块是否已注册；钩子目标仍全部靠运行时指纹发现，不依赖这些名字。res 大版本漂移时用 --ids 覆盖。",
+  "res_version": "1.1.4.0",
+  "ids": ["$CBH", "$CBL", "$CBN", "$KA", "$KB", "$KC", "$KD", "$KG", "$MM", "$NL", "$NN", "$NS", "$NT", "$NU", "$NV", "$NW", "$NX", "$NY", "$NZ", "$OB", "$OC", "$OD", "$OF", "$OI", "$OJ", "$OM", "$ON", "$OO", "$PK", "$PZ", "$QA", "$QM", "$RD", "$WL", "BattleBehaviorLogic", "TblEnum"]
+}

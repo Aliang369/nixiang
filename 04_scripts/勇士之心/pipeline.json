@@ -1,7 +1,7 @@
 {
   "game": "勇士之心",
   "version": "1.0.3",
-  "notes": "2026-09-21 热更 res 1.0.98.10 重抓与修复轮已收尾：只读重抓 23 个热更 JS + 官方 base.apk，解密后离线复现发现逻辑，根因=自动战斗指纹写死 bVs(（热更改名为 bXP）；修复为明文 BuffTableEnum 两级指纹；新包装机后六钩子全部安装，用户实测五项功能全部可用。本轮新增阶段：regrab_hotupdate / decrypt_hotupdate / verify_discovery。历史阶段快照中已不存在的中间产物按收尾清理修正为 not_exists。",
+  "notes": "2026-09-21 热更 res 1.0.98.10 重抓与修复轮已收尾：只读重抓 23 个热更 JS + 官方 base.apk，解密后离线复现发现逻辑，根因=自动战斗指纹写死 bVs(（热更改名为 bXP）；修复为明文 BuffTableEnum 两级指纹；新包装机后六钩子全部安装，用户实测五项功能全部可用。本轮新增阶段：regrab_hotupdate / decrypt_hotupdate / verify_discovery。历史阶段快照中已不存在的中间产物按收尾清理修正为 not_exists。\n2026-10-05 自动战斗双侧修复收官：MuMu + 真机 96f0d883 用户实测通过（功能#6 第 2/3 轮=有效）；唯一正式包 08_output/勇士之心/勇士之心_1.0.3_starry-final-releaseSigned.apk（md5 4228fbcb…/sha256 936f611b…，64,675,627B）+ delivery_20261005/；滚动物清理清单_20261005.json（7 项≈638MB 入隔离区）；本游戏未接入 archive 阶段，收官事实记录于此。",
   "params": {
     "game_id": "ysxz",
     "package": "com.fightingstars.games.warrior",
@@ -304,17 +304,12 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
-      "note": "2026-09-21 热更重抓轮：build_so 重跑，产物 md5=9bf52c07974ff487a03e6889472f36f6（自动战斗指纹改为明文 BuffTableEnum 两级指纹）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so; 原 md5=9bf52c07974ff487a03e6889472f36f6\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。",
-      "artifacts": {
-        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": {
-          "md5": "5e0d30c366fdf167086f08b809ccf4d9"
-        }
-      },
+      "note": "2026-09-21 热更重抓轮：build_so 重跑，产物 md5=9bf52c07974ff487a03e6889472f36f6（自动战斗指纹改为明文 BuffTableEnum 两级指纹）。\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so; 原 md5=9bf52c07974ff487a03e6889472f36f6\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。\n2026-10-05 收尾清理: E:\\nixiang\\mod菜单\\starry-mod-menu\\libs_ysxz\\arm64-v8a\\libstarry_magic.so\n2026-10-05 收尾清理: mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so; 原 md5=5e0d30c366fdf167086f08b809ccf4d9",
       "done_at": "2026-09-30 20:42:44"
     },
     {
@@ -340,10 +335,7 @@
           "md5": "9f03e4d6c80a5c2c7b88e0aacc52e000"
         }
       },
-      "done_at": "2026-09-30 20:43:00",
-      "inputs": {
-        "mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so": "5e0d30c366fdf167086f08b809ccf4d9"
-      }
+      "done_at": "2026-09-30 20:43:00"
     },
     {
       "id": "sign",

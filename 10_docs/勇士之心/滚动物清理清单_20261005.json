@@ -1,0 +1,57 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "C:/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030",
+  "timestamp": "20261005_195030",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "09_test/_recorder/20261005_192428",
+      "type": "dir",
+      "size_kib": 67986,
+      "source": "/e/nixiang/09_test/_recorder/20261005_192428",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030/09_test/_recorder/20261005_192428"
+    },
+    {
+      "path": "09_test/_recorder/20261005_193809",
+      "type": "dir",
+      "size_kib": 208782,
+      "source": "/e/nixiang/09_test/_recorder/20261005_193809",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030/09_test/_recorder/20261005_193809"
+    },
+    {
+      "path": "09_test/勇士之心/precheck_20261005_191553",
+      "type": "dir",
+      "size_kib": 67777,
+      "source": "/e/nixiang/09_test/勇士之心/precheck_20261005_191553",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030/09_test/勇士之心/precheck_20261005_191553"
+    },
+    {
+      "path": "09_test/勇士之心/precheck_20261005_193820",
+      "type": "dir",
+      "size_kib": 95297,
+      "source": "/e/nixiang/09_test/勇士之心/precheck_20261005_193820",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030/09_test/勇士之心/precheck_20261005_193820"
+    },
+    {
+      "path": "09_test/勇士之心/l2_20261005",
+      "type": "dir",
+      "size_kib": 63165,
+      "source": "/e/nixiang/09_test/勇士之心/l2_20261005",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030/09_test/勇士之心/l2_20261005"
+    },
+    {
+      "path": "09_test/勇士之心/deliver_20261005",
+      "type": "dir",
+      "size_kib": 133937,
+      "source": "/e/nixiang/09_test/勇士之心/deliver_20261005",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030/09_test/勇士之心/deliver_20261005"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/libs_ysxz",
+      "type": "dir",
+      "size_kib": 752,
+      "source": "/e/nixiang/mod菜单/starry-mod-menu/libs_ysxz",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261005_20261005_195030/mod菜单/starry-mod-menu/libs_ysxz"
+    }
+  ]
+}

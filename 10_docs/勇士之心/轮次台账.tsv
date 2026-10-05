@@ -4,3 +4,7 @@
 2026-10-05 16:21	6	1	用户实测自动战斗失效；根因=1.0.3正式包内嵌旧指纹 bVs(（ysxz_1.0.3_menu 覆盖文件未同步09-21修法），热更1.1.4.0已改名→静默跳过；离线 OLD=MISSING:auto / NEW=OK	pipeline.log	无效
 2026-10-05 16:55	6	2	真机双兼容修复：tryAuto 改四级指纹链（tier1 BuffTableEnum+return / tier2 短函数 return a.b( / tier3 len<600 return 调用 / tier4 仅 AUTO_BATTLE+len<600，为旧 bVs 指纹严格超集）；so md5 9deca8848eef0d33a214a128ffd13951，正式包 md5 ccdbbc58d9feb15de951ffec321c5385；真机 f9a116a2 已同签名覆盖安装（保数据），预检 so加载/授权过；模拟器待用户实测	pipeline.log	未测
 2026-10-05 17:15	6	3	回退四级指纹试验（用户指令「回退是保持真机可以用的状态」，模拟器侧移交 win）：恢复 16:23 真机可用两级指纹基线，so md5 da8784699193b0f81208334a23aaed86 / 正式包 md5 046d04f82a60f94c75055d90271b96cf —— 与当时装机版本逐字节一致；中间那版四级 so 9deca884… 已作废	真机 f9a116a2 同签名覆盖安装（保数据），设备 base.apk md5 == 本地产物；预检 so加载/菜单弹出/授权通过	通过（用户实测功能正常，已关闭游戏）
+2026-10-05 17:39	6	4	MuMu(模拟器)自动战斗无效果：evalString rva 0x3138E4 not mapped，地址解析只认x段	pipeline.log	无效
+2026-10-05 19:30	6	5	MuMu 四根因修复：可读段寻址+Dobby影子映射兜底(JS自举+ysxz_native_ok证明)+main.js标志字节+两级指纹；L2过(precheck PASS_TO_HUMAN)，两条路线均 auto=yes	pipeline.log	有效
+2026-10-05 19:53	6	6	真机 96f0d883 同包 L3：用户确认功能全部正常（19:40:26–46 开关窗口 + privilege granted + auto=yes；决定性行 evidence_20261005/real_device_decisive_lines.txt）；收尾正式包 md5 4228fbcb…	pipeline.log	有效
+# 双机合并说明：1–3 = mac 侧 f9a116a2 真机回退线（16:21–17:15）；4–6 = win 侧 96f0d883 双端通过线（17:39–19:53）。最终交付以正式包 md5 4228fbcb…（so 4ae5c58b…）为准。
