@@ -67,34 +67,16 @@ NEW_N_DECL = '''function MOD_boot(REG) {
           ? (globalThis.__starry_N = globalThis.__starry_N || {}) : {};'''
 
 NEW_SCAN = '''    /* scan 必须递归: 模块 exports 常是 { default: Class } 或多层命名空间, 原版只扫一层会漏掉类 */
-    /* shim: 原版挂钩代码假设「传进来的对象, 其静态方法就是挂钩点」(.FV) 或「有 .prototype」
-       (.prototype.hX)。exports 模式下一个类两种都可能, 所以做一个转发壳:
-       get/set 全部落到真宿主(类本身或其 prototype), 挂钩写回的就是真方法。 */
-    function shim(V) {
-        if (typeof V !== "function") return V;
-        var sh = {};
-        function cp(src, key) {
-            try {
-                Object.defineProperty(sh, key, {
-                    enumerable: true, configurable: true,
-                    get: function () { return src[key]; },
-                    set: function (nv) { src[key] = nv; }
-                });
-            } catch (e) {}
-        }
-        for (var k in V) cp(V, k);
-        if (V.prototype) {
-            for (var p in V.prototype) cp(V.prototype, p);
-            try { sh.prototype = V.prototype; } catch (e) {}
-        }
-        return sh;
-    }
+    /* 与原生 scan 同语义: tryLogic 只看类的【静态】方法(伤害公式是 .GD 这类静态方法);
+       tryEntity/trySystem/tryAuto 自己取 .prototype。
+       2026-10-06 MuMu 实测: 把 prototype 方法并进 tryLogic 的扫描面, 会让游戏包属性初始化
+       方法 .bJV(含 maxApDefRate/baseCritDamage 明文, 但无 atkEntity)抢占逻辑钩子, 真伤害
+       公式 battleLogic .GD 再也挂不上 -> 秒杀/伤害倍率同时失效。禁止再合并 prototype。 */
     function hit(V) {
-        var H = shim(V);
-        try { tryLogic(H); } catch (e) { log("tryLogic ERR: " + e); }
-        try { tryEntity(H); } catch (e) { log("tryEntity ERR: " + e); }
-        try { trySystem(H); } catch (e) { log("trySystem ERR: " + e); }
-        try { tryAuto(H); } catch (e) { log("tryAuto ERR: " + e); }
+        try { tryLogic(V); } catch (e) { log("tryLogic ERR: " + e); }
+        try { tryEntity(V); } catch (e) { log("tryEntity ERR: " + e); }
+        try { trySystem(V); } catch (e) { log("trySystem ERR: " + e); }
+        try { tryAuto(V); } catch (e) { log("tryAuto ERR: " + e); }
     }
     function scanObj(exp, depth, seen) {
         if (!exp) return;

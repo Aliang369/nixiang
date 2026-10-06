@@ -1,0 +1,36 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "C:/Users/Administrator/.Trash/nixiang______________20261006_20261006_220717",
+  "timestamp": "20261006_220717",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "09_test/勇士之心/l2_20261006",
+      "type": "dir",
+      "size_kib": 8192,
+      "source": "/e/nixiang/09_test/勇士之心/l2_20261006",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261006_20261006_220717/09_test/勇士之心/l2_20261006"
+    },
+    {
+      "path": "09_test/勇士之心/l2_20261006b",
+      "type": "dir",
+      "size_kib": 480,
+      "source": "/e/nixiang/09_test/勇士之心/l2_20261006b",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261006_20261006_220717/09_test/勇士之心/l2_20261006b"
+    },
+    {
+      "path": "09_test/勇士之心/l2_20261006c",
+      "type": "dir",
+      "size_kib": 176836,
+      "source": "/e/nixiang/09_test/勇士之心/l2_20261006c",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261006_20261006_220717/09_test/勇士之心/l2_20261006c"
+    },
+    {
+      "path": "09_test/勇士之心/release_20261006",
+      "type": "dir",
+      "size_kib": 63169,
+      "source": "/e/nixiang/09_test/勇士之心/release_20261006",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261006_20261006_220717/09_test/勇士之心/release_20261006"
+    }
+  ]
+}

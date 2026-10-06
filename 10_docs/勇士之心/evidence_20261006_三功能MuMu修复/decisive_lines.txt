@@ -1,0 +1,20 @@
+10-06 21:46:56.984 I/Ysxz    ( 5635): [MODMOD] auto-battle privilege hooked = .prototype.fDj
+10-06 21:46:56.990 I/Ysxz    ( 5635): [MODMOD] scanned all 8 modules with source (exps=9), hooks: logic=0 ent=0 sys=0 auto=1
+10-06 21:46:59.997 I/Ysxz    ( 5635): [MODMOD] REPORT  formula=undefined apply=undefined gate=undefined cost=undefined death=undefined movesys=NO auto=yes
+10-06 21:46:59.997 I/Ysxz    ( 5635): [MODMOD] REPORT  MOD=f1=false f2=false f3=false f4=false f5=false dmg=1
+10-06 21:52:32.444 I/Ysxz    ( 6138): [MODMOD] auto-battle privilege hooked = .prototype.fDj
+10-06 21:52:32.450 I/Ysxz    ( 6138): [MODMOD] scanned all 8 modules with source (exps=9), hooks: logic=0 ent=0 sys=0 auto=1
+10-06 21:52:35.456 I/Ysxz    ( 6138): [MODMOD] REPORT  formula=undefined apply=undefined gate=undefined cost=undefined death=undefined movesys=NO auto=yes
+10-06 21:52:35.458 I/Ysxz    ( 6138): [MODMOD] REPORT  MOD=f1=false f2=false f3=false f4=false f5=false dmg=1
+10-06 21:53:08.012 I/Ysxz    ( 6138): [MODMOD] battle-logic class hit: damage formula = .GD
+10-06 21:53:08.012 I/Ysxz    ( 6138): [MODMOD] feature1 hooked
+10-06 21:53:08.027 I/Ysxz    ( 6138): [MODMOD] skill cost = .FL  fields: maxCharge=Ds charge=Dr cd=cd mpCost=Dt hpCost=Du
+10-06 21:53:08.032 I/Ysxz    ( 6138): [MODMOD] skill gate = .FK  unlockedField=Dv
+10-06 21:53:08.032 I/Ysxz    ( 6138): [MODMOD] feature3 hooked (gate=true cost=true)
+10-06 21:53:08.035 I/Ysxz    ( 6138): [MODMOD] feature2 death-route hooked = .Hs
+10-06 21:53:08.039 I/Ysxz    ( 6138): [MODMOD] entity class hit: damage-apply = .prototype.hY
+10-06 21:53:08.039 I/Ysxz    ( 6138): [MODMOD] movement system hit
+10-06 21:53:08.041 I/Ysxz    ( 6138): [MODMOD] scanned all 35 modules with source (exps=36), hooks: logic=1 ent=1 sys=1 auto=1
+10-06 21:53:11.062 I/Ysxz    ( 6138): [MODMOD] REPORT  formula=GD apply=hY gate=FK cost=FL death=Hs movesys=yes auto=yes
+10-06 21:53:11.062 I/Ysxz    ( 6138): [MODMOD] REPORT  MOD=f1=false f2=false f3=false f4=false f5=false dmg=28
+10-06 21:53:38.574 I/Ysxz    ( 6138): [MODMOD] auto-battle privilege granted

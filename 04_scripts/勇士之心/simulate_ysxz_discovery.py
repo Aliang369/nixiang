@@ -32,7 +32,9 @@ RE_HP = re.compile(r"(\w+)\.(\w+)\s*=\s*Math\.max\(\1\.\2\s*-\s*\w+,\s*\1\.lockM
 RE_SKILL_CHARGE = re.compile(r"\w+\.\w+\s*>\s*0\s*\)\s*\w+\.\w+\s*-=\s*1")
 RE_CD = re.compile(r"\w+\.(\w+)\s*=\s*\w+\.maxCdTime")
 RE_DA = re.compile(r"if\s*\(\s*\w+\.(\w+)\s*\)\s*\{\s*\w+\.\w+\s*=\s*Math\.max\(0,")
-RE_KILL_FP = lambda s: "maxApDefRate" in s and "baseCritDamage" in s
+# 2026-10-06: 游戏包属性初始化方法 .bJV 也含 maxApDefRate+baseCritDamage(AttributeParamTable),
+# 只按前两个明文会被它抢占 -> 加 atkEntity(本作明文字段, 真公式 .GD 必含)。
+RE_KILL_FP = lambda s: ("maxApDefRate" in s and "baseCritDamage" in s and "atkEntity" in s)
 RE_AUTO_OLD = lambda s: "AUTO_BATTLE" in s and "bVs(" in s and len(s) < 600
 RE_AUTO_NEW = lambda s: ("AUTO_BATTLE" in s and "BuffTableEnum" in s and "return" in s
                          and len(s) < 600)

@@ -196,6 +196,20 @@ static void YsxzBootSelfHealOnce(const char* dataDir, int* state) {
         }
         return;
     }
+    /* 覆盖安装（保数据）后残留的是【上一版】自举补丁 main.js：既不等于本版 pristine
+       也不等于本版 patched，旧 driver 会继续跑（2026-10-06 MuMu 实测：旧自举仍锁
+       .bJV 假伤害公式 -> 秒杀/伤害倍率失效）。main.js 不在服务端热更名单（只有 4 个
+       index.js bundle），运行时只可能是官方原样或本 MOD 写过的补丁 ⇒ 任何 *ze* 且非
+       pristine 的形态都按“上一版自举”重写为本版 patched。
+       注：main.js 是加密态，明文里的 boot 标记搜不到，只能用 *ze* + 非 pristine 判。 */
+    if (cur.size() > 5 && memcmp(cur.data(), "*ze*", 4) == 0) {
+        if (YsxzWriteWholeFile(path, kYsxzBootPatched, kYsxzBootPatched_len)) {
+            LOGI("%s boot self-heal: stale boot patch %zu B -> patched (%u B)", YSXZ_LOG,
+                 cur.size(), kYsxzBootPatched_len);
+            *state = 2;
+        }
+        return;
+    }
     if (*state != 3) {
         LOGW("%s boot self-heal: main.js unknown version (%zu B), left untouched", YSXZ_LOG,
              cur.size());

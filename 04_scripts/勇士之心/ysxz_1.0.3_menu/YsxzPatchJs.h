@@ -155,10 +155,22 @@ function MOD_boot(REG) {
     /* ---------- 4. 战斗静态逻辑类: 伤害公式 / 技能门 / 技能消耗 / 死亡 ---------- */
     function tryLogic(K) {
         if (N.logicDone) return;
+        /* 指纹必须同时含 maxApDefRate + baseCritDamage + atkEntity:
+           atkEntity/target 是本作明文字段(钩子本身已依赖)。游戏包里属性初始化方法
+           .bJV 也含前两个明文(AttributeParamTable 初始化)，只按前两个会被它抢占，
+           真伤害公式(battleLogic .GD)再也挂不上 -> 秒杀/伤害倍率同时失效
+           (2026-10-06 MuMu 自举 exports 线实测 formula=.bJV)。 */
         var fv = findFn(K, function (s) {
-            return s.indexOf("maxApDefRate") >= 0 && s.indexOf("baseCritDamage") >= 0;
+            return s.indexOf("maxApDefRate") >= 0 && s.indexOf("baseCritDamage") >= 0 &&
+                   s.indexOf("atkEntity") >= 0;
         });
-        if (!fv) return;
+        if (!fv) {
+            var dec = findFn(K, function (s) {
+                return s.indexOf("maxApDefRate") >= 0 && s.indexOf("baseCritDamage") >= 0;
+            });
+            if (dec) log("!! damage-formula candidate ." + dec + " rejected by fingerprint (no atkEntity)");
+            return;
+        }
         N.logicDone = 1;
         N.FV = fv;
         log("battle-logic class hit: damage formula = ." + fv);
