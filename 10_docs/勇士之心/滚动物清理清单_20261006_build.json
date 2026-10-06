@@ -1,0 +1,15 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "C:/Users/Administrator/.Trash/nixiang______________20261006_build_20261006_221227",
+  "timestamp": "20261006_221227",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "mod菜单/starry-mod-menu/libs_ysxz",
+      "type": "dir",
+      "size_kib": 676,
+      "source": "/e/nixiang/mod菜单/starry-mod-menu/libs_ysxz",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261006_build_20261006_221227/mod菜单/starry-mod-menu/libs_ysxz"
+    }
+  ]
+}
