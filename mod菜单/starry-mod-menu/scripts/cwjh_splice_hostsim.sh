@@ -34,10 +34,14 @@ def block(start_pred):
 
 macros = [l for l in lines if l.startswith('#define CWJH_')]
 assert any('CWJH_RET' in m for m in macros), 'CWJH_RET 宏未找到'
-body = block(lambda l: l.startswith('static void ReplaceAll')) + '\n\n' + \
+body = block(lambda l: l.startswith('static size_t ReplaceAll')) + '\n\n' + \
        block(lambda l: l.startswith('static std::string SpliceCombatJs'))
 
-head = '#include <string>\n#include <cstring>\n#include <cstdio>\n#include <cstdlib>\n#include <functional>\n' + '\n'.join(macros) + '\n'
+head = ('#include <string>\n#include <cstring>\n#include <cstdio>\n#include <cstdlib>\n'
+        '#include <functional>\n'
+        '#define LOGI(...) do { printf(__VA_ARGS__); printf("\\n"); } while (0)\n'
+        '#define LOGW(...) do { printf("W "); printf(__VA_ARGS__); printf("\\n"); } while (0)\n'
+        ) + '\n'.join(macros) + '\n'
 main = '''
 int main(int argc, char** argv) {
     FILE* f = fopen(argv[1], "rb"); if (!f) { perror("open"); return 1; }

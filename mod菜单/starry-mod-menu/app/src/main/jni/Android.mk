@@ -248,8 +248,12 @@ LOCAL_ARM_MODE  := arm
 # LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
 # LOCAL_SRC_FILES := Main.cpp Games/ZxrMod.cpp
 # 消消英雄2 1.2.26 · xLua AN_1/2/3；Trace 用 STARRY_LUA_DUMP_TRACE=1 + APP_CFLAGS
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
-LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
+# LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
+# 超维进化 2.2（cwjh）— Cocos2djs se::evalString splice（20261006 0.3.16 热更：doDmg 首参 r→n，定义签名扫描）
+# 每次 splice 逐功能打印 f0-f9 hits；miss 一律 LOGW
+LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_CWJH
+LOCAL_SRC_FILES := Main.cpp Games/CwjhMod.cpp
 # 我嘎嘎乱杀 1.3.6 · BattleUtility CalculateDamage/ApplyDamage + BattleTimeMgr
 # Trace：ndk-build 传 STARRY_TRACE=1
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WGGLS

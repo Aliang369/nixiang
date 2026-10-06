@@ -28,6 +28,16 @@
  *           this=受击方；函数体内 t.SideType.MY_SIDE 仍在用，别名未漂移。
  *          已改为「前缀 + 下一个 ") {"」动态取签名，后续再追尾加形参不必改代码。
  *  实测 splice：热更档 2,767,392 → 2,769,815（+2423，离线模拟）；内置档 +2277（运行时实证）。
+ *
+ *  【20261006 热更重校（0.3.16，game.js 2,809,690 B / sha256 7eed0ec6… / md5 1a77d57f…）】
+ *   漂移面：doDmg 首参 r→n —— doDmg(n, a, o, c, h, l, _, d, u, m = !0, g = !1,
+ *          p = i.Normal, f = !1, C = -1) {。旧「固定前缀 + 动态尾」整段 miss ⇒ ⑧秒杀/⑨无敌
+ *          静默失效；①-⑦ 锚点与 0.3.5 同形全命中（gate 0-7 注入数 3/3/3/3/1/1/1/1 一致）。
+ *   处理：doDmg 改「扫定义签名（`) {` 结尾 + 默认值 = !0 + 枚举 .Normal 双特征）+ 参数名现取
+ *          （首参=伤害、三参=攻击者）」，不再依赖任何写死参数名；每次 splice 逐功能打印 hits
+ *          （f0-f9），miss 一律 LOGW 留痕（吸取 20260921「静默跳过」排查最久的教训）。
+ *   证据闭环：运行时 splice #2/#3 len 2809690→2811917（+2227）与旧代码主机离线逐字节同值；
+ *          修复后主机离线 = +2555（gate 8/9 各 1）。
  * ================================================================ */
 
 #include "CwjhMod.h"
@@ -226,12 +236,15 @@ static bool NeedsCombatSplice(const char* s, size_t n) {
            has("doDmg(e, n, r, a, o, c, h, l, _, d = !0");     // 2.1 首发/2.2 内置
 }
 
-static void ReplaceAll(std::string& s, const char* from, const char* to) {
+static size_t ReplaceAll(std::string& s, const char* from, const char* to) {
+    size_t cnt = 0;
     size_t p = s.find(from);
     while (p != std::string::npos) {
         s.replace(p, strlen(from), to);
         p = s.find(from, p + strlen(to));
+        cnt++;
     }
+    return cnt;
 }
 
 static std::string SpliceCombatJs(const char* src) {
@@ -240,20 +253,20 @@ static std::string SpliceCombatJs(const char* src) {
     // ① 超级回血/回蓝：_timer 1s tick，己方单位各多跳 N-1 次（回复速度 ×N，N=CWJH_*_TICK_MULT）
     //    锚点内置/热更同形，各 1 处。不做任何公式改动，纯 tick 次数放大。
     {
+        // 注意：CWJH_GATE 用 #i 字符串化，只能喂字面量（喂变量会展开成变量名，
+        // 20260921 实测：gated(0,...) 传 int 参数 → JS 里变成未定义标识符 idx，tick 抛异常）
+        auto gated = [](const char* gate, const char* fn) {
+            return std::string("if(") + gate + "&&this.sideType==1)this." + fn + "();\n";
+        };
         static const char* kAnchor = "_timer() {\nthis.recHp();\nthis.recSp();\n}";
-        if (s.find(kAnchor) != std::string::npos) {
-            // 注意：CWJH_GATE 用 #i 字符串化，只能喂字面量（喂变量会展开成变量名，
-            // 20260921 实测：gated(0,...) 传 int 参数 → JS 里变成未定义标识符 idx，tick 抛异常）
-            auto gated = [](const char* gate, const char* fn) {
-                return std::string("if(") + gate + "&&this.sideType==1)this." + fn + "();\n";
-            };
-            std::string rep = "_timer() {\n";
-            for (int i = 0; i < CWJH_HP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(0), "recHp");
-            rep += "this.recHp();\n";
-            for (int i = 0; i < CWJH_SP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(1), "recSp");
-            rep += "this.recSp();\n}";
-            ReplaceAll(s, kAnchor, rep.c_str());
-        }
+        std::string rep = "_timer() {\n";
+        for (int i = 0; i < CWJH_HP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(0), "recHp");
+        rep += "this.recHp();\n";
+        for (int i = 0; i < CWJH_SP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(1), "recSp");
+        rep += "this.recSp();\n}";
+        size_t hits = ReplaceAll(s, kAnchor, rep.c_str());
+        if (hits) LOGI("[Cwjh] splice f0/f1 timer hits=%zu", hits);
+        else LOGW("[Cwjh] splice f0/f1 timer anchor missed");
     }
 
     // ② 高暴击率：暴击判定值 +CWJH_CHC_BONUS（己方攻击方；玩家类+宠物类全替换）
@@ -263,11 +276,13 @@ static std::string SpliceCombatJs(const char* src) {
             "u = t ? this.getPropVal(\"CHC\") + (this.getPropVal(\"SK_CHC\", t.skId.toString()) || 0) + "
             "(this.getPropVal(\"SK_CHC\", \"0\") || 0) : this.getPropVal(\"CHC\");";
         std::string repA = std::string(kChcA) + "\nif(" CWJH_GATE(2) "&&this.sideType==1)u+=" CWJH_CHC_BONUS ";";
-        ReplaceAll(s, kChcA, repA.c_str());
+        size_t hits = ReplaceAll(s, kChcA, repA.c_str());
         // 形态B（0.2.89+ 热更重构）
         static const char* kChcB = "let i = e ? e._dmgChc || 0 : this.getPropVal(\"CHC\") || 0;";
         std::string repB = std::string(kChcB) + "\nif(" CWJH_GATE(2) "&&this.sideType==1)i+=" CWJH_CHC_BONUS ";";
-        ReplaceAll(s, kChcB, repB.c_str());
+        hits += ReplaceAll(s, kChcB, repB.c_str());
+        if (hits) LOGI("[Cwjh] splice f2 chc hits=%zu", hits);
+        else LOGW("[Cwjh] splice f2 chc anchor missed");
     }
 
     // ③ 高暴击伤害：原暴伤倍率再 ×2（乘法叠加，任何情况不低于原值，己方攻击方）
@@ -281,18 +296,20 @@ static std::string SpliceCombatJs(const char* src) {
             "3)&&this.sideType==1?2:1) * (t ? Math.max(1, this.getPropVal(\"CHD\") + "
             "(this.getPropVal(\"SK_CHD\", t.skId.toString()) || 0) + (this.getPropVal(\"SK_CHD\", \"0\") || 0) + e) : "
             "Math.max(1, this.getPropVal(\"CHD\") + e));");
-        ReplaceAll(s, kChdA, repA.c_str());
+        size_t hits = ReplaceAll(s, kChdA, repA.c_str());
         // 形态B：c *= Math.max(1, i + t);（玩家）/ o *= …（宠物）
         static const char* kChdB1 = "c *= Math.max(1, i + t);";
         std::string repB1 = std::string(
             "c *= (jsb.reflection.callStaticMethod(" CWJH_RET
             "3)&&this.sideType==1?2:1) * Math.max(1, i + t);");
-        ReplaceAll(s, kChdB1, repB1.c_str());
+        hits += ReplaceAll(s, kChdB1, repB1.c_str());
         static const char* kChdB2 = "o *= Math.max(1, i + t);";
         std::string repB2 = std::string(
             "o *= (jsb.reflection.callStaticMethod(" CWJH_RET
             "3)&&this.sideType==1?2:1) * Math.max(1, i + t);");
-        ReplaceAll(s, kChdB2, repB2.c_str());
+        hits += ReplaceAll(s, kChdB2, repB2.c_str());
+        if (hits) LOGI("[Cwjh] splice f3 chd hits=%zu", hits);
+        else LOGW("[Cwjh] splice f3 chd anchor missed");
     }
 
     // ④ 高防御：护甲减伤 AMR +15pp（己方受击方；沿用引擎自己的钳制作为上限，不另设 0.95）
@@ -301,17 +318,19 @@ static std::string SpliceCombatJs(const char* src) {
         static const char* kAmrC = "o = Math.min(Math.max(o, -1), t.StatusDef.getMinEdr(this));";
         std::string repC = std::string(kAmrC) + "\nif(" CWJH_GATE(
             4) "&&i.sideType==1){o+=.15;o=Math.min(o,t.StatusDef.getMinEdr(this));}";
-        ReplaceAll(s, kAmrC, repC.c_str());
+        size_t hits = ReplaceAll(s, kAmrC, repC.c_str());
         // 形态A（钳 0.9）：r = Math.min(Math.max(r, -1), .9);（e=受击方）
         static const char* kAmrA = "r = Math.min(Math.max(r, -1), .9);";
         std::string repA = std::string(kAmrA) + "\nif(" CWJH_GATE(
             4) "&&e.sideType==1){r+=.15;r=Math.min(r,.95);}";
-        ReplaceAll(s, kAmrA, repA.c_str());
+        hits += ReplaceAll(s, kAmrA, repA.c_str());
         // 形态B（钳 0.5）：i=受击方
         static const char* kAmrB = "r = Math.min(Math.max(r, -1), .5);";
         std::string repB = std::string(kAmrB) + "\nif(" CWJH_GATE(
             4) "&&i.sideType==1){r+=.15;r=Math.min(r,.95);}";
-        ReplaceAll(s, kAmrB, repB.c_str());
+        hits += ReplaceAll(s, kAmrB, repB.c_str());
+        if (hits) LOGI("[Cwjh] splice f4 amr hits=%zu", hits);
+        else LOGW("[Cwjh] splice f4 amr anchor missed");
     }
 
     // ⑤ 高抗性：抗性净值 ×2（己方受击方；钳制后叠加，沿用引擎钳制作上限）
@@ -320,17 +339,19 @@ static std::string SpliceCombatJs(const char* src) {
         static const char* kResC = "c = Math.min(Math.max(c, -1), t.StatusDef.getMinEdr(this));";
         std::string repC = std::string(kResC) + "\nif(" CWJH_GATE(
             5) "&&i.sideType==1){c*=2;c=Math.min(c,t.StatusDef.getMinEdr(this));}";
-        ReplaceAll(s, kResC, repC.c_str());
+        size_t hits = ReplaceAll(s, kResC, repC.c_str());
         // 形态A（钳 0.9）
         static const char* kResA = "a = Math.min(Math.max(a, -1), .9);";
         std::string repA = std::string(kResA) + "\nif(" CWJH_GATE(
             5) "&&e.sideType==1){a*=2;a=Math.min(a,.95);}";
-        ReplaceAll(s, kResA, repA.c_str());
+        hits += ReplaceAll(s, kResA, repA.c_str());
         // 形态B（钳 0.5）
         static const char* kResB = "a = Math.min(Math.max(a, -1), .5);";
         std::string repB = std::string(kResB) + "\nif(" CWJH_GATE(
             5) "&&i.sideType==1){a*=2;a=Math.min(a,.95);}";
-        ReplaceAll(s, kResB, repB.c_str());
+        hits += ReplaceAll(s, kResB, repB.c_str());
+        if (hits) LOGI("[Cwjh] splice f5 res hits=%zu", hits);
+        else LOGW("[Cwjh] splice f5 res anchor missed");
     }
 
     // ⑥ 高闪避：闪避值 +CWJH_DODGE_BONUS（己方受击方；对面命中仍会抵消，引擎 roll 封顶保留为安全网）
@@ -338,34 +359,37 @@ static std::string SpliceCombatJs(const char* src) {
         // 形态A：s = e.getPropVal("DGC") 行后
         static const char* kDdgA = "s += e.trigger(skill.TriggerTiming.PreDodge, i, e, s);";
         std::string repA = std::string(kDdgA) + "\nif(" CWJH_GATE(6) "&&e.sideType==1)s+=" CWJH_DODGE_BONUS ";";
-        ReplaceAll(s, kDdgA, repA.c_str());
+        size_t hits = ReplaceAll(s, kDdgA, repA.c_str());
         // 形态B
         static const char* kDdgB = "n += i.trigger(skill.TriggerTiming.PreDodge, s, i, n);";
         std::string repB = std::string(kDdgB) + "\nif(" CWJH_GATE(6) "&&i.sideType==1)n+=" CWJH_DODGE_BONUS ";";
-        ReplaceAll(s, kDdgB, repB.c_str());
+        hits += ReplaceAll(s, kDdgB, repB.c_str());
+        if (hits) LOGI("[Cwjh] splice f6 ddg hits=%zu", hits);
+        else LOGW("[Cwjh] splice f6 ddg anchor missed");
     }
 
     // ⑦ 免广告：adsPlay 开头直接走 skip 分支（C2S_WATCH_ADS_END 服务器照常发奖，需在线）
     {
         static const char* kAnchor = "async adsPlay(t, e, i = \"\") {";
-        if (s.find(kAnchor) != std::string::npos) {
-            std::string rep = std::string(kAnchor);
-            rep += "\nif(jsb.reflection.callStaticMethod(" CWJH_RET "7)){this._isPlaying=!0;"
-                   "try{let __r=await network.rpcCall(pb.MessageID.C2S_WATCH_ADS_END,"
-                   "pb.WatchAdsArg.encode({Type:t,Data:e}));"
-                   "if(0==__r.errcode){let __w=pb.WatchAdsReply.decode(__r.payload);"
-                   "return {succ:!0,rdata:__w};}}finally{this._isPlaying=!1;}}";
-            ReplaceAll(s, kAnchor, rep.c_str());
-        }
+        std::string rep = std::string(kAnchor);
+        rep += "\nif(jsb.reflection.callStaticMethod(" CWJH_RET "7)){this._isPlaying=!0;"
+               "try{let __r=await network.rpcCall(pb.MessageID.C2S_WATCH_ADS_END,"
+               "pb.WatchAdsArg.encode({Type:t,Data:e}));"
+               "if(0==__r.errcode){let __w=pb.WatchAdsReply.decode(__r.payload);"
+               "return {succ:!0,rdata:__w};}}finally{this._isPlaying=!1;}}";
+        size_t hits = ReplaceAll(s, kAnchor, rep.c_str());
+        if (hits) LOGI("[Cwjh] splice f7 ads hits=%zu", hits);
+        else LOGW("[Cwjh] splice f7 ads anchor missed");
     }
 
     // ⑧ 秒杀/无敌（20260909 用户要求加回，菜单尾部署，高风险自担）：
     //    doDmg 入口（this=受击方）。签名随热更被压缩器重命名（语义经函数体守卫实锤：
     //    首参=伤害，三参=攻击者）。无敌=己方受击归零；秒杀=己方攻击伤害=当前HP+1（避免天文数字进统计）。
+    //    20261006：0.3.16 首参 r→n，写死前缀必 miss ⇒ 改为识别定义签名 + 参数名现取（见下）。
     {
-        // 0.3.5+ 起签名会继续追尾加形参（0.3.3 加 u、0.3.5 加 C = -1），
-        // 故先按「前缀 + 下一个 ") {"」动态取整条签名，避免每次热更重编一端。
-        static const char* kPrefix = "doDmg(r, a, o, c, h, l, _, d, u, m = !0";
+        // 0.3.16（20261006）首参 r→n：任何写死参数名的前缀都会随热更失效。
+        // 只认定义签名双特征（以 ") {" 结尾 + 含默认值 = !0 + 含枚举默认 .Normal），
+        // 参数名从签名现取并实锤语义（首参=伤害、三参=攻击者，函数体用 this.sideType/攻击方.sideType 佐证）。
         struct DmgSig { const char* anchor; const char* dmg; const char* atk; };
         static const DmgSig kSigs[] = {
             {"doDmg(r, a, o, c, h, l, _, d, m, u = !0, g = !1, p = i.Normal, f = !1) {",
@@ -386,23 +410,67 @@ static std::string SpliceCombatJs(const char* src) {
                    + "&&" + atk + "&&this.sideType!=" + atk + ".sideType&&" + atk +
                    ".sideType==t.SideType.MY_SIDE)"
                    "{" + dmg + "=this.getPropVal(\"CUR_HP\")+1;}";
-            ReplaceAll(s, anchor.c_str(), rep.c_str());
-            return true;
+            return ReplaceAll(s, anchor.c_str(), rep.c_str()) > 0;
         };
-        size_t p = s.find(kPrefix);
-        bool done = false;
-        if (p != std::string::npos) {
-            size_t e = s.find(") {", p);
-            if (e != std::string::npos && e - p < 220) {
-                // 语义经函数体守卫实锤：首参 r=伤害、三参 o=攻击者、this=受击方（0.3.x/0.3.5 一致）
-                done = inject(s.substr(p, e + 3 - p), "r", "o");
+        // 签名取第 1/3 个形参名（顶层逗号切分；去掉默认值与空白）
+        auto paramNames = [](const std::string& sig, std::string& p1, std::string& p3) -> bool {
+            size_t lp = sig.find('(');
+            size_t rp = sig.rfind(") {");
+            if (lp == std::string::npos || rp == std::string::npos || rp <= lp + 1) return false;
+            int depth = 0, idx = 0;
+            std::string cur;
+            auto flush = [&]() {
+                size_t b = cur.find_first_not_of(" \t");
+                size_t e = cur.find_last_not_of(" \t");
+                std::string name = (b == std::string::npos) ? "" : cur.substr(b, e - b + 1);
+                size_t sp = name.find_first_of(" =");
+                if (sp != std::string::npos) name = name.substr(0, sp);
+                idx++;
+                if (idx == 1) p1 = name;
+                else if (idx == 3) p3 = name;
+                cur.clear();
+            };
+            for (size_t i = lp + 1; i < rp; i++) {
+                char ch = sig[i];
+                if (ch == '(' || ch == '[' || ch == '{') depth++;
+                else if (ch == ')' || ch == ']' || ch == '}') depth--;
+                if (ch == ',' && depth == 0) {
+                    flush();
+                    if (idx >= 3) break;
+                } else {
+                    cur += ch;
+                }
             }
+            if (idx < 3 && !cur.empty()) flush();
+            return !p1.empty() && !p3.empty();
+        };
+        size_t scan = 0;
+        bool done = false;
+        while (!done) {
+            size_t p = s.find("doDmg(", scan);
+            if (p == std::string::npos) break;
+            scan = p + 6;
+            size_t e = s.find(") {", p);
+            if (e == std::string::npos || e - p > 300) continue;
+            std::string sig = s.substr(p, e + 3 - p);
+            if (sig.find("= !0") == std::string::npos && sig.find("=!0") == std::string::npos) continue;
+            if (sig.find(".Normal") == std::string::npos) continue;
+            std::string dmg, atk;
+            if (!paramNames(sig, dmg, atk)) continue;
+            LOGI("[Cwjh] doDmg def dmg=%s atk=%s sig=%s", dmg.c_str(), atk.c_str(), sig.c_str());
+            done = inject(sig, dmg.c_str(), atk.c_str());
         }
         if (!done) {
             for (const auto& sig : kSigs) {
-                if (inject(sig.anchor, sig.dmg, sig.atk)) break;
+                if (inject(sig.anchor, sig.dmg, sig.atk)) {
+                    LOGW("[Cwjh] doDmg legacy signature fallback used");
+                    done = true;
+                    break;
+                }
             }
         }
+        if (done) LOGI("[Cwjh] splice f8/f9 doDmg injected");
+        else LOGW("[Cwjh] splice f8/f9 doDmg anchor missed (all forms)");
     }
 
     return s;

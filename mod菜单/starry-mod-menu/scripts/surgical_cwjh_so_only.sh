@@ -11,6 +11,7 @@
 # 用法：
 #   bash scripts/surgical_cwjh_so_only.sh [base.apk]
 #   STARRY_INSTALL=1 bash scripts/surgical_cwjh_so_only.sh
+#   STARRY_INSTALL_ONLY=1 [STARRY_APK=<apk>] bash scripts/surgical_cwjh_so_only.sh   # 复用现有包只验证+安装（不重编）
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -40,6 +41,20 @@ for v in 36.0.0 35.0.0 34.0.0; do
   [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]] && { BT="$HOME/Library/Android/sdk/build-tools/$v"; break; }
 done
 [[ -n "$BT" ]] || { echo "ERROR: build-tools missing"; exit 1; }
+
+# 复用现有正式包只做「验证+安装」（存量游戏快速重打口径；默认取 08_output 最新 releaseSigned）
+if [[ "${STARRY_INSTALL_ONLY:-0}" == "1" ]]; then
+  REUSE_APK="${STARRY_APK:-$(ls -t "$OUT"/*releaseSigned.apk 2>/dev/null | head -1 || true)}"
+  [[ -n "$REUSE_APK" && -f "$REUSE_APK" ]] || { echo "ERROR: STARRY_INSTALL_ONLY=1 但找不到可复用包（用 STARRY_APK=<path> 指定）"; exit 1; }
+  echo "[install-only] 复用包: $REUSE_APK"
+  "$BT/apksigner" verify --print-certs "$REUSE_APK" | head -3
+  adb push "$REUSE_APK" /data/local/tmp/cwjh_so_only.apk >/dev/null
+  adb shell "su -c 'am force-stop $PKG; pm install -r -d --user 0 /data/local/tmp/cwjh_so_only.apk'"
+  adb shell "su -c 'rm -f /data/local/tmp/cwjh_so_only.apk'"
+  bash "$NIXIANG/04_scripts/_common/verify_installed_apk.sh" f9a116a2 "$PKG" "$REUSE_APK" --su
+  echo "log: adb logcat -s Mod_Menu:V StarryMagic:V"
+  exit 0
+fi
 [[ -f "$BASE_APK" ]] || { echo "ERROR: missing base apk: $BASE_APK"; exit 1; }
 [[ -x "$NDK/ndk-build" ]] || { echo "ERROR: missing $NDK/ndk-build"; exit 1; }
 
