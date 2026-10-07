@@ -192,8 +192,11 @@ public class ModBridge {
         Preferences.with(this.context);
         AuthClient.init(this.context);
         syncAuthGameIdFromNative();
-        // 功能列表随 so 切换；丢掉旧 featNum 偏好，默认全关
-        Preferences.clearFeaturePrefs();
+        // 功能列表随 so 切换；**只有列表真的变了才丢旧 featNum 偏好**。
+        // 无条件清会把玩家刚拖的滑块值立刻抹掉（菜单浮层每次重开都新建 ModBridge），
+        // 对走 native hook 的游戏无感，但 H5/JS 补丁靠 Preferences 取值 → 拖了没反应。
+        String sig = featureListSignature();
+        Preferences.clearFeaturePrefsIfListChanged(sig);
         // 旧 HTTP 地址迁移到内置 HTTPS
         String base = Preferences.getAuthBaseUrl();
         if (base != null && base.startsWith("http://47.100.216.101")) {
@@ -203,6 +206,29 @@ public class ModBridge {
 
     private static boolean isUiFeature(int featNum) {
         return featNum >= UI_FEAT_MIN;
+    }
+
+    /**
+     * 当前功能列表指纹（供「列表变了才清偏好」判定）。
+     *
+     * @return 逐条拼接的列表；读不到（so 未就绪等）返回空串，调用方据此**保留**既有偏好
+     *         —— 误清不可恢复，延后清理只是多留一会儿旧值。
+     */
+    private static String featureListSignature() {
+        try {
+            String[] fs = nativeGetFeatureList();
+            if (fs == null || fs.length == 0) {
+                return "";
+            }
+            StringBuilder sb = new StringBuilder(fs.length * 24);
+            for (String f : fs) {
+                sb.append(f).append('\n');
+            }
+            return sb.toString();
+        } catch (Throwable t) {
+            Log.w(TAG, "featureListSignature 读取失败，保留既有偏好: " + t);
+            return "";
+        }
     }
 
     /**

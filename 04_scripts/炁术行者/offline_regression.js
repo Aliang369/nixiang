@@ -1,0 +1,161 @@
+/*
+ * qsxz_patch.js 离线行为回归（Node + vm，无设备、无网络）
+ *
+ * 目的：补丁是「页面内投值器」，写错会出两类真机才发现的问题：
+ *   ① 未授权也生效（越权）② 授权了却没生效（本次真实踩到：值投不进去）
+ * 本闸门把补丁源码放进沙盒跑，断言门控、取值口径与**投值通路**。
+ *
+ * 用法：node 04_scripts/炁术行者/offline_regression.js
+ * 退出码：0 全过；1 有断言失败
+ */
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+
+const ROOT = path.resolve(__dirname, '../..');
+const PATCH = path.join(ROOT, 'mod菜单/starry-mod-menu/app/src/main/assets/starry/qsxz_patch.js');
+
+const SRC = fs.readFileSync(PATCH, 'utf8');
+
+let pass = 0, fail = 0;
+function ok(cond, name) {
+    if (cond) { pass++; console.log('  PASS ' + name); }
+    else { fail++; console.log('  FAIL ' + name); }
+}
+function eq(a, b, name) { ok(a === b, name + '（实测 ' + JSON.stringify(a) + '，期望 ' + JSON.stringify(b) + '）'); }
+function j(v) { return JSON.stringify(v); }
+
+/**
+ * 造一个页面沙盒：StarryH5 桥 + 主 JS 暴露的 __QSW_APPLY。
+ * box.state 可直接改，用来模拟「菜单里改了值 / 登录后授权状态变化」。
+ */
+function makeCtx(initial) {
+    const box = { state: initial };
+    const logs = [];
+    const applied = [];
+    const ctx = {
+        window: {},
+        console: { log() {} },
+        JSON, Date, parseInt,
+        setInterval: () => 0,   // 手动驱动，不跑真实定时器
+        clearInterval: () => {},
+        setTimeout: () => 0,
+    };
+    ctx.window.StarryH5 = {
+        log(m) { logs.push(String(m)); },
+        ack(d) { logs.push('ack:' + d); },
+        getState() { return box.state; },
+    };
+    ctx.window.__QSW_APPLY = (k, dr) => { applied.push([k, dr]); };
+    ctx.globalThis = ctx;
+    vm.createContext(ctx);
+    return { ctx, logs, applied, box };
+}
+
+function load(ctx) { vm.runInContext(SRC, ctx, { filename: 'qsxz_patch.js' }); }
+function st(live, k, d) {
+    // bools/vals 按 featureList 数组下标：specs[0]=Category 占 0，1=倍率，2=减伤
+    return JSON.stringify({ live: live, specs: [], bools: [0, 0, 0], vals: [0, k, d] });
+}
+function applyLogs(logs) { return logs.filter(l => l.indexOf('apply ') === 0); }
+
+console.log('== qsxz_patch.js 离线回归 ==');
+
+// 0. 补丁资产不得含百分号/井号（历史坑：loadUrl 报 javascript: 时被 URL 解析截断）
+ok(SRC.indexOf('%') < 0, '源码不含百分号');
+ok(SRC.indexOf('#') < 0, '源码不含井号');
+
+// 1. 桥未就绪 → 不占守卫，直接返回
+{
+    const r = makeCtx(null);
+    delete r.ctx.window.StarryH5;
+    load(r.ctx);
+    ok(r.ctx.window.__qsxz_v1 === undefined, '无 JS 桥时不占守卫（等下一轮注入）');
+}
+
+// 2. 主 JS 未就绪（__QSW_APPLY 还没挂）→ 不占守卫
+{
+    const r = makeCtx(null);
+    delete r.ctx.window.__QSW_APPLY;
+    load(r.ctx);
+    ok(r.ctx.window.__qsxz_v1 === undefined, '主 JS 未就绪时不占守卫');
+}
+
+// 3. 未授权（live=0）→ 必须回落原版（k=1, dr=0），且忽略菜单里的值
+{
+    const r = makeCtx(st(0, 20, 50));
+    load(r.ctx);
+    eq(r.ctx.window.__qsxz_v1, 1, '桥+主 JS 就绪后装守卫');
+    eq(j(r.applied[0]), '[1,0]', 'live=0 回落原版，忽略菜单值');
+}
+
+// 4. 已授权 → 透传菜单值
+{
+    const r = makeCtx(st(1, 20, 50));
+    load(r.ctx);
+    eq(j(r.applied[0]), '[20,50]', 'live=1 透传 (20,50)');
+    ok(applyLogs(r.logs).length === 1, '首次投值写一条 apply 日志（可对账）');
+    ok(r.logs.some(l => l.indexOf('ack:') === 0), '装好后 ack（守护降频）');
+}
+
+// 5. 越界钳制（后台配错值也不能放出超范围口径）
+{
+    const a = makeCtx(st(1, 999, 999)); load(a.ctx);
+    eq(j(a.applied[0]), '[20,50]', '超上限钳到 (20,50)');
+    const b = makeCtx(st(1, 0, -5)); load(b.ctx);
+    eq(j(b.applied[0]), '[1,0]', '低于下限钳到 (1,0)');
+}
+
+// 6. 同一状态重复注入：值不抖、日志不刷屏（一次性装点也不重复）
+{
+    const r = makeCtx(st(1, 10, 30));
+    load(r.ctx);
+    const n1 = applyLogs(r.logs).length;
+    load(r.ctx); load(r.ctx); load(r.ctx);
+    eq(j(r.applied[r.applied.length - 1]), '[10,30]', '重复注入投的仍是同一组值（幂等）');
+    eq(applyLogs(r.logs).length, n1, '重复注入不重复刷 apply 日志');
+}
+
+// 7. ★ 本次修复回归：授权/取值变化后，Java 守护再次注入必须把新值投进去
+//    （旧实现只靠页面内 setInterval 轮询，页面被菜单浮层盖住时定时器被节流 → 投不进去）
+{
+    const r = makeCtx(st(0, 20, 50));       // 未授权：原版
+    load(r.ctx);
+    eq(j(r.applied[0]), '[1,0]', '授权前 = 原版');
+    r.box.state = st(1, 20, 50);            // 模拟：登录成功 + 滑块拉到 20 / 50
+    load(r.ctx);                            // 模拟：守护下一次注入
+    eq(j(r.applied[r.applied.length - 1]), '[20,50]', '状态变化后再次注入即生效（不依赖页面定时器）');
+    ok(r.logs.some(l => l.indexOf('apply k=20 dr=50 live=1') === 0), '变化后有 apply 日志可对账');
+}
+
+// 8. 授权失效（过期/后台停用）→ 下一次注入必须回落原版
+{
+    const r = makeCtx(st(1, 20, 50));
+    load(r.ctx);
+    r.box.state = st(0, 20, 50);
+    load(r.ctx);
+    eq(j(r.applied[r.applied.length - 1]), '[1,0]', '授权失效后回落原版');
+}
+
+// 9. 页面重载（新 window，全局被清）→ 重新投值
+{
+    const r = makeCtx(st(1, 12, 40));
+    load(r.ctx);
+    // 模拟重载：只换 window，沙盒里补丁的 window 引用随之更新
+    const r2 = makeCtx(st(1, 12, 40));
+    load(r2.ctx);
+    eq(j(r2.applied[0]), '[12,40]', '页面重载后重新投值');
+}
+
+// 10. getState 抛异常 → 不崩、不生效
+{
+    const r = makeCtx(null);
+    r.ctx.window.StarryH5.getState = () => { throw new Error('boom'); };
+    load(r.ctx);
+    ok(r.ctx.window.__qsxz_v1 === 1, 'getState 异常时补丁仍活着（不抛到游戏）');
+}
+
+console.log('\n结果: PASS=' + pass + ' FAIL=' + fail);
+process.exit(fail === 0 ? 0 : 1);

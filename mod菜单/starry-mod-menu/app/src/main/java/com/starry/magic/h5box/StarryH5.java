@@ -49,9 +49,37 @@ import java.lang.reflect.Method;
 public final class StarryH5 {
 
     private static final String TAG = "StarryH5";
-    private static final String JS_TAG = "StarryCzbhzJs";
     private static final String JS_NAME = "StarryH5";
-    private static final String PATCH_ASSET = "starry/czbhz_patch.js";
+    /**
+     * 补丁资产名与日志 tag 一律按运行时 game_id 推导（本类是全部 H5 游戏共用的，禁止写死某一款）：
+     * {@code assets/starry/<game_id>_patch.js}；game_id 由 native 同步进 {@link
+     * com.starry.magic.menu.Preferences#getAuthGameId()}。
+     *
+     * <p>未就绪时<b>不注入</b>（fail-closed）：宁可晚一秒再灌，也绝不把别的游戏的补丁
+     * 灌进本游戏——写死资产名的旧写法在换游戏时会静默注入上一款补丁。
+     */
+    private static final String PATCH_ASSET_DIR = "starry/";
+    private static volatile String sPatchAsset;
+    private static volatile String sJsTag;
+
+    private static boolean resolvePatchAsset() {
+        if (sPatchAsset != null) {
+            return true;
+        }
+        String gid = null;
+        try {
+            gid = com.starry.magic.menu.Preferences.getAuthGameId();
+        } catch (Throwable t) {
+            Log.w(TAG, "取 game_id 失败: " + t);
+        }
+        if (gid == null || gid.length() == 0) {
+            return false;
+        }
+        sJsTag = "StarryJs_" + gid;
+        sPatchAsset = PATCH_ASSET_DIR + gid + "_patch.js";
+        Log.i(TAG, "补丁资产=" + sPatchAsset + "（game_id 已就绪）");
+        return true;
+    }
     /** 宿主游戏 WebView 的具体类名（优先命中；认不出时退回能力探测） */
     private static final String HOST_WEBVIEW_CLASS =
             "com.chaunmi.fastwebview.view.x5.FastX5WebView";
@@ -316,9 +344,14 @@ public final class StarryH5 {
         if (ctx == null) {
             return null;
         }
+        if (!resolvePatchAsset()) {
+            Log.i(TAG, "game_id 未就绪，本轮跳过注入（下一轮重试）");
+            return null;
+        }
+        final String asset = sPatchAsset;
         InputStream in = null;
         try {
-            in = ctx.getAssets().open(PATCH_ASSET);
+            in = ctx.getAssets().open(asset);
             ByteArrayOutputStream bo = new ByteArrayOutputStream(32768);
             byte[] buf = new byte[8192];
             int n;
@@ -327,10 +360,10 @@ public final class StarryH5 {
             }
             String s = new String(bo.toByteArray(), "UTF-8");
             sPatchSrc = s;
-            Log.i(TAG, "补丁源已载入 " + PATCH_ASSET + " (" + s.length() + " 字符)");
+            Log.i(TAG, "补丁源已载入 " + asset + " (" + s.length() + " 字符)");
             return s;
         } catch (Throwable t) {
-            Log.e(TAG, "读取 " + PATCH_ASSET + " 失败（外科是否漏塞 assets？）", t);
+            Log.e(TAG, "读取 " + asset + " 失败（外科是否漏塞 assets？）", t);
             return null;
         } finally {
             if (in != null) {
@@ -349,7 +382,7 @@ public final class StarryH5 {
     /** 补丁日志 → logcat（tag 与网页控制台分开，便于过滤） */
     @JavascriptInterface
     public void log(String msg) {
-        Log.i(JS_TAG, msg == null ? "" : msg);
+        Log.i(sJsTag != null ? sJsTag : TAG, msg == null ? "" : msg);
     }
 
     /** 补丁完成安装（含钩子装点）后调用；守护据此降频 */
@@ -389,17 +422,34 @@ public final class StarryH5 {
             if (i > 0) {
                 sb.append(',');
             }
-            sb.append((live && boolOf(i)) ? 1 : 0);
+            sb.append((live && isBoolSpec(specs[i]) && boolOf(i)) ? 1 : 0);
         }
         sb.append("],\"vals\":[");
         for (int i = 0; i < specs.length; i++) {
             if (i > 0) {
                 sb.append(',');
             }
-            sb.append(live ? valOf(i) : 0);
+            sb.append((live && isIntSpec(specs[i])) ? valOf(i) : 0);
         }
         sb.append("]}");
         return sb.toString();
+    }
+
+    /**
+     * 按 spec 前缀判类型（与 ModBridge.reapplySavedFeaturesToNative 同一套口径）。
+     *
+     * <p>2026-10-07 炁术行者实测事故：getState 原先对**每个** feature 都调 boolOf(i)，
+     * 对滑块（值是 int）会走 getBoolean → ClassCastException，旧 readBoolean 再静默
+     * remove 掉该键 ⇒ 玩家刚拖的滑块值在同一帧内被删，H5 补丁永远读到 0
+     * （现象：拖完滑块游戏没反应）。故必须先按类型分流，绝不误读。
+     */
+    private static boolean isBoolSpec(String spec) {
+        return spec != null && (spec.startsWith("Toggle_") || spec.startsWith("CheckBox_"));
+    }
+
+    private static boolean isIntSpec(String spec) {
+        return spec != null && (spec.startsWith("Slider_") || spec.startsWith("SeekBar_")
+                || spec.startsWith("Spinner_"));
     }
 
     private static boolean boolOf(int featNum) {

@@ -1,0 +1,169 @@
+# -*- coding: utf-8 -*-
+# 炁术行者（com.h5wrapper.app）MOD 补丁生成器 —— 星光版（主 JS 侧）
+#
+# 作用：把服务端下发的原始玩法主 JS（/assets/main/index.js）改成本地版，
+#       由包内 MainActivity$2.shouldInterceptRequest 拦截替换后喂给 WebView。
+#
+# 职责边界（星光框架接入后）
+#   · 本文件只负责「机制」：在 3 个伤害/受击口径上挂 window.__QSW_DMG，
+#     并提供 window.__QSW_APPLY(k, drPct) 供框架侧补丁投值。
+#   · 默认值 = 原版（k=1, dr=0）：**未授权时游戏与官方完全一致**。
+#   · 授权门控与取值在 mod菜单/starry-mod-menu/app/src/main/assets/starry/qsxz_patch.js，
+#     由 h5box.StarryH5 注入并把菜单状态投给 __QSW_APPLY。
+#   · 无任何外部服务：无远程配置 XHR、无回传 beacon。
+#
+# 补丁主体（①~⑪）与该游戏已验证通过的 v8 版一致。
+#
+# 用法：
+#   python3 qsw_patch_js_star.py --src <原始 main/index.js> --dst <输出 main.js>
+
+import argparse
+import hashlib
+import re
+import sys
+
+HEADER = r'''/*QSW-MOD v10s 星光版*/
+!function(){
+var w=("undefined"!=typeof window)?window:this;
+if(w.__QSW_STAR_INSTALLED)return;
+w.__QSW_STAR_INSTALLED=!0;
+
+/* ===== 默认 = 原版：只有框架侧补丁投值后才会偏离官方口径 ===== */
+w.__QSWK=1;          /* 伤害倍率（1 = 原版） */
+w.__QSW_DR=0;        /* 减伤比例（0 = 原版；受击只吃 1-dr） */
+w.__QSW_INV=!1;      /* 真无敌：关闭（服务端 9988 封死，不提供开关） */
+w.__QSW_HR=0;
+w.__QSW_PS_K=0;      /* 战力放大：恒不启用 */
+w.__QSW_DN=0;
+w.__QSW_HN=0;
+w.__QSW_PSN=0;
+w.__QSW_LOG=function(){};            /* 无回传、无外部服务 */
+w.__QSW_PSF=function(v){return v};   /* 战力恒等（战力完全不动） */
+w.__QSW_APPLY=function(k,drPct){
+  k=(k|0); if(k<1)k=1; else if(k>20)k=20;
+  drPct=(drPct|0); if(drPct<0)drPct=0; else if(drPct>50)drPct=50;
+  w.__QSWK=k; w.__QSW_DR=drPct/100;
+};
+
+w.__QSW_DMG=function(v,c){
+  if(1===c){ if(w.__QSW_DR>0)return Math.max(1,Math.round(v*(1-w.__QSW_DR))); return v; }
+  w.__QSW_DN++;
+  return v*w.__QSWK;
+};
+
+try{console.log("QSW_MOD_LOADED v10s")}catch(e){}
+}();
+'''
+
+
+def sub_once(text, old, new, tag):
+    n = text.count(old)
+    if n != 1:
+        print('!! %s 命中 %d 次（期望 1）' % (tag, n))
+        sys.exit(1)
+    print('   %-30s OK (1)' % tag)
+    return text.replace(old, new)
+
+
+def re_once(text, pat, rep, tag):
+    m = list(re.finditer(pat, text))
+    if len(m) != 1:
+        print('!! %s 命中 %d 次（期望 1）' % (tag, len(m)))
+        sys.exit(1)
+    print('   %-30s OK (1)' % tag)
+    return text[:m[0].start()] + re.sub(pat, rep, text[m[0].start():m[0].end()]) + text[m[0].end():]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--src', required=True, help='原始 /assets/main/index.js')
+    ap.add_argument('--dst', required=True, help='输出 main.js（进包 assets/qsw/main.js）')
+    a = ap.parse_args()
+
+    src = open(a.src, encoding='utf-8').read()
+    orig_len = len(src)
+
+    print('=== 应用补丁 v10s（星光版）===')
+    # ① 无敌（受 __QSW_INV 控制；本版恒 false ⇒ 不生效，仅保留已验证代码不引入新变量）
+    src = sub_once(src,
+        'setHeroHp=function(e){this.realDie||(',
+        'setHeroHp=function(e){window.__QSW_INV&&1===this.camp&&e<1&&(e=1,++window.__QSW_HN%10===0&&window.__QSW_LOG({ev:"hp_clamp",n:window.__QSW_HN,camp:this.camp,hid:this.heroId})),this.realDie||(',
+        '① setHeroHp 无敌')
+
+    # ②③④ 伤害倍率 / 减伤（受 __QSWK / __QSW_DR 实时控制）
+    src = sub_once(src,
+        'r-=this.life.value*this.damageReduce2.value),Math.max(0,s)+Math.max(0,r)',
+        'r-=this.life.value*this.damageReduce2.value),window.__QSW_DMG(Math.max(0,s)+Math.max(0,r),this.camp)',
+        '② getBaseReduceHp 倍率')
+    src = re_once(src,
+        r'(getExtraRealReduceHp=function\(e,t\)\{return)([^{}]*?)(\})',
+        r'\1 window.__QSW_DMG((\2),this.camp)\3',
+        '③ getExtraRealReduceHp')
+    src = re_once(src,
+        r'(getRealReduceHp=function\(e,t\)\{return)([^{}]*?)(\})',
+        r'\1 window.__QSW_DMG((\2),this.camp)\3',
+        '④ getRealReduceHp')
+
+    # ⑥ 结算回执取证（本版 __QSW_LOG 为空实现 ⇒ 等价 no-op，仅保留结构）
+    src = sub_once(src,
+        'if(!t.result.isReject||v){',
+        'try{window.__QSW_LOG({ev:"result",isReject:t.result.isReject,hurtRate:t.result.hurtRate,'
+        'hn:window.__QSW_HN||0,dn:window.__QSW_DN||0,'
+        'hasBarrier:!!t.result.barrierData,hasTower:!!t.result.towerData,keys:Object.keys(t.result||{})})}catch(e){};'
+        'if(!t.result.isReject||v){',
+        '⑥ 结算取证')
+
+    # ⑦ neterr
+    src = sub_once(src,
+        'this._networkTips&&this._networkTips.responseErrorCode(i.code,r),_.rspObject.rejectback&&(',
+        'window.__QSW_LOG({ev:"neterr",cb:i.callback,code:i.code,d:String(i.data).slice(0,300)}),'
+        'this._networkTips&&this._networkTips.responseErrorCode(i.code,r),_.rspObject.rejectback&&(',
+        '⑦ neterr 信标')
+
+    # ⑦b bfe_catch
+    src = sub_once(src,
+        '}catch(e){this.onClose()}',
+        '}catch(e){try{window.__QSW_LOG({ev:"bfe_catch",err:String(e&&e.message||e).slice(0,200)})}catch(_e){};this.onClose()}',
+        '⑦b bfe_catch 信标')
+
+    # ⑧ bfe 入口
+    src = sub_once(src,
+        'barrierFightEnd=function(t){var r=this;return g.hurtRate&&(t.hurtRate=g.hurtRate),new Promise(',
+        'barrierFightEnd=function(t){var r=this;try{var _fp=null;try{_fp=JSON.parse(t.fightpro)}catch(_e){};'
+        'window.__QSW_LOG({ev:"bfe",win:t.win,time:t.time,'
+        'keys:Object.keys(t),powers:t.powers,th:_fp&&_fp.th,tbh:_fp&&_fp.tbh,hurtRate:g.hurtRate||0,'
+        'pw:typeof t.powers})}catch(e){};return g.hurtRate&&(t.hurtRate=g.hurtRate),new Promise(',
+        '⑧ bfe 入口信标')
+
+    # ⑪ 上报战力放大（__QSW_PSF 本版恒等 ⇒ 战力完全不动）
+    src = sub_once(src,
+        'w?o.powers[P][B]=w.power:x&&(o.powers[P][B]=x.power)',
+        'w?o.powers[P][B]=window.__QSW_PSF(w.power):x&&(o.powers[P][B]=window.__QSW_PSF(x.power))',
+        '⑪ powers 恒等-普通关卡')
+    src = sub_once(src,
+        'A?o.powers[1][D]=A.power:O&&(o.powers.pet1[D]=O.power)',
+        'A?o.powers[1][D]=window.__QSW_PSF(A.power):O&&(o.powers.pet1[D]=window.__QSW_PSF(O.power))',
+        '⑪ powers 恒等-树洞/跨服竞技')
+
+    # ⑨ hurtCheck 中和
+    src = sub_once(src,
+        'l.http.post(g.apipath+"c=cheat&a=hurtCheck",{uid:g.dbid,channelId:s.getChannel(),hurtRate:t.result.hurtRate},(function(t){m.alert("netcode_-10",(function(){s.restartGame()}))}))',
+        'window.__QSW_LOG({ev:"hurtcheck_blocked",hurtRate:t.result.hurtRate}),m.alert("netcode_-10",(function(){s.restartGame()}))',
+        '⑨ hurtCheck 中和')
+
+    # ⑩ hurtCheckPro 中和
+    src = sub_once(src,
+        'c.http.post(g.apipath+"c=cheat&a=hurtCheckPro",{uid:g.dbid,channelId:a.getChannel(),code:e},(function(t){"restart"==t?r.alert("netcode_"+e,(function(){a.restartGame()})):r.alert("netcode_"+e)}))',
+        '(window.__QSW_LOG({ev:"cheat_code",code:e}),r.alert("netcode_"+e))',
+        '⑩ hurtCheckPro 中和')
+
+    out = HEADER + src
+    with open(a.dst, 'w', encoding='utf-8') as f:
+        f.write(out)
+    print('=== 写出 %s ===' % a.dst)
+    print('  原始 %d B -> 补丁后 %d B (delta %+d)' % (orig_len, len(out), len(out) - orig_len))
+    print('  md5 %s' % hashlib.md5(out.encode('utf-8')).hexdigest())
+
+
+if __name__ == '__main__':
+    main()

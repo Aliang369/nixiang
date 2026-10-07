@@ -69,6 +69,8 @@ public class Preferences {
     private static final String KEY_MENU_ENABLED = "auth_menu_enabled";
     /** 远程公告 once_device 已读 id 集合（对齐 HTML starry_ann_seen_v1） */
     private static final String KEY_ANN_SEEN = "starry_ann_seen_v1";
+    /** 上次见到的功能列表指纹（只有它变了才清功能偏好，见 clearFeaturePrefsIfListChanged） */
+    private static final String KEY_FEATURE_SIG = "feature_list_sig";
     /** 内置验证服务器（自签 HTTPS + 证书固定）；改服务器只改这里 */
     public static final String DEFAULT_AUTH_BASE_URL = "https://47.100.216.101:8443";
     private static final int UI_FEAT_MIN = 50;
@@ -141,6 +143,55 @@ public class Preferences {
             }
         }
         editor.apply();
+    }
+
+    /**
+     * 功能列表**确实变化**时才清功能偏好。
+     *
+     * <p>为什么不能每次构造都清（2026-10-07 炁术行者实测事故）：{@code ModBridge}
+     * 每次构造（菜单浮层每次重开都会新建）都调 {@link #clearFeaturePrefs()}，会把玩家
+     * 刚拖的滑块值立刻抹掉。走 native hook 的游戏无感（值在 so 里），但 H5/JS 补丁是
+     * 经 {@code StarryH5.getState()} 读这里的偏好取值的 —— 现象是「拖完滑块游戏没反应」。
+     *
+     * @param sig 当前功能列表指纹；空串 = 读不到（此时保留偏好，宁可不更新也不误清，
+     *            因为清了之后玩家上一次的设置再也回不来）
+     */
+    public static void clearFeaturePrefsIfListChanged(String sig) {
+        with(null);
+        String s = canonSig(sig);
+        if (s.length() == 0) {
+            return;
+        }
+        String prev = canonSig(sharedPreferences.getString(KEY_FEATURE_SIG, ""));
+        if (s.equals(prev)) {
+            return;
+        }
+        clearFeaturePrefs();
+        sharedPreferences.edit().putString(KEY_FEATURE_SIG, s).apply();
+        Log.i(TAG, "功能列表变化 → 已清功能偏好；prev=[" + prev + "] new=[" + s + "]");
+    }
+
+    /**
+     * 指纹规范化：去掉全部空白字符后再比较/落盘。
+     *
+     * <p>2026-10-07 炁术行者实测：某些 ROM 的偏好 XML 往返会给字符串补尾随空白
+     * （实测末尾多出 4 个空格），直接 {@code equals} 会把「同一份列表」判成「变了」，
+     * 于是每次启动都清一遍功能偏好 —— 玩家刚拖的滑块值永远存不住，H5/JS 补丁
+     * 读到的永远是 0（现象：拖了滑块游戏没反应）。
+     */
+    private static String canonSig(String s) {
+        if (s == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+                continue;
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     private static boolean shouldWrite(int featureNum) {
@@ -244,8 +295,8 @@ public class Preferences {
         try {
             return sharedPreferences.getInt(k, 0);
         } catch (ClassCastException e) {
-            // 门控/锁功能误把滑块等写成 boolean 后，读 int 会崩；清掉脏键
-            sharedPreferences.edit().remove(k).apply();
+            // 读取绝不删数据：类型不符只回默认值（2026-10-07 炁术行者事故：
+            // 旧实现在此 remove，误读一次就把玩家刚拖的滑块值抹掉）
             return 0;
         }
     }
@@ -255,7 +306,7 @@ public class Preferences {
         try {
             return sharedPreferences.getBoolean(k, def);
         } catch (ClassCastException e) {
-            sharedPreferences.edit().remove(k).apply();
+            // 同上：绝不在读取路径删键
             return def;
         }
     }
@@ -265,7 +316,6 @@ public class Preferences {
         try {
             return sharedPreferences.getString(k, "");
         } catch (ClassCastException e) {
-            sharedPreferences.edit().remove(k).apply();
             return "";
         }
     }
@@ -275,7 +325,6 @@ public class Preferences {
         try {
             return sharedPreferences.getLong(k, 0L);
         } catch (ClassCastException e) {
-            sharedPreferences.edit().remove(k).apply();
             return 0L;
         }
     }

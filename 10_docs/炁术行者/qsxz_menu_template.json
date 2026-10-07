@@ -1,0 +1,10 @@
+{
+  "template_id": "qsxz",
+  "name": "炁术行者",
+  "package": "com.h5wrapper.app",
+  "source": "Games/QsxzEntry.cpp kQsxz_Features",
+  "features": [
+    {"feat_num": 1, "name": "伤害倍率"},
+    {"feat_num": 2, "name": "减伤"}
+  ]
+}
