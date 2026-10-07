@@ -59,6 +59,11 @@ public final class TapLoginForceWeb {
     /** 包名白名单：只对这些游戏的 Tap 登录强制网页，其他星空包游戏不受影响。 */
     private static final java.util.Set<String> PKG_WHITELIST =
             new java.util.HashSet<>(java.util.Arrays.asList(
+                    // 绝区零（TapTap 渠道 3.2.0）：包内 TapSDK 为 loginHandlers 旧路径
+                    // （TapTapLoginActivity + LoginActivityImpl.loginHandlers=[Cloud,Client] +
+                    //   internal/handlers/web/WebLoginFragment），改签包必须强制内嵌网页，
+                    // 否则拉起 TapTap 客户端 SSO 会因签名不匹配失败。
+                    "com.miHoYo.Nap",
                     // 境界刀鸣（taptap 渠道，TapSDK 版本待核）：登录改强制内嵌网页
                     "com.blade.bd",
                     "com.hypergryph.endfield",

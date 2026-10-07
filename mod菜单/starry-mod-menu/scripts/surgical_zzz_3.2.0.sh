@@ -47,6 +47,8 @@ ORIG_MD5="${ZZZ_BASE_MD5:-e94dfa2893b924272b66003f224f5831}"
 DEX_NAME="classes6.dex"
 DEX_SRC="${STARRY_SRC}/templates/zzz_menu_20261005/${DEX_NAME}"
 SO_SRC="${STARRY_SRC}/libs_zzz/arm64-v8a/libstarry_magic.so"
+# 池鸳同款保护层手术：libtersafe2.so 置零 12B（file 0xa24bc），可选件
+TERSAFE_SRC="${ZZZ_TERSAFE_SO:-${STARRY_SRC}/libs_zzz/arm64-v8a/libtersafe2.so}"
 MF_CACHE="${NIXIANG}/07_patched/${GAME}/surgical/AndroidManifest.xml"
 
 OUT_DIR="${NIXIANG}/08_output/${GAME}"
@@ -111,12 +113,15 @@ print(hashlib.md5(open(sys.argv[1],'rb').read()).hexdigest())
 " "${ORIG_APK}")"
 [[ "${omsg}" == "${ORIG_MD5}" ]] || die "官方底包指纹不符 ${omsg}（期望 ${ORIG_MD5}）"
 ssize="$(wc -c <"${SO_SRC}" | tr -d ' ')"
-for s in 'Toggle_无敌' 'Toggle_无限技能' 'Slider_移动速度' 'Slider_伤害倍率' 'Toggle_定怪'; do
+for s in 'Toggle_无敌' 'Toggle_无限技能' 'Slider_伤害倍率' 'Toggle_定怪'; do
   c="$(LC_ALL=C grep -ac "${s}" "${SO_SRC}" || true)"
   [[ "${c}" == "1" ]] || die "so 缺少菜单串 ${s}（grep -c=${c}）"
 done
+if LC_ALL=C grep -aq 'Slider_移动速度' "${SO_SRC}"; then
+  die "so 仍含已删除的移动速度菜单串（2026-10-07 用户要求删除）"
+fi
 LC_ALL=C grep -aq '\[jql\]' "${SO_SRC}" || die "so 缺少 [jql] 标签"
-echo "[check] 底包 ${osize} B (md5 ${omsg}) / so ${ssize} B / dex $(wc -c <"${DEX_SRC}" | tr -d ' ') B / 五条菜单串 ok"
+echo "[check] 底包 ${osize} B (md5 ${omsg}) / so ${ssize} B / dex $(wc -c <"${DEX_SRC}" | tr -d ' ') B / 四条菜单串 ok（移速已删）"
 
 echo "[2/6] binary AndroidManifest（保留官方 Application 与 ComponentFactory）"
 if [[ -n "${ZZZ_BINARY_MANIFEST:-}" && -f "${ZZZ_BINARY_MANIFEST:-}" ]]; then
@@ -257,6 +262,10 @@ REPL = {
     dex_name: os.path.join(work, dex_name),
     'lib/arm64-v8a/libstarry_magic.so': so,
 }
+_ts = os.environ.get('TERSAFE_SO') or ''
+if _ts and os.path.exists(_ts):
+    REPL['lib/arm64-v8a/libtersafe2.so'] = _ts
+    print('  [tersafe] replacing libtersafe2.so from %s' % _ts)
 
 def is_sig(name):
     u = name.upper()

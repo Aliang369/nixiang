@@ -141,7 +141,7 @@ fi
 
 mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 
-# ---- 菜单串按字节校验（硬约束 #9：五项，禁扩张） ----
+# ---- 菜单串按字节校验（2026-10-07 用户「移动速度功能删除」：四项，禁扩张） ----
 check_menu() {
   local s="$1" n
   n="$(LC_ALL=C grep -ac "$s" "$SO" 2>/dev/null || true)"
@@ -151,9 +151,12 @@ check_menu() {
 }
 check_menu "Toggle_无敌"
 check_menu "Toggle_无限技能"
-check_menu "Slider_移动速度"
 check_menu "Slider_伤害倍率"
 check_menu "Toggle_定怪"
+if LC_ALL=C grep -aq "Slider_移动速度" "$SO" 2>/dev/null; then
+  echo "ERROR: $SO 仍含已删除的移动速度菜单串 —— 旧 so 混入或菜单表未换" >&2
+  exit 1
+fi
 LC_ALL=C grep -aq '\[jql\]' "$SO" || { echo "ERROR: $SO 缺 [jql] 标签" >&2; exit 1; }
 LC_ALL=C grep -aq 'libil2cpp.so' "$SO" || { echo "ERROR: $SO 缺 libil2cpp.so 等待库名" >&2; exit 1; }
 

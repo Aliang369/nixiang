@@ -23,13 +23,11 @@
 enum ZzzFeat : int {
     ZZZ_FEAT_INV    = 0,   // Toggle_无敌
     ZZZ_FEAT_SKILL  = 1,   // Toggle_无限技能（v1 站点未定稿，仅记录开关）
-    ZZZ_FEAT_MOVE   = 2,   // Slider_移动速度:1:20:1   (1 = 关闭)
-    ZZZ_FEAT_DMG    = 3,   // Slider_伤害倍率:1:100:1  (1 = 关闭)
-    ZZZ_FEAT_FREEZE = 4,   // Toggle_定怪
+    ZZZ_FEAT_DMG    = 2,   // Slider_伤害倍率:1:100:1  (1 = 关闭) —— 2026-10-07 移速删除后前移
+    ZZZ_FEAT_FREEZE = 3,   // Toggle_定怪
 };
 
 // Slider 上限（必须与 ZzzEntry.cpp 的 Slider_ 声明一致）
-#define ZZZ_MOVE_MUL_MAX 20
 #define ZZZ_DMG_MUL_MAX  100
 
 // 签名与 ModEntry.h 回调一致
