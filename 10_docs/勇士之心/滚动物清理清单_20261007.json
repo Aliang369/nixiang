@@ -1,50 +1,22 @@
 {
-  "root": "/Users/aliang/Documents/nixiang",
-  "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511",
-  "timestamp": "20261007_131511",
+  "root": "E:/nixiang",
+  "quarantine": "C:/Users/Administrator/.Trash/nixiang______________20261007_20261007_163656",
+  "timestamp": "20261007_163656",
   "mode": "apply",
   "items": [
     {
-      "path": "04_scripts/勇士之心/ysxz_anticheat/BACKUP_星空包_1.0.3_原样.apk",
-      "type": "file",
-      "size_kib": 63164,
-      "source": "/Users/aliang/Documents/nixiang/04_scripts/勇士之心/ysxz_anticheat/BACKUP_星空包_1.0.3_原样.apk",
-      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/04_scripts/勇士之心/ysxz_anticheat/BACKUP_星空包_1.0.3_原样.apk"
-    },
-    {
-      "path": "09_test/勇士之心/precheck_20261005_161419",
+      "path": "09_test/勇士之心",
       "type": "dir",
-      "size_kib": 9460,
-      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_161419",
-      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_161419"
+      "size_kib": 3210,
+      "source": "/e/nixiang/09_test/勇士之心",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261007_20261007_163656/09_test/勇士之心"
     },
     {
-      "path": "09_test/勇士之心/precheck_20261005_162332",
+      "path": "mod菜单/starry-mod-menu/libs_ysxz",
       "type": "dir",
-      "size_kib": 6992,
-      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_162332",
-      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_162332"
-    },
-    {
-      "path": "09_test/勇士之心/precheck_20261005_164826",
-      "type": "dir",
-      "size_kib": 1616,
-      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_164826",
-      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_164826"
-    },
-    {
-      "path": "09_test/勇士之心/precheck_20261005_170931",
-      "type": "dir",
-      "size_kib": 5164,
-      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_170931",
-      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_170931"
-    },
-    {
-      "path": "09_test/勇士之心/regrab_20261005/base.apk",
-      "type": "file",
-      "size_kib": 63144,
-      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/regrab_20261005/base.apk",
-      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/regrab_20261005/base.apk"
+      "size_kib": 820,
+      "source": "/e/nixiang/mod菜单/starry-mod-menu/libs_ysxz",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang______________20261007_20261007_163656/mod菜单/starry-mod-menu/libs_ysxz"
     }
   ]
 }

@@ -1846,7 +1846,7 @@
                 title.on(cc.Node.EventType.TOUCH_END, function () { d = false; if (UI.proot) savePanelState(UI.proot.x, UI.proot.y); });
                 title.on(cc.Node.EventType.TOUCH_CANCEL, function () { d = false; });
             })();
-            
+
             title.y = H / 2 - headerH / 2; panel.addChild(title, 6);   // 标题在标题区里居中（跟着 headerH 走）
             title.x = -(W / 2) + 27 + (W - 180) / 2;      // 左边距 27：紧贴标题前的亮绿硬边
 
@@ -1860,7 +1860,7 @@
             var tabY = bodyTop - Math.round(bodyH * 0.04) - tabH / 2;
             var noticeTab = null, featureTab = null, autoTab = null;
 
-            
+
             /* ---- 滚动列表：view(遮罩) + content(内容) + 滚动条 ---- */
             var viewW = UI.geo.viewW, viewH = UI.geo.viewH;
             var view = new cc.Node('wx_view');
@@ -4033,7 +4033,7 @@ return { lastAction: "panelDiag", info: d };
       /* ★ v27 核心修复：主线任务奖励的【官方领取方式】终于找到了
          官方 TaskBaseComp（主线任务面板）的「领取奖励」按钮 = fdc()：
              fdc() {
-               // 若本组存在 status==$pB.d(可领取=2) 的任务，或活动宝箱可领 → 
+               // 若本组存在 status==$pB.d(可领取=2) 的任务，或活动宝箱可领 →
                return $eZ.task.cvk(this.fcS);        // ★ fcS = { taskType: X }（只有 taskType！）
                // 否则 cTg("暂无可领取奖励")
              }

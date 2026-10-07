@@ -11,14 +11,13 @@ enum YsxzFeat : int {
     YSXZ_FEAT_MOVE = 5,    // Slider_移动速度 1..10
     YSXZ_FEAT_AUTO = 6,    // Toggle_自动战斗
     // ---- 2026-10-07 新增（卡密包同名功能复刻，逻辑全在 JS 侧 auto_layer.js）----
-    // 7 是 Category_新增功能 分组标题，占位不参与逻辑
-    YSXZ_FEAT_GOLD = 8,    // Toggle_解锁金卡       JS: MOD.feature6
-    // 9 是 Category_自动化 分组标题，占位不参与逻辑
-    YSXZ_FEAT_REPEAT = 10, // Toggle_自动重复挑战   JS: MOD.feature7
-    YSXZ_FEAT_SELL = 11,   // Toggle_自动出售       JS: MOD.feature8
-    YSXZ_FEAT_DECO = 12,   // Toggle_自动分解       JS: MOD.feature9
-    YSXZ_FEAT_WEAR = 13,   // Toggle_自动穿戴       JS: MOD.feature10
-    YSXZ_FEAT_COUNT = 14,
+    YSXZ_FEAT_GOLD = 7,    // Toggle_解锁金卡       JS: MOD.feature6（已并入「基础功能」分类）
+    // 8 是 Category_自动化 分组标题，占位不参与逻辑
+    YSXZ_FEAT_REPEAT = 9,  // Toggle_自动重复挑战   JS: MOD.feature7
+    YSXZ_FEAT_SELL = 10,   // Toggle_自动出售       JS: MOD.feature8
+    YSXZ_FEAT_DECO = 11,   // Toggle_自动分解       JS: MOD.feature9
+    YSXZ_FEAT_WEAR = 12,   // Toggle_自动穿戴       JS: MOD.feature10
+    YSXZ_FEAT_COUNT = 13,
 };
 
 bool Ysxz_TryInit(JavaVM* vm);

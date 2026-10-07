@@ -490,4 +490,3 @@ window.__starry_capture = function (reg) {
 try {
   if (window.__starry_nlog) window.__starry_nlog("[MODMOD] capture installed");
 } catch (e) {}
-

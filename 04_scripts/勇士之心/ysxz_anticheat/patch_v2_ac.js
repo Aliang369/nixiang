@@ -938,14 +938,14 @@
   Object.defineProperty(M, "speed", { get: function () { return V(5); } });      /* 移动速度 1..10 */
   Object.defineProperty(M, "damage", { get: function () { return V(1); } });     /* 伤害倍率 1..50 */
   /* 2026-10-07 新增功能(卡密包同名功能复刻)。序号=菜单位置, 必须与 kYsxz_Features 严格一致:
-       7  Category_新增功能  /  8  解锁金卡
-       9  Category_自动化    / 10  自动重复挑战 / 11 自动出售 / 12 自动分解 / 13 自动穿戴
+       7  解锁金卡(已并入「基础功能」分类)  /  8  Category_自动化(分组占位)
+       9  自动重复挑战 / 10 自动出售 / 11 自动分解 / 12 自动穿戴
      全部由 automation 层(auto_layer.js)消费, 过检测层不读这些。 */
-  Object.defineProperty(M, "feature6",  { get: function () { return R(8); } });  /* 解锁金卡 */
-  Object.defineProperty(M, "feature7",  { get: function () { return R(10); } }); /* 自动重复挑战 */
-  Object.defineProperty(M, "feature8",  { get: function () { return R(11); } }); /* 自动出售 */
-  Object.defineProperty(M, "feature9",  { get: function () { return R(12); } }); /* 自动分解 */
-  Object.defineProperty(M, "feature10", { get: function () { return R(13); } }); /* 自动穿戴 */
+  Object.defineProperty(M, "feature6",  { get: function () { return R(7); } });  /* 解锁金卡 */
+  Object.defineProperty(M, "feature7",  { get: function () { return R(9); } });  /* 自动重复挑战 */
+  Object.defineProperty(M, "feature8",  { get: function () { return R(10); } }); /* 自动出售 */
+  Object.defineProperty(M, "feature9",  { get: function () { return R(11); } }); /* 自动分解 */
+  Object.defineProperty(M, "feature10", { get: function () { return R(12); } }); /* 自动穿戴 */
   globalThis.__starry_nlog = J;
   globalThis.MOD = M;
 })();
@@ -1431,4 +1431,3 @@ window.__starry_capture = function (reg) {
 try {
   if (window.__starry_nlog) window.__starry_nlog("[MODMOD] capture installed");
 } catch (e) {}
-
