@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/弹力果冻4399",
+  "keep": "弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk",
+  "keep_size": 2141011508,
+  "keep_md5": "38ea70fcbf575c5bcbcf4373d81a23cc",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk.idsig",
+      "size": 16864795,
+      "md5": "20332faa9532bb1235d8fb0840390203"
+    }
+  ],
+  "removed_count": 1
+}

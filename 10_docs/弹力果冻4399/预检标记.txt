@@ -1,0 +1,17 @@
+# 弹力果冻4399（com.ginicat.sweet.m4399）装机预检标记
+# 格式：类别|ERE 正则（每行一条，# 开头为注释）
+# 用途：post_install_precheck.sh 的机器预检关（L2）。人工终审仍是用户实测（L3）。
+
+pkg|com\.ginicat\.sweet\.m4399
+
+# 菜单 so 加载标记（星光框架 TAG）
+menu_load|StarryMagic
+
+# 菜单弹出标记
+menu_shown|native menu shown
+
+# 游戏级 hook 命中标记（4399 渠道 so 打的是 [Tlgd] 标签）
+hook_hit|\[Tlgd\]
+
+# 授权墙标记（过不去只发操作请求卡，不诊断服务端）
+auth_fail|renew auth fail

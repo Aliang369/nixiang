@@ -1,0 +1,11 @@
+{
+  "package": "com.ginicat.sweet.m4399",
+  "serial": "f9a116a2",
+  "device_base_path": "/data/app/~~k_aqTG6xRTYUyARQUw4oyA==/com.ginicat.sweet.m4399-XW9Q31b5AOYLhLPJCPIVrA==/base.apk",
+  "local_path": "/Users/aliang/Documents/nixiang/02_apks/弹力果冻4399/弹力果冻4399_2.4.0_vc4412_device_base.apk",
+  "size": 2140909132,
+  "md5": "9d20e5b550b442bdab557d041af912f7",
+  "sha256": "20a8a6df65ff2937bf8f757b308943cd904b193efa1087e306760868ae35d1cb",
+  "source": "真机只读提取（用户 2026-10-07 授权：以已装 4399 星光包为底包）",
+  "note": "versionCode=4412 与官方 4399 2.4.0 一致；classes.dex/resources.arsc 为官方原始字节"
+}

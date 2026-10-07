@@ -1,0 +1,16 @@
+{
+  "package": "com.ginicat.sweet.m4399",
+  "aapt_first_line": "package: name='com.ginicat.sweet.m4399' versionCode='4412' versionName='2.4.0' platformBuildVersionName='10' platformBuildVersionCode='29' compileSdkVersion='29' compileSdkVersionCodename='10'",
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/弹力果冻4399/弹力果冻4399_2.4.0_vc4412_device_base.apk",
+  "apk_size": 2140909132,
+  "apk_md5": "9d20e5b550b442bdab557d041af912f7",
+  "apk_sha256": "20a8a6df65ff2937bf8f757b308943cd904b193efa1087e306760868ae35d1cb",
+  "pkg_so_md5": "2186599e8f33c0efbdde9a573a34e659",
+  "pkg_libil2cpp_md5": "b3c74d18e4111fed2d0049088ae21c6d",
+  "classes2_dex_size": 293612,
+  "classes2_dex_sha256": "051348193efcf4d0f7e4459c2fe86ad3c10bdd4a31b0ac7494a3f314a1938d9d",
+  "classes2_is_old_menu": "yes",
+  "classes2_MenuService_hits": 1,
+  "classes2_has_new_category_label": 0,
+  "checked_at": "2026-10-07 15:06:08"
+}

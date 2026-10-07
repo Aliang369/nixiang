@@ -1,0 +1,243 @@
+{
+  "game": "弹力果冻4399",
+  "version": "2.4.0 / vc4412",
+  "notes": "2026-10-07 稳定性整改。4399 渠道（com.ginicat.sweet.m4399，vc4412）独立鉴权 ID=tlgd；目录与 tag=Tlgd。用户原话（m00001）：真机上这款弹力果冻是星空包，功能经常闪退/失效；TapTap 渠道做过一次修复好很多，需借鉴 TapTap 的方式改这款包让功能稳定，并把旧版菜单 dex 换成新版。做法=整份复用 TapTap 2.4.0 已验收稳定架构（Games/TlgdTapTapMod.cpp，七条整改：后台线程只置 refreshWanted / RefreshBattleCache 移入解释器 Hook 的游戏线程 / RAII 重入隔离 + 全异常兜底 / 主目标只改 DamageInfo 后调一次原 CreateDamage / 全屏补发走 HpHandle 原生桥标 isBuff+isFromNet / DamageInfo 全字段校验 / 敌我 EID 发布序号快照），唯一渠道差异 = 解释器公共点文件偏移 0xBAAB0C（4399，历史定稿）vs 0xBABB0C（TapTap，前移 0x1000），用 -DSTARRY_TLGD_M4399 编译期切换。菜单 dex 旧 293,612 B → 新 481,608 B。功能位顺序对齐 TapTap：1秒杀 2全屏秒杀 3无敌 4无限技能（旧顺序 1秒杀 2无敌 3全屏秒杀 4无限技能 已废弃，后台模板必须同步）。底包 = 从真机 f9a116a2 只读拉取当前已装星光包 base.apk（用户 2026-10-07 决策），vc4412 与官方 4399 2.4.0 一致、classes.dex/resources.arsc 为官方原始字节、天然同签名可覆盖安装。L1 静态核验 + G1 五项全通过；『功能稳定不闪退』标 NOT PROVEN 待 L3 用户实测（4399 历史闪退从未抓到直接 tombstone，不宣称全量覆盖）。详见 10_docs/弹力果冻4399/稳定性整改_2.4.0_20261007.md。",
+  "params": {
+    "game_id": "tlgd",
+    "package": "com.ginicat.sweet.m4399",
+    "version_code": 4412,
+    "mk": "Android_tlgdm4399.mk",
+    "tag": "Tlgd",
+    "obj_dir": "obj_tlgdm4399",
+    "libs_dir": "libs_tlgdm4399",
+    "serial": "f9a116a2",
+    "file_trampoline": "0xBAAB0C"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni",
+  "stages": [
+    {
+      "id": "fetch_apk",
+      "name": "真机只读提取底包（已装 4399 星光包 base.apk）",
+      "requires": [],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/tlgd4399_fetch_apk.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/弹力果冻4399/tlgd4399_fetch_apk.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/02_apks/弹力果冻4399/弹力果冻4399_2.4.0_vc4412_device_base.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/fetched_apk.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/02_apks/弹力果冻4399/弹力果冻4399_2.4.0_vc4412_device_base.apk": {
+          "md5": "9d20e5b550b442bdab557d041af912f7",
+          "sha256": "20a8a6df65ff2937bf8f757b308943cd904b193efa1087e306760868ae35d1cb",
+          "size": 2140909132
+        }
+      },
+      "notes": "用户 2026-10-07 决策：以真机 f9a116a2 上已装的 4399 星光包为底包。禁止卸载，只覆盖安装。"
+    },
+    {
+      "id": "check_apk",
+      "name": "核对 4399 底包身份（包名/版本/签名/DEX 布局/IL2CPP 指纹）",
+      "requires": [
+        "fetch_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/tlgd4399_check_apk.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/弹力果冻4399/tlgd4399_check_apk.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/check_summary.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/check_summary.json": {}
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/弹力果冻4399/弹力果冻4399_2.4.0_vc4412_device_base.apk": "9d20e5b550b442bdab557d041af912f7"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "构建 4399 稳定架构 so（复用 TapTap 实现，编译期切 0xBAAB0C）",
+      "requires": [
+        "check_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_tlgdm4399.mk",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdM4399Entry.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapMod.cpp",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp",
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/tlgd4399_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/弹力果冻4399/tlgd4399_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgdm4399/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgdm4399/arm64-v8a/libstarry_magic.so": {
+          "md5": "5a667e959120e897f1b675f439f0ec6c",
+          "sha256": "17e6dc00f1973befb870eecba733236b850a2adf9b60c7ff59a9954b30910090",
+          "size": 166568
+        }
+      },
+      "notes": "构建期护栏：mk 必须含 -DSTARRY_TLGD_M4399（否则退回 TapTap 0xBABB0C 挂错地址）。必须链 Games/NoAceStubs.cpp（MainModern.cpp:653/663 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad）；禁止链 Games/WxsjPatchedDll.a（误抄死重 2,191,784 B → 去掉后 166,568 B）。证据串断言：含 Category_战斗 / Toggle_全屏秒杀 / [Tlgd] / 解释器入口已挂 / 原生桥补发，且不得含 tlgdtt。LC_ALL=C 必需（macOS BSD grep 在 zh_CN.UTF-8 下匹配不了二进制内 UTF-8 中文）。"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（换 so + 换菜单 dex + 重签名）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/tlgd4399_surgical.sh",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/弹力果冻4399/tlgd4399_surgical.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk": {
+          "md5": "38ea70fcbf575c5bcbcf4373d81a23cc",
+          "sha256": "c2c93427ce875e13005d0271b373d5bbb825c72e74c720325ca9a5e2b543c9a4",
+          "size": 2141011508
+        }
+      },
+      "notes": "六段：消费预编 so → jniLibs → gradle assembleRelease → apktool d starry 收 com/starry smali → smali assemble -o classes2.dex → 二进制 Manifest（默认原样保留底包字节，不做 apktool 文本↔二进制往返）→ python zip 外科合并（跳 META-INF、保护 classes.dex/resources.arsc 断言 sha256 相等）→ zipalign -f -p 4 + apksigner。默认只出包不装机。"
+    },
+    {
+      "id": "audit",
+      "name": "增量审计（底包 vs 产物逐条目 diff）",
+      "requires": [
+        "surgical"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/tlgd4399_audit_delta.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/弹力果冻4399/tlgd4399_audit_delta.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "notes": "结果：4836 条目，[gone] 0 / [added] 0，预期变更恰好 5 条（classes2.dex 293,612→481,608 B；lib/arm64-v8a/libstarry_magic.so 132,560→166,568 B；META-INF 三件）。受保护条目逐字节相同：classes.dex 7,176,856 B sha256 8cc3b88fd0c50393…；resources.arsc 393,780 B sha256 db22e197cdee3fde…；AndroidManifest.xml 19,248 B sha256 8cda19d5718030a1…。ALLOW_DIFF_PREFIX=(assets/certs/, META-INF/)；对已签名产物不得断言『无 META-INF』（签名块是 apksigner 新加的）。"
+    },
+    {
+      "id": "gate",
+      "name": "装机前置门禁 G1（pre_install_gate.sh）",
+      "requires": [
+        "audit"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/_common/pre_install_gate.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --apk \"$NIXIANG/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk\" --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp\" --dex /tmp/tlgd4399_verify/classes2.dex --so \"$NIXIANG/mod菜单/starry-mod-menu/libs_tlgdm4399/arm64-v8a/libstarry_magic.so\" --menu-json \"$NIXIANG/10_docs/弹力果冻/tlgd_menu_template.json\" --needle 'com/starry/magic/StarryApp' --needle 'com/starry/magic/bridge/ModBridge' --needle 'com/starry/magic/menu/MenuService' --needle 'com/starry/magic/menu/NativeMenuController' --needle 'com/starry/magic/sign/SignSpoof' --needle 'com/starry/magic/ota'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "notes": "PASS=1 FAIL=0 WARN=0 SKIP=0，退出码 0。控件 PASS / 门禁串 6/6 PASS / JNI 配套 19/19 PASS（必须 --cpp 传 MainModern.cpp，传 Games/TlgdTapTapMod.cpp 会 SKIP 假通过）。其余 G1 四项（防封上报审计 / 异常兜底审计 / 4399 渠道三查 / game_id 独立性）结论见 10_docs/弹力果冻4399/装机前置检查_G1_20261007.md。"
+    },
+    {
+      "id": "install",
+      "name": "覆盖安装（禁止卸载）",
+      "requires": [
+        "gate"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/弹力果冻4399/tlgd4399_install.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/弹力果冻4399/tlgd4399_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "artifacts": {},
+      "notes": "pm install -r -d --user 0，本游戏约 2.1GB，禁止卸载（卸载丢存档且重下载）。2026-10-07 实跑结果：push 2,141,011,508 B @33.4 MB/s 用 61.1s；`Success`；装机完整性闭环三项全过——①设备 base.apk md5 == 本地产物 md5 `38ea70fcbf575c5bcbcf4373d81a23cc`；②设备包内 `lib/arm64-v8a/libstarry_magic.so` md5 `5a667e959120e897f1b675f439f0ec6c` == 本次 build_so 产物；③设备包内 `classes2.dex` sha256 `c8892509a5a6eef2…` == 本地产物（菜单真的换新）；设备 dex 集合 = 2 个。装机后设备 base.apk 路径 `/data/app/~~icyZiZvXgJvsyPW2pyKr3A==/com.ginicat.sweet.m4399-X7y27ryWEONM1BV2mQ6rjA==/base.apk`（设备上已装包 versionCode=4412 不变，firstInstallTime 保留 ⇒ 未卸载）。脚本内已修两处 2026-10-07 首跑踩坑：①门禁串必须选 dex 内真实字面量（`Category_战斗`/`Toggle_全屏秒杀` 在 so 里不在 dex，查5 会 FAIL 拦装机）；②`set -o pipefail` 下 `cmd | head -N` 因 SIGPIPE 返回 141 会中止脚本，所有 `| head` 已加 `|| true`。"
+    },
+    {
+      "id": "l2_check",
+      "name": "L2 机器关（装机后自动，不打扰用户）",
+      "requires": [
+        "install"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/_common/post_install_precheck.sh",
+        "/Users/aliang/Documents/nixiang/04_scripts/_common/flight_recorder.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/post_install_precheck.sh\" && bash \"$NIXIANG/04_scripts/_common/flight_recorder.sh\"",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-10-07",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/09_test/弹力果冻4399/precheck_20261007_151111": {},
+        "/Users/aliang/Documents/nixiang/09_test/_recorder/20261007_151108": {}
+      },
+      "notes": "2026-10-07 实跑：`post_install_precheck.sh --game 弹力果冻4399 --serial f9a116a2 --pkg com.ginicat.sweet.m4399 --markers 10_docs/弹力果冻4399/预检标记.txt` ⇒ **PASS_TO_HUMAN**（退出码 0）。五项证据：①包已安装；②force-stop + monkey 冷启干净；③菜单 so 加载 `StarryMagic: [桥接] exempt hidden apis via JNI 失败（隐藏方法）`；④**hook 命中 `Mod_Menu: [Tlgd] 功能 0 -> 关`**（4399 标签正确，不是 TapTap 的 tlgdtt）；⑤**菜单弹出 `MenuService: native menu shown mode=ACTIVITY`**；⑥**授权通过 `ModBridge: auth game_id synced from native: tlgd`**（game_id 独立性确认）。空转 3 分钟无崩溃、无 libc++abi terminating / SIGABRT。飞行记录仪目录 `09_test/_recorder/20261007_151108`（SUP=63864）在本轮全程运行中，用户喊「标记」即打点。**预检不证明功能好用**，功能稳定性终审仍待 L3 用户实测。"
+    },
+    {
+      "id": "archive",
+      "name": "收尾（finalize_game_delivery.sh）",
+      "requires": [
+        "l2_check"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/_common/finalize_game_delivery.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 弹力果冻4399 --apk \"$NIXIANG/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk\" --menu-template \"$NIXIANG/10_docs/弹力果冻/tlgd_menu_template.json\" --prune --sync-doc --apply",
+      "verify": [
+        "file_exists:08_output/弹力果冻4399/delivery_20261007/menu_template.json"
+      ],
+      "status": "done",
+      "notes": "2026-10-07 实跑（L3 用户「功能没问题」后收官）：delivery_20261007/ 生成 menu_template.json（4 项）；prune --apply 只删了 .idsig（16,864,795 B），保留唯一正式包。★ 踩坑：菜单模板 JSON 必须严格 5 键 {template_id,name,package,source,features}，本次因模板里多写了 note_20261007 / old_order_20260820 两个键 → finalize 的校验器 AssertionError 直接失败；已把旧顺序与注意事项移到 10_docs/弹力果冻4399/稳定性整改_2.4.0_20261007.md §8。★ 另注：finalize 的 --sync-doc 回扫提示里把模板源路径硬编码猜成 10_docs/弹力果冻4399/…，实际源是 10_docs/弹力果冻/tlgd_menu_template.json（4399 渠道模板一直放在弹力果冻目录下）——已人工核对 delivery 副本与源内容一致。",
+      "done_at": "2026-10-07",
+      "artifacts": {
+        "08_output/弹力果冻4399/delivery_20261007/menu_template.json": {
+          "size": 384
+        },
+        "10_docs/弹力果冻4399/正式包裁剪清单_20261007.json": {
+          "size": null
+        }
+      }
+    }
+  ]
+}

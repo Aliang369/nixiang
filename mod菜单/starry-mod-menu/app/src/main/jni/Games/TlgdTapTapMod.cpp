@@ -38,7 +38,15 @@
 
 // 4399 定稿函数入口为 0xBAAB0C；TapTap 2.4.0 对应函数前移 0x1000。
 // 两包逐指令比对：26 条中 25 条完全一致，仅一条内部相对分支不同。
+// ★本文件被两个渠道共用（2026-10-07 4399 稳定性整改）：
+//    TapTap 2.4.0 (com.ginicat.sweet)        → kFileTrampoline = 0xBABB0C（默认，无宏）
+//    4399   2.4.0 (com.ginicat.sweet.m4399)  → -DSTARRY_TLGD_M4399 ⇒ 0xBAAB0C
+// 两个值都由各自渠道的历史实测定稿（4399 = 斌哥 memdiff + 2026-08-20/24 用户验收）。
+#if defined(STARRY_TLGD_M4399)
+static constexpr uintptr_t kFileTrampoline = 0xBAAB0C;
+#else
 static constexpr uintptr_t kFileTrampoline = 0xBABB0C;
+#endif
 static constexpr int64_t kKillDmg = 99999999LL;
 static constexpr float kKillAtk = 99999999.f;
 static constexpr size_t kOffIsFromNet = 37;
