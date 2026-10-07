@@ -70,8 +70,13 @@ static bool IsLibMapLine(const char* line, const char* lib) {
 }
 
 static bool IsTargetBundle(const char* fileName) {
+    /* 2026-10-07 补 assets/main/index.：过检测闸门 ANTI_CHEAT_ENABLED 的宿主模块 $LZ
+     * 在 main bundle 里(实测 main/index.js 19 处命中)，不放行则闸门层永远 arm 不上。
+     * main 内容过滤已过关(window.__require / maxApDefRate / AUTO_BATTLE 齐备)。
+     * JS 侧用 sealMethods(仅 main 独有)识别 main，走 gate-only，不跑功能扫描。 */
     return fileName && (strstr(fileName, "assets/battleLogic/index.") ||
-                        strstr(fileName, "assets/game/index."));
+                        strstr(fileName, "assets/game/index.") ||
+                        strstr(fileName, "assets/main/index."));
 }
 
 // 两轮探测：先 x 段（真机快路径），找不到再退到最大可读段

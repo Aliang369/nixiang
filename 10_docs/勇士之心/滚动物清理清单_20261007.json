@@ -1,0 +1,50 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511",
+  "timestamp": "20261007_131511",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "04_scripts/勇士之心/ysxz_anticheat/BACKUP_星空包_1.0.3_原样.apk",
+      "type": "file",
+      "size_kib": 63164,
+      "source": "/Users/aliang/Documents/nixiang/04_scripts/勇士之心/ysxz_anticheat/BACKUP_星空包_1.0.3_原样.apk",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/04_scripts/勇士之心/ysxz_anticheat/BACKUP_星空包_1.0.3_原样.apk"
+    },
+    {
+      "path": "09_test/勇士之心/precheck_20261005_161419",
+      "type": "dir",
+      "size_kib": 9460,
+      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_161419",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_161419"
+    },
+    {
+      "path": "09_test/勇士之心/precheck_20261005_162332",
+      "type": "dir",
+      "size_kib": 6992,
+      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_162332",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_162332"
+    },
+    {
+      "path": "09_test/勇士之心/precheck_20261005_164826",
+      "type": "dir",
+      "size_kib": 1616,
+      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_164826",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_164826"
+    },
+    {
+      "path": "09_test/勇士之心/precheck_20261005_170931",
+      "type": "dir",
+      "size_kib": 5164,
+      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/precheck_20261005_170931",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/precheck_20261005_170931"
+    },
+    {
+      "path": "09_test/勇士之心/regrab_20261005/base.apk",
+      "type": "file",
+      "size_kib": 63144,
+      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心/regrab_20261005/base.apk",
+      "quarantine": "/Users/aliang/.Trash/nixiang______20261007_20261007_131511/09_test/勇士之心/regrab_20261005/base.apk"
+    }
+  ]
+}

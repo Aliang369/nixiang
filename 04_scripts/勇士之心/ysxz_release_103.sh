@@ -109,6 +109,14 @@ done
 say "  ✓ so 含模拟器自举（main.js 自愈 + ysxz_native_ok 判据）"
 say "  ✓ so 菜单表 = 新版 7 行"
 
+# 2026-10-07 新增功能（解锁金卡 / 自动重复挑战 / 自动出售 / 自动分解 / 自动穿戴）。
+# so 侧是菜单【项目清单】，dex 侧是开关【存储容量】—— 两者缺一就会出现"菜单能看到、
+# 开关读到的永远是 false"这种静默失效，所以两侧都要挡。
+for tok in "Toggle_解锁金卡" "Toggle_自动重复挑战" "Toggle_自动出售" "Toggle_自动分解" "Toggle_自动穿戴"; do
+  LC_ALL=C grep -aqF -- "$tok" "$SO" || die "so 缺新增功能菜单串 [$tok] —— 先跑 ysxz_build_so_103.sh"
+done
+say "  ✓ so 菜单表含新增功能 5 项"
+
 # 自动战斗指纹回归门禁（2026-10-05 事故：本脚本打包过未同步 09-21 修法的旧指纹 so，
 # 热更 res 1.1.4.0 改名后 tryAuto 静默跳过 → 自动战斗失效且无任何日志）。
 LC_ALL=C grep -aqF -- 'BuffTableEnum' "$SO" || die "so 自动战斗指纹是旧版（缺 BuffTableEnum）—— 检查 ysxz_1.0.3_menu/YsxzPatchJs.h 后 --build"
@@ -122,6 +130,11 @@ for tok in "[auth] store verdict=" "cold-start self-heal" "auth_backup_"; do
   LC_ALL=C grep -aqF -- "$tok" "$DEX" || die "dex 缺授权修法标记 [$tok] —— 这是修法前的 dex"
 done
 say "  ✓ dex = 星空外观 + 二次打开授权修法"
+
+# 2026-10-07：dex 侧 YsxzHooks 的 RET/VAL 容量必须已扩到 16（CAP_MARK 指纹）。
+# 旧容量 8 时菜单 10..13 号开关永远读 false，不报错、只是"功能不生效"。
+LC_ALL=C grep -aqF -- 'ysxz_hooks_cap16_20261007' "$DEX" || die "dex 的 YsxzHooks 还是小容量（缺 CAP_MARK）—— 先跑 ysxz_build_menu_dex.sh"
+say "  ✓ dex 的 YsxzHooks 容量 = 16（新增开关可读）"
 
 # ---------------- 2. 外科替换 ----------------
 h "2/7 外科替换（只动 classes4.dex 与 libstarry_magic.so）"

@@ -9,6 +9,11 @@
     {"feat_num": 3, "name": "无敌"},
     {"feat_num": 4, "name": "无限技能"},
     {"feat_num": 5, "name": "移动速度"},
-    {"feat_num": 6, "name": "自动战斗"}
+    {"feat_num": 6, "name": "自动战斗"},
+    {"feat_num": 8, "name": "解锁金卡"},
+    {"feat_num": 10, "name": "自动重复挑战"},
+    {"feat_num": 11, "name": "自动出售"},
+    {"feat_num": 12, "name": "自动分解"},
+    {"feat_num": 13, "name": "自动穿戴"}
   ]
 }

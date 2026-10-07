@@ -1,18 +1,26 @@
 #!/usr/bin/env python3.11
-"""Static regression checks for generated YsxzPatchJs.h."""
+"""Static regression checks for generated YsxzPatchJs.h.
+
+用法: python3.11 verify_ysxz_patch_js.py [YsxzPatchJs.h 路径]
+默认校验 1.0.4 主线那份(mod菜单/.../jni/Games/YsxzPatchJs.h)。
+1.0.3 专用那份要显式传: 04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h
+"""
 from __future__ import annotations
 
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-HEADER = ROOT / "mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h"
+DEFAULT_HEADER = ROOT / "mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h"
+HEADER = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else DEFAULT_HEADER
 START = 'R"YSXZJS('
 END = ')YSXZJS";'
 
 
 def main() -> int:
+    print(f"header: {HEADER}")
     text = HEADER.read_text(encoding="utf-8")
     start = text.find(START)
     end = text.rfind(END)

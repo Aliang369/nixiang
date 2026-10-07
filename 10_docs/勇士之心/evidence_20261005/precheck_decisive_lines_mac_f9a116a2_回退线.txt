@@ -1,0 +1,62 @@
+# 勇士之心 1.0.3 装机预检决定性行 — mac 侧真机 f9a116a2 回退线（2026-10-05 16:14–17:09）
+
+# 来源（本轮收尾已按滚动物清理删除原始 logcat，本文件即为留证）：
+#   09_test/勇士之心/precheck_20261005_161419/logcat.txt
+#   09_test/勇士之心/precheck_20261005_162332/logcat.txt
+#   09_test/勇士之心/precheck_20261005_164826/logcat.txt
+#   09_test/勇士之心/precheck_20261005_170931/logcat.txt
+# 会话背景：mac 侧四级指纹试验 → 用户指令「回退是保持真机可以用的状态」整体回退到 16:23 基线
+#           （见 10_docs/勇士之心/轮次台账.tsv 功能#6 第 1–3 轮）。
+
+## 1) 16:14:19 预检（第 1 轮之前：四级试验前状态，auto=NO）
+10-05 16:14:21.706 27411 27411 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-05 16:14:21.712 27411 27411 I Mod_Menu: [Ysxz] feature #0=OFF
+10-05 16:14:25.565 27411 27461 I Mod_Menu: [Ysxz] hooked se::evalString @0x6fe7f178e4 rva=0x3138E4
+10-05 16:14:26.354 27411 27840 I StarryMagic: [ysxz] 初始化成功
+10-05 16:14:26.354 27411 27840 I StarryMagic: MOD 已就绪 tag=ysxz ready=1
+10-05 16:16:07.687 27411 28116 I Ysxz    : [MODMOD] REPORT  formula=undefined apply=undefined gate=undefined cost=undefined death=undefined movesys=NO auto=NO
+10-05 16:16:46.231 27411 28116 I Ysxz    : [MODMOD] REPORT  formula=GD apply=hY gate=FK cost=FL death=Hs movesys=yes auto=NO
+10-05 16:16:53.512 27411 27411 I Mod_Menu: [Ysxz] feature #2=OFF
+10-05 16:16:53.513 27411 27411 I Mod_Menu: [Ysxz] feature #3=OFF
+# 判定：so 加载/hook 正常，但 auto=NO —— 旧指纹 `bVs(` 在热更 1.1.4.0 改名后落空（本轮第 1 轮的待修现象）
+# monkey.log: Events injected: 1（仅按一下桌面图标，无崩溃）
+
+## 2) 16:23:32 预检（第 2 轮：两级指纹修法落地后）
+10-05 16:23:34.366 32255 32255 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-05 16:23:34.369 32255 32255 I Mod_Menu: [Ysxz] feature #0=OFF
+10-05 16:23:34.572 32255 32292 I Mod_Menu: [Ysxz] hooked se::evalString @0x7419d3d8e4 rva=0x3138E4
+10-05 16:23:34.726 32255 32423 I StarryMagic: [ysxz] 初始化成功
+10-05 16:23:34.726 32255 32423 I StarryMagic: MOD 已就绪 tag=ysxz ready=1
+10-05 16:23:35.818 32255 32255 I Mod_Menu: [Ysxz] feature #2=OFF
+10-05 16:23:35.818 32255 32255 I Mod_Menu: [Ysxz] feature #3=OFF
+10-05 16:23:35.819 32255 32255 I Mod_Menu: [Ysxz] feature #4=OFF
+10-05 16:23:35.819 32255 32255 I Mod_Menu: [Ysxz] feature #6=OFF
+# 判定：这就是「真机可用基线」（so md5 da878469…／包 md5 046d04f8…）；用户实测功能正常。
+# monkey.log: Events injected: 1，无崩溃
+
+## 3) 16:48:26 预检（第 3 轮：四级指纹试验装机）
+10-05 16:48:28.929  6830  6830 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-05 16:48:28.929  6830  6830 I Mod_Menu: [Ysxz] feature #0=OFF
+10-05 16:48:29.139  6830  6861 I Mod_Menu: [Ysxz] hooked se::evalString @0x741c7308e4 rva=0x3138E4
+# 判定：装机层正常；该轮用户实测「仍不行」⇒ 四级试验判无效，按用户指令整体回退（diff 存档
+#       evidence_20261005_自动战斗回退/自动战斗四级指纹试验_20261005.diff）
+# monkey.log: Events injected: 1，无崩溃
+
+## 4) 17:09:31 预检（第 3 轮回退后：恢复 16:23 基线）
+10-05 17:09:33.456 12175 12175 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-05 17:09:33.456 12175 12175 I Mod_Menu: [Ysxz] feature #0=OFF
+10-05 17:09:33.656 12175 12236 I Mod_Menu: [Ysxz] hooked se::evalString @0x74197358e4 rva=0x3138E4
+10-05 17:09:33.781 12175 12485 I StarryMagic: [ysxz] 初始化成功
+10-05 17:09:33.781 12175 12485 I StarryMagic: MOD 已就绪 tag=ysxz ready=1
+10-05 17:09:34.865 12175 12175 I Mod_Menu: [Ysxz] feature #2=OFF
+10-05 17:09:34.866 12175 12175 I Mod_Menu: [Ysxz] feature #3=OFF
+10-05 17:09:34.866 12175 12175 I Mod_Menu: [Ysxz] feature #4=OFF
+10-05 17:09:34.867 12175 12175 I Mod_Menu: [Ysxz] feature #6=OFF
+# 判定：回退版装机层正常；本机采样 **不含** 战斗内 `auto=yes` 决定性行 —— 该行由 win 侧
+#       96f0d883 双侧修复轮补齐（见同目录 real_device_decisive_lines.txt）。
+# monkey.log: Events injected: 1，无崩溃
+
+## 结论
+四次预检均为「装机层正常、无崩溃」；四次都没能给出战斗内 `auto=yes`。
+mac 侧该线的最终归宿＝整体回退并**移交 win 侧做双端兼容**（`10_docs/勇士之心/win移交_自动战斗双端兼容_20261005.md`），
+双端兼容最终态见 `precheck_decisive_lines.txt`（win 侧 191553/193820 两跑）。

@@ -275,7 +275,11 @@ git diff --cached --check -- . \
   ':(exclude,glob)**/*.so' \
   `# 提取类原始载荷：保留字节原貌（含作者原有的行尾空白），不允许为了过空白门禁改写` \
   ':(exclude,glob)**/*_raw.lua' \
-  ':(exclude,glob)10_docs/伊莫/binge_lua_mod_*.lua'
+  ':(exclude,glob)10_docs/伊莫/binge_lua_mod_*.lua' \
+  `# 同上，勇士之心：从第三方包/出货 so 提取的原始载荷，以及逐字节比对用的生成物` \
+  ':(exclude,glob)**/*_原始.js' \
+  ':(exclude,glob)**/*from_shipped_so.js' \
+  ':(exclude,glob)04_scripts/勇士之心/ysxz_anticheat/patch_v2_ac.js'
 
 printf '%s\n' "$STAGED"
 echo "--- 即将提交的改动量（共享文件请逐行核对归属，禁止只用 grep 标记串核验）---"

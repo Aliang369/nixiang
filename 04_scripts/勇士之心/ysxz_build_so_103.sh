@@ -124,7 +124,11 @@ for tok in "boot self-heal" "ysxz_native_ok"; do
 done
 
 SZ="$(wc -c <"$SO" | tr -d ' ')"
-if [[ "$SZ" -lt 120000 || "$SZ" -gt 200000 ]]; then
+# 上限放宽到 400000：注入的 patch JS 会被【嵌两次】——一次是 Games/YsxzPatchJs.h
+# (kYsxzPatchJs)，一次是自举 blob libs_ysxz/main.patched.enc.js（XXTEA 后仍近似线性）。
+# 所以 patch JS 每长 1 B，so 大约长 2 B。2026-10-07 加自动化层后 patch 51.6K->60.8K，
+# so 199024 -> 226680，属预期。只防"编错目标/明显损坏"这种量级错误。
+if [[ "$SZ" -lt 120000 || "$SZ" -gt 400000 ]]; then
   echo "ERROR: $SO 体积异常（$SZ B），疑似编错目标" >&2; exit 1
 fi
 MD5="$(md5sum "$SO" 2>/dev/null | awk '{print $1}' || md5 -q "$SO")"

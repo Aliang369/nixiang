@@ -17,6 +17,13 @@ static const char* kYsxz_Features[] = {
     "Toggle_无限技能",         // 4  YSXZ_FEAT_SKILL
     "Slider_移动速度:1:10:1",    // 5  YSXZ_FEAT_MOVE（1=关，2..10=倍率）
     "Toggle_自动战斗",         // 6  YSXZ_FEAT_AUTO（金卡特权解锁）
+    "Category_新增功能",       // 7  分组标题（占位）
+    "Toggle_解锁金卡",         // 8  YSXZ_FEAT_GOLD（$eZ.monCard.fDn 原型 fDc 放行 gold）
+    "Category_自动化",         // 9  分组标题（占位）
+    "Toggle_自动重复挑战",     // 10 YSXZ_FEAT_REPEAT
+    "Toggle_自动出售",         // 11 YSXZ_FEAT_SELL
+    "Toggle_自动分解",         // 12 YSXZ_FEAT_DECO
+    "Toggle_自动穿戴",         // 13 YSXZ_FEAT_WEAR
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
