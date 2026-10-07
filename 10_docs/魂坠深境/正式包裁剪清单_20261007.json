@@ -1,0 +1,15 @@
+{
+  "game_dir": "E:/nixiang/08_output/魂坠深境",
+  "keep": "魂坠深境_1.1.1_starry-newmenu-releaseSigned.apk",
+  "keep_size": 922495212,
+  "keep_md5": "b86ba8a86fc7c6bc91290daa88ac7d0d",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "魂坠深境_1.1.1_starry-so-only-releaseSigned.apk",
+      "size": 922441906,
+      "md5": "c571100c114c94c56f4774ef40163078"
+    }
+  ],
+  "removed_count": 1
+}

@@ -75,6 +75,7 @@ static std::atomic<uint32_t> g_tick{0};
 static std::atomic<uint32_t> g_currWrote{0};
 static std::atomic<void*> g_playerGs{nullptr};
 static std::atomic<uint32_t> g_pgsiWaitLog{0};
+static std::atomic<bool> g_modThreadAttached{false};  // field_static_get needs managed thread context
 
 
 static void* g_clsBft = nullptr;     // BattleFieldTransform
@@ -365,7 +366,23 @@ static void* ResolveLivePgsi() {
 
     // 低频（每 8 tick），但也不装信号处理器：全部靠 SoftPtr + null 检查
     void* scene = api.StaticRefField(g_clsScene, "instance");
-    if (!scene || !SoftPtr(scene)) return nullptr;
+    if ((!scene || !SoftPtr(scene)) && api.thread_attach && !g_modThreadAttached.load()) {
+        void* domain = api.domain_get();
+        if (domain) {
+            g_modThreadAttached.store(true);
+            api.thread_attach(domain);
+            scene = api.StaticRefField(g_clsScene, "instance");
+            LOGI("[Hzsj] static instance retry after attach: %p", scene);
+        }
+    }
+    if (!scene || !SoftPtr(scene)) {
+        static uint32_t sceneLog = 0;
+        uint32_t n = ++sceneLog;
+        if (n <= 3 || (n % 60) == 0)
+            LOGI("[Hzsj] static instance null/unplausible cls=%p attach=%d", g_clsScene,
+                 g_modThreadAttached.load() ? 1 : 0);
+        return nullptr;
+    }
 
     // 直读 _gameState（同 C# getter 语义）；不调托管 getter，避免热更窗口异常 abort
     void* gs = g_offSceneGs ? ReadPtr(scene, g_offSceneGs) : nullptr;

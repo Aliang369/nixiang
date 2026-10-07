@@ -1,219 +1,135 @@
 {
   "game": "魂坠深境",
-  "version": "1.1.1",
-  "notes": "2026-09-10 版本适配 vc41→vc42：热更源码字段/链路与 1.1.0 完全一致（见 10_docs/魂坠深境/版本适配_1.1.1_20260910.md），HzsjMod.cpp v19 零改动复用。legacy 路线（Main.cpp #if + 共享 mk /tmp 拷贝内切换）。install 阶段须先取得用户对卸载官方包的确认（签名冲突）。",
+  "version": "1.1.1 / vc42",
+  "notes": "2026-10-07 模拟器适配 + 菜单换新（Windows 端）。① 根因：旧 so（09-21 构建）的 SoftPtr 判据为硬编码 64GiB~512GiB，模拟器堆指针 0x6ff9…(≈123TiB) 被全判否 ⇒ 五功能全哑；10-04 bfd04c4f 的设备无关判据（4GiB~128TiB）修好，真机不受影响（旧区间是新区间子集）。② 菜单换新：旧包 f191e461 为 gradle+smali 注入路线的 classes5.dex 混装菜单；新路线 = 新菜单 classes6.dex（hzsj_build_dex.sh，javac+d8 离线）+ Manifest 注册 StarryInitProvider + classes5.dex 去 com/starry 重建（surgical_hzsj_1.1.1.sh），菜单/授权/签名回灌/TapTap 强制网页登录由 Java Provider 内化。③ 底包 = 02_apks/魂坠深境/魂坠深境_1.1.1_device.apk（md5 f191e461… 实为星光正式包，官方原包不在本地）。env 留空、command 用 workdir 相对路径（Windows python3 输出 CRLF 会污染 $NIXIANG；管线不展开 $VAR、不认盘符绝对路径）。",
   "params": {
     "game_id": "hzsj",
     "package": "com.chillyroom.containerofsoul.yw",
-    "mk": "Android.mk（legacy 共享，构建时 /tmp 拷贝内切 HZSJ）",
     "tag": "hzsj",
-    "serial": "f9a116a2"
+    "serial": "127.0.0.1:16416"
   },
-  "env": {
-    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
-    "NIXIANG": "/Users/aliang/Documents/nixiang",
-    "SERIAL": "f9a116a2"
-  },
-  "workdir": "/Users/aliang/Documents/nixiang/04_scripts/魂坠深境",
+  "env": {},
+  "workdir": "E:/nixiang/04_scripts/魂坠深境",
   "stages": [
     {
-      "id": "check_apk",
-      "name": "官包核对（真机拉取官方 1.1.1/vc42）",
+      "id": "build_dex",
+      "name": "构建新菜单 classes6.dex（javac+d8 离线，全量 com/starry 源码）",
       "requires": [],
-      "command": "ls -lh \"$NIXIANG/02_apks/魂坠深境/魂坠深境_1.1.1_device.apk\" && shasum -a 256 \"$NIXIANG/02_apks/魂坠深境/魂坠深境_1.1.1_device.apk\"",
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/02_apks/魂坠深境/魂坠深境_1.1.1_device.apk"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-10 14:05:00",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/02_apks/魂坠深境/魂坠深境_1.1.1_device.apk": {
-          "md5": "295502a689bf7701f6358dad8e5c15d8"
-        }
-      }
-    },
-    {
-      "id": "dump",
-      "name": "热更 DLL 抽取 + 反编译（SOP Step1）",
-      "requires": [
-        "check_apk"
-      ],
       "preflight": [
-        "/Users/aliang/Documents/nixiang/04_scripts/魂坠深境/hzsj_dump_hotfix.sh"
+        "hzsj_build_dex.sh"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/魂坠深境/hzsj_dump_hotfix.sh\"",
+      "command": "bash hzsj_build_dex.sh",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/魂坠深境_1.1.1/src/DamageAction.cs"
+          "path": "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex"
         },
         {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/魂坠深境_1.1.1/dlls/Assembly-CSharp.dll"
+          "type": "file_contains",
+          "path": "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex",
+          "pattern": "StarryInitProvider"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-10 14:18:02",
+      "done_at": "2026-10-07 22:10:28",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/06_dumped/魂坠深境_1.1.1/src/DamageAction.cs": {
-          "md5": "04ff6888b20e83abf276a5f501444d53"
-        },
-        "/Users/aliang/Documents/nixiang/06_dumped/魂坠深境_1.1.1/dlls/Assembly-CSharp.dll": {
-          "md5": "05d01a74734c18c5b8e199a0c7df50e2"
-        }
-      }
-    },
-    {
-      "id": "anchor",
-      "name": "锚点核对（分析阶段：v19 依赖字段逐项核对）",
-      "requires": [
-        "dump"
-      ],
-      "command": "true",
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/10_docs/魂坠深境/版本适配_1.1.1_20260910.md"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-10 14:18:10",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/10_docs/魂坠深境/版本适配_1.1.1_20260910.md": {
-          "md5": "3194caecd2d5707ee281134c1dacdc18"
-        }
-      }
-    },
-    {
-      "id": "impl_mod",
-      "name": "功能实现（v19 零改动复用，分析结论见锚点文档 §2/§3）",
-      "requires": [
-        "anchor"
-      ],
-      "command": "true",
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/HzsjMod.cpp"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-10 14:18:10",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/HzsjMod.cpp": {
-          "md5": "bb554c2a58d4fc6f8c32134c0a90d42b"
+        "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex": {
+          "md5": "9cd0474f2390b33f9edc399aada947da"
         }
       }
     },
     {
       "id": "build_so",
-      "name": "构建 so（/tmp 拷贝切 mk：CWJH→HZSJ）",
-      "requires": [
-        "impl_mod"
-      ],
+      "name": "构建 libstarry_magic.so（私有 Android_hzsj.mk + ASCII 暂存）",
+      "requires": [],
       "preflight": [
-        "/Users/aliang/Documents/nixiang/04_scripts/魂坠深境/hzsj_build_so.sh"
+        "hzsj_build_so.sh"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/魂坠深境/hzsj_build_so.sh\"",
-      "verify": [
-        {
-          "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hzsj/arm64-v8a/libstarry_magic.so"
-        },
-        {
-          "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hzsj/arm64-v8a/libstarry_magic.so",
-          "pattern": "Hzsj"
-        },
-        {
-          "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hzsj/arm64-v8a/libstarry_magic.so",
-          "pattern": "JNI_OnLoad"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-10 20:41:43",
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_hzsj/arm64-v8a/libstarry_magic.so; 原 md5=dcfcb951b6da893284d02d6f5a63b491"
-    },
-    {
-      "id": "surgical",
-      "name": "整包注入 + 签名（inject_hzsj_1.1.1.sh，so 来自 build_so）",
-      "requires": [
-        "build_so"
-      ],
-      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/inject_hzsj_1.1.1.sh\"",
+      "command": "bash hzsj_build_so.sh",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/魂坠深境/魂坠深境_1.1.1_starry-final-releaseSigned.apk"
+          "path": "../../mod菜单/starry-mod-menu/libs_hzsj/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_contains",
+          "path": "../../mod菜单/starry-mod-menu/libs_hzsj/arm64-v8a/libstarry_magic.so",
+          "pattern": "Toggle_秒杀"
+        },
+        {
+          "type": "file_contains",
+          "path": "../../mod菜单/starry-mod-menu/libs_hzsj/arm64-v8a/libstarry_magic.so",
+          "pattern": "static instance retry after attach"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-10 20:43:04",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/魂坠深境/魂坠深境_1.1.1_starry-final-releaseSigned.apk": {
-          "md5": "32746c20761874c37d82689566447ee4"
+      "done_at": "2026-10-07 21:46:06"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（classes5 去旧菜单 + classes6 新菜单 + Manifest provider + so）",
+      "requires": [
+        "build_so",
+        "build_dex"
+      ],
+      "preflight": [
+        "../../mod菜单/starry-mod-menu/scripts/surgical_hzsj_1.1.1.sh"
+      ],
+      "command": "bash \"../../mod菜单/starry-mod-menu/scripts/surgical_hzsj_1.1.1.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "../../08_output/魂坠深境/魂坠深境_1.1.1_starry-newmenu-releaseSigned.apk"
         }
+      ],
+      "status": "done",
+      "done_at": "2026-10-07 22:11:41",
+      "artifacts": {
+        "../../08_output/魂坠深境/魂坠深境_1.1.1_starry-newmenu-releaseSigned.apk": {
+          "md5": "b86ba8a86fc7c6bc91290daa88ac7d0d"
+        }
+      },
+      "inputs": {
+        "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex": "9cd0474f2390b33f9edc399aada947da"
       }
     },
     {
       "id": "device_ready",
-      "name": "设备准备（真机 f9a116a2）",
+      "name": "设备准备（MuMu 127.0.0.1:16416）",
       "requires": [],
-      "command": "adb -s $SERIAL get-state && adb devices -l",
+      "command": "adb -s 127.0.0.1:16416 get-state && adb devices -l",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/04_scripts/魂坠深境/pipeline.json"
+          "path": "pipeline.json"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-10 14:23:16"
+      "done_at": "2026-10-07 21:47:09"
     },
     {
       "id": "install",
-      "name": "装机（须用户确认：签名冲突必须卸载官方包，见适配文档 §6）",
+      "name": "装机（新菜单包同签覆盖 -r，模拟器）",
       "requires": [
         "surgical",
         "device_ready"
       ],
-      "command": "adb -s $SERIAL shell am force-stop com.chillyroom.containerofsoul.yw; adb -s $SERIAL push \"$NIXIANG/08_output/魂坠深境/魂坠深境_1.1.1_starry-final-releaseSigned.apk\" /data/local/tmp/hzsj_mod.apk && adb -s $SERIAL shell \"su -c 'pm install -r -d --user 0 /data/local/tmp/hzsj_mod.apk'\" && adb -s $SERIAL shell rm -f /data/local/tmp/hzsj_mod.apk && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.chillyroom.containerofsoul.yw \"$NIXIANG/08_output/魂坠深境/魂坠深境_1.1.1_starry-final-releaseSigned.apk\" --su",
+      "command": "STARRY_INSTALL=1 SERIAL=127.0.0.1:16416 bash \"../../mod菜单/starry-mod-menu/scripts/surgical_hzsj_1.1.1.sh\"",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/魂坠深境/魂坠深境_1.1.1_starry-final-releaseSigned.apk"
+          "path": "../../08_output/魂坠深境/魂坠深境_1.1.1_starry-newmenu-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-10 20:43:39",
+      "done_at": "2026-10-07 22:13:01",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/魂坠深境/魂坠深境_1.1.1_starry-final-releaseSigned.apk": {
-          "md5": "32746c20761874c37d82689566447ee4"
+        "../../08_output/魂坠深境/魂坠深境_1.1.1_starry-newmenu-releaseSigned.apk": {
+          "md5": "b86ba8a86fc7c6bc91290daa88ac7d0d"
         }
-      }
-    },
-    {
-      "id": "archive",
-      "name": "收官归档（文档 + 索引 + git）",
-      "requires": [
-        "install"
-      ],
-      "command": "true",
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/10_docs/魂坠深境/版本适配_1.1.1_20260910.md"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-10 15:03:39",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/10_docs/魂坠深境/版本适配_1.1.1_20260910.md": {
-          "md5": "3194caecd2d5707ee281134c1dacdc18"
-        }
+      },
+      "inputs": {
+        "../../08_output/魂坠深境/魂坠深境_1.1.1_starry-newmenu-releaseSigned.apk": "b86ba8a86fc7c6bc91290daa88ac7d0d"
       }
     }
   ]

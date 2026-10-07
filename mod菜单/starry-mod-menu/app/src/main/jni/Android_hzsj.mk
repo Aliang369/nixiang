@@ -35,6 +35,14 @@ LOCAL_ARM_MODE  := arm
 LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_HZSJ
 LOCAL_SRC_FILES := MainModern.cpp Games/HzsjMod.cpp Games/HzsjEntry.cpp Unity/Il2CppApi.cpp
 
+# MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
+# FgoBoot_InjectEarlyFromOnLoad，不加本文件即 ld.lld: undefined symbol。
+# 魂坠深境走 B 类（无 libtprt.so / 无 ACE，菜单 dex 由 Manifest 的 StarryInitProvider
+# 拉起）→ 用 no-op 桩：不装 seccomp、不屏蔽致命信号、不做早期 dex 注入。
+# A 类（包内含 libtprt.so / ACE 加固）改为下面两行，删掉 NoAceStubs.cpp：
+#   LOCAL_SRC_FILES += Games/SignalQuarantine.cpp Games/FgoBoot.cpp
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif
