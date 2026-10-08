@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/我本布衣世家录",
+  "keep": "我本布衣世家录_1.1.56_surgical-releaseSigned.apk",
+  "keep_size": 175646546,
+  "keep_md5": "a44e924edef70ace25ca7b09b4cd177c",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "我本布衣世家录_1.1.56_surgical-releaseSigned.apk.idsig",
+      "size": 1394203,
+      "md5": "9af63c2d1015e2eea5852333722dec76"
+    },
+    {
+      "name": "我本布衣世家录_1.1.56_surgical-unsigned.apk",
+      "size": 175476571,
+      "md5": "7c72e38d9558eee217ea10afc22a9a82"
+    }
+  ],
+  "removed_count": 2
+}

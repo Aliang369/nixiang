@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 我本布衣：世家录 1.1.46 星空包签名
+# 我本布衣：世家录 星空包签名（1.1.56/vc71 起，VERSION 可用 WBJY_VERSION 覆盖）
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="我本布衣世家录"
-VERSION="1.1.46"
+VERSION="${WBJY_VERSION:-1.1.56}"
 PKG="com.JAGames.TalesoftheClan"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="${WBJY_UNSIGNED:-$OUT/${GAME}_${VERSION}_surgical-unsigned.apk}"

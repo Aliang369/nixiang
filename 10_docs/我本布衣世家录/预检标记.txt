@@ -1,0 +1,18 @@
+# 我本布衣：世家录（com.JAGames.TalesoftheClan）装机预检标记
+# 格式：类别|ERE 正则（每行一条，# 开头为注释）
+# 用途：post_install_precheck.sh 的机器预检关（L2）。人工终审仍是用户实测（L3）。
+
+pkg|com\.JAGames\.TalesoftheClan
+
+# 菜单 so 加载标记（星光框架 TAG）
+menu_load|StarryMagic
+
+# 菜单弹出标记
+menu_shown|native menu shown
+
+# 游戏级 hook 命中标记（native 层 23 个挂点，日志前缀 [wbjy]）
+#   @rva  = 走 RVA 快路径（锚点表口径正确）；@name = 退回按名兜底（功能仍生效）
+hook_hit|\[wbjy\].*hooked
+
+# 授权墙标记（过不去只发操作请求卡，不诊断服务端）
+auth_fail|renew auth fail

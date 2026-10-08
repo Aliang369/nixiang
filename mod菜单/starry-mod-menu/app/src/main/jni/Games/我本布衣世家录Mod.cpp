@@ -1,5 +1,12 @@
 /* ================================================================
- *  我本布衣世家录Mod.cpp — 我本布衣：世家录 (com.JAGames.TalesoftheClan / TapTap 1.1.46 / vc55)
+ *  我本布衣世家录Mod.cpp — 我本布衣：世家录 (com.JAGames.TalesoftheClan / TapTap 1.1.56 / vc71)
+ *
+ *  v4 版本更新重定位（2026-10-08，1.1.46/vc55 → 1.1.56/vc71）:
+ *  1. 旧 so（md5 6e6024a9…）与 1.1.56 so（sha256 8d27a4ff…）不同源，旧表 23 条 RVA 序言 23/23 DRIFT
+ *  2. 按「类短名+方法名+参数个数」重新出 Il2CppDumper dump 取新 RVA，逐条序言实测回填
+ *  3. 命名空间与类名逐条不变 ⇒ 按名兜底路径（@by-name）仍可用
+ *  4. TryRemoveItem 两个重载序言互换（旧表口径疑误），新表以实测为准
+ *  功能集与 hook 机制与 v3 完全一致（1:1 复刻，见 10_docs/我本布衣世家录/路线锁定.md）
  *
  *  v2 修复记录（2026-09-28）:
  *  1. delegate 调用改 runtime_invoke（旧版把 Action<int> 对象指针当函数指针 → SIGSEGV）
@@ -52,32 +59,38 @@ static std::atomic<void*> g_actionIntClass{nullptr};
 static std::atomic<void*> g_actionIntInvoke{nullptr};
 
 // ============================================================
-// ② 锚点常量（1.1.46；libil2cpp.so MD5 6e6024a9497609026b22d6efe5905d7e）
+// ② 锚点常量（1.1.56 / vc71）
+//    §23 绑定：libil2cpp.so SHA-256 8d27a4ff17b21083dc817a69e07f1f31a4e37ce7a84e5a01410c4273fda5e1eb
+//             global-metadata.dat SHA-256 8961e4a078bc9330b201efc54c7645d65944587a28190aa8e3e06c9cba18d988
+//    坐标系：dump.cs 的 RVA/VA 字段（= ELF VA），file offset = RVA − 0x4000
+//            （可执行段 p_vaddr−p_offset，实测程序头；非通用常数）
+//    重定位依据：1.1.46 旧表 23 条在本 so 上序言 23/23 DRIFT，按
+//    「类短名+方法名+参数个数」重新出 dump 取新值；序言为文件偏移处小端 uint32_t。
 // ============================================================
 enum : uintptr_t {
-    kRvaModifyResearch = 0x10D114C,
-    kRvaForceRemoveMoney = 0x1434F7C,
-    kRvaForceRemoveCopper = 0x1434FE0,
-    kRvaCheckItemEnough = 0x1435038,
-    kRvaItemManagerGetCount = 0x143267C,
-    kRvaItemMgrInstCheckEnough = 0x1432C00,
-    kRvaItemMgrInstForceRemMoney = 0x1434238,
-    kRvaItemMgrInstForceRemCopper = 0x1434330,
-    kRvaItemMgrInstTryRemPrice = 0x1433EFC,
-    kRvaItemMgrInstTryRemInt = 0x14340A4,
-    kRvaItemMoneyGetCount = 0x1431994,
-    kRvaItemMoneyForceRemove = 0x143181C,
-    kRvaGetMaxAP = 0x12F82F8,
-    kRvaIsApEnough = 0x12F8760,
-    kRvaModifyAP = 0x12F87B4,
-    kRvaRoleModifyAP = 0x12FB668,
-    kRvaRoleCheckMyApEnough = 0x12FB324,
-    kRvaGetOwnPlotLimit = 0x14893B4,
-    kRvaCanAffordBuyLand = 0x1423C30,
-    kRvaInitAd = 0x138B978,
-    kRvaShowRewardAd = 0x138BBA8,
-    kRvaToBidShowRewardAd = 0x138C450,
-    kRvaOnLoginSuccess = 0x10A9424,
+    kRvaModifyResearch = 0x10E13F0,
+    kRvaForceRemoveMoney = 0x1474360,
+    kRvaForceRemoveCopper = 0x14743C4,
+    kRvaCheckItemEnough = 0x1463F7C,
+    kRvaItemManagerGetCount = 0x14674A0,
+    kRvaItemMgrInstCheckEnough = 0x14722A8,
+    kRvaItemMgrInstForceRemMoney = 0x147361C,
+    kRvaItemMgrInstForceRemCopper = 0x1473714,
+    kRvaItemMgrInstTryRemPrice = 0x14640E0,
+    kRvaItemMgrInstTryRemInt = 0x14732FC,
+    kRvaItemMoneyGetCount = 0x1471138,
+    kRvaItemMoneyForceRemove = 0x1470FC0,
+    kRvaGetMaxAP = 0x130A4E8,
+    kRvaIsApEnough = 0x130A8E4,
+    kRvaModifyAP = 0x130A938,
+    kRvaRoleModifyAP = 0x130E9B4,
+    kRvaRoleCheckMyApEnough = 0x130E670,
+    kRvaGetOwnPlotLimit = 0x14C2FCC,
+    kRvaCanAffordBuyLand = 0x145DCC0,
+    kRvaInitAd = 0x13BFBAC,
+    kRvaShowRewardAd = 0x13BFDDC,
+    kRvaToBidShowRewardAd = 0x13C0684,
+    kRvaOnLoginSuccess = 0x10B9324,
 };
 
 // 序言期望值：从 ELF 文件偏移（RVA - ΔPT_LOAD）读出的真实指令（小端 uint32_t）
@@ -90,8 +103,8 @@ enum : uint32_t {
     kInsItemMgrInstCheckEnough = 0xA9BF4FFE,
     kInsItemMgrInstForceRemMoney = 0xF81D0FFE,
     kInsItemMgrInstForceRemCopper = 0x2A0103E2,
-    kInsItemMgrInstTryRemPrice = 0xD10183FF,
-    kInsItemMgrInstTryRemInt = 0xF81F0FFE,
+    kInsItemMgrInstTryRemPrice = 0xF81F0FFE,
+    kInsItemMgrInstTryRemInt = 0xD10183FF,
     kInsItemMoneyGetCount = 0xD10103FF,
     kInsItemMoneyForceRemove = 0xF81C0FFE,
     kInsGetMaxAP = 0xF81E0FFE,
