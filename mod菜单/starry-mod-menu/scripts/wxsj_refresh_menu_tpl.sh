@@ -125,9 +125,9 @@ unzip -p "$STARRY_APK" lib/arm64-v8a/libc++_shared.so > "$OUT/libc++_shared.so"
 unzip -p "$STARRY_APK" assets/certs/starlight.crt > "$OUT/starlight.crt"
 if [[ -s "$PREV/libc++_shared.so" ]]; then
   a=$(md5 -q "$PREV/libc++_shared.so"); b=$(md5 -q "$OUT/libc++_shared.so")
-  [[ "$a" == "$b" ]] || echo "  WARN: libc++_shared.so 与旧模板不同（$a → $b）"
+  [[ "$a" == "$b" ]] || echo "  WARN: libc++_shared.so 与旧模板不同（$a → ${b}）"
   a=$(md5 -q "$PREV/starlight.crt"); b=$(md5 -q "$OUT/starlight.crt")
-  [[ "$a" == "$b" ]] || echo "  WARN: starlight.crt 与旧模板不同（$a → $b）"
+  [[ "$a" == "$b" ]] || echo "  WARN: starlight.crt 与旧模板不同（$a → ${b}）"
 fi
 
 echo

@@ -126,6 +126,9 @@ done
 
 if [ "$hard" -gt 0 ]; then
   echo "✗ bash 3.2 门禁：$hard 处硬错误（必须修）$( [ "$soft" -gt 0 ] && echo "，另有 $soft 处提示")"
+  echo "  机械修法（判据与本门禁 ⓵ 一致，只改 \$VAR → \${VAR}）:"
+  echo "    python3 04_scripts/_common/fix_bash32_var_brace.py <文件...>           # 先 dry-run 预览"
+  echo "    python3 04_scripts/_common/fix_bash32_var_brace.py --apply <文件...>   # 写回"
   exit 1
 fi
 if [ "$soft" -gt 0 ]; then

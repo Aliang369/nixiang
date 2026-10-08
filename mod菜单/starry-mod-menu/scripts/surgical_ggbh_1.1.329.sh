@@ -46,16 +46,16 @@ AAPT2="${AAPT2:-$HOME/Library/Android/sdk/build-tools/36.0.0/aapt2}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK（用 GGBH_BASE_APK=... 指定底包）" >&2; exit 1; }
+[[ -f "$ORIG_APK" ]] || { echo "ERROR: missing ${ORIG_APK}（用 GGBH_BASE_APK=... 指定底包）" >&2; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
 [[ -d "$YNTT_SMALI/com/starry/magic/sign" ]] \
-  || { echo "ERROR: missing $YNTT_SMALI（TapTap 旧版路径必需）" >&2; exit 1; }
+  || { echo "ERROR: missing ${YNTT_SMALI}（TapTap 旧版路径必需）" >&2; exit 1; }
 SO_PREBUILT="${GGBH_SO:-$STARRY_SRC/libs_ggbh/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 04_scripts/鬼谷八荒/ggbh_build_so.sh）" >&2; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 04_scripts/鬼谷八荒/ggbh_build_so.sh）" >&2; exit 1; }
 echo "[check] modern so = $SO_PREBUILT ($(md5 -q "$SO_PREBUILT"))"
 ACTUAL_MD5=$(md5 -q "$ORIG_APK")
-[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符 $ACTUAL_MD5（期望 $ORIG_MD5）" >&2; exit 1; }
+[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符 ${ACTUAL_MD5}（期望 ${ORIG_MD5}）" >&2; exit 1; }
 echo "[check] 官包 = $ORIG_APK ($ACTUAL_MD5)"
 
 # dex 落位名：★必须是 base.apk 里「最小的空闲 classesN.dex 下标」。

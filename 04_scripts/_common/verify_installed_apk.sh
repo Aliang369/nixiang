@@ -31,7 +31,7 @@ if [ "$USE_SU" = "--su" ]; then
 else
   DEV_MD5="$(adb -s "$SERIAL" shell "md5sum $BASE" 2>/dev/null | tr -d '\r\n' | awk '{print $1}')"
 fi
-[ -n "$DEV_MD5" ] || { echo "ERROR: 设备侧 md5sum 失败（$BASE）；root 设备尝试加 --su" >&2; exit 1; }
+[ -n "$DEV_MD5" ] || { echo "ERROR: 设备侧 md5sum 失败（${BASE}）；root 设备尝试加 --su" >&2; exit 1; }
 
 LOCAL_MD5="$( if command -v md5 >/dev/null 2>&1; then md5 -q "$LOCAL"; else md5sum "$LOCAL" | awk '{print $1}'; fi )"
 if [ "$DEV_MD5" != "$LOCAL_MD5" ]; then

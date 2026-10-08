@@ -59,10 +59,10 @@ done
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 build_so 阶段）"; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 build_so 阶段）"; exit 1; }
 ACTUAL_MD5=$(md5 -q "$ORIG_APK")
 [[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] \
-  || { echo "ERROR: 官包指纹不符（期望 $ORIG_MD5，实际 $ACTUAL_MD5）"; exit 1; }
+  || { echo "ERROR: 官包指纹不符（期望 ${ORIG_MD5}，实际 ${ACTUAL_MD5}）"; exit 1; }
 
 LOCK_DIR="/tmp/czbhz_surgical.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -73,7 +73,7 @@ WORK="$(mktemp -d /tmp/czbhz_surgical.XXXXXX)"
 trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK" "$(dirname "$MF_CACHE")"
 
-echo "[1/6] gradle $GRADLE_TASK（starry → smali + assets）"
+echo "[1/6] gradle ${GRADLE_TASK}（starry → smali + assets）"
 rsync -a --delete \
   --exclude '.gradle/' --exclude 'app/build/' --exclude 'build/' \
   --exclude 'auth-server/.venv/' --exclude 'auth-server/data/' --exclude '.idea/' \
