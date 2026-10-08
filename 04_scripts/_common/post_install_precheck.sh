@@ -149,9 +149,25 @@ fi
 echo "✓ 包已安装: $PMPATH"
 
 # ---------- 2. 起录（不 wipe 设备缓冲，-T 1 只取新行）＋干净启动 ----------
-adbx logcat -T 1 -v threadtime > "$LOG" 2>/dev/null &
+# 设备端 logcat 的 PID：直接 kill 本地 adb 客户端**不会**结束设备端 logcat 进程（它继续占内存/电池，
+# 2026-10-09 实测一轮预检漏 1 个；本轮消消英雄2 收尾时一次清出 9 个历史泄漏）。
+# 做法：远端 shell 先把自身 PID 写进设备侧 pid 文件，再 `exec logcat`（PID 不变），
+# 收尾时只 kill 这一个 PID + 删 pid 文件 —— 不做设备端 `pkill -f logcat`（会误伤并行会话正在录的证据）。
+# 取不到 PID 时自动退回旧行为（只杀本地客户端），不阻塞预检。
+DEVLOG_PIDFILE="/data/local/tmp/starry_precheck_$$.pid"   # 非 root 可写；EXIT 时删除
+adbx shell "sh -c 'echo \$\$ > ${DEVLOG_PIDFILE}; exec logcat -T 1 -v threadtime'" > "$LOG" 2>/dev/null &
 LOGCAT_PID=$!
-cleanup() { kill "$LOGCAT_PID" 2>/dev/null; }
+DEVLOG_PID=""
+for _i in 1 2 3 4; do
+  sleep 0.3
+  DEVLOG_PID="$(adbx shell "cat ${DEVLOG_PIDFILE} 2>/dev/null" 2>/dev/null | tr -dc '0-9')"
+  [ -n "$DEVLOG_PID" ] && break
+done
+cleanup() {
+  if [ -n "$DEVLOG_PID" ]; then adbx shell "kill -9 $DEVLOG_PID" >/dev/null 2>&1 || true; fi
+  kill "$LOGCAT_PID" 2>/dev/null
+  adbx shell "rm -f ${DEVLOG_PIDFILE}" >/dev/null 2>&1 || true
+}
 trap cleanup EXIT
 
 adbx shell "am force-stop $PKG" >/dev/null 2>&1
@@ -263,7 +279,7 @@ CARD
         echo "等用户完成授权后重跑本预检；不诊断服务端。证据: $OUT"
         exit 3
       fi
-      kill "$LOGCAT_PID" 2>/dev/null
+      cleanup   # 本地客户端 + 设备端 logcat 一起收（EXIT trap 会再跑一次，幂等）
       if [ -n "$RE_HOOK" ] && [ "$hook_ok" -eq 0 ]; then
         echo "判定段=B 依据=菜单弹出但 hook_hit 标记（${RE_HOOK}）未命中"
         echo "证据: ${OUT}（logcat.txt 已留存）"
