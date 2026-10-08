@@ -32,7 +32,16 @@
 #    auth_fail|renew auth fail      # 授权墙标记
 #    auth_ok|auth game_id synced    # 授权通过标记
 #    crash|FATAL EXCEPTION|...      # 崩溃标记
+#    crash_ignore|记录先前处理器      # 崩溃标记的排除项（默认见 RE_CRASH_IGNORE）
 #    '#' 开头为注释
+#
+#  ⚠️ 崩溃误报教训（2026-10-08 我本布衣世家录实测）：
+#     CrashTrap 装信号处理器时会打自己的记账日志
+#     `[crash] 记录先前处理器 sig=SIGSEGV / sig=SIGABRT`
+#     （来源 mod菜单/starry-mod-menu/app/src/main/jni/Games/CrashTrap.cpp:220/224）。
+#     裸 `SIGSEGV|SIGABRT` 关键字会命中它，且该行带本进程 pid
+#     ⇒ 进程范围校验（CRASH_SCOPE）也拦不住 ⇒ 每次预检都误判 FAIL_A。
+#     故崩溃判定一律先过 RE_CRASH_IGNORE 再判范围。
 #
 #  退出码: 0=PASS_TO_HUMAN（预检过，请用户上手实测）
 #          1=FAIL_A（上游没发生：没装上/启动即崩/运行中崩/未见 so 加载）
@@ -84,6 +93,12 @@ RE_HOOK=''
 RE_AUTH_FAIL='renew auth fail|authoritative=.*deny'
 RE_AUTH_OK='auth game_id synced from native|renew ok'
 RE_CRASH='FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|tombstone'
+# 崩溃排除项：星光框架 CrashTrap 的「记录先前处理器」记账行含 sig=SIGSEGV/SIGABRT 字样，
+# 那是初始化日志不是崩溃（详见文件头 ⚠️ 教训）。可用标记文件 crash_ignore| 覆盖。
+RE_CRASH_IGNORE='记录先前处理器|\[crash\]|CrashTrap'
+
+# 崩溃行提取：命中 RE_CRASH 且不在 RE_CRASH_IGNORE 里的行（其余判定与展示一律走它）。
+crash_hits() { grep -E "$RE_CRASH" "$1" 2>/dev/null | grep -vE "$RE_CRASH_IGNORE"; }
 
 if [ -f "$MARKERS" ]; then
   echo "- 标记文件已加载: $MARKERS"
@@ -98,7 +113,8 @@ if [ -f "$MARKERS" ]; then
       auth_fail)  RE_AUTH_FAIL="$v" ;;
       auth_ok)    RE_AUTH_OK="$v" ;;
       crash)      RE_CRASH="$v" ;;
-      *) echo "! WARN 未知标记类别: $k（可用: pkg|menu_load|menu_shown|hook_hit|auth_fail|auth_ok|crash）" ;;
+      crash_ignore) RE_CRASH_IGNORE="$v" ;;
+      *) echo "! WARN 未知标记类别: ${k}（可用: pkg|menu_load|menu_shown|hook_hit|auth_fail|auth_ok|crash|crash_ignore）" ;;
     esac
   done < "$MARKERS"
 fi
@@ -160,10 +176,10 @@ while :; do
   # 3a. 进程消失检测（宽限后）
   NEWPID="$(adbx shell "pidof $PKG" 2>/dev/null | tr -d '\r' | awk '{print $1}')"
   if [ -z "$NEWPID" ] && [ $((NOW - START)) -ge "$GRACE" ]; then
-    if grep -q "$PKG" "$LOG" 2>/dev/null && grep -qE "$RE_CRASH" "$LOG" 2>/dev/null; then
+    if grep -q "$PKG" "$LOG" 2>/dev/null && [ -n "$(crash_hits "$LOG")" ]; then
       echo "== 崩溃上下文（logcat 尾 40 行）=="
       tail -40 "$LOG"
-      say_fail_a "进程消失且 logcat 含 $PKG 崩溃标记"
+      say_fail_a "进程消失且 logcat 含 ${PKG} 崩溃标记"
     fi
     say_fail_a "启动 ${GRACE}s 后进程消失/未起来（pidof 空，无崩溃日志则为启动即退或被杀）"
   fi
@@ -178,21 +194,21 @@ while :; do
     sed -n "$((seen + 1)),${TOTAL}p" "$LOG" > "$CHUNK"
     seen="$TOTAL"
 
-    # 崩溃：先限本游戏范围（pid 或包名），防别的 app 崩误报；
+    # 崩溃：先剔框架自身记账日志（CrashTrap 装处理器会打 sig=SIGSEGV/SIGABRT，
+    # 那不是崩溃且带本进程 pid，进程范围校验拦不住），再限本游戏范围
+    # （pid 或包名），防别的 app 崩误报；
     # java 崩的 FATAL EXCEPTION 行不带 pid，往后 6 行找 "Process: 包名"
-    if grep -qE "$RE_CRASH" "$CHUNK" 2>/dev/null; then
+    LN="$(grep -nE "$RE_CRASH" "$CHUNK" 2>/dev/null | grep -vE "$RE_CRASH_IGNORE" | head -1 | cut -d: -f1)"
+    if [ -n "$LN" ]; then
       CRASH_SCOPE="$PKG"
       [ -n "$CUR_PID" ] && CRASH_SCOPE="$CUR_PID|$CRASH_SCOPE"
-      if grep -A6 -E "$RE_CRASH" "$CHUNK" 2>/dev/null | grep -qE "$CRASH_SCOPE"; then
-        echo "== 崩溃标记（限 $PKG）=="
-        grep -E "$RE_CRASH" "$CHUNK" | head -3
-        LN="$(grep -nE "$RE_CRASH" "$CHUNK" | head -1 | cut -d: -f1)"
-        if [ -n "$LN" ]; then
-          L0=$((LN - 20)); [ "$L0" -lt 1 ] && L0=1
-          echo "== 上下文 ±20 行 =="
-          sed -n "${L0},$((LN + 20))p" "$CHUNK"
-        fi
-        say_fail_a "运行中崩溃: $(grep -E "$RE_CRASH" "$CHUNK" | head -1)"
+      if sed -n "${LN},$((LN + 6))p" "$CHUNK" | grep -qE "$CRASH_SCOPE"; then
+        echo "== 崩溃标记（限 ${PKG}）=="
+        crash_hits "$CHUNK" | head -3
+        L0=$((LN - 20)); [ "$L0" -lt 1 ] && L0=1
+        echo "== 上下文 ±20 行 =="
+        sed -n "${L0},$((LN + 20))p" "$CHUNK"
+        say_fail_a "运行中崩溃: $(crash_hits "$CHUNK" | head -1)"
       fi
     fi
 
@@ -249,8 +265,8 @@ CARD
       fi
       kill "$LOGCAT_PID" 2>/dev/null
       if [ -n "$RE_HOOK" ] && [ "$hook_ok" -eq 0 ]; then
-        echo "判定段=B 依据=菜单弹出但 hook_hit 标记（$RE_HOOK）未命中"
-        echo "证据: $OUT（logcat.txt 已留存）"
+        echo "判定段=B 依据=菜单弹出但 hook_hit 标记（${RE_HOOK}）未命中"
+        echo "证据: ${OUT}（logcat.txt 已留存）"
         exit 4
       fi
       echo "✓ PASS_TO_HUMAN —— so 加载/菜单弹出/空转 ${IDLE_MIN} 分钟无崩溃，装机层证据齐"
@@ -265,12 +281,12 @@ CARD
     echo "证据: $OUT"
     exit 3
   elif [ "$so_ok" -eq 1 ] && [ "$AUTH_DL" -eq 0 ] && [ "$NOW" -ge "$LAUNCH_DL" ]; then
-    echo "判定段=B 依据=so 加载标记已现但未见菜单弹出标记（$RE_MENU_SHOWN），logcat 尾 20 行："
+    echo "判定段=B 依据=so 加载标记已现但未见菜单弹出标记（${RE_MENU_SHOWN}），logcat 尾 20 行："
     tail -20 "$LOG"
     echo "证据: $OUT"
     exit 2
   elif [ "$AUTH_DL" -eq 0 ] && [ "$NOW" -ge "$LAUNCH_DL" ]; then
-    echo "判定段=A 依据=${LAUNCH_TIMEOUT}s 内未见菜单 so 加载标记（$RE_MENU_LOAD），logcat 尾 20 行："
+    echo "判定段=A 依据=${LAUNCH_TIMEOUT}s 内未见菜单 so 加载标记（${RE_MENU_LOAD}），logcat 尾 20 行："
     tail -20 "$LOG"
     echo "证据: $OUT"
     exit 1

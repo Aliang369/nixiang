@@ -33,6 +33,7 @@ p = sys.argv[1]
 lines = open(p, encoding="utf-8", errors="replace").read().splitlines()
 hard, soft = [], []
 in_comment_block = False
+bc_line = 0          # `/*` 起始行（未闭合时用于报「其后未检查」）
 # heredoc 状态: <<TAG 启动后, 到顶格 TAG 行之前的内容是字面/待展开文本 ——
 # ① 其中的 `#` 不是注释(2026-10-04 实测: 心跳 heredoc 里 `# 机器心跳: $HOST（`
 #   被注释剔除放过, 真跑 unbound variable); ② unquoted heredoc 里 $VAR 会展开, 必须检查
@@ -49,12 +50,22 @@ for i, line in enumerate(lines, 1):
     else:
         code = line
         # 粗略剔除注释（够用：本仓库脚本无复杂嵌套）
+        # 行注释**先**剔：否则注释里的 `/*`（例：`# ... 10_docs/<游戏>/*_menu_template.json`）
+        # 会被下面的块注释判定吞掉，连带其后整份文件被跳过。
+        code = re.sub(r'(?<!:)#.*$', '', code)          # 行注释（跳过 ${#x} 里的 # 由 (?<!:) 兜）
         if in_comment_block:
             if '*/' in code: code = code.split('*/', 1)[1]; in_comment_block = False
             else: continue
-        if '/*' in code and '*/' not in code.split('/*', 1)[1]:
-            code = code.split('/*', 1)[0]; in_comment_block = True
-        code = re.sub(r'(?<!:)#.*$', '', code)          # 行注释（跳过 ${#x} 里的 # 由 (?<!:) 兜）
+        # 块注释起始**只认**「行首（去空白）就是 `/*` 且行内无 `*/`」的多行 C 注释。
+        # 2026-10-08 实测：旧判据「行内出现 `/*`」把三种**代码**误判成注释开头 ⇒
+        # 其后所有行被 continue 跳过 ⇒ **门禁静默假 PASS**（post_install_precheck.sh
+        # 的 `$PKG）` 硬错误就是这样漏掉的，装机预检才炸）。被误判的三种写法：
+        #   ① 路径 glob：`10_docs/$GAME/*_menu_template.json`
+        #   ② 绝对路径判定：`[[ "$APK" = /* ]]` / `!= /*` / `== /*`
+        #   ③ case 分支：`/*) pf_args+=("$pf_one") ;;`
+        # 故加 `(?!\))` 排除 case 分支，并要求 `/*` 前只有空白。
+        if re.match(r'^\s*/\*(?!\))', code) and '*/' not in code:
+            code = ''; in_comment_block = True; bc_line = i
         m = re.search(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1\s*$", code)
         if m:
             heredoc_tag = m.group(2); heredoc_quoted = (m.group(1) != '')
@@ -84,6 +95,11 @@ for i, line in enumerate(lines, 1):
     if re.search(r'\$\{#[A-Za-z_][A-Za-z_0-9]*\[@\]\}', code):
         soft.append("L%d: `${#arr[@]}` —— 空数组 + `set -u` 会 unbound；改用计数器  (%s)"
                     % (i, code.strip()[:60]))
+# 块注释未闭合 ⇒ 其后所有行都没被检查过。宁可误报 FAIL，也绝不静默放过。
+if in_comment_block:
+    hard.append("L%d 起 `/*` 块注释未闭合（全文找不到 `*/`）—— 其后 %d 行**未被检查**；"
+                "请补 `*/`，或把 `/*` 改成行注释/加空格（防门禁假 PASS）"
+                % (bc_line, len(lines) - bc_line))
 has_u = any(re.search(r'^\s*set\s+-[a-z]*u', l) for l in lines)
 for h in hard: print("✗ " + h)
 if has_u:
