@@ -14,6 +14,13 @@
 #
 # 补丁主体（①~⑪）与该游戏已验证通过的 v8 版一致。
 #
+# 锚点版本：2026-10-08 复刻。服务端 /assets/main/index.js 被重新压缩
+#   （5,414,360 B，md5 67df56a68137b11aef65f1229bdcef70），压缩器改名/改写导致
+#   ⑥⑦b⑧⑪b⑨ 五处锚点命中 0 次，已按新源码逐处重导；①②③④⑦⑩ 原锚点仍唯一命中。
+#   重导原则：只改「锚点字面量」，不改补丁语义；每处仍必须命中恰好 1 次。
+#   将来再次失配时脚本会打印「命中 N 次（期望 1）」并 exit 1 —— 按该处上下文重导锚点，
+#   **不要把断言放宽成 ≥1**（放宽会把补丁落到未经验证的位置）。
+#
 # 用法：
 #   python3 qsw_patch_js_star.py --src <原始 main/index.js> --dst <输出 main.js>
 
@@ -105,12 +112,13 @@ def main():
         '④ getRealReduceHp')
 
     # ⑥ 结算回执取证（本版 __QSW_LOG 为空实现 ⇒ 等价 no-op，仅保留结构）
+    #   锚点：2026-10-08 服务端重压缩后三元式取代了 if/else、局部变量 v→b
     src = sub_once(src,
-        'if(!t.result.isReject||v){',
+        '!t.result.isReject||b?(r.applyFightResultData(t),a(t)):',
         'try{window.__QSW_LOG({ev:"result",isReject:t.result.isReject,hurtRate:t.result.hurtRate,'
         'hn:window.__QSW_HN||0,dn:window.__QSW_DN||0,'
         'hasBarrier:!!t.result.barrierData,hasTower:!!t.result.towerData,keys:Object.keys(t.result||{})})}catch(e){};'
-        'if(!t.result.isReject||v){',
+        '!t.result.isReject||b?(r.applyFightResultData(t),a(t)):',
         '⑥ 结算取证')
 
     # ⑦ neterr
@@ -120,19 +128,20 @@ def main():
         'this._networkTips&&this._networkTips.responseErrorCode(i.code,r),_.rspObject.rejectback&&(',
         '⑦ neterr 信标')
 
-    # ⑦b bfe_catch
+    # ⑦b bfe_catch（锚点：2026-10-08 重压缩后局部变量 e→t；且 `}catch(t){this.onClose()}`
+    #     在全 JS 共出现 3 次 ⇒ 必须带 UIFightOver 结算弹窗前缀才唯一）
     src = sub_once(src,
-        '}catch(e){this.onClose()}',
-        '}catch(e){try{window.__QSW_LOG({ev:"bfe_catch",err:String(e&&e.message||e).slice(0,200)})}catch(_e){};this.onClose()}',
+        'kt.battleType=this.battleType,kt.title=s,et.gui.open(it.UIFightOver,kt,ot.getPopCommonEffect())}}catch(t){this.onClose()}',
+        'kt.battleType=this.battleType,kt.title=s,et.gui.open(it.UIFightOver,kt,ot.getPopCommonEffect())}}catch(t){try{window.__QSW_LOG({ev:"bfe_catch",err:String(t&&t.message||t).slice(0,200)})}catch(_e){};this.onClose()}',
         '⑦b bfe_catch 信标')
 
-    # ⑧ bfe 入口
+    # ⑧ bfe 入口（锚点：2026-10-08 重压缩后模块作用域变量 g→p）
     src = sub_once(src,
-        'barrierFightEnd=function(t){var r=this;return g.hurtRate&&(t.hurtRate=g.hurtRate),new Promise(',
+        'barrierFightEnd=function(t){var r=this;return p.hurtRate&&(t.hurtRate=p.hurtRate),new Promise(',
         'barrierFightEnd=function(t){var r=this;try{var _fp=null;try{_fp=JSON.parse(t.fightpro)}catch(_e){};'
         'window.__QSW_LOG({ev:"bfe",win:t.win,time:t.time,'
-        'keys:Object.keys(t),powers:t.powers,th:_fp&&_fp.th,tbh:_fp&&_fp.tbh,hurtRate:g.hurtRate||0,'
-        'pw:typeof t.powers})}catch(e){};return g.hurtRate&&(t.hurtRate=g.hurtRate),new Promise(',
+        'keys:Object.keys(t),powers:t.powers,th:_fp&&_fp.th,tbh:_fp&&_fp.tbh,hurtRate:p.hurtRate||0,'
+        'pw:typeof t.powers})}catch(e){};return p.hurtRate&&(t.hurtRate=p.hurtRate),new Promise(',
         '⑧ bfe 入口信标')
 
     # ⑪ 上报战力放大（__QSW_PSF 本版恒等 ⇒ 战力完全不动）
@@ -140,15 +149,17 @@ def main():
         'w?o.powers[P][B]=w.power:x&&(o.powers[P][B]=x.power)',
         'w?o.powers[P][B]=window.__QSW_PSF(w.power):x&&(o.powers[P][B]=window.__QSW_PSF(x.power))',
         '⑪ powers 恒等-普通关卡')
+    #  锚点：2026-10-08 重压缩后树洞/跨服分支局部变量整体重排（A/D/O → O/A/D）
     src = sub_once(src,
-        'A?o.powers[1][D]=A.power:O&&(o.powers.pet1[D]=O.power)',
-        'A?o.powers[1][D]=window.__QSW_PSF(A.power):O&&(o.powers.pet1[D]=window.__QSW_PSF(O.power))',
+        'O?o.powers[1][A]=O.power:D&&(o.powers.pet1[A]=D.power)',
+        'O?o.powers[1][A]=window.__QSW_PSF(O.power):D&&(o.powers.pet1[A]=window.__QSW_PSF(D.power))',
         '⑪ powers 恒等-树洞/跨服竞技')
 
-    # ⑨ hurtCheck 中和
+    # ⑨ hurtCheck 中和（★实质功能项：阻断客户端把 hurtRate 上报作弊校验）
+    #   锚点：2026-10-08 重压缩后 http 句柄 l→f、apipath/dbid 所在模块 g→p、getChannel/restartGame 所在 s→l
     src = sub_once(src,
-        'l.http.post(g.apipath+"c=cheat&a=hurtCheck",{uid:g.dbid,channelId:s.getChannel(),hurtRate:t.result.hurtRate},(function(t){m.alert("netcode_-10",(function(){s.restartGame()}))}))',
-        'window.__QSW_LOG({ev:"hurtcheck_blocked",hurtRate:t.result.hurtRate}),m.alert("netcode_-10",(function(){s.restartGame()}))',
+        'f.http.post(p.apipath+"c=cheat&a=hurtCheck",{uid:p.dbid,channelId:l.getChannel(),hurtRate:t.result.hurtRate},(function(t){m.alert("netcode_-10",(function(){l.restartGame()}))}))',
+        'window.__QSW_LOG({ev:"hurtcheck_blocked",hurtRate:t.result.hurtRate}),m.alert("netcode_-10",(function(){l.restartGame()}))',
         '⑨ hurtCheck 中和')
 
     # ⑩ hurtCheckPro 中和

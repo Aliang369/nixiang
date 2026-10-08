@@ -24,8 +24,12 @@ GAME="炁术行者"
 TAG="星光版"
 PKG="com.h5wrapper.app"
 SERVER="http://43.248.140.201:8888"
-BASE_APK="$NIXIANG/02_apks/炁术行者9.15.apk.1"
 BASE_APK_MD5="f528339aadb2ba9fcdd6de477a936e06"
+# 底包路径解析：用户手动管理的 02_apks/ 里，同一底包可能以 炁术行者9.15.apk
+# 或 炁术行者9.15.apk.1 命名（浏览器下载残留）。指纹仍由下面 BASE_APK_MD5 硬校验，
+# 文件名不参与判定；也可用 QSW_BASE_APK 显式指定（仍需通过指纹检查）。
+BASE_APK="${QSW_BASE_APK:-$NIXIANG/02_apks/炁术行者9.15.apk}"
+[[ -f "$BASE_APK" ]] || BASE_APK="$NIXIANG/02_apks/炁术行者9.15.apk.1"
 SRC_DIR="$NIXIANG/04_scripts/$GAME"
 INJECT_SMALI="$SRC_DIR/inject/MainActivity\$2.smali"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
@@ -62,15 +66,15 @@ done
 
 say "0. 输入检查"
 [[ -f "$BASE_APK" ]] || die "缺底包 ${BASE_APK}（底包由用户管理，脚本不自动下载）"
-[[ "$(md5 -q "$BASE_APK")" == "$BASE_APK_MD5" ]] || die "底包指纹不符（期望 $BASE_APK_MD5）"
+[[ "$(md5 -q "$BASE_APK")" == "$BASE_APK_MD5" ]] || die "底包指纹不符（期望 ${BASE_APK_MD5}）"
 [[ -f "$INJECT_SMALI" ]] || die "缺注入 smali $INJECT_SMALI"
 [[ -f "$KS" ]] || die "缺签名密钥 $KS"
 [[ -x "$SMALI_BIN" && -x "$BAKSMALI_BIN" ]] || die "缺 smali/baksmali（$NIXIANG/01_tools/smali/）"
-[[ -f "$SO_PREBUILT" ]] || die "缺 $SO_PREBUILT（先跑 04_scripts/炁术行者/qsxz_build_so.sh）"
+[[ -f "$SO_PREBUILT" ]] || die "缺 ${SO_PREBUILT}（先跑 04_scripts/炁术行者/qsxz_build_so.sh）"
 mkdir -p "$WORK" "$OUT_DIR"
 
 LOCK_DIR="/tmp/qsw_star.lockdir"
-mkdir "$LOCK_DIR" 2>/dev/null || die "另一个出包进程在跑（$LOCK_DIR）"
+mkdir "$LOCK_DIR" 2>/dev/null || die "另一个出包进程在跑（${LOCK_DIR}）"
 echo $$ > "$LOCK_DIR/pid"
 trap 'rm -rf "$LOCK_DIR"' EXIT
 
@@ -145,7 +149,7 @@ echo "  classes.dex $(wc -c <"$WORK/classes.dex" | tr -d ' ') B"
 say "5. lib + binary Manifest"
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/libstarry_magic.so"
-cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so" || die "缺 libc++_shared.so（$NDK_CXX）"
+cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so" || die "缺 libc++_shared.so（${NDK_CXX}）"
 if [[ -d "$WORK/starry_dec/assets/certs" ]]; then
   mkdir -p "$WORK/assets/certs"; cp -R "$WORK/starry_dec/assets/certs/." "$WORK/assets/certs/"
 fi
