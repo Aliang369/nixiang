@@ -139,7 +139,7 @@ do_mark() {
   [ -n "$PID" ] || PID="-"
   TSE=$(date +%s); TSW=$(wall)
   echo "MARK|$TSE|$TSW|$PID|$NOTE" >> "$OUT/marks.log"
-  N="$(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null || echo 0)"
+  N="$(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null; true)"
   echo "✓ 已标记 第${N}条 $TSW pid=$PID 「${NOTE}」"
 }
 
@@ -149,7 +149,7 @@ do_slice() {
   [ -f "$OUT/logcat.txt" ] || { echo "✗ 目录无 logcat.txt: $OUT"; exit 1; }
   if [ -n "$MARKN" ]; then
     ML="$(grep '^MARK|' "$OUT/marks.log" 2>/dev/null | sed -n "${MARKN}p")"
-    [ -n "$ML" ] || { echo "✗ 第 ${MARKN} 条标记不存在（共 $(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null || echo 0) 条）"; exit 1; }
+    [ -n "$ML" ] || { echo "✗ 第 ${MARKN} 条标记不存在（共 $(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null; true) 条）"; exit 1; }
     EPOCH="$(echo "$ML" | cut -d'|' -f2)"
     TSW="$(echo "$ML" | cut -d'|' -f3)"
     TAG="M${MARKN}"
@@ -207,7 +207,7 @@ do_stop() {
   sleep 1
   [ -n "$LCP" ] && kill "$LCP" 2>/dev/null
   ev_log "REC_STOP"
-  NM="$(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null || echo 0)"
+  NM="$(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null; true)"
   ST="$(awk -F'|' '$3 ~ /REC_START/ {print $1; exit}' "$OUT/events.log" 2>/dev/null)"
   echo "✓ 记录仪已停: $OUT"
   echo "  标记 ${NM} 条；产物:"
@@ -227,7 +227,7 @@ do_status() {
   [ -f "$OUT/recorder.meta" ] || { echo "✗ 无 recorder.meta: $OUT"; exit 1; }
   SUP="$(sed -n 's/^SUP=//p' "$OUT/recorder.meta" | head -1)"
   if [ -n "$SUP" ] && kill -0 "$SUP" 2>/dev/null; then RUN="运行中(SUP=$SUP)"; else RUN="已停"; fi
-  NM="$(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null || echo 0)"
+  NM="$(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null; true)"
   echo "目录: $OUT  状态: $RUN  标记: ${NM} 条"
   [ "$NM" -gt 0 ] && tail -3 "$OUT/marks.log"
 }

@@ -1,29 +1,29 @@
 {
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/消消英雄2",
   "keep": "消消英雄2_1.2.28_starry-releaseSigned.apk",
-  "keep_size": 148072158,
-  "keep_md5": "3e47c092665ecb97b4bee43421675314",
+  "keep_size": 148076254,
+  "keep_md5": "d7f86bfd19f8c1fc456830a4c6742d4c",
   "mode": "--apply",
   "removed": [
     {
       "name": "消消英雄2_1.2.28_starry-releaseSigned.apk.idsig",
       "size": 1177115,
-      "md5": "4f9fc7b767bba72754d30cf9c1381e13"
+      "md5": "473fb88adf8ddce3ff7fb965d9d1744e"
     },
     {
       "name": "消消英雄2_1.2.28_starry-soOnly-releaseSigned.apk",
-      "size": 148076278,
-      "md5": "1df88a748bfb92be632c7a3d11871fa3"
+      "size": 148080374,
+      "md5": "1e08ae51e9fa9dfcb93c5055b68e8d65"
     },
     {
       "name": "消消英雄2_1.2.28_surgical-unsigned.apk",
-      "size": 147969562,
-      "md5": "707ddef8a4388504b72716ed8879d248"
+      "size": 147974051,
+      "md5": "9282e6c7617ff3639f135ced47298ca9"
     },
     {
       "name": "消消英雄2_1.2.28_starry-soOnly-releaseSigned.apk.idsig",
       "size": 1177115,
-      "md5": "d377d04ce7b91a00172e541a5576ced3"
+      "md5": "a8db3d75ff1f951d17f9c366c4ff0cde"
     }
   ],
   "removed_count": 4
