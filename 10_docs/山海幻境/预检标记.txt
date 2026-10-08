@@ -1,0 +1,29 @@
+# 山海幻境（com.chx.shhj）装机预检标记
+# 格式：类别|ERE 正则（每行一条，# 开头为注释）
+# 用途：post_install_precheck.sh 的机器预检关（L2）。人工终审仍是用户实测（L3）。
+# 建档：2026-10-08，dex 换新轮（classes4.dex 由 HEAD 菜单源码重编）
+
+pkg|com\.chx\.shhj
+
+# 菜单 so 加载标记（星光框架 TAG，包内 so 内唯一命中 "StarryMagic"）
+menu_load|StarryMagic
+
+# 菜单弹出标记（Java 侧 NativeMenuController 打出，新 dex 内计数 1）
+menu_shown|native menu shown
+
+# 游戏级 hook 命中标记（本游戏 native 层日志前缀 [Shhj]：
+#   `[Shhj] hooked se::evalString` = 装钩成功；`[Shhj] spliced ...` = JS 真的被改写）
+hook_hit|\[Shhj\]
+
+# 授权墙标记（过不去只发操作请求卡，不诊断服务端）
+auth_fail|renew auth fail
+auth_ok|auth game_id synced|renew ok
+
+# 崩溃关收窄（2026-10-08 实测教训）：
+#   默认 RE_CRASH 含裸信号名 SIGSEGV/SIGABRT，会命中 adb shell 辅助进程的
+#   `E libsigchain: Setting SIGSEGV to SIG_DFL` —— am / pm / monkey 这类
+#   app_process 工具进程每次启动都打这行，与游戏无关。
+#   本游戏实测：3 行命中分属 3 个不同 pid（22182/22286/22387），每个 pid 全日志仅此 1 行；
+#   游戏自身 pid=21193 同一时刻仍在正常输出 ⇒ 假崩溃。故这里去掉裸信号名。
+crash|FATAL EXCEPTION|Fatal signal|DEBUGGERD|crash_dump|am_crash
+crash_ignore|记录先前处理器|\[crash\]|CrashTrap|libsigchain

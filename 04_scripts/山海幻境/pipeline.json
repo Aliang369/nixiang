@@ -1,7 +1,7 @@
 {
   "game": "山海幻境",
   "version": "4.2 / vc68",
-  "notes": "2026-09-16：官方 4/vc54 已替换为星空包；登录 ret=5 非法客户端已修复，classes3 RSSDK.getMD5 回灌官方签名，修复包已同签覆盖并启动成功。无敌/百倍待用户实机验收。2026-09-28：官方 4.2/vc68 新增「五倍伤害（BOSS）」feat 3，静态门禁、正式包、裁剪和同签覆盖安装完成；真机 JS 拼接与战斗/服务端结算 NOT PROVEN。唯一正式包 08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk，md5 47eebe76…，sha256 5703c479…；详情见 10_docs/山海幻境/星光落地_4.2_20260928.md。",
+  "notes": "2026-09-16：官方 4/vc54 已替换为星空包；登录 ret=5 非法客户端已修复，classes3 RSSDK.getMD5 回灌官方签名，修复包已同签覆盖并启动成功。无敌/百倍待用户实机验收。2026-09-28：官方 4.2/vc68 新增「五倍伤害（BOSS）」feat 3，静态门禁、正式包、裁剪和同签覆盖安装完成；真机 JS 拼接与战斗/服务端结算 NOT PROVEN。唯一正式包 08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk，md5 47eebe76…，sha256 5703c479…；详情见 10_docs/山海幻境/星光落地_4.2_20260928.md。2026-10-08：按用户口令把 02_apks/山海幻境_4.2.apk 里旧版源码编的 classes4.dex 换成 HEAD 重编的新 dex（so 与其余条目逐字节不动），新阶段 dex_swap 记录全过程；唯一正式包已改为 08_output/山海幻境/山海幻境_4.2_menu-latest-releaseSigned.apk（1236763989 B md5 d2fb22317170e1dacab75dbdffacb950 sha256 9d0e7f07137d27e7bf147a3d33c127569c482d92eb1f6dd111f90aff1b6a815c），09-28 的 five-boss 包已按收尾口令裁剪移除。真机菜单链路与 JS 拼接已验，三功能数值 NOT PROVEN；详情见 10_docs/山海幻境/evidence_20261008/README.md。",
   "params": {
     "game_id": "shhj",
     "package": "com.chx.shhj",
@@ -391,6 +391,32 @@
       }
     },
     {
+      "id": "dex_swap",
+      "name": "菜单源码换新：HEAD 重编 classes4.dex + zip 外科置换 + 同签重打",
+      "requires": [],
+      "command": "bash 04_scripts/山海幻境/shhj_menu_latest_4.2.sh",
+      "preflight": [
+        "04_scripts/山海幻境/shhj_menu_latest_4.2.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/山海幻境/山海幻境_4.2_menu-latest-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-08 14:07:00",
+      "note": "用户口令：底包里的 dex 是旧版源码编的，换成 HEAD 新源码重编的并重打包，确保战斗代码相关功能无误。底包=02_apks/山海幻境_4.2.apk（1236747605 B md5 47eebe7668a6ef133c0621839cc67520，与 09-28 正式包逐字节相同）；新 dex 由 mod菜单/starry-mod-menu HEAD 56bcf89f 的 ./gradlew assembleRelease --offline 重编，再 apktool d 取 com/starry + StarryApp 宿主改写（.super/<init>/attachBaseContext/onCreate -> Lcom/chx/shhj/GameApplication;）+ smali assemble 得到：classes4.dex 454892 B md5 23baec22b821b7bc407723f868a188ce -> 484180 B md5 1b55d842b65834f917e9054b5fe4853d；zip 外科只换 classes4.dex，so 与其余 34230 个条目逐字节不动。战斗面证据：cocos/ShhjHooks 归一化后逐指令相同（98 行）；Main.cpp 20 条 regOne 与 dex native 声明缺失 0 / 签名不符 0；真机 f9a116a2 命中 [Shhj] splice #1 len 10278614->10280111 file=assets/main/index.jsc 与 GXR/GXD/GX5、getHurt dmg5、curHp、createNum、tHurt inv 四处挂点；precheck PASS_TO_HUMAN。旧 dex 实锤缺陷（新版已修）：auth/DeviceFingerprint 缺 getV4/writeSeed/writeSeedFile（v5 SSAID 单路径，旧串「系统 ANDROID_ID 缺失或无效」）；bridge/ModBridge 缺 featureListSignature 仍无条件 clearFeaturePrefs。三项战斗功能的数值效果仍 NOT PROVEN。脚本可重复执行，dex md5 因 R8 合成 lambda 随机名不可跨次复现。",
+      "artifacts": {
+        "08_output/山海幻境/山海幻境_4.2_menu-latest-releaseSigned.apk": {
+          "md5": "d2fb22317170e1dacab75dbdffacb950"
+        }
+      },
+      "inputs": {
+        "02_apks/山海幻境_4.2.apk": "47eebe7668a6ef133c0621839cc67520"
+      }
+    },
+    {
       "id": "archive",
       "name": "收尾文档、正式包与 Git 提交范围固化",
       "requires": [],
@@ -406,7 +432,7 @@
       ],
       "status": "done",
       "done_at": "2026-09-16 20:08:14",
-      "note": "2026-09-28 二次收尾（用户口令「收尾+正式包+清理+git」）：4.2/vc68 唯一正式包 08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk（md5 47eebe7668a6ef133c0621839cc67520，sha256 5703c47996c9d5b62657efd5c7fec002ad7644aeb24fb57970b0135443142c7b）；08_output 已裁剪，清理台账见 cleanup_summary_4.2_20260928.json；git 本地提交=2c6b0b9（16 files，current.md 仅本作 hunk）。GitHub 推送本轮因网络超时待重试，本地提交已保留、未强推；真机战斗/服务端结算仍 NOT PROVEN。archive_summary.json 仍是 4.0 历史记录，未覆盖。",
+      "note": "2026-09-28 二次收尾（用户口令「收尾+正式包+清理+git」）：4.2/vc68 唯一正式包 08_output/山海幻境/山海幻境_4.2_five-boss-releaseSigned.apk（md5 47eebe7668a6ef133c0621839cc67520，sha256 5703c47996c9d5b62657efd5c7fec002ad7644aeb24fb57970b0135443142c7b）；08_output 已裁剪，清理台账见 cleanup_summary_4.2_20260928.json；git 本地提交=2c6b0b9（16 files，current.md 仅本作 hunk）。GitHub 推送本轮因网络超时待重试，本地提交已保留、未强推；真机战斗/服务端结算仍 NOT PROVEN。archive_summary.json 仍是 4.0 历史记录，未覆盖。 2026-10-08 三次收尾（用户口令「收尾+正式包+清理+git」）：唯一正式包 08_output/山海幻境/山海幻境_4.2_menu-latest-releaseSigned.apk（1236763989 B，md5 d2fb22317170e1dacab75dbdffacb950，sha256 9d0e7f07137d…）；08_output 已裁剪（清单 10_docs/山海幻境/正式包裁剪清单_20261008.json，删 1 个 .idsig）；09_test/山海幻境 与 09_test/_recorder/20261008_141452 已隔离清理；决定性证据落 10_docs/山海幻境/evidence_20261008/README.md。archive_summary.json 仍是 4.0 历史记录，未覆盖。",
       "artifacts": {
         "04_scripts/山海幻境/archive_summary.json": {
           "md5": "9d8c4c4fc8947865343788ae1d7e6664"

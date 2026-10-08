@@ -72,7 +72,7 @@
 | 无尽探险队 | 历史 | 已收尾 | [摘要](games/无尽探险队.md) |
 | 战魂铭人 | 历史 | 已收尾 | [摘要](games/战魂铭人.md) |
 | 异世界勇者 | 2026-09-27 | ✅ 8.1.1/vc811 **v7 已装机**（`08_output/异世界勇者/异世界勇者_8.1.1_surgical-releaseSigned.apk` 546,464,855 B md5 `cc44d8b918b999c2cd1be76b4890094d`，包内 so 129,688 B md5 `8aa06587…`、classes3.dex… （完整结论见游戏摘要「2026-09-28 索引行归档」） | [摘要](games/异世界勇者.md) |
-| 山海幻境 | 2026-09-28 | ✅ 4.2/vc68 五倍伤害（BOSS）已出包并同签覆盖安装；静态门禁通过，真机 JS 拼接、战斗数值与服务端结算 NOT PROVEN | [摘要](games/山海幻境.md) |
+| 山海幻境 | 2026-10-08 | ✅ 4.2/vc68 **dex 换新 + 收尾交付**：唯一正式包 `山海幻境_4.2_menu-latest-releaseSigned.apk`（md5 `d2fb2231…` sha256 `9d0e7f07…`），so 逐字节不动；ShhjHooks 逐指令相同 + 真机 `[Shhj] splice #1 len 10278614→10280111 file=assets/main/index.jsc` 命中，预检 PASS_TO_HUMAN；三功能数值 NOT PROVEN | [摘要](games/山海幻境.md) |
 | 动物餐厅 | 历史 | 已收尾 | [摘要](games/动物餐厅.md) |
 | 冰晶菜单旁路 | 历史 | 已交付/待核验 | [摘要](games/旁路菜单.md) |
 | 元启世界 | 历史 | 纯分析 | [摘要](games/元启世界.md) |
