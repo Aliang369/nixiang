@@ -81,6 +81,10 @@ static const char* kDnsBlockSuffixes[] = {
     "crbt.i139.cn",
     "opencloud.wostore.cn",
     "api-e189.21cn.com",
+    // ↓ 本包唯一允许被切断的 alina-game.cn 主机：TapTap 广告归因回传（Lua ChannelTapReport
+    //   _GetReportUrl → https://taptap-ad-callback.service.alina-game.cn:7002/report，
+    //   body 带 oaid/idfa/user_id/充值金额）。与登录/本体/进度无关，切掉不影响游戏。
+    "taptap-ad-callback.service.alina-game.cn",
 };
 
 static std::mutex g_dnsLogMtx;
@@ -599,21 +603,38 @@ static std::atomic<bool> g_acDone{false};
 static const char* kAcScript = R"LUA(
 local ST = rawget(_G, "__starry_ac_state")
 if type(ST) ~= "table" then
-	ST = { acSkip = 0, acWin = 0, biBlock = 0, tapBlock = 0, buglyBlock = 0 }
+	ST = { acSkip = 0, acWin = 0, acDec = 0, hdrFix = 0, biSeen = 0, biFixDamage = 0,
+	       biFixFlag = 0, biFixDetail = 0, biBlock = 0, tapBlock = 0, buglyBlock = 0 }
 	_G.__starry_ac_state = ST
 end
 local function bump(k) ST[k] = (ST[k] or 0) + 1 end
 
-local okAC, okUI, okBI, okBINet, okTap, okBugly, okBIAct =
-	false, false, false, false, false, false, false
+local okAC, okUI, okBI, okBINet, okTap, okBugly, okBIAct, okHdr =
+	false, false, false, false, false, false, false, false
 
 -- [[1]] 过检测：本地重放校验 + 服端警告弹窗全部压掉
 if type(AntiCheatManager) == "table" and not rawget(AntiCheatManager, "__starry_ac") then
 	if type(AntiCheatManager.ShouldCheckPlay) == "function" then
 		AntiCheatManager.ShouldCheckPlay = function() return false end
 	end
-	AntiCheatManager.CheckPlay = function(self)
+	-- ⚠ CheckPlay(self, quest, callback) 是**异步回调型**：游戏自己的「不检查」分支正是
+	--   提前 callback(false) 后 return（反汇编 AntiCheatManager proto#8 @82-117 第 [15-18] 行；
+	--   走完 EnvTaskReplay 服务端回放任务时也会在成功分支 [54-56] 调 callback(false)）。
+	--   所以这里必须**照样回调**，否则上层（SideQuestApi 结算链）永远等不到回调 ⇒ 战斗结算卡死。
+	AntiCheatManager.CheckPlay = function(self, p1, p2)
 		bump("acSkip")
+		-- 补偿式（不是单纯拦截）：照游戏「本地校验通过」的真实路径走完副作用——
+		-- 观察期计数照常递减（反汇编 proto#8 @82-117 成功分支 [54-56] 就是
+		-- SetCheatCheckCount(_customData.CheatCheckCount - 1) 之后 cb(false)）。
+		-- 只压掉「重放/上报」这一段，才不会被「有观察期却永不递减」这种特征反推。
+		if type(self) == "table" and type(self._customData) == "table" then
+			local n = tonumber(self._customData.CheatCheckCount) or 0
+			if n > 0 and type(self.SetCheatCheckCount) == "function" then
+				pcall(self.SetCheatCheckCount, self, n - 1)
+				bump("acDec")
+			end
+		end
+		if type(p2) == "function" then pcall(p2, false) end
 		return
 	end
 	AntiCheatManager.TipCheatWarning = function(self)
@@ -667,17 +688,183 @@ if type(UIManager) == "table" and not rawget(UIManager, "__starry_ac") then
 	end
 end
 
--- [[3]] BI 出口（上游 8 个函数全换 no-op；EndQuest 就是 BIPlay 结算上报）
+-- [[2.5]] 补偿式上报（默认）：**不禁止、只改值**——载荷照发，只把越界值压回游戏自己的容忍带。
+--   依据（反汇编 _BIEndQuest，/tmp/x2dis/m_cef133c0.txt:2395-2476）：结算时游戏自己算一行 BI 数据
+--     RealDamagePerRound      = Σ 我方 Characters 的 Data:GetNum("DamagePerRound")
+--     PredictedDamagePerRound = AntiCheatManager:Judge()（按战力估的每回合伤害基准）
+--     Cheated                 = (PredictedDamagePerRound * 5 < RealDamagePerRound)   ← 容忍带＝5×
+--   然后 Json.encode 成字符串交给 BIRequest.EndQuest → BINetworkManager.CustomSend("BIPlay", …)。
+--   ⇒ 10 倍伤害**必然** Cheated=true，服端据此发 anticheat.warning 开观察期；
+--     而「整条 BI 消失」本身也是特征（勇士之心方法论：不禁止、只改值）。
+--   所以默认改成：照发，把 RealDamagePerRound 压到 ≤ PredictedDamagePerRound*1.8（远在 5× 带内），
+--   各类作弊/环境布尔置 false。要恢复硬拦：_G.__starry_bi_hard = true。
+local kHardBlock = rawget(_G, "__starry_bi_hard") == true
+local Json = nil
+local function GetJson()
+	if Json ~= nil then return Json end
+	Json = false
+	local NM = rawget(_G, "NetworkManager")
+	local cands = { (type(NM) == "table") and NM.Json or nil, rawget(_G, "Json"),
+	                CS and CS.LuaManager and CS.LuaManager.Instance and CS.LuaManager.Instance.Json }
+	for i = 1, #cands do
+		local c = cands[i]
+		if type(c) == "table" and type(c.decode) == "function" and type(c.encode) == "function" then
+			Json = c
+			break
+		end
+	end
+	return Json
+end
+
+local CHEAT_KEYS = { "Cheated", "IsCheat", "Cheat", "IsHacked", "IsHook", "HasHook",
+	                 "IsRoot", "IsEmulator", "IsDebug", "IsFrida", "IsModify", "IsSpeedHack" }
+
+-- 伤害类数值键：与顶层聚合字段**同一比例**缩放，维持「伤害账平」
+-- （方法论表 C：Σ逐角色/逐元素明细 ≈ RealDamagePerRound，只压聚合会被交叉校验看穿）
+-- 只认精确键名，不做子串匹配（避免误伤 DamageReduction 之类的百分比字段）。
+local DAMAGE_KEYS = { DamagePerRound = true, Damage = true, TotalDamage = true,
+	                  DamageAdd = true, HitDamage = true, DamageValue = true }
+
+local FixJson, FixTable, CopyTable
+
+-- 深拷贝（带环保护、深度上限）：**绝不就地改调用方的表**（方法论：改前记、改后还原）
+CopyTable = function(t, depth, seen)
+	if type(t) ~= "table" or depth > 4 then return t end
+	seen = seen or {}
+	if seen[t] then return seen[t] end
+	local c = {}
+	seen[t] = c
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			c[k] = CopyTable(v, depth + 1, seen)
+		else
+			c[k] = v
+		end
+	end
+	return c
+end
+
+FixTable = function(t, depth, ratio)
+	if type(t) ~= "table" or depth > 4 then return t end
+	local pred = tonumber(t.PredictedDamagePerRound)
+	local real = tonumber(t.RealDamagePerRound)
+	local rr = ratio
+	if not rr and real and pred and pred > 0 and real > pred * 1.8 then
+		rr = (pred * 1.8) / real -- 聚合值要压到的比例，明细按同一比例跟着缩
+		t.RealDamagePerRound = math.floor(pred * 1.8)
+		bump("biFixDamage")
+	end
+	for k, v in pairs(t) do
+		local tv = type(v)
+		if tv == "table" then
+			FixTable(v, depth + 1, rr)
+		elseif tv == "string" then
+			local fixed = FixJson(v, depth + 1, rr)
+			if fixed ~= v then t[k] = fixed end
+		elseif tv == "number" and rr and rr < 1 and type(k) == "string" and DAMAGE_KEYS[k]
+		       and k ~= "RealDamagePerRound" and k ~= "RealDamage" then
+			t[k] = math.floor(v * rr)
+			bump("biFixDetail")
+		elseif k == "RealDamagePerRound" or k == "RealDamage" then
+			local r = tonumber(v)
+			local p = tonumber(t.PredictedDamagePerRound) or pred
+			if r and p and p > 0 and r > p * 1.8 then
+				t[k] = math.floor(p * 1.8)
+				bump("biFixDamage")
+			end
+		elseif type(k) == "string" then
+			for i = 1, #CHEAT_KEYS do
+				if k == CHEAT_KEYS[i] and v ~= false then
+					t[k] = false
+					bump("biFixFlag")
+					ST.flags = ST.flags or {}
+					ST.flags[k] = (ST.flags[k] or 0) + 1
+					break
+				end
+			end
+		end
+	end
+	return t
+end
+
+FixJson = function(s, depth, ratio)
+	if type(s) ~= "string" or #s < 8 or s:byte(1) ~= 123 then return s end -- 非 '{' 开头直接放行
+	if not (string.find(s, '"Cheated"', 1, true) or
+	        string.find(s, '"RealDamagePerRound"', 1, true)) then return s end
+	local J = GetJson()
+	if not J then return s end
+	local ok, t = pcall(J.decode, J, s)
+	if not ok or type(t) ~= "table" then return s end
+	FixTable(t, depth, ratio)
+	local ok2, out = pcall(J.encode, J, t)
+	if ok2 and type(out) == "string" then return out end
+	return s
+end
+
+-- 参数清洗：表参数走**副本**（改完只在真的动了值时替换形参），字符串参数走 JSON 改写。
+-- ⇒ 调用方手里的表/状态一个字节都不动（游戏内数值、面板、后续逻辑都不受影响）。
+local function SanitizeArgs(a)
+	for i = 1, a.n do
+		local v = a[i]
+		if type(v) == "table" then
+			local n0 = (ST.biFixDamage or 0) + (ST.biFixFlag or 0) + (ST.biFixDetail or 0)
+			local c = CopyTable(v, 0)
+			FixTable(c, 0)
+			local n1 = (ST.biFixDamage or 0) + (ST.biFixFlag or 0) + (ST.biFixDetail or 0)
+			if n1 > n0 then a[i] = c end
+		elseif type(v) == "string" then
+			a[i] = FixJson(v, 0)
+		end
+	end
+end
+
+-- 包装＝记录 + 清洗 + 原样转发（结构不变、调用序不变 ⇒ 服端看不到缺口）
+-- tag 只用于可观测：真改了值才打一行 `[StarryACG] BI清洗 <tag>.<key> …`
+local function WrapForward(owner, key, tag)
+	local orig = owner[key]
+	if type(orig) ~= "function" then return false end
+	owner[key] = function(...)
+		if kHardBlock then bump("biBlock") return end
+		bump("biSeen")
+		local a = table.pack(...)
+		-- 出口审计：在唯一真正的发送口上按类别记账，首见各打一行。
+		-- 这行日志就是「本机到底往服端发了哪些 BI 类别」的第一手证据（对齐勇士之心表 A）。
+		if tag == "BINetworkManager" and key == "CustomSend" and type(a[1]) == "string" then
+			ST.cats = ST.cats or {}
+			if not ST.cats[a[1]] then
+				ST.cats[a[1]] = 1
+				print("[StarryACG] BI类别 " .. tostring(a[1]))
+			end
+		end
+		local d0 = (ST.biFixDamage or 0) + (ST.biFixDetail or 0) + (ST.biFixFlag or 0)
+		if pcall(SanitizeArgs, a) then
+			local d1 = (ST.biFixDamage or 0) + (ST.biFixDetail or 0) + (ST.biFixFlag or 0)
+			if d1 > d0 then
+				-- 把被翻掉的键名也打出来：这是「服端能收到哪些作弊类字段」的第一手账本来源
+				local fk = {}
+				if type(ST.flags) == "table" then
+					for k2, c2 in pairs(ST.flags) do fk[#fk + 1] = k2 .. "=" .. c2 end
+					table.sort(fk)
+				end
+				print(string.format("[StarryACG] BI清洗 %s.%s 聚合=%d 明细=%d 布尔=%d 键=%s",
+					tostring(tag), tostring(key), ST.biFixDamage or 0,
+					ST.biFixDetail or 0, ST.biFixFlag or 0,
+					#fk > 0 and table.concat(fk, ",", 1, math.min(#fk, 8)) or "-"))
+			end
+			return orig(table.unpack(a, 1, a.n))
+		end
+		return orig(...)
+	end
+	return true
+end
+
+-- [[3]] BI 出口（上游 8 个函数：EndQuest 就是 BIPlay 结算上报）
 if type(BIRequest) == "table" and not rawget(BIRequest, "__starry_ac") then
 	local fns = { "GeneralSend", "CommonAction", "ReportDeviceInfo", "EndQuest",
 	              "Tutorial", "SkipTimeline", "NetLibRecords", "Question" }
 	local n = 0
 	for i = 1, #fns do
-		local k = fns[i]
-		if type(BIRequest[k]) == "function" then
-			BIRequest[k] = function() bump("biBlock") return end
-			n = n + 1
-		end
+		if WrapForward(BIRequest, fns[i], "BIRequest") then n = n + 1 end
 	end
 	BIRequest.__starry_ac = true
 	okBI = n > 0
@@ -688,11 +875,7 @@ if type(BINetworkManager) == "table" and not rawget(BINetworkManager, "__starry_
 	local fns = { "CustomSend", "Send", "CachedSend", "StartSendingCachedData" }
 	local n = 0
 	for i = 1, #fns do
-		local k = fns[i]
-		if type(BINetworkManager[k]) == "function" then
-			BINetworkManager[k] = function() bump("biBlock") return end
-			n = n + 1
-		end
+		if WrapForward(BINetworkManager, fns[i], "BINetworkManager") then n = n + 1 end
 	end
 	BINetworkManager.__starry_ac = true
 	okBINet = n > 0
@@ -747,14 +930,57 @@ if type(BIActionManager) == "table" and not rawget(BIActionManager, "__starry_ac
 	okBIAct = true
 end
 
--- 完成标记：四个关键面都包上才算齐（渠道/Bugly/BIAction 表可能还没加载，不作门槛）
+-- [[9]] 设备指纹头 Microfun-Client：这是**最直接的「环境异常」信号**——
+--   NetworkUtility.GetMicrofunClientData（源码 97-158）拼了一串以 # 分隔的字段，
+--   其中一段由 CS.OneSDK.PlatformInterface.Instance.isJailbroken 驱动产出 "root"/"stock"，
+--   该字符串由 ApiClient._SendInternal 与 BINetworkManager.CustomSend 作为
+--   Microfun-Client 请求头**随每条 API/BI 请求上行**（root 设备上等于自报家门）。
+--   处理＝改值不加条：照发原样，只把整段等于 root/jailbroken/hacked 的段换成 stock。
+if type(NetworkUtility) == "table" and not rawget(NetworkUtility, "__starry_ac") then
+	local origHdr = NetworkUtility.GetMicrofunClientData
+	if type(origHdr) == "function" then
+		NetworkUtility.GetMicrofunClientData = function(self, ...)
+			local ok, s = pcall(origHdr, self, ...)
+			if not ok or type(s) ~= "string" then return s end
+			local out, i, n, changed = {}, 1, #s, false
+			while true do
+				local j = string.find(s, "#", i, true)
+				local sg = j and string.sub(s, i, j - 1) or string.sub(s, i)
+				if sg == "root" or sg == "jailbroken" or sg == "hacked" then
+					sg = "stock"
+					changed = true
+				end
+				out[#out + 1] = sg
+				if not j then break end
+				i = j + 1
+			end
+			if not changed then return s end
+			local s2 = table.concat(out, "#")
+			bump("hdrFix")
+			NetworkUtility._microfunClient = s2 -- 缓存字段同步换成干净版（别留一份 root 版）
+			return s2
+		end
+		okHdr = true
+	elseif type(NetworkUtility._microfunClient) == "string" then
+		local s2 = string.gsub(NetworkUtility._microfunClient, "#root#", "#stock#")
+		if s2 ~= NetworkUtility._microfunClient then
+			NetworkUtility._microfunClient = s2
+			bump("hdrFix")
+			okHdr = true
+		end
+	end
+	NetworkUtility.__starry_ac = true
+end
+
+-- 完成标记：四个关键面都包上才算齐（渠道/Bugly/BIAction/指纹头可能还没加载，不作门槛）
 if okAC and okUI and okBI and okBINet then __starry_ac = "1" end
 if not rawget(_G, "__starry_ac_logged") then
 	_G.__starry_ac_logged = true
+	ST.mode = kHardBlock and "hard" or "sanitize"
 	print(string.format(
-		"[StarryACG] 过检测=%s 弹窗兜底=%s BI出口=%s BI收口=%s 渠道=%s Bugly=%s BIAction=%s",
-		tostring(okAC), tostring(okUI), tostring(okBI), tostring(okBINet),
-		tostring(okTap), tostring(okBugly), tostring(okBIAct)))
+		"[StarryACG] 模式=%s 过检测=%s 弹窗兜底=%s BI出口=%s BI收口=%s 渠道=%s Bugly=%s BIAction=%s 指纹头=%s",
+		ST.mode, tostring(okAC), tostring(okUI), tostring(okBI), tostring(okBINet),
+		tostring(okTap), tostring(okBugly), tostring(okBIAct), tostring(okHdr)))
 end
 )LUA";
 

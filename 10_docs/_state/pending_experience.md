@@ -39,8 +39,14 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   ③从 Lua 拦必须同时处理三处：`BIRequest` 8 出口、`BINetworkManager.CustomSend`（唯一真发送器，`Send` 只转发、`CachedSend` 只写缓存）、以及 C#→Lua 入口 `CS.LuaManager.Instance.LuaBISend` **重指**（不重指等于没拦）。
   ④包装必须**逐表幂等 + 周期性重跑**（游戏热重载会换掉表），计数写全局诊断表并用一行日志报「哪几面装上了」，否则「拦了没有」不可观测。
   ⑤通用弹窗兜底只按「窗口名 + 文案」收窄（本例 `ForcedWindow`＝通用多选窗 `multi_choice_window`，无条件拦会误伤正常多选弹窗）。
+  ⑥**口径＝「让数据伪装成正常的」**（用户 m00665/m00796）：能照发就**不改函数**——`WrapForward` 记录→清洗→原样转发（表走**深拷贝副本**，调用方表零改动），
+  缺一条上报本身就是特征；硬拦只留逃生口 `_G.__starry_bi_hard`。需要改值的三类：聚合伤害字段（压到预测值×1.8 内）、同比例明细伤害、
+  作弊/环境类布尔键（`Cheated`/`IsCheat`/`IsRoot`/`IsEmulator`/`IsFrida`…）置 false；**请求头里的环境标识同样要改**（本例 `Microfun-Client` 头 12 段中一段 `root/jailbroken/hacked` → `stock`）。
+  ⑦**别按方法名拦业务存档**：同一 `BLSaveCustomData` 有 9 个 Lua 调用者，只有 1 个是反作弊 `anticheat`，其余 8 个是业务存档（`relic_draw`/`batch_purchase`/`kings_hard`/首充…）⇒ 只能按 key 过滤。
+  ⑧**DNS 黑名单必须含 SDK 的「配置下发域名」**，否则长连接数据面纯 IP 绕过（本例 `tgc.zztfly.com/tcp/config/init` ⇒ 后缀必含 `.zztfly.com`）。
+  ⑨**异步回调型反作弊方法不能替换成裸 `return`**：`CheckPlay(self,levelData,cb)` 的回调是上位机流程的必经环节，必须照它自己的通过分支回调（本例 `pcall(cb,false)`），否则**打完不结算卡死**（用户 m00726 报障）。
   落点拟：`skill/re-implement/hook-rules.md` 新节「反作弊压制与上报拦截分层」＋ `skill/starry-mod/SKILL.md` 出包自检清单（DNS 4 入口、黑名单后缀必含 SDK 的**长连接配置域名**，否则纯 IP 长连接绕过）。
-  证据＝`10_docs/消消英雄2/过检测与上报拦截_1.2.28.md` ＋ `09_test/消消英雄2/precheck_20261009_001702/logcat.txt`（实测 `DNS BLOCK android.bugly.qq.com / openlog.tapapis.cn / e.tapdb.net`，且 `tapsdk.tapapis.cn`、`*.alina-game.cn` 正常放行）。
+  证据＝`10_docs/消消英雄2/过检测与上报拦截_1.2.28.md` ＋ `09_test/消消英雄2/precheck_20261009_005259/logcat.txt`（实测 `DNS BLOCK taptap-ad-callback.service.alina-game.cn / android.bugly.qq.com / openlog.tapapis.cn / e.tapdb.net`、`[StarryACG] BI清洗 BIRequest.EndQuest 聚合=1 布尔=1 键=Cheated=1`、`指纹头=true`，且 `tapsdk.tapapis.cn`、`*.alina-game.cn` 正常放行）。
 - [emutls 静默降级：so 带 UND `__emutls_get_address` → 模拟器/真机 dlopen 失败，菜单静默降级 Java 版（绝区零 3.2.0，2026-10-05）](games/绝区零.md)：**已批准，待合并**（证据齐＋落点明确，自动门槛）——Android clang 默认 `-femulated-tls`，任何 TU 用 `thread_local`（本仓 30+ 个 `*Mod.cpp` 都在用）就会生成这条 UND；而它只有 **NDK 版 libc++_shared.so** 弱定义，游戏自带的旧 libc++_shared、MuMu 的 arm64 垫片 libc/libc++、真机 bionic libc **都没有**。失败时的坑＝菜单照弹（Java 降级 `native menu shown mode=ACTIVITY`）但 `ModBridge … Unavailable`、hook 全哑，极易误诊成“功能没实现”。修法＝mk 加 `-fno-emulated-tls` ＋ `-Wl,--exclude-libs,ALL`（后者防 libChiy 式静态库符号外露）；一行自检 `llvm-nm -D --undefined-only <so> | grep emutls` 必须为空。**模板已直接落地** `mod菜单/starry-mod-menu/app/src/main/jni/Android_modern_template.mk`；待并入 `skill/re-implement/hook-rules.md`（新节「so 装载硬门禁」）＋ `skill/starry-mod/SKILL.md` 出包自检清单。证据＝`10_docs/绝区零/出包记录_20261005.md` L2 节。
   对存量游戏：旧 `libs_*/` so 可用同一行命令扫；命中即在下次重编时补上这两个标志（存量包不追改）。
 - [MuMu 早期假映射下的 VA 口径与装钩就绪门（绝区零 3.2.0，2026-10-06；原「转译缓存」条已更正）](games/绝区零.md)：**已批准，待合并**（证据齐＋落点明确）——
