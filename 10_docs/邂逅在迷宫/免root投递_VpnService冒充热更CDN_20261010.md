@@ -2,6 +2,8 @@
 
 日期：2026-10-10 · 设备 `f9a116a2`（OPPO OPD2404 / Android 16）· 目标 `cn.alltune.endless` v2.6.53
 
+**最终交付**：`08_output/邂逅在迷宫/星光助手_v2.9_xhzm.apk`（md5 `9e8a3646352dd8e39438965c489a82d4`，versionCode 29）· 收尾记录见 [收尾_20261010.md](收尾_20261010.md)（阶段状态、门禁 G1–G3、保留表、清理授权记录）
+
 ## 一、要解决的问题
 
 三个作弊功能都在热更 DLL（`Assets/EndlessStrike/Res/HotUpdate/Dll` → `endlessstrikedll_*.bundle`
