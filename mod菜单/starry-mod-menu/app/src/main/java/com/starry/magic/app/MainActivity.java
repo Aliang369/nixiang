@@ -3,6 +3,7 @@ package com.starry.magic.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.VpnService;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 import com.starry.magic.BuildConfig;
 import com.starry.magic.R;
 import com.starry.magic.menu.MenuService;
+import com.starry.magic.menu.net.CdnVpnService;
 
 /**
  * 主 Activity — 应用入口
@@ -24,10 +26,12 @@ public class MainActivity extends Activity {
 
     private static final String TAG = "StarryMagic";
     private static final int REQUEST_OVERLAY = 1001;
+    private static final int REQUEST_VPN = 1002;
     private static final String NATIVE_LIB_NAME = "starry_magic";
 
     private int passThroughHits = 0;
     private TextView passThroughCount;
+    private TextView cdnStatus;
 
     static {
         try {
@@ -83,14 +87,26 @@ public class MainActivity extends Activity {
             Log.i(TAG, "SELFTEST isExternalStorageManager=" + esm
                     + " uid=" + android.os.Process.myUid());
             // 2) 逐个探测路径可写性（路径全部由 ModTarget 的目标包名拼出）
+            String gamePkg = com.starry.magic.menu.ModTarget.GAME_PKG;
+            String selfPkg = getPackageName();
+            // 关键探测矩阵：目标游戏 Android/data 的各种等价路径都要试，
+            // 因为 FUSE 的跨包隔离判定可能对 /sdcard、/storage/emulated/0、
+            // /mnt/user/0/primary 走不同分支（历史上有过只有某一条能写的情况）。
             String[] probes = {
                     com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[0],
-                    "/storage/emulated/0/Android/media/" + getPackageName(),
+                    "/storage/emulated/0/Android/media/" + selfPkg,
                     "/storage/emulated/0/Android/media",
                     com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[1],
-                    "/storage/emulated/0/Android/data/" + getPackageName() + "/files",
+                    "/storage/emulated/0/Android/data/" + gamePkg,
+                    "/storage/emulated/0/Android/data/" + gamePkg + "/files",
+                    "/storage/emulated/0/Android/data/" + gamePkg + "/files/Bundles",
+                    "/sdcard/Android/data/" + gamePkg + "/files",
+                    "/sdcard/Android/data/" + gamePkg + "/files/Bundles",
+                    "/mnt/user/0/primary/Android/data/" + gamePkg + "/files",
+                    "/mnt/user/0/emulated/0/Android/data/" + gamePkg + "/files",
+                    "/data/media/0/Android/data/" + gamePkg + "/files",
+                    "/storage/emulated/0/Android/data/" + selfPkg + "/files",
                     "/storage/emulated/0/Download",
-                    "/storage/emulated/0/Documents",
                     "/storage/emulated/0",
             };
             // 先尝试 mkdir（跨 App 创建 media 子目录）
@@ -114,6 +130,45 @@ public class MainActivity extends Activity {
                         + " canRead=" + d.canRead() + " canWrite=" + d.canWrite()
                         + " → " + r);
             }
+            // 2b) 进程身份：uid + 补充组（FUSE 的 DAC 判定会看组，如 ext_data_rw/media_rw）
+            try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(
+                    new java.io.FileInputStream("/proc/self/status"), "UTF-8"))) {
+                String ln;
+                while ((ln = br.readLine()) != null) {
+                    if (ln.startsWith("Groups:") || ln.startsWith("Uid:")) {
+                        Log.i(TAG, "SELFTEST proc " + ln);
+                    }
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "SELFTEST proc status failed: " + t);
+            }
+            // 2c) 直接 shell 一下，看 app 自己 fork 出来的进程是否也是同一套权限
+            try {
+                Process pr = Runtime.getRuntime().exec(new String[]{
+                        "sh", "-c", "ls -ld /sdcard/Android/data/" + gamePkg + " 2>&1"});
+                java.io.BufferedReader br = new java.io.BufferedReader(
+                        new java.io.InputStreamReader(pr.getInputStream(), "UTF-8"));
+                String ln = br.readLine();
+                Log.i(TAG, "SELFTEST sh ls game data dir: " + ln);
+                br.close();
+            } catch (Throwable t) {
+                Log.w(TAG, "SELFTEST sh failed: " + t);
+            }
+            // 2d) 试试软链接：如果 media 下能建一个指向游戏 data 目录的链接，
+            //     说明 FUSE 至少有写权限（本机历史上 FUSE 不支持 symlink，仅作记录）
+            try {
+                java.io.File link = new java.io.File(
+                        com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[0], "probe_link");
+                //noinspection ResultOfMethodCallIgnored
+                link.delete();
+                android.system.Os.symlink(
+                        "/storage/emulated/0/Android/data/" + gamePkg + "/files",
+                        link.getAbsolutePath());
+                Log.i(TAG, "SELFTEST symlink ok -> " + link.getAbsolutePath());
+            } catch (Throwable t) {
+                Log.i(TAG, "SELFTEST symlink failed: " + t);
+            }
+
             // 3) 目标状态文件
             try {
                 com.starry.magic.menu.StateMirror.attach(getApplicationContext());
@@ -151,6 +206,59 @@ public class MainActivity extends Activity {
         if (overlay != null) {
             overlay.setOnClickListener(v -> requestOverlayPermission());
         }
+        cdnStatus = findViewById(R.id.tv_cdn_status);
+        Button cdn = findViewById(R.id.btn_cdn_inject);
+        if (cdn != null) {
+            cdn.setOnClickListener(v -> toggleCdnInject());
+        }
+        android.widget.CheckBox autoClose = findViewById(R.id.cb_cdn_auto_close);
+        if (autoClose != null) {
+            autoClose.setChecked(CdnVpnService.autoClosePref(this));
+            autoClose.setOnCheckedChangeListener((v, checked) -> {
+                CdnVpnService.setAutoClosePref(MainActivity.this, checked);
+                Log.i(TAG, "cdn inject: auto close = " + checked);
+            });
+        }
+        refreshCdnStatus();
+    }
+
+    /** 热更注入开关：点一下（必要时先过系统 VPN 授权）。注入完成后会自动关闭。 */
+    private void toggleCdnInject() {
+        if (CdnVpnService.isRunning()) {
+            Log.i(TAG, "cdn inject: stop requested by user");
+            CdnVpnService.stop(this);
+            Toast.makeText(this, "热更注入已关闭（游戏下次启动会回到官方数据）",
+                    Toast.LENGTH_LONG).show();
+            refreshCdnStatus();
+            return;
+        }
+        Intent prep = VpnService.prepare(this);
+        if (prep != null) {
+            Log.i(TAG, "cdn inject: need vpn permission");
+            Toast.makeText(this, "请允许「星光助手」建立本地 VPN 连接", Toast.LENGTH_LONG).show();
+            startActivityForResult(prep, REQUEST_VPN);
+            return;
+        }
+        startCdnInject();
+    }
+
+    private void startCdnInject() {
+        CdnVpnService.start(this);
+        Toast.makeText(this,
+                "热更注入已开启：现在打开一次游戏，注入完成后会自动关闭",
+                Toast.LENGTH_LONG).show();
+        refreshCdnStatus();
+    }
+
+    private void refreshCdnStatus() {
+        if (cdnStatus == null) {
+            return;
+        }
+        cdnStatus.setText(CdnVpnService.statusText());
+        Button b = findViewById(R.id.btn_cdn_inject);
+        if (b != null) {
+            b.setText(CdnVpnService.isRunning() ? "热更注入已开启（点此关闭）" : "开启热更注入");
+        }
     }
 
     private void startMenu() {
@@ -186,6 +294,15 @@ public class MainActivity extends Activity {
             Toast.makeText(this,
                     checkOverlayPermission() ? "备用悬浮窗已开启" : "未开启备用权限（主路径仍可用）",
                     Toast.LENGTH_SHORT).show();
+        } else if (requestCode == REQUEST_VPN) {
+            if (resultCode == RESULT_OK) {
+                Log.i(TAG, "cdn inject: vpn permission granted");
+                startCdnInject();
+            } else {
+                Log.w(TAG, "cdn inject: vpn permission denied");
+                Toast.makeText(this, "未授权 VPN，无法注入热更数据", Toast.LENGTH_LONG).show();
+                refreshCdnStatus();
+            }
         }
     }
 
@@ -208,6 +325,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        refreshCdnStatus();
         MenuService service = MenuService.getInstance();
         if (service != null && !gameActivity.isEmpty()) {
             finish();

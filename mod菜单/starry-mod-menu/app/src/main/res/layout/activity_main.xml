@@ -49,6 +49,36 @@
             android:textColor="#E8E8F5"
             android:textSize="14sp" />
 
+        <Button
+            android:id="@+id/btn_cdn_inject"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#2E7D5B"
+            android:text="开启热更注入"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_cdn_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="热更注入：未开启"
+            android:textColor="#A0A0C0"
+            android:textSize="13sp" />
+
+        <CheckBox
+            android:id="@+id/cb_cdn_auto_close"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:checked="true"
+            android:text="注入完成后自动关闭（不影响游戏正常下载）"
+            android:textColor="#C8C8E0"
+            android:textSize="13sp" />
+
         <TextView
             android:id="@+id/tv_pass_through_count"
             android:layout_width="wrap_content"

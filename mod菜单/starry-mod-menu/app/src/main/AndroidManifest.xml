@@ -4,6 +4,9 @@
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 读当前网络与其 DNS 服务器，用于把上游 DNS 的 /32 路由也纳入隧道
+         （否则 ConnectivityManager.getActiveNetwork() 抛 SecurityException） -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- 独立助手（免 root）：需要写入目标游戏的外部私有目录
@@ -45,6 +48,23 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="MOD 菜单悬浮窗服务，需要持续显示悬浮窗供用户操作游戏辅助功能" />
+        </service>
+
+        <!-- 热更注入：在本机冒充 install2.hotune.com 的明文 HTTP CDN，
+             让游戏下次冷启动时自己把补丁 bundle 写进它自己的 Android/data。
+             exported=false + BIND_VPN_SERVICE：只有系统能绑定它。 -->
+        <service
+            android:name="com.starry.magic.menu.net.CdnVpnService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="本地热更数据补齐通道，需要持续运行以在游戏启动时提供补丁数据" />
         </service>
     </application>
 </manifest>
