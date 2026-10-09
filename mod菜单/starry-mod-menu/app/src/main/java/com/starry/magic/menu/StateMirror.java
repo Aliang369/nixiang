@@ -16,6 +16,13 @@ import java.nio.charset.StandardCharsets;
  * 这条通道完全走文件，C# 只用 File.ReadAllText / String.Split / int.Parse。
  *
  * 文件：{filesDir}/starry_state.txt，单行，空格分隔 feature 0..7 的当前值。
+ *
+ * 独立助手模式（免 root）：菜单不在游戏进程里，游戏读的是它自己的外部目录。
+ * Android 11+ 的 FUSE 只对 Android/data 与 Android/obb 做跨包隔离，所以
+ * /storage/emulated/0/Android/data/<游戏包名>/files/ 即便持有 MANAGE_EXTERNAL_STORAGE
+ * 也会被 EACCES 拒绝（Android 16 实测）；而 /storage/emulated/0/Android/media/<游戏包名>/
+ * 是应用自己的外部目录，宿主游戏天然可读，助手凭 All files access 也能跨包写入。
+ * 因此主路径 = media，次路径 = Android/data（旧 adb push 通道），兜底 = 本应用 filesDir。
  */
 public final class StateMirror {
 
@@ -35,6 +42,12 @@ public final class StateMirror {
         }
         Context app = ctx.getApplicationContext();
         context = app != null ? app : ctx;
+        // 独立助手模式：先把目标游戏已有的状态读进来，避免覆盖式清空
+        seedFrom(externalStateFile());
+        // 伤害倍率滑条最小值 1：未初始化时保持 1 倍而不是 0
+        if (VALUES[1] <= 0) {
+            VALUES[1] = 1;
+        }
     }
 
     /** 记录某个功能值；超出镜像范围的 featNum 直接忽略。 */
@@ -46,12 +59,83 @@ public final class StateMirror {
         write();
     }
 
-    private static void write() {
-        if (context == null) {
+    /**
+     * 独立助手模式：目标游戏的外部状态文件；不可用时为 null。
+     *
+     * <p>目录来自 {@link ModTarget#EXTERNAL_DIRS}（按游戏包名拼出来的），
+     * 不再硬编码字面量，换游戏只改 {@link ModTarget}。
+     */
+    private static File externalStateFile() {
+        for (String dir : ModTarget.EXTERNAL_DIRS) {
+            File d = new File(dir);
+            if (!d.isDirectory()) {
+                // media 目录可能尚未被游戏创建过，助手凭 All files access 直接建
+                //noinspection ResultOfMethodCallIgnored
+                d.mkdirs();
+            }
+            if (d.isDirectory()) {
+                return new File(d, FILE_NAME);
+            }
+        }
+        return null;
+    }
+
+    /** 外部 + 内部都写：外部是游戏真正读的那份，内部留一份便于排查。 */
+    private static void writeTo(File dir, String body) {
+        if (dir == null) {
             return;
         }
-        File dir = context.getFilesDir();
-        if (dir == null) {
+        File tmp = new File(dir, FILE_NAME + ".tmp");
+        File dst = new File(dir, FILE_NAME);
+        try (OutputStreamWriter writer =
+                     new OutputStreamWriter(new FileOutputStream(tmp), StandardCharsets.UTF_8)) {
+            writer.write(body);
+        } catch (Exception e) {
+            Log.w(TAG, "mirror write failed " + dir + ": " + e);
+            return;
+        }
+        if (!tmp.renameTo(dst)) {
+            Log.w(TAG, "mirror rename failed " + dir);
+            return;
+        }
+        // 让外部目录里的文件对宿主游戏可读：FUSE 会按真实权限位判定，
+        // 而宿主 App 与该文件不同 uid，默认 0660 会被拒。
+        try {
+            android.system.Os.chmod(dst.getAbsolutePath(), 0666);
+        } catch (Throwable e) {
+            Log.w(TAG, "chmod failed " + dst + ": " + e);
+        }
+        Log.i(TAG, "mirrored -> " + dst + " : " + body);
+    }
+
+    /** 从已有状态文件回填，避免只改一个开关就把其它功能清成 0。 */
+    private static void seedFrom(File f) {
+        if (f == null || !f.isFile()) {
+            return;
+        }
+        try {
+            java.io.InputStream in = new java.io.FileInputStream(f);
+            byte[] buf = new byte[512];
+            int n = in.read(buf);
+            in.close();
+            if (n <= 0) {
+                return;
+            }
+            String text = new String(buf, 0, n, StandardCharsets.UTF_8);
+            String[] tok = text.split("[ \t\r\n]+");
+            for (int i = 0; i < FEATURE_COUNT && i < tok.length; i++) {
+                try {
+                    VALUES[i] = Integer.parseInt(tok[i].trim());
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "seed read failed: " + e);
+        }
+    }
+
+    private static void write() {
+        if (context == null) {
             return;
         }
         StringBuilder sb = new StringBuilder(FEATURE_COUNT * 4);
@@ -61,17 +145,12 @@ public final class StateMirror {
             }
             sb.append(VALUES[i]);
         }
-        File tmp = new File(dir, FILE_NAME + ".tmp");
-        File dst = new File(dir, FILE_NAME);
-        try (OutputStreamWriter writer =
-                     new OutputStreamWriter(new FileOutputStream(tmp), StandardCharsets.UTF_8)) {
-            writer.write(sb.toString());
-        } catch (Exception e) {
-            Log.w(TAG, "mirror write failed: " + e);
-            return;
+        String body = sb.toString();
+        File ext = externalStateFile();
+        if (ext != null && ext.getParentFile() != null) {
+            writeTo(ext.getParentFile(), body);
         }
-        if (!tmp.renameTo(dst)) {
-            Log.w(TAG, "mirror rename failed");
-        }
+        File internal = context.getFilesDir();
+        writeTo(internal, body);
     }
 }

@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.starry.magic.BuildConfig;
 import com.starry.magic.R;
 import com.starry.magic.menu.MenuService;
 
@@ -55,8 +56,83 @@ public class MainActivity extends Activity {
             setupPassThroughTestUi();
         }
 
+        // 自检入口：am start -n com.starry.magic/.app.MainActivity --ez starry_selftest true
+        // 仅 debug 包可用：自检会真的写状态文件（把伤害倍率改成 42 之类），
+        // release 包一旦带出去，任何人一条 am start 就能改用户游戏状态。
+        if (BuildConfig.DEBUG
+                && getIntent() != null
+                && getIntent().getBooleanExtra("starry_selftest", false)) {
+            runStateChannelSelfTest();
+        }
+
         // 原生菜单：无权限也启动；Overlay 仅备用
         startMenu();
+    }
+
+    /** 状态通道自检：验证「星光助手 → 游戏外部目录状态文件」是否可读写。 */
+    private void runStateChannelSelfTest() {
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            // 1) 所有文件访问权限是否真的生效
+            boolean esm = false;
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    esm = android.os.Environment.isExternalStorageManager();
+                }
+            } catch (Throwable ignored) {
+            }
+            Log.i(TAG, "SELFTEST isExternalStorageManager=" + esm
+                    + " uid=" + android.os.Process.myUid());
+            // 2) 逐个探测路径可写性（路径全部由 ModTarget 的目标包名拼出）
+            String[] probes = {
+                    com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[0],
+                    "/storage/emulated/0/Android/media/" + getPackageName(),
+                    "/storage/emulated/0/Android/media",
+                    com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[1],
+                    "/storage/emulated/0/Android/data/" + getPackageName() + "/files",
+                    "/storage/emulated/0/Download",
+                    "/storage/emulated/0/Documents",
+                    "/storage/emulated/0",
+            };
+            // 先尝试 mkdir（跨 App 创建 media 子目录）
+            java.io.File mk = new java.io.File(com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[0]);
+            Log.i(TAG, "SELFTEST mkdir game media = " + mk.mkdirs() + " isDir=" + mk.isDirectory());
+            for (String dir : probes) {
+                java.io.File d = new java.io.File(dir);
+                java.io.File t = new java.io.File(d, "starry_probe.txt");
+                String r;
+                try {
+                    java.io.FileOutputStream out = new java.io.FileOutputStream(t);
+                    out.write("probe".getBytes("UTF-8"));
+                    out.close();
+                    r = "WRITE_OK";
+                    //noinspection ResultOfMethodCallIgnored
+                    t.delete();
+                } catch (Throwable e) {
+                    r = e.getClass().getSimpleName() + ":" + e.getMessage();
+                }
+                Log.i(TAG, "SELFTEST dir=" + dir + " isDir=" + d.isDirectory()
+                        + " canRead=" + d.canRead() + " canWrite=" + d.canWrite()
+                        + " → " + r);
+            }
+            // 3) 目标状态文件
+            try {
+                com.starry.magic.menu.StateMirror.attach(getApplicationContext());
+                com.starry.magic.menu.StateMirror.mirror(1, 42);
+            } catch (Throwable t) {
+                Log.e(TAG, "SELFTEST mirror failed", t);
+            }
+            java.io.File f = new java.io.File(
+                    com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[1], "starry_state.txt");
+            String body = "<unreadable>";
+            try (java.io.InputStream in = new java.io.FileInputStream(f)) {
+                byte[] b = new byte[64];
+                int n = in.read(b);
+                if (n > 0) body = new String(b, 0, n, java.nio.charset.StandardCharsets.UTF_8);
+            } catch (Throwable ignored) {
+            }
+            Log.i(TAG, "SELFTEST targetFile exists=" + f.exists()
+                    + " canWrite=" + f.canWrite() + " body=[" + body + "]");
+        }, 1500L);
     }
 
     private void setupPassThroughTestUi() {

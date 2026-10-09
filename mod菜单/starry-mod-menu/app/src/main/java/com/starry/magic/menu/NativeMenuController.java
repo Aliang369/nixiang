@@ -63,7 +63,11 @@ import java.util.concurrent.Executors;
 public final class NativeMenuController {
 
     private static final String TAG = "NativeMenu";
-    private static final float OVERLAY_SAFE_ALPHA = 0.79f;
+    /**
+     * Overlay 窗口不透明度。曾经是 0.79f，被怀疑是「菜单看得见球、展开后却几乎看不见」
+     * 的元凶，改成 1.0f（完全不透明）。
+     */
+    private static final float OVERLAY_SAFE_ALPHA = 1.0f;
 
     /** 字号阶梯（对齐旧 HTML 观感，略抬正文可读性） */
     private static final float FS_TITLE = 16f;
@@ -790,7 +794,7 @@ public final class NativeMenuController {
 
     // ---- attach ----
 
-    private boolean canOverlay() {
+    boolean canOverlay() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
         return Settings.canDrawOverlays(appContext);
     }
@@ -848,7 +852,7 @@ public final class NativeMenuController {
         }
     }
 
-    private void detachWindowOnly() {
+    void detachWindowOnly() {
         dismissMagicDropdown();
         removeWmToast();
         removeMagicAnnounce();

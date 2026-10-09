@@ -167,6 +167,38 @@ public class MenuService extends Service {
         }
     }
 
+    /**
+     * 独立助手模式（无 root 直装）：星光助手以自己包名单独安装，
+     * MenuService 跑在 {@link ModTarget#HELPER_PKG} 进程里，拿不到游戏进程的宿主 Activity。
+     * 此模式只能走 TYPE_APPLICATION_OVERLAY 常驻，禁止绑本 App 自己的 Activity
+     * （一旦绑上，切到游戏后本 App onStop 就会把菜单一起摘掉），
+     * 同时禁止任何「宿主生命周期驱动的藏窗」。
+     *
+     * <p>包名取自 {@link ModTarget}，不再硬编码；换游戏只改那一个文件。
+     */
+    public static boolean isStandaloneMode(Context ctx) {
+        try {
+            if (ctx == null) {
+                return false;
+            }
+            String pkg = ctx.getPackageName();
+            // 双保险：两个包名被组装脚本改成一样时（例如游戏本身就叫 com.starry.magic），
+            // 不能把游戏进程误判成独立助手 —— 那会让游戏内的菜单丢掉宿主、只剩悬浮窗。
+            if (ModTarget.HELPER_PKG.equals(ModTarget.GAME_PKG)) {
+                Log.w(TAG, "isStandaloneMode: HELPER_PKG == GAME_PKG ("
+                        + ModTarget.GAME_PKG + "), 判定为注入形态");
+                return false;
+            }
+            return ModTarget.HELPER_PKG.equals(pkg) && !ModTarget.GAME_PKG.equals(pkg);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private boolean standalone() {
+        return isStandaloneMode(this);
+    }
+
     private WindowManager windowManager;
     private NativeMenuController nativeMenu;
     private boolean isMenuVisible = false;
@@ -303,6 +335,10 @@ public class MenuService extends Service {
     }
 
     private void hideOverlayNow(String reason) {
+        if (standalone()) {
+            Log.i(TAG, reason + " → skip hide (standalone overlay)");
+            return;
+        }
         if (!hostLifecyclePrimed && inStartupGrace()) {
             Log.i(TAG, reason + " → skip hide (startup grace)");
             return;
@@ -434,6 +470,8 @@ public class MenuService extends Service {
      * 触发「正在当前页面悬浮显示，可能会造成部分操作无响应」。
      */
     private boolean shouldShowOverlayForHost(Activity a) {
+        // 独立助手模式：菜单是常驻悬浮球，与「同进程宿主是否全屏」无关
+        if (standalone()) return true;
         if (a == null || a.isFinishing()) return false;
         if (android.os.SystemClock.uptimeMillis() < suppressShowUntilElapsed) {
             return false;
@@ -497,6 +535,9 @@ public class MenuService extends Service {
 
     /** 供 NativeMenuController.findResumedHint 使用 */
     static Activity getLastResumedActivity() {
+        // 独立助手模式：本 App 的 Activity 不能当宿主（否则菜单随本 App 进后台被摘）
+        MenuService s = instance;
+        if (s != null && s.standalone()) return null;
         if (lastResumedActivity == null) return null;
         Activity a = lastResumedActivity.get();
         return (a != null && !a.isFinishing()) ? a : null;
@@ -507,6 +548,8 @@ public class MenuService extends Service {
      * 从 ActivityThread.mActivities 补捞未 paused 的 Activity（TLGD 等未注入 onResume 的游戏）。
      */
     private static Activity findResumedActivityViaThread() {
+        MenuService s0 = instance;
+        if (s0 != null && s0.standalone()) return null;
         try {
             Class<?> at = Class.forName("android.app.ActivityThread");
             Object thread = at.getMethod("currentActivityThread").invoke(null);
@@ -541,6 +584,8 @@ public class MenuService extends Service {
     }
 
     private Activity resolveMenuHost(Activity preferred) {
+        // 独立助手模式：绝不拿本 App 的 Activity 当宿主，强制 OVERLAY
+        if (standalone()) return null;
         if (preferred != null && !preferred.isFinishing()) return preferred;
         Activity a = getLastResumedActivity();
         if (a != null) return a;
@@ -590,8 +635,42 @@ public class MenuService extends Service {
             }
         }
         tryShowMenuWithRetry(0);
+        if (standalone()) {
+            Log.i(TAG, "standalone overlay mode (pkg=" + ModTarget.HELPER_PKG
+                    + ", target=" + ModTarget.GAME_PKG + ")");
+            mainHandler.postDelayed(standaloneAttachRunnable, 1500L);
+        }
         mainHandler.postDelayed(heartbeatRunnable, HEARTBEAT_INTERVAL_MS);
     }
+
+    /** 独立助手：常驻悬浮球自愈（授权后 / 被系统回收后自动重挂） */
+    private final Runnable standaloneAttachRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (menuUserHidden) return;
+                if (nativeMenu == null || !nativeMenu.isAttached()) {
+                    Log.i(TAG, "standalone: (re)attach overlay");
+                    showMenuNative(null);
+                } else if (nativeMenu.getAttachMode() != NativeMenuController.AttachMode.OVERLAY) {
+                    Log.i(TAG, "standalone: force OVERLAY (was "
+                            + nativeMenu.getAttachMode() + ")");
+                    nativeMenu.detachWindowOnly();
+                    nativeMenu = null;
+                    showMenuNative(null);
+                } else if (!nativeMenu.canOverlay()) {
+                    Log.w(TAG, "standalone: overlay permission missing");
+                }
+                if (nativeMenu != null && nativeMenu.isAttached()) {
+                    setOverlayVisible(true);
+                }
+            } catch (Throwable t) {
+                Log.e(TAG, "standaloneAttach isolated", t);
+            } finally {
+                if (standalone()) mainHandler.postDelayed(this, 2500L);
+            }
+        }
+    };
 
     public static void notifyOverlayInputFocus(boolean focused) {
         MenuService s = instance;
@@ -828,6 +907,8 @@ public class MenuService extends Service {
     }
 
     private boolean showMenuNative(Activity host) {
+        // 独立助手模式：强制走 OVERLAY（host=null → tryAttachActivity 直接 false → tryAttachOverlay）
+        if (standalone()) host = null;
         com.starry.magic.auth.AuthClient.init(this);
         Preferences.with(this);
         ModBridge.syncAuthGameIdFromNative();
