@@ -425,6 +425,7 @@ ilspycmd 06_dumped/游戏名_il2cpp/Assembly-CSharp.dll -o 03_decompiled/游戏�
 | 27 | 脚本依赖 ripgrep | 脚本里写 `rg ...`，本机 `command -v rg` 为空 ⇒ 静默返回空串，抽取/过滤结果全空（不报错，最难查） | 逆向脚本统一用 `grep -E`（BSD/GNU 都有）；新增脚本禁止引用 `rg`/`fd` 等未验证工具 |
 | 28 | Il2CppTypeDefinition 字段偏移 | 照抄 Il2CppDumper 声明顺序读 `+0x28` 当 `methodStart` ⇒ 大量 -1/垃圾区间，误判「本版不能用」 | 该结构实为 `td_size=0x5C`：`0x20 fieldStart / 0x24 methodStart / 0x28 eventStart / 0x2c propertyStart / 0x30 nestedTypesStart`；用「`method_count` == 按 `declaringType` 分组条数」判据反推偏移（明日方舟 2.7.81＝43,341/43,341） |
 | 29 | 二进制文件里搜**多字节（中文）串** | 默认 UTF-8 locale 的 BSD grep 对 `.so`/`.dex` 搜中文串会**假阴性**：`grep -a -c "十倍伤害" libstarry_magic.so` ⇒ `0`（实测该串确实存在 1 处）；`LC_ALL=C grep -a -c` ⇒ `1`。同文件里 ASCII 串（`MenuService`/`StarryMagic`）两种 locale 结果一致 ⇒ **只坑多字节串**，且不报错，最容易误判「菜单项丢了/门禁干净」 | 二进制内找中文串一律 `LC_ALL=C grep -a -o -F ...`（或直接用 python `blob.count(s.encode())`）；门禁类脚本的禁用串清单尽量只放 ASCII，含中文必须复核 |
+| 30 | GitHub SSH 出网被拦时的 `git push` | `git push` ⇒ `fatal: Could not read from remote repository. Please make sure you have the correct access rights`；`ssh -T -o ConnectTimeout=8 git@github.com` 与 `ssh -p 443 git@ssh.github.com` **双双 Operation timed out**，而普通 HTTPS 出网正常（`curl -s -o /dev/null -w '%{http_code}' -m10 https://www.baidu.com` ⇒ `200`）；`~/.ssh/config` 里的 github 段无异常 | 判定＝「网络能通、GitHub 22/443 被拦」⇒ **只本地 `git commit`，push 等网络恢复再做**，不要反复重试（每次都会挂满超时，还占轮次）；`git status -sb` 的 `ahead N` 就是待推队列 |
 
 ---
 
