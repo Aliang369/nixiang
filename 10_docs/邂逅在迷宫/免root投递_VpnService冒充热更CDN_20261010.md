@@ -87,8 +87,14 @@
 
 - **每次开局要在助手页点一次「开启热更注入」**（点完 15 s 自动关）。永久化免 root 不可能（见 §二推论）。
 - 卸载游戏清 `Android/data` ⇒ 需重新注入（会自动重新下载补丁包）。
-- 首次注入（走 9.8 MB 下载）整链尚未在修好的快栈上复跑（各分段均已单独验证）。
-- `04_scripts/_common/post_install_precheck.sh` 未跑（会 force-stop + monkey 冷启游戏，需用户不玩时补）。
+- 助手日志有历史遗留噪声：`等待游戏库 libil2cpp.so… Ns` 轮询（in-APK 形态的遗迹，standalone 下无意义）、
+  `[桥接] exempt hidden apis via JNI 失败（隐藏方法）` 告警；均无害，未清理。
+- 用户明确选择**不做**「游戏启动自动开启注入」（使用情况访问权限方案），保持手动点一次。
+- ✅ 已补做（2026-10-10 04:42–04:47）：**首次注入整链从零复测通过**（本地补丁文件移走 → 冷启动 →
+  0.92 s 下完 9.8 MB → `load endless dll len=24680448` → 15 s 自动关），落盘 md5 与 assets 一致；
+  `post_install_precheck.sh` **PASS_TO_HUMAN**（证据 `09_test/邂逅在迷宫/precheck_20261010_044339`）。
+  预检要点：预检的 `native menu shown` 标记只在菜单 attach 那一刻打一次，**必须先 force-stop 助手**
+  再跑预检、并在预检启动游戏后再拉起助手，否则标记落在录制窗口外会误判段=B。
 
 ## 六、失败路线（勿重复）
 
