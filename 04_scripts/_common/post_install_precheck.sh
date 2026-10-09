@@ -21,7 +21,8 @@
 #  用法:
 #    bash 04_scripts/_common/post_install_precheck.sh --game <游戏> \
 #        [--serial <S>] [--pkg <包名>] [--markers <标记文件>] \
-#        [--idle-min 3] [--launch-timeout 120] [--auth-timeout 300]
+#        [--idle-min 3] [--launch-timeout 120] [--auth-timeout 300] \
+#        [--helper-pkg <宿主助手包名>] [--helper-start] [--helper-delay 20]
 #
 #  包名解析优先级: --pkg > 标记文件 pkg 行 > 10_docs/<游戏>/*_menu_template.json 的 package 字段
 #  标记文件（默认 10_docs/<游戏>/预检标记.txt，可不存在）每行 `类别|ERE`：
@@ -49,6 +50,14 @@
 #          3=BLOCKED_AUTH（授权墙未过，已发操作请求卡；等用户输卡密后重跑）
 #          4=HOOK 未命中（菜单弹出但 hook_hit 标记缺失；菜单层证据齐，游戏层缺证）
 #
+#  ⚠️ 段=B 假阴性教训（2026-10-10 邂逅在迷宫实测）：
+#     独立助手形态下，`native menu shown` 只在**助手 attach 的那一次**打印。
+#     若助手在预检**开始录制之前**就已经在跑（典型：上一轮验证后没关），这条唯一证据
+#     就落在录制窗口外 ⇒ 预检判 FAIL_B（"装了没命中"），实为假阴性，白跑一整轮。
+#     对策：传 `--helper-pkg <助手包名>` ⇒ 起录前先 force-stop 助手；再用 `--helper-start`
+#     在**窗口内**拉起它（默认延后 20s，`--helper-delay` 可调）。不传 `--helper-start` 时
+#     脚本会打印"请在窗口内自行点开助手"的提示。
+#
 #  ⚠️ 真机取证纪律：本脚本不 screencap、不 input tap；授权墙一律发操作
 #     请求卡等用户处理，脚本不试账号、不改判服务端问题。
 #  ⚠️ macOS Bash 3.2 兼容：不用 mapfile / declare -A / ${v,,} / &>>
@@ -60,6 +69,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # ---------- 参数 ----------
 GAME=""; SERIAL=""; PKG=""; MARKERS=""
+HELPER_PKG=""; HELPER_START=0; HELPER_DELAY=20; HELPER_PID=""
 IDLE_MIN=3; LAUNCH_TIMEOUT=120; AUTH_TIMEOUT=300
 
 while [ $# -gt 0 ]; do
@@ -68,6 +78,9 @@ while [ $# -gt 0 ]; do
     --serial)         SERIAL="$2"; shift 2 ;;
     --pkg)            PKG="$2"; shift 2 ;;
     --markers)        MARKERS="$2"; shift 2 ;;
+    --helper-pkg)     HELPER_PKG="$2"; shift 2 ;;
+    --helper-start)   HELPER_START=1; shift ;;
+    --helper-delay)   HELPER_DELAY="$2"; shift 2 ;;
     --idle-min)       IDLE_MIN="$2"; shift 2 ;;
     --launch-timeout) LAUNCH_TIMEOUT="$2"; shift 2 ;;
     --auth-timeout)   AUTH_TIMEOUT="$2"; shift 2 ;;
@@ -148,6 +161,17 @@ if [ -z "$PMPATH" ]; then
 fi
 echo "✓ 包已安装: $PMPATH"
 
+# ---------- 1b. 宿主助手：起录前先 force-stop（消段=B 假阴性，见文件头教训） ----------
+if [ -n "$HELPER_PKG" ]; then
+  HP="$(adbx shell "pm path $HELPER_PKG" 2>/dev/null | tr -d '\r' | head -1)"
+  if [ -z "$HP" ]; then
+    echo "⚠ --helper-pkg $HELPER_PKG 未安装 ⇒ 跳过助手处理（菜单标记将由游戏内形态提供？）"
+  else
+    adbx shell "am force-stop $HELPER_PKG" >/dev/null 2>&1
+    echo "- 已 force-stop 宿主助手 ${HELPER_PKG}（避免其一次性 attach 日志落在录制窗口外）"
+  fi
+fi
+
 # ---------- 2. 起录（不 wipe 设备缓冲，-T 1 只取新行）＋干净启动 ----------
 # 设备端 logcat 的 PID：直接 kill 本地 adb 客户端**不会**结束设备端 logcat 进程（它继续占内存/电池，
 # 2026-10-09 实测一轮预检漏 1 个；本轮消消英雄2 收尾时一次清出 9 个历史泄漏）。
@@ -165,6 +189,7 @@ for _i in 1 2 3 4; do
 done
 cleanup() {
   if [ -n "$DEVLOG_PID" ]; then adbx shell "kill -9 $DEVLOG_PID" >/dev/null 2>&1 || true; fi
+  if [ -n "${HELPER_PID:-}" ]; then kill "$HELPER_PID" 2>/dev/null; fi
   kill "$LOGCAT_PID" 2>/dev/null
   adbx shell "rm -f ${DEVLOG_PIDFILE}" >/dev/null 2>&1 || true
 }
@@ -174,6 +199,20 @@ adbx shell "am force-stop $PKG" >/dev/null 2>&1
 sleep 1
 adbx shell "monkey -p $PKG -c android.intent.category.LAUNCHER 1" > "$OUT/monkey.log" 2>&1
 echo "- 已干净启动（force-stop 后 monkey 冷启）"
+
+# 宿主助手必须在**录制窗口内**启动，否则其一次性 attach 日志（native menu shown）录不到。
+if [ -n "$HELPER_PKG" ]; then
+  if [ "$HELPER_START" = "1" ]; then
+    (
+      sleep "$HELPER_DELAY"
+      adbx shell "monkey -p $HELPER_PKG -c android.intent.category.LAUNCHER 1" >/dev/null 2>&1
+    ) &
+    HELPER_PID=$!
+    echo "- ${HELPER_DELAY}s 后将拉起宿主助手 ${HELPER_PKG}（窗口内 attach ⇒ 菜单标记可被录到）"
+  else
+    echo "- 请在**预检结束前**自行点开宿主助手 ${HELPER_PKG}（否则 native menu shown 不在窗口内 ⇒ 段=B 假阴性）"
+  fi
+fi
 
 # ---------- 3. 监控循环 ----------
 START=$(date +%s)

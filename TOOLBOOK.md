@@ -388,6 +388,39 @@ ilspycmd 06_dumped/游戏名_il2cpp/Assembly-CSharp.dll -o 03_decompiled/游戏�
 
 ---
 
+## 二-b、本机 / 真机坑位（命令级，2026-10-10 起）
+
+> 来源：邂逅在迷宫会话复盘 P4（`10_docs/_state/规范优化_20261010_邂逅在迷宫会话复盘.md`）。
+> 规则：**踩到即落一行** —— 命令级坑（引号/路径/权限/工具行为）当轮补进本表，
+> 不要只在对话里说一遍。开工时 `bash 04_scripts/_common/session_start.sh <游戏>` 会回读本表。
+
+| # | 场景 | 坑（错法） | 正解 |
+|---|---|---|---|
+| 1 | adb + root 重定向 | `adb shell su -c "cmd" > local.txt` 在**非 root shell** 里执行重定向 ⇒ 文件空/权限错 | `adb exec-out su -c "cat /path" > local.txt` |
+| 2 | KernelSU 引号 | `adb shell su -c 'am force-stop X'` 里再套引号被拆 | 统一 `adb shell "su -c '<cmd>'"`（外层双引号，内层单引号） |
+| 3 | adb 安装设备侧文件 | `adb install -r -d /data/local/tmp/x.apk` ⇒ `failed to stat`（绝对路径被当**本地**路径） | `adb shell pm install -r -d /data/local/tmp/x.apk` |
+| 4 | 换签包必须卸载 | `pm uninstall -k` 在部分机型不生效，改签包覆盖安装失败 | `pm uninstall <pkg>`（会清 `/sdcard/Android/data/<pkg>`，让游戏自建，别用 shell 预建） |
+| 5 | 自杀式 pkill | `pkill -f xhzm_autobind.sh` 匹配到自身命令行 ⇒ 把自己杀掉 | `pkill -9 -f '[x]hzm_autobind'` |
+| 6 | 开机固化脚本目录 | `/data/adb/service.d/` 不存在（KernelSU/不同机型差异） | 先 `ls /data/adb/`；多数只有 `/data/adb/post-fs-data.d/` |
+| 7 | root 写 app 私有目录 | 写完 app 在 Enforcing 下读不到（SELinux 上下文不对） | `chcon u:object_r:app_data_file:s0:c251,c259,c512,c768 <file>`；`setenforce 0` 不足以解锁 |
+| 8 | 悬浮窗权限授予 | shell(uid 2000) `appops set ... SYSTEM_ALERT_WINDOW allow` ⇒ `SecurityException: uid 2000 does not have MANAGE_APP_OPS_MODES` | 走 root：`adb shell "su -c 'appops set <pkg> SYSTEM_ALERT_WINDOW allow'"` |
+| 9 | macOS 无 timeout | `timeout 30 cmd` 不存在 | `perl -e 'alarm 30; exec @ARGV' cmd` |
+| 10 | bash 3.2 门禁 | `mapfile`/`readarray`/`declare -A`/`local -n`/`${v^^}`/`;;&`/`&>>`、以及 `$VAR` 紧跟中文（bash 把中文并进变量名）⇒ 整套脚本跑不起来/静默少做事 | 跑 `bash 04_scripts/_common/preflight.sh <file>`；`$VAR` 一律写 `${VAR}`；有自动修法 `python3 04_scripts/_common/fix_bash32_var_brace.py --apply <file>` |
+| 11 | frida CLI 17.16.4 | 遇 stdin EOF **立刻退出**，且无 `--no-pause`/`-o`，spawn 需 Gadget 不可用 | `sleep 120 \| frida -U -n <name> -l hook.js`（attach 可用；`tail -f /dev/null` 会让管道永不结束） |
+| 12 | 启动 Activity | `am start -n <pkg>/<错类名>` ⇒ `Error type 3` | 用真实组件名（`aapt2 dump badging` 的 `launchable-activity`），或 `monkey -p <pkg> -c android.intent.category.LAUNCHER 1` |
+| 13 | pipefail 假失败 | `unzip -p a.apk f \| grep -q x` 在 `set -o pipefail` 下因 SIGPIPE 判失败 | 先落临时文件再 grep，或 `\|\| true` 局部豁免 |
+| 14 | logcat 选项 | `logcat -a` 在部分设备/本机不支持（`Unknown option '(null)'`） | 用 `-T 1 -v threadtime` 起录 |
+| 15 | 二进制串计数 | `grep -c` 数的是**行**，不是出现次数；.NET 的 `#US` 字符串是 **UTF-16LE**，UTF-8 grep 假阴性 | `grep -a -o -F '<串>' \| wc -l`；必要时转码/按 UTF-16 搜 |
+| 16 | apksigner 断言字节串 | 写 `d2800bc8` ⇒ `AssertionError: unexpected bytes` | 必须是**小端字节序**（`c80b80d2`） |
+| 17 | tcpdump 抓包偏移 | `-i any` 的 pcap 是 **LINUX_SLL2**（link-type 276） | IP 头偏移按 **20**（不是 14）算 |
+| 18 | toybox nsenter | `nsenter -t <pid> -m ls -la` ⇒ `Unknown option`（不支持组合选项） | 一次只进一个 ns：`nsenter -t <pid> -m md5sum /path` |
+| 19 | curl 自测格式化 | 本地 shell 吃掉 `-w '%{http_code}'` 的引号 ⇒ 报 `code=000`（把格式串当 URL） | 在设备侧整体加引号：`adb shell "curl -s -o /dev/null -w 'code=%{http_code}' http://…"` |
+| 20 | 多 VPN/多路由表 | 只看 `ip route` 会误判（策略路由在 table 1026 / 1000000026 等） | `ip route show table all \| grep tun0`；`dumpsys connectivity` 看 VPN 网络状态 |
+| 21 | md5 取法跨机 | `md5sum` 在 macOS 不存在（反之 Linux 无 `md5`） | `md5 -q f 2>/dev/null \|\| md5sum f \| cut -d' ' -f1` |
+| 22 | dumpsys 服务状态 | 只看 `ps` 判断前台服务是否活着会漏（进程内服务无独立 pid） | `dumpsys activity services <pkg>` 看 `isForeground=true`；VPN 看 `dumpsys connectivity` 的 `VPN CONNECTED` |
+
+---
+
 ## 三、工作区目录结构规范
 
 ```

@@ -73,6 +73,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
   - 2026-10-04（用户明示「按照你说的进行调整」）：新增 `04_scripts/_common/device_profile.sh`（设备画像：对设备只读，八节报告落 `10_docs/_state/设备画像/<serial>.md`，含 libil2cpp 映射分组/基址判据、RVA 段权限与内存 vs 文件字节、`extractNativeLibs`/`ro.apk_verity.mode`）；`AGENTS.md` §授权与测试边界 新增「验收阶梯 L1/L2/L3」「设备画像先行」，§执行纪律补充 新增「诊断与最可能修复同包」「一轮一个变量、一轮只问一次」；`skill/re-implement/hook-rules.md` 新增 §31 设备无关单路径与 SELFCHECK。实测依据：真机 `f9a116a2` 画像 `组数=2 选中组=#1 rw-p=0x2b7000`、两条 RVA 均 `perm=r-xp inbest=yes`、`ro.apk_verity.mode=enforcing` ⇒ **D3 原地改包快路在该机不可用**。
   - 2026-10-04（同轮，出包提速 D1/D2）：`04_scripts/冒险与征途/mxyzt_so_only_1.5.9.sh` 复刻底包改 `cp -c`（APFS clonefile，实测 886MB 从 ≈5 秒降到 0.005 秒，失败回落 `cp -f`）、zipalign 前加 `-c -p 4` 预检（预检 rc=1 未对齐 ⇒ 本游戏不触发；zipalign 实测仅 1.46 秒）、订正「原样搬压缩流」的错误注释（实测会重压 deflate 条目）；`hook-rules.md` 追加 §31.7 出包提速实测表。结论：**打包不是瓶颈，大头是编译+装机 ⇒ 省时间靠减少轮次**。
   - 2026-10-05（用户口述「生成图标和菜单模板不该每次收尾都做，新游戏首次、或我说了才生成」）：`04_scripts/_common/finalize_game_delivery.sh` 改为 icon/菜单模板**按需交付**——删掉菜单模板自动扫描（不传参不再报错/不再复制），两参数都不传时不创建 delivery 目录、`--sync-doc` 的 delivery 行/摘要行/回扫行全部条件化，首次交付未传时打 NOTE 提醒；`AGENTS.md` 收尾节、`04_scripts/_common/stages.md` 收官步 2、`skill/starry-mod/SKILL.md` 收尾产出三处同步改口径；冒烟 T1–T6（已交付游戏跳过/显式 icon+模板/首交付 NOTE/apply 产物/缺模板报错/apply 跳过）PASS。
+  - 2026-10-10（用户 m04481「按照方案全量修改」）：邂逅在迷宫会话复盘 P0–P7 全量落地。新建 `04_scripts/_common/session_start.sh`（开工六查：硬约束/路线锁定/台账+**禁止重试清单**/管线出口/TOOLBOOK 坑位/设备·预算）、`gradle_cycle.sh`（bump→assembleRelease→zipalign→apksigner→verify→出包门禁→装机→可选诊断自测抓日志）、`check_release_apk.sh`（查 `application-debuggable` + 禁用串 + versionCode/Name 一致）、`gate_note.sh`（G1/G2/G3 门禁 append-only 台账）、`prior_art.sh`（动手前先例检索，全无命中 rc=1）；`post_install_precheck.sh` 新增 `--helper-pkg/--helper-start/--helper-delay`（治独立助手形态下 `native menu shown` 落在录制窗口外的段=B 假阴性）；新增 `10_docs/_templates/{台账.md,方案选型卡.md}`；`TOOLBOOK.md` 新增「二-b、本机 / 真机坑位（命令级）」22 行；本文件新增下方「增量（2026-10-10…）」子节 P10–P16。依据 = `10_docs/_state/规范优化_20261010_邂逅在迷宫会话复盘.md`（该会话 4.4k 条消息 / 9 版装机包 / 11.4 GB 死路产物 / 1 次外部服务器事故；根因不是缺文档而是**机制被旁路**——本游戏既无 `硬约束.md` 也无 `pipeline.json`，纪律全靠对话记忆，prune 一到就稀释）。机器关：全部改动过 `04_scripts/_common/preflight.sh`（PASS=4 FAIL=0，其中 bash 3.2 门禁实测抓出 5 处 `$VAR` 紧跟中文）；`check_release_apk.sh` 对交付包 `星光助手_v2.9_xhzm.apk` 实跑 rc=0，反向灵敏度自检（`--forbid CdnVpnService`）命中 ×3。
 - 需要用户操作（进游戏、开菜单、打开工具等）时在聊天说明操作、成功标志和所需配合，等待确认并核对结果；只暂停依赖该结果的步骤，不假定用户已操作，独立且已授权工作可继续。
 - **真机交互零截图（2026-10-01 定）**：不做 `screencap` 猜坐标、不 `input tap`、不靠截图判断界面状态 —— 真机取证一律走 `logcat`、`/proc/<pid>/{mem,maps}`、frida。屏幕上的点按、输入、翻页**全部由用户完成**。（历史浪费：为算 `input tap` 坐标花掉 `wm size` + `screencap` 的调用，最终未用上。）
   **三条根因（2026-10-04 用户口述定案，禁止再提机器实测 / 自动点击类提案）**：① 坐标定位会歪，失败重试烧流程和 token；② 菜单授权墙机器过不去、还会误诊成服务端问题，而用户输一次账号即可解决；③ 人工实测比机器判定准——有些问题日志里看不出来，使用时才知道。分工由此定死：**人工＝终审＋标记，机器＝预检员＋记录仪**（工具见下条）。
@@ -169,6 +170,43 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - **诊断三段判定**：功能报无效时先写结论行 `判定段=A|B|C 依据=<证据行>` 再动代码（A 上游没发生 / B 装上了没命中 / C 命中了下游不接），做法见 `hook-rules.md` §29.5。
 - **诊断与最可能修复同包（2026-10-04 定）**：证据已能锁定最可能根因时，**同一轮就把「诊断计数器 + 最可能修复」打进同一个包**装机，禁止先出「只加日志」的诊断包、再出修复包——每次装机都在烧用户的实测时间。范例：冒险与征途 v46b 一次装机同时拿到「命中 免广告=25267/s ⇒ 自激环」的证据与修复（一次性事件门），一轮定案。
 - **一轮一个变量、一轮只问一次**：同一轮只改一个自变量（多改则失败无法归因，也违反 P4 轮次门禁）；需要用户配合时一轮只发一张操作请求卡，不连续追问。
+
+### 增量（2026-10-10 邂逅在迷宫会话复盘全量落地）
+
+> 来源：`10_docs/_state/规范优化_20261010_邂逅在迷宫会话复盘.md`。该会话 4.4k 条消息、9 版装机包、
+> 11.4 GB 死路产物，根因**不是缺文档**（机制早就齐了），而是**机制被旁路**：本游戏既没有
+> `10_docs/{游戏}/硬约束.md` 也没有 `pipeline.json`，于是纪律全靠对话记忆 → prune 一到就稀释。
+> 下面每条都对应一个**可执行入口**，不是口号。
+
+- **开工 preflight（P10）**：开工第一步 `bash 04_scripts/_common/session_start.sh <游戏> [--serial S] [--pkg P]`。
+  六查 = 硬约束 / 路线锁定 / 台账（**打印"已否证=禁止重试清单"**）/ 管线出口 / TOOLBOOK 坑位 / 设备与预算。
+  硬约束或台账缺失时脚本会**生成骨架并判 FAIL**（"生成空表"≠"抄了用户原话"）。
+  **未跑 preflight，不得改功能代码、不得装机。**
+- **判据先行 + 先例检索（P11）**：① 任何「客户端如何判定 / 机制怎么走」的结论，先写成**可判真假的判据 + 决定性证据行**（日志原文带时间戳）再动手，禁止"先改代码再看能不能跑"；② 动手前 3 分钟先例检索
+  `bash 04_scripts/_common/prior_art.sh <关键词...>`（搜 `10_docs/ skill/ 04_scripts/ TOOLBOOK.md AGENTS.md`，
+  全无命中时 rc=1 = 这是新问题可放心推）。命中先例先读先例；结论冲突时先解释冲突再推翻它。
+- **决策台账 append-only（P12）**：每得出一个结论（成立/否证）**当轮**落一行进 `10_docs/{游戏}/台账.md`
+  （模板 `10_docs/_templates/台账.md`，列 = 结论 | 决定性证据 | 状态 | 归属）。**「已否证」区 = 禁止重试清单**：
+  除非写出新证据推翻它，否则不得重试。不写 = 下一个会话重推一遍（本会话 11.4 GB 死路产物的直接成因）。
+- **方案选型卡（P13）**：命中「出网 / 改外部机器或用户资产 / 变更交付形态 / 需要用户做额外动作（点按钮、开权限、每次开局操作）/ ≥2 条代价不可比路线」任一条时，**先**填 `10_docs/_templates/方案选型卡.md`
+  （≥3 案，含"不做"与推荐）**等用户选定再动手**；用户否掉推荐项后不得在执行时悄悄带回。
+  历史事故：顺手动外部服务器、擅自把形态做成 root 版、把"需要电脑推包"当默认前提 —— 三次都是没让用户选。
+- **一键出包链路（P14）**：gradle 助手包一律走
+  `bash 04_scripts/_common/gradle_cycle.sh --tag vX --bump-version [--install] [--arm-service <组件> --watch N --logs '<ERE>']`
+  （bump → assembleRelease → zipalign → apksigner → verify → 出包门禁 → 装机 →（可选）诊断自测抓日志），
+  禁止再手敲 6~10 条命令（本会话同一链路手敲 9 遍，3 次因忘 bump/忘 verify 返工）。
+  **出包门禁 `04_scripts/_common/check_release_apk.sh --apk <apk>` 默认不可跳过**：查 `application-debuggable`、
+  查禁用串（`classes*.dex`/`assets/*`/`lib/*`；清单 = 内置 + `10_docs/{游戏}/出包禁用串.txt` + `--forbid`）、
+  查 versionCode/versionName 与期望一致；native 侧另跑 `check_release_clean.sh`。
+- **装机预检带宿主助手（P14-b）**：独立助手形态下，宿主助手的一次性 attach 日志（`native menu shown`）
+  若落在录制窗口外会判成 FAIL_B 假阴性。用
+  `bash 04_scripts/_common/post_install_precheck.sh --game <游戏> --helper-pkg <助手包名> [--helper-start] [--helper-delay 20]`
+  —— 起录前先 force-stop 助手，再在窗口内拉起它。
+- **门禁即时记账（P15）**：过任一阶段门禁（G1 静态 / G2 机器 / G3 人验）**当轮**记一行
+  `bash 04_scripts/_common/gate_note.sh <游戏> <G1|G2|G3> <通过|失败|未验证> "<证据一句话>"`，
+  落 `10_docs/{游戏}/门禁台账.tsv`（只追加）。收尾时**不许靠回忆补门禁表**，也不许把"未验证"当"已通过"。
+- **坑位即落（P16）**：踩到命令级坑（引号/路径/权限/工具行为/端序/表遍历）当轮在
+  `TOOLBOOK.md`「二-b、本机 / 真机坑位」补一行（场景 | 坑 | 正解）。开工 preflight 会回读该表。
 
 ## 工具专属文件
 
