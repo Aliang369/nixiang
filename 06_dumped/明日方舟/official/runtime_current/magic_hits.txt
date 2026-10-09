@@ -1,2 +1,2 @@
-range=78c1ef4000-78c4894000 perms=rw-s path=(deleted) reason=exact_page_aligned_size
-dumped=0x78c1ef4000 size=43646828 file=/data/local/tmp/mrfzz_official_metadata/metadata_runtime_518649757696.bin reason=size
+range=73e2531000-73e4f52000 perms=rw-s path=(deleted) reason=head_version_size_window magic=0 version=24 header_size=272
+dumped=0x73e2531000 size=44172880 file=/data/local/tmp/mrfzz_official_metadata/metadata_runtime_0x73e2531000.bin reason=head_version_size_window magic=0 version=24 header_size=272

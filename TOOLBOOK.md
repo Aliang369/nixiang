@@ -418,6 +418,13 @@ ilspycmd 06_dumped/游戏名_il2cpp/Assembly-CSharp.dll -o 03_decompiled/游戏�
 | 20 | 多 VPN/多路由表 | 只看 `ip route` 会误判（策略路由在 table 1026 / 1000000026 等） | `ip route show table all \| grep tun0`；`dumpsys connectivity` 看 VPN 网络状态 |
 | 21 | md5 取法跨机 | `md5sum` 在 macOS 不存在（反之 Linux 无 `md5`） | `md5 -q f 2>/dev/null \|\| md5sum f \| cut -d' ' -f1` |
 | 22 | dumpsys 服务状态 | 只看 `ps` 判断前台服务是否活着会漏（进程内服务无独立 pid） | `dumpsys activity services <pkg>` 看 `isForeground=true`；VPN 看 `dumpsys connectivity` 的 `VPN CONNECTED` |
+| 23 | 运行期解密 metadata 定位 | Unity IL2CPP 游戏在内存里**搜不到**标准 magic `af1bb1fa`（首 4 字节 sanity 被清零），全可读映射扫完 0 命中 | 按「可读段尺寸落在 `<包内 global-metadata.dat 大小>`…`+65536` 窗口 + 首部 `version∈[16..32]`」定位 ashmem/memfd 段（明日方舟 2.7.81＝`73e2531000` 段 44,175,360 B，version=24）；别只靠 magic 扫描 |
+| 24 | Il2CppDumper 吃新版 metadata | `dotnet Il2CppDumper.dll libil2cpp.so magicfixed.dat out` ⇒ `System.Collections.Generic.KeyNotFoundException: 'kIl2CppMetadataUsageInvalid' was not present in the dictionary.`（`Metadata.cs:line 235` ← `:121`），输出目录为空 | 新版 metadata（v24+）先做**按名解析核验**（自研解析器 / `Cpp2IL`），别在 Dumper 上反复试；判据只取「类/方法名 + argc 是否命中」 |
+| 25 | bash 3.2 空数组展开 | `set -u` 下 `"${ARR[@]}"` 当 `ARR=()` ⇒ `unbound variable`（macOS 自带 bash 3.2；Linux bash 4+ 不复现，容易漏） | 写 `${ARR[@]+"${ARR[@]}"}`；可选参数数组一律用这个形态 |
+| 26 | 共享入口引用新 helper 符号 | 共享 `MainModern.cpp` 的 `JNI_OnLoad` 引用了某 helper（如 `SignalQuarantine_Start`/`FgoBoot_InjectEarlyFromOnLoad`）而该游戏 mk 未收录其源 ⇒ `ld.lld: error: undefined symbol` | 在游戏 mk 加 `LOCAL_SRC_FILES += Games/NoAceStubs.cpp`（**B 类 no-op 桩**，不改变交付形态）；**不要**顺手拉 A 类实现（会引入早期注入，偏离既有已验证形态） |
+| 27 | 脚本依赖 ripgrep | 脚本里写 `rg ...`，本机 `command -v rg` 为空 ⇒ 静默返回空串，抽取/过滤结果全空（不报错，最难查） | 逆向脚本统一用 `grep -E`（BSD/GNU 都有）；新增脚本禁止引用 `rg`/`fd` 等未验证工具 |
+| 28 | Il2CppTypeDefinition 字段偏移 | 照抄 Il2CppDumper 声明顺序读 `+0x28` 当 `methodStart` ⇒ 大量 -1/垃圾区间，误判「本版不能用」 | 该结构实为 `td_size=0x5C`：`0x20 fieldStart / 0x24 methodStart / 0x28 eventStart / 0x2c propertyStart / 0x30 nestedTypesStart`；用「`method_count` == 按 `declaringType` 分组条数」判据反推偏移（明日方舟 2.7.81＝43,341/43,341） |
+| 29 | 二进制文件里搜**多字节（中文）串** | 默认 UTF-8 locale 的 BSD grep 对 `.so`/`.dex` 搜中文串会**假阴性**：`grep -a -c "十倍伤害" libstarry_magic.so` ⇒ `0`（实测该串确实存在 1 处）；`LC_ALL=C grep -a -c` ⇒ `1`。同文件里 ASCII 串（`MenuService`/`StarryMagic`）两种 locale 结果一致 ⇒ **只坑多字节串**，且不报错，最容易误判「菜单项丢了/门禁干净」 | 二进制内找中文串一律 `LC_ALL=C grep -a -o -F ...`（或直接用 python `blob.count(s.encode())`）；门禁类脚本的禁用串清单尽量只放 ASCII，含中文必须复核 |
 
 ---
 

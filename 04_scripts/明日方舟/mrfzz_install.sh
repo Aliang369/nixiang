@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 明日方舟 2.7.71 - 装机阶段（pipeline install）
+# 明日方舟 - 装机阶段（pipeline install）【版本无关，版本取自 official_apk.json】
 #
 # 默认只做同签名覆盖安装。TapTap 官方包为 HyperGryph 签名，星光包为
 # StarryMagic 签名，异签覆盖会失败；卸载/清数据需 MRFZZ_ALLOW_UNINSTALL=1。
@@ -9,8 +9,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$NIXIANG/04_scripts/_common/env.sh"
 GAME="明日方舟"
-VERSION="2.7.71"
 PKG="com.hypergryph.arknights"
+META_FILE="$SCRIPT_DIR/official_apk.json"
+[[ -f "$META_FILE" ]] || { echo "错误: 缺少 ${META_FILE}，请先跑 fetch_official 阶段" >&2; exit 1; }
+VERSION="${MRFZZ_VERSION:-$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["version_name"])' "$META_FILE")}"
 SIGNED="$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_surgical-releaseSigned.apk"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 OK_STAMP="$SCRIPT_DIR/.install_ok"

@@ -96,6 +96,9 @@ res/anim/hg_platform_share_layout_in.xml
 res/anim/hg_platform_share_layout_out.xml
 res/anim/hg_view_close.xml
 res/anim/hg_view_open.xml
+res/anim/hg_wv_activity_enter.xml
+res/anim/hg_wv_activity_exit.xml
+res/anim/hg_wv_activity_fake.xml
 res/anim/hg_wv_dialog_enter.xml
 res/anim/hg_wv_dialog_exit.xml
 res/animator/fragment_close_enter.xml
@@ -255,6 +258,3 @@ res/drawable/hg_sdk_icon_btn_black_ok.xml
 res/drawable/hg_sdk_icon_btn_black_ok_n.xml
 res/drawable/hg_sdk_icon_btn_black_ok_p.xml
 res/drawable/hg_sdk_icon_btn_gary_cancel.xml
-res/drawable/hg_sdk_icon_btn_gary_cancel_n.xml
-res/drawable/hg_sdk_icon_btn_gary_cancel_p.xml
-res/drawable/hg_sdk_icon_clean.xml

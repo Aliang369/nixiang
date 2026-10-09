@@ -37,6 +37,17 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
 LOCAL_SRC_FILES := MainModern.cpp Games/ArknightsMod.cpp Games/ArknightsEntry.cpp Unity/Il2CppApi.cpp
 
+# MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
+# FgoBoot_InjectEarlyFromOnLoad（2026-09-22 起），不加即 ld.lld: undefined symbol。
+# 明日方舟取 **B 类 no-op 桩**（Games/NoAceStubs.cpp），判据＝与 2026-09-19 已验证的
+# 2.7.71 星光包行为一致：
+#   · 该包在真机冷启动 30 秒无 ACE 击杀，当时 MainModern.cpp 尚无这两个调用 ⇒
+#     加 no-op 桩等价于当时行为，符合硬约束①「照 2.7.71 复刻、不重新做分析」。
+#   · 交付形态＝APK 内 classes6.dex + Manifest 的 StarryInitProvider（provider-only），
+#     非 payload 形态；A 类的 FgoBoot 早期注入会去找 assets/starry.dex，属另一形态，
+#     引入即偏离硬约束①（SignalQuarantine 还会新增 seccomp/信号屏蔽，属未验证行为）。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

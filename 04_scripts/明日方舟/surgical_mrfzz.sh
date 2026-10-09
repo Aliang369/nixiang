@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 明日方舟 2.7.71 (com.hypergryph.arknights) TapTap 官方包 — 星光外科组装
+# 明日方舟 (com.hypergryph.arknights) TapTap 官方包 — 星光外科组装【版本无关】
 #
 # 保留官方 classes.dex..classes5.dex / resources.arsc / assets / 全部原 so 字节不变。
 # 改动：
@@ -9,18 +9,23 @@
 #   - 新增 classes6.dex：星光 Java/smali
 #   - 新增 lib/arm64-v8a/libstarry_magic.so + libc++_shared.so
 #
-# 产物：08_output/明日方舟/明日方舟_2.7.71_surgical-unsigned.apk
-# 用法：bash 04_scripts/明日方舟/surgical_mrfzz_2.7.71.sh
+# 版本与底包指纹一律从 official_apk.json（fetch_official 产出）派生；
+# 环境变量 MRFZZ_VERSION / MRFZZ_BASE_APK / MRFZZ_BASE_MD5 可覆盖。
+# 产物：08_output/明日方舟/明日方舟_<version>_surgical-unsigned.apk
+# 用法：bash 04_scripts/明日方舟/surgical_mrfzz.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 GAME="明日方舟"
-VERSION="2.7.71"
 PKG="com.hypergryph.arknights"
-ORIG_APK="${MRFZZ_BASE_APK:-$NIXIANG/02_apks/$GAME/${GAME}_${VERSION}_taptap_official_from_device.apk}"
-ORIG_MD5="${MRFZZ_BASE_MD5:-56a905c17c34aa58dd1db5be74b6c58e}"
+META_FILE="$SCRIPT_DIR/official_apk.json"
+[[ -f "$META_FILE" ]] || { echo "ERROR: missing ${META_FILE}（先跑 fetch_official 阶段）" >&2; exit 1; }
+VERSION="${MRFZZ_VERSION:-$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["version_name"])' "$META_FILE")}"
+ORIG_APK="${MRFZZ_BASE_APK:-$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["apk_path"])' "$META_FILE")}"
+ORIG_MD5="${MRFZZ_BASE_MD5:-$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["md5"])' "$META_FILE")}"
+echo "[meta] version=$VERSION base_md5=$ORIG_MD5 base=$ORIG_APK"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
 # 新路径避免复用曾经替换 Application/factory 的旧缓存。
@@ -41,11 +46,11 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN" >&2; exit 1; }
 SO_PREBUILT="${MRFZZ_SO:-$STARRY_SRC/libs_mrfzz/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 mrfzz_build_so.sh）" >&2; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 mrfzz_build_so.sh）" >&2; exit 1; }
 echo "[check] modern so = $SO_PREBUILT ($(md5 -q "$SO_PREBUILT"))"
 ACTUAL_MD5="$(md5 -q "$ORIG_APK")"
 [[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] \
-  || { echo "ERROR: 官包指纹不符 $ACTUAL_MD5（期望 $ORIG_MD5）" >&2; exit 1; }
+  || { echo "ERROR: 官包指纹不符 ${ACTUAL_MD5}（期望 ${ORIG_MD5}）" >&2; exit 1; }
 
 LOCK_DIR="/tmp/mrfzz_surgical.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -307,7 +312,7 @@ if not (12 <= added <= 30):
 print(f"  manifest ok (新增 {added} 项 / 官方节点零丢失)")
 PY
 else
-  echo "  WARN: aapt2 不在 $AAPT2，跳过 manifest 回读校验" >&2
+  echo "  WARN: aapt2 不在 ${AAPT2}，跳过 manifest 回读校验" >&2
 fi
 
 echo "[5/6] surgical zip merge（官方 dex/arsc/assets/原 so 字节不变）"

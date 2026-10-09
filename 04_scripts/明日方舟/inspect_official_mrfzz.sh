@@ -18,7 +18,7 @@ sed -n '1,260p' "$OUT/zip_entries.txt" > "$OUT/zip_entries_head.txt"
 
 pick() {
   local pattern="$1"
-  rg "$pattern" "$OUT/zip_entries.txt" | sed -n '1p' || true
+  grep -E "$pattern" "$OUT/zip_entries.txt" | sed -n '1p' || true
 }
 
 MANIFEST="$(pick '^AndroidManifest\.xml$')"
@@ -35,7 +35,7 @@ EXTRACT_LIST="$OUT/extract_list.txt"
 for entry in "$MANIFEST" "$IL2CPP" "$UNITY" "$METADATA" "$SDK" "$TOOLCHECK" "$RXPATCH" "$NESTED"; do
   [[ -n "$entry" ]] && printf '%s\n' "$entry" >> "$EXTRACT_LIST"
 done
-rg '^classes[0-9]*\.dex$|^lib/arm64-v8a/.*\.so$|^assets/.*(\.html|\.js|\.json|\.dat|\.bin)$|^META-INF/.*\.(RSA|DSA|EC)$|^shell_.*\.xml$' "$OUT/zip_entries.txt" >> "$EXTRACT_LIST" || true
+grep -E '^classes[0-9]*\.dex$|^lib/arm64-v8a/.*\.so$|^assets/.*(\.html|\.js|\.json|\.dat|\.bin)$|^META-INF/.*\.(RSA|DSA|EC)$|^shell_.*\.xml$' "$OUT/zip_entries.txt" >> "$EXTRACT_LIST" || true
 sort -u "$EXTRACT_LIST" -o "$EXTRACT_LIST"
 
 if [[ -s "$EXTRACT_LIST" ]]; then

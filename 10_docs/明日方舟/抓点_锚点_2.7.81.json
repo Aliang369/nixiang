@@ -1,0 +1,248 @@
+{
+  "schema": "nixiang.starry.anchor.v1",
+  "game": "明日方舟",
+  "game_id": "mrfzz",
+  "version_name": "2.7.81",
+  "version_code": "200",
+  "generated_at": "2026-10-10T06:19:49",
+  "serial": "f9a116a2",
+  "metadata": "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.magicfixed.dat",
+  "metadata_magic": "0xfab11baf",
+  "metadata_version": 24,
+  "method_def_size": 92,
+  "type_table_crosscheck": {
+    "types_with_method_start": 43341,
+    "method_count_equal_grouped": 43341
+  },
+  "source_of_truth": "mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp",
+  "summary": {
+    "total": 11,
+    "ok": 11,
+    "bad": 0,
+    "verdicts": {
+      "ok": 10,
+      "ok_inherited": 1
+    }
+  },
+  "anchors": [
+    {
+      "id": "support_get_side",
+      "feature": "支持用·Entity.get_side",
+      "ns": "Torappu.Battle",
+      "class": "Entity",
+      "method": "get_side",
+      "argc_expected": 0,
+      "cpp_lines": [
+        386,
+        388
+      ],
+      "resolve": "Torappu.Battle.Entity",
+      "type_index": 10202,
+      "methods_total": 393,
+      "verdict": "ok_inherited",
+      "owner": "Torappu.Battle.BObject",
+      "chain": [
+        "Torappu.Battle.Entity",
+        "Torappu.Battle.BObject",
+        "Torappu.Battle.VisualObject",
+        "UnityEngine.MonoBehaviour",
+        "UnityEngine.Behaviour",
+        "UnityEngine.Component",
+        "UnityEngine.Object",
+        "System.Object"
+      ],
+      "evidence": "metadata:类型自身无 get_side，继承链命中 Torappu.Battle.BObject（argc=0）；链=Torappu.Battle.Entity -> Torappu.Battle.BObject -> Torappu.Battle.VisualObject -> UnityEngine.MonoBehaviour -> UnityEngine.Behaviour -> UnityEngine.Component -> UnityEngine.Object -> System.Object",
+      "in_cpp": true
+    },
+    {
+      "id": "attack_speed",
+      "feature": "Toggle_超级攻速",
+      "ns": "Torappu.Battle",
+      "class": "BattleFormula",
+      "method": "CalculateAttackInterval",
+      "argc_expected": 2,
+      "cpp_lines": [
+        415,
+        416
+      ],
+      "resolve": "Torappu.Battle.BattleFormula",
+      "type_index": 10072,
+      "methods_total": 18,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": true,
+      "in_cpp": true
+    },
+    {
+      "id": "invincible",
+      "feature": "Toggle_超级无敌",
+      "ns": "Torappu.Battle",
+      "class": "Entity",
+      "method": "get_isInvincible",
+      "argc_expected": 0,
+      "cpp_lines": [
+        431,
+        432
+      ],
+      "resolve": "Torappu.Battle.Entity",
+      "type_index": 10202,
+      "methods_total": 393,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "base_lock",
+      "feature": "Toggle_基地锁血",
+      "ns": "Torappu.Battle",
+      "class": "Enemy",
+      "method": "get_lifePointReduce",
+      "argc_expected": 0,
+      "cpp_lines": [
+        445,
+        446
+      ],
+      "resolve": "Torappu.Battle.Enemy",
+      "type_index": 11394,
+      "methods_total": 342,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "damage10",
+      "feature": "Toggle_十倍伤害",
+      "ns": "Torappu.Battle",
+      "class": "Entity",
+      "method": "get_atk",
+      "argc_expected": 0,
+      "cpp_lines": [
+        459,
+        460
+      ],
+      "resolve": "Torappu.Battle.Entity",
+      "type_index": 10202,
+      "methods_total": 393,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "deploy_anywhere",
+      "feature": "Toggle_全图放置",
+      "ns": "Torappu.Battle",
+      "class": "Tile",
+      "method": "get_buildableType",
+      "argc_expected": 0,
+      "cpp_lines": [
+        473,
+        474
+      ],
+      "resolve": "Torappu.Battle.Tile",
+      "type_index": 10718,
+      "methods_total": 143,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "zero_cost_card",
+      "feature": "Toggle_零部署费用·Deck.Card",
+      "ns": "Torappu.Battle",
+      "class": "Card",
+      "method": "get_cost",
+      "argc_expected": 0,
+      "cpp_lines": [
+        487,
+        489
+      ],
+      "resolve": "Torappu.Battle.Deck+Card",
+      "type_index": 10148,
+      "methods_total": 118,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "zero_cost_token",
+      "feature": "Toggle_零部署费用·Deck.TokenCard",
+      "ns": "Torappu.Battle",
+      "class": "TokenCard",
+      "method": "get_cost",
+      "argc_expected": 0,
+      "cpp_lines": [
+        488,
+        492
+      ],
+      "resolve": "Torappu.Battle.Deck+TokenCard",
+      "type_index": 10150,
+      "methods_total": 47,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "infinite_skill_sp",
+      "feature": "Toggle_无限技能·Entity.get_sp",
+      "ns": "Torappu.Battle",
+      "class": "Entity",
+      "method": "get_sp",
+      "argc_expected": 0,
+      "cpp_lines": [
+        507,
+        509
+      ],
+      "resolve": "Torappu.Battle.Entity",
+      "type_index": 10202,
+      "methods_total": 393,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "infinite_skill_available",
+      "feature": "Toggle_无限技能·BasicSkill.get_availableCnt",
+      "ns": "Torappu.Battle",
+      "class": "BasicSkill",
+      "method": "get_availableCnt",
+      "argc_expected": 0,
+      "cpp_lines": [
+        512,
+        513
+      ],
+      "resolve": "Torappu.Battle.BasicSkill",
+      "type_index": 10922,
+      "methods_total": 145,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    },
+    {
+      "id": "infinite_skill_usedup",
+      "feature": "Toggle_无限技能·BasicSkill.get_isUsedUp",
+      "ns": "Torappu.Battle",
+      "class": "BasicSkill",
+      "method": "get_isUsedUp",
+      "argc_expected": 0,
+      "cpp_lines": [
+        515,
+        516
+      ],
+      "resolve": "Torappu.Battle.BasicSkill",
+      "type_index": 10922,
+      "methods_total": 145,
+      "verdict": "ok",
+      "evidence": "metadata:类型自身方法命中，argc 一致",
+      "static": false,
+      "in_cpp": true
+    }
+  ]
+}
