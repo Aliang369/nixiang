@@ -21,7 +21,7 @@
 // 否则玩家一进游戏就在用极限值，与「未授权=原版」的设计相悖。
 static const char* kQsxz_Features[] = {
     "Category_基础功能",        // 0
-    "SeekBar_伤害倍率_1_20_1",  // 1  QSXZ_FEAT_DMG（默认 1 = 原版）
+    "SeekBar_伤害倍率_1_5_1",   // 1  QSXZ_FEAT_DMG（默认 1 = 原版；2026-10-09 上限 20→5）
     "SeekBar_减伤_0_50_0",      // 2  QSXZ_FEAT_DR（默认 0 = 原版）
 };
 

@@ -56,7 +56,7 @@ void Qsxz_OnFeatureChanged(int featNum, bool enabled) {
 void Qsxz_OnValueChanged(int featNum, int value) {
     if (featNum == QSXZ_FEAT_DMG) {
         if (value < 1) value = 1;
-        if (value > 20) value = 20;
+        if (value > 5) value = 5;   // 2026-10-09：上限由 20 收窄到 5（服务端容差 ~+50%，高倍率必被标）
         g_dmg.store(value);
     } else if (featNum == QSXZ_FEAT_DR) {
         if (value < 0) value = 0;
@@ -72,7 +72,7 @@ void Qsxz_Tick(const bool* features, const int* values) {
     if (values) {
         int k = values[QSXZ_FEAT_DMG];
         int d = values[QSXZ_FEAT_DR];
-        if (k < 1) k = 1; else if (k > 20) k = 20;
+        if (k < 1) k = 1; else if (k > 5) k = 5;   // 2026-10-09：上限 20 → 5
         if (d < 0) d = 0; else if (d > 50) d = 50;
         g_dmg.store(k);
         g_dr.store(d);

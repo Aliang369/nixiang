@@ -85,7 +85,7 @@ ok(SRC.indexOf('#') < 0, '源码不含井号');
 
 // 3. 未授权（live=0）→ 必须回落原版（k=1, dr=0），且忽略菜单里的值
 {
-    const r = makeCtx(st(0, 20, 50));
+    const r = makeCtx(st(0, 5, 50));
     load(r.ctx);
     eq(r.ctx.window.__qsxz_v1, 1, '桥+主 JS 就绪后装守卫');
     eq(j(r.applied[0]), '[1,0]', 'live=0 回落原版，忽略菜单值');
@@ -93,9 +93,9 @@ ok(SRC.indexOf('#') < 0, '源码不含井号');
 
 // 4. 已授权 → 透传菜单值
 {
-    const r = makeCtx(st(1, 20, 50));
+    const r = makeCtx(st(1, 5, 50));
     load(r.ctx);
-    eq(j(r.applied[0]), '[20,50]', 'live=1 透传 (20,50)');
+    eq(j(r.applied[0]), '[5,50]', 'live=1 透传 (5,50)');
     ok(applyLogs(r.logs).length === 1, '首次投值写一条 apply 日志（可对账）');
     ok(r.logs.some(l => l.indexOf('ack:') === 0), '装好后 ack（守护降频）');
 }
@@ -103,50 +103,50 @@ ok(SRC.indexOf('#') < 0, '源码不含井号');
 // 5. 越界钳制（后台配错值也不能放出超范围口径）
 {
     const a = makeCtx(st(1, 999, 999)); load(a.ctx);
-    eq(j(a.applied[0]), '[20,50]', '超上限钳到 (20,50)');
+    eq(j(a.applied[0]), '[5,50]', '超上限钳到 (5,50)');
     const b = makeCtx(st(1, 0, -5)); load(b.ctx);
     eq(j(b.applied[0]), '[1,0]', '低于下限钳到 (1,0)');
 }
 
 // 6. 同一状态重复注入：值不抖、日志不刷屏（一次性装点也不重复）
 {
-    const r = makeCtx(st(1, 10, 30));
+    const r = makeCtx(st(1, 5, 30));
     load(r.ctx);
     const n1 = applyLogs(r.logs).length;
     load(r.ctx); load(r.ctx); load(r.ctx);
-    eq(j(r.applied[r.applied.length - 1]), '[10,30]', '重复注入投的仍是同一组值（幂等）');
+    eq(j(r.applied[r.applied.length - 1]), '[5,30]', '重复注入投的仍是同一组值（幂等）');
     eq(applyLogs(r.logs).length, n1, '重复注入不重复刷 apply 日志');
 }
 
 // 7. ★ 本次修复回归：授权/取值变化后，Java 守护再次注入必须把新值投进去
 //    （旧实现只靠页面内 setInterval 轮询，页面被菜单浮层盖住时定时器被节流 → 投不进去）
 {
-    const r = makeCtx(st(0, 20, 50));       // 未授权：原版
+    const r = makeCtx(st(0, 5, 50));        // 未授权：原版
     load(r.ctx);
     eq(j(r.applied[0]), '[1,0]', '授权前 = 原版');
-    r.box.state = st(1, 20, 50);            // 模拟：登录成功 + 滑块拉到 20 / 50
+    r.box.state = st(1, 5, 50);             // 模拟：登录成功 + 滑块拉到上限 5 / 50
     load(r.ctx);                            // 模拟：守护下一次注入
-    eq(j(r.applied[r.applied.length - 1]), '[20,50]', '状态变化后再次注入即生效（不依赖页面定时器）');
-    ok(r.logs.some(l => l.indexOf('apply k=20 dr=50 live=1') === 0), '变化后有 apply 日志可对账');
+    eq(j(r.applied[r.applied.length - 1]), '[5,50]', '状态变化后再次注入即生效（不依赖页面定时器）');
+    ok(r.logs.some(l => l.indexOf('apply k=5 dr=50 live=1') === 0), '变化后有 apply 日志可对账');
 }
 
 // 8. 授权失效（过期/后台停用）→ 下一次注入必须回落原版
 {
-    const r = makeCtx(st(1, 20, 50));
+    const r = makeCtx(st(1, 5, 50));
     load(r.ctx);
-    r.box.state = st(0, 20, 50);
+    r.box.state = st(0, 5, 50);
     load(r.ctx);
     eq(j(r.applied[r.applied.length - 1]), '[1,0]', '授权失效后回落原版');
 }
 
 // 9. 页面重载（新 window，全局被清）→ 重新投值
 {
-    const r = makeCtx(st(1, 12, 40));
+    const r = makeCtx(st(1, 5, 40));
     load(r.ctx);
     // 模拟重载：只换 window，沙盒里补丁的 window 引用随之更新
-    const r2 = makeCtx(st(1, 12, 40));
+    const r2 = makeCtx(st(1, 5, 40));
     load(r2.ctx);
-    eq(j(r2.applied[0]), '[12,40]', '页面重载后重新投值');
+    eq(j(r2.applied[0]), '[5,40]', '页面重载后重新投值');
 }
 
 // 10. getState 抛异常 → 不崩、不生效

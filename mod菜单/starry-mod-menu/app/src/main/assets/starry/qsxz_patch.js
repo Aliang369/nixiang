@@ -36,10 +36,10 @@
     if (!window.__QSW_APPLY) { return; }     // 主 JS 未就绪，等下一次注入
 
     /* ---- 功能位号：必须与 Games/QsxzEntry.cpp 的 featureList 下标一致 ---- */
-    var F_DMG = 1;   // SeekBar_伤害倍率_1_20_1
+    var F_DMG = 1;   // SeekBar_伤害倍率_1_5_1
     var F_DR = 2;    // SeekBar_减伤_0_50_0
 
-    var K_MAX = 20, DR_MAX = 50, POLL_MS = 500;
+    var K_MAX = 5, DR_MAX = 50, POLL_MS = 500;   // 2026-10-09：K_MAX 由 20 收窄到 5
 
     /* ---- 跨注入共享状态挂在 window 上：每次注入都是新闭包，局部变量靠不住 ---- */
     var W = window;

@@ -46,8 +46,10 @@ w.__QSW_HN=0;
 w.__QSW_PSN=0;
 w.__QSW_LOG=function(){};            /* 无回传、无外部服务 */
 w.__QSW_PSF=function(v){return v};   /* 战力恒等（战力完全不动） */
+w.__QSW_NETSKIP={9998:1,9999:1,9997:1};  /* 静默的 netcode（账号被标后反复弹「参数传输遇到问题」） */
+w.__QSW_NETGUARD=function(e){return !0===w.__QSW_NETSKIP[e]};
 w.__QSW_APPLY=function(k,drPct){
-  k=(k|0); if(k<1)k=1; else if(k>20)k=20;
+  k=(k|0); if(k<1)k=1; else if(k>5)k=5;
   drPct=(drPct|0); if(drPct<0)drPct=0; else if(drPct>50)drPct=50;
   w.__QSWK=k; w.__QSW_DR=drPct/100;
 };
@@ -112,13 +114,14 @@ def main():
         '④ getRealReduceHp')
 
     # ⑥ 结算回执取证（本版 __QSW_LOG 为空实现 ⇒ 等价 no-op，仅保留结构）
-    #   锚点：2026-10-08 服务端重压缩后三元式取代了 if/else、局部变量 v→b
+    #   锚点：2026-10-08 重压缩后三元式取代 if/else、局部变量 v→b；
+    #        2026-10-09 再次重压缩后 b→y（y=t.DEBUG 常量，生产恒假）、resolve 回调 a(t)→e(t)
     src = sub_once(src,
-        '!t.result.isReject||b?(r.applyFightResultData(t),a(t)):',
+        '!t.result.isReject||y?(r.applyFightResultData(t),e(t)):',
         'try{window.__QSW_LOG({ev:"result",isReject:t.result.isReject,hurtRate:t.result.hurtRate,'
         'hn:window.__QSW_HN||0,dn:window.__QSW_DN||0,'
         'hasBarrier:!!t.result.barrierData,hasTower:!!t.result.towerData,keys:Object.keys(t.result||{})})}catch(e){};'
-        '!t.result.isReject||b?(r.applyFightResultData(t),a(t)):',
+        '!t.result.isReject||y?(r.applyFightResultData(t),e(t)):',
         '⑥ 结算取证')
 
     # ⑦ neterr
@@ -157,9 +160,13 @@ def main():
 
     # ⑨ hurtCheck 中和（★实质功能项：阻断客户端把 hurtRate 上报作弊校验）
     #   锚点：2026-10-08 重压缩后 http 句柄 l→f、apipath/dbid 所在模块 g→p、getChannel/restartGame 所在 s→l
+    #   2026-10-09 改法：原替换保留了 m.alert("netcode_-10"…)+restartGame()，被标记账号每场必弹
+    #   「系统检测到游戏客户端异常，请点击确定重新启动」并重启。现改为「按已接受口径 resolve」
+    #   —— 与真值分支 `r.applyFightResultData(t),e(t)` 完全同形：不弹窗、不重启、结算不挂起。
+    #   （不改 reject：reject 会以 await 抛异常 → 结算响应异常弹窗，比原行为更糟。）
     src = sub_once(src,
         'f.http.post(p.apipath+"c=cheat&a=hurtCheck",{uid:p.dbid,channelId:l.getChannel(),hurtRate:t.result.hurtRate},(function(t){m.alert("netcode_-10",(function(){l.restartGame()}))}))',
-        'window.__QSW_LOG({ev:"hurtcheck_blocked",hurtRate:t.result.hurtRate}),m.alert("netcode_-10",(function(){l.restartGame()}))',
+        '(window.__QSW_LOG({ev:"hurtcheck_blocked",hurtRate:t.result.hurtRate}),r.applyFightResultData(t),e(t))',
         '⑨ hurtCheck 中和')
 
     # ⑩ hurtCheckPro 中和
@@ -167,6 +174,27 @@ def main():
         'c.http.post(g.apipath+"c=cheat&a=hurtCheckPro",{uid:g.dbid,channelId:a.getChannel(),code:e},(function(t){"restart"==t?r.alert("netcode_"+e,(function(){a.restartGame()})):r.alert("netcode_"+e)}))',
         '(window.__QSW_LOG({ev:"cheat_code",code:e}),r.alert("netcode_"+e))',
         '⑩ hurtCheckPro 中和')
+
+    # ⑫ netcode 弹窗静默（★用户诉求：账号被标后每场反复弹「参数传输遇到问题，点击确定重试」）
+    #   锚点 = NetGameTips.responseErrorCode 的最后 else 分支（全 JS 唯一）。
+    #   只静默 __QSW_NETSKIP 白名单（9998/9999/9997），其余错误码照旧弹窗，绝不吞掉真实错误。
+    #   刻意不动 `<0 || 9995` 致命分支（账号异地登录 / 客户端不是最新版本）——那里必须 alert+restartGame。
+    src = sub_once(src,
+        '196==e?r.toast("netcode_"+e):r.alert("netcode_"+e)},e}())',
+        '196==e?r.toast("netcode_"+e):window.__QSW_NETGUARD(e)?window.__QSW_LOG({ev:"netalert_suppressed",code:e}):r.alert("netcode_"+e)},e}())',
+        '⑫ netcode 弹窗静默')
+
+    # ⑬ 结算上报回流原版口径（★「屏蔽标记」的实质实现）
+    #   机制：服务端拿客户端上报的结算数据与「原版期望值」比对，容差约 +50%；k 倍放大后
+    #   th/hl/pl 是原版的 k 倍、tbh 因减伤低于原版 → 双向都被判异常 → 账号被标记。
+    #   改法：只对「返回值」做折算，构造新对象，不动累加器本身（保证多次调用幂等、不叠加）。
+    #   fightpro/worldScale=md5str(seedstr+fightpro+herotimes+pettimes) 都基于本返回值序列化，
+    #   故折算后自洽，不会触发反篡改校验。
+    #   折算口径与 __QSW_DMG 严格对应：camp==1（玩家受击）走 (1-dr)，其余走 k。
+    src = sub_once(src,
+        'n.createHurtLog=function(){return{pl:t.instance.petFontLog,hl:t.instance.heroFontLog,th:t.instance.totalHurt,tbh:t.instance.totalBeHurt}}',
+        'n.createHurtLog=function(){var _k=window.__QSWK||1,_d=window.__QSW_DR||0,_p={},_h={},_i;if(_k>1){for(_i in t.instance.petFontLog)_p[_i]=Math.round(t.instance.petFontLog[_i]/_k);for(_i in t.instance.heroFontLog)_h[_i]=Math.round(t.instance.heroFontLog[_i]/_k);}else{_p=t.instance.petFontLog;_h=t.instance.heroFontLog;}return{pl:_p,hl:_h,th:_k>1?Math.round(t.instance.totalHurt/_k):t.instance.totalHurt,tbh:_d>0?Math.round(t.instance.totalBeHurt/(1-_d)):t.instance.totalBeHurt}}',
+        '⑬ 结算上报回流原版口径')
 
     out = HEADER + src
     with open(a.dst, 'w', encoding='utf-8') as f:
