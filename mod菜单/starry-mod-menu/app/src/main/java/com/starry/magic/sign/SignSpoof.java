@@ -1108,6 +1108,18 @@ public final class SignSpoof {
                     + "ONbYK9hdtO18hIJcnudx7dR/4nyShBJYYwiJ1KhqSIj4ZEjLFv5HxlgfSE6qMbs0NmHVh/nwl4WMQZ2qqHZGbgu3YyNUu9d6TeMxpt4Gknutt2irNfED72XKKgZA6MknvmjxEL32+RcVMhNd0Q9x"
                     + "aQDWGbyUnk+zTppOMdED5A==";
 
+    // ── 邂逅在迷宫 (cn.alltune.endless) ────────────────────────────────────────
+    // subject/issuer: C=CN, ST=Zhejiang, L=Hangzhou, O=Hangzhou Hotune Co Ltd,
+    //                 OU=Hotune Games, CN=MoeRush
+    // 有效期: 2015-11-16 → 2040-11-09；DER 925 B / RSA-2048
+    // MD5:     d3f53f43313dc5c5e9a8af50d3ce3b67
+    // SHA-1:   8334bf3bae60eb60730bcd8331a4d8fbebc7cab1
+    // SHA-256: 54d882d897712de60fd45aa3a4092ba4daa6abefdc513d5ee573ad12a03f02a6
+    // 用途: 模组包自签后回灌官签，喂游戏 ESBaseActivity.getSignMd5Str() 与 TapSDK 签名校验
+    private static final String XHZM_PKG = "cn.alltune.endless";
+    private static final String XHZM_CERT_B64 =
+            "MIIDmTCCAoGgAwIBAgIEafWcsDANBgkqhkiG9w0BAQsFADB9MQswCQYDVQQGEwJDTjERMA8GA1UECBMIWmhlamlhbmcxETAPBgNVBAcTCEhhbmd6aG91MR8wHQYDVQQKExZIYW5nemhvdSBIb3R1bmUgQ28gTHRkMRUwEwYDVQQLEwxIb3R1bmUgR2FtZXMxEDAOBgNVBAMTB01vZVJ1c2gwHhcNMTUxMTE2MDMyODQ1WhcNNDAxMTA5MDMyODQ1WjB9MQswCQYDVQQGEwJDTjERMA8GA1UECBMIWmhlamlhbmcxETAPBgNVBAcTCEhhbmd6aG91MR8wHQYDVQQKExZIYW5nemhvdSBIb3R1bmUgQ28gTHRkMRUwEwYDVQQLEwxIb3R1bmUgR2FtZXMxEDAOBgNVBAMTB01vZVJ1c2gwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/Rg3YGxDa3w53drbYZ3Izh8zxHMy7o8iomE5eFqhw1vGOJo7ZbYV40mrsN4hEh3NknWxO2GgJYBy4IGqGCHpZDfLovGFOvpWTnkhFWWWiqfp6xngF9yQYq0zMtkTMvSaUZbT93svgYNLKmWpqtnu3ijf09vjfvQCdIU8clJhpyCJLnLHqs713O/af3QS76hC8nGLWy5IhbVmTK6CKoNz0ZiXsBYrHcLyrXtkvcMb//qSngmxnM/LW8WJPXOPbB1uBtuTTNXQfDxhrIaRSSIkc7dfoIuX9y0TkJdOI1okL6H8Cz+wXXqgtH6dcFAtr1Mpj59G9zPAlAk0Rml1woj5ZAgMBAAGjITAfMB0GA1UdDgQWBBSZ56VV8kQj9pTnLu1l/TEbGrObQjANBgkqhkiG9w0BAQsFAAOCAQEAuPRZ5TO29GS/uGZ/yEIIeQGLk/aN0glNDQuM5YpoKDO1mQrLoiluQlc3hnBALia+7BYzUhkBFwBtDFfWwe4AT83V7+f3NvzwATxOCUvp+dz5R29dPwM4vQHRzLiQjSPkBY9VyVQwCYseiXTVUtd7//NCkyy+v4EzFSjcR8v1wGLLJfqnzJW8J3YBvIULbO9OQvPac3Ai6UH7Y3L8+mZ9gZExAgMRVmbSp9wJCEy/C2HnHRmpONk5eeR6DcsFOzPX3U2U9PVFEIKfTaqt5DXw8m9xS5SCUh4Rl61eanxSuWO5VS84X9zpki9fCvbeKiHoS5G8JE+8Dz1RUKR5+dB5Kw==";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1179,6 +1191,7 @@ public final class SignSpoof {
                 fakes.put(WOR_PKG, new Signature(Base64.decode(WOR_CERT_B64, Base64.DEFAULT)));
                 fakes.put(XNBZ_PKG, new Signature(Base64.decode(XNBZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GGBH_PKG, new Signature(Base64.decode(GGBH_CERT_B64, Base64.DEFAULT)));
+                fakes.put(XHZM_PKG, new Signature(Base64.decode(XHZM_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

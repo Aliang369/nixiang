@@ -1,0 +1,11 @@
+{
+  "template_id": "xhzm",
+  "name": "邂逅在迷宫",
+  "package": "cn.alltune.endless",
+  "source": "Games/XhzmEntry.cpp kXhzm_Features",
+  "features": [
+    {"feat_num": 1, "name": "伤害倍率"},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "无限技能"}
+  ]
+}

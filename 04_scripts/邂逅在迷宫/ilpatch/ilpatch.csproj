@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 模板：热更程序集 IL 补丁器。复制整个目录到 04_scripts/{游戏}/ilpatch/ 即可用。
+       InvariantGlobalization 必开：容器/无 ICU 环境下省去全球化依赖。 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ilpatch</AssemblyName>
+    <RootNamespace>ilpatch</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+  </ItemGroup>
+</Project>
