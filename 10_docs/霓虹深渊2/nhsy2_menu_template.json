@@ -1,0 +1,37 @@
+{
+  "template_id": "nhsy2",
+  "name": "霓虹深渊2",
+  "package": "com.veewo.neonabyss2",
+  "source": "Games/nhsy2Entry.cpp knhsy2_Features / Games/nhsy2Mod.h nhsy2Feat @ 2026-10-11 四次定稿（14 槽 = 2 分类 + 12 功能；一功能一开关；资源＝四 CostType 白名单 + 原生 InfiniteKey 通道）",
+  "resources_gate": {
+    "mode": "whitelist_1to1",
+    "cost_types": ["Bomb", "Coin", "Crystal", "Key"],
+    "native_channel": {
+      "name": "InfiniteKey / KeySuit（钥匙套装）",
+      "hooks": [
+        "NEON.Game.Managers.NEONPlayerState::get_HasInfiniteKey -> true",
+        "NEON.Game.Managers.NEONPlayerState::get_InfiniteKey -> >=9999"
+      ],
+      "note": "彩色钥匙走游戏原生通道（HUD 钥匙图标切 KeyImageSync.infiniteKeySprite 彩色/∞），不占 CostType；其余 33 个 CostType 一律走游戏原逻辑"
+    },
+    "note": "NHY2 metadata 无独立「彩色钥匙」货币字段/枚举项（GameplayKey/ColorKey/SpecialKey/彩色/彩虹 全量 0 命中）；NHY1 的彩色钥匙＝GameplayKey 属性机制，本作无对应物。CostType.Token(28) 已查明＝代币机代币，与彩色钥匙无关。"
+  },
+  "so_sha256": "81a7da0798340a011d9a58560b8690349943f094ed08a5398ae382a809ea9a1e",
+  "so_size_bytes": 221504,
+  "features": [
+    {"feat_num": 0, "name": "Category_战斗"},
+    {"feat_num": 1, "name": "伤害倍率", "type": "slider", "min": 1, "max": 100},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "技能无CD"},
+    {"feat_num": 4, "name": "全屏攻击", "status": "抓点待补"},
+    {"feat_num": 5, "name": "移速倍率", "type": "slider", "min": 1, "max": 10},
+    {"feat_num": 6, "name": "无限跳"},
+    {"feat_num": 7, "name": "Category_资源"},
+    {"feat_num": 8, "name": "解锁标准版"},
+    {"feat_num": 9, "name": "无限手雷", "cost_type": "Bomb"},
+    {"feat_num": 10, "name": "无限金币", "cost_type": "Coin"},
+    {"feat_num": 11, "name": "无限水晶", "cost_type": "Crystal"},
+    {"feat_num": 12, "name": "无限钥匙", "cost_type": "Key"},
+    {"feat_num": 13, "name": "无限彩色钥匙", "native_channel": "InfiniteKey"}
+  ]
+}

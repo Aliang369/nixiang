@@ -1,0 +1,13 @@
+# 霓虹深渊2 装机预检标记（post_install_precheck.sh 用；每行 `类别|ERE`，'#' 开头为注释）
+# 建立于 2026-10-11（10.10 底包星光版装机轮）——默认正则即可跑通，本文件只补游戏级标记与一条误报排除。
+pkg|com.veewo.neonabyss2
+menu_load|StarryMagic|MenuService
+menu_shown|native menu shown
+hook_hit|\[nhsy2\] (lib ready|初始化成功|MOD 已就绪|fault guard armed)
+auth_fail|renew auth fail|authoritative=.*deny
+auth_ok|auth game_id synced from native|renew ok
+crash|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|tombstone
+# 自家 CrashTrap 的自述行不是崩溃（2026-10-11 实测：`Mod_Menu: [nhsy2] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)`
+# 被默认 RE_CRASH 的 `SIGSEGV` 命中 ⇒ 预检误判「判定段=A 运行中崩溃」。注意本类别是**整体替换** RE_CRASH_IGNORE，
+# 不是追加 —— 必须把默认三项一并抄上。）
+crash_ignore|记录先前处理器|\[crash\]|CrashTrap|fault guard armed|fault guard restored

@@ -30,6 +30,7 @@ typedef void* (*domain_assembly_open_t)(void*, const char*);
 typedef const void* (*assembly_get_image_t)(const void*);
 typedef void* (*object_get_class_t)(void*);
 typedef const char* (*class_get_name_t)(void*);
+typedef const char* (*class_get_namespace_t)(void*);
 typedef void* (*class_get_method_from_name_t)(void*, const char*, int);
 typedef void* (*class_get_methods_t)(void*, void**);  // 迭代器：iter 初始 *iter=nullptr（可空：老包无此导出）
 typedef void* (*runtime_invoke_t)(void*, void*, void**, void**);
@@ -47,6 +48,10 @@ typedef char* (*type_get_name_t)(void*);              // Il2CppType* -> 全名�
 typedef void* (*thread_attach_t)(void*);              // domain -> Il2CppThread*（非 il2cpp 线程 invoke 前必须）
 typedef void* (*method_get_return_type_t)(void*);     // MethodInfo -> Il2CppType*
 typedef void* (*method_get_param_t)(void*, uint32_t); // MethodInfo, idx -> Il2CppType*
+/* ★2026-10-05 增加：`il2cpp_method_get_param_count(const MethodInfo*)` 确实存在
+ *（离线实测 nhsy2 的 libil2cpp dynsym idx=928 / st_value=0x2fe61d8，落在本模块可执行段内）。
+ * 旧注释「class_methods 迭代器没有配套 param_count 导出」是错的。 */
+typedef uint32_t (*method_get_param_count_t)(void*);
 /* ★2026-10-03 修正（MuMu 实机血证，务必不要再改回单参）：
  *  `il2cpp_method_get_flags(const MethodInfo* method, uint32_t* iflags)` 是**双参** API，
  *  第二参是「输出型 iflags 指针」。旧声明只有 `(void*)`，调用方只传 1 个参数 ⇒ callee 的 x1
@@ -77,7 +82,9 @@ struct Api {
     assembly_get_image_t         assembly_image = nullptr;
     object_get_class_t           object_class = nullptr;
     class_get_name_t             class_name = nullptr;
+    class_get_namespace_t        class_namespace = nullptr; // 可空：ClassFromName 降级扫描用
     class_get_method_from_name_t class_method = nullptr;
+    method_get_param_count_t     method_param_count = nullptr; // 可空：GetMethod 降级扫描用
     runtime_invoke_t             runtime_invoke = nullptr;
     string_new_t                 string_new = nullptr;
     image_get_class_count_t      image_class_count = nullptr;
@@ -114,6 +121,17 @@ struct Api {
 
     void* FindClassInImage(void* image, const char* shortName) const;
     void* FindClassByShortName(const char* shortName) const;
+    /** 降级类查找（2026-10-05 增加）。专治「`il2cpp_class_from_name` 的 dynsym
+     *  st_value 被保护壳伪造成指向自己（themis-v8）的负偏移」的场景：该符号被
+     *  `ResolveIl2CppSym` 的模块范围校验置空后，用**未被污染**的三件套
+     *  `image_get_class_count` + `image_class` + `class_name`（+ `class_namespace`）
+     *  做线性扫描，并**按 image 懒建一次完整哈希表**（后续 O(1)）。
+     *  正常包（class_from_name 可用）不会走到这里。 */
+    void* ClassFromNameScan(void* image, const char* ns, const char* name) const;
+    /** 降级方法查找（2026-10-05 增加）。同上，`il2cpp_class_get_method_from_name`
+     *  被置空时改用 `class_methods` 迭代器 + `method_get_name` +
+     *  `method_param_count` 线性匹配（argc<0 表示不校验参数个数）。 */
+    void* GetMethodScan(void* klass, const char* name, int argc) const;
     void* ClassFromName(void* image, const char* ns, const char* name) const;
     void* GetMethod(void* klass, const char* name, int argc) const;
     /** 重载消歧（2026-10-01 增加）。`GetMethod(name, argc)` 只能返回匹配 argc 的**第一个**候选，
@@ -127,7 +145,8 @@ struct Api {
      *  返回规则：唯一命中 → 该 MethodInfo；0 命中 / 多命中 / 迭代器或类型 API 不可用
      *  → **退回 `GetMethod(klass, name, argc)`**（行为与改造前一致，不引入新的不确定性，
      *  但调用方应按需自行校验拿到的方法，别假定一定对）。两个后缀都为空时直接走 GetMethod。
-     *  ⚠️ 不校验 argc：`class_methods` 迭代器没有配套的 param_count 导出，只有 name 是可靠判据。
+     *  ⚠️ 本方法不校验 argc；如 `method_param_count` 可用，`GetMethod` 自身的降级
+     *  路径会校验（见 `GetMethodScan`）。
      *  例：`api.GetMethodBySig(k, "op_Implicit", 1, "ObscuredInt", "Int32")` */
     void* GetMethodBySig(void* klass, const char* name, int argc,
                          const char* retSuffix, const char* p0Suffix) const;

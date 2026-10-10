@@ -553,14 +553,82 @@ static void* DynsymLookup(const char* name) {
     return it != map->end() ? it->second : nullptr;
 }
 
+/* ★2026-10-05 新增：libil2cpp 模块范围校验（themis 诱饵符号过滤）
+ *
+ * 现象（霓虹深渊2 / com.veewo.neonabyss2，纯真机实测）：30 个 il2cpp_* 符号里
+ * 27 个正确落在 libil2cpp.so，3 个被 libthemis-v8.so 抢走：
+ *   il2cpp_class_from_name / il2cpp_assembly_get_image / il2cpp_class_get_method_from_name
+ * 它们被解析出来的地址前 8 字节是**正常函数序言**（`ffc301d1fd7b01a9` =
+ * `sub sp,sp,#0x70; stp x29,x30,[sp,#0x10]`），完全不像诱饵 —— 但拿游戏的
+ * Il2CppImage* 去调它必崩：`signal 11 SIGSEGV fault addr 0xb8, null pointer dereference`。
+ *
+ * 离线定位（解析 /tmp/nhsy2/libil2cpp.live.so 的 phdr + PT_DYNAMIC + DT_HASH；该库
+ * 只有 SysV DT_HASH、无 DT_GNU_HASH，nbucket=2455 / nchain=2454 ⇒ 2454 个符号）：
+ * 三个名字都在、st_shndx/st_info 正常，但 **st_value 被改成负值**：
+ *   il2cpp_assembly_get_image          sym idx 11   st_value 0xfffffffffefd864c
+ *   il2cpp_class_from_name             sym idx 1801 st_value 0xfffffffffefd89f4
+ *   il2cpp_class_get_method_from_name  sym idx 1429 st_value 0xfffffffffefd8d1c
+ * 即故意让 `base + st_value` 以 64 位回绕到 base 之下约 16 MB（-0x10279b4），恰好落进
+ * 紧贴 libil2cpp 下方的 libthemis-v8.so（themis 自带一份真 il2cpp 代码副本，并用同名
+ * 导出抢先注册）。其余 27 个 st_value 正常，全落在可执行段内的 0x2fe59xx~0x2fe65xx 导出桩簇。
+ *
+ * ⇒ **dlsym 也救不了**：bionic 同样算 `load_bias + sym->st_value`，会得到同一个假地址。
+ *   唯一可靠判据 = 地址必须落在 libil2cpp.so 自己的映射区间内。
+ * 其它游戏完全不受影响：正常包所有符号都在本模块内 ⇒ 校验恒通过，行为与改造前一致。
+ */
+static int PhdrCallbackQuiet(struct dl_phdr_info* info, size_t, void* data) {
+    PhdrCtx* ctx = (PhdrCtx*)data;
+    const char* n = info->dlpi_name;
+    if (!n || !ctx->lib) return 0;
+    size_t ln = strlen(ctx->lib), l = strlen(n);
+    if (l < ln || strcmp(n + (l - ln), ctx->lib) != 0) return 0;
+    ctx->base = (uintptr_t)info->dlpi_addr;
+    ctx->phdr = info->dlpi_phdr;
+    ctx->phnum = info->dlpi_phnum;
+    ctx->found = true;
+    return 1;
+}
+
+/* libil2cpp.so 的可信映射范围 [base, end)。取不到时返回 false（调用方放行，退回旧行为）。 */
+static bool LibIl2CppRange(uintptr_t* outBase, uintptr_t* outEnd) {
+    PhdrCtx ctx = {};
+    ctx.lib = sec_lib_il2cpp();
+    if (!ctx.lib || dl_iterate_phdr(PhdrCallbackQuiet, &ctx) <= 0 || !ctx.found) return false;
+    uintptr_t end = ctx.base;
+    for (int i = 0; i < ctx.phnum; i++) {
+        if (ctx.phdr[i].p_type == PT_LOAD) {
+            uintptr_t e = ctx.base + ctx.phdr[i].p_vaddr + ctx.phdr[i].p_memsz;
+            if (e > end) end = e;
+        }
+    }
+    if (!ctx.base || end <= ctx.base) return false;
+    *outBase = ctx.base;
+    *outEnd = end;
+    return true;
+}
+
+/* 地址是否落在 libil2cpp 自己的映射内。判不了（取不到 phdr）时返回 true = 不拦。 */
+static bool InIl2CppRange(const void* p) {
+    if (!p) return false;
+    uintptr_t b = 0, e = 0;
+    if (!LibIl2CppRange(&b, &e)) return true;
+    uintptr_t v = (uintptr_t)p;
+    return v >= b && v < e;
+}
+
 static void* ResolveIl2CppSym(void* handle, const char* name) {
     if (!handle || !name) return nullptr;
     void* p = xdl_sym(handle, name, nullptr);
     if (!p) p = xdl_dsym(handle, name, nullptr);
+    /* ★保护壳诱饵过滤（见上方 PhdrCallbackQuiet 前的长注释）：非空 ≠ 正确。 */
+    const bool poison = (p != nullptr) && !InIl2CppRange(p);
+    if (poison) p = nullptr;
+
     /* TP 重排 dynsym 但未重建 GNU hash 表 → xdl_sym 可能「静默返回错误的非空
      * 地址」（不是 null，所以旧的 miss 兜底永不触发）。恒取自解析表结果做对照，
      * 首次解析时打一行 diag（xdl/self 双方地址 + 前 8 字节）。 */
     void* self = DynsymLookup(name);  // TP 符号隐藏对策
+    if (self && !InIl2CppRange(self)) self = nullptr;
     if (!p) p = self;
     {
         static std::unordered_set<std::string> loggedDiag;
@@ -576,7 +644,8 @@ static void* ResolveIl2CppSym(void* handle, const char* name) {
                 SafeProbe([&] { memcpy(b2, self, 8); return true; }))
                 for (int i = 0; i < 8; i++) snprintf(h2 + i * 2, 3, "%02x", b2[i]);
             LOGI("[Il2Cpp] diag %s xdl=%p[%s] self=%p[%s] %s", name, p, h1, self, h2,
-                 (self && self != p) ? "MISMATCH" : "same");
+                 poison ? "POISONED(dropped)"
+                        : ((self && self != p) ? "MISMATCH" : "same"));
         }
     }
     if (!p) {
@@ -788,14 +857,31 @@ bool Api::Load(const char* libName) {
     get_corlib        = (get_corlib_t)detail::ResolveIl2CppSym(handle, "il2cpp_get_corlib");
     /* 可空：仅 GetMethodBySig 的重载消歧用，缺了也不影响 ready */
     class_methods     = (class_get_methods_t)detail::ResolveIl2CppSym(handle, "il2cpp_class_get_methods");
+    /* ★2026-10-05：ClassFromName / GetMethod 的降级扫描用（两个符号在 nhsy2 上都未被
+     *  themis 污染，离线实测 class_get_namespace st_value=0x2fe59f0 / idx717、
+     *  method_get_param_count st_value=0x2fe61d8 / idx928）。缺了只是降级能力弱一点。 */
+    class_namespace   = (class_get_namespace_t)detail::ResolveIl2CppSym(handle, "il2cpp_class_get_namespace");
+    method_param_count = (method_get_param_count_t)detail::ResolveIl2CppSym(handle, "il2cpp_method_get_param_count");
 
-    if (!class_from_name || !class_get_field || !field_offset ||
+    /* ★class_from_name 允许为空：保护壳（如 nhsy2 的 themis-v8）会把它伪造成指向
+     * 自己的假地址，被上面的模块范围校验丢弃 ⇒ 此时走 ClassFromNameScan 降级扫描
+     * （image_get_class_count + image_class + class_name + class_namespace）。
+     * 能给出 ClassFromNameScan 能力时，就不算 core 缺失。 */
+    const bool class_lookup_ok = class_from_name != nullptr ||
+        (image_class_count != nullptr && image_class != nullptr && class_name != nullptr);
+    if (!class_lookup_ok || !class_get_field || !field_offset ||
         !domain_get || (!domain_assemblies && !domain_assembly_open) ||
         !object_class || !class_name) {
-        LOGI("[Il2Cpp] core api missing (xdl+dynsym) asm_enum=%d asm_open=%d",
-             domain_assemblies != nullptr, domain_assembly_open != nullptr);
+        LOGI("[Il2Cpp] core api missing (xdl+dynsym) asm_enum=%d asm_open=%d cfname=%d scan=%d",
+             domain_assemblies != nullptr, domain_assembly_open != nullptr,
+             class_from_name != nullptr, class_lookup_ok && !class_from_name);
         return false;
     }
+    if (!class_from_name)
+        LOGI("[Il2Cpp] NOTE: il2cpp_class_from_name poisoned/absent -> ClassFromNameScan fallback");
+    if (!class_method)
+        LOGI("[Il2Cpp] NOTE: il2cpp_class_get_method_from_name poisoned/absent -> GetMethodScan fallback (methods=%d pcount=%d)",
+             class_methods != nullptr, method_param_count != nullptr);
 
     ready = true;
     LOGI("[Il2Cpp] api loaded from %s (xdl+dynsym)", libName);
@@ -825,18 +911,29 @@ bool Api::ReprobeCore() {
         { "il2cpp_value_box",                 (void**)&value_box },
         { "il2cpp_get_corlib",                (void**)&get_corlib },
         { "il2cpp_class_get_methods",         (void**)&class_methods },
+        { "il2cpp_class_get_namespace",       (void**)&class_namespace },
+        { "il2cpp_method_get_param_count",    (void**)&method_param_count },
     };
-    int changed = 0, missing = 0;
+    int changed = 0, missing = 0, poisoned = 0;
     for (auto& e : k) {
         void* self = detail::DynsymLookup(e.name);
         if (!self) { missing++; continue; }
+        /* ★自解析表和 xdl 一样会读到被壳篡改的负 st_value（同一个文件 dynsym），
+         * 必须过同一道模块范围校验，否则 reprobe 会把刚丢掉的诱饵地址又装回去。 */
+        if (!detail::InIl2CppRange(self)) {
+            LOGI("[Il2Cpp] reprobe %s: POISONED %p (out of libil2cpp range) -> keep nullptr",
+                 e.name, self);
+            *e.slot = nullptr;
+            poisoned++;
+            continue;
+        }
         if (self != *e.slot) {
             LOGI("[Il2Cpp] reprobe %s: %p -> %p", e.name, *e.slot, self);
             *e.slot = self;
             changed++;
         }
     }
-    LOGI("[Il2Cpp] reprobe done changed=%d missing=%d", changed, missing);
+    LOGI("[Il2Cpp] reprobe done changed=%d missing=%d poisoned=%d", changed, missing, poisoned);
     return changed > 0;
 }
 
@@ -948,14 +1045,114 @@ void* Api::FindClassByShortName(const char* shortName) const {
     return nullptr;
 }
 
+/* ============================================================================
+ * ★2026-10-05 ClassFromNameScan：`il2cpp_class_from_name` 被保护壳污染时的降级查找
+ *
+ * 背景见 ResolveIl2CppSym 上方的长注释：nhsy2 的 themis-v8 把
+ * `il2cpp_class_from_name` 的 dynsym st_value 改成负值，令 `base + st_value`
+ * 回绕到 themis 自己的真代码副本 ⇒ 模块范围校验把它丢掉（指针 = nullptr）。
+ * 但**另有一整套未被污染的符号**能完成同样的事：
+ *     il2cpp_image_get_class_count / il2cpp_image_get_class / il2cpp_class_get_name
+ *     / il2cpp_class_get_namespace    （离线逐条核对过 st_value 都落在本模块可执行段内）
+ *
+ * 做法：按 image 懒建一次「ns \x1f name → klass」全量哈希表，之后 O(1)。
+ * 只有真正被查询过的 image 才会建表（FindClassNs 命中即返回，通常只建 1~2 张）。
+ * ========================================================================== */
+void* Api::ClassFromNameScan(void* image, const char* ns, const char* name) const {
+    if (!image || !name) return nullptr;
+    if (!image_class_count || !image_class || !class_name) return nullptr;
+
+    static std::mutex s_mtx;
+    static std::unordered_map<void*, std::unordered_map<std::string, void*>*> s_cache;
+
+    std::string key;
+    if (ns && *ns) { key.assign(ns); key.push_back('\x1f'); }
+    key.append(name);
+
+    std::lock_guard<std::mutex> lk(s_mtx);
+    auto it = s_cache.find(image);
+    std::unordered_map<std::string, void*>* m = nullptr;
+    if (it != s_cache.end()) {
+        m = it->second;
+    } else {
+        m = new std::unordered_map<std::string, void*>();
+        uint32_t n = image_class_count(image);
+        if (n > 300000) {   // 防御：异常 image 就给个空表，不要 OOM/长扫
+            LOGI("[Il2Cpp] ClassFromNameScan: image=%p bogus class count %u", image, n);
+            n = 0;
+        }
+        m->reserve(n * 2);
+        for (uint32_t i = 0; i < n; i++) {
+            void* k = image_class(image, i);
+            if (!k) continue;
+            const char* cn = class_name(k);
+            if (!cn) continue;
+            std::string kk;
+            if (class_namespace) {
+                const char* kns = class_namespace(k);
+                if (kns && *kns) { kk.assign(kns); kk.push_back('\x1f'); }
+            }
+            kk.append(cn);
+            /* 同名同命名空间重复时保留第一个，与 il2cpp 自己的线性查找语义一致 */
+            m->emplace(std::move(kk), k);
+        }
+        s_cache[image] = m;
+        LOGI("[Il2Cpp] ClassFromNameScan: built map for image=%p classes=%zu", image, m->size());
+    }
+    auto f = m->find(key);
+    return f != m->end() ? f->second : nullptr;
+}
+
 void* Api::ClassFromName(void* image, const char* ns, const char* name) const {
-    if (!class_from_name || !image) return nullptr;
-    return class_from_name(image, ns, name);
+    if (!image) return nullptr;
+    if (class_from_name) {
+        void* k = class_from_name(image, ns, name);
+        if (k) return k;
+    }
+    /* 指针为空（被污染丢弃）或原 API 未命中 → 降级扫描。
+     * 注意：只有 class_namespace 在场时才能区分同名类；否则退化为「按短名匹配」。 */
+    return ClassFromNameScan(image, ns, name);
+}
+
+/* ★2026-10-05 GetMethodScan：`il2cpp_class_get_method_from_name` 被污染时的降级查找。
+ * 语义刻意与 il2cpp 原生实现对齐：「按方法表顺序返回第一个 name 匹配且参数个数匹配的
+ * 方法」（原生实现也是返回第一个，不是唯一命中），argc < 0 表示不校验参数个数。
+ * 只用未被污染的 class_methods 迭代器 + method_get_name + method_param_count。 */
+void* Api::GetMethodScan(void* klass, const char* name, int argc) const {
+    if (!klass || !name || !class_methods || !method_get_name) return nullptr;
+    void* iter = nullptr;
+    void* hit = nullptr;
+    int guard = 0;
+    while (void* mi = class_methods(klass, &iter)) {
+        if (++guard > 20000) break;   // 防御：迭代器异常时不无限转
+        const char* mn = method_get_name(mi);
+        if (!mn || strcmp(mn, name) != 0) continue;
+        if (argc >= 0) {
+            if (method_param_count) {
+                if ((int)method_param_count(mi) != argc) continue;
+            } else {
+                static std::mutex s_warnMtx;
+                static bool s_warned = false;
+                std::lock_guard<std::mutex> lk(s_warnMtx);
+                if (!s_warned) {
+                    s_warned = true;
+                    LOGI("[Il2Cpp] GetMethodScan: no method_param_count -> argc unchecked for %s", name);
+                }
+            }
+        }
+        hit = mi;
+        break;
+    }
+    return hit;
 }
 
 void* Api::GetMethod(void* klass, const char* name, int argc) const {
-    if (!class_method || !klass || !name) return nullptr;
-    return class_method(klass, name, argc);
+    if (!klass || !name) return nullptr;
+    if (class_method) {
+        void* mi = class_method(klass, name, argc);
+        if (mi) return mi;
+    }
+    return GetMethodScan(klass, name, argc);
 }
 
 /* 重载消歧：见头文件注释。核心约束是「宁可退回旧行为，也不猜」——

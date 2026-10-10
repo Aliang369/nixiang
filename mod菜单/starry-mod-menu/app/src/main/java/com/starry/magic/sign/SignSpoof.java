@@ -1120,6 +1120,25 @@ public final class SignSpoof {
     private static final String XHZM_CERT_B64 =
             "MIIDmTCCAoGgAwIBAgIEafWcsDANBgkqhkiG9w0BAQsFADB9MQswCQYDVQQGEwJDTjERMA8GA1UECBMIWmhlamlhbmcxETAPBgNVBAcTCEhhbmd6aG91MR8wHQYDVQQKExZIYW5nemhvdSBIb3R1bmUgQ28gTHRkMRUwEwYDVQQLEwxIb3R1bmUgR2FtZXMxEDAOBgNVBAMTB01vZVJ1c2gwHhcNMTUxMTE2MDMyODQ1WhcNNDAxMTA5MDMyODQ1WjB9MQswCQYDVQQGEwJDTjERMA8GA1UECBMIWmhlamlhbmcxETAPBgNVBAcTCEhhbmd6aG91MR8wHQYDVQQKExZIYW5nemhvdSBIb3R1bmUgQ28gTHRkMRUwEwYDVQQLEwxIb3R1bmUgR2FtZXMxEDAOBgNVBAMTB01vZVJ1c2gwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC/Rg3YGxDa3w53drbYZ3Izh8zxHMy7o8iomE5eFqhw1vGOJo7ZbYV40mrsN4hEh3NknWxO2GgJYBy4IGqGCHpZDfLovGFOvpWTnkhFWWWiqfp6xngF9yQYq0zMtkTMvSaUZbT93svgYNLKmWpqtnu3ijf09vjfvQCdIU8clJhpyCJLnLHqs713O/af3QS76hC8nGLWy5IhbVmTK6CKoNz0ZiXsBYrHcLyrXtkvcMb//qSngmxnM/LW8WJPXOPbB1uBtuTTNXQfDxhrIaRSSIkc7dfoIuX9y0TkJdOI1okL6H8Cz+wXXqgtH6dcFAtr1Mpj59G9zPAlAk0Rml1woj5ZAgMBAAGjITAfMB0GA1UdDgQWBBSZ56VV8kQj9pTnLu1l/TEbGrObQjANBgkqhkiG9w0BAQsFAAOCAQEAuPRZ5TO29GS/uGZ/yEIIeQGLk/aN0glNDQuM5YpoKDO1mQrLoiluQlc3hnBALia+7BYzUhkBFwBtDFfWwe4AT83V7+f3NvzwATxOCUvp+dz5R29dPwM4vQHRzLiQjSPkBY9VyVQwCYseiXTVUtd7//NCkyy+v4EzFSjcR8v1wGLLJfqnzJW8J3YBvIULbO9OQvPac3Ai6UH7Y3L8+mZ9gZExAgMRVmbSp9wJCEy/C2HnHRmpONk5eeR6DcsFOzPX3U2U9PVFEIKfTaqt5DXw8m9xS5SCUh4Rl61eanxSuWO5VS84X9zpki9fCvbeKiHoS5G8JE+8Dz1RUKR5+dB5Kw==";
 
+    // ── 霓虹深渊2 (com.veewo.neonabyss2, TapTap 渠道) ──────────────────────────
+    // subject/issuer: O=Veewo（自发行），serial 60A3475A
+    // 有效期: 2025-11-21 → 2075-11-09；DER 674 B / RSA-2048
+    // MD5:     bbe1da8584fb2fb1017a512b2e99ff21
+    // SHA-1:   da7d71c24dd1feeb24c1d589d4dba9de19e83b23
+    // SHA-256: b86bbedff816e493b4542e47a8e5d8c33d8a883fa0ec32154fcbbc843c11b8a8
+    // 用途: 模组包自签后回灌官签，喂 TapSDK 签名校验；与 dex 层
+    //       `TapSignKit.getSign` 回灌同一张证书（surgical_nhsy2_*.sh 步骤 4）互为兜底
+    private static final String NHSY2_PKG = "com.veewo.neonabyss2";
+    private static final String NHSY2_CERT_B64 =
+            "MIICnjCCAYagAwIBAgIEYKNHWjANBgkqhkiG9w0BAQUFADAQMQ4wDAYDVQQKDAVWZWV3bzAgFw0yNTExMjEwNDEyMjFaGA8yMDc1MTEwOTA0MTIyMVowED"
+                    + "EOMAwGA1UECgwFVmVld28wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCJNiuHwDVGvH9BfiRkQa1KWmguJNYbTiNpM68Dy5rYrSoiKacFhtzu"
+                    + "S2O6rwImiqS5lMOnSn/jjaNZlHrrg3deZyxD+D8XWC/9Vab9AvCkoCtSg6SOSMeKrkScREJdMvvn0Do+F2IddhzkbqoBIG1i7vMijZ2FDHt1NpuvFqC7ec"
+                    + "IFxD5ie5aZpm+LB5KeluyzB25Fap6EebN7emZUtxgH3koss4ie7uSnhkK7OfRuftbxKxK6HB5MS++00cxiujSB1Ydu4BZFD/7qrf0HMdMlY0A/gqqv/jFm"
+                    + "Zq2Bgw0nGpLRmP1/cc9579TarAm3DqOtzDceqh3Gp3izOqA/LFKbAgMBAAEwDQYJKoZIhvcNAQEFBQADggEBADWLBeES/YqaF7P0DzoSZcNzTGLP+ye10y"
+                    + "lrIequjKFkmgJ3cwaHNk2eI2F8i8GHsAdc7Um6q7qPwH0rdn6k/2HvGikYwWenygbbImtQMmWh0zVophENW/47Y7C5/UUYyugx/oUVK7NYq8IXCFQxk1gh"
+                    + "w5GyUNObPGUlqOoymW8WgeBLS33eaxb4jumoE91eCAq0mklHCn2oYVJwgfi4D+8xUMTlMgCLK4AU/qdOnp+ODtJSSBM3erlB/RgMl0J3eT1DCJmfbgz+Iv"
+                    + "bphAOvjJ22roqloBPVYG6zH6aDmXAiBSqdyPQiXOk9l4R3AJy0acJld7l3T2weQGTmanXBBkE=";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1163,6 +1182,7 @@ public final class SignSpoof {
                 fakes.put(YSJYZ_PKG, new Signature(Base64.decode(YSJYZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(FCXYXZJ_PKG, new Signature(Base64.decode(FCXYXZJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(WDXSJ_PKG, new Signature(Base64.decode(WDXSJ_CERT_B64, Base64.DEFAULT)));
+                fakes.put(NHSY2_PKG, new Signature(Base64.decode(NHSY2_CERT_B64, Base64.DEFAULT)));
                 fakes.put(DHSS_PKG, new Signature(Base64.decode(DHSS_CERT_B64, Base64.DEFAULT)));
                 fakes.put(ZZBX2_PKG, new Signature(Base64.decode(ZZBX2_CERT_B64, Base64.DEFAULT)));
                 fakes.put(YNTT_PKG, new Signature(Base64.decode(YNTT_CERT_B64, Base64.DEFAULT)));

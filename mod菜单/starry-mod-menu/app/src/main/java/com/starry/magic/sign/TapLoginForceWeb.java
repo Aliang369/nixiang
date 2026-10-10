@@ -113,6 +113,13 @@ public final class TapLoginForceWeb {
                     "com.wanda.sf3.wd",
                     // 弹壳战机：TapTap 渠道原版；改签包固定走 embedded_web，避免客户端 SSO 校验真签。
                     "com.survivor.acecn",
+                    // 霓虹深渊2（TapTap 渠道自发行）：包内 TapSDK 为 LoginTypes 新版路由
+                    // （ClientLoginUtils / TapSignKit / DefaultTapLoginFragmentProvider / LoginRequest.loginType
+                    //   / embedded_web / fallbackToWeb 均在 classes3.dex；旧类 TapTapActivity、
+                    //   login/internal/handlers/web/WebLoginFragment 全不在包内）。
+                    // 强制网页登录主路径由 dex 层实现（surgical 步骤 4：ClientLoginUtils.isClientLogin 恒 false），
+                    // 此处登记仅为纳入框架入口白名单；反射兜底路径仅在包内存在同构旧类名时才会生效。
+                    "com.veewo.neonabyss2",
                     // Phigros（taptap 渠道 3.20.0 / vc154）：TapSDK 3.30.3 旧版路径
                     // （com.taptap.sdk.ui.TapTapActivity + intent extra "request" + LoginClient 的 catch
                     //   分支落 WebViewHandler）。2026-09-21 实测：游戏内「账号与统计 → TapTap 登录」走
