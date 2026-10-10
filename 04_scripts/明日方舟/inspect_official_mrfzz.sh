@@ -7,7 +7,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 META_FILE="$SCRIPT_DIR/official_apk.json"
 OUT="$NIXIANG_ROOT/06_dumped/明日方舟/official/static_inspect"
 
-[[ -f "$META_FILE" ]] || { echo "错误: 缺少 $META_FILE，请先跑 fetch_official 阶段" >&2; exit 1; }
+[[ -f "$META_FILE" ]] || { echo "错误: 缺少 ${META_FILE}，请先跑 fetch_official 阶段" >&2; exit 1; }
 APK="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["apk_path"])' "$META_FILE")"
 [[ -f "$APK" ]] || { echo "错误: APK 不存在: $APK" >&2; exit 1; }
 
