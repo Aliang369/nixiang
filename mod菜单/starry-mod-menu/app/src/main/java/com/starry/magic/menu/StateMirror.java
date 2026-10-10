@@ -60,6 +60,15 @@ public final class StateMirror {
     }
 
     /**
+     * 重新落一次当前值：用于「刚授予所有文件访问权限」这类场合 ——
+     * 此时玩家并没有再动开关，但状态文件必须马上出现在游戏目录里，
+     * 否则要等到玩家下一次拨开关游戏侧才生效（玩家会以为「还是没反应」）。
+     */
+    public static synchronized void resync() {
+        write();
+    }
+
+    /**
      * 独立助手模式：目标游戏的外部状态文件；不可用时为 null。
      *
      * <p>目录来自 {@link ModTarget#EXTERNAL_DIRS}（按游戏包名拼出来的），
