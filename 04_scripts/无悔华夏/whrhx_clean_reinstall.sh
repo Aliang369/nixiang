@@ -1,20 +1,27 @@
 #!/usr/bin/env bash
 # 无悔华夏 · 清数据重装 / 装机后状态校验
-# 目的：数据被清或热更资源缺失导致游戏卡在资源加载时，做一次干净的「清数据 → 覆盖安装 → 拉起 → 校验」，
+# 目的：数据被清或热更资源缺失导致游戏卡在资源加载时，做一次干净的「卸载 → 全新安装 → 拉起 → 校验」，
 #       并在游戏重新下载完热更资源后校验运行时 libil2cpp.so 是否仍是本轮校订 RVA 时用的那一份。
 # 用法：
 #   bash whrhx_clean_reinstall.sh --check      # 只读：报告当前装机/数据/热更 so 状态，不动任何东西
 #   bash whrhx_clean_reinstall.sh --wipe       # 破坏性：pm clear（清档）→ adb install -r → 拉起游戏
 #   bash whrhx_clean_reinstall.sh --uninstall  # 破坏性（最彻底）：pm uninstall（连数据目录/外置数据/热更负载一起没了）→ adb install → 拉起游戏
 # --wipe / --uninstall 都会丢失游戏存档与本地缓存，必须由用户明确授权后运行。
+#
+# !! 无悔华夏专用硬约束（用户 m00888）!!
+#   本游戏【只允许】--uninstall（卸载 → 全新安装）。禁止 --wipe / 任何 `adb install -r` 覆盖安装：
+#   覆盖安装会换掉 APK，乐变（lebian）随之删掉自己的派生负载目录，却保留 resourceInfo.cfg 的 currVer，
+#   于是拒绝重建负载 ⇒ 游戏退回映射 APK 内置的加密 libil2cpp.so ⇒ mod 的 RVA 全表失配、il2cpp C-API 也解析不到。
+#   现象：logcat `[Il2Cpp] core api missing` + `[Whrhx] rva miss …`，且 lebian/<pkg>-1/lib/arm64/ 目录为空。
+#   详见 10_docs/无悔华夏/硬约束.md 第 4 条。
 set -uo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 SERIAL="${WHRHX_SERIAL:-f9a116a2}"
 PKG="${WHRHX_PKG:-com.yhhy.whrhx.aligames}"
-APK="${WHRHX_APK:-$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_科研立即完成热更修复_20260923-releaseSigned.apk}"
-RUNTIME_SO="$NIXIANG/06_dumped/无悔华夏/current_20260923/runtime/libil2cpp_runtime_20260923.so"
-EXPECT_SO_SHA="c04afff475683c0d0550ba3443d28f6e3dcc53fcf661351aa5692be5e364d3ca"
+APK="${WHRHX_APK:-$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_四新增功能R2_20261011-releaseSigned.apk}"
+RUNTIME_SO="$NIXIANG/06_dumped/无悔华夏/current_20261011/runtime/libil2cpp_runtime_20261011.so"
+EXPECT_SO_SHA="79adda770c528633213efe26bd084d14839c58a3a5382007de19cfc3d897aec9"
 LEBIAN_LIB="/data/data/$PKG/lebian/$PKG-1/lib/arm64/libil2cpp.so"
 
 MODE="${1:-}"
@@ -79,6 +86,13 @@ if [[ "$MODE" == "--uninstall" ]]; then
   adb -s "$SERIAL" install "$APK" || { echo "ERROR: install 失败" >&2; exit 1; }
 else
   echo
+  echo "!! 警告：无悔华夏禁止覆盖安装（用户硬约束 m00888），--wipe 走 adb install -r 会让乐变负载失效。"
+  echo "!! 请改用: bash $0 --uninstall"
+  if [[ "${WHRHX_ALLOW_WIPE:-0}" != "1" ]]; then
+    echo "已中止。若确要强行继续，设置 WHRHX_ALLOW_WIPE=1 重跑（不推荐）。"
+    exit 65
+  fi
+  echo
   echo "== 3. 清数据（破坏性）=="
   echo "即将执行: pm clear $PKG  →  存档/本地缓存全部丢失（APK 与 mod so 不受影响）"
   adb -s "$SERIAL" shell "su -c 'pm clear $PKG'" || { echo "ERROR: pm clear 失败" >&2; exit 1; }
@@ -93,7 +107,8 @@ echo
 echo "== 5. 拉起游戏（不点屏）=="
 adb -s "$SERIAL" shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 echo "已拉起。请让游戏联网把热更资源重新下载完（可能要几分钟），然后："
-echo "  1) 打开游戏内星空菜单，开启第 9 项「科研立即完成」；"
+echo "  1) 打开游戏内星空菜单，逐个试本轮 4 个新功能："
+echo "     #10 政策技能无CD / #11 名臣好感度 / #12 名臣技能无CD / #13 军队规模加成滑块(1-100)";
 echo "  2) 做一次国家政策/科技研发 + 一次名臣政策研发；"
 echo "  3) 回来跑: bash 04_scripts/无悔华夏/whrhx_research_log_check.sh"
 echo "另建议热更下载完成后复跑本脚本 --check，确认运行时 so sha 仍为 ${EXPECT_SO_SHA:0:8}…。"

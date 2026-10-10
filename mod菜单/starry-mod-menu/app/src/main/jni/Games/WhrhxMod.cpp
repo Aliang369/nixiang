@@ -55,8 +55,13 @@ enum : uintptr_t {
     RVA_MGR_COUNTRY_ID_OFF = 0x30,      // CountryDataMgr.m_countryId（IsPlayerCountry 反汇编比对源）
     // 2026-08-30 v23 零身份钩子（乐变库带导出表，IsPlayerCountry 的 Dobby 钩 4/4 崩溃 → 永久禁钩）：
     // 读它的取值链（+0x8C adrp→ldr→ldr 得 MethodInfo；bl get_Instance），Tick 直呼 getter 读 mgr+0x30
-    RVA_IS_PLAYER_LEB      = 0x32584F4,  // 兼作乐变构建标记（序言 A9BE4FF4）
+    RVA_IS_PLAYER_LEB      = 0x67DF754,  // CountryData.IsPlayerCountry（兼作乐变构建标记，序言 A9BE4FF4）
+                                         // 2026-10-11 校订：旧值 0x32584F4 落在 protobuf Field.Types.Cardinality
+                                         // 区间（0x64F89D0→ILFixDynamicMethodWrapper.__Gen_Wrap_1150），
+                                         // 两值在本机 79adda77 so 上序言均 miss → 身份链恒失败。
     RVA_GET_INSTANCE_LEB   = 0x64F89D0,  // QF.Singleton<CountryDataMgr>$$get_Instance 泛型共享实例 ins F81C0FF7
+                                         // 2026-10-11 已失效：该 RVA 实为 ILFixDynamicMethodWrapper.__Gen_Wrap_1150
+                                         // → 身份链改走 ResolveCountryMgrByName()（按名 + runtime_invoke）
     RVA_IS_PLAYER_DECODE_OFF = 0x8C,
     // 战斗三件（乐变 dump RVA；官方 SetEnd/Update 空页即拒）
     RVA_UPDATE_BATTLE_LEB  = 0x3394D5C,
@@ -113,6 +118,15 @@ enum : uintptr_t {
     // 函数内 0x3C5C8E0 cmp/0x3C5C8E4 b.ge → 0x3C5C8E8 orr w20,wzr,#7(ResNotEnough)
     //                                      / 0x3C5C8F0 orr w20,wzr,#2(CanExecute)
     RVA_POLICY_ITEM_SHOW_STATE     = 0x3C5B5A4,  // PolicyDataMgr.GetPolicyItemShowState(int,float) ins D104C3FF
+
+    // ── 2026-10-11 本机运行时 so 重校（sha256 79adda77…、201,368,952B；dump=06_dumped/无悔华夏/current_20261011）──
+    // 说明：上面 0923 那批锚点基准是 c04afff4…，本机再热更后已整体漂移（旧值首指令不符 →
+    //       ResolveRva 直接 miss → 自动回落按名）。本轮只登记四个新功能用到的锚点，
+    //       首指令值均按当前 so 逐点读出（见 kExpect[]）。
+    RVA_ARMY_GET_MAX_CAN_SEND  = 0x7016B98,  // CountryData.CountryArmyData.GetMaxCanSendNum(int,bool,int,bool,long,bool) → long
+    RVA_ARMY_GET_MAX_SEND      = 0x7017094,  // CountryData.CountryArmyData.GetMaxSendNum(eBattleType,int) → long
+    RVA_MINISTER_GET_FAVOR     = 0x7CD6F58,  // MinisterPlayMgr.GetMinisterFavorite(int) → int
+    RVA_MINISTER_ADD_FAVOR     = 0x7633D40,  // MinisterPlayMgr.MinisterPlayData.AddFavor(int)
 };
 
 static constexpr size_t kOffCountryMoney  = 0x118;
@@ -122,6 +136,16 @@ static constexpr size_t kOffCountryArmy   = 0x198;
 static constexpr size_t kOffResDataNumFx  = 0x10;
 static constexpr size_t kOffArmyPercentFx = 0x18;
 static constexpr size_t kOffPolicyRemainTime = 0x14;  // PolicyData.m_remainTime (float)
+
+// 2026-10-11 新增四项所需字段（dump current_20261011 逐点实锤）
+static constexpr size_t kOffPolicyRepeatCd     = 0x18;   // PolicyData.m_repeatRemainCd (float) ←「政策重复CD」
+static constexpr size_t kOffCountryPolicyMgr   = 0x1C8;  // CountryData.m_policyMgr (PolicyDataMgr)
+static constexpr size_t kOffCountryMinisterMgr = 0x2A8;  // CountryData.m_ministerData (MinisterPlayMgr)
+static constexpr size_t kOffMgrPolicyDic       = 0x10;   // PolicyDataMgr.m_policyDic
+static constexpr size_t kOffMinisterPlayDic    = 0x18;   // MinisterPlayMgr.m_playDataDic
+static constexpr size_t kOffMinisterFavorite   = 0x18;   // MinisterPlayMgr.MinisterPlayData.Favorite (int)
+static constexpr size_t kOffArmyCountryId      = 0x98;   // CountryData.CountryArmyData.m_countryId (int)
+static constexpr int32_t kFavorFull = 100;               // 好感度拉满值（游戏 90 档阈值之上）
 
 static constexpr int64_t kFakeRes = 99999999LL;
 static constexpr int64_t kFakeNum = 999999LL;
@@ -144,6 +168,8 @@ static std::atomic<bool> g_hooksEco{false};
 static std::atomic<bool> g_hooksBattle{false};
 static std::atomic<bool> g_hooksSpeed{false};
 static std::atomic<bool> g_hooksResearch{false};
+static std::atomic<bool> g_hooksMinister{false};   // feat11/12 名臣钩
+static std::atomic<bool> g_hooksArmyScale{false};  // feat13 军队规模钩
 
 static std::atomic<bool> g_gold{false};
 static std::atomic<bool> g_food{false};
@@ -154,6 +180,14 @@ static std::atomic<bool> g_researchDone{false};
 static std::atomic<int>  g_speedLvl{1};
 static std::atomic<int>  g_lastSpeedLvl{0};
 
+// 2026-10-11 新增四项的开关（feat10..#13）
+static std::atomic<bool> g_policyNoCd{false};         // feat10 政策技能无CD
+static std::atomic<bool> g_ministerFavor{false};      // feat11 名臣好感度
+static std::atomic<bool> g_ministerSkillNoCd{false};  // feat12 名臣技能无CD
+static std::atomic<int>  g_armyScalePct{0};           // feat13 0/1=关；2..100 = 规模加成 +X%
+// 名臣面板入口作用域（只在 MinisterPolicyUI/ExtraMinisterPolicyUI 调用栈内 >0）
+static thread_local int t_ministerSkillDepth = 0;
+
 static std::atomic<int32_t> g_playerCountryId{-1};
 static std::atomic<void*> g_playerCountry{nullptr};
 static std::atomic<void*> g_playerMoneyFx{nullptr};
@@ -162,6 +196,7 @@ static std::atomic<void*> g_playerArmyFx{nullptr};
 // v23 身份链：getter 直呼（零钩子）+ 最近 Cost thiz（钩子线程只存裸指针）
 static std::atomic<void*> g_countryMgr{nullptr};
 static std::atomic<void*> g_lastCostCountry{nullptr};
+static std::atomic<void*> g_policyMgr{nullptr};  // PolicyDataMgr 实例（Hooked_PolicyExecute 的 thiz）
 static std::atomic<size_t> g_offCountryId{0xE0};
 static std::atomic<size_t> g_offMgrCountryId{0x30};
 static std::atomic<bool> g_identityApiResolved{false};
@@ -287,6 +322,18 @@ static thread_local int t_policyPanelDepth = 0;
 static std::atomic<bool> g_hooksPanelGate{false};
 static constexpr int32_t kResCntBypass = 999999999;
 
+// 2026-10-11 新增四项的原生函数指针
+// ④ 军队规模：CountryArmyData 实例方法（this=armyData）
+typedef int64_t (*ArmyMaxCanSend_t)(void*, int32_t, bool, int32_t, bool, int64_t, bool, void*);
+typedef int64_t (*ArmyMaxSend_t)(void*, int32_t, int32_t, void*);
+// ② 名臣好感度：MinisterPlayMgr 实例 + MinisterPlayData 实例
+typedef int32_t (*MinisterGetFavor_t)(void*, int32_t, void*);
+typedef void    (*MinisterAddFavor_t)(void*, int32_t, void*);
+static ArmyMaxCanSend_t g_origArmyMaxCanSend = nullptr;
+static ArmyMaxSend_t g_origArmyMaxSend = nullptr;
+static MinisterGetFavor_t g_origMinisterGetFavor = nullptr;
+static MinisterAddFavor_t g_origMinisterAddFavor = nullptr;
+
 
 // --- 双路径：RVA ↔ Il2Cpp 按名；禁止 base+RVA；禁止全 RX 序言误扫 ---
 
@@ -308,6 +355,7 @@ static void* FileOffToVaBest(const char* lib, uintptr_t fileOff) {
     char line[768];
     void* found = nullptr;
     size_t bestSpan = 0;
+    int bestPrio = -1;  // 多份同名库同时映射时的优先级（乐变热更副本 = RVA 基准）
     while (fgets(line, sizeof(line), fp)) {
         if (!IsIl2CppMapLine(line, lib)) continue;
         unsigned long start = 0, end = 0, off = 0;
@@ -318,7 +366,12 @@ static void* FileOffToVaBest(const char* lib, uintptr_t fileOff) {
         void* va = VaInSegment(start, end, off, fileOff);
         if (!va) continue;
         const size_t span = static_cast<size_t>(end - start);
-        if (span > bestSpan) {
+        // 2026-10-11：APK 内置 libil2cpp.so（221MB）与乐变热更副本（201MB）可能同时映射，
+        // 仅按 span 取大会选错库（RVA 基准是乐变那份）→ 先比路径优先级，同优先级再比 span。
+        const int prio = strstr(line, "/lebian/") ? 2
+                       : (strstr(line, "/data/app/") ? 1 : 0);
+        if (prio > bestPrio || (prio == bestPrio && span > bestSpan)) {
+            bestPrio = prio;
             bestSpan = span;
             found = va;
         }
@@ -418,6 +471,11 @@ static const PrologueExpect kExpect[] = {
     {RVA_POLICY_CHECK_DISABLE, 0xA9BB67FA, "PolicyDataMgr.CheckPolicyDisable"},
     // 条目状态门（2026-09-23 续修）：资源/科技/前置等拦截态 → CanExecute
     {RVA_POLICY_ITEM_SHOW_STATE, 0xD104C3FF, "PolicyDataMgr.GetPolicyItemShowState"},
+    // 2026-10-11 本机运行时 so（sha 79adda77…）四锚点首指令逐点实锤
+    {RVA_ARMY_GET_MAX_CAN_SEND, 0xD101C3FF, "CountryArmyData.GetMaxCanSendNum"},
+    {RVA_ARMY_GET_MAX_SEND, 0xFC1C0FE8, "CountryArmyData.GetMaxSendNum"},
+    {RVA_MINISTER_GET_FAVOR, 0xF81D0FF5, "MinisterPlayMgr.GetMinisterFavorite"},
+    {RVA_MINISTER_ADD_FAVOR, 0xA9BE4FF4, "MinisterPlayData.AddFavor"},
 };
 
 static const PrologueExpect* ExpectForRva(uintptr_t rva) {
@@ -1012,6 +1070,36 @@ static void CaptureCountryMgr(void* mgr) {
     }
 }
 
+// 2026-10-11 新增：身份链按名兜底。
+// RVA_IS_PLAYER_LEB / RVA_GET_INSTANCE_LEB 在热更后都已漂移（均不是函数入口），
+// 且 F81C0FF7 序言在 201MB so 里有 12994 处碰撞，无法按序言定位 get_Instance。
+// 故改用 il2cpp API 按名取 Singleton<CountryDataMgr>.get_Instance 的 MethodInfo，
+// 再用 runtime_invoke 直调：泛型共享 thunk 的调用约定交给 runtime，避免裸函数指针误调。
+static std::atomic<void*> g_countryMgrMi{nullptr};
+
+static void* ResolveCountryMgrByName() {
+    if (!EnsureIl2CppApi()) return nullptr;
+    void* mi = g_countryMgrMi.load();
+    if (!mi) {
+        void* cls = FindClassNs("", "CountryDataMgr");
+        if (!cls) return nullptr;
+        void* m = GetApi().GetMethod(cls, "get_Instance", 0);
+        if (!m) return nullptr;
+        if (GetApi().method_get_name) {
+            const char* n = GetApi().method_get_name(m);
+            if (!n || strcmp(n, "get_Instance") != 0) return nullptr;
+        }
+        g_countryMgrMi.store(m);
+        mi = m;
+        LOGI("[Whrhx] country mgr mi by-name %p", mi);
+    }
+    if (!GetApi().runtime_invoke) return nullptr;
+    void* exc = nullptr;
+    void* obj = GetApi().runtime_invoke(mi, nullptr, nullptr, &exc);
+    if (exc || !obj) return nullptr;
+    return obj;
+}
+
 static void RefreshPlayerIdentityTick() {
     ResolveCountryIdentityApi();
     const int64_t now = NowMs();
@@ -1022,6 +1110,8 @@ static void RefreshPlayerIdentityTick() {
         if (!mgr && ResolveIdentityChainLEB())
             mgr = reinterpret_cast<GetMgrInst_t>(g_getInstFn)(g_mi);
 #endif
+        // 按名兜底（不依赖 RVA，热更漂移后仍可用；KB 包同样受益）
+        if (!mgr) mgr = ResolveCountryMgrByName();
         if (mgr) CaptureCountryMgr(mgr);
         PinCityArmies();
     }
@@ -1497,6 +1587,12 @@ static void ResearchScopeLeave() {
     if (t_researchDepth > 0 && --t_researchDepth == 0) t_researchHandled = false;
 }
 
+// 2026-10-11 名臣技能无CD：名臣两侧面板入口的调用栈标记（与科研作用域并列、互不干扰）
+static void MinisterSkillScopeEnter() { t_ministerSkillDepth++; }
+static void MinisterSkillScopeLeave() {
+    if (t_ministerSkillDepth > 0) t_ministerSkillDepth--;
+}
+
 static void Hooked_ResearchTech(void* thiz, int32_t techId, void* method) {
     const bool enabled = g_researchDone.load();
     if (enabled) ResearchScopeEnter();
@@ -1518,21 +1614,33 @@ static void Hooked_PolicyUiExecute(void* thiz, int32_t policyId, void* method) {
 // 内部同样 bl → PolicyDataMgr.ExecutePolicy，所以只要进 scope，「立即完成 + 无条件」就自动覆盖名臣。
 static void Hooked_MinisterUiExecute(void* thiz, int32_t policyId, void* method) {
     const bool enabled = g_researchDone.load();
+    const bool noCd = g_ministerSkillNoCd.load();
     if (enabled) {
         LOGI("[Whrhx] minister policy ui execute id=%d", policyId);
         ResearchScopeEnter();
     }
+    if (noCd) {
+        LOGI("[Whrhx] minister skill noCD execute id=%d", policyId);
+        MinisterSkillScopeEnter();
+    }
     if (g_origMinisterUiExecute) g_origMinisterUiExecute(thiz, policyId, method);
+    if (noCd) MinisterSkillScopeLeave();
     if (enabled) ResearchScopeLeave();
 }
 
 static void Hooked_ExtraMinisterUiExecute(void* thiz, int32_t policyId, void* method) {
     const bool enabled = g_researchDone.load();
+    const bool noCd = g_ministerSkillNoCd.load();
     if (enabled) {
         LOGI("[Whrhx] extra minister policy ui execute id=%d", policyId);
         ResearchScopeEnter();
     }
+    if (noCd) {
+        LOGI("[Whrhx] extra minister skill noCD execute id=%d", policyId);
+        MinisterSkillScopeEnter();
+    }
     if (g_origExtraMinisterUiExecute) g_origExtraMinisterUiExecute(thiz, policyId, method);
+    if (noCd) MinisterSkillScopeLeave();
     if (enabled) ResearchScopeLeave();
 }
 
@@ -1543,24 +1651,29 @@ static void Hooked_TechPolicyResearch(void* thiz, void* method) {
     if (enabled) ResearchScopeLeave();
 }
 
-static void Hooked_PolicyExecute(void* thiz, int32_t id, float discount, bool needLog,
-                                 bool isAutoSave, void* method) {
-    if (g_origPolicyExecute)
-        g_origPolicyExecute(thiz, id, discount, needLog, isAutoSave, method);
-    if (!g_researchDone.load() || t_researchDepth <= 0 || t_researchHandled) return;
-    if (!thiz || id <= 0 || !g_policyGetData || !g_policyFinishAnyway || !g_policyUpdateTime)
-        return;
+// ①/③ 共用：把某政策的重复CD（PolicyData.m_repeatRemainCd）清 0
+static void ClearRepeatCdNow(void* mgr, int32_t policyId) {
+    if (!mgr || policyId <= 0 || !g_policyGetData) return;
+    void* data = g_policyGetData(mgr, policyId, nullptr);
+    if (!data) return;
+    const float zero = 0.f;
+    if (KWrite(static_cast<char*>(data) + kOffPolicyRepeatCd, &zero, sizeof(zero)))
+        LOGI("[Whrhx] policy repeat cd cleared id=%d", policyId);
+}
 
-    t_researchHandled = true;
-    void* data = g_policyGetData(thiz, id, nullptr);
+// 立即完成（科研 / ① 政策无CD / ③ 名臣技能无CD 三处共用同一套动作）：
+// GetPolicyData → FinishPolicyTimeAnyway → 读回校验（不降则兜底写 0.1f）→ UpdatePolicyTime(1.0f)
+static void PolicyFinishNow(void* mgr, int32_t id, const char* tag) {
+    if (!mgr || id <= 0 || !g_policyGetData || !g_policyFinishAnyway || !g_policyUpdateTime) return;
+    void* data = g_policyGetData(mgr, id, nullptr);
     float remain = 0.f;
     if (!data || !KRead(static_cast<char*>(data) + kOffPolicyRemainTime, &remain, sizeof(remain)) ||
         !(remain > 0.f)) {
-        LOGW("[Whrhx] research finish id=%d no active remain=%.3f", id, remain);
+        LOGW("[Whrhx] %s finish id=%d no active remain=%.3f", tag, id, remain);
         return;
     }
 
-    g_policyFinishAnyway(thiz, id, nullptr);
+    g_policyFinishAnyway(mgr, id, nullptr);
     float after = remain;
     const bool readBack =
         KRead(static_cast<char*>(data) + kOffPolicyRemainTime, &after, sizeof(after));
@@ -1570,9 +1683,32 @@ static void Hooked_PolicyExecute(void* thiz, int32_t id, float discount, bool ne
         fallback = KWrite(static_cast<char*>(data) + kOffPolicyRemainTime, &nearDone,
                            sizeof(nearDone));
     }
-    g_policyUpdateTime(thiz, 1.0f, true, true, nullptr);
-    LOGI("[Whrhx] research finish id=%d remain=%.3f fallback=%d", id, remain,
-         fallback ? 1 : 0);
+    g_policyUpdateTime(mgr, 1.0f, true, true, nullptr);
+    LOGI("[Whrhx] %s finish id=%d remain=%.3f fallback=%d", tag, id, remain, fallback ? 1 : 0);
+}
+
+static void Hooked_PolicyExecute(void* thiz, int32_t id, float discount, bool needLog,
+                                 bool isAutoSave, void* method) {
+    if (g_origPolicyExecute)
+        g_origPolicyExecute(thiz, id, discount, needLog, isAutoSave, method);
+
+    // 顺手缓存 PolicyDataMgr（做字典级清 CD 用；thiz 就是 PolicyDataMgr 实例）
+    if (thiz && ObjKlassNameIs(thiz, "PolicyDataMgr")) g_policyMgr.store(thiz);
+
+    // ① 政策技能无CD：所有政策执行即完成 + 该政策重复CD 清 0
+    const bool noCdPolicy = g_policyNoCd.load();
+    // ③ 名臣技能无CD：只在名臣面板入口的调用栈内生效（独立生效，不依赖 ① ）
+    const bool noCdMinSkill = g_ministerSkillNoCd.load() && t_ministerSkillDepth > 0;
+    if (noCdPolicy || noCdMinSkill) {
+        ClearRepeatCdNow(thiz, id);
+        PolicyFinishNow(thiz, id, noCdMinSkill ? "noCD-minister" : "noCD-policy");
+        return;
+    }
+
+    // 既有科研立即完成路径（语义与 2026-09-23 版完全一致，不动）
+    if (!g_researchDone.load() || t_researchDepth <= 0 || t_researchHandled) return;
+    t_researchHandled = true;
+    PolicyFinishNow(thiz, id, "research");
 }
 
 // ── 面板资源门放行（与 feat#9 同一开关）───────────────────────────────────────
@@ -1595,15 +1731,21 @@ static void Hooked_PolicyUiActive(void* thiz, void* method) {
 
 static void Hooked_MinisterTryActive(void* thiz, void* method) {
     const bool enabled = g_researchDone.load();
+    const bool noCd = g_ministerSkillNoCd.load();
     if (enabled) PolicyPanelScopeEnter();
+    if (noCd) MinisterSkillScopeEnter();
     if (g_origMinisterTryActive) g_origMinisterTryActive(thiz, method);
+    if (noCd) MinisterSkillScopeLeave();
     if (enabled) PolicyPanelScopeLeave();
 }
 
 static void Hooked_ExtraMinisterTryActive(void* thiz, void* method) {
     const bool enabled = g_researchDone.load();
+    const bool noCd = g_ministerSkillNoCd.load();
     if (enabled) PolicyPanelScopeEnter();
+    if (noCd) MinisterSkillScopeEnter();
     if (g_origExtraMinisterTryActive) g_origExtraMinisterTryActive(thiz, method);
+    if (noCd) MinisterSkillScopeLeave();
     if (enabled) PolicyPanelScopeLeave();
 }
 
@@ -1805,8 +1947,256 @@ static void InstallCaptureHooks() {
 }
 #endif
 
+// ════════════════════════════════════════════════════════════════════════════
+//  2026-10-11 新增四项（feat 10..13）
+//    ① 10 政策技能无CD   ② 11 名臣好感度
+//    ③ 12 名臣技能无CD   ④ 13 军队规模（滑块 1..100，语义=规模加成 +X%）
+//  锚点取自 current_20261011 dump（运行时 so sha256 79adda77…）；RVA 首指令由
+//  kExpect 校验，不符自动回落按名 ⇒ 热更漂移不会让功能失效，只会换解析路径。
+// ════════════════════════════════════════════════════════════════════════════
+
+// 身份：四项功能只需要「玩家 CountryData*」。这里**只走按名解析**、刻意不用
+// 旧 LEB RVA（RVA_GET_COUNTRY_MGR_LEB=0x3A0379C 是 c04afff4… 基准，本机 so
+// 79adda77… 已漂移且不在 kExpect 内 ⇒ 会挂到函数中段、把身份链挂错）。
+// Hooked_GetCountryMgr 会把 id==pid 的结果存进 g_playerCountry。
+// 另外 RefreshPlayerIdentityTick 还有一条不依赖钩子的路（Singleton.get_Instance
+// → CaptureCountryMgr），两条路互为兜底。
+static void InstallNewFeatureIdentity() {
+    if (!g_origGetCountryById) {
+        static const int kOneArgcs[] = {1};
+        if (HookRvaOrIl2Cpp("GetCountryDataById", "", "CountryDataMgr", "GetCountryDataById",
+                            kOneArgcs, 1, /*rva=*/0, (void*)Hooked_GetCountryMgr,
+                            (void**)&g_origGetCountryById, false, 0)) {
+            LOGI("[Whrhx] identity hooks: country(by-name)");
+        }
+    }
+    static std::atomic<uint32_t> s_att{0};
+    const uint32_t att = s_att.fetch_add(1);
+    if (!g_origGetCountryById || (att % 20) != 0) return;
+    void* mgr = g_countryMgr.load();
+    const int32_t pid = g_playerCountryId.load();
+    if (!mgr || pid <= 0 || pid > 64) return;
+    void* c = g_origGetCountryById(mgr, pid, nullptr);
+    if (!c || !ObjKlassNameIs(c, "CountryData")) return;
+    int32_t cid = -1;
+    if (KRead(static_cast<char*>(c) + g_offCountryId.load(), &cid, sizeof(cid)) && cid == pid)
+        g_playerCountry.store(c);
+}
+
+// ① 政策重复CD：遍历 PolicyDataMgr.m_policyDic，把每条 PolicyData.m_repeatRemainCd 清 0。
+//    （m_repeatRemainCd 即游戏「政策重复CD」——CountryReformMgr.GetPolicyRepeatRemainCd
+//      的返回值就是 [PolicyData+0x18]，GM 面板也有官方「清除政策重复剩余CD」按钮。）
+static int SweepPolicyCdInMgr(void* mgr, bool verbose) {
+    if (!mgr) return 0;
+    void* dict = nullptr;
+    if (!KRead(static_cast<char*>(mgr) + kOffMgrPolicyDic, &dict, 8) || !dict) return 0;
+    void* entries = nullptr;
+    if (!KRead(static_cast<char*>(dict) + 0x18, &entries, 8) || !entries) return 0;
+    int32_t maxLen = 0;
+    if (!KRead(static_cast<char*>(entries) + 0x18, &maxLen, 4) || maxLen <= 0 || maxLen > 65536)
+        return 0;
+    char* base = static_cast<char*>(entries) + 0x20;
+    const float zero = 0.f;
+    int cleared = 0;
+    for (int32_t i = 0; i < maxLen; i++) {
+        char* ent = base + static_cast<size_t>(i) * 0x18;
+        void* data = nullptr;
+        if (!KRead(ent + 0x10, &data, 8) || !data) continue;
+        if (!ObjKlassNameIs(data, "PolicyData")) continue;  // 布局假设兜底
+        float cd = 0.f;
+        if (!KRead(static_cast<char*>(data) + kOffPolicyRepeatCd, &cd, sizeof(cd))) continue;
+        if (cd > 0.f && KWrite(static_cast<char*>(data) + kOffPolicyRepeatCd, &zero, sizeof(zero)))
+            cleared++;
+    }
+    if (verbose && cleared > 0) LOGI("[Whrhx] policy noCD sweep cleared=%d", cleared);
+    return cleared;
+}
+
+// ② 名臣好感度：遍历 MinisterPlayMgr.m_playDataDic，把每个 MinisterPlayData.Favorite 抬到 100。
+static int PinMinisterFavorInMgr(void* mgr, bool verbose) {
+    if (!mgr) return 0;
+    void* dict = nullptr;
+    if (!KRead(static_cast<char*>(mgr) + kOffMinisterPlayDic, &dict, 8) || !dict) return 0;
+    void* entries = nullptr;
+    if (!KRead(static_cast<char*>(dict) + 0x18, &entries, 8) || !entries) return 0;
+    int32_t maxLen = 0;
+    if (!KRead(static_cast<char*>(entries) + 0x18, &maxLen, 4) || maxLen <= 0 || maxLen > 65536)
+        return 0;
+    char* base = static_cast<char*>(entries) + 0x20;
+    int n = 0;
+    for (int32_t i = 0; i < maxLen; i++) {
+        char* ent = base + static_cast<size_t>(i) * 0x18;
+        void* play = nullptr;
+        if (!KRead(ent + 0x10, &play, 8) || !play) continue;
+        if (!ObjKlassNameIs(play, "MinisterPlayData")) continue;  // 身份校验，防错写
+        int32_t fav = 0;
+        if (!KRead(static_cast<char*>(play) + kOffMinisterFavorite, &fav, 4)) continue;
+        if (fav >= kFavorFull) continue;
+        if (KWrite(static_cast<char*>(play) + kOffMinisterFavorite, &kFavorFull, 4)) n++;
+    }
+    if (verbose && n > 0) LOGI("[Whrhx] minister favor pinned=%d", n);
+    return n;
+}
+
+// ② 好感度读取口：面板/任务读取时直接给满值
+static int32_t Hooked_MinisterGetFavor(void* thiz, int32_t ministerId, void* method) {
+    int32_t v = g_origMinisterGetFavor ? g_origMinisterGetFavor(thiz, ministerId, method) : 0;
+    if (!g_ministerFavor.load() || v >= kFavorFull) return v;
+    LOGI("[Whrhx] minister favorite id=%d %d→%d", ministerId, v, kFavorFull);
+    return kFavorFull;
+}
+
+// ② 好感度写入口：先抬到满值再走原生（原生是 += 语义，结果只会更大）
+static void Hooked_MinisterAddFavor(void* thiz, int32_t favor, void* method) {
+    if (g_ministerFavor.load() && thiz && ObjKlassNameIs(thiz, "MinisterPlayData")) {
+        int32_t cur = 0;
+        if (KRead(static_cast<char*>(thiz) + kOffMinisterFavorite, &cur, 4) && cur < kFavorFull) {
+            if (KWrite(static_cast<char*>(thiz) + kOffMinisterFavorite, &kFavorFull, 4))
+                LOGI("[Whrhx] minister add favor %d→%d (arg=%d)", cur, kFavorFull, favor);
+        }
+    }
+    if (g_origMinisterAddFavor) g_origMinisterAddFavor(thiz, favor, method);
+}
+
+// ④ 规模加成：cap = 原生 × (100+pct)/100，只对玩家自己的 CountryArmyData 生效
+//    （不做玩家判定会把 AI 一起加强）。pct<=1 视为关闭（滑块 1=关）。
+static int64_t ScaleArmyCap(void* armyData, int64_t orig) {
+    const int32_t pct = g_armyScalePct.load();
+    if (pct <= 1 || orig <= 0 || !armyData) return orig;
+    if (!ObjKlassNameIs(armyData, "CountryArmyData")) return orig;
+    int32_t cid = -1;
+    if (!KRead(static_cast<char*>(armyData) + kOffArmyCountryId, &cid, sizeof(cid))) return orig;
+    const int32_t pid = g_playerCountryId.load();
+    if (cid <= 0 || pid <= 0 || cid != pid) return orig;
+    const int64_t scaled = orig * static_cast<int64_t>(100 + pct) / 100;
+    return scaled > orig ? scaled : orig;
+}
+
+static int64_t Hooked_ArmyMaxCanSend(void* thiz, int32_t targetCity, bool isRobberBattle,
+                                     int32_t roadPointId, bool isDefend, int64_t maxSendNum,
+                                     bool canPassByLord, void* method) {
+    int64_t r = g_origArmyMaxCanSend
+                    ? g_origArmyMaxCanSend(thiz, targetCity, isRobberBattle, roadPointId, isDefend,
+                                           maxSendNum, canPassByLord, method)
+                    : 0;
+    const int64_t s = ScaleArmyCap(thiz, r);
+    if (s != r)
+        LOGI("[Whrhx] army cap target=%d %lld→%lld (+%d%%)", targetCity, (long long)r,
+             (long long)s, g_armyScalePct.load());
+    return s;
+}
+
+static int64_t Hooked_ArmyMaxSend(void* thiz, int32_t battleType, int32_t intParam, void* method) {
+    int64_t r = g_origArmyMaxSend ? g_origArmyMaxSend(thiz, battleType, intParam, method) : 0;
+    const int64_t s = ScaleArmyCap(thiz, r);
+    if (s != r)
+        LOGI("[Whrhx] army maxSend type=%d %lld→%lld (+%d%%)", battleType, (long long)r,
+             (long long)s, g_armyScalePct.load());
+    return s;
+}
+
+// ② 名臣钩安装（GetMinisterFavorite 读口 + MinisterPlayData.AddFavor 写口）
+static void InstallMinisterHooks() {
+    if (g_hooksMinister.load()) return;
+    static std::atomic<uint32_t> s_att{0};
+    const uint32_t att = s_att.fetch_add(1);
+    if (att > 0 && (att % 10) != 0) return;
+    static const int kOneArgcs[] = {1};
+    int n = 0;
+    if (!g_origMinisterGetFavor) {
+        if (HookRvaOrIl2Cpp("MinisterGetFavorite", "", "MinisterPlayMgr", "GetMinisterFavorite",
+                            kOneArgcs, 1, RVA_MINISTER_GET_FAVOR,
+                            (void*)Hooked_MinisterGetFavor, (void**)&g_origMinisterGetFavor, true,
+                            0))
+            ++n;
+    }
+    if (!g_origMinisterAddFavor) {
+        // 嵌套类在 il2cpp 里的 klass 名是短名（MinisterPlayData），不是 dump 的 MinisterPlayMgr.MinisterPlayData
+        if (HookRvaOrIl2Cpp("MinisterAddFavor", "", "MinisterPlayData", "AddFavor", kOneArgcs, 1,
+                            RVA_MINISTER_ADD_FAVOR, (void*)Hooked_MinisterAddFavor,
+                            (void**)&g_origMinisterAddFavor, true, 0))
+            ++n;
+    }
+    if (n > 0)
+        LOGI("[Whrhx] minister hooks=%d rva-read=%d rva-write=%d", n,
+             g_origMinisterGetFavor ? 1 : 0, g_origMinisterAddFavor ? 1 : 0);
+    if (g_origMinisterGetFavor && g_origMinisterAddFavor) {
+        g_hooksMinister.store(true);
+        LOGI("[Whrhx] minister hooks ready");
+    }
+}
+
+// ④ 军队规模钩安装
+static void InstallArmyScaleHooks() {
+    if (g_hooksArmyScale.load()) return;
+    static std::atomic<uint32_t> s_att{0};
+    const uint32_t att = s_att.fetch_add(1);
+    if (att > 0 && (att % 10) != 0) return;
+    static const int kCanSendArgcs[] = {6};
+    static const int kMaxSendArgcs[] = {2};
+    int n = 0;
+    if (!g_origArmyMaxCanSend) {
+        if (HookRvaOrIl2Cpp("ArmyGetMaxCanSendNum", "", "CountryArmyData", "GetMaxCanSendNum",
+                            kCanSendArgcs, 1, RVA_ARMY_GET_MAX_CAN_SEND,
+                            (void*)Hooked_ArmyMaxCanSend, (void**)&g_origArmyMaxCanSend, true, 0))
+            ++n;
+    }
+    if (!g_origArmyMaxSend) {
+        if (HookRvaOrIl2Cpp("ArmyGetMaxSendNum", "", "CountryArmyData", "GetMaxSendNum",
+                            kMaxSendArgcs, 1, RVA_ARMY_GET_MAX_SEND, (void*)Hooked_ArmyMaxSend,
+                            (void**)&g_origArmyMaxSend, true, 0))
+            ++n;
+    }
+    if (n > 0)
+        LOGI("[Whrhx] army scale hooks=%d canSend=%d maxSend=%d", n,
+             g_origArmyMaxCanSend ? 1 : 0, g_origArmyMaxSend ? 1 : 0);
+    if (g_origArmyMaxCanSend && g_origArmyMaxSend) {
+        g_hooksArmyScale.store(true);
+        LOGI("[Whrhx] army scale hooks ready");
+    }
+}
+
+// 新增四项的周期维护（1s 节流）：身份兜底 → ① 清政策重复CD → ② 抬名臣好感度
+static void NewFeaturesTick() {
+    const bool anyPolicy = g_policyNoCd.load();
+    const bool anyFavor = g_ministerFavor.load();
+    const bool anySkill = g_ministerSkillNoCd.load();
+    const int32_t pct = g_armyScalePct.load();
+    if (!anyPolicy && !anyFavor && !anySkill && pct <= 1) return;
+    InstallNewFeatureIdentity();
+    static std::atomic<int64_t> s_lastMs{0};
+    const int64_t now = NowMs();
+    if (now - s_lastMs.load() < 1000) return;
+    s_lastMs.store(now);
+
+    // ①（③ 的持续面靠执行口清 CD）：玩家 CountryData.m_policyMgr，拿不到就退回
+    // Hooked_PolicyExecute 缓存的 PolicyDataMgr。
+    if (anyPolicy) {
+        void* mgr = nullptr;
+        void* country = g_playerCountry.load();
+        if (country)
+            KRead(static_cast<char*>(country) + kOffCountryPolicyMgr, &mgr, sizeof(mgr));
+        if (!mgr) mgr = g_policyMgr.load();
+        if (mgr && ObjKlassNameIs(mgr, "PolicyDataMgr")) SweepPolicyCdInMgr(mgr, true);
+    }
+    // ② 好感度：玩家 CountryData.m_ministerData（MinisterPlayMgr）
+    if (anyFavor) {
+        void* country = g_playerCountry.load();
+        void* mgr = nullptr;
+        if (country)
+            KRead(static_cast<char*>(country) + kOffCountryMinisterMgr, &mgr, sizeof(mgr));
+        if (mgr && ObjKlassNameIs(mgr, "MinisterPlayMgr")) PinMinisterFavorInMgr(mgr, true);
+    }
+}
+
 static void Whrhx_SyncHooks() {
     if (!g_libReady.load()) return;
+    // ── 2026-10-11 新增四项（feat 10..13）──
+    const bool newNoCd = g_policyNoCd.load() || g_ministerSkillNoCd.load();
+    const bool anyNew = newNoCd || g_ministerFavor.load() || g_armyScalePct.load() > 1;
+    // 身份先建：新增四项走「按名」建立身份链（旧 LEB RVA 在当前 so 已漂移，
+    // 见 InstallNewFeatureIdentity 注释），先占位可顺带让生态路径跳过错误 RVA。
+    if (anyNew) InstallNewFeatureIdentity();
 #ifdef STARRY_GAME_WHRHXKB
     InstallCaptureHooks();
 #endif
@@ -1821,6 +2211,12 @@ static void Whrhx_SyncHooks() {
     if (g_speedLvl.load() > 1) InstallSpeedHooks();
     if (g_researchDone.load()) InstallResearchHooks();
     PinPlayerValues();
+
+    // ① / ③ 复用科研那套 PolicyExecute 钩（GetPolicyData / FinishPolicyTimeAnyway / UpdatePolicyTime）
+    if (newNoCd) InstallResearchHooks();
+    if (g_ministerFavor.load()) InstallMinisterHooks();
+    if (g_armyScalePct.load() > 1) InstallArmyScaleHooks();
+    if (anyNew) NewFeaturesTick();
 }
 
 bool Whrhx_TryInit() {
@@ -1851,6 +2247,9 @@ void Whrhx_Tick(const bool* features) {
         g_pop.store(features[WHRHX_FEAT_POP]);
         g_win.store(features[WHRHX_FEAT_WIN]);
         g_researchDone.store(features[WHRHX_FEAT_RESEARCH_DONE]);
+        g_policyNoCd.store(features[WHRHX_FEAT_POLICY_NOCD]);
+        g_ministerFavor.store(features[WHRHX_FEAT_MINISTER_FAVOR]);
+        g_ministerSkillNoCd.store(features[WHRHX_FEAT_MINISTER_SKILL_NOCD]);
     }
     if (g_libReady.load() && !GetApi().ready && isLibraryLoaded(GameUnity::TARGET_LIB)) {
         const uint32_t t = g_il2cppRetryTick.fetch_add(1);
@@ -1871,6 +2270,9 @@ void Whrhx_OnFeatureChanged(int featNum, bool enabled) {
         case WHRHX_FEAT_POP:  g_pop.store(enabled); break;
         case WHRHX_FEAT_WIN:  g_win.store(enabled); break;
         case WHRHX_FEAT_RESEARCH_DONE: g_researchDone.store(enabled); break;
+        case WHRHX_FEAT_POLICY_NOCD: g_policyNoCd.store(enabled); break;
+        case WHRHX_FEAT_MINISTER_FAVOR: g_ministerFavor.store(enabled); break;
+        case WHRHX_FEAT_MINISTER_SKILL_NOCD: g_ministerSkillNoCd.store(enabled); break;
         case WHRHX_FEAT_SPEED:
             if (!enabled) {
                 g_speedLvl.store(1);
@@ -1887,6 +2289,16 @@ void Whrhx_OnFeatureChanged(int featNum, bool enabled) {
 }
 
 void Whrhx_OnValueChanged(int featNum, int value) {
+    // ④ 军队规模：滑块 1..100，1=关；语义=规模加成 +X%
+    if (featNum == WHRHX_FEAT_ARMY_SCALE) {
+        if (value < 1) value = 1;
+        if (value > 100) value = 100;
+        if (value == g_armyScalePct.load()) return;
+        g_armyScalePct.store(value);
+        Whrhx_SyncHooks();
+        LOGI("[Whrhx] armyScalePct=%d%% (cap=orig*%d/100)", value, 100 + value);
+        return;
+    }
     if (featNum != WHRHX_FEAT_SPEED) return;
     if (value < 1) value = 1;
     if (value > 5) value = 5;
@@ -1904,6 +2316,11 @@ void Whrhx_ForceClear() {
     g_pop.store(false);
     g_win.store(false);
     g_researchDone.store(false);
+    g_policyNoCd.store(false);
+    g_ministerFavor.store(false);
+    g_ministerSkillNoCd.store(false);
+    g_armyScalePct.store(0);
+    t_ministerSkillDepth = 0;
     g_speedLvl.store(1);
     g_lastSpeedLvl.store(0);
     g_playerCountryId.store(-1);
@@ -1913,6 +2330,7 @@ void Whrhx_ForceClear() {
     g_playerArmyFx.store(nullptr);
     g_countryMgr.store(nullptr);
     g_lastCostCountry.store(nullptr);
+    g_policyMgr.store(nullptr);
 #ifdef STARRY_GAME_WHRHXKB
     g_cityMgr.store(nullptr);
 #endif

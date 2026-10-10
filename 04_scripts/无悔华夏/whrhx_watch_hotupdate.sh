@@ -9,7 +9,7 @@ SERIAL="${WHRHX_SERIAL:-f9a116a2}"
 PKG="${WHRHX_PKG:-com.yhhy.whrhx.aligames}"
 LEBIAN_LIB="/data/data/$PKG/lebian/$PKG-1/lib/arm64/libil2cpp.so"
 LEBIAN_DIR="/data/data/$PKG/lebian"
-EXPECT_SO_SHA="c04afff475683c0d0550ba3443d28f6e3dcc53fcf661351aa5692be5e364d3ca"
+EXPECT_SO_SHA="79adda770c528633213efe26bd084d14839c58a3a5382007de19cfc3d897aec9"
 ROUNDS="${WHRHX_ROUNDS:-60}"      # 60 × 30s = 30 分钟上限
 INTERVAL="${WHRHX_INTERVAL:-30}"
 
@@ -34,9 +34,9 @@ for i in $(seq 1 "$ROUNDS"); do
       echo "[watch] 热更运行时 so 已回填（第 $((i*INTERVAL)) 秒）"
       echo "  size=$(dev "su -c 'stat -c %s $LEBIAN_LIB'")  sha256=$SHA"
       if [[ "$SHA" == "$EXPECT_SO_SHA" ]]; then
-        echo "  ✓ 与校订 RVA 所用版本一致 ⇒ 科研 RVA 仍然有效"
+        echo "  ✓ 与校订 RVA 所用版本一致 ⇒ 本轮 RVA 仍然有效"
       else
-        echo "  ! 与校订版本（c04afff4…）不同 ⇒ RVA 可能再次漂移，需要重新 dump 校订"
+        echo "  ! 与校订版本（79adda77…）不同 ⇒ RVA 可能再次漂移，需要重新 dump 校订"
       fi
       show_maps
       echo "=== [Whrhx] 最近日志 ==="

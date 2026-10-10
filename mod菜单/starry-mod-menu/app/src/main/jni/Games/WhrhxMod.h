@@ -14,6 +14,11 @@ enum WhrhxFeat : int {
     WHRHX_FEAT_WIN   = 6,
     WHRHX_FEAT_SPEED = 8,
     WHRHX_FEAT_RESEARCH_DONE = 9,
+    // 2026-10-11 新增四项（用户点名）
+    WHRHX_FEAT_POLICY_NOCD         = 10,  // 政策技能无CD：执行即完成 + 重复CD 清零
+    WHRHX_FEAT_MINISTER_FAVOR      = 11,  // 名臣好感度：拉到 100
+    WHRHX_FEAT_MINISTER_SKILL_NOCD = 12,  // 名臣技能无CD：名臣面板政策执行即完成
+    WHRHX_FEAT_ARMY_SCALE          = 13,  // 军队规模：滑块 1..100（1=关，语义=规模加成 +X%）
 };
 
 bool Whrhx_TryInit();

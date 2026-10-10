@@ -619,6 +619,11 @@ static const char* g_featureList[] = {
     "Category_其它",                     // 7
     "Slider_游戏加速:1:5",               // 8  WHRHX_FEAT_SPEED 1=关
     "Toggle_科研立即完成",               // 9  WHRHX_FEAT_RESEARCH_DONE
+    // 2026-10-11 新增四项（下标必须 == feat 号，Category_ 不占号，故直接续在 9 之后）
+    "Toggle_政策技能无CD",               // 10 WHRHX_FEAT_POLICY_NOCD
+    "Toggle_名臣好感度",                 // 11 WHRHX_FEAT_MINISTER_FAVOR
+    "Toggle_名臣技能无CD",               // 12 WHRHX_FEAT_MINISTER_SKILL_NOCD
+    "Slider_军队规模加成:1:100",         // 13 WHRHX_FEAT_ARMY_SCALE 1=关，X=规模加成 +X%
 #elif defined(STARRY_GAME_WHRHXKB)
     // 无悔华夏（WhrhxMod.h — 斌哥六项对齐）
     "Category_资源",                     // 0
@@ -2117,6 +2122,10 @@ static void* mod_thread(void* arg) {
                 Whrhx_Tick(g_features);
                 if (g_values[WHRHX_FEAT_SPEED] > 0)
                     Whrhx_OnValueChanged(WHRHX_FEAT_SPEED, g_values[WHRHX_FEAT_SPEED]);
+                // 2026-10-11 feat13 军队规模：菜单重进/进程重启后按已存值回填
+                if (g_values[WHRHX_FEAT_ARMY_SCALE] > 0)
+                    Whrhx_OnValueChanged(WHRHX_FEAT_ARMY_SCALE,
+                                         g_values[WHRHX_FEAT_ARMY_SCALE]);
             }
             usleep(200000);
             continue;
