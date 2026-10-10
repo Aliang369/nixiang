@@ -73,8 +73,24 @@ static void NoThrow(const char* what, Fn&& fn) noexcept {
     }
 }
 
+/* 效果路径的对象门闩。
+ * 2026-10-10 实测标定（`[mrfzz] calib` / `diag: asm[i]` 行）：
+ *   · 共享层 Il2Cpp::IsValidHeapPtr()（maps 快照 PermCached）在本机**健康** ——
+ *     对 0xb4… tagged 程序集指针判 valid=1，对自身全局判 heap=1；
+ *   · 真正静默判死的是 Api::ImageOf() 的**第二道**守卫 detail::IsReadableRange()
+ *     （精确 fopen，**不清标签**）：同一指针 readRaw=0 而 readUntag=1。
+ * 故本门闩保持「共享层判据优先、starptr 区间判据兜底」，只放宽不收紧，
+ * 既保留已验证行为，又不再依赖那条会静默判死的 maps 快照。 */
 static bool OkPtr(const void* p) {
-    return p && IsValidHeapPtr(const_cast<void*>(p));
+    if (!p) return false;
+    const bool heap = IsValidHeapPtr(const_cast<void*>(p));
+    const bool live = heap ? true : starptr::LiveFast(p);
+    static std::atomic<int> s_probe{0};
+    if (s_probe.fetch_add(1, std::memory_order_relaxed) < 3) {
+        LOGI(MRFZZ_LOG " OkPtr probe: ptr=%p heap=%d liveFallback=%d",
+             p, heap ? 1 : 0, live ? 1 : 0);
+    }
+    return live;
 }
 
 static void MarkFirst(const char* name, std::atomic<bool>& seen) {
@@ -142,8 +158,15 @@ static bool EnsureApi() {
  *      [mrfzz] status hooked=0/7 assemblies=88 entity=0x0 apiReady=1
  *    —— 枚举到 88 个程序集，但 Api::ImageOf() 对它们**全部**静默返回 nullptr：
  *    so 里确实含 "[Il2Cpp] ImageOf asm=" 串，整份 logcat 却 0 次出现，
- *    ⇒ 死在 ImageOf 自己日志之前的静默守卫（IsValidHeapPtr / IsReadableRange）。
+ *    ⇒ 死在 ImageOf 自己日志之前的静默守卫。
  *    entity=0x0 ⇒ FindClassNs 的 for 循环全程 continue ⇒ 七项全灭。
+ *
+ *  2026-10-10 判据标定（`[mrfzz] diag: asm[i]` / `calib:` 行）—— 已定案：
+ *      asm[0]=0xb4000075c4976000 valid=1(=IsValidHeapPtr) readRaw=0 readUntag=1
+ *    ⇒ 挡下的是**第二道**守卫 detail::IsReadableRange((uintptr_t)assembly, 8)：
+ *      它走精确 fopen("/proc/self/maps") 且**不清顶字节标签**，而本机程序集指针
+ *      带 0xb4 标签（`maps` 里是 0x75c4976000…），区间比对必然不中 ⇒ 静默 nullptr。
+ *      （第一道 IsValidHeapPtr 反而是健康的：它内部先 starptr::Untag。）
  *
  *  对策（只在本游戏模块内做，不动共享层 Il2CppApi.cpp）：
  *    ① api.ImageOf()            —— 原路径，能用就用；
@@ -159,6 +182,9 @@ std::atomic<int> g_imgViaApi{0};
 std::atomic<int> g_imgViaRead{0};
 std::atomic<int> g_imgViaApiImg{0};
 std::atomic<int> g_imgFail{0};
+/* 判据标定用的「确定可读」锚点（void* ⇒ 8 字节对齐，避免用 atomic<int> 取址时
+ * 因 4 字节对齐被判 LiveObj 否而误读为判据失效）。 */
+void* g_calibAnchor = nullptr;
 
 struct ImageList {
     void* items[8];
@@ -281,6 +307,23 @@ static void LogResolveDiagOnce() {
         void* clsEnt = FindClassNs("Torappu.Battle", "Entity");
         LOGI(MRFZZ_LOG " diag: System.Object=%p UnityEngine.GameObject=%p "
                        "Torappu.Battle.Entity=%p", clsObj, clsGo, clsEnt);
+        /* 判据标定（ground truth）：
+         *  · anchor 取本 so 内一个确定可读且 8 字节对齐的全局（void*）；
+         *  · guard2 用真程序集指针比对「原指针 vs 清标签后」的可读判定 ——
+         *    2026-10-10 实测本机为 raw=0 / untag=1，即 Api::ImageOf 死在
+         *    第二道守卫 detail::IsReadableRange()（精确 fopen，不清标签）。 */
+        const void* self = (const void*)&g_calibAnchor;
+        LOGI(MRFZZ_LOG " calib: anchor=%p heap=%d read=%d live=%d",
+             self, Il2Cpp::IsValidHeapPtr(const_cast<void*>(self)) ? 1 : 0,
+             Il2Cpp::IsReadableRange((uintptr_t)self, 1) ? 1 : 0,
+             starptr::LiveObj(self) ? 1 : 0);
+        if (assemblies && count > 0) {
+            const uintptr_t a0 = (uintptr_t)assemblies[0];
+            const int g2raw = Il2Cpp::IsReadableRange(a0, 8) ? 1 : 0;
+            const int g2untag = Il2Cpp::IsReadableRange(starptr::Untag(a0), 8) ? 1 : 0;
+            LOGI(MRFZZ_LOG " calib: guard2 raw=%d untag=%d ⇒ %s", g2raw, g2untag,
+                 g2raw ? "第二道守卫未挡（需另查）" : "Api::ImageOf 死于此守卫(未清标签)");
+        }
         LOGI(MRFZZ_LOG " diag: imgVia api=%d selfread=%d apiImg=%d fail=%d byName=%zu",
              g_imgViaApi.load(), g_imgViaRead.load(), g_imgViaApiImg.load(),
              g_imgFail.load(), ByNameImages().n);
@@ -710,6 +753,9 @@ static bool AnyEnabled() {
 }
 
 static void LogStatusIfDue() {
+    /* 一次性解析诊断必须在任何提前 return **之前** 调用：
+     * 七个功能常常在同一瞬间装齐，原来放在 DoneCount()>=7 之后 ⇒ diag 行永远打不出来。 */
+    if (GetApi().ready) LogResolveDiagOnce();
     if (!AnyEnabled()) return;
     if (DoneCount() >= 7) return;
     static std::atomic<int64_t> s_nextMs{0};
