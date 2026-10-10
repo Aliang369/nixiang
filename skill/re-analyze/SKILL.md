@@ -19,6 +19,19 @@ bash 04_scripts/_common/decode_apk.sh <apk路径>
 
 检查 Manifest 的 Application/Activity、`lib/`、DEX 形态和 assets。工具无法解析只是一项观察，还需区分版本不支持、输入不完整、压缩/封装或保护；游戏 APK 默认外科组装，整包重建的例外授权与证据条件统一见 [AGENTS.md](../../AGENTS.md)。
 
+### 1.1 新版本接手必测三件（2026-10-10 追迹迷城 1.0.20260912→1.0.20261009 补充）
+
+同一游戏换版本（渠道更新 / 热更后重打）时，**先做这三件再动手改任何东西** —— 漏掉任何一件，上一版的做法就会整段作废：
+
+| # | 必测 | 一条命令 | 为什么（实测代价） |
+|---|---|---|---|
+| 1 | 包内 **dex 数量/命名**与方法数余量 | `unzip -l <apk> \| grep -E "classes[0-9]*\.dex"`；每包读头偏移 `0x58`(method_ids_size) 与 `0x60`(class_defs_size) | 追迹迷城 0912→1009：6 个 dex 变 4 个，上一版改的 `classes5/classes6` **根本不存在**；`classes3.dex` 已达 65533/65536 ⇒ 沿用旧方案把类合并进去必然溢出 |
+| 2 | 上一版**依赖的 Manifest 特征**是否还在 | `python3 04_scripts/_common/axml_inspect.py <AndroidManifest.xml>` 与旧版逐项对照 | 0912 靠「33 字符广告 service 槽等长替换」，1009 该广告 SDK 槽**整条消失** ⇒ 等长替换路径必然失败，只能改成「凭空新增元素」 |
+| 3 | `libil2cpp.so` / `global-metadata.dat` 的 md5 与 metadata 版本 | `md5 <so> <metadata>` + 读 metadata 头 `sanity/version` | 两者任一变 ⇒ **全部 RVA 必须重算**（0912 的 17 个 Hook 目标全作废）；metadata 大版本变（如 v31→v32）还要先确认 Il2CppDumper 是否已支持 |
+
+- 顺带记录：`apksigner verify --print-certs` 的证书 MD5/DN（签名伪装表要用）、`aapt2 dump badging` 的 versionCode/versionName、`extractNativeLibs`。
+- dex 合并目标**不要硬编码 `classesN`**：先算余量（`0x10000 - method_ids_size`）再选，或直接跑 `mod菜单/starry-mod-menu/scripts/_lib/dex_target.sh <apk>`（输出候选 dex 与余量，并在余量不足时非零退出）。
+
 ## 2. 引擎判定速查表
 
 下表是候选索引，不是仅凭文件名定性；组件可能共存、改名、未使用或运行时才加载。

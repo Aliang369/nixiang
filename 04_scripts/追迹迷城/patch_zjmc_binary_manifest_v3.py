@@ -41,7 +41,10 @@ PROP_VALUE = "MOD menu overlay"
 # 与 stopWithTask 的 res id 落成了 0，平台看不到 specialUse 前台类型。
 ATTR_RES_IDS = {
     "foregroundServiceType": 0x01010599,
-    "stopWithTask": 0x01010281,
+    # 0x0101036a = android:stopWithTask（真值来源：aapt2 dump resources $ANDROID_HOME/platforms/android-<api>/android.jar）。
+    # 首版凭记忆写成 0x01010281 —— 那是 android:glEsVersion；平台在 <service> 上不认该属性 ⇒ 视同未设，
+    # 而 stopWithTask 的默认值恰为 false（与本处声明值相同）⇒ 已交付包无功能影响，仅属声明不干净。
+    "stopWithTask": 0x0101036A,
 }
 # 入口点：**不用 Application 替换**（1.0.20261009 实测 <application android:name> 平台不采用：
 # 该属性记录经 aapt2 复读合法（name#3 resid=0x1010003、type=string、值正确），但运行时

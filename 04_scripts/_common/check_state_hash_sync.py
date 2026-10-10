@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Check that game state/current index hashes match the final APK/prune manifest."""
+"""Check that game state/current index hashes match the final APK/prune manifest.
+
+清单/输入契约（2026-10-10 追迹迷城复盘 P0-4 补注）:
+  --manifest 吃 prune 清单（removed:[{name,size,md5}]），必须含 md5 与 size，
+  且 state 文件（10_docs/_state/games/{游戏}.md）须写出**完整** md5 + sha256；
+  10_docs/_state/current.md 的本游戏行须含 md5/sha256 的 **8 位前缀**，
+  且整行 ≤400 **字符**（不是字节）。缺 sha256 前缀 ⇒ 报
+  「hash sync failed: current sha256 prefix」。
+"""
 import argparse
 import hashlib
 import json

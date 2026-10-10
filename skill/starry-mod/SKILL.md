@@ -131,6 +131,9 @@ adb logcat -s StarryApp:V StarryMagic:V | grep "auth game_id synced from native"
 | TSS/ACE 游戏 | **必须外科组装** |
 | 快速试改 smali | MT MCP |
 
+**dex 合并目标一律自动探测（2026-10-10 追迹迷城复盘 P0-2，禁止硬编码 `classesN`）**：版本换代会改 dex 数量与布局——0912→1009 实测由 6 dex 变 4 dex，且 `classes3.dex` 已顶到 65533/65536 的 ART 方法数上限。先跑
+`bash mod菜单/starry-mod-menu/scripts/_lib/dex_target.sh --apk <底包> --need-methods <星光方法数>` 看各 dex 余量表（默认 need-methods=2048），`--print-entry` 只输出选定文件名（供外科脚本内联）；把它并进源码时按「余量最大且 ≥ 待合并方法数」选定。无候选满足 ⇒ **rc=2，回退重建 dex 方案**，不要硬塞进某个 dex（超限会在 ART 侧静默丢类）。
+
 ### 存量游戏快速重打（2026-09-29）
 
 已有可构建工程和既有 native so 时，按改动范围选最短路径，不走全套标准阶段：
@@ -179,6 +182,34 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 > 结论：**构建命令一开始就带一次性放宽权限运行**，不要先撞一次再重跑（重跑还要重编 so，白烧一轮）。
 
 优先用各游戏的 `scripts/surgical_*.sh` / `*_so_only.sh`（脚本内应已含拷贝与自检）。
+
+---
+
+## 入口点决策表
+
+> 出处：2026-10-10 追迹迷城 1.0.20261009 会话复盘 §4 P0-1。四路入口的适用条件与已否决判据，**首选 ContentProvider**。
+> 出包前先跑 `bash 04_scripts/_common/framework_entry_audit.sh --game <游戏> --pkg <包名> --apk <apk>`（逐项 ✓/✗，任意 ✗ 禁止出包）。
+
+| 入口 | 写法 | 适用条件 | 已否决判据（为什么不要先选它） |
+|------|------|----------|-------------------------------|
+| **ContentProvider（首选）** | `<provider android:name="com.starry.magic.StarryInitProvider" android:authorities="<包名>.starryinit" android:exported="false"/>` | 默认全场景选它。`ContentProvider.onCreate` 早于 `Activity.onCreate`，且晚于壳的 initialize 完成（安全窗口） | 仅当该包已有同 authorities 的 provider 冲突时才另议 |
+| Application | `<application android:name="com.starry.magic.StarryApp">` | 仅纯正 Android 应用，且能在 logcat 看到 StarryApp 行 | **1.0.20261009 实测平台不采用**：该属性经 aapt2 复读合法（`name#3 resid=0x1010003`、`type=string`、值正确），但运行时 StarryApp 从未实例化（logcat 无任何 StarryApp 行、`/proc/<pid>/maps` 无 `libstarry_magic.so`；且若 className 生效而类缺失，必然 `Unable to instantiate application` 崩溃 —— 未崩） |
+| appComponentFactory | `android:appComponentFactory="com.starry.magic.StarryAppCompFactory0"` | 宿主已自带 appComponentFactory 且可**等长替换**（`androidx.core.app.CoreComponentFactory`，38 字符） | ACE/TSS 类壳：替换 Application 会让 `AceApplication.initialize` 在 native 信号量上毒丸挂起（黑屏 Splash + 后续被击杀） |
+| 宿主 Activity 注入 | 借壳自己的入口类（`ysxz/`、`conch/`、`h5box/` 等分支） | 宿主已声明自家 Provider/Factory，或需挂在宿主 Activity 生命周期点上 | 需逐壳适配、换壳即失效，不作为跨游戏默认方案 |
+
+- **Provider 顺序铁律**：必须排在其它 Provider（TapTap 的 `TapTapKitInitProvider`/`TapUpdateFileProvider` 等）**之前** —— Provider 顺序＝平台实例化顺序，先回灌官方证书再让 SDK 读；参考 `04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py`。
+- **黑屏/无菜单先查入口三件事**（都不会让构建报错）① 入口类不在 dex（`ClassNotFoundException`）② Manifest 里没写进去（用 `aapt2 dump xmltree --file AndroidManifest.xml <apk>` 复读）③ 入口被壳的 Application 挂死。
+- **现有入口类清单**（`java/com/starry/magic/`）：`StarryInitProvider`（Provider，推荐）/ `StarryApp`（Application）/ `StarryAppCompFactory0`、`sign/SignSpoofAppComponentFactory`、`ysxz/YsxzAppComponentFactory`（Factory）/ `conch/DcslConchProvider`、`h5box/StarryH5Provider`、`h5box/CzbhzH5Provider`（壳专用 Provider）。
+
+## TapTap 接入检查表
+
+> 出处：同上 §4 P1-2。五条全是**静默失败**：零日志、不崩、构建全绿，装机后才发现。
+
+1. **强制网页登录＝覆盖 intent extra**：要改的是登录 intent 里的 extra `loginType="embedded_web"`；改 `ClientLoginUtils.isClientLogin` 无效（它不参与该路径判断）。
+2. **`PKG_WHITELIST` 必须含目标包名**：`sign/TapLoginForceWeb.java` 的 `PKG_WHITELIST`（`java.util.Set` 字面量）漏配该包 ⇒ 5 处 `if (!PKG_WHITELIST.contains(activity.getPackageName())) return;` 静默 return、**零日志**（追迹迷城 1.0.20261009 实测表现：被强制走网页登录）。
+3. **`SignSpoof` 证书表须有该包条目**：`sign/SignSpoof.java` 里 `<TAG>_PKG = "<包名>"` 常量与 `fakes.put(<TAG>_PKG, new Signature(Base64.decode(<TAG>_CERT_B64, Base64.DEFAULT)))` 两件齐备才算生效（只写了常量、漏 `fakes.put` ＝ 没有伪装）。
+4. **客户端 SSO 永不可用的判据**：`TapSignKit.getSign` 走 `PackageManager.getPackageInfo(pkg, 0x40)` 取签名 ⇒ 被 `killPm` 代理覆盖 ⇒ **进程内可过、系统侧过不了**，故不要指望客户端 SSO，能通的是网页登录那条路。
+5. **判据：`AppSwitchEvent(targetName=com.taptap)` 出现＝仍走客户端**（说明上面的覆盖没生效）。
 
 ---
 

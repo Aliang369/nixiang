@@ -8,6 +8,10 @@ MODE="dry-run"
 TAG="cleanup"
 MANIFEST=""
 PATHS=()
+SUGGEST=0
+GAME=""
+GAME_ID=""
+ALLOW_TRACKED=0
 
 usage() {
   cat >&2 <<'EOF'
@@ -22,6 +26,10 @@ usage() {
   - 例外：01_tools 下工具自身的构建/运行输出按 TOOLS_REGEN_ALLOW 白名单放行（规则见 TOOLBOOK.md）。
   - --manifest 可指定 JSON 清单；apply 且未指定时写入隔离目录内的 manifest.json。
   - apply 前会打印同样的 dry-run 清单并要求路径显式传入。
+  - --suggest --game <游戏> [--id <游戏id>]：只打印该游戏可清理路径的草案（--path 行，可直接拼进命令行），
+    自动排除仓库根/.git/01_tools/02_apks/08_output，并自动排除「含已入库(tracked)文件」的路径。
+  - 硬门禁（P0-4，2026-10-10）：任何路径若含 tracked 文件，dry-run 即拒绝（历史事故：清理清单压到
+    tracked 的 rva_targets.json，整目录被移走）；确需清理时用 --allow-tracked 显式放行并在汇报里写明。
 EOF
   exit 2
 }
@@ -51,6 +59,24 @@ while [[ $# -gt 0 ]]; do
       PATHS+=("$2")
       shift 2
       ;;
+    --suggest)
+      SUGGEST=1
+      shift
+      ;;
+    --game)
+      [[ $# -ge 2 ]] || usage
+      GAME="$2"
+      shift 2
+      ;;
+    --id)
+      [[ $# -ge 2 ]] || usage
+      GAME_ID="$2"
+      shift 2
+      ;;
+    --allow-tracked)
+      ALLOW_TRACKED=1
+      shift
+      ;;
     -h|--help)
       usage
       ;;
@@ -60,10 +86,66 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ ${#PATHS[@]} -gt 0 ]] || usage
+# --suggest 模式不需要 --path（真正的分派在函数定义之后，见文件下半部）
+[[ "$SUGGEST" == "1" || ${#PATHS[@]} -gt 0 ]] || usage
 [[ -n "$TAG" ]] || TAG="cleanup"
 TAG="$(printf '%s' "$TAG" | tr -c 'A-Za-z0-9._-' '_' | sed 's/_*$//')"
 [[ -n "$TAG" ]] || TAG="cleanup"
+
+# P0-4：tracked 门禁。清单里的路径若包含已入库文件，一律拒绝（--allow-tracked 可显式放行）。
+# 判据用 `git ls-files -- <rel>`（目录会列出其下全部入库文件），不用 basename 猜测。
+tracked_under() {   # $1 = 仓库相对路径；stdout = 命中的 tracked 文件（最多 5 条）
+  git -C "$ROOT" ls-files -- "$1" 2>/dev/null | head -5 || true
+}
+
+# P0-4：--suggest 草案生成（只打印，不动文件）
+suggest_paths() {
+  local game="$1" rel child t ct any skipped id
+  [[ -n "$game" ]] || { echo "ERROR: --suggest 需要 --game <游戏>" >&2; exit 2; }
+  # 游戏 id（zjmc 之类）：优先 --id，其次取 04_scripts/<游戏>/pipeline.json 的 params.game_id
+  id="${GAME_ID:-}"
+  if [[ -z "$id" && -f "$ROOT/04_scripts/$game/pipeline.json" ]]; then
+    id="$(grep -o '"game_id"[[:space:]]*:[[:space:]]*"[^"]*"' "$ROOT/04_scripts/$game/pipeline.json" 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+  fi
+  echo "[trash_paths] --suggest game=${game} id=${id:-<未知>}（已排除含 tracked 文件的路径与禁清目录）"
+  for parent in 03_decompiled 06_dumped 07_patched 09_test; do
+    for rel in "$parent/$game" "$parent/${game}"_*; do
+      [[ -e "$ROOT/$rel" ]] || continue
+      is_banned_rel "$rel" && ! is_tools_regen_allow "$rel" && continue
+      t="$(tracked_under "$rel")"
+      if [[ -z "$t" ]]; then
+        printf -- '--path %s\n' "$rel"
+        continue
+      fi
+      any=0
+      skipped=""
+      while IFS= read -r child; do
+        [[ -n "$child" && -d "$ROOT/$child" ]] || continue
+        ct="$(git -C "$ROOT" ls-files -- "$child" 2>/dev/null | head -1 || true)"
+        if [[ -z "$ct" ]]; then
+          printf -- '--path %s\n' "$child"
+          any=1
+        else
+          skipped="${skipped}${child} "
+        fi
+      done < <(cd "$ROOT" && find "$rel" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
+      [[ -n "$skipped" ]] && printf '[note] 已排除（含 tracked 文件）：%s\n' "$skipped" >&2
+      [[ "$any" == "0" ]] && printf '[note] %s 整体未列入（含 tracked 文件，例：%s）\n' "$rel" "$(printf '%s' "$t" | head -1)" >&2
+    done
+  done
+  for rel in "mod菜单/starry-mod-menu/app/build" "mod菜单/starry-mod-menu/build" "mod菜单/starry-mod-menu/.gradle" "mod菜单/starry-mod-menu/.gradle-home"; do
+    [[ -e "$ROOT/$rel" ]] || continue
+    [[ -z "$(tracked_under "$rel")" ]] && printf -- '--path %s\n' "$rel"
+  done
+  if [[ -n "$id" ]]; then
+    while IFS= read -r rel; do
+      [[ -n "$rel" ]] && printf -- '--path %s\n' "$rel"
+    done < <(cd "$ROOT" && find mod菜单 -maxdepth 6 -type d \( -name "obj_${id}" -o -name "libs_${id}" \) 2>/dev/null | sort)
+  else
+    printf '[note] 未识别 <游戏id> ⇒ 未列出 mod菜单 的 obj_<id>/libs_<id> 编译产物（可用 --id 指定）\n' >&2
+  fi
+  exit 0
+}
 
 STAMP="$(date '+%Y%m%d_%H%M%S')"
 TRASH_PARENT="${NIXIANG_TRASH_DIR:-$HOME/.Trash}"
@@ -99,6 +181,7 @@ is_tools_regen_allow() {
   return 1
 }
 
+[[ "$SUGGEST" == "1" ]] && suggest_paths "$GAME"
 TMP="$(mktemp /tmp/trash_paths.XXXXXX)"
 trap 'rm -f "$TMP"' EXIT
 
@@ -119,6 +202,19 @@ for input in "${PATHS[@]}"; do
   rel="${abs#"$ROOT"/}"
   if is_banned_rel "$rel" && ! is_tools_regen_allow "$rel"; then
     echo "ERROR: 安全禁止清理: $rel" >&2; exit 1
+  fi
+
+  tracked_hit="$(tracked_under "$rel")"
+  if [[ -n "$tracked_hit" ]]; then
+    if [[ "$ALLOW_TRACKED" == "1" ]]; then
+      echo "[trash_paths] WARNING: --allow-tracked 放行含 tracked 文件的路径: $rel" >&2
+      printf '%s\n' "$tracked_hit" | sed 's/^/        tracked: /' >&2
+    else
+      echo "ERROR: 路径含已入库(tracked)文件，禁止清理: $rel" >&2
+      printf '%s\n' "$tracked_hit" | sed 's/^/        tracked: /' >&2
+      echo "        正解：从清单里剔除该文件/该目录；确需清理用 --allow-tracked 并在汇报里写明。" >&2
+      exit 1
+    fi
   fi
 
   if [[ -d "$abs" && ! -L "$abs" ]]; then

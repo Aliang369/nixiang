@@ -5,6 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
+# P0-5：传输自适应推送（SSH 不可达时自动 HTTPS+gh token，见 git_push_main.sh）
+source "$(dirname "$0")/git_push_main.sh"
+
 MESSAGE=""
 # 默认提交后推送（用户口令「git」= 提交 + 推送连体）；--no-push 才关。
 PUSH=1
@@ -293,7 +296,7 @@ fi
 git commit -m "$MESSAGE"
 
 if [[ "$PUSH" == "1" ]]; then
-  git push origin main
+  push_main main || echo "[push] 未推送：本地提交已保留，汇报里写明 ahead"
 fi
 
 echo "==> 提交完成: $(git log -1 --oneline)"

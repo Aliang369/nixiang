@@ -548,6 +548,25 @@ if (!f) {
   请求发出但被服务端/风控拒（此时 native 侧**永远等不到回调**）。
 - 只有 C 段才允许进入「重复试不同返回值」的循环；B 段重复试返回值一律视为违反 §29.1。
 
+#### 29.5.1 段判定判据表：症状 → 第一条判据命令（2026-10-10 追迹迷城补充）
+
+> 来源：追迹迷城 1.0.20261009 装机后「菜单不出」——先上 frida Java 桥、`dumpsys` 读 `ApplicationInfo.className`、
+> `package_cache`、`packages.xml`（**四条都是结构性死路**），兜了一圈才用「一条 logcat」定案。
+> **铁律：先选一条能证伪的命令，再谈取证；重工具（frida / 全量 dumpsys dump）排在最后。**
+
+| 症状 | 第一条判据（一条命令） | 判读 |
+|---|---|---|
+| 装机后菜单不出 / 功能全无 | `adb logcat -c` → 冷启 → `adb logcat -d \| grep -aE "Starry\|starry_magic\|MenuService\|Mod_Menu\|native menu"` | **零命中 ＝ 段=A（入口没跑）**；有 `native ensureLoaded=true` 但无 `native menu shown` ＝ 段=B；有 overlay 附着但开关无效 ＝ 段=C |
+| 自家 so 是否真的注入 | `adb exec-out "su -c 'grep <自家 so 名> /proc/$(pidof <包名>)/maps'"` | 空 ＝ **从未 dlopen**（与「装上了没命中」不是同一层）；有映射但不命中 ＝ 段=B |
+| 组件是否被平台登记 | `adb shell am start-foreground-service -n <包名>/<类名>` | `Requires permission … not exported from uid …` ＝ **已登记**（Manifest 补丁的属性被平台认到）；`Not found; no service started` ＝ 未登记 |
+| 注入的属性是否被平台认到 | 与官方包 `aapt2 dump xmltree` 逐行 diff | 只应有预期行差异；**aapt2 复读通过 ≠ 平台按 res id 取到值**（resource map 错位时 aapt2 照样正常解析，平台读到 0）⇒ 跑 `04_scripts/_common/axml_inspect.py <manifest> --assert-map` |
+| TapTap 没走内嵌网页登录 | `adb logcat -d \| grep -a "AppSwitchEvent\|onAppEnter"` | 出现 `targetName=com.taptap` ＝ **仍拉起客户端**（段=A：入口前置条件没满足，见 `skill/starry-mod/SKILL.md`「TapTap 接入检查表」） |
+
+- **禁止当判据的三条**（实测读不到，别浪费轮次）：`dumpsys package -v` / `cmd package dump` 读 `ApplicationInfo.className`（只打印 `applicationInfo=ApplicationInfo{<hash> <包名>}`）；`/data/system/package_cache/`（只缓存系统包）；`/data/system/packages.xml`（不列组件、不记 className）。
+- `dumpsys package` 的 **Service / Activity Resolver Table 只收录带 `intent-filter` 的组件** ⇒ 自家新增的 `<service>` 不在其中属正常，**不能**当作「没登记」的证据。
+- 要真凭据时用「与不存在类对照」的写法：`am start-foreground-service -n <pkg>/<不存在类>` 报 `Not found`，两条报错文本不同即可定案。
+- 段判定判据与「日志可见性」要分开确认：自家 tag 零命中时，先确认该 ROM 是否抑制了本包 Java 日志（同窗口应能看到同进程的其它 Java tag，如 Unity/SDK 日志）；能看到 ⇒ 零命中就是真结论。
+
 ---
 
 ## 30. 模拟器 / 翻译层环境下的基址定位与装钩判据（2026-10-03 冒险与征途）

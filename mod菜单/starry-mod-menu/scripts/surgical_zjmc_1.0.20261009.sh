@@ -60,7 +60,7 @@ PKG="com.TeaMelo.DungeonChasers"
 SIGNED="$OUT/追迹迷城_${VERSION}_surgical-releaseSigned.apk"
 [[ "$BUILD_TYPE" == "debug" ]] && SIGNED="$OUT/追迹迷城_${VERSION}_surgical-debugSigned.apk"
 MF_CACHE="$NIXIANG/07_patched/追迹迷城/surgical_$VERSION/AndroidManifest.xml"
-MERGE_DEX="classes4.dex"
+MERGE_DEX=""            # 由 scripts/_lib/dex_target.sh 按 method_ids 余量选定（P0-2：禁止硬编码 classesN）
 SO_MD5_EXPECT="${ZJMC_SO_MD5:-}"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
@@ -99,6 +99,13 @@ for n in dexes:
     print(f"  {n:14s} method_ids={hdr(n):6d} spare={65536-hdr(n)}")
 print(f"  目标版本 {ver} / vc{vc} 与底包 dex 布局断言通过")
 PY
+
+# dex 合并落点动态选择（P0-2：按余量算，不硬编码 classesN）
+DEX_TARGET_SH="$(dirname "$0")/_lib/dex_target.sh"
+[[ -f "$DEX_TARGET_SH" ]] || { echo "ERROR: missing ${DEX_TARGET_SH}"; exit 1; }
+MERGE_DEX="$(bash "$DEX_TARGET_SH" --apk "$ORIG_APK" --need-methods "${ZJMC_NEED_METHODS:-8192}" --print-entry)" \
+  || { echo "ERROR: dex_target.sh 选不出可用 dex（余量不足，见上方表格）"; exit 1; }
+echo "[dex] 合并落点 = ${MERGE_DEX}（由 dex_target.sh 按余量选定，need-methods=${ZJMC_NEED_METHODS:-8192}）"
 
 LOCK_DIR="/tmp/zjmc_surgical.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -149,7 +156,7 @@ fi
 echo "[2/7] apktool d starry template"
 apktool d -f -o "$WORK/starry_dec" "$STARRY_APK" >/dev/null
 
-echo "[3/7] collect starry smali (将打进新增 $MERGE_DEX)"
+echo "[3/7] collect starry smali (将合并进 ${MERGE_DEX})"
 SMALI_ROOT="$WORK/smali_starry"
 mkdir -p "$SMALI_ROOT"
 shopt -s nullglob

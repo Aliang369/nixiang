@@ -211,6 +211,14 @@ fi
 kv "会话预算（AGENTS.md P6）：工具调用 ≈600 / 装机 ≈40 / 阴影 token ≈150K —— 超了就按复盘格式记账"
 kv "纪律卡：① 禁止 input tap/swipe（m01899：屏幕由用户操作）② 出网/改外部机器/改交付形态 ⇒ 先出 10_docs/_templates/方案选型卡.md 等用户选定（m03714）③ 装机后跑 post_install_precheck.sh ④ 卸载/清数据后此前结论全部作废（状态归零纪律）"
 
+# ---------- 出包前提示（2026-10-10 复盘 P0-1 / P2-1；只追加提示，不改退出码与既有结构） ----------
+kv "框架入口自检（入口类清单）：grep -rln --include='*.java' -E 'class [A-Za-z0-9_]+ extends (Application|ContentProvider|AppComponentFactory)' mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/"
+kv "出包前跑审计（任一 ✗ 禁止出包）：bash 04_scripts/_common/framework_entry_audit.sh --game <游戏> --pkg <包名> --apk <apk>；入口取舍见 skill/starry-mod/SKILL.md「入口点决策表」"
+MK_ENTRY_AUDIT="${NIXIANG_ROOT}/mod菜单/starry-mod-menu/app/src/main/jni/Android.mk"
+if [ -f "$MK_ENTRY_AUDIT" ] && grep -qE '^[[:space:]]*LOCAL_CFLAGS.*-DENABLE_UNITY_HOOK.*-DSTARRY_GAME_' "$MK_ENTRY_AUDIT"; then
+  kv "该游戏 Android.mk 激活分支属 libil2cpp 基址解析类 ⇒ 按「设备画像先行」可跑 bash 04_scripts/_common/device_profile.sh --serial <S> --pkg <P> --rva <符号>=0x<HEX>"
+fi
+
 echo "================================================================"
 if [ "$fail" -gt 0 ]; then
   echo "结论：✗ FAIL $fail 项 / ⚠ WARN $warn 项 ⇒ 补齐后再改功能代码或装机"

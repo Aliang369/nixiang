@@ -227,6 +227,21 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 
 压缩顺序：**验证正式包 → 裁剪 `08_output` → 清理滚动物（`trash_paths.sh` dry-run→apply）→ 修 pipeline 快照 → 文档状态 → `archive_scoped_git.sh` 提交推送**。每一步先打印实际路径/影响；缺底包、缺正式包或签名校验失败即停止。
 
+### 收官脚本参数契约表（2026-10-10 追迹迷城收官复盘 P0-4 落地）
+
+> 踩坑背景：收官链上**两种清单长得像但互不通用**（prune 清单 vs trash 清单），2026-10-10 实测各踩一次返工。
+
+| 脚本 | 典型入参 | 清单 / 输入契约 | 通过判据 | 常见报错 → 正解 |
+|---|---|---|---|---|
+| `prune_output_final.sh` | `<游戏输出目录> <保留APK> --apply --manifest <文件>` | **写** prune 清单：`removed:[{name,size,md5}]` | 目录只剩唯一正式包 | 无参数 ⇒ 打 usage（`<游戏输出目录>` 与 `<保留APK>` 均必填） |
+| `trash_paths.sh` | `--tag <标签> --path <相对路径>…`（可多个）`[--apply]`；建议先 `--suggest --game <游戏>` | **吃**清理（trash）清单：**显式 `--path` 列表，禁通配符** | dry-run 先打印解析后的绝对路径 + Trash 目标；含 tracked 文件的路径**直接拒绝**（rc=1）；`--suggest` 只打印 `--path` 草案 | `ERROR: 路径含已入库(tracked)文件，禁止清理` ⇒ 从清单剔除该路径（确实要清才加 `--allow-tracked`）；`--suggest` 报 rc=2 ⇒ 忘了 `--game` |
+| `pipeline_record_cleanup.py` | `--game <游戏> --manifest <文件>`（或 `--removed name:size:md5`） | **只吃 prune 清单**（键 `removed:[{name,size,md5}]`） | 输出「已更新」或「无需修改: 指定路径未出现在 pipeline 快照中」 | `错误: 至少需要一个 --removed 或 --manifest 条目` ⇒ 传的是 **trash 清单**，改传 `正式包裁剪清单_*.json` |
+| `check_state_hash_sync.py` | `--game <游戏> --manifest <prune 清单>` | state 文件须含**完整** md5 + sha256；`current.md` 本游戏行须含二者 **8 位前缀**，且行 ≤400 **字符**（不是字节） | `OK … row_chars=N` | `FAIL … 缺 current sha256 prefix` ⇒ 补 state 的 sha256 全值 + 索引行 8 位前缀 |
+| `archive_scoped_git.sh` | `[--game <游戏>] [--no-push]` | 白名单 `git add`（**禁 `-A`**）；push 走 `git_push_main.sh::push_main` | 提交 + 推送 origin/main（`git status -sb` 无 ahead） | push 失败 ⇒ 保留本地提交并汇报 ahead，不 `--force` |
+| `archive_close_git.sh` | `--game <游戏> [--no-push]` | 管线状态收口 + 生成 `delivery_manifest.json` | 同上 + manifest `--check` 通过 | 同上 |
+| `check_release_clean.sh` | `--tag <文件名前缀> --so <so>` | `--tag` 是**文件前缀**（大小写敏感，如 `ZjmcMod`），**不是**游戏名或版本号 | 扫描命中 + 无禁用串 | `没找到扫描对象` ⇒ 传 `Games/<Tag>Mod.cpp` 的前缀 |
+| `axml_inspect.py` | `<AndroidManifest.xml> --assert-map` | 平台属性 res id 真值表（`KNOWN_ATTR_RES_ID`，值取自 android.jar） | `[assert-map]` 无 FAIL（rc=0） | `[FAIL] <android:xx> res id 期望 … 实际 …` ⇒ 补丁器写错了 res id（见 TOOLBOOK #48/#55） |
+
 1. 文档收尾：游戏文档更新（结论/证据/遗留）；详情写入
    `10_docs/_state/games/{游戏}.md`，`current.md` 只同步一行摘要。反复反馈的
    功能补 `10_docs/_templates/功能验收卡.md`，多日志证据补

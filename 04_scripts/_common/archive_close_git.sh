@@ -3,6 +3,9 @@
 # archive 阶段的源码/文档应先由 archive_scoped_git.sh 提交；本脚本拒绝遗漏的游戏范围脏改动。
 set -euo pipefail
 
+# P0-5：传输自适应推送（见 git_push_main.sh）
+source "$(dirname "$0")/git_push_main.sh"
+
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
@@ -107,9 +110,20 @@ git diff --cached --check -- "$STATE" "$MANIFEST"
 git commit -m "$MESSAGE"
 
 if [[ "$PUSH" == "1" ]]; then
-  git push origin main
+  push_main main || echo "[push] 未推送：本地提交已保留，汇报里写明 ahead"
 fi
 
 echo "==> 状态提交完成: $(git log -1 --oneline)"
 echo "==> 交付 manifest: $MANIFEST"
 python3 04_scripts/_common/delivery_manifest.py --game "$GAME" --output "$MANIFEST" --check
+
+# P2-2（2026-10-10 追迹迷城复盘落地）：轮次台账 ≥2 条 ⇒ 提醒补一次会话复盘
+ROUNDS_FILE="10_docs/$GAME/轮次台账.tsv"
+if [[ -f "$ROUNDS_FILE" ]]; then
+  ROUND_ROWS="$(grep -cv '^[[:space:]]*$' "$ROUNDS_FILE" 2>/dev/null || true)"
+  if [[ "${ROUND_ROWS:-0}" -ge 3 ]]; then
+    echo "[提示] ${ROUNDS_FILE} 已有 $((ROUND_ROWS - 1)) 条轮次记录（≥2 轮返工）。"
+    echo "       若本轮还出现过「装机后 段=A/B 判定」，建议补一次会话复盘："
+    echo "       模板 10_docs/_templates/会话复盘模板.md ⇒ 10_docs/_state/规范优化_{日期}_{游戏}会话复盘.md"
+  fi
+fi

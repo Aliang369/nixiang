@@ -4,6 +4,12 @@
 The cleanup step may delete build outputs before archive.  This helper keeps
 the pipeline snapshot consistent by changing matching verify rules to
 not_exists and removing matching artifact/input entries.
+
+清单契约（2026-10-10 追迹迷城复盘 P0-4 补注）:
+  --manifest 只吃 **prune 清单**（prune_output_final.sh 写出的
+  removed:[{name,size,md5}]，即 10_docs/{游戏}/正式包裁剪清单_*.json）。
+  传 trash_paths.sh 的清理清单（--path 列表、无 removed 键）会报
+  「错误: 至少需要一个 --removed 或 --manifest 条目」。
 """
 
 from __future__ import annotations

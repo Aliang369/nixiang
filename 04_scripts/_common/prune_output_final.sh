@@ -14,6 +14,10 @@ fi
 
 usage() {
   echo "用法: bash 04_scripts/_common/prune_output_final.sh <游戏输出目录> <保留APK> [--apply] [--manifest 文件]" >&2
+  echo "  清单契约: --manifest 写的是 prune 清单（键 removed:[{name,size,md5}]），供" >&2
+  echo "            pipeline_record_cleanup.py / check_state_hash_sync.py 消费；与" >&2
+  echo "            trash_paths.sh 的清理清单（--path 列表）互不通用。" >&2
+  echo "  默认 dry-run 只打印候选；--apply 才删除（删前校验签名与 hash）。" >&2
   exit 2
 }
 
