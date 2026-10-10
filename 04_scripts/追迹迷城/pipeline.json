@@ -1,7 +1,7 @@
 {
   "game": "追迹迷城",
   "version": "1.0.20261009",
-  "notes": "1.0.20261009（vc101201，TapTap）星空包：重 dump 后 17 个目标 RVA 全部重定位；官方 4 个 dex 与 resources.arsc 逐字节未改，星光类装进新增 classes5.dex；Manifest 走 v3 补丁器（新增 MenuService 元素 + StarryApp + FGS/悬浮窗权限）；免广告三入口策略已并入 so，hotfix/extract_ota 阶段作废。",
+  "notes": "1.0.20261009（vc101201，TapTap）星空包已收尾交付：重 dump 后 17 个目标 RVA 全部重定位；入口改走 ContentProvider（实测 <application android:name> 平台不采用，StarryApp 零实例化），星光 smali 合并进官方 classes4.dex，官方 classes.dex/classes2.dex/classes3.dex 与 resources.arsc 逐字节未改；Manifest 走 v3 补丁器（新增 MenuService + StarryInitProvider + FGS specialUse/悬浮窗权限，并修 resource map 追加基址 off-by-2）；免广告三入口策略已并入 so；TapTap 强制网页登录补 PKG_WHITELIST；hotfix/extract_ota 阶段作废。正式包 md5 4b5767c6bf96494a182b243d0a98a54e / sha256 f5990c41f15d7d200308104e24e40e56dfe3671461d9a4e7799fe4d15cc20f44，L2+L3 全通过。",
   "params": {
     "game_id": "zjmc",
     "package": "com.TeaMelo.DungeonChasers"
