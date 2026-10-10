@@ -5,3 +5,6 @@
 2026-10-10 15:16	明日方舟	G1	通过	check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）	ai
 2026-10-10 15:32	明日方舟	G1	通过	check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）	ai
 2026-10-10 15:44	明日方舟	G1	通过	check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）	ai
+2026-10-10 15:56	明日方舟	G2	通过	预检 PASS_TO_HUMAN（09_test/明日方舟/precheck_20261010_154710）：so 加载/菜单弹出 native menu shown mode=ACTIVITY/auth game_id=mrfzz/空转2分钟无崩溃；装机 md5=310e1a74bd1d05392f7828e4ebbdf005 设备侧 md5sum 实读一致	ai
+2026-10-10 15:56	明日方舟	G3	通过	用户真人实测（m01870 原话「功能都没问题，进行收尾+正式包+清理+git」）：七项全开进战斗，装钩 10/10（hooked=10）、game-side hit 六项（attack_speed/damage10/zero_cost_card/deploy_anywhere/infinite_sp/invincible @15:52:38-44）、ANR/tombstone/FATAL 全 0；证据 09_test/_recorder/mrfzz_20261010/l3_判读_20261010.txt	human
+2026-10-10 15:56	明日方舟	收尾	通过	finalize_game_delivery.sh --prune --sync-doc --apply：保留唯一正式包 明日方舟_2.7.81_surgical-releaseSigned.apk（1,863,780,554 B / md5 310e1a74 / sha256 49847283c29f…），裁掉 surgical-unsigned.apk 与 .idsig（清单 10_docs/明日方舟/正式包裁剪清单_20261010.json）	ai
