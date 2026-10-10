@@ -1,1 +1,17 @@
-{"serial":"f9a116a2","package":"com.TeaMelo.DungeonChasers","action":"uninstall_no_keep_data","at":"2026-09-14 19:22:09"}
+{
+ "history": [
+  {
+   "serial": "f9a116a2",
+   "package": "com.TeaMelo.DungeonChasers",
+   "action": "uninstall_no_keep_data",
+   "at": "2026-09-14 19:22:09"
+  },
+  {
+   "serial": "f9a116a2",
+   "package": "com.TeaMelo.DungeonChasers",
+   "action": "uninstall_no_keep_data",
+   "at": "2026-10-10 16:45:05",
+   "note": "用户当轮明确选择「直接替换，不备份」（ask_user_question install_decision）；异签名 INSTALL_FAILED_UPDATE_INCOMPATIBLE 不可避免"
+  }
+ ]
+}

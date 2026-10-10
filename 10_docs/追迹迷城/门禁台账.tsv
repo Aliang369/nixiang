@@ -1,0 +1,4 @@
+时间	游戏	门禁	结论	证据	记入者
+2026-10-10 17:15	追迹迷城	G1	通过	静态门禁：check_release_apk 仅 TEMP_DEBUG 假阳性（官方数据条目，官方包同命中）；check_release_clean --tag ZjmcMod --so PASS；包内 so md5=构建产物；classes/2/3+arsc sha256 未变	ai
+2026-10-10 17:15	追迹迷城	G2	通过	L2 预检 PASS_TO_HUMAN：RegisterNatives 20/20、native menu shown mode=ACTIVITY、auth game_id synced zjmc、空转 2min 无崩溃；17 条 hooked 日志全绿	ai
+2026-10-10 17:29	追迹迷城	G3	通过	用户 2026-10-10 实测确认：TapTap 强制网页登录已生效、五项功能（秒杀/无敌/全屏秒杀/无限技能/免广告）均无问题（用户原话「功能都没问题」）	ai

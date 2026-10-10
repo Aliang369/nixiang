@@ -1,7 +1,7 @@
 {
   "game": "追迹迷城",
-  "version": "1.0.20260912",
-  "notes": "1.0.20260912 免广告修复完成并通过真机日志验证；修复 APK 与 OTA so 已保留，构建缓存与临时件已清理。",
+  "version": "1.0.20261009",
+  "notes": "1.0.20261009（vc101201，TapTap）星空包：重 dump 后 17 个目标 RVA 全部重定位；官方 4 个 dex 与 resources.arsc 逐字节未改，星光类装进新增 classes5.dex；Manifest 走 v3 补丁器（新增 MenuService 元素 + StarryApp + FGS/悬浮窗权限）；免广告三入口策略已并入 so，hotfix/extract_ota 阶段作废。",
   "params": {
     "game_id": "zjmc",
     "package": "com.TeaMelo.DungeonChasers"
@@ -147,7 +147,7 @@
     },
     {
       "id": "impl_mod",
-      "name": "功能实现（原四功能 RVA 迁移 + 免广告 + Manifest 补丁缓存）",
+      "name": "功能实现（17 目标 RVA 重定位 + Manifest v3 补丁缓存）",
       "requires": [
         "anchor"
       ],
@@ -172,11 +172,12 @@
         "07_patched/追迹迷城/surgical_1.0.20260912/AndroidManifest.xml": {
           "md5": "722d54e7c398ede2ecf56c93f3e59f31"
         }
-      }
+      },
+      "cleanup_note": "2026-10-10：ZjmcMod.cpp RVA 表按新 dump 全量替换（libil2cpp md5 d6d9b40da0e47d23ae2f87ec7e5188ec / metadata v31）；Manifest 缓存 07_patched/追迹迷城/surgical_1.0.20261009/AndroidManifest.xml（md5 6e75558d3b6ee930555e23d3cf5e9782）。"
     },
     {
       "id": "build_so",
-      "name": "构建 libstarry_magic.so（ZJMC 标签 + JNI 导出校验）",
+      "name": "构建 libstarry_magic.so（ZJMC 标签 + 免广告串校验）",
       "requires": [
         "impl_mod"
       ],
@@ -191,29 +192,29 @@
         }
       ],
       "status": "done",
-      "cleanup_note": "构建产物已用于 2026-09-15 免广告修复包与 OTA so；obj_zjmc/libs_zjmc 已按追加清理删除。",
+      "cleanup_note": "2026-10-10：so md5 5dba6b41830703f1cf526c07f9658b88（4,217,360 B），已用于本次外科包。",
       "done_at": "2026-09-15 20:17:24",
       "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*"
     },
     {
       "id": "surgical",
-      "name": "外科组装（classes3/5 patch + classes6 星光合并 + Manifest + so）",
+      "name": "外科组装（星光 smali 合并进官方 classes4.dex + Manifest v3 补丁 + so；classes/2/3+arsc 零改动）",
       "requires": [
         "build_so"
       ],
-      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh",
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20261009.sh",
       "preflight": [
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh",
-        "04_scripts/追迹迷城/patch_zjmc_smali.py"
+        "mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20261009.sh",
+        "04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261009_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "cleanup_note": "2026-09-14 首次外科包完成；2026-09-15 免广告修复改走 hotfix_no_ad 的 so-only 路径。"
+      "cleanup_note": "2026-10-10 出包成功（v4：入口改 StarryInitProvider + 星光合并进 classes4.dex，classes4 method_ids 37691→39785、class_defs 5498→5685）；classes.dex/2/3 + resources.arsc sha256 全等（脚本内断言）；Manifest 缓存 07_patched/追迹迷城/surgical_1.0.20261009/AndroidManifest.xml md5 02afbafb5a600057b1a9d5a6a8950438"
     },
     {
       "id": "sign",
@@ -225,15 +226,15 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261009_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "cleanup_note": "2026-09-14 首次签名完成；修复包签名记录见 hotfix_no_ad。"
+      "cleanup_note": "2026-10-10：apksigner v3 方案验证通过（CN=StarryMagic，SHA-1 821c92e404ab5fdac8dbf157c2e467e71440917d）；APK 983,764,178 B / md5 b3aeba681ef98921f4ffe22d345ac526。"
     },
     {
       "id": "uninstall_official",
-      "name": "卸载官方包（用户 2026-09-14 明确授权：不保留数据）",
+      "name": "卸载官方包（用户 2026-10-10 明确选择「直接替换，不备份」）",
       "requires": [
         "sign",
         "device_ready"
@@ -249,7 +250,7 @@
         }
       ],
       "status": "done",
-      "cleanup_note": "2026-09-14 用户授权卸载官方包且不保留数据，已完成；修复包为同签名覆盖安装，无需再次卸载。"
+      "cleanup_note": "2026-10-10 16:45 卸载官方包（异签名，覆盖安装不可行）；用户当轮确认不保留数据。"
     },
     {
       "id": "install",
@@ -269,7 +270,7 @@
         }
       ],
       "status": "done",
-      "cleanup_note": "2026-09-14 首次安装完成；2026-09-15 修复包覆盖安装记录见 hotfix_no_ad。"
+      "cleanup_note": "2026-10-10 16:45 安装完成（adb install 增量装，29.9 s）；设备 base.apk md5 == 本地包 md5 b3aeba681ef98921f4ffe22d345ac526。"
     },
     {
       "id": "cleanup",
@@ -334,87 +335,6 @@
       "inputs": {
         "04_scripts/追迹迷城/cleanup_summary.json": "38e8fb5d7c604030c2e612164169ff8b",
         "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs": "82fed0909dd53e697832cad27c68b134"
-      }
-    },
-    {
-      "id": "hotfix_no_ad",
-      "name": "免广告修复（UsedCount/UseFreeSkipAds/RemainingCount 三钩 + 同签名 so-only 覆盖安装）",
-      "requires": [
-        "build_so",
-        "device_ready"
-      ],
-      "command": "STARRY_INSTALL=1 bash 04_scripts/追迹迷城/zjmc_so_only_no_ad_fix.sh",
-      "preflight": [
-        "04_scripts/追迹迷城/zjmc_so_only_no_ad_fix.sh"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk"
-        }
-      ],
-      "status": "done",
-      "cleanup_note": "2026-09-15 免广告修复包已构建、覆盖安装并通过日志/奖励链验证；输出 APK 保留在 08_output。"
-    },
-    {
-      "id": "extract_ota_so",
-      "name": "提取 OTA 单文件 libstarry_magic.so",
-      "requires": [
-        "hotfix_no_ad"
-      ],
-      "command": "bash 04_scripts/追迹迷城/extract_ota_so_zjmc.sh",
-      "preflight": [
-        "04_scripts/追迹迷城/extract_ota_so_zjmc.sh"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-15 20:44:35",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so": {
-          "md5": "a4d18d81d3230e0758304326eea457c5"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20260912_noAdFix-releaseSigned.apk": "e2263456f4c39e1d97303cfc7b5ed6f7"
-      }
-    },
-    {
-      "id": "cleanup_fix",
-      "name": "免广告修复包追加清理（构建缓存 + 临时件）",
-      "requires": [
-        "extract_ota_so"
-      ],
-      "command": "bash 04_scripts/追迹迷城/cleanup_fix_zjmc.sh",
-      "preflight": [
-        "04_scripts/追迹迷城/cleanup_fix_zjmc.sh"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "04_scripts/追迹迷城/cleanup_fix_summary.json"
-        },
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-15 20:46:25",
-      "artifacts": {
-        "04_scripts/追迹迷城/cleanup_fix_summary.json": {
-          "md5": "f313815b318575a08946558fce53cadb"
-        },
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so": {
-          "md5": "a4d18d81d3230e0758304326eea457c5"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/ota/zjmc/libstarry_magic.so": "a4d18d81d3230e0758304326eea457c5"
       }
     }
   ]

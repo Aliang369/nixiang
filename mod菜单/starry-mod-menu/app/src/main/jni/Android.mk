@@ -248,8 +248,9 @@ LOCAL_ARM_MODE  := arm
 # LOCAL_CFLAGS    += -DENABLE_COCOS_HOOK -DSTARRY_GAME_ZXR
 # LOCAL_SRC_FILES := Main.cpp Games/ZxrMod.cpp
 # 消消英雄2 1.2.28 · xLua AN_1/2/3（2026-10-08 激活）；Trace 用 STARRY_LUA_DUMP_TRACE=1 + APP_CFLAGS
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
-LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
+# 2026-10-10 切走（追迹迷城 1.0.20261009 出包），恢复时取消下面两行注释
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_MATCH2
+# LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
 # 超维进化 2.2（cwjh）— Cocos2djs se::evalString splice（20261006 0.3.16 热更：doDmg 首参 r→n，定义签名扫描）
 # 每次 splice 逐功能打印 f0-f9 hits；miss 一律 LOGW
 # 2026-10-08 切走（消消英雄2 1.2.28 出包）→ 恢复时取消下面两行注释
@@ -259,10 +260,10 @@ LOCAL_SRC_FILES := Main.cpp Games/Match2Mod.cpp Unity/Il2CppApi.cpp
 # Trace：ndk-build 传 STARRY_TRACE=1
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WGGLS
 # LOCAL_SRC_FILES += Main.cpp Games/WgglsMod.cpp Unity/Il2CppApi.cpp
-# 追迹迷城 1.0.20260912 TapTap（2026-09-14 RVA 重算见 ZjmcMod.cpp）
-# 2026-09-20 切走（我的勇者 7.6.1 出包），恢复时取消下面两行注释
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
-# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 追迹迷城 1.0.20261009 / vc101201 TapTap（2026-10-10 重 dump＋RVA 重定位见 ZjmcMod.cpp）
+# 上一版 0912 的 RVA 已全部作废；五项功能与 17 个 Hook 目标签名未变
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
 # 我的勇者 7.6.1（wdyz）— Battle 结算钩：五倍攻击(敌 ×5)/无敌(HeroSettle 0)
 # 2026-09-07 星光自注入验证（不用 frida；TryEnterCd 已证死路，勿挂技能簇）
 # 2026-09-20 7.6.1(vc203) 重 dump：RVA 全漂移 → 双路径按名兜底 + 新 RVA 回填

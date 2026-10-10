@@ -1,0 +1,78 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358",
+  "timestamp": "20261010_173358",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "06_dumped/追迹迷城/1.0.20260912_il2cpp",
+      "type": "dir",
+      "size_kib": 4,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/追迹迷城/1.0.20260912_il2cpp",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/06_dumped/追迹迷城/1.0.20260912_il2cpp"
+    },
+    {
+      "path": "06_dumped/追迹迷城/1.0.20261009_il2cpp",
+      "type": "dir",
+      "size_kib": 319424,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/追迹迷城/1.0.20261009_il2cpp",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/06_dumped/追迹迷城/1.0.20261009_il2cpp"
+    },
+    {
+      "path": "06_dumped/追迹迷城/1.0.20261009_il2cpp.tool",
+      "type": "dir",
+      "size_kib": 129524,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/追迹迷城/1.0.20261009_il2cpp.tool",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/06_dumped/追迹迷城/1.0.20261009_il2cpp.tool"
+    },
+    {
+      "path": "09_test/追迹迷城/precheck_20261010_164532",
+      "type": "dir",
+      "size_kib": 2056,
+      "source": "/Users/aliang/Documents/nixiang/09_test/追迹迷城/precheck_20261010_164532",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/09_test/追迹迷城/precheck_20261010_164532"
+    },
+    {
+      "path": "09_test/追迹迷城/precheck_20261010_171258",
+      "type": "dir",
+      "size_kib": 5144,
+      "source": "/Users/aliang/Documents/nixiang/09_test/追迹迷城/precheck_20261010_171258",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/09_test/追迹迷城/precheck_20261010_171258"
+    },
+    {
+      "path": "09_test/追迹迷城/precheck_20261010_172417",
+      "type": "dir",
+      "size_kib": 3080,
+      "source": "/Users/aliang/Documents/nixiang/09_test/追迹迷城/precheck_20261010_172417",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/09_test/追迹迷城/precheck_20261010_172417"
+    },
+    {
+      "path": "09_test/_recorder/20261010_171539",
+      "type": "dir",
+      "size_kib": 19360,
+      "source": "/Users/aliang/Documents/nixiang/09_test/_recorder/20261010_171539",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/09_test/_recorder/20261010_171539"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/app/build",
+      "type": "dir",
+      "size_kib": 73584,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/build",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/mod菜单/starry-mod-menu/app/build"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/.gradle",
+      "type": "dir",
+      "size_kib": 1200,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/.gradle",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/mod菜单/starry-mod-menu/.gradle"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/obj_zjmc",
+      "type": "dir",
+      "size_kib": 7116,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_zjmc",
+      "quarantine": "/Users/aliang/.Trash/nixiang_zjmc_20261010_20261010_173358/mod菜单/starry-mod-menu/obj_zjmc"
+    }
+  ]
+}

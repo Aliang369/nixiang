@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/追迹迷城",
+  "keep": "追迹迷城_1.0.20261009_surgical-releaseSigned.apk",
+  "keep_size": 980028568,
+  "keep_md5": "4b5767c6bf96494a182b243d0a98a54e",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "追迹迷城_1.0.20261009_surgical-releaseSigned.apk.idsig",
+      "size": 7726619,
+      "md5": "c8b107f098bc83751cc90d5bd6fc1abe"
+    }
+  ],
+  "removed_count": 1
+}

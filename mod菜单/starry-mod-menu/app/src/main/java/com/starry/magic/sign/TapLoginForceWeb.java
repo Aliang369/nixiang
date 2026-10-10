@@ -195,7 +195,23 @@ public final class TapLoginForceWeb {
                     // （⇒ 与圣翼传说同构：无 loginType 分流，走 LoginClient + WebViewHandler）；
                     // 设备已装 TapTap 客户端（com.taptap），改签后客户端 SSO 必被
                     // signature not match 拒绝 ⇒ 固定 embedded_web 网页登录。特此列入白名单。
-                    "com.guigugame.guigubahuang"));
+                    "com.guigugame.guigubahuang",
+                    // 追迹迷城（com.TeaMelo.DungeonChasers）TapTap 渠道原版 1.0.20261009/vc101201：
+                    // 2026-10-10 真机实测**漏配白名单**的后果 —— 本类 5 个入口各自
+                    // `if (!PKG_WHITELIST.contains(...)) return;` 静默返回、`StarryTapLogin` 零日志，
+                    // SDK 默认走 mobile_client 拉起 TapTap 客户端：
+                    // `SceneSDK…AppSwitchEvent(targetName=com.taptap)` +
+                    // `DCSEX-AppSwitchManager: onAppEnter … exitActivity=com.taptap.common.account.ui.login.CheckOneKeyLoginActivity`，
+                    // 玩家侧活动 `com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity`，
+                    // 游戏内 `CheckLoginState：当前未登录`。
+                    // 包内实证 TapSDK **新版路径**（classes3.dex 字符串计数）：
+                    // com_taptap_sdk_login_request=1 / embedded_web=1 / loginType=2 / fallbackToWeb=1 /
+                    // WebLoginFragment=21 / DefaultTapLoginFragmentProvider=3 / TapTapLoginActivity=7
+                    // ⇒ 走 prepareNewImplRequest 固定 embedded_web + forceNewImplWeb 兜底。
+                    // 设备已装 TapTap 客户端，改签后客户端 SSO 必被 signature not match 拒绝
+                    // ⇒ 必须强制内嵌网页登录。签名侧另由 SignSpoof 的 killPm 覆盖
+                    // TapSignKit.getSign(Context)（其实现＝pm.getPackageInfo(pkg, 0x40) → signatures[0] → MD5）。
+                    "com.TeaMelo.DungeonChasers"));
 
     private TapLoginForceWeb() {}
 

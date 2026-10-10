@@ -6,7 +6,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 UNINSTALL_MARK="$SCRIPT_DIR/uninstall_done.json"
-APK="$NIXIANG_ROOT/08_output/追迹迷城/追迹迷城_1.0.20260912_surgical-releaseSigned.apk"
+APK="${ZJMC_APK:-}"
+if [[ -z "$APK" ]]; then
+  # 版本无关：取 08_output 下最新的星空外科包（可用 ZJMC_APK 覆盖）
+  APK="$(ls -t "$NIXIANG_ROOT"/08_output/追迹迷城/追迹迷城_*_surgical-releaseSigned.apk 2>/dev/null | head -1)"
+fi
 PKG="com.TeaMelo.DungeonChasers"
 REMOTE="/data/local/tmp/zjmc_surgical.apk"
 ADB_BIN="${ADB_BIN:-adb}"
