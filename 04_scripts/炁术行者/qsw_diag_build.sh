@@ -94,16 +94,16 @@ s = sub_once(s,
 
 # (2) 装载确认：证明页面真的执行了我们这份 main.js
 s = sub_once(s,
-    'try{console.log("QSW_MOD_LOADED v10s")}catch(e){}',
-    'try{console.log("QSW_MOD_LOADED v10s")}catch(e){}'
-    'try{w.__QSW_LOG({ev:"loaded",tag:"v10s_diag",k:w.__QSWK,dr:w.__QSW_DR,'
+    'try{console.log("QSW_MOD_LOADED v14s")}catch(e){}',
+    'try{console.log("QSW_MOD_LOADED v14s")}catch(e){}'
+    'try{w.__QSW_LOG({ev:"loaded",tag:"v14s_diag",k:w.__QSWK,dr:w.__QSW_DR,'
     'bridge:!!window.StarryH5,ua:navigator.userAgent.slice(0,40)})}catch(e){}',
     "loaded 装载信标")
 
 # (3) 投值确认：__QSW_APPLY 每次调用都留痕
 s = sub_once(s,
     "w.__QSWK=k; w.__QSW_DR=drPct/100;",
-    "w.__QSWK=k; w.__QSW_DR=drPct/100; w.__QSW_LOG({ev:\"apply\",k:k,dr:w.__QSW_DR});",
+    "w.__QSWK=k; w.__QSW_DR=drPct/100; w.__QSW_LOG({ev:\"apply\",k:k,dr:w.__QSW_DR,spd:spd});",
     "apply 投值信标")
 
 # (4) 伤害钩子：计数 + 前 10 次 / 每 100 次打点（含 camp、k、dr、返回前后值）
@@ -131,7 +131,7 @@ print("   写出 %s  (%d B, md5 %s)" % (dst_p, len(s.encode("utf-8")),
 PY
 
 node --check "$DIAG_DIR/main.js" && echo "   node --check OK"
-for needle in 'QSWDIAG' 'ev:"loaded"' 'ev:"apply"' 'ev:"dmg"' 'window.__QSW_DMG(Math.max(0,s)+Math.max(0,r),this.camp)' 'QSW_MOD_LOADED v10s'; do
+for needle in 'QSWDIAG' 'ev:"loaded"' 'ev:"apply"' 'ev:"dmg"' 'window.__QSW_DMG(Math.max(0,s)+Math.max(0,r),this.camp)' 'QSW_MOD_LOADED v14s'; do
   c=$(LC_ALL=C grep -acF -- "$needle" "$DIAG_DIR/main.js" || true)
   [[ "$c" -ge 1 ]] || { echo "!! 插桩缺件: $needle" >&2; exit 1; }
   printf '   %-56s x%s\n' "$needle" "$c"

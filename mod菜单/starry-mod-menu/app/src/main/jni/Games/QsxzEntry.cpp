@@ -17,12 +17,18 @@
 
 // featNum = 下标（Category_ 占位），与 QsxzMod.h 的 enum 严格对齐。
 // 滑块格式（FeatureListParser）：SeekBar_名_min_max[_default]，名不得含下划线。
-// 默认值一律取「原版口径」（倍率 1、减伤 0）：菜单首次打开不能是拉满状态，
+// 默认值一律取「原版口径」（倍率 1、减伤 0、加速 1）：菜单首次打开不能是拉满状态，
 // 否则玩家一进游戏就在用极限值，与「未授权=原版」的设计相悖。
 static const char* kQsxz_Features[] = {
-    "Category_基础功能",        // 0
-    "SeekBar_伤害倍率_1_5_1",   // 1  QSXZ_FEAT_DMG（默认 1 = 原版；2026-10-09 上限 20→5）
-    "SeekBar_减伤_0_50_0",      // 2  QSXZ_FEAT_DR（默认 0 = 原版）
+    "Category_基础功能",         // 0
+    "SeekBar_伤害倍率_1_5_1",    // 1  QSXZ_FEAT_DMG（默认 1 = 原版；2026-10-09 上限 20→5）
+    "SeekBar_减伤_0_50_0",       // 2  QSXZ_FEAT_DR（默认 0 = 原版）
+    // 3  QSXZ_FEAT_SPEED 战斗加速（2026-10-10 新增）：1 = 原版完全不干预。
+    //    本作是 H5，速度走 cocos Scheduler.setTimeScale + GAME_SPEED 枚举，
+    //    补丁只在战斗内（timeScale>1）纠偏，城里/菜单/结算慢镜一律不碰。
+    //    2026-10-10 上限 10→3：服务端是权威制（authorityVersion）且速度是协商项，客户端跑太快
+    //    会被判 9998「参数传输遇到问题」拒判整场；用户实测 5、10 均过不了关，3 可稳定过关。
+    "SeekBar_战斗加速_1_3_1",    // 默认 1 = 原版（上限 3 = 实测服务端可接受的最快节奏）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

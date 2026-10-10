@@ -1,0 +1,9 @@
+时间	游戏	门禁	结论	证据	记入者
+2026-10-10 20:35	炁术行者	G1	通过	出包门禁 PASS（3 文件违规0）；包内 so md5=e316ab5e8277af9aa9dd5f54f1b8b517、main.js md5=8a14a437eaf3405a1450a9bc505ae8a4、APK md5=ed0c0181813da05adb6eaa49cc49921e；签名 426fa3fb…92b88 前缀符	ai
+2026-10-10 20:38	炁术行者	G2	通过	post_install_precheck PASS_TO_HUMAN（so 加载/菜单弹出/授权同步/空转3min无崩溃）；证据 09_test/炁术行者/precheck_20261010_203546	ai
+2026-10-10 20:51	炁术行者	G1	通过	弹窗总闸 v12s：补丁器17锚点各1次；包内 main.js md5 8ff731ccac590e7a62c03c9b9a2f00a3；check_release_clean PASS（3 文件违规 0）	ai
+2026-10-10 20:51	炁术行者	G2	通过	post_install_precheck PASS_TO_HUMAN（so 加载/菜单弹出/授权同步/空转3分钟无崩溃）；正式包 md5 1ddbd645cd46e96cba48062562b45ccd；证据 09_test/炁术行者/precheck_20261010_204757	ai
+2026-10-10 21:06	炁术行者	G1	通过	v13s 埋点版：补丁器18锚点各1次；包内 main.js v13s；check_release_clean PASS（3 文件违规 0）	ai
+2026-10-10 21:06	炁术行者	G2	通过	post_install_precheck PASS_TO_HUMAN（so加载/菜单弹出/授权同步/空转3分钟无崩溃）；正式包 md5 6bd716cc95e54b9b1ddda08f7ce547e9；证据 09_test/炁术行者/precheck_20261010_210248	ai
+2026-10-10 21:16	炁术行者	G1	通过	v14s 加速上限 10→3：补丁器18锚点各1次；offline_speed_check 45/0；offline_regression 27/0；check_release_clean --tag Qsxz PASS（违规 0）	ai
+2026-10-10 21:16	炁术行者	G2	通过	post_install_precheck PASS_TO_HUMAN（证据 09_test/炁术行者/precheck_20261010_211312）；正式包 md5 627858330ce5451a528dc9e3129861bd；so b0d297204c312c3c639f209b94886aec	ai

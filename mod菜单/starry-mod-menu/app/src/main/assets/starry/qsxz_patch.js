@@ -1,5 +1,5 @@
 /* ============================================================================
- * qsxz_patch.js — 星光版《炁术行者》页面内 JS 补丁（v1）
+ * qsxz_patch.js — 星光版《炁术行者》页面内 JS 补丁（v2）
  *
  * 载体：assets/starry/qsxz_patch.js（外科注入塞进游戏 APK）
  * 注入：com.starry.magic.h5box.StarryH5 —— 每 1s（ack 前）/ 5s（ack 后）用
@@ -22,8 +22,9 @@
  *   4) 不抛异常：每步独立 try/catch。
  *
  * 数值口径（已实测，勿擅改）
- *   · 伤害倍率 1~20：20 为服务端稳定通过上限（10/10）
+ *   · 伤害倍率 1~5：5 为服务端稳定通过上限（2026-10-09 由 20 收窄）
  *   · 减伤 0~50：50 为服务端可接受上限（70 会被 9988 拒判）
+ *   · 战斗加速 1~10：1 = 完全不动（原版）；2 以上把战斗 timeScale 与技能除速常量一起改成该值
  *   · 战力一律不动（放大战力 9987 拒判）
  *
  * 日志：window.StarryH5.log(...) → logcat tag "StarryJs_qsxz"
@@ -38,13 +39,14 @@
     /* ---- 功能位号：必须与 Games/QsxzEntry.cpp 的 featureList 下标一致 ---- */
     var F_DMG = 1;   // SeekBar_伤害倍率_1_5_1
     var F_DR = 2;    // SeekBar_减伤_0_50_0
+    var F_SPD = 3;   // SeekBar_战斗加速_1_3_1（1 = 原版，不干预；上限 3）
 
-    var K_MAX = 5, DR_MAX = 50, POLL_MS = 500;   // 2026-10-09：K_MAX 由 20 收窄到 5
+    var K_MAX = 5, DR_MAX = 50, SPD_MAX = 3, POLL_MS = 500;   // 2026-10-09：K_MAX 由 20 收窄到 5；2026-10-10：SPD_MAX 由 10 收窄到 3（实测 5/10 服务端 9998 拒判）
 
     /* ---- 跨注入共享状态挂在 window 上：每次注入都是新闭包，局部变量靠不住 ---- */
     var W = window;
     if (!W.__qsxz_st) {
-        W.__qsxz_st = { k: -1, d: -1, beats: 0, raw: null };
+        W.__qsxz_st = { k: -1, d: -1, s: -1, beats: 0, raw: null };
     }
     var st = W.__qsxz_st;
     var state = { live: 0, specs: [], bools: [], vals: [] };
@@ -69,14 +71,16 @@
 
     /* 注：bools/vals 按 featureList 数组下标（specs[i] 对 vals[i]；Category 占 0） */
     function pick() {
-        var k = 1, d = 0;
+        var k = 1, d = 0, s = 1;
         if (state.live) {
             k = state.vals ? (state.vals[F_DMG] | 0) : 1;
             d = state.vals ? (state.vals[F_DR] | 0) : 0;
+            s = state.vals ? (state.vals[F_SPD] | 0) : 1;
         }
         if (k < 1) { k = 1; } else if (k > K_MAX) { k = K_MAX; }
         if (d < 0) { d = 0; } else if (d > DR_MAX) { d = DR_MAX; }
-        return { k: k, d: d };
+        if (s < 1) { s = 1; } else if (s > SPD_MAX) { s = SPD_MAX; }
+        return { k: k, d: d, s: s };
     }
 
     /* 投值：每次注入都跑（见文件头 ★ 说明）。未授权 → live=0 → 回落原版。 */
@@ -85,13 +89,14 @@
             refresh();
             var p = pick();
             /* 无条件重写：即使页面某处改过 __QSWK，下一轮注入也会纠回来 */
-            window.__QSW_APPLY(p.k, p.d);
-            if (p.k !== st.k || p.d !== st.d) {
+            window.__QSW_APPLY(p.k, p.d, p.s);
+            if (p.k !== st.k || p.d !== st.d || p.s !== st.s) {
                 st.k = p.k;
                 st.d = p.d;
-                log('apply k=' + p.k + ' dr=' + p.d + ' live=' + (state.live ? 1 : 0));
+                st.s = p.s;
+                log('apply k=' + p.k + ' dr=' + p.d + ' spd=' + p.s + ' live=' + (state.live ? 1 : 0));
             } else if ((++st.beats & 15) === 0) {
-                log('beat k=' + p.k + ' dr=' + p.d + ' live=' + (state.live ? 1 : 0) + ' n=' + st.beats);
+                log('beat k=' + p.k + ' dr=' + p.d + ' spd=' + p.s + ' live=' + (state.live ? 1 : 0) + ' n=' + st.beats);
             }
         } catch (e) { log('applyNow 失败: ' + e); }
     }
@@ -103,6 +108,6 @@
         W.__qsxz_v1 = 1;
         /* 前台兜底：页面可见时 500ms 一跟，拖滑块更跟手 */
         try { setInterval(applyNow, POLL_MS); } catch (e) { /* 不影响游戏 */ }
-        try { window.StarryH5.ack('qsxz v1'); } catch (e) { /* 不影响游戏 */ }
+        try { window.StarryH5.ack('qsxz v2'); } catch (e) { /* 不影响游戏 */ }
     }
 })();

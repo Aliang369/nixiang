@@ -96,7 +96,15 @@ cp "$STARRY_SRC/app/src/main/assets/starry/qsxz_patch.js" "$WORK/assets/starry/q
 import sys
 mj = open(sys.argv[1], encoding='utf-8').read()
 pj = open(sys.argv[2], encoding='utf-8').read()
-for m in ('QSW-MOD v10s', '__QSW_APPLY', 'getBaseReduceHp=function'):
+for m in ('QSW-MOD v14s', '__QSW_APPLY', 'getBaseReduceHp=function',
+          # 战斗加速（v11s）：枚举 getter + TweenSpeed 抓 Scheduler 两处锚点必须都进了产物
+          '__QSW_SPD', 'Object.defineProperty(Q,"speed1"', 'window.__QSW_SCHED=r.getScheduler()',
+          # 弹窗总闸（v12s）：GameUtil.alert 包装必须进了产物
+          '__QSW_ALERTSKIP', 'window.__QSW_ALERTSKIP(e)){',
+          # 网络埋点（v13s）：发送埋点 ⑰ + 错误码证据行（折在 ⑦ neterr 里）都要进产物
+          '__QSW_NETREQ', '__QSW_NETERR',
+          'window.__QSW_NETREQ&&window.__QSW_NETREQ(t,e)',
+          'window.__QSW_NETERR&&window.__QSW_NETERR(i.code,r,i.callback,i.data)'):
     assert m in mj, 'main.js 缺 ' + m
 for b in ('192.168.10.25', '8899', '/cfg'):
     assert b not in mj, 'main.js 仍残留外部服务痕迹: ' + b

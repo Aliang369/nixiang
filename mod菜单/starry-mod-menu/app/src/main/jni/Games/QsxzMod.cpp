@@ -11,7 +11,7 @@
  *
  *  数据流：菜单 UI(MenuService) → 框架 onValueChanged/Tick → 本文件 atomics
  *          → Preferences（Java 侧）→ window.StarryH5.getState() → 补丁读值
- *          → 补丁调用页面内 window.__QSW_APPLY(k, dr) → 伤害口径生效
+ *          → 补丁调用页面内 window.__QSW_APPLY(k, dr, spd) → 伤害/减伤/战斗加速生效
  * ================================================================ */
 
 #include "QsxzMod.h"
@@ -27,6 +27,7 @@
 // ============================================================
 static std::atomic<int> g_dmg{1};   // 伤害倍率（1 = 关，等于原版）
 static std::atomic<int> g_dr{0};    // 减伤百分比（0 = 关）
+static std::atomic<int> g_spd{1};   // 战斗加速倍速（1 = 关，等于原版节奏）
 static std::atomic<bool> g_ready{false};
 
 // ============================================================
@@ -44,10 +45,11 @@ bool Qsxz_TryInit(JavaVM* /*vm*/) {
 bool Qsxz_IsReady() { return g_ready.load(); }
 
 void Qsxz_OnFeatureChanged(int featNum, bool enabled) {
-    // 本作两个功能都是滑块，无 Toggle；关掉时回落到原版口径。
+    // 本作三个功能都是滑块，无 Toggle；关掉时回落到原版口径。
     switch (featNum) {
-        case QSXZ_FEAT_DMG: if (!enabled) g_dmg.store(1); break;
-        case QSXZ_FEAT_DR:  if (!enabled) g_dr.store(0);  break;
+        case QSXZ_FEAT_DMG:   if (!enabled) g_dmg.store(1); break;
+        case QSXZ_FEAT_DR:    if (!enabled) g_dr.store(0);  break;
+        case QSXZ_FEAT_SPEED: if (!enabled) g_spd.store(1); break;
         default: break;
     }
     LOGI(QSXZ_LOG "toggle #%d = %d", featNum, enabled ? 1 : 0);
@@ -62,6 +64,10 @@ void Qsxz_OnValueChanged(int featNum, int value) {
         if (value < 0) value = 0;
         if (value > 50) value = 50;
         g_dr.store(value);
+    } else if (featNum == QSXZ_FEAT_SPEED) {
+        if (value < 1) value = 1;
+        if (value > 3) value = 3;   // 2026-10-10：上限 10→3（实测 5/10 被服务端 9998 拒判）；1 = 原版完全不干预
+        g_spd.store(value);
     }
     LOGI(QSXZ_LOG "value #%d = %d", featNum, value);
 }
@@ -72,10 +78,13 @@ void Qsxz_Tick(const bool* features, const int* values) {
     if (values) {
         int k = values[QSXZ_FEAT_DMG];
         int d = values[QSXZ_FEAT_DR];
-        if (k < 1) k = 1; else if (k > 5) k = 5;   // 2026-10-09：上限 20 → 5
+        int s = values[QSXZ_FEAT_SPEED];
+        if (k < 1) k = 1; else if (k > 5) k = 5;    // 2026-10-09：上限 20 → 5
         if (d < 0) d = 0; else if (d > 50) d = 50;
+        if (s < 1) s = 1; else if (s > 3) s = 3;  // 2026-10-10：上限 10→3；1 = 原版
         g_dmg.store(k);
         g_dr.store(d);
+        g_spd.store(s);
     }
     if (!g_ready.load()) {
         g_ready.store(true);
@@ -85,5 +94,6 @@ void Qsxz_Tick(const bool* features, const int* values) {
 void Qsxz_ForceClear() {
     g_dmg.store(1);
     g_dr.store(0);
+    g_spd.store(1);
     LOGI(QSXZ_LOG "forceClear：全部功能回落原版（补丁侧 live=0 后自然哑火）");
 }
