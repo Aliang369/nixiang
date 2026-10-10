@@ -3,3 +3,5 @@
 2026-10-10 06:34	明日方舟	G2	通过	post_install_precheck PASS_TO_HUMAN（09_test/明日方舟/precheck_20261010_063226）：so 加载 StarryMagic/菜单弹出 native menu shown mode=ACTIVITY/auth game_id=mrfzz/空转2分钟无崩溃；装机 md5=0daa5960e6d1f54ebffbb302d037ad30 设备侧一致	ai
 2026-10-10 14:59	明日方舟	G1	通过	check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）	ai
 2026-10-10 15:16	明日方舟	G1	通过	check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）	ai
+2026-10-10 15:32	明日方舟	G1	通过	check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）	ai
+2026-10-10 15:44	明日方舟	G1	通过	check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）	ai

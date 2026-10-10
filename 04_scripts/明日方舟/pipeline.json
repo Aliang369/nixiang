@@ -255,14 +255,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:20:55",
+      "done_at": "2026-10-10 15:38:12",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": {
-          "md5": "9a6a870dbce98847c0fc392bc92c26e0"
+          "md5": "03ca9096fcf76255b551f31a42de2d0b"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp": "dd9f31b99dd9451649cc75389c1b4e11",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp": "cdd60c5c6cb24b699289fb20824e954e",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp": "2c25065ed7078e6a12737e0082ec5406",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk": "5b8687e98f5723170f5b434f19be5357"
       }
@@ -290,17 +290,17 @@
       ],
       "status": "done",
       "note": "manifest 必须保留官方 com.u8.sdk.U8Application 与 androidx.core.app.CoreComponentFactory（provider-only）；出现 StarryApp/SignSpoofAppComponentFactory 即 ACE 启动击杀（2.7.71 实测 12s SIGSEGV / 11s SIGBUS）。",
-      "done_at": "2026-10-10 06:23:55",
+      "done_at": "2026-10-10 15:39:17",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-unsigned.apk": {
-          "md5": "f2315aa32d90af9179da510bc46a2eef"
+          "md5": "c26fead24ee11b74d688330f03356b32"
         },
         "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": {
-          "md5": "482290df0c881f3605a5ecca7c7b460b"
+          "md5": "5c4b39bc76bd69282769e3891db0205a"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": "9a6a870dbce98847c0fc392bc92c26e0"
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": "03ca9096fcf76255b551f31a42de2d0b"
       }
     },
     {
@@ -320,15 +320,15 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:26:33",
+      "done_at": "2026-10-10 15:41:14",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": {
-          "md5": "0daa5960e6d1f54ebffbb302d037ad30"
+          "md5": "310e1a74bd1d05392f7828e4ebbdf005"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-unsigned.apk": "f2315aa32d90af9179da510bc46a2eef",
-        "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": "482290df0c881f3605a5ecca7c7b460b"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-unsigned.apk": "c26fead24ee11b74d688330f03356b32",
+        "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": "5c4b39bc76bd69282769e3891db0205a"
       }
     },
     {
@@ -348,14 +348,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:29:48",
+      "done_at": "2026-10-10 15:44:46",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": {
-          "md5": "0daa5960e6d1f54ebffbb302d037ad30"
+          "md5": "310e1a74bd1d05392f7828e4ebbdf005"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "0daa5960e6d1f54ebffbb302d037ad30"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "310e1a74bd1d05392f7828e4ebbdf005"
       }
     },
     {
@@ -373,14 +373,14 @@
       ],
       "status": "done",
       "note": "2.7.71 轮：JNI 配套检查因 RegisterNatives 名称被 OBFUSCATE(...) 包裹而 SKIP，另用 llvm-nm -D 确认 so 导出 JNI_OnLoad，并逐项确认 ModBridge.java 的 19 个 native 声明均在 classes6.dex 中；运行时 19/19 注册仍是 G2 NOT PROVEN。",
-      "done_at": "2026-10-10 06:30:08",
+      "done_at": "2026-10-10 15:45:09",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": {
-          "md5": "0daa5960e6d1f54ebffbb302d037ad30"
+          "md5": "310e1a74bd1d05392f7828e4ebbdf005"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "0daa5960e6d1f54ebffbb302d037ad30"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "310e1a74bd1d05392f7828e4ebbdf005"
       }
     },
     {
@@ -401,14 +401,14 @@
       ],
       "status": "done",
       "note": "用户已授权（硬约束 ③）：官方包签名与我们的 starry 签名不一致 ⇒ 需 MRFZZ_ALLOW_UNINSTALL=1 走 pm uninstall --user 0 后重装，会清除游戏数据。装机后按 AGENTS 跑 post_install_precheck.sh + flight_recorder.sh，并请用户冷启动实测。",
-      "done_at": "2026-10-10 06:32:04",
+      "done_at": "2026-10-10 15:46:50",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.install_ok": {
-          "md5": "2ed3304f1052571a274dd2ee446ef2c2"
+          "md5": "9d0638f770da3bc0c51c840ad6cacc7b"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "0daa5960e6d1f54ebffbb302d037ad30"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "310e1a74bd1d05392f7828e4ebbdf005"
       }
     }
   ]
