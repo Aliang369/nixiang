@@ -285,6 +285,8 @@ Android 8+ `startForegroundService()` 后 **5 秒**内不进前台，系统直�
 - **热更回归**：官方热更重新全量下载，打进热更目录的补丁（jsc 门控、patch 过的资源）全部丢失
 - 游戏内贴图变紫/洋红 = 热更 DLC 资源校验失败（与 Mod hook 无关）：先保留唯一热更输入与故障证据；重新下载/删除须按 TOOLBOOK「清理规则」「真机残留清理」核对可取得性、范围及授权，**不默认清数据**
 
+**例外（全仓唯一，只对无悔华夏生效）**：`无悔华夏`（`com.yhhy.whrhx.aligames`，九游，带**乐变**热更派生负载）**必须卸载重装** —— 覆盖安装会让乐变弃用派生负载而 `resourceInfo.cfg` 仍记 `currVer` ⇒ 游戏退回映射 APK 内加密 `libil2cpp.so`，hook 全灭（现象：`core api missing (xdl+dynsym)`、`rva miss` 满屏）。执行入口 `bash 04_scripts/无悔华夏/whrhx_clean_reinstall.sh --uninstall`（`--wipe` 默认 exit 65）；判据与失败现象速查见 `10_docs/无悔华夏/硬约束.md` 第 4 条。用户 m02896 明确：**此例外不得外推到任何其它游戏** —— 其它同证书自签包仍按本节的「禁止清数据、只覆盖安装」（TOOLBOOK 规则 #77 三档：root 覆盖 so → `install -r` → 只有证书变了才 `uninstall`）。
+
 ---
 
 ## 设备指纹
