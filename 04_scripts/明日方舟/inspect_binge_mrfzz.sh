@@ -7,7 +7,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 META_FILE="$SCRIPT_DIR/binge_apk.json"
 OUT="$NIXIANG_ROOT/06_dumped/明日方舟/static_inspect"
 
-[[ -f "$META_FILE" ]] || { echo "错误: 缺少 $META_FILE，请先跑 fetch_binge 阶段" >&2; exit 1; }
+[[ -f "$META_FILE" ]] || { echo "错误: 缺少 ${META_FILE}，请先跑 fetch_binge 阶段" >&2; exit 1; }
 APK="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["apk_path"])' "$META_FILE")"
 [[ -f "$APK" ]] || { echo "错误: APK 不存在: $APK" >&2; exit 1; }
 
@@ -18,7 +18,7 @@ sed -n '1,260p' "$OUT/zip_entries.txt" > "$OUT/zip_entries_head.txt"
 
 pick() {
   local pattern="$1"
-  rg "$pattern" "$OUT/zip_entries.txt" | sed -n '1p' || true
+  grep -E -- "$pattern" "$OUT/zip_entries.txt" | sed -n '1p' || true
 }
 
 MANIFEST="$(pick '^AndroidManifest\.xml$')"
@@ -35,7 +35,7 @@ EXTRACT_LIST="$OUT/extract_list.txt"
 for entry in "$MANIFEST" "$IL2CPP" "$UNITY" "$METADATA" "$SDK" "$TOOLCHECK" "$RXPATCH" "$NESTED"; do
   [[ -n "$entry" ]] && printf '%s\n' "$entry" >> "$EXTRACT_LIST"
 done
-rg '^classes[0-9]*\.dex$|^lib/arm64-v8a/.*\.so$|^assets/.*(\.html|\.js|\.json|\.dat|\.bin)$|^META-INF/.*\.(RSA|DSA|EC)$|^shell_.*\.xml$' "$OUT/zip_entries.txt" >> "$EXTRACT_LIST" || true
+grep -aE '^classes[0-9]*\.dex$|^lib/arm64-v8a/.*\.so$|^assets/.*(\.html|\.js|\.json|\.dat|\.bin)$|^META-INF/.*\.(RSA|DSA|EC)$|^shell_.*\.xml$' "$OUT/zip_entries.txt" >> "$EXTRACT_LIST" || true
 sort -u "$EXTRACT_LIST" -o "$EXTRACT_LIST"
 
 if [[ -s "$EXTRACT_LIST" ]]; then

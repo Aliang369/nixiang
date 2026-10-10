@@ -52,6 +52,14 @@ ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif
 
+# 诊断总闸（2026-10-10 复盘 P0-2）：
+#   STARRY_DIAG=1（默认，诊断包）→ 诊断行编进 so，装机后能自报判据健康度；
+#   STARRY_DIAG=0（交付包）      → 诊断行连字符串都不进包（Includes/JudgeSelfCheck.h 的 SDIAG 走 #if）。
+# 用法: STARRY_DIAG=0 bash 04_scripts/明日方舟/mrfzz_build_so.sh
+ifdef STARRY_DIAG
+LOCAL_CFLAGS    += -DSTARRY_DIAG=$(STARRY_DIAG)
+endif
+
 # ==== 公共区（勿动）====
 LOCAL_SRC_FILES += xDL/xdl.c \
                    xDL/xdl_iterate.c \

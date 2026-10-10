@@ -35,6 +35,7 @@ CFG_HASH="$(
       "$JNI/Games/ArknightsMod.h" "$JNI/Games/ArknightsMod.cpp" \
       "$JNI/Games/ArknightsEntry.cpp"
     printf 'TRACE=%s\n' "${STARRY_TRACE:-}"
+    printf 'DIAG=%s\n' "${STARRY_DIAG:-1}"
   ) | shasum -a 256 | awk '{print $1}'
 )"
 if [[ -f "$STAMP" && "$(cat "$STAMP" 2>/dev/null)" != "$CFG_HASH" ]]; then
@@ -108,6 +109,31 @@ for bad in "[Endfield]" "Toggle_秒杀" "Toggle_无敌" "Toggle_玩家隐身" \
     exit 1
   }
 done
+
+# ---------- 诊断总闸断言（P0-2）----------
+# 诊断包：诊断串必须在（否则「诊断包其实没诊断」）；交付包：诊断串必须一条不剩
+# （SDIAG 用 #if 而不是 if，字符串应被预处理丢弃；这条断言就是它的证明）。
+DIAG_VAL="${STARRY_DIAG:-1}"
+if [[ "$DIAG_VAL" == "0" ]]; then
+  for d in 'diag: ready=' 'calib: anchor=' 'calib: guard2 ' 'OkPtr probe' ' by-name ok: ' \
+           'ext api assignable=' 'SELFCHECK'; do
+    HIT="$(LC_ALL=C grep -Fac "$d" "$SO" || true)"
+    [[ "$HIT" -eq 0 ]] || {
+      echo "ERROR: STARRY_DIAG=0（交付包）但 $SO 仍含诊断串: ${d}（检查 SDIAG 是否被写成了 if）" >&2
+      exit 1
+    }
+  done
+  echo "[build_so] 诊断串负向断言通过（交付包：0 条诊断串，证据层 hooked/hit 仍保留）"
+else
+  for d in 'diag: ready=' 'calib: guard2 ' 'SELFCHECK'; do
+    HIT="$(LC_ALL=C grep -Fac "$d" "$SO" || true)"
+    [[ "$HIT" -ge 1 ]] || {
+      echo "ERROR: STARRY_DIAG=${DIAG_VAL}（诊断包）但 $SO 缺诊断串: $d" >&2
+      exit 1
+    }
+  done
+  echo "[build_so] 诊断串正向断言通过（诊断包）"
+fi
 
 echo "[build_so] done → $SO"
 echo "[build_so] md5 = $(md5 -q "$SO")"

@@ -22,6 +22,7 @@
 #include <mutex>
 
 #include "Dobby/dobby.h"
+#include "Includes/JudgeSelfCheck.h"
 #include "Includes/Logger.h"
 #include "Includes/SecStrings.hpp"
 #include "Includes/StarPtr.h"
@@ -86,10 +87,10 @@ static bool OkPtr(const void* p) {
     const bool heap = IsValidHeapPtr(const_cast<void*>(p));
     const bool live = heap ? true : starptr::LiveFast(p);
     static std::atomic<int> s_probe{0};
-    if (s_probe.fetch_add(1, std::memory_order_relaxed) < 3) {
+    SDIAG(if (s_probe.fetch_add(1, std::memory_order_relaxed) < 3) {
         LOGI(MRFZZ_LOG " OkPtr probe: ptr=%p heap=%d liveFallback=%d",
              p, heap ? 1 : 0, live ? 1 : 0);
-    }
+    });
     return live;
 }
 
@@ -140,8 +141,8 @@ static void LoadExtApi() {
         g_ext.nested_types = reinterpret_cast<class_get_nested_types_t>(
             ResolveLocalSymbol("il2cpp_class_get_nested_types"));
         g_ext.loaded = true;
-        LOGI(MRFZZ_LOG " ext api assignable=%d nested=%d",
-             g_ext.is_assignable != nullptr, g_ext.nested_types != nullptr);
+        SDIAG(LOGI(MRFZZ_LOG " ext api assignable=%d nested=%d",
+             g_ext.is_assignable != nullptr, g_ext.nested_types != nullptr));
     });
 }
 
@@ -184,7 +185,9 @@ std::atomic<int> g_imgViaApiImg{0};
 std::atomic<int> g_imgFail{0};
 /* 判据标定用的「确定可读」锚点（void* ⇒ 8 字节对齐，避免用 atomic<int> 取址时
  * 因 4 字节对齐被判 LiveObj 否而误读为判据失效）。 */
-void* g_calibAnchor = nullptr;
+#if STARRY_DIAG
+void* g_calibAnchor = nullptr;   // 判据标定锚点（仅诊断包；交付包里连符号都不留）
+#endif
 
 struct ImageList {
     void* items[8];
@@ -232,12 +235,12 @@ static ImageList& ByNameImages() {
     std::call_once(once, [] {
         auto& api = GetApi();
         if (!api.domain_assembly_open) {
-            LOGW(MRFZZ_LOG " by-name: no domain_assembly_open export");
+            SDIAG(LOGW(MRFZZ_LOG " by-name: no domain_assembly_open export"));
             return;
         }
         void* domain = api.domain_get ? api.domain_get() : nullptr;
         if (!domain) {
-            LOGW(MRFZZ_LOG " by-name: domain null");
+            SDIAG(LOGW(MRFZZ_LOG " by-name: domain null"));
             return;
         }
         static const char* kNames[] = {
@@ -247,7 +250,7 @@ static ImageList& ByNameImages() {
         for (const char* n : kNames) {
             void* a = api.domain_assembly_open(domain, n);
             if (!a) {
-                LOGI(MRFZZ_LOG " by-name miss: %s", n);
+                SDIAG(LOGI(MRFZZ_LOG " by-name miss: %s", n));
                 continue;
             }
             void* img = ImageOfRobust(a);
@@ -255,12 +258,12 @@ static ImageList& ByNameImages() {
                 img = const_cast<void*>(api.assembly_image((const void*)a));
                 if (img) g_imgViaApiImg.fetch_add(1, std::memory_order_relaxed);
             }
-            LOGI(MRFZZ_LOG " by-name ok: %s asm=%p img=%p", n, a, img);
+            SDIAG(LOGI(MRFZZ_LOG " by-name ok: %s asm=%p img=%p", n, a, img));
             if (img && list.n < (sizeof(list.items) / sizeof(list.items[0]))) {
                 list.items[list.n++] = img;
             }
         }
-        LOGI(MRFZZ_LOG " by-name images=%zu", list.n);
+        SDIAG(LOGI(MRFZZ_LOG " by-name images=%zu", list.n));
     });
     return list;
 }
@@ -285,6 +288,7 @@ static void* FindClassNs(const char* ns, const char* name) {
     return nullptr;
 }
 
+#if STARRY_DIAG
 /* 一次性解析诊断：把「哪一级成功/哪个守卫判否」写进日志，供下一轮直接判读。 */
 static void LogResolveDiagOnce() {
     static std::once_flag once;
@@ -329,6 +333,10 @@ static void LogResolveDiagOnce() {
              g_imgFail.load(), ByNameImages().n);
     });
 }
+#else
+/* 交付包：无诊断行（字符串不进包），仅保留证据层日志 */
+static void LogResolveDiagOnce() {}
+#endif
 
 static void* ResolveNestedClass(const char* ns, const char* outerName,
                                 const char* nestedName) {
@@ -752,6 +760,7 @@ static bool AnyEnabled() {
            g_zeroCost.load();
 }
 
+#if STARRY_DIAG
 static void LogStatusIfDue() {
     /* 一次性解析诊断必须在任何提前 return **之前** 调用：
      * 七个功能常常在同一瞬间装齐，原来放在 DoneCount()>=7 之后 ⇒ diag 行永远打不出来。 */
@@ -773,6 +782,24 @@ static void LogStatusIfDue() {
     void* entity = FindClassNs("Torappu.Battle", "Entity");
     LOGI(MRFZZ_LOG " status hooked=%d/7 assemblies=%zu entity=%p apiReady=%d",
          DoneCount(), count, entity, GetApi().ready ? 1 : 0);
+}
+#else
+static void LogStatusIfDue() {}
+#endif
+
+/* 判据自检（P1-1，照 Games/GgbhMod.cpp 的 EmitSelfCheckOnce 先例）：
+ * 装机后第一行就回答「判据健康吗 / 类解析到了吗 / 装了几个钩子」——
+ * 专治 2026-10-10 那类「看起来装上了、其实判据全假」的静默失效。只在诊断包出现。 */
+static void EmitSelfCheckOnce() {
+    SDIAG_ONCE(mrfzz_selfcheck,
+        size_t asmCount = 0;
+        GetApi().Assemblies(&asmCount);
+        LOGI(MRFZZ_LOG " SELFCHECK api=%d asm=%zu cls=%d rd=%d hk=%d/7",
+             GetApi().ready ? 1 : 0, asmCount,
+             FindClassNs("System", "Object") ? 1 : 0,
+             Il2Cpp::IsReadableRange((uintptr_t)&g_calibAnchor, 1) ? 1 : 0,
+             DoneCount());
+    );
 }
 
 static void SyncHooks() {
@@ -820,7 +847,7 @@ void Arknights_OnFeatureChanged(int featNum, bool enabled) {
     // 只置位后立刻返回：安装由 worker tick 完成。
     // 早期版本在这里同步调 SyncHooks()，UI 线程被 Dobby 安装 + g_installMutex
     // 阻塞 1~6 秒 ⇒ 菜单卡顿，最后 Input dispatching timed out（ANR）被杀。
-    LOGI(MRFZZ_LOG " feature #%d -> %d (install deferred to worker)", featNum, enabled ? 1 : 0);
+    SDIAG(LOGI(MRFZZ_LOG " feature #%d -> %d (install deferred to worker)", featNum, enabled ? 1 : 0));
 }
 
 void Arknights_OnValueChanged(int /*featNum*/, int /*value*/) {}
@@ -838,6 +865,8 @@ void Arknights_Tick(const bool* features, const int* /*values*/) {
     if (!g_libReady.load() && isLibraryLoaded(sec_lib_il2cpp()))
         g_libReady.store(true);
     SyncHooks();
+    if (g_libReady.load(std::memory_order_relaxed) && GetApi().ready)
+        EmitSelfCheckOnce();
     LogStatusIfDue();
 }
 

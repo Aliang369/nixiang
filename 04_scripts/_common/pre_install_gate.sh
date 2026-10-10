@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ================================================================
-#  pre_install_gate.sh — 装机前产物机器关（五查）
+#  pre_install_gate.sh — 装机前产物机器关（六查）
 #
 #  背景（2026-09-17 会话记录审计定案）：多游戏装机失败属于机器可拦截错误，
 #  每次都浪费一整轮装机+用户实测。本脚本在 install 阶段前强制拦截五类：
@@ -27,10 +27,17 @@
 #      --runtime-menu-json <运行时控件清单.json>  # 可选；允许 Slider_/Toggle_ 等运行时名称，只用于控件类型检查
 #      --apk <目标APK> --needle '<门禁串>' [--needle '...'...]  # 查5；也可 --dex 当目标
 #      --needle-file <门禁串清单.txt>            # 查5；每行一条，'#' 开头的整行注释被跳过
+#      --game <游戏> [--rounds-threshold N] [--allow-rounds]   # 查6；读该游戏轮次台账做根因闸门
 #
 #  ⚠️ 查5 门禁串必须是**产物中真实存在的字面量**（类名/方法名/const-string）。
 #     **不要用 smali 的 `#` 注释当门禁串**——汇编器会把注释整行丢弃，产物里根本
 #     没有该字面量，只有"二进制字面量存在性机检"才能抓到这类假通过。
+#
+#    查6 轮次根因关   ：（2026-10-10 复盘 P1-3）传 `--game <游戏>` 时，读 10_docs/<游戏>/轮次台账.tsv，
+#                     同一功能**连续 ≥2 轮「无效」**则必须有「根因定案」（10_docs/<游戏>/根因定案.tsv，
+#                     rootcause_note.sh 登记，定案轮次 ≥ 最后一次无效轮次），否则 FAIL。
+#                     防的是「同一个功能换个自变量再装一次包、白耗一整轮 + 用户一次实测」。
+#                     显式强过：`STAGE_NEXT_FORCE=1` 或 `--allow-rounds`（须在台账写明理由）。
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
 #  注意: 与 preflight.sh 职责不同——preflight 管"改完源文件"的语法，
@@ -49,6 +56,7 @@ fail=0; pass=0; warn=0; skip=0
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
 runtime_menu_json=""; apk_file=""
+game=""; rounds_threshold=2; allow_rounds=""
 NEEDLES="$TMPDIR_PF/needles.txt"; : > "$NEEDLES"
 
 while [ $# -gt 0 ]; do
@@ -61,6 +69,9 @@ while [ $# -gt 0 ]; do
     --menu-json)   menu_json="$2"; shift 2 ;;
     --runtime-menu-json) runtime_menu_json="$2"; shift 2 ;;
     --apk)         apk_file="$2"; shift 2 ;;
+    --game)        game="$2"; shift 2 ;;
+    --rounds-threshold) rounds_threshold="$2"; shift 2 ;;
+    --allow-rounds) allow_rounds="1"; shift ;;
     --needle)      printf '%s\n' "$2" >> "$NEEDLES"; shift 2 ;;
     --needle-file)
       if [ ! -f "$2" ]; then echo "✗ 门禁串清单缺失: $2"; exit 1; fi
@@ -334,6 +345,27 @@ if [ -s "$NEEDLES" ]; then
     else
       fail=$((fail+1))
     fi
+  fi
+fi
+
+# ---------- 查6：轮次根因关（2026-10-10 复盘 P1-3） ----------
+# 背景：同一功能连续多轮「无效」时最容易发生的是「换个自变量再装一次包」——本轮明日方舟
+#       因此白耗 2 轮 + 用户 2 次实测。规则：连续 >=2 轮无效必须留下根因定案（含证据行）。
+if [ -n "$game" ]; then
+  if [ -n "$allow_rounds" ] || [ "${STAGE_NEXT_FORCE:-}" = "1" ]; then
+    echo "- WARN  [轮次根因] 已显式放行（${allow_rounds:+--allow-rounds }${STAGE_NEXT_FORCE:+STAGE_NEXT_FORCE=1}）：本轮交班/台账必须写明为何绕过轮次根因闸门"
+    warn=$((warn+1))
+  elif [ -f "$SCRIPT_DIR/rootcause_note.sh" ]; then
+    if bash "$SCRIPT_DIR/rootcause_note.sh" --check --game "$game" --threshold "$rounds_threshold"; then
+      pass=$((pass+1))
+    else
+      echo "        ⇒ 登记定案: bash 04_scripts/_common/rootcause_note.sh --game ${game} --feature <N> --round <最后一次无效轮次+1> --cause '<一句话根因，指向具体判据/代码行>' --evidence '<文件:行 或 logcat 行>' --verify '<验证命令>'"
+      echo "        ⇒ 或显式强过（须写明理由）: STAGE_NEXT_FORCE=1（或本脚本 --allow-rounds）"
+      fail=$((fail+1))
+    fi
+  else
+    echo "- SKIP  [轮次根因] 未找到 $SCRIPT_DIR/rootcause_note.sh（无法做根因闸门）"
+    skip=$((skip+1))
   fi
 fi
 

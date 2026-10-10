@@ -5,6 +5,7 @@
 # 用法:
 #   bash 04_scripts/明日方舟/实测判读_mrfzz.sh [recorder_dir]
 #   不传目录时取 09_test/_recorder/mrfzz_* 中最新的一目录。
+#   bash 04_scripts/明日方舟/实测判读_mrfzz.sh --selfcheck   # 夹具自检（正/负/跨会话三组，无需设备与日志）
 #
 # 统计口径（v2，2026-10-10 修）：
 #   - 只统计「最后一次 MOD 初始化」那个 pid 的行（同一份 logcat 跨多次装机/会话，
@@ -18,6 +19,69 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# ================================================================
+#  --selfcheck：判读脚本自身的正/负控夹具（2026-10-10 复盘 P0-3）
+#  背景：本会话曾因判读口径出错「误报未装上」——① hooked 行只打方法名（按功能键名 grep 恒 0）
+#        ② 一份 logcat 跨多次装机，全量计数把 10 条 hooked 累加成 30。
+#  做法：造三份人造 logcat 调**本脚本自身**（子进程），断言关键输出与退出码。
+#        口径再错一次，这里立刻红。
+# ================================================================
+if [ "${1:-}" = "--selfcheck" ]; then
+  SC_DIR="$(mktemp -d /tmp/mrfzz_judge_selfcheck.XXXXXX)" || exit 1
+  SC_FAIL=0
+  mk_sc_log() {  # mk_sc_log <pid> <hooked 行数> <hit 行数> → stdout 行
+    p="$1"; hn="$2"; ht="$3"
+    if [ "$hn" -gt 0 ]; then
+      for h in get_atk get_isInvincible get_lifePointReduce get_buildableType get_sp \
+               get_availableCnt get_isUsedUp CalculateAttackInterval get_cost get_cost; do
+        echo "10-10 15:52:38.398 $p $p I Mod_Menu: [mrfzz] hooked $h argc=0 target=0x756ad10500"
+        hn=$((hn - 1)); [ "$hn" -le 0 ] && break
+      done
+    fi
+    i=0
+    for k in attack_speed damage10 zero_cost_card deploy_anywhere infinite_sp invincible; do
+      [ "$i" -lt "$ht" ] || break
+      echo "10-10 15:52:3$i.000 $p $p I Mod_Menu: [mrfzz] hit $k"
+      i=$((i + 1))
+    done
+    echo "10-10 15:52:30.000 $p $p I Mod_Menu: [mrfzz] lib ready (runtime resolve, hooks installed by worker)"
+  }
+
+  # 组1 正控：10 hooked + 6 hit ⇒ 期望 hooked=10、attack_speed 判定「已生效」、rc=0
+  mkdir -p "$SC_DIR/ok"
+  mk_sc_log 20377 10 6 > "$SC_DIR/ok/logcat.txt"
+  OUT_OK="$(bash "$0" "$SC_DIR/ok" 2>&1)"; RC_OK=$?
+  echo "$OUT_OK" | grep -q "本会话 hooked 行数 = 10" || { echo "✗ 自检失败[组1]：正控 hooked 计数不是 10"; echo "$OUT_OK" | sed 's/^/    /'; SC_FAIL=1; }
+  echo "$OUT_OK" | grep -q "attack_speed .*已生效" || { echo "✗ 自检失败[组1]：attack_speed 未判为已生效"; SC_FAIL=1; }
+  [ "$RC_OK" = "0" ] || { echo "✗ 自检失败[组1]：退出码应为 0 实为 $RC_OK"; SC_FAIL=1; }
+  [ "$SC_FAIL" = "0" ] && echo "✓ 自检[组1 正控] 10 hooked/6 hit ⇒ 计数与判定正确"
+
+  # 组2 负控：0 hooked ⇒ 期望退出码 3（本轮全无 hooked）
+  mkdir -p "$SC_DIR/none"
+  mk_sc_log 999 0 0 > "$SC_DIR/none/logcat.txt"
+  OUT_NO="$(bash "$0" "$SC_DIR/none" 2>&1)"; RC_NO=$?
+  echo "$OUT_NO" | grep -q "本会话 hooked 行数 = 0" || { echo "✗ 自检失败[组2]：负控 hooked 计数不是 0"; SC_FAIL=1; }
+  [ "$RC_NO" = "3" ] || { echo "✗ 自检失败[组2]：退出码应为 3 实为 $RC_NO"; SC_FAIL=1; }
+  [ "$SC_FAIL" = "0" ] && echo "✓ 自检[组2 负控] 0 hooked ⇒ rc=3"
+
+  # 组3 跨会话：pid 111 装满 10 条，pid 222（最后一次）只 2 条 ⇒ 期望「只算 2」，全量 12
+  mkdir -p "$SC_DIR/multi"
+  { mk_sc_log 111 10 4; mk_sc_log 222 2 1; } > "$SC_DIR/multi/logcat.txt"
+  OUT_MU="$(bash "$0" "$SC_DIR/multi" 2>&1)"; RC_MU=$?
+  echo "$OUT_MU" | grep -q "本会话 hooked 行数 = 2" || { echo "✗ 自检失败[组3]：跨会话未按 pid 切（期望 2，全量 12）"; SC_FAIL=1; }
+  [ "$RC_MU" = "0" ] || { echo "✗ 自检失败[组3]：退出码应为 0 实为 $RC_MU"; SC_FAIL=1; }
+  [ "$SC_FAIL" = "0" ] && echo "✓ 自检[组3 跨会话] 只统计最后 pid（2），未累加历次装机（12）"
+
+  rm -rf "$SC_DIR"
+  echo "────────────────────────────────"
+  if [ "$SC_FAIL" -gt 0 ]; then
+    echo "❌ 判读脚本自检失败：口径错一次都会误判「装上/没装上」，先修脚本再用它下结论。"
+    exit 1
+  fi
+  echo "✅ 判读脚本自检通过（正控/负控/跨会话三组）。"
+  exit 0
+fi
 
 DIR="${1:-}"
 if [[ -z "${DIR}" ]]; then

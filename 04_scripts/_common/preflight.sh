@@ -14,6 +14,8 @@
 #
 #  按扩展名自动路由检查器：
 #    .sh   → bash -n + bash 3.2 兼容门禁（macOS 自带 bash 就是 3.2；见下 "bash 3.2 门禁"）
+#            + shell 环境坑位 lint（lint_shell_traps.py：rg 不存在 / 设备侧 $((0x…)) /
+#              BRE 方括号 grep / 大包直接哈希 / timeout / grep -c 进 &&；ERROR 级挡关）
 #  bash 3.2 门禁（2026-09-30 起，伊莫复盘 P1-3）：本仓库一律在 macOS bash 3.2 下运行，
 #    bash 4+ 的语法会**整套脚本直接跑不起来**，`set -u` + 空数组/多字节变量名会**静默少做事**。
 #    检查项：① `$VAR` 紧跟非 ASCII 字符（bash 会把中文并进变量名 ⇒ unbound variable；
@@ -61,6 +63,18 @@ check_one() {
           *)     remind=$((remind+1)) ;;
         esac
       }
+      # ---- shell 环境坑位 lint（2026-10-10 复盘 P2）：rg 不存在 / 设备侧 $((0x…)) /
+      #      BRE 方括号 grep / 大包直接哈希 / timeout / grep -c 进 && —— 这些坑本会话各炸过一次
+      if [ -f "$SCRIPT_DIR/lint_shell_traps.py" ]; then
+        lint_out=$(python3 "$SCRIPT_DIR/lint_shell_traps.py" "$f" 2>&1); lint_rc=$?
+        if [ -n "$lint_out" ]; then echo "$lint_out" | sed 's/^/       /'; fi
+        if [ "$lint_rc" != "0" ]; then
+          echo "       ✗ FAIL  [坑位lint] ${f}（ERROR 级：本机会静默失败，必须先修）"
+          fail=$((fail+1))
+        elif [ -n "$lint_out" ]; then
+          remind=$((remind+1))
+        fi
+      fi
       ;;
     py)
       if python3 -c 'import sys; compile(open(sys.argv[1], encoding="utf-8").read(), sys.argv[1], "exec")' "$f" 2>/tmp/pf_err_$$; then

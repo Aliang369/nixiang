@@ -94,6 +94,7 @@
 - [状态目录规则](games/README.md)
 - [基础设施与工作区历史](games/infrastructure.md)
 - [挂起与候选经验](pending_experience.md)
+- [会话效率复盘与落地（2026-10-10 明日方舟）](规范优化_20261010_明日方舟会话复盘.md)——六项机制：so 热替换（`_common/so_hotswap.sh`）、诊断宏闸（`STARRY_DIAG`）、两段制 L3（`明日方舟/l3_round.sh`）、轮次根因闸门（`_common/rootcause_note.sh` + `pre_install_gate.sh` 查6）、崩溃三分类（`_common/classify_proc_gone.sh`）、坑位 lint（`_common/lint_shell_traps.py`）；均带 `--selfcheck` 或正/负断言。
 
 ## 历史来源
 
