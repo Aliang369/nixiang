@@ -63,3 +63,14 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   target/handler 本就落在 ±4GB 内（∈同一片 0x4000 区），跳板转为安全冗余而非必需。
   待并入 `skill/re-implement/hook-rules.md`「模拟器/转译层」节 ＋ `skill/starry-mod/SKILL.md` 出包自检。
   证据＝`10_docs/绝区零/出包记录_20261006.md` §第三轮 ＋ `09_test/绝区零/precheck_20261006_010317/`
+- [追迹迷城 1.0.20261009 会话复盘 P0–P2 共 9 项全量落地（2026-10-10，用户 m01108「按照方案全量修改」）](规范优化_20261010_追迹迷城1.0.20261009会话复盘.md)：**已合并**——
+  ① 入口点靠试错（未先查框架先例）与 ② 判据顺序倒置（先上 frida/dumpsys，最后才用 `am start-foreground-service` 报错文本）
+  两个黑洞的机制化对策已全部落入目标位置，合并 commit `ae8b3d56`：
+  新建 `04_scripts/_common/framework_entry_audit.sh`（入口四路 + 六项审计，✗ 即禁出包）、`04_scripts/_common/axml_inspect.py`（AXML dump + `--assert-map` 真值断言）、
+  `04_scripts/_common/git_push_main.sh`（`push_main`：SSH 5s 探测不通即 HTTPS + `gh auth token`，刷新 `refs/remotes/origin/main`）、
+  `mod菜单/starry-mod-menu/scripts/_lib/dex_target.sh`（按 `method_ids` 余量自动选定 dex 合并目标）；
+  `trash_paths.sh` tracked 门禁 + `--suggest`；`archive_scoped_git.sh`/`archive_close_git.sh` 接线 `push_main` + 轮次台账复盘提醒；
+  `skill/re-implement/hook-rules.md` §29.5.1 判据表；`skill/re-analyze/SKILL.md` §1.1 换代必测三件；`skill/starry-mod/SKILL.md` 入口点决策表 + TapTap 接入检查表；
+  `session_start.sh` 入口自检/审计/`device_profile.sh` 提示；`stages.md` 收官脚本参数契约表 + 三脚本 usage 补注；`TOOLBOOK.md` #52 补注与 #53–#55；`AGENTS.md` 变更日志 + 「push 一律经 `push_main`」。
+  附带收益：用新工具复查已交付包，抓出 `MenuService` 的 `android:stopWithTask` res id 被凭记忆写成 `0x01010281`（真值 `0x0101036A`），已修 `04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py`（无功能影响，包不重出）。
+  机器关：`preflight.sh` PASS=14 FAIL=0、`bash32_check.sh` 无硬错误、`axml_inspect.py` 跨游戏回归 6/6 rc=0、`trash_paths.sh` T1–T7 全绿、`push_main` 实跑 HTTPS 绕行成功。
