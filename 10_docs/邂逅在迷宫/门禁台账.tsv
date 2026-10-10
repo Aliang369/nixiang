@@ -9,3 +9,4 @@
 2026-10-10 19:52	邂逅在迷宫	G2	通过	方案A两轮实测：轮1开通道注入 load endless dll len=24681472、payload 落官方名 endlessstrikedll_8fa83621b75bca5af7b14bf2f4a86163.bundle 9801205B、19:51:00 自动关通道 tun0 消失；轮2零通道冷启 diff size=4408（仅回源官方 buildpatch）dld count=0 len=24681472、StarryCdn 日志 0 行 ⇒ 永久生效免开通道	ai
 2026-10-10 20:12	邂逅在迷宫	G2	通过	v3.9 分发版出包（去自启动版）+ check_release_apk 干净正式包 + install 成功（vc39/3.9，md5 cdde2776d3b372d386a5fc13d30e6ffc）	ai
 2026-10-10 20:12	邂逅在迷宫	G2	通过	v3.9 注入通道实跑：真实CDN IP 49.119.117.64/118.183.236.58 + /32 路由；覆盖三件套 200（505/4408/9801205B，9.8MB 用时1.49s）；回源透传 esdatadll 200 4444030B；CDN_STOP 后 tun0 撤；静态链三件套+so md5 与源码一致	ai
+2026-10-10 20:30	邂逅在迷宫	G1	通过	第二轮规范落地：装机闸门(无凭证rc=4/有凭证通过) + 出包 tee/自动记账 + finalize --usage-doc/--copy-apk 正反两路 + code_locate/selftest_env 冒烟 + preflight PASS=5 FAIL=0	ai

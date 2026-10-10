@@ -76,6 +76,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
   - 2026-10-05（用户口述「生成图标和菜单模板不该每次收尾都做，新游戏首次、或我说了才生成」）：`04_scripts/_common/finalize_game_delivery.sh` 改为 icon/菜单模板**按需交付**——删掉菜单模板自动扫描（不传参不再报错/不再复制），两参数都不传时不创建 delivery 目录、`--sync-doc` 的 delivery 行/摘要行/回扫行全部条件化，首次交付未传时打 NOTE 提醒；`AGENTS.md` 收尾节、`04_scripts/_common/stages.md` 收官步 2、`skill/starry-mod/SKILL.md` 收尾产出三处同步改口径；冒烟 T1–T6（已交付游戏跳过/显式 icon+模板/首交付 NOTE/apply 产物/缺模板报错/apply 跳过）PASS。
   - 2026-10-10（用户 m04481「按照方案全量修改」）：邂逅在迷宫会话复盘 P0–P7 全量落地。新建 `04_scripts/_common/session_start.sh`（开工六查：硬约束/路线锁定/台账+**禁止重试清单**/管线出口/TOOLBOOK 坑位/设备·预算）、`gradle_cycle.sh`（bump→assembleRelease→zipalign→apksigner→verify→出包门禁→装机→可选诊断自测抓日志）、`check_release_apk.sh`（查 `application-debuggable` + 禁用串 + versionCode/Name 一致）、`gate_note.sh`（G1/G2/G3 门禁 append-only 台账）、`prior_art.sh`（动手前先例检索，全无命中 rc=1）；`post_install_precheck.sh` 新增 `--helper-pkg/--helper-start/--helper-delay`（治独立助手形态下 `native menu shown` 落在录制窗口外的段=B 假阴性）；新增 `10_docs/_templates/{台账.md,方案选型卡.md}`；`TOOLBOOK.md` 新增「二-b、本机 / 真机坑位（命令级）」22 行；本文件新增下方「增量（2026-10-10…）」子节 P10–P16。依据 = `10_docs/_state/规范优化_20261010_邂逅在迷宫会话复盘.md`（该会话 4.4k 条消息 / 9 版装机包 / 11.4 GB 死路产物 / 1 次外部服务器事故；根因不是缺文档而是**机制被旁路**——本游戏既无 `硬约束.md` 也无 `pipeline.json`，纪律全靠对话记忆，prune 一到就稀释）。机器关：全部改动过 `04_scripts/_common/preflight.sh`（PASS=4 FAIL=0，其中 bash 3.2 门禁实测抓出 5 处 `$VAR` 紧跟中文）；`check_release_apk.sh` 对交付包 `星光助手_v2.9_xhzm.apk` 实跑 rc=0，反向灵敏度自检（`--forbid CdnVpnService`）命中 ×3。
   - 2026-10-10（用户 m01108「按照方案全量修改」）：追迹迷城 1.0.20261009 会话复盘 P0–P2 共 9 项全量落地。新建 `04_scripts/_common/framework_entry_audit.sh`（入口四路 + `PKG_WHITELIST`/`SignSpoof`/`GameConfig`/`Android.mk`/入口类/包内 dex·AXML 六项审计，任一 ✗ ⇒ rc=1 禁止出包，自带 `--selfcheck` 正负控）、`04_scripts/_common/axml_inspect.py`（AXML 结构 dump + `--assert-map` 平台属性 res id 真值断言）、`04_scripts/_common/git_push_main.sh`（`push_main`：SSH 5 秒探测不通即自动改走 HTTPS + `gh auth token`，成功后刷新 `refs/remotes/origin/main`；不盲等、不强推）、`mod菜单/starry-mod-menu/scripts/_lib/dex_target.sh`（按 `method_ids` 余量自动选定 dex 合并目标，外科脚本禁再硬编码 `classesN`）；`trash_paths.sh` 补 tracked 门禁（dry-run 逐项 `git ls-files --error-unmatch` 命中即拒）+ `--suggest --game <游戏>`；`archive_scoped_git.sh`/`archive_close_git.sh` 接线 `push_main`；`skill/re-implement/hook-rules.md` 新增 §29.5.1「症状 → 第一条判据命令」+ 三条禁止当判据的死路；`skill/re-analyze/SKILL.md` 新增 §1.1「新版本接手必测三件」；`skill/starry-mod/SKILL.md` 新增「入口点决策表」「TapTap 接入检查表」；`session_start.sh` 追加入口自检 / 出包前审计 / `device_profile.sh` 提示；`TOOLBOOK.md` 二-b 新增 #53–#55。依据 = `10_docs/_state/规范优化_20261010_追迹迷城1.0.20261009会话复盘.md`（根因＝入口点未先查框架先例 + 判据顺序倒置）。**期间用新工具复查已交付包，抓出一处真实缺陷**：`MenuService` 的 `android:stopWithTask` res id 被凭记忆写成 `0x01010281`（＝`android:glEsVersion`），真值 `0x0101036A`；无功能影响（该属性平台默认即 `false`），已修正补丁器并落 `10_docs/追迹迷城/台账.md`。机器关：`preflight.sh` PASS、`bash32_check.sh` 无硬错误、`axml_inspect.py` 跨游戏回归 6/6 rc=0（真值表订正前 6/6 误报 FAIL，见 TOOLBOOK #55）、`trash_paths.sh` T1–T7 全绿、`framework_entry_audit.sh` 追迹迷城 rc=0 / 反例 rc=1 / `--selfcheck` 全绿。**合并提交 `ae8b3d56`（已推送，`origin/main` 同步）**；§6 落地回填表见该复盘文档，经验登记见 `10_docs/_state/pending_experience.md`。
+  - 2026-10-10（用户「按照方案全量修改」，第二轮 邂逅在迷宫会话复盘）：把**纪律做成闸门**（P17–P22，见下方新增子节）。新建 `04_scripts/_common/code_locate.sh`（>200 行文件定位读，替代整文件读：grep -n + 窗口 + 给出 `read offset/limit`）、`04_scripts/_common/selftest_env.sh`（自测影响面 before/after 快照，落 `09_test/{游戏}/{日期}/env_{before,after}.txt`，after 自动对照并提示需复原）；`session_start.sh` 通过时落凭证 `10_docs/_state/机器心跳/preflight_{游戏}.stamp`（含 epoch + 硬约束 md5），`gradle_cycle.sh` 新增 `--game/--log-dir/--no-log/--allow-stale-preflight` 并在**装前**验凭证（缺失/超 12h/硬约束变过 ⇒ 退出码 4；实测无凭证 rc=4、有凭证 dry-run 通过）、全量日志 `tee` 到 `09_test/{游戏}/logs/`、完成块打印完整 md5/大小/日志路径、成功后**自动** `gate_note.sh G2 通过`；`finalize_game_delivery.sh` 新增 `--usage-doc`（复制为 delivery `使用说明.md`，残留 `{占位符}` 即 rc=1，实测正反两路）与 `--copy-apk`；新增模板 `10_docs/_templates/{使用说明_分发型.md,侦察笔记.md,轮次台账.tsv}`；新增 `10_docs/邂逅在迷宫/{侦察笔记.md,轮次台账.tsv}`（免广告面板 3 轮 / 菜单球 3 轮回填），`硬约束.md` 追加 #13–#18；新建 `10_docs/_state/games/邂逅在迷宫.md` 并接进 `current.md`。依据 = 该复盘 §4.2（第一轮机制全在却被整段旁路：11 版里 5 版返工、三次自伤、md5 因 `| tail` 丢失）。本机坑：bash 3.2 `$VAR` 紧跟中文被吞 ⇒ 3 个脚本 10 处改 `${VAR}`。
 - 需要用户操作（进游戏、开菜单、打开工具等）时在聊天说明操作、成功标志和所需配合，等待确认并核对结果；只暂停依赖该结果的步骤，不假定用户已操作，独立且已授权工作可继续。
 - **真机交互零截图（2026-10-01 定）**：不做 `screencap` 猜坐标、不 `input tap`、不靠截图判断界面状态 —— 真机取证一律走 `logcat`、`/proc/<pid>/{mem,maps}`、frida。屏幕上的点按、输入、翻页**全部由用户完成**。（历史浪费：为算 `input tap` 坐标花掉 `wm size` + `screencap` 的调用，最终未用上。）
   **三条根因（2026-10-04 用户口述定案，禁止再提机器实测 / 自动点击类提案）**：① 坐标定位会歪，失败重试烧流程和 token；② 菜单授权墙机器过不去、还会误诊成服务端问题，而用户输一次账号即可解决；③ 人工实测比机器判定准——有些问题日志里看不出来，使用时才知道。分工由此定死：**人工＝终审＋标记，机器＝预检员＋记录仪**（工具见下条）。
@@ -183,7 +184,9 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - **开工 preflight（P10）**：开工第一步 `bash 04_scripts/_common/session_start.sh <游戏> [--serial S] [--pkg P]`。
   六查 = 硬约束 / 路线锁定 / 台账（**打印"已否证=禁止重试清单"**）/ 管线出口 / TOOLBOOK 坑位 / 设备与预算。
   硬约束或台账缺失时脚本会**生成骨架并判 FAIL**（"生成空表"≠"抄了用户原话"）。
-  **未跑 preflight，不得改功能代码、不得装机。**
+  **未跑 preflight，不得改功能代码、不得装机。** 现已**硬化成闸门**（见第二轮 P17-b）：
+  preflight 通过时落凭证 `10_docs/_state/机器心跳/preflight_{游戏}.stamp`，`gradle_cycle.sh --install`
+  在凭证缺失 / 超过 12h / 硬约束台账被改过时**直接拒绝**（退出码 4），`--allow-stale-preflight "理由"` 才放行并记账。
 - **判据先行 + 先例检索（P11）**：① 任何「客户端如何判定 / 机制怎么走」的结论，先写成**可判真假的判据 + 决定性证据行**（日志原文带时间戳）再动手，禁止"先改代码再看能不能跑"；② 动手前 3 分钟先例检索
   `bash 04_scripts/_common/prior_art.sh <关键词...>`（搜 `10_docs/ skill/ 04_scripts/ TOOLBOOK.md AGENTS.md`，
   全无命中时 rc=1 = 这是新问题可放心推）。命中先例先读先例；结论冲突时先解释冲突再推翻它。
@@ -209,6 +212,46 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
   落 `10_docs/{游戏}/门禁台账.tsv`（只追加）。收尾时**不许靠回忆补门禁表**，也不许把"未验证"当"已通过"。
 - **坑位即落（P16）**：踩到命令级坑（引号/路径/权限/工具行为/端序/表遍历）当轮在
   `TOOLBOOK.md`「二-b、本机 / 真机坑位」补一行（场景 | 坑 | 正解）。开工 preflight 会回读该表。
+
+### 增量（2026-10-10 第二轮 邂逅在迷宫会话复盘：把纪律做成闸门）
+
+> 来源：`10_docs/_state/规范优化_20261010_邂逅在迷宫会话复盘.md` §4.2。第一轮的 P0–P7 **机制全在**，
+> 本轮却**又整段旁路**：没跑 preflight 就改了 4 版代码、装了 8 次机；11 版里 **5 版是返工/自伤**
+> （自造 DNS 假 IP 黑洞 2 版、探针手搓 Unity 签名崩广告面板 2 版、自启动加了又删 2 版）；
+> 用户发火纠正 4 次；v3.6/3.7/3.8 的 APK md5 因调用方 `| tail` 截断而**永久丢失**。
+> 结论：**能机械拦的一律做成闸门，拦不住的一律做成模板 + 快照**，不再新增「请记住」型规则。
+
+- **P17 自测影响面（before/after 快照 + 复原）**：凡会碰到用户设备的动作（装包 / 起停助手·游戏 /
+  起 VPN / 改 DNS·路由 / `am force-stop`），**动手前**先拍快照、**做完再拍一张**：
+  `bash 04_scripts/_common/selftest_env.sh before|after <游戏> [--serial S] [--pkg P] [--helper-pkg H] [--note "本轮要对用户设备做什么"]`
+  → 落 `09_test/{游戏}/{日期}/env_{before,after}.txt`（助手/游戏 pid、versionName、悬浮窗 appops、`tun0`、前台 Activity），
+  after 自动对照 before 并提示「需要复原」。**汇报里必须写「已复原」或未复原的原因与理由**。
+  （本会话三次自伤全在这类动作上：DNS 假 IP 黑洞、探针崩广告面板、`am force-stop` 助手把用户的菜单球弄没。）
+- **P17-b 装机闸门（P10 硬化）**：`session_start.sh` 通过时落凭证
+  `10_docs/_state/机器心跳/preflight_{游戏}.stamp`（含 `epoch` 与 `hard_constraints_md5`）；
+  `gradle_cycle.sh --install` **装前先验**：凭证缺失 / 超 12h / 硬约束台账被改过 ⇒ **拒绝装机（退出码 4）**。
+  确需绕过只准 `--allow-stale-preflight "理由"`。凭证是本机运行时状态，`*.stamp` 已 gitignore，不入库。
+- **P18 读文件纪律（省上下文）**：**>200 行的源码/文本禁止整文件读**，先定位再定行读：
+  `bash 04_scripts/_common/code_locate.sh <文件> '<正则>' [--ctx N] [--max M]`（grep -n 定位 + 窗口打印
+  + 直接给出可复制的 `read offset=… limit=…`）。结论**当轮**写进 `10_docs/{游戏}/侦察笔记.md`
+  （模板 `10_docs/_templates/侦察笔记.md`，列 = 文件:行 → 结论），下次查笔记不重读。
+  （本会话同一文件整读 ≥4 次，被压掉的 150K 上下文里大半是它。）
+- **P19 出包即记账 + 判据落盘**：出包一律带 `--game <游戏>`：① 全量日志 `tee` 到
+  `09_test/{游戏}/logs/gradle_cycle_<tag>_<ts>.log`（**证据不依赖调用方的 `| tail`**）；
+  ② 完成块打印 **APK 路径 / 大小 / md5 / versionCode / 日志路径**（完整指纹，禁止只打一半）；
+  ③ 成功后**自动** `gate_note.sh {游戏} G2 通过 "…md5=… size=… 日志=…"`。
+  **出包命令禁止用 `| tail` / `| head` 收尾**——要看尾巴就 tail 日志文件，别截断管道。
+- **P20 默认分发型交付**：需要「发给别人」的交付一律按分发型做（单 APK、免 root、免电脑、零外部依赖、
+  含《使用说明》、菜单可自救）——**动手前先按 P13 定形态**，别做完再被否。
+  收尾用 `finalize_game_delivery.sh`，**别手搓 delivery 目录**：
+  `bash 04_scripts/_common/finalize_game_delivery.sh --game <游戏> --apk <正式包> --usage-doc <使用说明.md> --copy-apk --prune --sync-doc --apply`
+  （`--usage-doc` 复制为 delivery 里 `使用说明.md`，文档残留 `{占位符}` 直接 FAIL；模板 `10_docs/_templates/使用说明_分发型.md`）。
+- **P21 push 只走 `push_main`**：远端操作一律
+  `source 04_scripts/_common/git_push_main.sh && push_main main`（SSH 5 秒探测 → 不通自动改走 HTTPS + `gh auth token`），
+  **禁止裸 `git push` 盲等超时**；失败保留本地提交并报告「已提交未推送 + 远端落后 N」，不弱推。
+- **P22 轮次台账（同一功能反复反馈）**：同一功能「改动 → 装机 → 用户实测」每轮记一行
+  `10_docs/{游戏}/轮次台账.tsv`（模板 `10_docs/_templates/轮次台账.tsv`，列 = 时间 功能 轮次 改动 结果 判据 状态）。
+  第 3 轮仍无效即触发 P4：**先填假设矩阵再装机**。（本会话免广告面板 3 轮、菜单球 3 轮，全靠对话记忆在追。）
 
 ## 工具专属文件
 

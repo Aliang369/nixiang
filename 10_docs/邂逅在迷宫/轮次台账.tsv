@@ -1,0 +1,7 @@
+时间	功能	轮次	改动	结果	判据	状态
+2026-10-10 19:42	免广告面板卡死	1	探针 type scope 解成 UnityEngine.AnimationModule	失败	Could not load type 'UnityEngine.Debug' from assembly 'UnityEngine.AnimationModule' at AdsRewardMenu.SetGetBtn	已否证
+2026-10-10 19:52	免广告面板卡死	2	探针改借库内真实 UnityEngine.Debug::Log(object) 调用点	通过	load endless dll, using 181 ms,len=24681472 + 用户实测面板不卡、奖励到账	已完成
+2026-10-10 20:10	免广告面板卡死	3	定版复测（同一修复，无行为改动）	通过	通道实跑覆盖 505/4408/9801205 B + 回灌官方文件名生效	已完成
+2026-10-10 20:05	菜单/悬浮球消失	1	standalone 常驻三处（划掉任务不自杀）+ stopWithTask=false	通过	MenuService: overlayVisible=true attached=true	已完成
+2026-10-10 20:08	菜单/悬浮球消失	2	加开机自启（BootReceiver + RECEIVE_BOOT_COMPLETED + ROM 引导页跳转）	失败	OplusAppStartupManager: prevent start … strict mode = true；Restarting ServiceRecord nextRestartTime 已过仍未起	已否证
+2026-10-10 20:11	菜单/悬浮球消失	3	删除全部自启动（用户 m05963 叫停），改「重开 App / 点通知」自救	通过	dumpsys 内 BootReceiver 计数 0 + 用户认可此为分发形态	已完成

@@ -219,6 +219,39 @@ if [ -f "$MK_ENTRY_AUDIT" ] && grep -qE '^[[:space:]]*LOCAL_CFLAGS.*-DENABLE_UNI
   kv "该游戏 Android.mk 激活分支属 libil2cpp 基址解析类 ⇒ 按「设备画像先行」可跑 bash 04_scripts/_common/device_profile.sh --serial <S> --pkg <P> --rva <符号>=0x<HEX>"
 fi
 
+# ---------- preflight 凭证（2026-10-10 第二轮复盘 P10 硬化） ----------
+# 为什么要有凭证：P10 一直只是「说给人听的纪律」。第二轮复盘发现它**又被整段旁路**
+# （本会话没跑 preflight 就改了 v3.6~v3.9 四版代码、装了 4 次机，其中 2 版白做）。
+# 纪律要能生效就得有闸门 ⇒ 这里在通过时落一份签章凭证（含硬约束台账 md5），
+# gradle_cycle.sh --install 只认它：凭证缺失 / 超过 12h / 硬约束台账被改过 ⇒ 拒绝装机。
+STAMP_DIR="${NIXIANG_ROOT}/10_docs/_state/机器心跳"
+STAMP="${STAMP_DIR}/preflight_${GAME}.stamp"
+HC_MD="${NIXIANG_ROOT}/10_docs/${GAME}/硬约束.md"
+hc_md5="-"; hc_rows=0
+if [ -f "$HC_MD" ]; then
+  hc_md5="$(md5 -q "$HC_MD" 2>/dev/null || md5sum "$HC_MD" | awk '{print $1}')"
+  hc_rows="$(grep -cE '^\| [0-9]+ \|' "$HC_MD" 2>/dev/null || true)"
+  [ -n "$hc_rows" ] || hc_rows=0
+fi
+if [ "$fail" -gt 0 ]; then
+  kv "preflight 未通过 ⇒ 不落凭证（${STAMP}）；此时 gradle_cycle.sh --install 会被拒"
+else
+  mkdir -p "$STAMP_DIR"
+  {
+    echo "t=$(date '+%Y-%m-%d %H:%M:%S')"
+    echo "epoch=$(date +%s)"
+    echo "host=${NIXIANG_HOST}"
+    echo "game=${GAME}"
+    echo "serial=${SERIAL:-（唯一设备）}"
+    echo "pkg=${PKG:-（未传 --pkg）}"
+    echo "hard_constraints_md5=${hc_md5}"
+    echo "hard_constraints_rows=${hc_rows}"
+    echo "warn=${warn}"
+    echo "by=session_start.sh"
+  } > "$STAMP"
+  ok "preflight 凭证已落：${STAMP}（硬约束 md5=${hc_md5} 行数=${hc_rows}；12h 内有效）"
+fi
+
 echo "================================================================"
 if [ "$fail" -gt 0 ]; then
   echo "结论：✗ FAIL $fail 项 / ⚠ WARN $warn 项 ⇒ 补齐后再改功能代码或装机"

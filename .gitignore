@@ -181,3 +181,6 @@ _tmp_*.sh
 /.ysxz_103_build/
 # _install_stage/：装机暂存（各游戏 apktool 解包 + 待装 APK，单包 200 MB 级）。
 _install_stage/
+
+# preflight 凭证（本机运行时状态，2026-10-10 第二轮复盘 P10 硬化）
+10_docs/_state/机器心跳/*.stamp
