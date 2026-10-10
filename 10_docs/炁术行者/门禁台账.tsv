@@ -7,3 +7,5 @@
 2026-10-10 21:06	炁术行者	G2	通过	post_install_precheck PASS_TO_HUMAN（so加载/菜单弹出/授权同步/空转3分钟无崩溃）；正式包 md5 6bd716cc95e54b9b1ddda08f7ce547e9；证据 09_test/炁术行者/precheck_20261010_210248	ai
 2026-10-10 21:16	炁术行者	G1	通过	v14s 加速上限 10→3：补丁器18锚点各1次；offline_speed_check 45/0；offline_regression 27/0；check_release_clean --tag Qsxz PASS（违规 0）	ai
 2026-10-10 21:16	炁术行者	G2	通过	post_install_precheck PASS_TO_HUMAN（证据 09_test/炁术行者/precheck_20261010_211312）；正式包 md5 627858330ce5451a528dc9e3129861bd；so b0d297204c312c3c639f209b94886aec	ai
+2026-10-10 21:23	炁术行者	G1	通过	收尾复检 check_release_apk.sh：APK 无 application-debuggable / 禁用串 0 命中 / versionCode=1 versionName=1.0（md5 627858330ce5451a528dc9e3129861bd）	ai
+2026-10-10 21:23	炁术行者	G3	通过	用户 L3 通过（逐字 m00685「功能都没问题了，进行收尾+正式包+清理+git」）；3× 战斗链 21:21:07 barrierUpdateTroop_17 → 21:21:14 fightOver_18 无 QSWERR，beat spd=3 37 条；证据 09_test/炁术行者/l3_speed3_20261010_212215	human
