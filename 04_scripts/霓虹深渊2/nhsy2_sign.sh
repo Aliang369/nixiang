@@ -25,7 +25,7 @@ DO_INSTALL="${NHSY2_INSTALL:-0}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED（先跑 scripts/surgical_nhsy2_2026.10.5.sh）" >&2; exit 1; }
+[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing ${UNSIGNED}（先跑 scripts/surgical_nhsy2_2026.10.5.sh）" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 
 BT=""
