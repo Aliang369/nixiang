@@ -1,0 +1,297 @@
+{
+  "meta": {
+    "game": "崩坏3",
+    "pkg": "com.miHoYo.enterprise.NGHSoD",
+    "pkg_note": "与官方崩坏3包名一致，改包未改名",
+    "version_name_manifest": "8.9.0",
+    "version_note": "manifest 内版本串 8.9.0；另有第三方 SDK 串 1.0.25 / 2.49.0，非游戏版本。aapt/apkanalyzer 不可用，versionCode 未取。",
+    "engine": "Unity IL2CPP（非 Lua；libil2cpp.so 289,903,208 B md5 16c981465db12e8069974edb5fbf2dd5）",
+    "unity_activity": "com.miHoYo.overridenativeactivity.OverrideNativeActivity",
+    "abi": "arm64-v8a",
+    "binge_apk_size": 704607479,
+    "binge_apk_md5": "d6c85ec3df671aa7a9be86f318c06341",
+    "binge_apk_pulled_from": "/data/app/~~-CYHpBfDyGf8YoSzIZiDow==/com.miHoYo.enterprise.NGHSoD-WlQYE2rOFySqDHj9B4YuIQ==/base.apk",
+    "libSDKloading_md5": "f2122937a47ac14577826b43a8b54bc3",
+    "libSDKloading_size": 3893752,
+    "libSDKloading_note": "游戏进程实际加载的壳 so（pid 26210 maps 可见）；磁盘上不含菜单域名/免责声明/偏移表/tag dword（全 0 命中）⇒ 配置运行时解密或下发",
+    "device": "真机 root（serial 未在证据中记录）",
+    "observed_pid": 26210,
+    "captured_at": "2026-10-08",
+    "captured_by": "静态：APK/dex/so 扫描 + 内存段 dump 反汇编；实机：进程 maps + WebView 缓存",
+    "feature_count": 3,
+    "feature_count_note": "用户点名 3 项（秒杀 / 超级血量(无敌) / 刀刀暴击）；补丁表内恰好 3 个 libil2cpp.so 偏移 —— 数量吻合，但一一映射未实测（待与原版对照）",
+    "binge_pack_evidence": [
+      "assets/声明.txt（95 B 明文）：禁止将此APP用于违法用途 / 一切由使用此应用造成的后果及连带后果自负",
+      "classes6.dex（442,028 B）含类名 BinGe 与混淆命名空间 com/android/support/（jadx6 源：BinGe.java/Menu.java/BUFF.java/Main.java/Preferences.java）",
+      "classes4.dex（11,203,336 B）含菜单前端逻辑字符串 file.myqcloud / /game/ / initGame / com/android/support"
+    ]
+  },
+
+  "artifact": {
+    "menu_html_recovered": "/tmp/bh3_recon/menu_out/be558b40b079df0c_0.html",
+    "menu_html_chars": 13194,
+    "menu_html_note": "从设备 WebView 缓存原样恢复（缓存文件含 0x54 字节 HTTP 前缀，正文为明文 HTML，无需解压）",
+    "shell_mem_dump": "06_dumped/崩坏3/mem_20261008/bh3_shell/（195 段 seg_*.bin + index.txt）",
+    "patch_table_segment": "seg_23_rw-p_7349938000.bin（155,648 B）",
+    "analysis_scripts": "10_docs/崩坏3/_*.py 与 _*_out.txt（分析代码，非交付物）",
+    "other_apk_in_tmp": {
+      "path": "/tmp/bh3_recon/BGHSoDv2Original_base.apk",
+      "size": 65919796,
+      "md5": "2be0d321d38eed4dd18417877ce29ae8",
+      "note": "lib/arm64-v8a 含 libpglarmor/libchaos/libbaiduprotect 等，与崩坏3 无关；来源与用途待用户确认"
+    }
+  },
+
+  "injection_mechanism": {
+    "summary": "不是 Lua 载荷替换（与伊莫完全不同）。壳在运行时维护一张「目标 so + 偏移」补丁表，直接改 libil2cpp.so 内的 IL2CPP 生成代码；表内容在 APK 内无明文。",
+    "is_native_patch": true,
+    "patch_table_format": {
+      "stride": "变长（不是固定 24 字节）：每条记录 = NUL 补齐到 8 字节对齐的 ASCII 字符串 + 8 字节脚注",
+      "footer": "u32=0x00000101 + u32=tag（小端）",
+      "tags": {
+        "0x000066b6 (字节 b6 66 00 00)": "HOOK / 补丁描述记录",
+        "0x00006662 (字节 62 66 00 00)": "UIKEY / 菜单键名（Java↔native 桥）"
+      }
+    },
+    "hook_records_seg23": {
+      "region": "0x24d00..0x24f30",
+      "ordered_entries": [
+        "libil2cpp.so", "libil2cpp.so", "libil2cpp.so", "libil2cpp.so",
+        "0x5F16228", "libil2cpp.so", "0x5F156A8", "libil2cpp.so",
+        "0x5F16828", "libil2cpp.so", "0x0", "C0 03 5F D6",
+        "libil2cpp.so", "0x0", "libil2cpp.so", "libil2cpp.so",
+        "0x0", "libil2cpp.so", "libil2cpp.so", "0x0",
+        "<免责声明 CJK 串>"
+      ],
+      "hex_offset_string_count": 3,
+      "hex_offset_note": "全 seg_23 内形如十六进制地址的 ASCII 串仅 3 个（即 3 个偏移）；另两处 0xa14C9 / 0x3994 不在表内",
+      "ret_byte_string": "C0 03 5F D6（ARM64 ret），疑为补丁内容 —— 推断，待验证"
+    },
+    "table_not_on_disk": {
+      "claim": "补丁表在 APK 内无明文",
+      "evidence": "全 APK 逐条目扫描：0x5F16228/0x5F156A8/0x5F16828、menu-1255602259、game/38.html、您好 均 0 命中；tag dword b6 66 00 00 / 62 66 00 00 也 0 命中",
+      "inference": "运行时解密或随菜单由 menu-1255602259.file.myqcloud.com 按 game_id=38 下发（待验证）"
+    },
+    "early_hook_cluster_seg23": {
+      "region": "0x1700..0x1900",
+      "content": "两条 /proc/self/maps 的 HOOK 记录（0x17c0 / 0x17f0）+ 一条 base64 PNG（iVBORw0KGgoAAAANSUhEUgAAAUgAAAFICAYAAAAyFGcz…，菜单图标，0x1810）"
+    },
+    "jni_and_url_records_seg23": {
+      "region": "0x24600..0x24890",
+      "entries": ["m/game/38.html（菜单 URL 尾串）", "widget/Toast", "makeText", "get/Toast;", "cal/tmp/", "cal/tmp/fha", ".AGTool", "8932a702"]
+    }
+  },
+
+  "switch_channel": {
+    "summary": "远程 WebView 菜单（腾讯云 COS）→ 加密功能串 exp 客户端解密 → 壳 native 侧功能列表",
+    "menu_url": "https://menu-1255602259.file.myqcloud.com/game/38.html",
+    "menu_host": "腾讯云 COS（server:tencent-cos；etag:b066f8275fbb823e9fdec87af1180abf；last-modified:Sun, 31 May 2026 09:00:47 GMT）",
+    "frontend_assets": "https://menu-1255602259.file.myqcloud.com/public/Game/：app.css?var=0517、app1.js?var=0517、bootstrap*、jquery.min.js",
+    "window_vars": {"game_id": "38", "version": "1", "version_tip": "", "tUrl": ""},
+    "tabs": ["首页(#home)", "用户中心(#user)", "设置(#aboud)"],
+    "features_source": "onload=function(){ initGame(exp); }，exp 为加密 base64 串（HTML 硬编码，形如 BTpFHwdqOhcuK2UBFlwOFhQ2XxcTbSgBIw0IFXg5HTFs…%3D%3D），由混淆 app1.js 的 initGame/strencode 客户端解密",
+    "not_decoded": "exp 功能串未解码（需取 app1.js）⇒ 菜单 3 项功能的官方文案未从数据侧确认",
+    "native_ui_keys": ["Category_1", "Toggle_000", "Toggle_2", "SettingsList", "GetFeatureList", "getGoHomeUrl", "NetworkMessage", "getStringEX", "getVersion", "IsGameLibLoaded", "Icon", "IconWebViewData", "java/lang/String", "()Ljava/lang/String;", "()Z", "com.android.support/Menu", "com.android.support/Preferences", "com.android.support/Main", "Changes", "()Ljava/lang/String;)V", "OverlayPermission", "(Landroid/content/Context;)V"]
+  },
+
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "秒杀（用户点名；与抓点1/2/3 的对应未定序）",
+      "switch": "远程菜单项（功能名来自加密 exp 串，未解码）",
+      "mechanism": "native 补丁 libil2cpp.so（IL2CPP 生成代码段）",
+      "anchors": [
+        {"target": "libil2cpp.so", "offset": "0x5F16228", "offset_kind": "file_offset", "enclosing_func_file_off": "0x5F16180", "func_size_min": "0xA8", "section": "il2cpp"},
+        {"target": "libil2cpp.so", "offset": "0x5F156A8", "offset_kind": "file_offset", "enclosing_func_file_off": "0x5F155D8", "func_size_min": "0xD0", "section": "il2cpp"},
+        {"target": "libil2cpp.so", "offset": "0x5F16828", "offset_kind": "file_offset", "enclosing_func_file_off": "0x5F16270", "func_size_min": "0x5B8", "section": "il2cpp"}
+      ],
+      "caution": "本文件的 features 列表是把 3 个抓点平整列出；3 功能 ⇄ 3 抓点的具体对应尚未实测"
+    }
+  ],
+
+  "hook_points": [
+    {
+      "id": 1,
+      "offset": "0x5F16228",
+      "offset_kind": "file_offset",
+      "target_module": "libil2cpp.so",
+      "section": "il2cpp",
+      "enclosing_func_file_off": "0x5F16180",
+      "disasm_at_hook": [
+        "0x5f161fc: adrp x8, #0x111fb000",
+        "0x5f16200: mov  w9, #0x8cd0",
+        "0x5f16204: movk w9, #3, lsl #16   ; w9 = 0x38cd0",
+        "0x5f16208: ldr  x8, [x8, #0x3f0]",
+        "0x5f1620c: ldr  x8, [x8, x9]",
+        "0x5f16210: mov  w9, #0x1170",
+        "0x5f16214: movk w9, #9, lsl #16   ; w9 = 0x91170",
+        "0x5f16218: ldr  x0, [x8, x9]      ; x0 = IL2CPP 元数据用途槽对象",
+        "0x5f1621c: cbz  x0, #0x5f1626c",
+        "0x5f16220: mov  x1, x20",
+        "0x5f16224: mov  w2, w19",
+        "0x5f16228: ★HOOK  ldp x20,x19,[sp,#0x20]; ldr x21,[sp,#0x10]; ldp x29,x30,[sp],#0x30; b #0x9a8a560"
+      ],
+      "func_head_disasm": [
+        "0x5f16180: stp x29,x30,[sp,#-0x30]!",
+        "0x5f16190: adrp x8, #0x1170c000",
+        "0x5f1619c: ldrb w8, [x8, #0xedd]     ; 全局标志",
+        "0x5f161a0: cbnz w8, #0x5f161fc       ; → 进入含抓点的分支",
+        "0x5f161a4: ldr  x21, [x20, #0x20]",
+        "0x5f161b8: ldr  x8, [x0, #0x78]",
+        "0x5f161bc: ldr  x8, [x8, #0x80]      ; 虚调用链"
+      ],
+      "shape": "很薄的转发/包装函数：取对象 → 带 2 个参数尾调用 0x9a8a560"
+    },
+    {
+      "id": 2,
+      "offset": "0x5F156A8",
+      "offset_kind": "file_offset",
+      "target_module": "libil2cpp.so",
+      "section": "il2cpp",
+      "enclosing_func_file_off": "0x5F155D8",
+      "disasm_at_hook": [
+        "0x5f155d8: sub  sp, sp, #0x80        ; 函数头",
+        "0x5f155e4..0x5f155f4: stp x28,x27 / x26,x25 / x24,x23 / x22,x21 / x20,x19",
+        "0x5f155f8: adrp x20, #0x114b0000",
+        "0x5f15600: ldrb w8, [x20, #0x877]",
+        "0x5f15608: adrp x8, #0x1170c000",
+        "0x5f1560c: ldrb w8, [x8, #0xec2]      ; 全局开关字节",
+        "0x5f15610: cbnz w8, #0x5f15948",
+        "0x5f15614: ldr  x20, [x19, #0x38]",
+        "0x5f156a4: ldr  x0, [x20, #0x30]",
+        "0x5f156a8: ★HOOK  cbz x0, #0x5f15920",
+        "0x5f156ac: bl   #0xc90fb44            ; 取对象",
+        "0x5f156b8: ldr  x22, [x21]",
+        "0x5f156bc: ldr  x23, [x26, #0x498]",
+        "0x5f156c0: ldrb w8, [x22, #0xd6]",
+        "0x5f156c4: ldrh w9, [x22, #0xd4]",
+        "0x5f156c8: bfi  w9, w8, #0x10, #8     ; 位域拼接",
+        "0x5f156cc: tbz  w9, #0x11, #0x5f158d0 ; 判标志位",
+        "0x5f15734: blr  x8                    ; 虚调用，w0 被 cbz 判"
+      ],
+      "shape": "位域判定（obj+0xd4/0xd6）+ 虚调用返回布尔 ⇒ 状态/条件判定类"
+    },
+    {
+      "id": 3,
+      "offset": "0x5F16828",
+      "offset_kind": "file_offset",
+      "target_module": "libil2cpp.so",
+      "section": "il2cpp",
+      "enclosing_func_file_off": "0x5F16270",
+      "disasm_at_hook": [
+        "0x5f16270: sub  sp, sp, #0xc0        ; 函数头",
+        "0x5f16290: adrp x8, #0x1170c000",
+        "0x5f16298: ldrb w8, [x8, #0xede]",
+        "0x5f162a0: ldrb w8, [x28, #0xc2]",
+        "0x5f162a8: ldr  w21, [x28, #0xec]",
+        "0x5f16828: ★HOOK  b #0x5f1682c",
+        "0x5f1682c: add  x21, sp, #0x20",
+        "0x5f16834: cmp  w1, #1",
+        "0x5f16838: b.ne #0x5f169a0",
+        "0x5f16874: ldrh w8, [x19, #0xaa] → strh w8, [x20, #0xaa]",
+        "0x5f16884: ldr  d0, [x19, #0xc8] → str  d0, [x20, #0xc8]   ; double 字段",
+        "0x5f16890: ldrb w8, [x19, #0xc0] → strb w8, [x20, #0xc0]",
+        "0x5f168b4: ldr  x8, [x19, #0x10] → str  x8, [x20, #0x10]",
+        "0x5f168cc: ldr  x8, [x19, #0xa0] → str  x8, [x20, #0xa0]",
+        "0x5f168dc: ret"
+      ],
+      "shape": "把对象（含 double@0xc8 + 多个指针字段）整体拷贝 ⇒ 形如「复制战斗/伤害结果结构体」"
+    }
+  ],
+
+  "hook_offset_kind_rationale": {
+    "elf_layout_of_libil2cpp": {
+      ".text": "addr=0x2172cc0 off=0x216ecc0 size=0x360c20",
+      "il2cpp": "addr=0x24d38e0 off=0x24cf8e0 size=0xdead620",
+      "__start_il2cpp": "0x24d38e0",
+      "__stop_il2cpp": "0x10380f00",
+      "il2cpp_get_api_table": "0x249b5ec",
+      "addr_minus_fileoff": "0x4000（两个 loadable 段一致）"
+    },
+    "why_file_offset": "把 3 个值当文件偏移读时三处均为自洽 ARM64 代码且可向前找到正规函数头；当虚拟地址（vaddr-0x4000）读时 0x5F156A8 处字节无法解码（capstone 无输出）、另两处落在疑似数据区",
+    "why_in_il2cpp_section": "3 个偏移都落在名为 il2cpp 的托管代码段内 ⇒ 改的是玩法逻辑，符合预期",
+    "confidence": "强证据支持，最终口径待与原版 so 对照复核"
+  },
+
+  "anti_cheat": {
+    "summary": "崩坏3 的反作弊是官方自带的一整套（腾讯 ACE + 米哈游自研）；斌哥改包是「带着/绕过」，不是自己造检测。未发现斌哥侧独立的上报拦截模块。",
+    "official_libs": {
+      "libtersafe2.so": {"size": 5609568, "md5": "a70ab27ddec979d800f1ec11157eac7c", "role": "腾讯 ACE / TSS 反作弊主体", "present_in": "崩坏3有；另一支 miHoYo 包没有"},
+      "libtprt.so": {"size": 1655432, "md5": "7113fb934a5758de8e831fa4f3bbbc57", "role": "ACE 的 RWX 保护/运行时组件", "present_in": "同 libtersafe2"},
+      "libtoolChecker.so": {"size": 5512, "md5": "3c4724ce3faeda4f890c0136ebddd514", "role": "RootBeer 式 root 检测", "note": "两包同 md5 ⇒ 米哈游官方库，非斌哥加的；移植不要删"},
+      "libMHYComboCrypto.so": {"size": 357120, "role": "米哈游组合加密"},
+      "libsecsdk.so / libthemis.so / libastrolabe-crypto.so": {"sizes": [349040, 849496, 366552], "role": "米哈游安全/风控/加密"}
+    },
+    "ace_keyword_hits_libtersafe2": {"tersafe": 1, "ACE": 1, "Tss": 26, "gamesafe": 1, "ptrace": 1, "TracerPid": "present", "debug": 3, "root": 3, "su": 58, "emulator": 1, "mprotect": 1, "inline": 5, "hook": 10, "patch": 1, "report": 11, "check": 7, "signature": 1, "maps": 1},
+    "inline_hook_engine": {
+      "segment": "seg_21_r-xp（壳 rx 代码段，999,424 B）",
+      "evidence_strings": ["A64_HOOK", "mprotect failed with errno = %d, p = %p, size = %zu", "ref_idx must be less than or equal to current_idx!", "failed to allocate trampoline!", "/proc/self/maps", "libEGL.so"],
+      "reading": "自有 inline-hook 框架：改页属性(mprotect) → 分配 trampoline → 按 ref_idx 管理跳板；失败文案可作诊断锚点"
+    },
+    "detection_surface": {
+      "segment": "seg_34_rw-p（匿名 rw，16,384 B，77 串）",
+      "strings": ["/proc/self/maps", "BW_MEMORYTOOL", "libtprt.so", "libtersafe2.so", "tersafe", "signatures", "[Landroid/content/pm/Signature;", "libEGL.so", "eglSwapBuffers", "android/widget/Toast", "(Landroid/content/Context;Ljava/lang/CharSequence;I)Landroid/widget/Toast;"],
+      "reading": "读自身 maps 找注入 so；扫内存工具特征(BW_MEMORYTOOL)；取 APK 签名数组做校验；libEGL/eglSwapBuffers 画面层检测（外挂叠加层常用点）；Toast 提示"
+    },
+    "signature_handling": {
+      "segment": "seg_30_rw-p（16,384 B）",
+      "strings": ["-bin/mt/apksignaturekillerplus/HookApplication", "%s/SpeedUpCCH.dat"],
+      "reading": "用 MT 管理器「APK 签名杀手」在运行时伪造回官方签名，规避 Signature[] 校验；SpeedUpCCH.dat 为配套加速/风控缓存"
+    },
+    "no_report_interception_found": "未发现斌哥侧独立的「拦截 RPC / 屏蔽上报」模块；更可能是靠 MT 签名杀手通过官方 ACE 的签名校验，ACE 本身仍运行/上报 —— 推断，待验证",
+    "other_segments": {
+      "seg_10": "含 APK 路径与 Hp/HP 变体串（无关）",
+      "seg_31_r-xp": "libEGL.so / /proc/self/maps（同族检测）",
+      "seg_35": "CJK 崩坏3",
+      "seg_194": "libAkSoundEngine.so 路径"
+    }
+  },
+
+  "diagnostics": {
+    "anchors": [
+      {"anchor": "A64_HOOK / failed to allocate trampoline! / mprotect failed with errno=…", "where": "seg_21（壳 rx）", "use": "判 inline-hook 是否装上/失败"},
+      {"anchor": "BW_MEMORYTOOL", "where": "seg_34（壳 rw）", "use": "判内存工具检测是否被触发"},
+      {"anchor": "Signature[] / signatures", "where": "seg_34", "use": "判签名校验路径"},
+      {"anchor": "eglSwapBuffers / libEGL.so", "where": "seg_34 / seg_21 / seg_31", "use": "判画面层检测"},
+      {"anchor": "/proc/self/maps", "where": "seg_21 / seg_31 / seg_34 / seg_23", "use": "判注入 so 自检"},
+      {"anchor": "C0 03 5F D6 + 3 偏移", "where": "seg_23 0x24d00..0x24f30", "use": "补丁表本体（运行后 dump 才可见）"},
+      {"anchor": "免责声明 CJK / assets/声明.txt", "where": "seg_23 / APK assets", "use": "判是否斌哥包"},
+      {"anchor": "菜单页 …/game/38.html", "where": "WebView 缓存 wvcache/", "use": "判菜单版本与功能串"}
+    ]
+  },
+
+  "game_architecture_facts": {
+    "engine": "Unity IL2CPP（libil2cpp.so 289 MB，托管代码段名为 il2cpp）",
+    "shell": "libSDKloading.so 在游戏进程内与 libil2cpp/libunity/libmain/libulua 同列加载",
+    "menu": "远程 WebView 页（腾讯云 COS），功能串加密下发",
+    "protection": "腾讯 ACE(libtersafe2+libtprt) + 米哈游 libtoolChecker(RootBeer)/libMHYComboCrypto/libsecsdk/libthemis"
+  },
+
+  "not_proven": [
+    "抓点→功能的一一映射（表内 3 偏移、用户点名 3 功能，数量吻合但未逐项实测）",
+    "补丁语义（C0 03 5F D6 = ret 的推断未实证；也可能是 hook 跳板而非 ret）",
+    "补丁表来源（推断为运行时解密/随菜单下发，未抓到下发请求）",
+    "exp 功能串未解码（需取 app1.js；因此菜单 3 项功能官方文案未数据侧确认）",
+    "官方原版 libil2cpp.so 未到手，无法 diff 出斌哥改了哪 3 处",
+    "上报拦截（未发现独立模块；靠 MT 签名杀手过关为推断）",
+    "versionCode 未取（aapt/apkanalyzer/androguard 不可用）",
+    "设备 serial 未记录"
+  ],
+
+  "open_questions": [
+    "官方原版 8.9.0 的 libil2cpp.so 与斌哥包是否同一编译版本（决定能否用偏移直接 diff）",
+    "3 个抓点分别对应秒杀/无敌/暴击中的哪一个",
+    "补丁表是否由 menu-1255602259.file.myqcloud.com 下发（需抓网络/capture）",
+    "app1.js 的 initGame/strencode 解密算法（解 exp 得功能文案）",
+    "/tmp 里的 BGHSoDv2Original_base.apk 是什么（与崩坏3 无关）"
+  ],
+
+  "port_plan_sketch": [
+    "不在改包/壳上做文章：libSDKloading.so 配置运行时解密，静态改 .rodata 不可行；走星空自己的注入路径",
+    "最小闭环：① 取官方原版 libil2cpp.so，与斌哥包同一 so 做 diff，定位 3 处字节改动；② 对照本文件 3 个偏移（文件偏移口径）在原版里的对应函数（0x5F16180 / 0x5F155D8 / 0x5F16270 附近）确认语义；③ 用星空框架在这 3 个函数上做运行时 hook/直写，不硬编码偏移，改用代码特征串/函数签名定位（hook-rules.md §24 指纹铁律）",
+    "ACE/TSS 当既定环境处理：libtersafe2 + libtprt 会做 ptrace/root/模拟器/inline-hook/签名/maps 检测并上报。禁 frida（ACE 命中即杀）、禁动 libEGL/eglSwapBuffers 叠加层特征；优先不改签名即可覆盖的装机方式",
+    "RootBeer(libtoolChecker.so) 是官方库（两包同 md5），移植不要删",
+    "功能优先级：先「秒杀」（单点，最易验证）→ 再「刀刀暴击」（判定/倍率）→ 最后「无敌(超级血量)」（链路最长，最可能触发服务器/ACE 校验）",
+    "验收走 L1 静态 + L2 机器 + L3 人工；ACE 场景下模拟器可能不可用，L2 需真机，人工只在 L3"
+  ]
+}

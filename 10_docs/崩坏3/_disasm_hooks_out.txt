@@ -1,0 +1,274 @@
+=== sections ===
+  [ 0]                      type= 0 addr=0x0000000000 off=0x0000000000 size=0x0 entsize=0
+  [ 1] .note.android.ident  type= 7 addr=0x0010d3f040 off=0x0010d37040 size=0x98 entsize=0
+  [ 2] .note.gnu.build-id   type= 7 addr=0x0010d3f128 off=0x0010d37128 size=0x24 entsize=0
+  [ 3] .dynsym              type=11 addr=0x0000001e28 off=0x0000001e28 size=0x1998 entsize=24
+  [ 4] .gnu.version         type=1879048191 addr=0x0000001b80 off=0x0000001b80 size=0x208 entsize=2
+  [ 5] .gnu.version_r       type=1879048190 addr=0x0000001d88 off=0x0000001d88 size=0x60 entsize=0
+  [ 6] .gnu.hash            type=1879048182 addr=0x0000001de8 off=0x0000001de8 size=0x3c entsize=0
+  [ 7] .dynstr              type= 3 addr=0x0000000350 off=0x0000000350 size=0x1078 entsize=0
+  [ 8] .rela.dyn            type=1610612738 addr=0x001176c430 off=0x00111f0430 size=0x288837 entsize=1
+  [ 9] .rela.plt            type= 4 addr=0x00000037c0 off=0x00000037c0 size=0x1860 entsize=24
+  [10] .gcc_except_table    type= 1 addr=0x00001cd4a8 off=0x00001cd4a8 size=0x13facc entsize=0
+  [11] .rodata              type= 1 addr=0x000030cf80 off=0x000030cf80 size=0xf25b2 entsize=0
+  [12] .eh_frame_hdr        type= 1 addr=0x00003ff534 off=0x00003ff534 size=0x5a2f0c entsize=0
+  [13] .eh_frame            type= 1 addr=0x00009a2440 off=0x00009a2440 size=0x17cc87c entsize=0
+  [14] .text                type= 1 addr=0x0002172cc0 off=0x000216ecc0 size=0x360c20 entsize=0
+  [15] il2cpp               type= 1 addr=0x00024d38e0 off=0x00024cf8e0 size=0xdead620 entsize=0
+  [16] .plt                 type= 1 addr=0x0010380f00 off=0x001037cf00 size=0xfd0 entsize=0
+  [17] .data.rel.ro         type= 1 addr=0x0010385ed0 off=0x001037ded0 size=0x9b9130 entsize=0
+  [18] .fini_array          type=15 addr=0x0010d3f000 off=0x0010d37000 size=0x10 entsize=0
+  [19] .dynamic             type= 6 addr=0x001176c240 off=0x00111f0240 size=0x1f0 entsize=16
+  [20] .got                 type= 1 addr=0x0010d3f220 off=0x0010d37220 size=0x29a0 entsize=0
+  [21] .got.plt             type= 1 addr=0x0010d41bc0 off=0x0010d39bc0 size=0x7f0 entsize=0
+  [22] .data                type= 1 addr=0x0010d463b0 off=0x0010d3a3b0 size=0x4aeac8 entsize=0
+  [23] .shstrtab            type= 3 addr=0x0000000000 off=0x00111e8e78 size=0x111 entsize=0
+
+=== symbols mentioning Il2Cpp / metadata ===
+  .dynsym: __start_il2cpp value=0x24d38e0 size=0x0
+  .dynsym: __stop_il2cpp value=0x10380f00 size=0x0
+  .dynsym: il2cpp_get_api_table value=0x249b5ec size=0x4
+==============================================================================
+### value 0x5f16228
+  nearest prologues (as file offsets):
+    0x5f155d8  insn=0xd10203ff  delta=0xc50
+    0x5f15a14  insn=0xd10183ff  delta=0x814
+    0x5f15b68  insn=0xd10183ff  delta=0x6c0
+    0x5f15cbc  insn=0xd10183ff  delta=0x56c
+    0x5f15e10  insn=0xd10183ff  delta=0x418
+    0x5f15f64  insn=0xd10183ff  delta=0x2c4
+
+=== 0x5f16228 window (file-offset interp): file_off 0x5f161e8 .. 0x5f16308 ===
+  0x05f161e8: bl        #0xbad5254
+  0x05f161ec: ldp       x20, x19, [sp, #0x20]
+  0x05f161f0: ldr       x21, [sp, #0x10]
+  0x05f161f4: ldp       x29, x30, [sp], #0x30
+  0x05f161f8: ret       
+  0x05f161fc: adrp      x8, #0x111fb000
+  0x05f16200: mov       w9, #0x8cd0
+  0x05f16204: movk      w9, #3, lsl #16
+  0x05f16208: ldr       x8, [x8, #0x3f0]
+  0x05f1620c: ldr       x8, [x8, x9]
+  0x05f16210: mov       w9, #0x1170
+  0x05f16214: movk      w9, #9, lsl #16
+  0x05f16218: ldr       x0, [x8, x9]
+  0x05f1621c: cbz       x0, #0x5f1626c
+  0x05f16220: mov       x1, x20
+  0x05f16224: mov       w2, w19
+  0x05f16228: ldp       x20, x19, [sp, #0x20]
+  0x05f1622c: ldr       x21, [sp, #0x10]
+  0x05f16230: ldp       x29, x30, [sp], #0x30
+  0x05f16234: b         #0x9a8a560
+  0x05f16238: bl        #0x24c05f0
+  0x05f1623c: mov       w1, #0xe
+  0x05f16240: bl        #0x244af24
+  0x05f16244: mov       x0, x21
+  0x05f16248: mov       w1, w19
+  0x05f1624c: bl        #0xbad5fb0
+  0x05f16250: tbz       w0, #0x1f, #0x5f161d4
+  0x05f16254: mov       x0, xzr
+  0x05f16258: ldp       x20, x19, [sp, #0x20]
+  0x05f1625c: ldr       x21, [sp, #0x10]
+  0x05f16260: ldp       x29, x30, [sp], #0x30
+  0x05f16264: ret       
+  0x05f16268: bl        #0x24c05f0
+  0x05f1626c: bl        #0x24c05f0
+  0x05f16270: sub       sp, sp, #0xc0
+  0x05f16274: stp       x29, x30, [sp, #0x60]
+  0x05f16278: add       x29, sp, #0x60
+  0x05f1627c: stp       x28, x27, [sp, #0x70]
+  0x05f16280: stp       x26, x25, [sp, #0x80]
+  0x05f16284: stp       x24, x23, [sp, #0x90]
+  0x05f16288: stp       x22, x21, [sp, #0xa0]
+  0x05f1628c: stp       x20, x19, [sp, #0xb0]
+  0x05f16290: adrp      x8, #0x1170c000
+  0x05f16294: mov       x28, x0
+  0x05f16298: ldrb      w8, [x8, #0xede]
+  0x05f1629c: cbnz      w8, #0x5f1690c
+  0x05f162a0: ldrb      w8, [x28, #0xc2]
+  0x05f162a4: adrp      x19, #0x11242000
+  0x05f162a8: ldr       w21, [x28, #0xec]
+  0x05f162ac: cbz       w8, #0x5f16314
+  0x05f162b0: ldr       x0, [x19, #0x440]
+  0x05f162b4: ldr       x22, [x28, #0x60]
+  0x05f162b8: ldr       x23, [x28, #0x48]
+  0x05f162bc: ldr       x24, [x28, #0x80]
+  0x05f162c0: ldr       w25, [x28, #0xe0]
+  0x05f162c4: ldr       w26, [x28, #0xbc]
+  0x05f162c8: ldr       w27, [x28, #0xb0]
+  0x05f162cc: bl        #0x2457cc4
+  0x05f162d0: cmp       w21, #0
+  0x05f162d4: mov       w9, #0x65
+  0x05f162d8: mov       w8, #-1
+  0x05f162dc: mov       w10, #1
+  0x05f162e0: csel      w1, w9, w21, eq
+  0x05f162e4: mov       x2, x22
+  0x05f162e8: mov       x3, x23
+  0x05f162ec: mov       x4, x24
+  0x05f162f0: mov       w5, w25
+  0x05f162f4: mov       w6, w26
+  0x05f162f8: mov       w7, w27
+  0x05f162fc: str       w8, [x0, #0xf4]
+  0x05f16300: str       w8, [x0, #0xac]
+  0x05f16304: mov       x27, x0
+==============================================================================
+### value 0x5f156a8
+  nearest prologues (as file offsets):
+    0x5f155d8  insn=0xd10203ff  delta=0xd0
+
+=== 0x5f156a8 window (file-offset interp): file_off 0x5f15668 .. 0x5f15788 ===
+  0x05f15668: strb      w8, [x20, #0x4d]
+  0x05f1566c: ldr       x1, [x24, #0xc60]
+  0x05f15670: add       x0, sp, #8
+  0x05f15674: bl        #0xaddf4e0
+  0x05f15678: tbz       w0, #0, #0x5f159e4
+  0x05f1567c: ldr       x20, [sp, #0x18]
+  0x05f15680: cbz       x20, #0x5f1590c
+  0x05f15684: ldrb      w8, [x25, #0xff1]
+  0x05f15688: cbnz      w8, #0x5f15874
+  0x05f1568c: ldr       x0, [x20, #0x30]
+  0x05f15690: cbz       x0, #0x5f15760
+  0x05f15694: bl        #0xc90fb44
+  0x05f15698: cbz       x0, #0x5f15760
+  0x05f1569c: ldrb      w8, [x25, #0xff1]
+  0x05f156a0: cbnz      w8, #0x5f158a8
+  0x05f156a4: ldr       x0, [x20, #0x30]
+  0x05f156a8: cbz       x0, #0x5f15920
+  0x05f156ac: bl        #0xc90fb44
+  0x05f156b0: mov       x21, x0
+  0x05f156b4: cbz       x0, #0x5f15920
+  0x05f156b8: ldr       x22, [x21]
+  0x05f156bc: ldr       x23, [x26, #0x498]
+  0x05f156c0: ldrb      w8, [x22, #0xd6]
+  0x05f156c4: ldrh      w9, [x22, #0xd4]
+  0x05f156c8: bfi       w9, w8, #0x10, #8
+  0x05f156cc: tbz       w9, #0x11, #0x5f158d0
+  0x05f156d0: ldrh      w8, [x22, #0xce]
+  0x05f156d4: cbz       x8, #0x5f156f8
+  0x05f156d8: ldr       x9, [x22, #0x10]
+  0x05f156dc: add       x9, x9, #8
+  0x05f156e0: ldur      x10, [x9, #-8]
+  0x05f156e4: cmp       x10, x23
+  0x05f156e8: b.eq      #0x5f15714
+  0x05f156ec: add       x9, x9, #0x10
+  0x05f156f0: subs      x8, x8, #1
+  0x05f156f4: b.ne      #0x5f156e0
+  0x05f156f8: mov       x0, x21
+  0x05f156fc: mov       x1, x23
+  0x05f15700: mov       w2, wzr
+  0x05f15704: bl        #0x244a784
+  0x05f15708: mov       x9, x0
+  0x05f1570c: mov       x8, x1
+  0x05f15710: b         #0x5f1572c
+  0x05f15714: ldrsw     x8, [x9]
+  0x05f15718: ldrh      w9, [x22, #0xca]
+  0x05f1571c: ldr       x10, [x22]
+  0x05f15720: add       w9, w8, w9
+  0x05f15724: ldr       x8, [x10, x8, lsl #3]
+  0x05f15728: ldr       x9, [x10, w9, sxtw #3]
+  0x05f1572c: mov       x0, x21
+  0x05f15730: mov       x1, x9
+  0x05f15734: blr       x8
+  0x05f15738: cbz       w0, #0x5f15760
+  0x05f1573c: ldr       w8, [x19, #0xd8]
+  0x05f15740: cmp       w8, #0
+  0x05f15744: b.gt      #0x5f15760
+  0x05f15748: ldrb      w8, [x19, #0xaa]
+  0x05f1574c: cbnz      w8, #0x5f15760
+  0x05f15750: ldrb      w8, [x19, #0xa9]
+  0x05f15754: cbnz      w8, #0x5f15760
+  0x05f15758: ldr       x8, [x19, #0x10]
+  0x05f1575c: cbz       x8, #0x5f157cc
+  0x05f15760: ldr       x21, [x20, #0x30]
+  0x05f15764: cbz       x21, #0x5f15910
+  0x05f15768: ldr       w22, [x19, #0xe0]
+  0x05f1576c: mov       x0, x21
+  0x05f15770: bl        #0xc90f338
+  0x05f15774: ldr       x0, [x21, #0x10]
+  0x05f15778: cbz       x0, #0x5f15914
+  0x05f1577c: mov       w1, #5
+  0x05f15780: mov       w2, #0x17
+  0x05f15784: mov       w3, #0x14
+==============================================================================
+### value 0x5f16828
+  nearest prologues (as file offsets):
+    0x5f15a14  insn=0xd10183ff  delta=0xe14
+    0x5f15b68  insn=0xd10183ff  delta=0xcc0
+    0x5f15cbc  insn=0xd10183ff  delta=0xb6c
+    0x5f15e10  insn=0xd10183ff  delta=0xa18
+    0x5f15f64  insn=0xd10183ff  delta=0x8c4
+    0x5f16270  insn=0xd10303ff  delta=0x5b8
+
+=== 0x5f16828 window (file-offset interp): file_off 0x5f167e8 .. 0x5f16908 ===
+  0x05f167e8: bl        #0x244af24
+  0x05f167ec: b         #0x5f16574
+  0x05f167f0: adrp      x8, #0x11241000
+  0x05f167f4: ldr       x0, [x8, #0x648]
+  0x05f167f8: add       x21, sp, #0x20
+  0x05f167fc: bl        #0x2457cc4
+  0x05f16800: mov       x23, x0
+  0x05f16804: bl        #0xa46bb38
+  0x05f16808: adrp      x8, #0x112b8000
+  0x05f1680c: ldr       x1, [x8, #0x390]
+  0x05f16810: mov       x0, x23
+  0x05f16814: bl        #0x24c05cc
+  0x05f16818: b         #0x5f16990
+  0x05f1681c: add       x21, sp, #0x20
+  0x05f16820: bl        #0x24c05f0
+  0x05f16824: b         #0x5f16990
+  0x05f16828: b         #0x5f1682c
+  0x05f1682c: add       x21, sp, #0x20
+  0x05f16830: b         #0x5f16834
+  0x05f16834: cmp       w1, #1
+  0x05f16838: b.ne      #0x5f169a0
+  0x05f1683c: bl        #0x218f8dc
+  0x05f16840: ldr       x23, [x0]
+  0x05f16844: bl        #0x218f97c
+  0x05f16848: ldr       w8, [sp, #0x1c]
+  0x05f1684c: cbz       x23, #0x5f166b8
+  0x05f16850: mov       x0, x23
+  0x05f16854: mov       x1, xzr
+  0x05f16858: bl        #0x24c05cc
+  0x05f1685c: ldr       w8, [sp, #0x1c]
+  0x05f16860: add       x9, sp, #0x20
+  0x05f16864: ldp       x19, x20, [sp, #8]
+  0x05f16868: mov       w10, #0x1e4
+  0x05f1686c: add       w8, w8, #1
+  0x05f16870: str       w10, [x9, w8, sxtw #2]
+  0x05f16874: ldrh      w8, [x19, #0xaa]
+  0x05f16878: mov       x0, x20
+  0x05f1687c: ldp       x22, x21, [sp, #0xa0]
+  0x05f16880: strh      w8, [x20, #0xaa]
+  0x05f16884: ldr       d0, [x19, #0xc8]
+  0x05f16888: ldp       x24, x23, [sp, #0x90]
+  0x05f1688c: str       d0, [x20, #0xc8]
+  0x05f16890: ldrb      w8, [x19, #0xc0]
+  0x05f16894: ldp       x26, x25, [sp, #0x80]
+  0x05f16898: strb      w8, [x20, #0xc0]
+  0x05f1689c: ldrb      w8, [x19, #0xc1]
+  0x05f168a0: ldp       x28, x27, [sp, #0x70]
+  0x05f168a4: strb      w8, [x20, #0xc1]
+  0x05f168a8: ldrb      w8, [x19, #0xbb]
+  0x05f168ac: ldp       x29, x30, [sp, #0x60]
+  0x05f168b0: strb      w8, [x20, #0xbb]
+  0x05f168b4: ldr       x8, [x19, #0x10]
+  0x05f168b8: str       x8, [x20, #0x10]
+  0x05f168bc: ldr       x8, [x19, #0x70]
+  0x05f168c0: str       x8, [x20, #0x70]
+  0x05f168c4: ldr       x8, [x19, #0x88]
+  0x05f168c8: str       x8, [x20, #0x88]
+  0x05f168cc: ldr       x8, [x19, #0xa0]
+  0x05f168d0: str       x8, [x20, #0xa0]
+  0x05f168d4: ldp       x20, x19, [sp, #0xb0]
+  0x05f168d8: add       sp, sp, #0xc0
+  0x05f168dc: ret       
+  0x05f168e0: bl        #0x24c05f0
+  0x05f168e4: bl        #0x24c05f0
+  0x05f168e8: bl        #0x24c05f0
+  0x05f168ec: bl        #0x24c05f0
+  0x05f168f0: bl        #0x244c1d0
+  0x05f168f4: mov       x1, xzr
+  0x05f168f8: bl        #0x24c05cc
+  0x05f168fc: bl        #0x24c05f0
+  0x05f16900: bl        #0x24c05f0
+  0x05f16904: bl        #0x24c05f0
