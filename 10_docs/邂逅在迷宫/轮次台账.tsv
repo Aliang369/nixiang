@@ -5,3 +5,4 @@
 2026-10-10 20:05	菜单/悬浮球消失	1	standalone 常驻三处（划掉任务不自杀）+ stopWithTask=false	通过	MenuService: overlayVisible=true attached=true	已完成
 2026-10-10 20:08	菜单/悬浮球消失	2	加开机自启（BootReceiver + RECEIVE_BOOT_COMPLETED + ROM 引导页跳转）	失败	OplusAppStartupManager: prevent start … strict mode = true；Restarting ServiceRecord nextRestartTime 已过仍未起	已否证
 2026-10-10 20:11	菜单/悬浮球消失	3	删除全部自启动（用户 m05963 叫停），改「重开 App / 点通知」自救	通过	dumpsys 内 BootReceiver 计数 0 + 用户认可此为分发形态	已完成
+2026-10-10 20:47	08_output 交付目录收口	1	删除 v29/v35 旧交付、v2.9 顶层包、两个 json 记录、.DS_Store；delivery_20261010_v39 改名 delivery_20261010（对齐 finalize 命名契约）	通过	目录内恰 1 个 APK md5 cdde2776d3b372d386a5fc13d30e6ffc + apksigner 证书 MD5 161fca32a36d3df274458682a44cb774；prune_output_final.sh dry-run removed=0；被删项隔离在 ~/.Trash/nixiang_xhzm_08clean_20261010_204747/	已完成
