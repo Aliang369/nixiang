@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "generated_by": "04_scripts/_common/delivery_manifest.py",
+  "generated_at": "2026-10-10T09:40:40+00:00",
+  "game": "追迹迷城",
+  "version": "1.0.20261009",
+  "package": "com.TeaMelo.DungeonChasers",
+  "pipeline_state": "04_scripts/追迹迷城/pipeline.json",
+  "pipeline_status": {
+    "device_ready": "done",
+    "pull_device": "done",
+    "check_apk": "done",
+    "dump": "done",
+    "anchor": "done",
+    "impl_mod": "done",
+    "build_so": "done",
+    "surgical": "done",
+    "sign": "done",
+    "uninstall_official": "done",
+    "install": "done",
+    "cleanup": "done",
+    "archive": "done"
+  },
+  "source_commit": "f423c0ce67453b8ad38efb83d93ddd6468489ad1",
+  "source_tree": "1fac60b8a42a1491637bd90bac33d0ffd5e5eede",
+  "apk": null,
+  "artifacts": [
+    {
+      "stage": "device_ready",
+      "path": "04_scripts/追迹迷城/.device_serial",
+      "recorded_md5": "0bc47570b06495af1a544933783b7037",
+      "available": true,
+      "current_md5": "0bc47570b06495af1a544933783b7037",
+      "current_sha256": "cbe27de68d4d3b09f6c7d5b249441193c24b6a21737d78c5c810a7b8386a337a",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "pull_device",
+      "path": "04_scripts/追迹迷城/official_apk.json",
+      "recorded_md5": "43129311e03eff92b6c8d9b3b90fabbe",
+      "available": true,
+      "current_md5": "6528c6a61507eaa1ef08307e07478984",
+      "current_sha256": "6b143f175b19edc87a35bb0c9fcc506569ced412e27f7cf91aee884d85f88833",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "check_apk",
+      "path": "04_scripts/追迹迷城/check_summary.json",
+      "recorded_md5": "817b01a71639cb9211ce2203c2790e22",
+      "available": true,
+      "current_md5": "817b01a71639cb9211ce2203c2790e22",
+      "current_sha256": "db8121cb6f1984c535929ae2c2e09c54225d7fe0323c13ec8ed2919e7cf33c05",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "dump",
+      "path": "03_decompiled/追迹迷城/current/AndroidManifest.xml",
+      "recorded_md5": "15490ab63eeb954d840ef7194e46cd4e",
+      "available": false
+    },
+    {
+      "stage": "dump",
+      "path": "06_dumped/追迹迷城/current/dump.cs",
+      "recorded_md5": "82fed0909dd53e697832cad27c68b134",
+      "available": false
+    },
+    {
+      "stage": "dump",
+      "path": "06_dumped/追迹迷城/current/script.json",
+      "recorded_md5": "c0adacda777d1256b7e17d11b0e232ff",
+      "available": false
+    },
+    {
+      "stage": "impl_mod",
+      "path": "07_patched/追迹迷城/surgical_1.0.20260912/AndroidManifest.xml",
+      "recorded_md5": "722d54e7c398ede2ecf56c93f3e59f31",
+      "available": false
+    },
+    {
+      "stage": "cleanup",
+      "path": "04_scripts/追迹迷城/cleanup_summary.json",
+      "recorded_md5": "376f9aae89d4c1d95b38feda2ea3b569",
+      "available": true,
+      "current_md5": "38e8fb5d7c604030c2e612164169ff8b",
+      "current_sha256": "677e1cbbd21e873bf8370e4b6c32351426a45f8a0ce32f4aa4794614598edfe9",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "cleanup",
+      "path": "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs",
+      "recorded_md5": "82fed0909dd53e697832cad27c68b134",
+      "available": false
+    },
+    {
+      "stage": "archive",
+      "path": "10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md",
+      "recorded_md5": "6fab6c6897dfb851ebcf6ee48bf6c9a3",
+      "available": true,
+      "current_md5": "42c96f40a192de2cef380a39ee8741e0",
+      "current_sha256": "b2a2fd9703f8fe778df288e51de508a418cebe32a535aca54b7b5eb3711cd42f",
+      "matches_recorded_md5": false
+    }
+  ],
+  "not_proven": [
+    "manifest 只汇总管线与文件指纹；运行证据/NOT PROVEN 需由归档文档人工明确记录"
+  ],
+  "closure": {
+    "staged_scope_checked": true,
+    "generated_at_archive_close": true
+  }
+}
