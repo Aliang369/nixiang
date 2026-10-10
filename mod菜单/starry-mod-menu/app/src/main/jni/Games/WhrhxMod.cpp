@@ -540,18 +540,83 @@ static void* MethodPointer(void* mi) {
     return mi ? *reinterpret_cast<void**>(mi) : nullptr;
 }
 
+// KRead 的定义在本文件 :983 之后，而下面的 ImageOfRaw 要用 ⇒ 提前声明（2026-10-11 编译修复）。
+static bool KRead(const void* addr, void* out, size_t len);
+
+// 2026-10-11 本机实证：`Api::ImageOf` 对 119 个程序集**全部**返回 nullptr
+// （日志 `class CountryDataMgr not found (asms=119 imgs=0)`，且一条
+// `[Il2Cpp] ImageOf asm=… -> img=…` 都没打 ⇒ 它在前置判定
+// `IsValidHeapPtr(assembly)` / `ReadableRange(assembly,8)` 就被判否，根本没读）。
+// 身份链因此断死：拿不到 CountryDataMgr，就没有权威字段偏移、没有 get_Instance。
+// 这里改走自有路径：KRead 是 `process_vm_readv(getpid(),…)`，读坏指针只返回 false，
+// 不会把进程带崩；再校验「image 首字段 = const char* name 且可读、前 7 字节可打印」
+// 才交给 ClassFromName —— 防坏指针进 il2cpp。
+static void* ImageOfRaw(void* asmPtr, bool log) {
+    if (!asmPtr) return nullptr;
+    void* img = nullptr;
+    if (!KRead(asmPtr, &img, sizeof(img)) || !img) {
+        if (log) LOGW("[Whrhx] ImageOfRaw asm=%p read-fail img=%p", asmPtr, img);
+        return nullptr;
+    }
+    const char* nm = nullptr;
+    char b[8] = {0};
+    if (!KRead(img, &nm, sizeof(nm)) || !nm || !KRead(nm, b, sizeof(b) - 1)) {
+        if (log) LOGW("[Whrhx] ImageOfRaw asm=%p img=%p name-unreadable", asmPtr, img);
+        return nullptr;
+    }
+    for (int i = 0; i < 7; i++) {
+        const char c = b[i];
+        if (c == 0) break;
+        if (c < 0x20 || c > 0x7e) {
+            if (log) LOGW("[Whrhx] ImageOfRaw asm=%p img=%p name-garbage", asmPtr, img);
+            return nullptr;
+        }
+    }
+    if (log) LOGI("[Whrhx] ImageOfRaw asm=%p -> img=%p name=%s", asmPtr, img, b);
+    return img;
+}
+
+// 诊断（2026-10-11）：按名找类失败必须区分「拿不到程序集」和「遍历了 N 个镜像
+// 但没有这个类」—— 两者修法完全不同。限流 6 条。
+static void ClassLookupMiss(const char* name, size_t asms, size_t imgs) {
+    static std::atomic<uint32_t> s_n{0};
+    if (s_n.fetch_add(1) >= 6) return;
+    LOGW("[Whrhx] class %s not found (asms=%zu imgs=%zu)", name, asms, imgs);
+}
+
 static void* FindClassNs(const char* ns, const char* name) {
     auto& api = GetApi();
     size_t n = 0;
     void** asms = api.Assemblies(&n);
-    if (!asms || n == 0) return nullptr;
+    if (!asms || n == 0) { ClassLookupMiss(name, n, 0); return nullptr; }
+    size_t imgs = 0;
+    static std::atomic<int> s_dbg{0};
     for (size_t i = 0; i < n; i++) {
-        void* img = api.ImageOf(asms[i]);
+        const bool dbg = (s_dbg.load() < 4);
+        void* img = ImageOfRaw(asms[i], dbg);
+        if (dbg) s_dbg.fetch_add(1);
+        if (!img) img = api.ImageOf(asms[i]);   // 兜底：老路径（本机恒 null，留着不亏）
         if (!img) continue;
+        imgs++;
         void* k = api.ClassFromName(img, ns, name);
-        if (k) return k;
+        if (k) {
+            LOGI("[Whrhx] class %s found asm#%zu img=%p", name, i, img);
+            return k;
+        }
     }
+    ClassLookupMiss(name, n, imgs);
     return nullptr;
+}
+
+// 父类链查找：CountryDataMgr : Singleton<CountryDataMgr>，get_Instance 挂在父类上。
+// 不依赖 il2cpp_class_get_method_from_name 是否走父链（各版本行为不一致）。
+static void* GetMethodDeep(void* cls, const char* name, int argc) {
+    auto& api = GetApi();
+    int hops = 32;
+    for (void* c = cls; c && api.class_parent && hops-- > 0; c = api.class_parent(c)) {
+        if (void* m = api.GetMethod(c, name, argc)) return m;
+    }
+    return api.GetMethod(cls, name, argc);
 }
 
 static void* ResolveByName(const char* ns, const char* cls, const char* method, const int* argcs,
@@ -1010,21 +1075,45 @@ static bool ResolveIdentityChainLEB() {
     return true;
 }
 
+// 诊断（2026-10-11）：身份链每个失败分支都必须发声。此前四条 return false
+// 全静默 ⇒ 日志里既没有 "identity api ready" 也没有任何线索，只能靠猜。
+// 用统一计数器限流（最多 8 条），避免 2s tick 刷屏。
+static void IdentityMiss(const char* why, void* a = nullptr) {
+    static std::atomic<uint32_t> s_n{0};
+    if (s_n.fetch_add(1) >= 8) return;
+    LOGW("[Whrhx] identity miss: %s (%p)", why, a);
+}
+
 // 热更后旧字节链可能漂移：优先用运行时 IL2CPP API 按类名/字段名取权威布局。
 // 只读调用 getter，不 Dobby；拿不到 API 时由 CaptureCountryMgr 用旧偏移兜底。
 static bool ResolveCountryIdentityApi() {
     if (g_identityApiResolved.load()) return true;
-    if (!EnsureIl2CppApi()) return false;
+    // 2026-10-11：本函数每拍（200ms）被 PinPlayerValues 调一次；未解出时每次要走
+    // 「遍历 119 个程序集取镜像 + 按名找类」×2。真机上这条链曾把 **主线程** 拖进
+    // ANR（见 Whrhx_SyncHooks 顶部注释），故未解出时限流 1s、连续失败 10 次后退避到 5s。
+    static std::atomic<int64_t> s_lastMs{0};
+    static std::atomic<uint32_t> s_fail{0};
+    const int64_t now = NowMs();
+    const int64_t period = s_fail.load() < 10 ? 1000 : 5000;
+    if (now - s_lastMs.load() < period) return false;
+    s_lastMs.store(now);
+    if (!EnsureIl2CppApi()) { s_fail.fetch_add(1); IdentityMiss("il2cpp api not ready"); return false; }
     void* mgrClass = FindClassNs("", "CountryDataMgr");
-    if (!mgrClass) return false;
-    void* mi = GetApi().GetMethod(mgrClass, "get_m_countryId", 0);
+    if (!mgrClass) { s_fail.fetch_add(1); IdentityMiss("class CountryDataMgr not found"); return false; }
+    void* mi = GetMethodDeep(mgrClass, "get_m_countryId", 0);
+    if (!mi) { s_fail.fetch_add(1); IdentityMiss("method get_m_countryId not found"); return false; }
     void* fn = MethodPointer(mi);
     if (!fn || !Il2Cpp::IsValidHeapPtr(fn) ||
-        !FnInLibExec(fn, GameUnity::TARGET_LIB, nullptr))
+        !FnInLibExec(fn, GameUnity::TARGET_LIB, nullptr)) {
+        IdentityMiss("get_m_countryId ptr invalid/out-of-lib", fn);
         return false;
+    }
     if (GetApi().method_get_name) {
         const char* name = GetApi().method_get_name(mi);
-        if (!name || strcmp(name, "get_m_countryId") != 0) return false;
+        if (!name || strcmp(name, "get_m_countryId") != 0) {
+            IdentityMiss("get_m_countryId name mismatch", fn);
+            return false;
+        }
     }
     size_t mgrOff = 0;
     if (GetApi().class_get_field && GetApi().field_offset) {
@@ -1077,26 +1166,49 @@ static void CaptureCountryMgr(void* mgr) {
 // 再用 runtime_invoke 直调：泛型共享 thunk 的调用约定交给 runtime，避免裸函数指针误调。
 static std::atomic<void*> g_countryMgrMi{nullptr};
 
+// 非 il2cpp 线程 invoke 前必须 attach（EndfieldMod.cpp:385 / HzsjMod.cpp:369 同法）。
+// ★安全闸门：`il2cpp_domain_get()` 非空 ⇔ il2cpp_init 已完成 —— init 完成前调
+//   `il2cpp_thread_attach` 会 abort（WorMod 真机实锤）。domain 为空就本轮跳过、
+//   下一个 tick 再试，绝不硬调。mod_thread 是 Main.cpp:2361 裸 pthread_create
+//   起的线程，默认**不在** il2cpp 线程表里，所以这一步不能省。
+static std::atomic<bool> g_tickThreadAttached{false};
+
+static bool EnsureTickThreadAttached() {
+    if (g_tickThreadAttached.load()) return true;
+    if (!GetApi().thread_attach || !GetApi().domain_get) return false;
+    void* d = GetApi().domain_get();
+    if (!d) { IdentityMiss("attach deferred: il2cpp domain null"); return false; }
+    if (!GetApi().thread_attach(d)) { IdentityMiss("thread_attach failed"); return false; }
+    g_tickThreadAttached.store(true);
+    LOGI("[Whrhx] tick thread attached to il2cpp domain");
+    return true;
+}
+
 static void* ResolveCountryMgrByName() {
     if (!EnsureIl2CppApi()) return nullptr;
     void* mi = g_countryMgrMi.load();
     if (!mi) {
         void* cls = FindClassNs("", "CountryDataMgr");
-        if (!cls) return nullptr;
-        void* m = GetApi().GetMethod(cls, "get_Instance", 0);
-        if (!m) return nullptr;
+        if (!cls) { IdentityMiss("mgr class not found (by-name)"); return nullptr; }
+        void* m = GetMethodDeep(cls, "get_Instance", 0);
+        if (!m) { IdentityMiss("get_Instance not found (by-name)"); return nullptr; }
         if (GetApi().method_get_name) {
             const char* n = GetApi().method_get_name(m);
-            if (!n || strcmp(n, "get_Instance") != 0) return nullptr;
+            if (!n || strcmp(n, "get_Instance") != 0) {
+                IdentityMiss("get_Instance name mismatch", m);
+                return nullptr;
+            }
         }
         g_countryMgrMi.store(m);
         mi = m;
         LOGI("[Whrhx] country mgr mi by-name %p", mi);
     }
-    if (!GetApi().runtime_invoke) return nullptr;
+    if (!GetApi().runtime_invoke) { IdentityMiss("runtime_invoke missing"); return nullptr; }
+    if (!EnsureTickThreadAttached()) return nullptr;  // ← 未 attach 绝不 invoke
     void* exc = nullptr;
     void* obj = GetApi().runtime_invoke(mi, nullptr, nullptr, &exc);
-    if (exc || !obj) return nullptr;
+    if (exc) { IdentityMiss("get_Instance threw", exc); return nullptr; }
+    if (!obj) { IdentityMiss("get_Instance returned null"); return nullptr; }
     return obj;
 }
 
@@ -1820,12 +1932,19 @@ static void InstallPolicyPanelHooks() {
                         "TryActivePolicy", kZeroArgcsPanel, 1, RVA_EXTRA_MINISTER_TRY_ACTIVE,
                         (void*)Hooked_ExtraMinisterTryActive,
                         (void**)&g_origExtraMinisterTryActive, true);
+    // 2026-10-11 真机修复：这两个原来只走 HookAtRva（RVA 来自旧基准 c04afff4…），本机
+    // 79adda77… 上 0x326A8D0 / 0x3C5959C 已漂移 ⇒ 永远装不上，policy panel gate 每秒
+    // 打一次 "gate incomplete … res=0 disable=0 — will retry" 且面板资源/学习条件门不生效。
+    // 两者在 dump 里都唯一且有 1 参：CountryData.GetResCnt(eSpecialResType)、
+    // PolicyDataMgr.CheckPolicyDisable(int) ⇒ 改成 HookRvaOrIl2Cpp，RVA 校验失败后按名。
     if (!g_countryGetResCnt)
-        HookAtRva("CountryGetResCnt", RVA_COUNTRY_GET_RES_CNT, (void*)Hooked_CountryGetResCnt,
-                  (void**)&g_countryGetResCnt);
+        HookRvaOrIl2Cpp("CountryGetResCnt", "", "CountryData", "GetResCnt", kOneArgcsPanel, 1,
+                        RVA_COUNTRY_GET_RES_CNT, (void*)Hooked_CountryGetResCnt,
+                        (void**)&g_countryGetResCnt, true);
     if (!g_policyCheckDisable)
-        HookAtRva("PolicyCheckDisable", RVA_POLICY_CHECK_DISABLE, (void*)Hooked_PolicyCheckDisable,
-                  (void**)&g_policyCheckDisable);
+        HookRvaOrIl2Cpp("PolicyCheckDisable", "", "PolicyDataMgr", "CheckPolicyDisable",
+                        kOneArgcsPanel, 1, RVA_POLICY_CHECK_DISABLE,
+                        (void*)Hooked_PolicyCheckDisable, (void**)&g_policyCheckDisable, true);
     if (!g_policyCanActive)
         HookRvaOrIl2Cpp("PolicyCanActive", "", "PolicyDataMgr", "CanActive", kCanActiveArgcs, 1,
                         RVA_POLICY_CAN_ACTIVE, (void*)Hooked_PolicyCanActive,
@@ -1847,13 +1966,18 @@ static void InstallPolicyPanelHooks() {
              g_origExtraMinisterTryActive ? 1 : 0, g_countryGetResCnt ? 1 : 0,
              g_policyCanActive ? 1 : 0, g_policyCheckDisable ? 1 : 0,
              g_policyItemShowState ? 1 : 0);
-    else
-        LOGW("[Whrhx] policy panel gate incomplete tech=%d min=%d extra=%d res=%d can=%d "
-             "disable=%d state=%d — will retry",
-             g_origPolicyUiActive ? 1 : 0, g_origMinisterTryActive ? 1 : 0,
-             g_origExtraMinisterTryActive ? 1 : 0, g_countryGetResCnt ? 1 : 0,
-             g_policyCanActive ? 1 : 0, g_policyCheckDisable ? 1 : 0,
-             g_policyItemShowState ? 1 : 0);
+    else {
+        // 限流：装机时若个别钩子长期装不上，这条每秒一条会把 logcat 刷爆（曾实测刷了几十条）。
+        static std::atomic<uint32_t> s_warn{0};
+        const uint32_t w = s_warn.fetch_add(1);
+        if (w < 3 || (w % 300) == 0)
+            LOGW("[Whrhx] policy panel gate incomplete tech=%d min=%d extra=%d res=%d can=%d "
+                 "disable=%d state=%d — will retry (#%u)",
+                 g_origPolicyUiActive ? 1 : 0, g_origMinisterTryActive ? 1 : 0,
+                 g_origExtraMinisterTryActive ? 1 : 0, g_countryGetResCnt ? 1 : 0,
+                 g_policyCanActive ? 1 : 0, g_policyCheckDisable ? 1 : 0,
+                 g_policyItemShowState ? 1 : 0, w + 1);
+    }
 }
 
 static void InstallResearchHooks() {
@@ -2038,11 +2162,17 @@ static int PinMinisterFavorInMgr(void* mgr, bool verbose) {
     return n;
 }
 
+// 热路径日志闸（2026-10-11）：这些钩子会在战斗/名臣面板里被每帧调用，而 LOGI 写 logcat
+// 是 syscall（真机单条数百微秒，且缓冲满时可阻塞调用线程）⇒ 统一「前 3 条 + 每 200 条 1 条」。
+static bool HotLog(uint32_t n) { return n <= 3 || (n % 200) == 0; }
+
 // ② 好感度读取口：面板/任务读取时直接给满值
 static int32_t Hooked_MinisterGetFavor(void* thiz, int32_t ministerId, void* method) {
     int32_t v = g_origMinisterGetFavor ? g_origMinisterGetFavor(thiz, ministerId, method) : 0;
     if (!g_ministerFavor.load() || v >= kFavorFull) return v;
-    LOGI("[Whrhx] minister favorite id=%d %d→%d", ministerId, v, kFavorFull);
+    static std::atomic<uint32_t> s_n{0};
+    if (HotLog(s_n.fetch_add(1) + 1))
+        LOGI("[Whrhx] minister favorite id=%d %d→%d", ministerId, v, kFavorFull);
     return kFavorFull;
 }
 
@@ -2051,8 +2181,11 @@ static void Hooked_MinisterAddFavor(void* thiz, int32_t favor, void* method) {
     if (g_ministerFavor.load() && thiz && ObjKlassNameIs(thiz, "MinisterPlayData")) {
         int32_t cur = 0;
         if (KRead(static_cast<char*>(thiz) + kOffMinisterFavorite, &cur, 4) && cur < kFavorFull) {
-            if (KWrite(static_cast<char*>(thiz) + kOffMinisterFavorite, &kFavorFull, 4))
-                LOGI("[Whrhx] minister add favor %d→%d (arg=%d)", cur, kFavorFull, favor);
+            if (KWrite(static_cast<char*>(thiz) + kOffMinisterFavorite, &kFavorFull, 4)) {
+                static std::atomic<uint32_t> s_n{0};
+                if (HotLog(s_n.fetch_add(1) + 1))
+                    LOGI("[Whrhx] minister add favor %d→%d (arg=%d)", cur, kFavorFull, favor);
+            }
         }
     }
     if (g_origMinisterAddFavor) g_origMinisterAddFavor(thiz, favor, method);
@@ -2080,18 +2213,24 @@ static int64_t Hooked_ArmyMaxCanSend(void* thiz, int32_t targetCity, bool isRobb
                                            maxSendNum, canPassByLord, method)
                     : 0;
     const int64_t s = ScaleArmyCap(thiz, r);
-    if (s != r)
-        LOGI("[Whrhx] army cap target=%d %lld→%lld (+%d%%)", targetCity, (long long)r,
-             (long long)s, g_armyScalePct.load());
+    if (s != r) {
+        static std::atomic<uint32_t> s_n{0};
+        if (HotLog(s_n.fetch_add(1) + 1))
+            LOGI("[Whrhx] army cap target=%d %lld→%lld (+%d%%)", targetCity, (long long)r,
+                 (long long)s, g_armyScalePct.load());
+    }
     return s;
 }
 
 static int64_t Hooked_ArmyMaxSend(void* thiz, int32_t battleType, int32_t intParam, void* method) {
     int64_t r = g_origArmyMaxSend ? g_origArmyMaxSend(thiz, battleType, intParam, method) : 0;
     const int64_t s = ScaleArmyCap(thiz, r);
-    if (s != r)
-        LOGI("[Whrhx] army maxSend type=%d %lld→%lld (+%d%%)", battleType, (long long)r,
-             (long long)s, g_armyScalePct.load());
+    if (s != r) {
+        static std::atomic<uint32_t> s_n{0};
+        if (HotLog(s_n.fetch_add(1) + 1))
+            LOGI("[Whrhx] army maxSend type=%d %lld→%lld (+%d%%)", battleType, (long long)r,
+                 (long long)s, g_armyScalePct.load());
+    }
     return s;
 }
 
@@ -2189,8 +2328,21 @@ static void NewFeaturesTick() {
     }
 }
 
+/* 2026-10-11 真机 ANR 实锤（anr_16850_2026-10-11-02-35-52）：菜单回调跑在 **主线程**
+ * （Unity main + JNI），而 Whrhx_SyncHooks() 是重活（装 inline 钩 + 遍历 119 个程序集
+ * 按名找类 + files/maps 判定）。抓到的卡死栈：
+ *     libstarry_magic.so → fgets(/proc/self/maps)
+ *     ← ModBridge.nativeSetFeature ← reapplySavedFeaturesToNative ← NativeMenuController$3.run
+ * 表现就是用户报的「每次菜单动作都要卡死一会」（输入分发 5s 超时 → ANR）。
+ * 规则：**菜单/JNI 线程只记开关，重活一律留给 mod 线程**（Whrhx_Tick 每 200ms 一拍）。
+ * 代价：开关生效最多晚 200ms —— 远小于一次 ANR。 */
+static thread_local bool t_whrhxTick = false;
+static std::atomic<bool> g_syncDirty{false};
+
 static void Whrhx_SyncHooks() {
     if (!g_libReady.load()) return;
+    if (!t_whrhxTick) { g_syncDirty.store(true); return; }  // 非 mod 线程：只记脏，不装钩
+    g_syncDirty.store(false);
     // ── 2026-10-11 新增四项（feat 10..13）──
     const bool newNoCd = g_policyNoCd.load() || g_ministerSkillNoCd.load();
     const bool anyNew = newNoCd || g_ministerFavor.load() || g_armyScalePct.load() > 1;
@@ -2240,6 +2392,7 @@ bool Whrhx_IsReady() { return g_libReady.load(); }
 static std::atomic<uint32_t> g_il2cppRetryTick{0};
 
 void Whrhx_Tick(const bool* features) {
+    t_whrhxTick = true;  // 本线程（mod_thread）= 唯一允许做装钩重活的线程
     if (features) {
         g_gold.store(features[WHRHX_FEAT_GOLD]);
         g_food.store(features[WHRHX_FEAT_FOOD]);
@@ -2255,6 +2408,14 @@ void Whrhx_Tick(const bool* features) {
         const uint32_t t = g_il2cppRetryTick.fetch_add(1);
         if ((t % 120) == 0) GetApi().Load(GameUnity::TARGET_LIB);
     }
+    // 诊断心跳（2026-10-11）：证明 tick 线程活着，且能看出身份链是否随程序集
+    // 加载而自愈。刻意打在 SyncHooks **之前** —— 若心跳持续而 SyncHooks 后无日志，
+    // 说明卡在 SyncHooks 内部。前 5 拍全打，其后每 30s（150×200ms）一拍。
+    static std::atomic<uint32_t> s_hb{0};
+    const uint32_t hb = s_hb.fetch_add(1) + 1;
+    if (hb <= 5 || (hb % 150) == 0)
+        LOGI("[Whrhx] tick=%u api=%d idApi=%d mgr=%p cid=%d", hb, GetApi().ready ? 1 : 0,
+             g_identityApiResolved.load() ? 1 : 0, g_countryMgr.load(), g_playerCountryId.load());
     Whrhx_SyncHooks();
 #if defined(STARRY_TRACE)
     const uint32_t t = g_traceTick.fetch_add(1) + 1;
