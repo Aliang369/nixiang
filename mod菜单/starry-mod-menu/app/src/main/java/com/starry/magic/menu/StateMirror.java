@@ -33,6 +33,12 @@ public final class StateMirror {
     private static final int[] VALUES = new int[FEATURE_COUNT];
     private static Context context;
 
+    /** 体检用：最近一次写失败的原因（成功时清空）。 */
+    private static volatile String lastError;
+    /** 体检用：最近一次写成功的路径与时间。 */
+    private static volatile String lastGoodPath;
+    private static volatile long lastGoodTs;
+
     private StateMirror() {
     }
 
@@ -100,10 +106,12 @@ public final class StateMirror {
                      new OutputStreamWriter(new FileOutputStream(tmp), StandardCharsets.UTF_8)) {
             writer.write(body);
         } catch (Exception e) {
+            lastError = "写 " + dir + " 失败：" + e;
             Log.w(TAG, "mirror write failed " + dir + ": " + e);
             return;
         }
         if (!tmp.renameTo(dst)) {
+            lastError = "改名失败 " + dst;
             Log.w(TAG, "mirror rename failed " + dir);
             return;
         }
@@ -115,6 +123,41 @@ public final class StateMirror {
             Log.w(TAG, "chmod failed " + dst + ": " + e);
         }
         Log.i(TAG, "mirrored -> " + dst + " : " + body);
+        lastError = null;
+        lastGoodPath = dst.getAbsolutePath();
+        lastGoodTs = System.currentTimeMillis();
+    }
+
+    /** 体检用：游戏真正读的那个状态文件的绝对路径；拿不到目录时为 null。 */
+    public static synchronized String externalPath() {
+        File f = externalStateFile();
+        return f == null ? null : f.getAbsolutePath();
+    }
+
+    /** 体检用：助手内存里的开关值（玩家在菜单里拨的那组）。 */
+    public static synchronized String currentState() {
+        StringBuilder sb = new StringBuilder(FEATURE_COUNT * 3);
+        for (int i = 0; i < FEATURE_COUNT; i++) {
+            if (i > 0) {
+                sb.append(' ');
+            }
+            sb.append(VALUES[i]);
+        }
+        return sb.toString();
+    }
+
+    /** 体检用：最近一次写失败原因；正常时为 null。 */
+    public static String lastError() {
+        return lastError;
+    }
+
+    /** 体检用：最近一次写成功的路径与时间。 */
+    public static String lastGoodPath() {
+        return lastGoodPath;
+    }
+
+    public static long lastGoodTs() {
+        return lastGoodTs;
     }
 
     /** 从已有状态文件回填，避免只改一个开关就把其它功能清成 0。 */

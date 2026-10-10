@@ -3,6 +3,8 @@ package com.starry.magic.menu.net;
 import android.content.Context;
 import android.util.Log;
 
+import com.starry.magic.menu.InjectJournal;
+
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -101,6 +103,8 @@ final class HttpResponder {
             return null;
         }
         FakeCdn.SERVED.incrementAndGet();
+        // 体检用：游戏真的来取补丁了 —— 这条是「注入到底有没有被游戏用上」的唯一硬证据
+        InjectJournal.served(ctx, base, body.length);
 
         boolean ranged = req.rangeStart >= 0 || req.rangeEnd >= 0;
         if (ranged) {

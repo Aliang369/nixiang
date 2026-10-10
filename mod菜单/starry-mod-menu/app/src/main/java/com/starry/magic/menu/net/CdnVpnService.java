@@ -14,6 +14,8 @@ import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.starry.magic.menu.InjectJournal;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.InetAddress;
@@ -116,6 +118,7 @@ public class CdnVpnService extends VpnService implements Runnable {
             }
         } catch (Throwable t) {
             Log.e(TAG, "start vpn service failed", t);
+            InjectJournal.note(ctx, InjectJournal.K_ERR, "注入服务起不来：" + t);
         }
     }
 
@@ -133,10 +136,12 @@ public class CdnVpnService extends VpnService implements Runnable {
         sAutoClose = autoClosePref(this);
         if (ACTION_STOP.equals(action)) {
             Log.i(TAG, "stop requested");
+            InjectJournal.note(this, InjectJournal.K_CH_CLOSE, "手动关闭");
             teardown();
             stopSelf();
             return START_NOT_STICKY;
         }
+        InjectJournal.note(this, InjectJournal.K_CH_START);
         startForegroundNotice();
         if (!running) {
             startTunnel();
@@ -220,6 +225,8 @@ public class CdnVpnService extends VpnService implements Runnable {
             tunFd = b.establish();
             if (tunFd == null) {
                 Log.e(TAG, "establish() returned null (permission revoked?)");
+                InjectJournal.note(this, InjectJournal.K_VPN_NULL, "VPN 未建立（授权被撤销？）");
+                InjectJournal.note(this, InjectJournal.K_ERR, "VPN 通道建立失败（establish 返回 null）");
                 stopSelf();
                 return;
             }
@@ -229,6 +236,7 @@ public class CdnVpnService extends VpnService implements Runnable {
             dns = new DnsInterceptor(this, this::sendToTun);
             running = true;
             sRunning = true;
+            InjectJournal.note(this, InjectJournal.K_CH_UP, "隧道已就绪");
 
             readerThread = new Thread(this, "starry-tun");
             readerThread.setDaemon(true);
@@ -251,6 +259,7 @@ public class CdnVpnService extends VpnService implements Runnable {
                         // ★ 注入完成后自动关闭：不再长期占着 VPN 影响游戏正常下载
                         if (sAutoClose && shouldAutoClose(upAt)) {
                             Log.i(TAG, "注入完成，自动关闭热更注入通道（不再影响游戏正常下载）");
+                            InjectJournal.note(this, InjectJournal.K_CH_CLOSE, "注入完成后自动关闭");
                             teardown();
                             stopSelf();
                             return;
@@ -269,6 +278,7 @@ public class CdnVpnService extends VpnService implements Runnable {
                     + " overrides=" + FakeCdn.describe());
         } catch (Throwable t) {
             Log.e(TAG, "startTunnel failed", t);
+            InjectJournal.note(this, InjectJournal.K_ERR, "建立隧道失败：" + t);
             teardown();
             stopSelf();
         }
@@ -383,6 +393,8 @@ public class CdnVpnService extends VpnService implements Runnable {
     @Override
     public void onRevoke() {
         Log.w(TAG, "onRevoke: another VPN took over");
+        InjectJournal.note(this, InjectJournal.K_REVOKE, "通道被系统或其它 VPN 抢占");
+        InjectJournal.note(this, InjectJournal.K_ERR, "VPN 通道被抢占（onRevoke）");
         teardown();
         stopSelf();
         super.onRevoke();
