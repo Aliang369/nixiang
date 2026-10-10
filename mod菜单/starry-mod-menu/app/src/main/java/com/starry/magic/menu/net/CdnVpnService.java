@@ -181,14 +181,32 @@ public class CdnVpnService extends VpnService implements Runnable {
 
     private void startTunnel() {
         try {
+            // v3.2：先把真实 CDN IP 解析出来（走系统 DNS，此时隧道还没建）。
+            // DNS 应答会返回这些真实地址，所以下面要给每个地址加 /32 路由，
+            // 否则游戏直连真实 CDN 会绕过隧道 ⇒ 注入失效。
+            // 注意：startTunnel 跑在主线程，直接解析会抛 NetworkOnMainThreadException，
+            // 所以丢到子线程再 join（join 只是等，不算主线程网络操作）。
+            Thread resolver = new Thread(FakeCdn::rememberCdnIps, "starry-cdn-resolve");
+            resolver.setDaemon(true);
+            resolver.start();
+            try {
+                resolver.join(3000L);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
             Builder b = new Builder();
             b.setSession("StarryCdn");
             b.setMtu(1500);
             b.addAddress(FakeCdn.VPN_ADDR_STR, FakeCdn.VPN_PREFIX);
             b.addDnsServer(FakeCdn.VPN_DNS_STR);
             b.addRoute(FakeCdn.ROUTE_STR, FakeCdn.VPN_PREFIX);
-            b.addRoute(FakeCdn.FAKE_CDN_IP[0] + "." + FakeCdn.FAKE_CDN_IP[1] + "."
-                    + FakeCdn.FAKE_CDN_IP[2] + "." + FakeCdn.FAKE_CDN_IP[3], 32);
+            // 真实 CDN IP 逐个 /32 进隧道（v3.3 起 DNS 应答真实 IP，不再有假 IP 路由）
+            for (byte[] ip : FakeCdn.cdnIps()) {
+                String dotted = (ip[0] & 0xff) + "." + (ip[1] & 0xff) + "."
+                        + (ip[2] & 0xff) + "." + (ip[3] & 0xff);
+                b.addRoute(dotted, 32);
+                Log.i(TAG, "route " + dotted + "/32 -> tun");
+            }
             // 兜底：即使 DNS 没劫持到，真实 CDN 网段的明文 HTTP 也进隧道
             b.addRoute(FakeCdn.CDN_ROUTE_STR, FakeCdn.CDN_ROUTE_PREFIX);
             addUnderlyingDnsRoutes(b);

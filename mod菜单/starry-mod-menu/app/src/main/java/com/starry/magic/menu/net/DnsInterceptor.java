@@ -10,12 +10,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * DNS 拦截：只把 {@link FakeCdn#CDN_HOST} 指向 {@link FakeCdn#FAKE_CDN_IP}，
+ * DNS 拦截：把 {@link FakeCdn#CDN_HOST} 应答成**真实 CDN IP**（{@link FakeCdn#primaryCdnIp()}），
  * **其余查询一律原样转发到上游 DNS**（保证其它 App 与游戏登录不受影响）。
  *
- * <p>为什么需要它：游戏用明文 HTTP 连 install2.hotune.com，但域名解析出来的是
- * 腾讯 DNSPod 的 CDN 节点 IP，且随运营商/地域变化（实测同一网络下出现过
- * 118.183.236.58 与 .59）。把域名固定解析到隧道内的假 IP，就不必依赖 CDN 网段。
+ * <p>v3.2 修正：早先应答成隧道内假 IP（10.9.9.9），注入完成隧道自动关闭并撤掉
+ * {@code 10.9.9.9/32} 路由后，系统解析器/游戏侧仍缓存那个假地址 ⇒ 之后按需下载的
+ * 活动资源、广告面板直接 ConnectFailure(110) 卡死。现在只回真实 IP，并且
+ * CdnVpnService 会给每个真实 IP 加 /32 路由：隧道开着照样拦到，隧道关掉也能连通。
  *
  * <p>转发用的 socket 会被 {@code protect()} 排除在 VPN 之外，避免自己转自己。
  */
@@ -78,14 +79,23 @@ final class DnsInterceptor {
         }
 
         if (qname != null && qname.equalsIgnoreCase(FakeCdn.CDN_HOST)) {
-            byte[] resp = buildAnswer(pkt, dnsOff, qend, dnsLen, qtype);
-            if (resp != null) {
-                sink.sendToTun(TunPackets.ipUdp(dip, sip,
-                        FakeCdn.DNS_PORT, sport, resp, 0, resp.length));
-                Log.i(FakeCdn.TAG, "DNS " + qname + " -> " + TunPackets.ipToStr(FakeCdn.FAKE_CDN_IP, 0)
-                        + " (qtype=" + qtype + ")");
+            // v3.2：不再应答假 IP。假 IP（10.9.9.9）在隧道自动关闭后会变成黑洞
+            // （系统/Mono 仍缓存，/32 路由已撤销）⇒ 活动资源、广告面板卡死。
+            // 改为应答「真实 CDN IP + 该 IP 走隧道」：隧道开着照样拦到，
+            // 隧道关掉缓存的也是真能连通的地址。
+            byte[] realIp = FakeCdn.primaryCdnIp();
+            if (realIp != null) {
+                byte[] resp = buildAnswer(pkt, dnsOff, qend, dnsLen, qtype, realIp);
+                if (resp != null) {
+                    sink.sendToTun(TunPackets.ipUdp(dip, sip,
+                            FakeCdn.DNS_PORT, sport, resp, 0, resp.length));
+                    Log.i(FakeCdn.TAG, "DNS " + qname + " -> " + TunPackets.ipToStr(realIp, 0)
+                            + " (真实 CDN,qtype=" + qtype + ")");
+                    return;
+                }
             }
-            return;
+            // 没解析到真实 IP：不要瞎回答，交给上游；下面的转发分支会兜住。
+            Log.w(FakeCdn.TAG, "DNS " + qname + " 无真实 CDN IP，改走上游转发");
         }
 
         // 其余域名：异步转发上游，别阻塞 TUN 读循环
@@ -102,8 +112,8 @@ final class DnsInterceptor {
         }
     }
 
-    /** 命中目标域名：直接在本地组应答，不去上游。 */
-    private byte[] buildAnswer(byte[] pkt, int dnsOff, int qEnd, int dnsLen, int qtype) {
+    /** 命中目标域名：直接在本地组应答，不去上游。answerIp 是真实 CDN IP。 */
+    private byte[] buildAnswer(byte[] pkt, int dnsOff, int qEnd, int dnsLen, int qtype, byte[] answerIp) {
         try {
             byte[] q = new byte[dnsLen];
             System.arraycopy(pkt, dnsOff, q, 0, dnsLen);
@@ -128,7 +138,7 @@ final class DnsInterceptor {
                 TunPackets.put16(out, o + 4, 1);       // CLASS IN
                 TunPackets.put32(out, o + 6, 60);      // TTL 60s
                 TunPackets.put16(out, o + 10, 4);      // RDLENGTH
-                System.arraycopy(FakeCdn.FAKE_CDN_IP, 0, out, o + 12, 4);
+                System.arraycopy(answerIp, 0, out, o + 12, 4);
             }
             return out;
         } catch (Throwable t) {

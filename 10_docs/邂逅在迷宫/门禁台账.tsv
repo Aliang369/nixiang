@@ -1,2 +1,11 @@
 时间	游戏	门禁	结论	证据	记入者
 2026-10-10 05:04	邂逅在迷宫	G2	通过	gradle_cycle 出包链路建立 + apksigner verify 通过	ai
+2026-10-10 18:34	邂逅在迷宫	G2	通过	gradle_cycle 出包 v3.0（免广告版）+ check_release_apk 干净正式包 + install 成功	ai
+2026-10-10 18:49	邂逅在迷宫	G2	通过	gradle_cycle 出包 v3.1（修正 jniLibs 被 zjmc .so 污染）+ check_release_apk 干净正式包 + install 成功	ai
+2026-10-10 19:18	邂逅在迷宫	G2	通过	gradle_cycle 出包 v3.2（DNS 不再伪造假 IP，改回真实 CDN IP + 真实 IP /32 路由）+ check_release_apk 干净正式包 + install 成功	ai
+2026-10-10 19:19	邂逅在迷宫	G2	通过	gradle_cycle 出包 v3.3（DNS 应答真实 CDN IP + 真实 IP /32 路由，修隧道关闭后假 IP 黑洞）+ check_release_apk 干净正式包 + install 成功	ai
+2026-10-10 19:42	邂逅在迷宫	G1	通过	v3.4 探针 scope 修复静态复核：重跑补丁得 Debug 引用=UnityEngine.CoreModule；DLL md5 ac56b14e 与包内 bundle TextAsset 一致（xhzm_repack_bundle.py --verify）；APK 内三件套 md5 == 源 == 装机包	ai
+2026-10-10 19:52	邂逅在迷宫	G2	通过	gradle_cycle 出包 v3.5（探针改借库内真实 Debug.Log(object) 修广告面板卡死；payload 顶官方构建哈希命名 enable 方案A）+ check_release_apk 干净正式包 + install 成功（vc35/3.5，md5 b28ce25cb7b84ed14916e356acf0156d）	ai
+2026-10-10 19:52	邂逅在迷宫	G2	通过	方案A两轮实测：轮1开通道注入 load endless dll len=24681472、payload 落官方名 endlessstrikedll_8fa83621b75bca5af7b14bf2f4a86163.bundle 9801205B、19:51:00 自动关通道 tun0 消失；轮2零通道冷启 diff size=4408（仅回源官方 buildpatch）dld count=0 len=24681472、StarryCdn 日志 0 行 ⇒ 永久生效免开通道	ai
+2026-10-10 20:12	邂逅在迷宫	G2	通过	v3.9 分发版出包（去自启动版）+ check_release_apk 干净正式包 + install 成功（vc39/3.9，md5 cdde2776d3b372d386a5fc13d30e6ffc）	ai
+2026-10-10 20:12	邂逅在迷宫	G2	通过	v3.9 注入通道实跑：真实CDN IP 49.119.117.64/118.183.236.58 + /32 路由；覆盖三件套 200（505/4408/9801205B，9.8MB 用时1.49s）；回源透传 esdatadll 200 4444030B；CDN_STOP 后 tun0 撤；静态链三件套+so md5 与源码一致	ai

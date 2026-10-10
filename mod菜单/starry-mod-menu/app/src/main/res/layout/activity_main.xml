@@ -15,47 +15,37 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="星光魔法"
+            android:text="星光助手"
             android:textColor="#FFFFFF"
             android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:gravity="center"
-            android:text="收起菜单只留悬浮球后，点下方按钮\n若能弹出提示，说明穿透正常"
+            android:text="无需 root · 不修改游戏安装包\n按下面 ①② 顺序点一次即可，之后不用再进本 App"
             android:textColor="#A0A0C0"
             android:textSize="14sp" />
 
         <Button
-            android:id="@+id/btn_pass_through_test"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="28dp"
-            android:backgroundTint="#9B7ED8"
-            android:text="点我测试穿透"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
-
-        <Button
             android:id="@+id/btn_request_overlay"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="12dp"
-            android:backgroundTint="#2D2E5F"
-            android:text="可选：开启悬浮窗备用"
-            android:textColor="#E8E8F5"
-            android:textSize="14sp" />
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:backgroundTint="#9B7ED8"
+            android:text="① 开启悬浮窗权限（菜单球要用）"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
 
         <Button
             android:id="@+id/btn_cdn_inject"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="20dp"
             android:backgroundTint="#2E7D5B"
-            android:text="开启热更注入"
+            android:text="② 一键注入并打开游戏（只需一次）"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
 
@@ -65,7 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:gravity="center"
-            android:text="热更注入：未开启"
+            android:text="注入：未做过（做完一次就永久生效）"
             android:textColor="#A0A0C0"
             android:textSize="13sp" />
 
@@ -73,19 +63,21 @@
             android:id="@+id/cb_cdn_auto_close"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:checked="true"
-            android:text="注入完成后自动关闭（不影响游戏正常下载）"
+            android:text="注入完成后自动关闭通道（不影响游戏正常下载）"
             android:textColor="#C8C8E0"
             android:textSize="13sp" />
 
         <TextView
-            android:id="@+id/tv_pass_through_count"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="已点到：0 次"
+            android:layout_marginTop="18dp"
+            android:gravity="center"
+            android:text="球不见了？重新打开一次本 App 即可（或点通知栏「星光助手」）。"
             android:textColor="#7EE0A0"
-            android:textSize="15sp" />
+            android:textSize="13sp" />
+
+
     </LinearLayout>
 </FrameLayout>

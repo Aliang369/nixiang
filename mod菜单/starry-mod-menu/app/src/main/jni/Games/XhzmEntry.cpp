@@ -19,6 +19,7 @@ static const char* kXhzm_Features[] = {
     "SeekBar_伤害倍率_1_100_1",   // 1  XHZM_FEAT_DMG
     "Toggle_无敌",                // 2  XHZM_FEAT_GOD
     "Toggle_无限技能",            // 3  XHZM_FEAT_NOCD
+    "Toggle_免广告",              // 4  XHZM_FEAT_NOAD（状态位走状态文件 idx4，native 无 hook）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

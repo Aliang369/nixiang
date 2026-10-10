@@ -15,6 +15,15 @@ var src = root + "/06_dumped/邂逅在迷宫/hotdll/EndlessStrike.dll";
 var dst = root + "/07_patched/邂逅在迷宫/EndlessStrike.patched.dll";
 
 var a = new List<string>(args);
+// --find：按方法名/类型名正则枚举成员（一次看全某类挂点）
+//   dotnet run -- --find <方法名正则> [<类型名正则>]
+if (a.Count > 0 && a[0] == "--find")
+{
+    var mRe = a.Count > 1 ? a[1] : ".*";
+    var tRe = a.Count > 2 ? a[2] : ".*";
+    Dumper.Find(AssemblyDefinition.ReadAssembly(src), mRe, tRe);
+    return;
+}
 if (a.Count > 0 && a[0] == "--dump")
 {
     var tName = a.Count > 1 ? a[1] : "Person";

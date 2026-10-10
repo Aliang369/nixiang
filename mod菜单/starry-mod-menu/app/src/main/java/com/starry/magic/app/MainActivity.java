@@ -29,8 +29,6 @@ public class MainActivity extends Activity {
     private static final int REQUEST_VPN = 1002;
     private static final String NATIVE_LIB_NAME = "starry_magic";
 
-    private int passThroughHits = 0;
-    private TextView passThroughCount;
     private TextView cdnStatus;
 
     static {
@@ -57,7 +55,8 @@ public class MainActivity extends Activity {
             }
         } else {
             setContentView(R.layout.activity_main);
-            setupPassThroughTestUi();
+            setupHomeUi();
+            firstRunGuide();
         }
 
         // 自检入口：am start -n com.starry.magic/.app.MainActivity --ez starry_selftest true
@@ -73,8 +72,34 @@ public class MainActivity extends Activity {
         startMenu();
     }
 
-    /** 状态通道自检：验证「星光助手 → 游戏外部目录状态文件」是否可读写。 */
-    private void runStateChannelSelfTest() {
+    /**
+     * 首启引导（分发版）：把两件「不点就不好使」的事自动走完。
+     * 第 1 优先是悬浮窗权限——独立助手的菜单只能靠悬浮窗显示在游戏画面上，
+     * 没这个权限玩家会以为「装上没反应」。引导只做提示与跳转，不改任何状态。
+     */
+    private void firstRunGuide() {
+        try {
+            if (!checkOverlayPermission()) {
+                Toast.makeText(this,
+                        "第 1 步：请给「星光助手」开启悬浮窗权限（菜单球要显示在游戏画面上）",
+                        Toast.LENGTH_LONG).show();
+                requestOverlayPermission();
+                return;
+            }
+            android.content.SharedPreferences sp =
+                    getSharedPreferences("starry_boot", MODE_PRIVATE);
+            if (!sp.getBoolean("guide_done", false)) {
+                sp.edit().putBoolean("guide_done", true).apply();
+                Toast.makeText(this,
+                        "悬浮窗已就绪 ✓\n下一步：点「② 一键注入」，游戏会自动打开",
+                        Toast.LENGTH_LONG).show();
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "firstRunGuide failed: " + t);
+        }
+    }
+
+    /** 状态通道自检：验证「星光助手 → 游戏外部目录状态文件」是否可读写。 */    private void runStateChannelSelfTest() {
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             // 1) 所有文件访问权限是否真的生效
             boolean esm = false;
@@ -190,18 +215,8 @@ public class MainActivity extends Activity {
         }, 1500L);
     }
 
-    private void setupPassThroughTestUi() {
-        Button btn = findViewById(R.id.btn_pass_through_test);
-        passThroughCount = findViewById(R.id.tv_pass_through_count);
-        if (btn == null) return;
-        btn.setOnClickListener(v -> {
-            passThroughHits++;
-            if (passThroughCount != null) {
-                passThroughCount.setText("已点到：" + passThroughHits + " 次");
-            }
-            Toast.makeText(this, "穿透正常：点到了 Activity 按钮", Toast.LENGTH_SHORT).show();
-            Log.i(TAG, "pass-through test hit #" + passThroughHits);
-        });
+    /** 独立助手主页：① 悬浮窗权限 → ② 一键注入（注入后自动打开游戏）。 */
+    private void setupHomeUi() {
         Button overlay = findViewById(R.id.btn_request_overlay);
         if (overlay != null) {
             overlay.setOnClickListener(v -> requestOverlayPermission());
@@ -245,19 +260,44 @@ public class MainActivity extends Activity {
     private void startCdnInject() {
         CdnVpnService.start(this);
         Toast.makeText(this,
-                "热更注入已开启：现在打开一次游戏，注入完成后会自动关闭",
+                "热更注入已开启：正在打开游戏，请照常进到主界面即可",
                 Toast.LENGTH_LONG).show();
         refreshCdnStatus();
+        launchGameForInjection();
+    }
+
+    /** 通道就绪后自动拉起游戏：发给别人的包里不能让玩家自己找图标点进来。 */
+    private void launchGameForInjection() {
+        try {
+            Intent i = getPackageManager()
+                    .getLaunchIntentForPackage(com.starry.magic.menu.ModTarget.GAME_PKG);
+            if (i == null) {
+                Log.w(TAG, "cdn inject: 未找到 " + com.starry.magic.menu.ModTarget.GAME_PKG);
+                Toast.makeText(this,
+                        "没找到游戏「邂逅在迷宫」：确认已安装且属同一渠道",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            Log.i(TAG, "cdn inject: 自动拉起游戏 " + com.starry.magic.menu.ModTarget.GAME_PKG);
+        } catch (Throwable t) {
+            Log.w(TAG, "cdn inject: auto launch game failed: " + t);
+        }
     }
 
     private void refreshCdnStatus() {
         if (cdnStatus == null) {
             return;
         }
-        cdnStatus.setText(CdnVpnService.statusText());
+        cdnStatus.setText(CdnVpnService.isRunning()
+                ? CdnVpnService.statusText()
+                : "注入：未做过（做完一次就永久生效）");
         Button b = findViewById(R.id.btn_cdn_inject);
         if (b != null) {
-            b.setText(CdnVpnService.isRunning() ? "热更注入已开启（点此关闭）" : "开启热更注入");
+            b.setText(CdnVpnService.isRunning()
+                    ? "通道已开启（注入完成会自动关闭）"
+                    : "② 一键注入并打开游戏（只需一次）");
         }
     }
 
@@ -278,7 +318,9 @@ public class MainActivity extends Activity {
 
     private void requestOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Toast.makeText(this, "可选：开启悬浮窗作为菜单备用路径", Toast.LENGTH_LONG).show();
+            Toast.makeText(this,
+                    "请开启「悬浮窗权限」：菜单球要靠它显示在游戏画面上（关掉就看不到菜单）",
+                    Toast.LENGTH_LONG).show();
             Intent intent = new Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:" + getPackageName())

@@ -36,10 +36,13 @@ internal static class Patcher
     const int FEAT_DMG = 1;
     const int FEAT_GOD = 2;
     const int FEAT_NOCD = 3;
+    const int FEAT_NOAD = 4;   // Toggle_免广告：跳过视频播放，直接走本类的广告完成回调（其余链路照旧）
+    // 诊断探针前缀（走 UnityEngine.Debug.Log → logcat 里 grep "StarryAd| "）
+    const string PROBE_PREFIX = "StarryAd| ";
 
     static ModuleDefinition mod;
     static int nPatch;
-    static MethodReference mRaw, mGod, mMult, mNoCd;
+    static MethodReference mRaw, mGod, mMult, mNoCd, mNoAd, mProbe;
 
     public static void Run(string srcPath, string dstPath)
     {
@@ -78,6 +81,26 @@ internal static class Patcher
         P(() => PatchHurt(person), "Person.Hurt                [god + dmg_mul]");
         P(() => PatchSkillCdBool(skillCd, "isTimeOver"), "SkillCD.isTimeOver         [nocd]");
         P(() => PatchSkillCdBool(skillCd, "CanUse"), "SkillCD.CanUse             [nocd]");
+
+        // ── 免广告：各入口「看广告」按钮前置门控 → 直接调本类的广告完成回调 ──
+        // 保留原链路（完成回调里照旧上报服务端 / 照旧发奖），只是不播视频。
+        // 全作共 3 个真实播放入口；HomepageLeftButtonBar/ManorLeftButtonBar::OnAdsClick 只是打开本菜单，无需改动。
+        P(() => PatchAdEntry("AdsRewardMenu", "GetAds", 0, "onRewardAdsCompleted", 0),
+            "AdsRewardMenu.GetAds        [noad]");
+        P(() => PatchAdEntry("SearchMapMenuLogic", "SearchAllByAds", 0, "onRewardAdsCompleted", 0),
+            "SearchMapMenuLogic.SearchAllByAds [noad]");
+        P(() => PatchAdEntry("BuildingUpgradeView", "OnBtnFinishUpgradeByAdsClicked", 0, "OnAdsFinished", 0),
+            "BuildingUpgradeView.OnBtnFinishUpgradeByAdsClicked [noad]");
+
+        // ── 诊断探针：不改行为，只在关键路径打一行日志（判据：服务端是否放行）──
+        P(() => PatchProbe("AdsRewardMenu", "OnlyReward", 0, "AdsRewardMenu.OnlyReward()"),
+            "probe AdsRewardMenu.OnlyReward");
+        P(() => PatchProbe("AdsRewardMenu", "SetGetBtn", 1, "AdsRewardMenu.SetGetBtn(uint)"),
+            "probe AdsRewardMenu.SetGetBtn");
+        P(() => PatchProbe("AdsRewardMenu", "GetReward", 0, "AdsRewardMenu.GetReward()"),
+            "probe AdsRewardMenu.GetReward");
+        P(() => PatchProbe("SearchMapMenuLogic", "SetAdsBtnState", 1, "SearchMapMenuLogic.SetAdsBtnState"),
+            "probe SearchMapMenuLogic.SetAdsBtnState");
 
         var constantsBefore = ConstantAudit.Snapshot(mod);
         var wp = new WriterParameters { WriteSymbols = false };
@@ -168,13 +191,46 @@ internal static class Patcher
         else
         {
             var names = cheat.Methods.Select(x => x.Name).ToList();
-            bool ok = names.Contains("Raw") && names.Contains("God") && names.Contains("Mult") && names.Contains("NoCD");
+            bool ok = names.Contains("Raw") && names.Contains("God") && names.Contains("Mult") && names.Contains("NoCD") && names.Contains("NoAd");
             bool path = cheat.Methods.Where(x => x.HasBody)
                             .SelectMany(x => x.Body.Instructions.AsEnumerable())
                             .Any(i => i.OpCode == OpCodes.Ldstr && ((string)i.Operand ?? "") == STATE_PATH);
             A("Starry.StarryCheat", ok && path, $"方法={string.Join(",", names)}；状态文件路径已内联={path}");
             A("Starry.StarryCheat.IsPlayer", cheat.Methods.Any(x => LoadsField(x, "IsPlayer")),
                 "God()/Mult() 必须读 Person.IsPlayer 作为归属判据");
+        }
+        // ⑤ 免广告：三个真实播放入口首条必须是 call NoAd（→ 直接走完成回调）
+        foreach (var spec in new[]
+                 {
+                     "AdsRewardMenu::GetAds",
+                     "SearchMapMenuLogic::SearchAllByAds",
+                     "BuildingUpgradeView::OnBtnFinishUpgradeByAdsClicked",
+                 })
+        {
+            var sp = spec.Split(new[] { "::" }, StringSplitOptions.None);
+            var m = Need(sp[0], sp[1]);
+            if (m == null) continue;
+            A($"Ad.{sp[1]}", HeadIsCallNamed(m, "NoAd"),
+                $"首条={m.Body.Instructions[0].OpCode.Name} {m.Body.Instructions[0].Operand}；调用 NoAd={Calls(m, "NoAd")}");
+        }
+        // ⑥ 诊断探针：AdsRewardMenu.OnlyReward()（0 参重载）首条必须是 call Probe
+        //    （探针未注入时跳过：探针只是取证手段，不能因为拿不到判据就卡出包）
+        if (mProbe == null)
+        {
+            Console.WriteLine("[warn] 探针未注入（未定位到 UnityEngine.CoreModule）⇒ 跳过 ⑥ 探针断言");
+        }
+        else
+        {
+            var m = mm.GetType("AdsRewardMenu")?.Methods.FirstOrDefault(x => x.Name == "OnlyReward" && x.Parameters.Count == 0);
+            if (m == null) fails.Add("AdsRewardMenu::OnlyReward() NOT FOUND（探针未落到该方法）");
+            else
+            {
+                var h0 = m.Body.Instructions[0];
+                var lit = h0.OpCode == OpCodes.Ldstr ? (h0.Operand as string) : null;
+                A("Probe.AdsRewardMenu.OnlyReward",
+                    lit != null && lit.StartsWith(PROBE_PREFIX, StringComparison.Ordinal) && Calls(m, "Probe"),
+                    $"首条={h0.OpCode.Name} \"{lit}\"；前缀={PROBE_PREFIX}；调用 Probe={Calls(m, "Probe")}");
+            }
         }
     }
 
@@ -328,6 +384,66 @@ internal static class Patcher
             Instruction.Create(OpCodes.Ldc_I4_1),
             Instruction.Create(OpCodes.Ret),
         });
+    }
+
+    // ---------------- 免广告 ----------------
+    // 入口「看广告」按钮 → 不播视频，直接调本类的广告完成回调（后续上报/发奖链路一字不改）。
+    //   if (StarryCheat.NoAd()) { Probe("T.m"); this.m(); return; }
+    static void PatchAdEntry(string typeName, string entry, int entryParams, string completion, int completionParams)
+    {
+        var t = FindTypeByName(typeName);
+        var em = FindM(t, entry, entryParams);
+        var cm = FindM(t, completion, completionParams);
+        if (cm.Parameters.Count != 0)
+            throw new Exception($"{typeName}::{completion} 必须无参（实际 {cm.Parameters.Count} 个）");
+        if (em.Body.HasExceptionHandlers)
+            Console.WriteLine($"[warn] {typeName}::{entry} 有异常处理区，头部插入会使首个 try 覆盖新增前置指令（需观察）");
+        var orig = em.Body.Instructions[0];
+        var list = new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Call, mNoAd),
+            Instruction.Create(OpCodes.Brfalse, orig),
+        };
+        if (mProbe != null)
+        {
+            list.Add(Instruction.Create(OpCodes.Ldstr, $"{typeName}.{entry}"));
+            list.Add(Instruction.Create(OpCodes.Call, mProbe));
+        }
+        list.Add(Instruction.Create(OpCodes.Ldarg_0));
+        list.Add(Instruction.Create(OpCodes.Call, cm));
+        if (cm.ReturnType.FullName != "System.Void")
+        {
+            var v = new VariableDefinition(cm.ReturnType);
+            em.Body.Variables.Add(v);
+            em.Body.InitLocals = true;
+            list.Add(Instruction.Create(OpCodes.Stloc, v));
+        }
+        list.Add(Instruction.Create(OpCodes.Ret));
+        InsertAt(em, 0, list);
+    }
+
+    // 纯诊断：在某方法头部插一行日志（零行为改动），用于判定服务端是否放行。
+    static void PatchProbe(string typeName, string method, int paramCount, string tag)
+    {
+        if (mProbe == null)
+        {
+            Console.WriteLine($"[skip] 探针不可用，跳过 {tag}");
+            return;
+        }
+        var t = FindTypeByName(typeName);
+        var m = FindM(t, method, paramCount);
+        InsertAt(m, 0, new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldstr, PROBE_PREFIX + tag),
+            Instruction.Create(OpCodes.Call, mProbe),
+        });
+    }
+
+    static TypeDefinition FindTypeByName(string name)
+    {
+        var t = mod.GetTypes().FirstOrDefault(x => x.Name == name);
+        if (t == null) throw new Exception($"类型未找到（按名）: {name}");
+        return t;
     }
 
     // ---------------- Starry.StarryCheat 注入 ----------------
@@ -573,7 +689,119 @@ internal static class Patcher
         mNoCdDef.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
         mNoCd = mNoCdDef;
 
-        Console.WriteLine($"[cfg] Starry.StarryCheat 已注入（2s 缓存, {STATE_PATH}, god={FEAT_GOD} dmg={FEAT_DMG} nocd={FEAT_NOCD}）");
+        // ── static bool NoAd() ─────────────────────────────────────────────
+        var mNoAdDef = new MethodDefinition("NoAd",
+            MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.HideBySig, tBool);
+        t.Methods.Add(mNoAdDef);
+        mNoAdDef.Body.Instructions.Add(Instruction.Create(OpCodes.Ldc_I4, FEAT_NOAD));
+        mNoAdDef.Body.Instructions.Add(Instruction.Create(OpCodes.Call, mRaw));
+        mNoAdDef.Body.Instructions.Add(Instruction.Create(OpCodes.Ldc_I4_0));
+        mNoAdDef.Body.Instructions.Add(Instruction.Create(OpCodes.Cgt_Un));
+        mNoAdDef.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+        mNoAd = mNoAdDef;
+
+        // ── static void Probe(string tag) ──────────────────────────────────
+        // 诊断探针（方案 A 判据取证）：只打一行日志，不改行为。
+        // 走 UnityEngine.Debug.Log（logcat / Unity tag，带时间戳），不用 File IO
+        // —— 热更 DLL 里写文件的目标路径权限不确定，宿主进程自己的日志最可靠。
+        // ⚠ v3.4 血案修正：不能拿「第一个 namespace 以 UnityEngine 开头的 TypeReference」的 Scope。
+        //    实测该 scope 是 UnityEngine.AnimationModule ⇒ 运行时报
+        //    Could not load type 'UnityEngine.Debug' from assembly 'UnityEngine.AnimationModule'
+        //    （发生在 AdsRewardMenu.Init → SetGetBtn），直接把广告面板 Init 打断 → 面板卡死。
+        //    Debug 只住在 UnityEngine.CoreModule；解析不出就**整个不出探针**：宁可不取证，也不能把游戏打崩。
+        var mLog = ResolveUnityDebugLog(mod);
+        if (mLog == null)
+        {
+            Console.WriteLine("[warn] 未定位到可用的 UnityEngine.Debug.Log 引用 ⇒ 本次不出诊断探针（免广告仍生效，只是拿不到判据日志）");
+        }
+        else
+        {
+            var mProbeDef = new MethodDefinition("Probe",
+                MethodAttributes.Static | MethodAttributes.Public | MethodAttributes.HideBySig, mod.TypeSystem.Void);
+            mProbeDef.Parameters.Add(new ParameterDefinition("tag", ParameterAttributes.None, tStr));
+            t.Methods.Add(mProbeDef);
+            var pb = mProbeDef.Body.Instructions;
+            // 纯直传：字符串拼接在**调用点**（编译期常量）完成，运行期只做一次 ldarg/call
+            // —— 不再自建 String::Concat / Debug.Log 签名（两处手搓签名各炸过一次，见 ResolveUnityDebugLog 注释）
+            pb.Add(Instruction.Create(OpCodes.Ldarg_0));
+            pb.Add(Instruction.Create(OpCodes.Call, mLog));
+            pb.Add(Instruction.Create(OpCodes.Ret));
+            mProbe = mProbeDef;
+            Console.WriteLine($"[cfg] 诊断探针已注入（Debug.Log 直传, 前缀 \"{PROBE_PREFIX}\"）");
+        }
+
+        Console.WriteLine($"[cfg] Starry.StarryCheat 已注入（2s 缓存, {STATE_PATH}, god={FEAT_GOD} dmg={FEAT_DMG} nocd={FEAT_NOCD} noad={FEAT_NOAD}）");
+    }
+
+    // ── UnityEngine.Debug 的**正确**声明程序集解析 ────────────────────────────
+    // Tuanjie / Unity 2019+ 里 UnityEngine.Debug 属于 UnityEngine.CoreModule.dll。
+    // 库里任何 namespace 以 UnityEngine 开头的 TypeReference 都可能是 AnimationModule /
+    // PhysicsModule 等 ⇒ scope 用错就是运行时 TypeLoad 爆炸（v3.3 实测：广告面板 Init 被打断）。
+    // ── UnityEngine.Debug.Log 的**真实**方法引用 ────────────────────────────────
+    // v3.4 血案二（logcat 实证 2026-10-10 19:44:52）：
+    //   手搓 `new MethodReference("Log", void, tDbg)` 且把参数写成 System.String
+    //   ⇒ 运行时 `MethodNotFind UnityEngine.Debug::Log`
+    //      at AdsRewardMenu.SetGetBtn (System.UInt32 progress) → AdsRewardMenu.Init() 中断 → 广告面板卡死。
+    //   （血案一：手搓 DeclaringType 落到 AnimationModule ⇒ Could not load type。）
+    // 铁律：**不要手搓 Unity API 的签名**。优先借用 DLL 里真实调用点上的 MethodReference
+    //   —— 它的 scope 与签名必然和运行期一致；实在没有调用点，才自建正确的 Log(object)。
+    static MethodReference ResolveUnityDebugLog(ModuleDefinition mod)
+    {
+        // ① 库里确实有人调过 Debug.Log ⇒ 直接借（含 CoreModule scope + 真实参数类型）
+        foreach (var mr in mod.GetMemberReferences().OfType<MethodReference>())
+        {
+            if (mr.Name != "Log") continue;
+            if (mr.HasGenericParameters || mr.GenericParameters.Count > 0) continue;
+            if (mr.Parameters.Count != 1) continue;
+            var dt = mr.DeclaringType;
+            if (dt == null || dt.Namespace != "UnityEngine" || dt.Name != "Debug") continue;
+            if (!(dt.Scope is AssemblyNameReference a) || a.Name != "UnityEngine.CoreModule") continue;
+            Console.WriteLine($"[cfg] 探针借用库内既有 Debug.Log：{mr.FullName}"
+                + $"（参数类型 {mr.Parameters[0].ParameterType.FullName}, scope {a.Name}）");
+            return mr;
+        }
+        // ② 没有现成调用点 ⇒ 用 CoreModule 的**正确签名** Log(object) 自建
+        var tDbg = ResolveUnityDebugType(mod);
+        if (tDbg == null) return null;
+        var mLog = new MethodReference("Log", mod.TypeSystem.Void, tDbg) { HasThis = false };
+        mLog.Parameters.Add(new ParameterDefinition(mod.TypeSystem.Object));
+        Console.WriteLine($"[cfg] 探针自建 Debug.Log(object)：scope={tDbg.Scope}（库里无既有调用点）");
+        return mLog;
+    }
+
+    // 三级回退，全失败返回 null（调用方据此放弃探针）。
+    static TypeReference ResolveUnityDebugType(ModuleDefinition mod)
+    {
+        const string NS = "UnityEngine";
+        const string NAME = "Debug";
+        const string CORE = "UnityEngine.CoreModule";
+
+        // ① 库里已经有人调过 Debug.Log/LogWarning/… ⇒ 借它的 DeclaringType，scope 必然正确
+        foreach (var mr in mod.GetMemberReferences().OfType<MethodReference>())
+        {
+            var dt = mr.DeclaringType;
+            if (dt != null && dt.Namespace == NS && dt.Name == NAME
+                && dt.Scope is AssemblyNameReference a0 && a0.Name == CORE)
+            {
+                return dt;
+            }
+        }
+        // ② 现成 TypeReference，但必须是 CoreModule 的（AnimationModule 之类一律丢弃）
+        var good = mod.GetTypeReferences().FirstOrDefault(r =>
+            r.Namespace == NS && r.Name == NAME
+            && r.Scope is AssemblyNameReference a1 && a1.Name == CORE);
+        if (good != null) return good;
+        // ③ 自己造一个：只有本模块真的引用了 CoreModule 才安全
+        var core = mod.AssemblyReferences.FirstOrDefault(x => x.Name == CORE);
+        if (core == null)
+        {
+            var anyUni = mod.GetTypeReferences().FirstOrDefault(r => r.Namespace != null && r.Namespace.StartsWith(NS));
+            Console.WriteLine("[warn] 本模块未引用 " + CORE
+                + (anyUni == null ? "，也没有任何 UnityEngine 类型引用" : $"（可疑 scope: {anyUni.Scope}）")
+                + " ⇒ 不出探针");
+            return null;
+        }
+        return new TypeReference(NS, NAME, mod, core);
     }
 
     static void EmitCharElem(IList<Instruction> g, int index, int ch)

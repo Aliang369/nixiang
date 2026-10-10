@@ -25,6 +25,7 @@ enum XhzmFeat : int {
     XHZM_FEAT_DMG  = 1,  // SeekBar_伤害倍率_1_100_1
     XHZM_FEAT_GOD  = 2,  // Toggle_无敌
     XHZM_FEAT_NOCD = 3,  // Toggle_无限技能
+    XHZM_FEAT_NOAD = 4,  // Toggle_免广告（纯状态位：native 不 hook，只由状态文件传给热更 DLL）
 };
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）

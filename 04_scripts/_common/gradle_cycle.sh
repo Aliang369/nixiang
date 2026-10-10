@@ -31,6 +31,9 @@
 #    --watch <秒>       arm-service 后等待秒数（默认 5）
 #    --logs <ERE>       logcat 过滤正则（配合 --watch 打印，形如 '注入完成|load endless dll'）
 #    --no-gate          跳过 check_release_apk.sh 出包门禁（默认跑）
+#    --so-tag <串>      断言 jniLibs 的 libstarry_magic.so 含该标记串（可多次），
+#                       用于拦「jniLibs 被别的游戏的 so 污染」⇒ 菜单串成别的游戏
+#                       （TOOLBOOK 坑 56；例：--so-tag 邂逅在迷宫 --so-tag 伤害倍率）
 #    --dry-run          只打印将要执行的步骤（不构建、不装机）
 #
 #  退出码: 0=全链通过；1=构建/签名/门禁失败；2=用法或环境错；3=装机失败
@@ -58,9 +61,10 @@ WATCH=5
 LOGS=""
 GATE=1
 DRY=0
+SO_TAGS=""        # --so-tag 累积（换行分隔；不用数组，兼容 macOS bash 3.2 的 set -u）
 
 usage() {
-  sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,42p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 while [ $# -gt 0 ]; do
@@ -79,6 +83,8 @@ while [ $# -gt 0 ]; do
     --watch)   WATCH="$2"; shift 2 ;;
     --logs)    LOGS="$2"; shift 2 ;;
     --no-gate) GATE=0; shift ;;
+    --so-tag)  [ -n "${2:-}" ] || { echo "--so-tag 需要参数"; usage; exit 2; }
+               SO_TAGS="$SO_TAGS$2"$'\n'; shift 2 ;;
     --dry-run) DRY=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "未知参数: $1"; usage; exit 2 ;;
@@ -95,7 +101,9 @@ case "$PROJECT" in /*) : ;; *) PROJECT="$NIXIANG_ROOT/$PROJECT" ;; esac
 [ -f "$PROJECT/gradlew" ] || die "找不到 gradlew（不是 gradle 工程？）: $PROJECT/gradlew"
 
 GRADLE_FILE="$PROJECT/$MODULE/build.gradle"
-VC_OLD="$(grep -m1 -E '^[[:space:]]*versionCode[[:space:]]' "$GRADLE_FILE" | tr -d ' \r' | cut -d= -f2)"
+# versionCode 同时兼容 `versionCode 29`（Groovy 空格语法）与 `versionCode = 29` / `versionCode=29`
+VC_RAW="$( { grep -m1 -E '^[[:space:]]*versionCode[[:space:]]*=' "$GRADLE_FILE" || true; grep -m1 -E '^[[:space:]]*versionCode[[:space:]]+[0-9]' "$GRADLE_FILE" || true; } | head -1 )"
+VC_OLD="$(printf '%s' "$VC_RAW" | sed 's/.*versionCode[[:space:]]*=[[:space:]]*//; s/.*versionCode[[:space:]]*//' | tr -d ' \r"')"
 VN_OLD="$(grep -m1 -E '^[[:space:]]*versionName[[:space:]]' "$GRADLE_FILE" | sed 's/.*versionName[[:space:]]*//' | tr -d ' \r"')"
 [ -n "$VC_OLD" ] || die "读不到 versionCode（${GRADLE_FILE}）"
 
@@ -111,7 +119,7 @@ if [ "$BUMP" = "1" ]; then
     echo "   [dry-run] 改写 $GRADLE_FILE"
   else
     cp "$GRADLE_FILE" "$GRADLE_FILE.bak"
-    sed -i.tmp "s/^\([[:space:]]*versionCode[[:space:]]*\)$VC_OLD/\1$VC_NEW/" "$GRADLE_FILE"
+    sed -i.tmp "s/^\([[:space:]]*versionCode[[:space:]]*=\{0,1\}[[:space:]]*\)$VC_OLD/\1$VC_NEW/" "$GRADLE_FILE"
     if [ -n "$TAG" ]; then
       sed -i.tmp "s/^\([[:space:]]*versionName[[:space:]]*\).*/\1\"$TAG\"/" "$GRADLE_FILE"
     fi
@@ -134,6 +142,42 @@ APK_SRC="$PROJECT/$MODULE/build/outputs/apk/release/$MODULE-release.apk"
 [ -f "$APK_SRC" ] || APK_SRC="$(ls -1 "$PROJECT/$MODULE/build/outputs/apk/release/"*.apk 2>/dev/null | head -1)"
 [ -n "$APK_SRC" ] && [ -f "$APK_SRC" ] || die "找不到构建产物 apk" 1
 echo "   产物: $APK_SRC ($(wc -c < "$APK_SRC" | tr -d ' ') B)"
+
+# --- native so 身份核对 ------------------------------------------------------
+# gradle 不编 native（externalNativeBuild disabled，so 原样取自 jniLibs），
+# 而 jniLibs 是跨游戏共用路径 ⇒ 并发会话/上一轮别的游戏的 so 会被原样打进包，
+# 出包门禁只看可调试位/禁用串、不看 so 身份（TOOLBOOK 坑 56）。
+JNI_SO="$(ls -1 "$PROJECT/$MODULE/src/main/jniLibs/"*/libstarry_magic.so 2>/dev/null | head -1)"
+if [ -n "$JNI_SO" ]; then
+  step "native so 身份核对"
+  SO_ABI="$(basename "$(dirname "$JNI_SO")")"
+  SO_SIZE="$(wc -c < "$JNI_SO" | tr -d ' ')"
+  SO_MD5="$(md5 -q "$JNI_SO" 2>/dev/null || md5sum "$JNI_SO" | cut -d' ' -f1)"
+  SO_MTIME="$(stat -f '%Sm' "$JNI_SO" 2>/dev/null || date -r "$JNI_SO" '+%Y-%m-%d %H:%M' 2>/dev/null || echo '?')"
+  echo "   jniLibs : $JNI_SO"
+  echo "             ${SO_SIZE} B  md5=${SO_MD5}  mtime=${SO_MTIME}"
+  if [ "$DRY" = "1" ]; then
+    echo "   [dry-run] 跳过包内 so 比对"
+  else
+    PKG_SO_MD5="$(unzip -p "$APK_SRC" "lib/${SO_ABI}/libstarry_magic.so" 2>/dev/null | md5 -q 2>/dev/null || true)"
+    [ -n "$PKG_SO_MD5" ] || PKG_SO_MD5="$(unzip -p "$APK_SRC" "lib/${SO_ABI}/libstarry_magic.so" 2>/dev/null | md5sum | cut -d' ' -f1)"
+    echo "   包内 so : md5=${PKG_SO_MD5:-?}（应等于 jniLibs）"
+    [ "$PKG_SO_MD5" = "$SO_MD5" ] || die "包内 so 与 jniLibs 不一致（gradle 打包了别的 so？）" 1
+  fi
+  # 可选：--so-tag <串> 断言 so 含本游戏的标记串（可多次；中文多字节，用 python 计数）
+  if [ -n "$SO_TAGS" ]; then
+    while IFS= read -r t; do
+      [ -n "$t" ] || continue
+      if python3 -c 'import sys;d=open(sys.argv[1],"rb").read();sys.exit(0 if d.count(sys.argv[2].encode())>0 else 1)' "$JNI_SO" "$t"; then
+        echo "   so 含标记 ✓ $t"
+      else
+        die "so 不含本游戏标记「${t}」—— jniLibs 里的 so 可能是别的游戏的（TOOLBOOK 坑 56）" 1
+      fi
+    done <<< "$SO_TAGS"
+  else
+    echo "   提示  : 未给 --so-tag，未校验 so 属于哪个游戏；本游戏标记示例：--so-tag 邂逅在迷宫 --so-tag 伤害倍率"
+  fi
+fi
 
 # build-tools
 BT=""

@@ -25,6 +25,17 @@ xhzm_forge_cdn.py —— 生成「伪造热更 CDN 应答集」，用于免 root
 用法：
     python3 xhzm_forge_cdn.py --official <官方bundle> --patched <补丁bundle> \
         --buildpatch <官方buildpatch.json> --versions <官方versions.json> --out cdn/
+
+模式二：`--official-names`（一次性注入 / 注入后永久免开通道）
+  默认模式把 buildpatch 换成**新的**哈希名，客户端每冷启动都要靠伪造 versions.json
+  才认得出它 ⇒ 每次开局都必须开注入通道。加 `--official-names` 后改为：
+    * buildpatch 清单**沿用官方文件名**（内容仍是我们的伪造清单：bundle0 指向补丁 bundle）
+    * versions.json 的 BuildPatch 项**原样保留**（file/hash/size 都指向官方名）
+    * 补丁 bundle 仍用新哈希名（客户端本地没有 ⇒ 会下）
+  这样第一次注入就把伪造清单写进了**官方文件名**；之后即使关掉注入通道，
+  真实 versions.json 指的还是这个官方名、本地文件已存在 ⇒ diff=0 ⇒ 直接读我们的清单
+  ⇒ 清单里的 bundle 名（我们的哈希名）本地也已存在 ⇒ 加载补丁 DLL。
+  ⇒ 一次注入，永久生效，之后游戏侧零伪装残留。
 """
 import argparse
 import hashlib
@@ -75,7 +86,11 @@ def forge(official_bundle, patched_bundle, buildpatch_src, versions_src, outdir)
 
     bp_body = json.dumps(bp, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     H2 = sha(bp_body)
-    bp_name = f"buildpatch_v{bp['version']}_{H2}.json"
+    if OFFICIAL_NAMES:
+        # 一次性注入：清单写进**官方文件名**，客户端下次对着真 versions.json 也认得出
+        bp_name = os.path.basename(buildpatch_src)
+    else:
+        bp_name = f"buildpatch_v{bp['version']}_{H2}.json"
     open(os.path.join(outdir, bp_name), "wb").write(bp_body)
 
     # ---- 3. 伪造 versions.json：BuildPatch 指向新清单 ----
@@ -83,15 +98,17 @@ def forge(official_bundle, patched_bundle, buildpatch_src, versions_src, outdir)
     hit = 0
     for d in vj["data"]:
         if d["name"] == "BuildPatch":
-            d["file"] = bp_name
-            d["size"] = len(bp_body)
-            d["hash"] = H2
+            if not OFFICIAL_NAMES:
+                d["file"] = bp_name
+                d["size"] = len(bp_body)
+                d["hash"] = H2
             hit += 1
     if hit != 1:
         sys.exit(f"官方 versions.json 里 BuildPatch 命中 {hit} 次，预期 1")
     vj_body = json.dumps(vj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     open(os.path.join(outdir, "versions.json"), "wb").write(vj_body)
 
+    print(f"[forge] 模式       : {'official-names（一次性注入）' if OFFICIAL_NAMES else 'hash-names（每次开局注入）'}")
     print(f"[forge] 输出目录 : {outdir}")
     print(f"[forge] 官方哈希 : {old_hash}  全文件 md5={hashlib.md5(pat_raw).hexdigest()}  size={len(pat_raw)}")
     print(f"[forge] 新构建哈希 H3 = {H3}   -> {bundle_name}  size={len(patched_out)}")
@@ -101,6 +118,7 @@ def forge(official_bundle, patched_bundle, buildpatch_src, versions_src, outdir)
 
 
 HASH_OVERRIDE = None
+OFFICIAL_NAMES = False
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
@@ -110,8 +128,11 @@ if __name__ == "__main__":
     ap.add_argument("--versions", required=True)
     ap.add_argument("--out", default="cdn")
     ap.add_argument("--hash", help="指定新的 bundle 构建哈希（默认 = 补丁 bundle 全文件 md5）")
+    ap.add_argument("--official-names", action="store_true",
+                    help="一次性注入模式：清单沿用官方文件名、versions.json 的 BuildPatch 项原样保留")
     a = ap.parse_args()
     HASH_OVERRIDE = a.hash.lower() if a.hash else None
+    OFFICIAL_NAMES = a.official_names
     if HASH_OVERRIDE is not None and (len(HASH_OVERRIDE) != 32 or any(c not in "0123456789abcdef" for c in HASH_OVERRIDE)):
         sys.exit("--hash 必须是 32 位小写十六进制")
     forge(a.official, a.patched, a.buildpatch, a.versions, a.out)

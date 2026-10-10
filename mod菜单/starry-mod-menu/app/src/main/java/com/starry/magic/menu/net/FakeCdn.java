@@ -39,11 +39,6 @@ final class FakeCdn {
 
     /** 隧道内部地址（VPN 自己）。 */
     static final byte[] VPN_ADDR = {(byte) 10, (byte) 9, 0, 1};
-    /** 假 DNS 服务器地址（必须落在隧道路由 10.9.0.0/24 内）。 */
-    static final byte[] VPN_DNS = {(byte) 10, (byte) 9, 0, 2};
-    /** 冒充 CDN 的地址（同样落在隧道路由内）。 */
-    static final byte[] FAKE_CDN_IP = {(byte) 10, (byte) 9, 9, 9};
-
     static final int VPN_PREFIX = 24;
     static final String VPN_ADDR_STR = "10.9.0.1";
     static final String VPN_DNS_STR = "10.9.0.2";
@@ -61,21 +56,23 @@ final class FakeCdn {
      * 覆盖表：请求 URL 的**文件名** → APK assets 路径。
      * 按文件名匹配，所以 /bundle3/Android/x 与 /bundle3/2.6.53.13/Android/x 都能命中。
      */
+    // ★ v3.5「一次性注入」形态（方案 A）：补丁 bundle 用**官方 bundle 的构建哈希**命名
+    //   （endlessstrikedll_8fa83621b75bca5af7b14bf2f4a86163.bundle，前缀哈希自洽），
+    //   于是注入那一次客户端把我们的 payload 落在**官方文件名**下；此后真 CDN 的官方 buildpatch
+    //   指向的就是这个已存在的文件名 ⇒ diff 0 ⇒ 永久装载补丁 DLL，不再需要通道/伪装。
     private static final String[][] OVERRIDES = {
             {"versions.json",
                     "xhzm/versions.json"},
-            {"buildpatch_v63_ba2deed1a86fd27eb34d6d517cc38962.json",
-                    "xhzm/buildpatch_v63_ba2deed1a86fd27eb34d6d517cc38962.json"},
-            {"endlessstrikedll_9639893c55f4e0f1495197aaddb1581b.bundle",
-                    "xhzm/endlessstrikedll_9639893c55f4e0f1495197aaddb1581b.bundle"},
+            {"buildpatch_v63_46cb04d92b7d89c592bcc8aac63748a0.json",
+                    "xhzm/buildpatch_v63_46cb04d92b7d89c592bcc8aac63748a0.json"},
+            {"endlessstrikedll_8fa83621b75bca5af7b14bf2f4a86163.bundle",
+                    "xhzm/endlessstrikedll_8fa83621b75bca5af7b14bf2f4a86163.bundle"},
     };
 
     private static final Map<String, byte[]> CACHE = new LinkedHashMap<>();
 
     /** 统计：命中覆盖表（SERVED）/ 回源真实 CDN（PASSED）。给界面显示用。 */
     static final java.util.concurrent.atomic.AtomicInteger SERVED =
-            new java.util.concurrent.atomic.AtomicInteger();
-    static final java.util.concurrent.atomic.AtomicInteger MISSED =
             new java.util.concurrent.atomic.AtomicInteger();
     static final java.util.concurrent.atomic.AtomicInteger PASSED =
             new java.util.concurrent.atomic.AtomicInteger();
@@ -94,6 +91,59 @@ final class FakeCdn {
     }
 
     private static volatile java.net.InetAddress realCdn;
+
+    /** 已解析到的真实 CDN IP（4 字节）；DNS 应答与隧道 /32 路由都用它。 */
+    private static final java.util.List<byte[]> REAL_IPS = new java.util.ArrayList<>();
+    private static volatile byte[] primaryCdnIp;
+
+    /**
+     * 隧道建立**之前**解析真实 CDN 的全部 A 记录并登记。
+     *
+     * <p>为什么不再伪造 DNS：v3.1 实测把 {@code install2.hotune.com} 应答成 10.9.9.9 后，
+     * 注入完成会自动关闭隧道并撤掉 10.9.9.9/32 路由，而系统解析器/Mono 仍缓存着这个假 IP
+     * （DNS TTL 60s，Mono 侧甚至无视 TTL）⇒ 之后按需下载的活动/广告 bundle 直接
+     * {@code ConnectFailure (mono-io-layer-error 110)}，界面卡在「资源下载中 0%」。
+     * 改成「应答也返回真实 IP + 真实 IP 也走隧道」后，隧道开着照样拦到（按文件名覆盖/回源），
+     * 隧道关了缓存里的地址也是真能连通的地址，不再有黑洞。
+     */
+    static synchronized void rememberCdnIps() {
+        try {
+            java.net.InetAddress[] all = java.net.InetAddress.getAllByName(CDN_HOST);
+            java.util.List<byte[]> ips = new java.util.ArrayList<>();
+            StringBuilder sb = new StringBuilder();
+            for (java.net.InetAddress a : all) {
+                if (a == null) {
+                    continue;
+                }
+                byte[] ip = a.getAddress();
+                if (ip != null && ip.length == 4) {
+                    ips.add(ip);
+                    sb.append(a.getHostAddress()).append(' ');
+                }
+            }
+            if (!ips.isEmpty()) {
+                REAL_IPS.clear();
+                REAL_IPS.addAll(ips);
+                primaryCdnIp = ips.get(0);
+                realCdn = java.net.InetAddress.getByAddress(CDN_HOST, primaryCdnIp);
+                Log.i(TAG, "真实 CDN IP 集 = " + sb.toString().trim());
+                return;
+            }
+            Log.w(TAG, "解析 " + CDN_HOST + " 没拿到 A 记录，继续用网段兜底");
+        } catch (Throwable t) {
+            Log.w(TAG, "解析 " + CDN_HOST + " 失败，继续用网段兜底: " + t);
+        }
+    }
+
+    /** 主 CDN IP（4 字节）；没解析到返回 null（此时 DNS 应答改走转发）。 */
+    static byte[] primaryCdnIp() {
+        return primaryCdnIp;
+    }
+
+    /** 已登记的真实 CDN IP 列表（VPN 建隧道时逐个加 /32 路由）。 */
+    static synchronized java.util.List<byte[]> cdnIps() {
+        return new java.util.ArrayList<>(REAL_IPS);
+    }
 
     /**
      * 真实 CDN 的地址：覆盖表以外的请求要**回源透传**，不能 404
@@ -174,10 +224,14 @@ final class FakeCdn {
 
     /** 这个目的地址是否该由我们冒充 CDN 应答。 */
     static boolean isCdnDest(byte[] pkt, int ipOff) {
-        if (u8Eq(pkt, ipOff + 16, FAKE_CDN_IP)) {
-            return true;
+        // DNS 应答返回真实 CDN IP（v3.3 起不再伪造 10.9.9.9），所以真实 IP
+        // 必须由我们接管；解析失败时用网段兜底。
+        for (byte[] ip : cdnIps()) {
+            if (u8Eq(pkt, ipOff + 16, ip)) {
+                return true;
+            }
         }
-        // 兜底网段：DNS 劫持失败、游戏拿到真实 CDN IP 时仍然由我们应答
+        // 兜底网段：解析失败、游戏拿到网段内其它 CDN IP 时仍然由我们应答
         return (pkt[ipOff + 16] & 0xff) == (CDN_CIDR[0] & 0xff)
                 && (pkt[ipOff + 17] & 0xff) == (CDN_CIDR[1] & 0xff)
                 && (pkt[ipOff + 18] & 0xff) == (CDN_CIDR[2] & 0xff);

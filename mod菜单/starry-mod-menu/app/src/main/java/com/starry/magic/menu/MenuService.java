@@ -1175,6 +1175,14 @@ public class MenuService extends Service {
         } catch (Throwable t) {
             Log.e(TAG, "onStartCommand startForeground failed", t);
         }
+        if (standalone()) {
+            // 独立助手（com.starry.magic）：进程里永远没有游戏 Activity，「无宿主」
+            // 是常态而非异常 ⇒ 不设丧尸看门狗、START_STICKY 保活，让悬浮球在
+            // 「划掉最近任务 / 系统回收内存」之后被系统自动重建，用户不必再开 App。
+            Log.i(TAG, "standalone overlay service → 常驻模式（START_STICKY，无宿主看门狗停用）");
+            mainHandler.post(() -> ensureMenuAfterPermissionGranted("onStartCommand(standalone)"));
+            return START_STICKY;
+        }
         if (startedActivityCount > 0 || resumedActivityCount > 0) {
             // 进程里有活的游戏 Activity：正常路径，立即挂菜单
             mainHandler.post(() -> ensureMenuAfterPermissionGranted("onStartCommand"));
@@ -1198,6 +1206,11 @@ public class MenuService extends Service {
      *  菜单挂上僵尸进程。挂载前必须有活宿主）。 */
     private final Runnable zombieWatchdog = new Runnable() {
         @Override public void run() {
+            if (standalone()) {
+                // 独立助手没有游戏宿主，这里永远为 0 ⇒ 绝不能自杀
+                Log.i(TAG, "standalone → 看门狗豁免（无宿主是常态）");
+                return;
+            }
             if (startedActivityCount == 0 && resumedActivityCount == 0) {
                 Log.i(TAG, "no host within 25s → zombie service, stopSelf");
                 stopSelf();
@@ -1211,9 +1224,29 @@ public class MenuService extends Service {
         // 部分模拟器 ROM（MuMu 实测）上滑走的是「直接杀进程」路径，本回调
         // 可能不触发；AMS 若按 start-requested 重启服务，由 onStartCommand
         // 的活宿主检查 + 看门狗兜底。stopSelf 覆盖「移除任务」路径。
+        if (standalone()) {
+            // 独立助手是玩家唯一的功能开关入口（游戏是官方原包，菜单进不去）
+            // ⇒ 划掉最近任务不能让悬浮球消失。语义：服务常驻，不随行退出。
+            Log.i(TAG, "standalone → task removed 但保持常驻（悬浮球继续）");
+            super.onTaskRemoved(rootIntent);
+            return;
+        }
         Log.i(TAG, "task removed → stopSelf（游戏关闭，菜单服务随行）");
         stopSelf();
         super.onTaskRemoved(rootIntent);
+    }
+
+
+    /** 通知点一下就回助手主页（用户动作 ⇒ 允许重新拉起前台服务；国产 ROM 里这是
+     *  「球被系统杀了之后最省事的一条自救路径」）。 */
+    private android.app.PendingIntent reopenIntent() {
+        Intent open = new Intent(this, com.starry.magic.app.MainActivity.class);
+        open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        int flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= android.app.PendingIntent.FLAG_IMMUTABLE;
+        }
+        return android.app.PendingIntent.getActivity(this, NOTIFICATION_ID, open, flags);
     }
 
     @SuppressWarnings("DEPRECATION")
@@ -1242,16 +1275,18 @@ public class MenuService extends Service {
                 nm.createNotificationChannel(channel);
             }
             Notification.Builder builder = new Notification.Builder(this, CHANNEL_ID)
-                    .setContentTitle("星光魔法")
-                    .setContentText("MOD 菜单运行中")
+                    .setContentTitle("星光助手")
+                    .setContentText("菜单运行中 · 点此恢复菜单球")
                     .setSmallIcon(android.R.drawable.ic_menu_info_details)
+                    .setContentIntent(reopenIntent())
                     .setOngoing(true);
             notification = builder.build();
         } else {
             notification = new Notification.Builder(this)
-                    .setContentTitle("星光魔法")
-                    .setContentText("MOD 菜单运行中")
+                    .setContentTitle("星光助手")
+                    .setContentText("菜单运行中 · 点此恢复菜单球")
                     .setSmallIcon(android.R.drawable.ic_menu_info_details)
+                    .setContentIntent(reopenIntent())
                     .setOngoing(true)
                     .build();
         }
