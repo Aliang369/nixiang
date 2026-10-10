@@ -1,0 +1,63 @@
+# 手写 kExpect 表的迁移存档（2026-10-11，P0-②）
+#
+# 原表在 WhrhxMod.cpp 里，热更后 50 行中有 20 行与本机运行时 so 的实测字节不符 ——
+# 手写期望值会随热更漂移，且与自动生成的 WhrhxRvaGen.h 双份维护。现改为：
+#   * 本文件只保留「常量名 + tag」这类**映射信息**（不变的东西）；
+#   * 期望首指令一律由 whrhx_rebaseline.py 从当前运行时 so 现读；
+#   * 与实测不符的常量进 WhrhxRvaGen.h 的 kExpectStale[]（拒用名单，ResolveRva 直接放弃该 RVA）。
+#
+# 解析格式（whrhx_rebaseline.py 的 --expect 默认读本文件）：
+#   <RVA_常量名>  <原表声明的首指令>  <tag>
+#
+# 新增「不经 HookRvaOrIl2Cpp 站点、直接 HookAtRva 用的常量」时，在这里补一行即可。
+
+RVA_COST_SINGLE_LEB              0xD10283FF  CostSingleRes
+RVA_COST_RES_LEB                 0xD10143FF  CostRes
+RVA_CHECK_RES_LEB                0xD10183FF  CheckRes
+RVA_IS_PLAYER_LEB                0xA9BE4FF4  IsPlayerCountry
+RVA_GET_DELTA_LEB                0xF81E0FF3  get_deltaTime
+RVA_ON_BATTLE_END_LEB            0xF81D0FF5  OnBattleEnd
+RVA_ADD_RES_LEB                  0xA9BC5FF8  AddRes
+RVA_ADD_RES_CAMPAIGN             0xF81D0FF5  AddResCampaign
+RVA_BATTLE_START                 0xD10143FF  StartBattle
+RVA_BATTLE_UPDATE_TIME           0xD10143FF  UpdateBattleTime
+RVA_BATTLE_SET_END               0xD10243FF  BattleSetEnd
+RVA_GET_DELTA_TIME               0xF81E0FF3  get_deltaTime
+RVA_UPDATE_BATTLE_LEB            0xD10143FF  UpdateBattleTime
+RVA_SET_END_LEB                  0xD10243FF  BattleSetEnd
+RVA_START_BATTLE_LEB             0xD10143FF  StartBattle
+RVA_ARMY_CORRECT_LEB             0xD10303FF  ArmyCorrectMgr
+RVA_GET_COUNTRY_MGR_LEB          0xF81D0FF5  GetCountryDataById
+RVA_GET_CITY_MGR_LEB             0xF81D0FF5  GetCityData
+RVA_KB_COST_SINGLE               0xA9BD57F6  KB.CostSingleRes
+RVA_KB_CHECK_RES                 0xD101C3FF  KB.CheckRes
+RVA_KB_ADD_RES                   0xA9BE4FF4  KB.AddRes
+RVA_KB_ADD_RES_CAMP              0xD10143FF  KB.AddResCampaign
+RVA_KB_ARMY_CORRECT              0xF81D0FF5  KB.ArmyCorrectMgr
+RVA_KB_GET_DELTA                 0xF81E0FF3  KB.get_deltaTime
+RVA_KB_SET_END                   0xF81E0FF3  KB.BattleSetEnd
+RVA_KB_ON_COUNTDOWN              0xD10143FF  KB.OnCountDown
+RVA_KB_UPDATE_COST               0xF81E0FF3  KB.UpdateBattleCostTime
+RVA_KB_START_TIMER               0xA9BE4FF4  KB.StartTimer
+RVA_KB_GET_COUNTRY_MGR           0xD101C3FF  KB.GetCountryDataById
+RVA_KB_GET_CITY_MGR              0xA9BD57F6  KB.GetCityData
+RVA_RESEARCH_TECH                0xF81D0FF5  MengHuaRecordMgr.ResearchTech
+RVA_TECH_POLICY_RESEARCH         0xA9BE4FF4  MengHuaTechPolicyData.Research
+RVA_POLICY_GET_DATA              0xF81D0FF5  PolicyDataMgr.GetPolicyData
+RVA_POLICY_UPDATE_TIME           0xD10383FF  PolicyDataMgr.UpdatePolicyTime
+RVA_POLICY_FINISH_ANYWAY         0xD10103FF  PolicyDataMgr.FinishPolicyTimeAnyway
+RVA_POLICY_EXECUTE               0xFC1C0FE8  PolicyDataMgr.ExecutePolicy
+RVA_POLICY_UI_EXECUTE            0xF81D0FF5  PolicyUI.ExecutePolicy
+RVA_MINISTER_UI_EXECUTE          0xFC1D0FE8  MinisterPolicyUI.ExecutePolicy
+RVA_EXTRA_MINISTER_UI_EXECUTE    0xFC1D0FE8  ExtraMinisterPolicyUI.ExecutePolicy
+RVA_POLICY_UI_ACTIVE             0xD10303FF  PolicyUI.ActivePolicy
+RVA_POLICY_CAN_ACTIVE            0xA9BC5FF8  PolicyDataMgr.CanActive
+RVA_COUNTRY_GET_RES_CNT          0xA9BE4FF4  CountryData.GetResCnt
+RVA_MINISTER_TRY_ACTIVE          0xD101C3FF  MinisterPolicyUI.TryActivePolicy
+RVA_EXTRA_MINISTER_TRY_ACTIVE    0xD101C3FF  ExtraMinisterPolicyUI.TryActivePolicy
+RVA_POLICY_CHECK_DISABLE         0xA9BB67FA  PolicyDataMgr.CheckPolicyDisable
+RVA_POLICY_ITEM_SHOW_STATE       0xD104C3FF  PolicyDataMgr.GetPolicyItemShowState
+RVA_ARMY_GET_MAX_CAN_SEND        0xD101C3FF  CountryArmyData.GetMaxCanSendNum
+RVA_ARMY_GET_MAX_SEND            0xFC1C0FE8  CountryArmyData.GetMaxSendNum
+RVA_MINISTER_GET_FAVOR           0xF81D0FF5  MinisterPlayMgr.GetMinisterFavorite
+RVA_MINISTER_ADD_FAVOR           0xA9BE4FF4  MinisterPlayData.AddFavor

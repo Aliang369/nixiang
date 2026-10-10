@@ -337,7 +337,7 @@ if [[ "$SYNC_DOC" == "1" ]]; then
     echo "#       （历史事故：模板 17 项→15 项后 games/疾风骑士.md:39 仍写 17 项）"
   fi
   if [[ -n "$USAGE_DOC" ]]; then
-    echo "#   - 08_output/${GAME}/delivery_${DATE}/使用说明.md（内容来自 $USAGE_DOC）"
+    echo "#   - 08_output/${GAME}/delivery_${DATE}/使用说明.md（内容来自 ${USAGE_DOC}）"
   fi
   if [[ "$COPY_APK" == "1" ]]; then
     echo "#   - 08_output/${GAME}/delivery_${DATE}/$(basename "$APK")（正式包副本，md5 $(md5_of "$APK")）"

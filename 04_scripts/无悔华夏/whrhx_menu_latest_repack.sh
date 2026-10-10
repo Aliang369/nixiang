@@ -14,6 +14,8 @@
 #   → zipalign → 星空证书重签 → 四查审计。不安装、不卸载、不清数据。
 #
 # 注意：同名产物若已存在请先删除（磁盘峰值 ≈ 底包 ×3）。
+# P1-⑦（2026-10-11）：出包后默认**删除同批（同一 8 位日期）旧产物与其 .idsig**，
+# 只留本轮包（本轮曾手工堆出 R1/R2/正式三个 1.5 GB 包 ≈3 GB）。关掉用 WHRHX_PRUNE_SAME_BATCH=0。
 # ================================================================
 set -euo pipefail
 
@@ -55,7 +57,10 @@ if [[ "${WHRHX_REQUIRE_STAMP:-1}" == "1" ]]; then
 fi
 
 # --- so 标签门禁：本轮科研真门 hook 标记必须存在 ---
-for tag in "[Whrhx]" "policy panel gate ready" "PolicyDataMgr.GetPolicyItemShowState" "科研立即完成"; do
+# 门禁只许要求「代码真的会发出的字面量」：类名与方法名在 il2cpp 里是两条独立字面量，
+# 拼接串「PolicyDataMgr.GetPolicyItemShowState」只在已删除的手写 kExpect tag 里存在过
+# （曾导致 p0 出包被误判失败，见 10_docs/无悔华夏/台账.md 20261011 追加节）。
+for tag in "[Whrhx]" "policy panel gate ready" "PolicyDataMgr" "GetPolicyItemShowState" "科研立即完成"; do
   LC_ALL=C grep -a -q "$tag" "$SO" || { echo "ERROR: mod so missing tag: $tag" >&2; exit 1; }
 done
 
@@ -183,6 +188,37 @@ if [[ -x "$NIXIANG/01_tools/smali/baksmali" ]]; then
   echo "[menu_latest] 包内 dex 类数 = $(wc -l < "$WORK/final_classes.txt" | tr -d ' ')"
   LC_ALL=C grep -q "Lcom/starry/magic/menu/MagicRes;" "$WORK/final_classes.txt" || {
     echo "ERROR: packaged dex lost MagicRes" >&2; exit 1; }
+fi
+
+# --- P1-⑦ 同批产物清理（WHRHX_PRUNE_SAME_BATCH，默认 1=开）：只留本轮正式包 ---
+# 依据（2026-10-11 复盘账）：收尾时 08_output/无悔华夏/ 里堆着 R1/R2/正式三个 1.5 GB 包
+# （≈3 GB）纯粹是人工忘删 —— 脚本既然是唯一产出点，就该由它保证「同批只留一个」。
+# 安全边界三条缺一不可：
+#   ① 只在 $OUT_DIR 内操作；② 只删「同一 8 位日期 + -releaseSigned.apk[.idsig]」；
+#   ③ 永不删本轮 $OUT_APK 自己（显式排除，删完再断言它还在）。
+if [[ "${WHRHX_PRUNE_SAME_BATCH:-1}" = "1" ]]; then
+  OUT_NAME="$(basename "$OUT_APK")"
+  # 注意：BSD sed 的 BRE 不支持 \{8\}（实测静默不匹配 ⇒ 日期取空 ⇒ 一路跳过）⇒ 一律用 -E
+  BATCH_DATE="$(printf '%s' "$OUT_NAME" | sed -nE 's/.*_([0-9]{8})-releaseSigned\.apk$/\1/p')"
+  if [[ -z "$BATCH_DATE" ]]; then
+    echo "[menu_latest] prune 跳过：产物名里没有 8 位日期（${OUT_NAME}）"
+  else
+    shopt -s nullglob
+    pruned=0; freed=0
+    for f in "$OUT_DIR"/无悔华夏_*_"$BATCH_DATE"-releaseSigned.apk \
+             "$OUT_DIR"/无悔华夏_*_"$BATCH_DATE"-releaseSigned.apk.idsig; do
+      [[ "$f" = "$OUT_APK" ]] && continue
+      [[ "$f" = "$OUT_APK.idsig" ]] && continue
+      sz="$(stat -f %z "$f")"
+      rm -f -- "$f"
+      pruned=$((pruned + 1)); freed=$((freed + sz))
+      echo "[menu_latest] prune 删除同批旧产物：$(basename "$f")（${sz} B）"
+    done
+    shopt -u nullglob
+    [[ -f "$OUT_APK" ]] || { echo "ERROR: prune 把本轮产物删没了" >&2; exit 1; }
+    echo "[menu_latest] prune 同批日期=${BATCH_DATE} 删除 ${pruned} 个文件，回收 $((freed / 1048576)) MiB（当前目录只剩本轮产物）"
+    ls -la "$OUT_DIR" | sed 's/^/    /'
+  fi
 fi
 
 echo "[menu_latest] done -> $OUT_APK"

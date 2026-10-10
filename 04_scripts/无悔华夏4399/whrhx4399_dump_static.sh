@@ -54,7 +54,7 @@ jadx -d "$DECOMP_ROOT/jadx_classes" "$DECOMP_ROOT/classes.dex"
 JADX_RC=$?
 set -e
 if [[ "$JADX_RC" -ne 0 ]]; then
-  echo "警告: jadx 退出码 $JADX_RC；保留可用产物" >&2
+  echo "警告: jadx 退出码 ${JADX_RC}；保留可用产物" >&2
 fi
 
 echo "==> 尝试离线 header patch + Il2CppDumper"

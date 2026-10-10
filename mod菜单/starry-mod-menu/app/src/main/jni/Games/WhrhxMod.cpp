@@ -20,10 +20,15 @@
 #include <android/log.h>
 
 #include "Dobby/dobby.h"
+#include "Includes/HotLog.h"
 #include "Includes/Logger.h"
+#include "Includes/ModThread.h"
 #include "Includes/Utils.hpp"
 #include "GameConfig.h"
 #include "Unity/Il2CppApi.h"
+// P0-②（2026-10-11）：本机运行时 so 的实测 RVA + 期望序言，由 whrhx_rebaseline.sh 从
+// dump.cs + libil2cpp_runtime_*.so 自动生成（勿手改）。ResolveRva() 优先用它做序言校验。
+#include "WhrhxRvaGen.h"
 
 #include <sys/syscall.h>
 #include <sys/uio.h>
@@ -38,19 +43,19 @@ enum : uintptr_t {
     // ★ 2026-09-23 热更重校：以下"官版"值即官方 so（APK 内置 221MB）在新构建下的真身，
     //   乐变 OTA 那份 201MB 与本簇 RVA 同值（两者同构建）；旧值整体作废。
     RVA_BATTLE_SET_END    = 0x33951C8,  // BattleControlMgr.SetEnd(bool,bool,int,int,int)
-    RVA_BATTLE_START      = 0x339A9E4,  // BattleControlMgr.StartBattle
-    RVA_BATTLE_UPDATE_TIME = 0x3394D5C, // BattleControlMgr.UpdateBattleTime
-    RVA_GET_DELTA_TIME    = 0x8BB9860,  // UnityEngine.Time.get_deltaTime()
+    RVA_BATTLE_START      = 0x6921C44,  // BattleControlMgr.StartBattle
+    RVA_BATTLE_UPDATE_TIME = 0x691BFBC, // BattleControlMgr.UpdateBattleTime
+    RVA_GET_DELTA_TIME    = 0x63CF098,  // UnityEngine.Time.get_deltaTime()
     // 乐变热更后常见 190MB libil2cpp——官方 RVA 序言 miss，用下列对照
     // 九游 3.8.280 乐变 201MB（sha c04afff4…，2026-09-23 OTA 热更落地）
-    RVA_COST_SINGLE_LEB   = 0x325E210,  // CountryData.CostSingleRes(CostResData,bool)  ins D10283FF
-    RVA_COST_RES_LEB      = 0x326D35C,  // CountryData.CostRes(List<CostResData>)      ins D10143FF
-    RVA_CHECK_RES_LEB     = 0x326D548,  // CountryData.CheckRes(List<CostResData>,int) ins D10183FF
+    RVA_COST_SINGLE_LEB   = 0x67E5470,  // CountryData.CostSingleRes(CostResData,bool)  ins D10283FF
+    RVA_COST_RES_LEB      = 0x67F45BC,  // CountryData.CostRes(List<CostResData>)      ins D10143FF
+    RVA_CHECK_RES_LEB     = 0x67F47A8,  // CountryData.CheckRes(List<CostResData>,int) ins D10183FF
     RVA_GET_DELTA_LEB     = 0x8BB9860,  // 与官版同址（本次热更后不再分叉）
     RVA_ON_BATTLE_END_LEB = 0x3BDDBBC,  // BattleUtil.OnBattleEnd(bool)  ins F81D0FF5（官方 SetEnd 页为 0）
     // 资源发放 + 玩家身份
-    RVA_ADD_RES_LEB       = 0x32691C8,  // CountryData.AddRes(resType, cnt, isTrading)  ins A9BC5FF8
-    RVA_ADD_RES_CAMPAIGN  = 0x3908B40,  // CampaignData.AddRes(resType, cnt)            ins F81D0FF5
+    RVA_ADD_RES_LEB       = 0x67F0428,  // CountryData.AddRes(resType, cnt, isTrading)  ins A9BC5FF8
+    RVA_ADD_RES_CAMPAIGN  = 0x6EE88B0,  // CampaignData.AddRes(resType, cnt)            ins F81D0FF5
     RVA_COUNTRY_ID_OFF    = 0xE0,       // CountryData 国家 id 字段偏移
     RVA_MGR_COUNTRY_ID_OFF = 0x30,      // CountryDataMgr.m_countryId（IsPlayerCountry 反汇编比对源）
     // 2026-08-30 v23 零身份钩子（乐变库带导出表，IsPlayerCountry 的 Dobby 钩 4/4 崩溃 → 永久禁钩）：
@@ -67,62 +72,64 @@ enum : uintptr_t {
     RVA_UPDATE_BATTLE_LEB  = 0x3394D5C,
     RVA_SET_END_LEB        = 0x33951C8,
     RVA_START_BATTLE_LEB   = 0x339A9E4,
-    RVA_ARMY_CORRECT_LEB   = 0x3A0264C,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
-    RVA_GET_COUNTRY_MGR_LEB = 0x3A0379C, // CountryDataMgr.GetCountryDataById(int) → 捕获 this
-    RVA_GET_CITY_MGR_LEB    = 0x38659F0, // CityDataMgr.GetCityData(int) → 捕获 this
+    RVA_ARMY_CORRECT_LEB   = 0x701C990,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
+    RVA_GET_COUNTRY_MGR_LEB = 0x701DAE0, // CountryDataMgr.GetCountryDataById(int) → 捕获 this
+    RVA_GET_CITY_MGR_LEB    = 0x6E0FD70, // CityDataMgr.GetCityData(int) → 捕获 this
 
     // ── 好游快爆 com.syyx.whrhx · 乐变 223.7MB（sha 1646c8bb…，8/20 构建）──
     // 2026-08-30 活内存 dump：metadata v24.5 变体(32段/method 64B token@+52/type 92B/image 40B)
     // + gap 区 CodeGenModule methodPointers（idx=rid-1，get_deltaTime 序言 f81e0ff3 与九游互证）。
     // 8/20 构建重构：CountryData.CostRes/CanAddArmy 删除；BattleControlMgr.StartBattle/UpdateBattleTime
     // 改名（候选 StartTimer/OnCountDown/UpdateBattleCostTime，Trace 分辨）；QF.Singleton getter 泛型化。
-    RVA_KB_COST_SINGLE     = 0x31EE844,  // CountryData.CostSingleRes
-    RVA_KB_CHECK_RES       = 0x31DBF28,  // CountryData.CheckRes
-    RVA_KB_ADD_RES         = 0x31EBCB4,  // CountryData.AddRes
-    RVA_KB_ADD_RES_CAMP    = 0x3E84B58,  // CampaignData.AddRes
-    RVA_KB_ARMY_CORRECT    = 0x3A9A258,  // CountryDataMgr.CorrectArmyData
-    RVA_KB_GET_DELTA       = 0x8BD2134,  // Time.get_deltaTime（九游 0x8BD2100 + 0x34）
-    RVA_KB_SET_END         = 0x33091F4,  // BattleControlMgr.SetEnd（同名沿用）
-    RVA_KB_ON_COUNTDOWN    = 0x32FF1D8,  // BattleControlMgr.OnCountDown（tick 候选1）
-    RVA_KB_UPDATE_COST     = 0x3300AF0,  // BattleControlMgr.UpdateBattleCostTime（tick 候选2）
-    RVA_KB_START_TIMER     = 0x32FEEE8,  // BattleControlMgr.StartTimer（开战候选）
+    RVA_KB_COST_SINGLE     = 0x67E5470,  // CountryData.CostSingleRes
+    RVA_KB_CHECK_RES       = 0x67F47A8,  // CountryData.CheckRes
+    RVA_KB_ADD_RES         = 0x67F0428,  // CountryData.AddRes
+    RVA_KB_ADD_RES_CAMP    = 0x6EE88B0,  // CampaignData.AddRes
+    RVA_KB_ARMY_CORRECT    = 0x701C990,  // CountryDataMgr.CorrectArmyData
+    RVA_KB_GET_DELTA       = 0x63CF098,  // Time.get_deltaTime（九游 0x8BD2100 + 0x34）
+    RVA_KB_SET_END         = 0x691C428,  // BattleControlMgr.SetEnd（同名沿用）
+    RVA_KB_ON_COUNTDOWN    = 0x691BDEC,  // BattleControlMgr.OnCountDown（tick 候选1）
+    RVA_KB_UPDATE_COST     = 0x691C348,  // BattleControlMgr.UpdateBattleCostTime（tick 候选2）
+    RVA_KB_START_TIMER     = 0x691B9E8,  // BattleControlMgr.StartTimer（开战候选）
     RVA_KB_ON_BATTLE_END   = 0x3629344,  // LockStepMgr.OnBattleEnd（首指令 B 跳板，resolve-only）
-    RVA_KB_GET_COUNTRY_MGR = 0x3A9AF68,  // CountryDataMgr.GetCountryDataById → 捕获 this
-    RVA_KB_GET_CITY_MGR    = 0x3728BBC,  // CityDataMgr.GetCityData → 捕获 this
+    RVA_KB_GET_COUNTRY_MGR = 0x701DAE0,  // CountryDataMgr.GetCountryDataById → 捕获 this
+    RVA_KB_GET_CITY_MGR    = 0x6E0FD70,  // CityDataMgr.GetCityData → 捕获 this
 
     // ── 2026-09-23 乐变 OTA 热更后重校（新 dump.cs + libil2cpp 首指令逐点实锤）──
     // 旧值全部作废：OTA 换掉了运行时 libil2cpp.so，RVA 整体漂移。
-    RVA_RESEARCH_TECH          = 0x44AF604,  // MengHuaRecordMgr.ResearchTech(int)
-    RVA_TECH_POLICY_RESEARCH   = 0x3C09BF0,  // MengHuaTechPolicyData.Research()
+    RVA_RESEARCH_TECH          = 0x7B55B0C,  // MengHuaRecordMgr.ResearchTech(int)
+    RVA_TECH_POLICY_RESEARCH   = 0x723FA40,  // MengHuaTechPolicyData.Research()
     RVA_POLICY_GET_DATA        = 0x3C506AC,  // PolicyDataMgr.GetPolicyData(int)
     RVA_POLICY_UPDATE_TIME     = 0x3C51A6C,  // PolicyDataMgr.UpdatePolicyTime(float,bool,bool)  ← 2→3 参
     RVA_POLICY_FINISH_ANYWAY   = 0x3C538B8,  // PolicyDataMgr.FinishPolicyTimeAnyway(int)
-    RVA_POLICY_EXECUTE         = 0x3C56968,  // PolicyDataMgr.ExecutePolicy(int,float,bool,bool) ← 3→4 参
-    RVA_POLICY_UI_EXECUTE      = 0x3854030,  // GameUI.PolicyUI.ExecutePolicy(int)
+    RVA_POLICY_EXECUTE         = 0x728B7B8,  // PolicyDataMgr.ExecutePolicy(int,float,bool,bool) ← 3→4 参
+    RVA_POLICY_UI_EXECUTE      = 0x6DFD3B0,  // GameUI.PolicyUI.ExecutePolicy(int)
     // 名臣科研入口（上一轮漏做）：与 PolicyUI 并列的另外两个政策面板
-    RVA_MINISTER_UI_EXECUTE       = 0x3C6C2B8,  // GameUI.MinisterPolicyUI.ExecutePolicy(int)
-    RVA_EXTRA_MINISTER_UI_EXECUTE = 0x422A7E8,  // GameUI.ExtraMinisterPolicyUI.ExecutePolicy(int)
+    RVA_MINISTER_UI_EXECUTE       = 0x72A1108,  // GameUI.MinisterPolicyUI.ExecutePolicy(int)
+    RVA_EXTRA_MINISTER_UI_EXECUTE = 0x790E4D8,  // GameUI.ExtraMinisterPolicyUI.ExecutePolicy(int)
     // 国家政策面板的「资源不足」资源门（在内联于 ActivePolicy，不走 CountryData.CheckRes）：
     // PolicyUI.ActivePolicy 内 → CanActive 早退 → GetResCnt(21/22) 对比 GetSpecialResCostList → ShowPopUI
-    RVA_POLICY_UI_ACTIVE      = 0x3852D18,  // GameUI.PolicyUI.ActivePolicy()  ins D10303FF
-    RVA_POLICY_CAN_ACTIVE     = 0x3C50760,  // PolicyDataMgr.CanActive(int,bool,bool,bool) ins A9BC5FF8
-    RVA_COUNTRY_GET_RES_CNT   = 0x326A8D0,  // CountryData.GetResCnt(eSpecialResType) → int ins A9BE4FF4
+    RVA_POLICY_UI_ACTIVE      = 0x6DFC098,  // GameUI.PolicyUI.ActivePolicy()  ins D10303FF
+    RVA_POLICY_CAN_ACTIVE     = 0x72855B0,  // PolicyDataMgr.CanActive(int,bool,bool,bool) ins A9BC5FF8
+    RVA_COUNTRY_GET_RES_CNT   = 0x67F1B30,  // CountryData.GetResCnt(eSpecialResType) → int ins A9BE4FF4
     // 名臣两侧：TryActivePolicy → PolicyDataMgr.CheckPolicyDisable(学习条件) → ShowPopUI(条件文案)
     // 实测：名臣面板默认也提示「资源不足」，执行完一项资源够的政策后因条件重算才放开；科技面板则始终不放
-    RVA_MINISTER_TRY_ACTIVE        = 0x3C6BA68,  // GameUI.MinisterPolicyUI.TryActivePolicy() ins D101C3FF
-    RVA_EXTRA_MINISTER_TRY_ACTIVE  = 0x4229014,  // GameUI.ExtraMinisterPolicyUI.TryActivePolicy() ins D101C3FF
-    RVA_POLICY_CHECK_DISABLE       = 0x3C5959C,  // PolicyDataMgr.CheckPolicyDisable(int) → int ins 0xA9BB67FA
+    RVA_MINISTER_TRY_ACTIVE        = 0x72A08B8,  // GameUI.MinisterPolicyUI.TryActivePolicy() ins D101C3FF
+    RVA_EXTRA_MINISTER_TRY_ACTIVE  = 0x790CD04,  // GameUI.ExtraMinisterPolicyUI.TryActivePolicy() ins D101C3FF
+    RVA_POLICY_CHECK_DISABLE       = 0x728E3EC,  // PolicyDataMgr.CheckPolicyDisable(int) → int ins 0xA9BB67FA
     // 「能不能点」的真门（2026-09-23 续修）：条目显示/可点状态由它返回
     // 调用者 PolicyItem.CheckShowState @0x389AB0C（+0x124 处 bl 本函数，返回值存 PolicyItem+0x104）
     // ← 列表构建 PolicyItem.InitPolicyItem +0x120、点击 PolicyUI.OnClickPolicyItem +0xF4
     // 函数内 0x3C5C8E0 cmp/0x3C5C8E4 b.ge → 0x3C5C8E8 orr w20,wzr,#7(ResNotEnough)
     //                                      / 0x3C5C8F0 orr w20,wzr,#2(CanExecute)
-    RVA_POLICY_ITEM_SHOW_STATE     = 0x3C5B5A4,  // PolicyDataMgr.GetPolicyItemShowState(int,float) ins D104C3FF
+    RVA_POLICY_ITEM_SHOW_STATE     = 0x72903F4,  // PolicyDataMgr.GetPolicyItemShowState(int,float) ins D104C3FF
 
     // ── 2026-10-11 本机运行时 so 重校（sha256 79adda77…、201,368,952B；dump=06_dumped/无悔华夏/current_20261011）──
     // 说明：上面 0923 那批锚点基准是 c04afff4…，本机再热更后已整体漂移（旧值首指令不符 →
-    //       ResolveRva 直接 miss → 自动回落按名）。本轮只登记四个新功能用到的锚点，
-    //       首指令值均按当前 so 逐点读出（见 kExpect[]）。
+    //       ResolveRva 直接 miss → 自动回落按名）。
+    //       ★ 2026-10-11 二次重校（P0-②）：整张枚举已由 04_scripts/无悔华夏/whrhx_rebaseline.sh
+    //       --apply 依据 dump.cs + 本机运行时 so 全部改写为实测值（36 个常量），期望首指令
+    //       不再写在这里 —— 统一由自动生成的 WhrhxRvaGen.h 的 kExpectGen[] 提供。
     RVA_ARMY_GET_MAX_CAN_SEND  = 0x7016B98,  // CountryData.CountryArmyData.GetMaxCanSendNum(int,bool,int,bool,long,bool) → long
     RVA_ARMY_GET_MAX_SEND      = 0x7017094,  // CountryData.CountryArmyData.GetMaxSendNum(eBattleType,int) → long
     RVA_MINISTER_GET_FAVOR     = 0x7CD6F58,  // MinisterPlayMgr.GetMinisterFavorite(int) → int
@@ -142,6 +149,7 @@ static constexpr size_t kOffPolicyRepeatCd     = 0x18;   // PolicyData.m_repeatR
 static constexpr size_t kOffCountryPolicyMgr   = 0x1C8;  // CountryData.m_policyMgr (PolicyDataMgr)
 static constexpr size_t kOffCountryMinisterMgr = 0x2A8;  // CountryData.m_ministerData (MinisterPlayMgr)
 static constexpr size_t kOffMgrPolicyDic       = 0x10;   // PolicyDataMgr.m_policyDic
+static constexpr size_t kOffMgrCountryDic      = 0x10;   // CountryDataMgr.m_countryDataDic（P2-⑨ 免登录自检用）
 static constexpr size_t kOffMinisterPlayDic    = 0x18;   // MinisterPlayMgr.m_playDataDic
 static constexpr size_t kOffMinisterFavorite   = 0x18;   // MinisterPlayMgr.MinisterPlayData.Favorite (int)
 static constexpr size_t kOffArmyCountryId      = 0x98;   // CountryData.CountryArmyData.m_countryId (int)
@@ -411,79 +419,11 @@ static bool ReadInsn(void* addr, uint32_t* out) {
     return true;
 }
 
-struct PrologueExpect {
-    uintptr_t rva;
-    uint32_t firstInsn;
-    const char* tag;
-};
-
-static const PrologueExpect kExpect[] = {
-    {RVA_COST_SINGLE_LEB, 0xD10283FF, "CostSingleRes"},
-    {RVA_COST_RES_LEB, 0xD10143FF, "CostRes"},
-    {RVA_CHECK_RES_LEB, 0xD10183FF, "CheckRes"},
-    {RVA_IS_PLAYER_LEB, 0xA9BE4FF4, "IsPlayerCountry"},
-    {RVA_GET_DELTA_LEB, 0xF81E0FF3, "get_deltaTime"},
-    {RVA_ON_BATTLE_END_LEB, 0xF81D0FF5, "OnBattleEnd"},
-    {RVA_ADD_RES_LEB, 0xA9BC5FF8, "AddRes"},
-    {RVA_ADD_RES_CAMPAIGN, 0xF81D0FF5, "AddResCampaign"},
-    // 2026-08-29 官方库活体序言（乐变内存补丁会让官方库变化，pristine 态为准）
-    {RVA_BATTLE_START, 0xD10143FF, "StartBattle"},
-    {RVA_BATTLE_UPDATE_TIME, 0xD10143FF, "UpdateBattleTime"},
-    {RVA_BATTLE_SET_END, 0xD10243FF, "BattleSetEnd"},
-    {RVA_GET_DELTA_TIME, 0xF81E0FF3, "get_deltaTime"},
-    // 战斗 LEB（dump 序言）
-    {RVA_UPDATE_BATTLE_LEB, 0xD10143FF, "UpdateBattleTime"},
-    {RVA_SET_END_LEB, 0xD10243FF, "BattleSetEnd"},
-    {RVA_START_BATTLE_LEB, 0xD10143FF, "StartBattle"},
-    {RVA_ARMY_CORRECT_LEB, 0xD10303FF, "ArmyCorrectMgr"},
-    {RVA_GET_COUNTRY_MGR_LEB, 0xF81D0FF5, "GetCountryDataById"},
-    {RVA_GET_CITY_MGR_LEB, 0xF81D0FF5, "GetCityData"},
-    // 好游快爆（8/20 构建活体内存序言）
-    {RVA_KB_COST_SINGLE, 0xA9BD57F6, "KB.CostSingleRes"},
-    {RVA_KB_CHECK_RES, 0xD101C3FF, "KB.CheckRes"},
-    {RVA_KB_ADD_RES, 0xA9BE4FF4, "KB.AddRes"},
-    {RVA_KB_ADD_RES_CAMP, 0xD10143FF, "KB.AddResCampaign"},
-    {RVA_KB_ARMY_CORRECT, 0xF81D0FF5, "KB.ArmyCorrectMgr"},
-    {RVA_KB_GET_DELTA, 0xF81E0FF3, "KB.get_deltaTime"},
-    {RVA_KB_SET_END, 0xF81E0FF3, "KB.BattleSetEnd"},
-    {RVA_KB_ON_COUNTDOWN, 0xD10143FF, "KB.OnCountDown"},
-    {RVA_KB_UPDATE_COST, 0xF81E0FF3, "KB.UpdateBattleCostTime"},
-    {RVA_KB_START_TIMER, 0xA9BE4FF4, "KB.StartTimer"},
-    {RVA_KB_GET_COUNTRY_MGR, 0xD101C3FF, "KB.GetCountryDataById"},
-    {RVA_KB_GET_CITY_MGR, 0xA9BD57F6, "KB.GetCityData"},
-    // 2026-09-23 乐变 OTA 热更后九游科研链重校（首指令逐点实锤）
-    {RVA_RESEARCH_TECH, 0xF81D0FF5, "MengHuaRecordMgr.ResearchTech"},
-    {RVA_TECH_POLICY_RESEARCH, 0xA9BE4FF4, "MengHuaTechPolicyData.Research"},
-    {RVA_POLICY_GET_DATA, 0xF81D0FF5, "PolicyDataMgr.GetPolicyData"},
-    {RVA_POLICY_UPDATE_TIME, 0xD10383FF, "PolicyDataMgr.UpdatePolicyTime"},
-    {RVA_POLICY_FINISH_ANYWAY, 0xD10103FF, "PolicyDataMgr.FinishPolicyTimeAnyway"},
-    {RVA_POLICY_EXECUTE, 0xFC1C0FE8, "PolicyDataMgr.ExecutePolicy"},
-    {RVA_POLICY_UI_EXECUTE, 0xF81D0FF5, "PolicyUI.ExecutePolicy"},
-    {RVA_MINISTER_UI_EXECUTE, 0xFC1D0FE8, "MinisterPolicyUI.ExecutePolicy"},
-    {RVA_EXTRA_MINISTER_UI_EXECUTE, 0xFC1D0FE8, "ExtraMinisterPolicyUI.ExecutePolicy"},
-    // 国家政策面板资源门三件（2026-09-23 重校，首指令逐点实锤）
-    {RVA_POLICY_UI_ACTIVE, 0xD10303FF, "PolicyUI.ActivePolicy"},
-    {RVA_POLICY_CAN_ACTIVE, 0xA9BC5FF8, "PolicyDataMgr.CanActive"},
-    {RVA_COUNTRY_GET_RES_CNT, 0xA9BE4FF4, "CountryData.GetResCnt"},
-    // 名臣两侧学习条件门（首指令逐点实锤）
-    {RVA_MINISTER_TRY_ACTIVE, 0xD101C3FF, "MinisterPolicyUI.TryActivePolicy"},
-    {RVA_EXTRA_MINISTER_TRY_ACTIVE, 0xD101C3FF, "ExtraMinisterPolicyUI.TryActivePolicy"},
-    {RVA_POLICY_CHECK_DISABLE, 0xA9BB67FA, "PolicyDataMgr.CheckPolicyDisable"},
-    // 条目状态门（2026-09-23 续修）：资源/科技/前置等拦截态 → CanExecute
-    {RVA_POLICY_ITEM_SHOW_STATE, 0xD104C3FF, "PolicyDataMgr.GetPolicyItemShowState"},
-    // 2026-10-11 本机运行时 so（sha 79adda77…）四锚点首指令逐点实锤
-    {RVA_ARMY_GET_MAX_CAN_SEND, 0xD101C3FF, "CountryArmyData.GetMaxCanSendNum"},
-    {RVA_ARMY_GET_MAX_SEND, 0xFC1C0FE8, "CountryArmyData.GetMaxSendNum"},
-    {RVA_MINISTER_GET_FAVOR, 0xF81D0FF5, "MinisterPlayMgr.GetMinisterFavorite"},
-    {RVA_MINISTER_ADD_FAVOR, 0xA9BE4FF4, "MinisterPlayData.AddFavor"},
-};
-
-static const PrologueExpect* ExpectForRva(uintptr_t rva) {
-    for (const auto& e : kExpect) {
-        if (e.rva == rva) return &e;
-    }
-    return nullptr;
-}
+// 序言表 = 自动生成的 WhrhxRvaGen.h（kExpectGen[] / kExpectStale[]，见 P0-②）。
+// ★ 2026-10-11：原来这里有一张手写 kExpect[]（50 行）+ ExpectForRva()，热更后其中 20 行与
+//   本机运行时 so（79adda77…）的实际字节不符 —— 手写表会随热更漂移，且和生成表双份维护。
+//   现在手写表的「常量名 + tag」只作为 whrhx_rebaseline.sh 的输入，首指令一律从 so 现读；
+//   仍与实测不符的常量进 kExpectStale[]（拒用），不再有第二处需要人肉同步的期望值。
 
 static void* ResolveRva(uintptr_t rva) {
     void* best = FileOffToVaBest(GameUnity::TARGET_LIB, rva);
@@ -493,11 +433,17 @@ static void* ResolveRva(uintptr_t rva) {
         LOGW("[Whrhx] rva miss off=0x%lX zero/invalid insn — try alt/name", (unsigned long)rva);
         return nullptr;
     }
-    const PrologueExpect* exp = ExpectForRva(rva);
-    if (exp) {
-        if (got != exp->firstInsn) {
-            LOGW("[Whrhx] rva miss %s got=0x%08X want=0x%08X — try il2cpp-name", exp->tag, got,
-                 exp->firstInsn);
+    // 漂移名单：该地址上已不是目标函数（手写表声明的序言与本机 so 实测不符）⇒ 直接放弃 RVA 路径，
+    // 让 HookRvaOrIl2Cpp 退回按名；宁可慢一次类表遍历，也不能静默钩到别的函数上。
+    if (const WhrhxGenExpect* stale = FindStaleGen(rva)) {
+        LOGW("[Whrhx] rva stale %s off=0x%lX 已漂移 — 只走按名", stale->tag, (unsigned long)rva);
+        return nullptr;
+    }
+    // 序言校验：kExpectGen 由 whrhx_rebaseline.sh 从 dump.cs + 本机运行时 so 生成，是唯一事实来源。
+    if (const WhrhxGenExpect* gen = FindExpectGen(rva)) {
+        if (got != gen->firstInsn) {
+            LOGW("[Whrhx] rva miss %s got=0x%08X want=0x%08X — try il2cpp-name", gen->tag, got,
+                 gen->firstInsn);
             return nullptr;
         }
     }
@@ -677,17 +623,26 @@ static bool HookByName(const char* tag, const char* ns, const char* cls, const c
     return HookAt(tag, fn, hook, orig, "il2cpp-name");
 }
 
-// 三路径：主 RVA → 乐变对照 RVA → Il2Cpp 按名；任一成功即停
+// 三路径：Il2Cpp 按名 → 主 RVA → 乐变对照 RVA；任一成功即停。
+//
+// ★ 2026-10-11 顺序重排（P0-②，有数据支撑）：实测装钩分布是 **按名 46 次 : 按 RVA 2 次**
+//   （/tmp/whrhx_stream2.log：`(il2cpp-name)`=271、`rva miss`=221，其中同一符号反复失败
+//   `PolicyDataMgr.CheckPolicyDisable`×72、`CountryData.GetResCnt`×72）——RVA 表在热更
+//   漂移后基本失效，先试 RVA 只会在每拍刷 `rva miss …` 噪音，把真缺陷埋掉
+//   （面板门 `policy panel gate incomplete` ×71 就是这么被掩盖的）。
+//   按名走 il2cpp 元数据，是稳定路径；RVA 降级为「可选加速」（命中即省一次类表遍历，
+//   且 HookAtRva 仍要求 off==rva，落错点会自己退出）。按名只在装钩时发生一次，
+//   且装钩已收在 mod 线程（见 Whrhx_SyncHooks 的线程闸），不构成 ANR 风险。
 static bool HookRvaOrIl2Cpp(const char* tag, const char* ns, const char* cls, const char* method,
                             const int* argcs, size_t nArgcs, uintptr_t rva, void* hook, void** orig,
                             bool /*requirePrologue*/, uintptr_t altRva = 0) {
     if (*orig) return true;
-    if (rva && HookAtRva(tag, rva, hook, orig)) return true;
-    if (altRva && altRva != rva && HookAtRva(tag, altRva, hook, orig)) return true;
     if (method && nArgcs > 0 && HookByName(tag, ns, cls, method, argcs, nArgcs, hook, orig))
         return true;
-    LOGW("[Whrhx] %s paths failed (rva=0x%lX alt=0x%lX name=%s)", tag, (unsigned long)rva,
-         (unsigned long)altRva, method ? method : "?");
+    if (rva && HookAtRva(tag, rva, hook, orig)) return true;
+    if (altRva && altRva != rva && HookAtRva(tag, altRva, hook, orig)) return true;
+    LOGW("[Whrhx] %s paths failed (name=%s rva=0x%lX alt=0x%lX)", tag, method ? method : "?",
+         (unsigned long)rva, (unsigned long)altRva);
     return false;
 }
 
@@ -804,6 +759,7 @@ static void Hooked_CostSingleRes(void* thiz, void* cost, bool isTrading, void* m
     if (IsPlayerCountryObj(thiz) && ShouldBypassType(CostType(cost))) {
         static std::atomic<int> s_bp{0};
         const int n = s_bp.fetch_add(1);
+        // lint:ok R2-hotlog 已有硬上限：n<8 ⇒ 整个进程最多 8 条，不是逐帧无限流
         if (n < 8) LOGI("[Whrhx] bypass CostSingle type=%d n=%d", CostType(cost), n + 1);
         return;
     }
@@ -818,6 +774,7 @@ static void Hooked_CostRes(void* thiz, void* costs, void* method) {
     if (IsPlayerCountryObj(thiz) && ListAllCostsBypass(costs)) {
         static std::atomic<int> s_bp{0};
         const int n = s_bp.fetch_add(1);
+        // lint:ok R2-hotlog 已有硬上限：n<8 ⇒ 整个进程最多 8 条，不是逐帧无限流
         if (n < 8) LOGI("[Whrhx] bypass CostRes n=%d", n + 1);
         return;
     }
@@ -1166,22 +1123,19 @@ static void CaptureCountryMgr(void* mgr) {
 // 再用 runtime_invoke 直调：泛型共享 thunk 的调用约定交给 runtime，避免裸函数指针误调。
 static std::atomic<void*> g_countryMgrMi{nullptr};
 
-// 非 il2cpp 线程 invoke 前必须 attach（EndfieldMod.cpp:385 / HzsjMod.cpp:369 同法）。
+// 非 il2cpp 线程 invoke 前必须 attach（实现已收口到 Includes/ModThread.h，P1-⑧）。
 // ★安全闸门：`il2cpp_domain_get()` 非空 ⇔ il2cpp_init 已完成 —— init 完成前调
 //   `il2cpp_thread_attach` 会 abort（WorMod 真机实锤）。domain 为空就本轮跳过、
 //   下一个 tick 再试，绝不硬调。mod_thread 是 Main.cpp:2361 裸 pthread_create
 //   起的线程，默认**不在** il2cpp 线程表里，所以这一步不能省。
-static std::atomic<bool> g_tickThreadAttached{false};
-
 static bool EnsureTickThreadAttached() {
-    if (g_tickThreadAttached.load()) return true;
-    if (!GetApi().thread_attach || !GetApi().domain_get) return false;
-    void* d = GetApi().domain_get();
-    if (!d) { IdentityMiss("attach deferred: il2cpp domain null"); return false; }
-    if (!GetApi().thread_attach(d)) { IdentityMiss("thread_attach failed"); return false; }
-    g_tickThreadAttached.store(true);
-    LOGI("[Whrhx] tick thread attached to il2cpp domain");
-    return true;
+    // IdentityMiss 是 (const char*, void*) 双参（第二参默认空），而 ModThread.h 的回调是单参；
+    // 用这层转发保持两边签名干净。
+    struct Cb {
+        static void Defer(const char* why) { IdentityMiss(why); }
+    };
+    return StarryEnsureIl2cppThreadAttached(GetApi().domain_get, GetApi().thread_attach, "Whrhx",
+                                            &Cb::Defer);
 }
 
 static void* ResolveCountryMgrByName() {
@@ -1212,6 +1166,9 @@ static void* ResolveCountryMgrByName() {
     return obj;
 }
 
+// P2-⑨：自检实现放在文件后段（依赖 ObjKlassNameIs 与各字典偏移常量），此处先声明。
+static void Whrhx_SelfTestTick();
+
 static void RefreshPlayerIdentityTick() {
     ResolveCountryIdentityApi();
     const int64_t now = NowMs();
@@ -1235,6 +1192,7 @@ static void RefreshPlayerIdentityTick() {
             ccid == g_playerCountryId.load())
             g_playerCountry.store(thiz);
     }
+    Whrhx_SelfTestTick();  // P2-⑨：玩家国度一被捕获就把「落点可达」自证打到日志
 }
 
 static void RefreshPlayerPtrsTick() {
@@ -1261,6 +1219,19 @@ static bool ObjKlassNameIs(void* obj, const char* want) {
     char buf[24] = {0};
     if (!KRead(namePtr, buf, sizeof(buf) - 1)) return false;
     return strncmp(buf, want, sizeof(buf) - 1) == 0;
+}
+
+// 取对象类名（用于诊断日志；泛型类给的是开放名如 "Dictionary`2"）
+static void ObjKlassNameStr(void* obj, char* out, size_t cap) {
+    if (!out || cap == 0) return;
+    out[0] = 0;
+    if (!obj) return;
+    void* klass = nullptr;
+    if (!KRead(obj, &klass, 8) || !klass) return;
+    void* namePtr = nullptr;
+    if (!KRead(static_cast<char*>(klass) + 0x10, &namePtr, 8) || !namePtr) return;
+    KRead(namePtr, out, cap - 1);
+    out[cap - 1] = 0;
 }
 
 // 泛型共享实现的 mi 的 klass 是开放类 Singleton`1，无法按名区分 T；
@@ -1566,14 +1537,18 @@ static void InstallBattleHooks() {
     }
     // tick 双候选（Trace 分辨定稿）；StartTimer 开战标记（失败无碍 — BattleTick 自臂）
     static const int kZeroArgcs[] = {0};
+    static const int kCostTimeArgcs[] = {1};   // BattleControlMgr.UpdateBattleCostTime(float)
     if (!g_origOnCountDown &&
         HookRvaOrIl2Cpp("OnCountDown", "", "BattleControlMgr", "OnCountDown", kZeroArgcs, 1,
                         RVA_KB_ON_COUNTDOWN, (void*)Hooked_OnCountDown,
                         (void**)&g_origOnCountDown, true, 0))
         ++n;
+    // ★ 2026-10-11（P0-② 自动重标查出的真缺陷）：dump.cs 里是
+    //   `private void UpdateBattleCostTime(float time)` ⇒ 参数个数 1，原先这里传 kZeroArgcs（{0}）
+    //   ⇒ 按名路径永远查不到该方法，只能靠 RVA 兜底；RVA 一漂移这条钩就静默失效。
     if (!g_origUpdateCost &&
         HookRvaOrIl2Cpp("UpdateBattleCostTime", "", "BattleControlMgr", "UpdateBattleCostTime",
-                        kZeroArgcs, 1, RVA_KB_UPDATE_COST, (void*)Hooked_UpdateCostTime,
+                        kCostTimeArgcs, 1, RVA_KB_UPDATE_COST, (void*)Hooked_UpdateCostTime,
                         (void**)&g_origUpdateCost, true, 0))
         ++n;
     if (!g_origStartBattle &&
@@ -1715,6 +1690,7 @@ static void Hooked_ResearchTech(void* thiz, int32_t techId, void* method) {
 static void Hooked_PolicyUiExecute(void* thiz, int32_t policyId, void* method) {
     const bool enabled = g_researchDone.load();
     if (enabled) {
+        // lint:ok R2-hotlog 用户点击才触发（非逐帧），且是 whrhx_verify.sh 的验收证据行
         LOGI("[Whrhx] policy ui execute id=%d", policyId);
         ResearchScopeEnter();
     }
@@ -1728,10 +1704,12 @@ static void Hooked_MinisterUiExecute(void* thiz, int32_t policyId, void* method)
     const bool enabled = g_researchDone.load();
     const bool noCd = g_ministerSkillNoCd.load();
     if (enabled) {
+        // lint:ok R2-hotlog 用户点击才触发（非逐帧），且是 whrhx_verify.sh 的验收证据行
         LOGI("[Whrhx] minister policy ui execute id=%d", policyId);
         ResearchScopeEnter();
     }
     if (noCd) {
+        // lint:ok R2-hotlog 用户点击才触发（非逐帧），#12 验收证据行
         LOGI("[Whrhx] minister skill noCD execute id=%d", policyId);
         MinisterSkillScopeEnter();
     }
@@ -1744,10 +1722,12 @@ static void Hooked_ExtraMinisterUiExecute(void* thiz, int32_t policyId, void* me
     const bool enabled = g_researchDone.load();
     const bool noCd = g_ministerSkillNoCd.load();
     if (enabled) {
+        // lint:ok R2-hotlog 用户点击才触发（非逐帧），且是 whrhx_verify.sh 的验收证据行
         LOGI("[Whrhx] extra minister policy ui execute id=%d", policyId);
         ResearchScopeEnter();
     }
     if (noCd) {
+        // lint:ok R2-hotlog 用户点击才触发（非逐帧），#12 验收证据行
         LOGI("[Whrhx] extra minister skill noCD execute id=%d", policyId);
         MinisterSkillScopeEnter();
     }
@@ -2162,9 +2142,124 @@ static int PinMinisterFavorInMgr(void* mgr, bool verbose) {
     return n;
 }
 
+// P2-⑨ 免登录冷启自检（2026-10-11）：把「必须等用户卡密登录才能验证」从验证链路里摘掉。
+// 纯读：只用已实证偏移把玩家国度对象读通（m_countryId → m_policyMgr → m_policyDic、
+// m_ministerData → m_playDataDic），并按类名数一遍 PolicyData / MinisterPlayData 条目。
+// 不写任何游戏数据、不碰卡密闸门（认证与功能开关是另一条路径，这里只证明「落点可达」）。
+// 成功打印：`[Whrhx] selftest ok cid=%d … policies=%d ministers=%d`
+// ⇒ whrhx_verify.sh 可在**无卡密**冷启（正常玩一局即可捕获玩家国度）后直接判四项落点。
+static std::atomic<uint32_t> g_selfTestDone{0};
+static std::atomic<uint32_t> g_selfTestWait{0};
+
+// 只读数条目：Dictionary.m_entries → maxLen（容量）内按对象类名筛出真实条目数；<0 表示不可读。
+static int CountDictObjects(void* dict, const char* klass, int32_t capLimit) {
+    void* entries = nullptr;
+    if (!dict || !KRead(static_cast<char*>(dict) + 0x18, &entries, 8) || !entries) return -1;
+    int32_t maxLen = 0;
+    if (!KRead(static_cast<char*>(entries) + 0x18, &maxLen, 4) || maxLen <= 0 || maxLen > 65536)
+        return -1;
+    if (maxLen > capLimit) maxLen = capLimit;
+    char* base = static_cast<char*>(entries) + 0x20;
+    int n = 0;
+    for (int32_t i = 0; i < maxLen; i++) {
+        void* obj = nullptr;
+        if (!KRead(base + static_cast<size_t>(i) * 0x18 + 0x10, &obj, 8) || !obj) continue;
+        if (ObjKlassNameIs(obj, klass)) n++;
+    }
+    return n;
+}
+
+static void* FirstDictObject(void* dict, const char* klass, int32_t capLimit) {
+    void* entries = nullptr;
+    if (!dict || !KRead(static_cast<char*>(dict) + 0x18, &entries, 8) || !entries) return nullptr;
+    int32_t maxLen = 0;
+    if (!KRead(static_cast<char*>(entries) + 0x18, &maxLen, 4) || maxLen <= 0 || maxLen > 65536)
+        return nullptr;
+    if (maxLen > capLimit) maxLen = capLimit;
+    char* base = static_cast<char*>(entries) + 0x20;
+    for (int32_t i = 0; i < maxLen; i++) {
+        void* obj = nullptr;
+        if (!KRead(base + static_cast<size_t>(i) * 0x18 + 0x10, &obj, 8) || !obj) continue;
+        if (ObjKlassNameIs(obj, klass)) return obj;
+    }
+    return nullptr;
+}
+
+static void Whrhx_SelfTestTick() {
+    if (g_selfTestDone.load()) return;
+
+    // ① 首选玩家国度（真实路径，功能钩子用的就是它）
+    void* country = g_playerCountry.load();
+    int32_t cid = -1;
+    int probe = 0;
+    if (country && (!KRead(static_cast<char*>(country) + g_offCountryId.load(), &cid, sizeof(cid)) ||
+                    cid <= 0))
+        country = nullptr;
+
+    // ② 免登录兜底：玩家还没进局（停在登录/标题界面）时，从 CountryDataMgr.m_countryDataDic
+    //    里挑第一个可读国度，证明「类查得到 + 字段偏移对 + 字典可达」。
+    //    为什么必须有这条路：2026-10-11 真机实测冷启 100s 内 g_playerCountry 恒为空 ⇒
+    //    自检一条都不打，「免登录自检」等于白写（判据：日志里 selftest 行数 = 0）。
+    if (!country) {
+        const uint32_t tries = g_selfTestWait.fetch_add(1) + 1;
+        if (tries < 20 || (tries % 200) == 0) {
+            void* mgr = ResolveCountryMgrByName();
+            void* dic = nullptr;
+            if (mgr) KRead(static_cast<char*>(mgr) + kOffMgrCountryDic, &dic, sizeof(dic));
+            country = FirstDictObject(dic, "CountryData", 4096);
+            if (country) {
+                probe = 1;
+                if (!KRead(static_cast<char*>(country) + g_offCountryId.load(), &cid, sizeof(cid)))
+                    cid = -1;
+            } else {
+                char dicKlass[24] = {0};
+                ObjKlassNameStr(dic, dicKlass, sizeof(dicKlass));
+                int32_t count = -1;
+                int32_t maxLen = -1;
+                if (dic) {
+                    KRead(static_cast<char*>(dic) + 0x20, &count, 4);
+                    void* entries = nullptr;
+                    if (KRead(static_cast<char*>(dic) + 0x18, &entries, 8) && entries)
+                        KRead(static_cast<char*>(entries) + 0x18, &maxLen, 4);
+                }
+                // 标题界面还没进局时国度表真的是空的（count=0）⇒ 单独打一行「身份链可达」证据：
+                // mgr 按名解析成功 + 0x10 处确实是 Dictionary`2 + 表为空。这行本身是 PASS 级证据，
+                // 与「selftest ok（含政策/名臣表）」区分开，见 whrhx_verify.sh 的 selftest-reach 判据。
+                if (dic && tries == 1) {
+                    LOGI("[Whrhx] selftest reach mgr=%p dic=%p dicKlass=%s count=%d maxLen=%d",
+                         mgr, dic, dicKlass[0] ? dicKlass : "?", count, maxLen);
+                } else if (tries < 5 || (tries % 200) == 0) {
+                    LOGW("[Whrhx] selftest wait: no country yet tries=%u mgr=%p dic=%p dicKlass=%s "
+                         "count=%d maxLen=%d",
+                         tries, mgr, dic, dicKlass[0] ? dicKlass : "?", count, maxLen);
+                }
+            }
+        }
+        if (!country) return;
+    }
+
+    void* policyMgr = nullptr;
+    void* ministerMgr = nullptr;
+    KRead(static_cast<char*>(country) + kOffCountryPolicyMgr, &policyMgr, sizeof(policyMgr));
+    KRead(static_cast<char*>(country) + kOffCountryMinisterMgr, &ministerMgr, sizeof(ministerMgr));
+    void* policyDic = nullptr;
+    void* ministerDic = nullptr;
+    if (policyMgr)
+        KRead(static_cast<char*>(policyMgr) + kOffMgrPolicyDic, &policyDic, sizeof(policyDic));
+    if (ministerMgr)
+        KRead(static_cast<char*>(ministerMgr) + kOffMinisterPlayDic, &ministerDic,
+              sizeof(ministerDic));
+    const int policies = CountDictObjects(policyDic, "PolicyData", 4096);
+    const int ministers = CountDictObjects(ministerDic, "MinisterPlayData", 4096);
+    LOGI("[Whrhx] selftest ok cid=%d probe=%d country=%p policyMgr=%p policyDic=%p ministerMgr=%p "
+         "ministerDic=%p policies=%d ministers=%d",
+         cid, probe, country, policyMgr, policyDic, ministerMgr, ministerDic, policies, ministers);
+    g_selfTestDone.store(1);
+}
+
 // 热路径日志闸（2026-10-11）：这些钩子会在战斗/名臣面板里被每帧调用，而 LOGI 写 logcat
 // 是 syscall（真机单条数百微秒，且缓冲满时可阻塞调用线程）⇒ 统一「前 3 条 + 每 200 条 1 条」。
-static bool HotLog(uint32_t n) { return n <= 3 || (n % 200) == 0; }
+// 实现已收口到 Includes/HotLog.h（P1-⑧），此处不再本地定义（重复定义会编译失败）。
 
 // ② 好感度读取口：面板/任务读取时直接给满值
 static int32_t Hooked_MinisterGetFavor(void* thiz, int32_t ministerId, void* method) {
@@ -2404,6 +2499,10 @@ void Whrhx_Tick(const bool* features) {
         g_ministerFavor.store(features[WHRHX_FEAT_MINISTER_FAVOR]);
         g_ministerSkillNoCd.store(features[WHRHX_FEAT_MINISTER_SKILL_NOCD]);
     }
+    // 这里是「库还没装上就重试加载」的一次性初始化路径：已被 g_il2cppRetryTick 限到每 120 拍
+    // （≈24s）一次，GetApi().ready 之后就再不会进来；此刻 Api 尚未可用，也就无从调用
+    // ImageOfRaw()（那正是需要 Api 的地方）。豁免标记必须紧贴被检行（lint 只看本行与前一行）。
+    // lint:ok R1-maps 一次性初始化重试，非热路径；详见上两行
     if (g_libReady.load() && !GetApi().ready && isLibraryLoaded(GameUnity::TARGET_LIB)) {
         const uint32_t t = g_il2cppRetryTick.fetch_add(1);
         if ((t % 120) == 0) GetApi().Load(GameUnity::TARGET_LIB);

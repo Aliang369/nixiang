@@ -26,7 +26,7 @@ DUMP="${WHRHX_DUMP:-$ROOT/06_dumped/无悔华夏/current_20261011/runtime/il2cpp
 MAP="${WHRHX_ADDRMAP:-/tmp/whrhx_addr_map.txt}"
 
 if [[ ! -f "$DUMP" ]]; then
-    echo "缺 dump.cs: $DUMP（可设 WHRHX_DUMP 指定）" >&2
+    echo "缺 dump.cs: ${DUMP}（可设 WHRHX_DUMP 指定）" >&2
     exit 2
 fi
 

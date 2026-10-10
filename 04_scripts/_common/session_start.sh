@@ -74,6 +74,33 @@ echo "================================================================"
 echo " 开工 preflight：$GAME   （${TODAY}，host=${NIXIANG_HOST}）"
 echo "================================================================"
 
+# ---------- 查0 硬约束行（首屏必看；P1-⑥ 2026-10-11 无悔华夏复盘）----------
+# 为什么放最前面：本轮真踩过 —— 硬约束第 4 条（本游戏只能卸载重装）其实已经写进文档了，
+# 但装机时没人回看，`adb install -r` 当场翻车（乐变负载目录不重建 ⇒ 整轮 RVA/按名钩失效，
+# 返工 63s 卸载重装 + 60s 回填）。结论：硬约束不能只躺在文档第 N 行，
+# 必须在开工首屏**以行露出**，让「没看到」不再是借口。
+CONSTRAINT_TOP="$DOC_DIR/硬约束.md"
+if [ -f "$CONSTRAINT_TOP" ]; then
+  # 只取「约束表」的行：`| N | 「用户原话」 | …`（台账表首列是日期，不会带 「 引号）
+  HC_ROWS="$(grep -E '^\| *[0-9]+ *\| *「' "$CONSTRAINT_TOP" 2>/dev/null || true)"
+  HC_N=0
+  if [ -n "$HC_ROWS" ]; then HC_N="$(printf '%s\n' "$HC_ROWS" | grep -c . || true)"; fi
+  if [ "$QUIET" = "1" ]; then
+    echo "▌硬约束 ${HC_N} 条：${CONSTRAINT_TOP}（逐字用户原话，违反 = 整轮返工）"
+  else
+    echo "▌本游戏硬约束 ${HC_N} 条（逐字用户原话；违反 = 整轮返工）——全文：$CONSTRAINT_TOP"
+    printf '%s\n' "$HC_ROWS" | awk -F'|' '
+      {
+        n=$2; q=$3; lv=$4; act=$5;
+        gsub(/^[ \t]+|[ \t]+$/, "", n); gsub(/^[ \t]+|[ \t]+$/, "", q);
+        gsub(/^[ \t]+|[ \t]+$/, "", lv); gsub(/^[ \t]+|[ \t]+$/, "", act);
+        if (length(q) > 62) q = substr(q, 1, 62) "…";
+        if (length(act) > 58) act = substr(act, 1, 58) "…";
+        printf "  [%s] %s %s → %s\n", n, lv, q, act;
+      }'
+  fi
+fi
+
 # ---------- 查1 硬约束 ----------
 head_ "查1 硬约束（用户原话）"
 CONSTRAINT="$DOC_DIR/硬约束.md"
@@ -167,6 +194,17 @@ head_ "查4 机械动作的管线出口"
 if [ -f "$SCRIPT_GAME_DIR/pipeline.json" ]; then
   ok "pipeline.json 在位：$SCRIPT_GAME_DIR/pipeline.json"
   [ "$QUIET" = "1" ] || grep -o '"name"[^,]*' "$SCRIPT_GAME_DIR/pipeline.json" 2>/dev/null | head -20 | sed 's/^/     /'
+  # 装机策略（P1-⑥）：本游戏若是 uninstall_only，就在开工时把规则喊出来，别等翻车。
+  POL="$(LC_ALL=C grep -o '"install_policy"[[:space:]]*:[[:space:]]*"[^"]*"' "$SCRIPT_GAME_DIR/pipeline.json" 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+  case "$POL" in
+    uninstall_only)
+      echo "  █ install_policy=uninstall_only：本游戏禁止覆盖安装（禁 adb install -r / -d / --replace）"
+      echo "    ⇒ 装机唯一入口：WHRHX_APK=<apk> bash 04_scripts/$GAME/whrhx_clean_reinstall.sh --uninstall"
+      echo "    ⇒ 事前自查闸门：bash 04_scripts/_common/install_guard.sh $GAME --cmd \"adb … install -r …\"（命中即 exit 65）"
+      ;;
+    "") : ;;
+    *) kv "install_policy=$POL" ;;
+  esac
 else
   note "无 04_scripts/$GAME/pipeline.json ⇒ 本游戏的机械动作没有登记出口；改包/重打/装机前先写清「本次出口命令」或补 pipeline"
 fi
@@ -200,6 +238,20 @@ if command -v "$ADB" >/dev/null 2>&1; then
     if [ -n "$SERIAL" ]; then ADBX="$ADB -s $SERIAL"; else ADBX="$ADB"; fi
     MODEL="$($ADBX shell getprop ro.product.model 2>/dev/null | tr -d '\r')"
     ok "设备在线：${SERIAL:-（唯一设备）} model=$MODEL"
+    # logcat 环形缓冲（P1-⑥）：ColorOS 默认 main=256KiB，冷启动日志几秒就被冲掉 —— 本轮
+    # 真踩过：卸载重装后回看不到 mod 初始化行，白查一轮（要靠 su -c 'logcat -G 16M' 补救）。
+    # 开工就抬到 16MiB，代价几乎为 0。
+    LBUF="$($ADBX shell logcat -g 2>/dev/null | head -1 | tr -d '\r')"
+    case "$LBUF" in
+      *"16 MiB"*|*16M*|*16m*|*16777216*) kv "logcat 环形缓冲：$LBUF" ;;
+      *)
+        if $ADBX shell su -c 'logcat -G 16M' >/dev/null 2>&1; then
+          ok "logcat 环形缓冲已抬到 16M（原：${LBUF:-未知}）"
+        else
+          note "logcat 缓冲偏小（${LBUF:-未知}）且抬升失败（su 不可用？）⇒ 冷启动日志可能被冲掉；抓日志前先 adb logcat -c、必要时 -b all"
+        fi
+        ;;
+    esac
     if [ -n "$PKG" ]; then
       VN="$($ADBX shell dumpsys package "$PKG" 2>/dev/null | grep -m1 'versionName=' | tr -d '\r' | sed 's/.*versionName=//')"
       if [ -n "$VN" ]; then kv "目标包 $PKG versionName=$VN"; else note "目标包 $PKG 未安装或查不到 versionName"; fi

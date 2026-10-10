@@ -1016,6 +1016,7 @@ static bool resolveCocosOffsets() {
     const char* libName = GameCocos::TARGET_LIB;
     LOGI("[Cocos] 开始解析目标库: %s", libName);
 
+    // lint:ok R1-maps 一次性初始化地址解析（每次启动只走一遍），不是逐帧/同步热路径
     if (!isLibraryLoaded(libName)) {
         LOGE("[Cocos] 目标库 %s 未加载", libName);
         return false;
@@ -1086,6 +1087,7 @@ static bool resolveGenericOffsets() {
     const char* libName = GameGeneric::TARGET_LIB;
     LOGI("[Generic] 开始解析目标库: %s", libName);
 
+    // lint:ok R1-maps 一次性初始化地址解析（每次启动只走一遍），不是逐帧/同步热路径
     if (!isLibraryLoaded(libName)) {
         LOGE("[Generic] 目标库 %s 未加载", libName);
         return false;

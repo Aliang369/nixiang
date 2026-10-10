@@ -119,7 +119,27 @@ def rule_r6(text):
     return out
 
 
-RULES = (rule_r1, rule_r2, rule_r3, rule_r4, rule_r5, rule_r6)
+def rule_r7(text):
+    """$VAR 紧跟中日韩/全角字符 ⇒ bash 会把全角字当变量名的一部分（2026-10-11 踩坑）。"""
+    out = []
+    pat = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)(?=[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef])")
+    for i, ln in enumerate(text.splitlines(), 1):
+        s = ln.strip()
+        if s.startswith("#"):
+            continue
+        m = pat.search(ln)
+        if not m:
+            continue
+        # 单引号内不展开 ⇒ 不算坑（用奇偶个引号做粗略判断）
+        if ln.count("'") % 2 == 1 and ln.index("'") < m.start():
+            continue
+        out.append(("ERROR", "R7 $VAR 后接全角字", i,
+                    "写 ${%s}：全角字会被 bash 当成变量名的一部分 ⇒ `line N: %s？: unbound variable`"
+                    "（在 set -u 下直接中断脚本）" % (m.group(1), m.group(1))))
+    return out
+
+
+RULES = (rule_r1, rule_r2, rule_r3, rule_r4, rule_r5, rule_r6, rule_r7)
 
 
 def lint_text(path, text):
@@ -141,6 +161,49 @@ def lint_text(path, text):
     return lines, any(h[0] == "ERROR" for h in hits)
 
 
+# ---- R7 机械修复（opt-in）：只动「双引号/无引号上下文里 $VAR 紧跟全角字」，跳过单引号与注释 ----
+def fix_r7_text(text):
+    pat = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)(?=[\u3000-\u303f\u4e00-\u9fff\uff00-\uffef])")
+    out_lines, n = [], 0
+    for ln in text.split("\n"):
+        stripped = ln.lstrip()
+        if stripped.startswith("#"):
+            out_lines.append(ln)
+            continue
+        buf, i, in_single, changed = [], 0, False, False
+        while i < len(ln):
+            ch = ln[i]
+            if ch == "'":
+                in_single = not in_single
+                buf.append(ch); i += 1; continue
+            if ch == "\\" and not in_single:
+                buf.append(ln[i:i + 2]); i += 2; continue
+            if ch == "$" and not in_single:
+                m = pat.match(ln, i)
+                if m:
+                    buf.append("${%s}" % m.group(1))
+                    i = m.end(); n += 1; changed = True; continue
+            buf.append(ch); i += 1
+        out_lines.append("".join(buf) if changed else ln)
+    return "\n".join(out_lines), n
+
+
+def fix_r7_files(paths):
+    total = 0
+    for p in paths:
+        try:
+            t = open(p, encoding="utf-8").read()
+        except OSError as e:
+            print("✗ 读不到 %s: %s" % (p, e)); continue
+        new, n = fix_r7_text(t)
+        if n:
+            open(p, "w", encoding="utf-8").write(new)
+            print("✓ 修 %s：%d 处 $VAR+全角字 → ${VAR}" % (p, n))
+        total += n
+    print("R7_FIX_TOTAL=%d" % total)
+    return 0
+
+
 def selfcheck():
     """两组夹具：坑文件必须被逐条抓出、干净文件必须零命中。"""
     bad = """#!/usr/bin/env bash
@@ -151,12 +214,14 @@ adb -s S shell "echo hi"
 N=$(grep -c "[mrfzz] hooked x" log.txt) && echo "$N"
 md5 -q out.apk
 timeout 30 bash slow.sh
+echo "策略=$POLICY（只能卸载重装）"
 """
     good = """#!/usr/bin/env bash
 set -uo pipefail
 X=$(grep -aF -- "[mrfzz] hooked " log.txt | wc -l | tr -d ' ')
 A=$(printf '%d' 0x754ea38000)
 N=$(grep -acF -- "[mrfzz] hooked x" log.txt || true)
+echo "策略=${POLICY}（只能卸载重装）"
 """
     fail = 0
     d = tempfile.mkdtemp(prefix="lint_traps_")
@@ -167,7 +232,8 @@ N=$(grep -acF -- "[mrfzz] hooked x" log.txt || true)
         open(p_good, "w", encoding="utf-8").write(good)
         lines_bad, err_bad = lint_text(p_bad, bad)
         tags_bad = set(l.split("[")[1].split("]")[0] for l in lines_bad)
-        need = {"R2 设备侧算术", "R3 BRE方括号", "R4 大包哈希", "R5 timeout", "R6 grep -c 短路"}
+        need = {"R2 设备侧算术", "R3 BRE方括号", "R4 大包哈希", "R5 timeout", "R6 grep -c 短路",
+                "R7 $VAR 后接全角字"}
         if not shutil.which("rg"):
             need.add("R1 rg不可用")
         missing = need - tags_bad
@@ -177,7 +243,7 @@ N=$(grep -acF -- "[mrfzz] hooked x" log.txt || true)
                 print("    " + l)
             fail = 1
         else:
-            print("✓ 自检[坑夹具] 6 条规则全部命中（ERROR=%s）" % ("是" if err_bad else "否"))
+            print("✓ 自检[坑夹具] %d 条规则全部命中（ERROR=%s）" % (len(need), "是" if err_bad else "否"))
         lines_good, err_good = lint_text(p_good, good)
         if lines_good or err_good:
             print("✗ 自检失败：干净文件被误报")
@@ -198,6 +264,13 @@ N=$(grep -acF -- "[mrfzz] hooked x" log.txt || true)
 
 
 def main(argv):
+    # 注意：main(sys.argv) ⇒ argv[0] 是脚本路径，子命令一律比 argv[1]（本次踩坑：写成 argv[0] 会静默走 lint 分支）
+    if len(argv) >= 2 and argv[1] == "--fix-r7":
+        if len(argv) < 3:
+            print("用法: python3 lint_shell_traps.py --fix-r7 <脚本…>", file=sys.stderr)
+            return 2
+        return fix_r7_files(argv[2:])
+
     if len(argv) >= 2 and argv[1] == "--selfcheck":
         return selfcheck()
     if len(argv) < 2:
