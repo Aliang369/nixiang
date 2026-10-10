@@ -1,50 +1,214 @@
 #!/usr/bin/env bash
-# git_push_main.sh —— 推送到 origin/main 的**传输自适应**实现（P0-5，2026-10-10 追迹迷城复盘落地）
+# git_push_main.sh —— 推送到 origin/<branch> 的**四通道自适应 + 自愈重试**实现
 #
-# 为什么单独成文件：2026-10-10 实测本机 `git@github.com:22` 与 `ssh.github.com:443` 都超时，
-# 而 HTTPS 可达 —— 当时连试 3 次 `git push`、每次盲等 60 s 以上才发现是传输层问题。
-# 本函数把「先判传输可达性、不可达立刻改走 HTTPS + gh token」固化成唯一路径。
+# 版本：v2.1（2026-10-11 重写并实测）；v1 = 2026-10-10「单次探测 SSH，失败即永久改走 HTTPS」。
 #
-# 用法（由其它脚本 source 后调用）：
+# ── 为什么要重写：v1 的真实失效模式（2026-10-11 用户已多次报「推送总失败」）────────────
+#   · 本机到 github 的通道是**分钟级抖动**：同一次调用里 `ssh -T` 成功、下一分钟 `:22 Operation timed out`；
+#     HTTPS 必须过 `HTTPS_PROXY=http://127.0.0.1:7897`，代理节点一挂就是 `SSL_ERROR_SYSCALL`（rc=35，
+#     5 秒内秒失败）或 `curl 28 Operation too slow`（被 lowSpeedLimit=1000/lowSpeedTime=60 掐断）；
+#     直连 HTTPS 曾经是 `Connection reset by peer`。
+#   · v1 只在**开头探一次** SSH，失败就把整轮永久交给 HTTPS+代理 ⇒ 代理一挂必然全败；
+#     重试只能靠人工临时写 /tmp/retry_push*.sh（本会话写了 3 个，仍反复失败）。
+#
+# ── v2.1 的做法 ───────────────────────────────────────────────────────────────
+#   ① **四通道按序试**：ssh22 | ssh443(`-p 443 -o Hostname=ssh.github.com`) | https-proxy | https-direct
+#   ② **探测 == 真实操作**：每条通道用 `git ls-remote --heads origin <branch>` 做探测，
+#      它与 `git push` 走**完全相同的认证与 DNS/代理路径** ⇒ 不会再出现「探测通过但 push 失败」的错配
+#      （v2.0 用 `ssh -T` 探测就踩过这个坑）。探测失败会把**真实错误尾行**打出来。
+#   ③ **一次调用内自带重试**：`--attempts`（默认 6）× `--wait`（默认 20s），抖动期内不必人工再喊。
+#   ④ 一律 `git -c … push origin <branch>`（**不再 URL 推**）⇒ 跟踪引用天然刷新；
+#      传输层耐慢参数 HTTP/1.1 + `lowSpeedLimit=0` + `lowSpeedTime=600` + 大 postBuffer；
+#      SSH 侧 `ConnectTimeout=8 / ServerAliveInterval=10 / ServerAliveCountMax=3`。
+#   ⑤ **分叉短路**：被 `Updates were rejected` / `non-fast-forward` 时立刻停手、打印两端 tip、
+#      返回 3 —— 这不是网络问题，必须先 fetch/rebase，**绝不 force**（本会话 amend 已推提交踩过）。
+#   ⑥ **无需联网也不会误报**：本地 ahead=0 时直接 `PUSH_RESULT=NOTHING_TO_PUSH` rc=0。
+#   ⑦ 可选**本地镜像**（离线第二落点）：`PUSH_MIRROR_DIR=/path/to/bare.git` 时同轮把提交推到本地裸仓
+#      （放 Syncthing/Resilio 同步目录即可实现双机搬运，网络全挂也不丢提交）。
+#
+# 用法（其它脚本 source 后调用）：
 #   source "$(dirname "$0")/git_push_main.sh"
-#   push_main main          # 参数缺省为 main
+#   push_main main                      # 缺省 main
+#   push_main main --attempts 8 --wait 15
+#   push_main --selftest                # 只体检四条通道并逐条打印真实错误，不做推送
 #
-# 行为与退出码：
-#   0   = 已推送（含 HTTPS 绕行；`git push` 报 Everything up-to-date 也算成功）
-#   非 0 = **未推送**（本地提交保留；绝不强推，调用方须在汇报里写明 ahead 数量）
+# 环境变量：PUSH_MAX_ATTEMPTS(6) / PUSH_WAIT_SECS(20) / PUSH_ROUTES(通道白名单) /
+#           PUSH_MIRROR_DIR(本地裸仓) / PUSH_QUIET(1=少说话)
 #
-# 步骤：① `ssh -T git@github.com`（BatchMode + ConnectTimeout=5）判 SSH 是否真能认证，
-# 不靠盲等 push 失败；② SSH 可用 → `git push origin <branch>`（不改 remote 配置）；
-# ③ SSH 不可用 → 有 `gh auth token` 就一次性 `-c credential.helper=…` 走 HTTPS 推送，
-# 成功后 `git fetch <url> <branch>:refs/remotes/origin/<branch>` 刷新跟踪引用
-# （URL 推送**不会**更新 refs/remotes/origin/*，不刷新会导致 `git status` 误报 ahead）；
-# ④ 无 token → 打印「保留本地提交、未推送」并返回非 0。
-push_main() {
-  local branch="${1:-main}" rem url tok rc
-  if ssh -o BatchMode=yes -o ConnectTimeout=5 -T git@github.com 2>&1 \
-       | grep -q "successfully authenticated"; then
-    git push origin "$branch"
-    return $?
+# 退出码：0 = 已推送（含 up-to-date / 仅落本地镜像）   1 = 未推送（本地提交保留，绝不强推）
+#         2 = 用法/参数错误                            3 = 远端分叉（需 fetch/rebase，不是网络问题）
+_pg_log() { [ "${PUSH_QUIET:-0}" = "1" ] || echo "[push] $*"; }
+
+# 所有 git 调用共用的传输层参数（耐慢 + HTTP/1.1 抗代理抖动）
+_PG_GIT_OPTS=( -c http.version=HTTP/1.1 -c http.lowSpeedLimit=0 -c http.lowSpeedTime=600 \
+               -c http.postBuffer=524288000 )
+_PG_SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=8 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
+_PG_SSH22=""
+_PG_SSH443="-p 443 -o Hostname=ssh.github.com"
+
+# gh token（HTTPS 通道用；只取一次并缓存）
+_pg_token() {
+  if [ -z "${_PG_TOKEN:-}" ]; then
+    if command -v gh >/dev/null 2>&1; then _PG_TOKEN="$(gh auth token 2>/dev/null || true)"; fi
   fi
-  echo "[push] git@github.com:22 不可达或不可认证 ⇒ 改走 HTTPS + gh token（不改 remote 配置）"
-  tok=""
-  if command -v gh >/dev/null 2>&1; then
-    tok="$(gh auth token 2>/dev/null || true)"
-  fi
-  if [[ -z "$tok" ]]; then
-    echo "[push] 无可用 gh token ⇒ 保留本地提交、未推送；汇报里写明 ahead 数量，禁止强推"
-    return 1
-  fi
-  rem="$(git remote get-url origin 2>/dev/null || echo 'git@github.com:Aliang369/nixiang.git')"
-  url="$(printf '%s' "$rem" | sed -e 's#^git@github.com:#https://github.com/#')"
-  git -c credential.helper= -c credential.helper="!f(){ echo username=x-access-token; echo \"password=$tok\"; };f" \
-      push "$url" "$branch"
-  rc=$?
-  if [[ "$rc" -eq 0 ]]; then
-    git fetch --quiet "$url" "$branch:refs/remotes/origin/$branch" 2>/dev/null || true
-    echo "[push] 已用 HTTPS 绕行推送成功；refs/remotes/origin/$branch 已刷新"
-  else
-    echo "[push] HTTPS 推送失败（rc=${rc}）；本地提交保留，未强推"
-  fi
+  printf '%s' "${_PG_TOKEN:-}"
+}
+
+# 统一执行器：跑一条命令，**只把 stderr 收进 $_PG_LAST_ERR**（push/ls-remote 的正常进度都走 stderr，
+# 故 err 非空 ≠ 失败；成败一律看返回码），并原样把返回码传出去。
+_pg_exec() {
+  local out rc
+  out="$("$@" 2>&1 >/dev/null)"; rc=$?
+  _PG_LAST_ERR="$(printf '%s' "$out" | grep -v '^$' | tail -2 | tr '\n' ' ')"
   return "$rc"
+}
+
+# 统一的「跑一条通道」：$1=route $2=branch $3=probe|push
+# probe 用 `git ls-remote --heads origin <branch>` —— 与 push 走**完全相同**的认证/DNS/代理路径。
+_pg_run_route() {
+  local route="$1" branch="$2" mode="$3" proxy helper
+  _PG_LAST_ERR=""
+  case "$route" in
+    ssh22|ssh443)
+      local ssho="$_PG_SSH22"
+      [ "$route" = "ssh443" ] && ssho="$_PG_SSH443"
+      if [ "$mode" = "probe" ]; then
+        _pg_exec git "${_PG_GIT_OPTS[@]}" -c core.sshCommand="ssh $ssho $_PG_SSH_OPTS" \
+          ls-remote --heads origin "$branch"
+      else
+        _pg_exec git "${_PG_GIT_OPTS[@]}" -c core.sshCommand="ssh $ssho $_PG_SSH_OPTS" \
+          push origin "$branch"
+      fi
+      return $?;;
+    https-proxy|https-direct)
+      proxy="${HTTPS_PROXY:-${https_proxy:-http://127.0.0.1:7897}}"
+      [ "$route" = "https-direct" ] && proxy=""
+      helper=""
+      if [ -n "$(_pg_token)" ]; then
+        helper='!f(){ echo username=x-access-token; echo \"password='"$(_pg_token)"'\"; };f'
+      fi
+      if [ -n "$proxy" ]; then
+        if [ "$mode" = "probe" ]; then
+          _pg_exec git "${_PG_GIT_OPTS[@]}" -c http.proxy="$proxy" \
+            -c credential.helper= -c credential.helper="$helper" ls-remote --heads origin "$branch"
+        else
+          _pg_exec git "${_PG_GIT_OPTS[@]}" -c http.proxy="$proxy" \
+            -c credential.helper= -c credential.helper="$helper" push origin "$branch"
+        fi
+      else
+        if [ "$mode" = "probe" ]; then
+          _pg_exec env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy -u ALL_PROXY -u all_proxy \
+            git "${_PG_GIT_OPTS[@]}" -c http.proxy= -c credential.helper= -c credential.helper="$helper" \
+            ls-remote --heads origin "$branch"
+        else
+          _pg_exec env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy -u ALL_PROXY -u all_proxy \
+            git "${_PG_GIT_OPTS[@]}" -c http.proxy= -c credential.helper= -c credential.helper="$helper" \
+            push origin "$branch"
+        fi
+      fi
+      return $?;;
+    *) _PG_LAST_ERR="未知通道 $route"; return 1;;
+  esac
+}
+
+# 未配置镜像时必须 return 1（不能 0）：否则调用方把「没配镜像」当成「镜像已落盘」。
+_pg_mirror_push() {  # $1 = 分支
+  [ -n "${PUSH_MIRROR_DIR:-}" ] || return 1
+  if git push "$PUSH_MIRROR_DIR" "$1" >/dev/null 2>&1; then
+    _pg_log "MIRROR_OK dir=${PUSH_MIRROR_DIR}（不依赖网络，提交已落盘）"
+    return 0
+  fi
+  _pg_log "MIRROR_FAIL dir=${PUSH_MIRROR_DIR}（检查该路径是否裸仓且可写）"
+  return 1
+}
+
+# 本地相对跟踪引用的待推提交数（0 = 没东西要推；-1 = 算不出来）
+_pg_pending_count() {  # $1 = 分支
+  git rev-list --count "origin/$1..$1" 2>/dev/null || echo "-1"
+}
+
+_pg_usage() {
+  echo "[push] 用法：push_main [<branch>] [--attempts N] [--wait S] [--quiet] [--selftest]"
+  echo "[push] 环境：PUSH_MAX_ATTEMPTS(6) PUSH_WAIT_SECS(20) PUSH_ROUTES(白名单) PUSH_MIRROR_DIR(本地裸仓)"
+}
+
+# 通道体检：逐条真实探测并打印错误（诊断用，read-only，不推送）
+push_selftest() {
+  local branch="main" route ok=0
+  [ $# -ge 1 ] && branch="$1"
+  echo "[push] === 四通道体检（ls-remote，read-only）==="
+  for route in $(printf '%s' "${PUSH_ROUTES:-ssh22,ssh443,https-proxy,https-direct}" | tr ',' ' '); do
+    if _pg_run_route "$route" "$branch" probe; then
+      echo "[push]   $route  OK"; ok=$((ok + 1))
+    else
+      echo "[push]   $route  FAIL  ${_PG_LAST_ERR:-（无错误输出）}"
+    fi
+  done
+  echo "[push] 可用通道 $ok/4"
+  [ "$ok" -gt 0 ] || return 1
+  return 0
+}
+
+push_main() {
+  local branch="main" attempts="${PUSH_MAX_ATTEMPTS:-6}" wait_s="${PUSH_WAIT_SECS:-20}" i=0
+  local routes route tried first_err ahead pending mirror_ok=0 selftest=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --attempts) [ $# -ge 2 ] || { echo "[push] --attempts 缺少数值"; _pg_usage; return 2; }
+                  attempts="$2"; shift 2;;
+      --wait)     [ $# -ge 2 ] || { echo "[push] --wait 缺少秒数"; _pg_usage; return 2; }
+                  wait_s="$2"; shift 2;;
+      --quiet)    PUSH_QUIET=1; shift;;
+      --selftest) selftest=1; shift;;
+      -*)         echo "[push] 未知参数：$1"; _pg_usage; return 2;;
+      *)          branch="$1"; shift;;
+    esac
+  done
+  routes="${PUSH_ROUTES:-ssh22,ssh443,https-proxy,https-direct}"
+  if [ "$selftest" = "1" ]; then push_selftest "$branch" && return 0 || return 1; fi
+
+  _pg_mirror_push "$branch" && mirror_ok=1
+
+  # 没东西要推时不要因为「网络全挂」报 FAIL：ahead=0 即目标已达成。
+  pending="$(_pg_pending_count "$branch")"
+  if [ "$pending" = "0" ]; then
+    _pg_log "PUSH_RESULT=NOTHING_TO_PUSH（本地无新提交，ahead 0，无需联网）"
+    return 0
+  fi
+
+  while [ "$i" -lt "$attempts" ]; do
+    i=$((i + 1)); tried=""
+    for route in $(printf '%s' "$routes" | tr ',' ' '); do
+      if _pg_run_route "$route" "$branch" probe; then
+        _pg_log "第 $i/$attempts 轮 route=$route 探测通过 ⇒ 推送"
+        if _pg_run_route "$route" "$branch" push; then
+          _pg_log "PUSH_RESULT=OK route=$route attempts=$i"
+          return 0
+        fi
+        _pg_log "第 $i/$attempts 轮 route=$route push 失败：${_PG_LAST_ERR:-（无错误输出）}"
+      else
+        _pg_log "第 $i/$attempts 轮 route=$route 探测失败：${_PG_LAST_ERR:-（无错误输出）}"
+      fi
+      # 分叉短路：不是网络问题，换通道只会重复被拒
+      case "${_PG_LAST_ERR:-}" in
+        *"Updates were rejected"*|*"non-fast-forward"*)
+          echo "[push] ✗ 远端与本地**历史分叉**（非网络问题）⇒ 先 fetch/rebase，禁止强推"
+          echo "[push] 远端 $branch tip = $(git ls-remote origin "$branch" 2>/dev/null | awk '{print $1}')"
+          echo "[push] 本地 $branch tip = $(git rev-parse --short HEAD)"
+          echo "[push] PUSH_RESULT=DIVERGED"; return 3;;
+      esac
+      tried="${tried}${tried:+,}$route"
+      if [ -z "$first_err" ]; then first_err="${_PG_LAST_ERR:-$route 无错误输出}"; fi
+    done
+    ahead="$(_pg_pending_count "$branch")"
+    if [ "$ahead" = "0" ]; then _pg_log "PUSH_RESULT=OK（提交已在远端，ahead 0）"; return 0; fi
+    if [ "$i" -lt "$attempts" ]; then
+      _pg_log "第 $i/$attempts 轮四通道未成功（首错：${first_err}）⇒ ${wait_s}s 后重试"
+      sleep "$wait_s"
+    fi
+  done
+  echo "[push] ✗ 未推送：本地 ahead ${ahead}，已试通道=${tried}，首错=${first_err}"
+  if [ "$mirror_ok" = "1" ]; then echo "[push] PUSH_RESULT=FAIL_REMOTE_MIRROR_OK（远端未推，但本地镜像已落盘）"
+  else echo "[push] PUSH_RESULT=FAIL"; fi
+  return 1
 }
