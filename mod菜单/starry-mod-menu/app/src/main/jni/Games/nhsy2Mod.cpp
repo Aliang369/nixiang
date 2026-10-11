@@ -30,6 +30,7 @@
 #include <mutex>      // §④ 装钩互斥
 #include <setjmp.h>   // §④ sigsetjmp 保护区
 #include <signal.h>   // §④ 致命信号兜底
+#include <ucontext.h> // §④.4 故障现场取证：uc_mcontext.pc / regs[30] / sp
 #include <sys/mman.h> // §⑤.1 极小函数 4 字节挂钩（邻近跳板 mmap/mprotect）
 #include <unistd.h>   // §⑤.1 sysconf(_SC_PAGESIZE)
 #include <cstdarg>    // §⑦.6 async_safe 日志护盾：va_list 转发
@@ -137,22 +138,13 @@ static CalcDamage_t g_origCalcDamage = nullptr;
 typedef void (*ReallyDeduct_t)(void* thiz, void* damage, float finalDamage, void* method);
 static ReallyDeduct_t g_origReallyDeduct = nullptr;
 
-// ================= ★ r11 全屏攻击：伤害广播（换方法，不再猜键名） =================
-//  用户 m04997：「两个功能仍然没有效果 …… 不行就给我换方法」。
-//  机制：本地玩家打中一只怪时，在 HitPoints::ReallyDeductHP 这一跳（= 斌哥 desc0 同族、
-//  也是伤害链最后一跳）把**同一个 DamageInfo 与同一个最终伤害值**广播给同类的其它
-//  HitPoints 实例 —— 用能拿到的一切原样转发，不猜字段、不猜 arg 类型：
-//    ① 敌人 HP 的「类」从本跳的 thiz 现场学到（`*(void**)thiz`），玩家的 Hearts 类
-//       自动被排除（类是另一个）⇒ 不会把自己打伤；
-//    ② 同类实例用 Api::ScanInstances 按 klass 指针扫 rw 内存拿到（结果缓存 2 s，
-//       避免每次命中都扫）；每个候选先复核首字仍是同一 klass 再调用；
-//    ③ 转发走 g_origReallyDeduct（原函数跳板）⇒ 不会二次乘伤害、不会递归回本钩子。
-static std::atomic<uint32_t> g_hitBcast{0};        // 广播触发次数
-static std::atomic<uint32_t> g_fullBcast{0};       // 广播出的目标总数
-static void*    g_bcastKlass   = nullptr;          // 现场学到的「敌人 HP 类」
-static uint64_t g_bcastScanMs  = 0;                // 上次扫描时刻
-static std::vector<void*> g_bcastList;             // 扫描缓存
-static thread_local bool t_inBcast = false;        // 广播重入闸（防级联）
+// ================= ★ r14 全屏攻击：挂点迁到 Killable 族（历史：r11-r13 的伤害广播） =================
+//  用户 m04997「两个功能仍然没有效果 …… 不行就给我换方法」→ 试过「在 ReallyDeductHP 这一跳
+//  把同一份伤害按 klass 扫内存广播给同类 HP 实例」；真机取证（记录仪 20261012_025029）：
+//  `fullscreen bcast scan #1 found=41` 之后 1 ms 即 `[THEMIS]: get signal 11` —— 内存扫描
+//  分不清活体与已释放/复用的尸体，一调原函数就踩错内存 ⇒ 该机制**整段删除**。
+//  r14 改为：Killable.TakeDamage 记录这一下 + Killable.Update 对在场活体逐个施放（见 :1290 段）。
+static thread_local bool t_inBcast = false;        // 施放重入闸（防级联）
 
 // ================= ★ r11 无限水晶：直接挂「水晶计数」的共享实现 =================
 //  r9/r10 两条路都无效的根因推断：`SpriteManager.GetCrystalSpriteCount`（水晶计数
@@ -374,11 +366,20 @@ static std::mutex g_installMutex;   // 保护「装钩全过程」，只在 Sync
 static std::mutex g_guardMutex;     // 只保护一次性「安装信号处理器」动作
 
 // ---- 4.2 本线程故障态（thread_local：hook 体在多线程并发） ----
-static thread_local sigjmp_buf              t_faultJmp;
 static thread_local volatile sig_atomic_t   t_inGuard    = 0;
 static thread_local volatile sig_atomic_t   t_faultDepth = 0;
 static thread_local volatile int            t_faultSig   = 0;
 static thread_local volatile void*          t_faultAddr  = nullptr;
+//  ★ r16：故障现场（定位用）。旧版只存了 si_addr，拿不到 PC/LR ⇒ 真机上只能看到
+//  THEMIS 转发后那张「二次故障」tombstone（其 memcpy 用的还是垃圾上下文，272 字节）。
+static thread_local volatile uintptr_t      t_faultPc    = 0;
+static thread_local volatile uintptr_t      t_faultLr    = 0;
+static thread_local volatile uintptr_t      t_faultSp    = 0;
+//  ★ r16：保护区**栈顶** jmp_buf。旧实现只有一个全局 t_faultJmp，嵌套调用互相覆盖
+//  （§⑦ 注释里记过：内层 RunGuarded 已返回后再来信号，siglongjmp 会跳到失效帧 ⇒ 栈毁）。
+//  现在每次进入保护区都在**调用方自己**的栈上开一个 buf，用 t_jmpTop 串成栈：信号永远
+//  longjmp 到最内层仍然有效的那一个。
+static thread_local sigjmp_buf*             t_jmpTop     = nullptr;
 
 // 备用信号栈（SIGSEGV 时原栈可能已不可用）；64KB/线程
 static thread_local char t_altStack[65536];
@@ -392,8 +393,8 @@ static std::atomic<bool> g_guardArmed{false};
 static bool g_lastFatal = false;   // 只在 g_installMutex 保护下读写
 
 // ---- 4.4 故障处理器 ----
-static void TplFaultHandler(int sig, siginfo_t* si, void* /*uc*/) {
-    if (t_inGuard) {
+static void TplFaultHandler(int sig, siginfo_t* si, void* uc) {
+    if (t_inGuard && t_jmpTop) {
         if (++t_faultDepth > 4) {
             signal(sig, SIG_DFL);
             raise(sig);
@@ -401,14 +402,25 @@ static void TplFaultHandler(int sig, siginfo_t* si, void* /*uc*/) {
         }
         t_faultSig  = sig;
         t_faultAddr = si ? si->si_addr : nullptr;
-        siglongjmp(t_faultJmp, 1);   // 永不返回
+        //  ★ r16：把故障现场一起带走。真机上 THEMIS 会把原始崩溃吞掉（只留一张「转发后
+        //  二次故障」的系统 tombstone，里面 memcpy 用的还是垃圾上下文），第一现场永远查不到，
+        //  所以必须在处理器里自己落 PC/LR/SP —— 这是唯一能定位「游戏内部哪条指令崩」的机会。
+        if (uc) {
+            const ucontext_t* u = static_cast<const ucontext_t*>(uc);
+            t_faultPc = (uintptr_t)u->uc_mcontext.pc;
+            t_faultLr = (uintptr_t)u->uc_mcontext.regs[30];
+            t_faultSp = (uintptr_t)u->uc_mcontext.sp;
+        } else {
+            t_faultPc = t_faultLr = t_faultSp = 0;
+        }
+        siglongjmp(*t_jmpTop, 1);   // 永不返回（跳到最内层仍然有效的保护区）
     }
 
     const struct sigaction* old = (sig == SIGSEGV) ? &g_oldSegv
                                : (sig == SIGBUS)  ? &g_oldBus
                                                   : &g_oldIll;
     if (old->sa_sigaction && old->sa_sigaction != TplFaultHandler) {
-        old->sa_sigaction(sig, si, nullptr);
+        old->sa_sigaction(sig, si, uc);   // ★ r16：透传真上下文（旧版传 nullptr，下游只能拿到垃圾）
         return;
     }
     signal(sig, SIG_DFL);
@@ -454,10 +466,14 @@ static void InstallFaultGuard() {
 static bool DobbyHookGuarded(const char* tag, void* target, void* hook, void** orig) {
     ArmFaultGuardForThread();
     t_faultDepth = 0;
-    if (sigsetjmp(t_faultJmp, 1) == 0) {
+    sigjmp_buf  buf;                        // ★ r16：本函数**自己的**帧，穿成保护区栈
+    sigjmp_buf* prev = t_jmpTop;
+    t_jmpTop = &buf;
+    if (sigsetjmp(buf, 1) == 0) {
         t_inGuard = 1;
         int rc = DobbyHook(target, hook, orig);
         t_inGuard = 0;
+        t_jmpTop  = prev;                   // ★ 返回前必须还栈，否则信号会跳到失效帧
         if (rc != 0) {
             LOGW(TPL_LOG " %s dobby fail rc=%d", tag, rc);
             return false;
@@ -465,6 +481,7 @@ static bool DobbyHookGuarded(const char* tag, void* target, void* hook, void** o
         return true;
     }
     t_inGuard = 0;
+    t_jmpTop  = prev;
     g_lastFatal = true;
     LOGW(TPL_LOG " %s dobby SIG(%d) @%p — 槽位熔断，游戏继续",
          tag, (int)t_faultSig, (void*)t_faultAddr);
@@ -475,13 +492,18 @@ static bool DobbyHookGuarded(const char* tag, void* target, void* hook, void** o
 static bool ReadU32Guarded(const char* tag, const void* p, uint32_t* out) {
     ArmFaultGuardForThread();
     t_faultDepth = 0;
-    if (sigsetjmp(t_faultJmp, 1) == 0) {
+    sigjmp_buf  buf;
+    sigjmp_buf* prev = t_jmpTop;
+    t_jmpTop = &buf;
+    if (sigsetjmp(buf, 1) == 0) {
         t_inGuard = 1;
         *out = *reinterpret_cast<const volatile uint32_t*>(p);
         t_inGuard = 0;
+        t_jmpTop  = prev;
         return true;
     }
     t_inGuard = 0;
+    t_jmpTop  = prev;
     LOGW(TPL_LOG " %s prologue read SIG(%d) @%p — 跳过该槽位",
          tag, (int)t_faultSig, (void*)t_faultAddr);
     return false;
@@ -490,17 +512,103 @@ static bool ReadU32Guarded(const char* tag, const void* p, uint32_t* out) {
 static bool RunGuarded(const char* tag, void (*fn)(void*), void* arg) {
     ArmFaultGuardForThread();
     t_faultDepth = 0;
-    if (sigsetjmp(t_faultJmp, 1) == 0) {
+    sigjmp_buf  buf;
+    sigjmp_buf* prev = t_jmpTop;
+    t_jmpTop = &buf;
+    if (sigsetjmp(buf, 1) == 0) {
         t_inGuard = 1;
         fn(arg);
         t_inGuard = 0;
+        t_jmpTop  = prev;
         return true;
     }
     t_inGuard = 0;
+    t_jmpTop  = prev;
     LOGW(TPL_LOG " %s 回调内 SIG(%d) @%p — 已吞掉，游戏继续",
          tag, (int)t_faultSig, (void*)t_faultAddr);
     return false;
 }
+
+// ---- 4.8 故障定位：把绝对地址写成「库名+偏移」（★ r16 新增）----
+//  只读 /proc/self/maps，普通上下文调用（不在信号处理器里），安全。
+//  偏移基准取该模块**最低**的一段映射起始（＝装载基址），所以 `库名+0x…` 里的数字
+//  可以直接和静态反汇编（capstone 的 vaddr / RVA）对齐比对。
+static void ModOff(uintptr_t addr, char* out, size_t cap) {
+    if (!out || !cap) return;
+    out[0] = '\0';
+    if (!addr) { std::snprintf(out, cap, "-"); return; }
+    FILE* f = std::fopen("/proc/self/maps", "re");
+    if (!f) { std::snprintf(out, cap, "%p", (void*)addr); return; }
+
+    char      line[320];
+    char      hitPath[192] = {0};
+    uintptr_t hitLo = 0;
+    bool      hit    = false;
+    uintptr_t minLo  = 0;
+    bool      minSet = false;
+    while (std::fgets(line, sizeof(line), f)) {
+        unsigned long lo = 0, hi = 0;
+        char perms[8] = {0}, path[200] = {0};
+        if (std::sscanf(line, "%lx-%lx %7s %*s %*s %*s %199s", &lo, &hi, perms, path) < 3) continue;
+        if (!hit && addr >= (uintptr_t)lo && addr < (uintptr_t)hi) {
+            hit = true; hitLo = (uintptr_t)lo;
+            std::snprintf(hitPath, sizeof(hitPath), "%s", path);
+        }
+        // 同一模块的最低映射（用于算装载基址）：无 path 的匿名段不参与
+        if (path[0] == '/' && !minSet) { /* 占位：下面按需覆盖 */ }
+        if (path[0] == '/' && hitPath[0] == '/' && std::strcmp(path, hitPath) == 0) {
+            if (!minSet || (uintptr_t)lo < minLo) { minLo = (uintptr_t)lo; minSet = true; }
+        }
+    }
+    std::fclose(f);
+
+    if (!hit)            { std::snprintf(out, cap, "%p", (void*)addr); return; }
+    if (hitPath[0] != '/') { std::snprintf(out, cap, "[anon]+0x%zx", (size_t)(addr - hitLo)); return; }
+    const char* base = std::strrchr(hitPath, '/');
+    base = base ? base + 1 : hitPath;
+    const uintptr_t ref = (minSet && minLo && minLo <= addr) ? minLo : hitLo;
+    std::snprintf(out, cap, "%s+0x%zx", base, (size_t)(addr - ref));
+}
+
+//  故障已就地拦下 ⇒ 落一行带 PC/LR 的定位日志（★ r16：r11–r15 的 0xb8 崩溃之所以
+//  始终查不出「游戏内部哪条指令崩」，就是因为原始现场被 THEMIS 吞掉、我们也没自己取证）。
+static void LogGuardFault(const char* tag) {
+    char pc[128], lr[128];
+    ModOff((uintptr_t)t_faultPc, pc, sizeof(pc));
+    ModOff((uintptr_t)t_faultLr, lr, sizeof(lr));
+    LOGW(TPL_LOG " ★原函数崩溃已拦下 %s SIG(%d) pc=%s lr=%s sp=%p addr=%p"
+                 " —— 就地吞掉：游戏不闪退，本次按「未生效」处理",
+         tag, (int)t_faultSig, pc, lr, (void*)t_faultSp, (void*)t_faultAddr);
+}
+
+// ---- 4.9 调原函数保护区（★ r16）----
+//  用法：  bool ok = false; T r = 安全默认值;
+//          FS_GUARDED("orig.X", ok, { r = g_origX(a, b); });
+//          if (!ok) { 用 r 的默认值 }
+//  语义：正常 ⇒ ok=true；原函数内部炸了 ⇒ ok=false（调用方给安全返回值），
+//        现场 PC/LR/SP 落盘。这样「游戏自己在我们调进去的链上崩」既不会带走进程，
+//        又能一次拿到定位（不用再靠 THEMIS 那张二次故障 tombstone）。
+#define FS_GUARDED(tag, okvar, ...)                                          \
+    do {                                                                     \
+        ArmFaultGuardForThread();                                            \
+        t_faultDepth = 0;                                                    \
+        sigjmp_buf _fsbuf;                                                   \
+        sigjmp_buf* _fsprev = t_jmpTop;                                      \
+        t_jmpTop = &_fsbuf;                                                  \
+        if (sigsetjmp(_fsbuf, 1) == 0) {                                     \
+            t_inGuard = 1;                                                   \
+            __VA_ARGS__;                                                     \
+            t_inGuard = 0;                                                   \
+            t_jmpTop  = _fsprev;                                             \
+            (okvar)   = true;                                                \
+        } else {                                                             \
+            t_inGuard = 0;                                                   \
+            t_jmpTop  = _fsprev;                                             \
+            LogGuardFault(tag);                                              \
+            (okvar)   = false;                                               \
+        }                                                                    \
+    } while (0)
+
 
 // ---- 4.8 槽位熔断 ----
 //  ★ 2026-10-12（r8c 根因）：kSlotsMax 必须 ≥ kSlotsCount。原来写死 64，而
@@ -785,6 +893,72 @@ static void* MmapPageNear(void* target, size_t size) {
     return nullptr;
 }
 
+// ================= ★ r17：跳板页池（一页共享给同窗所有槽位） =================
+//  背景（2026-10-12 r16 真机 04:04 装机自检）：`MmapPageNear` 每次为**一个**槽位找**一整页**
+//  空洞，而本机 libil2cpp 窗口内的空洞极小（实测整窗只剩 8KB：0x754d3fe000-0x754d400000）。
+//  前两个槽位各吃掉一页之后，同窗口后续槽位全部报
+//    `MmapPageNear: ±124MB 内无 4096 字节空洞（maps=418X）@0x754xxxxxxx`
+//  ⇒ 静默丢掉 4 个槽位：`Res_CrystalCountImpl`（无限水晶主挂点，veneer 4 字节补丁）、
+//    `Res_GitterCoin`（金币通道）、`Std_IsFreeBoss`/`Std_IsFreeLevel`（解锁标准版），
+//    装机行从 r15 的 `install pass: ok=69 dead=0/72` 退化成 `ok=66 dead=0/72`。
+//  对策：一页只 mmap 一次，之后按 16 字节粒度切给**所有** |ΔT| ≤ 124MB 的槽位复用。
+//    每个桩只占 16-20 字节 ⇒ 4KB 可服务上百个桩，窗内消耗从「每槽一页」降到「每窗一页」。
+//    这修的是**确定性**：同一份代码在不同本机布局下不再随机丢槽（r15 命中、r16 不命中）。
+//  权限：池页落地即 RWX（同一页会被多个槽位先后写入，不能装完一个就收成 RX）；
+//    只作用在我们自己的匿名页上，不改游戏代码页的权限模型。
+struct TrampPool { uintptr_t base; uint32_t size; uint32_t used; };
+static TrampPool g_trampPools[16];
+static int g_trampPoolCount = 0;
+static std::mutex g_trampPoolMtx;
+
+// 在 target 附近切一块可执行暂存（优先复用窗外 124MB 内已有的池页）
+static void* TrampAllocNear(void* target, uint32_t size) {
+    const uintptr_t t = reinterpret_cast<uintptr_t>(target);
+    const uintptr_t maxDist = 0x7C00000ULL;                     // 同 MmapPageNear：124MB
+    const uint32_t need = (size + 15u) & ~15u;                  // 16 字节对齐（B/字面量都够用）
+    std::lock_guard<std::mutex> lk(g_trampPoolMtx);
+    for (int i = 0; i < g_trampPoolCount; ++i) {
+        TrampPool& p = g_trampPools[i];
+        const uintptr_t d = (p.base > t) ? (p.base - t) : (t - p.base);
+        if (d > maxDist || p.size - p.used < need) continue;
+        void* r = reinterpret_cast<void*>(p.base + p.used);
+        p.used += need;
+        return r;
+    }
+    if (g_trampPoolCount >= static_cast<int>(sizeof(g_trampPools) / sizeof(g_trampPools[0]))) {
+        LOGW(TPL_LOG " 跳板池已满（%d 页）@%p", g_trampPoolCount, target);
+        return nullptr;
+    }
+    void* page = MmapPageNear(target, 0x1000);
+    if (!page) return nullptr;                                  // 该窗确实没有空洞（无解）
+    if (mprotect(page, 0x1000, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+        LOGW(TPL_LOG " 跳板池页 %p 置 RWX 失败 errno=%d", page, errno);
+        munmap(page, 0x1000);
+        return nullptr;
+    }
+    TrampPool& p = g_trampPools[g_trampPoolCount++];
+    p.base = reinterpret_cast<uintptr_t>(page);
+    p.size = 0x1000;
+    p.used = need;
+    const uintptr_t d = (p.base > t) ? (p.base - t) : (t - p.base);
+    LOGI(TPL_LOG " 跳板池 #%d %p ΔT=%.1fMB（池内每桩 16 字节，窗内槽位共用这一页）",
+         g_trampPoolCount, page, static_cast<double>(d) / 1048576.0);
+    return page;
+}
+
+// 池页落地时已是 RWX；从池里切出来的地址可能不在页首 ⇒ 先对齐再 mprotect。
+// 非池页（HookTiny4 里「附近无空洞」的退路 `mmap(nullptr,0x1000,RW)`）必须升到 RX 才能执行。
+static bool TrampMakeExec(void* page) {
+    if (!page) return false;
+    const uintptr_t pg = reinterpret_cast<uintptr_t>(page) & ~static_cast<uintptr_t>(0xFFFULL);
+    if (mprotect(reinterpret_cast<void*>(pg), 0x1000, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+        LOGW(TPL_LOG " TrampMakeExec: mprotect RWX 失败 errno=%d @%p", errno, page);
+        return false;
+    }
+    __builtin___clear_cache(reinterpret_cast<char*>(pg), reinterpret_cast<char*>(pg) + 0x1000);
+    return true;
+}
+
 // 入口 16 字节是否「极小且可安全 4 字节挂钩」
 static bool TinyHookable(const uint32_t w[4], int retAt) {
     if (retAt < 0 || retAt > 3) return false;                 // 无 RET ⇒ 走 Dobby
@@ -809,9 +983,9 @@ static bool TinyHookable(const uint32_t w[4], int retAt) {
 
 static bool HookTiny4(const char* tag, const char* label, void* target, void* hook, void** orig) {
     // ---- A) orig 跳板：原样副本 + 回跳（orig 是普通函数指针，位置不受 ±128MB 限制）----
-    void* pageA = MmapPageNear(target, 0x1000);
+    void* pageA = TrampAllocNear(target, 32);   // 5 word（4 条原样副本 + 回跳）⇒ 32 字节足够
     const bool aNear = (pageA != nullptr);
-    if (!pageA) {   // 附近无空洞（极罕见）：退回任意页，副本尾部改用 ret 收尾
+    if (!pageA) {   // 该窗真的没有空洞（极罕见）：退回任意页，副本尾部改用 ret 收尾
         pageA = mmap(nullptr, 0x1000, PROT_READ | PROT_WRITE,
                      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     }
@@ -822,8 +996,7 @@ static bool HookTiny4(const char* tag, const char* label, void* target, void* ho
     uint32_t* a = reinterpret_cast<uint32_t*>(pageA);
     for (int i = 0; i < 4; ++i) {
         if (!ReadU32Guarded(tag, reinterpret_cast<const uint32_t*>(target) + i, &a[i])) {
-            munmap(pageA, 0x1000);
-            return false;
+            return false;                       // ★ 池页不许 munmap（同页还有别的槽位的桩）
         }
     }
     if (aNear) {
@@ -834,20 +1007,16 @@ static bool HookTiny4(const char* tag, const char* label, void* target, void* ho
     } else {
         a[4] = 0xD65F03C0u;   // ret（安全终止；正常路径永不可达，因为副本里含 RET）
     }
-    if (mprotect(pageA, 0x1000, PROT_READ | PROT_EXEC) != 0) {
-        munmap(pageA, 0x1000);
+    if (!TrampMakeExec(pageA)) {                 // 池页已 RWX；退路页 RW→RWX
         return false;
     }
-    __builtin___clear_cache(reinterpret_cast<char*>(pageA),
-                            reinterpret_cast<char*>(pageA) + 0x1000);
 
     // ---- B) 入口 4 字节 B 补丁 ----
     void* dest = hook;
     const int64_t dHook = (PtrI64(hook) - PtrI64(target)) / 4;
     if (dHook > 0x1FFFFFFLL || dHook < -0x2000000LL) {
-        void* pageN = MmapPageNear(target, 0x1000);
+        void* pageN = TrampAllocNear(target, 32);   // ldr x17,#8 + br x17 + 8B 字面量 = 16B
         if (!pageN) {
-            munmap(pageA, 0x1000);
             LOGW(TPL_LOG " %s %s 找不到 ±124MB 内的跳板空洞 — 放弃该槽位", tag, label);
             return false;
         }
@@ -855,26 +1024,20 @@ static bool HookTiny4(const char* tag, const char* label, void* target, void* ho
         n[0] = 0x58000051u;   // ldr x17, #8
         n[1] = 0xD61F0220u;   // br  x17
         *reinterpret_cast<uint64_t*>(n + 2) = reinterpret_cast<uint64_t>(hook);
-        if (mprotect(pageN, 0x1000, PROT_READ | PROT_EXEC) != 0) {
-            munmap(pageN, 0x1000);
-            munmap(pageA, 0x1000);
+        if (!TrampMakeExec(pageN)) {
             return false;
         }
-        __builtin___clear_cache(reinterpret_cast<char*>(pageN),
-                                reinterpret_cast<char*>(pageN) + 0x1000);
         dest = pageN;
         LOGI(TPL_LOG " %s %s hook 距目标 %.1fMB > 128MB ⇒ 邻近跳板 %p（原样副本 %p）",
              tag, label, static_cast<double>(dHook) * 4.0 / 1048576.0, pageN, pageA);
     }
     const int64_t dB = (PtrI64(dest) - PtrI64(target)) / 4;
     if (dB > 0x1FFFFFFLL || dB < -0x2000000LL) {
-        munmap(pageA, 0x1000);
         LOGW(TPL_LOG " %s %s B 补丁超出 ±128MB — 放弃该槽位", tag, label);
         return false;
     }
     if (!CodePatchU32(tag, target,
                       0x14000000u | (static_cast<uint32_t>(dB) & 0x03FFFFFFu))) {
-        munmap(pageA, 0x1000);
         return false;
     }
     if (orig) *orig = pageA;
@@ -899,7 +1062,7 @@ static bool PatchEntryBranch4(const char* tag, const char* label, void* entry, v
     void* pageN = nullptr;
     const int64_t dHook = (PtrI64(hook) - PtrI64(entry)) / 4;
     if (dHook > 0x1FFFFFFLL || dHook < -0x2000000LL) {
-        pageN = MmapPageNear(entry, 0x1000);
+        pageN = TrampAllocNear(entry, 32);   // ldr x17,#8 + br x17 + 8B 字面量 = 16B
         if (!pageN) {
             LOGW(TPL_LOG " %s %s 找不到 ±124MB 内的跳板空洞 — 放弃该挂点", tag, label);
             return false;
@@ -908,24 +1071,19 @@ static bool PatchEntryBranch4(const char* tag, const char* label, void* entry, v
         n[0] = 0x58000051u;   // ldr x17, #8
         n[1] = 0xD61F0220u;   // br  x17
         *reinterpret_cast<uint64_t*>(n + 2) = reinterpret_cast<uint64_t>(hook);
-        if (mprotect(pageN, 0x1000, PROT_READ | PROT_EXEC) != 0) {
-            munmap(pageN, 0x1000);
+        if (!TrampMakeExec(pageN)) {
             return false;
         }
-        __builtin___clear_cache(reinterpret_cast<char*>(pageN),
-                                reinterpret_cast<char*>(pageN) + 0x1000);
         dest = pageN;
         LOGI(TPL_LOG " %s %s hook 距入口 %.1fMB > 128MB ⇒ 邻近跳板 %p",
              tag, label, static_cast<double>(dHook) * 4.0 / 1048576.0, pageN);
     }
     const int64_t dB = (PtrI64(dest) - PtrI64(entry)) / 4;
     if (dB > 0x1FFFFFFLL || dB < -0x2000000LL) {
-        if (pageN) munmap(pageN, 0x1000);
         LOGW(TPL_LOG " %s %s 4 字节 B 补丁超出 ±128MB — 放弃该挂点", tag, label);
         return false;
     }
     if (!CodePatchU32(tag, entry, 0x14000000u | (static_cast<uint32_t>(dB) & 0x03FFFFFFu))) {
-        if (pageN) munmap(pageN, 0x1000);
         return false;
     }
     return true;
@@ -1147,8 +1305,13 @@ static bool HookByName(const char* tag, const char* ns, const char* cls,
     }
     if (!DobbyHookGuarded(tag, fn, hook, orig)) return false;
     HookEntryNote(fn);
-    LOGI(TPL_LOG " %s hooked by-name %s.%s(argc=%d) trampoline=%p",
-         tag, cls, method, argc, orig ? *orig : nullptr);
+    //  ★ r16：补印**目标入口**的库名+偏移（`trampoline` 是 Dobby 的跳板，不是目标入口，
+    //  离线对崩溃帧时用不上）。有了这一行，任何 tombstone / 护栏日志里的 `libil2cpp+0x…`
+    //  都能立刻对上「是哪个被挂钩的方法在哪一跳崩的」。
+    char offbuf[128];
+    ModOff(reinterpret_cast<uintptr_t>(fn), offbuf, sizeof(offbuf));
+    LOGI(TPL_LOG " %s hooked by-name %s.%s(argc=%d) trampoline=%p target=%s",
+         tag, cls, method, argc, orig ? *orig : nullptr, offbuf);
     return true;
 }
 
@@ -1191,7 +1354,11 @@ static bool Hooked_Hearts_DeductHP(void* thiz, void* damage, int32_t count, void
         return false;   // 不扣血
     }
     if (!g_origHeartsDeduct) return false;
-    return g_origHeartsDeduct(thiz, damage, count, method);
+    //  ★ r16：原函数自己崩 ⇒ 就地拦下（不闪退），落 PC/LR 定位行；本次按「未扣血」返回。
+    bool ok = false, r = false;
+    FS_GUARDED("orig.Hearts.DeductHP", ok,
+               { r = g_origHeartsDeduct(thiz, damage, count, method); });
+    return ok ? r : false;
 }
 
 // ---- 6.2 伤害倍率：NEON.Game.HitPoints.DeductHP(DamageInfo, Int32) -> Boolean ----
@@ -1231,7 +1398,11 @@ static bool Hooked_HitPoints_DeductHP(void* thiz, void* damage, int32_t count, v
              g_offDmgDamage.load(), g_offDmgMult.load());
     }
     if (!g_origHitPointsDeduct) return false;
-    return g_origHitPointsDeduct(thiz, damage, count, method);
+    //  ★ r16：原函数自己崩 ⇒ 就地拦下（不闪退），落 PC/LR 定位行；本次按「未扣血」返回。
+    bool ok = false, r = false;
+    FS_GUARDED("orig.HitPoints.DeductHP", ok,
+               { r = g_origHitPointsDeduct(thiz, damage, count, method); });
+    return ok ? r : false;
 }
 
 // 伤害倍率的唯一改写点：HitPoints::ReallyDeductHP(DamageInfo, Single) -> Void
@@ -1244,9 +1415,8 @@ static bool Hooked_HitPoints_DeductHP(void* thiz, void* damage, int32_t count, v
 //    ReallyDeductHP 是伤害链**最后一跳**（slot=34 虚方法，token 0x06008D25）：
 //    只乘 finalDamage 实参 ⇒ 不读任何字段偏移、不可能与下游重复相乘（不存在平方）。
 //    门禁：DamageInfo.IsFromLocalPLayer()（本地玩家造成的伤害才放大；本机受伤原样放行）。
-// ================= ★ r11 全屏攻击：伤害广播 =================
-//  放在 ReallyDeductHP 之前：C++ 里先用后定义需要前置声明。
-static void FullScreenBroadcast(void* self, void* damage, float amount, void* method);
+// ================= ★ r14 全屏攻击：挂点已迁到 Killable 族（见下方 FullScreenArm 段）=================
+//  r11-r13 的「伤害广播」已删除：真机实测「扫同类实例再转发」1 ms 内 SIGSEGV。
 static long long NowMonoMs();   // 定义在 §6.5（登录保命）段，此处前置声明
 
 static void Hooked_ReallyDeductHP(void* thiz, void* damage, float finalDamage, void* method) {
@@ -1259,83 +1429,212 @@ static void Hooked_ReallyDeductHP(void* thiz, void* damage, float finalDamage, v
         if (n <= 20) LOGI(TPL_LOG " dmg probe #%u ReallyDeductHP %.3f -> %.3f (x%d)",
                           n, finalDamage, out, mul);
     }
-    // ★ r11 全屏攻击：本地玩家打中一只 ⇒ 先把同一份伤害广播给同类目标，再打原函数
-    if (g_full.load(std::memory_order_relaxed) && local && OkPtr(thiz)) {
-        FullScreenBroadcast(thiz, damage, out, method);
-    }
-    if (g_origReallyDeduct) g_origReallyDeduct(thiz, damage, out, method);
+    // ★ r14：全屏攻击的广播点已从本层**移除**（真机 20261012_025029 实证：
+    //   本层扫内存转发同类实例后 1 ms SIGSEGV —— 扫描分不清活体与已释放的尸体）。
+    //   新机制挂在 `Killable.TakeDamage`（记录）＋ `Killable.Update`（逐个施放）。
+    if (!g_origReallyDeduct) return;
+    //  ★ r16：伤害倍率这一跳也是「我们调原函数」，同一层事故（0xb8）就在这条链上 ⇒ 纳入护栏。
+    //  拦下时本次伤害按「未生效」处理（原函数没跑完，不能再补一次，否则可能扣两次血）。
+    bool ok = false;
+    FS_GUARDED("orig.HitPoints.ReallyDeductHP", ok,
+               { g_origReallyDeduct(thiz, damage, out, method); });
 }
 
-//  ★ r11 全屏攻击实现（用户 m04997「不行就给我换方法」）：
-//    在伤害链最后一跳上，把**同一个 DamageInfo + 同一个最终伤害值**原样转发给
-//    「和被打中那只是同一 HP 类」的其它所有实例 —— 不猜字段、不猜参数类型、
-//    不猜伤害公式（原样转发 ⇒ 与玩家自己打那一下完全等价）。
-//  安全性：
-//    ① 目标类现场学到（thiz 的 klass），玩家自己的 Hearts 是另一个类 ⇒ 永不误伤自己；
-//    ② 每个候选复核「首字仍是同一 klass」才调用（释放后的对象被复用 ⇒ klass 不符即跳过）；
-//    ③ 类名含 player/pet/follower/npc 的跳过（避免打到宠物/随从）；
-//    ④ thread_local 重入闸（转发用的是原函数跳板，本就不会回调本钩子，闸门是双保险）；
-//    ⑤ 单次广播目标数上限 48；扫描结果缓存 2 s，避免每次命中都扫内存。
-static void FullScreenBroadcast(void* self, void* damage, float amount, void* method) {
+// ================= ★ r14 全屏攻击（用户 m05869 指定思路）=================
+//  用户原话：「先获取到在场的所有怪物，然后攻击一个怪物的时候，所有怪物收到相同的伤害
+//  或者动作，能明白吗？这个思路能做吗？」⇒ 按这个思路重做，不再裸扫内存。
+//  为什么换掉 r11-r13：「按同类 HP 类扫内存再转发」在真机上 1 ms 内 SIGSEGV
+//  （记录仪 09_test/_recorder/20261012_025029：`fullscreen bcast scan #1 found=41`
+//   紧跟 `[THEMIS]: get signal 11`，崩前连 `targets=` 那行都没打出来）——扫描分不清
+//  「活着的怪」与「已释放/被复用的尸体」，转发时一调原函数就踩该死内存。
+//  新机制（只用活体的必经入口，绝不枚举内存）：
+//    ① 记录：`NEON.Game.Killable.TakeDamage(DamageInfo, Int32)`（斌哥原版 4 个描述符之一，
+//       实测在玩家打怪链上）拿到「主动目标 + 那一份 DamageInfo + 那一个 Int32 实参」；
+//    ② 施放：`NEON.Game.Killable.Update()`（MonoBehaviour，每只活体每帧必经）在 200 ms
+//       窗口内对**同阵营**的其它活体原样调用 TakeDamage ⇒ 只有活着的对象会被施放。
+//  1:1 保真：判据只有「活体自己调 Update」「faction 相同」「类名不含 player/pet/follower/
+//  npc/hearts」「本窗口未施放过」「上限 256 只」；不写任何字段、不猜伤害公式
+//  （转发的是游戏自己那一份参数 ⇒ 与玩家打那一下完全等价）。
+static const uint32_t kFsMaxTargets = 256;
+static const uint64_t kFsWindowMs   = 200;
+//  ★★★ r15（修 r14「打怪就闪退」）：DamageInfo 的**常驻深拷贝槽**
+//   两份真机 tombstone（r13 pid 8103 tid 8183 / r14 pid 13302 tid 13384）逐帧同址：
+//   `#00 libc __memcpy_aarch64_simd+232` ← … ← 最外层都有我方 `libstarry_magic.so` 帧
+//   （r13 `+0x262a0`、r14 `+0x26c50`），且都是
+//   `signal 11 (SIGSEGV) code 1 (SEGV_MAPERR) fault addr 0xb8`、`x1=0xb8`（memcpy 源）、
+//   `x2=0x110`（长度 272 字节）⇒ 游戏侧正从「空基址 + 0xb8」处拷 272 字节结构体。
+//   为什么是我们那一下：`Killable.TakeDamage(DamageInfo, Int32)` /
+//   `HitPoints.ReallyDeductHP(DamageInfo, Single)` 的 DamageInfo 实参是**调用方栈上的
+//   临时副本**（值传递结构），我们 r11-r14 一直把那个指针**留到调用返回之后**再用
+//   ⇒ 栈帧一撤，指针指向的就是被复用/被清零的栈内存（r14 实测 hit #1 成功、hit #2 崩）。
+//   ⇒ 记录时**当场**深拷贝进本 so 的常驻缓冲（地址永不失效、不被栈复用），
+//     每次施放再从模板复制一个**独立槽位**（7 个轮转）发给目标，绝不共用一块。
+static const size_t   kFsDmgCopyBytes = 272;      // = 游戏自己那一次 memcpy 的 0x110
+static const uint32_t kFsDmgSlots     = 8;        // 槽 0 = 模板，槽 1..7 轮转发给各目标
+alignas(16) static uint8_t g_fsDmgRing[kFsDmgSlots][kFsDmgCopyBytes + 16];
+static std::atomic<uint32_t> g_fsDmgSlot{1};
+static bool    g_fsDmgCopied   = false;           // 深拷贝成功（失败则本窗口不施放）
+static std::atomic<uint64_t> g_fsUntilMs{0};      // >0 且未过期 ⇒ 令牌生效（热路径只读这一个）
+static void*   g_fsDamage      = nullptr;         // ★ r15：恒指向 g_fsDmgRing[0]（常驻模板）
+//  ★ r16：第 3 个实参改成 64 位透传。反汇编 `Killable.TakeDamage`(RVA 0x3f24730) 的序言是
+//  `0x3f24760 mov x21, x2` —— 游戏自己按 **64 位**保存它（我们原来写 int32_t，编译成
+//  `mov w2, w24`，高 32 位被清零）。虽然扫过的函数体里 x21 在 0x3f24b28 被覆盖前没被用过，
+//  但「原样透传」在两种可能签名（Int32 / 指针）下都安全，且零成本 ⇒ 按 64 位走。
+static intptr_t g_fsArg2       = 0;               // TakeDamage 的第 2 实参（64 位透传）
+static void*   g_fsMethod      = nullptr;
+static void*   g_fsSelf        = nullptr;         // 主动目标（本窗口不再重复打）
+static int32_t g_fsFaction     = 0;
+static bool    g_fsHasFaction  = false;
+static uint32_t g_fsSeenCount  = 0;
+static void*   g_fsSeen[kFsMaxTargets];
+static std::atomic<uint32_t> g_hitFsArm{0};
+static std::atomic<uint32_t> g_hitFsHit{0};
+static std::atomic<size_t>   g_offKillableFaction{0};
+typedef bool (*KillableTakeDamage_t)(void* thiz, void* damage, intptr_t arg2, void* method);
+typedef void (*KillableUpdate_t)(void* thiz, void* method);
+static KillableTakeDamage_t g_origKillableTakeDamage = nullptr;
+static KillableUpdate_t     g_origKillableUpdate     = nullptr;
+
+// 类名闸：只挡「玩家自己 / 宠物 / 随从 / NPC / 玩家 HP 类」，其余（含各类怪物）一律放行。
+static inline bool FsNameAllowed(void* obj) {
+    const char* cn = GetApi().ClassName(obj);
+    if (!cn) return true;
+    char low[96]; size_t j = 0;
+    for (const char* p = cn; *p && j + 1 < sizeof(low); ++p) {
+        char c = *p; if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+        low[j++] = c;
+    }
+    low[j] = 0;
+    return !(strstr(low, "player") || strstr(low, "pet") || strstr(low, "follower") ||
+             strstr(low, "npc") || strstr(low, "hearts"));
+}
+
+// ★ r15：把调用方那份 DamageInfo 拷进常驻槽。必须在**调用原函数之前**做：
+//   调用一返回，那个指针就可能已经指向被复用/被覆盖的栈内存。
+static bool FsCopyDamage(void* src, uint32_t slot) {
+    if (!OkPtr(src) || slot >= kFsDmgSlots) return false;
+    if (!Il2Cpp::IsReadableRange(reinterpret_cast<uintptr_t>(src), kFsDmgCopyBytes)) return false;
+    memcpy(g_fsDmgRing[slot], src, kFsDmgCopyBytes);
+    return true;
+}
+
+// 记下这一下（damage 必须是**已深拷贝**的常驻地址）
+static void FullScreenArm(void* src, void* damage, intptr_t arg2, void* method, bool copied) {
+    g_fsDamage = damage; g_fsArg2 = arg2; g_fsMethod = method; g_fsSelf = src;
+    g_fsDmgCopied = copied;
+    g_fsFaction = 0; g_fsHasFaction = false;
+    const size_t off = g_offKillableFaction.load(std::memory_order_relaxed);
+    if (off && OkPtr(src)) {
+        int32_t v = 0; memcpy(&v, reinterpret_cast<const char*>(src) + off, sizeof(v));
+        g_fsFaction = v; g_fsHasFaction = true;
+    }
+    g_fsDmgSlot.store(1, std::memory_order_relaxed);
+    g_fsSeenCount = 0;                                  // 先写齐负载，最后开门（顺序保证）
+    g_fsUntilMs.store((uint64_t)NowMonoMs() + kFsWindowMs, std::memory_order_release);
+}
+
+// Killable.TakeDamage(DamageInfo, Int32) -> Boolean（argc=2）：只**记录**这一下
+static bool Hooked_KillableTakeDamage(void* thiz, void* damage, intptr_t arg2, void* method) {
+    // ★ r15：先深拷贝（此刻指针一定有效），再调原函数；此后一律只用这份拷贝。
+    const bool wantArm = g_full.load(std::memory_order_relaxed) && OkPtr(thiz) && OkPtr(damage);
+    bool copied = false;
+    if (wantArm) copied = FsCopyDamage(damage, 0);
+    void* stable = copied ? (void*)g_fsDmgRing[0] : damage;
+    // ★ r16：这一跳是**我们调原函数**，r11–r15 的 `fault addr 0xb8` 崩溃就发生在它内部
+    //   （tombstone 帧 #13 就是我们这条 `blr x8` 的返回址）。纳入护栏 ⇒ 原函数自己崩就地
+    //   拦下、落 PC/LR/SP 定位行、游戏继续；本次伤害按「未生效」返回 false。
+    bool ok = false, r = false;
+    FS_GUARDED("orig.Killable.TakeDamage", ok, {
+        r = g_origKillableTakeDamage ? g_origKillableTakeDamage(thiz, damage, arg2, method) : false;
+    });
+    if (!ok) return false;
+    // ★ r16：触发闸换判据。r15 的闸是「必须 DamageFromLocalPlayer」——记录仪全程（pid 19880 /
+    //   22685 两次崩溃会话）**一行 `fullscreen token arm` 都没有**，说明这道闸恒假，全屏攻击
+    //   等于根本没接上（且该分支连日志都不打，所以此前无法察觉）。
+    //   新闸改为**受害者侧判据**：被记的对象不是玩家/宠物/随从/NPC/玩家HP 类就记这一下；
+    //   `DamageFromLocalPlayer` 降级成日志字段，不再单独决定成败。
+    const bool victimOk = FsNameAllowed(thiz);
+    const bool localHit = copied ? DamageFromLocalPlayer(stable) : false;
+    if (wantArm && copied && victimOk) {
+        FullScreenArm(thiz, stable, arg2, method, true);
+        const uint32_t n = g_hitFsArm.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (n <= 10) {
+            LOGI(TPL_LOG " fullscreen token arm #%u self=%p faction=%d has=%d dmg=%.3f copy=%d local=%d"
+                         "（全屏攻击：记下这一下，交给在场活体逐个施放）",
+                 n, thiz, g_fsFaction, (int)g_fsHasFaction,
+                 (double)SafeReadF32(stable, g_offDmgDamage.load(), 0.f), (int)copied, (int)localHit);
+        }
+    } else if (wantArm && !copied) {
+        const uint32_t n = g_hitFsArm.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (n <= 4) LOGW(TPL_LOG " fullscreen token arm 跳过 #%u：damage=%p 无法深拷贝 %zu 字节",
+                         n, damage, kFsDmgCopyBytes);
+    } else if (wantArm && copied && !victimOk) {
+        const uint32_t n = g_hitFsArm.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (n <= 4) LOGW(TPL_LOG " fullscreen token arm 跳过 #%u：受害者 %p 被类名闸挡（玩家/宠物/随从/NPC/HP）",
+                         n, thiz);
+    }
+    return r;
+}
+
+// Killable.Update() -> Void（argc=0，每只活体每帧必经）：施放点
+static void FullScreenTryApply(void* thiz) {
     if (t_inBcast) return;
-    if (!g_origReallyDeduct || !g_full.load(std::memory_order_relaxed)) return;
-    Il2Cpp::Api& api = GetApi();
-    void* k = *(void**)self;                      // Il2CppObject 首个字段 = klass
-    if (!k || k == g_clsHearts) return;           // 玩家自己的 HP 类 ⇒ 不广播
-    const char* cn = api.ClassName(self);
-    if (cn) {
-        char low[96]; size_t j = 0;
-        for (const char* p = cn; *p && j + 1 < sizeof(low); ++p) {
-            char c = *p; if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
-            low[j++] = c;
-        }
-        low[j] = 0;
-        if (strstr(low, "player") || strstr(low, "pet") || strstr(low, "follower") ||
-            strstr(low, "npc") || strstr(low, "hearts")) {
-            return;                                // 不是敌人 ⇒ 不广播
-        }
+    if (!g_origKillableTakeDamage || !OkPtr(thiz) || thiz == g_fsSelf || !g_fsDamage) return;
+    if (!Il2Cpp::IsManagedObjectPtr(thiz)) return;      // ★ r15：只对**真托管对象**施放
+    const size_t foff = g_offKillableFaction.load(std::memory_order_relaxed);
+    if (g_fsHasFaction && foff) {                       // 同阵营判据（拿不到偏移时退化为不判）
+        int32_t v = 0; memcpy(&v, reinterpret_cast<const char*>(thiz) + foff, sizeof(v));
+        if (v != g_fsFaction) return;
     }
-    if (k != g_bcastKlass) {                       // 换了敌人的 HP 类 ⇒ 立即重扫
-        g_bcastKlass = k;
-        g_bcastScanMs = 0;
-        g_bcastList.clear();
+    if (!FsNameAllowed(thiz)) return;
+    for (uint32_t i = 0; i < g_fsSeenCount; ++i) {
+        if (g_fsSeen[i] == thiz) return;                // 本窗口已施放过 ⇒ 不重复
     }
-    const uint64_t now = (uint64_t)NowMonoMs();
-    if (g_bcastList.empty() || (now - g_bcastScanMs) > 2000) {
-        g_bcastList.clear();
-        g_bcastScanMs = now;
-        api.ScanInstances(k, g_bcastList, 768);
-        const uint32_t s = g_hitBcast.fetch_add(1, std::memory_order_relaxed) + 1;
-        if (s <= 5) {
-            LOGI(TPL_LOG " fullscreen bcast scan #%u klass=%p self=%p found=%zu（全屏攻击：按 HP 类扫描同类目标）",
-                 s, k, self, g_bcastList.size());
-        }
-    } else {
-        g_hitBcast.fetch_add(1, std::memory_order_relaxed);
+    if (g_fsSeenCount >= kFsMaxTargets) { g_fsUntilMs.store(0, std::memory_order_release); return; }
+    // ★ r15：每个目标发一份**独立**的拷贝（同一块缓冲被多个目标共用＝互相踩）
+    void* send = g_fsDamage;
+    if (g_fsDmgCopied) {
+        const uint32_t slot = 1 + (g_fsDmgSlot.fetch_add(1, std::memory_order_relaxed) % (kFsDmgSlots - 1));
+        memcpy(g_fsDmgRing[slot], g_fsDmgRing[0], kFsDmgCopyBytes);
+        send = (void*)g_fsDmgRing[slot];
     }
-
     t_inBcast = true;
-    uint32_t seen = 0, ok = 0;
-    for (void* cand : g_bcastList) {
-        if (cand == self) continue;
-        if (!OkPtr(cand) || *(void**)cand != k) continue;   // 释放/复用复核
-        if (++seen > 48) break;
-        g_origReallyDeduct(cand, damage, amount, method);    // ★ 原样转发（同伤害值）
-        ++ok;
-    }
+    // ★ r16：广播这一下也是「我们调原函数」（只是换了个受害者）⇒ 同样纳入护栏。
+    //  某个目标自己崩了，只丢这一个目标，其余目标继续，进程不受影响。
+    bool ok = false;
+    FS_GUARDED("bcast.Killable.TakeDamage", ok, {
+        g_origKillableTakeDamage(thiz, send, g_fsArg2, g_fsMethod);
+    });
     t_inBcast = false;
-    const uint32_t total = g_fullBcast.fetch_add(ok, std::memory_order_relaxed) + ok;
-    const uint32_t n = g_hitBcast.load(std::memory_order_relaxed);
-    if (n <= 12 || (total % 200) < ok) {
-        LOGI(TPL_LOG " fullscreen bcast %u targets=%u damage=%.1f（全屏攻击：一只挨打 → 同类全掉血）",
-             n, ok, (double)amount);
+    g_fsSeen[g_fsSeenCount++] = thiz;
+    const uint32_t t = g_hitFsHit.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (t <= 8 || (t % 200) == 0) {
+        LOGI(TPL_LOG " fullscreen token hit #%u target=%p seen=%u send=%p ok=%d"
+                     "（全屏攻击：在场活体逐个施放同一份伤害）",
+             t, thiz, g_fsSeenCount, send, (int)ok);
     }
 }
 
+static void Hooked_KillableUpdate(void* thiz, void* method) {
+    const uint64_t until = g_fsUntilMs.load(std::memory_order_acquire);
+    if (until) {                                        // 令牌未开时零额外开销
+        if ((uint64_t)NowMonoMs() > until) g_fsUntilMs.store(0, std::memory_order_release);
+        else FullScreenTryApply(thiz);
+    }
+    if (!g_origKillableUpdate) return;
+    // ★ r16：原函数纳入护栏（拦下 ⇒ 这一帧的 Update 没跑完，不能补调用，直接返回）。
+    bool ok = false;
+    FS_GUARDED("orig.Killable.Update", ok, { g_origKillableUpdate(thiz, method); });
+}
 // 伤害计算入口：HitPoints::CalculationDamage(DamageInfo, Int32) -> Single
 //  已降级为**纯探针**（不再缩放：与 ReallyDeductHP 同时缩放会产生平方）
 static float Hooked_CalculationDamage(void* thiz, void* damage, int32_t count, void* method) {
-    const float r = g_origCalcDamage ? g_origCalcDamage(thiz, damage, count, method) : 0.f;
+    if (!g_origCalcDamage) return 0.f;
+    float r = 0.f;
+    bool ok = false;
+    FS_GUARDED("orig.HitPoints.CalculationDamage", ok,
+               { r = g_origCalcDamage(thiz, damage, count, method); });
+    if (!ok) return 0.f;
     const uint32_t n = g_hitDmg.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 8) LOGI(TPL_LOG " dmg probe #%u CalculationDamage -> %.3f (乘算已迁至 ReallyDeductHP)", n, r);
     return r;
@@ -1797,17 +2096,32 @@ static std::atomic<int32_t> g_ctBomb{-1};
 static std::atomic<int32_t> g_ctCoin{-1};
 static std::atomic<int32_t> g_ctKey{-1};
 static std::atomic<int32_t> g_ctCrystal{-1};
+//  ★★★ r15（修 m06085「水晶还是没效果，仍然提示需要更多水晶」）：水晶通道必须**并入 Mana**
+//   真机证据（跨全部 11 个记录仪目录统计）：
+//     · `costType=2`(CostType.Crystal) 在**任何会话里都是 0 次**；
+//     · 玩家实测那一次「要水晶」的交互，可负担性判定走的是
+//       `NEONPlayerState.HasEnough / HasEnoughRaw / GetAmountRaw`，`costType=22`(CostType.Mana)
+//       （r14 会话 `03:11:20.961 … res probe #1 HasEnough costType=22 gate=0 (Bomb=0 Coin=1 Crystal=2 Key=5)`，
+//        早于全屏崩溃 10 秒，tid 与崩溃同一线程 13384；20261011_034826 同一模式）；
+//     · 离线元数据里全库唯一一条「需要更多 X」的提示是
+//       `NEON.Game.Portal.promptMsgNeedMoreMana`（token=0x04006BA4），X = **Mana**；
+//     · `NEON.Game.PowerUps.AlternativeResourcePu.UnifyManaCrystal`（token=0x0600F75F）
+//       ⇒ 这游戏的 Mana 就是玩家界面上看到的「水晶 / 灵力水晶」。
+//  语义：Mana 只由「无限水晶」这一个开关管（不与金币/钥匙/手雷串联，保持一功能一开关）。
+static std::atomic<int32_t> g_ctMana{-1};
 
-// 资源闸（2026-10-10 三次定稿：**四通道白名单 + 一功能一开关**）。
-//  命中白名单 = CostType.Bomb / Coin / Crystal / Key，且只有该项自己的开关为开时才生效：
+// 资源闸（r15：**五通道白名单 + 一功能一开关**）。
+//  命中白名单 = CostType.Bomb / Coin / Crystal / Key / Mana，且只有该项自己的开关为开时才生效：
 //    开「无限手雷」⇒ 只有 CostType.Bomb 走闸；金币/水晶/钥匙完全不受影响（反之亦然）。
-//  其余 33 个 CostType（Egg / Heart / Mana / Curse / Cooling / Unlocked / RewardDepleted …）
-//  一律返回 false ⇒ 完整走游戏原逻辑，不再被连带改写（上版万能闸的副作用来源）。
+//  Mana 归「无限水晶」（开门消耗的是 Mana，见上面 g_ctMana 的取证）。
+//  其余 32 个 CostType（Egg / Heart / Curse / Cooling / Unlocked / RewardDepleted …）
+//  一律返回 false ⇒ 完整走游戏原逻辑（上版万能闸的副作用来源）。
 static bool ResGateOn(int32_t ct) {
     if (ct == g_ctBomb.load())    return g_bomb.load();
     if (ct == g_ctCoin.load())    return g_coin.load();
     if (ct == g_ctCrystal.load()) return g_crystal.load();
     if (ct == g_ctKey.load())     return g_key.load();
+    if (ct == g_ctMana.load())    return g_crystal.load();
     return false;
 }
 
@@ -1821,16 +2135,17 @@ static void ResProbeCost(const char* who, int32_t ct) {
     if (ct < 0 || ct >= (int32_t)(sizeof(g_ctSeen) / sizeof(g_ctSeen[0]))) {
         const uint32_t n = g_hitResOdd.fetch_add(1, std::memory_order_relaxed) + 1;
         if (n <= 4) {
-            LOGI(TPL_LOG " res probe(越界) #%u %s costType=%d (Bomb=%d Coin=%d Crystal=%d Key=%d)",
-                 n, who, ct, g_ctBomb.load(), g_ctCoin.load(), g_ctCrystal.load(), g_ctKey.load());
+            LOGI(TPL_LOG " res probe(越界) #%u %s costType=%d (Bomb=%d Coin=%d Crystal=%d Key=%d Mana=%d)",
+                 n, who, ct, g_ctBomb.load(), g_ctCoin.load(), g_ctCrystal.load(), g_ctKey.load(),
+                 g_ctMana.load());
         }
         return;
     }
     const int n = g_ctSeen[ct].fetch_add(1, std::memory_order_relaxed) + 1;
     if (n > 4) return;
-    LOGI(TPL_LOG " res probe #%d %s costType=%d gate=%d (Bomb=%d Coin=%d Crystal=%d Key=%d)",
+    LOGI(TPL_LOG " res probe #%d %s costType=%d gate=%d (Bomb=%d Coin=%d Crystal=%d Key=%d Mana=%d)",
          n, who, ct, (int)ResGateOn(ct),
-         g_ctBomb.load(), g_ctCoin.load(), g_ctCrystal.load(), g_ctKey.load());
+         g_ctBomb.load(), g_ctCoin.load(), g_ctCrystal.load(), g_ctKey.load(), g_ctMana.load());
 }
 
 // ①-a 「我有多少」
@@ -1936,6 +2251,7 @@ static int ResChannelOfKey(void* keyObj) {
     }
     lower[n] = '\0';
     if (strstr(lower, "crystal")) return 2;
+    if (strstr(lower, "mana"))    return 2;   // ★ r15：Mana 就是界面上那个「水晶/灵力水晶」
     if (strstr(lower, "coin"))    return 1;
     if (strstr(lower, "key"))     return 3;
     if (strstr(lower, "bomb"))    return 0;
@@ -1943,6 +2259,7 @@ static int ResChannelOfKey(void* keyObj) {
         uint16_t c = 0;
         memcpy(&c, chars + i * 2, sizeof(c));
         if (c == 0x6C34 /* 水 */) return 2;      // 水晶
+        if (c == 0x7075 /* 灵 */) return 2;      // 灵力水晶（Mana）
         if (c == 0x91D1 /* 金 */) return 1;      // 金币
         if (c == 0x94A5 /* 钥 */) return 3;      // 钥匙
         if (c == 0x624B /* 手 */) return 0;      // 手雷
@@ -1986,6 +2303,89 @@ static bool Hooked_IsCostTypeSupported(int32_t ct, void* method) {
     ResProbeCost("IsCostTypeSupported", ct);
     if (ResGateOn(ct)) return true;
     return r;
+}
+
+// ================= ★ r14 无限水晶＝开门（用户 m05869：「水晶现在的作用就是开门，
+//  你没找到这个吗？有一个门需要水晶开」）=================
+//  离线元数据实证：`NEON.Game.Managers.NEONPlayerState`（TYPE index=10255）里有
+//  「解锁成本」三连方法（dump 行 133236-133238，紧邻 RevokeAttrs/RefreshTopLeftUi）：
+//    CanUnlock(CostType, Int32) -> Boolean        token=0x06011390
+//    CanFreeUnlock(CostType)    -> Boolean        token=0x06011391
+//    UnlockCosts(CostType, Int32, Boolean) -> Void token=0x06011392
+//  它们**不属于** HasEnough / GetAmount / ConsumeRaw / IsCostTypeSupported 任何一族
+//  ⇒ r11-r13 的那套资源闸门天然漏掉「开门付水晶」这条路径（这也解释了真机整局
+//  costType=2(Crystal) 一次都没出现：门走的不是那三族）。
+//  1:1 保真：只有当第一实参**看起来是合法 CostType**（按 w 寄存器语义取低 32 位，0..63）
+//  且该通道开关为开时才放行/抑制；指针/对象地址绝不可能落在这个区间 ⇒ 不会顺手放行
+//  别的成本类型（钥匙/金币/手雷各自管各自的开关）。
+static std::atomic<uint32_t> g_hitUnlock{0};
+typedef bool (*CanUnlock_t)(void* thiz, intptr_t p1, intptr_t p2, void* method);
+typedef bool (*CanFreeUnlock_t)(void* thiz, intptr_t p1, void* method);
+typedef void (*UnlockCosts_t)(void* thiz, intptr_t p1, intptr_t p2, intptr_t p3, void* method);
+static CanUnlock_t     g_origCanUnlock     = nullptr;
+static CanFreeUnlock_t g_origCanFreeUnlock = nullptr;
+static UnlockCosts_t   g_origUnlockCosts   = nullptr;
+
+// 形参是否「像 CostType」：枚举按 int32 传参（w 寄存器），故只看低 32 位。
+static inline bool UnlockCostTypeLike(intptr_t p1, int32_t* outCt) {
+    const uint32_t raw = (uint32_t)(uintptr_t)p1;
+    if (raw > 63u) return false;                        // CostType 全表 0..36
+    *outCt = (int32_t)raw;
+    return true;
+}
+
+// CanUnlock(CostType, Int32) -> Boolean：开门判定
+static bool Hooked_CanUnlock(void* thiz, intptr_t p1, intptr_t p2, void* method) {
+    const bool r = g_origCanUnlock ? g_origCanUnlock(thiz, p1, p2, method) : false;
+    int32_t ct = -1;
+    const bool like = UnlockCostTypeLike(p1, &ct);
+    if (like) ResProbeCost("CanUnlock", ct);
+    const uint32_t n = g_hitUnlock.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 16) {
+        LOGI(TPL_LOG " unlock probe #%u CanUnlock p1=%u p2=%u 像CostType=%d orig=%d"
+                     "（开门付资源：0=手雷 1=金币 2=水晶 5=钥匙）",
+             n, (unsigned)(uint32_t)(uintptr_t)p1, (unsigned)(uint32_t)(uintptr_t)p2,
+             (int)like, (int)r);
+    }
+    if (like && ResGateOn(ct)) {
+        if (n <= 16) LOGI(TPL_LOG " unlock gate #%u CanUnlock ct=%d -> true（无限资源：开门判定放行）", n, ct);
+        return true;
+    }
+    return r;
+}
+
+// CanFreeUnlock(CostType) -> Boolean：免费开门判定
+static bool Hooked_CanFreeUnlock(void* thiz, intptr_t p1, void* method) {
+    const bool r = g_origCanFreeUnlock ? g_origCanFreeUnlock(thiz, p1, method) : false;
+    int32_t ct = -1;
+    const bool like = UnlockCostTypeLike(p1, &ct);
+    if (like) ResProbeCost("CanFreeUnlock", ct);
+    const uint32_t n = g_hitUnlock.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 16) {
+        LOGI(TPL_LOG " unlock probe #%u CanFreeUnlock p1=%u 像CostType=%d orig=%d",
+             n, (unsigned)(uint32_t)(uintptr_t)p1, (int)like, (int)r);
+    }
+    if (like && ResGateOn(ct)) return true;
+    return r;
+}
+
+// UnlockCosts(CostType, Int32, Boolean) -> Void：真正扣资源的那一下
+static void Hooked_UnlockCosts(void* thiz, intptr_t p1, intptr_t p2, intptr_t p3, void* method) {
+    int32_t ct = -1;
+    const bool like = UnlockCostTypeLike(p1, &ct);
+    if (like) ResProbeCost("UnlockCosts", ct);
+    const uint32_t n = g_hitUnlock.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 16) {
+        LOGI(TPL_LOG " unlock probe #%u UnlockCosts p1=%u p2=%u p3=%u 像CostType=%d"
+                     "（开门扣资源：0=手雷 1=金币 2=水晶 5=钥匙）",
+             n, (unsigned)(uint32_t)(uintptr_t)p1, (unsigned)(uint32_t)(uintptr_t)p2,
+             (unsigned)(uint32_t)(uintptr_t)p3, (int)like);
+    }
+    if (like && ResGateOn(ct)) {
+        if (n <= 16) LOGI(TPL_LOG " unlock gate #%u UnlockCosts ct=%d 已抑制（无限资源：不扣）", n, ct);
+        return;                                          // 不调原函数 ⇒ 不扣资源
+    }
+    if (g_origUnlockCosts) g_origUnlockCosts(thiz, p1, p2, p3, method);
 }
 
 // ---- 商店交易闸 ----
@@ -2632,21 +3032,20 @@ static void AttriProbeKey(void* keyObj, double value) {
 }
 
 // 读点强制：键名命中规则表 ⇒ 抬到 rule.value（只抬不降，与壳同语义）
+//  ★★★ r16：**本条已停用**（kFullRules 不再参与全屏攻击）。
+//   停用理由（真机证据链）：① 记录仪 20261012_032803 里 pid 22685 崩溃**发生在
+//   全屏攻击已经关掉（03:35:30 feature[3]=0）之后**，而崩前最后几行我方日志正是这条路的
+//   `attri probe #56..#60`（basemeleeorbitalradius / extrabulletspeedmult / …）；
+//   ② 反汇编解出的崩溃语义是「`[x19+0x30]` 里装着小整数 0xa8，被当对象读 +0x10」——
+//   典型的**对象被释放/字段被写坏**；③ 这条规则表会把 `bulletsize/projectilerange/
+//   orbitalradius/checkdistance/damagesize` 抬到 99999、`bulletcount` 抬到 24，直接改
+//   已在飞行的投射物参数，是可疑的写坏源（斌哥壳虽然也改 Attri，但他们改的是**他们自己
+//   那份**参数表，我们无法复刻其具体键与值）。
+//   ⇒ r16 全屏攻击只保留「记录 + 逐个施放」这条纯转发机制（不写任何游戏字段），
+//     属性强制整条下掉；函数保留空壳，避免 5 个读点调用点全部改动（单变量原则）。
 static void AttriForceIfFull(void* keyObj, double* value) {
-    if (!value || !OkPtr(keyObj)) return;
-    if (!g_full.load(std::memory_order_relaxed)) return;
-    char lower[40];
-    AttriKeyLower(keyObj, lower, sizeof(lower));
-    const FullForceRule* rule = AttriMatchFullRule(lower);
-    if (!rule) return;
-    ++g_hitFull;
-    if (*value >= rule->value) return;
-    const double old = *value;
-    *value = rule->value;
-    const uint32_t n = ++g_fullForced;
-    if (n <= 12)
-        LOGI(TPL_LOG " fullscreen: %s(needle=%s) %.3f -> %.3f（全屏攻击：只抬不降）",
-             lower, rule->needle, old, rule->value);
+    (void)keyObj; (void)value;
+    return;
 }
 
 // 无限水晶的读点强制（与全屏同一机制，闸不同）：开闸且键命中水晶计数族 ⇒ 抬到 9999
@@ -2664,14 +3063,15 @@ static std::atomic<uint32_t> g_crystalForced{0};   // 实际抬值次数
 // 用于下一轮直接看到游戏在哪个时机请求水晶计数、键名是什么。
 static void AttriProbeCrystalKey(void* keyObj, double value) {
     static std::atomic<uint32_t> logged{0};
-    if (logged.load(std::memory_order_relaxed) >= 30) return;
+    if (logged.load(std::memory_order_relaxed) >= 60) return;
     if (!OkPtr(keyObj)) return;
     char lower[40];
     AttriKeyLower(keyObj, lower, sizeof(lower));
-    if (strstr(lower, "crystal") == nullptr) return;
+    // ★ r15：水晶＝Mana ⇒ 含 mana 的键也要能看到（门/提示走的就是这条）
+    if (strstr(lower, "crystal") == nullptr && strstr(lower, "mana") == nullptr) return;
     const uint32_t n = ++g_hitCrystalKey;
-    if (logged.fetch_add(1, std::memory_order_relaxed) < 30)
-        LOGI(TPL_LOG " crystal attri probe #%u key=%s value=%.4f on=%d（水晶计数键被请求）",
+    if (logged.fetch_add(1, std::memory_order_relaxed) < 60)
+        LOGI(TPL_LOG " crystal/mana attri probe #%u key=%s value=%.4f on=%d（水晶计数键被请求）",
              n, lower, value, GateCrystal() ? 1 : 0);
 }
 
@@ -2802,6 +3202,18 @@ static const HookSlot kSlots[] = {
     // 战斗 —— 伤害倍率真改写点（伤害链最后一跳）
     {"Dmg_ReallyDeduct",0, 0, "NEON.Game",         "HitPoints",   "ReallyDeductHP", 2,
      (void*)Hooked_ReallyDeductHP,  (void**)&g_origReallyDeduct},
+    // ★ r14 全屏攻击：记录点 + 施放点（只用活体的必经入口，绝不枚举内存）
+    {"Full_KillTakeDmg",0, 0, "NEON.Game",         "Killable",    "TakeDamage", 2,
+     (void*)Hooked_KillableTakeDamage, (void**)&g_origKillableTakeDamage},
+    {"Full_KillUpdate", 0, 0, "NEON.Game",         "Killable",    "Update", 0,
+     (void*)Hooked_KillableUpdate,     (void**)&g_origKillableUpdate},
+    // ★ r14 无限水晶＝开门：解锁成本三连（HasEnough/GetAmount/ConsumeRaw 之外的单一路径）
+    {"Res_CanUnlock",   0, 0, "NEON.Game.Managers", "NEONPlayerState", "CanUnlock", 2,
+     (void*)Hooked_CanUnlock,    (void**)&g_origCanUnlock},
+    {"Res_CanFreeUnlock",0,0, "NEON.Game.Managers", "NEONPlayerState", "CanFreeUnlock", 1,
+     (void*)Hooked_CanFreeUnlock,(void**)&g_origCanFreeUnlock},
+    {"Res_UnlockCosts", 0, 0, "NEON.Game.Managers", "NEONPlayerState", "UnlockCosts", 3,
+     (void*)Hooked_UnlockCosts,  (void**)&g_origUnlockCosts},
     // 移动 / 跳跃
     {"Spd_MoveSpeed",  0, 0, "NEON.Game.Actors",  "PlayerActor", "get_MovementSpeed", 0,
      (void*)Hooked_GetMovementSpeed, (void**)&g_origGetMovementSpeed},
@@ -2995,6 +3407,19 @@ static void ResolveOffsetsAndEnums() {
         LOGW(TPL_LOG " class miss NEON.Game.DamageInfo — 伤害倍率降级为原样放行");
     }
 
+    // ★ r14 全屏攻击：Killable.faction（同阵营判据；拿不到就走类名闸，不猜偏移）
+    {
+        void* clsK = FindClassNs("NEON.Game", "Killable");
+        if (!clsK) clsK = GetApi().FindClassByShortName("Killable");
+        if (clsK) {
+            const size_t fo = GetApi().FieldOffset(clsK, "faction");
+            g_offKillableFaction.store(fo, std::memory_order_relaxed);
+            LOGI(TPL_LOG " fullscreen: Killable faction off=0x%zX（全屏攻击：同阵营判据；0=退化为类名闸）", fo);
+        } else {
+            LOGW(TPL_LOG " class miss NEON.Game.Killable — 全屏攻击改用类名闸（仍只打活体）");
+        }
+    }
+
     g_clsPlayerActor = FindClassNs("NEON.Game.Actors", "PlayerActor");
     if (!g_clsPlayerActor) g_clsPlayerActor = GetApi().FindClassByShortName("PlayerActor");
     if (g_clsPlayerActor) {
@@ -3051,6 +3476,7 @@ static void ResolveOffsetsAndEnums() {
             if (!std::strcmp(kCTNames[i], "Coin"))    g_ctCoin.store(v);
             if (!std::strcmp(kCTNames[i], "Key"))     g_ctKey.store(v);
             if (!std::strcmp(kCTNames[i], "Crystal")) g_ctCrystal.store(v);
+            if (!std::strcmp(kCTNames[i], "Mana"))    g_ctMana.store(v);
             if (off < (int)sizeof(buf) - 24) {
                 off += std::snprintf(buf + off, sizeof(buf) - off, "%s=%d ", kCTNames[i], v);
             }
@@ -3063,6 +3489,10 @@ static void ResolveOffsetsAndEnums() {
         if (g_ctCoin.load() < 0)    LOGW(TPL_LOG " CostType.Coin 未解析 ⇒ 「无限金币」本局无效");
         if (g_ctCrystal.load() < 0) LOGW(TPL_LOG " CostType.Crystal 未解析 ⇒ 「无限水晶」本局无效");
         if (g_ctKey.load() < 0)     LOGW(TPL_LOG " CostType.Key 未解析 ⇒ 「无限钥匙」本局无效");
+        // ★ r15：水晶通道 = Crystal(2) + Mana(22)（开门消耗 Mana，取证见 g_ctMana 处注释）
+        if (g_ctMana.load() < 0)    LOGW(TPL_LOG " CostType.Mana 未解析 ⇒ 「无限水晶（开门）」本局无效");
+        else                        LOGI(TPL_LOG " 无限水晶通道 = Crystal(%d) + Mana(%d)（开门消耗的是 Mana）",
+                                          g_ctCrystal.load(), g_ctMana.load());
     } else {
         LOGW(TPL_LOG " class miss CostType — 四项资源开关本局全部无效（不会牵连其它通道）");
     }

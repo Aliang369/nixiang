@@ -799,6 +799,38 @@ bool IsValidHeapPtr(void* p) {
     return false;
 }
 
+/* 托管堆内判定（v27 全屏攻击加固）：区分「真对象」与「栈/静态区里的同名指针」。
+ * 背景：Api::ScanInstances 是裸字节搜 klass 指针，线程栈（[anon:stack_and_tls:NNNN]）、
+ * .bss 等 rw 段里也会出现同类指针；把这些地址当对象、再按对象布局解引用/写字段就会
+ * 踩栈 ⇒ signal 11。判据（全部满足才算「可能是对象」）：① 完整落在单个 rw 映射内；
+ * ② 段 ≥ 64KiB（排除 .bss / 小 anon）；③ path 为空 / [anon*…] / [heap]（扫描段白名单）；
+ * ④ 段名不含 stack_and_tls/dalvik/jit/scudo/houdini/memfd。低频路径，可接受 fopen。 */
+bool IsManagedObjectPtr(void* p) {
+    if (!p) return false;
+    const uintptr_t a = starptr::Untag((uintptr_t)p);
+    if (!starptr::InUserVa(a)) return false;
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) return false;
+    char line[512];
+    bool ok = false;
+    while (fgets(line, sizeof(line), f)) {
+        uintptr_t start = 0, end = 0;
+        char perms[8] = {0};
+        char path[256] = {0};
+        sscanf(line, "%lx-%lx %s %*s %*s %*s %255s", &start, &end, perms, path);
+        if (a < start || a >= end) continue;
+        const size_t size = (size_t)(end - start);
+        ok = perms[0] == 'r' && perms[1] == 'w' && size >= (64u << 10) &&
+             (path[0] == 0 || strncmp(path, "[anon", 5) == 0 || strcmp(path, "[heap]") == 0) &&
+             !strstr(path, "stack_and_tls") && !strstr(path, "dalvik") &&
+             !strstr(path, "jit") && !strstr(path, "scudo") &&
+             !strstr(path, "houdini") && !strstr(path, "memfd");
+        break;
+    }
+    fclose(f);
+    return ok;
+}
+
 /* maps 级可读/可执行判定（[addr, addr+len) 必须完整落在单个映射内）。
  * 供外部（Games/*.cpp）在做「读目标地址 / 装 inline hook」前做前置守卫。 */
 bool IsReadableRange(uintptr_t addr, size_t len) {
@@ -1275,7 +1307,8 @@ void Api::ScanInstances(void* klass, std::vector<void*>& out, size_t maxScanMB) 
         // 空 path、[anon*]、[heap] 都是 Unity/il2cpp 堆常见映射；旧逻辑 path[0]!=0 直接跳过导致扫不到
         if (path[0] != 0 && strncmp(path, "[anon", 5) != 0 && strcmp(path, "[heap]") != 0) continue;
         if (strstr(path, "dalvik") || strstr(path, "jit-cache") || strstr(path, "scudo") ||
-            strstr(path, "houdini") || strstr(path, "memfd") || strstr(path, "jit-zygote"))
+            strstr(path, "houdini") || strstr(path, "memfd") || strstr(path, "jit-zygote") ||
+            strstr(path, "stack_and_tls"))   // v27：线程栈里也有同名指针，扫它只会产生假对象
             continue;
         uintptr_t size = end - start;
         if (size == 0) continue;
@@ -1299,7 +1332,10 @@ void Api::ScanInstances(void* klass, std::vector<void*>& out, size_t maxScanMB) 
         for (uintptr_t a = start; a + 8 <= scanEnd; a += 8) {
             const uint8_t* p = (const uint8_t*)a;
             if (memcmp(p, patBytes, 8) == 0) {
-                if (a >= start + 8) out.push_back((void*)(a - 8));
+                // v27 修 off-by-8：Il2CppObject 布局是 { Il2CppClass* klass; MonitorData* monitor; }
+                // ⇒ klass 在 +0，命中地址 a **就是**对象地址。旧代码交回 a-8（对象地址-8），
+                // 调用方按对象布局判 `*(void**)cand == klass` 必然失败 ⇒ 全屏攻击 targets 恒 0。
+                out.push_back((void*)a);
             }
         }
     }

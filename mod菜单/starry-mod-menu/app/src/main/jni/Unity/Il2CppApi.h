@@ -166,6 +166,10 @@ Api& GetApi();
 
 bool IsValidHeapPtr(void* p);
 
+/** 托管堆内判定：真对象地址 vs 栈/静态区里的同名指针（全屏攻击按类扫实例时
+ *  必须用它过滤，否则会把线程栈上的指针当对象调用 ⇒ signal 11）。 */
+bool IsManagedObjectPtr(void* p);
+
 /** maps 级可读/可执行判定：[addr, addr+len) 必须完整落在单个映射内。
  *  装 inline hook / 读目标方法前 12 字节之前必须先过这一关（HybridCLR 解释方法的
  *  methodPointer 可能是 0x400000000000 这类「标记值」，直接解引用即致命故障）。

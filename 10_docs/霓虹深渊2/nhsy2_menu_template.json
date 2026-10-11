@@ -2,36 +2,129 @@
   "template_id": "nhsy2",
   "name": "霓虹深渊2",
   "package": "com.veewo.neonabyss2",
-  "source": "Games/nhsy2Entry.cpp knhsy2_Features / Games/nhsy2Mod.h nhsy2Feat @ 2026-10-11 四次定稿（14 槽 = 2 分类 + 12 功能；一功能一开关；资源＝四 CostType 白名单 + 原生 InfiniteKey 通道）",
+  "source": "Games/nhsy2Entry.cpp knhsy2_Features / Games/nhsy2Mod.h nhsy2Feat @ 2026-10-12 r17 定稿（13 槽 = 2 分类 + 11 功能：战斗 5 项 + 资源 5 项 + 解锁标准版；一功能一开关，互不牵连）",
+  "version": {
+    "game": "2026.10.10",
+    "round": "r17",
+    "built": "2026-10-12"
+  },
   "resources_gate": {
     "mode": "whitelist_1to1",
-    "cost_types": ["Bomb", "Coin", "Crystal", "Key"],
+    "cost_types": [
+      "Bomb",
+      "Coin",
+      "Crystal",
+      "Key"
+    ],
+    "cost_type_indices": {
+      "Bomb": 0,
+      "Coin": 1,
+      "Crystal": 2,
+      "Key": 5
+    },
+    "mana_merged_into_crystal": {
+      "CostType.Mana": 22,
+      "why": "水晶门的付费判定走 CostType.Mana(22) 而非 Crystal(2)（跨 11 个记录仪目录实测 costType=2 命中 0 次、costType=22 每局 8–12 次）⇒ 无限水晶开关必须同时放行 Mana 通道，否则永远提示「需要更多水晶」"
+    },
     "native_channel": {
       "name": "InfiniteKey / KeySuit（钥匙套装）",
       "hooks": [
         "NEON.Game.Managers.NEONPlayerState::get_HasInfiniteKey -> true",
         "NEON.Game.Managers.NEONPlayerState::get_InfiniteKey -> >=9999"
       ],
-      "note": "彩色钥匙走游戏原生通道（HUD 钥匙图标切 KeyImageSync.infiniteKeySprite 彩色/∞），不占 CostType；其余 33 个 CostType 一律走游戏原逻辑"
+      "note": "彩色钥匙走游戏原生通道（HUD 钥匙图标切彩色/∞），不占 CostType；其余 33 个 CostType 一律走游戏原逻辑"
     },
-    "note": "NHY2 metadata 无独立「彩色钥匙」货币字段/枚举项（GameplayKey/ColorKey/SpecialKey/彩色/彩虹 全量 0 命中）；NHY1 的彩色钥匙＝GameplayKey 属性机制，本作无对应物。CostType.Token(28) 已查明＝代币机代币，与彩色钥匙无关。"
+    "note": "四个资源开关严格 1:1：手雷=Bomb、金币=Coin、水晶=Crystal+Mana、钥匙=Key；不存在「万能闸」（已撤下）。解锁标准版＝独立开关（feat 7）。"
   },
-  "so_sha256": "81a7da0798340a011d9a58560b8690349943f094ed08a5398ae382a809ea9a1e",
-  "so_size_bytes": 221504,
+  "combat_notes": {
+    "damage_multiplier": "Slider 1..100；唯一点位 HitPoints.ReallyDeductHP（只放大「来自本地玩家」的那些伤害）",
+    "invincible": "Hearts.DeductHP 拦下 + Hearts.inv(0x138)/unkill(0x148) 置 1",
+    "fullscreen": {
+      "feat_num": 3,
+      "mechanism": "伤害广播：Killable.TakeDamage(DamageInfo,IntPtr) 记录这一下（先深拷贝 272 B 到本 so 常驻缓冲）→ Killable.Update 在 200 ms 窗口内对同阵营在场活体逐个施放（每目标独立副本，≤256 只）",
+      "gate": "受害者侧判据（类名不含 player/pet/follower/npc/hearts 即记录；不再依赖 DamageFromLocalPlayer）",
+      "crashed_and_fixed": "2026-10-12 r16/r17：原闪退发生在游戏自身 Killable.TakeDamage 链内的「小整数被当对象」访问（fault addr 0xb8 = x20(0xa8)+0x10），已加伤害链全段故障护栏（FS_GUARDED：原函数自己崩就地吞掉、不闪退并落定位行），并停用 Attri 属性改写（kFullRules）"
+    },
+    "speed_jump": "移速倍率＝Slider 1..10（战斗分类）；无限跳＝Toggle（战斗分类）"
+  },
+  "so_sha256": "fbf635afbc7922b6763e2658ec28fccec80287b1aeb25fe589116591ba24fbcb",
+  "so_size_bytes": 288944,
   "features": [
-    {"feat_num": 0, "name": "Category_战斗"},
-    {"feat_num": 1, "name": "伤害倍率", "type": "slider", "min": 1, "max": 100},
-    {"feat_num": 2, "name": "无敌"},
-    {"feat_num": 3, "name": "技能无CD"},
-    {"feat_num": 4, "name": "全屏攻击", "status": "抓点待补"},
-    {"feat_num": 5, "name": "移速倍率", "type": "slider", "min": 1, "max": 10},
-    {"feat_num": 6, "name": "无限跳"},
-    {"feat_num": 7, "name": "Category_资源"},
-    {"feat_num": 8, "name": "解锁标准版"},
-    {"feat_num": 9, "name": "无限手雷", "cost_type": "Bomb"},
-    {"feat_num": 10, "name": "无限金币", "cost_type": "Coin"},
-    {"feat_num": 11, "name": "无限水晶", "cost_type": "Crystal"},
-    {"feat_num": 12, "name": "无限钥匙", "cost_type": "Key"},
-    {"feat_num": 13, "name": "无限彩色钥匙", "native_channel": "InfiniteKey"}
+    {
+      "feat_num": 0,
+      "name": "Category_战斗",
+      "type": "category"
+    },
+    {
+      "feat_num": 1,
+      "name": "伤害倍率",
+      "type": "slider",
+      "min": 1,
+      "max": 100,
+      "default": 1
+    },
+    {
+      "feat_num": 2,
+      "name": "无敌",
+      "type": "toggle"
+    },
+    {
+      "feat_num": 3,
+      "name": "全屏攻击",
+      "type": "toggle"
+    },
+    {
+      "feat_num": 4,
+      "name": "移速倍率",
+      "type": "slider",
+      "min": 1,
+      "max": 10,
+      "default": 1
+    },
+    {
+      "feat_num": 5,
+      "name": "无限跳",
+      "type": "toggle"
+    },
+    {
+      "feat_num": 6,
+      "name": "Category_资源",
+      "type": "category"
+    },
+    {
+      "feat_num": 7,
+      "name": "解锁标准版",
+      "type": "toggle"
+    },
+    {
+      "feat_num": 8,
+      "name": "无限手雷",
+      "type": "toggle",
+      "cost_type": "Bomb"
+    },
+    {
+      "feat_num": 9,
+      "name": "无限金币",
+      "type": "toggle",
+      "cost_type": "Coin"
+    },
+    {
+      "feat_num": 10,
+      "name": "无限水晶",
+      "type": "toggle",
+      "cost_type": "Crystal+Mana"
+    },
+    {
+      "feat_num": 11,
+      "name": "无限钥匙",
+      "type": "toggle",
+      "cost_type": "Key"
+    },
+    {
+      "feat_num": 12,
+      "name": "无限彩色钥匙",
+      "type": "toggle",
+      "native_channel": "InfiniteKey"
+    }
   ]
 }
