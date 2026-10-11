@@ -262,8 +262,9 @@ LOCAL_ARM_MODE  := arm
 # LOCAL_SRC_FILES += Main.cpp Games/WgglsMod.cpp Unity/Il2CppApi.cpp
 # 追迹迷城 1.0.20261009 / vc101201 TapTap（2026-10-10 重 dump＋RVA 重定位见 ZjmcMod.cpp）
 # 上一版 0912 的 RVA 已全部作废；五项功能与 17 个 Hook 目标签名未变
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
-LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 2026-10-12 切走（无限升级 12.10701/vc1644 星空版出包），恢复时取消下面两行注释
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
 # 我的勇者 7.6.1（wdyz）— Battle 结算钩：五倍攻击(敌 ×5)/无敌(HeroSettle 0)
 # 2026-09-07 星光自注入验证（不用 frida；TryEnterCd 已证死路，勿挂技能簇）
 # 2026-09-20 7.6.1(vc203) 重 dump：RVA 全漂移 → 双路径按名兜底 + 新 RVA 回填
@@ -283,9 +284,11 @@ LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
 # LOCAL_SRC_FILES := Main.cpp Games/Es2Mod.cpp Unity/Il2CppApi.cpp
 # 超维进化（cwjh）— Cocos2djs se::evalString splice（20260921 0.3.5 热更：doDmg 14 参/前缀动态匹配）
 # 防御·抗性新增形态C锚点（o/c + StatusDef.getMinEdr）；回血回蓝×4、暴击+60pp、闪避+35pp
-# 无限升级 12.10701 / vc1644 — 热更 dll 字节替换（2026-09-23 二次热更正式包）
+# 无限升级 12.10701 / vc1644 — 热更 dll 字节替换（2026-10-12 星空版出包，激活；走 scripts/wxsj_so_only.sh）
 # 2026-09-23 白天：官方再推热更，dll 1960960 → 2030080 B；已用 DIAG 包抓到新 dll 并重打补丁，
 #   kOrigDllLen 已改 2030080，DIAG 开关按约定移除（勿再打开，否则 release 构建被脚本拒绝）。
+# 2026-10-12：现网热更已切到 hotfix3 2028544（清单 F12671617101211 / 2026-09-24），
+#   WxsjMod.cpp 的 (len,fnv) 双变体表已含 hf3，故本次出包同时内置 hf2+hf3。
 # 我的勇者 7.6.1（wdyz）— 2026-09-29 切走（长生天机降世 1.0.2 出包），恢复时取消下面两行注释
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
 # LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
@@ -294,8 +297,8 @@ ifdef STARRY_GAME_DZQS
 LOCAL_CFLAGS    := $(filter-out -DSTARRY_GAME_WDYZ,$(LOCAL_CFLAGS)) -DENABLE_UNITY_HOOK -DSTARRY_GAME_DZQS
 LOCAL_SRC_FILES := Main.cpp Games/DzqsMod.cpp Unity/Il2CppApi.cpp
 endif
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
-# LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
+LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
 # 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
 # 20260908 SIGABRT 修复：类查齐后隔轮再读 offsets（热更 layout 中途 field_get_offset 必崩）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
