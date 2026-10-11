@@ -2167,9 +2167,35 @@ static void InstallLoginAssistHooks() {
 //    旧 needle `projectilerange` / `range` 在 81 个键里**一次都没命中**（整个名单
 //    没有任何键含 "range"），所以旧版全场只抬了 `finalbulletlifespanmult` 一条。
 //    斌哥机制＝「按名字把某个值抬上去、只抬不降」⇒ 这里就是它的执行面（Attri::TryGetValue）。
+//  ★★★ r10（用户 m04844「攻击一个怪物，只有一个怪物受到伤害」）——键名名单已离线坐实：
+//    `NEON.Game.Managers.GameConstVariables`（index 10208）的 **380 个字段名小写后
+//    就是 AutoDict 的键名**（实测 81 键全部能在其中逐字对上，含 `basemeleeorbitalradius`
+//    / `currentspriteattackcount` 这类只有玩到才被请求的键）。⇒ 键名不用再猜，直接把
+//    「攻击判定几何」那一族字段名拿来当 needle（都只在与攻击相关的时机被读，抬它们
+//    就是斌哥的「按名抬值、只抬不降」）：
+//      MeleeCheckDistance / ExtraMeleeCheckDistance / FinalMeleeCheckDistance（近战命中判定距离）
+//      DamageSize（NEONPlayerState.get_DamageSize 的底值键）、ProjectileRange（弹道射程）
+//      BaseMeleeOrbitalRadius（环绕近战半径）
 static struct FullForceRule { const char* needle; double value; } kFullRules[] = {
-    {"bulletsize", 100.0},   // finalbulletsizemult（实测键）：子弹体积 ×100 ⇒ 攻击覆盖全屏
-    {"lifespan",    60.0},   // finalbulletlifespanmult（实测键）：子弹存活久 ⇒ 打得更远
+    {"checkdistance",   99999.0},  // MeleeCheckDistance 族：命中判定距离 ⇒ 判定覆盖整屏
+    {"damagesize",      99999.0},  // DamageSize：玩家伤害判定大小
+    {"projectilerange", 99999.0},  // ProjectileRange：弹道射程
+    {"orbitalradius",   99999.0},  // BaseMeleeOrbitalRadius：环绕近战半径
+    {"bulletcount",        24.0},  // finalbulletcount（实测键）：一次 24 发铺开 ⇒ 一枪扫全场
+    {"bulletsize",        100.0},  // finalbulletsizemult（实测键）：子弹体积 ×100
+    {"lifespan",           60.0},  // finalbulletlifespanmult（实测键）：子弹存活久
+};
+
+//  ★ r10 无限水晶（用户 m04844「使用水晶，提示需要更多水晶」）：水晶计数同样是
+//    AutoDict 的键（GameConstVariables 的 `CurrentSpriteCrystalCount`(0x0400CAED)，
+//    与**实测已被请求的** `currentspriteattackcount` / `currentspriteattackandshadowcount`
+//    同一族）⇒ 用同一个读点强制机制抬计数。
+//    只抬**计数键** `*spritecrystalcount`：`LeastOneSpriteCrystal`(保底值) 故意不抬——
+//    保底若被抬到 9999，而内部真实计数走的是不走 Attri 的循环，就可能触发「补到保底」
+//    的死循环/爆量生成；计数键本身只被读来判定「够不够」，抬它没有这个风险。
+static struct GateForceRule { const char* needle; double value; } kCrystalRules[] = {
+    {"spritecrystalcount", 9999.0},   // currentspritecrystalcount（水晶计数）
+    {"crystalcount",       9999.0},   // 兜底：任何 *CrystalCount* 键（不含 leastonespritecrystal）
 };
 static const uint32_t    kAttriProbeMax  = 120;
 
@@ -2253,11 +2279,55 @@ static void AttriForceIfFull(void* keyObj, double* value) {
              lower, rule->needle, old, rule->value);
 }
 
+// 无限水晶的读点强制（与全屏同一机制，闸不同）：开闸且键命中水晶计数族 ⇒ 抬到 9999
+static const GateForceRule* AttriMatchCrystalRule(const char* lower) {
+    if (!lower || lower[0] == '\0') return nullptr;
+    for (const GateForceRule& r : kCrystalRules)
+        if (strstr(lower, r.needle) != nullptr) return &r;
+    return nullptr;
+}
+
+static std::atomic<uint32_t> g_hitCrystalKey{0};   // 水晶键请求次数（含未开闸）
+static std::atomic<uint32_t> g_crystalForced{0};   // 实际抬值次数
+
+// 水晶键专属探针：键名含 crystal 就打印（不受 120 条 attri 窗口限制），
+// 用于下一轮直接看到游戏在哪个时机请求水晶计数、键名是什么。
+static void AttriProbeCrystalKey(void* keyObj, double value) {
+    static std::atomic<uint32_t> logged{0};
+    if (logged.load(std::memory_order_relaxed) >= 30) return;
+    if (!OkPtr(keyObj)) return;
+    char lower[40];
+    AttriKeyLower(keyObj, lower, sizeof(lower));
+    if (strstr(lower, "crystal") == nullptr) return;
+    const uint32_t n = ++g_hitCrystalKey;
+    if (logged.fetch_add(1, std::memory_order_relaxed) < 30)
+        LOGI(TPL_LOG " crystal attri probe #%u key=%s value=%.4f on=%d（水晶计数键被请求）",
+             n, lower, value, GateCrystal() ? 1 : 0);
+}
+
+static void AttriForceIfCrystal(void* keyObj, double* value) {
+    if (!value || !OkPtr(keyObj)) return;
+    char lower[40];
+    AttriKeyLower(keyObj, lower, sizeof(lower));
+    AttriProbeCrystalKey(keyObj, *value);
+    if (!GateCrystal()) return;
+    const GateForceRule* rule = AttriMatchCrystalRule(lower);
+    if (!rule) return;
+    if (*value >= rule->value) return;
+    const double old = *value;
+    *value = rule->value;
+    const uint32_t n = ++g_crystalForced;
+    if (n <= 12)
+        LOGI(TPL_LOG " crystal attri: %s(needle=%s) %.3f -> %.3f（无限水晶：只抬不降）",
+             lower, rule->needle, old, rule->value);
+}
+
 static bool Hooked_AttriTryGetValue(void* thiz, void* key, double* outValue, void* method) {
     const bool ok = g_origAttriTryGet ? g_origAttriTryGet(thiz, key, outValue, method) : false;
     if (ok && outValue) {
         AttriProbeKey(key, *outValue);
         AttriForceIfFull(key, outValue);
+        AttriForceIfCrystal(key, outValue);
     }
     return ok;
 }
@@ -2266,6 +2336,7 @@ static double Hooked_AttriGet(void* thiz, void* key, void* method) {
     double v = g_origAttriGet ? g_origAttriGet(thiz, key, method) : 0.0;
     AttriProbeKey(key, v);
     AttriForceIfFull(key, &v);
+    AttriForceIfCrystal(key, &v);
     return v;
 }
 
@@ -2273,6 +2344,7 @@ static double Hooked_AttriGetItem(void* thiz, void* key, void* method) {
     double v = g_origAttriGetItem ? g_origAttriGetItem(thiz, key, method) : 0.0;
     AttriProbeKey(key, v);
     AttriForceIfFull(key, &v);
+    AttriForceIfCrystal(key, &v);
     return v;
 }
 
@@ -2281,6 +2353,7 @@ static double Hooked_AttriGetOrDefault(void* thiz, void* key, float defValue, vo
                                    : static_cast<double>(defValue);
     AttriProbeKey(key, v);
     AttriForceIfFull(key, &v);
+    AttriForceIfCrystal(key, &v);
     return v;
 }
 
@@ -2289,6 +2362,7 @@ static float Hooked_AttriF(void* thiz, void* key, void* method) {
     AttriProbeKey(key, static_cast<double>(v));
     double d = static_cast<double>(v);
     AttriForceIfFull(key, &d);
+    AttriForceIfCrystal(key, &d);
     return static_cast<float>(d);
 }
 
