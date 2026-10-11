@@ -163,6 +163,48 @@ static IntGetter_t  g_origGetInfKey  = nullptr;   // get_InfiniteKey（KeySuit �
 static IntGetter_t  g_origGetCoinValue = nullptr;
 static IntGetter_t  g_origGetRealKey   = nullptr;
 static IntGetter_t  g_origGetKeyValue  = nullptr;
+
+// ============================================================================
+//  ★ 2026-10-12 r8：用户实测 m04183「全屏攻击无效果、无限水晶没效果」的两处新挂点
+// ============================================================================
+//  ① 全屏攻击 —— 真正生效的射程读点：`NEONPlayerState.get_ProjectileRange()`（实例、argc=0）。
+//     旧路线（§⑥.7 kFullRules 按 Attri 键名）实测整场 58 个属性键里**没有任何
+//     range/scope 类键**（只命中 finalbulletlifespanmult）⇒ 对射程无能为力。
+//     ★ r8 首轮真机已证：这个 getter 的返回类型**不是数值**。装钩诊断打印的真名是
+//     `Veewo.Stats.Stat`（Veewo.Stat.dll，TYPE index=25553，40 方法 / 9 字段）——
+//     它是游戏自己的 stat 包装对象（字段 `baseValue` / `_cachedValue`，属性 `get_Value`）。
+//     所以 r8 那套「伪造一个 double 当返回值」＝把垃圾当**对象指针**交给游戏 ⇒ 必然崩。
+//     r8b 改法（本轮落地）：本层只**透传**并记下这个 Stat 实例指针；
+//     真正的强制点挪到 `Veewo.Stats.Stat.get_Value`（argc=0 -> System.Single），
+//     且只在 `thiz == g_projRangeStat`（同一个实例）时强制 ⇒ 1:1 只改「射程」这一条 stat，
+//     不波及伤害 / 移速 / 其它任何 stat；也不写任何字段与缓存（最坏只是不生效）。
+static std::atomic<uint32_t> g_hitRange{0};
+static std::atomic<uint32_t> g_hitRangeForce{0};
+static std::atomic<uint32_t> g_hitDamageSize{0};
+typedef void* (*ObjGetter_t)(void* thiz, void* method);
+static ObjGetter_t   g_origProjRange  = nullptr;  // NEONPlayerState.get_ProjectileRange -> Veewo.Stats.Stat*
+static ObjGetter_t   g_origDamageSize = nullptr;  // NEONPlayerState.get_DamageSize（同类对象，只读探针）
+static FloatGetter_t g_origStatValue  = nullptr;  // Veewo.Stats.Stat.get_Value -> System.Single
+static std::atomic<void*> g_projRangeStat{nullptr};
+static const float kFullRangeForce = 99999.0f;   // 射程强制值（真类型 Single，不再赌调用约定）
+
+//  ② 无限水晶 —— 真正的水晶通道在 `NEON.Game.SpriteManager`。
+//     依据：`NEONPlayerState` 的 275 个字段里**没有任何 crystal 字段**（离线字段表实证），
+//     `get_CurrentSpriteCrystalCount` 只是 SpriteManager 用 `SetPlayerStateSpriteCount`
+//     推过去的展示值 ⇒ 旧挂点（Res_Crystal）实测整场 0 次调用＝死路径。
+//     SpriteManager 三件套（实例方法）：GetCrystalSpriteCount(argc=0)->Int32、
+//     UseCrystalSprite(argc=1)->Int32、AddCrystalSprite(argc=0)->Void；
+//     另有 NEONPlayerState.ConsumeSpriteAtkRaw(argc=2)->Bool（精灵攻击消耗，开闸恒 true）。
+static std::atomic<uint32_t> g_hitCrystalCount{0};
+static std::atomic<uint32_t> g_hitUseCrystal{0};
+static std::atomic<uint32_t> g_hitSpriteAtk{0};
+static IntGetter_t  g_origGetCrystalSpriteCount = nullptr;
+typedef int32_t (*SpriteArg1_t)(void* thiz, intptr_t a, void* method);
+static SpriteArg1_t g_origUseCrystalSprite = nullptr;
+typedef bool (*ConsumeSpriteAtk_t)(void* thiz, intptr_t a, intptr_t b, void* method);
+static ConsumeSpriteAtk_t g_origConsumeSpriteAtk = nullptr;
+static void* g_miAddCrystalSprite = nullptr;      // SpriteManager.AddCrystalSprite()（退款/补发用）
+static std::atomic<bool> g_grantCrystalTried{false};
 // 扣减面：恒不扣（参数一律 intptr_t 透传，且**不调用 orig** ⇒ 参数类型无关紧要）
 typedef bool (*ConsumeRaw_t)(void* thiz, intptr_t a, intptr_t b, void* method);
 static ConsumeRaw_t g_origConsumeCoin = nullptr;
@@ -425,8 +467,16 @@ static bool RunGuarded(const char* tag, void (*fn)(void*), void* arg) {
 }
 
 // ---- 4.8 槽位熔断 ----
-static const int kSlotsMax = 64;
+//  ★ 2026-10-12（r8c 根因）：kSlotsMax 必须 ≥ kSlotsCount。原来写死 64，而
+//   表已扩到 66 ⇒ 循环 `i < kSlotsCount && i < kSlotsMax` 在 i=64 处静默截断，
+//   最后两槽（Res_UseCrystal / Res_SpriteAtk）**从未被尝试安装**，日志里既没有
+//   probe 也没有 skip、也没进 dead ⇒ 「无限水晶没效果」而查不出原因（真机证据：
+//   install pass: ok=61 dead=0/66、probe 行 64 条主表 + 6 条登录槽 = 70 条，
+//   最后的 Res_CrystalCount 之后直接跳到 install pass）。教训：上限类常量必须
+//   配一条 static_assert 把「表比上限大」变成编译期错误，而不是运行期静默丢槽。
+static const int kSlotsMax = 96;
 static bool g_slotDead[kSlotsMax];
+// （编译期断言写在 `kSlotsCount` 定义之后 —— 常量必须先声明，见本文件槽位表尾部）
 static std::atomic<int> g_installedCount{0};
 // 是否已跑过一次完整装钩。结构性失败的槽位（本机 ±124MB 内无跳板空洞、
 // 入口是 `br xN` veneer 等）再重试一万次也还是失败，而每轮都要全量重扫
@@ -1138,8 +1188,142 @@ static int32_t Hooked_GetCrystal(void* thiz, void* method) {
     const int32_t r = g_origGetCrystal ? g_origGetCrystal(thiz, method) : 0;
     if (!GateCrystal()) return r;
     const uint32_t n = g_hitCrystal.fetch_add(1, std::memory_order_relaxed) + 1;
-    if (n <= 5) LOGI(TPL_LOG " crystal probe #%u real=%d -> %d", n, r, kInfiniteAmount);
+    if (n <= 5) LOGI(TPL_LOG " crystal probe #%u real=%d -> %d（展示值路径：实测 0 次调用＝死路径）",
+                     n, r, kInfiniteAmount);
     return kInfiniteAmount;
+}
+
+// ── r8b 全屏攻击：射程读点＝透传 + 记实例（不在这一层伪造返回值，见上方注释）──
+static void* Hooked_GetProjectileRange(void* thiz, void* method) {
+    void* stat = g_origProjRange ? g_origProjRange(thiz, method) : nullptr;
+    const uint32_t n = g_hitRange.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (!OkPtr(stat)) {
+        if (n <= 12) LOGW(TPL_LOG " fullscreen range probe #%u stat=NULL（未取到射程 stat 实例）", n);
+        return stat;
+    }
+    void* prev = g_projRangeStat.exchange(stat, std::memory_order_relaxed);
+    if (n <= 12 || prev != stat) {
+        LOGI(TPL_LOG " fullscreen range probe #%u stat=%p prev=%p on=%d（射程 stat 实例；强制点在 Stat.get_Value）",
+             n, stat, prev, g_full.load(std::memory_order_relaxed) ? 1 : 0);
+    }
+    return stat;
+}
+
+// 只读探针：DamageSize（与射程同类的 stat 对象，本轮只留证据，不动它）
+static void* Hooked_GetDamageSize(void* thiz, void* method) {
+    void* stat = g_origDamageSize ? g_origDamageSize(thiz, method) : nullptr;
+    const uint32_t n = g_hitDamageSize.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 12) {
+        LOGI(TPL_LOG " fullscreen damagesize probe #%u stat=%p（只读探针）", n, stat);
+    }
+    return stat;
+}
+
+// ── r8b 全屏攻击真正的强制点：Veewo.Stats.Stat.get_Value（实例闸，1:1）──
+//  只有 `thiz` 是射程那一个 Stat 实例时才抬到 99999；不写字段、不碰缓存 ⇒
+//  游戏自身的 Refresh / Dirty / 事件逻辑完全不受影响，最坏情况只是「没命中、不生效」。
+static float Hooked_StatValue(void* thiz, void* method) {
+    const float r = g_origStatValue ? g_origStatValue(thiz, method) : 0.0f;
+    if (!g_full.load(std::memory_order_relaxed)) return r;
+    if (!thiz || thiz != g_projRangeStat.load(std::memory_order_relaxed)) return r;
+    const uint32_t n = g_hitRangeForce.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 12) {
+        LOGI(TPL_LOG " fullscreen stat force #%u get_Value %.3f -> %.1f（射程 stat 实例闸命中）",
+             n, static_cast<double>(r), static_cast<double>(kFullRangeForce));
+    }
+    return kFullRangeForce;
+}
+
+// ── r8 无限水晶：SpriteManager 真通道 ──
+//  补发/退款都走游戏自带的 AddCrystalSprite()（作者意图内的入口，不写任何字段内存）。
+//  补发只做一次（g_grantCrystalTried），目的是「先给一个」而不是「凭空造满」：
+//  为 0 时把 count 硬抬到 9999 会让按 count 索引的 UI/逻辑越界，所以 0 保持 0。
+static void CrystalSpriteRefund(void* spriteMgr, const char* why, uint32_t n) {
+    auto& api = GetApi();
+    if (!g_miAddCrystalSprite || !api.runtime_invoke || !OkPtr(spriteMgr)) {
+        if (n <= 10) LOGW(TPL_LOG " crystal: 拒绝调用 AddCrystalSprite（句柄=%p 实例=%p why=%s）",
+                          g_miAddCrystalSprite, spriteMgr, why ? why : "?");
+        return;
+    }
+    void* exc = nullptr;
+    api.runtime_invoke(g_miAddCrystalSprite, spriteMgr, nullptr, &exc);
+    if (n <= 10) {
+        LOGI(TPL_LOG " crystal: 已调用 SpriteManager.AddCrystalSprite() 补回 1 个（%s exc=%p）",
+             why ? why : "?", exc);
+    }
+}
+
+static int32_t Hooked_GetCrystalSpriteCount(void* thiz, void* method) {
+    const int32_t r = g_origGetCrystalSpriteCount ? g_origGetCrystalSpriteCount(thiz, method) : 0;
+    const bool on = GateCrystal();
+    const uint32_t n = g_hitCrystalCount.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 10) {
+        LOGI(TPL_LOG " crystal probe #%u SpriteManager.GetCrystalSpriteCount real=%d on=%d（本层只探针：不抬 count，避免按数量索引的 UI/逻辑越界）",
+             n, r, on ? 1 : 0);
+    }
+    if (!on) return r;
+    if (r <= 0) {                     // 一个都没有时先给一个（只补一次）
+        if (!g_grantCrystalTried.load(std::memory_order_relaxed)) {
+            g_grantCrystalTried.store(true, std::memory_order_relaxed);
+            CrystalSpriteRefund(thiz, "无限水晶：起手补发 1 个", n);
+        }
+        return r;
+    }
+    // ★ r8b：不再把 count 抬到 9999（真机未必安全：按数量索引的 UI/逻辑会越界）；
+    //   「无限水晶」的实效改由「用完退款 + 精灵攻击免费」承担（数量只增不减）。
+    return r;
+}
+
+// ── r9（用户 m04709「无限水晶改成无条件使用就可以了」）──
+//  语义：开闸后水晶的「使用」不再受余额限制 —— 先按游戏自己的入口补 1 个
+//  （AddCrystalSprite，作者意图内的 API，不写任何字段内存），再重试一次原调用；
+//  成功后退款 ⇒ 数量只增不减。关闸时完全原样转发。
+static int32_t Hooked_UseCrystalSprite(void* thiz, intptr_t idx, void* method) {
+    const int32_t r = g_origUseCrystalSprite ? g_origUseCrystalSprite(thiz, idx, method) : 0;
+    const bool on = GateCrystal();
+    const uint32_t n = g_hitUseCrystal.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 10) {
+        LOGI(TPL_LOG " crystal probe #%u SpriteManager.UseCrystalSprite(idx=%d) real=%d on=%d",
+             n, static_cast<int>(idx), r, on ? 1 : 0);
+    }
+    if (!on) return r;
+    if (r <= 0 && g_origUseCrystalSprite) {      // 余额不足/失败 ⇒ 无条件使用：补 1 再重试
+        CrystalSpriteRefund(thiz, "无限水晶：余额不足，先补 1 再执行", n);
+        const int32_t r2 = g_origUseCrystalSprite(thiz, idx, method);
+        CrystalSpriteRefund(thiz, "无限水晶：重试成功后退款", n);
+        if (n <= 10) {
+            LOGI(TPL_LOG " crystal: 无条件使用 real=%d -> 重试=%d（不足即补）", r, r2);
+        }
+        return r2 > 0 ? r2 : 1;
+    }
+    CrystalSpriteRefund(thiz, "无限水晶：用完退款", n);
+    return r;
+}
+
+// 只读探针：水晶数量是否真由 AddCrystalSprite() 增长（判定水晶体系是否活着，
+//   为下一轮「消耗点到底在哪」留证据；不改任何值）。
+typedef void (*VoidGetter_t)(void* thiz, void* method);
+static VoidGetter_t           g_origAddCrystalSprite = nullptr;
+static std::atomic<uint32_t>  g_hitCrystalAdd{0};
+
+static void Hooked_AddCrystalSprite(void* thiz, void* method) {
+    const uint32_t n = g_hitCrystalAdd.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 10) {
+        LOGI(TPL_LOG " crystal probe #%u SpriteManager.AddCrystalSprite（水晶被增加：通道活着）", n);
+    }
+    if (g_origAddCrystalSprite) g_origAddCrystalSprite(thiz, method);
+}
+
+static bool Hooked_ConsumeSpriteAtk(void* thiz, intptr_t a, intptr_t b, void* method) {
+    const bool on = GateCrystal();
+    const bool r = on ? true
+                      : (g_origConsumeSpriteAtk ? g_origConsumeSpriteAtk(thiz, a, b, method) : false);
+    const uint32_t n = g_hitSpriteAtk.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 10) {
+        LOGI(TPL_LOG " crystal probe #%u ConsumeSpriteAtkRaw(%d,%d) on=%d -> %d（无限水晶：精灵攻击免费）",
+             n, static_cast<int>(a), static_cast<int>(b), on ? 1 : 0, r ? 1 : 0);
+    }
+    return r;
 }
 
 static int32_t Hooked_GetGitterCoin(void* thiz, void* method) {
@@ -1964,7 +2148,7 @@ static void InstallLoginAssistHooks() {
 //       double** ⇒ `TryGetValue` 第 2 形参是 8 字节 double 出参，钩子里直接改写
 //       它不会破坏任何东西（这也是 desc2 被斌哥选作「键名嗅探点」的原因）。
 //  实现：**只在读点强制**（不写任何对象内存、不碰 SetClamp/变更事件、不调 Set）：
-//    键名小写后命中规则表（§kFullRules：projectilerange / range / lifespan）⇒
+//    键名小写后命中规则表（§kFullRules：bulletsize / lifespan，均为真机实测键名）⇒
 //    把这次读到的值抬到规则目标（只抬不降），其余键一律原样返回；同时按
 //    「首次见到该键」去重打印 `attri probe #N key=… value=…`（上限 120 条），
 //    用于真机直接看到游戏到底查询了哪些属性名
@@ -1978,10 +2162,14 @@ static void InstallLoginAssistHooks() {
 //      可以超出这 104 个（MultipleJumpCountLimit 等变体就不在表里）⇒ 键名只能
 //      靠真机 `attri probe` 名单定；先用一组候选把「射程/存活/倍率」覆盖住，
 //      并逐次打印命中的是哪个 needle，下一轮按名单收窄。
+//  ★ r9（用户 m04709「全屏攻击抄不明白」）：needle **全部换成真机实测键名**
+//    （名单 `/tmp/nhsy2/keys_observed.txt`，81 键，来自 `attri probe`）——
+//    旧 needle `projectilerange` / `range` 在 81 个键里**一次都没命中**（整个名单
+//    没有任何键含 "range"），所以旧版全场只抬了 `finalbulletlifespanmult` 一条。
+//    斌哥机制＝「按名字把某个值抬上去、只抬不降」⇒ 这里就是它的执行面（Attri::TryGetValue）。
 static struct FullForceRule { const char* needle; double value; } kFullRules[] = {
-    {"projectilerange", 9999.0},   // 武器射程（主候选，键名与游戏字段同名）
-    {"range",           9999.0},   // WeaponProjectileRange / AttackRange 等变体
-    {"lifespan",          60.0},   // BulletLifeSpanMult：子弹存活久 ⇒ 打满全屏
+    {"bulletsize", 100.0},   // finalbulletsizemult（实测键）：子弹体积 ×100 ⇒ 攻击覆盖全屏
+    {"lifespan",    60.0},   // finalbulletlifespanmult（实测键）：子弹存活久 ⇒ 打得更远
 };
 static const uint32_t    kAttriProbeMax  = 120;
 
@@ -2255,9 +2443,44 @@ static const HookSlot kSlots[] = {
      (void*)Hooked_AttriGetOrDefault, (void**)&g_origAttriGetOrDef},
     {"Full_AttriF",     0, 0, "NEON.Framework", "Attri", "f", 1,
      (void*)Hooked_AttriF,            (void**)&g_origAttriF},
+
+    // ────────────────────────────────────────────────────────────────────────
+    //  ★ r8（用户 m04183「全屏攻击没效果、无限水晶没效果」）新增 5 个槽位
+    // ────────────────────────────────────────────────────────────────────────
+    //  全屏攻击：射程真正生效的读点（旧 Attri 键名路线实测无 range 类键）；
+    //            get_DamageSize 只读探针（留证据，不改值）。
+    //  ★ r8b：get_ProjectileRange 返回的是 `Veewo.Stats.Stat` 对象（r8 真机打印真名），
+    //          本层只透传 + 记实例；真正的强制点在 Full_StatValue（同实例闸 1:1）。
+    {"Full_ProjRange",  0, 0, "NEON.Game.Managers", "NEONPlayerState", "get_ProjectileRange", 0,
+     (void*)Hooked_GetProjectileRange, (void**)&g_origProjRange},
+    {"Full_DamageSize", 0, 0, "NEON.Game.Managers", "NEONPlayerState", "get_DamageSize", 0,
+     (void*)Hooked_GetDamageSize,      (void**)&g_origDamageSize},
+    {"Full_StatValue",  0, 0, "Veewo.Stats", "Stat", "get_Value", 0,
+     (void*)Hooked_StatValue,          (void**)&g_origStatValue},
+    //  无限水晶：SpriteManager 真通道（旧 Res_Crystal 挂在 NEONPlayerState 展示值＝死路径）
+    {"Res_CrystalCount", 0, 0, "NEON.Game", "SpriteManager", "GetCrystalSpriteCount", 0,
+     (void*)Hooked_GetCrystalSpriteCount, (void**)&g_origGetCrystalSpriteCount},
+    {"Res_UseCrystal",  0, 0, "NEON.Game", "SpriteManager", "UseCrystalSprite", 1,
+     (void*)Hooked_UseCrystalSprite,      (void**)&g_origUseCrystalSprite},
+    {"Res_SpriteAtk",   0, 0, "NEON.Game.Managers", "NEONPlayerState", "ConsumeSpriteAtkRaw", 2,
+     (void*)Hooked_ConsumeSpriteAtk,      (void**)&g_origConsumeSpriteAtk},
+    //  无限水晶 r9（m04709）：AddCrystalSprite 只读探针 —— 它的父类实现（水晶通道是否活着）；
+    //  真正的「无条件使用」在 Res_UseCrystal（不足即补 1 再重试）。
+    {"Res_CrystalAdd",  0, 0, "NEON.Game", "SpriteManager", "AddCrystalSprite", 0,
+     (void*)Hooked_AddCrystalSprite,      (void**)&g_origAddCrystalSprite},
 };
 
+// ★ 2026-10-12（r8c 根因）：`InstallAllHooks` 的循环是
+//   `for (i = 0; i < kSlotsCount && i < kSlotsMax; ++i)` —— 表比 kSlotsMax 长时
+//   末尾槽位**静默丢弃**（无 probe / 无 skip / 不进 dead），只会表现为「功能没效果」。
+//   真机实证：r8b 表 66 槽、kSlotsMax=64 ⇒ Res_UseCrystal / Res_SpriteAtk 两槽
+//   从未被尝试安装（`install pass: ok=61 dead=0/66`，probe 行数 64+6）。
+
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
+
+// 这条断言把上面那类事故变成**编译期**错误（必须紧跟 kSlotsCount 定义）。
+static_assert(kSlotsCount <= kSlotsMax,
+              "kSlotsMax 小于槽位表长度 ⇒ 末尾槽位会被静默丢弃，请同步抬高 kSlotsMax");
 
 // ============================================================================
 //  ⑥.6 运行时字段偏移 / 枚举字面量解析（装钩时做一次；失败只降级）
@@ -2398,6 +2621,43 @@ static void ResolveOffsetsAndEnums() {
         if (g_ctKey.load() < 0)     LOGW(TPL_LOG " CostType.Key 未解析 ⇒ 「无限钥匙」本局无效");
     } else {
         LOGW(TPL_LOG " class miss CostType — 四项资源开关本局全部无效（不会牵连其它通道）");
+    }
+
+    // ---- 6.6z r8b：射程 stat 通道的句柄 + 无限水晶的 AddCrystalSprite 方法句柄 ----
+    //  ★★ 坑（r8 首轮真机已证，绝对不要再犯）：**`api.type_name()` 的返回值不能 `free()`**。
+    //      r8 用它打一行返回类型名诊断后 `free(tn)`，真机当场：
+    //        F/libc: Pointer tag for 0x7441496f90 was truncated … tagged-pointers
+    //        F/libc: Fatal signal 6 (SIGABRT), code -1 (SI_QUEUE)   → Abort message 同上
+    //      （scudo 分配器 abort；该串不是可 free 的 malloc 内存 / 带 pointer tag）。
+    //      r8 因此拿到了唯一想要的结论——`get_ProjectileRange` 返回 `Veewo.Stats.Stat`
+    //      对象（不是数值）⇒ 强制点挪到 `Veewo.Stats.Stat.get_Value`（Full_StatValue，实例闸）。
+    //      诊断目的已达成，本模块**不再调用 type_name / free**。
+    {
+        auto& apiR = GetApi();
+        void* kPS = FindClassNs("NEON.Game.Managers", "NEONPlayerState");
+        if (!kPS) kPS = apiR.FindClassByShortName("NEONPlayerState");
+        void* miRange = kPS ? apiR.GetMethod(kPS, "get_ProjectileRange", 0) : nullptr;
+        void* kStat = FindClassNs("Veewo.Stats", "Stat");
+        if (!kStat) kStat = apiR.FindClassByShortName("Stat");
+        void* miVal = (kStat && kStat != kPS) ? apiR.GetMethod(kStat, "get_Value", 0) : nullptr;
+        void* miDmg = kPS ? apiR.GetMethod(kPS, "get_DamageSize", 0) : nullptr;
+        LOGI(TPL_LOG " 全屏攻击: 射程 stat 通道 get_ProjectileRange=%p DamageSize=%p Veewo.Stats.Stat.get_Value=%p（实例闸强制点）",
+             miRange, miDmg, miVal);
+        if (!miRange)  LOGW(TPL_LOG " 全屏攻击: get_ProjectileRange 未解析 ⇒ 射程实例拿不到，本局无效");
+        if (!miVal)    LOGW(TPL_LOG " 全屏攻击: Veewo.Stats.Stat.get_Value 未解析 ⇒ 射程强制本局无效");
+        //  无限水晶：补发 / 退款要用的 AddCrystalSprite 方法句柄
+        void* kSM = FindClassNs("NEON.Game", "SpriteManager");
+        if (!kSM) kSM = apiR.FindClassByShortName("SpriteManager");
+        if (kSM) {
+            g_miAddCrystalSprite = apiR.GetMethod(kSM, "AddCrystalSprite", 0);
+            LOGI(TPL_LOG " 无限水晶: SpriteManager.AddCrystalSprite 句柄=%p（用完退款 / 起手补发用）",
+                 g_miAddCrystalSprite);
+            if (!g_miAddCrystalSprite) {
+                LOGW(TPL_LOG " 无限水晶: AddCrystalSprite 未解析 ⇒ 只剩「精灵攻击免费」一条通道");
+            }
+        } else {
+            LOGW(TPL_LOG " 无限水晶: 未找到 NEON.Game.SpriteManager ⇒ 水晶通道降级");
+        }
     }
 
     // ---- 6.4e 商店交易闸所需：TradingType.Coin 字面量 + StoreItem 字段偏移 ----
