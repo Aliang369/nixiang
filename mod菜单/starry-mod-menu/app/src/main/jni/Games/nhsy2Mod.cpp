@@ -163,10 +163,15 @@ static thread_local bool t_inBcast = false;        // 广播重入闸（防级�
 //  「选择子 == veneer 里那个立即数」的调用 ⇒ 无限水晶开闸时直接返回 9999。
 //  寄存器保持：处理函数与跳板声明同样的 6 参（x0..x5）原样转发，避免未知参数被截断。
 typedef int32_t (*Shared6_t)(void*, void*, void*, void*, void*, void*);
-static Shared6_t g_origCrystalCountImpl = nullptr;
+// ★ r12b：**不再挂共享实现本身**（它的 16 字节窗口里有邻居方法入口 ⇒ Dobby 会吃掉邻居）。
+//   改为只把 veneer 的第一条指令（`mov w1,#imm`）换成 `b <hook>`，钩子内**直接调用真实现**。
+//   ⇒ 这个指针是「真实现地址」（不是 trampoline），调用时必须自己补上 w1=选择子。
+static Shared6_t g_implCrystalCount = nullptr;
+static bool g_crystalVeneerHooked = false;
 static uintptr_t g_crystalCountSel = 0;            // veneer 里的立即数（=水晶计数的选择子/偏移）
 static std::atomic<uint32_t> g_hitCrystalImpl{0};  // 命中次数
 static std::atomic<uint32_t> g_crystalImplShown{0};
+static std::atomic<uint32_t> g_crystalImplOtherShown{0};  // ★ r12 诊断：非目标选择子的调用（≤8 条）
 
 // ---- 移动 / 跳跃：orig ----
 //  PlayerActor.get_MovementSpeed() -> Single  （Mover.Init(deltaAcc,maxSpeed) 的速度源）
@@ -876,6 +881,82 @@ static bool HookTiny4(const char* tag, const char* label, void* target, void* ho
     return true;
 }
 
+// ================= ★ r12b：只改入口 4 字节的挂钩（不碰 16 字节窗口） =================
+//  背景（2026-10-12 真机，用户 m05208「进游戏直接闪退了」）：`SpriteManager` 那条
+//  `mov w1,#imm ; b <共享实现>` 的 veneer 目标，其 16 字节窗口内**另有**一个方法入口
+//  （真机取证：`GetCustomSpriteTypeCount`）⇒ 只要用 Dobby（固定改写入口 16 字节）就会把
+//  邻居的方法入口改成野指令，一进关对方代码首次运行即 SIGSEGV（r7 事故同机理）。
+//  做法：**完全不碰目标函数**，只把 veneer 入口的第一条指令（MOVZ/MOVN）换成 `b <hook>`；
+//  4 字节补丁只覆盖 veneer 自己的 +0..+3（veneer 只有 8 字节，+8 起的邻居入口不动）。
+//  钩子内部直接调用**真实现**（不需要任何 orig 跳板，因为我们不修改目标函数）。
+static bool PatchEntryBranch4(const char* tag, const char* label, void* entry, void* hook) {
+    if (!entry || !hook) return false;
+    if (!Il2Cpp::IsExecutableRange(reinterpret_cast<uintptr_t>(entry), 4)) {
+        LOGW(TPL_LOG " %s %s 入口 %p 不可执行 — 放弃该挂点", tag, label, entry);
+        return false;
+    }
+    void* dest = hook;
+    void* pageN = nullptr;
+    const int64_t dHook = (PtrI64(hook) - PtrI64(entry)) / 4;
+    if (dHook > 0x1FFFFFFLL || dHook < -0x2000000LL) {
+        pageN = MmapPageNear(entry, 0x1000);
+        if (!pageN) {
+            LOGW(TPL_LOG " %s %s 找不到 ±124MB 内的跳板空洞 — 放弃该挂点", tag, label);
+            return false;
+        }
+        uint32_t* n = reinterpret_cast<uint32_t*>(pageN);
+        n[0] = 0x58000051u;   // ldr x17, #8
+        n[1] = 0xD61F0220u;   // br  x17
+        *reinterpret_cast<uint64_t*>(n + 2) = reinterpret_cast<uint64_t>(hook);
+        if (mprotect(pageN, 0x1000, PROT_READ | PROT_EXEC) != 0) {
+            munmap(pageN, 0x1000);
+            return false;
+        }
+        __builtin___clear_cache(reinterpret_cast<char*>(pageN),
+                                reinterpret_cast<char*>(pageN) + 0x1000);
+        dest = pageN;
+        LOGI(TPL_LOG " %s %s hook 距入口 %.1fMB > 128MB ⇒ 邻近跳板 %p",
+             tag, label, static_cast<double>(dHook) * 4.0 / 1048576.0, pageN);
+    }
+    const int64_t dB = (PtrI64(dest) - PtrI64(entry)) / 4;
+    if (dB > 0x1FFFFFFLL || dB < -0x2000000LL) {
+        if (pageN) munmap(pageN, 0x1000);
+        LOGW(TPL_LOG " %s %s 4 字节 B 补丁超出 ±128MB — 放弃该挂点", tag, label);
+        return false;
+    }
+    if (!CodePatchU32(tag, entry, 0x14000000u | (static_cast<uint32_t>(dB) & 0x03FFFFFFu))) {
+        if (pageN) munmap(pageN, 0x1000);
+        return false;
+    }
+    return true;
+}
+
+// ================= ★ r12b：16 字节窗口内的「外来方法入口」检测 =================
+//  Dobby 的入口补丁固定改写 16 字节 ⇒ 只要窗口 [target,target+16) 里存在**别的方法入口**，
+//  那个方法一被调用就跳到野指令（r7/r12 两次真机 SIGSEGV 的同一根因）。
+//  判据来源：r12 真机日志 `该实现 16 字节窗口内另有 1 个方法入口：GetCustomSpriteTypeCount`。
+//  返回窗口内外来入口个数（≤4 条名字写进 namesOut，可为空）。
+static int ForeignEntryInWindow(void* klass, void* target, const char** namesOut, int namesCap) {
+    if (!klass || !target || !GetApi().class_methods) return 0;
+    void* iter = nullptr;
+    int guard = 0, n = 0;
+    char* end = reinterpret_cast<char*>(target) + 16;
+    while (true) {
+        void* mi = GetApi().class_methods(klass, &iter);
+        if (!mi) break;
+        if (++guard > 4096) break;
+        void* f = *reinterpret_cast<void**>(mi);
+        if (!OkPtr(f) || f == target) continue;
+        if (f >= target && f < end) {
+            if (namesOut && n < namesCap) {
+                namesOut[n] = GetApi().method_get_name ? GetApi().method_get_name(mi) : nullptr;
+            }
+            ++n;
+        }
+    }
+    return n;
+}
+
 // ★ 2026-10-11：已成功挂钩的入口表。同一入口被两个槽位命中时，第二次必须跳过——
 //   再挂一次会把我们自己的补丁字节当成「原序言」重定位，等于自毁；转发器解析后
 //   也要用同一张表判冗余（例：Attri.get_Item 转发到 Attri.Get，后者已被前面的槽位挂钩）。
@@ -1050,6 +1131,20 @@ static bool HookByName(const char* tag, const char* ns, const char* cls,
     }
 
     // ---- ③ 常规函数（入口 16 字节内无 RET/分支）：Dobby 的 16 字节补丁完全落在函数体内 ----
+    //  ★ r12b（2026-10-12）：但「函数体够长」不代表窗口干净——真机取证证明 IL2CPP 会把**另一个
+    //  方法的入口**放在某方法体的前 16 字节内（`SpriteManager` 那条 veneer 目标窗口里就有
+    //  `GetCustomSpriteTypeCount`）。那种情况下 Dobby 一样会吃掉邻居入口 ⇒ SIGSEGV（r7/r12 同源）。
+    //  所以这里再加一道：窗口内出现外来方法入口就禁用 Dobby，跳过该槽位（fail-soft，只丢这一个槽）。
+    {
+        const int foreign = ForeignEntryInWindow(k, fn, nullptr, 0);
+        if (foreign > 0) {
+            LOGW(TPL_LOG " %s %s.%s 入口 16 字节窗口内有 %d 个**外来方法入口** — 跳过该槽位："
+                         "Dobby 16 字节补丁会改写邻居方法入口（r7/r12 事故同源，SIGSEGV）",
+                 tag, cls, method, foreign);
+            g_installSkip.fetch_add(1);
+            return false;
+        }
+    }
     if (!DobbyHookGuarded(tag, fn, hook, orig)) return false;
     HookEntryNote(fn);
     LOGI(TPL_LOG " %s hooked by-name %s.%s(argc=%d) trampoline=%p",
@@ -1439,30 +1534,34 @@ static bool Hooked_ConsumeSpriteAtk(void* thiz, intptr_t a, intptr_t b, void* me
 //  我们的入口形态闸门（避免 Dobby 16 字节补丁吃邻居）会跳过它 ⇒ 这个 getter
 //  从来没被挂上过。这里改为挂 **veneer 的目标**（共享实现），并用「6 参原样转发」
 //  保证未知参数不被截断；只拦「选择子 == veneer 里那个立即数」的调用。
-static int32_t Hooked_CrystalCountImpl(void* a0, void* a1, void* a2,
-                                       void* a3, void* a4, void* a5) {
+// ★ r12b：veneer 入口钩子。我们只替换了 veneer 的 `mov w1,#imm`，所以 w1 要自己补上；
+//  其余参数（x0..x5）与返回值原样透传。开闸时直接返回 kInfiniteAmount（水晶计数读点被抬）。
+static int32_t Hooked_CrystalCountVeneer(void* a0, void* a1, void* a2,
+                                         void* a3, void* a4, void* a5) {
+    (void)a1;                          // 真值由 veneer 的 `mov w1,#imm` 提供，这里被我们替换掉了
     const uint32_t n = g_hitCrystalImpl.fetch_add(1, std::memory_order_relaxed) + 1;
-    const bool hit = (g_crystalCountSel != 0) && ((uintptr_t)a1 == g_crystalCountSel);
-    if (hit && GateCrystal()) {
+    int32_t real = 0;
+    if (g_implCrystalCount) {
+        real = g_implCrystalCount(a0, reinterpret_cast<void*>(g_crystalCountSel), a2, a3, a4, a5);
+    }
+    if (GateCrystal()) {
         const uint32_t s = g_crystalImplShown.fetch_add(1, std::memory_order_relaxed) + 1;
         if (s <= 10) {
-            LOGI(TPL_LOG " crystal count impl #%u sel=0x%zX real->9999（无限水晶：直接抬水晶计数读点）",
-                 n, g_crystalCountSel);
+            LOGI(TPL_LOG " crystal veneer #%u sel=0x%zX real=%d -> %d（无限水晶：veneer 入口 4 字节补丁）",
+                 n, g_crystalCountSel, real, kInfiniteAmount);
         }
         return kInfiniteAmount;
     }
-    const int32_t r = g_origCrystalCountImpl
-                    ? g_origCrystalCountImpl(a0, a1, a2, a3, a4, a5) : 0;
-    if (hit && n <= 10) {
-        LOGI(TPL_LOG " crystal count impl #%u sel=0x%zX real=%d on=0（无限水晶关闸，原值放行）",
-             n, g_crystalCountSel, r);
+    if (n <= 10) {
+        LOGI(TPL_LOG " crystal veneer #%u sel=0x%zX real=%d on=0（无限水晶关闸，原值放行）",
+             n, g_crystalCountSel, real);
     }
-    return r;
+    return real;
 }
 
-//  解 veneer（`mov w1,#imm ; b target`）并挂它的目标；失败则保持原样（fail-soft）。
+//  ★ r12b：解 veneer（`mov w1,#imm ; b target`），**只在 veneer 入口改 4 字节**（不碰 target）。
 static bool InstallCrystalCountImplHook() {
-    if (g_origCrystalCountImpl) return true;
+    if (g_crystalVeneerHooked) return true;
     void* cls = FindClassNs("NEON.Game", "SpriteManager");
     if (!cls) cls = GetApi().FindClassByShortName("SpriteManager");
     if (!cls) { LOGW(TPL_LOG " Res_CrystalCountImpl 未找到 SpriteManager 类 — 本局无限水晶仅走读点抬值"); return false; }
@@ -1499,14 +1598,100 @@ static bool InstallCrystalCountImplHook() {
         LOGW(TPL_LOG " Res_CrystalCountImpl veneer 目标 %p 不可执行 — 跳过", target);
         return false;
     }
-    g_crystalCountSel = sel;
-    if (!DobbyHookGuarded("Res_CrystalCountImpl", target,
-                          reinterpret_cast<void*>(Hooked_CrystalCountImpl),
-                          reinterpret_cast<void**>(&g_origCrystalCountImpl))) {
-        g_crystalCountSel = 0;
+
+    // ---- ★ r12 取证：这个 veneer 目标是不是「共享实现」？它的 16 字节窗口里还有谁？----
+    //  判据意义：若窗口内存在**其它方法入口**，则 Dobby 的 16 字节入口补丁必然把它们改成野指令
+    //  （r7 事故机理）；若同一实现被多个方法的 veneer 指向，则该实现是「常量偏移共享访问器」，
+    //  必然是极短叶函数 ⇒ 必须走 4 字节补丁。两件事都打成一行日志，进关崩不崩都能自证。
+    {
+        void* iter = nullptr;
+        int guard = 0, shared = 0, inWindow = 0;
+        void* winEntry[4] = {nullptr, nullptr, nullptr, nullptr};
+        const char* winName[4] = {nullptr, nullptr, nullptr, nullptr};
+        while (GetApi().class_methods) {
+            void* mi2 = GetApi().class_methods(cls, &iter);
+            if (!mi2) break;
+            if (++guard > 4096) break;
+            void* f2 = *reinterpret_cast<void**>(mi2);
+            if (!OkPtr(f2)) continue;
+            if (f2 >= target && f2 < reinterpret_cast<char*>(target) + 16) {
+                if (inWindow < 4) {
+                    winEntry[inWindow] = f2;
+                    winName[inWindow] = GetApi().method_get_name ? GetApi().method_get_name(mi2) : nullptr;
+                }
+                ++inWindow;
+            }
+            uint32_t y1 = 0;
+            if (!ReadU32Guarded("Res_CrystalCountImpl", reinterpret_cast<const uint32_t*>(f2) + 1, &y1)) continue;
+            if ((y1 & 0xFC000000u) != 0x14000000u) continue;      // 第二条指令不是无条件 B
+            int64_t im = static_cast<int64_t>(y1 & 0x03FFFFFFu);
+            if (im & 0x02000000LL) im -= 0x04000000LL;
+            if (reinterpret_cast<char*>(f2) + (im << 2) == target) ++shared;
+        }
+        LOGI(TPL_LOG " Res_CrystalCountImpl 共享分析：SpriteManager 内 %d 个方法经 veneer 指向同一实现 %p；"
+                     "该实现 16 字节窗口内另有 %d 个方法入口%s%s%s%s（判定共享/邻居是否被吃掉）",
+             shared, target, inWindow,
+             inWindow > 0 ? "：" : "",
+             inWindow > 0 ? (winName[0] ? winName[0] : "(?)") : "",
+             inWindow > 1 ? "," : "", inWindow > 1 ? (winName[1] ? winName[1] : "(?)") : "");
+    }
+
+    // ---- ★ r12：veneer 目标也必须过「入口形态闸门」 ----
+    //  背景（2026-10-12 真机，用户 m05208「进游戏直接闪退了」）：r11 直接在**目标地址**上
+    //  用 Dobby（固定改写入口 16 字节）装钩，**绕过了本文件 §⑤.1 的两道形态闸门**。而这条
+    //  veneer（`mov w1,#imm ; b <共享实现>`）的目标正是 Unity 那种「常量偏移共享访问器」——
+    //  典型形态 `ldr w0,[x0,x1] ; ret`（8 字节）⇒ 16 字节补丁必然吃掉紧随其后的邻居方法入口
+    //  （就是 r7 那次 SIGSEGV fault addr 0xb8 的同一机理）。现场佐证：装钩后主菜单存活 20 分钟
+    //  （那些方法没被调用），一进关（精灵/水晶代码首次运行）3 秒即 SIGSEGV 且无任何 tombstone
+    //  （THEMIS 自处理），我方钩子一行日志都没出 ⇒ 崩在**邻居方法**上，不是崩在钩子里。
+    //  做法：与常规槽位同款三步 —— 读入口 4 字 → 极小函数走 4 字节补丁（HookTiny4，不碰邻居）、
+    //  短函数（+0/+4/+8 即终止指令）跳过、其余才用 Dobby。
+    uint32_t tw[4] = {0, 0, 0, 0};
+    {
+        const uint32_t* code = reinterpret_cast<const uint32_t*>(target);
+        for (int i = 0; i < 4; ++i) {
+            if (!ReadU32Guarded("Res_CrystalCountImpl", code + i, &tw[i])) break;
+        }
+    }
+    int tRetAt = -1;
+    for (int i = 0; i < 4; ++i) {
+        if ((tw[i] & 0xFFFFFC1Fu) == 0xD65F0000u) { tRetAt = i; break; }   // RET
+    }
+    const bool tTiny = TinyHookable(tw, tRetAt);
+    LOGI(TPL_LOG " Res_CrystalCountImpl 目标形态 impl=%p code=%08X %08X %08X %08X%s",
+         target, tw[0], tw[1], tw[2], tw[3],
+         tTiny ? "  <-TINY/RET -> 4B 补丁（不碰邻居）" : ((tRetAt >= 0) ? "  <-RET" : ""));
+    if ((tw[0] & 0xFFFFFC1Fu) == 0xD61F0000u) {           // target 本身是 `br xN`：只提示（本版不再改 target）
+        LOGI(TPL_LOG " Res_CrystalCountImpl veneer 目标 %p 本身是 `br xN` — 无妨（r12b 只改 veneer 入口）", target);
+    }
+    if (HookEntryAlready(fn)) {
+        LOGW(TPL_LOG " Res_CrystalCountImpl veneer 入口 %p 已被前面槽位挂钩 — 跳过重复挂点", fn);
         return false;
     }
-    LOGI(TPL_LOG " Res_CrystalCountImpl hooked veneer=%p→impl=%p sel=0x%zX（无限水晶：绕过「8 字节 veneer 被跳过」）",
+    // ★ r12b（2026-10-12 真机：用户 m05208「进游戏直接闪退了」）：
+    //  这里**绝不能再在 target 上用 Dobby**。Dobby 的入口补丁固定改写 16 字节，而真机取证
+    //  （`共享分析` 那行）证明该实现的 16 字节窗口内**另有**一个方法入口
+    //  （`GetCustomSpriteTypeCount`）⇒ 补丁会把邻居的方法入口改成野指令，一进关邻居首次运行
+    //  即 SIGSEGV（与 r7 事故同机理，且我方钩子一行日志都不出）。
+    //  改法：只把 **veneer 自己的第一条指令**（`mov w1,#imm`）换成 `b <hook>` —— 只覆盖 4 字节，
+    //  veneer 只有 8 字节、+8 起的邻居入口一个字节都不动；钩子内直接调用真实现。
+    const int foreign = ForeignEntryInWindow(cls, target, nullptr, 0);
+    if (foreign > 0) {
+        LOGW(TPL_LOG " Res_CrystalCountImpl 目标窗口内另有 %d 个方法入口 ⇒ 禁用 Dobby，"
+                     "改走 veneer 入口 4 字节补丁（不碰共享实现）", foreign);
+    }
+    g_crystalCountSel = sel;
+    g_implCrystalCount = reinterpret_cast<Shared6_t>(target);
+    if (!PatchEntryBranch4("Res_CrystalCountImpl", "veneer", fn,
+                           reinterpret_cast<void*>(Hooked_CrystalCountVeneer))) {
+        g_crystalCountSel = 0;
+        g_implCrystalCount = nullptr;
+        return false;
+    }
+    g_crystalVeneerHooked = true;
+    HookEntryNote(fn);
+    LOGI(TPL_LOG " Res_CrystalCountImpl hooked veneer=%p（只改入口 4 字节）impl=%p sel=0x%zX "
+                 "共享实现未被修改（无限水晶：不再用 Dobby，避免吃邻居方法入口）",
          fn, target, sel);
     return true;
 }
