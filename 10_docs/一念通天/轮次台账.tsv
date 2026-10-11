@@ -1,0 +1,4 @@
+# 轮次台账 — 同一功能「改代码 → 装机 → 用户实测」逐轮结果（pipeline.sh 一念通天 round 追加）
+# 门禁规则：同一功能连续 3 轮「无效」⇒ 拒绝装机，先填假设矩阵（pipeline.sh 一念通天 rounds）
+日期	功能#	轮次	改动摘要	装机结果	用户结果
+2026-10-12 01:41	全部(1-6)	1	底包 739→747 重定位：官方 747 只读拉取（so/metadata 双哈希变）→ 全量静态 dump → `yntt_rva_extract.py` 9 挂点全部漂移但 8 个序言首指令与 739 逐条一致 → 仅改 `YnttMod.cpp` 的 8 个 `kRva*` + `kOffAdRequest 0x448→0x450` → build_so/surgical/sign + 机器关全过；产物 md5 `0aa23073b80d57e7f58595fab12b1328`	用户授权卸载重装；`[install-verify] 设备 base.apk md5 == 本地产物 ✓`；`signatures=[6f4dda0b]`(星空)、versionName=747；logcat 无崩溃	有效（用户 m00403「功能都没问题」，六项全部正常）

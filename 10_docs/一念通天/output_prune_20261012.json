@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/一念通天",
+  "keep": "一念通天_747_surgical-releaseSigned.apk",
+  "keep_size": 431506686,
+  "keep_md5": "0aa23073b80d57e7f58595fab12b1328",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "一念通天_747_surgical-unsigned.apk",
+      "size": 431429394,
+      "md5": "b8f1896443297d798889cde4f6910df2"
+    },
+    {
+      "name": "一念通天_747_surgical-releaseSigned.apk.idsig",
+      "size": 3409435,
+      "md5": "e0968ba25ab61617897e1b11abc65634"
+    }
+  ],
+  "removed_count": 2
+}

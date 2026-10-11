@@ -80,7 +80,10 @@ static void* g_onADSuccessMethod = nullptr;
 static WbarrierSetField_t g_wbarrierSetField = nullptr;
 
 // ============================================================
-// ② 字段偏移与 RVA（728 dump.cs / 序言实测；换包必须重 dump）
+// ② 字段偏移与 RVA（747 dump.cs / 序言实测；换包必须重 dump）
+// 重定位工具：python3 04_scripts/一念通天/yntt_rva_extract.py（--prev 对照打印漂移）
+// 747 复核结论：8 个挂点序言首指令与 739 完全一致 ⇒ kIns* 无需改动；
+//              字段仅 GameRuning.adRequest 0x448→0x450；ABI 序言 mov w26,w3 / w22,w2 / w21,w2 亦同 739。
 // ============================================================
 enum : size_t {
     kOffNpcType       = 0x18,
@@ -90,7 +93,7 @@ enum : size_t {
     kOffMoney         = 0xC0,
     kOffNpcData       = 0x2E8,
     kOffFuMoData      = 0x2F0,
-    kOffAdRequest     = 0x448,
+    kOffAdRequest     = 0x450,   // 747 变更：739 为 0x448
     kOffFuMoTili      = 0x28,
     kOffFuMoTiliZq    = 0x48,
     kOffFuMoTiliGq    = 0x80,
@@ -98,14 +101,14 @@ enum : size_t {
 };
 
 enum : uintptr_t {
-    kRvaMonsterReduce = 0x12BBE68,
-    kRvaNpcReduce     = 0x10113A8,
-    kRvaMonsterDot    = 0x12AD6C8,
-    kRvaNpcDot        = 0x1006740,
-    kRvaPlayerDamage  = 0x1136060,
-    kRvaSetTimeScale  = 0x2E8762C,
-    kRvaGameUpdate    = 0x124B8E4,
-    kRvaShowAD        = 0x1249F00,
+    kRvaMonsterReduce = 0x12CB95C,
+    kRvaNpcReduce     = 0x10191E0,
+    kRvaMonsterDot    = 0x12BD1BC,
+    kRvaNpcDot        = 0x100E578,
+    kRvaPlayerDamage  = 0x11423CC,
+    kRvaSetTimeScale  = 0x2E99A00,
+    kRvaGameUpdate    = 0x125A3D0,
+    kRvaShowAD        = 0x12589EC,
 };
 
 enum : uint32_t {
