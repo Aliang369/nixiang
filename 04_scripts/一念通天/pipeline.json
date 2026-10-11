@@ -368,18 +368,20 @@
           "path": "10_docs/一念通天/收尾与最小复现清单_747_20261012.md"
         }
       ],
-      "status": "failed",
+      "status": "done",
       "artifacts": {
         "10_docs/一念通天/收尾与最小复现清单_747_20261012.md": {
-          "md5": "264a35b337b4626c01a466e2c21ed066"
+          "md5": "6e3fd39215c460b8cd808a44e2d4117c"
         }
       },
       "inputs": {
         "04_scripts/一念通天/cleanup_summary.json": "501d65074850e904d3d40820d00ab7b2",
-        "06_dumped/一念通天/official_747/rva_targets.json": "697057b622d42aedb9aef6a385dcb4f9"
+        "06_dumped/一念通天/official_747/rva_targets.json": "697057b622d42aedb9aef6a385dcb4f9",
+        "10_docs/一念通天/output_prune_20261012.json": "5bafcf27176da87cc9e0e394a1ac035a"
       },
       "failed_at": "2026-10-12 02:22:31",
-      "error": "命令退出码 1（详见日志尾部）"
+      "error": "命令退出码 1（详见日志尾部）",
+      "done_at": "2026-10-12 02:23:35"
     }
   ]
 }
