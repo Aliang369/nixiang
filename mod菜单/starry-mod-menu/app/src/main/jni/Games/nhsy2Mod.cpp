@@ -137,6 +137,37 @@ static CalcDamage_t g_origCalcDamage = nullptr;
 typedef void (*ReallyDeduct_t)(void* thiz, void* damage, float finalDamage, void* method);
 static ReallyDeduct_t g_origReallyDeduct = nullptr;
 
+// ================= ★ r11 全屏攻击：伤害广播（换方法，不再猜键名） =================
+//  用户 m04997：「两个功能仍然没有效果 …… 不行就给我换方法」。
+//  机制：本地玩家打中一只怪时，在 HitPoints::ReallyDeductHP 这一跳（= 斌哥 desc0 同族、
+//  也是伤害链最后一跳）把**同一个 DamageInfo 与同一个最终伤害值**广播给同类的其它
+//  HitPoints 实例 —— 用能拿到的一切原样转发，不猜字段、不猜 arg 类型：
+//    ① 敌人 HP 的「类」从本跳的 thiz 现场学到（`*(void**)thiz`），玩家的 Hearts 类
+//       自动被排除（类是另一个）⇒ 不会把自己打伤；
+//    ② 同类实例用 Api::ScanInstances 按 klass 指针扫 rw 内存拿到（结果缓存 2 s，
+//       避免每次命中都扫）；每个候选先复核首字仍是同一 klass 再调用；
+//    ③ 转发走 g_origReallyDeduct（原函数跳板）⇒ 不会二次乘伤害、不会递归回本钩子。
+static std::atomic<uint32_t> g_hitBcast{0};        // 广播触发次数
+static std::atomic<uint32_t> g_fullBcast{0};       // 广播出的目标总数
+static void*    g_bcastKlass   = nullptr;          // 现场学到的「敌人 HP 类」
+static uint64_t g_bcastScanMs  = 0;                // 上次扫描时刻
+static std::vector<void*> g_bcastList;             // 扫描缓存
+static thread_local bool t_inBcast = false;        // 广播重入闸（防级联）
+
+// ================= ★ r11 无限水晶：直接挂「水晶计数」的共享实现 =================
+//  r9/r10 两条路都无效的根因推断：`SpriteManager.GetCrystalSpriteCount`（水晶计数
+//  getter，ret=Int32）是 8 字节 veneer `mov w1,#imm; b <共享实现>` —— 我们的入口形态
+//  闸门**主动跳过**它（避免 Dobby 16 字节补丁吃邻居），所以从来没挂上过；
+//  于是「水晶够不够」的判定一直读的是真实值 ⇒ 用户看到「需要更多水晶」。
+//  修法：不解 veneer，改为**按地址挂它的目标（共享实现）**，在钩子里只拦
+//  「选择子 == veneer 里那个立即数」的调用 ⇒ 无限水晶开闸时直接返回 9999。
+//  寄存器保持：处理函数与跳板声明同样的 6 参（x0..x5）原样转发，避免未知参数被截断。
+typedef int32_t (*Shared6_t)(void*, void*, void*, void*, void*, void*);
+static Shared6_t g_origCrystalCountImpl = nullptr;
+static uintptr_t g_crystalCountSel = 0;            // veneer 里的立即数（=水晶计数的选择子/偏移）
+static std::atomic<uint32_t> g_hitCrystalImpl{0};  // 命中次数
+static std::atomic<uint32_t> g_crystalImplShown{0};
+
 // ---- 移动 / 跳跃：orig ----
 //  PlayerActor.get_MovementSpeed() -> Single  （Mover.Init(deltaAcc,maxSpeed) 的速度源）
 //  Mover.get_FinalMaxSpeed()      -> Single  （夹取上限，仅做探针对照）
@@ -1118,16 +1149,92 @@ static bool Hooked_HitPoints_DeductHP(void* thiz, void* damage, int32_t count, v
 //    ReallyDeductHP 是伤害链**最后一跳**（slot=34 虚方法，token 0x06008D25）：
 //    只乘 finalDamage 实参 ⇒ 不读任何字段偏移、不可能与下游重复相乘（不存在平方）。
 //    门禁：DamageInfo.IsFromLocalPLayer()（本地玩家造成的伤害才放大；本机受伤原样放行）。
+// ================= ★ r11 全屏攻击：伤害广播 =================
+//  放在 ReallyDeductHP 之前：C++ 里先用后定义需要前置声明。
+static void FullScreenBroadcast(void* self, void* damage, float amount, void* method);
+static long long NowMonoMs();   // 定义在 §6.5（登录保命）段，此处前置声明
+
 static void Hooked_ReallyDeductHP(void* thiz, void* damage, float finalDamage, void* method) {
     float out = finalDamage;
     const int mul = g_dmgMul.load(std::memory_order_relaxed);
-    if (mul > 1 && OkPtr(damage) && DamageFromLocalPlayer(damage)) {   // 滑块值即开关（§③.1）
+    const bool local = OkPtr(damage) && DamageFromLocalPlayer(damage);
+    if (mul > 1 && local) {   // 滑块值即开关（§③.1）
         out = finalDamage * static_cast<float>(mul);
         const uint32_t n = g_hitDmg.fetch_add(1, std::memory_order_relaxed) + 1;
         if (n <= 20) LOGI(TPL_LOG " dmg probe #%u ReallyDeductHP %.3f -> %.3f (x%d)",
                           n, finalDamage, out, mul);
     }
+    // ★ r11 全屏攻击：本地玩家打中一只 ⇒ 先把同一份伤害广播给同类目标，再打原函数
+    if (g_full.load(std::memory_order_relaxed) && local && OkPtr(thiz)) {
+        FullScreenBroadcast(thiz, damage, out, method);
+    }
     if (g_origReallyDeduct) g_origReallyDeduct(thiz, damage, out, method);
+}
+
+//  ★ r11 全屏攻击实现（用户 m04997「不行就给我换方法」）：
+//    在伤害链最后一跳上，把**同一个 DamageInfo + 同一个最终伤害值**原样转发给
+//    「和被打中那只是同一 HP 类」的其它所有实例 —— 不猜字段、不猜参数类型、
+//    不猜伤害公式（原样转发 ⇒ 与玩家自己打那一下完全等价）。
+//  安全性：
+//    ① 目标类现场学到（thiz 的 klass），玩家自己的 Hearts 是另一个类 ⇒ 永不误伤自己；
+//    ② 每个候选复核「首字仍是同一 klass」才调用（释放后的对象被复用 ⇒ klass 不符即跳过）；
+//    ③ 类名含 player/pet/follower/npc 的跳过（避免打到宠物/随从）；
+//    ④ thread_local 重入闸（转发用的是原函数跳板，本就不会回调本钩子，闸门是双保险）；
+//    ⑤ 单次广播目标数上限 48；扫描结果缓存 2 s，避免每次命中都扫内存。
+static void FullScreenBroadcast(void* self, void* damage, float amount, void* method) {
+    if (t_inBcast) return;
+    if (!g_origReallyDeduct || !g_full.load(std::memory_order_relaxed)) return;
+    Il2Cpp::Api& api = GetApi();
+    void* k = *(void**)self;                      // Il2CppObject 首个字段 = klass
+    if (!k || k == g_clsHearts) return;           // 玩家自己的 HP 类 ⇒ 不广播
+    const char* cn = api.ClassName(self);
+    if (cn) {
+        char low[96]; size_t j = 0;
+        for (const char* p = cn; *p && j + 1 < sizeof(low); ++p) {
+            char c = *p; if (c >= 'A' && c <= 'Z') c = (char)(c - 'A' + 'a');
+            low[j++] = c;
+        }
+        low[j] = 0;
+        if (strstr(low, "player") || strstr(low, "pet") || strstr(low, "follower") ||
+            strstr(low, "npc") || strstr(low, "hearts")) {
+            return;                                // 不是敌人 ⇒ 不广播
+        }
+    }
+    if (k != g_bcastKlass) {                       // 换了敌人的 HP 类 ⇒ 立即重扫
+        g_bcastKlass = k;
+        g_bcastScanMs = 0;
+        g_bcastList.clear();
+    }
+    const uint64_t now = (uint64_t)NowMonoMs();
+    if (g_bcastList.empty() || (now - g_bcastScanMs) > 2000) {
+        g_bcastList.clear();
+        g_bcastScanMs = now;
+        api.ScanInstances(k, g_bcastList, 768);
+        const uint32_t s = g_hitBcast.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (s <= 5) {
+            LOGI(TPL_LOG " fullscreen bcast scan #%u klass=%p self=%p found=%zu（全屏攻击：按 HP 类扫描同类目标）",
+                 s, k, self, g_bcastList.size());
+        }
+    } else {
+        g_hitBcast.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    t_inBcast = true;
+    uint32_t seen = 0, ok = 0;
+    for (void* cand : g_bcastList) {
+        if (cand == self) continue;
+        if (!OkPtr(cand) || *(void**)cand != k) continue;   // 释放/复用复核
+        if (++seen > 48) break;
+        g_origReallyDeduct(cand, damage, amount, method);    // ★ 原样转发（同伤害值）
+        ++ok;
+    }
+    t_inBcast = false;
+    const uint32_t total = g_fullBcast.fetch_add(ok, std::memory_order_relaxed) + ok;
+    const uint32_t n = g_hitBcast.load(std::memory_order_relaxed);
+    if (n <= 12 || (total % 200) < ok) {
+        LOGI(TPL_LOG " fullscreen bcast %u targets=%u damage=%.1f（全屏攻击：一只挨打 → 同类全掉血）",
+             n, ok, (double)amount);
+    }
 }
 
 // 伤害计算入口：HitPoints::CalculationDamage(DamageInfo, Int32) -> Single
@@ -1324,6 +1431,84 @@ static bool Hooked_ConsumeSpriteAtk(void* thiz, intptr_t a, intptr_t b, void* me
              n, static_cast<int>(a), static_cast<int>(b), on ? 1 : 0, r ? 1 : 0);
     }
     return r;
+}
+
+// ================= ★ r11 无限水晶：共享实现钩子（veneer 目标） =================
+//  `SpriteManager.GetCrystalSpriteCount` 的入口是 8 字节 veneer
+//    `mov w1,#imm ; b <共享实现>`
+//  我们的入口形态闸门（避免 Dobby 16 字节补丁吃邻居）会跳过它 ⇒ 这个 getter
+//  从来没被挂上过。这里改为挂 **veneer 的目标**（共享实现），并用「6 参原样转发」
+//  保证未知参数不被截断；只拦「选择子 == veneer 里那个立即数」的调用。
+static int32_t Hooked_CrystalCountImpl(void* a0, void* a1, void* a2,
+                                       void* a3, void* a4, void* a5) {
+    const uint32_t n = g_hitCrystalImpl.fetch_add(1, std::memory_order_relaxed) + 1;
+    const bool hit = (g_crystalCountSel != 0) && ((uintptr_t)a1 == g_crystalCountSel);
+    if (hit && GateCrystal()) {
+        const uint32_t s = g_crystalImplShown.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (s <= 10) {
+            LOGI(TPL_LOG " crystal count impl #%u sel=0x%zX real->9999（无限水晶：直接抬水晶计数读点）",
+                 n, g_crystalCountSel);
+        }
+        return kInfiniteAmount;
+    }
+    const int32_t r = g_origCrystalCountImpl
+                    ? g_origCrystalCountImpl(a0, a1, a2, a3, a4, a5) : 0;
+    if (hit && n <= 10) {
+        LOGI(TPL_LOG " crystal count impl #%u sel=0x%zX real=%d on=0（无限水晶关闸，原值放行）",
+             n, g_crystalCountSel, r);
+    }
+    return r;
+}
+
+//  解 veneer（`mov w1,#imm ; b target`）并挂它的目标；失败则保持原样（fail-soft）。
+static bool InstallCrystalCountImplHook() {
+    if (g_origCrystalCountImpl) return true;
+    void* cls = FindClassNs("NEON.Game", "SpriteManager");
+    if (!cls) cls = GetApi().FindClassByShortName("SpriteManager");
+    if (!cls) { LOGW(TPL_LOG " Res_CrystalCountImpl 未找到 SpriteManager 类 — 本局无限水晶仅走读点抬值"); return false; }
+    void* mi = GetApi().GetMethod(cls, "GetCrystalSpriteCount", 0);
+    if (!mi) { LOGW(TPL_LOG " Res_CrystalCountImpl 未找到 GetCrystalSpriteCount — 跳过"); return false; }
+    void* fn = *reinterpret_cast<void**>(mi);
+    if (!fn || !Il2Cpp::IsExecutableRange((uintptr_t)fn, 8)) {
+        LOGW(TPL_LOG " Res_CrystalCountImpl 方法指针不可执行 ptr=%p — 跳过", fn);
+        return false;
+    }
+    const uint32_t w0 = reinterpret_cast<const uint32_t*>(fn)[0];
+    const uint32_t w1 = reinterpret_cast<const uint32_t*>(fn)[1];
+    // 只接受 `b <impl>` 作第二条指令（0x14000000 掩码）+ 第一条是 MOVZ/MOVN 到 x1 的立即数
+    if ((w1 & 0xFC000000u) != 0x14000000u) {
+        LOGW(TPL_LOG " Res_CrystalCountImpl 入口不是 `b` 尾调用（w1=0x%08X）— 跳过（留给常规槽位）", w1);
+        return false;
+    }
+    // ★ 编码校验（r11b 修）：MOVZ/MOVN 的 Rd 是 bits[4:0]（早期误写成 bits[9:5]，
+    //   把 rd 判成 0 ⇒ 真机 `0x52800401`(mov w1,#0x20) 被误拒、veneer 目标从未挂上）
+    const uint32_t rd = w0 & 0x1Fu;
+    const bool movz = ((w0 & 0x7F800000u) == 0x52800000u) && (rd == 1);
+    const bool movn = ((w0 & 0x7F800000u) == 0x12800000u) && (rd == 1);
+    if (!movz && !movn) {
+        LOGW(TPL_LOG " Res_CrystalCountImpl 入口首条不是 `mov w1,#imm`（w0=0x%08X）— 跳过", w0);
+        return false;
+    }
+    int64_t imm26 = (int64_t)(w1 & 0x03FFFFFFu);
+    if (imm26 & 0x02000000) imm26 -= 0x04000000;          // 符号扩展
+    void* target = reinterpret_cast<uint8_t*>(fn) + (imm26 << 2);
+    uint32_t imm16 = (w0 >> 5) & 0xFFFFu;
+    if (w0 & 0x00200000u) imm16 <<= 16;                    // hw 位
+    uintptr_t sel = movn ? (~(uintptr_t)imm16 & 0xFFFFFFFFu) : (uintptr_t)imm16;
+    if (!Il2Cpp::IsExecutableRange((uintptr_t)target, 16)) {
+        LOGW(TPL_LOG " Res_CrystalCountImpl veneer 目标 %p 不可执行 — 跳过", target);
+        return false;
+    }
+    g_crystalCountSel = sel;
+    if (!DobbyHookGuarded("Res_CrystalCountImpl", target,
+                          reinterpret_cast<void*>(Hooked_CrystalCountImpl),
+                          reinterpret_cast<void**>(&g_origCrystalCountImpl))) {
+        g_crystalCountSel = 0;
+        return false;
+    }
+    LOGI(TPL_LOG " Res_CrystalCountImpl hooked veneer=%p→impl=%p sel=0x%zX（无限水晶：绕过「8 字节 veneer 被跳过」）",
+         fn, target, sel);
+    return true;
 }
 
 static int32_t Hooked_GetGitterCoin(void* thiz, void* method) {
@@ -2823,6 +3008,12 @@ static int InstallAllHooks() {
                      "（转发器/短函数；避免 Dobby 16 字节补丁改写邻居入口）",
              g_installSkip.load());
     }
+    // ★ r11 无限水晶：`SpriteManager.GetCrystalSpriteCount` 是 8 字节 veneer（上面会被
+    //   主动跳过）⇒ 改为挂它的目标（共享实现），只拦 veneer 里那个选择子的调用。
+    //  ★ 必须**无条件**挂载：装钩只在「首次有任一功能开启」时跑一次，而用户可能
+    //    进游戏后才打开无限水晶（g_installPassDone 已置位 ⇒ 永远不会再装）。
+    //    行为闸在钩子内部按 g_crystal 实时判断。
+    if (InstallCrystalCountImplHook()) ++ok;
     if (ok > 0) g_anyHooked.store(true);
     return ok;
 }
