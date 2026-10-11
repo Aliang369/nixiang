@@ -30,12 +30,27 @@
 #    bash 04_scripts/_common/install_guard.sh --pkg com.yhhy.whrhx.aligames --cmd "…"
 #        用包名反查游戏（扫 04_scripts/*/pipeline.json 的 params.package）
 #
+#  装机策略取值（pipeline.json 的 install_policy）
+#  ----------------------------------------------------------------
+#    uninstall_only ：只能「先卸载再全新安装」（无悔华夏：乐变负载目录只在新装时重建）
+#    overlay_only   ：只许**覆盖安装**（adb install -r -d），**禁止卸载/清数据**（霓虹深渊2：
+#                     官方包 1.3GB、同签名覆盖即可；卸载会丢官方包与账号态）
+#                     确需卸载时加 --allow-uninstall 或 INSTALL_GUARD_ALLOW_UNINSTALL=1，
+#                     并在轮次台账留一行理由。
+#                     （2026-10-12 霓虹深渊2 会话复盘 P1-9：该会话出现 7 次 uninstall，
+#                       招致用户质问「同签名游戏你为什么还要卸载重装？」）
+#
+#    bash 04_scripts/_common/install_guard.sh <游戏> --cmd "adb uninstall <pkg>"   # overlay_only ⇒ 66
+#
 #  退出码
 #  ----------------------------------------------------------------
 #    0 = 允许（策略不是 uninstall_only，或命令里没有覆盖安装语义）
 #   65 = 拒绝（uninstall_only 游戏 + 命令含 -r/--replace/-d/--downgrade 等覆盖安装）  ← EX_DATAERR
+#   66 = 拒绝（overlay_only 游戏 + 命令含卸载/清数据，且未显式 --allow-uninstall）    ← EX_NOINPUT
 #    2 = 用法错（缺参数/未知参数）
 #    3 = 策略未知（找不到 pipeline.json 或没有 install_policy 字段）
+#       ⚠ exit 3 **不是**「可以随便装」的许可：这正是 2026-10-12 复盘查到的黑洞 ——
+#       霓虹深渊2 当时没有 pipeline.json ⇒ 本闸门形同虚设、全程 0 次调用。新游戏建目录时先把 pipeline.json 建好。
 #
 #  典型接法（装机脚本开头）
 #  ----------------------------------------------------------------
@@ -53,6 +68,7 @@ NIXIANG_ROOT="${NIXIANG_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 GAMES_DIR="$NIXIANG_ROOT/04_scripts"
 
 GAME=""; PKG=""; MODE=""; CMDSTR=""
+ALLOW_UNINSTALL="${INSTALL_GUARD_ALLOW_UNINSTALL:-0}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --policy)   MODE=policy; shift ;;
@@ -60,6 +76,7 @@ while [ $# -gt 0 ]; do
     --adb-args) MODE=args;   shift; CMDSTR="$*"; break ;;
     --pkg)      PKG="${2:-}"; shift 2 ;;
     --game)     GAME="${2:-}"; shift 2 ;;
+    --allow-uninstall) ALLOW_UNINSTALL=1; shift ;;
     -h|--help)  sed -n '1,60p' "$0"; exit 0 ;;
     -*)         echo "未知参数: $1" >&2; echo "见: bash $0 --help" >&2; exit 2 ;;
     *)          GAME="$1"; shift ;;
@@ -97,6 +114,7 @@ POLICY="$(LC_ALL=C grep -o '"install_policy"[[:space:]]*:[[:space:]]*"[^"]*"' "$
 if [ -z "$POLICY" ]; then
   echo "INSTALL_GUARD[$GAME]: pipeline.json 无 install_policy 字段 ⇒ 策略未知" >&2
   echo "  默认按通用纪律处理（允许覆盖安装）；本游戏若属卸载重装类，请补字段：\"install_policy\": \"uninstall_only\"" >&2
+  echo "  若是「只许覆盖、禁止卸载」类（如霓虹深渊2），请补：\"install_policy\": \"overlay_only\"" >&2
   exit 3
 fi
 
@@ -108,6 +126,11 @@ if [ "$MODE" = "policy" ] || [ -z "$MODE" ]; then
       echo "  ⇒ 禁止覆盖安装（adb install -r / --replace / -d）。装机唯一入口："
       echo "     WHRHX_APK=<apk> bash 04_scripts/$GAME/whrhx_clean_reinstall.sh --uninstall"
       echo "     理由见 10_docs/$GAME/硬约束.md 第 4 条（乐变负载不重建 ⇒ 钩子全失效）"
+      ;;
+    overlay_only)
+      echo "  ⇒ 只许覆盖安装（adb install -r -d），**禁止卸载/清数据**（uninstall / pm clear / pm uninstall）"
+      echo "     理由：官方包 1.3GB + 同签名覆盖即可；卸载会丢官方包与账号态、还要重下 1.3GB"
+      echo "     确需卸载时（换签名/修损坏安装）：--allow-uninstall 或 INSTALL_GUARD_ALLOW_UNINSTALL=1，并在轮次台账留一行"
       ;;
     *) echo "  ⇒ 通用纪律（允许覆盖安装；卸载/清数据前先确认不用保档）" ;;
   esac
@@ -126,6 +149,35 @@ case "$low" in
 esac
 # `pm install -r`（走 adb shell）单列，便于打印更准的整改提示
 case "$low" in *"pm install -r"*) HIT="pm install -r" ;; esac
+
+# ---- 卸载 / 清数据语义（overlay_only 策略下必须显式放行）----
+UNHIT=""
+case "$low" in
+  *"uninstall"*)                              UNHIT="uninstall" ;;
+  *"pm clear"*|*"pm  clear"*)                 UNHIT="pm clear（清应用数据）" ;;
+  *"rm -rf /data/data"*|*"rm -rf /data/user"*) UNHIT="删数据目录" ;;
+esac
+
+if [ -n "$UNHIT" ] && [ "$POLICY" = "overlay_only" ] && [ "$ALLOW_UNINSTALL" != "1" ]; then
+  cat >&2 <<EOF
+INSTALL_GUARD: ✗ 拒绝执行（exit 66）
+  游戏    : $GAME
+  策略    : install_policy=${POLICY}（只许覆盖安装，禁止卸载/清数据）
+  命中    : $UNHIT
+  命令    : $CMDSTR
+  为什么  : 本游戏同签名覆盖安装即可（adb install -r -d）。卸载会丢官方包与账号态，还要重下 1.3GB；
+            2026-10-12 霓虹深渊2 会话复盘：该会话出现 7 次 uninstall，招致用户质问
+            「同签名游戏你为什么还要卸载重装？」——闸门存在却被旁路（当时没有 pipeline.json）。
+  怎么办  : ① 改覆盖安装：    adb -s <serial> install -r -d <已签名 apk>
+            ② 确需卸载/清数据：加 --allow-uninstall （或 INSTALL_GUARD_ALLOW_UNINSTALL=1），
+               并在 10_docs/$GAME/轮次台账.tsv 留一行理由
+  依据    : 04_scripts/$GAME/pipeline.json install_policy + 10_docs/$GAME/硬约束.md
+EOF
+  exit 66
+fi
+if [ -n "$UNHIT" ] && [ "$POLICY" = "overlay_only" ] && [ "$ALLOW_UNINSTALL" = "1" ]; then
+  echo "INSTALL_GUARD: ⚠ 放行卸载（策略=${POLICY}，命中 ${UNHIT}，已显式 --allow-uninstall）⇒ 请在轮次台账留一行理由"
+fi
 
 if [ -n "$HIT" ]; then
   if [ "$POLICY" = "uninstall_only" ]; then
@@ -154,6 +206,8 @@ case "$low" in
     if [ "$POLICY" = "uninstall_only" ]; then
       echo "  ⚠ 本游戏策略=uninstall_only：全新安装前必须先 pm uninstall（脚本已按此实现？）"
       echo "    否则 adb install 会 INSTALL_FAILED_ALREADY_EXISTS，或落到乐变负载不一致的状态。"
+    elif [ "$POLICY" = "overlay_only" ] && [ -z "$HIT" ]; then
+      echo "  ⚠ 本游戏策略=overlay_only：覆盖安装要带 -r（adb install -r -d），否则会 INSTALL_FAILED_ALREADY_EXISTS"
     fi
     ;;
 esac

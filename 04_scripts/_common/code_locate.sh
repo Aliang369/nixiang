@@ -94,4 +94,6 @@ done
 echo
 echo "→ 定行读（不要整文件读）：read file_path=\"${TARGET}\" offset=${first_shown} limit=${shown_lines}"
 echo "→ 读完把这行结论写进 10_docs/<游戏>/侦察笔记.md（文件:行 → 结论），下次查笔记不重读"
+echo "→ 改这里时的纪律：同轮同文件只用一种工具（read 拿读戳后只用 edit；要用 bash 重写就整轮都别用 edit）"
+echo "  ↳ 混用的代价：本仓库实测 29 次 \`file changed since it was read\`（skill/re-implement/hook-rules.md §32）"
 exit 0

@@ -120,14 +120,65 @@ ensure_note() {
   echo "▶ 已新建定案台账: ${NOTE}"
 }
 
+# ── 台账格式识别 + 判定归一化（2026-10-12 P0-2：**这是「同一个功能改十几遍」的作案机制**）──
+#  旧实现直接取 $6 与字面量 "无效" 比较。但仓库里同时存在三种台账表头：
+#    · 六列（pipeline.sh 生成）：日期 功能# 轮次 改动摘要 装机结果 用户结果      → 判定在第 6 列
+#    · 七列（P22 模板，霓虹深渊2/邂逅在迷宫/炁术行者手工写）：时间 功能 轮次 改动 结果 判据 状态
+#      → 判定本应在第 5 列、且取值是「通过/失败」（**从无 "无效" 字样**）
+#    · 自由格式（绝区零）
+#  ⇒ 七列表台账下 `$6=="无效"` **永远为假**，门禁数学上不可能触发，却一直打印「✓ PASS」。
+#  现在：先按表头定位判定列，再对取值做归一化（无效|失败|未通过→无效；有效|通过→有效；其余→未测）。
+LEDGER_VERDICT_COL="6"
+ledger_verdict_col() {  # 输出判定列号；表头识别不了时输出 0（调用方须告警，不许静默 PASS）
+  [ -f "$LEDGER" ] || { echo 0; return 0; }
+  awk -F'\t' '
+    NR==3{ for (i=1;i<=NF;i++) if ($i=="用户结果") { print i; exit }
+           for (i=1;i<=NF;i++) if ($i=="结果")   { print i; exit }
+           print 6; exit }
+    END{ if (NR<3) print 0 }' "$LEDGER"
+}
 # 该功能「连续无效」的轮次与最后一轮轮次：输出 "<streak> <last_round>"
 streak_of() {  # streak_of <功能#>
   [ -f "$LEDGER" ] || { echo "0 0"; return 0; }
-  awk -F'\t' -v f="$1" '
-    NR>3 && $2==f { v[++n]=$6; r[n]=$3 }
+  awk -F'\t' -v f="$1" -v vc="${LEDGER_VERDICT_COL:-6}" '
+    function nv(s,   t){
+      t=s; gsub(/[[:space:]]/,"",t); gsub(/（推）/,"",t); gsub(/\(推\)/,"",t)
+      if (t ~ /无效|失败|未通过|已否证/) return "无效"
+      if (t ~ /未测|未验证|待验证|待用户|进行中|已作废/) return "未测"
+      if (t ~ /有效|通过|已成立|已完成/) return "有效"
+      return "未测"
+    }
+    NR>3 && $2==f && $2!="功能#" && $2!="功能" && $2!="日期" && $2!="时间" { v[++n]=nv($(vc)); r[n]=$3 }
     END{ c=0
          for (i=n; i>=1; i--) { if (v[i]=="无效") { c++; if ((r[i]+0) > (last+0)) last=r[i] } else break }
          print c" "(last+0) }' "$LEDGER"
+}
+# 台账里有多少行带「有效/无效」判定（=0 说明只有装机登记、没有任何实测判定 ⇒ 门禁没有计数依据）
+judged_rows() {
+  [ -f "$LEDGER" ] || { echo 0; return 0; }
+  awk -F'\t' -v vc="${LEDGER_VERDICT_COL:-6}" '
+    function nv(s,   t){
+      t=s; gsub(/[[:space:]]/,"",t); gsub(/（推）/,"",t); gsub(/\(推\)/,"",t)
+      if (t ~ /无效|失败|未通过|已否证/) return 1
+      if (t ~ /有效|通过|已成立|已完成/) return 1
+      return 0
+    }
+    NR>3 && $2!="" && $2!="功能#" && $2!="功能" && $2!="日期" && $2!="时间" { if (nv($(vc))) c++ } END{ print c+0 }' "$LEDGER"
+}
+# 历史累计无效轮数与最近一次无效轮次：输出 "<count> <last_invalid_round>"
+# （用于提示「改十几遍但从没写过根因定案」——尾部已转有效不算拦，但必须看得见，否则下次从头再试）
+invalid_total_of() {  # invalid_total_of <功能#>
+  [ -f "$LEDGER" ] || { echo "0 0"; return 0; }
+  awk -F'\t' -v f="$1" -v vc="${LEDGER_VERDICT_COL:-6}" '
+    function nv(s,   t){
+      t=s; gsub(/[[:space:]]/,"",t); gsub(/（推）/,"",t); gsub(/\(推\)/,"",t)
+      if (t ~ /无效|失败|未通过|已否证/) return "无效"
+      if (t ~ /未测|未验证|待验证|待用户|进行中|已作废/) return "未测"
+      if (t ~ /有效|通过|已成立|已完成/) return "有效"
+      return "未测"
+    }
+    NR>3 && $2==f { if (nv($(vc))=="无效") { c++; last=$3 } }
+    END{ print c+0" "(last+0) }' "$LEDGER"
 }
 # 是否有定案：定案轮次 ≥ 给定轮次 → 输出 "1"
 has_note() {  # has_note <功能#> <需要的轮次>
@@ -149,11 +200,37 @@ if [ "$MODE" = "check" ]; then
     echo "✓ PASS  [查6 轮次根因] 无轮次台账（${LEDGER}）⇒ 不拦"
     exit 0
   fi
-  BAD=0; CHECKED=0
-  for f in $(awk -F'\t' 'NR>3 && $2!="" {print $2}' "$LEDGER" | sort -u -n); do
+  LEDGER_VERDICT_COL="$(ledger_verdict_col)"
+  if [ "${LEDGER_VERDICT_COL:-0}" = "0" ]; then
+    echo "⚠ WARN  [查6 轮次根因] 台账 ${LEDGER##*/} 第 3 行不是列名行 ⇒ **判定列识别不了，本节对本游戏失明**"
+    echo "        ⇒ 表头请用： 日期 功能# 轮次 改动摘要 装机结果 用户结果 [判据 状态 功能名]"
+    echo "        ⇒ 迁移参考： 霓虹深渊2/轮次台账.tsv（2026-10-12 由 P22 七列迁为九列超集）"
+    exit 0
+  fi
+  JUDGED="$(judged_rows)"
+  if [ "${JUDGED:-0}" = "0" ]; then
+    echo "⚠ WARN  [查6 轮次根因] 台账 ${LEDGER##*/} 里 **没有任何「有效/无效」判定**（列 ${LEDGER_VERDICT_COL} 全是未测/装机登记）"
+    echo "        ⇒ 门禁没有计数依据、拦不住连续返工；用户每次 L3 回执后必须回写一行："
+    echo "           bash 04_scripts/pipeline.sh ${GAME} round <功能#> <有效|无效> '<一句摘要>（用户 mXXXXX）'"
+    exit 0
+  fi
+  echo "──── 查6 轮次根因：${LEDGER##*/} 判定列=${LEDGER_VERDICT_COL}，带判定行数=${JUDGED}，阈值=${THRESHOLD} 轮 ────"
+  BAD=0; CHECKED=0; WARNED=0
+  FEATS="$(awk -F'\t' -v vc="$LEDGER_VERDICT_COL" 'NR>3 && $2!="" && $2!="功能#" && $2!="功能" && $2!="日期" && $2!="时间" && $(vc)!="" {print $2}' "$LEDGER" | sort -u -n)"
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
     SET="$(streak_of "$f")"
     ST="${SET% *}"; LR="${SET#* }"
-    [ "${ST:-0}" -ge "$THRESHOLD" ] || continue
+    if [ "${ST:-0}" -lt "$THRESHOLD" ]; then
+      IT="$(invalid_total_of "$f")"; ITN="${IT% *}"; ITR="${IT#* }"
+      if [ "${ITN:-0}" -ge "$THRESHOLD" ] && [ "$(has_note "$f" "$ITR")" != "1" ]; then
+        WARNED=$((WARNED + 1))
+        echo "⚠ WARN  [查6 轮次根因] 功能#${f} 历史累计无效 ${ITN} 轮（最近无效第 ${ITR} 轮，末次判定已非无效）**且无根因定案**"
+        echo "        ⇒ 这是「同一个功能改十几遍」的痕迹（本轮不拦，但下次不许从头再试）；补一笔定案："
+        echo "           bash 04_scripts/_common/rootcause_note.sh --game ${GAME} --feature ${f} --round $((ITR+1)) --cause '…' --evidence '…' --verify '…'"
+      fi
+      continue
+    fi
     CHECKED=$((CHECKED + 1))
     if [ "$(has_note "$f" "$LR")" = "1" ]; then
       echo "✓ PASS  [查6 轮次根因] 功能#${f} 连续无效 ${ST} 轮（最后第 ${LR} 轮）已有根因定案"
@@ -164,12 +241,15 @@ if [ "$MODE" = "check" ]; then
       echo "        ⇒ 或显式强过（须在台账写明理由）： STAGE_NEXT_FORCE=1"
       BAD=$((BAD + 1))
     fi
-  done
+  done <<EOF
+$FEATS
+EOF
   if [ "$BAD" -gt 0 ]; then
     echo "❌ 查6 未过：${BAD} 个功能缺根因定案（连续无效 ≥${THRESHOLD} 轮）。"
+    echo "   ⚠ 这正是「同一个功能改十几遍」的闸门：不许再换个自变量装同一轮包，先出假设矩阵（pipeline.sh ${GAME} rounds）。"
     exit 1
   fi
-  echo "✓ PASS  [查6 轮次根因] 无「连续 ${THRESHOLD} 轮无效且无定案」的功能（检查 ${CHECKED} 个）"
+  echo "✓ PASS  [查6 轮次根因] 无「连续 ${THRESHOLD} 轮无效且无定案」的功能（检查 ${CHECKED} 个达标功能；历史累计告警 ${WARNED} 个）"
   exit 0
 fi
 

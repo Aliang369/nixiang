@@ -304,6 +304,34 @@ else
   ok "preflight 凭证已落：${STAMP}（硬约束 md5=${hc_md5} 行数=${hc_rows}；12h 内有效）"
 fi
 
+# ---------- 开工出口：下一步三条命令 + 闸门点名（2026-10-12 霓虹深渊2 会话复盘 P1-7）----------
+# 那次会话的教训：纪律写在 AGENTS.md 里，但**开工时没人把它翻译成「现在敲哪一条命令」**，
+# 于是 pre_install_gate / rootcause_note / code_locate / install_guard / prior_art 全程 0 次调用，
+# 轮次门禁与装机闸门形同虚设：同一功能改 10 轮、卸载重装 7 次。规则要生效就得在出口点名。
+echo "----------------------------------------------------------------"
+echo "下一步（照抄命令行，别凭记忆）："
+if [ -f "${NIXIANG_ROOT}/10_docs/${GAME}/_digest.md" ]; then
+  DIG_LINES="$(wc -l < "${NIXIANG_ROOT}/10_docs/${GAME}/_digest.md" | tr -d ' ')"
+  echo "  1) 状态速读（禁整读台账/摘要，共 ${DIG_LINES} 行）："
+  echo "       cat 10_docs/${GAME}/_digest.md        # 需要细节再按摘要里的行号：sed -n 'A,Bp' 原文"
+  DG="$(bash 04_scripts/_common/state_digest.sh "$GAME" --check 2>&1 | head -1 || true)"
+  case "$DG" in *过期*|*无摘要*) echo "       ⚠ 速读摘要已过期 ⇒ 先跑：bash 04_scripts/_common/state_digest.sh ${GAME} --write" ;; esac
+else
+  echo "  1) 还没有速读摘要 ⇒ 先生成（比整读台账省 5 倍上下文）："
+  echo "       bash 04_scripts/_common/state_digest.sh ${GAME} --write"
+fi
+echo "  2) 下一轮装机前（闸门，缺一不装）："
+echo "       bash 04_scripts/_common/pre_install_gate.sh --game ${GAME} --rounds-threshold 3 [--cpp …] [--apk …]"
+echo "       bash 04_scripts/_common/install_guard.sh ${GAME} --cmd \"adb -s ${SERIAL:-<SERIAL>} install -r -d <apk>\""
+echo "  3) 用户 L3 回执之后（不回写 ⇒ 轮次门禁永久失明）："
+echo "       bash 04_scripts/pipeline.sh ${GAME} round <功能#> <有效|无效> '<摘要>（用户 mXXXXX）'"
+echo "  4) 定位改动（禁整读大文件）：bash 04_scripts/_common/code_locate.sh <文件> '<正则>' --ctx 3"
+echo
+echo "点名：上一轮会话被旁路（0 次调用）的闸门 —— 本轮别再绕："
+echo "  pre_install_gate.sh（装机前总闸）· rootcause_note.sh（同一功能改 3 轮就拦）· install_guard.sh（装机策略）·"
+echo "  code_locate.sh（定行读）· prior_art.sh（开工先查是否做过）· device_profile.sh（设备画像）· archive_scoped_git.sh（收官归档）"
+echo "----------------------------------------------------------------"
+
 echo "================================================================"
 if [ "$fail" -gt 0 ]; then
   echo "结论：✗ FAIL $fail 项 / ⚠ WARN $warn 项 ⇒ 补齐后再改功能代码或装机"

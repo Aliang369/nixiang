@@ -1,0 +1,192 @@
+{
+  "game": "霓虹深渊2",
+  "version": "2026.10.5 / com.veewo.neonabyss2 (TapTap 渠道)",
+  "notes": "2026-10-12 由「霓虹深渊2 会话效率复盘」P0-1 补齐：本游戏此前**没有 pipeline.json**，导致 P4 轮次门禁不可用、install_guard.sh 判「装机策略未知」形同虚设（会话里出现 7 次 uninstall 且招致用户质问「同签名游戏你为什么还要卸载重装？」）。装机包走 native 外科注入链（不是 apktool 重建）：surgical_nhsy2_2026.10.5.sh 内部构建 libstarry_magic.so + 注入 dex/so → nhsy2_sign.sh 用 starry_release.jks 签名 → NHSY2_INSTALL=1 才装机。r17 包已交付结项（md5 4c27f8da1886c8844f4724cb4a243716 / 1,338,643,610 B，L3 通过 用户 m06941），收官时按裁剪清单清理了约 2.9 GB 中间产物（02_apks/霓虹深渊2、06_dumped/霓虹深渊2、libs_nhsy2 已不在工作区）⇒ 重新开工必须先补回官包再跑 build_surgical，不要以为缺产物＝脚本坏了。",
+  "params": {
+    "game_id": "nhsy2",
+    "package": "com.veewo.neonabyss2",
+    "tag": "nhsy2",
+    "serial": "f9a116a2",
+    "version": "2026.10.5",
+    "version_code": "2026.10.5.85c2f964f38"
+  },
+  "env": {
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2",
+    "ANDROID_NDK_HOME": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973"
+  },
+  "install_policy": "overlay_only",
+  "rounds": {
+    "threshold": 3,
+    "ledger": "10_docs/霓虹深渊2/轮次台账.tsv",
+    "note": "同一功能连续 3 轮「无效」⇒ 拒绝装机，先出假设矩阵/根因定案（rootcause_note.sh --check 判定；pre_install_gate.sh 查6 复用）"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（TapTap 官包入 02_apks/霓虹深渊2/，作为外科注入底包）",
+      "requires": [],
+      "command": "ls -lh \"$NIXIANG/02_apks/霓虹深渊2/\" && { command -v sha256sum >/dev/null 2>&1 && sha256sum \"$NIXIANG/02_apks/霓虹深渊2/霓虹深渊2_taptap_official.apk\" || shasum -a 256 \"$NIXIANG/02_apks/霓虹深渊2/霓虹深渊2_taptap_official.apk\"; }",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/霓虹深渊2/霓虹深渊2_taptap_official.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "anchor",
+      "name": "锚点与路线锁定（钩子目标与语义；本游戏 RVA 不可得 ⇒ 全部走按名路径）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/霓虹深渊2/路线锁定.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/霓虹深渊2/硬约束.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/霓虹深渊2/侦察笔记_锚点索引.md"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "impl_mod",
+      "name": "功能实现（Games/nhsy2Mod.cpp + Games/nhsy2Entry.cpp 菜单注册表）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Entry.cpp"
+        },
+        {
+          "type": "file_contains",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp",
+          "pattern": "nhsy2_TryInit"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "build_surgical",
+      "name": "构建 + 外科注入（surgical_nhsy2_2026.10.5.sh：NDK 构建 libstarry_magic.so → 注入 dex/so → 未签名包）",
+      "requires": [
+        "impl_mod"
+      ],
+      "preflight": [
+        "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_nhsy2_2026.10.5.sh"
+      ],
+      "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_nhsy2_2026.10.5.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-unsigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "sign",
+      "name": "签名（starry_release.jks / alias starry；输出 _surgical-releaseSigned.apk）",
+      "requires": [
+        "build_surgical"
+      ],
+      "preflight": [
+        "$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "device_ready",
+      "name": "设备就绪（真机在线 + 型号留痕；凭证供 install 阶段复查）",
+      "requires": [],
+      "command": "adb -s $SERIAL get-state && adb -s $SERIAL shell getprop ro.product.model && adb -s $SERIAL shell getprop ro.product.model > 04_scripts/霓虹深渊2/.device_ready.txt",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/霓虹深渊2/.device_ready.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-12 05:08:38",
+      "artifacts": {
+        "04_scripts/霓虹深渊2/.device_ready.txt": {
+          "md5": "a138fe788b225a2ebefaa90f24a9ae9c"
+        }
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机（同签名覆盖安装；装机前机器关：轮次根因闸门 + 产物六查 + 装机策略闸门）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --game 霓虹深渊2 --rounds-threshold 3 --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp\" && bash \"$NIXIANG/04_scripts/_common/install_guard.sh\" 霓虹深渊2 --cmd \"adb -s $SERIAL install -r -d 08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk\" && NHSY2_INSTALL=1 bash \"$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign.sh\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.veewo.neonabyss2 \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive",
+      "name": "收尾归档（唯一正式包 + delivery_/icon/菜单模板/使用说明 + 索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 霓虹深渊2 --apk \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.10_surgical-releaseSigned.apk\" --menu-template \"$NIXIANG/10_docs/霓虹深渊2/nhsy2_menu_template.json\" --expect-menu-template --sync-doc",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/霓虹深渊2/nhsy2_menu_template.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/霓虹深渊2/台账.md"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive_close",
+      "name": "归档关闭（git 推送 origin/main，只走 push_main）",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_scoped_git.sh\" 霓虹深渊2",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/霓虹深渊2/pipeline.json"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}

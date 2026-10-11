@@ -79,6 +79,8 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
   - 2026-10-10（用户「按照方案全量修改」，第二轮 邂逅在迷宫会话复盘）：把**纪律做成闸门**（P17–P22，见下方新增子节）。新建 `04_scripts/_common/code_locate.sh`（>200 行文件定位读，替代整文件读：grep -n + 窗口 + 给出 `read offset/limit`）、`04_scripts/_common/selftest_env.sh`（自测影响面 before/after 快照，落 `09_test/{游戏}/{日期}/env_{before,after}.txt`，after 自动对照并提示需复原）；`session_start.sh` 通过时落凭证 `10_docs/_state/机器心跳/preflight_{游戏}.stamp`（含 epoch + 硬约束 md5），`gradle_cycle.sh` 新增 `--game/--log-dir/--no-log/--allow-stale-preflight` 并在**装前**验凭证（缺失/超 12h/硬约束变过 ⇒ 退出码 4；实测无凭证 rc=4、有凭证 dry-run 通过）、全量日志 `tee` 到 `09_test/{游戏}/logs/`、完成块打印完整 md5/大小/日志路径、成功后**自动** `gate_note.sh G2 通过`；`finalize_game_delivery.sh` 新增 `--usage-doc`（复制为 delivery `使用说明.md`，残留 `{占位符}` 即 rc=1，实测正反两路）与 `--copy-apk`；新增模板 `10_docs/_templates/{使用说明_分发型.md,侦察笔记.md,轮次台账.tsv}`；新增 `10_docs/邂逅在迷宫/{侦察笔记.md,轮次台账.tsv}`（免广告面板 3 轮 / 菜单球 3 轮回填），`硬约束.md` 追加 #13–#18；新建 `10_docs/_state/games/邂逅在迷宫.md` 并接进 `current.md`。依据 = 该复盘 §4.2（第一轮机制全在却被整段旁路：11 版里 5 版返工、三次自伤、md5 因 `| tail` 丢失）。本机坑：bash 3.2 `$VAR` 紧跟中文被吞 ⇒ 3 个脚本 10 处改 `${VAR}`。
   - 2026-10-11（用户 m02896「只许卸载重装这个只对无悔华夏生效，规则备注单独写上这个不就行了」）：给「不默认清数据或卸载」这条**加适用范围备注**（本文件 §授权与测试边界 —— 游戏级例外只对该游戏生效，目前唯一例外是无悔华夏/乐变派生负载，方向不得外推）；同步加注 `TOOLBOOK.md:476`（规则 #77 尾「★适用范围」）、`skill/starry-mod/SKILL.md`「清数据 = Mod + 热更资源双杀」节「例外（全仓唯一）」段、`10_docs/无悔华夏/硬约束.md` 第 4 条（并入 `:13` 范围备注与变更记录，依据 m00888＋m02896）。根因＝同一句话「卸载重装」在两边方向相反却都没写范围，任一侧被机械套用都会造成真实损失（乐变负载失效 ⇒ hook 全灭 / 白清本地存档）。
   - 2026-10-11（用户 m03016「这个推送到github上面一直失败？有没有方法是一次推送成功不看网络…这个问题很严重啊…看看可以用哪些不同的做法，提高效率」）：`04_scripts/_common/git_push_main.sh` 升 **v2.1**。根因不是 git，而是**通道分钟级抖动**＋旧脚本「开头探一次 SSH、失败就把整轮锁死在 HTTPS+代理，且用 URL 推送」。改为四通道（`ssh22` / `ssh443` / `https-proxy` / `https-direct`）按序试；**探测改用 `git ls-remote --heads origin <branch>`**（与 push 完全同一条认证/DNS/代理路径，杜绝 v2.0「探针通过、push 仍失败」的错配）；一次调用内自愈重试（`--attempts`/`--wait`）并逐条打印真实错误尾行；`--selftest` 只体检通道；`PUSH_MIRROR_DIR=<裸仓>` 可落本地镜像（不联网）；被 `Updates were rejected`/`non-fast-forward` 立即短路返回 3（分叉**绝不强推**）；`ahead=0` 时 `NOTHING_TO_PUSH` rc=0 不误报失败。配套纪律：**已推送过的提交不要再 amend**（本会话正是 amend 造成远端/本地历史分叉，多花一整轮排障）。坑位与实测见 `TOOLBOOK.md` 二-b 规则 #84。
+  - 2026-10-12（用户 m00001「霓虹深渊2 会话 9a67c280…可以用哪些不同的做法，提高这次对会话的效率？…给我一个可执行的方案」）：霓虹深渊2 会话效率复盘第一项落地——新建 `04_scripts/_common/session_stats.py`（**会话体检器**，只读：zstd 自动解压 → 规模 / prune·compaction·LLM 重试 / 每工具调用与输出体量 / read 热点 / bash 输出分类 / 每轮调用与时长 / 已有闸门「0 次 = 机制被旁路」告警 / 工具错误归并；`--list` `--session-id` `--top` `--out`），配套复盘文档 `10_docs/_state/规范优化_20261012_霓虹深渊2会话效率复盘.md`。依据（实测）= 该会话 2393 次调用 / 3.89 MB 工具输出 / 70% 调用（1672 次）花在「全屏攻击 + 无限水晶」返工；`04_scripts/霓虹深渊2/pipeline.json` 缺失致**轮次门禁与 `install_guard.sh` 双双旁路**（装机策略未知、7 次卸载触发用户质问）；`nhsy2Mod.cpp` 被读 202 次 608 KB；29 次 `file changed since it was read`；纪律文件（硬约束/路线锁定/台账/轮次台账）直到会话开始后 27.6 h 才首次入库。
+  - 2026-10-12（用户 m00133「按照方案全量修改」，承接上一条的 P0–P2 全量落地）：**把「已经存在的闸门」接上**（新增下方子节 P23–P30）。新建 `04_scripts/霓虹深渊2/pipeline.json`（9 阶段 + `install_policy: overlay_only` + `rounds.threshold:3`，`workdir`=仓库根、`verify.path` 全部根相对 —— 实测 `pipeline.sh` verify 不展开 `$NIXIANG`，`pipeline.sh 冒险与征途 verify` 同样输出字面 `$NIXIANG/02_apks/…` ⇒ 全仓同型隐患）、`04_scripts/霓虹深渊2/round.sh`（只改 params 再转发 `pipeline.sh next --loop`，不重造 cycle 脚本）、`04_scripts/_common/state_digest.sh`（状态文档速读摘要；霓虹深渊2 实测 92 KB→19 KB / 283 行，`--check` 过期告警）、`04_scripts/_common/evidence.sh`（logcat 参数化取证，落 `09_test/<游戏>/evidence_<ts>/`，终端只回显 ≤40 行）、`04_scripts/_common/so_inspect.py`（sha/strings/zip/hex/disasm/ptr；**strings 默认 UTF-8 感知** —— 实测包内 `libstarry_magic.so` 命中 37 条中文串而系统 `strings` 命中 0 条）、`10_docs/霓虹深渊2/侦察笔记_锚点索引.md`（nhsy2Mod.cpp 4008 行 24 段锚点表，替代 202 次整读）、`10_docs/霓虹深渊2/_digest.md`；改造 `install_guard.sh`（新增 `overlay_only`：卸载/清数据语义 **rc=66**，需 `--allow-uninstall` 或 `INSTALL_GUARD_ALLOW_UNINSTALL=1`；写明 exit 3「策略未知」不是放行许可）、`rootcause_note.sh`（判定列按**列名**识别 + 功能键精确匹配 + `judged_rows()` + 历史累计无效告警；表头识别不了时 WARN「本节对本游戏失明」）、`finalize_game_delivery.sh`（`--expect-icon`/`--expect-menu-template`：点名而缺内容 ⇒ rc=1 且不写任何文件；给全则把菜单模板 JSON 原文直接打印给用户复制）、`session_start.sh`（出口 4 组可照抄命令 + 「上一轮被旁路（0 次调用）的闸门」点名）、`skill/re-implement/hook-rules.md` §32「编辑一把刀」、`code_locate.sh` 提示；台账 `10_docs/霓虹深渊2/轮次台账.tsv` 由 P22 七列迁为 6 列正统的九列超集（`日期 功能# 轮次 改动摘要 装机结果 用户结果 判据 状态 功能名`，`$2`=数字功能#、`$6`=用户结果；22 数据行→40 行，无损校验通过）。依据（实测）：旧七列与门禁取列错配 ⇒ **门禁数学上不可能触发**（会话内 0 次调用）；复验后真实台账尾部以有效收尾，故门禁＝「尾部连续拦截 + 历史累计 ≥阈值告警」（功能#4=8 轮、功能#11=8 轮）。**另发现同型第二例**：`bash32_check.sh` + `fix_bash32_var_brace.py` 早已存在且 `preflight.sh:59` 确实调用，但按文件传参、无人全仓扫 —— 全仓 633 个脚本里 **63 个**仍带 `$VAR` 紧跟中文的 ✗ 硬错误（机械修复未做，留待用户点头）。机器关：`preflight.sh` 对全部改动文件 PASS、`bash32_check.sh` 无硬错误、`rootcause_note.sh --selfcheck` 三组全过。
 - 需要用户操作（进游戏、开菜单、打开工具等）时在聊天说明操作、成功标志和所需配合，等待确认并核对结果；只暂停依赖该结果的步骤，不假定用户已操作，独立且已授权工作可继续。
 - **真机交互零截图（2026-10-01 定）**：不做 `screencap` 猜坐标、不 `input tap`、不靠截图判断界面状态 —— 真机取证一律走 `logcat`、`/proc/<pid>/{mem,maps}`、frida。屏幕上的点按、输入、翻页**全部由用户完成**。（历史浪费：为算 `input tap` 坐标花掉 `wm size` + `screencap` 的调用，最终未用上。）
   **三条根因（2026-10-04 用户口述定案，禁止再提机器实测 / 自动点击类提案）**：① 坐标定位会歪，失败重试烧流程和 token；② 菜单授权墙机器过不去、还会误诊成服务端问题，而用户输一次账号即可解决；③ 人工实测比机器判定准——有些问题日志里看不出来，使用时才知道。分工由此定死：**人工＝终审＋标记，机器＝预检员＋记录仪**（工具见下条）。
@@ -256,6 +258,42 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - **P22 轮次台账（同一功能反复反馈）**：同一功能「改动 → 装机 → 用户实测」每轮记一行
   `10_docs/{游戏}/轮次台账.tsv`（模板 `10_docs/_templates/轮次台账.tsv`，列 = 时间 功能 轮次 改动 结果 判据 状态）。
   第 3 轮仍无效即触发 P4：**先填假设矩阵再装机**。（本会话免广告面板 3 轮、菜单球 3 轮，全靠对话记忆在追。）
+
+### 增量（2026-10-12 霓虹深渊2 会话复盘：把「已经存在的闸门」接上）
+
+依据：`10_docs/_state/规范优化_20261012_霓虹深渊2会话效率复盘.md`；体检器 `04_scripts/_common/session_stats.py`。
+会话实测（9a67c280）：2393 次工具调用 / 26 轮 / 输出 3.89 MB，其中 turn 10–23 占 69.9%；
+**真正的问题不是缺规则，而是三条既有闸门全程 0 次调用**（`pre_install_gate.sh` / `install_guard.sh` / `rootcause_note.sh`）。
+
+- **P23 编辑一把刀（同一文件、同一轮只准一把刀）**：同一文件在**同一轮**里禁止混用「bash 改写（sed/heredoc/fix 脚本）」与 `edit` 工具
+  —— 实测 29 次 `file changed since it was read`（几乎全在 `Games/nhsy2Mod.cpp`）。正确姿势：
+  `bash 04_scripts/_common/code_locate.sh <文件> '<正则>' --ctx 3` 定位 → `read offset=… limit=…` 拿读戳 → `edit`。
+  大文件禁整读、禁 heredoc 整文件重写（纯 `cat >>` 追加例外）。观测口：`session_stats.py` 的 edit 报错率 >5% 即违规。详见 `skill/re-implement/hook-rules.md` §32。
+- **P24 大文档禁整读（速读摘要先行）**：`10_docs/{游戏}/` 与 `10_docs/_state/` 下的状态文档（≥20 KB 的 `台账.md / 硬约束.md / 路线锁定.md / current.md / 决策台账.md`）**禁止无 offset/limit 整读**：
+  先 `cat 10_docs/{游戏}/_digest.md`（`bash 04_scripts/_common/state_digest.sh <游戏> --write` 生成，≈92 KB→19 KB，带行号可 grep），
+  再按行号 `read offset=… limit=…` 取需要的那几段；`--check` 提醒摘要过期。台账 charter 是 append-only，**分片不等于删行**。
+  （实测同一文件完全相同的整读最高 5 次：台账.md 5、硬约束.md 4、menu_template.json 4、路线锁定.md 3、current.md 3。）
+- **P25 轮次台账统一格式（P22 修正版）**：正统写入口是 `bash 04_scripts/pipeline.sh <游戏> round <功能#> <有效|无效> '<摘要>（用户 mXXXXX）'`，
+  文件列 = `日期 功能# 轮次 改动摘要 装机结果 用户结果 判据 状态 功能名`（**6 列正统的超集**：`$2`=数字功能#、`$6`=用户结果，
+  与 `pipeline.sh` 写入器、`rootcause_note.sh`、`archive_close_git.sh` 全兼容）。**功能# 必须是数字**（对照 `10_docs/{游戏}/功能总表*.md`），
+  `用户结果 ∈ 有效|无效|未测`，用户没回执不得写「有效」，推断行加 `(推)` 并留用户原话出处。
+  **每轮用户 L3 回执后必须回写一行**——不回写 = 轮次门禁失明（本会话功能#4 连续无效 8 轮无人拦）。
+- **P26 口令点名即必须交付（守卫不是产出）**：用户或口令点名要的交付物，收尾必须显式传入产出参数，缺一即 rc=1 且**不写任何文件**：
+  `bash 04_scripts/_common/finalize_game_delivery.sh --game <游戏> --apk <正式包> --expect-menu-template --menu-template <json> --expect-icon --icon-source <图> --apply`
+  （`--expect-*` = 「本轮点名要交付」的硬断言；点名而缺内容 ⇒ 报错；点名且给全 ⇒ **把菜单模板 JSON 原文直接打印在终端**，不让用户自己找文件）。
+  背景：本会话用户两次追问「菜单模版 json 为什么不发给我」。
+- **P27 装机策略 overlay_only + 卸载需显式放行**：`04_scripts/{游戏}/pipeline.json` 必须写 `install_policy`
+  （`uninstall_only` / `overlay_only`，字段缺失时 `install_guard.sh` 只能报「策略未知」= 闸门形同虚设）。
+  同签名包换包一律覆盖安装（`adb install -r -d`）；**卸载/清数据语义（uninstall / pm clear / rm -rf /data/data）在 overlay_only 下被拒（rc=66）**，
+  确需卸载要显式 `--allow-uninstall` 或 `INSTALL_GUARD_ALLOW_UNINSTALL=1`，并在轮次台账留一行理由。（本会话 uninstall 7 次招致用户质问。）
+- **P28 一键轮次环（别手搓链路）**：出包装机走
+  `bash 04_scripts/霓虹深渊2/round.sh <标签> [--loop N]`（只改 `pipeline.json` 的 `params.version`，再转发 `pipeline.sh <游戏> next --loop N`）；
+  机械操作唯一合法入口仍是 `04_scripts/pipeline.sh`（有指纹锁，AI 禁改）。rc=3 = 被轮次门禁拦住：**先填假设矩阵**（`pipeline.sh <游戏> rounds`），
+  不许换自变量再装一轮，只有用户明确要求才 `STAGE_NEXT_FORCE=1`。写 pipeline.json 的 `verify.path` 一律用**相对仓库根**的路径（`pipeline.sh` 的 verify **不展开 `$NIXIANG`**）。
+- **P29 取证收敛（别现场手搓分析）**：日志取证用 `bash 04_scripts/_common/evidence.sh --game <游戏> --needle '<串>' --needle …`（落 `09_test/<游戏>/evidence_<ts>/`，终端只回显 ≤40 行）；
+  ELF/APK 取证用 `python3 04_scripts/_common/so_inspect.py {sha|strings|zip|hex|disasm|ptr} …` —— **`strings` 默认 `--utf8`**（系统 `strings` 把 ≥0x80 当不可打印，中文菜单串全漏，实测 mod 包内 37 条 vs 0 条）。
+  结论一律落文件，不靠对话记忆。
+- **P30 会话切点 / 合包 / 后台 / 证据目录**：① **切点纪律** —— 同一功能**每 2 个用户实测轮**或累计 3 h / 600 次调用即交接（写一轮交接摘要 + 台账回写），别等上下文被 prune 68 次；② **合包测试** —— 多改动合并成「一轮一个包」，不一轮一包；③ **编译/取证走后台 job 并行**，别串行等待；④ **证据目录只留决定性证据**（README 写清哪条证死了什么），中间产物出包后清理。
 
 ## 工具专属文件
 

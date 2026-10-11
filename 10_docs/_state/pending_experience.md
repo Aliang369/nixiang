@@ -83,3 +83,11 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   ⑤ 模板/台账 `侦察笔记.md`、`轮次台账.tsv`（免广告面板 3 轮、菜单球 3 轮已回填）；
   ⑥ `硬约束.md` #13–#18（被提问不得擅自改动 / 不再管卡密 / 不做自启动 / 默认分发型交付 / 方案 A 授权 / 菜单必须同时存在）+ `games/邂逅在迷宫.md` 交接文件 + `current.md` 索引行 + AGENTS.md「增量（第二轮）」与变更日志。
   机器关：`preflight.sh` 五脚本 PASS=5 FAIL=0（首轮抓出 `finalize_game_delivery.sh` L385 `$USAGE_DOC）` 硬错误）、`bash32_check.sh` 五脚本全过、`gate_note.sh` 记 G1 一行。
+- [霓虹深渊2 会话 9a67c280 效率复盘 P0–P2 全量落地（2026-10-12，用户 m00133「按照方案全量修改」）](规范优化_20261012_霓虹深渊2会话效率复盘.md)：**已合并**——
+  根因不是缺规则，而是**三条既有闸门全程 0 次调用**（`pre_install_gate.sh` / `install_guard.sh` / `rootcause_note.sh`），加上更隐蔽的一条：**旧台账列格式与门禁取列错配 ⇒ 门禁数学上不可能触发**。对策：
+  ① 补 `04_scripts/霓虹深渊2/pipeline.json`（9 阶段 + `install_policy: overlay_only` + `rounds.threshold:3`；`workdir`=仓库根、`verify.path` 全部根相对 —— 实测 `pipeline.sh` verify 不展开 `$NIXIANG`，全仓同型隐患）；
+  ② 台账 `轮次台账.tsv` 迁为 6 列正统的九列超集（22 行→40 行，无损校验）+ `rootcause_note.sh` 改按列名识别判定列、功能键精确匹配、`judged_rows()`、历史累计无效告警（真实台账：功能#4=8 轮、功能#11=8 轮；表头坏 ⇒ WARN「本节对本游戏失明」不再静默 PASS）；
+  ③ `install_guard.sh` 新增 `overlay_only`（卸载/清数据 rc=66，需 `--allow-uninstall`）、`finalize_game_delivery.sh` 新增 `--expect-icon/--expect-menu-template`（点名缺内容 rc=1 且不写文件；给全则打印 JSON 原文）；
+  ④ `state_digest.sh`（状态文档速读 92 KB→19 KB）、`evidence.sh`（logcat 参数化取证）、`so_inspect.py`（sha/strings/zip/hex/disasm/ptr，**strings 默认 UTF-8 感知**：mod 包 37 条中文串 vs 系统 strings 0 条）、`10_docs/霓虹深渊2/侦察笔记_锚点索引.md`（nhsy2Mod.cpp 24 段锚点表，替代 202 次整读）、`round.sh`（一键轮次环，不重造 cycle 脚本）；
+  ⑤ `session_start.sh` 出口 4 组命令 + 「被旁路的闸门」点名；`hook-rules.md` §32「编辑一把刀」；`AGENTS.md` P23–P30 + 变更日志；`TOOLBOOK.md` #100（bash32 全仓 63/633 带硬错误，`bash32_check.sh` 按文件传参 ⇒ 无人全仓扫）。
+  机器关：`preflight.sh` 14 文件 PASS=13→修 2 处 `$VAR` 紧跟全角字后 FAIL=0、`rootcause_note.sh --selfcheck` 三组全过、`bash32_check.sh` 无硬错误。

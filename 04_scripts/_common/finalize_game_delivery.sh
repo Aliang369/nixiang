@@ -17,6 +17,12 @@ SYNC_DOC=0
 ALLOW_LEGACY_TEMPLATE=0
 USAGE_DOC=""      # --usage-doc：复制为 delivery 目录里的「使用说明.md」（分发型交付必带，P20）
 COPY_APK=0        # --copy-apk：把正式 APK 也复制进 delivery 目录
+# 口令点名即必须交付（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
+# 用户在当轮口令里点名要 icon / 菜单模板时，必须显式传 --icon-source / --menu-template，
+# 漏传一律 rc=1（以前只打一行 NOTE 就放过去了 —— 那次用户追问了两次「菜单模版 json 为什么
+# 不发给我，让我复制？」「菜单模版 JSON 你有按照规范格式写的吗？」）。
+EXPECT_ICON=0
+EXPECT_MENU_TEMPLATE=0
 
 usage() {
   cat >&2 <<'EOF'
@@ -32,6 +38,8 @@ usage() {
     [--prune] \
     [--sync-doc] \
     [--allow-legacy-template] \
+    [--expect-icon] \
+    [--expect-menu-template] \
     [--apply]
 
 说明:
@@ -55,6 +63,10 @@ usage() {
     正式 APK 仍留在 08_output/{游戏}/）。
   - 2026-10-10 第二轮复盘 P20：分发型交付默认 `--usage-doc … --copy-apk`；
     别再手搓 delivery 目录与《使用说明.md》。
+  - --expect-icon / --expect-menu-template（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
+    **用户口令里点名要什么，就传哪个守卫**。传了守卫却没传对应内容 ⇒ rc=1（不再静默跳过）。
+    传 --expect-menu-template 时会把模板 JSON **原文打到终端**，供直接复制发给用户；
+    理由：那次会话用户两次追问「菜单模版 json 为什么不发给我，让我复制？」。
 EOF
   exit 2
 }
@@ -71,6 +83,9 @@ while [[ $# -gt 0 ]]; do
     --prune) PRUNE=1; shift ;;
     --sync-doc) SYNC_DOC=1; shift ;;
     --allow-legacy-template) ALLOW_LEGACY_TEMPLATE=1; shift ;;
+    # 「口令点名即必须交付」：这两个开关是**守卫**不是产出 —— 传了它却没传对应内容 = 直接 FAIL
+    --expect-icon) EXPECT_ICON=1; shift ;;
+    --expect-menu-template) EXPECT_MENU_TEMPLATE=1; shift ;;
     --apply) MODE="apply"; shift ;;
     -h|--help) usage ;;
     *) echo "ERROR: 未知参数 $1" >&2; usage ;;
@@ -305,6 +320,31 @@ else
     echo "[finalize]       新游戏首交付若需要 icon/菜单模板，请补传这两个参数后重跑；不需要则忽略本提示。" >&2
   fi
 fi
+
+# ---------- 「口令点名即必须交付」门禁（2026-10-12 霓虹深渊2 会话复盘 P0-4）----------
+# 为什么要有这一段：那次会话用户两次追问菜单模板 JSON，根因是"用户当轮点名要什么"这件事
+# 在脚本里没有机械判据 —— 不传参数就安静跳过（只打一行 NOTE，rc 仍是 0）。
+# 现在：口令里点名了 icon / 菜单模板，就必须显式传 --icon-source / --menu-template，否则 rc=1。
+EXPECT_FAIL=0
+if [[ "$EXPECT_ICON" == "1" && -z "$ICON_SOURCE" ]]; then
+  echo "ERROR: --expect-icon：本轮点名要交付 icon，但没有 --icon-source <app_icon.png>" >&2
+  echo "       动作：从底包/来源图取一张 ≥512×512 的 app_icon.png，补传后重跑。" >&2
+  EXPECT_FAIL=1
+fi
+if [[ "$EXPECT_MENU_TEMPLATE" == "1" && -z "$MENU_TEMPLATE" ]]; then
+  echo "ERROR: --expect-menu-template：本轮点名要交付菜单模板，但没有 --menu-template <…_menu_template.json>" >&2
+  echo "       动作：按 10_docs/_templates/菜单模板_规范与示例.md 生成/自检模板后，补传后重跑。" >&2
+  echo "       （模板必须无 Category_* 分组行；不确定就用 --allow-legacy-template 前先问用户）" >&2
+  EXPECT_FAIL=1
+fi
+if [[ "$EXPECT_MENU_TEMPLATE" == "1" && -n "$MENU_TEMPLATE" ]]; then
+  echo
+  echo "================ 菜单模板 JSON 原文（直接复制粘贴给用户，别让用户自己找文件）================"
+  cat "$MENU_TEMPLATE"
+  echo "================ 菜单模板 JSON 原文结束（同时已自检见上）================"
+  echo
+fi
+[[ "$EXPECT_FAIL" == "0" ]] || { echo "[finalize] 因本轮点名的交付物缺失而中止（未写任何文件）" >&2; exit 1; }
 
 if [[ "$SYNC_DOC" == "1" ]]; then
   APK_BASE="$(basename "$APK")"

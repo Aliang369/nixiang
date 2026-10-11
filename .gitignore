@@ -184,3 +184,6 @@ _install_stage/
 
 # preflight 凭证（本机运行时状态，2026-10-10 第二轮复盘 P10 硬化）
 10_docs/_state/机器心跳/*.stamp
+
+# pipeline device_ready 阶段留痕（本机运行时状态，2026-10-12 霓虹深渊2 复盘 P0-1）
+04_scripts/*/.device_ready.txt

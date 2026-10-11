@@ -696,3 +696,32 @@ bash 04_scripts/_common/device_profile.sh --serial <S> --pkg <包名> --rva <名
 
 **推论（写进纪律的理由）**：既然单轮机器耗时主要在「编译+装机」，省时间的手段是**减少轮次**——
 诊断与最可能修复同包、一轮一个变量、L2 机器层先把能自动判的都判掉（§31.5），而不是继续抠打包含量。
+
+---
+
+## §32 编辑纪律：一把刀（2026-10-12 霓虹深渊2 会话复盘）
+
+**铁律：同一个文件在同一轮里只能由一种工具改 —— 要么 `edit`，要么 bash（sed / python / heredoc 重写）。混用必炸。**
+
+| 现象 | 本会话实测 |
+|---|---|
+| `edit` 报 `file changed since it was read` | **29 次**（占 edit 287 次的 10%），几乎全在 `mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp`：同一轮里先 `python3 - <<PY` 打补丁、再用 `edit` 改同一文件 |
+| `edit` 报 `file has not been read` | 5 次（凭记忆直接改） |
+| `edit` 报 `old_string matched N times` | 2 次（用加长 `old_string` 硬试的后果） |
+
+**正确姿势（三者顺序不可颠倒）**：
+
+```bash
+# 1) 先用定位器拿行号，不要整读、不要凭记忆
+bash 04_scripts/_common/code_locate.sh <文件> '<正则>' --ctx 3
+# 2) 按行段读（这是唯一的"读戳"来源）
+#    read <文件> offset=N limit=K
+# 3) 用 edit 改（若必须用 bash 改，则本轮弃用 edit，全部由 bash 完成）
+```
+
+**推论**：
+
+1. 大文件（>1000 行，如 `Games/nhsy2Mod.cpp` 4008 行）**禁止整读、禁止 heredoc 整文件重写**。整文件重写会同时冲掉并行改动，也是读戳失效的根源。
+2. 撞到 `file changed since it was read`，正确反应是**重新 `read` 再 `edit`**；把 `old_string` 加长硬试会升级成 `matched N times`。
+3. 允许的例外：纯追加（`cat >> 文档 <<EOF`、`>> 台账`）不需要读戳，但同一轮内不要再对同一文件用 `edit`。
+4. 这条纪律的机器观测口：`python3 04_scripts/_common/session_stats.py` 会统计 edit 报错类型与热点文件；edit 失败率 >5% 即为违规信号。
