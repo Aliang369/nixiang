@@ -1,0 +1,11 @@
+{
+  "template_id": "fkssj",
+  "name": "疯狂水世界",
+  "package": "com.gx.sw.qa.fkssj004.esj",
+  "source": "Games/FkssjEntry.cpp kFkssj_Features + Games/FkssjMod.h FkssjFeat @ 1.11.6/vc480",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "伤害倍率"},
+    {"feat_num": 3, "name": "战斗加速"}
+  ]
+}

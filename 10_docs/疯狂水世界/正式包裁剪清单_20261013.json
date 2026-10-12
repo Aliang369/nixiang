@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/疯狂水世界",
+  "keep": "疯狂水世界_1.11.6_surgical-releaseSigned.apk",
+  "keep_size": 520989472,
+  "keep_md5": "a723794db9dcd90ea2ee4a0c3fda19c8",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "疯狂水世界_1.11.6_surgical-unsigned.apk",
+      "size": 520092859,
+      "md5": "44619541eacef197b8764d752cc31753"
+    }
+  ],
+  "removed_count": 1
+}

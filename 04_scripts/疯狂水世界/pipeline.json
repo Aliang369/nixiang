@@ -177,18 +177,13 @@
       "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_fkssj_1.11.6.sh\"",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "note": "骨架照 scripts/surgical_xnbz_0.0.14.sh（同为 Cocos + 分支 B）。七步：gradle 白包 → 包内 so 身份校验（LC_ALL=C grep -a '[Fkssj]'，防 jniLibs 未刷新）→ apktool d 只取 smali → 收集 com/starry smali → smali assemble -o classes5.dex → Manifest 文字注入（mini apk 解码 + apktool b + aapt2 零丢失校验，缓存 07_patched/疯狂水世界/surgical/AndroidManifest.xml）→ zip 外科 merge（cp 原包 + zip -d 'META-INF/*' + zip -u 覆盖新增条目）→ 逐条断言 classes.dex~classes4.dex 与 resources.arsc 与原包相等。底包指纹门禁 md5 == f8ed1b954a3c5ce91dcecb4e721f3e9b。**第 4 步（baksmali 改官方 dex）本作 N/A：无 TapTap 登录类、无 smali 目标，需在脚本内显式写明跳过**。禁止 apktool b 整包重建。",
-      "done_at": "2026-10-12 23:47:46",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk": {
-          "md5": "44619541eacef197b8764d752cc31753"
-        }
-      }
+      "note": "骨架照 scripts/surgical_xnbz_0.0.14.sh（同为 Cocos + 分支 B）。七步：gradle 白包 → 包内 so 身份校验（LC_ALL=C grep -a '[Fkssj]'，防 jniLibs 未刷新）→ apktool d 只取 smali → 收集 com/starry smali → smali assemble -o classes5.dex → Manifest 文字注入（mini apk 解码 + apktool b + aapt2 零丢失校验，缓存 07_patched/疯狂水世界/surgical/AndroidManifest.xml）→ zip 外科 merge（cp 原包 + zip -d 'META-INF/*' + zip -u 覆盖新增条目）→ 逐条断言 classes.dex~classes4.dex 与 resources.arsc 与原包相等。底包指纹门禁 md5 == f8ed1b954a3c5ce91dcecb4e721f3e9b。**第 4 步（baksmali 改官方 dex）本作 N/A：无 TapTap 登录类、无 smali 目标，需在脚本内显式写明跳过**。禁止 apktool b 整包重建。\n2026-10-13 收尾清理: /Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk\n2026-10-13 收尾清理: /Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk; 原 md5=44619541eacef197b8764d752cc31753",
+      "done_at": "2026-10-12 23:47:46"
     },
     {
       "id": "sign",
@@ -210,9 +205,6 @@
         "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk": {
           "md5": "a723794db9dcd90ea2ee4a0c3fda19c8"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk": "44619541eacef197b8764d752cc31753"
       }
     },
     {
@@ -273,8 +265,13 @@
       ],
       "command": "true",
       "verify": [],
-      "status": "pending",
-      "note": "落 10_docs/疯狂水世界/环境轮记录_1.11.6_2026xxxx.md（装机取证 + 用户上手结论 + 阶段① 是否结），并刷新 10_docs/_state/current.md 与 10_docs/_state/games/疯狂水世界.md。"
+      "status": "done",
+      "note": "落 10_docs/疯狂水世界/环境轮记录_1.11.6_2026xxxx.md（装机取证 + 用户上手结论 + 阶段① 是否结），并刷新 10_docs/_state/current.md 与 10_docs/_state/games/疯狂水世界.md。",
+      "done_at": "2026-10-13 00:18:45",
+      "artifacts": {},
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.install_ok": "594f225527ac12ecffcec2450d40087a"
+      }
     },
     {
       "id": "archive_close",
@@ -286,8 +283,7 @@
       "verify": [],
       "status": "done",
       "note": "共享文件 SignSpoof.java 必须走 python3 04_scripts/_common/stage_shared_file.py --path …/sign/SignSpoof.java --drop-pattern '<他人标记>' 做 hunk 级暂存，禁止 git add -A（会把并行会话未完成的改动一起提交）；禁止用「标记串 grep=0」代替逐行核对（他人改动常含无标记续行）。push 走 04_scripts/_common/git_push_main.sh 的 push_main（四通道，禁强推）。",
-      "done_at": "2026-10-12 22:57:09",
-      "artifacts": {}
+      "done_at": "2026-10-12 22:57:09"
     }
   ]
 }

@@ -1,0 +1,37 @@
+# 疯狂水世界 1.11.6 阶段② 三功能【无敌 / 伤害倍率 / 战斗加速】决定性行
+# 来源：adb logcat（真机 serial 96f0d883，Xiaomi M2102K1AC，无 root）
+
+## A. 星光菜单加载 + 身份同步 + 悬浮窗（09_test/疯狂水世界/precheck_20261012_233156/logcat.txt）
+10-12 23:31:57.734 I Mod_Menu: [Fkssj] onLoad: FkssjHooks 已缓存（classloader ok）
+10-12 23:31:57.734 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=Fkssj)
+10-12 23:31:58.343 I MenuService: auth game_id=fkssj
+10-12 23:31:58.343 I ModBridge: auth game_id synced from native: fkssj
+10-12 23:31:58.389 I MenuService: native menu shown mode=ACTIVITY
+10-12 23:31:58.390 I Mod_Menu: [Fkssj] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)
+10-12 23:31:58.390 I Mod_Menu: [Fkssj] lib ready (cocos jsb, js-patch armed)
+10-12 23:31:58.391 I StarryMagic: MOD 已就绪 tag=Fkssj ready=1
+
+## B. 四锚点挂载（同文件；锚点④ = 本轮新增的只读取证）
+10-12 23:32:00.399 I StarryTrace: fkssj-js fkssj-js anchor#1 applyDamage hooked
+10-12 23:32:00.400 I StarryTrace: fkssj-js fkssj-js anchor#2 checkDeath hooked
+10-12 23:32:00.400 I StarryTrace: fkssj-js fkssj-js anchor#3 battle speed hooked
+10-12 23:32:00.400 I StarryTrace: fkssj-js fkssj-js damage pipeline armed (applyDamage)
+10-12 23:32:00.400 I StarryTrace: fkssj-js fkssj-js battle speed armed (update dt x N)
+10-12 23:32:00.400 I StarryTrace: fkssj-js fkssj-js all 3 anchors armed
+（同文件，StarryTrace 原始行去时间戳摘录）
+StarryTrace: fkssj-js fkssj-js stat#1 inv=0 dmg=0 spd=0
+StarryTrace: fkssj-js fkssj-js stat#2 inv=0 dmg=0 spd=1
+# 读法：stat#N 只在「命中计数变化」时才回传；进战斗前恒为 0 ⇒ 计数增长本身就是补丁存活判据
+
+## C. 用户菜单档位下发（[Fkssj] 侧；前两行取自 A 段同一份 logcat，第三行取自 D 段战斗日志）
+10-12 23:31:59.091 I Mod_Menu: [Fkssj] 无敌 ON（我方免伤 + 我方死亡判定恒假）
+10-12 23:31:59.896 I Mod_Menu: [Fkssj] 伤害倍率 值=100（敌方实际掉血 ×100）
+10-12 23:49:19.679 I Mod_Menu: [Fkssj] 战斗加速 值=9（推帧 dt ×9）
+
+## D. ★用户实测两场主线（09_test/疯狂水世界/battle_20261012_235545.log）
+10-12 23:52:00.370 I/StarryTrace(26591): fkssj-js fkssj-js battleEnd type=MAINLINE clientWin=1 serverWin=0 popup=FAIL frame=65 fightTime=2/90 inv=2 dmg=4
+10-12 23:52:04.701 I/StarryTrace(26591): fkssj-js fkssj-js battleEnd type=MAINLINE clientWin=1 serverWin=0 popup=FAIL frame=65 fightTime=2/90 inv=4 dmg=8
+# 读法：clientWin=1（演出层我方胜）／serverWin=0（服务端判负）／popup=FAIL（主线弹窗听服务端）
+#       frame=65、fightTime=2/90 ⇒ 演出正常收场，无超时空转
+#       inv=2→4、dmg=4→8 ⇒ 免伤命中与伤害倍率命中计数在战斗内逐场累计递增（补丁真实作用在战斗里，非仅挂载）
+#       菜单下发档位见 C 段（无敌 ON、伤害倍率 100、战斗加速 9）
