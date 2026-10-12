@@ -42,11 +42,11 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing base APK $ORIG_APK" >&2; exit 1; }
 [[ -x "$SMALI_BIN" && -x "$BAKSMALI_BIN" ]] || { echo "ERROR: smali/baksmali missing" >&2; exit 1; }
 SO_PREBUILT="${CXSWZ_SO:-$STARRY_SRC/libs_cxswz/arm64-v8a/libstarry_magic.so}"
-[[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing starry so $SO_PREBUILT（先跑 cxswz_build_so.sh）" >&2; exit 1; }
+[[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing starry so ${SO_PREBUILT}（先跑 cxswz_build_so.sh）" >&2; exit 1; }
 [[ -f "$NDK_CXX" ]] || { echo "ERROR: missing libc++_shared at $NDK_CXX" >&2; exit 1; }
 
 ACTUAL_MD5="$(md5 -q "$ORIG_APK")"
-[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符（$ACTUAL_MD5 != $ORIG_MD5）" >&2; exit 1; }
+[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符（$ACTUAL_MD5 != ${ORIG_MD5}）" >&2; exit 1; }
 
 # 底包自检：不得已含星光外挂物 / 已占用 classes16.dex
 python3 - "$ORIG_APK" "$NEW_DEX" <<'PYCHK'
@@ -317,7 +317,7 @@ unzip -p "$UNSIGNED" "$NEW_DEX" > "$WORK/${NEW_DEX%.dex}_check.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c16_check" "$WORK/${NEW_DEX%.dex}_check.dex" >/dev/null
 for f in com/starry/magic/StarryInitProvider.smali com/starry/magic/menu/MenuService.smali \
          com/starry/magic/sign/SignSpoof.smali com/starry/magic/sign/TapLoginForceWeb.smali; do
-  [[ -f "$WORK/c16_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 $f（smali 未打进包）" >&2; exit 1; }
+  [[ -f "$WORK/c16_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 ${f}（smali 未打进包）" >&2; exit 1; }
 done
 echo "[dex-verify] $NEW_DEX 含 StarryInitProvider / MenuService / SignSpoof / TapLoginForceWeb ✓"
 
