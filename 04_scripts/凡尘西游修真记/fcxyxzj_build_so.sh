@@ -64,7 +64,7 @@ done
 # 反查上一款游戏标签不得出现（菜单串错游戏防线）
 for bad in "Toggle_秒杀" "Toggle_自动胜利"; do
   HIT=$(LC_ALL=C grep -ac "$bad" "$SO" || true)
-  [[ "$HIT" -eq 0 ]] || { echo "ERROR: $SO 含其它游戏菜单串 $bad（mk 未切或旧 so）" >&2; exit 1; }
+  [[ "$HIT" -eq 0 ]] || { echo "ERROR: $SO 含其它游戏菜单串 ${bad}（mk 未切或旧 so）" >&2; exit 1; }
 done
 
 echo "[build_so] done → $SO ($(md5 -q "$SO"))"

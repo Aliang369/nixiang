@@ -39,7 +39,7 @@ if [[ -f "$RUNTIME_META" ]]; then
   cp "$RUNTIME_META" "$DUMP_DIR/global-metadata.runtime.dat"
   echo "已复制运行时解码元数据: $DUMP_DIR/global-metadata.runtime.dat"
 else
-  echo "警告: 未找到运行时解码元数据（$RUNTIME_META）；包内元数据为混淆版，"
+  echo "警告: 未找到运行时解码元数据（${RUNTIME_META}）；包内元数据为混淆版，"
   echo "      静态 dump 前需先在运行中的游戏进程内 dump 解码后的 global-metadata.dat。"
 fi
 
