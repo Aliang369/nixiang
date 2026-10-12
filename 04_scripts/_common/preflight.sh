@@ -4,8 +4,17 @@
 #
 #  用法:
 #    bash 04_scripts/_common/preflight.sh <文件1> [文件2 ...]
+#    bash 04_scripts/_common/preflight.sh                        # 无参数 = 全仓 bash 3.2 扫描（见下）
+#    bash 04_scripts/_common/preflight.sh --sweep                # 同上，显式写法
 #    bash 04_scripts/_common/preflight.sh --env <文件...>        # 顺带跑环境体检
 #    bash 04_scripts/_common/preflight.sh --env                 # 只跑环境体检
+#
+#  无参 / --sweep（2026-10-12 霓虹深渊2 会话复盘 P8 收尾）：把
+#  `04_scripts/*/*.sh` + `04_scripts/_common/*.sh` + `mod菜单/*/scripts/*.sh`
+#  全量过一遍 bash32_check.sh。**为什么需要**：bash32 门禁本来是**按文件传参**的，
+#  于是"脚本存在 ≠ 门禁生效"—— 2026-10-12 实测全仓 633 个脚本里 63 个带 ✗ 硬错误，
+#  没人全仓跑过它。本模式让新脚本进来时自己被抓，不再靠"有人想起来扫一遍"。
+#  列表上限由 PF_SWEEP_LIST 控制（默认 20 个文件）。
 #
 #  --env：额外执行 `04_scripts/_common/env_deps.sh` —— 检查 bash 版本、宿主判定、
 #    NIXIANG_* 解析、python/Pillow、python3.11（win 侧垫片）、apksigner/zipalign/
@@ -36,7 +45,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-fail=0; pass=0; skip=0; remind=0
+fail=0; pass=0; skip=0; remind=0; cpp_remind=0; sweep_files=0
 
 check_one() {
   local f="$1"
@@ -112,7 +121,7 @@ check_one() {
       ;;
     cpp|cc|c|h|hpp|mk)
       echo "⚠ REMIND [C++/mk] $f —— 无独立语法检查器：该改动必须以重跑管线构建阶段验证（bash 04_scripts/pipeline.sh <游戏> run build_so 或对应阶段）"
-      remind=$((remind+1))
+      remind=$((remind+1)); cpp_remind=$((cpp_remind+1))
       ;;
     *)
       echo "✓ PASS  [跳过] ${f}（类型无检查器）"; pass=$((pass+1))
@@ -120,24 +129,73 @@ check_one() {
   esac
 }
 
-[ $# -ge 1 ] || { echo "用法: bash 04_scripts/_common/preflight.sh [--env] <文件...>（改过什么文件就传什么）"; exit 1; }
+# ---------------------------------------------------------------
+# 全仓 bash 3.2 扫描（无参模式 / --sweep）
+#   判据 100% 复用 bash32_check.sh（单一真源，不在这里重写正则）
+# ---------------------------------------------------------------
+sweep_bash32() {
+  local list="${PF_SWEEP_LIST:-20}"
+  local tmp; tmp=$(mktemp -t pf_sweep) || { echo "✗ FAIL  [全仓bash32] mktemp 失败"; fail=$((fail+1)); return; }
+  for f in 04_scripts/*/*.sh 04_scripts/_common/*.sh mod菜单/*/scripts/*.sh; do
+    [ -f "$f" ] || continue
+    printf '%s\0' "$f" >> "$tmp"
+    sweep_files=$((sweep_files+1))
+  done
+  if [ "$sweep_files" -eq 0 ]; then
+    echo "⚠ REMIND [全仓bash32] 扫描目标 0 个 —— 请在仓库根运行（04_scripts/**、mod菜单/**/scripts/** 都不存在？）"
+    rm -f "$tmp"; remind=$((remind+1)); return
+  fi
+  echo "── 全仓 bash 3.2 门禁扫描：$sweep_files 个脚本（04_scripts/*/*.sh + _common/*.sh + mod菜单/*/scripts/*.sh）──"
+  local out
+  out=$(xargs -0 bash "$SCRIPT_DIR/bash32_check.sh" < "$tmp" 2>&1)
+  rm -f "$tmp"
+  # 逐文件提取：bash32_check 的行格式是 `  [<文件>] ✗ …`；汇总行/缺文件行不含方括号前缀，先剔掉
+  local hits
+  hits=$(echo "$out" | grep '✗' | grep -v 'bash 3.2 门禁' | grep -v '缺文件')
+  local bad
+  bad=$(echo "$hits" | sed 's/^  \[\(.*\)\] .*/\1/' | sort -u | grep -c .)
+  if [ "${bad:-0}" -gt 0 ]; then
+    echo "✗ FAIL  [全仓bash32] $bad 个脚本仍有硬错误（共扫 $sweep_files 个）："
+    echo "$hits" | head -n "$list" | sed 's/^/       /'
+    if [ "$bad" -gt "$list" ]; then
+      echo "       …（只列前 $list 个文件；要全量就用 PF_SWEEP_LIST=0 或直接 bash $SCRIPT_DIR/bash32_check.sh <文件…>）"
+    fi
+    echo "       修法（判据与门禁一致，只改 \$VAR → \${VAR}）："
+    echo "         python3 04_scripts/_common/fix_bash32_var_brace.py <该文件…>            # 先看 diff"
+    echo "         python3 04_scripts/_common/fix_bash32_var_brace.py --apply <该文件…>    # 写回"
+    fail=$((fail+bad))
+  else
+    echo "✓ PASS  [全仓bash32] $sweep_files 个脚本，0 处硬错误"
+    pass=$((pass+1))
+  fi
+}
+
+
 
 # --- 参数解析（bash 3.2 安全）---
 # --env：额外跑一遍环境依赖体检（env_deps.sh）。用于"动真格前先确认机器没问题"
 #        —— 收官链在 Win 上曾被 apksigner/python3.11/stat 三个环境问题分三次打断。
+# --sweep：全仓 bash 3.2 扫描（无参数时也走这条 —— 见文件头"无参 / --sweep"）
 ENV_CHECK=0
+SWEEP_CHECK=0
 FILE_ARGS=0
 for _a in "$@"; do
   case "$_a" in
     --env)      ENV_CHECK=1 ;;
-    -h|--help)  echo "用法: bash 04_scripts/_common/preflight.sh [--env] <文件...>"; exit 0 ;;
+    --sweep)    SWEEP_CHECK=1 ;;
+    -h|--help)  echo "用法: bash 04_scripts/_common/preflight.sh [--sweep] [--env] <文件...>（不给文件 = 全仓 bash 3.2 扫描）"; exit 0 ;;
     --*)        echo "✗ FAIL  [参数] 未知选项 $_a"; exit 2 ;;
     *)          FILE_ARGS=$((FILE_ARGS+1)) ;;
   esac
 done
+# 无文件、也无 --env ⇒ 默认做全仓扫描（而不是打 usage 退出：2026-10-12 复盘 P8 收尾）
 if [ "$ENV_CHECK" = "0" ] && [ "$FILE_ARGS" -lt 1 ]; then
-  echo "用法: bash 04_scripts/_common/preflight.sh [--env] <文件...>（改过什么文件就传什么）"
-  exit 1
+  SWEEP_CHECK=1
+fi
+
+if [ "$SWEEP_CHECK" = "1" ]; then
+  sweep_bash32
+  [ "$FILE_ARGS" -ge 1 ] && echo
 fi
 
 for f in "$@"; do
@@ -165,8 +223,11 @@ if [ "$env_rc" != "0" ]; then
   echo "❌ 环境体检未通过（env_deps.sh rc=${env_rc}）：先修环境再继续。"
   exit 1
 fi
-if [ "$remind" -gt 0 ]; then
+if [ "$cpp_remind" -gt 0 ]; then
   echo "⚠ 有 C++/mk 改动：进入下一步前必须重跑对应管线构建阶段。"
+fi
+if [ "$remind" -gt "$cpp_remind" ]; then
+  echo "⚠ 存在 REMIND 提示（见上，非 C++/mk）：确认无风险后再继续。"
 fi
 echo "✅ 机器关通过。"
 exit 0
