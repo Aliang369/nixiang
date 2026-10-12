@@ -281,9 +281,8 @@
       ],
       "command": "bash \"$NIXIANG/04_scripts/_common/archive_close_git.sh\" --game \"疯狂水世界\"",
       "verify": [],
-      "status": "done",
-      "note": "共享文件 SignSpoof.java 必须走 python3 04_scripts/_common/stage_shared_file.py --path …/sign/SignSpoof.java --drop-pattern '<他人标记>' 做 hunk 级暂存，禁止 git add -A（会把并行会话未完成的改动一起提交）；禁止用「标记串 grep=0」代替逐行核对（他人改动常含无标记续行）。push 走 04_scripts/_common/git_push_main.sh 的 push_main（四通道，禁强推）。",
-      "done_at": "2026-10-12 22:57:09"
+      "status": "pending",
+      "note": "共享文件 SignSpoof.java 必须走 python3 04_scripts/_common/stage_shared_file.py --path …/sign/SignSpoof.java --drop-pattern '<他人标记>' 做 hunk 级暂存，禁止 git add -A（会把并行会话未完成的改动一起提交）；禁止用「标记串 grep=0」代替逐行核对（他人改动常含无标记续行）。push 走 04_scripts/_common/git_push_main.sh 的 push_main（四通道，禁强推）。"
     }
   ]
 }
