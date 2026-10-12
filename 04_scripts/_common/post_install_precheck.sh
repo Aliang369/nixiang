@@ -108,7 +108,11 @@ RE_AUTH_OK='auth game_id synced from native|renew ok'
 RE_CRASH='FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|tombstone'
 # 崩溃排除项：星光框架 CrashTrap 的「记录先前处理器」记账行含 sig=SIGSEGV/SIGABRT 字样，
 # 那是初始化日志不是崩溃（详见文件头 ⚠️ 教训）。可用标记文件 crash_ignore| 覆盖。
-RE_CRASH_IGNORE='记录先前处理器|\[crash\]|CrashTrap'
+# ⚠️ 崩溃误报教训 2（2026-10-12 疯狂水世界实测）：native 侧致命信号兜底装处理器时会打
+#     `[Fkssj] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)`——这行同样含
+#     裸 SIGSEGV 且带本进程 pid，进程范围校验也拦不住 ⇒ 每次预检都误判「运行中崩溃」。
+#     该行是**所有星光改包游戏**共有的初始化日志（不只是本作），故在默认排除项里全局兜掉。
+RE_CRASH_IGNORE='记录先前处理器|\[crash\]|CrashTrap|fault guard armed'
 
 # 崩溃行提取：命中 RE_CRASH 且不在 RE_CRASH_IGNORE 里的行（其余判定与展示一律走它）。
 crash_hits() { grep -E "$RE_CRASH" "$1" 2>/dev/null | grep -vE "$RE_CRASH_IGNORE"; }

@@ -1139,6 +1139,33 @@ public final class SignSpoof {
                     + "w5GyUNObPGUlqOoymW8WgeBLS33eaxb4jumoE91eCAq0mklHCn2oYVJwgfi4D+8xUMTlMgCLK4AU/qdOnp+ODtJSSBM3erlB/RgMl0J3eT1DCJmfbgz+Iv"
                     + "bphAOvjJ22roqloBPVYG6zH6aDmXAiBSqdyPQiXOk9l4R3AJy0acJld7l3T2weQGTmanXBBkE=";
 
+    // ── 疯狂水世界 (com.gx.sw.qa.fkssj004.esj, TapTap 渠道) ────────────────────
+    // subject/issuer: CN=changwan, OU=changwan, O=changwan, L=guangzhou,
+    //                 ST=guangdong, C=086（自签证书，创玩/易玩渠道方）
+    // 有效期: 2013-10-08 → 2043-10-01；DER 601 B / RSA-1024
+    // MD5:     d4cd9b6442ab640f3cac7a5dd96b7640
+    // SHA-1:   b31e01bfcfb8494fce85089367c4f9b65de5fbf6
+    // SHA-256: cf7a7239a81e0ec77b39b320b09732c2f748173ae9ea780c01cd61510317190d
+    // 用途: 模组包自签后回灌官签。底包内无 TapTap 登录类 / 无 TapSignKit，4 个 dex
+    //       全量 grep 三枚指纹均 0 命中 ⇒ 不存在硬编码证书常量。签名读取方是
+    //       com.cw.platform.core.util.V2SignUtils + 三份同源 dolly 副本
+    //       (com.ewrisk.sdk.util.dolly.* / com.cw.platform.core.util.dolly.* /
+    //        com.xcsp.sdk.util.dolly.*) 与 com.ewrisk.sdk.util.as.L(Context,String)。
+    //       「读 PackageManager 签名」一路由此处回灌覆盖；另一路「直接读 APK 签名块
+    //       自定义 ID-value 对 0x64707763="259425"」由 fkssj_sign.sh 的 Walle 式
+    //       回注覆盖，两条互为兜底。
+    private static final String FKSJ_PKG = "com.gx.sw.qa.fkssj004.esj";
+    private static final String FKSJ_CERT_B64 =
+            "MIICVTCCAb6gAwIBAgIEUlOpNTANBgkqhkiG9w0BAQUFADBvMQwwCgYDVQQGEwMwODYxEjAQBgNVBAgTCWd1YW5nZG9uZzESMBAG"
+                    + "A1UEBxMJZ3Vhbmd6aG91MREwDwYDVQQKEwhjaGFuZ3dhbjERMA8GA1UECxMIY2hhbmd3YW4xETAPBgNVBAMTCGNoYW5nd2FuMB4X"
+                    + "DTEzMTAwODA2NDE1N1oXDTQzMTAwMTA2NDE1N1owbzEMMAoGA1UEBhMDMDg2MRIwEAYDVQQIEwlndWFuZ2RvbmcxEjAQBgNVBAcT"
+                    + "CWd1YW5nemhvdTERMA8GA1UEChMIY2hhbmd3YW4xETAPBgNVBAsTCGNoYW5nd2FuMREwDwYDVQQDEwhjaGFuZ3dhbjCBnzANBgkq"
+                    + "hkiG9w0BAQEFAAOBjQAwgYkCgYEAnGQGfMcH8JIMCpyb5KxzDLmJTbwaJPmbonJV+OZGDsZ9wOFVImN7JVNguO35/R7RttpVqs31"
+                    + "3niOqoIcqAPd70JouGZywrPCxGAAV9bX8RfmK743Ie/LJhm2JhSBwSQA24HuqZnDKrt2aBrIlkLiTERabM/d/M0KN9H7bTc0pfMC"
+                    + "AwEAATANBgkqhkiG9w0BAQUFAAOBgQCcP/Z6FDiAE6pd4ht+bAMa/WSNawBJ05fUXjJUZEkjmxRZOJ5xKUXlenkvO06IniMB6ren"
+                    + "OwQ1tZBDvg43DbaE78CZuiYCsBfhBgh0+xmRa8sT3vrINojG4cWW5W9CWMjls+CMMhv0U/ur7Jf4QA9NPHXkkUyhOaB0QnpIFU97"
+                    + "uw==";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1212,6 +1239,7 @@ public final class SignSpoof {
                 fakes.put(XNBZ_PKG, new Signature(Base64.decode(XNBZ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(GGBH_PKG, new Signature(Base64.decode(GGBH_CERT_B64, Base64.DEFAULT)));
                 fakes.put(XHZM_PKG, new Signature(Base64.decode(XHZM_CERT_B64, Base64.DEFAULT)));
+                fakes.put(FKSJ_PKG, new Signature(Base64.decode(FKSJ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# 疯狂水世界 管线 build_so 后端：私有 Android_fkssj.mk 直编（modern 注册表，不切共享 mk）
+# 引擎：Cocos Creator 3.x / libcocos.so ⇒ 源文件三件套，**不含 Unity/Il2CppApi.cpp**
+# 产物 = mod菜单/starry-mod-menu/libs_fkssj/arm64-v8a/libstarry_magic.so
+#
+# 注意：jniLibs/arm64-v8a/libstarry_magic.so 是 gradle 打包时实际取用的那份，
+# 且被所有并行游戏会话共享 —— surgical 脚本会在 gradle 之后按字节校验归属，
+# 此处只负责产出 libs_fkssj 并同步到 jniLibs。
+#
+#  普通构建： bash 04_scripts/疯狂水世界/fkssj_build_so.sh
+set -euo pipefail
+
+NIXIANG="/Users/aliang/Documents/nixiang"
+STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
+JNI="$STARRY_SRC/app/src/main/jni"
+NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
+OUT_LIBS="$STARRY_SRC/libs_fkssj"
+SO="$OUT_LIBS/arm64-v8a/libstarry_magic.so"
+
+[[ -x "$NDK/ndk-build" ]] || { echo "ERROR: ndk-build missing at $NDK" >&2; exit 1; }
+[[ -f "$JNI/Android_fkssj.mk" ]] || { echo "ERROR: missing $JNI/Android_fkssj.mk" >&2; exit 1; }
+
+OBJ="$STARRY_SRC/obj_fkssj"
+STAMP="$OBJ/.build_stamp"
+CFG_HASH="$( (cat "$JNI/Android_fkssj.mk" "$JNI/Application.mk"; \
+  printf 'TRACE=%s\n' "${STARRY_TRACE:-}") \
+  | shasum -a 256 | awk '{print $1}')"
+if [[ -f "$STAMP" && "$(cat "$STAMP" 2>/dev/null)" != "$CFG_HASH" ]]; then
+  echo "[stamp] 构建配置变化（mk/开关）→ 清 obj_fkssj 强制全量重编"
+  rm -rf "$OBJ"
+fi
+
+SO_MD5_BEFORE="$(md5 -q "$SO" 2>/dev/null || echo none)"
+T0="$(mktemp)"; touch "$T0"
+BUILD_RC=0
+"$NDK/ndk-build" -C "$JNI" \
+  NDK_PROJECT_PATH="../.." \
+  APP_BUILD_SCRIPT="./Android_fkssj.mk" \
+  NDK_APPLICATION_MK="./Application.mk" \
+  NDK_OUT="$OBJ" \
+  NDK_LIBS_OUT="$OUT_LIBS" \
+  -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 8)" || BUILD_RC=$?
+NEW_O="$(find "$OBJ" -name '*.o' -newer "$T0" 2>/dev/null | head -1)"
+rm -f "$T0"
+[[ $BUILD_RC -eq 0 ]] || { echo "ERROR: ndk-build rc=$BUILD_RC" >&2; exit 1; }
+[[ -f "$SO" ]] || { echo "ERROR: build produced no $SO" >&2; exit 1; }
+
+# 链接活动保险：有新 .o 但 so 字节未变 → 旧 so 顶包嫌疑
+if [[ -n "$NEW_O" && "$(md5 -q "$SO")" == "$SO_MD5_BEFORE" ]]; then
+  echo "ERROR: 本次构建产生了新 .o 但 $SO 未变化——旧 so 顶包嫌疑，禁止通过" >&2
+  exit 1
+fi
+mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
+
+# ---- 归属防呆：本作串必须在、别家串必须不在（跨会话共享目录，禁止凭 mtime 判断）----
+# 中文 UTF-8 多字节，strings 默认 ASCII 会漏报 ⇒ LC_ALL=C grep -a 按字节搜
+for s in "Category_战斗" "Toggle_无敌" "Slider_伤害倍率:1:100:1" "Slider_战斗加速:1:10:1" "fkssj"; do
+  n="$(LC_ALL=C grep -ac -- "$s" "$SO" || true)"
+  [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含本作串 ${s}（旧 so 混入或源码未编译）" >&2; exit 1; }
+done
+n="$(LC_ALL=C grep -ac -- "\[Fkssj\]" "$SO" || true)"
+[[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含 [Fkssj] 日志标签" >&2; exit 1; }
+# 注意：必须转义方括号，否则 "[Xnbz]" 被 grep 当正则字符类，匹配任意 X/n/b/z 字节 → 恒真误报
+for s in "\[Xnbz\]" "\[Haly\]" "\[Sjzz\]" "\[Zmxy\]" "\[Gyzw\]" "\[Jfqs\]"; do
+  if LC_ALL=C grep -aq -- "$s" "$SO"; then
+    echo "ERROR: $SO 含别家标签 ${s}（libs_fkssj 被并行会话覆盖）" >&2
+    exit 1
+  fi
+done
+
+# ---- 同步到 gradle 实际取用的 jniLibs（共享路径，必须字节一致）----
+# ★ 2026-10-12 事故：AGP 的 jniLibs 默认源目录**只有** app/src/main/jniLibs（无 sourceSets
+#   覆盖，见 app/build.gradle）。该目录缺失时 gradle 编出的白包**不含 libstarry_magic.so**，
+#   于是 surgical 第 1 步 `unzip -p <白包> lib/arm64-v8a/libstarry_magic.so` 报
+#   `caution: filename not matched` + unzip rc=11，整条管线停在这一步。
+#   ⇒ jniLibs **必须 mkdir -p 强制存在**并逐字节校验；app/src/main/libs 与 app/libs 只是历史
+#   遗留路径（AGP 不取用），缺失时静默跳过即可，但存在就必须一致。
+SO_MD5="$(md5 -q "$SO")"
+JNI_DIR="$STARRY_SRC/app/src/main/jniLibs/arm64-v8a"
+mkdir -p "$JNI_DIR"
+cp -f "$SO" "$JNI_DIR/libstarry_magic.so"
+for d in "$STARRY_SRC/app/src/main/libs/arm64-v8a" "$STARRY_SRC/app/libs/arm64-v8a"; do
+  [[ -d "$d" ]] || continue
+  cp -f "$SO" "$d/libstarry_magic.so"
+done
+for d in "$JNI_DIR" "$STARRY_SRC/app/src/main/libs/arm64-v8a" "$STARRY_SRC/app/libs/arm64-v8a"; do
+  [[ -f "$d/libstarry_magic.so" ]] || continue
+  m="$(md5 -q "$d/libstarry_magic.so")"
+  [[ "$m" == "$SO_MD5" ]] || { echo "ERROR: $d 同步失败（$m != ${SO_MD5}）" >&2; exit 1; }
+done
+# 硬门禁：gradle 真正会打进白包的那一份必须在位（防再次静默跳过）
+[[ -f "$JNI_DIR/libstarry_magic.so" ]] \
+  || { echo "ERROR: $JNI_DIR/libstarry_magic.so 缺失（gradle 白包将不含星光 so）" >&2; exit 1; }
+[[ "$(md5 -q "$JNI_DIR/libstarry_magic.so")" == "$SO_MD5" ]] \
+  || { echo "ERROR: $JNI_DIR 内 so 与构建产物不一致" >&2; exit 1; }
+
+echo "[build_so] done → $SO ($SO_MD5, $(stat -f%z "$SO") B)；jniLibs 已同步（gradle 取用路径 $JNI_DIR 已就位）"

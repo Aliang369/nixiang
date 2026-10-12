@@ -1,0 +1,296 @@
+{
+  "game": "疯狂水世界",
+  "version": "1.11.6",
+  "notes": "2026-10-13 首轮接入（新游戏）。底包 = 真机 96f0d883 上安装的官方 TapTap 渠道原版 com.gx.sw.qa.fkssj004.esj 1.11.6（vc480），从 /data/app/~~MvgqQpfN4itmIKrbuTs17Q==/com.gx.sw.qa.fkssj004.esj-2MLxV7o_dBw4RvTVvTNsdw==/base.apk 只读拉取，519,961,058 B md5 f8ed1b954a3c5ce91dcecb4e721f3e9b sha256 d38acbcd419d4bed4ef8d20533f90fd0acdfa4033552665bda3f3cfd3ff99328；已登记 10_docs/_state/底包再获取台账.md，本地副本按政策用完即删。用户诉求（m00001）：先过环境——星光菜单组装进游戏且能正常玩才算完成；之后再做【无敌 / 伤害倍率 / 战斗加速】三功能；另需去 taptap 签名。引擎 Cocos Creator 3.x + JSB，assets 内 394 个 .js 全为 NHPK 魔数密文（不加密的假设已否定），无整包加固壳。",
+  "params": {
+    "game_id": "fkssj",
+    "package": "com.gx.sw.qa.fkssj004.esj",
+    "label": "疯狂水世界",
+    "mk": "Android_fkssj.mk（modern 注册表管线，Cocos 系 ⇒ 不含 Unity/Il2CppApi.cpp，含 Games/NoAceStubs.cpp）",
+    "tag": "Fkssj",
+    "serial": "96f0d883",
+    "version_code": 480,
+    "min_sdk": 21,
+    "target_sdk": 30,
+    "engine": "Cocos Creator 3.x (lib/arm64-v8a/libcocos.so 30,429,096 B, JSB); assets 内 394/394 .js 为 NHPK 密文",
+    "shell": "无整包加固壳（application@name = android.support.multidex.MultiDexApplication 明文原类；无 libjiagu/libtprt/StubApp）；但有爱加密方法抽取（com.iwjiami NCall 索引，libijiami_*）与顶象 DXRisk（libDXRisk-*）风控 ⇒ 仍走分支 B",
+    "manifest_variant": "分支 B：StarryInitProvider(authorities=com.gx.sw.qa.fkssj004.esj.starryinit, initOrder=2147483647) + MenuService(foregroundServiceType=specialUse) + SYSTEM_ALERT_WINDOW/FOREGROUND_SERVICE/FOREGROUND_SERVICE_SPECIAL_USE；**不替换 application@name**",
+    "new_dex": "classes5.dex",
+    "patched_dex": null,
+    "patched_dex_note": "本作无 Java/dex 补丁：底包内没有 com.taptap.sdk.login.* / TapSignKit / ClientLoginUtils ⇒ taptap-web-login.md 三版 patch 点全不适用，本阶段不做强制网页登录；classes.dex~classes4.dex 必须逐字节透传",
+    "orig_sign_md5": "d4cd9b6442ab640f3cac7a5dd96b7640",
+    "orig_sign_sha1": "b31e01bfcfb8494fce85089367c4f9b65de5fbf6",
+    "orig_sign_sha256": "cf7a7239a81e0ec77b39b320b09732c2f748173ae9ea780c01cd61510317190d",
+    "orig_sign_dn": "CN=changwan, OU=changwan, O=changwan, L=guangzhou, ST=guangdong, C=086 (RSA-1024, 2013-10-08 → 2043-10-01)",
+    "base_apk": {
+      "path": "09_test/疯狂水世界/base/base.apk",
+      "size": 519961058,
+      "md5": "f8ed1b954a3c5ce91dcecb4e721f3e9b",
+      "sha256": "d38acbcd419d4bed4ef8d20533f90fd0acdfa4033552665bda3f3cfd3ff99328",
+      "source": "设备只读拉取 /data/app/~~MvgqQpfN4itmIKrbuTs17Q==/com.gx.sw.qa.fkssj004.esj-2MLxV7o_dBw4RvTVvTNsdw==/base.apk",
+      "policy": "APK 不留本地（用完删），仅登记 10_docs/_state/底包再获取台账.md"
+    },
+    "oracle_entries": [
+      "classes.dex",
+      "classes2.dex",
+      "classes3.dex",
+      "classes4.dex",
+      "resources.arsc"
+    ],
+    "oracle_entries_note": "签名阶段现场从底包取 md5 比对，不写死常量（见 04_scripts/疯狂水世界/fkssj_sign.sh [3/6]）",
+    "signing_block_extra_ids": [
+      {
+        "id": "0x64707763",
+        "value": "259425",
+        "meaning": "渠道自有块（读方 com.ewrisk.sdk.util.as.L / 三份 dolly 副本 getByteValueById）；apksigner 重签必然丢失，签名后必须由 fkssj_idblock.py 回注"
+      }
+    ],
+    "menu_features": [
+      "Category_战斗",
+      "Toggle_无敌",
+      "Slider_伤害倍率:1:100:1",
+      "Slider_战斗加速:1:10:1"
+    ],
+    "stage_gate": "阶段① 过环境：菜单进游戏且能正常玩（用户 m00001 明确「先不要直接做功能，先过环境」）。阶段② 三功能（无敌 / 伤害倍率 / 战斗加速）**必须等用户明确「开始做功能」口令**才开工；当前 native 为零 hook 环境版：kSlots[] 空表 + HookSlotInstall 桩，开关只写日志不改游戏。",
+    "starry_so_md5": "eca3770ea2fafa8eb91e7494129bcd92",
+    "starry_so_size": 2111760,
+    "signed_apk": {
+      "path": "08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk",
+      "size": 520981280,
+      "md5": "1a0ecd37d3dc9886fb634e3ce7d4f39b",
+      "sha256": "11dad6b2f4117fa80f217c33d5e847ef4ddea7a1f5e55623505f8ddde4dc9bfd",
+      "unsigned_path": "08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk",
+      "unsigned_size": 520084765,
+      "unsigned_md5": "3fdecf48a3ef9d8259a5cd31b3180bef",
+      "signing_schemes": "apksigner 写入 v2 (0x7109871a) + v3 (0xf05368c0) + verity (0x42726577)；渠道块 0x64707763=\"259425\" 由 fkssj_idblock.py 回注 (+18 B)，回注后 apksigner verify 仍通过",
+      "signer": "CN=StarryMagic (SHA-256 83C5CC0BE218D046B3B7AF0D2A9F8236297FE228171AF2974B71BAC130736F1D)"
+    },
+    "conclusion": "✅ 阶段① 过环境达成（2026-10-12）：星光 MOD 菜单已组装进游戏内并装机成功，用户上手口述验收「菜单正常，游戏能正常玩」（H3 唯一终审）。正式包 08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk （520,981,280 B / md5 1a0ecd37d3dc9886fb634e3ce7d4f39b / CN=StarryMagic），设备 96f0d883 装机后 base.apk md5 == 产物；官包零改动（9013 条受保护条目逐字节一致 + 4 dex + resources.arsc md5 全等）；渠道块 0x64707763=259425 回注保住；SignSpoof 回灌原厂证书实测命中（spoof hit md5=d4cd9b6442ab640f3cac7a5dd96b7640）。阶段② 三功能（无敌 / 伤害倍率 / 战斗加速）待用户明确「开始做功能」口令。详见 10_docs/疯狂水世界/环境轮记录_1.11.6_20261012.md。"
+  },
+  "env": {
+    "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "96f0d883"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "底包核对（官方 TapTap 原版 1.11.6，519,961,058 B / md5 f8ed1b95…）",
+      "requires": [],
+      "command": "bash \"$NIXIANG/04_scripts/疯狂水世界/device_ready_fkssj.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/疯狂水世界/底包静态分析_1.11.6.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.device_serial"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-12 20:40:00",
+      "note": "设备只读拉取（无 root，adb pull 直读 /data/app 可读的 base.apk）。判定：单 APK 非 split（splits=[base]）、primaryCpuAbi=arm64-v8a、extractNativeLibs=true、apkSigningVersion=2、首装/更新 2026-10-12 20:36:25。4 个明文 dex：classes.dex 2,154,280 / classes2.dex 6,306,768 / classes3.dex 8,076,396 / classes4.dex 6,603,396 B，类数合计 21,418。已登记 10_docs/_state/底包再获取台账.md；本地副本按政策用完即删。"
+    },
+    {
+      "id": "dump",
+      "name": "内存 dump（本作不需要：无壳、无 IL2CPP，静态解码已足够）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "true",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-10-12 20:40:00",
+      "note": "理由：① 无整包加固壳（strings 扫 4 个 dex 无 com.ijiami.* stub / StubApp / libexecmain，全部类明文）；② 引擎是 Cocos 而非 Unity，无 IL2CPP metadata/global-metadata.dat，不需要 Il2CppDumper；③ 新增 dex 落位可由 04_scripts/_common/next_free_dex.py 静态求出（实测输出 5）。唯一的运行时未知量是 assets 内 NHPK 密文 JS 的解密后内容——那属于阶段② 找锚点时才需要的运行期取证（frida hook com.cocos.lib.CocosJavascriptJavaBridge.evalString(String)），不影响阶段①。"
+    },
+    {
+      "id": "anchor",
+      "name": "静态定位（注入分支选型 / 新增 dex 下标 / 签名块渠道块 / 官包零改动条目）",
+      "requires": [
+        "dump"
+      ],
+      "command": "true",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/疯狂水世界/底包静态分析_1.11.6.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-13 00:30:00",
+      "note": "结论见 10_docs/疯狂水世界/底包静态分析_1.11.6.md 与 10_docs/疯狂水世界/硬约束.md。要点：① 注入入口 = 分支 B（SKILL.md:195-197 入口选型表：Application 分支 2026-10-09 实测平台不采用）——插入 StarryInitProvider 而非替换 application@name；② 新增 dex = classes5.dex（python3 04_scripts/_common/next_free_dex.py 实测输出 5；写死错号会让 ART 顺序扫描遇缺口即停 → StarryInitProvider ClassNotFoundException 启动即崩）；③ APK Signing Block 实测含三个 ID-value 对：0x7109871a（v2 签名 987 B）、0x64707763（值 \"259425\"，6 B 渠道块）、0x42726577（verity padding 3035 B）；④ 登录承载方是 cn.ewan.supersdk.*（易玩超级 SDK）+ com.cw.platform.core.*（创玩平台 SDK），底包内**没有** com.taptap.sdk.login.* / TapSignKit / ClientLoginUtils，com.taptap.* 仅剩 com.taptap.services.update.*（TapUpdate）⇒ 本阶段不做强制网页登录，也不做 dex 补丁；⑤ 官包零改动条目 = classes.dex~classes4.dex + resources.arsc；⑥ 签名校验面：4 个 dex 全量 grep 三枚原厂指纹 0 命中 ⇒ 不存在硬编码证书常量，校验若存在是「读签名块 / 读 PackageManager 后上报」。"
+    },
+    {
+      "id": "impl_mod",
+      "name": "星空侧实现（FkssjMod/FkssjEntry/h 三件套 + SignSpoof 证书表）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/scan_mod_cpp.sh\" \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/FkssjMod.cpp\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/FkssjMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/FkssjEntry.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_fkssj.mk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-13 01:20:00",
+      "note": "四件套由 scripts/new_game_mod.sh Fkssj Fkssj 生成后按 Cocos 改造：① FkssjMod.cpp 删 #include \"Unity/Il2CppApi.h\" 与 using Il2Cpp::GetApi()、TPL_TARGET_LIB 改 \"libcocos.so\"、OkPtr 改裸指针判空、SafeWrite/Read 改 std::memcpy、§⑤⑥⑦（原 283-435 行）替换为 kSlots[] 空表 + HookSlotInstall 桩（零 hook 环境版，照 仙逆 环境轮先例）；§④ 致命信号兜底与懒装机器原样保留；开关改 std::atomic<bool> g_inv / std::atomic<int> g_dmgMul{1} / g_spdMul{1}，只写日志零副作用。② FkssjMod.h：enum FkssjFeat { FKSSJ_FEAT_INV=1, FKSSJ_FEAT_DMG=2, FKSSJ_FEAT_SPD=3 }，对外契约 6 个签名不变。③ FkssjEntry.cpp：.tag=\"Fkssj\" .authGameId=\"fkssj\" .waitLib=\"libcocos.so\" .initDelayMs=0 .initRetryMax=120 .initRetryIntervalMs=2000 .tickIntervalMs=200000；featureList 与 enum 下标对齐。④ Android_fkssj.mk：LOCAL_SRC_FILES := MainModern.cpp Games/FkssjMod.cpp Games/FkssjEntry.cpp（去掉 Unity/Il2CppApi.cpp），保留 Games/NoAceStubs.cpp。⑤ SignSpoof.java 追加 FKSJ_PKG=\"com.gx.sw.qa.fkssj004.esj\" + FKSJ_CERT_B64（DER 601 B / base64 804 字符，与 openssl 导出的 /tmp/fkssj_cert.der 逐字节相等，md5 d4cd9b6442ab640f3cac7a5dd96b7640）+ fakes.put(FKSJ_PKG, …)。⑥ scan_mod_cpp.sh PASS（error 级无命中）。",
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/10_docs/疯狂水世界/硬约束.md": "8cac62e7fbfb651dda914be1faf03c9c",
+        "/Users/aliang/Documents/nixiang/10_docs/疯狂水世界/底包静态分析_1.11.6.md": "d19b2a713eb4e68d76acc220d8415cb1"
+      }
+    },
+    {
+      "id": "build_so",
+      "name": "native 编译（私有 Android_fkssj.mk，modern 注册表，零 hook 环境版）",
+      "requires": [
+        "impl_mod"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/疯狂水世界/fkssj_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_fkssj/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-13 01:35:00",
+      "note": "ndk-build（NDK 27.0.12077973，LOCAL_ARM_MODE/APP_PLATFORM android-21/APP_STL c++_shared）→ libs_fkssj/arm64-v8a/libstarry_magic.so，2,111,760 B，md5 eca3770ea2fafa8eb91e7494129bcd92；jniLibs/arm64-v8a、libs/arm64-v8a、libs/arm64-v8a 三处已同步并逐处 md5 复核。脚本内含：obj stamp（mk 变化即清 obj）、链接活动保险（有新 .o 但 so 未变 ⇒ 旧 so 顶包嫌疑，直接 ERROR）、归属防呆（LC_ALL=C grep -a 逐个校验 5 个本作菜单串 + [Fkssj] 标签，别家 6 个标签必须不命中——方括号已转义防正则字符类误报）。构建日志中的 fcntl(): Bad file descriptor 是 macOS 上 ndk-build 的已知无害噪音。"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（classes5.dex 星光 dex + Manifest 分支 B + so，官方 dex/arsc 逐字节透传）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_fkssj_1.11.6.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "骨架照 scripts/surgical_xnbz_0.0.14.sh（同为 Cocos + 分支 B）。七步：gradle 白包 → 包内 so 身份校验（LC_ALL=C grep -a '[Fkssj]'，防 jniLibs 未刷新）→ apktool d 只取 smali → 收集 com/starry smali → smali assemble -o classes5.dex → Manifest 文字注入（mini apk 解码 + apktool b + aapt2 零丢失校验，缓存 07_patched/疯狂水世界/surgical/AndroidManifest.xml）→ zip 外科 merge（cp 原包 + zip -d 'META-INF/*' + zip -u 覆盖新增条目）→ 逐条断言 classes.dex~classes4.dex 与 resources.arsc 与原包相等。底包指纹门禁 md5 == f8ed1b954a3c5ce91dcecb4e721f3e9b。**第 4 步（baksmali 改官方 dex）本作 N/A：无 TapTap 登录类、无 smali 目标，需在脚本内显式写明跳过**。禁止 apktool b 整包重建。",
+      "done_at": "2026-10-12 22:31:55",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk": {
+          "md5": "3fdecf48a3ef9d8259a5cd31b3180bef"
+        }
+      }
+    },
+    {
+      "id": "sign",
+      "name": "签名（星空证书 starry_release.jks，CN=StarryMagic）+ 官包零改动硬校验 + 渠道块回注",
+      "requires": [
+        "surgical"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/疯狂水世界/fkssj_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "六步：① dex 编号无缺口且最大为 classes5.dex；② classes5.dex 含 StarryInitProvider/MenuService/ModBridge/SignSpoof + 包名串 + Fkssj 标记；③ classes.dex~classes4.dex 与 resources.arsc 的 md5 **现场从底包取**逐条比对（不写死常量）；④ 包内 so md5 == libs_fkssj 产物 md5 且含 [Fkssj]、不含别家标签；⑤ zipalign -f -p 4 + apksigner sign；⑥ **回注签名块渠道块 id=0x64707763 value=\"259425\"**（apksigner 只写 0x7109871a/0x42726577，重签必丢；用 04_scripts/疯狂水世界/fkssj_idblock.py inject，原理＝Walle：v2 摘要只覆盖 entry 数据 + 中央目录 + EOCD（其中中央目录偏移字段按规范替换为签名块起始偏移），签名块自身不在摘要内 ⇒ 追加未知 ID-value 对不破签），回注后必须 apksigner verify 仍通过，作为「回注不破签」的实证。",
+      "done_at": "2026-10-12 22:33:12",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk": {
+          "md5": "1a0ecd37d3dc9886fb634e3ce7d4f39b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk": "3fdecf48a3ef9d8259a5cd31b3180bef"
+      }
+    },
+    {
+      "id": "device_ready",
+      "name": "真机就位（serial 锁定 + root 识别 + 只读识别现装版本）",
+      "requires": [
+        "sign"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/疯狂水世界/device_ready_fkssj.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.device_serial"
+        }
+      ],
+      "status": "done",
+      "note": "实测已通过：serial=96f0d883 / model=M2102K1AC / android=14 (sdk 34) / abi=arm64-v8a / package_path=/data/app/~~MvgqQpfN4itmIKrbuTs17Q==/com.gx.sw.qa.fkssj004.esj-2MLxV7o_dBw4RvTVvTNsdw==/base.apk / device_apk_md5=f8ed1b954a3c5ce91dcecb4e721f3e9b / **root=无**。★与仙逆先例的差异：本机无 root ⇒ 脚本把 root 当加分项而非门槛（取不到只记 root=<无> 并继续），设备侧 md5/size 读不到时留空，绝不因此 exit 1。",
+      "done_at": "2026-10-12 22:34:14",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.device_serial": {
+          "md5": "430a3196cafa744b7ef4b38e3a294b3b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk": "1a0ecd37d3dc9886fb634e3ce7d4f39b"
+      }
+    },
+    {
+      "id": "install",
+      "name": "装机（默认只做同签名覆盖；签名冲突需 FKSJ_ALLOW_UNINSTALL=1 明确授权）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/疯狂水世界/fkssj_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.install_ok"
+        }
+      ],
+      "status": "done",
+      "note": "官方签名 CN=changwan ≠ 星光 CN=StarryMagic ⇒ pm install -r -d 预期 INSTALL_FAILED_UPDATE_INCOMPATIBLE，默认不卸载（卸载会清本地存档，属破坏性操作，需用户明确授权 FKSJ_ALLOW_UNINSTALL=1）。装机后：① 闭环 verify_installed_apk.sh 比对设备 base.apk 与本地产物 md5；② SYSTEM_ALERT_WINDOW 走三级回退（探测已 allow → su -c → 非 root 直设），三级都不成才告警并给手动授权指引，**不 exit 1**（无 root 是本机常态，H6）；③ 之后必须跑 04_scripts/_common/post_install_precheck.sh --game 疯狂水世界（机器关），过完才请用户上手实测。",
+      "done_at": "2026-10-12 22:38:31",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.install_ok": {
+          "md5": "0a2bd37675dcf8cffc09fa01ec37f24f"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.device_serial": "430a3196cafa744b7ef4b38e3a294b3b"
+      }
+    },
+    {
+      "id": "archive",
+      "name": "归档（文档落盘，范围限定本游戏）",
+      "requires": [
+        "install"
+      ],
+      "command": "true",
+      "verify": [],
+      "status": "done",
+      "note": "落 10_docs/疯狂水世界/环境轮记录_1.11.6_2026xxxx.md（装机取证 + 用户上手结论 + 阶段① 是否结），并刷新 10_docs/_state/current.md 与 10_docs/_state/games/疯狂水世界.md。",
+      "done_at": "2026-10-12 22:50:19",
+      "artifacts": {},
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.install_ok": "0a2bd37675dcf8cffc09fa01ec37f24f"
+      }
+    },
+    {
+      "id": "archive_close",
+      "name": "归档收口（scoped git 提交 + 状态索引刷新）",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_close_git.sh\" --game \"疯狂水世界\"",
+      "verify": [],
+      "status": "pending",
+      "note": "共享文件 SignSpoof.java 必须走 python3 04_scripts/_common/stage_shared_file.py --path …/sign/SignSpoof.java --drop-pattern '<他人标记>' 做 hunk 级暂存，禁止 git add -A（会把并行会话未完成的改动一起提交）；禁止用「标记串 grep=0」代替逐行核对（他人改动常含无标记续行）。push 走 04_scripts/_common/git_push_main.sh 的 push_main（四通道，禁强推）。"
+    }
+  ]
+}

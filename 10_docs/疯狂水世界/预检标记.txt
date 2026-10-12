@@ -1,0 +1,11 @@
+# 疯狂水世界 装机后预检标记（04_scripts/_common/post_install_precheck.sh --game 疯狂水世界 自动读取）
+# 建立：2026-10-12 ｜ 依据：本轮真机 96f0d883 实测日志（Cocos 3.x / 分支 B / native 零 hook 环境版）
+# 说明：本作 so 标签 [Fkssj]、注册表 game_id=fkssj；menu_load 命中 `[Fkssj] lib ready` 与
+#       `MOD 已就绪 tag=Fkssj`；auth 沿用框架统一串 `auth game_id synced from native`。
+# 说明：crash_ignore 不在此覆盖，沿用脚本默认（默认已含 `fault guard armed`，
+#       该行是 native 致命信号兜底装处理器时的记账日志，含裸 SIGSEGV 但不是崩溃）。
+pkg|com.gx.sw.qa.fkssj004.esj
+menu_load|\[Fkssj\] lib ready|MOD 已就绪 tag=Fkssj|StarryMagic|StarryApp
+menu_shown|native menu shown
+auth_ok|auth game_id synced from native|renew ok
+auth_fail|renew auth fail|authoritative=.*deny
