@@ -24,7 +24,7 @@ set -e
 printf '%s\n' "$INSTALL_OUT"
 adb -s "$SERIAL" shell rm -f "$REMOTE" >/dev/null 2>&1 || true
 if [[ $RC -ne 0 ]] || ! printf '%s\n' "$INSTALL_OUT" | grep -Fq 'Success'; then
-  echo "ERROR: root pm install failed rc=$RC；未自动卸载、未清数据" >&2
+  echo "ERROR: root pm install failed rc=${RC}；未自动卸载、未清数据" >&2
   exit 1
 fi
 
