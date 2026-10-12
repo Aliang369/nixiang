@@ -47,7 +47,7 @@ mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 # 中文菜单串必须按字节检查，strings 不认 UTF-8。
 for token in 'Slider_伤害倍率' 'Toggle_无敌' 'Toggle_免广告' 'Toggle_游戏加速' 'Sjzz'; do
   cnt=$(LC_ALL=C grep -ac "$token" "$SO" || true)
-  [[ "$cnt" -ge 1 ]] || { echo "ERROR: $SO 不含 $token（旧 so 混入或源码未编译）" >&2; exit 1; }
+  [[ "$cnt" -ge 1 ]] || { echo "ERROR: $SO 不含 ${token}（旧 so 混入或源码未编译）" >&2; exit 1; }
 done
 LC_ALL=C grep -aq 'SjzzHooks' "$SO" \
   || { echo "ERROR: $SO 不含 SjzzHooks（Java 桥未编入）" >&2; exit 1; }
