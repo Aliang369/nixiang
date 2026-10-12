@@ -58,7 +58,7 @@ for f in YsxzEntry.cpp YsxzMod.h YsxzPatchJs.h YsxzMod.cpp; do
   [[ -f "$MENU_DIR/$f" ]] || { echo "ERROR: missing $MENU_DIR/$f" >&2; exit 1; }
 done
 
-[[ -f "$SRC_APK" ]] || { echo "ERROR: 缺底包 $SRC_APK（用于提取 pristine main.js）" >&2; exit 1; }
+[[ -f "$SRC_APK" ]] || { echo "ERROR: 缺底包 ${SRC_APK}（用于提取 pristine main.js）" >&2; exit 1; }
 [[ -n "$PY" ]] || { echo "ERROR: 找不到 python3.11/python3（自举素材生成需要）" >&2; exit 1; }
 [[ -f "$MENU_DIR/boot_ids.json" ]] || { echo "ERROR: 缺 $MENU_DIR/boot_ids.json" >&2; exit 1; }
 

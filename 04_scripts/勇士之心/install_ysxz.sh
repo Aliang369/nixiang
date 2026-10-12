@@ -60,7 +60,7 @@ PY
     fi
     rm -rf "$GATE_DIR"
   else
-    echo "警告: 找不到 $PATCH_H，跳过 JS 语法关" >&2
+    echo "警告: 找不到 ${PATCH_H}，跳过 JS 语法关" >&2
   fi
 fi
 

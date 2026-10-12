@@ -52,4 +52,4 @@ data = {"package": "com.fightingstars.games.warrior", "serial": serial, "tag": t
 print(json.dumps({k: data[k] for k in ("size", "md5", "entries")}, ensure_ascii=False))
 PY
 echo "backup_ok=$OUT/data_$TAG.tar"
-echo "设备端备份副本保留在 $REMOTE_TAR（还原脚本默认用它，可省一次 push）"
+echo "设备端备份副本保留在 ${REMOTE_TAR}（还原脚本默认用它，可省一次 push）"

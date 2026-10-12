@@ -149,7 +149,7 @@ KS="$ROOT/01_tools/starry_release.jks"
 if [ -f "$KS" ]; then
   c_ok "签名库存在（alias starry，证书 CN=StarryMagic）"
 else
-  c_warn "未找到 $KS：确认出包是否用了固定签名库（换签名 ⇒ install -r 被拒 ⇒ 卸载 ⇒ 丢登录态与 831MB 热更）"
+  c_warn "未找到 ${KS}：确认出包是否用了固定签名库（换签名 ⇒ install -r 被拒 ⇒ 卸载 ⇒ 丢登录态与 831MB 热更）"
 fi
 g_r "INSTALL_FAILED_UPDATE_INCOMPATIBLE\|install -r\|adb install" "$SURGICAL_DIR" | grep -q . \
   && c_ok "出包/安装流程使用 install -r 覆盖安装" \
