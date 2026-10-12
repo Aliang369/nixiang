@@ -26,7 +26,7 @@ if [[ -f "$INDEX" ]]; then
 else
   REMOTE_DIR="/data/data/$PKG/files/gg-hot-update"
   if ! "$ADB_BIN" -s "$SERIAL" shell "su -c 'test -d \"$REMOTE_DIR\"'"; then
-    echo "错误: 真机不存在 $REMOTE_DIR，请确认游戏至少进入过一次并完成热更" >&2
+    echo "错误: 真机不存在 ${REMOTE_DIR}，请确认游戏至少进入过一次并完成热更" >&2
     exit 1
   fi
   mkdir -p "$(dirname "$OUT")"
