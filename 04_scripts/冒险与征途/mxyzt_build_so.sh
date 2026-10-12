@@ -155,7 +155,7 @@ check_menu() {
   local s="$1" n
   n="$(LC_ALL=C grep -ac "$s" "$SO" 2>/dev/null || true)"
   [ -n "$n" ] || n=0
-  [ "$n" -ge 1 ] || { echo "ERROR: $SO 不含菜单串「$s」—— 源文件未编译进去或旧 so 混入" >&2; exit 1; }
+  [ "$n" -ge 1 ] || { echo "ERROR: $SO 不含菜单串「${s}」—— 源文件未编译进去或旧 so 混入" >&2; exit 1; }
   echo "[check] 菜单串 OK: $s (x$n)"
 }
 check_menu "Toggle_秒杀小怪"
