@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-12T14:55:58+00:00",
+  "generated_at": "2026-10-12T16:20:43+00:00",
   "game": "疯狂水世界",
   "version": "1.11.6",
   "package": "com.gx.sw.qa.fkssj004.esj",
@@ -19,32 +19,23 @@
     "archive": "done",
     "archive_close": "pending"
   },
-  "source_commit": "932adc78789c7b59679425f17c0453ceff93227a",
-  "source_tree": "fd7b9bde372f6d1cee9cdc4a6e186761e18340ca",
+  "source_commit": "62076ade26a7a5c5cb5afe0a65515451f448166f",
+  "source_tree": "4cc523c74a7b9e5fcff8cd8c9013b6b368376d41",
   "apk": {
     "path": "08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk",
     "available": true,
-    "size": 520981280,
-    "md5": "1a0ecd37d3dc9886fb634e3ce7d4f39b",
-    "sha256": "11dad6b2f4117fa80f217c33d5e847ef4ddea7a1f5e55623505f8ddde4dc9bfd"
+    "size": 520989472,
+    "md5": "a723794db9dcd90ea2ee4a0c3fda19c8",
+    "sha256": "b5e487a5d6b75459081681a61872329b77d681c59143f547e7482657b3d2e2e6"
   },
   "artifacts": [
     {
-      "stage": "surgical",
-      "path": "08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk",
-      "recorded_md5": "3fdecf48a3ef9d8259a5cd31b3180bef",
-      "available": true,
-      "current_md5": "3fdecf48a3ef9d8259a5cd31b3180bef",
-      "current_sha256": "606b1c577cfc1c6ce72e95c7f3f106135d53a5486db5e3ae9d0fbc004ae40610",
-      "matches_recorded_md5": true
-    },
-    {
       "stage": "sign",
       "path": "08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk",
-      "recorded_md5": "1a0ecd37d3dc9886fb634e3ce7d4f39b",
+      "recorded_md5": "a723794db9dcd90ea2ee4a0c3fda19c8",
       "available": true,
-      "current_md5": "1a0ecd37d3dc9886fb634e3ce7d4f39b",
-      "current_sha256": "11dad6b2f4117fa80f217c33d5e847ef4ddea7a1f5e55623505f8ddde4dc9bfd",
+      "current_md5": "a723794db9dcd90ea2ee4a0c3fda19c8",
+      "current_sha256": "b5e487a5d6b75459081681a61872329b77d681c59143f547e7482657b3d2e2e6",
       "matches_recorded_md5": true
     },
     {
@@ -59,10 +50,10 @@
     {
       "stage": "install",
       "path": "04_scripts/疯狂水世界/.install_ok",
-      "recorded_md5": "0a2bd37675dcf8cffc09fa01ec37f24f",
+      "recorded_md5": "594f225527ac12ecffcec2450d40087a",
       "available": true,
-      "current_md5": "0a2bd37675dcf8cffc09fa01ec37f24f",
-      "current_sha256": "ad881ba0aa11dc9f701260ea7f57cd61d54e9de7f9e2c6941dc2bef63d051aee",
+      "current_md5": "594f225527ac12ecffcec2450d40087a",
+      "current_sha256": "9816b6a1ac963d57f0548a04c4cf95f5ad43eb10501e21cadabb4684f06803ac",
       "matches_recorded_md5": true
     }
   ],
