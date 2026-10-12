@@ -41,7 +41,7 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
 SO_PREBUILT="${SF3_SO:-$STARRY_SRC/libs_sf3/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 sf3_build_so.sh）" >&2; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 sf3_build_so.sh）" >&2; exit 1; }
 echo "[check] modern so = $SO_PREBUILT ($(md5 -q "$SO_PREBUILT"))"
 ACTUAL_MD5=$(md5 -q "$ORIG_APK")
 [[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符 $ACTUAL_MD5" >&2; exit 1; }
@@ -257,7 +257,7 @@ if not (15 <= added <= 30):
 print(f'  manifest ok (新增 {added} 项 / 丢弃 {sum(dropped.values())} 项=旧 factory，顺序无关)')
 PY
 else
-  echo "  WARN: aapt2 不在 $AAPT2，跳过 manifest 回读校验" >&2
+  echo "  WARN: aapt2 不在 ${AAPT2}，跳过 manifest 回读校验" >&2
 fi
 
 echo "[5/6] surgical zip merge（原 dex/arsc/assets/lib 字节不变）"

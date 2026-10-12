@@ -16,7 +16,7 @@ KS_PASS="${STARRY_KS_PASS:-starry2026}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED（先跑 surgical）" >&2; exit 1; }
+[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing ${UNSIGNED}（先跑 surgical）" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 
 BT=""
@@ -72,10 +72,10 @@ IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 # 官包游戏本体零改动硬校验（两包同源：md5 与斌哥包一致）
 IL2CPP_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libil2cpp.so | md5 -q)"
 [[ "$IL2CPP_MD5" == "53345cdb4d31dff336fdd575fb87b667" ]] \
-  || { echo "ERROR: libil2cpp.so 被改动（$IL2CPP_MD5）" >&2; exit 1; }
+  || { echo "ERROR: libil2cpp.so 被改动（${IL2CPP_MD5}）" >&2; exit 1; }
 META_MD5="$(unzip -p "$SIGNED" assets/bin/Data/Managed/Metadata/global-metadata.dat | md5 -q)"
 [[ "$META_MD5" == "809ec525f0875c2092dc7f21e73fb288" ]] \
-  || { echo "ERROR: global-metadata.dat 被改动（$META_MD5）" >&2; exit 1; }
+  || { echo "ERROR: global-metadata.dat 被改动（${META_MD5}）" >&2; exit 1; }
 
 echo "[sign] done → $SIGNED"
 echo "[sign] md5 = $(md5 -q "$SIGNED")"
