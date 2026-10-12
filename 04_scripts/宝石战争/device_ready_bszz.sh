@@ -14,7 +14,7 @@ COUNT="$(printf '%s\n' "$DEVICES" | sed '/^$/d' | wc -l | tr -d ' ')"
 [[ "$COUNT" -eq 1 ]] || { echo "错误: 需要恰好一台在线设备，当前 $COUNT" >&2; exit 1; }
 SERIAL="$(printf '%s\n' "$DEVICES" | sed -n '1p')"
 if [[ -n "$EXPECTED_SERIAL" && "$SERIAL" != "$EXPECTED_SERIAL" ]]; then
-  echo "错误: 在线设备为 $SERIAL，期望 $EXPECTED_SERIAL" >&2
+  echo "错误: 在线设备为 ${SERIAL}，期望 $EXPECTED_SERIAL" >&2
   exit 1
 fi
 

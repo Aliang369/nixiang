@@ -46,13 +46,13 @@ done
 # 注入 IL 的 P/Invoke 入口名必须与 so 导出符号一致，否则运行期 dlsym 失败抛
 # EntryPointNotFoundException，战斗协程被打断（2026-09-16 宝石战争回合结束卡死实锤）。
 PATCH_SIDECAR="$PATCHED_ROOT/System.Network.patched.pinvoke.json"
-[[ -f "$PATCH_SIDECAR" ]] || { echo "ERROR: missing $PATCH_SIDECAR（patch_dll 未产出入口名清单）" >&2; exit 1; }
+[[ -f "$PATCH_SIDECAR" ]] || { echo "ERROR: missing ${PATCH_SIDECAR}（patch_dll 未产出入口名清单）" >&2; exit 1; }
 NM_BIN="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin/llvm-nm"
 [[ -x "$NM_BIN" ]] || { echo "ERROR: llvm-nm missing" >&2; exit 1; }
 while read -r sym; do
   [[ -n "$sym" ]] || continue
   if ! "$NM_BIN" -D --defined-only "$SO_PREBUILT" | grep -q " $sym$"; then
-    echo "ERROR: 注入 IL 声明了 P/Invoke 入口名 $sym，但 $SO_PREBUILT 没有该导出符号（dlsym 必失败）" >&2
+    echo "ERROR: 注入 IL 声明了 P/Invoke 入口名 ${sym}，但 $SO_PREBUILT 没有该导出符号（dlsym 必失败）" >&2
     exit 1
   fi
 done < <(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["entry_points"]))' "$PATCH_SIDECAR")

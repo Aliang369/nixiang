@@ -22,7 +22,7 @@ ADB_BIN="${ADB_BIN:-adb}"
 SERIAL="$(tr -d '[:space:]' < "$STATE_FILE")"
 LOCAL_MD5="$(md5 -q "$OFFICIAL")"
 [[ "$LOCAL_MD5" == "$EXPECT_MD5" ]] || {
-  echo "ERROR: 官方原包 md5 不符（$LOCAL_MD5 != $EXPECT_MD5），拒绝安装" >&2
+  echo "ERROR: 官方原包 md5 不符（$LOCAL_MD5 != ${EXPECT_MD5}），拒绝安装" >&2
   exit 1
 }
 
