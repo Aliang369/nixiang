@@ -38,7 +38,7 @@ fi
 [ -n "$NDK" ] || die "NDK 未找到（设 ANDROID_NDK_HOME）"
 [ -f "$JNI/$MK_NAME" ] || die "缺 $JNI/$MK_NAME"
 
-echo "[1/3] ndk-build（$NDK）"
+echo "[1/3] ndk-build（${NDK}）"
 NPROC="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)"
 # Application.mk 用 $(shell git log -1 --format=%ct) 做「同源重建戳」；
 # 在 ASCII 暂存目录里不是 git 仓库 ⇒ 会打印 fatal 并回落到当前时间。
