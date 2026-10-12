@@ -20,6 +20,12 @@ SO="$OUT_LIBS/arm64-v8a/libstarry_magic.so"
 [[ -x "$NDK/ndk-build" ]] || { echo "ERROR: ndk-build missing at $NDK" >&2; exit 1; }
 [[ -f "$JNI/Android_fkssj.mk" ]] || { echo "ERROR: missing $JNI/Android_fkssj.mk" >&2; exit 1; }
 
+# ---- JS 语法门禁（2026-10-12 加）----
+# kPatchJs / kDumpJs 是嵌在 so 里的裸 JS 文本，C++ 编译期**完全不做语法校验**：
+# 写错一个括号照样编过、照样装机，但运行期 evalString 静默失败 ⇒ 三功能全废，
+# 且只有用户实测才会暴露。编译前先用 node --check 卡死。
+python3 "$NIXIANG/04_scripts/疯狂水世界/fkssj_check_js.py" "$JNI/Games/FkssjMod.cpp"
+
 OBJ="$STARRY_SRC/obj_fkssj"
 STAMP="$OBJ/.build_stamp"
 CFG_HASH="$( (cat "$JNI/Android_fkssj.mk" "$JNI/Application.mk"; \

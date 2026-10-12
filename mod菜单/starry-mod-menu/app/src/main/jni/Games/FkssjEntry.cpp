@@ -33,9 +33,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .initDelayMs = 0,               // 引擎库映射即可判定，无需额外延迟
         .initRetryMax = 120,            // 启动期重试上限
         .initRetryIntervalMs = 2000,
-        .tickIntervalMs = 200000,       // 阶段① 零 hook；阶段② JS 桥需要 1s 级轮询再改小
+        .tickIntervalMs = 1000,         // 阶段②：JS 桥（evalString 注入 + 开关同步）需 1s 级轮询
 
-        .onLoad = nullptr,              // 阶段① 无 JNI_OnLoad 期工作（无 {Game}Hooks 类缓存需求）
+        .onLoad = Fkssj_OnLoad,         // JNI_OnLoad 内缓存 FkssjHooks（classloader 可用）
         .tryInit = Fkssj_TryInit,
         .isReady = Fkssj_IsReady,
         .tick = Fkssj_Tick,

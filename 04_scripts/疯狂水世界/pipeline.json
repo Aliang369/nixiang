@@ -183,10 +183,10 @@
       ],
       "status": "done",
       "note": "骨架照 scripts/surgical_xnbz_0.0.14.sh（同为 Cocos + 分支 B）。七步：gradle 白包 → 包内 so 身份校验（LC_ALL=C grep -a '[Fkssj]'，防 jniLibs 未刷新）→ apktool d 只取 smali → 收集 com/starry smali → smali assemble -o classes5.dex → Manifest 文字注入（mini apk 解码 + apktool b + aapt2 零丢失校验，缓存 07_patched/疯狂水世界/surgical/AndroidManifest.xml）→ zip 外科 merge（cp 原包 + zip -d 'META-INF/*' + zip -u 覆盖新增条目）→ 逐条断言 classes.dex~classes4.dex 与 resources.arsc 与原包相等。底包指纹门禁 md5 == f8ed1b954a3c5ce91dcecb4e721f3e9b。**第 4 步（baksmali 改官方 dex）本作 N/A：无 TapTap 登录类、无 smali 目标，需在脚本内显式写明跳过**。禁止 apktool b 整包重建。",
-      "done_at": "2026-10-12 22:31:55",
+      "done_at": "2026-10-12 23:47:46",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk": {
-          "md5": "3fdecf48a3ef9d8259a5cd31b3180bef"
+          "md5": "44619541eacef197b8764d752cc31753"
         }
       }
     },
@@ -205,14 +205,14 @@
       ],
       "status": "done",
       "note": "六步：① dex 编号无缺口且最大为 classes5.dex；② classes5.dex 含 StarryInitProvider/MenuService/ModBridge/SignSpoof + 包名串 + Fkssj 标记；③ classes.dex~classes4.dex 与 resources.arsc 的 md5 **现场从底包取**逐条比对（不写死常量）；④ 包内 so md5 == libs_fkssj 产物 md5 且含 [Fkssj]、不含别家标签；⑤ zipalign -f -p 4 + apksigner sign；⑥ **回注签名块渠道块 id=0x64707763 value=\"259425\"**（apksigner 只写 0x7109871a/0x42726577，重签必丢；用 04_scripts/疯狂水世界/fkssj_idblock.py inject，原理＝Walle：v2 摘要只覆盖 entry 数据 + 中央目录 + EOCD（其中中央目录偏移字段按规范替换为签名块起始偏移），签名块自身不在摘要内 ⇒ 追加未知 ID-value 对不破签），回注后必须 apksigner verify 仍通过，作为「回注不破签」的实证。",
-      "done_at": "2026-10-12 22:33:12",
+      "done_at": "2026-10-12 23:48:15",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk": {
-          "md5": "1a0ecd37d3dc9886fb634e3ce7d4f39b"
+          "md5": "a723794db9dcd90ea2ee4a0c3fda19c8"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk": "3fdecf48a3ef9d8259a5cd31b3180bef"
+        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-unsigned.apk": "44619541eacef197b8764d752cc31753"
       }
     },
     {
@@ -230,14 +230,14 @@
       ],
       "status": "done",
       "note": "实测已通过：serial=96f0d883 / model=M2102K1AC / android=14 (sdk 34) / abi=arm64-v8a / package_path=/data/app/~~MvgqQpfN4itmIKrbuTs17Q==/com.gx.sw.qa.fkssj004.esj-2MLxV7o_dBw4RvTVvTNsdw==/base.apk / device_apk_md5=f8ed1b954a3c5ce91dcecb4e721f3e9b / **root=无**。★与仙逆先例的差异：本机无 root ⇒ 脚本把 root 当加分项而非门槛（取不到只记 root=<无> 并继续），设备侧 md5/size 读不到时留空，绝不因此 exit 1。",
-      "done_at": "2026-10-12 22:34:14",
+      "done_at": "2026-10-12 23:48:22",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.device_serial": {
           "md5": "430a3196cafa744b7ef4b38e3a294b3b"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk": "1a0ecd37d3dc9886fb634e3ce7d4f39b"
+        "/Users/aliang/Documents/nixiang/08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk": "a723794db9dcd90ea2ee4a0c3fda19c8"
       }
     },
     {
@@ -255,10 +255,10 @@
       ],
       "status": "done",
       "note": "官方签名 CN=changwan ≠ 星光 CN=StarryMagic ⇒ pm install -r -d 预期 INSTALL_FAILED_UPDATE_INCOMPATIBLE，默认不卸载（卸载会清本地存档，属破坏性操作，需用户明确授权 FKSJ_ALLOW_UNINSTALL=1）。装机后：① 闭环 verify_installed_apk.sh 比对设备 base.apk 与本地产物 md5；② SYSTEM_ALERT_WINDOW 走三级回退（探测已 allow → su -c → 非 root 直设），三级都不成才告警并给手动授权指引，**不 exit 1**（无 root 是本机常态，H6）；③ 之后必须跑 04_scripts/_common/post_install_precheck.sh --game 疯狂水世界（机器关），过完才请用户上手实测。",
-      "done_at": "2026-10-12 22:38:31",
+      "done_at": "2026-10-12 23:49:14",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.install_ok": {
-          "md5": "0a2bd37675dcf8cffc09fa01ec37f24f"
+          "md5": "594f225527ac12ecffcec2450d40087a"
         }
       },
       "inputs": {
@@ -273,13 +273,8 @@
       ],
       "command": "true",
       "verify": [],
-      "status": "done",
-      "note": "落 10_docs/疯狂水世界/环境轮记录_1.11.6_2026xxxx.md（装机取证 + 用户上手结论 + 阶段① 是否结），并刷新 10_docs/_state/current.md 与 10_docs/_state/games/疯狂水世界.md。",
-      "done_at": "2026-10-12 22:50:19",
-      "artifacts": {},
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/04_scripts/疯狂水世界/.install_ok": "0a2bd37675dcf8cffc09fa01ec37f24f"
-      }
+      "status": "pending",
+      "note": "落 10_docs/疯狂水世界/环境轮记录_1.11.6_2026xxxx.md（装机取证 + 用户上手结论 + 阶段① 是否结），并刷新 10_docs/_state/current.md 与 10_docs/_state/games/疯狂水世界.md。"
     },
     {
       "id": "archive_close",

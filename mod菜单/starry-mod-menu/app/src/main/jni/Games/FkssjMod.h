@@ -23,8 +23,9 @@ enum FkssjFeat : int {
     FKSSJ_FEAT_SPD = 3,  // Slider_战斗加速:1:10:1 （1 = 关闭）
 };
 
-// 签名与 ModEntry.h 回调一致（Cocos 系可选传 vm 供 JS 桥用；本阶段忽略）
-bool Fkssj_TryInit(JavaVM* vm);
+// 签名与 ModEntry.h 回调一致
+void Fkssj_OnLoad(JavaVM* vm);   // JNI_OnLoad 内缓存 FkssjHooks（native 线程 classloader 拿不到应用类）
+bool Fkssj_TryInit(JavaVM* vm);  // Cocos 系传 vm 供 JS 桥（evalString）用
 bool Fkssj_IsReady();
 void Fkssj_OnFeatureChanged(int featNum, bool enabled);
 void Fkssj_OnValueChanged(int featNum, int value);
