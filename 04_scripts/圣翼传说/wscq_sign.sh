@@ -18,7 +18,7 @@ SO_BUILT="$NIXIANG/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED（先跑 surgical_wscq_7.5.10.sh）" >&2; exit 1; }
+[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing ${UNSIGNED}（先跑 surgical_wscq_7.5.10.sh）" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT" >&2; exit 1; }
 
@@ -100,10 +100,10 @@ IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 # 官包游戏本体零改动硬校验（与原版/斌哥包同源：libil2cpp.so md5 完全一致 → 15 个锚点可直接沿用）
 IL2CPP_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libil2cpp.so | md5 -q)"
 [[ "$IL2CPP_MD5" == "563b40a81370833858ef2d4452f8dc3f" ]] \
-  || { echo "ERROR: libil2cpp.so 被改动（$IL2CPP_MD5）" >&2; exit 1; }
+  || { echo "ERROR: libil2cpp.so 被改动（${IL2CPP_MD5}）" >&2; exit 1; }
 META_MD5="$(unzip -p "$SIGNED" assets/bin/Data/Managed/Metadata/global-metadata.dat | md5 -q)"
 [[ "$META_MD5" == "ef84cf230a6f4be6858f13cc47e2ab5b" ]] \
-  || { echo "ERROR: global-metadata.dat 被改动（$META_MD5）" >&2; exit 1; }
+  || { echo "ERROR: global-metadata.dat 被改动（${META_MD5}）" >&2; exit 1; }
 
 # YnttLoginRequest 必须在星光 dex 里（TapTap 旧版强制网页登录的唯一载体）—— 已在上面校验
 

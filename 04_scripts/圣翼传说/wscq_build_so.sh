@@ -54,7 +54,7 @@ mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 for s in "SeekBar_伤害倍率_1_1000_1" "Toggle_玩家无敌" "SeekBar_战斗加速_1_10_1" \
          "Toggle_怪物BOSS瞬刷" "Toggle_全屏攻击"; do
   n=$(LC_ALL=C grep -ac "$s" "$SO" || true)
-  [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含菜单串 $s（源码未编译或旧 so 混入）" >&2; exit 1; }
+  [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含菜单串 ${s}（源码未编译或旧 so 混入）" >&2; exit 1; }
 done
 # 校验 hook 锚点标签已编译进 so（防 Mod.cpp 没被链进去）
 for t in "EnemyGetHurt" "ReviveBoss" "EnemyCtr2Fixed" "AntiSpeed"; do

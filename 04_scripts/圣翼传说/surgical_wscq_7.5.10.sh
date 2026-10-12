@@ -43,16 +43,16 @@ AAPT2="${AAPT2:-$HOME/Library/Android/sdk/build-tools/36.0.0/aapt2}"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK（用 WSCQ_BASE_APK=... 指定底包）" >&2; exit 1; }
+[[ -f "$ORIG_APK" ]] || { echo "ERROR: missing ${ORIG_APK}（用 WSCQ_BASE_APK=... 指定底包）" >&2; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
 [[ -d "$YNTT_SMALI/com/starry/magic/sign" ]] \
-  || { echo "ERROR: missing $YNTT_SMALI（TapTap 旧版路径必需）" >&2; exit 1; }
+  || { echo "ERROR: missing ${YNTT_SMALI}（TapTap 旧版路径必需）" >&2; exit 1; }
 SO_PREBUILT="${WSCQ_SO:-$STARRY_SRC/libs_wscq/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 04_scripts/圣翼传说/wscq_build_so.sh）" >&2; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 04_scripts/圣翼传说/wscq_build_so.sh）" >&2; exit 1; }
 echo "[check] modern so = $SO_PREBUILT ($(md5 -q "$SO_PREBUILT"))"
 ACTUAL_MD5=$(md5 -q "$ORIG_APK")
-[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符 $ACTUAL_MD5（期望 $ORIG_MD5）" >&2; exit 1; }
+[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 官包指纹不符 ${ACTUAL_MD5}（期望 ${ORIG_MD5}）" >&2; exit 1; }
 echo "[check] 官包 = $ORIG_APK ($ACTUAL_MD5)"
 
 # dex 落位名：★必须是 base.apk 里「最小的空闲 classesN.dex 下标」。
@@ -289,7 +289,7 @@ if not (15 <= added <= 40):
 print(f'  manifest ok (新增 {added} 项 / 丢弃 {sum(dropped.values())} 项=旧 factory，顺序无关)')
 PY
 else
-  echo "  WARN: aapt2 不在 $AAPT2，跳过 manifest 回读校验" >&2
+  echo "  WARN: aapt2 不在 ${AAPT2}，跳过 manifest 回读校验" >&2
 fi
 
 echo "[5/6] surgical zip merge（原 dex/arsc/assets/lib 字节不变）"
