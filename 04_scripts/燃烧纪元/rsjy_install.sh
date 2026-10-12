@@ -33,7 +33,7 @@ if [[ -n "$CUR_PATH" ]]; then
     echo "[install] 当前已是星光同签包，force-stop 后覆盖安装（不清数据）"
     adb -s "$SERIAL" shell am force-stop "$PKG"
   else
-    echo "ERROR: 当前已安装包签名 SHA-1=$CUR_SHA1，既非官方也非星光，拒绝自动处理。" >&2
+    echo "ERROR: 当前已安装包签名 SHA-1=${CUR_SHA1}，既非官方也非星光，拒绝自动处理。" >&2
     exit 1
   fi
 else
