@@ -1,7 +1,7 @@
 {
   "game": "疯狂水世界",
   "version": "1.11.6",
-  "notes": "2026-10-13 首轮接入（新游戏）。底包 = 真机 96f0d883 上安装的官方 TapTap 渠道原版 com.gx.sw.qa.fkssj004.esj 1.11.6（vc480），从 /data/app/~~MvgqQpfN4itmIKrbuTs17Q==/com.gx.sw.qa.fkssj004.esj-2MLxV7o_dBw4RvTVvTNsdw==/base.apk 只读拉取，519,961,058 B md5 f8ed1b954a3c5ce91dcecb4e721f3e9b sha256 d38acbcd419d4bed4ef8d20533f90fd0acdfa4033552665bda3f3cfd3ff99328；已登记 10_docs/_state/底包再获取台账.md，本地副本按政策用完即删。用户诉求（m00001）：先过环境——星光菜单组装进游戏且能正常玩才算完成；之后再做【无敌 / 伤害倍率 / 战斗加速】三功能；另需去 taptap 签名。引擎 Cocos Creator 3.x + JSB，assets 内 394 个 .js 全为 NHPK 魔数密文（不加密的假设已否定），无整包加固壳。",
+  "notes": "2026-10-13 首轮接入（新游戏）。底包 = 真机 96f0d883 上安装的官方 TapTap 渠道原版 com.gx.sw.qa.fkssj004.esj 1.11.6（vc480），从 /data/app/~~MvgqQpfN4itmIKrbuTs17Q==/com.gx.sw.qa.fkssj004.esj-2MLxV7o_dBw4RvTVvTNsdw==/base.apk 只读拉取，519,961,058 B md5 f8ed1b954a3c5ce91dcecb4e721f3e9b sha256 d38acbcd419d4bed4ef8d20533f90fd0acdfa4033552665bda3f3cfd3ff99328；已登记 10_docs/_state/底包再获取台账.md，本地副本按政策用完即删。用户诉求（m00001）：先过环境——星光菜单组装进游戏且能正常玩才算完成；之后再做【无敌 / 伤害倍率 / 战斗加速】三功能；另需去 taptap 签名。引擎 Cocos Creator 3.x + JSB，assets 内 394 个 .js 全为 NHPK 魔数密文（不加密的假设已否定），无整包加固壳。 2026-10-13 阶段② 收官完成：三功能【无敌 / 伤害倍率 / 战斗加速】落地为运行时 JS 补丁（4 锚点，宿主 mod菜单/starry-mod-menu/app/src/main/jni/Games/FkssjMod.cpp §⑨-b），用户实测「功能都有效」（m01455）；语义限制已取证并告知：本作战果由服务端裁定（ChallengeStageRequest 仅含 stage，663 消息名中无任何请求携带战果），主线弹窗读服务端 serverData.stats.isLeftWin、其余模式读客户端 victorCamp，故无敌/伤害倍率在主线仅影响演出、奖励与推进不可翻盘，战斗加速（dt×spd）全模式真有效（fightTime 为帧计数）。用户决定不为「服务端判负而演出判胜」做观感补丁（m01514）。正式包唯一化 08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk 520,989,472 B md5 a723794db9dcd90ea2ee4a0c3fda19c8 sha256 b5e487a5d6b75459081681a61872329b77d681c59143f547e7482657b3d2e2e6；包内 lib/arm64-v8a/libstarry_magic.so md5 7dae074d2f86cd356544dfd23114eec0、classes5.dex 553,004 B（星光），官方 classes.dex~classes4.dex 逐字节透传，渠道块 id=0x64707763 值 \"259425\" 已回注。交付 08_output/疯狂水世界/delivery_20261013/ + 证据 10_docs/疯狂水世界/evidence_20261013/。本轮提交：e070f979（源码/文档/交付+清理）→ 62076ade（管线状态）→ c58cb7e3（archive_close 状态收口）。",
   "params": {
     "game_id": "fkssj",
     "package": "com.gx.sw.qa.fkssj004.esj",
@@ -281,8 +281,10 @@
       ],
       "command": "bash \"$NIXIANG/04_scripts/_common/archive_close_git.sh\" --game \"疯狂水世界\"",
       "verify": [],
-      "status": "pending",
-      "note": "共享文件 SignSpoof.java 必须走 python3 04_scripts/_common/stage_shared_file.py --path …/sign/SignSpoof.java --drop-pattern '<他人标记>' 做 hunk 级暂存，禁止 git add -A（会把并行会话未完成的改动一起提交）；禁止用「标记串 grep=0」代替逐行核对（他人改动常含无标记续行）。push 走 04_scripts/_common/git_push_main.sh 的 push_main（四通道，禁强推）。"
+      "status": "done",
+      "note": "共享文件 SignSpoof.java 必须走 python3 04_scripts/_common/stage_shared_file.py --path …/sign/SignSpoof.java --drop-pattern '<他人标记>' 做 hunk 级暂存，禁止 git add -A（会把并行会话未完成的改动一起提交）；禁止用「标记串 grep=0」代替逐行核对（他人改动常含无标记续行）。push 走 04_scripts/_common/git_push_main.sh 的 push_main（四通道，禁强推）。",
+      "done_at": "2026-10-13 00:20:56",
+      "artifacts": {}
     }
   ]
 }

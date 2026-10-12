@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-12T16:20:43+00:00",
+  "generated_at": "2026-10-12T16:21:23+00:00",
   "game": "疯狂水世界",
   "version": "1.11.6",
   "package": "com.gx.sw.qa.fkssj004.esj",
@@ -17,10 +17,10 @@
     "device_ready": "done",
     "install": "done",
     "archive": "done",
-    "archive_close": "pending"
+    "archive_close": "done"
   },
-  "source_commit": "62076ade26a7a5c5cb5afe0a65515451f448166f",
-  "source_tree": "4cc523c74a7b9e5fcff8cd8c9013b6b368376d41",
+  "source_commit": "c58cb7e30a6cd5d545e5fb08216e18af6995c1c3",
+  "source_tree": "3caf41e1949d7559207109e3ddcb64a492d888e8",
   "apk": {
     "path": "08_output/疯狂水世界/疯狂水世界_1.11.6_surgical-releaseSigned.apk",
     "available": true,
