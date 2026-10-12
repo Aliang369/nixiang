@@ -44,7 +44,7 @@ for f in com/starry/magic/StarryApp.smali \
          com/starry/magic/cocos/YsjYzHooks.smali \
          com/starry/magic/sign/SignSpoof.smali \
          com/starry/magic/menu/MenuService.smali; do
-  [[ -f "$WORK/smali_in/$f" ]] || { echo "ERROR: 框架缺 $f（Java 桥没编进 starry app）" >&2; exit 1; }
+  [[ -f "$WORK/smali_in/$f" ]] || { echo "ERROR: 框架缺 ${f}（Java 桥没编进 starry app）" >&2; exit 1; }
 done
 
 echo "[3/3] smali assemble → $OUT"

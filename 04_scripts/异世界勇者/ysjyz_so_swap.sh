@@ -29,11 +29,11 @@ V5_C3_MD5="916bdd497364a90f26d0d42fc99532a0"       # 底包内 classes3.dex 必�
 SO_PATH="lib/arm64-v8a/libstarry_magic.so"
 C3_PATH="classes3.dex"
 
-[[ -f "$BASE" ]] || { echo "ERROR: 缺底包 $BASE（先 adb exec-out su -c 'cat <base.apk>' 拉回并核对 md5）" >&2; exit 1; }
-[[ -f "$SO" ]]   || { echo "ERROR: 缺 $SO（先跑 build_so 阶段）" >&2; exit 1; }
+[[ -f "$BASE" ]] || { echo "ERROR: 缺底包 ${BASE}（先 adb exec-out su -c 'cat <base.apk>' 拉回并核对 md5）" >&2; exit 1; }
+[[ -f "$SO" ]]   || { echo "ERROR: 缺 ${SO}（先跑 build_so 阶段）" >&2; exit 1; }
 
 BMD5="$(md5 -q "$BASE")"
-grep -q "$BMD5" <<<"${V5_MD5S// /$'\n'}" || { echo "ERROR: 底包 md5=$BMD5 不属于已知 v5 内容（$V5_MD5S）" >&2; exit 1; }
+grep -q "$BMD5" <<<"${V5_MD5S// /$'\n'}" || { echo "ERROR: 底包 md5=$BMD5 不属于已知 v5 内容（${V5_MD5S}）" >&2; exit 1; }
 # 内容判据（比整包 md5 更硬）：classes3.dex 在 且 包内 so 仍是 v5 构建
 # 注意：禁止 `unzip -l | grep -q`（grep 提前退出发 SIGPIPE，pipefail 下整条管道返回 141 误报缺失）
 BASE_LIST="$(mktemp /tmp/ysjyz_baselist.XXXXXX)"
@@ -41,9 +41,9 @@ unzip -l "$BASE" > "$BASE_LIST"
 grep -c "classes3.dex" "$BASE_LIST" >/dev/null || { rm -f "$BASE_LIST"; echo "ERROR: 底包无 classes3.dex —— 这不是星空包（增量模式要求已注入的 v5 包）" >&2; exit 1; }
 rm -f "$BASE_LIST"
 INNER_SO_MD5="$(unzip -p "$BASE" "$SO_PATH" | md5 -q)"
-[[ "$INNER_SO_MD5" == "$V5_SO_MD5" ]] || { echo "ERROR: 底包内 so md5=$INNER_SO_MD5 ≠ v5 构建 $V5_SO_MD5（底包不是 v5）" >&2; exit 1; }
+[[ "$INNER_SO_MD5" == "$V5_SO_MD5" ]] || { echo "ERROR: 底包内 so md5=$INNER_SO_MD5 ≠ v5 构建 ${V5_SO_MD5}（底包不是 v5）" >&2; exit 1; }
 INNER_C3_MD5="$(unzip -p "$BASE" "$C3_PATH" | md5 -q)"
-[[ "$INNER_C3_MD5" == "$V5_C3_MD5" ]] || { echo "ERROR: 底包内 classes3.dex md5=$INNER_C3_MD5 ≠ v5 框架 $V5_C3_MD5（底包不是 v5）" >&2; exit 1; }
+[[ "$INNER_C3_MD5" == "$V5_C3_MD5" ]] || { echo "ERROR: 底包内 classes3.dex md5=$INNER_C3_MD5 ≠ v5 框架 ${V5_C3_MD5}（底包不是 v5）" >&2; exit 1; }
 SMD5="$(md5 -q "$SO")"
 echo "[swap] base=$BASE";  echo "[swap] base md5 = $BMD5"
 echo "[swap] so   md5 = $SMD5  ($(stat -f%z "$SO") B)"
@@ -53,9 +53,9 @@ if [[ "${YSJYZ_SKIP_CLASSES3:-0}" == "1" ]]; then
   SWAP_C3=0
   echo "[swap] classes3.dex 跳过（YSJYZ_SKIP_CLASSES3=1）"
 else
-  [[ -f "$C3" ]] || { echo "ERROR: 缺 $C3（先跑 build_menu_dex 阶段，或设 YSJYZ_SKIP_CLASSES3=1）" >&2; exit 1; }
+  [[ -f "$C3" ]] || { echo "ERROR: 缺 ${C3}（先跑 build_menu_dex 阶段，或设 YSJYZ_SKIP_CLASSES3=1）" >&2; exit 1; }
   CMD5="$(md5 -q "$C3")"
-  [[ "$CMD5" != "$V5_C3_MD5" ]] || { echo "ERROR: classes3 构建产物与 v5 框架相同（$CMD5），没有换新" >&2; exit 1; }
+  [[ "$CMD5" != "$V5_C3_MD5" ]] || { echo "ERROR: classes3 构建产物与 v5 框架相同（${CMD5}），没有换新" >&2; exit 1; }
   echo "[swap] c3   md5 = $CMD5  ($(stat -f%z "$C3") B)"
 fi
 
