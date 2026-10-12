@@ -151,7 +151,7 @@ LC_ALL=C grep -aqF "[Ggbh]" <(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.s
   || { echo "ERROR: 包内 so 不含 [Ggbh]" >&2; exit 1; }
 for t in "[Xnbz]" "[Gyzw]" "[Jfqs]" "[Ysxz]" "[Dwct]" "[Tlgd]"; do
   if LC_ALL=C grep -aqF "$t" <(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so); then
-    echo "ERROR: 包内 so 含别家标签 $t（so 顶包）" >&2; exit 1
+    echo "ERROR: 包内 so 含别家标签 ${t}（so 顶包）" >&2; exit 1
   fi
 done
 
