@@ -33,7 +33,7 @@ APK="$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_surgical-releaseSigned.apk"
 REMOTE="/data/local/tmp/blfx_surgical.apk"
 INSTALL_OK="$NIXIANG/04_scripts/$GAME/.install_ok"
 
-[[ -f "$SERIAL_FILE" ]] || { echo "ERROR: missing $SERIAL_FILE（先跑 device_ready_blfx.sh）" >&2; exit 1; }
+[[ -f "$SERIAL_FILE" ]] || { echo "ERROR: missing ${SERIAL_FILE}（先跑 device_ready_blfx.sh）" >&2; exit 1; }
 SERIAL="$(tr -d '[:space:]' < "$SERIAL_FILE")"
 [[ -n "$SERIAL" ]] || { echo "ERROR: empty serial" >&2; exit 1; }
 [[ -f "$APK" ]] || { echo "ERROR: missing ${APK}（先跑 surgical + sign）" >&2; exit 1; }

@@ -22,7 +22,7 @@ COUNT="$(printf '%s\n' "$DEVICES" | sed '/^$/d' | wc -l | tr -d ' ')"
 
 SERIAL="$(printf '%s\n' "$DEVICES" | sed -n '1p')"
 if [[ -n "$EXPECTED_SERIAL" && "$SERIAL" != "$EXPECTED_SERIAL" ]]; then
-  echo "错误: 在线设备为 $SERIAL，期望 $EXPECTED_SERIAL；拒绝误操作其他设备" >&2
+  echo "错误: 在线设备为 ${SERIAL}，期望 ${EXPECTED_SERIAL}；拒绝误操作其他设备" >&2
   exit 1
 fi
 

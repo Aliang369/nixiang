@@ -26,7 +26,7 @@ LOGIN_CARRIER="com/starry/magic/sign/TapLoginForceWeb"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED（先跑 surgical_blfx_1.01.06.sh）" >&2; exit 1; }
+[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing ${UNSIGNED}（先跑 surgical_blfx_1.01.06.sh）" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT" >&2; exit 1; }
 
@@ -101,7 +101,7 @@ LC_ALL=C grep -aqF "com/starry/magic/StarryInitProvider" "$WORK/starry.dex" \
 LC_ALL=C grep -aqF "com/starry/magic/menu/MenuService" "$WORK/starry.dex" \
   || { echo "ERROR: $DEX_NAME 缺 MenuService（悬浮球菜单不会起来）" >&2; exit 1; }
 LC_ALL=C grep -aqF "$LOGIN_CARRIER" "$WORK/starry.dex" \
-  || { echo "ERROR: $DEX_NAME 缺 $LOGIN_CARRIER（TapTap 改签后登录修复载体缺失）" >&2; exit 1; }
+  || { echo "ERROR: $DEX_NAME 缺 ${LOGIN_CARRIER}（TapTap 改签后登录修复载体缺失）" >&2; exit 1; }
 
 SO_MD5="$(md5 -q "$SO_BUILT")"
 IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
@@ -111,10 +111,10 @@ IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 # 官包游戏本体零改动硬校验（底包即不可再生输入，任何一处变了都说明打错底包/被误改）
 IL2CPP_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libil2cpp.so | md5 -q)"
 [[ "$IL2CPP_MD5" == "$EXPECT_IL2CPP_MD5" ]] \
-  || { echo "ERROR: libil2cpp.so 被改动（$IL2CPP_MD5，期望 $EXPECT_IL2CPP_MD5）" >&2; exit 1; }
+  || { echo "ERROR: libil2cpp.so 被改动（${IL2CPP_MD5}，期望 ${EXPECT_IL2CPP_MD5}）" >&2; exit 1; }
 META_MD5="$(unzip -p "$SIGNED" assets/bin/Data/Managed/Metadata/global-metadata.dat | md5 -q)"
 [[ "$META_MD5" == "$EXPECT_META_MD5" ]] \
-  || { echo "ERROR: global-metadata.dat 被改动（$META_MD5，期望 $EXPECT_META_MD5）" >&2; exit 1; }
+  || { echo "ERROR: global-metadata.dat 被改动（${META_MD5}，期望 ${EXPECT_META_MD5}）" >&2; exit 1; }
 
 echo "[sign] done → $SIGNED"
 echo "[sign] pkg = $PKG"

@@ -64,7 +64,7 @@ mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 for s in "SeekBar_伤害倍率_1_100_1" "Toggle_无敌" "SeekBar_战斗加速_1_10_1" \
          "Category_战斗"; do
   n=$(LC_ALL=C grep -ac "$s" "$SO" || true)
-  [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含菜单串 $s（源码未编译或旧 so 混入）" >&2; exit 1; }
+  [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含菜单串 ${s}（源码未编译或旧 so 混入）" >&2; exit 1; }
 done
 # 校验本作 Mod.cpp 已链进去（防 BlfxMod.cpp 漏进 LOCAL_SRC_FILES）
 for t in "blfx_probe.txt" "zbSafeLong" "zbCombatSpeed" "ChangeHp"; do

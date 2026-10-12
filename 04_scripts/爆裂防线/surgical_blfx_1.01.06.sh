@@ -52,15 +52,15 @@ LOGIN_CARRIER="$STARRY_SRC/app/src/main/java/com/starry/magic/sign/TapLoginForce
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK（用 BLFX_BASE_APK=... 指定底包）" >&2; exit 1; }
+[[ -f "$ORIG_APK" ]] || { echo "ERROR: missing ${ORIG_APK}（用 BLFX_BASE_APK=... 指定底包）" >&2; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
 [[ -d "$STARRY_SRC" ]] || { echo "ERROR: missing $STARRY_SRC" >&2; exit 1; }
 SO_PREBUILT="${BLFX_SO:-$STARRY_SRC/libs_blfx/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] \
-  || { echo "ERROR: missing modern so $SO_PREBUILT（先跑 04_scripts/爆裂防线/blfx_build_so.sh）" >&2; exit 1; }
+  || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 04_scripts/爆裂防线/blfx_build_so.sh）" >&2; exit 1; }
 echo "[check] modern so = $SO_PREBUILT ($(md5 -q "$SO_PREBUILT"))"
 ACTUAL_MD5=$(md5 -q "$ORIG_APK")
-[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 底包指纹不符 $ACTUAL_MD5（期望 $ORIG_MD5）" >&2; exit 1; }
+[[ "$ACTUAL_MD5" == "$ORIG_MD5" ]] || { echo "ERROR: 底包指纹不符 ${ACTUAL_MD5}（期望 ${ORIG_MD5}）" >&2; exit 1; }
 echo "[check] 底包 = $ORIG_APK ($ACTUAL_MD5)"
 
 # ---- TapSDK 路径探测：决定是否需要并入旧版 yntt_smali ------------------------------
@@ -89,13 +89,13 @@ echo "[check] TapSDK 路径 = $TAP_PATH"
 case "$TAP_PATH" in
   old)
     [[ -d "$YNTT_SMALI/com/starry/magic/sign" ]] \
-      || { echo "ERROR: missing $YNTT_SMALI（旧版 TapTap 路径必需）" >&2; exit 1; }
+      || { echo "ERROR: missing ${YNTT_SMALI}（旧版 TapTap 路径必需）" >&2; exit 1; }
     NEED_YNTT=1 ;;
   new)
     NEED_YNTT=0
     if [[ "${BLFX_SKIP_LOGIN_WHITELIST_GATE:-0}" != "1" ]]; then
       if [[ ! -f "$LOGIN_CARRIER" ]]; then
-        echo "ERROR: missing $LOGIN_CARRIER（无法核对 TapTap 新路径白名单）" >&2; exit 1
+        echo "ERROR: missing ${LOGIN_CARRIER}（无法核对 TapTap 新路径白名单）" >&2; exit 1
       fi
       if ! grep -qF "\"$PKG\"" "$LOGIN_CARRIER"; then
         cat >&2 <<EOM
@@ -368,7 +368,7 @@ if not (15 <= added <= 40):
 print(f'  manifest ok (新增 {added} 项 / 丢弃 {sum(dropped.values())} 项=旧 factory，顺序无关)')
 PY
 else
-  echo "  WARN: aapt2 不在 $AAPT2，跳过 manifest 回读校验" >&2
+  echo "  WARN: aapt2 不在 ${AAPT2}，跳过 manifest 回读校验" >&2
 fi
 
 echo "[5/6] surgical zip merge（原 dex/arsc/assets/lib 字节不变）"

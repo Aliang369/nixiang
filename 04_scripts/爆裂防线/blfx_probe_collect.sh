@@ -19,7 +19,7 @@ DUMP="/data/data/$PKG/files/blfx_probe.txt"
 SERIAL_FILE="$SCRIPT_DIR/.device_serial"
 WAIT_SEC="${1:-100}"
 
-[[ -f "$SERIAL_FILE" ]] || { echo "ERROR: missing $SERIAL_FILE（先跑 device_ready_blfx.sh）" >&2; exit 1; }
+[[ -f "$SERIAL_FILE" ]] || { echo "ERROR: missing ${SERIAL_FILE}（先跑 device_ready_blfx.sh）" >&2; exit 1; }
 SERIAL="$(tr -d '[:space:]' < "$SERIAL_FILE")"
 [[ -n "$SERIAL" ]] || { echo "ERROR: empty serial" >&2; exit 1; }
 
