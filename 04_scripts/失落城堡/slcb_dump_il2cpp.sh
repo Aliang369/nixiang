@@ -18,7 +18,7 @@ DUMPER_DIR="$ROOT/01_tools/Il2CppDumper"
 DUMPER_OUT="$OUT/il2cpp_dump"
 TOOL_DIR="$OUT.tool"
 
-[[ -f "$SO"   ]] || { echo "错误: 内存解析版 so 不存在: $SO（先跑 slcb_dump_il2cpp_mem.sh）" >&2; exit 1; }
+[[ -f "$SO"   ]] || { echo "错误: 内存解析版 so 不存在: ${SO}（先跑 slcb_dump_il2cpp_mem.sh）" >&2; exit 1; }
 [[ -f "$META" ]] || { echo "错误: global-metadata.dat 不存在: $META" >&2; exit 1; }
 
 mkdir -p "$OUT" "$DUMPER_OUT"
