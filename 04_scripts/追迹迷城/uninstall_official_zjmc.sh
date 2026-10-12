@@ -14,7 +14,7 @@ command -v "$ADB_BIN" >/dev/null || { echo "错误: adb 不可用" >&2; exit 1; 
 
 BEFORE="$("$ADB_BIN" -s "$SERIAL" shell pm path "$PKG" 2>/dev/null | tr -d '\r' || true)"
 if [[ -z "$BEFORE" ]]; then
-  echo "设备未安装 $PKG，无需卸载"
+  echo "设备未安装 ${PKG}，无需卸载"
 else
   echo "官方包路径: $BEFORE"
   "$ADB_BIN" -s "$SERIAL" shell am force-stop "$PKG" 2>/dev/null || true

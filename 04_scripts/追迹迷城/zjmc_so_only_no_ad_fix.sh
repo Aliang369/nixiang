@@ -45,12 +45,12 @@ fi
 
 BASE_MD5="$(md5 -q "$WORK/base.apk")"
 [[ "$BASE_MD5" == "$EXPECTED_BASE_MD5" ]] || {
-  echo "错误: 设备底包不是预期星空版本（$BASE_MD5 != $EXPECTED_BASE_MD5）" >&2
+  echo "错误: 设备底包不是预期星空版本（$BASE_MD5 != ${EXPECTED_BASE_MD5}）" >&2
   exit 1
 }
 BASE_SHA1="$("$BT/apksigner" verify --print-certs "$WORK/base.apk" 2>/dev/null | sed -n 's/.*certificate SHA-1 digest: //p' | head -1 | tr 'A-F' 'a-f')"
 [[ "$BASE_SHA1" == "$EXPECTED_SIGN_SHA1" ]] || {
-  echo "错误: 设备底包签名不是星光包（$BASE_SHA1）" >&2
+  echo "错误: 设备底包签名不是星光包（${BASE_SHA1}）" >&2
   exit 1
 }
 
