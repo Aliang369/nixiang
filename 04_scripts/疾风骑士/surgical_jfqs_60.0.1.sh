@@ -100,7 +100,7 @@ AVAIL_G="$(df -g "$NIXIANG" | awk 'NR==2{print $4}')"
 [ "$AVAIL_G" -ge 6 ] || { echo "ERROR: 磁盘可用 ${AVAIL_G}G < 6G" >&2; exit 1; }
 
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-    echo "ERROR: 另一实例在跑（$LOCK_DIR，pid $(cat "$LOCK_DIR/pid" 2>/dev/null)）" >&2; exit 1
+    echo "ERROR: 另一实例在跑（${LOCK_DIR}，pid $(cat "$LOCK_DIR/pid" 2>/dev/null)）" >&2; exit 1
 fi
 echo $$ > "$LOCK_DIR/pid"
 WORK="$(mktemp -d /tmp/jfqs_surgical.XXXXXX)"
