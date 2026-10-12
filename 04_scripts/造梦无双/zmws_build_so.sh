@@ -57,6 +57,6 @@ mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 # 防呆：so 必须含菜单串（中文 UTF-8 多字节，LC_ALL=C grep -a 按字节搜）
 for s in "Toggle_无限技能" "Toggle_超级秒杀"; do
   N=$(LC_ALL=C grep -ac "$s" "$SO" || true)
-  [[ "$N" -ge 1 ]] || { echo "ERROR: $SO 不含 $s（旧 so 混入或源码未编译）" >&2; exit 1; }
+  [[ "$N" -ge 1 ]] || { echo "ERROR: $SO 不含 ${s}（旧 so 混入或源码未编译）" >&2; exit 1; }
 done
 echo "[build_so] done → $SO ($(md5 -q "$SO"))"
