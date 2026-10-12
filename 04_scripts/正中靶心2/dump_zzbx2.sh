@@ -8,7 +8,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 META_FILE="$SCRIPT_DIR/binge_apk.json"
 OUT_ROOT="$NIXIANG_ROOT/06_dumped/正中靶心2/binge_1.6"
 
-[[ -f "$META_FILE" ]] || { echo "错误: 缺少 $META_FILE，请先跑 pull_mod" >&2; exit 1; }
+[[ -f "$META_FILE" ]] || { echo "错误: 缺少 ${META_FILE}，请先跑 pull_mod" >&2; exit 1; }
 APK="$(python3 - "$META_FILE" <<'PY'
 import json, sys
 print(json.load(open(sys.argv[1], encoding='utf-8'))['apk_path'])

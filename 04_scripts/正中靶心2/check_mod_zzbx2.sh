@@ -12,7 +12,7 @@ OUT_FILE="$SCRIPT_DIR/mod_check.json"
 TEXT_FILE="$SCRIPT_DIR/mod_check.txt"
 EXPECTED_PKG="${PKG:-com.openew.monster}"
 
-[[ -f "$META_FILE" ]] || { echo "错误: 缺少 $META_FILE，请先跑 pull_mod" >&2; exit 1; }
+[[ -f "$META_FILE" ]] || { echo "错误: 缺少 ${META_FILE}，请先跑 pull_mod" >&2; exit 1; }
 APK="$(python3 - "$META_FILE" <<'PY'
 import json, sys
 print(json.load(open(sys.argv[1], encoding='utf-8'))['apk_path'])
@@ -20,7 +20,7 @@ PY
 )"
 [[ -f "$APK" ]] || { echo "错误: APK 不存在: $APK" >&2; exit 1; }
 [[ -n "${NIXIANG_BUILD_TOOLS:-}" && -x "$NIXIANG_BUILD_TOOLS/aapt2" ]] || {
-  echo "错误: 找不到 aapt2（NIXIANG_BUILD_TOOLS=$NIXIANG_BUILD_TOOLS）" >&2
+  echo "错误: 找不到 aapt2（NIXIANG_BUILD_TOOLS=${NIXIANG_BUILD_TOOLS}）" >&2
   exit 1
 }
 
