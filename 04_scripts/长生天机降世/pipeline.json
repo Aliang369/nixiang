@@ -1,0 +1,152 @@
+{
+  "game": "长生天机降世",
+  "version": "1.0.3 / vc1030 (TapTap 渠道)",
+  "notes": "2026-10-14 建：本游戏此前**没有 pipeline.json**（1.0.2 收官时未登记），导致 P4 轮次门禁不可用、install_guard.sh 判 exit 3（策略未知）形同虚设 —— 与 2026-10-12 霓虹深渊2 复盘查到的同一个黑洞，新会话建目录时先建它。底包＝真机 f9a116a2 上 TapTap 原版 1.0.3（只读 pull，sha256 9ce8142db6eeebe0a05098a3e38c3c95fda456f1ec6c2f59a743696792a857f0），已入 02_apks/长生天机降世/。出包走 surgical（native 外科注入链，禁止 classes4.dex / apktool b 整包）：surgical_cstjjs_1.0.3.sh 内部 ndk-build libstarry_magic.so → 并入官方 classes3.dex → 定点 zip -u 替换 → zipalign + apksigner(starry_release.jks)。挂点 EnterFrameFromInterpreter file 0x2657350（VA 0x265b350，与 1.0.2 同址，2026-10-14 在 1.0.3 官方 libil2cpp.so 上逐指令复核）。install_policy=uninstall_only 是**首装**事实：官方签名 CN=netkuu 与星空 CN=StarryMagic 不同 ⇒ `pm install -r` 必报 signature mismatch；卸载会清游戏数据，故装机前必须取得用户当轮授权（硬约束 #6）。设备改用星空版后，后续星空→星空更新应改判 overlay_only 并在此处更新。",
+  "params": {
+    "game_id": "cstjjs",
+    "package": "com.netkuu.changsheng.tjjs",
+    "tag": "cstjjs",
+    "serial": "f9a116a2",
+    "version": "1.0.3",
+    "version_code": "1030"
+  },
+  "env": {
+    "NIXIANG": "/Users/aliang/Documents/nixiang",
+    "SERIAL": "f9a116a2",
+    "ANDROID_NDK_HOME": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973"
+  },
+  "install_policy": "uninstall_only",
+  "rounds": {
+    "threshold": 3,
+    "ledger": "10_docs/长生天机降世/轮次台账.tsv",
+    "note": "同一功能连续 3 轮「无效」⇒ 拒绝装机，先出假设矩阵/根因定案（rootcause_note.sh --check 判定；pre_install_gate.sh 查6 复用）"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "base_apk",
+      "name": "底包核对（真机 TapTap 原版 1.0.3 入 02_apks/长生天机降世/，作为外科底包）",
+      "requires": [],
+      "command": "ls -lh \"$NIXIANG/02_apks/长生天机降世/\" && shasum -a 256 \"$NIXIANG/02_apks/长生天机降世/长生天机降世_1.0.3_official.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/长生天机降世/长生天机降世_1.0.3_official.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-14 00:29:00",
+      "artifacts": {
+        "02_apks/长生天机降世/长生天机降世_1.0.3_official.apk": {
+          "sha256": "9ce8142db6eeebe0a05098a3e38c3c95fda456f1ec6c2f59a743696792a857f0"
+        }
+      }
+    },
+    {
+      "id": "anchor",
+      "name": "挂点与路线锁定（EnterFrameFromInterpreter 在 1.0.3 libil2cpp.so 上重新取证）",
+      "requires": [
+        "base_apk"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/so_inspect.py\" disasm \"$NIXIANG/02_apks/长生天机降世/libil2cpp_1.0.3.so\" --off 0x2657350 --va 0x265b350 --n 24",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/长生天机降世/硬约束.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/长生天机降世/路线锁定.md"
+        },
+        {
+          "type": "file_contains",
+          "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/CstjjsMod.cpp",
+          "pattern": "FILE_ENTER_INTERP = 0x2657350"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-14 00:25:00"
+    },
+    {
+      "id": "build_surgical",
+      "name": "构建 + 外科组装（surgical_cstjjs_1.0.3.sh：ndk-build so → 并入 classes3 → zip 定点替换 → zipalign + 签名）",
+      "requires": [
+        "anchor"
+      ],
+      "preflight": [
+        "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_cstjjs_1.0.3.sh"
+      ],
+      "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_cstjjs_1.0.3.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/长生天机降世/长生天机降世_1.0.3_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "device_ready",
+      "name": "设备就绪（真机在线 + 型号留痕；凭证供 install 阶段复查）",
+      "requires": [],
+      "command": "adb -s $SERIAL get-state && adb -s $SERIAL shell getprop ro.product.model && adb -s $SERIAL shell getprop ro.product.model > 04_scripts/长生天机降世/.device_ready.txt",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/长生天机降世/.device_ready.txt"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "install",
+      "name": "装机（异签：先报告用户取得授权，再走卸载重装；装机前机器关：轮次根因闸门 + 产物六查 + 装机策略闸门）",
+      "requires": [
+        "build_surgical",
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --game 长生天机降世 --rounds-threshold 3 --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/CstjjsMod.cpp\" --apk \"$NIXIANG/08_output/长生天机降世/长生天机降世_1.0.3_surgical-releaseSigned.apk\" && bash \"$NIXIANG/04_scripts/_common/install_guard.sh\" 长生天机降世 --cmd \"STARRY_INSTALL=1 STARRY_ALLOW_UNINSTALL=1 bash scripts/surgical_cstjjs_1.0.3.sh\" && STARRY_INSTALL=1 STARRY_ALLOW_UNINSTALL=1 SERIAL=$SERIAL bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_cstjjs_1.0.3.sh\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.netkuu.changsheng.tjjs \"$NIXIANG/08_output/长生天机降世/长生天机降世_1.0.3_surgical-releaseSigned.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/长生天机降世/长生天机降世_1.0.3_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive",
+      "name": "收尾归档（唯一正式包 + delivery_/icon/菜单模板/使用说明 + 索引 + git）",
+      "requires": [
+        "install"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 长生天机降世 --apk \"$NIXIANG/08_output/长生天机降世/长生天机降世_1.0.3_surgical-releaseSigned.apk\" --menu-template \"$NIXIANG/10_docs/长生天机降世/cstjjs_menu_template.json\" --expect-menu-template --sync-doc",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/长生天机降世/cstjjs_menu_template.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/长生天机降世/台账.md"
+        }
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "archive_close",
+      "name": "归档关闭（git 推送 origin/main，只走 push_main）",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_scoped_git.sh\" 长生天机降世",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/长生天机降世/pipeline.json"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}

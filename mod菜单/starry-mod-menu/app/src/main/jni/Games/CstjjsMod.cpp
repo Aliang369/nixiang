@@ -1,5 +1,5 @@
 /* ================================================================
- *  长生：天机降世 1.0.2 / vc1020
+ *  长生：天机降世 1.0.3 / vc1030
  *
  *  0.9.9 壳挂点 ABI：x1=MethodInfo, x2=args[+0]=CBRole* [+8]=int64 delta
  *  那不是 Execute 入口，是 HybridCLR InterpFrameGroup::EnterFrameFromInterpreter：
@@ -7,10 +7,16 @@
  *    源码：AllocStackSlot(maxStack - argStackObjectSize)，不拷参数
  *  C#→C# 走 CallInterp → 本函数；独桩/Execute 只承接 native→C#，战斗扣血看不见。
  *
- *  1.0.2 磁盘（真机官方 base.apk）：
- *    EnterFrameFromInterpreter  file 0x2657350（VA 0x265b350）
+ *  1.0.3 磁盘（真机官方 base.apk，2026-10-14 取证）：
+ *    EnterFrameFromInterpreter  file 0x2657350（VA 0x265b350）— 与 1.0.2 同址
+ *      判据（1.0.3 实测）：str x30,[sp,#-0x30]! 入口 / ldr x8,[x20,#0x58] /
+ *      ldr w9,[x8,#0x2c] / bl 0x265b3c4(AllocStackSlot) / bl 0x265b430 /
+ *      stp x20,x19,[x0]（帧压入 {MethodInfo, argBase}，不拷参数）；
+ *      该函数被 Execute 体内 6 处 BL 引用（0x2667f08/0x26685f0/0x2668700/
+ *      0x2668930/0x2668af0/0x2668b48）。
  *    Interpreter::Execute       VA 0x265d1a8（已否：interp live 但 Health 名 0）
- *    历史：0.9.10 file 0x2656920 / 1.0.1 file 0x2657084；仅证明同一语义链，勿再沿用。
+ *    历史：1.0.2 file 0x2657350 / 1.0.1 file 0x2657084 / 0.9.10 file 0x2656920；
+ *      仅证明同一语义链，勿再沿用旧偏移做新版本假设（每版必须重新取证）。
  *
  *  过滤只改 ET.CBRoleValueSystem.RoleValue_Health（0.9.9 已验）。
  *  禁止 ELF base+RVA；禁止再钩独桩 / Execute（会漏或双改）。
@@ -35,7 +41,7 @@ using Il2Cpp::GetApi;
 using Il2Cpp::IsValidHeapPtr;
 
 enum : uintptr_t {
-    FILE_ENTER_INTERP = 0x2657350,  // 1.0.2 EnterFrameFromInterpreter（VA 0x265b350）
+    FILE_ENTER_INTERP = 0x2657350,  // 1.0.3 EnterFrameFromInterpreter（VA 0x265b350；1.0.2 同址）
 };
 enum : size_t {
     OFF_ROLE_SIDE_FALLBACK = 0x74,
