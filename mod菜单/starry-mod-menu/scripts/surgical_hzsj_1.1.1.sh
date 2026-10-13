@@ -1,34 +1,41 @@
 #!/usr/bin/env bash
 # ================================================================
-#  魂坠深境 1.1.1 (com.chillyroom.containerofsoul.yw) — 星光外科组装
-#  （新菜单 provider-only 路线，照 surgical_zzz_3.2.0.sh）
+#  魂坠深境 (com.chillyroom.containerofsoul.yw) — 星光外科组装
+#  （新菜单 provider-only 路线，照 surgical_zzz_3.2.0.sh）；
+#  **同一脚本管两代底包：VERSION=1.1.1（旧星光底包）/ 1.1.2（官方 TapTap 原包）**
 #
-#  背景：2026-10-07 用户要求「dex 菜单换新源码」。旧包（f191e461，2026-09-10
-#  gradle+smali 注入路线）把菜单 smali 混进了 classes5.dex；新路线改为
-#  「新菜单 classes6.dex + Manifest 注册 StarryInitProvider」——菜单/授权/签名
-#  回灌/TapTap 强制网页登录都由 Java 侧 Provider 内化（StarryInitProvider.java），
-#  不再需要逐游戏 smali 补丁；此后换菜单只需换 classes6.dex。
+#  背景：旧包（f191e461，2026-09-10 gradle+smali 注入路线）把菜单 smali 混进了
+#  classes5.dex，靠 Activity onCreate 插桩拉起。新路线改为「新菜单 dex + Manifest
+#  注册 StarryInitProvider」——菜单/授权/签名回灌/TapTap 强制网页登录都由 Java 侧
+#  Provider 内化（StarryInitProvider.java），不再需要逐游戏 smali 补丁。
 #
-#  底包：02_apks/魂坠深境/魂坠深境_1.1.1_device.apk（实测 md5=f191e461… 星光正式包）
-#  手术（四件，其余条目字节保真）：
-#   1) classes5.dex  重建为「去 com/starry」（baksmali→删→smali；原 dex 仅 1.48MB，
-#      内容 = kotlin/okhttp3/okio/org 789 文件 + 旧菜单 127 文件）→ 缓存复用
-#   2) classes6.dex  新增（templates/hzsj_menu_20261007，hzsj_build_dex.sh 产）
-#   3) AndroidManifest.xml  加 <provider com.starry.magic.StarryInitProvider>
-#      （MenuService/权限旧包已有；application/ComponentFactory 零改动）→ 缓存复用
-#   4) lib/arm64-v8a/libstarry_magic.so  替换（libs_hzsj 产物，含设备无关指针判据）
+#  底包：02_apks/魂坠深境/魂坠深境_${VERSION}_device{,_official}.apk
+#        （1.1.1 = 旧星光底包 md5 f191e461…；1.1.2 = 用户真机官方 TapTap 原包）
+#  手术（其余 2460+ 条目字节保真）：
+#   0) 【仅 VERSION=1.1.1】classes5.dex 重建为「去 com/starry」（baksmali→删→smali；
+#      旧星光底包把 127 个旧菜单类混在此 dex）→ 缓存复用
+#      【VERSION=1.1.2 跳过】：官方包全 4 dex 内 `com/starry` 命中 0，无需清理
+#   1) 新菜单 dex 新增（templates/hzsj_menu_20261007，hzsj_build_dex.sh 产）；
+#      名字 = 包内最大 classesN.dex 的下一位（1.1.1 ⇒ classes6.dex，1.1.2 ⇒ classes5.dex）
+#   2) AndroidManifest.xml 加 <provider com.starry.magic.StarryInitProvider>
+#      + <service MenuService>(foregroundServiceType=specialUse) + 两条权限
+#      （application/appComponentFactory 零改动；旧包已有则自动跳过）→ 缓存复用
+#      ★服务在前台跑需要 SYSTEM_ALERT_WINDOW（悬浮窗）+ FOREGROUND_SERVICE_SPECIAL_USE，
+#        旧星光底包已有，官方 1.1.2 原包**没有**，由本步补
+#   3) lib/arm64-v8a/libstarry_magic.so 替换（libs_hzsj 产物，含设备无关指针判据）
+#   4) libc++_shared.so：新 so 的 DT_NEEDED 含 libc++_shared.so；旧星光底包自带，
+#      官方 1.1.2 原包**不带** ⇒ 底包缺则注入 NDK 构建产物同源副本（缺它 = 装载失败）
 #
-#  ★旧包 Activity 插桩（onCreate 调 MenuService.start / SignSpoof.install /
-#    StarryNativeLoad.ensureLoaded）**保留不动**：classes5 的旧 com/starry 删除后，
-#    这些引用自动解析到 classes6 的新类；MenuService.start 幂等（instance!=null 即 skip），
-#    与 Provider 双启动无副作用（已核 11-07）。
-#  ★不注入 libc++_shared.so（官包自带）。
+#  ★旧包 Activity 插桩（onCreate 调 MenuService.start 等）在 1.1.1 底包中保留不动：
+#    classes5 的旧 com/starry 删除后引用自动解析到新菜单 dex；MenuService.start
+#    幂等（instance!=null 即 skip），与 Provider 双启动无副作用（已核 11-07）。
 #
 #  签名：01_tools/starry_release.jks（CN=StarryMagic，alias starry）——禁换（卡密指纹）
 #
 #  用法:
-#    bash scripts/surgical_hzsj_1.1.1.sh                    # 出包
-#    STARRY_INSTALL=1 SERIAL=127.0.0.1:16416 bash ...       # 出包+装机（同签 -r）
+#    bash scripts/surgical_hzsj_1.1.1.sh                    # 出包（默认 1.1.2 官方底包）
+#    HZSJ_VERSION=1.1.1 bash scripts/surgical_hzsj_1.1.1.sh  # 出旧代包
+#    STARRY_INSTALL=1 SERIAL=f9a116a2 bash ...              # 出包+装机（同签 -r）
 # ================================================================
 set -euo pipefail
 
@@ -39,24 +46,41 @@ source "${STARRY_SRC}/../../04_scripts/_common/env.sh"
 
 NIXIANG="${NIXIANG_ROOT}"
 GAME="魂坠深境"
-VERSION="1.1.1"
+VERSION="${HZSJ_VERSION:-1.1.2}"
 PKG="com.chillyroom.containerofsoul.yw"
 AUTHORITY="${PKG}.starryinit"
 SERIAL="${SERIAL:-127.0.0.1:16416}"
 
-BASE_APK="${HZSJ_BASE_APK:-${NIXIANG}/02_apks/${GAME}/${GAME}_1.1.1_device.apk}"
-BASE_MD5_EXPECT="f191e461b4d83ef9d079d693e94cca35"
-DEX6_NAME="classes6.dex"
-DEX6_SRC="${STARRY_SRC}/templates/hzsj_menu_20261007/${DEX6_NAME}"
+# --- 代数相关（1.1.1 = 旧星光底包 / 1.1.2 = 官方 TapTap 原包）-----------------
+case "${VERSION}" in
+  1.1.1)
+    BASE_DEFAULT="${NIXIANG}/02_apks/${GAME}/${GAME}_1.1.1_device.apk"
+    BASE_MD5_EXPECT="${HZSJ_BASE_MD5:-f191e461b4d83ef9d079d693e94cca35}"
+    DEX_ADD_NAME="${HZSJ_DEX_NAME:-classes6.dex}"     # 星光底包已是 dex…dex5
+    LEGACY_MENU_DEX="1"                               # 1 = 需重建 classes5 去 com/starry
+    ;;
+  1.1.2)
+    BASE_DEFAULT="${NIXIANG}/02_apks/${GAME}/${GAME}_1.1.2_device_official.apk"
+    BASE_MD5_EXPECT="${HZSJ_BASE_MD5:-4890e8053f0df45c8c321b2cdc04e65e}"
+    DEX_ADD_NAME="${HZSJ_DEX_NAME:-classes5.dex}"     # 官方原包只到 dex4
+    LEGACY_MENU_DEX=""                                # 官方包无 com/starry，免清理
+    ;;
+  *) echo "ERROR: 未知 HZSJ_VERSION=${VERSION}（只支持 1.1.1 / 1.1.2）" >&2; exit 1 ;;
+esac
+
+BASE_APK="${HZSJ_BASE_APK:-${BASE_DEFAULT}}"
 SO_SRC="${STARRY_SRC}/libs_hzsj/arm64-v8a/libstarry_magic.so"
+LIBCXX_SRC="${STARRY_SRC}/libs_hzsj/arm64-v8a/libc++_shared.so"
 
 OUT_DIR="${NIXIANG}/08_output/${GAME}"
 FINAL="${OUT_DIR}/${GAME}_${VERSION}_starry-newmenu-releaseSigned.apk"
 
-# 一次性手术缓存（dex5 去菜单 / 二进制 Manifest）
-CACHE_DIR="${NIXIANG}/07_patched/${GAME}/surgical"
+# 一次性手术缓存（dex5 去菜单 / 二进制 Manifest）；缓存按"是否做 dex5 清理"分桶
+CACHE_DIR="${NIXIANG}/07_patched/${GAME}/surgical${LEGACY_MENU_DEX:+_1.1.1}"
 CACHE_CLS5="${CACHE_DIR}/classes5_nostarry.dex"
 CACHE_MF="${CACHE_DIR}/AndroidManifest.xml"
+
+DEX6_SRC="${STARRY_SRC}/templates/hzsj_menu_20261007/${DEX_ADD_NAME}"
 
 KS="${STARRY_KS:-${NIXIANG}/01_tools/starry_release.jks}"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
@@ -65,9 +89,24 @@ CERT_SHA256="83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
 
 JAVA17="${NIXIANG_JAVA17}"
 JAVA="$JAVA17/bin/java.exe"; [ -f "$JAVA" ] || JAVA="$JAVA17/bin/java"
-BAKSMALI="${NIXIANG}/01_tools/smali/baksmali-fat.jar"
-SMALI="${NIXIANG}/01_tools/smali/smali-fat.jar"
-APKTOOL="${APKTOOL:-${NIXIANG}/01_tools/apktool/apktool}"
+# smali 工具：win 侧有 01_tools/smali/{baksmali,smali}-fat.jar；mac 侧只有 baksmali-2.5.2.jar
+# （fat 版是 win 端现场打的），故按"fat 优先，缺则普通 jar + 依赖 classpath"双轨解析
+SMALI_DIR="${NIXIANG}/01_tools/smali"
+if [ -f "${SMALI_DIR}/baksmali-fat.jar" ]; then
+  BAKSMALI_JAR="${SMALI_DIR}/baksmali-fat.jar"; BAKSMALI_CP=""
+else
+  BAKSMALI_JAR="${SMALI_DIR}/baksmali-2.5.2.jar"
+  BAKSMALI_CP="${SMALI_DIR}/baksmali-2.5.2.jar:${SMALI_DIR}/dexlib2-2.5.2.jar:${SMALI_DIR}/util-2.5.2.jar:${SMALI_DIR}/guava-30.1.1-jre.jar:${SMALI_DIR}/jcommander-1.64.jar:${SMALI_DIR}/antlr-runtime-3.5.2.jar:${SMALI_DIR}/jsr305-3.0.2.jar:${SMALI_DIR}/error_prone_annotations-2.5.1.jar:${SMALI_DIR}/checker-qual-3.8.0.jar:${SMALI_DIR}/failureaccess-1.0.1.jar:${SMALI_DIR}/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:${SMALI_DIR}/j2objc-annotations-1.3.jar:${SMALI_DIR}/animal-sniffer-annotations-1.20.jar"
+fi
+if [ -f "${SMALI_DIR}/smali-fat.jar" ]; then
+  SMALI_JAR="${SMALI_DIR}/smali-fat.jar"; SMALI_CP=""
+else
+  SMALI_JAR="${SMALI_DIR}/smali-2.5.2.jar"; SMALI_CP="${BAKSMALI_CP}"
+fi
+baksmali() { if [ -n "${BAKSMALI_CP}" ]; then "$JAVA" -cp "${BAKSMALI_CP}" org.jf.baksmali.Main "$@"; else "$JAVA" -jar "${BAKSMALI_JAR}" "$@"; fi; }
+smali()    { if [ -n "${SMALI_CP}" ];    then "$JAVA" -cp "${SMALI_CP}" org.jf.smali.Main "$@";    else "$JAVA" -jar "${SMALI_JAR}" "$@"; fi; }
+# 本仓库 apktool 只有 jar（无 win 的 apktool/apktool 包装脚本）⇒ 两平台都走 java -jar
+APKTOOL_JAR="${APKTOOL_JAR:-${NIXIANG}/01_tools/apktool/apktool.jar}"
 AAPT2="${AAPT2:-${NIXIANG_BUILD_TOOLS}/aapt2.exe}"
 [ -f "$AAPT2" ] || AAPT2="${NIXIANG_BUILD_TOOLS}/aapt2"
 PY="${NIXIANG_PYTHON:-python}"
@@ -77,6 +116,7 @@ if [[ -n "${NIXIANG_JAVA17:-}" ]]; then
   export JAVA_HOME="${NIXIANG_JAVA17}"
   export PATH="${NIXIANG_JAVA17}/bin:${PATH}"
 fi
+apktool() { "$JAVA" -jar "${APKTOOL_JAR}" "$@"; }
 
 die() { echo "ERROR: $*" >&2; exit 1; }
 md5f() { if command -v md5sum >/dev/null 2>&1; then md5sum "$1" | awk '{print $1}'; else md5 -q "$1"; fi; }
@@ -90,10 +130,13 @@ mkdir -p "${ASCII_ROOT}" "${OUT_DIR}" "${CACHE_DIR}"
 [[ -f "${BASE_APK}" ]] || die "缺底包 ${BASE_APK}（HZSJ_BASE_APK=... 覆盖）"
 [[ -f "${DEX6_SRC}" ]] || die "缺 ${DEX6_SRC}（先跑 04_scripts/魂坠深境/hzsj_build_dex.sh）"
 [[ -f "${SO_SRC}" ]]   || die "缺 ${SO_SRC}（先跑 04_scripts/魂坠深境/hzsj_build_so.sh）"
+[[ -f "${LIBCXX_SRC}" ]] || die "缺 ${LIBCXX_SRC}（NDK 构建顺产出，被删就跑 hzsj_build_so.sh）"
 [[ -f "${JAVA}" ]]     || die "缺 java: ${JAVA}"
-[[ -f "${BAKSMALI}" && -f "${SMALI}" ]] || die "缺 smali 工具（01_tools/smali）"
+[[ -f "${APKTOOL_JAR}" ]] || die "缺 apktool.jar: ${APKTOOL_JAR}"
+[[ -f "${BAKSMALI_JAR}" && -f "${SMALI_JAR}" ]] || die "缺 smali 工具（01_tools/smali：baksmali/smali jar）"
 [[ -x "${ZIPALIGN}" ]] || die "缺 zipalign: ${ZIPALIGN}"
 [[ -x "${APKSIGNER}" || -f "${APKSIGNER}" ]] || die "缺 apksigner: ${APKSIGNER}"
+[[ -f "${AAPT2}" ]] || die "缺 aapt2: ${AAPT2}（build-tools）"
 
 LOCK_DIR="/tmp/hzsj_surgical.lockdir"
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
@@ -113,28 +156,51 @@ bmd5="$(md5f "${BASE_APK}")"
 [[ "${bmd5}" == "${BASE_MD5_EXPECT}" ]] || die "底包指纹不符 ${bmd5}（期望 ${BASE_MD5_EXPECT}）"
 for s in 'com/starry/magic/StarryInitProvider' 'com/starry/magic/menu/MenuService'; do
   c="$(LC_ALL=C grep -ac "$s" "${DEX6_SRC}" || true)"
-  [[ "${c}" -ge 1 ]] || die "classes6.dex 缺 ${s}"
+  [[ "${c}" -ge 1 ]] || die "${DEX_ADD_NAME} 缺 ${s}"
 done
 for s in 'Toggle_秒杀' 'Toggle_自动胜利' '[Hzsj]'; do
   LC_ALL=C grep -aq "$s" "${SO_SRC}" || die "so 缺 ${s}"
 done
-echo "[check] 底包 ${bsize} B (md5 ${bmd5}) / dex6 $(wc -c <"${DEX6_SRC}" | tr -d ' ') B / so $(wc -c <"${SO_SRC}" | tr -d ' ') B ok"
+echo "[check] VERSION=${VERSION} 底包 ${bsize} B (md5 ${bmd5}) / ${DEX_ADD_NAME} $(wc -c <"${DEX6_SRC}" | tr -d ' ') B / so $(wc -c <"${SO_SRC}" | tr -d ' ') B ok"
 
-echo "[2/6] classes5.dex → 去 com/starry 重建"
-if [[ ! -f "${CACHE_CLS5}" ]]; then
+# 底包结构闸门：既不能已含注入目标（重复注入），也不能缺替换目标
+"${PY}" - "${BASE_APK}" "${DEX_ADD_NAME}" <<'PY' || die "底包结构闸门不过"
+import sys, zipfile
+z = zipfile.ZipFile(sys.argv[1]); names = set(z.namelist()); add = sys.argv[2]
+if add in names:
+    sys.exit('底包已含 %s（重复注入嫌疑：底包选错或 dex 序号冲突）' % add)
+for k in ('AndroidManifest.xml',):
+    if k not in names:
+        sys.exit('底包缺条目 %s' % k)
+so = 'lib/arm64-v8a/libstarry_magic.so'
+print('  底包结构 ok（无 %s；%s %s）' % (add, so, '可替换' if so in names else '待新增'))
+PY
+
+echo "[2/6] 旧菜单清理（仅 VERSION=1.1.1 底包需要：classes5.dex 去 com/starry）"
+if [[ -z "${LEGACY_MENU_DEX}" ]]; then
+  # 官方 1.1.2 原包：4 个 dex 内 com/starry 命中 0（已核，见 10_docs/魂坠深境/重构_1.1.2_*.md）
+  # ⇒ 无旧菜单可清；同时确认底包确实没有 classes5.dex（否则 DEX_ADD_NAME 会撞名）
+  "${PY}" - "${BASE_APK}" <<'PY' || die "官方底包含 classes5.dex（dex 序号冲突，改 HZSJ_DEX_NAME）"
+import sys, zipfile
+z = zipfile.ZipFile(sys.argv[1])
+if 'classes5.dex' in z.namelist():
+    sys.exit('底包已含 classes5.dex')
+print('  跳过：官方底包无旧菜单（com/starry 命中 0）且无 classes5.dex')
+PY
+elif [[ ! -f "${CACHE_CLS5}" ]]; then
   "${PY}" - "${BASE_APK}" "${WORKW}/classes5.dex" <<'PY'
 import sys, zipfile
 z = zipfile.ZipFile(sys.argv[1])
 open(sys.argv[2], 'wb').write(z.read('classes5.dex'))
 print('  classes5.dex extracted')
 PY
-  "$JAVA" -jar "${BAKSMALI}" d -o "${WORKW}/dis5" "${WORKW}/classes5.dex" >"${WORK}/baksmali.log" 2>&1 \
+  baksmali d -o "${WORKW}/dis5" "${WORKW}/classes5.dex" >"${WORK}/baksmali.log" 2>&1 \
     || { tail -20 "${WORK}/baksmali.log" >&2; die "baksmali 失败"; }
   [[ -d "${WORK}/dis5/com/starry" ]] || die "classes5 反编后未找到 com/starry（底包结构变化？）"
   n_starry="$(find "${WORK}/dis5/com/starry" -name '*.smali' | wc -l | tr -d ' ')"
   n_total="$(find "${WORK}/dis5" -name '*.smali' | wc -l | tr -d ' ')"
   rm -rf "${WORK}/dis5/com/starry"
-  "$JAVA" -jar "${SMALI}" a -o "${WORKW}/classes5_nostarry.dex" "${WORKW}/dis5" >"${WORK}/smali.log" 2>&1 \
+  smali a -o "${WORKW}/classes5_nostarry.dex" "${WORKW}/dis5" >"${WORK}/smali.log" 2>&1 \
     || { tail -20 "${WORK}/smali.log" >&2; die "smali 重汇编失败"; }
   [[ -f "${WORK}/classes5_nostarry.dex" ]] || die "smali 未产出 dex"
   if LC_ALL=C grep -aq 'com/starry/magic' "${WORK}/classes5_nostarry.dex"; then
@@ -152,7 +218,7 @@ fi
 
 echo "[3/6] 二进制 Manifest（+StarryInitProvider；application/Factory 零改动）"
 if [[ ! -f "${CACHE_MF}" ]]; then
-  "${APKTOOL}" d -f -s --no-assets -o "${WORK}/mf_dec" "${BASE_APK}" >"${WORK}/apktool_d.log" 2>&1 \
+  apktool d -f -s --no-assets -o "${WORK}/mf_dec" "${BASE_APK}" >"${WORK}/apktool_d.log" 2>&1 \
     || { tail -20 "${WORK}/apktool_d.log" >&2; die "apktool d 失败"; }
   "${PY}" - "${WORK}/mf_dec/AndroidManifest.xml" "${AUTHORITY}" <<'PY'
 from pathlib import Path
@@ -199,7 +265,7 @@ p.write_text(t, encoding='utf-8')
 print('  manifest patched (provider+service+perms)，application 零改动')
 PY
   rm -rf "${WORK}/mf_dec"/smali* 2>/dev/null || true
-  "${APKTOOL}" b -f "${WORK}/mf_dec" -o "${WORK}/mf_only.apk" >"${WORK}/apktool_b.log" 2>&1 \
+  apktool b -f "${WORK}/mf_dec" -o "${WORK}/mf_only.apk" >"${WORK}/apktool_b.log" 2>&1 \
     || { tail -20 "${WORK}/apktool_b.log" >&2; die "apktool b 失败"; }
   unzip -p "${WORK}/mf_only.apk" AndroidManifest.xml > "${CACHE_MF}" || die "提取二进制 manifest 失败"
   echo "  缓存 ${CACHE_MF} ($(wc -c <"${CACHE_MF}" | tr -d ' ') B)"
@@ -228,17 +294,19 @@ for need in \
 done
 echo "  manifest ok（provider/service/Factory/权限均在）"
 
-echo "[5/6] surgical zip merge（dex5 重建 + dex6 新增 + manifest + so）"
-"${PY}" - "${BASE_APK}" "${CACHE_CLS5}" "${CACHE_MF}" "${DEX6_SRC}" "${SO_SRC}" "${MERGED}" <<'PY'
+echo "[5/6] surgical zip merge（manifest + ${DEX_ADD_NAME} 新增 + so${LEGACY_MENU_DEX:+ + dex5 重建}）"
+"${PY}" - "${BASE_APK}" "${CACHE_CLS5}" "${CACHE_MF}" "${DEX6_SRC}" "${DEX_ADD_NAME}" "${SO_SRC}" "${LIBCXX_SRC}" "${MERGED}" <<'PY'
 import os, sys, zipfile
 
-orig, cls5, mf, dex6, so, out = sys.argv[1:7]
+orig, cls5, mf, dex_src, dex_name, so, libcxx, out = sys.argv[1:9]
+LEGACY = bool(cls5) and os.path.isfile(cls5)
+
 REPL = {
     'AndroidManifest.xml': mf,
-    'classes5.dex': cls5,
-    'lib/arm64-v8a/libstarry_magic.so': so,
 }
-ADD = {'classes6.dex': dex6}
+ADD = {dex_name: dex_src}
+if LEGACY:
+    REPL['classes5.dex'] = cls5
 
 def is_sig(name):
     u = name.upper()
@@ -248,8 +316,25 @@ def is_sig(name):
 
 zin = zipfile.ZipFile(orig, 'r')
 names = set(zin.namelist())
-if 'classes6.dex' in names:
-    sys.exit('底包已含 classes6.dex（重复注入嫌疑）—— 请核对底包或改名')
+if dex_name in names:
+    sys.exit('底包已含 %s（重复注入嫌疑）—— 请核对底包或改名' % dex_name)
+
+# so（注入目标）：底包已有 = 替换（1.1.1 星光底包）；没有 = 新增（官方原包）
+SO_ENTRY = 'lib/arm64-v8a/libstarry_magic.so'
+if SO_ENTRY in names:
+    REPL[SO_ENTRY] = so
+else:
+    ADD[SO_ENTRY] = so
+
+# libc++_shared.so：新 so 的 DT_NEEDED（硬依赖）。官方 1.1.2 原包不带 ⇒ 必须注入，
+# 否则 dlopen 失败：cannot locate symbol / library "libc++_shared.so" not found。
+CXX_ENTRY = 'lib/arm64-v8a/libc++_shared.so'
+if CXX_ENTRY in names:
+    print('  底包自带 %s（%d B）→ 不覆盖' % (CXX_ENTRY, zin.getinfo(CXX_ENTRY).file_size))
+else:
+    ADD[CXX_ENTRY] = libcxx
+    print('  底包缺 %s → 注入 NDK 同源副本 %d B' % (CXX_ENTRY, os.path.getsize(libcxx)))
+
 for k in REPL:
     if k not in names:
         sys.exit('底包缺条目 %s' % k)
@@ -311,21 +396,27 @@ cp -f "${WORK}/final.apk" "${FINAL}"
 "${APKSIGNER}" verify --print-certs "${FINAL}" > "${WORK}/certs.txt" 2>&1 || true
 LC_ALL=C grep -qi "${CERT_SHA256}" "${WORK}/certs.txt" || die "签发证书 SHA-256 不符"
 
-"${PY}" - "${FINAL}" "${SO_SRC}" "${CACHE_CLS5}" <<'PY'
-import sys, zipfile, hashlib
-apk, so, cls5 = sys.argv[1:4]
+"${PY}" - "${FINAL}" "${SO_SRC}" "${LIBCXX_SRC}" "${CACHE_CLS5}" "${DEX_ADD_NAME}" <<'PY'
+import sys, zipfile, hashlib, os
+apk, so, libcxx, cls5, dex_name = sys.argv[1:6]
+legacy = bool(cls5) and os.path.isfile(cls5)
 z = zipfile.ZipFile(apk)
-def md5b(b): return hashlib.md5(b).hexdigest()
+md5b = lambda b: hashlib.md5(b).hexdigest()
 in_so = md5b(z.read('lib/arm64-v8a/libstarry_magic.so'))
-exp_so = md5b(open(so, 'rb').read())
-assert in_so == exp_so, 'so md5 mismatch %s != %s' % (in_so, exp_so)
-d6 = z.read('classes6.dex')
-for s in (b'StarryInitProvider', b'com/starry/magic/menu/MenuService'):
-    assert s in d6, 'classes6.dex missing %s' % s.decode()
-d5 = z.read('classes5.dex')
-assert b'com/starry/magic' not in d5, 'classes5.dex still has com/starry'
-assert b'kotlin' in d5, 'classes5.dex lost kotlin'
-print('  包内校验 ok: so md5=%s / dex6 含新菜单 / dex5 无旧菜单且保留 kotlin' % in_so)
+assert in_so == md5b(open(so, 'rb').read()), 'so md5 mismatch %s' % in_so
+# libc++_shared.so：底包自带或注入，都必须存在且优先核对为注入源（新 so 硬依赖）
+assert 'lib/arm64-v8a/libc++_shared.so' in z.namelist(), 'libc++_shared.so 缺失（dlopen 必失败）'
+d = z.read(dex_name)
+for s in (b'StarryInitProvider', b'com/starry/magic/menu/MenuService',
+          b'com/starry/magic/bridge/ModBridge', b'com/starry/magic/ota/StarryNativeLoad'):
+    assert s in d, '%s missing %s' % (dex_name, s.decode())
+msg = 'so md5=%s / %s 含新菜单' % (in_so, dex_name)
+if legacy:
+    d5 = z.read('classes5.dex')
+    assert b'com/starry/magic' not in d5, 'classes5.dex still has com/starry'
+    assert b'kotlin' in d5, 'classes5.dex lost kotlin'
+    msg += ' / dex5 无旧菜单且保留 kotlin'
+print('  包内校验 ok: %s' % msg)
 PY
 fsize="$(wc -c <"${FINAL}" | tr -d ' ')"
 echo "[done] ${FINAL} (${fsize} B)"

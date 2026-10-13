@@ -4,10 +4,13 @@
 # 照 2026-10-05 绝区零 zzz_build_dex.sh（win 本机实测路线）：
 #   - 本机无 gradle 发行版；javac+d8 全离线（JDK17 + build-tools）
 #   - 源码 = mod菜单/starry-mod-menu/app/src/main/java（全量通用菜单）
-#   - 产物业内 dex 序号：现包 classes.dex…classes5.dex ⇒ 新菜单 = classes6.dex
-#     （next_free_dex.py 复核；由 surgical 脚本消费）
+#   - 补 `R.java` / `BuildConfig.java` 两个**构建期桩**（HEAD 源码新引用；本机无 aapt2/gradle）。
+#     R 里出现的 id/string/drawable 全部由命令枚举得来（见第 3 步注释），新增引用时同步补桩。
+#   - 产物业内 dex 序号 = 包内最大 classesN.dex 的下一位（官方 1.1.2 只到 classes4.dex ⇒ classes5.dex；
+#     HZSJ_DEX_NAME 可覆盖）。**surgical 脚本的 DEX_ADD_NAME 必须与此一致**。
 #
 # 用法：bash 04_scripts/魂坠深境/hzsj_build_dex.sh
+#      HZSJ_DEX_NAME=classes6.dex bash ...   # 覆盖产出 dex 名（如给 5-dex 版本号底包）
 set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,7 +20,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAR="$NIXIANG_ROOT/mod菜单/starry-mod-menu"
 SRC="$STAR/app/src/main/java"
 TPL_DIR="$STAR/templates/hzsj_menu_20261007"
-DEX_NAME="classes6.dex"
+DEX_NAME="${HZSJ_DEX_NAME:-classes5.dex}"
 LOG="$NIXIANG_ROOT/06_dumped/魂坠深境/_dex_build.log"
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -67,27 +70,69 @@ mkdir -p "$STAGE_ROOT/src" "$STAGE_ROOT/gen/com/starry/magic" "$STAGE_ROOT/class
 echo "[1/5] 源拷贝 → $STAGE_ROOT/src（ASCII 路径）"
 cp -a "$SRC/." "$STAGE_ROOT/src/" || die "源拷贝失败"
 
-# --- 3. 生成 R 桩（本机无 aapt2 资源编译；仅 MainActivity 用 3 个 id + 1 layout）---
+# --- 3. 生成 R / BuildConfig 桩（本机无 aapt2 资源编译、无 gradle）---
+# 枚举来源（勿手抄）：grep -rhoE "R\.(id|layout|drawable|string)\.[A-Za-z0-9_]+" app/src/main/java | sort -u
+#   + grep -rn "BuildConfig\." app/src/main/java
+# 这些 id/string 只被游戏内不启动的 MainActivity / 剪贴板对话框引用，取值可任意（不查 resources.arsc）。
 cat > "$STAGE_ROOT/gen/com/starry/magic/R.java" <<'EOF'
 package com.starry.magic;
-/** 构建期 R 桩：本机无 aapt2 资源编译。仅 MainActivity 引用（游戏内不启动该 Activity）。 */
+/** 构建期 R 桩：本机无 aapt2 资源编译。仅供编译期符号解析（游戏内不启动该 Activity）。 */
 public final class R {
     private R() {}
     public static final class layout {
         private layout() {}
         public static final int activity_main = 0x7f010001;
     }
+    public static final class drawable {
+        private drawable() {}
+        public static final int ic_menu_info_details  = 0x7f040001;
+        public static final int stat_sys_download_done = 0x7f040002;
+    }
+    public static final class string {
+        private string() {}
+        public static final int copy      = 0x7f050001;
+        public static final int cut       = 0x7f050002;
+        public static final int paste     = 0x7f050003;
+        public static final int selectAll = 0x7f050004;
+    }
     public static final class id {
         private id() {}
-        public static final int btn_pass_through_test = 0x7f020001;
-        public static final int tv_pass_through_count  = 0x7f020002;
-        public static final int btn_request_overlay    = 0x7f020003;
+        public static final int background            = 0x7f020001;
+        public static final int btn_cdn_inject        = 0x7f020002;
+        public static final int btn_diag_copy         = 0x7f020003;
+        public static final int btn_diag_refresh      = 0x7f020004;
+        public static final int btn_diag_share        = 0x7f020005;
+        public static final int btn_pass_through_test = 0x7f020006;
+        public static final int btn_request_allfiles  = 0x7f020007;
+        public static final int btn_request_overlay   = 0x7f020008;
+        public static final int cb_cdn_auto_close     = 0x7f020009;
+        public static final int copy                  = 0x7f02000a;
+        public static final int cut                   = 0x7f02000b;
+        public static final int paste                 = 0x7f02000c;
+        public static final int progress              = 0x7f02000d;
+        public static final int secondaryProgress     = 0x7f02000e;
+        public static final int selectAll             = 0x7f02000f;
+        public static final int tv_cdn_status         = 0x7f020010;
+        public static final int tv_diag_detail        = 0x7f020011;
+        public static final int tv_diag_headline      = 0x7f020012;
+        public static final int tv_pass_through_count = 0x7f020013;
     }
 }
 EOF
 
+cat > "$STAGE_ROOT/gen/com/starry/magic/BuildConfig.java" <<'EOF'
+package com.starry.magic;
+/** 构建期 BuildConfig 桩：本机无 gradle（Diag 读版本串 / MainActivity 读 DEBUG）。 */
+public final class BuildConfig {
+    private BuildConfig() {}
+    public static final boolean DEBUG = false;
+    public static final String  VERSION_NAME = "1.1.2";
+    public static final int     VERSION_CODE = 43;
+}
+EOF
+
 echo "[2/5] javac 编译"
-(find "$STAGE_ROOT/src" -name '*.java'; printf '%s\n' "$STAGE_ROOT/gen/com/starry/magic/R.java") > "$STAGE_ROOT/srcs.txt"
+(find "$STAGE_ROOT/src" -name '*.java'; printf '%s\n' "$STAGE_ROOT/gen/com/starry/magic/R.java" "$STAGE_ROOT/gen/com/starry/magic/BuildConfig.java") > "$STAGE_ROOT/srcs.txt"
 : > "$STAGE_ROOT/argv.txt"
 while IFS= read -r f; do printf '"%s"\n' "$(w "$f")" >> "$STAGE_ROOT/argv.txt"; done < "$STAGE_ROOT/srcs.txt"
 
