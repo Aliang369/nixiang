@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-# 收官交付物打包：唯一正式 APK、可选 icon 512/144、可选菜单模板副本、可选裁剪清单。
+# 收官交付物打包：唯一正式 APK、可选 icon（单张原图 icon_{游戏}_{边长}.png）、可选菜单模板副本、可选裁剪清单。
 # icon/菜单模板是**按需交付物**：只有显式传 --icon-source/--menu-template 才生成；两者都不传时
 # 不创建 delivery 目录。（使用时机：新游戏首次交付，或用户当轮明确说「图标和菜单模板」。2026-10-05 用户定）
+# ⚠️ 图标命名口径（2026-10-14 用户 m00631/m00668 定案，取代旧的 512+144 双档）：
+#   delivery 目录内**只放一张原图** `icon_{游戏}_{边长}.png`，边长＝源图自身像素（不做放大/缩小）；
+#   图标源没变时**不要重出**（沿用已有交付文件）。旧写法 `icon_{游戏}_512.png` / `_144.png` 已废弃。
 # 默认 dry-run；--apply 才写入 delivery 目录和裁剪 08_output。
 set -euo pipefail
 
@@ -9,6 +12,8 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 GAME=""
 APK=""
 ICON_SOURCE=""
+ICON_EDGE=""       # 源图边长（px），传给 --icon-source 时探测
+ICON_NAME=""       # 落盘文件名 icon_{游戏}_{边长}.png
 MENU_TEMPLATE=""
 DATE="$(date +%Y%m%d)"
 MODE="dry-run"
@@ -52,6 +57,8 @@ usage() {
     都不传 ⇒ 本次不创建 delivery 目录、不生成任何文件（也不再自动扫描 10_docs 下的模板）。
     使用时机：**新游戏首次交付**（08_output/{游戏} 下还没有 delivery_*）或用户当轮明确说
     「图标和菜单模板」；其余收尾默认不传，避免每次都生成不需要的交付物。
+  - icon **只落一张原图** `icon_{游戏}_{边长}.png`（边长＝源图自身像素，2026-10-14 用户 m00631/m00668
+    定案，旧 `_512.png`/`_144.png` 双档已废弃）；图标源与已有交付件相同时**不要重出**。
   - 传 --menu-template 时：字段严格自检 + 复制一份 menu_template.json 到 delivery 目录。
   - 菜单模板自检含分组行门禁（features 不得出现 Category_* 或纯分组名）+ feat_num 升序/去重/
     缺口提示，依据 `10_docs/_templates/菜单模板_规范与示例.md` §2。遗留模板确实带分组行时
@@ -200,6 +207,26 @@ if [[ -n "$ICON_SOURCE" ]]; then
     pick_py_with_pil >/dev/null \
       || { echo "ERROR: 无 sips 且无可用的 python+Pillow 生成 icon（可设 PYTHON=/path/to/python）" >&2; exit 1; }
   fi
+  # 命名口径（2026-10-14 用户 m00631/m00668）：只落一张原图 icon_{游戏}_{边长}.png，边长＝源图自身像素。
+  if command -v sips >/dev/null 2>&1; then
+    ICON_EDGE="$(sips -g pixelWidth "$ICON_SOURCE" 2>/dev/null | awk '/pixelWidth/{print $2}')"
+  fi
+  if ! [[ "${ICON_EDGE:-}" =~ ^[0-9]+$ ]]; then
+    _ICON_PY="$(pick_py_with_pil)" \
+      || { echo "ERROR: 无法探测 icon 源图边长（无 sips 且无可用的 python+Pillow）" >&2; exit 1; }
+    ICON_EDGE="$("$_ICON_PY" -c 'import sys;from PIL import Image;print(Image.open(sys.argv[1]).size[0])' "$(win_path "$ICON_SOURCE")" 2>/dev/null || true)"
+  fi
+  [[ "${ICON_EDGE:-}" =~ ^[0-9]+$ ]] \
+    || { echo "ERROR: 无法读取 icon 源图边长（该文件不是可解析的图片？）: $ICON_SOURCE" >&2; exit 1; }
+  ICON_NAME="icon_${GAME}_${ICON_EDGE}.png"
+  # 「已有则不再生成」提示（历史事故：2026-10-14 底包迁移时把 r17 已交付的同一张图标又生成了一遍）
+  _prev_icon="$(ls -1 "$ROOT/08_output/$GAME"/delivery_*/icon_${GAME}_*.png 2>/dev/null | head -1 || true)"
+  if [[ -n "$_prev_icon" ]]; then
+    echo "[finalize] NOTE: $GAME 已有交付图标 ${_prev_icon}；图标源未变时按「已有则不再生成」**不要重出**（不要传 --icon-source）。"
+  fi
+  if [[ "$ICON_EDGE" -lt 512 ]]; then
+    echo "[finalize] NOTE: 源图仅 ${ICON_EDGE}×${ICON_EDGE}；本口径不做放大，将按原图像素落盘（如需更大尺寸请改从更高密度资源取原图）。" >&2
+  fi
 fi
 
 if [[ -n "$MENU_TEMPLATE" ]]; then
@@ -251,8 +278,8 @@ done
 DELIVERY_ASSETS=""
 DELIVERY_ASSETS_DESC=""
 if [[ -n "$ICON_SOURCE" ]]; then
-  DELIVERY_ASSETS="icon 512/144"
-  DELIVERY_ASSETS_DESC="icon_${GAME}_512.png / icon_${GAME}_144.png"
+  DELIVERY_ASSETS="icon ${ICON_EDGE}×${ICON_EDGE}（原图）"
+  DELIVERY_ASSETS_DESC="icon_${GAME}_${ICON_EDGE}.png"
 fi
 if [[ -n "$MENU_TEMPLATE" ]]; then
   if [[ -n "$DELIVERY_ASSETS" ]]; then
@@ -307,7 +334,7 @@ echo "[finalize] copy_apk=$COPY_APK"
 echo "[finalize] delivery=$DELIVERY"
 if [[ -n "$ICON_SOURCE" ]]; then
   echo "[finalize] icon_source=$ICON_SOURCE"
-  echo "[finalize] icon_out=icon_${GAME}_512.png, icon_${GAME}_144.png"
+  echo "[finalize] icon_out=${ICON_NAME}（原图 ${ICON_EDGE}×${ICON_EDGE}，不放大/不缩小；旧 512/144 双档已废弃）"
 else
   echo "[finalize] icon_source=(未提供，跳过 icon 生成)"
 fi
@@ -328,7 +355,7 @@ fi
 EXPECT_FAIL=0
 if [[ "$EXPECT_ICON" == "1" && -z "$ICON_SOURCE" ]]; then
   echo "ERROR: --expect-icon：本轮点名要交付 icon，但没有 --icon-source <app_icon.png>" >&2
-  echo "       动作：从底包/来源图取一张 ≥512×512 的 app_icon.png，补传后重跑。" >&2
+  echo "       动作：从底包取官方最高密度资源那张原图（png），补传后重跑；本口径保留原图像素，不做放大。" >&2
   EXPECT_FAIL=1
 fi
 if [[ "$EXPECT_MENU_TEMPLATE" == "1" && -z "$MENU_TEMPLATE" ]]; then
@@ -368,7 +395,7 @@ if [[ "$SYNC_DOC" == "1" ]]; then
   fi
   echo "# ③ 回扫提示（--apply 会重写下列产物，请回头核对已写过的摘要行）："
   if [[ -n "$ICON_SOURCE" ]]; then
-    echo "#   - 08_output/${GAME}/delivery_${DATE}/icon_${GAME}_512.png、icon_${GAME}_144.png"
+    echo "#   - 08_output/${GAME}/delivery_${DATE}/${ICON_NAME}（原图 ${ICON_EDGE}×${ICON_EDGE}）"
   fi
   if [[ -n "$MENU_TEMPLATE" ]]; then
     echo "#   - 08_output/${GAME}/delivery_${DATE}/menu_template.json（内容来自 10_docs/${GAME}/$(basename "$MENU_TEMPLATE")）"
@@ -399,22 +426,28 @@ else
   echo "[finalize] 未传任何交付件参数（--icon-source/--menu-template/--usage-doc/--copy-apk）：跳过 delivery 目录（--prune/--sync-doc 照常）。"
 fi
 if [[ -n "$ICON_SOURCE" ]]; then
-  if command -v sips >/dev/null 2>&1; then
-    sips -z 512 512 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_512.png" >/dev/null
-    sips -z 144 144 "$ICON_SOURCE" --out "$DELIVERY/icon_${GAME}_144.png" >/dev/null
+  # 单张原图落盘：PNG 源直接逐字节复制（不重编码、不改像素）；其它格式转成 PNG 但保持原像素。
+  if [[ "$ICON_SOURCE" == "$DELIVERY/$ICON_NAME" ]]; then
+    echo "[finalize] icon 已在位（源==目标，跳过复制）: $DELIVERY/$ICON_NAME"
+  elif [[ "$ICON_SOURCE" == *.png || "$ICON_SOURCE" == *.PNG ]]; then
+    cp -f "$ICON_SOURCE" "$DELIVERY/$ICON_NAME" || { echo "ERROR: icon 落盘失败: $DELIVERY/$ICON_NAME" >&2; exit 1; }
+    echo "[finalize] + ${ICON_NAME}（${ICON_EDGE}×${ICON_EDGE}，原图逐字节复制，未重编码）"
+  elif command -v sips >/dev/null 2>&1; then
+    sips -s format png "$ICON_SOURCE" --out "$DELIVERY/$ICON_NAME" >/dev/null \
+      || { echo "ERROR: icon 转 PNG 失败: $ICON_SOURCE" >&2; exit 1; }
+    echo "[finalize] + ${ICON_NAME}（${ICON_EDGE}×${ICON_EDGE}，转 PNG，原像素未改）"
   else
-    # Windows / Linux 无 sips ⇒ 走 Pillow（跨平台等价实现）
+    # Windows / Linux 无 sips ⇒ 走 Pillow（跨平台等价实现；不 resize）
     PYTHON="$(pick_py_with_pil)" \
       || { echo "ERROR: 无 sips 且无可用的 python+Pillow，无法生成 icon（可设 PYTHON=/path/to/python）" >&2; exit 1; }
     [[ "$PYTHON" == */* ]] && PYTHON="$(win_path "$PYTHON")"
-    "$PYTHON" - "$(win_path "$ICON_SOURCE")" "$(win_path "$DELIVERY")" "$GAME" <<'PYEOF' || { echo "ERROR: icon 生成失败" >&2; exit 1; }
+    "$PYTHON" - "$(win_path "$ICON_SOURCE")" "$(win_path "$DELIVERY/$ICON_NAME")" <<'PYEOF' || { echo "ERROR: icon 生成失败" >&2; exit 1; }
 import sys
 from PIL import Image
-src, out_dir, game = sys.argv[1], sys.argv[2], sys.argv[3]
-im = Image.open(src).convert("RGBA")
-for edge in (512, 144):
-    im.resize((edge, edge), Image.LANCZOS).save(f"{out_dir}/icon_{game}_{edge}.png")
+src, dst = sys.argv[1], sys.argv[2]
+Image.open(src).convert("RGBA").save(dst)   # 原像素，不 resize
 PYEOF
+    echo "[finalize] + ${ICON_NAME}（${ICON_EDGE}×${ICON_EDGE}，原像素未改）"
   fi
 fi
 if [[ -n "$MENU_TEMPLATE" ]]; then

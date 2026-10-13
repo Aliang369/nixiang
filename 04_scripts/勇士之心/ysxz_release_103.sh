@@ -236,8 +236,8 @@ cat > "$DELIVER/说明.md" <<EOF
 | classes4.dex | 菜单外观（星空面板/星光紫）+ 菜单授权链路 | ${DEX_MD5} |
 | lib/arm64-v8a/libstarry_magic.so | 菜单清单（7 行）+ 各功能原生实现 | ${SO_MD5} |
 
-同目录另有 icon_${GAME}_512.png / icon_${GAME}_144.png（由 finalize_game_delivery.sh 从
-10_docs/${GAME}/yszzx_icon.png 生成）、menu_template.json（菜单模板副本），以及
+同目录另有 icon_${GAME}_{原图边长}.png（2026-10-14 起单张原图口径；由 finalize_game_delivery.sh 从
+10_docs/${GAME}/yszzx_icon.png 逐字节落盘，不放大）、menu_template.json（菜单模板副本），以及
 SHA256SUMS.txt（在 delivery 目录里执行 sha256sum -c SHA256SUMS.txt 可校验主包）。
 两个被替换条目本身不复制副本（构建产物，可 --build 复现），哈希见 SHA256SUMS.txt 注释。
 
