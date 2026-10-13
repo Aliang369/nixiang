@@ -19,7 +19,14 @@
 #      名字 = 包内最大 classesN.dex 的下一位（1.1.1 ⇒ classes6.dex，1.1.2 ⇒ classes5.dex）
 #   2) AndroidManifest.xml 加 <provider com.starry.magic.StarryInitProvider>
 #      + <service MenuService>(foregroundServiceType=specialUse) + 两条权限
-#      （application/appComponentFactory 零改动；旧包已有则自动跳过）→ 缓存复用
+#      **+ appComponentFactory: androidx.core.app.CoreComponentFactory
+#        → com.starry.magic.sign.SignSpoofAppComponentFactory**（application@name 零改动）
+#      【2026-10-13 修正】原为「Factory 零改动、签名只在 Provider.onCreate 装」，用户实测
+#      1.1.2 报「TapTap 签名校验没处理」：Provider.onCreate 晚于 Application 实例化与
+#      TapSDK 冷启动读取签名（TapSignKit.getSign → pm.getPackageInfo(pkg,0x40)），
+#      代理由此漏装 ⇒ 改由 AppComponentFactory.instantiateApplication 在 Application
+#      实例化前 install()（本仓库通用做法，见 surgical_gjc2_1.1.9.sh / surgical_mrfzz.sh）。
+#      SignSpoofAppComponentFactory 把非 Application 组件委托给原 CoreComponentFactory。
 #      ★服务在前台跑需要 SYSTEM_ALERT_WINDOW（悬浮窗）+ FOREGROUND_SERVICE_SPECIAL_USE，
 #        旧星光底包已有，官方 1.1.2 原包**没有**，由本步补
 #   3) lib/arm64-v8a/libstarry_magic.so 替换（libs_hzsj 产物，含设备无关指针判据）
@@ -216,7 +223,7 @@ else
   fi
 fi
 
-echo "[3/6] 二进制 Manifest（+StarryInitProvider；application/Factory 零改动）"
+echo "[3/6] 二进制 Manifest（+StarryInitProvider；appComponentFactory → SignSpoofAppComponentFactory）"
 if [[ ! -f "${CACHE_MF}" ]]; then
   apktool d -f -s --no-assets -o "${WORK}/mf_dec" "${BASE_APK}" >"${WORK}/apktool_d.log" 2>&1 \
     || { tail -20 "${WORK}/apktool_d.log" >&2; die "apktool d 失败"; }
@@ -225,8 +232,15 @@ from pathlib import Path
 import sys
 p = Path(sys.argv[1]); authority = sys.argv[2]
 t = p.read_text(encoding='utf-8')
-if 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"' not in t:
-    raise SystemExit('manifest assertion failed: missing appComponentFactory')
+OLD_FACTORY = 'androidx.core.app.CoreComponentFactory'
+NEW_FACTORY = 'com.starry.magic.sign.SignSpoofAppComponentFactory'
+if NEW_FACTORY in t:
+    print('  manifest 已是星光 Factory，跳过替换')
+elif 'android:appComponentFactory="%s"' % OLD_FACTORY in t:
+    t = t.replace('android:appComponentFactory="%s"' % OLD_FACTORY,
+                  'android:appComponentFactory="%s"' % NEW_FACTORY, 1)
+else:
+    raise SystemExit('manifest assertion failed: 既无 %s 也无 %s' % (OLD_FACTORY, NEW_FACTORY))
 perms = []
 if "SYSTEM_ALERT_WINDOW" not in t:
     perms.append('    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>')
@@ -262,7 +276,7 @@ if "com.starry.magic.menu.MenuService" not in t:
 '''
     t = t.replace("</application>", svc + "\n    </application>", 1)
 p.write_text(t, encoding='utf-8')
-print('  manifest patched (provider+service+perms)，application 零改动')
+print('  manifest patched (provider+service+perms+SignSpoof Factory)，application@name 零改动')
 PY
   rm -rf "${WORK}/mf_dec"/smali* 2>/dev/null || true
   apktool b -f "${WORK}/mf_dec" -o "${WORK}/mf_only.apk" >"${WORK}/apktool_b.log" 2>&1 \
@@ -270,7 +284,7 @@ PY
   unzip -p "${WORK}/mf_only.apk" AndroidManifest.xml > "${CACHE_MF}" || die "提取二进制 manifest 失败"
   echo "  缓存 ${CACHE_MF} ($(wc -c <"${CACHE_MF}" | tr -d ' ') B)"
 else
-  echo "  缓存命中 ${CACHE_MF}"
+  echo "  缓存命中 ${CACHE_MF}（若为 2026-10-13 前的旧缓存，[4/6] 的 Factory 断言会失败；删缓存重跑即可）"
 fi
 
 echo "[4/6] 二进制 Manifest 回读校验（aapt2）"
@@ -287,7 +301,7 @@ PY
 for need in \
   "com.starry.magic.StarryInitProvider" \
   "com.starry.magic.menu.MenuService" \
-  "androidx.core.app.CoreComponentFactory" \
+  "com.starry.magic.sign.SignSpoofAppComponentFactory" \
   "android.permission.SYSTEM_ALERT_WINDOW" \
   "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"; do
   grep -q "$need" "${WORK}/tree_new.txt" || die "新 manifest 缺 $need"
@@ -396,9 +410,9 @@ cp -f "${WORK}/final.apk" "${FINAL}"
 "${APKSIGNER}" verify --print-certs "${FINAL}" > "${WORK}/certs.txt" 2>&1 || true
 LC_ALL=C grep -qi "${CERT_SHA256}" "${WORK}/certs.txt" || die "签发证书 SHA-256 不符"
 
-"${PY}" - "${FINAL}" "${SO_SRC}" "${LIBCXX_SRC}" "${CACHE_CLS5}" "${DEX_ADD_NAME}" <<'PY'
-import sys, zipfile, hashlib, os
-apk, so, libcxx, cls5, dex_name = sys.argv[1:6]
+"${PY}" - "${FINAL}" "${SO_SRC}" "${LIBCXX_SRC}" "${CACHE_CLS5}" "${DEX_ADD_NAME}" "${AAPT2}" <<'PY'
+import sys, zipfile, hashlib, os, subprocess
+apk, so, libcxx, cls5, dex_name, aapt2 = sys.argv[1:7]
 legacy = bool(cls5) and os.path.isfile(cls5)
 z = zipfile.ZipFile(apk)
 md5b = lambda b: hashlib.md5(b).hexdigest()
@@ -411,6 +425,23 @@ for s in (b'StarryInitProvider', b'com/starry/magic/menu/MenuService',
           b'com/starry/magic/bridge/ModBridge', b'com/starry/magic/ota/StarryNativeLoad'):
     assert s in d, '%s missing %s' % (dex_name, s.decode())
 msg = 'so md5=%s / %s 含新菜单' % (in_so, dex_name)
+# appComponentFactory 改写是 2026-10-13「TapTap 签名校验时机」修复的核心；最终包内回读确认。
+# 注：二进制 AXML 的字符串池是 UTF-16，不能按 bytes 搜 ASCII —— 用 aapt2 dump 成文本再断言。
+os.makedirs('/tmp/hzsj_mfchk', exist_ok=True)
+mfx = '/tmp/hzsj_mfchk/mf.zip'
+with zipfile.ZipFile(mfx, 'w', zipfile.ZIP_DEFLATED) as wz:
+    wi = zipfile.ZipInfo('AndroidManifest.xml')
+    wi.compress_type = zipfile.ZIP_DEFLATED
+    wz.writestr(wi, z.read('AndroidManifest.xml'))
+# aapt2 dump xmltree 只吃 zip/apk（不给裸 axml，会 rc=1）
+r = subprocess.run([aapt2, 'dump', 'xmltree', '--file', 'AndroidManifest.xml', mfx],
+                   capture_output=True, text=True)
+assert r.returncode == 0, 'aapt2 dump 失败: %s' % r.stderr[-300:]
+tree = r.stdout
+assert 'com.starry.magic.sign.SignSpoofAppComponentFactory' in tree, \
+    'manifest 未换 SignSpoofAppComponentFactory（签名伪装会晚于 TapSDK 冷启动）'
+assert 'com.starry.magic.StarryInitProvider' in tree, 'manifest 缺 StarryInitProvider'
+msg += ' / manifest Factory=SignSpoof'
 if legacy:
     d5 = z.read('classes5.dex')
     assert b'com/starry/magic' not in d5, 'classes5.dex still has com/starry'

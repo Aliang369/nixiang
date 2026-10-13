@@ -53,7 +53,7 @@
 | 偶像梦幻祭2 | 2026-09-15 | 已交付/待核验 | [摘要](games/偶像梦幻2.md) |
 | 大话蜀山 | 2026-09-14 | 已交付/待核验 | [摘要](games/大话蜀山.md) |
 | 凡尘西游修真记 | 2026-09-14 | 已收尾 | [摘要](games/凡尘西游修真记.md) |
-| 魂坠深境 | 2026-10-13 | ✅ **官方 1.1.2（vc43）复刻星空版收官，真机 f9a116a2 六功能用户实测全通过**。底包=设备只读拉取官方原包（`4890e805…`，4 dex 无 classes5 ⇒ 免去旧菜单步）；菜单 dex 取新名 `classes5.dex`、so 补注入官方缺的 `libc++_shared.so`；签名不同 ⇒ 卸载重装（root 静默，外部 744MB 热更资源保留）。正式包 md5 `43f6f83d…`/sha256 `d6160c26c4f6…`；遗留：MuMu/小米未复测 |
+| 魂坠深境 | 2026-10-14 | ✅ **官方 1.1.2（vc43）复刻星空版收官，真机 f9a116a2 六功能用户实测全通过**；同日修 TapTap 两项：①签名伪装改由 `appComponentFactory=SignSpoofAppComponentFactory` 在 Application 实例化前安装，②包名补进 `TapLoginForceWeb` 白名单强制内嵌网页登录（日志实证 `loginType mobile_client -> embedded_web`，TapTap 客户端零启动）。底包=设备只读拉取官方原包 `4890e805…`；菜单 dex 取新名 `classes5.dex`、so 补注入官方缺的 `libc++_shared.so`；签名不同 ⇒ root 静默卸载重装（外部 744MB 热更资源保留）。正式包 md5 `bfbd061b…`/sha256 `f9f9c98d…`；遗留：MuMu/小米未复测 | [摘要](games/魂坠深境.md) |
 | 我的修仙世界 | 2026-09-13 | 已收尾 | [摘要](games/我的修仙世界.md) |
 | 地城狩猎 | 2026-09-13 | 失败/归档 | [摘要](games/地城狩猎.md) |
 | 迷雾大陆 | 2026-09-12 | 已收尾 | [摘要](games/迷雾大陆.md) |
