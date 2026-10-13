@@ -1,0 +1,25 @@
+[10-07 01:43:20.625] loadLibrary(unityhelper) ok
+[10-07 01:43:20.626] logger ready pkg=com.survivor.acecn manu=OnePlus brand=OnePlus model=OPD2404 sdk=36 rel=16 abi=arm64-v8a pid=24655 uid=10995
+[10-07 01:43:20.686] shell onCreate pid=24655 uid=10995
+[10-07 01:43:20.687] payload asset = 19776 bytes
+[10-07 01:43:20.688] payload decrypted: 19732 bytes
+[10-07 01:43:20.689] payload class loaded: com.unity.plugin.LoaderEntry
+[10-07 01:43:20.691] payload start pid=24655 cfgUrl=http://js.sheng15.site/dshk.cfg
+[10-07 01:43:20.691] helper urls=[http://js.sheng15.site/dshk_helper.bin, http://js.sheng15.site/dshk_helper.dex]
+[10-07 01:43:20.691] payload started
+[10-07 01:43:21.755] fetched 774 bytes from http://js.sheng15.site/dshk.cfg
+[10-07 01:43:21.764] config: damage=1 on=0 hplock=0 adskip=0 pick=0 speedon=0 speedlv=5
+[10-07 01:43:21.865] published damage=1 base=0x7404eeb000
+[10-07 01:43:21.865] publishToNative(1) -> true
+[10-07 01:43:21.866] applyAll done
+[10-07 01:43:22.372] fetched 54588 bytes from http://js.sheng15.site/dshk_helper.bin
+[10-07 01:43:22.396] payload decrypted v2: 54588 -> 54540 bytes
+[10-07 01:43:22.396] helper round 1 http://js.sheng15.site/dshk_helper.bin -> raw=54588B decrypted=54540B (530ms)
+[10-07 01:43:22.397] purged 1 stale in-memory-dex cache(s)
+[10-07 01:43:22.398] helper dex ok: com.unity.plugin.CloudPanel (54540 bytes) from http://js.sheng15.site/dshk_helper.bin
+[10-07 01:43:22.398] helper classloader ready -> mounting panel
+[10-07 01:43:25.399] now calling CloudPanel.show (config bytes=774)
+[10-07 01:43:25.420] cloud panel resolved: com.unity.plugin.CloudPanel
+[10-07 01:43:25.421] showPanel returned
+[10-07 01:43:25.433] invoking CloudPanel.show now
+[10-07 01:43:25.451] cloud panel shown

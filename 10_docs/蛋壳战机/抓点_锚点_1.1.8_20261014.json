@@ -1,0 +1,214 @@
+{
+ "game": "蛋壳战机",
+ "actual_app_label": "弹壳战机",
+ "package": "com.survivor.acecn",
+ "version_name": "1.1.8",
+ "version_code": 35,
+ "serial": "f9a116a2",
+ "engine": "Unity IL2CPP",
+ "date": "2026-10-14",
+ "note": "1.1.8 锚点重抓。1.1.7 的 file offset 全部作废（so 布局已变，四处 file offset 平移 -0x7BAC ~ +0xA5FC 不等）。",
+ "elf": {
+  "file": "lib/arm64-v8a/libil2cpp.so",
+  "rva_to_file_offset_delta": "0x4000",
+  "text_section_file_offset": "0x3682814",
+  "text_section_va": "0x3686814",
+  "text_section_size": "0x5a008fc"
+ },
+ "apk": {
+  "path": "02_apks/蛋壳战机/蛋壳战机_1.1.8_official_from_device.apk",
+  "size": 204412103,
+  "md5": "ccd69304f6f8268279a89e401723e1be",
+  "sha256": "a87f0620c4b1bed83bbc6cbbe21d0522bf986cab68ce6f12a4c0c20332b36cea",
+  "signer": "O=gorilla",
+  "signer_cert_sha256": "4c999c6ac30fde9c5d6c72e2d48e643a9044c26ff353ce53c46a3d4e91a18994",
+  "app_component_factory": "androidx.core.app.CoreComponentFactory",
+  "dex_entries": [
+   "classes.dex",
+   "classes2.dex",
+   "classes3.dex",
+   "classes4.dex"
+  ]
+ },
+ "core_entry_sha256": {
+  "lib/arm64-v8a/libil2cpp.so": "a4463ba74cc96848f312aea170bd874a7daaefbd2cbfd74905f63c74c829a901",
+  "lib/arm64-v8a/libunity.so": "d419ae8ed7677c61b25e82173037546a7cb04cd2e57bb7fbc285a7c07262642a",
+  "lib/arm64-v8a/libmain.so": "9348cd29bcdec5b677c7124b111a2ebb285bfd6550282619c8fd178f2982eb5d",
+  "assets/bin/Data/Managed/Metadata/global-metadata.dat": "eef682fe436738fdd91885d761859c837b5bd53968e7a3d3c77c828886d4c240",
+  "classes.dex": "b3b2811beb849365056af1080a1394c4dbcc830fd1d1e3d9c0bd8a22d89ae577",
+  "classes2.dex": "52bd1e4b78bcd99c35212383d69893870a77f59a8e84ab04a1ad68d9c391f305",
+  "classes3.dex": "10eea5fb1cdd5f5851a2cdf48fccbb082a100f1b1b7167b5648e970a089e2772",
+  "classes4.dex": "196901f26e093ed090e5a348ffd2fb2e98c2ef03c37d0886d19fdad56db59071",
+  "resources.arsc": "dfb1f9093294bb703c1d694126bf42dca17c6d24771ac2d08715b0078d6b5a07"
+ },
+ "menu": {
+  "template": "10_docs/蛋壳战机/dkzj_menu_template.json",
+  "features": [
+   {
+    "button": "Slider_攻击倍率",
+    "feature": 1,
+    "name": "攻击倍率",
+    "type": "range",
+    "range": "1-100"
+   },
+   {
+    "button": "Toggle_上帝模式",
+    "feature": 2,
+    "name": "上帝模式",
+    "type": "toggle"
+   },
+   {
+    "button": "Toggle_偷盗技能",
+    "feature": 3,
+    "name": "偷盗技能",
+    "type": "toggle"
+   },
+   {
+    "button": "Toggle_免广告",
+    "feature": 4,
+    "name": "免广告",
+    "type": "toggle"
+   }
+  ],
+  "menu_note": "2026-10-14 03:52 轮：`Toggle_拦截上报`（原 feature 6）已按用户 m00392 第 2 条取消菜单开关、改为常开注入（hook 仍安装，g_blockReport 恒 true）。2026-10-14 04:10 轮（用户 m00790）：`Toggle_立即胜利`（feature 5）已**整体删除**，菜单现为 4 功能 + Category_功能 = 5 项。"
+ },
+ "hooks": [
+  {
+   "method": "HotFix.BattleLogic.EntityCharacter.ChangeHp(long)",
+   "rva": "0x6c2e314",
+   "file_offset": "0x6c2a314",
+   "prologue_word_1_1_8": "0xa9bb6ffe",
+   "prologue_word_1_1_7": "0xa9bb6ffe",
+   "prologue_same_as_1_1_7": true,
+   "file_offset_1_1_7": "0x6c31ec0"
+  },
+  {
+   "method": "HotFix.BattleLogic.EntityHero.ChangeHp(long)",
+   "rva": "0x6d24180",
+   "file_offset": "0x6d20180",
+   "prologue_word_1_1_8": "0xf81d0ffe",
+   "prologue_word_1_1_7": "0xf81d0ffe",
+   "prologue_same_as_1_1_7": true,
+   "file_offset_1_1_7": "0x6d1c3e4"
+  },
+  {
+   "method": "HotFix.BattleLogic.BattleWorldContext.PostProcessLearnedSkill(EntityCharacter,int,Skill_Main,bool,HeroComponentRandomSkill)",
+   "rva": "0x6ee8654",
+   "file_offset": "0x6ee4654",
+   "prologue_word_1_1_8": "0xd10303ff",
+   "prologue_word_1_1_7": "0xd10303ff",
+   "prologue_same_as_1_1_7": true,
+   "file_offset_1_1_7": "0x6ede058"
+  },
+  {
+   "method": "HotFix.ADModuleMgr.CheckAndPlayVideo(string, Action<bool>)",
+   "rva": "0x77eba98",
+   "file_offset": "0x77e7a98",
+   "prologue_word_1_1_8": "0xa9bc67fe",
+   "prologue_word_1_1_7": "0xa9bc67fe",
+   "prologue_same_as_1_1_7": true,
+   "file_offset_1_1_7": "0x77e2ef8"
+  },
+  {
+   "method": "HotFix.BattleLogic.HurtBase.FinalizeAttackResult(FP)",
+   "rva": "0x6d3dc44",
+   "file_offset": "0x6d39c44",
+   "prologue_word": "0xf81d0ffe",
+   "prologue_word_1_1_7": "0x0",
+   "file_offset_1_1_7": "0x6d35ea8",
+   "source": "卡密包（DSHK/unityhelper）挂点",
+   "purpose": "★ 攻击倍率新挂点：FP 攻击结算结果 ×N；被击中方为 Hero/Follower 时不动（敌伤不翻倍）"
+  },
+  {
+   "method": "HotFix.BattleLogic.EntityHero.set_CurrentHp(long)",
+   "rva": "0x6d267e0",
+   "file_offset": "0x6d227e0",
+   "prologue_word": "0xf81d0ffe",
+   "source": "卡密包挂点",
+   "purpose": "★ 上帝模式补刀：属性 setter 路径也拦，god 开启时拒绝「往下改」血量"
+  },
+  {
+   "method": "Framework.GameAdsManager.CheckAndPlayVideo(Action<bool>, Action, Action<string>, Func<string>)",
+   "rva": "0x43cd720",
+   "file_offset": "0x43c9720",
+   "prologue_word": "0xd10183ff",
+   "source": "卡密包挂点",
+   "purpose": "★ 免广告新挂点：框架层 4 参重载；不播广告，反射直调 onShow() 与 onClose(true) ⇒ 上层视为已观看（ADModuleMgr 旧层保留兜底）"
+  }
+ ],
+ "cardmod_alignment_1_1_8": {
+  "doc": "10_docs/蛋壳战机/卡密包拆解/03_卡密包挂点还原与1.1.8映射_20261014.md",
+  "note": "卡密包 libunityhelper.so 用硬编码 RVA + libil2cpp 基址挂钩；1.1.7 那批方法头是 16 字节 IL2CPP 间接跳转桩（函数指针表 RVA 0x9EF3400），1.1.8 已无此桩、首指令即真实序言。"
+ },
+ "field_offsets_verified_1_1_8": {
+  "HeroComponentRandomSkill._allSkills": "0x58",
+  "HeroComponentRandomSkill._randomSkillResult": "0x88",
+  "RandomSkillResult.<ShowSkills>k__BackingField": "0x60",
+  "List<int>.items": "0x10",
+  "List<int>.size": "0x18",
+  "int[] length": "0x18",
+  "int[] data": "0x20",
+  "Skill_Main.<UpgradeSkillId>k__BackingField": "0x30",
+  "note": "与 1.1.7 全等（dump.cs 1.1.8 实测）"
+ },
+ "resolved_by_name": [
+  {
+   "method": "HotFix.BattleLogic.BattleWorldContext.AddSkillToCharacter(EntityCharacter,int,bool)",
+   "rva": "0x6ed8ca8",
+   "file_offset": "0x6ed4ca8",
+   "file_offset_1_1_7": "0x6ece6ac",
+   "prologue_word": "0xf81c0ffe",
+   "purpose": "偷盗技能回灌入口；MethodInfo 按名解析"
+  },
+  {
+   "method": "LocalModels.LocalModelManager.GetSkill_Main(int)",
+   "rva": "0x68dfbd0",
+   "file_offset": "0x68dbbd0",
+   "file_offset_1_1_7": "0x68d88a0",
+   "prologue_word": "0xf81d0ffe",
+   "purpose": "读 Skill_Main.UpgradeSkillId 判下一级"
+  },
+  {
+   "method": "Game.get_Table()",
+   "rva": "0x75bdf30",
+   "file_offset": "0x75b9f30",
+   "file_offset_1_1_7": "0x75b5390",
+   "prologue_word": "0xf81e0ffe",
+   "purpose": "取 LocalModelManager 表入口"
+  }
+ ],
+ "artifacts": {
+  "mod_cpp": "mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp",
+  "signed_apk": "08_output/蛋壳战机/蛋壳战机_1.1.8_starry-releaseSigned.apk",
+  "signed_apk_md5_20261014_0352": "93ffaab5ebafb20d5ce6b6e1f54f149a",
+  "so_md5_20261014_0352": "fb2d02bb82f555bc81dddb0c0133b97e",
+  "so_size_20261014_0352": 198592,
+  "classes5_dex_md5_20261014_0352": "9c3ea7156f1c801c9d53860f80eee5c8",
+  "round_doc": "10_docs/蛋壳战机/星空落地_1.1.8_修补_卡密包挂点对齐_20261014.md",
+  "signed_apk_md5_20261014_0410": "6a783641ed5c4e44cb47c3cf3d4d6df0",
+  "so_md5_20261014_0410": "e1ad08f87e73a9311b313b4c142d224d",
+  "so_size_20261014_0410": 189304,
+  "unsigned_apk_md5_20261014_0410": "36c2c7f49c60df424be93eed07dd9cb6",
+  "classes5_dex_md5_20261014_0410": "b2c8f4d588d53f9707181794201007d8",
+  "round_doc_20261014_0410": "10_docs/蛋壳战机/星空落地_1.1.8_修补_删除立即胜利与偷盗技能完善_20261014.md"
+ },
+ "precheck_20261014_035342": {
+  "log": "09_test/蛋壳战机/precheck_20261014_035342/logcat.txt",
+  "result": "15/15 hook 安装成功（含 4 个新挂点），RegisterNatives 19/19，桥接自检 PASS=15 FAIL=0，空转 75s 进程存活、本包零 tombstone/SIGSEGV/ANR"
+ },
+ "status": "2026-10-14 04:10 版已装机并通过启动预检（12/12 hook 命中、菜单 5 项、零崩溃）；「立即胜利」已删除，偷盗技能去重窗口 800ms / 快照 120s / 升级链补 UpgradeSkillId_B；四项功能与偷盗技能完善效果待用户进局实测",
+ "removed_20261014_0410": [
+  {
+   "method": "HotFix.BattleLogic.BattleWorldContext.SetWinPlayerId(int)",
+   "reason": "用户 m00790 要求删除「立即胜利」；该挂点是星光自研的胜方钉定，非卡密包挂点（卡密包 nativeTriggerWin 三个变体均已被其作者做成 0x2C 日志桩）。连同波次驱动（BaseSurvivalBattleManager.OnUpdateHook / CheckEnemyAllDie）一并撤除，不留死代码。",
+   "cardmod_note": "卡密包侧一键胜利已停用，无挂点可抄。"
+  }
+ ],
+ "precheck_20261014_0410": {
+  "dir": "09_test/蛋壳战机/precheck_20261014_041011",
+  "hooks_installed": 12,
+  "menu_items": 5,
+  "crash": "零 SIGSEGV / tombstone / FATAL / ANR",
+  "note": "hook 由 15 → 12（移除 SetWinPlayerId / OnUpdateHook / CheckEnemyAllDie）；菜单 6 → 5 项。"
+ }
+}

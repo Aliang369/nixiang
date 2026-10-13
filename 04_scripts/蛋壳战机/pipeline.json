@@ -1,6 +1,6 @@
 {
   "game": "蛋壳战机",
-  "version": "1.1.5 / 1.1.6 / 1.1.7",
+  "version": "1.1.5 / 1.1.6 / 1.1.7 / 1.1.8",
   "notes": "2026-09-20：原版同源核对、星光四项功能（攻击倍率/上帝模式/偷盗技能/免广告）实现、构建、签名、装机前门禁和授权卸载安装均已完成。设备 base.apk 指纹一致，连续冷启动及新版覆盖后启动每次四项 Hook 与 grant ok 均通过，战斗/广告行为待进局验收。偷盗技能不会使重复同名技能升级，已按用户决定记录为已知限制、不再修复。\n2026-09-23 1.1.6 星空包交付（偷盗技能重做 + 启动闪退修复）：底包=真机只读拉取的原版 1.1.6/vc27 `02_apks/蛋壳战机/蛋壳战机_1.1.6_official_from_device.apk`（204,423,483B md5 6bd3f3dea5eb38fce6be8d8038d70fb3）。① 偷盗技能根因：1.1.5 补授用的 `HeroComponentRandomSkill.AddSkillSurvior(int)` 方法体只有 `_allSkills.Add(id); OnAddSkill(id);`，只改 UI 列表、不实例化技能、不触发升级 —— 正是用户反馈的「纯 UI 修改 / 不能升级 / 实际无效果」。1.1.6 改为 Hook `BattleWorldContext.PostProcessLearnedSkill`（file 0x6E72E40，1.1.5 的 `OnAddSkill` 锚点作废），读出该次 `RandomSkillResult.ShowSkills` 后对**其余候选**逐个回灌 `BattleWorldContext.AddSkillToCharacter(entity,id,true)`，重复同名技能交回游戏自身 `checkIfReplaced` 升级逻辑。真机实测 9 次真实三选一全部 `steal picked=… granted=N (of M candidates)`。② 随之引入并已修复的回归：1.1.6 新增的 `ResolveSkillAux()` 在**启动期**无条件调 `ResolveMethodPtr` → `il2cpp_domain_get_assemblies`，而 `il2cpp_init` 由 libunity 在 `nativeRender` 渲染循环里才跑完、MOD 后台线程又是裸 `std::thread`（未 `thread_attach`）⇒ **静默 SIGSEGV**（无 tombstone / 无 crash buffer / 无 `am_crash`，只有 `exit-info reason=2 status=11`）。修复 = 启动期零 il2cpp 调用 + MethodInfo 惰性解析 + `AttachCurrentThreadToIl2Cpp()` + `g_il2cppRuntimeUp` 门控。**通用铁律：启动期只允许 /proc/self/maps 换算。**③ 构建踩坑：`Android_dkzj.mk` 过时致 `ld.lld: undefined symbol: SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad`（`MainModern.cpp:647-663` 自 2026-09-22 起无条件引用）→ 加 `Games/NoAceStubs.cpp` no-op 兜底；`| tail` 会吃掉构建退出码；macOS `strings` 匹配不到 UTF-8 中文串（须 `LC_ALL=C grep -ac`）。另订正：原包**确有**腾讯安全组件 libsecsdk/libsgcore/libthemis 与字节 libpanglearmor，但无 libtprt.so；本次闪退与它们无关。④ 真机 f9a116a2（2026-09-23 21:02:47 pid 27511，同签覆盖安装、存档保留）：四项 Hook 全命中 + `lib ready` 正常打印，`[Il2Cpp] api loaded` 延后到 21:03:49（游戏线程），进程存活 ≥105s，`exit-info` 无新增条目；攻击倍率（`attack x100 hpdelta -360 -> -36000`）与上帝模式（`god blocked hero hp delta=-175`）亦实测生效。⑤ 文档=`10_docs/蛋壳战机/{星空落地_1.1.6_20260923.md,功能验收_偷盗技能_1.1.6_20260923.md,故障复盘_启动闪退_1.1.6_20260923.md,抓点_锚点_1.1.6_20260923.json}`，证据=`10_docs/蛋壳战机/evidence_1.1.6_20260923/`（完整 logcat 按约定不入库，存 09_test/）。⑥ 仍待用户确认：重复同名技能是否升级、免广告各入口发奖。",
   "params": {
     "package": "com.survivor.acecn",
@@ -93,9 +93,7 @@
           "md5": "f739bf1619e6640985623a910c1d49a1"
         }
       },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_binge_from_device.apk": "005af54a8f0a03b592ed70b28e40772e"
-      }
+      "note": "[2026-10-14 1.1.8 轮] inputs 快照清理 1 条（蛋壳战机_1.1.5_binge_from_device.apk）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。"
     },
     {
       "id": "dump_il2cpp",
@@ -157,9 +155,7 @@
           "md5": "4a97e219af8f7cf4e918389460d96392"
         }
       },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.1.5/dump.cs": "a2ef9b97f7939744e2a443690c3423d8"
-      }
+      "note": "[2026-10-14 1.1.8 轮] inputs 快照清理 1 条（dump.cs）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。"
     },
     {
       "id": "fetch_official",
@@ -184,9 +180,7 @@
           "md5": "1cff7c1f24e641a41e3674fdc18cf3ee"
         }
       },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/抓点_锚点_20260920.json": "4a97e219af8f7cf4e918389460d96392"
-      }
+      "note": "[2026-10-14 1.1.8 轮] inputs 快照清理 1 条（抓点_锚点_20260920.json）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。"
     },
     {
       "id": "impl_mod",
@@ -252,9 +246,7 @@
           "md5": "01d68259671a8eeca0a94cbd1b3a8226"
         }
       },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.5_official_from_device.apk": "1cff7c1f24e641a41e3674fdc18cf3ee"
-      }
+      "note": "[2026-10-14 1.1.8 轮] inputs 快照清理 1 条（蛋壳战机_1.1.5_official_from_device.apk）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。"
     },
     {
       "id": "build_so",
@@ -278,11 +270,11 @@
       ],
       "status": "done",
       "done_at": "2026-09-20 21:46:00",
-      "note": "收尾时删除构建输出 libstarry_magic.so（原 md5 aeff52ad9ca16975823f6a021f0c156a），可由 dkzj_build_so.sh 重编；正式包内仍保留同 md5 的 so。",
+      "note": "收尾时删除构建输出 libstarry_magic.so（原 md5 aeff52ad9ca16975823f6a021f0c156a），可由 dkzj_build_so.sh 重编；正式包内仍保留同 md5 的 so。 ｜ [2026-10-14 1.1.8 轮] 本命令（dkzj_build_so.sh）在 1.1.8 轮已按重定位后的 DkzjMod.cpp 重跑成功（libstarry_magic.so md5 e30a36ae5cb447b2d8cbd52980a77c3a，174,040B，菜单串门禁全过）；inputs/artifacts 快照同步为现状。",
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp": "fcc0c10af38db803dfa459bc93fb58b8",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp": "b6daaba2f85a78e0e67b41325011695b",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk": "01d68259671a8eeca0a94cbd1b3a8226"
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp": "977c2a17a7179a7fd585ee29a2258aab",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp": "33f867af3adf3c4ee41e44d43f8c1f5e",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk": "6f507167ae70d06f35d96ac2b50c7e61"
       }
     },
     {
@@ -301,9 +293,9 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-unsigned.apk"
         }
       ],
-      "status": "done",
+      "status": "skipped",
       "done_at": "2026-09-20 21:46:31",
-      "note": "收尾时删除 unsigned APK（原 md5 791e72768afe6a7ebdd15bfcaedbc8a7），可由 surgical_dkzj_1.1.5.sh 重跑再生；正式签名包保留。"
+      "note": "收尾时删除 unsigned APK（原 md5 791e72768afe6a7ebdd15bfcaedbc8a7），可由 surgical_dkzj_1.1.5.sh 重跑再生；正式签名包保留。 ｜ [2026-10-14 1.1.8 轮] 本阶段属 1.1.5 轮，其产物（1.1.5 底包/08_output 正式包）已按分发红线删除、命令不可重跑，标 skipped 留档；不再参与下游陈旧度判定（后续各版本轮由 archive_<版本> 阶段自己串完整链）。"
     },
     {
       "id": "sign",
@@ -321,14 +313,9 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk"
         }
       ],
-      "status": "done",
+      "status": "skipped",
       "done_at": "2026-09-20 21:46:50",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": {
-          "md5": "55457ccbc564504e42f57d566a2333f6"
-        }
-      },
-      "inputs": {}
+      "note": "[2026-10-14 1.1.8 轮] 本阶段属 1.1.5 轮，其产物（1.1.5 底包/08_output 正式包）已按分发红线删除、命令不可重跑，标 skipped 留档；不再参与下游陈旧度判定（后续各版本轮由 archive_<版本> 阶段自己串完整链）。"
     },
     {
       "id": "pre_install_gate",
@@ -346,16 +333,9 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk"
         }
       ],
-      "status": "done",
+      "status": "skipped",
       "done_at": "2026-09-20 21:46:58",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": {
-          "md5": "55457ccbc564504e42f57d566a2333f6"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": "55457ccbc564504e42f57d566a2333f6"
-      }
+      "note": "[2026-10-14 1.1.8 轮] inputs 快照清理 1 条（蛋壳战机_1.1.5_starry-releaseSigned.apk）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。 ｜ [2026-10-14 1.1.8 轮] 本阶段属 1.1.5 轮，其产物（1.1.5 底包/08_output 正式包）已按分发红线删除、命令不可重跑，标 skipped 留档；不再参与下游陈旧度判定（后续各版本轮由 archive_<版本> 阶段自己串完整链）。"
     },
     {
       "id": "install",
@@ -373,16 +353,9 @@
           "path": "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok"
         }
       ],
-      "status": "done",
+      "status": "skipped",
       "done_at": "2026-09-20 21:47:21",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok": {
-          "md5": "bf29c5b09da966e69f65219cdc9ee2f6"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": "55457ccbc564504e42f57d566a2333f6"
-      }
+      "note": "[2026-10-14 1.1.8 轮] inputs 快照清理 1 条（蛋壳战机_1.1.5_starry-releaseSigned.apk）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。 ｜ [2026-10-14 1.1.8 轮] 本阶段属 1.1.5 轮，其产物（1.1.5 底包/08_output 正式包）已按分发红线删除、命令不可重跑，标 skipped 留档；不再参与下游陈旧度判定（后续各版本轮由 archive_<版本> 阶段自己串完整链）。"
     },
     {
       "id": "archive",
@@ -420,26 +393,9 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk.idsig"
         }
       ],
-      "status": "done",
-      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-20）。后端 archive_dkzj.sh 校验唯一正式包、裁剪清单与中间产物已清理，只提交本作路径并 push。偷盗技能不会使重复同名技能升级，作为已知限制记录，不修复。",
-      "done_at": "2026-09-20 21:55:05",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-releaseSigned.apk": {
-          "md5": "55457ccbc564504e42f57d566a2333f6"
-        },
-        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/cleanup_summary.json": {
-          "md5": "89fbb739ae2a4a3627e0b6d5e9bd9838"
-        },
-        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/正式包裁剪清单_1.1.5_20260920.json": {
-          "md5": "fc695232c2beda2ec31629feee3e1a4f"
-        },
-        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.5_20260920.md": {
-          "md5": "127f26cd8285dbd90ff98c0371616c6f"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok": "bf29c5b09da966e69f65219cdc9ee2f6"
-      }
+      "status": "skipped",
+      "note": "用户口令「收尾+正式包+清理+git」已下达（2026-09-20）。后端 archive_dkzj.sh 校验唯一正式包、裁剪清单与中间产物已清理，只提交本作路径并 push。偷盗技能不会使重复同名技能升级，作为已知限制记录，不修复。 ｜ [2026-10-14 1.1.8 轮] 本阶段属 1.1.5 轮，其产物（1.1.5 底包/08_output 正式包）已按分发红线删除、命令不可重跑，标 skipped 留档；不再参与下游陈旧度判定（后续各版本轮由 archive_<版本> 阶段自己串完整链）。",
+      "done_at": "2026-09-20 21:55:05"
     },
     {
       "id": "archive_close",
@@ -515,7 +471,7 @@
           "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.6_20260923.md"
         }
       ],
-      "note": "用户口令「功能没问题了，进行收尾+正式包+清理+git」已下达（2026-09-23）。本轮不动 1.1.5 阶段记录（它们是上一版的机械留档）；1.1.5 正式包已按口令裁剪，08_output/蛋壳战机 下现只剩 1.1.6 唯一正式包。清理：06_dumped/蛋壳战机/{il2cpp_dump_1.1.6/{script.json,il2cpp.h,DummyDll},il2cpp_dump_1.1.6.tool,static_inspect_1.1.6}、07_patched/蛋壳战机、mod菜单/starry-mod-menu/{obj_dkzj,libs_dkzj}，清理前 695,976 KiB → 清理后 128,116 KiB（释放约 554 MB）；不可再生输入 02_apks/蛋壳战机/蛋壳战机_1.1.6_official_from_device.apk 保留。pipeline_record_cleanup.py 对本轮裁剪清单返回「无需修改」（快照未引用被删路径）。完整 logcat 按 AGENTS 约定不入库，已移入 09_test/蛋壳战机/evidence_1.1.6_20260923/，10_docs 下只留决定性行（decisive_*.txt + README.md）。",
+      "note": "用户口令「功能没问题了，进行收尾+正式包+清理+git」已下达（2026-09-23）。本轮不动 1.1.5 阶段记录（它们是上一版的机械留档）；1.1.5 正式包已按口令裁剪，08_output/蛋壳战机 下现只剩 1.1.6 唯一正式包。清理：06_dumped/蛋壳战机/{il2cpp_dump_1.1.6/{script.json,il2cpp.h,DummyDll},il2cpp_dump_1.1.6.tool,static_inspect_1.1.6}、07_patched/蛋壳战机、mod菜单/starry-mod-menu/{obj_dkzj,libs_dkzj}，清理前 695,976 KiB → 清理后 128,116 KiB（释放约 554 MB）；不可再生输入 02_apks/蛋壳战机/蛋壳战机_1.1.6_official_from_device.apk 保留。pipeline_record_cleanup.py 对本轮裁剪清单返回「无需修改」（快照未引用被删路径）。完整 logcat 按 AGENTS 约定不入库，已移入 09_test/蛋壳战机/evidence_1.1.6_20260923/，10_docs 下只留决定性行（decisive_*.txt + README.md）。 ｜ [2026-10-14 1.1.8 轮] inputs 快照清理 1 条（蛋壳战机_1.1.6_official_from_device.apk）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.6_starry-releaseSigned.apk": {
           "md5": "c8944f4579afa12e267f72e6d4164d0a"
@@ -526,9 +482,6 @@
         "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/收尾与最小复现清单_1.1.6_20260923.md": {
           "md5": "8f387827df2912e9f065d7d2aaeb8006"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.6_official_from_device.apk": "6bd3f3dea5eb38fce6be8d8038d70fb3"
       },
       "status": "done",
       "done_at": "2026-09-23 21:20:00"
@@ -584,7 +537,7 @@
           "path": "/Users/aliang/Documents/nixiang/07_patched/蛋壳战机"
         }
       ],
-      "note": "用户口令「进行收尾+正式包+清理+git」已下达（2026-09-28）。本轮不动 1.1.5 / 1.1.6 阶段记录（上一版机械留档）。08_output 裁剪为唯一正式包（删 unsigned + idsig）；清理 06_dumped/蛋壳战机/{il2cpp_dump_1.1.7/{script.json,il2cpp.h,DummyDll},il2cpp_dump_1.1.7.tool,static_inspect_1.1.7}、07_patched/蛋壳战机、mod菜单/starry-mod-menu/{obj_dkzj,libs_dkzj}；按用户明确要求删除全部 09_test/蛋壳战机/backup_*（1.1.5/1.1.6/1.1.7），今后不再产生数据备份；合计释放约 770 MB（1,196,448 → 408,432 KiB）。不可再生输入 02_apks/蛋壳战机/蛋壳战机_1.1.7_official_from_device.apk 保留。完整 logcat 按 AGENTS 约定不入库，在 09_test/蛋壳战机/evidence_1.1.7_20260928/，10_docs 下只留决定性行。",
+      "note": "用户口令「进行收尾+正式包+清理+git」已下达（2026-09-28）。本轮不动 1.1.5 / 1.1.6 阶段记录（上一版机械留档）。08_output 裁剪为唯一正式包（删 unsigned + idsig）；清理 06_dumped/蛋壳战机/{il2cpp_dump_1.1.7/{script.json,il2cpp.h,DummyDll},il2cpp_dump_1.1.7.tool,static_inspect_1.1.7}、07_patched/蛋壳战机、mod菜单/starry-mod-menu/{obj_dkzj,libs_dkzj}；按用户明确要求删除全部 09_test/蛋壳战机/backup_*（1.1.5/1.1.6/1.1.7），今后不再产生数据备份；合计释放约 770 MB（1,196,448 → 408,432 KiB）。不可再生输入 02_apks/蛋壳战机/蛋壳战机_1.1.7_official_from_device.apk 保留。完整 logcat 按 AGENTS 约定不入库，在 09_test/蛋壳战机/evidence_1.1.7_20260928/，10_docs 下只留决定性行。 ｜ [2026-10-14 1.1.8 轮] inputs 快照清理 1 条（蛋壳战机_1.1.7_official_from_device.apk）——这些产物已按分发红线删除，快照永久失配会产生假过期；留着会拦死后续任何装机阶段。",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.7_starry-releaseSigned.apk": {
           "md5": "5fd08acb6ffa9725c117dcb6a13a3658"
@@ -596,11 +549,99 @@
           "md5": "773ac788abd005f0f8ee42f6240d66bf"
         }
       },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.7_official_from_device.apk": "713d5655d4628b667faaa8e6701a062a"
-      },
       "status": "done",
       "done_at": "2026-09-28 15:30:00"
+    },
+    {
+      "id": "archive_1.1.8",
+      "name": "1.1.8 星光包重打（锚点按 1.1.8 重定位，功能照 1.1.7 原样复刻）",
+      "requires": [
+        "archive_1.1.7"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_build_so.sh' && bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/surgical_dkzj_1.1.8.sh' && bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_sign_1.1.8.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_build_so.sh",
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/surgical_dkzj_1.1.8.sh",
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/dkzj_sign_1.1.8.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.8_starry-releaseSigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.8_starry-unsigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.8_starry-releaseSigned.apk.idsig"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/抓点_锚点_1.1.8_20261014.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/星空落地_1.1.8_20261014.md"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dkzj"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/蛋壳战机"
+        }
+      ],
+      "note": "2026-10-14 03:52 轮：四项功能改挂卡密包挂点 + 拦截上报常开（md5 93ffaab5…）。2026-10-14 04:10 轮（用户 m00790）：删除「立即胜利」（卡密包侧该功能已被其作者停用；星光自研的 SetWinPlayerId + 波次驱动整体撤除，hook 15→12、菜单 6→5 项）；偷盗技能完善（升级链补 UpgradeSkillId_B 0x150、去重窗口 3000→800ms、候选快照 30s→120s、授予日志打全量 ids）。本行 md5 为 04:10 轮产物 6a783641…。",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.8_starry-releaseSigned.apk": {
+          "md5": "6a783641ed5c4e44cb47c3cf3d4d6df0"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/抓点_锚点_1.1.8_20261014.json": {
+          "md5": "823edb6562a3780d49dc0c778f4927be"
+        },
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/星空落地_1.1.8_修补_删除立即胜利与偷盗技能完善_20261014.md": {
+          "md5": "2257d9d65bf87d4499ac6fc9aa85a363"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/02_apks/蛋壳战机/蛋壳战机_1.1.8_official_from_device.apk": "ccd69304f6f8268279a89e401723e1be"
+      },
+      "status": "done",
+      "done_at": "2026-10-14 04:10:00"
+    },
+    {
+      "id": "install_1.1.8",
+      "name": "1.1.8 装机（异签，需用户授权卸载重装）",
+      "requires": [
+        "archive_1.1.8"
+      ],
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/install_dkzj_1.1.8.sh'",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/install_dkzj_1.1.8.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok"
+        }
+      ],
+      "note": "2026-10-14 03:53：同签覆盖安装成功 + 15/15 hook + 菜单 6 项 + 零崩溃（93ffaab5…）。2026-10-14 04:09：同签覆盖安装成功（6a783641…）+ 预检 12/12 hook 命中、菜单 5 项（Toggle_立即胜利 已消失）、零 SIGSEGV/tombstone/FATAL/ANR，空转 80s 进程存活（pid 5043）。证据 10_docs/蛋壳战机/evidence_1.1.8_20261014/decisive_boot_20261014_041011.txt。四项功能与偷盗技能完善效果待用户进局实测。",
+      "status": "done",
+      "done_at": "2026-10-14 04:09:37",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/蛋壳战机/.install_ok": {
+          "md5": "f74dc74bc16b479aa69815d197a6a855"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.8_starry-releaseSigned.apk": "6a783641ed5c4e44cb47c3cf3d4d6df0",
+        "/Users/aliang/Documents/nixiang/10_docs/蛋壳战机/抓点_锚点_1.1.8_20261014.json": "823edb6562a3780d49dc0c778f4927be"
+      }
     }
-  ]
+  ],
+  "install_policy": "overlay_only",
+  "install_policy_note": "蛋壳战机为单机游戏、官方包签名 O=gorilla 与星光包 CN=StarryMagic 异签。默认只覆盖安装；异签覆盖失败时按 AGENTS 分发红线先报告，取得用户明确授权后才允许卸载重装（此时需 INSTALL_GUARD_ALLOW_UNINSTALL=1 与 DKZJ_ALLOW_UNINSTALL=1 同时置位）。"
 }

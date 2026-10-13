@@ -1,0 +1,58 @@
+# 1.1.8 卡密包挂点对齐版 · 启动预检决定性行（2026-10-14 03:53，serial f9a116a2，pid 25237）
+# 全量 logcat（含同机其它包噪音）: 09_test/蛋壳战机/precheck_20261014_035342/logcat.txt（47,900 行）
+# 本文件只保留 com.survivor.acecn 主进程 pid 25237 的行。
+
+## 引导与桥接
+10-14 03:53:46.031 25237 25237 D nativeloader: Load libframework-connectivity-tiramisu-jni.so using APEX ns com_android_tethering for caller /apex/com.android.tethering/javalib/framework-connectivity-t.jar: ok
+10-14 03:53:46.074 25237 25237 D nativeloader: Configuring clns-9 for other apk /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk. target_sdk_version=36, uses_libraries=, library_path=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64:/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!/lib/arm64-v8a, permitted_path=/data:/mnt/expand:/data/user/0/com.survivor.acecn
+10-14 03:53:46.082 25237 25237 I StarrySignFactory: SignSpoof installed before application=android.app.Application
+10-14 03:53:46.088 25237 25237 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libstarry_magic.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes5.dex): ok
+10-14 03:53:46.088 25237 25237 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-14 03:53:46.088 25237 25237 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=dkzj)
+10-14 03:53:46.088 25237 25237 I StarryNativeLoad: loaded apk so via loadLibrary
+10-14 03:53:46.088 25237 25237 I ModBridge: native via StarryNativeLoad: loadLibrary(starry_magic)
+10-14 03:53:46.089 25237 25237 I StarryBridgeTest: === 桥接自检结束: PASS=15 FAIL=0 === ✓
+10-14 03:53:46.089 25237 25237 I StarryInitProvider: native ensureLoaded=true path=loadLibrary(starry_magic)
+10-14 03:53:46.156 25237 25237 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libmain.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): ok
+10-14 03:53:46.182 25237 25237 I StarryInitProvider: MenuService.start scheduled (activity-resumed)
+10-14 03:53:46.200 25237 25237 I StarryInitProvider: MenuService.start ok (activity-resumed)
+10-14 03:53:46.789 25237 25324 D nativeloader: Load libNativeSemaphore.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): dlopen failed: library "libNativeSemaphore.so" not found
+10-14 03:53:46.935 25237 25324 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libAdaptivePerformanceThermalHeadroom.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): ok
+10-14 03:53:46.937 25237 25324 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libAdaptivePerformanceHint.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): ok
+10-14 03:53:47.072 25237 25324 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libAndroidCpuUsage.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): ok
+10-14 03:53:50.603 25237 25324 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libBugly_Native.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): ok
+10-14 03:53:50.855 25237 25237 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libtapsdkcore.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): ok
+10-14 03:53:50.927 25237 25237 D nativeloader: Load /data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/lib/arm64/libthemis.so using class loader ns clns-9 (caller=/data/app/~~KSeAbMtZmwcEbchKUWpQzA==/com.survivor.acecn-DfFw7Ao36Jhv0JFDgXJ4ng==/base.apk!classes4.dex): ok
+
+## 15 个 hook 安装结果（含本轮 4 个新挂点）
+10-14 03:53:46.328 25237 25348 I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked file=0x6C2A314
+10-14 03:53:46.333 25237 25348 I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked file=0x6D20180
+10-14 03:53:46.335 25237 25348 I Mod_Menu: [dkzj] HurtBase.FinalizeAttackResult hooked file=0x6D39C44
+10-14 03:53:46.336 25237 25348 I Mod_Menu: [dkzj] EntityHero.set_CurrentHp hooked file=0x6D227E0
+10-14 03:53:46.337 25237 25348 I Mod_Menu: [dkzj] GameAdsManager.CheckAndPlayVideo hooked file=0x43C9720
+10-14 03:53:46.338 25237 25348 I Mod_Menu: [dkzj] BattleWorldContext.SetWinPlayerId hooked file=0x6ECA3D4
+10-14 03:53:46.339 25237 25348 I Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill hooked file=0x6EE4654
+10-14 03:53:46.341 25237 25348 I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked file=0x77E7A98
+10-14 03:53:46.343 25237 25348 I Mod_Menu: [dkzj] RandomSkillResult.set_ShowSkills hooked file=0x6D03FE4
+10-14 03:53:46.344 25237 25348 I Mod_Menu: [dkzj] AngleViewData.set_ShowSkills hooked file=0x790F48C
+10-14 03:53:46.345 25237 25348 I Mod_Menu: [dkzj] ContractDevilData.set_ShowSkills hooked file=0x79D4C2C
+10-14 03:53:46.346 25237 25348 I Mod_Menu: [dkzj] PunchboardViewData.set_ShowSkills hooked file=0x7E19A10
+10-14 03:53:46.348 25237 25348 I Mod_Menu: [dkzj] BaseSurvivalBattleManager.OnUpdateHook hooked file=0x69960E8
+10-14 03:53:46.350 25237 25348 I Mod_Menu: [dkzj] BattleRecordManager.IsNeedUploadSaveData hooked file=0x74E1900
+10-14 03:53:46.351 25237 25348 I Mod_Menu: [dkzj] BaseSurvivalBattleManager.CheckEnemyAllDie hooked file=0x69999B8
+10-14 03:53:46.352 25237 25348 I Mod_Menu: [dkzj] AddSkillToCharacter resolved @0x754b2e9ca8
+10-14 03:53:46.353 25237 25348 I Mod_Menu: [dkzj] GetSkill_Main resolved @0x754acf0bd0
+10-14 03:53:46.355 25237 25348 I Mod_Menu: [dkzj] Game.get_Table resolved @0x754b9cef30
+10-14 03:53:46.356 25237 25348 I Mod_Menu: [dkzj] win GetCurPlayer resolved @0x754adad3bc
+10-14 03:53:46.357 25237 25348 I Mod_Menu: [dkzj] win EntityHero.get_PlayerID resolved @0x754b1339a8
+10-14 03:53:46.358 25237 25348 I Mod_Menu: [dkzj] win OnBattleEnd resolved @0x754adf0530
+10-14 03:53:46.358 25237 25348 I Mod_Menu: [dkzj] lib ready; hooks file-offset + by-name fallback
+10-14 03:53:46.358 25237 25348 I StarryMagic: [dkzj] 初始化成功
+10-14 03:53:47.632 25237 25237 I Mod_Menu: [dkzj] instant-win OFF
+10-14 03:53:51.072 25237 25237 I Mod_Menu: [dkzj] instant-win OFF
+
+## 菜单功能表变化（拦截上报已摘除）
+10-14 03:53:46.291 25237 25237 I StarryPrefs: 功能列表变化 → 已清功能偏好；prev=[Category_功能Slider_攻击倍率:1:100:1Toggle_上帝模式Toggle_偷盗技能Toggle_免广告Toggle_立即胜利Toggle_拦截上报] new=[Category_功能Slider_攻击倍率:1:100:1Toggle_上帝模式Toggle_偷盗技能Toggle_免广告Toggle_立即胜利]
+
+## 本包崩溃检查（无输出 = 干净）
+(无 SIGSEGV / tombstone / FATAL / ANR)

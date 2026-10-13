@@ -1,0 +1,63 @@
+# 蛋壳战机 1.1.8 星光版 启动预检决定性证据（pid 5043）
+# 源: 09_test/蛋壳战机/precheck_20261014_041011/logcat.txt（全量按约定不入库）
+# 2026-10-14 04:10 「立即胜利」删除 + 偷盗技能完善轮
+
+I StarrySignFactory: SignSpoof installed before application=android.app.Application
+W StarryMagic: [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=dkzj)
+I StarryBridgeTest: === 桥接自检开始 ===
+I StarryBridgeTest: nativeBridgeRegistered = PASS
+I StarryBridgeTest: nativeGetAuthGameId = PASS
+I StarryBridgeTest: nativeIsGameLibLoaded = PASS
+I StarryBridgeTest: nativeHasLiveSession = PASS
+I StarryBridgeTest: nativeGetAceGateRemainSec = PASS
+I StarryBridgeTest: nativeGetFeatureList = PASS
+I StarryBridgeTest: nativeGetSettingsList = PASS
+I StarryMagic: [验证] flag=false live=0
+I StarryBridgeTest: nativeSetAuthorized(false) = PASS
+I StarryMagic: [开关] #0 selftest = OFF
+I StarryBridgeTest: nativeSetFeature(0,off) = PASS
+W StarryMagic: [数值] 拒绝 #0（未授权）
+I StarryBridgeTest: nativeSetValue(0,0) = PASS
+I StarryMagic: [长整] #0 = 0
+I StarryBridgeTest: nativeSetLongValue(0,0) = PASS
+W StarryMagic: [文本] 拒绝 #0（未授权）
+I StarryBridgeTest: nativeSetText(0,empty) = PASS
+W StarryMagic: [验证] grant rejected
+I StarryBridgeTest: nativeApplyGrant(垃圾票→拒绝) = PASS
+W StarryMagic: [OTA] 补丁签名校验失败
+I StarryBridgeTest: nativeVerifyOtaSig(垃圾→false) = PASS
+I StarryBridgeTest: nativeGetPinnedCert = PASS
+I StarryBridgeTest: === 桥接自检结束: PASS=15 FAIL=0 === ✓
+I StarryPrefs: 功能列表变化 → 已清功能偏好；prev=[Category_功能Slider_攻击倍率:1:100:1Toggle_上帝模式Toggle_偷盗技能Toggle_免广告Toggle_立即胜利] new=[Category_功能Slider_攻击倍率:1:100:1Toggle_上帝模式Toggle_偷盗技能Toggle_免广告]
+I StarryMagic: ===== 星光魔法 MOD 菜单初始化（modern/dkzj）=====
+I StarryMagic: MOD 后台线程已启动 tag=dkzj
+I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked file=0x6C2A314
+I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked file=0x6D20180
+I Mod_Menu: [dkzj] HurtBase.FinalizeAttackResult hooked file=0x6D39C44
+I Mod_Menu: [dkzj] EntityHero.set_CurrentHp hooked file=0x6D227E0
+I Mod_Menu: [dkzj] GameAdsManager.CheckAndPlayVideo hooked file=0x43C9720
+I Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill hooked file=0x6EE4654
+I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked file=0x77E7A98
+I Mod_Menu: [dkzj] RandomSkillResult.set_ShowSkills hooked file=0x6D03FE4
+I Mod_Menu: [dkzj] AngleViewData.set_ShowSkills hooked file=0x790F48C
+I Mod_Menu: [dkzj] ContractDevilData.set_ShowSkills hooked file=0x79D4C2C
+I Mod_Menu: [dkzj] PunchboardViewData.set_ShowSkills hooked file=0x7E19A10
+I Mod_Menu: [dkzj] BattleRecordManager.IsNeedUploadSaveData hooked file=0x74E1900
+I Mod_Menu: [dkzj] AddSkillToCharacter resolved @0x754ab92ca8
+I Mod_Menu: [dkzj] GetSkill_Main resolved @0x754a599bd0
+I Mod_Menu: [dkzj] Game.get_Table resolved @0x754b277f30
+I Mod_Menu: [dkzj] lib ready; hooks file-offset + by-name fallback
+I StarryMagic: [dkzj] 初始化成功
+I StarryMagic: MOD 已就绪 tag=dkzj ready=1
+I StarryMagic: [验证] grant ok exp=1792008055
+I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+I StarryMagic: [开关] #3 Toggle_偷盗技能 = OFF
+I StarryMagic: [开关] #4 Toggle_免广告 = OFF
+I StarryMagic: [验证] grant ok exp=1792008618
+I StarryMagic: [数值] #1 Slider_攻击倍率:1:100:1 = 1
+I StarryMagic: [开关] #2 Toggle_上帝模式 = OFF
+I StarryMagic: [开关] #3 Toggle_偷盗技能 = OFF
+I StarryMagic: [开关] #4 Toggle_免广告 = OFF

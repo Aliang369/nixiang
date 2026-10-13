@@ -8,5 +8,12 @@
     {"feat_num": 2, "name": "上帝模式"},
     {"feat_num": 3, "name": "偷盗技能"},
     {"feat_num": 4, "name": "免广告"}
+  ],
+  "removed_features": [
+    {"feat_num": 5, "name": "立即胜利", "removed_at": "2026-10-14 04:10",
+     "note": "用户 m00790 要求删除；卡密包侧该功能亦已被其作者停用（nativeTriggerWin 三变体均为 0x2C 日志桩），星光自研的 SetWinPlayerId + 波次驱动一并撤除"}
+  ],
+  "always_on": [
+    {"name": "拦截上报", "note": "2026-10-14 03:52 起改为常开注入，不占菜单项（用户 m00392 第 2 条）"}
   ]
 }
