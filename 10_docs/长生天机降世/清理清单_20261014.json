@@ -1,0 +1,15 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_cstjjs103_20261014_011409",
+  "timestamp": "20261014_011409",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "07_patched/长生天机降世",
+      "type": "dir",
+      "size_kib": 24,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/长生天机降世",
+      "quarantine": "/Users/aliang/.Trash/nixiang_cstjjs103_20261014_011409/07_patched/长生天机降世"
+    }
+  ]
+}

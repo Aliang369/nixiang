@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/长生天机降世",
+  "keep": "长生天机降世_1.0.3_surgical-releaseSigned.apk",
+  "keep_size": 1941668697,
+  "keep_md5": "2a940f67c10ecc19c11238209b1c2812",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "长生天机降世_1.0.3_surgical-releaseSigned.apk.idsig",
+      "size": 15296027,
+      "md5": "0849136433be57b42cce8dcc46361fae"
+    }
+  ],
+  "removed_count": 1
+}
