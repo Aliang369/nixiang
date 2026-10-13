@@ -1,0 +1,215 @@
+{
+  "schema": 1,
+  "generated_by": "04_scripts/_common/delivery_manifest.py",
+  "generated_at": "2026-10-13T20:57:04+00:00",
+  "game": "蛋壳战机",
+  "version": "1.1.5 / 1.1.6 / 1.1.7 / 1.1.8",
+  "package": "com.survivor.acecn",
+  "pipeline_state": "04_scripts/蛋壳战机/pipeline.json",
+  "pipeline_status": {
+    "device_ready": "done",
+    "fetch_binge": "done",
+    "static_inspect": "done",
+    "dump_il2cpp": "done",
+    "anchor": "done",
+    "fetch_official": "done",
+    "impl_mod": "done",
+    "build_so": "done",
+    "surgical": "skipped",
+    "sign": "skipped",
+    "pre_install_gate": "skipped",
+    "install": "skipped",
+    "archive": "skipped",
+    "archive_close": "done",
+    "archive_1.1.6": "done",
+    "archive_1.1.7": "done",
+    "archive_1.1.8": "done",
+    "install_1.1.8": "done"
+  },
+  "source_commit": "5f27009bc858f4a9090937bdce17407637d87400",
+  "source_tree": "a6314c5138e3b477ed0c402af04948fb510a6ec4",
+  "apk": {
+    "path": "08_output/蛋壳战机/蛋壳战机_1.1.8_starry-releaseSigned.apk",
+    "available": true,
+    "size": 206979718,
+    "md5": "6a783641ed5c4e44cb47c3cf3d4d6df0",
+    "sha256": "9ed12d017400145b0b5e783e6eab593681506fb194bedf1a9da1074c112c968b"
+  },
+  "artifacts": [
+    {
+      "stage": "device_ready",
+      "path": "04_scripts/蛋壳战机/.device_serial",
+      "recorded_md5": "0bc47570b06495af1a544933783b7037",
+      "available": true,
+      "current_md5": "0bc47570b06495af1a544933783b7037",
+      "current_sha256": "cbe27de68d4d3b09f6c7d5b249441193c24b6a21737d78c5c810a7b8386a337a",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "fetch_binge",
+      "path": "02_apks/蛋壳战机/蛋壳战机_1.1.5_binge_from_device.apk",
+      "recorded_md5": "005af54a8f0a03b592ed70b28e40772e",
+      "available": false
+    },
+    {
+      "stage": "static_inspect",
+      "path": "06_dumped/蛋壳战机/static_inspect/zip_entries.txt",
+      "recorded_md5": "9fa587f66e37540be38e0e260ea68928",
+      "available": true,
+      "current_md5": "9fa587f66e37540be38e0e260ea68928",
+      "current_sha256": "f659581593cf0b326abc3bacaf1c808833fa82d3a9eff4ef40c4ce6a739a7efa",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "static_inspect",
+      "path": "06_dumped/蛋壳战机/static_inspect/static_identity.json",
+      "recorded_md5": "f739bf1619e6640985623a910c1d49a1",
+      "available": true,
+      "current_md5": "f739bf1619e6640985623a910c1d49a1",
+      "current_sha256": "f177c7a6e357cb30ed578827b7d26b8ab7be4f1a4b1e2113f78e9d3ada76d472",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "dump_il2cpp",
+      "path": "06_dumped/蛋壳战机/il2cpp_dump_1.1.5/dump.cs",
+      "recorded_md5": "a2ef9b97f7939744e2a443690c3423d8",
+      "available": false
+    },
+    {
+      "stage": "anchor",
+      "path": "10_docs/蛋壳战机/斌哥包抓点_1.1.5_20260920.md",
+      "recorded_md5": "493b00cd2e20203c04e9a90c59865d69",
+      "available": false
+    },
+    {
+      "stage": "anchor",
+      "path": "10_docs/蛋壳战机/抓点_锚点_20260920.json",
+      "recorded_md5": "4a97e219af8f7cf4e918389460d96392",
+      "available": false
+    },
+    {
+      "stage": "fetch_official",
+      "path": "02_apks/蛋壳战机/蛋壳战机_1.1.5_official_from_device.apk",
+      "recorded_md5": "1cff7c1f24e641a41e3674fdc18cf3ee",
+      "available": false
+    },
+    {
+      "stage": "impl_mod",
+      "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjMod.cpp",
+      "recorded_md5": "0b9216672a5ef9e737b670dc6c6ddb18",
+      "available": true,
+      "current_md5": "4b6f670ff6b4ca1ea072895affe69ef1",
+      "current_sha256": "bcd3fab49f25501dc5a8f19ad622c0914eb1827c2de48c7f6357b031992d8da7",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "impl_mod",
+      "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp",
+      "recorded_md5": "b6daaba2f85a78e0e67b41325011695b",
+      "available": true,
+      "current_md5": "9246c20782ce5c180c0c80d9464dfbb9",
+      "current_sha256": "5ae7d0d77e5b732bff255733357091dc93d9b8cc839f1831aaffcf1333ea0abf",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "impl_mod",
+      "path": "mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk",
+      "recorded_md5": "01d68259671a8eeca0a94cbd1b3a8226",
+      "available": true,
+      "current_md5": "6f507167ae70d06f35d96ac2b50c7e61",
+      "current_sha256": "4428d908c527b41db1a8a2ab3daa2647cfb1d598093db2673e997703eb3cf83d",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "archive_1.1.6",
+      "path": "08_output/蛋壳战机/蛋壳战机_1.1.6_starry-releaseSigned.apk",
+      "recorded_md5": "c8944f4579afa12e267f72e6d4164d0a",
+      "available": false
+    },
+    {
+      "stage": "archive_1.1.6",
+      "path": "10_docs/蛋壳战机/正式包裁剪清单_1.1.6_20260923.json",
+      "recorded_md5": "5d4cbf186f1eeeb41707f74e6b1f9d0f",
+      "available": true,
+      "current_md5": "5d4cbf186f1eeeb41707f74e6b1f9d0f",
+      "current_sha256": "7c00819b5d8fd7e45447ca8af8ba1eb963992dad1918da8a9b03cfeebc2021ad",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "archive_1.1.6",
+      "path": "10_docs/蛋壳战机/收尾与最小复现清单_1.1.6_20260923.md",
+      "recorded_md5": "8f387827df2912e9f065d7d2aaeb8006",
+      "available": true,
+      "current_md5": "e0e926fe00bca41d9878cee3380cb0c3",
+      "current_sha256": "1f7ea36b7aa88e80db31e0c944a65a0a234344d0a9123570c449427eed59e270",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "archive_1.1.7",
+      "path": "08_output/蛋壳战机/蛋壳战机_1.1.7_starry-releaseSigned.apk",
+      "recorded_md5": "5fd08acb6ffa9725c117dcb6a13a3658",
+      "available": false
+    },
+    {
+      "stage": "archive_1.1.7",
+      "path": "10_docs/蛋壳战机/正式包裁剪清单_1.1.7_20260928.json",
+      "recorded_md5": "b879f153ea23bdfa83dfc0edcb370f77",
+      "available": true,
+      "current_md5": "b879f153ea23bdfa83dfc0edcb370f77",
+      "current_sha256": "6c534a2517939fb705c421a5fd02ed8cecd94d5761302a5afc2a98b68bc560a5",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "archive_1.1.7",
+      "path": "10_docs/蛋壳战机/收尾与最小复现清单_1.1.7_20260928.md",
+      "recorded_md5": "773ac788abd005f0f8ee42f6240d66bf",
+      "available": true,
+      "current_md5": "773ac788abd005f0f8ee42f6240d66bf",
+      "current_sha256": "cf82f6c6706c74da1e3049a1e023494b7b07843b6c892f6c98c9c46fc3e82d8f",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "archive_1.1.8",
+      "path": "08_output/蛋壳战机/蛋壳战机_1.1.8_starry-releaseSigned.apk",
+      "recorded_md5": "6a783641ed5c4e44cb47c3cf3d4d6df0",
+      "available": true,
+      "current_md5": "6a783641ed5c4e44cb47c3cf3d4d6df0",
+      "current_sha256": "9ed12d017400145b0b5e783e6eab593681506fb194bedf1a9da1074c112c968b",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "archive_1.1.8",
+      "path": "10_docs/蛋壳战机/抓点_锚点_1.1.8_20261014.json",
+      "recorded_md5": "823edb6562a3780d49dc0c778f4927be",
+      "available": true,
+      "current_md5": "823edb6562a3780d49dc0c778f4927be",
+      "current_sha256": "d45395c983ffa59a2658eb78fd7a41a729082b58f471fffda8ebb5abae3a700c",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "archive_1.1.8",
+      "path": "10_docs/蛋壳战机/星空落地_1.1.8_修补_删除立即胜利与偷盗技能完善_20261014.md",
+      "recorded_md5": "2257d9d65bf87d4499ac6fc9aa85a363",
+      "available": true,
+      "current_md5": "2257d9d65bf87d4499ac6fc9aa85a363",
+      "current_sha256": "b21f046351b703aebdd01d73058aaec79c7864891e2f698de503441fa01213ac",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "install_1.1.8",
+      "path": "04_scripts/蛋壳战机/.install_ok",
+      "recorded_md5": "f74dc74bc16b479aa69815d197a6a855",
+      "available": true,
+      "current_md5": "f74dc74bc16b479aa69815d197a6a855",
+      "current_sha256": "bf699855b648e5f41bd641e9e746c1c36444d9be2d06ca0f4daaed4647541b40",
+      "matches_recorded_md5": true
+    }
+  ],
+  "not_proven": [
+    "manifest 只汇总管线与文件指纹；运行证据/NOT PROVEN 需由归档文档人工明确记录"
+  ],
+  "closure": {
+    "staged_scope_checked": true,
+    "generated_at_archive_close": true
+  }
+}
