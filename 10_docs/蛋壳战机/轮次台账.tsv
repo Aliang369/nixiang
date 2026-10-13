@@ -25,3 +25,7 @@
 2026-10-14 04:10	5	11	立即胜利**整体删除**（用户 m00790）：移除 6 个函数（ResolveWinAux/LocalPlayerIdOrCache/Hooked_SetWinPlayerId/MaybeDriveInstantWin/Hooked_BsbmOnUpdateHook/Hooked_BsbmCheckEnemyAllDie）、3 个 hook slot、全套 kWin*/kOffWf*/kOffBm* 常量与 21 个 g_win*/g_instantWin/g_localPlayerId 全局；enum 与菜单项 Toggle_立即胜利 同步删除	装机成功（同签覆盖，产物 6a783641…）+ 预检 hook 数 15→12、菜单 6→5 项（logcat 实证 prev 含 Toggle_立即胜利 / new 不含）	已删除
 2026-10-14 04:10	3	2	偷盗技能完善（用户 m00790）：①PickNextTier 升级链补 UpgradeSkillId_B(0x150)（Skill_Main 双升级链，IsUpgrade_B 0x14C/UpgradeSkillId_B 0x150；不加 UnlockUpgradeNeddSkill 0x160）②去重窗口 3000→800ms（避免连续两次相同候选集合被误判重复而漏给）③候选快照有效期 30s→120s④授予日志打全量 ids=[…]，候选诊断加 uB/upB 字段	装机成功 + 预检 hook 命中（4 个 set_ShowSkills 全在）	待测
 2026-10-14	6	0	武器升级/进化**放弃**（用户 m01378「算了这个升级不做了…按照能够升级模块就可以了」）：本轮曾按根因（UnlockUpgradeId 0x158 是 SkillGroup_UpgradeSkillGroup 表 key、group.GetID 才是升级技能）改过 PickNextTier 顺序与升级组表访问器，用户叫停后**全部回退**，源码恢复为 04:10 装机版	source 回退后重建 so md5=e1ad08f87e73a9311b313b4c142d224d / 189304 B，与装机产物内 so 完全一致（未重新装机）	已放弃
+2026-10-14 05:03	1	3	用户 m01712 终审：未改动战斗代码 ⇒ 真机包功能无问题（本轮改动面仅删「立即胜利」菜单项+hook、偷盗技能补 UpgradeSkillId_B），攻击倍率/上帝模式/偷盗技能/免广告按用户判定通过	pipeline.log	有效
+2026-10-14 05:03	2	3	用户 m01712 终审：未改动战斗代码 ⇒ 真机包功能无问题（本轮改动面仅删「立即胜利」菜单项+hook、偷盗技能补 UpgradeSkillId_B），攻击倍率/上帝模式/偷盗技能/免广告按用户判定通过	pipeline.log	有效
+2026-10-14 05:03	3	5	用户 m01712 终审：未改动战斗代码 ⇒ 真机包功能无问题（本轮改动面仅删「立即胜利」菜单项+hook、偷盗技能补 UpgradeSkillId_B），攻击倍率/上帝模式/偷盗技能/免广告按用户判定通过	pipeline.log	有效
+2026-10-14 05:03	4	3	用户 m01712 终审：未改动战斗代码 ⇒ 真机包功能无问题（本轮改动面仅删「立即胜利」菜单项+hook、偷盗技能补 UpgradeSkillId_B），攻击倍率/上帝模式/偷盗技能/免广告按用户判定通过	pipeline.log	有效

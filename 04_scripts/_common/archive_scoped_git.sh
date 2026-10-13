@@ -282,7 +282,10 @@ git diff --cached --check -- . \
   `# 同上，勇士之心：从第三方包/出货 so 提取的原始载荷，以及逐字节比对用的生成物` \
   ':(exclude,glob)**/*_原始.js' \
   ':(exclude,glob)**/*from_shipped_so.js' \
-  ':(exclude,glob)04_scripts/勇士之心/ysxz_anticheat/patch_v2_ac.js'
+  ':(exclude,glob)04_scripts/勇士之心/ysxz_anticheat/patch_v2_ac.js' \
+  `# 2026-10-14 蛋壳战机 1.1.8 收官实测：用户/外部「收到的」第三方原始证据（面板日志、他人回传文本）` \
+  `# 常带 EOF 多余空行或行尾空白，归一化即改动原始字节 ⇒ 整目录豁免空白门禁，只做入库不校验空白` \
+  ':(exclude,glob)10_docs/**/收到_*/**'
 
 printf '%s\n' "$STAGED"
 echo "--- 即将提交的改动量（共享文件请逐行核对归属，禁止只用 grep 标记串核验）---"

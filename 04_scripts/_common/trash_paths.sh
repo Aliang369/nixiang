@@ -103,9 +103,12 @@ suggest_paths() {
   local game="$1" rel child t ct any skipped id
   [[ -n "$game" ]] || { echo "ERROR: --suggest 需要 --game <游戏>" >&2; exit 2; }
   # 游戏 id（zjmc 之类）：优先 --id，其次取 04_scripts/<游戏>/pipeline.json 的 params.game_id
+  # 2026-10-14 补（蛋壳战机 1.1.8 实测）：pipeline.json **无 game_id** 时 grep 无命中 ⇒ 管道 rc=1，
+  # 在 set -euo pipefail 下会让整个 --suggest 静默退出（无输出、rc=1）。故整条管道兜底 `|| true`；
+  # 取不到 id 的后果由下方 [note] 打印，不在此处失败。
   id="${GAME_ID:-}"
   if [[ -z "$id" && -f "$ROOT/04_scripts/$game/pipeline.json" ]]; then
-    id="$(grep -o '"game_id"[[:space:]]*:[[:space:]]*"[^"]*"' "$ROOT/04_scripts/$game/pipeline.json" 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+    id="$(grep -o '"game_id"[[:space:]]*:[[:space:]]*"[^"]*"' "$ROOT/04_scripts/$game/pipeline.json" 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/' || true)"
   fi
   echo "[trash_paths] --suggest game=${game} id=${id:-<未知>}（已排除含 tracked 文件的路径与禁清目录）"
   for parent in 03_decompiled 06_dumped 07_patched 09_test; do
