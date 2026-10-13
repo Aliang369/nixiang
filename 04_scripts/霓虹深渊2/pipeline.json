@@ -220,7 +220,7 @@
       "requires": [
         "install"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 霓虹深渊2 --apk \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk\" --icon-source \"$NIXIANG/10_docs/霓虹深渊2/icon_霓虹深渊2.png\" --menu-template \"$NIXIANG/10_docs/霓虹深渊2/nhsy2_menu_template.json\" --date 20261012 --prune --apply --sync-doc --expect-menu-template",
+      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 霓虹深渊2 --apk \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk\" --menu-template \"$NIXIANG/10_docs/霓虹深渊2/nhsy2_menu_template.json\" --date 20261012 --prune --apply --sync-doc --expect-menu-template",
       "verify": [
         {
           "type": "file_exists",
