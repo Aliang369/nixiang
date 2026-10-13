@@ -6,8 +6,23 @@ menu_shown|native menu shown
 hook_hit|\[nhsy2\] (lib ready|初始化成功|MOD 已就绪|fault guard armed)
 auth_fail|renew auth fail|authoritative=.*deny
 auth_ok|auth game_id synced from native|renew ok
-crash|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|tombstone
+# 崩溃判据收窄（2026-10-14，10.12 底包第三轮实测）：**去掉裸 `tombstone`** —— 本作有一个游戏内
+# Attri 键就叫 `tombstonespawncd`，我方 `attri probe #52 key=tombstonespawncd value=1.0000` 被裸
+# `tombstone` 命中 ⇒ 预检第三次误判「判定段=A 运行中崩溃」。真崩溃一定伴随 `F libc: Fatal signal`，
+# 故改用 `/data/tombstones/` 路径形态，判据不放松。
+crash|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|/data/tombstones/
 # 自家 CrashTrap 的自述行不是崩溃（2026-10-11 实测：`Mod_Menu: [nhsy2] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)`
 # 被默认 RE_CRASH 的 `SIGSEGV` 命中 ⇒ 预检误判「判定段=A 运行中崩溃」。注意本类别是**整体替换** RE_CRASH_IGNORE，
 # 不是追加 —— 必须把默认三项一并抄上。）
-crash_ignore|记录先前处理器|\[crash\]|CrashTrap|fault guard armed|fault guard restored
+# 第二条误报排除（2026-10-14 实测，10.12 底包首启）：本作我方 by-name 探针故意触发一次 SEGV
+# 探测符号可解析性（`[Il2Cpp] dynsym self-parse: 0 syms (probe=SEGV-caught)`），THEMIS 捕获后打
+# `D [THEMIS]: send crashlog successed, path=…/tombstone_xxxx.native.log` —— 该行的 path 含
+# `tombstone` 被 RE_CRASH 命中 ⇒ 预检误判「判定段=A 运行中崩溃」（而进程随后正常装完 6 个登录挂点、
+# 弹菜单、进登录页）。台账「已否证（禁止重试区）」已列：THEMIS 报 send crashlog successed ≠ 游戏崩了。
+# 真崩溃判据仍保留 `F libc: Fatal signal` / `FATAL EXCEPTION` 与进程范围校验。
+# 第三条误报排除（2026-10-14 实测，10.12 底包首启第二轮）：挂点安装期我方 fail-soft 警告行自带
+# `SIGSEGV` 字样 —— `W Mod_Menu: [nhsy2] <槽名> <类>.<方法> 入口 +8 处即 ret（函数体不足 16 字节）
+# — 跳过该槽位：Dobby 16 字节补丁会改写紧随其后的邻居方法入口（历史事故 SIGSEGV fault addr 0xb8）`
+# ⇒ 被 RE_CRASH 的 `SIGSEGV` 命中、预检误判「判定段=A 运行中崩溃」。该行是我方**主动跳过**槽位的
+# 说明（install skip: 3），不是崩溃；同轮 `install pass: ok=69 dead=0/72` 照常完成。
+crash_ignore|记录先前处理器|\[crash\]|CrashTrap|fault guard armed|fault guard restored|send crashlog successed|跳过该槽位|历史事故 SIGSEGV

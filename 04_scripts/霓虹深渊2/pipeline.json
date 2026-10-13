@@ -1,14 +1,14 @@
 {
   "game": "霓虹深渊2",
-  "version": "2026.10.5 / com.veewo.neonabyss2 (TapTap 渠道)",
-  "notes": "2026-10-12 由「霓虹深渊2 会话效率复盘」P0-1 补齐：本游戏此前**没有 pipeline.json**，导致 P4 轮次门禁不可用、install_guard.sh 判「装机策略未知」形同虚设（会话里出现 7 次 uninstall 且招致用户质问「同签名游戏你为什么还要卸载重装？」）。装机包走 native 外科注入链（不是 apktool 重建）：surgical_nhsy2_2026.10.5.sh 内部构建 libstarry_magic.so + 注入 dex/so → nhsy2_sign.sh 用 starry_release.jks 签名 → NHSY2_INSTALL=1 才装机。r17 包已交付结项（md5 4c27f8da1886c8844f4724cb4a243716 / 1,338,643,610 B，L3 通过 用户 m06941），收官时按裁剪清单清理了约 2.9 GB 中间产物（02_apks/霓虹深渊2、06_dumped/霓虹深渊2、libs_nhsy2 已不在工作区）⇒ 重新开工必须先补回官包再跑 build_surgical，不要以为缺产物＝脚本坏了。",
+  "version": "2026.10.12 / com.veewo.neonabyss2 (TapTap 渠道)",
+  "notes": "2026-10-12 由「霓虹深渊2 会话效率复盘」P0-1 补齐：本游戏此前**没有 pipeline.json**，导致 P4 轮次门禁不可用、install_guard.sh 判「装机策略未知」形同虚设（会话里出现 7 次 uninstall 且招致用户质问「同签名游戏你为什么还要卸载重装？」）。装机包走 native 外科注入链（不是 apktool 重建）：surgical_nhsy2_2026.10.5.sh 内部构建 libstarry_magic.so + 注入 dex/so → nhsy2_sign.sh 用 starry_release.jks 签名 → NHSY2_INSTALL=1 才装机。r17 包已交付结项（md5 4c27f8da1886c8844f4724cb4a243716 / 1,338,643,610 B，L3 通过 用户 m06941），收官时按裁剪清单清理了约 2.9 GB 中间产物（02_apks/霓虹深渊2、06_dumped/霓虹深渊2、libs_nhsy2 已不在工作区）⇒ 重新开工必须先补回官包再跑 build_surgical，不要以为缺产物＝脚本坏了。\n[2026-10-14] 真机底包更新为官方 taptap 2026.10.12.3c8f88d4990（vc578，base.apk 1,346,094,567 B，md5 8d47959d27c696e9404770fc95e286b0，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 与 10.10 同证书）；libil2cpp.so md5 43018559d0c7a28fe53a47b2f606e421、global-metadata.dat md5 4432669382c8da1d473007f3fdccb97d 均已变 ⇒ 在新底包上重做移植；底包由真机只读拉取（02_apks/ 已清空、APK 不留本地）。",
   "params": {
     "game_id": "nhsy2",
     "package": "com.veewo.neonabyss2",
     "tag": "nhsy2",
     "serial": "f9a116a2",
-    "version": "2026.10.5",
-    "version_code": "2026.10.5.85c2f964f38"
+    "version": "2026.10.12",
+    "version_code": "2026.10.12.3c8f88d4990"
   },
   "env": {
     "NIXIANG": "/Users/aliang/Documents/nixiang",
@@ -25,16 +25,22 @@
   "stages": [
     {
       "id": "check_apk",
-      "name": "官包核对（TapTap 官包入 02_apks/霓虹深渊2/，作为外科注入底包）",
+      "name": "官包核对（真机已装官方 2026.10.12 只读拉取件作底包；02_apks/ 已清空、APK 不留本地）",
       "requires": [],
-      "command": "ls -lh \"$NIXIANG/02_apks/霓虹深渊2/\" && { command -v sha256sum >/dev/null 2>&1 && sha256sum \"$NIXIANG/02_apks/霓虹深渊2/霓虹深渊2_taptap_official.apk\" || shasum -a 256 \"$NIXIANG/02_apks/霓虹深渊2/霓虹深渊2_taptap_official.apk\"; }",
+      "command": "B=/tmp/nhsy2/nhsy2_base_2026.10.12.apk; mkdir -p /tmp/nhsy2; [ -f \"$B\" ] || adb -s $SERIAL pull \"$(adb -s $SERIAL shell pm path com.veewo.neonabyss2 | tr -d '\\r' | sed -n 's|^package:||p' | head -1)\" \"$B\"; ls -lh \"$B\" && echo \"md5=$(md5 -q \"$B\")\" && { command -v sha256sum >/dev/null 2>&1 && sha256sum \"$B\" || shasum -a 256 \"$B\"; }",
       "verify": [
         {
           "type": "file_exists",
-          "path": "02_apks/霓虹深渊2/霓虹深渊2_taptap_official.apk"
+          "path": "/tmp/nhsy2/nhsy2_base_2026.10.12.apk"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-14 03:35:16",
+      "artifacts": {
+        "/tmp/nhsy2/nhsy2_base_2026.10.12.apk": {
+          "md5": "8d47959d27c696e9404770fc95e286b0"
+        }
+      }
     },
     {
       "id": "anchor",
@@ -57,7 +63,22 @@
           "path": "10_docs/霓虹深渊2/侦察笔记_锚点索引.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-14 03:35:19",
+      "artifacts": {
+        "10_docs/霓虹深渊2/路线锁定.md": {
+          "md5": "8f193c720cd824d935359016ed698985"
+        },
+        "10_docs/霓虹深渊2/硬约束.md": {
+          "md5": "9a077166f2b7e73b9b0254b414b8607a"
+        },
+        "10_docs/霓虹深渊2/侦察笔记_锚点索引.md": {
+          "md5": "c61c36df19af6a4e8ad8a8ca135bf033"
+        }
+      },
+      "inputs": {
+        "/tmp/nhsy2/nhsy2_base_2026.10.12.apk": "8d47959d27c696e9404770fc95e286b0"
+      }
     },
     {
       "id": "impl_mod",
@@ -81,25 +102,45 @@
           "pattern": "nhsy2_TryInit"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-14 03:35:25",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp": {
+          "md5": "83ca3a3393a2f21fe53d011f68a702e4"
+        },
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Entry.cpp": {
+          "md5": "5e996199ef4c14769f32aacde5ef9176"
+        }
+      }
     },
     {
       "id": "build_surgical",
-      "name": "构建 + 外科注入（surgical_nhsy2_2026.10.5.sh：NDK 构建 libstarry_magic.so → 注入 dex/so → 未签名包）",
+      "name": "构建 + 外科注入（surgical_nhsy2_2026.10.12.sh：NDK 构建 libstarry_magic.so → 注入 dex/so → 未签名包）",
       "requires": [
         "impl_mod"
       ],
       "preflight": [
-        "$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_nhsy2_2026.10.5.sh"
+        "mod菜单/starry-mod-menu/scripts/surgical_nhsy2_2026.10.12.sh",
+        "04_scripts/霓虹深渊2/nhsy2_sign_2026.10.12.sh"
       ],
-      "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_nhsy2_2026.10.5.sh",
+      "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_nhsy2_2026.10.12.sh",
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-unsigned.apk"
+          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-unsigned.apk"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-14 03:38:00",
+      "artifacts": {
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-unsigned.apk": {
+          "md5": "13f2b1b7152d70ea1e57db15bb9741ef"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp": "83ca3a3393a2f21fe53d011f68a702e4",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Entry.cpp": "5e996199ef4c14769f32aacde5ef9176"
+      }
     },
     {
       "id": "sign",
@@ -108,16 +149,25 @@
         "build_surgical"
       ],
       "preflight": [
-        "$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign.sh"
+        "04_scripts/霓虹深渊2/nhsy2_sign_2026.10.12.sh"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign.sh\"",
+      "command": "bash \"$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign_2026.10.12.sh\"",
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk"
+          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-14 03:38:44",
+      "artifacts": {
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk": {
+          "md5": "063fa07f5541cc5e946bf7d9ec0a45dd"
+        }
+      },
+      "inputs": {
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-unsigned.apk": "13f2b1b7152d70ea1e57db15bb9741ef"
+      }
     },
     {
       "id": "device_ready",
@@ -140,19 +190,29 @@
     },
     {
       "id": "install",
-      "name": "装机（同签名覆盖安装；装机前机器关：轮次根因闸门 + 产物六查 + 装机策略闸门）",
+      "name": "装机（证书迁移：官方 Veewo → 星光，需卸载；装机前机器关：轮次根因闸门 + 产物六查 + 装机策略闸门）",
       "requires": [
         "sign",
         "device_ready"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --game 霓虹深渊2 --rounds-threshold 3 --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp\" && bash \"$NIXIANG/04_scripts/_common/install_guard.sh\" 霓虹深渊2 --cmd \"adb -s $SERIAL install -r -d 08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk\" && NHSY2_INSTALL=1 bash \"$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign.sh\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.veewo.neonabyss2 \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk\"",
+      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --game 霓虹深渊2 --rounds-threshold 3 --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp\" && { bash \"$NIXIANG/04_scripts/_common/install_guard.sh\" 霓虹深渊2 --allow-uninstall --cmd \"adb -s $SERIAL uninstall com.veewo.neonabyss2 && adb -s $SERIAL install -r -d \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk\"\" || exit $?; } && adb -s $SERIAL uninstall com.veewo.neonabyss2 && adb -s $SERIAL install -r -d \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.veewo.neonabyss2 \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk\"",
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.5_surgical-releaseSigned.apk"
+          "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-14 03:44:45",
+      "artifacts": {
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk": {
+          "md5": "063fa07f5541cc5e946bf7d9ec0a45dd"
+        }
+      },
+      "inputs": {
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk": "063fa07f5541cc5e946bf7d9ec0a45dd",
+        "04_scripts/霓虹深渊2/.device_ready.txt": "a138fe788b225a2ebefaa90f24a9ae9c"
+      }
     },
     {
       "id": "archive",
@@ -160,15 +220,19 @@
       "requires": [
         "install"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 霓虹深渊2 --apk \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.10_surgical-releaseSigned.apk\" --menu-template \"$NIXIANG/10_docs/霓虹深渊2/nhsy2_menu_template.json\" --expect-menu-template --sync-doc",
+      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 霓虹深渊2 --apk \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.12_surgical-releaseSigned.apk\" --icon-source \"$NIXIANG/10_docs/霓虹深渊2/icon_霓虹深渊2.png\" --menu-template \"$NIXIANG/10_docs/霓虹深渊2/nhsy2_menu_template.json\" --date 20261012 --prune --apply --sync-doc --expect-menu-template",
       "verify": [
         {
           "type": "file_exists",
-          "path": "10_docs/霓虹深渊2/nhsy2_menu_template.json"
+          "path": "08_output/霓虹深渊2/delivery_20261012/menu_template.json"
         },
         {
           "type": "file_exists",
-          "path": "10_docs/霓虹深渊2/台账.md"
+          "path": "10_docs/霓虹深渊2/正式包裁剪清单_20261012.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/霓虹深渊2/nhsy2_menu_template.json"
         }
       ],
       "status": "pending"
@@ -179,7 +243,7 @@
       "requires": [
         "archive"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/_common/archive_scoped_git.sh\" 霓虹深渊2",
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_scoped_git.sh\" --message \"feat(霓虹深渊2): r18 底包迁移至官方 taptap 2026.10.12.3c8f88d4990/vc578 并复刻星空版（装机+L3 通过）\" --path 04_scripts/霓虹深渊2 --path 10_docs/霓虹深渊2 --path 10_docs/_state/games/霓虹深渊2.md --path mod菜单/starry-mod-menu/scripts/surgical_nhsy2_2026.10.12.sh",
       "verify": [
         {
           "type": "file_exists",
