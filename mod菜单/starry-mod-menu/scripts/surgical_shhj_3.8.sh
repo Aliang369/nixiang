@@ -403,11 +403,25 @@ PY
 fi
 
 echo "[4/6] binary AndroidManifest (GameApplication → StarryApp + MenuService)"
+# 2026-10-15（山海幻境 4.3 复盘 P0-2）：MF_CACHE 必须是**二进制 AXML**（头 4 字节 03 00 08 00）。
+# 背景：dump_*_static.sh 曾把**文本** AndroidManifest.xml 写在同一路径上，一旦命中就会把文本
+# Manifest 原样塞进 zip —— 构建全绿、装机后 Manifest 坏。此断言把这类错误挡在组装阶段。
+assert_binary_axml() {  # assert_binary_axml <file> <来源说明>
+  local f="$1" src="$2" head
+  head="$(head -c 4 "$f" | od -An -tx1 | tr -d ' \n')"
+  if [[ "$head" != "03000800" ]]; then
+    echo "ERROR: $src 不是二进制 AXML（头=${head}，期望 03000800）: $f" >&2
+    echo "  ⇒ 多半把 apktool 的**文本** Manifest 当成了 MF_CACHE；文本 Manifest 请用 *.text.xml，二进制用 apktool b 后的 extract。" >&2
+    exit 1
+  fi
+}
 if [[ -n "${SHHJ_BINARY_MANIFEST:-}" && -f "$SHHJ_BINARY_MANIFEST" ]]; then
+  assert_binary_axml "$SHHJ_BINARY_MANIFEST" "SHHJ_BINARY_MANIFEST"
   cp "$SHHJ_BINARY_MANIFEST" "$WORK/AndroidManifest.xml"
 elif [[ -f "$MF_CACHE" ]]; then
+  assert_binary_axml "$MF_CACHE" "MF_CACHE"
   cp "$MF_CACHE" "$WORK/AndroidManifest.xml"
-  echo "  using cached $MF_CACHE"
+  echo "  using cached $MF_CACHE (binary AXML ok)"
 else
   echo "  generate binary Manifest once (apktool d -s + b extract)"
   apktool d -f -s -o "$WORK/orig_dec" "$ORIG_APK" >/dev/null

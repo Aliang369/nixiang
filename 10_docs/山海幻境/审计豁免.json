@@ -1,0 +1,35 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "山海幻境",
+  "package": "com.chx.shhj",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "tap_login_whitelist",
+      "match": ["PKG_WHITELIST 未含包名"],
+      "conclusion": "接受偏离",
+      "reason": "本游戏强制网页登录不走 TapLoginForceWeb 白名单，而是外科直接改写 SDK 类：ClientLoginUtils.isClientLogin→false、ClientLoginHandler.canHandle→false（构建日志 4.3 轮两处 patch 均命中）。白名单对本包为空属冗余路径缺失，不影响登录链。",
+      "evidence": "mod菜单/starry-mod-menu/scripts/surgical_shhj_3.8.sh [3b/6] 两处 patch 输出 + 4.0 轮登录 201/301 ret=0（10_docs/山海幻境/星光落地_4_20260916.md §登录修复）",
+      "date": "2026-10-15",
+      "review_by": "2026-12-15"
+    },
+    {
+      "id": "android_mk_branch",
+      "match": ["激活分支", "与 --game"],
+      "conclusion": "接受偏离",
+      "reason": "SHHJ 的 so 在**隔离副本**里构建（build_shhj_so_4.sh 改写副本的 Android.mk，工作区 mk 零接触），所以工作区 Android.mk 的激活分支与本游戏不一致是设计如此，不会编出别的游戏的 so。",
+      "evidence": "04_scripts/山海幻境/build_shhj_so_4.sh（rsync 副本 + 注入 -DSTARRY_GAME_SHHJ）+ 产物 so 含 [Shhj]×9、shhj×4、四个 splice 标签且无其它游戏标签",
+      "date": "2026-10-15",
+      "review_by": "2026-12-15"
+    },
+    {
+      "id": "entry_form_application",
+      "match": ["StarryInitProvider", "入口/服务没写进 Manifest"],
+      "conclusion": "接受偏离",
+      "reason": "本游戏 3.8/4.0/4.2/4.3 四轮均用 <application android:name=com.starry.magic.StarryApp> 入口（宿主 GameApplication 派生），真机实测菜单弹出与 hook 均正常；换成 ContentProvider 会引入一个与「换版本复刻」无关的变量。",
+      "evidence": "真机 4.3 预检 logcat：MenuService: native menu shown mode=ACTIVITY、StarryMagic: [桥接] RegisterNatives 20/20、[Shhj] 初始化成功（10_docs/山海幻境/evidence_20261015/README.md §2.2）",
+      "date": "2026-10-15",
+      "review_by": "2026-12-15"
+    }
+  ]
+}
