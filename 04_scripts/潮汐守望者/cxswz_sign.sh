@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# 潮汐守望者 1.2.56.375.3 — 星光包签名阶段（starry_release.jks，与其他星光包同签）
+# 潮汐守望者 — 星光包签名阶段（starry_release.jks，与其他星光包同签）
+# 版本走 CXSWZ_VER：1.2.65.385.1（1.2.56.375.3 起沿用同一把星钥）
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GAME="潮汐守望者"
-VERSION="1.2.56.375.3"
+VERSION="${CXSWZ_VER:-1.2.65.385.1}"
 UNSIGNED="$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_starry-unsigned.apk"
 OUT="$NIXIANG/08_output/$GAME"
 SIGNED="$OUT/${GAME}_${VERSION}_starry-releaseSigned.apk"

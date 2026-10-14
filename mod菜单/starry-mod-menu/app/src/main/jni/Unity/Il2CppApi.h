@@ -177,6 +177,24 @@ bool IsManagedObjectPtr(void* p);
 bool IsReadableRange(uintptr_t addr, size_t len);
 bool IsExecutableRange(uintptr_t addr, size_t len);
 
+/** ★2026-10-14：可信模块名覆盖（IL2CPP 运行时所在模块）。
+ *
+ *  默认（不调用本函数）= 旧行为：可信映射范围 = sec_lib_il2cpp() 指向的 libil2cpp.so。
+ *  加壳作品例外：潮汐守望者 / 境界守望者包内 libil2cpp.so 只是 7z 解压壳，
+ *  真 IL2CPP 在 liblogic.so（首启自解压）。此时 xdl_sym 解析出的正确地址会被
+ *  InIl2CppRange() 判成 themis 诱饵全部丢弃（实测 93/93 miss → core api missing）。
+ *
+ *  调用方在 Api::Load() **之前** SetTrustLib("liblogic.so") 即可。
+ *  不调用 ⇒ 其余游戏解析行为逐字节不变。 */
+void SetTrustLib(const char* libSuffix);
+
+/* ★e6：从 trust lib 解析**任意导出**的地址（自解析 dynsym 优先，xdl_sym 兜底）。
+ * 用途：潮汐守望者必须先 hook `il2cpp_init`，用「init 返回」作为「运行时真正就绪」的
+ * 判据 —— 只凭 domain_assemblies 非空是不够的（程序集 vector 在 il2cpp_init 内部就被
+ * 填好了，此时调 class_from_name/class_name 会让 il2cpp 自己 abort，实测 1.2.65.385.1）。
+ * 与 SetTrustLib 同源：未 SetTrustLib 时退回包内 libil2cpp.so，行为不影响其它游戏。 */
+void* ResolveExport(const char* name);
+
 inline int32_t ReadI32(void* p, size_t off) { return *(int32_t*)((uintptr_t)p + off); }
 inline void WriteI32(void* p, size_t off, int32_t v) { *(int32_t*)((uintptr_t)p + off) = v; }
 inline float ReadF32(void* p, size_t off) { return *(float*)((uintptr_t)p + off); }

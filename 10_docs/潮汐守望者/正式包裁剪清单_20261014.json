@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/潮汐守望者",
+  "keep": "潮汐守望者_1.2.65.385.1_starry-releaseSigned.apk",
+  "keep_size": 219267536,
+  "keep_md5": "cdb5114bec028a336c04475996859390",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "潮汐守望者_1.2.65.385.1_starry-unsigned.apk",
+      "size": 219133063,
+      "md5": "5886ffe7f9a1ccfd65f01b2f87112b1a"
+    },
+    {
+      "name": "潮汐守望者_1.2.65.385.1_starry-releaseSigned.apk.idsig",
+      "size": 1738267,
+      "md5": "ded8a15f6ce74fba9d9b0db5a036fcea"
+    }
+  ],
+  "removed_count": 2
+}

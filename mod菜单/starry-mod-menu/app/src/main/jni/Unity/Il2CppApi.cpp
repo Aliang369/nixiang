@@ -168,6 +168,23 @@ struct DynsymInfo {
     uintptr_t base = 0;
 };
 
+/* ★2026-10-14 新增：可信模块名覆盖（默认 nullptr ⇒ 与改造前逐字节一致）。
+ *
+ * 血证（潮汐守望者 1.2.65.385.1，小米 96f0d883，09_logs/潮汐守望者/starry_xiaomi_run_1.2.65.385.1.log）：
+ *   该作族（潮汐守望者 / 境界守望者）**包内 libil2cpp.so 只是 7z 解压壳（157KB）**，
+ *   真 IL2CPP 运行时在 liblogic.so（首启自解压，177MB）。
+ *   Load("liblogic.so") 时 xdl_open 成功、xdl_sym 也解析出了正确地址
+ *   （il2cpp_class_from_name = liblogic_base + 0x44af59c），
+ *   但 InIl2CppRange() 拿的是 sec_lib_il2cpp()（libil2cpp.so 那条映射），
+ *   ⇒ 全部被 `poison` 判成 themis 诱饵丢弃：「93 条 miss 全 miss」+
+ *   「core api missing (xdl+dynsym) asm_enum=0 asm_open=0 cfname=0 scan=0」
+ *   ⇒ Api::Load 恒 false ⇒ 钩子一个都没挂上（hooked=0）。
+ *
+ * 修法：调用方在 Load() 之前 SetTrustLib("liblogic.so")，把可信范围换成**真正承载
+ *   IL2CPP 的那个模块**。不调用则本变量保持 nullptr，行为与改造前完全一致
+ *   ⇒ 其余约 30 个游戏的解析结果零变化（不影响任何现有作品）。 */
+static const char* g_trustLibName = nullptr;
+
 struct PhdrCtx {
     const char* lib;
     uintptr_t base;
@@ -542,7 +559,8 @@ static void* DynsymLookup(const char* name) {
         map = new std::unordered_map<std::string, void*>();
         SetScanThread(pthread_self());  // SEGV handler 按线程匹配，必须先登记当前线程
         bool ok = SafeProbe([&]() -> bool {
-            BuildDynsymMap(sec_lib_il2cpp(), map);
+            // ★2026-10-14：自解析也跟随 trust lib（否则对 7z 壳 libil2cpp.so 永远 0 syms）
+            BuildDynsymMap(g_trustLibName ? g_trustLibName : sec_lib_il2cpp(), map);
             return true;
         });
         LOGI("[Il2Cpp] dynsym self-parse: %zu syms (probe=%s)",
@@ -589,10 +607,11 @@ static int PhdrCallbackQuiet(struct dl_phdr_info* info, size_t, void* data) {
     return 1;
 }
 
-/* libil2cpp.so 的可信映射范围 [base, end)。取不到时返回 false（调用方放行，退回旧行为）。 */
+/* libil2cpp.so 的可信映射范围 [base, end)。取不到时返回 false（调用方放行，退回旧行为）。
+ * ★2026-10-14：lib 名改走 g_trustLibName 覆盖（默认 sec_lib_il2cpp()，行为不变）。 */
 static bool LibIl2CppRange(uintptr_t* outBase, uintptr_t* outEnd) {
     PhdrCtx ctx = {};
-    ctx.lib = sec_lib_il2cpp();
+    ctx.lib = g_trustLibName ? g_trustLibName : sec_lib_il2cpp();
     if (!ctx.lib || dl_iterate_phdr(PhdrCallbackQuiet, &ctx) <= 0 || !ctx.found) return false;
     uintptr_t end = ctx.base;
     for (int i = 0; i < ctx.phnum; i++) {
@@ -773,6 +792,31 @@ void SetInScan(int v) { g_inScan = v; }
 
 } // namespace detail
 
+/* ★2026-10-14：把「可信模块名」换成真正承载 IL2CPP 运行时的那个模块。
+ * 必须在 Api::Load() **之前**调用（Load 内部的 ResolveIl2CppSym / LibIl2CppRange 就要用）。
+ * 传 nullptr = 恢复默认（sec_lib_il2cpp()）。不调用 = 改造前行为。 */
+void SetTrustLib(const char* libSuffix) {
+    detail::g_trustLibName = (libSuffix && *libSuffix) ? libSuffix : nullptr;
+    LOGI("[Il2Cpp] SetTrustLib: %s",
+         detail::g_trustLibName ? detail::g_trustLibName : sec_lib_il2cpp());
+}
+
+/* ★e6：解析 trust lib 上任意导出（供游戏模块 hook il2cpp_init 用）。
+ * 走的是同一套「xdl_sym + 自解析 dynsym + 诱饵过滤」，只是不写进 Api 结构。
+ * 不缓存 handle：本接口只被少数游戏在就绪闸门里调用几次。 */
+void* ResolveExport(const char* name) {
+    if (!name || !*name) return nullptr;
+    const char* lib = detail::g_trustLibName ? detail::g_trustLibName : sec_lib_il2cpp();
+    void* h = xdl_open(lib, XDL_DEFAULT);
+    if (!h) {
+        LOGI("[Il2Cpp] ResolveExport: xdl_open %s failed", lib);
+        return nullptr;
+    }
+    void* p = detail::ResolveIl2CppSym(h, name);
+    LOGI("[Il2Cpp] ResolveExport %s -> %p", name, p);
+    return p;
+}
+
 void SetScanThread(pthread_t t) {
     detail::g_scanThread = t;
     detail::g_scanThreadSet = true;
@@ -832,19 +876,30 @@ bool IsManagedObjectPtr(void* p) {
 }
 
 /* maps 级可读/可执行判定（[addr, addr+len) 必须完整落在单个映射内）。
- * 供外部（Games/*.cpp）在做「读目标地址 / 装 inline hook」前做前置守卫。 */
+ * 供外部（Games/*.cpp）在做「读目标地址 / 装 inline hook」前做前置守卫。
+ *
+ * ★e5（潮汐守望者 1.2.65.385.1 定案）：必须先 Untag 再查 maps。
+ *   本机 liblogic.so 的 il2cpp 对象指针带 MTE top-byte 标签（实测
+ *   domain_assemblies[0]=0xb4000074f4535000，标签字节正是 StarPtr.h 的 kTagHintTop=0xb4），
+ *   而 /proc/self/maps 里登记的是去标签地址（0x74f4535000）。
+ *   原来直接拿带标签地址查表 ⇒ 必然 miss ⇒ 退化成 fopen 全量扫 maps（每拍 67 个 assembly
+ *   × 多次 = resolve 8~12 秒）且恒判「不可读」⇒ Api::ImageOf 恒 nullptr ⇒ 按名找类全 miss。
+ *   诊断实证：diag asm: a0=0xb4000074f4535000 rd16=0 heap=1（同一指针被 IsValidHeapPtr 判真
+ *   却在此判否）。Untag 只在判 maps 时用；调用方解引用仍用带标签原指针（MTE 语义正确）。 */
 bool IsReadableRange(uintptr_t addr, size_t len) {
+    const uintptr_t u = starptr::Untag(addr);
     // v26u 热路径：先查 8192 条 maps 快照（零 I/O），未命中才走精确 fopen 判定。
     bool found = false;
-    const bool ok = detail::PermCachedSoft(addr, len, 1u, &found);
+    const bool ok = detail::PermCachedSoft(u, len, 1u, &found);
     if (found) return ok;
-    return detail::IsReadableRange(addr, len);
+    return detail::IsReadableRange(u, len);
 }
 bool IsExecutableRange(uintptr_t addr, size_t len) {
+    const uintptr_t u = starptr::Untag(addr);
     bool found = false;
-    const bool ok = detail::PermCachedSoft(addr, len, 4u, &found);
+    const bool ok = detail::PermCachedSoft(u, len, 4u, &found);
     if (found) return ok;
-    return detail::MappingHasPerm(addr, len, 'x');
+    return detail::MappingHasPerm(u, len, 'x');
 }
 
 bool Api::Load(const char* libName) {
@@ -1030,14 +1085,16 @@ void* Api::ImageOf(void* assembly) const {
      * 万一 asm 是坏指针也只是返回 nullptr 并打日志，不会把进程带崩。 */
     void* img = nullptr;
     /* v4：读前先查 maps（不可读 = 等价于故障，直接给 nullptr），
-     * 避免在模拟器上靠信号兜底——那会把初始化拖进死循环。 */
-    if (!detail::IsReadableRange((uintptr_t)assembly, 8)) return nullptr;
+     * 避免在模拟器上靠信号兜底——那会把初始化拖进死循环。
+     * e5：改用公开的 IsReadableRange（内部 Untag + 走 8192 条 maps 缓存），
+     * 既让 MTE 带标签指针判对，也免掉每拍 67 次 fopen 全量扫 maps（8~12s → 微秒级）。 */
+    if (!IsReadableRange((uintptr_t)assembly, 8)) return nullptr;
     if (!SafeProbe([&] { img = *(void**)assembly; return true; })) return nullptr;
     static int s_log = 0;
     if (s_log < 12) {
         s_log++;
         LOGI("[Il2Cpp] ImageOf asm=%p -> img=%p", assembly, img);
-        if (img && IsValidHeapPtr(img) && detail::IsReadableRange((uintptr_t)img, 8)) {
+        if (img && IsValidHeapPtr(img) && IsReadableRange((uintptr_t)img, 8)) {
             const char* nm = nullptr;
             SafeProbe([&] { nm = *(const char**)img; return true; });
             if (nm && IsValidHeapPtr((void*)nm))
@@ -1090,6 +1147,20 @@ void* Api::FindClassByShortName(const char* shortName) const {
  * 做法：按 image 懒建一次「ns \x1f name → klass」全量哈希表，之后 O(1)。
  * 只有真正被查询过的 image 才会建表（FindClassNs 命中即返回，通常只建 1~2 张）。
  * ========================================================================== */
+/* ★e6：元数据名字指针的**有界**拷贝。
+ * 背景：1.2.65.385.1 实测在 il2cpp_init 完成前做 67 图扫描，abort 落在 il2cpp 内部
+ * （x15 = liblogic+0x288AEF4，与旧崩溃同偏移）；若 name 指针是「可读但非字符串」的野
+ * 指针，旧代码 `std::string::append(cn)` 会 strlne 到数 MB 再抛 std::length_error，
+ * 在无 catch 的 native 线程上等同于 abort。这里一律封顶 256 字节并拒收非法名字。 */
+static bool AppendNameBounded(std::string& out, const char* p) {
+    if (!p) return false;
+    if (!IsReadableRange((uintptr_t)p, 1)) return false;
+    const size_t len = strnlen(p, 256);
+    if (len == 0 || len >= 256) return false;
+    out.append(p, len);
+    return true;
+}
+
 void* Api::ClassFromNameScan(void* image, const char* ns, const char* name) const {
     if (!image || !name) return nullptr;
     if (!image_class_count || !image_class || !class_name) return nullptr;
@@ -1117,14 +1188,15 @@ void* Api::ClassFromNameScan(void* image, const char* ns, const char* name) cons
         for (uint32_t i = 0; i < n; i++) {
             void* k = image_class(image, i);
             if (!k) continue;
-            const char* cn = class_name(k);
-            if (!cn) continue;
-            std::string kk;
+            std::string kk;                       // ★e6：全部改走有界名字拷贝
             if (class_namespace) {
                 const char* kns = class_namespace(k);
-                if (kns && *kns) { kk.assign(kns); kk.push_back('\x1f'); }
+                if (kns && *kns) {
+                    if (!AppendNameBounded(kk, kns)) continue;
+                    kk.push_back('\x1f');
+                }
             }
-            kk.append(cn);
+            if (!AppendNameBounded(kk, class_name(k))) continue;
             /* 同名同命名空间重复时保留第一个，与 il2cpp 自己的线性查找语义一致 */
             m->emplace(std::move(kk), k);
         }

@@ -74,8 +74,22 @@ LC_ALL=C grep -aqF -- "DMG x%d" "$SO" \
   || { echo "ERROR: $SO 未见伤害倍率改写日志（功能未编译进去）" >&2; exit 1; }
 LC_ALL=C grep -aqF -- "INV e=%p" "$SO" \
   || { echo "ERROR: $SO 未见无敌改写日志（功能未编译进去）" >&2; exit 1; }
-LC_ALL=C grep -aqF -- "cxswz-f" "$SO" \
-  || { echo "ERROR: $SO 未见构建身份标记（CXSWZ_BUILD_TAG 未编入）" >&2; exit 1; }
+LC_ALL=C grep -aqF -- "cxswz-e10-" "$SO" \
+  || { echo "ERROR: $SO 未见构建身份标记（CXSWZ_BUILD_TAG 未编入，需 cxswz-e10-）" >&2; exit 1; }
+# ---- 运行时布局解析（1.2.65.385.1 起取代静态 RVA；缺任一 = 源码未切到 e5 路线）----
+for s in "cxswz_tables.txt" "cxswz_cfg.txt" "layout: ok=%d how=%s" "S3 reconcile" \
+         "SetTrustLib" "hotpath: layout not ok" "waiting il2cpp runtime" "runtime not up" \
+         "timing layout:" "timing tick:" "timing hooks:" "diag asm(v5):" "shortscan img#" \
+         "il2cpp_init hooked" "il2cpp_init 已返回" "sweep HIT" "首次看到程序集" \
+         "ResolveExport %s -> %p" "等待初始化" "short index: images=" \
+         "S5 class layout" "hpd inline fix" "D#%d hd=" "D#%d list="; do
+  LC_ALL=C grep -aqF -- "$s" "$SO" \
+    || { echo "ERROR: $SO 未见运行时布局解析标记 ${s}" >&2; exit 1; }
+done
+# 静态 RVA 路径必须已短路（rva=0）；旧序言常量只许作为 *DOC_ONLY* 件出现在符号表外
+if LC_ALL=C grep -aqF -- "rva drift got=" "$SO"; then
+  : # 字符串仍在（HookAtRva 保留），但 rva 传 0 ⇒ 不会走到；无需报错
+fi
 # 滑条范围必须与需求一致（1..10）；旧 1..100 不得残留
 LC_ALL=C grep -aqF -- "Slider_伤害倍率:1:10:1" "$SO" \
   || { echo "ERROR: $SO 伤害倍率滑条不是 1:10（菜单串与需求不一致）" >&2; exit 1; }
