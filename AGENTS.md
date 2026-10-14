@@ -68,6 +68,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
     全部归档到 `10_docs/_state/规范变更日志.md`；新建只读度量脚本 `04_scripts/_common/session_metrics.py`；
     依据 `10_docs/_state/规范优化_20261014_双会话效率复盘与可执行方案.md`。
   - 2026-10-14（用户 m01681「按照方案全量修改」，潮汐守望者会话复盘）：新增 5 工具 + 1 静态规则 —— `device_ready_check.sh`（真机就绪门禁，有 FAIL ⇒ rc=4 不装机）／`crash_forensics.sh`（崩溃取证七件套，免 root 优先 App 自写 `crash_logs/`）／`finalize_round.sh`（收尾+正式包+清理+git 一条命令，默认 dry-run）／`new_hypothesis.sh`（假设预注册：先写判定行与否决条件再改码）／`with_timeout.sh`（垫片，超时 rc=124，**禁字面 `timeout`**）／`lint_mod_thread.sh` 加 R4-prefix；技能文档补 `il2cpp-abi-pitfalls.md` 坑 7·坑 8、`il2cpp-from-scratch.md` §〇 实例台账、`hook-rules.md` §33。依据 `10_docs/_state/规范优化_20261014_潮汐守望者1.2.65.385.1会话复盘.md`。
+  - 2026-10-15（用户本轮：会话效率复盘 + 可执行方案）：新增 `starry_prefs_edit.sh`；`skill/starry-mod` 授权会话小节、`stages.md` 收尾三条命令、`路线锁定.md` 数值来源纪律、后台任务先 `job_list`；依据 `10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`。
   - 本组 17 笔历史正文（P1–P9 落地、去审批化、装机预检闸门、设备画像、出包提速、按需图标模板、邂逅在迷宫 P10–P22、追迹迷城入口审计、
     push_main v2.1、无悔华夏例外范围、霓虹深渊2 P23–P31、bash32 全仓清零、蛋壳战机 P0-1～P2-1）→ 归档位置
     `10_docs/_state/规范变更日志.md` §归档正文 B（含用户原话与机器关实测数字，需要时 `grep` 该文件）。

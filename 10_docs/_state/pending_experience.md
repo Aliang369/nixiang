@@ -91,3 +91,10 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   ④ `state_digest.sh`（状态文档速读 92 KB→19 KB）、`evidence.sh`（logcat 参数化取证）、`so_inspect.py`（sha/strings/zip/hex/disasm/ptr，**strings 默认 UTF-8 感知**：mod 包 37 条中文串 vs 系统 strings 0 条）、`10_docs/霓虹深渊2/侦察笔记_锚点索引.md`（nhsy2Mod.cpp 24 段锚点表，替代 202 次整读）、`round.sh`（一键轮次环，不重造 cycle 脚本）；
   ⑤ `session_start.sh` 出口 4 组命令 + 「被旁路的闸门」点名；`hook-rules.md` §32「编辑一把刀」；`AGENTS.md` P23–P30 + 变更日志；`TOOLBOOK.md` #100（bash32 全仓 63/633 带硬错误，`bash32_check.sh` 按文件传参 ⇒ 无人全仓扫）。
   机器关：`preflight.sh` 14 文件 PASS=13→修 2 处 `$VAR` 紧跟全角字后 FAIL=0、`rootcause_note.sh --selfcheck` 三组全过、`bash32_check.sh` 无硬错误。
+
+## 2026-10-15 霓虹深渊2 r19 会话复盘（优化会话·已落地）
+
+- 规则目标位置：`skill/starry-mod/SKILL.md`（新增「授权会话（卡密）预置与诊断」小节）／`04_scripts/_common/stages.md`（收尾三条固定命令）／`10_docs/_templates/路线锁定.md`（回读时机第 5 条「数值来源纪律」）／`AGENTS.md`（一行指针，32,725 B ≤ 32,768）／`04_scripts/_common/starry_prefs_edit.sh`（新工具）。
+- 依据：`10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`；`session_metrics.py --gate` FAIL 5 项（calls/step 1.15、单发 85.9%、bash 检索 78.9%、单条 >8 KB 32 条、单条消息 33,093 字符）。
+- 状态：**已合并**（证据＝本轮真机实测行 + 反证排除；落点＝上述文件；提交号见本轮 `archive_scoped_git.sh` 输出）。
+- 未落地候选：① P2-2 会话切点加硬阈值（同一共享文件触达 >10 次 或 连续 3 个 step 单发 ⇒ 先压缩再继续）——阈值待下一轮数据；② `pipeline.sh status --brief`（需按指纹锁流程改 `pipeline.sh`）；③ `skill/re-implement/hook-rules.md` 补一条与 `路线锁定.md` 同款的数值来源纪律。

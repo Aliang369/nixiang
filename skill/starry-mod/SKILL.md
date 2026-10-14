@@ -226,6 +226,43 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 
 ---
 
+## 授权会话（卡密）预置与诊断（2026-10-15 霓虹深渊2 r19 落地）
+
+> 来源：r19 为恢复「官方包卸装后丢掉的卡密会话」花了约 2 小时 —— 根因只是 **Android SharedPreferences 的 `value=` 属性写法**。
+> 依据 `10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`（§2.2/§2.3/§4 P0-1）。
+
+**症状 → 首查项（先做便宜的三步，别从命名空间 / 看门狗查起）**
+
+| 症状 | 首查 | 证据行 |
+|---|---|---|
+| 菜单能开、功能全不生效 | 授权会话 | `[验证] grant rejected`（对照 `grant ok exp=…`） |
+| 连 `install pass` 都没有 | 导出摘名 | `[Il2Cpp] core api missing (xdl+dynsym)` |
+| `install pass: ok=N/72` 但 N 变小 | 槽位入口形态 | `install skip: N 个槽位因「入口形态不安全」主动跳过` |
+
+**prefs 解析规则（违反 ⇒ App 拿到空 map，现象与「被谁清空」一模一样）**
+
+- 文件：`/data/data/<pkg>/shared_prefs/starry_magic_prefs.xml`（授权 + 功能开关的唯一载体）。
+- `string` 值在**文本体**；`int/long/float/boolean` 值在 **`value=` 属性**；`set` 子元素是 `<string>`；根是 `<map>`；每项必须有 `name`。
+- 写成文本体 `<boolean name="5">true</boolean>` ⇒ 解析抛异常 ⇒ 空 map ⇒ App 用代码缺省重写 9 个键、`auth_*` 全丢。
+- 判据：`auth_backup_*` **不存在** ⇒ 不是 `clearAuthSession()` 干的；`StarryPrefs: 功能列表变化 → 已清功能偏好；prev=[]` ⇒ 它读到的是空 map。
+- **禁止离线生成整份 XML**（实测同判空 map）；只能在 App 自己写的文件上**拼接**。
+
+**工具（唯一入口，别再手搓 seed 脚本）**
+
+```bash
+bash 04_scripts/_common/starry_prefs_edit.sh --show                       # 列键（token/grant/card 自动脱敏）
+bash 04_scripts/_common/starry_prefs_edit.sh --validate <本地 xml>         # 写前体检（rc=3 时打印修法原文）
+bash 04_scripts/_common/starry_prefs_edit.sh --seed-auth --grant '<grant>' --token '<t>' --card '<卡密>' \
+     [--exp '<ISO>'] [--last-ok <ms>] [--launch --verify]                  # 拼接 + 冷启 + 判据复核
+bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [--launch --verify]
+```
+
+护栏：写前 `am force-stop` 且 pid 必须为空（否则 rc=4）；XML 不合法拒写（rc=3）；写后复核大小与关键键（rc=5）。
+
+**编辑纪律**：同一文件在同一轮内**要么全用 bash 改写、要么 `read` 后再 `edit`**，禁混用 —— 混用会报 `file changed since it was read`（P23「编辑一把刀」；本轮 `路线锁定.md`/`轮次台账.tsv` 各踩一次）。
+
+---
+
 ## 装机前置检查（G1 必查，2026-09-17 起，不再等用户追问）
 
 > 来源：18 份会话记录审计——「防封审计做了吗」「异常兜底做了吗」在 3 个会话被用户重复追问才补做；凡尘西游 TapTap 游戏装机即闪退（SignSpoof 未预嵌证书+登录白名单缺失）；山海幻境装机后被服务端签名校验拦截（ret=5）返工。重复追问 = 流程缺口。
