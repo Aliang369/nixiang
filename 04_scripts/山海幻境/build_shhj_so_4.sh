@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# 山海幻境 4.0：在隔离副本中构建 legacy SHHJ so，不修改工作区 Android.mk。
+# 山海幻境：在隔离副本中构建 legacy SHHJ so，不修改工作区 Android.mk。
+# 换版本时用 SHHJ_BUILD_DIR 指定独立产物目录（例：SHHJ_BUILD_DIR=.../build_4.3），
+# 避免与上一版本的 so 产物互相覆盖；默认沿用 3.8/4.0 时代的 build_4。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SRC="$NIXIANG_ROOT/mod菜单/starry-mod-menu"
-OUT_DIR="$NIXIANG_ROOT/07_patched/山海幻境/build_4"
+OUT_DIR="${SHHJ_BUILD_DIR:-$NIXIANG_ROOT/07_patched/山海幻境/build_4}"
 OUT_SO="$OUT_DIR/libstarry_magic.so"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 NDK_BUILD="$NDK/ndk-build"

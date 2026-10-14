@@ -5,8 +5,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 META_FILE="$SCRIPT_DIR/official_apk.json"
-OUT_ROOT="$NIXIANG_ROOT/06_dumped/山海幻境/official_4"
-MANIFEST_ROOT="$NIXIANG_ROOT/07_patched/山海幻境/surgical_4"
 SMALI_BIN="$NIXIANG_ROOT/01_tools/smali/baksmali"
 APKTOOL_BIN="${APKTOOL_BIN:-apktool}"
 
@@ -24,6 +22,9 @@ print(json.load(open(sys.argv[1], encoding="utf-8"))["version_name"])
 PY
 )"
 [[ -f "$APK" ]] || { echo "错误: APK 不存在: $APK" >&2; exit 1; }
+# 目录按 versionName 派生（3.8/4.0 时代的 official_4 / surgical_4 保持原样，换版本不再互相覆盖）
+OUT_ROOT="$NIXIANG_ROOT/06_dumped/山海幻境/official_${VERSION_NAME}"
+MANIFEST_ROOT="$NIXIANG_ROOT/07_patched/山海幻境/surgical_${VERSION_NAME}"
 [[ -x "$SMALI_BIN" ]] || { echo "错误: 缺少 baksmali: $SMALI_BIN" >&2; exit 1; }
 command -v "$APKTOOL_BIN" >/dev/null || { echo "错误: apktool 不可用" >&2; exit 1; }
 

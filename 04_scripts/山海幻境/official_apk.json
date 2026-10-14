@@ -2,15 +2,15 @@
   "package": "com.chx.shhj",
   "game": "山海幻境",
   "kind": "official_from_device",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/山海幻境/山海幻境_4.2_official_from_device.apk",
-  "version_name": "4.2",
-  "version_code": 68,
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/山海幻境/山海幻境_4.3_official_from_device.apk",
+  "version_name": "4.3",
+  "version_code": 69,
   "installer": "com.android.packageinstaller",
   "originating_package": "com.taptap",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~LJ-nNXyZ-mZCh72BEEOJbA==/com.chx.shhj-hR6rWo2Kb1AucnDi0_J7EA==/base.apk",
-  "size": 1234863367,
-  "sha256": "7b7db05d6130ae6213d53014ef9d0574eb63fddc8d393197d5b9d00c41f8ec7a",
-  "md5": "3468db060b355509600c2dc98df17ead"
+  "remote_path": "/data/app/~~2tKfycaXBB7a810Oek1F2w==/com.chx.shhj-oyHQMmaB5oCE8y0YRULhRA==/base.apk",
+  "size": 1296756453,
+  "sha256": "f475b7570df15abe85b7af0f87b3c4d32ec8c1a6341c22e02ff824f914d89da6",
+  "md5": "9adc1108637c17326a5845d90f067c3c"
 }

@@ -1,0 +1,22 @@
+{
+  "apk_path": "/Users/aliang/Documents/nixiang/08_output/山海幻境/山海幻境_4.3_starry-releaseSigned.apk",
+  "apk_md5": "a014ea1f51b0617836a5d0db06139805",
+  "apk_sha256": "bc6302b818db02b5509b2b5278b8f21e8851c18e965455fa49b8d56eb43971ae",
+  "package": "com.chx.shhj",
+  "version_name": "4.3",
+  "version_code": 69,
+  "signer_cert_md5": "161fca32a36d3df274458682a44cb774",
+  "signer_cert_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "v1_verified": true,
+  "v2_verified": true,
+  "v3_verified": true,
+  "zipalign_verified": true,
+  "libstarry_magic_md5": "8bbc9d43098cde53b8b474ffbbf1491c",
+  "manifest_starry_app": true,
+  "manifest_menu_service": true,
+  "classes3_package_sign_patch": true,
+  "official_common_entries_preserved": 34686,
+  "official_common_entries_changed": [],
+  "official_non_meta_removed": [],
+  "unexpected_added": []
+}

@@ -8,7 +8,8 @@ META_FILE="$SCRIPT_DIR/official_apk.json"
 OUT_FILE="${SHHJ_VERIFY_OUT:-$SCRIPT_DIR/candidate_verify.json}"
 APK="${1:-$NIXIANG_ROOT/08_output/山海幻境/山海幻境_4_surgical-releaseSigned.apk}"
 EXPECTED_C3_PATCH="${SHHJ_EXPECT_CLASSES3_PATCH:-0}"
-SO="$NIXIANG_ROOT/07_patched/山海幻境/build_4/libstarry_magic.so"
+# 换版本时用 SHHJ_SO 指向本轮构建产物（例：07_patched/山海幻境/build_4.3/libstarry_magic.so）
+SO="${SHHJ_SO:-$NIXIANG_ROOT/07_patched/山海幻境/build_4/libstarry_magic.so}"
 PKG="com.chx.shhj"
 VERSION_NAME="$(python3 - "$META_FILE" <<'PY'
 import json

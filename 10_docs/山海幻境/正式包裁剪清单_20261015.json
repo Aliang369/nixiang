@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/山海幻境",
+  "keep": "山海幻境_4.3_starry-releaseSigned.apk",
+  "keep_size": 1298685747,
+  "keep_md5": "a014ea1f51b0617836a5d0db06139805",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "山海幻境_4.3_starry.apk",
+      "size": 1298685747,
+      "md5": "a014ea1f51b0617836a5d0db06139805"
+    },
+    {
+      "name": "山海幻境_4.3_starry-releaseSigned.apk.idsig",
+      "size": 10237467,
+      "md5": "5cab620c36d36475201a5c61a49b8ad0"
+    }
+  ],
+  "removed_count": 2
+}

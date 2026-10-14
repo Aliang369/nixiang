@@ -1,0 +1,6 @@
+# 轮次台账 — 同一功能「改代码 → 装机 → 用户实测」逐轮结果（pipeline.sh <游戏> round 追加）
+# 门禁规则：同一功能连续 3 轮「无效」⇒ 拒绝装机，先填假设矩阵（pipeline.sh <游戏> rounds）
+日期	功能#	轮次	改动摘要	装机结果	用户结果
+2026-10-15 02:34	1	1	4.3 换版本复刻：tHurt inv + GXR(2)；用户实测有效（m00002），真机 feature #1=ON inv=1	pipeline.log	有效
+2026-10-15 02:34	2	1	4.3 换版本复刻：curHp/createNum + GXD()/GXR(3)；用户实测有效（m00002），真机开关 14 次 feature #2=ON/OFF 正常	pipeline.log	有效
+2026-10-15 02:34	3	1	4.3 换版本复刻：RoleBase.getHurt + GX5()/GXR(4)；用户实测有效（m00002），真机开关 13 次 feature #3=ON/OFF 正常	pipeline.log	有效
