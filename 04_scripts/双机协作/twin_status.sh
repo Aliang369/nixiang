@@ -280,6 +280,18 @@ if [ -f "$ROOT/AGENTS.md" ]; then
   fi
 fi
 
+# 技能层待办可见性（策略 B「触碰即清」，2026-10-15 用户 m00008）:
+#   不为清理单开一轮，但要求每个会话开工就看得到剩余量，改到哪个清哪个。
+SKILL_TODO="$ROOT/10_docs/_state/技能层待办.md"
+if [ -f "$SKILL_TODO" ]; then
+  todo_line="$(grep -m1 '^> 剩余待清' "$SKILL_TODO" 2>/dev/null || true)"
+  if [ -n "$todo_line" ]; then
+    info "技能层待办（策略 B：触碰即清）: ${todo_line#> }"
+  else
+    warn "技能层待办缺「> 剩余待清：N 个」行（twin_status 用这一行显示进度）"
+  fi
+fi
+
 # --------------------------------------------------------------------------
 # 心跳: 重写本机心跳文件 (只写本机那台, 收工随 git 提交; 对方 pull 后可见本机最近体检)
 if [ "$HOST" = mac ] || [ "$HOST" = win ]; then
