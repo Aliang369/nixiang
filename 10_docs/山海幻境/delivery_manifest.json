@@ -1,16 +1,16 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-08T06:24:00+00:00",
+  "generated_at": "2026-10-14T18:40:42+00:00",
   "game": "山海幻境",
-  "version": "4.2 / vc68",
+  "version": "4.3 / vc69",
   "package": "com.chx.shhj",
   "pipeline_state": "04_scripts/山海幻境/pipeline.json",
   "pipeline_status": {
     "device_ready": "done",
     "pull_official": "done",
-    "check_official": "done",
-    "dump_static": "done",
+    "check_official": "skipped",
+    "dump_static": "skipped",
     "build_so": "skipped",
     "surgical": "skipped",
     "sign": "skipped",
@@ -18,20 +18,31 @@
     "uninstall_official": "done",
     "install": "done",
     "login_fix_surgical": "done",
-    "login_fix_verify": "done",
+    "login_fix_verify": "skipped",
     "login_fix_install": "done",
     "cleanup": "done",
-    "dex_swap": "done",
-    "archive": "done"
+    "dex_swap": "skipped",
+    "archive": "done",
+    "v43_pull_official": "done",
+    "v43_check_official": "done",
+    "v43_dump_static": "done",
+    "v43_decrypt_js": "done",
+    "v43_js_anchor_check": "done",
+    "v43_build_so": "done",
+    "v43_surgical": "done",
+    "v43_verify_package": "done",
+    "v43_uninstall_official": "done",
+    "v43_install": "done",
+    "v43_precheck": "done"
   },
-  "source_commit": "87fc255b9b555b4a0c8fecbeafecc694e615181d",
-  "source_tree": "c7bf83b92577b370390d7450cf257de37d62cf1d",
+  "source_commit": "0a3eb0b6362d3e578fec100dac44a6143921ea48",
+  "source_tree": "a2bd3b7ea6637485318a5bb2126d5f5c0d9e53b4",
   "apk": {
-    "path": "08_output/山海幻境/山海幻境_4.2_menu-latest-releaseSigned.apk",
+    "path": "08_output/山海幻境/山海幻境_4.3_starry-releaseSigned.apk",
     "available": true,
-    "size": 1236763989,
-    "md5": "d2fb22317170e1dacab75dbdffacb950",
-    "sha256": "9d0e7f07137d27e7bf147a3d33c127569c482d92eb1f6dd111f90aff1b6a815c"
+    "size": 1298685747,
+    "md5": "a014ea1f51b0617836a5d0db06139805",
+    "sha256": "bc6302b818db02b5509b2b5278b8f21e8851c18e965455fa49b8d56eb43971ae"
   },
   "artifacts": [
     {
@@ -48,45 +59,9 @@
       "path": "04_scripts/山海幻境/official_apk.json",
       "recorded_md5": "c0242ba2ea68663eaa78b6d4ba7e9b1a",
       "available": true,
-      "current_md5": "39eb6ed9af4b37d64d54ec6641339aa9",
-      "current_sha256": "8ac6baf9a49d9195713938df4f3817ad55588263390e75daf014332ef8e2a089",
+      "current_md5": "effe3cdfa8970841507c021cc3e39874",
+      "current_sha256": "3c8f324b40ac2fe4a552b3690426fced25f6247351a3d6f7933b52a5848e4de4",
       "matches_recorded_md5": false
-    },
-    {
-      "stage": "check_official",
-      "path": "04_scripts/山海幻境/official_check.json",
-      "recorded_md5": "2790892c8f963e270c7b49962acfd41d",
-      "available": true,
-      "current_md5": "5bd561dd3dc07511f9a7e7a18bcfc355",
-      "current_sha256": "3487530b9eb3ec5ff5f4bbe58f6d93580de796eb701f390365f355d764dc9786",
-      "matches_recorded_md5": false
-    },
-    {
-      "stage": "check_official",
-      "path": "04_scripts/山海幻境/official_check.txt",
-      "recorded_md5": "e0df59cc3b622adcebe700cf075ad9d5",
-      "available": true,
-      "current_md5": "be30bf9d3e58eccf8d4c7b884e26eb29",
-      "current_sha256": "5d2dc4adb54a1b30c5611e17f82912f175477fd6ad1ab5faba17ffc47db68c84",
-      "matches_recorded_md5": false
-    },
-    {
-      "stage": "dump_static",
-      "path": "06_dumped/山海幻境/official_4/dump_summary.json",
-      "recorded_md5": "75c45096327c770a4f64618663e21054",
-      "available": false
-    },
-    {
-      "stage": "dump_static",
-      "path": "06_dumped/山海幻境/official_4/smali/com/chx/shhj/AppActivity.smali",
-      "recorded_md5": "0e1fd2e79f9e03d79f4fd264f25dce95",
-      "available": false
-    },
-    {
-      "stage": "dump_static",
-      "path": "07_patched/山海幻境/surgical_4/AndroidManifest.xml",
-      "recorded_md5": "241748aba783f748a491882460908d7b",
-      "available": false
     },
     {
       "stage": "uninstall_official",
@@ -111,15 +86,6 @@
       "path": "08_output/山海幻境/山海幻境_4_loginfix-releaseSigned.apk",
       "recorded_md5": "6bd976050b7571d71a9cd3597513427d",
       "available": false
-    },
-    {
-      "stage": "login_fix_verify",
-      "path": "04_scripts/山海幻境/candidate_verify_loginfix.json",
-      "recorded_md5": "2e8478a7a55009b03291031722e292b2",
-      "available": true,
-      "current_md5": "2e8478a7a55009b03291031722e292b2",
-      "current_sha256": "57ae95e60703228f8200709f37b5e52a5f398d26037ce86fcfef85664048b374",
-      "matches_recorded_md5": true
     },
     {
       "stage": "login_fix_install",
@@ -149,21 +115,75 @@
       "matches_recorded_md5": true
     },
     {
-      "stage": "dex_swap",
-      "path": "08_output/山海幻境/山海幻境_4.2_menu-latest-releaseSigned.apk",
-      "recorded_md5": "d2fb22317170e1dacab75dbdffacb950",
-      "available": true,
-      "current_md5": "d2fb22317170e1dacab75dbdffacb950",
-      "current_sha256": "9d0e7f07137d27e7bf147a3d33c127569c482d92eb1f6dd111f90aff1b6a815c",
-      "matches_recorded_md5": true
-    },
-    {
       "stage": "archive",
       "path": "04_scripts/山海幻境/archive_summary.json",
       "recorded_md5": "9d8c4c4fc8947865343788ae1d7e6664",
       "available": true,
       "current_md5": "9d8c4c4fc8947865343788ae1d7e6664",
       "current_sha256": "7d9e6fff40cf0fa61fa9ae3120c00ca8e3819a77198fad07877d1b3e086430b6",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "v43_pull_official",
+      "path": "02_apks/山海幻境/山海幻境_4.3_official_from_device.apk",
+      "recorded_md5": "9adc1108637c17326a5845d90f067c3c",
+      "available": true,
+      "current_md5": "9adc1108637c17326a5845d90f067c3c",
+      "current_sha256": "f475b7570df15abe85b7af0f87b3c4d32ec8c1a6341c22e02ff824f914d89da6",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "v43_check_official",
+      "path": "04_scripts/山海幻境/official_check.json",
+      "recorded_md5": "e7d3151cbc0367791d50dc9f05502df5",
+      "available": true,
+      "current_md5": "e7d3151cbc0367791d50dc9f05502df5",
+      "current_sha256": "ce182f4ff8214f9a65d2af264b749d680d40b3913723bdb154b7139d0da54112",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "v43_build_so",
+      "path": "07_patched/山海幻境/build_4.3/libstarry_magic.so",
+      "recorded_md5": "8bbc9d43098cde53b8b474ffbbf1491c",
+      "available": true,
+      "current_md5": "8bbc9d43098cde53b8b474ffbbf1491c",
+      "current_sha256": "18ac7d34e87c5377c3135d3d94b1496559a8cd77cf1eea2118623cfe57f880cc",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "v43_surgical",
+      "path": "08_output/山海幻境/山海幻境_4.3_starry-releaseSigned.apk",
+      "recorded_md5": "a014ea1f51b0617836a5d0db06139805",
+      "available": true,
+      "current_md5": "a014ea1f51b0617836a5d0db06139805",
+      "current_sha256": "bc6302b818db02b5509b2b5278b8f21e8851c18e965455fa49b8d56eb43971ae",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "v43_verify_package",
+      "path": "04_scripts/山海幻境/candidate_verify_4.3.json",
+      "recorded_md5": "9e0ec87851cf3bb5a343a4085048e403",
+      "available": true,
+      "current_md5": "9e0ec87851cf3bb5a343a4085048e403",
+      "current_sha256": "be5185d948a68dffda4e55d30cda0d55b9f40ea655366126adab79be89be7141",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "v43_uninstall_official",
+      "path": "04_scripts/山海幻境/uninstall_done.json",
+      "recorded_md5": "4496cf1b1b050993f0ca6d54b7ca5636",
+      "available": true,
+      "current_md5": "4496cf1b1b050993f0ca6d54b7ca5636",
+      "current_sha256": "a9a58b5a936beda7edb21ee89b4116772056b9479d1ff2523d4316e9b4e10024",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "v43_install",
+      "path": "04_scripts/山海幻境/install_result_4.3.json",
+      "recorded_md5": "5eaabc000d6c8823d34f0044cba82a35",
+      "available": true,
+      "current_md5": "5eaabc000d6c8823d34f0044cba82a35",
+      "current_sha256": "5df73f8242fcc47935b08fbfcebe2b7e8006cffc4f999c80965802ac5a4c98ad",
       "matches_recorded_md5": true
     }
   ],
