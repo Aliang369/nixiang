@@ -233,7 +233,15 @@ public final class TapLoginForceWeb {
                     // 入口时序：SignSpoof 的 PackageInfo.CREATOR 代理由 Manifest
                     // appComponentFactory=com.starry.magic.sign.SignSpoofAppComponentFactory 在
                     // Application 实例化前安装（Provider.onCreate 晚于 TapSDK 冷启动读取）。
-                    "com.chillyroom.containerofsoul.yw"));
+                    "com.chillyroom.containerofsoul.yw",
+                    // 保卫向日葵（com.bwxrk.yqmy.ty4）TapTap 渠道原版 1.46/vc46：
+                    // 登录入口是 dodjoy 聚合壳 com.juhe.sdk.TapTapLoginActivity（它再调 TapSDK）；
+                    // 2026-10-15 实测改签首装：TapInitializer 报
+                    //   「应用的包名（package name）、签名（certificate fingerprint）未在 TapTap 开发者中心正确配置」
+                    //   → JuHeSDK「TapTap CONFIG_ERROR … 包名、签名错误」→ TapTapException: SDK not initialized。
+                    // 该检查读本地 PackageManager 签名 ⇒ 由 SignSpoof 回灌官方证书（CN=QT, O=GD）解决；
+                    // 本白名单负责「即使 SSO 可用也强制走内嵌网页」，避免拉起 TapTap 客户端做真签校验。
+                    "com.bwxrk.yqmy.ty4"));
 
     private TapLoginForceWeb() {}
 

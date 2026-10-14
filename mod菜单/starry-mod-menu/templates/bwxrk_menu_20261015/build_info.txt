@@ -1,0 +1,8 @@
+game      : 保卫向日葵 (bwxrk)
+dex       : classes5.dex
+built_at  : 2026-10-15 04:51:45
+javac     : /Users/aliang/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home/bin/javac
+d8        : /Users/aliang/Library/Android/sdk/build-tools/36.0.0/d8
+androidjar: /Users/aliang/Library/Android/sdk/platforms/android-36/android.jar
+source    : /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256    : 9c22ae13d3795ab9769cb9a9100b4d6c1f8047ebdd23b518dd628b9bb8c7cc6b

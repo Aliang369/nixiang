@@ -1,0 +1,12 @@
+{
+  "template_id": "bwxrk",
+  "name": "保卫向日葵",
+  "package": "com.bwxrk.yqmy.ty4",
+  "source": "Games/BwxrkEntry.cpp GameMod_Get",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "拿全部技能"
+    }
+  ]
+}

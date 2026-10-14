@@ -99,3 +99,32 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 状态：**已合并**（证据＝本轮真机实测行 + 反证排除；落点＝上述文件；提交号见本轮 `archive_scoped_git.sh` 输出）。
 - 已合并（同日第二批「按照方案全量修改」）：① P2-2 会话切点硬阈值 → `AGENTS.md` D7；② `pipeline.sh status --brief` ＋ `verify <stage> --set` → `04_scripts/pipeline.sh`＋`_common/pipeline.lock`（指纹 `5efdea57…`）＋`stages.md` 收尾四条固定命令；③ 数值来源纪律 → `skill/re-implement/hook-rules.md` §5；④ `starry_prefs_edit.sh` 校验器改标签流解析。
 - 仍留候选：无（本批清空）。下一个观察口＝`session_metrics.py --gate` 在下一次会话是否把 calls/step、bash 检索占比、单条 >8 KB 三项拉回阈值内。
+
+## 2026-10-15 新增（保卫向日葵 1.46 斌哥改包抓点）
+
+### A. 待办：技能表回填（本会话是游戏执行会话，按 AGENTS 禁改 `skill/`，留给优化会话）
+
+- `skill/re-extract/binge-memdiff.md` §1.2 game_id 表追加一行：`| 806 | 保卫向日葵（com.bwxrk.yqmy.ty4） |`
+- 同文件 §二「斌哥游戏档案表」追加一行：
+
+  | 保卫向日葵 1.46 | Unity IL2CPP v29 + xLua + HybridCLR(热更) | 全壳(无嵌套 base.apk, 但有 shell_config) | 806 | B：内存 RX vs 磁盘 so 全段 diff（仅 2 处 12B 跳桩）+ 壳 BSS 自述中文串 + 双构建 RVA 对照 | 拿全部技能(帧指令) / 战斗加速(改返回值，壳自检拒装) | `10_docs/保卫向日葵/斌哥包抓点_20261015.md` |
+
+- 注意：本次触碰该文件需同时执行「触碰即清」（该文件在 `技能层待办.md` 队列 #2）⇒ 回填与去游戏化**同批做**。
+
+### B. 候选经验（证据齐、落点明确，待优化会话合并）
+
+1. **新版斌哥模板把功能自述写成 BSS 中文串**（落点：`re-extract/binge-memdiff.md` §一路径 C 第 5 步 + §3.5）
+   证据：保卫向日葵 `libSDKloading.so` rw 段直接可读 `[BW] 钩点 …=%p …=%p`、`[BW路标] n/3 准备装 <类::方法>(★功能名)`、
+   `[BW☠] … -> 不装这个钩子`、`[BW] 开关: 第N格=★<功能名>`、`[BW诊断] 心跳活着 … 格子1=%d 格子2=%d`，
+   以及一整段「已判死清单」。⇒ **抓点第一步应先 dump 壳 rw/BSS 并抽 UTF-8 串（`so_inspect.py strings --utf8`）**，
+   功能名↔钩点↔原理一次拿全，可省掉大量反汇编；`so_inspect.py strings` 默认 UTF-8 是关键（原生 `strings` 会漏中文）。
+2. **必须区分「APK 内嵌构建」与「运行时热更构建」两份 libil2cpp / metadata**（落点：`re-extract/binge-memdiff.md` §六坑表新增一条 + §1.1 判据）
+   证据：保卫向日葵运行时 dlopen 的是 dodjoy 热更落地的 `/data/data/{pkg}/files/libil2cpp.so`（62,235,240）而非 APK `lib/arm64-v8a/`（62,032,888）；
+   maps 里 `files/` 那份才是真身；metadata 同理（14,295,428 vs 14,253,536）。两套 RVA 不同（本例 +0x25194 / +0x253A8）。
+   判据命令：`su -c 'grep libil2cpp /proc/<pid>/maps'` 看路径，再看 `/sdcard/Android/data/{pkg}/files/StreamingAssets/ab/` 是否有 `arm64-v8a_libil2cpp.so`。
+3. **壳的「建档偏移守卫」会在游戏首启热更后拒绝装钩（静默失效）**（落点：`re-extract/binge-memdiff.md` §六坑表 + `re-implement/hook-rules.md` §24 指纹铁律邻近）
+   证据：原话 `[BW☠] GetFinalTimeScale 偏移不符(实际2609984 期望2609452) -> 可能游戏已更新, 不装这个钩子`；
+   建档值＝APK 内嵌构建布局，现场值＝热更构建；读数口径＝`GetFinalTimeScale − SelectRandomSkill` + 常量 `0xE8`
+   （期望 `0x27D12C`＝`0x27D044`+0xE8、实际 `0x27D340`＝`0x27D258`+0xE8），两构建差 `0x214`，与壳打印差逐字节吻合。
+   ⇒ **移植结论（可外推）**：在这类「热更 IL2CPP + 会自校验偏移」的游戏上，星光侧挂点必须**按名解析 + 序言字节校验**，
+   禁止写死 RVA；且抓到的 RVA 必须标明属于哪一份构建。
