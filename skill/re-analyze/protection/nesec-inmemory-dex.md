@@ -224,3 +224,14 @@ wrapper:      com.starry.magic.StarryApp -> LBApplication
 - 对 `libil2cpp.so` 数 dynsym 时 `il2cpp_*` 命中为 0
 
 同一结论已并入 `re-extract/il2cpp-from-scratch.md` §0 的前置判定。
+
+## 外部已公开方案（检索入口，2026-10-15 新增）
+
+- **已核验公开来源**：
+  - [MT 论坛 thread-145498](https://bbs.binmt.cc/thread-145498-1-1.html)「il2cpp 易盾 so 加固与修复 dump 成果」（同系问题实操帖）
+  - [tianyalu/NeProgramGuardDecompilation](https://github.com/tianyalu/NeProgramGuardDecompilation)（网易易盾防反编译 / 加固实现分析）
+  - [IIIImmmyyy/frida-il2cppDumper](https://github.com/IIIImmmyyy/frida-il2cppDumper)（自述「已支持易盾」的内存 dump 路线）
+  - [Perfare/Zygisk-Il2CppDumper](https://github.com/Perfare/Zygisk-Il2CppDumper)（3.3k 星，Zygisk 运行时 dump；需 root + Zygisk，有被扫痕迹风险）
+- **⚠ 前提提醒（对本页 §206 的纠偏）**：这里记的「Cpp2IL 失败」是 **Cpp2IL 吃内存 dump 出来的 so**（page 0 非 ELF 头、符号表被随机化）⇒ **失败属输入坏，不能据此判断 Cpp2IL 不支持新 metadata**。下次遇到**磁盘版**新 metadata，先单独复测 [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL)（3.0k 星 / 2026-09 活跃；Il2CppDumper 主仓 2024-08 已停更）再下结论。
+- **检索词**：`易盾 il2cpp so 加固 dump` / `metadata 内存 dump 修复` / **报错原文加引号**（如 `"kIl2CppMetadataUsageInvalid"`）。
+- **台账**：`10_docs/_state/外部方案台账.md`（§1 X-1 / X-6）；协议见 `skill/diagnosis-index.md`「外部检索协议」。

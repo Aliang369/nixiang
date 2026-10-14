@@ -107,3 +107,10 @@ TP runtime 对 libil2cpp.so 做三层手脚，`dlsym`/`xdl_sym`/readelf/IDA 全�
 adb logcat | grep -E "tersafe|tprt|ACE"
 ```
 看是否过 Privacy 页、`libcocos.so` 是否正常映射。存活 >25s 即初步通过。
+
+## 外部已公开方案（检索入口，2026-10-15 新增）
+
+- **已核验公开项目：暂无**（2026-10-15 首查 `ACE 反外挂 过检 手游 逆向` 得 0 条，疑搜索引擎频控，**不等于无解**；空结果已记台账 §3）。
+- **检索词**：`ACE 过检` / `tersafe 反调试 绕过` / `site:bbs.kanxue.com ACE` / 英文源 UnknownCheats、GameGuardian（壳类问题命中率较高）。
+- **注意**：ACE/TSS 属**反作弊**而非壳（本页开头的「不走壳路」判断优先）；外部方案即便存在，也须先过 `code-review-checklist.md`「外部方案专项」四问，尤其是**痕迹面**。
+- **台账**：`10_docs/_state/外部方案台账.md`；协议见 `skill/diagnosis-index.md`「外部检索协议」。

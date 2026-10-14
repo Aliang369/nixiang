@@ -14,10 +14,20 @@
 #    bash 04_scripts/_common/prior_art.sh 加固 自退出 bind-mount
 #    bash 04_scripts/_common/prior_art.sh 'libFairGuard' 'exit_group' --max 20
 #
-#  搜索面（默认）: 10_docs/ skill/ 04_scripts/ TOOLBOOK.md AGENTS.md
+#  搜索面（默认，**只管仓内**）: 10_docs/ skill/ 04_scripts/ TOOLBOOK.md AGENTS.md
 #  输出：每个关键词命中条数 + 前 N 条 `文件:行:内容`（自动截断长行，便于扫读）
-#  退出码: 0=至少一个关键词有命中；1=全无命中（= 这是新问题，可放心自己推）
-#  纪律：命中先例后**先读先例**再动手；先例结论与本轮现象冲突时，先解释冲突再推翻它。
+#  退出码: 0=至少一个关键词有命中；1=仓内全无命中 ⇒ **触发一次外部检索**（≠ 可以放心自己推）
+#  纪律①：命中先例后**先读先例**再动手；先例结论与本轮现象冲突时，先解释冲突再推翻它。
+#  纪律②（2026-10-15 新增，用户本会话「按照你说的方案进行全量修改」）：本脚本只覆盖仓内，
+#    仓内 rc=1 时按下方「外部检索」再查一次 —— 依据是三次已查实的失效：
+#    境界刀鸣 2026-09-23 记 `web_search` 不可用；霓虹深渊2 2026-10-11 会话 2393 次调用里
+#    web_search=0 次、web_fetch 2 次全失败 ⇒「去外面查」这个动作长期消失，全靠自研硬解。
+#    预算：≤3 次调用，命中即止；未命中把关键词写进台账「空结果」栏，不再重查。
+#    通道（curl 直连，2026-10-15 实测全 200）：DuckDuckGo html 端点 / GitHub API / 看雪 bbs.kanxue.com /
+#      吾爱 52pojie.cn / MT 论坛 bbs.binmt.cc。⚠ curl 走 Bing 实测返回无关结果（不可用）；
+#      `web_search` 工具本机额度/API key 常年不可用，**不要依赖它**。
+#    关键词模板与证据分级见 skill/diagnosis-index.md「外部检索协议」；结果落
+#      10_docs/_state/外部方案台账.md（查一次双机复用，含「已评估·不接入」清单防重复评估）。
 # ================================================================
 set -uo pipefail
 
@@ -56,7 +66,8 @@ for kw in $KWS; do
   cnt="$(printf '%s' "$out" | grep -c . || true)"
   echo "══ 关键词「${kw}」命中 $cnt 条（显示前 ${MAX}）══"
   if [ "$cnt" = "0" ]; then
-    echo "   （无先例 ⇒ 这一条是新问题，可放心自己推）"
+    echo "   （仓内无先例 ⇒ 触发一次外部检索；通道与关键词模板见 skill/diagnosis-index.md「外部检索协议」）"
+    echo "      结果落 10_docs/_state/外部方案台账.md（未命中也要写进「空结果」栏，避免重复烧 step）"
   else
     hit_any=1
     printf '%s\n' "$out" | while IFS= read -r line; do

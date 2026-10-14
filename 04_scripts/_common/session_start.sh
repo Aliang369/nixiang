@@ -263,6 +263,23 @@ fi
 kv "会话预算（AGENTS.md P6）：工具调用 ≈600 / 装机 ≈40 / 阴影 token ≈150K —— 超了就按复盘格式记账"
 kv "纪律卡：① 禁止 input tap/swipe（m01899：屏幕由用户操作）② 出网/改外部机器/改交付形态 ⇒ 先出 10_docs/_templates/方案选型卡.md 等用户选定（m03714）③ 装机后跑 post_install_precheck.sh ④ 卸载/清数据后此前结论全部作废（状态归零纪律）"
 
+# ---------- 查7 外部先例（2026-10-15 新增；用户本会话「按照你说的方案进行全量修改」） ----------
+# 为什么要有这一查：境界刀鸣 2026-09-23 记录 `web_search` 不可用；霓虹深渊2 2026-10-11 会话
+# 2393 次调用里 web_search=0 次、web_fetch 2 次全失败 ⇒「去外面查」这个动作长期消失，
+# 全部靠自研硬解。本查只读台账 + 打印关键词模板，**不强制联网**（预算见 diagnosis-index.md）。
+head_ "查7 外部先例（外部方案台账 + 关键词模板）"
+EXT_LEDGER="${NIXIANG_ROOT}/10_docs/_state/外部方案台账.md"
+if [ -f "$EXT_LEDGER" ]; then
+  EXT_N="$(grep -c '^|' "$EXT_LEDGER" 2>/dev/null || true)"
+  [ -n "$EXT_N" ] || EXT_N=0
+  ok "外部方案台账在：10_docs/_state/外部方案台账.md（表行 ${EXT_N}）"
+else
+  note "无外部方案台账（10_docs/_state/外部方案台账.md）⇒ 本轮查到的东西无处沉淀"
+fi
+kv "症状 → 外部关键词：见 skill/diagnosis-index.md「外部检索协议」（先按症状行取词，再检索）"
+kv "通道（curl 直连，2026-10-15 实测全 200）：DuckDuckGo html 端点 / GitHub API / 看雪 bbs.kanxue.com / 吾爱 52pojie.cn / MT 论坛 bbs.binmt.cc（curl 走 Bing 不可用；web_search 常年不可用）"
+kv "纪律：报错原文加引号优先 · ≤3 次即止 · 未命中写台账「空结果」栏 · 外部结论先落「候选」，本仓实测通过才升「已合并」"
+
 # ---------- 出包前提示（2026-10-10 复盘 P0-1 / P2-1；只追加提示，不改退出码与既有结构） ----------
 kv "框架入口自检（入口类清单）：grep -rln --include='*.java' -E 'class [A-Za-z0-9_]+ extends (Application|ContentProvider|AppComponentFactory)' mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/"
 kv "出包前跑审计（任一 ✗ 禁止出包）：bash 04_scripts/_common/framework_entry_audit.sh --game <游戏> --pkg <包名> --apk <apk>；入口取舍见 skill/starry-mod/SKILL.md「入口点决策表」"
@@ -329,7 +346,7 @@ echo "  4) 定位改动（禁整读大文件）：bash 04_scripts/_common/code_l
 echo
 echo "点名：上一轮会话被旁路（0 次调用）的闸门 —— 本轮别再绕："
 echo "  pre_install_gate.sh（装机前总闸）· rootcause_note.sh（同一功能改 3 轮就拦）· install_guard.sh（装机策略）·"
-echo "  code_locate.sh（定行读）· prior_art.sh（开工先查是否做过）· device_profile.sh（设备画像）· archive_scoped_git.sh（收官归档）"
+echo "  code_locate.sh（定行读）· prior_art.sh（开工先查是否做过；仓内零命中 ⇒ 外部检索 ≤3 次，见查7）· device_profile.sh（设备画像）· archive_scoped_git.sh（收官归档）"
 echo "----------------------------------------------------------------"
 
 echo "================================================================"

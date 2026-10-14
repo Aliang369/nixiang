@@ -22,6 +22,7 @@
    - 机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`（第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在→走 `pipeline.sh`；不存在→用该游戏的 `surgical_*/inject_*` 脚本，仍禁直接敲 adb/apktool/zip/ndk-build；分析操作照常推理产出落 `10_docs/`）。**有 `pipeline.json` 的游戏直接用 pipeline.sh 的原生动词**：`bash 04_scripts/pipeline.sh <游戏> status`（钉硬约束 + 台账）/ `next --loop N`（连跑，逐次回显日志尾 40 行）/ `log [N]` / `round`+`rounds`（轮次门禁，见「执行纪律补充」）；旧写法 `bash 04_scripts/_common/stage_next.sh <游戏> [status|next|auto N|rounds]` 仍在，但已缩成同义转发器。
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（扫描与插件按具体问题触发，不作无差别全扫）
    - 经验查阅 → `skill/re-lessons/SKILL.md`
+   - **先例检索（仓内 → 仓外）→ `bash 04_scripts/_common/prior_art.sh <关键词>`；仓内零命中（rc=1）⇒ 再按 `skill/diagnosis-index.md`「外部检索协议」≤3 次外部检索，结果落 `10_docs/_state/外部方案台账.md`**
    - 纯评估 / 文档维护 → 只读待评估文档及直接引用，不自动进入游戏执行流程。
 2.5 **动手前先查「现成能力」**（2026-10-02 消消英雄2 教训，最省 token 的一条）：
    `ls 04_scripts/_common` + `grep -rn "<关键词>" skill/ 04_scripts/_common/`，
@@ -137,7 +138,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - **硬约束与路线锁定落盘**：用户下达「必须 / 禁止 / 照 XX 做」时，**当轮**抄其原话（带消息号）进 `10_docs/{游戏}/硬约束.md`（模板 `10_docs/_templates/硬约束.md`）；有对照包的移植必须维护 `10_docs/{游戏}/路线锁定.md`（模板 `_templates/路线锁定.md`），表内存在「未确认偏离」即禁止装机。约束文件**永不删行**，失效只改状态。
 - **管线原生内循环（P5，2026-10-03 起；正文已归档）**：`bash 04_scripts/pipeline.sh <游戏> {status|rounds|next --loop N|log [N]|round <功能#> <有效|无效|未测> "摘要"|gate <阶段id>}`；细则（旧 `stage_next.sh` 同义转发、**pipeline.sh 是弱 AI 禁改文件**、指纹锁 `_common/pipeline.lock` 与跨机改法）见 `10_docs/_state/规范变更日志.md` §归档正文 C 与 `04_scripts/_common/stages.md` 文末。
 - **会话规模预算（P6）**：单个会话的机械行为预算 —— 工具调用 ≈600 次、装机 ≈40 次、prune 阴影 token ≈150K。任一触顶即**交接**：把「已确认事实 / 未决问题 / 下一步 / 证据落点」写进 `10_docs/_state/games/{游戏}.md`，然后开新会话，不硬撑（旧会话实测 2428 次调用 / 380K 阴影 / 99 条用户消息，后段全靠压缩维持）。
-- **P4 轮次门禁 / P7 IL 一次到位 / P9 清理禁通配符 / 诊断三段判定 / 诊断与最可能修复同包**：正文已归档 `10_docs/_state/规范变更日志.md` §归档正文 A（第一轮 P10–P16 节内）与 §执行纪律补充；要点：同一功能第 3 轮仍无效禁装机、`aot/_tgt_q.py dump-class <正则>` 一次取全、删除禁通配符须写显式名单、报无效先写 `判定段=A|B|C`、能锁定根因就「诊断计数器+最可能修复」同包装机。
+- **P4 轮次门禁 / P7 IL 一次到位 / P9 清理禁通配符 / 诊断三段判定 / 诊断与最可能修复同包**：正文已归档 `10_docs/_state/规范变更日志.md` §归档正文 A（第一轮 P10–P16 节内）与 §执行纪律补充；要点：同一功能第 3 轮仍无效禁装机、`aot/_tgt_q.py dump-class <正则>` 一次取全、删除禁通配符须写显式名单、报无效先写 `判定段=A|B|C`、能锁定根因就「诊断计数器+最可能修复」同包装机。**新增（2026-10-15）：同一功能第 2 轮无效时强制一次外部检索**（≤3 次调用；通道与关键词模板见 `skill/diagnosis-index.md`「外部检索协议」，结果落 `10_docs/_state/外部方案台账.md`）。
 - **一轮一个变量、一轮只问一次**：同一轮只改一个自变量（多改则失败无法归因，也违反 P4 轮次门禁）；需要用户配合时一轮只发一张操作请求卡，不连续追问。
 
 ## 会话效率纪律（D1–D7，2026-10-14 定；长正文在 `10_docs/_state/规范变更日志.md`）
@@ -178,9 +179,10 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 > 用 `grep -n '^- \*\*P2[0-9]' 10_docs/_state/规范变更日志.md` 取原文。
 
 - P1–P9（2026-10-03 冒险与征途）：见本文件上方「## 执行纪律补充（2026-10-03 规范优化全量落地）」——**不归档，仍在本文**。
-- P10–P16（2026-10-10 邂逅在迷宫第一轮）：开工 preflight 六查 `session_start.sh` ／判据先行 + 先例检索 `prior_art.sh` ／决策台账 append-only ＋「已否证=禁止重试」／方案选型卡 ／一键出包链路 `gradle_cycle.sh` ＋出包门禁 `check_release_apk.sh` ／装机预检带宿主助手 `post_install_precheck.sh` ／门禁即时记账 `gate_note.sh` ／坑位即落 `TOOLBOOK.md` 二-b。
+- P10–P16（2026-10-10 邂逅在迷宫第一轮）：开工 preflight 六查 `session_start.sh`（**P33 起为七查，新增查7 外部先例**）／判据先行 + 先例检索 `prior_art.sh` ／决策台账 append-only ＋「已否证=禁止重试」／方案选型卡 ／一键出包链路 `gradle_cycle.sh` ＋出包门禁 `check_release_apk.sh` ／装机预检带宿主助手 `post_install_precheck.sh` ／门禁即时记账 `gate_note.sh` ／坑位即落 `TOOLBOOK.md` 二-b。
 - P17–P22（2026-10-10 第二轮，把纪律做成闸门）：自测影响面 before/after 快照 `selftest_env.sh` ／装机闸门（preflight 凭证 `preflight_{游戏}.stamp`，缺失·超 12h·硬约束变过 ⇒ **rc=4**，`--allow-stale-preflight` 才放行）／读文件纪律 `code_locate.sh`（>200 行禁整读）／出包即记账（全量日志 `tee`，**禁 `| tail` 截断**，自动 G2 记账）／默认分发型交付 `finalize_game_delivery.sh --usage-doc` ／push 只走 `push_main`（四通道自愈，**禁裸 `git push` 盲等**）／轮次台账 `轮次台账.tsv`。
 - P32（2026-10-14 潮汐守望者复盘落地）：设备就绪门禁 `device_ready_check.sh` ／崩溃取证 `crash_forensics.sh` ／收官编排 `finalize_round.sh` ／假设预注册 `new_hypothesis.sh` ／超时垫片 `with_timeout.sh` ／装钩表前缀规则 R4-prefix —— 正文归档 `规范变更日志.md` §同批落地（2026-10-14 第二轮）。
+- P33（2026-10-15 外部检索闸门）：先例检索两层（`prior_art.sh` 仓内 rc=1 ⇒ 外部检索 ≤3 次）／开工**七查**（新增查7 外部先例）／外部方案**采纳四问**（时效·痕迹·边界·重叠）／结论落 `10_docs/_state/外部方案台账.md`（候选 / 已评估·不接入 / 空结果）—— 正文归档 `规范变更日志.md` §归档正文 G；候选与空结果见台账。
 - P23–P31（2026-10-12 霓虹深渊2）：编辑一把刀（同轮同文件禁混用 bash 改写与 `edit`）／大文档禁整读 `state_digest.sh` ＋ `_digest.md` ／轮次台账 6 列正统九列超集（`pipeline.sh <游戏> round` 为唯一写入口）／口令点名即必须交付（`--expect-icon` / `--expect-menu-template`，缺则 rc=1 不写文件）／`install_policy: overlay_only` ＋卸载语义 **rc=66** ／一键轮次环 `round.sh` ／取证收敛 `evidence.sh` ＋ `so_inspect.py`（`strings` 默认 `--utf8`）／会话切点（每 2 个用户实测轮或 3 h / 600 次调用即交接）／门禁全仓入口 `preflight.sh` 无参扫描（638 文件 ≈24 s）。
 
 ## 工具专属文件

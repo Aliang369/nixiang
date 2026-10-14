@@ -79,3 +79,9 @@
 - Killer 只过 Java 层 PM 签名查询，**native 层自检仍需另过**（如 ACE/tersafe）
 - 643 和 193 不要混用
 - 提取原版证书时确保用原版 APK（未改签的）
+
+## 外部已公开方案（检索入口，2026-10-15 新增）
+
+- **已核验公开项目**：[L-JINBIN/ApkSignatureKillerEx](https://github.com/L-JINBIN/ApkSignatureKillerEx)（MT 签名杀手原型）——本仓**已实际借用**：雷霆战机 `libSignatureKiller643_fstat.so` 的 xhook 链、消消英雄2 改包分析（见 `10_docs/雷霆战机/MT_Killer643_kill包分析_1.25.31.md`）。MT 版即 `bin/mt/signature/KillerApplication*`。
+- **检索词**：`ApkSignatureKiller` / `PM 证书 弹窗 绕过` / `签名校验 native 自检 过检`。
+- **台账**：`10_docs/_state/外部方案台账.md`（§1 **X-12**，状态＝已合并）；协议见 `skill/diagnosis-index.md`「外部检索协议」。

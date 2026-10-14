@@ -94,3 +94,10 @@ pm install -r -d /data/local/tmp/x.apk
 - **MT 精细改也杀**：MT 改 DEX 会修改字节，触发哈希校验
 - 只有外科 zip 组装（官方文件字节不变）可行
 - **Manifest 可改**但需用二进制格式
+
+## 外部已公开方案（检索入口，2026-10-15 新增）
+
+- **已核验公开项目**（只解决「拿到 dex」，不解决完整性校验）：[CodingGay/BlackDex](https://github.com/CodingGay/BlackDex)（6.5k 星，免 root，Android 5.0–12）、[tiwe0/r0dump](https://github.com/tiwe0/r0dump)（2026-09，Android 16 ART 集成 DEX dumper + 修复，FART 思路）、[hluwa/frida-dexdump](https://github.com/hluwa/frida-dexdump)（4.6k，本仓已装；**反 frida 游戏不可用**）。
+- **检索词**：`<壳名> dex 完整性 校验 绕过` / `APK 体积 阈值 黑名单 检测` / `resources.arsc STORED 校验`。
+- **优先级提醒**：本页铁律（外科 zip 组装、不动已加密 dex）**高于**任何外部脱壳工具；外部工具只在「需要先看清被加密的代码」时用。
+- **台账**：`10_docs/_state/外部方案台账.md`（§1 X-8）。

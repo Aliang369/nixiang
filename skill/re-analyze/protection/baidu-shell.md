@@ -44,3 +44,10 @@ adb shell su -c 'cat /data/data/<pkg>/shared_prefs/shell_config.xml'
 - **不要替换 `libbaiduprotect.so`**：壳的版本与 DEX 加密方案绑定
 - 如果需要修改被壳加密的代码（如 TapTap 登录逻辑），静态改不可行，需运行时 Pine/ART hook（参考虚无之刃案例：mocika 壳加密 DEX 时用 Pine hook 运行时 patch）
 - 部分游戏百度壳 + 斌哥壳叠加，需同时处理两层保护
+
+## 外部已公开方案（检索入口，2026-10-15 新增）
+
+- **已核验公开项目：暂无**（2026-10-15 首查 `百度加固 脱壳 dex dump` 得 0 条，疑搜索引擎频控，**不等于无解**；空结果已记台账 §3）。
+- **检索词**：`百度加固 脱壳 dex` / `libbaiduprotect 分析` / `<so 名> 壳 初始化`。
+- **注意**：本页铁律（**不替换 `libbaiduprotect.so`、不改被加密的 classes.dex、新增代码进新 DEX**）高于任何外部「脱壳后重打包」方案——脱壳只用于**看清代码**，交付仍走外科组装。
+- **台账**：`10_docs/_state/外部方案台账.md`；协议见 `skill/diagnosis-index.md`「外部检索协议」。
