@@ -261,6 +261,25 @@ for ef in "$ROOT/CLAUDE.md" "$ROOT/.trae/rules/project_rules.md" "$ROOT"/.cursor
 done
 pass "纯指针入口 $n_ptr 个, 不承载正文不漂移"
 
+# 入口文件边界（2026-10-15 用户 m00006 定，机检版）:
+#   AGENTS.md 只放通用规则与路由 —— 日志正文与单游戏例外正文不得回流。
+#   判据 1: 入口内不得出现「日期开头的日志条目」（日志全在 10_docs/_state/规范变更日志.md）
+#   判据 2: 入口体量仍在 D6 闸门内（≤32768 B）
+if [ -f "$ROOT/AGENTS.md" ]; then
+  n_log="$(grep -c -E '^[[:space:]]*-[[:space:]]*[0-9]{4}-[0-9]{2}-[0-9]{2}[（(]' "$ROOT/AGENTS.md" 2>/dev/null || true)"
+  if [ "${n_log:-0}" -gt 0 ]; then
+    fail "AGENTS.md 含 $n_log 条日志正文（入口不放日志）-> 挪到 10_docs/_state/规范变更日志.md，入口只留一行指针"
+  else
+    pass "AGENTS.md 无日志条目（日志统一在 规范变更日志.md）"
+  fi
+  sz="$(wc -c < "$ROOT/AGENTS.md" | tr -d ' ')"
+  if [ "$sz" -le 32768 ]; then
+    pass "AGENTS.md 体量 $sz B <= 32768（D6 闸门）"
+  else
+    fail "AGENTS.md 体量 $sz B > 32768（D6 闸门）-> 按「入口文件边界」把单游戏/日志内容移出"
+  fi
+fi
+
 # --------------------------------------------------------------------------
 # 心跳: 重写本机心跳文件 (只写本机那台, 收工随 git 提交; 对方 pull 后可见本机最近体检)
 if [ "$HOST" = mac ] || [ "$HOST" = win ]; then
