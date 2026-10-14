@@ -38,6 +38,9 @@
 #                     rootcause_note.sh 登记，定案轮次 ≥ 最后一次无效轮次），否则 FAIL。
 #                     防的是「同一个功能换个自变量再装一次包、白耗一整轮 + 用户一次实测」。
 #                     显式强过：`STAGE_NEXT_FORCE=1` 或 `--allow-rounds`（须在台账写明理由）。
+#    查7 包内 Manifest 形态关（2026-10-15 补）：`--apk` 时校验包内 AndroidManifest.xml 头 4 字节
+#                     = 03 00 08 00（真 AXML）；命中文本 Manifest 一律 FAIL。
+#                     防「dump 的文本 Manifest 与外科 MF_CACHE 同名 ⇒ 文本进包、构建全绿」。
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
 #  注意: 与 preflight.sh 职责不同——preflight 管"改完源文件"的语法，
@@ -335,6 +338,22 @@ if [ -s "$NEEDLES" ]; then
       total=$((total+1))
       cnt="$(dex_literal_count "$needle" $gate_targets)"
       if [ "$cnt" -eq 0 ]; then
+        # 2026-10-15（山海幻境 4.3 实测踩坑）：门禁串若写成**点分 Java 名**（com.x.Y），
+        # dex 字符串池里只有斜杠形式（Lcom/x/Y; / com/x/Y），会假 FAIL 白耗一轮。
+        # 归一：点分名自动再试斜杠形式；命中则 WARN 放过并提示改写。
+        alt=""
+        case "$needle" in
+          *.*) alt="$(printf '%s' "$needle" | tr '.' '/')" ;;
+        esac
+        if [ -n "$alt" ] && [ "$alt" != "$needle" ]; then
+          cnt_alt="$(dex_literal_count "$alt" $gate_targets)"
+          if [ "$cnt_alt" -gt 0 ]; then
+            echo "⚠ WARN  [门禁串] 『${needle}』是点分 Java 名；dex 里只有斜杠形式『${alt}』（命中 ${cnt_alt}）"
+            echo "        ⇒ 本次按命中放过；请把门禁串改写成斜杠形式（类名用 com/x/Y），避免下次假 FAIL"
+            warn=$((warn+1))
+            continue
+          fi
+        fi
         echo "✗ FAIL  [门禁串] 字面量『${needle}』在产物中不存在（检查目标:${gate_targets}）"
         echo "        ⇒ 若该串写在 smali 里，先确认它不是被写成了 # 注释行（汇编器会丢弃，二进制里根本不存在该字面量）"
         miss=$((miss+1))
@@ -346,6 +365,19 @@ if [ -s "$NEEDLES" ]; then
       fail=$((fail+1))
     fi
   fi
+fi
+
+# ---------- 查7：包内 Manifest 二进制形态关（2026-10-15 补，山海幻境 4.3 复盘） ----------
+# 背景：dump 脚本把**文本** AndroidManifest.xml 落在与外科脚本 MF_CACHE **同名**的路径上，
+#   外科会把文本 Manifest 原样塞进 zip —— 构建不报错、装机后 Manifest 坏（黑屏/装不上）。
+#   判据：真 AXML 头 4 字节 = 03 00 08 00（其余一律 FAIL）。
+if [ -n "$apk_file" ]; then
+  axml_head="$(unzip -p "$apk_file" AndroidManifest.xml 2>/dev/null | head -c 4 | od -An -tx1 | tr -d ' \n')"
+  case "$axml_head" in
+    03000800) echo "✓ PASS  [Manifest形态] 包内 AndroidManifest.xml 是二进制 AXML" ;;
+    "")       echo "✗ FAIL  [Manifest形态] 包内读不到 AndroidManifest.xml"; fail=$((fail+1)) ;;
+    *)        echo "✗ FAIL  [Manifest形态] 包内 AndroidManifest.xml 头=${axml_head}（期望 03000800）⇒ 多半把文本 Manifest 打进包了"; fail=$((fail+1)) ;;
+  esac
 fi
 
 # ---------- 查6：轮次根因关（2026-10-10 复盘 P1-3） ----------

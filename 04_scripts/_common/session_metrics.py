@@ -48,6 +48,35 @@ GATES = {
     "subagent_msg_chars": 3000,   # D5
 }
 SEARCH_RE = re.compile(r"\b(grep|rg|awk|sed\s+-n|head|tail|cut|sort|uniq|wc|cat\s+)\b")
+# 中性段：只用来加表头/等待，不算工作量（判定「纯检索调用」时忽略）
+NEUTRAL_RE = re.compile(r"^\s*(cd|echo|printf|sleep|true|:)\b")
+# 注入体标记：工作区指令由运行时注入到首条 user 消息，不是人说的话，D5 不应计入门禁
+INJECT_MARKS = ("Instructions from:", "<system-reminder>", "Current runtime context.")
+
+
+def _strip_quotes(s: str) -> str:
+    return re.sub(r"'[^']*'|\"[^\"]*\"", "''", s)
+
+
+def bash_cmd_kinds(args: str) -> tuple[bool, int, int]:
+    """返回 (是否「纯检索调用」, 实际命令段数, 其中检索段数)。
+
+    2026-10-15（山海幻境 4.3 复盘）：旧 D3 口径把「一个 bash 里塞 5 条侦察命令」也记成
+    「把 bash 当检索器」，与 D1「一次多发」互相打架（批得越多越违规）。新口径按**命令段**
+    判定：段 = 按 ; && || | 换行切开后、去掉纯 cd/echo/sleep 的中性段；
+    **所有段都是检索**才算纯检索调用（门禁项，这部分确实该换成 grep/read 原生工具），
+    其余记「批量侦察命令组」只报不罚；检索段占比作为参考值（阈值待 2–3 个会话后再定）。
+    """
+    try:
+        cmd = json.loads(args).get("command", "") if args.strip().startswith("{") else args
+    except Exception:
+        cmd = args
+    segs = [s.strip() for s in re.split(r";|&&|\|\||\||\n", _strip_quotes(cmd)) if s.strip()]
+    real = [s for s in segs if not NEUTRAL_RE.match(s)]
+    if not real:
+        return False, len(segs), 0
+    nsearch = sum(1 for s in real if SEARCH_RE.search(s))
+    return nsearch == len(real), len(real), nsearch
 FILE_RE = re.compile(r"[\w./\-]{4,}\.(?:cs|json|txt|log|md|py|sh|cpp|h|xml|tsv|java|so|apk)\b")
 
 _WS_HINT = ("/Users/", "10_docs/", "06_dumped/", "04_scripts/", "09_test/", "mod菜单/",
@@ -127,6 +156,8 @@ def collect(paths: list[Path], top: int) -> dict:
     m = {
         "sessions": [], "steps": 0, "calls": 0, "call_by_step": Counter(), "tool": Counter(),
         "bash_total": 0, "bash_search": 0, "bash_fail": 0,
+        "bash_pure_search": 0, "bash_batch_recon": 0, "injected_msgs": [],
+        "bash_seg_total": 0, "bash_seg_search": 0,
         "bash_bytes": 0, "read_bytes": 0, "read": 0, "edit": 0,
         "result_kb": [], "hot": Counter(), "compress": 0, "prune": 0, "prune_tokens": 0,
         "user_msgs": [], "input_tokens": 0, "cached_tokens": 0, "output_tokens": 0,
@@ -170,6 +201,13 @@ def collect(paths: list[Path], top: int) -> dict:
                     m["bash_bytes"] += nb
                     if SEARCH_RE.search(args):
                         m["bash_search"] += 1
+                    pure, nseg, nsearch = bash_cmd_kinds(args)
+                    m["bash_seg_total"] += nseg
+                    m["bash_seg_search"] += nsearch
+                    if pure:
+                        m["bash_pure_search"] += 1
+                    elif nseg > 1:
+                        m["bash_batch_recon"] += 1
                     rc = re.search(r"\[exit code:\s*(\d+)", body)
                     if rc and rc.group(1) != "0":
                         m["bash_fail"] += 1
@@ -197,7 +235,12 @@ def collect(paths: list[Path], top: int) -> dict:
                     if isinstance(c, dict) and c.get("type") == "reasoning":
                         m["reasoning_bytes"] += len(str(c.get("text") or "").encode("utf-8"))
             elif t == "user/message":
-                m["user_msgs"].append((len(text_of(d.get("content")).encode("utf-8")), sid))
+                txt = text_of(d.get("content"))
+                if any(k in txt for k in INJECT_MARKS):
+                    # 运行时注入的工作区指令（AGENTS/skill/工具预告），不是对话输入
+                    m["injected_msgs"].append((len(txt.encode("utf-8")), sid))
+                else:
+                    m["user_msgs"].append((len(txt.encode("utf-8")), sid))
             elif t == "compaction/start":
                 m["compress"] += 1
             elif t == "compaction/prune":
@@ -252,12 +295,18 @@ def report(m: dict, top: int) -> tuple[str, list[str]]:
     A("## D3 检索纪律")
     bt = max(1, m["bash_total"])
     ratio = 100.0 * m["bash_search"] / bt
-    A("- bash %d 次，其中含 grep/rg/awk/sed -n/head/tail/cut/sort/wc 的 **%d 次（%.1f%%）**（阈值 <%.0f%%）"
-      % (m["bash_total"], m["bash_search"], ratio, GATES["bash_search_ratio"] * 100))
+    pure_ratio = 100.0 * m["bash_pure_search"] / bt
+    A("- bash %d 次：**纯检索调用 %d 次（%.1f%%）**（门禁阈值 <%.0f%%）；"
+      "含检索关键字 %d 次（旧口径 %.1f%%，其中批量侦察命令组 %d 次属省 step 用，不计违规）"
+      % (m["bash_total"], m["bash_pure_search"], pure_ratio, GATES["bash_search_ratio"] * 100,
+         m["bash_search"], ratio, m["bash_batch_recon"]))
     A("- 入上下文体量：bash %.0f KB + read %.0f KB" % (m["bash_bytes"] / 1024.0, m["read_bytes"] / 1024.0))
-    if ratio > GATES["bash_search_ratio"] * 100:
-        bad.append("D3 bash 检索占比 %.1f%% > %.0f%%（改用 grep/read 原生工具）"
-                   % (ratio, GATES["bash_search_ratio"] * 100))
+    seg_t = max(1, m["bash_seg_total"])
+    A("- 检索段占比 %d/%d = **%.1f%%**（参考值，暂不设门禁；连续偏高 ⇒ 把检索段改成原生 grep/read）"
+      % (m["bash_seg_search"], m["bash_seg_total"], 100.0 * m["bash_seg_search"] / seg_t))
+    if pure_ratio > GATES["bash_search_ratio"] * 100:
+        bad.append("D3 纯检索调用占比 %.1f%% > %.0f%%（一个 bash 只做一件事的检索，改用 grep/read 原生工具）"
+                   % (pure_ratio, GATES["bash_search_ratio"] * 100))
     A("- 单条工具结果 >%.0f KB：**%d 条**（阈值 0 条）" % (GATES["single_result_kb"], len(m["result_kb"])))
     for kb, name in sorted(m["result_kb"], reverse=True)[:5]:
         A("    - %.1f KB  `%s`" % (kb, name))
@@ -276,6 +325,9 @@ def report(m: dict, top: int) -> tuple[str, list[str]]:
     A("## D5 单条入父上下文体量")
     A("- 单条 user 消息最大 **%d 字符**（阈值 ≤%d）"
       % (m["big_msgs"][0][0] if m["big_msgs"] else 0, GATES["subagent_msg_chars"]))
+    if m["injected_msgs"]:
+        A("- 已排除运行时注入体 %d 条（最大 %d 字符：AGENTS/skill 指令，不是对话输入）"
+          % (len(m["injected_msgs"]), max(k for k, _ in m["injected_msgs"])))
     if m["big_msgs"] and m["big_msgs"][0][0] > GATES["subagent_msg_chars"]:
         bad.append("D5 单条消息 %d 字符 > %d（改「结论 ≤20 行 + 落盘路径」）"
                    % (m["big_msgs"][0][0], GATES["subagent_msg_chars"]))

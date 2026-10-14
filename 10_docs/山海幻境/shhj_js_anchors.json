@@ -1,0 +1,155 @@
+{
+  "framework": "starry-cocos-splice/v1",
+  "game": "山海幻境",
+  "package": "com.chx.shhj",
+  "entry": "assets/main/index.js",
+  "source_of_truth": "mod菜单/starry-mod-menu/app/src/main/jni/Games/ShhjMod.cpp::SpliceCombatJs（kPreamble:179 / kGetHurtFromSp:195 / kCurHp:210 / kCreate:222 / kInvFrom:232 / kBossGuard:44）",
+  "key_source": "libcocos2djs.so jsb_set_xxtea_key（4.0/4.2/4.3 同一支 so，md5 09e19fcd…）",
+  "xxtea_key": "376f2502-1ead-46",
+  "entry_jsc": "assets/assets/main/index.jsc",
+  "stats_needles": [
+    [
+      "RoleBase.getHurt 定义(带空格)",
+      "e.prototype.getHurt = function(t, e, i) {"
+    ],
+    [
+      "RoleBase.getHurt 定义(紧凑)",
+      "e.prototype.getHurt=function(t,e,i){"
+    ],
+    [
+      "curHp += f;",
+      "this.curHp += f;"
+    ],
+    [
+      "curHp+=f;",
+      "this.curHp+=f;"
+    ],
+    [
+      "createNum(...)",
+      "createNum(t[0], t[1], t[2], t[4]"
+    ],
+    [
+      "SKILLEFFECTSUBTYPE77 免伤块",
+      "if (this._hasEffectType[r.default.SKILLEFFECTSUBTYPE77]) {"
+    ],
+    [
+      "world.isBoss 斩杀判定",
+      "this.view.isBoss"
+    ],
+    [
+      "window.__require",
+      "window.__require"
+    ]
+  ],
+  "preamble": {
+    "marker": "starry_shhj_gxr",
+    "anchor": "window.__require",
+    "text": "/*starry_shhj_gxr*/window.__hack_ret=window.__hack_ret||{};window.__gxc=window.__gxc||{t:{},v:{}};window.GXR=function(n){if(window.__hack_ret[n])return!0;var c=window.__gxc,m=Date.now();if(!c.t[n]||m-c.t[n]>250){c.t[n]=m;try{c.v[n]=!!jsb.reflection.callStaticMethod(\"com.chx.shhj.AppActivity\",\"get_ret\",\"(I)Z\",n)}catch(e){c.v[n]=!1}}return c.v[n];};window.GXD=function(){return window.GXR(3)?100:1;};window.GX5=function(m){if(!window.GXR(4)||!m)return 1;var b=m.ActivityWorldBoss||m.guildBoss||m.daoyun||m.waterFireBoss;return window.GXR(3)&&!b?1:5;};\n",
+    "log": "spliced GXR/GXD/GX5 preamble"
+  },
+  "rules": [
+    {
+      "label": "getHurt dmg5",
+      "guard_absent": [
+        "window.GX5("
+      ],
+      "pairs": [
+        {
+          "tag": "compact",
+          "from": "e.prototype.getHurt=function(t,e,i){",
+          "to": "e.prototype.getHurt=function(t,e,i){if(t&&t[2]<0&&t[3]&&t[3].camp==d.default.SELFCAMP&&this.camp!=d.default.SELFCAMP){var _m=window.GX5(E.default);_m>1&&(t[2]=Math.floor(_m*t[2]));}",
+          "log": "spliced getHurt dmg5 (compact)"
+        },
+        {
+          "tag": "spaced",
+          "from": "e.prototype.getHurt = function(t, e, i) {",
+          "to": "e.prototype.getHurt = function(t, e, i) {if (t && t[2] < 0 && t[3] && t[3].camp == d.default.SELFCAMP && this.camp != d.default.SELFCAMP) { var _m = window.GX5(E.default); _m > 1 && (t[2] = Math.floor(_m * t[2])); }",
+          "log": "spliced getHurt dmg5 (spaced)"
+        }
+      ]
+    },
+    {
+      "label": "curHp",
+      "pairs": [
+        {
+          "tag": "compact",
+          "from": "this.curHp+=f;",
+          "to": "this.curHp+=(f<0&&this.view.camp!=a.default.SELFCAMP&&!(_.default.ActivityWorldBoss||_.default.guildBoss||_.default.daoyun||_.default.waterFireBoss)&&window.GXD()>1?Math.floor(window.GXD()*f):f);",
+          "log": "spliced curHp (compact)"
+        },
+        {
+          "tag": "spaced",
+          "from": "this.curHp += f;",
+          "to": "this.curHp += (f < 0 && this.view.camp != a.default.SELFCAMP && !(_.default.ActivityWorldBoss || _.default.guildBoss || _.default.daoyun || _.default.waterFireBoss) && window.GXD() > 1 ? Math.floor(window.GXD() * f) : f);",
+          "log": "spliced curHp (spaced)"
+        }
+      ]
+    },
+    {
+      "label": "createNum",
+      "pairs": [
+        {
+          "tag": "compact",
+          "from": "createNum(t[0],t[1],t[2],t[4]",
+          "to": "createNum(t[0],t[1],t[2]<0&&!(p.default.ActivityWorldBoss||p.default.guildBoss||p.default.daoyun||p.default.waterFireBoss)&&window.GXD()>1?Math.floor(window.GXD()*t[2]):t[2],t[4]",
+          "log": "spliced createNum (compact)"
+        },
+        {
+          "tag": "spaced",
+          "from": "createNum(t[0], t[1], t[2], t[4]",
+          "to": "createNum(t[0], t[1], t[2] < 0 && !(p.default.ActivityWorldBoss || p.default.guildBoss || p.default.daoyun || p.default.waterFireBoss) && window.GXD() > 1 ? Math.floor(window.GXD() * t[2]) : t[2], t[4]",
+          "log": "spliced createNum (spaced)"
+        }
+      ]
+    },
+    {
+      "label": "tHurt inv",
+      "guard_absent": [
+        "window.GXR(2)"
+      ],
+      "pairs": [
+        {
+          "tag": "compact",
+          "from": "if(this._hasEffectType[r.default.SKILLEFFECTSUBTYPE77]){",
+          "to": "if(this._hasEffectType[r.default.SKILLEFFECTSUBTYPE77]||(this.view.camp==a.default.SELFCAMP&&window.GXR(2))){",
+          "log": "spliced tHurt inv"
+        },
+        {
+          "tag": "spaced",
+          "from": "if (this._hasEffectType[r.default.SKILLEFFECTSUBTYPE77]) {",
+          "to": "if (this._hasEffectType[r.default.SKILLEFFECTSUBTYPE77] || (this.view.camp == a.default.SELFCAMP && window.GXR(2))) {",
+          "log": "spliced tHurt inv (spaced)"
+        }
+      ]
+    },
+    {
+      "label": "boss kill check",
+      "guard_present": [
+        "this.view.isBoss"
+      ],
+      "guard_absent": [
+        "window.GXD()"
+      ],
+      "pairs": [
+        {
+          "tag": "compact",
+          "from": "this.curHp+f<=0&&this.view.isBoss",
+          "to": "this.curHp+f*(!(_.default.ActivityWorldBoss||_.default.guildBoss||_.default.daoyun||_.default.waterFireBoss)?window.GXD():1)<=0&&this.view.isBoss",
+          "log": "spliced boss kill check"
+        },
+        {
+          "tag": "spaced",
+          "from": "this.curHp + f <= 0 && this.view.isBoss",
+          "to": "this.curHp + f * (!(_.default.ActivityWorldBoss || _.default.guildBoss || _.default.daoyun || _.default.waterFireBoss) ? window.GXD() : 1) <= 0 && this.view.isBoss",
+          "log": "spliced boss kill check (spaced)"
+        }
+      ]
+    }
+  ],
+  "required": [
+    "preamble",
+    "getHurt dmg5",
+    "curHp",
+    "tHurt inv"
+  ]
+}

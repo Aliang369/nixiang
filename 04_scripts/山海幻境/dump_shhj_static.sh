@@ -36,7 +36,10 @@ unzip -p "$APK" classes.dex > "$OUT_ROOT/classes.dex"
 "$SMALI_BIN" d -o "$OUT_ROOT/smali" "$OUT_ROOT/classes.dex"
 
 "$APKTOOL_BIN" d -f -s -o "$OUT_ROOT/apktool_manifest" "$APK" >/dev/null
-cp -f "$OUT_ROOT/apktool_manifest/AndroidManifest.xml" "$MANIFEST_ROOT/AndroidManifest.xml"
+# 2026-10-15：文本 Manifest 落名加 .text 后缀 —— 外科脚本的 MF_CACHE 默认是
+# 同目录的 AndroidManifest.xml（**二进制**），同名会让外科直接拿文本 Manifest 进包
+# （不报错、装上去 Manifest 坏）。命名分离后两者永不互相顶替。
+cp -f "$OUT_ROOT/apktool_manifest/AndroidManifest.xml" "$MANIFEST_ROOT/AndroidManifest.text.xml"
 
 python3 - "$OUT_ROOT" "$APK" "$VERSION_NAME" <<'PY'
 import json
