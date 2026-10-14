@@ -66,7 +66,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
   - 2026-10-14（用户 m00123）：会话效率复盘全量落地 —— AGENTS.md 减重至 ≤32 KB ＋ 新增「D1–D7」与「P1–P31 指针表」＋ `session_metrics.py`；正文＝`规范变更日志.md` §同批落地（2026-10-14：会话效率复盘），依据 `规范优化_20261014_双会话效率复盘与可执行方案.md`。
   - 2026-10-14（用户 m01681，潮汐守望者复盘）：新增 `device_ready_check.sh`／`crash_forensics.sh`／`finalize_round.sh`／`new_hypothesis.sh`／`with_timeout.sh` ＋ `lint_mod_thread.sh` R4-prefix；技能补 `il2cpp-abi-pitfalls.md` 坑 7·8、`hook-rules.md` §33；正文＝`规范变更日志.md` §同批落地（2026-10-14 第二轮）。
   - 2026-10-15（霓虹深渊2 r19 复盘）：`starry_prefs_edit.sh`＋`pipeline.sh` 的 `status --brief`／`verify --set`；技能补授权会话·数值来源·收尾三条·D7 切点；依据 `规范优化_20261015_霓虹深渊2r19会话复盘.md`。
-  - 2026-10-15（山海幻境 4.3 复盘，m00004/m00005）：新增公共 cocos JSC 解密／锚点核对工具＋锚点 JSON；`pre_install_gate.sh` 增查7 Manifest 形态与门禁串归一；`session_metrics.py` D3/D5 口径修正；框架层 P0-4~P0-7（审计豁免表／框架 `CHANGELOG.md`＋`框架待办.md`／复盘五维／外科 MF_CACHE 断言）；正文＝`规范变更日志.md` §同批落地（2026-10-15 山海幻境 4.3）。
+  - 2026-10-15（山海幻境 4.3 复盘，m00005）：新增公共 cocos JSC 解密／锚点核对工具＋锚点 JSON；`pre_install_gate.sh` 增查7 Manifest 形态与门禁串归一；`session_metrics.py` D3/D5 口径修正；框架层 P0-4~P0-7（审计豁免表／框架 `CHANGELOG.md`＋`框架待办.md`／复盘五维／外科断言）；正文＝`规范变更日志.md` §同批落地（2026-10-15 山海幻境 4.3）。
   - 本组更早 17 笔（P1–P9、去审批化、装机预检闸门、设备画像、出包提速、按需图标模板、邂逅在迷宫 P10–P22、追迹迷城入口审计、push_main v2.1、无悔华夏例外范围、霓虹深渊2 P23–P31、bash32 全仓清零、蛋壳战机 P0-1～P2-1）→ `规范变更日志.md` §归档正文 B（含用户原话与机器关实测数字）。
 
 - 需要用户操作（进游戏、开菜单、打开工具等）时在聊天说明操作、成功标志和所需配合，等待确认并核对结果；只暂停依赖该结果的步骤，不假定用户已操作，独立且已授权工作可继续。
