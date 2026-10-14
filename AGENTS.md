@@ -63,15 +63,10 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - **规范/技能优化全自动（2026-10-04 定，用户明示「不审批，AI 自动完成优化」）**：以规范优化 / 复盘 / 文档维护为任务的**优化会话**可直接修改 `skill/`、`AGENTS.md`、`10_docs/_templates/`、`04_scripts/_common/`（`pipeline.sh` 仍走指纹锁跨机姿势），无须逐次请示；每笔改动必须 ① 按适用维度自查 `skill/re-implement/code-review-checklist.md` ② 跑 `04_scripts/_common/preflight.sh` ③ 在「规范变更日志」追加一行（日期＋文件＋改动＋依据）。**游戏执行会话（拆包/hook/装机等日常任务）仍禁改上述文件**——撤的是审批流，不是防线。日志供用户抽查，不阻塞执行。
 - **规范变更日志（只增不删；正文若 > 约 3 KB 追加到归档文件并在本文留指针）**：本文只保留最近 1–2 笔摘要，更早长正文归档到
   `10_docs/_state/规范变更日志.md`（**规则可下移，规则本身不得消失**；每笔归档仍在本文留「日期 + 依据消息号 + 一句话 + 归档位置」）：
-  - 2026-10-14（用户 m00123「按照你说的方案全量修改」）：会话效率复盘全量落地 —— `AGENTS.md` **67,191 B → ≤32 KB**（D6 入口体量闸门），
-    新增「## 会话效率纪律（D1–D7）」＋「P1–P31 规则指针表」，三节增量正文（原第 183–299 行）与本组 2026-10-03～2026-10-14 长正文
-    全部归档到 `10_docs/_state/规范变更日志.md`；新建只读度量脚本 `04_scripts/_common/session_metrics.py`；
-    依据 `10_docs/_state/规范优化_20261014_双会话效率复盘与可执行方案.md`。
-  - 2026-10-14（用户 m01681「按照方案全量修改」，潮汐守望者会话复盘）：新增 5 工具 + 1 静态规则 —— `device_ready_check.sh`（真机就绪门禁，有 FAIL ⇒ rc=4 不装机）／`crash_forensics.sh`（崩溃取证七件套，免 root 优先 App 自写 `crash_logs/`）／`finalize_round.sh`（收尾+正式包+清理+git 一条命令，默认 dry-run）／`new_hypothesis.sh`（假设预注册：先写判定行与否决条件再改码）／`with_timeout.sh`（垫片，超时 rc=124，**禁字面 `timeout`**）／`lint_mod_thread.sh` 加 R4-prefix；技能文档补 `il2cpp-abi-pitfalls.md` 坑 7·坑 8、`il2cpp-from-scratch.md` §〇 实例台账、`hook-rules.md` §33。依据 `10_docs/_state/规范优化_20261014_潮汐守望者1.2.65.385.1会话复盘.md`。
-  - 2026-10-15（用户本轮：会话效率复盘 + 可执行方案）：新增 `starry_prefs_edit.sh`；`skill/starry-mod` 授权会话小节、`stages.md` 收尾三条命令、`路线锁定.md` 数值来源纪律、后台任务先 `job_list`；依据 `10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`。
-  - 本组 17 笔历史正文（P1–P9 落地、去审批化、装机预检闸门、设备画像、出包提速、按需图标模板、邂逅在迷宫 P10–P22、追迹迷城入口审计、
-    push_main v2.1、无悔华夏例外范围、霓虹深渊2 P23–P31、bash32 全仓清零、蛋壳战机 P0-1～P2-1）→ 归档位置
-    `10_docs/_state/规范变更日志.md` §归档正文 B（含用户原话与机器关实测数字，需要时 `grep` 该文件）。
+  - 2026-10-14（用户 m00123）：会话效率复盘全量落地 —— AGENTS.md 减重至 ≤32 KB ＋ 新增「D1–D7」与「P1–P31 指针表」＋ `session_metrics.py`；正文＝`规范变更日志.md` §同批落地（2026-10-14：会话效率复盘），依据 `规范优化_20261014_双会话效率复盘与可执行方案.md`。
+  - 2026-10-14（用户 m01681，潮汐守望者复盘）：新增 `device_ready_check.sh`／`crash_forensics.sh`／`finalize_round.sh`／`new_hypothesis.sh`／`with_timeout.sh` ＋ `lint_mod_thread.sh` R4-prefix；技能补 `il2cpp-abi-pitfalls.md` 坑 7·8、`hook-rules.md` §33；正文＝`规范变更日志.md` §同批落地（2026-10-14 第二轮）。
+  - 2026-10-15（用户本轮「会话效率复盘 + 可执行方案」＋「按照方案全量修改」）：新增 `starry_prefs_edit.sh`（prefs 写前校验／拼接预置／判据复核；校验器按标签流解析）＋ `pipeline.sh status --brief`（34 KB→0.9 KB）＋ `verify <stage> --set`（产物已在、状态需补）；`skill/starry-mod` 授权会话小节、`hook-rules.md` §5 与 `路线锁定.md` 数值来源纪律、`stages.md` 收尾三条命令、D7 会话切点硬阈值；依据 `10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`。
+  - 本组更早 17 笔（P1–P9、去审批化、装机预检闸门、设备画像、出包提速、按需图标模板、邂逅在迷宫 P10–P22、追迹迷城入口审计、push_main v2.1、无悔华夏例外范围、霓虹深渊2 P23–P31、bash32 全仓清零、蛋壳战机 P0-1～P2-1）→ `规范变更日志.md` §归档正文 B（含用户原话与机器关实测数字）。
 
 - 需要用户操作（进游戏、开菜单、打开工具等）时在聊天说明操作、成功标志和所需配合，等待确认并核对结果；只暂停依赖该结果的步骤，不假定用户已操作，独立且已授权工作可继续。
 - **真机交互零截图（2026-10-01 定）**：不做 `screencap` 猜坐标、不 `input tap`、不靠截图判断界面状态 —— 真机取证一律走 `logcat`、`/proc/<pid>/{mem,maps}`、frida。屏幕上的点按、输入、翻页**全部由用户完成**。（历史浪费：为算 `input tap` 坐标花掉 `wm size` + `screencap` 的调用，最终未用上。）
@@ -176,6 +171,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - **D7 压缩前置与开工节拍**：`compress` 触发点前移到**上下文 ≈90 K**（不再等 ~140 K 才动，现状 19/20 次全部贴峰值触发）；一个压缩条目只装一个主题。
   开工节拍固定为三读一次并发完成：`_state/current.md` 摘要行 → `_state/games/{游戏}.md` 当前摘要 → `10_docs/{游戏}/硬约束.md`
   （现状引用落差 8 倍：`games/蛋壳战机.md` 被读 34 次 vs 4 次）。
+  **会话切点硬阈值（2026-10-15 补，霓虹深渊2 r19 实测）**：同一共享文件被触达 >10 次，或连续 3 个 step 单发，即先 `compress`／写交接再继续 —— 本轮峰值 774,719 tokens、`pipeline.sh` 触达 22 次、`pipeline.json` 23 次，D1/D3/D5 三项 FAIL 全出在后段。
 
 **度量口（只读，D1/D3/D5 的阈值机检）**：`python3 04_scripts/_common/session_metrics.py --session-id <片段> --gate`
 （`--list` 列会话、`--latest N` 合计、`--top N`、`--out <文件>`；违规 rc=3）。它直接输出 calls/step 分布、单发占比、bash 检索占比、

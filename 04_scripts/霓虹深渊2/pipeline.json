@@ -30,17 +30,14 @@
       "command": "B=/tmp/nhsy2/nhsy2_base_2026.10.14.apk; mkdir -p /tmp/nhsy2; [ -f \"$B\" ] || adb -s $SERIAL pull \"$(adb -s $SERIAL shell pm path com.veewo.neonabyss2 | tr -d '\\r' | sed -n 's|^package:||p' | head -1)\" \"$B\"; ls -lh \"$B\" && echo \"md5=$(md5 -q \"$B\")\" && { command -v sha256sum >/dev/null 2>&1 && sha256sum \"$B\" || shasum -a 256 \"$B\"; }",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "/tmp/nhsy2/nhsy2_base_2026.10.14.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-10-14 23:24:09",
-      "artifacts": {
-        "/tmp/nhsy2/nhsy2_base_2026.10.14.apk": {
-          "md5": "60ef776bb109f18ba661bceb48b12ef6"
-        }
-      }
+      "done_at": "2026-10-15 01:36:59",
+      "note": "2026-10-15 收尾清理: /private/tmp/nhsy2/nhsy2_base_2026.10.14.apk\n2026-10-15 收尾清理: /tmp/nhsy2/nhsy2_base_2026.10.14.apk; 原 md5=60ef776bb109f18ba661bceb48b12ef6",
+      "artifacts": {}
     },
     {
       "id": "anchor",
@@ -64,20 +61,17 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-14 23:24:13",
+      "done_at": "2026-10-15 01:37:05",
       "artifacts": {
         "10_docs/霓虹深渊2/路线锁定.md": {
-          "md5": "8f193c720cd824d935359016ed698985"
+          "md5": "a9d38f04dbdeae54504aa23d91f69f2c"
         },
         "10_docs/霓虹深渊2/硬约束.md": {
-          "md5": "bb5c4063df43844f20e84294d7e52b0d"
+          "md5": "420aa85a4f3cdb9947f55d4858041987"
         },
         "10_docs/霓虹深渊2/侦察笔记_锚点索引.md": {
           "md5": "c61c36df19af6a4e8ad8a8ca135bf033"
         }
-      },
-      "inputs": {
-        "/tmp/nhsy2/nhsy2_base_2026.10.14.apk": "60ef776bb109f18ba661bceb48b12ef6"
       }
     },
     {
@@ -126,21 +120,17 @@
       "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_nhsy2_2026.10.14.sh",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.14_surgical-unsigned.apk"
         }
       ],
       "status": "done",
       "done_at": "2026-10-15 00:22:03",
-      "artifacts": {
-        "08_output/霓虹深渊2/霓虹深渊2_2026.10.14_surgical-unsigned.apk": {
-          "md5": "fa5461baa1e9ed3b14dc1b213226afa9"
-        }
-      },
       "inputs": {
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp": "83ca3a3393a2f21fe53d011f68a702e4",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Entry.cpp": "5e996199ef4c14769f32aacde5ef9176"
-      }
+      },
+      "note": "2026-10-15 收尾清理: /Users/aliang/Documents/nixiang/08_output/霓虹深渊2/霓虹深渊2_2026.10.14_surgical-unsigned.apk\n2026-10-15 收尾清理: 08_output/霓虹深渊2/霓虹深渊2_2026.10.14_surgical-unsigned.apk; 原 md5=fa5461baa1e9ed3b14dc1b213226afa9"
     },
     {
       "id": "sign",
@@ -158,9 +148,15 @@
           "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.14_surgical-releaseSigned.apk"
         }
       ],
-      "status": "failed",
+      "status": "done",
       "failed_at": "2026-10-15 00:25:00",
-      "error": "命令退出码 1（详见日志尾部）"
+      "error": "命令退出码 1（详见日志尾部）",
+      "done_at": "2026-10-15 01:37:11",
+      "artifacts": {
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.14_surgical-releaseSigned.apk": {
+          "md5": "857c622f4798a8c8ed7407cc1e0d2491"
+        }
+      }
     },
     {
       "id": "device_ready",
@@ -260,7 +256,6 @@
       ],
       "status": "done",
       "done_at": "2026-10-15 00:25:30",
-      "artifacts": {},
       "inputs": {
         "08_output/霓虹深渊2/delivery_20261012/menu_template.json": "d6ceee0a34d31996780a0960e0359a87",
         "10_docs/霓虹深渊2/正式包裁剪清单_20261012.json": "c919a97f553e93679c960828763e158c",

@@ -15,11 +15,12 @@
 #
 #  用法：
 #    bash 04_scripts/pipeline.sh <游戏> status          # 查看状态（开工第一步；同时钉硬约束 + 台账）
+#    bash 04_scripts/pipeline.sh <游戏> status --brief  # 精简状态（跳过 说明/前置 与 硬约束+台账 回显，≈1/3 输出）
 #    bash 04_scripts/pipeline.sh <游戏> next            # 执行下一阶段
 #    bash 04_scripts/pipeline.sh <游戏> next --loop 4   # 连跑最多 4 个阶段，逐次回显日志尾 40 行（失败即停）
 #    bash 04_scripts/pipeline.sh <游戏> run <stage_id> # 显式执行某阶段
 #    bash 04_scripts/pipeline.sh <游戏> reset <stage_id># 状态回退 pending
-#    bash 04_scripts/pipeline.sh <游戏> verify <stage_id># 只校验产物不执行
+#    bash 04_scripts/pipeline.sh <游戏> verify <stage_id> [--set]  # 只校验产物不执行；--set 校验通过即置 done
 #    bash 04_scripts/pipeline.sh <游戏> log [N]         # 只回显 pipeline.log 尾 N 行（默认 40）
 #    bash 04_scripts/pipeline.sh <游戏> round <功能#> <有效|无效|未测> [摘要]   # 记一轮实测结果
 #    bash 04_scripts/pipeline.sh <游戏> rounds          # 打假设矩阵（被轮次门禁拦住时照它填）
@@ -208,11 +209,11 @@ usage() {
 用法: bash 04_scripts/pipeline.sh <游戏> <动作> [参数]
 
 动作:
-  status                        查看状态（开工第一步；同时钉出硬约束生效条目与轮次台账）
+  status [--brief]              查看状态（开工第一步；默认同时钉出硬约束生效条目与轮次台账；--brief 只回显阶段行 + 下一步）
   next [--loop N]               # 执行下一阶段；--loop N 连跑最多 N 个阶段（逐次回显日志尾 ${TAIL_LINES} 行）
   run <stage_id>                # 显式执行某阶段
   reset <stage_id>              # 状态回退 pending
-  verify <stage_id>             # 只校验产物不执行
+  verify <stage_id> [--set]     # 只校验产物不执行；--set＝校验通过即置 done（用于「产物已在、状态需补」的收尾）
   log [N]                       # 只回显 pipeline.log 尾 N 行（默认 ${TAIL_LINES}）
   round <功能#> <有效|无效|未测> [摘要]   # 记一轮「改代码→装机→用户实测」结果（写 10_docs/<游戏>/轮次台账.tsv）
   rounds                        # 打假设矩阵（被轮次门禁拦住时照它填，填完贴给用户确认方向）
@@ -307,11 +308,13 @@ def _save():
     json.dump(data, open(jf, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 
 if cmd == "status":
+    brief = "--brief" in sys.argv
     gname = os.path.basename(gdir)
     stages = data.get("stages", [])
     cur = next((i for i, s in enumerate(stages) if s.get("status") == "pending"), len(stages))
     print(f"游戏: {data.get('game')}  版本: {data.get('version','')}  阶段: {cur}/{len(stages)}")
-    print(f"说明: {data.get('notes','')}")
+    if not brief:
+        print(f"说明: {data.get('notes','')}")
     print("-" * 68)
     for i, s in enumerate(stages):
         mark = {"pending": "⬜", "done": "✅", "failed": "❌", "skipped": "⏭"}.get(s.get("status"), "❓")
@@ -323,6 +326,11 @@ if cmd == "status":
             art_str = f"  [产物指纹{'⚠️已变化' if changed else '✓'}]" if arts else ""
         if s.get("status") == "done" and s.get("inputs") and _stale_inputs(s):
             art_str += "  [⚠️上游已更新，本阶段过期（需重跑）]"
+        if brief:
+            print(f" {mark} {i+1}. {s['id']:<12} {s.get('status'):<8}{art_str}")
+            if s.get("status") == "failed" and s.get("error"):
+                print(f"      错误: {s['error']}")
+            continue
         print(f" {mark} {i+1}. {s['id']:<12} {s.get('name','')}")
         print(f"      前置: {req}   状态: {s.get('status')}{art_str}")
         if s.get("status") == "failed" and s.get("error"):
@@ -333,6 +341,8 @@ if cmd == "status":
         print(f"下一步: bash 04_scripts/pipeline.sh {gname} next   （将执行: {nxt['id']} {nxt.get('name','')}）")
     else:
         print("全部阶段完成或无待执行阶段。")
+    if brief:
+        print("（--brief：已省略 说明 / 阶段名 / 前置 与「硬约束 + 台账」回显；要全量用不带 --brief 的 status）")
 
 elif cmd == "get_next":
     stages = data.get("stages", [])
@@ -605,11 +615,17 @@ main() {
 
   case "$action" in
     status)
-      pin_constraints "$game"
-      echo ""
-      json_py "$jf" status
-      echo ""
-      ledger_summary "$game"
+      local brief=0
+      [ "${3:-}" = "--brief" ] && brief=1
+      if [ "${brief}" = 0 ]; then
+        pin_constraints "$game"
+        echo ""
+        json_py "$jf" status
+        echo ""
+        ledger_summary "$game"
+      else
+        json_py "$jf" status --brief
+      fi
       ;;
     next)
       local sid i=0 loop=1
@@ -645,8 +661,15 @@ main() {
       echo "已回退 [${3}] → pending"
       ;;
     verify)
-      [ $# -ge 3 ] || die "用法: pipeline.sh ${game} verify <stage_id>"
-      json_py "$jf" verify "$3"
+      [ $# -ge 3 ] || die "用法: pipeline.sh ${game} verify <stage_id> [--set]"
+      if json_py "$jf" verify "$3"; then
+        if [ "${4:-}" = "--set" ]; then
+          json_py "$jf" set_status "$3" done
+          echo "✅ 已按校验结果置 [${3}] → done（--set；同时刷新产物指纹与上游快照）"
+        fi
+      else
+        die "阶段 ${3} 产物校验未通过（--set 未生效）"
+      fi
       ;;
     log)
       local logf="${SCRIPT_DIR}/${game}/pipeline.log" ln

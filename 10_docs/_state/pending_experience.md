@@ -97,4 +97,5 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 规则目标位置：`skill/starry-mod/SKILL.md`（新增「授权会话（卡密）预置与诊断」小节）／`04_scripts/_common/stages.md`（收尾三条固定命令）／`10_docs/_templates/路线锁定.md`（回读时机第 5 条「数值来源纪律」）／`AGENTS.md`（一行指针，32,725 B ≤ 32,768）／`04_scripts/_common/starry_prefs_edit.sh`（新工具）。
 - 依据：`10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`；`session_metrics.py --gate` FAIL 5 项（calls/step 1.15、单发 85.9%、bash 检索 78.9%、单条 >8 KB 32 条、单条消息 33,093 字符）。
 - 状态：**已合并**（证据＝本轮真机实测行 + 反证排除；落点＝上述文件；提交号见本轮 `archive_scoped_git.sh` 输出）。
-- 未落地候选：① P2-2 会话切点加硬阈值（同一共享文件触达 >10 次 或 连续 3 个 step 单发 ⇒ 先压缩再继续）——阈值待下一轮数据；② `pipeline.sh status --brief`（需按指纹锁流程改 `pipeline.sh`）；③ `skill/re-implement/hook-rules.md` 补一条与 `路线锁定.md` 同款的数值来源纪律。
+- 已合并（同日第二批「按照方案全量修改」）：① P2-2 会话切点硬阈值 → `AGENTS.md` D7；② `pipeline.sh status --brief` ＋ `verify <stage> --set` → `04_scripts/pipeline.sh`＋`_common/pipeline.lock`（指纹 `5efdea57…`）＋`stages.md` 收尾四条固定命令；③ 数值来源纪律 → `skill/re-implement/hook-rules.md` §5；④ `starry_prefs_edit.sh` 校验器改标签流解析。
+- 仍留候选：无（本批清空）。下一个观察口＝`session_metrics.py --gate` 在下一次会话是否把 calls/step、bash 检索占比、单条 >8 KB 三项拉回阈值内。

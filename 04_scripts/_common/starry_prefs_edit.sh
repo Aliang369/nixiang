@@ -108,56 +108,75 @@ validate_xml() { # $1 = 文件；返回 0/3，错误打到 stderr
       sub(/\/$/, "", s)
       return s
     }
-    BEGIN { errors = 0; keys = 0; root = 0 }
-    /^[ \t]*$/ { next }
-    /^<\?xml/ { next }
-    {
-      line = $0
-      sub(/^[ \t]+/, "", line)
-      if (line ~ /^<map/) { root = 1; next }
-      if (line ~ /^<\//) { next }
-      if (line !~ /^</) {
-        printf("[prefs] ✗ 第 %d 行：<map> 里出现裸文本（Android 会解析失败）：%s\n", NR, line) > "/dev/stderr"
-        errors++; next
+    function trim(s) { gsub(/^[ \t\r\n]+/, "", s); gsub(/[ \t\r\n]+$/, "", s); return s }
+    function errm(msg) { printf("[prefs] ✗ %s\n", msg) > "/dev/stderr"; errors++ }
+    function flushbody(   t) {
+      if (cur == "") { body = ""; return }
+      if (cur != "string" && cur != "set") {
+        t = trim(body)
+        if (t != "")
+          errm(sprintf("元素 <%s> 的值必须写在 value= 属性里（收到文本体 %s）", cur, substr(t, 1, 40)))
       }
-      # 单个元素（本作 App 自己写的一行一个元素）
-      tag = line
-      sub(/^</, "", tag)
-      sub(/[ >].*$/, "", tag)
-      name = attr(line, "name")
-      if (name == "") {
-        printf("[prefs] ✗ 第 %d 行：<%s> 缺 name 属性\n", NR, tag) > "/dev/stderr"
-        errors++; next
-      }
-      if (seen[name]++) {
-        printf("[prefs] ✗ 第 %d 行：键名重复 name=\"%s\"\n", NR, name) > "/dev/stderr"
-        errors++
-      }
-      keys++
-      if (tag == "boolean" || tag == "int" || tag == "long" || tag == "float") {
-        if (attr(line, "value") == "") {
-          printf("[prefs] ✗ 第 %d 行：<%s name=\"%s\"> 缺 value= 属性 ⇒ Android 解析抛异常 ⇒ App 得到空 map\n", NR, tag, name) > "/dev/stderr"
-          printf("[prefs]    修法：<boolean name=\"%s\" value=\"true\" />（布尔/整数/长整/浮点一律写属性，不写文本体）\n", name) > "/dev/stderr"
-          errors++
-        }
-      } else if (tag == "string") {
-        if (attr(line, "value") != "") {
-          printf("[prefs] ✗ 第 %d 行：<string name=\"%s\" value=\"…\"/> —— Android 读的是文本体，属性值会被静默丢弃\n", NR, name) > "/dev/stderr"
-          printf("[prefs]    修法：<string name=\"%s\">值</string>\n", name) > "/dev/stderr"
-          errors++
-        }
-      } else if (tag == "set") {
-        # 子元素由下一行校验（<string>），这里只记名
-      } else {
-        printf("[prefs] ✗ 第 %d 行：未知元素 <%s>（合法：string/int/long/float/boolean/set）\n", NR, tag) > "/dev/stderr"
-        errors++
-      }
+      body = ""
     }
+    BEGIN { errors = 0; keys = 0; root = 0; cur = ""; body = ""; buf = ""; lineno = 1; in_set = 0 }
+    { buf = buf $0 "\n" }
     END {
-      if (!root) {
-        printf("[prefs] ✗ 根元素不是 <map>（Android 只认 <map>）\n") > "/dev/stderr"
-        errors++
+      n = length(buf); i = 1
+      while (i <= n) {
+        c = substr(buf, i, 1)
+        if (c != "<") {
+          body = body c
+          if (c == "\n") lineno++
+          i++
+          continue
+        }
+        j = index(substr(buf, i + 1), ">")
+        if (j == 0) { errm(sprintf("第 %d 行附近：标签缺闭合的 >（文件被截断？）", lineno)); break }
+        inner = substr(buf, i + 1, j - 1)
+        tmp = substr(buf, i, j + 1); gsub(/[^\n]/, "", tmp); lineno += length(tmp)
+        i = i + j + 1
+        if (inner ~ /^\?/ || inner ~ /^!/) { body = ""; continue }   # 声明 / 注释
+        if (inner ~ /^\//) {                                          # 闭合标签
+          ct = substr(inner, 2)
+          if (ct == "map" || ct == "set") { flushbody(); cur = ""; if (ct == "set") in_set = 0; continue }
+          if (cur != "" && ct != cur) errm(sprintf("第 %d 行：</%s> 与 <%s> 不匹配", lineno, ct, cur))
+          flushbody(); cur = ""; continue
+        }
+        selfclose = (substr(inner, length(inner), 1) == "/")
+        tg = tagname(inner)
+        if (tg == "map") { root = 1; cur = selfclose ? "" : "map"; body = ""; continue }
+        if (tg != "string" && tg != "int" && tg != "long" && tg != "float" && tg != "boolean" && tg != "set") {
+          errm(sprintf("第 %d 行：未知元素 <%s>（合法：string/int/long/float/boolean/set）", lineno, tg))
+          body = ""; continue
+        }
+        nm = attr(inner, "name")
+        if (tg == "set") {
+          if (nm == "") errm(sprintf("第 %d 行：<set> 缺 name 属性", lineno))
+          else { if (seen[nm]++) errm(sprintf("第 %d 行：键名重复 name=\"%s\"", lineno, nm)); keys++ }
+          cur = selfclose ? "" : "set"; in_set = !selfclose; body = ""
+          continue
+        }
+        if (nm == "") {
+          if (in_set && tg == "string") { cur = ""; body = ""; continue }   # <set> 成员 <string> 无 name 属正常
+          errm(sprintf("第 %d 行：<%s> 缺 name 属性", lineno, tg)); body = ""; continue
+        }
+        if (seen[nm]++) errm(sprintf("第 %d 行：键名重复 name=\"%s\"", lineno, nm))
+        keys++
+        if (tg == "string") {
+          if (attr(inner, "value") != "") {
+            errm(sprintf("第 %d 行：<string name=\"%s\" value=\"…\"/> —— Android 读的是文本体，属性值会被静默丢弃", lineno, nm))
+            printf("[prefs]    修法：<string name=\"%s\">值</string>\n", nm) > "/dev/stderr"
+          }
+        } else if (attr(inner, "value") == "") {
+          errm(sprintf("第 %d 行：<%s name=\"%s\"> 缺 value= 属性 ⇒ Android 解析抛异常 ⇒ App 得到空 map", lineno, tg, nm))
+          printf("[prefs]    修法：<%s name=\"%s\" value=\"…\" />（布尔/整数/长整/浮点一律写属性，不写文本体）\n", tg, nm) > "/dev/stderr"
+        }
+        cur = selfclose ? "" : tg; body = ""
       }
+      flushbody()
+      if (cur != "") errm(sprintf("元素 <%s> 没有闭合标签", cur))
+      if (!root) errm("根元素不是 <map>（Android 只认 <map>）")
       if (errors == 0) printf("[prefs] ✓ XML 体检通过（%d 个键）\n", keys)
       exit(errors == 0 ? 0 : 3)
     }

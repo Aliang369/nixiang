@@ -252,10 +252,13 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    目录为空或正式包不存在 → 报告并停下，不要从 `09_test` 里翻中间包冒充正式包。
    icon / 菜单模板是**按需交付物**（2026-10-05 用户定）：仅「新游戏首次交付」（`08_output/{游戏}` 下无 `delivery_*`）或用户当轮点名「图标和菜单模板」时，才用 `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json [--prune --sync-doc] --apply` 生成 delivery 目录（icon 512/144 + 模板副本 + 字段自检）；其余收尾**不传这两个参数**（脚本默认跳过、不建 delivery 目录），裁剪与文档片段分别走上面的 `prune_output_final.sh` 与 `--sync-doc`。
 
-   **收尾三条固定命令（2026-10-15 霓虹深渊2 r19 补；都是本轮实测踩出来的）**：
-   - 看状态**只切片**（`status` 会回显「硬约束生效条目全文 + 台账尾部」≈15 KB，整读等于白烧一次压缩）：
-     `bash 04_scripts/pipeline.sh {游戏} status | grep -E '^ [⬜✅⚠]|下一步'`。
-   - `next` 报 `missing …<某阶段产物>` 且该阶段**已经跑过**（典型：`archive` 的 prune 删掉了 `sign` 的输入 unsigned apk，一致性扫掠把 `sign` 打回 pending）⇒ `bash 04_scripts/pipeline.sh {游戏} verify <stage>` 复位为 done 再 `next`；**禁**手改 stage 的 `verify` 语义。
+   **收尾四条固定命令（2026-10-15 霓虹深渊2 r19 补；都是本轮实测踩出来的）**：
+   - 看状态**用 `--brief`**（全量 `status` 会回显「硬约束生效条目全文 + 台账尾部」≈34 KB，整读等于白烧一次压缩；`--brief` 实测 0.9 KB）：
+     `bash 04_scripts/pipeline.sh {游戏} status --brief`（要全量/要钉硬约束时才用不带 `--brief` 的 status）。
+   - `next` 报 `missing …<某阶段产物>` 且该阶段**已经跑过**（典型：`archive` 的 prune 删掉了 `sign` 的输入 unsigned apk）⇒ 先按产物裁剪清单登记清理
+     `python3 04_scripts/_common/pipeline_record_cleanup.py --game {游戏} --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json [--apply]`（**先 dry-run**；它会把 `verify` 改 `not_exists` 并从快照里移除该产物/下游 inputs），
+     再用 `bash 04_scripts/pipeline.sh {游戏} verify <stage> --set` 把「产物已在、状态需补」的阶段置回 done；**禁**手改 stage 的 `verify` 语义。
+     （2026-10-15 实例：`sign` 因 prune 被标 failed 且一路留在台账里，`--brief` 一跑就暴露 ⇒ 登记清理 + 三个 `--set` 后 9/9 全绿、无 stale 标记。）
    - 真机残留清理走现成脚本（**禁手打 rm 名单**：非 root 会静默删不动，本轮实测 `su 0` 才删得掉）：
      `bash 04_scripts/_common/cleanup_device_re_residue.sh --deep`（先 `--dry-run` 看范围；保留项写进台账）。
 3. 官包归位：`02_apks`（用户手动管理，AI 不探测不整理）；本轮是否有原版以**用户声明**为准。
@@ -364,3 +367,4 @@ native 自读）、热重载做法、四条验收与可 grep 的日志锚点都�
 - **清理禁通配符（P9）**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库 tracked 脚本，靠 `git checkout` 才救回）。
 - **真要改 `pipeline.sh` 时的跨机姿势（2026-10-03 澄清，当日已按此流程改过一次）**：`pipeline.sh` 与 `_common/pipeline.lock` 都是 **git 跟踪文件**（`git ls-files 04_scripts/_common/pipeline.lock` 命中），只是 `_common/pipeline.lock` 被 Syncthing `.stignore` 忽略（`10_docs/双机协作/双机协作同步方案.md:482`，避免双通道冲突），而 `pipeline.sh` 本身走 Syncthing。所以改法是：**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的 `shasum -a 256`，然后 push，另一台 `git pull --rebase --autostash` 后即一致（不必手工碰 lock）；**禁止**只改一边或两端同时改 —— Syncthing 会先把新 `pipeline.sh` 送到另一台而那边 lock 还是旧的，该机任何 `pipeline.sh` 命令都会 die「指纹不匹配」，`git pull` 一次即恢复。
   - 2026-10-03 实例（P1/P4/P5 并入 + UTF-8 垫片）：新指纹 `pipeline_sh_sha256=1bf3e07b9486b9a8b5b596df3823c78e65c4a58b2cffc31e5fd0a16d25233b42`（旧 `0a2e133157760ce0b4a715b293d3718574b495772a46b48cac81fc089f72a435`），`stage_next.sh` 同批缩为转发器；另一台机器拉取后先跑一次 `bash 04_scripts/pipeline.sh <游戏> status` 确认不再 die 即为同步成功。
+  - 2026-10-15 实例（霓虹深渊2 r19 复盘：`status --brief` + `verify --set`）：新指纹 `pipeline_sh_sha256=5efdea573dc23c381e1f701369abff636afbea760a35fe383ad2b58f05a83029`（旧 `1bf3e07b…`）。同一提交内改 `pipeline.sh`（`status [--brief]`＝跳过 说明/阶段名/前置 与「硬约束+台账」回显；`verify <stage> [--set]`＝校验通过即 `set_status done`，用于「产物已在、状态需补」的收尾）＋刷新 `_common/pipeline.lock`。另一台机器 `git pull --rebase --autostash` 后先跑 `bash 04_scripts/pipeline.sh <游戏> status --brief` 验证不再 die。
