@@ -902,6 +902,165 @@ bool IsExecutableRange(uintptr_t addr, size_t len) {
     return detail::MappingHasPerm(u, len, 'x');
 }
 
+/* ★r19（2026-10-14 底包迁移，vc590 / 2026-10-14.f5a3317af6d）：导出台账平移恢复
+ *
+ * 背景（真机实测 + 日志比对，证据目录 09_test/霓虹深渊2/precheck_20261014_232854）：
+ *   新底包 libil2cpp.so（139,261,576 B / md5 92d0367a1f0675984a0418ed8564c09d）的
+ *   .dynsym（file 0x72ae3c8，2620 条）里**只保留 141 个 il2cpp_* 导出**，缺的正是 mod
+ *   需要的这批：class_from_name / class_get_field_from_name / field_get_offset /
+ *   object_get_class / class_get_name / class_get_fields / class_get_parent /
+ *   class_get_method_from_name / class_get_methods / class_get_namespace / field_get_name /
+ *   field_get_type / field_static_get_value / method_get_name / method_get_param(_count) /
+ *   method_get_flags / method_get_return_type / type_get_name / string_new /
+ *   image_get_class_count / image_get_class。
+ *   ⇒ xdl_sym/xdl_dsym 按名解析 23 条 miss ⇒ Load() 在 core 门禁处 return false
+ *     ⇒ 零钩子。r19 冷启日志只有
+ *     `[Il2Cpp] core api missing (xdl+dynsym) asm_enum=1 asm_open=1 cfname=0 scan=0`，
+ *     没有 `install pass: ok=…/72`（r18 同代码同流程是 ok=69/72 + login assist 6/6）。
+ *   已否证「加密更强/解密更晚」「改名导出」「搬到 libthemis.so」三种解释：
+ *   运行期 dump 解密后的 .dynstr 里这些名字**物理不存在**（10 分钟后复 dump 不变），
+ *   全库搜 ClassFromName/FieldGetOffset/ObjectGetClass/ImageGetClass/FindClass 等 0 命中，
+ *   新底包 libthemis.so（853,816 B）自身 dynstr 只有 97 条 libc 导入、0 个 il2cpp 导出。
+ *
+ * 判据（判据先行，全部来自本仓库实测日志，不是猜测）：
+ *   这些符号的**导出地址本身仍可用**——它们是一张「调用桩表」，两次底包之间整体平移、
+ *   相对布局逐符号不变。旧表地址取自 r18（10.12 底包）日志的 `[Il2Cpp] diag …` 行，
+ *   那些地址是 xdl 实际返回**且已被成功调用**的（install pass ok=69/72 为证）：
+ *     10.12（r18，base 0x7546c0b000）：get_corlib +0x300BC90  domain_get +0x300C1C0
+ *       domain_assembly_open +0x300C1C4  domain_get_assemblies +0x300C1CC
+ *       value_box +0x300C5C0  runtime_invoke +0x300C5E4  thread_attach +0x300C61C
+ *     10.14（r19，base 0x7546206000）：同 7 个 → +0x301833C  +0x301886C  +0x3018870
+ *       +0x3018878  +0x3018C6C  +0x3018C90  +0x3018CC8
+ *   ⇒ **7/7 锚点给出同一个位移 +0xC6AC**（7 个符号跨表两端，不是巧合）。
+ *
+ * 说明：class_from_name / class_get_method_from_name / assembly_get_image 在**旧底包里
+ *   本来就被 themis 伪造成负偏移**（指向 libthemis-v8，2026-10-05 记录）⇒ 台账里没有它们
+ *   的条目，也不恢复；它们继续走既有的 ClassFromNameScan / GetMethodScan / ImageOf
+ *   （直接读 Il2CppAssembly 首字段）降级路径——r18 正是靠这条路交付的。
+ */
+bool Api::RecoverByStubShift() {
+    struct Slot { const char* name; uint32_t oldRva; void** slot; };
+    const Slot k[] = {
+        { "il2cpp_get_corlib",                0x300BC90, (void**)&get_corlib },
+        { "il2cpp_class_get_fields",          0x300BD08, (void**)&class_fields },
+        { "il2cpp_class_get_field_from_name", 0x300BD1C, (void**)&class_get_field },
+        { "il2cpp_class_get_methods",         0x300BD20, (void**)&class_methods },
+        { "il2cpp_class_get_name",            0x300BD28, (void**)&class_name },
+        { "il2cpp_class_get_namespace",       0x300BD2C, (void**)&class_namespace },
+        { "il2cpp_class_get_parent",          0x300BD30, (void**)&class_parent },
+        { "il2cpp_domain_get",                0x300C1C0, (void**)&domain_get },
+        { "il2cpp_domain_assembly_open",      0x300C1C4, (void**)&domain_assembly_open },
+        { "il2cpp_domain_get_assemblies",     0x300C1CC, (void**)&domain_assemblies },
+        { "il2cpp_field_get_name",            0x300C378, (void**)&field_name },
+        { "il2cpp_field_get_offset",          0x300C398, (void**)&field_offset },
+        { "il2cpp_field_get_type",            0x300C39C, (void**)&field_type },
+        { "il2cpp_field_static_get_value",    0x300C3B4, (void**)&field_static_get },
+        { "il2cpp_method_get_return_type",    0x300C4F8, (void**)&method_ret_type },
+        { "il2cpp_method_get_name",           0x300C504, (void**)&method_get_name },
+        { "il2cpp_method_get_param_count",    0x300C514, (void**)&method_param_count },
+        { "il2cpp_method_get_param",          0x300C518, (void**)&method_param },
+        { "il2cpp_method_get_flags",          0x300C528, (void**)&method_flags },
+        { "il2cpp_object_get_class",          0x300C590, (void**)&object_class },
+        { "il2cpp_value_box",                 0x300C5C0, (void**)&value_box },
+        { "il2cpp_runtime_invoke",            0x300C5E4, (void**)&runtime_invoke },
+        { "il2cpp_string_new",                0x300C600, (void**)&string_new },
+        { "il2cpp_thread_attach",             0x300C61C, (void**)&thread_attach },
+        { "il2cpp_type_get_name",             0x300C67C, (void**)&type_name },
+        { "il2cpp_image_get_class_count",     0x300C8A4, (void**)&image_class_count },
+        { "il2cpp_image_get_class",           0x300C8B8, (void**)&image_class },
+    };
+
+    bool anyMissing = false;
+    for (const Slot& s : k) if (!*s.slot) { anyMissing = true; break; }
+    if (!anyMissing) return false;  // 正常包：全部按名解析成功，什么都不做
+
+    uintptr_t base = 0, end = 0;
+    if (!detail::LibIl2CppRange(&base, &end)) {
+        LOGI("[Il2Cpp] stub-shift: libil2cpp range unknown -> skip");
+        return false;
+    }
+
+    /* 1) 用「已按名解析到」的锚点自解位移；多数一致才认（防其它游戏误触发） */
+    uintptr_t seen[8]; int votes[8]; int nv = 0, anchored = 0;
+    for (const Slot& s : k) {
+        if (!*s.slot) continue;
+        const uintptr_t a = (uintptr_t)*s.slot;
+        if (a < base || a >= end) continue;
+        anchored++;
+        const uintptr_t sh = a - base - s.oldRva;
+        int hit = -1;
+        for (int i = 0; i < nv; i++) if (seen[i] == sh) { hit = i; break; }
+        if (hit >= 0) votes[hit]++;
+        else if (nv < 8) { seen[nv] = sh; votes[nv] = 1; nv++; }
+    }
+    if (anchored < 3 || nv == 0) {
+        LOGI("[Il2Cpp] stub-shift: anchored=%d too few -> skip", anchored);
+        return false;
+    }
+    int best = 0;
+    for (int i = 1; i < nv; i++) if (votes[i] > votes[best]) best = i;
+    const uintptr_t shift = seen[best];
+    LOGI("[Il2Cpp] stub-shift: base=%p anchored=%d/%d shift=+%#lx votes=%d distinct=%d",
+         (void*)base, votes[best], anchored, (unsigned long)shift, votes[best], nv);
+    if (votes[best] < 3 || votes[best] * 4 < anchored * 3) {
+        LOGI("[Il2Cpp] stub-shift: anchors disagree -> no recovery");
+        return false;
+    }
+
+    /* 2) 按台账补齐缺失符号（三重校验：落在模块内 + 可执行 + 首字可读） */
+    int filled = 0, rejected = 0;
+    for (const Slot& s : k) {
+        if (*s.slot) continue;
+        const uintptr_t cand = base + s.oldRva + shift;
+        if (cand < base || cand >= end || !IsExecutableRange(cand, 4)) {
+            LOGI("[Il2Cpp] recover %s -> +%#lx REJECT(not exec)", s.name, (unsigned long)(cand - base));
+            rejected++; continue;
+        }
+        uint32_t w = 0;
+        if (!SafeProbe([&] { memcpy(&w, (const void*)cand, 4); return true; })) {
+            LOGI("[Il2Cpp] recover %s -> +%#lx REJECT(unreadable)", s.name, (unsigned long)(cand - base));
+            rejected++; continue;
+        }
+        *s.slot = (void*)cand;
+        filled++;
+        LOGI("[Il2Cpp] recover %s -> +%#lx (ledger+shift, w=%08x)", s.name, (unsigned long)(cand - base), w);
+    }
+    LOGI("[Il2Cpp] stub-shift recovery: filled=%d rejected=%d", filled, rejected);
+    if (!filled) return false;
+
+    /* 3) 端到端自检：用补出来的 API 真跑一遍类枚举
+     *    domain_get → domain_assemblies → ImageOf(首字段) → image_class_count →
+     *    image_class → class_name 必须读出一个可打印类名（任一步坏都算恢复失败）。 */
+    if (domain_get && domain_assemblies && image_class_count && image_class && class_name) {
+        size_t asmCount = 0; uint32_t clsCount = 0;
+        const char *imgName = nullptr, *cls0 = nullptr;
+        const bool ok = SafeProbe([&]() -> bool {
+            void* domain = domain_get();
+            void** asms = domain_assemblies(domain, &asmCount);
+            if (!asms || asmCount == 0) return false;
+            for (size_t i = 0; i < asmCount && i < 32; i++) {
+                if (!asms[i] || !IsReadableRange((uintptr_t)asms[i], 8)) continue;
+                void* img = *(void**)asms[i];
+                if (!img || !IsReadableRange((uintptr_t)img, 8)) continue;
+                const char* nm = *(const char**)img;
+                if (!nm || !IsReadableRange((uintptr_t)nm, 4)) continue;
+                const uint32_t n = image_class_count(img);
+                if (n == 0 || n > 200000) continue;
+                void* k0 = image_class(img, 0);
+                if (!k0 || !IsReadableRange((uintptr_t)k0, 8)) continue;
+                const char* c0 = class_name(k0);
+                if (!c0 || !IsReadableRange((uintptr_t)c0, 2)) continue;
+                imgName = nm; clsCount = n; cls0 = c0;
+                return true;
+            }
+            return false;
+        });
+        LOGI("[Il2Cpp] selftest(recovered): ok=%d asm=%zu img=%.24s classes=%u class0=%.32s",
+             ok, asmCount, imgName ? imgName : "(none)", clsCount, cls0 ? cls0 : "(none)");
+    }
+    return true;
+}
+
 bool Api::Load(const char* libName) {
     if (ready) return true;
     if (!libName) libName = sec_lib_il2cpp();
@@ -949,6 +1108,11 @@ bool Api::Load(const char* libName) {
      *  method_get_param_count st_value=0x2fe61d8 / idx928）。缺了只是降级能力弱一点。 */
     class_namespace   = (class_get_namespace_t)detail::ResolveIl2CppSym(handle, "il2cpp_class_get_namespace");
     method_param_count = (method_get_param_count_t)detail::ResolveIl2CppSym(handle, "il2cpp_method_get_param_count");
+
+    /* ★r19（2026-10-14 底包迁移）：新底包把 modder API 整批从 .dynsym 摘掉时，
+     * 用「导出台账 + 实测位移」补齐（长注释见上方 RecoverByStubShift）。
+     * 符号齐全（正常包）时它是空转，不改变任何既有行为。 */
+    RecoverByStubShift();
 
     /* ★class_from_name 允许为空：保护壳（如 nhsy2 的 themis-v8）会把它伪造成指向
      * 自己的假地址，被上面的模块范围校验丢弃 ⇒ 此时走 ClassFromNameScan 降级扫描

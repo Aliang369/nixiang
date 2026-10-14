@@ -258,7 +258,14 @@
           "path": "04_scripts/霓虹深渊2/pipeline.json"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-15 00:25:30",
+      "artifacts": {},
+      "inputs": {
+        "08_output/霓虹深渊2/delivery_20261012/menu_template.json": "d6ceee0a34d31996780a0960e0359a87",
+        "10_docs/霓虹深渊2/正式包裁剪清单_20261012.json": "c919a97f553e93679c960828763e158c",
+        "10_docs/霓虹深渊2/nhsy2_menu_template.json": "d6ceee0a34d31996780a0960e0359a87"
+      }
     }
   ]
 }

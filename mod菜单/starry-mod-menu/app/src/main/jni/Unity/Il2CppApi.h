@@ -115,6 +115,17 @@ struct Api {
      * 仅由游戏模块在 Domain()/Assemblies() 失败时按需调用（opt-in，不影响其它游戏）。 */
     bool ReprobeCore();
 
+    /* ★r19（2026-10-14 底包迁移）：**导出台账平移恢复**。
+     *
+     * 新底包（霓虹深渊2 vc590 / 2026-10-14.f5a3317af6d）的 libil2cpp.so 把 modder 用的
+     * 那批 il2cpp_* 名字从 .dynsym/.dynstr 里整批摘掉（只剩 141 个 Unity 自用符号），
+     * 按名解析 23 条 miss ⇒ Load() 在 core 门禁返回 false ⇒ 零钩子。
+     * 但这批函数**在镜像里仍在**，且其导出桩在两次底包之间**整体平移、相对布局不变**：
+     * 用本仓库实测台账（10.12 日志里 xdl 实际返回且已被成功调用的 RVA）当基准，
+     * 先由仍能解析到的锚点自解位移（要求 ≥3 票且 ≥75% 一致，其它游戏不会误触发），
+     * 再按「base + 台账 RVA + 位移」补齐缺失符号，并用补出来的 API 端到端自检一次。 */
+    bool RecoverByStubShift();
+
     void* Domain() const;
     void** Assemblies(size_t* count) const;
     void* ImageOf(void* assembly) const;
