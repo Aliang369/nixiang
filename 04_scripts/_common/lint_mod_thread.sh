@@ -12,6 +12,16 @@
 #    R3-attach 裸 pthread 起的 mod 线程里直接 runtime_invoke，但同函数既没
 #              thread_attach 也没 Ensure*ThreadAttached/domain_get()
 #              ⇒ 不在 il2cpp 线程表里 invoke 会异常或 abort。
+#    R4-prefix 装钩表的 tag 字段值不是本作前缀（TPL_LOG）
+#              —— 该值以 %s 进日志行，值不是前缀 ⇒ 事后按前缀 grep 统计时整类日志被漏掉。
+#              「R4-prefix 为什么这么窄」：试过宽口径「文件用了 TPL_LOG 就不许有裸 LOGx」，
+#              全仓 74 处命中几乎全是 `LOGx("%s ...", tag)` 这种**前缀经由变量传入**的正常写法
+#              （tag 的值才是问题所在），宽口径等于噪声 ⇒ 收窄为「只查装钩表 tag 字段的字面量」。
+#              依据：2026-10-14 潮汐守望者会话，CxswzMod 的 kSlots 用 {"ExcuteOnce", …} 作 tag，
+#              `grep \[Cxswz\]` 漏掉 HookByName 的 "… class miss … degrade" 一类行，功能判读多绕一轮。
+#              **存量口径（2026-10-14 立规则时实测：全仓 221 处 / 21 文件）**：多游戏装钩表的 tag
+#              值原本就是裸标签，属历史存量、**不是本轮回归**；各游戏在「下一轮动该文件」时顺手
+#              改成 TPL_LOG（`--strict` 前先清掉本游戏自己那几处），不为清零单独开轮。
 #
 #  用法:
 #    bash 04_scripts/_common/lint_mod_thread.sh                 # 扫默认目录 Games/*.cpp
@@ -79,13 +89,14 @@ ROOT = sys.argv[1]
 MODE = sys.argv[2]
 ARGS = sys.argv[3:]
 
-RULE_IDS = ("R1-maps", "R2-hotlog", "R3-attach")
+RULE_IDS = ("R1-maps", "R2-hotlog", "R3-attach", "R4-prefix")
 
 # 修复提示（不含空格，保证 VIOLATION 行的字段可空格切分）
 HINTS = {
     "R1-maps": "装钩/同步路径禁用ImageOf()与/proc/self/maps读取，改用ImageOfRaw()或挪到一次性初始化",
     "R2-hotlog": "改用 HotLog(n)/HotLogEvery(ms) 限流（见 Includes/HotLog.h）",
     "R3-attach": "调用前 EnsureIl2cppThreadAttached（见 Includes/ModThread.h）",
+    "R4-prefix": "日志前缀落到日志行里必须可grep：把该表的tag字段值改成TPL_LOG（本文件已定义），或让装钩函数直接传TPL_LOG",
 }
 
 # ---- R1: 装钩/同步路径里的调用 ----
@@ -104,6 +115,13 @@ HOTLOG_OK = ("HotLog(", "HotLogEvery(")
 # ---- R3: 跨线程 invoke 未 attach ----
 INVOKE_RE = re.compile(r"(?<![A-Za-z0-9_])runtime_invoke\s*\(")
 ATTACH_OK_RE = re.compile(r"thread_attach|Ensure[A-Za-z]*ThreadAttached|domain_get\s*\(")
+
+# ---- R4: 日志前缀（口径见文件头「R4-prefix 为什么这么窄」）----
+TPL_TOKEN = "TPL_LOG"
+# 装钩表里的 tag 字段：值最终以 %s 进日志行，值不是 TPL_LOG 就 grep 不到前缀。
+TAG_MEMBER_RE = re.compile(r"const\s+char\s*\*\s*tag\s*;")
+STRUCT_OPEN_RE = re.compile(r"^\s*(?:typedef\s+)?struct\s+([A-Za-z_][A-Za-z_0-9]*)\s*\{?\s*$")
+LIT_RE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 
 # ---- 豁免标记 ----
 EXEMPT_RE = re.compile(r"//\s*lint:ok(?:\s+([A-Za-z0-9_\-]+))?")
@@ -242,10 +260,63 @@ def rel_of(path):
     return r
 
 
+def _prefix_structs(nostrs):
+    """形如 `struct HookSlot { const char* tag; ... }` 的结构体名（tag 字段 = 日志前缀来源）。"""
+    names = []
+    cur = None
+    for ln in nostrs:
+        m = STRUCT_OPEN_RE.match(ln)
+        if m:
+            if TAG_MEMBER_RE.search(ln):
+                names.append(m.group(1))
+                cur = None
+            else:
+                cur = m.group(1)
+            continue
+        if cur is not None:
+            if TAG_MEMBER_RE.search(ln):
+                names.append(cur)
+                cur = None
+            elif re.match(r"^\s*\}", ln):
+                cur = None
+    return names
+
+
+def r4_prefix_hits(nostrs, kepts):
+    """返回 [(行号, 字面量片段)]：装钩表首字段字面量不以 '[' 开头（即不是本作前缀）。"""
+    structs = _prefix_structs(nostrs)
+    if not structs:
+        return []
+    hits = []
+    for name in structs:
+        arr_re = re.compile(r"\b" + re.escape(name) + r"\b[^=;]*\[\s*\]\s*=\s*\{")
+        for i, ln in enumerate(nostrs):
+            if not arr_re.search(ln):
+                continue
+            depth = ln.count("{") - ln.count("}")
+            j = i + 1
+            while j < len(nostrs) and depth > 0:
+                body = nostrs[j]
+                if depth == 1 and body.lstrip().startswith("{"):
+                    for k in range(j, min(j + 3, len(nostrs))):
+                        m = LIT_RE.search(kepts[k])
+                        if m:
+                            lit = m.group(1)
+                            if lit and not lit.startswith("["):
+                                hits.append((k + 1, '"' + lit[:16] + '"'))
+                            break
+                        if nostrs[k].lstrip().startswith("}"):
+                            break
+                depth += body.count("{") - body.count("}")
+                j += 1
+    return hits
+
+
 def analyse(path):
     out = []
     suppressed = 0
     raw = open(path, encoding="utf-8", errors="replace").read().splitlines()
+    has_tpl = any(TPL_TOKEN in ln for ln in raw)
     state = [False]
     kepts, nostrs, strmasks = [], [], []
     for ln in raw:
@@ -294,6 +365,15 @@ def analyse(path):
                 suppressed += 1
             else:
                 out.append((ln_no, rule, sym))
+
+    # R4 —— 装钩表 tag 字段必须是本作前缀（口径见文件头「R4-prefix 为什么这么窄」）。
+    if has_tpl:
+        for (ln_no, sym) in r4_prefix_hits(nostrs, kepts):
+            if is_exempt(raw, ln_no, "R4-prefix"):
+                suppressed += 1
+            else:
+                out.append((ln_no, "R4-prefix", sym))
+
     out.sort(key=lambda v: (v[0], v[1]))
     return out, suppressed
 

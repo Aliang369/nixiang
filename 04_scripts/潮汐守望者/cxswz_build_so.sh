@@ -16,6 +16,68 @@ NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 OUT_LIBS="$STARRY_SRC/libs_cxswz"
 SO="$OUT_LIBS/arm64-v8a/libstarry_magic.so"
 
+# ---- 字符串自检（只 grep 字面量：函数名 strip 后不留在 so 里）----
+selfcheck_so() {
+  # ---- 归属防呆：本作串必须在、别家标签必须不在（跨会话共享目录）----
+  # 中文 UTF-8 多字节，strings 默认 ASCII 会漏报 ⇒ LC_ALL=C grep -a 按字节搜
+  for s in "Category_战斗" "Toggle_无敌" "Slider_伤害倍率" "[Cxswz]" "liblogic.so"; do
+    n="$(LC_ALL=C grep -acF -- "$s" "$SO" || true)"
+    [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含本作串 ${s}（旧 so 混入或源码未编译）" >&2; exit 1; }
+  done
+  for s in "[Jjdm]" "[Gyzw]" "[Hxwj]" "[Blfx]" "[Sjzz]" "[WbjY]"; do
+    # -F：标签里的 [] 是字面字符，否则会被 grep 当字符类（曾假报含别家标签）
+    if LC_ALL=C grep -aqF -- "$s" "$SO"; then
+      echo "ERROR: $SO 含别家标签 ${s}（libs_cxswz 被并行会话覆盖）" >&2
+      exit 1
+    fi
+  done
+
+  # ---- 阶段标记自检：功能阶段必须含功能标记、不得残留环境阶段标记 ----
+  LC_ALL=C grep -aqF -- "feature stage" "$SO" \
+    || { echo "ERROR: $SO 未见功能阶段标记（源码未切到功能阶段）" >&2; exit 1; }
+  LC_ALL=C grep -aqF -- "DMG x%d" "$SO" \
+    || { echo "ERROR: $SO 未见伤害倍率改写日志（功能未编译进去）" >&2; exit 1; }
+  LC_ALL=C grep -aqF -- "INV e=%p" "$SO" \
+    || { echo "ERROR: $SO 未见无敌改写日志（功能未编译进去）" >&2; exit 1; }
+  LC_ALL=C grep -aqF -- "cxswz-e10-" "$SO" \
+    || { echo "ERROR: $SO 未见构建身份标记（CXSWZ_BUILD_TAG 未编入，需 cxswz-e10-）" >&2; exit 1; }
+  # ---- 运行时布局解析（1.2.65.385.1 起取代静态 RVA；缺任一 = 源码未切到 e5 路线）----
+  for s in "cxswz_tables.txt" "cxswz_cfg.txt" "layout: ok=%d how=%s" "S3 reconcile" \
+           "SetTrustLib" "hotpath: layout not ok" "waiting il2cpp runtime" "runtime not up" \
+           "timing layout:" "timing tick:" "timing hooks:" "diag asm(v5):" "shortscan img#" \
+           "il2cpp_init hooked" "il2cpp_init 已返回" "sweep HIT" "首次看到程序集" \
+           "ResolveExport %s -> %p" "等待初始化" "short index: images=" \
+           "S5 class layout" "hpd inline fix" "D#%d hd=" "D#%d list="; do
+    LC_ALL=C grep -aqF -- "$s" "$SO" \
+      || { echo "ERROR: $SO 未见运行时布局解析标记 ${s}" >&2; exit 1; }
+  done
+  # 静态 RVA 路径必须已短路（rva=0）；旧序言常量只许作为 *DOC_ONLY* 件出现在符号表外
+  if LC_ALL=C grep -aqF -- "rva drift got=" "$SO"; then
+    : # 字符串仍在（HookAtRva 保留），但 rva 传 0 ⇒ 不会走到；无需报错
+  fi
+  # 滑条范围必须与需求一致（1..10）；旧 1..100 不得残留
+  LC_ALL=C grep -aqF -- "Slider_伤害倍率:1:10:1" "$SO" \
+    || { echo "ERROR: $SO 伤害倍率滑条不是 1:10（菜单串与需求不一致）" >&2; exit 1; }
+  if LC_ALL=C grep -aqF -- "Slider_伤害倍率:1:100:1" "$SO"; then
+    echo "ERROR: $SO 仍含旧 1:100 滑条" >&2; exit 1
+  fi
+  if LC_ALL=C grep -aqF -- "env stage kSlots=0" "$SO"; then
+    echo "ERROR: $SO 仍含环境阶段标记（源码与 so 不一致）" >&2; exit 1
+  fi
+}
+
+# ---- --selfcheck-only：不重编，只对现成 so 跑自检（≤5 s；省掉一次 5 分钟全量构建）----
+SC_MODE="${1:-}"
+case "$SC_MODE" in
+  "") ;;
+  --selfcheck-only)
+    [[ -f "$SO" ]] || { echo "ERROR: 尚无 ${SO}，--selfcheck-only 无从检查（先跑一次完整构建）" >&2; exit 1; }
+    selfcheck_so
+    echo "[selfcheck] ok → $SO ($(md5 -q "$SO"), $(stat -f%z "$SO") B)"
+    exit 0 ;;
+  *) echo "用法: bash $0 [--selfcheck-only]" >&2; exit 1 ;;
+esac
+
 [[ -x "$NDK/ndk-build" ]] || { echo "ERROR: ndk-build missing at $NDK" >&2; exit 1; }
 [[ -f "$JNI/Android_cxswz.mk" ]] || { echo "ERROR: missing $JNI/Android_cxswz.mk" >&2; exit 1; }
 
@@ -53,52 +115,7 @@ if [[ -n "$NEW_O" && "$(md5 -q "$SO")" == "$SO_MD5_BEFORE" ]]; then
 fi
 mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 
-# ---- 归属防呆：本作串必须在、别家标签必须不在（跨会话共享目录）----
-# 中文 UTF-8 多字节，strings 默认 ASCII 会漏报 ⇒ LC_ALL=C grep -a 按字节搜
-for s in "Category_战斗" "Toggle_无敌" "Slider_伤害倍率" "[Cxswz]" "liblogic.so"; do
-  n="$(LC_ALL=C grep -acF -- "$s" "$SO" || true)"
-  [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含本作串 ${s}（旧 so 混入或源码未编译）" >&2; exit 1; }
-done
-for s in "[Jjdm]" "[Gyzw]" "[Hxwj]" "[Blfx]" "[Sjzz]" "[WbjY]"; do
-  # -F：标签里的 [] 是字面字符，否则会被 grep 当字符类（曾假报含别家标签）
-  if LC_ALL=C grep -aqF -- "$s" "$SO"; then
-    echo "ERROR: $SO 含别家标签 ${s}（libs_cxswz 被并行会话覆盖）" >&2
-    exit 1
-  fi
-done
-
-# ---- 阶段标记自检：功能阶段必须含功能标记、不得残留环境阶段标记 ----
-LC_ALL=C grep -aqF -- "feature stage" "$SO" \
-  || { echo "ERROR: $SO 未见功能阶段标记（源码未切到功能阶段）" >&2; exit 1; }
-LC_ALL=C grep -aqF -- "DMG x%d" "$SO" \
-  || { echo "ERROR: $SO 未见伤害倍率改写日志（功能未编译进去）" >&2; exit 1; }
-LC_ALL=C grep -aqF -- "INV e=%p" "$SO" \
-  || { echo "ERROR: $SO 未见无敌改写日志（功能未编译进去）" >&2; exit 1; }
-LC_ALL=C grep -aqF -- "cxswz-e10-" "$SO" \
-  || { echo "ERROR: $SO 未见构建身份标记（CXSWZ_BUILD_TAG 未编入，需 cxswz-e10-）" >&2; exit 1; }
-# ---- 运行时布局解析（1.2.65.385.1 起取代静态 RVA；缺任一 = 源码未切到 e5 路线）----
-for s in "cxswz_tables.txt" "cxswz_cfg.txt" "layout: ok=%d how=%s" "S3 reconcile" \
-         "SetTrustLib" "hotpath: layout not ok" "waiting il2cpp runtime" "runtime not up" \
-         "timing layout:" "timing tick:" "timing hooks:" "diag asm(v5):" "shortscan img#" \
-         "il2cpp_init hooked" "il2cpp_init 已返回" "sweep HIT" "首次看到程序集" \
-         "ResolveExport %s -> %p" "等待初始化" "short index: images=" \
-         "S5 class layout" "hpd inline fix" "D#%d hd=" "D#%d list="; do
-  LC_ALL=C grep -aqF -- "$s" "$SO" \
-    || { echo "ERROR: $SO 未见运行时布局解析标记 ${s}" >&2; exit 1; }
-done
-# 静态 RVA 路径必须已短路（rva=0）；旧序言常量只许作为 *DOC_ONLY* 件出现在符号表外
-if LC_ALL=C grep -aqF -- "rva drift got=" "$SO"; then
-  : # 字符串仍在（HookAtRva 保留），但 rva 传 0 ⇒ 不会走到；无需报错
-fi
-# 滑条范围必须与需求一致（1..10）；旧 1..100 不得残留
-LC_ALL=C grep -aqF -- "Slider_伤害倍率:1:10:1" "$SO" \
-  || { echo "ERROR: $SO 伤害倍率滑条不是 1:10（菜单串与需求不一致）" >&2; exit 1; }
-if LC_ALL=C grep -aqF -- "Slider_伤害倍率:1:100:1" "$SO"; then
-  echo "ERROR: $SO 仍含旧 1:100 滑条" >&2; exit 1
-fi
-if LC_ALL=C grep -aqF -- "env stage kSlots=0" "$SO"; then
-  echo "ERROR: $SO 仍含环境阶段标记（源码与 so 不一致）" >&2; exit 1
-fi
+selfcheck_so
 
 # ---- 同步到 gradle 实际取用的 jniLibs（共享路径，必须字节一致）----
 SO_MD5="$(md5 -q "$SO")"

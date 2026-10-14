@@ -169,6 +169,54 @@ static void Hooked_ModifyResearch(int32_t delta, void* method) {
 
 ---
 
+## 坑 7：MTE 标记指针（top-byte tag）不 Untag → `ImageOf` 恒 null + 全量扫 maps 卡死（2026-10-14 潮汐守望者）
+
+**症状**：`il2cpp_image_get_name(image)` / 自写 `Api::ImageOf` **恒返回 null**（`img=0x0(how=0)`）；每次未命中就退化成 `fopen("/proc/self/maps")` 全扫 ⇒ 主线程 `Looper PerfMonitor doFrame latency=13381ms`、**mod 菜单打开几秒就卡死**。功能看似「没崩」但解析耗时 `resolve=8381ms`。
+
+**根因**：Android 14 / arm64 上 il2cpp 返回的类与对象指针带 **top-byte tag**（形如 `0xb4000074f4535000`）。任何 `maps` 范围比较、`dladdr`、`std::less` 区间查找都认不出带标记的地址 ⇒ 查表全 miss。
+
+**修法**：范围判断与所有下游查询**入口处先 Untag，后续一律用未标记值**：
+
+```cpp
+// StarPtr.h
+inline uintptr_t Untag(uintptr_t u) { return (u >> 56) == 0xb4 ? (u & 0x00FFFFFFFFFFFFFFull) : u; }
+constexpr uintptr_t kTagHintTop = 0xb4;
+```
+
+- `IsReadableRange` / `IsExecutableRange` **第一行**就 Untag（`const uintptr_t u = starptr::Untag(addr);`），函数体后续全部用 `u`
+- `Api::ImageOf` 必须走「会 Untag 的公开版本」，不要自己另开一条不经 Untag 的快路径
+- 诊断行的读法：`a0=0xb4000074f4535000 rd16=0 heap=1 img=0x0(how=0) sym_asm_image=0x74f8a0c4d0` ⇒ `a0` 带 tag 而 `sym_asm_image` 不带（来自 `maps`），两者不一致就是本条坑
+
+**验收**：修后 `ImageOf` 非 0（`how≠0`）且 `timing layout: resolve=` **< 100ms**（本次 8381ms → 17ms / 12ms），`doFrame latency` 不再出现万毫秒级。
+
+---
+
+## 坑 8：值类型（热更记录）内联字段整体 `+0x10` 偏置（2026-10-14 潮汐守望者）
+
+**症状**：**不崩溃、也不生效**——按 dump 的偏移改写字段，日志说「已写入」，游戏里血量/伤害毫无变化。
+
+**根因**：静态 dump（Il2CppDumper / 元数据）给出的偏移是**内联数据相对偏移**，而运行时拿到的是「装箱头 + 内联数据」的对象指针；HybridCLR 热更值类型记录的字段在运行时**整体平移 `+0x10`**（装箱头大小）。本作实测：
+
+| 字段 | dump 口径 | 运行时真值 |
+|---|---|---|
+| `fValue` | 0x00 | **0x10** |
+| `src` | 0x08 | **0x18** |
+| `settle` | 0x0C | **0x1C** |
+| `show` | 0x10 | **0x20** |
+| `skill` | 0x28 | **0x38** |
+| `formula` | 0x2C | **0x3C** |
+
+日志依据：`hpd inline fix: 运行时偏移整体 +0x10(值类型装箱头) slotGap=0x78 == cn 长度 0x78 ⇒ 采用真实内联布局 fValue=0x0 src=0x8 settle=0xC show=0x10 skill=0x28 formula=0x2C atk=1C/20/24`。
+
+**修法（双条件自校验，缺一不动手）**：
+
+1. 偏移**来源必须是运行时**：`il2cpp_field_get_offset` 真值优先；静态常量只作 `*_DOC_ONLY` 文档件，绝不参与改写（本作版本漂移实例：`SYS_MATK 0xD0→0xD8`、`SYS_FDAMAGE 0xD8→0xE0`）。
+2. 要做整表平移时，**同时**满足「**六个字段平移量一致**」**且**「**结构槽长 == 记录长度**」（本次 `slotGap=0x78 == cn 长度 0x78`）才启用；任一不成立 ⇒ **不改写**，只打 `hotpath: layout not ok — 跳过改写（功能暂不生效）`，宁可无效也不写坏内存。
+
+**验收**：功能生效必须有「原始值 → 改写值」成对数值日志（`DMG x10 e=… uid=17 raw=-430080->-4300800`），并配合游戏内可见状态（血量不掉/伤害变高）双确认。
+
+---
+
 ## 装机前快速自检
 
 写完 hook 后过一遍：
@@ -183,3 +231,5 @@ static void Hooked_ModifyResearch(int32_t delta, void* method) {
 - [ ] 每个序言值来自 `extract_il2cpp_preambles.py` 而不是手抄
 - [ ] delegate invoke 失败时有 fallback 走原函数（不吞异常）
 - [ ] 只消费不生产的功能（如"无限货币"）同时 hook 了显示 + 判定 + 扣费三层
+- [ ] **Android 14+ / arm64：范围判断与 `maps`/`dladdr` 查询前先 Untag**（`p & 0x00FFFFFFFFFFFFFF`），`ImageOf` 非 0 且 resolve 耗时 < 100ms
+- [ ] **值类型字段偏移来自运行时 `il2cpp_field_get_offset`**；做整表平移必须过「字段平移一致 + 槽长 == 记录长」双条件，不成立就不改写

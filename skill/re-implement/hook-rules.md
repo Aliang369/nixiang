@@ -725,3 +725,29 @@ bash 04_scripts/_common/code_locate.sh <文件> '<正则>' --ctx 3
 2. 撞到 `file changed since it was read`，正确反应是**重新 `read` 再 `edit`**；把 `old_string` 加长硬试会升级成 `matched N times`。
 3. 允许的例外：纯追加（`cat >> 文档 <<EOF`、`>> 台账`）不需要读戳，但同一轮内不要再对同一文件用 `edit`。
 4. 这条纪律的机器观测口：`python3 04_scripts/_common/session_stats.py` 会统计 edit 报错类型与热点文件；edit 失败率 >5% 即为违规信号。
+
+---
+
+## §33 偏移类问题：先出「类布局证据」，再改功能代码（2026-10-14 潮汐守望者）
+
+**来源教训**：一次会话里连续 **9 个版本（e1–e9）** 都是「先改源码 → 装机 → 看日志」，同一现象 `layout: ok=0` 被判读两次结论不同，约 7 轮白跑。根因不是能力不足，是**顺序错了**。
+
+**铁律三行**：
+
+1. **先取证再改码**：任何「按偏移改写内存」的功能，改功能代码前必须先有一条**类布局证据行**落到日志/磁盘（运行时字段偏移 + 槽长 + 类名确认），证据不在手上不许动功能分支。工具：`bash 04_scripts/_common/new_hypothesis.sh --game <游戏> --hypothesis "…" --verdict "<可 grep 的判定行>" --reject "<什么算否证>"`（假设先写死，避免事后改判据）。
+2. **静态偏移只作文档**：编译期常量一律 `*_DOC_ONLY`，改写的偏移必须来自运行时（`il2cpp_field_get_offset`）；版本漂移是常态（本作 `SYS_MATK 0xD0→0xD8`、`SYS_FDAMAGE 0xD8→0xE0`）。
+3. **有疑问就安全退回**：布局自校验不过 ⇒ 只打告警（`hotpath: layout not ok — 跳过改写（功能暂不生效）`）**不写内存**。宁可「功能暂时无效」，绝不「写坏内存 + 崩溃」，因为崩溃取证与重装一轮的成本远高于无效一轮。
+
+**推荐的取证顺序（照抄即可）**：
+
+```
+① device_ready_check.sh --pkg <包名>          # 设备真就绪（别在锁屏/前台不对时开测）
+② flight_recorder.sh start --pkg <包名>        # 先开录，再让用户操作
+③ 装机 → 用户点开菜单 → 只看「布局/解析」日志：
+     layout: ok=1 how=by-name com_hp=0x… hData=0x… lValues=0x… fValue=0x…
+     S5 class layout … / hpd inline fix … slotGap=0x… == cn 长度 0x…
+④ 布局证据齐全后，才允许动功能分支（改写/倍率/无敌）
+⑤ 出包前 cxswz_build_so.sh --selfcheck-only（0.7 s 字符串自检，不必重编 5 分钟）
+```
+
+**判据（可机器 grep）**：布局未就绪时日志必须出现「跳过改写」字样且**零**崩溃关键字；布局就绪时必须出现成对数值（`raw=<原值>-><新值>`）与游戏内可见变化（双确认）。

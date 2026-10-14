@@ -67,6 +67,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
     新增「## 会话效率纪律（D1–D7）」＋「P1–P31 规则指针表」，三节增量正文（原第 183–299 行）与本组 2026-10-03～2026-10-14 长正文
     全部归档到 `10_docs/_state/规范变更日志.md`；新建只读度量脚本 `04_scripts/_common/session_metrics.py`；
     依据 `10_docs/_state/规范优化_20261014_双会话效率复盘与可执行方案.md`。
+  - 2026-10-14（用户 m01681「按照方案全量修改」，潮汐守望者会话复盘）：新增 5 工具 + 1 静态规则 —— `device_ready_check.sh`（真机就绪门禁，有 FAIL ⇒ rc=4 不装机）／`crash_forensics.sh`（崩溃取证七件套，免 root 优先 App 自写 `crash_logs/`）／`finalize_round.sh`（收尾+正式包+清理+git 一条命令，默认 dry-run）／`new_hypothesis.sh`（假设预注册：先写判定行与否决条件再改码）／`with_timeout.sh`（垫片，超时 rc=124，**禁字面 `timeout`**）／`lint_mod_thread.sh` 加 R4-prefix；技能文档补 `il2cpp-abi-pitfalls.md` 坑 7·坑 8、`il2cpp-from-scratch.md` §〇 实例台账、`hook-rules.md` §33。依据 `10_docs/_state/规范优化_20261014_潮汐守望者1.2.65.385.1会话复盘.md`。
   - 本组 17 笔历史正文（P1–P9 落地、去审批化、装机预检闸门、设备画像、出包提速、按需图标模板、邂逅在迷宫 P10–P22、追迹迷城入口审计、
     push_main v2.1、无悔华夏例外范围、霓虹深渊2 P23–P31、bash32 全仓清零、蛋壳战机 P0-1～P2-1）→ 归档位置
     `10_docs/_state/规范变更日志.md` §归档正文 B（含用户原话与机器关实测数字，需要时 `grep` 该文件）。
@@ -187,6 +188,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null    # pull 后看�
 - P1–P9（2026-10-03 冒险与征途）：见本文件上方「## 执行纪律补充（2026-10-03 规范优化全量落地）」——**不归档，仍在本文**。
 - P10–P16（2026-10-10 邂逅在迷宫第一轮）：开工 preflight 六查 `session_start.sh` ／判据先行 + 先例检索 `prior_art.sh` ／决策台账 append-only ＋「已否证=禁止重试」／方案选型卡 ／一键出包链路 `gradle_cycle.sh` ＋出包门禁 `check_release_apk.sh` ／装机预检带宿主助手 `post_install_precheck.sh` ／门禁即时记账 `gate_note.sh` ／坑位即落 `TOOLBOOK.md` 二-b。
 - P17–P22（2026-10-10 第二轮，把纪律做成闸门）：自测影响面 before/after 快照 `selftest_env.sh` ／装机闸门（preflight 凭证 `preflight_{游戏}.stamp`，缺失·超 12h·硬约束变过 ⇒ **rc=4**，`--allow-stale-preflight` 才放行）／读文件纪律 `code_locate.sh`（>200 行禁整读）／出包即记账（全量日志 `tee`，**禁 `| tail` 截断**，自动 G2 记账）／默认分发型交付 `finalize_game_delivery.sh --usage-doc` ／push 只走 `push_main`（四通道自愈，**禁裸 `git push` 盲等**）／轮次台账 `轮次台账.tsv`。
+- P32（2026-10-14 潮汐守望者复盘落地）：设备就绪门禁 `device_ready_check.sh` ／崩溃取证 `crash_forensics.sh` ／收官编排 `finalize_round.sh` ／假设预注册 `new_hypothesis.sh` ／超时垫片 `with_timeout.sh` ／装钩表前缀规则 R4-prefix —— 正文归档 `规范变更日志.md` §同批落地（2026-10-14 第二轮）。
 - P23–P31（2026-10-12 霓虹深渊2）：编辑一把刀（同轮同文件禁混用 bash 改写与 `edit`）／大文档禁整读 `state_digest.sh` ＋ `_digest.md` ／轮次台账 6 列正统九列超集（`pipeline.sh <游戏> round` 为唯一写入口）／口令点名即必须交付（`--expect-icon` / `--expect-menu-template`，缺则 rc=1 不写文件）／`install_policy: overlay_only` ＋卸载语义 **rc=66** ／一键轮次环 `round.sh` ／取证收敛 `evidence.sh` ＋ `so_inspect.py`（`strings` 默认 `--utf8`）／会话切点（每 2 个用户实测轮或 3 h / 600 次调用即交接）／门禁全仓入口 `preflight.sh` 无参扫描（638 文件 ≈24 s）。
 
 ## 工具专属文件

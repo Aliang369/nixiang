@@ -22,10 +22,11 @@
 #    bash 04_scripts/_common/flight_recorder.sh status [--dir <目录>]
 #
 #  产物（目录内；均为文本，按需切片读勿整读）:
-#    logcat.txt       连续 logcat（-v threadtime，行首 MM-DD HH:MM:SS.mmm）
+#    logcat.txt       连续 logcat（-v threadtime，行首 MM-DD HH:MM:SS.mmm；断线自动重连）
 #    proc_samples.log `S|<epoch>|<时刻>|<pid>| statm=<..> VmRSS=<..> Threads=<..>`（周期采样）
 #    marks.log        `MARK|<epoch>|<时刻>|<pid或->|<用户原话>`
-#    events.log       `<epoch>|<时刻>|<事件>`（REC_START/REC_STOP/PROC_GONE/PROC_RESTART）
+#    events.log       `<epoch>|<时刻>|<事件>`（REC_START/REC_STOP/PROC_GONE/PROC_RESTART/
+#                     [recorder] disconnected at … / reconnected at …）
 #    recorder.meta    SUP=<pid> / LOGCAT=<pid>（stop 用）
 #    slice_*.txt      slice 产物（窗口内 logcat/marks/proc/events 汇总）
 #
@@ -33,6 +34,9 @@
 #    - mark/slice 不依赖记录仪存活（marks.log 追加随时可用；slice 读存量文件）
 #    - 跨午夜窗口 slice 只保同日半窗（时间按 HH:MM:SS 字符串比较）；当日会话无碍
 #    - 一次一录：同一 --out 目录已有活记录仪时 start 拒绝
+#    - 设备掉线不再是采集终点：logcat 退出即由 __logcat 监督进程重连（events.log 留痕
+#      `[recorder] disconnected at …` / `reconnected at …`），日志追加不截断；连续 60 次
+#      不可达才 give up（设备物理断开会话时仍能保住已采证据）
 #  ⚠️ macOS Bash 3.2 兼容：不用 mapfile / declare -A / ${v,,} / &>>
 # ================================================================
 set -u
@@ -43,7 +47,7 @@ NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 MODE=""
 [ $# -gt 0 ] && { MODE="$1"; shift; }
 case "$MODE" in
-  start|mark|slice|stop|status|__worker) ;;
+  start|mark|slice|stop|status|__worker|__logcat) ;;
   *) sed -n '2,/^set -u$/p' "$0"; [ -n "$MODE" ] && echo "✗ 未知模式: $MODE"; exit 1 ;;
 esac
 
@@ -100,7 +104,9 @@ do_start() {
 # ---------- __worker（后台常驻） ----------
 do_worker() {
   [ -n "$PKG" ] && [ -n "$OUT" ] || { echo "✗ worker 内部参数缺失"; exit 1; }
-  adbx logcat -v threadtime > "$OUT/logcat.txt" 2>/dev/null &
+  LC_ARGS="--out $OUT"
+  [ -n "$SERIAL" ] && LC_ARGS="--serial $SERIAL $LC_ARGS"
+  nohup bash "$0" __logcat $LC_ARGS >> "$OUT/recorder.logcat.log" 2>&1 &
   LOGCAT_PID=$!
   echo "LOGCAT=$LOGCAT_PID" >> "$OUT/recorder.meta"
   trap 'kill "$LOGCAT_PID" 2>/dev/null; exit 0' INT TERM
@@ -122,6 +128,52 @@ do_worker() {
     fi
     PREV="$PID"
     sleep "$SAMPLE_SEC"
+  done
+}
+
+# ---------- __logcat（logcat 监督：设备掉线自动重连，断线留痕） ----------
+do_logcat() {
+  [ -n "$OUT" ] || { echo "✗ __logcat 内部参数缺失"; exit 1; }
+  CUR=""
+  trap '[ -n "$CUR" ] && kill "$CUR" 2>/dev/null; exit 0' INT TERM
+  trap '[ -n "$CUR" ] && kill "$CUR" 2>/dev/null' EXIT
+  DOWN=0; LASTNOTE=0
+  while :; do
+    # logcat 常驻；设备掉线时它会自己退出（rc 非 0），也可能一直阻塞等设备回来
+    # ⇒ 两种情形都由下面这个看门狗统一留痕（只看「设备此刻是否可达」）
+    adbx logcat -v threadtime >> "$OUT/logcat.txt" 2>/dev/null &
+    CUR=$!
+    while kill -0 "$CUR" 2>/dev/null; do
+      sleep 5
+      NOWS="$(date +%s)"
+      if adbx shell true >/dev/null 2>&1; then
+        if [ "$DOWN" -gt 0 ]; then
+          ev_log "[recorder] reconnected at $(wall)（断连期间重试 ${DOWN} 次）"
+          DOWN=0; LASTNOTE=0
+        fi
+      else
+        DOWN=$((DOWN + 1))
+        if [ "$DOWN" -eq 1 ]; then
+          ev_log "[recorder] disconnected at $(wall)（设备不可达；logcat 进程仍在等设备，日志追加不截断）"
+          LASTNOTE=$NOWS
+        elif [ $((NOWS - LASTNOTE)) -ge 60 ]; then
+          ev_log "[recorder] still disconnected（已重试 ${DOWN} 次）"
+          LASTNOTE=$NOWS
+        fi
+        if [ "$DOWN" -ge 60 ]; then
+          ev_log "[recorder] give up（连续 60 次不可达，采集停止）"
+          kill "$CUR" 2>/dev/null
+          exit 0
+        fi
+      fi
+    done
+    wait "$CUR" 2>/dev/null
+    RC=$?
+    CUR=""
+    if adbx shell true >/dev/null 2>&1; then
+      ev_log "[recorder] logcat 退出 rc=${RC}，2s 后重连（设备仍在）"
+      sleep 2
+    fi
   done
 }
 
@@ -205,7 +257,10 @@ do_stop() {
   LCP="$(sed -n 's/^LOGCAT=//p' "$OUT/recorder.meta" | head -1)"
   [ -n "$SUP" ] && kill "$SUP" 2>/dev/null
   sleep 1
-  [ -n "$LCP" ] && kill "$LCP" 2>/dev/null
+  if [ -n "$LCP" ]; then
+    pkill -P "$LCP" 2>/dev/null
+    kill "$LCP" 2>/dev/null
+  fi
   ev_log "REC_STOP"
   NM="$(grep -c '^MARK|' "$OUT/marks.log" 2>/dev/null; true)"
   ST="$(awk -F'|' '$3 ~ /REC_START/ {print $1; exit}' "$OUT/events.log" 2>/dev/null)"
@@ -252,6 +307,7 @@ done
 case "$MODE" in
   start)    do_start ;;
   __worker) do_worker ;;
+  __logcat) do_logcat ;;
   mark)     do_mark ;;
   slice)    do_slice ;;
   stop)     do_stop ;;

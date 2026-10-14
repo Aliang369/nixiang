@@ -18,6 +18,9 @@ readelf -S lib/arm64-v8a/libil2cpp.so | head -20
 
 # ③ dynsym 是否被改名：正常应有大量 il2cpp_*；被壳处理过命中 0
 readelf --dyn-syms lib/arm64-v8a/libil2cpp.so | grep -c il2cpp
+
+# ④ 包里到底有没有 libil2cpp.so（没有 ⇒ 是「外壳 + 首启解包」形态，先找真库名，别急着 dump）
+unzip -l <apk> | grep -iE 'libil2cpp|Z7Extractor|DynamicSOLoader|comlibs'
 ```
 
 | 检查项 | 正常 | 被壳保护 → 静态路线否决 |
@@ -34,6 +37,15 @@ readelf --dyn-syms lib/arm64-v8a/libil2cpp.so | grep -c il2cpp
 3. 运行时按名挂载 Hook（星光框架 `HookSlot` 的 `HookByName` 路径）。
 
 详细症状、停止条件与实机证据见 `re-analyze/protection/nesec-inmemory-dex.md` §9。
+
+### 实例台账（踩过就记一行，避免第三次白跑）
+
+| 日期 | 游戏 | 形态 | 现象（判据原文） | 结论 |
+|---|---|---|---|---|
+| 2026-09-20 | 境界守望者 | 同族加固 | Il2CppDumper `System.IO.EndOfStreamException: Unable to read beyond the end of the stream.` | 静态否决 |
+| 2026-10-14 | 潮汐守望者 | **7z 外壳 + 首启解包** | APK `lib/arm64-v8a/` 里**没有** `libil2cpp.so`，只有 157,376 B 的 7z 壳（`com.moba.unityplugin.Z7Extractor`）；真库首启解到 `/sdcard/Android/data/<pkg>/files/<gamedir>/assets/comlibs/arm64-v8a/liblogic.bytes`（177,216,216 B），再由 `DynamicSOLoader` 拷到 `/data/user/0/<pkg>/app_libs/liblogic.so` 并 `System.load`。Il2CppDumper 仍报 `EndOfStreamException`（`Metadata Version: 24.4`、`CodeRegistration : 1690740`、`MetadataRegistration : a0ae708`） | 静态否决；**按名 Hook**（真库名 `liblogic.so`，RVA→VA 必经 `/proc/self/maps`，禁写死基址） |
+
+> 同一品类（`liblogic.so` + `CSharpBattle.Battle` + HybridCLR 热更）**连续两作**静态 dump 死路 ⇒ 遇到 `liblogic`/`CSharpBattle` 字样直接走 §八 按名路线，不再花时间试 dumper。
 
 ---
 
