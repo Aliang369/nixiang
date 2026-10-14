@@ -74,6 +74,14 @@
 3. 敌我判定参考 `damage-pattern.md` 中的通用法
 4. 游戏更新后功能失效（`hits=0`）→ 按 [`version-update-relocate.md`](version-update-relocate.md) 重定位，禁止沿用旧 offset 或叠猜
 
+**大源文件编辑通道（A2，2026-10-14 定；专治 `Games/DkzjMod.cpp` 这类 60 KB+ 文件）**——实测两会话把它触达 147 / 158 次，是单点最大编辑成本：
+
+1. 改前先用 `read` 的 `offset`/`limit` 锁定目标行号（或用 `04_scripts/_common/code_locate.sh` 定位），**禁整份复读**；
+2. `edit` 的 `old_string` 只取**锚点行 ±1 行**，不搬整段函数——上下文越长越容易因空白/缩进差异失败；
+3. 编译报错 → 按报错行号**反查该区间**再局部 `read`，不要整份重读；
+4. 同一文件的多处改动**同一 step 一次并发发完**（不一步一改）；同文件禁混用 bash 改写与 `edit`（P23「编辑一把刀」）；
+5. 阈值：单会话对同一大文件的 bash 触达 **≤15 次**；自检用 `04_scripts/_common/session_metrics.py --gate` 的「单文件触达 Top」段。
+
 ### 第五步：封号风险评估（功能写完后、装机前）
 
 **必须读 `anti-ban-analysis.md`，逐条评估本功能的封号风险。**
