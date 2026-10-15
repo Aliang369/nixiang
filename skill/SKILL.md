@@ -1,6 +1,6 @@
 # 逆向技能总纲
 
-> 📍 `/Users/aliang/Documents/nixiang/skill/SKILL.md`
+> 📍 `skill/SKILL.md`（相对仓库根）
 > 读取、授权、协作与通用政策唯一入口：`../AGENTS.md`。本文件仅作按需知识索引，不另设优先级。
 
 ---

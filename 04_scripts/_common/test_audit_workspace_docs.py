@@ -118,6 +118,57 @@ class AuditTests(unittest.TestCase):
         path = self.write('file.bin', 'abc')
         self.assertEqual(self.cli('artifact', path, '--expect-sha256', 'bad').returncode, 2)
 
+    def state_index(self, text):
+        return self.write(audit.STATE_INDEX, text)
+
+    def test_state_index_row_limit_counts_characters_not_bytes(self):
+        # 200 Chinese characters = ~640 UTF-8 bytes on one row. The declared
+        # limit is 400 *characters*, so byte counting would wrongly reject it.
+        row = '| 游戏甲 | 2026-10-15 | ' + '汉' * 200 + ' | [摘要](games/a.md) |\n'
+        self.assertGreater(len(row.encode('utf-8')), audit.INDEX_ROW_MAX_CHARS)
+        self.assertLessEqual(len(row), audit.INDEX_ROW_MAX_CHARS)
+        path = self.state_index('# 索引\n\n| 游戏 | 最近更新 | 状态 | 详情 |\n'
+                                '|---|---|---|---|\n' + row)
+        self.assertEqual(audit.audit_state_index(path), [])
+
+    def test_state_index_flags_overlong_row_and_header_is_ignored(self):
+        row = '| 游戏甲 | 2026-10-15 | ' + '汉' * 400 + ' | [x](y.md) |\n'
+        path = self.state_index('# 索引\n\n| 游戏 | 最近更新 | 状态 | 详情 |\n'
+                                '|---|---|---|---|\n' + row)
+        issues = audit.audit_state_index(path)
+        self.assertEqual([i['kind'] for i in issues], ['index-row-length'])
+        self.assertEqual(issues[0]['line'], 5)
+        # Widening the per-row cap clears it without touching the header rows.
+        self.assertEqual(audit.audit_state_index(path, 4000), [])
+
+    def test_state_index_flags_total_size(self):
+        path = self.state_index('# 索引\n\n| 游戏 | 最近更新 | 状态 | 详情 |\n'
+                                '|---|---|---|---|\n| 甲 | 2026-10-15 | 已收尾 | [x](y.md) |\n')
+        self.assertEqual(audit.audit_state_index(path, 400, 10)[0]['kind'], 'index-size')
+
+    def test_state_index_scope_is_the_declared_path_only(self):
+        body = ('| 游戏 | 最近更新 | 状态 | 详情 |\n|---|---|---|---|\n'
+                '| 甲 | 2026-10-15 | ' + '汉' * 400 + ' | [x](y.md) |\n')
+        declared = self.state_index(body)
+        lookalike = self.write('10_docs/_state/games/other.md', body)
+        self.write('10_docs/_state/games/y.md', '# link target\n')
+        self.assertTrue(audit.is_state_index(self.root, declared))
+        self.assertFalse(audit.is_state_index(self.root, lookalike))
+        # The same over-long table outside the declared path is not index-checked.
+        result = self.cli('--root', self.root, 'audit', lookalike)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_state_index_cli_end_to_end(self):
+        self.state_index('# 索引\n\n| 游戏 | 最近更新 | 状态 | 详情 |\n|---|---|---|---|\n'
+                         '| 甲 | 2026-10-15 | ' + '汉' * 400 + ' | [x](y.md) |\n')
+        result = self.cli('--root', self.root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('index-row-length', result.stdout)
+        self.assertIn('State index', result.stdout)
+        result = self.cli('--root', self.root, 'audit',
+                          '--state-index-max-chars', 4000)
+        self.assertNotIn('index-row-length', result.stdout)
+
     def test_default_scope(self):
         for name in audit.DEFAULT_FILES:
             self.write(name, '# Valid\n')

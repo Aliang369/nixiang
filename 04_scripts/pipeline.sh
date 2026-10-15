@@ -5,7 +5,8 @@
 #  铁律（详见 _common/stages.md）：
 #    1. 机械操作（拆/打/注/移/签/装/清理）唯一合法入口=本脚本；
 #       禁止直接敲 adb/apktool/zip/ndk-build 等命令序列。
-#    2. 本文件与 pipeline.lock 禁止【弱 AI】修改：启动即校验 sha256 指纹。
+#    2. 本文件与 pipeline.lock 的变更纪律（所有会话一体适用）：禁随手改、禁只改一边；
+#       启动即校验 sha256 指纹。
 #       唯一合法改法＝同一提交内改本文件 + 刷新 _common/pipeline.lock 的
 #       `shasum -a 256` 并 push（另一台 git pull 后即一致；只改不推会让另一台
 #       经 Syncthing 先拿到新脚本而 lock 仍旧 ⇒ 那台所有命令 die「指纹不匹配」）。
@@ -186,12 +187,12 @@ gate_before_stage() {  # P4：只拦「装机」阶段；被拦即 exit 3（STAG
 
 # ---------- 0. 指纹自检（防改脚本） ----------
 self_check() {
-  [ -f "$LOCK_FILE" ] || die "指纹锁缺失: ${LOCK_FILE}（请用强 AI 重新生成，勿手工创建）"
+  [ -f "$LOCK_FILE" ] || die "指纹锁缺失: ${LOCK_FILE}（请按 _common/stages.md「真要改 pipeline.sh 时的跨机姿势」重新生成，勿手工创建）"
   local expected actual
   expected="$(sed -n 's/^pipeline_sh_sha256=//p' "$LOCK_FILE" | tr -d '[:space:]')"
   actual="$(shasum -a 256 "$0" 2>/dev/null | awk '{print $1}')"
   [ -n "$expected" ] && [ "$expected" = "$actual" ] || die "pipeline.sh 已被改动（指纹不匹配）。
-  机械管线禁止修改——请还原（git checkout）或请强 AI 修复。
+  机械管线禁止随手修改——请还原（git checkout）或按 _common/stages.md「真要改 pipeline.sh 时的跨机姿势」修复（同一提交改脚本 + 刷新 lock + push）。
   期望指纹: ${expected:-<lock缺失>}
   实际指纹: ${actual:-<计算失败>}"
 }
@@ -415,7 +416,7 @@ elif cmd == "verify":
             rec["changed"] = True
     if changed:
         report.append("  ⚠ 产物指纹变化: " + ", ".join(changed) + "（可能被改动过，请核对）")
-        ok_all = False  # 产物被动过=硬失败，不给弱模型"警告即通过"的错觉
+        ok_all = False  # 产物被动过=硬失败，不给"警告即通过"的错觉
     if artifacts:  # 无论变化与否都写回（还原后要清掉 changed 标志）
         json.dump(data, open(jf, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     if ok_all:
@@ -611,7 +612,7 @@ main() {
 
   local game="$1" action="$2"
   local jf="${SCRIPT_DIR}/${game}/pipeline.json"
-  [ -f "$jf" ] || die "游戏未注册: ${game}（缺 ${jf}）。已注册: $(list_games | tr '\n' ' ')。新游戏管线由强 AI 生成（见 _common/stages.md）。"
+  [ -f "$jf" ] || die "游戏未注册: ${game}（缺 ${jf}）。已注册: $(list_games | tr '\n' ' ')。新游戏管线按 _common/stages.md 的阶段定义生成。"
 
   case "$action" in
     status)

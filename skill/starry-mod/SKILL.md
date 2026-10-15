@@ -29,7 +29,7 @@ bash mod菜单/starry-mod-menu/scripts/new_game_mod.sh {Game}
 
 入口 = `MainModern.cpp`（游戏差异全在 Entry 的 `StarryGameMod` 注册表）。**禁止改 `Main.cpp` / `MainModern.cpp` / `GameConfig.h` / 公共 `Android.mk`**（`Main.cpp` 连注释都禁改：`OBFUSCATE` 用 `__LINE__` 做混淆种子，行号偏移即产物漂移）。
 
-**存量游戏走 legacy**：公共 `Android.mk` 一个 `STARRY_GAME_*`（+ `ENABLE_*_HOOK` + 对应 `Games/*Mod.cpp`），`STARRY_AUTH_GAME_ID` 由 `GameConfig.h` 自动映射；重新出包时顺手迁移注册表（写 Entry + 切私有 mk；**Main.cpp 里的旧 #if 分支不删**——Main.cpp 连注释都禁改，删分支会漂移所有 legacy 产物字节，分支组保留到全部游戏迁移完成后由强 AI 统一一次性清理）。**禁止**：在 mk 里写 `-DSTARRY_AUTH_GAME_ID`、在 Java 写死默认游戏名、删 `#error` 保护。
+**存量游戏走 legacy**：公共 `Android.mk` 一个 `STARRY_GAME_*`（+ `ENABLE_*_HOOK` + 对应 `Games/*Mod.cpp`），`STARRY_AUTH_GAME_ID` 由 `GameConfig.h` 自动映射；重新出包时顺手迁移注册表（写 Entry + 切私有 mk；**Main.cpp 里的旧 #if 分支不删**——Main.cpp 连注释都禁改，删分支会漂移所有 legacy 产物字节，分支组保留到全部游戏迁移完成后统一一次性清理（该清理需单独授权））。**禁止**：在 mk 里写 `-DSTARRY_AUTH_GAME_ID`、在 Java 写死默认游戏名、删 `#error` 保护。
 
 modern 的 `Games/*Mod.cpp` 同样从生成器产出（防闪退骨架 v3，内置懒装/双路径挂点/SafeWrite，勿从旧游戏复制）。详见 `mod菜单/starry-mod-menu/SWITCH_GAME.md` 顶部。
 

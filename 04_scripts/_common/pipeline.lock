@@ -1,2 +1,2 @@
-# 机械管线指纹锁（pipeline.sh 启动自检用；与 pipeline.lock 本身均禁止修改）
-pipeline_sh_sha256=5efdea573dc23c381e1f701369abff636afbea760a35fe383ad2b58f05a83029
+# 机械管线指纹锁（pipeline.sh 启动自检用；变更纪律＝同一提交改脚本 + 刷新本文件 + push，见 _common/stages.md 文末跨机姿势）
+pipeline_sh_sha256=bf5eac4f6eee1da7ce1fb737d42e7bb32a98366733394f94e0f00c14b2a3aebd

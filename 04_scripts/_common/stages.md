@@ -14,16 +14,16 @@
 
 | 操作类型 | 唯一合法方式 | 说明 |
 |----------|--------------|------|
-| **机械操作**（拆包/打包/注入/移植/签名/构建/装机/清理） | `bash 04_scripts/pipeline.sh <游戏> <动作>` | 弱模型禁止直接敲 adb/apktool/zip/ndk-build/jarsigner 等命令序列；报错时读日志与校验输出，禁止换命令试错 |
+| **机械操作**（拆包/打包/注入/移植/签名/构建/装机/清理） | `bash 04_scripts/pipeline.sh <游戏> <动作>` | 禁止直接敲 adb/apktool/zip/ndk-build/jarsigner 等命令序列；报错时读日志与校验输出，禁止换命令试错 |
 | **分析操作**（逆向/锚点抓取/反作弊研判/方案设计） | 照常自由推理 | 产出必须落 `10_docs/{游戏}/` 文档（证据闭环不变）；状态机的"锚点抓取"阶段产出入文档、指针记录入 pipeline.json |
 
-机械管线文件（pipeline.sh / pipeline.lock）**弱 AI 禁止修改**：入口启动即校验 sha256 指纹（登记于
-`_common/pipeline.lock`），被改动直接拒绝执行。合法参数修改走 pipeline.json 的 `params`
-字段（game_id/版本/设备 serial 等——该改的给它改，脚本本体不动）。
-强 AI 确需改本体时，唯一合法姿势＝**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的
-`shasum -a 256` 并 push（见文末「真要改 `pipeline.sh` 时的跨机姿势」）。
+机械管线文件（pipeline.sh / pipeline.lock）**变更纪律（对所有会话/所有模型一体适用）**：入口启动即校验
+sha256 指纹（登记于 `_common/pipeline.lock`），被改动直接拒绝执行；**禁止随手修改，也禁止只改一边或绕过指纹门禁**。
+合法参数修改走 pipeline.json 的 `params` 字段（game_id/版本/设备 serial 等——该改的给它改，脚本本体不动）。
+确需改本体时，唯一合法姿势＝**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的
+`shasum -a 256` 并 push（见文末「真要改 `pipeline.sh` 时的跨机姿势」）；权限不按模型档次划分，按任务范围与本节纪律划分。
 
-## 弱 AI 使用词汇表（全部操作只此几个动词）
+## 管线原生命令（机械操作的全部动词）
 
 ```bash
 bash 04_scripts/pipeline.sh <游戏> status          # 开工第一步：看当前在哪（同时钉硬约束 + 轮次台账）
@@ -44,7 +44,7 @@ bash 04_scripts/_common/pre_install_gate.sh ...    # 装机前产物四查门禁
 - 改完任何 `.sh/.py/.js/.json` 文件 → 必跑 preflight（bash -n / python compile / node --check / json.tool，多符号少括号立刻抓）
 - 改完 `.cpp/.mk` → preflight 会 REMIND：必须重跑管线构建阶段验证（C++ 无独立语法检查器，构建才是检查）
 - 管线阶段可在 json 里声明 `preflight` 文件列表（相对 workdir 或绝对路径）：执行阶段命令**前**自动过机器关，FAIL 即拦截——散装改脚本没过检查就跑，在管线侧不可能发生
-- 弱 AI 会话级注入纪律见 `weak-ai-system-prompt.md`（贴到 Cursor/Claude Code 等工具 Rules）
+- 会话纪律、授权边界与协作政策正文见仓库根 `AGENTS.md`；本文件只写机械操作细则，不另设一份通用政策。
 - **bash 3.2 兼容门禁（2026-09-30 起）**：`preflight.sh` 对每个 `.sh` 追加调 `bash32_check.sh`，
   `✗` 计入 FAIL、`⚠` 计 REMIND：
   ① `$VAR` 紧跟非 ASCII（bash 把中文并进变量名 ⇒ `unbound variable`；一律写 `${VAR}`，
@@ -101,7 +101,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
 - **失败即停**：阶段失败状态置 `failed` 并附日志路径；禁止换命令绕过，修完原因后 `reset` 该阶段重跑。
 - **产物即证据**：每阶段完成把产物指纹（md5/标签检查结果）写回 json——"改错文件返工"由此兜底：下一阶段前置校验产物指纹，改动过的产物立刻暴露。
 - **inputs 快照与陈旧度（2026-09-10 起，防旧产物直装）**：阶段完成时记录上游产物 md5 快照。快照≠现状 = 该阶段过期：① 仍处 done 的过期阶段被**自动回退 pending**（上游产物一变化即触发，`reset 上游忘重跑下游`不再可能装旧包）；② 过期链路上的阶段**拒绝执行**并点名环节（改了源码没重编 so、换了 so 没重打 APK 都会拦），remedy = `reset <被点名阶段>` 后 `next` 连跑；③ 产物未变化的重跑不引发级联（幂等）。`pipeline.json` 状态文件与 `*.md` 活文档不参与指纹/新鲜度判定。
-- **每游戏一份 pipeline.json**，位于 `04_scripts/{游戏}/pipeline.json`；新游戏由强 AI 生成（或后续并入 new_game_mod.sh 生成第五件套）。
+- **每游戏一份 pipeline.json**，位于 `04_scripts/{游戏}/pipeline.json`；新游戏按本节阶段定义生成（或由 `new_game_mod.sh` 生成第五件套）。
 - 日志统一追加至 `04_scripts/{游戏}/pipeline.log`。完整日志是本地可再生物，
   `.gitignore` 已排除；Git 只保留结论、决定性日志行和复现命令。
 
@@ -349,7 +349,7 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 
 | 脚本 | 角色 | 触发场景 |
 |---|---|---|
-| `pipeline.sh` + `pipeline.lock` | 状态机本体（**弱 AI 禁改 / 强 AI 只按「同一提交 + 刷新 lock + push」改**；lock 由 git 跟踪、被 Syncthing 忽略，见下注）。**2026-10-03 起原生带**：硬约束钉行（P1）/ 轮次门禁（P4）/ 内循环 `next --loop N` + `log`（P5）/ UTF-8 输出垫片 | 所有机械动词 |
+| `pipeline.sh` + `pipeline.lock` | 状态机本体（**禁随手改；确需改只按「同一提交 + 刷新 lock + push」**，详见文末跨机姿势；lock 由 git 跟踪、被 Syncthing 忽略，见下注）。**2026-10-03 起原生带**：硬约束钉行（P1）/ 轮次门禁（P4）/ 内循环 `next --loop N` + `log`（P5）/ UTF-8 输出垫片 | 所有机械动词 |
 | `stage_next.sh` | pipeline.sh 的**同义转发器**（旧命令形态兼容层，不再自己实现逻辑） | 旧习惯命令 / 文档里的旧写法 |
 | `preflight.sh` | 阶段执行前的语法/格式机器关 | 阶段声明 `preflight` 时自动调用 |
 | `bash32_check.sh` | macOS bash 3.2 兼容门禁（本仓脚本都要在 3.2 下跑） | 新增/改 `*.sh` 后 |
@@ -368,3 +368,4 @@ native 自读）、热重载做法、四条验收与可 grep 的日志锚点都�
 - **真要改 `pipeline.sh` 时的跨机姿势（2026-10-03 澄清，当日已按此流程改过一次）**：`pipeline.sh` 与 `_common/pipeline.lock` 都是 **git 跟踪文件**（`git ls-files 04_scripts/_common/pipeline.lock` 命中），只是 `_common/pipeline.lock` 被 Syncthing `.stignore` 忽略（`10_docs/双机协作/双机协作同步方案.md:482`，避免双通道冲突），而 `pipeline.sh` 本身走 Syncthing。所以改法是：**同一提交**改 `pipeline.sh` + 刷新 `pipeline.lock` 的 `shasum -a 256`，然后 push，另一台 `git pull --rebase --autostash` 后即一致（不必手工碰 lock）；**禁止**只改一边或两端同时改 —— Syncthing 会先把新 `pipeline.sh` 送到另一台而那边 lock 还是旧的，该机任何 `pipeline.sh` 命令都会 die「指纹不匹配」，`git pull` 一次即恢复。
   - 2026-10-03 实例（P1/P4/P5 并入 + UTF-8 垫片）：新指纹 `pipeline_sh_sha256=1bf3e07b9486b9a8b5b596df3823c78e65c4a58b2cffc31e5fd0a16d25233b42`（旧 `0a2e133157760ce0b4a715b293d3718574b495772a46b48cac81fc089f72a435`），`stage_next.sh` 同批缩为转发器；另一台机器拉取后先跑一次 `bash 04_scripts/pipeline.sh <游戏> status` 确认不再 die 即为同步成功。
   - 2026-10-15 实例（霓虹深渊2 r19 复盘：`status --brief` + `verify --set`）：新指纹 `pipeline_sh_sha256=5efdea573dc23c381e1f701369abff636afbea760a35fe383ad2b58f05a83029`（旧 `1bf3e07b…`）。同一提交内改 `pipeline.sh`（`status [--brief]`＝跳过 说明/阶段名/前置 与「硬约束+台账」回显；`verify <stage> [--set]`＝校验通过即 `set_status done`，用于「产物已在、状态需补」的收尾）＋刷新 `_common/pipeline.lock`。另一台机器 `git pull --rebase --autostash` 后先跑 `bash 04_scripts/pipeline.sh <游戏> status --brief` 验证不再 die。
+  - 2026-10-15 实例二（规范去重：弱模型旧规则退役）：新指纹 `pipeline_sh_sha256=bf5eac4f6eee1da7ce1fb737d42e7bb32a98366733394f94e0f00c14b2a3aebd`（旧 `5efdea57…`）。改动**仅注释与 3 处 die 提示文案**（把原先按模型档次划分的「禁改」表述改成模型无关的变更纪律，指向本节），已用「剥注释逐行比对」证明可执行代码零差异；指纹门禁正/负例实测：刷新后 `status --brief` rc=0、把 lock 改成全 0 后 die `rc=1`。

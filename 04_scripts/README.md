@@ -5,7 +5,7 @@ Frida hook 脚本（.js）、Python 解密脚本（.py）、Shell 自动化脚�
 - 跨游戏通用：`_common/`（拆包 / Manifest / 重打包签名）
 - **机械操作管线（2026-09-09 起）**：`pipeline.sh` 统一入口 + `{游戏}/pipeline.json` 状态机
 
-## 机械操作管线（弱 AI 唯一合法入口）
+## 机械操作管线（机械操作的唯一合法入口）
 
 ```bash
 bash 04_scripts/pipeline.sh <游戏> status          # 开工第一步：看当前在哪
@@ -17,7 +17,7 @@ bash 04_scripts/pipeline.sh <游戏> reset <stage_id># 状态回退 pending
 
 规则（详见 [`_common/stages.md`](_common/stages.md)）：
 - 机械操作（拆/打/注/移/签/装/清理）禁止直接敲 adb/apktool/zip/ndk-build——命令全部收进管线，AI 只填"游戏+阶段"
-- `pipeline.sh` / `pipeline.lock` 禁止修改（启动即 sha256 自检，被改动拒绝执行）
+- `pipeline.sh` / `pipeline.lock` 禁止随手修改（启动即 sha256 自检，被改动拒绝执行）；确需改时按 [`_common/stages.md`](_common/stages.md) 文末「真要改 `pipeline.sh` 时的跨机姿势」（同一提交改脚本 + 刷新 lock + push）
 - 合法参数改 `{游戏}/pipeline.json` 的 `params`；阶段失败即停（读日志修原因，禁止换命令绕过）
 - 每阶段完成自动记录产物指纹——改错文件会立刻在 verify/下一阶段暴露
 
@@ -28,8 +28,8 @@ bash 04_scripts/_common/preflight.sh <改过的文件...>
 ```
 
 按扩展名自动检查：`.sh`→bash -n、`.py`→compile、`.js`→node --check、`.json`→json.tool；
-`.cpp/.mk` 提示必须重跑管线构建阶段验证。多符号/少括号/尾逗号等弱模型高频错误在装机前抓。
-弱 AI 会话纪律模板：[`_common/weak-ai-system-prompt.md`](_common/weak-ai-system-prompt.md)（贴到 Cursor 等工具 Rules）。
+`.cpp/.mk` 提示必须重跑管线构建阶段验证。多符号/少括号/尾逗号等高频错误在装机前抓。
+会话纪律与授权正文统一见仓库根 `../AGENTS.md`（本目录不另设一份）。
 
 ## 旧通用工具（继续可用，逐步并入管线后端）
 

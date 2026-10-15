@@ -26,6 +26,12 @@ DEFAULT_FILES = (
     '10_docs/_state/current.md',
 )
 DEFAULT_DIRS = ('.cursor', '10_docs/_state/games', '10_docs/_templates')
+# Byte/character caps the cross-game index declares about itself (AGENTS.md
+# section "状态索引"): one row per game, <=400 Unicode characters per row.
+STATE_INDEX = '10_docs/_state/current.md'
+INDEX_ROW_MAX_CHARS = 400
+INDEX_MAX_BYTES = 15000
+TABLE_ROW = re.compile(r'^\s*\|')
 FENCE = re.compile(r'^ {0,3}(`{3,}|~{3,})(.*)$')
 INLINE_CODE = re.compile(r'(`+)(?!`)(.+?)(?<!`)\1(?!`)', re.DOTALL)
 LINK_START = re.compile(r'(?<!!)\[[^\]\n]*\]\(|!\[[^\]\n]*\]\(')
@@ -129,6 +135,56 @@ def audit_file(path, pointer=False, pointer_max_lines=3):
     return issues
 
 
+def is_state_index(root, path):
+    """True only for the declared cross-game index, wherever it was reached from.
+
+    Both sides are resolved because callers may pass a symlinked root (macOS
+    /var -> /private/var) and relative_to would then silently never match.
+    """
+    try:
+        return Path(path).resolve().relative_to(Path(root).resolve()) == Path(STATE_INDEX)
+    except (ValueError, OSError):
+        return False
+
+
+def audit_state_index(path, max_chars=INDEX_ROW_MAX_CHARS, max_bytes=INDEX_MAX_BYTES):
+    """Return index-shape diagnostics: per-row character cap and total byte cap.
+
+    Row length is counted in Unicode characters, not UTF-8 bytes: the declared
+    limit is written for human-readable one-line summaries, and counting bytes
+    would make it far stricter for Chinese text than the rule states.
+    """
+    issues = []
+
+    def issue(line, kind, message):
+        issues.append({'path': str(path.resolve()), 'line': line,
+                       'kind': kind, 'message': message})
+
+    try:
+        data = path.read_bytes()
+        lines = data.decode('utf-8-sig').splitlines()
+    except (OSError, UnicodeError) as exc:
+        issue(0, 'read-error', str(exc))
+        return issues
+    if len(data) >= max_bytes:
+        issue(1, 'index-size',
+              f'{len(data)} bytes reaches or exceeds limit {max_bytes}')
+    for number, line in enumerate(lines, 1):
+        if not TABLE_ROW.match(line):
+            continue
+        cells = line.split('|')
+        if len(cells) < 4:
+            continue
+        name = cells[1].strip()
+        # Skip the header row and the |---|---| separator line.
+        if not name or name == '游戏' or not set(name) - set('-: '):
+            continue
+        if len(line) > max_chars:
+            issue(number, 'index-row-length',
+                  f'{len(line)} characters exceed limit {max_chars} ({name})')
+    return issues
+
+
 def default_paths(root):
     paths = [root / name for name in DEFAULT_FILES]
     for name in DEFAULT_DIRS:
@@ -195,6 +251,12 @@ def main(argv=None):
         target.add_argument('--pointer-max-lines', type=nonnegative,
                             default=3 if target is parser else argparse.SUPPRESS,
                             help='Maximum Cursor body lines, excluding frontmatter/headings')
+        target.add_argument('--state-index-max-chars', type=nonnegative,
+                            default=INDEX_ROW_MAX_CHARS if target is parser else argparse.SUPPRESS,
+                            help='Maximum Unicode characters per row of the cross-game index')
+        target.add_argument('--state-index-max-bytes', type=nonnegative,
+                            default=INDEX_MAX_BYTES if target is parser else argparse.SUPPRESS,
+                            help='Maximum total bytes of the cross-game index')
     audit.add_argument('paths', nargs='*', type=Path,
                        help='Override default files; relative paths resolve against root')
     file_parser = commands.add_parser('artifact', help='JSON file bytes only; no APK signature or build identity proof')
@@ -212,10 +274,15 @@ def main(argv=None):
     for path in paths:
         pointer = (root / '.cursor') in path.resolve().parents
         issues.extend(audit_file(path, pointer, args.pointer_max_lines))
+        if is_state_index(root, path):
+            issues.extend(audit_state_index(path, args.state_index_max_chars,
+                                            args.state_index_max_bytes))
     for item in issues:
         print('{path}:{line}: {kind}: {message}'.format(**item))
     print(f'Audited {len(paths)} files; {len(issues)} issue(s). '
-          'Relative link files only; anchors NOT validated. No files modified.')
+          'Relative link files only; anchors NOT validated. '
+          f'State index {STATE_INDEX}: rows <= {args.state_index_max_chars} chars, '
+          f'file < {args.state_index_max_bytes} bytes. No files modified.')
     return 1 if issues else 0
 
 

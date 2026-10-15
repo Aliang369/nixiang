@@ -1,7 +1,7 @@
 # TOOLBOOK.md — 安卓逆向工具文档与使用规范
 
 > 📅 最后更新：2026-09-29（正式交付目录、安全隔离清理、Build Tools 自动探测）
-> 📍 工作区：/Users/aliang/Documents/nixiang
+> 📍 工作区：本仓库根（跨机路径用 `$NIXIANG_ROOT` / `_common/env.sh`，勿写死某台机器的绝对路径）
 > 🎯 用途：个人安卓游戏逆向学习
 > 读取、授权与协作唯一入口：`AGENTS.md`；本书按工具问题查阅，不另设优先级或必读协议。
 

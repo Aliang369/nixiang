@@ -1,7 +1,7 @@
 # WORKFLOW.md - 逆向工作流程规范
 
 > 读取、授权、协作、测试与清理政策唯一入口：`AGENTS.md`。
-> 工作区：`/Users/aliang/Documents/nixiang`；本书按任务查阅，不是启动必读协议。
+> 工作区：本仓库根（路径解析见 `04_scripts/_common/env.sh` 的 `NIXIANG_*`）；本书按任务查阅，不是启动必读协议。
 > 工具版本/可用性是历史记录，使用前按需核验。
 
 ## 0. 执行政策入口
@@ -69,7 +69,7 @@
 > **管线优先（2026-09-09 起）**：构建/打包/签名/装机等**机械操作已收进统一管线**——
 > AI 一律走 `bash 04_scripts/pipeline.sh <游戏> status/next/verify/reset`（规则见
 > `04_scripts/_common/stages.md`，含最高频的"调试内循环"：reset build_so → next 连跑到 install）。
-> 本节手工流程仅供理解后端原理、排障和强 AI 选脚本参考，**不是执行入口**。
+> 本节手工流程仅供理解后端原理、排障与选脚本参考，**不是执行入口**。
 
 ### 4.1 工具选择(先看再跑)
 

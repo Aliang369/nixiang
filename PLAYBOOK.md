@@ -1,7 +1,6 @@
 # PLAYBOOK.md — 新游戏接手标准流程
 
-> 📍 `/Users/aliang/Documents/nixiang/PLAYBOOK.md`  
-> 🎯 AI 接手**新游戏/新版本**时读这个；日常操作读 `WORKFLOW.md`，工具用法查 `TOOLBOOK.md`  
+> 📍 `PLAYBOOK.md`（相对仓库根）；🎯 AI 接手**新游戏/新版本**时读这个，日常操作读 `WORKFLOW.md`，工具用法查 `TOOLBOOK.md`。
 > 读取、授权、协作与通用政策统一见 `AGENTS.md`；本书按任务查阅，不另设读取顺序。
 
 ---
