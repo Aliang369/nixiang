@@ -463,15 +463,10 @@ if (!f) {
    「读计数比 0」「读状态位」的纯谓词/门禁 ⇒ **明确排除**；
 4. 只 hook 第 2 步那个函数，返回一个大常数。谓词与门禁一律交回 orig。
 
-### 28.3 实例对照表（疾风骑士 `PlayerMovement`，RVA 仅注释、实现全 by-name）
+### 28.3 实例对照表
 
-| 函数 | RVA | 反汇编语义 | 判定 |
-|---|---|---|---|
-| `GetMaxMoreJumpCount()` | `0x37C4728` | `CheckEquipNormalArtifact(0x6d) ? level+1 : 1` | ✅ 唯一正解（默认 1 ⇒ 地面 1 + 空中 1 = 共 2 跳，与用户描述完全一致） |
-| `CanMoreJump()` | `0x37C47E4` | 读 `[this+0x440]` 计数器 → `> 0` | ❌ 纯派生谓词 |
-| `CheckCanJump()` | `0x37BB970` | 读三个状态位 + 内部状态机调用 | ❌ 状态门禁（恒真 ⇒ **自动连跳**） |
-| `PlayerJumpCooltime(float)` | `0x37C47A4` | `(Time.time - [this+0x838]) > (offset+const)` | ❌ 起跳节流（恒真 ⇒ **每帧允许起跳**） |
-| `PlayerMoreJumpCountReset(int)` | `0x37C46C0` | `w0 = GetMaxMoreJumpCount() + moreCount` 写回 `[this+0x440]` | 不必 hook（改上限即自动生效） |
+§28.1 三类函数 + §28.2 形态判据在具体函数上的落地（逐函数 RVA / 反汇编语义 / 正解判定）：
+先例 `10_docs/疾风骑士/技能先例.md` §1。
 
 ### 28.4 通用化
 
@@ -483,19 +478,20 @@ if (!f) {
 ### 28.5 相关：冷却类功能的真门禁往往不是名字带 `CoolTime` 的函数
 
 同一会话里「技能无限」也翻过一次车：名字最像的 `CheckCanSubSkillByCoolTime()` 实际是
-`CheckCanAttackSkill() && !CheckEquipNormalArtifact(0x23) && !CheckEquipNormalArtifact(0x15b)`，
-**与冷却无关**；真正的冷却只有一个计时字段，由少数几个写入点维护。
-⇒ 判据：**先找「计时字段的写入点」，再找读它的 getter**，而不是找名字。
+`CheckCanAttackSkill() && !CheckEquipNormalArtifact(...)`，**与冷却无关**；真正的冷却只有一个计时字段，
+由少数几个写入点维护。⇒ 判据：**先找「计时字段的写入点」，再找读它的 getter**，而不是找名字。
 
-| 角色 | 疾风骑士实例 | RVA |
-|---|---|---|
-| 唯一计时字段 | `PlayerMovement + 0x588`（`float`，`get_WeaponSkillCoolTime()` = `ldr s0,[x0,#0x588]; ret`） | `0x37AA27C` |
-| 写入点（填满） | `SetWeaponSkillCoolTime(bool)` | `0x37B596C` |
-| 写入点（加减） | `SetPlusWeaponSkillCoolTime(float)` | `0x37D3D6C` |
-| 假门禁（名字骗人） | `CheckCanSubSkillByCoolTime()` | `0x3817E6C` |
-
-做法：拦写入点 + `SafeWriteF32(self, 0x588, 0.0f)`，并把各冷却 getter 返 0；
+做法：拦**写入点** + 把计时字段写 0（`SafeWriteF32`），并把各冷却 getter 返 0；
 **不要**去恒真那些 `CheckCan*` 谓词（会连带改掉攻击判定，见 §28.1）。
+实例（计时字段 / 两个写入点 / 假门禁各自的 RVA 与语义）：先例 `10_docs/疾风骑士/技能先例.md` §2。
+
+### 28.6 读侧变体：读错偏移的返回值同样是「恒真」（2026-10-16 冒险与征途）
+
+用 `runtime_invoke` 读**值类型**返回值时若按 `*(T*)r` 读，读到的是**装箱对象头的 `klass` 低位** ——
+同一进程内对所有候选、对 `true`/`false` 都是**同一个常量** ⇒ 判据恒真/恒假，且**静默不报错**；
+最坏形态是「行为探测」永远锁定第一个候选，把错 mi 当成「真实现」，而日志上一切正常
+（返回值方向的 ABI 与两条可证伪判据见 `il2cpp-abi-pitfalls.md` 坑 9）。
+先例 `10_docs/冒险与征途/技能先例.md`。
 
 ## 29. 功能无效先探针，别先改代码（2026-10-02 疾风骑士）
 

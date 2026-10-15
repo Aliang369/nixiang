@@ -2639,8 +2639,9 @@ static void* NoAdMiGetV50(void* klass, const char* name, int argc) {
  * 我按「`r` = 指向 retval 槽的指针」去读**引用类型**返回值是错的 —— 实际 `r` **就是对象本身**
  * （`*(void**)r` 读到的是对象的 klass，于是 `class_name(klass)` 打出 `0WŐt` 这种垃圾名字）。
  * il2cpp 的 `il2cpp_runtime_invoke` 对**引用类型直接返回对象指针**、对**值类型**（bool/int/ulong）
- * 另有约定（本作 `CdInvoke` 用 `*(uint8_t*)r` 读 bool 且实测能锁定真实现 ⇒ 值类型是「指向值的指针」
- * 或「装箱后 +0x10」两种可能之一）。
+ * 另有约定（值类型 = **装箱对象、真值在 `+0x10`** —— v50→v52 已在本作定案，规则见
+ * `skill/re-implement/il2cpp-abi-pitfalls.md` 坑 9；`CdInvoke` 的旧写法 `*(uint8_t*)r` 属读错偏移，
+ * 见其函数头 ★v53 注释与 `10_docs/冒险与征途/技能先例.md` §2）。
  *
  * 所以这里不再赌约定，而是**双读 + 自证**（全部 fail-safe：任何一条不成立就返回失败，
  * 让广告照播、奖励照发）：
@@ -5019,6 +5020,8 @@ static void EnsureIl2CppAttach() {
  *  为什么干脆全删而不是改对参数：官方 setter 做的事就是写 `_attributes[23]`，
  *  而我们已经**直接写** `_attributes[23]` + `_attributesBigInt[23]`（判死读的正是 BigInt 那个），
  *  效果完全等价（v26s3/v26t 实测：`SKILLHP … saHp=871710000 -> 1743` 落地、`KILLDEAD ok=1` 真死）。
+ *  ★v53 复核（2026-10-16）：血量写入那条是实测；但 `KILLDEAD ok=1` **不能**当作 invoke 返回值判据 ——
+ *    `ok` 读的是装箱对象 klass 低位常量（恒真），真死来自血量写 1 + 伤害放大，见 CdInvoke 上方注释。
  *  ⇒ 纯内存写足够，`runtime_invoke` 是**唯一的崩溃向量**，全部从热路径移除。
  *  目前只剩 `CdInvoke`（CheckDead）一处 invoke，且带熔断（见 SaCheckDead）。
  *
@@ -6378,7 +6381,9 @@ static void GmHarvest(uint64_t now) {
 //  v26m 曾刻意回避它（ToDead 会碰 Unity Collider，而 tick 线程不是 Unity 主线程），
 //  v26p 实测证明**不调它怪就永远不死**（同一个 Character 零血挂 4 分钟）⇒ 必须调，且**每个演员只调一次**。
 static void* g_cdActorKlass = nullptr;  // v26s2：上次解析 CheckDead 用的类（按类缓存，避免跨类用错 mi）
-static void* g_miCheckDead = nullptr;   // v26t：**已行为验证过的真实现**（空桩会被剔除）
+static void* g_miCheckDead = nullptr;   // v26t：按行为探测锁定的候选（空桩会被剔除）
+                                        // ★v53 复核：锁定用的 `ok` 实为装箱对象 klass 低位常量
+                                        // ⇒ 「真实现」身份**未证实**，见 CdInvoke 注释 + 坑 9
 static void* g_cdCand[4] = {nullptr, nullptr, nullptr, nullptr};
 static int g_cdCandN = 0;
 static int g_cdTry = 0;
@@ -6440,8 +6445,47 @@ static bool CdInvoke(void* mi, uintptr_t actor, bool* okOut) {
     t_modInvoke++;
     void* r = api.runtime_invoke(mi, (void*)actor, args, &exc);
     t_modInvoke--;
-    if (exc) return false;
-    if (okOut) *okOut = (r && *(uint8_t*)r != 0);
+    if (exc) return false;  // 只有 invoke 真抛异常才回 false（false = 触发熔断，见 SaCheckDead）
+    if (!okOut) return true;
+    /* ★v53（2026-10-16 源码复核，**未装机**）—— 旧判据 `*(uint8_t*)r` 读的是**装箱对象头的
+     *  `klass` 低位**，不是 bool 真值。依据：
+     *   ① 本文件 line 5027 早就写明「il2cpp 约定：**返回值是装箱对象（数据在 ret+0x10）**」
+     *      （v26n 血证：装箱对象被当 long ⇒ 读到 `klass×10000 ≈ 1.377e18`）；
+     *   ② `skill/re-implement/il2cpp-abi-pitfalls.md` 坑 9（坑 6 / 坑 8 的**返回值方向**）。
+     *  该字节对**所有候选 mi、对 true/false 都是同一个常量**（`System.Boolean` 的 Il2CppClass* 低字节）
+     *  ⇒ 它不携带任何返回值信息（`hook-rules.md` §28.6 恒真陷阱的读侧形态）：
+     *  非 0 就永远锁定 idx=0、恰为 0 就一个候选都锁不上，两种都是错，且**静默**。
+     *
+     *  【为什么本版**不改判据**、只加证据】硬约束 `10_docs/冒险与征途/硬约束.md` #7③
+     *  「**不得改动四项功能的判据与落点语义**」：改成 +0x10 口径后，兜底路径的血量是 **1**
+     *  （`kAttrScale`，见下方 KILLMOB / KILLDEAD 注释），而真实现 `CheckDead` 首行读「HP ≤ 0」
+     *  ⇒ 它只会返回 **false** ⇒ 四个候选一个都锁不上 ⇒ **兜底 invoke 整个停掉** ——
+     *  这是判据 / 落点语义变更，必须用户授权 + 一次装机实测才能切。
+     *  切换动作只有一行：把末尾 `*okOut = (a != 0);` 改成 `*okOut = bLegal && bb != 0;`。
+     *
+     *  【两条互相独立的可证伪判据】任一命中即证明坑 9 需要复核（本版只打印，不静默改约定）：
+     *   ① 旧口径 `a` 多次调用间**出现漂移**（同进程内同一个类的 klass 低位不可能变）；
+     *   ② 新口径 `bb` **∉ {0,1}**（合法装箱 Boolean 只可能是 0/1）。
+     *  取证姿势：`MXYTZ_VERBOSE=1` 重编（交付档把这个闸关着，诊断行走 `DBGLOG` 会被编译掉，
+     *  见 line 73）后看 `CHECKDED 双读` 行 —— 与 v49 诊断轮同一姿势。 */
+    const bool okA = Il2Cpp::IsReadableRange((uintptr_t)r, 1);
+    const bool okB = Il2Cpp::IsReadableRange((uintptr_t)r + 0x10, 1);
+    const uint8_t a = okA ? *reinterpret_cast<const uint8_t*>(r) : 0;
+    const uint8_t bb = okB ? *reinterpret_cast<const uint8_t*>(reinterpret_cast<const char*>(r) + 0x10) : 0;
+    static int s_n = 0, s_aN = 0, s_drift = 0, s_badBool = 0;
+    static uint8_t s_a0 = 0;
+    if (okA) {
+        if (s_aN == 0) s_a0 = a;
+        else if (a != s_a0) s_drift++;
+        s_aN++;
+    }
+    const bool bLegal = okB && (bb == 0 || bb == 1);
+    if (!bLegal) s_badBool++;
+    s_n++;
+    if (s_n <= 4 || !bLegal || (s_drift > 0 && s_drift <= 2))
+        DBGLOG(TPL_LOG " CHECKDED 双读 A(旧口径,r)=%u B(r+0x10)=%u n=%d A漂移=%d B非bool=%d", (unsigned)a,
+             (unsigned)bb, s_n, s_drift, s_badBool);
+    *okOut = (a != 0);  // ★判据保持旧口径（硬约束 #7③）；一行切换见上方说明
     return true;
 }
 
