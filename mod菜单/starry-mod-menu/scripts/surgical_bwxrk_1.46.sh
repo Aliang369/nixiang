@@ -110,10 +110,10 @@ if command -v cygpath >/dev/null 2>&1; then
 fi
 mkdir -p "${ASCII_ROOT}" "${OUT_DIR}" "${CACHE_DIR}"
 
-[[ -f "${BASE_APK}" ]] || die "缺底包 ${BASE_APK}（HZSJ_BASE_APK=... 覆盖）"
-[[ -f "${DEX6_SRC}" ]] || die "缺 ${DEX6_SRC}（先跑 04_scripts/魂坠深境/hzsj_build_dex.sh）"
-[[ -f "${SO_SRC}" ]]   || die "缺 ${SO_SRC}（先跑 04_scripts/魂坠深境/hzsj_build_so.sh）"
-[[ -f "${LIBCXX_SRC}" ]] || die "缺 ${LIBCXX_SRC}（NDK 构建顺产出，被删就跑 hzsj_build_so.sh）"
+[[ -f "${BASE_APK}" ]] || die "缺底包 ${BASE_APK}（BWXRK_BASE_APK=... 覆盖）"
+[[ -f "${DEX6_SRC}" ]] || die "缺 ${DEX6_SRC}（先跑 04_scripts/保卫向日葵/bwxrk_build_dex.sh）"
+[[ -f "${SO_SRC}" ]]   || die "缺 ${SO_SRC}（先跑 04_scripts/保卫向日葵/bwxrk_build_so.sh）"
+[[ -f "${LIBCXX_SRC}" ]] || die "缺 ${LIBCXX_SRC}（NDK 构建顺产出，被删就跑 bwxrk_build_so.sh）"
 [[ -f "${JAVA}" ]]     || die "缺 java: ${JAVA}"
 [[ -f "${APKTOOL_JAR}" ]] || die "缺 apktool.jar: ${APKTOOL_JAR}"
 [[ -f "${BAKSMALI_JAR}" && -f "${SMALI_JAR}" ]] || die "缺 smali 工具（01_tools/smali：baksmali/smali jar）"
@@ -144,6 +144,13 @@ done
 for s in 'Toggle_拿全部技能' '[Bwxrk]'; do
   LC_ALL=C grep -aq "$s" "${SO_SRC}" || die "so 缺 ${s}"
 done
+
+# 共享表登记断言（复盘 P1-1，2026-10-15）：本包必须已在 SignSpoof / TapLoginForceWeb 两张表里。
+# 漏登记的症状是「装机成功但 TapTap 登录失败（CONFIG_ERROR / SDK not initialized）」，
+# 纯静态可查却会白耗一轮装机+用户实测 ⇒ 前置成硬门禁。
+bash "${STARRY_SRC}/scripts/_lib/check_shared_tables.sh" --pkg "${PKG}" --channel taptap --quiet \
+  || die "共享表未登记（见上方补法）—— 首装 TapTap 登录必失败"
+echo "[check] 共享表登记 ok（SignSpoof + TapLoginForceWeb 均含 ${PKG}）"
 echo "[check] VERSION=${VERSION} 底包 ${bsize} B (md5 ${bmd5}) / ${DEX_ADD_NAME} $(wc -c <"${DEX6_SRC}" | tr -d ' ') B / so $(wc -c <"${SO_SRC}" | tr -d ' ') B ok"
 
 # 底包结构闸门：既不能已含注入目标（重复注入），也不能缺替换目标
@@ -159,11 +166,11 @@ so = 'lib/arm64-v8a/libstarry_magic.so'
 print('  底包结构 ok（无 %s；%s %s）' % (add, so, '可替换' if so in names else '待新增'))
 PY
 
-echo "[2/6] 旧菜单清理（仅 VERSION=1.1.1 底包需要：classes5.dex 去 com/starry）"
+echo "[2/6] 旧菜单清理（本作官方原包无 com/starry，本步只做 dex 序号撞名检查）"
 if [[ -z "${LEGACY_MENU_DEX}" ]]; then
-  # 官方 1.1.2 原包：4 个 dex 内 com/starry 命中 0（已核，见 10_docs/魂坠深境/重构_1.1.2_*.md）
+  # 官方原包：4 个 dex 内 com/starry 命中 0（已核，见 10_docs/保卫向日葵/斌哥包抓点_20261015.md §2）
   # ⇒ 无旧菜单可清；同时确认底包确实没有 classes5.dex（否则 DEX_ADD_NAME 会撞名）
-  "${PY}" - "${BASE_APK}" <<'PY' || die "官方底包含 classes5.dex（dex 序号冲突，改 HZSJ_DEX_NAME）"
+  "${PY}" - "${BASE_APK}" <<'PY' || die "官方底包含 classes5.dex（dex 序号冲突，改 BWXRK_DEX_NAME）"
 import sys, zipfile
 z = zipfile.ZipFile(sys.argv[1])
 if 'classes5.dex' in z.namelist():
@@ -413,8 +420,8 @@ for s in (b'StarryInitProvider', b'com/starry/magic/menu/MenuService',
 msg = 'so md5=%s / %s 含新菜单' % (in_so, dex_name)
 # appComponentFactory 改写是 2026-10-13「TapTap 签名校验时机」修复的核心；最终包内回读确认。
 # 注：二进制 AXML 的字符串池是 UTF-16，不能按 bytes 搜 ASCII —— 用 aapt2 dump 成文本再断言。
-os.makedirs('/tmp/hzsj_mfchk', exist_ok=True)
-mfx = '/tmp/hzsj_mfchk/mf.zip'
+os.makedirs('/tmp/bwxrk_mfchk', exist_ok=True)
+mfx = '/tmp/bwxrk_mfchk/mf.zip'
 with zipfile.ZipFile(mfx, 'w', zipfile.ZIP_DEFLATED) as wz:
     wi = zipfile.ZipInfo('AndroidManifest.xml')
     wi.compress_type = zipfile.ZIP_DEFLATED

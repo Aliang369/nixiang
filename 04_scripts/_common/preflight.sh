@@ -11,6 +11,8 @@
 #
 #  无参 / --sweep（2026-10-12 霓虹深渊2 会话复盘 P8 收尾）：把
 #  `04_scripts/*/*.sh` + `04_scripts/_common/*.sh` + `mod菜单/*/scripts/*.sh`
+#  + `mod菜单/*/scripts/_lib/*.sh`（2026-10-15 保卫向日葵复盘补：原 glob 漏了 `_lib/`，
+#  既有的 `dex_target.sh` 与新加的 `check_shared_tables.sh` 都一直不在扫描范围内）
 #  全量过一遍 bash32_check.sh。**为什么需要**：bash32 门禁本来是**按文件传参**的，
 #  于是"脚本存在 ≠ 门禁生效"—— 2026-10-12 实测全仓 633 个脚本里 63 个带 ✗ 硬错误，
 #  没人全仓跑过它。本模式让新脚本进来时自己被抓，不再靠"有人想起来扫一遍"。
@@ -136,7 +138,7 @@ check_one() {
 sweep_bash32() {
   local list="${PF_SWEEP_LIST:-20}"
   local tmp; tmp=$(mktemp -t pf_sweep) || { echo "✗ FAIL  [全仓bash32] mktemp 失败"; fail=$((fail+1)); return; }
-  for f in 04_scripts/*/*.sh 04_scripts/_common/*.sh mod菜单/*/scripts/*.sh; do
+  for f in 04_scripts/*/*.sh 04_scripts/_common/*.sh mod菜单/*/scripts/*.sh mod菜单/*/scripts/_lib/*.sh; do
     [ -f "$f" ] || continue
     printf '%s\0' "$f" >> "$tmp"
     sweep_files=$((sweep_files+1))
@@ -145,7 +147,7 @@ sweep_bash32() {
     echo "⚠ REMIND [全仓bash32] 扫描目标 0 个 —— 请在仓库根运行（04_scripts/**、mod菜单/**/scripts/** 都不存在？）"
     rm -f "$tmp"; remind=$((remind+1)); return
   fi
-  echo "── 全仓 bash 3.2 门禁扫描：$sweep_files 个脚本（04_scripts/*/*.sh + _common/*.sh + mod菜单/*/scripts/*.sh）──"
+  echo "── 全仓 bash 3.2 门禁扫描：$sweep_files 个脚本（04_scripts/*/*.sh + _common/*.sh + mod菜单/*/scripts/*.sh + mod菜单/*/scripts/_lib/*.sh）──"
   local out
   out=$(xargs -0 bash "$SCRIPT_DIR/bash32_check.sh" < "$tmp" 2>&1)
   rm -f "$tmp"

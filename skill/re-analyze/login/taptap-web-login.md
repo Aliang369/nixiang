@@ -70,14 +70,35 @@ smali patch：恒抛 `ActivityNotFoundException("starry_force_web_login")`
 
 否则 SDK 内部签名校验仍会失败。
 
+## 证书回灌自检（SignSpoof，2026-10-15 起）
+
+改签包后 TapTap 用**本机 PackageManager 里的签名**去服务端核对，不一致即报：
+`TapInitializer: 应用的包名、签名（certificate fingerprint）未在 TapTap 开发者中心正确配置`
+→ `JuHeSDK TapTap CONFIG_ERROR: 包名、签名错误` → `TapTapException: SDK not initialized`。
+⚠️ **症状里不出现「证书」字样**，只报 CONFIG_ERROR ⇒ 先自己验证书，别去查登录流程或服务端。
+
+机制：`SignSpoof` 按包名回灌官方证书 DER（每款游戏一段 `XXX_PKG` + `XXX_CERT_B64` + 一行 `fakes.put`）。
+**追加**证书块属允许的模式化操作（`AGENTS.md` 授权节），但**抄错一位就复现上面三条报错且极难定位**，故必须逐字节自检：
+
+```bash
+unzip -o -q <官方.apk> 'META-INF/*.RSA' -d /tmp/c
+openssl pkcs7 -inform DER -in /tmp/c/META-INF/*.RSA -print_certs -out /tmp/c/cert.pem
+openssl x509 -in /tmp/c/cert.pem -outform DER -out /tmp/c/cert.der
+md5 -q /tmp/c/cert.der                                          # ① 官方 DER md5
+apksigner verify --print-certs <官方.apk> | grep "MD5 digest"    # ② 必须与 ① 相等
+# ③ Java 源里 XXX_CERT_B64 各段拼起来 base64 解码后的 md5 也必须相等
+```
+
+装机后判据：`StarrySignSpoof: installed pkgs=[… <包名> …]` 且上述三条报错消失。
+
+> 先例：见 `10_docs/保卫向日葵/审计_20261015.md` §3.3（727 B DER 逐字节相同，md5 `63e2fa89…`）。
+
 ## mocika 壳加密 DEX 处理
 
-**案例：虚无之刃**
+`classes.dex` 被 mocika 壳加密时：静态改不可行（无法重加密）、改运行时缓存 `c2.dex` 首次生效但重装即被覆盖
+⇒ 走 `libstarry_magic.so` 内运行时 patch `ClientLoginHandler.canHandle`（Pine/ART hook）。
 
-当 `classes.dex` 被 mocika 壳加密时：
-- 静态改 `classes.dex` 不可行（无法重加密）
-- 运行时改缓存 c2.dex → 首次生效但重装被覆盖
-- **推荐方案**：在 `libstarry_magic.so` 中用 Pine/ART hook 运行时 patch `ClientLoginHandler.canHandle`
+> 先例：见 `10_docs/虚无之刃/技能先例.md`。
 
 ## 弯路（不要踩）
 
