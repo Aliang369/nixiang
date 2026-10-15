@@ -75,7 +75,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
   - **阈值**：同一 dump 每轮 grep ≤10 次、单条工具结果 ≤8 KB；长脚本/模板（`surgical_*.sh` 同限）先取大纲再切片。
 - **同文件串行编辑**：同一轮**禁止**对同一文件并行发多个 Edit —— 同消息/并行 Edit 是读-改-写竞争，会互相覆盖丢改动（历史事故×3）；不同文件可以并行。同一文件也不要同轮混用 bash 改写与 `edit`。
 - **提交 / 推送底线**：
-  - **push 一律经 `push_main`**（`source 04_scripts/_common/git_push_main.sh && push_main main`；四通道自愈）。**禁裸 `git push` 盲等、禁 `--force`**；被拒 ⇒ `git pull --rebase --autostash` 再推。
+  - **push 一律经 `push_main`**（`source 04_scripts/_common/git_push_main.sh && push_main main`；四通道自愈）。**禁裸 `git push` 盲等、禁 `--force`**；被拒 ⇒ `git pull --rebase --autostash` 再推。**判远端是否同步只看 `git status -sb` 的 ahead/behind，禁在会话中段裸跑 `git fetch`**（SSH 通道探测会挂 60 s+ 并转后台占坑；确需联网确认时套 `with_timeout.sh` 或复用 `push_main` 的通道逻辑）。
   - 收工走 `bash 04_scripts/_common/archive_scoped_git.sh` 白名单 add（**禁 `git add -A`**）——本仓长期多会话并行，全量 add 会把他人的半成品提交进去。add 前若 `status` 出现 `*.jks` / `*.keystore` / `.env` / 大文件（>50M），停下报告。
   - **危险 Git 命令禁令（碰了就是事故级）**：`reset --hard`、`checkout -- .`、`clean -fd`（丢弃工作区改动）；`push -f` / `--force`；`filter-repo` / `filter-branch`（历史改写）；删除或重建 `.git/`；改 `.gitignore` 的例外规则；删除 git 正在跟踪的文件来「省空间」；提交前不检查就 `add -A`。以上除用户当轮明确要求并授权外一律禁止。
   - **pre-push 机器关**：`core.hooksPath=04_scripts/_common/git-hooks`，本次 push 涉及的 `.sh` 自动过 `preflight.sh`，FAIL 即阻断（git 只吐 `failed to push some refs`，**真正的 FAIL 清单在 `git push --dry-run` 的门禁输出里**）。逃生门 `git push --no-verify` 仅应急，**用了必须在汇报里写明**。

@@ -106,7 +106,7 @@ adb logcat -s StarryApp:V StarryMagic:V | grep "auth game_id synced from native"
 |------|------|
 | Java / dex / Manifest / 菜单资源 | 复用现有该游戏的 `libstarry_magic.so`；直接跑该游戏 surgical 脚本完成构建、签名、验证、可选安装 |
 | C++ / Hook / 菜单 native 串 | 先跑该游戏 `*_build_so.sh`，确认 so 指纹和菜单串，再跑同一条 surgical 链 |
-| 只有现有正式包，要重装 | `STARRY_INSTALL_ONLY=1` 复用包，只跑验证+安装；禁止重新构建后再声称“只是重装” |
+| 只有现有正式包，要重装 | **首选统一入口** `bash 04_scripts/_common/install_starry_apk.sh --apk <正式包> --pkg <包名> --so-tag '[<Tag>]' --game-id <id> [--clean]`（签名/so 标签/md5 三查 + 可选异签名资源保护，见「分发与装机红线」节）；游戏脚本自带 `STARRY_INSTALL_ONLY=1` 的按其分支走。两者都**只跑验证+安装**，禁止重新构建后再声称“只是重装” |
 
 ```bash
 bash mod菜单/starry-mod-menu/scripts/surgical_<game>_<ver>.sh                 # 构建+签名+验证
@@ -249,14 +249,14 @@ bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [-
 5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（历史事故：临时复用同 id 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）
 
 **收尾交付物（icon / 菜单模板为按需产出：新游戏首次交付或用户点名时才生成）**：
-- icon 提取（按需）：交付副本放 `08_output/{游戏}/delivery_YYYYMMDD/icon_{游戏}_{512|144}.png`；`02_apks/` 只作为用户管理的不可再生输入，AI 不默认写入。
+- icon 提取（按需）：交付副本放 `08_output/{游戏}/delivery_YYYYMMDD/icon_{游戏}_{源图边长}.png`（**边长＝源图自身像素，不放大**；2026-10-14 用户 m00631/m00668 定案，旧 `_512`/`_144` 双档已废弃）；`02_apks/` 只作为用户管理的不可再生输入，AI 不默认写入。
 - 菜单模板 JSON：`10_docs/{游戏}/{游戏拼音}_menu_template.json`（`template_id`=game_id）
 - 交付副本（按需）：`08_output/{游戏}/delivery_YYYYMMDD/menu_template.json`，字段严格按 `10_docs/_templates/菜单模板_规范与示例.md` 自检。
 - 交付目录生成（**★收尾一律走这条，禁手工重造**）：先读 `04_scripts/_common/stages.md` 收尾节，再跑
   `bash 04_scripts/_common/finalize_game_delivery.sh --game {游戏} --apk {正式包} --prune --sync-doc --apply`
   —— 裁剪唯一正式包 + **打印**文档同步片段（共享文件仍需手动粘，脚本不自动改）。
-  **icon / 菜单模板按需**：仅「新游戏首次交付」（`08_output/{游戏}` 无 `delivery_*`）或用户当轮点名时才追加 `--icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json`，生成 delivery 目录（icon 512/144 + 模板副本 + 字段自检）；其余收尾不传，脚本默认跳过、不建 delivery 目录。
-- icon 无 512 源时：官方资源常只到 192×192，必须放大并在交付记录里注明「由官方最高密度 XX 放大」，不谎称原生 512。
+  **icon / 菜单模板按需**：仅「新游戏首次交付」（`08_output/{游戏}` 无 `delivery_*`）或用户当轮点名时才追加 `--icon-source {原图} --menu-template 10_docs/{游戏}/{id}_menu_template.json`，生成 delivery 目录（**icon 一张原图** + 模板副本 + 字段自检）；其余收尾不传，脚本默认跳过、不建 delivery 目录。
+- **icon 尺寸口径（2026-10-14 起，取代旧的 512/144 双档）**：取**官方最高密度**那份原图（`aapt2 dump badging <apk> | grep application-icon-` 看各 dpi，通常是 `res/mipmap-xxxhdpi/app_icon.png`），**不放大、不缩小**，文件名边长＝源图自身像素（192×192 → `icon_终末地_192.png`）。源图只到 192×192 属正常，**禁止放大后谎称原生 512**，注明来源密度即可（工具头注即权威：`finalize_game_delivery.sh:1-10`）。
 - 收尾清单：按 `10_docs/_templates/游戏收尾与最小复现清单.md` 填写，含生命周期场景矩阵已测/未测
 
 ---
@@ -287,6 +287,30 @@ Android 8+ `startForegroundService()` 后 **5 秒**内不进前台，系统直�
 - **Mod 失效**：运行时解密/热更后的 libil2cpp 与静态 RVA 不一致（导出剥离的游戏还需 xdl_sym/dsym + RX 段序言扫描兜底），清数据改变映射环境 → 偏移全飘
 - **热更回归**：官方热更重新全量下载，打进热更目录的补丁（jsc 门控、patch 过的资源）全部丢失
 - 游戏内贴图变紫/洋红 = 热更 DLC 资源校验失败（与 Mod hook 无关）：先保留唯一热更输入与故障证据；重新下载/删除须按 TOOLBOOK「清理规则」「真机残留清理」核对可取得性、范围及授权，**不默认清数据**
+
+### 异签名必须卸载重装时：先保护外置数据（2026-10-16 终末地 29,990 MB 实证；FW-12）
+
+同证书自签包走覆盖安装；**证书不同（异签名）时覆盖装必失败**，只能卸载重装——而 `pm uninstall` 会
+**连带清除** `/sdcard/Android/data/<pkg>`（大资源游戏可达数十 GB，且**静默无报错**）。标准步骤：
+
+1. **落备胎**（同卷 `mv`，瞬时且零额外空间）：`su -c 'mv /sdcard/Android/data/<pkg> /sdcard/Android/data/<pkg>.nxreserve'`
+   —— `.nxreserve` 是另一个名字，卸载的目标目录不含它，故不会被连带清掉。
+2. **核对备胎非空才允许卸载**（硬闸门）：`ls -d <reserve>` 拿不到就**中止，绝不裸卸**；确认可丢要显式放行。
+3. 卸载 → 安装星空包（`su -c 'pm install -r -d --user 0 <tmp.apk>'`）。
+4. **归位必须 chown 到新 uid**：重装会**重新分配 app uid**（实测 11058→11059），旧属主下 app 读不到自己的
+   外置目录 ⇒ `chown -R <新uid>:<新uid> <dir>` + `restorecon -R <dir>`（新 uid：`stat -c %u /data/user/0/<pkg>`）。
+5. **判据**：归位后 `du -sm` 与卸载前一致（本例 29,990 MB）、`ls -ld` 属主 == 新 uid。
+
+**统一入口（只装机 / 异签名重装都走它，FW-11）**：
+
+```bash
+bash 04_scripts/_common/install_starry_apk.sh --apk <正式包> --pkg <包名> \
+    --so-tag '[<Tag>]' --game-id <id> [--clean] [--serial <S>] [--dry-run]
+```
+
+先做「签名身份 `CN=StarryMagic` / 包内 so 标签与 game_id / md5」三查，再装机；`--clean` 即含上面 1–5 步。
+**优先用它，而不是逼着重跑外科脚本重建**——重签会改产物 md5、使已取证/已交付的包与证据脱钩。
+自带 `STARRY_INSTALL_ONLY=1` 分支的游戏脚本（如 `surgical_endfield_1.6.4.sh`）行为等价，保留即可。
 
 > **游戏级例外不在本技能展开**：任何「必须卸载重装」类例外只写在该游戏 `10_docs/{游戏}/硬约束.md`，此处只承认「按该文件逐条生效、只对该游戏有效、不得外推」这一条通用规则。现存先例：`10_docs/无悔华夏/硬约束.md` 第 4 条（带乐变类热更派生负载的游戏）。其它同证书自签包一律按本节默认处理（`TOOLBOOK.md` 规则 #77 三档：root 覆盖 so → `install -r` → 只有证书变了才 `uninstall`）。
 

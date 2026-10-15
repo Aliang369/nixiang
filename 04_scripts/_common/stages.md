@@ -259,8 +259,10 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
      `python3 04_scripts/_common/pipeline_record_cleanup.py --game {游戏} --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json [--apply]`（**先 dry-run**；它会把 `verify` 改 `not_exists` 并从快照里移除该产物/下游 inputs），
      再用 `bash 04_scripts/pipeline.sh {游戏} verify <stage> --set` 把「产物已在、状态需补」的阶段置回 done；**禁**手改 stage 的 `verify` 语义。
      （2026-10-15 实例：`sign` 因 prune 被标 failed 且一路留在台账里，`--brief` 一跑就暴露 ⇒ 登记清理 + 三个 `--set` 后 9/9 全绿、无 stale 标记。）
-   - 真机残留清理走现成脚本（**禁手打 rm 名单**：非 root 会静默删不动，本轮实测 `su 0` 才删得掉）：
+   - 真机残留清理：**已获当轮授权收尾**时才走现成脚本（**禁手打 rm 名单**：非 root 会静默删不动，实测 `su 0` 才删得掉）：
      `bash 04_scripts/_common/cleanup_device_re_residue.sh --deep`（先 `--dry-run` 看范围；保留项写进台账）。
+     **未获授权时（复盘/分析/纯文档会话）不跑该脚本**，只做定向核验并报告待处理项 —— 本行按 `AGENTS.md` §6 从严口径统一（2026-10-16 消解与「归档正文 D」的冲突）。定向核验示例：
+     `adb -s <serial> shell "su -c 'ls -la /data/local/tmp/ | grep -iE \"<pkg>|nxreserve\" || echo 无残留'"`。
 3. 官包归位：`02_apks`（用户手动管理，AI 不探测不整理）；本轮是否有原版以**用户声明**为准。
 4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；只清理本游戏路径；删前逐项核对再生依据；中文路径先 `git config core.quotepath false`）。
    优先用 `bash 04_scripts/_common/trash_paths.sh --tag {游戏}_{日期} --path 03_decompiled/{游戏} ...`；默认 dry-run，核对路径/大小/Trash 目标后再加 `--apply`。只清理本游戏可再生路径（03/06 大二进制、07 大包、09_test），中文路径先 `git config core.quotepath false`。
