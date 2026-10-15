@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 # git_push_main.sh —— 推送到 origin/<branch> 的**四通道自适应 + 自愈重试**实现
 #
-# 版本：v2.1（2026-10-11 重写并实测）；v1 = 2026-10-10「单次探测 SSH，失败即永久改走 HTTPS」。
+# 版本：v2.2（2026-10-15 修 HTTPS 通道退化 + 有界低速阈值）；v2.1（2026-10-11 重写并实测）；
+#       v1 = 2026-10-10「单次探测 SSH，失败即永久改走 HTTPS」。
+#
+# ── v2.2 修的是什么（2026-10-15 实测，用户报「推送总失败」）───────────────────────
+#   `origin` 是 **SSH 形态**（`git@github.com:owner/repo.git`）且仓库/全局都没有 `url.insteadOf`
+#   映射时，https-proxy / https-direct 两条通道虽然传了 `-c http.proxy=` 与 `-c credential.helper=`，
+#   git 仍按 SSH 传输 ⇒ 这两个参数**完全无效**，两条通道退化成「再试一次 SSH」，
+#   「四通道自愈」实际只剩 ssh22/ssh443 两条。实测证据：
+#     · `push_main --selftest` 四通道全 FAIL，且**错误文本全是 SSH 的**
+#       「Please make sure you have the correct access rights and the repository exists.」；
+#     · 进程树里 https 通道的子进程仍是 `/usr/bin/ssh … git-upload-pack`；
+#     · 后果：三条 SSH 路线都不通时整轮必然失败，且 `archive_scoped_git.sh` 卡在推送阶段 17 分钟。
+#   修法＝HTTPS 通道先按 `_pg_https_insteadof_cfg` 把 SSH 形态 origin 改写成 HTTPS（见 ⑧）。
+#   同批把 `lowSpeedLimit` 从 0 改为非 0：0 表示**不做低速判定**，`lowSpeedTime` 形同虚设，
+#   单条通道可挂 10 分钟；现在默认 1000 B/s × 60 s 即判死，可用 PUSH_HTTP_LOWSPEED_* 覆盖。
 #
 # ── 为什么要重写：v1 的真实失效模式（2026-10-11 用户已多次报「推送总失败」）────────────
 #   · 本机到 github 的通道是**分钟级抖动**：同一次调用里 `ssh -T` 成功、下一分钟 `:22 Operation timed out`；
@@ -18,8 +32,12 @@
 #      （v2.0 用 `ssh -T` 探测就踩过这个坑）。探测失败会把**真实错误尾行**打出来。
 #   ③ **一次调用内自带重试**：`--attempts`（默认 6）× `--wait`（默认 20s），抖动期内不必人工再喊。
 #   ④ 一律 `git -c … push origin <branch>`（**不再 URL 推**）⇒ 跟踪引用天然刷新；
-#      传输层耐慢参数 HTTP/1.1 + `lowSpeedLimit=0` + `lowSpeedTime=600` + 大 postBuffer；
-#      SSH 侧 `ConnectTimeout=8 / ServerAliveInterval=10 / ServerAliveCountMax=3`。
+#      传输层耐慢参数 HTTP/1.1 + 大 postBuffer + **有界**低速阈值（`lowSpeedLimit` 必须非 0，
+#      否则 `lowSpeedTime` 形同虚设）；SSH 侧 `ConnectTimeout=8 / ServerAliveInterval=10 /
+#      ServerAliveCountMax=3`。
+#   ⑧ **HTTPS 通道先把 SSH 形态的 origin 改写成 HTTPS**（`_pg_https_insteadof_cfg`）：
+#      少了这一步，`-c http.proxy` / `-c credential.helper` 对 SSH 传输完全无效，
+#      https-proxy / https-direct 会退化成「再试一次 SSH」⇒ 四通道实际只剩两条（见头部 v2.2 说明）。
 #   ⑤ **分叉短路**：被 `Updates were rejected` / `non-fast-forward` 时立刻停手、打印两端 tip、
 #      返回 3 —— 这不是网络问题，必须先 fetch/rebase，**绝不 force**（本会话 amend 已推提交踩过）。
 #   ⑥ **无需联网也不会误报**：本地 ahead=0 时直接 `PUSH_RESULT=NOTHING_TO_PUSH` rc=0。
@@ -39,8 +57,14 @@
 #         2 = 用法/参数错误                            3 = 远端分叉（需 fetch/rebase，不是网络问题）
 _pg_log() { [ "${PUSH_QUIET:-0}" = "1" ] || echo "[push] $*"; }
 
-# 所有 git 调用共用的传输层参数（耐慢 + HTTP/1.1 抗代理抖动）
-_PG_GIT_OPTS=( -c http.version=HTTP/1.1 -c http.lowSpeedLimit=0 -c http.lowSpeedTime=600 \
+# 所有 git 调用共用的传输层参数（耐慢 + HTTP/1.1 抗代理抖动）。
+# 低速阈值必须**非 0**：`lowSpeedLimit=0` = 不做低速判定（`lowSpeedTime` 随之失效），
+# 代理一挂就会把单条通道挂满（v2.1 曾设 0/600 ⇒ 实测单轮卡 17 分钟）。默认 1000 B/s × 60 s。
+_PG_LOWSPEED_LIMIT="${PUSH_HTTP_LOWSPEED_LIMIT:-1000}"
+_PG_LOWSPEED_TIME="${PUSH_HTTP_LOWSPEED_TIME:-60}"
+_PG_GIT_OPTS=( -c http.version=HTTP/1.1 \
+               -c "http.lowSpeedLimit=${_PG_LOWSPEED_LIMIT}" \
+               -c "http.lowSpeedTime=${_PG_LOWSPEED_TIME}" \
                -c http.postBuffer=524288000 )
 _PG_SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=8 -o ServerAliveInterval=10 -o ServerAliveCountMax=3"
 _PG_SSH22=""
@@ -52,6 +76,25 @@ _pg_token() {
     if command -v gh >/dev/null 2>&1; then _PG_TOKEN="$(gh auth token 2>/dev/null || true)"; fi
   fi
   printf '%s' "${_PG_TOKEN:-}"
+}
+
+# origin 是 SSH 形态时，HTTPS 通道必须把它改写成 HTTPS —— 否则 `-c http.proxy` /
+# `-c credential.helper` 对 SSH 传输完全无效，本通道退化成「再试一次 SSH」（见头部 v2.2）。
+# $1 = 远端 URL（显式传入以便单测，不传则空 ⇒ 输出空）；stdout = 单个 git `-c` 值，无需改写时为空。
+_pg_https_insteadof_cfg() {
+  local url="${1:-}" host path
+  case "$url" in
+    git@*:*)     host="${url#git@}"; host="${host%%:*}"; path="${url#*:}" ;;
+    ssh://git@*) path="${url#ssh://git@}"; host="${path%%/*}"; path="${path#*/}" ;;
+    *) return 0 ;;
+  esac
+  [ -n "$host" ] && [ -n "$path" ] || return 0
+  printf 'url.https://%s/%s.insteadOf=%s' "$host" "$path" "$url"
+}
+
+# 当前 origin 的改写配置（origin 读不到 / 已是 HTTPS 时输出空）。
+_pg_origin_insteadof_cfg() {
+  _pg_https_insteadof_cfg "$(git remote get-url origin 2>/dev/null || true)"
 }
 
 # 统一执行器：跑一条命令，**只把 stderr 收进 $_PG_LAST_ERR**（push/ls-remote 的正常进度都走 stderr，
@@ -87,22 +130,29 @@ _pg_run_route() {
       if [ -n "$(_pg_token)" ]; then
         helper='!f(){ echo username=x-access-token; echo \"password='"$(_pg_token)"'\"; };f'
       fi
+      # SSH 形态的 origin 必须改写成 HTTPS，否则本通道的代理/凭证参数对 SSH 传输无效（见头部 v2.2）。
+      # `rw` 可能为空数组 ⇒ 一律用 ${rw[@]+"${rw[@]}"} 展开（bash 3.2 + set -u 下裸展开会报错）。
+      local rw=() cfg
+      cfg="$(_pg_origin_insteadof_cfg)"
+      [ -n "$cfg" ] && rw=( -c "$cfg" )
       if [ -n "$proxy" ]; then
         if [ "$mode" = "probe" ]; then
-          _pg_exec git "${_PG_GIT_OPTS[@]}" -c http.proxy="$proxy" \
+          _pg_exec git "${_PG_GIT_OPTS[@]}" ${rw[@]+"${rw[@]}"} -c http.proxy="$proxy" \
             -c credential.helper= -c credential.helper="$helper" ls-remote --heads origin "$branch"
         else
-          _pg_exec git "${_PG_GIT_OPTS[@]}" -c http.proxy="$proxy" \
+          _pg_exec git "${_PG_GIT_OPTS[@]}" ${rw[@]+"${rw[@]}"} -c http.proxy="$proxy" \
             -c credential.helper= -c credential.helper="$helper" push origin "$branch"
         fi
       else
         if [ "$mode" = "probe" ]; then
           _pg_exec env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy -u ALL_PROXY -u all_proxy \
-            git "${_PG_GIT_OPTS[@]}" -c http.proxy= -c credential.helper= -c credential.helper="$helper" \
+            git "${_PG_GIT_OPTS[@]}" ${rw[@]+"${rw[@]}"} -c http.proxy= \
+            -c credential.helper= -c credential.helper="$helper" \
             ls-remote --heads origin "$branch"
         else
           _pg_exec env -u HTTPS_PROXY -u https_proxy -u HTTP_PROXY -u http_proxy -u ALL_PROXY -u all_proxy \
-            git "${_PG_GIT_OPTS[@]}" -c http.proxy= -c credential.helper= -c credential.helper="$helper" \
+            git "${_PG_GIT_OPTS[@]}" ${rw[@]+"${rw[@]}"} -c http.proxy= \
+            -c credential.helper= -c credential.helper="$helper" \
             push origin "$branch"
         fi
       fi
@@ -130,13 +180,22 @@ _pg_pending_count() {  # $1 = 分支
 _pg_usage() {
   echo "[push] 用法：push_main [<branch>] [--attempts N] [--wait S] [--quiet] [--selftest]"
   echo "[push] 环境：PUSH_MAX_ATTEMPTS(6) PUSH_WAIT_SECS(20) PUSH_ROUTES(白名单) PUSH_MIRROR_DIR(本地裸仓)"
+  echo "[push]       PUSH_HTTP_LOWSPEED_LIMIT(1000) PUSH_HTTP_LOWSPEED_TIME(60)"
 }
 
 # 通道体检：逐条真实探测并打印错误（诊断用，read-only，不推送）
 push_selftest() {
-  local branch="main" route ok=0
+  local branch="main" route ok=0 cfg
   [ $# -ge 1 ] && branch="$1"
   echo "[push] === 四通道体检（ls-remote，read-only）==="
+  echo "[push] origin=$(git remote get-url origin 2>/dev/null || echo '<未知>')"
+  cfg="$(_pg_origin_insteadof_cfg)"
+  if [ -n "$cfg" ]; then
+    echo "[push] HTTPS 通道改写：${cfg}"
+    echo "[push]   （origin 是 SSH 形态；没这一行时 https-* 通道会退化成「再试一次 SSH」）"
+  else
+    echo "[push] HTTPS 通道改写：无需（origin 已是 HTTPS 形态）"
+  fi
   for route in $(printf '%s' "${PUSH_ROUTES:-ssh22,ssh443,https-proxy,https-direct}" | tr ',' ' '); do
     if _pg_run_route "$route" "$branch" probe; then
       echo "[push]   $route  OK"; ok=$((ok + 1))
