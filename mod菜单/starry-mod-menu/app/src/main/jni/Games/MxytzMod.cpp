@@ -872,6 +872,27 @@ static bool IsPlayerActorV32(void* obj) {
     return false;
 }
 
+/** ★v47 防闪退/防「功能永久失效」兜底：受击策略的重入闸改 **RAII**。
+ *
+ *  旧写法是手工配对：开头 `if (g_dmgReenter.exchange(true)) return;`、函数**末尾**一行
+ *  `g_dmgReenter.store(false)`。这在今天是对的（函数体里没有第二个 return），但它是
+ *  「**只要有人在中间加一个 return，这条闸就永久上锁**」的结构 —— 一旦上锁，
+ *  `Hurt` 这一整条路（#1 秒杀小怪 / #2 无敌的受击清零 / #3 的技能增伤统计）
+ *  会在**本次进程剩余时间内全部静默失效**，而且没有任何日志。
+ *  这正是用户报的「有时候功能会失效」那一类"不可自恢复"故障的形状，所以按结构消掉它。
+ *  RAII 保证：无论从哪个分支离开、哪怕中途抛异常，计数一定归位。
+ *  （`g_dmgReenter` 是全局而非 thread_local：跨线程撞上时后来者**只跳过本次策略**，
+ *   不会写坏状态；保持原语义不变，只把「配对」这件事交给析构函数。） */
+struct HurtReenterGuard {
+    bool pass;
+    HurtReenterGuard() : pass(!g_dmgReenter.exchange(true, std::memory_order_acq_rel)) {}
+    ~HurtReenterGuard() {
+        if (pass) g_dmgReenter.store(false, std::memory_order_release);
+    }
+    HurtReenterGuard(const HurtReenterGuard&) = delete;
+    HurtReenterGuard& operator=(const HurtReenterGuard&) = delete;
+};
+
 static void ApplyHurtPolicy(void* refSlot) {
     const bool kill = g_killMob.load(std::memory_order_relaxed);
     const bool inv = g_invincible.load(std::memory_order_relaxed);
@@ -879,8 +900,10 @@ static void ApplyHurtPolicy(void* refSlot) {
     if (!(kill || inv || skill)) return;
     if (!LivePtr(refSlot)) return;
     /* ★v34→**回退**（用户 m02501：「与最开始没任何变化，还把无敌改坏了…你快别改」）：
-     *  这里恢复成 v33 你已验证「#1、#2 单独开都没问题」的**硬闸**，一行不多一行不少。 */
-    if (g_dmgReenter.exchange(true)) return;
+     *  这里恢复成 v33 你已验证「#1、#2 单独开都没问题」的**硬闸**，一行不多一行不少。
+     *  ★v47：配对交给 `HurtReenterGuard` 的析构函数（结构上不再可能漏配对而永久锁死）。 */
+    HurtReenterGuard reenter;
+    if (!reenter.pass) return;
     /* ★★v30 `para` 定案（v29b 血证驱动，**不再靠猜**）：
      *  ① 已实测的实参布局：入口 `a1` 是「**实参值内联**的 8 字节槽区」（`DMGARG` 里 slot 直接是
      *     0.5f/0.4f/40.0f/1.0f 的位模式），不是「指向实参的指针数组」。
@@ -1043,7 +1066,7 @@ static void ApplyHurtPolicy(void* refSlot) {
                      g_paraReady.load() ? 1 : 0);
         }
     }
-    g_dmgReenter.store(false);  // ★v34：与入口 exchange(true) 配对（v33 原样）
+    // ← 出作用域即由 `HurtReenterGuard` 释放重入闸（v47：不再手工配对）
 }
 
 /** Dobby 内联桩 —— **备用路径**：本环境 `Hurt` 是解释方法（methodPointer = 解释器共享桩），
@@ -1370,14 +1393,25 @@ static const size_t kAdSlotN = sizeof(kAdSlots) / sizeof(kAdSlots[0]);
 //      提供，实测 `GMHARV _unitList size=6..10 acc=N` 稳定命中，不再依赖 `ActorOfferArgs` 那条路。
 //   需要重新取证（名册/兴趣/参数帧）时改回 true 即可，功能不受影响。
 static const bool kDiag = false;
-/* ★v29（2026-10-03 实测定案）：**开机即挂解释器 hook**，不再等用户点功能。
- *  血证：钩子原先只在 `anyOn`（用户点开任一功能）时才装，而配置表反序列化
- *  （`ProjectileData::set_damageFactor_A` /`set_damageConst`、`BuffStateEffect::set_damageConstPara`
- *  /`set_damageFactorA`）发生在**开机/进战斗的加载期** —— 实测 `LEARN ok` 那几行出现在 armed 之后
- *  5~6 秒，那一批 setter 的值**已经被游戏读走** ⇒ `DMGARG=0`，「全模式技能伤害增加」永远赶不上。
- *  代价：每次热更方法调用多一次「读一个字段 + 一次哈希 + 1~2 次指针比较」（`InterpDispatch` 热路径），
- *  实测 150 秒 48 万次慢路径时游戏不掉帧；且**所有写动作仍由功能开关把关**（全关时零行为改变）。 */
-static const bool kStartupArm = true;
+/* ★v47（2026-10-16）：`kStartupArm` **true → false**（防闪退兜底，用户报「打开游戏闪退」）。
+ *
+ *  v29 当年开它的**唯一理由**是抓住「开机/加载期那一批 `set_damage*` setter」——
+ *  即 `K_DMGMUL`（配置表 setter 实参乘倍率）这条路。那条路**已在本文件 1437 行永久停用**
+ *  （`kDmgMulHook=false`，三条血证：实测无效 / 复用实参缓冲 / 连乘失控），
+ *  目标项 `set_damageFactor_A` 等也不再有任何消费方（见 §⑩a `kKinds` 的 v47 注）。
+ *  ⇒ 开机即挂**收益为零**，剩下的只有风险：
+ *    ① `DobbyHook` 是**原地改写正在执行的代码页**，而 `Mxytz_TryInit` 跑在游戏刚
+ *       `domain/assembly` 就绪的窗口里 —— 解释器入口此刻正被主线程高频调用，
+ *       改写与执行并发 ⇒ icache/预取拿到半条指令的设备就会 SIGILL/SIGSEGV。
+ *       这解释了「**部分手机**打开游戏闪退」（同一份 so 在不同机型 GC/调度时序下表现不同）。
+ *    ② 该窗口里连带跑的大件（`ResolveParaLayout` 全镜像遍历）已被记为 Boehm GC
+ *       `Exclusion ranges overlap` abort 的嫌疑人（见 v44 清理注释），本轮一并挪出启动路径。
+ *  现在改成**懒装**：功能打开后 `SyncHooks` 走 `CanInstallHooks()`（冷启 12s + 开功能 1s 双闸）
+ *  才装钩。功能可用性不受影响（三条独立理由）：
+ *    · `Hurt`/`DoAttack` 在战斗里被**持续**调用 ⇒ 学习期随时能把它们学进来；
+ *    · `#4` 的四个广告目标由 `EnsureAdTargetsV43()` 按 `MethodInfo` **预登记**，不等调用；
+ *    · `Mxytz_OnFeatureChanged` 每次开功能都会**重开学习期**（见该函数注释）。 */
+static const bool kStartupArm = false;
 // ★v26x 出包定案：**kDmgHooks = true**，但**只装 `Hurt5` 这一枚**（见 kDmgOnlyHurt）。
 //   理由（全部有实测/元数据依据）：
 //   ① 用户实测「秒杀小怪怪物直接死了，但什么奖励装备没给」+「全模式技能伤害增加没效果」+
@@ -1843,14 +1877,19 @@ struct KindDef {
 };
 
 static const KindDef kKinds[] = {
-    /* ============ ★v28 正路：入口**实测可达**的伤害公式参数（MuMu 全量普查 653 对/218 类）============
-     *  `cls` 留空 = **按方法名匹配任意类**（同一个 setter 名可能同时存在于 ProjectileData /
-     *  SkillData / BuffStateEffect / LProjectileModelData …，全部都要乘 —— 这正是「全模式」）；
-     *  每个 (名字, 类) 组合各自登记一个槽（见 LearnSlot::klass）。 */
-    {"", "set_damageFactor_A", K_DMGMUL, "FacA"},
-    {"", "set_damageFactorA", K_DMGMUL, "FacA2"},
-    {"", "set_damageConst", K_DMGMUL, "Const"},
-    {"", "set_damageConstPara", K_DMGMUL, "ConstPara"},
+    /* ★★v47：**删除 v28 的 4 个 `set_damage*` 目标**（`K_DMGMUL`）。
+     *  它们不是「暂时不用」，而是**必须删**——留着会直接造成用户报的「功能有时候会失效」：
+     *   ① 消费方早已永久停用：`kDmgMulHook=false`（1437 行，三条血证：实测无效 / 复用实参缓冲 /
+     *      连乘失控 ⇒「突然 90 多万伤害」）。即这 4 项目标**登记了也没有任何行为**；
+     *   ② 它们是 `cls==""`（按名匹配任意类）⇒ `InterpLearn` **永远不给它们置 `g_kindDone`**
+     *      （v28 的原意是「别让第一个类把整族关掉」），于是 `LearnAllDone()` **恒为假**、
+     *      学习期永远只有「窗口到期」这一条关闭路径；
+     *   ③ 更要命的是它们会**持续占表**：每个 (名字, 类) 组合各登记一个槽，而 `kLearnSlots`
+     *      当时只有 **64** —— MuMu 普查该族就有「653 对/218 类」⇒ 表会被这族**填满**，
+     *      `LearnRegister` 的 8 次探测全部失败后 `LEARN 表满`，后面真正的战斗目标
+     *      （`Hurt`/`DoAttack`/`ProjExec`）**再也登记不进去** ⇒ 功能静默失效。
+     *      （`kLearnSlots` 本轮同时提到 256，双重消除这条饱和路径，见该常量处注释。）
+     *  留档：若将来要重启 `K_DMGMUL`，先把 `kDmgMulHook` 改 true，再把这 4 行加回来。 */
     /* ============ 兜底：3 分 50 秒普查里**从未出现**（= 纯托管→托管，见 §⑩b 挂点说明）============
      *  留着不为命中，只为「万一别的场景会过入口」时能立刻看到 `LEARN ok`；
      *  真正的覆盖靠 §⑩b 的**帧构造二级挂点**（`0x207DCCC`，x1 = MethodInfo*）。 */
@@ -1886,7 +1925,17 @@ struct LearnSlot {
     uint8_t argBase;   // 1 = 实例方法（a1[0] = this）；0 = 静态（由 method_flags & 0x10 定案）
     uint32_t hits;     // 该目标的命中次数（hook-rules §25：独立计数，装配自检用）
 };
-static const uint32_t kLearnSlots = 64;  // 2 的幂
+static const uint32_t kLearnSlots = 256;  // 2 的幂（★v47：64 → 256，见下方 kLearnShift 说明）
+/* ★v47：哈希位移必须与槽数**联动**（旧代码把 `>> 26` 硬编码在 `LearnRegister` 与
+ *  `InterpDispatch` **两处**，改槽数不改位移 = 一半以上槽永远用不到 + 探测窗口错位）。
+ *  这里抽成一个常量 + 静态断言，改槽数时只会在这里改一次。
+ *  `h = (name >> 4) * 2654435761u >> kLearnShift` ∈ [0, kLearnSlots)。 */
+static const uint32_t kLearnShift = 24;  // 32 - log2(256)
+static_assert((1u << (32 - kLearnShift)) == kLearnSlots, "kLearnShift 必须等于 32 - log2(kLearnSlots)");
+static inline uint32_t LearnHash(uintptr_t namePtr) {
+    return ((uint32_t)(namePtr >> 4) * 2654435761u) >> kLearnShift;
+}
+static const uint32_t kLearnProbeMax = 16;  // 开放寻址探测上限（★v47：8 → 16，抗聚集）
 static LearnSlot g_lslot[kLearnSlots] = {};
 static std::atomic<uint32_t> g_learnActive{0};  // 0 = 学习期已关（热路径只剩纯指针表查）
 static std::atomic<uint32_t> g_learnMs{0};      // 学习窗口起点（Tick 写）
@@ -2393,7 +2442,14 @@ static std::atomic<uint32_t> g_adRegTryV43{0};
 static std::atomic<uint32_t> g_adV43Seen{0};
 static std::atomic<uint32_t> g_adV43Done{0};
 static std::atomic<uint32_t> g_adV43Fuse{0};        // 熔断**次数**（只作 STATS 可见性，不再永久关死）
-static constexpr uint32_t kAdV43MaxDone = 30;
+static constexpr uint32_t kAdV43MaxDone = 100;
+/* ★v47：这个上限原本是**进程级永久** 30 次 —— 看满 30 个广告之后 `DrainPendingAdV43` 会
+ *  在 `g_adV43Done >= kAdV43MaxDone` 处静默 `return`，功能**永久失效**且没有任何提示。
+ *  这是用户报的「有时候功能会失效」的一条确定来源（尤其是长时间在线的玩家）。
+ *  现在语义改为**按激活期**计：`Mxytz_OnFeatureChanged` / `Mxytz_ForceClear` 都会把它清零
+ *  （关掉再打开 = 重新上膛），并把额度从 30 提到 100 —— 真正的失控保护仍然在，
+ *  而且更强：`g_adV43FuseUntilMs` 的 30 秒熔断窗口是按「invoke 抛异常」触发的速率保护，
+ *  与这个「累计成功次数」是两道独立的闸。 */
 /* ★v46：熔断从「一次异常永久停用」改为「降级 30 秒自动重试」。
  *  旧语义（`g_adV43Fuse.store(1)` 之后 `return`）一旦触发就把整条广告链路永久关死，
  *  游戏侧再也等不到 `OnADVideoResult` ⇒ 玩家看到的是「点了广告玩法进不去」，
@@ -2538,18 +2594,57 @@ static const int32_t kProjCountMax = 200;   /* 安全上限：别把场面投射
 static const float   kProjFanout   = 5.0f;  /* ★扇出：他代码里的这个常量从串池读不出来（他日志里是运行时
                                              *   值 `扇出×%d.%d`），先按 ×2.0 起步，用他这套日志调。 */
 
+/* ============================================================================
+ * ★v47 防闪退兜底 —— #3「全模式技能伤害增加」的**速率预算 + 看门狗**（用户报「玩久了掉帧闪退
+ *   是技能伤害增加导致的」）。这一节是**纯新增的限流**，不改变任何判据与落点。
+ *
+ * 为什么需要（机理，标注为「推断」的证据链）：
+ *   #3 的动作 = 把 `LAddProjectile._count` 乘 `kProjFanout`(5)、上限 `kProjCountMax`(200)，
+ *   并且**写进游戏自己的技能配置对象**（不是在栈上临时改一下）。于是：
+ *   ① 单次施放的投射物数最多 ×5（`_count` 小时）到 200（`_count` 大时）——这是**每个投射物
+ *      一个 GameObject + 碰撞体 + 生命周期回调**的实打实的对象数；
+ *   ② 它**不区分场景频率**：带周期性/持续施放（光环、连射、召唤）的技能会**每秒重复**这个放大，
+ *      于是「每秒新增对象数」被放大 5 倍并**持续整个会话** —— 这正是「**玩久了**掉帧、最后闪退」
+ *      的形状（内存与 GC 压力单调累积，而不是某一次瞬间爆掉）；
+ *   ③ 唯一可能兜住它的那道引擎闸是 `_activeCountLimit`（`CheckProjectileActiveCountLimit`
+ *      在 `activeCount > limit` 时 Dispose 最老的），而旧实现在 `limit > 0` 时把它**抬到 target**
+ *      ⇒ **等于把回收闸门一起关掉**，与「防闪退」的目标正好相反。
+ *
+ * 因此三条兜底（都是 fail-safe：出问题只**减少**放大，绝不写坏内存）：
+ *   ⓪ **不再写 `_activeCountLimit`** —— 保留引擎自带的回收上限（见 `ApplyProjectileExecBoost`
+ *      里 v47 注）。`limit == 0`（= 游戏自己声明「不限制」）时旧实现本来也是不写。
+ *   ① **每秒预算** `kProjBoostPerSecMax`：本秒「被放大的投射物**发数**」累计超过预算后，
+ *      本秒**剩余施放一律不放大**（按游戏原值透传）。注意计的是 `Σtarget`，不是施放次数 ——
+ *      一次 200 发的施放和 40 次 5 发的施放对内存的压力是同一量级。
+ *   ② **看门狗**：连续 `kProjOverSecLimit` 秒都超预算 ⇒ **降级挂起** `kProjSuspendMs` 毫秒
+ *      （期间不放大、并把已写进配置对象的 `_count` 还原），到期**自动恢复** ——
+ *      既不永久废掉功能（用户会看到「功能突然没了」），又能在持续过载时把游戏从 OOM 边缘拉回来。
+ *   ③ 诊断可见：`STATS-PROJ` 每 30s 一行（本秒峰值 / 预算拦下次数 / 挂起次数），下一轮可直接
+ *      用真机日志把 `kProjBoostPerSecMax` 调到「正常游玩几乎不触发」的位置，而不是继续凭猜。
+ *
+ * 取值口径：`kProjBoostPerSecMax = 1500` 是**保守取大方**（正常战斗每秒 2000 个投射物已经是
+ * 极端场面），目的是「基本只在失控时触发」；宁可偶尔多放过一点，也不要让正常技能被限流成废功能。 */
+static const uint32_t kProjBoostPerSecMax = 1500;   /* 每秒钟被放大的投射物总发数上限 */
+static const uint32_t kProjOverSecLimit   = 3;      /* 连续 N 秒超预算 ⇒ 降级挂起 */
+static const uint64_t kProjSuspendMs      = 20000ull; /* 降级窗口（到期自动恢复） */
+static const int      kProjSlotN          = 64;     /* ★v47：槽表 16 → 64（原 16 槽一旦被挤出，
+                                                     * 丢了 base 就再也还原不回去 = 脏数据永驻） */
+
 struct ProjFldCacheV34 {
     const void* k;
     size_t count, activeLimit, activeLimitTag, emitByTargetCount;
 };
 static ProjFldCacheV34 g_projFldV34 = {};
 /* 他日志里的「槽%d/已用%d/挤掉%d次」= 按 `data` 指针开的一张槽表，存**游戏给的原始 count**；
- * 没有这张表就会在已经放大过的值上再乘一次（连乘失控 —— 正是「突然 90 多万伤害」那类残留）。 */
+ * 没有这张表就会在已经放大过的值上再乘一次（连乘失控 —— 正是「突然 90 多万伤害」那类残留）。
+ * ★v47：容量 16 → 64 并**改为环形覆盖**（见 `ProjSlotTakeV47`）—— 16 槽在「一场战斗几十个不同
+ *   技能配置对象」的真实场面下必然溢出，溢出即丢失 base ⇒ 功能关掉后那批配置仍是放大值。 */
 struct ProjSlotV36 {
     const void* data;
     int32_t base;
 };
-static ProjSlotV36 g_projSlotV36[16] = {};
+static ProjSlotV36 g_projSlotV36[kProjSlotN] = {};
+static uint32_t g_projSlotRR = 0;                  /* 环形游标（槽满时覆盖最老一项） */
 static std::atomic<uint32_t> g_projTopSec{0};      /* 本秒顶层发射数 */
 static std::atomic<uint32_t> g_projNestSec{0};     /* 本秒套娃层发射数 */
 static std::atomic<uint32_t> g_projSetV36{0};      /* count 写入次数 */
@@ -2559,6 +2654,13 @@ static std::atomic<uint32_t> g_projNestLogV36{0};
 static std::atomic<uint32_t> g_projSecLogV36{0};
 static std::atomic<uint32_t> g_projMainLogV36{0};
 static std::atomic<uint64_t> g_projSecStartV36{0};
+/* ---- v47 限流/看门狗状态 ---- */
+static std::atomic<uint32_t> g_projEmitSec{0};     /* 本秒已放大的投射物发数（Σtarget） */
+static std::atomic<uint32_t> g_projBudgetSkip{0};  /* 被预算拦下的施放次数（累计） */
+static std::atomic<uint32_t> g_projOverSec{0};     /* 连续超预算秒数 */
+static std::atomic<uint32_t> g_projSuspendN{0};    /* 触发降级的次数（累计） */
+static std::atomic<uint32_t> g_projEmitPeak{0};    /* 本窗口内「单秒放出量」峰值（诊断） */
+static std::atomic<uint64_t> g_projSuspendUntilMs{0}; /* 降级挂起到期时刻（0 = 未挂起） */
 
 /* 他原文（anon1b @0xb31f5）：
  *   `[冒险-投射物·★每秒总量#%d★] 顶层%d + 套娃%d = ★共%d个/秒★ | 扇出×%d.%d (目标N=%d)` */
@@ -2583,13 +2685,97 @@ static void ProjSecTickV36() {
     }
 }
 
+/** ★v47：本秒「已放大的投射物发数」预算闸 + 看门狗。**只在冷路径（一次施放一次）调用**。
+ *  返回 true = 允许本次放大（并已把 `cost` 计入本秒预算）；false = 本秒预算用尽 / 正在降级窗口。
+ *  设计要点（fail-safe，全部方向都是「少放大」）：
+ *   · 预算用尽 ⇒ 本次**按游戏原值透传**（不写 `_count`），不是把值改小；
+ *   · 挂起窗口只影响**放大动作**，不影响 `Hurt`/`DoAttack`/广告等其它功能；
+ *   · 挂起到期自动恢复（同 `g_adV43FuseUntilMs` 的口径），不永久废功能。 */
+static bool ProjBudgetTakeV47(uint32_t cost) {
+    const uint64_t now = NowMs();
+    /* ① 降级窗口内：不放大（并顺手做一次还原，见 `ApplyProjectileExecBoost` 的调用点） */
+    const uint64_t su = g_projSuspendUntilMs.load(std::memory_order_relaxed);
+    if (su && now < su) return false;
+    if (su) {
+        g_projSuspendUntilMs.store(0, std::memory_order_relaxed);
+        g_projOverSec.store(0, std::memory_order_relaxed);
+        g_projEmitSec.store(0, std::memory_order_relaxed);
+        LOGI(TPL_LOG " ★PROJ 降级窗口结束 → 自动恢复放大★（已拦 %u 次 / 累计降级 %u 次）",
+             g_projBudgetSkip.load(std::memory_order_relaxed),
+             g_projSuspendN.load(std::memory_order_relaxed));
+    }
+    /* ② 本秒预算（按秒滚动；`ProjSecTickV36` 只管日志，这里独立记账） */
+    static std::atomic<uint64_t> s_secTick{0};
+    if (now - s_secTick.load(std::memory_order_relaxed) >= 1000ull) {
+        s_secTick.store(now, std::memory_order_relaxed);
+        const uint32_t used = g_projEmitSec.exchange(0, std::memory_order_relaxed);
+        const uint32_t pk = g_projEmitPeak.load(std::memory_order_relaxed);
+        if (used > pk) g_projEmitPeak.store(used, std::memory_order_relaxed);
+        /* 看门狗：连续 `kProjOverSecLimit` 秒超预算 ⇒ 降级挂起 */
+        if (used > kProjBoostPerSecMax) {
+            const uint32_t over = g_projOverSec.fetch_add(1, std::memory_order_relaxed) + 1;
+            if (over >= kProjOverSecLimit) {
+                g_projSuspendUntilMs.store(now + kProjSuspendMs, std::memory_order_relaxed);
+                g_projSuspendN.fetch_add(1, std::memory_order_relaxed);
+                g_projOverSec.store(0, std::memory_order_relaxed);
+                LOGW(TPL_LOG
+                     " ★PROJ 连续%u秒超预算(单秒%u发 > 上限%u) → 降级挂起 %llu ms 并还原脏数据★"
+                     "（防闪退兜底，到期自动恢复）",
+                     over, used, kProjBoostPerSecMax, (unsigned long long)kProjSuspendMs);
+                return false;
+            }
+        } else {
+            g_projOverSec.store(0, std::memory_order_relaxed);
+        }
+    }
+    const uint32_t used = g_projEmitSec.fetch_add(cost, std::memory_order_relaxed);
+    if (used + cost > kProjBoostPerSecMax) {
+        const uint32_t n = g_projBudgetSkip.fetch_add(1, std::memory_order_relaxed);
+        if (n < 10 || (n % 50) == 0)
+            DBGLOG(TPL_LOG " PROJ 本秒预算用尽（已 %u + 本次 %u > %u）→ 本次按原值透传（第%u次）",
+                 used, cost, kProjBoostPerSecMax, n + 1);
+        return false;
+    }
+    return true;
+}
+
+/** ★v47：本秒累计量（给 `STATS-PROJ` 诊断行用）。 */
+static uint32_t ProjEmitPeakTakeV47() {
+    const uint32_t used = g_projEmitSec.load(std::memory_order_relaxed);
+    const uint32_t pk = g_projEmitPeak.load(std::memory_order_relaxed);
+    return used > pk ? used : pk;
+}
+
+/** ★v47：清空限流/看门狗状态（功能开关切换与 ForceClear 调用：重新上膛，不带着旧窗口）。 */
+static void ProjBudgetResetV47(bool clearSuspend) {
+    g_projEmitSec.store(0, std::memory_order_relaxed);
+    g_projOverSec.store(0, std::memory_order_relaxed);
+    g_projEmitPeak.store(0, std::memory_order_relaxed);
+    if (clearSuspend) g_projSuspendUntilMs.store(0, std::memory_order_relaxed);
+}
+
+/** ★v47：槽表取槽 —— 先按 data 指针找；没有空槽就**环形覆盖最老一项**（而不是像 v36 那样
+ *  固定挤掉 0 号槽）。为什么必须改：v36 在 16 槽满时恒取 `slot = 0`，一旦有第 17 个不同的
+ *  技能配置对象进来，0 号槽的 base 就丢了 ⇒ 那个对象**永远还原不回去**（功能关掉之后它还是放大值）。
+ *  环形覆盖至少保证「最近用过的 64 个对象」的 base 是准的，并且 `ProjRestoreV41` 会一次性扫全表。 */
+static int ProjSlotTakeV47(const void* data) {
+    for (int i = 0; i < kProjSlotN; i++)
+        if (g_projSlotV36[i].data == data) return i;
+    for (int i = 0; i < kProjSlotN; i++)
+        if (!g_projSlotV36[i].data) return i;
+    const int i = (int)(g_projSlotRR % (uint32_t)kProjSlotN);
+    g_projSlotRR = (g_projSlotRR + 1u) % (uint32_t)kProjSlotN;
+    return i;
+}
+
+
 /** ★v41：把之前写进 `LAddProjectile._count` 的扇出**还回原始值**（#3 关掉时调用）。
  *  为什么必须有：`_count` 是我们写进**游戏对象**里的持久状态，功能一关我们不再写，但游戏那边
  *  **还留着 count=5** ⇒ 技能继续发 5 发 ⇒ 用户 m03027 的「所有功能都关闭了，感觉伤害还是很高」。
  *  （这也是他说的「脏数据」—— 我们的写必须**可逆**。） */
 static void ProjRestoreV41() {
     if (!g_projFldV34.count || g_projFldV34.count > 0x400) return;
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < kProjSlotN; i++) {
         void* d = const_cast<void*>(g_projSlotV36[i].data);
         if (!d) continue;
         const uintptr_t fp = (uintptr_t)d + g_projFldV34.count;
@@ -2603,7 +2789,22 @@ static void ProjRestoreV41() {
             g_projSlotV36[i].data = nullptr;
             continue;
         }
-        if (now == g_projSlotV36[i].base) continue;     // 已经是原始值
+        if (now == g_projSlotV36[i].base) {             // 已经是原始值
+            /* ★v47：这种情况也把槽清掉 —— 否则 64 槽全占着时，每个 `Execute` 帧都要做
+             *  最多 64 次 maps 查询（`IsReadableRange`）。清掉不影响正确性：功能再打开时
+             *  base 会从「当前（= 原始）count」重新记一遍，仍是原始值。 */
+            g_projSlotV36[i].data = nullptr;
+            continue;
+        }
+        /* ★v47 安全闸：**只在「当前值比记录的原始值大」时还原**。
+         * 旧实现只要 `now != base` 就写 base —— 于是当游戏自己把 count 改成更小的值时
+         * （切场景/换技能/配置重载），我们会把**过期的大值**写回去，等于自己制造脏数据。
+         * 我们的写永远是「调大」（`target = base × 扇出 ≥ base`），所以「变小」一定是游戏干的，
+         * 那种情况**不是我们造成的，也不该由我们改**，只把槽忘掉即可。 */
+        if (g_projSlotV36[i].base > now) {
+            g_projSlotV36[i].data = nullptr;
+            continue;
+        }
         const int32_t bad = now;
         *v = g_projSlotV36[i].base;
         g_projSlotV36[i].data = nullptr;                // 还原过就退出槽表
@@ -2613,6 +2814,14 @@ static void ProjRestoreV41() {
             DBGLOG(TPL_LOG " ★#3已关闭·还原投射物 count %d→%d★ data=%p（不留脏数据）", bad,
                  g_projSlotV36[i].base, d);
     }
+}
+
+/** ★v47：还原 + 清空全部槽（功能关闭 / ForceClear / 看门狗降级时调用）。
+ *  比 `ProjRestoreV41` 多做一件事：把槽表**整表清干净**，避免下次开功能时用旧 base 去写。 */
+static void ProjRestoreAllV47() {
+    ProjRestoreV41();
+    for (int i = 0; i < kProjSlotN; i++) g_projSlotV36[i].data = nullptr;
+    g_projSlotRR = 0;
 }
 
 static void ApplyProjectileBoost(void* a1, uint8_t argBase) {
@@ -2879,24 +3088,27 @@ static void ApplyProjectileExecBoost(void* a1, uint8_t argBase) {
     const int32_t cnt0 = *cv;
     if (cnt0 < 0 || cnt0 > 10000) return;  // 安全闸：异常值一律不碰
     g_projTopSec.fetch_add(1, std::memory_order_relaxed);
-    int slot = -1;
-    bool isNew = false;
-    for (int i = 0; i < 16; i++)
-        if (g_projSlotV36[i].data == data) { slot = i; break; }
-    if (slot < 0) {
-        for (int i = 0; i < 16; i++)
-            if (!g_projSlotV36[i].data) { slot = i; break; }
-        if (slot < 0) slot = 0;
+    /* ★v47：槽表查找/登记改走 `ProjSlotTakeV47`（64 槽 + 环形覆盖，见其注释） */
+    int slot = ProjSlotTakeV47(data);
+    const bool isNew = (g_projSlotV36[slot].data != data);
+    if (isNew) {
         g_projSlotV36[slot].data = data;
         g_projSlotV36[slot].base = (cnt0 < kProjCountMax) ? cnt0 : kProjCountMax;
-        isNew = true;
     }
     int used = 0;
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < kProjSlotN; i++)
         if (g_projSlotV36[i].data) used++;
     int32_t target = (int32_t)((float)g_projSlotV36[slot].base * kProjFanout + 0.5f);
     if (target < 1) target = 1;
     if (target > kProjCountMax) target = kProjCountMax;
+    /* ★★v47 防闪退兜底（本节的核心）：**预算闸 + 看门狗**。
+     *  顺序很重要：先算 target，再问预算 —— 预算按「本次将放出多少发」计费。 */
+    if (!ProjBudgetTakeV47((uint32_t)target)) {
+        /* 被限流：① 顺手把已经写进配置对象的放大值还原（降级窗口内不留脏数据）；
+         *          ② **按游戏原值透传**（不写 `_count`）—— 只少放大，绝不改小。 */
+        ProjRestoreAllV47();
+        return;
+    }
     bool wrote = false;
     int32_t cntAfter = cnt0;
     if (*cv != target) {
@@ -2906,36 +3118,37 @@ static void ApplyProjectileExecBoost(void* a1, uint8_t argBase) {
         wrote = true;
         g_projSetV36.fetch_add(1, std::memory_order_relaxed);
     }
-    /* activeLimit：`Execute` IL_14EC `get_activeCountLimit() / IL_14F3 ble.s` ⇒ 引擎**只有 >0 才做上限检查**
-     * （`GameObjectManager::CheckProjectileActiveCountLimit 0x0601E996`：`activeCount <= limit` 直接 return，
-     *  否则 Dispose 最老那发）⇒ `0` = **不限制、不该动**，只把 >0 的值抬到 target。 */
-    int32_t limBefore = 0, limAfter = 0;
-    const size_t lofs[2] = {g_projFldV34.activeLimit, g_projFldV34.activeLimitTag};
-    for (int i = 0; i < 2; i++) {
-        const size_t o = lofs[i];
-        if (!o || o > 0x400) continue;
-        const uintptr_t fp = (uintptr_t)data + o;
-        if (!Il2Cpp::IsReadableRange(fp, 4)) continue;
-        int32_t* v = reinterpret_cast<int32_t*>(fp);
-        if (*v <= 0 || *v > 10000) continue;
-        if (i == 0) limBefore = *v;
-        if (*v < target) {
-            *v = target;
-            if (i == 0) limAfter = *v;
-            wrote = true;
-            g_projLimitSetV36.fetch_add(1, std::memory_order_relaxed);
-        } else if (i == 0) {
-            limAfter = *v;
-        }
+    /* ★★v47：**不再写 `_activeCountLimit` / `_activeCountLimitWithTag`**（防闪退兜底，本版关键改动）。
+     *
+     *  旧实现（v36~v46b）：`if (*v > 0 && *v < target) *v = target;`
+     *  注释理由是「引擎只有 >0 才做上限检查，所以把上限抬到 target 才能让 5 倍弹幕都活着」。
+     *  但这条恰好**把引擎唯一的回收闸门关掉了**：
+     *    `GameObjectManager::CheckProjectileActiveCountLimit 0x0601E996` 的语义是
+     *    「`activeCount > limit` 就 `Dispose` 最老那发」= 游戏自带的**同时在场投射物上限**。
+     *    我们把它从配置值（例如 30）抬到 target（最多 200）⇒ 同时在场的投射物从 30 变 200，
+     *    再叠加 `_count ×5` 的发射速率 ⇒ 「每秒新增对象数」与「常驻对象数」**同时**放大约 5~6 倍，
+     *    而且**持续整个会话**（`_count` 写在游戏的技能配置对象上，不是一次性效果）。
+     *    这与用户报的「**玩久了**掉帧、最后闪退」是同一形状：对象/内存压力单调累积到 OOM 或
+     *    某次 GC/分配失败，而不是某一击瞬间爆掉。
+     *  ⇒ 保留引擎自带的上限（它的回收策略是游戏作者调过的）。代价只是「同时在场数」不再被我们
+     *    额外抬高；`_count` 的放大**完全保留** ⇒ 单次技能的段数/伤害增益不受影响。
+     *  （`limit == 0` 时旧实现本来也是不写 —— 这里只是把「>0 也写」这条去掉。） */
+    if (g_projFldV34.activeLimit || g_projFldV34.activeLimitTag) {
+        static std::atomic<uint32_t> s_limLog{0};
+        const uint32_t ln = s_limLog.fetch_add(1, std::memory_order_relaxed);
+        if (ln < 3)
+            DBGLOG(TPL_LOG
+                 " PROJ v47：activeLimit 保持游戏原值不写（off=+0x%zx/+0x%zx）—— 保留引擎回收闸门",
+                 g_projFldV34.activeLimit, g_projFldV34.activeLimitTag);
     }
     const uint32_t n = g_projMainLogV36.fetch_add(1, std::memory_order_relaxed);
     if (wrote && (n < 40 || (n % 50) == 0))
         DBGLOG(TPL_LOG
              " 投射物#%u data=%p ★Execute帧 count %d→%d★ (目标%d) 槽%d/已用%d/挤掉%u次%s "
-             "activeLimit %d→%d acd=%p",
+             "acd=%p | 本秒预算已用=%u 上限=%u",
              n, data, cnt0, cntAfter, target, slot, used,
-             g_projSqueezedV36.load(std::memory_order_relaxed), isNew ? " ★新对象★" : "", limBefore,
-             limAfter, acd);
+             g_projSqueezedV36.load(std::memory_order_relaxed), isNew ? " ★新对象★" : "", acd,
+             g_projEmitSec.load(std::memory_order_relaxed), kProjBoostPerSecMax);
     else if (!wrote && (n < 8 || (n % 200) == 0))
         DBGLOG(TPL_LOG " 投射物#%u Execute帧 已是目标值 count=%d (目标%d) data=%p", n, cnt0, target, data);
 }
@@ -3190,8 +3403,8 @@ struct LearnLockGuard {
 static bool LearnRegister(const char* nm, void* klass, uint16_t kind, uint8_t argBase) {
     LearnLockGuard guard;
     const uint32_t mask = kLearnSlots - 1;
-    const uint32_t h = ((uint32_t)((uintptr_t)nm >> 4) * 2654435761u) >> 26;
-    for (uint32_t p = 0; p < 8; p++) {
+    const uint32_t h = LearnHash((uintptr_t)nm);  // ★v47：与 InterpDispatch 共用同一套哈希/位移
+    for (uint32_t p = 0; p < kLearnProbeMax; p++) {
         LearnSlot& s = g_lslot[(h + p) & mask];
         const char* cur = __atomic_load_n(&s.name, __ATOMIC_ACQUIRE);
         if (cur == nm) {
@@ -3405,12 +3618,24 @@ static void LearnProbeRollWindow() {
 /** ★热路径（每次热更方法调用都过一遍）：1 次读 + 1~2 次指针比较。
  *  **禁止** maps 查询 / 字符串遍历 / 除法 / 日志 / 碰 a1 —— 这里每多 10 个周期，一场战斗就多 ~1.5e8 周期。 */
 static void InterpDispatch(void* a0, void* a1, void* a2, bool allowWrite) {
+    /* ★v47 防闪退兜底：**碰 a0 之前先做一次零 I/O 的廉价自证**（对齐 + 用户态区间），
+     *  不合规立刻透传。理由（同型血证的直接教训）：v26g 那次崩就是「入口热路径上直接解引用
+     *  一个没验过的指针」→ `SIGSEGV in libstarry_magic.so+0x1a338`，从此 a1 只在身份确认后才碰；
+     *  但 a0 一直是无条件读 `+0x18`/`+0x20` 的 —— 两个挂点各有一条来源：
+     *    · `Hooked_Interp` 的 a0 来自 `0x207F798` 的第 1 参（约定是 MethodInfo*）；
+     *    · `Hooked_PushFrame` 的 mi 来自 `0x207DCCC` 的 **x1** —— 那 16 个调用点里
+     *      混进一个「x1 不是 MethodInfo」的调用（例如控制流旁路/被优化的分支），
+     *      或者模块尚在重定位中，我们对 `mi+0x18` 的读就是一次野读。
+     *  代价：两条整数指令（无 maps 查询、无原子、无分支预测代价大的路径）——
+     *  与「一场战斗 1.5e7 次调用」（文件头 §⑩a 注释里的量级）相比可忽略。
+     *  注意**不要**在这里用 `starptr::LiveFastCounted`（它每次判都做 3 次原子 RMW）。 */
+    if (!starptr::IsAligned(a0) || !starptr::InUserVa(a0)) return;
     const uintptr_t nu = RawWord(a0, 0x18);  // MethodInfo+0x18 = 方法名字符串指针
     if (!nu) return;
     const uint32_t mask = kLearnSlots - 1;
-    const uint32_t h = ((uint32_t)(nu >> 4) * 2654435761u) >> 26;
+    const uint32_t h = LearnHash(nu);  // ★v47：与 LearnRegister 共用同一套哈希/位移
     const uintptr_t ku = RawWord(a0, 0x20);  // MethodInfo+0x20 = 类（同名不同类必须区分）
-    for (uint32_t p = 0; p < 8; p++) {
+    for (uint32_t p = 0; p < kLearnProbeMax; p++) {
         LearnSlot& s = g_lslot[(h + p) & mask];
         const char* cur = __atomic_load_n(&s.name, __ATOMIC_ACQUIRE);
         if (cur == (const char*)nu) {
@@ -3437,11 +3662,10 @@ static void InterpDispatch(void* a0, void* a1, void* a2, bool allowWrite) {
     /* ★v27：首字节不在目标名单（Hurt/DoAttack/Damage/get_localDamage/PlayADVideo/
      *  OnADVideoResult/DispatchResult/CanClaimReward ⇒ H D g P O C）就直接返回，
      *  连 `InterpLearn` 都不进（一次 load + 一次位测试）。
-     *  ★v28 追加：放 `set_damage*`（伤害公式参数 setter，首字节 's'）进来 ——
-     *  只认这 10 个字符的前缀，`set_*` 家族里的其它几千个名字照旧被挡在慢路径之外。 */
-    if (!(g_firstMask[c0 >> 3] & (uint8_t)(1u << (c0 & 7))) &&
-        strncmp((const char*)nu, "set_damage", 10) != 0)
-        return;
+     *  ★v47：**删掉 v28 追加的 `set_damage*` 放行**（那 4 项目标已从 `kKinds` 移除，
+     *  见其处注释）—— 放它们进慢路径只会做一整轮 strcmp 后什么都匹配不到，
+     *  而且在负载高的战斗里还占着慢路径预算（`kLearnBudget`）。 */
+    if (!(g_firstMask[c0 >> 3] & (uint8_t)(1u << (c0 & 7)))) return;
     InterpLearn((const char*)nu, a0, a1, a2, allowWrite);
 }
 
@@ -4665,7 +4889,9 @@ struct StateFldCacheV34 {
     int id;
 };
 static StateFldCacheV34 g_stateFldV34[8] = {};
-__attribute__((unused)) static size_t StateFieldOffV34(void* state, const char* name, int id) {
+/* ★v47：本函数**重新启用**（v34 之后一直挂着 `__attribute__((unused))`）—— 见下方
+ *  `InvStateWriteV47`：无敌的免疫位改成「**按字段名优先**、按名失败才退回旧硬偏移」。 */
+static size_t StateFieldOffV34(void* state, const char* name, int id) {
     if (!state || !name) return 0;
     auto& api = Il2Cpp::GetApi();
     if (!api.object_class) return 0;
@@ -4688,6 +4914,74 @@ __attribute__((unused)) static size_t StateFieldOffV34(void* state, const char* 
             DBGLOG(TPL_LOG " V34 state 字段 %s +0x%zx cls=%s", name, off, api.class_name(k));
     }
     return ok ? off : 0;
+}
+
+/** ★v47 —— #2 无敌的免疫位写入：**按字段名优先，按名失败才退回旧硬偏移**。
+ *
+ *  为什么必须做这一步（把仓库里已有的两条自相矛盾的记录摆在一起就看出来了）：
+ *   · 本文件 §v31 的 IL 定案注释（**元数据级证据**）写明：
+ *     「`CBattleActorUtil::IsDamageImmune 0x0601E262` 只读 `target.get_state().immuneDamage`
+ *       （FieldDef **0x04017E2D**）⇒ 置该位后 `Hurt` 立刻 `SetValue(0)`」；
+ *     —— 即**游戏真正读的**是 `state` 对象上名为 `immuneDamage` 的那个字段。
+ *   · 而本文件 v34 的「全面自查结论之三」写明：`ActorApplyTick` 的无敌块写的是**硬编码**
+ *     `e.state + 60/61/62/63/70/76`，并且那几个 1「一直写进了**别的状态字节**，
+ *     玩家免疫位从未真正置上 ⇒ 这就是『开无敌还会掉血』的成因之一」。
+ *  ⇒ 结论：硬偏移**不可信**（写错位置 = 既没生效、又污染了无关状态字节——后者本身就是闪退/失控
+ *     的一类种子），而按名字段解析是**有元数据依据**的那条路。
+ *
+ *  行为（三级，全部 fail-safe）：
+ *   ① 按名解析 `immuneDamage` 成功 ⇒ 只写**解析出来的**那几个字段（同族的名字各自解析，
+ *      解析不到的就不写），**完全不碰**旧硬偏移；
+ *   ② 按名解析失败 ⇒ 退回旧硬偏移写法（保留 v46b「已验证可用」的行为，不做无证据的削弱）；
+ *   ③ `e.state` 本身不可读/未解析 ⇒ 一个字节都不写。
+ *  无论哪一级，写之前都要求**目标地址可读**（`recheck` 为假时用零 I/O 的区间判据兜一道）。 */
+static void InvStateWriteV47(void* state, bool recheck) {
+    if (!state) return;
+    auto& api = Il2Cpp::GetApi();
+    const uintptr_t st = (uintptr_t)state;
+    if (!starptr::IsAligned(st) || !starptr::InUserVa(st)) return;
+    if (recheck && !AddrOk(st, 0x60)) return;
+    /* ① 按名解析（结果按类缓存；`StateFieldOffV34` 内部自带 8 项缓存与范围闸） */
+    static const char* const kNames[5] = {"immuneDamage", "immunePhysicalDamage", "immuneMagicDamage",
+                                          "immuneDebuff", "invincible"};
+    static const int kIds[5] = {101, 102, 103, 104, 105};
+    size_t offs[5] = {0, 0, 0, 0, 0};
+    int have = 0;
+    for (int i = 0; i < 5; i++) {
+        offs[i] = StateFieldOffV34(state, kNames[i], kIds[i]);
+        if (offs[i]) have++;
+    }
+    if (offs[0]) {  // `immuneDamage` 是 IL 里被读的那一个 ⇒ 它解析成功才认「按名这条线成立」
+        static std::atomic<uint32_t> s_byName{0};
+        for (int i = 0; i < 5; i++) {
+            if (!offs[i]) continue;
+            if (recheck && !AddrOk(st + offs[i], 1)) continue;
+            SetByte(st + offs[i], 1);
+        }
+        const uint32_t n = s_byName.fetch_add(1, std::memory_order_relaxed);
+        if (n < 8)
+            DBGLOG(TPL_LOG
+                 " V47 INV 按名写免疫位 state=%p immuneDamage=+0x%zx(+%d个同族) 旧硬偏移未使用",
+                 state, offs[0], have);
+        return;
+    }
+    /* ② 按名失败 ⇒ 退回 v46b 的硬偏移（并在日志里说清走的是哪条路） */
+    static std::atomic<uint32_t> s_byOff{0};
+    const uint32_t m = s_byOff.fetch_add(1, std::memory_order_relaxed);
+    if (m < 8)
+        LOGW(TPL_LOG
+             " V47 INV 按名解析不到 immuneDamage → 退回旧硬偏移 60/61/62/63/70/76（v46b 行为）state=%p",
+             state);
+    if (recheck ? AddrOk(st + 60, 4) : true) {
+        SetByte(st + 60, 1);  // immuneDamage
+        SetByte(st + 61, 1);  // immunePhysicalDamage
+        SetByte(st + 62, 1);  // immuneMagicDamage
+        SetByte(st + 63, 1);  // immuneDebuff
+    }
+    if (recheck ? AddrOk(st + 70, 1) : true) {
+        SetByte(st + 70, 1);  // invincible
+        SetByte(st + 76, 1);  // v33 原样的第二枚
+    }
 }
 
 /** `ActionGameObject::_state` 偏移；解析失败回退 v26s 实测的 64。 */
@@ -6031,17 +6325,11 @@ static void ActorApplyTick() {
          *  于是怪物被写上 `immuneDamage=1` ⇒ 「小怪 0 血但不死、还能动」。 */
         if (kActorWritesInv && wantInv && isPlayer) {
             /* ★v34→**回退**（用户 m02501：「还把无敌改坏了…你快别改」）：逐字节恢复 v33 你已验证
-             *  「#2 单独开没问题」的硬编码偏移写法（v34 的按名解析已移除）。 */
-            if (e.state && (recheck ? AddrOk(e.state + 60, 4) : true)) {
-                SetByte(e.state + 60, 1);   // immuneDamage —— `IsDamageImmune` 只读这一个
-                SetByte(e.state + 61, 1);   // immunePhysicalDamage
-                SetByte(e.state + 62, 1);   // immuneMagicDamage
-                SetByte(e.state + 63, 1);   // immuneDebuff
-            }
-            if (e.state && (recheck ? AddrOk(e.state + 70, 1) : true)) {
-                SetByte(e.state + 70, 1);   // invincible
-                SetByte(e.state + 76, 1);   // 保留 v33 原样的第二枚
-            }
+             *  「#2 单独开没问题」的硬编码偏移写法（v34 的按名解析已移除）。
+             *  ★v47：改走 `InvStateWriteV47` —— **按字段名优先、按名失败才退回上面这套硬偏移**。
+             *  理由见该函数注释（IL 明写游戏读的是 `state.immuneDamage`，而 v34 自查发现硬偏移
+             *  写的是别的字节并污染无关状态）；两条路都保留，所以不会比 v46b 更弱。 */
+            InvStateWriteV47((void*)e.state, recheck);
             /* v26t：**所有** CharacterData 候选的属性表都顶满（`_attributes[23] = _attributes[22]`），
              *  BigInt 数组同步（`Character::CheckDead` 首行读的正是 get_healthPointNowBigInt()）。
              *  v26s3 血证：只写一个候选时玩家照样被打死、`phyDmg×50` 也毫无效果 ⇒ 游戏读的是另一个候选。 */
@@ -6225,9 +6513,17 @@ bool Mxytz_TryInit(JavaVM* /*vm*/) {
     /* v44 清理：原来这里是 `if (kProbeDump) { … }` 的类名/camp 字段探测（g_offCamp / g_playerKlass）。
      *  身份判据早已换成 **roleId**（v40 `RoleIdOfV40` + `PlayerSideV41`），类名路线不再需要。 */
 
-    DBGLOG(TPL_LOG " step3 classes done -> para layout");
-    ResolveParaLayout();  // 先解析并落日志（诊断）：装钩时会再解析一次，幂等
-    DBGLOG(TPL_LOG " step4 para layout done");
+    /* ★v47：**启动期不再跑 `ResolveParaLayout()`**（防闪退兜底）。
+     *  它是 `FindClassAnywhere("CtagHurtHPPara")` + `FindClassAnywhere("BigInt")`，
+     *  每次都是一次**全镜像类遍历**（13755 个类，375ms~1s），而且是在
+     *  「il2cpp 刚完成 domain/assembly 初始化」的窗口里跑 —— v44 清理注释里那条
+     *  Boehm GC `GC_exclude_static_roots_inner` → `abort("Exclusion ranges overlap")`
+     *  就是大范围 image/class 遍历的嫌疑人；这一步同时把启动时间顶长。
+     *  偏移不再需要在启动期钉死，两条兜底都已存在且更可靠：
+     *    ① `InstallDmgHooks()` 装钩时补一次（v26x 已写的注释：「必须在这里补一次」）；
+     *    ② `ApplyHurtPolicy` 在**第一次真的分发到 `Hurt`** 时用活体对象反查
+     *       （`ResolveParaLayoutFromObj`，3 次 `class_get_field_from_name`，µs 级、零遍历）。 */
+    DBGLOG(TPL_LOG " step3 classes done（v47：para layout 延后到装钩/首次 Hurt，启动期不做全镜像遍历）");
     /* v44 清理：原来这里跑 `InstallProbeDump()`（字段/实例探测，省 15s 卡顿的「大件诊断」），
      *  已随 kProbeDump 一起删除 —— 偏移早已标定固化，无需再探。 */
     SyncHooks();
@@ -6261,7 +6557,21 @@ void Mxytz_OnFeatureChanged(int featNum, bool enabled) {
         g_pendAdReady.store(0, std::memory_order_relaxed);
         g_adV43FuseUntilMs.store(0, std::memory_order_relaxed);
         AdForceGateReset();  // ★v46b：一次性门重新上膛
-        LOGI(TPL_LOG " AD43 待办/熔断窗口已清（免广告=%d）", enabled ? 1 : 0);
+        /* ★v47：免广告的「累计成功回调上限」改为**按激活期**计（见 `kAdV43MaxDone` 处注释）。
+         *  旧语义是进程级永久 30 次 —— 看满 30 个广告后这个功能会**静默永久失效**，
+         *  这正是用户报的「有时候功能会失效」的一种。现在每次开关都重新上膛。 */
+        g_adV43Done.store(0, std::memory_order_relaxed);
+        LOGI(TPL_LOG " AD43 待办/熔断窗口/配额已重置（免广告=%d）", enabled ? 1 : 0);
+    }
+    /* ★v47：#3 的「脏数据还原 + 限流状态重置」——**开关切换时立刻做**，不再只等下一次
+     *  `Execute` 帧路过才还原（旧实现只有 `InterpFire` 的 K_PROJEXEC 分支会还原，
+     *  如果关掉之后玩家的技能暂时不再施放，配置对象上就一直是放大值 ⇒ 用户看到
+     *  「功能都关了伤害还是很高」）。 */
+    if (featNum == MXYTZ_FEAT_SKILL_DMG) {
+        ProjRestoreAllV47();
+        ProjBudgetResetV47(true);
+        LOGI(TPL_LOG " PROJ #3开关=%d：已还原投射物 count 并重置限流/看门狗（槽%d）",
+             enabled ? 1 : 0, kProjSlotN);
     }
     /* ★v27：功能一开就**重开学习期**。目标方法是「按需调用」的 —— 尤其广告链路
      *  （`PlayADVideo` / `OnADVideoResult` / `DispatchResult`）只在玩家点广告时才被调用。
@@ -6321,6 +6631,55 @@ void Mxytz_Tick(const bool* features, const int* /*values*/) {
         if (!s_forcedLog) {
             s_forcedLog = true;
             DBGLOG(TPL_LOG " FORCETEST 三功能强制开启（自验用，交付前删除）");
+        }
+    }
+
+    /* ★★v47 修「**功能有时候会失效**」—— 学习期**周期性补学**（fail-open 方向：只多学，不夺权）。
+     *
+     *  旧的关闭语义是三选一：`LearnAllDone()` / 预算耗尽 / 窗口到期（10 分钟）。
+     *  关闭之后**没有任何再打开的通路**（除非用户手动关-开功能触发 `Mxytz_OnFeatureChanged`）。
+     *  而目标方法是**按需调用**的：某个模式/关卡/首领战里才第一次被调用到的类上，
+     *  只要那一轮没赶上学习窗口，它的 (名字, 类) 就**永远进不了表** ⇒ 那条功能在该场景里永久静默失效。
+     *  这正是用户说的「有时候功能会失效」（换模式/换关卡后某一项没反应，重启又好了）的形状。
+     *
+     *  兜底：每 30 秒检查一次「**已经打开**的功能里，是否还有目标没登记」——
+     *    · 有 ⇒ 重开一个 60 秒的学习窗口，并把缺口写进日志（下一轮可据此判断是哪个目标没学到）；
+     *    · 没有 ⇒ 什么也不做（零开销：只有几个原子读）。
+     *  开销上限：每次重开最多 60s 的慢路径，而慢路径已由首字节位图挡掉绝大多数无关名字。 */
+    if (g_learnActive.load(std::memory_order_relaxed) == 0) {
+        static uint64_t s_reopenMs = 0;
+        const uint64_t nowR = NowMs();
+        if (!s_reopenMs) s_reopenMs = nowR;
+        if (nowR - s_reopenMs > 30000ull) {
+            s_reopenMs = nowR;
+            const bool wantKill = g_killMob.load(std::memory_order_relaxed);
+            const bool wantInv = g_invincible.load(std::memory_order_relaxed);
+            const bool wantSkill = g_skillDmg.load(std::memory_order_relaxed);
+            const bool wantAd = g_noAd.load(std::memory_order_relaxed);
+            char miss[160] = {0};
+            size_t w = 0;
+            size_t need = 0;
+            for (size_t i = 0; i < kKindN; i++) {
+                const uint16_t k = kKinds[i].kind;
+                bool wanted = false;
+                if (k & K_HURT) wanted = wantKill || wantInv || wantSkill;
+                if (k & K_DOATTACK) wanted = wantInv;
+                if (k & (K_PROJ | K_PROJEXEC)) wanted = wantSkill;
+                if (k & (K_PLAYAD | K_ADRESULT | K_ADREWARD | K_CANCLAIM)) wanted = wantAd;
+                /* K_DAMAGE / K_LOCALDMG 是「只取证」目标，缺了不影响任何功能 ⇒ 不参与补学 */
+                if (!wanted) continue;
+                if (__atomic_load_n(&g_kindDone[i], __ATOMIC_RELAXED) == 1) continue;
+                need++;
+                const int r = snprintf(miss + w, sizeof(miss) - w, "%s(%s) ", kKinds[i].tag, kKinds[i].cls);
+                if (r > 0 && (size_t)r < sizeof(miss) - w) w += (size_t)r;
+            }
+            if (need) {
+                g_interpCalls.store(0, std::memory_order_relaxed);
+                g_learnMs.store(0, std::memory_order_relaxed);
+                g_learnActive.store(1, std::memory_order_relaxed);
+                LOGI(TPL_LOG " interp learn ★补学窗口重开★（已开功能仍有 %u 个目标未登记：%s）", (unsigned)need,
+                     miss);
+            }
         }
     }
 
@@ -6408,6 +6767,22 @@ void Mxytz_Tick(const bool* features, const int* /*values*/) {
                  g_adGateSkip[kAdGateCanClaim].load(), g_adGatePass[kAdGateVResult].load(),
                  g_adGateSkip[kAdGateVResult].load(), g_adGatePass[kAdGateInterp].load(),
                  g_adGateSkip[kAdGateInterp].load());
+            /* ★v47 诊断行：#3 的**限流/看门狗**可见性（用户报「玩久了掉帧闪退是技能伤害增加
+             *  导致的」→ 下一轮用真机日志判断预算该调大还是调小，而不是继续凭猜）。
+             *  判读：`单秒峰值` 一直贴着 `上限`（或 `拦下` 持续增长）= 场面确实被限流，
+             *  说明预算取小了；`降级=0 拦下=0` 且峰值远低于上限 = 正常游玩不触发兜底。
+             *  `槽` = 当前记录的「被放大过的技能配置对象」数量（还原表的占用），越大越接近槽容量。 */
+            {
+                uint32_t slotUsed = 0;
+                for (int i = 0; i < kProjSlotN; i++)
+                    if (g_projSlotV36[i].data) slotUsed++;
+                const uint64_t su = g_projSuspendUntilMs.load(std::memory_order_relaxed);
+                LOGI(TPL_LOG
+                     " STATS-PROJ fanout=%.1f 上限%d/次 预算%d/秒 | 单秒峰值=%u 拦下=%u 降级=%u 挂起=%s | 写count=%u 槽=%u/%d",
+                     (double)kProjFanout, (int)kProjCountMax, (int)kProjBoostPerSecMax,
+                     ProjEmitPeakTakeV47(), g_projBudgetSkip.load(), g_projSuspendN.load(),
+                     (su && NowMs() < su) ? "是" : "否", g_projSetV36.load(), slotUsed, kProjSlotN);
+            }
         }
     }
 
@@ -6428,7 +6803,12 @@ void Mxytz_ForceClear() {
     g_noAd.store(false);
     g_pendAdReady.store(0, std::memory_order_relaxed);  // ★v46：清掉未执行的免广告待办
     g_adV43FuseUntilMs.store(0, std::memory_order_relaxed);
+    g_adV43Done.store(0, std::memory_order_relaxed);     // ★v47：配额一起重新上膛
     AdForceGateReset();                                  // ★v46b：一次性门重新上膛
+    /* ★v47：ForceClear 也要把 #3 写进游戏配置对象的 `_count` 还原（旧实现漏了这一步 ——
+     *  它是「全部关闭后伤害还是很高」这类残留的另一条来源），并清空限流/看门狗状态。 */
+    ProjRestoreAllV47();
+    ProjBudgetResetV47(true);
     DBGLOG(TPL_LOG " ForceClear hits dmg=%u inv=%u skill=%u ad=%u", g_hitDmg.load(), g_hitInv.load(),
          g_hitSkill.load(), g_hitAd.load());
 }
