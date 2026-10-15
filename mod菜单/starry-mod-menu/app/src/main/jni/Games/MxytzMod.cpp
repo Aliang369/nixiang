@@ -67,6 +67,9 @@ using Il2Cpp::GetApi;
  *  交付包只保留四类行：开机/挂载（`lib ready` / `* armed` / `* installed`）、菜单开关（`feat`）、
  *  免广告链路（`↑v43 预登记` / `AD43`）、以及每 30s 一条 `STATS` 汇总。
  *  排障时把下面的 0 改成 1 重编即可把全部诊断行放回来（代码没删，只是不编译进去）。 */
+/* ★v50 交付档：诊断闸关回 0（v49 诊断轮的普查结论已固化在文档里：
+ *   两条入口 `ProtocolManager::sendEvent` 与 `DS_Advertising::OnGetADInfoRsp` **都经过**我们的挂点；
+ *   结构发现在 `EventItemInt+0x20` 拿到 `Proto_CSRsp`。此后只需看 AD50 自检行）。 */
 #define MXYTZ_VERBOSE 0
 #if MXYTZ_VERBOSE
 #define DBGLOG(...) LOGI(__VA_ARGS__)
@@ -1867,6 +1870,19 @@ enum : uint16_t {
      *  另外：17 参方法的第 4 个实参经 `IL_0106 ldarg.s 4 / switch(get_direction())` 只喂给
      *  `ProjectileFactory::CreatProjectile(...) 0x0601EB3A` ⇒ 那是**方向值**，v37/v38 写它是错的（已撤）。 */
     K_PROJEXEC = 1u << 10,
+    /* ★v48：**#4 免广告的「不出画」落点** —— `DS_Advertising::OnGetADInfoRsp(Proto_CSRsp)`
+     *  （token `0x06001253`，argc=1，实例方法）。铁证见 `ApplyNoAdRspV48` 的整条 IL 注释：
+     *  游戏在这一帧里判断 `start_watch_ad_rsp.result`，**等于 0 才去调 `PlayADVideo` 拉 SDK**；
+     *  非 0（尤其 `==2`「已使用免广告特权跳过观看」）则改走它自己的 `DispatchResult(ad_id,true)`。
+     *  ⇒ 在建帧时刻把 `result` 写成 2，广告就**根本不会被拉起**（v47 只是「代回调发奖」，
+     *    所以用户真机看到「奖励到手了、广告照样跳出来」）。 */
+    K_GETADRSP = 1u << 11,
+    /* ★v49：**委托跳不可见，但它的调用者可见** —— 真机 C# 栈证据：
+     *   `Engine:FixedUpdate → ProtocolManager:update → ProtocolManager:sendEvent(EventItemInt)
+     *    → [委托跳：不可见] → DS_Advertising:OnGetADInfoRsp(Proto_CSRsp)`
+     *  `sendEvent` 是热更→热更调用（pushframe，实测可见），且**先于** `OnGetADInfoRsp` 执行
+     *  ⇒ 在这一帧用**结构发现**取出 `Proto_CSRsp`，就能在 `get_result()` 被读之前写 `result=2`。 */
+    K_SENDEVENT = 1u << 12,
 };
 
 struct KindDef {
@@ -1914,6 +1930,12 @@ static const KindDef kKinds[] = {
      *  学习期日志 `LEARN 拒 ActionCommand_AddProjectile::Execute ← 实际 EventDelegate::Execute`
      *  就是这条判据在起作用）。 */
     {"ActionCommand_AddProjectile", "Execute", K_PROJEXEC, "ProjExec"},
+    /* ★v48：#4 免广告「不出画」的落点（见 `K_GETADRSP` 与 `ApplyNoAdRspV48`）。
+     *  类名必须一起比 —— `OnGetADInfoRsp` 是网络回调，别的方法名混不进来，但仍按 §⑩a 的
+     *  「名字 + 类」双键登记（LearnSlot::klass），与其它目标一致。 */
+    {"DS_Advertising", "OnGetADInfoRsp", K_GETADRSP, "GetAdRsp"},
+    /* ★v49：走得到的落点（见 `K_SENDEVENT`）。类名一起比；argc 用 1（`sendEvent(EventItemInt)`）。 */
+    {"ProtocolManager", "sendEvent", K_SENDEVENT, "SendEvent"},
 };
 static const size_t kKindN = sizeof(kKinds) / sizeof(kKinds[0]);
 
@@ -1940,6 +1962,11 @@ static LearnSlot g_lslot[kLearnSlots] = {};
 static std::atomic<uint32_t> g_learnActive{0};  // 0 = 学习期已关（热路径只剩纯指针表查）
 static std::atomic<uint32_t> g_learnMs{0};      // 学习窗口起点（Tick 写）
 static uint8_t g_kindDone[kKindN] = {};         // 1 = 已登记 / 2 = 类名核对拒绝（只作跳过提示）
+/* ★v50：**预登记**标记（`PreRegisterKindV43` 成功登记过的目标）。
+ *  为什么需要：预登记只往快表写槽、**不置 `g_kindDone`**，于是 v47 的「补学」检查会把它们
+ *  永远当成"未登记" ⇒ 每 30 秒重开一次 60 秒学习窗（真机 v47 日志可见 `slow=` 持续增长）。
+ *  补学只该管「*没*预登记、又一直没被慢路径学到」的目标。 */
+static uint8_t g_kindPre[kKindN] = {};
 static const char* g_rejectNm[16] = {};         // 类名核对失败的名字指针（避免每次重复核对）
 static uintptr_t g_rejectKls[16] = {};          // ★v40：**类指针也进键**（见 InterpLearn 的 v40 注释）
 static uint32_t g_rejectN = 0;
@@ -2442,6 +2469,13 @@ static std::atomic<uint32_t> g_adRegTryV43{0};
 static std::atomic<uint32_t> g_adV43Seen{0};
 static std::atomic<uint32_t> g_adV43Done{0};
 static std::atomic<uint32_t> g_adV43Fuse{0};        // 熔断**次数**（只作 STATS 可见性，不再永久关死）
+/* ★v48：`OnGetADInfoRsp` 路径（见 `ApplyNoAdRspV48`）的独立计数 —— 用来在真机日志里
+ *  一眼分辨「广告是被这条新路径拦下的」还是「回落到 v47 的 PlayADVideo 路径」。 */
+static std::atomic<uint32_t> g_adV48Seen{0};        // 入口①（OnGetADInfoRsp）把 rsp 送进核心的次数
+static std::atomic<uint32_t> g_adV48Wrote{0};       // 成功把 result 写成 2 的次数（= 不拉 SDK）
+/* ★v49：入口②（`ProtocolManager::sendEvent`）的独立计数 —— 与入口①分开，日志里一眼看出是哪条路生效。 */
+static std::atomic<uint32_t> g_adV49Event{0};       // sendEvent 帧被分发到的次数
+static std::atomic<uint32_t> g_adV49Found{0};       // 结构发现在该帧里找到 rsp 的次数
 static constexpr uint32_t kAdV43MaxDone = 100;
 /* ★v47：这个上限原本是**进程级永久** 30 次 —— 看满 30 个广告之后 `DrainPendingAdV43` 会
  *  在 `g_adV43Done >= kAdV43MaxDone` 处静默 `return`，功能**永久失效**且没有任何提示。
@@ -2484,6 +2518,10 @@ static bool Il2CppU64OfStringV43(void* s, uint64_t* out) {
  *  ⇒ 两个方向互相递归，UnityMain 560 帧把栈涨破 8MB 保护页
  *  （`Fatal signal 11 SIGSEGV SEGV_ACCERR fault addr 0x743401ffc8`，sp 距栈顶仅 0x70 字节）。
  *  熔断：一次异常降级 30 秒（不再永久停用整条链路）；累计成功回调上限 `kAdV43MaxDone`。 */
+/* ★v48：登记闸的前置声明（定义在下方 `ApplyNoAdV43` 之后，两条登记路径共用；
+ *  这里只是为了「先声明后使用」—— `ApplyNoAdV43` 也要用它）。 */
+static bool NoAdEnqueueGatedV48(int32_t adId, uint64_t uuid, const char* src);
+
 static void ApplyNoAdV43(void* a1, uint8_t argBase) {
     if (!a1) return;
     /* 冷路径才允许做可读性检查（走 maps 快照，慢）：两个实参槽必须都在可读映射内。 */
@@ -2498,12 +2536,469 @@ static void ApplyNoAdV43(void* a1, uint8_t argBase) {
         LOGI(TPL_LOG " AD43 PlayADVideo 免广告=%d adid=%d uuidStr=%p uuid=%llu 解析=%d mi=%p",
              on ? 1 : 0, adId, ustr, (unsigned long long)uuid, parsed ? 1 : 0, g_miOnAdResultV43);
     if (!on || !parsed || !g_miOnAdResultV43) return;
-    if (g_adV43FuseUntilMs.load(std::memory_order_relaxed) > NowMs()) return;
-    if (g_adV43Done.load(std::memory_order_relaxed) >= kAdV43MaxDone) return;
-    /* ★v46：登记待办（不 invoke）。同批多次 `PlayADVideo` 会被合并成一次回调 ——
-     *  这既省掉重复 invoke，也直接砍掉「一次调用变两次」的递归放大。 */
-    EnqueueNoAdV43(adId, uuid, "interp");
+    /* ★v48：闸①熔断窗口 / 闸②累计配额 / mi 就绪 —— 抽成 `NoAdEnqueueGatedV48` 与
+     *  `OnGetADInfoRsp` 路径共用（判据只留一份，避免两处漂移）。 */
+    NoAdEnqueueGatedV48(adId, uuid, "interp");
 }
+
+/** ★v48：登记前统一过闸（熔断窗口 / 累计配额 / 回调 MethodInfo 是否就绪）。
+ *  两条登记路径（`ApplyNoAdV43` 的 PlayADVideo 帧、`ApplyNoAdRspV48` 的 OnGetADInfoRsp 帧）
+ *  共用，避免两处判据漂移。`src` 只进日志。 */
+static bool NoAdEnqueueGatedV48(int32_t adId, uint64_t uuid, const char* src) {
+    if (g_adV43FuseUntilMs.load(std::memory_order_relaxed) > NowMs()) return false;
+    if (g_adV43Done.load(std::memory_order_relaxed) >= kAdV43MaxDone) return false;
+    if (!g_miOnAdResultV43) return false;
+    EnqueueNoAdV43(adId, uuid, src);
+    return true;
+}
+
+/* ============================================================================
+ * ★★v48 #4 免广告「广告还是会跳出来」的**机制级修复**（用户 2026-10-16 实测：
+ *   「免广告可以获得奖励，但是广告还是会跳出来」）
+ *
+ * 先纠正一条被推翻的旧结论：v46b 记录「本机厂商 SDK 根本不出画」⇒ 当时以为
+ * `PlayADVideo` 不会被真正执行、于是只做了「代回调发奖」。**真机实测证明它会出画**
+ * ⇒ 只代回调不够，必须让游戏**根本不调** `PlayADVideo`。
+ *
+ * 铁证（官方 `Assembly-CSharp` 元数据 + IL，本机 dump `06_dumped/冒险与征途/aot/_tgt_il_ad2.txt`，
+ * 与 `_钩子目标与语义.md` §11 的调用链一致）——`DS_Advertising::OnGetADInfoRsp 0x06001253`：
+ *   ```
+ *   IL_0043: ldloc.0 / callvirt Proto_SCStartWatchAdRsp::get_result()
+ *   IL_0049: brtrue.s 31                      // result != 0 → 跳 IL_006A
+ *   IL_004B: ldsfld SDKProxy::Instance
+ *   IL_0050..005F: ad_id, uuid.ToString()
+ *   IL_0064: callvirt BaseSDKAdapter::PlayADVideo(int,string) -> void   ← ★广告从这里出画
+ *   IL_0069: ret
+ *   IL_006A: DispatchResult(ad_id, true)      // ← 官方「不需要看视频」分支（本地事件）
+ *   IL_0077: get_result() / ldc.i4.2 / bne.un ← result==2 时补一句提示
+ *   IL_0080: ldstr "已使用免广告特权跳过观看"
+ *   ```
+ *  ⇒ **`start_watch_ad_rsp.result != 0` 就是游戏自己的「免广告特权」开关**：
+ *     它走 `DispatchResult(ad_id,true)`（= `EventManager.send("Event_WatchADResult",[ad_id])`），
+ *     并且**永远到不了 `PlayADVideo`** ⇒ 厂商 SDK 不被拉起 ⇒ **不播广告**。
+ *
+ * 本函数在 `OnGetADInfoRsp` 的**建帧时刻**（方法体还没跑、`get_result()` 还没读）把
+ * `result` 写成 **2**（= 官方「已使用免广告特权跳过观看」那个值），于是：
+ *   ① 广告视频不再出现（IL 走 else 分支，`PlayADVideo` 一次都不会被调用）；
+ *   ② 游戏自己发本地事件 + 提示「已使用免广告特权跳过观看」（正是我们要的语义）；
+ *   ③ **发奖链路一字不改**：奖励仍由本 mod 的代回调走官方 `OnADVideoResult(true, ad_id, uuid)`
+ *      → `ReqADVideoResult` → cmd 2762（结果与 v46b/v47 完全一致，用户实测已通过的那条）。
+ *
+ * 为什么必须用「写服务端响应里的字段」而不是「不调 orig」：
+ *   `OnGetADInfoRsp` 与它要调的 `PlayADVideo` 都是**热更解释方法**，`callvirt` 走的是
+ *   解释器体内的**建帧桩** `0x207DCCC`（`Hooked_PushFrame`）——该桩的返回值 x0 被调用方
+ *   接着用于 `str x23,[x0,#0x18]`（frame->obj），**跳过 orig 会让调用方拿着野指针写内存**
+ *   ⇒ 在建帧桩上「不调 orig」物理上不成立。写数据字段则完全安全（`allowWrite=true`）。
+ *
+ * 自证三道（缺一不写，fail-safe；任何一步失败都退回「广告照播但奖励照发」的 v47 行为）：
+ *   ① 参数对象类名必须含 `Proto_CSRsp`；
+ *   ② 按名解析 `start_watch_ad_rsp` 拿到的子对象类名必须含 `SCStartWatchAdRsp`；
+ *   ③ 子对象上 `result` 字段按名解析成功且偏移 ≤0x400 ⇒ 此刻读到的值==0 才动（非 0 说明
+ *      服务端自己就不要求看，让它走原分支，我们只登记代回调）。 */
+/** ★v49：把 v48 的「写 result=2」逻辑抽成**核心**（入参 = 已经确认是 `Proto_CSRsp` 的对象）。
+ *  两个入口共用它：① `ApplyNoAdRspV48`（`DS_Advertising::OnGetADInfoRsp` 帧）；
+ *  ② `ApplyNoAdRspFromEventV49`（`ProtocolManager::sendEvent` 帧，结构发现拿到 rsp）。
+ *  **每一次 bail 都打日志**（前若干次）—— v48 全线静默，导致真机上无法判断「没进函数」
+ *  还是「进了但自证没过」，这一版把可观测性补齐（这是本轮唯一的诊断性改动）。 */
+/* ============================================================================
+ * ★v50 —— **不再猜字段名**：改成调用**游戏自己的 getter/setter**。
+ *
+ * v49 的真机证据（`AD50 结构发现：容器 cls=EventItemInt 的 +0x20 就是 Proto_CSRsp`，
+ * 紧接 `AD49 rsp 字段 cls=Proto_CSRsp start_watch_ad_rsp=+0x0`）：**两条入口都可见**
+ * （`INTERP SendEvent kinds=0x1000 … hit=0..11`、`INTERP GetAdRsp kinds=0x0800 … hit=0`），
+ * 结构发现也成功，唯独 `FieldOffset(Proto_CSRsp,"start_watch_ad_rsp")` 返回 **0** ——
+ * 说明 `Proto_CSRsp` 上那个字段**不叫这个名字**（该族类用的是自动属性 `<X>k__BackingField`
+ * 命名，本作已有实证：`ActionGameLibrary.DamageFactory::<IsPVPBattleMode>k__BackingField`、
+ * `InteractiveGameObject::<ZAxis>k__BackingField`，见 `06_dumped/…/aot/_tgt_il_df.txt:2273`、
+ * `_tgt_il_igo.txt:185`）。继续猜字段名是错的路子。
+ *
+ * 现在改为**逐字使用 IL 里出现的公开成员名**（`_tgt_il_ad2.txt` 的 `OnGetADInfoRsp 0x06001253`）：
+ *   `Proto_CSRsp::get_start_watch_ad_rsp()`   → 取子消息（不必知道它存在哪个字段）
+ *   `Proto_SCStartWatchAdRsp::get_result() / get_ad_id() / get_uuid()` → 读三个值
+ *   `Proto_SCStartWatchAdRsp::set_result(int)` → **写 2**（走游戏自己的 setter，连 protobuf 的
+ *                                               变更跟踪一起走，比裸写字段更"正"）
+ * 全部经 `runtime_invoke` 调用（本作已验证可用：免广告代回调 `DrainPendingAdV43`、
+ * `CdInvoke` 都走它；invoke 期间打 `t_modInvoke` 标 ⇒ 被调方内部的解释器入口跳过派发，
+ * 不构成帧内递归）。这些名字长且非混淆（`hook-rules.md` §24 指纹铁律）⇒ 可安全写死。
+ *
+ * 三级 fail-safe 与 v49 相同：不是 `Proto_CSRsp` / 取不到子消息 / 取不到 mi → 一个字节不写；
+ * `result != 0` → 不干预；**先登记代回调成功才写**（奖励优先）。写完再用 `get_result()` 复核。 */
+static void* NoAdMiGetV50(void* klass, const char* name, int argc) {
+    auto& api = Il2Cpp::GetApi();
+    void* mi = api.class_method ? api.class_method(klass, name, argc) : nullptr;
+    /* 降级：`Api::GetMethod` 内部先试 `class_method`，失败再走 `GetMethodScan`
+     *（class_methods 迭代 + 20000 次防御上限）。**只在按类缓存未命中时调用**，不在热路径。 */
+    if (!mi) mi = api.GetMethod(klass, name, argc);
+    return mi;
+}
+
+/* ============================================================================
+ * ★v51 —— **`runtime_invoke` 返回值约定的双读自证**（v50 真机血证驱动的修正）
+ *
+ * v50 真机日志（`AD50[sendEvent]/AD50[rsp] 子对象 cls=0WŐt 不是 SCStartWatchAdRsp`）证明：
+ * 我按「`r` = 指向 retval 槽的指针」去读**引用类型**返回值是错的 —— 实际 `r` **就是对象本身**
+ * （`*(void**)r` 读到的是对象的 klass，于是 `class_name(klass)` 打出 `0WŐt` 这种垃圾名字）。
+ * il2cpp 的 `il2cpp_runtime_invoke` 对**引用类型直接返回对象指针**、对**值类型**（bool/int/ulong）
+ * 另有约定（本作 `CdInvoke` 用 `*(uint8_t*)r` 读 bool 且实测能锁定真实现 ⇒ 值类型是「指向值的指针」
+ * 或「装箱后 +0x10」两种可能之一）。
+ *
+ * 所以这里不再赌约定，而是**双读 + 自证**（全部 fail-safe：任何一条不成立就返回失败，
+ * 让广告照播、奖励照发）：
+ *   · 引用类型：候选① `r` 本身是对象、候选② `*(void**)r` 是对象 —— **用期望的类名子串自证**
+ *     （`get_start_watch_ad_rsp` 只可能是 `SCStartWatchAdRsp`）；
+ *   · 值类型：候选① `*(T*)r`、候选② `*(T*)((char*)r + 0x10)`（装箱对象的数据区）——
+ *     用 **`ad_id` 必须在 [1, 100000)** 这条业务约束自证（真机实测 adid=7/13/17），
+ *     并把选中的约定**缓存 + 打一行日志**（`AD51 retval 约定=A|B`），之后不再双读。
+ * ============================================================================ */
+static int g_noAdRetvalDirectV51 = -1;  // -1 未定案 / 1 = 候选①（读 r） / 0 = 候选②（读 r+0x10）
+
+/** 按已定案的约定读一个 64 位值；`direct` 为 -1 时返回两个候选（供自证）。 */
+static void NoAdReadRawV51(void* r, int direct, uint64_t* out) {
+    *out = 0;
+    if (!r) return;
+    if (direct == 1) {
+        memcpy(out, r, 8);
+    } else if (direct == 0) {
+        memcpy(out, (const char*)r + 0x10, 8);
+    }
+}
+
+/** 调 0 参 getter 取 int32；`adIdHint=true` 时用「[1,100000)」自证并定案约定。 */
+static int32_t NoAdCallGetI32V51(void* mi, void* obj, bool* ok, bool adIdHint) {
+    *ok = false;
+    if (!mi || !LivePtr(obj)) return 0;
+    auto& api = Il2Cpp::GetApi();
+    if (!api.runtime_invoke) return 0;
+    void* exc = nullptr;
+    t_modInvoke++;
+    void* r = api.runtime_invoke(mi, obj, nullptr, &exc);
+    t_modInvoke--;
+    if (!r || exc) return 0;
+    const int direct = (g_noAdRetvalDirectV51 < 0) ? 1 : g_noAdRetvalDirectV51;
+    uint64_t raw = 0;
+    NoAdReadRawV51(r, direct, &raw);
+    int32_t v = (int32_t)(raw & 0xFFFFFFFFu);
+    if (g_noAdRetvalDirectV51 < 0 && adIdHint) {
+        /* 双读自证：候选① 不合理就试候选②，用业务约束（adid 是小正整数）定案 */
+        const bool okA = (v > 0 && v < 100000);
+        uint64_t rawB = 0;
+        NoAdReadRawV51(r, 0, &rawB);
+        const int32_t vB = (int32_t)(rawB & 0xFFFFFFFFu);
+        const bool okB = (vB > 0 && vB < 100000);
+        if (okA || okB) {
+            g_noAdRetvalDirectV51 = okA ? 1 : 0;
+            v = okA ? v : vB;
+            LOGI(TPL_LOG " AD51 retval 约定=%s 定案（adid 自证 raw=%llu/%llu r=%p）",
+                 okA ? "A(读 r)" : "B(读 r+0x10)", (unsigned long long)raw, (unsigned long long)rawB, r);
+        } else {
+            static std::atomic<uint32_t> s_nd{0};
+            if (s_nd.fetch_add(1, std::memory_order_relaxed) < 4)
+                LOGW(TPL_LOG " AD51 retval 约定未能定案（两种读法都不像 adid：%d/%d r=%p）", v, vB, r);
+            return 0;
+        }
+    }
+    *ok = true;
+    return v;
+}
+
+/** 调 0 参 getter 取 uint64（沿用已定案的约定）。 */
+static uint64_t NoAdCallGetU64V51(void* mi, void* obj, bool* ok) {
+    *ok = false;
+    if (!mi || !LivePtr(obj)) return 0;
+    auto& api = Il2Cpp::GetApi();
+    if (!api.runtime_invoke) return 0;
+    void* exc = nullptr;
+    t_modInvoke++;
+    void* r = api.runtime_invoke(mi, obj, nullptr, &exc);
+    t_modInvoke--;
+    if (!r || exc) return 0;
+    const int direct = (g_noAdRetvalDirectV51 < 0) ? 1 : g_noAdRetvalDirectV51;
+    uint64_t raw = 0;
+    NoAdReadRawV51(r, direct, &raw);
+    *ok = true;
+    return raw;
+}
+
+/** 调 0 参 getter 取对象引用：**双读 + 类名自证**（见上方说明）。 */
+static void* NoAdCallGetObjV51(void* mi, void* obj, const char* expect) {
+    if (!mi || !LivePtr(obj)) return nullptr;
+    auto& api = Il2Cpp::GetApi();
+    if (!api.runtime_invoke || !api.object_class || !api.class_name) return nullptr;
+    void* exc = nullptr;
+    t_modInvoke++;
+    void* r = api.runtime_invoke(mi, obj, nullptr, &exc);
+    t_modInvoke--;
+    if (!r || exc) return nullptr;
+    /* 候选①：`r` 本身就是对象（v50 实测的真约定）；候选②：`r` 指向 retval 槽。 */
+    void* cand[2] = {r, nullptr};
+    memcpy(&cand[1], r, 8);
+    for (int i = 0; i < 2; i++) {
+        void* p = cand[i];
+        if (!LivePtr(p) || !Il2Cpp::IsReadableRange((uintptr_t)p, 0x10)) continue;
+        void* k = api.object_class(p);
+        if (!LivePtr(k)) continue;
+        const char* n = api.class_name(k);
+        if (n && strstr(n, expect)) {
+            static std::atomic<uint32_t> s_conv{0};
+            if (s_conv.fetch_add(1, std::memory_order_relaxed) < 3)
+                LOGI(TPL_LOG " AD51 引用返回约定=候选%d（cls=%s，期望含 %s）", i + 1, n, expect);
+            return p;
+        }
+    }
+    static std::atomic<uint32_t> s_bad{0};
+    if (s_bad.fetch_add(1, std::memory_order_relaxed) < 6) {
+        void* k0 = api.object_class(cand[0]);
+        const char* n0 = LivePtr(k0) ? api.class_name(k0) : "?";
+        void* k1 = LivePtr(cand[1]) ? api.object_class(cand[1]) : nullptr;
+        const char* n1 = LivePtr(k1) ? api.class_name(k1) : "?";
+        LOGW(TPL_LOG " AD51 引用返回的两种读法都不像 %s（r=%p 候选1 cls=%s / 候选2 cls=%s）", expect, r,
+             n0 ? n0 : "?", n1 ? n1 : "?");
+    }
+    return nullptr;
+}
+
+/** 调 1 参 setter 写 int32（走游戏自己的 setter）。 */
+static bool NoAdCallSetI32V51(void* mi, void* obj, int32_t val) {
+    if (!mi || !LivePtr(obj)) return false;
+    auto& api = Il2Cpp::GetApi();
+    if (!api.runtime_invoke) return false;
+    void* exc = nullptr;
+    int32_t v = val;
+    void* args[1] = {&v};
+    t_modInvoke++;
+    void* r = api.runtime_invoke(mi, obj, args, &exc);
+    t_modInvoke--;
+    (void)r;
+    return exc == nullptr;
+}
+
+static void NoAdRspCoreV50(void* rsp, const char* src) {
+    if (!g_noAd.load(std::memory_order_relaxed)) return;
+    static std::atomic<uint32_t> s_bailCls{0}, s_bailSub{0}, s_bailMi{0}, s_nosub{0}, s_noq{0}, s_skip{0};
+    auto& api = Il2Cpp::GetApi();
+    if (!api.object_class || !api.class_name) return;
+    if (!LivePtr(rsp) || !Il2Cpp::IsReadableRange((uintptr_t)rsp, 0x10)) return;
+    /* ── 自证①：必须是 Proto_CSRsp ── */
+    void* rk = api.object_class(rsp);
+    if (!LivePtr(rk)) return;
+    const char* rn = api.class_name(rk);
+    if (!rn || !strstr(rn, "Proto_CSRsp")) {
+        if (s_bailCls.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD50[%s] rsp=%p cls=%s 不是 Proto_CSRsp → 放弃", src, rsp, rn ? rn : "?");
+        return;
+    }
+    /* ── MI 解析（按 rsp 类缓存）：get_start_watch_ad_rsp() ── */
+    static const void* s_rk = nullptr;
+    static void* s_getSub = nullptr;
+    if (s_rk != rk) {
+        s_rk = rk;
+        s_getSub = NoAdMiGetV50(rk, "get_start_watch_ad_rsp", 0);
+        LOGI(TPL_LOG " AD50 rsp 类 %s :: get_start_watch_ad_rsp=%p（走游戏 getter，不碰字段）", rn,
+             s_getSub);
+    }
+    if (!s_getSub) {
+        if (s_bailMi.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD50[%s] 解析不到 get_start_watch_ad_rsp → 放弃", src);
+        return;
+    }
+    void* sub = NoAdCallGetObjV51(s_getSub, rsp, "SCStartWatchAdRsp");
+    if (!sub) {
+        if (s_nosub.fetch_add(1, std::memory_order_relaxed) < 3)
+            DBGLOG(TPL_LOG " AD50[%s] 本条 rsp 没有 start_watch_ad_rsp 子消息 → 忽略", src);
+        return;
+    }
+    /* ── 自证②：子对象必须是 SCStartWatchAdRsp ── */
+    void* sk = api.object_class(sub);
+    const char* sn = LivePtr(sk) ? api.class_name(sk) : nullptr;
+    if (!sn || !strstr(sn, "SCStartWatchAdRsp")) {
+        if (s_bailSub.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD50[%s] 子对象 cls=%s 不是 SCStartWatchAdRsp → 放弃", src, sn ? sn : "?");
+        return;
+    }
+    /* ── MI 解析（按子类缓存）：get_result / get_ad_id / get_uuid / set_result ── */
+    static const void* s_sk = nullptr;
+    static void* s_getRes = nullptr;
+    static void* s_getAdId = nullptr;
+    static void* s_getUuid = nullptr;
+    static void* s_setRes = nullptr;
+    if (s_sk != sk) {
+        s_sk = sk;
+        s_getRes = NoAdMiGetV50(sk, "get_result", 0);
+        s_getAdId = NoAdMiGetV50(sk, "get_ad_id", 0);
+        s_getUuid = NoAdMiGetV50(sk, "get_uuid", 0);
+        s_setRes = NoAdMiGetV50(sk, "set_result", 1);
+        LOGI(TPL_LOG " AD50 子类 %s :: get_result=%p get_ad_id=%p get_uuid=%p set_result=%p", sn, s_getRes,
+             s_getAdId, s_getUuid, s_setRes);
+    }
+    if (!s_getRes || !s_getAdId || !s_getUuid || !s_setRes) {
+        if (s_bailMi.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD50[%s] 子类成员解析不全（res=%p adid=%p uuid=%p set=%p）→ 本次不干预", src,
+                 s_getRes, s_getAdId, s_getUuid, s_setRes);
+        return;
+    }
+    bool okR = false, okA = false, okU = false;
+    /* `ad_id` 那次传 `adIdHint=true` ⇒ 由它**定案**值类型的返回值约定（双读自证） */
+    const int32_t adId = NoAdCallGetI32V51(s_getAdId, sub, &okA, true);
+    const int32_t res = NoAdCallGetI32V51(s_getRes, sub, &okR, false);
+    const uint64_t uuid = NoAdCallGetU64V51(s_getUuid, sub, &okU);
+    const uint32_t n = g_adV48Seen.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 12 || (n % 20) == 0)
+        LOGI(TPL_LOG " AD50[%s] 读到 adid=%d uuid=%llu result=%d (ok=%d/%d/%d 第%u次)", src, adId,
+             (unsigned long long)uuid, res, okR ? 1 : 0, okA ? 1 : 0, okU ? 1 : 0, n);
+    if (!okR || !okA || !okU) {
+        if (s_bailMi.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD50[%s] getter 调用失败（exc）→ 本次不干预", src);
+        return;
+    }
+    /* ★v51 二次自证：**uuid 必须像服务端真 uuid**（真机实测值 ≈1.31e17 的 19 位十进制）。
+     *  为什么必须挡：这条路的 uuid 是我们 invoke 读出来的，一旦读错就会把**错的 uuid** 交给
+     *  代回调 ⇒ cmd 2762 被服务端拒 ⇒ 奖励拿不到（而这条路的 AD43 兜底又因为我们成功拦下了
+     *  `PlayADVideo` 而不会启动）。所以「不像真 uuid」时**一律不登记、不写**，退回「广告照播 +
+     *  AD43 路径发奖」的既有行为（奖励优先）。 */
+    if (uuid < 1000000000000000ull) {
+        static std::atomic<uint32_t> s_badu{0};
+        if (s_badu.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD50[%s] uuid=%llu 不像服务端 uuid → 不拦截（奖励优先）", src,
+                 (unsigned long long)uuid);
+        return;
+    }
+    /* 服务端自己就不要求看（`result != 0`，含 `==2` 官方「免广告特权跳过」）⇒ **一律不干预**：
+     *  这一支游戏本来就不拉 SDK，而且它**不需要**客户端再发 cmd 2762（奖励由服务端在 start
+     *  阶段就发了）⇒ 我们若多补一发 finish 包就是重复上报，风险大于收益。 */
+    if (res != 0) {
+        if (s_skip.fetch_add(1, std::memory_order_relaxed) < 3)
+            LOGI(TPL_LOG " AD50[%s] result=%d（服务端已跳过观看）⇒ 不干预", src, res);
+        return;
+    }
+    /* 奖励优先：代回调没登记成功就一个字节都不写，让广告照播（= v47 行为）。 */
+    if (!NoAdEnqueueGatedV48(adId, uuid, src)) {
+        if (s_noq.fetch_add(1, std::memory_order_relaxed) < 5)
+            LOGW(TPL_LOG " AD50[%s] 代回调未登记（熔断/配额/mi）⇒ 本次不拦截（奖励优先）", src);
+        return;
+    }
+    if (!NoAdCallSetI32V51(s_setRes, sub, 2)) {
+        if (s_bailMi.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD50[%s] set_result(2) 抛异常 → 本次不拦截", src);
+        return;
+    }
+    /* 写后复核：再用游戏自己的 getter 读一次。`复核=2` = 「广告不会再出画」已实测成立。 */
+    bool ok2 = false;
+    const int32_t back = NoAdCallGetI32V51(s_getRes, sub, &ok2, false);
+    const uint32_t w = g_adV48Wrote.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (w <= 12 || (w % 20) == 0)
+        LOGI(TPL_LOG
+             " AD50[%s] ★set_result(2)：result %d→%d（getter 复核 ok=%d）⇒ 游戏走自带"
+             "「已使用免广告特权跳过观看」分支、不拉 SDK★ adid=%d uuid=%llu 第%u次",
+             src, res, back, ok2 ? 1 : 0, adId, (unsigned long long)uuid, w);
+}
+
+/** ★v49：**结构发现** —— 在 `EventItemInt`（或任何容器对象）里找出 `Proto_CSRsp`。
+ *
+ * 为什么需要它：`OnGetADInfoRsp` 是被 `ProtocolManager.callback` **委托**调进来的
+ * （真机栈证据：`Engine:FixedUpdate → ProtocolManager:update → ProtocolManager:sendEvent(EventItemInt)
+ *  → DS_Advertising:OnGetADInfoRsp(Proto_CSRsp)`，见 `Log::infoPhone` 附带的 C# 调用栈），
+ * 而委托那一跳**不经过我们的两个挂点**（v48 全无 AD48 日志，而同一帧里它调用的 `PlayADVideo`
+ * 我们看得见 ⇒ 热更→热更的 pushframe 可见、委托跳不可见）。
+ * `sendEvent` 本身是 `update()` 里的**热更→热更**调用 ⇒ **可见**，且它在 `OnGetADInfoRsp`
+ * **之前**执行 ⇒ 在这里拿到 rsp 就能在 `get_result()` 被读之前把 `result` 写好。
+ *
+ * 布局未知怎么办（不猜字段名）：**按结构找** —— 在容器对象前 0x40 字节的 8 字节对齐字里找
+ * 「klass 名字含 `Proto_CSRsp`」的活指针；两级（容器 → 其字段对象）就够，因为 `EventItemInt`
+ * 是队列项、proto 直接挂在它（或其内部一个小结构）身上。**结果按类缓存**（含「没找到」），
+ * 所以只有第一次遇到该类才付出几十次元数据查询的代价，之后是「1 次解引用 + 1 次类比较」。
+ * 全部走 `LivePtr` / 可读性闸，失败一律返回 nullptr（= 什么都不做，广告照播）。 */
+static void* ProtoCsRspInObjV49(void* o) {
+    if (!LivePtr(o) || !Il2Cpp::IsReadableRange((uintptr_t)o, 0x48)) return nullptr;
+    auto& api = Il2Cpp::GetApi();
+    if (!api.object_class || !api.class_name) return nullptr;
+    void* ok = api.object_class(o);
+    if (!LivePtr(ok)) return nullptr;
+    /* 缓存：{容器类, 命中偏移}（off==0 表示「这个类里没有」） */
+    static const void* s_ck[8] = {};
+    static size_t s_coff[8] = {};
+    static std::atomic<uint32_t> s_cn{0};
+    const uint32_t cn = s_cn.load(std::memory_order_relaxed);
+    for (uint32_t i = 0; i < cn && i < 8; i++)
+        if (s_ck[i] == ok) {
+            if (!s_coff[i]) return nullptr;
+            /* 命中缓存：**不再复核类名**（该偏移对该容器类是稳定的，且核心 `NoAdRspCoreV50`
+             *  仍会拿类名自证一次）⇒ 每帧只付「1 次解引用 + 1 次 LivePtr」的代价。 */
+            void* p = (void*)RawWord(o, s_coff[i]);
+            return LivePtr(p) ? p : nullptr;
+        }
+    /* 一级：容器自身的 8 字节对齐字段（跳过 +0 = klass） */
+    for (size_t off = 8; off < 0x40; off += 8) {
+        void* p = (void*)RawWord(o, off);
+        if (!LivePtr(p) || !Il2Cpp::IsReadableRange((uintptr_t)p, 0x10)) continue;
+        void* pk = api.object_class(p);
+        if (!LivePtr(pk)) continue;
+        const char* pn = api.class_name(pk);
+        if (pn && strstr(pn, "Proto_CSRsp")) {
+            if (cn < 8) { s_ck[cn] = ok; s_coff[cn] = off; s_cn.store(cn + 1, std::memory_order_relaxed); }
+            LOGI(TPL_LOG " AD50 结构发现：容器 cls=%s 的 +0x%zx 就是 Proto_CSRsp", api.class_name(ok),
+                 off);
+            return p;
+        }
+        /* 二级：该字段对象自己的前 0x20 字节里再找一层（只在没命中缓存时做一次） */
+        if (!Il2Cpp::IsReadableRange((uintptr_t)p, 0x28)) continue;
+        for (size_t o2 = 8; o2 < 0x20; o2 += 8) {
+            void* q = (void*)RawWord(p, o2);
+            if (!LivePtr(q) || !Il2Cpp::IsReadableRange((uintptr_t)q, 0x10)) continue;
+            void* qk = api.object_class(q);
+            if (!LivePtr(qk)) continue;
+            const char* qn = api.class_name(qk);
+            if (qn && strstr(qn, "Proto_CSRsp")) {
+                LOGI(TPL_LOG
+                     " AD50 结构发现：容器 cls=%s 的 +0x%zx → 其字段 +0x%zx 是 Proto_CSRsp（两级）",
+                     api.class_name(ok), off, o2);
+                /* 两级命中时**不缓存**（缓存语义是「容器字段直接就是 rsp」）——
+                 * 只当次使用；代价是该类每次都要再搜一遍两级，但那只有几十次元数据查询，
+                 * 且只在真的有广告响应时才发生（低频）。 */
+                return q;
+            }
+        }
+    }
+    if (cn < 8) { s_ck[cn] = ok; s_coff[cn] = 0; s_cn.store(cn + 1, std::memory_order_relaxed); }
+    static std::atomic<uint32_t> s_nf{0};
+    if (s_nf.fetch_add(1, std::memory_order_relaxed) < 6)
+        LOGW(TPL_LOG " AD50 结构发现：容器 cls=%s 里没找到 Proto_CSRsp → 该类以后不再搜",
+             api.class_name(ok));
+    return nullptr;
+}
+
+/** ★v48 入口①：`DS_Advertising::OnGetADInfoRsp(Proto_CSRsp)` 帧（若该帧可见时生效）。 */
+static void ApplyNoAdRspV48(void* a1, uint8_t argBase) {
+    if (!g_noAd.load(std::memory_order_relaxed)) return;
+    if (!a1) return;
+    if (!Il2Cpp::IsReadableRange((uintptr_t)a1 + (uintptr_t)argBase * 8u, 8)) return;
+    void* rsp = (void*)RawWord(a1, (size_t)argBase * 8);  // 实例方法 ⇒ 第 1 个 IL 实参在 argBase+0
+    NoAdRspCoreV50(rsp, "rsp");
+}
+
+/** ★v49 入口②：`ProtocolManager::sendEvent(EventItemInt)` 帧 —— 实测**可见**的那条路。
+ *  实参可能是「对象指针」也可能是「按值内联的结构体」，两种都试：
+ *   ① `RawWord(a1, argBase*8)` 若是活对象 → 直接当容器做结构发现；
+ *   ② 否则把 `a1 + argBase*8` 当作内联结构体起点做结构发现。 */
+static void ApplyNoAdRspFromEventV49(void* a1, uint8_t argBase) {
+    if (!g_noAd.load(std::memory_order_relaxed)) return;
+    if (!a1) return;
+    const size_t so = (size_t)argBase * 8u;
+    if (!Il2Cpp::IsReadableRange((uintptr_t)a1 + so, 8)) return;
+    const uint32_t n = g_adV49Event.fetch_add(1, std::memory_order_relaxed) + 1;
+    void* cand = (void*)RawWord(a1, so);
+    void* rsp = LivePtr(cand) ? ProtoCsRspInObjV49(cand) : nullptr;
+    if (!rsp) {
+        /* 按值内联的结构体：直接扫那块内存（同一个函数复用，代价只在本类第一次出现时付） */
+        rsp = ProtoCsRspInObjV49(reinterpret_cast<void*>((uintptr_t)a1 + so));
+    }
+    if (!rsp) {
+        if (n <= 3) DBGLOG(TPL_LOG " AD50[sendEvent] 第%u次：本条消息里没有 start_watch_ad_rsp", n);
+        return;
+    }
+    g_adV49Found.fetch_add(1, std::memory_order_relaxed);
+    NoAdRspCoreV50(rsp, "sendEvent");
+}
+
 
 /** ★v46：免广告代回调的**帧外**执行体。
  *  调用点 = 解释器入口/压帧桩（见 `Hooked_Interp` / `Hooked_PushFrame`），且必须在
@@ -3380,6 +3875,12 @@ static void InterpFire(uint16_t kinds, uint8_t argBase, void* a0, void* a1, void
     if (kinds & K_ADREWARD) ForceTrueArg(a1, argBase, 1, "Dispatch");  // DispatchResult(int,bool)
     /* ★v43 A2：在 `PlayADVideo` 帧上代厂商 SDK 回调「成功」（见 ApplyNoAdV43 的整条 IL 链注释）。 */
     if (kinds & K_PLAYAD) ApplyNoAdV43(a1, argBase);
+    /* ★v48：在 `OnGetADInfoRsp` 帧上把 `start_watch_ad_rsp.result` 写成 2
+     *  ⇒ 游戏走自己的「免广告特权」分支，`PlayADVideo` 永不被调用 = **广告不出画**；
+     *  发奖仍由 `NoAdEnqueueGatedV48` 登记的代回调（cmd 2762）负责。见 `ApplyNoAdRspV48`。 */
+    if (kinds & K_GETADRSP) ApplyNoAdRspV48(a1, argBase);
+    /* ★v49：委托跳不可见、但它的调用者可见 ⇒ 在 `sendEvent` 帧上结构发现 rsp（见该 kind 注释）。 */
+    if (kinds & K_SENDEVENT) ApplyNoAdRspFromEventV49(a1, argBase);
     if (kinds & (K_DAMAGE | K_LOCALDMG | K_PLAYAD | K_CANCLAIM)) InterpEvidence(kinds, a1, a2);
 }
 
@@ -3446,6 +3947,8 @@ static void PreRegisterKindV43(void* mi, uint16_t kind, const char* tag) {
     const bool isStatic = (api.method_flags && ((api.method_flags(mi, nullptr) & 0x10u) != 0));
     const uint8_t ab = isStatic ? 0 : 1;
     const bool isNew = LearnRegister((const char*)nu, (void*)ku, kind, ab);
+    for (size_t i = 0; i < kKindN; i++)      // ★v50：标记为「已预登记」，补学不再重复开窗
+        if (kKinds[i].kind == kind) __atomic_store_n(&g_kindPre[i], 1u, __ATOMIC_RELAXED);
     LOGI(TPL_LOG " ↑v43 预登记 %s kind=0x%04x base=%u mi=%p %s", tag, kind, ab, mi,
          isNew ? "新建" : "已存在");
 }
@@ -3456,8 +3959,11 @@ static void PreRegisterKindV43(void* mi, uint16_t kind, const char* tag) {
  *  一次失败就再也补不上（v26x 血证：`g_installedDmg` 无条件锁闸 ⇒ 一次失败永久失效）。 */
 static void EnsureAdTargetsV43() {
     if (!g_noAd.load(std::memory_order_relaxed)) return;
+    /* ★v48：目标从 4 个变 5 个（多出 `OnGetADInfoRsp`）⇒ 完成掩码 0x0F → 0x1F。
+     *  这里**必须**同步改，否则 `mask==0x0F` 永远不会成立、会一直重试到 `g_adRegTryV43` 上限。 */
+    static const uint32_t kAdAllMask = 0x3Fu;   /* ★v49：4→5→6 个目标（+OnGetADInfoRsp +sendEvent） */
     uint32_t mask = g_adRegMaskV43.load(std::memory_order_relaxed);
-    if (mask == 0x0Fu) return;
+    if (mask == kAdAllMask) return;
     if (g_adRegTryV43.fetch_add(1, std::memory_order_relaxed) > 12) return;
     static const struct {
         const char* cls;
@@ -3471,6 +3977,12 @@ static void EnsureAdTargetsV43() {
         {"DS_Advertising", "OnADVideoResult", 3, K_ADRESULT, "OnResult7", 2u},
         {"DS_Advertising", "DispatchResult", 2, K_ADREWARD, "Dispatch2", 4u},
         {"AdMascotManager", "CanClaimReward", 0, K_CANCLAIM, "CanClaim", 8u},
+        /* ★v48：**广告出画的判定帧**。预登记它是为了「不等它自己被调用一次」——
+         *  它只在服务端下发 `start_watch_ad_rsp` 时才跑，而我们要在**第一次**点击看广告时
+         *  就拦住（学习期能不能赶上完全取决于玩家点得快不快，不能赌）。 */
+        {"DS_Advertising", "OnGetADInfoRsp", 1, K_GETADRSP, "GetAdRsp", 16u},
+        /* ★v49：**实测可见的落点**（热更→热更 pushframe）—— 预登记它，避免赌学习期。 */
+        {"ProtocolManager", "sendEvent", 1, K_SENDEVENT, "SendEvent", 32u},
     };
     for (size_t i = 0; i < sizeof(kT) / sizeof(kT[0]); i++) {
         if (mask & kT[i].bit) continue;
@@ -3484,7 +3996,8 @@ static void EnsureAdTargetsV43() {
         mask |= kT[i].bit;
     }
     g_adRegMaskV43.store(mask, std::memory_order_relaxed);
-    if (mask == 0x0Fu) LOGI(TPL_LOG " ↑v43 广告四目标预登记**全部完成**（免广告 A1+A2 已就绪）");
+    if (mask == kAdAllMask)
+        LOGI(TPL_LOG " ↑v49 广告六目标预登记**全部完成**（A1 + A2 + result 改写：rsp/sendEvent 两条入口）");
 }
 
 static bool LearnAllDone() {
@@ -6665,9 +7178,12 @@ void Mxytz_Tick(const bool* features, const int* /*values*/) {
                 if (k & K_HURT) wanted = wantKill || wantInv || wantSkill;
                 if (k & K_DOATTACK) wanted = wantInv;
                 if (k & (K_PROJ | K_PROJEXEC)) wanted = wantSkill;
-                if (k & (K_PLAYAD | K_ADRESULT | K_ADREWARD | K_CANCLAIM)) wanted = wantAd;
+                if (k & (K_PLAYAD | K_ADRESULT | K_ADREWARD | K_CANCLAIM | K_GETADRSP | K_SENDEVENT))
+                    wanted = wantAd;
                 /* K_DAMAGE / K_LOCALDMG 是「只取证」目标，缺了不影响任何功能 ⇒ 不参与补学 */
                 if (!wanted) continue;
+                /* ★v50：预登记过的目标**不参与补学**（它已在快表里，缺的是"没被慢路径学到"的那类） */
+                if (__atomic_load_n(&g_kindPre[i], __ATOMIC_RELAXED) == 1) continue;
                 if (__atomic_load_n(&g_kindDone[i], __ATOMIC_RELAXED) == 1) continue;
                 need++;
                 const int r = snprintf(miss + w, sizeof(miss) - w, "%s(%s) ", kKinds[i].tag, kKinds[i].cls);
@@ -6759,14 +7275,15 @@ void Mxytz_Tick(const bool* features, const int* /*values*/) {
             /* ★v46b 诊断行：区分到底是哪一个 tag 在自激（真机 v46 只能看到总数 1087/s）。
              *  判读：开免广告前后两次 STATS-AD 的差值 / 30s 即为该 tag 的调用速率；
              *  `门` 三列 = 上锁通过次数（应≈1/2s）、被门拦下次数（大就说明上游在空转）。 */
-            LOGI(TPL_LOG " STATS-AD watch=%u watch0=%u click=%u canclaim=%u vresult=%u playad=%u result=%u | 门 canclaim=%u/%u vresult=%u/%u interp=%u/%u",
+            LOGI(TPL_LOG " STATS-AD watch=%u watch0=%u click=%u canclaim=%u vresult=%u playad=%u result=%u | 门 canclaim=%u/%u vresult=%u/%u interp=%u/%u | v48 见=%u 改写=%u | v49 sendEvent=%u 找到rsp=%u",
                  g_adTagCnt[kAdTagWatch].load(), g_adTagCnt[kAdTagWatch0].load(),
                  g_adTagCnt[kAdTagClick].load(), g_adTagCnt[kAdTagCanClaim].load(),
                  g_adTagCnt[kAdTagVResult].load(), g_adTagCnt[kAdTagPlayAd].load(),
                  g_adTagCnt[kAdTagResult].load(), g_adGatePass[kAdGateCanClaim].load(),
                  g_adGateSkip[kAdGateCanClaim].load(), g_adGatePass[kAdGateVResult].load(),
                  g_adGateSkip[kAdGateVResult].load(), g_adGatePass[kAdGateInterp].load(),
-                 g_adGateSkip[kAdGateInterp].load());
+                 g_adGateSkip[kAdGateInterp].load(), g_adV48Seen.load(), g_adV48Wrote.load(),
+                 g_adV49Event.load(), g_adV49Found.load());
             /* ★v47 诊断行：#3 的**限流/看门狗**可见性（用户报「玩久了掉帧闪退是技能伤害增加
              *  导致的」→ 下一轮用真机日志判断预算该调大还是调小，而不是继续凭猜）。
              *  判读：`单秒峰值` 一直贴着 `上限`（或 `拦下` 持续增长）= 场面确实被限流，
