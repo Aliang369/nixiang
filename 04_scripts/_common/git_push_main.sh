@@ -16,6 +16,11 @@
 #   修法＝HTTPS 通道先按 `_pg_https_insteadof_cfg` 把 SSH 形态 origin 改写成 HTTPS（见 ⑧）。
 #   同批把 `lowSpeedLimit` 从 0 改为非 0：0 表示**不做低速判定**，`lowSpeedTime` 形同虚设，
 #   单条通道可挂 10 分钟；现在默认 1000 B/s × 60 s 即判死，可用 PUSH_HTTP_LOWSPEED_* 覆盖。
+#   **同批第二个坑（修好传输后才暴露）**：内联 credential helper 原先把引号写成 `\"`，
+#   git 收到的那一行成了 `"password=…` ⇒ 键名带引号 ⇒ git 认为没有 password ⇒ 交互式索要密码，
+#   无 tty 时报 `could not read Password for 'https://x-access-token@github.com'`。
+#   探测之所以通过：本仓是公开仓库，`ls-remote` 匿名即可，只有需要认证的 push 才踩到。
+#   现统一由 `_pg_cred_helper` 生成（普通双引号，A/B 实测 rc=0）。
 #
 # ── 为什么要重写：v1 的真实失效模式（2026-10-11 用户已多次报「推送总失败」）────────────
 #   · 本机到 github 的通道是**分钟级抖动**：同一次调用里 `ssh -T` 成功、下一分钟 `:22 Operation timed out`；
@@ -97,6 +102,20 @@ _pg_origin_insteadof_cfg() {
   _pg_https_insteadof_cfg "$(git remote get-url origin 2>/dev/null || true)"
 }
 
+# 内联 credential helper（用 gh token 当密码）；无 token 时输出空 ⇒ 不注入 helper。
+# **引号只能写普通双引号，绝不能转义成 `\"`**：转义后 git 收到的那一行是 `"password=…`，
+# 键名带了引号 ⇒ git 认为没有 password，转而去交互式索要密码，无 tty 时报
+# `could not read Password for 'https://x-access-token@github.com'`
+# （2026-10-16 实测 A/B：`\"` 形态 rc=128，普通引号形态 rc=0）。
+# 之所以不易发现：探测用 `ls-remote`，而本仓是公开仓库 ⇒ 匿名即可通过探测，
+# 只有真正需要认证的 push 才暴露（v2.1 因 HTTPS 通道压根没走通，这个坑一直没被踩到）。
+_pg_cred_helper() {
+  local tok
+  tok="$(_pg_token)"
+  [ -n "$tok" ] || return 0
+  printf '!f(){ echo username=x-access-token; echo "password=%s"; };f' "$tok"
+}
+
 # 统一执行器：跑一条命令，**只把 stderr 收进 $_PG_LAST_ERR**（push/ls-remote 的正常进度都走 stderr，
 # 故 err 非空 ≠ 失败；成败一律看返回码），并原样把返回码传出去。
 _pg_exec() {
@@ -126,10 +145,7 @@ _pg_run_route() {
     https-proxy|https-direct)
       proxy="${HTTPS_PROXY:-${https_proxy:-http://127.0.0.1:7897}}"
       [ "$route" = "https-direct" ] && proxy=""
-      helper=""
-      if [ -n "$(_pg_token)" ]; then
-        helper='!f(){ echo username=x-access-token; echo \"password='"$(_pg_token)"'\"; };f'
-      fi
+      helper="$(_pg_cred_helper)"
       # SSH 形态的 origin 必须改写成 HTTPS，否则本通道的代理/凭证参数对 SSH 传输无效（见头部 v2.2）。
       # `rw` 可能为空数组 ⇒ 一律用 ${rw[@]+"${rw[@]}"} 展开（bash 3.2 + set -u 下裸展开会报错）。
       local rw=() cfg

@@ -83,5 +83,50 @@ class InsteadOfRewriteTests(unittest.TestCase):
         self.assertNotIn('http.lowSpeedLimit=0', result.stdout)
 
 
+class CredentialHelperTests(unittest.TestCase):
+    """The inline helper must emit a line git parses as `password=<token>`.
+
+    2026-10-16 A/B: the v2.2 first cut escaped the quotes as `\\"`, so git received
+    the line `"password=<token>` — the key was `"password`, git saw no password and
+    prompted ("could not read Password for 'https://x-access-token@github.com'").
+    """
+
+    def helper_output(self, token):
+        """Return [command, stdout-of-command]. `token` may be a stub or None.
+
+        When `token` is None the token lookup itself is stubbed out, because an
+        empty _PG_TOKEN still falls back to `gh auth token` by design.
+        """
+        if token is None:
+            stub = '_pg_token() { printf "%s" ""; }; '
+        else:
+            stub = ''
+        script = (f'_PG_TOKEN="$2"; source "$1" >/dev/null 2>&1; {stub}'
+                  'h="$(_pg_cred_helper)"; '
+                  'printf "%s\\n" "$h"; '
+                  'printf "%s\\n" "$h" | sed "s/^!//" | sh')
+        result = subprocess.run(['bash', '-c', script, '_', str(SCRIPT),
+                                 token or ''],
+                                capture_output=True, text=True, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.split('\n')
+
+    def test_helper_emits_unquoted_password_key(self):
+        lines = self.helper_output('gho_exampletoken')
+        command, username_line, password_line = lines[0], lines[1], lines[2]
+        self.assertTrue(command.startswith('!'), command)
+        self.assertEqual(username_line, 'username=x-access-token')
+        self.assertEqual(password_line, 'password=gho_exampletoken')
+        # The regression itself: no stray quote in front of the key, and no
+        # backslash-escaped quotes left in the command git will run.
+        self.assertFalse(password_line.startswith('"'))
+        self.assertNotIn('\\"', command)
+
+    def test_no_token_means_no_helper(self):
+        # Boolean assertions only: never print a real token into test output.
+        command = self.helper_output(None)[0]
+        self.assertFalse(command)
+
+
 if __name__ == '__main__':
     unittest.main()
