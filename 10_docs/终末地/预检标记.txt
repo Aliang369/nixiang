@@ -1,0 +1,18 @@
+# 终末地（com.hypergryph.endfield）装机预检标记
+# 格式：类别|ERE 正则（每行一条，# 开头为注释）
+# 用途：post_install_precheck.sh 的机器预检关（L2）。人工终审仍是用户实测（L3）。
+
+pkg|com\.hypergryph\.endfield
+
+# 菜单 so 加载标记（星光框架 TAG）
+menu_load|StarryMagic
+
+# 菜单弹出标记
+menu_shown|native menu shown
+
+# 游戏级就绪标记：EndfieldMod.cpp 按名解析（metadata 加密，不依赖静态 RVA）
+# 打出即证明 libil2cpp 符号表自解析 + 类/方法按名解析链路在本版本可用。
+hook_hit|\[Endfield\] lib ready
+
+# 授权墙标记（过不去只发操作请求卡，不诊断服务端）
+auth_fail|renew auth fail
