@@ -1,0 +1,70 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/冒险与征途",
+  "keep": "冒险与征途_1.5.9_starry-final-releaseSigned.apk",
+  "keep_size": 886768575,
+  "keep_md5": "c2d7c44cd28fdb834e4e2df9baff816d",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "冒险与征途_1.5.9_soonly-0450806c-releaseSigned.apk.idsig",
+      "size": 6993435,
+      "md5": "789ff6d3ce7799bebe5f07d3478e3412"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-560b562f-releaseSigned.apk.idsig",
+      "size": 6993435,
+      "md5": "95344e60a2d45fe94856762b63adba6d"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-9b1182fd-releaseSigned.apk.idsig",
+      "size": 6993435,
+      "md5": "d392a9a136f9f25ee2dd645b7904c3ed"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-9177e1b0-releaseSigned.apk.idsig",
+      "size": 6993435,
+      "md5": "da25bb17773b65b658fd3d0f0307c280"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-9b1182fd-releaseSigned.apk",
+      "size": 886748095,
+      "md5": "9cce9640f1bbfae1f605368af62707f9"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-bc204b85-releaseSigned.apk.idsig",
+      "size": 6993435,
+      "md5": "ce0e95e6e3f525a4ef981012810914ee"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-9177e1b0-releaseSigned.apk",
+      "size": 886768575,
+      "md5": "91a9e4764bd6a97350ced0d96c520a20"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-bc204b85-releaseSigned.apk",
+      "size": 886797247,
+      "md5": "a5d308a20e3b12b853d6843462051ad2"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-9943ed3d-releaseSigned.apk",
+      "size": 886764479,
+      "md5": "895c9d34798f3c6e7f0df5f39e06044e"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-9943ed3d-releaseSigned.apk.idsig",
+      "size": 6993435,
+      "md5": "2a6f43496de5e37c9d816b831ca8434f"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-0450806c-releaseSigned.apk",
+      "size": 886752191,
+      "md5": "74782ccbd5d86130aa1234559fde47ad"
+    },
+    {
+      "name": "冒险与征途_1.5.9_soonly-560b562f-releaseSigned.apk",
+      "size": 886768575,
+      "md5": "c2d7c44cd28fdb834e4e2df9baff816d"
+    }
+  ],
+  "removed_count": 12
+}
