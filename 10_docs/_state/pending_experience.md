@@ -129,7 +129,7 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
    ⇒ **移植结论（可外推）**：在这类「热更 IL2CPP + 会自校验偏移」的游戏上，星光侧挂点必须**按名解析 + 序言字节校验**，
    禁止写死 RVA；且抓到的 RVA 必须标明属于哪一份构建。
 
-4. **`il2cpp_runtime_invoke` 的返回值约定：引用类型直接给对象指针、值类型是装箱对象（真值在 `+0x10`）**（状态：**待验证→已在本作实测**；落点建议：`re-implement/hook-rules.md` 新增一节「runtime_invoke 返回值口径」+ 复核各游戏 `CdInvoke` 一类读返回值的写法）
+4. **`il2cpp_runtime_invoke` 的返回值约定：引用类型直接给对象指针、值类型是装箱对象（真值在 `+0x10`）**（状态：**已合并**（2026-10-16，提交 `46c1ac8e`）；落点：`re-implement/il2cpp-abi-pitfalls.md` **坑 9**「`runtime_invoke` 返回值方向的 ABI」＋ `hook-rules.md` **§28.6**「读侧变体：读错偏移的返回值同样是恒真」；先例：`10_docs/冒险与征途/技能先例.md`）
    证据（冒险与征途 1.5.9 / v50→v52，2026-10-16 真机）：
    · v50 按「`r` = 指向 retval 槽的指针」写 `*(void**)r` ⇒ 取到的"对象"类名是垃圾（`cls=0WŐt`），
      因为读到的其实是**对象自己的 klass**；改成候选① `r` 即对象 + 类名自证后即命中。
@@ -141,3 +141,9 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
      该写法在别的游戏上可能一直读到 klass 低位 0 ⇒ 需按本卡复核）。
    ⇒ **自证姿势（建议固化）**：不要赌约定，**双读 + 业务约束自证**（本作用 `uuid` 量级 >1e15、
      `ad_id ∈ (0,1e5)`、`result ∈ [0,16]` 三条同时成立来定案并缓存），任何一条不成立就不动手。
+   ⇒ **同轮复核（2026-10-16，结论已落盘）**：全仓 `runtime_invoke` 返回值用法普查 ⇒ 需复核的只有本作
+     `MxytzMod.cpp` 的 `CdInvoke`（`EndfieldMod` 已按 `+0x10` 读、`WhrhxMod:1163` 按对象读、其余不看返回值）。
+     其旧读法 `*(uint8_t*)r` 读到的是装箱 `System.Boolean` 的 **klass 低位常量** ⇒ 判据恒真、候选「行为探测」形同虚设
+     （源码 line 5021 的「`KILLDEAD ok=1` 真死」不是有效证据）。按该游戏硬约束 #7③
+     **只加双读探针、未改判据**（切 `+0x10` 会让秒杀兜底一个候选都锁不上 ⇒ 落点语义变更，须授权 + 实测轮）；
+     源码已改、**未装机 / 未实测**（定案需 `MXYTZ_VERBOSE=1` 诊断档一次装机）。
