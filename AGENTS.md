@@ -73,7 +73,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
   - MB / KB-heavy 级**禁整读**：`06_dumped/**/dump.cs`、`meta/dump_all.txt`、`meta/types.txt`、`pipeline.log`、原始 logcat、`_state/current.md` —— 一律 `rg -n -m <N>` 或 `sed -n 'A,Bp'` 按行切片；metadata 全量清单禁整读，只按 TYPE/类名片段取值。
   - 禁止 `cat 04_scripts/{游戏}/pipeline.json`（会把历史阶段一起灌入），只取目标 stage。`git status` / `git diff` 必须带游戏 pathspec，禁止裸跑后自行过滤。
   - **阈值**：同一 dump 每轮 grep ≤10 次、单条工具结果 ≤8 KB；长脚本/模板（`surgical_*.sh` 同限）先取大纲再切片。
-- **同文件串行编辑**：同一轮**禁止**对同一文件并行发多个 Edit —— 同消息/并行 Edit 是读-改-写竞争，会互相覆盖丢改动（历史事故×3）；不同文件可以并行。同一文件也不要同轮混用 bash 改写与 `edit`。
+- **同文件串行编辑**：同一轮**禁止**对同一文件并行发多个 Edit —— 同消息/并行 Edit 是读-改-写竞争，会互相覆盖丢改动（历史事故×3）；不同文件可以并行。同一文件也不要同轮混用 bash 改写与 `edit`。**同一文件多处改动：先把目标区域一次读全再连续 edit**；`edit` 报 `file changed since it was read` 只表示**读态过期**（自己或他人刚写过），重读一次即可，不要当冲突反复排查；位置已知且改动较大时一次 `write` 覆盖更省（2026-10-16 实测：单会话因逐处「读→改」往返浪费 ≥10 次工具调用）。
 - **提交 / 推送底线**：
   - **push 一律经 `push_main`**（`source 04_scripts/_common/git_push_main.sh && push_main main`；四通道自愈）。**禁裸 `git push` 盲等、禁 `--force`**；被拒 ⇒ `git pull --rebase --autostash` 再推。**判远端是否同步只看 `git status -sb` 的 ahead/behind，禁在会话中段裸跑 `git fetch`**（SSH 通道探测会挂 60 s+ 并转后台占坑；确需联网确认时套 `with_timeout.sh` 或复用 `push_main` 的通道逻辑）。
   - 收工走 `bash 04_scripts/_common/archive_scoped_git.sh` 白名单 add（**禁 `git add -A`**）——本仓长期多会话并行，全量 add 会把他人的半成品提交进去。add 前若 `status` 出现 `*.jks` / `*.keystore` / `.env` / 大文件（>50M），停下报告。

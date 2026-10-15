@@ -287,6 +287,10 @@ Android 8+ `startForegroundService()` 后 **5 秒**内不进前台，系统直�
 - **Mod 失效**：运行时解密/热更后的 libil2cpp 与静态 RVA 不一致（导出剥离的游戏还需 xdl_sym/dsym + RX 段序言扫描兜底），清数据改变映射环境 → 偏移全飘
 - **热更回归**：官方热更重新全量下载，打进热更目录的补丁（jsc 门控、patch 过的资源）全部丢失
 - 游戏内贴图变紫/洋红 = 热更 DLC 资源校验失败（与 Mod hook 无关）：先保留唯一热更输入与故障证据；重新下载/删除须按 TOOLBOOK「清理规则」「真机残留清理」核对可取得性、范围及授权，**不默认清数据**
+- **覆盖安装后「一开就崩 / 行为像旧版」≠ 包坏，先查是不是仍在跑旧 so**（2026-10-16 终末地/小米 byron 实证，FW-13）：框架**优先加载**玩家已下载的 `files/starry_ota/<game_id>/libstarry_magic.so`（`StarryApp.java:78`「优先 OTA」、`ModBridge.java:60`「有 OTA 文件则只 load OTA」）；覆盖安装时清不清它由**包内 so 的构建戳**决定。若包内 so 缺戳（modern 入口曾因 `--gc-sections` 丢戳，已由共享 `Includes/Utils.cpp` 的 `retain` 修掉）或设备做过 root so 热替换（`so_hotswap.sh`），就会「`base.apk` 正确、跑的却是旧 so」。
+  - **判据**：`su -c md5sum /data/app/*/<pkg>-*/lib/arm64/libstarry_magic.so` 与包内该 so 的 md5 比对（现由 `verify_installed_apk.sh` 第二查自动做）。
+  - **玩家自救（不丢数据）**：菜单「**清除游戏补丁**」（`NativeMenuController.java:1405`）→ 确认 → **完全划掉游戏再开**。
+  - **分发说明统一加一句**：*装过旧星空版的，先点菜单「清除游戏补丁」再进*。
 
 ### 异签名必须卸载重装时：先保护外置数据（2026-10-16 终末地 29,990 MB 实证；FW-12）
 

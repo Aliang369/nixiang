@@ -184,6 +184,28 @@ check_clean_allowed_paths() {
 # 如果调用前已有其他会话的暂存内容，直接拒绝，避免误提交。
 check_staged_scope
 
+# ---------- 共享文件「逐行确认归属」硬门禁（2026-10-16 P0-1） ----------
+# 背景：复盘会话实测——共享文件内容级暂存时把并行会话的行一起写进索引，提交后才发现
+# （current.md 的「冒险与征途 v48」行随 d1905e3b 入库）。stage_shared_file.py --own-pattern
+# 做逐行归属校验；此处再加一道「提交前必须看过逐行差异」的闸门：只要共享文件在暂存区，
+# 就完整打印 git diff --cached，并要求 ACK_SHARED=1 才放行（--dry-run 只读，不拦）。
+DRY_CALL=0
+case " $* " in *" --dry-run "*) DRY_CALL=1 ;; esac
+if [[ "$DRY_CALL" == "0" ]]; then
+  for path in "${SHARED_FILES[@]}"; do
+    if [[ -n "$(git diff --cached --name-only -- "$path")" ]]; then
+      echo "== 共享文件在暂存区：${path}（逐行确认归属；改动行必须全属本轮）==" >&2
+      git diff --cached -- "$path" >&2
+      if [[ "${ACK_SHARED:-0}" != "1" ]]; then
+        echo "错误: 提交含共享文件需显式确认（已打印逐行差异）。确认无误后加 ACK_SHARED=1 重跑：" >&2
+        echo "       ACK_SHARED=1 bash $0 --staged-only --message \"…\" --path ${path}" >&2
+        echo "       差异里若有别会话行：先 python3 04_scripts/_common/stage_shared_file.py --path ${path} --own-pattern '<只属本轮的串>' 重新内容级暂存。" >&2
+        exit 1
+      fi
+    fi
+  done
+fi
+
 # 共享文件门禁：路径级 add 前先看它是否混有其它会话的在写改动。
 SHARED_DIRTY=()
 for path in "${PATHS[@]}"; do

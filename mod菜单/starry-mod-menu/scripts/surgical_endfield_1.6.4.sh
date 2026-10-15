@@ -47,7 +47,21 @@ AUTH_ID="mrfzzmd"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
-ORIG_APK="${ENDFIELD_BASE_APK:-$NIXIANG/02_apks/终末地/终末地_${VERSION}_base.apk}"
+ORIG_APK="${ENDFIELD_BASE_APK:-}"
+# 底包默认路径按实际留存位回退（02_apks 由用户手动管理，本轮底包按策略留 09_test/…/base）
+if [ -z "$ORIG_APK" ]; then
+  for _cand in "$NIXIANG/02_apks/终末地/终末地_${VERSION}_base.apk" \
+               "$NIXIANG/09_test/终末地/base/终末地_${VERSION}_base.apk"; do
+    if [ -f "$_cand" ]; then ORIG_APK="$_cand"; break; fi
+  done
+fi
+if [ -z "$ORIG_APK" ]; then
+  echo "ERROR: 找不到官方底包。请用 ENDFIELD_BASE_APK=<绝对路径> 指定；已尝试：" >&2
+  echo "       $NIXIANG/02_apks/终末地/终末地_${VERSION}_base.apk" >&2
+  echo "       $NIXIANG/09_test/终末地/base/终末地_${VERSION}_base.apk" >&2
+  exit 1
+fi
+echo "[0/6] 底包：$ORIG_APK"; echo "      md5：$( if command -v md5 >/dev/null 2>&1; then md5 -q "$ORIG_APK"; else md5sum "$ORIG_APK" | awk '{print $1}'; fi )"
 # ENDFIELD_OUT 可把产物指到临时区做 A/B（默认 08_output/{游戏}，避免验证性构建误覆盖正式包）
 OUT="${ENDFIELD_OUT:-$NIXIANG/08_output/终末地}"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"

@@ -39,6 +39,12 @@ LOCAL_MODULE    := starry_magic
 LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
+# FW-13（2026-10-16）：**必须强制保留** Includes/Utils.cpp 里烘焙的 OTA 构建戳。
+#   modern 入口 MainModern.cpp 零引用 kStarryBuildStamp（唯一引用者是 legacy Main.cpp），
+#   上面这行 --gc-sections 会把它整段回收 ⇒ so 内没有 STARRYSTAMP1:EPOCH= ⇒
+#   Java OtaSoStamp.apkStamp()=0 ⇒ PlayOtaManager 判据恒假 ⇒ 覆盖安装后永不清 starry_ota
+#   旧 so ⇒ 玩家跑旧 so（小米 byron 实测「打开就闪退」）。共享源已加 retain，此处再兜一层：
+LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm

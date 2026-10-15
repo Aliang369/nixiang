@@ -145,6 +145,12 @@ def main() -> int:
         help="正则块：从命中 START 的行到其后首个命中 END 的行（含两端）整块丢弃（可重复）",
     )
     ap.add_argument("--assert-absent", action="append", default=[], help="结果中不得出现的字面串（可重复，失败即中止）")
+    ap.add_argument(
+        "--own-pattern",
+        action="append",
+        default=[],
+        help="正则：相对 HEAD 的**每一条改动行**都必须命中其中之一，否则中止（逐行归属校验，防混入别会话行）",
+    )
     ap.add_argument("--expect-present", action="append", default=[], help="结果中必须出现的字面串（可重复，失败即中止）")
     ap.add_argument("--dry-run", action="store_true", help="只打印将要暂存的内容与差异，不写索引")
     ap.add_argument(
@@ -245,6 +251,29 @@ def main() -> int:
             print(f"       L{j} 仍保留: {nxt[:100]}", file=sys.stderr)
         print("       处置：补全 --drop-pattern/--drop-block 覆盖整段，或确认无误后加 --allow-truncated-statement", file=sys.stderr)
         return 4
+
+    # ---- 归属过滤（2026-10-16 P0-1）：防「并行会话的行随本次内容级暂存一起入库」 ----
+    # 背景：复盘会话实测——current.md 里并行会话的「冒险与征途 v48」行被一并暂存并提交（d1905e3b）。
+    # --own-pattern 给出「只属于本轮」的正则后，**每一条相对 HEAD 的改动行都必须命中**其中至少一条，
+    # 否则中止并逐行列出，供补 --drop-pattern 后重跑。
+    changed: list[str] = []
+    for dl in difflib.unified_diff(base or [], content.splitlines(keepends=True), n=0):
+        if dl.startswith(("+++", "---")):
+            continue
+        if dl[:1] in ("+", "-"):
+            changed.append(dl[1:])
+    if args.own_pattern:
+        unmatched = [ln for ln in changed if not any(re.search(p, ln) for p in args.own_pattern)]
+        if unmatched:
+            print(f"错误: 有 {len(unmatched)} 行改动未命中任何 --own-pattern（疑似别会话内容）:", file=sys.stderr)
+            for ln in unmatched[:20]:
+                print(f"       {ln.rstrip()[:120]}", file=sys.stderr)
+            print("       处置：补 --drop-pattern/--drop-block 丢弃他人行，或补全 --own-pattern 后重跑。", file=sys.stderr)
+            return 5
+        print(f"归属过滤: 改动行 {len(changed)} 行全部命中 --own-pattern ✓")
+    elif changed and not (args.drop_pattern or args.drop_block):
+        print("⚠ 未提供 --own-pattern/--drop-pattern：该文件**全部**改动行都会进入暂存；"
+              "并行会话也在改此文件时其行会一并入库。建议加 --own-pattern '<只属本轮的串>'。")
 
     print("--- 拟暂存内容 vs HEAD 的差异 ---")
     print(render_diff(base or [], content.splitlines(keepends=True), path, args.diff_limit))

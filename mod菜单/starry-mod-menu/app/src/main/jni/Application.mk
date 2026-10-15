@@ -11,5 +11,6 @@ APP_CPPFLAGS := -std=c++17 -fexceptions -fpermissive
 STARRY_BUILD_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null | tr -cd '0-9')
 ifeq ($(strip $(STARRY_BUILD_EPOCH)),)
 STARRY_BUILD_EPOCH := 1790184000
+$(warning WARNING: STARRY_BUILD_EPOCH not derived from git; falling back to 1790184000. The OTA stamp comparison will be UNRELIABLE: the fallback is older than any real stamp, so a cover-install will NOT clear the player's starry_ota so (player keeps running the OLD so). Build where git is on PATH, or pass STARRY_BUILD_EPOCH=<epoch seconds>. Gate: 04_scripts/_common/pre_install_gate.sh check8.)
 endif
 APP_CPPFLAGS += -DSTARRY_BUILD_EPOCH=$(STARRY_BUILD_EPOCH)

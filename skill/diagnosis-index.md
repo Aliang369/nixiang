@@ -11,7 +11,8 @@
 | 启动后静默退出、无 Java 崩溃栈 | 区分主动 exit/保护线程退出与崩溃；检查系统 crash/dropbox 和探针自检结果 | 不要盲目 patch exit/kill 或把「干净退出」当成功 | `re-implement/anti-cheat-pattern.md`；`re-analyze/native-probe-on-device.md` |
 | 服务端拒绝、结算失败或收益回滚 | 先查服务端是否独立重放战斗/结算输入，明确客户端与服务端各自证据 | 不要伪造胜利、跳过上报或把客户端显示当服务端接受 | `re-analyze/login/server-rejection-triage.md`；`re-implement/anti-cheat-pattern.md` |
 | 登录/签名校验失败 | 确认渠道 SDK、包名、证书来源及校验发生在 Application/provider 哪个时序 | 不要先全局替换签名或修改证书表 | `re-analyze/login/sign-spoof.md`；`re-analyze/login/taptap-web-login.md` |
-| 多机并行时提交混入其他工作 | 先检查 Git status 和 staged paths；按共享文件规则做内容级暂存并划定单写者 | 不要 `git add -A` 或 pull 脏工作区 | `../AGENTS.md`「双机协作」；`04_scripts/_common/stage_shared_file.py`；`archive_scoped_git.sh` |
+| 多机并行时提交混入其他工作 | 先检查 Git status 和 staged paths；按共享文件规则做内容级暂存并划定单写者 | 不要 `git add -A` 或 pull 脏工作区 | `../AGENTS.md`「双机协作」；`04_scripts/_common/stage_shared_file.py`（**逐行归属校验 `--own-pattern`**）；`archive_scoped_git.sh`（共享文件在暂存区时**强制逐行打印**，需 `ACK_SHARED=1` 放行） |
+| 第三方反馈「装上后像旧版 / 打开就闪退」，而 `base.apk` 核对正常 | 先查**运行中的 so 是否等于包内 so**：`su -c md5sum /data/app/*/<pkg>-*/lib/arm64/libstarry_magic.so` vs 包内该 so md5；再看是否有 `files/starry_ota/<game_id>/` 旧补丁 so 顶替 | 不要先说「包坏了」或让玩家清数据（会丢热更资源） | `04_scripts/_common/verify_installed_apk.sh`（第二查）；`skill/starry-mod/SKILL.md`「清数据」节；`04_scripts/_common/so_hotswap.sh --restore-from` |
 | 正式包夹带诊断日志/探针 | 查编译期诊断开关、obj 输出目录隔离、包内字符串及 release gate | 不要靠最后手工删日志代码 | `re-implement/hook-rules.md` §26；`04_scripts/_common/check_release_clean.sh` |
 | 会话结束但源码、证据、产物与 Git 状态对不上 | 对照 pipeline 状态、交付 manifest、Git 范围和 NOT PROVEN 清单 | 不要手写 manifest 或只凭文档说已交付 | `04_scripts/_common/archive_close_git.sh`；`04_scripts/_common/delivery_manifest.py` |
 
