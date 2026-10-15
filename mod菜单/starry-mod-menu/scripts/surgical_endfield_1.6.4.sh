@@ -213,6 +213,15 @@ for menu in '百倍伤害' '无限跳跃' '无限技能'; do
     echo "ERROR: so 缺菜单串 $menu"; exit 1
   fi
 done
+# OTA 守卫判据：so 内**必须**含构建戳。缺戳 ⇒ Java 侧 apkStamp=0 ⇒ 覆盖安装后永不清 OTA so
+# ⇒ 玩家继续跑旧 OTA so（2026-10-16 小米 byron 实测：新包装上了、跑的却是旧 so，一开就崩）。
+STAMP="$(grep -a -o 'STARRYSTAMP1:EPOCH=[0-9]*' "$SO_BUILT" | head -1)"
+if [ -z "$STAMP" ]; then
+  echo "ERROR: so 缺构建戳（STARRYSTAMP1:EPOCH=）—— OTA 守卫会失效"
+  echo "       检查 Android_mrfzzmd.mk 是否带 -Wl,--undefined=kStarryBuildStamp"
+  exit 1
+fi
+echo "  so 构建戳 ${STAMP}（OTA 守卫可判新旧）"
 for dest in \
   "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a" \
   "$STARRY_SRC/app/src/main/libs/arm64-v8a" \

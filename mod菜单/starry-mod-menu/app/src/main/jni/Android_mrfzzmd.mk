@@ -26,6 +26,13 @@ LOCAL_MODULE    := starry_magic
 LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
 LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
+# 必须强制保留 Includes/Utils.cpp 里烘焙的构建戳（OTA 守卫判「包内 so 是否比玩家已下载的 OTA so 新」）：
+#   戳的唯一引用点是 **legacy `Main.cpp:2539`**；modern 入口 `MainModern.cpp` 零引用
+#   ⇒ `--gc-sections` 把未引用的 const 回收 ⇒ so 内无 `STARRYSTAMP1:EPOCH=` ⇒ Java 侧
+#   `OtaSoStamp.apkStamp()` 返回 0 ⇒ `PlayOtaManager:375` 的 `if (apkStamp > 0L && …)` 恒假
+#   ⇒ **永远 keep OTA** ⇒ 覆盖安装后仍优先加载玩家的旧 OTA so（"新包装上了、跑的却是旧 so"）。
+#   2026-10-16 小米 byron 实测即此形态（崩溃帧 so build-id 24da7cd7… ≠ 包内 13e40d97…，清数据后正常）。
+LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm
