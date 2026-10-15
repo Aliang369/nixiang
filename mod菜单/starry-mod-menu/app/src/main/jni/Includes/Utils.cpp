@@ -5,7 +5,25 @@
 
 // ===== 星光包构建戳（OTA 守卫判新旧用）=====
 // 定义放这里是因为 32/32 个 Android_*.mk 都编译 Includes/Utils.cpp，无需改各个 mk。
-extern "C" const char kStarryBuildStamp[] = STARRY_STAMP_MARKER;
+//
+// ⚠️ 2026-10-16 修正（小米 byron「覆盖安装后一开就崩」事故）：**光编译到还不够**。
+//   戳是个无人引用的 const —— 唯一引用点 starry_build_stamp_marker() 只被 legacy Main.cpp
+//   调用，而 modern 入口 MainModern.cpp 零引用 ⇒ 链接期 `-Wl,--gc-sections,--strip-all`
+//   把该 section 整段回收 ⇒ so 里根本没有 "STARRYSTAMP1:EPOCH=…" ⇒ Java 侧
+//   OtaSoStamp.apkStamp() 恒为 0 ⇒ PlayOtaManager.invalidateOtaIfApkUpdated 的
+//   `if (apkStamp > 0 …)` 恒假 ⇒ **覆盖安装后永不清** starry_ota 旧 so ⇒ 运行时按「优先 OTA」
+//   加载玩家旧的 so（症状：新包装上了、跑的却是旧 so，一开就崩；清数据/清补丁即恢复）。
+//   故必须显式声明 retained：即便无人引用也保留（clang≥13 / NDK≥25 支持 retain）。
+#if defined(__has_attribute)
+#  if __has_attribute(retain)
+#    define STARRY_BUILD_STAMP_KEEP __attribute__((used, retain))
+#  else
+#    define STARRY_BUILD_STAMP_KEEP __attribute__((used))
+#  endif
+#else
+#  define STARRY_BUILD_STAMP_KEEP __attribute__((used))
+#endif
+extern "C" STARRY_BUILD_STAMP_KEEP const char kStarryBuildStamp[] = STARRY_STAMP_MARKER;
 extern "C" const char *starry_build_stamp_marker(void) { return kStarryBuildStamp; }
 extern "C" long long starry_build_epoch(void) { return (long long) STARRY_BUILD_EPOCH; }
 

@@ -260,6 +260,9 @@ public final class PlayOtaManager {
             deleteRecursive(tmpDir);
 
             Preferences.setOtaLocalVer(gameId, ver);
+            // 记下「本次下载补丁时包内 so 的 sha256」：存量无戳包靠它判「包是否已被替换」
+            // （双保险，见 invalidateOtaIfApkUpdated 的 ② 内容判据）
+            writeApkSoMark(destDir, sha256OrEmpty(apkSoFile(ctx)));
             Log.i(TAG, "OTA applied game=" + gameId + " ver=" + ver
                     + " json=" + hasJson + " so=" + hasSo
                     + " skipJson=" + skippedJson + " skipSo=" + skippedSo);
@@ -350,12 +353,24 @@ public final class PlayOtaManager {
 
     /**
      * 覆盖安装新星光包后：{@code files/starry_ota/} 里的旧补丁 so 会被优先加载，包内新 so
-     * 永远进不来。在首次 load so 之前调用：只比 so 内烘焙的构建戳（{@link OtaSoStamp}），
-     * 包内 so 比 OTA so 新才清。
+     * 永远进不来。在首次 load so 之前调用，判「包内 so 是否比 OTA so 新」：
      *
-     * <p>不能用 {@code PackageInfo.lastUpdateTime} 判：乐变（免安装 overlay）会把它在真实
-     * 安装时间与 overlay APK 的 mtime 之间来回抖，旧实现据此误判「覆盖安装」，
-     * 每次冷启动都清掉玩家刚下载的补丁（无悔华夏 2026-09-24 实测）。
+     * <p>① 首选 so 内烘焙的构建戳（{@link OtaSoStamp}）——包内 so 比 OTA so 新才清。
+     * <p>② 无戳时**退回内容判据**：比对「下载补丁时记录的包内 so sha256」与「当前包内 so
+     * sha256」，不一致 ⇒ 包确实被替换过 ⇒ 清。
+     *
+     * <p>之所以不能只用 ①：2026-10-16 小米 byron 事故 —— modern 入口（MainModern.cpp）不引用
+     * 戳访问器，链接期 {@code --gc-sections} 把戳整段回收 ⇒ {@code apkStamp} 恒为 0 ⇒ 旧实现
+     * 直接 keep ⇒ **覆盖安装后永远优先加载玩家的旧 OTA so**（症状：新包装上了、跑的却是旧 so，
+     * 一开就崩；清数据/清补丁即恢复）。根因已在 {@code Includes/Utils.cpp} 用
+     * {@code __attribute__((used, retain))} 修掉，此处为**双保险 + 兼容存量无戳包**。
+     *
+     * <p>也不能「无戳就无条件清」：OTA so 与包内 so 同源时两边都无戳，会退化成每次冷启动都清掉
+     * 玩家刚下载的补丁（无悔华夏 2026-09-24 的回归形态）。故无戳时必须有「记录值」可比才清，
+     * 无记录一律保守保留（只打日志）。
+     *
+     * <p>也不能用 {@code PackageInfo.lastUpdateTime} 判：乐变（免安装 overlay）会把它在真实
+     * 安装时间与 overlay APK 的 mtime 之间来回抖，旧实现据此误判「覆盖安装」。
      *
      * @return true 表示本次清掉了本地 OTA
      */
@@ -371,15 +386,83 @@ public final class PlayOtaManager {
         if (otaSo == null || !otaSo.isFile()) return false;   // 没有 OTA so 就没什么可清
         long apkStamp = OtaSoStamp.apkStamp(ctx);
         long otaStamp = OtaSoStamp.of(otaSo);
-        // 包内 so 更新（真·覆盖安装）→ 清；戳相同（同源重建）或 OTA 更新 → 保留。
-        if (apkStamp > 0L && (otaStamp == 0L || apkStamp > otaStamp)) {
-            Log.i(TAG, "APK so stamp " + apkStamp + " > OTA so stamp " + otaStamp
-                    + ", clearing starry_ota so APK so can load");
+        boolean clear;
+        String why;
+        if (apkStamp > 0L) {
+            // 有戳：包内 so 更新（真·覆盖安装）→ 清；戳相同（同源重建）或 OTA 更新 → 保留。
+            clear = (otaStamp == 0L || apkStamp > otaStamp);
+            why = "stamp apk=" + apkStamp + " ota=" + otaStamp;
+        } else {
+            // 无戳：内容判据。now 空（读不到包内 so）⇒ 无法判定 ⇒ 保留。
+            String now = sha256OrEmpty(apkSoFile(ctx));
+            String rec = readApkSoMark(otaSo.getParentFile());
+            clear = !now.isEmpty() && !rec.isEmpty() && !rec.equalsIgnoreCase(now);
+            why = "no-stamp apkSoSha=" + shortSha(now) + " rec=" + shortSha(rec)
+                    + (rec.isEmpty() ? "（无记录 ⇒ 保守保留）" : "");
+        }
+        if (clear) {
+            Log.i(TAG, "clearing starry_ota so APK so can load (" + why + ")");
             clearLocalOta(ctx);
             return true;
         }
-        Log.i(TAG, "keep OTA: apkSoStamp=" + apkStamp + " otaSoStamp=" + otaStamp);
+        Log.i(TAG, "keep OTA: " + why);
         return false;
+    }
+
+    /** 包内 so（loadLibrary 实际加载的那份）文件；取不到返回 null。 */
+    private static File apkSoFile(Context ctx) {
+        try {
+            String dir = ctx.getApplicationInfo().nativeLibraryDir;
+            if (dir == null) return null;
+            File f = new File(dir, "libstarry_magic.so");
+            return f.isFile() ? f : null;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    private static String sha256OrEmpty(File f) {
+        if (f == null || !f.isFile()) return "";
+        try {
+            String s = sha256File(f);
+            return s == null ? "" : s;
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    private static String shortSha(String s) {
+        return (s == null || s.isEmpty()) ? "-" : s.substring(0, Math.min(12, s.length()));
+    }
+
+    /**
+     * 「下载补丁时的包内 so sha256」记录文件，放补丁目录里 ⇒ 与补丁同生共死
+     * （清补丁删目录即一并清掉），不污染 Preferences。
+     */
+    private static File apkSoMarkFile(File gameDir) {
+        return gameDir == null ? null : new File(gameDir, ".apk_so_sha");
+    }
+
+    private static String readApkSoMark(File gameDir) {
+        File f = apkSoMarkFile(gameDir);
+        if (f == null || !f.isFile()) return "";
+        try (InputStream in = new FileInputStream(f)) {
+            byte[] b = new byte[(int) Math.min(f.length(), 128L)];
+            int n = in.read(b);
+            return n <= 0 ? "" : new String(b, 0, n, StandardCharsets.UTF_8).trim();
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    private static void writeApkSoMark(File gameDir, String sha) {
+        File f = apkSoMarkFile(gameDir);
+        if (f == null || sha == null || sha.isEmpty()) return;
+        try (OutputStream os = new FileOutputStream(f)) {
+            os.write(sha.getBytes(StandardCharsets.UTF_8));
+        } catch (Throwable t) {
+            Log.w(TAG, "writeApkSoMark: " + t);
+        }
     }
 
     /** 是否存在任意 game 的 OTA so / manifest / patch.json */
