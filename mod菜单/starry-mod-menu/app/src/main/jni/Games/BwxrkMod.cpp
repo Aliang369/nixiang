@@ -463,6 +463,9 @@ static object_new_t             g_fnObjectNew = nullptr;
 static array_new_t              g_fnArrayNew = nullptr;
 static void*                    g_listSbyteKlass = nullptr;
 static std::atomic<int>         g_gameApiState{0};   // 0=未解析 1=就绪 2=解析失败(可重试)
+// ★审计发现 1（2026-10-15）修复：下面 4 个指针是**非原子**全局，首次解析必须串行化，
+//   否则两线程并发首调会读到半写指针（实测单线程未触发，属加固）。
+static std::mutex               g_apiMutex;
 
 enum : size_t {
     kOffListItems = 0x10,   // List<T>._items
@@ -484,9 +487,13 @@ static void* ResolveGameFn(const char* ns, const char* cls, const char* method, 
 }
 
 // 解析一次游戏 API；失败留状态 2 供下次重试（只在玩家点技能时调用，频率极低）
+// ★并发：首次解析写 4 个非原子全局 ⇒ 必须持锁 + double-check（审计发现 1）。
+//   注意不能改用 std::call_once —— 那会「失败也只跑一次」，丢掉状态 2 的重试语义。
 static bool EnsureGameApi() {
-    const int st = g_gameApiState.load();
-    if (st == 1) return true;
+    if (g_gameApiState.load() == 1) return true;
+
+    std::lock_guard<std::mutex> lk(g_apiMutex);
+    if (g_gameApiState.load() == 1) return true;      // double-check：等锁期间别人已装好
 
     void* mi = nullptr;
     g_fnSendThreeStar = reinterpret_cast<SendThreeStar_t>(
