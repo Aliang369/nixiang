@@ -2,7 +2,7 @@
   "template_id": "mrfzzmd",
   "name": "明日方舟：终末地",
   "package": "com.hypergryph.endfield",
-  "source": "已归档 APK；详见 10_docs/终末地/",
+  "source": "Games/EndfieldEntry.cpp kEndfield_Features (legacy 出处: Main.cpp g_featureList(STARRY_GAME_ENDFIELD))",
   "features": [
     {"feat_num": 1, "name": "百倍伤害"},
     {"feat_num": 2, "name": "无敌"},
