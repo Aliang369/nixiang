@@ -2650,73 +2650,86 @@ static void* NoAdMiGetV50(void* klass, const char* name, int argc) {
  *     用 **`ad_id` 必须在 [1, 100000)** 这条业务约束自证（真机实测 adid=7/13/17），
  *     并把选中的约定**缓存 + 打一行日志**（`AD51 retval 约定=A|B`），之后不再双读。
  * ============================================================================ */
-static int g_noAdRetvalDirectV51 = -1;  // -1 未定案 / 1 = 候选①（读 r） / 0 = 候选②（读 r+0x10）
+static int g_noAdRetvalDirectV51 = -1;  // -1 未定案 / 1 = 候选A（读 r） / 0 = 候选B（读 r+0x10）
 
-/** 按已定案的约定读一个 64 位值；`direct` 为 -1 时返回两个候选（供自证）。 */
-static void NoAdReadRawV51(void* r, int direct, uint64_t* out) {
+/** 调 0 参 getter，返回 `runtime_invoke` 的原始返回值指针（失败返回 nullptr）。 */
+static void* NoAdInvokeGetRawV52(void* mi, void* obj) {
+    if (!mi || !LivePtr(obj)) return nullptr;
+    auto& api = Il2Cpp::GetApi();
+    if (!api.runtime_invoke) return nullptr;
+    void* exc = nullptr;
+    t_modInvoke++;
+    void* r = api.runtime_invoke(mi, obj, nullptr, &exc);
+    t_modInvoke--;
+    if (!r || exc) return nullptr;
+    return r;
+}
+
+/** 按候选约定从原始返回值里取出 64 位：`direct==1` 读 `r`（值类型直接给值）、
+ *  `direct==0` 读 `r+0x10`（装箱对象的数据区）。 */
+static void NoAdReadRawV52(void* r, int direct, uint64_t* out) {
     *out = 0;
     if (!r) return;
-    if (direct == 1) {
-        memcpy(out, r, 8);
-    } else if (direct == 0) {
-        memcpy(out, (const char*)r + 0x10, 8);
-    }
+    memcpy(out, (direct == 1) ? r : (const char*)r + 0x10, 8);
 }
 
-/** 调 0 参 getter 取 int32；`adIdHint=true` 时用「[1,100000)」自证并定案约定。 */
-static int32_t NoAdCallGetI32V51(void* mi, void* obj, bool* ok, bool adIdHint) {
-    *ok = false;
-    if (!mi || !LivePtr(obj)) return 0;
-    auto& api = Il2Cpp::GetApi();
-    if (!api.runtime_invoke) return 0;
-    void* exc = nullptr;
-    t_modInvoke++;
-    void* r = api.runtime_invoke(mi, obj, nullptr, &exc);
-    t_modInvoke--;
-    if (!r || exc) return 0;
-    const int direct = (g_noAdRetvalDirectV51 < 0) ? 1 : g_noAdRetvalDirectV51;
-    uint64_t raw = 0;
-    NoAdReadRawV51(r, direct, &raw);
-    int32_t v = (int32_t)(raw & 0xFFFFFFFFu);
-    if (g_noAdRetvalDirectV51 < 0 && adIdHint) {
-        /* 双读自证：候选① 不合理就试候选②，用业务约束（adid 是小正整数）定案 */
-        const bool okA = (v > 0 && v < 100000);
-        uint64_t rawB = 0;
-        NoAdReadRawV51(r, 0, &rawB);
-        const int32_t vB = (int32_t)(rawB & 0xFFFFFFFFu);
-        const bool okB = (vB > 0 && vB < 100000);
-        if (okA || okB) {
-            g_noAdRetvalDirectV51 = okA ? 1 : 0;
-            v = okA ? v : vB;
-            LOGI(TPL_LOG " AD51 retval 约定=%s 定案（adid 自证 raw=%llu/%llu r=%p）",
-                 okA ? "A(读 r)" : "B(读 r+0x10)", (unsigned long long)raw, (unsigned long long)rawB, r);
-        } else {
+/** ★v52：三个标量一次性**双约定读取 + 业务约束定案**（比 v51 只用 ad_id 更稳）。
+ *  判据（全部来自真机实测值）：`uuid ≈ 1.31e17`（19 位）⇒ `> 1e15`；`ad_id = 7/13/17` ⇒ `(0,1e5)`；
+ *  `result ∈ {0,1,2}` ⇒ `[0,16]`。**两种约定都打印一次**（`AD52 raw` 行），便于日后核对。
+ *  两种都不满足 ⇒ 不定案、不写任何东西（fail-safe：广告照播、奖励走 AD43 老路）。 */
+struct NoAdScalarsV52 {
+    int32_t adId;
+    int32_t res;
+    uint64_t uuid;
+    bool ok;
+};
+static NoAdScalarsV52 NoAdReadScalarsV52(void* miAdId, void* miRes, void* miUuid, void* sub,
+                                        const char* src) {
+    NoAdScalarsV52 o = {0, 0, 0, false};
+    void* rA = NoAdInvokeGetRawV52(miAdId, sub);
+    void* rR = NoAdInvokeGetRawV52(miRes, sub);
+    void* rU = NoAdInvokeGetRawV52(miUuid, sub);
+    if (!rA || !rR || !rU) {
+        static std::atomic<uint32_t> s_e{0};
+        if (s_e.fetch_add(1, std::memory_order_relaxed) < 6)
+            LOGW(TPL_LOG " AD52[%s] getter 调用失败（exc）⇒ 不干预", src);
+        return o;
+    }
+    uint64_t a1 = 0, r1 = 0, u1 = 0, a0 = 0, r0 = 0, u0 = 0;
+    NoAdReadRawV52(rA, 1, &a1); NoAdReadRawV52(rR, 1, &r1); NoAdReadRawV52(rU, 1, &u1);
+    NoAdReadRawV52(rA, 0, &a0); NoAdReadRawV52(rR, 0, &r0); NoAdReadRawV52(rU, 0, &u0);
+    static std::atomic<uint32_t> s_raw{0};
+    if (s_raw.fetch_add(1, std::memory_order_relaxed) < 4)
+        LOGI(TPL_LOG
+             " AD52[%s] raw 候选A(读r): adid=%d result=%d uuid=%llu | 候选B(r+0x10): adid=%d result=%d uuid=%llu",
+             src, (int32_t)(a1 & 0xFFFFFFFFu), (int32_t)(r1 & 0xFFFFFFFFu), (unsigned long long)u1,
+             (int32_t)(a0 & 0xFFFFFFFFu), (int32_t)(r0 & 0xFFFFFFFFu), (unsigned long long)u0);
+    const int32_t ad1 = (int32_t)(a1 & 0xFFFFFFFFu), rs1 = (int32_t)(r1 & 0xFFFFFFFFu);
+    const int32_t ad0 = (int32_t)(a0 & 0xFFFFFFFFu), rs0 = (int32_t)(r0 & 0xFFFFFFFFu);
+    const bool ok1 = (u1 > 1000000000000000ull) && ad1 > 0 && ad1 < 100000 && rs1 >= 0 && rs1 <= 16;
+    const bool ok0 = (u0 > 1000000000000000ull) && ad0 > 0 && ad0 < 100000 && rs0 >= 0 && rs0 <= 16;
+    int conv = g_noAdRetvalDirectV51;
+    if (conv < 0) {
+        if (ok1) conv = 1;
+        else if (ok0) conv = 0;
+        else {
             static std::atomic<uint32_t> s_nd{0};
-            if (s_nd.fetch_add(1, std::memory_order_relaxed) < 4)
-                LOGW(TPL_LOG " AD51 retval 约定未能定案（两种读法都不像 adid：%d/%d r=%p）", v, vB, r);
-            return 0;
+            if (s_nd.fetch_add(1, std::memory_order_relaxed) < 6)
+                LOGW(TPL_LOG
+                     " AD52[%s] 两种返回值约定都不满足业务约束（A: adid=%d res=%d uuid=%llu | "
+                     "B: adid=%d res=%d uuid=%llu）⇒ 不定案、不干预",
+                     src, ad1, rs1, (unsigned long long)u1, ad0, rs0, (unsigned long long)u0);
+            return o;
         }
+        g_noAdRetvalDirectV51 = conv;
+        LOGI(TPL_LOG " AD52 retval 约定定案=%s（adid=%d result=%d uuid=%llu）", conv ? "A(读 r)" : "B(读 r+0x10)",
+             conv ? ad1 : ad0, conv ? rs1 : rs0, (unsigned long long)(conv ? u1 : u0));
     }
-    *ok = true;
-    return v;
-}
-
-/** 调 0 参 getter 取 uint64（沿用已定案的约定）。 */
-static uint64_t NoAdCallGetU64V51(void* mi, void* obj, bool* ok) {
-    *ok = false;
-    if (!mi || !LivePtr(obj)) return 0;
-    auto& api = Il2Cpp::GetApi();
-    if (!api.runtime_invoke) return 0;
-    void* exc = nullptr;
-    t_modInvoke++;
-    void* r = api.runtime_invoke(mi, obj, nullptr, &exc);
-    t_modInvoke--;
-    if (!r || exc) return 0;
-    const int direct = (g_noAdRetvalDirectV51 < 0) ? 1 : g_noAdRetvalDirectV51;
-    uint64_t raw = 0;
-    NoAdReadRawV51(r, direct, &raw);
-    *ok = true;
-    return raw;
+    o.adId = (conv == 1) ? ad1 : ad0;
+    o.res = (conv == 1) ? rs1 : rs0;
+    o.uuid = (conv == 1) ? u1 : u0;
+    o.ok = true;
+    return o;
 }
 
 /** 调 0 参 getter 取对象引用：**双读 + 类名自证**（见上方说明）。 */
@@ -2836,20 +2849,16 @@ static void NoAdRspCoreV50(void* rsp, const char* src) {
                  s_getRes, s_getAdId, s_getUuid, s_setRes);
         return;
     }
-    bool okR = false, okA = false, okU = false;
-    /* `ad_id` 那次传 `adIdHint=true` ⇒ 由它**定案**值类型的返回值约定（双读自证） */
-    const int32_t adId = NoAdCallGetI32V51(s_getAdId, sub, &okA, true);
-    const int32_t res = NoAdCallGetI32V51(s_getRes, sub, &okR, false);
-    const uint64_t uuid = NoAdCallGetU64V51(s_getUuid, sub, &okU);
+    /* ★v52：三个标量一次性双约定读取 + 业务约束定案（见 `NoAdReadScalarsV52` 注释） */
+    const NoAdScalarsV52 sc = NoAdReadScalarsV52(s_getAdId, s_getRes, s_getUuid, sub, src);
+    if (!sc.ok) return;
+    const int32_t adId = sc.adId;
+    const int32_t res = sc.res;
+    const uint64_t uuid = sc.uuid;
     const uint32_t n = g_adV48Seen.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 12 || (n % 20) == 0)
-        LOGI(TPL_LOG " AD50[%s] 读到 adid=%d uuid=%llu result=%d (ok=%d/%d/%d 第%u次)", src, adId,
-             (unsigned long long)uuid, res, okR ? 1 : 0, okA ? 1 : 0, okU ? 1 : 0, n);
-    if (!okR || !okA || !okU) {
-        if (s_bailMi.fetch_add(1, std::memory_order_relaxed) < 6)
-            LOGW(TPL_LOG " AD50[%s] getter 调用失败（exc）→ 本次不干预", src);
-        return;
-    }
+        LOGI(TPL_LOG " AD50[%s] 读到 adid=%d uuid=%llu result=%d（第%u次）", src, adId,
+             (unsigned long long)uuid, res, n);
     /* ★v51 二次自证：**uuid 必须像服务端真 uuid**（真机实测值 ≈1.31e17 的 19 位十进制）。
      *  为什么必须挡：这条路的 uuid 是我们 invoke 读出来的，一旦读错就会把**错的 uuid** 交给
      *  代回调 ⇒ cmd 2762 被服务端拒 ⇒ 奖励拿不到（而这条路的 AD43 兜底又因为我们成功拦下了
@@ -2882,8 +2891,11 @@ static void NoAdRspCoreV50(void* rsp, const char* src) {
         return;
     }
     /* 写后复核：再用游戏自己的 getter 读一次。`复核=2` = 「广告不会再出画」已实测成立。 */
-    bool ok2 = false;
-    const int32_t back = NoAdCallGetI32V51(s_getRes, sub, &ok2, false);
+    void* rBack = NoAdInvokeGetRawV52(s_getRes, sub);
+    uint64_t backRaw = 0;
+    bool ok2 = (rBack != nullptr);
+    if (ok2) NoAdReadRawV52(rBack, (g_noAdRetvalDirectV51 == 0) ? 0 : 1, &backRaw);
+    const int32_t back = (int32_t)(backRaw & 0xFFFFFFFFu);
     const uint32_t w = g_adV48Wrote.fetch_add(1, std::memory_order_relaxed) + 1;
     if (w <= 12 || (w % 20) == 0)
         LOGI(TPL_LOG
