@@ -66,6 +66,10 @@ usage() {
   - 默认提交后推送 origin/main（用户口令「git」= 提交 + 推送连体）。
     只有明确不想推送时才加 --no-push，并在汇报里说明未推送。
   - push 失败/冲突则保留本地提交并报错，不自动强推。
+  - 退出码（2026-10-16 起，调用方应按失败处理）：0 = 已提交且（按需）推送成功，或 --no-push；
+    **1 = 提交成功但未推送**（网络/通道问题，提交在本地、汇报须写明 ahead）；
+    **3 = 远端与本地历史分叉**（需 fetch/rebase，绝不 force）。
+    仅「提交本身失败」（白名单越界、空白门禁等）沿用各自原有的非 0 码。
   - 空白检查自动排除 pipeline.log、06_dumped、evidence 原始日志和二进制。
 EOF
   exit 2
@@ -298,8 +302,22 @@ fi
 
 git commit -m "$MESSAGE"
 
+# 推送结果必须经退出码传出去（2026-10-16 修）：旧写法 `push_main main || echo "…"`
+# 把失败吞掉后仍以 0 结束，于是**调用方只看 rc 就会把「已提交但没推上去」当成功**——
+# `finalize_round.sh` 里那句 `rc=$?; [ "$rc" -eq 0 ] || step_fail "$rc"` 因此一直是死代码，
+# pipeline 的 archive 阶段同理。现在：本地提交照旧保留、提示照旧打印，但 rc = push_main 的 rc。
+PUSH_RC=0
 if [[ "$PUSH" == "1" ]]; then
-  push_main main || echo "[push] 未推送：本地提交已保留，汇报里写明 ahead"
+  push_main main || PUSH_RC=$?
+  if [[ "$PUSH_RC" != "0" ]]; then
+    echo "[push] 未推送（push_main rc=${PUSH_RC}）：本地提交已保留（$(git rev-parse --short HEAD)），汇报里写明 ahead"
+  fi
 fi
 
 echo "==> 提交完成: $(git log -1 --oneline)"
+
+if [[ "$PUSH_RC" != "0" ]]; then
+  # 1 = 未推送/网络问题（提交在本地）；3 = 远端分叉（需 fetch/rebase，绝不 force）。
+  echo "==> 退出码 ${PUSH_RC}：提交已在本地，**远端未同步**，调用方请按失败处理" >&2
+fi
+exit "$PUSH_RC"

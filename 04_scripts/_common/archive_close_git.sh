@@ -109,13 +109,24 @@ git diff --cached --check -- "$STATE" "$MANIFEST"
 [[ -n "$MESSAGE" ]] || MESSAGE="$GAME 管线状态收口"
 git commit -m "$MESSAGE"
 
+PUSH_RC=0
 if [[ "$PUSH" == "1" ]]; then
-  push_main main || echo "[push] 未推送：本地提交已保留，汇报里写明 ahead"
+  push_main main || PUSH_RC=$?
+  if [[ "$PUSH_RC" != "0" ]]; then
+    echo "[push] 未推送（push_main rc=${PUSH_RC}）：本地提交已保留（$(git rev-parse --short HEAD)），汇报里写明 ahead"
+  fi
 fi
 
 echo "==> 状态提交完成: $(git log -1 --oneline)"
 echo "==> 交付 manifest: $MANIFEST"
 python3 04_scripts/_common/delivery_manifest.py --game "$GAME" --output "$MANIFEST" --check
+
+# 与 archive_scoped_git.sh 同一处修复（2026-10-16）：push 失败必须经退出码传出去，
+# 否则 pipeline 的 archive_close 阶段会把「已提交但没推上去」当成功。manifest 复核保持在上方先跑。
+if [[ "$PUSH_RC" != "0" ]]; then
+  echo "==> 退出码 ${PUSH_RC}：提交已在本地，**远端未同步**，调用方请按失败处理" >&2
+fi
+exit "$PUSH_RC"
 
 # P2-2（2026-10-10 追迹迷城复盘落地）：轮次台账 ≥2 条 ⇒ 提醒补一次会话复盘
 ROUNDS_FILE="10_docs/$GAME/轮次台账.tsv"
