@@ -43,8 +43,18 @@ ORIG_SIZE=883770021
 DEX_SRC="${STARRY_SRC}/templates/mxyzt_menu_20261002/classes4.dex"
 DEX_SHA256="69af7b77e4ff881aa569deeb4ba4e9b85f5cd3a5e47368ab77126f24981d2ae6"
 SO_SRC="${STARRY_SRC}/libs_mxyzt/arm64-v8a/libstarry_magic.so"
-SO_SIZE=2223040
-SO_SHA256="f08deb3b4316b0b4adc7205647da2f9fb3323d9a93eed7bbee68673eb45a8718"
+# ★FW-16（2026-10-16 优化会话）：so 的 size/sha256 **不再手抄** —— 手抄值每次「只换 so」交付后都会过期
+#   （v46b 的 2223040/f08deb3b… 被 v52 的 2264760/560b562f… 取代后无人更新 ⇒ 要么在校验处 FAIL，
+#    要么有人绕过断言把**旧 so** 拼进新包，跑起来是新包旧逻辑）。改为**从 SO_SRC 现算**。
+#   需要锁定某一版 so 时，调用前设 `SO_SHA256_EXPECT=<sha256>`（不设＝只现算并打印供人工核对）。
+#   注意：此处 `die()` 尚未定义（在第 74 行），故用内联错误处理。
+if [[ ! -f "${SO_SRC}" ]]; then
+  echo "ERROR: so 不存在：${SO_SRC}（先跑 04_scripts/冒险与征途/mxyzt_build_so.sh）" >&2
+  exit 1
+fi
+SO_SIZE="$(wc -c <"${SO_SRC}" | tr -d ' ')"
+SO_SHA256="$("${NIXIANG_PYTHON:-python}" -c 'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "${SO_SRC}")"
+SO_SHA256_EXPECT="${SO_SHA256_EXPECT:-}"
 CXX_SRC="${STARRY_SRC}/libs_mxyzt/arm64-v8a/libc++_shared.so"
 MF_SRC="${NIXIANG}/07_patched/冒险与征途/surgical/AndroidManifest.xml"
 MF_SIZE=39148
@@ -103,7 +113,8 @@ echo "[1/6] input checks"
 osize="$(wc -c <"${ORIG_APK}" | tr -d ' ')"
 [[ "${osize}" == "${ORIG_SIZE}" ]] || die "官方底包体积不符：期望 ${ORIG_SIZE} 实得 ${osize}（底包被换过？禁止继续）"
 ssize="$(wc -c <"${SO_SRC}" | tr -d ' ')"
-[[ "${ssize}" == "${SO_SIZE}" ]] || die "so 体积不符：期望 ${SO_SIZE} 实得 ${ssize}"
+[[ "${ssize}" == "${SO_SIZE}" ]] || die "so 体积自检失败：现算 ${SO_SIZE} 实得 ${ssize}（同一次运行内不可能不符，说明文件被并发改写）"
+(( ssize > 1000000 && ssize < 8000000 )) || die "so 体积异常：${ssize} B（预期 1–8 MB 量级的菜单 so；是不是拼到了别的 .so？）"
 msize="$(wc -c <"${MF_SRC}" | tr -d ' ')"
 [[ "${msize}" == "${MF_SIZE}" ]] || die "补丁清单体积不符：期望 ${MF_SIZE} 实得 ${msize}"
 "${PY}" -c "
@@ -113,13 +124,17 @@ if h!=sys.argv[2]:
     print('dex sha256 mismatch: %s'%h); sys.exit(1)
 print('dex sha256 ok')
 " "${DEX_SRC}" "${DEX_SHA256}" || die "菜单 dex 指纹不符（重跑 mxyzt_build_dex.sh）"
-"${PY}" -c "
+if [[ -n "${SO_SHA256_EXPECT}" ]]; then
+  "${PY}" -c "
 import hashlib,sys
 h=hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest()
 if h!=sys.argv[2]:
     print('so sha256 mismatch: %s'%h); sys.exit(1)
-print('so sha256 ok')
-" "${SO_SRC}" "${SO_SHA256}" || die "so 指纹不符（重跑 mxyzt_build_so.sh）"
+print('so sha256 ok（强校验：== SO_SHA256_EXPECT）')
+" "${SO_SRC}" "${SO_SHA256_EXPECT}" || die "so 指纹不符：期望 ${SO_SHA256_EXPECT}（重跑 mxyzt_build_so.sh）"
+else
+  echo "[check] so sha256（现算）= ${SO_SHA256}  ← 需要锁定时设 SO_SHA256_EXPECT=<sha256>"
+fi
 # so 字节自检：四条菜单串 + 标签 + 目标库名
 for s in 'Toggle_秒杀小怪' 'Toggle_无敌' 'Toggle_全模式技能伤害增加' 'Toggle_免广告'; do
   c="$(LC_ALL=C grep -ac "${s}" "${SO_SRC}" || true)"
@@ -127,7 +142,7 @@ for s in 'Toggle_秒杀小怪' 'Toggle_无敌' 'Toggle_全模式技能伤害增�
 done
 LC_ALL=C grep -aq '\[mxyzt\]' "${SO_SRC}" || die "so 缺少 [mxyzt] 标签"
 LC_ALL=C grep -aq 'libil2cpp.so' "${SO_SRC}" || die "so 缺少 libil2cpp.so 等待库名"
-echo "[check] 底包 ${osize} B / so ${ssize} B / 清单 ${msize} B / dex+so 指纹 ok / 四条菜单串 ok"
+echo "[check] 底包 ${osize} B / so ${ssize} B / 清单 ${msize} B / dex 指纹 ok / so 现算（见上） / 四条菜单串 ok"
 
 echo "[2/6] merge (python zipfile, 官方非注入条目字节保真)"
 "${PY}" - "${ORIG_APK}" "${WORK}/merged.apk" "${MF_SRC}" "${DEX_SRC}" "${SO_SRC}" "${CXX_SRC}" "${CRT_SRC}" <<'PYEOF'

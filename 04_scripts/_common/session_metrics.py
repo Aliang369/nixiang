@@ -10,7 +10,7 @@
   * bash 占比、bash 里做文本检索的占比     → D3「别把 bash 当检索器」（目标 <50%）
   * 单条工具结果 >8 KB 的条目              → D3 目标 0 条
   * 单文件触达 top-N                       → A2/D3 大文件热点（read/edit/bash 参数里出现的路径）
-  * 单条 user 消息最大字符                 → D5 子代理回传目标 ≤3,000 字符
+  * 单条子代理回传最大字符                 → D5 目标 ≤3,000 字符（人类输入/注入体只作信息项，不计门禁）
   * compress 次数 + prune 阴影条数          → D7 触发水位 ≤90 K、一块一主题
   * 上下文峰值 / 缓存命中率 / reasoning 量  → 只报告不设阈值（缓存已到顶，无单价空间）
 
@@ -52,6 +52,11 @@ SEARCH_RE = re.compile(r"\b(grep|rg|awk|sed\s+-n|head|tail|cut|sort|uniq|wc|cat\
 NEUTRAL_RE = re.compile(r"^\s*(cd|echo|printf|sleep|true|:)\b")
 # 注入体标记：工作区指令由运行时注入到首条 user 消息，不是人说的话，D5 不应计入门禁
 INJECT_MARKS = ("Instructions from:", "<system-reminder>", "Current runtime context.")
+# D5 只对「子代理回传」计门禁：这几个工具的结果正文就是子会话交回父会话的东西。
+# 2026-10-16 修正：旧实现拿 `user/message` 当"D5 入父体量"，而该类型实为**人类输入**（注入体已排除）
+# ⇒ 用户粘贴长口令必然判 FAIL，门禁恒不可满足、逐渐被无视（冒险与征途复盘 P2-2 实测：唯一违规
+# 是一条 16,801 字符的**用户口令**，agent 无法控制）。现改为：门禁只测子代理回传，人类输入降为信息项。
+DELEG_TOOLS = ("subagent", "subagent_fork", "task", "workflow")
 
 
 def _strip_quotes(s: str) -> str:
@@ -160,7 +165,7 @@ def collect(paths: list[Path], top: int) -> dict:
         "bash_seg_total": 0, "bash_seg_search": 0,
         "bash_bytes": 0, "read_bytes": 0, "read": 0, "edit": 0,
         "result_kb": [], "hot": Counter(), "compress": 0, "prune": 0, "prune_tokens": 0,
-        "user_msgs": [], "input_tokens": 0, "cached_tokens": 0, "output_tokens": 0,
+        "user_msgs": [], "deleg_msgs": [], "input_tokens": 0, "cached_tokens": 0, "output_tokens": 0,
         "peak_ctx": 0, "reasoning_bytes": 0, "turns": 0,
     }
     for path in paths:
@@ -196,6 +201,8 @@ def collect(paths: list[Path], top: int) -> dict:
                 name, args = calls.get(cid, ("?", ""))
                 body = text_of(d.get("content")) or text_of((d.get("message") or {}).get("content"))
                 nb = len(body.encode("utf-8"))
+                if name in DELEG_TOOLS:
+                    m["deleg_msgs"].append((nb, name))   # D5：子代理回传正文体量（唯一计门禁项）
                 if name == "bash":
                     m["bash_total"] += 1
                     m["bash_bytes"] += nb
@@ -322,15 +329,25 @@ def report(m: dict, top: int) -> tuple[str, list[str]]:
             A("- %d 次  `%s`" % (c, f))
 
     A("")
-    A("## D5 单条入父上下文体量")
-    A("- 单条 user 消息最大 **%d 字符**（阈值 ≤%d）"
-      % (m["big_msgs"][0][0] if m["big_msgs"] else 0, GATES["subagent_msg_chars"]))
+    A("## D5 入父上下文体量")
+    dm = sorted(m["deleg_msgs"], reverse=True)
+    A("- 单条**子代理回传**最大 **%d 字符**（阈值 ≤%d）%s"
+      % (dm[0][0] if dm else 0, GATES["subagent_msg_chars"],
+         "" if dm else " ← 本次没派子代理，本项不计违规"))
+    for n, name in dm[:3]:
+        A("    - %d 字符  `%s`" % (n, name))
+    if dm and dm[0][0] > GATES["subagent_msg_chars"]:
+        bad.append("D5 子代理回传 %d 字符 > %d（改「结论 ≤20 行 + 落盘路径」）"
+                   % (dm[0][0], GATES["subagent_msg_chars"]))
+    if m["user_msgs"]:
+        hm = max(m["user_msgs"])
+        A("- 单条**人类输入**最大 %d 字符（**信息项，不计门禁**：用户可粘贴长口令，agent 无法控制）"
+          % hm[0])
+        if hm[0] > GATES["subagent_msg_chars"]:
+            A("    - 该条即用户粘贴的长需求/长口令，属正常，不作为违规")
     if m["injected_msgs"]:
         A("- 已排除运行时注入体 %d 条（最大 %d 字符：AGENTS/skill 指令，不是对话输入）"
           % (len(m["injected_msgs"]), max(k for k, _ in m["injected_msgs"])))
-    if m["big_msgs"] and m["big_msgs"][0][0] > GATES["subagent_msg_chars"]:
-        bad.append("D5 单条消息 %d 字符 > %d（改「结论 ≤20 行 + 落盘路径」）"
-                   % (m["big_msgs"][0][0], GATES["subagent_msg_chars"]))
 
     A("")
     A("## D7 压缩与预算")

@@ -15,6 +15,8 @@
 | 2026-10-16 | `app/src/main/java/com/starry/magic/ota/PlayOtaManager.java` | `invalidateOtaIfApkUpdated` 增**无戳内容判据兜底**：比对「下载补丁时记录的包内 so sha256」（写 `starry_ota/<game_id>/.apk_so_sha`，与补丁同生共死、不动 Preferences）与当前包内 so sha256，不一致才清；**无记录一律保守保留**；判定理由全程打日志。下载成功路径同步写入该记录 | 同上（FW-13 ②③）。**刻意不做**「读不到戳就无条件清」——OTA so 与包内 so 同源时两边都无戳，那会退化成每次冷启动都清掉玩家刚下载的补丁（无悔华夏 2026-09-24 的回归形态） |
 | 2026-10-16 | `app/src/main/jni/Android_mrfzzmd.mk`、`scripts/surgical_endfield_1.6.4.sh`（**游戏私有**） | mk 加 `LOCAL_LDFLAGS += -Wl,--undefined=kStarryBuildStamp`（与共享 `retain` 双保险，附事故注释）；外科脚本加「so 缺 `STARRYSTAMP1:EPOCH=` 即 `ERROR` 拒出包」断言（并打印本次戳），另新增 `ENDFIELD_OUT` 可把产物指到临时区做 A/B（避免验证性构建误覆盖正式包） | 同上；断言首次运行即打印戳 ⇒ 把「缺戳包」挡在 L1 出包口。通用化（模板 mk / `_common` 出包门禁）见复盘 **P0-2**，登记 `框架待办.md` **FW-14** |
 
+| 2026-10-16 | `scripts/surgical_mxyzt_1.5.9.sh`（游戏私有） | so 的 `SO_SIZE`/`SO_SHA256` **手抄改现算**（`wc -c` + `hashlib`，删 v46b 遗留硬编码）；加体积量级断言（1–8 MB）；sha256 校验改为**可选强校验** `SO_SHA256_EXPECT=<sha256>`（默认现算并打印供人工核对） | `10_docs/_state/规范优化_20261016_冒险与征途1.5.9会话复盘.md` P0-4 + `框架待办.md` **FW-16**（旧值 2223040/`f08deb3b…` 已被 v52 的 2264760/`560b562f…` 取代）；用户当轮口令「按照你说的方案全量修改，然后git」 |
+
 ## 待办（框架侧）
 
 见 `10_docs/_state/框架待办.md`（框架侧发现的统一落点；本文件只记**已发生**的改动）。
