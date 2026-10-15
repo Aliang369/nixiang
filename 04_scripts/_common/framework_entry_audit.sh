@@ -447,8 +447,12 @@ else
     if [ -z "$man" ]; then
       bad "aapt2 dump xmltree 失败：${APK}"
     else
+      # ⚠ 禁写成 `printf '%s\n' "$man" | grep -qF …`：grep -q 命中即退出 ⇒ printf 吃 SIGPIPE(141)，
+      #   与 :20 的 pipefail 相乘会把「命中」判成失败（2026-10-16 终末地 1.6.4 实测假阴性：
+      #   同一 dump 里**靠前**的 StarryInitProvider 判 MISS、**靠后**的 MenuService 判 HIT）。
+      #   here-string 不建管道、无 SIGPIPE，匹配语义仍是「$man 含字面量 ="$cls"」。
       for cls in com.starry.magic.StarryInitProvider com.starry.magic.menu.MenuService; do
-        if printf '%s\n' "$man" | grep -qF "=\"${cls}\""; then
+        if grep -qF "=\"${cls}\"" <<<"$man"; then
           ok "AXML 含 ${cls}（aapt2：${AAPT2}）"
         else
           bad "AXML 未含 ${cls} ⇒ 入口/服务没写进 Manifest（dex 里有类也白搭）"

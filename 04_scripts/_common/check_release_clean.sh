@@ -17,8 +17,9 @@
 #
 #  判定:
 #    · 命中 FORBIDDEN = 违规（手写诊断/裸日志，运行期真的会跑），
-#      唯一豁免：包在 `#ifdef STARRY_DIAG` / `#if MOD_DIAG_LUA` 块内；
-#      `#ifndef STARRY_DIAG` / `#if !MOD_DIAG_LUA` 块内属正式包路径 ⇒ 照查。
+#      豁免：包在**诊断守卫**块内 —— DIAG_WORDS = STARRY_DIAG / STARRY_TRACE / MOD_DIAG_LUA
+#      （三者同为构建期开关：正式包 `Android_*.mk` 不传 ⇒ 宏不定义 ⇒ 块内代码不编入）。
+#      取反形式 `#ifndef STARRY_TRACE` / `#if !STARRY_TRACE` 等属正式包路径 ⇒ 照查。
 #    · `DLOG/DLOGN/DWARN` 不算违规（ModDiag.h 的宏本身就是隔离），只做统计。
 #    · 注释不参与判定；`--so` 时附加二进制检查（不得含 moddiag.log / ym.log 等）。
 #  退出码: 0 = 干净；1 = 有违规；2 = 用法错误
@@ -120,9 +121,19 @@ def strip_comments(text):
     return out
 
 guard_re = re.compile(r'^\s*#\s*(ifdef|ifndef|if|elif|else|endif)\b(.*)$')
-diag_word = re.compile(r'STARRY_DIAG|MOD_DIAG_LUA')
+# 诊断守卫词汇表（唯一来源）。判据：宏由构建期开关控制，正式包不传即不定义 ⇒ 块内代码不编入。
+#   STARRY_DIAG   — ModDiag.h 机制（DLOG/DLOGN/DWARN 的开关）
+#   MOD_DIAG_LUA  — Lua 诊断 chunk（正式包 MOD_DIAG_LUA_TEXT == ""）
+#   STARRY_TRACE  — 通用 trace 开关：`Android_*.mk` 一律 `ifdef STARRY_TRACE → -DSTARRY_TRACE=1`
+#                   （由 04_scripts/<游戏>/<tag>_build_so.sh 传），源文件侧 `#if defined(STARRY_TRACE)`
+#                   未定义时把 TRACE 宏展开成 ((void)0)。2026-10-16 补：此前只认前两项，
+#                   使已交付文件被误判 VIOLATION（假阳性）——实测 Games/ 与 Includes/ 内
+#                   STARRY_TRACE 守卫 43 处，其中 Games/BjdwMod.cpp 12 处。
+DIAG_WORDS = ("STARRY_DIAG", "MOD_DIAG_LUA", "STARRY_TRACE")
+_alt = "|".join(DIAG_WORDS)
+diag_word = re.compile(_alt)
 neg_re = re.compile(r'^\s*#\s*(?:ifndef\s+|if\s+!\s*(?:defined\s*\(?\s*)?)'
-                    r'(?:STARRY_DIAG|MOD_DIAG_LUA)')
+                    r'(?:' + _alt + r')')
 
 viol, macro = [], []
 for p in paths:
@@ -138,9 +149,17 @@ for p in paths:
         if m:
             kind, rest = m.group(1), m.group(2)
             if kind in ("ifdef", "if", "ifndef"):
-                stack.append(bool(diag_word.search(rest)) and not neg_re.match(line))
+                if neg_re.match(line):        # 取反＝正式包路径 ⇒ 整块照查
+                    stack.append(False)
+                elif diag_word.search(rest):  # 诊断守卫 ⇒ 块内不编入正式包，免查
+                    stack.append(True)
+                else:                         # 非诊断条件 ⇒ 两个分支都照查
+                    stack.append(None)        # None＝不豁免，且 #else/#elif 不许翻转它
             elif kind in ("else", "elif"):
-                if stack: stack[-1] = not stack[-1]
+                # 2026-10-16 修：原先无条件 `stack[-1] = not stack[-1]`，使**任意**非诊断 `#if` 的
+                # `#else` 分支被算作「已守卫」⇒ 真诊断漏进正式包（假阴性）。只有诊断守卫才翻转。
+                if stack and stack[-1] is not None:
+                    stack[-1] = not stack[-1]
             elif kind == "endif":
                 if stack: stack.pop()
             continue
@@ -157,7 +176,8 @@ for p in paths:
 
 bad = [v for v in viol if v[0] == "VIOLATION"]
 if viol:
-    print("--- 手写诊断清单（VIOLATION = 会进正式包；GUARDED = 已包在 STARRY_DIAG 块内）---")
+    print("--- 手写诊断清单（VIOLATION = 会进正式包；GUARDED = 已包在诊断守卫块内"
+          "（STARRY_DIAG / STARRY_TRACE / MOD_DIAG_LUA））---")
     for tag, p, i, desc, text in viol:
         print(f"  {tag:9s} {p}:{i}  {desc}\n            {text}")
 if list_only and macro:
