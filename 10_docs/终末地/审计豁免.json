@@ -2,23 +2,14 @@
   "schema": "starry-audit-waivers/v1",
   "game": "终末地",
   "package": "com.hypergryph.endfield",
-  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。2026-10-16 收尾：原 axml_provider_false_negative 豁免已**删除**——该假阴性根因已由 d6aaeb5f「修共享门禁三条缺陷」修掉（不再用 printf|grep -qF），本轮复跑 [F] 两条均**原生 ✓**，豁免已无对象，留着只会掩盖回归。",
   "waivers": [
     {
       "id": "android_mk_branch_private_mk",
       "match": ["激活分支", "与 --game"],
       "conclusion": "接受偏离",
       "reason": "1.6.4 轮起本游戏走 **modern 注册表 + 私有 mk**（新 Games/EndfieldEntry.cpp + Android_mrfzzmd.mk），公共 Android.mk 按 2026-10-15 m00007 铁律**零接触**，故工作区 Android.mk 的激活分支仍停在上一款（CSTJJS）属设计如此，不会编出别的游戏的 so。通用审计的 [D] 项只认 legacy 切换路径，对本形态无判别力。",
-      "evidence": "私有 mk：mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzzmd.mk（含 -DENABLE_UNITY_HOOK -DSTARRY_GAME_ENDFIELD + Games/EndfieldMod.cpp + Games/EndfieldEntry.cpp）；产物 so `libs_mrfzzmd/arm64-v8a/libstarry_magic.so` md5 7c5ed8bb1e77dfc89f78ab4b89c2c1a8 含 [Endfield]×13、mrfzzmd×1、五个菜单中文串，反查 [Wggls]/[Gjc2]/[Dwct]/[Cstjjs]/[Hzsj]/[Wxsj] 全部 0 命中（-F 字面量比）。构建日志 mod菜单/starry-mod-menu/scripts/surgical_endfield_1.6.4.sh [1/6] 段。",
-      "date": "2026-10-16",
-      "review_by": "2027-01-16"
-    },
-    {
-      "id": "axml_provider_false_negative",
-      "match": ["AXML 未含 com.starry.magic.StarryInitProvider"],
-      "conclusion": "接受偏离（工具假阴性，非真实缺失）",
-      "reason": "framework_entry_audit.sh 本项是**假阴性**，根因＝该脚本 `set -uo pipefail`（:20）配上 `printf '%s\n' \"$man\" | grep -qF`（:452）：grep -q 命中即退出 → printf 吃 SIGPIPE(141) → pipefail 把整条管道判失败 → 命中被读成未命中。判据：本包 Manifest 里 provider 出现在 dump 第 226 行（靠前，第 1146 行总量中），同一次运行里靠后的 MenuService 反而 ✓ —— 「靠前 MISS、靠后 HIT」正是 SIGPIPE 的指纹；同一 aapt2 单独复跑两条串**全部 HIT**。真实包内 provider 存在且**排在首个官方 provider 之前**（skill/starry-mod 入口铁律）。",
-      "evidence": "独立复核：(1) `aapt2 dump xmltree --file AndroidManifest.xml 08_output/终末地/终末地_1.6.4_surgical-releaseSigned.apk` 第 226 行 `android:name(0x01010003)=\"com.starry.magic.StarryInitProvider\"`、authorities=`com.hypergryph.endfield.starryinit`；(2) 外科脚本 [5/6] 后置门禁（先落盘再 grep，已避 SIGPIPE）对 unsigned.apk 复读通过；(3) 注入位置＝第 110 行，早于官方 GameUpdateApkProvider(113)/TapTapKitInitProvider(300)；(4) 复现脚本见 10_docs/终末地/版本适配_1.6.4_20261016.md「工具缺陷」节。⚠️ 本体缺陷应由规范优化会话在 04_scripts/_common/framework_entry_audit.sh 修（把该 `printf | grep -q` 改为先落盘再 grep 或用 grep 读 here-string），本轮游戏执行会话不改共享门禁。",
+      "evidence": "私有 mk：mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzzmd.mk（含 -DENABLE_UNITY_HOOK -DSTARRY_GAME_ENDFIELD + Games/EndfieldMod.cpp + Games/EndfieldEntry.cpp）；产物 so（当轮 md5 7c5ed8bb1e77dfc89f78ab4b89c2c1a8）含 [Endfield]×13、mrfzzmd×1、五个菜单中文串，反查 [Wggls]/[Gjc2]/[Dwct]/[Cstjjs]/[Hzsj]/[Wxsj] 全部 0 命中（-F 字面量比）。构建日志见 10_docs/终末地/版本适配_1.6.4_20261016.md。注：该 md5 对应的构建中间件已按收官规则清理，so 可由 Android_mrfzzmd.mk + ndk-build 重建。",
       "date": "2026-10-16",
       "review_by": "2027-01-16"
     }

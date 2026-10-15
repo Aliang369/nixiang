@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/终末地",
+  "keep": "终末地_1.6.4_surgical-releaseSigned.apk",
+  "keep_size": 1693066274,
+  "keep_md5": "5c78027487f848ead8f824efb854b00b",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "终末地_1.6.4_surgical-releaseSigned.apk.idsig",
+      "size": 13342235,
+      "md5": "453a1132c123cdd76500bb418fbfd864"
+    }
+  ],
+  "removed_count": 1
+}
