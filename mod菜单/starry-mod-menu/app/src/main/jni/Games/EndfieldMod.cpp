@@ -887,26 +887,54 @@ static void InstallSkillHooks() {
     }
 }
 
+// ---- v14.4（2026-10-16 小米真机「第二次打开就闪退」复盘，见 10_docs/终末地/闪退_二次打开_20261016.md）----
+// 旧实现只在「apply&&jump 装上」或「DobbyHook 失败 3 次」时落定 done；而**按名解析失败**
+// （AbilitySystem/ApplyModifier miss、jump/skillCd/cd/cost 的 class|method miss）**不计数**
+// ⇒ 解析不到时每 300ms 重跑一次「全程序集解析」，il2cpp 调用贯穿整个进程生命周期；
+// 长时间运行 / 后台恢复 / 热更阶段一旦 il2cpp 侧状态变化，就崩在 il2cpp 内部
+// （实测 fault addr 0x138、null 解引用；帧 libstarry_magic.so +0x1829c → +0x13c38 →
+//  +0x126dc → +0x124f8 → +0x12010 = 框架 MOD 线程 300ms 轮询）。
+// 现改为：**前 10 次每 tick 试**（≈0–3s，覆盖正常启动）→ **之后指数退避**（每 7/14/28/56/
+// 112/224 个 tick ≈ 2s→4s→8s→17s→34s→67s 封顶）；累计 kHookMaxAttempts 次仍未装成则
+// **落定并告警** ⇒ 稳态 il2cpp 调用 = 0（根治该崩溃路）。用户切换开关会重新武装（见 OnFeatureChanged）。
+static std::atomic<bool> g_hookDone{false};
+static std::atomic<int>  g_hookAttempts{0};
+static std::atomic<int>  g_hookTickNo{0};
+static std::atomic<int>  g_hookNextTryAt{0};
+static const int         kHookMaxAttempts = 60;
+
 static void SyncHooks() {
     // v14：恢复 v5 已验证稳定的按名 hook 集（抓点文档实证挂点）。
     // v6-v10 闪退根因复盘修正：不是 hook 本身（v5 同挂点稳定生效），而是
     // hook 回调里的解引用学习 + 浮窗/主线程并发重复装载。v14：回调零解引用
     // （敌我=直调 get_factionIndex 纯字段读）+ g_hookMtx 串行 + 装成即停重试。
-    static std::atomic<bool> done{false};
-    if (done.load()) return;
+    if (g_hookDone.load()) return;
     if (!g_libReady.load()) return;
+    // 退避节拍：框架每 ~300ms 调一次本函数 ⇒ 用 tick 序号当节拍器，不引入时钟依赖。
+    const int tickNo = g_hookTickNo.fetch_add(1) + 1;
+    if (tickNo < g_hookNextTryAt.load()) return;   // 退避期：一次 il2cpp 调用都不做
     std::lock_guard<std::mutex> lk(g_hookMtx);
     if (!EnsureApi()) return;
+    const int attempts = g_hookAttempts.fetch_add(1) + 1;
+    {
+        const int shift = attempts <= 10 ? 0 : (attempts - 10 > 5 ? 5 : attempts - 10);
+        g_hookNextTryAt.store(tickNo + (1 << shift) * 7);
+    }
     InstallDmgHooks();
     InstallInvHooks();
     InstallJumpHooks();
     InstallSkillHooks();
-    LOGI(EF_LOG " hooks sync calc=%d apply=%d jump=%d skillCd=%d",
+    const bool coreOk = (g_origApplyMod && g_origJump);
+    LOGI(EF_LOG " hooks sync calc=%d apply=%d jump=%d skillCd=%d (try %d)",
          g_origCalc ? 1 : 0, g_origApplyMod ? 1 : 0,
-         g_origJump ? 1 : 0, g_origCheckSkillCd ? 1 : 0);
-    // 核心 hook 就位 → 完成（calc v14.2 起暂缓，不阻塞 done）；熔断 → 也停
-    if ((g_origApplyMod && g_origJump) || g_failApply >= 3)
-        done.store(true);
+         g_origJump ? 1 : 0, g_origCheckSkillCd ? 1 : 0, attempts);
+    // 核心 hook 就位 → 完成（calc v14.2 起暂缓，不阻塞 done）；熔断 / 试满 → 也停
+    if (coreOk || g_failApply >= 3 || attempts >= kHookMaxAttempts) {
+        g_hookDone.store(true);
+        if (!coreOk)
+            LOGW(EF_LOG " hooks give up after %d tries (apply=%d jump=%d) —— 稳态不再触碰 il2cpp",
+                 attempts, g_origApplyMod ? 1 : 0, g_origJump ? 1 : 0);
+    }
 }
 
 bool Endfield_TryInit() {
@@ -930,6 +958,11 @@ void Endfield_OnFeatureChanged(int featNum, bool enabled) {
         case ENDFIELD_FEAT_SKILL: g_skill.store(enabled); break;
         default: break;
     }
+    // v14.4：用户动开关 ⇒ 重新武装**有界**重试（退避期/give-up 之后仍有机会装上）
+    g_hookDone.store(false);
+    g_hookAttempts.store(0);
+    g_hookTickNo.store(0);
+    g_hookNextTryAt.store(0);
     SyncHooks();
 }
 

@@ -1,10 +1,10 @@
 {
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/终末地",
   "keep": "终末地_1.6.4_surgical-releaseSigned.apk",
-  "keep_size": 1693066274,
-  "keep_md5": "93ce6635e0ca0539e3b97cf3d0dbc2b9",
-  "keep_sha256": "61757d72376e546e26090d9882b31039178d2935959f4497ccc2613c095b9c46",
-  "keep_note": "2026-10-16 FW-13 修戳版：包内 so 含 STARRYSTAMP1:EPOCH=1792090972（so md5 b1c08263a9eba6e8ab33e3156c896320 / build-id 96ce01c9e61737e8341697727d36a1c738e62bc3）；签名证书 MD5 161fca32a36d3df274458682a44cb774 与旧包一致。取代旧包 md5 5c78027487f848ead8f824efb854b00b（sha256 73ba4e63c11958930247b9fff5581cb1e368a604df64269abf659f1bd884171a，即 L3 实测过的那份）",
+  "keep_size": 1693070370,
+  "keep_md5": "5888b8d0dadd5a0f6454b90197bb20a7",
+  "keep_sha256": "8e946d0a8f93d7888178d94973b6a18ca80a40cb6f2ef991db59f8d355a0ab74",
+  "keep_note": "2026-10-16 **闪退修复版（v14.4）**：包内 so md5 2243abc2780548ba58ff332f5c3bcba8、戳 STARRYSTAMP1:EPOCH=1792153771；修的是 Games/EndfieldMod.cpp 的 SyncHooks 无界重试（小米 96f0d883「第二次打开就闪退」根因，见 10_docs/终末地/闪退_二次打开_20261016.md 与框架待办 FW-18）。签名证书 MD5 161fca32a36d3df274458682a44cb774（同钥 ⇒ 可覆盖安装）。**已被取代的版本**：93ce6635e0ca0539e3b97cf3d0dbc2b9（sha256 61757d72…，FW-13 修戳版）、5c78027487f848ead8f824efb854b00b（sha256 73ba4e63…，L3 实测过的那份）",
   "mode": "--apply",
   "removed": [
     {
