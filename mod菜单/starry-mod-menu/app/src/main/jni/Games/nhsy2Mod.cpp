@@ -776,7 +776,9 @@ static bool LoginHooksEnabled() {
     if (v >= 0) return v == 1;
     char buf[PROP_VALUE_MAX] = {0};
     const int n = __system_property_get("debug.starry.nhsy2_login_hooks", buf);
-    v = (n > 0) ? atoi(buf) : 0;
+    /* ★r20c 收官定案：**默认 1**（登录预算延长是必需功能；r20 曾因它会触发退出而默认关，
+     *   现在退出已被 exit_group 闸就地停住，用户 2026-10-17 L3 实测（含本钩）登录与功能均正常）。 */
+    v = (n > 0) ? atoi(buf) : 1;
     cached.store(v);
     return v == 1;
 }
@@ -3816,7 +3818,10 @@ static long long HookDelayMs() {
     if (v >= 0) return v;
     char buf[PROP_VALUE_MAX] = {0};
     const int n = __system_property_get("debug.starry.nhsy2_hook_delay_ms", buf);
-    v = (n > 0) ? atoi(buf) : 10000;
+    /* ★r20c 收官定案：**默认 0**（立即装钩）。实测 2026-10-17：默认 10000 会把 69 钩推到 themis 装载之后
+     *   （+10.5s），那时装钩必 SEGV_ACCERR（ok=67 少 2 槽 + 进程死）；而 +5s（il2cpp 刚就绪、themis 未载）
+     *   装钩 69/72 全中且无崩溃 —— 用户 L3 实测即此配置。 */
+    v = (n > 0) ? atoi(buf) : 0;
     if (v < 0) v = 0;
     cached.store(v);
     return v;
@@ -4586,7 +4591,8 @@ static void InstallPthreadCreateGate() {
     g_pcGateArmed.store(true);
     char buf[PROP_VALUE_MAX] = {0};
     const int n = __system_property_get("debug.starry.nhsy2_nothread", buf);
-    const long v = (n > 0) ? strtol(buf, nullptr, 0) : 0;
+    /* ★r20c 收官定案：**默认 0xC1240**（只拒 themis 看门狗这一个 entry，不碰别的 themis 线程/业务线程）。 */
+    const long v = (n > 0) ? strtol(buf, nullptr, 0) : 0xC1240;
     if (v < 0) { LOGI(TPL_LOG " pthread_create 闸：属性=%ld ⇒ 逃生门生效，不装闸（回到 r20 冻结路径）", v); return; }
     if (v == 1)      g_ntMode.store(1);
     else if (v > 1) { g_ntOff.store(static_cast<int>(v)); g_ntMode.store(2); }
@@ -4754,7 +4760,9 @@ static void InstallExitGroupGuard() {
     g_exitGuardArmed.store(true);
     char buf[PROP_VALUE_MAX] = {0};
     const int pn = __system_property_get("debug.starry.nhsy2_exitguard", buf);
-    int mode = (pn > 0) ? atoi(buf) : 0;
+    /* ★r20c 收官定案：**默认 3**（不再依赖 setprop）—— 10.15 底包反篡改靠裸 svc `exit_group` 退出，
+     *   必须就地停住那个线程功能钩才装得上；用户 2026-10-17 L3 实测（69 钩 + 本档）功能全部有效。prop 仍可覆盖。 */
+    int mode = (pn > 0) ? atoi(buf) : 3;
     if (mode <= 0) { LOGI(TPL_LOG " exit_group 闸：未启用（debug.starry.nhsy2_exitguard=0）"); return; }
     if (mode > 3) mode = 3;
     g_exitGuardMode.store(mode);

@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/弓箭传说2国际版",
+  "keep": "弓箭传说2国际版_1.0.1_surgical-releaseSigned.apk",
+  "keep_size": 820733451,
+  "keep_md5": "9d70af161ac9f82a7fe925e6f06448ca",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "弓箭传说2国际版_1.0.1_surgical-releaseSigned.apk.idsig",
+      "size": 6473243,
+      "md5": "bc2840a30d0316618aae8cd0a522c5f7"
+    }
+  ],
+  "removed_count": 1
+}
