@@ -126,21 +126,17 @@
       "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_nhsy2_2026.10.15.sh",
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 05:02:26",
-      "artifacts": {
-        "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-unsigned.apk": {
-          "md5": "025fb887e5c54f6c25e39d512c585d02"
-        }
-      },
+      "done_at": "2026-10-17 06:05:57",
       "inputs": {
-        "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp": "ead49d47e5175eb4892cfd36c0ab3c49",
+        "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp": "4a4b24cdd7b17ebe799bf0eba558ac2c",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Entry.cpp": "5e996199ef4c14769f32aacde5ef9176"
-      }
+      },
+      "note": "2026-10-17 收尾清理: /Users/aliang/Documents/nixiang/08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-unsigned.apk\n2026-10-17 收尾清理: 08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-unsigned.apk; 原 md5=d314f71140a213bfe98f31fa4a547bfb"
     },
     {
       "id": "sign",
@@ -159,14 +155,11 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 05:03:25",
+      "done_at": "2026-10-17 06:07:11",
       "artifacts": {
         "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-releaseSigned.apk": {
-          "md5": "5cd4140ceb32b1ce91723788756bc3c2"
+          "md5": "e26a259edfc481fbda37559a349022a6"
         }
-      },
-      "inputs": {
-        "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-unsigned.apk": "025fb887e5c54f6c25e39d512c585d02"
       }
     },
     {
@@ -203,14 +196,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 05:04:26",
+      "done_at": "2026-10-17 06:08:27",
       "artifacts": {
         "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-releaseSigned.apk": {
-          "md5": "5cd4140ceb32b1ce91723788756bc3c2"
+          "md5": "e26a259edfc481fbda37559a349022a6"
         }
       },
       "inputs": {
-        "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-releaseSigned.apk": "5cd4140ceb32b1ce91723788756bc3c2",
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-releaseSigned.apk": "e26a259edfc481fbda37559a349022a6",
         "04_scripts/霓虹深渊2/.device_ready.txt": "a138fe788b225a2ebefaa90f24a9ae9c"
       }
     },
@@ -235,7 +228,22 @@
           "path": "10_docs/霓虹深渊2/nhsy2_menu_template.json"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-17 06:22:44",
+      "artifacts": {
+        "08_output/霓虹深渊2/delivery_20261015/menu_template.json": {
+          "md5": "d6ceee0a34d31996780a0960e0359a87"
+        },
+        "10_docs/霓虹深渊2/正式包裁剪清单_20261015.json": {
+          "md5": "4c5627ee7adc595a4e744b5de1e0a40b"
+        },
+        "10_docs/霓虹深渊2/nhsy2_menu_template.json": {
+          "md5": "d6ceee0a34d31996780a0960e0359a87"
+        }
+      },
+      "inputs": {
+        "08_output/霓虹深渊2/霓虹深渊2_2026.10.15_surgical-releaseSigned.apk": "e26a259edfc481fbda37559a349022a6"
+      }
     },
     {
       "id": "archive_close",
