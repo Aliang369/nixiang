@@ -104,6 +104,10 @@ struct Api {
     method_get_flags_t           method_flags = nullptr;    // 可空
 
     bool ready = false;
+    /* ★r20：上一次 `RecoverByStubShift()` 的端到端自检没过 = **托管运行时尚未就绪**。
+     *   置真时 `Load()` 必须返回 false（不得置 ready），由上层 Tick 稍后重试；
+     *   越权放行会在运行时半初始化状态下装钩/扫类，把游戏带进干净退出 exit(0)。 */
+    bool runtimeNotReady = false;
     /* Assemblies 降级缓存：TP 删枚举符号时按名 open 程序集（const 方法内写 → mutable） */
     mutable std::vector<void*> asm_fallback_;
     mutable bool asm_fallback_done_ = false;

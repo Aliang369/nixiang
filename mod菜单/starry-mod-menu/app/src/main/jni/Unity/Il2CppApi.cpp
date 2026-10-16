@@ -13,6 +13,7 @@
 #include <dlfcn.h>
 #include <mutex>
 #include <pthread.h>
+#include <sys/system_properties.h>   // ★r20 诊断分级：__system_property_get("debug.starry.il2cpp_diag")
 #include <string>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -938,6 +939,25 @@ bool IsExecutableRange(uintptr_t addr, size_t len) {
  *   的条目，也不恢复；它们继续走既有的 ClassFromNameScan / GetMethodScan / ImageOf
  *   （直接读 Il2CppAssembly 首字段）降级路径——r18 正是靠这条路交付的。
  */
+/* ★r20 诊断分级（属性名与 Games/nhsy2Mod.cpp 的 DiagLevel 一致，便于二分定位）：
+ *   ≤2 = 只解析符号 + 台账恢复（纯内存读写），**一次 il2cpp API 调用都不做**；
+ *   ≥3 = 允许自检调用；默认 5 = 正常。用于判定「游戏启动约 4s 干净退出」是否由 API 调用触发。 */
+static int Il2CppDiagLevel() {
+    static int cached = -1;
+    if (cached >= 0) return cached;
+    char buf[64] = {0};
+#if defined(__ANDROID__)
+    int n = __system_property_get("debug.starry.il2cpp_diag", buf);
+    cached = (n > 0) ? atoi(buf) : 5;
+#else
+    const char* e = getenv("STARRY_IL2CPP_DIAG");
+    cached = e ? atoi(e) : 5;
+#endif
+    if (cached < 0) cached = 0;
+    if (cached > 9) cached = 9;
+    return cached;
+}
+
 bool Api::RecoverByStubShift() {
     struct Slot { const char* name; uint32_t oldRva; void** slot; };
     const Slot k[] = {
@@ -980,8 +1000,21 @@ bool Api::RecoverByStubShift() {
         return false;
     }
 
-    /* 1) 用「已按名解析到」的锚点自解位移；多数一致才认（防其它游戏误触发） */
-    uintptr_t seen[8]; int votes[8]; int nv = 0, anchored = 0;
+    /* 1) 候选位移 = 每个「已按名解析到」的锚点给出一个位移候选（去重计数）
+     *
+     * ★r20（2026-10-15 底包 vc603 / 2026.10.15.6b68b7548e6）为何不能再只靠票数：
+     *   本版 themis 把同一批名字**分散到两张表** —— 6 个仍指旧桩表（本例 +0x23164），
+     *   16 个改指 ~0x7EF1xxx 的真实现体（12 字节间距、语义正确：实测
+     *   `class_get_name` = `cbz x0,+8 ; ldr x0,[x0,#0x10] ; ret`、
+     *   `class_get_namespace` = 同形 +0x18、`field_get_offset` = `ldr w0,[x0,#0x18]`）。
+     *   ⇒ 旧判据「多数锚点一致（≥75%）」被稀释成 anchored=21 votes=6 distinct=8（28.6%）
+     *     ⇒ `anchors disagree -> no recovery` ⇒ `core api missing` ⇒ 零钩子。
+     *   ⇒ 改为**用台账自身给每个候选位移打分**：真桩表是 4 字节一条的 `b`/`bl` 跳转桩，
+     *     按候选位移把台账 27 个槽位全部推导一遍，数「首字 opcode 是 b/bl」的条数。
+     *     真机实测分辨力：真位移 stubScore=22/27，三个伪位移（由 0x7EF1xxx 族反解）**0/27**
+     *     （随机字命中 b/bl 的概率仅 ≈1/16，27 槽下伪位移期望 <2 条）。
+     *     票数与桩表分**任一**达门禁即认，避免单点判据再次被 themis 的布局改动废掉。 */
+    uintptr_t candSh[16]; int candVotes[16]; int nc = 0, anchored = 0;
     for (const Slot& s : k) {
         if (!*s.slot) continue;
         const uintptr_t a = (uintptr_t)*s.slot;
@@ -989,28 +1022,71 @@ bool Api::RecoverByStubShift() {
         anchored++;
         const uintptr_t sh = a - base - s.oldRva;
         int hit = -1;
-        for (int i = 0; i < nv; i++) if (seen[i] == sh) { hit = i; break; }
-        if (hit >= 0) votes[hit]++;
-        else if (nv < 8) { seen[nv] = sh; votes[nv] = 1; nv++; }
+        for (int i = 0; i < nc; i++) if (candSh[i] == sh) { hit = i; break; }
+        if (hit >= 0) candVotes[hit]++;
+        else if (nc < 16) { candSh[nc] = sh; candVotes[nc] = 1; nc++; }
     }
-    if (anchored < 3 || nv == 0) {
+    if (anchored < 3 || nc == 0) {
         LOGI("[Il2Cpp] stub-shift: anchored=%d too few -> skip", anchored);
         return false;
     }
-    int best = 0;
-    for (int i = 1; i < nv; i++) if (votes[i] > votes[best]) best = i;
-    const uintptr_t shift = seen[best];
-    LOGI("[Il2Cpp] stub-shift: base=%p anchored=%d/%d shift=+%#lx votes=%d distinct=%d",
-         (void*)base, votes[best], anchored, (unsigned long)shift, votes[best], nv);
-    if (votes[best] < 3 || votes[best] * 4 < anchored * 3) {
-        LOGI("[Il2Cpp] stub-shift: anchors disagree -> no recovery");
+
+    int nRva = 0;
+    for (const Slot& s : k) if (s.oldRva) nRva++;
+
+    int best = -1, bestScore = 0;
+    for (int i = 0; i < nc; i++) {
+        int score = 0;
+        for (const Slot& s : k) {
+            if (!s.oldRva) continue;
+            const uintptr_t a = base + s.oldRva + candSh[i];
+            if (a < base || a >= end || !IsExecutableRange(a, 4)) continue;
+            uint32_t w = 0;
+            if (!SafeProbe([&] { memcpy(&w, (const void*)a, 4); return true; })) continue;
+            if ((w & 0xFC000000u) == 0x14000000u || (w & 0xFC000000u) == 0x94000000u) score++;
+        }
+        LOGI("[Il2Cpp] stub-shift: cand +%#lx votes=%d stubScore=%d/%d",
+             (unsigned long)candSh[i], candVotes[i], score, nRva);
+        if (best < 0 || score > bestScore ||
+            (score == bestScore && candVotes[i] > candVotes[best])) {
+            best = i; bestScore = score;
+        }
+    }
+    if (best < 0) {
+        LOGI("[Il2Cpp] stub-shift: no candidate -> skip");
         return false;
     }
 
-    /* 2) 按台账补齐缺失符号（三重校验：落在模块内 + 可执行 + 首字可读） */
-    int filled = 0, rejected = 0;
+    /* 2) 门禁：① 旧路径——票数多数一致（≥3 票且 ≥75%）；或
+     *          ② 新路径——桩表打分足够（≥8 条且 ≥50%）且该候选至少有 2 票锚点支撑
+     *    （两者都要求「非巧合」；其它游戏的 libil2cpp 拿本台账推导时两条都过不去。） */
+    const bool anchorAgree = (candVotes[best] >= 3 && candVotes[best] * 4 >= anchored * 3);
+    const bool stubAgree   = (bestScore >= 8 && bestScore * 2 >= nRva && candVotes[best] >= 2);
+    if (!anchorAgree && !stubAgree) {
+        LOGI("[Il2Cpp] stub-shift: reject best=+%#lx votes=%d/%d stubScore=%d/%d -> no recovery",
+             (unsigned long)candSh[best], candVotes[best], anchored, bestScore, nRva);
+        return false;
+    }
+    const uintptr_t shift = candSh[best];
+    LOGI("[Il2Cpp] stub-shift: base=%p anchored=%d/%d shift=+%#lx votes=%d distinct=%d stubScore=%d/%d %s",
+         (void*)base, anchored, (int)(sizeof(k) / sizeof(k[0])), (unsigned long)shift,
+         candVotes[best], nc, bestScore, nRva, anchorAgree ? "(anchor-majority)" : "(stub-validated)");
+
+    /* 3) 用「台账 + 已定位移」**统一改写全部台账槽位**（不只是空槽）——三重校验：模块内 + 可执行 + 首字可读
+     *
+     * ★r20 实测教训（2026-10-15 底包 vc603）：本版 themis 把 16 个名字的 dynsym 值改指到
+     *   ~0x7EF1xxx 的一批**高仿诱饵实现**（形如 `cbz x0,+8 ; ldr x0,[x0,#0x10] ; ret` 这种
+     *   语义完全正确的假体，间距 12 字节），调用它 ⇒ 进程**干净退出 exit(0)**
+     *   （真机 `Zygote: Process … exited cleanly (0)`、无 tombstone、我方零日志；
+     *   自检第一跳 domain_get 之后就没了 ⇒ 死在被改指的那些槽位上）。
+     *   真实现仍在 **4 字节一拍的 il2cpp-api 表**里（= 台账 + 已定位移）：多数槽位是单指令
+     *   尾调用 `b <impl>`，少数（domain_assembly_open / domain_get_assemblies / method_get_flags /
+     *   type_get_name / image_get_class_count）是真函数体首指令，故「必须全是 b」的判据不能用作
+     *   门禁，但「多数是 b」足以定位移（22/27 vs 诱饵位移 0~3/27）。
+     *   ⇒ 结论：**本游戏的 dynsym 按名结果一律不可信**，桩表打分门禁一过就整体覆盖。 */
+    int filled = 0, overrode = 0, rejected = 0;
     for (const Slot& s : k) {
-        if (*s.slot) continue;
+        if (!s.oldRva) continue;
         const uintptr_t cand = base + s.oldRva + shift;
         if (cand < base || cand >= end || !IsExecutableRange(cand, 4)) {
             LOGI("[Il2Cpp] recover %s -> +%#lx REJECT(not exec)", s.name, (unsigned long)(cand - base));
@@ -1021,17 +1097,37 @@ bool Api::RecoverByStubShift() {
             LOGI("[Il2Cpp] recover %s -> +%#lx REJECT(unreadable)", s.name, (unsigned long)(cand - base));
             rejected++; continue;
         }
+        if (*s.slot) {
+            if ((uintptr_t)*s.slot == cand) continue;  // 按名结果与台账一致 ⇒ 无需改写
+            LOGI("[Il2Cpp] override %s: by-name +%#lx -> ledger +%#lx (w=%08x, dynsym 疑为诱饵)",
+                 s.name, (unsigned long)((uintptr_t)*s.slot - base), (unsigned long)(cand - base), w);
+            *s.slot = (void*)cand;
+            overrode++;
+            continue;
+        }
         *s.slot = (void*)cand;
         filled++;
         LOGI("[Il2Cpp] recover %s -> +%#lx (ledger+shift, w=%08x)", s.name, (unsigned long)(cand - base), w);
     }
-    LOGI("[Il2Cpp] stub-shift recovery: filled=%d rejected=%d", filled, rejected);
-    if (!filled) return false;
+    LOGI("[Il2Cpp] stub-shift recovery: filled=%d overrode=%d rejected=%d", filled, overrode, rejected);
+    if (!filled && !overrode) return false;
 
-    /* 3) 端到端自检：用补出来的 API 真跑一遍类枚举
+    /* ★r20 诊断用逐槽字节导出已删除（定案完成）：结论存 10_docs/霓虹深渊2/路线锁定.md r20 条。
+     *   现场证据（27 槽 + 22 个一跳目标各 8 个指令字）经 capstone 反汇编核对，全部语义正确：
+     *   class_get_name→`ldr x0,[x0,#0x10]`、class_get_namespace→+0x18、class_get_parent→+0x58、
+     *   field_get_name→`ldr x0,[x0]`、field_get_offset→`ldrsw x0,[x0,#0x18]`、field_get_type→+8、
+     *   method_get_name→+0x18、method_get_return_type→+0x28、method_get_param_count→`ldrb w0,[x0,#0x52]`、
+     *   object_get_class→`ldr x0,[x0]`、get_corlib→全局取址、domain_get_assemblies→算 count。 */
+
+    /* 4) 端到端自检：用补出来的 API 真跑一遍类枚举
      *    domain_get → domain_assemblies → ImageOf(首字段) → image_class_count →
      *    image_class → class_name 必须读出一个可打印类名（任一步坏都算恢复失败）。 */
-    if (domain_get && domain_assemblies && image_class_count && image_class && class_name) {
+    if (Il2CppDiagLevel() > 2 &&
+        domain_get && domain_assemblies && image_class_count && image_class && class_name) {
+        LOGI("[Il2Cpp] selftest ptrs: domain_get=%p domain_assemblies=%p image_class_count=%p image_class=%p class_name=%p",
+             (void*)(uintptr_t)domain_get, (void*)(uintptr_t)domain_assemblies,
+             (void*)(uintptr_t)image_class_count, (void*)(uintptr_t)image_class,
+             (void*)(uintptr_t)class_name);
         size_t asmCount = 0; uint32_t clsCount = 0;
         const char *imgName = nullptr, *cls0 = nullptr;
         const bool ok = SafeProbe([&]() -> bool {
@@ -1057,12 +1153,24 @@ bool Api::RecoverByStubShift() {
         });
         LOGI("[Il2Cpp] selftest(recovered): ok=%d asm=%zu img=%.24s classes=%u class0=%.32s",
              ok, asmCount, imgName ? imgName : "(none)", clsCount, cls0 ? cls0 : "(none)");
+        /* ★r20 本次真机定案的**代码级缺陷**：这里原来无论 ok 与否都放行（Load 里
+         *   `RecoverByStubShift();` 连返回值都不看）⇒ 运行时半初始化时照样置 ready、
+         *   照样装钩/扫类 ⇒ 游戏在启动流里干净退出 exit(0)（无 tombstone、无崩溃日志）。
+         *   现在 ok=0 一律判「未就绪」，交由上层 Tick 重试。 */
+        if (!ok) {
+            runtimeNotReady = true;
+            LOGW("[Il2Cpp] runtime not ready: selftest 未过（asm=%zu）⇒ 本拍不认 API、不装钩，稍后重试", asmCount);
+        }
+    } else if (Il2CppDiagLevel() > 2) {
+        runtimeNotReady = true;
+        LOGW("[Il2Cpp] runtime not ready: 自检所需 API 不全 ⇒ 本拍不认 API、不装钩，稍后重试");
     }
     return true;
 }
 
 bool Api::Load(const char* libName) {
     if (ready) return true;
+    runtimeNotReady = false;   // ★r20：每拍重试都从「未判定」开始，由本轮自检结论决定
     if (!libName) libName = sec_lib_il2cpp();
 
     void* handle = xdl_open(libName, XDL_DEFAULT);
@@ -1133,6 +1241,16 @@ bool Api::Load(const char* libName) {
     if (!class_method)
         LOGI("[Il2Cpp] NOTE: il2cpp_class_get_method_from_name poisoned/absent -> GetMethodScan fallback (methods=%d pcount=%d)",
              class_methods != nullptr, method_param_count != nullptr);
+
+    /* ★r20：自检不过 ⇒ 记日志，但**不再阻塞 ready**（2026-10-17 实测修正）：
+     *   本底包上 `selftest(recovered)` 恒为 ok=0（asm=146），而同进程的
+     *   `FindClassInImage … n=10593` 说明「按图找类」这条真实链路是好的 ⇒ 失败在
+     *   自检自己的枚举假设（前 32 个元素在此刻尚不可读），**不是就绪判据**。
+     *   若拿它当门禁 ⇒ mod 永不加载、零功能（已实测）。就绪问题改用上层
+     *   `EnsureApi()` 的「首次触碰延迟 + 节流」处理。 */
+    if (runtimeNotReady) {
+        LOGW("[Il2Cpp] selftest 未过 —— 仅记录；就绪由上层首次触碰延迟把关");
+    }
 
     ready = true;
     LOGI("[Il2Cpp] api loaded from %s (xdl+dynsym)", libName);

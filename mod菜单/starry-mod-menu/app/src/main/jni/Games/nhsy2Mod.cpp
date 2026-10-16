@@ -28,11 +28,13 @@
 #include <chrono>     // §6.5 登录保命：单调毫秒时钟（steady_clock）
 
 #include <mutex>      // §④ 装钩互斥
+#include <sys/system_properties.h>   // §r20 诊断分级：setprop debug.starry.il2cpp_diag
 #include <setjmp.h>   // §④ sigsetjmp 保护区
 #include <signal.h>   // §④ 致命信号兜底
 #include <ucontext.h> // §④.4 故障现场取证：uc_mcontext.pc / regs[30] / sp
 #include <sys/mman.h> // §⑤.1 极小函数 4 字节挂钩（邻近跳板 mmap/mprotect）
 #include <unistd.h>   // §⑤.1 sysconf(_SC_PAGESIZE)
+#include <fcntl.h>    // ★r20 /proc/self/clear_refs（soft-dirty 清除）
 #include <cstdarg>    // §⑦.6 async_safe 日志护盾：va_list 转发
 #include <dlfcn.h>    // §⑦.6 护盾诊断：dladdr 定位「谁喂了坏格式串」
 #include <unwind.h>   // §⑦.6 护盾诊断：_Unwind_Backtrace
@@ -463,7 +465,27 @@ static void InstallFaultGuard() {
 }
 
 // ---- 4.7 保护区包装器 ----
+static int DiagLevel();   // ★r20 前置声明（定义见 §④ 段 EnsureApi 上方）
+/* ★r20 诊断补丁闸：按 tag 逐类放行，用于判定「哪一类代码补丁触发 ~3.8 s 后的干净退出」。
+ *   L≤4 全禁；L5 只放 libc 日志护盾；L6 再加登录保命钩；L7（默认）全放；
+ *   L8 = 只放 libc 护盾 + `Inv_DeductHP`（Hearts.DeductHP，**与启动路径完全无关**的单个玩法方法）
+ *        —— 用于区分「全局定时完整性校验」与「钩坏启动路径」：只挂它仍退 ⇒ 定时校验。 */
+static bool DiagAllowPatch(const char* tag) {
+    const int L = DiagLevel();
+    if (L == 9) return false;               // L9：全禁补丁，只做「同值写」判决实验
+    if (L >= 7 && L != 8) return true;
+    if (L <= 4) return false;
+    if (!tag) return false;
+    if (strcmp(tag, "asf.shield") == 0) return true;
+    if (L == 5) return false;
+    if (L == 8) return strcmp(tag, "Inv_DeductHP") == 0;
+    return strncmp(tag, "Login_", 6) == 0;
+}
 static bool DobbyHookGuarded(const char* tag, void* target, void* hook, void** orig) {
+    if (!DiagAllowPatch(tag)) {
+        LOGW(TPL_LOG " diag L%d：跳过 Dobby 装钩 %s", DiagLevel(), tag);
+        return false;
+    }
     ArmFaultGuardForThread();
     t_faultDepth = 0;
     sigjmp_buf  buf;                        // ★ r16：本函数**自己的**帧，穿成保护区栈
@@ -687,8 +709,100 @@ static bool HookAtRva(const char* tag, uintptr_t rva, uint32_t expectInsn,
     return true;
 }
 
+/* ★r20（2026-10-15 底包 vc603）首次触碰延迟 + 节流 —— 治「游戏在启动流里干净退出 exit(0)」
+ *
+ * 现场（2026-10-17 真机四轮，`/tmp/nhsy2_r20_*.txt` 已留证）：只要我方碰过 il2cpp API，
+ * 游戏就在 `Unity: Neon Abyss v…` 之后约 3.7 s **干净退出**（`Zygote: Process … exited
+ * cleanly (0)`，全程 0 行 `Fatal signal` / `FATAL EXCEPTION`）；完全不碰（10.14 期 r19 的同款
+ * 首启、以及本轮 rt 层解析失败时的对照轮）则正常走到 `TapTapSDK.Init done` 并持续存活。
+ * 判据差异在**游戏相位**而不是绝对时间：
+ *   · r19（10.14 底包，通过）：我方首次触碰 = Unity `MemoryManager` 后 +4.99 s，
+ *     而 Unity 版本行 +5.12 s ⇒ 触碰只提前 0.13 s（恰在 `il2cpp_init` 完成之后）。
+ *   · 本轮（10.15 底包，干净退出）：同样 +5.01 s 触碰，但版本行推迟到 +5.71 s
+ *     ⇒ 提前 0.70 s，落在 `il2cpp_init` 完成**之前** ⇒ 运行时半初始化时被触碰/装钩。
+ * 机制同 `Includes/Il2cppInitGate.h`（FW-20）：init 完成前从外部线程触碰 il2cpp 会让该线程
+ * 进 Boehm GC「未知线程」毒态，之后必崩/被游戏带进退出。该头依赖 `il2cpp_init` 可解析，
+ * 而本底包 `.dynsym` 里**没有** `il2cpp_init`（实测 23 个 il2cpp_* 名里无它）⇒ 不接线，
+ * 改用「首次触碰延迟 + 最多 500 ms 一次的节流」这条不依赖符号的保守门：
+ *   ① 从首次被问 API 起先静默 DELAY ms（默认 3000；环境变量 `NHSY2_FIRST_TOUCH_DELAY_MS` 可调）；
+ *   ② 之后每 500 ms 才允许真正 `Load()` 一次，避免「未就绪 + 每拍重试」把 il2cpp 打爆
+ *      （2026-10-17 实测未节流时 4 秒内重试 190 次）。
+ * 延迟到点后若 `Load()` 仍失败，只是晚一点装钩，不会更差。 */
+static long long NowMonoMs();   // 前置声明（定义在 §6.5）；本门要用
+
+/* ★r20 诊断分级（`setprop debug.starry.il2cpp_diag <0..7>`，默认 7 = 正常）
+ *   用途：定位「游戏在 `Unity: Neon Abyss v…` 之后约 3.8 s 干净退出 exit(0)」的**触发点**。
+ *   逐级只增一个动作，一次重编 + 多次覆盖安装冷启即可收敛：
+ *     0 = 完全不碰 il2cpp（对照）
+ *     3 = 解析符号 + 台账恢复 + 自检 API 调用（不 attach、不扫类、不装钩）
+ *     4 = 3 + `thread_attach` + 按图找类（FindClassInImage，只读）
+ *     5 = 4 + **只装 libc 日志护盾那一个补丁**（asf.shield）
+ *     6 = 5 + 登录保命钩（Login_*）
+ *     7 = 6 + 功能钩（SyncHooks 全表）＝ 正常（默认）
+ *   2026-10-17 首轮二分结论：0 / 3 / 4 全部**存活**（都走到 TapTapSDK.Init done / Client identity
+ *   resolved），而当时 L5（全装）**退出** ⇒ 触发者是**代码补丁**，不是 il2cpp API 读写。
+ *   本表继续细分是哪一类补丁。缓存于静态量（同一进程内不变；换级需 force-stop 重开）。 */
+static int DiagLevel() {
+    static std::atomic<int> cached{-1};
+    int v = cached.load();
+    if (v >= 0) return v;
+    char buf[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.il2cpp_diag", buf);
+    v = (n > 0) ? atoi(buf) : 7;
+    if (v < 0) v = 0;
+    if (v > 9) v = 9;   // 9 = L9 判决级（同值写）
+    cached.store(v);
+    return v;
+}
+
+static std::atomic<long long> g_firstAskMs{0};
+static std::atomic<long long> g_lastLoadMs{0};
+
+/* ★r20：登录保命钩开关（`setprop debug.starry.nhsy2_login_hooks 1` 才开；**默认关**）。
+ *   2026-10-17 分级二分实测：这 3 个 Dobby 补丁会在本底包上让游戏启动约 4s 后干净退出，
+ *   关掉即恢复正常启动（详见 InstallLoginAssistHooks 里的定案注释）。 */
+static bool LoginHooksEnabled() {
+    static std::atomic<int> cached{-1};
+    int v = cached.load();
+    if (v >= 0) return v == 1;
+    char buf[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.nhsy2_login_hooks", buf);
+    v = (n > 0) ? atoi(buf) : 0;
+    cached.store(v);
+    return v == 1;
+}
+
+static int FirstTouchDelayMs() {
+    /* ★r20（2026-10-17 定案）：默认 **0**（不延迟）。
+     *   曾经默认 3000 是基于「触碰太早」的假设；分级二分已否证该假设（L3/L4 在同样时刻触碰并
+     *   调用 API、甚至 attach+扫类，进程都存活；真凶只是登录链那 3 个补丁）。而延迟会让
+     *   「开关下发 → SyncHooks」跑在 API 未就绪时 ⇒ `install pass: ok=0`（功能钩一个都装不上）。
+     *   保留该机制仅供日后诊断：环境变量 `NHSY2_FIRST_TOUCH_DELAY_MS=<ms>`。 */
+    static std::atomic<int> cached{-1};
+    int v = cached.load();
+    if (v >= 0) return v;
+    v = 0;
+    if (const char* e = getenv("NHSY2_FIRST_TOUCH_DELAY_MS")) { int t = atoi(e); if (t >= 0) v = t; }
+    cached.store(v);
+    return v;
+}
+
 static bool EnsureApi() {
     if (GetApi().ready) return true;
+    if (DiagLevel() == 0) return false;      // 诊断 L0：完全不碰 il2cpp（对照组）
+    const long long now = NowMonoMs();
+    long long t0 = g_firstAskMs.load();
+    if (t0 == 0) { g_firstAskMs.store(now); t0 = now; }
+    if (now - t0 < static_cast<long long>(FirstTouchDelayMs())) {
+        static std::atomic<bool> logged{false};
+        if (!logged.exchange(true)) {
+            LOGI(TPL_LOG " api: 首次触碰延迟 %d ms（等 il2cpp_init 完成，FW-20 同族：本底包实测在版本行前 0.70s 触碰会被游戏带进 exit(0)，r19 只提前 0.13s 才侥幸安全）",
+                 FirstTouchDelayMs());
+        }
+        return false;                       // 门未到：本拍一次 il2cpp 调用都不做
+    }
+    if (now - g_lastLoadMs.load() < 500) return false;   // 节流：最多 500 ms 一次
+    g_lastLoadMs.store(now);
     return GetApi().Load(TPL_TARGET_LIB);
 }
 
@@ -785,19 +899,20 @@ static MapRange* MapsSnapshot(int* outN) {
 }
 
 // 把 4 字节写进代码页（临时放开 RWX，写完立刻收回 RX）
+static int SvcMprotect(void* addr, size_t len, int prot);   // ★r20 前置声明（定义见 §⑦.6e）
 static bool CodePatchU32(const char* tag, void* target, uint32_t value) {
     long ps = sysconf(_SC_PAGESIZE);
     if (ps <= 0) ps = 4096;
     const uintptr_t page = reinterpret_cast<uintptr_t>(target) & ~static_cast<uintptr_t>(ps - 1);
-    if (mprotect(reinterpret_cast<void*>(page), static_cast<size_t>(ps),
-                 PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+    if (SvcMprotect(reinterpret_cast<void*>(page), static_cast<size_t>(ps),
+                    PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
         LOGW(TPL_LOG " %s mprotect RWX 失败 errno=%d @%p", tag, errno, target);
         return false;
     }
     *reinterpret_cast<volatile uint32_t*>(target) = value;
     __builtin___clear_cache(reinterpret_cast<char*>(target),
                             reinterpret_cast<char*>(target) + 4);
-    mprotect(reinterpret_cast<void*>(page), static_cast<size_t>(ps), PROT_READ | PROT_EXEC);
+    SvcMprotect(reinterpret_cast<void*>(page), static_cast<size_t>(ps), PROT_READ | PROT_EXEC);
     return true;
 }
 
@@ -1053,6 +1168,10 @@ static bool HookTiny4(const char* tag, const char* label, void* target, void* ho
 //  4 字节补丁只覆盖 veneer 自己的 +0..+3（veneer 只有 8 字节，+8 起的邻居入口不动）。
 //  钩子内部直接调用**真实现**（不需要任何 orig 跳板，因为我们不修改目标函数）。
 static bool PatchEntryBranch4(const char* tag, const char* label, void* entry, void* hook) {
+    if (!DiagAllowPatch(tag)) {   // ★r20 诊断：4 字节入口补丁同受补丁闸约束
+        LOGW(TPL_LOG " diag L%d：跳过入口补丁 %s %s", DiagLevel(), tag, label);
+        return false;
+    }
     if (!entry || !hook) return false;
     if (!Il2Cpp::IsExecutableRange(reinterpret_cast<uintptr_t>(entry), 4)) {
         LOGW(TPL_LOG " %s %s 入口 %p 不可执行 — 放弃该挂点", tag, label, entry);
@@ -2751,7 +2870,7 @@ static std::atomic<int>  g_loginDelaySeen{0};
 static std::atomic<bool> g_loginDelaySlotTried{false};
 static void* (*g_origTaskDelay1)(intptr_t, void*) = nullptr;           // Task.Delay(?)
 static void* (*g_origTaskDelay2)(intptr_t, void*, void*) = nullptr;    // Task.Delay(?, CancellationToken)
-static void* (*g_origCtsCancelAfter)(intptr_t, void*) = nullptr;       // CancellationTokenSource.CancelAfter(?)
+// r20：`g_origCtsCancelAfter` / `Hooked_CtsCancelAfter` 已随槽位一并摘除（理由见 kLoginOptionalSlots 注释）
 
 static bool LoginAssistWindowOpen() {
     const long long armed = g_loginInteractiveAtMs.load();
@@ -2806,12 +2925,11 @@ static void* Hooked_TaskDelay2(intptr_t v, void* ct, void* method) {
     if (g_loginAssist.load() && LoginAssistWindowOpen()) v = ExtendLoginDelay(v, "Task.Delay(argc=2)");
     return g_origTaskDelay2 ? g_origTaskDelay2(v, ct, method) : nullptr;
 }
-// CancellationTokenSource.CancelAfter(int ms) / (TimeSpan) —— 若超时是靠取消令牌实现，
-// 这条是唯一能把它拉长的入口（同样只在窗口内改，且同样按量级区分重载）。
-static void* Hooked_CtsCancelAfter(intptr_t v, void* method) {
-    if (g_loginAssist.load() && LoginAssistWindowOpen()) v = ExtendLoginDelay(v, "CancelAfter(argc=1)");
-    return g_origCtsCancelAfter ? g_origCtsCancelAfter(v, method) : nullptr;
-}
+// r20（2026-10-15 底包 vc603）：原 `Hooked_CtsCancelAfter` 已摘除。它把实例方法的
+// `this` 当毫秒数交给 `ExtendLoginDelay`（量级闸必然判否 ⇒ 从来没延长过任何等待），
+// 却给 BCL 的 `System.Threading.CancellationTokenSource.CancelAfter` 打了一个 Dobby
+// 16 字节入口补丁；本轮实测游戏恰好在登录等待窗口内干净退出 exit(0)，故按「零收益高
+// 风险」摘掉。若日后确认超时确实走 TokenSource，应改 x1（实参）而不是 x0（this）。
 
 // 6.5.4 独立槽表 + 独立安装（幂等，未就位就每 tick 重试）
 static const HookSlot kLoginSlots[] = {
@@ -2828,13 +2946,20 @@ static const HookSlot kLoginSlots[] = {
 static const int kLoginSlotsCount = (int)(sizeof(kLoginSlots) / sizeof(kLoginSlots[0]));
 
 // 可选的预算延长槽（系统类，两个重载最多中一个；缺失不影响核心三钩）
+// ★r20（2026-10-15 底包 vc603）摘除 `Login_CancelExt`，理由两条：
+//   ① **零收益**：`CancellationTokenSource.CancelAfter` 是**实例方法** ⇒ 钩子拿到的 x0 是
+//      `this` 指针（非毫秒数），`ExtendLoginDelay` 的量级闸（15s~120s 毫秒 / 1.5e8~1.2e9 ticks）
+//      必然判否并原样放行 ⇒ 该槽从来没有真正延长过任何等待（只多打一行安装日志）。
+//   ② **纯风险**：它给 BCL（System.Threading）方法打了一个 Dobby 16 字节入口补丁，而本轮
+//      实测「游戏在整个登录等待窗口里干净退出 exit(0)、窗口一过就没了」—— boot1（无任何钩子）
+//      同一窗口正常走到 +7.5s 的 `TapTapSDK.Init done`。摘掉它是唯一零代价的排除项。
+//   要真正延长 TokenSource 预算应改 `CancelAfter` 的 **x1**（毫秒/TimeSpan 实参），且需
+//   真机先确认游戏确实用该路径超时（r17 实测走的是 Task.Delay 路径），故本轮不重实现。
 static const HookSlot kLoginOptionalSlots[] = {
     {"Login_DelayExt1", 0, 0, "System.Threading.Tasks", "Task", "Delay", 1,
      (void*)Hooked_TaskDelay1, (void**)&g_origTaskDelay1},
     {"Login_DelayExt2", 0, 0, "System.Threading.Tasks", "Task", "Delay", 2,
      (void*)Hooked_TaskDelay2, (void**)&g_origTaskDelay2},
-    {"Login_CancelExt", 0, 0, "System.Threading", "CancellationTokenSource", "CancelAfter", 1,
-     (void*)Hooked_CtsCancelAfter, (void**)&g_origCtsCancelAfter},
 };
 static const int kLoginOptionalCount = (int)(sizeof(kLoginOptionalSlots) / sizeof(kLoginOptionalSlots[0]));
 static std::atomic<bool> g_loginHooksDone{false};
@@ -2843,6 +2968,13 @@ static void InstallLoginAssistHooks() {
     if (g_loginHooksDone.load()) return;                 // 快路径：已就位
     if (!g_libReady.load()) return;                      // 库未就绪：下一 tick 再试
     if (!EnsureApi()) return;
+
+    // ★r20 诊断 L≤3：只到「API 可用（含自检调用）」为止，不 attach、不扫类、不装钩
+    if (DiagLevel() <= 3) {
+        static std::atomic<bool> once3{false};
+        if (!once3.exchange(true)) LOGI(TPL_LOG " diag L%d：跳过 attach/扫类/装钩（二分定位）", DiagLevel());
+        return;
+    }
 
     // 本函数可能跑在 mod 线程（TryInit/Tick 都是 pthread）⇒ 先 attach 再解析元数据
     // （Games/HzsjMod.cpp:369 同款；thread_attach 幂等，重复调用无害）
@@ -2854,6 +2986,29 @@ static void InstallLoginAssistHooks() {
             api.thread_attach(domain);
             LOGI(TPL_LOG " login assist: mod 线程已 attach 到 il2cpp");
         }
+    }
+
+    /* ★r20（2026-10-17 二分定案）：登录保命钩**默认关闭**。
+     *   真机分级实测（同一 .so，仅 `setprop debug.starry.il2cpp_diag` 不同；日志 /tmp/nhsy2_L*.txt）：
+     *     L4 = attach + 按图找类、**零代码补丁**          → 进程存活，走到 TapTapSDK.Init done
+     *     L5 = L4 + libc 日志护盾(asf.shield) 一个补丁     → 存活
+     *     L6 = L5 + 下面这 3 个 Login_* Dobby 补丁         → **启动后约 4s 干净退出 exit(0)**
+     *     L7 = 全装（+ SyncHooks 69 槽）                   → 退出（与 L6 同因）
+     *   ⇒ 触发者只是这 3 个补丁：`LoginService.StartInteractiveLoginInternal` /
+     *     `HandleLoginFailure` / `HandleLoginSuccess`；**69 个功能钩本身无罪**（L4 证明零补丁可活，
+     *     功能钩不在启动路径上，10.15 底包新增/加严的保护面只覆盖了登录链这三个方法）。
+     *   代价评估（为什么敢默认关）：登录保命钩是 r17 为「用户网页登录手速 vs 游戏 ~30–37s 预算」
+     *   加的兜底——**关了不会闪退，只会在登录拖太久时照常弹「登录失败」框、可重试**；
+     *   而开着会让游戏根本进不去。两害相权取重。
+     *   需要复现研究时：`setprop debug.starry.nhsy2_login_hooks 1` 再冷启（会退出，仅供取证）。 */
+    if (!LoginHooksEnabled()) {
+        static std::atomic<bool> onceLh{false};
+        if (!onceLh.exchange(true)) {
+            LOGW(TPL_LOG " login assist: 登录保命钩默认关闭（本底包实测这 3 个补丁会让游戏启动约 4s 后干净退出 exit(0)）；"
+                         "需要取证时 setprop debug.starry.nhsy2_login_hooks 1");
+        }
+        g_loginHooksDone.store(true);   // 不再重试，避免每 tick 刷屏
+        return;
     }
 
     int ok = 0;
@@ -3640,16 +3795,75 @@ static bool AnyFeatureOn() {
         || SpdMulActive() || g_jump.load();
 }
 
+/* ★r20：把「首次装钩」推迟到启动后 N ms（`setprop debug.starry.nhsy2_hook_delay_ms`，默认 10000）。
+ *   动机：本底包上任何 il2cpp 方法代码补丁都会让游戏在 `Neon Abyss v…` 之后约 3.8 s **干净退出**
+ *   （分级实测：L4/L5 零或单个 libc 补丁存活；L6 只加 3 个登录补丁即退出；65 个功能钩同样退出；
+ *   而钩子集合与 r19 逐项相同 ⇒ 新加的是**代码完整性校验**）。
+ *   若该校验是**一次性**的，把装钩推到它之后再落即可既保住功能又不触发。Tick 每拍都会重调
+ *   SyncHooks，所以只是晚装、不会漏装（判据：`install pass: ok=69` 且进程存活）。 */
+static long long HookDelayMs() {
+    static std::atomic<int> cached{-1};
+    int v = cached.load();
+    if (v >= 0) return v;
+    char buf[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.nhsy2_hook_delay_ms", buf);
+    v = (n > 0) ? atoi(buf) : 10000;
+    if (v < 0) v = 0;
+    cached.store(v);
+    return v;
+}
+static bool HookInstallTimeReached() {
+    if (HookDelayMs() <= 0) return true;
+    static std::atomic<long long> t0{0};
+    const long long now = NowMonoMs();
+    long long s = t0.load();
+    if (s == 0) { t0.store(now); s = now; }
+    return (now - s) >= HookDelayMs();
+}
+
+static void ClearSoftDirty(const char* why);   // ★r20 前置声明（定义见 §⑦.6e）
+static void ReProtectExecPages(const char* why);   // ★r20 前置声明（定义见 §⑦.6e）
+static bool FreezeThemisWatchdog();                 // ★r20 前置声明（定义见 §⑦.6f）
+static std::atomic<bool> g_watchdogFrozen{false};    // ★r20 前置定义（SyncHooks 闸门要用）
+static bool ThemisWatchdogNeutralized();             // ★r20b 前置声明（定义见 §⑦.6g）
+static void FlushThreadRecords(const char* why);     // ★r20b 前置声明（定义见 §⑦.6g）
+static std::atomic<int> g_ntMode{0};                 // ★r20b pthread_create 闸模式（0=只记账/1=拒全部/2=拒一个偏移）
+static std::atomic<int> g_tcRefused{0};              // ★r20b 已被拒绝出生的 themis 线程数
+
 static void SyncHooks() {
     if (!g_libReady.load()) return;
     if (!AnyFeatureOn()) return;                        // 全关：不装、也不卸载
     if (g_installPassDone.load()) return;               // 快路径：一次装钩已完成，不再重跑
+    if (!HookInstallTimeReached()) return;              // ★r20：推迟到启动后 N ms（Tick 每拍重试，不会漏装）
 
     std::lock_guard<std::mutex> lk(g_installMutex);     // ★ 串行化，防并发双挂
     if (g_installPassDone.load()) return;               // double-check
+    if (!HookInstallTimeReached()) return;
 
+    // ★r20 闸门：看门狗没中和就**不许装钩**（带着活看门狗装钩 = 必然被 exit）。下一 tick 再试。
+    // ★r20b 换序：中和优先走「**拒绝出生**」（§⑦.6g，纯 libc 侧、**不写 themis 任何代码页**）；
+    //   只有在拒绝没生效（闸未装 / themis 线程早于闸诞生）时才退回 r20 的「冻结」（往 themis .text 写）。
+    //   依据：① 分级实测 L5「只改 libc 不触发校验」⇒ libc 是我们唯一验证过的安全面；② L9 已证触发源是
+    //   「写代码页这一事件本身」⇒ 冻结动作与触发动作**同类**，这正是它「改写成功却仍退出」的最自洽解释。
+    //   ★r20b 关键补充：**只要操作者选了拒绝路径（`nhsy2_nothread≠0`），就绝不退回「冻结」**
+    //   —— 否则 SyncHooks 会在 themis 还没装载时就先往它 .text 写（把要验证的变量污染掉），
+    //   整个「拒绝出生」实验就永远测不出结论。宁可不装钩（每 tick 重试、日志会喊），也不写 themis 代码页。
+    if (!ThemisWatchdogNeutralized()) {
+        if (g_ntMode.load() == 0 && FreezeThemisWatchdog()) {
+            /* 冻结路径成功 ⇒ 放行（保持 r20 行为） */
+        } else {
+            static std::atomic<int> n{0};
+            if (n.fetch_add(1) < 12) {
+                LOGW(TPL_LOG " 看门狗尚未中和（mode=%d 已拒绝=%d）⇒ 本轮暂缓装钩，稍后重试",
+                     g_ntMode.load(), g_tcRefused.load());
+            }
+            return;
+        }
+    }
     ResolveOffsetsAndEnums();                           // 只在首次装钩时解析一次
     g_installedCount.store(InstallAllHooks());
+    ClearSoftDirty("after-install-hooks");               // ★r20 装钩后立刻清脏位
+    ReProtectExecPages("after-install-hooks");            // ★r20 并把 rwx 代码页改回 R-X
     g_installPassDone.store(true);
 }
 
@@ -3879,6 +4093,583 @@ static void InstallLogAbortShield() {
 }
 
 // ============================================================================
+/* ---- ⑦.6c ★r20：exit / _exit 拦截（libc 代码补丁安全：分级 L5 实测只改 libc 不触发 il2cpp 校验）----
+ *  背景：2026-10-15 底包（vc603）新增 **libil2cpp 代码完整性校验** —— 改任何一个 il2cpp 方法
+ *  的代码，进程约 4 s 后**干净退出** exit(0)（无 tombstone、无 FATAL EXCEPTION）。分级实测：
+ *    L0/L3/L4（零补丁）存活 · L5（只改 libc 的 async_safe）存活 · L6（+3 个登录补丁）退出 ·
+ *    L7（+65 个功能钩）退出 · **L8（只挂 1 个与启动无关的 Hearts.DeductHP）也退出**
+ *  ⇒ 是**全局定时校验**，不是「钩坏了启动路径」。
+ *  处置：校验命中的外部表现就是 `exit(0)`/`_exit(0)`。libc 补丁不触发它 ⇒ 把退出吞掉、让进程
+ *  继续跑；每次调用都留日志（前 5 次），`setprop debug.starry.nhsy2_block_exit 0` 可放行。 */
+static void (*g_exitOrig)(int)  = nullptr;
+static void (*g_uexitOrig)(int) = nullptr;
+static std::atomic<int>  g_exitSeen{0};
+static std::atomic<bool> g_exitShieldArmed{false};
+
+static bool BlockExitEnabled() {
+    static std::atomic<int> cached{-1};
+    int v = cached.load();
+    if (v >= 0) return v == 1;
+    char buf[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.nhsy2_block_exit", buf);
+    v = (n > 0) ? atoi(buf) : 1;
+    cached.store(v);
+    return v == 1;
+}
+static void Hooked_Exit(int code) {
+    const int n = g_exitSeen.fetch_add(1) + 1;
+    if (BlockExitEnabled() && code == 0) {
+        if (n <= 5) LOGW(TPL_LOG " exit(0) 已拦截（第 %d 次）—— 疑似 libil2cpp 完整性校验命中的退出；放行用 setprop debug.starry.nhsy2_block_exit 0", n);
+        return;                                   // ★ 吞掉：让进程继续运行
+    }
+    if (n <= 5) LOGW(TPL_LOG " exit(%d) 放行（第 %d 次）", code, n);
+    if (g_exitOrig) g_exitOrig(code);
+}
+static void Hooked_UExit(int code) {
+    const int n = g_exitSeen.fetch_add(1) + 1;
+    if (BlockExitEnabled() && code == 0) {
+        if (n <= 5) LOGW(TPL_LOG " _exit(0) 已拦截（第 %d 次）—— 同上", n);
+        return;
+    }
+    if (n <= 5) LOGW(TPL_LOG " _exit(%d) 放行（第 %d 次）", code, n);
+    if (g_uexitOrig) g_uexitOrig(code);
+}
+static void InstallExitShield() {
+    if (g_exitShieldArmed.load()) return;
+    std::lock_guard<std::mutex> lk(g_installMutex);
+    if (g_exitShieldArmed.load()) return;
+    g_exitShieldArmed.store(true);
+    void* pe = getSymAddress("libc.so", "exit", false);
+    void* pu = getSymAddress("libc.so", "_exit", false);
+    if (pe && DobbyHookGuarded("exit.shield", pe, reinterpret_cast<void*>(Hooked_Exit),
+                               reinterpret_cast<void**>(&g_exitOrig))) {
+        LOGI(TPL_LOG " exit 护盾已装：orig=%p（code==0 时拦截）", reinterpret_cast<void*>(g_exitOrig));
+    }
+    if (pu && DobbyHookGuarded("uexit.shield", pu, reinterpret_cast<void*>(Hooked_UExit),
+                               reinterpret_cast<void**>(&g_uexitOrig))) {
+        LOGI(TPL_LOG " _exit 护盾已装：orig=%p（code==0 时拦截）", reinterpret_cast<void*>(g_uexitOrig));
+    }
+}
+
+/* ---- ⑦.6d ★r20：libil2cpp 完整性校验的**钓取与中和**（走 libc 补丁，安全）----
+ *  线索：`libthemis.so`（TapTap themis lite 的 JNI 库）导入表含 `memcmp / open / __open_2 /
+ *  read / lseek / mprotect / pthread_create / pthread_cond_timedwait` —— 正是「起一个定时线程、
+ *  按段读取原始 libil2cpp.so、与内存里的映射逐段 memcmp」的配方；而分级实测已证明
+ *  **改 libc 代码不触发该校验**（L5 存活）⇒ 用 libc 补丁去钓它最划算。
+ *  做法：挂 `memcmp`；只对「单次比较 ≥ 4 KB」（文件 vs 内存的块比较特征）记账，把**调用者返回地址**
+ *  打出来 —— 若落在 libthemis 的映射里，就拿到了校验函数的位置。并可选（`debug.starry.nhsy2_memcmp_spoof=1`）
+ *  对「调用者属于 themis」的大块比较**直接返回 0（视为一致）**，从而让校验永远通过、不必改 themis 代码。 */
+static int (*g_memcmpOrig)(const void*, const void*, size_t) = nullptr;
+static std::atomic<int>      g_mcSeen{0};
+static std::atomic<uintptr_t> g_themisBase{0};
+static std::atomic<bool>     g_mcProbeArmed{false};
+
+static bool MemcmpSpoofEnabled() {
+    static std::atomic<int> cached{-1};
+    int v = cached.load();
+    if (v >= 0) return v == 1;
+    char buf[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.nhsy2_memcmp_spoof", buf);
+    v = (n > 0) ? atoi(buf) : 0;
+    cached.store(v);
+    return v == 1;
+}
+static int Hooked_Memcmp(const void* a, const void* b, size_t n) {
+    if (n >= 256) {
+        const uintptr_t lr = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+        /* 记账去重：同一 (n,a,b,lr) 只记一次，避免周期性校验把日志刷满。
+         * 热路径 ⇒ try_lock：抢不到锁就直接放行（只影响记账，不影响功能）。 */
+        struct Rec { size_t n; uintptr_t a, b, lr; };
+        static Rec recs[48];
+        static std::atomic<int> nrec{0};
+        static std::mutex m;
+        std::unique_lock<std::mutex> lk(m, std::try_to_lock);
+        if (lk.owns_lock()) {
+            const int cnt = nrec.load();
+            bool dup = false;
+            for (int i = 0; i < cnt && i < 48; i++) {
+                if (recs[i].n == n && recs[i].a == (uintptr_t)a && recs[i].b == (uintptr_t)b &&
+                    recs[i].lr == lr) { dup = true; break; }
+            }
+            if (!dup && cnt < 48) {
+                recs[cnt] = Rec{n, (uintptr_t)a, (uintptr_t)b, lr};
+                nrec.store(cnt + 1);
+                LOGW(TPL_LOG " memcmp u#%d n=%zu a=%p b=%p lr=%p", cnt + 1, n, a, b,
+                     reinterpret_cast<void*>(lr));
+            }
+        }
+    }
+    return g_memcmpOrig ? g_memcmpOrig(a, b, n) : 0;
+}
+
+/* 进程内打印**全量** maps（一次性）：消除跨进程 ASLR 歧义，让 a/b/lr 都能落到具体映射上。 */
+static void LogKeyModuleBases() {
+    FILE* f = fopen("/proc/self/maps", "re");
+    if (!f) return;
+    char line[512];
+    int n = 0;
+    while (fgets(line, sizeof(line), f) && n < 40) {
+        if (!strstr(line, "libthemis") && !strstr(line, "libil2cpp.so") &&
+            !strstr(line, "libunity.so") && !strstr(line, "libc.so") &&
+            !strstr(line, "libstarry")) continue;
+        char* nl = strchr(line, '\n'); if (nl) *nl = '\0';
+        LOGW(TPL_LOG " MAP %s", line);
+        n++;
+    }
+    fclose(f);
+    LOGW(TPL_LOG " MAP end(%d)", n);
+}
+
+/* 文件侧探针：若校验是「重读原 libil2cpp.so 再比对」，这两条会直接给出**调用者地址**。
+ *  themis 导入的是 `__open_2` / `__openat_2`（非变参版本），正好可以安全挂钩。 */
+static int  (*g_open2Orig)(const char*, int) = nullptr;
+static int  (*g_openat2Orig)(int, const char*, int) = nullptr;
+static std::atomic<int> g_openSeen{0};
+static int Hooked_Open2(const char* path, int flags) {
+    const int k = g_openSeen.fetch_add(1) + 1;
+    if (k <= 60) {
+        LOGW(TPL_LOG " open#%d path=%s lr=%p", k, path ? path : "(null)",
+             __builtin_return_address(0));
+    }
+    return g_open2Orig ? g_open2Orig(path, flags) : -1;
+}
+static int Hooked_Openat2(int dirfd, const char* path, int flags) {
+    const int k = g_openSeen.fetch_add(1) + 1;
+    if (k <= 60) {
+        LOGW(TPL_LOG " openat#%d dirfd=%d path=%s lr=%p", k, dirfd, path ? path : "(null)",
+             __builtin_return_address(0));
+    }
+    return g_openat2Orig ? g_openat2Orig(dirfd, path, flags) : -1;
+}
+
+/* ★r20 soft-dirty 清除器（决定性假设）：
+ *  L9 判决实验里 `CodePatchU32` 已换成**裸 svc** 完全绕开 libc，仍被判退 ⇒ 观测点在**内核/页级**。
+ *  最自洽的解释是 themis 用 **soft-dirty 位**做「写检测」：定期 `echo 4 >/proc/self/clear_refs`
+ *  复位全进程脏位，再读 `/proc/self/pagemap` 看自己模块的页面有没有被写过 —— 这解释了
+ *  ①写回同值也退（只看"写过"不看内容）②约 4 s 的固定延迟（扫描周期）③改 libc 不触发（只扫自己的模块）。
+ *  对策：**我们写完立刻把全进程 soft-dirty 清掉**，并起一个轻量线程周期性清（400 ms），
+ *  让它的扫描看不到「我们的页面被写过」。 */
+static void ClearSoftDirty(const char* why) {
+    const int fd = open("/proc/self/clear_refs", O_WRONLY);
+    if (fd < 0) { LOGW(TPL_LOG " clear_refs 打不开 errno=%d（why=%s）", errno, why); return; }
+    const ssize_t w = write(fd, "4", 1);
+    close(fd);
+    static std::atomic<int> n{0};
+    const int k = n.fetch_add(1) + 1;
+    if (k <= 6) LOGW(TPL_LOG " clear_refs(4) #%d why=%s w=%zd", k, why, w);
+}
+
+/* ★r20 关键实验：绕开 libc 的 `mprotect`（裸 `svc #0`），并把自己发起的 mprotect 从 themis 眼前藏掉。
+ *  依据（2026-10-17 L9 判决实验）：唯一一次代码页改动是「按原值写回」，且 `CodePatchU32` 写完**已把
+ *  页权限还原成 R-X、内容零变化**，游戏**照样干净退出** ⇒ 校验盯的不是内容（不是校验和），而是
+ *  **mprotect/写页这个事件本身**；而只改 libc（L5）不触发 ⇒ themis 极可能是在 libc 层拦 `mprotect`
+ *  来观察「谁把它保护的代码页改成可写」。
+ *  做法：① `SvcMprotect()` 用 arm64 系统调用号 226 直接发 svc；② 钩住 libc `mprotect`，凡请求里带
+ *  PROT_WRITE 的**都由我们自己发裸 syscall 并直接返回、不向下转发** ⇒ themis 的观察层看不到这次
+ *  「代码页变可写」。行为上与真实 mprotect 等价（同一个系统调用），只是不让它记账。 */
+static int SvcMprotect(void* addr, size_t len, int prot) {
+#if defined(__aarch64__)
+    register long x0 __asm__("x0") = reinterpret_cast<long>(addr);
+    register long x1 __asm__("x1") = static_cast<long>(len);
+    register long x2 __asm__("x2") = static_cast<long>(prot);
+    register long x8 __asm__("x8") = 226;   // __NR_mprotect (arm64)
+    __asm__ volatile("svc #0" : "+r"(x0) : "r"(x1), "r"(x2), "r"(x8) : "memory", "cc");
+    if (x0 < 0) { errno = static_cast<int>(-x0); return -1; }
+    return static_cast<int>(x0);
+#else
+    return mprotect(addr, len, prot);
+#endif
+}
+static int (*g_mprotectLibcOrig)(void*, size_t, int) = nullptr;
+static std::atomic<int> g_mphSeen{0};
+static std::atomic<bool> g_mprotectHideArmed{false};
+static int Hooked_MprotectHide(void* addr, size_t len, int prot) {
+    const int k = g_mphSeen.fetch_add(1) + 1;
+    if (k <= 40) {
+        LOGW(TPL_LOG " mprotect(hide)#%d addr=%p len=%zu prot=%d lr=%p -> 裸 svc", k, addr, len, prot,
+             __builtin_return_address(0));
+    }
+    if (prot & PROT_WRITE) return SvcMprotect(addr, len, prot);   // ★ 不转发：themis 看不到
+    if (g_mprotectLibcOrig) return g_mprotectLibcOrig(addr, len, prot);
+    return SvcMprotect(addr, len, prot);
+}
+static void InstallMprotectHider() {
+    if (g_mprotectHideArmed.load()) return;
+    std::lock_guard<std::mutex> lk(g_installMutex);
+    if (g_mprotectHideArmed.load()) return;
+    g_mprotectHideArmed.store(true);
+    void* pm = getSymAddress("libc.so", "mprotect", false);
+    if (!pm) { LOGW(TPL_LOG " mprotect 隐藏器：符号不可得 ⇒ 跳过"); return; }
+    if (DobbyHookGuarded("mprotect.hide", pm, reinterpret_cast<void*>(Hooked_MprotectHide),
+                         reinterpret_cast<void**>(&g_mprotectLibcOrig))) {
+        LOGI(TPL_LOG " mprotect 隐藏器已装：orig=%p（PROT_WRITE 请求走裸 svc #226，不转发）",
+             reinterpret_cast<void*>(g_mprotectLibcOrig));
+    }
+}
+
+/* ★r20 关键修复尝试：把「可写的代码页」强制改回 RX。
+ *  线索：themis 在 `_INIT_0` 里 `pthread_mutex_init` + `pthread_cond_init` 之后起了一个**常驻看门狗线程**
+ *  （入口 FUN_001bf3f8，libthemis 0x1bf3f8；代码做了地址基址混淆，静态追到底困难），周期约 4 s。
+ *  已排除「内容比对」（同值写也退）。最省事、最自洽的余下解释：它**周期性读 /proc/self/maps**，看
+ *  自己模块里有没有出现「可写又可执行」的页 —— Dobby 装钩后常把代码页留在 RWX。
+ *  对策：装钩后（并每 500 ms 复查一次）把 libil2cpp/libunity 里所有 rwx 页用裸 svc 强制改回 R-X。 */
+static std::atomic<int> g_reprotectRuns{0};
+static void ReProtectExecPages(const char* why) {
+    FILE* f = fopen("/proc/self/maps", "re");
+    if (!f) return;
+    char line[512];
+    int fixed = 0, seen = 0;
+    while (fgets(line, sizeof(line), f)) {
+        /* ★r20 扩展：不只模块内，**匿名 RWX 页**（Dobby 跳板页）同样归一化 —— 若看门狗统计的是
+         * 「进程里可写可执行的页」，那它一样会看见 Dobby 的匿名跳板。 */
+        const bool inModule = strstr(line, "libil2cpp.so") || strstr(line, "libunity.so") ||
+                              strstr(line, "libthemis.so");
+        const bool anon = (strchr(line, '/') == nullptr);
+        if (!inModule && !anon) continue;
+        unsigned long s = 0, e = 0; char perms[8] = {0};
+        if (sscanf(line, "%lx-%lx %7s", &s, &e, perms) != 3) continue;
+        if (!strchr(perms, 'w') || !strchr(perms, 'x')) continue;
+        seen++;
+        if (SvcMprotect(reinterpret_cast<void*>(s), static_cast<size_t>(e - s),
+                        PROT_READ | PROT_EXEC) == 0) {
+            fixed++;
+            LOGW(TPL_LOG " reprotect(%s): %lx-%lx %s -> R-X", why, s, e, perms);
+        } else {
+            LOGW(TPL_LOG " reprotect(%s): %lx-%lx %s 改 RX 失败 errno=%d", why, s, e, perms, errno);
+        }
+    }
+    fclose(f);
+    const int k = g_reprotectRuns.fetch_add(1) + 1;
+    if (k <= 8 || fixed) LOGW(TPL_LOG " reprotect #%d why=%s 发现 rwx=%d 已改=%d", k, why, seen, fixed);
+}
+static void* GuardThread(void*) {
+    for (;;) {
+        usleep(500 * 1000);
+        ReProtectExecPages("tick");
+        FlushThreadRecords("tick");     // ★r20b：线程记账的**打印**放在这里（钩子体内禁止打日志）
+    }
+    return nullptr;
+}
+static void StartSoftDirtyCleaner() {   // 复用原入口：把「清脏位线程」升级成「页权限守护线程」
+    static std::atomic<bool> once{false};
+    if (once.exchange(true)) return;
+    pthread_t t;
+    if (pthread_create(&t, nullptr, GuardThread, nullptr) == 0) {
+        pthread_detach(t);
+        LOGI(TPL_LOG " 页权限守护线程已起（每 500 ms 把 libil2cpp/libunity 的 rwx 页改回 R-X）");
+    } else {
+        LOGW(TPL_LOG " 页权限守护线程创建失败");
+    }
+}
+
+/* ★r20 关键修复：**冻结 themis 看门狗线程**（本轮最终解法）。
+ *  定位过程（可复核）：① IG5 静态确认 themis 在 `_INIT_0`（构造函数）里 `pthread_mutex_init` +
+ *  `pthread_cond_init` 后起了一个常驻线程（入口 libthemis+0x1bf3f8），是它唯一的周期线程；
+ *  ② root 采样 `/proc/<pid>/task/<tid>/syscall` 的 PC，唯一长期停在 **libthemis+0xc16e0** 的线程就是它；
+ *  ③ 本地反汇编 0xc16a0-0xc1800 显示 0xc16d8/0xc16dc 正是 `mov w8,#101(nanosleep); svc #0`，
+ *  其后 0xc16e0 起是返回点 —— 「睡 N 秒 → 巡检 → 再睡」的循环。
+ *  做法：把 0xc16c4（原 `sxtw x8,w8`，机器码 0x93407d08）改成 `movz x8,#0xffff,lsl #16`
+ *  （0xD2BFFFE8 ≈ 4294901760 秒 ≈ 136 年）⇒ 看门狗第一次睡下去就再也不醒，之后既不巡检也不会
+ *  `exit_group`。补丁前按机器码**指纹校验**，不符就不动（换版本时自动失效而不是改坏）。 */
+/* themis 基址取法：**不能走 /proc/self/maps** —— 实测应用侧（同 uid）在自己的 maps 里
+ *  **看不到 libthemis.so 的任何行**（themis 隐藏了自身映射；root 从外部 cat 才看得到），
+ *  框架的 xdl_open 也因此报 `xdl_open failed for libthemis.so`。
+ *  改用系统链接器自己认识已加载库这一点：`dlopen("libthemis.so", RTLD_NOLOAD)` 拿句柄 →
+ *  `dlsym(handle,"JNI_OnLoad")` 拿到**模块内地址** → 从该页起**回扫找 ELF 头**（\x7fELF）得基址。 */
+static uintptr_t FindThemisBase() {
+    void* h = dlopen("libthemis.so", RTLD_NOW | RTLD_NOLOAD);
+    if (!h) return 0;
+    void* sym = dlsym(h, "JNI_OnLoad");
+    dlclose(h);
+    if (!sym) return 0;
+    uintptr_t a = reinterpret_cast<uintptr_t>(sym) & ~static_cast<uintptr_t>(0xFFF);
+    for (int i = 0; i < 0x400; i++, a -= 0x1000) {          // 回扫 ≤4 MB（模块本身 ~850 KB）
+        if (memcmp(reinterpret_cast<const void*>(a), "\x7f" "ELF", 4) == 0) return a;
+    }
+    return 0;
+}
+static bool FreezeThemisWatchdog() {
+    const uintptr_t base = FindThemisBase();
+    if (!base) { LOGW(TPL_LOG " 冻结看门狗：找不到 libthemis 基址 ⇒ 稍后重试"); return false; }
+    const uint32_t* p = reinterpret_cast<const uint32_t*>(base + 0xc16c4);
+    const uint32_t cur = *p;
+    LOGW(TPL_LOG " 冻结看门狗：themis 基址=%p 目标机器码=%08x（期望 93407d08）",
+         reinterpret_cast<void*>(base), cur);
+    if (cur != 0x93407d08u) {
+        LOGW(TPL_LOG " 冻结看门狗：指纹不符 ⇒ 不动（该版本可能已改）");
+        return false;
+    }
+    const bool ok = CodePatchU32("watchdog.freeze",
+                                 const_cast<uint32_t*>(p), 0xD2BFFFE8u);
+    LOGW(TPL_LOG " 冻结看门狗：改写 %s（睡眠改 ≈136 年）", ok ? "成功" : "失败");
+    if (ok) g_watchdogFrozen.store(true);
+    return ok;
+}
+
+/* ==== ⑦.6g ★r20b：看门狗线程「拒绝出生」闸（纯 libc 侧，本轮换的方法）====
+ *  为什么不再用 r20 的「冻结」：冻结＝把 themis+0xc16c4 改成 `movz x8,#0xffff,lsl#16`（睡 ≈136 年），
+ *    · 它只掐**一个 sleep 点**，而循环里还可能有别的检查点/别的线程（r20 「下一步 1」已怀疑）；
+ *    · 更要紧：它**往 themis 自己的 .text 写**，而 L9 判决实验已证触发源是「写代码页这一事件本身」
+ *      ⇒ 解决动作与触发动作**同类**。这是「改写成功却仍退出」的最自洽解释，也是本闸要绕开的东西。
+ *  本闸做的是「在源头不让巡检线程诞生」：挂 libc `pthread_create`，当 `start_routine` 落在 themis 内
+ *    （或等于指定偏移）时**直接 `return 0`（假装成功）而不建线程** ⇒ 一次掐掉该线程的**全部** sleep /
+ *    检查点，且**完全不碰 themis 任何代码页**（libc 是分级实测 L5 唯一验证过的安全面）。
+ *  仓外同机理依据（已落 `10_docs/_state/外部方案台账.md` §1 X-13）：看雪 thread-289359（libmsaoaidsec.so
+ *    型检测线程）＝「Hook pthread_create，识别到来自该 SO 的创建请求就 return 0，反调试线程永不创建」；
+ *    看雪 thread-284838 补充：检测方会**核对 `start_routine` 参数地址**，非预期地址会反复重建 ⇒ 拒绝闸
+ *    必须能按**偏移**精确打击（故提供 mode 2），不要只会按「来自哪个 so」一刀切。
+ *  分两轮，**同一份 so**，第二轮只改 setprop、不重新出包：
+ *    round-1（默认 `debug.starry.nhsy2_nothread=0`）⇒ **只记账不拒绝**：先拿到 themis 起了几个线程、
+ *      entry 偏移各是多少（日志 `pc#N fn=… arg=… lr=…`、落在 themis 的打成 `**themis+0x…**`）。
+ *    round-2 `=1` 拒绝 themis 全部线程；`=0x<偏移>`（如 `0x1bf3f8`）只拒绝该 entry。逃生门 `=-1` 不装闸。
+ *  ★ 钩子体纪律（针对 r20「装 libc 探针 ⇒ mod 线程在装钩前死锁」事故，务必保持）：
+ *    钩子内**零锁、零日志、零系统调用、零内存分配、零 dladdr/FindThemisBase**（后者会碰链接器锁）。
+ *    记账只写定长数组（写完再以 release 发布序号），**打印一律留给我方守护线程** FlushThreadRecords()。 */
+static constexpr int kTcRecMax = 1024;      // ★r20b：64 太小 —— 实测 themis 装载后 10 s 就爆表（第 65 次创建）
+static constexpr int kTcUniqMax = 128;      // 只打印「首次出现的 (fn,lr)」，避免 1024 条刷屏
+static constexpr uintptr_t kVaMask = 0x0000FFFFFFFFFFFFull;   // 去掉 PAC 签名（高 16 位）
+struct TcRec { uintptr_t fn, arg, lr; };
+static TcRec g_tcRec[kTcRecMax];
+static std::atomic<uint32_t> g_tcSeq[kTcRecMax];      // 0=未就绪；n=第 n 条已写完（release 发布）
+static std::atomic<uint32_t> g_tcN{0};                // 已观测到的线程创建总次数（可 > kTcRecMax）
+static std::atomic<uint32_t> g_tcFlushed{0};
+static std::atomic<int>      g_ntOff{0};              // mode 2 的目标 entry 偏移
+static std::atomic<bool>     g_pcGateArmed{false};
+static std::atomic<uintptr_t> g_themisHi{0};          // themis 上界（ELF phdr 实算）
+static int (*g_pcGateOrig)(void*, const void*, void* (*)(void*), void*) = nullptr;
+
+static int Hooked_PthreadCreateGate(void* a, const void* attr, void* (*fn)(void*), void* arg) {
+    const uint32_t i = g_tcN.fetch_add(1, std::memory_order_relaxed);
+    if (i < kTcRecMax) {
+        g_tcRec[i].fn  = reinterpret_cast<uintptr_t>(fn);
+        g_tcRec[i].arg = reinterpret_cast<uintptr_t>(arg);
+        g_tcRec[i].lr  = reinterpret_cast<uintptr_t>(__builtin_return_address(0));
+        g_tcSeq[i].store(i + 1, std::memory_order_release);
+    }
+    const int mode = g_ntMode.load(std::memory_order_relaxed);
+    if (mode) {
+        const uintptr_t lo = g_themisBase.load(std::memory_order_relaxed);
+        const uintptr_t hi = g_themisHi.load(std::memory_order_relaxed);
+        /* ★ 必须先去 PAC：实测本机 fn 可能是签名指针（形如 0xab0000xxxxxxxxxx），
+         *   原样比较必然落在区间外 ⇒ 拒绝闸静默失效。 */
+        const uintptr_t p  = reinterpret_cast<uintptr_t>(fn) & kVaMask;
+        if (lo && hi > lo && p >= lo && p < hi) {
+            if (mode == 1 || static_cast<int>(p - lo) == g_ntOff.load(std::memory_order_relaxed)) {
+                g_tcRefused.fetch_add(1, std::memory_order_relaxed);
+                return 0;                            // ★ 假装成功：巡检线程永不诞生
+            }
+        }
+    }
+    return g_pcGateOrig ? g_pcGateOrig(a, attr, fn, arg) : -1;
+}
+
+/* ELF phdr 实算模块跨度：**只允许在我方线程调用**。拍脑袋的固定窗口（曾用 4 MB）会把邻居模块
+ *  算进 themis 区间 ⇒ 拒绝闸可能误伤别的库的线程。此模块实测仅 ~0xD8000，必须按实际来。 */
+static uintptr_t ElfSpanEnd(uintptr_t base) {
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(base);
+    if (memcmp(p, "\x7f" "ELF", 4) != 0 || p[4] != 2) return 0;      // 64-bit only
+    uint64_t phoff = 0; uint16_t phentsize = 0, phnum = 0;
+    memcpy(&phoff, p + 32, 8);
+    memcpy(&phentsize, p + 54, 2);
+    memcpy(&phnum, p + 56, 2);
+    if (!phoff || phentsize < 56 || phnum == 0 || phnum > 64) return 0;
+    uintptr_t maxEnd = 0;
+    for (uint16_t i = 0; i < phnum; i++) {
+        const uint8_t* ph = p + phoff + static_cast<uint64_t>(i) * phentsize;
+        uint32_t type = 0; memcpy(&type, ph, 4);
+        if (type != 1) continue;                                     // PT_LOAD
+        uint64_t vaddr = 0, filesz = 0, memsz = 0;
+        memcpy(&vaddr, ph + 16, 8);
+        memcpy(&filesz, ph + 32, 8);
+        memcpy(&memsz,  ph + 40, 8);
+        const uint64_t end = vaddr + (memsz > filesz ? memsz : filesz);
+        if (base + end > maxEnd) maxEnd = base + end;
+    }
+    return maxEnd;
+}
+
+/* themis 区间刷新：**只允许在我方线程调用**（含 dlopen/dlsym，会碰链接器锁）。 */
+static void RefreshThemisRange() {
+    if (g_themisHi.load() > g_themisBase.load()) return;
+    const uintptr_t b = FindThemisBase();
+    if (!b) return;
+    uintptr_t end = ElfSpanEnd(b);
+    if (end <= b) end = b + 0x200000;    // 兜底 2 MB（phdr 读失败时）
+    g_themisBase.store(b);
+    g_themisHi.store(end);
+    LOGW(TPL_LOG " themis 区间已定：base=%p hi=%p（跨度 %lu KB，源自 ELF phdr）",
+         reinterpret_cast<void*>(b), reinterpret_cast<void*>(end),
+         static_cast<unsigned long>((end - b) / 1024));
+}
+
+static void FlushThreadRecords(const char* why) {
+    const uint32_t n = g_tcN.load(std::memory_order_relaxed);
+    const uint32_t f = g_tcFlushed.load(std::memory_order_relaxed);
+    static std::atomic<int>  lastRefused{-1};
+    static std::atomic<bool> baseLogged{false};
+    static std::atomic<bool> ovLogged{false};
+    static uintptr_t uniq[kTcUniqMax][2];
+    static std::atomic<int> nUniq{0};
+    const int rf = g_tcRefused.load(std::memory_order_relaxed);
+    const bool newRec = (n > f);
+    const bool refChanged = (rf != lastRefused.load());
+    if (!newRec && !refChanged) return;
+    RefreshThemisRange();
+    const uintptr_t lo = g_themisBase.load(std::memory_order_relaxed);
+    const uintptr_t hi = g_themisHi.load(std::memory_order_relaxed);
+    const uint32_t cap = (n < static_cast<uint32_t>(kTcRecMax)) ? n : static_cast<uint32_t>(kTcRecMax);
+    for (uint32_t i = f; i < cap; i++) {
+        if (g_tcSeq[i].load(std::memory_order_acquire) != i + 1) break;   // 该条还没写完
+        const TcRec& r = g_tcRec[i];
+        g_tcFlushed.store(i + 1, std::memory_order_relaxed);              // 先推进游标，防重复打印
+        const uintptr_t ufn = r.fn & kVaMask, ulr = r.lr & kVaMask;
+        /* 去重：1024 条里绝大多数是同几个 (fn,lr) 的重复（Unity/音频/GC 线程池），只打印首次。 */
+        const int nu = nUniq.load();
+        bool dup = false;
+        for (int k = 0; k < nu && k < kTcUniqMax; k++) {
+            if (uniq[k][0] == ufn && uniq[k][1] == ulr) { dup = true; break; }
+        }
+        if (dup) continue;
+        if (nu < kTcUniqMax) { uniq[nu][0] = ufn; uniq[nu][1] = ulr; nUniq.store(nu + 1); }
+        if (lo && hi > lo && ufn >= lo && ufn < hi) {
+            LOGW(TPL_LOG " %s pc#%u **themis+0x%lx**（疑巡检线程）fn=%p arg=%p lr=%p", why, i + 1,
+                 static_cast<unsigned long>(ufn - lo), reinterpret_cast<void*>(ufn),
+                 reinterpret_cast<void*>(r.arg), reinterpret_cast<void*>(ulr));
+        } else {
+            LOGW(TPL_LOG " %s pc#%u fn=%p arg=%p lr=%p（lr 是否在 themis：%s）", why, i + 1,
+                 reinterpret_cast<void*>(ufn), reinterpret_cast<void*>(r.arg),
+                 reinterpret_cast<void*>(ulr),
+                 (lo && hi > lo && ulr >= lo && ulr < hi) ? "是 ★" : "否");
+        }
+    }
+    if (!baseLogged.load() && lo) {
+        baseLogged.store(true);
+        LOGW(TPL_LOG " %s THEMIS base=%p hi=%p（mode=%d off=+0x%x）", why, reinterpret_cast<void*>(lo),
+             reinterpret_cast<void*>(hi), g_ntMode.load(), g_ntOff.load());
+    }
+    if (refChanged) {
+        lastRefused.store(rf);
+        LOGW(TPL_LOG " %s 已拒绝出生 themis 线程=%d（mode=%d off=+0x%x 观测创建=%u）",
+             why, rf, g_ntMode.load(), g_ntOff.load(), n);
+    }
+    if (n > static_cast<uint32_t>(kTcRecMax) && !ovLogged.exchange(true)) {
+        LOGW(TPL_LOG " %s 线程创建次数 %u 超记账上限 %d ⇒ 只记前 %d 条", why, n, kTcRecMax, kTcRecMax);
+    }
+}
+
+/* 中和判据：冻结成功，或「拒绝出生」已确实发生过一次（mode≠0 且 refused>0）。 */
+static bool ThemisWatchdogNeutralized() {
+    if (g_watchdogFrozen.load()) return true;
+    return g_ntMode.load() != 0 && g_tcRefused.load() > 0;
+}
+
+static void InstallPthreadCreateGate() {
+    if (g_pcGateArmed.load()) return;
+    std::lock_guard<std::mutex> lk(g_installMutex);
+    if (g_pcGateArmed.load()) return;
+    g_pcGateArmed.store(true);
+    char buf[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.nhsy2_nothread", buf);
+    const long v = (n > 0) ? strtol(buf, nullptr, 0) : 0;
+    if (v < 0) { LOGI(TPL_LOG " pthread_create 闸：属性=%ld ⇒ 逃生门生效，不装闸（回到 r20 冻结路径）", v); return; }
+    if (v == 1)      g_ntMode.store(1);
+    else if (v > 1) { g_ntOff.store(static_cast<int>(v)); g_ntMode.store(2); }
+    else             g_ntMode.store(0);
+    void* pp = getSymAddress("libc.so", "pthread_create", false);
+    if (!pp) { g_ntMode.store(0); LOGW(TPL_LOG " pthread_create 闸：符号不可得 ⇒ 跳过（退化为只靠冻结）"); return; }
+    if (DobbyHookGuarded("pthread_create.gate", pp, reinterpret_cast<void*>(Hooked_PthreadCreateGate),
+                         reinterpret_cast<void**>(&g_pcGateOrig))) {
+        LOGI(TPL_LOG " pthread_create 闸已装：orig=%p mode=%d(0=只记账/1=拒 themis 全部/2=只拒一个) off=+0x%x",
+             reinterpret_cast<void*>(g_pcGateOrig), g_ntMode.load(), g_ntOff.load());
+    } else {
+        g_ntMode.store(0);
+        LOGW(TPL_LOG " pthread_create 闸装失败（DobbyHookGuarded=false）⇒ 退化为只记账");
+    }
+}
+
+/* mprotect 探针：Dobby 改码必须先 mprotect 放开写权限；若 themis 靠「页权限/写入」发现篡改，
+ * 这里的 lr 会指出是谁在看。同时也能看到 themis 是否自己回改权限。 */
+static int (*g_mprotectOrig)(void*, size_t, int) = nullptr;
+static std::atomic<int> g_mpSeen{0};
+static int Hooked_Mprotect(void* addr, size_t len, int prot) {
+    const int k = g_mpSeen.fetch_add(1) + 1;
+    if (k <= 40) {
+        LOGW(TPL_LOG " mprotect#%d addr=%p len=%zu prot=%d lr=%p", k, addr, len, prot,
+             __builtin_return_address(0));
+    }
+    return g_mprotectOrig ? g_mprotectOrig(addr, len, prot) : -1;
+}
+
+static void InstallMemcmpProbe() {
+    if (g_mcProbeArmed.load()) return;
+    std::lock_guard<std::mutex> lk(g_installMutex);
+    if (g_mcProbeArmed.load()) return;
+    g_mcProbeArmed.store(true);
+    LogKeyModuleBases();          // 先在进程内留下各模块基址（离线解析 LR 用）
+    /* themis 的映射范围：`getLibraryAddress("libthemis.so")` 实测返回 0（拿不到模块表），
+     * 改用它自己的导出 `JNI_OnLoad` 作为「落在 themis 里」的地标。 */
+    uintptr_t tb = getLibraryAddress("libthemis.so");
+    if (tb == 0) {
+        void* jl = getSymAddress("libthemis.so", "JNI_OnLoad", false);
+        if (jl) tb = reinterpret_cast<uintptr_t>(jl) & ~static_cast<uintptr_t>(0xFFFFF);
+    }
+    g_themisBase.store(tb);
+    void* pm = getSymAddress("libc.so", "memcmp", false);
+    if (pm && DobbyHookGuarded("memcmp.probe", pm, reinterpret_cast<void*>(Hooked_Memcmp),
+                               reinterpret_cast<void**>(&g_memcmpOrig))) {
+        LOGI(TPL_LOG " memcmp 探针已装：orig=%p themisBase=%p（记账阈值 256B；spoof=%d）",
+             reinterpret_cast<void*>(g_memcmpOrig), reinterpret_cast<void*>(tb),
+             static_cast<int>(MemcmpSpoofEnabled()));
+    }
+    void* po = getSymAddress("libc.so", "__open_2", false);
+    if (po && DobbyHookGuarded("open2.probe", po, reinterpret_cast<void*>(Hooked_Open2),
+                               reinterpret_cast<void**>(&g_open2Orig))) {
+        LOGI(TPL_LOG " __open_2 探针已装：orig=%p", reinterpret_cast<void*>(g_open2Orig));
+    }
+    void* pa = getSymAddress("libc.so", "__openat_2", false);
+    if (pa && DobbyHookGuarded("openat2.probe", pa, reinterpret_cast<void*>(Hooked_Openat2),
+                               reinterpret_cast<void**>(&g_openat2Orig))) {
+        LOGI(TPL_LOG " __openat_2 探针已装：orig=%p", reinterpret_cast<void*>(g_openat2Orig));
+    }
+    /* ★r20b：`pthread_create` 探针已升级为 §⑦.6g 的**闸**（单独挂钩、带「拒绝出生」能力）。
+     *  此处不再重复挂钩 —— 同一函数挂两次＝互踩，且 r20 已证四个探针同装必然死锁。 */
+    void* pm2 = getSymAddress("libc.so", "mprotect", false);
+    if (pm2 && DobbyHookGuarded("mprotect.probe", pm2, reinterpret_cast<void*>(Hooked_Mprotect),
+                                reinterpret_cast<void**>(&g_mprotectOrig))) {
+        LOGI(TPL_LOG " mprotect 探针已装：orig=%p", reinterpret_cast<void*>(g_mprotectOrig));
+    }
+}
+
+/* ★r20 L9 判决实验：把 libil2cpp .text 里的 4 字节**按原值写回**（内容零变化，但确实执行了
+ *  mprotect + 写代码页）。用途：区分校验的性质 ——
+ *    · 仍然退出 ⇒ 检测的是「代码页被写 / 页属性被改」这一**事件**（与内容无关）；
+ *    · 正常存活 ⇒ 检测的是**内容**（校验和/逐字节比对），那我们改的字节才是触发源。
+ *  目标地址取已解析到的真 API 桩（get_corlib，必在 libil2cpp 可执行段内）。 */
+static void InstallSameValueWriteTest() {
+    if (!EnsureApi()) { LOGW(TPL_LOG " L9: api 未就绪，跳过"); return; }
+    void* t = reinterpret_cast<void*>(GetApi().get_corlib);
+    if (!t) { LOGW(TPL_LOG " L9: get_corlib 为空，跳过"); return; }
+    uint32_t w = 0;
+    memcpy(&w, t, sizeof(w));
+    LOGW(TPL_LOG " L9 同值写测试：target=%p 现值=%08x（写回同值，内容不变）", t, w);
+    const bool ok = CodePatchU32("L9.same", t, w);
+    LOGW(TPL_LOG " L9 同值写结果=%d（1=已执行 mprotect+写页）", static_cast<int>(ok));
+    ClearSoftDirty("L9-after-write");
+    {   // 打印目标所在页的权限（验证 CodePatchU32 的 RX 还原是否真的生效）
+        FILE* mf = fopen("/proc/self/maps", "re");
+        if (mf) {
+            char ln[512];
+            const unsigned long tgt = reinterpret_cast<unsigned long>(t);
+            while (fgets(ln, sizeof(ln), mf)) {
+                unsigned long s = 0, e = 0; char pm[8] = {0};
+                if (sscanf(ln, "%lx-%lx %7s", &s, &e, pm) != 3) continue;
+                if (tgt >= s && tgt < e) { LOGW(TPL_LOG " L9 目标页权限=%s (%lx-%lx)", pm, s, e); break; }
+            }
+            fclose(mf);
+        }
+    }
+}
+
 //  ⑧ 对外接口（ModEntry.h 注册表契约，签名不可改）
 // ============================================================================
 bool nhsy2_TryInit(JavaVM* /*vm*/) {
@@ -3886,9 +4677,24 @@ bool nhsy2_TryInit(JavaVM* /*vm*/) {
     if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
 
     InstallFaultGuard();          // §④ 先装兜底，再装钩
+    // ★r20 注：此刻 libthemis 往往还没被 TapTap SDK dlopen ⇒ 冻结须在 tick 里重试（见 SyncHooks）。
+    StartSoftDirtyCleaner();      // ★r20 页权限守护线程
+    // ★r20 注意：`InstallMprotectHider()`（给 libc mprotect 打钩）实测**会把 Dobby 后续装钩一起带down**
+    //   （日志停在它那一步，之后的 `探针已装` / `install pass` 全无）⇒ 已停用，只保留页权限守护。
+    // InstallMprotectHider();
     InstallLogAbortShield();      // §⑦.6 进程级日志护盾：坏格式串不再让 libc assert→abort
+    InstallExitShield();          // §⑦.6c r20：拦截 exit(0)/_exit(0)（libil2cpp 完整性校验命中的干净退出）
+    // ★r20：`InstallMemcmpProbe()`（memcmp/__open_2/__openat_2/mprotect 四个 libc 探针）实测
+    //   会让紧接着的 `SyncHooks()` 卡死（日志正好停在最后一个「探针已装」之后，之后再无输出，
+    //   而游戏本体照常运行 ⇒ mod 线程死锁）。且其 pthread_create 部分已由 §⑦.6g 的闸取代 ⇒ 保持停用。
+    // InstallMemcmpProbe();
+    if (DiagLevel() == 9) InstallSameValueWriteTest();   // ★L9 判决实验（同值写）
     g_libReady.store(true);
     SyncHooks();                  // 已 ON 的开关立即装；全关保持 0 hook
+    // ★r20b：只挂**一个** libc 函数（pthread_create，§⑦.6g 的「拒绝出生」闸）。放在这里是为了最大
+    //   提前量 —— themis 是 TapTap SDK 稍后才 dlopen 的，此刻闸已就位就能拦住它的巡检线程诞生；
+    //   同时它排在 SyncHooks 之后（SyncHooks 才是历史上会卡死的那个），爆炸半径最小。
+    InstallPthreadCreateGate();
     InstallLoginAssistHooks();    // §6.5 登录保命：与开关无关，必须在登录页出现前就位
     LOGI(TPL_LOG " lib ready (by-name hooks only, lazy install)");
     return true;
