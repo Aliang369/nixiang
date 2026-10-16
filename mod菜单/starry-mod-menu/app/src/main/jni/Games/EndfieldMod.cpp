@@ -910,6 +910,18 @@ static void SyncHooks() {
     // （敌我=直调 get_factionIndex 纯字段读）+ g_hookMtx 串行 + 装成即停重试。
     if (g_hookDone.load()) return;
     if (!g_libReady.load()) return;
+    // v14.5（2026-10-16 小米 96f0d883「冷启 ~3 秒必崩」根因，见 10_docs/终末地/闪退_二次打开_20261016.md §8）：
+    //  SafeProbe 的 siglongjmp **只在登记过的线程有效**（Il2CppApi.h:220/228 —— PushJmp 失败即
+    //  `return false`，根本不执行 fn），而本 MOD 线程**从未登记**（只有 LearnWorker 登记过）⇒
+    //   ① 所有 SafeProbe 守卫的读取（如 Api::ImageOf 的「读首字段」）在本线程直接返回 false
+    //      ⇒ 按名解析永远失败；
+    //   ② 未守卫的 il2cpp 调用（如 Assemblies() 内的 domain_assemblies）一旦命中「运行时未就绪」
+    //      就是**未捕获 SIGSEGV ⇒ 直接杀进程**（实测 fault addr 0x138、null 解引用；帧
+    //      libstarry_magic.so+0x18564 → libil2cpp+0xc9927f8/+0xc9be2e8/+0xc9b14c8）。
+    //  修法：先登记本线程（与 LearnWorker 同款），再把整段「解析 + 装钩」包进 SafeProbe ——
+    //  故障被 longjmp 捕获 ⇒ 本次判失败返回，外层退避稍后重试（运行时就绪后即可装上），不再杀进程。
+    static thread_local bool tlsRegistered = false;
+    if (!tlsRegistered) { Il2Cpp::SetScanThread(pthread_self()); tlsRegistered = true; }
     // 退避节拍：框架每 ~300ms 调一次本函数 ⇒ 用 tick 序号当节拍器，不引入时钟依赖。
     const int tickNo = g_hookTickNo.fetch_add(1) + 1;
     if (tickNo < g_hookNextTryAt.load()) return;   // 退避期：一次 il2cpp 调用都不做
@@ -920,10 +932,17 @@ static void SyncHooks() {
         const int shift = attempts <= 10 ? 0 : (attempts - 10 > 5 ? 5 : attempts - 10);
         g_hookNextTryAt.store(tickNo + (1 << shift) * 7);
     }
-    InstallDmgHooks();
-    InstallInvHooks();
-    InstallJumpHooks();
-    InstallSkillHooks();
+    const bool probed = Il2Cpp::SafeProbe([&]() -> bool {
+        InstallDmgHooks();
+        InstallInvHooks();
+        InstallJumpHooks();
+        InstallSkillHooks();
+        return true;
+    });
+    if (!probed) {
+        LOGW(EF_LOG " hooks try %d faulted (runtime not ready?) — backoff, will retry", attempts);
+        return;   // 不落定：退避后会再试（运行时就绪后即可装上）
+    }
     const bool coreOk = (g_origApplyMod && g_origJump);
     LOGI(EF_LOG " hooks sync calc=%d apply=%d jump=%d skillCd=%d (try %d)",
          g_origCalc ? 1 : 0, g_origApplyMod ? 1 : 0,

@@ -2,9 +2,9 @@
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/终末地",
   "keep": "终末地_1.6.4_surgical-releaseSigned.apk",
   "keep_size": 1693070370,
-  "keep_md5": "5888b8d0dadd5a0f6454b90197bb20a7",
-  "keep_sha256": "8e946d0a8f93d7888178d94973b6a18ca80a40cb6f2ef991db59f8d355a0ab74",
-  "keep_note": "2026-10-16 **闪退修复版（v14.4）**：包内 so md5 2243abc2780548ba58ff332f5c3bcba8、戳 STARRYSTAMP1:EPOCH=1792153771；修的是 Games/EndfieldMod.cpp 的 SyncHooks 无界重试（小米 96f0d883「第二次打开就闪退」根因，见 10_docs/终末地/闪退_二次打开_20261016.md 与框架待办 FW-18）。签名证书 MD5 161fca32a36d3df274458682a44cb774（同钥 ⇒ 可覆盖安装）。**已被取代的版本**：93ce6635e0ca0539e3b97cf3d0dbc2b9（sha256 61757d72…，FW-13 修戳版）、5c78027487f848ead8f824efb854b00b（sha256 73ba4e63…，L3 实测过的那份）",
+  "keep_md5": "54331a8c990aece56fa4dbf332cc3e99",
+  "keep_sha256": "e6cb56f55aa6d1890be02f211afbc4077d987bcb2e485c0aed845b99360f9ac7",
+  "keep_note": "2026-10-16 **闪退修复版（v14.5）**：包内 so md5 a102ee75fe78cf73fd86229e886bfe18、戳 STARRYSTAMP1:EPOCH=1792153771。v14.5 修的是 Games/EndfieldMod.cpp 的 SyncHooks：MOD 线程未 SetScanThread ⇒ SafeProbe 守卫读全失效 + 未守卫的 il2cpp 调用在「运行时未就绪」时未捕获 SIGSEGV 杀进程（fault 0x138）；改为「登记本线程 + 整段包 SafeProbe」。**实测不再 SIGSEGV**（hooks try 1 faulted … backoff + 模组初始化成功 + 菜单弹出）。⚠️ **仍有一层未修**：我们在 Unity 初始化前碰 il2cpp ⇒ 游戏自身 abort（框架待办 FW-20，归属未坐实）。签名证书 MD5 161fca32a36d3df274458682a44cb774（同钥 ⇒ 可覆盖安装）。**已被取代**：5888b8d0dadd5a0f6454b90197bb20a7（v14.4）、93ce6635e0ca0539e3b97cf3d0dbc2b9（FW-13 修戳版）、5c78027487f848ead8f824efb854b00b（L3 实测过的那份）",
   "mode": "--apply",
   "removed": [
     {
