@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 # 弓箭传说2国际版 1.0.1 — 外科组装（classes.dex / resources.arsc 字节不变）
 #
-# 底包：02_apks/弓箭传说2国际版/facai_1.0.1_from_device.apk（com.facai.archeroii）
+# 底包：02_apks/弓箭传说2国际服.apk（com.facai.archeroii，官方原包 CN=fc）
+#       可用 GJC2INTL_BASE_APK=<path> 覆盖
 # 产物：08_output/弓箭传说2国际版/弓箭传说2国际版_1.0.1_surgical-releaseSigned.apk
 #
 # 用法:
 #   bash scripts/surgical_gjc2intl_1.0.1.sh
 #   STARRY_INSTALL=1 STARRY_ALLOW_UNINSTALL=1 bash scripts/surgical_gjc2intl_1.0.1.sh
 #
-# 依赖：Android.mk 已启用 STARRY_GAME_GJC2INTL；SignSpoof 含 com.facai.archeroii 证书
+# 依赖：私有 mk Android_gjc2intl.mk（modern 注册表路线，2026-10-17 从 legacy
+#       Main.cpp 路线迁出）；SignSpoof 含 com.facai.archeroii 证书
+#       迁移原因：legacy 路线要求公共 Android.mk 启用行保持取消注释，
+#       而切游戏时该行被注释 ⇒ 构建随机失败；modern 路线共享文件零改动
 set -euo pipefail
 
 BUILD_TYPE="${STARRY_BUILD_TYPE:-release}"
@@ -24,7 +28,16 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
-ORIG_APK="$NIXIANG/02_apks/弓箭传说2国际版/facai_1.0.1_from_device.apk"
+# 底包自适应：优先显式覆盖 → 历史目录 → 用户放在 02_apks 根下的平铺原包
+ORIG_APK="${GJC2INTL_BASE_APK:-}"
+if [[ -z "$ORIG_APK" ]]; then
+  for _cand in \
+    "$NIXIANG/02_apks/弓箭传说2国际版/facai_1.0.1_from_device.apk" \
+    "$NIXIANG/02_apks/弓箭传说2国际服.apk"
+  do
+    [[ -f "$_cand" ]] && { ORIG_APK="$_cand"; break; }
+  done
+fi
 OUT="$NIXIANG/08_output/弓箭传说2国际版"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
@@ -48,10 +61,10 @@ done
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
-MK="$STARRY_SRC/app/src/main/jni/Android.mk"
-grep -E '^\s*LOCAL_CFLAGS\s*\+=\s*-DENABLE_UNITY_HOOK\s+-DSTARRY_GAME_GJC2INTL' "$MK" \
-  || { echo "ERROR: Android.mk must enable STARRY_GAME_GJC2INTL"; exit 1; }
-echo "[check] Android.mk target=gjc2intl pkg=$PKG"
+MK="$STARRY_SRC/app/src/main/jni/Android_gjc2intl.mk"
+grep -q -- '-DSTARRY_GAME_GJC2INTL' "$MK" \
+  || { echo "ERROR: Android_gjc2intl.mk must define STARRY_GAME_GJC2INTL"; exit 1; }
+echo "[check] Android_gjc2intl.mk target=gjc2intl pkg=$PKG (modern 注册表)"
 
 LOCK_DIR="/tmp/gjc2intl_surgical.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
@@ -62,13 +75,16 @@ WORK="$(mktemp -d /tmp/gjc2intl_surgical.XXXXXX)"
 trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK" "$(dirname "$MF_CACHE")"
 
-echo "[1/6] ndk-build -> jniLibs"
+echo "[1/6] ndk-build -> 私有 obj/libs（并行会话互不踩）"
 NDK_BUILD="$NDK/ndk-build"
 [[ -x "$NDK_BUILD" ]] || { echo "ERROR: missing $NDK_BUILD"; exit 1; }
+OBJ_DIR="$STARRY_SRC/obj_gjc2intl"
+LIBS_DIR="$STARRY_SRC/libs_gjc2intl"
 (cd "$STARRY_SRC/app/src/main/jni" && \
-  "$NDK_BUILD" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk \
+  "$NDK_BUILD" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_gjc2intl.mk \
+  NDK_APPLICATION_MK=./Application.mk NDK_OUT="$OBJ_DIR" NDK_LIBS_OUT="$LIBS_DIR" \
   -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
-SO_BUILT="$STARRY_SRC/app/src/libs/arm64-v8a/libstarry_magic.so"
+SO_BUILT="$LIBS_DIR/arm64-v8a/libstarry_magic.so"
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT"; exit 1; }
 if ! grep -a -q 'gjc2intl' "$SO_BUILT" || ! grep -a -q '\[Gjc2Intl\]' "$SO_BUILT"; then
   echo "ERROR: so 不是 GJC2INTL"
@@ -302,7 +318,7 @@ if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
     fi
   fi
   adb shell "rm -f $REMOTE" 2>/dev/null || true
-  echo "log: adb logcat -s StarryApp:V StarryMagic:V Gjc2:V MenuService:V StarrySignSpoof:V"
+  echo "log: adb logcat -s StarryApp:V StarryMagic:V Mod_Menu:V StarryTrace:V MenuService:V StarrySignSpoof:V"
 fi
 
 echo "DONE: $SIGNED"

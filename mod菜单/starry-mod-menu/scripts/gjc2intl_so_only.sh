@@ -8,7 +8,7 @@ NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 OUT="$NIXIANG/08_output/弓箭传说2国际版"
 SIGNED="$OUT/弓箭传说2国际版_1.0.1_surgical-releaseSigned.apk"
 PKG="com.facai.archeroii"
-MK="$STARRY_SRC/app/src/main/jni/Android.mk"
+MK="$STARRY_SRC/app/src/main/jni/Android_gjc2intl.mk"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 KS="$NIXIANG/01_tools/starry_release.jks"
 
@@ -16,7 +16,7 @@ export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || tru
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
 [[ -f "$SIGNED" ]] || { echo "ERROR: missing $SIGNED (先跑 surgical_gjc2intl_1.0.1.sh)"; exit 1; }
-grep -q 'STARRY_GAME_GJC2INTL' "$MK" || { echo "ERROR: Android.mk not GJC2INTL"; exit 1; }
+grep -q -- '-DSTARRY_GAME_GJC2INTL' "$MK" || { echo "ERROR: Android_gjc2intl.mk not GJC2INTL"; exit 1; }
 
 BT=""
 for v in 36.0.0 35.0.0 34.0.0; do
@@ -28,14 +28,26 @@ done
 WORK="$(mktemp -d /tmp/gjc2intl_so_only.XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 
-echo "[1/3] ndk-build"
+echo "[1/3] ndk-build（私有 obj/libs，不污染共享 app/src/obj）"
+# 探针构建走**独立** obj/libs：ndk-build 不追踪编译标志变化，共用 obj 会复用上一次
+# 的目标文件，把探查代码带进正式包（2026-10-17 实测踩中，靠 so 串门禁才发现）
+if [[ "${GJC2INTL_PROBE:-0}" == "1" ]]; then
+  OBJ_DIR="$STARRY_SRC/obj_gjc2intl_probe"
+  LIBS_DIR="$STARRY_SRC/libs_gjc2intl_probe"
+else
+  OBJ_DIR="$STARRY_SRC/obj_gjc2intl"
+  LIBS_DIR="$STARRY_SRC/libs_gjc2intl"
+fi
 (cd "$STARRY_SRC/app/src/main/jni" && \
-  "$NDK/ndk-build" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
+  "$NDK/ndk-build" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_gjc2intl.mk \
+  NDK_APPLICATION_MK=./Application.mk NDK_OUT="$OBJ_DIR" NDK_LIBS_OUT="$LIBS_DIR" \
+  -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
 
 SO=""
 for cand in \
-  "$STARRY_SRC/app/src/libs/arm64-v8a/libstarry_magic.so" \
-  "$STARRY_SRC/app/src/obj/local/arm64-v8a/libstarry_magic.so"
+  "$LIBS_DIR/arm64-v8a/libstarry_magic.so" \
+  "$OBJ_DIR/local/arm64-v8a/libstarry_magic.so" \
+  "$STARRY_SRC/app/src/libs/arm64-v8a/libstarry_magic.so"
 do
   if [[ -f "$cand" ]] && grep -a -q 'gjc2intl' "$cand" && grep -a -q '\[Gjc2Intl\]' "$cand"; then
     SO="$cand"

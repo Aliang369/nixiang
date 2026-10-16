@@ -1,0 +1,19 @@
+# 弓箭传说2国际版（com.facai.archeroii）装机预检标记
+# 格式：类别|ERE 正则（每行一条，# 开头为注释）
+# 用途：post_install_precheck.sh 的机器预检关（L2）。人工终审仍是用户实测（L3）。
+# 建档：2026-10-17，移除「攻速倍率」菜单项轮（so-only 换包，仅 libstarry_magic.so 变）
+
+pkg|com\.facai\.archeroii
+
+# 菜单 so 加载标记（星光框架 TAG，包内 so 内唯一命中 "StarryMagic"）
+menu_load|StarryMagic
+
+# 菜单弹出标记（Java 侧 MenuService 打出：native menu shown mode=…）
+menu_shown|native menu shown
+
+# 游戏级 hook 命中标记（[Gjc2Intl] 前缀：懒装成功/hooked 清单/bspeed 心跳）
+hook_hit|\[Gjc2Intl\]
+
+# 授权墙标记（过不去只发操作请求卡，不诊断服务端）
+auth_fail|renew auth fail
+auth_ok|auth game_id synced|renew ok
