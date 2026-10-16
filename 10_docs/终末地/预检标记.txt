@@ -16,3 +16,20 @@ hook_hit|\[Endfield\] lib ready
 
 # 授权墙标记（过不去只发操作请求卡，不诊断服务端）
 auth_fail|renew auth fail
+
+# 崩溃判定（本作**收窄**，2026-10-16 小米 96f0d883 实测）：默认 RE_CRASH 含**裸 `tombstone`
+# 关键字**，而 MIUI 的 ScoutManager/DumpScoutTraceThread 遥测会为前台 App 抓 Java 栈，
+# tombstoned 随即连打四行（registered intercept … kDebuggerdJavaBacktrace / received crash
+# request for pid … / found intercept fd … / skipping tombstone file creation due to intercept）
+# ⇒ 每次 MIUI 抓栈都误判 FAIL_A（本轮连吃两次）。这里改用**精确崩溃签名**：
+#   native 崩溃 = Fatal signal / Abort message / Tombstone written to
+#   Java 崩溃   = FATAL EXCEPTION
+#   ANR / Unity 崩溃处理器 = ANR in / E CRASH
+# 语义是「收窄误报面」而非放宽：真崩的每一条都在上述签名里。
+crash|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|E CRASH|ANR in|Tombstone written to|Abort message
+
+# 崩溃误报排除：同上 MIUI 抓栈产生的非崩溃行（⚠️ 该类别在脚本里是 `RE_CRASH_IGNORE="$v"`
+# **覆盖**语义，故必须带上默认四项）。
+# 反证（本轮实证）：同窗口 `Fatal signal`/`E CRASH`/`ANR in` 计数 0、`ApplicationExitInfo`
+# 无崩溃项、进程存活、无 tombstone 落盘。
+crash_ignore|记录先前处理器|\[crash\]|CrashTrap|fault guard armed|kDebuggerdJavaBacktrace|Wrote stack traces to tombstoned|skipping tombstone file creation|received crash request for pid|found intercept fd
