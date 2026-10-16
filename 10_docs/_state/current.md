@@ -66,7 +66,7 @@
 | 造梦无双 | 历史 | 已收尾 | [摘要](games/造梦无双.md) |
 | 超维进化 | 2026-10-06 | ✅ 0.3.16 热更重校完成并重打 so-only 包；L2 预检 PASS、L3 用户实测「功能都没问题了」 | [摘要](games/超维进化.md) |
 | 虚无之刃 | 历史 | 未完成 | [摘要](games/虚无之刃.md) |
-| 终末地 | 2026-10-16 | ✅ 1.6.4/vc61 **v14.6 修「打开就闪退」**：根因＝init 前碰 il2cpp ⇒ GC 未知线程 ⇒ UnityMain abort（FW-20），修法＝`il2cpp_init` 返回门 + 三处 usleep 单位错；**L2 4 次预检 3 过**（门→`il2cpp_init 返回 1`→`hooks sync calc=1 apply=1 jump=1`，0 崩溃）；**L3 通过**（用户实测四功能 OK + 打开不闪退）；残留＝慢启时 Unity Vulkan 断言（共享层 overlay 时机，与本次改动无关）；正式包 md5 e3f1c966 / sha256 c39a2165 | [摘要](games/终末地.md) |
+| 终末地 | 2026-10-16 | ✅ 1.6.4/vc61 **v14.6 修「打开就闪退」**：根因＝init 前碰 il2cpp ⇒ GC 未知线程 ⇒ UnityMain abort（FW-20），修法＝`il2cpp_init` 返回门 + 三处 usleep 单位错；**L2 4 次预检 3 过**（门→`il2cpp_init 返回 1`→`hooks sync calc=1 apply=1 jump=1`，0 崩溃）；**L3 通过**（用户实测四功能 OK + 打开不闪退）；残留＝慢启时 Unity Vulkan 断言（共享层 overlay 时机，与本次改动无关）；OnePlus f9a116a2 亦已装 v14.6 + L2 通过（待输卡密）；正式包 md5 e3f1c966 / sha256 c39a2165 | [摘要](games/终末地.md) |
 | 百分之一 | 历史 | 纯分析/归档 | [摘要](games/百分之一.md) |
 | 月圆之夜 | 历史 | 已收尾 | [摘要](games/月圆之夜.md) |
 | 遗弃之地 | 2026-09-21 | 已终止/已清理（仅留文档） | [摘要](games/遗弃之地.md) |
