@@ -42,7 +42,12 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kEndfield_Features) / sizeof(kEndfield_Features[0])),
 
         .waitLib = sec_lib_il2cpp(),
-        .initDelayMs = 2000,
+        // v14.6（FW-20）：本字段在 MainModern.cpp:230 走 `usleep(initDelayMs)` ⇒ **单位是微秒**。
+        // 原值 2000 = 2ms（意图 2s）⇒ 首次触碰 il2cpp 几乎与库加载同拍，必然早于
+        // `il2cpp_init` 完成 ⇒ mod 线程进 GC「未知线程」毒态 ⇒ UnityMain 触发 GC 即 abort。
+        // 现改为 0：延迟交给 `EndfieldMod.cpp` 的 il2cpp_init 就绪门（真信号，非盲等），
+        // 越早挂门越能抢在 UnityMain 调 il2cpp_init 之前。
+        .initDelayMs = 0,
         .initRetryMax = 120,
         .initRetryIntervalMs = 2000,
         .tickIntervalMs = 300,

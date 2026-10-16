@@ -11,8 +11,12 @@
 #include <cstdio>
 #include <cstring>
 
+#include <dlfcn.h>
+#include <time.h>
+
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
+#include "Includes/SecStrings.hpp"
 #include "Includes/Utils.hpp"
 #include "GameConfig.h"
 #include "Unity/Il2CppApi.h"
@@ -903,6 +907,75 @@ static std::atomic<int>  g_hookTickNo{0};
 static std::atomic<int>  g_hookNextTryAt{0};
 static const int         kHookMaxAttempts = 60;
 
+// ============================================================
+// ★v14.6（2026-10-16，FW-20 落地）：il2cpp_init 返回门
+//
+// 实锤症状（小米 96f0d883 / M2102K1AC / Android 14 / 无 root，crash 缓冲原文）：
+//   21:03:06.681 我们首次触碰 il2cpp API（`hooks try 1 faulted`）
+//   21:03:07.162 Unity 才起 `MemoryManager: Using 'Dynamic Heap' Allocator.`（init 未完成）
+//   21:03:07.651 Unity CRASH / 21:03:07.722 SIGABRT（tid=UnityMain, status=6）
+//   帧：libc abort+168 ← libil2cpp.so ×7 ← libunity.so ×4 ← UnityPlayer$e.run/handleMessage
+//   同一形态 20:56:33 一次，帧逐条相同；`ApplicationExitInfo` 显示 12:50 起 status=11(SIGSEGV)
+//   到 20:56 起 status=6(SIGABRT)。
+//
+// 机制（同型先例 Games/ZhmrMod.cpp 3.6.0 实锤，逐条吻合）：
+//   mod 线程在 `il2cpp_init` **完成之前**触碰 il2cpp ⇒ 本线程进 GC「未知线程」毒态
+//   ⇒ UnityMain 随后触发 GC 收集即 abort。首启 Tick 首探常落在 init 之后故幸存，
+//   重开 init 变慢 ⇒ 必撞（本机：12:44 首启存活 5 分钟 / 1.5GB RSS，之后每次开必崩）。
+//   另有本游戏私有诱因：`EndfieldEntry.initDelayMs` 写成 2000（单位实为微秒 ⇒ 2ms），
+//   本意 2s ⇒ 首次触碰几乎与库加载同拍，必然落在 init 之前。
+//
+// 修法（照抄 ZhmrMod 门控 + 本仓 ResolveExport 设施，不重造）：
+//   ① Dobby 挂引擎函数 `il2cpp_init`（非游戏逻辑函数），**原函数返回后**才放行；
+//   ② 挂钩失败 / 错过调用点 ⇒ 时间兜底放行（30s，实测 init 的数十倍），保证功能不死锁；
+//   ③ v14.5 的「登记线程 + SafeProbe」保留为最后一层兜底，不再当主要防线。
+// ============================================================
+static std::atomic<bool> g_il2cppInitDone{false};
+static std::atomic<bool> g_initHookTried{false};
+static std::atomic<bool> g_initHookFailed{false};
+typedef int (*EfIl2cppInit_t)(const char*);
+static EfIl2cppInit_t g_origIl2cppInit = nullptr;
+
+static int64_t EfNowMs() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (int64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+
+static int EfHooked_Il2cppInit(const char* domainName) {
+    const int r = g_origIl2cppInit ? g_origIl2cppInit(domainName) : 0;
+    LOGI(EF_LOG " il2cpp_init 返回 %d ⇒ 就绪门打开（此后才允许触碰 il2cpp）", r);
+    if (r == 1) g_il2cppInitDone.store(true);
+    return r;
+}
+
+// 只做「解析符号 + 打补丁」，不调用任何 il2cpp API ⇒ 可在 init 前安全执行。
+static void ArmIl2cppInitGate() {
+    if (g_initHookTried.exchange(true)) return;
+    void* fn = nullptr;
+    const char* how = "?";
+    void* h = dlopen(sec_lib_il2cpp(), RTLD_LAZY | RTLD_NOLOAD);
+    if (h) {
+        fn = dlsym(h, "il2cpp_init");
+        if (fn) how = "dlsym";
+    }
+    if (!fn) {
+        fn = Il2Cpp::ResolveExport("il2cpp_init");   // TP 保护下 dynsym 自解析兜底
+        if (fn) how = "dynsym";
+    }
+    if (!fn || !Il2Cpp::IsExecutableRange((uintptr_t)fn, 16)) {
+        LOGW(EF_LOG " il2cpp_init 解析失败(fn=%p) ⇒ 退化为时间兜底盲等", fn);
+        g_initHookFailed.store(true);
+        return;
+    }
+    if (DobbyHook(fn, (void*)EfHooked_Il2cppInit, (void**)&g_origIl2cppInit) == 0) {
+        LOGI(EF_LOG " il2cpp_init 就绪门已挂 @%p (%s)", fn, how);
+    } else {
+        LOGW(EF_LOG " il2cpp_init DobbyHook 失败 ⇒ 退化为时间兜底盲等");
+        g_initHookFailed.store(true);
+    }
+}
+
 static void SyncHooks() {
     // v14：恢复 v5 已验证稳定的按名 hook 集（抓点文档实证挂点）。
     // v6-v10 闪退根因复盘修正：不是 hook 本身（v5 同挂点稳定生效），而是
@@ -922,6 +995,25 @@ static void SyncHooks() {
     //  故障被 longjmp 捕获 ⇒ 本次判失败返回，外层退避稍后重试（运行时就绪后即可装上），不再杀进程。
     static thread_local bool tlsRegistered = false;
     if (!tlsRegistered) { Il2Cpp::SetScanThread(pthread_self()); tlsRegistered = true; }
+    // ★v14.6 就绪门：`il2cpp_init` 返回前，本函数**一次 il2cpp 调用都不做**
+    //   （含 EnsureApi() —— 它的符号探测也会真调进 il2cpp）。
+    if (!g_il2cppInitDone.load()) {
+        // 兜底上限统一 30s：本机实测「进程起 → MemoryManager」≈0.75s，il2cpp_init 紧随其后，
+        // 30s 是实测值的数十倍；宁可多等，也不在运行时未就绪时触碰 il2cpp（FW-19/FW-20 契约）。
+        static const int64_t kGateCapMs = 30000;
+        static const int64_t s_gateStartMs = EfNowMs();
+        const int64_t waitedMs = EfNowMs() - s_gateStartMs;
+        if (waitedMs < kGateCapMs) {
+            static int s_gateLogDiv = 0;
+            if ((s_gateLogDiv++ % 20) == 0)
+                LOGI(EF_LOG " 等 il2cpp_init 完成（已等 %lldms / 上限 %lldms，hookFailed=%d）—— 本拍不触碰 il2cpp",
+                     (long long)waitedMs, (long long)kGateCapMs, g_initHookFailed.load() ? 1 : 0);
+            return;
+        }
+        LOGW(EF_LOG " 就绪门时间兜底：等 %lldms 未见 il2cpp_init 返回（hookFailed=%d）⇒ 放行",
+             (long long)waitedMs, g_initHookFailed.load() ? 1 : 0);
+        g_il2cppInitDone.store(true);
+    }
     // 退避节拍：框架每 ~300ms 调一次本函数 ⇒ 用 tick 序号当节拍器，不引入时钟依赖。
     const int tickNo = g_hookTickNo.fetch_add(1) + 1;
     if (tickNo < g_hookNextTryAt.load()) return;   // 退避期：一次 il2cpp 调用都不做
@@ -959,6 +1051,9 @@ static void SyncHooks() {
 bool Endfield_TryInit() {
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(GameUnity::TARGET_LIB)) return false;
+    // ★v14.6：库一命中就先挂就绪门（只解析符号 + 打补丁，不碰 il2cpp），
+    //   抢在 UnityMain 调 `il2cpp_init` 之前；晚挂则退化为时间兜底。
+    ArmIl2cppInitGate();
     g_libReady.store(true);
     StartLearnWorker();
     SyncHooks();
