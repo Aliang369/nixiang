@@ -38,6 +38,15 @@
 #include <cstdarg>    // §⑦.6 async_safe 日志护盾：va_list 转发
 #include <dlfcn.h>    // §⑦.6 护盾诊断：dladdr 定位「谁喂了坏格式串」
 #include <unwind.h>   // §⑦.6 护盾诊断：_Unwind_Backtrace
+#include <sys/prctl.h>       // ★r20c §⑦.6h seccomp：PR_SET_NO_NEW_PRIVS
+#include <sys/syscall.h>     // ★r20c §⑦.6h seccomp：__NR_seccomp / __NR_exit_group
+#include <linux/seccomp.h>   // ★r20c §⑦.6h SECCOMP_SET_MODE_FILTER / RET_LOG / RET_TRAP / TSYNC
+#include <linux/filter.h>    // ★r20c §⑦.6h BPF_STMT / BPF_JUMP / sock_filter / sock_fprog
+#include <linux/audit.h>     // ★r20c §⑦.6h AUDIT_ARCH_AARCH64
+#include <stddef.h>          // ★r20c §⑦.6h offsetof(struct seccomp_data, …)
+#ifndef PR_SET_NO_NEW_PRIVS
+#define PR_SET_NO_NEW_PRIVS 38   // ★r20c：bionic 老头文件可能没带，补固定值（内核 ABI 不变）
+#endif
 
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
@@ -3829,6 +3838,8 @@ static bool ThemisWatchdogNeutralized();             // ★r20b 前置声明（�
 static void FlushThreadRecords(const char* why);     // ★r20b 前置声明（定义见 §⑦.6g）
 static std::atomic<int> g_ntMode{0};                 // ★r20b pthread_create 闸模式（0=只记账/1=拒全部/2=拒一个偏移）
 static std::atomic<int> g_tcRefused{0};              // ★r20b 已被拒绝出生的 themis 线程数
+static void FlushExitGuardRecords(const char* why);  // ★r20c 前置声明（定义见 §⑦.6h）
+static std::atomic<int> g_exitGuardMode{0};          // ★r20c exit_group 闸模式（0=不装/1=RET_LOG/2=RET_TRAP）
 
 static void SyncHooks() {
     if (!g_libReady.load()) return;
@@ -4347,6 +4358,7 @@ static void* GuardThread(void*) {
         usleep(500 * 1000);
         ReProtectExecPages("tick");
         FlushThreadRecords("tick");     // ★r20b：线程记账的**打印**放在这里（钩子体内禁止打日志）
+        FlushExitGuardRecords("tick");  // ★r20c：exit_group 命中的模块解析与打印也在这里（信号处理器里禁止打日志）
     }
     return nullptr;
 }
@@ -4557,9 +4569,13 @@ static void FlushThreadRecords(const char* why) {
     }
 }
 
-/* 中和判据：冻结成功，或「拒绝出生」已确实发生过一次（mode≠0 且 refused>0）。 */
+/* 中和判据：冻结成功，或「拒绝出生」已确实发生过一次（mode≠0 且 refused>0），
+ *  ★r20c 或 **exit_group 闸已在「就地停住」档（≥3）** —— 那一档能让任何检查器的裸 svc 退出失效，
+ *  所以**不必再往 themis 代码页写**（r20 的冻结法本身就是"写代码页"这件事，是我们要避开的动作面）。
+ *  实测依据：mode=3 下 3 个登录补丁 + 真凶线程被停住，进程一路走到 `native menu shown` / `LoginService: SDK Initialized`。 */
 static bool ThemisWatchdogNeutralized() {
     if (g_watchdogFrozen.load()) return true;
+    if (g_exitGuardMode.load() >= 3) return true;
     return g_ntMode.load() != 0 && g_tcRefused.load() > 0;
 }
 
@@ -4585,6 +4601,201 @@ static void InstallPthreadCreateGate() {
         g_ntMode.store(0);
         LOGW(TPL_LOG " pthread_create 闸装失败（DobbyHookGuarded=false）⇒ 退化为只记账");
     }
+}
+
+/* ==== ⑦.6h ★r20c：`exit_group` 的 seccomp 闸（指名真凶 + 可选就地中和）====
+ *  现场（r20b 实测）：任一 libil2cpp 代码页补丁之后 **固定 4.427/4.441/4.440 s** 干净退出；退出**不经 libc**
+ *    （`exit`/`_exit` 护盾从未命中）⇒ 凶手用**裸 `svc exit_group`**；且退出时 `libthemis.so` 尚未 dlopen
+ *    ⇒ 真凶不是 themis 看门狗（r20 的核心归属已否证）。
+ *  裸 svc 在用户态**钩不到**（没有函数可挂），但在**内核边界**可以拦：seccomp 过滤器按 syscall 号命中，
+ *    并用 `SECCOMP_FILTER_FLAG_TSYNC` **一次同步到全部现有线程**（此后新建线程自动继承）
+ *    ⇒ 不需要知道凶手是哪个线程、也不需要它由谁创建，这正好补上 r20b「按线程找巡检者」失败的那一环。
+ *  四档 prop `debug.starry.nhsy2_exitguard`（默认 0 = 不装，行为与之前完全一致）：
+ *    1 = `SECCOMP_RET_LOG`：只记录。内核把 `syscall=94 … comm=` 写进 audit，而本机 **audit 确实进 logcat**
+ *        （实测 `logcat -b events | grep -c audit` = 318，**记录里带 `ip=`**）⇒ 直接**点名凶手线程**（最安全，先跑这一档）。
+ *    2 = `SECCOMP_RET_TRAP`：**就地中和**。内核给该线程发 SIGSYS，我在处理器里只做「记 PC + 把 x0 置 -EPERM」
+ *        （异步信号安全：只写定长数组，不打日志、不分配），返回后 **exit_group 不执行 ⇒ 进程不退**；
+ *        模块+RVA 由守护线程下一拍解析打印。
+ *    3 = `SECCOMP_RET_TRAP` + **把该线程就地停住**（pc 改指向 `ParkTrappedThread`）：实测该 syscall 桩页
+ *        `svc` 之后是**全零**（AArch64 解成 `udf #0`）⇒ 第 2 档放它继续执行会 SIGILL 崩死；
+ *        第 3 档不让它执行桩页后续字节 ⇒ 进程可望**存活**（代价：若该线程持锁则可能拖住别人）。
+ *  记录内容（第 2/3 档）：pc（桩页内）+ **lr=x30（调用桩页的返回地址＝真凶本人所在模块+RVA）** + fp + sp + tid + 栈字。
+ *  边界：① 只拦 `exit_group`（不碰其它 syscall）；② 第 2/3 档会连**合法退出**一起拦（实验档，默认关）；
+ *    ③ 凶手若换成 `tgkill`/`_exit` 等别的路，本闸失效（届时看 audit 里换成了哪个 syscall）。 */
+
+/* 地址 → 「模块名+文件相对偏移（含段权限）」。只在我方线程调用（要 fopen/malloc）。 */
+static void ResolvePcToModule(uintptr_t pc, char* out, size_t cap) {
+    out[0] = '\0';
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) { snprintf(out, cap, "%p(打不开 maps)", reinterpret_cast<void*>(pc)); return; }
+    char line[512];
+    while (fgets(line, sizeof(line), f)) {
+        unsigned long long s = 0, e = 0, off = 0; char perms[8] = {0};
+        if (sscanf(line, "%llx-%llx %7s %llx", &s, &e, perms, &off) != 4) continue;
+        if (pc < s || pc >= e) continue;
+        const char* slash = strrchr(line, '/');
+        if (slash) {
+            char name[128];
+            snprintf(name, sizeof(name), "%s", slash + 1);
+            char* nl = strchr(name, '\n'); if (nl) *nl = '\0';
+            snprintf(out, cap, "%s+%#llx [段 %s 起 %#llx]", name,
+                     static_cast<unsigned long long>(off + (pc - s)), perms, s);
+        } else {
+            snprintf(out, cap, "[anon]+%#llx [段 %s 起 %#llx]",
+                     static_cast<unsigned long long>(pc - s), perms, s);
+        }
+        break;
+    }
+    fclose(f);
+    if (!out[0]) snprintf(out, cap, "%p(不在任何映射内)", reinterpret_cast<void*>(pc));
+}
+
+static constexpr int kEgRecMax = 8;
+static constexpr int kEgStackWords = 16;
+struct EgRec {
+    uintptr_t pc, lr, fp, sp, tid;
+    uintptr_t stk[kEgStackWords];
+};
+static EgRec g_egRec[kEgRecMax];
+static std::atomic<uint32_t> g_egSeq[kEgRecMax];
+static std::atomic<uint32_t> g_egN{0};
+static std::atomic<uint32_t> g_egFlushed{0};
+static std::atomic<int> g_egBlocked{0};
+static std::atomic<bool> g_exitGuardArmed{false};
+
+/* ★r20c 第 3 档用：被拦下的线程就地处「永久等待」，**绝不执行桩页 svc 之后的字节**
+ *  （实测那里的内容是 0 ⇒ AArch64 解成 `udf #0` ⇒ 直接 SIGILL 崩死，这就是第 2 档仍"死"的原因）。
+ *  永不返回；故意不加任何同步/日志（在信号处理器里被跳转过来）。 */
+static void ParkTrappedThread() {
+    for (;;) { __asm__ __volatile__("wfe" ::: "memory"); }
+}
+
+/* ★ SIGSYS 处理器：**必须异步信号安全** —— 只写定长数组 + 原子 + 读本线程栈，禁止日志/分配/fopen。
+ *  记录 pc（桩页内 svc 之后）、**lr=x30（调用桩页的返回地址＝真凶本人）**、fp=x29、sp、tid（裸 syscall 取）、
+ *  以及 sp 上方 16 个栈字（供继续回溯）。sp 之上是本帧已用栈，必定已映射 ⇒ 读取安全。 */
+static void OnSigsys(int, siginfo_t*, void* uc_) {
+    ucontext_t* uc = reinterpret_cast<ucontext_t*>(uc_);
+    const uint32_t i = g_egN.fetch_add(1, std::memory_order_relaxed);
+    if (i < kEgRecMax) {
+        EgRec& r = g_egRec[i];
+        r.pc  = static_cast<uintptr_t>(uc->uc_mcontext.pc);
+        r.lr  = static_cast<uintptr_t>(uc->uc_mcontext.regs[30]);
+        r.fp  = static_cast<uintptr_t>(uc->uc_mcontext.regs[29]);
+        r.sp  = static_cast<uintptr_t>(uc->uc_mcontext.sp);
+        r.tid = static_cast<uintptr_t>(syscall(__NR_gettid));
+        const uintptr_t* p = reinterpret_cast<const uintptr_t*>(r.sp);
+        for (int k = 0; k < kEgStackWords; ++k) r.stk[k] = p[k];
+        g_egSeq[i].store(i + 1, std::memory_order_release);
+    }
+    g_egBlocked.fetch_add(1, std::memory_order_relaxed);
+    if (g_exitGuardMode.load(std::memory_order_relaxed) >= 3) {
+        uc->uc_mcontext.pc = static_cast<uint64_t>(reinterpret_cast<uintptr_t>(&ParkTrappedThread));
+        return;                                // 永不到达（ParkTrappedThread 不返回）—— 线程就地停住
+    }
+    uc->uc_mcontext.regs[0] = static_cast<uint64_t>(-EPERM);   // 第 2 档：让该次 syscall「失败」
+}
+
+static void FlushExitGuardRecords(const char* why) {
+    const uint32_t n = g_egN.load(std::memory_order_relaxed);
+    const uint32_t f = g_egFlushed.load(std::memory_order_relaxed);
+    static std::atomic<bool> armedLogged{false};
+    if (n == f) {
+        if (!armedLogged.load() && g_exitGuardMode.load() != 0 && g_exitGuardArmed.load()) {
+            armedLogged.store(true);
+            LOGW(TPL_LOG " %s exit_group 闸：mode=%d 已就位，尚未命中", why, g_exitGuardMode.load());
+        }
+        return;
+    }
+    const uint32_t cap = (n < static_cast<uint32_t>(kEgRecMax)) ? n : static_cast<uint32_t>(kEgRecMax);
+    for (uint32_t i = f; i < cap; i++) {
+        if (g_egSeq[i].load(std::memory_order_acquire) != i + 1) break;
+        g_egFlushed.store(i + 1, std::memory_order_relaxed);
+        const EgRec& r = g_egRec[i];
+        char mpc[192] = {0}, mlr[192] = {0}, mfp[192] = {0};
+        ResolvePcToModule(r.pc, mpc, sizeof(mpc));
+        ResolvePcToModule(r.lr, mlr, sizeof(mlr));
+        ResolvePcToModule(r.fp, mfp, sizeof(mfp));
+        char comm[64] = {0}, cpath[96];
+        snprintf(cpath, sizeof(cpath), "/proc/self/task/%lu/comm", static_cast<unsigned long>(r.tid));
+        if (FILE* cf = fopen(cpath, "re")) {
+            if (fgets(comm, sizeof(comm), cf)) { char* nl = strchr(comm, '\n'); if (nl) *nl = '\0'; }
+            fclose(cf);
+        }
+        LOGW(TPL_LOG " %s ★exit_group 命中 #%u：tid=%lu comm=\"%s\"（累计拦下=%d mode=%d）", why, i + 1,
+             static_cast<unsigned long>(r.tid), comm, g_egBlocked.load(), g_exitGuardMode.load());
+        LOGW(TPL_LOG " %s    ★调用者 lr=%p → %s", why, reinterpret_cast<void*>(r.lr), mlr);
+        LOGW(TPL_LOG " %s    桩页 pc=%p → %s", why, reinterpret_cast<void*>(r.pc), mpc);
+        LOGW(TPL_LOG " %s    fp=%p → %s / sp=%p", why, reinterpret_cast<void*>(r.fp), mfp,
+             reinterpret_cast<void*>(r.sp));
+        char buf[640]; int off = 0; int shown = 0;
+        buf[0] = '\0';
+        for (int k = 0; k < kEgStackWords && shown < 6; ++k) {
+            const uintptr_t v = r.stk[k];
+            if (v < 0x1000) continue;
+            char mm[192] = {0};
+            ResolvePcToModule(v, mm, sizeof(mm));
+            if (strstr(mm, "libc.so") || strstr(mm, "[anon]") || strstr(mm, "不在任何映射")) continue;
+            const int w = snprintf(buf + off, sizeof(buf) - static_cast<size_t>(off), " [%d]%s", k, mm);
+            if (w <= 0 || off + w >= static_cast<int>(sizeof(buf)) - 8) break;
+            off += w; shown++;
+        }
+        if (shown) LOGW(TPL_LOG " %s    栈上候选返回地址：%s", why, buf);
+    }
+    if (n > static_cast<uint32_t>(kEgRecMax)) {
+        static std::atomic<bool> ov{false};
+        if (!ov.exchange(true)) LOGW(TPL_LOG " %s exit_group 命中 %u 次，超记录上限 %d", why, n, kEgRecMax);
+    }
+}
+
+static void InstallExitGroupGuard() {
+    if (g_exitGuardArmed.load()) return;
+    std::lock_guard<std::mutex> lk(g_installMutex);
+    if (g_exitGuardArmed.load()) return;
+    g_exitGuardArmed.store(true);
+    char buf[PROP_VALUE_MAX] = {0};
+    const int pn = __system_property_get("debug.starry.nhsy2_exitguard", buf);
+    int mode = (pn > 0) ? atoi(buf) : 0;
+    if (mode <= 0) { LOGI(TPL_LOG " exit_group 闸：未启用（debug.starry.nhsy2_exitguard=0）"); return; }
+    if (mode > 3) mode = 3;
+    g_exitGuardMode.store(mode);
+    if (mode >= 2) {
+        struct sigaction sa;
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_sigaction = OnSigsys;
+        sa.sa_flags = SA_SIGINFO | SA_NODEFER;
+        sigemptyset(&sa.sa_mask);
+        if (sigaction(SIGSYS, &sa, nullptr) != 0) {
+            LOGW(TPL_LOG " exit_group 闸：装 SIGSYS 处理器失败 errno=%d（mode=2 将退化为进程被杀）", errno);
+        }
+    }
+    if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
+        LOGW(TPL_LOG " exit_group 闸：PR_SET_NO_NEW_PRIVS 失败 errno=%d（继续尝试）", errno);
+    }
+    const uint32_t action = (mode >= 2) ? SECCOMP_RET_TRAP : SECCOMP_RET_LOG;
+    struct sock_filter f[7];
+    f[0] = BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, arch));
+    f[1] = BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_AARCH64, 1, 0);
+    f[2] = BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW);
+    f[3] = BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, nr));
+    f[4] = BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, __NR_exit_group, 0, 1);
+    f[5] = BPF_STMT(BPF_RET | BPF_K, action);
+    f[6] = BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW);
+    struct sock_fprog prog;
+    prog.len = static_cast<unsigned short>(sizeof(f) / sizeof(f[0]));
+    prog.filter = f;
+    errno = 0;
+    const long r = syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_TSYNC, &prog);
+    if (r != 0) {
+        const int e1 = errno;
+        errno = 0;
+        const long r2 = syscall(__NR_seccomp, SECCOMP_SET_MODE_FILTER, 0, &prog);
+        const int e2 = errno;
+        LOGW(TPL_LOG " exit_group 闸：TSYNC rc=%ld errno=%d ⇒ 退回单线程安装 rc=%ld errno=%d（只覆盖本线程）",
+             r, e1, r2, e2);
+        if (r2 != 0) { g_exitGuardMode.store(0); LOGW(TPL_LOG " exit_group 闸：安装失败 ⇒ 放弃"); return; }
+    }
+    LOGI(TPL_LOG " exit_group 闸已装：mode=%d（1=RET_LOG 只记账看 audit / 2=RET_TRAP 拦下但桩页会 SIGILL 崩 / 3=RET_TRAP+就地停住线程）",
+         mode);
 }
 
 /* mprotect 探针：Dobby 改码必须先 mprotect 放开写权限；若 themis 靠「页权限/写入」发现篡改，
@@ -4684,6 +4895,10 @@ bool nhsy2_TryInit(JavaVM* /*vm*/) {
     // InstallMprotectHider();
     InstallLogAbortShield();      // §⑦.6 进程级日志护盾：坏格式串不再让 libc assert→abort
     InstallExitShield();          // §⑦.6c r20：拦截 exit(0)/_exit(0)（libil2cpp 完整性校验命中的干净退出）
+    // ★r20c：`exit_group` 的 seccomp 闸（§⑦.6h）。它拦的是**内核边界**上的裸 svc —— r20b 已证真凶不走 libc、
+    //   也不在 themis 里，用户态没有可挂的函数，只有 seccomp 能按 syscall 号拦；TSYNC 一次覆盖全部现有线程。
+    //   默认 prop=0 ⇒ 不装（行为与之前完全一致），要取证/中和必须显式 setprop。
+    InstallExitGroupGuard();
     // ★r20：`InstallMemcmpProbe()`（memcmp/__open_2/__openat_2/mprotect 四个 libc 探针）实测
     //   会让紧接着的 `SyncHooks()` 卡死（日志正好停在最后一个「探针已装」之后，之后再无输出，
     //   而游戏本体照常运行 ⇒ mod 线程死锁）。且其 pthread_create 部分已由 §⑦.6g 的闸取代 ⇒ 保持停用。
