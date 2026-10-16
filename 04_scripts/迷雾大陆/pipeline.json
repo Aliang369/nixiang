@@ -1,7 +1,7 @@
 {
   "game": "迷雾大陆",
   "version": "15.0.0",
-  "notes": "2026-09-12 15.0.0 星空包收官：只迁移旧版四项功能（百倍伤害/无敌/移动速度滑块/无限技能），未新增；当前 bundle code=a1e47、md5=21a4ff6b94b83f4dfd4bf9feb71a5c91，符号 jA→ow、vS→RS，伤害尾锚 i.target.damage=E。真机 f9a116a2 已安装星空包，设备 base.apk md5=6b4600de14a0b3cd76a22277456b4eb5，用户实测四项功能通过。",
+  "notes": "2026-10-17 热更 bundle 换代重适配：code a1e47(21a4ff6b…)→bffa2(6,867,542B/md5 eb40baaac75516b54b7a8511a566e622)，仅做符号迁移 ow→gA、RS.MOV_SPEED→PS.MOV_SPEED、伤害尾锚 i.target.damage=E}→=P}（功能文本逐字未动，未新增功能）；Android_mwdl.mk 补 NoAceStubs.cpp 才能链接。官方底包 md5 a59d05317f18f1d6ef8629efc6da36d5 与上轮一致；正式包 md5=05d9b2be3ca6cc32f21f18377684e82e、包内 so md5=bf8d3b96ed77a1c132d6fa71588572b2。真机 f9a116a2 已卸载原版→安装星空包，verify_installed_apk 双指纹一致；pre_install_gate PASS=7/FAIL=0；post_install_precheck=PASS_TO_HUMAN（含 [Mwdl] combat splice 6867542→6868660 真机命中）。四项功能待用户人工终审。文档=10_docs/迷雾大陆/星空落地_15.0.0_bffa2_20261017.md。",
   "params": {
     "game_id": "mwdl",
     "package": "com.hortor.mwdl",
@@ -67,10 +67,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:25:47",
+      "done_at": "2026-10-17 03:00:48",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": {
-          "md5": "ae445340ce1e7e803073a63947779a7b"
+          "md5": "ab9d16abccc9fb39ba2e76dd0814ff80"
         }
       },
       "inputs": {
@@ -106,14 +106,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:25:58",
+      "done_at": "2026-10-17 02:52:11",
       "artifacts": {
         "../../libs_mwdl/arm64-v8a/libstarry_magic.so": {
-          "md5": "421abba5315f90488a807e164b445c0a"
+          "md5": "bf8d3b96ed77a1c132d6fa71588572b2"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": "ae445340ce1e7e803073a63947779a7b"
+        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": "ab9d16abccc9fb39ba2e76dd0814ff80"
       }
     },
     {
@@ -133,14 +133,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:27:26",
+      "done_at": "2026-10-17 02:55:12",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": {
-          "md5": "6b4600de14a0b3cd76a22277456b4eb5"
+          "md5": "05d9b2be3ca6cc32f21f18377684e82e"
         }
       },
       "inputs": {
-        "../../libs_mwdl/arm64-v8a/libstarry_magic.so": "421abba5315f90488a807e164b445c0a"
+        "../../libs_mwdl/arm64-v8a/libstarry_magic.so": "bf8d3b96ed77a1c132d6fa71588572b2"
       }
     },
     {
@@ -172,7 +172,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:34:10",
+      "done_at": "2026-10-17 02:56:02",
       "artifacts": {}
     },
     {
@@ -191,14 +191,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:34:27",
+      "done_at": "2026-10-17 02:56:37",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": {
-          "md5": "6b4600de14a0b3cd76a22277456b4eb5"
+          "md5": "05d9b2be3ca6cc32f21f18377684e82e"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "6b4600de14a0b3cd76a22277456b4eb5"
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "05d9b2be3ca6cc32f21f18377684e82e"
       }
     },
     {
@@ -215,10 +215,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:34:34",
+      "done_at": "2026-10-17 02:56:39",
       "artifacts": {},
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "6b4600de14a0b3cd76a22277456b4eb5"
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "05d9b2be3ca6cc32f21f18377684e82e"
       }
     },
     {
@@ -235,14 +235,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:40:27",
+      "done_at": "2026-10-17 03:08:34",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/10_docs/迷雾大陆/星空落地_15.0.0_20260912.md": {
-          "md5": "06f1703a79dd73010117b91bc8f8adf8"
+          "md5": "7172cad6c20148a4cc64ca3f7c5ab4b2"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "6b4600de14a0b3cd76a22277456b4eb5"
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "05d9b2be3ca6cc32f21f18377684e82e"
       }
     }
   ]

@@ -1,7 +1,8 @@
 /* ================================================================
  *  迷雾大陆 MOD — 对齐斌哥 zip.apk get_ret 1..4 + 反作弊屏蔽
  *  路径：se::ScriptEngine::evalString 运行时拼接（方案 B）
- *  15.0.0：符号 jA→ow、vS→RS，伤害尾锚 i.target.damage=E
+ *  15.0.0/bffa2：单位枚举 ow→gA、属性枚举 RS.MOV_SPEED→PS.MOV_SPEED，
+ *                 伤害尾锚 i.target.damage=E} → i.target.damage=P}（局部变量名随混淆改名）
  * ================================================================ */
 
 #include "MwdlMod.h"
@@ -146,34 +147,34 @@ static std::string SpliceCombatJs(const char* src) {
     static char kTickHook[900];
     static bool once = false;
     if (!once) {
-        // get_ret(1)+get_ret(2)：百倍伤害 / 无敌 — 15.0.0 伤害尾锚 i.target.damage=E
+        // get_ret(1)+get_ret(2)：百倍伤害 / 无敌 — 15.0.0/bffa2 尾锚 i.target.damage=P}
         snprintf(
             kKhHook, sizeof(kKhHook),
-            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===ow.Hero||"
-            "_su.unitType===ow.Summon||_su.unitType===ow.Guardian||"
-            "_su.unitType===ow.Player||_su.unitType===ow.ParasyteGuardian)){"
-            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",1)&&(E*=100)}"
-            "if(_su&&_su.unitType===ow.Monster&&"
-            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){E=0}"
-            "i.target.damage=E}",
+            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===gA.Hero||"
+            "_su.unitType===gA.Summon||_su.unitType===gA.Guardian||"
+            "_su.unitType===gA.Player||_su.unitType===gA.ParasyteGuardian)){"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",1)&&(P*=100)}"
+            "if(_su&&_su.unitType===gA.Monster&&"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){P=0}"
+            "i.target.damage=P}",
             kAct, kAct);
-        // get_val(3)：移速倍率 — MoveSpeed getter（15.0.0 为 RS.MOV_SPEED）
+        // get_val(3)：移速倍率 — MoveSpeed getter（15.0.0/bffa2 为 PS.MOV_SPEED）
         snprintf(
             kSpdRepl, sizeof(kSpdRepl),
             "/*starry_mwdl_spd*/function(n){try{var "
             "m=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",3);"
-            "m>1&&(this.unitType===ow.Hero||this.unitType===ow.Summon||"
-            "this.unitType===ow.Guardian||this.unitType===ow.Player||"
-            "this.unitType===ow.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
-            "n}.call(this,this.AttributeComponent.getAttr(RS.MOV_SPEED)*t)}",
+            "m>1&&(this.unitType===gA.Hero||this.unitType===gA.Summon||"
+            "this.unitType===gA.Guardian||this.unitType===gA.Player||"
+            "this.unitType===gA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
+            "n}.call(this,this.AttributeComponent.getAttr(PS.MOV_SPEED)*t)}",
             kAct);
         // get_ret(4)：无限技能 — 插在 SkillComponent.tick 前
         snprintf(
             kTickHook, sizeof(kTickHook),
             "/*starry_mwdl_uls*/ jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===ow.Hero||"
-            "this.unitType===ow.Summon||this.unitType===ow.Guardian||"
-            "this.unitType===ow.Player||this.unitType===ow.ParasyteGuardian)&&"
+            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===gA.Hero||"
+            "this.unitType===gA.Summon||this.unitType===gA.Guardian||"
+            "this.unitType===gA.Player||this.unitType===gA.ParasyteGuardian)&&"
             "(this.SkillComponent.reduceAllSkillColdDown(1e9),"
             "this.ActiveSkillComponent&&this.ActiveSkillComponent.reduceAllSkillColdDown(1e9)), ",
             kAct);
@@ -184,16 +185,19 @@ static std::string SpliceCombatJs(const char* src) {
         return s.find(tag) != std::string::npos;
     };
 
-    // --- 伤害结算（百倍伤害 + 无敌）：15.0.0 尾锚 i.target.damage=E} ---
-    if (!already("starry_mwdl_kh") && s.find("i.target.damage=E}") != std::string::npos) {
-        size_t p = s.find("i.target.damage=E}");
-        s.replace(p, strlen("i.target.damage=E}"), kKhHook);
-        LOGI("[Mwdl] spliced damage (15.0.0)");
+    // --- 伤害结算（百倍伤害 + 无敌）：15.0.0/bffa2 尾锚 i.target.damage=P} ---
+    // 注：该锚点尾部是混淆后的伤害局部变量名（a1e47 为 E，bffa2 为 P），
+    //     与 hook 文本强耦合，不做旧锚回退（回退会拼出引用未声明变量的 JS）。
+    if (!already("starry_mwdl_kh") && s.find("i.target.damage=P}") != std::string::npos) {
+        size_t p = s.find("i.target.damage=P}");
+        s.replace(p, strlen("i.target.damage=P}"), kKhHook);
+        LOGI("[Mwdl] spliced damage (15.0.0/bffa2)");
     }
 
-    // --- MoveSpeed（移动速度：15.0.0 为 RS.MOV_SPEED）---
+    // --- MoveSpeed（移动速度：15.0.0/bffa2 为 PS.MOV_SPEED；旧枚举名为等价回退）---
     if (!already("starry_mwdl_spd")) {
         static const char* kSpdFroms[] = {
+            "this.AttributeComponent.getAttr(PS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(RS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(vS.MOV_SPEED)*t}",
             nullptr,
@@ -288,7 +292,9 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 
-    bool interesting = has("i.target.damage=E}") || has("RS.MOV_SPEED") ||
+    // 预筛：只按「与混淆符号无关」的稳定片段判定，符号改名后仍能进入拼接流程，
+    //       拼接失败由 SpliceCombatJs 的告警日志暴露（避免静默不拼接）。
+    bool interesting = has("i.target.damage=") || has("MOV_SPEED") ||
                        has("SkillComponent.tick") || has("onStageCheat");
     if (!interesting) {
         return orig_seEval(thiz, script, length, ret, fileName);
@@ -297,6 +303,10 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
     std::string src(script, (size_t)n);
     std::string patched = SpliceCombatJs(src.c_str());
     if (patched == src) {
+        static std::atomic<bool> warned{false};
+        if (!warned.exchange(true)) {
+            LOGI("[Mwdl] WARN combat bundle matched but no anchor spliced (bundle drift?)");
+        }
         return orig_seEval(thiz, script, length, ret, fileName);
     }
 

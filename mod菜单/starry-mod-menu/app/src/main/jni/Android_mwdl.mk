@@ -33,6 +33,14 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系：MainModern 入口 + MwdlMod + MwdlEntry，无 Unity/Il2CppApi.cpp
 LOCAL_SRC_FILES := MainModern.cpp Games/MwdlMod.cpp Games/MwdlEntry.cpp
 
+# 非 ACE 游戏 + 菜单 dex 已在包内（外科 zip 组装）⇒ B 类兜底：
+# MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
+# FgoBoot_InjectEarlyFromOnLoad（2026-09-22 起），不加本文件即 ld.lld undefined symbol。
+# 迷雾大陆包内 native 无 libtprt.so（无 ACE；只有 ucrash/umeng/crashsdk 上报库），
+# 菜单类在 classes5.dex 且由 Manifest 注册的 com.starry.magic.menu.MenuService 拉起，
+# 不做早期 dex 注入 ⇒ 用 no-op 桩。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

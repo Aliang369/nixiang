@@ -1,0 +1,4 @@
+pkg|com.hortor.mwdl
+menu_load|StarryMagic
+menu_shown|native menu shown
+hook_hit|\[Mwdl\] combat splice
