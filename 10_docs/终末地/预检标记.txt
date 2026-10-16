@@ -28,8 +28,6 @@ auth_fail|renew auth fail
 # 语义是「收窄误报面」而非放宽：真崩的每一条都在上述签名里。
 crash|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|E CRASH|ANR in|Tombstone written to|Abort message
 
-# 崩溃误报排除：同上 MIUI 抓栈产生的非崩溃行（⚠️ 该类别在脚本里是 `RE_CRASH_IGNORE="$v"`
-# **覆盖**语义，故必须带上默认四项）。
-# 反证（本轮实证）：同窗口 `Fatal signal`/`E CRASH`/`ANR in` 计数 0、`ApplicationExitInfo`
-# 无崩溃项、进程存活、无 tombstone 落盘。
-crash_ignore|记录先前处理器|\[crash\]|CrashTrap|fault guard armed|kDebuggerdJavaBacktrace|Wrote stack traces to tombstoned|skipping tombstone file creation|received crash request for pid|found intercept fd
+# 崩溃误报排除：**本作不再需要手写** —— 2026-10-16 起 `post_install_precheck.sh` 的默认
+# `RE_CRASH_IGNORE` 已覆盖 MIUI ScoutManager 抓栈的五种行，且 `crash_ignore` 改为**追加**语义
+# （原为覆盖 ⇒ 必须手抄默认四项；见 `框架待办` FW-21）。日后本作确有额外误报再加一行。

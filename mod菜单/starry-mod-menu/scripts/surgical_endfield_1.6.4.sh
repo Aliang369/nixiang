@@ -195,6 +195,12 @@ if [[ "${STARRY_INSTALL_ONLY:-0}" == "1" ]]; then
 fi
 
 
+# ★P1-2（2026-10-16）：构建戳取自 `git log -1 --format=%ct`（Application.mk:12），而该宏作用在
+# `Includes/Utils.cpp` 的常量上 —— ndk-build **只按源文件 mtime 增量**：只改 `-D` 不会重编该 .o
+# ⇒ 戳长期陈旧（实测 v14.4/v14.5/v14.6 三连构建共用 `1792153771`，覆盖安装就清不掉旧 OTA so）。
+# 这里先 touch 失效它，保证「本次构建的戳 == 当前 HEAD 的提交时间」。通用化见复盘 P1-2。
+touch "$STARRY_SRC/app/src/main/jni/Includes/Utils.cpp"
+
 echo "[1/6] ndk-build ($TAG_MK) -> libs_${TAG_MK_TAG} (STARRY_TRACE=${STARRY_TRACE:-0})"
 NDK_BUILD="$NDK/ndk-build"
 [[ -x "$NDK_BUILD" ]] || { echo "ERROR: missing $NDK_BUILD"; exit 1; }

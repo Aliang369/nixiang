@@ -32,7 +32,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         // ⚠️ MainModern 直接 usleep()，本组字段实际是【微秒】（名字带 Ms 是历史误称）：
         //   旧值 initRetry=2000＝2ms（120 次 0.24s 烧完，形同虚设）、tick=5000＝5ms＝200Hz。
         //   R20 全关态冻死现场：WatchHooks 按 Tick 频率碰 dl_iterate_phdr（loader 锁）⇒ 降频。
-        .initDelayMs = 2000,            // 2ms：历史值，仅首轮让路，本轮不动
+        .initDelayMs = 2000000,            // 2ms：历史值，仅首轮让路，本轮不动
         .initRetryMax = 120,
         .initRetryIntervalMs = 2000000, // 2s/次（意图值；旧 2000＝2ms）
         .tickIntervalMs = 200000,       // 200ms（旧 5000＝5ms＝200Hz，高频碰 loader 锁）

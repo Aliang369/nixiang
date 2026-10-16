@@ -26,9 +26,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kAwlzwFeatures) / sizeof(kAwlzwFeatures[0])),
 
         .waitLib = "libil2cpp.so",
-        .initDelayMs = 2000,        // 等库后延迟，避开 il2cpp 半初始化窗口
+        .initDelayMs = 2000000,        // 等库后延迟，避开 il2cpp 半初始化窗口
         .initRetryMax = 120,
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
         .onLoad = nullptr,

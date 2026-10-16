@@ -30,7 +30,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = "libcocos.so",       // Cocos Creator 3.x 引擎库（包内实测存在）
         .initDelayMs = 0,               // 引擎库映射即可判定，无需额外延迟
         .initRetryMax = 120,            // 启动期重试上限
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,         // 阶段②：JS 桥需要 1s 级轮询（此前零 hook 用 200000）
 
         .onLoad = Xnbz_OnLoad,         // JNI_OnLoad 内缓存 XnbzHooks（classloader 可用）

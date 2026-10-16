@@ -29,9 +29,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kYimo_Features) / sizeof(kYimo_Features[0])),
 
         .waitLib = "libil2cpp.so",      // il2cpp 先起；libxlua.so 由 Yimo_TryInit 自己 dlopen
-        .initDelayMs = 3000,            // 避开 il2cpp / xLua 半初始化（此时 Lua VM 还没建）
+        .initDelayMs = 3000000,            // 避开 il2cpp / xLua 半初始化（此时 Lua VM 还没建）
         .initRetryMax = 0,              // 0 = Tick 懒加载（不死锁启动；libxlua 起得比 il2cpp 晚）
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,       // 200ms：开关/滑块同步要跟手
 
         .onLoad = nullptr,

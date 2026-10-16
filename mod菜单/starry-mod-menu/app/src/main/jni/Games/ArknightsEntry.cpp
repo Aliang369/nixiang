@@ -27,10 +27,10 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kArknights_Features) / sizeof(kArknights_Features[0])),
 
         .waitLib = sec_lib_il2cpp(),
-        .initDelayMs = 3000,
+        .initDelayMs = 3000000,
         .initRetryMax = 120,
-        .initRetryIntervalMs = 2000,
-        .tickIntervalMs = 200,
+        .initRetryIntervalMs = 2000000,
+        .tickIntervalMs = 200000,
 
         .onLoad = nullptr,
         .tryInit = Arknights_TryInit,

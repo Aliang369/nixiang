@@ -32,9 +32,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kSlcb_Features) / sizeof(kSlcb_Features[0])),
 
         .waitLib = "libil2cpp.so",
-        .initDelayMs = 3000,            // 易盾壳解壳 + il2cpp 初始化较慢，给足余量
+        .initDelayMs = 3000000,            // 易盾壳解壳 + il2cpp 初始化较慢，给足余量
         .initRetryMax = 600,            // 60s 内每 100ms 探一次
-        .initRetryIntervalMs = 100,
+        .initRetryIntervalMs = 100000,
         .tickIntervalMs = 200000,
 
         .onLoad = nullptr,

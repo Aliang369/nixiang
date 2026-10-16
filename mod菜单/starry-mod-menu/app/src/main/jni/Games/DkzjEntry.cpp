@@ -20,9 +20,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kDkzj_Features) / sizeof(kDkzj_Features[0])),
 
         .waitLib = "libil2cpp.so",
-        .initDelayMs = 1500,
+        .initDelayMs = 1500000,
         .initRetryMax = 120,
-        .initRetryIntervalMs = 1000,
+        .initRetryIntervalMs = 1000000,
         .tickIntervalMs = 15000,
 
         .onLoad = nullptr,

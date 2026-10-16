@@ -124,6 +124,18 @@ check_one() {
     cpp|cc|c|h|hpp|mk)
       echo "⚠ REMIND [C++/mk] $f —— 无独立语法检查器：该改动必须以重跑管线构建阶段验证（bash 04_scripts/pipeline.sh <游戏> run build_so 或对应阶段）"
       remind=$((remind+1)); cpp_remind=$((cpp_remind+1))
+      # ★FW-22（2026-10-16）：Games/*Entry.cpp 的 usleep 字段（initDelayMs / initRetryIntervalMs /
+      # tickIntervalMs）单位是**微秒**，按毫秒写小值会让延迟与 tick 静默失真（实测 32 个 entry 命中；
+      # 终末地因此 tick 跑到 ~2300 次/秒、退避节拍失效）。判定阈值 <10000 ⇒ 视为误写。
+      # 全量修正器：`python3 04_scripts/_common/fix_entry_units.py [--apply|--check]`。
+      if [[ "$f" == *"/Games/"*"Entry.cpp" ]]; then
+        _bad="$(grep -E '\.(initDelayMs|initRetryIntervalMs|tickIntervalMs)[[:space:]]*=[[:space:]]*[0-9]+' "$f" 2>/dev/null | awk -F= '{v=$2; gsub(/[^0-9]/,"",v); if (v+0>0 && v+0<10000) print}')"
+        if [ -n "$_bad" ]; then
+          echo "⚠ REMIND [FW-22] $f 的 usleep 字段可能按毫秒误写（单位应为微秒，见 Games/ModEntry.h）："
+          printf '%s\n' "$_bad" | sed 's/^/       /' | head -4
+          remind=$((remind+1))
+        fi
+      fi
       ;;
     *)
       echo "✓ PASS  [跳过] ${f}（类型无检查器）"; pass=$((pass+1))

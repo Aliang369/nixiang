@@ -32,7 +32,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = "libil2cpp.so",     // Unity IL2CPP（游戏逻辑另含 libxlua.so，由 Mod 侧自行 dlopen）
         .initDelayMs = 0,               // 必须 0：Assembly.Load(byte[]) 实测在进程 ~6.6s，越早装 hook 越好
         .initRetryMax = 120,            // 启动期重试上限；死锁案（如 gjc2）改 0 = Tick 懒加载
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
         .onLoad = Jjssjd_OnLoad,       // 早装热更 DLL 装载 hook（框架等库是 sleep(1) 粒度，太粗）

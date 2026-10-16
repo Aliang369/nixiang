@@ -41,7 +41,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = "libil2cpp.so",
         .initDelayMs = 3000000,   // legacy sleep(3)：等 il2cpp/HybridCLR 半初始化窗口过去
         .initRetryMax = 180,      // legacy 轮询 180 × 2s
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000, // 200ms，与 legacy 节拍一致
 
         .onLoad = nullptr,

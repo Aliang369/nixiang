@@ -34,9 +34,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kGgbh_Features) / sizeof(kGgbh_Features[0])),
 
         .waitLib = "libil2cpp.so",      // Unity IL2CPP 瘦壳（官包 so md5 与斌哥包一致）
-        .initDelayMs = 2000,            // 等库后延迟（避开 il2cpp 半初始化）
+        .initDelayMs = 2000000,            // 等库后延迟（避开 il2cpp 半初始化）
         .initRetryMax = 120,            // 启动期重试上限；失败后 Tick 懒装兜底
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,       // 200ms：开关/滑块同步要跟手
 
         .onLoad = nullptr,              // 本游戏无需 EarlyHook / 过检补丁

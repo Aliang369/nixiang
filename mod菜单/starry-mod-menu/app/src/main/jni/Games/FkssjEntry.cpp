@@ -32,8 +32,8 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = "libcocos.so",       // Cocos Creator 3.x 引擎库（包内实测存在，30,429,096 B）
         .initDelayMs = 0,               // 引擎库映射即可判定，无需额外延迟
         .initRetryMax = 120,            // 启动期重试上限
-        .initRetryIntervalMs = 2000,
-        .tickIntervalMs = 1000,         // 阶段②：JS 桥（evalString 注入 + 开关同步）需 1s 级轮询
+        .initRetryIntervalMs = 2000000,
+        .tickIntervalMs = 1000000,         // 阶段②：JS 桥（evalString 注入 + 开关同步）需 1s 级轮询
 
         .onLoad = Fkssj_OnLoad,         // JNI_OnLoad 内缓存 FkssjHooks（classloader 可用）
         .tryInit = Fkssj_TryInit,

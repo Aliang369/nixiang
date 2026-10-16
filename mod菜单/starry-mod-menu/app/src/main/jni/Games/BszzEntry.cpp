@@ -21,7 +21,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = "libil2cpp.so",
         .initDelayMs = 0,
         .initRetryMax = 0,
-        .initRetryIntervalMs = 1000,
+        .initRetryIntervalMs = 1000000,
         .tickIntervalMs = 200000,
 
         .onLoad = nullptr,

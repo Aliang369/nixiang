@@ -27,7 +27,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = "libcocos.so",
         .initDelayMs = 0,
         .initRetryMax = 120,
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
         .onLoad = Sjzz_OnLoad,

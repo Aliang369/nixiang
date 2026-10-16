@@ -23,9 +23,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kJjdm_Features) / sizeof(kJjdm_Features[0])),
 
         .waitLib = "libil2cpp.so",      // il2cpp 先起；libgame.so 由 TryInit 自己等
-        .initDelayMs = 3000,            // 避开 il2cpp/Lua 半初始化
+        .initDelayMs = 3000000,            // 避开 il2cpp/Lua 半初始化
         .initRetryMax = 0,              // 0 = Tick 懒加载（不死锁启动）
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
         .onLoad = nullptr,

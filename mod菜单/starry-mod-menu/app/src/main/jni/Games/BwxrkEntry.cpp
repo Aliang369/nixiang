@@ -27,9 +27,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kBwxrk_Features) / sizeof(kBwxrk_Features[0])),
 
         .waitLib = "libil2cpp.so",      // 运行时实际加载的是 dodjoy 热更落地的 files/libil2cpp.so（同名）
-        .initDelayMs = 2000,            // 等库后延迟（避开 il2cpp/HybridCLR 半初始化；实测再调）
+        .initDelayMs = 2000000,            // 等库后延迟（避开 il2cpp/HybridCLR 半初始化；实测再调）
         .initRetryMax = 120,            // 启动期重试上限；死锁案（如 gjc2）改 0 = Tick 懒加载
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
         .onLoad = nullptr,              // TODO: EarlyHook / 过检补丁 / 菜单 bootstrap 在此挂

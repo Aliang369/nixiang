@@ -41,8 +41,8 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = nullptr,             // 无原生游戏库：纯壳不等待
         .initDelayMs = 0,               // 无可等目标，立即 init
         .initRetryMax = 3,              // 纯壳恒成功；留 3 次兜底
-        .initRetryIntervalMs = 500,
-        .tickIntervalMs = 1000,         // Tick 只同步开关，1s 足够
+        .initRetryIntervalMs = 500000,
+        .tickIntervalMs = 1000000,         // Tick 只同步开关，1s 足够
 
         .onLoad = nullptr,              // 无过检补丁需求（客户端未发现完整性校验）
         .tryInit = Qsxz_TryInit,

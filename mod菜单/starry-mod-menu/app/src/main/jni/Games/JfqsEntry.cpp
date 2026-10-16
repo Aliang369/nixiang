@@ -45,10 +45,10 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kJfqs_Features) / sizeof(kJfqs_Features[0])),
 
         .waitLib = "libil2cpp.so",      // 等目标库映射后再走 TryInit
-        .initDelayMs = 2000,            // 等库后延迟（避开 il2cpp 半初始化窗口）
+        .initDelayMs = 2000000,            // 等库后延迟（避开 il2cpp 半初始化窗口）
         .initRetryMax = 120,            // 启动期重试上限
-        .initRetryIntervalMs = 2000,
-        .tickIntervalMs = 5000,         // 5s：按名挂载可重试晚注册的类
+        .initRetryIntervalMs = 2000000,
+        .tickIntervalMs = 5000000,         // 5s：按名挂载可重试晚注册的类
 
         .onLoad = nullptr,              // 本游戏无需 EarlyHook / 过检补丁
         .tryInit = Jfqs_TryInit,

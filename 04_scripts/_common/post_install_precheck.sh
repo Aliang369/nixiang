@@ -64,6 +64,11 @@
 # ================================================================
 set -u
 
+# ★P2-1（2026-10-16）：把退出码打成一行。调用方常写 `bash post_install_precheck.sh … | tail`，
+# 管道会把 rc 换成 tail 的 rc ⇒ **FAIL_A 被看成 0**（本轮实测踩到一次，差点漏判一次崩溃）。
+# 放在最前面 ⇒ 任何 exit 路径（含 usage / 判定分支 / set -u 中止）都会打印。
+trap 'rc=$?; printf "[precheck] PRECHECK_RC=%s\n" "$rc"' EXIT
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
@@ -112,7 +117,16 @@ RE_CRASH='FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|tombstone'
 #     `[Fkssj] fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=65536)`——这行同样含
 #     裸 SIGSEGV 且带本进程 pid，进程范围校验也拦不住 ⇒ 每次预检都误判「运行中崩溃」。
 #     该行是**所有星光改包游戏**共有的初始化日志（不只是本作），故在默认排除项里全局兜掉。
-RE_CRASH_IGNORE='记录先前处理器|\[crash\]|CrashTrap|fault guard armed'
+RE_CRASH_IGNORE='记录先前处理器|\[crash\]|CrashTrap|fault guard armed|kDebuggerdJavaBacktrace|Wrote stack traces to tombstoned|skipping tombstone file creation|received crash request for pid|found intercept fd'
+# ⚠️ 崩溃误报教训 3（2026-10-16 终末地 1.6.4 小米机实测）：`RE_CRASH` 里的**裸 `tombstone`**
+#     会被 MIUI/HyperOS 的系统遥测误命中 —— MIUI 的 `ScoutManager`/`DumpScoutTraceThread` 会为
+#     前台 App 抓 Java 栈，`tombstoned` 随即连打四行：
+#       `registered intercept for pid … and type kDebuggerdJavaBacktrace`
+#       `received crash request for pid …` / `found intercept fd …`
+#       `Wrote stack traces to tombstoned` / `skipping tombstone file creation due to intercept`
+#     ⇒ 每次 MIUI 抓栈都判「运行中崩溃」（本轮连吃两次假 FAIL_A）。反证判据：同窗口
+#     `Fatal signal|E CRASH|ANR in` 计数 0 + `dumpsys activity exit-info` 无崩溃项 +
+#     进程存活 + **无 tombstone 落盘**（真崩必然落盘）。上面五条已在默认排除项里全局兜掉。
 
 # 崩溃行提取：命中 RE_CRASH 且不在 RE_CRASH_IGNORE 里的行（其余判定与展示一律走它）。
 crash_hits() { grep -E "$RE_CRASH" "$1" 2>/dev/null | grep -vE "$RE_CRASH_IGNORE"; }
@@ -130,7 +144,10 @@ if [ -f "$MARKERS" ]; then
       auth_fail)  RE_AUTH_FAIL="$v" ;;
       auth_ok)    RE_AUTH_OK="$v" ;;
       crash)      RE_CRASH="$v" ;;
-      crash_ignore) RE_CRASH_IGNORE="$v" ;;
+      # ★P0-1（2026-10-16）：**追加**语义。原为覆盖（`RE_CRASH_IGNORE="$v"`）⇒ 标记文件里
+      # 只要加一条，默认排除项就被整体冲掉，游戏侧被迫把手抄的默认值也写进去
+      # （实例：10_docs/终末地/预检标记.txt 的 crash_ignore 行不得不带默认四项）。
+      crash_ignore) RE_CRASH_IGNORE="${RE_CRASH_IGNORE}|$v" ;;
       *) echo "! WARN 未知标记类别: ${k}（可用: pkg|menu_load|menu_shown|hook_hit|auth_fail|auth_ok|crash|crash_ignore）" ;;
     esac
   done < "$MARKERS"

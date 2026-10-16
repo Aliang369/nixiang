@@ -28,9 +28,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .featureCount = (int)(sizeof(kCxswz_Features) / sizeof(kCxswz_Features[0])),
 
         .waitLib = "liblogic.so",       // 运行时解压出的真 IL2CPP 库（包内 libil2cpp.so 只是 7z 壳）
-        .initDelayMs = 2000,            // 等库后延迟（避开 il2cpp/HybridCLR 半初始化；实测再调）
+        .initDelayMs = 2000000,            // 等库后延迟（避开 il2cpp/HybridCLR 半初始化；实测再调）
         .initRetryMax = 120,            // 启动期重试上限；死锁案（如 gjc2）改 0 = Tick 懒加载
-        .initRetryIntervalMs = 2000,
+        .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
         .onLoad = nullptr,              // TODO: EarlyHook / 过检补丁 / 菜单 bootstrap 在此挂

@@ -14,7 +14,9 @@
 | 多机并行时提交混入其他工作 | 先检查 Git status 和 staged paths；按共享文件规则做内容级暂存并划定单写者 | 不要 `git add -A` 或 pull 脏工作区 | `../AGENTS.md`「双机协作」；`04_scripts/_common/stage_shared_file.py`（**逐行归属校验 `--own-pattern`**）；`archive_scoped_git.sh`（共享文件在暂存区时**强制逐行打印**，需 `ACK_SHARED=1` 放行） |
 | 第三方反馈「装上后像旧版 / 打开就闪退」，而 `base.apk` 核对正常 | 先查**运行中的 so 是否等于包内 so**：`su -c md5sum /data/app/*/<pkg>-*/lib/arm64/libstarry_magic.so` vs 包内该 so md5；再看是否有 `files/starry_ota/<game_id>/` 旧补丁 so 顶替 | 不要先说「包坏了」或让玩家清数据（会丢热更资源） | `04_scripts/_common/verify_installed_apk.sh`（第二查）；`skill/starry-mod/SKILL.md`「清数据」节；`04_scripts/_common/so_hotswap.sh --restore-from` |
 | 正式包夹带诊断日志/探针 | 查编译期诊断开关、obj 输出目录隔离、包内字符串及 release gate | 不要靠最后手工删日志代码 | `re-implement/hook-rules.md` §26；`04_scripts/_common/check_release_clean.sh` |
-| 会话结束但源码、证据、产物与 Git 状态对不上 | 对照 pipeline 状态、交付 manifest、Git 范围和 NOT PROVEN 清单 | 不要手写 manifest 或只凭文档说已交付 | `04_scripts/_common/archive_close_git.sh`；`04_scripts/_common/delivery_manifest.py` |
+| 崩溃（有 native 栈）追因 | **先扫「崩溃前 3 秒」的全部 E/F 级日志行**（按时间切片 `grep -E " [EF] "`），先认清是「游戏自身断言」还是「我们的调用」，再谈机制 | 不要先按「自己挂的 hook 最可疑」去反汇编/查反作弊 —— 实测白烧 ≥10 次调用，真凶就是崩溃前一行 `E Unity: [Critical] HG_ALWAYS_ASSERT …` | 本文件「判定纪律」§1；`re-implement/hook-rules.md` §33 |
+| 检索 so/产物里的中文串查不到（疑似没编进去） | **so 内 UTF-8 一律 `LC_ALL=C grep -a`**：默认 locale 下 `grep -a -c "中文"` 对二进制会假阴性（实测把已编入的代码判成「没编进去」，多跑一轮核对） | 不要据此重编/重出包 | `mod菜单/starry-mod-menu/scripts/surgical_*.sh`（既有做法 `LC_ALL=C grep -aq`） |
+| session 结束但源码、证据、产物与 Git 状态对不上 | 对照 pipeline 状态、交付 manifest、Git 范围和 NOT PROVEN 清单 | 不要手写 manifest 或只凭文档说已交付 | `04_scripts/_common/archive_close_git.sh`；`04_scripts/_common/delivery_manifest.py` |
 
 ## 判定纪律
 

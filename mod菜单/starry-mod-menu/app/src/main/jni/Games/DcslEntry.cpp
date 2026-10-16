@@ -24,8 +24,8 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .waitLib = nullptr,
         .initDelayMs = 0,
         .initRetryMax = 3,
-        .initRetryIntervalMs = 500,
-        .tickIntervalMs = 1000,
+        .initRetryIntervalMs = 500000,
+        .tickIntervalMs = 1000000,
 
         .onLoad = nullptr,
         .tryInit = Dcsl_TryInit,
