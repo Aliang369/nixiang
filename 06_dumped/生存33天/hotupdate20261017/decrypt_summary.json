@@ -1,0 +1,73 @@
+{
+  "game": "生存33天",
+  "package": "com.lgcb.scsst.sc33ttaptapwz37zgx3.dayssurvive",
+  "round": "20261017",
+  "why": "游戏热更（mainRes version=198）后 fight 锚点漂移致功能失效；本轮重定锚点前先取运行时明文做指纹对照与离线预演",
+
+  "bundle": {
+    "asset_path": "assets/main/index.jsc",
+    "hotupdate_file": "/data/data/<pkg>/files/patch/mainRes/assets/main/index.jsc",
+    "hotupdate_file_size": 5404628,
+    "in_apk_file_size": 4811304,
+    "runtime_plaintext_size": 31206123,
+    "prev_round_plaintext_size": 29599436,
+    "runtime_plaintext_sha256": "3fc1e3fe32e05b4d16a123c7fb5c6494b1c5d4972b10506805275efa1365ecfd",
+    "runtime_plaintext_local": "06_dumped/生存33天/hotupdate20261017/sc33_eval_main.js",
+    "local_note": "该 .js 被 .gitignore:64 `06_dumped/**/*.js` 硬排除，不入库；本 JSON 为入库锚点"
+  },
+
+  "how_obtained": {
+    "method": "freeze-and-grep（frida 在本机不可用：phantom 17.16.4 对所有 app 注入均 agent connection closed，与游戏无关）",
+    "steps": [
+      "启动游戏，adb logcat 监听 '[Sc33] big eval len=.*combat=1'",
+      "命中瞬间 adb shell su -c 'kill -STOP <pid>'（此时 mod 的 hooked_seEval 未返回，原始明文缓冲必在内存）",
+      "cat /proc/<pid>/maps，逐条 rw-p 匿名区（>=16MB）dd if=/proc/<pid>/mem 出来本地 grep 'prototype.FightChangeEntityHp'",
+      "命中区 0x745ec00000（108MB）内同一段明文出现 3 份、按 32MB 对齐（游戏原缓冲 / mod 的 std::string src / patched）；取区偏移 0 起 31206123 字节即整份原文",
+      "kill -CONT <pid>"
+    ],
+    "reproducer": "04_scripts/生存33天/sim_sc33_splice.py（拼接锚点离线复现 + node --check 预览）",
+    "refetch_script": "04_scripts/生存33天/freeze_grab_eval_js.sh（--pkg <包名> --out <文件>，冻结法一键重抓）"
+  },
+
+  "anchors_20261017": {
+    "fight": {
+      "function": "prototype.FightChangeEntityHp = function(t, e, i, n, o)",
+      "em": "h",
+      "neg": "f",
+      "opts": "n",
+      "extra": "o",
+      "anchor_line": "var p = n && n.force, d = n && n.trueDmg, f = i < 0, _ = i > 0, m = 0;",
+      "byte_offset": 9202605,
+      "insert_after_line_end_byte": 9202675,
+      "hook_bytes": 937
+    },
+    "baseDmg": {
+      "function": "DamageCommonCalcFinal = function(t, e, i, n, o, a, r, s, l)",
+      "anchor": "t = u.baseDmg;",
+      "byte_offset": 23616004,
+      "tgt": "a",
+      "caster": "o",
+      "hook_bytes": 332
+    },
+    "atk": {
+      "anchor": "e = Math.min(e, i);\\nreturn Math.max(e, .01);",
+      "note": "未漂移（2026-10-17 与 1.0.24 同形态）",
+      "hook_delta_bytes": 476
+    },
+    "viewAtk": {
+      "anchor_expected": "i = this.CalcFinalAtkSpeedValue(o, i);\\nreturn this.CalcFightFloat(i);",
+      "hit": 0,
+      "note": "热更后实际形态为 CalcFinalAtkSpeedValue(n, i)；日志 viewAtk=1 是 TryInsertViewAtkHook 提前返回的假阳性，该钩子从未生效，本轮未改行为"
+    }
+  },
+
+  "splice_evidence": {
+    "before": "len 31206123 -> 31206931 (+808, fight=0)",
+    "after": "len 31206123 -> 31207868 (+1745 = fight 937 + baseDmg 332 + atk 476, fight=1)",
+    "log_lines": [
+      "[Sc33] fight hook auto em=h neg=f opts=n extra=o @9202675",
+      "[Sc33] baseDmg hook auto tgt=a caster=o @23616955",
+      "[Sc33] splice detail fight=1 baseDmg=1 atk=1 viewAtk=1"
+    ]
+  }
+}

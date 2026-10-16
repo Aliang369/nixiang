@@ -32,7 +32,7 @@
 | 造梦西游 | 2026-09-29 | ✅ 1.1.0/vc3 星光复刻已装机并经用户实测验收；反检测评估已成文，屏蔽上报属新增功能待点名 | [摘要](games/造梦西游.md) |
 | 圣翼传说 | 2026-09-24 | ✅ sycs 星空版已交付，用户实机验收「功能没问题」 | [摘要](games/圣翼传说.md) |
 | 我的勇者 | 2026-09-28 | ✅ 7.6.3/vc205 已收尾；纠正 HeroCore 错挂点、敌我改精确类指针，用户实测「没问题」 | [摘要](games/我的勇者.md) |
-| 生存33天 | 2026-10-17 | ⚠️ 热更（mainRes v198）后 `FightChangeEntityHp` 形参互换致 fight 锚点全 miss（`splice detail fight=0`）→ 改**结构派生优先+变体表兜底**并顺手修 baseDmg 施法者写死；菜单按要求只留一个分类、入口迁 modern 注册表（`Android_sc33.mk`+`Sc33Entry.cpp`，不再碰 Main.cpp）；so-only 换包 MD5 `c106c9a8…`，预检 PASS_TO_HUMAN，**待用户进局实测终审** | [摘要](games/生存33天.md) |
+| 生存33天 | 2026-10-17 | ✅ 热更（mainRes v198）后 `FightChangeEntityHp` 形参互换致 fight 锚点全 miss（`splice detail fight=0`）→ 改**结构派生优先+变体表兜底**并顺手修 baseDmg 施法者写死；菜单按要求只留一个分类、入口迁 modern 注册表（`Android_sc33.mk`+`Sc33Entry.cpp`，不再碰 Main.cpp）；so-only 换包 MD5 `c106c9a8…`，预检 PASS_TO_HUMAN，**用户实测「功能没问题了」** | [摘要](games/生存33天.md) |
 | 蛋壳战机 | 2026-10-14 | ✅ 1.1.8/vc35 星空包已交付装机；按用户要求删除「立即胜利」（hook 15→12、菜单 6→5） | [摘要](games/蛋壳战机.md) |
 | 正中靶心2 | 2026-09-20 | 已交付/待核验 | [摘要](games/正中靶心2.md) |
 | 暗影格斗3 | 2026-09-20 | 已交付/待核验 | [摘要](games/暗影格斗3.md) |
