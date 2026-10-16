@@ -48,9 +48,19 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         // 现改为 0：延迟交给 `EndfieldMod.cpp` 的 il2cpp_init 就绪门（真信号，非盲等），
         // 越早挂门越能抢在 UnityMain 调 il2cpp_init 之前。
         .initDelayMs = 0,
+        // v14.6（FW-20）：本字段同样走 `MainModern.cpp:248/262` 的 `usleep(tickInterval)` ⇒
+        // **单位是微秒**（框架默认值 200000 即 200ms，可对照）。原值 300 = 0.3ms ⇒ 实测
+        // **~2300 次 tick/秒**（precheck_20261016_212826：479 条门日志 / 4.1s）：
+        //   ① `SyncHooks` 的退避节拍按 **tick 计数**设计（`tickNo + (1<<shift)*7`，本意 2.1s）
+        //      在 0.3ms 节拍下退化为 ~67ms ⇒ v14.4 的指数退避**实际失效**（FW-18 的高频重解析风险复发）；
+        //   ② 每 20 拍一条门日志 ⇒ ~130 条/秒的日志噪声。
+        // 改为 300000（=300ms，与文件头「Tick：300ms 节流」的原意一致）。
+        .tickIntervalMs = 300000,
         .initRetryMax = 120,
-        .initRetryIntervalMs = 2000,
-        .tickIntervalMs = 300,
+        // v14.6：同走 `usleep(initRetryIntervalMs)` ⇒ 单位是微秒。原值 2000 = 2ms（意图 2s）。
+        // 本作 `TryInit` 库加载即返回 true（重试循环首轮即 break）⇒ 现无实际影响，
+        // 但保持单位与框架一致，避免日后 TryInit 改成延迟返回时静默退化。
+        .initRetryIntervalMs = 2000000,
 
         .onLoad = nullptr,
         .tryInit = Entry_TryInit,
