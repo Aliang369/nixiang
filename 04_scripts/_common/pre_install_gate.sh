@@ -408,7 +408,11 @@ fi
 # 被 --gc-sections 回收）已在共享 Includes/Utils.cpp 用 __attribute__((used, retain)) 修掉；
 # 本关防的是「改动回退 / 新 mk 漏带」。逃生门：STAMP_CHECK=0（须在装机报告写明理由）。
 if [ -n "$apk_file" ] && [ "${STAMP_CHECK:-1}" = "1" ]; then
-  if unzip -l "$apk_file" 2>/dev/null | grep -q 'lib/arm64-v8a/libstarry_magic.so'; then
+  # 先落盘再 grep（禁 `unzip -l | grep -q`：pipefail 下 SIGPIPE(141) 会让命中被判成未命中，
+  # 大 APK 的 listing 超管道缓冲时必现 ⇒ 本关会被静默跳过 = 假 PASS）
+  apk_entries="$TMPDIR_PF/apk_entries.txt"
+  unzip -l "$apk_file" > "$apk_entries" 2>/dev/null || true
+  if grep -q 'lib/arm64-v8a/libstarry_magic.so' "$apk_entries"; then
     stamp="$(unzip -p "$apk_file" lib/arm64-v8a/libstarry_magic.so 2>/dev/null | grep -a -o 'STARRYSTAMP1:EPOCH=[0-9]*' | head -1)"
     if [ -n "$stamp" ]; then
       epoch="${stamp#STARRYSTAMP1:EPOCH=}"

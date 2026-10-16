@@ -46,8 +46,13 @@ echo "[install-verify] 设备 base.apk md5 == 本地产物 ($LOCAL_MD5) ✓"
 # ⇒ **只比 base.apk md5 会出现「核对全绿、跑的是别的 so」**（实测：崩溃帧 so build-id 与包内不同，
 # base.apk 却完全正确）。故补第二查，不等即判「热替换态/异 so」并给出恢复命令。
 TMP_SO="$(mktemp "${TMPDIR:-/tmp}/install_verify_so.XXXXXX")"
-trap 'rm -f "${TMP_SO:-}"' EXIT
-if unzip -l "$LOCAL" 2>/dev/null | grep -q 'lib/arm64-v8a/libstarry_magic.so'; then
+TMP_LIST="${TMP_SO}.list"
+trap 'rm -f "${TMP_SO:-}" "${TMP_LIST:-}"' EXIT
+# ⚠️ 必须先落盘再 grep：`unzip -l | grep -q` 在 `set -o pipefail` 下，grep -q 命中即退出会让
+# 左侧 unzip 吃 SIGPIPE(141)，整条管道返回非零 ⇒ `if` 判假、**本查被静默跳过**（大 APK 的
+# listing 超过管道缓冲时必现；2026-10-16 装机实测踩中，本查当时根本没跑）。
+unzip -l "$LOCAL" > "$TMP_LIST" 2>/dev/null || true
+if grep -q 'lib/arm64-v8a/libstarry_magic.so' "$TMP_LIST"; then
   PKG_LIB_DIR="$(dirname "$BASE")/lib/arm64"
   if [ "$USE_SU" = "--su" ]; then
     RUN_MD5="$(adb -s "$SERIAL" shell "su -c 'md5sum $PKG_LIB_DIR/libstarry_magic.so'" 2>/dev/null | tr -d '\r\n' | awk '{print $1}')"

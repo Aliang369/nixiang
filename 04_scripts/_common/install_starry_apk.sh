@@ -152,9 +152,13 @@ fi
 
 echo "== 安装 =="
 REMOTE="/data/local/tmp/$(basename "$APK")"
-adbx push "$APK" "$REMOTE"
-adbsu "pm install -r -d --user 0 \"${REMOTE}\" && rm -f \"${REMOTE}\"" \
-  || adbx install -r -d "$APK"
+if adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c id" 2>/dev/null | grep -q "uid=0"; then
+  adbx push "$APK" "$REMOTE"
+  adbsu "pm install -r -d --user 0 \"${REMOTE}\" && rm -f \"${REMOTE}\""
+else
+  echo "  (设备无 root ⇒ 走 adb install 流式安装，不做 /data/local/tmp 预推，避免重推 1.7GB)"
+  adbx install -r -d "$APK"
+fi
 
 if [[ "$CLEAN" == 1 && "$DRY" != 1 ]]; then
   echo "== 外置数据归位 =="
@@ -166,8 +170,18 @@ if [[ "$CLEAN" == 1 && "$DRY" != 1 ]]; then
 fi
 
 if [[ "$DRY" != 1 ]]; then
-  echo "== 闭环核对（设备包 md5 == 本地产物）=="
-  bash "${SCRIPT_DIR}/verify_installed_apk.sh" "$SERIAL" "$PKG" "$APK" --su
+  # root 探测决定 --su：非 root 机（实测小米 96f0d883 无 su）只要 /data/app 对 shell 可读，
+  # 免 su 也能做 md5 核对；写死 --su 会让「装成功」被判成失败。
+  DEV_ROOT=0
+  if adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c id" 2>/dev/null | grep -q "uid=0"; then DEV_ROOT=1; fi
+  echo "== 闭环核对（设备包 md5 == 本地产物；root=$([ "$DEV_ROOT" == "1" ] && echo yes || echo no)）=="
+  V_ARGS=()
+  [[ "$DEV_ROOT" == "1" ]] && V_ARGS=(--su)
+  if ! bash "${SCRIPT_DIR}/verify_installed_apk.sh" "$SERIAL" "$PKG" "$APK" "${V_ARGS[@]+"${V_ARGS[@]}"}"; then
+    echo "  ! md5 核对未通过 ⇒ 降级为组件指纹旁证（非 root 机读不到 /data/app 时用）：" >&2
+    adb "${AEXP[@]+"${AEXP[@]}"}" shell "dumpsys package $PKG | grep -E 'versionName=|versionCode=|lastUpdateTime=|firstInstallTime='" 2>/dev/null | tr -d '\r' | sed 's/^/    /' >&2 || true
+    echo "  ⇒ 人工比对 versionName/versionCode 与本次包；**md5 未核 ⇒ 不得宣称「已核对完成」**。" >&2
+  fi
   if [[ "$SEED" == 1 ]]; then
     bash "${SCRIPT_DIR}/ensure_starry_device_id_seed.sh" || true
   fi
