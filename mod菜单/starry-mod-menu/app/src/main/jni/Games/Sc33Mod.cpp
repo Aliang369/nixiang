@@ -7,13 +7,16 @@
 #include "Sc33Mod.h"
 #include "Includes/obfuscate.h"
 
+#include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <cstdio>
 #include <cstring>
 #include <dlfcn.h>
 #include <pthread.h>
 #include <string>
 #include <unistd.h>
+#include <vector>
 
 #if defined(__linux__) || defined(__ANDROID__)
 #include <string.h> // memmem
@@ -94,6 +97,10 @@ static void LogAnchorScanOnce(const char* script, size_t n) {
         "t = u.baseDmg;",
         "t = u.baseDmg",
         "var p = o && o.force, d = o && o.trueDmg",
+        /* 2026-10-17 热更：FightChangeEntityHp 第 4/5 形参互换（o↔n），opts 变 n */
+        "var p = n && n.force, d = n && n.trueDmg",
+        "prototype.FightChangeEntityHp = function(t, e, i, n, o)",
+        "DamageCommonCalcFinal = function(t, e, i, n, o, a, r, s, l)",
         "e = Math.min(e, i);",
         "return Math.max(e, .01);",
         "this.CalcFinalAtkSpeedValue(o, i);",
@@ -349,10 +356,48 @@ static bool InsertBeforeOnce(std::string& s, const char* anchor, const char* ins
     return true;
 }
 
-/* FightChangeEntityHp 钩子体：em=EntityManager 模块别名，neg=(i<0) 变量名
- * 1.0.24: em=h neg=f   1.0.23: em=f neg=h */
-static std::string BuildFightHook(const char* em, const char* neg) {
-    const std::string E(em), N(neg);
+/* 变量名合法性：混淆器改名只会在 1~3 个 [A-Za-z0-9_$] 之间漂移（hook-rules §24） */
+static bool Sc33IsIdentChar(char c) {
+    return std::isalnum((unsigned char)c) || c == '_' || c == '$';
+}
+
+static bool Sc33IsIdent(const std::string& t) {
+    if (t.empty() || t.size() > 3) return false;
+    for (char c : t) {
+        if (!Sc33IsIdentChar(c)) return false;
+    }
+    return true;
+}
+
+/* 解析形参表：openParen 指向 '('；形参无默认值/解构（本作 minify 形态固定） */
+static bool Sc33ParseParams(const std::string& s, size_t openParen,
+                            std::vector<std::string>& out) {
+    if (openParen >= s.size() || s[openParen] != '(') return false;
+    size_t close = s.find(')', openParen);
+    if (close == std::string::npos || close - openParen > 160) return false;
+    std::string body = s.substr(openParen + 1, close - openParen - 1);
+    out.clear();
+    size_t start = 0;
+    while (true) {
+        size_t c = body.find(',', start);
+        std::string t = (c == std::string::npos) ? body.substr(start) : body.substr(start, c - start);
+        size_t a = t.find_first_not_of(" \t\r\n");
+        size_t b = t.find_last_not_of(" \t\r\n");
+        if (a == std::string::npos) return false;
+        out.push_back(t.substr(a, b - a + 1));
+        if (c == std::string::npos) break;
+        start = c + 1;
+    }
+    return true;
+}
+
+/* FightChangeEntityHp 钩子体
+ * em=EntityManager 模块别名，neg=(i<0) 变量名，opts=第4形参(opts)，extra=第5形参
+ * 1.0.24: em=h neg=f opts=o extra=n   1.0.23: em=f neg=h opts=o extra=n
+ * 2026-10-17 热更: em=h neg=f opts=n extra=o（第4/5形参互换） */
+static std::string BuildFightHook(const char* em, const char* neg, const char* opts,
+                                  const char* extra) {
+    const std::string E(em), N(neg), O(opts), X(extra);
     std::string h;
     h += "var isChecked_RET_aoeAll=jsb.reflection.callStaticMethod("
          "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",3);"
@@ -362,7 +407,7 @@ static std::string BuildFightHook(const char* em, const char* neg) {
          "var aoeMap=" + E + ".EntityManager.Inst().entityMap;"
          "aoeMap&&aoeMap.forEach(function(aoeEnt){"
          "if(aoeEnt&&aoeEnt!==t&&!aoeEnt.IsDead&&aoeEnt.monsterCfg)"
-         "this.FightChangeEntityHp(aoeEnt,e,i,o,n);},this);"
+         "this.FightChangeEntityHp(aoeEnt,e,i," + O + "," + X + ");},this);"
          "}finally{this._aoeAllEnemiesRunning=!1;}}}";
     h += "var isChecked_RET_dmg100=jsb.reflection.callStaticMethod("
          "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",1);"
@@ -374,43 +419,107 @@ static std::string BuildFightHook(const char* em, const char* neg) {
     return h;
 }
 
-/* Trace 实锤锚点（1.0.24 优先，1.0.23 兜底）：
- * 1.0.24 @9014501  var p = o && o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;  (EntityManager=h)
- * 1.0.23 @8304848  var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;  (EntityManager=f) */
+/* 结构派生（首选）：从 `prototype.FightChangeEntityHp = function(...)` 的形参表与
+ * 体内 `var p = X && X.force, d = X && X.trueDmg, <neg> = i < 0, _ = i > 0, m = 0;`
+ * 行直接读出 opts/neg，再从体内 `<em>.EntityManager.Inst()` 取模块别名。
+ * 热更只改这些短标识符时本路径自愈（hook-rules §24：禁止写死会被改名的短标识符）。 */
+static bool Sc33DeriveFightVars(const std::string& s, size_t& insertPos, std::string& em,
+                                std::string& neg, std::string& opts, std::string& extra) {
+    static const char* kHead = "prototype.FightChangeEntityHp = function(";
+    size_t h = s.find(kHead);
+    if (h == std::string::npos) return false;
+    std::vector<std::string> ps;
+    if (!Sc33ParseParams(s, h + strlen(kHead) - 1, ps) || ps.size() != 5) return false;
+    for (const std::string& p : ps) {
+        if (!Sc33IsIdent(p)) return false;
+    }
+    opts = ps[3];
+    extra = ps[4];
+
+    size_t winEnd = std::min(s.size(), h + 4096);
+    std::string win = s.substr(h, winEnd - h);
+
+    std::string pat = "var p = " + opts + " && " + opts + ".force, d = " + opts + " && " +
+                      opts + ".trueDmg, ";
+    size_t vp = win.find(pat);
+    if (vp == std::string::npos) return false;
+    static const char* kTail = " = i < 0, _ = i > 0, m = 0;";
+    size_t q = win.find(kTail, vp + pat.size());
+    if (q == std::string::npos) return false;
+    neg = win.substr(vp + pat.size(), q - (vp + pat.size()));
+    if (!Sc33IsIdent(neg)) return false;
+
+    static const char* kEm = ".EntityManager.Inst()";
+    size_t e = win.find(kEm);
+    if (e == std::string::npos) return false;
+    size_t b = e;
+    while (b > 0 && Sc33IsIdentChar(win[b - 1])) --b;
+    em = win.substr(b, e - b);
+    if (!Sc33IsIdent(em)) return false;
+
+    insertPos = h + q + strlen(kTail);
+    return true;
+}
+
+/* Trace 实锤锚点（结构派生失败时的兜底变体表）
+ * 2026-10-17 热更 @?  var p = n && n.force, d = n && n.trueDmg, f = i < 0, _ = i > 0, m = 0;  (em=h opts=n extra=o)
+ * 1.0.24 @9014501   var p = o && o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;  (em=h opts=o extra=n)
+ * 1.0.23 @8304848   var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;  (em=f opts=o extra=n) */
 static bool TryInsert1023FightHooks(std::string& s) {
     if (s.find("isChecked_RET_aoeAll") != std::string::npos) return true;
+
+    {
+        size_t pos = 0;
+        std::string em, neg, opts, extra;
+        if (Sc33DeriveFightVars(s, pos, em, neg, opts, extra)) {
+            std::string hook = BuildFightHook(em.c_str(), neg.c_str(), opts.c_str(),
+                                              extra.c_str());
+            s.insert(pos, hook);
+            LOGI("[Sc33] fight hook auto em=%s neg=%s opts=%s extra=%s @%zu", em.c_str(),
+                 neg.c_str(), opts.c_str(), extra.c_str(), pos);
+            return true;
+        }
+        LOGW("[Sc33] fight hook 结构派生失败 → 走变体表");
+    }
 
     static const struct {
         const char* anchor;
         const char* em;
         const char* neg;
+        const char* opts;
+        const char* extra;
     } kVar[] = {
-        {"var p = o && o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f"},
-        {"var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;", "f", "h"},
-        {"o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f"},
-        {"o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;", "f", "h"},
+        {"var p = n && n.force, d = n && n.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f", "n", "o"},
+        {"var p = o && o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f", "o", "n"},
+        {"var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;", "f", "h", "o", "n"},
+        {"o.force, d = n && n.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f", "n", "o"},
+        {"o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f", "o", "n"},
+        {"o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;", "f", "h", "o", "n"},
     };
     for (size_t k = 0; k < sizeof(kVar) / sizeof(kVar[0]); ++k) {
         if (s.find(kVar[k].anchor) == std::string::npos) continue;
-        std::string hook = BuildFightHook(kVar[k].em, kVar[k].neg);
+        std::string hook = BuildFightHook(kVar[k].em, kVar[k].neg, kVar[k].opts, kVar[k].extra);
         if (InsertAfterOnce(s, kVar[k].anchor, hook.c_str())) {
-            LOGI("[Sc33] fight hook anchor#%zu em=%s neg=%s", k, kVar[k].em, kVar[k].neg);
+            LOGI("[Sc33] fight hook anchor#%zu em=%s neg=%s opts=%s extra=%s", k, kVar[k].em,
+                 kVar[k].neg, kVar[k].opts, kVar[k].extra);
             return true;
         }
     }
     return false;
 }
 
-/* 伤害终算 baseDmg 钩子体：tgt=目标实体变量名
- * 1.0.24 DamageCommonCalcFinal(t,e,i,o,n,a,r,s,l): n=casterEntity, a=targetEntity, t=伤害
- * 1.0.23 同名函数:                              n=casterEntity, r=targetEntity, t=伤害 */
-static std::string BuildBaseDmgHook(const char* tgt) {
-    const std::string T(tgt);
+/* 伤害终算 baseDmg 钩子体：tgt=目标实体变量名，caster=施法者实体变量名
+ * 形参位次实测（2026-10-17 热更明文）：
+ *   DamageCommonCalcFinal(t, e, i, n, o, a, r, s, l) → 第5形参=casterEntity(o)、第6形参=targetEntity(a)
+ * 1.0.24 同锚点 `t = u.baseDmg;` 时第5形参名为 n（见 10_docs/生存33天/锚点与验证_1.0.24.md），
+ * 故 caster 必须与锚点一起参数化 —— 写死 n 会让「施法者是英雄」判据恒假、百倍伤害静默失效。 */
+static std::string BuildBaseDmgHook(const char* tgt, const char* caster) {
+    const std::string T(tgt), C(caster);
     return std::string(
                "var isChecked_RET_dmg100=jsb.reflection.callStaticMethod("
                "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",1);"
-               "if(isChecked_RET_dmg100&&n&&n.heroCfg&&") +
-           T + "&&" + T +
+               "if(isChecked_RET_dmg100&&") +
+           C + "&&" + C + ".heroCfg&&" + T + "&&" + T +
            ".monsterCfg)t*=100;"
            "var isChecked_RET_dmg0=jsb.reflection.callStaticMethod("
            "\"com.sanqi.jmybt.game37.JMYBTActivity\",\"get_ret\",\"(I)Z\",2);"
@@ -418,22 +527,58 @@ static std::string BuildBaseDmgHook(const char* tgt) {
            T + "&&" + T + ".heroCfg)t=0;";
 }
 
+/* 结构派生：从 DamageCommonCalcFinal 形参表读 targetEntity(第6)/casterEntity(第5) */
+static bool Sc33DeriveBaseDmgVars(const std::string& s, size_t& insertPos, std::string& tgt,
+                                  std::string& caster) {
+    static const char* kAnchor = "t = u.baseDmg;";
+    size_t a = s.find(kAnchor);
+    if (a == std::string::npos) return false;
+    static const char* kHead = "DamageCommonCalcFinal = function(";
+    size_t h = s.rfind(kHead, a);
+    if (h == std::string::npos || a - h > 20000) return false;
+    std::vector<std::string> ps;
+    if (!Sc33ParseParams(s, h + strlen(kHead) - 1, ps) || ps.size() != 9) return false;
+    for (const std::string& p : ps) {
+        if (!Sc33IsIdent(p)) return false;
+    }
+    caster = ps[4];
+    tgt = ps[5];
+    if (tgt == caster) return false;
+    insertPos = a + strlen(kAnchor);
+    return true;
+}
+
 /* Trace 实锤：伤害终算后的 baseDmg 赋值（1.0.24 @22058889 / 1.0.23 @19760498） */
 static bool TryInsertBaseDmgHook(std::string& s) {
-    if (s.find("isChecked_RET_dmg100&&n&&n.heroCfg") != std::string::npos) return true;
+    if (s.find(".heroCfg)t=0;") != std::string::npos) return true;
+
+    {
+        size_t pos = 0;
+        std::string tgt, caster;
+        if (Sc33DeriveBaseDmgVars(s, pos, tgt, caster)) {
+            std::string hook = BuildBaseDmgHook(tgt.c_str(), caster.c_str());
+            s.insert(pos, hook);
+            LOGI("[Sc33] baseDmg hook auto tgt=%s caster=%s @%zu", tgt.c_str(), caster.c_str(),
+                 pos);
+            return true;
+        }
+        LOGW("[Sc33] baseDmg hook 结构派生失败 → 走变体表");
+    }
 
     static const struct {
         const char* anchor;
         const char* tgt;
+        const char* caster;
     } kVar[] = {
-        {"t = u.baseDmg;", "a"},
-        {"t = c.baseDmg;", "r"},
+        {"t = u.baseDmg;", "a", "o"},
+        {"t = c.baseDmg;", "r", "n"},
     };
     for (size_t k = 0; k < sizeof(kVar) / sizeof(kVar[0]); ++k) {
         if (s.find(kVar[k].anchor) == std::string::npos) continue;
-        std::string hook = BuildBaseDmgHook(kVar[k].tgt);
+        std::string hook = BuildBaseDmgHook(kVar[k].tgt, kVar[k].caster);
         if (InsertAfterOnce(s, kVar[k].anchor, hook.c_str())) {
-            LOGI("[Sc33] baseDmg hook anchor#%zu tgt=%s", k, kVar[k].tgt);
+            LOGI("[Sc33] baseDmg hook anchor#%zu tgt=%s caster=%s", k, kVar[k].tgt,
+                 kVar[k].caster);
             return true;
         }
     }
@@ -811,4 +956,19 @@ void Sc33_Tick(const bool* features) {
              g_spliceHits.load(), g_seCalls.load(), g_seHooked ? 1 : 0, g_dmg100 ? 1 : 0,
              g_inv ? 1 : 0, g_atkMul.load(), g_aoe ? 1 : 0, g_noAd ? 1 : 0);
     }
+}
+
+/* ================= modern 注册表入口适配（Games/Sc33Entry.cpp + MainModern.cpp）=========
+ * legacy Main.cpp 的 SC33 分支 = JNI_OnLoad 起 early hook 线程 + 主循环里
+ *   Sc33_Tick(g_features) 后跟 Sc33_OnValueChanged(ATK_SPEED, g_values[...])（500ms 节拍）。
+ * modern 路径由 MainModern.cpp 依 Entry 表调用 onLoad/tick，此处逐条等价复刻，
+ * 保证换入口后功能与真机验收过的 legacy 包一致。 */
+void Sc33_OnLoad(JavaVM* vm) { Sc33_StartEarlyHookThread(vm); }
+
+void Sc33_TickModern(const bool* features, const int* values) {
+    Sc33_Tick(features);
+    if (!features) return;
+    int mul = values ? values[SC33_FEAT_ATK_SPEED] : 0;
+    /* 与 legacy 一致：攻速>1 时按 tick 节拍续刷 JS 侧倍率（游戏可能重建 localStorage） */
+    if (mul > 0) Sc33_OnValueChanged(SC33_FEAT_ATK_SPEED, mul);
 }

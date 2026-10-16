@@ -1,0 +1,24 @@
+# 生存33天（com.lgcb.scsst.sc33ttaptapwz37zgx3.dayssurvive）装机预检标记
+# 格式：类别|ERE 正则（每行一条，# 开头为注释）
+# 用途：post_install_precheck.sh 的机器预检关（L2）。人工终审仍是用户实测（L3）。
+# 建档：2026-10-17，热更锚点重定轮（so-only 换包，仅 libstarry_magic.so 变）
+
+pkg|com\.lgcb\.scsst\.sc33ttaptapwz37zgx3\.dayssurvive
+
+# 菜单 so 加载标记（星光框架 TAG，包内 so 内唯一命中 "StarryMagic"）
+menu_load|StarryMagic
+
+# 菜单弹出标记（Java 侧 NativeMenuController 打出）
+menu_shown|native menu shown
+
+# 游戏级 hook 命中标记（[Sc33] 前缀；`combat splice` = JS 真被改写，
+# `fight hook auto` = 2026-10-17 起新增的结构派生锚点自愈路径）
+hook_hit|\[Sc33\]
+
+# 授权墙标记（过不去只发操作请求卡，不诊断服务端）
+auth_fail|renew auth fail
+auth_ok|auth game_id synced|renew ok
+
+# 崩溃关：去掉裸信号名（会命中 adb shell 辅助进程的 libsigchain 行，见山海幻境档）
+crash|FATAL EXCEPTION|Fatal signal|DEBUGGERD|crash_dump|am_crash
+crash_ignore|记录先前处理器|\[crash\]|CrashTrap|libsigchain|Sc33ExitTrace
