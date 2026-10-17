@@ -84,17 +84,17 @@ vm.runInContext(GFRAG, ctx, { filename: 'GAME_SPEED' });
 ok(!!GAME_SPEED, 'GAME_SPEED 片段可执行');
 ok(GAME_SPEED[1.2] === 'speed1' && GAME_SPEED[1.6] === 'speed2', '反向映射保留（1.2→speed1 / 1.6→speed2）');
 ok(GAME_SPEED.speed1 === 1.2 && GAME_SPEED.speed2 === 1.6, '默认（滑块 1）= 原版 1.2/1.6，完全不干预');
-ctx.__QSW_APPLY(1, 0, 3);
-ok(GAME_SPEED.speed1 === 3 && GAME_SPEED.speed2 === 3, '滑块 3（上限）→ 两档速度常量都变 3');
-ctx.__QSW_APPLY(1, 0, 5);
-ok(GAME_SPEED.speed1 === 3 && ctx.__QSW_SPD === 3, '滑块 5 → 钳到上限 3（实测 5 会被服务端 9998 拒判）');
+ctx.__QSW_APPLY(1, 0, 10);
+ok(GAME_SPEED.speed1 === 10 && GAME_SPEED.speed2 === 10, '滑块 10（上限）→ 两档速度常量都变 10');
+ctx.__QSW_APPLY(1, 0, 11);
+ok(GAME_SPEED.speed1 === 10 && ctx.__QSW_SPD === 10, '滑块 11 → 钳到上限 10');
 ctx.__QSW_APPLY(1, 0, 1);
 ok(GAME_SPEED.speed1 === 1.2 && GAME_SPEED.speed2 === 1.6, '滑块回 1 → 恢复原版 1.2/1.6');
 ctx.__QSW_APPLY(2, 10, 99);
-ok(GAME_SPEED.speed1 === 3 && ctx.__QSW_SPD === 3, '滑块 99 超上限钳到 3（2026-10-10：上限 10→3）');
+ok(GAME_SPEED.speed1 === 10 && ctx.__QSW_SPD === 10, '滑块 99 超上限钳到 10');
 ctx.__QSW_APPLY(0, -5, 0);
-ok(GAME_SPEED.speed1 === 1.2 && ctx.__QSW_DR === 0 && ctx.__QSWK === 1, '下界钳制：spd→1 / dr→0 / k→1');
-ctx.__QSW_APPLY(5, 50);
+ok(GAME_SPEED.speed1 === 1.2 && ctx.__QSW_DR === 0 && ctx.__QSWK === 1, '下界钳制：spd→1 / dr→0（原版哨兵） / k→1');
+ctx.__QSW_APPLY(100, 100);
 ok(ctx.__QSW_SPD === 1 && GAME_SPEED.speed1 === 1.2, '旧式两参调用（缺 spd）→ 速度保持不干预');
 
 /* ---- 3. TweenSpeed：抓 Scheduler + 每帧只提速不降速 ---- */
@@ -111,9 +111,9 @@ ok(ctx.window.__QSW_SCHED === sched, 'start() 抓到 Scheduler（后续取值走
 function run(ts, spd) { forced.length = 0; ticks.length = 0; sched._ts = ts; ctx.__QSW_APPLY(1, 0, spd); r.tick(1); return ticks[0]; }
 ok(run(1, 5) === 1 && forced.length === 0, '场外 timeScale=1 → 绝不干预（城里不加速）');
 ok(run(1.2, 1) === 1.2 && forced.length === 0, '滑块关(1) + 战斗(1.2) → 不接管，原版行为');
-ok(run(1.2, 3) === 3 && forced[0] === 3, '滑块 3（上限）+ 战斗 → 当帧纠偏到 3，dt 按 3 计');
-ok(run(3, 2) === 2 && forced[0] === 2, '战斗中改滑块（3→2）→ 当帧生效');
-ok(run(1.2, 9) === 3 && forced[0] === 3, '滑块 9 → 先钳到上限 3 再纠偏（上限不可被越过）');
+ok(run(1.2, 10) === 10 && forced[0] === 10, '滑块 10（上限）+ 战斗 → 当帧纠偏到 10，dt 按 10 计');
+ok(run(10, 2) === 2 && forced[0] === 2, '战斗中改滑块（10→2）→ 当帧生效');
+ok(run(1.2, 11) === 10 && forced[0] === 10, '滑块 11 → 先钳到上限 10 再纠偏（上限不可被越过）');
 ok(run(0.5, 3) === 0.5 && forced.length === 0, '结算慢镜 0.5 → 不接管（保留慢镜）');
 
 try { fs.rmSync(path.dirname(tmp), { recursive: true, force: true }); } catch (e) { /* 临时目录清理失败不影响结论 */ }

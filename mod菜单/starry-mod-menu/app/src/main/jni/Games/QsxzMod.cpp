@@ -58,15 +58,15 @@ void Qsxz_OnFeatureChanged(int featNum, bool enabled) {
 void Qsxz_OnValueChanged(int featNum, int value) {
     if (featNum == QSXZ_FEAT_DMG) {
         if (value < 1) value = 1;
-        if (value > 5) value = 5;   // 2026-10-09：上限由 20 收窄到 5（服务端容差 ~+50%，高倍率必被标）
+        if (value > 100) value = 100;   // 2026-10-18：上限 5→100（用户定制）
         g_dmg.store(value);
     } else if (featNum == QSXZ_FEAT_DR) {
-        if (value < 0) value = 0;
-        if (value > 50) value = 50;
+        if (value < 0) value = 0;        // 0 = 原版哨兵（未授权回落 0）；菜单 min=1 保证玩家最低 1%
+        if (value > 100) value = 100;    // 2026-10-18：上限 50→100（用户定制）
         g_dr.store(value);
     } else if (featNum == QSXZ_FEAT_SPEED) {
         if (value < 1) value = 1;
-        if (value > 3) value = 3;   // 2026-10-10：上限 10→3（实测 5/10 被服务端 9998 拒判）；1 = 原版完全不干预
+        if (value > 10) value = 10;      // 2026-10-18：上限 3→10（用户定制 1-10）；1 = 原版完全不干预
         g_spd.store(value);
     }
     LOGI(QSXZ_LOG "value #%d = %d", featNum, value);
@@ -79,9 +79,9 @@ void Qsxz_Tick(const bool* features, const int* values) {
         int k = values[QSXZ_FEAT_DMG];
         int d = values[QSXZ_FEAT_DR];
         int s = values[QSXZ_FEAT_SPEED];
-        if (k < 1) k = 1; else if (k > 5) k = 5;    // 2026-10-09：上限 20 → 5
-        if (d < 0) d = 0; else if (d > 50) d = 50;
-        if (s < 1) s = 1; else if (s > 3) s = 3;  // 2026-10-10：上限 10→3；1 = 原版
+        if (k < 1) k = 1; else if (k > 100) k = 100;  // 2026-10-18：上限 5 → 100
+        if (d < 0) d = 0; else if (d > 100) d = 100;  // 0 = 原版哨兵；上限 50 → 100
+        if (s < 1) s = 1; else if (s > 10) s = 10;    // 2026-10-18：上限 3→10；1 = 原版
         g_dmg.store(k);
         g_dr.store(d);
         g_spd.store(s);

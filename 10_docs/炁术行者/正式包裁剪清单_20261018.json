@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/炁术行者",
+  "keep": "炁术行者_1.0_星光版.apk",
+  "keep_size": 6833647,
+  "keep_md5": "0110146ef1c996258525c08622bfdee2",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "炁术行者_1.0_星光版.apk.idsig",
+      "size": 62956,
+      "md5": "e323715b9eddc4b47ff0ce67958b716f"
+    }
+  ],
+  "removed_count": 1
+}

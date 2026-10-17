@@ -64,8 +64,9 @@ chk() {  # chk <字节串> <说明>
   [[ "$n" -ge 1 ]] || { echo "ERROR: $SO 不含 '$1'（$2；旧 so 混入或源码未编译）" >&2; exit 1; }
 }
 chk "qsxz"                   "游戏标签未编译进 so"
-chk "SeekBar_伤害倍率_1_5_1"   "feat1 菜单串未编译进 so"
-chk "SeekBar_减伤_0_50_0"     "feat2 菜单串未编译进 so"
+chk "SeekBar_伤害倍率_1_100_1"   "feat1 菜单串未编译进 so"
+chk "SeekBar_减伤_1_100_1"     "feat2 菜单串未编译进 so"
+chk "SeekBar_战斗加速_1_10_1"   "feat3 菜单串未编译进 so"
 
 echo "[build_so] done → $SO"
 echo "[build_so] md5 = $(md5 -q "$SO")  size = $(wc -c < "$SO" | tr -d ' ')"

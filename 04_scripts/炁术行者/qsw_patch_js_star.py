@@ -57,7 +57,7 @@ import hashlib
 import re
 import sys
 
-HEADER = r'''/*QSW-MOD v14s 星光版*/
+HEADER = r'''/*QSW-MOD v15s 星光版*/
 !function(){
 var w=("undefined"!=typeof window)?window:this;
 if(w.__QSW_STAR_INSTALLED)return;
@@ -101,14 +101,14 @@ w.__QSW_NETERR=function(code,cmd,cb,data){try{
   w.__QSW_AUDIT("QSWERR code="+code+" cmd="+cmd+" cb="+cb+" data="+w.__QSW_TRUNC(data,220))}catch(QE1){}};
 
 /* ===== 战斗加速（v11s 新增）：滑块值 = 目标倍速；1 = 原版完全不干预 ===== */
-w.__QSW_SPD=1;      /* 菜单滑块值 1..3（1 = 不干预，游戏自带 1x/2x 照旧可用；上限 3 = 实测天花板） */
+w.__QSW_SPD=1;      /* 菜单滑块值 1..10（1 = 不干预，游戏自带 1x/2x 照旧可用；上限 10 = 用户定制 1-10） */
 w.__QSW_SCHED=null; /* 运行时抓到的 cocos Scheduler（在 TweenSpeed.start 里捕获） */
 w.__QSW_SPDVAL=function(d){var q=w.__QSW_SPD|0;return q>=2?q:d};  /* GAME_SPEED 枚举取值器 */
 
 w.__QSW_APPLY=function(k,drPct,spd){
-  k=(k|0); if(k<1)k=1; else if(k>5)k=5;
-  drPct=(drPct|0); if(drPct<0)drPct=0; else if(drPct>50)drPct=50;
-  spd=(spd|0); if(spd<1)spd=1; else if(spd>3)spd=3;   /* 2026-10-10：上限 10→3 */
+  k=(k|0); if(k<1)k=1; else if(k>100)k=100;
+  drPct=(drPct|0); if(drPct<0)drPct=0; else if(drPct>100)drPct=100;   /* 下限 0=原版哨兵（未授权回落 0）；上限 50→100（用户定制） */
+  spd=(spd|0); if(spd<1)spd=1; else if(spd>10)spd=10;   /* 2026-10-18：上限 3→10（用户定制 1-10） */
   w.__QSWK=k; w.__QSW_DR=drPct/100;
   var ch=(w.__QSW_SPD!==spd);
   w.__QSW_SPD=spd;
@@ -128,7 +128,7 @@ w.__QSW_DMG=function(v,c){
   return v*w.__QSWK;
 };
 
-try{console.log("QSW_MOD_LOADED v14s")}catch(e){}
+try{console.log("QSW_MOD_LOADED v15s")}catch(e){}
 }();
 '''
 
@@ -160,7 +160,7 @@ def main():
     src = open(a.src, encoding='utf-8').read()
     orig_len = len(src)
 
-    print('=== 应用补丁 v14s（星光版）===')
+    print('=== 应用补丁 v15s（星光版）===')
     # ① 无敌（受 __QSW_INV 控制；本版恒 false ⇒ 不生效，仅保留已验证代码不引入新变量）
     src = sub_once(src,
         'setHeroHp=function(e){this.realDie||(',
@@ -209,11 +209,11 @@ def main():
 
     # ⑧ bfe 入口（锚点：2026-10-08 重压缩后模块作用域变量 g→p）
     src = sub_once(src,
-        'barrierFightEnd=function(t){var r=this;return p.hurtRate&&(t.hurtRate=p.hurtRate),new Promise(',
+        'barrierFightEnd=function(t){var r=this;return m.hurtRate&&(t.hurtRate=m.hurtRate),new Promise(',
         'barrierFightEnd=function(t){var r=this;try{var _fp=null;try{_fp=JSON.parse(t.fightpro)}catch(_e){};'
         'window.__QSW_LOG({ev:"bfe",win:t.win,time:t.time,'
-        'keys:Object.keys(t),powers:t.powers,th:_fp&&_fp.th,tbh:_fp&&_fp.tbh,hurtRate:p.hurtRate||0,'
-        'pw:typeof t.powers})}catch(e){};return p.hurtRate&&(t.hurtRate=p.hurtRate),new Promise(',
+        'keys:Object.keys(t),powers:t.powers,th:_fp&&_fp.th,tbh:_fp&&_fp.tbh,hurtRate:m.hurtRate||0,'
+        'pw:typeof t.powers})}catch(e){};return m.hurtRate&&(t.hurtRate=m.hurtRate),new Promise(',
         '⑧ bfe 入口信标')
 
     # ⑪ 上报战力放大（__QSW_PSF 本版恒等 ⇒ 战力完全不动）
@@ -234,7 +234,7 @@ def main():
     #   —— 与真值分支 `r.applyFightResultData(t),e(t)` 完全同形：不弹窗、不重启、结算不挂起。
     #   （不改 reject：reject 会以 await 抛异常 → 结算响应异常弹窗，比原行为更糟。）
     src = sub_once(src,
-        'f.http.post(p.apipath+"c=cheat&a=hurtCheck",{uid:p.dbid,channelId:l.getChannel(),hurtRate:t.result.hurtRate},(function(t){m.alert("netcode_-10",(function(){l.restartGame()}))}))',
+        'f.http.post(m.apipath+"c=cheat&a=hurtCheck",{uid:m.dbid,channelId:l.getChannel(),hurtRate:t.result.hurtRate},(function(t){p.alert("netcode_-10",(function(){l.restartGame()}))}))',
         '(window.__QSW_LOG({ev:"hurtcheck_blocked",hurtRate:t.result.hurtRate}),r.applyFightResultData(t),e(t))',
         '⑨ hurtCheck 中和')
 
@@ -261,8 +261,8 @@ def main():
     #   故折算后自洽，不会触发反篡改校验。
     #   折算口径与 __QSW_DMG 严格对应：camp==1（玩家受击）走 (1-dr)，其余走 k。
     src = sub_once(src,
-        'n.createHurtLog=function(){return{pl:t.instance.petFontLog,hl:t.instance.heroFontLog,th:t.instance.totalHurt,tbh:t.instance.totalBeHurt}}',
-        'n.createHurtLog=function(){var _k=window.__QSWK||1,_d=window.__QSW_DR||0,_p={},_h={},_i;if(_k>1){for(_i in t.instance.petFontLog)_p[_i]=Math.round(t.instance.petFontLog[_i]/_k);for(_i in t.instance.heroFontLog)_h[_i]=Math.round(t.instance.heroFontLog[_i]/_k);}else{_p=t.instance.petFontLog;_h=t.instance.heroFontLog;}return{pl:_p,hl:_h,th:_k>1?Math.round(t.instance.totalHurt/_k):t.instance.totalHurt,tbh:_d>0?Math.round(t.instance.totalBeHurt/(1-_d)):t.instance.totalBeHurt}}',
+        'i.createHurtLog=function(){return{pl:t.instance.petFontLog,hl:t.instance.heroFontLog,th:t.instance.totalHurt,tbh:t.instance.totalBeHurt}}',
+        'i.createHurtLog=function(){var _k=window.__QSWK||1,_d=window.__QSW_DR||0,_p={},_h={},_i;if(_k>1){for(_i in t.instance.petFontLog)_p[_i]=Math.round(t.instance.petFontLog[_i]/_k);for(_i in t.instance.heroFontLog)_h[_i]=Math.round(t.instance.heroFontLog[_i]/_k);}else{_p=t.instance.petFontLog;_h=t.instance.heroFontLog;}return{pl:_p,hl:_h,th:_k>1?Math.round(t.instance.totalHurt/_k):t.instance.totalHurt,tbh:_d>0&&_d<1?Math.round(t.instance.totalBeHurt/(1-_d)):t.instance.totalBeHurt}}',
         '⑬ 结算上报回流原版口径')
 
     # ⑭ 战斗加速①：GAME_SPEED 枚举改成「实时取值器」
