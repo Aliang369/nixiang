@@ -1,0 +1,12 @@
+{
+  "template_id": "dkzjsf",
+  "name": "蛋壳战机 私服",
+  "package": "com.wxdmxga.dkzj",
+  "source": "Games/DkzjSfEntry.cpp kDkzjSf_Features（modern 注册表，game_id=dkzjsf，复用 DkzjMod）",
+  "features": [
+    {"feat_num": 1, "name": "攻击倍率"},
+    {"feat_num": 2, "name": "上帝模式"},
+    {"feat_num": 3, "name": "偷盗技能"},
+    {"feat_num": 4, "name": "免广告"}
+  ]
+}
