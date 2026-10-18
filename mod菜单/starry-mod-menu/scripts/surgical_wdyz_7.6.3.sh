@@ -32,6 +32,9 @@ STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 VER="7.6.3"
 ORIG_APK="$NIXIANG/02_apks/我的勇者/我的勇者_${VER}_base.apk"
+# 热更 build 357 的 libil2cpp.so（真机 files/update/current 拉取，md5 626e9db7…）。
+# 直装包内嵌此 so：避免底包内旧 so 与 mod 的 357 偏移不匹配（否则要等游戏热更后才能生效）。
+NEW_SO="$NIXIANG/02_apks/我的勇者/libil2cpp_${VER}_357.so"
 OUT="$NIXIANG/08_output/我的勇者"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
@@ -59,14 +62,16 @@ for v in 36.0.0 35.0.0 34.0.0; do
 done
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
+[[ -f "$NEW_SO" ]] || { echo "ERROR: missing $NEW_SO"; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
-MK="$STARRY_SRC/app/src/main/jni/Android.mk"
-grep -E '^\s*LOCAL_CFLAGS\s*\+=\s*-DENABLE_UNITY_HOOK\s+-DSTARRY_GAME_WDYZ' "$MK" \
-  || { echo "ERROR: Android.mk must enable STARRY_GAME_WDYZ"; exit 1; }
-grep -E '^\s*LOCAL_SRC_FILES\s*:=\s*Main\.cpp\s+Games/WdyzMod\.cpp' "$MK" \
-  || { echo "ERROR: Android.mk LOCAL_SRC_FILES must be Main.cpp Games/WdyzMod.cpp"; exit 1; }
-echo "[check] Android.mk target=wdyz (${VER})"
+MK="$STARRY_SRC/app/src/main/jni/Android_wdyz.mk"
+[[ -f "$MK" ]] || { echo "ERROR: missing $MK"; exit 1; }
+grep -E '^\s*LOCAL_SRC_FILES\s*:=\s*MainModern\.cpp\s+Games/WdyzMod\.cpp\s+Games/WdyzEntry\.cpp' "$MK" \
+  || { echo "ERROR: Android_wdyz.mk LOCAL_SRC_FILES must be MainModern.cpp Games/WdyzMod.cpp Games/WdyzEntry.cpp"; exit 1; }
+[[ -f "$STARRY_SRC/app/src/main/jni/Games/WdyzEntry.cpp" ]] \
+  || { echo "ERROR: missing Games/WdyzEntry.cpp"; exit 1; }
+echo "[check] modern target=wdyz (${VER})"
 echo "[check] orig apk = $ORIG_APK"
 
 LOCK_DIR="/tmp/wdyz763_surgical.lockdir"
@@ -82,9 +87,10 @@ echo "[1/6] ndk-build -> jniLibs"
 NDK_BUILD="$NDK/ndk-build"
 [[ -x "$NDK_BUILD" ]] || { echo "ERROR: missing $NDK_BUILD"; exit 1; }
 (cd "$STARRY_SRC/app/src/main/jni" && \
-  "$NDK_BUILD" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk \
+  "$NDK_BUILD" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_wdyz.mk NDK_APPLICATION_MK=./Application.mk \
+  NDK_OUT="$STARRY_SRC/app/src/obj_wdyz" NDK_LIBS_OUT="$STARRY_SRC/app/src/libs_wdyz" \
   APP_ABI=arm64-v8a -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
-SO_BUILT="$STARRY_SRC/app/src/libs/arm64-v8a/libstarry_magic.so"
+SO_BUILT="$STARRY_SRC/app/src/libs_wdyz/arm64-v8a/libstarry_magic.so"
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT"; exit 1; }
 if ! grep -a -q '\[Wdyz\]' "$SO_BUILT"; then
   echo "ERROR: so 不是 WDYZ（可能仍是上一款游戏）。strings 检查失败。"
@@ -100,7 +106,7 @@ done
 CERT_N=$(grep -a -c 'BEGIN CERTIFICATE' "$SO_BUILT" || true)
 [[ "${CERT_N:-0}" -ge 1 ]] || { echo "ERROR: so 内无烘焙证书（BEGIN CERTIFICATE=0）"; exit 1; }
 # 中文菜单串按字节搜（strings 默认 ASCII 不认 UTF-8 中文）
-for m in '无敌' '五倍攻击'; do
+for m in '无敌' '五倍攻击' '无限技能' '伤害倍率'; do
   N=$(LC_ALL=C grep -a -c "$m" "$SO_BUILT" || true)
   [[ "${N:-0}" -ge 1 ]] || { echo "ERROR: so 内缺菜单串 $m"; exit 1; }
 done
@@ -266,11 +272,12 @@ fi
 ls -la "$WORK/AndroidManifest.xml"
 
 echo "[6/6] zip surgical merge"
-python3.11 - "$ORIG_APK" "$WORK" "$WORK/unsigned.apk" <<'PY'
+python3.11 - "$ORIG_APK" "$WORK" "$WORK/unsigned.apk" "$NEW_SO" <<'PY'
 import sys, zipfile, hashlib
 from pathlib import Path
 
 src, work, dst = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
+new_so = Path(sys.argv[4]).read_bytes()
 mf = (work / "AndroidManifest.xml").read_bytes()
 c2 = (work / "classes2.dex").read_bytes()
 extras = {}
@@ -297,6 +304,8 @@ for item in zin.infolist():
         continue  # 官方只有 classes.dex；防御性跳过不存在项
     if name == "AndroidManifest.xml":
         data = mf
+    elif name == "lib/arm64-v8a/libil2cpp.so":
+        data = new_so  # 内嵌 357 热更 so（mod 偏移按 357 dump 回填）
     else:
         data = zin.read(item)
     info = zipfile.ZipInfo(name, item.date_time)
@@ -326,8 +335,10 @@ assert hashlib.sha256(zin2.read("resources.arsc")).hexdigest() == hashlib.sha256
 assert hashlib.sha256(zin2.read("classes.dex")).hexdigest() == hashlib.sha256(zout2.read("classes.dex")).hexdigest()
 assert "classes2.dex" in zout2.namelist()
 assert "lib/arm64-v8a/libstarry_magic.so" in zout2.namelist()
-# 官方条目逐字节透传（排除注入项与签名块）
-inj = set(extras) | {"classes2.dex", "AndroidManifest.xml"}
+assert hashlib.sha256(zout2.read("lib/arm64-v8a/libil2cpp.so")).hexdigest() == hashlib.sha256(new_so).hexdigest()
+print(f"  embedded libil2cpp.so sha256 = {hashlib.sha256(new_so).hexdigest()[:16]}… (357)")
+# 官方条目逐字节透传（排除注入项、签名块、内嵌 357 so）
+inj = set(extras) | {"classes2.dex", "AndroidManifest.xml", "lib/arm64-v8a/libil2cpp.so"}
 n_same = n_checked = 0
 for item in zin2.infolist():
     name = item.filename

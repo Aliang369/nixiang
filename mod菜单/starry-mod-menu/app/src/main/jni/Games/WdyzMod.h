@@ -19,17 +19,20 @@
 #ifndef STARRY_WDYZ_MOD_H
 #define STARRY_WDYZ_MOD_H
 
-// 功能位号：对齐 Main.cpp g_featureList 的 WDYZ 块（#1 无敌 / #2 五倍攻击）
+// 功能位号：对齐 WdyzEntry.cpp kFeatures 数组下标（0=Category 占位）
+// #1 无敌 / #2 五倍攻击 / #3 无限技能 / #4 伤害倍率(Slider)
 enum WdyzFeat : int {
-    WDYZ_FEAT_INV = 1,  // Toggle_无敌 → HeroSettle 结算值归零（承伤不掉血）
-    WDYZ_FEAT_DMG = 2,  // Toggle_五倍攻击 → BattleObjectCore 敌 core 结算 ×5
+    WDYZ_FEAT_INV  = 1,  // Toggle_无敌 → HeroSettle 结算值归零（承伤不掉血）
+    WDYZ_FEAT_DMG  = 2,  // Toggle_五倍攻击 → 敌 core 结算 value ×5
+    WDYZ_FEAT_SKILL= 3,  // Toggle_无限技能 → 无CD(CheckSkill 返回值归零) + 免蓝(settleMp 归零)
+    WDYZ_FEAT_DMGX = 4,  // Slider_伤害倍率(1-50) → 敌 core value 与 shield 同乘 N（真实伤害穿盾）
 };
 
 bool Wdyz_TryInit();
 bool Wdyz_IsReady();
 void Wdyz_OnFeatureChanged(int featNum, bool enabled);
 void Wdyz_OnValueChanged(int featNum, int value);
-void Wdyz_Tick(const bool* features);
+void Wdyz_Tick(const bool* features, const int* values);
 void Wdyz_ForceClear();
 
 #endif  // STARRY_WDYZ_MOD_H

@@ -2,9 +2,11 @@
   "template_id": "wdyz",
   "name": "我的勇者",
   "package": "com.rsg.wdyz",
-  "source": "Games/WdyzMod.h WDYZ_FEAT_* / Main.cpp g_featureList",
+  "source": "Games/WdyzEntry.cpp GameMod_Get",
   "features": [
     {"feat_num": 1, "name": "无敌"},
-    {"feat_num": 2, "name": "五倍攻击"}
+    {"feat_num": 2, "name": "五倍攻击"},
+    {"feat_num": 3, "name": "无限技能"},
+    {"feat_num": 4, "name": "伤害倍率"}
   ]
 }
