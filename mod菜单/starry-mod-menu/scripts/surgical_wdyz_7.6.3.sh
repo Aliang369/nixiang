@@ -35,7 +35,9 @@ ORIG_APK="$NIXIANG/02_apks/我的勇者/我的勇者_${VER}_base.apk"
 # 热更 build 357 的 libil2cpp.so（真机 files/update/current 拉取，md5 626e9db7…）。
 # 直装包内嵌此 so：避免底包内旧 so 与 mod 的 357 偏移不匹配（否则要等游戏热更后才能生效）。
 NEW_SO="$NIXIANG/02_apks/我的勇者/libil2cpp_${VER}_357.so"
-OUT="$NIXIANG/08_output/我的勇者"
+# STARRY_OUT_DIR：可把产物写到别处（默认 08_output/我的勇者）。
+#   用于「验证包先落临时目录、确认能用再进 08_output」，避免覆盖已交付/已归档的正式包。
+OUT="${STARRY_OUT_DIR:-$NIXIANG/08_output/我的勇者}"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
@@ -61,8 +63,19 @@ for v in 36.0.0 35.0.0 34.0.0; do
   fi
 done
 
+# STARRY_SKIP_SO_SWAP=1：**不替换** lib/arm64-v8a/libil2cpp.so（用底包自带 so）。
+#   为什么需要（2026-10-18 首装闪退实测，见 10_docs/我的勇者/崩溃复现_首装闪退_20261018.md）：
+#   把 so 换成热更 build 357、但 global-metadata.dat 仍是底包那份；游戏自带 UnityPatch 在
+#   「没热更过」的干净机器上找不到补丁副本（NewPatchSoDir==false → LoadLibrary.false）就回退到
+#   包内 so ⇒ so/metadata 混搭 ⇒ il2cpp 互递归爆栈闪退。只有已热更 357 的机器（走 files/update/current）才正常。
+#   跳过换 so 时 mod 走 WdyzMod.cpp 的「RVA 序言不符 → 按名兜底」路径。
+SKIP_SO_SWAP="${STARRY_SKIP_SO_SWAP:-0}"
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
-[[ -f "$NEW_SO" ]] || { echo "ERROR: missing $NEW_SO"; exit 1; }
+if [[ "$SKIP_SO_SWAP" == "1" ]]; then
+  echo "[check] STARRY_SKIP_SO_SWAP=1 ⇒ 保留底包 libil2cpp.so（mod 走按名兜底）"
+else
+  [[ -f "$NEW_SO" ]] || { echo "ERROR: missing $NEW_SO"; exit 1; }
+fi
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN"; exit 1; }
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN"; exit 1; }
 MK="$STARRY_SRC/app/src/main/jni/Android_wdyz.mk"
@@ -272,12 +285,13 @@ fi
 ls -la "$WORK/AndroidManifest.xml"
 
 echo "[6/6] zip surgical merge"
-python3.11 - "$ORIG_APK" "$WORK" "$WORK/unsigned.apk" "$NEW_SO" <<'PY'
+python3.11 - "$ORIG_APK" "$WORK" "$WORK/unsigned.apk" "$NEW_SO" "$SKIP_SO_SWAP" <<'PY'
 import sys, zipfile, hashlib
 from pathlib import Path
 
 src, work, dst = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
-new_so = Path(sys.argv[4]).read_bytes()
+skip_so = (sys.argv[5] == "1")
+new_so = None if skip_so else Path(sys.argv[4]).read_bytes()
 mf = (work / "AndroidManifest.xml").read_bytes()
 c2 = (work / "classes2.dex").read_bytes()
 extras = {}
@@ -304,7 +318,7 @@ for item in zin.infolist():
         continue  # 官方只有 classes.dex；防御性跳过不存在项
     if name == "AndroidManifest.xml":
         data = mf
-    elif name == "lib/arm64-v8a/libil2cpp.so":
+    elif name == "lib/arm64-v8a/libil2cpp.so" and new_so is not None:
         data = new_so  # 内嵌 357 热更 so（mod 偏移按 357 dump 回填）
     else:
         data = zin.read(item)
@@ -335,10 +349,18 @@ assert hashlib.sha256(zin2.read("resources.arsc")).hexdigest() == hashlib.sha256
 assert hashlib.sha256(zin2.read("classes.dex")).hexdigest() == hashlib.sha256(zout2.read("classes.dex")).hexdigest()
 assert "classes2.dex" in zout2.namelist()
 assert "lib/arm64-v8a/libstarry_magic.so" in zout2.namelist()
-assert hashlib.sha256(zout2.read("lib/arm64-v8a/libil2cpp.so")).hexdigest() == hashlib.sha256(new_so).hexdigest()
-print(f"  embedded libil2cpp.so sha256 = {hashlib.sha256(new_so).hexdigest()[:16]}… (357)")
-# 官方条目逐字节透传（排除注入项、签名块、内嵌 357 so）
-inj = set(extras) | {"classes2.dex", "AndroidManifest.xml", "lib/arm64-v8a/libil2cpp.so"}
+if new_so is not None:
+    assert hashlib.sha256(zout2.read("lib/arm64-v8a/libil2cpp.so")).hexdigest() == hashlib.sha256(new_so).hexdigest()
+    print(f"  embedded libil2cpp.so sha256 = {hashlib.sha256(new_so).hexdigest()[:16]}… (357)")
+    bak_so_sha = None
+else:
+    bak_so_sha = hashlib.sha256(zout2.read("lib/arm64-v8a/libil2cpp.so")).hexdigest()
+    assert bak_so_sha == hashlib.sha256(zin2.read("lib/arm64-v8a/libil2cpp.so")).hexdigest()
+    print(f"  keep base libil2cpp.so sha256 = {bak_so_sha[:16]}… (未替换)")
+# 官方条目逐字节透传（排除注入项、签名块；替换 so 时另排除 so）
+inj = set(extras) | {"classes2.dex", "AndroidManifest.xml"}
+if new_so is not None:
+    inj.add("lib/arm64-v8a/libil2cpp.so")
 n_same = n_checked = 0
 for item in zin2.infolist():
     name = item.filename

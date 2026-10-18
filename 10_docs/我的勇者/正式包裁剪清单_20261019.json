@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/我的勇者",
+  "keep": "我的勇者_7.6.3_surgical-releaseSigned.apk",
+  "keep_size": 1535202235,
+  "keep_md5": "d98c7e721a91278d0773e6c2537e06cf",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "我的勇者_7.6.3_surgical-releaseSigned_crash-old.apk",
+      "size": 1535202235,
+      "md5": "fe12162d7dc2a1ef2fd61e7f25303acb"
+    }
+  ],
+  "removed_count": 1
+}
