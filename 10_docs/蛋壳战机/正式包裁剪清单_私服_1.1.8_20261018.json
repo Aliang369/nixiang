@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机",
+  "keep": "蛋壳战机_私服_1.1.8_starry-releaseSigned.apk",
+  "keep_size": 202868022,
+  "keep_md5": "f52fdbab968996bab4e0ab715b0e7446",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "蛋壳战机_私服_1.1.8_starry-releaseSigned.apk.idsig",
+      "size": 1607195,
+      "md5": "05c75912cc74c85b220c8f804a21b020"
+    },
+    {
+      "name": "蛋壳战机_私服_1.1.8_starry-unsigned.apk",
+      "size": 202537162,
+      "md5": "cf50532d2dd2528a1723ffa7f4f094f0"
+    }
+  ],
+  "removed_count": 2
+}
