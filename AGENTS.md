@@ -38,8 +38,8 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
    - **用户说「先过环境 / 先别直接做功能 / 菜单进游戏能正常玩才算完成」→ `skill/re-analyze/environment-min-path.md`**（环境阶段最小充分集五步 + 每步退出条件 + 推迟清单；别在第一阶段做 IL2CPP 符号/RVA/metadata 分析）
    - 已有包提取玩法 / 抓点 → `skill/re-extract/SKILL.md`
    - **已有星光包在跑、游戏内热更后功能失效 → `skill/re-extract/hotupdate-fingerprint-recheck.md`**（三查分流：热更资源版本 / 核心 so SHA / 玩法分包是否只在热更目录；确认 JS 指纹漂移再动手）
-   - 写功能 / Hook → `skill/re-implement/SKILL.md`（指纹铁律 `hook-rules.md` §24：禁止写死会被混淆器改名的短标识符；**挂点五步门禁 §22**，第 5 步＝`10_docs/{游戏}/路线锁定.md` 填满且无「未确认偏离」才准装机）
-   - 星光落地 / 切游戏 / 出包 → `skill/starry-mod/SKILL.md`（**已有星光包只重打 dex/APK/重装**：只改 Java/dex 不重编 native；复用正式包用 `STARRY_INSTALL_ONLY=1`）
+   - 写功能 / Hook → `skill/re-implement/SKILL.md`（指纹铁律 `hook-rules.md` §24：禁止写死会被混淆器改名的短标识符；**挂点五步门禁 §22**，第 5 步＝`10_docs/{游戏}/路线锁定.md` 填满且无「未确认偏离」才准装机）；**动手前先扫 `10_docs/_state/pending_experience.md` 候选经验 + `bash 04_scripts/_common/prior_art.sh <关键词>`**（2026-10-19 我的勇者复盘根因：同类结论已在候选经验里，没扫 ⇒ 整轮重复推导）
+   - 星光落地 / 切游戏 / 出包 → `skill/starry-mod/SKILL.md`（**已有星光包只重打 dex/APK/重装**：只改 Java/dex 不重编 native；复用正式包用 `STARRY_INSTALL_ONLY=1`；**直装包不得只换 `libil2cpp.so`**，验收须含一次干净安装——见该文件「分发与装机红线」两节）
    - **机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`**。第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在 → 走 `pipeline.sh` 原生动词 `bash 04_scripts/pipeline.sh <游戏> {status|rounds|next --loop N|log [N]|round <功能#> <有效|无效|未测> "摘要"|gate <阶段id>}`（旧 `_common/stage_next.sh <游戏> [status|next|auto N|rounds]` 仍是同义转发器）；不存在 → 用该游戏 `surgical_*/inject_*` 脚本。**两条路都禁直接敲 adb/apktool/zip/ndk-build/jarsigner**；分析操作照常推理，产出落 `10_docs/`。
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（按具体问题触发，不作无差别全扫）；经验查阅 → `skill/re-lessons/SKILL.md`
    - **先例检索（仓内 → 仓外）→ `bash 04_scripts/_common/prior_art.sh <关键词>`**；仓内零命中（rc=1）⇒ 按 `skill/diagnosis-index.md`「外部检索协议」≤3 次外部检索，结果落 `10_docs/_state/外部方案台账.md`

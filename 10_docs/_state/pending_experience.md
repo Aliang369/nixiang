@@ -119,10 +119,15 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
    以及一整段「已判死清单」。⇒ **抓点第一步应先 dump 壳 rw/BSS 并抽 UTF-8 串（`so_inspect.py strings --utf8`）**，
    功能名↔钩点↔原理一次拿全，可省掉大量反汇编；`so_inspect.py strings` 默认 UTF-8 是关键（原生 `strings` 会漏中文）。
 2. **必须区分「APK 内嵌构建」与「运行时热更构建」两份 libil2cpp / metadata**（落点：`re-extract/binge-memdiff.md` §六坑表新增一条 + §1.1 判据）
+   → **已合并（2026-10-19，跨游戏第 2 例：我的勇者 7.6.3 首装闪退）**：出包侧正文＝
+   `skill/starry-mod/SKILL.md`「直装包不得『只换 libil2cpp.so』」；装机前强制＝`04_scripts/_common/pre_install_gate.sh` 查9
+   （`--apk` + `--base-apk`，只换 so 不换 metadata ⇒ FAIL）。本条保留在 re-extract 侧作为**取证侧**判据。
    证据：保卫向日葵运行时 dlopen 的是 dodjoy 热更落地的 `/data/data/{pkg}/files/libil2cpp.so`（62,235,240）而非 APK `lib/arm64-v8a/`（62,032,888）；
    maps 里 `files/` 那份才是真身；metadata 同理（14,295,428 vs 14,253,536）。两套 RVA 不同（本例 +0x25194 / +0x253A8）。
    判据命令：`su -c 'grep libil2cpp /proc/<pid>/maps'` 看路径，再看 `/sdcard/Android/data/{pkg}/files/StreamingAssets/ab/` 是否有 `arm64-v8a_libil2cpp.so`。
 3. **壳的「建档偏移守卫」会在游戏首启热更后拒绝装钩（静默失效）**（落点：`re-extract/binge-memdiff.md` §六坑表 + `re-implement/hook-rules.md` §24 指纹铁律邻近）
+   → **已合并（2026-10-19）**：通用表述已写入 `skill/starry-mod/SKILL.md`「直装包不得『只换 libil2cpp.so』」末条
+   （写死 RVA 的补丁在换构建后必须显式跳过并留日志，先例 `Games/WdyzMod.cpp` 无CD `expect drift → skip`）。
    证据：原话 `[BW☠] GetFinalTimeScale 偏移不符(实际2609984 期望2609452) -> 可能游戏已更新, 不装这个钩子`；
    建档值＝APK 内嵌构建布局，现场值＝热更构建；读数口径＝`GetFinalTimeScale − SelectRandomSkill` + 常量 `0xE8`
    （期望 `0x27D12C`＝`0x27D044`+0xE8、实际 `0x27D340`＝`0x27D258`+0xE8），两构建差 `0x214`，与壳打印差逐字节吻合。

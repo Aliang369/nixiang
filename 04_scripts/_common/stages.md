@@ -65,10 +65,18 @@ bash 04_scripts/_common/pre_install_gate.sh \
   --so <so> --pinvoke-json <EntryPoint清单> \  # 查3 P/Invoke符号 vs so导出表
   --menu-json <菜单模板> --cpp <含getVal/getRet的源码>  # 查4 控件类型 vs 读取方式
   --runtime-menu-json <运行时控件清单>                     # 可选；用于查4，允许 Slider_/Toggle_ 前缀
+  --apk <目标APK> --base-apk <官方底包> \                  # 查9 so/metadata 配套（IL2CPP 直装包必传）
+  --expect-so-sha256 <sha> --expect-metadata-sha256 <sha>  # 查9 精确断言（可选）
 ```
 
 - 各查独立可选（传了才查），有 FAIL 即禁止装机（exit 1）
 - 查4 局限：只抓字面量索引调用（`getRet(4)` 形式）；变量传参（`getRet(n)`）靠人工核对
+- **查9 是什么（2026-10-19 补，我的勇者 7.6.3 首装闪退）**：包内 `lib/arm64-v8a/libil2cpp.so` 与
+  `assets/bin/Data/Managed/Metadata/global-metadata.dat` 的「换没换」必须一致；**只换 so 不换 metadata
+  （或反之）= 混搭 ⇒ FAIL**。事故链：把热更 build 357 的 so 塞进底包、metadata 留底包版 ⇒ 干净机
+  （无热更副本）被游戏自带 `r2.labs.unitypatch` 回退加载包内 so ⇒ il2cpp 互递归爆栈、启动约 7 s 崩；
+  旧机因 `files/update/current` 有配套副本（运行时根本不加载包内 so）才一直正常。逃生门 `SO_META_CHECK=0`。
+  两类都替换时只 WARN（机器无法判定二者同源，需文档/人工确认）。
 - 检出 FAIL 若属故意保留（如兼容空实现），须在装机报告显式说明并经用户确认才可放行
 - 与 preflight 职责区分：preflight 管"改完源文件"的语法；本门禁管"装机前"的产物交叉核对
 - **装机脚本内建门禁（2026-09-30 起）**：`install_*.sh` 应自带门禁并"不过即 exit 1 阻止装机"，
@@ -80,6 +88,17 @@ bash 04_scripts/_common/pre_install_gate.sh \
   （`VERIFY_MODE=sig`：`dumpsys package` 里本包独有组件 + 打印 `versionName=`/`signatures=`）；
   序列号支持 `SERIAL` 环境变量覆盖，便于临时装到第二台测试机而不改 `.device_serial`。
 
+### 装机验收口径：干净安装（2026-10-19 起，install 阶段必做）
+
+> 依据：我的勇者 7.6.3 —— 2026-10-18 只在「已热更过的旧机」做同签名**覆盖安装**验证通过就交付，
+> 2026-10-19 在干净机（全新安装）复现启动约 7 s 必崩。**覆盖安装 ≠ 首装验收。**
+
+- **任何对外分发 / 换设备的包，install 阶段必须包含一次「卸载 → 全新安装 → `post_install_precheck.sh`」**；
+  覆盖安装只作附加证据（需要保留用户数据时才用）。
+- 未做干净安装时必须显式标注 `NOT PROVEN：仅覆盖安装验证`，**不得写成"已交付 / 用户实测通过"**。
+- 卸载属破坏性操作（连带清 `/sdcard/Android/data/<pkg>` 与 app 私有数据），**须先取得用户同意**。
+- 判定证据：同一包、同设备的预检记录（`09_test/<游戏>/precheck_*`），「干净安装」那条的 pid 与时间戳可核对。
+
 ## 标准阶段表（新游戏从模板生成后按此裁剪）
 
 | # | stage_id | 名称 | 前置 | 后端命令形态 | 产物与校验 |
@@ -89,10 +108,10 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 3 | `anchor` | 锚点抓取 | 2 | 分析性阶段（AI 自由推理），产出落 10_docs | 锚点文档路径入 json |
 | 4 | `impl_mod` | 功能实现 | 3 | new_game_mod.sh 四件套 + 填 TODO | Mod/Entry/mk 三件套存在 + 构建通过 |
 | 5 | `build_so` | 构建 so | 4 | ndk-build（私有 mk + 独立 obj；**换证书须先 `xxd -i` 重烘 `CertPinned.h`**，只换 dex/assets 无效） | so 含游戏标签 + JNI_OnLoad 导出 + md5 入 json；后端防呆四件套：**绝对路径 NDK_OUT/LIBS_OUT + obj stamp（mk/探针开关变化清 obj 重编）+ 链接活动保险（有新 .o 而 so 未变=FAIL）+ 菜单串按字节校验**（范本 `04_scripts/魂坠深境/hzsj_build_so.sh`） |
-| 6 | `surgical` | 外科注入 | 5 | surgical_{游戏}_{版本}.sh（迭代场景后端配 `*_so_only.sh`，见下方内循环） | 注入包存在 + so 标签复核 + **包内 so md5 == build_so 产物**（旧 so 混包直装防线） |
+| 6 | `surgical` | 外科注入 | 5 | surgical_{游戏}_{版本}.sh（迭代场景后端配 `*_so_only.sh`，见下方内循环） | 注入包存在 + so 标签复核 + **包内 so md5 == build_so 产物**（旧 so 混包直装防线） + **若替换了 `libil2cpp.so` 就必须同时替换 `global-metadata.dat`（查9 配套关；2026-10-19 我的勇者首装闪退）** |
 | 7 | `sign` | 签名 | 6 | uber-apk-signer | 签名包存在 + hash 入 json |
 | 8 | `device_ready` | 设备准备 | — | adb devices / connect（MuMu `127.0.0.1:5555`，重启后端口可能变 16384）/ 端口转发（MT MCP `adb forward tcp:8787 tcp:8787`） | 目标设备在线 |
-| 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 四查**（JS 语法/JNI 配套/P/Invoke 符号/控件读取，见上方专节；**优先由 `install_*.sh` 内建并自动阻止装机**）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载；非 root 机用组件指纹校验，见 `VERIFY_MODE=sig`） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；非 root 机改组件指纹；防"装机成功"假象装旧包） |
+| 9 | `install` | 装机验证 | 7,8 | **装机前必过 `_common/pre_install_gate.sh` 查1–查9**（JS 语法/JNI 配套/P/Invoke 符号/控件读取/门禁串/Manifest 形态/构建戳/**so-metadata 配套**，见上方专节；**优先由 `install_*.sh` 内建并自动阻止装机**）→ adb install（须真机授权；大包 push+pm install；覆盖安装失败不自动卸载；非 root 机用组件指纹校验，见 `VERIFY_MODE=sig`） | 安装成功日志 + **`_common/verify_installed_apk.sh` 设备包 md5 == 本地 APK**（root 真机加 `--su`；非 root 机改组件指纹；防"装机成功"假象装旧包） + **干净安装预检**（见上方「装机验收口径：干净安装」；只做覆盖安装须标 NOT PROVEN） |
 | 10 | `archive` | 收官归档 | 9 | 文档/游戏摘要 + current.md 单行索引 + `_common/archive_scoped_git.sh` 白名单**提交并推送 origin/main**（用户口令「git」= 提交+推送连体；仅明确不想推送时才 `--no-push`） | 索引行存在 + 唯一正式包/裁剪清单存在 + 远端已同步 |
 | 11 | `archive_close` | 状态收口提交 | 10 | pipeline 写回 archive done 后，运行 `_common/archive_close_git.sh --game {游戏}`；校验游戏范围无漏提交/未跟踪文件，自动生成 `10_docs/{游戏}/delivery_manifest.json`，与 `pipeline.json` 状态一并提交并推送 | manifest 存在且 APK/artifact hash 可核对；本作路径无未提交状态 + 远端已同步 |
 

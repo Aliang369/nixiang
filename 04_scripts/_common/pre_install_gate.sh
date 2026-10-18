@@ -26,6 +26,8 @@
 #      --menu-json <菜单模板.json> --cpp <含getVal/getRet调用的源码>
 #      --runtime-menu-json <运行时控件清单.json>  # 可选；允许 Slider_/Toggle_ 等运行时名称，只用于控件类型检查
 #      --apk <目标APK> --needle '<门禁串>' [--needle '...'...]  # 查5；也可 --dex 当目标
+#      --apk <目标APK> --base-apk <官方底包>                     # 查9 so/metadata 配套关（IL2CPP 直装包建议必传）
+#      [--expect-so-sha256 <sha>] [--expect-metadata-sha256 <sha>]  # 查9 精确断言（可选，优先级高于底包比对）
 #      --needle-file <门禁串清单.txt>            # 查5；每行一条，'#' 开头的整行注释被跳过
 #      --game <游戏> [--rounds-threshold N] [--allow-rounds]   # 查6；读该游戏轮次台账做根因闸门
 #
@@ -41,6 +43,15 @@
 #    查7 包内 Manifest 形态关（2026-10-15 补）：`--apk` 时校验包内 AndroidManifest.xml 头 4 字节
 #                     = 03 00 08 00（真 AXML）；命中文本 Manifest 一律 FAIL。
 #                     防「dump 的文本 Manifest 与外科 MF_CACHE 同名 ⇒ 文本进包、构建全绿」。
+#    查9 so/metadata 配套关（2026-10-19 补；我的勇者 7.6.3「首装闪退」实证）：`--apk` + `--base-apk`
+#                     时，包内 `lib/arm64-v8a/libil2cpp.so` 与
+#                     `assets/bin/Data/Managed/Metadata/global-metadata.dat` 的「换没换」必须一致；
+#                     **只换 so 不换 metadata（或反之）= 混搭** ⇒ FAIL。
+#                     事故链：把热更 build 357 的 so 塞进底包、metadata 留底包版 ⇒ 干净机（无热更副本）
+#                     被游戏自带 UnityPatch 回退加载包内 so ⇒ il2cpp 互递归栈溢出，启动约 7 s 崩；
+#                     旧机因 `files/update/current` 有配套副本（运行时根本不加载包内 so）才一直正常。
+#                     可用 `--expect-so-sha256/--expect-metadata-sha256` 做精确断言。
+#                     逃生门：SO_META_CHECK=0（须在装机报告写明理由）。
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
 #  注意: 与 preflight.sh 职责不同——preflight 管"改完源文件"的语法，
@@ -58,7 +69,7 @@ fail=0; pass=0; warn=0; skip=0
 
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
-runtime_menu_json=""; apk_file=""
+runtime_menu_json=""; apk_file=""; base_apk=""; expect_so=""; expect_md=""
 game=""; rounds_threshold=2; allow_rounds=""
 NEEDLES="$TMPDIR_PF/needles.txt"; : > "$NEEDLES"
 
@@ -72,6 +83,9 @@ while [ $# -gt 0 ]; do
     --menu-json)   menu_json="$2"; shift 2 ;;
     --runtime-menu-json) runtime_menu_json="$2"; shift 2 ;;
     --apk)         apk_file="$2"; shift 2 ;;
+    --base-apk)    base_apk="$2"; shift 2 ;;
+    --expect-so-sha256)       expect_so="$2"; shift 2 ;;
+    --expect-metadata-sha256) expect_md="$2"; shift 2 ;;
     --game)        game="$2"; shift 2 ;;
     --rounds-threshold) rounds_threshold="$2"; shift 2 ;;
     --allow-rounds) allow_rounds="1"; shift ;;
@@ -435,6 +449,79 @@ if [ -n "$apk_file" ] && [ "${STAMP_CHECK:-1}" = "1" ]; then
   else
     echo "- SKIP  [构建戳] 包内无 lib/arm64-v8a/libstarry_magic.so（非星光包）"
     skip=$((skip+1))
+  fi
+fi
+
+# ---------- 查9：so / metadata 配套关（2026-10-19 补；我的勇者 7.6.3「首装闪退」实证） ----------
+# 判据：包内 libil2cpp.so 与 global-metadata.dat 的「换没换」必须一致。只换一个是混搭。
+# 事故：so=热更 build 357、metadata=底包 ⇒ 干净机被 UnityPatch 回退加载包内 so ⇒ il2cpp
+#   互递归爆栈，启动约 7 s 崩；旧机因 files/update/current 有配套副本才一直正常。
+# 依赖：调用前已 `unzip -l` 落盘再 grep（禁 `unzip -l | grep -q`，pipefail/SIGPIPE 会假阴性）。
+zip_entry_sha256() {  # $1=apk $2=entry（须先确认 entry 存在：空流哈希会得到 e3b0c442… 假值）
+  if command -v shasum >/dev/null 2>&1; then
+    unzip -p "$1" "$2" 2>/dev/null | shasum -a 256 2>/dev/null | awk '{print $1}'
+  else
+    unzip -p "$1" "$2" 2>/dev/null | sha256sum 2>/dev/null | awk '{print $1}'
+  fi
+}
+if [ -n "$apk_file" ] && [ "${SO_META_CHECK:-1}" = "1" ]; then
+  SO_REL="lib/arm64-v8a/libil2cpp.so"
+  MD_REL="assets/bin/Data/Managed/Metadata/global-metadata.dat"
+  ent9="$TMPDIR_PF/apk_entries9.txt"
+  unzip -l "$apk_file" > "$ent9" 2>/dev/null || true
+  if ! grep -qF -- "$SO_REL" "$ent9" || ! grep -qF -- "$MD_REL" "$ent9"; then
+    echo "- SKIP  [so/metadata] 包内缺 ${SO_REL} 或 ${MD_REL}（非 IL2CPP 包 / 已裁剪）"
+    skip=$((skip+1))
+  else
+    so_t="$(zip_entry_sha256 "$apk_file" "$SO_REL")"
+    md_t="$(zip_entry_sha256 "$apk_file" "$MD_REL")"
+    mism=0
+    if [ -n "$expect_so" ] && [ "$so_t" != "$expect_so" ]; then
+      echo "✗ FAIL  [so/metadata] 包内 so sha256=${so_t} ≠ 期望 ${expect_so}"
+      fail=$((fail+1)); mism=1
+    fi
+    if [ -n "$expect_md" ] && [ "$md_t" != "$expect_md" ]; then
+      echo "✗ FAIL  [so/metadata] 包内 metadata sha256=${md_t} ≠ 期望 ${expect_md}"
+      fail=$((fail+1)); mism=1
+    fi
+    pair_bad=""
+    if [ -n "$base_apk" ] && [ -f "$base_apk" ]; then
+      ent9b="$TMPDIR_PF/base_entries9.txt"
+      unzip -l "$base_apk" > "$ent9b" 2>/dev/null || true
+      if grep -qF -- "$SO_REL" "$ent9b" && grep -qF -- "$MD_REL" "$ent9b"; then
+        so_b="$(zip_entry_sha256 "$base_apk" "$SO_REL")"
+        md_b="$(zip_entry_sha256 "$base_apk" "$MD_REL")"
+        so_chg=0; [ "$so_t" != "$so_b" ] && so_chg=1
+        md_chg=0; [ "$md_t" != "$md_b" ] && md_chg=1
+        if [ "$so_chg" = "1" ] && [ "$md_chg" = "0" ]; then
+          pair_bad="只换了 so（${so_t:0:12}… vs 底包 ${so_b:0:12}…），metadata 仍是底包（${md_t:0:12}…）"
+        elif [ "$so_chg" = "0" ] && [ "$md_chg" = "1" ]; then
+          pair_bad="只换了 metadata（${md_t:0:12}… vs 底包 ${md_b:0:12}…），so 仍是底包（${so_t:0:12}…）"
+        elif [ "$so_chg" = "1" ] && [ "$md_chg" = "1" ]; then
+          echo "⚠ WARN  [so/metadata] so 与 metadata 都已替换（${so_t:0:12}… / ${md_t:0:12}…）：机器只能确认「都换过」，无法断定二者来自同一次热更抓取 ⇒ 需文档/人工确认同源"
+          warn=$((warn+1))
+        elif [ "$mism" = "0" ]; then
+          echo "- PASS  [so/metadata] so 与 metadata 均与底包一致（未替换：${so_t:0:12}… / ${md_t:0:12}…）"
+          pass=$((pass+1))
+        fi
+      else
+        echo "- SKIP  [so/metadata] 底包内取不到 so/metadata（--base-apk 传错文件？）"
+        skip=$((skip+1))
+      fi
+    elif [ "$mism" = "0" ] && { [ -n "$expect_so" ] || [ -n "$expect_md" ]; }; then
+      echo "- PASS  [so/metadata] 已按 --expect-* 精确断言通过（so ${so_t:0:12}… / md ${md_t:0:12}…）"
+      pass=$((pass+1))
+    elif [ "$mism" = "0" ]; then
+      echo "- SKIP  [so/metadata] 未传 --base-apk/--expect-*：无法判定配套（IL2CPP 直装包建议传底包）"
+      skip=$((skip+1))
+    fi
+    if [ -n "$pair_bad" ]; then
+      echo "✗ FAIL  [so/metadata] ${pair_bad} ⇒ 混搭：干净机（无热更副本）会回退加载包内 so，启动即崩"
+      echo "        修：① 不换 so（用底包 so，mod 走按名兜底；先例 surgical_wdyz_7.6.3.sh 的 STARRY_SKIP_SO_SWAP=1）"
+      echo "            ② so + metadata + 资源成套更换（同一份热更抓取）"
+      echo "        逃生门：SO_META_CHECK=0（须在装机报告写明理由）"
+      fail=$((fail+1))
+    fi
   fi
 fi
 

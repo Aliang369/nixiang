@@ -121,30 +121,50 @@ fi
 RESERVE="/sdcard/Android/data/${PKG}.nxreserve"
 APPEXT="/sdcard/Android/data/${PKG}"
 
+# 设备 root 探测（一次，卸载/归位共用；2026-10-19 起无 root 也有正确路径）
+HAS_ROOT=0
+if adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c id" 2>/dev/null | grep -q "uid=0"; then HAS_ROOT=1; fi
+
 if [[ "$CLEAN" == 1 ]]; then
-  echo "== 异签名卸载重装（先保护外置数据）=="
+  echo "== 异签名卸载重装（先保护外置数据；root=$([ "$HAS_ROOT" == 1 ] && echo yes || echo no)）=="
   adbx shell am force-stop "$PKG" >/dev/null 2>&1 || true
-  echo "  保护 ${APPEXT} → ${RESERVE}"
-  RESERVE_CMD="rm -rf \"${RESERVE}\"; if [ -d \"${APPEXT}\" ]; then mv \"${APPEXT}\" \"${RESERVE}\"; fi; ls -d \"${RESERVE}\" 2>/dev/null"
-  if [[ "$DRY" == 1 ]]; then
-    adbsu "$RESERVE_CMD"
-    echo "  [dry-run] 跳过备胎核对（dry-run 无真实输出，不据此判定成功）"
-  else
-    adbsu "$RESERVE_CMD" > "${TMP}/reserve.txt" 2>&1 || true
-    cat "${TMP}/reserve.txt"
-    if grep -q "$RESERVE" "${TMP}/reserve.txt"; then
-      echo "  ✓ 备胎就位（mv 成功；同卷 rename、零额外空间）"
+  if [[ "$HAS_ROOT" == 1 ]]; then
+    echo "  保护 ${APPEXT} → ${RESERVE}"
+    RESERVE_CMD="rm -rf \"${RESERVE}\"; if [ -d \"${APPEXT}\" ]; then mv \"${APPEXT}\" \"${RESERVE}\"; fi; ls -d \"${RESERVE}\" 2>/dev/null"
+    if [[ "$DRY" == 1 ]]; then
+      adbsu "$RESERVE_CMD"
+      echo "  [dry-run] 跳过备胎核对（dry-run 无真实输出，不据此判定成功）"
     else
-      echo "  ! 外置资源目录不存在或 mv 失败（可能是新装、或机型不支持同卷 rename）"
-      if [[ "$ALLOW_LOSS" == 1 ]]; then
-        echo "  ! --allow-resource-loss 已显式给出 ⇒ 继续卸载（外置数据将丢失）"
+      adbsu "$RESERVE_CMD" > "${TMP}/reserve.txt" 2>&1 || true
+      cat "${TMP}/reserve.txt"
+      if grep -q "$RESERVE" "${TMP}/reserve.txt"; then
+        echo "  ✓ 备胎就位（mv 成功；同卷 rename、零额外空间）"
       else
-        echo "ERROR: 拒绝裸卸（避免静默丢大资源）。确认可丢时加 --allow-resource-loss" >&2
-        exit 3
+        echo "  ! 外置资源目录不存在或 mv 失败（可能是新装、或机型不支持同卷 rename）"
+        if [[ "$ALLOW_LOSS" == 1 ]]; then
+          echo "  ! --allow-resource-loss 已显式给出 ⇒ 继续卸载（外置数据将丢失）"
+        else
+          echo "ERROR: 拒绝裸卸（避免静默丢大资源）。确认可丢时加 --allow-resource-loss" >&2
+          exit 3
+        fi
       fi
     fi
+  else
+    # 无 root：卸载前无法把外置目录 mv 走（属 app uid），重装后也无法 chown/restorecon 归位
+    echo "  ! 设备无 root ⇒ 无法做外置数据备胎/归位；卸载会连带清 ${APPEXT}，重装后需重下资源"
+    if [[ "$ALLOW_LOSS" == 1 ]]; then
+      echo "  ! --allow-resource-loss 已显式给出 ⇒ 继续卸载（外置数据将丢失）"
+    else
+      echo "ERROR: 无 root 无法保护外置数据。确认可丢时加 --allow-resource-loss" >&2
+      exit 3
+    fi
   fi
-  adbsu "pm uninstall ${PKG}" || true
+  # 卸载：有 root 走 su；无 root 直接 adb uninstall（旧版只在 adbsu 里跑，无 su 时被 || true 静默吞掉）
+  if [[ "$HAS_ROOT" == 1 ]]; then
+    adbsu "pm uninstall ${PKG}" || true
+  else
+    adbx uninstall "${PKG}" 2>&1 | tail -2 || true
+  fi
 else
   echo "== 覆盖安装（不卸载）=="
   adbx shell am force-stop "$PKG" >/dev/null 2>&1 || true
@@ -160,20 +180,21 @@ else
   adbx install -r -d "$APK"
 fi
 
-if [[ "$CLEAN" == 1 && "$DRY" != 1 ]]; then
+if [[ "$CLEAN" == 1 && "$DRY" != 1 && "$HAS_ROOT" == 1 ]]; then
   echo "== 外置数据归位 =="
   NEW_UID="$(adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c 'stat -c %u /data/user/0/${PKG} 2>/dev/null || stat -c %u /data/data/${PKG} 2>/dev/null'" 2>/dev/null | tr -d '\r' | head -1)"
   case "$NEW_UID" in ''|*[!0-9]*) echo "ERROR: 取不到新 app uid（'${NEW_UID}'）⇒ 需人工归位，禁止声称收尾完成" >&2; exit 1;; esac
   echo "  新 uid = ${NEW_UID}（重装会重新分配；不 chown 则 app 读不到自己的外置目录）"
   RESTORE_CMD="R=\"${RESERVE}\"; T=\"${APPEXT}\"; if [ ! -d \"\$R\" ]; then echo NO_RESERVE; elif [ -d \"\$T/files/VFS\" ]; then echo TARGET_ALREADY_POPULATED; else rm -rf \"\$T\"; mv \"\$R\" \"\$T\"; chown -R ${NEW_UID}:${NEW_UID} \"\$T\"; restorecon -R \"\$T\" 2>/dev/null; du -sm \"\$T\" 2>/dev/null; echo RESTORED; fi"
   adbsu "$RESTORE_CMD"
+elif [[ "$CLEAN" == 1 && "$DRY" != 1 ]]; then
+  echo "== 外置数据归位：跳过（无 root 无法 chown/restorecon；资源由游戏重新下载）=="
 fi
 
 if [[ "$DRY" != 1 ]]; then
   # root 探测决定 --su：非 root 机（实测小米 96f0d883 无 su）只要 /data/app 对 shell 可读，
-  # 免 su 也能做 md5 核对；写死 --su 会让「装成功」被判成失败。
-  DEV_ROOT=0
-  if adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c id" 2>/dev/null | grep -q "uid=0"; then DEV_ROOT=1; fi
+  # 免 su 也能做 md5 核对；写死 --su 会让「装成功」被判成失败。复用开头的 HAS_ROOT，不再二次探测。
+  DEV_ROOT="$HAS_ROOT"
   echo "== 闭环核对（设备包 md5 == 本地产物；root=$([ "$DEV_ROOT" == "1" ] && echo yes || echo no)）=="
   V_ARGS=()
   [[ "$DEV_ROOT" == "1" ]] && V_ARGS=(--su)

@@ -272,6 +272,30 @@ bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [-
    - 同管道补证书自检：`... | grep -a -c 'BEGIN CERTIFICATE'` 应 ≥1；新游戏包 `assets/certs` 可省，详见 [surgical-build.md](surgical-build.md)「证书固定来源」
 3. 改过 Java（MenuService / StarryApp 等）时，baksmali 成品 dex 验改动真的打进了包，不信「源码已改」
 
+### 直装包不得「只换 libil2cpp.so」（2026-10-19 我的勇者 7.6.3「首装闪退」实证）
+
+热更构建与包内构建是**两份资产**：`libil2cpp.so` 与 `global-metadata.dat`（及 `.dll-resources`）必须**同源**。
+把热更 so 塞进底包、metadata 留底包版 ⇒ 干净机（无 `files/update/current` 副本）被游戏自带补丁框架
+（如 `r2.labs.unitypatch`：`PatchCheck.NewPatchSoDir == false` → `LoadLibrary.false`）回退加载包内 so
+⇒ il2cpp 互递归爆栈、启动约 7 s 崩；**已热更过的机器反而一切正常**（运行时根本不加载包内 so，见
+"清数据 = Mod + 热更资源双杀"同源证据）。
+
+- 出包二选一：① **不换 so**（用底包 so，Mod 走 `HookSlotInstall` 的按名兜底；先例 `surgical_wdyz_7.6.3.sh`
+  的 `STARRY_SKIP_SO_SWAP=1`）；② so + metadata + 资源**成套**换（同一份热更抓取，并写明来源与 sha256）。
+- 装前机检（必过）：`bash 04_scripts/_common/pre_install_gate.sh --apk 成品.apk --base-apk 官方底包` → 查9 配套关。
+  只换一个 = FAIL；两个都换 = WARN（机器判不了同源，需文档写明抓取来源与 sha256）。
+- 抓到的 RVA 必须标明属于哪份构建；写死 RVA 的补丁在换构建后必须**显式跳过并留日志**
+  （先例 `Games/WdyzMod.cpp` 无CD 补丁的 `expect drift → skip`），不得静默生效。
+
+### 干净安装才算验收（2026-10-19 起，全游戏）
+
+**覆盖安装 ≠ 首装验收。** 我的勇者 2026-10-18 在「已热更旧机」上覆盖安装验证通过即交付，次日干净机复现启动必崩。
+
+- 对外分发 / 换设备前必须做一次「卸载 → 全新安装 → `post_install_precheck.sh`」；覆盖安装只作附加证据。
+- 只做覆盖安装时，交付结论必须标 `NOT PROVEN：仅覆盖安装验证`，不得写「用户实测通过 / 已交付」。
+- 卸载会清 `/sdcard/Android/data/<pkg>` 与 app 私有数据 ⇒ 先取得用户同意；无 root 机走 `adb uninstall`
+  （`install_starry_apk.sh --clean` 自 2026-10-19 起自动降级，并明示「外置数据不可归位、重装需重下资源」）。
+
 ### MenuService 前台服务铁律（框架级，全游戏生效）
 
 Android 8+ `startForegroundService()` 后 **5 秒**内不进前台，系统直接杀进程。Application 越重的游戏（加固/热更/统计 SDK 越多）主线程越容易被占满而超时：
