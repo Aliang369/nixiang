@@ -1,0 +1,31 @@
+# 蛋壳战机私服 1.1.8 星空版 L2 决定性证据（2026-10-19/20 收尾轮）
+# 来源: 09_test/蛋壳战机/precheck_20261019_235900/logcat.txt
+
+== 初始化 ==
+10-19 23:59:04.456  9545  9627 I StarryMagic: [dkzjsf] 初始化成功
+
+== 12 hook 命中 ==
+ADModuleMgr.CheckAndPlayVideo hooked file=0x77E7A98
+AngleViewData.set_ShowSkills hooked file=0x790F48C
+BattleRecordManager.IsNeedUploadSaveData hooked file=0x74E1900
+BattleWorldContext.PostProcessLearnedSkill hooked file=0x6EE4654
+ContractDevilData.set_ShowSkills hooked file=0x79D4C2C
+EntityCharacter.ChangeHp hooked file=0x6C2A314
+EntityHero.ChangeHp hooked file=0x6D20180
+EntityHero.set_CurrentHp hooked file=0x6D227E0
+GameAdsManager.CheckAndPlayVideo hooked file=0x43C9720
+HurtBase.FinalizeAttackResult hooked file=0x6D39C44
+PunchboardViewData.set_ShowSkills hooked file=0x7E19A10
+RandomSkillResult.set_ShowSkills hooked file=0x6D03FE4
+hook 总数: 12
+
+== 菜单 ==
+10-19 23:59:02.927  9545  9545 I MenuService: native menu shown mode=ACTIVITY
+
+== 授权 ==
+10-19 23:59:02.909  9545  9545 I ModBridge: auth game_id synced from native: dkzjsf
+10-19 23:59:02.910  9545  9545 I ModBridge: auth game_id synced from native: dkzjsf
+10-19 23:59:02.927  9545  9625 I ModBridge: auth game_id synced from native: dkzjsf
+
+== 崩溃判定（应为 0）==
+FATAL/SIGSEGV/tombstone 命中: 0

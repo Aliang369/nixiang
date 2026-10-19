@@ -1,0 +1,7 @@
+# 蛋壳战机私服（com.wxdmxga.dkzj）预检标记 — post_install_precheck.sh 用
+# 格式：类别|ERE（'#' 注释）；menu_load/crash/crash_ignore 走脚本默认值
+pkg|com.wxdmxga.dkzj
+hook_hit|hooked
+hook_hit|初始化成功
+menu_shown|native menu shown
+auth_ok|auth game_id synced from native: dkzjsf

@@ -1,0 +1,36 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_20261020_20261020_001329",
+  "timestamp": "20261020_001329",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "07_patched/蛋壳战机",
+      "type": "dir",
+      "size_kib": 628,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/蛋壳战机",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_20261020_20261020_001329/07_patched/蛋壳战机"
+    },
+    {
+      "path": "09_test/蛋壳战机",
+      "type": "dir",
+      "size_kib": 192816,
+      "source": "/Users/aliang/Documents/nixiang/09_test/蛋壳战机",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_20261020_20261020_001329/09_test/蛋壳战机"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/libs_dkzjsf",
+      "type": "dir",
+      "size_kib": 1952,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dkzjsf",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_20261020_20261020_001329/mod菜单/starry-mod-menu/libs_dkzjsf"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/obj_dkzjsf",
+      "type": "dir",
+      "size_kib": 4340,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_dkzjsf",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_20261020_20261020_001329/mod菜单/starry-mod-menu/obj_dkzjsf"
+    }
+  ]
+}
