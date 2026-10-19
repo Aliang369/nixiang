@@ -23,3 +23,5 @@
 2026-10-19 20:31	11	2	「一直不会自动分解」排查：bag.bYJ/bYK/bXY 与 lm.cnp/cnq 在 1.1.4.0 与 1.1.6.0 完全一致(无漂移)=>非指纹问题。加一次性诊断(容器件数/锁定/可分解数/品质分布/api类型)+容器回落 bXk->bYn+包 bag.pk/pf 打协议 code+第20秒先探容器(不发协议)+可分解=0 时不空发协议。等 L3 日志定案(强候选: EquipTable.decompose 为空=「分解要50级」)	pipeline.log	未测
 2026-10-19 20:35	7	1	真机首轮机器证据：gold-card hooked: $eZ.monCard.fDq.fDf [发现方式=struct+behaviour] + 「放行 gold 卡判定 第1次调用」；包 76d24ba8 / so 21072642；等用户 L3 目视确认	logcat(precheck_20261019_203442)	未测
 2026-10-19 20:35	11	2	真机首轮机器证据：装备容器@bXk 共 5 件(锁定0, 品质1:3 2:1 4:1) 但可分解=0 ⇒ 「不会自动分解」根因＝当前装备按 EquipTable.decompose 全部不可分解(＝作者记录的「分解要50级」)，非钩子失效；bYJ/bYK/bXY 三个 api typeof 均为 function	logcat(precheck_20261019_203442)	未测
+2026-10-19 20:44	7	2	追加「结算特权翻卡」试验：hasPrivilege 全包 0 处写、3 处读 => 服务端字段(推断)；特权卡无 cost(客户端把 type=2 改发 type=1) => 安全放行：面板内 type=2 卡 hasPrivilege 置真 + 包 battleMgr.bFh 打服务端 code + 卡组统计行；包 3b9c398e / so 117aaa77；离线 132 pass/0 fail	logcat(precheck_20261019_204402)	未测
+2026-10-19 20:44	11	3	补充根因（与金卡同因）：结算面板 AdventureFinishPanel L48851-48868 里【游戏自带】的自动出售/自动分解整块被 fDf("gold") 门控，金卡失效期间该块不执行 => 「一直不分解」的主因；金卡修好后该路径打开，我们回城触发为第二重保险	静态对照 game/index.js 1.1.6.0	未测

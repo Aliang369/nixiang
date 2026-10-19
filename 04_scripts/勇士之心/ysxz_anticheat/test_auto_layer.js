@@ -135,7 +135,7 @@ function makeGame(sb, opt) {
 
   sb.win.$eZ = eZ;
   sb.win.__require = (id) => {
-    if (id === "$JX") return { $fb: { cvConfig: { panels: { AdventureFinishPanel: { n: 1 } } } } };
+    if (id === "$JX") return { $fb: { cvConfig: { panels: { AdventureFinishPanel: { n: 1 }, AdventureTurnCardPanel: { n: 2 } } } } };
     return null;
   };
   return { eZ, calls, lm, cardProto, cardData,
@@ -288,6 +288,33 @@ console.log("\nT2d 分解诊断 · 空容器不定稿(不许自己把功能锁�
   chk(sb.A.sdFinal === 1, "读到真实件数后定稿", sb.A.sdTotal);
   chk(sb.A.sdDecoable === 1, "可分解 1 件", sb.A.sdDecoable);
   chk(g.calls.deco.length === 1, "分解协议真的发出 1 次", g.calls.deco);
+}
+
+/* ============================================================== T2e ==== */
+/* 结算特权翻卡：只放行 type=2 的卡，别把别的组也改了；并且要能记录服务端 code。 */
+console.log("\nT2e 结算特权翻卡 · hasPrivilege 只放行特权组");
+{
+  const sb = makeSandbox();
+  const g = makeGame(sb, {});
+  const cards = {
+    f1: { type: 1, rewards: [] },
+    p2: { type: 2, rewards: [], hasPrivilege: false },
+    e3: { type: 3, rewards: [] }
+  };
+  const panel = { egb: new Map([["2", new Map([["0", cards.p2]])]]), list_privilege: {} };
+  const inner2 = panel.egb.get("2");
+  if (inner2) inner2.set("1", { type: 2, rewards: [] });
+  panel.egb.set("1", new Map([["0", cards.f1]]));
+  panel.egb.set("3", new Map([["0", cards.e3]]));
+  g.eZ.fguiMgr.cTO = () => panel;
+  sb.sw.gold = true;
+  sb.advance(1000);
+  chk(cards.p2.hasPrivilege === true, "type=2 特权卡被放行");
+  chk(cards.f1.hasPrivilege === undefined, "type=1 免费卡没被改");
+  chk(cards.e3.hasPrivilege === undefined, "type=3 道具卡没被改");
+  chk(sb.has(/\[tc\] 翻卡面板卡组: 免费=1 特权=2 道具=1/), "打了一行卡组统计", sb.MOD_LOG.slice(-2));
+  chk(sb.state().tcPatched >= 2, "状态口记录放行张数", sb.state().tcPatched);
+  sb.sw.gold = false;
 }
 
 /* ================================================================ T3 ===== */
@@ -589,10 +616,11 @@ console.log("\nT9 __AUTO_STATE__ 字段齐全");
   const st = sb.state();
   const want = ["v", "gold", "goldKey", "goldHow", "goldN", "repeatFlag", "repeatClicks", "sell", "deco",
                 "sellQ", "decoQ", "sdDump", "sdTotal", "sdLocked", "sdDecoable",
-                "protoSent", "protoCode", "wear", "wearOk", "wearEmpty", "ticks", "battles",
+                "protoSent", "protoCode", "tcPatched", "tcFlips", "tcCode",
+                "wear", "wearOk", "wearEmpty", "ticks", "battles",
                 "inLatch", "busy", "errs", "lastErr", "warns", "note"];
   const miss = want.filter((k) => !(k in st));
-  chk(miss.length === 0, "28 个诊断字段都在", miss);
+  chk(miss.length === 0, "31 个诊断字段都在", miss);
   chk(Object.keys(st).length === want.length, "没有多余字段(口径稳定)", Object.keys(st).length);
   chk(st.ticks === 1, "ticks 随 tick 增长", st.ticks);
   sb.advance(1000);

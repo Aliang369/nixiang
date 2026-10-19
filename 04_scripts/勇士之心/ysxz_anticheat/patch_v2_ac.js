@@ -701,6 +701,106 @@
     } catch (e) { err("gold", e); return false; }
   }
 
+  /* ============================================ (1b) 结算「特权翻卡」放行 ====
+   * 2026-10-19 用户反馈：「解锁金卡后，结算翻卡额外获得装备怎么没有？」
+   * 代码事实（assets/game/index.js 1.1.6.0）：
+   *   · 翻卡面板 AdventureTurnCardPanel 把卡分三组：$DD.c=1 免费 / $DD.d=2 特权 / $DD.e=3 道具
+   *   · 特权组每张卡能否翻，只看【服务端下发的那张卡对象上的 hasPrivilege】
+   *     （L51761 `this.egP.hasPrivilege || (n = !1)`；L51822 无该字段则显示「购买月卡后获得」）
+   *   · 该字段全包只有 3 处【读】、0 处【写】⇒ 不是客户端按 monCard.fDf("gold") 现算的
+   *     ⇒ 本地伪造金卡 buff 改不动它，这是「怎么没有」的直接原因。
+   *   · 特权翻卡【不消耗道具】：L51893 `if (egR == a.d) e = a.c` —— 特权卡按「免费」发请求，
+   *     服务端才是最终裁决方（协议 FightInstance.selectCard）。
+   * 因此这里做两件事（都只在金卡开关开着时）：
+   *   ① 把面板里 type=2 的卡对象 hasPrivilege 置 true，让客户端愿意发请求；
+   *   ② 包一层 battleMgr.bFh(selectCard)，把服务端返回的 code 打出来 ⇒ 能不能拿到由证据说话。
+   * 拿不到也只是回一个错误码，不会扣道具/脏数据（特权组本身无 cost）。 */
+  var TC = { seen: null, patched: 0, dumpN: 0, flipN: 0, flipCode: "", hooked: false };
+  function tcPanel() {
+    try {
+      var fgm = F() && F().fguiMgr;
+      if (!fgm) return null;
+      var cfg = getPanelCfg("AdventureTurnCardPanel");
+      if (cfg && typeof fgm.cTO === "function") { try { var p = fgm.cTO(cfg); if (p) return p; } catch (e) {} }
+      if (cfg && typeof fgm.cTK === "function" && fgm.cTK(cfg) && typeof fgm.cTU === "function") return fgm.cTU();
+      var top = typeof fgm.cTU === "function" ? fgm.cTU() : null;
+      var tk = top ? String((top.vJ && top.vJ.cUV) || "") : "";
+      if (tk && tk.indexOf("TurnCard") >= 0) return top;
+    } catch (e) {}
+    return null;
+  }
+  function tcHookFlip() {
+    if (TC.hooked) return;
+    try {
+      var bm = F() && F().battleMgr;
+      if (!bm || typeof bm.bFh !== "function") return;
+      var of = bm.bFh;
+      bm.bFh = function (t) {
+        var pr;
+        TC.flipN++;
+        try { pr = of.apply(this, arguments); } catch (e) { throw e; }
+        try {
+          if (pr && pr.then) {
+            pr.then(function (r) {
+              var code = r && r.code;
+              TC.flipCode = "code=" + code;
+              if (TC.flipN <= 6) log("[tc] 翻卡协议(selectCard type=" + (t && t.type) + ") 返回 code=" + code);
+            }, function (e2) {
+              TC.flipCode = "reject";
+              if (TC.flipN <= 6) log("[tc] 翻卡协议 rejected: " + msgOf(e2));
+            });
+          }
+        } catch (e3) {}
+        return pr;
+      };
+      TC.hooked = true;
+      log("[tc] 翻卡协议已挂钩：能拿到服务端 code（0=成功，其它=被拒）");
+    } catch (e) { err("tc/hook", e); }
+  }
+  function tcSweep() {
+    if (!FEAT(6)) return;
+    tcHookFlip();
+    var p = tcPanel();
+    if (!p) return;
+    var found = { 1: 0, 2: 0, 3: 0 }, patched = 0, nodes = 0;
+    var seen = new Map(), q = [p];
+    while (q.length && nodes < 4000) {
+      var o = q.shift(); nodes++;
+      if (!o || typeof o !== "object" || seen.has(o)) continue;
+      seen.set(o, 1);
+      if (typeof o.type === "number" && o.rewards) {
+        found[o.type] = (found[o.type] || 0) + 1;
+        if (o.type === 2 && o.hasPrivilege !== true) { o.hasPrivilege = true; patched++; }
+        continue;
+      }
+      /* Map / Array 必须显式展开：for-in 在 Map 上拿不到任何元素，
+       * 少这一步的表现是"面板找到了但 0 张卡"（离线验收台当场抓到的）。 */
+      try {
+        if (o instanceof Map) {
+          o.forEach(function (v) { if (v && typeof v === "object") q.push(v); });
+          continue;
+        }
+        if (Array.isArray(o)) {
+          for (var ai = 0; ai < o.length && ai < 500; ai++) {
+            var av = o[ai]; if (av && typeof av === "object") q.push(av);
+          }
+          continue;
+        }
+      } catch (e0) {}
+      for (var k in o) {
+        try { var v = o[k]; if (v && typeof v === "object") q.push(v); } catch (e) {}
+      }
+    }
+    if (!TC.dumpN) {
+      TC.dumpN = 1;
+      log("[tc] 翻卡面板卡组: 免费=" + found[1] + " 特权=" + found[2] + " 道具=" + found[3]
+          + (found[2] ? " -> 已把 " + patched + " 张特权卡的 hasPrivilege 置真(等点一次看服务端 code)" : " -> 本副本没有特权卡组(配置里就没有)"));
+    } else if (patched) {
+      log("[tc] 又放行 " + patched + " 张特权卡");
+    }
+    if (patched) TC.patched += patched;
+  }
+
   /* ============================================== (2) 自动重复挑战 =========
    * 两路并用，照抄他：
    *  (2a) 写游戏自己的自动挑战位 lm.cms.autoBattleFlag bit1（幂等，只在变化时写）
@@ -1086,6 +1186,7 @@
     try { repeatFlagSync(); } catch (e) {}
     try { repeatTick(); } catch (e) {}
     try { cleanupTick(); } catch (e) {}
+    try { tcSweep(); } catch (e) { err("tc", e); }
     /* 第 20 秒探一次装备容器（不发任何协议）：
      * 用户可能还没打一局，而「分解到底有没有可分解件」是静态就能答的问题。
      * 这样即使 cleanupTick 的"回城那一拍"没触发，日志里也有容器事实可判。 */
@@ -1104,6 +1205,7 @@
       v: A.__v,
       gold: A.goldHooked, goldKey: A.goldKey, goldHow: A.goldHow, goldN: A.goldAllowN,
       repeatFlag: A.repeatFlagSync, repeatClicks: A.repeatClickN,
+      tcPatched: TC.patched, tcFlips: TC.flipN, tcCode: TC.flipCode,
       sell: A.sellN, deco: A.decoN, sellQ: A.lastSellQ, decoQ: A.lastDecoQ,
       sdDump: A.sdDump, sdTotal: A.sdTotal, sdLocked: A.sdLocked, sdDecoable: A.sdDecoable,
       protoSent: A.protoSent, protoCode: A.protoCode,
