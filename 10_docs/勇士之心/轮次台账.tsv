@@ -25,3 +25,4 @@
 2026-10-19 20:35	11	2	真机首轮机器证据：装备容器@bXk 共 5 件(锁定0, 品质1:3 2:1 4:1) 但可分解=0 ⇒ 「不会自动分解」根因＝当前装备按 EquipTable.decompose 全部不可分解(＝作者记录的「分解要50级」)，非钩子失效；bYJ/bYK/bXY 三个 api typeof 均为 function	logcat(precheck_20261019_203442)	未测
 2026-10-19 20:44	7	2	追加「结算特权翻卡」试验：hasPrivilege 全包 0 处写、3 处读 => 服务端字段(推断)；特权卡无 cost(客户端把 type=2 改发 type=1) => 安全放行：面板内 type=2 卡 hasPrivilege 置真 + 包 battleMgr.bFh 打服务端 code + 卡组统计行；包 3b9c398e / so 117aaa77；离线 132 pass/0 fail	logcat(precheck_20261019_204402)	未测
 2026-10-19 20:44	11	3	补充根因（与金卡同因）：结算面板 AdventureFinishPanel L48851-48868 里【游戏自带】的自动出售/自动分解整块被 fDf("gold") 门控，金卡失效期间该块不执行 => 「一直不分解」的主因；金卡修好后该路径打开，我们回城触发为第二重保险	静态对照 game/index.js 1.1.6.0	未测
+2026-10-19 20:50	7	4	L3 用户确认：结算翻卡面板点【特权牌】能翻开并拿到奖励（服务端 code=0 放行）=> 解锁金卡+hasPrivilege 放行这条链在真机成立；包 3b9c398e / so 117aaa77	pipeline.log	有效
