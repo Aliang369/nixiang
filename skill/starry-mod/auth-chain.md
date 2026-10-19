@@ -114,3 +114,26 @@ bash 04_scripts/_common/ensure_starry_device_id_seed.sh
 ```
 
 详见经验卡：`10_docs/_templates/经验_卡密设备指纹跨包一致.md` 和 `10_docs/_templates/全游戏卡密_复现路径与防再发.md`
+
+---
+
+## 机器恢复（card_key 直登，无需走 App UI）
+
+冷启/重装后要恢复授权会话，不必走登录 UI，直接 curl 换 token/grant 再 seed（实测于霓虹深渊2 r22，2026-10-19）：
+
+```bash
+CARD='AL-XXXX-XXXX-XXXX-XXXX'; GAME='<game_id>'; DEV='<device_id>'
+curl -sk https://47.100.216.101:8443/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d "{\"card_key\":\"$CARD\",\"game_id\":\"$GAME\",\"device_id\":\"$DEV\"}"
+```
+
+- 响应体取 `data.token` + `data.grant`（grant 形如 `1|device|game|exp|menu|card|kid.hexsig`，HMAC-SHA256 验签，pepper 见上文「apply_grant_utf8」）。
+- 拿到后 seed（跨游戏务必带 `--pkg`，脚本默认 `com.veewo.neonabyss2`）：
+  ```bash
+  bash 04_scripts/_common/starry_prefs_edit.sh --seed-auth \
+    --grant '<上一步 data.grant>' --token '<data.token>' --card "$CARD" \
+    [--exp '<ISO 时间>'] [--last-ok <毫秒时间戳>] [--launch --verify]
+  ```
+- 功能开关恢复：`--seed-features 5,7,8,9,10,11,12`（槽位号照 `10_docs/{游戏}/{id}_menu_template.json`）。
+- 卡密 / device_id / game_id 取值见 `10_docs/{游戏}/硬约束.md`；game_id 跨渠道独立（见 `SKILL.md`「分发与装机红线」）。

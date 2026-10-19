@@ -327,6 +327,11 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    如果已经用 `git add` 精确暂存，可加 `--staged-only`；该模式不会再次 `git add`，只校验暂存区全部落在显式白名单、过空白门禁后提交并推送。
    若白名单文件可能混有其它会话改动，加 `--require-clean-paths`。该检查会在提交前确认白名单路径没有未暂存改动；有混合改动时先做 hunk 级暂存，再走 `--staged-only`，禁止用路径级 `git add -A` 直接吞入无关改动。
 
+   **提交时机（2026-10-19 霓虹深渊2 r22 补）**：git 提交要放在「pipeline settle」之后——先把
+   `pipeline_record_cleanup.py --apply` 与 `pipeline.sh <游戏> verify <stage> --set`（置回 9/9 done）
+   全部跑完，再走本步提交；否则提交后 `verify --set` 会再改写 `pipeline.json` 的阶段状态/指纹，
+   产生二次未提交 diff（r22 实测：先提交时 8/9 done，后 settle 到 9/9，pipeline.json 留 17 行未提交）。
+
    **三条共享文件硬规则（2026-09-30 补，勇士之心收官实际踩过，提交 `9aed48b9` 混入他会话 17 行 → `7d5e331c` 修正）**：
 
    a. **共享文件禁止路径级 add**：`mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java`、`10_docs/_state/current.md`、`10_docs/_state/底包再获取台账.md` 是多会话同时改的文件。

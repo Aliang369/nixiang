@@ -219,7 +219,11 @@ need_device() {
   $ADB get-state >/dev/null 2>&1 || die "设备未就绪（adb get-state 失败；用 --serial 指定）"
 }
 
-pid_of() { $ADB shell pidof "${PKG}" 2>/dev/null | tr -d '\r\n' ; }
+# ★2026-10-17 r20 实测修：`set -euo pipefail` 下「进程已停」时设备侧 pidof 返回 1
+#   ⇒ 管道整体非 0 ⇒ `p="$(pid_of)"` 赋值即触发 set -e 退出（rc=1、无任何提示），
+#   而「进程已停」恰恰是本脚本的**正常路径** ⇒ 该工具自建立起就没在真机跑通过。
+#   与 dce4855f「pipefail 下 grep -q 被 SIGPIPE 静默跳过」同类：显式把失败吞掉。
+pid_of() { $ADB shell pidof "${PKG}" 2>/dev/null | tr -d '\r\n' || true ; }
 
 pull_prefs() { # $1 = 目标本地文件
   $ADB exec-out su 0 cat "${REMOTE}" > "$1" 2>/dev/null || return 1
@@ -270,7 +274,17 @@ seed() {
   log "进程已停（pid 空）"
 
   # ② 拉 App 自己写的文件并体检（原地拼接的前提）
-  pull_prefs "${cur}" || die "拉取 ${REMOTE} 失败（App 必须先跑过一次生成该文件）"
+  # ★2026-10-19 r22 实测：干净安装后 shared_prefs/ 目录不存在，pull 拉回的是 cat 的
+  #   「No such file」文本，validate_xml 会报「根元素不是 <map>」。这里自动冷启一次生成
+  #   prefs 再拉（幂等：prefs 已存在则一次 pull 命中、直接跳过，不触发冷启）。
+  if ! pull_prefs "${cur}" || ! grep -q '<map>' "${cur}" 2>/dev/null; then
+    log "prefs 不存在/非 <map>（干净安装或 App 从未跑过）⇒ 冷启一次生成"
+    $ADB shell monkey -p "${PKG}" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
+    sleep 10
+    $ADB shell am force-stop "${PKG}" >/dev/null 2>&1 || true
+    sleep 2
+    pull_prefs "${cur}" || die "冷启后仍拉取 ${REMOTE} 失败（请确认 App 可正常启动）"
+  fi
   cp "${cur}" "${TMPDIR_LOCAL}/orig.copy"
   validate_xml "${cur}" || die "设备上的原文件本身就不合法（见上），先按提示修它再预置" 3
 
