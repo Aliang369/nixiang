@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 绿梦：时空之声 —— 独立 mod 程序集 StarryLvmeng.dll
+       由 Assembly-ACT.dll 里 Hello::Run() 的 prefix 用
+         Assembly.Load(File.ReadAllBytes(<候选目录>/starry_lvmeng.dll))
+       从**文件路径**加载（热更 C# 不能 P/Invoke，也不能依赖编译期合并）。
+       引用集合刻意只留 5 个（mscorlib/System/System.Core/UnityEngine.CoreModule/Assembly-ACT），
+       构建后用 `ilpatch refs` 核对 AssemblyRef 表必须恰好是这 5 个。
+       DisableImplicitFrameworkReferences=true ⇒ 只用 06_dumped 里游戏自带的引用程序集，
+       避免 mix 桌面 .NET Framework 的引用导致运行期 AssemblyRef 版本对不上。 -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <BypassFrameworkInstallChecks>true</BypassFrameworkInstallChecks>
+    <AssemblyName>StarryLvmeng</AssemblyName>
+    <RootNamespace>Starry</RootNamespace>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>9.0</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1701;CS1702</NoWarn>
+    <DumpDir Condition="'$(DumpDir)' == ''">$(MSBuildThisFileDirectory)../../../06_dumped/绿梦_20261019/hotfix_dll</DumpDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib">
+      <HintPath>$(DumpDir)/mscorlib.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>$(DumpDir)/System.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>$(DumpDir)/System.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(DumpDir)/UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Assembly-ACT">
+      <HintPath>$(DumpDir)/Assembly-ACT.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Bamboo.ECS.Runtime">
+      <HintPath>$(DumpDir)/Bamboo.ECS.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
