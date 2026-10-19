@@ -1,0 +1,57 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130",
+  "timestamp": "20261019_205130",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "03_decompiled/勇士之心_cardkey_20261007",
+      "type": "dir",
+      "size_kib": 130304,
+      "source": "/Users/aliang/Documents/nixiang/03_decompiled/勇士之心_cardkey_20261007",
+      "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130/03_decompiled/勇士之心_cardkey_20261007"
+    },
+    {
+      "path": "09_test/勇士之心",
+      "type": "dir",
+      "size_kib": 144312,
+      "source": "/Users/aliang/Documents/nixiang/09_test/勇士之心",
+      "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130/09_test/勇士之心"
+    },
+    {
+      "path": ".ysxz_103_build",
+      "type": "dir",
+      "size_kib": 52620,
+      "source": "/Users/aliang/Documents/nixiang/.ysxz_103_build",
+      "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130/.ysxz_103_build"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/libs_ysxz",
+      "type": "dir",
+      "size_kib": 932,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_ysxz",
+      "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130/mod菜单/starry-mod-menu/libs_ysxz"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/app/build",
+      "type": "dir",
+      "size_kib": 50104,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/build",
+      "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130/mod菜单/starry-mod-menu/app/build"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/build",
+      "type": "dir",
+      "size_kib": 136,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/build",
+      "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130/mod菜单/starry-mod-menu/build"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/.gradle",
+      "type": "dir",
+      "size_kib": 488,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/.gradle",
+      "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261019_20261019_205130/mod菜单/starry-mod-menu/.gradle"
+    }
+  ]
+}
