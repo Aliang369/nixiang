@@ -1,0 +1,177 @@
+{
+  "in_root": "/Users/aliang/Documents/nixiang/09_test/勇士之心/regrab_20261019",
+  "out_root": "/Users/aliang/Documents/nixiang/06_dumped/勇士之心/hotupdate_20261019",
+  "key_full": "237GaogniB!@#$1sdf546685",
+  "key_effective": "237GaogniB!@#$1s",
+  "count": 24,
+  "files": [
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/MiniGameXXL/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/MiniGameXXL/index.js",
+      "encrypted_size": 14625,
+      "xxtea_size": 14613,
+      "plain_size": 65055
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/base/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/base/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/battleCommonRender/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/battleCommonRender/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/battleLogic/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/battleLogic/index.js",
+      "encrypted_size": 71185,
+      "xxtea_size": 71174,
+      "plain_size": 312776
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/battleRender/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/battleRender/index.js",
+      "encrypted_size": 62113,
+      "xxtea_size": 62102,
+      "plain_size": 295720
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/battleRes/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/battleRes/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/battleSound/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/battleSound/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/ccui/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/ccui/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/clientCfg/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/clientCfg/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/config/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/config/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/fgui/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/fgui/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/game/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/game/index.js",
+      "encrypted_size": 1015469,
+      "xxtea_size": 1015458,
+      "plain_size": 6413012
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/internal/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/internal/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/main/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/main/index.js",
+      "encrypted_size": 254497,
+      "xxtea_size": 254486,
+      "plain_size": 1106910
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/map/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/map/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/mcAtlas/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/mcAtlas/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/model/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/model/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/assets/sproto/index.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/assets/sproto/index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/jsb-adapter/jsb-builtin.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/jsb-adapter/jsb-builtin.js",
+      "encrypted_size": 63625,
+      "xxtea_size": 63615,
+      "plain_size": 361613
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/jsb-adapter/jsb-engine.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/jsb-adapter/jsb-engine.js",
+      "encrypted_size": 37501,
+      "xxtea_size": 37489,
+      "plain_size": 228789
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/main.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/main.js",
+      "encrypted_size": 1685,
+      "xxtea_size": 1673,
+      "plain_size": 4988
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/src/assets/bingo/src/fgui/fairygui.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/src/assets/bingo/src/fgui/fairygui.js",
+      "encrypted_size": 77909,
+      "xxtea_size": 77898,
+      "plain_size": 420012
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/src/cocos2d-jsb.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/src/cocos2d-jsb.js",
+      "encrypted_size": 386345,
+      "xxtea_size": 386336,
+      "plain_size": 1684891
+    },
+    {
+      "src": "09_test/勇士之心/regrab_20261019/src/settings.js",
+      "dst": "06_dumped/勇士之心/hotupdate_20261019/src/settings.js",
+      "encrypted_size": 237,
+      "xxtea_size": 226,
+      "plain_size": 355
+    }
+  ]
+}

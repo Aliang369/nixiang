@@ -142,6 +142,29 @@ function makeGame(sb, opt) {
            setTop: (t) => { top = t; } };
 }
 
+/* 1.1.6.0 真机形态：$eZ.monCard.fDs(明文 Basic/Premium/buffId 配置) + fDq 数据对象，
+ * 原型上同时有 fDf(持有,boolean) / fDi(剩余秒数,number) / fDh(配置存在,含 findByKey)。
+ * 函数体用 new Function 生成，保证 toString() 里带着真机同款明文锚点。 */
+function makeGame116(sb) {
+  const eZ = {};
+  eZ.battleMgr = { bEu: { no: () => false } };
+  eZ.localMgr = { cms: { autoBattleFlag: 0 }, cnp: () => false, cnq: () => false };
+  eZ.bag = {};
+  eZ.monCard = {};
+  eZ.monCard.fDs = { Basic: { buffId: 11, goodsId: 80101 }, Premium: { buffId: 22, goodsId: 80102 } };
+  eZ.buff = { bYZ: { bYS: () => false, bYU: () => undefined } };
+  eZ.cfgMgr = { tbl: { BuffChildTable: { findByKey: () => null }, ShopGoodsTable: { findByKey: () => null } } };
+  const mk = (body) => new Function("$eZ", "return function (cardType) {" + body + "};")(eZ);
+  const fDf = mk('var e = "silver" === cardType ? $eZ.monCard.fDs.Basic.buffId : $eZ.monCard.fDs.Premium.buffId; return $eZ.buff.bYZ.bYS(e);');
+  const fDi = mk('var e = "silver" === cardType ? $eZ.monCard.fDs.Basic.buffId : $eZ.monCard.fDs.Premium.buffId; var n = $eZ.buff.bYZ.bYU(e); return n ? 1 : 0;');
+  const fDh = mk('var e = "silver" === cardType ? $eZ.monCard.fDs.Basic.buffId : $eZ.monCard.fDs.Premium.buffId; return null != $eZ.cfgMgr.tbl.BuffChildTable.findByKey(e);');
+  const proto = { fDf, fDi, fDh, fDg: function (t) { return this.fDf(t) || this.fDf("gold"); } };
+  const data = Object.create(proto);
+  eZ.monCard.fDq = data;
+  sb.win.$eZ = eZ;
+  return { eZ, proto, data };
+}
+
 /* 战斗信号通道②：过检测层的 tickSeen 在涨 = 在战斗里（真机已验证这条链是通的） */
 function acTick(sb, n) { sb.win.__starry_ac = { tickSeen: n }; }
 
@@ -155,7 +178,7 @@ console.log("T1 装载 + 版本仲裁");
 {
   const sb = makeSandbox();
   chk(!!sb.A && typeof sb.win.__AUTO_STATE__ === "function", "装载成功, __starry_auto / __AUTO_STATE__ 都在");
-  chk(sb.win.__starry_auto.__v === 1, "版本号 __v === 1");
+  chk(sb.win.__starry_auto.__v === 2, "版本号 __v === 2(1.1.6.0 结构化发现)");
   chk(sb.count(/auto layer v1 loaded/) === 1, "装载日志已打 1 条(不重复计数 = 两个日志通道是独立的)", sb.count(/auto layer v1 loaded/));
   chk(sb.MOD_LOG.some((s) => /auto layer v1 loaded/.test(s)), "MOD_LOG 通道也收到了同一条");
   chk(sb.pendingTimers() === 1, "主循环已挂上一条 1s 定时器(常驻驱动)", sb.pendingTimers());
@@ -180,7 +203,7 @@ console.log("\nT2 解锁金卡");
   sb.advance(1000);
   chk(sb.A.goldHooked === true, "开关开: 钩子装上");
   chk(sb.A.goldKey === "monCard.fDn.fDc", "记录的方法名 = monCard.fDn.fDc(不是写死的短名)");
-  chk(sb.has(/gold-card hooked: \$eZ\.monCard\.fDn\.prototype\.fDc/), "打了 hooked 日志");
+  chk(sb.has(/gold-card hooked: \$eZ\.monCard\.fDn\.fDc \[发现方式=legacy-name\]/), "打了 hooked 日志(带发现方式)");
   chk(g.cardProto.fDc.__starryGold === true, "包装器打了 __starryGold 戳");
   chk(g.cardProto.fDc.__starryGoldOrig !== undefined, "留了 __starryGoldOrig(原函数)");
 
@@ -200,6 +223,71 @@ console.log("\nT2 解锁金卡");
   chk(sb.count(/gold: 放行 gold 卡判定/) === 3, "放行证据日志封顶 3 条(不刷屏)", sb.count(/gold: 放行 gold 卡判定/));
   // 计数口径：第 1 次(gold) + 开关关掉那一次【不计】 + 这 5 次 = 6
   chk(sb.A.goldAllowN === 6, "计数照常累加(与日志封顶无关)", sb.A.goldAllowN);
+}
+
+/* =============================================================== T2b ===== */
+/* 2026-10-19 真机回归：res 1.1.6.0 把该类的短名整体漂移
+ *   monCard.fDn -> fDq   /   原型 fDc(持有,boolean) -> fDf
+ *   同族混淆项: fDi(剩余秒数,number) / fDh(商品配置是否存在,含 findByKey)
+ * 断言：结构+行为两级发现必须挑中 fDf，而不是靠旧短名，也不能挑到 number 那条。 */
+console.log("\nT2b 解锁金卡 · 1.1.6.0 短名整体漂移(真实形态)");
+{
+  const sb = makeSandbox();
+  const g = makeGame116(sb);
+  sb.sw.gold = true;
+  sb.advance(1000);
+  chk(sb.A.goldHooked === true, "结构+行为两级发现挂上了钩子");
+  chk(sb.A.goldHow === "struct+behaviour", "发现方式 = struct+behaviour(不是靠旧短名)", sb.A.goldHow);
+  chk(sb.A.goldKey === "monCard.fDq.fDf", "定位到 fDq 的 fDf(持有判定)", sb.A.goldKey);
+  chk(g.proto.fDf.__starryGold === true, "包装器打在 fDf 上");
+  chk(g.proto.fDi.__starryGold === undefined, "没有误挂到 fDi(剩余秒数那条)");
+  chk(g.proto.fDh.__starryGold === undefined, "没有误挂到 fDh(配置存在那条)");
+  chk(g.proto.fDf("gold") === true, "fDf('gold') -> true(放行)");
+  chk(g.proto.fDf("silver") === false, "fDf('silver') 走原逻辑(未持有时仍是 false)");
+  chk(g.proto.fDi("gold") === 0, "fDi 未被改动(仍返回 number)");
+  sb.sw.gold = false;
+  chk(g.proto.fDf("gold") === false, "关掉开关 -> 立刻回原值 false");
+}
+
+/* =============================================================== T2c ===== */
+/* 原型被冻结时不许假成功：goldHooked 必须是 false 且留一条 pin 告警。 */
+console.log("\nT2c 解锁金卡 · 原型冻结 -> 不许假成功");
+{
+  const sb = makeSandbox();
+  const g = makeGame116(sb);
+  Object.freeze(g.proto);
+  sb.sw.gold = true;
+  sb.advance(1000);
+  chk(sb.A.goldHooked === false, "写不进去 => goldHooked 保持 false(不假成功)");
+  chk(sb.has(/warn: 解锁金卡: 定位到 monCard\.fDq\.fDf 但原型被冻结/), "留了 pin 告警", sb.MOD_LOG.slice(-3));
+  chk(sb.A.goldKey === "", "没有登记 goldKey");
+}
+
+/* ============================================================== T2d ==== */
+/* 诊断自身不许把功能锁死：第 20 秒在登录/选角阶段扫到"0 件"时不能定稿，
+ * 否则进游戏后永远走"跳过:0 件可分解"这条分支。 */
+console.log("\nT2d 分解诊断 · 空容器不定稿(不许自己把功能锁死)");
+{
+  const sb = makeSandbox();
+  const g = makeGame(sb, {});
+  const items = [];
+  const box = { d: { bdn: (cb) => items.forEach(cb) } };
+  g.eZ.bag.bXk = () => box;
+  g.eZ.bag.bXh = () => ({ quality: 1 });
+  g.eZ.bag.bXY = () => true;
+  sb.sw.deco = true;
+  sb.advance(20000);                              // 第 20 秒探容器（此时 0 件）
+  chk(sb.A.sdFinal === 0, "空容器不定稿");
+  chk(sb.A.sdDump === "wait", "标记为 wait", sb.A.sdDump);
+  chk(sb.has(/还是空的/), "打了一条‘还是空的’");
+
+  items.push({ gridId: 1, itemId: 100, amount: 1 });   // 进游戏后背包才有件
+  acTick(sb, 100); sb.advance(1000);                   // 进战斗
+  sb.advance(1000);                                    // 回城触发清理
+  sb.advance(900);
+  chk(sb.A.sdFinal === 1, "读到真实件数后定稿", sb.A.sdTotal);
+  chk(sb.A.sdDecoable === 1, "可分解 1 件", sb.A.sdDecoable);
+  chk(g.calls.deco.length === 1, "分解协议真的发出 1 次", g.calls.deco);
 }
 
 /* ================================================================ T3 ===== */
@@ -499,11 +587,12 @@ console.log("\nT9 __AUTO_STATE__ 字段齐全");
   makeGame(sb, {});
   sb.advance(1000);
   const st = sb.state();
-  const want = ["v", "gold", "goldKey", "goldN", "repeatFlag", "repeatClicks", "sell", "deco",
-                "sellQ", "decoQ", "wear", "wearOk", "wearEmpty", "ticks", "battles",
+  const want = ["v", "gold", "goldKey", "goldHow", "goldN", "repeatFlag", "repeatClicks", "sell", "deco",
+                "sellQ", "decoQ", "sdDump", "sdTotal", "sdLocked", "sdDecoable",
+                "protoSent", "protoCode", "wear", "wearOk", "wearEmpty", "ticks", "battles",
                 "inLatch", "busy", "errs", "lastErr", "warns", "note"];
   const miss = want.filter((k) => !(k in st));
-  chk(miss.length === 0, "21 个诊断字段都在", miss);
+  chk(miss.length === 0, "28 个诊断字段都在", miss);
   chk(Object.keys(st).length === want.length, "没有多余字段(口径稳定)", Object.keys(st).length);
   chk(st.ticks === 1, "ticks 随 tick 增长", st.ticks);
   sb.advance(1000);
@@ -559,7 +648,7 @@ console.log("\nT11 改名诊断(把静默失效变成一条日志)");
   acTick(sb, 0);
   sb.sw.gold = true; sb.sw.repeat = true; sb.sw.sell = true; sb.sw.wear = true;
   sb.advance(1000);
-  chk(sb.has(/warn: 解锁金卡: monCard\.fDn 原型上的 fDc 不是函数/), "金卡短名改名 -> 告警");
+  chk(sb.has(/warn: 解锁金卡: monCard 下找不到「持有判定」方法/), "金卡短名改名 -> 告警");
   chk(sb.has(/warn: 自动重复挑战: \$eZ\.fguiMgr 不存在/), "面板管理器改名 -> 告警");
   chk(sb.A.goldHooked === false, "改名后绝不假装挂上了(goldHooked 保持 false)");
   chk(g.cardData.fDc === undefined, "改名后没有往原型上硬塞 fDc(不污染游戏对象)");

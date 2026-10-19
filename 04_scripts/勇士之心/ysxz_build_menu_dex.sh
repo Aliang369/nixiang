@@ -90,7 +90,12 @@ if LC_ALL=C grep -aq -- 'YsxzAppComponentFactory' "$DEX"; then
   die "新 dex 里混进了 1.0.4 的过检测类 YsxzAppComponentFactory"
 fi
 SZ="$(wc -c < "$DEX")"
-[[ "$SZ" -ge 400000 && "$SZ" -le 550000 ]] || die "classes4.dex 体积异常：$SZ"
+# 体积门禁只挡「明显不是这份 dex」的产物（漏搬/多搬/空壳），不做精确断言。
+# 2026-10-19 上界 550000 -> 700000：菜单源码本轮确实长大了（480140 -> 562568 B），
+# 新增类经 baksmali 对照为 FkssjHooks / LvmengPayloadProvider / StarryH5Provider /
+# menu.Diag / InjectJournal / ModTarget 与一批 lambda 合成类，属共享菜单源正常演进，
+# 不是误搬别的游戏 dex（starry 包内容全部来自同一个 com/starry 命名空间）。
+[[ "$SZ" -ge 400000 && "$SZ" -le 700000 ]] || die "classes4.dex 体积异常：$SZ"
 mkdir -p "$OUT"
 cp -f "$DEX" "$OUT/classes4.dex"
 say "OK: $OUT/classes4.dex  ($SZ B, md5 $(md5sum "$OUT/classes4.dex" | cut -d' ' -f1))"

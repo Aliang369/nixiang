@@ -485,7 +485,7 @@
  * 另外每 tick 计数，第 15 / 60 tick 各打一张状态快照；`window.__AUTO_STATE__()` 随时可读。
  * ========================================================================== */
 ;(function () {
-  var AUTO_VER = 1;
+  var AUTO_VER = 2;   /* 2 = 2026-10-19 res 1.1.6.0：金卡结构化发现 + 出售/分解决定性诊断 */
   if (typeof window === "undefined") return;
   var _prev = window.__starry_auto;
   if (_prev && (_prev.__v | 0) >= AUTO_VER) return;
@@ -512,17 +512,20 @@
   var A = {
     __v: AUTO_VER,
     /* (1) 解锁金卡 */
-    goldHooked: false, goldKey: "", goldAllowN: 0,
+    goldHooked: false, goldKey: "", goldHow: "", goldAllowN: 0,
     /* (2) 自动重复挑战 */
     repeatFlagSync: 0, repeatClickN: 0,
     repeatToken: 0, repeatScheduled: null, repeatHandled: null,
     /* (3)(4) 出售 / 分解 */
     sellN: 0, decoN: 0, sellDef: 0, decoDef: 0, lastSellQ: "", lastDecoQ: "",
+    sdDump: "", sdLast: null, sdTotal: 0, sdLocked: 0, sdDecoable: 0,
+    sdFinal: 0, sdEmptyLogged: 0,
+    protoSent: 0, protoCode: "", pkHooked: false, evProto: 0,
     /* (5) 穿戴 */
     wearN: 0, wearOkN: 0, wearEmptyN: 0,
     /* 驱动 / 节流 */
     tickN: 0, inBattleLatch: false, busy: false, lastCleanup: 0, battleN: 0,
-    acTickSeen: 0, evGold: 0, evRepeat: 0, evClean: 0, evWear: 0,
+    acTickSeen: 0, evGold: 0, evRepeat: 0, evClean: 0, evWear: 0, sdProbe: 0,
     errN: 0, lastErr: "", note: "", loopStarted: false, warnN: 0
   };
 
@@ -566,24 +569,102 @@
 
   /* ======================================================== (1) 解锁金卡 ====
    * 他的实现 GoldCardFeature L2975-2996：取 $eZ.monCard.fDn 的【原型】上的 fDc(卡类型)，
-   * 判 gold 时直接改返 true。我们用独立开关 feature6（他是 CFG.autoFight）。 */
+   * 判 gold 时直接改返 true。我们用独立开关 feature6（他是 CFG.autoFight）。
+   *
+   * 【2026-10-19 / res 1.1.6.0 修复：该类短名整体漂移】
+   *   实测对照（1.1.4.0 -> 1.1.6.0，同一 bundle 只差 721 字节，其它功能锚点一个没变）：
+   *     $eZ.monCard.fDn (持有数据对象)      -> fDq
+   *     原型 fDc (是否持有, 返回 boolean)   -> fDf
+   *     原型 fDf (剩余秒数, 返回 number)    -> fDi
+   *     原型 fDe/fDb/fDj (可购/是否永久/任务) -> fDh/fDj/fDk
+   *   ⇒ 旧写法 data.fDn / proto.fDc 全部落空：开关开着、钩子挂不上、无任何提示（静默失效）。
+   *   按 hook-rules §24 不写死短标识符，改两级发现：
+   *     tier1 结构锚点：monCard 下「原型方法体含明文 "silver" + Premium + buffId + $eZ.buff」的对象
+   *                     （明文属性 Basic/Premium/buffId 与 $eZ.buff 这类公共管理器不参与混淆）
+   *     tier2 行为甄别：候选里唯一【拿 "gold" 调用返回 boolean】的才是"持有判定"
+   *                      （同族的"剩余秒数"返回 number；"商品配置是否存在"含 findByKey 已排除）
+   *   都落空时退回历史短名列表（fDf/fDc…）并做同样的 boolean 行为校验。
+   *   命中哪一级都写进 goldKey + 一行日志 ⇒ 下一版热更直接看日志就知道走没走对。 */
+  var GOLD_LEGACY = ["fDf", "fDc", "fDe", "fDn"];
+  function goldCandidates(v) {
+    var out = [];
+    var p;
+    try { p = Object.getPrototypeOf(v); } catch (e) { return out; }
+    if (!p || p === Object.prototype) return out;
+    var pn;
+    try { pn = Object.getOwnPropertyNames(p); } catch (e) { return out; }
+    for (var j = 0; j < pn.length; j++) {
+      var f;
+      try { f = p[pn[j]]; } catch (e1) { continue; }
+      if (typeof f !== "function") continue;
+      var src = "";
+      try { src = Function.prototype.toString.call(f); } catch (e2) { continue; }
+      if (src.indexOf('"silver"') < 0 || src.indexOf("Premium") < 0) continue;
+      if (src.indexOf("buffId") < 0 || src.indexOf("$eZ.buff") < 0) continue;
+      if (src.indexOf("findByKey") >= 0) continue;     /* 同族里"商品/子buff配置是否存在"那条 */
+      out.push({ name: pn[j], fn: f });
+    }
+    return out;
+  }
+  function goldAcceptBool(o, v) {
+    var r;
+    try { r = o.fn.call(v, "gold"); } catch (e) { return false; }
+    return typeof r === "boolean";                      /* 剩余秒数那条返回 number, 这里被刷掉 */
+  }
+  function goldScan(z) {
+    var mc = z && z.monCard;
+    if (!mc) return null;
+    var names;
+    try { names = Object.getOwnPropertyNames(mc); } catch (e) { return null; }
+    /* 第一趟：结构锚点 + 行为甄别 */
+    for (var i = 0; i < names.length; i++) {
+      var v;
+      try { v = mc[names[i]]; } catch (e1) { continue; }
+      if (!v || typeof v !== "object" || v === mc) continue;
+      var cands = goldCandidates(v);
+      for (var k = 0; k < cands.length; k++) {
+        if (goldAcceptBool(cands[k], v)) {
+          return { data: v, dataKey: names[i], name: cands[k].name, how: "struct+behaviour" };
+        }
+      }
+    }
+    /* 第二趟：历史短名 + 同样的行为校验（只认 boolean，防挂到"剩余秒数"上） */
+    for (var i2 = 0; i2 < names.length; i2++) {
+      var v2;
+      try { v2 = mc[names[i2]]; } catch (e3) { continue; }
+      if (!v2 || typeof v2 !== "object") continue;
+      var p2;
+      try { p2 = Object.getPrototypeOf(v2); } catch (e4) { continue; }
+      if (!p2) continue;
+      for (var n2 = 0; n2 < GOLD_LEGACY.length; n2++) {
+        var f2 = p2[GOLD_LEGACY[n2]];
+        if (typeof f2 !== "function") continue;
+        if (!goldAcceptBool({ fn: f2 }, v2)) continue;
+        return { data: v2, dataKey: names[i2], name: GOLD_LEGACY[n2], how: "legacy-name" };
+      }
+    }
+    return null;
+  }
   function tryGoldCard() {
     if (A.goldHooked) return true;
     if (!FEAT(6)) return false;
     try {
-      var z = window.$eZ, data = z && z.monCard && z.monCard.fDn;
+      var z = window.$eZ;
       if (!z) return false;                          /* 还没加载到 $eZ：不算缺失, 别误报 */
-      if (!data) { miss("gold.data", "解锁金卡: 开关开着但 $eZ.monCard.fDn 不存在 —— 本版本改名了？该功能不会生效"); return false; }
-      var proto = Object.getPrototypeOf(data);
-      if (!proto || typeof proto.fDc !== "function") {
-        miss("gold.fn", "解锁金卡: monCard.fDn 原型上的 fDc 不是函数 —— 本版本改名了？该功能不会生效");
+      if (!z.monCard) { miss("gold.data", "解锁金卡: 开关开着但 $eZ.monCard 不存在 —— 本版本改名了？该功能不会生效"); return false; }
+      var hit = goldScan(z);
+      if (!hit) {
+        miss("gold.fn", "解锁金卡: monCard 下找不到「持有判定」方法（结构+行为两级全落空）—— 本版本改了结构？该功能不会生效");
         return false;
       }
-      if (proto.fDc.__starryGold && (proto.fDc.__starryGoldVer | 0) >= AUTO_VER) {
-        A.goldHooked = true; A.goldKey = "monCard.fDn.fDc";
+      var data = hit.data, proto = Object.getPrototypeOf(data), cur = proto[hit.name];
+      var key = "monCard." + hit.dataKey + "." + hit.name;
+      if (typeof cur === "function" && cur.__starryGold && (cur.__starryGoldVer | 0) >= AUTO_VER) {
+        A.goldHooked = true; A.goldKey = key;
         return true;
       }
-      var orig = proto.fDc.__starryGoldOrig || proto.fDc;
+      var orig = (typeof cur === "function" && cur.__starryGoldOrig) || cur;
+      if (typeof orig !== "function") { miss("gold.orig", "解锁金卡: 定位到 " + key + " 但不是函数"); return false; }
       var w = function (cardType) {
         var owned = orig.apply(this, arguments);
         try {
@@ -598,10 +679,24 @@
       w.__starryGold = true;
       w.__starryGoldVer = AUTO_VER;
       w.__starryGoldOrig = orig;
-      proto.fDc = w;
+      /* 挂上去必须能【读回验证】：游戏 bundle 里存在 sealMethods（部分原型被冻结/被包装），
+       * 直接赋值可能静默失败 —— 那样 goldHooked=true 就是假成功，正是要根治的形态。 */
+      var placed = false;
+      try { proto[hit.name] = w; placed = (proto[hit.name] === w); } catch (e1) {}
+      if (!placed) {
+        try {
+          Object.defineProperty(proto, hit.name, { value: w, writable: true, configurable: true, enumerable: false });
+          placed = (proto[hit.name] === w);
+        } catch (e2) {}
+      }
+      if (!placed) {
+        miss("gold.pin", "解锁金卡: 定位到 " + key + " 但原型被冻结/写不进去 —— 该功能不会生效（本版本给原型上了 seal）");
+        return false;
+      }
       A.goldHooked = true;
-      A.goldKey = "monCard.fDn.fDc";
-      log("gold-card hooked: $eZ.monCard.fDn.prototype.fDc (cardType===gold -> true, 受 feature6 控制)");
+      A.goldKey = key;
+      A.goldHow = hit.how;
+      log("gold-card hooked: $eZ." + key + " [发现方式=" + hit.how + "] (cardType===gold -> true, 受 feature6 控制)");
       return true;
     } catch (e) { err("gold", e); return false; }
   }
@@ -753,12 +848,127 @@
     return Object.keys(set).map(Number).filter(function (x) { return x >= 1 && x <= 6; })
                  .sort(function (a, b) { return a - b; });
   }
+  /* ---- 出售/分解：容器与方法解析 + 一次性诊断（2026-10-19 加） ----
+   * 排查纪律：上一版「开关开着、什么都不发、也没有一行日志」正是最难查的形态。
+   * 现在把四种可能各留一行有界日志，一次真机回城就能定案：
+   *   ① 根本没触发（没进过战斗 / 回城那一拍没赶上）
+   *   ② 触发了但装备容器读不到（bXk 改名或数据未加载 → 回退 bYn）
+   *   ③ 读到了但 0 件可分解（EquipTable.decompose 为空 = 卡密包作者记录的
+   *      「分解要 50 级」根因；也可能全被 isLock 锁住）
+   *   ④ 协议发了但服务端拒（pk/pf 的 promise code）
+   * EQUIP=200 是 main 包 TblEnum.BagTableEnum.EQUIP 的硬编号，1.1.4.0/1.1.6.0 实测一致。 */
+  var EQUIP_BAG = 200;
+  function bagContainer(bag) {
+    var order = ["bXk", "bYn"];        /* 卡密包 _sdDump 的同一回落顺序 */
+    for (var i = 0; i < order.length; i++) {
+      var fn = bag[order[i]];
+      if (typeof fn !== "function") continue;
+      try { var c = fn.call(bag, EQUIP_BAG); if (c && c.d) return { c: c, via: order[i] }; } catch (e) {}
+    }
+    return null;
+  }
+  /* 统计一次装备容器：总数 / 锁定 / 品质分布 / 可分解数 */
+  function sdCount(bag) {
+    var r = { ok: false, via: "", total: 0, locked: 0, decoable: 0, q: {}, qfail: 0 };
+    var got = bagContainer(bag);
+    if (!got) return r;
+    r.ok = true; r.via = got.via;
+    var box = got.c.d;
+    try {
+      var walk = typeof box.bdn === "function" ? box.bdn : (typeof box.bdm === "function" ? box.bdm : null);
+      if (!walk) return r;
+      walk.call(box, function (node) {
+        r.total++;
+        var isLock = !!(node && node.equip && node.equip.isLock);
+        if (isLock) { r.locked++; return; }
+        var cfg = null;
+        try { cfg = bag.bXh(node.itemId); } catch (e) {}
+        if (!cfg || cfg.quality === undefined) { r.qfail++; return; }
+        var q = cfg.quality | 0;
+        r.q[q] = (r.q[q] || 0) + 1;
+        try { if (typeof bag.bXY === "function" && bag.bXY(node)) r.decoable++; } catch (e2) {}
+      });
+    } catch (e) {}
+    return r;
+  }
+  function qDist(q) {
+    var out = [];
+    for (var k in q) { if (Object.prototype.hasOwnProperty.call(q, k)) out.push(k + ":" + q[k]); }
+    out.sort();
+    return out.join(" ");
+  }
+  function sdDump(bag) {
+    /* 定稿条件 = 【真读到件数】。登录/选角阶段 bag 容器存在但 0 件，
+     * 那时若把 0 件当结论缓存下来，进游戏后就永远"跳过:0 件可分解" —— 自己把功能锁死。
+     * 所以 total=0 只打一条"还在等"，不进定稿。 */
+    if (A.sdFinal) return A.sdLast;
+    var st = sdCount(bag);
+    if (!st.ok) {
+      /* 容器读不到 ≠ 结论：可能是 bag 数据还没加载。只留一条日志，下次调用再试。 */
+      A.sdLast = st;
+      miss("sd.cont", "出售/分解: 读不到装备容器（bXk/bYn 都没有 .d）—— 这两个也改名了？该功能不会生效");
+      return st;
+    }
+    A.sdLast = st;
+    A.sdTotal = st.total; A.sdLocked = st.locked; A.sdDecoable = st.decoable;
+    if (st.total === 0) {
+      A.sdDump = "wait";
+      if (!A.sdEmptyLogged) {
+        A.sdEmptyLogged = 1;
+        log("[sd] 装备容器@" + st.via + " 还是空的（角色/背包数据未加载）—— 先不定稿，后续 tick 再扫");
+      }
+      return st;
+    }
+    A.sdDump = "ok";
+    A.sdFinal = 1;          /* 定稿：已读到真实件数，后续不再重扫（sdLocked 是"锁定件数"，别混用） */
+    log("[sd] 装备容器@" + st.via + " 共 " + st.total + " 件 | 锁定 " + st.locked + " | 可取品质失败 " + st.qfail
+        + " | 可分解 " + st.decoable + " | 品质分布[" + (qDist(st.q) || "空") + "]"
+        + " | api bYJ=" + (typeof bag.bYJ) + " bYK=" + (typeof bag.bYK) + " bXY=" + (typeof bag.bXY));
+    if (st.decoable === 0) {
+      log("[sd] 判定: 容器里有装备但【没有可分解件】—— EquipTable.decompose 为空(低品质/低等级)或全部 isLock，"
+          + "这不是钩子失效；分解协议不会发出。");
+    }
+    return st;
+  }
+  /* 协议可观测：包一层 pk(分解) / pf(出售)，把请求与 promise 结果留成日志（有界） */
+  function sdHookProto(bag) {
+    if (A.pkHooked) return;
+    A.pkHooked = true;
+    function wrap(name, tag) {
+      var of = bag[name];
+      if (typeof of !== "function") { miss("sd." + name, "出售/分解: bag." + name + " 不是函数（协议层改名了？）"); return; }
+      var w = function () {
+        var pr;
+        A.protoSent++;
+        try { pr = of.apply(this, arguments); }
+        catch (e) { A.protoCode = tag + " throw"; err("proto/" + tag, e); throw e; }
+        try {
+          if (pr && pr.then) {
+            pr.then(function (r) {
+              var code = r && r.code;
+              A.protoCode = tag + " code=" + code;
+              if (A.evProto < 4) { A.evProto++; log("[sd] " + tag + " 协议返回 code=" + code); }
+            }, function (e2) {
+              A.protoCode = tag + " reject";
+              if (A.evProto < 4) { A.evProto++; log("[sd] " + tag + " 协议 rejected: " + msgOf(e2)); }
+            });
+          }
+        } catch (e3) {}
+        return pr;
+      };
+      w.__starryProto = tag;
+      bag[name] = w;
+    }
+    wrap("pk", "分解");
+    wrap("pf", "出售");
+  }
   function cleanupSellDeco() {
     var wantSell = FEAT(8), wantDeco = FEAT(9);
     if (!wantSell && !wantDeco) return false;
     try {
       var z = F(), bag = z && z.bag, lm = z && z.localMgr;
       if (!bag) { miss("sd.bag", "出售/分解: $eZ.bag 不存在 —— 该功能不会生效"); return false; }
+      sdHookProto(bag);
       var sellQ = wantSell ? qualitiesOf(lm, true) : [];
       var decoQ = wantDeco ? qualitiesOf(lm, false) : [];
       /* 兜底照抄他 v33N：开关开着却一个品质都没有 -> [1,2,3]，否则等于空转 */
@@ -770,6 +980,7 @@
         decoQ = [1, 2, 3];
         if (!A.decoDef) { A.decoDef = 1; log("[sd] 分解品质为空(游戏内未勾选) -> 兜底 [1,2,3]"); }
       }
+      var look = sdDump(bag);       /* 一次性：容器/件数/可分解数/api 类型 */
       var did = "";
       if (wantSell && sellQ.length) {
         if (typeof bag.bYK === "function") {
@@ -783,12 +994,16 @@
       }
       if (wantDeco && decoQ.length) {
         if (typeof bag.bYJ === "function") {
-          try {
-            bag.bYJ(decoQ);
-            A.decoN++;
-            A.lastDecoQ = decoQ.join(",");
-            did += "分解[" + A.lastDecoQ + "]";
-          } catch (e) { err("deco", e); }
+          if (look && look.ok && look.decoable === 0) {
+            did += "分解[跳过:0 件可分解]";
+          } else {
+            try {
+              bag.bYJ(decoQ);
+              A.decoN++;
+              A.lastDecoQ = decoQ.join(",");
+              did += "分解[" + A.lastDecoQ + "]";
+            } catch (e) { err("deco", e); }
+          }
         } else { err("deco/noapi", "bag.bYJ 不可用"); }
       }
       /* 每次清理打一行总账（有界） */
@@ -871,6 +1086,12 @@
     try { repeatFlagSync(); } catch (e) {}
     try { repeatTick(); } catch (e) {}
     try { cleanupTick(); } catch (e) {}
+    /* 第 20 秒探一次装备容器（不发任何协议）：
+     * 用户可能还没打一局，而「分解到底有没有可分解件」是静态就能答的问题。
+     * 这样即使 cleanupTick 的"回城那一拍"没触发，日志里也有容器事实可判。 */
+    if (A.tickN === 20 && (FEAT(8) || FEAT(9))) {
+      try { var zp = F(); if (zp && zp.bag) { sdHookProto(zp.bag); sdDump(zp.bag); } } catch (e) {}
+    }
     /* 两张一次性快照，便于真机上"根本没进战斗"和"进了但没触发"能区分开 */
     if (A.tickN === 15 || A.tickN === 60) {
       try { log("state@" + A.tickN + "s " + JSON.stringify(window.__AUTO_STATE__())); } catch (e) {}
@@ -881,9 +1102,11 @@
   window.__AUTO_STATE__ = function () {
     return {
       v: A.__v,
-      gold: A.goldHooked, goldKey: A.goldKey, goldN: A.goldAllowN,
+      gold: A.goldHooked, goldKey: A.goldKey, goldHow: A.goldHow, goldN: A.goldAllowN,
       repeatFlag: A.repeatFlagSync, repeatClicks: A.repeatClickN,
       sell: A.sellN, deco: A.decoN, sellQ: A.lastSellQ, decoQ: A.lastDecoQ,
+      sdDump: A.sdDump, sdTotal: A.sdTotal, sdLocked: A.sdLocked, sdDecoable: A.sdDecoable,
+      protoSent: A.protoSent, protoCode: A.protoCode,
       wear: A.wearN, wearOk: A.wearOkN, wearEmpty: A.wearEmptyN,
       ticks: A.tickN, battles: A.battleN, inLatch: A.inBattleLatch, busy: A.busy,
       errs: A.errN, lastErr: A.lastErr, warns: A.warnN, note: A.note

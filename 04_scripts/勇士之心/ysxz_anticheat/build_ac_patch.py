@@ -254,7 +254,11 @@ def main() -> int:
         ("return R(10); } });" in combined, "E9 序号: feature8 -> R(10)"),
         ("return R(11); } });" in combined, "E9 序号: feature9 -> R(11)"),
         ("return R(12); } });" in combined, "E9 序号: feature10 -> R(12)"),
-        ("proto.fDc = w;" in combined, "解锁金卡: 包装 monCard.fDn 原型的 fDc"),
+        ("proto[hit.name] = w;" in combined, "解锁金卡: 按发现结果包装原型方法(不写死短名)"),
+        ("goldCandidates" in combined and 'src.indexOf("$eZ.buff")' in combined,
+         "解锁金卡: 结构锚点(silver/Premium/buffId/$eZ.buff)仍在"),
+        ("goldAcceptBool" in combined and 'typeof r === "boolean"' in combined,
+         "解锁金卡: 行为甄别(只认返回 boolean 的持有判定)"),
         ('cardType === "gold"' in combined, "解锁金卡: 只放行 gold 卡类型"),
         ("AdventureFinishPanel" in combined and "cur.efi();" in combined, "自动重复挑战: 点结算面板 efi()"),
         ("A.repeatToken" in combined, "自动重复挑战: token 去重(防重复点击)"),
@@ -269,7 +273,7 @@ def main() -> int:
         ("now - A.lastCleanup < 5000" in combined, "两次清理间隔 >=5s"),
         ("}, 900);" in combined and "}, 2100);" in combined, "错峰 900ms 出售分解 / 2100ms 穿戴"),
         ("A.tickN === 15 || A.tickN === 60" in combined, "automation 两张一次性状态快照保留"),
-        ("AUTO_VER = 1" in combined, "automation 版本仲裁 AUTO_VER 存在"),
+        ("AUTO_VER = 2" in combined, "automation 版本仲裁 AUTO_VER = 2"),
         ("FEAT(6)" in combined and "FEAT(10)" in combined, "automation 开关走 FEAT(6)..FEAT(10)"),
     ]
     bad = [msg for ok, msg in checks if not ok]

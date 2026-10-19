@@ -19,3 +19,7 @@
 2026-10-07 13:16	11	1	新增 自动出售：bag.bYK(品质列表)；品质只读游戏内勾选 lm.cnp，全未勾时兜底 [1,2,3]。回城后 900ms 错峰发协议。用户实测通过	pipeline.log	有效
 2026-10-07 13:16	12	1	新增 自动分解：bag.bYJ(品质列表)；同上品质来源与兜底。用户实测通过	pipeline.log	有效
 2026-10-07 13:16	13	1	新增 自动穿戴：equip.ftA() 取待替换列表 → fvH 提交；仅 resolved code15/3 时重试(最多3次)，rejected 不重试(同卡密包原版)。用户实测通过	pipeline.log	有效
+2026-10-19 20:31	7	1	热更 res 1.1.6.0：monCard 数据类短名整体顺移(fDn->fDq, 持有判定 fDc->fDf)，旧代码写死短名=>静默失效；改两级发现(结构锚点 silver/Premium/buffId/$eZ.buff + 行为甄别只认返回 boolean)+挂上读回验证。so 21072642 / 包 76d24ba8；预检 PASS_TO_HUMAN，等真机 L3	pipeline.log	未测
+2026-10-19 20:31	11	2	「一直不会自动分解」排查：bag.bYJ/bYK/bXY 与 lm.cnp/cnq 在 1.1.4.0 与 1.1.6.0 完全一致(无漂移)=>非指纹问题。加一次性诊断(容器件数/锁定/可分解数/品质分布/api类型)+容器回落 bXk->bYn+包 bag.pk/pf 打协议 code+第20秒先探容器(不发协议)+可分解=0 时不空发协议。等 L3 日志定案(强候选: EquipTable.decompose 为空=「分解要50级」)	pipeline.log	未测
+2026-10-19 20:35	7	1	真机首轮机器证据：gold-card hooked: $eZ.monCard.fDq.fDf [发现方式=struct+behaviour] + 「放行 gold 卡判定 第1次调用」；包 76d24ba8 / so 21072642；等用户 L3 目视确认	logcat(precheck_20261019_203442)	未测
+2026-10-19 20:35	11	2	真机首轮机器证据：装备容器@bXk 共 5 件(锁定0, 品质1:3 2:1 4:1) 但可分解=0 ⇒ 「不会自动分解」根因＝当前装备按 EquipTable.decompose 全部不可分解(＝作者记录的「分解要50级」)，非钩子失效；bYJ/bYK/bXY 三个 api typeof 均为 function	logcat(precheck_20261019_203442)	未测
