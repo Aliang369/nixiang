@@ -83,6 +83,8 @@
 #define STARRY_AUTH_GAME_ID "wggls"
 #elif defined(STARRY_GAME_WHRHX4399)
 #define STARRY_AUTH_GAME_ID "whhx4399"
+#elif defined(STARRY_GAME_WHRHXBILI)
+#define STARRY_AUTH_GAME_ID "whhxbili"
 #elif defined(STARRY_GAME_WHRHX)
 #define STARRY_AUTH_GAME_ID "whhx"
 #elif defined(STARRY_GAME_WHRHXKB)
@@ -155,6 +157,10 @@ namespace GameUnity {
 #elif defined(STARRY_GAME_WHRHX4399)
     constexpr const char* PACKAGE    = "com.yhhy.whrhx.m4399";
     constexpr const char* GAME_NAME  = "无悔华夏4399";
+    constexpr size_t HYBRIDCLR_FIELD_BIAS = 0;
+#elif defined(STARRY_GAME_WHRHXBILI)
+    constexpr const char* PACKAGE    = "com.yhhy.whrhx.bilibili";
+    constexpr const char* GAME_NAME  = "无悔华夏B站";
     constexpr size_t HYBRIDCLR_FIELD_BIAS = 0;
 #elif defined(STARRY_GAME_WHRHX)
     constexpr const char* PACKAGE    = "com.yhhy.whrhx.aligames";

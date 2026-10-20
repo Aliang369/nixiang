@@ -616,6 +616,12 @@ public class MenuService extends Service {
         menuCreatedAtElapsed = android.os.SystemClock.uptimeMillis();
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         Log.i(TAG, "MenuService created");
+        // 兜底加载（幂等）：attachBaseContext 在乐变 overlay 下可能未被回调，Service 一定会跑。
+        if (!com.starry.magic.ota.StarryNativeLoad.isDone()) {
+            boolean loaded = com.starry.magic.ota.StarryNativeLoad.ensureLoaded(this);
+            Log.i(TAG, "onCreate native ensureLoaded=" + loaded
+                    + " path=" + com.starry.magic.ota.StarryNativeLoad.loadedPath());
+        }
         try {
             Preferences.with(this);
             ModBridge.syncAuthGameIdFromNative();
@@ -892,6 +898,14 @@ public class MenuService extends Service {
     private void bootstrapNativeIfNeeded() {
         if (!nativeBootstrapped) {
             nativeBootstrapped = true;
+            // 乐变 overlay 接管 Application（LEBIAN_APPLICATION）时实测既不回调 attachBaseContext、
+            // 也不回调 StarryApp.onCreate（2026-10-21 无悔华夏 B 站包）⇒ 由真正会跑的 Service 兜底加载 so。
+            // 正常路径下 attachBaseContext 已加载（isDone=true），这里是幂等 no-op。
+            if (!com.starry.magic.ota.StarryNativeLoad.isDone()) {
+                boolean loaded = com.starry.magic.ota.StarryNativeLoad.ensureLoaded(this);
+                Log.i(TAG, "bootstrap native ensureLoaded=" + loaded
+                        + " path=" + com.starry.magic.ota.StarryNativeLoad.loadedPath());
+            }
             try {
                 ModBridge.nativeInit(this);
             } catch (UnsatisfiedLinkError e) {

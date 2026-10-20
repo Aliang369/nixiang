@@ -2473,6 +2473,9 @@ bool Whrhx_TryInit() {
 #if defined(STARRY_GAME_WHRHX4399)
     LOGI("[Whrhx] lib ready target=m4399");
 #endif
+#if defined(STARRY_GAME_WHRHXBILI)
+    LOGI("[Whrhx] lib ready target=bilibili");
+#endif
     // 导出已剥：GetApi 常失败，装钩不依赖它；仍尝试一次便于日后诊断
     if (GetApi().Load(GameUnity::TARGET_LIB))
         LOGI("[Whrhx] lib ready (dual: rva + il2cpp-name)");

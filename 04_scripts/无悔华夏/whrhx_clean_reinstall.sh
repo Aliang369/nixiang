@@ -83,7 +83,21 @@ if [[ "$MODE" == "--uninstall" ]]; then
 
   echo
   echo "== 4. 全新安装本轮产物 =="
-  adb -s "$SERIAL" install "$APK" || { echo "ERROR: install 失败" >&2; exit 1; }
+  if [[ "${WHRHX_SILENT:-0}" == "1" ]]; then
+    # root 静默安装：push 到 /data/local/tmp 后由 su 直接 pm install，不弹安装界面、不走 Incremental。
+    # 注意仍是「已卸载后的全新安装」，不是覆盖安装（硬约束 #4 只管禁覆盖）。
+    echo "  [silent] push → pm install（root，无 UI）"
+    adb -s "$SERIAL" push "$APK" /data/local/tmp/whrhx_install.apk >/dev/null \
+      || { echo "ERROR: push 失败" >&2; exit 1; }
+    adb -s "$SERIAL" shell "su -c 'pm install /data/local/tmp/whrhx_install.apk'" 2>&1 | tr -d '\r' | tail -3
+    adb -s "$SERIAL" shell "pm path $PKG" 2>/dev/null | grep -q '^package:' \
+      || adb -s "$SERIAL" shell "su -c 'pm install /data/local/tmp/whrhx_install.apk'" >/dev/null 2>&1
+    adb -s "$SERIAL" shell "pm path $PKG" 2>/dev/null | grep -q '^package:' \
+      || { echo "ERROR: 静默安装失败" >&2; exit 1; }
+    adb -s "$SERIAL" shell "su -c 'rm -f /data/local/tmp/whrhx_install.apk'" >/dev/null 2>&1 || true
+  else
+    adb -s "$SERIAL" install "$APK" || { echo "ERROR: install 失败" >&2; exit 1; }
+  fi
 else
   echo
   echo "!! 警告：无悔华夏禁止覆盖安装（用户硬约束 m00888），--wipe 走 adb install -r 会让乐变负载失效。"

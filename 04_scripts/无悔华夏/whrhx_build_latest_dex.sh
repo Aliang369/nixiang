@@ -17,8 +17,10 @@ trap 'rc=$?; echo "ERROR: whrhx_build_latest_dex.sh line ${LINENO} rc=${rc}" >&2
 NIXIANG="/Users/aliang/Documents/nixiang"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 DATE_TAG="${WHRHX_DEX_DATE:-$(date +%Y%m%d)}"
-OUT_DIR="$NIXIANG/07_patched/无悔华夏/menu_latest_$DATE_TAG"
-OUT_DEX="$OUT_DIR/classes2.dex"
+OUT_DIR="${WHRHX_DEX_OUT_DIR:-$NIXIANG/07_patched/无悔华夏/menu_latest_$DATE_TAG}"
+OUT_DEX="$OUT_DIR/${WHRHX_DEX_NAME:-classes2.dex}"
+# 壳父类：九游/快爆=易盾 NIS MyApplication（留在包内做壳）；B 站/4399=无壳重建，父类改成乐变 LBApplication
+SUPER_CLASS="${WHRHX_SUPER_CLASS:-Lcom/netease/nis/wrapper/MyApplication;}"
 SMALI="$NIXIANG/01_tools/smali/smali"
 BAKSMALI="$NIXIANG/01_tools/smali/baksmali"
 BT_DEXDUMP="$HOME/Library/Android/sdk/build-tools/36.0.0/dexdump"
@@ -59,29 +61,30 @@ shopt -u nullglob
 SMALI_COUNT="$(find "$SMALI_ROOT" -name '*.smali' | wc -l | tr -d ' ')"
 echo "  smali 文件数 = $SMALI_COUNT"
 
-echo "[3/5] StarryApp 父类外科补丁（NIS 壳 MyApplication）"
+echo "[3/5] StarryApp 父类外科补丁（${SUPER_CLASS}）"
 APP_SMALI="$SMALI_ROOT/com/starry/magic/StarryApp.smali"
 [[ -f "$APP_SMALI" ]] || { echo "ERROR: StarryApp.smali missing" >&2; exit 1; }
-python3.11 - "$APP_SMALI" <<'PY'
+SUPER_CLASS="$SUPER_CLASS" python3.11 - "$APP_SMALI" <<'PY'
 from pathlib import Path
-import sys
+import os, sys
 p = Path(sys.argv[1])
 t = p.read_text(encoding="utf-8")
+SUPER = os.environ["SUPER_CLASS"]
 repls = [
-    (".super Landroid/app/Application;", ".super Lcom/netease/nis/wrapper/MyApplication;"),
+    (".super Landroid/app/Application;", ".super " + SUPER),
     ("invoke-direct {p0}, Landroid/app/Application;-><init>()V",
-     "invoke-direct {p0}, Lcom/netease/nis/wrapper/MyApplication;-><init>()V"),
+     "invoke-direct {p0}, " + SUPER + "-><init>()V"),
     ("invoke-super {p0, p1}, Landroid/app/Application;->attachBaseContext(Landroid/content/Context;)V",
-     "invoke-super {p0, p1}, Lcom/netease/nis/wrapper/MyApplication;->attachBaseContext(Landroid/content/Context;)V"),
+     "invoke-super {p0, p1}, " + SUPER + "->attachBaseContext(Landroid/content/Context;)V"),
     ("invoke-super {p0}, Landroid/app/Application;->onCreate()V",
-     "invoke-super {p0}, Lcom/netease/nis/wrapper/MyApplication;->onCreate()V"),
+     "invoke-super {p0}, " + SUPER + "->onCreate()V"),
 ]
 hits = []
 for a, b in repls:
     if a in t:
         t = t.replace(a, b)
         hits.append(a.split("->")[-1].split("(")[0])
-if "Lcom/netease/nis/wrapper/MyApplication;" not in t:
+if SUPER not in t:
     raise SystemExit("ERROR: StarryApp missing MyApplication super")
 if ".method protected attachBaseContext" not in t:
     t = t.rstrip() + """
@@ -90,7 +93,7 @@ if ".method protected attachBaseContext" not in t:
     .locals 1
     .param p1, "base"    # Landroid/content/Context;
 
-    invoke-super {p0, p1}, Lcom/netease/nis/wrapper/MyApplication;->attachBaseContext(Landroid/content/Context;)V
+    invoke-super {p0, p1}, """ + SUPER + """->attachBaseContext(Landroid/content/Context;)V
 
     const-string v0, "starry_magic"
 
@@ -110,17 +113,17 @@ mkdir -p "$OUT_DIR"
 echo "  classes2.dex $(stat -f %z "$OUT_DEX")B"
 
 echo "[5/5] 产物校验"
-python3.11 - "$OUT_DEX" "$SMALI_ROOT" <<'PY'
+SUPER_CLASS="$SUPER_CLASS" python3.11 - "$OUT_DEX" "$SMALI_ROOT" <<'PY'
 from pathlib import Path
-import sys
+import os, sys
 dex = Path(sys.argv[1]).read_bytes()
 smali_root = Path(sys.argv[2])
 checks = [
     (b'STARRYSTAMP1:EPOCH=', 'OtaSoStamp 戳字面量'),
-    (b'keep OTA: apkSoStamp=', '新守卫日志'),
+    (b'keep OTA: ', 'OTA 守卫保留日志'),  # 2026-10-21：源码改为 "keep OTA: " + why，格式串不再是字面量
     (b'nativeGetBuildStamp', '新桥接声明'),
     (b'com/starry/magic/ota/OtaSoStamp', 'OtaSoStamp 类描述符'),
-    (b'Lcom/netease/nis/wrapper/MyApplication;', 'NIS 壳父类'),
+    (os.environ.get('SUPER_CLASS', 'Lcom/netease/nis/wrapper/MyApplication;').encode(), '壳父类'),
 ]
 for needle, label in checks:
     if needle not in dex:
@@ -141,11 +144,12 @@ if [[ -x "$BT_DEXDUMP" ]]; then
   echo "  dexdump native 声明校验通过"
 fi
 
-python3.11 - "$OUT_DEX" "$OUT_DIR/MENU_SOURCE.txt" "$SMALI_COUNT" <<'PY'
+SUPER_CLASS="$SUPER_CLASS" python3.11 - "$OUT_DEX" "$OUT_DIR/MENU_SOURCE.txt" "$SMALI_COUNT" <<'PY'
 from pathlib import Path
-import hashlib, sys
+import hashlib, os, sys
 dex, out, count = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
 b = dex.read_bytes()
+SUPER_CLASS = os.environ.get('SUPER_CLASS', 'Lcom/netease/nis/wrapper/MyApplication;')
 out.write_text(f"""无悔华夏 3.8.280（九游 aligames）菜单 dex — 重建于 {__import__('datetime').date.today()}
 ================================================================
 来源：mod菜单/starry-mod-menu 工作区（含 OTA 守卫 build-stamp 修复：
@@ -153,7 +157,7 @@ out.write_text(f"""无悔华夏 3.8.280（九游 aligames）菜单 dex — 重�
 构建：{dex.parent} （rsync 隔离副本，不动工作区）
   JAVA_HOME=jdk-17 ./gradlew assembleRelease --console=plain
   apktool d → 汇总 smali*/com/starry → {count} 个 .smali
-外科补丁：StarryApp.smali 4 处 Landroid/app/Application; → Lcom/netease/nis/wrapper/MyApplication;
+外科补丁：StarryApp.smali 4 处 Landroid/app/Application; → {SUPER_CLASS}
 产物：classes2.dex  {len(b)}B
   sha256 {hashlib.sha256(b).hexdigest()}
   md5    {hashlib.md5(b).hexdigest()}

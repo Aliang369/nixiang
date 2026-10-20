@@ -107,6 +107,47 @@ public final class StarryNativeLoad {
         }
     }
 
+    /**
+     * 直接按 ApplicationInfo.nativeLibraryDir 加载包内 so。
+     * <p>乐变 overlay 会给游戏换一个 ClassLoader，其 library_path 指向
+     * {@code lebian/<pkg>-1/lib/arm64}；该目录只有乐变下发负载时才存在。
+     * 无壳重建包把 so 放在 base.apk 的 lib 目录里，overlay 目录不存在时
+     * {@code System.loadLibrary} 必然找不到 ⇒ 这里用绝对路径直连包内 lib 目录。
+     */
+    private static boolean loadFromNativeLibraryDir(Context ctx) {
+        if (ctx == null) return false;
+        try {
+            String dir = ctx.getApplicationInfo().nativeLibraryDir;
+            if (dir == null || dir.isEmpty()) return false;
+            File so = new File(dir, "libstarry_magic.so");
+            if (!so.isFile()) {
+                Log.w(TAG, "apk lib dir has no libstarry_magic.so: " + dir);
+                return false;
+            }
+            // 先按绝对路径把 libc++_shared 拉起来：本 so 的 DT_NEEDED 含 libc++_shared.so，
+            // 且引用 __emutls_get_address（emutls 运行时在 libc++_shared 里）。
+            // 乐变 overlay 的 ClassLoader 命名空间里没有 base APK 的 lib 目录时，
+            // 直接 dlopen 本 so 会报 "cannot locate symbol __emutls_get_address"（2026-10-21 实测）。
+            File cxx = new File(dir, "libc++_shared.so");
+            if (cxx.isFile()) {
+                try {
+                    System.load(cxx.getAbsolutePath());
+                    Log.i(TAG, "preloaded " + cxx.getAbsolutePath());
+                } catch (Throwable t) {
+                    Log.w(TAG, "preload libc++_shared failed: " + t);
+                }
+            }
+            System.load(so.getAbsolutePath());
+            loadedPath = so.getAbsolutePath();
+            DONE.set(true);
+            Log.i(TAG, "loaded apk lib-dir so: " + loadedPath);
+            return true;
+        } catch (Throwable t) {
+            Log.e(TAG, "load apk lib-dir so failed", t);
+            return false;
+        }
+    }
+
     /** Scan starry_ota game dirs for libstarry_magic.so without prefs. */
     public static File findOtaSo(Context ctx) {
         if (ctx == null) return null;
@@ -186,6 +227,7 @@ public final class StarryNativeLoad {
                 }
             }
             if (tryLoadPackagedAlias(ctx)) return true;
+            if (loadFromNativeLibraryDir(ctx)) return true;
             try {
                 System.loadLibrary("starry_magic");
                 loadedPath = "loadLibrary(starry_magic)";

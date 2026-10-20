@@ -86,6 +86,14 @@ public class StarryApp extends Application {
         com.starry.magic.crash.CrashHandler.init(this);  // 崩溃日志：自测壳
         String proc = currentProcessName();
         Log.i(TAG, "onCreate proc=" + proc);
+        // 乐变 overlay 的应用接管（LEBIAN_APPLICATION → StarryApp）实测只回调 onCreate、
+        // 不回调 attachBaseContext（2026-10-21 无悔华夏 B 站包：主进程无 "native ensureLoaded" 日志、
+        // /proc/<pid>/maps 无 libstarry_magic）。这里补一次幂等加载，attachBaseContext 正常时 isDone() 已 true。
+        if (isMainProcess(this) && !StarryNativeLoad.isDone()) {
+            boolean loaded = StarryNativeLoad.ensureLoaded(this);
+            Log.i(TAG, "onCreate fallback native ensureLoaded=" + loaded
+                    + " path=" + StarryNativeLoad.loadedPath());
+        }
         if (!isMainProcess(this)) {
             Log.i(TAG, "onCreate skip MenuService (secondary process)");
             return;

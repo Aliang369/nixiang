@@ -1,0 +1,19 @@
+{
+  "template_id": "whhxbili",
+  "name": "无悔华夏B站",
+  "package": "com.yhhy.whrhx.bilibili",
+  "source": "Games/WhrhxMod.h WHRHX_FEAT_* / Main.cpp STARRY_GAME_WHRHX + Android_whrhxbili.mk / GameConfig.h game_id=whhxbili",
+  "features": [
+    {"feat_num": 1, "name": "无限金币"},
+    {"feat_num": 2, "name": "无限食物"},
+    {"feat_num": 3, "name": "无限军队"},
+    {"feat_num": 4, "name": "无限人口"},
+    {"feat_num": 6, "name": "瞬间胜利"},
+    {"feat_num": 8, "name": "游戏加速"},
+    {"feat_num": 9, "name": "科研立即完成"},
+    {"feat_num": 10, "name": "政策技能无CD"},
+    {"feat_num": 11, "name": "名臣好感度"},
+    {"feat_num": 12, "name": "名臣技能无CD"},
+    {"feat_num": 13, "name": "军队规模加成"}
+  ]
+}
