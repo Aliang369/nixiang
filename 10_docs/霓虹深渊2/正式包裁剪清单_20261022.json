@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/霓虹深渊2",
+  "keep": "霓虹深渊2_2026.10.20_surgical-releaseSigned.apk",
+  "keep_size": 1340596243,
+  "keep_md5": "a700f513fdbdf0802cde533e2c1ec30d",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "霓虹深渊2_2026.10.20_surgical-unsigned.apk",
+      "size": 1339090709,
+      "md5": "598d7562b411c0cb865ae7721bbb0dda"
+    },
+    {
+      "name": "霓虹深渊2_2026.10.20_surgical-releaseSigned.apk.idsig",
+      "size": 10561051,
+      "md5": "6dfbbb06291b1bb2065f247736ad39a8"
+    }
+  ],
+  "removed_count": 2
+}
