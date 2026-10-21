@@ -250,9 +250,14 @@
           "path": "04_scripts/霓虹深渊2/pipeline.json"
         }
       ],
-      "status": "failed",
+      "status": "done",
       "failed_at": "2026-10-22 00:21:04",
-      "error": "命令退出码 1（详见日志尾部）"
+      "error": "命令退出码 1（详见日志尾部）",
+      "done_at": "2026-10-22 00:21:33",
+      "artifacts": {},
+      "inputs": {
+        "10_docs/霓虹深渊2/nhsy2_menu_template.json": "d6ceee0a34d31996780a0960e0359a87"
+      }
     }
   ]
 }
