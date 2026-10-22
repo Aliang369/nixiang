@@ -332,10 +332,12 @@
           "path": "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/pipeline.json"
         }
       ],
-      "status": "failed",
+      "status": "done",
       "note": "在 archive 写回 done 之后运行，收口 pipeline.json 的状态变化（避免手工补第二次提交）。",
       "failed_at": "2026-10-23 01:32:03",
-      "error": "命令退出码 1（详见日志尾部）"
+      "error": "命令退出码 1（详见日志尾部）",
+      "done_at": "2026-10-23 01:34:02",
+      "artifacts": {}
     }
   ]
 }
