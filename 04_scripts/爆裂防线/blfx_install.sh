@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ================================================================
-#  爆裂防线 1.01.06 (com.muyegame.blfx) — 管线 install 后端
+#  爆裂防线 1.02.01 (com.muyegame.blfx) — 管线 install 后端
 #
 #  签名语义：本包用 01_tools/starry_release.jks 签名，与官方签名（以及设备上
 #  现装的斌哥包 CN=binge2.keystore）都不同。
@@ -11,7 +11,7 @@
 #    默认      = 只做同签名覆盖安装（pm install -r -d）；失败即报告并 exit 1。
 #    BLFX_ALLOW_UNINSTALL=1
 #                = 用户已明确授权「卸载设备上现装的那一版（丢本地数据/存档）+ 全新安装」。
-#                  回退包：02_apks/爆裂防线/爆裂防线_1.01.06_original_from_device.apk
+#                  回退包：02_apks/爆裂防线/爆裂防线_1.02.01_original_from_device.apk
 #
 #  ⚠ 设备上若装的是斌哥改包：卸载它不会丢失原作进度之外的任何东西，
 #    但仍然会清掉该包名下的本地存档，故同样必须先取得用户明确授权。
@@ -26,7 +26,7 @@ set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="爆裂防线"
-VERSION="1.01.06"
+VERSION="1.02.01"
 PKG="com.muyegame.blfx"
 SERIAL_FILE="$NIXIANG/04_scripts/$GAME/.device_serial"
 APK="$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_surgical-releaseSigned.apk"
@@ -53,6 +53,7 @@ if [[ -n "$DEV_PATH" ]]; then
   DEV_MD5="$(adb -s "$SERIAL" shell "su -c 'md5sum $DEV_PATH'" 2>/dev/null | tr -d '\r\n' | awk '{print $1}' || true)"
 fi
 case "$DEV_MD5" in
+  c4f293d9009e90aa7098e29acea2d053) echo "[install] 设备现存 = 官方原版 1.02.01" ;;
   1a57be4509b55582f4aae5475aeaf6c6) echo "[install] 设备现存 = 官方原版 1.01.06" ;;
   dda75d4f8466b2b2992ddd2c3e928901) echo "[install] 设备现存 = 斌哥改包 1.01.06" ;;
   "$APK_MD5")                        echo "[install] 设备现存 = 本星光包（同包重装，不会丢数据）" ;;
@@ -76,21 +77,47 @@ ERROR: 覆盖安装失败（签名冲突）——设备上现装的包与本星�
 本脚本不会自动卸载：卸载会清掉游戏本地数据/存档，属破坏性操作，需要用户明确授权。
 
 设备上可能现装的是：
-  · 官方原版  com.muyegame.blfx 1.01.06（签名 CN=binge2.keystore 之外的原厂签名）
-  · 斌哥改包  com.muyegame.blfx 1.01.06（签名 CN=binge2.keystore）← 本轮拉取时的状态
+  · 官方原版  com.muyegame.blfx 1.02.01（签名 CN=my）
+  · 官方原版  com.muyegame.blfx 1.01.06（签名 CN=my）
+  · 斌哥改包  com.muyegame.blfx 1.01.06（签名 CN=binge2.keystore）
 
 用户确认「可以卸载设备上现装的那一版、接受本地数据/存档丢失」后重跑：
     BLFX_ALLOW_UNINSTALL=1 bash 04_scripts/爆裂防线/blfx_install.sh
 
 回退路径（不可再生输入，勿删）：
+  官方原包  02_apks/爆裂防线/爆裂防线_1.02.01_original_from_device.apk
   官方原包  02_apks/爆裂防线/爆裂防线_1.01.06_original_from_device.apk
   斌哥改包  02_apks/爆裂防线/爆裂防线_1.01.06_binge_from_device.apk
 EOM
     exit 1
   fi
-  echo "[install] 已授权卸载：pm uninstall --user 0 ${PKG}（本地数据将被清除）"
+  echo "[install] 已授权卸载：先保护外置数据，再 pm uninstall --user 0 ${PKG}（本地数据将被清除）"
+  EXT_DIR="/sdcard/Android/data/${PKG}"
+  EXT_RESERVE="${EXT_DIR}.nxreserve"
+  NEED_RESTORE=0
+  if adb -s "$SERIAL" shell "su -c 'test -d $EXT_DIR'" >/dev/null 2>&1; then
+    adb -s "$SERIAL" shell "su -c 'mv $EXT_DIR $EXT_RESERVE'" >/dev/null
+    if adb -s "$SERIAL" shell "su -c 'test -d $EXT_RESERVE'" >/dev/null 2>&1; then
+      NEED_RESTORE=1
+      echo "[install] 外置数据已移入备胎 $EXT_RESERVE"
+    else
+      echo "[install] WARN: 外置数据备胎未就绪，中止卸载以保护数据" >&2
+      exit 1
+    fi
+  fi
   adb -s "$SERIAL" shell pm uninstall --user 0 "$PKG" >/dev/null
   adb -s "$SERIAL" shell pm install --user 0 "$REMOTE"
+  if [[ "$NEED_RESTORE" == "1" ]]; then
+    NEW_UID="$(adb -s "$SERIAL" shell "su -c 'stat -c %u /data/user/0/${PKG}'" 2>/dev/null | tr -d '\r' || true)"
+    if [[ -n "$NEW_UID" ]]; then
+      adb -s "$SERIAL" shell "su -c 'mv $EXT_RESERVE $EXT_DIR && chown -R ${NEW_UID}:${NEW_UID} $EXT_DIR'" >/dev/null
+      # restorecon 在 /sdcard 的 FUSE 传输端点上会报 Operation not supported，属可忽略（数据已归位且属主正确）
+      adb -s "$SERIAL" shell "su -c 'restorecon -R $EXT_DIR'" >/dev/null 2>&1 || true
+    else
+      adb -s "$SERIAL" shell "su -c 'mv $EXT_RESERVE $EXT_DIR'" >/dev/null
+    fi
+    echo "[install] 外置数据已归位（uid=${NEW_UID:-?}）"
+  fi
 fi
 
 echo "[install] 闭环校验：设备 base.apk == 本地产物"

@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "game": "爆裂防线",
+    "pkg": "com.muyegame.blfx",
+    "version": "1.02.01(10201)",
+    "base_apk": "02_apks/爆裂防线/爆裂防线_1.02.01_original_from_device.apk",
+    "base_apk_size": 368486572,
+    "base_apk_md5": "c4f293d9009e90aa7098e29acea2d053",
+    "base_apk_sha256": "08ca59f4c028ab79f6fc637adbae2428a532f66090ed2227915ad20529e32419",
+    "base_signature": "CN=my",
+    "base_cert_sha256": "d454e72ba70ea50fac26822ac421bb492cefc6aa17b335b975e3d325a11a0c72",
+    "base_cert_md5": "36dd267f3795083800ebc2f28a90a530",
+    "engine": "Unity IL2CPP (团结引擎 Tuanjie) + HybridCLR 热更",
+    "hotfix_ab_in_apk": "assets/assetbundle/hotfixdlls/android/scriptdll/scriptdll.ab",
+    "hotfix_ab_size": 4473880,
+    "hotfix_ab_md5": "ea82876923079c2640c8738c9d4cb723",
+    "hotfix_dll": "06_dumped/爆裂防线/hotfix_1.02.01/hotfix_script.dll",
+    "hotfix_dll_size": 12048896,
+    "hotfix_dll_md5": "3a7a9bdeea4e9a491cd0c132cacf2605",
+    "device_serial": "f9a116a2",
+    "captured": "2026-10-23"
+  },
+  "identity_diff_vs_1.01.06": {
+    "libil2cpp.so": {"md5": "30563544a2a74351cef4378cae66cfe2", "same": true},
+    "global-metadata.dat": {"md5": "1712cdbaa5a019f46e4797ca70654e9d", "same": true},
+    "dex_count": 2,
+    "dex_names": ["classes.dex", "classes2.dex"],
+    "starry_dex_target": "classes3.dex",
+    "hotfix_dll": {"md5_1.01.06": "3a45bad804ed4ba4a6255c1671048166", "md5_1.02.01": "3a7a9bdeea4e9a491cd0c132cacf2605", "same": false}
+  },
+  "anchor_verification": [
+    {"type": "zbMonster", "member": "curHp", "kind": "field(zbSafeLong)", "status": "unchanged", "evidence": "csout_key/zbMonster.cs:399"},
+    {"type": "zbMonster", "member": "maxHp", "kind": "field(zbSafeLong)", "status": "unchanged", "evidence": "csout_key/zbMonster.cs:401"},
+    {"type": "zbMonster", "member": "ChangeHp", "kind": "method", "status": "CHANGED argc 5->8", "signature_1.02.01": "long ChangeHp(zbAttackerBase hero, zbCombatDefense defense, long value, bool violent=false, bool instantKill=false, bool hpPercentDamage=false, zbCombatTeam damageStatTeam=null, zbAttackerBase damageStatAttacker=null)", "evidence": "csout_key/zbMonster.cs:1585", "action": "BlfxMod.cpp class_method/ResolveClass argc 已由 5 改为 8"},
+    {"type": "zbCombatDefense", "member": "curHp", "kind": "field(zbSafeLong)", "status": "unchanged", "evidence": "csout_key/zbCombatDefense.cs:15"},
+    {"type": "zbCombatDefense", "member": "maxHp", "kind": "field(zbSafeLong)", "status": "unchanged", "evidence": "csout_key/zbCombatDefense.cs:17"},
+    {"type": "zbCombatDefense", "member": "ChangeHp(float,long)", "kind": "method", "status": "unchanged argc=2", "evidence": "csout_key/zbCombatDefense.cs:204"},
+    {"type": "zbCombatSpeed", "member": "speed1/speed2/speed3", "kind": "static readonly float", "status": "unchanged", "evidence": "csout_key/zbCombatSpeed.cs:10,12,14"},
+    {"type": "zbCombatSpeed", "member": "SetSpeed/GetSpeedByEnum", "kind": "method", "status": "unchanged", "evidence": "csout_key/zbCombatSpeed.cs:43,65"},
+    {"type": "zbCombatSystem", "member": "sInstance/combatData/accumTime/startServerTime", "kind": "field", "status": "unchanged", "evidence": "csout_key/zbCombatSystem.cs:12,30,40,78"},
+    {"type": "zbCombatData", "member": "monsters/defense", "kind": "field", "status": "unchanged", "evidence": "csout_key/zbCombatData.cs:46,48"},
+    {"type": "zbCombatMonster", "member": "ActiveList(monsterList)", "kind": "field", "status": "unchanged", "evidence": "csout_key/zbCombatMonster.cs:12,14"},
+    {"type": "zbSafeLong", "member": "_obfValue/_key/_shadowObf/_shadowKey/_fieldName", "kind": "struct layout 40B", "status": "unchanged", "evidence": "csout_key/zbSafeLong.cs:3,5,7,9,11"},
+    {"type": "zbSelf", "member": "sInstance/combatHandler", "kind": "field", "status": "unchanged", "evidence": "csout_key/zbSelf.cs:6,90"},
+    {"type": "zbCombatHandler", "member": "outString/battleMonsterHpTotal", "kind": "field", "status": "unchanged", "evidence": "csout_key/zbCombatHandler.cs:31,35"}
+  ],
+  "conclusion": [
+    "libil2cpp.so 与 global-metadata.dat 与 1.01.06 逐字节相同 => BLFX_SYMDELTA_STATIC_SET=4 与 Il2CppApi 符号解析均无需变更。",
+    "唯一功能锚点变化：zbMonster.ChangeHp 参数个数 5 -> 8；BlfxMod.cpp 中 class_method/ResolveClass 的 argc 已同步改为 8。",
+    "字段偏移在运行时由 api.FieldOffset 计算，不硬编码，故 1.02.01 无需更新任何偏移常量。",
+    "zbSafeLong 双影子布局未变，双副本同写协议继续有效。",
+    "未发现新增硬约束；功能集与 1.01.06 完全一致（伤害倍率/无敌/战斗加速，免广告不做）。"
+  ],
+  "open_questions": []
+}

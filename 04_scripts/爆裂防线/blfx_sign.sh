@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# 爆裂防线 1.01.06 (com.muyegame.blfx) — 签名阶段（pipeline sign）
+# 爆裂防线 1.02.01 (com.muyegame.blfx) — 签名阶段（pipeline sign）
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="爆裂防线"
-VERSION="1.01.06"
+VERSION="1.02.01"
 PKG="com.muyegame.blfx"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="${BLFX_UNSIGNED:-$OUT/${GAME}_${VERSION}_surgical-unsigned.apk}"
@@ -15,7 +15,7 @@ KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"
 SO_BUILT="$NIXIANG/mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so"
 
-# 官包零改动硬校验基准（原版 1.01.06，02_apks 内为不可再生输入）
+# 官包零改动硬校验基准（原版 1.02.01，02_apks 内为不可再生输入）
 EXPECT_IL2CPP_MD5="${BLFX_IL2CPP_MD5:-30563544a2a74351cef4378cae66cfe2}"
 EXPECT_META_MD5="${BLFX_META_MD5:-1712cdbaa5a019f46e4797ca70654e9d}"
 # 本作 TapTap 走「新版」路径（TapTapLoginActivity + LoginRequest.loginType + fallbackToWeb），
@@ -26,7 +26,7 @@ LOGIN_CARRIER="com/starry/magic/sign/TapLoginForceWeb"
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing ${UNSIGNED}（先跑 surgical_blfx_1.01.06.sh）" >&2; exit 1; }
+[[ -f "$UNSIGNED" ]] || { echo "ERROR: missing ${UNSIGNED}（先跑 surgical_blfx_1.02.01.sh）" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT" >&2; exit 1; }
 

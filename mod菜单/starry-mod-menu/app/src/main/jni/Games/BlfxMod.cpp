@@ -1,5 +1,5 @@
 /* ================================================================
- *  BlfxMod — 爆裂防线（com.muyegame.blfx）1.01.06  ★星空版
+ *  BlfxMod — 爆裂防线（com.muyegame.blfx）1.02.01  ★星空版
  *  斌哥改包复刻
  *
  *  ── 功能位（BlfxEntry.cpp featureList 下标）─────────────────
@@ -319,7 +319,7 @@ static void InstallHookOnce() {
     if (g_hookTried.exchange(true)) return;
     auto& api = GetApi();
     if (g_clsMonster && api.class_method)
-        g_miMonsterChangeHp = api.class_method(g_clsMonster, "ChangeHp", 5);
+        g_miMonsterChangeHp = api.class_method(g_clsMonster, "ChangeHp", 8);
     if (g_clsDefense && api.class_method)
         g_miDefenseChangeHp = api.class_method(g_clsDefense, "ChangeHp", 2);
     g_slotMon.mi = g_miMonsterChangeHp;
@@ -365,6 +365,9 @@ static inline int32_t RdI32(const void* base, size_t off) {
 static inline void WrI64(void* base, size_t off, int64_t v) {
     *reinterpret_cast<int64_t*>(static_cast<char*>(base) + off) = v;
 }
+static inline void WrI32(void* base, size_t off, int32_t v) {
+    *reinterpret_cast<int32_t*>(static_cast<char*>(base) + off) = v;
+}
 static inline void* RdPtr(const void* base, size_t off) {
     if (!base || !off) return nullptr;
     return *reinterpret_cast<void* const*>(static_cast<const char*>(base) + off);
@@ -375,6 +378,15 @@ static inline void SlWrite(void* p, int64_t v) {
     const int64_t sk = RdI64(p, 24);
     WrI64(p, 0,  v ^ k);      // _obfValue
     WrI64(p, 16, v ^ sk);     // _shadowObf  —— 双影子必须一致，否则 zbSafeLong 自己 ReportCheat
+}
+// zbSafeFloat 双影子（20 B）：_obfValue@0 _key@4 _shadowObf@8 _shadowKey@12 _fieldName@16
+static inline void SlfWrite(void* p, float v) {
+    uint32_t x;
+    __builtin_memcpy(&x, &v, sizeof(x));
+    const uint32_t k  = (uint32_t)RdI32(p, 4);
+    const uint32_t sk = (uint32_t)RdI32(p, 12);
+    WrI32(p, 0, (int32_t)(x ^ k));
+    WrI32(p, 8, (int32_t)(x ^ sk));
 }
 static bool ClassOfIs(void* obj, void* klass) {
     auto& api = GetApi();
@@ -539,7 +551,7 @@ static void ResolveTargets() {
            (void*)api.field_static_get, (void*)g_fieldStaticSet, BLFX_SYMDELTA_STATIC_SET);
     }
 
-    if (!g_clsMonster) g_clsMonster = ResolveClass("zbMonster", "ChangeHp", 5);
+    if (!g_clsMonster) g_clsMonster = ResolveClass("zbMonster", "ChangeHp", 8);
     if (!g_clsDefense) g_clsDefense = ResolveClass("zbCombatDefense", "ChangeHp", 2);
     if (!g_clsSpeed)   g_clsSpeed   = ResolveClass("zbCombatSpeed", "speed1", 0);
 
@@ -643,13 +655,56 @@ static void ReadbackSpeed(const char* tag) {
 
 static void WriteSpeedStatics(int mult) {
     if (!g_fieldStaticSet || !g_fSpeed1) return;
-    const float f = (float)mult;
+    // mult<=1（关）= 恢复游戏默认 speed1=1 / speed2=1.5 / speed3=2.5；
+    // 绝不能再把 speed2/speed3 写成 1.0（1.02.01 实测：结算「时间加速」检查
+    // 用 accumTime/speed3 对服务器耗时，speed3=1.0 会把上一段高倍速累积的
+    // accumTime 放大到远超真实耗时 ⇒ 命中检测并上报）。
+    float f1, f2, f3;
+    if (mult <= 1) { f1 = 1.0f; f2 = 1.5f; f3 = 2.5f; }
+    else           { f1 = f2 = f3 = (float)mult; }
     Il2Cpp::SafeProbe([&] {
-        if (g_fSpeed1) g_fieldStaticSet(g_fSpeed1, (void*)&f);
-        if (g_fSpeed2) g_fieldStaticSet(g_fSpeed2, (void*)&f);
-        if (g_fSpeed3) g_fieldStaticSet(g_fSpeed3, (void*)&f);
+        if (g_fSpeed1) g_fieldStaticSet(g_fSpeed1, (void*)&f1);
+        if (g_fSpeed2) g_fieldStaticSet(g_fSpeed2, (void*)&f2);
+        if (g_fSpeed3) g_fieldStaticSet(g_fSpeed3, (void*)&f3);
         return true;
     });
+}
+
+// ── 反检测：维持 zbCombatHandler.IsZuobi「时间加速」检查恒不成立 ──────────────
+// 检查式：serverElapsed < accumTime / zbCombatSpeed.speed3 - 10
+// 成立条件即 accumTime/speed3 超出真实耗时 10s 以上。修法：在 speed 开关切换时
+// 把 accumTime 校正为 serverElapsed × 目标 speed3，使比值恒等于真实耗时。
+static int64_t s_lastStartServer = 0;
+static int64_t s_battleStartMono = 0;
+
+static int64_t ServerElapsedMs() {
+    auto& api = GetApi();
+    if (!g_clsCombatSystem || !g_offSysStartServer) return 0;
+    void* sys = api.StaticRefField(g_clsCombatSystem, "sInstance");
+    if (!ClassOfIs(sys, g_clsCombatSystem)) return 0;
+    const int64_t ss = SlRead(static_cast<const char*>(sys) + g_offSysStartServer);
+    if (ss != s_lastStartServer) {
+        s_lastStartServer = ss;
+        s_battleStartMono = NowMs();
+        PD("BATTLESTART ss=%lld", (long long)ss);
+    }
+    if (!s_battleStartMono) return 0;
+    return NowMs() - s_battleStartMono;
+}
+
+static void CorrectAccumTime(float speed3) {
+    if (!g_clsCombatSystem || !g_offSysAccumTime) return;
+    const int64_t ms = ServerElapsedMs();
+    if (ms <= 0) return;
+    auto& api = GetApi();
+    void* sys = api.StaticRefField(g_clsCombatSystem, "sInstance");
+    if (!ClassOfIs(sys, g_clsCombatSystem)) return;
+    const float target = ((float)ms / 1000.0f) * speed3;
+    Il2Cpp::SafeProbe([&] {
+        SlfWrite(static_cast<char*>(sys) + g_offSysAccumTime, target);
+        return true;
+    });
+    PD("ACCUMFIX ms=%lld speed3=%.3f target=%.3f", (long long)ms, speed3, target);
 }
 
 static void ApplySpeed(int mult, bool forceTimeScale) {
@@ -663,6 +718,7 @@ static void ApplySpeed(int mult, bool forceTimeScale) {
             Il2Cpp::SafeProbe([&] { g_setTimeScale((float)mult, nullptr); return true; });
         }
     }
+    CorrectAccumTime((mult <= 1) ? 2.5f : (float)mult);
     g_appliedSpeed.store(mult);
     ReadbackSpeed("after-write");
 }
@@ -744,6 +800,13 @@ void Blfx_Tick(const bool* features, const int* values) {
             s_resolveTries++;
             Il2Cpp::SafeProbe([&] { ResolveTargets(); return true; });
         }
+    }
+
+    // 反检测：持续跟踪战斗开始（startServerTime 变化 = 新战斗），供 CorrectAccumTime 用
+    static int64_t s_lastTrack = 0;
+    if (now - s_lastTrack > 500) {
+        s_lastTrack = now;
+        Il2Cpp::SafeProbe([&] { (void)ServerElapsedMs(); return true; });
     }
 
     // hook 动态重挂（惰性桩被 HybridCLR 改写后立刻跟上）

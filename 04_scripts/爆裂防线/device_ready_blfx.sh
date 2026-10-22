@@ -48,6 +48,7 @@ fi
 
 case "$DEV_APK_MD5" in
   1a57be4509b55582f4aae5475aeaf6c6) DEV_KIND="官方原版 1.01.06" ;;
+  c4f293d9009e90aa7098e29acea2d053) DEV_KIND="官方原版 1.02.01" ;;
   dda75d4f8466b2b2992ddd2c3e928901) DEV_KIND="斌哥改包 1.01.06（对照物，装机前必须卸载/覆盖）" ;;
   "")                                DEV_KIND="未知（读不到 md5）" ;;
   *)                                 DEV_KIND="其它（可能是本星光包或别的版本）" ;;
