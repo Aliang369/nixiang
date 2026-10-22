@@ -82,6 +82,10 @@ static SendThreeStar_t       g_fnSendThreeStar = nullptr;   // 不挂钩，只�
 //       · RVA     = Il2CppDumper(hot files/libil2cpp.so + hot metadata) 精确命中
 //     ★本作运行时加载的是 dodjoy 热更落地的 files/libil2cpp.so（≠APK 内嵌那份），
 //       两构建 RVA 不同 ⇒ 下面用【热更构建】RVA + 序言校验；校验不过自动退按名解析。
+//     ★2026-10-23 热更换构建（63,343,272 B / md5 8a66e68f16675d59d9d6bd1b900daca2；
+//       上一版 62,235,240 B）⇒ 已按 10_docs/保卫向日葵/热更RVA重定位_20261023.md 重定位：
+//       该 so 的 PT_LOAD 实测 p_vaddr − p_offset = 0（RVA == file offset）。
+//       旧热更构建 62,235,240 B 对应值：OnUpdate 0x250307C / SelectRandomSkill 0x2508CF0。
 // ============================================================================
 enum : size_t {
     kOffCoreBattle = 0x20,   // BattleCoreSys.<Battle>（换局检测锚；与 +0x10 m_runtimeInput 同链）
@@ -93,10 +97,11 @@ enum : uint32_t {
     kIdxListCount = 3,       // idxList = [0,1,2]
 };
 
-// 热更构建（files/libil2cpp.so）RVA + 序言首指令（小端 u32）
-static const uintptr_t kRvaOnUpdate           = 0x250307C;  // APK内嵌构建对应 0x24DDEE8
+// 热更构建（files/libil2cpp.so，20261023 新构建 63,343,272 B / md5 8a66e68f…）RVA + 序言首指令（小端 u32）
+// 序言字节已实测复核（0x25D288C: ff 03 01 d1；0x25D8510: f5 53 be a9）⇒ 两序言值未变，仅 RVA 漂移
+static const uintptr_t kRvaOnUpdate           = 0x25D288C;  // 旧热更构建 0x250307C
 static const uint32_t  kInsnOnUpdate          = 0xD10103FF; // sub sp, sp, #0x40
-static const uintptr_t kRvaSelectRandomSkill  = 0x2508CF0;  // APK内嵌构建对应 0x24E3B5C
+static const uintptr_t kRvaSelectRandomSkill  = 0x25D8510;  // 旧热更构建 0x2508CF0
 static const uint32_t  kInsnSelectRandomSkill = 0xA9BE53F5; // stp x21, x20, [sp, #-0x20]!
 
 // ============================================================================

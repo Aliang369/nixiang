@@ -392,12 +392,17 @@ PY
 
 echo "[6/6] zipalign + apksigner + 校验"
 "${ZIPALIGN}" -f -p 4 "${MERGED}" "${WORK}/aligned.apk" || die "zipalign failed"
+# 磁盘保护（2026-10-23）：merged/aligned/final 三份 1.7 GB 同时存活会把 8 GB 内存/小余量机器撑爆
+#（实机踩过 `apksigner … No space left on device`）。zipalign 之后 merged 已完成使命，立刻释放；
+# 签名之后 aligned 同理。只删中间物，产物字节不受影响。
+rm -f "${MERGED}"
 rm -f "${FINAL}"
 "${APKSIGNER}" sign \
   --ks "${KS}" --ks-key-alias "${KS_ALIAS}" \
   --ks-pass "pass:${KS_PASS}" --key-pass "pass:${KS_PASS}" \
   --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true \
   --out "${WORK}/final.apk" "${WORK}/aligned.apk" || die "apksigner failed"
+rm -f "${WORK}/aligned.apk"
 cp -f "${WORK}/final.apk" "${FINAL}"
 
 "${APKSIGNER}" verify --print-certs "${FINAL}" > "${WORK}/certs.txt" 2>&1 || true
