@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "generated_by": "04_scripts/_common/delivery_manifest.py",
+  "generated_at": "2026-10-22T17:33:23+00:00",
+  "game": "爆裂防线",
+  "version": "1.02.01",
+  "package": "com.muyegame.blfx",
+  "pipeline_state": "04_scripts/爆裂防线/pipeline.json",
+  "pipeline_status": {
+    "check_apk": "done",
+    "dump": "done",
+    "anchor": "done",
+    "impl_mod": "done",
+    "build_so": "done",
+    "surgical": "done",
+    "sign": "done",
+    "device_ready": "done",
+    "install": "done",
+    "archive": "done",
+    "archive_close": "failed"
+  },
+  "source_commit": "4bbc11affacfed8f4a226efa7ee7159dad5fa27e",
+  "source_tree": "4e42042fedf11629201553b772bee0a933d46d87",
+  "apk": {
+    "path": "08_output/爆裂防线/爆裂防线_1.02.01_surgical-releaseSigned.apk",
+    "available": true,
+    "size": 372750765,
+    "md5": "b8837473e0daa13e09ac5e0b40ff7a04",
+    "sha256": "de2e1d88623caf707647b0cbb4411258908241a992a9e6cc19180ee9d066b104"
+  },
+  "artifacts": [
+    {
+      "stage": "check_apk",
+      "path": "02_apks/爆裂防线/爆裂防线_1.02.01_original_from_device.apk",
+      "recorded_md5": "c4f293d9009e90aa7098e29acea2d053",
+      "available": true,
+      "current_md5": "c4f293d9009e90aa7098e29acea2d053",
+      "current_sha256": "08ca59f4c028ab79f6fc637adbae2428a532f66090ed2227915ad20529e32419",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "dump",
+      "path": "06_dumped/爆裂防线/hotfix_1.02.01/hotfix_script.dll",
+      "recorded_md5": "3a7a9bdeea4e9a491cd0c132cacf2605",
+      "available": true,
+      "current_md5": "3a7a9bdeea4e9a491cd0c132cacf2605",
+      "current_sha256": "c5dca953c693c057e71db0a218459276bafa55775793fd7247a89e6216086964",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "anchor",
+      "path": "10_docs/爆裂防线/抓点_锚点_1.02.01.json",
+      "recorded_md5": "8f0679155ed9f8db1294aed3ac79c86b",
+      "available": true,
+      "current_md5": "8f0679155ed9f8db1294aed3ac79c86b",
+      "current_sha256": "4c6b53aeebae9d570d203338e835ce46b354d55ceb897eca6c6d2aeb225fc503",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "impl_mod",
+      "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.cpp",
+      "recorded_md5": "4470739bf5bfbab2adb236df8edc9e72",
+      "available": true,
+      "current_md5": "b10988c72b7e8679cc723e1e9a7efccb",
+      "current_sha256": "41e0a960737bc6fa9691da645567457dae0cd6145e1eae2649c5ec512f0059ea",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "impl_mod",
+      "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxEntry.cpp",
+      "recorded_md5": "386120908b04eb816e5b38917a2e026d",
+      "available": true,
+      "current_md5": "386120908b04eb816e5b38917a2e026d",
+      "current_sha256": "1812df27ad4f8c39375fcb3694bea4f63f34ee545b091fbe29b8444e0913aeb9",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "impl_mod",
+      "path": "mod菜单/starry-mod-menu/app/src/main/jni/Games/BlfxMod.h",
+      "recorded_md5": "bc70d329e4ca6ceec7fbc663d812c5ca",
+      "available": true,
+      "current_md5": "bc70d329e4ca6ceec7fbc663d812c5ca",
+      "current_sha256": "458621a9838d1ac90037851434073f680754bc4ffe45fa89e45c72fe60b900cc",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "build_so",
+      "path": "mod菜单/starry-mod-menu/libs_blfx/arm64-v8a/libstarry_magic.so",
+      "recorded_md5": "0f9e8cce2ba9c77774ebb3e6cd3ce831",
+      "available": true,
+      "current_md5": "0f9e8cce2ba9c77774ebb3e6cd3ce831",
+      "current_sha256": "de671baece8b1bac221085ebb2e74eb4e05b964eb435628dae525eed2b0282da",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "surgical",
+      "path": "07_patched/爆裂防线/surgical/AndroidManifest.xml",
+      "recorded_md5": "cf39d59593607ece6250b4e92d353024",
+      "available": true,
+      "current_md5": "cf39d59593607ece6250b4e92d353024",
+      "current_sha256": "0bf19949f58464dc047f395dfd6403e6c75c871c1cd36588c2dce3f3314cd129",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "sign",
+      "path": "08_output/爆裂防线/爆裂防线_1.02.01_surgical-releaseSigned.apk",
+      "recorded_md5": "b8837473e0daa13e09ac5e0b40ff7a04",
+      "available": true,
+      "current_md5": "b8837473e0daa13e09ac5e0b40ff7a04",
+      "current_sha256": "de2e1d88623caf707647b0cbb4411258908241a992a9e6cc19180ee9d066b104",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "device_ready",
+      "path": "04_scripts/爆裂防线/.device_serial",
+      "recorded_md5": "0bc47570b06495af1a544933783b7037",
+      "available": true,
+      "current_md5": "0bc47570b06495af1a544933783b7037",
+      "current_sha256": "cbe27de68d4d3b09f6c7d5b249441193c24b6a21737d78c5c810a7b8386a337a",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "install",
+      "path": "04_scripts/爆裂防线/.install_ok",
+      "recorded_md5": "30f80f5e1f13957e369ab932290fce45",
+      "available": true,
+      "current_md5": "30f80f5e1f13957e369ab932290fce45",
+      "current_sha256": "6ceae7d24195bc12bea991eb9c5b464a5eeb19960e15246860c982cbc0ed43bc",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "archive",
+      "path": "10_docs/爆裂防线/移植记录_星空版_1.02.01.md",
+      "recorded_md5": "3e67a81ee51d2c29537db14e0b561bcb",
+      "available": true,
+      "current_md5": "3e67a81ee51d2c29537db14e0b561bcb",
+      "current_sha256": "6f3d0cdcd7f803294e6ab49eeb6209a3fcb84fbbd705eb9db93552d3e3d436d7",
+      "matches_recorded_md5": true
+    }
+  ],
+  "not_proven": [
+    "manifest 只汇总管线与文件指纹；运行证据/NOT PROVEN 需由归档文档人工明确记录"
+  ],
+  "closure": {
+    "staged_scope_checked": true,
+    "generated_at_archive_close": true
+  }
+}
