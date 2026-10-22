@@ -304,8 +304,17 @@
           "path": "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/移植记录_星空版_1.02.01.md"
         }
       ],
-      "status": "pending",
-      "note": "用户说「收尾+正式包+清理+git」时执行：① 写 10_docs/爆裂防线/移植记录_星空版_1.02.01.md + 10_docs/_state/games/爆裂防线.md + current.md 单行；② prune_output_final.sh 08_output/爆裂防线 爆裂防线_1.02.01_surgical-releaseSigned.apk；③ 清理前先 pipeline_record_cleanup.py dry-run；④ archive_scoped_git.sh 白名单提交推送。"
+      "status": "done",
+      "note": "用户说「收尾+正式包+清理+git」时执行：① 写 10_docs/爆裂防线/移植记录_星空版_1.02.01.md + 10_docs/_state/games/爆裂防线.md + current.md 单行；② prune_output_final.sh 08_output/爆裂防线 爆裂防线_1.02.01_surgical-releaseSigned.apk；③ 清理前先 pipeline_record_cleanup.py dry-run；④ archive_scoped_git.sh 白名单提交推送。",
+      "done_at": "2026-10-23 01:31:42",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/爆裂防线/移植记录_星空版_1.02.01.md": {
+          "md5": "3e67a81ee51d2c29537db14e0b561bcb"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/.install_ok": "30f80f5e1f13957e369ab932290fce45"
+      }
     },
     {
       "id": "archive_close",
@@ -323,8 +332,10 @@
           "path": "/Users/aliang/Documents/nixiang/04_scripts/爆裂防线/pipeline.json"
         }
       ],
-      "status": "pending",
-      "note": "在 archive 写回 done 之后运行，收口 pipeline.json 的状态变化（避免手工补第二次提交）。"
+      "status": "failed",
+      "note": "在 archive 写回 done 之后运行，收口 pipeline.json 的状态变化（避免手工补第二次提交）。",
+      "failed_at": "2026-10-23 01:32:03",
+      "error": "命令退出码 1（详见日志尾部）"
     }
   ]
 }
