@@ -2,8 +2,34 @@
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/勇士之心",
   "keep": "勇士之心_1.0.6_surgical-releaseSigned.apk",
   "keep_size": 67264583,
-  "keep_md5": "9c25c51fcdab5e117dd25a9bb3c175f5",
+  "keep_md5": "dfae38fb4628936d29ba45788e6f79e8",
   "mode": "--apply",
-  "removed": [],
-  "removed_count": 0
+  "removed": [
+    {
+      "name": "勇士之心_1.0.6_metainf-probe-unsigned.apk",
+      "size": 67151096,
+      "md5": "2a266a8f3e94feeec616cc292b179a64"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-unsigned.apk",
+      "size": 67146322,
+      "md5": "190e21def1b1e5c901ccb0f18ea69020"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned.apk.idsig",
+      "size": 542235,
+      "md5": "d79e4df673964bfba30054c23705aa80"
+    },
+    {
+      "name": "勇士之心_1.0.6_metainf-probe-signed.apk",
+      "size": 67182468,
+      "md5": "2e14d8953b430f276455df61c0e3606b"
+    },
+    {
+      "name": "勇士之心_1.0.6_metainf-probe-signed.apk.idsig",
+      "size": 542235,
+      "md5": "dba0a350d26e2f7d1c3d014509312c09"
+    }
+  ],
+  "removed_count": 5
 }

@@ -1,0 +1,13 @@
+# 勇士之心 1.0.6 无 root 端（96f0d883）装机+冷启取证  20261024_024618
+apk_md5=dfae38fb4628936d29ba45788e6f79e8
+pid=14885
+--- 设备/版本 ---
+    versionCode=6 minSdk=24 targetSdk=30
+    versionName=1.0.6
+--- 决定性日志（Ysxz / jswrapper JS 三层）---
+10-24 02:46:21.101 14885 14885 I Mod_Menu: [YsxzSec] sec shell watchdog started
+10-24 02:46:21.115 14885 16808 I Mod_Menu: [YsxzSec] libsecret.so base=0x716bd05000
+10-24 02:46:21.117 14885 16808 I Mod_Menu: [YsxzSec] state words dirty=0x716bd760cc(tag=1.0.6) failed=0x716bd760d8(tag=1.0.6) checked=0x716bd69ea0
+10-24 02:46:21.131 14885 14885 I StarrySignSpoof: spoof hit pkg=com.fightingstars.games.warrior md5=79a6a62f1c189d911b2dff8324be384b
+10-24 02:46:21.189 14885 16808 I Mod_Menu: [YsxzSec] normalized failedMask=0x200 @iter=68
+10-24 02:46:27.861 14885 16808 I Mod_Menu: [YsxzSec] first 6s done; switch to 20ms interval

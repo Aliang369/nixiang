@@ -30,3 +30,4 @@
 2026-10-24 01:56	1	2	1.0.6 加密壳代星空包 13 项功能用户实测通过（2026-10-24 用户原话「目前测试功能都是没问题的」）；包 54bdc83b / so 995bf547	pipeline.log	有效
 2026-10-24 02:04	6	7	战斗加速 v2（真·全局变速）：改挂 cc.director.calculateDeltaTime 把每帧 _deltaTime ×k（cocos2d-jsb 6406 处一处放大 → compScheduler/scheduler/ActionManager/物理/组件 update 全局生效）；worldTimeScale 与 scheduler.setTimeScale 降为兜底且互斥；tick 的 wallMs 除回 k 保持真实墙钟；菜单重排到基础功能第 6 位（自动战斗 7、金卡 8、自动化 10..13）。离线单测 12/12。so 863c6c21 / 包 72ba3541。	pipeline.log	未测
 2026-10-24 02:08	6	8	战斗加速 v2 用户实测通过（2026-10-24「功能都没问题」）：引擎 dt×k 全局变速 + 基础功能第 6 位；包 9c25c51f / so 7f51585b	pipeline.log	有效
+2026-10-24 02:51	过检测	2	TapSDK「包名/签名」提示：定位到 APK v2 签名块层（META-INF 探针换成官方证书后指纹仍是星空证书；Java spoof 不在其路径上）；压提示的 cc.Label 文本过滤实测仍弹窗，用户决定暂不处理；功能不受影响	pipeline.log	无效

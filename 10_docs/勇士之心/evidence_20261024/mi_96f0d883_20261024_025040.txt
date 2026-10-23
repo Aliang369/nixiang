@@ -1,0 +1,28 @@
+# 勇士之心 1.0.6 无 root 端（96f0d883）装机+冷启取证  20261024_025040
+apk_md5=dfae38fb4628936d29ba45788e6f79e8
+pid=16953
+--- 设备/版本 ---
+    versionCode=6 minSdk=24 targetSdk=30
+    versionName=1.0.6
+--- 决定性日志（Ysxz / jswrapper JS 三层）---
+10-24 02:50:43.602 16953 16953 I Mod_Menu: [YsxzSec] sec shell watchdog started
+10-24 02:50:43.617 16953 18935 I Mod_Menu: [YsxzSec] libsecret.so base=0x710908e000
+10-24 02:50:43.618 16953 18935 I Mod_Menu: [YsxzSec] state words dirty=0x71090ff0cc(tag=1.0.6) failed=0x71090ff0d8(tag=1.0.6) checked=0x71090f2ea0
+10-24 02:50:43.635 16953 16953 I StarrySignSpoof: spoof hit pkg=com.fightingstars.games.warrior md5=79a6a62f1c189d911b2dff8324be384b
+10-24 02:50:43.698 16953 18935 I Mod_Menu: [YsxzSec] normalized failedMask=0x200 @iter=74
+10-24 02:50:50.277 16953 18935 I Mod_Menu: [YsxzSec] first 6s done; switch to 20ms interval
+10-24 02:50:50.651 16953 19130 D jswrapper: JS: [AC] battle-speed: apply loop started (load-time)
+10-24 02:50:50.651 16953 19130 D jswrapper: JS: [AC] ac layer v1 loaded (observe-only useTime; damage accumulator compensation armed)
+10-24 02:50:50.651 16953 19130 D jswrapper: JS: [AUTO] auto layer v1 loaded (gold / auto-repeat / auto-sell / auto-decompose / auto-wear; 开关读 MOD.feature6..10)
+10-24 02:50:50.652 16953 19130 I Ysxz    : [MODMOD] require trap installed (cur=undefined)
+10-24 02:50:50.652 16953 19130 D jswrapper: JS: [MODMOD] require trap installed (cur=undefined)
+10-24 02:50:50.758 16953 19130 D jswrapper: JS: Cocos Creator v2.4.15
+10-24 02:50:51.656 16953 19130 D jswrapper: JS: [AUTO] gold-card hooked: $eZ.monCard.fDq.fDf [发现方式=struct+behaviour] (cardType===gold -> true, 受 feature6 控制)
+10-24 02:50:51.656 16953 19130 D jswrapper: JS: [AUTO] repeat: 游戏内自动挑战位 置1 autoBattleFlag 0 -> 2
+10-24 02:50:51.658 16953 19130 D jswrapper: JS: [AUTO] [tc] 翻卡协议已挂钩：能拿到服务端 code（0=成功，其它=被拒）
+10-24 02:50:52.281 16953 19130 I Ysxz    : [AC] battle-speed = 5x (useTime clamp armed)
+10-24 02:50:52.281 16953 19130 D jswrapper: JS: [AC] battle-speed = 5x (useTime clamp armed)
+10-24 02:50:52.282 16953 19130 I Ysxz    : [AC] battle-speed: engine dt scaling armed (calculateDeltaTime x k)
+10-24 02:50:52.282 16953 19130 D jswrapper: JS: [AC] battle-speed: engine dt scaling armed (calculateDeltaTime x k)
+10-24 02:51:05.716 16953 19130 D jswrapper: JS: [AUTO] state@15s {"v":2,"gold":true,"goldKey":"monCard.fDq.fDf","goldHow":"struct+behaviour","goldN":0,"repeatFlag":1,"repeatClicks":0,"tcPatched":0,"tcFlips":0,"tcCode":"","sell":0,"deco":0,"sellQ":"","decoQ":"","sdDump":"","sdTotal":0,"sdLocked":0,"sdDecoable":0,"protoSent":0,"protoCode":"","wear":0,"wearOk":0,"wearEmpty":0,"ticks":15,"battles":0,"inLatch":false,"busy":false,"errs":0,"lastErr":"","warns":0,"note":""}
+10-24 02:51:10.739 16953 19130 D jswrapper: JS: [AUTO] [sd] 装备容器@bXk 还是空的（角色/背包数据未加载）—— 先不定稿，后续 tick 再扫

@@ -21,7 +21,6 @@
 // 净化为「只写运行时状态字、不改指令、不重放生命周期」：不触碰壳的代码段，
 // 也不自己调用真实 Application.onCreate（那会重入同一启动路径并死锁主线程）。
 
-#define _GNU_SOURCE 1   /* process_vm_readv 在 bionic 里受 __USE_GNU 保护 */
 #include "YsxzSecShell.h"
 
 #include <jni.h>
@@ -33,16 +32,8 @@
 #include <string.h>
 #include <atomic>
 #include <time.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <sys/syscall.h>
 
 #include "Includes/Logger.h"
-#include "Dobby/dobby.h"
-#include <stdarg.h>
 
 #define YSXZ_SEC_LOGI(...) LOGI("[YsxzSec] " __VA_ARGS__)
 #define YSXZ_SEC_LOGW(...) LOGW("[YsxzSec] " __VA_ARGS__)
@@ -78,177 +69,6 @@ std::atomic<bool> g_started{false};
 std::atomic<uintptr_t> g_dirtyWord{0};
 std::atomic<uintptr_t> g_failedWord{0};
 std::atomic<uintptr_t> g_checkedWord{0};
-
-// ===================== 诊断：把内存里的匿名 dex 落到外部媒体目录 =====================
-// 目的（2026-10-24）：壳把保护 payload（其中含 TapSDK 的类）解密后只在内存里以
-// Anonymous-DexFile 装载，非 root 机上取不到。为了定位「TapSDK 到底从哪儿读签名」，
-// 需要拿到它自己的代码。这里从进程自身的 /proc/self/mem 把「以 dex 魔数开头的可读段」
-// 原样写到 /storage/emulated/0/Android/media/<pkg>/ysxz_dump/（adb shell 可读）。
-// **仅在开关文件 yszx_dump_flag 存在时执行一次**；交付包不下发开关就不会触发。
-static void YsxzReadPkgName(char *out, size_t n) {
-    out[0] = '\0';
-    FILE *f = fopen("/proc/self/cmdline", "rb");
-    if (!f) return;
-    size_t got = fread(out, 1, n - 1, f);
-    fclose(f);
-    out[got] = '\0';
-    for (size_t i = 0; i < got; ++i) {
-        if (out[i] == '\0') { out[i] = '\0'; break; }
-    }
-}
-
-// 读自身进程内存：/proc/self/mem 在 Android 上被 SELinux 拒（EPERM 实测），
-// process_vm_readv 对自身进程可用，且越界返回 EFAULT 而不会 SIGSEGV。
-static ssize_t YsxzReadMem(void *dst, uintptr_t src, size_t n) {
-    struct iovec local;
-    struct iovec remote;
-    local.iov_base = dst;
-    local.iov_len = n;
-    remote.iov_base = reinterpret_cast<void *>(src);
-    remote.iov_len = n;
-    /* 直接走 syscall：bionic 只在 API>=23 导出 process_vm_readv，本工程 APP_PLATFORM 更低 */
-    return (ssize_t)syscall(__NR_process_vm_readv, getpid(), &local,
-                            (unsigned long)1, &remote, (unsigned long)1,
-                            (unsigned long)0);
-}
-
-// ===================== 诊断：谁在打开 APK（定位 TapSDK 读签名的路径）=====================
-// 开关文件：/storage/emulated/0/Android/media/<pkg>/ysxz_trace_open
-// 命中就打印「路径 + 调用者库/偏移(dladdr)」，用于判断 TapSDK 是自读 base.apk 还是走 Java PM。
-static int (*g_origOpen)(const char *, int, ...) = nullptr;
-static int (*g_origOpenat)(int, const char *, int, ...) = nullptr;
-static std::atomic<int> g_openHits{0};
-
-static void TraceWho(const char *tag, const char *path, void *caller) {
-    if (!path) return;
-    if (!strstr(path, ".apk") && !strstr(path, "apksecure")) return;
-    const int n = ++g_openHits;
-    if (n > 40) return;                       /* 封顶，绝不刷屏 */
-    Dl_info info;
-    memset(&info, 0, sizeof(info));
-    const char *lib = "?";
-    unsigned long off = 0;
-    if (dladdr(caller, &info) && info.dli_fname) {
-        lib = info.dli_fname;
-        if (info.dli_fbase) off = (unsigned long)((uintptr_t)caller - (uintptr_t)info.dli_fbase);
-    }
-    YSXZ_SEC_LOGI("[open] %s %s  <- %s+0x%lx", tag, path, lib, off);
-}
-
-static int HookOpen(const char *path, int flags, ...) {
-    mode_t mode = 0;
-    if (flags & O_CREAT) {
-        va_list ap;
-        va_start(ap, flags);
-        mode = (mode_t)va_arg(ap, int);
-        va_end(ap);
-        TraceWho("open", path, __builtin_return_address(0));
-        return g_origOpen ? g_origOpen(path, flags, mode) : -1;
-    }
-    TraceWho("open", path, __builtin_return_address(0));
-    return g_origOpen ? g_origOpen(path, flags) : -1;
-}
-
-static int HookOpenat(int dirfd, const char *path, int flags, ...) {
-    mode_t mode = 0;
-    if (flags & O_CREAT) {
-        va_list ap;
-        va_start(ap, flags);
-        mode = (mode_t)va_arg(ap, int);
-        va_end(ap);
-        TraceWho("openat", path, __builtin_return_address(0));
-        return g_origOpenat ? g_origOpenat(dirfd, path, flags, mode) : -1;
-    }
-    TraceWho("openat", path, __builtin_return_address(0));
-    return g_origOpenat ? g_origOpenat(dirfd, path, flags) : -1;
-}
-
-static void YsxzTraceApkOpenMaybe() {
-    char pkg[192] = {0};
-    YsxzReadPkgName(pkg, sizeof(pkg));
-    if (!pkg[0]) return;
-    char flagPath[512];
-    snprintf(flagPath, sizeof(flagPath),
-             "/storage/emulated/0/Android/media/%s/ysxz_trace_open", pkg);
-    if (access(flagPath, F_OK) != 0) return;
-    void *p1 = nullptr, *p2 = nullptr;
-    void *sym_open = dlsym(RTLD_DEFAULT, "open");
-    void *sym_openat = dlsym(RTLD_DEFAULT, "openat");
-    if (sym_open && DobbyHook(sym_open, (dobby_dummy_func_t)HookOpen, (dobby_dummy_func_t *)&g_origOpen) == 0) {
-        p1 = sym_open;
-    }
-    if (sym_openat && DobbyHook(sym_openat, (dobby_dummy_func_t)HookOpenat, (dobby_dummy_func_t *)&g_origOpenat) == 0) {
-        p2 = sym_openat;
-    }
-    YSXZ_SEC_LOGI("[open] trace armed open=%p openat=%p", p1, p2);
-}
-
-static uintptr_t g_dumpedAddr[64];
-static int g_dumpedN = 0;
-
-static bool YsxzAlreadyDumped(uintptr_t a) {
-    for (int i = 0; i < g_dumpedN; ++i) if (g_dumpedAddr[i] == a) return true;
-    return false;
-}
-
-static int YsxzDumpAnonDexOnce() {
-    char pkg[192] = {0};
-    YsxzReadPkgName(pkg, sizeof(pkg));
-    if (!pkg[0]) return -1;
-    char flagPath[512];
-    snprintf(flagPath, sizeof(flagPath),
-             "/storage/emulated/0/Android/media/%s/ysxz_dump_flag", pkg);
-    if (access(flagPath, F_OK) != 0) return -1;          /* 开关不在 ⇒ 什么都不做 */
-    char outDir[512];
-    snprintf(outDir, sizeof(outDir), "/storage/emulated/0/Android/media/%s/ysxz_dump", pkg);
-    mkdir(outDir, 0770);
-
-    FILE *maps = fopen("/proc/self/maps", "r");
-    if (!maps) { YSXZ_SEC_LOGE("dump: open maps failed"); return -1; }
-
-    char line[512];
-    int dumped = 0;
-    while (fgets(line, sizeof(line), maps)) {
-        unsigned long start = 0, end = 0;
-        char perms[8] = {0};
-        if (sscanf(line, "%lx-%lx %7s", &start, &end, perms) != 3) continue;
-        if (perms[0] != 'r') continue;
-        const unsigned long size = end - start;
-        if (size < 4096UL || size > 96UL * 1024UL * 1024UL) continue;
-        unsigned char magic[8] = {0};
-        if (YsxzReadMem(magic, (uintptr_t)start, sizeof(magic)) != (ssize_t)sizeof(magic)) continue;
-        /* dex 魔数："dex\n035\0" / "cdex001\0" */
-        const bool isDex = (memcmp(magic, "dex\n", 4) == 0) || (memcmp(magic, "cdex", 4) == 0);
-        if (!isDex) continue;
-        if (YsxzAlreadyDumped((uintptr_t)start)) continue;
-        char path[600];
-        snprintf(path, sizeof(path), "%s/dex_%lx_%lx.dex", outDir, start, end);
-        const int out = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-        if (out < 0) continue;
-        unsigned long done = 0;
-        char buf[65536];
-        bool ok = true;
-        while (done < size) {
-            size_t want = sizeof(buf);
-            if (size - done < want) want = (size_t)(size - done);
-            ssize_t r = YsxzReadMem(buf, (uintptr_t)(start + done), want);
-            if (r <= 0) { ok = false; break; }
-            if (write(out, buf, (size_t)r) != r) { ok = false; break; }
-            done += (unsigned long)r;
-        }
-        close(out);
-        if (ok) {
-            ++dumped;
-            if (g_dumpedN < (int)(sizeof(g_dumpedAddr) / sizeof(g_dumpedAddr[0]))) {
-                g_dumpedAddr[g_dumpedN++] = (uintptr_t)start;
-            }
-            YSXZ_SEC_LOGI("dump: %s (%lu bytes)", path, size);
-        }
-    }
-    fclose(maps);
-    YSXZ_SEC_LOGI("dump: done, %d dex region(s) -> %s", dumped, outDir);
-    return dumped;
-}
 
 // 扫描 /proc/self/maps，返回 libsecret.so 的主镜像基址。
 // 选 file offset == 0 且**跨度最大**的那条映射：加固壳在 APKSecure 私有命名空间下
@@ -397,26 +217,7 @@ uintptr_t ResolveStateWord(uintptr_t base, const char *symbol,
     return 0;
 }
 
-void *DumpPollThread(void *) {
-    for (int i = 0; i < 90; ++i) {          /* 最多 ~3 分钟，每 2s 扫一遍 */
-        const int n = YsxzDumpAnonDexOnce();
-        if (n < 0) return nullptr;          /* 没有开关文件 ⇒ 立即退出 */
-        if (g_dumpedN > 0 && i > 20 && n == 0) break;
-        usleep(2 * 1000 * 1000);
-    }
-    return nullptr;
-}
-
 void *WatchThread(void *) {
-    static std::atomic<bool> dumped{false};
-    bool expect = false;
-    if (dumped.compare_exchange_strong(expect, true)) {
-        /* 诊断：壳的 payload dex 是启动后才载入内存的，单次扫描必然扑空 ⇒ 起轮询线程。
-         * 无开关文件时第一轮就返回，代价可忽略。 */
-        pthread_t dt;
-        if (pthread_create(&dt, nullptr, DumpPollThread, nullptr) == 0) pthread_detach(dt);
-        YsxzTraceApkOpenMaybe();   /* 诊断：无开关文件时立即返回 */
-    }
     uintptr_t base = 0;
     for (int i = 0; i < 2000 && !base; ++i) {  // 最多等 ~2s
         base = FindSecLibBase();

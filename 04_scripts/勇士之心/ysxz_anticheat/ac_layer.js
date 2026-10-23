@@ -79,7 +79,6 @@
     /* 7 战斗加速（全局时间缩放） */
     speedMul: 1, speedHits: 0, speedPath: "", schedClock: 1, schedHits: 0,
     dtScaled: false, dtHits: 0, speedHolder: null, speedLoopOn: false,
-    tapFilterOn: false, tapFilterHits: 0,
     /* 杂项 */
     pending: null, note: "", reg: null, installN: 0, loopStarted: false
   };
@@ -508,56 +507,6 @@
   }
   AC.installDeltaScale = installDeltaScale;
 
-  /* ------------------------------------- 8 压掉 TapSDK 的「包名/签名」提示 --
-   * 背景（2026-10-24 实测）：本作 TapSDK 的签名校验读的是 **APK v2 签名块**（不是
-   * PackageManager，故 Java 侧 spoof 覆盖不到；META-INF 探针也证明它不读 v1）。
-   * 包层面无解（v2 块只能是我们星空密钥签的），用户选择「只压提示」。
-   * 做法：把 ui 文本里同时出现 TapSDK 与（包名/签名/clientId）的字符串过滤掉。
-   * 覆盖 cc.Label / cc.RichText 的 string setter；只在命中时改写，其它一律原样透传。 */
-  AC.tapFilterHits = 0;
-  function isTapWarn(v) {
-    if (typeof v !== "string" || v.length < 6 || v.length > 400) return false;
-    if (v.indexOf("TapSDK") < 0 && v.indexOf("TapTap") < 0) return false;
-    return v.indexOf("包名") >= 0 || v.indexOf("签名") >= 0 || v.indexOf("clientId") >= 0 ||
-           v.indexOf("client_id") >= 0 || v.indexOf("certificate") >= 0;
-  }
-  function patchTextProp(Proto, label) {
-    try {
-      if (!Proto) return false;
-      var d = Object.getOwnPropertyDescriptor(Proto, "string");
-      if (!d || !d.set || Proto.__starryTapFilter) return !!Proto.__starryTapFilter;
-      Object.defineProperty(Proto, "string", {
-        configurable: true,
-        enumerable: d.enumerable,
-        get: d.get,
-        set: function (v) {
-          try {
-            if (isTapWarn(v)) {
-              AC.tapFilterHits = (AC.tapFilterHits | 0) + 1;
-              if (AC.tapFilterHits <= 3) log("tap-warn text suppressed #" + AC.tapFilterHits + " (" + label + ")");
-              v = "";
-            }
-          } catch (e) {}
-          return d.set.call(this, v);
-        }
-      });
-      Proto.__starryTapFilter = true;
-      log("tap-warn filter armed on " + label);
-      return true;
-    } catch (e) { return false; }
-  }
-  AC.installTapFilter = function () {
-    if (AC.tapFilterOn) return true;
-    try {
-      if (typeof cc === "undefined" || !cc) return false;
-      var ok = false;
-      if (cc.Label) ok = patchTextProp(cc.Label.prototype, "cc.Label") || ok;
-      if (cc.RichText) ok = patchTextProp(cc.RichText.prototype, "cc.RichText") || ok;
-      if (ok) AC.tapFilterOn = true;
-      return ok;
-    } catch (e) { return false; }
-  };
-
   AC.applySpeed = function () {
     var k = 1;
     try { k = (window.MOD && window.MOD.bspeed) ? (window.MOD.bspeed | 0) : 1; } catch (e) { k = 1; }
@@ -569,7 +518,6 @@
     }
     /* 主路线：引擎 dt 放大（真·全局变速）。装上后调度器/worldTimeScale 一律保持 1，防叠乘。 */
     try { installDeltaScale(); } catch (e) {}
-    try { AC.installTapFilter(); } catch (e) {}
     var holder = null;
     try {
       /* 缓存优先：战斗换局时 world 会换对象，取不到数值就重扫一次 */

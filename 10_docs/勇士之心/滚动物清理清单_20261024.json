@@ -1,0 +1,18 @@
+{
+  "game": "勇士之心",
+  "date": "2026-10-24",
+  "reason": "本轮收尾：分析期临时产物、可再生的热更密文样本、本次会话飞行记录仪目录入隔离区",
+  "quarantine": "/Users/aliang/.Trash/nixiang_ysxz_20261024_20261024_025226",
+  "items": [
+    {"path": ".ysxz_re", "size_kib": 104804, "why": "TapSDK 追查用临时目录（libsecret/apksecurefile/libtapsdkcore 解包 + 12.8MB payload dex + 52MB smali + 探针包）", "regen": "APK 内条目直接可解包；payload dex 用 YsxzDumpAnonDexOnce 诊断重取"},
+    {"path": "09_test/勇士之心/regrab_20261024", "size_kib": 67772, "why": "res 1.1.8.1 密文重抓样本（解密产物与结论已留 06_dumped/勇士之心/hotupdate_20261024）", "regen": "TAG=<日期> bash 04_scripts/勇士之心/regrab_ysxz_hotupdate.sh"},
+    {"path": "09_test/_recorder/20261024_012908", "size_kib": 82260, "why": "本轮飞行记录仪（结论行已抽到 evidence_20261024/decisive_lines_pid17276.txt）", "regen": "flight_recorder.sh start/mark/slice"},
+    {"path": "08_output/勇士之心/勇士之心_1.0.6_surgical-unsigned.apk.bak", "size_kib": 65600, "why": "未签名的中间备份（正式包唯一保留）", "regen": "surgical_ysxz_1.0.6.sh 重跑即可"}
+  ],
+  "kept": [
+    "08_output/勇士之心/勇士之心_1.0.6_surgical-releaseSigned.apk（唯一正式包）",
+    "08_output/勇士之心/delivery_20261024/（icon 192 + menu_template.json）",
+    "06_dumped/勇士之心/hotupdate_20261024（res 1.1.8.1 解密产物，功能指纹证据）",
+    "10_docs/勇士之心/evidence_20261024/（决定性日志与无 root 端取证）"
+  ]
+}
