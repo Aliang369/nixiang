@@ -171,22 +171,43 @@ for line in sys.stdin:
         cur={"key":key,"start":st,"end":en,"segs":[(st,en,perm,off,path)]}
 if cur is not None: groups.append(cur)
 print("GROUPCOUNT %d" % len(groups))
+def xspan(g):
+    return sum(e-s for s,e,p,o,pa in g["segs"] if "x" in p)
 for i,g in enumerate(groups):
     rw=sum(e-s for s,e,p,o,pa in g["segs"] if p.startswith("rw"))
     off0=[s for s,e,p,o,pa in g["segs"] if o=="00000000"]
     g["rw"]=rw; g["off0"]=min(off0) if off0 else None
-    print("GROUP %d segs=%d total=0x%x rw=0x%x off0=%s path=%s" % (
-        i,len(g["segs"]),g["end"]-g["start"],rw,
+    print("GROUP %d segs=%d total=0x%x rw=0x%x xs=0x%x off0=%s path=%s" % (
+        i,len(g["segs"]),g["end"]-g["start"],rw,xspan(g),
         ("0x%x"%g["off0"]) if g["off0"] is not None else "-",
         g["segs"][0][4] or "(anon)"))
 # 与源码 LibBaseResolve() 同规则：rw-p 总量最大的那组；并列/全零退化为总长最大
 best=max(range(len(groups)), key=lambda i:(groups[i]["rw"], groups[i]["end"]-groups[i]["start"]))
+rule="rw-p总量最大组的off==0起点"
+if not groups[best]["rw"]:
+    rule="无rw-p段⇒退化为总长最大组起点"
+base=groups[best]["off0"] if groups[best]["off0"] is not None else groups[best]["start"]
+# ★后备判据（2026-10-23，我的勇者 7.6.4 实测）：壳加载时段间留 0x3000 空隙 ⇒ 同一 so 被拆成多组，
+#   「最大 rw-p 组」可能落到末段 bss（组内无可执行段），base 错、所有 RVA 落空。
+#   此时按主程序 FileOffToVa 的语义改取「含可执行段」的组：rw-p 最大者优先，
+#   base = 该组最大 x 段的 start-off（即该映射副本的 off==0 起点）。
+#   选中组本就可执行（旧行为正确）时**完全不变**——Mxytz 等既有游戏不受影响。
+if xspan(groups[best])==0:
+    xg=[i for i in range(len(groups)) if xspan(groups[i])>0]
+    if xg:
+        best=max(xg, key=lambda i:(groups[i]["rw"], groups[i]["end"]-groups[i]["start"]))
+        seg=max([(e-s,s,int(o,16)) for s,e,p,o,pa in groups[best]["segs"] if "x" in p])
+        xstart=seg[1]
+        # 基址 = 同一 so 里 off==00000000 且起始地址 <= 该 x 段的最近一段起点
+        #   （start-off 会差一个 ELF 首段页偏移 0x4000，不能用）
+        cand=[s for gg in groups for s,e,p,o,pa in gg["segs"] if o=="00000000" and s<=xstart]
+        base=max(cand) if cand else xstart-seg[2]
+        rule="选中组无可执行段⇒改取含 r-xp 的组（FileOffToVa 语义：取 r-xp 段 + 同副本 off==0 起点为基址）"
 g=groups[best]
-base=g["off0"] if g["off0"] is not None else g["start"]
-print("PICK %d base=0x%x rule=%s" % (best, base, "rw-p总量最大组的off==0起点" if g["rw"] else "无rw-p段⇒退化为总长最大组起点"))
-print("BASEMSG 组数=%d 选中组=#%d 段数=%d 总长=0x%x rw-p=0x%x（其它组：%s）" % (
-    len(groups), best, len(g["segs"]), g["end"]-g["start"], g["rw"],
-    ", ".join("#%d segs=%d rw=0x%x"%(i,len(x["segs"]),x["rw"]) for i,x in enumerate(groups) if i!=best) or "无"))
+print("PICK %d base=0x%x xs=0x%x rule=%s" % (best, base, xspan(g), rule))
+print("BASEMSG 组数=%d 选中组=#%d 段数=%d 总长=0x%x rw-p=0x%x xs=0x%x（其它组：%s）" % (
+    len(groups), best, len(g["segs"]), g["end"]-g["start"], g["rw"], xspan(g),
+    ", ".join("#%d segs=%d rw=0x%x xs=0x%x"%(i,len(x["segs"]),x["rw"],xspan(x)) for i,x in enumerate(groups) if i!=best) or "无"))
 for n,rv in rvas:
     addr=base+rv
     hit=None
@@ -233,6 +254,8 @@ GROUPCOUNT="$(printf '%s\n' "$PY_OUT" | awk '/^GROUPCOUNT/{print $2}')"
 BASEMSG="$(printf '%s\n' "$PY_OUT" | sed -n 's/^BASEMSG //p')"
 PICKLINE="$(printf '%s\n' "$PY_OUT" | sed -n 's/^PICK //p')"
 BASE="$(printf '%s' "$PICKLINE" | sed -n 's/.*base=0x\([0-9a-fA-F]*\).*/\1/p')"
+# 选中组自身可执行段总长（只看选中组，不能从 BASEMSG 里 grep —— 那里还列了「其它组」的同名字段）
+SELX="$(printf '%s' "$PICKLINE" | sed -n 's/.*xs=0x\([0-9a-fA-F]*\).*/\1/p')"
 GRPINFO="$(printf '%s\n' "$PY_OUT" | sed -n '/^GROUP /p')"
 RVAINFO="$(printf '%s\n' "$PY_OUT" | sed -n '/^RVA /p')"
 
@@ -242,10 +265,10 @@ VERDICT="判据正常"; RC=0
 if [ -n "$PID" ] && [ -z "$MAPS_LIB" ]; then VERDICT="进程里【没有 libil2cpp.so】⇒ 未进入 IL2CPP 层"; RC=2; fi
 if [ -n "$MAPS_LIB" ] && [ -z "$BASE" ]; then VERDICT="有映射但选不出基址 ⇒ 判据需修（§30.2 逐级降级）"; RC=2; fi
 if [ -n "$BASE" ]; then
-  # 选了影子副本的典型特征：选中组里只有 r--p 段（无 r-xp/rw-p）
-  case "$BASEMSG" in
-    *"rw-p=0x0"*) VERDICT="★疑似选中只读影子副本（选中组 rw-p=0）⇒ 装钩会静默失败，须按 §30.2 加显式 RVA 交叉校验"; RC=2 ;;
-  esac
+  # 选了影子副本的典型特征：**选中组自己**没有任何可执行段（SELX=0，只有 r--p/rw-p）
+  if [ -n "$SELX" ] && [ "$((16#$SELX))" -eq 0 ]; then
+    VERDICT="★疑似选中只读影子副本（选中组无可执行段 xs=0）⇒ 装钩会静默失败，须按 §30.2 加显式 RVA 交叉校验"; RC=2
+  fi
 fi
 NVUMS="$(printf '%s\n' "$RVAINFO" | grep -c 'perm=-' || true)"
 if [ -n "$RVAINFO" ] && [ "${NVUMS:-0}" != "0" ]; then
@@ -301,7 +324,7 @@ NOW="$(date '+%Y-%m-%d %H:%M:%S')"
   emit "## 4. libil2cpp 映射分组（★设备差异核心判据）"
   emit ""
   if [ -n "$MAPS_LIB" ]; then
-    emit "分组规则与源码 \`LibBaseResolve()\` 一致：按 dev:inode 分组 → 组内地址首尾相接 → 取 **rw-p 总量最大那组**的 \`off==00000000\` 起点为基址。"
+    emit "分组规则与源码 \`LibBaseResolve()\` 一致：按 dev:inode 分组 → 组内地址首尾相接 → 取 **rw-p 总量最大那组**的 \`off==00000000\` 起点为基址；若该组**无可执行段**（壳加载时段间空隙把 \`r-xp\` 拆成独立组），回退取含 \`r-xp\` 的组，并以该副本 \`off==00000000\` 段（start <= x 段起点者）的起点为基址（与主程序 \`FileOffToVa\` 语义一致）。"
     emit ""
     emit "\`\`\`"
     printf '%s\n' "$GRPINFO" >> "$TMP"

@@ -23,7 +23,10 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <dirent.h>   // §④ 就绪门读 /proc/self/task
+#include <mutex>      // §④ 装钩互斥
 #include <sys/mman.h>
+#include <time.h>     // §④ 就绪门退避计时（CLOCK_MONOTONIC）
 
 #include "Dobby/dobby.h"
 
@@ -62,20 +65,25 @@ typedef void (*SettleMp_t)(void* self, int value);
 static SettleMp_t g_origHeroSettleMp = nullptr;
 
 // ============================================================
-// ② 偏移与 RVA（build 357 重 dump：06_dumped/我的勇者/7.6.3_hu357_il2cpp/dump.cs）
+// ② 偏移与 RVA（7.6.4 base 重 dump：rt360 热更 = 本表 +0x208）
+//   绑定产物：/tmp/wdyz_dump/base/libil2cpp.so sha256 288c1a24…（7.6.4 包内 so，base 配对）
 //   地址口径 = dump.cs 的 Offset（文件偏移），供 FileOffToVa 在 /proc/self/maps 换算 VA。
-//   RVA 序言首 4 字节（小端）：
-//     MonsterCore.SettleDamage   Offset 0x47C08B0  "eb 2b bb 6d" → 0x6DBB2BEB
-//     HeroCore.SettleDamage      Offset 0x4795FAC  "eb 2b bc 6d" → 0x6DBC2BEB
-//     BattleObjectCore.SettleDamage Offset 0x4775EE0 "ff 03 05 d1" → 0xD10503FF
-//     HeroCore.settleMp          Offset 0x47960F0  "fe 0f 1e f8" → 0xF81E0FFE
+//   RVA 序言首 4 字节（小端，2026-10-23 从 so 逐字节实测）：
+//     MonsterCore.SettleDamage   Offset 0x47ECE5C  "eb 2b bb 6d" → 0x6DBB2BEB
+//     HeroCore.SettleDamage      Offset 0x47E26BC  "eb 2b bc 6d" → 0x6DBC2BEB
+//     BattleObjectCore.SettleDamage Offset 0x47A25B0 "ff 03 05 d1" → 0xD10503FF
+//     HeroCore.settleMp          Offset 0x47E27F8  "fe 0f 1e f8" → 0xF81E0FFE
+//     SKillBase.CheckSkill(bool) Offset 0x485B26C  "fe 4f bf a9" → 0xA9BF4FFE
+//       （无CD 4B 补丁点 = 入口 +0x60 = 0x485B2CC，原指令 "00 00 13 2a"=0x2A130000）
+//   历史 357（7.6.3 包用 357 热更 so，勿删）：Monster 0x47C08B0 / Hero 0x4795FAC /
+//     Base 0x4775EE0 / settleMp 0x47960F0 / 无CD ResolveFn 0x482ECB8。
 //   任一序言不符（热更/漂移）→ 自动转按名，不挂错地址。
 // ============================================================
 enum : size_t {
-    kRvaMonsterSettle = 0x47C08B0,
-    kRvaHeroSettle    = 0x4795FAC,
-    kRvaBaseSettle    = 0x4775EE0,
-    kRvaHeroSettleMp  = 0x47960F0,
+    kRvaMonsterSettle = 0x47ECE5C,
+    kRvaHeroSettle    = 0x47E26BC,
+    kRvaBaseSettle    = 0x47A25B0,
+    kRvaHeroSettleMp  = 0x47E27F8,
 };
 
 // ============================================================
@@ -84,7 +92,150 @@ enum : size_t {
 static bool OkPtr(void* p) { return p && Il2Cpp::IsValidHeapPtr(p); }
 
 // ============================================================
-// ④ 双路径挂点机器（禁 base+RVA、禁全 RX 误扫）
+// ④ 并发装钩互斥 + 槽位熔断 + il2cpp 就绪门（勿删）
+//   并发根因（2026-10-23 实测）：UI 线程与 200ms Tick 线程同时进入 SyncHooks()，
+//   HookSlotInstall 的 `if (origPtr && *origPtr)` 是 check-then-act、非原子 ⇒ 同一地址被
+//   DobbyHook 两次 ⇒ DobbyCodePatch 越界 memcpy ⇒ SIGSEGV(SEGV_ACCERR)。
+//   修法：g_installMutex 串行化 + 持锁后 double-check；失败槽位进 g_slotDead[] 熔断。
+//
+//   ⚠️ R20 铁律（照 Games/ZzzMod.cpp「头号根因」反面教材）：本文件禁止出现
+//   sigaction / sigsetjmp / siglongjmp，禁止进程级替换 SIGSEGV/SIGBUS/SIGILL。
+//   2026-10-23 冷启崩实测：装上进程级处理器后，启动期 Unity/ART 自发的可恢复 SIGSEGV
+//   探针被我们抢先接管，链回旧处理器时 ucontext 传 nullptr ⇒ 下游从空 mcontext 读
+//   （SEGV_MAPERR fault 0xb8、size 0x110，__memcpy ← libunity ← libil2cpp），
+//   backtrace 里没有 libstarry_magic 帧。故一律裸读裸写，地址只指向「活对象或本进程
+//   已装载模块」（调用点保证）。
+// ============================================================
+static std::mutex g_installMutex;   // 保护「装钩全过程」，只在 SyncHooks 里 **try_lock** 取
+static std::mutex g_patchMutex;     // 只保护无CD 补丁的读-校验-写
+// 2026-10-23 ANR 修：装钩锁一律 try_lock，抢不到就让「本轮装钩」作废（开关状态在原子量里，
+// 不丢状态），绝不让任何线程（尤其 UI 主线程 nativeSetFeature → onFeatureChanged）阻塞等这把锁。
+// 反查依据：0x12da4 就是 SyncHooks 里这把锁的 bl mutex::lock（锁对象 0x221a20 = g_installMutex）。
+static std::atomic<int> g_installDeferCount{0};   // try_lock 未取到的次数（只用于限频日志）
+
+// ---- 4.1 原语（裸读/裸写；失败只返回 false，交给熔断） ----
+static bool DobbyHookChecked(const char* tag, void* target, void* hook, void** orig) {
+    const int rc = DobbyHook(target, hook, orig);
+    if (rc != 0) {
+        LOGW(WDYZ_LOG " %s dobby fail rc=%d", tag, rc);
+        if (orig) *orig = nullptr;   // 半写保护：失败必须清 orig，否则后续调用跳野指针
+        return false;
+    }
+    return true;
+}
+
+static bool ReadU32At(const char* tag, const void* p, uint32_t* out) {
+    (void)tag;
+    *out = *reinterpret_cast<const volatile uint32_t*>(p);
+    return true;
+}
+
+static bool WriteU32At(const char* tag, void* p, uint32_t v) {
+    (void)tag;
+    *reinterpret_cast<volatile uint32_t*>(p) = v;
+    return true;
+}
+
+// ---- 4.2 槽位熔断：同一槽位连续失败 kSlotFailLimit 次即本次会话不再重试 ----
+static const int kSlotsMax = 16;                    // kSlots 只有 4 个，留余量
+static const int kSlotFailLimit = 5;                // 有界重试，防每 Tick 无限重试
+static bool g_slotDead[kSlotsMax];                  // 只在 g_installMutex 下读写
+static int  g_slotFails[kSlotsMax];                 // 只在 g_installMutex 下读写
+static std::atomic<int> g_installedCount{0};        // 已成功装上的槽位数
+static std::atomic<int> g_deadCount{0};             // 已熔断的槽位数
+
+// ---- 4.3 il2cpp 运行时就绪门（只用 /proc，不调任何 il2cpp API） ----
+// 实测（2026-10-23）：prefs 持久化「无敌 ON」时，200ms tick 在进程启动 ~2s 就发起装钩；
+// 此时游戏仍停在 PrivacyActivity、Unity/il2cpp 运行时尚未初始化。此前任何 il2cpp API 探测
+// 都会把进程打死，故就绪判据改用 /proc 只读信号，二选一（任一命中即认为可安全调 API）：
+//   ① /proc/self/maps 出现 global-metadata 映射（il2cpp 装载 metadata 的直接证据）；
+//   ② /proc/self/task/*/comm 出现 UnityMain，且已持续 ≥10s（Unity 播放器起来后再等一个
+//      初始化窗口，避免播放器刚建线程就调 API）。
+// 未就绪：本轮 SyncHooks 直接 return，不下发任何 il2cpp API；节流 1s 复查一次。
+static std::atomic<bool> g_runtimeReady{false};
+static std::atomic<int>  g_readyProbeLogs{0};
+static long long g_nextReadyMs = 0;                  // 下次探测时间；只在 g_installMutex 下读写
+static long long g_unityMainSeenMs = 0;              // 首次看到 UnityMain 的时间；同上
+static long long g_nextResolveMs = 0;                // 类解析重试退避；只在 g_installMutex 下读写
+static int g_resolveFails = 0;                       // 类解析失败次数；只在 g_installMutex 下读写
+
+static void ResolveBattleClasses();                  // 定义在 ⑥
+
+static long long NowMs() {
+    struct timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return 0;
+    return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+
+// /proc/self/maps 是否已有 global-metadata 映射（纯文件读，不触 il2cpp）
+static bool Il2CppMetadataMapped() {
+    FILE* fp = fopen("/proc/self/maps", "rt");
+    if (!fp) return false;
+    char line[768];
+    bool found = false;
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, "global-metadata")) { found = true; break; }
+    }
+    fclose(fp);
+    return found;
+}
+
+// /proc/self/task 里是否存在指定线程名（纯文件读，不触 il2cpp）
+static bool ThreadNamedExists(const char* name) {
+    DIR* d = opendir("/proc/self/task");
+    if (!d) return false;
+    bool found = false;
+    struct dirent* e;
+    while ((e = readdir(d)) != nullptr) {
+        if (e->d_name[0] == '.') continue;
+        char path[160];
+        snprintf(path, sizeof(path), "/proc/self/task/%s/comm", e->d_name);
+        FILE* f = fopen(path, "rt");
+        if (!f) continue;
+        char comm[64] = {0};
+        if (fgets(comm, sizeof(comm), f)) {
+            size_t n = strlen(comm);
+            while (n > 0 && (comm[n - 1] == '\n' || comm[n - 1] == '\r')) comm[--n] = 0;
+            if (strcmp(comm, name) == 0) found = true;
+        }
+        fclose(f);
+        if (found) break;
+    }
+    closedir(d);
+    return found;
+}
+
+// 就绪门：未就绪返回 false，调用方必须直接 return（不得再下发任何 il2cpp API）。
+static bool Il2CppRuntimeReady() {
+    if (g_runtimeReady.load()) return true;
+    const long long now = NowMs();
+    if (now < g_nextReadyMs) return false;           // 1s 节流
+    g_nextReadyMs = now + 1000;
+
+    if (Il2CppMetadataMapped()) {
+        g_runtimeReady.store(true);
+        LOGI(WDYZ_LOG " il2cpp ready (metadata mapped) — 进入装钩");
+        return true;
+    }
+    if (ThreadNamedExists("UnityMain")) {
+        if (g_unityMainSeenMs == 0) {
+            g_unityMainSeenMs = now;
+            LOGI(WDYZ_LOG " UnityMain 已出现，等待 10s 初始化窗口后再判就绪");
+        } else if (now - g_unityMainSeenMs >= 10000) {
+            g_runtimeReady.store(true);
+            LOGI(WDYZ_LOG " il2cpp ready (UnityMain+%lldms) — 进入装钩", now - g_unityMainSeenMs);
+            return true;
+        }
+    }
+    const int k = g_readyProbeLogs.fetch_add(1) + 1;
+    if (k == 1 || (k % 30) == 0) {
+        LOGI(WDYZ_LOG " il2cpp not ready — skip install（不下发 il2cpp API, probe#%d）", k);
+    }
+    return false;
+}
+
+// ============================================================
+// ⑤ 双路径挂点机器（禁 base+RVA、禁全 RX 误扫）
 // ============================================================
 static bool IsLibMapLine(const char* line, const char* lib) {
     return line && lib && strstr(line, lib) && strstr(line, ".so");
@@ -121,13 +272,13 @@ static bool HookAtRva(const char* tag, uintptr_t rva, uint32_t expectInsn, void*
     }
     if (expectInsn) {
         uint32_t got = 0;
-        memcpy(&got, va, sizeof(got));
+        if (!ReadU32At(tag, va, &got)) return false;   // 读序言也走保护区
         if (got == 0 || got == 0xFFFFFFFFu || got != expectInsn) {
             LOGW("%s rva drift got=0x%08X want=0x%08X — try by-name", tag, got, expectInsn);
             return false;
         }
     }
-    if (DobbyHook(va, hook, orig) != 0) {
+    if (!DobbyHookChecked(tag, va, hook, orig)) {
         LOGW("%s dobby fail @rva", tag);
         return false;
     }
@@ -177,7 +328,7 @@ static bool HookByName(const char* tag, const char* ns, const char* cls, const c
         LOGW("%s bad method ptr %s.%s", tag, cls, method);
         return false;
     }
-    if (DobbyHook(fn, hook, orig) != 0) {
+    if (!DobbyHookChecked(tag, fn, hook, orig)) {
         LOGW("%s dobby fail @name %s", tag, method);
         return false;
     }
@@ -197,14 +348,16 @@ struct HookSlot {
     void**      origPtr;
 };
 
+// ⚠️ 只在 g_installMutex 保护下调用（由 InstallBattleHooks 持锁循环）。
+// 这里的 `if (origPtr && *origPtr)` 是 check-then-act，本身不是原子的。
 static bool HookSlotInstall(const HookSlot& s) {
-    if (s.origPtr && *s.origPtr) return true;
+    if (s.origPtr && *s.origPtr) return true;   // 已装：幂等返回（配合持锁 double-check）
     if (s.rva && HookAtRva(s.tag, s.rva, s.expectInsn, s.hookFn, s.origPtr)) return true;
     return HookByName(s.tag, s.ns, s.cls, s.method, s.argc, s.hookFn, s.origPtr);
 }
 
 // ============================================================
-// ⑤ 敌我/类别判定（复用 7.6.3 已验证实现）
+// ⑥ 敌我/类别判定（复用 7.6.3 已验证实现）
 // ============================================================
 static std::atomic<int> g_monSamp{0};
 static std::atomic<int> g_heroSamp{0};
@@ -273,7 +426,7 @@ static int MonsterTypeOf(void* self) {
 }
 
 // ============================================================
-// ⑥ 无限技能：无CD 直写链（见 10_docs/我的勇者/挂点分析_无限技能.md）
+// ⑦ 无限技能：无CD 直写链（见 10_docs/我的勇者/挂点分析_无限技能.md）
 //   HeroCore → skillEntity(0x30, ISkillable) → skillContainer(0x18) →
 //   skillDic(0x18, Dictionary<int,MSkill>) → 枚举 value → MSkill →
 //   skillBase(0x18, SKillBase) → CDTime(0x38)=0 / cding(0x3C)=false
@@ -318,7 +471,7 @@ static void ClearHeroSkillCd(void* heroCore) {
 }
 
 // ============================================================
-// ⑦ hook 函数与挂点表
+// ⑧ hook 函数与挂点表
 // ============================================================
 // 基类 BattleObjectCore.SettleDamage — 真正 HP 落地点。
 // 普通怪的五倍攻击/伤害倍率必须在这里改：MonsterCore 覆盖入口会重算 value。
@@ -446,79 +599,205 @@ static const HookSlot kSlots[] = {
 };
 
 // ============================================================
-// ⑧ 受保护函数补丁助手（无CD 用）：thunk 跟随 + 4B 补丁
+// ⑨ 受保护函数补丁助手（无CD 用）：thunk 跟随 + 4B 补丁
 // ============================================================
 // 跟随 thunk 解析真实函数体基址。游戏把受保护函数搬到匿名内存，原 .text 位置只留
 //   ldr x17, [pc,#imm]; br x17; <8字节字面量=wrapper地址>
 // wrapper 固定 0x34 字节后才是真实函数体（已实测 CheckSkill / SettleDamage 两处一致）。
-static void* ResolveFn(uintptr_t entryFileOff) {
-    void* va = FileOffToVa(GameUnity::TARGET_LIB, entryFileOff);
-    if (!va) return nullptr;
+static void* FollowThunk(void* fn) {
+    if (!fn) return nullptr;
     uint32_t insn = 0;
-    memcpy(&insn, va, 4);
+    if (!ReadU32At("nocd", fn, &insn)) return nullptr;
     if (insn == 0x58000051u) {  // ldr x17, [pc, #imm]
         uint64_t t = 0;
-        memcpy(&t, (char*)va + 8, 8);
+        memcpy(&t, (char*)fn + 8, 8);
         if (t > 0x10000 && t < 0x7FFFFFFFFFFFull) {
             return (char*)t + 0x34;  // wrapper + 0x34 = 真实函数体
         }
     }
-    return va;  // 未 thunk，返回原入口
+    return fn;  // 未 thunk，返回原入口
 }
 
-static void Patch4At(void* va, const uint8_t* bytes, uint32_t want, uint32_t revert, const char* tag) {
+// 返回 true = 已处于目标态（含幂等跳过）；false = 失配/写入失败，调用方据此置闩锁。
+static bool Patch4At(void* va, uint32_t want, uint32_t revert, const char* tag) {
     if (!va) {
         LOGW(WDYZ_LOG " %s patch va null", tag);
-        return;
+        return false;
     }
     uint32_t cur = 0;
-    memcpy(&cur, va, 4);
-    if (cur == want) return;  // 已是目标态，幂等跳过
+    if (!ReadU32At(tag, va, &cur)) return false;   // 读补丁点也走保护区
+    if (cur == want) return true;                       // 已是目标态，幂等跳过
     if (cur != revert) {
         LOGW(WDYZ_LOG " %s patch expect drift cur=0x%08X (skip)", tag, cur);
-        return;
+        return false;
     }
     uintptr_t page = (uintptr_t)va & ~(uintptr_t)0xFFFu;
     if (mprotect((void*)page, 0x1000, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
         LOGW(WDYZ_LOG " %s patch mprotect fail @%p", tag, va);
-        return;
+        return false;
     }
-    memcpy(va, bytes, 4);
+    const bool wrote = WriteU32At(tag, va, want);  // 写只读页也走保护区
     ClearCache(va, (char*)va + 4);
     mprotect((void*)page, 0x1000, PROT_READ | PROT_EXEC);
-    LOGI(WDYZ_LOG " %s patch applied @%p", tag, va);
+    if (wrote) LOGI(WDYZ_LOG " %s patch applied @%p", tag, va);
+    return wrote;
 }
 
-// 无CD：SKillBase.CheckSkill（被 thunk 保护）最终 `orr w0,w0,w19`(0x4832D18) → mov w0,#0。
-// 直接把返回值强制为 0=无错误，一并清掉 cding(bit4)/次数(bit7)/连续CD(bit8)/虚方法结果，
-// 不碰 CDTime/cding 字段、不动事件链 → 不会出现上版「倒计时卡死」。
-static void ApplyNoCdPatch(bool on) {
-    void* base = ResolveFn(0x482ECB8);  // SKillBase.CheckSkill 入口（文件偏移）
-    if (!base) return;
-    static const uint8_t kOn[]  = {0x00, 0x00, 0x80, 0x52};  // mov w0, #0
-    static const uint8_t kOff[] = {0x00, 0x00, 0x13, 0x2a};  // orr w0, w0, w19（原指令）
-    Patch4At((char*)base + 0x60, on ? kOn : kOff, on ? 0x52800000u : 0x2A130000u,
-             on ? 0x2A130000u : 0x52800000u, "nocd");
-}
+// 无CD：SKillBase.CheckSkill 最终 `orr w0,w0,w19`（补丁点 = 入口 +0x60）→ mov w0,#0。
+// 入口按名解析（Battle.Skill.SKillBase::CheckSkill(bool)，与 kSlots 同口径），不再用
+// 硬编码文件偏移：热更副本上 0x485B26C 已落到无关代码（实测 +0x60 读回 0x94388E9F）。
+// 解析/身份校验/补丁点校验失败 ⇒ 置闩锁：同一开关状态不再每 Tick 重试、不在错地址读 4B；
+// 只有开关切换时才清闩重试一次。
+static std::atomic<bool> g_nocdLatched{false};   // 本次开关状态已放弃
+static std::atomic<bool> g_nocdLastOn{false};    // 上次处理过的开关状态
+static std::atomic<bool> g_nocdApplied{false};   // 补丁当前是否为目标态
 
-// ============================================================
-// ⑨ 分组安装 + 懒装
-// ============================================================
-static void InstallBattleHooks() {
-    ResolveBattleClasses();
-    for (const auto& s : kSlots) {
-        if (HookSlotInstall(s)) g_anyHooked.store(true);
+static void* ResolveCheckSkillEntry() {
+    if (!EnsureApi()) return nullptr;
+    auto& api = GetApi();
+    void* k = FindClassNs("Battle.Skill", "SKillBase");
+    if (!k) k = api.FindClassByShortName("SKillBase");
+    if (!k) {
+        LOGW(WDYZ_LOG " nocd class miss SKillBase — 已置闩锁，本次不再重试");
+        return nullptr;
     }
+    void* mi = api.GetMethod(k, "CheckSkill", 1);
+    if (!mi) {
+        LOGW(WDYZ_LOG " nocd method miss SKillBase.CheckSkill — 已置闩锁，本次不再重试");
+        return nullptr;
+    }
+    void* fn = *reinterpret_cast<void**>(mi);
+    if (!OkPtr(fn)) {
+        LOGW(WDYZ_LOG " nocd bad method ptr SKillBase.CheckSkill=%p", fn);
+        return nullptr;
+    }
+    return FollowThunk(fn);
+}
+
+static void ApplyNoCdPatch(bool on) {
+    if (!g_runtimeReady.load()) return;   // 就绪门前不碰 il2cpp API（开关状态保留，不置闩）
+    std::lock_guard<std::mutex> lk(g_patchMutex);   // 读-校验-写整体串行，防双线程互踩页权限
+
+    if (on == g_nocdLastOn.load()) {
+        if (g_nocdLatched.load()) return;           // ★ 同状态失配闩：不重试、不读 4B
+        if (g_nocdApplied.load() == on) return;     // 已处于目标态
+    } else {
+        g_nocdLatched.store(false);                 // 开关切换：清闩，允许重试一次
+        g_nocdLastOn.store(on);
+    }
+
+    void* entry = ResolveCheckSkillEntry();
+    if (!entry) {
+        g_nocdLatched.store(true);
+        return;
+    }
+
+    uint32_t pro = 0;
+    if (!ReadU32At("nocd", entry, &pro)) {     // 身份校验：入口序言
+        g_nocdLatched.store(true);
+        return;
+    }
+    if (pro != 0xA9BF4FFE) {                        // stp x30,x19,[sp,#-0x10]!
+        LOGW(WDYZ_LOG " nocd entry prologue 0x%08X != 0xA9BF4FFE (latched, no retry)", pro);
+        g_nocdLatched.store(true);
+        return;
+    }
+
+    static const uint32_t kOn  = 0x52800000u;  // mov w0, #0
+    static const uint32_t kOff = 0x2A130000u;  // orr w0, w0, w19（原指令）
+    const uint32_t want   = on ? kOn  : kOff;
+    const uint32_t revert = on ? kOff : kOn;
+    if (!Patch4At((char*)entry + 0x60, want, revert, "nocd")) {
+        g_nocdLatched.store(true);
+        LOGW(WDYZ_LOG " nocd patch 未生效 — 已置闩锁（同一状态不再重试）");
+        return;
+    }
+    g_nocdApplied.store(on);
+}
+
+// ============================================================
+// ⑩ 分组安装 + 懒装（安装全程持 g_installMutex，防 UI/Tick 同址双装）
+// ============================================================
+static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
+
+static void InstallBattleHooks() {
+    // 类解析：未命中时退避重试（0.5s→8s），超过 40 次本次会话放弃；不阻塞其他槽位逻辑
+    if (!g_classCacheReady.load()) {
+        const long long now = NowMs();
+        if (now < g_nextResolveMs) return;
+        ResolveBattleClasses();
+        if (!g_classCacheReady.load()) {
+            g_resolveFails++;
+            long long delay = 500LL << (g_resolveFails > 4 ? 4 : (g_resolveFails - 1));
+            if (delay > 8000) delay = 8000;
+            g_nextResolveMs = now + delay;
+            if (g_resolveFails == 1 || g_resolveFails % 10 == 0) {
+                LOGW(WDYZ_LOG " Battle 类解析未命中 #%d — 退避 %lldms 后重试",
+                     g_resolveFails, delay);
+            }
+            if (g_resolveFails >= 40) {
+                LOGW(WDYZ_LOG " Battle 类始终未命中（%d 次）— 本次会话不再解析", g_resolveFails);
+                g_nextResolveMs = now + 3600000LL;
+            }
+            return;   // 没拿到类就不装钩
+        }
+    }
+    int ok = 0, dead = 0;
+    for (int i = 0; i < kSlotsCount && i < kSlotsMax; ++i) {
+        if (g_slotDead[i]) { ++dead; continue; }        // 熔断，跳过
+        if (HookSlotInstall(kSlots[i])) {
+            ++ok;
+            g_slotFails[i] = 0;
+        } else if (++g_slotFails[i] >= kSlotFailLimit) {
+            g_slotDead[i] = true;                       // 本次会话永久拉黑
+            LOGW(WDYZ_LOG " slot[%d] %s 连续失败 %d 次 — 本次会话熔断，不再重试",
+                 i, kSlots[i].tag, g_slotFails[i]);
+        }
+    }
+    const int prevOk = g_installedCount.exchange(ok);
+    const int prevDead = g_deadCount.exchange(dead);
+    if (ok != prevOk || dead != prevDead) {
+        LOGI(WDYZ_LOG " install pass: ok=%d dead=%d/%d", ok, dead, kSlotsCount);
+    }
+    if (ok > 0) g_anyHooked.store(true);
+}
+
+static bool AllSlotsSettled() {
+    return g_installedCount.load() + g_deadCount.load() >= kSlotsCount;
 }
 
 static void SyncHooks() {
     if (!g_libReady.load()) return;
-    if (g_dmg.load() || g_inv.load() || g_skill.load()) InstallBattleHooks();
+    // 全关：不探测、不装钩、不给 noCD 下发任何 il2cpp API
+    if (!g_dmg.load() && !g_inv.load() && !g_skill.load()) return;
+
+    // ---- 就绪门：il2cpp 运行时没起来之前，跳过本轮，不下发任何 il2cpp API ----
+    if (!Il2CppRuntimeReady()) return;
+
+    if (g_dmg.load() || g_inv.load() || g_skill.load()) {
+        if (!AllSlotsSettled()) {                              // 快路径：装齐/熔断后不进锁
+            // ★ 2026-10-23 ANR 修：lock_guard（futex_wait 阻塞）→ try_lock（不等待）。
+            //   二次打开时菜单 refreshFeatures 触发 Switch.setChecked → nativeSetFeature →
+            //   onFeatureChanged → 本函数；此刻 Tick 线程正持 g_installMutex 做类解析/装钩，
+            //   主线程卡锁 >5s ⇒ Input dispatching timed out（主线程栈 0xfc30 → 0x12da4）。
+            //   现在抢不到锁就跳过「本轮装钩」：g_dmg/g_inv/g_skill 是原子量，状态不丢，
+            //   Tick 下一拍（200ms）会带同样状态重来；防双装语义由「只有持锁者装」保证。
+            std::unique_lock<std::mutex> lk(g_installMutex, std::try_to_lock);
+            if (!lk.owns_lock()) {
+                const int k = g_installDeferCount.fetch_add(1) + 1;
+                if (k == 1 || (k % 30) == 0) {
+                    LOGI(WDYZ_LOG " install busy — try_lock 未取到，本轮跳过装钩（下次 tick 继续 #%d）", k);
+                }
+            } else if (!AllSlotsSettled()) {                   // double-check
+                InstallBattleHooks();
+            }
+        }
+    }
     ApplyNoCdPatch(g_skill.load());
 }
 
 // ============================================================
-// ⑩ 对外接口（MainModern.cpp 注册表契约）
+// ⑪ 对外接口（MainModern.cpp 注册表契约）
 // ============================================================
 bool Wdyz_TryInit() {
     if (g_libReady.load()) return true;
