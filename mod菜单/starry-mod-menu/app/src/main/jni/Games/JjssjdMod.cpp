@@ -75,8 +75,8 @@ static std::atomic<bool> g_kill{false};       // JJSSJD_FEAT_KILL（秒杀）
 extern "C" const uint8_t _binary_jjssjd_dll_start[];
 extern "C" const uint8_t _binary_jjssjd_dll_end[];
 
-static constexpr size_t kOfficialLen = 11800576;   // 官方 Assembly-CSharp.dll（设备热更版去 8B 头）
-static constexpr size_t kPatchedLen  = 11804672;   // 补丁版（+4096 B ⇒ 超原数组容量）
+static constexpr size_t kOfficialLen = 11801088;   // 官方 Assembly-CSharp.dll（2026-10-24 热更版，.text +512B）
+static constexpr size_t kPatchedLen  = 11805184;   // 补丁版（+4096 B ⇒ 超原数组容量）
 // System.Reflection.Assembly.Load(byte[]) 在 libil2cpp.so 里的 RVA（Il2CppDumper dump.cs）
 static constexpr uintptr_t kLoadRva = 0x11832AC;
 // 序言 16 字节：str x19,[sp,#-32]! ; stp x29,x30,[sp,#16] ; add x29,sp,#16 ; mov x19,x0
@@ -273,6 +273,26 @@ static bool HookAtRvaStrict(const char* tag, uintptr_t rva, const uint8_t* prolo
 // ============================================================
 static void* (*g_origAssemblyLoad)(void* a0, void* a1, void* a2, void* a3, void* a4, void* a5) = nullptr;
 
+#ifdef STARRY_DIAG
+// 诊断：把放行的 Assembly.Load 入参落盘（定位热更 DLL 漂移；正式包编译期不存在）
+static void DumpAsmLoadOnce(const void* arr, int32_t len) {
+    static std::atomic<int> s_done{0};
+    if (s_done.fetch_add(1) != 0) return;
+    if (!arr || len <= 0 || len > 64 * 1024 * 1024) return;
+    const uint8_t* b = reinterpret_cast<const uint8_t*>(arr) + 0x20;
+    FILE* fp = fopen("/data/user/0/com.cmge.ssjd.x7sy/files/asmload.bin", "wb");
+    if (!fp) { LOGW(TPL_LOG " dump open fail"); return; }
+    size_t w = fwrite(b, 1, (size_t)len, fp);
+    fclose(fp);
+    uint32_t lfanew = 0;
+    memcpy(&lfanew, b + 0x3c, 4);
+    uint32_t peSig = 0;
+    if (lfanew + 4 <= (uint32_t)len) memcpy(&peSig, b + lfanew, 4);
+    LOGW(TPL_LOG " asmload dump n=%d w=%zu head=%02x%02x%02x%02x lfanew=0x%x peSig=0x%x",
+          (int)len, w, b[0], b[1], b[2], b[3], lfanew, peSig);
+}
+#endif
+
 // il2cpp 数组布局（64-bit）：klass@0 monitor@8 bounds@0x10 max_length@0x18 data@0x20
 static void* AllocByteArray(size_t len) {
     static void* (*pArrayNew)(void*, size_t) = nullptr;
@@ -323,6 +343,9 @@ static void* Hooked_AssemblyLoad(void* a0, void* a1, void* a2, void* a3, void* a
         static std::atomic<int> s_odd{0};
         if (len > 0 && s_odd.fetch_add(1) < 4)
             LOGI(TPL_LOG " Assembly.Load 其它程序集 len=%d — 放行", len);
+#ifdef STARRY_DIAG
+        DumpAsmLoadOnce(a0, len);
+#endif
     } else {
         const uint8_t* b = reinterpret_cast<const uint8_t*>(a0) + 0x20;
         hit = (b[0] == 'M' && b[1] == 'Z');
