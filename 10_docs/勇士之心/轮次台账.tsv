@@ -26,3 +26,7 @@
 2026-10-19 20:44	7	2	追加「结算特权翻卡」试验：hasPrivilege 全包 0 处写、3 处读 => 服务端字段(推断)；特权卡无 cost(客户端把 type=2 改发 type=1) => 安全放行：面板内 type=2 卡 hasPrivilege 置真 + 包 battleMgr.bFh 打服务端 code + 卡组统计行；包 3b9c398e / so 117aaa77；离线 132 pass/0 fail	logcat(precheck_20261019_204402)	未测
 2026-10-19 20:44	11	3	补充根因（与金卡同因）：结算面板 AdventureFinishPanel L48851-48868 里【游戏自带】的自动出售/自动分解整块被 fDf("gold") 门控，金卡失效期间该块不执行 => 「一直不分解」的主因；金卡修好后该路径打开，我们回城触发为第二重保险	静态对照 game/index.js 1.1.6.0	未测
 2026-10-19 20:50	7	4	L3 用户确认：结算翻卡面板点【特权牌】能翻开并拿到奖励（服务端 code=0 放行）=> 解锁金卡+hasPrivilege 放行这条链在真机成立；包 3b9c398e / so 117aaa77	pipeline.log	有效
+2026-10-24 01:56	14	1	新增【战斗加速】Slider 1..5（菜单第 13 项，末尾追加，前 13 项序号不变）：战斗内 battle world 的 worldTimeScale、战斗外 cc.director 调度器 setTimeScale，二者互斥防叠乘；AC 层 useTime 按自己倍率补偿（clampArmed=speedMul>1）。so 995bf547 / 包 54bdc83b。	pipeline.log	未测
+2026-10-24 01:56	1	2	1.0.6 加密壳代星空包 13 项功能用户实测通过（2026-10-24 用户原话「目前测试功能都是没问题的」）；包 54bdc83b / so 995bf547	pipeline.log	有效
+2026-10-24 02:04	6	7	战斗加速 v2（真·全局变速）：改挂 cc.director.calculateDeltaTime 把每帧 _deltaTime ×k（cocos2d-jsb 6406 处一处放大 → compScheduler/scheduler/ActionManager/物理/组件 update 全局生效）；worldTimeScale 与 scheduler.setTimeScale 降为兜底且互斥；tick 的 wallMs 除回 k 保持真实墙钟；菜单重排到基础功能第 6 位（自动战斗 7、金卡 8、自动化 10..13）。离线单测 12/12。so 863c6c21 / 包 72ba3541。	pipeline.log	未测
+2026-10-24 02:08	6	8	战斗加速 v2 用户实测通过（2026-10-24「功能都没问题」）：引擎 dt×k 全局变速 + 基础功能第 6 位；包 9c25c51f / so 7f51585b	pipeline.log	有效

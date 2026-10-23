@@ -1,7 +1,7 @@
 /* ================================================================
  *  勇士之心 MOD - se::ScriptEngine::evalString splice
  *
- *  目标：TapTap com.fightingstars.games.warrior 1.0.4 / vc5
+ *  目标：TapTap com.fightingstars.games.warrior 1.0.3 / vc5
  *  引擎：Cocos Creator 2.4.15 / libcocos2djs.so
  *
  *  本包与斌哥包的核心资产一致：
@@ -16,12 +16,25 @@
 
 #include "YsxzMod.h"
 #include "YsxzPatchJs.h"
+/* 模拟器侧引导脚本素材（由 04_scripts/勇士之心/ysxz_mainjs_patch.py 生成）：
+   kYsxzBootPristine/_len = 底包 assets/main.js（加密态）
+   kYsxzBootPatched/_len  = 同一明文 + 自举补丁后重新加密
+   生成命令见 ysxz_build_so_103.sh；缺这个头文件就编不过（故意如此，防拿旧产物出包）。 */
+#include "YsxzBootBlob.h"
+/* 1.0.6（加密壳代）追加：
+   YsxzSecShell —— 每 1ms 把壳的 dirty/failedMask 归零，避免重签+外科导致壳自检失败后
+                   跳过 Application.onCreate ⇒ bingo SDK 未初始化 ⇒ AppInfo.parameters NPE。
+                   在 1.0.3 明文包上找不到 libsecret.so 会自动退化为 idle，无副作用。
+   YsxzExitTrace —— 退出点只观测（打印调用点），不改行为。 */
+#include "Games/YsxzSecShell.h"
+#include "Games/YsxzExitTrace.h"
 
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <sys/stat.h>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -29,16 +42,13 @@
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
 #include "Includes/SecStrings.hpp"
-#include "Games/YsxzSecShell.h"
-#include "Games/YsxzExitTrace.h"
 
 #define YSXZ_LOG "[Ysxz]"
 
 static const char* kTargetLib() { return sec_lib_cocosjs(); }
 
-// 已知静态 RVA 回退表（新→旧）；仅当 JNI 桥自适应定位失败时才用
-static constexpr uintptr_t kEvalRvaFallbacks[] = {0x3152dc, 0x3138e4};
-static constexpr uint32_t kEvalInsn = 0xD10543FFu;  // sub sp, sp, #0x150 序言
+static constexpr uintptr_t kEvalRva = 0x3138e4;
+static constexpr uint32_t kEvalInsn = 0xD10543FFu;
 static constexpr long kBundleMinLen = 200L * 1024L;
 static constexpr long kBundleMaxLen = 64L * 1024L * 1024L;
 
@@ -67,8 +77,13 @@ static bool IsLibMapLine(const char* line, const char* lib) {
 }
 
 static bool IsTargetBundle(const char* fileName) {
+    /* 2026-10-07 补 assets/main/index.：过检测闸门 ANTI_CHEAT_ENABLED 的宿主模块 $LZ
+     * 在 main bundle 里(实测 main/index.js 19 处命中)，不放行则闸门层永远 arm 不上。
+     * main 内容过滤已过关(window.__require / maxApDefRate / AUTO_BATTLE 齐备)。
+     * JS 侧用 sealMethods(仅 main 独有)识别 main，走 gate-only，不跑功能扫描。 */
     return fileName && (strstr(fileName, "assets/battleLogic/index.") ||
-                        strstr(fileName, "assets/game/index."));
+                        strstr(fileName, "assets/game/index.") ||
+                        strstr(fileName, "assets/main/index."));
 }
 
 // 两轮探测：先 x 段（真机快路径），找不到再退到最大可读段
@@ -110,241 +125,181 @@ static void* FileOffToVa(const char* lib, uintptr_t fileOff, bool* viaReadable) 
     return nullptr;
 }
 
-// ---------------------------------------------------------------
-//  自适应定位 se::ScriptEngine::evalString
-//    本作 so 被 strip（无 se:: 符号），但导出了 JNI 桥
-//    Java_org_cocos2dx_lib_Cocos2dxJavascriptJavaBridge_evalString；
-//    该 wrapper 内 “bl 目标首字 == 0xD10543FF” 的那一个就是 evalString。
-//    1.0.4 实测：wrapper @rva 0x2c3318，bl @0x2c33a4 → evalString @rva 0x3152dc
-//    （旧 0x3138e4 已漂移 +0x19F8，序言校验会直接拒绝）。
-// ---------------------------------------------------------------
-struct SoRange {
-    uintptr_t base = 0;
-    size_t size = 0;
-    bool ok = false;
-};
+static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,
+                             const char* fileName);
 
-static SoRange GetLoadedRange(const char* lib) {
-    SoRange r;
-    FILE* fp = fopen("/proc/self/maps", "rt");
-    if (!fp) return r;
-    char line[768];
-    uintptr_t lo = 0, hi = 0;
-    while (fgets(line, sizeof(line), fp)) {
-        if (!IsLibMapLine(line, lib)) continue;
-        unsigned long start = 0, end = 0;
-        if (sscanf(line, "%lx-%lx", &start, &end) != 2 || end <= start) continue;
-        if (!r.ok || start < lo) lo = start;
-        if (!r.ok || end > hi) hi = end;
-        r.ok = true;
-    }
+/* ======================================================================
+ *  模拟器自举的两块地基（MuMu/Houdini 上原生 inline hook 装得上但不命中）
+ *
+ *  1) main.js 自愈：引擎真正加载的是 files/res/main.js。若它还是底包原样
+ *     （或首启尚未解包、文件不存在），就把「尾附自举补丁」的那份写回去。
+ *     只按字节比对已知 pristine/patched，不认识的版本一律不动。
+ *  2) 生效证明：只有真的截获到 evalString 才写 files/ysxz_native_ok（内容=pid）。
+ *     main.js 里的自举驱动启动时读它：同 pid ⇒ 原生路线已在工作，自举让位；
+ *     读不到（含 MuMu 这种钩子不命中的情形）⇒ 自举接管。
+ *  两条路线共享同一份补丁源，运行时判据选路，无机型/模拟器名单分叉。
+ * ====================================================================== */
+static void YsxzDataDir(char* out, size_t cap) {
+    if (!out || cap < 32) return;
+    out[0] = 0;
+    FILE* fp = fopen("/proc/self/cmdline", "rb");
+    if (!fp) return;
+    char buf[256];
+    memset(buf, 0, sizeof(buf));
+    const size_t got = fread(buf, 1, sizeof(buf) - 1, fp);
     fclose(fp);
-    if (r.ok) {
-        r.base = lo;
-        r.size = static_cast<size_t>(hi - lo);
-    }
-    return r;
+    if (got == 0) return;
+    char* colon = strchr(buf, ':');   /* com.pkg:remote -> com.pkg */
+    if (colon) *colon = 0;
+    if (!buf[0]) return;
+    snprintf(out, cap, "/data/data/%s", buf);
+    if (access(out, F_OK) != 0) snprintf(out, cap, "/data/user/0/%s", buf);
 }
 
-struct YsxzEhdr {
-    uint8_t ident[16];
-    uint16_t type, machine;
-    uint32_t version;
-    uint64_t entry, phoff, shoff;
-    uint32_t flags;
-    uint16_t ehsize, phentsize, phnum, shentsize, shnum, shstrndx;
-};
-struct YsxzPhdr {
-    uint32_t type, flags;
-    uint64_t offset, vaddr, paddr, filesz, memsz, align;
-};
-struct YsxzDyn {
-    int64_t tag;
-    uint64_t val;
-};
-struct YsxzSym {
-    uint32_t name;
-    uint8_t info, other;
-    uint16_t shndx;
-    uint64_t value, size;
-};
-
-static constexpr uint32_t kPtDynamic = 2;
-static constexpr int64_t kDtHash = 4, kDtStrtab = 5, kDtSymtab = 6, kDtStrsz = 10;
-static constexpr int64_t kDtGnuHash = 0x6ffffef5ll;
-
-static bool ReadMapped(const SoRange& r, uintptr_t addr, void* dst, size_t n) {
-    if (addr < r.base || addr - r.base + n > r.size) return false;
-    memcpy(dst, reinterpret_cast<const void*>(addr), n);
+static bool YsxzReadWholeFile(const char* path, std::string* out) {
+    FILE* fp = fopen(path, "rb");
+    if (!fp) return false;
+    out->clear();
+    char buf[4096];
+    size_t n = 0;
+    while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) out->append(buf, n);
+    fclose(fp);
     return true;
 }
 
-// GNU_HASH 符号计数：bucket 最大值 → chain 链尾（低位为 1）
-static uint32_t GnuHashSymCount(const SoRange& r, uintptr_t gh) {
-    uint32_t hdr[4] = {0, 0, 0, 0};
-    if (!ReadMapped(r, gh, hdr, sizeof(hdr))) return 0;
-    const uint32_t nbuckets = hdr[0], symoffset = hdr[1], bloomSize = hdr[2];
-    if (!nbuckets || !symoffset) return 0;
-    const uintptr_t buckets = gh + 16 + static_cast<uintptr_t>(bloomSize) * 8;
-    uint32_t maxIdx = symoffset;
-    for (uint32_t i = 0; i < nbuckets; i++) {
-        uint32_t b = 0;
-        if (!ReadMapped(r, buckets + i * 4u, &b, 4)) return 0;
-        if (b > maxIdx) maxIdx = b;
-    }
-    const uintptr_t chain = buckets + static_cast<uintptr_t>(nbuckets) * 4;
-    for (uint32_t k = 0; k < 0x100000u; k++) {
-        uint32_t c = 0;
-        if (!ReadMapped(r, chain + (maxIdx - symoffset + k) * 4u, &c, 4)) return 0;
-        if (c & 1u) return maxIdx + k + 1;
-    }
-    return 0;
+static bool YsxzWriteWholeFile(const char* path, const unsigned char* data, size_t len) {
+    std::string tmp = std::string(path) + ".starrytmp";
+    FILE* fp = fopen(tmp.c_str(), "wb");
+    if (!fp) return false;
+    const size_t wrote = fwrite(data, 1, len, fp);
+    fclose(fp);
+    if (wrote != len) { unlink(tmp.c_str()); return false; }
+    chmod(tmp.c_str(), 0600);
+    if (rename(tmp.c_str(), path) != 0) { unlink(tmp.c_str()); return false; }
+    return true;
 }
 
-static uintptr_t ResolveEvalViaJniBridge(const SoRange& r) {
-    YsxzEhdr eh;
-    if (!ReadMapped(r, r.base, &eh, sizeof(eh))) return 0;
-    if (memcmp(eh.ident, "\x7f""ELF", 4) != 0 || eh.ident[4] != 2) return 0;
-    uintptr_t dynAddr = 0;
-    uint64_t dynSize = 0;
-    for (uint16_t i = 0; i < eh.phnum; i++) {
-        YsxzPhdr ph;
-        if (!ReadMapped(r, r.base + eh.phoff + static_cast<uint64_t>(i) * eh.phentsize, &ph,
-                        sizeof(ph)))
-            break;
-        if (ph.type == kPtDynamic) {
-            dynAddr = r.base + ph.vaddr;
-            dynSize = ph.filesz;
-            break;
+/* 状态: 0=未判 1=已是补丁版 2=本轮刚写 3=陌生产物（不动） */
+static void YsxzBootSelfHealOnce(const char* dataDir, int* state) {
+    if (!dataDir || !dataDir[0]) return;
+    char path[512];
+    snprintf(path, sizeof(path), "%s/files/res/main.js", dataDir);
+    std::string cur;
+    if (!YsxzReadWholeFile(path, &cur)) {
+        if (YsxzWriteWholeFile(path, kYsxzBootPatched, kYsxzBootPatched_len)) {
+            LOGI("%s boot self-heal: main.js missing -> wrote patched (%u B)", YSXZ_LOG,
+                 kYsxzBootPatched_len);
+            *state = 1;
         }
+        return;
     }
-    if (!dynAddr) return 0;
-
-    uintptr_t symtab = 0, strtab = 0, hash = 0, gnuHash = 0;
-    uint64_t strsz = 0;
-    for (uint64_t o = 0; o + 16 <= dynSize; o += 16) {
-        YsxzDyn dd;
-        if (!ReadMapped(r, dynAddr + o, &dd, sizeof(dd))) break;
-        if (dd.tag == 0) break;
-        const uintptr_t v = r.base + dd.val;
-        if (dd.tag == kDtSymtab) symtab = v;
-        else if (dd.tag == kDtStrtab) strtab = v;
-        else if (dd.tag == kDtStrsz) strsz = dd.val;
-        else if (dd.tag == kDtHash) hash = v;
-        else if (dd.tag == kDtGnuHash) gnuHash = v;
+    if (cur.size() == kYsxzBootPatched_len &&
+        memcmp(cur.data(), kYsxzBootPatched, kYsxzBootPatched_len) == 0) {
+        if (*state != 1) LOGI("%s boot self-heal: main.js already patched", YSXZ_LOG);
+        *state = 1;
+        return;
     }
-    if (!symtab || !strtab) return 0;
-
-    uint32_t count = 0;
-    if (hash) {
-        uint32_t h2[2] = {0, 0};
-        if (ReadMapped(r, hash, h2, sizeof(h2))) count = h2[1];  // nchain == 符号数
-    }
-    if (!count && gnuHash) count = GnuHashSymCount(r, gnuHash);
-    if (!count) count = 60000;  // 兜底上限，遇 name 越界即 break
-
-    const char* want = sec_sym_cocos_jsb_eval();
-    const size_t wantLen = strlen(want);
-    for (uint32_t i = 0; i < count; i++) {
-        YsxzSym sym;
-        if (!ReadMapped(r, symtab + static_cast<uint64_t>(i) * sizeof(YsxzSym), &sym, sizeof(sym)))
-            break;
-        if (!sym.name) continue;
-        if (strsz && sym.name >= strsz) break;
-        if (sym.value >= r.size) continue;
-        char nm[128] = {0};
-        if (!ReadMapped(r, strtab + sym.name, nm, sizeof(nm) - 1)) break;
-        if (strncmp(nm, want, wantLen) != 0 || nm[wantLen] != '\0') continue;
-
-        const uintptr_t fn = r.base + sym.value;
-        const size_t span =
-            (sym.size > 0 && sym.size <= 0x400) ? static_cast<size_t>(sym.size) : (size_t)0x300;
-        for (size_t b = 0; b + 4 <= span; b += 4) {
-            uint32_t w = 0;
-            if (!ReadMapped(r, fn + b, &w, 4)) return 0;
-            if ((w & 0xFC000000u) != 0x94000000u) continue;  // BL imm26
-            int64_t off = static_cast<int64_t>(w & 0x03FFFFFFu);
-            if (off & 0x02000000) off -= 0x04000000;  // 26bit 符号扩展
-            const uintptr_t tgt = fn + b + static_cast<uintptr_t>(off * 4);
-            if (tgt < r.base || tgt >= r.base + r.size) continue;
-            uint32_t pro = 0;
-            if (!ReadMapped(r, tgt, &pro, 4)) continue;
-            if (pro != kEvalInsn) continue;
-            LOGI("%s jni bridge wrapper=%p bl@%p -> evalString=%p", YSXZ_LOG, (void*)fn,
-                 (void*)(fn + b), (void*)tgt);
-            return tgt;
+    if (cur.size() == kYsxzBootPristine_len &&
+        memcmp(cur.data(), kYsxzBootPristine, kYsxzBootPristine_len) == 0) {
+        if (YsxzWriteWholeFile(path, kYsxzBootPatched, kYsxzBootPatched_len)) {
+            LOGI("%s boot self-heal: pristine -> patched (%u B)", YSXZ_LOG,
+                 kYsxzBootPatched_len);
+            *state = 2;
         }
-        LOGW("%s jni bridge found but no evalString callee in %zu bytes", YSXZ_LOG, span);
-        return 0;
+        return;
     }
-    return 0;
+    /* 覆盖安装（保数据）后残留的是【上一版】自举补丁 main.js：既不等于本版 pristine
+       也不等于本版 patched，旧 driver 会继续跑（2026-10-06 MuMu 实测：旧自举仍锁
+       .bJV 假伤害公式 -> 秒杀/伤害倍率失效）。main.js 不在服务端热更名单（只有 4 个
+       index.js bundle），运行时只可能是官方原样或本 MOD 写过的补丁 ⇒ 任何 *ze* 且非
+       pristine 的形态都按“上一版自举”重写为本版 patched。
+       注：main.js 是加密态，明文里的 boot 标记搜不到，只能用 *ze* + 非 pristine 判。 */
+    if (cur.size() > 5 && memcmp(cur.data(), "*ze*", 4) == 0) {
+        if (YsxzWriteWholeFile(path, kYsxzBootPatched, kYsxzBootPatched_len)) {
+            LOGI("%s boot self-heal: stale boot patch %zu B -> patched (%u B)", YSXZ_LOG,
+                 cur.size(), kYsxzBootPatched_len);
+            *state = 2;
+        }
+        return;
+    }
+    if (*state != 3) {
+        LOGW("%s boot self-heal: main.js unknown version (%zu B), left untouched", YSXZ_LOG,
+             cur.size());
+    }
+    *state = 3;
 }
 
-static bool g_evalViaReadable = false;
+static std::atomic<bool> g_proofWritten{false};
 
-static uintptr_t LocateEvalString() {
-    const char* lib = kTargetLib();
-    SoRange r = GetLoadedRange(lib);
-    if (r.ok) {
-        uintptr_t va = ResolveEvalViaJniBridge(r);
-        if (va) {
-            g_evalViaReadable = false;
-            return va;
-        }
-        LOGW("%s adaptive resolve failed span=%zu, fallback static rva", YSXZ_LOG, r.size);
-    } else {
-        LOGW("%s lib mapping not found in /proc/self/maps", YSXZ_LOG);
-    }
-    for (uintptr_t rva : kEvalRvaFallbacks) {
-        bool viaReadable = false;
-        void* va = FileOffToVa(lib, rva, &viaReadable);
-        if (!va) {
-            LOGW("%s static rva 0x%lX not mapped", YSXZ_LOG, (unsigned long)rva);
-            continue;
-        }
-        uint32_t got = 0;
-        memcpy(&got, va, sizeof(got));
-        if (got != kEvalInsn) {
-            LOGW("%s static rva 0x%lX prologue drift got=0x%08X", YSXZ_LOG, (unsigned long)rva,
-                 got);
-            continue;
-        }
-        g_evalViaReadable = viaReadable;
-        LOGI("%s evalString via static rva=0x%lX perm=%s", YSXZ_LOG, (unsigned long)rva,
-             viaReadable ? "readable" : "rx");
-        return reinterpret_cast<uintptr_t>(va);
-    }
-    return 0;
+static void YsxzWriteNativeProof() {
+    char dir[384] = {0};
+    YsxzDataDir(dir, sizeof(dir));
+    if (!dir[0]) return;
+    char path[512];
+    snprintf(path, sizeof(path), "%s/files/ysxz_native_ok", dir);
+    FILE* fp = fopen(path, "wb");
+    if (!fp) return;
+    fprintf(fp, "%d\n", (int)getpid());
+    fclose(fp);
 }
 
-static uintptr_t g_evalVa = 0;
-static uintptr_t g_libBase = 0;
-
-static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,
-                             const char* fileName);
+static void* BootSelfHealThread(void* arg) {
+    (void)arg;
+    char dir[384] = {0};
+    YsxzDataDir(dir, sizeof(dir));
+    /* 先清上一进程残留的「原生已生效」证明，避免误导 main.js 里的自举判据 */
+    if (dir[0]) {
+        const std::string proof = std::string(dir) + "/files/ysxz_native_ok";
+        unlink(proof.c_str());
+    }
+    int state = 0;
+    bool loggedDir = false;
+    for (int i = 0; i < 90; i++) {   /* 90s 看门狗：覆盖首启解包/热更覆盖 */
+        if (dir[0] && access(dir, F_OK) == 0) {
+            if (!loggedDir) {
+                LOGI("%s boot self-heal: dir=%s", YSXZ_LOG, dir);
+                loggedDir = true;
+            }
+            YsxzBootSelfHealOnce(dir, &state);
+        }
+        usleep(1000 * 1000);
+    }
+    return nullptr;
+}
 
 static bool HookEvalString() {
     if (g_hooked.load()) return true;
     const char* lib = kTargetLib();
     if (!isLibraryLoaded(lib)) return false;
 
-    const uintptr_t va = LocateEvalString();
+    bool viaReadable = false;
+    void* va = FileOffToVa(lib, kEvalRva, &viaReadable);
     if (!va) {
-        LOGW("%s evalString locate failed", YSXZ_LOG);
+        LOGW("%s evalString rva 0x%lX not mapped", YSXZ_LOG, (unsigned long)kEvalRva);
         return false;
     }
-    g_evalVa = va;
-    g_libBase = GetLoadedRange(lib).base;
-    if (DobbyHook((void*)va, (dobby_dummy_func_t)HookedEvalString,
-                  (dobby_dummy_func_t*)&g_origSeEval) != 0) {
-        LOGW("%s DobbyHook evalString failed @%p", YSXZ_LOG, (void*)va);
+    uint32_t got = 0;
+    memcpy(&got, va, sizeof(got));
+    if (got != kEvalInsn) {
+        // 1.0.6（加密壳代）的 libcocos2djs.so 重编后 se::evalString 已不在 kEvalRva 上，
+        // 本守卫必然失配 ⇒ 原生 splice 路线不挂，改由 JS 自举路线（files/res/main.js 尾部补丁）
+        // 生效。重试循环每秒会走很多次，日志必须限速，否则刷掉 L3 取证要看的行。
+        static std::atomic<int> s_drift{0};
+        const int n = ++s_drift;
+        if (n <= 3 || (n % 200) == 0) {
+            LOGW("%s evalString prologue drift got=0x%08X want=0x%08X (#%d, 本版走 JS 自举路线)",
+                 YSXZ_LOG, got, kEvalInsn, n);
+        }
+        return false;
+    }
+    if (DobbyHook(va, (dobby_dummy_func_t)HookedEvalString, (dobby_dummy_func_t*)&g_origSeEval) != 0) {
+        LOGW("%s DobbyHook evalString failed @%p", YSXZ_LOG, va);
         return false;
     }
     g_hooked.store(true);
-    const unsigned long rva = (g_libBase && va > g_libBase) ? (unsigned long)(va - g_libBase) : 0;
-    LOGI("%s SELFCHECK evalString va=%p rva=0x%lX via=%s rd=1 hook=1", YSXZ_LOG, (void*)va,
-         rva, g_evalViaReadable ? "readable" : "rx");
-    LOGI("%s hooked se::evalString @%p rva=0x%lX", YSXZ_LOG, (void*)va, rva);
+    LOGI("%s SELFCHECK evalString va=%p rva=0x%lX via=%s rd=1 hook=1", YSXZ_LOG, va,
+         (unsigned long)kEvalRva, viaReadable ? "readable" : "rx");
+    LOGI("%s hooked se::evalString @%p rva=0x%lX", YSXZ_LOG, va, (unsigned long)kEvalRva);
     return true;
 }
 
@@ -365,6 +320,8 @@ static bool PatchRegistryCall(std::string* src) {
 static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,
                              const char* fileName) {
     if (!g_origSeEval) return false;
+    /* 真的截获到了 ⇒ 原生路线在这台机器上有效；写 pid 证明给 main.js 里的自举驱动看 */
+    if (!g_proofWritten.exchange(true)) YsxzWriteNativeProof();
     if (!script || t_inSplice) return g_origSeEval(thiz, script, length, ret, fileName);
 
     long n = length;
@@ -523,10 +480,10 @@ static void* EarlyHookThread(void* arg) {
 
 void Ysxz_OnLoad(JavaVM* vm) {
     g_jvm = vm;
-    // 逃查 5~13s 的干净退出（exit(0)）是谁调的；只在 ysxz 构建链里生效，日志前缀 [YsxzExit]。
+    // 1.0.6 加密壳：退出点取证 + 壳状态净化。
+    // 正常路径由 com.starry.magic.ysxz.YsxzAppComponentFactory 在 ~365ms（早于壳自检 413ms）
+    // 先起一次；这里兜底，保证任何入口（含 OTA 热更 so / 直接 dlopen）都能起。
     YsxzExitTrace_Start(vm);
-    // 兜底：正常路径由 com.starry.magic.ysxz.YsxzAppComponentFactory 在 ~365ms（早于
-    // 壳自检 413ms）触发；这里再调一次保证任何入口（含 OTA 热更 so）都起看门狗。
     YsxzSecShell_Start();
     static std::atomic<bool> started{false};
     bool expected = false;
@@ -537,6 +494,8 @@ void Ysxz_OnLoad(JavaVM* vm) {
     } else {
         started.store(false);
     }
+    pthread_t bh;
+    if (pthread_create(&bh, nullptr, BootSelfHealThread, nullptr) == 0) pthread_detach(bh);
 }
 
 bool Ysxz_TryInit(JavaVM* vm) {

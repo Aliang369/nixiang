@@ -142,6 +142,11 @@ EDITS: list[tuple[str, str, str]] = [
         try { if (window.__starry_ac) window.__starry_ac.adoptHit(Cls, hx); } catch (acErr) {}""",
     ),
     (
+        "E10 菜单重排: 自动战斗 6 -> 7（战斗加速占第 6 位，基础功能内）",
+        '''  Object.defineProperty(M, "feature5", { get: function () { return R(6); } });   /* 自动战斗 */''',
+        '''  Object.defineProperty(M, "feature5", { get: function () { return R(7); } });   /* 自动战斗 */''',
+    ),
+    (
         "E9 新增功能开关: 追加 feature6..10 的菜单 getter (自动化层读这些)",
         """  Object.defineProperty(M, "speed", { get: function () { return V(5); } });      /* 移动速度 1..10 */
   Object.defineProperty(M, "damage", { get: function () { return V(1); } });     /* 伤害倍率 1..50 */
@@ -149,14 +154,18 @@ EDITS: list[tuple[str, str, str]] = [
         """  Object.defineProperty(M, "speed", { get: function () { return V(5); } });      /* 移动速度 1..10 */
   Object.defineProperty(M, "damage", { get: function () { return V(1); } });     /* 伤害倍率 1..50 */
   /* 2026-10-07 新增功能(卡密包同名功能复刻)。序号=菜单位置, 必须与 kYsxz_Features 严格一致:
-       7  解锁金卡(已并入「基础功能」分类)  /  8  Category_自动化(分组占位)
-       9  自动重复挑战 / 10 自动出售 / 11 自动分解 / 12 自动穿戴
+       8  解锁金卡(已并入「基础功能」分类)  /  9  Category_自动化(分组占位)
+       10 自动重复挑战 / 11 自动出售 / 12 自动分解 / 13 自动穿戴
      全部由 automation 层(auto_layer.js)消费, 过检测层不读这些。 */
-  Object.defineProperty(M, "feature6",  { get: function () { return R(7); } });  /* 解锁金卡 */
-  Object.defineProperty(M, "feature7",  { get: function () { return R(9); } });  /* 自动重复挑战 */
-  Object.defineProperty(M, "feature8",  { get: function () { return R(10); } }); /* 自动出售 */
-  Object.defineProperty(M, "feature9",  { get: function () { return R(11); } }); /* 自动分解 */
-  Object.defineProperty(M, "feature10", { get: function () { return R(12); } }); /* 自动穿戴 */
+  Object.defineProperty(M, "feature6",  { get: function () { return R(8); } });  /* 解锁金卡 */
+  Object.defineProperty(M, "feature7",  { get: function () { return R(10); } }); /* 自动重复挑战 */
+  Object.defineProperty(M, "feature8",  { get: function () { return R(11); } }); /* 自动出售 */
+  Object.defineProperty(M, "feature9",  { get: function () { return R(12); } }); /* 自动分解 */
+  Object.defineProperty(M, "feature10", { get: function () { return R(13); } }); /* 自动穿戴 */
+  /* 2026-10-24 新增：战斗加速（1=关，2..5=倍率），放在「基础功能」里、紧跟移动速度（序号 6）。
+     消费方是 ac 层：引擎 calculateDeltaTime 的 _deltaTime ×k（真·全局变速），
+     结算 useTime 按同一倍率折回。 */
+  Object.defineProperty(M, "bspeed",    { get: function () { return V(6); } }); /* 战斗加速 */
 """,
     ),
 ]
@@ -249,11 +258,21 @@ def main() -> int:
         ("window.__AUTO_STATE__" in combined, "automation 可观测口 __AUTO_STATE__ 存在"),
         ('Object.defineProperty(M, "feature6"' in combined, "E9 生效(feature6 解锁金卡)"),
         ('Object.defineProperty(M, "feature10"' in combined, "E9 生效(feature10 自动穿戴)"),
-        ("return R(7); } });" in combined, "E9 序号: feature6 -> R(7)"),
-        ("return R(9); } });" in combined, "E9 序号: feature7 -> R(9)"),
-        ("return R(10); } });" in combined, "E9 序号: feature8 -> R(10)"),
-        ("return R(11); } });" in combined, "E9 序号: feature9 -> R(11)"),
-        ("return R(12); } });" in combined, "E9 序号: feature10 -> R(12)"),
+        ("return R(7); } });" in combined, "E10 序号: feature5(自动战斗) -> R(7)"),
+        ("return R(8); } });" in combined, "E9 序号: feature6(金卡) -> R(8)"),
+        ("return R(10); } });" in combined, "E9 序号: feature7(重复挑战) -> R(10)"),
+        ("return R(11); } });" in combined, "E9 序号: feature8(出售) -> R(11)"),
+        ("return R(12); } });" in combined, "E9 序号: feature9(分解) -> R(12)"),
+        ("return R(13); } });" in combined, "E9 序号: feature10(穿戴) -> R(13)"),
+        ('Object.defineProperty(M, "bspeed"' in combined, "战斗加速: 滑块绑定存在"),
+        ("return V(6); } });" in combined, "战斗加速: 序号 6 -> V(6)"),
+        ("AC.installDeltaScale" in combined, "战斗加速: 引擎 dt 放大安装器存在(真·全局)"),
+        ("this._deltaTime = dt * k;" in combined, "战斗加速: 每帧 _deltaTime ×k"),
+        ("AC.dtScaled" in combined, "战斗加速: dt 路线标志(与兜底互斥)"),
+        ("AC.applySpeed = function ()" in combined, "战斗加速: applySpeed 实现存在"),
+        ("worldTimeScale" in combined, "战斗加速: 走 worldTimeScale(明文名, 不写死短名)"),
+        ("AC.speedMul", "战斗加速: useTime 按自己倍率补偿（speedMul 记账）"),
+        ("speedLoop" in combined, "战斗加速: 战斗外低频施加链存在"),
         ("proto[hit.name] = w;" in combined, "解锁金卡: 按发现结果包装原型方法(不写死短名)"),
         ("goldCandidates" in combined and 'src.indexOf("$eZ.buff")' in combined,
          "解锁金卡: 结构锚点(silver/Premium/buffId/$eZ.buff)仍在"),

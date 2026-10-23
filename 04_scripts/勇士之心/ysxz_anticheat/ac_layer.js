@@ -76,10 +76,28 @@
      * 早于进战斗 => 真机上根本看不到战斗中的记账。没有这几条日志，
      * "补偿链路到底跑没跑" 就永远是一个无法证伪的说法。 */
     evHit: 0, evNote: 0, evFix: 0, evReport: 0,
+    /* 7 战斗加速（全局时间缩放） */
+    speedMul: 1, speedHits: 0, speedPath: "", schedClock: 1, schedHits: 0,
+    dtScaled: false, dtHits: 0, speedHolder: null, speedLoopOn: false,
     /* 杂项 */
     pending: null, note: "", reg: null, installN: 0, loopStarted: false
   };
   window.__starry_ac = AC;
+
+  /* 战斗加速的施加链：**载入即启动**，不依赖 capture（实测：主包 capture 迟迟不来时
+   * 之前只有 tick 一条路，而 tick 只在战斗里跑 ⇒ 菜单开到 3 也毫无反应）。
+   * 幂等：只允许一条自重排链。 */
+  AC.startSpeedLoop = function () {
+    if (AC.speedLoopOn) return;
+    AC.speedLoopOn = true;
+    log("battle-speed: apply loop started (load-time)");
+    var tick = function () {
+      try { AC.applySpeed(); } catch (e) {}
+      try { setTimeout(tick, 1000); } catch (e) {}
+    };
+    try { setTimeout(tick, 1500); } catch (e) {}
+  };
+  try { AC.startSpeedLoop(); } catch (e) {}
 
   /* ------------------------------------------------------------ 6 可观测 --
    * 卡密包对应 L7033 W.__WX_AC_STATE__。诊断输出是这套东西的命门：
@@ -94,6 +112,9 @@
       reportN: AC.reportN, logicalMs: Math.round(AC.logicalMs), wallMs: Math.round(AC.wallMs),
       tickSeen: AC.tickSeen, tickN: AC.tickN, tickBad: AC.tickBad,
       clampArmed: !!AC.clampArmed, clamped: AC.clamped,
+      speedMul: AC.speedMul, speedHits: AC.speedHits, speedPath: AC.speedPath || "",
+      schedClock: AC.schedClock, schedHits: AC.schedHits,
+      dtScaled: !!AC.dtScaled, dtHits: AC.dtHits | 0, speedLoopOn: !!AC.speedLoopOn,
       installN: AC.installN, note: AC.note
     };
   };
@@ -195,12 +216,19 @@
     var cur = cr.useTime;
     var want = cur;
     try {
-      if (AC.clampArmed && wall > 0) {
-        var realMs = wall;
-        if (realMs >= cur * 0.5) {        /* 墙钟明显偏小 = 我们没量准，宁可不改 */
-          want = Math.max(1000, Math.min(realMs, cur));
+      if (AC.clampArmed) {
+        /* 战斗加速打开后，逻辑钟被我们放大了 k 倍 ⇒ 只折算我们自己的那个倍率：
+         * base = 逻辑时长 / k ≈ 真实墙钟时长；墙钟可用时再取二者较小值兜底。 */
+        var kk = AC.speedMul > 1 ? AC.speedMul : 1;
+        var base = cur / kk;
+        if (wall > 0 && Math.abs(base - wall) > Math.max(1500, base * 0.5)) {
+          /* 墙钟与折算值差太远（多半是没进战斗就结算 / tick 没量到）⇒ 只按倍率折算 */
+          AC.note = "wall off (wall " + Math.round(wall) + " vs base " + Math.round(base) + "), mul-only";
+          want = Math.max(1000, base);
+        } else if (wall > 0) {
+          want = Math.max(1000, Math.min(wall, base));
         } else {
-          AC.note = "clamp skipped (wall " + Math.round(wall) + " << logical " + cur + ")";
+          want = Math.max(1000, base);
         }
       }
     } catch (e) {}
@@ -225,6 +253,8 @@
           " clampArmed=" + !!AC.clampArmed + " reportN=" + AC.reportN);
     }
   }
+  /* 结算出口暴露一份给离线单测/诊断用（真机路径仍由出口钩子调用同一个函数）。 */
+  AC.onReport = onReport;
 
   /* -------------------------------------------------------- 4 伤害字段还原 --
    * 卡密包 L2578 HitBus.hookPrototype(proto,"hY")：
@@ -377,9 +407,154 @@
   AC.tickSeen = 0; AC.tickN = 0; AC.tickBad = 0;
   AC.tick = function (dt) {
     AC.tickSeen++;
-    if (typeof dt === "number" && dt > 0 && dt < 1) { AC.tickN++; AC.wallMs += dt * 1000; }
+    if (typeof dt === "number" && dt > 0 && dt < 1) {
+      AC.tickN++;
+      /* 战斗加速打开后引擎 dt 已被 ×k ⇒ 这里除回去才是真实墙钟，
+       * 否则 wallMs 与逻辑钟同比例放大，结算补偿会误判成"没加速"。 */
+      var _kk = AC.speedMul > 1 ? AC.speedMul : 1;
+      AC.wallMs += (dt * 1000) / _kk;
+    }
     else AC.tickBad++;
+    try { AC.applySpeed(); } catch (e) {}
   };
+
+  /* --------------------------------------------- 7 战斗加速（全局时间缩放） --
+   * 用户点名的新功能：一个滑条，1=关、2..5=倍速。
+   * 落点两块，互斥使用，避免同一个 k 被算两次（k² 会直接把战斗打成幻灯片）：
+   *   ① 战斗内：battle world 的 worldTimeScale —— battleLogic update 里
+   *      fk += dt*hitPauseTimeScale*worldTimeScale*mainTimeScale，这是战斗节奏真正的乘数；
+   *   ② 战斗外：cc.director.getScheduler().setTimeScale(k) —— 全局调度器加速（挂机/动画/剧情）。
+   * 铁律：不写死 ctrl/world 的混淆短名（hook-rules §24），world 用**明文名**
+   * worldTimeScale(混淆器不动) 做结构发现，命中路径记进 AC.speedPath 便于复现。
+   * 账：我们自己拉长了逻辑时钟 ⇒ 结算 useTime 必须按同一倍率补偿（clampArmed 打开），
+   * 否则服务端看到的是「对局时长 >> 墙钟」的异常。 */
+  /* 有界广度扫描：从 $eZ.battleMgr 起按 BFS 找「自己身上带数值型 worldTimeScale」的对象。
+   * 深度上限 3（battleLogic 实测形态：world 挂在 ctrl 下、或再套一层），
+   * 命中就缓存（AC.speedHolder），每轮只做一次 key 扫描 + 一次属性比对，代价可忽略。
+   * 找不到就返回 null —— 调用方**不猜也不写**，绝不拿短名硬取值。 */
+  function findSpeedHolder() {
+    var g = null;
+    try { g = window.$eZ; } catch (e) {}
+    if (!g) return null;
+    var root = g.battleMgr || g;
+    var seen = [];
+    var queue = [{ o: root, p: "battleMgr" }];
+    var depth = 0;
+    while (queue.length && depth <= 3) {
+      var next = [];
+      for (var i = 0; i < queue.length; i++) {
+        var cur = queue[i];
+        var o = cur.o;
+        if (!o || typeof o !== "object") continue;
+        var dup = false;
+        for (var s = 0; s < seen.length; s++) { if (seen[s] === o) { dup = true; break; } }
+        if (dup) continue;
+        seen.push(o);
+        try {
+          if (typeof o.worldTimeScale === "number") { AC.speedPath = cur.p; return o; }
+        } catch (e0) {}
+        var keys = [];
+        try { keys = Object.keys(o); } catch (e1) { keys = []; }
+        for (var j = 0; j < keys.length; j++) {
+          var v = null;
+          try { v = o[keys[j]]; } catch (e2) { continue; }
+          if (v && typeof v === "object" && typeof v !== "function") {
+            next.push({ o: v, p: cur.p + "." + keys[j] });
+          }
+        }
+      }
+      queue = next;
+      depth++;
+    }
+    return null;
+  }
+
+  /* ---- 真·全局变速：挂引擎的 calculateDeltaTime，把每帧 _deltaTime ×k ----
+   * 引擎 mainLoop（cocos2d-jsb 1.1.8.1 src/cocos2d-jsb.js@6406）：
+   *   this.calculateDeltaTime(t); var dt = this._deltaTime;
+   *   → compScheduler.updatePhase(dt) / _scheduler.update(dt) / ActionManager / 物理 / 组件 update
+   * 一处放大即全局生效：战斗、过场、挂机、动画、UI 动效全部 k 倍。
+   * 不动 _lastUpdate（仍按真实墙钟推进），所以每帧只放大「本帧间隔」，不累积漂移。
+   * 兜底顺序：dt 放大装不上 → 战斗内 worldTimeScale；再不行 → 调度器 setTimeScale。
+   * 三条路线**互斥**，否则同一个 k 会被平方。 */
+  function installDeltaScale() {
+    try {
+      if (AC.dtScaled) return true;
+      var d = (window.cc && cc.director) ? cc.director : null;
+      if (!d || typeof d.calculateDeltaTime !== "function") return false;
+      if (d.__starryDtWrapped) { AC.dtScaled = true; return true; }
+      var orig = d.calculateDeltaTime;
+      d.calculateDeltaTime = function (t) {
+        var r = orig.apply(this, arguments);
+        try {
+          var k = 1;
+          try { k = (window.MOD && window.MOD.bspeed) ? (window.MOD.bspeed | 0) : 1; } catch (e0) { k = 1; }
+          if (k > 1) {
+            var dt = this._deltaTime;
+            if (typeof dt === "number" && dt > 0) {
+              this._deltaTime = dt * k;
+              AC.dtHits = (AC.dtHits | 0) + 1;
+            }
+          }
+        } catch (e1) {}
+        return r;
+      };
+      d.__starryDtWrapped = true;
+      AC.dtScaled = true;
+      log("battle-speed: engine dt scaling armed (calculateDeltaTime x k)");
+      return true;
+    } catch (e) { return false; }
+  }
+  AC.installDeltaScale = installDeltaScale;
+
+  AC.applySpeed = function () {
+    var k = 1;
+    try { k = (window.MOD && window.MOD.bspeed) ? (window.MOD.bspeed | 0) : 1; } catch (e) { k = 1; }
+    if (!(k > 1)) k = 1;
+    if (AC.speedMul !== k) {
+      AC.speedMul = k;
+      AC.clampArmed = k > 1;   /* 只有我们自己加速时才钳 useTime，别的来源一律不碰 */
+      log("battle-speed = " + k + "x (useTime clamp " + (AC.clampArmed ? "armed" : "off") + ")");
+    }
+    /* 主路线：引擎 dt 放大（真·全局变速）。装上后调度器/worldTimeScale 一律保持 1，防叠乘。 */
+    try { installDeltaScale(); } catch (e) {}
+    var holder = null;
+    try {
+      /* 缓存优先：战斗换局时 world 会换对象，取不到数值就重扫一次 */
+      if (AC.speedHolder && typeof AC.speedHolder.worldTimeScale === "number") holder = AC.speedHolder;
+      else { holder = findSpeedHolder(); if (holder) AC.speedHolder = holder; }
+    } catch (e) { holder = null; }
+    if (holder) {
+      /* 战斗内兜底：只有在「引擎 dt 放大」没装上的时候才用 worldTimeScale，
+       * 否则 dt 已经 ×k，再乘一次就是 k²（2026-10-24 用户实测"没效果"的教训：
+       * 光改 worldTimeScale 不影响 UI/过场/挂机，且 battle world 常常找不到）。 */
+      try {
+        if (!AC.dtScaled && holder.worldTimeScale !== k) {
+          if (typeof holder.setWorldTimeScale === "function") holder.setWorldTimeScale(k);
+          else holder.worldTimeScale = k;
+          AC.speedHits = (AC.speedHits | 0) + 1;
+          if (AC.speedHits <= 3) log("battle-speed world=" + k + "x @ " + (AC.speedPath || "battleMgr"));
+        }
+      } catch (e) {}
+      return;
+    }
+    /* 战斗外兜底：调度器（dt 放大可用时保持 1，避免叠乘） */
+    try {
+      if (window.cc && cc.director && typeof cc.director.getScheduler === "function") {
+        var sch = cc.director.getScheduler();
+        var want = AC.dtScaled ? 1 : k;
+        if (sch && typeof sch.setTimeScale === "function" && AC.schedClock !== want) {
+          sch.setTimeScale(want);
+          AC.schedClock = want;
+          if (!AC.dtScaled) {
+            AC.schedHits = (AC.schedHits | 0) + 1;
+            if (AC.schedHits <= 3) log("battle-speed scheduler=" + k + "x (fallback, out of battle)");
+          }
+        }
+      }
+    } catch (e) {}
+  };
+
 
   /* --------------------------------------------------------------- 安装调度 --
    * 主补丁在 bundle 载入瞬间就被调用(__starry_capture)，那时 $eZ 还没被赋值
@@ -428,6 +603,7 @@
     try { tryInstall(); } catch (e) {}
     if (AC.loopStarted) return;      /* bundle 可能多次调捕获口, 只允许一条轮询链 */
     AC.loopStarted = true;
+    try { AC.startSpeedLoop(); } catch (e) {}
     var n = 0;
     var loop = function () {
       n++;

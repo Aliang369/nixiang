@@ -43,14 +43,27 @@ namespace {
 
 constexpr const char *kSecLib = "libsecret.so";
 
-// 导出符号（Frida 实测 RVA，仅作 dlsym 失败时的兜底）
-constexpr uintptr_t kIsDirtyRvaFallback = 0x4e5cc;   // SecShell_IsDirty
-constexpr uintptr_t kFailedMaskRvaFallback = 0x4e664;  // SecShell_FailedMask
+// 导出符号兜底 RVA。壳库随版本重编，导出地址会整体位移，故改成**候选表 + 验证**：
+// 逐个试 RVA，命中判据 = 能从该函数序言反推出「可写的」状态字，而不是凭 RVA 硬认。
+// 1.0.6 的值取自官方 base.apk 的 libsecret.so 导出表（nm -D --defined-only）：
+//   T SecShell_IsDirty 0x54130 / T SecShell_FailedMask 0x541c8（CheckedMask 0x54184）。
+struct AccessorCandidate {
+    uintptr_t rva;
+    const char *ver;
+};
+constexpr AccessorCandidate kIsDirtyCandidates[] = {
+    {0x54130, "1.0.6"},
+    {0x4e5cc, "1.0.4"},
+};
+constexpr AccessorCandidate kFailedMaskCandidates[] = {
+    {0x541c8, "1.0.6"},
+    {0x4e664, "1.0.4"},
+};
 
-// 状态字 RVA（由导出函数序言的 adrp+ldr 反推；实测值作为兜底）
-constexpr uintptr_t kDirtyRvaFallback = 0x64e98;
+// checkedMask 仅供诊断记录（本进程不写它）。
+// dirty / failedMask 现在一律由 ResolveStateWord 反推得到，不再用「硬 RVA 兜底」——
+// 旧值 0x64e98 / 0x64ea4 只对 1.0.4 的 libsecret.so 成立，换版本会打错内存。
 constexpr uintptr_t kCheckedRvaFallback = 0x64ea0;
-constexpr uintptr_t kFailedRvaFallback = 0x64ea4;
 
 std::atomic<bool> g_started{false};
 std::atomic<uintptr_t> g_dirtyWord{0};
@@ -171,13 +184,37 @@ bool DecodeGlobalWord(uintptr_t fn, uintptr_t *out) {
     return false;
 }
 
-uintptr_t ResolveAccessor(uintptr_t base, const char *symbol, uintptr_t rva_fallback) {
+// 解析一个访问器导出，并直接反推出它的状态字地址。
+// 顺序：① dlsym(RTLD_DEFAULT) ② 候选 RVA 表逐个验证。
+// 命中判据统一为「DecodeGlobalWord 成功且该字可写」——1.0.4/1.0.6 共用同一份逻辑，
+// 换版本只需在候选表里加一行，不需要为版本写分支。
+uintptr_t ResolveStateWord(uintptr_t base, const char *symbol,
+                           const AccessorCandidate *cands, size_t cand_count,
+                           uintptr_t *out_word, const char **out_tag) {
     void *p = dlsym(RTLD_DEFAULT, symbol);
-    if (!p) {
-        // APKSecure 私有命名空间下 dlsym 可能看不到导出，退回基址 + 实测 RVA。
-        p = reinterpret_cast<void *>(base + rva_fallback);
+    if (p) {
+        uintptr_t w = 0;
+        if (DecodeGlobalWord(reinterpret_cast<uintptr_t>(p), &w) && AddrIsWritable(w)) {
+            *out_word = w;
+            if (out_tag) {
+                *out_tag = "dlsym";
+            }
+            return reinterpret_cast<uintptr_t>(p);
+        }
     }
-    return reinterpret_cast<uintptr_t>(p);
+    // APKSecure 私有命名空间下 dlsym 可能看不到导出，退回基址 + 候选 RVA。
+    for (size_t i = 0; i < cand_count; ++i) {
+        const uintptr_t fn = base + cands[i].rva;
+        uintptr_t w = 0;
+        if (DecodeGlobalWord(fn, &w) && AddrIsWritable(w)) {
+            *out_word = w;
+            if (out_tag) {
+                *out_tag = cands[i].ver;
+            }
+            return fn;
+        }
+    }
+    return 0;
 }
 
 void *WatchThread(void *) {
@@ -195,20 +232,24 @@ void *WatchThread(void *) {
     YSXZ_SEC_LOGI("libsecret.so base=%p", reinterpret_cast<void *>(base));
 
     uintptr_t dirty = 0, failed = 0, checked = 0;
-    const uintptr_t is_dirty_fn = ResolveAccessor(base, "SecShell_IsDirty", kIsDirtyRvaFallback);
-    const uintptr_t failed_fn = ResolveAccessor(base, "SecShell_FailedMask", kFailedMaskRvaFallback);
-    const bool dec_dirty = DecodeGlobalWord(is_dirty_fn, &dirty);
-    const bool dec_failed = DecodeGlobalWord(failed_fn, &failed);
-    if (!dec_dirty) {
-        dirty = base + kDirtyRvaFallback;
-    }
-    if (!dec_failed) {
-        failed = base + kFailedRvaFallback;
+    const char *dirty_tag = "?";
+    const char *failed_tag = "?";
+    const uintptr_t is_dirty_fn = ResolveStateWord(
+            base, "SecShell_IsDirty", kIsDirtyCandidates,
+            sizeof(kIsDirtyCandidates) / sizeof(kIsDirtyCandidates[0]), &dirty, &dirty_tag);
+    const uintptr_t failed_fn = ResolveStateWord(
+            base, "SecShell_FailedMask", kFailedMaskCandidates,
+            sizeof(kFailedMaskCandidates) / sizeof(kFailedMaskCandidates[0]), &failed, &failed_tag);
+    if (is_dirty_fn == 0 || failed_fn == 0) {
+        // 拿不到可信状态字就什么都不写（凭旧 RVA 硬写会打到无关内存，比不净化更危险）。
+        YSXZ_SEC_LOGE("state word resolve failed (isDirty=%d failedMask=%d); watchdog abort",
+                      is_dirty_fn != 0, failed_fn != 0);
+        return nullptr;
     }
     checked = base + kCheckedRvaFallback;
-    YSXZ_SEC_LOGI("state words dirty=%p(dec=%d) failed=%p(dec=%d) checked=%p",
-                  reinterpret_cast<void *>(dirty), dec_dirty ? 1 : 0,
-                  reinterpret_cast<void *>(failed), dec_failed ? 1 : 0,
+    YSXZ_SEC_LOGI("state words dirty=%p(tag=%s) failed=%p(tag=%s) checked=%p",
+                  reinterpret_cast<void *>(dirty), dirty_tag,
+                  reinterpret_cast<void *>(failed), failed_tag,
                   reinterpret_cast<void *>(checked));
 
     if (!AddrIsWritable(dirty) || !AddrIsWritable(failed)) {

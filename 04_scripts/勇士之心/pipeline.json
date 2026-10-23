@@ -35,13 +35,13 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-15 12:28:35",
+      "done_at": "2026-10-24 01:06:14",
       "artifacts": {
         "04_scripts/勇士之心/.device_serial": {
           "md5": "0bc47570b06495af1a544933783b7037"
         },
         "04_scripts/勇士之心/device_info.json": {
-          "md5": "dc6f554a110bfc685d48fdd00c5d79b7"
+          "md5": "2b19242b3f20565324e8ab4e6895a227"
         }
       }
     },
@@ -61,17 +61,7 @@
           "path": "04_scripts/勇士之心/binge_apk.json"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-15 12:28:42",
-      "artifacts": {
-        "04_scripts/勇士之心/binge_apk.json": {
-          "md5": "09ad467791182d3a6f0511e9c4c1116e"
-        }
-      },
-      "inputs": {
-        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037",
-        "04_scripts/勇士之心/device_info.json": "dc6f554a110bfc685d48fdd00c5d79b7"
-      }
+      "status": "pending"
     },
     {
       "id": "check_mod",
@@ -250,13 +240,16 @@
           "path": "04_scripts/勇士之心/official_apk.json"
         }
       ],
-      "status": "done",
+      "status": "failed",
       "done_at": "2026-09-15 13:12:11",
       "artifacts": {
         "04_scripts/勇士之心/official_apk.json": {
-          "md5": "c9d807879d535f12816e5bf715204e8d"
+          "md5": "c9d807879d535f12816e5bf715204e8d",
+          "changed": true
         }
-      }
+      },
+      "failed_at": "2026-10-24 01:06:20",
+      "error": "产物校验未通过（详见上方校验输出）"
     },
     {
       "id": "check_official",
@@ -353,17 +346,8 @@
           "path": "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "artifacts": {
-        "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk": {
-          "md5": "e45a5a2e0efe3913a50a2058458c0e81"
-        }
-      },
-      "note": "2026-09-21 热更重抓轮重签：md5=4175178fe6f9663556efe21541726f6e，sha256=2846e57b0577bd4561a387d56b7e8ce1f98d6a5a3e4ed31c1df20427eea93a8d，size=64642859，签名 CN=StarryMagic；unsigned 中间包已按收官口令裁剪。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。",
-      "done_at": "2026-09-30 20:43:03",
-      "inputs": {
-        "08_output/勇士之心/勇士之心_1.0.4_surgical-unsigned.apk": "9f03e4d6c80a5c2c7b88e0aacc52e000"
-      }
+      "status": "pending",
+      "note": "2026-09-21 热更重抓轮重签：md5=4175178fe6f9663556efe21541726f6e，sha256=2846e57b0577bd4561a387d56b7e8ce1f98d6a5a3e4ed31c1df20427eea93a8d，size=64642859，签名 CN=StarryMagic；unsigned 中间包已按收官口令裁剪。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。"
     },
     {
       "id": "install",
@@ -382,19 +366,8 @@
           "path": "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "artifacts": {
-        "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk": {
-          "md5": "e45a5a2e0efe3913a50a2058458c0e81"
-        }
-      },
-      "inputs": {
-        "08_output/勇士之心/勇士之心_1.0.4_surgical-releaseSigned.apk": "e45a5a2e0efe3913a50a2058458c0e81",
-        "04_scripts/勇士之心/.device_serial": "0bc47570b06495af1a544933783b7037",
-        "04_scripts/勇士之心/device_info.json": "dc6f554a110bfc685d48fdd00c5d79b7"
-      },
-      "note": "2026-09-21 热更重抓轮装机：官方包 CN=shan 与星光包 CN=StarryMagic 签名不同，覆盖安装返回 INSTALL_FAILED_UPDATE_INCOMPATIBLE，按用户明确指示（无需备份）卸载重装；设备 base.apk md5=4175178fe6f9663556efe21541726f6e 与产物一致；冷启动日志：hooked se::evalString rva=0x3138E4、game/battleLogic 两个 bundle 各自 splice、六钩子 + auto=yes 全部安装、无闪退；用户实机测试五项功能全部可用。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。",
-      "done_at": "2026-09-30 20:43:08"
+      "status": "pending",
+      "note": "2026-09-21 热更重抓轮装机：官方包 CN=shan 与星光包 CN=StarryMagic 签名不同，覆盖安装返回 INSTALL_FAILED_UPDATE_INCOMPATIBLE，按用户明确指示（无需备份）卸载重装；设备 base.apk md5=4175178fe6f9663556efe21541726f6e 与产物一致；冷启动日志：hooked se::evalString rva=0x3138E4、game/battleLogic 两个 bundle 各自 splice、六钩子 + auto=yes 全部安装、无闪退；用户实机测试五项功能全部可用。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。"
     },
     {
       "id": "regrab_hotupdate",

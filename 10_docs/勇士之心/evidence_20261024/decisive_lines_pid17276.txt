@@ -1,0 +1,119 @@
+10-24 01:40:02.124 17276 17276 I Mod_Menu: [Ysxz] feature #2=ON
+10-24 01:40:02.128 17276 17276 I Mod_Menu: [Ysxz] feature #3=ON
+10-24 01:40:02.132 17276 17276 I Mod_Menu: [Ysxz] feature #4=ON
+10-24 01:40:02.137 17276 17276 I Mod_Menu: [Ysxz] feature #6=ON
+10-24 01:40:02.140 17276 17276 I Mod_Menu: [Ysxz] feature #7=ON
+10-24 01:40:02.168 17276 17549 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#22) tid=17549 线程=allocateBuffers
+10-24 01:40:02.368 17276 17552 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#23) tid=17552 线程=allocateBuffers
+10-24 01:40:02.954 17276 17276 I Mod_Menu: [Ysxz] feature #2=ON
+10-24 01:40:02.957 17276 17276 I Mod_Menu: [Ysxz] feature #3=ON
+10-24 01:40:02.960 17276 17276 I Mod_Menu: [Ysxz] feature #4=ON
+10-24 01:40:02.967 17276 17276 I Mod_Menu: [Ysxz] feature #6=ON
+10-24 01:40:02.970 17276 17276 I Mod_Menu: [Ysxz] feature #7=ON
+10-24 01:40:02.970 17276 17276 I Mod_Menu: [Ysxz] feature #9=OFF
+10-24 01:40:02.970 17276 17276 I Mod_Menu: [Ysxz] feature #10=OFF
+10-24 01:40:02.970 17276 17276 I Mod_Menu: [Ysxz] feature #11=OFF
+10-24 01:40:02.970 17276 17276 I Mod_Menu: [Ysxz] feature #12=OFF
+10-24 01:40:02.987 17276 17555 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#24) tid=17555 线程=allocateBuffers
+10-24 01:40:04.305 17276 17591 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#25) tid=17591 线程=SharedPreferenc
+10-24 01:40:04.487 17276 17604 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#26) tid=17604 线程=Thread-14
+10-24 01:40:04.506 17276 17609 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#27) tid=17609 线程=Thread-15
+10-24 01:40:04.793 17276 17493 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#28) tid=17493 线程=AsyncTask #1
+10-24 01:40:05.103 17276 17624 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#29) tid=17624 线程=SharedPreferenc
+10-24 01:40:05.117 17276 17626 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#30) tid=17626 线程=SharedPreferenc
+10-24 01:40:05.125 17276 17633 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#31) tid=17633 线程=SharedPreferenc
+10-24 01:40:05.126 17276 17629 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#32) tid=17629 线程=SharedPreferenc
+10-24 01:40:05.171 17276 17642 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#33) tid=17642 线程=SharedPreferenc
+10-24 01:40:05.178 17276 17644 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#34) tid=17644 线程=SharedPreferenc
+10-24 01:40:05.181 17276 17276 I Mod_Menu: [Ysxz] feature #2=ON
+10-24 01:40:05.184 17276 17276 I Mod_Menu: [Ysxz] feature #3=ON
+10-24 01:40:05.188 17276 17276 I Mod_Menu: [Ysxz] feature #4=ON
+10-24 01:40:05.191 17276 17276 I Mod_Menu: [Ysxz] feature #6=ON
+10-24 01:40:05.194 17276 17276 I Mod_Menu: [Ysxz] feature #7=ON
+10-24 01:40:06.024 17276 17304 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#35) tid=17304 线程=ImageDecompress
+10-24 01:40:06.024 17276 17305 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#36) tid=17305 线程=ImageDecompress
+10-24 01:40:06.025 17276 17309 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#37) tid=17309 线程=ImageDecompress
+10-24 01:40:06.028 17276 17276 I Mod_Menu: [Ysxz] feature #2=ON
+10-24 01:40:06.031 17276 17276 I Mod_Menu: [Ysxz] feature #3=ON
+10-24 01:40:06.035 17276 17276 I Mod_Menu: [Ysxz] feature #4=ON
+10-24 01:40:06.041 17276 17276 I Mod_Menu: [Ysxz] feature #6=ON
+10-24 01:40:06.044 17276 17276 I Mod_Menu: [Ysxz] feature #7=ON
+10-24 01:40:06.044 17276 17276 I Mod_Menu: [Ysxz] feature #9=OFF
+10-24 01:40:06.044 17276 17276 I Mod_Menu: [Ysxz] feature #10=OFF
+10-24 01:40:06.044 17276 17276 I Mod_Menu: [Ysxz] feature #11=OFF
+10-24 01:40:06.044 17276 17276 I Mod_Menu: [Ysxz] feature #12=OFF
+10-24 01:40:07.090 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#200, 本版走 JS 自举路线)
+10-24 01:40:07.756 17276 17483 D jswrapper: JS: [AC] ac layer v1 loaded (observe-only useTime; damage accumulator compensation armed)
+10-24 01:40:07.756 17276 17483 D jswrapper: JS: [AUTO] auto layer v1 loaded (gold / auto-repeat / auto-sell / auto-decompose / auto-wear; 开关读 MOD.feature6..10)
+10-24 01:40:07.756 17276 17483 I Ysxz    : [MODMOD] require trap installed (cur=undefined)
+10-24 01:40:07.756 17276 17483 D jswrapper: JS: [MODMOD] require trap installed (cur=undefined)
+10-24 01:40:07.824 17276 17483 D jswrapper: JS: Cocos Creator v2.4.15
+10-24 01:40:08.141 17276 17404 I Mod_Menu: [YsxzSec] first 6s done; switch to 20ms interval
+10-24 01:40:08.427 17276 17483 I Ysxz    : [MODMOD] resolve: 9/36 模块就绪  未就绪=$KA,$KB,$KC,$KD,$KG,$MM,$NL,$NN,$NS,$NT,$NU,$NV,$NW,$NX,$NY,$NZ,$OB,$OC,$OD,$OF,$OI,$OJ,$OM,$ON,$OO,$PK,BattleBehaviorLogic
+10-24 01:40:08.427 17276 17483 D jswrapper: JS: [MODMOD] resolve: 9/36 模块就绪  未就绪=$KA,$KB,$KC,$KD,$KG,$MM,$NL,$NN,$NS,$NT,$NU,$NV,$NW,$NX,$NY,$NZ,$OB,$OC,$OD,$OF,$OI,$OJ,$OM,$ON,$OO,$PK,BattleBehaviorLogic
+10-24 01:40:08.541 17276 17691 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#38) tid=17691 线程=Thread-38
+10-24 01:40:08.688 17276 17692 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#39) tid=17692 线程=Thread-39
+10-24 01:40:08.814 17276 17483 I Ysxz    : [AUTO] gold-card hooked: $eZ.monCard.fDq.fDf [发现方式=struct+behaviour] (cardType===gold -> true, 受 feature6 控制)
+10-24 01:40:08.814 17276 17483 D jswrapper: JS: [AUTO] gold-card hooked: $eZ.monCard.fDq.fDf [发现方式=struct+behaviour] (cardType===gold -> true, 受 feature6 控制)
+10-24 01:40:08.814 17276 17483 I Ysxz    : [AUTO] [tc] 翻卡协议已挂钩：能拿到服务端 code（0=成功，其它=被拒）
+10-24 01:40:08.814 17276 17483 D jswrapper: JS: [AUTO] [tc] 翻卡协议已挂钩：能拿到服务端 code（0=成功，其它=被拒）
+10-24 01:40:09.226 17276 17704 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#40) tid=17704 线程=SharedPreferenc
+10-24 01:40:09.228 17276 17707 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#41) tid=17707 线程=SharedPreferenc
+10-24 01:40:09.254 17276 17708 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#42) tid=17708 线程=allocateBuffers
+10-24 01:40:09.268 17276 17483 I Ysxz    : [MODMOD] boot(exports): 8/36 个模块拿到源码, toString OK
+10-24 01:40:09.275 17276 17483 I Ysxz    : [MODMOD] fallback A1(1.1.4.0): hx=hy isPlayer=bmN
+10-24 01:40:09.275 17276 17483 I Ysxz    : [MODMOD] fallback hp=bhd
+10-24 01:40:09.275 17276 17483 I Ysxz    : [MODMOD] fallback world=hj
+10-24 01:40:09.275 17276 17483 I Ysxz    : [MODMOD] fallback ctx=bnR/fF/ddQ
+10-24 01:40:09.275 17276 17483 I Ysxz    : [MODMOD] fallback camp=hE.blx
+10-24 01:40:09.275 17276 17483 I Ysxz    : [MODMOD] names: hx=hy.bmN  camp=hE.blx  ctx=bnR/fF/ddQ  hp=bhd  world=hj
+10-24 01:40:09.276 17276 17483 I Ysxz    : [MODMOD] auto-battle privilege hooked = .prototype.fDm
+10-24 01:40:09.278 17276 17483 I Ysxz    : [MODMOD] scanned all 8 modules with source (exps=9), hooks: logic=0 ent=0 sys=0 auto=1
+10-24 01:40:09.282 17276 17698 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#43) tid=17698 线程=Thread-40
+10-24 01:40:09.417 17276 17699 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#44) tid=17699 线程=Thread-41
+10-24 01:40:09.421 17276 17701 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#45) tid=17701 线程=Thread-42
+10-24 01:40:10.605 17276 17634 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#46) tid=17634 线程=Thread-24
+10-24 01:40:11.906 17276 17688 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#47) tid=17688 线程=GLThread 86
+10-24 01:40:12.287 17276 17483 I Ysxz    : [MODMOD] REPORT  formula=undefined apply=undefined gate=undefined cost=undefined death=undefined movesys=NO auto=yes
+10-24 01:40:12.288 17276 17483 I Ysxz    : [MODMOD] REPORT  MOD=f1=true f2=true f3=true f4=false f5=true dmg=1
+10-24 01:40:12.665 17276 17654 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#48) tid=17654 线程=pool-9-thread-1
+10-24 01:40:13.008 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#400, 本版走 JS 自举路线)
+10-24 01:40:13.311 17276 17725 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#49) tid=17725 线程=allocateBuffers
+10-24 01:40:13.601 17276 17727 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#50) tid=17727 线程=SharedPreferenc
+10-24 01:40:13.602 17276 17728 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#51) tid=17728 线程=SharedPreferenc
+10-24 01:40:14.000 17276 17735 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#52) tid=17735 线程=Thread-49
+10-24 01:40:14.296 17276 17738 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#53) tid=17738 线程=Thread-50
+10-24 01:40:14.367 17276 17411 W Mod_Menu: [YsxzExit] _exit 被调用 code=0 (#54)
+10-24 01:40:14.626 17276 17411 W Mod_Menu: [YsxzExit] 内核拦截退出 syscall #1 nr=94(exit_group) code=0
+10-24 01:40:14.626 17276 17411 W Mod_Menu: [YsxzExit]   pc=0x75732c602c (未映射)
+10-24 01:40:14.626 17276 17411 W Mod_Menu: [YsxzExit]   lr=libsecret.so+0x4551c (0x74b364851c)
+10-24 01:40:14.626 17276 17411 W Mod_Menu: [YsxzExit] 该线程=s.games.warrior tid=17411 已被单独结束（进程存活）
+10-24 01:40:14.626 17276 17411 W Mod_Menu: [YsxzExit] syscall(nr=93 code=0) 直调退出 (#55)
+10-24 01:40:14.954 17276 17743 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#56) tid=17743 线程=allocateBuffers
+10-24 01:40:18.243 17276 17755 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#57) tid=17755 线程=Thread-55
+10-24 01:40:19.170 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#600, 本版走 JS 自举路线)
+10-24 01:40:22.189 17276 17483 I Ysxz    : [AUTO] gold: 放行 gold 卡判定 (第 1 次调用)
+10-24 01:40:22.189 17276 17483 D jswrapper: JS: [AUTO] gold: 放行 gold 卡判定 (第 1 次调用)
+10-24 01:40:22.987 17276 17483 I Ysxz    : [AUTO] state@15s {"v":2,"gold":true,"goldKey":"monCard.fDq.fDf","goldHow":"struct+behaviour","goldN":1,"repeatFlag":0,"repeatClicks":0,"tcPatched":0,"tcFlips":0,"tcCode":"","sell":0,"deco":0,"sellQ":"","decoQ":"","sdDump":"","sdTotal":0,"sdLocked":0,"sdDecoable":0,"protoSent":0,"protoCode":"","wear":0,"wearOk":0,"wearEmpty":0,"ticks":15,"battles":0,"inLatch":false,"busy":false,"errs":0,"lastErr":"","warns":0,"note":""}
+10-24 01:40:22.987 17276 17483 D jswrapper: JS: [AUTO] state@15s {"v":2,"gold":true,"goldKey":"monCard.fDq.fDf","goldHow":"struct+behaviour","goldN":1,"repeatFlag":0,"repeatClicks":0,"tcPatched":0,"tcFlips":0,"tcCode":"","sell":0,"deco":0,"sellQ":"","decoQ":"","sdDump":"","sdTotal":0,"sdLocked":0,"sdDecoable":0,"protoSent":0,"protoCode":"","wear":0,"wearOk":0,"wearEmpty":0,"ticks":15,"battles":0,"inLatch":false,"busy":false,"errs":0,"lastErr":"","warns":0,"note":""}
+10-24 01:40:23.353 17276 17483 I Ysxz    : [AUTO] gold: 放行 gold 卡判定 (第 2 次调用)
+10-24 01:40:23.353 17276 17483 D jswrapper: JS: [AUTO] gold: 放行 gold 卡判定 (第 2 次调用)
+10-24 01:40:24.962 17276 17790 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#58) tid=17790 线程=Thread-64
+10-24 01:40:25.200 17276 17483 I Ysxz    : [AUTO] gold: 放行 gold 卡判定 (第 3 次调用)
+10-24 01:40:25.200 17276 17483 D jswrapper: JS: [AUTO] gold: 放行 gold 卡判定 (第 3 次调用)
+10-24 01:40:25.278 17276 17794 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#59) tid=17794 线程=Thread-65
+10-24 01:40:25.454 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#800, 本版走 JS 自举路线)
+10-24 01:40:28.104 17276 17483 I Ysxz    : [MODMOD] resolve: 仍 9/36 模块就绪 (pass 40)
+10-24 01:40:28.104 17276 17483 D jswrapper: JS: [MODMOD] resolve: 仍 9/36 模块就绪 (pass 40)
+10-24 01:40:31.611 17276 17427 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#60) tid=17427 线程=CrAsyncTask #2
+10-24 01:40:31.611 17276 17428 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#61) tid=17428 线程=CrAsyncTask #3
+10-24 01:40:31.612 17276 17429 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#62) tid=17429 线程=CrAsyncTask #4
+10-24 01:40:31.613 17276 17425 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#63) tid=17425 线程=CrAsyncTask #1
+10-24 01:40:31.864 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#1000, 本版走 JS 自举路线)
+10-24 01:40:38.437 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#1200, 本版走 JS 自举路线)
+10-24 01:40:44.922 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#1400, 本版走 JS 自举路线)
+10-24 01:40:45.089 17276 17618 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#64) tid=17618 线程=CachedPool-2
+10-24 01:40:48.138 17276 17483 I Ysxz    : [MODMOD] resolve: 仍 9/36 模块就绪 (pass 80)
+10-24 01:40:48.138 17276 17483 D jswrapper: JS: [MODMOD] resolve: 仍 9/36 模块就绪 (pass 80)
+10-24 01:40:48.184 17276 17514 W Mod_Menu: [YsxzExit] pthread_exit(0x0) (#65) tid=17514 线程=CachedPool-1
+10-24 01:40:51.575 17276 17405 W Mod_Menu: [Ysxz] evalString prologue drift got=0x97FFE631 want=0xD10543FF (#1600, 本版走 JS 自举路线)

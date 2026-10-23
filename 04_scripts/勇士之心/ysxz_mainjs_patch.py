@@ -144,6 +144,15 @@ def main() -> int:
         plain = plain[: plain.index(MARK)].rstrip()
     if "window.__starry_capture" in boot:
         raise SystemExit("ERROR: boot-js contains the native capture section -- wrong file?")
+    # 闸门（2026-10-24 事故）：误把 C++ 头文件（YsxzPatchJs.h）当 --boot-js 传进来时，
+    # `#pragma once` / `R"YSXZJS(` 会被拼进 main.js，引擎报
+    # `Uncaught SyntaxError: Unexpected identifier` 并永远卡在「正在为您加载游戏资源」。
+    for bad in ("#pragma once", 'R"YSXZJS(', "static const char* kYsxzPatchJs"):
+        if bad in boot:
+            raise SystemExit(
+                "ERROR: --boot-js 里出现 C/C++ 片段 %r —— 八成传了 YsxzPatchJs.h；"
+                "请传 gen_ysxz_boot_js.py 产出的纯 JS（或 patch_v2_ac.js）" % bad
+            )
 
     patched_plain = plain.rstrip() + "\n\n" + MARK + "\n" + boot
     patched = encrypt_main(patched_plain)

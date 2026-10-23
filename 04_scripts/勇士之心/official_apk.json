@@ -3,14 +3,14 @@
   "game": "勇士之心",
   "kind": "official",
   "channel": "taptap",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_1.0.3_taptap_official.apk",
-  "version_name": "1.0.3",
-  "version_code": 5,
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/勇士之心/勇士之心_1.0.6_taptap_official.apk",
+  "version_name": "1.0.6",
+  "version_code": 6,
   "installer": "com.android.packageinstaller",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~Cw1C-wU_IU545AXTsfj3yA==/com.fightingstars.games.warrior-HkScsAfEmNj1YJxYAxGHIg==/base.apk",
-  "size": 56866924,
-  "sha256": "c88b92068ae9176d671824fbb465c6c72b5344497ba53f8ef0f43d5807ce5204",
-  "md5": "8d47c857b3c32e37b79d17775f30e2d4"
+  "remote_path": "/data/app/~~2UQINmb9xF2X8O3P0tv_WA==/com.fightingstars.games.warrior-66jcBizsGmSR2MWXNogEuQ==/base.apk",
+  "size": 65531496,
+  "sha256": "4fb3b923f6b670dbc910418f73d5bc66ea3300b7c626b559590710be95edf341",
+  "md5": "c06a1c1e3cc4f57e4d9ab29ecd9becfa"
 }

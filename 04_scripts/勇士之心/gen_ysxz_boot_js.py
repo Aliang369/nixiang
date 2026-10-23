@@ -310,7 +310,20 @@ def main() -> int:
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args()
 
-    src = Path(a.patch_js).read_text(encoding="utf-8") if a.patch_js else extract_patch_js(HEADER)
+    if a.patch_js:
+        src = Path(a.patch_js).read_text(encoding="utf-8")
+        # 事故闸门（2026-10-24）：把 C++ 头文件当补丁 JS 传进来时，整段 `#pragma once` +
+        # `static const char* kYsxzPatchJs = R"YSXZJS(...` 会被原样拼进 main.js 尾部，
+        # 引擎报 `Uncaught SyntaxError: Unexpected identifier`、永远卡在「正在为您加载游戏资源」。
+        # 因此：给的是头文件就自动抽 R"YSXZJS(...)" 内部；抽不到直接失败，绝不原样落盘。
+        if "#pragma once" in src or 'R"YSXZJS(' in src:
+            m = re.search(r'R"YSXZJS\((.*?)\)YSXZJS"', src, re.S)
+            if not m:
+                print("ERROR: --patch-js 给的是 C++ 头文件，且抽不到 R\"YSXZJS(...)\" 内容", file=sys.stderr)
+                return 2
+            src = m.group(1)
+    else:
+        src = extract_patch_js(HEADER)
     ids = json.loads(Path(a.ids).read_text(encoding="utf-8"))["ids"]
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)

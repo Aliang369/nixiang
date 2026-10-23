@@ -21,6 +21,13 @@
    kYsxzBootPatched/_len  = 同一明文 + 自举补丁后重新加密
    生成命令见 ysxz_build_so_103.sh；缺这个头文件就编不过（故意如此，防拿旧产物出包）。 */
 #include "YsxzBootBlob.h"
+/* 1.0.6（加密壳代）追加：
+   YsxzSecShell —— 每 1ms 把壳的 dirty/failedMask 归零，避免重签+外科导致壳自检失败后
+                   跳过 Application.onCreate ⇒ bingo SDK 未初始化 ⇒ AppInfo.parameters NPE。
+                   在 1.0.3 明文包上找不到 libsecret.so 会自动退化为 idle，无副作用。
+   YsxzExitTrace —— 退出点只观测（打印调用点），不改行为。 */
+#include "Games/YsxzSecShell.h"
+#include "Games/YsxzExitTrace.h"
 
 #include <atomic>
 #include <cstdint>
@@ -274,7 +281,15 @@ static bool HookEvalString() {
     uint32_t got = 0;
     memcpy(&got, va, sizeof(got));
     if (got != kEvalInsn) {
-        LOGW("%s evalString prologue drift got=0x%08X want=0x%08X", YSXZ_LOG, got, kEvalInsn);
+        // 1.0.6（加密壳代）的 libcocos2djs.so 重编后 se::evalString 已不在 kEvalRva 上，
+        // 本守卫必然失配 ⇒ 原生 splice 路线不挂，改由 JS 自举路线（files/res/main.js 尾部补丁）
+        // 生效。重试循环每秒会走很多次，日志必须限速，否则刷掉 L3 取证要看的行。
+        static std::atomic<int> s_drift{0};
+        const int n = ++s_drift;
+        if (n <= 3 || (n % 200) == 0) {
+            LOGW("%s evalString prologue drift got=0x%08X want=0x%08X (#%d, 本版走 JS 自举路线)",
+                 YSXZ_LOG, got, kEvalInsn, n);
+        }
         return false;
     }
     if (DobbyHook(va, (dobby_dummy_func_t)HookedEvalString, (dobby_dummy_func_t*)&g_origSeEval) != 0) {
@@ -465,6 +480,11 @@ static void* EarlyHookThread(void* arg) {
 
 void Ysxz_OnLoad(JavaVM* vm) {
     g_jvm = vm;
+    // 1.0.6 加密壳：退出点取证 + 壳状态净化。
+    // 正常路径由 com.starry.magic.ysxz.YsxzAppComponentFactory 在 ~365ms（早于壳自检 413ms）
+    // 先起一次；这里兜底，保证任何入口（含 OTA 热更 so / 直接 dlopen）都能起。
+    YsxzExitTrace_Start(vm);
+    YsxzSecShell_Start();
     static std::atomic<bool> started{false};
     bool expected = false;
     if (!started.compare_exchange_strong(expected, true)) return;
