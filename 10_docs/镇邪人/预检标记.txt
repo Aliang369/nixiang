@@ -1,0 +1,11 @@
+# 镇邪人 装机预检标记（post_install_precheck.sh 读）
+# 2026-10-24 首建：底包换成官方原版 vc11，菜单入口走 JMYBTActivity/MenuService 注入。
+pkg|com.zxr.dlxmz.zxrwz37zgx10.gg9b
+menu_load|StarryMagic
+menu_shown|native menu shown
+hook_hit|\[Zxr\]
+auth_fail|renew auth fail
+auth_ok|grant ok|auth game_id synced
+# 崩溃正则收窄：不写裸 SIGSEGV（自家 CrashTrap 记账行会误报，见 post_install_precheck.sh 头注）
+crash|FATAL EXCEPTION|Fatal signal|DEBUGGERD|crash_dump|am_crash
+crash_ignore|记录先前处理器

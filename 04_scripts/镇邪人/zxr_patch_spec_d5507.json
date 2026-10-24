@@ -1,0 +1,22 @@
+{
+  "marker": "starry_zxr_safe_v2",
+  "prefix": "window.__starryZxrState=window.__starryZxrState||{};if(!window.__starryZxrState.ret)window.__starryZxrState.ret={};window.__starryZxrOn=function(i){try{var s=window.__starryZxrState;if(s&&s.ret&&typeof s.ret[i]!==\"undefined\")return !!s.ret[i];}catch(e){}try{return !!jsb.reflection.callStaticMethod(\"com.starry.magic.cocos.ZxrHooks\",\"getRet\",\"(I)Z\",i);}catch(e2){return false;}};/*starry_zxr_safe_v2*/\n",
+  "replacements": [
+    {
+      "name": "damage_and_invincible",
+      "anchor": "t = c.baseDmg;",
+      "insert": "\ntry{if(window.__starryZxrOn&&window.__starryZxrOn(1)&&n&&n.heroCfg){t*=100;}if(window.__starryZxrOn&&window.__starryZxrOn(2)&&r&&r.heroCfg){t=0;}}catch(__zxrErr){}"
+    },
+    {
+      "name": "attack_speed",
+      "anchor": "return Math.max(e, .01);",
+      "insert": "\ntry{if(window.__starryZxrOn&&window.__starryZxrOn(3)&&t&&t.heroCfg&&!t.CheckEntityHaveStatus(l.EnumEntityStatus.bossFakeControl)){e=Math.min(e*10,i);}}catch(__zxrErr){}"
+    },
+    {
+      "name": "full_screen_kill",
+      "anchor": "var f = o && o.force, h = o && o.trueDmg, _ = i < 0, I = i > 0, E = 0;",
+      "insert": "\ntry { if (window.__starryZxrOn && window.__starryZxrOn(4) && i < 0 && t && t.monsterCfg && !this.__starryZxrAoeBusy) { var __zxrCaster = d.EntityManager.Inst().GetEntity(e); if (__zxrCaster && (__zxrCaster.heroCfg || __zxrCaster.EntityType === s.EnumEntityType.Player)) { var __zxrMap = d.EntityManager.Inst().entityMap; if (__zxrMap && typeof __zxrMap.forEach === \"function\") { this.__starryZxrAoeBusy = true; try { Array.from(__zxrMap.values()).forEach(function(__zxrEnt) { if (__zxrEnt && __zxrEnt !== t && !__zxrEnt.IsDead && !__zxrEnt.IsLogicDead && __zxrEnt.monsterCfg) { try { this.FightForceKillEntity(__zxrEnt, e); } catch (__zxrOneErr) {} } }, this); } finally { this.__starryZxrAoeBusy = false; } } } } } catch (__zxrErr) {}"
+    }
+  ],
+  "version_note": "d5507@vc11: FightChangeEntityHp prologue uses I/E instead of S/M; other two anchors unchanged"
+}

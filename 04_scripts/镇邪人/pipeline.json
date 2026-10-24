@@ -1,7 +1,7 @@
 {
   "game": "镇邪人",
-  "version": "1.0.3-0d1ae-star",
-  "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。\n\n2026-10-01：服务器热更 src 又从 e4278 漂到 0d1ae（同 09-29 根因重演：包内只钉 e4278/ca0d4/d5507，引擎「包内命中优先」落空后走未修补热更缓存）。修复两路：① 用同一套 zxr_patch_spec_b5278.json 给 0d1ae 重打补丁并钉进包内（四份 pin 齐全）；② native 兜底去版本化——删除 Games/ZxrMod.cpp 里只认 5 个固定 bundle 文件名的白名单（热更缓存落盘名是 gamecaches/<数字>.jsc，按文件名永远匹配不上，兜底从未生效），改为纯内容指纹判定（1MB~48MB 体积窗口 + 不含 starry_zxr_safe_v2 + 含 FightChangeEntityHp/DamageCommonCalcFinal/CalcFinalAtkSpeedValue + 三个战斗符号名齐全），并新增「补丁脚本 eval 失败则用原脚本重跑」的回退分支。同时用工作区当前 HEAD 的 mod菜单/starry-mod-menu 重编 classes8.dex 与 libstarry_magic.so 换进游戏。底包=设备上安装的 09-29 星光正式包（md5 0cde8985655c30007b7bd65275f7742f）。jsb-engine.js 与 main.js 与底包逐字节一致，SyncJsState() 的 bundleGuard 故意未动。",
+  "version": "1.0.3-cb9dc-star",
+  "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。\n\n2026-10-01：服务器热更 src 又从 e4278 漂到 0d1ae（同 09-29 根因重演：包内只钉 e4278/ca0d4/d5507，引擎「包内命中优先」落空后走未修补热更缓存）。修复两路：① 用同一套 zxr_patch_spec_b5278.json 给 0d1ae 重打补丁并钉进包内（四份 pin 齐全）；② native 兜底去版本化——删除 Games/ZxrMod.cpp 里只认 5 个固定 bundle 文件名的白名单（热更缓存落盘名是 gamecaches/<数字>.jsc，按文件名永远匹配不上，兜底从未生效），改为纯内容指纹判定（1MB~48MB 体积窗口 + 不含 starry_zxr_safe_v2 + 含 FightChangeEntityHp/DamageCommonCalcFinal/CalcFinalAtkSpeedValue + 三个战斗符号名齐全），并新增「补丁脚本 eval 失败则用原脚本重跑」的回退分支。同时用工作区当前 HEAD 的 mod菜单/starry-mod-menu 重编 classes8.dex 与 libstarry_magic.so 换进游戏。底包=设备上安装的 09-29 星光正式包（md5 0cde8985655c30007b7bd65275f7742f）。jsb-engine.js 与 main.js 与底包逐字节一致，SyncJsState() 的 bundleGuard 故意未动。\n\n2026-10-24：底包换成**官方原版 vc11**（无百度壳/斌哥壳，旧 inject/surgical 脚本都不适用）⇒ 新写 build_star_origbase_zxr.sh（zip 级全量注入：Manifest MenuService + classes7 入口/免广告 smali + sq_plugin TapSign 固定 + classes8/so 复用 10-01 留档 + 引擎包内优先 + d5507/cb9dc 双 pin）。远端 src 又漂 cb9dc 且 FightChangeEntityHp 序言改名 ⇒ 新增 zxr_patch_spec_cb9dc.json / zxr_patch_spec_d5507.json（各 7/7 回归）。签名变更 ⇒ 用户确认后卸载重装（干净安装），precheck PASS_TO_HUMAN，用户输卡密后四项战斗实测通过。",
   "params": {
     "game_id": "zxr",
     "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
@@ -366,6 +366,108 @@
         }
       },
       "note": "真机 f9a116a2 同签覆盖安装成功（firstInstallTime 保持 2026-10-01 19:05:50，未卸载未清数据），冷启动 35s 零 FATAL/SIGSEGV/Cocos2dxDownloader，[Zxr] 初始化链完整。G2 功能实测（19:34）：#1/#2/#3/#4/#6 全开 + #8 加速=5，进战斗四项战斗功能全部正常，用户确认「功能都没问题」；日志每一行都是 `[Zxr] feature #N=ON noAd=1 splice=0`、无 `hotfallback splice` ⇒ native 兜底未介入，走的是包内钉入的修补 0d1ae（引擎包内命中优先 = 预期路径）。注意：`SyncJsState()` 的 `zxr jsstate patched=` 行本轮没出现（菜单走 nativeSetFeature 即时路径），后续复查以 `splice=0` + 功能实测为准。未测场景（NOT PROVEN）：同局内关→再开、换章节/重开战斗、跨进程开→关→再开、登录/登出。日志 09_test/镇邪人_0d1ae_20261001/logcat_runtime_toggle.txt。"
+    },
+    {
+      "id": "cb9dc_origbase_build",
+      "name": "官方原版 vc11 外科重建星空包（菜单入口/免广告/TapSign 固定 + 引擎包内优先 + d5507/cb9dc 双 pin）",
+      "requires": [
+        "0d1ae_menu_latest_closeout"
+      ],
+      "command": "ZXR_BASE_APK=\"${ZXR_BASE_APK:-/tmp/zxr_orig_1024.apk}\" bash 04_scripts/镇邪人/build_star_origbase_zxr.sh && bash 04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk \"${ZXR_BASE_APK:-/tmp/zxr_orig_1024.apk}\"",
+      "preflight": [
+        "04_scripts/镇邪人/build_star_origbase_zxr.sh",
+        "04_scripts/镇邪人/patch_origbase_zxr_smali.py",
+        "04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh",
+        "04_scripts/镇邪人/zxr_patch_spec_cb9dc.json",
+        "04_scripts/镇邪人/zxr_patch_spec_d5507.json",
+        "07_patched/镇邪人/menu_latest/classes8.dex",
+        "07_patched/镇邪人/cb9dc/index.cb9dc.jsc",
+        "07_patched/镇邪人/d5507/index.d5507.jsc"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "底包 md5 0dab73812162a2cab8541431fb972af5（官方原版 99,870,824B，vc11）；APK 不留本地，重跑需先按 10_docs/_state/底包再获取台账.md 重新拉取并放 /tmp。",
+      "done_at": "2026-10-24 23:52:13",
+      "artifacts": {
+        "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": {
+          "md5": "5ca9908ae975930a4bb3317fb5cf4d8d"
+        }
+      },
+      "inputs": {
+        "07_patched/镇邪人/0d1ae/index.0d1ae.jsc": "6b0820c40307e84c6a78046c6766d565",
+        "07_patched/镇邪人/menu_latest/classes8.dex": "69bcfff79e9dfc206e3ba5b369a30751"
+      }
+    },
+    {
+      "id": "cb9dc_origbase_install",
+      "name": "卸载官方原版 → 全新安装星空包 → 装机完整性校验（签名变更，需用户确认）",
+      "requires": [
+        "cb9dc_origbase_build"
+      ],
+      "command": "mkdir -p 09_test/镇邪人_cb9dc_20261024 && { CONFIRM_UNINSTALL=1 SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_fresh_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk 2>&1 | tee 09_test/镇邪人_cb9dc_20261024/install_fresh.log; }",
+      "preflight": [
+        "04_scripts/镇邪人/install_fresh_zxr.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_contains",
+          "path": "09_test/镇邪人_cb9dc_20261024/install_fresh.log",
+          "pattern": "install_fresh=ok"
+        }
+      ],
+      "status": "done",
+      "note": "签名从官方 8fa00ae1… 换成 StarryMagic 83c5cc0b… ⇒ 必须卸载重装（用户 2026-10-24 已确认）；之后跑 post_install_precheck.sh --game 镇邪人。",
+      "failed_at": "2026-10-24 23:52:24",
+      "error": "产物校验未通过（详见上方校验输出）",
+      "done_at": "2026-10-24 23:53:02",
+      "artifacts": {},
+      "inputs": {
+        "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": "5ca9908ae975930a4bb3317fb5cf4d8d"
+      }
+    },
+    {
+      "id": "cb9dc_origbase_closeout",
+      "name": "收官：文档 + 唯一正式包裁剪 + 07/09 滚动物清理 + 设备残留",
+      "requires": [
+        "cb9dc_origbase_install"
+      ],
+      "command": "bash 04_scripts/_common/preflight.sh 04_scripts/镇邪人/build_star_origbase_zxr.sh 04_scripts/镇邪人/install_fresh_zxr.sh 04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh 04_scripts/镇邪人/patch_origbase_zxr_smali.py 04_scripts/镇邪人/zxr_patch_spec_cb9dc.json 04_scripts/镇邪人/zxr_patch_spec_d5507.json",
+      "preflight": [
+        "04_scripts/镇邪人/build_star_origbase_zxr.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md"
+        },
+        {
+          "type": "file_exists",
+          "path": "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk"
+        }
+      ],
+      "note": "08_output 已裁成唯一正式包（删 .idsig）；07_patched 删两份明文 *.patched.js（约45MB，留 .jsc+哈希 json）；底包 APK 与 /tmp 临时件已删并登记台账。",
+      "status": "done",
+      "done_at": "2026-10-25 00:00:36",
+      "artifacts": {
+        "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md": {
+          "md5": "cad3dcb1d59bfeb8d08d5e446bdb9d85"
+        },
+        "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json": {
+          "md5": "f548ac1d6e7472eb25a46e7d63d5ae31"
+        },
+        "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": {
+          "md5": "5ca9908ae975930a4bb3317fb5cf4d8d"
+        }
+      }
     }
   ]
 }
