@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-24T16:22:57+00:00",
+  "generated_at": "2026-10-24T16:33:50+00:00",
   "game": "镇邪人",
-  "version": "1.0.3-cb9dc-star-sofix",
+  "version": "1.0.3-cb9dc-menu-star",
   "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
   "pipeline_state": "04_scripts/镇邪人/pipeline.json",
   "pipeline_status": {
@@ -21,16 +21,17 @@
     "cb9dc_origbase_build": "done",
     "cb9dc_origbase_install": "done",
     "cb9dc_origbase_closeout": "done",
-    "cb9dc_hotfix_derive_20261025": "done"
+    "cb9dc_hotfix_derive_20261025": "done",
+    "cb9dc_menu_head_rebuild_20261025": "done"
   },
-  "source_commit": "2e7081dc8a57cbeaf4cb60a5804eb0936a994e66",
-  "source_tree": "c6251472b9aba03ea3dece3e8100210f9dcbdc98",
+  "source_commit": "7f94233e015d8c1517bee0e9d0ba0914a7904ec2",
+  "source_tree": "3fa6548d969abaedbf80b77a538f7e83ee565b91",
   "apk": {
-    "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_so_only_20261025-releaseSigned.apk",
+    "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk",
     "available": true,
-    "size": 106286241,
-    "md5": "238673830d2b72fb5b9116c5404df725",
-    "sha256": "5f2986b9255d47c246a6839d706cfc726c1c4eefea8bf12fd0cf0b6195ce3eea"
+    "size": 106331297,
+    "md5": "4a7e4431ddbf452f048cae42d97287c5",
+    "sha256": "1953fd7108064f722796925a9906010245a602bba1d43bb5dd67740de46f36a5"
   },
   "artifacts": [
     {
@@ -154,18 +155,24 @@
       "stage": "cb9dc_hotfix_derive_20261025",
       "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_so_only_20261025-releaseSigned.apk",
       "recorded_md5": "238673830d2b72fb5b9116c5404df725",
-      "available": true,
-      "current_md5": "238673830d2b72fb5b9116c5404df725",
-      "current_sha256": "5f2986b9255d47c246a6839d706cfc726c1c4eefea8bf12fd0cf0b6195ce3eea",
-      "matches_recorded_md5": true
+      "available": false
     },
     {
       "stage": "cb9dc_hotfix_derive_20261025",
       "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_hotfix结构派生_20261025.md",
       "recorded_md5": "84acd3eabb23195d1642cc3d3d8a05db",
       "available": true,
-      "current_md5": "84acd3eabb23195d1642cc3d3d8a05db",
-      "current_sha256": "9b41448892fbe9fb7f6b4471ad03cd1f7f614e4b3621437fd1eb0b44db36685a",
+      "current_md5": "30f253a39e4f176ccc6c78f6b3ec2bd2",
+      "current_sha256": "83c217a364c6e5436cab5e2d34ff1fad79eae1724df8b69decf71acb7637042a",
+      "matches_recorded_md5": false
+    },
+    {
+      "stage": "cb9dc_menu_head_rebuild_20261025",
+      "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk",
+      "recorded_md5": "4a7e4431ddbf452f048cae42d97287c5",
+      "available": true,
+      "current_md5": "4a7e4431ddbf452f048cae42d97287c5",
+      "current_sha256": "1953fd7108064f722796925a9906010245a602bba1d43bb5dd67740de46f36a5",
       "matches_recorded_md5": true
     }
   ],
