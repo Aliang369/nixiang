@@ -1,473 +1,475 @@
 {
-  "game": "镇邪人",
-  "version": "1.0.3-cb9dc-star",
-  "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。\n\n2026-10-01：服务器热更 src 又从 e4278 漂到 0d1ae（同 09-29 根因重演：包内只钉 e4278/ca0d4/d5507，引擎「包内命中优先」落空后走未修补热更缓存）。修复两路：① 用同一套 zxr_patch_spec_b5278.json 给 0d1ae 重打补丁并钉进包内（四份 pin 齐全）；② native 兜底去版本化——删除 Games/ZxrMod.cpp 里只认 5 个固定 bundle 文件名的白名单（热更缓存落盘名是 gamecaches/<数字>.jsc，按文件名永远匹配不上，兜底从未生效），改为纯内容指纹判定（1MB~48MB 体积窗口 + 不含 starry_zxr_safe_v2 + 含 FightChangeEntityHp/DamageCommonCalcFinal/CalcFinalAtkSpeedValue + 三个战斗符号名齐全），并新增「补丁脚本 eval 失败则用原脚本重跑」的回退分支。同时用工作区当前 HEAD 的 mod菜单/starry-mod-menu 重编 classes8.dex 与 libstarry_magic.so 换进游戏。底包=设备上安装的 09-29 星光正式包（md5 0cde8985655c30007b7bd65275f7742f）。jsb-engine.js 与 main.js 与底包逐字节一致，SyncJsState() 的 bundleGuard 故意未动。\n\n2026-10-24：底包换成**官方原版 vc11**（无百度壳/斌哥壳，旧 inject/surgical 脚本都不适用）⇒ 新写 build_star_origbase_zxr.sh（zip 级全量注入：Manifest MenuService + classes7 入口/免广告 smali + sq_plugin TapSign 固定 + classes8/so 复用 10-01 留档 + 引擎包内优先 + d5507/cb9dc 双 pin）。远端 src 又漂 cb9dc 且 FightChangeEntityHp 序言改名 ⇒ 新增 zxr_patch_spec_cb9dc.json / zxr_patch_spec_d5507.json（各 7/7 回归）。签名变更 ⇒ 用户确认后卸载重装（干净安装），precheck PASS_TO_HUMAN，用户输卡密后四项战斗实测通过。",
-  "params": {
-    "game_id": "zxr",
-    "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
-    "version": "1.0.3",
-    "version_code": 11,
-    "activity": "com.sanqi.jmybt.game37.JMYBTActivity",
-    "serial": "f9a116a2"
+ "game": "镇邪人",
+ "version": "1.0.3-cb9dc-star",
+ "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。\n\n2026-10-01：服务器热更 src 又从 e4278 漂到 0d1ae（同 09-29 根因重演：包内只钉 e4278/ca0d4/d5507，引擎「包内命中优先」落空后走未修补热更缓存）。修复两路：① 用同一套 zxr_patch_spec_b5278.json 给 0d1ae 重打补丁并钉进包内（四份 pin 齐全）；② native 兜底去版本化——删除 Games/ZxrMod.cpp 里只认 5 个固定 bundle 文件名的白名单（热更缓存落盘名是 gamecaches/<数字>.jsc，按文件名永远匹配不上，兜底从未生效），改为纯内容指纹判定（1MB~48MB 体积窗口 + 不含 starry_zxr_safe_v2 + 含 FightChangeEntityHp/DamageCommonCalcFinal/CalcFinalAtkSpeedValue + 三个战斗符号名齐全），并新增「补丁脚本 eval 失败则用原脚本重跑」的回退分支。同时用工作区当前 HEAD 的 mod菜单/starry-mod-menu 重编 classes8.dex 与 libstarry_magic.so 换进游戏。底包=设备上安装的 09-29 星光正式包（md5 0cde8985655c30007b7bd65275f7742f）。jsb-engine.js 与 main.js 与底包逐字节一致，SyncJsState() 的 bundleGuard 故意未动。\n\n2026-10-24：底包换成**官方原版 vc11**（无百度壳/斌哥壳，旧 inject/surgical 脚本都不适用）⇒ 新写 build_star_origbase_zxr.sh（zip 级全量注入：Manifest MenuService + classes7 入口/免广告 smali + sq_plugin TapSign 固定 + classes8/so 复用 10-01 留档 + 引擎包内优先 + d5507/cb9dc 双 pin）。远端 src 又漂 cb9dc 且 FightChangeEntityHp 序言改名 ⇒ 新增 zxr_patch_spec_cb9dc.json / zxr_patch_spec_d5507.json（各 7/7 回归）。签名变更 ⇒ 用户确认后卸载重装（干净安装），precheck PASS_TO_HUMAN，用户输卡密后四项战斗实测通过。",
+ "params": {
+  "game_id": "zxr",
+  "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
+  "version": "1.0.3",
+  "version_code": 11,
+  "activity": "com.sanqi.jmybt.game37.JMYBTActivity",
+  "serial": "f9a116a2"
+ },
+ "env": {
+  "NIXIANG": "/Users/aliang/Documents/nixiang",
+  "NIXIANG_PYTHON": "/opt/homebrew/bin/python3.11",
+  "ANDROID_NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
+  "SMALI_BIN": "/Users/aliang/Documents/nixiang/01_tools/smali/smali",
+  "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
+  "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner",
+  "RELEASE_KS": "01_tools/starry_release.jks (alias starry)"
+ },
+ "workdir": "/Users/aliang/Documents/nixiang",
+ "history": [
+  {
+   "version": "1.0.3-safe-v2",
+   "done_at": "2026-09-16 20:02:00",
+   "notes": "从玩家星光底包只读解出 XXTEA key c25d728a-a9d9-4c，静态 patch DamageCommonCalcFinal/CalcFinalAtkSpeedValue/FightChangeEntityHp + 本地 src 路由保护（jsb-engine/main.js）→ 镇邪人_1.0.3_safe-releaseSigned.apk（125,361,805B，md5 7073581c16a2cb6123dae2081c80a09b）",
+   "doc": "10_docs/镇邪人/镇邪人_1.0.3_安全重写_20260916.md"
   },
-  "env": {
-    "NIXIANG": "/Users/aliang/Documents/nixiang",
-    "NIXIANG_PYTHON": "/opt/homebrew/bin/python3.11",
-    "ANDROID_NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
-    "SMALI_BIN": "/Users/aliang/Documents/nixiang/01_tools/smali/smali",
-    "AAPT2": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/aapt2",
-    "APKSIGNER": "/Users/aliang/Library/Android/sdk/build-tools/36.0.0/apksigner",
-    "RELEASE_KS": "01_tools/starry_release.jks (alias starry)"
+  {
+   "version": "1.0.3-e4278-star",
+   "done_at": "2026-09-29 15:05:00",
+   "notes": "e4278 热更指纹重钉 + 引擎包内优先缓存策略；用户实测秒杀/无敌/攻速/全屏秒杀正常。",
+   "doc": "10_docs/镇邪人/镇邪人_1.0.3_e4278_OTA收尾_20260929.md"
+  }
+ ],
+ "stages": [
+  {
+   "id": "fetch_orig_apk",
+   "name": "真机只读拉取官方原版 base.apk（重装后的未打补丁包）",
+   "requires": [],
+   "command": "adb -s f9a116a2 pull $(adb -s f9a116a2 shell pm path com.zxr.dlxmz.zxrwz37zgx10.gg9b | sed 's/package://' | tr -d '\\r') 09_test/镇邪人_orig_20260923/apk/orig_base.apk",
+   "preflight": [
+    "adb devices -l"
+   ],
+   "verify": [
+    {
+     "type": "not_exists",
+     "path": "09_test/镇邪人_orig_20260923/apk/orig_base.apk"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 15:39:00",
+   "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/镇邪人_orig_20260923/apk/orig_base.apk\n2026-09-30 收尾清理: 09_test/镇邪人_orig_20260923/apk/orig_base.apk; 原 md5=0dab73812162a2cab8541431fb972af5"
   },
-  "workdir": "/Users/aliang/Documents/nixiang",
-  "history": [
+  {
+   "id": "dump_hotupdate",
+   "name": "打包官方热更产物（gamecaches/packageUpdate）并解出 ca0d4 明文 src",
+   "requires": [
+    "fetch_orig_apk"
+   ],
+   "command": "adb -s f9a116a2 shell su -c 'tar cf /data/local/tmp/hotupdate.tar -C /data/data/com.zxr.dlxmz.zxrwz37zgx10.gg9b/files gamecaches packageUpdate' && adb -s f9a116a2 pull /data/local/tmp/hotupdate.tar 09_test/镇邪人_orig_20260923/hotupdate.tar",
+   "preflight": [
+    "adb -s f9a116a2 shell su -c id"
+   ],
+   "verify": [
     {
-      "version": "1.0.3-safe-v2",
-      "done_at": "2026-09-16 20:02:00",
-      "notes": "从玩家星光底包只读解出 XXTEA key c25d728a-a9d9-4c，静态 patch DamageCommonCalcFinal/CalcFinalAtkSpeedValue/FightChangeEntityHp + 本地 src 路由保护（jsb-engine/main.js）→ 镇邪人_1.0.3_safe-releaseSigned.apk（125,361,805B，md5 7073581c16a2cb6123dae2081c80a09b）",
-      "doc": "10_docs/镇邪人/镇邪人_1.0.3_安全重写_20260916.md"
-    },
-    {
-      "version": "1.0.3-e4278-star",
-      "done_at": "2026-09-29 15:05:00",
-      "notes": "e4278 热更指纹重钉 + 引擎包内优先缓存策略；用户实测秒杀/无敌/攻速/全屏秒杀正常。",
-      "doc": "10_docs/镇邪人/镇邪人_1.0.3_e4278_OTA收尾_20260929.md"
+     "type": "not_exists",
+     "path": "09_test/镇邪人_orig_20260923/hotupdate/gamecaches/src/17901492119032.jsc"
     }
-  ],
-  "stages": [
-    {
-      "id": "fetch_orig_apk",
-      "name": "真机只读拉取官方原版 base.apk（重装后的未打补丁包）",
-      "requires": [],
-      "command": "adb -s f9a116a2 pull $(adb -s f9a116a2 shell pm path com.zxr.dlxmz.zxrwz37zgx10.gg9b | sed 's/package://' | tr -d '\\r') 09_test/镇邪人_orig_20260923/apk/orig_base.apk",
-      "preflight": [
-        "adb devices -l"
-      ],
-      "verify": [
-        {
-          "type": "not_exists",
-          "path": "09_test/镇邪人_orig_20260923/apk/orig_base.apk"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 15:39:00",
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/镇邪人_orig_20260923/apk/orig_base.apk\n2026-09-30 收尾清理: 09_test/镇邪人_orig_20260923/apk/orig_base.apk; 原 md5=0dab73812162a2cab8541431fb972af5"
-    },
-    {
-      "id": "dump_hotupdate",
-      "name": "打包官方热更产物（gamecaches/packageUpdate）并解出 ca0d4 明文 src",
-      "requires": [
-        "fetch_orig_apk"
-      ],
-      "command": "adb -s f9a116a2 shell su -c 'tar cf /data/local/tmp/hotupdate.tar -C /data/data/com.zxr.dlxmz.zxrwz37zgx10.gg9b/files gamecaches packageUpdate' && adb -s f9a116a2 pull /data/local/tmp/hotupdate.tar 09_test/镇邪人_orig_20260923/hotupdate.tar",
-      "preflight": [
-        "adb -s f9a116a2 shell su -c id"
-      ],
-      "verify": [
-        {
-          "type": "not_exists",
-          "path": "09_test/镇邪人_orig_20260923/hotupdate/gamecaches/src/17901492119032.jsc"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 15:43:00",
-      "artifacts": {
-        "09_test/镇邪人_orig_20260923/hotupdate.tar": {
-          "size": 71034368
-        }
-      },
-      "note": "2026-09-23 收尾清理: 06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/镇邪人_orig_20260923/hotupdate"
-    },
-    {
-      "id": "patch_jsc_ca0d4",
-      "name": "对 ca0d4 明文 src 打静态战斗补丁并回加密（锚点用 zxr_patch_spec_b5278.json）",
-      "requires": [
-        "dump_hotupdate"
-      ],
-      "command": "bash 04_scripts/镇邪人/build_patched_ca0d4_zxr.sh",
-      "preflight": [
-        "04_scripts/镇邪人/build_patched_ca0d4_zxr.sh",
-        "04_scripts/镇邪人/zxr_patch_spec_b5278.json"
-      ],
-      "verify": [
-        {
-          "type": "not_exists",
-          "path": "07_patched/镇邪人/ca0d4/index.ca0d4.jsc"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 15:52:00",
-      "note": "2026-09-23 收尾清理: /Users/aliang/Documents/nixiang/07_patched/镇邪人/ca0d4\n2026-09-23 收尾清理: 07_patched/镇邪人/ca0d4/index.ca0d4.jsc\n2026-09-23 收尾清理: 07_patched/镇邪人/ca0d4/config.ca0d4.json"
-    },
-    {
-      "id": "build_package",
-      "name": "重编最新菜单（星空面板）+ 回滚路由补丁 + ca0d4/d5507 双份外科合并",
-      "requires": [
-        "patch_jsc_ca0d4"
-      ],
-      "command": "ZXR_OUTPUT_NAME=\"镇邪人_1.0.3_ca0d4_star-uberdebug.apk\" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_ca0d4_menu_latest.sh",
-      "preflight": [
-        "mod菜单/starry-mod-menu/scripts/surgical_zxr_ca0d4_menu_latest.sh",
-        "09_test/镇邪人_crash_20260923/apk/base.apk"
-      ],
-      "verify": [
-        {
-          "type": "not_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 16:30:00",
-      "artifacts": {
-        "07_patched/镇邪人/menu_latest/": {
-          "note": "菜单产物留档（classes8.dex / libstarry_magic.so / libc++_shared.so / starlight.crt）"
-        }
-      },
-      "note": "2026-09-23 收尾清理: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk\n2026-09-23 收尾清理: 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk; 原 md5=3656f9cbe48c3f35c9603264c2fea263"
-    },
-    {
-      "id": "verify",
-      "name": "候选包静态复核（菜单/so、双份补丁、引擎回滚、远端 URL 本地命中）",
-      "requires": [
-        "build_package"
-      ],
-      "command": "bash 04_scripts/镇邪人/verify_apk_ca0d4_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk",
-      "preflight": [
-        "04_scripts/镇邪人/verify_apk_ca0d4_zxr.sh"
-      ],
-      "verify": [
-        {
-          "type": "command_output",
-          "expect": "verify=pass"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 16:31:00",
-      "note": "2026-09-23 收尾：08_output 已裁剪为唯一正式包，复核目标改指向保留包（其 payload 与已上机验证的 debug 测试包逐条目一致）；07_patched/镇邪人/ca0d4 对照产物已按滚动物清理删除，重跑本阶段前先执行 patch_jsc_ca0d4 再生。"
-    },
-    {
-      "id": "install_device_test",
-      "name": "覆盖安装测试包并冷启动抓日志（零崩溃 + 授权 grant ok）",
-      "requires": [
-        "verify"
-      ],
-      "command": "adb -s f9a116a2 push 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk /data/local/tmp/zxr_star.apk && adb -s f9a116a2 shell pm install -r -d /data/local/tmp/zxr_star.apk && adb -s f9a116a2 shell am force-stop com.zxr.dlxmz.zxrwz37zgx10.gg9b && adb -s f9a116a2 shell am start -n com.zxr.dlxmz.zxrwz37zgx10.gg9b/com.sanqi.jmybt.game37.JMYBTActivity && sleep 28 && adb -s f9a116a2 logcat -d > 09_test/镇邪人_ca0d4_fix_20260923/logcat_star.txt",
-      "preflight": [
-        "adb devices -l"
-      ],
-      "verify": [
-        {
-          "type": "command_output",
-          "expect": "grep -cE 'FATAL EXCEPTION|StarryCrash|Cocos2dxDownloader' == 0"
-        },
-        {
-          "type": "command_output",
-          "expect": "[验证] grant ok"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 16:31:09",
-      "artifacts": {
-        "09_test/镇邪人_ca0d4_fix_20260923/logcat_star.txt": {
-          "lines": 7372
-        },
-        "09_test/镇邪人_ca0d4_fix_20260923/shot_menu_latest.png": {}
-      },
-      "note": "2026-09-23 收尾：本阶段安装的 debug 测试包 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk 已按收官规则裁剪；重跑需先用 build_package 的同命令再生。真机现装的就是该 debug 版（同签名覆盖安装），正式包证书不同，直接覆盖会 INSTALL_FAILED_UPDATE_INCOMPATIBLE，需先卸载（会清游戏热更数据）。"
-    },
-    {
-      "id": "build_official",
-      "name": "出一版 release 证书正式包（内容与已验证测试包 payload 逐条目一致）",
-      "requires": [
-        "verify"
-      ],
-      "command": "ZXR_USE_RELEASE_KS=1 ZXR_SKIP_MENU_BUILD=1 ZXR_OUTPUT_NAME=\"镇邪人_1.0.3_ca0d4_star-releaseSigned.apk\" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_ca0d4_menu_latest.sh",
-      "preflight": [
-        "01_tools/starry_release.jks"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 16:36:00",
-      "artifacts": {
-        "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk": {
-          "size": 106069153,
-          "md5": "59a6e755e8ddea2232c6a9e3ee375f62",
-          "sha256": "48979c9dfb149505946b4fa778711cb8de390df4619b191da5c2ec233058142c",
-          "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
-        }
-      }
-    },
-    {
-      "id": "repo_push",
-      "name": "菜单源码（星空面板 + 新紫）与本次脚本/文档提交推送",
-      "requires": [
-        "build_official"
-      ],
-      "command": "git add <MagicRes.java + 本次脚本 + 文档> && git commit && git push origin main",
-      "preflight": [
-        "git status --short"
-      ],
-      "verify": [
-        {
-          "type": "command_output",
-          "expect": "main -> main"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 16:32:00",
-      "artifacts": {
-        "commit_magicres": "cdcd46c 星光菜单：补提交 MagicRes 星空面板 + 新紫配色（2026-09-22 星光紫美化漏提交部分）"
-      }
-    },
-    {
-      "id": "archive",
-      "name": "收官归档（文档 + 索引 + 08_output 唯一正式包 + git）",
-      "requires": [
-        "repo_push"
-      ],
-      "command": "bash 04_scripts/_common/prune_output_final.sh 08_output/镇邪人 镇邪人_1.0.3_ca0d4_star-releaseSigned.apk --apply --manifest 10_docs/镇邪人/正式包裁剪清单_1.0.3_20260923.json",
-      "preflight": [
-        "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md"
-        },
-        {
-          "type": "not_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk"
-        },
-        {
-          "type": "not_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_menu-latest-releaseSigned.apk"
-        },
-        {
-          "type": "not_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_safe-releaseSigned.apk"
-        },
-        {
-          "type": "not_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk.idsig"
-        },
-        {
-          "type": "not_exists",
-          "path": "06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js"
-        },
-        {
-          "type": "not_exists",
-          "path": "07_patched/镇邪人/ca0d4/index.ca0d4.jsc"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 16:52:00",
-      "note": "用户口令「收尾+正式包+清理+git」2026-09-23 二次确认（首轮漏做第 2 步裁剪）。收官事实：08_output/镇邪人 只留正式包 镇邪人_1.0.3_ca0d4_star-releaseSigned.apk（106,069,153B，md5 59a6e755e8ddea2232c6a9e3ee375f62，sha256 48979c9dfb149505946b4fa778711cb8de390df4619b191da5c2ec233058142c，签名 starry-release 83c5cc0b…）；裁剪清单=10_docs/镇邪人/正式包裁剪清单_1.0.3_20260923.json（删 7 项 / 约 320MB）；滚动物清单=10_docs/镇邪人/滚动物清理清单_20260923.json（删 06 明文 25,147,378B + 07_patched/ca0d4 29,391,742B，约 54.5MB，不可再生输入全保留）；git 提交=106f496（8b95e74..106f496，9 files；含 `_common/pipeline_record_cleanup.py` 的 KeyError 修复，本阶段状态由 archive_close_git 收口提交）。",
-      "artifacts": {
-        "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md": {
-          "md5": "5537ae070cde3e970031fe86509003f3"
-        }
-      }
-    },
-    {
-      "id": "e4278_hotfix_closeout",
-      "name": "e4278 热更修复正式包 + OTA libstarry_magic.so + 08_output 裁剪",
-      "requires": [
-        "archive"
-      ],
-      "command": "bash 04_scripts/镇邪人/verify_apk_e4278_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk && bash 04_scripts/镇邪人/extract_ota_so_zxr.sh && bash 04_scripts/_common/prune_output_final.sh 08_output/镇邪人 镇邪人_1.0.3_e4278_star-releaseSigned.apk --apply --manifest 10_docs/镇邪人/正式包裁剪清单_1.0.3_e4278_20260929.json",
-      "preflight": [
-        "04_scripts/镇邪人/verify_apk_e4278_zxr.sh",
-        "04_scripts/镇邪人/extract_ota_so_zxr.sh",
-        "10_docs/镇邪人/镇邪人_1.0.3_e4278_OTA收尾_20260929.md"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk"
-        },
-        {
-          "type": "file_exists",
-          "path": "08_output/镇邪人/游戏内/libstarry_magic.so"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-29 15:05:00",
-      "artifacts": {
-        "08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk": {
-          "size": 110316865,
-          "md5": "0cde8985655c30007b7bd65275f7742f",
-          "sha256": "83d49ea88ac7895cf2c065d0b895c70e5b480591d1c0977518442efb82886c7d",
-          "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
-        },
-        "08_output/镇邪人/游戏内/libstarry_magic.so": {
-          "size": 4160976,
-          "md5": "fef2fc5681804502b78718288a1ccf7b",
-          "sha256": "79bfb98cf31a33926a5b3ba1a5d581bcfbd68a6cfad2ee96ffca7ebdf6f0347b"
-        }
-      },
-      "note": "OTA 仅导出实际使用的 libstarry_magic.so；APK 根目录裁剪为唯一正式包，游戏内/ 为用户指定的 OTA 单文件目录。"
-    },
-    {
-      "id": "0d1ae_menu_latest_closeout",
-      "name": "0d1ae 热更重校 + 菜单源码换新 + OTA libstarry_magic.so",
-      "requires": [
-        "e4278_hotfix_closeout"
-      ],
-      "command": "/opt/homebrew/bin/python3.11 04_scripts/镇邪人/patch_jsc_zxr.py <decrypted_0d1ae.js> 04_scripts/镇邪人/zxr_patch_spec_b5278.json /tmp/index.0d1ae.patched.js 07_patched/镇邪人/0d1ae/index.0d1ae.jsc && ZXR_BASE_APK=<设备在装星光包> ZXR_USE_RELEASE_KS=1 ZXR_OUTPUT_NAME='镇邪人_1.0.3_0d1ae_star-releaseSigned.apk' bash mod菜单/starry-mod-menu/scripts/surgical_zxr_0d1ae_menu_latest.sh && bash 04_scripts/镇邪人/verify_apk_0d1ae_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk && SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk && ZXR_OTA_SOURCE_APK=08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk ZXR_OTA_APK_SHA256=da3c320e3a2dd97b727371921e41f9527cd99c73e097fd3821b90fe811678989 ZXR_OTA_SO_SHA256=b5d7c8dce1e6ff62af60eaee091c26dbaf02d9dfb84e78533e38fd7d29ae4580 bash 04_scripts/镇邪人/extract_ota_so_zxr.sh",
-      "preflight": [
-        "04_scripts/镇邪人/patch_jsc_zxr.py",
-        "04_scripts/镇邪人/zxr_patch_spec_b5278.json",
-        "04_scripts/镇邪人/verify_apk_0d1ae_zxr.sh",
-        "mod菜单/starry-mod-menu/scripts/surgical_zxr_0d1ae_menu_latest.sh",
-        "07_patched/镇邪人/0d1ae/index.0d1ae.jsc",
-        "10_docs/镇邪人/镇邪人_1.0.3_0d1ae_热更重校与菜单换新_20261001.md"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk"
-        },
-        {
-          "type": "file_exists",
-          "path": "08_output/镇邪人/游戏内/libstarry_magic.so"
-        },
-        {
-          "type": "file_exists",
-          "path": "07_patched/镇邪人/0d1ae/index.0d1ae.jsc"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-10-01 19:30:00",
-      "artifacts": {
-        "08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk": {
-          "size": 114597345,
-          "md5": "026d99d15cb1c9cebdc452ead8043086",
-          "sha256": "da3c320e3a2dd97b727371921e41f9527cd99c73e097fd3821b90fe811678989",
-          "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
-        },
-        "08_output/镇邪人/游戏内/libstarry_magic.so": {
-          "size": 4230784,
-          "md5": "c2b9bf52d1c1ffc396bc13d97a02ee02",
-          "sha256": "b5d7c8dce1e6ff62af60eaee091c26dbaf02d9dfb84e78533e38fd7d29ae4580"
-        },
-        "07_patched/镇邪人/0d1ae/index.0d1ae.jsc": {
-          "size": 4243540,
-          "sha256": "6392402f4bc5ebe67910793c07404c123b8dfb224768560f1aee5e41f521950d"
-        },
-        "07_patched/镇邪人/menu_latest/classes8.dex": {
-          "size": 462232,
-          "md5": "69bcfff79e9dfc206e3ba5b369a30751",
-          "sha256": "3e56ad3eaf77a685d7044dfca68a5e0beadf28af3625e7a6c6757116af2ed505"
-        }
-      },
-      "note": "真机 f9a116a2 同签覆盖安装成功（firstInstallTime 保持 2026-10-01 19:05:50，未卸载未清数据），冷启动 35s 零 FATAL/SIGSEGV/Cocos2dxDownloader，[Zxr] 初始化链完整。G2 功能实测（19:34）：#1/#2/#3/#4/#6 全开 + #8 加速=5，进战斗四项战斗功能全部正常，用户确认「功能都没问题」；日志每一行都是 `[Zxr] feature #N=ON noAd=1 splice=0`、无 `hotfallback splice` ⇒ native 兜底未介入，走的是包内钉入的修补 0d1ae（引擎包内命中优先 = 预期路径）。注意：`SyncJsState()` 的 `zxr jsstate patched=` 行本轮没出现（菜单走 nativeSetFeature 即时路径），后续复查以 `splice=0` + 功能实测为准。未测场景（NOT PROVEN）：同局内关→再开、换章节/重开战斗、跨进程开→关→再开、登录/登出。日志 09_test/镇邪人_0d1ae_20261001/logcat_runtime_toggle.txt。"
-    },
-    {
-      "id": "cb9dc_origbase_build",
-      "name": "官方原版 vc11 外科重建星空包（菜单入口/免广告/TapSign 固定 + 引擎包内优先 + d5507/cb9dc 双 pin）",
-      "requires": [
-        "0d1ae_menu_latest_closeout"
-      ],
-      "command": "ZXR_BASE_APK=\"${ZXR_BASE_APK:-/tmp/zxr_orig_1024.apk}\" bash 04_scripts/镇邪人/build_star_origbase_zxr.sh && bash 04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk \"${ZXR_BASE_APK:-/tmp/zxr_orig_1024.apk}\"",
-      "preflight": [
-        "04_scripts/镇邪人/build_star_origbase_zxr.sh",
-        "04_scripts/镇邪人/patch_origbase_zxr_smali.py",
-        "04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh",
-        "04_scripts/镇邪人/zxr_patch_spec_cb9dc.json",
-        "04_scripts/镇邪人/zxr_patch_spec_d5507.json",
-        "07_patched/镇邪人/menu_latest/classes8.dex",
-        "07_patched/镇邪人/cb9dc/index.cb9dc.jsc",
-        "07_patched/镇邪人/d5507/index.d5507.jsc"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk"
-        }
-      ],
-      "status": "done",
-      "note": "底包 md5 0dab73812162a2cab8541431fb972af5（官方原版 99,870,824B，vc11）；APK 不留本地，重跑需先按 10_docs/_state/底包再获取台账.md 重新拉取并放 /tmp。",
-      "done_at": "2026-10-24 23:52:13",
-      "artifacts": {
-        "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": {
-          "md5": "5ca9908ae975930a4bb3317fb5cf4d8d"
-        }
-      },
-      "inputs": {
-        "07_patched/镇邪人/0d1ae/index.0d1ae.jsc": "6b0820c40307e84c6a78046c6766d565",
-        "07_patched/镇邪人/menu_latest/classes8.dex": "69bcfff79e9dfc206e3ba5b369a30751"
-      }
-    },
-    {
-      "id": "cb9dc_origbase_install",
-      "name": "卸载官方原版 → 全新安装星空包 → 装机完整性校验（签名变更，需用户确认）",
-      "requires": [
-        "cb9dc_origbase_build"
-      ],
-      "command": "mkdir -p 09_test/镇邪人_cb9dc_20261024 && { CONFIRM_UNINSTALL=1 SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_fresh_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk 2>&1 | tee 09_test/镇邪人_cb9dc_20261024/install_fresh.log; }",
-      "preflight": [
-        "04_scripts/镇邪人/install_fresh_zxr.sh"
-      ],
-      "verify": [
-        {
-          "type": "file_contains",
-          "path": "09_test/镇邪人_cb9dc_20261024/install_fresh.log",
-          "pattern": "install_fresh=ok"
-        }
-      ],
-      "status": "done",
-      "note": "签名从官方 8fa00ae1… 换成 StarryMagic 83c5cc0b… ⇒ 必须卸载重装（用户 2026-10-24 已确认）；之后跑 post_install_precheck.sh --game 镇邪人。",
-      "failed_at": "2026-10-24 23:52:24",
-      "error": "产物校验未通过（详见上方校验输出）",
-      "done_at": "2026-10-24 23:53:02",
-      "artifacts": {},
-      "inputs": {
-        "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": "5ca9908ae975930a4bb3317fb5cf4d8d"
-      }
-    },
-    {
-      "id": "cb9dc_origbase_closeout",
-      "name": "收官：文档 + 唯一正式包裁剪 + 07/09 滚动物清理 + 设备残留",
-      "requires": [
-        "cb9dc_origbase_install"
-      ],
-      "command": "bash 04_scripts/_common/preflight.sh 04_scripts/镇邪人/build_star_origbase_zxr.sh 04_scripts/镇邪人/install_fresh_zxr.sh 04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh 04_scripts/镇邪人/patch_origbase_zxr_smali.py 04_scripts/镇邪人/zxr_patch_spec_cb9dc.json 04_scripts/镇邪人/zxr_patch_spec_d5507.json",
-      "preflight": [
-        "04_scripts/镇邪人/build_star_origbase_zxr.sh"
-      ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md"
-        },
-        {
-          "type": "file_exists",
-          "path": "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json"
-        },
-        {
-          "type": "file_exists",
-          "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk"
-        }
-      ],
-      "note": "08_output 已裁成唯一正式包（删 .idsig）；07_patched 删两份明文 *.patched.js（约45MB，留 .jsc+哈希 json）；底包 APK 与 /tmp 临时件已删并登记台账。",
-      "status": "done",
-      "done_at": "2026-10-25 00:00:36",
-      "artifacts": {
-        "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md": {
-          "md5": "cad3dcb1d59bfeb8d08d5e446bdb9d85"
-        },
-        "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json": {
-          "md5": "f548ac1d6e7472eb25a46e7d63d5ae31"
-        },
-        "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": {
-          "md5": "5ca9908ae975930a4bb3317fb5cf4d8d"
-        }
-      }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 15:43:00",
+   "artifacts": {
+    "09_test/镇邪人_orig_20260923/hotupdate.tar": {
+     "size": 71034368
     }
-  ]
+   },
+   "note": "2026-09-23 收尾清理: 06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/09_test/镇邪人_orig_20260923/hotupdate"
+  },
+  {
+   "id": "patch_jsc_ca0d4",
+   "name": "对 ca0d4 明文 src 打静态战斗补丁并回加密（锚点用 zxr_patch_spec_b5278.json）",
+   "requires": [
+    "dump_hotupdate"
+   ],
+   "command": "bash 04_scripts/镇邪人/build_patched_ca0d4_zxr.sh",
+   "preflight": [
+    "04_scripts/镇邪人/build_patched_ca0d4_zxr.sh",
+    "04_scripts/镇邪人/zxr_patch_spec_b5278.json"
+   ],
+   "verify": [
+    {
+     "type": "not_exists",
+     "path": "07_patched/镇邪人/ca0d4/index.ca0d4.jsc"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 15:52:00",
+   "note": "2026-09-23 收尾清理: /Users/aliang/Documents/nixiang/07_patched/镇邪人/ca0d4\n2026-09-23 收尾清理: 07_patched/镇邪人/ca0d4/index.ca0d4.jsc\n2026-09-23 收尾清理: 07_patched/镇邪人/ca0d4/config.ca0d4.json"
+  },
+  {
+   "id": "build_package",
+   "name": "重编最新菜单（星空面板）+ 回滚路由补丁 + ca0d4/d5507 双份外科合并",
+   "requires": [
+    "patch_jsc_ca0d4"
+   ],
+   "command": "ZXR_OUTPUT_NAME=\"镇邪人_1.0.3_ca0d4_star-uberdebug.apk\" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_ca0d4_menu_latest.sh",
+   "preflight": [
+    "mod菜单/starry-mod-menu/scripts/surgical_zxr_ca0d4_menu_latest.sh",
+    "09_test/镇邪人_crash_20260923/apk/base.apk"
+   ],
+   "verify": [
+    {
+     "type": "not_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 16:30:00",
+   "artifacts": {
+    "07_patched/镇邪人/menu_latest/": {
+     "note": "菜单产物留档（classes8.dex / libstarry_magic.so / libc++_shared.so / starlight.crt）"
+    }
+   },
+   "note": "2026-09-23 收尾清理: /Users/aliang/Documents/nixiang/08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk\n2026-09-23 收尾清理: 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk; 原 md5=3656f9cbe48c3f35c9603264c2fea263"
+  },
+  {
+   "id": "verify",
+   "name": "候选包静态复核（菜单/so、双份补丁、引擎回滚、远端 URL 本地命中）",
+   "requires": [
+    "build_package"
+   ],
+   "command": "bash 04_scripts/镇邪人/verify_apk_ca0d4_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk",
+   "preflight": [
+    "04_scripts/镇邪人/verify_apk_ca0d4_zxr.sh"
+   ],
+   "verify": [
+    {
+     "type": "command_output",
+     "expect": "verify=pass"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 16:31:00",
+   "note": "2026-09-23 收尾：08_output 已裁剪为唯一正式包，复核目标改指向保留包（其 payload 与已上机验证的 debug 测试包逐条目一致）；07_patched/镇邪人/ca0d4 对照产物已按滚动物清理删除，重跑本阶段前先执行 patch_jsc_ca0d4 再生。"
+  },
+  {
+   "id": "install_device_test",
+   "name": "覆盖安装测试包并冷启动抓日志（零崩溃 + 授权 grant ok）",
+   "requires": [
+    "verify"
+   ],
+   "command": "adb -s f9a116a2 push 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk /data/local/tmp/zxr_star.apk && adb -s f9a116a2 shell pm install -r -d /data/local/tmp/zxr_star.apk && adb -s f9a116a2 shell am force-stop com.zxr.dlxmz.zxrwz37zgx10.gg9b && adb -s f9a116a2 shell am start -n com.zxr.dlxmz.zxrwz37zgx10.gg9b/com.sanqi.jmybt.game37.JMYBTActivity && sleep 28 && adb -s f9a116a2 logcat -d > 09_test/镇邪人_ca0d4_fix_20260923/logcat_star.txt",
+   "preflight": [
+    "adb devices -l"
+   ],
+   "verify": [
+    {
+     "type": "command_output",
+     "expect": "grep -cE 'FATAL EXCEPTION|StarryCrash|Cocos2dxDownloader' == 0"
+    },
+    {
+     "type": "command_output",
+     "expect": "[验证] grant ok"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 16:31:09",
+   "artifacts": {
+    "09_test/镇邪人_ca0d4_fix_20260923/logcat_star.txt": {
+     "lines": 7372
+    },
+    "09_test/镇邪人_ca0d4_fix_20260923/shot_menu_latest.png": {}
+   },
+   "note": "2026-09-23 收尾：本阶段安装的 debug 测试包 08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk 已按收官规则裁剪；重跑需先用 build_package 的同命令再生。真机现装的就是该 debug 版（同签名覆盖安装），正式包证书不同，直接覆盖会 INSTALL_FAILED_UPDATE_INCOMPATIBLE，需先卸载（会清游戏热更数据）。"
+  },
+  {
+   "id": "build_official",
+   "name": "出一版 release 证书正式包（内容与已验证测试包 payload 逐条目一致）",
+   "requires": [
+    "verify"
+   ],
+   "command": "ZXR_USE_RELEASE_KS=1 ZXR_SKIP_MENU_BUILD=1 ZXR_OUTPUT_NAME=\"镇邪人_1.0.3_ca0d4_star-releaseSigned.apk\" bash mod菜单/starry-mod-menu/scripts/surgical_zxr_ca0d4_menu_latest.sh",
+   "preflight": [
+    "01_tools/starry_release.jks"
+   ],
+   "verify": [
+    {
+     "type": "file_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 16:36:00",
+   "artifacts": {
+    "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk": {
+     "size": 106069153,
+     "md5": "59a6e755e8ddea2232c6a9e3ee375f62",
+     "sha256": "48979c9dfb149505946b4fa778711cb8de390df4619b191da5c2ec233058142c",
+     "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
+    }
+   }
+  },
+  {
+   "id": "repo_push",
+   "name": "菜单源码（星空面板 + 新紫）与本次脚本/文档提交推送",
+   "requires": [
+    "build_official"
+   ],
+   "command": "git add <MagicRes.java + 本次脚本 + 文档> && git commit && git push origin main",
+   "preflight": [
+    "git status --short"
+   ],
+   "verify": [
+    {
+     "type": "command_output",
+     "expect": "main -> main"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 16:32:00",
+   "artifacts": {
+    "commit_magicres": {
+     "note": "cdcd46c 星光菜单：补提交 MagicRes 星空面板 + 新紫配色（2026-09-22 星光紫美化漏提交部分）"
+    }
+   }
+  },
+  {
+   "id": "archive",
+   "name": "收官归档（文档 + 索引 + 08_output 唯一正式包 + git）",
+   "requires": [
+    "repo_push"
+   ],
+   "command": "bash 04_scripts/_common/prune_output_final.sh 08_output/镇邪人 镇邪人_1.0.3_ca0d4_star-releaseSigned.apk --apply --manifest 10_docs/镇邪人/正式包裁剪清单_1.0.3_20260923.json",
+   "preflight": [
+    "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md"
+   ],
+   "verify": [
+    {
+     "type": "file_exists",
+     "path": "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md"
+    },
+    {
+     "type": "not_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-uberdebug.apk"
+    },
+    {
+     "type": "not_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_menu-latest-releaseSigned.apk"
+    },
+    {
+     "type": "not_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_safe-releaseSigned.apk"
+    },
+    {
+     "type": "not_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_ca0d4_star-releaseSigned.apk.idsig"
+    },
+    {
+     "type": "not_exists",
+     "path": "06_dumped/镇邪人/remote_ca0d4/index.ca0d4.js"
+    },
+    {
+     "type": "not_exists",
+     "path": "07_patched/镇邪人/ca0d4/index.ca0d4.jsc"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-23 16:52:00",
+   "note": "用户口令「收尾+正式包+清理+git」2026-09-23 二次确认（首轮漏做第 2 步裁剪）。收官事实：08_output/镇邪人 只留正式包 镇邪人_1.0.3_ca0d4_star-releaseSigned.apk（106,069,153B，md5 59a6e755e8ddea2232c6a9e3ee375f62，sha256 48979c9dfb149505946b4fa778711cb8de390df4619b191da5c2ec233058142c，签名 starry-release 83c5cc0b…）；裁剪清单=10_docs/镇邪人/正式包裁剪清单_1.0.3_20260923.json（删 7 项 / 约 320MB）；滚动物清单=10_docs/镇邪人/滚动物清理清单_20260923.json（删 06 明文 25,147,378B + 07_patched/ca0d4 29,391,742B，约 54.5MB，不可再生输入全保留）；git 提交=106f496（8b95e74..106f496，9 files；含 `_common/pipeline_record_cleanup.py` 的 KeyError 修复，本阶段状态由 archive_close_git 收口提交）。",
+   "artifacts": {
+    "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md": {
+     "md5": "5537ae070cde3e970031fe86509003f3"
+    }
+   }
+  },
+  {
+   "id": "e4278_hotfix_closeout",
+   "name": "e4278 热更修复正式包 + OTA libstarry_magic.so + 08_output 裁剪",
+   "requires": [
+    "archive"
+   ],
+   "command": "bash 04_scripts/镇邪人/verify_apk_e4278_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk && bash 04_scripts/镇邪人/extract_ota_so_zxr.sh && bash 04_scripts/_common/prune_output_final.sh 08_output/镇邪人 镇邪人_1.0.3_e4278_star-releaseSigned.apk --apply --manifest 10_docs/镇邪人/正式包裁剪清单_1.0.3_e4278_20260929.json",
+   "preflight": [
+    "04_scripts/镇邪人/verify_apk_e4278_zxr.sh",
+    "04_scripts/镇邪人/extract_ota_so_zxr.sh",
+    "10_docs/镇邪人/镇邪人_1.0.3_e4278_OTA收尾_20260929.md"
+   ],
+   "verify": [
+    {
+     "type": "file_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk"
+    },
+    {
+     "type": "file_exists",
+     "path": "08_output/镇邪人/游戏内/libstarry_magic.so"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-09-29 15:05:00",
+   "artifacts": {
+    "08_output/镇邪人/镇邪人_1.0.3_e4278_star-releaseSigned.apk": {
+     "size": 110316865,
+     "md5": "0cde8985655c30007b7bd65275f7742f",
+     "sha256": "83d49ea88ac7895cf2c065d0b895c70e5b480591d1c0977518442efb82886c7d",
+     "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
+    },
+    "08_output/镇邪人/游戏内/libstarry_magic.so": {
+     "size": 4160976,
+     "md5": "fef2fc5681804502b78718288a1ccf7b",
+     "sha256": "79bfb98cf31a33926a5b3ba1a5d581bcfbd68a6cfad2ee96ffca7ebdf6f0347b"
+    }
+   },
+   "note": "OTA 仅导出实际使用的 libstarry_magic.so；APK 根目录裁剪为唯一正式包，游戏内/ 为用户指定的 OTA 单文件目录。"
+  },
+  {
+   "id": "0d1ae_menu_latest_closeout",
+   "name": "0d1ae 热更重校 + 菜单源码换新 + OTA libstarry_magic.so",
+   "requires": [
+    "e4278_hotfix_closeout"
+   ],
+   "command": "/opt/homebrew/bin/python3.11 04_scripts/镇邪人/patch_jsc_zxr.py <decrypted_0d1ae.js> 04_scripts/镇邪人/zxr_patch_spec_b5278.json /tmp/index.0d1ae.patched.js 07_patched/镇邪人/0d1ae/index.0d1ae.jsc && ZXR_BASE_APK=<设备在装星光包> ZXR_USE_RELEASE_KS=1 ZXR_OUTPUT_NAME='镇邪人_1.0.3_0d1ae_star-releaseSigned.apk' bash mod菜单/starry-mod-menu/scripts/surgical_zxr_0d1ae_menu_latest.sh && bash 04_scripts/镇邪人/verify_apk_0d1ae_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk && SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk && ZXR_OTA_SOURCE_APK=08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk ZXR_OTA_APK_SHA256=da3c320e3a2dd97b727371921e41f9527cd99c73e097fd3821b90fe811678989 ZXR_OTA_SO_SHA256=b5d7c8dce1e6ff62af60eaee091c26dbaf02d9dfb84e78533e38fd7d29ae4580 bash 04_scripts/镇邪人/extract_ota_so_zxr.sh",
+   "preflight": [
+    "04_scripts/镇邪人/patch_jsc_zxr.py",
+    "04_scripts/镇邪人/zxr_patch_spec_b5278.json",
+    "04_scripts/镇邪人/verify_apk_0d1ae_zxr.sh",
+    "mod菜单/starry-mod-menu/scripts/surgical_zxr_0d1ae_menu_latest.sh",
+    "07_patched/镇邪人/0d1ae/index.0d1ae.jsc",
+    "10_docs/镇邪人/镇邪人_1.0.3_0d1ae_热更重校与菜单换新_20261001.md"
+   ],
+   "verify": [
+    {
+     "type": "file_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk"
+    },
+    {
+     "type": "file_exists",
+     "path": "08_output/镇邪人/游戏内/libstarry_magic.so"
+    },
+    {
+     "type": "file_exists",
+     "path": "07_patched/镇邪人/0d1ae/index.0d1ae.jsc"
+    }
+   ],
+   "status": "done",
+   "done_at": "2026-10-01 19:30:00",
+   "artifacts": {
+    "08_output/镇邪人/镇邪人_1.0.3_0d1ae_star-releaseSigned.apk": {
+     "size": 114597345,
+     "md5": "026d99d15cb1c9cebdc452ead8043086",
+     "sha256": "da3c320e3a2dd97b727371921e41f9527cd99c73e097fd3821b90fe811678989",
+     "signer": "starry-release 83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d"
+    },
+    "08_output/镇邪人/游戏内/libstarry_magic.so": {
+     "size": 4230784,
+     "md5": "c2b9bf52d1c1ffc396bc13d97a02ee02",
+     "sha256": "b5d7c8dce1e6ff62af60eaee091c26dbaf02d9dfb84e78533e38fd7d29ae4580"
+    },
+    "07_patched/镇邪人/0d1ae/index.0d1ae.jsc": {
+     "size": 4243540,
+     "sha256": "6392402f4bc5ebe67910793c07404c123b8dfb224768560f1aee5e41f521950d"
+    },
+    "07_patched/镇邪人/menu_latest/classes8.dex": {
+     "size": 462232,
+     "md5": "69bcfff79e9dfc206e3ba5b369a30751",
+     "sha256": "3e56ad3eaf77a685d7044dfca68a5e0beadf28af3625e7a6c6757116af2ed505"
+    }
+   },
+   "note": "真机 f9a116a2 同签覆盖安装成功（firstInstallTime 保持 2026-10-01 19:05:50，未卸载未清数据），冷启动 35s 零 FATAL/SIGSEGV/Cocos2dxDownloader，[Zxr] 初始化链完整。G2 功能实测（19:34）：#1/#2/#3/#4/#6 全开 + #8 加速=5，进战斗四项战斗功能全部正常，用户确认「功能都没问题」；日志每一行都是 `[Zxr] feature #N=ON noAd=1 splice=0`、无 `hotfallback splice` ⇒ native 兜底未介入，走的是包内钉入的修补 0d1ae（引擎包内命中优先 = 预期路径）。注意：`SyncJsState()` 的 `zxr jsstate patched=` 行本轮没出现（菜单走 nativeSetFeature 即时路径），后续复查以 `splice=0` + 功能实测为准。未测场景（NOT PROVEN）：同局内关→再开、换章节/重开战斗、跨进程开→关→再开、登录/登出。日志 09_test/镇邪人_0d1ae_20261001/logcat_runtime_toggle.txt。"
+  },
+  {
+   "id": "cb9dc_origbase_build",
+   "name": "官方原版 vc11 外科重建星空包（菜单入口/免广告/TapSign 固定 + 引擎包内优先 + d5507/cb9dc 双 pin）",
+   "requires": [
+    "0d1ae_menu_latest_closeout"
+   ],
+   "command": "ZXR_BASE_APK=\"${ZXR_BASE_APK:-/tmp/zxr_orig_1024.apk}\" bash 04_scripts/镇邪人/build_star_origbase_zxr.sh && bash 04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk \"${ZXR_BASE_APK:-/tmp/zxr_orig_1024.apk}\"",
+   "preflight": [
+    "04_scripts/镇邪人/build_star_origbase_zxr.sh",
+    "04_scripts/镇邪人/patch_origbase_zxr_smali.py",
+    "04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh",
+    "04_scripts/镇邪人/zxr_patch_spec_cb9dc.json",
+    "04_scripts/镇邪人/zxr_patch_spec_d5507.json",
+    "07_patched/镇邪人/menu_latest/classes8.dex",
+    "07_patched/镇邪人/cb9dc/index.cb9dc.jsc",
+    "07_patched/镇邪人/d5507/index.d5507.jsc"
+   ],
+   "verify": [
+    {
+     "type": "file_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk"
+    }
+   ],
+   "status": "done",
+   "note": "底包 md5 0dab73812162a2cab8541431fb972af5（官方原版 99,870,824B，vc11）；APK 不留本地，重跑需先按 10_docs/_state/底包再获取台账.md 重新拉取并放 /tmp。",
+   "done_at": "2026-10-24 23:52:13",
+   "artifacts": {
+    "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": {
+     "md5": "5ca9908ae975930a4bb3317fb5cf4d8d"
+    }
+   },
+   "inputs": {
+    "07_patched/镇邪人/0d1ae/index.0d1ae.jsc": "6b0820c40307e84c6a78046c6766d565",
+    "07_patched/镇邪人/menu_latest/classes8.dex": "69bcfff79e9dfc206e3ba5b369a30751"
+   }
+  },
+  {
+   "id": "cb9dc_origbase_install",
+   "name": "卸载官方原版 → 全新安装星空包 → 装机完整性校验（签名变更，需用户确认）",
+   "requires": [
+    "cb9dc_origbase_build"
+   ],
+   "command": "mkdir -p 09_test/镇邪人_cb9dc_20261024 && { CONFIRM_UNINSTALL=1 SERIAL=f9a116a2 bash 04_scripts/镇邪人/install_fresh_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk 2>&1 | tee 09_test/镇邪人_cb9dc_20261024/install_fresh.log; }",
+   "preflight": [
+    "04_scripts/镇邪人/install_fresh_zxr.sh"
+   ],
+   "verify": [
+    {
+     "type": "file_contains",
+     "path": "09_test/镇邪人_cb9dc_20261024/install_fresh.log",
+     "pattern": "install_fresh=ok"
+    }
+   ],
+   "status": "done",
+   "note": "签名从官方 8fa00ae1… 换成 StarryMagic 83c5cc0b… ⇒ 必须卸载重装（用户 2026-10-24 已确认）；之后跑 post_install_precheck.sh --game 镇邪人。",
+   "failed_at": "2026-10-24 23:52:24",
+   "error": "产物校验未通过（详见上方校验输出）",
+   "done_at": "2026-10-24 23:53:02",
+   "artifacts": {},
+   "inputs": {
+    "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": "5ca9908ae975930a4bb3317fb5cf4d8d"
+   }
+  },
+  {
+   "id": "cb9dc_origbase_closeout",
+   "name": "收官：文档 + 唯一正式包裁剪 + 07/09 滚动物清理 + 设备残留",
+   "requires": [
+    "cb9dc_origbase_install"
+   ],
+   "command": "bash 04_scripts/_common/preflight.sh 04_scripts/镇邪人/build_star_origbase_zxr.sh 04_scripts/镇邪人/install_fresh_zxr.sh 04_scripts/镇邪人/verify_apk_cb9dc_zxr.sh 04_scripts/镇邪人/patch_origbase_zxr_smali.py 04_scripts/镇邪人/zxr_patch_spec_cb9dc.json 04_scripts/镇邪人/zxr_patch_spec_d5507.json",
+   "preflight": [
+    "04_scripts/镇邪人/build_star_origbase_zxr.sh"
+   ],
+   "verify": [
+    {
+     "type": "file_exists",
+     "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md"
+    },
+    {
+     "type": "file_exists",
+     "path": "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json"
+    },
+    {
+     "type": "file_exists",
+     "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk"
+    }
+   ],
+   "note": "08_output 已裁成唯一正式包（删 .idsig）；07_patched 删两份明文 *.patched.js（约45MB，留 .jsc+哈希 json）；底包 APK 与 /tmp 临时件已删并登记台账。",
+   "status": "done",
+   "done_at": "2026-10-25 00:00:36",
+   "artifacts": {
+    "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md": {
+     "md5": "cad3dcb1d59bfeb8d08d5e446bdb9d85"
+    },
+    "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json": {
+     "md5": "f548ac1d6e7472eb25a46e7d63d5ae31"
+    },
+    "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk": {
+     "md5": "5ca9908ae975930a4bb3317fb5cf4d8d"
+    }
+   }
+  }
+ ]
 }
