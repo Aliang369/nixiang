@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/镇邪人",
+  "keep": "镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk",
+  "keep_size": 106331297,
+  "keep_md5": "4a7e4431ddbf452f048cae42d97287c5",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "镇邪人_1.0.3_cb9dc_so_only_20261025-releaseSigned.apk",
+      "size": 106286241,
+      "md5": "238673830d2b72fb5b9116c5404df725"
+    },
+    {
+      "name": "镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk.idsig",
+      "size": 845339,
+      "md5": "0a02527c43537698b9729ca1d4cc4cf0"
+    }
+  ],
+  "removed_count": 2
+}

@@ -1,6 +1,6 @@
 {
   "game": "镇邪人",
-  "version": "1.0.3-cb9dc-star-sofix",
+  "version": "1.0.3-cb9dc-menu-star",
   "notes": "2026-09-23：真机启动即弹「菜单崩溃！」。根因=游戏自带 org.cocos2dx.lib.Cocos2dxDownloader$3.run(Cocos2dxDownloader.java:154) NPE（domain.startsWith(\"www.\") 的 try 区间只覆盖 .line 133-134）；09-16 包的路由补丁把远端热更 src 强制成相对路径 assets/remote/src，服务器 src 从 b5278 漂到 ca0d4 后包内无此版本 ⇒ 落盘路径 + 无 host 的 URL ⇒ 原生下载 NPE。修复：改以官方原版包为底重建，回滚 jsb-engine.js/main.js 路由补丁（与原版逐字节一致），包内同钉 ca0d4+d5507 双份静态战斗补丁；菜单按当前源码重编并回补星空面板 MagicRes$PanelBgDrawable（2026-09-22 ed61bcd 漏提交部分，已 push cdcd46c）。\n\n2026-09-29：服务器热更 src 漂移到 e4278，旧包仅内钉 ca0d4+d5507，导致四项战斗补丁被未修补热更 JSC 绕过。已将 e4278 重打同一套战斗补丁，并调整 jsb-engine.js 为“包内命中优先于旧热更缓存”；同签覆盖安装后四项功能实测正常。正式包 110,316,865B / sha256 83d49ea8…，OTA so 4,160,976B / sha256 79bfb98c…。\n\n2026-10-01：服务器热更 src 又从 e4278 漂到 0d1ae（同 09-29 根因重演：包内只钉 e4278/ca0d4/d5507，引擎「包内命中优先」落空后走未修补热更缓存）。修复两路：① 用同一套 zxr_patch_spec_b5278.json 给 0d1ae 重打补丁并钉进包内（四份 pin 齐全）；② native 兜底去版本化——删除 Games/ZxrMod.cpp 里只认 5 个固定 bundle 文件名的白名单（热更缓存落盘名是 gamecaches/<数字>.jsc，按文件名永远匹配不上，兜底从未生效），改为纯内容指纹判定（1MB~48MB 体积窗口 + 不含 starry_zxr_safe_v2 + 含 FightChangeEntityHp/DamageCommonCalcFinal/CalcFinalAtkSpeedValue + 三个战斗符号名齐全），并新增「补丁脚本 eval 失败则用原脚本重跑」的回退分支。同时用工作区当前 HEAD 的 mod菜单/starry-mod-menu 重编 classes8.dex 与 libstarry_magic.so 换进游戏。底包=设备上安装的 09-29 星光正式包（md5 0cde8985655c30007b7bd65275f7742f）。jsb-engine.js 与 main.js 与底包逐字节一致，SyncJsState() 的 bundleGuard 故意未动。\n\n2026-10-24：底包换成**官方原版 vc11**（无百度壳/斌哥壳，旧 inject/surgical 脚本都不适用）⇒ 新写 build_star_origbase_zxr.sh（zip 级全量注入：Manifest MenuService + classes7 入口/免广告 smali + sq_plugin TapSign 固定 + classes8/so 复用 10-01 留档 + 引擎包内优先 + d5507/cb9dc 双 pin）。远端 src 又漂 cb9dc 且 FightChangeEntityHp 序言改名 ⇒ 新增 zxr_patch_spec_cb9dc.json / zxr_patch_spec_d5507.json（各 7/7 回归）。签名变更 ⇒ 用户确认后卸载重装（干净安装），precheck PASS_TO_HUMAN，用户输卡密后四项战斗实测通过。",
   "params": {
     "game_id": "zxr",
@@ -502,6 +502,31 @@
       },
       "inputs": {
         "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json": "f548ac1d6e7472eb25a46e7d63d5ae31"
+      }
+    },
+    {
+      "id": "cb9dc_menu_head_rebuild_20261025",
+      "name": "菜单 dex 换 HEAD 重编（修功能偏好每次被清空）",
+      "requires": [
+        "cb9dc_hotfix_derive_20261025"
+      ],
+      "command": "ZXR_BASE_APK=08_output/镇邪人/镇邪人_1.0.3_cb9dc_so_only_20261025-releaseSigned.apk ZXR_OUTPUT_NAME='镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk' ZXR_INSTALL=1 bash 04_scripts/镇邪人/menu_rebuild_zxr.sh",
+      "preflight": [
+        "04_scripts/镇邪人/menu_rebuild_zxr.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "包内 classes8.dex 原为 2026-10-01 产物，早于 10-07 的「ModBridge 无条件清功能偏好」修复 ⇒ 每次开菜单清空玩家开关。脚本默认从 HEAD 建临时 worktree（干净树）重编，避免带入他人在改的 Java；模板 .gitignore 的 gradle-wrapper.jar/local.properties 从工作区补齐。",
+      "done_at": "2026-10-25 00:33:28",
+      "artifacts": {
+        "08_output/镇邪人/镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk": {
+          "md5": "4a7e4431ddbf452f048cae42d97287c5"
+        }
       }
     }
   ]
