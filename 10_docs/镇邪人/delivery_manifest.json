@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-24T16:33:50+00:00",
+  "generated_at": "2026-10-24T16:36:43+00:00",
   "game": "镇邪人",
   "version": "1.0.3-cb9dc-menu-star",
   "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
@@ -24,8 +24,8 @@
     "cb9dc_hotfix_derive_20261025": "done",
     "cb9dc_menu_head_rebuild_20261025": "done"
   },
-  "source_commit": "7f94233e015d8c1517bee0e9d0ba0914a7904ec2",
-  "source_tree": "3fa6548d969abaedbf80b77a538f7e83ee565b91",
+  "source_commit": "a37480248092ee099612a72d259b51917b1722e8",
+  "source_tree": "ef575087c7cc30d80e3f79cf2a5bde427c988f73",
   "apk": {
     "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk",
     "available": true,
@@ -117,9 +117,9 @@
       "path": "07_patched/镇邪人/menu_latest/classes8.dex",
       "recorded_md5": "69bcfff79e9dfc206e3ba5b369a30751",
       "available": true,
-      "current_md5": "69bcfff79e9dfc206e3ba5b369a30751",
-      "current_sha256": "3e56ad3eaf77a685d7044dfca68a5e0beadf28af3625e7a6c6757116af2ed505",
-      "matches_recorded_md5": true
+      "current_md5": "36271dd7eaac531bfd51b388b930629a",
+      "current_sha256": "ade3263b63f16f0f7d0bdfc6bc11e4c75a417f09ea1e6ff03a4180537b9f139a",
+      "matches_recorded_md5": false
     },
     {
       "stage": "cb9dc_origbase_build",
@@ -162,8 +162,8 @@
       "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_hotfix结构派生_20261025.md",
       "recorded_md5": "84acd3eabb23195d1642cc3d3d8a05db",
       "available": true,
-      "current_md5": "30f253a39e4f176ccc6c78f6b3ec2bd2",
-      "current_sha256": "83c217a364c6e5436cab5e2d34ff1fad79eae1724df8b69decf71acb7637042a",
+      "current_md5": "8f8a5cd4cb895c15889ee4ec12e25783",
+      "current_sha256": "1e2ee4e9ee1efdb3c857d0a4652bb7ea44ca10cc334e5cdb63b622f8c9e5c371",
       "matches_recorded_md5": false
     },
     {
