@@ -30,3 +30,4 @@
 - **热更兜底（2026-10-25 起）**：native 走「结构派生（`Games/ZxrDerive.h`，不认混淆名）→ 历史锚点变体表 → 显式告警」；功能日志带 `hot=` 探针（`0` 未介入 / `1` 已挂上 / `2` 锚点全 miss = 战斗静默失效）。
 - 每版热更优先级：**pin 命中**（首选）→ 兜底派生（次选）→ `hot=2` 告警（需要出包）。
 - **菜单 dex 必须是 HEAD 重编的**（2026-10-25 教训）：本作长期复用 2026-10-01 的 `menu_latest` 产物，而 10-07 才修掉「`ModBridge` 构造无条件清功能偏好」⇒ 旧 dex 每次开菜单都把玩家开关清空（现象＝「不保存」）。判据：设备 `shared_prefs/starry_magic_prefs.xml` 里有 `feature_list_sig` 才是新 dex。重编走 `menu_rebuild_zxr.sh`（默认从 HEAD 建临时 worktree，避免带入他人在改的 Java）。
+- **功能偏好保存**：已随 2026-10-25 菜单 dex 换代修好（用户实测通过）；`07_patched/镇邪人/menu_latest` 已换成 HEAD 重编产物（含 `PROVENANCE.md`），**不要再用 10-01 那版 dex**。
