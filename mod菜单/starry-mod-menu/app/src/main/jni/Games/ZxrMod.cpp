@@ -11,6 +11,7 @@
 
 #include "ZxrMod.h"
 #include "ZxrPatchJs.h"
+#include "ZxrDerive.h"
 
 #include <atomic>
 #include <cstdio>
@@ -39,6 +40,7 @@ static std::atomic<bool> g_spliceDisabled{false};
 static std::atomic<int> g_spliceHits{0};
 static std::atomic<int> g_seCalls{0};
 static std::atomic<int> g_speedLvl{1};
+static std::atomic<int> g_hotState{0};  // 0=未知 1=热更补丁已挂上 2=锚点未命中(功能会静默失效)
 static thread_local bool t_inEvalSplice = false;
 
 static std::atomic<bool> g_seckill{false};
@@ -53,6 +55,7 @@ static jclass g_hooksCls = nullptr;
 static jmethodID g_hooksSetRet = nullptr;
 static jmethodID g_hooksSetNoAd = nullptr;
 static jmethodID g_hooksClear = nullptr;
+static jmethodID g_hooksLogStatus = nullptr;
 
 static JNIEnv* GetEnv(bool* needDetach) {
     *needDetach = false;
@@ -148,6 +151,8 @@ static void CacheJava(JNIEnv* env) {
             g_hooksSetRet = env->GetStaticMethodID(g_hooksCls, "setRet", "(IZ)V");
             g_hooksSetNoAd = env->GetStaticMethodID(g_hooksCls, "setNoAd", "(Z)V");
             g_hooksClear = env->GetStaticMethodID(g_hooksCls, "clearAll", "()V");
+            g_hooksLogStatus = env->GetStaticMethodID(
+                g_hooksCls, "logStatus", "(Ljava/lang/String;)V");
             env->DeleteLocalRef(local);
             if (env->ExceptionCheck()) env->ExceptionClear();
         } else {
@@ -236,19 +241,76 @@ static bool MemHas(const char* data, size_t size, const char* needle) {
     return n > 0 && size >= n && memmem(data, size, needle, n) != nullptr;
 }
 
-static bool ReplaceRequired(std::string& script, const char* anchor,
-                            const char* replacement, const char* name) {
-    if (!anchor || !*anchor || !replacement) return false;
-    size_t pos = script.find(anchor);
-    if (pos == std::string::npos) {
-        LOGW("[Zxr] hotfallback anchor missing: %s", name ? name : "?");
-        return false;
+static void ReportHotUnpatched(const std::string& why) {
+    g_hotState.store(2);
+    static std::atomic<bool> logged{false};
+    if (logged.exchange(true)) return;
+    LOGW("[Zxr] hot-patch MISS: %s", why.c_str());
+    // 双通道告警：既进 Mod_Menu 日志，也走 Java ZxrHooks.logStatus（只打日志，不改状态）
+    bool detach = false;
+    JNIEnv* env = GetEnv(&detach);
+    if (!env) return;
+    CacheJava(env);
+    if (g_hooksCls && g_hooksLogStatus) {
+        char msg[640];
+        snprintf(msg, sizeof(msg),
+                 "[Zxr] 战斗补丁未命中热更脚本，四项战斗功能将静默失效（请重新出包）: %s",
+                 why.c_str());
+        jstring jmsg = env->NewStringUTF(msg);
+        if (jmsg) {
+            env->CallStaticVoidMethod(g_hooksCls, g_hooksLogStatus, jmsg);
+            env->DeleteLocalRef(jmsg);
+        }
     }
-    script.replace(pos, strlen(anchor), replacement);
-    return true;
+    if (env->ExceptionCheck()) env->ExceptionClear();
+    if (detach) g_zxrJvm->DetachCurrentThread();
 }
 
-static bool BuildHotPatch(const char* src, size_t size, std::string* out) {
+struct ZxrHookBinding {
+    const char* name;
+    bool (*derive)(const std::string&, zxrderive::Plan*, std::string*);
+    const ZxrPatchVariant* variants;
+    int variantCount;
+};
+
+// 先结构派生（不认标识符），再逐条试历史锚点变体；两条都不成就报原因。
+static bool ApplyOneHook(std::string& script, const ZxrHookBinding& hb, bool* derivedOut) {
+    std::string why;
+    if (hb.derive) {
+        zxrderive::Plan plan;
+        std::string dwhy;
+        if (hb.derive(script, &plan, &dwhy) && !plan.anchor.empty()) {
+            const size_t first = script.find(plan.anchor);
+            if (first != std::string::npos &&
+                script.find(plan.anchor, first + plan.anchor.size()) == std::string::npos) {
+                script.replace(first, plan.anchor.size(), plan.anchor + plan.insert);
+                if (derivedOut) *derivedOut = true;
+                return true;
+            }
+            why = "derived anchor hits != 1";
+        } else {
+            why = dwhy.empty() ? "derive failed" : dwhy;
+        }
+    } else {
+        why = "no derive fn";
+    }
+    for (int i = 0; i < hb.variantCount; ++i) {
+        const char* a = hb.variants[i].anchor;
+        if (!a || !*a) continue;
+        const size_t n = strlen(a);
+        const size_t pos = script.find(a);
+        if (pos == std::string::npos) continue;
+        if (script.find(a, pos + n) != std::string::npos) continue;  // 多命中不赌
+        script.replace(pos, n, hb.variants[i].replacement);
+        LOGI("[Zxr] hotfallback variant hit: %s #%d", hb.name ? hb.name : "?", i);
+        return true;
+    }
+    LOGW("[Zxr] hotfallback anchor missing: %s (%s)", hb.name ? hb.name : "?", why.c_str());
+    return false;
+}
+
+static bool BuildHotPatch(const char* src, size_t size, std::string* out,
+                          std::string* whyOut) {
     if (!src || !out) return false;
     try {
         std::string script;
@@ -256,20 +318,36 @@ static bool BuildHotPatch(const char* src, size_t size, std::string* out) {
         script.append(src, size);
         script.append("\n");
         script.append(kZxrPatchPrefix);
-        if (!ReplaceRequired(script, kZxr_damage_and_invincible_anchor,
-                             kZxr_damage_and_invincible_replacement,
-                             "damage_and_invincible") ||
-            !ReplaceRequired(script, kZxr_attack_speed_anchor,
-                             kZxr_attack_speed_replacement, "attack_speed") ||
-            !ReplaceRequired(script, kZxr_full_screen_kill_anchor,
-                             kZxr_full_screen_kill_replacement,
-                             "full_screen_kill")) {
+        const ZxrHookBinding hooks[] = {
+            {"damage_and_invincible", zxrderive::DeriveDamage,
+             kZxrVariants_damage_and_invincible, kZxrVariants_damage_and_invincible_n},
+            {"attack_speed", zxrderive::DeriveAttackSpeed,
+             kZxrVariants_attack_speed, kZxrVariants_attack_speed_n},
+            {"full_screen_kill", zxrderive::DeriveFullScreenKill,
+             kZxrVariants_full_screen_kill, kZxrVariants_full_screen_kill_n},
+        };
+        int derived = 0;
+        std::string fails;
+        for (const auto& hb : hooks) {
+            bool byDerive = false;
+            if (!ApplyOneHook(script, hb, &byDerive)) {
+                if (!fails.empty()) fails += "; ";
+                fails += hb.name ? hb.name : "?";
+            } else if (byDerive) {
+                ++derived;
+            }
+        }
+        if (!fails.empty()) {
+            if (whyOut) *whyOut = "hooks failed: " + fails;
             return false;
         }
+        LOGI("[Zxr] hotfallback plan ok: derive=%d/3 variantTbl=%d", derived,
+             kZxrVariants_full_screen_kill_n);
         out->swap(script);
         return true;
     } catch (...) {
         LOGW("[Zxr] hotfallback build exception");
+        if (whyOut) *whyOut = "build exception";
         return false;
     }
 }
@@ -315,11 +393,14 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
     }
 
     std::string patched;
-    if (!BuildHotPatch(script, (size_t)n, &patched)) {
+    std::string why;
+    if (!BuildHotPatch(script, (size_t)n, &patched, &why)) {
         g_spliceDisabled.store(true);
         LOGW("[Zxr] hotfallback disabled: anchor set incomplete");
+        ReportHotUnpatched(why);
         return orig_seEval(thiz, script, length, ret, fileName);
     }
+    g_hotState.store(1);
 
     int hit = ++g_spliceHits;
     if (hit <= 5) {
@@ -440,8 +521,9 @@ void Zxr_OnFeatureChanged(int featNum, bool enabled) {
     SyncJavaRets();
     SyncJsState();
     SyncSpeedJs();
-    LOGI("[Zxr] feature #%d=%s noAd=%d splice=%d", featNum,
-         enabled ? "ON" : "OFF", g_noAd.load() ? 1 : 0, g_spliceHits.load());
+    LOGI("[Zxr] feature #%d=%s noAd=%d splice=%d hot=%d", featNum,
+         enabled ? "ON" : "OFF", g_noAd.load() ? 1 : 0, g_spliceHits.load(),
+         g_hotState.load());
 }
 
 void Zxr_OnValueChanged(int featNum, int value) {
@@ -497,7 +579,8 @@ void Zxr_Tick(const bool* features) {
     if (dirty) {
         SyncJavaRets();
         SyncJsState();
-        LOGI("[Zxr] feature sync dirty splice=%d", g_spliceHits.load());
+        LOGI("[Zxr] feature sync dirty splice=%d hot=%d", g_spliceHits.load(),
+             g_hotState.load());
     }
     static int tickN = 0;
     if ((++tickN % 40) == 0 && g_speedLvl.load() > 1) {

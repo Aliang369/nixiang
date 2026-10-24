@@ -2,16 +2,31 @@
 #ifndef STARRY_ZXR_PATCH_JS_H
 #define STARRY_ZXR_PATCH_JS_H
 
+/* Per hook: one insert (validated identical across specs) + N historical anchors.
+ * Runtime order: structural derive (ZxrDerive.h) first, then these variants. */
+struct ZxrPatchVariant {
+    const char* anchor;
+    const char* replacement;
+};
+
 static const char* kZxrPatchMarker = "starry_zxr_safe_v2";
 static const char* kZxrPatchPrefix = "window.__starryZxrState=window.__starryZxrState||{};if(!window.__starryZxrState.ret)window.__starryZxrState.ret={};window.__starryZxrOn=function(i){try{var s=window.__starryZxrState;if(s&&s.ret&&typeof s.ret[i]!==\"undefined\")return !!s.ret[i];}catch(e){}try{return !!jsb.reflection.callStaticMethod(\"com.starry.magic.cocos.ZxrHooks\",\"getRet\",\"(I)Z\",i);}catch(e2){return false;}};/*starry_zxr_safe_v2*/\n";
 
-static const char* kZxr_damage_and_invincible_anchor = "t = c.baseDmg;";
-static const char* kZxr_damage_and_invincible_replacement = "t = c.baseDmg;\ntry{if(window.__starryZxrOn&&window.__starryZxrOn(1)&&n&&n.heroCfg){t*=100;}if(window.__starryZxrOn&&window.__starryZxrOn(2)&&r&&r.heroCfg){t=0;}}catch(__zxrErr){}";
+static const ZxrPatchVariant kZxrVariants_damage_and_invincible[] = {
+    {"t = c.baseDmg;", "t = c.baseDmg;\ntry{if(window.__starryZxrOn&&window.__starryZxrOn(1)&&n&&n.heroCfg){t*=100;}if(window.__starryZxrOn&&window.__starryZxrOn(2)&&r&&r.heroCfg){t=0;}}catch(__zxrErr){}"},
+};
+static const int kZxrVariants_damage_and_invincible_n = 1;
 
-static const char* kZxr_attack_speed_anchor = "return Math.max(e, .01);";
-static const char* kZxr_attack_speed_replacement = "return Math.max(e, .01);\ntry{if(window.__starryZxrOn&&window.__starryZxrOn(3)&&t&&t.heroCfg&&!t.CheckEntityHaveStatus(l.EnumEntityStatus.bossFakeControl)){e=Math.min(e*10,i);}}catch(__zxrErr){}";
+static const ZxrPatchVariant kZxrVariants_attack_speed[] = {
+    {"return Math.max(e, .01);", "return Math.max(e, .01);\ntry{if(window.__starryZxrOn&&window.__starryZxrOn(3)&&t&&t.heroCfg&&!t.CheckEntityHaveStatus(l.EnumEntityStatus.bossFakeControl)){e=Math.min(e*10,i);}}catch(__zxrErr){}"},
+};
+static const int kZxrVariants_attack_speed_n = 1;
 
-static const char* kZxr_full_screen_kill_anchor = "var f = o && o.force, h = o && o.trueDmg, _ = i < 0, S = i > 0, M = 0;";
-static const char* kZxr_full_screen_kill_replacement = "var f = o && o.force, h = o && o.trueDmg, _ = i < 0, S = i > 0, M = 0;\ntry { if (window.__starryZxrOn && window.__starryZxrOn(4) && i < 0 && t && t.monsterCfg && !this.__starryZxrAoeBusy) { var __zxrCaster = d.EntityManager.Inst().GetEntity(e); if (__zxrCaster && (__zxrCaster.heroCfg || __zxrCaster.EntityType === s.EnumEntityType.Player)) { var __zxrMap = d.EntityManager.Inst().entityMap; if (__zxrMap && typeof __zxrMap.forEach === \"function\") { this.__starryZxrAoeBusy = true; try { Array.from(__zxrMap.values()).forEach(function(__zxrEnt) { if (__zxrEnt && __zxrEnt !== t && !__zxrEnt.IsDead && !__zxrEnt.IsLogicDead && __zxrEnt.monsterCfg) { try { this.FightForceKillEntity(__zxrEnt, e); } catch (__zxrOneErr) {} } }, this); } finally { this.__starryZxrAoeBusy = false; } } } } } catch (__zxrErr) {}";
+static const ZxrPatchVariant kZxrVariants_full_screen_kill[] = {
+    {"var f = o && o.force, h = o && o.trueDmg, _ = i < 0, S = i > 0, M = 0;", "var f = o && o.force, h = o && o.trueDmg, _ = i < 0, S = i > 0, M = 0;\ntry { if (window.__starryZxrOn && window.__starryZxrOn(4) && i < 0 && t && t.monsterCfg && !this.__starryZxrAoeBusy) { var __zxrCaster = d.EntityManager.Inst().GetEntity(e); if (__zxrCaster && (__zxrCaster.heroCfg || __zxrCaster.EntityType === s.EnumEntityType.Player)) { var __zxrMap = d.EntityManager.Inst().entityMap; if (__zxrMap && typeof __zxrMap.forEach === \"function\") { this.__starryZxrAoeBusy = true; try { Array.from(__zxrMap.values()).forEach(function(__zxrEnt) { if (__zxrEnt && __zxrEnt !== t && !__zxrEnt.IsDead && !__zxrEnt.IsLogicDead && __zxrEnt.monsterCfg) { try { this.FightForceKillEntity(__zxrEnt, e); } catch (__zxrOneErr) {} } }, this); } finally { this.__starryZxrAoeBusy = false; } } } } } catch (__zxrErr) {}"},
+    {"var f = o && o.force, h = o && o.trueDmg, _ = i < 0, I = i > 0, E = 0;", "var f = o && o.force, h = o && o.trueDmg, _ = i < 0, I = i > 0, E = 0;\ntry { if (window.__starryZxrOn && window.__starryZxrOn(4) && i < 0 && t && t.monsterCfg && !this.__starryZxrAoeBusy) { var __zxrCaster = d.EntityManager.Inst().GetEntity(e); if (__zxrCaster && (__zxrCaster.heroCfg || __zxrCaster.EntityType === s.EnumEntityType.Player)) { var __zxrMap = d.EntityManager.Inst().entityMap; if (__zxrMap && typeof __zxrMap.forEach === \"function\") { this.__starryZxrAoeBusy = true; try { Array.from(__zxrMap.values()).forEach(function(__zxrEnt) { if (__zxrEnt && __zxrEnt !== t && !__zxrEnt.IsDead && !__zxrEnt.IsLogicDead && __zxrEnt.monsterCfg) { try { this.FightForceKillEntity(__zxrEnt, e); } catch (__zxrOneErr) {} } }, this); } finally { this.__starryZxrAoeBusy = false; } } } } } catch (__zxrErr) {}"},
+    {"var M = o && o.force, E = o && o.trueDmg, w = i < 0, D = i > 0, P = 0;", "var M = o && o.force, E = o && o.trueDmg, w = i < 0, D = i > 0, P = 0;\ntry { if (window.__starryZxrOn && window.__starryZxrOn(4) && i < 0 && t && t.monsterCfg && !this.__starryZxrAoeBusy) { var __zxrCaster = d.EntityManager.Inst().GetEntity(e); if (__zxrCaster && (__zxrCaster.heroCfg || __zxrCaster.EntityType === s.EnumEntityType.Player)) { var __zxrMap = d.EntityManager.Inst().entityMap; if (__zxrMap && typeof __zxrMap.forEach === \"function\") { this.__starryZxrAoeBusy = true; try { Array.from(__zxrMap.values()).forEach(function(__zxrEnt) { if (__zxrEnt && __zxrEnt !== t && !__zxrEnt.IsDead && !__zxrEnt.IsLogicDead && __zxrEnt.monsterCfg) { try { this.FightForceKillEntity(__zxrEnt, e); } catch (__zxrOneErr) {} } }, this); } finally { this.__starryZxrAoeBusy = false; } } } } } catch (__zxrErr) {}"},
+};
+static const int kZxrVariants_full_screen_kill_n = 3;
 
 #endif // STARRY_ZXR_PATCH_JS_H
