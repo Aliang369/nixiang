@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-24T16:02:07+00:00",
+  "generated_at": "2026-10-24T16:03:53+00:00",
   "game": "镇邪人",
   "version": "1.0.3-cb9dc-star",
   "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
@@ -22,8 +22,8 @@
     "cb9dc_origbase_install": "done",
     "cb9dc_origbase_closeout": "done"
   },
-  "source_commit": "4812a6ac509061dfa0361431359cb62a72bdb77c",
-  "source_tree": "2a69ad5a31e4bb6072f268b2a2c09386a76d3617",
+  "source_commit": "4a5fb9ca552fc9162215e28a9962d792b1e6da10",
+  "source_tree": "0452e8e82dfb76948745ede899345473e8f4c1e1",
   "apk": {
     "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk",
     "available": true,
@@ -133,9 +133,9 @@
       "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md",
       "recorded_md5": "cad3dcb1d59bfeb8d08d5e446bdb9d85",
       "available": true,
-      "current_md5": "cad3dcb1d59bfeb8d08d5e446bdb9d85",
-      "current_sha256": "ba4949434b3cd355257e9488bd485333a45fd950744aac6ecbbfc52266723a7b",
-      "matches_recorded_md5": true
+      "current_md5": "b6ac94cf1d57dd96fecaf6026ebe4c2b",
+      "current_sha256": "61d5035a843df2366fdeec051da295a6904f1709a896b0fa0e7c6551f9cb9760",
+      "matches_recorded_md5": false
     },
     {
       "stage": "cb9dc_origbase_closeout",
