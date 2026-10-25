@@ -1,0 +1,57 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406",
+  "timestamp": "20261026_023406",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "09_test/_recorder/20261026_014619",
+      "type": "dir",
+      "size_kib": 8,
+      "source": "/Users/aliang/Documents/nixiang/09_test/_recorder/20261026_014619",
+      "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/09_test/_recorder/20261026_014619"
+    },
+    {
+      "path": "09_test/_recorder/20261026_021535",
+      "type": "dir",
+      "size_kib": 245780,
+      "source": "/Users/aliang/Documents/nixiang/09_test/_recorder/20261026_021535",
+      "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/09_test/_recorder/20261026_021535"
+    },
+    {
+      "path": "09_test/圣翼传说/precheck_20261026_014133",
+      "type": "dir",
+      "size_kib": 3080,
+      "source": "/Users/aliang/Documents/nixiang/09_test/圣翼传说/precheck_20261026_014133",
+      "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/09_test/圣翼传说/precheck_20261026_014133"
+    },
+    {
+      "path": "06_dumped/圣翼传说/il2cppdump_7.6.06",
+      "type": "dir",
+      "size_kib": 90888,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/il2cppdump_7.6.06",
+      "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/06_dumped/圣翼传说/il2cppdump_7.6.06"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/obj_wscq",
+      "type": "dir",
+      "size_kib": 7316,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_wscq",
+      "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/mod菜单/starry-mod-menu/obj_wscq"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/libs_wscq",
+      "type": "dir",
+      "size_kib": 3912,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq",
+      "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/mod菜单/starry-mod-menu/libs_wscq"
+    },
+    {
+      "path": "07_patched/圣翼传说/surgical_7.6.06",
+      "type": "dir",
+      "size_kib": 572,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical_7.6.06",
+      "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/07_patched/圣翼传说/surgical_7.6.06"
+    }
+  ]
+}

@@ -1,37 +1,47 @@
 #!/usr/bin/env bash
 # ================================================================
-#  圣翼传说 7.5.10 (com.aiyue.wscq) — 管线 install 后端
+#  圣翼传说 7.6.06+ (com.aiyue.wscq) — 管线 install 后端
 #
-#  签名语义：本包用 01_tools/starry_release.jks 签名，与官方（O=tianyu）不同。
-#  故「同签名覆盖安装」必然 INSTALL_FAILED_UPDATE_INCOMPATIBLE —— 需要先卸载官方包。
+#  签名语义：官方包为 O=tianyu，星光包为 CN=StarryMagic。设备已切成星光签名后，
+#  后续构建只做同包名、同星光签名的覆盖安装，保留账号与本机数据。
+#  若设备仍是官方签名，覆盖会报 INSTALL_FAILED_UPDATE_INCOMPATIBLE；此时默认停止。
 #
 #  授权语义（本项目政策：不默认卸载、不默认清数据）：
 #    默认      = 只做同签名覆盖安装（pm install -r -d）；失败即报告并 exit 1。
 #    WSCQ_ALLOW_UNINSTALL=1
 #                = 用户已明确授权「卸载官方包（丢本地数据/存档）+ 全新安装」。
-#                  官方回退包：02_apks/圣翼传说/圣翼传说_7.5.10_taptap_official_from_device.apk
+#                  当前回退底包：09_test/圣翼传说/base_20261026/base.apk
 #
 #  装机后闭环：verify_installed_apk.sh 比对设备 base.apk 与本地产物 md5。
 #
 #  用法:
-#    bash 04_scripts/圣翼传说/wscq_install.sh                      # 覆盖（会失败，提示授权）
-#    WSCQ_ALLOW_UNINSTALL=1 bash 04_scripts/圣翼传说/wscq_install.sh # 卸载重装
+#    WSCQ_VERSION=7.6.06 bash 04_scripts/圣翼传说/wscq_install.sh
+#    WSCQ_VERSION=7.6.06 WSCQ_ALLOW_UNINSTALL=1 bash 04_scripts/圣翼传说/wscq_install.sh
 # ================================================================
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="圣翼传说"
-VERSION="7.5.10"
+VERSION="${WSCQ_VERSION:-7.5.10}"
 PKG="com.aiyue.wscq"
 SERIAL_FILE="$NIXIANG/04_scripts/$GAME/.device_serial"
-APK="$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_surgical-releaseSigned.apk"
-REMOTE="/data/local/tmp/wscq_surgical.apk"
-INSTALL_OK="$NIXIANG/04_scripts/$GAME/.install_ok"
+APK="${WSCQ_SIGNED:-$NIXIANG/08_output/$GAME/${GAME}_${VERSION}_surgical-releaseSigned.apk}"
+REMOTE="/data/local/tmp/wscq_${VERSION}_surgical.apk"
+INSTALL_OK="${WSCQ_INSTALL_OK:-$NIXIANG/04_scripts/$GAME/.install_ok}"
+OFFICIAL_BASE="${WSCQ_BASE_APK:-$NIXIANG/09_test/$GAME/base_20261026/base.apk}"
 
 [[ -f "$SERIAL_FILE" ]] || { echo "ERROR: missing ${SERIAL_FILE}（先跑 device_ready_wscq.sh）" >&2; exit 1; }
 SERIAL="$(tr -d '[:space:]' < "$SERIAL_FILE")"
 [[ -n "$SERIAL" ]] || { echo "ERROR: empty serial" >&2; exit 1; }
 [[ -f "$APK" ]] || { echo "ERROR: missing ${APK}（先跑 surgical + sign）" >&2; exit 1; }
+
+if [[ "${WSCQ_ALLOW_UNINSTALL:-0}" == "1" ]]; then
+  INSTALL_GUARD_ALLOW_UNINSTALL=1 bash "$NIXIANG/04_scripts/_common/install_guard.sh" \
+    "$GAME" --allow-uninstall --cmd "adb -s $SERIAL shell pm uninstall --user 0 $PKG; adb -s $SERIAL shell pm install --user 0 $REMOTE" || exit $?
+else
+  bash "$NIXIANG/04_scripts/_common/install_guard.sh" \
+    "$GAME" --cmd "adb -s $SERIAL shell pm install -r -d --user 0 $REMOTE" || exit $?
+fi
 
 rm -f "$INSTALL_OK"
 
@@ -51,13 +61,13 @@ trap 'rc=$?; adb -s "$SERIAL" shell rm -f "$REMOTE" >/dev/null 2>&1 || true; exi
 echo "[install] 同签名覆盖安装（保留数据）"
 if ! adb -s "$SERIAL" shell pm install -r -d --user 0 "$REMOTE"; then
   if [[ "${WSCQ_ALLOW_UNINSTALL:-0}" != "1" ]]; then
-    cat >&2 <<'EOM'
+    cat >&2 <<EOM
 ERROR: 覆盖安装失败（设备上是官方签名 O=tianyu 的包，与本星光包签名冲突）。
 
 本脚本不会自动卸载：卸载会清掉游戏本地数据，属破坏性操作，需要用户明确授权。
 用户确认「可以卸载官方包、接受本地数据丢失」后重跑：
     WSCQ_ALLOW_UNINSTALL=1 bash 04_scripts/圣翼传说/wscq_install.sh
-回退路径：官方原包仍在 02_apks/圣翼传说/圣翼传说_7.5.10_taptap_official_from_device.apk
+回退路径：官方原包仍在 ${OFFICIAL_BASE}
 EOM
     exit 1
   fi

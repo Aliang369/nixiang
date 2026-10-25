@@ -1,0 +1,130 @@
+{
+  "version": "7.6.06",
+  "base_apk": "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/base.apk",
+  "libil2cpp_sha256": "69eea5d129e1568ea12cf94647e346fee0fa0c3feac8fdb6029030914f4b532c",
+  "libil2cpp_md5": "53b3363b559d85d3e8975f384bfc009b",
+  "methods_txt": "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/il2cppdump_7.6.06/out/methods.txt",
+  "rva_file_off_delta": "0x4000",
+  "anchors": {
+    "EnemyGetHurt": {
+      "class": "public class Enemy : MonoBehaviour",
+      "method": "public void GetHurt(long bloodNum, bool is吸血, bool is真伤, bool is暴击, string 特效) { }",
+      "cid": 178910,
+      "rva": 20086964,
+      "file_off": 20070580,
+      "insn": 4229369836,
+      "old_rva": 20102272,
+      "rva_delta_from_7_5_10": -15308,
+      "old_insn": 4229369836,
+      "insn_same_as_7_5_10": true
+    },
+    "PlayerGetHurt": {
+      "class": "public class PlayerCtr : MonoBehaviour",
+      "method": "public void GetHurt(float HurtNum, string 颜色 = \"red\") { }",
+      "cid": 180159,
+      "rva": 20759240,
+      "file_off": 20742856,
+      "insn": 1840851947,
+      "old_rva": 20722456,
+      "rva_delta_from_7_5_10": 36784,
+      "old_insn": 1840851947,
+      "insn_same_as_7_5_10": true
+    },
+    "SetTimeScale": {
+      "class": "public class Time",
+      "method": "public static void set_timeScale(float value) { }",
+      "cid": 362620,
+      "rva": 40410260,
+      "file_off": 40393876,
+      "insn": 4229828584,
+      "old_rva": 40372904,
+      "rva_delta_from_7_5_10": 37356,
+      "old_insn": 4229828584,
+      "insn_same_as_7_5_10": true
+    },
+    "PlayerFixed": {
+      "class": "public class PlayerCtr : MonoBehaviour",
+      "method": "private void FixedUpdate() { }",
+      "cid": 180159,
+      "rva": 20767104,
+      "file_off": 20750720,
+      "insn": 1840980969,
+      "old_rva": 20730272,
+      "rva_delta_from_7_5_10": 36832,
+      "old_insn": 1840980969,
+      "insn_same_as_7_5_10": true
+    },
+    "EnemiesFixed": {
+      "class": "public class EnemiesCtr : MonoBehaviour",
+      "method": "private void FixedUpdate() { }",
+      "cid": 178789,
+      "rva": 20072460,
+      "file_off": 20056076,
+      "insn": 4229828584,
+      "old_rva": 20087768,
+      "rva_delta_from_7_5_10": -15308,
+      "old_insn": 4229828584,
+      "insn_same_as_7_5_10": true
+    },
+    "ReviveBoss": {
+      "class": "public class EnemiesCtr : MonoBehaviour",
+      "method": "public void 复活BOSS() { }",
+      "cid": 178789,
+      "rva": 20066408,
+      "file_off": 20050024,
+      "insn": 3506553855,
+      "old_rva": 20081716,
+      "rva_delta_from_7_5_10": -15308,
+      "old_insn": 3506553855,
+      "insn_same_as_7_5_10": true
+    },
+    "EnemyCtr2Fixed": {
+      "class": "public class EnemyCtr2 : Enemy",
+      "method": "private void FixedUpdate() { }",
+      "cid": 179021,
+      "rva": 20505216,
+      "file_off": 20488832,
+      "insn": 1840919533,
+      "old_rva": 20468440,
+      "rva_delta_from_7_5_10": 36776,
+      "old_insn": 1840919533,
+      "insn_same_as_7_5_10": true
+    },
+    "AntiSpeed": {
+      "class": "private sealed class EnemiesCtr.<检测是否使用变速器>d__60 : IEnumerator<object>, IEnumerator, IDisposable",
+      "method": "private bool MoveNext() { }",
+      "cid": 178721,
+      "rva": 20081256,
+      "file_off": 20064872,
+      "insn": 4162654206,
+      "old_rva": 20096564,
+      "rva_delta_from_7_5_10": -15308,
+      "old_insn": 4162654206,
+      "insn_same_as_7_5_10": true
+    },
+    "Ban1": {
+      "class": "public class CameraCtr : MonoBehaviour",
+      "method": "public void 公用封杀并退出游戏() { }",
+      "cid": 178103,
+      "rva": 18693052,
+      "file_off": 18676668,
+      "insn": 3506521087,
+      "old_rva": 18670188,
+      "rva_delta_from_7_5_10": 22864,
+      "old_insn": 3506521087,
+      "insn_same_as_7_5_10": true
+    },
+    "Ban2": {
+      "class": "public class CameraCtr : MonoBehaviour",
+      "method": "public void 封杀并退出游戏() { }",
+      "cid": 178103,
+      "rva": 18693996,
+      "file_off": 18677612,
+      "insn": 3506537471,
+      "old_rva": 18671132,
+      "rva_delta_from_7_5_10": 22864,
+      "old_insn": 3506537471,
+      "insn_same_as_7_5_10": true
+    }
+  }
+}

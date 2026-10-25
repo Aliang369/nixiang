@@ -11,7 +11,7 @@
 #     TapLoginForceWeb / ModBridge / OTA + yntt_smali 的 YnttLoginRequest）
 #   - 新增 lib/arm64-v8a/libstarry_magic.so + libc++_shared.so
 #
-# 功能全在 native（Games/WscqMod.cpp：伤害倍率 / 玩家无敌 / 战斗加速 / 怪物BOSS瞬刷 / 全屏攻击）。
+# 功能全在 native（Games/WscqMod.cpp：伤害倍率 / 玩家无敌 / 全屏攻击；20261026 收窄）。
 # 登录：本作是 TapSDK 旧版路径（com.taptap.sdk.ui.TapTapActivity）→ 必须同时做
 #   ① TapLoginForceWeb 白名单加 com.aiyue.wscq ② yntt_smali 注入（YnttLoginRequest）。
 #
@@ -26,13 +26,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 GAME="圣翼传说"
-VERSION="7.5.10"
+VERSION="${WSCQ_VERSION:-7.5.10}"
 PKG="com.aiyue.wscq"
 ORIG_APK="${WSCQ_BASE_APK:-$NIXIANG/02_apks/$GAME/${GAME}_${VERSION}_taptap_official_from_device.apk}"
 ORIG_MD5="${WSCQ_BASE_MD5:-66b979b2bef80dce1bcc6223f57cc4ed}"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
-MF_CACHE="$NIXIANG/07_patched/$GAME/surgical/AndroidManifest.xml"
+MF_CACHE="${WSCQ_MF_CACHE:-$NIXIANG/07_patched/$GAME/surgical/AndroidManifest.xml}"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 YNTT_SMALI="$STARRY_SRC/yntt_smali"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
@@ -76,7 +76,7 @@ PY
 )"
 echo "[check] 星光 dex 落位 = $DEX_NAME"
 
-LOCK_DIR="/tmp/wscq_surgical.lockdir"
+LOCK_DIR="/tmp/wscq_surgical_${VERSION}.lockdir"
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
   echo "ERROR: lock $LOCK_DIR held" >&2; exit 1
 fi
@@ -138,7 +138,7 @@ done
   || { echo "ERROR: $DEX_NAME 与 ModBridge.java 声明不一致（$NATIVE_MISS/$NATIVE_TOTAL 缺失）" >&2; exit 1; }
 echo "  dex↔ModBridge native 声明校验通过（$NATIVE_TOTAL 项）"
 
-STAGE_DIR="$NIXIANG/07_patched/$GAME/surgical"
+STAGE_DIR="${WSCQ_STAGE_DIR:-$NIXIANG/07_patched/$GAME/surgical}"
 mkdir -p "$STAGE_DIR"
 cp -f "$WORK/$DEX_NAME" "$STAGE_DIR/$DEX_NAME"
 echo "  $DEX_NAME → $STAGE_DIR/$DEX_NAME ($(md5 -q "$STAGE_DIR/$DEX_NAME"))"

@@ -1,15 +1,19 @@
 {
   "game": "圣翼传说",
-  "version": "7.5.10",
-  "notes": "2026-09-24 首版星空版移植（TapTap 渠道，底包 = 官方 7.5.10 com.aiyue.wscq）。抓点来源：斌哥改包内存 diff（15 处 Dobby 跳桩，见 10_docs/圣翼传说/斌哥改包抓点_20260924.md）；官包 libil2cpp.so 与斌哥包 md5 完全一致（563b40a81370833858ef2d4452f8dc3f）→ 15 个 RVA 锚点直接沿用。5 功能：伤害倍率(滑块1..1000)/玩家无敌/战斗加速(滑块1..10)/怪物BOSS瞬刷/全屏攻击；登录走 TapLoginForceWeb + yntt_smali（强制包内网页登录，绕开 TapTap 客户端 SSO 的 signature not match）。install 阶段必须卸载官方包（签名冲突，破坏性，须用户确认）。",
+  "version": "current-device-20261026",
+  "notes": "2026-10-26 当前设备底包 = TapTap 官方 7.6.06 com.aiyue.wscq；用户实测后明确删除战斗加速与怪物/BOSS瞬刷，当前只保留伤害倍率(1..1000)/玩家无敌/全屏攻击 3 功能，实际使用 4 个挂点，仅战斗加速配套的反作弊组已全部删除。旧 7.5.10 记录中的五项功能只作历史基线，不得据此复活已删除项。登录仍走 TapLoginForceWeb + yntt_smali。当前设备已装星光同签名包，重建后只允许覆盖安装并保留数据。",
+  "install_policy": "overlay_only",
+  "install_policy_note": "TapTap 官方 O=tianyu 与星光 CN=StarryMagic 异签，默认不卸载；覆盖失败后必须取得用户当轮明确授权，才可带 INSTALL_GUARD_ALLOW_UNINSTALL=1 与 WSCQ_ALLOW_UNINSTALL=1 卸载官方包并全新安装。卸载会清本地数据。",
   "params": {
     "game_id": "sycs",
     "package": "com.aiyue.wscq",
     "mk": "Android_wscq.mk（modern 注册表管线）",
     "tag": "wscq",
     "serial": "f9a116a2",
-    "il2cpp_md5": "563b40a81370833858ef2d4452f8dc3f",
-    "global_metadata_md5": "ef84cf230a6f4be6858f13cc47e2ab5b"
+    "base_apk": "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/base.apk",
+    "base_apk_md5": "a39c4219859570a489450bcee5a50dec",
+    "il2cpp_md5": "53b3363b559d85d3e8975f384bfc009b",
+    "global_metadata_md5": "2d59c15aff49b8cff212cbc0c2625e5b"
   },
   "env": {
     "NDK": "/Users/aliang/Library/Android/sdk/ndk/27.0.12077973",
@@ -103,19 +107,7 @@
           "path": "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥改包抓点_20260924.md"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-24 14:18:25",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥hook锚点_20260924.json": {
-          "md5": "eb1d64d2a3edc6cbaa944d2ac0d2d546"
-        },
-        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/斌哥改包抓点_20260924.md": {
-          "md5": "b371752fe8da8d9af1271f2a66c245e8"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/mem_20260924/raw/il2cpp_rx_segs.txt": "49cfeb25e2be8dd608b5d43132e241dc"
-      }
+      "status": "pending"
     },
     {
       "id": "impl_mod",
@@ -174,12 +166,7 @@
           "pattern": "JNI_OnLoad"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-24 14:18:25",
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp": "642b2511e4fc705805b0c164ae26b028",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp": "45d36d50df262ad3f5c60c69fddf7f96"
-      },
+      "status": "pending",
       "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so; 原 md5=109425618e54bed1c4398fdc1d1e21ed"
     },
     {
@@ -224,17 +211,7 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-24 14:18:26",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-releaseSigned.apk": {
-          "md5": "621644ee72659ea4c3ca6b99574745f1"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-unsigned.apk": "25d085c98c0281b54cb6bd57473f029b",
-        "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical/AndroidManifest.xml": "612efb7d4a109917fdc5e10670f18830"
-      }
+      "status": "pending"
     },
     {
       "id": "install",
@@ -250,18 +227,8 @@
           "path": "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok"
         }
       ],
-      "status": "done",
-      "note": "未取得用户对卸载的明确授权前不得 run（默认不带 WSCQ_ALLOW_UNINSTALL=1 只会报错退出）。",
-      "done_at": "2026-09-24 14:18:26",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok": {
-          "md5": "09de79f6cd9944faeaeb1af2d337b68d"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.5.10_surgical-releaseSigned.apk": "621644ee72659ea4c3ca6b99574745f1",
-        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.device_serial": "0bc47570b06495af1a544933783b7037"
-      }
+      "status": "pending",
+      "note": "未取得用户对卸载的明确授权前不得 run（默认不带 WSCQ_ALLOW_UNINSTALL=1 只会报错退出）。"
     },
     {
       "id": "archive",
@@ -285,6 +252,263 @@
       },
       "inputs": {
         "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok": "09de79f6cd9944faeaeb1af2d337b68d"
+      }
+    },
+    {
+      "id": "latest_pull",
+      "name": "新版底包拉取与三项必测输入采集（当前设备官方包）",
+      "requires": [],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_pull_latest_base.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/base_info.txt"
+        }
+      ],
+      "status": "done",
+      "note": "只读拉取当前安装的 TapTap 官方最新版；记录版本/签名/dex/libil2cpp/global-metadata 哈希。产物落 09_test，不自动写 02_apks。",
+      "done_at": "2026-10-26 00:54:41",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/base_info.txt": {
+          "md5": "c9c0bd9bc5b640bed07ecd72529f48ab"
+        }
+      }
+    },
+    {
+      "id": "latest_static",
+      "name": "新版静态三查（dex/Manifest/libil2cpp+metadata）",
+      "requires": [
+        "latest_pull"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_static_fingerprint.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/static/fingerprint.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-26 00:57:33",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/static/fingerprint.txt": {
+          "md5": "cba794ec037fca8dd3c3fa5eb57dc18b"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/base_info.txt": "c9c0bd9bc5b640bed07ecd72529f48ab"
+      }
+    },
+    {
+      "id": "latest_dump",
+      "name": "新版 IL2CPP dump（libil2cpp + global-metadata v31）",
+      "requires": [
+        "latest_static"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_dump_il2cpp.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/il2cppdump_7.6.06/out/dump.cs"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/圣翼传说/il2cppdump_7.6.06/out/methods.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-26 01:02:21",
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/static/fingerprint.txt": "cba794ec037fca8dd3c3fa5eb57dc18b"
+      },
+      "note": "2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/06_dumped/圣翼传说/il2cppdump_7.6.06\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/06_dumped/圣翼传说/il2cppdump_7.6.06/out/dump.cs; 原 md5=6efb259e0c652a729b241a4095da92e0\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/06_dumped/圣翼传说/il2cppdump_7.6.06/out/methods.txt; 原 md5=233efd20a5c9c54decd1b8de6aefcd8c"
+    },
+    {
+      "id": "latest_anchor",
+      "name": "新版锚点解析（10 个类::方法唯一命中 + 文件偏移/序言校验）",
+      "requires": [
+        "latest_dump"
+      ],
+      "command": "python3 \"$NIXIANG/04_scripts/圣翼传说/wscq_resolve_anchors.py\" --methods \"$NIXIANG/06_dumped/圣翼传说/il2cppdump_7.6.06/out/methods.txt\" --so \"$NIXIANG/06_dumped/圣翼传说/il2cppdump_7.6.06/input/libil2cpp.so\" --out \"$NIXIANG/10_docs/圣翼传说/hook锚点_7.6.06_20261026.json\" --version 7.6.06 --base-apk \"$NIXIANG/09_test/圣翼传说/base_20261026/base.apk\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/hook锚点_7.6.06_20261026.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-26 01:11:00",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/hook锚点_7.6.06_20261026.json": {
+          "md5": "5cc629b830695047a0d418b9d1f04ecd"
+        }
+      },
+      "note": "10/10 类::方法唯一命中；RVA-file_off 均为 0x4000；10 个 4B 序言与 7.5.10 相同。libil2cpp md5=53b3363b559d85d3e8975f384bfc009b。"
+    },
+    {
+      "id": "latest_impl_mod",
+      "name": "新版功能实现（用户收窄为 3 功能，实际绑定 4 个挂点）",
+      "requires": [
+        "latest_anchor"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/scan_mod_cpp.sh\" Games/WscqMod.cpp",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp"
+        }
+      ],
+      "status": "done",
+      "note": "从 10 个已解析锚点中选用 4 个：EnemyGetHurt/PlayerGetHurt/PlayerFixed/EnemyCtr2Fixed；菜单严格 3 项，不新增功能。",
+      "done_at": "2026-10-26 02:08:23",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp": {
+          "md5": "a98de180179fc23cefb6ea0c2bdb4bab"
+        },
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp": {
+          "md5": "6b9ff8fd7d6de7c0d8807987174959f1"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/10_docs/圣翼传说/hook锚点_7.6.06_20261026.json": "5cc629b830695047a0d418b9d1f04ecd"
+      }
+    },
+    {
+      "id": "latest_build_so",
+      "name": "新版 so 构建（7.6.06 锚点 + 3 功能菜单串）",
+      "requires": [
+        "latest_impl_mod"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/wscq_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_build_so.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-10-26 02:08:35",
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqMod.cpp": "a98de180179fc23cefb6ea0c2bdb4bab",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/WscqEntry.cpp": "6b9ff8fd7d6de7c0d8807987174959f1"
+      },
+      "note": "2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_wscq/arm64-v8a/libstarry_magic.so; 原 md5=43d0b0348f27d2fb7a2d5048571fa4f0"
+    },
+    {
+      "id": "latest_surgical",
+      "name": "7.6.06 外科组装（官方 entries 字节不变 + classes2.dex + Manifest + 新 so）",
+      "requires": [
+        "latest_build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/surgical_wscq_7.5.10.sh"
+      ],
+      "command": "WSCQ_VERSION=7.6.06 WSCQ_BASE_APK=\"$NIXIANG/09_test/圣翼传说/base_20261026/base.apk\" WSCQ_BASE_MD5=a39c4219859570a489450bcee5a50dec WSCQ_MF_CACHE=\"$NIXIANG/07_patched/圣翼传说/surgical_7.6.06/AndroidManifest.xml\" WSCQ_STAGE_DIR=\"$NIXIANG/07_patched/圣翼传说/surgical_7.6.06\" bash \"$NIXIANG/04_scripts/圣翼传说/surgical_wscq_7.5.10.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.6.06_surgical-unsigned.apk"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical_7.6.06/AndroidManifest.xml"
+        },
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical_7.6.06/classes2.dex"
+        }
+      ],
+      "status": "done",
+      "note": "当前官包仍是单 classes.dex；Manifest 不复用旧版缓存；surgical 阶段对全部未改 entries 做 sha256 逐项一致性校验。\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.6.06_surgical-unsigned.apk\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical_7.6.06\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.6.06_surgical-unsigned.apk; 原 md5=34c8be15fb3cc80c4f544be2fb35be6c\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical_7.6.06/AndroidManifest.xml; 原 md5=088e4878bef73d1f9817ffefb3a07a31\n2026-10-26 收尾清理: /Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical_7.6.06/classes2.dex; 原 md5=2457ca83a29100ac6c829b2c4b93599c",
+      "done_at": "2026-10-26 02:09:20"
+    },
+    {
+      "id": "latest_sign",
+      "name": "7.6.06 对齐与签名（starry_release.jks / CN=StarryMagic）",
+      "requires": [
+        "latest_surgical"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/wscq_sign.sh"
+      ],
+      "command": "WSCQ_VERSION=7.6.06 WSCQ_EXPECT_IL2CPP_MD5=53b3363b559d85d3e8975f384bfc009b WSCQ_EXPECT_META_MD5=2d59c15aff49b8cff212cbc0c2625e5b bash \"$NIXIANG/04_scripts/圣翼传说/wscq_sign.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.6.06_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "包内 libil2cpp.so 与 global-metadata.dat 必须分别等于 7.6.06 官方底包哈希，确保 native 锚点与 metadata 配套。",
+      "done_at": "2026-10-26 02:09:45",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.6.06_surgical-releaseSigned.apk": {
+          "md5": "9cc7f98377856e2ee2b52b9cee85b247"
+        }
+      }
+    },
+    {
+      "id": "latest_preinstall",
+      "name": "7.6.06 装机前 L1 门禁（3 功能 + 4 实际挂点 + 设备画像）",
+      "requires": [
+        "latest_sign"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/wscq_preinstall_7_6_06.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/圣翼传说/wscq_preinstall_7_6_06.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/preinstall/preinstall_7.6.06_20261026.txt"
+        }
+      ],
+      "status": "done",
+      "note": "4 个实际使用 RVA 必须落 r-xp 且在 LibBaseResolve 选中组；滑块数组同步 WARN 由 Wscq_Tick 到 SyncAllFromMenu 的人工核对。",
+      "done_at": "2026-10-26 02:10:29",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/preinstall/preinstall_7.6.06_20261026.txt": {
+          "md5": "64d1f554eaa929e1492c438ee3cc62c5"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/圣翼传说/圣翼传说_7.6.06_surgical-releaseSigned.apk": "9cc7f98377856e2ee2b52b9cee85b247"
+      }
+    },
+    {
+      "id": "latest_install",
+      "name": "7.6.06 同签名覆盖安装（保留数据）",
+      "requires": [
+        "latest_preinstall",
+        "device_ready"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/wscq_install.sh"
+      ],
+      "command": "WSCQ_VERSION=7.6.06 WSCQ_BASE_APK=\"$NIXIANG/09_test/圣翼传说/base_20261026/base.apk\" WSCQ_INSTALL_OK=\"$NIXIANG/04_scripts/圣翼传说/.install_ok_7.6.06\" bash \"$NIXIANG/04_scripts/圣翼传说/wscq_install.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok_7.6.06"
+        }
+      ],
+      "status": "done",
+      "note": "设备已经是同签名星光包；本次功能收窄只允许覆盖安装并保留数据。不得再次卸载或清除本地存档。",
+      "done_at": "2026-10-26 02:11:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.install_ok_7.6.06": {
+          "md5": "a973c5d7863de2a6ce432d06f0a4f221"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/09_test/圣翼传说/base_20261026/preinstall/preinstall_7.6.06_20261026.txt": "64d1f554eaa929e1492c438ee3cc62c5",
+        "/Users/aliang/Documents/nixiang/04_scripts/圣翼传说/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     }
   ]

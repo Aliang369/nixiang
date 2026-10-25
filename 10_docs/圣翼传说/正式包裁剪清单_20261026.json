@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/圣翼传说",
+  "keep": "圣翼传说_7.6.06_surgical-releaseSigned.apk",
+  "keep_size": 205724323,
+  "keep_md5": "9cc7f98377856e2ee2b52b9cee85b247",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "圣翼传说_7.6.06_surgical-releaseSigned.apk.idsig",
+      "size": 1631771,
+      "md5": "8e180e3c9421763f61bbc2f78ea8482c"
+    },
+    {
+      "name": "圣翼传说_7.6.06_surgical-unsigned.apk",
+      "size": 205689570,
+      "md5": "34c8be15fb3cc80c4f544be2fb35be6c"
+    }
+  ],
+  "removed_count": 2
+}

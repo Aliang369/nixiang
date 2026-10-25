@@ -1,0 +1,6 @@
+# 圣翼传说 7.6.06 装机后预检标记
+pkg|com.aiyue.wscq
+menu_load|StarryMagic|MenuService|\[wscq\] lib ready
+menu_shown|native menu shown
+hook_hit|\[wscq\] (lib ready|.*hooked)
+auth_ok|auth game_id synced from native: sycs

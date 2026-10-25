@@ -4,11 +4,13 @@ set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="圣翼传说"
-VERSION="7.5.10"
+VERSION="${WSCQ_VERSION:-7.5.10}"
 PKG="com.aiyue.wscq"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="${WSCQ_UNSIGNED:-$OUT/${GAME}_${VERSION}_surgical-unsigned.apk}"
-SIGNED="$OUT/${GAME}_${VERSION}_surgical-releaseSigned.apk"
+SIGNED="${WSCQ_SIGNED:-$OUT/${GAME}_${VERSION}_surgical-releaseSigned.apk}"
+EXPECT_IL2CPP_MD5="${WSCQ_EXPECT_IL2CPP_MD5:-563b40a81370833858ef2d4452f8dc3f}"
+EXPECT_META_MD5="${WSCQ_EXPECT_META_MD5:-ef84cf230a6f4be6858f13cc47e2ab5b}"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
@@ -99,10 +101,10 @@ IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 
 # 官包游戏本体零改动硬校验（与原版/斌哥包同源：libil2cpp.so md5 完全一致 → 15 个锚点可直接沿用）
 IL2CPP_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libil2cpp.so | md5 -q)"
-[[ "$IL2CPP_MD5" == "563b40a81370833858ef2d4452f8dc3f" ]] \
+[[ "$IL2CPP_MD5" == "$EXPECT_IL2CPP_MD5" ]] \
   || { echo "ERROR: libil2cpp.so 被改动（${IL2CPP_MD5}）" >&2; exit 1; }
 META_MD5="$(unzip -p "$SIGNED" assets/bin/Data/Managed/Metadata/global-metadata.dat | md5 -q)"
-[[ "$META_MD5" == "ef84cf230a6f4be6858f13cc47e2ab5b" ]] \
+[[ "$META_MD5" == "$EXPECT_META_MD5" ]] \
   || { echo "ERROR: global-metadata.dat 被改动（${META_MD5}）" >&2; exit 1; }
 
 # YnttLoginRequest 必须在星光 dex 里（TapTap 旧版强制网页登录的唯一载体）—— 已在上面校验
