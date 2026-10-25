@@ -458,24 +458,62 @@ static void MarkAoeKilled(int64_t eid) {
     g_aoeKilledN.store(count + 1);
 }
 
+// 运行时已知的 libil2cpp **代码指针**（HpHandle 的 MethodInfo->methodPointer）。
+// 用途见 FileOffToVa：用「已知代码指针落在哪个段」反推真正执行的那份 guest 视图。
+static void* g_anchorCode = nullptr;
+static bool g_mapsLogged = false;
+
+// ★设备无关（2026-10-26 雷电轮实锤）：
+//   雷电(LDPlayer)/x86_64 + ARM 转译环境下，libil2cpp.so 在 /proc/self/maps 里
+//   **只有 r--p / rw-p 段，没有任何 r-xp 段**（ARM64 guest 代码由转译器执行），
+//   而原实现要求 perm 含 'x' ⇒ FileOffToVa 恒 nullptr ⇒「解释器公共点解析失败」刷屏、
+//   钩子零安装；又因为 RefreshBattleCache() 只在钩子内跑（:568），
+//   连数据型的无限技能也一起死（units 恒 0）。
+//   改为三段式选段：
+//     ① 优先：段范围包含 g_anchorCode（= 真正被执行的那份 guest 代码映射）；
+//     ② 否则：覆盖 fileOff 的非可写段（r--p / r-xp）；
+//     ③ 仍拒绝 w 段（堆/数据段不能当代码基）。
+//   首次调用把候选段表打进 logcat，下一轮不用再猜。
 static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
     FILE* fp = fopen("/proc/self/maps", "rt");
     if (!fp) return nullptr;
-    char line[768];
-    void* found = nullptr;
+    char line[1024];
+    void* hit = nullptr;
+    void* fallback = nullptr;
+    const uintptr_t anchor = g_anchorCode ? starptr::Untag(g_anchorCode) : 0;
+    char cand[4][192];
+    int ncand = 0;
     while (fgets(line, sizeof(line), fp)) {
         if (!strstr(line, lib)) continue;
         unsigned long start = 0, end = 0, off = 0;
         char perm[8] = {0};
         if (sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
-        if (!strchr(perm, 'x') || end <= start) continue;
-        if (fileOff >= off && fileOff < off + (end - start)) {
-            found = reinterpret_cast<void*>(start + (fileOff - off));
+        if (end <= start) continue;
+        if (strchr(perm, 'w')) continue;
+        const uintptr_t base = reinterpret_cast<uintptr_t>(start) - reinterpret_cast<uintptr_t>(off);
+        const uintptr_t va = base + fileOff;
+        const bool covers = (fileOff >= off) && (fileOff < off + (end - start));
+        if (ncand < 4) {
+            snprintf(cand[ncand], sizeof(cand[ncand]), "%lx-%lx %s off=%lx base=%lx va=%lx%s",
+                     start, end, perm, off, (unsigned long)base, (unsigned long)va,
+                     covers ? " [covers]" : "");
+            ncand++;
+        }
+        if (covers && anchor && anchor >= start && anchor < end) {
+            hit = reinterpret_cast<void*>(va);
             break;
         }
+        if (covers && !fallback) fallback = reinterpret_cast<void*>(va);
     }
     fclose(fp);
-    return found;
+    if (!hit) hit = fallback;
+    if (!g_mapsLogged) {
+        g_mapsLogged = true;
+        for (int i = 0; i < ncand; i++) LOGW(TLGD_TAG " maps[%d] %s", i, cand[i]);
+        LOGW(TLGD_TAG " FileOffToVa %s off=0x%llx anchor=%p -> %p",
+             lib, (unsigned long long)fileOff, (void*)anchor, hit);
+    }
+    return hit;
 }
 
 static void* BattleServerStuff() {
@@ -604,7 +642,15 @@ static void* Hooked_Trampoline(void* a0, void* a1, void* a2, void* a3) {
 
 static bool InstallTrampolineHook() {
     if (g_hooked.load()) return true;
+    // anchor = HpHandle 的 methodPointer（真正可执行的那份 guest 代码里的地址）
+    if (!g_anchorCode) g_anchorCode = g_hpHandleFn ? g_hpHandleFn : g_getSrvStuff;
     void* tramp = FileOffToVa(TLGD_LIB, kFileTrampoline);
+    if (tramp && !g_hooked.load()) {
+        // 首 16B 快照：判「这里是不是干净的函数入口」（真机 4399 = a9bd57f6 ...）
+        const uint32_t* w = reinterpret_cast<const uint32_t*>(tramp);
+        LOGI(TLGD_TAG " 公共点首16B %08x %08x %08x %08x", w[0], w[1], w[2], w[3]);
+    }
+    if (!tramp) return false;
     if (!tramp) {
         LOGW(TLGD_TAG " 解释器公共点解析失败 file=0x%llx", (unsigned long long)kFileTrampoline);
         return false;

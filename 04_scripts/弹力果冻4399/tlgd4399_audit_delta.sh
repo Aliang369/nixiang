@@ -18,13 +18,13 @@
 set -euo pipefail
 
 NIXIANG="${NIXIANG:-/Users/aliang/Documents/nixiang}"
-BASE="${1:-$NIXIANG/02_apks/弹力果冻4399/弹力果冻4399_2.4.0_vc4412_device_base.apk}"
-OUT="${2:-$NIXIANG/08_output/弹力果冻4399/弹力果冻4399_2.4.0_稳定整改_20261007-releaseSigned.apk}"
+BASE="${1:-${TLGD4399_BASE:-$NIXIANG/02_apks/弹力果冻4399/弹力果冻4399_2.4.0_vc4412_雷电原版_20261026.apk}}"
+OUT="${2:-$NIXIANG/08_output/弹力果冻4399/弹力果冻4399_2.4.0_雷电星空_20261026-releaseSigned.apk}"
 [[ -f "$BASE" ]] || { echo "ERROR: 底包不存在 $BASE"; exit 1; }
 [[ -f "$OUT" ]] || { echo "ERROR: 产物不存在 $OUT"; exit 1; }
 
 python3.11 - "$BASE" "$OUT" <<'PY'
-import sys, zipfile, hashlib
+import os, sys, zipfile, hashlib
 
 base_p, out_p = sys.argv[1], sys.argv[2]
 zb, zo = zipfile.ZipFile(base_p), zipfile.ZipFile(out_p)
@@ -39,6 +39,13 @@ ALLOW_DIFF = {
 # META-INF/* 是签名块：底包（上一轮星光签名）与产物（本轮重签）必然不同，名字恰好相同
 # （都是 META-INF/STARRY.RSA + STARRY.SF + MANIFEST.MF）→ 计入预期变更。
 ALLOW_DIFF_PREFIX = ("assets/certs/", "META-INF/")
+# 2026-10-26 雷电轮：底包 = 4399 **官方原版**（无 classes2.dex、Manifest 未注入）
+# ⇒ 该模式下 classes2.dex 是「预期新增」、AndroidManifest.xml 是「预期变更」。
+BASE_KIND = os.environ.get("TLGD_AUDIT_BASE_KIND", "starry")
+OFFICIAL = (BASE_KIND == "official")
+if OFFICIAL:
+    # 官方底包未注入 → 本轮 Manifest 变更是预期内的
+    ALLOW_DIFF.add("AndroidManifest.xml")
 
 def h(x, n=16):
     return x[:n] + "…"
@@ -53,7 +60,10 @@ if bad_gone:
 
 # 2) 新增的条目
 added = sorted(set(no) - set(nb))
-bad_added = [a for a in added if not a.startswith("META-INF/")]
+ALLOW_ADDED = ({"classes2.dex", "lib/arm64-v8a/libstarry_magic.so",
+                "lib/arm64-v8a/libc++_shared.so", "assets/certs/starlight.crt"}
+               if OFFICIAL else set())
+bad_added = [a for a in added if not a.startswith("META-INF/") and a not in ALLOW_ADDED]
 print(f"[added] {len(added)} 条：{added}")
 if bad_added:
     print(f"  ✗ 非预期新增：{bad_added}")
@@ -100,7 +110,10 @@ if "AndroidManifest.xml" in nb and "AndroidManifest.xml" in no:
     hb = hashlib.sha256(zb.read("AndroidManifest.xml")).hexdigest()
     ho = hashlib.sha256(zo.read("AndroidManifest.xml")).hexdigest()
     if hb != ho:
-        unexpected.append("AndroidManifest.xml: 本轮声明不改 Manifest，但字节变了")
+        if OFFICIAL:
+            print(f"[预期变更] AndroidManifest.xml（官方→注入 StarryApp/MenuService/Provider）: {h(hb)} -> {h(ho)} [{nb['AndroidManifest.xml'].file_size} B -> {no['AndroidManifest.xml'].file_size} B]")
+        else:
+            unexpected.append("AndroidManifest.xml: 本轮声明不改 Manifest，但字节变了")
     else:
         print(f"[protected] AndroidManifest.xml 逐字节相同 ✓ ({h(hb)}, {nb['AndroidManifest.xml'].file_size} B)")
 

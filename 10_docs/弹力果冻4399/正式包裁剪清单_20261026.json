@@ -1,0 +1,15 @@
+{
+  "game_dir": "E:/nixiang/08_output/弹力果冻4399",
+  "keep": "弹力果冻4399_2.4.0_雷电星空_20261026-releaseSigned.apk",
+  "keep_size": 2141060660,
+  "keep_md5": "10a54826eec95efceacc167c11701dd0",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "弹力果冻4399_2.4.0_雷电星空_20261026-releaseSigned.apk.idsig",
+      "size": 16864795,
+      "md5": "489e2205f70c17debf8b897b5b431979"
+    }
+  ],
+  "removed_count": 1
+}
