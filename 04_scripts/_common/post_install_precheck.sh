@@ -218,7 +218,22 @@ trap cleanup EXIT
 
 adbx shell "am force-stop $PKG" >/dev/null 2>&1
 sleep 1
-adbx shell "monkey -p $PKG -c android.intent.category.LAUNCHER 1" > "$OUT/monkey.log" 2>&1
+# 2026-10-25 win/雷电：部分模拟器镜像没有 /system/bin/monkey，monkey 冷启会静默失败
+# （log 里只有 "monkey: inaccessible or not found"）⇒ 预检假阴性判段 A。这里优先 monkey，
+# 设备上没有就退化为 am start（先 resolve launcher activity）。
+launch_pkg() {
+  _lp="$1"
+  if adbx shell "command -v monkey" 2>/dev/null | grep -q monkey; then
+    adbx shell "monkey -p $_lp -c android.intent.category.LAUNCHER 1"
+    return 0
+  fi
+  _act="$(adbx shell "cmd package resolve-activity --brief $_lp" 2>/dev/null | tr -d '\r' | tail -1)"
+  case "$_act" in
+    */*) adbx shell "am start -n $_act" ;;
+    *)   adbx shell "monkey -p $_lp -c android.intent.category.LAUNCHER 1" ;;
+  esac
+}
+launch_pkg "$PKG" > "$OUT/monkey.log" 2>&1
 echo "- 已干净启动（force-stop 后 monkey 冷启）"
 
 # 宿主助手必须在**录制窗口内**启动，否则其一次性 attach 日志（native menu shown）录不到。
@@ -226,7 +241,7 @@ if [ -n "$HELPER_PKG" ]; then
   if [ "$HELPER_START" = "1" ]; then
     (
       sleep "$HELPER_DELAY"
-      adbx shell "monkey -p $HELPER_PKG -c android.intent.category.LAUNCHER 1" >/dev/null 2>&1
+      launch_pkg "$HELPER_PKG" >/dev/null 2>&1
     ) &
     HELPER_PID=$!
     echo "- ${HELPER_DELAY}s 后将拉起宿主助手 ${HELPER_PKG}（窗口内 attach ⇒ 菜单标记可被录到）"

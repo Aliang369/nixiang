@@ -7,9 +7,11 @@
 """
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -94,12 +96,23 @@ def main() -> int:
             raise SystemExit(f"{prop} 是滑块却用 {fn} 读取（滑块必须 getVal）")
         if prop.startswith("feature") and fn != "R":
             raise SystemExit(f"{prop} 是开关却用 {fn} 读取（开关必须 getRet）")
-    proc = subprocess.run(
-        ["node", "--check", "/dev/stdin"],
-        input=js,
-        text=True,
-        capture_output=True,
-    )
+    # 2026-10-25 win：`node --check /dev/stdin` 在原生 Windows node 上会被解析成
+    # E:\dev\stdin 直接 MODULE_NOT_FOUND（Git Bash 的 /dev 映射过不去）。
+    # 改成落临时文件再 --check，两端行为一致。
+    fd, tmp = tempfile.mkstemp(suffix=".js", prefix="ysxz_patch_")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as fh:
+            fh.write(js)
+        proc = subprocess.run(
+            ["node", "--check", tmp],
+            text=True,
+            capture_output=True,
+        )
+    finally:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
     if proc.returncode != 0:
         raise SystemExit("node --check failed:\n" + proc.stderr)
     if not re.search(r"function tryAuto\(Cls\)", js):

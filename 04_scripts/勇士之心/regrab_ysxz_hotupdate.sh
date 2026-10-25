@@ -15,7 +15,8 @@ REMOTE_ROOT="/data/data/$PKG/files"
 REMOTE_RES="$REMOTE_ROOT/res"
 
 [[ -f "$STATE_FILE" ]] || { echo "错误: 缺少 .device_serial" >&2; exit 1; }
-SERIAL="$(tr -d '[:space:]' < "$STATE_FILE")"
+# SERIAL 可由环境变量覆盖（例如本轮目标机型不是 .device_serial 记的那台）。
+SERIAL="${SERIAL:-$(tr -d '[:space:]' < "$STATE_FILE")}"
 command -v "$ADB_BIN" >/dev/null || { echo "错误: adb 不可用" >&2; exit 1; }
 "$ADB_BIN" -s "$SERIAL" get-state >/dev/null
 

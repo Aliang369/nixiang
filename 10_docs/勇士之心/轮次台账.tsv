@@ -31,3 +31,15 @@
 2026-10-24 02:04	6	7	战斗加速 v2（真·全局变速）：改挂 cc.director.calculateDeltaTime 把每帧 _deltaTime ×k（cocos2d-jsb 6406 处一处放大 → compScheduler/scheduler/ActionManager/物理/组件 update 全局生效）；worldTimeScale 与 scheduler.setTimeScale 降为兜底且互斥；tick 的 wallMs 除回 k 保持真实墙钟；菜单重排到基础功能第 6 位（自动战斗 7、金卡 8、自动化 10..13）。离线单测 12/12。so 863c6c21 / 包 72ba3541。	pipeline.log	未测
 2026-10-24 02:08	6	8	战斗加速 v2 用户实测通过（2026-10-24「功能都没问题」）：引擎 dt×k 全局变速 + 基础功能第 6 位；包 9c25c51f / so 7f51585b	pipeline.log	有效
 2026-10-24 02:51	过检测	2	TapSDK「包名/签名」提示：定位到 APK v2 签名块层（META-INF 探针换成官方证书后指纹仍是星空证书；Java spoof 不在其路径上）；压提示的 cc.Label 文本过滤实测仍弹窗，用户决定暂不处理；功能不受影响	pipeline.log	无效
+2026-10-25 22:11	1	3	1.0.6 官方包 + 热更 res 1.1.9.1 重出星空包，雷电模拟器实测有效（伤害倍率）	pipeline.log	有效
+2026-10-25 22:11	2	2	秒杀 雷电实测有效（战斗域短名判据改为候选+类型/真值校验后）	pipeline.log	有效
+2026-10-25 22:11	3	1	无敌 雷电实测有效	pipeline.log	有效
+2026-10-25 22:11	4	2	无限技能 雷电实测有效	pipeline.log	有效
+2026-10-25 22:11	5	1	移动速度 雷电实测有效	pipeline.log	有效
+2026-10-25 22:11	6	9	战斗加速（引擎 dt×k 全局变速）雷电实测有效	pipeline.log	有效
+2026-10-25 22:11	7	5	自动战斗（解锁游戏内按钮）：本轮重构驱动时漏调 autoBattleTick() 导致失效，补回后用户实测通过；已加门禁强制检查该调用	pipeline.log	有效
+2026-10-25 22:11	8	2	解锁金卡 雷电实测有效（monCard.fNc.fMR struct+behaviour）	pipeline.log	有效
+2026-10-25 22:11	10	2	自动重复挑战：改挂官方设置位 localMgr.cod(1,true)（读回 coc(1)=true flag=2），面板开 6.5s 未走才兜底 ekx()	pipeline.log	有效
+2026-10-25 22:11	11	5	自动出售：旧 bag.bYK(品质数组) 在本版是判定函数（不发协议）→ 改挂官方批量口 bag.bZw([品质])	pipeline.log	有效
+2026-10-25 22:11	12	2	自动分解：旧 bag.bYJ 同上 → 改挂官方批量口 bag.bZv([品质])（自带 isLock+bYK 过滤）	pipeline.log	有效
+2026-10-25 22:11	13	2	自动穿戴：旧 equip.ftA/fvH 本版不存在 → 改挂 equip.fCV(资格)+fCW(更优)+fFu(提交)	pipeline.log	有效

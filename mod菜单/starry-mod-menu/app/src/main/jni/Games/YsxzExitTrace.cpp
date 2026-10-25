@@ -13,6 +13,8 @@
 #include "Games/YsxzExitTrace.h"
 
 #include <dlfcn.h>
+#include <elf.h>
+#include <link.h>
 #include <errno.h>
 #include <stddef.h>
 #include <linux/audit.h>
@@ -255,18 +257,46 @@ void Report(const char* who, int code) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// 2026-10-25（雷电 x86_64+Houdini 实测）：壳的「静默退出」在本机走的是 **libc `_exit(0)`
+// 导出**（真机上走内联 exit_group(94)，已由 seccomp 拦）。判据＝**调用者模块**
+// （dladdr(返回地址) 命中 libsecret.so）；命中则只结束该线程、进程存活 —— 与 SIGSYS
+// 处理器完全同一语义。非壳调用（游戏自身/框架）照常退出，不改变正常退出行为。
+static bool CallerIsSecShell(void* lr) {
+    if (!lr) return false;
+    Dl_info di;
+    memset(&di, 0, sizeof(di));
+    if (!dladdr(lr, &di) || !di.dli_fname) return false;
+    return strstr(di.dli_fname, "libsecret.so") != nullptr;
+}
+
+// 返回 true 表示「已拦截并结束了当前线程」（本函数不返回）。
+static bool BlockShellExit(const char* what, int code, void* lr) {
+    if (!CallerIsSecShell(lr)) return false;
+    char name[32];
+    ThreadName(name, sizeof(name));
+    LOGW(YEXIT_LOG "壳调用 %s(%d) → 拦截：只结束该线程 tid=%d(%s)，进程存活",
+         what, code, gettid(), name);
+    syscall(__NR_exit, 0);   // 只结束当前线程（与 SIGSYS 处理器同语义）
+    while (true) usleep(1000000);
+    return true;
+}
+
 void H_exit(int code) {
     Report("exit", code);
+    BlockShellExit("exit", code, __builtin_return_address(0));
     if (o_exit) o_exit(code);
 }
 
 void H_uexit(int code) {
     Report("_exit", code);
+    BlockShellExit("_exit", code, __builtin_return_address(0));
     if (o_uexit) o_uexit(code);
 }
 
 void H_Exit(int code) {
     Report("_Exit", code);
+    BlockShellExit("_Exit", code, __builtin_return_address(0));
     if (o_Exit) o_Exit(code);
 }
 
@@ -331,12 +361,66 @@ void H_jniKillProcess(JNIEnv* env, jclass cls, jint pid) {
     if (o_jniKillProcess) o_jniKillProcess(env, cls, pid);
 }
 
+// ---------------------------------------------------------------------------
+// 2026-10-25（雷电/LDPlayer x86_64 + Houdini 实测，SIGSEGV @ JNI_OnLoad+780）：
+// Dobby（arm64 版）只能安全改 **AArch64** 机器码。模拟器把游戏的 arm64 库放在
+// houdini 翻译层（0x4000_xxxx_xxxx 段），但 libandroid_runtime.so 这类系统库仍是
+// **原生 x86_64**；对它 DobbyHook ⇒ DobbyCodePatch 在 mmap 副本上踩飞。
+// 判据＝目标地址所属模块的 ELF e_machine（运行时判据，不写死机型/模拟器名单）；
+// 判不出来（不在任何 guest 模块内）一律跳过，宁可不挂这条诊断钩子。
+struct Arm64Probe {
+    const void* p;
+    int machine;
+};
+static int Arm64ProbeCb(struct dl_phdr_info* info, size_t, void* data) {
+    Arm64Probe* c = static_cast<Arm64Probe*>(data);
+    const uintptr_t a = reinterpret_cast<uintptr_t>(c->p);
+    for (int i = 0; i < info->dlpi_phnum; ++i) {
+        const ElfW(Phdr)* ph = &info->dlpi_phdr[i];
+        if (ph->p_type != PT_LOAD) continue;
+        const uintptr_t s = static_cast<uintptr_t>(info->dlpi_addr) + ph->p_vaddr;
+        const uintptr_t e = s + ph->p_memsz;
+        if (a >= s && a < e) {
+            if (info->dlpi_addr == 0) {   // 主可执行体：Android 上必为 AArch64，读头无意义
+                c->machine = EM_AARCH64;
+            } else {
+                const ElfW(Ehdr)* eh =
+                    reinterpret_cast<const ElfW(Ehdr)*>(static_cast<uintptr_t>(info->dlpi_addr));
+                c->machine = eh->e_machine;
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+static int TargetMachine(const void* p) {
+    if (!p) return 0;
+    Arm64Probe c{p, 0};
+    dl_iterate_phdr(Arm64ProbeCb, &c);
+    return c.machine;
+}
+static bool IsArm64PatchTarget(const void* p) { return TargetMachine(p) == EM_AARCH64; }
+
 template <typename Fn>
 bool Hook(const char* lib, const char* sym, void* fn, Fn* orig, const char* label) {
-    void* p = DobbySymbolResolver(lib, sym);
+    // 2026-10-25 实测（雷电 x86_64+Houdini）：DobbySymbolResolver 会 mmap/解析目标库的
+    // ELF；对 libandroid_runtime.so 这种**宿主原生 x86_64** 库解析越界 ⇒ SIGSEGV
+    // （SEGV_MAPERR，JNI_OnLoad+780，且 p 都还没拿到）。dlsym 走 linker 的符号表，
+    // 不做 ELF 段解析，宿主导入的 JNI 函数也能取到；取不到就当「符号未找到」跳过。
+    void* p = dlsym(RTLD_DEFAULT, sym);
     if (!p) {
-        LOGW(YEXIT_LOG "符号未找到 %s!%s", lib, sym);
+        LOGW(YEXIT_LOG "符号未找到(dlsym) %s!%s", lib, sym);
         return false;
+    }
+    {
+        // 诊断：记录每个目标的 ELF e_machine（183=EM_AARCH64；0=不在任何 guest 模块内）
+        int m = TargetMachine(p);
+        LOGI(YEXIT_LOG "probe %s (%s:%s) @%p machine=%d", label, lib, sym, p, m);
+        if (m != EM_AARCH64) {
+            LOGW(YEXIT_LOG "跳过非 arm64 目标 %s (%s:%s @%p) —— houdini/x86 主机上改原生库必崩",
+                 label, lib, sym, p);
+            return false;
+        }
     }
     if (DobbyHook(p, fn, reinterpret_cast<void**>(orig)) != 0) {
         LOGW(YEXIT_LOG "hook 失败 %s", label);

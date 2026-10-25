@@ -70,17 +70,20 @@ std::atomic<uintptr_t> g_dirtyWord{0};
 std::atomic<uintptr_t> g_failedWord{0};
 std::atomic<uintptr_t> g_checkedWord{0};
 
-// 扫描 /proc/self/maps，返回 libsecret.so 的主镜像基址。
-// 选 file offset == 0 且**跨度最大**的那条映射：加固壳在 APKSecure 私有命名空间下
-// 可能留下一个 dlopen 兜底副本，其映射比主镜像小，用最大跨度可稳定拿到主镜像。
-uintptr_t FindSecLibBase() {
+
+// 收集 libsecret.so 的**全部** offset==0 映射基址（升序，guest 镜像优先）。
+// 为什么需要多个：雷电是 x86_64 + Houdini，壳库既能以 guest(ARM64) 镜像出现在
+// 0x40xx_xxxx_xxxx 段，也会被宿主 x86_64 加载器以大地址映射一份（实测 0x7252_…）。
+// 旧实现只取「跨度最大」单条，实测会抽中宿主那份：ARM64 指令解码拿到乱码 ⇒
+// 状态字反推失败 ⇒ 看门狗退出 ⇒ 壳自检 dirty=1 ⇒ AppInfo.parameters NPE 闪退。
+// 现在把候选全收上来，由 WatchThread 逐个验证（验证通过才写）。
+int CollectSecLibBases(uintptr_t *out, int max) {
     FILE *fp = fopen("/proc/self/maps", "r");
     if (!fp) {
         return 0;
     }
     char line[512];
-    uintptr_t best_base = 0;
-    uintptr_t best_span = 0;
+    int n = 0;
     while (fgets(line, sizeof(line), fp)) {
         if (!strstr(line, kSecLib)) {
             continue;
@@ -92,14 +95,30 @@ uintptr_t FindSecLibBase() {
         if (off != 0 || end <= start) {
             continue;
         }
-        const uintptr_t span = static_cast<uintptr_t>(end - start);
-        if (span > best_span) {
-            best_span = span;
-            best_base = static_cast<uintptr_t>(start);
+        const uintptr_t b = static_cast<uintptr_t>(start);
+        bool dup = false;
+        for (int i = 0; i < n; ++i) {
+            if (out[i] == b) {
+                dup = true;
+                break;
+            }
         }
+        if (dup || n >= max) {
+            continue;
+        }
+        out[n++] = b;
     }
     fclose(fp);
-    return best_base;
+    for (int i = 1; i < n; ++i) {  // 升序：guest 0x40xx… 排在宿主 0x7xxx… 之前
+        const uintptr_t v = out[i];
+        int j = i - 1;
+        while (j >= 0 && out[j] > v) {
+            out[j + 1] = out[j];
+            --j;
+        }
+        out[j + 1] = v;
+    }
+    return n;
 }
 
 // 地址是否落在带 w 权限的映射内（越界写会 SIGSEGV，必须先校验）。
@@ -218,34 +237,56 @@ uintptr_t ResolveStateWord(uintptr_t base, const char *symbol,
 }
 
 void *WatchThread(void *) {
-    uintptr_t base = 0;
-    for (int i = 0; i < 2000 && !base; ++i) {  // 最多等 ~2s
-        base = FindSecLibBase();
-        if (!base) {
-            usleep(10 * 1000);
-        }
-    }
-    if (!base) {
-        YSXZ_SEC_LOGW("libsecret.so not found; watchdog idle");
-        return nullptr;
-    }
-    YSXZ_SEC_LOGI("libsecret.so base=%p", reinterpret_cast<void *>(base));
-
-    uintptr_t dirty = 0, failed = 0, checked = 0;
+    // 解析状态字：**边等边验**，直到两个访问器能从同一份镜像反推出可写状态字。
+    // 为什么不能拿到第一个 base 就收工：雷电上 libsecret.so 会先以【宿主 x86_64 映射】
+    // 出现（0x7xxx…，ARM64 指令解不出来），guest(ARM64) 主镜像稍后才挂上（0x40xx…）。
+    // 实测 21:38/21:41 两次都抽中宿主那份 ⇒ 反推失败 ⇒ 看门狗退出 ⇒ 壳自检 dirty=1
+    // ⇒ AppInfo.parameters NPE 闪退；而 21:09 那次刚好先看到 guest 镜像就正常。
+    // 所以改成每 20ms 重扫一次、重验一次，最多 ~4s（壳首轮自检在 413~483ms）。
+    uintptr_t dirty = 0, failed = 0, checked = 0, base = 0;
     const char *dirty_tag = "?";
     const char *failed_tag = "?";
-    const uintptr_t is_dirty_fn = ResolveStateWord(
-            base, "SecShell_IsDirty", kIsDirtyCandidates,
-            sizeof(kIsDirtyCandidates) / sizeof(kIsDirtyCandidates[0]), &dirty, &dirty_tag);
-    const uintptr_t failed_fn = ResolveStateWord(
-            base, "SecShell_FailedMask", kFailedMaskCandidates,
-            sizeof(kFailedMaskCandidates) / sizeof(kFailedMaskCandidates[0]), &failed, &failed_tag);
-    if (is_dirty_fn == 0 || failed_fn == 0) {
-        // 拿不到可信状态字就什么都不写（凭旧 RVA 硬写会打到无关内存，比不净化更危险）。
-        YSXZ_SEC_LOGE("state word resolve failed (isDirty=%d failedMask=%d); watchdog abort",
-                      is_dirty_fn != 0, failed_fn != 0);
+    int seen = 0;
+    for (int round = 0; round < 200 && base == 0; ++round) {
+        uintptr_t bases[8] = {0};
+        const int nb = CollectSecLibBases(bases, 8);
+        if (nb > seen) {
+            seen = nb;
+            YSXZ_SEC_LOGI("libsecret.so candidates=%d first=%p (round=%d)",
+                          nb, reinterpret_cast<void *>(bases[0]), round);
+        }
+        for (int bi = 0; bi < nb && base == 0; ++bi) {
+            uintptr_t d = 0, f = 0;
+            const char *dt = "?";
+            const char *ft = "?";
+            const uintptr_t dfn = ResolveStateWord(
+                    bases[bi], "SecShell_IsDirty", kIsDirtyCandidates,
+                    sizeof(kIsDirtyCandidates) / sizeof(kIsDirtyCandidates[0]), &d, &dt);
+            const uintptr_t ffn = ResolveStateWord(
+                    bases[bi], "SecShell_FailedMask", kFailedMaskCandidates,
+                    sizeof(kFailedMaskCandidates) / sizeof(kFailedMaskCandidates[0]), &f, &ft);
+            if (dfn != 0 && ffn != 0 && AddrIsWritable(d) && AddrIsWritable(f)) {
+                base = bases[bi];
+                dirty = d;
+                failed = f;
+                dirty_tag = dt;
+                failed_tag = ft;
+                break;
+            }
+            if (round == 0 || round % 50 == 49) {   // 有界日志：首轮 + 每 1s 一次
+                YSXZ_SEC_LOGW("candidate base=%p rejected (isDirty=%d failedMask=%d, round=%d)",
+                               reinterpret_cast<void *>(bases[bi]), dfn != 0, ffn != 0, round);
+            }
+        }
+        if (base == 0) {
+            usleep(20 * 1000);
+        }
+    }
+    if (base == 0) {
+        YSXZ_SEC_LOGE("state word resolve failed after ~4s (candidates=%d); watchdog abort", seen);
         return nullptr;
     }
+    YSXZ_SEC_LOGI("libsecret.so base=%p (candidates=%d)", reinterpret_cast<void *>(base), seen);
     checked = base + kCheckedRvaFallback;
     YSXZ_SEC_LOGI("state words dirty=%p(tag=%s) failed=%p(tag=%s) checked=%p",
                   reinterpret_cast<void *>(dirty), dirty_tag,

@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import json
+import os
 import struct
 import sys
 import zlib
@@ -84,11 +85,21 @@ def main() -> int:
     if not files:
         raise SystemExit(f"no encrypted js under {IN_ROOT}")
     records = []
+    errors = []
     for src in files:
         dst = OUT_ROOT / src.relative_to(IN_ROOT)
-        records.append(decrypt_file(src, dst))
+        try:
+            records.append(decrypt_file(src, dst))
+        except Exception as exc:  # noqa: BLE001
+            # 2026-10-25：热更里存在极个别不走 XXTEA 主格式的小 js（如 assets/mcAtlas/index.js
+            # 313B，*ze* 头但载荷非标准块）。TOLERANT=1 时记录失败并继续，不阻断指纹比对；
+            # 默认仍严格失败，避免把「解密器坏了」当成「个别文件特殊」放过去。
+            if os.environ.get("TOLERANT") != "1":
+                raise
+            errors.append({"src": str(src), "error": str(exc)})
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     summary = {
+        "errors": errors,
         "in_root": str(IN_ROOT),
         "out_root": str(OUT_ROOT),
         "key_full": KEY.decode(),

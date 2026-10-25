@@ -52,6 +52,12 @@ SCAN_BLOCK = '''    function scan(exp) {
         for (var k in exp) {
             var V;
             try { V = exp[k]; } catch (e) { continue; }
+            /* 2026-10-25：cocos bundle 常见 exports.default = 类 / 命名空间对象，旧扫描只认
+             * typeof === "function"，整包被静默跳过（1.1.9.1 自动战斗所在导出就是这种形态
+             * ⇒ auto=NO）。这里拆一层 default 再判函数。 */
+            if (typeof V !== "function") {
+                try { if (V && typeof V["default"] === "function") V = V["default"]; } catch (e2) {}
+            }
             if (typeof V !== "function") continue;
             try { tryLogic(V); } catch (e) { log("tryLogic ERR: " + e); }
             try { tryEntity(V); } catch (e) { log("tryEntity ERR: " + e); }
@@ -140,8 +146,18 @@ NEW_SEC7_HEAD = '''    /* ---------- 7. 模拟器路线: 无 REG 可用, 改从 
     }
     log("boot(exports): " + nmod + "/" + idList.length + " 个模块拿到源码, toString " +
         (nmod > 0 ? "OK" : "UNAVAILABLE — 自愈无法工作"));
-    for (id in srcs) harvestA(srcs[id]);
-    for (id in srcs) harvestB(srcs[id]);
+    /* 2026-10-25：短名只在**战斗包**里采（含伤害公式三指纹的模块）。全局采会被 game/main
+       包的同名形态抢走 ⇒ isMine() 判反 ⇒ 伤害倍率/秒杀/无敌/无限技能全部静默失效。 */
+    var harvestIds = [];
+    for (id in srcs) {
+        var _hs = srcs[id];
+        if (_hs.indexOf("maxApDefRate") >= 0 && _hs.indexOf("baseCritDamage") >= 0 &&
+            _hs.indexOf("atkEntity") >= 0) harvestIds.push(id);
+    }
+    if (!harvestIds.length) { for (id in srcs) harvestIds.push(id); }
+    for (var _hi = 0; _hi < harvestIds.length; _hi++) harvestA(srcs[harvestIds[_hi]]);
+    for (var _hj = 0; _hj < harvestIds.length; _hj++) harvestB(srcs[harvestIds[_hj]]);
+    log("harvest scope: " + harvestIds.join(","));
     /* ---- 1.1.4.0 离线兜底: exports 反推的源码里缺 A1 片段时 harvestA 抓不到 hx/isPlayer ----
        (离线 _t_harvest_1140.py 实测: $KC @75430 case "isPlayer": return t.hy.bmN;
         其它锚点: hE.blx / bnR.fF.ddQ / hp=bhd / world=hj)

@@ -50,14 +50,51 @@ fi
 SO_MD5_BEFORE="$(md5 -q "$SO" 2>/dev/null || echo none)"
 T0="$(mktemp)"; touch "$T0"
 BUILD_RC=0
-"$NDK/ndk-build" -C "$JNI" \
-  NDK_PROJECT_PATH="../.." \
-  APP_BUILD_SCRIPT="./Android_ysxz.mk" \
-  NDK_APPLICATION_MK="./Application.mk" \
-  NDK_OUT="$OBJ" \
-  NDK_LIBS_OUT="$OUT_LIBS" \
-  -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 8)" || BUILD_RC=$?
-NEW_O="$(find "$OBJ" -name '*.o' -newer "$T0" 2>/dev/null | head -1)"
+JOBS="$(sysctl -n hw.ncpu 2>/dev/null || echo 8)"
+
+# ---- Windows(Git Bash) 分支（2026-10-25）------------------------------------------------
+# NDK 在 Windows 上给 make 发的是 cmd 批处理命令（rem/del/copy/md/move），MSYS 的
+# /usr/bin/sh 不认 ⇒ 必须走 ndk-build.cmd（cmd.exe 驱动）。另：本仓 jni 路径含中文
+# （mod菜单/），clang/make 对非 ASCII 路径不稳，先 stage 到 ASCII 目录再编。
+_YSXZ_IS_WIN=0
+case "$(uname -s 2>/dev/null || echo unknown)" in
+  MINGW*|MSYS*|CYGWIN*) _YSXZ_IS_WIN=1 ;;
+esac
+if [[ "$_YSXZ_IS_WIN" == "1" ]]; then
+  NDKC="$(cygpath -u "$NDK")/build/ndk-build.cmd"
+  [[ -f "$NDKC" ]] || { echo "ERROR: 缺 Windows ndk-build.cmd: $NDKC" >&2; exit 1; }
+  command -v rsync >/dev/null 2>&1 || { echo "ERROR: Windows 分支需要 rsync" >&2; exit 1; }
+  STAGE="${YSXZ_WIN_STAGE:-/c/ysxz_build_stage}"
+  rm -rf "$STAGE/jni" "$STAGE/obj" "$STAGE/libs"
+  mkdir -p "$STAGE"
+  rsync -a "$JNI/" "$STAGE/jni/"
+  W_JNI="$(cygpath -w "$STAGE/jni")"
+  W_PROJ="$(cygpath -w "$STAGE")"
+  W_OBJ="$(cygpath -w "$STAGE/obj")"
+  W_LIBS="$(cygpath -w "$STAGE/libs")"
+  echo "[build_so] win 分支: stage=$STAGE"
+  ( cd "$STAGE/jni" && cmd //c "$(cygpath -w "$NDKC")" -C "$W_JNI" \
+      NDK_PROJECT_PATH="$W_PROJ" \
+      APP_BUILD_SCRIPT="./Android_ysxz.mk" \
+      NDK_APPLICATION_MK="./Application.mk" \
+      NDK_OUT="$W_OBJ" \
+      NDK_LIBS_OUT="$W_LIBS" \
+      -j"$JOBS" ) || BUILD_RC=$?
+  if [[ $BUILD_RC -eq 0 && -f "$STAGE/libs/arm64-v8a/libstarry_magic.so" ]]; then
+    mkdir -p "$OUT_LIBS/arm64-v8a"
+    cp -f "$STAGE/libs/arm64-v8a/libstarry_magic.so" "$SO"
+    NEW_O="$(find "$STAGE/obj" -name '*.o' 2>/dev/null | head -1)"
+  fi
+else
+  "$NDK/ndk-build" -C "$JNI" \
+    NDK_PROJECT_PATH="../.." \
+    APP_BUILD_SCRIPT="./Android_ysxz.mk" \
+    NDK_APPLICATION_MK="./Application.mk" \
+    NDK_OUT="$OBJ" \
+    NDK_LIBS_OUT="$OUT_LIBS" \
+    -j"$JOBS" || BUILD_RC=$?
+  NEW_O="$(find "$OBJ" -name '*.o' -newer "$T0" 2>/dev/null | head -1)"
+fi
 rm -f "$T0"
 [[ $BUILD_RC -eq 0 ]] || { echo "ERROR: ndk-build rc=$BUILD_RC" >&2; exit 1; }
 [[ -f "$SO" ]] || { echo "ERROR: build produced no $SO" >&2; exit 1; }

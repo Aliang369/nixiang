@@ -111,18 +111,60 @@ function MOD_boot(REG) {
         if (typeof v === "number" && v >= 0) return v;
         return 1;                 /* 降级: 本作阵营 1 = 我方(gF() 取 camp!=1 当敌人) */
     }
-    function isMine(ent) {
-        if (!ent || !N.hD || !N.camp) return false;
+    /* 2026-10-25（雷电 1.1.9.1 实机取证）：采集到的 camp=blx 在阵营对象上**不存在** ——
+     * 实机 sideKeys=[blW,blX,blY,constructor,lT,lU]，真名是 blW ⇒ isMine 恒 false ⇒
+     * 伤害倍率/秒杀/无敌/无限技能四项静默全灭（dmg hit pending=none、无敌不挡）。
+     * 改成「候选键 + 类型校验」：按顺序取第一个**在真实对象上是数字**的键。 */
+    function campOf(ent) {
+        if (!ent || !N.hD) return null;
         var h = ent[N.hD];
-        if (!h) return false;
-        var c = h[N.camp];
-        if (typeof c !== "number" || c < 0) return false;
+        if (!h) return null;
+        var cands = [N.camp, "blW", "blX", "blY"];
+        for (var i = 0; i < cands.length; i++) {
+            var k = cands[i];
+            if (!k) continue;
+            var v = h[k];
+            if (typeof v === "number") return v;
+        }
+        return null;
+    }
+    function campProbe(ent) {
+        var out = [];
+        try {
+            var h = ent && N.hD ? ent[N.hD] : null;
+            var cands = [N.camp, "blW", "blX", "blY"];
+            for (var i = 0; i < cands.length; i++) {
+                var k = cands[i];
+                if (h && k) out.push(k + "=" + (typeof h[k]) + ":" + h[k]);
+            }
+        } catch (e) {}
+        return out.join(" ");
+    }
+    function isMine(ent) {
+        var c = campOf(ent);
+        if (c === null || c < 0) return false;
         return c === myCamp(ent);
     }
     function isMyHero(ent) {
         if (!isMine(ent) || !N.hx) return false;
         var x = ent[N.hx];
-        return !!(x && x[N.isPlayer]);
+        if (!x) return false;
+        /* 2026-10-25（1.1.9.1）：采集名 bmN 未必等于英雄信息对象上的真名（实机同 camp 那次
+         * 就采错过 blx）。改成候选键 + **严格真值**校验：只认 true/1，避免把别的布尔当命中。 */
+        var cands = [N.isPlayer, "bmN", "bnm", "isPlayer"];
+        for (var i = 0; i < cands.length; i++) {
+            var k = cands[i];
+            if (!k) continue;
+            var v = x[k];
+            if (v === true || v === 1) return true;
+        }
+        if (!N.dbgHero) {
+            N.dbgHero = 1;
+            var hk = [];
+            try { for (var kk in x) hk.push(kk + ":" + (typeof x[kk])); } catch (e0) {}
+            log("hero probe: sideKeys=[" + hk.join(",") + "] tried=" + cands.join("/"));
+        }
+        return false;
     }
     /* 时间缩放组件: 靠明文字段 hTimeScale 认, 认到后缓存槽名 */
     function tsComp(ent) {
@@ -177,6 +219,19 @@ function MOD_boot(REG) {
         K[fv] = function (ctx, hit, ratio, canCrit) {
             var d = oFV.apply(this, arguments);
             try {
+                if (N.dbgFv === undefined) N.dbgFv = 0;
+                if (N.dbgFv < 3 && hit) {
+                    N.dbgFv++;
+                    var _ak = [], _sk = [];
+                    try { for (var _k in hit.atkEntity) _ak.push(_k); } catch (e1) {}
+                    try { var _h = hit.atkEntity && hit.atkEntity[N.hD]; for (var _k2 in _h) _sk.push(_k2); } catch (e2) {}
+                    log("formula call #" + N.dbgFv + " d=" + d +
+                        " mineAtk=" + isMine(hit.atkEntity) + " mineTgt=" + isMine(hit.target) +
+                        " hD=" + N.hD + " camp=" + N.camp + " ctx=" + N.teams + "/" + N.teamCamp +
+                        " atkKeys=[" + _ak.join(",") + "]" +
+                        " sideKeys=[" + _sk.join(",") + "]" +
+                        " campVals[" + campProbe(hit.atkEntity) + "]");
+                }
                 if (hit && d > 0 && isMine(hit.atkEntity) && !isMine(hit.target)) {
                 // 咽喉 = 唯一伤害数值公式(指纹: 明文 maxApDefRate + baseCritDamage)。
                 // 在公式里放大而不是在扣血口放大, 飘字/结算数值才会同步。
@@ -277,7 +332,17 @@ function MOD_boot(REG) {
         // 死亡例程内部直接把当前HP写 0, 绕过扣血口。
         // 指纹 = 明文 hitDirType + "把HP字段置0"
         var gj = null;
-        if (N.hp) {
+        /* 2026-10-25（1.1.9.1 实测）：名字发现会串类 —— 本轮 N.hp 落到 bhd，而死亡例程里真正
+         * 被清 0 的字段是同一实体的 e.hw.bhC，于是旧「单名匹配」直接落空（无敌少一条挂点）。
+         * 改成结构判据：函数体同时含明文 hitDirType 且把某个短字段置 0（实测唯一命中 HQ：
+         *   e.hw.bhC = 0; e.hF.blj = 1; ... hitDirType: 0 ...），旧名匹配保留作兜底。 */
+        gj = findFn(K, function (s) {
+            if (s.indexOf("hitDirType") < 0) return false;
+            /* 必须打在**属性组件**上：死亡例程实测形态 e.hw.bhC = 0。
+             * 只写 /\.\w+ = 0;/ 会先命中击退例程 FX（1.1.9.1 实测误挂 FX）。 */
+            return /\.hw\.[A-Za-z_$][\w$]{1,4}\s*=\s*0\s*;/.test(s);
+        });
+        if (!gj && N.hp) {
             var reHp = new RegExp("\\.\\s*" + N.hp + "\\s*=\\s*0\\s*;");
             gj = findFn(K, function (s) { return s.indexOf("hitDirType") >= 0 && reHp.test(s); });
         }
@@ -436,9 +501,36 @@ function MOD_boot(REG) {
         if (s0) { srcs[id] = s0; nmod++; }
     }
     log("boot: " + nmod + " modules, toString " + (nmod > 0 ? "OK" : "UNAVAILABLE — 自愈无法工作"));
-    for (id in srcs) harvestA(srcs[id]);
-    for (id in srcs) harvestB(srcs[id]);
+    /* 2026-10-25（1.1.9.1 实测）：短名必须**在战斗包里采**。全局采集会被 game/main 包里
+     * 同名形态抢走（本轮实测采到 hx=hy.bmN / camp=hE.blx / ctx=bnR.../hp=bhd，而战斗包真名是
+     * hy.bnm / hE.blW / boq.../bhC）⇒ isMine() 判反 ⇒ 伤害倍率/秒杀/无敌/无限技能全部静默失效
+     * （dmg hit pending=none 就是这个）。这里只从含「伤害公式三指纹」的模块采集，采不到再回退全局。 */
+    var harvestIds = [];
+    for (id in srcs) {
+        var _hs = srcs[id];
+        if (_hs.indexOf("maxApDefRate") >= 0 && _hs.indexOf("baseCritDamage") >= 0 &&
+            _hs.indexOf("atkEntity") >= 0) harvestIds.push(id);
+    }
+    if (!harvestIds.length) { for (id in srcs) harvestIds.push(id); }
+    for (var _hi = 0; _hi < harvestIds.length; _hi++) harvestA(srcs[harvestIds[_hi]]);
+    for (var _hj = 0; _hj < harvestIds.length; _hj++) harvestB(srcs[harvestIds[_hj]]);
+    log("harvest scope: " + harvestIds.join(","));
     MOD_boot.names = N;                /* 排查用: 控制台看 MOD_boot.names */
+    /* 2026-10-25（1.1.9.1）：自动战斗的解锁判定是 buff 查询 bZF(BuffTableEnum.AUTO_BATTLE)，
+     * 枚举值运行时不一定能遍历到（实测 findEnum 失败）。这里直接从**模块源码文本**抠数字：
+     * 打包产物里枚举表是字面量 AUTO_BATTLE: <n>，一次 regex 即可，不写死数字。 */
+    if (N.autoBattleEnum === undefined) {
+        for (id in srcs) {
+            var _mm = /AUTO_BATTLE\s*[:=]\s*(\d+)/.exec(srcs[id]);
+            if (_mm) { N.autoBattleEnum = Number(_mm[1]); break; }
+        }
+        for (id in srcs) {
+            var _mf = /MONTH_CARD_OPEN\s*[:=]\s*(\d+)/.exec(srcs[id]);
+            if (_mf) { N.monthCardEnum = Number(_mf[1]); break; }
+        }
+        log("auto-battle enum from src: " + (N.autoBattleEnum === undefined ? "NOT FOUND" : N.autoBattleEnum) +
+            " monthCardOpen=" + (N.monthCardEnum === undefined ? "NOT FOUND" : N.monthCardEnum));
+    }
     log("names: hx=" + N.hx + "." + N.isPlayer + "  camp=" + N.hD + "." + N.camp +
         "  ctx=" + N.ctxKey + "/" + N.teams + "/" + N.teamCamp + "  hp=" + N.hp + "  world=" + N.world);
 
@@ -447,6 +539,12 @@ function MOD_boot(REG) {
         for (var k in exp) {
             var V;
             try { V = exp[k]; } catch (e) { continue; }
+            /* 2026-10-25：cocos bundle 常见 exports.default = 类 / 命名空间对象，旧扫描只认
+             * typeof === "function"，整包被静默跳过（1.1.9.1 自动战斗所在导出就是这种形态
+             * ⇒ auto=NO）。这里拆一层 default 再判函数。 */
+            if (typeof V !== "function") {
+                try { if (V && typeof V["default"] === "function") V = V["default"]; } catch (e2) {}
+            }
             if (typeof V !== "function") continue;
             try { tryLogic(V); } catch (e) { log("tryLogic ERR: " + e); }
             try { tryEntity(V); } catch (e) { log("tryEntity ERR: " + e); }

@@ -19,24 +19,57 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 
+# 2026-10-25 win：build-tools 目录/可执行名随平台变（mac 是 zipalign，win 是 zipalign.exe），
+# 且 SDK 根在 ANDROID_HOME。这里按「先 ANDROID_HOME，再 mac 老路径」逐个探测，取最高版本。
 BT=""
-for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
-    BT="$HOME/Library/Android/sdk/build-tools/$v"; break
-  fi
-done
+ZA=""
+APKS=""
+_pick_bt() {
+  for cand in "$1"; do
+    [ -d "$cand" ] || continue
+    # 用 -f 而不是 -x：MSYS 的 test -x 会把 "zipalign" 当 "zipalign.exe" 解析成真，
+    # 而 apksigner.bat 又不是可执行位，混用会一半命中一半落空（2026-10-25 实测）。
+    if [ -f "$cand/zipalign.exe" ]; then ZA="$cand/zipalign.exe";
+    elif [ -f "$cand/zipalign" ]; then ZA="$cand/zipalign";
+    else continue; fi
+    if [ -f "$cand/apksigner.bat" ]; then APKS="$cand/apksigner.bat";
+    elif [ -f "$cand/apksigner" ]; then APKS="$cand/apksigner";
+    elif [ -f "$cand/apksigner.jar" ]; then APKS="$cand/apksigner.jar";
+    else ZA=""; continue; fi
+    BT="$cand"
+    return 0
+  done
+  return 1
+}
+if [ -n "${ANDROID_HOME:-}${ANDROID_SDK_ROOT:-}" ]; then
+  for v in 36.1.0 36.0.0 35.0.0 34.0.0; do
+    _pick_bt "${ANDROID_HOME:-$ANDROID_SDK_ROOT}/build-tools/$v" && break
+  done
+fi
+if [ -z "$BT" ]; then
+  for v in 36.0.0 35.0.0 34.0.0; do
+    _pick_bt "$HOME/Library/Android/sdk/build-tools/$v" && break
+  done
+fi
 
 WORK="$(mktemp -d /tmp/ysxz_sign.XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 ALIGNED="$WORK/aligned.apk"
 
+# 分发：.bat/.exe 直接执行；只有 jar 时用 java -jar
+_apksign() {
+  case "$APKS" in
+    *.jar) java -jar "$APKS" "$@" ;;
+    *)     "$APKS" "$@" ;;
+  esac
+}
 if [[ -n "$BT" ]]; then
-  "$BT/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
-  "$BT/apksigner" sign \
+  "$ZA" -f -p 4 "$UNSIGNED" "$ALIGNED"
+  _apksign sign \
     --ks "$KS" --ks-key-alias "$KS_ALIAS" \
     --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
     --out "$SIGNED" "$ALIGNED"
-  "$BT/apksigner" verify --print-certs "$SIGNED" 2>&1 | sed -n '1,6p' || true
+  _apksign verify --print-certs "$SIGNED" 2>&1 | sed -n '1,6p' || true
 fi
 
 if [[ ! -f "$SIGNED" ]]; then
@@ -50,7 +83,7 @@ fi
 
 [[ -f "$SIGNED" ]] || { echo "ERROR: sign failed" >&2; exit 1; }
 if [[ -n "$BT" ]]; then
-  "$BT/apksigner" verify "$SIGNED" >/dev/null || { echo "ERROR: apksigner verify failed" >&2; exit 1; }
+  _apksign verify "$SIGNED" >/dev/null || { echo "ERROR: apksigner verify failed" >&2; exit 1; }
 fi
 
 unzip -l "$SIGNED" > "$WORK/entries.txt"

@@ -10,6 +10,10 @@ ADB_BIN="${ADB_BIN:-adb}"
 PKG="${PKG:-com.fightingstars.games.warrior}"
 APK="${APK:-$NIXIANG_ROOT/08_output/勇士之心/勇士之心_${VERSION:-1.0.4}_surgical-releaseSigned.apk}"
 REMOTE_APK="/data/local/tmp/ysxz_starry_signed.apk"
+# 2026-10-25 win：Git Bash/MSYS 会把 /data/local/tmp/... 当成「本地绝对路径」改写成
+# C:/Program Files/Git/data/...，adb push 因此写到一个不存在的位置。这里只对远端路径
+# 关掉参数转换；不能全局设 MSYS_NO_PATHCONV=1（会把 /e/nixiang/... 原样丢给 python.exe）。
+export MSYS2_ARG_CONV_EXCL='/data/local/tmp'
 
 [[ "${ALLOW_UNINSTALL:-0}" == "1" ]] || {
   echo "错误: 未设置 ALLOW_UNINSTALL=1，拒绝执行卸载安装" >&2
@@ -22,6 +26,13 @@ SERIAL="${SERIAL:-$(tr -d '[:space:]' < "$STATE_FILE")}"
 [[ -n "$SERIAL" ]] || { echo "错误: serial 为空" >&2; exit 1; }
 command -v "$ADB_BIN" >/dev/null || { echo "错误: adb 不可用" >&2; exit 1; }
 "$ADB_BIN" -s "$SERIAL" get-state >/dev/null
+
+# 2026-10-25 win：设备侧 `pm install /data/local/tmp/*.apk` 在雷电/LDPlayer 上会
+# INSTALL_FAILED_MEDIA_UNAVAILABLE（Failed to restorecon）。改用宿主侧 `adb install`
+# 走 streamed session，两端行为一致，也不再依赖 /data/local/tmp 的 SELinux 标签。
+_do_install() {
+  "$ADB_BIN" -s "$SERIAL" install -r -d --user 0 "$1"
+}
 
 LOCAL_MD5="$(md5 -q "$APK")"
 echo "authorized_uninstall=1"
@@ -71,18 +82,18 @@ echo "==> push 星光包"
 
 if "$ADB_BIN" -s "$SERIAL" shell pm path "$PKG" >/dev/null 2>&1; then
   echo "==> 先尝试同签名覆盖安装（保留当前应用数据）"
-  if ! "$ADB_BIN" -s "$SERIAL" shell pm install -r -d --user 0 "$REMOTE_APK"; then
+  if ! _do_install "$APK"; then
     [[ "${ALLOW_UNINSTALL:-0}" == "1" ]] || {
       echo "错误: 覆盖安装失败且未授权卸载" >&2
       exit 1
     }
     echo "==> 覆盖失败，按已授权卸载后重装"
     "$ADB_BIN" -s "$SERIAL" shell pm uninstall --user 0 "$PKG"
-    "$ADB_BIN" -s "$SERIAL" shell pm install -r -d --user 0 "$REMOTE_APK"
+    _do_install "$APK"
   fi
 else
   echo "==> 未检测到已安装包，直接安装"
-  "$ADB_BIN" -s "$SERIAL" shell pm install -r -d --user 0 "$REMOTE_APK"
+  _do_install "$APK"
 fi
 "$ADB_BIN" -s "$SERIAL" shell rm -f "$REMOTE_APK" >/dev/null 2>&1 || true
 
