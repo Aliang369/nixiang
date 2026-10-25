@@ -376,6 +376,23 @@ static bool NameHas(const char* got, const char* needle) {
 static std::mutex g_installMutex;   // 保护「装钩全过程」，只在 SyncHooks 里取
 static std::mutex g_guardMutex;     // 只保护一次性「安装信号处理器」动作
 
+// ---- 4.1b r27 最小化二分开关（定义见 §④ 前部；此处只放读取，任何地方都能问） ----
+static int SafeMask() {
+    static int cached = -1;
+    if (cached >= 0) return cached;
+    char b[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.nhsy2_safemask", b);
+    /* ★r27 定案（真机二分，vc646）：**默认 4 = 关掉 ReProtectExecPages**。
+     *  bisect 结果：mask=28（守护线程开、reprotect 关）稳；mask=24（开 reprotect）⇒ 必进
+     *  themis 崩溃处理器无限递归风暴。即「每 500 ms 对 rwx 代码页做 mprotect(R-X)」这个小动作
+     *  在本版被判定为篡改。它是 r20 的辅助手段（防 themis 回改页权限），本版代价远大于收益 ⇒ 默认关。 */
+    int v = (n > 0) ? atoi(b) : 4;
+    if (v < 0) v = 0;
+    if (v > 31) v = 31;
+    cached = v;
+    return cached;
+}
+
 // ---- 4.2 本线程故障态（thread_local：hook 体在多线程并发） ----
 static thread_local volatile sig_atomic_t   t_inGuard    = 0;
 static thread_local volatile sig_atomic_t   t_faultDepth = 0;
@@ -403,6 +420,41 @@ static struct sigaction g_oldIll;
 static std::atomic<bool> g_guardArmed{false};
 static bool g_lastFatal = false;   // 只在 g_installMutex 保护下读写
 
+// ---- 4.4a 未捕获崩溃现场采集（★r24 防闪退：兜底之外的「取证兜底」）----
+//  保护区内的故障会被就地吞掉（GuardedOr/FS_GUARDED）；但保护区**外**的故障（我们没预料到的
+//  野读、线程栈溢出、Dobby 迁移指令异常…）必须链给系统 ⇒ 进程仍会死。死了也要留下可归因的证据：
+//  处理器里只做「写定长环 + 一次 __android_log_print（纯整数，不 snprintf 任何字符串）」，绝不
+//  fopen/malloc/递归加锁 —— 那些在信号上下文里会二次崩。
+struct UncaughtFaultRec {
+    int      sig;
+    int      tid;
+    uintptr_t addr, pc, lr, sp;
+};
+static UncaughtFaultRec g_ucFaults[8];
+static std::atomic<uint32_t> g_ucFaultW{0};   // 写序号（>1 轮时环形覆盖）
+static std::atomic<uint32_t> g_ucFaultFlushed{0};
+
+static void RecordUncaughtFault(int sig, siginfo_t* si, void* uc) {
+    const uint32_t idx = g_ucFaultW.fetch_add(1, std::memory_order_acq_rel);
+    UncaughtFaultRec* r = &g_ucFaults[idx & 7u];
+    r->sig  = sig;
+    r->tid  = (int)syscall(__NR_gettid);
+    r->addr = si ? (uintptr_t)si->si_addr : 0;
+    if (uc) {
+        const ucontext_t* u = static_cast<const ucontext_t*>(uc);
+        r->pc = (uintptr_t)u->uc_mcontext.pc;
+        r->lr = (uintptr_t)u->uc_mcontext.regs[30];
+        r->sp = (uintptr_t)u->uc_mcontext.sp;
+    } else {
+        r->pc = r->lr = r->sp = 0;
+    }
+    // 唯一一次异步上下文日志：只打整数（走 Logger.h 的 LOGE 宏，底层同为 __android_log_print，
+    // 内部只写 socket、不做堆分配；用宏而不是裸调，是为了过 check_release_clean 的「裸日志」门禁）
+    LOGE(TPL_LOG " ★未捕获崩溃现场 sig=%d tid=%d addr=%p pc=%p lr=%p sp=%p"
+                 "（保护区外故障：已落环，随后按系统默认链继续）",
+         r->sig, r->tid, (void*)r->addr, (void*)r->pc, (void*)r->lr, (void*)r->sp);
+}
+
 // ---- 4.4 故障处理器 ----
 static void TplFaultHandler(int sig, siginfo_t* si, void* uc) {
     if (t_inGuard && t_jmpTop) {
@@ -426,6 +478,8 @@ static void TplFaultHandler(int sig, siginfo_t* si, void* uc) {
         }
         siglongjmp(*t_jmpTop, 1);   // 永不返回（跳到最内层仍然有效的保护区）
     }
+
+    RecordUncaughtFault(sig, si, uc);      // ★r24：保护区外 ⇒ 先取证，再照原样链给系统
 
     const struct sigaction* old = (sig == SIGSEGV) ? &g_oldSegv
                                : (sig == SIGBUS)  ? &g_oldBus
@@ -471,6 +525,39 @@ static void InstallFaultGuard() {
     g_guardArmed.store(true);
     LOGI(TPL_LOG " fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=%zu)",
          sizeof(t_altStack));
+}
+
+// ---- 4.6b 周期性抢回信号链头位（★r24 关键）----
+//  问题（真机 vc646 实测）：Android 的 sigaction 是**链式**的，后注册者排在链头。
+//  libthemis-v8 在我们之后才装载并注册它自己的 SIGSEGV 处理器 ⇒ 我们所有「故意造一次
+//  可恢复故障」的探针（SafeProbe/SelfProbe）都会先落到 themis 的处理器里，而它本版的
+//  处理器自己要 pthread_mutex_lock 一个失效的锁 ⇒ SEGV_ACCERR ⇒ 再进 sigchain ⇒
+//  **无限递归风暴**（实测 20 万~166 万帧，进程必死）。
+//  对策：守护线程每拍重装一次我们的处理器（只换 handler，不覆盖 g_old*），保持我们在链头；
+//  探针故障仍由我们 longjmp 收回，themis 根本看不到。
+static void RearmFaultGuard() {
+    if (!g_guardArmed.load()) return;
+    struct sigaction cur;
+    memset(&cur, 0, sizeof(cur));
+    if (sigaction(SIGSEGV, nullptr, &cur) != 0) return;
+    if (cur.sa_sigaction == TplFaultHandler) return;      // 已在链头，什么都不做
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = TplFaultHandler;
+    sa.sa_flags     = SA_SIGINFO | SA_ONSTACK | SA_NODEFER;
+    sigemptyset(&sa.sa_mask);
+    struct sigaction prev;
+    memset(&prev, 0, sizeof(prev));
+    if (sigaction(SIGSEGV, &sa, &prev) != 0) return;
+    sigaction(SIGBUS, &sa, nullptr);
+    sigaction(SIGILL, &sa, nullptr);
+    /* 注意：**不覆盖 g_oldSegv/g_oldBus/g_oldIll** —— 那三个是「首次安装时排在我们前面的
+     * 处理器」，是我们的链式回退目标。这里只是把自己挪回链头，捕获到的 prev 仅用于日志。 */
+    static std::atomic<int> rn{0};
+    const int k = rn.fetch_add(1) + 1;
+    if (k <= 8)
+        LOGW(TPL_LOG " fault guard 抢回链头 #%d：被顶掉的是 %p（探针故障不再落到它们手里）",
+             k, (void*)prev.sa_sigaction);
 }
 
 // ---- 4.7 保护区包装器 ----
@@ -639,6 +726,53 @@ static void LogGuardFault(const char* tag) {
             (okvar)   = false;                                               \
         }                                                                    \
     } while (0)
+
+// ---- 4.9b 调 orig 的「带回退值」包装（★r24 防闪退兜底）----
+//  §④ 骨架的 FS_GUARDED 只覆盖了 r11–r16 出过事的几处（伤害/Killable 链）；
+//  其余 40+ 个 hook 体仍是裸调 orig：一旦游戏原函数在我们这一跳里崩（我们改过实参、
+//  或该机型对象形态不同），t_inGuard==0 ⇒ 信号直接链给 ART ⇒ **进程闪退**。
+//  这里把「调 orig」统一收口成 6 行模板：正常返回原值，崩了则记一行定位日志并回退到
+//  调用方给的**安全默认值**（比例键 0/false/nullptr），进程继续跑。
+//  代价：每次多一次 sigsetjmp（arm64 ~10–20 ns），只在被挂钩的方法上付出。
+template <typename R, typename F>
+static R GuardedOr(const char* tag, R defv, F&& body) {
+    ArmFaultGuardForThread();
+    t_faultDepth = 0;
+    sigjmp_buf  buf;
+    sigjmp_buf* prev = t_jmpTop;
+    t_jmpTop = &buf;
+    if (sigsetjmp(buf, 1) == 0) {
+        t_inGuard = 1;
+        R v = body();
+        t_inGuard = 0;
+        t_jmpTop  = prev;
+        return v;
+    }
+    t_inGuard = 0;
+    t_jmpTop  = prev;
+    LogGuardFault(tag);
+    return defv;
+}
+
+template <typename F>
+static bool GuardedVoid(const char* tag, F&& body) {
+    ArmFaultGuardForThread();
+    t_faultDepth = 0;
+    sigjmp_buf  buf;
+    sigjmp_buf* prev = t_jmpTop;
+    t_jmpTop = &buf;
+    if (sigsetjmp(buf, 1) == 0) {
+        t_inGuard = 1;
+        body();
+        t_inGuard = 0;
+        t_jmpTop  = prev;
+        return true;
+    }
+    t_inGuard = 0;
+    t_jmpTop  = prev;
+    LogGuardFault(tag);
+    return false;
+}
 
 
 // ---- 4.8 槽位熔断 ----
@@ -911,7 +1045,50 @@ static MapRange* MapsSnapshot(int* outN) {
 
 // 把 4 字节写进代码页（临时放开 RWX，写完立刻收回 RX）
 static int SvcMprotect(void* addr, size_t len, int prot);   // ★r20 前置声明（定义见 §⑦.6e）
+/* ★r24：绕开 mprotect 的代码页写入通道（`/proc/self/mem` + FOLL_FORCE）。
+ *  动机（真机实测 2026-10-25）：vc646 上「任何 mprotect(RWX)+写代码页」都会在 ~10 s 内
+ *  触发 themis 的反篡改（exit_group / 崩溃风暴），而 r20 已证「同值写也触发 ⇒ 不是内容校验」。
+ *  内核给 /proc/self/mem 的写走 FOLL_FORCE，**不改页表权限、不调用 mprotect** ⇒ 是一个
+ *  与 r20 实验过的动作面（libc mprotect / 裸 svc mprotect / soft-dirty 清理）都不重叠的新通道。
+ *  prop `debug.starry.nhsy2_patchmem`：1（默认）= 优先走它；0 = 老路径（mprotect）。 */
+static bool MemWriteU32ViaProcSelf(const char* tag, void* target, uint32_t value) {
+    static std::atomic<int> g_fd{-2};
+    int fd = g_fd.load(std::memory_order_relaxed);
+    if (fd == -2) {
+        fd = open("/proc/self/mem", O_RDWR | O_CLOEXEC);
+        g_fd.store(fd, std::memory_order_relaxed);
+    }
+    if (fd < 0) return false;
+    const ssize_t n = pwrite(fd, &value, sizeof(value),
+                             static_cast<off_t>(reinterpret_cast<uintptr_t>(target)));
+    if (n != static_cast<ssize_t>(sizeof(value))) {
+        static std::atomic<int> once{0};
+        if (once.fetch_add(1) < 3)
+            LOGW(TPL_LOG " %s /proc/self/mem 写入失败 n=%zd errno=%d @%p（退回 mprotect 路径）",
+                 tag, n, errno, target);
+        return false;
+    }
+    __builtin___clear_cache(reinterpret_cast<char*>(target),
+                            reinterpret_cast<char*>(target) + sizeof(value));
+    return true;
+}
+
+static int PatchMemMode() {
+    static int cached = -1;
+    if (cached >= 0) return cached;
+    char b[PROP_VALUE_MAX] = {0};
+    const int n = __system_property_get("debug.starry.nhsy2_patchmem", b);
+    cached = (n > 0) ? atoi(b) : 1;
+    return cached;
+}
+
 static bool CodePatchU32(const char* tag, void* target, uint32_t value) {
+    if (PatchMemMode() == 1 && MemWriteU32ViaProcSelf(tag, target, value)) {
+        static std::atomic<int> once{0};
+        if (once.fetch_add(1) < 4)
+            LOGI(TPL_LOG " %s 代码页写入走 /proc/self/mem（未调用 mprotect）@%p", tag, target);
+        return true;
+    }
     long ps = sysconf(_SC_PAGESIZE);
     if (ps <= 0) ps = 4096;
     const uintptr_t page = reinterpret_cast<uintptr_t>(target) & ~static_cast<uintptr_t>(ps - 1);
@@ -1794,7 +1971,7 @@ static inline bool GateCrystal() { return g_crystal.load(); }
 
 // get_Coin / get_MaxCoin / get_Key / get_CurrentSpriteCrystalCount / get_GitterCoin
 static int32_t Hooked_GetCoin(void* thiz, void* method) {
-    const int32_t r = g_origGetCoin ? g_origGetCoin(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_Coin", 0, [&]{ return g_origGetCoin ? g_origGetCoin(thiz, method) : 0; });
     if (!GateCoin()) return r;
     const uint32_t n = g_hitCoin.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " coin probe #%u real=%d -> %d", n, r, kInfiniteAmount);
@@ -1802,13 +1979,13 @@ static int32_t Hooked_GetCoin(void* thiz, void* method) {
 }
 
 static int32_t Hooked_GetMaxCoin(void* thiz, void* method) {
-    const int32_t r = g_origGetMaxCoin ? g_origGetMaxCoin(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_MaxCoin", 0, [&]{ return g_origGetMaxCoin ? g_origGetMaxCoin(thiz, method) : 0; });
     if (!GateCoin()) return r;
     return r > kInfiniteAmount ? r : kInfiniteAmount;
 }
 
 static int32_t Hooked_GetKey(void* thiz, void* method) {
-    const int32_t r = g_origGetKey ? g_origGetKey(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_Key", 0, [&]{ return g_origGetKey ? g_origGetKey(thiz, method) : 0; });
     if (!GateKey()) return r;
     const uint32_t n = g_hitKey.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " key probe #%u real=%d -> %d", n, r, kInfiniteAmount);
@@ -1816,7 +1993,7 @@ static int32_t Hooked_GetKey(void* thiz, void* method) {
 }
 
 static int32_t Hooked_GetCrystal(void* thiz, void* method) {
-    const int32_t r = g_origGetCrystal ? g_origGetCrystal(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_Crystal", 0, [&]{ return g_origGetCrystal ? g_origGetCrystal(thiz, method) : 0; });
     if (!GateCrystal()) return r;
     const uint32_t n = g_hitCrystal.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " crystal probe #%u real=%d -> %d（展示值路径：实测 0 次调用＝死路径）",
@@ -1826,7 +2003,7 @@ static int32_t Hooked_GetCrystal(void* thiz, void* method) {
 
 // ── r8b 全屏攻击：射程读点＝透传 + 记实例（不在这一层伪造返回值，见上方注释）──
 static void* Hooked_GetProjectileRange(void* thiz, void* method) {
-    void* stat = g_origProjRange ? g_origProjRange(thiz, method) : nullptr;
+    void* stat = GuardedOr<void*>("orig.GetProjectileRange", nullptr, [&]{ return g_origProjRange ? g_origProjRange(thiz, method) : nullptr; });
     const uint32_t n = g_hitRange.fetch_add(1, std::memory_order_relaxed) + 1;
     if (!OkPtr(stat)) {
         if (n <= 12) LOGW(TPL_LOG " fullscreen range probe #%u stat=NULL（未取到射程 stat 实例）", n);
@@ -1842,7 +2019,7 @@ static void* Hooked_GetProjectileRange(void* thiz, void* method) {
 
 // 只读探针：DamageSize（与射程同类的 stat 对象，本轮只留证据，不动它）
 static void* Hooked_GetDamageSize(void* thiz, void* method) {
-    void* stat = g_origDamageSize ? g_origDamageSize(thiz, method) : nullptr;
+    void* stat = GuardedOr<void*>("orig.GetDamageSize", nullptr, [&]{ return g_origDamageSize ? g_origDamageSize(thiz, method) : nullptr; });
     const uint32_t n = g_hitDamageSize.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 12) {
         LOGI(TPL_LOG " fullscreen damagesize probe #%u stat=%p（只读探针）", n, stat);
@@ -1854,7 +2031,7 @@ static void* Hooked_GetDamageSize(void* thiz, void* method) {
 //  只有 `thiz` 是射程那一个 Stat 实例时才抬到 99999；不写字段、不碰缓存 ⇒
 //  游戏自身的 Refresh / Dirty / 事件逻辑完全不受影响，最坏情况只是「没命中、不生效」。
 static float Hooked_StatValue(void* thiz, void* method) {
-    const float r = g_origStatValue ? g_origStatValue(thiz, method) : 0.0f;
+    const float r = GuardedOr<float>("orig.Stat.get_Value", 0.0f, [&]{ return g_origStatValue ? g_origStatValue(thiz, method) : 0.0f; });
     if (!g_full.load(std::memory_order_relaxed)) return r;
     if (!thiz || thiz != g_projRangeStat.load(std::memory_order_relaxed)) return r;
     const uint32_t n = g_hitRangeForce.fetch_add(1, std::memory_order_relaxed) + 1;
@@ -1885,7 +2062,7 @@ static void CrystalSpriteRefund(void* spriteMgr, const char* why, uint32_t n) {
 }
 
 static int32_t Hooked_GetCrystalSpriteCount(void* thiz, void* method) {
-    const int32_t r = g_origGetCrystalSpriteCount ? g_origGetCrystalSpriteCount(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.GetCrystalSpriteCount", 0, [&]{ return g_origGetCrystalSpriteCount ? g_origGetCrystalSpriteCount(thiz, method) : 0; });
     const bool on = GateCrystal();
     const uint32_t n = g_hitCrystalCount.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 10) {
@@ -1910,7 +2087,7 @@ static int32_t Hooked_GetCrystalSpriteCount(void* thiz, void* method) {
 //  （AddCrystalSprite，作者意图内的 API，不写任何字段内存），再重试一次原调用；
 //  成功后退款 ⇒ 数量只增不减。关闸时完全原样转发。
 static int32_t Hooked_UseCrystalSprite(void* thiz, intptr_t idx, void* method) {
-    const int32_t r = g_origUseCrystalSprite ? g_origUseCrystalSprite(thiz, idx, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.UseCrystalSprite", 0, [&]{ return g_origUseCrystalSprite ? g_origUseCrystalSprite(thiz, idx, method) : 0; });
     const bool on = GateCrystal();
     const uint32_t n = g_hitUseCrystal.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 10) {
@@ -1920,7 +2097,7 @@ static int32_t Hooked_UseCrystalSprite(void* thiz, intptr_t idx, void* method) {
     if (!on) return r;
     if (r <= 0 && g_origUseCrystalSprite) {      // 余额不足/失败 ⇒ 无条件使用：补 1 再重试
         CrystalSpriteRefund(thiz, "无限水晶：余额不足，先补 1 再执行", n);
-        const int32_t r2 = g_origUseCrystalSprite(thiz, idx, method);
+        const int32_t r2 = GuardedOr<int32_t>("orig.UseCrystalSprite.retry", 0, [&]{ return g_origUseCrystalSprite ? g_origUseCrystalSprite(thiz, idx, method) : 0; });
         CrystalSpriteRefund(thiz, "无限水晶：重试成功后退款", n);
         if (n <= 10) {
             LOGI(TPL_LOG " crystal: 无条件使用 real=%d -> 重试=%d（不足即补）", r, r2);
@@ -1942,7 +2119,7 @@ static void Hooked_AddCrystalSprite(void* thiz, void* method) {
     if (n <= 10) {
         LOGI(TPL_LOG " crystal probe #%u SpriteManager.AddCrystalSprite（水晶被增加：通道活着）", n);
     }
-    if (g_origAddCrystalSprite) g_origAddCrystalSprite(thiz, method);
+    GuardedVoid("orig.AddCrystalSprite", [&]{ if (g_origAddCrystalSprite) g_origAddCrystalSprite(thiz, method); });
 }
 
 static bool Hooked_ConsumeSpriteAtk(void* thiz, intptr_t a, intptr_t b, void* method) {
@@ -2126,7 +2303,7 @@ static bool InstallCrystalCountImplHook() {
 }
 
 static int32_t Hooked_GetGitterCoin(void* thiz, void* method) {
-    const int32_t r = g_origGetGitter ? g_origGetGitter(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_GitterCoin", 0, [&]{ return g_origGetGitter ? g_origGetGitter(thiz, method) : 0; });
     // ★ 2026-10-11 五轮定稿（用户实测 #3「无限金币没开、金币不够也能买」）：
     //   闪光币 GitterCoin(GlitterCoin) 是**金币的变体**，旧版却挂在 GateCrystal 上
     //   ⇒ 只要「无限水晶」开着，闪光币余额就恒 9999 ⇒ 商店不花真金币也能买单。
@@ -2144,7 +2321,7 @@ static int32_t Hooked_GetGitterCoin(void* thiz, void* method) {
 //     且所有读该状态的消耗路径全免 —— 与「无限钥匙」(数量 9999 + CostType.Key 免费)
 //     是两条不同的通道 ⇒ 满足「一功能一开关 1:1」。
 static bool Hooked_HasInfiniteKey(void* thiz, void* method) {
-    const bool r = g_origHasInfKey ? g_origHasInfKey(thiz, method) : false;
+    const bool r = GuardedOr<bool>("orig.get_HasInfiniteKey", false, [&]{ return g_origHasInfKey ? g_origHasInfKey(thiz, method) : false; });
     if (!g_ckey.load()) return r;
     const uint32_t n = g_hitCKey.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 10) LOGI(TPL_LOG " colored-key probe #%u HasInfiniteKey real=%d -> 1", n, (int)r);
@@ -2153,7 +2330,7 @@ static bool Hooked_HasInfiniteKey(void* thiz, void* method) {
 
 // get_InfiniteKey -> >0（同一个 KeySuit 通道的计数面；HUD/门禁也可能读它）
 static int32_t Hooked_GetInfiniteKey(void* thiz, void* method) {
-    const int32_t r = g_origGetInfKey ? g_origGetInfKey(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_InfiniteKey", 0, [&]{ return g_origGetInfKey ? g_origGetInfKey(thiz, method) : 0; });
     if (!g_ckey.load()) return r;
     const uint32_t n = g_hitCKey.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 10) LOGI(TPL_LOG " colored-key probe #%u InfiniteKey real=%d -> %d", n, r, kInfiniteAmount);
@@ -2163,7 +2340,7 @@ static int32_t Hooked_GetInfiniteKey(void* thiz, void* method) {
 // ---- 6.4b 次要读取面：商店实际读 CoinValue / RealKey / KeyValue ----
 //  只 hook get_Coin 不够 —— HasEnough 走的是这几个「真实值」getter。
 static int32_t Hooked_GetCoinValue(void* thiz, void* method) {
-    const int32_t r = g_origGetCoinValue ? g_origGetCoinValue(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_CoinValue", 0, [&]{ return g_origGetCoinValue ? g_origGetCoinValue(thiz, method) : 0; });
     if (!GateCoin()) return r;
     const uint32_t n = g_hitCoin.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " coinValue probe #%u real=%d -> %d", n, r, kInfiniteAmount);
@@ -2171,7 +2348,7 @@ static int32_t Hooked_GetCoinValue(void* thiz, void* method) {
 }
 
 static int32_t Hooked_GetRealKey(void* thiz, void* method) {
-    const int32_t r = g_origGetRealKey ? g_origGetRealKey(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_RealKey", 0, [&]{ return g_origGetRealKey ? g_origGetRealKey(thiz, method) : 0; });
     if (!GateKey()) return r;
     const uint32_t n = g_hitKey.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " realKey probe #%u real=%d -> %d", n, r, kInfiniteAmount);
@@ -2179,7 +2356,7 @@ static int32_t Hooked_GetRealKey(void* thiz, void* method) {
 }
 
 static int32_t Hooked_GetKeyValue(void* thiz, void* method) {
-    const int32_t r = g_origGetKeyValue ? g_origGetKeyValue(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_KeyValue", 0, [&]{ return g_origGetKeyValue ? g_origGetKeyValue(thiz, method) : 0; });
     if (!GateKey()) return r;
     return kInfiniteAmount;
 }
@@ -2190,7 +2367,8 @@ static int32_t Hooked_GetKeyValue(void* thiz, void* method) {
 //  故意**不调用 orig**，因此形参类型无关（用 intptr_t 原样透传寄存器）。
 static bool Hooked_ConsumeCoinRaw(void* thiz, intptr_t a, intptr_t b, void* method) {
     (void)thiz; (void)b; (void)method;
-    if (!GateCoin()) return g_origConsumeCoin ? g_origConsumeCoin(thiz, a, b, method) : false;
+    if (!GateCoin()) return GuardedOr<bool>("orig.ConsumeCoin", false,
+        [&]{ return g_origConsumeCoin ? g_origConsumeCoin(thiz, a, b, method) : false; });
     const uint32_t n = g_hitCoin.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " consumeCoinRaw probe #%u amount=%ld -> no-op", n, (long)a);
     return true;
@@ -2198,7 +2376,8 @@ static bool Hooked_ConsumeCoinRaw(void* thiz, intptr_t a, intptr_t b, void* meth
 
 static bool Hooked_ConsumeKeyRaw(void* thiz, intptr_t a, intptr_t b, void* method) {
     (void)thiz; (void)b; (void)method;
-    if (!GateKey()) return g_origConsumeKey ? g_origConsumeKey(thiz, a, b, method) : false;
+    if (!GateKey()) return GuardedOr<bool>("orig.ConsumeKey", false,
+        [&]{ return g_origConsumeKey ? g_origConsumeKey(thiz, a, b, method) : false; });
     const uint32_t n = g_hitKey.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " consumeKeyRaw probe #%u amount=%ld -> no-op", n, (long)a);
     return true;
@@ -2280,14 +2459,14 @@ static void ResProbeCost(const char* who, int32_t ct) {
 
 // ①-a 「我有多少」
 static int32_t Hooked_GetAmountRaw(void* thiz, int32_t ct, intptr_t p2, void* method) {
-    const int32_t r = g_origGetAmountRaw ? g_origGetAmountRaw(thiz, ct, p2, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.GetAmountRaw", 0, [&]{ return g_origGetAmountRaw ? g_origGetAmountRaw(thiz, ct, p2, method) : 0; });
     ResProbeCost("GetAmountRaw", ct);
     if (!ResGateOn(ct)) return r;
     return r > kInfiniteAmount ? r : kInfiniteAmount;
 }
 
 static int32_t Hooked_GetAmount(void* thiz, int32_t ct, intptr_t p2, void* method) {
-    const int32_t r = g_origGetAmount ? g_origGetAmount(thiz, ct, p2, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.GetAmount", 0, [&]{ return g_origGetAmount ? g_origGetAmount(thiz, ct, p2, method) : 0; });
     ResProbeCost("GetAmount", ct);
     if (!ResGateOn(ct)) return r;
     return r > kInfiniteAmount ? r : kInfiniteAmount;
@@ -2297,20 +2476,23 @@ static int32_t Hooked_GetAmount(void* thiz, int32_t ct, intptr_t p2, void* metho
 static bool Hooked_HasEnough(void* thiz, int32_t ct, intptr_t amount, intptr_t flag, void* method) {
     ResProbeCost("HasEnough", ct);
     if (ResGateOn(ct)) return true;
-    return g_origHasEnough ? g_origHasEnough(thiz, ct, amount, flag, method) : false;
+    return GuardedOr<bool>("orig.HasEnough", false,
+        [&]{ return g_origHasEnough ? g_origHasEnough(thiz, ct, amount, flag, method) : false; });
 }
 
 static bool Hooked_HasEnoughRaw(void* thiz, int32_t ct, intptr_t amount, intptr_t flag, void* method) {
     ResProbeCost("HasEnoughRaw", ct);
     if (ResGateOn(ct)) return true;
-    return g_origHasEnoughRaw ? g_origHasEnoughRaw(thiz, ct, amount, flag, method) : false;
+    return GuardedOr<bool>("orig.HasEnoughRaw", false,
+        [&]{ return g_origHasEnoughRaw ? g_origHasEnoughRaw(thiz, ct, amount, flag, method) : false; });
 }
 
 // 重载二：HasEnoughRaw(CostType, Single) —— 浮点实参在 s0
 static bool Hooked_HasEnoughRawFloat(void* thiz, int32_t ct, float amountRoundUp, void* method) {
     ResProbeCost("HasEnoughRaw(f)", ct);
     if (ResGateOn(ct)) return true;
-    return g_origHasEnoughRawF ? g_origHasEnoughRawF(thiz, ct, amountRoundUp, method) : false;
+    return GuardedOr<bool>("orig.HasEnoughRawFloat", false,
+        [&]{ return g_origHasEnoughRawF ? g_origHasEnoughRawF(thiz, ct, amountRoundUp, method) : false; });
 }
 
 // ③-a 「消费执行体」：恒成功、不实扣（关闸时原样转发）
@@ -2318,7 +2500,8 @@ static bool Hooked_ConsumeRaw4(void* thiz, int32_t ct, int32_t amount, int32_t r
                                bool silent, void* method) {
     ResProbeCost("ConsumeRaw", ct);
     if (ResGateOn(ct)) return true;
-    return g_origConsumeRaw4 ? g_origConsumeRaw4(thiz, ct, amount, reported, silent, method) : false;
+    return GuardedOr<bool>("orig.ConsumeRaw4", false,
+        [&]{ return g_origConsumeRaw4 ? g_origConsumeRaw4(thiz, ct, amount, reported, silent, method) : false; });
 }
 
 // ③-b §21.1 数据优先：SetResource(costType, amount) 是资源的唯一写入点。
@@ -2339,7 +2522,7 @@ static void Hooked_SetResource(void* thiz, int32_t ct, int32_t amount, void* met
 static void Hooked_UseCoinByCovert(void* thiz, int32_t amount, void* method) {
     ResProbeCost("UseCoinByCovert", g_ctCoin.load());
     if (g_coin.load()) return;
-    if (g_origUseCoinByCovert) g_origUseCoinByCovert(thiz, amount, method);
+    GuardedVoid("orig.UseCoinByCovert", [&]{ if (g_origUseCoinByCovert) g_origUseCoinByCovert(thiz, amount, method); });
 }
 
 // ============================================================================
@@ -2421,7 +2604,7 @@ static void Hooked_ConsumeRawInternal(void* thiz, void* key, int32_t amount, voi
              n, lower, amount, ch, (int)ResChannelOn(ch));
     }
     if (ResChannelOn(ch)) return;                   // 该资源开关开 ⇒ 只记账不扣
-    if (g_origConsumeRawInternal) g_origConsumeRawInternal(thiz, key, amount, method);
+    GuardedVoid("orig.ConsumeRawInternal", [&]{ if (g_origConsumeRawInternal) g_origConsumeRawInternal(thiz, key, amount, method); });
 }
 
 // static IsCostTypeSupported(CostType) -> Boolean（「该成本类型在本局是否可用」）
@@ -2429,7 +2612,7 @@ typedef bool (*IsCostTypeSupported_t)(int32_t ct, void* method);
 static IsCostTypeSupported_t g_origIsCostTypeSupported = nullptr;
 
 static bool Hooked_IsCostTypeSupported(int32_t ct, void* method) {
-    const bool r = g_origIsCostTypeSupported ? g_origIsCostTypeSupported(ct, method) : false;
+    const bool r = GuardedOr<bool>("orig.IsCostTypeSupported", false, [&]{ return g_origIsCostTypeSupported ? g_origIsCostTypeSupported(ct, method) : false; });
     ResProbeCost("IsCostTypeSupported", ct);
     if (ResGateOn(ct)) return true;
     return r;
@@ -2466,7 +2649,7 @@ static inline bool UnlockCostTypeLike(intptr_t p1, int32_t* outCt) {
 
 // CanUnlock(CostType, Int32) -> Boolean：开门判定
 static bool Hooked_CanUnlock(void* thiz, intptr_t p1, intptr_t p2, void* method) {
-    const bool r = g_origCanUnlock ? g_origCanUnlock(thiz, p1, p2, method) : false;
+    const bool r = GuardedOr<bool>("orig.CanUnlock", false, [&]{ return g_origCanUnlock ? g_origCanUnlock(thiz, p1, p2, method) : false; });
     int32_t ct = -1;
     const bool like = UnlockCostTypeLike(p1, &ct);
     if (like) ResProbeCost("CanUnlock", ct);
@@ -2486,7 +2669,7 @@ static bool Hooked_CanUnlock(void* thiz, intptr_t p1, intptr_t p2, void* method)
 
 // CanFreeUnlock(CostType) -> Boolean：免费开门判定
 static bool Hooked_CanFreeUnlock(void* thiz, intptr_t p1, void* method) {
-    const bool r = g_origCanFreeUnlock ? g_origCanFreeUnlock(thiz, p1, method) : false;
+    const bool r = GuardedOr<bool>("orig.CanFreeUnlock", false, [&]{ return g_origCanFreeUnlock ? g_origCanFreeUnlock(thiz, p1, method) : false; });
     int32_t ct = -1;
     const bool like = UnlockCostTypeLike(p1, &ct);
     if (like) ResProbeCost("CanFreeUnlock", ct);
@@ -2515,7 +2698,7 @@ static void Hooked_UnlockCosts(void* thiz, intptr_t p1, intptr_t p2, intptr_t p3
         if (n <= 16) LOGI(TPL_LOG " unlock gate #%u UnlockCosts ct=%d 已抑制（无限资源：不扣）", n, ct);
         return;                                          // 不调原函数 ⇒ 不扣资源
     }
-    if (g_origUnlockCosts) g_origUnlockCosts(thiz, p1, p2, p3, method);
+    GuardedVoid("orig.UnlockCosts", [&]{ if (g_origUnlockCosts) g_origUnlockCosts(thiz, p1, p2, p3, method); });
 }
 
 // ---- 商店交易闸 ----
@@ -2545,7 +2728,7 @@ static bool (*g_origStoreCanBuy)(void* thiz, void* method) = nullptr;
 static bool (*g_origStoreIsFree)(void* thiz, void* method) = nullptr;
 
 static bool Hooked_StoreItemCanBuy(void* thiz, void* method) {
-    const bool r = g_origStoreCanBuy ? g_origStoreCanBuy(thiz, method) : false;
+    const bool r = GuardedOr<bool>("orig.StoreItem.CanBuy", false, [&]{ return g_origStoreCanBuy ? g_origStoreCanBuy(thiz, method) : false; });
     if (!ShopCoinGate(thiz)) return r;
     const uint32_t n = g_hitShop.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 12) {
@@ -2556,7 +2739,7 @@ static bool Hooked_StoreItemCanBuy(void* thiz, void* method) {
 }
 
 static bool Hooked_StoreItemIsFree(void* thiz, void* method) {
-    const bool r = g_origStoreIsFree ? g_origStoreIsFree(thiz, method) : false;
+    const bool r = GuardedOr<bool>("orig.StoreItem.IsFree", false, [&]{ return g_origStoreIsFree ? g_origStoreIsFree(thiz, method) : false; });
     if (!ShopCoinGate(thiz)) return r;
     const uint32_t n = g_hitShop.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 12) {
@@ -2573,7 +2756,7 @@ static bool Hooked_StoreItemIsFree(void* thiz, void* method) {
 //  的速度来源 —— 在这里单点乘算。Mover.get_FinalMaxSpeed() **只做探针不缩放**
 //  （两处同时缩放 ⇒ 速度平方，与伤害倍率同一个坑）。
 static float Hooked_GetMovementSpeed(void* thiz, void* method) {
-    const float r = g_origGetMovementSpeed ? g_origGetMovementSpeed(thiz, method) : 0.f;
+    const float r = GuardedOr<float>("orig.get_MovementSpeed", 0.f, [&]{ return g_origGetMovementSpeed ? g_origGetMovementSpeed(thiz, method) : 0.f; });
     const int mul = g_spdMul.load(std::memory_order_relaxed);
     if (mul <= 1) return r;   // 滑块值即开关（§③.1）：1 = 关
     const uint32_t n = g_hitSpd.fetch_add(1, std::memory_order_relaxed) + 1;
@@ -2583,7 +2766,7 @@ static float Hooked_GetMovementSpeed(void* thiz, void* method) {
 }
 
 static float Hooked_GetFinalMaxSpeed(void* thiz, void* method) {
-    const float r = g_origGetFinalMaxSpeed ? g_origGetFinalMaxSpeed(thiz, method) : 0.f;
+    const float r = GuardedOr<float>("orig.get_FinalMaxSpeed", 0.f, [&]{ return g_origGetFinalMaxSpeed ? g_origGetFinalMaxSpeed(thiz, method) : 0.f; });
     const uint32_t n = g_hitSpd.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 10) LOGI(TPL_LOG " spd probe #%u FinalMaxSpeed=%.3f (仅探针，不缩放)", n, r);
     return r;
@@ -2591,7 +2774,7 @@ static float Hooked_GetFinalMaxSpeed(void* thiz, void* method) {
 
 //  无限跳：跳数上限。Final 与基础两个 getter 都取「不小于 99」⇒ 整数上限不会成幂。
 static int32_t Hooked_GetFinalJumpLimit(void* thiz, void* method) {
-    const int32_t r = g_origGetFinalJumpLimit ? g_origGetFinalJumpLimit(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_FinalMultipleJumpCountLimit", 0, [&]{ return g_origGetFinalJumpLimit ? g_origGetFinalJumpLimit(thiz, method) : 0; });
     if (!g_jump.load()) return r;
     const uint32_t n = g_hitJump.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " jump probe #%u FinalMultipleJumpCountLimit %d -> 99", n, r);
@@ -2599,7 +2782,7 @@ static int32_t Hooked_GetFinalJumpLimit(void* thiz, void* method) {
 }
 
 static int32_t Hooked_GetJumpLimit(void* thiz, void* method) {
-    const int32_t r = g_origGetJumpLimit ? g_origGetJumpLimit(thiz, method) : 0;
+    const int32_t r = GuardedOr<int32_t>("orig.get_MultipleJumpCountLimit", 0, [&]{ return g_origGetJumpLimit ? g_origGetJumpLimit(thiz, method) : 0; });
     if (!g_jump.load()) return r;
     const uint32_t n = g_hitJump.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 5) LOGI(TPL_LOG " jump probe #%u MultipleJumpCountLimit %d -> 99", n, r);
@@ -2652,7 +2835,7 @@ static void StdDepthLeave() {
     static bool (*g_orig_##NAME)(void*) = nullptr;                           \
     static bool Hooked_##NAME(void* method) {                                \
         if (!StdDepthEnter(#NAME)) return true;                              \
-        const bool r = g_orig_##NAME ? g_orig_##NAME(method) : false;        \
+        const bool r = GuardedOr<bool>(#NAME, false, [&]{ return g_orig_##NAME ? g_orig_##NAME(method) : false; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2662,7 +2845,7 @@ static void StdDepthLeave() {
     static bool (*g_orig_##NAME)(intptr_t, void*) = nullptr;                 \
     static bool Hooked_##NAME(intptr_t a0, void* method) {                   \
         if (!StdDepthEnter(#NAME)) return true;                              \
-        const bool r = g_orig_##NAME ? g_orig_##NAME(a0, method) : false;    \
+        const bool r = GuardedOr<bool>(#NAME, false, [&]{ return g_orig_##NAME ? g_orig_##NAME(a0, method) : false; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2672,7 +2855,7 @@ static void StdDepthLeave() {
     static bool (*g_orig_##NAME)(intptr_t, intptr_t, void*) = nullptr;       \
     static bool Hooked_##NAME(intptr_t a0, intptr_t a1, void* method) {      \
         if (!StdDepthEnter(#NAME)) return true;                              \
-        const bool r = g_orig_##NAME ? g_orig_##NAME(a0, a1, method) : false;\
+        const bool r = GuardedOr<bool>(#NAME, false, [&]{ return g_orig_##NAME ? g_orig_##NAME(a0, a1, method) : false; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2682,7 +2865,7 @@ static void StdDepthLeave() {
     static bool (*g_orig_##NAME)(intptr_t, intptr_t, intptr_t, void*) = nullptr; \
     static bool Hooked_##NAME(intptr_t a0, intptr_t a1, intptr_t a2, void* method) { \
         if (!StdDepthEnter(#NAME)) return true;                              \
-        const bool r = g_orig_##NAME ? g_orig_##NAME(a0, a1, a2, method) : false;   \
+        const bool r = GuardedOr<bool>(#NAME, false, [&]{ return g_orig_##NAME ? g_orig_##NAME(a0, a1, a2, method) : false; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2692,7 +2875,7 @@ static void StdDepthLeave() {
     static int32_t (*g_orig_##NAME)(void*) = nullptr;                        \
     static int32_t Hooked_##NAME(void* method) {                             \
         if (!StdDepthEnter(#NAME)) return g_allowedEnum.load();              \
-        const int32_t r = g_orig_##NAME ? g_orig_##NAME(method) : 0;         \
+        const int32_t r = GuardedOr<int32_t>(#NAME, 0, [&]{ return g_orig_##NAME ? g_orig_##NAME(method) : 0; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2702,7 +2885,7 @@ static void StdDepthLeave() {
     static int32_t (*g_orig_##NAME)(intptr_t, void*) = nullptr;              \
     static int32_t Hooked_##NAME(intptr_t a0, void* method) {                \
         if (!StdDepthEnter(#NAME)) return g_allowedEnum.load();              \
-        const int32_t r = g_orig_##NAME ? g_orig_##NAME(a0, method) : 0;     \
+        const int32_t r = GuardedOr<int32_t>(#NAME, 0, [&]{ return g_orig_##NAME ? g_orig_##NAME(a0, method) : 0; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2712,7 +2895,7 @@ static void StdDepthLeave() {
     static int32_t (*g_orig_##NAME)(intptr_t, intptr_t, void*) = nullptr;    \
     static int32_t Hooked_##NAME(intptr_t a0, intptr_t a1, void* method) {   \
         if (!StdDepthEnter(#NAME)) return g_allowedEnum.load();              \
-        const int32_t r = g_orig_##NAME ? g_orig_##NAME(a0, a1, method) : 0; \
+        const int32_t r = GuardedOr<int32_t>(#NAME, 0, [&]{ return g_orig_##NAME ? g_orig_##NAME(a0, a1, method) : 0; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2722,7 +2905,7 @@ static void StdDepthLeave() {
     static int32_t (*g_orig_##NAME)(intptr_t, intptr_t, intptr_t, intptr_t, void*) = nullptr; \
     static int32_t Hooked_##NAME(intptr_t a0, intptr_t a1, intptr_t a2, intptr_t a3, void* method) { \
         if (!StdDepthEnter(#NAME)) return g_allowedEnum.load();              \
-        const int32_t r = g_orig_##NAME ? g_orig_##NAME(a0, a1, a2, a3, method) : 0; \
+        const int32_t r = GuardedOr<int32_t>(#NAME, 0, [&]{ return g_orig_##NAME ? g_orig_##NAME(a0, a1, a2, a3, method) : 0; }); \
         StdDepthLeave();                                                     \
         if (!g_std.load()) return r;                                         \
         g_hitStd.fetch_add(1, std::memory_order_relaxed);                    \
@@ -2814,7 +2997,7 @@ static void (*g_origLoginStartInteractive)(void*) = nullptr;
 static void Hooked_LoginStartInteractive(void* method) {
     g_loginInteractiveAtMs.store(NowMonoMs());
     LOGI(TPL_LOG " login: 交互登录开始（内嵌网页页，需用户手动输入，游戏侧预算约 35s）");
-    if (g_origLoginStartInteractive) g_origLoginStartInteractive(method);
+    GuardedVoid("orig.Login.StartInteractive", [&]{ if (g_origLoginStartInteractive) g_origLoginStartInteractive(method); });
 }
 
 // 6.5.2 LoginService::HandleLoginFailure(Int32 errorCode, String message) -> Void（实例 argc=2）
@@ -2842,7 +3025,7 @@ static void Hooked_LoginFailure(void* thiz, int32_t code, void* message, void* m
          code, static_cast<int>(g_loginAssist.load()), armed,
          armed ? (now - armed) : -1LL, static_cast<int>(recent), static_cast<int>(gapOk),
          used, static_cast<int>(NHSY2_LOGIN_GRACE_MAX));
-    if (g_origLoginFailure) g_origLoginFailure(thiz, code, message, method);
+    GuardedVoid("orig.Login.OnFailure", [&]{ if (g_origLoginFailure) g_origLoginFailure(thiz, code, message, method); });
 }
 
 // 6.5.3 LoginService::HandleLoginSuccess(LoginResult) -> Void（实例 argc=1）
@@ -2854,7 +3037,7 @@ static void Hooked_LoginSuccess(void* thiz, void* result, void* method) {
         LOGI(TPL_LOG " login assist: 登录成功 → 保命收工（累计兜住 %d 次超时，本次会话不再干预）",
              static_cast<int>(g_loginGraceUsed.load()));
     }
-    if (g_origLoginSuccess) g_origLoginSuccess(thiz, result, method);
+    GuardedVoid("orig.Login.OnSuccess", [&]{ if (g_origLoginSuccess) g_origLoginSuccess(thiz, result, method); });
 }
 
 // 6.5.3b 登录预算延长：窗口内的 Task.Delay(~30s) → 300s（治本，治的是「手速」而不是「弹框」）
@@ -2930,11 +3113,11 @@ static intptr_t ExtendLoginDelay(intptr_t v, const char* which) {
 
 static void* Hooked_TaskDelay1(intptr_t v, void* method) {
     if (g_loginAssist.load() && LoginAssistWindowOpen()) v = ExtendLoginDelay(v, "Task.Delay(argc=1)");
-    return g_origTaskDelay1 ? g_origTaskDelay1(v, method) : nullptr;
+    return GuardedOr<void*>("orig.Task.Delay1", nullptr, [&]{ return g_origTaskDelay1 ? g_origTaskDelay1(v, method) : nullptr; });
 }
 static void* Hooked_TaskDelay2(intptr_t v, void* ct, void* method) {
     if (g_loginAssist.load() && LoginAssistWindowOpen()) v = ExtendLoginDelay(v, "Task.Delay(argc=2)");
-    return g_origTaskDelay2 ? g_origTaskDelay2(v, ct, method) : nullptr;
+    return GuardedOr<void*>("orig.Task.Delay2", nullptr, [&]{ return g_origTaskDelay2 ? g_origTaskDelay2(v, ct, method) : nullptr; });
 }
 // r20（2026-10-15 底包 vc603）：原 `Hooked_CtsCancelAfter` 已摘除。它把实例方法的
 // `this` 当毫秒数交给 `ExtendLoginDelay`（量级闸必然判否 ⇒ 从来没延长过任何等待），
@@ -3259,7 +3442,7 @@ static void AttriForceIfCrystal(void* keyObj, double* value) {
 }
 
 static bool Hooked_AttriTryGetValue(void* thiz, void* key, double* outValue, void* method) {
-    const bool ok = g_origAttriTryGet ? g_origAttriTryGet(thiz, key, outValue, method) : false;
+    const bool ok = GuardedOr<bool>("orig.Attri.TryGetValue", false, [&]{ return g_origAttriTryGet ? g_origAttriTryGet(thiz, key, outValue, method) : false; });
     if (ok && outValue) {
         AttriProbeKey(key, *outValue);
         AttriForceIfFull(key, outValue);
@@ -3269,7 +3452,7 @@ static bool Hooked_AttriTryGetValue(void* thiz, void* key, double* outValue, voi
 }
 
 static double Hooked_AttriGet(void* thiz, void* key, void* method) {
-    double v = g_origAttriGet ? g_origAttriGet(thiz, key, method) : 0.0;
+    double v = GuardedOr<double>("orig.Attri.Get", 0.0, [&]{ return g_origAttriGet ? g_origAttriGet(thiz, key, method) : 0.0; });
     AttriProbeKey(key, v);
     AttriForceIfFull(key, &v);
     AttriForceIfCrystal(key, &v);
@@ -3277,7 +3460,7 @@ static double Hooked_AttriGet(void* thiz, void* key, void* method) {
 }
 
 static double Hooked_AttriGetItem(void* thiz, void* key, void* method) {
-    double v = g_origAttriGetItem ? g_origAttriGetItem(thiz, key, method) : 0.0;
+    double v = GuardedOr<double>("orig.Attri.GetItem", 0.0, [&]{ return g_origAttriGetItem ? g_origAttriGetItem(thiz, key, method) : 0.0; });
     AttriProbeKey(key, v);
     AttriForceIfFull(key, &v);
     AttriForceIfCrystal(key, &v);
@@ -3285,8 +3468,9 @@ static double Hooked_AttriGetItem(void* thiz, void* key, void* method) {
 }
 
 static double Hooked_AttriGetOrDefault(void* thiz, void* key, float defValue, void* method) {
-    double v = g_origAttriGetOrDef ? g_origAttriGetOrDef(thiz, key, defValue, method)
-                                   : static_cast<double>(defValue);
+    double v = GuardedOr<double>("orig.Attri.GetOrDefault", static_cast<double>(defValue),
+        [&]{ return g_origAttriGetOrDef ? g_origAttriGetOrDef(thiz, key, defValue, method)
+                                        : static_cast<double>(defValue); });
     AttriProbeKey(key, v);
     AttriForceIfFull(key, &v);
     AttriForceIfCrystal(key, &v);
@@ -3294,7 +3478,7 @@ static double Hooked_AttriGetOrDefault(void* thiz, void* key, float defValue, vo
 }
 
 static float Hooked_AttriF(void* thiz, void* key, void* method) {
-    const float v = g_origAttriF ? g_origAttriF(thiz, key, method) : 0.0f;
+    const float v = GuardedOr<float>("orig.Attri.GetFloat", 0.0f, [&]{ return g_origAttriF ? g_origAttriF(thiz, key, method) : 0.0f; });
     AttriProbeKey(key, static_cast<double>(v));
     double d = static_cast<double>(v);
     AttriForceIfFull(key, &d);
@@ -3846,11 +4030,28 @@ static std::atomic<int> g_tcRefused{0};              // ★r20b 已被拒绝出�
 static void FlushExitGuardRecords(const char* why);  // ★r20c 前置声明（定义见 §⑦.6h）
 static std::atomic<int> g_exitGuardMode{0};          // ★r20c exit_group 闸模式（0=不装/1=RET_LOG/2=RET_TRAP）
 
+/* ★r28：SyncHooks 的**节流单行摘要**（每 5 s 最多一行）。
+ *  为什么需要：本版日志量大（themis/Unity 刷屏 + logd 限流），关键节点行经常被挤掉，
+ *  只能靠「gate=… anyOn=… neutral=… api=…」这一行判定它卡在哪一步。 */
+static long long NowMonoMs();          // 定义在 §6.5
+static long long NowMonoMsFwd() { return NowMonoMs(); }
+static void SyncTrace(const char* why) {
+    static std::atomic<long long> lastMs{0};
+    const long long now = NowMonoMsFwd();
+    long long prev = lastMs.load(std::memory_order_relaxed);
+    if (now - prev < 5000) return;
+    if (!lastMs.compare_exchange_strong(prev, now, std::memory_order_relaxed)) return;
+    LOGI(TPL_LOG " sync@%s anyOn=%d passDone=%d installed=%d neutral=%d exitGuard=%d libReady=%d",
+         why, (int)AnyFeatureOn(), (int)g_installPassDone.load(), g_installedCount.load(),
+         (int)(g_watchdogFrozen.load() || g_exitGuardMode.load() >= 3),
+         g_exitGuardMode.load(), (int)g_libReady.load());
+}
+
 static void SyncHooks() {
     if (!g_libReady.load()) return;
-    if (!AnyFeatureOn()) return;                        // 全关：不装、也不卸载
+    if (!AnyFeatureOn()) { SyncTrace("anyOff"); return; }   // 全关：不装、也不卸载
     if (g_installPassDone.load()) return;               // 快路径：一次装钩已完成，不再重跑
-    if (!HookInstallTimeReached()) return;              // ★r20：推迟到启动后 N ms（Tick 每拍重试，不会漏装）
+    if (!HookInstallTimeReached()) { SyncTrace("delay"); return; }   // ★r20：推迟到启动后 N ms
 
     std::lock_guard<std::mutex> lk(g_installMutex);     // ★ 串行化，防并发双挂
     if (g_installPassDone.load()) return;               // double-check
@@ -3873,13 +4074,30 @@ static void SyncHooks() {
                 LOGW(TPL_LOG " 看门狗尚未中和（mode=%d 已拒绝=%d）⇒ 本轮暂缓装钩，稍后重试",
                      g_ntMode.load(), g_tcRefused.load());
             }
+            SyncTrace("neutralGate");
             return;
         }
     }
-    ResolveOffsetsAndEnums();                           // 只在首次装钩时解析一次
-    g_installedCount.store(InstallAllHooks());
+    // ★r24 防闪退：解析与装钩两步在**同一个函数帧内**纳入保护区。
+    //   之所以不把整个 SyncHooks 包起来：它持有 std::lock_guard，siglongjmp 会跳过 C++ 析构
+    //   ⇒ g_installMutex 永久上锁、Tick 线程死锁。包在这两步之内，锁的生命周期不受影响。
+    //   解析失败/装钩中崩 ⇒ **不置 pass-done**，下一拍重试（宁可不装，也不让进程陪葬）。
+    const bool okResolve = GuardedVoid("resolve.offsets", [&]{ ResolveOffsetsAndEnums(); });
+    if (!okResolve) {
+        static std::atomic<int> nr{0};
+        if (nr.fetch_add(1) < 10) LOGW(TPL_LOG " 偏移/枚举解析崩溃已拦下 ⇒ 本轮不装钩，稍后重试");
+        return;
+    }
+    int installed = 0;
+    const bool okInstall = GuardedOr<bool>("install.hooks", false, [&]{ installed = InstallAllHooks(); return true; });
+    g_installedCount.store(installed);
     ClearSoftDirty("after-install-hooks");               // ★r20 装钩后立刻清脏位
-    ReProtectExecPages("after-install-hooks");            // ★r20 并把 rwx 代码页改回 R-X
+    if (!(SafeMask() & 4)) ReProtectExecPages("after-install-hooks");   // ★r27：mask=4 时禁用（风暴根因）
+    if (!okInstall) {
+        static std::atomic<int> ni{0};
+        if (ni.fetch_add(1) < 10) LOGW(TPL_LOG " 装钩过程崩溃已拦下（已装 %d 槽）⇒ 不置 pass-done，稍后重试", installed);
+        return;
+    }
     g_installPassDone.store(true);
 }
 
@@ -4358,15 +4576,37 @@ static void ReProtectExecPages(const char* why) {
     const int k = g_reprotectRuns.fetch_add(1) + 1;
     if (k <= 8 || fixed) LOGW(TPL_LOG " reprotect #%d why=%s 发现 rwx=%d 已改=%d", k, why, seen, fixed);
 }
+static void FlushUncaughtFaultRecords();   // ★r24 前置声明（定义在 GuardThread 之后）
 static void* GuardThread(void*) {
     for (;;) {
         usleep(500 * 1000);
-        ReProtectExecPages("tick");
+        if (!(SafeMask() & 4)) ReProtectExecPages("tick");   // ★r27 二分：bit2=4 关闭
         FlushThreadRecords("tick");     // ★r20b：线程记账的**打印**放在这里（钩子体内禁止打日志）
         FlushExitGuardRecords("tick");  // ★r20c：exit_group 命中的模块解析与打印也在这里（信号处理器里禁止打日志）
+        FlushUncaughtFaultRecords();    // ★r24：保护区外崩溃现场的「模块+偏移」解析（信号处理器里不能 fopen maps）
+        RearmFaultGuard();              // ★r24：抢回 SIGSEGV/SIGBUS/SIGILL 链头（themis 后装载会顶掉我们）
     }
     return nullptr;
 }
+// ★r24：把未捕获崩溃现场解析成 `模块+0x偏移`（和静态反汇编/IG5 的 vaddr 可直接对齐）
+static void FlushUncaughtFaultRecords() {
+    uint32_t w = g_ucFaultW.load(std::memory_order_acquire);
+    uint32_t done = g_ucFaultFlushed.load(std::memory_order_relaxed);
+    if (w == done) return;
+    if (w - done > 8u) done = w - 8u;          // 环形覆盖：只保留最后 8 条
+    while (done != w) {
+        const UncaughtFaultRec* r = &g_ucFaults[done & 7u];
+        char pc[128], lr[128], sp[128];
+        ModOff(r->pc, pc, sizeof(pc));
+        ModOff(r->lr, lr, sizeof(lr));
+        ModOff(r->sp, sp, sizeof(sp));
+        LOGW(TPL_LOG " ★未捕获崩溃定位 #%u sig=%d tid=%d addr=%p pc=%s lr=%s sp=%s",
+             done, r->sig, r->tid, (void*)r->addr, pc, lr, sp);
+        ++done;
+    }
+    g_ucFaultFlushed.store(w, std::memory_order_release);
+}
+
 static void StartSoftDirtyCleaner() {   // 复用原入口：把「清脏位线程」升级成「页权限守护线程」
     static std::atomic<bool> once{false};
     if (once.exchange(true)) return;
@@ -4616,7 +4856,7 @@ static void InstallPthreadCreateGate() {
  *  裸 svc 在用户态**钩不到**（没有函数可挂），但在**内核边界**可以拦：seccomp 过滤器按 syscall 号命中，
  *    并用 `SECCOMP_FILTER_FLAG_TSYNC` **一次同步到全部现有线程**（此后新建线程自动继承）
  *    ⇒ 不需要知道凶手是哪个线程、也不需要它由谁创建，这正好补上 r20b「按线程找巡检者」失败的那一环。
- *  四档 prop `debug.starry.nhsy2_exitguard`（默认 0 = 不装，行为与之前完全一致）：
+ *  五档 prop `debug.starry.nhsy2_exitguard`（★r24 起默认 4 = RET_ERRNO(EPERM)，见函数内长注释）：
  *    1 = `SECCOMP_RET_LOG`：只记录。内核把 `syscall=94 … comm=` 写进 audit，而本机 **audit 确实进 logcat**
  *        （实测 `logcat -b events | grep -c audit` = 318，**记录里带 `ip=`**）⇒ 直接**点名凶手线程**（最安全，先跑这一档）。
  *    2 = `SECCOMP_RET_TRAP`：**就地中和**。内核给该线程发 SIGSYS，我在处理器里只做「记 PC + 把 x0 置 -EPERM」
@@ -4762,11 +5002,19 @@ static void InstallExitGroupGuard() {
     const int pn = __system_property_get("debug.starry.nhsy2_exitguard", buf);
     /* ★r20c 收官定案：**默认 3**（不再依赖 setprop）—— 10.15 底包反篡改靠裸 svc `exit_group` 退出，
      *   必须就地停住那个线程功能钩才装得上；用户 2026-10-17 L3 实测（69 钩 + 本档）功能全部有效。prop 仍可覆盖。 */
-    int mode = (pn > 0) ? atoi(buf) : 3;
+    /* ★r24（vc646 真机实测，2026-10-25）：**默认改成 4 = RET_ERRNO(EPERM)**。
+     *  为什么不再用 3（RET_TRAP + 停住线程）：本版的反篡改 `exit_group` 是**多线程同时**发的
+     *  （一次事故里 debuggerd 连开 6+ 个 dumper），RET_TRAP 每命中一次就发一次 SIGSYS，
+     *  而我们只在一个线程上把 pc 改到 ParkTrappedThread ⇒ 其余命中仍按致命 SIGSYS 处理，
+     *  进程照样死（真机日志：多次 `F DEBUG: signal 31 (SIGSYS), code 1 (SYS_SECCOMP)` 后 `has died`）。
+     *  RET_ERRNO 不产生任何信号：内核直接把这次 exit_group 判成 `-EPERM` 返回给调用者，
+     *  线程继续跑、不需要信号处理器、也不需要停住谁 ⇒ 多线程同时命中也不会死人。
+     *  第 1/2/3 档保留作取证（1=只记账 / 2=TRAP 放行 / 3=TRAP+停住）。 */
+    int mode = (pn > 0) ? atoi(buf) : 4;
     if (mode <= 0) { LOGI(TPL_LOG " exit_group 闸：未启用（debug.starry.nhsy2_exitguard=0）"); return; }
-    if (mode > 3) mode = 3;
+    if (mode > 4) mode = 4;
     g_exitGuardMode.store(mode);
-    if (mode >= 2) {
+    if (mode == 2 || mode == 3) {
         struct sigaction sa;
         memset(&sa, 0, sizeof(sa));
         sa.sa_sigaction = OnSigsys;
@@ -4779,7 +5027,9 @@ static void InstallExitGroupGuard() {
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) {
         LOGW(TPL_LOG " exit_group 闸：PR_SET_NO_NEW_PRIVS 失败 errno=%d（继续尝试）", errno);
     }
-    const uint32_t action = (mode >= 2) ? SECCOMP_RET_TRAP : SECCOMP_RET_LOG;
+    const uint32_t action = (mode == 4) ? (SECCOMP_RET_ERRNO | (EPERM & SECCOMP_RET_DATA))
+                            : (mode >= 2) ? SECCOMP_RET_TRAP
+                                          : SECCOMP_RET_LOG;
     struct sock_filter f[7];
     f[0] = BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, arch));
     f[1] = BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, AUDIT_ARCH_AARCH64, 1, 0);
@@ -4802,7 +5052,7 @@ static void InstallExitGroupGuard() {
              r, e1, r2, e2);
         if (r2 != 0) { g_exitGuardMode.store(0); LOGW(TPL_LOG " exit_group 闸：安装失败 ⇒ 放弃"); return; }
     }
-    LOGI(TPL_LOG " exit_group 闸已装：mode=%d（1=RET_LOG 只记账看 audit / 2=RET_TRAP 拦下但桩页会 SIGILL 崩 / 3=RET_TRAP+就地停住线程）",
+    LOGI(TPL_LOG " exit_group 闸已装：mode=%d（1=RET_LOG 只记账 / 2=RET_TRAP 放行 / 3=RET_TRAP+停住线程 / 4=RET_ERRNO(EPERM) 无信号中和）",
          mode);
 }
 
@@ -4895,30 +5145,43 @@ bool nhsy2_TryInit(JavaVM* /*vm*/) {
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
 
-    InstallFaultGuard();          // §④ 先装兜底，再装钩
+    /* ★r27 最小化二分开关 `debug.starry.nhsy2_safemask`（默认 0 = 正常行为）：
+     *   1  = 不装 SIGSEGV/SIGBUS/SIGILL 处理器（含备用信号栈）
+     *   2  = 不起守护线程（页权限/rearm/取证 flush 全不跑）
+     *   4  = 守护线程里**不跑** ReProtectExecPages（mprotect 扫 rwx 页），其余照跑
+     *   8  = 不解析符号、不装任何功能钩（SyncHooks / 登录保命钩全跳过）
+     *   16 = 不装 libc 侧护盾（日志护盾 / exit 护盾 / exit_group seccomp 闸 / pthread_create 闸）
+     *   31 = SAFE_MODE：只加载 so + 菜单可用，其余全关。
+     * 用途：本版（vc646）themis 的崩溃处理器是坏的（任何真实 SIGSEGV 都会引爆无限递归），
+     *   要靠这个把「谁在造故障」二分出来。日志 `safe mask=N` 便于对齐每一档。 */
+    const int safemask = SafeMask();
+    LOGI(TPL_LOG " safe mask=%d（0=正常）", safemask);
+    if (!(safemask & 1)) InstallFaultGuard();     // §④ 先装兜底，再装钩
     // ★r20 注：此刻 libthemis 往往还没被 TapTap SDK dlopen ⇒ 冻结须在 tick 里重试（见 SyncHooks）。
-    StartSoftDirtyCleaner();      // ★r20 页权限守护线程
+    if (!(safemask & 2)) StartSoftDirtyCleaner(); // ★r20 页权限守护线程
     // ★r20 注意：`InstallMprotectHider()`（给 libc mprotect 打钩）实测**会把 Dobby 后续装钩一起带down**
     //   （日志停在它那一步，之后的 `探针已装` / `install pass` 全无）⇒ 已停用，只保留页权限守护。
     // InstallMprotectHider();
-    InstallLogAbortShield();      // §⑦.6 进程级日志护盾：坏格式串不再让 libc assert→abort
-    InstallExitShield();          // §⑦.6c r20：拦截 exit(0)/_exit(0)（libil2cpp 完整性校验命中的干净退出）
+    if (!(safemask & 16)) {
+        InstallLogAbortShield();  // §⑦.6 进程级日志护盾：坏格式串不再让 libc assert→abort
+        InstallExitShield();      // §⑦.6c r20：拦截 exit(0)/_exit(0)（libil2cpp 完整性校验命中的干净退出）
+    }
     // ★r20c：`exit_group` 的 seccomp 闸（§⑦.6h）。它拦的是**内核边界**上的裸 svc —— r20b 已证真凶不走 libc、
     //   也不在 themis 里，用户态没有可挂的函数，只有 seccomp 能按 syscall 号拦；TSYNC 一次覆盖全部现有线程。
     //   默认 prop=0 ⇒ 不装（行为与之前完全一致），要取证/中和必须显式 setprop。
-    InstallExitGroupGuard();
+    if (!(safemask & 16)) InstallExitGroupGuard();
     // ★r20：`InstallMemcmpProbe()`（memcmp/__open_2/__openat_2/mprotect 四个 libc 探针）实测
     //   会让紧接着的 `SyncHooks()` 卡死（日志正好停在最后一个「探针已装」之后，之后再无输出，
     //   而游戏本体照常运行 ⇒ mod 线程死锁）。且其 pthread_create 部分已由 §⑦.6g 的闸取代 ⇒ 保持停用。
     // InstallMemcmpProbe();
     if (DiagLevel() == 9) InstallSameValueWriteTest();   // ★L9 判决实验（同值写）
     g_libReady.store(true);
-    SyncHooks();                  // 已 ON 的开关立即装；全关保持 0 hook
+    if (!(safemask & 8)) SyncHooks();   // 已 ON 的开关立即装；全关保持 0 hook
     // ★r20b：只挂**一个** libc 函数（pthread_create，§⑦.6g 的「拒绝出生」闸）。放在这里是为了最大
     //   提前量 —— themis 是 TapTap SDK 稍后才 dlopen 的，此刻闸已就位就能拦住它的巡检线程诞生；
     //   同时它排在 SyncHooks 之后（SyncHooks 才是历史上会卡死的那个），爆炸半径最小。
-    InstallPthreadCreateGate();
-    InstallLoginAssistHooks();    // §6.5 登录保命：与开关无关，必须在登录页出现前就位
+    if (!(safemask & 16)) InstallPthreadCreateGate();
+    if (!(safemask & 8)) InstallLoginAssistHooks();   // §6.5 登录保命：与开关无关，必须在登录页出现前就位
     LOGI(TPL_LOG " lib ready (by-name hooks only, lazy install)");
     return true;
 }
@@ -4996,8 +5259,10 @@ void nhsy2_Tick(const bool* features, const int* values) {
         g_libReady.store(true);
         LOGI(TPL_LOG " lib ready (via Tick fallback)");
     }
-    SyncHooks();
-    InstallLoginAssistHooks();   // §6.5 幂等重试：库/类晚就绪时每 200ms 补装一次
+    if (!(SafeMask() & 8)) GuardedVoid("tick.syncHooks", [&]{ SyncHooks(); });
+    // ★r24：登录保命钩的补装也在 mod 线程里跑；解析/装钩崩了同样会带走整个进程 ⇒ 纳入保护区
+    if (!(SafeMask() & 8))
+        GuardedVoid("tick.loginAssist", [&]{ InstallLoginAssistHooks(); });   // §6.5 幂等重试（每 200ms）
 
     // §6.5 观察窗（只记日志，不碰游戏状态）：兜住 5040 之后 60 s 还没等到成功回调 ⇒ 提示重试
     {
@@ -5013,8 +5278,8 @@ void nhsy2_Tick(const bool* features, const int* values) {
         }
     }
 
-    // 标准版：单例权益字段的轻量维持（每 200ms 一次，非热路径）
-    if (g_std.load()) PushStandardEditionEntitlement();
+    // 标准版：单例权益字段的轻量维持（每 200ms 一次，非热路径；★r24 同纳入保护区）
+    if (g_std.load()) GuardedVoid("tick.stdEntitlement", [&]{ PushStandardEditionEntitlement(); });
 
     // ★ 禁止在此 SafeProbe / 扫堆 / 遍历对象 / 逐对象写
 }

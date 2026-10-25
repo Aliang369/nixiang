@@ -2,7 +2,7 @@
   "template_id": "nhsy2",
   "name": "霓虹深渊2",
   "package": "com.veewo.neonabyss2",
-  "source": "Games/nhsy2Entry.cpp knhsy2_Features + Games/nhsy2Mod.h nhsy2Feat @ 2026.10.10（2026.10.12 底包 3c8f88d4990 复核：功能代码与 r17 逐字节相同，so md5 19c00f90c52e491b811160feb8bc541a）",
+  "source": "Games/nhsy2Entry.cpp knhsy2_Features + Games/nhsy2Mod.h nhsy2Feat（2026-10-25 r28 复核：vc646 / 2026.10.22.119e94ee6ab 底包，11 项功能 L3 全过，so md5 ccead68ee6cea7968df318939e37b3ec）",
   "features": [
     {"feat_num": 1, "name": "伤害倍率"},
     {"feat_num": 2, "name": "无敌"},

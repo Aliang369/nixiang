@@ -208,6 +208,19 @@ static int PhdrCallback(struct dl_phdr_info* info, size_t, void* data) {
     return 1;
 }
 
+/* ★r28：dynsym 路径专用的「可读性判定」——**不走 fopen("/proc/self/maps")**。
+ *  真机实测（vc646）：本版线程在 `MappingHasPerm` 的 fopen 处直接卡死/暴毙
+ *  （日志停在 `dynsym fixed` 之后再无输出，mask=20 时进程直接没了），
+ *  而 root 从外部 `cat /proc/<pid>/maps` 只要 30 ms ⇒ 是该进程内对 maps 的访问被拦。
+ *  改用**缓存的映射表**（`detail::PermCachedSoft`：静态快照 + 最多 1 s 刷新一次），
+ *  完全不碰 fopen。判定语义一致（要求整段落在一个映射内且含 r 位）。 */
+static bool DsReadable(uintptr_t addr, size_t len) {
+    if (!addr || !len) return false;
+    bool found = false;
+    const bool ok = detail::PermCachedSoft(addr, len, 1u, &found);
+    return found && ok;
+}
+
 static bool LocateDynsym(const char* lib, DynsymInfo* out) {
     PhdrCtx ctx = {};
     ctx.lib = lib;
@@ -231,17 +244,33 @@ static bool LocateDynsym(const char* lib, DynsymInfo* out) {
     }
     if (!dyn) return false;
 
-    uintptr_t symtab = 0, strtab = 0, gnuhash = 0;
+    uintptr_t symtab = 0, strtab = 0, gnuhash = 0, sysvhash = 0;
     uint64_t strsz = 0;
-    for (const Elf64_Dyn* d = dyn; d->d_tag != DT_NULL; d++) {
+    /* ★r28（vc646 真机：日志停在 `phdr match` 之后再无输出、线程挂住）：
+     *  这里的 PT_DYNAMIC 遍历**无上界**——若本版把 DT_NULL 终止项改掉/加密，
+     *  循环会在一片可读内存里一直扫下去（既不断言也不崩），表现就是"卡住"。
+     *  加固：①最多 512 项（.dynamic 正常 ≤30 项，512 已极宽松）；
+     *        ②每项先查可读性，不可读立刻收工；③打一行收尾诊断（项数/是否见到 DT_NULL）。*/
+    int dynCnt = 0;
+    bool sawNull = false;
+    for (const Elf64_Dyn* d = dyn; dynCnt < 512; ++d, ++dynCnt) {
+        if (!DsReadable((uintptr_t)d, sizeof(Elf64_Dyn))) break;
+        if (d->d_tag == DT_NULL) { sawNull = true; break; }
         switch (d->d_tag) {
             case DT_SYMTAB:   symtab  = (uintptr_t)d->d_un.d_ptr; break;
             case DT_STRTAB:   strtab  = (uintptr_t)d->d_un.d_ptr; break;
             case DT_STRSZ:    strsz   = d->d_un.d_val; break;
             case DT_GNU_HASH: gnuhash = (uintptr_t)d->d_un.d_ptr; break;
+            /* ★r24：vc646 只有 SysV DT_HASH（无 DT_GNU_HASH）⇒ 旧代码 nsyms 恒 0
+             *   ⇒ `dynsym locate failed or nsyms bad` ⇒ 自解析 0 符号。
+             *   SysV 布局 [nbucket|nchain|buckets…|chains…]，符号数 = nchain。 */
+            case DT_HASH:     sysvhash = (uintptr_t)d->d_un.d_ptr; break;
             default: break;
         }
     }
+    LOGI("[Il2Cpp] dynsym dynamic: 项数=%d DT_NULL=%d symtab=%p strtab=%p strsz=%llu hash=%p gnuhash=%p",
+         dynCnt, (int)sawNull, (void*)symtab, (void*)strtab,
+         (unsigned long long)strsz, (void*)sysvhash, (void*)gnuhash);
     if (!symtab || !strtab || !strsz) return false;
 
     /* d_ptr 兜底：bionic linker 通常已把 d_ptr 写回为绝对地址，
@@ -256,6 +285,9 @@ static bool LocateDynsym(const char* lib, DynsymInfo* out) {
     symtab = fixptr(symtab);
     strtab = fixptr(strtab);
     gnuhash = fixptr(gnuhash);
+    sysvhash = fixptr(sysvhash);
+    LOGI("[Il2Cpp] dynsym fixed: symtab=%p strtab=%p hash=%p (base=%p end=%p)",
+         (void*)symtab, (void*)strtab, (void*)sysvhash, (void*)ctx.base, (void*)mapend);
 
     out->sym = (const Elf64_Sym*)symtab;
     out->str = (const char*)strtab;
@@ -279,7 +311,34 @@ static bool LocateDynsym(const char* lib, DynsymInfo* out) {
             out->nsyms = maxIdx + 1;
         }
     }
-    return true;
+    LOGI("[Il2Cpp] dynsym before-sysv: nsyms=%u hash_readable=%d", out->nsyms,
+         (int)DsReadable(sysvhash, 8));
+    if (out->nsyms == 0 && sysvhash && DsReadable(sysvhash, 8)) {
+        const uint32_t* vh = (const uint32_t*)sysvhash;
+        const uint32_t nchain = vh[1];
+        if (nchain > 0 && nchain < 200000) {
+            out->nsyms = nchain;
+            LOGI("[Il2Cpp] dynsym: 无 DT_GNU_HASH ⇒ 用 SysV nchain=%u 作符号数", nchain);
+        }
+    }
+    /* ★r24：把「可读性」前置校验 —— 旧实现直接解引用，不可读时会造一次**自造 SIGSEGV**；
+     *  真机实测本版越界读会让 themis 的崩溃处理器进入无限递归（371k+ 帧风暴）。
+     *  所有后续遍历都以这里的结果为准，宁可「解析不到」也不要「造故障」。 */
+    LOGI("[Il2Cpp] dynsym checkA start (symtab=%p len=%zu)", (void*)symtab,
+         sizeof(Elf64_Sym) * (out->nsyms ? out->nsyms : 1));
+    const bool rA = DsReadable(symtab, sizeof(Elf64_Sym) * (out->nsyms ? out->nsyms : 1));
+    LOGI("[Il2Cpp] dynsym checkA=%d → checkB start (strtab=%p len=%llu)", (int)rA,
+         (void*)strtab, (unsigned long long)strsz);
+    const bool rB = DsReadable(strtab, (size_t)strsz);
+    LOGI("[Il2Cpp] dynsym checkB=%d", (int)rB);
+    if (!rA || !rB) {
+        LOGI("[Il2Cpp] dynsym: symtab/strtab 不可读（symtab=%p strtab=%p）⇒ 放弃自解析",
+             (void*)symtab, (void*)strtab);
+        out->nsyms = 0;
+        return false;
+    }
+    if (gnuhash && !IsReadableRange(gnuhash, 16)) out->nsyms = 0;
+    return out->nsyms != 0;
 }
 
 static bool NameIsPrintable(const char* s, size_t len) {
@@ -293,6 +352,7 @@ static bool NameIsPrintable(const char* s, size_t len) {
 /* 单条符号取名：TP 模式（st_name 指向终止符，回扫）优先，失败退回标准直读 */
 static bool SymName(const DynsymInfo& t, const Elf64_Sym& s, std::string* out) {
     if (s.st_name == 0 || s.st_name >= t.strsz) return false;
+    if (!DsReadable((uintptr_t)(t.str + s.st_name), 1)) return false;   // ★r24 不造故障
     const char* endp = t.str + s.st_name;
     if (*endp == 0) {
         /* TP 模式：真名 = [q, endp)，q 从 endp 回扫到上一个 NUL（或 strtab 起点） */
@@ -315,6 +375,7 @@ static bool SymName(const DynsymInfo& t, const Elf64_Sym& s, std::string* out) {
 }
 
 static void BuildDynsymMap(const char* lib, std::unordered_map<std::string, void*>* m) {
+    LOGI("[Il2Cpp] BuildDynsymMap enter lib=%s", lib ? lib : "(null)");
     DynsymInfo t;
     if (!LocateDynsym(lib, &t) || t.nsyms == 0 || t.nsyms > 200000) {
         LOGI("[Il2Cpp] dynsym locate failed or nsyms bad");
@@ -323,6 +384,7 @@ static void BuildDynsymMap(const char* lib, std::unordered_map<std::string, void
     LOGI("[Il2Cpp] dynsym ctx: base=%p sym=%p str=%p strsz=%u nsyms=%u",
          (void*)t.base, (const void*)t.sym, (const void*)t.str, t.strsz, t.nsyms);
     m->reserve(t.nsyms);
+    LOGI("[Il2Cpp] BuildDynsymMap loop: nsyms=%u", t.nsyms);
     std::string name;
     for (uint32_t i = 0; i < t.nsyms; i++) {
         const Elf64_Sym& s = t.sym[i];
@@ -647,7 +709,18 @@ static void* ResolveIl2CppSym(void* handle, const char* name) {
     /* TP 重排 dynsym 但未重建 GNU hash 表 → xdl_sym 可能「静默返回错误的非空
      * 地址」（不是 null，所以旧的 miss 兜底永不触发）。恒取自解析表结果做对照，
      * 首次解析时打一行 diag（xdl/self 双方地址 + 前 8 字节）。 */
-    void* self = DynsymLookup(name);  // TP 符号隐藏对策
+    /* ★r28（vc646 真机）：**默认不再走 dynsym 自解析**。
+     *  实测本版自解析线程会卡在 dynsym 阶段（日志停在 `dynsym fixed`，线程阻塞在
+     *  read(eventfd) 上，进程随后被 themis 带走），而本版 dynstr 名字层已被整体替换成
+     *  凯撒+1 诱饵 ⇒ 就算解析成功也拿不到任何真名（3 个被抢注的 API 仍走
+     *  ClassFromNameScan / GetMethodScan / ImageOf 降级，r18 正是这样交付的）。
+     *  要取证时用 `debug.starry.nhsy2_dynsym=1` 显式打开。 */
+    static const bool kUseDynsym = [] {
+        char b[PROP_VALUE_MAX] = {0};
+        const int n = __system_property_get("debug.starry.nhsy2_dynsym", b);
+        return n > 0 && atoi(b) == 1;
+    }();
+    void* self = kUseDynsym ? DynsymLookup(name) : nullptr;  // TP 符号隐藏对策（默认关）
     if (self && !InIl2CppRange(self)) self = nullptr;
     if (!p) p = self;
     {

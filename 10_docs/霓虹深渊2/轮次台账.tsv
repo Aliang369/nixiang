@@ -60,3 +60,6 @@
 2026-10-22 00:08	90	14	r23 底包迁移装机+机器判据全绿：官方 taptap 2026.10.20.ee23e7980c8/vc630；install pass ok=69 dead=0/72+skip3、stub-shift shift=+0x490b4 votes=7 filled=20 overrode=0 rejected=0、selftest(recovered) ok=1 asm=146 classes=10620、exit_group 闸 mode=3 已就位、[验证] grant ok exp=1792684936、native menu shown、7 开关 ON、precheck PASS_TO_HUMAN、0 崩溃；正式包 md5 a700f513… 待L3	pipeline.log	未测
 2026-10-22 00:18	90	15	r23 L3 通过（用户『功能都没问题，进行收尾+正式包+清理+git』）⇒ 官方 taptap 2026.10.20.ee23e7980c8/vc630 上 11 项功能整体结案；13 槽菜单（2 分类+11 功能，一功能一开关 1:1）未改；正式包 md5 a700f513fdbdf0802cde533e2c1ec30d	pipeline.log	有效
 2026-10-22 00:18	91	6	r23 菜单仍 13 槽（2 分类+11 功能）；native menu shown mode=ACTIVITY；用户 L3『功能都没问题』	pipeline.log	有效
+2026-10-25 01:50	16	1	r24 vc646 阻断：dynsym 0 syms + 3 API miss ⇒ install pass 不出，启动 10–18s 被 themis 崩溃链带走（A/B 证与兜底改动无关）	pipeline.log	未测
+2026-10-25 16:46	16	2	r28：vc646 上 install pass ok=68/72+skip3、storm=0、grant ok、菜单正常；正式包 071e5c3a（so ccead68e）已覆盖装机，待用户 L3	pipeline.log	未测
+2026-10-25 16:52	16	3	r28 L3 通过：用户『所有功能都没问题』⇒ vc646 上 11 项功能整体结案（install pass ok=68/72+skip3、storm=0、正式包 071e5c3a、so ccead68e）	pipeline.log	有效
