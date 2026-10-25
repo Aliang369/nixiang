@@ -10,6 +10,9 @@
 # assets/apksecuresolib/<abi>/libcocos2djs.so（密文，运行时由 libsecret.so 落盘
 # 到 no_backup/mlib/ 再 dlopen）。外科只做增量，官方 classes.dex、resources.arsc、
 # lib/arm64-v8a/* 与 assets/**（含加密 cocos so）一律字节不变。
+# ↳ **唯一例外（2026-10-25）**：`assets/main.js` 换成【已打补丁的加密 main.js】。
+#   原因：引擎首次运行会把 assets/main.js 原样抽到 files/res/main.js，会盖掉 so 自愈刚写好的
+#   补丁版 ⇒ 首次启动无效果、再启动才有（真机 96f0d883 实测）；把补丁版放进 assets 后首启即生效。
 # 新增星空 classes2.dex（官方仅 1 个 dex，最小空闲下标）+ libstarry_magic.so + libc++_shared.so。
 set -euo pipefail
 
@@ -44,6 +47,12 @@ command -v java >/dev/null 2>&1 || { echo "ERROR: java 不在 PATH" >&2; exit 1;
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
 SO_PREBUILT="${YSXZ_SO:-$STARRY_SRC/libs_ysxz/arm64-v8a/libstarry_magic.so}"
 [[ -f "$SO_PREBUILT" ]] || { echo "ERROR: missing modern so $SO_PREBUILT" >&2; exit 1; }
+# 2026-10-25（真机 96f0d883 首启无效果复盘）：引擎**首次运行**会把 assets/main.js 原样
+# 抽到 files/res/main.js，恰好盖掉 so 自愈刚写好的补丁版 ⇒ 首启跑的是未打补丁的 boot，
+# 要二次启动（自愈把 pristine -> patched）才有效果。所以把**已打补丁的加密 main.js**
+# 直接放进 APK 的 assets/main.js：首启抽出来的就是补丁版，自愈只做后备。
+BOOT_ENC="${YSXZ_BOOT_ENC:-$STARRY_SRC/libs_ysxz/main.patched.enc.js}"
+[[ -f "$BOOT_ENC" ]] || { echo "ERROR: missing patched main.js: $BOOT_ENC" >&2; exit 1; }
 [[ "$(md5 -q "$ORIG_APK")" == "$ORIG_MD5" ]] || { echo "ERROR: 原包指纹不符" >&2; exit 1; }
 
 LOCK_DIR="/tmp/ysxz_surgical.lockdir"
@@ -193,13 +202,15 @@ PY
 fi
 
 echo "[4/5] zip surgical merge -> $UNSIGNED"
-python3 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$NEW_DEX" <<'PY'
+python3 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$NEW_DEX" "$BOOT_ENC" <<'PY'
 import sys, zipfile, hashlib
 from pathlib import Path
 src, work, dst, new_dex = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4]
+boot_enc = Path(sys.argv[5]).read_bytes()   # 已打补丁的加密 main.js（首启即生效，不再等自愈）
 mf = (work / "AndroidManifest.xml").read_bytes()
 cnew = (work / new_dex).read_bytes()
 extras = {}
+extras["assets/main.js"] = boot_enc     # 首启即生效：引擎抽出来的就是补丁版
 for p in (work / "lib").rglob("*"):
     if p.is_file():
         extras["lib/" + str(p.relative_to(work / "lib")).replace("\\", "/")] = p.read_bytes()
@@ -216,7 +227,9 @@ untouched = [
     "lib/arm64-v8a/libthemis.so",
     "assets/apksecuresolib/arm64-v8a/libcocos2djs.so",
     "assets/apksecurefile", "assets/apksecuresolist",
-    "assets/main.js", "assets/src/cocos2d-jsb.js", "assets/src/settings.js",
+    # assets/main.js 自 2026-10-25 起换成【补丁版】（首启无效果复盘），不再列入 untouched；
+    # 它的校验改为后面「包内 == BOOT_ENC 字节相等」。
+    "assets/src/cocos2d-jsb.js", "assets/src/settings.js",
 ]
 zin = zipfile.ZipFile(src, "r")
 names = set(zin.namelist())
@@ -253,6 +266,8 @@ for name in untouched:
     a = hashlib.sha256(zin2.read(name)).hexdigest()
     b = hashlib.sha256(zout2.read(name)).hexdigest()
     assert a == b, f"changed: {name}"
+assert zout2.read("assets/main.js") == boot_enc, "assets/main.js 不是补丁版（首启会无效果）"
+print(f"  assets/main.js <- patched ({len(boot_enc)} B, md5 {hashlib.md5(boot_enc).hexdigest()})")
 out_names = set(zout2.namelist())
 for name in kept_meta: assert name in out_names, f"lost {name}"
 assert new_dex in out_names
