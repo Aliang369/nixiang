@@ -53,5 +53,12 @@
       "source": "/Users/aliang/Documents/nixiang/07_patched/圣翼传说/surgical_7.6.06",
       "quarantine": "/Users/aliang/.Trash/nixiang_sycs-20261026_20261026_023406/07_patched/圣翼传说/surgical_7.6.06"
     }
-  ]
+  ],
+  "postcheck": {
+    "checked_at": "2026-10-26 02:53:00 +0800",
+    "quarantine_present": false,
+    "trash_mtime": "2026-10-26 02:46:59 +0800",
+    "cause": "unknown",
+    "note": "收尾复核时隔离根目录已整体不存在；本清单保留历史清理记录，当前不可从 Trash 恢复。"
+  }
 }
