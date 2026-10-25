@@ -2,15 +2,15 @@
  *  星光菜单游戏模块 — 绝区零 3.2.0 (vc429) arm64-v8a  [ZzzMod.cpp]
  *
  *  站点全部来自 10_docs/绝区零/星空版站点定位_20261005.md 的实测反汇编：
- *    ① 无敌     file 0x1151d138 = JNCLILAONEF.HLAOJKPGHIO（池鸳同款站点 0x11521138）
+ *    ① 无敌     file 0x12114318 = LFLFDPIEKIH（3.3.0 站点 RVA 0x12118318，32B 唯一）
  *              池鸳 handler 过滤条件：事件 +0x16(u16)==0x85（伤害事件） 且
  *              +0x38(u32)==玩家 actorId → 不调原函数 ⇒ 本模块同款过滤
- *    ② 伤害倍率 file 0xc0269f0 入口 fmov s8,s0 ⇒ s0 即倍率入参；
+ *    ② 伤害倍率 —— 3.3.0 未实现（no-op；属性写回链弃用，见 RealModuleReady 注释）；
  *              唯一调用者 file 0x8238550（先取 x0，再 fmov s0,s8 后 bl）⇒ (self, float)
  *    ③ 移动速度 file 0xfb2700c 函数内 3 条写指令（str s8,[x0,#0xf8] / str s8,[x0,#0x100] /
  *              strb w8,[x0,#0x104]），入口 hook 拿不到 s8 ⇒ 走 12B 原地桩 + 自带 handler
  *              【R20】功能已删（2026-10-07 用户令）：桩与看护全部停装，注释仅备查，禁止复活
- *    ④ 定怪     file 0x19ce2164 = BehaviorManager.Tick（唯一调用者 0x1a7f0710）
+ *    ④ 定怪     file 0x1aae0e1c = BehaviorManager.Tick（3.3.0 站点 RVA 0x1aae4e1c，32B 唯一）
  *    ⑤ 无限技能 v1 未定稿（候选 0x1391de04 三簇调用者，扣费点未确证）→ 只记开关，不挂 hook
  *
  *  ⚠️ 地址口径（2026-10-06 修正，MuMu 实战零命中事故）：
@@ -23,6 +23,10 @@
 #include "ZzzMod.h"
 
 #include <atomic>
+#include <map>
+#include <vector>
+#include <string>
+#include <thread>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -54,11 +58,16 @@ using Il2Cpp::GetApi;
 //  ① 站点常量（文件偏移空间，禁改——换包必须重 dump 并回填序言校验）
 // ============================================================================
 enum : uintptr_t {
-    kFileOffInvEntry    = 0x1151d138,
-    kFileOffDmgEntry    = 0xc0269f0,
+    // 3.3.0（2026-10-22 重定位）：无敌入口 RVA 0x12118318（7v7 caller 对齐 + frida watch 23/60s）
+    kFileOffInvEntry    = 0x12114318,
+    // R34 实体 getter 三站（RVA-0x4000）
+    kFileOffEntHp       = 0xa046370,   // RVA 0xa04a370 - 0x4000
+    kFileOffEntAtk      = 0xa0463c0,   // RVA 0xa04a3c0 - 0x4000
+    kFileOffEntCamp     = 0xa046410,   // RVA 0xa04a410 - 0x4000
+    // 3.3.0：定怪 = BehaviorManager.Tick，MethodInfo 堆表名字 Tick + 同类 78 方法语义确证
+    kFileOffFreezeEntry = 0x1aae0e1c,
     kFileOffMoveWrite   = 0xfb2700c,   // str s8,[x0,#0xf8]
     kFileOffMoveResume  = 0xfb27018,   // 原函数收尾（ldp x20,x19,[sp,#0x30]）
-    kFileOffFreezeEntry = 0x19ce2164,
     kFileOffMoveApplyEntry = 0xfb26f14, // SetMoveSpeedRatio.apply entry (R5f hit diag)
     kFileOffActorRoot   = 0x1d749418,  // libil2cpp 尾部 BSS 全局（玩家 actorId 链根）
     // R19（2026-10-07）：R14/R16/R17/R18 的伤害倍率诊断站点（DmgSettle / VicLoopTail /
@@ -72,17 +81,64 @@ enum : uintptr_t {
 //    2026-10-06 R3 实证：actor 链根正确 VA = 首段起点 + 0x1d749418；套 phdr 文件偏移公式得 +0xC000 → NULL。
 enum : uintptr_t {
     kRvaActorRoot       = 0x1d749418,  // 玩家 actorId 链根（RVA 空间）
-    kRvaUltGate         = 0x11541510,  // 池鸳「大招」补丁点：cset w0,ls → mov w0,#1
+    kRvaUltGate         = 0x120faea4,  // 3.3.0：cset w0,ls → mov w0,#1（16B 上下文全 so 唯一）
 };
 static const uint32_t kUltGateOrig  = 0x1a9f87e0u;   // cset  w0, ls（原字节）
 static const uint32_t kUltGatePatch = 0x52800020u;   // mov   w0, #1（池鸳写法，强制返回 true）
+// 3.3.0 站点 16B 上下文（cset w0,ls; ldr d8,[sp],#0x30; ret; mov x20,xzr）——全 so 唯一，装前校验
+static const uint32_t kUltGateCtx[4] = {0x1a9f87e0u, 0xfc4307e8u, 0xd65f03c0u, 0xaa1f03f4u};
+
+// R39（2026-10-25）：actor id 分带判据（三局实测，见 10_docs/绝区零/伤害结算定位_3.3.0_静态.md §12.2 / §14）
+//   玩家侧受击/攻击 actor id：5 / 9 / 11 / 12（≤ 12）
+//   怪物侧 actor id：22 / 52 / 56 / 57 / 59 / 60 / 62 / 64 / 65 / 67 / 69 / 72 / 90 / 98 / 103 / 106（≥ 22）
+//   中间 13..21 为死区：任一 id 落在死区 ⇒ 不判定（fail-open，宁漏保护不误伤怪物）
+static const uint32_t kIdPlayerMax  = 12;
+static const uint32_t kIdMonsterMin = 22;
 
 // 序言校验（磁盘文件实测原始字节，u32 小端）
-static const uint32_t kPrologueInv[4]    = {0xa9be57feu, 0xa9014ff4u, 0xd0060388u, 0x2a0203f5u};
-static const uint32_t kPrologueDmg[4]    = {0xfc1d0fe8u, 0xa90157feu, 0xa9024ff4u, 0xf008aac8u};
+// 3.3.0 无敌入口 32B（uniq16=1/uniq32=1）：stp x30,x21,[sp,#-0x20]! ; stp x20,x19,[sp,#0x10] ;
+//   adrp x8,#0x1e542000 ; mov w21,w2 ; mov x19,x1 ; mov x20,x0 ; ldrb w8,[x8,#0xf6f] ; cbnz
+static const uint32_t kPrologueInv[8]    = {0xa9be57feu, 0xa9014ff4u, 0xf00621a8u, 0x2a0203f5u,
+                                            0xaa0103f3u, 0xaa0003f4u, 0x397dbd08u, 0x35000768u};
 static const uint32_t kPrologueMove[3]   = {0xbd00f808u, 0xbd010008u, 0x39041008u};
 static const uint32_t kPrologueMoveApply[4] = {0xd10103ffu, 0xfd0013e8u, 0xf90017feu, 0xa9034ff4u};
-static const uint32_t kPrologueFreeze[4] = {0xa9be57feu, 0xa9014ff4u, 0xd001c288u, 0xaa0103f4u};
+// 3.3.0 定怪（BehaviorManager.Tick）32B：uniq16=2（不可用）/uniq32=1
+static const uint32_t kPrologueFreeze[8] = {0xa9be57feu, 0xa9014ff4u, 0xf001d0e8u, 0xaa0103f4u,
+                                            0xaa0003f3u, 0x396b2d08u, 0x35000548u, 0xd001d5d5u};
+
+// R34（2026-10-22）实体访问器三站（可读名 getter，MethodInfo 表定位）：
+//   get_hp RVA 0xa04a370 / get_attack 0xa04a3c0 / get_camp 0xa04a410。
+//   这三个 getter 的 x0 就是**实体对象**，钩它们的唯一目的＝抓实体指针（只读 pass-through，不改返回值）。
+//   uniq16/uniq32 实测：Hp uniq16=1、Atk uniq16=1、Camp uniq16=15 不可用 ⇒ Camp 取 32B（uniq32=1）。
+static const uint32_t kPrologueEntHp[4]   = {0xa9bf4ffeu, 0xd00a2628u, 0xaa0003f3u, 0x395a3908u};
+static const uint32_t kPrologueEntAtk[4]  = {0xa9bf4ffeu, 0xd00a2628u, 0xaa0003f3u, 0x395a3d08u};
+static const uint32_t kPrologueEntCamp[8] = {0x3942e000u, 0xd65f03c0u, 0x3902e001u, 0xd65f03c0u,
+                                             0xa9bf4ffeu, 0xd00a2628u, 0xaa0003f3u, 0x395a4908u};
+
+// ============================================================================
+//  R36（2026-10-23）只读探针四站 —— 三问一次战斗定案：
+//    ① 0x16de0acc 是否真是 id→实体解析
+//    ② 实体真实 HP / 阵营偏移（+0x90..+0xBC 全量 dump：谁随受伤下降、+0xB8 是否分组）
+//    ③ 哪个 HP 写候选在受伤时被调用（0x5a5a400 / 0x1aa964b0 / 0x1aa95b14 计数）
+//  静态定位与判据见 10_docs/绝区零/伤害结算定位_3.3.0_静态.md。
+//  ★铁律（本段不许演化成功能）：**pass-through** —— 调原函数、不改入参、不写内存、不替换返回值。
+//  序言 32B 均为磁盘 so 直读原字节（取 file_off = RVA - 0x4000），装钩前 CheckPrologue 逐字校验。
+static constexpr uintptr_t kFileOffResolve = 0x16ddcacc;   // RVA 0x16de0acc id→对象解析
+static constexpr uintptr_t kFileOffHpWa    = 0x05a56400;   // RVA 0x05a5a400 带护盾血条型，写 +0xA4/+0x98
+static constexpr uintptr_t kFileOffHpWb    = 0x1aa924b0;   // RVA 0x1aa964b0 对称两块，写 +0xA0
+static constexpr uintptr_t kFileOffHpWc    = 0x1aa91b14;   // RVA 0x1aa95b14 对称两块，写 +0xA0
+// sub sp,sp,#0x50 ; stp x30,x23 ; stp x22,x21 ; stp x20,x19 ; mov w19,w1 ; mov x20,x0 ...
+static const uint32_t kPrologueResolve[8] = {0xd10143ffu, 0xa9025ffeu, 0xa90357f6u, 0xa9044ff4u,
+                                             0x2a0103f3u, 0xaa0003f4u, 0xf9400808u, 0xa9017fffu};
+// stp x29,x30 ; stp x22,x21 ; stp x20,x19 ; mov x29,sp ; ldr x8,[x0,#8] ; mov x19,x0 ; ldr w9,[x0,#0x9c] ; ldr w13,[x0,#0xa4]
+static const uint32_t kPrologueHpWa[8]    = {0xa9bd7bfdu, 0xa90157f6u, 0xa9024ff4u, 0x910003fdu,
+                                             0xf9400408u, 0xaa0003f3u, 0xb9409c09u, 0xb940a40du};
+// stp x30,x23 ; stp x22,x21 ; stp x20,x19 ; adrp x22 ; mov x19,x2 ; mov x20,x1 ; mov x21,x0 ; ldrb w8,[x22,#0xce]
+static const uint32_t kPrologueHpWb[8]    = {0xa9bd5ffeu, 0xa90157f6u, 0xa9024ff4u, 0x9001fa16u,
+                                             0xaa0203f3u, 0xaa0103f4u, 0xaa0003f5u, 0x39433ac8u};
+// stp x30,x25 ; stp x24,x23 ; stp x22,x21 ; stp x20,x19 ; cbz x1 ; mov x19,x2 ; cbz x2 ; mov x21,x4
+static const uint32_t kPrologueHpWc[8]    = {0xa9bc67feu, 0xa9015ff8u, 0xa90257f6u, 0xa9034ff4u,
+                                             0xb4002741u, 0xaa0203f3u, 0xb4002722u, 0xaa0403f5u};
 
 // R5b（2026-10-06）：移速类「把速度重置为常量 1.0f」的两处站点（方法3 / 方法4 内 3 条写指令）。
 //   反汇编实证（file 0xfb270e4 / 0xfb2720c 两个函数体）：
@@ -120,6 +176,13 @@ static std::atomic<bool> g_movePatched{false};
 static std::atomic<bool> g_moveResetAPatched{false};   // R5b：reset 方法3 内 12B 桩
 static std::atomic<bool> g_moveResetBPatched{false};   // R5b：reset 方法4 内 12B 桩
 static std::atomic<bool> g_freezeHooked{false};
+static std::atomic<bool> g_entHpHooked{false};     // R34 实体 getter 钩（只读抓实体指针）
+static std::atomic<bool> g_entAtkHooked{false};
+static std::atomic<bool> g_entCampHooked{false};
+static std::atomic<bool> g_resolveHooked{false};      // R36 id→实体解析探针
+static std::atomic<bool> g_hpWaHooked{false};         // R36 HP 写候选 A
+static std::atomic<bool> g_hpWbHooked{false};         // R36 HP 写候选 B
+static std::atomic<bool> g_hpWcHooked{false};         // R36 HP 写候选 C
 static std::atomic<bool> g_moveEntryHooked{false};   // R5f: SetMoveSpeedRatio.apply entry hook (diag)
 static std::atomic<unsigned> g_moveEntryHits{0};
 static std::atomic<unsigned> g_moveEntryLast{0};
@@ -397,8 +460,20 @@ static bool CheckPrologue(const char* tag, void* va, const uint32_t* want, int w
     return true;
 }
 
-// 静默读（就绪探测/丢失看护用）。R20：裸读——故障守卫已移除（见上方 ④ 说明）。
+// R27（2026-10-22）：读前指针闸门。
+//   背景：3.3.0 上旧链根 0x1d749418（全进程共享全局）读到垃圾 0x1200000095be94d1 后仍继续
+//   +0x18 解引用 ⇒ 后台线程 SIGSEGV 带崩进程（用户 L3：开无敌挨打即闪退）。任何裸读前必须过这道闸。
+//   口径：>=0x10000（挡空/小整数）&& <0x8000000000（arm64 用户态上界）&& 按 align 对齐。
+static inline bool ValidPtrForRead(const void* p, size_t align) {
+    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+    if (a < 0x10000ULL || a >= 0x8000000000ULL) return false;
+    if (align && (a % align) != 0) return false;
+    return true;
+}
+
+// 静默读（就绪探测/丢失看护用）。R20 曾改成裸读；R27 改为「先校验、不合法返 false、绝不裸解引用」。
 static bool ReadU32Quiet(const void* p, uint32_t* out) {
+    if (!ValidPtrForRead(p, 4)) return false;
     *out = *reinterpret_cast<const volatile uint32_t*>(p);
     return true;
 }
@@ -467,7 +542,7 @@ static void* PhdrVaForFileOff(const char* lib, uintptr_t fileOff,
 }
 
 // RVA 空间原点：libil2cpp 里【文件偏移 0】那个 PT_LOAD 的映射起点。
-// 池鸳与我们的常量（0x11541510 / 0x1d749418 …）都是相对它的偏移 ⇒ VA = origin + RVA。
+// 池鸳与我们的常量（0x120faea4 / 0x1d749418 …）都是相对它的偏移 ⇒ VA = origin + RVA。
 // 实证 2026-10-06 MuMu：origin=0x400023600000，origin+0x1d749418 链通（actorId=5）；
 // 同一常量套 phdr 文件偏移公式（该段 p_vaddr-p_offset=0xC000）读到 NULL ⇒ 必须分开两条公式。
 static uintptr_t PhdrRvaOrigin(const char* lib) {
@@ -493,6 +568,7 @@ static uintptr_t PhdrRvaOrigin(const char* lib) {
 // ============================================================================
 // R20：裸读。调用点只在功能开启时走链（见 Hook_Inv 门控）。
 static bool ReadPtrQuiet(const void* p, uint64_t* out) {
+    if (!ValidPtrForRead(p, 8)) return false;   // R27：先校验再读
     *out = *reinterpret_cast<const volatile uint64_t*>(p);
     return true;
 }
@@ -694,6 +770,42 @@ static void ObserveAttackerOwner(uint32_t own) {
     }
 }
 
+// R31（2026-10-22）：归属学习改为「互攻」判据（R29 的「被>=3 个不同攻击方打」被证会误学怪物：
+//   R29 那场把 vic=5（怪）学成我方并拦了 12 次；R30 那场我方是 atk 侧 5/9、敌方 vic 侧 56/61/64）。
+//   规则：维护每个 id 的 atkCount / vicCount；某 id **两侧都 >=1**（既打人也挨打）⇒ LearnMeId(id)。
+//   首个人 id 同步写 g_meTeam（兼容旧日志/兜底）。
+static void ObserveExchange(uint32_t atk, uint32_t vic) {
+    if (!atk || !vic || atk == vic) return;
+    struct Rec { uint32_t id; uint32_t atkN, vicN; };
+    static Rec s_rec[16] = {};
+    static std::mutex s_m;
+    std::lock_guard<std::mutex> lk(s_m);
+    Rec* ra = nullptr; Rec* rv = nullptr; Rec* empty = nullptr;
+    for (int i = 0; i < 16; ++i) {
+        if (s_rec[i].id == atk) ra = &s_rec[i];
+        if (s_rec[i].id == vic) rv = &s_rec[i];
+        if (!s_rec[i].id && !empty) empty = &s_rec[i];
+    }
+    if (!ra) { if (!empty) return; ra = empty; ra->id = atk; ra->atkN = 0; ra->vicN = 0; empty = nullptr; }
+    if (!rv) {
+        Rec* e2 = nullptr;
+        for (int i = 0; i < 16; ++i) if (!s_rec[i].id) { e2 = &s_rec[i]; break; }
+        if (!e2) return;
+        rv = e2; rv->id = vic; rv->atkN = 0; rv->vicN = 0;
+    }
+    if (ra->atkN < 0xFFFF) ++ra->atkN;
+    if (rv->vicN < 0xFFFF) ++rv->vicN;
+    // R32：只统计、**不再 LearnMeId**（互攻判据对敌我同时成立，学习必然污染 g_meIds）。
+    for (Rec* r : { ra, rv }) {
+        if (r->atkN >= 1 && r->vicN >= 1) {
+            static std::atomic<int> nObs{0};
+            if (nObs.fetch_add(1) < 20)
+                LOGI(TPL_LOG " 互攻观察 id=%u（atk数=%u vic数=%u，仅观察不学习）",
+                     (unsigned)r->id, (unsigned)r->atkN, (unsigned)r->vicN);
+        }
+    }
+}
+
 // NOTE: g_meTeam == the voted value of ev+0x1C (own) == the local player actor id.
 // R5f (2026-10-07): the single rule for enemy/ally separation.
 //   Evidence (R5e: two full event dumps + 40 INV-EVT lines):
@@ -747,6 +859,11 @@ static bool ChainSelfTest(bool verbose, uint32_t* outId) {
     void* root = org ? reinterpret_cast<void*>(org + kRvaActorRoot) : nullptr;
     if (verbose) LOGI(TPL_LOG " 链自检 org=0x%lX root=%p", (unsigned long)org, root);
     if (!root) return false;
+    // R27：root 本身先过闸（3.3.0 该槽读出的垃圾值曾被直接解引用）
+    if (!ValidPtrForRead(root, 8)) {
+        if (verbose) LOGI(TPL_LOG " 链自检 root=%p 不合法（R27 闸门拒绝解引用）", root);
+        return false;
+    }
     const int paths = verbose ? 2 : 1;   // selfmem 兜底已实证被拒（/proc/self/mem EPERM），只在详查时再看
     for (int path = 0; path < paths; ++path) {
         const char* pt = (path == 0) ? "direct" : "selfmem";
@@ -758,6 +875,11 @@ static bool ChainSelfTest(bool verbose, uint32_t* outId) {
         for (int i = 0; i < 7; ++i) {
             const void* a = reinterpret_cast<const char*>(cur) + kActorChain[i];
             uint64_t nxt = 0;
+            // R27：每跳先过闸，不合法立即放弃（绝不裸读野指针）
+            if (!ValidPtrForRead(a, 8)) {
+                if (verbose) LOGI(TPL_LOG "  链[%s] +0x%02X @%p 不合法（R27 拒绝）", pt, (unsigned)kActorChain[i], a);
+                good = false; break;
+            }
             bool ok2 = (path == 0) ? ReadPtrQuiet(a, &nxt) : ReadMemSelf(&nxt, a, 8);
             if (verbose) LOGI(TPL_LOG "  链[%s] +0x%02X @%p ok=%d val=0x%llX", pt,
                                    (unsigned)kActorChain[i], a, (int)ok2, (unsigned long long)nxt);
@@ -767,6 +889,7 @@ static bool ChainSelfTest(bool verbose, uint32_t* outId) {
         if (!good) continue;
         const void* ia = reinterpret_cast<const char*>(cur) + 0x38;
         uint32_t id = 0;
+        if (!ValidPtrForRead(ia, 4)) { if (verbose) LOGI(TPL_LOG "  链[%s] id@%p 不合法（R27 拒绝）", pt, ia); continue; }
         bool ok3 = (path == 0) ? ReadU32Quiet(ia, &id) : ReadMemSelf(&id, ia, 4);
         if (verbose) LOGI(TPL_LOG "  链[%s] id@%p ok=%d id=%u", pt, ia, (int)ok3, (unsigned)id);
         if (ok3 && id) { if (outId) *outId = id; LearnMeId(id); return true; }
@@ -822,29 +945,73 @@ static bool ResolvePlayerActorId(uint32_t* outId) {
 typedef void (*FnInv_t)(void* self, void* ev, size_t a2, void* a3, void* mth);
 typedef void (*FnDmg_t)(void* self, float mult, void* mth);
 typedef void (*FnFreeze_t)(void* self, void* a1, void* mth);
+typedef uint32_t (*FnEnt_t)(void* self);   // R34：get_hp / get_attack / get_camp 均 (self) -> u32
 
 static FnInv_t    g_origInv    = nullptr;
 static FnDmg_t    g_origDmg    = nullptr;
 static FnFreeze_t g_origFreeze = nullptr;
+static FnEnt_t    g_origEntHp   = nullptr;
+static FnEnt_t    g_origEntAtk  = nullptr;
+static FnEnt_t    g_origEntCamp = nullptr;
 
 static std::atomic<int> g_evtCalls{0};
 
+// ============================================================================
+//  R36：id→实体 16 槽小表 + 实体字段 dump（只读探针的公共件）
+//  写：Hook_Resolve 每次解析成功写一格（round-robin，旧值被覆盖是预期行为）。
+//  读：Hook_Inv 的伤害分支按 vic(+0x3C) 反查，命中才 dump。
+//  只用于**观测**：不参与无敌/倍率的任何判定；表内容永不被当成可信指针使用，
+//  dump 前一律先 ValidPtrForRead。
+// ============================================================================
+struct ResSlot { uint32_t id; uint32_t pad; uintptr_t ent; };
+static ResSlot    g_resv[16] = {};
+static std::mutex g_resvMutex;
+static std::atomic<unsigned> g_resvNext{0};
+
+static void ResTablePut(uint32_t id, uintptr_t ent) {
+    if (!id || !ent) return;
+    const unsigned k = g_resvNext.fetch_add(1) % 16u;
+    std::lock_guard<std::mutex> lk(g_resvMutex);
+    g_resv[k].id = id;
+    g_resv[k].ent = ent;
+}
+
+static bool ResTableLookup(uint32_t id, uintptr_t* out) {
+    if (!id || !out) return false;
+    bool ok = false;
+    std::lock_guard<std::mutex> lk(g_resvMutex);
+    for (int i = 0; i < 16; ++i) {
+        if (g_resv[i].id == id && g_resv[i].ent) { *out = g_resv[i].ent; ok = true; break; }
+    }
+    return ok;
+}
+
+// 实体 +0x90..+0xBC 共 12 个 u32（HP=+0xA0? / ATK=+0xA4? / camp=+0xB8? / canBattle=+0x99）
+// 只读；任一 word 读失败该位打 DEADBEEF，不中断、不重试、不扩大读取范围（R12 深读卡死教训）。
+static void DumpEnt12(const char* tag, int n, uintptr_t ent, unsigned atk, unsigned vic) {
+    const void* pv = reinterpret_cast<const void*>(ent);
+    if (!ValidPtrForRead(pv, 4)) {
+        LOGW(TPL_LOG " ENT12 %s n=%d ent=%p 不合法（跳过）", tag, n, (void*)ent);
+        return;
+    }
+    const char* pb = reinterpret_cast<const char*>(pv);
+    uint32_t w[12]; int nOk = 0;
+    for (int m = 0; m < 12; ++m) {
+        if (ReadU32Quiet(pb + 0x90 + m * 4, &w[m])) ++nOk; else w[m] = 0xDEADBEEFu;
+    }
+    LOGI(TPL_LOG " ENT12 %s n=%d ent=%p ok=%d/12 atk=%u vic=%u", tag, n, (void*)ent, nOk,
+         (unsigned)atk, (unsigned)vic);
+    LOGI(TPL_LOG "  +90=%08X +94=%08X +98=%08X +9C=%08X | +A0=%08X +A4=%08X +A8=%08X +AC=%08X",
+         (unsigned)w[0], (unsigned)w[1], (unsigned)w[2], (unsigned)w[3],
+         (unsigned)w[4], (unsigned)w[5], (unsigned)w[6], (unsigned)w[7]);
+    LOGI(TPL_LOG "  +B0=%08X +B4=%08X +B8=%08X +BC=%08X",
+         (unsigned)w[8], (unsigned)w[9], (unsigned)w[10], (unsigned)w[11]);
+}
+
 static float U32AsF(uint32_t u) { float f = 0.0f; std::memcpy(&f, &u, sizeof(f)); return f; }
 
-// R19：只保留每事件一行紧凑摘要（前 48 条），事件对象 0x100 全量 dump 已删除。
-//   字段语义（R2+R4 实测）：+0x18 攻击方 actor / +0x1C 所有权；+0x38 受击方 / +0x3C 所有权。
-static void DiagDumpEvent(void* ev, uint16_t type, uint32_t victim, uint32_t atk,
-                          uint32_t atkOwn, uint32_t vicOwn, uint32_t me, const char* meSrc) {
-    int n = g_evtCalls.fetch_add(1);
-    if (n >= 48) return;
-    uint32_t c10 = 0, c14 = 0;
-    ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x10, &c10);
-    ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x14, &c14);
-    LOGI(TPL_LOG " EVT#%d type=0x%X atk=%u own=%u vic=%u vow=%u c10=0x%08X c14=0x%08X me=%u(%s) set=%d vote=%u/%u",
-         n, (unsigned)type, (unsigned)atk, (unsigned)atkOwn, (unsigned)victim,
-         (unsigned)vicOwn, (unsigned)c10, (unsigned)c14, (unsigned)me, meSrc ? meSrc : "-",
-         MeIdCount(), (unsigned)g_ownVoteVal.load(), (unsigned)g_ownVoteN.load());
-}
+// R29（2026-10-22）：DiagDumpEvent（3.2.0 的 own/vow 字段摘要）已删除 —— 3.3.0 的 +0x1C 是位掩码、
+//   +0x38/+0x3C 语义已换，继续打印只会误导排查；字段观测统一走 Hook_Inv 里的 INV-PROBE2 全量 dump。
 
 // R19（2026-10-07）：0x104 事件记录路线按 R15 定案为死路（写回成功但画面伤害不变），
 //   配套的写回/还原/回读诊断一律删除，不再对事件记录做任何字段级扫描或写入。
@@ -861,26 +1028,206 @@ static void DiagDumpEvent(void* ev, uint16_t type, uint32_t victim, uint32_t atk
 //   与 0x104 写回全部删除（前者在 MuMu/Houdini 热路径卡死，后者已证无效果）。
 // R19: 诊断段（VicProbeEntity / VicMidDump / Hook_VicTail / Hook_VicMid /
 //   DiagDumpAttackEvent）已整段删除，禁止以任何形式重新启用：卡死栈证据见轮次台账 R18b。
+static void MaybeStartEntScan();   // R35 前向声明（定义在实体钩子段之后）
+static void MaybeStartAttrScan();  // R45：属性记录链运行时扫描（诊断用，只读）
+static bool ZMapped(uintptr_t a, size_t n);
+static void ZLoadMaps();
+
+// R42（2026-10-25）：ENTSCAN 采到的实体表快照，供「倍率差值补扣」使用。
+//   只存 16 字节对齐、hp 合理、klass 可读的对象；写回前一律重新读一次校验。
+struct EntTrackRec { uintptr_t addr; uint32_t hp; uint64_t klass; };
+static std::mutex g_entTrackMu;
+static std::vector<EntTrackRec> g_entTrack;
+
+// R43（2026-10-25）：只收「ENTSCAN 里真的掉过血」的地址（垃圾候选全被筛掉）。
+static std::mutex g_dropMu;
+static std::vector<uint64_t> g_dropAddrs;
+
+// R43：伤害不是在同一次调用里同步写入的 ⇒ 事件后延迟复查再补扣。
+struct PendSnap { uintptr_t addr; uint32_t hp0; long long due; int mul; };
+static std::mutex g_pendMu;
+static std::vector<PendSnap> g_pend;
+static std::atomic<bool> g_pendStarted{false};
+static inline long long NowMs() {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+static void PendWatchThread();
+
 static void Hook_Inv(void* self, void* ev, size_t a2, void* a3, void* mth) {
     if (!ev) {
         if (g_origInv) g_origInv(self, ev, a2, a3, mth);
         return;
     }
 
-    uint32_t wt = 0, victim = 0, atk = 0, atkOwn = 0, vicOwn = 0;
+    // R29（2026-10-22）全量探针（替代 R28 的 INV-PROBE）：3.3.0 payload 结构已重排
+    //   （callee 实测 +0x10→+0x14、+0x1c→+0x1e），先无条件 dump 前 24 次的 ev+0x00..+0x60
+    //   共 24 个 word（u32 视图 3 行 + u16 视图 6 行），用来定 type / atk / victim 的真实偏移。
+    //   只读：全部走 ReadU32Quiet（自带 ValidPtrForRead 闸门），不写任何游戏内存。
+    {
+        static std::atomic<int> s_probe2{0};
+        static std::atomic<int> s_invCalls{0};
+        const int n = s_invCalls.fetch_add(1) + 1;
+        if (n == 1 || (n % 256) == 0)
+            LOGI(TPL_LOG " INV-CALLS total=%d self=%p ev=%p", n, self, ev);
+        const int idx = s_probe2.fetch_add(1);
+        if (idx < 24) {
+            const char* b = reinterpret_cast<const char*>(ev);
+            uint32_t w[24]; int nOk = 0;
+            for (int k = 0; k < 24; ++k) {
+                if (ReadU32Quiet(b + k * 4, &w[k])) ++nOk; else w[k] = 0xDEADBEEFu;
+            }
+            if (nOk == 24) LOGI(TPL_LOG " INV-PROBE2 n=%d ev=%p self=%p ok=24/24", idx, ev, self);
+            else           LOGW(TPL_LOG " INV-PROBE2 n=%d ev=%p self=%p FAIL ok=%d/24", idx, ev, self, nOk);
+            for (int line = 0; line < 3; ++line) {
+                LOGI(TPL_LOG "  P2 n=%d u32 +0x%02X: %08X %08X %08X %08X %08X %08X %08X %08X",
+                     idx, line * 0x20, (unsigned)w[line*8+0], (unsigned)w[line*8+1],
+                     (unsigned)w[line*8+2], (unsigned)w[line*8+3], (unsigned)w[line*8+4],
+                     (unsigned)w[line*8+5], (unsigned)w[line*8+6], (unsigned)w[line*8+7]);
+            }
+            for (int line = 0; line < 6; ++line) {
+                const uint32_t a0 = w[line*4+0], a1 = w[line*4+1], a2 = w[line*4+2], a3 = w[line*4+3];
+                LOGI(TPL_LOG "  P2 n=%d u16 +0x%02X: %04X %04X %04X %04X %04X %04X %04X %04X",
+                     idx, line * 0x10,
+                     (unsigned)(a0 & 0xFFFF), (unsigned)(a0 >> 16), (unsigned)(a1 & 0xFFFF), (unsigned)(a1 >> 16),
+                     (unsigned)(a2 & 0xFFFF), (unsigned)(a2 >> 16), (unsigned)(a3 & 0xFFFF), (unsigned)(a3 >> 16));
+            }
+        }
+    }
+
+    // R29（2026-10-22）3.3.0 字段重映射（依据：语义对比 —— payload 结构重排 + R28 探针）
+    //   · type   = u32@+0x14 的高 16 位（3.3.0 疑似把伤害类型 0x85 重编号为 0x86，两个都收）
+    //   · atk    = u32@+0x18（未变）
+    //   · victim = u32@+0x3C（3.3.0 里恒=5，正是 3.2.0 的玩家 id）
+    //   · +0x38 与 +0x1C 仅只读留观（+0x1C 实测是位掩码 0x60000，不是 own）
+    uint32_t wt = 0, victim = 0, atk = 0;
     bool okT = ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x14, &wt);
     uint16_t type = okT ? static_cast<uint16_t>(wt >> 16) : 0xFFFFu;
     bool okK = ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x18, &atk);
-    bool okO = ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x1C, &atkOwn);
-    bool okV = ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x38, &victim);
-    bool okW = ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x3C, &vicOwn);
-    (void)okW;   // R5f: vow(+0x3C) is always 0 in practice; kept only for the event dump
+    bool okV = ReadU32Quiet(reinterpret_cast<const char*>(ev) + 0x3C, &victim);
+    const bool isDmg = okT && (type == 0x85 || type == 0x86);
+
+    // R31（2026-10-22）实体字段只读探针：验证 HP/攻击/阵营 偏移（HP=+0xA0 / attack=+0xA4 /
+    //   camp=+0xB8 / canBattle=+0x99，来自可读名 getter 反汇编）。**只读**，失败只打 FAIL，不影响逻辑。
+    //   p = *(ev+0x20)、q = *(ev+0x30)，各自读 +0x90..+0xBC 共 12 个 u32。
+    if (isDmg) {
+        static std::atomic<int> s_entProbe{0};
+        const int pn = s_entProbe.fetch_add(1);
+        // R48：诊断关闭（ENTSCAN / ATTR-SCAN 仅保留函数体，正式包不启动）
+        (void)&MaybeStartEntScan;
+        (void)&MaybeStartAttrScan;
+        // R46（2026-10-25）：事件里两个指针（+0x20 / +0x30）全量 dump 0x00..0x1FF（前 3 次事件）。
+        //   目的：判定它们是不是「受害者实体 / 伤害记录」，以及伤害数值落在哪个偏移（int 或 float）。
+        if (false && pn < 3) {
+            ZLoadMaps();
+            const char* eb = reinterpret_cast<const char*>(ev);
+            for (int k = 0; k < 2; ++k) {
+                const uint32_t off = (k == 0) ? 0x20u : 0x30u;
+                uint64_t ptr = 0;
+                if (!ReadPtrQuiet(eb + off, &ptr) || !ptr) { LOGW(TPL_LOG " FDUMP +0x%02X 读失败", (unsigned)off); continue; }
+                const uintptr_t pa = static_cast<uintptr_t>(ptr);
+                if (!ZMapped(pa, 0x200)) { LOGW(TPL_LOG " FDUMP +0x%02X ptr=%p 未映射（跳过）", (unsigned)off, (void*)pa); continue; }
+                LOGI(TPL_LOG " FDUMP tag=%c ev+0x%02X ptr=%p vec=%u", (k == 0) ? 'p' : 'q', (unsigned)off, (void*)pa, (unsigned)victim);
+                // R47：把「每次命中都换新」的 5 个子对象也 dump 0x00..0xFC（伤害数值最可能在这里）
+                if (k == 0) {
+                    static const uint32_t kChild[5] = {0x10, 0x68, 0x80, 0x88, 0xA8};
+                    for (int ci = 0; ci < 5; ++ci) {
+                        uint64_t cp = 0;
+                        if (!ReadPtrQuiet(reinterpret_cast<const char*>(pa) + kChild[ci], &cp) || !cp) continue;
+                        const uintptr_t ca = static_cast<uintptr_t>(cp);
+                        if (!ZMapped(ca, 0x100)) continue;
+                        LOGI(TPL_LOG "  CHILD p+0x%02X -> %p", (unsigned)kChild[ci], (void*)ca);
+                        for (uint32_t base = 0; base < 0x100; base += 0x20) {
+                            const char* cb2 = reinterpret_cast<const char*>(ca + base);
+                            uint32_t cw[8]; int cok = 0;
+                            for (int i = 0; i < 8; ++i) { if (ReadU32Quiet(cb2 + i * 4, &cw[i])) ++cok; else cw[i] = 0xDEADBEEFu; }
+                            if (cok == 8)
+                                LOGI(TPL_LOG "   C%02X +%03X: %08X %08X %08X %08X %08X %08X %08X %08X",
+                                     (unsigned)kChild[ci], (unsigned)base, (unsigned)cw[0], (unsigned)cw[1],
+                                     (unsigned)cw[2], (unsigned)cw[3], (unsigned)cw[4], (unsigned)cw[5],
+                                     (unsigned)cw[6], (unsigned)cw[7]);
+                        }
+                    }
+                }
+                for (uint32_t base = 0; base < 0x200; base += 0x20) {
+                    const char* b = reinterpret_cast<const char*>(pa + base);
+                    uint32_t w[8]; int ok = 0;
+                    for (int i = 0; i < 8; ++i) { if (ReadU32Quiet(b + i * 4, &w[i])) ++ok; else w[i] = 0xDEADBEEFu; }
+                    if (ok == 8)
+                        LOGI(TPL_LOG "  F%c +%03X: %08X %08X %08X %08X %08X %08X %08X %08X",
+                             (k == 0) ? 'p' : 'q', (unsigned)base, (unsigned)w[0], (unsigned)w[1],
+                             (unsigned)w[2], (unsigned)w[3], (unsigned)w[4], (unsigned)w[5],
+                             (unsigned)w[6], (unsigned)w[7]);
+                }
+            }
+        }
+        if (pn < 24) {
+            const char* eb = reinterpret_cast<const char*>(ev);
+            for (int k = 0; k < 2; ++k) {
+                const uint32_t off = (k == 0) ? 0x20u : 0x30u;
+                const char tag = (k == 0) ? 'p' : 'q';
+                uint64_t ptr = 0;
+                if (!ReadPtrQuiet(eb + off, &ptr) || !ptr) {
+                    LOGW(TPL_LOG " ENT-PROBE n=%d tag=%c ev+0x%02X ptr FAIL", pn, tag, (unsigned)off);
+                    continue;
+                }
+                const void* pv = reinterpret_cast<const void*>(ptr);
+                if (!ValidPtrForRead(pv, 4)) {
+                    LOGW(TPL_LOG " ENT-PROBE n=%d tag=%c ptr=%p 不合法（跳过）", pn, tag, (void*)ptr);
+                    continue;
+                }
+                const char* pb = reinterpret_cast<const char*>(pv);
+                uint32_t w[12]; int nOk = 0;
+                for (int m = 0; m < 12; ++m) {
+                    if (ReadU32Quiet(pb + 0x90 + m * 4, &w[m])) ++nOk; else w[m] = 0xDEADBEEFu;
+                }
+                LOGI(TPL_LOG " ENT-PROBE n=%d tag=%c addr=%p ok=%d/12 atk=%u vic=%u",
+                     pn, tag, (void*)ptr, nOk, (unsigned)atk, (unsigned)victim);
+                LOGI(TPL_LOG "   ENT %c +90=%08X +94=%08X +98=%08X +9C=%08X | +A0=%08X(HP?) +A4=%08X(ATK?) +A8=%08X +AC=%08X",
+                     tag, (unsigned)w[0], (unsigned)w[1], (unsigned)w[2], (unsigned)w[3],
+                     (unsigned)w[4], (unsigned)w[5], (unsigned)w[6], (unsigned)w[7]);
+                LOGI(TPL_LOG "   ENT %c +B0=%08X +B4=%08X +B8=%08X(camp?) +BC=%08X",
+                     tag, (unsigned)w[8], (unsigned)w[9], (unsigned)w[10], (unsigned)w[11]);
+            }
+        }
+
+        // R36（2026-10-23）②：用 (id→实体) 表把 vic(+0x3C) 反查成实体指针，dump +0x90..+0xBC。
+        //   判据：同一实体连续受伤时 +0xA0 应单调下降（真 HP）；+0xB8 应把「我方/怪物」分成两组。
+        //   只读；表未命中就静默跳过（战斗早期解析器还没被调用过是正常的）。
+        if (okV && victim) {
+            static std::atomic<int> s_rsvVic{0}, s_rsvMiss{0};
+            uintptr_t ent = 0;
+            if (ResTableLookup(victim, &ent) && ent) {
+                const int rn = s_rsvVic.fetch_add(1) + 1;
+                if (rn <= 24 || (rn % 64) == 0) DumpEnt12("VIC", rn, ent, atk, victim);
+            } else {
+                const int mn = s_rsvMiss.fetch_add(1) + 1;
+                if (mn <= 6 || (mn % 128) == 0)
+                    LOGW(TPL_LOG " VIC-MISS n=%d vic=%u 表内无记录（RSV 命中数=%d）",
+                         mn, (unsigned)victim, s_rsvVic.load());
+            }
+        }
+    }
+
+
+    // R27（2026-10-22）fail-open：关键字段读不到（ev 非法 / 3.3.0 结构比 0x40 短）⇒ 不做任何归属判定，
+    //   打一行日志后直接走原函数。宁可漏保护，也绝不再拿垃圾值/metadata 走进链路（上轮 SIGSEGV 教训）。
+    if (!okT || !okK) {
+        static std::atomic<int> nEvtBad{0};
+        if (nEvtBad.fetch_add(1) < 8)
+            LOGW(TPL_LOG " INV-EVT 字段不可读(okT=%d okK=%d) ev=%p — fail-open 直通原函数",
+                 (int)okT, (int)okK, ev);
+        if (g_origInv) g_origInv(self, ev, a2, a3, mth);
+        return;
+    }
+    // victim 读失败（结构更短）⇒ 置 0 继续：vicMine 必为 false ⇒ 天然不拦截（fail-open）
+    if (!okV) victim = 0;
 
     const bool invOn  = g_inv.load();
     const int  mul    = g_dmgMul.load();
 
-    // +0x1C（攻击方所有权）连续同值计票：id 集为空的兜底（R2/R4 实测玩家攻击时为 5）
-    if (type == 0x85 && okO) ObserveAttackerOwner(atkOwn);
+    // R31：互攻判据（某 id 既当攻击方又当受击方 ⇒ 我方）；R29 的「被>=3 攻击方打」已停用（会误学怪物）。
+    if (isDmg && okV && okK) ObserveExchange(atk, victim);
 
     uint32_t me = 0;
     const char* meSrc = "none";
@@ -891,21 +1238,12 @@ static void Hook_Inv(void* self, void* ev, size_t a2, void* a3, void* mth) {
 
     // R5f identity rule (see IsMineActor): chain id | own(local player id) | 0x104-learned set.
     //   R5e's own/vow based owner comparison is gone - own is constant 5 on both sides。
-    if (type == 0x85 && !g_reenter.load()) {
+    if (isDmg && !g_reenter.load()) {
         const uint32_t team = g_meTeam.load();
 
-        // R8：先喂「对攻关系」表（可能在本次事件里把我方第二/第三个角色 id 认出来），
-        //   再算出归属 —— 切换角色后新角色被打一次 + 回打一次就会入列。
-        if (okK && okV) ObserveDamagePair(atk, victim, team);
-        // R24: 新战斗的怪物 id 往往换一批，被怪打一次就清掉上一场的统计，
-        // 避免旧的“打过怪”证据把新怪也拉进我方集合。
-        if (team == 0) {
-            static std::atomic<int> s_pairHits{0};
-            const int hit = s_pairHits.fetch_add(1);
-            if (hit < 3 || hit % 200 == 0) {
-                SideResetHitStats();
-            }
-        }
+        // R29：R8 的「对攻关系表」与 R24 的 SideResetHitStats 不再参与归属（IsMineActor 只看
+        //   chain/own/id 集），已从热路径移除，避免误导排查。
+        (void)team;
 
         const uint32_t chainId = me;                   // 0 = chain did not resolve this time
         const char* whyV = nullptr;
@@ -922,31 +1260,61 @@ static void Hook_Inv(void* self, void* ev, size_t a2, void* a3, void* mth) {
             //   failure mode we hunt); keep a small budget for the rest.
             const bool interesting = !vicMine;
             if ((interesting || nInvEvt.fetch_add(1) < 24) && nInvLog.fetch_add(1) < 400) {
-                LOGI(TPL_LOG " INV-EVT type=0x%X atk=%u own=%u vic=%u vow=%u team=%u set=%d me=%u(%s) atkMine=%d vicMine=%d",
-                     (unsigned)type, (unsigned)atk, (unsigned)atkOwn, (unsigned)victim, (unsigned)vicOwn,
+                LOGI(TPL_LOG " INV-EVT type=0x%X atk=%u vic(+0x3C)=%u team=%u set=%d me=%u(%s) atkMine=%d vicMine=%d",
+                     (unsigned)type, (unsigned)atk, (unsigned)victim,
                      (unsigned)team, MeIdCount(), (unsigned)me, meSrc, (int)atkMine, (int)vicMine);
             }
         }
 
-        // ① 无敌：受击方是玩家侧 ⇒ 不调原函数（= 池鸳 libcymod 0x4e2c8 的同款过滤）
-        if (invOn && vicMine) {
-            static std::atomic<int> n{0};
-            const int k = n.fetch_add(1);
-            if (k < 12) {
-                LOGI(TPL_LOG " 无敌拦截: type=0x%X 受击=%u vow=%u(why=%s) atk=%u own=%u(why=%s) me=%u(%s)",
-                     (unsigned)type, (unsigned)victim, (unsigned)vicOwn, whyV ? whyV : "-",
-                     (unsigned)atk, (unsigned)atkOwn, whyA ? whyA : "-", (unsigned)me, meSrc);
-            }
-            if (k < 2) DiagDumpEvent(ev, type, victim, atk, atkOwn, vicOwn, me, meSrc);
+        // ① 无敌已停用（R32 no-op 止血）：R29/R31 的 id 归属规则被证会把怪物学成我方（用户实测
+        //   「个别怪物也变无敌」），在拿到可靠 camp 判据前一律不拦，只在前 3 次打一行说明后照常调原函数。
+        // ① 无敌（R39 2026-10-25 启用）：actor id 分带判据
+        //   受击方 ≤ kIdPlayerMax(12) 且 攻击方 ≥ kIdMonsterMin(22) ⇒ 判为「怪物打玩家」⇒ 不调原函数。
+        //   方向不对或任一 id 落死区 13..21 ⇒ 不判定，照常调原函数（fail-open）。
+        //   R32 的「学习式 id 集」已废止：它会把 22 这类怪物学成我方（用户实测小怪也变无敌）。
+        // R51（2026-10-25）：新关卡实测怪物 id 会落到 17/21/24/27（<22），旧「攻击方≥22」规则会漏保护。
+        //   改为**只看受击方**：victim ∈ [1,12] 即玩家侧 ⇒ 拦截（不要求攻击方数值）。
+        //   实测依据：`atk=17 vic=5`、`atk=21 vic=5` 漏拦；而 `atk=5 vic=17/21`（玩家打怪）不受影响。
+        if (invOn && okV && victim >= 1 && victim <= kIdPlayerMax && atk != victim) {
+            static std::atomic<int> nBlk{0};
+            const int c = nBlk.fetch_add(1) + 1;
+            if (c <= 12 || (c % 64) == 0)
+                LOGI(TPL_LOG " 无敌拦截 n=%d type=0x%X atk=%u vic=%u（不调原函数）",
+                     c, (unsigned)type, (unsigned)atk, (unsigned)victim);
             return;
         }
+        if (invOn && !vicMine) {
+            static std::atomic<int> nMiss{0};
+            if (nMiss.fetch_add(1) < 6)
+                LOGW(TPL_LOG " 无敌未拦 type=0x%X atk=%u vic=%u（id 带外，fail-open）",
+                     (unsigned)type, (unsigned)atk, (unsigned)victim);
+        }
 
-        // ② 伤害倍率：R22 起走属性写回（DmgAttrSync，挂在 0xc02a9f0 每帧站点，见下方 R22 段）。
-        //   旧 0x104 写回（R15 实证无效）与 VicTail 深读（R18b 卡死）已全部移除，不在此处做任何事。
-        if (mul > 1) {
-            static std::atomic<int> nDmgHint{0};
-            if (nDmgHint.fetch_add(1) == 0)
-                LOGI(TPL_LOG " 伤害倍率 R22：属性写回已接管（本钩子不再参与伤害倍率）");
+        // ② 伤害倍率（R41 2026-10-25）：玩家打怪事件 ⇒ **重复调用原函数 reps 次**，每次=原生一击，
+        //   总伤害 ≈ 原生 × reps。判据与无敌正相反：攻击方 1..12（玩家），受击方 ≥22（怪物）。1=关。
+        //   上限 20 次（滑块 >20 按 20 计），避免单帧重复过多打爆帧时间。
+        //   依据：R39 已实证「不调原函数 ⇒ 伤害不结算」⇒ 原函数就是伤害结算入口。
+        // ③ 伤害倍率（R49 2026-10-25）：用户实测「重复调用确实扣血更多」⇒ 恢复多段结算。
+        //   玩家打怪事件（攻击方 ≤12、受击方 ≥22）时把原函数调用 reps 次；第 2 次起用**事件副本**
+        //   （浅拷贝 0x100 字节），避免游戏把同一事件对象当「已处理」丢弃。reps 上限 20。
+        if (mul > 1 && okV && okK && atk >= 1 && atk <= kIdPlayerMax && victim >= kIdMonsterMin) {
+            int reps = mul;
+            if (reps > 20) reps = 20;
+            // R52：21 个下游探针已证明抓不到伤害数值，正式包不装（探针会插 21 个热函数，影响帧率）
+            static thread_local unsigned char s_evCopy[0x100];
+            if (g_origInv) {
+                g_origInv(self, ev, a2, a3, mth);
+                for (int i = 1; i < reps; ++i) {
+                    memcpy(s_evCopy, ev, sizeof(s_evCopy));
+                    g_origInv(self, s_evCopy, a2, a3, mth);
+                }
+            }
+            static std::atomic<int> nRep2{0};
+            const int c = nRep2.fetch_add(1) + 1;
+            if (c <= 10 || (c % 128) == 0)
+                LOGI(TPL_LOG " 倍率(多段) n=%d atk=%u vic=%u reps=%d（含事件副本）",
+                     c, (unsigned)atk, (unsigned)victim, reps);
+            return;
         }
     }
 
@@ -954,6 +1322,61 @@ static void Hook_Inv(void* self, void* ev, size_t a2, void* a3, void* mth) {
 }
 
 // R19: R9/R10 的 HP 差分/补扣后处理（Hook_InvPostDmg）已删除，禁止复活。
+
+// ============================================================================
+//  R36（2026-10-23）只读探针 hook 本体
+//  全部 pass-through：先/后调原函数，入参原样、内存不写、返回值只用原函数的。
+//  日志一律限流（首 N 次 + 每 256/64 次），避免热路径刷 logcat 拖慢 UnityMain。
+// ============================================================================
+typedef void*    (*FnResolve_t)(void* mgr, uint32_t id);
+typedef uint64_t (*FnHpW2_t)(void* a0, uint64_t a1);
+typedef uint64_t (*FnHpW3_t)(void* a0, void* a1, void* a2);
+typedef uint64_t (*FnHpW5_t)(void* a0, void* a1, void* a2, void* a3, void* a4);
+
+static FnResolve_t g_origResolve = nullptr;
+static FnHpW2_t    g_origHpWa    = nullptr;
+static FnHpW3_t    g_origHpWb    = nullptr;
+static FnHpW5_t    g_origHpWc    = nullptr;
+
+// ① 0x16de0acc：id→实体解析。判据：ret 非空且 id 与我们已知的 actor id 域一致；
+//   同时把 (id→ret) 记进 16 槽表，供 Hook_Inv 的受击分支反查。
+static void* Hook_Resolve(void* mgr, uint32_t id) {
+    void* ret = g_origResolve ? g_origResolve(mgr, id) : nullptr;
+    if (ret) ResTablePut(id, reinterpret_cast<uintptr_t>(ret));
+    static std::atomic<int> s_calls{0}, s_log{0};
+    const int n = s_calls.fetch_add(1) + 1;
+    if ((n <= 8 || (n % 256) == 0) && s_log.fetch_add(1) < 40) {
+        LOGI(TPL_LOG " RSV n=%d mgr=%p id=%u ret=%p", n, mgr, (unsigned)id, ret);
+        if (ret && (n <= 8)) DumpEnt12("RSV", n, reinterpret_cast<uintptr_t>(ret), 0, id);
+    }
+    return ret;
+}
+
+// ② 0x5a5a400：x0=self，w1=数值（静态分析：与 [+0x9c] 取大后按系数扣减，写 +0xA4/+0x98）
+static uint64_t Hook_HpWa(void* a0, uint64_t a1) {
+    static std::atomic<int> s_calls{0};
+    const int n = s_calls.fetch_add(1) + 1;
+    if (n <= 12)
+        LOGI(TPL_LOG " HPW-A n=%d x0=%p x1=%#lx (w1=%u)", n, a0, (unsigned long)a1,
+             (unsigned)(a1 & 0xFFFFFFFFu));
+    return g_origHpWa ? g_origHpWa(a0, a1) : 0;
+}
+
+// ③ 0x1aa964b0：x0/x1/x2 三个入参（静态分析：x19=x2、x20=x1、x21=x0，对称两块写 +0xA0）
+static uint64_t Hook_HpWb(void* a0, void* a1, void* a2) {
+    static std::atomic<int> s_calls{0};
+    const int n = s_calls.fetch_add(1) + 1;
+    if (n <= 12) LOGI(TPL_LOG " HPW-B n=%d x0=%p x1=%p x2=%p", n, a0, a1, a2);
+    return g_origHpWb ? g_origHpWb(a0, a1, a2) : 0;
+}
+
+// ④ 0x1aa95b14：入口即 cbz x1 / cbz x2，且 mov x21,x4 ⇒ 读 x0..x4 五个入参
+static uint64_t Hook_HpWc(void* a0, void* a1, void* a2, void* a3, void* a4) {
+    static std::atomic<int> s_calls{0};
+    const int n = s_calls.fetch_add(1) + 1;
+    if (n <= 12) LOGI(TPL_LOG " HPW-C n=%d x0=%p x1=%p x2=%p x3=%p x4=%p", n, a0, a1, a2, a3, a4);
+    return g_origHpWc ? g_origHpWc(a0, a1, a2, a3, a4) : 0;
+}
 
 // ============================================================================
 //  R22（2026-10-07）：伤害倍率 = 玩家「伤害加成属性」写回（池鸳 attack-writeback 机制，自研实现）
@@ -964,7 +1387,7 @@ static void Hook_Inv(void* self, void* ev, size_t a2, void* a3, void* mth) {
 //    ② selfSet/selfGet 取错来源：不是 R+0x08/R+0x10，而是 getComponent(R,0x1a) 派生出来的两个对象。
 //    ③ actor id 在 R+0x38（不是 R+0x20）。
 //  池鸳语义（libcymod 反汇编，RVA 全部为 libil2cpp）：
-//    0x4e45c（挂在 0xc02a9f0 的 handler）→ 0x4f684(0x1d749418) 走 5 级 → +0xB8 = R；
+//    0x4e45c（池鸳 handler）→ 0x4f684(0x1d749418) 走 5 级 → +0xB8 = R；[3.3.0 该链弃用]
 //    0x4f118(R, out)：actor = *(u32*)(R+0x38)（为 0 即放弃）；
 //        comp = getComponent(R, 0x1a, 0)（槽 0x130f50 = base+0xd937a30）；
 //        C = *(comp+0xc8)；out+0x08 = C（写对象 selfSet）；out+0x10 = *(C+0x20)（读对象 selfGet）；
@@ -1224,6 +1647,81 @@ static void Hook_MoveEntry(void* self, void* a1, void* mth) {
 }
 
 static void Hook_Freeze(void* self, void* a1, void* mth) {
+    // R32（2026-10-22）只读探针：在定怪钩的 a1 上找实体字段（HP=+0xA0? 攻击=+0xA4? camp=+0xB8?）。
+    //   前 12 次调用（不限开关）打印 a1 的 +0x00..+0x40 与 +0x90..+0xC0；只读、失败打 FAIL、不影响冻结逻辑。
+    {
+        static std::atomic<int> s_fe{0};
+        const int fn = s_fe.fetch_add(1);
+        if (fn < 12) {
+            uint32_t ru = 0; bool okId = false;
+            if (a1) okId = ReadU32Quiet(reinterpret_cast<const char*>(a1) + 0x18, &ru);
+            LOGI(TPL_LOG " FREEZE-ENT #%d self=%p a1=%p id(+0x18)=%u ok=%d freeze=%d",
+                 fn, self, a1, (unsigned)ru, (int)okId, (int)g_freeze.load());
+            if (a1 && ValidPtrForRead(a1, 4)) {
+                const char* ab = reinterpret_cast<const char*>(a1);
+                for (int row = 0; row < 4; ++row) {
+                    uint32_t v[4]; int nOk = 0;
+                    for (int c = 0; c < 4; ++c) {
+                        if (ReadU32Quiet(ab + row * 0x10 + c * 4, &v[c])) ++nOk; else v[c] = 0xDEADBEEFu;
+                    }
+                    LOGI(TPL_LOG "   FE-1 #%d +%02X=%08X +%02X=%08X +%02X=%08X +%02X=%08X ok=%d/4",
+                         fn, row * 0x10, (unsigned)v[0], row * 0x10 + 4, (unsigned)v[1],
+                         row * 0x10 + 8, (unsigned)v[2], row * 0x10 + 12, (unsigned)v[3], nOk);
+                }
+                for (int row = 0; row < 3; ++row) {
+                    uint32_t v[4]; int nOk = 0;
+                    for (int c = 0; c < 4; ++c) {
+                        const uint32_t off = 0x90 + row * 0x10 + c * 4;
+                        if (ReadU32Quiet(ab + off, &v[c])) ++nOk; else v[c] = 0xDEADBEEFu;
+                    }
+                    LOGI(TPL_LOG "   FE-2 #%d +%02X=%08X +%02X=%08X +%02X=%08X +%02X=%08X ok=%d/4 row=%d",
+                         fn, 0x90 + row * 0x10, (unsigned)v[0], 0x94 + row * 0x10, (unsigned)v[1],
+                         0x98 + row * 0x10, (unsigned)v[2], 0x9C + row * 0x10, (unsigned)v[3], nOk, row);
+                }
+
+                // R33（2026-10-22）顺藤摸瓜：a1 的 +0x20 / +0x98 / +0xA8 三个 64 位指针各再 dump
+                //   前 0x40（16 word）+ 0x90..0xC0（12 word），找真正的实体对象（HP=+0xA0/攻击=+0xA4/camp=+0xB8）。
+                //   纯只读，非法指针跳过、读失败打 FAIL，不影响冻结/无敌逻辑。
+                static const uint32_t kPtrOffs[3] = { 0x20u, 0x98u, 0xA8u };
+                for (int pi = 0; pi < 3; ++pi) {
+                    const uint32_t po = kPtrOffs[pi];
+                    uint64_t p = 0;
+                    if (!ReadPtrQuiet(ab + po, &p) || !p) {
+                        LOGW(TPL_LOG "   FREEZE-PTR #%d ptr%d(a1+0x%02X) 读失败(FAIL)", fn, pi, (unsigned)po);
+                        continue;
+                    }
+                    const void* pv2 = reinterpret_cast<const void*>(p);
+                    if (!ValidPtrForRead(pv2, 4)) {
+                        LOGW(TPL_LOG "   FREEZE-PTR #%d ptr%d(a1+0x%02X)=%p 不合法（跳过）", fn, pi, (unsigned)po, (void*)p);
+                        continue;
+                    }
+                    LOGI(TPL_LOG "   FREEZE-PTR #%d ptr%d(a1+0x%02X)=%p", fn, pi, (unsigned)po, (void*)p);
+                    const char* pb = reinterpret_cast<const char*>(pv2);
+                    for (int row = 0; row < 4; ++row) {
+                        uint32_t v[4]; int nOk = 0;
+                        for (int c = 0; c < 4; ++c) {
+                            if (ReadU32Quiet(pb + row * 0x10 + c * 4, &v[c])) ++nOk; else v[c] = 0xDEADBEEFu;
+                        }
+                        LOGI(TPL_LOG "     FP-1 #%d ptr%d +%02X=%08X +%02X=%08X +%02X=%08X +%02X=%08X ok=%d/4",
+                             fn, pi, row * 0x10, (unsigned)v[0], row * 0x10 + 4, (unsigned)v[1],
+                             row * 0x10 + 8, (unsigned)v[2], row * 0x10 + 12, (unsigned)v[3], nOk);
+                    }
+                    for (int row = 0; row < 3; ++row) {
+                        uint32_t v[4]; int nOk = 0;
+                        for (int c = 0; c < 4; ++c) {
+                            const uint32_t off = 0x90 + row * 0x10 + c * 4;
+                            if (ReadU32Quiet(pb + off, &v[c])) ++nOk; else v[c] = 0xDEADBEEFu;
+                        }
+                        LOGI(TPL_LOG "     FP-2 #%d ptr%d +%02X=%08X +%02X=%08X +%02X=%08X +%02X=%08X ok=%d/4 row=%d",
+                             fn, pi, 0x90 + row * 0x10, (unsigned)v[0], 0x94 + row * 0x10, (unsigned)v[1],
+                             0x98 + row * 0x10, (unsigned)v[2], 0x9C + row * 0x10, (unsigned)v[3], nOk, row);
+                    }
+                }
+            } else {
+                LOGW(TPL_LOG "   FREEZE-ENT #%d a1=%p 不可读（FAIL）", fn, a1);
+            }
+        }
+    }
     if (g_freeze.load()) {
         const char* n = SafeClassName("定怪 entity", a1);
         bool isPlayer = n && (std::strstr(n, "Avatar") || std::strstr(n, "Player") ||
@@ -1235,6 +1733,307 @@ static void Hook_Freeze(void* self, void* a1, void* mth) {
         }
     }
     if (g_origFreeze) g_origFreeze(self, a1, mth);
+}
+
+// R34（2026-10-22）实体 getter 只读 pass-through 钩：x0 就是实体对象，我们把它的
+//   关键字段（HP=+0xA0 / 攻击=+0xA4 / 阵营=+0xB8 / canBattle=+0x99）打出来，然后原样调原函数返回。
+//   绝不改返回值、绝不写内存；读失败只打 FAIL，不影响游戏逻辑。
+static void EntDumpImpl(const char* tag, void* self, std::atomic<int>* ctr, int limit) {
+    if (!self) return;
+    const char* sb = reinterpret_cast<const char*>(self);
+    uint32_t hp = 0, atk = 0, camp = 0, cb = 0;
+    const bool b1 = ReadU32Quiet(sb + 0xA0, &hp);
+    const bool b2 = ReadU32Quiet(sb + 0xA4, &atk);
+    const bool b3 = ReadU32Quiet(sb + 0xB8, &camp);
+    const bool b4 = ReadU32Quiet(sb + 0x99, &cb);
+    if (!(b1 && b2 && b3 && b4)) {
+        LOGW(TPL_LOG " %s self=%p 读失败 b=%d%d%d%d", tag, self, (int)b1, (int)b2, (int)b3, (int)b4);
+        return;
+    }
+    const int n = ctr->fetch_add(1);
+    if (n < limit)
+        LOGI(TPL_LOG " %s self=%p hp(+0xA0)=%u atk(+0xA4)=%u camp(+0xB8)=%u(0x%X) cb(+0x99)=%u",
+             tag, self, (unsigned)hp, (unsigned)atk, (unsigned)(camp & 0xFF), (unsigned)(camp & 0xFFFFFFFF),
+             (unsigned)(cb & 0xFF));
+}
+static std::atomic<int> g_entHpN{0}, g_entAtkN{0}, g_entCampN{0};
+
+static uint32_t Hook_EntHp(void* self) {
+    EntDumpImpl("ENT-HP", self, &g_entHpN, 24);
+    return g_origEntHp ? g_origEntHp(self) : 0u;
+}
+static uint32_t Hook_EntAtk(void* self) {
+    EntDumpImpl("ENT-ATK", self, &g_entAtkN, 12);
+    const uint32_t v = g_origEntAtk ? g_origEntAtk(self) : 0u;
+    if (!self) return v;
+    // R40（2026-10-25）：倍率 = 对「玩家侧实体」的攻击力返回值放大（不写任何游戏内存）。
+    //   actor id 取自 +0x40（R37/R38 实测：玩家 5/9/11/12，怪物 22/52..106）
+    uint32_t id = 0;
+    const bool okId = ReadU32Quiet(reinterpret_cast<const char*>(self) + 0x40, &id);
+    const int mul = g_dmgMul.load();
+    {
+        static std::atomic<int> s_diag{0};
+        const int n = s_diag.fetch_add(1);
+        if (n < 24)
+            LOGI(TPL_LOG " ENT-ATK call n=%d self=%p id(+0x40)=%u ok=%d ret=%u mul=%d",
+                 n + 1, self, (unsigned)id, (int)okId, (unsigned)v, mul);
+    }
+    if (mul > 1 && okId && id >= 1 && id <= kIdPlayerMax) {
+        uint64_t s64 = static_cast<uint64_t>(v) * static_cast<uint64_t>(mul);
+        if (s64 > 0x7FFFFFFFULL) s64 = 0x7FFFFFFFULL;
+        static std::atomic<int> s_boost{0};
+        const int nb = s_boost.fetch_add(1) + 1;
+        if (nb <= 8 || (nb % 256) == 0)
+            LOGI(TPL_LOG " 倍率(ATK) id=%u %u -> %u (x%d) n=%d",
+                 (unsigned)id, (unsigned)v, (unsigned)s64, mul, nb);
+        return static_cast<uint32_t>(s64);
+    }
+    return v;
+}
+static uint32_t Hook_EntCamp(void* self) {
+    EntDumpImpl("ENT-CAMP", self, &g_entCampN, 12);
+    return g_origEntCamp ? g_origEntCamp(self) : 0u;
+}
+
+// ============================================================================
+// R35（2026-10-22）后台 GC 堆实体扫描（只读；独立线程，绝不写游戏内存）
+//   目的：getter 是死代码（R34 实测 0 次调用）、事件里没有实体指针 ⇒ 最后一条自给路径：
+//   直接扫 GC 堆 arena，用「实体特征」筛候选，再靠 hp 下降抓受击实体。
+//   段选择：/proc/self/maps 里 rw-p、匿名、start∈[0x7800000000,0x7810000000)、size>=64MB。
+//   候选判据：vtable∈(0x1000000000,0x8000000000)、hp(+0xA0)∈[100,1e7]、atk(+0xA4)∈[1,1e6]、
+//            camp(+0xB8)<4、cb(+0x99)<2。
+//   触发：首次收到 0x86 伤害事件 或 无敌开关打开；之后每 5 秒一轮，最多 20 轮；每轮只打前 60 CAND / 40 DROP。
+// ============================================================================
+static std::atomic<bool> g_entScanStarted{false};
+
+static void EntScanOnce(std::map<uint64_t, uint32_t>* last) {
+    FILE* fp = std::fopen("/proc/self/maps", "r");
+    if (!fp) return;
+    char line[512];
+    uintptr_t segStart = 0, segEnd = 0;
+    while (std::fgets(line, sizeof(line), fp)) {
+        unsigned long long a = 0, b = 0;
+        char perms[8] = {0};
+        if (std::sscanf(line, "%llx-%llx %7s", &a, &b, perms) != 3) continue;
+        if (perms[0] != 'r' || perms[1] != 'w') continue;
+        if (a < 0x7800000000ULL || a >= 0x7810000000ULL) continue;
+        if (b - a < (64ULL << 20)) continue;
+        // 匿名段：地址后无路径名（或仅有空格）
+        const char* p = line;
+        int spaces = 0; while (*p && spaces < 5) { if (*p == ' ') ++spaces; ++p; }
+        while (*p == ' ') ++p;
+        if (*p != '\n' && *p != 0 && *p != '/') {
+            // 有非路径内容（如 [anon:...]）⇒ 也算匿名，继续
+        }
+        if (*p == '/' ) continue;   // 有名映射跳过
+        segStart = static_cast<uintptr_t>(a);
+        segEnd   = static_cast<uintptr_t>(b);
+        break;
+    }
+    std::fclose(fp);
+    if (!segStart || segEnd <= segStart) {
+        LOGW(TPL_LOG " ENTSCAN 未找到 GC 堆段（rw-p 匿名 >=64MB @0x7800_000000）");
+        return;
+    }
+    static std::atomic<int> s_round{0};
+    const int round = s_round.fetch_add(1);
+    const uintptr_t limit = segEnd - 0xC8;
+    int nCand = 0, nDrop = 0, nScanned = 0;
+    std::map<uint64_t, uint32_t> now;
+    for (uintptr_t a = segStart; a < limit; a += 8) {
+        ++nScanned;
+        const volatile uint64_t* qw = reinterpret_cast<const volatile uint64_t*>(a);
+        const uint64_t vt = *qw;
+        if (vt <= 0x1000000000ULL || vt >= 0x8000000000ULL) continue;
+        const volatile uint32_t* pd = reinterpret_cast<const volatile uint32_t*>(a);
+        const uint32_t hp  = pd[0xA0 / 4];
+        if (hp < 100 || hp > 10000000u) continue;
+        const uint32_t atk = pd[0xA4 / 4];
+        if (atk < 1 || atk > 1000000u) continue;
+        const volatile uint8_t* pb = reinterpret_cast<const volatile uint8_t*>(a);
+        const uint8_t camp = pb[0xB8];
+        if (camp > 3) continue;
+        const uint8_t cb = pb[0x99];
+        if (cb > 1) continue;
+        nCand++;
+        const uint64_t key = static_cast<uint64_t>(a);
+        now[key] = hp;
+        auto it = last->find(key);
+        const bool isNew = (it == last->end());
+        if (isNew) {
+            if (nCand <= 60)
+                LOGI(TPL_LOG " ENTSCAN CAND r%d a=%p hp=%u atk=%u camp=%u cb=%u id=%u vt=%p",
+                     round, reinterpret_cast<void*>(a), (unsigned)hp, (unsigned)atk,
+                     (unsigned)camp, (unsigned)cb, (unsigned)pd[0x40 / 4],
+                     reinterpret_cast<void*>(static_cast<uintptr_t>(vt)));
+        } else if (it->second >= hp + 10) {
+            {
+                std::lock_guard<std::mutex> dl(g_dropMu);
+                bool dup = false;
+                for (size_t z = 0; z < g_dropAddrs.size(); ++z)
+                    if (g_dropAddrs[z] == key) { dup = true; break; }
+                if (!dup && g_dropAddrs.size() < 96) g_dropAddrs.push_back(key);
+            }
+            if (nDrop < 40)
+                LOGI(TPL_LOG " ENTSCAN DROP r%d a=%p hp: %u -> %u atk=%u camp=%u id=%u",
+                     round, reinterpret_cast<void*>(a), (unsigned)it->second, (unsigned)hp,
+                     (unsigned)atk, (unsigned)camp, (unsigned)pd[0x40 / 4]);
+            ++nDrop;
+        }
+    }
+    *last = now;
+    {
+        std::lock_guard<std::mutex> lk(g_entTrackMu);
+        g_entTrack.clear();
+        std::lock_guard<std::mutex> dl(g_dropMu);
+        for (size_t z = 0; z < g_dropAddrs.size(); ++z) {
+            const uintptr_t a = static_cast<uintptr_t>(g_dropAddrs[z]);
+            if (a & 15ull) continue;
+            uint32_t hp = 0, atk = 0;
+            if (!ReadU32Quiet(reinterpret_cast<const char*>(a) + 0xA0, &hp)) continue;
+            if (!ReadU32Quiet(reinterpret_cast<const char*>(a) + 0xA4, &atk)) continue;
+            if (hp < 50u || hp > 200000u || atk < 30u || atk > 30000u) continue;
+            uint64_t k = 0;
+            if (!ReadPtrQuiet(reinterpret_cast<const void*>(a), &k)) continue;
+            EntTrackRec r;
+            r.addr = a; r.hp = hp; r.klass = k;
+            g_entTrack.push_back(r);
+        }
+        if (!g_dropAddrs.empty())
+            LOGI(TPL_LOG " ENT-TRACK 表=%d（来自掉血地址 %d）", (int)g_entTrack.size(), (int)g_dropAddrs.size());
+    }
+    LOGI(TPL_LOG " ENTSCAN round=%d 段=[%p,%p) 扫描=%d 候选=%d 下降=%d",
+         round, reinterpret_cast<void*>(segStart), reinterpret_cast<void*>(segEnd),
+         nScanned, nCand, nDrop);
+}
+
+// R43：延迟补扣线程 —— 事件后 120 ms 复查实体血量，真掉血才按倍率补扣。
+static void PendWatchThread() {
+    for (;;) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(40));
+        const long long now = NowMs();
+        std::lock_guard<std::mutex> lk(g_pendMu);
+        for (size_t i = 0; i < g_pend.size(); ) {
+            const PendSnap p = g_pend[i];
+            if (now < p.due) { ++i; continue; }
+            if (!(p.addr & 15ull)) {
+                uint32_t idr = 0;
+                const bool playerBand = ReadU32Quiet(reinterpret_cast<const char*>(p.addr) + 0x40, &idr) &&
+                                        idr >= 1 && idr <= kIdPlayerMax;
+                uint32_t hp = 0;
+                if (!playerBand && ReadU32Quiet(reinterpret_cast<const char*>(p.addr) + 0xA0, &hp) &&
+                    hp < p.hp0 && (p.hp0 - hp) >= 1u && (p.hp0 - hp) <= 100000u) {
+                    const uint32_t d = p.hp0 - hp;
+                    const uint64_t extra = static_cast<uint64_t>(d) * static_cast<uint64_t>(p.mul - 1);
+                    const uint32_t target = (hp > extra) ? static_cast<uint32_t>(hp - extra) : 1u;
+                    *reinterpret_cast<volatile uint32_t*>(p.addr + 0xA0) = target;
+                    static std::atomic<int> nAp{0};
+                    const int c = nAp.fetch_add(1) + 1;
+                    if (c <= 12 || (c % 64) == 0)
+                        LOGI(TPL_LOG " 倍率(延迟补扣) n=%d a=%p %u -> %u (x%d, 原生伤害=%u)",
+                             c, (void*)p.addr, (unsigned)hp, (unsigned)target, p.mul, (unsigned)d);
+                }
+            }
+            g_pend.erase(g_pend.begin() + i);
+        }
+    }
+}
+
+// R45（2026-10-25）：按 3.2.0 的链形找「属性记录根」——不需要旧包。
+//   链：slot -> +0x08 -> +0x18 -> +0x10 -> +0x78 -> +0x00 = R，读 R+0x38(actor)/R+0xb8(value)。
+//   全部读前过 maps 可读校验（R27 教训：ValidPtrForRead 不查映射，裸读会 SIGSEGV）。
+struct ZMapRange { uintptr_t a, b; };
+static std::vector<ZMapRange> g_rdMaps;
+static std::vector<ZMapRange> g_il2Rw;
+
+static void ZLoadMaps() {
+    g_rdMaps.clear(); g_il2Rw.clear();
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) return;
+    char line[512];
+    while (fgets(line, sizeof(line), f)) {
+        unsigned long long a = 0, b = 0; char perm[8] = {0}, path[384] = {0};
+        if (sscanf(line, "%llx-%llx %7s %*s %*s %*s %383s", &a, &b, perm, path) < 3) continue;
+        if (perm[0] == 'r') { ZMapRange r; r.a = (uintptr_t)a; r.b = (uintptr_t)b; g_rdMaps.push_back(r); }
+        if (perm[0] == 'r' && perm[1] == 'w' && strstr(path, "libil2cpp.so")) {
+            ZMapRange r; r.a = (uintptr_t)a; r.b = (uintptr_t)b; g_il2Rw.push_back(r);
+        }
+    }
+    fclose(f);
+}
+static bool ZMapped(uintptr_t a, size_t n) {
+    for (size_t i = 0; i < g_rdMaps.size(); ++i)
+        if (a >= g_rdMaps[i].a && a + n <= g_rdMaps[i].b) return true;
+    return false;
+}
+static bool ZRdU64(uintptr_t a, uint64_t* out) {
+    if (!ZMapped(a, 8)) return false;
+    *out = *reinterpret_cast<const volatile uint64_t*>(a);
+    return true;
+}
+static bool ZRdU32(uintptr_t a, uint32_t* out) {
+    if (!ZMapped(a, 4)) return false;
+    *out = *reinterpret_cast<const volatile uint32_t*>(a);
+    return true;
+}
+static void AttrChainScanOnce() {
+    ZLoadMaps();
+    if (g_il2Rw.empty()) { LOGW(TPL_LOG " ATTR-SCAN 找不到 libil2cpp rw 段"); return; }
+    static const uintptr_t kChain[5] = {0x08, 0x18, 0x10, 0x78, 0x00};
+    int nSlot = 0, nChain = 0, nLog = 0;
+    for (size_t si = 0; si < g_il2Rw.size(); ++si) {
+        const uintptr_t s0 = g_il2Rw[si].a, e0 = g_il2Rw[si].b;
+        for (uintptr_t slot = (s0 + 7) & ~7ull; slot + 8 <= e0; slot += 8) {
+            uint64_t v = 0;
+            if (!ZRdU64(slot, &v)) continue;
+            if (v < 0x7000000000ull || v >= 0x8000000000ull) continue;
+            ++nSlot;
+            uintptr_t cur = (uintptr_t)v; bool ok = true;
+            for (int k = 0; k < 5; ++k) {
+                uint64_t nx = 0;
+                if (!ZRdU64(cur + kChain[k], &nx) || nx < 0x7000000000ull || nx >= 0x8000000000ull) { ok = false; break; }
+                cur = (uintptr_t)nx;
+            }
+            if (!ok) continue;
+            ++nChain;
+            uint32_t a38 = 0, a40 = 0, vB8 = 0, vB0 = 0;
+            const bool okA = ZRdU32(cur + 0x38, &a38);
+            ZRdU32(cur + 0x40, &a40);
+            const bool okV = ZRdU32(cur + 0xb8, &vB8);
+            ZRdU32(cur + 0xb0, &vB0);
+            if (okA && okV && a38 <= 200 && vB8 <= 200000 && nLog < 24) {
+                ++nLog;
+                LOGI(TPL_LOG " ATTR-CAND slot=0x%X R=%p act@38=%u @40=%u val@b8=%u @b0=%u",
+                     (unsigned)slot, (void*)cur, (unsigned)a38, (unsigned)a40, (unsigned)vB8, (unsigned)vB0);
+            }
+        }
+    }
+    LOGI(TPL_LOG " ATTR-SCAN 完成：slot(堆指针)=%d 链走通=%d", nSlot, nChain);
+}
+static void MaybeStartAttrScan() {
+    static std::atomic<bool> started{false};
+    if (started.exchange(true)) return;
+    std::thread t([]() { std::this_thread::sleep_for(std::chrono::milliseconds(800)); AttrChainScanOnce(); });
+    t.detach();
+}
+
+static void EntScanThread() {
+    std::map<uint64_t, uint32_t> last;
+    for (int i = 0; i < 20; ++i) {
+        EntScanOnce(&last);
+        for (int s = 0; s < 50; ++s) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+    LOGI(TPL_LOG " ENTSCAN 结束（20 轮）");
+}
+
+// 只读、独立线程、最多启动一次。
+static void MaybeStartEntScan() {
+    if (g_entScanStarted.exchange(true)) return;
+    LOGI(TPL_LOG " ENTSCAN 启动（首次伤害事件触发，20 轮 × 5s，只读）");
+    std::thread t(EntScanThread);
+    t.detach();
 }
 
 // ============================================================================
@@ -1425,7 +2224,7 @@ static bool InstallMoveResetB() {
 
 // ============================================================================
 //  ⑦b 无限大招（借池鸳的「改哪一条指令」结论，实现走我们自己的字节补丁 + 自检 + 看护）
-//    池鸳 Nap32Extra：把 RVA 0x11541510（原字节 0x1a9f87e0 = cset w0,ls）改成 0x52800020
+//    池鸳 Nap32Extra 同款语义：把站点（3.3.0 RVA 0x120faea4，原字节 0x1a9f87e0 = cset w0,ls）改成 0x52800020
 //    = mov w0,#1，强制该“大招可用”判定恒真；其自检逻辑（libcymod 0x50520 附近）也按这两个
 //    值区分“已补丁 / 未补丁” ⇒ 确认这就是它「大招」的唯一落点。
 //    开关关掉时还原原字节；每 5s 回读，被游戏还原/重映射则自动重打。
@@ -1448,6 +2247,8 @@ static void* UltGateVa() {
     return cached;
 }
 
+static bool UltGateCtxOk();   // 定义在 RealModuleReady 段
+
 static bool WriteUltGate(uint32_t expect, uint32_t want, const char* what) {
     void* va = UltGateVa();
     if (!va) {
@@ -1460,6 +2261,10 @@ static bool WriteUltGate(uint32_t expect, uint32_t want, const char* what) {
         return false;
     }
     if (cur == want) return true;
+    if (!UltGateCtxOk()) {
+        LOGW(TPL_LOG " 无限大招: 16B 上下文不符（站点可能被换/被重写）— 拒绝写入");
+        return false;
+    }
     if (cur != expect) {
         LOGW(TPL_LOG " 无限大招: 字节漂移 @%p got=0x%08X want=0x%08X — 拒绝写入",
              va, (unsigned)cur, (unsigned)expect);
@@ -1506,18 +2311,45 @@ static void SyncHooks() {
     std::lock_guard<std::mutex> lk(g_installMutex);
 
     if (!g_invHooked.load()) {
-        InstallEntryHook("Inv", kFileOffInvEntry, kPrologueInv, 4,
+        InstallEntryHook("Inv", kFileOffInvEntry, kPrologueInv, 8,
                          (void*)Hook_Inv, (void**)&g_origInv, &g_invHooked);
     }
-    if (!g_dmgHooked.load()) {
-        InstallEntryHook("Dmg", kFileOffDmgEntry, kPrologueDmg, 4,
-                         (void*)Hook_Dmg, (void**)&g_origDmg, &g_dmgHooked);
-    }
+    // 3.3.0：伤害倍率不装钩（属性写回链已弃用，见 RealModuleReady 注释）；Hook_Dmg 保留但永不注册。
     if (!g_freezeHooked.load()) {
-        InstallEntryHook("Freeze", kFileOffFreezeEntry, kPrologueFreeze, 4,
+        InstallEntryHook("Freeze", kFileOffFreezeEntry, kPrologueFreeze, 8,
                          (void*)Hook_Freeze, (void**)&g_origFreeze, &g_freezeHooked);
     }
+    // R34：实体 getter 三钩（只读 pass-through，用于抓实体指针 → 无敌 camp 判据 + 倍率锚点验证）
+    if (!g_entHpHooked.load()) {
+        InstallEntryHook("ENT-HP", kFileOffEntHp, kPrologueEntHp, 4,
+                         (void*)Hook_EntHp, (void**)&g_origEntHp, &g_entHpHooked);
+    }
+    if (!g_entAtkHooked.load()) {
+        InstallEntryHook("ENT-ATK", kFileOffEntAtk, kPrologueEntAtk, 4,
+                         (void*)Hook_EntAtk, (void**)&g_origEntAtk, &g_entAtkHooked);
+    }
+    if (!g_entCampHooked.load()) {
+        InstallEntryHook("ENT-CAMP", kFileOffEntCamp, kPrologueEntCamp, 8,
+                         (void*)Hook_EntCamp, (void**)&g_origEntCamp, &g_entCampHooked);
+    }
     // R19: DmgSettle / VicTail / VicMid 诊断钩一律不装（卡死根因，见 kFileOff* 注释）。
+    // R36（2026-10-23）只读探针四站：id→实体解析 + 三个 HP 写候选（全部 pass-through，不写内存）。
+    if (!g_resolveHooked.load()) {
+        InstallEntryHook("RSV", kFileOffResolve, kPrologueResolve, 8,
+                         (void*)Hook_Resolve, (void**)&g_origResolve, &g_resolveHooked);
+    }
+    if (!g_hpWaHooked.load()) {
+        InstallEntryHook("HPW-A", kFileOffHpWa, kPrologueHpWa, 8,
+                         (void*)Hook_HpWa, (void**)&g_origHpWa, &g_hpWaHooked);
+    }
+    if (!g_hpWbHooked.load()) {
+        InstallEntryHook("HPW-B", kFileOffHpWb, kPrologueHpWb, 8,
+                         (void*)Hook_HpWb, (void**)&g_origHpWb, &g_hpWbHooked);
+    }
+    if (!g_hpWcHooked.load()) {
+        InstallEntryHook("HPW-C", kFileOffHpWc, kPrologueHpWc, 8,
+                         (void*)Hook_HpWc, (void**)&g_origHpWc, &g_hpWcHooked);
+    }
     // R20: 移速三桩 + MoveEntry 诊断钩全部停装（功能已删；残留桩/看护＝全关态活动源，禁止复活）。
     SyncUltGate();   // 无限大招：开关跟随；被还原则重打（内部自带回读）
 }
@@ -1528,8 +2360,27 @@ static void SyncHooks() {
 // 真就绪判据（2026-10-06）：maps 名字命中 ≠ 真加载（早期有校验/预读同名临时映射）。
 // 必须：① loader（dl_iterate_phdr）有 libil2cpp；② Dmg 站序言 RVA 交叉校验通过
 // ⇒ 真实模块最终映射就位。任一不满足继续等（2s 一次，不写内存）。
+// 3.3.0 无限技能站点 16B 上下文校验（装补丁前必过；word0 允许已是补丁值 = 已打过）
+static bool UltGateCtxOk() {
+    uintptr_t org = PhdrRvaOrigin(TPL_LIB_NAME);
+    if (!org) return false;
+    const char* p = reinterpret_cast<const char*>(org + kRvaUltGate);
+    for (int i = 0; i < 4; ++i) {
+        uint32_t cur = 0;
+        if (!ReadU32Quiet(p + i * 4, &cur)) return false;
+        uint32_t want = kUltGateCtx[i];
+        if (i == 0 && cur == kUltGatePatch) continue;
+        if (cur != want) return false;
+    }
+    return true;
+}
+
+// 真就绪判据（3.3.0）：无敌 32B + 定怪 32B + 无限技能 16B 三处必须全过。
+//   伤害倍率的旧序言已作废（旧站点在新 so 0 命中），不再参与就绪门。
 static bool RealModuleReady() {
-    return PhdrVaForFileOff(TPL_LIB_NAME, kFileOffDmgEntry, kPrologueDmg, 4) != nullptr;
+    if (PhdrVaForFileOff(TPL_LIB_NAME, kFileOffInvEntry, kPrologueInv, 8) == nullptr) return false;
+    if (PhdrVaForFileOff(TPL_LIB_NAME, kFileOffFreezeEntry, kPrologueFreeze, 8) == nullptr) return false;
+    return UltGateCtxOk();
 }
 
 bool Zzz_TryInit(JavaVM* /*vm*/) {
@@ -1557,7 +2408,7 @@ void Zzz_OnFeatureChanged(int featNum, bool enabled) {
             break;
         case ZZZ_FEAT_SKILL:
             g_skill.store(enabled);
-            // 无限技能 = 无限大招：走池鸳同款站点（RVA 0x11541510）的字节补丁，见 SyncUltGate
+            // 无限技能 = 无限大招：3.3.0 站点 RVA 0x120faea4 的字节补丁，见 SyncUltGate
             LOGI(TPL_LOG " 无限大招开关 = %s", enabled ? "on" : "off");
             break;
         case ZZZ_FEAT_FREEZE:
@@ -1571,10 +2422,14 @@ void Zzz_OnFeatureChanged(int featNum, bool enabled) {
 
 void Zzz_OnValueChanged(int featNum, int value) {
     if (featNum == ZZZ_FEAT_DMG) {
-        if (value < 1) value = 1;
-        if (value > ZZZ_DMG_MUL_MAX) value = ZZZ_DMG_MUL_MAX;
-        g_dmgMul.store(value);
-        LOGI(TPL_LOG " 伤害倍率 = %d（%s）", value, value > 1 ? "on" : "off");
+        // R40（2026-10-25）：倍率改走「攻击力 getter 放大」（见 Hook_EntAtk），不写游戏内存。
+        int m = value;
+        if (m < 1) m = 1;
+        if (m > 100) m = 100;
+        g_dmgMul.store(m);
+        static std::atomic<int> nSet{0};
+        if (nSet.fetch_add(1) < 12)
+            LOGI(TPL_LOG " 伤害倍率 = x%d（ATK getter 路线）", m);
     }
     SyncHooks();
 }
@@ -1592,9 +2447,8 @@ static void WatchHooks() {
         s_lastWatch.store(nowS);
         struct Watch { const char* tag; uintptr_t off; const uint32_t* pro; int words; std::atomic<bool>* done; };
         static Watch kWatch[] = {
-            {"Inv",    kFileOffInvEntry,    kPrologueInv,    4, &g_invHooked},
-            {"Dmg",    kFileOffDmgEntry,    kPrologueDmg,    4, &g_dmgHooked},
-            {"Freeze", kFileOffFreezeEntry, kPrologueFreeze, 4, &g_freezeHooked},
+            {"Inv",    kFileOffInvEntry,    kPrologueInv,    8, &g_invHooked},
+            {"Freeze", kFileOffFreezeEntry, kPrologueFreeze, 8, &g_freezeHooked},
         };
         for (Watch& w : kWatch) {
             if (!w.done->load()) continue;
@@ -1606,23 +2460,12 @@ static void WatchHooks() {
         }
     }
 
-    // 链自检：无敌的归属判定需要「玩家 id 集」，每 30s 借存活的 actor 链补喂一次。
-    //   只在无敌开启时跑；结果翻转时补一份逐级详情 + 一行结论。
-    static std::atomic<long long> s_lastTest{0};
-    static int s_lastOkState = -1;   // 仅 WatchHooks 线程读写
-    if (g_inv.load() && nowS - s_lastTest.load() >= 30) {
-        s_lastTest.store(nowS);
-        uint32_t id = 0;
-        bool ok = ChainSelfTest(false, &id);
-        int st = ok ? 1 : 0;
-        if (st != s_lastOkState) {
-            s_lastOkState = st;
-            if (!ok) ChainSelfTest(true, &id);   // 翻转才补逐级详情
-            LOGI(TPL_LOG " 链自检结果 ok=%d id=%u set=%d vote=%u/%u",
-                 (int)ok, (unsigned)id, MeIdCount(),
-                 (unsigned)g_ownVoteVal.load(), (unsigned)g_ownVoteN.load());
-        }
-    }
+    // R27（2026-10-22）：3.3.0 **禁止跑链自检**。
+    //   取证定案：旧链根 0x1d749418 在 3.3.0 已失效（全进程共享全局、2,201 处引用），30s 自检
+    //   读到垃圾 0x1200000095be94d1 后继续 +0x18 解引用 ⇒ 后台线程 SIGSEGV 带崩进程。
+    //   链路整体作废：ChainSelfTest 函数体保留（已加 R27 指针闸门）但此处**不再调用**。
+    //   玩家 id 集改为只由 Hook_Inv 的 ev 字段投票（+0x1C）喂养。
+    (void)nowS;
 }
 
 void Zzz_Tick(const bool* features, const int* values) {
@@ -1630,10 +2473,11 @@ void Zzz_Tick(const bool* features, const int* values) {
         g_inv.store(features[ZZZ_FEAT_INV]);
         g_skill.store(features[ZZZ_FEAT_SKILL]);
         g_freeze.store(features[ZZZ_FEAT_FREEZE]);
-        int dm = values[ZZZ_FEAT_DMG];
-        if (dm < 1) dm = 1;
-        if (dm > ZZZ_DMG_MUL_MAX) dm = ZZZ_DMG_MUL_MAX;
-        g_dmgMul.store(dm);
+        // R40：倍率读滑块值（1..100）
+        int m = values[ZZZ_FEAT_DMG];
+        if (m < 1) m = 1;
+        if (m > 100) m = 100;
+        g_dmgMul.store(m);
     }
 
     if (!g_libReady.load()) {
