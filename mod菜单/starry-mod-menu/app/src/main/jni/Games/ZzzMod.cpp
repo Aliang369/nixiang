@@ -46,6 +46,7 @@
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
 #include "Includes/SecStrings.hpp"
+#include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）——2026-10-25 修复
 #include "Unity/Il2CppApi.h"
 
 using Il2Cpp::GetApi;
@@ -463,11 +464,14 @@ static bool CheckPrologue(const char* tag, void* va, const uint32_t* want, int w
 // R27（2026-10-22）：读前指针闸门。
 //   背景：3.3.0 上旧链根 0x1d749418（全进程共享全局）读到垃圾 0x1200000095be94d1 后仍继续
 //   +0x18 解引用 ⇒ 后台线程 SIGSEGV 带崩进程（用户 L3：开无敌挨打即闪退）。任何裸读前必须过这道闸。
-//   口径：>=0x10000（挡空/小整数）&& <0x8000000000（arm64 用户态上界）&& 按 align 对齐。
+//   口径：清 TBI/MTE 顶字节后 ∈ [4GiB, 128TiB)（starptr 唯一实现）&& 按 align 对齐。
+// ★设备无关修正（2026-10-25，LDPlayer/Houdini）：上界原为 0x8000000000（512GiB）。
+//   那个值只对 39 位用户态布局成立；LDPlayer 的 houdini 把 arm64 客户库映射在
+//   0x4000_23e0_0000（≈70TB）⇒ 越界即整片判否 ⇒ PrologueMatches / UltGateCtxOk 全 false
+//   ⇒ Zzz_TryInit 永不就绪、四项功能全哑（菜单照常弹出）。真机 39 位布局下正常，故只在模拟器暴露。
 static inline bool ValidPtrForRead(const void* p, size_t align) {
-    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
-    if (a < 0x10000ULL || a >= 0x8000000000ULL) return false;
-    if (align && (a % align) != 0) return false;
+    if (!starptr::LiveFast(p)) return false;
+    if (align && (reinterpret_cast<uintptr_t>(p) & (align - 1)) != 0) return false;
     return true;
 }
 
@@ -2319,37 +2323,14 @@ static void SyncHooks() {
         InstallEntryHook("Freeze", kFileOffFreezeEntry, kPrologueFreeze, 8,
                          (void*)Hook_Freeze, (void**)&g_origFreeze, &g_freezeHooked);
     }
-    // R34：实体 getter 三钩（只读 pass-through，用于抓实体指针 → 无敌 camp 判据 + 倍率锚点验证）
-    if (!g_entHpHooked.load()) {
-        InstallEntryHook("ENT-HP", kFileOffEntHp, kPrologueEntHp, 4,
-                         (void*)Hook_EntHp, (void**)&g_origEntHp, &g_entHpHooked);
-    }
-    if (!g_entAtkHooked.load()) {
-        InstallEntryHook("ENT-ATK", kFileOffEntAtk, kPrologueEntAtk, 4,
-                         (void*)Hook_EntAtk, (void**)&g_origEntAtk, &g_entAtkHooked);
-    }
-    if (!g_entCampHooked.load()) {
-        InstallEntryHook("ENT-CAMP", kFileOffEntCamp, kPrologueEntCamp, 8,
-                         (void*)Hook_EntCamp, (void**)&g_origEntCamp, &g_entCampHooked);
-    }
-    // R19: DmgSettle / VicTail / VicMid 诊断钩一律不装（卡死根因，见 kFileOff* 注释）。
-    // R36（2026-10-23）只读探针四站：id→实体解析 + 三个 HP 写候选（全部 pass-through，不写内存）。
-    if (!g_resolveHooked.load()) {
-        InstallEntryHook("RSV", kFileOffResolve, kPrologueResolve, 8,
-                         (void*)Hook_Resolve, (void**)&g_origResolve, &g_resolveHooked);
-    }
-    if (!g_hpWaHooked.load()) {
-        InstallEntryHook("HPW-A", kFileOffHpWa, kPrologueHpWa, 8,
-                         (void*)Hook_HpWa, (void**)&g_origHpWa, &g_hpWaHooked);
-    }
-    if (!g_hpWbHooked.load()) {
-        InstallEntryHook("HPW-B", kFileOffHpWb, kPrologueHpWb, 8,
-                         (void*)Hook_HpWb, (void**)&g_origHpWb, &g_hpWbHooked);
-    }
-    if (!g_hpWcHooked.load()) {
-        InstallEntryHook("HPW-C", kFileOffHpWc, kPrologueHpWc, 8,
-                         (void*)Hook_HpWc, (void**)&g_origHpWc, &g_hpWcHooked);
-    }
+    // R34/R36 诊断探针（ENT-HP/ENT-ATK/ENT-CAMP/RSV/HPW-A/B/C）已全部停装（R54 2026-10-25）：
+    //   ① 它们是纯诊断，不该进交付包（hook-rules §30：模拟器翻译层对代码改写面敏感，
+    //      hook 数量必须收敛）；
+    //   ② 雷电/houdini 实测（tombstone_03/04）：装这 9 个钩后进游戏 4 分钟内 SIGSEGV，
+    //      一次在 malloc 里（堆损坏），一次栈全在 libhoudini.so 内（fault 0xdead1007）。
+    //      RSV 是其中唯一在「加载期」就被高频调用的（实测 1280+ 次），是首要嫌疑。
+    //   ③ ENT-ATK 还会改 getter 返回值（R40 路线），与 R49 的多段结算重复。
+    //   钩函数本体保留（静态会话要用），但**永不注册**；需要再开必须带用户当轮授权与新证据。
     // R20: 移速三桩 + MoveEntry 诊断钩全部停装（功能已删；残留桩/看护＝全关态活动源，禁止复活）。
     SyncUltGate();   // 无限大招：开关跟随；被还原则重打（内部自带回读）
 }
@@ -2386,7 +2367,18 @@ static bool RealModuleReady() {
 bool Zzz_TryInit(JavaVM* /*vm*/) {
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
-    if (!RealModuleReady()) return false;
+    if (!RealModuleReady()) {
+        // 一次性就绪门诊断（R53 2026-10-25）：三段判据各打成一行，避免再出现
+        // 「菜单能开、功能全哑」却无从定位。只打一次，不参与热路径。
+        static std::atomic<bool> s_gateLogged{false};
+        if (!s_gateLogged.exchange(true)) {
+            void* vaInv = PhdrVaForFileOff(TPL_LIB_NAME, kFileOffInvEntry);
+            void* vaFrz = PhdrVaForFileOff(TPL_LIB_NAME, kFileOffFreezeEntry);
+            LOGW(TPL_LOG " 就绪门未过：origin=%p inv=%p freeze=%p ultCtx=%d（指针区间 4GiB~128TiB）",
+                 (void*)PhdrRvaOrigin(TPL_LIB_NAME), vaInv, vaFrz, (int)UltGateCtxOk());
+        }
+        return false;
+    }
 
     g_libReady.store(true);
     // R21：缓存 libil2cpp RVA 原点（伤害倍率属性写回用；dl_iterate_phdr 只在此处跑一次）
