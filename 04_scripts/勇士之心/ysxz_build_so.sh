@@ -95,15 +95,19 @@ else
     -j"$JOBS" || BUILD_RC=$?
   NEW_O="$(find "$OBJ" -name '*.o' -newer "$T0" 2>/dev/null | head -1)"
 fi
+SO_NEW=0
+if [[ -f "$SO" && "$SO" -nt "$T0" ]]; then SO_NEW=1; fi   # so 本尊被重新链接过 = 真的重编了
 rm -f "$T0"
 [[ $BUILD_RC -eq 0 ]] || { echo "ERROR: ndk-build rc=$BUILD_RC" >&2; exit 1; }
 [[ -f "$SO" ]] || { echo "ERROR: build produced no $SO" >&2; exit 1; }
 
 if [[ -n "$NEW_O" && "$(md5 -q "$SO")" == "$SO_MD5_BEFORE" ]]; then
   # 区分两种「so 没变」：
-  #   a) 源码/配置没变（CFG_HASH 与上次一致）→ 重编产出同一字节，属**正常可复现**，放行；
-  #   b) 配置变了却还产出同一个 so → 多半没真正重编（旧产物/路径错），必须拦。
-  if [[ -f "$STAMP" && "$(cat "$STAMP" 2>/dev/null)" == "$CFG_HASH" ]]; then
+  #   a) 真重编且字节可复现（so 本尊被重新链接，SO_NEW=1；或配置哈希与上次成功构建一致）→ 放行；
+  #   b) 没有重新链接就拿到同一 so → 旧产物/路径错，必须拦。
+  # 2026-10-25 修正：旧版只看 STAMP，而 STAMP 在「配置变化 → rm -rf $OBJ」分支里已被删掉，
+  # 于是「首次构建/手工清过 obj」时永远判 miss ⇒ 字节可复现的构建也被拦（本轮实测踩到）。
+  if [[ "$SO_NEW" -eq 1 ]] || [[ -f "$STAMP" && "$(cat "$STAMP" 2>/dev/null)" == "$CFG_HASH" ]]; then
     echo "[build_so] 源码/配置未变，重编产出同一 so（字节可复现）→ 放行"
   else
     echo "ERROR: 配置变化后仍产出同一 so，疑似未真正重编，禁止通过" >&2
