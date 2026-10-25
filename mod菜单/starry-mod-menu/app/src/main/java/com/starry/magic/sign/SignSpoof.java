@@ -1198,6 +1198,21 @@ public final class SignSpoof {
             "U1nZ9a4OeFoBhIBxkeKe/GUaB6gkLoQoPHJ33sjOEtPO3/mOpZyPpRuCW69xxKAcF9ndVYumgQ2E" +
             "LCItF6B/83dvGA==";
 
+    // 绝区零（TapTap 渠道 3.2.0 / vc429，2026-10-06）：
+    // Subject: C=US, ST=shanghai, L=shanghai, O=mihoyo, OU=mihoyo, CN=nap
+    // SHA-256: 5aacc92bfca5dea7a8dddedf0dde1ec833bfbdcc5089d35036ab02892631018d
+    // 有效期: 2023-02-13 → 2048-02-07；DER 873 B / RSA-2048（官方 base.apk 的 META-INF/HOYOVERS.RSA 抽出）
+    // 用途: 改签后回灌官签，喂 TapSDK 签名校验（TapTapSignatureCheckException）与 HoYo 渠道校验
+    private static final String NAP_PKG = "com.miHoYo.Nap";
+    private static final String NAP_CERT_B64 =
+            "MIIDZTCCAk2gAwIBAgIERCk/hDANBgkqhkiG9w0BAQsFADBjMQswCQYDVQQGEwJVUzERMA8GA1UECBMIc2hhbmdoYWkxETAPBgNVBAcTCHNoYW5naGFpMQ8wDQYDVQQKEwZtaWhveW8xDzANBgNVBAsTBm1paG95bzEMMAoGA1UEAxMDbmFw"
+                    + "MB4XDTIzMDIxMzA4MDIyMFoXDTQ4MDIwNzA4MDIyMFowYzELMAkGA1UEBhMCVVMxETAPBgNVBAgTCHNoYW5naGFpMREwDwYDVQQHEwhzaGFuZ2hhaTEPMA0GA1UEChMGbWlob3lvMQ8wDQYDVQQLEwZtaWhveW8xDDAKBgNVBAMTA25hcDCC"
+                    + "ASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJpYDks/SzNi5AduTqTqUOMyvlXWgev/me0EHTG62zAkzTYq5JIAu1SRFVMFBwlgsMtrCYZ5d8kMWim2Og1RctGneXah0VtCQMTm2ea3e2O1Z5kiau0qDUzkJq4EFSjBWVwao4jFNuAC"
+                    + "1hzDaJ9OUGIflUG3+7P0tQYeA/35/6/GCuD9KtjP4Told8A75jPzN08WJ4V7n/Nu/rwl6Q9FTQpy0AKlK3g5IXx5X0g+/PkPagg26gudNSpuKnUPoxFycYrOhvBO0fk27xa77He9mzx5vzLChT9ubNd1H6BZAXM+jCSBtUdKFKtxVzX4aKO9"
+                    + "SSCEa5EGGVnucE92ZdGECP8CAwEAAaMhMB8wHQYDVR0OBBYEFECqGuenxMt4eewkS7Gy70ghdQmmMA0GCSqGSIb3DQEBCwUAA4IBAQCWrphzHtIqjs5xPuZLBn7igqGj54CWS3z3MJ18oSXzLGzHefGdCi+777vTdhbVGRsLB/lNCXJI8FAq"
+                    + "r/PRBXbdv4CeQPTVDzVhmUtxuA9yCUIooaqpVPOcMWMMac/QyRsA+rhK/YhJ2eprxKDkv1cPGXwGD84Hi/U4oLTZf2po14uyY0RFxhGNCjDuQLKxRXD0sVvHBPNZHl0mm+KmQ8ZcmeD+jDOS1JudTMtqp+BgvyzP2kc7nKrP7rm/6sC1NV41"
+                    + "AzXOMsvphP6xbhk7prIrGW9iCw4jayz4UHXwMb7MN/bwL+4mS//tGccTpI5DiS2zixkgMuXN9G4Fc0QrRgza";
+
     public static void install() {
         if (sInstalled) return;
         synchronized (SignSpoof.class) {
@@ -1274,6 +1289,7 @@ public final class SignSpoof {
                 fakes.put(FKSJ_PKG, new Signature(Base64.decode(FKSJ_CERT_B64, Base64.DEFAULT)));
                 fakes.put(BWXRK_PKG, new Signature(Base64.decode(BWXRK_CERT_B64, Base64.DEFAULT)));
                 fakes.put(KDJXSF_PKG, new Signature(Base64.decode(KDJXSF_CERT_B64, Base64.DEFAULT)));
+                fakes.put(NAP_PKG, new Signature(Base64.decode(NAP_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());
