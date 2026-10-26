@@ -389,7 +389,7 @@ adb logcat -s StarryApp:V StarryMagic:V AuthClient DeviceFingerprint | grep -E \
 ## 菜单索引与授权验证边界
 
 - **适用范围**：当前工作区星光框架的 `g_featureList` 数组索引协议；不保证其他框架或后续版本沿用。
-- 历史案例与证据：见 `10_docs/无限升级/运行时dump与YAES破解_20260905.md` §九–十一（“已合并”不等于所有命题 PROVEN）。
+- 历史案例与证据：见 `10_docs/_state/games/无限升级.md` 的 YAES/运行时 dump 段（原 `10_docs/无限升级/运行时dump与YAES破解_20260905.md` 已按清理口径下移，正文以该摘要为准）（“已合并”不等于所有命题 PROVEN）。
 
 ### featNum 与 Category
 

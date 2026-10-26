@@ -74,10 +74,10 @@
 | 文件 | 路径 | 用途 |
 |------|------|------|
 | 菜单工程 | `11_proj_tools/战魂铭人/mod_menu/` | Android-Mod-Menu 5.0 模板 + 战魂铭人 C++ 功能 |
-| 构建注入脚本 | `04_scripts/战魂铭人/mod_menu_build_inject.sh` | 构建/注入/重打包/签名一键执行 |
+| 构建注入脚本 | ~~`04_scripts/战魂铭人/mod_menu_build_inject.sh`~~（**已清理，目录不存在**） | 历史：构建/注入/重打包/签名一键执行 |
 | 改包工作树 | `07_patched/战魂铭人/apktool_3.4.0_modmenu/` | 已注入 smali/service/主 Activity 调用 |
 | 成品 APK | `08_output/战魂铭人/战魂铭人_3.4.0_modmenu_unsigned.apk` | 签名后的改包安装包 |
-| 记录 | `10_docs/战魂铭人/战魂铭人_3.4.0_MOD菜单改包.md` | 功能/偏移/注入/验证进度 |
+| 记录 | `10_docs/战魂铭人/战魂铭人_3.6.0_复刻验证_20260908.md`（原 `战魂铭人_3.4.0_MOD菜单改包.md` 已清理） | 功能/偏移/注入/验证进度 |
 
 #### 通过 Android Studio 安装
 
@@ -267,7 +267,7 @@ adb push frida-server /data/local/tmp/
 # 查看日志
 adb logcat | grep -i "关键词"
 
-# 截图
+# 截图（⚠️ 仅用户/人工执行：AI 禁止 `screencap` 猜坐标或判界面状态 —— AGENTS.md §4「真机交互零截图」）
 adb exec-out screencap -p > 09_test/screenshot.png
 ```
 
@@ -385,6 +385,10 @@ ilspycmd 06_dumped/游戏名_il2cpp/Assembly-CSharp.dll -o 03_decompiled/游戏�
 1. 从 APK 中提取 `assets/bin/Data/Managed/Assembly-CSharp.dll`
 2. 直接 `ilspycmd Assembly-CSharp.dll -o 03_decompiled/游戏名/ilspy/`
 3. 阅读反编译的 C# 源码，定位游戏逻辑
+
+### MT 管理器 APK MCP — 连接方式、分工与分析用法
+
+手机 MT 启动 APK MCP → 电脑 `adb forward tcp:8787 tcp:8787` → Cursor 启用 `MT_APK_MCP`（`.cursor/mcp.json`）。静态 Smali/资源/Dex xref/so 反汇编·CFG·试 patch·重打包优先走 MCP；运行时仍 Frida/星光。详备 `10_docs/_templates/MT管理器_MCP配合.md`；全局/仓内规则 `.cursor/rules/mt-apk-mcp.mdc`。
 
 ---
 
@@ -523,7 +527,7 @@ nixiang/
 
 **星光菜单执行路径（摘要）：** 只改 native → `*_so_only.sh`；改菜单/smali/正式包 → 外科组装；历史 `inject_*.sh` 先核对实现与授权。细则与检查点在 **`WORKFLOW.md` §4**。切游戏：**只改** `Android.mk` 的 `STARRY_GAME_*`（`SWITCH_GAME.md`；规则 `starry-mod-game-id.mdc`）；`game_id` 由 `GameConfig.h` 映射。
 
-**MT 管理器 APK MCP（摘要）：** 手机 MT 启动 APK MCP → 电脑 `adb forward tcp:8787 tcp:8787` → Cursor 启用 `MT_APK_MCP`（`.cursor/mcp.json`）。静态 Smali/资源/Dex xref/so 反汇编·CFG·试 patch·重打包优先走 MCP；运行时仍 Frida/星光。详备 `10_docs/_templates/MT管理器_MCP配合.md`；全局/仓内规则 `mt-apk-mcp.mdc`。
+**MT 管理器 APK MCP：** 已移到 §二「MT 管理器 APK MCP — 连接方式、分工与分析用法」。
 
 **IDA Pro MCP（摘要，用的时候再开）：** `ida-pro-mcp 2.0.0` 已装（pip → `/opt/homebrew/lib/python3.11/site-packages/ida_pro_mcp/`；Codex 配置 `~/.codex/config.toml` → `http://127.0.0.1:13337/mcp`；IDA 插件 symlink `~/Library/Application Support/Hex-Rays/IDA Pro/plugins/ida_mcp.py`）。启动：IDA Pro 9.3 打开目标 `.so`/`.i64` → **Edit → Plugins → MCP**（macOS `Ctrl+Option+M`）→ 监听 `13337`。服务端跑在 IDA 内部，不随 IDA 启动，**用的时候再开**。
 
@@ -716,6 +720,8 @@ git 入库纪律（2026-09-12 实清后定，勿再犯）：过程日志（`dump
 4. 重建失败或未验证，保留相关输入并记录缺口。build 不等于 runtime：G1 可测试、G2 运行验证、G3 可交付分别留证。APK hash 可因 ZIP/签名元数据变化而不同，不强求整包逐字节一致；按声明的比较标准核对关键条目、包结构、签名与目标版本，不能忽略实质差异或把构建成功冒充运行通过。
 
 **备份与执行顺序**
+
+> 适用范围（2026-10-27 澄清）：本节管的是**密钥/无法再取得的输入/证据保全**；它**不是** `AGENTS.md` §4「数据备份默认不做」的例外——存档与测试数据的备份仍默认不做，未经当轮明示不得创建 `09_test/**/backup_*`。两处冲突时以 `AGENTS.md` §4 为准，本节只在「密钥与被删后不可再取得」的对象上要求先保全。
 
 1. 不默认把大目录复制到同一 SSD 的 `99_archive/` 当释放空间；同盘归档不是释放空间。小文档按任务授权逐文件备份即可。外置备份须用户授权目标介质/路径，复制后验证完整性与可读性；未配置目标不擅自上传，不把未验证备份当删除前提已满足。
 2. 先只读盘点，向用户列出候选的具体绝对路径、实测大小、游戏/会话归属、可再生依据、保留前提和重建证据（独立垃圾可改列无需重建的独立性证据）；不运行宽泛删除命令。排除 02/08、源码/自写脚本/配置规则、密钥、跨游戏内容和符号链接跳出的目标；`.git` 不可整删。目录内混有保留项时细化到文件，不跟随符号链接扩大范围。

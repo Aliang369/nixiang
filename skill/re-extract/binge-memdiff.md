@@ -89,7 +89,7 @@ https://menu-1255602259.file.myqcloud.com/game/<id>.html
 | Phigros 3.20.0 | Unity IL2CPP | 瘦壳 | 231 | B：磁盘 vs 内存 + trampoline | 满分 | `10_docs/phigros/分析_斌哥包抓点_20260908.md` |
 | 无悔华夏 3.8.280 | Unity IL2CPP | 全壳 | — | prefs/get_ret 映射 + Java 桥 jadx | — | `10_docs/无悔华夏/斌哥包识别_20260826.md` |
 | 独奏骑士-BUFF 1.1.760 | Unity IL2CPP + HybridCLR | 双开容器 | 720 | D：方法名过滤反汇编 | 百倍伤害 / 无敌 | `10_docs/独奏骑士/斌哥BUFF容器_菜单机制提取_20260820.md` |
-| 弓箭传说2 1.1.8 | Unity IL2CPP + HybridCLR | 全壳 | 1161 | 壳 BSS 字符串 + 旗标差分 | 偷技能 / 隐身 / 全屏攻击 | `10_docs/弓箭传说2/斌哥功能对照_20260817.md` |
+| 弓箭传说2 1.1.8 | Unity IL2CPP + HybridCLR | 全壳 | 1161 | 壳 BSS 字符串 + 旗标差分 | 偷技能 / 隐身 / 全屏攻击 | `10_docs/弓箭传说2/功能落地_20260831.md` |
 | 雷霆战机 1.25.31 | Cocos JS | 全壳 | — | 菜单早载机制分析 | — | `10_docs/雷霆战机/斌哥菜单早载机制_20260816.md` |
 | 圣翼传说 7.5.10 | Unity IL2CPP | 瘦壳 | 1189 | B：磁盘 vs 内存 memdiff（15 跳桩）+ 壳内中文串 | 百倍伤害 / 玩家无敌 / 战斗速度 / 怪物+BOSS瞬刷 / 全屏攻击 | `10_docs/圣翼传说/斌哥改包抓点_20260924.md` |
 
