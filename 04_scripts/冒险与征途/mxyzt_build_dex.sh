@@ -71,27 +71,50 @@ mkdir -p "$STAGE_ROOT/src" "$STAGE_ROOT/gen/com/starry/magic" "$STAGE_ROOT/class
 echo "[1/5] 源拷贝 → $STAGE_ROOT/src（ASCII 路径）"
 cp -a "$SRC/." "$STAGE_ROOT/src/" || die "源拷贝失败"
 
-# --- 3. 生成 R 桩（本机无 aapt2 资源编译；仅 MainActivity 用到 4 个 id）-------
-cat > "$STAGE_ROOT/gen/com/starry/magic/R.java" <<'EOF'
+# --- 3. 生成 R / BuildConfig 桩（本机无 aapt2 资源编译、无 gradle）-------------
+#  ★2026-10-26：桩改为**按源码自动枚举**。原先手抄的 4 个 id 早已不够 —— 通用菜单源码
+#   （MainActivity / Diag / 剪贴板对话框）现在引用 20+ 个 R.* 与 BuildConfig.VERSION_NAME，
+#   手抄桩会让 javac 直接 "找不到符号" ⇒ 菜单 dex 根本编不出来（本作模板 dex 已因此缺失）。
+#   枚举口径与 bwxrk_build_dex.sh 一致：`grep -rhoE "R\.(id|layout|drawable|string|color|attr)\.[A-Za-z0-9_]+"`。
+R_GEN="$STAGE_ROOT/gen/com/starry/magic/R.java"
+{
+  echo 'package com.starry.magic;'
+  echo '/** 构建期 R 桩（自动枚举，勿手改）：本机无 aapt2 资源编译，仅供编译期符号解析。 */'
+  echo 'public final class R {'
+  echo '    private R() {}'
+  for kind in layout id drawable string color attr dimen style; do
+    names="$(grep -rhoE "R\.${kind}\.[A-Za-z0-9_]+" "$SRC" 2>/dev/null | sed "s|^R\.${kind}\.||" | sort -u)"
+    [ -n "$names" ] || continue
+    echo "    public static final class ${kind} {"
+    echo "        private ${kind}() {}"
+    i=1
+    while IFS= read -r n; do
+      [ -n "$n" ] || continue
+      printf '        public static final int %s = 0x7f0%01x%04x;\n' "$n" "$(printf '%d' "$(echo "$kind" | cksum | cut -d' ' -f1)" | cut -c1)" "$i"
+      i=$((i + 1))
+    done <<< "$names"
+    echo '    }'
+  done
+  echo '}'
+} > "$R_GEN"
+echo "[1b/5] R 桩自动生成：$(grep -c 'public static final int' "$R_GEN") 个符号"
+
+#  BuildConfig 桩：Diag 读版本串、MainActivity 读 DEBUG（无 gradle ⇒ 必须自己给）
+MXYZT_MENU_VER_NAME="${MXYZT_MENU_VER_NAME:-1.5.9}"
+MXYZT_MENU_VER_CODE="${MXYZT_MENU_VER_CODE:-159}"
+cat > "$STAGE_ROOT/gen/com/starry/magic/BuildConfig.java" <<EOF
 package com.starry.magic;
-/** 构建期 R 桩：本机无 aapt2 资源编译。仅 MainActivity 引用（游戏内不启动该 Activity）。 */
-public final class R {
-    private R() {}
-    public static final class layout {
-        private layout() {}
-        public static final int activity_main = 0x7f010001;
-    }
-    public static final class id {
-        private id() {}
-        public static final int btn_pass_through_test = 0x7f020001;
-        public static final int tv_pass_through_count  = 0x7f020002;
-        public static final int btn_request_overlay    = 0x7f020003;
-    }
+/** 构建期 BuildConfig 桩（本机无 gradle）。 */
+public final class BuildConfig {
+    private BuildConfig() {}
+    public static final boolean DEBUG = false;
+    public static final String  VERSION_NAME = "${MXYZT_MENU_VER_NAME}";
+    public static final int     VERSION_CODE = ${MXYZT_MENU_VER_CODE};
 }
 EOF
 
 echo "[2/5] javac 编译"
-(find "$STAGE_ROOT/src" -name '*.java'; printf '%s\n' "$STAGE_ROOT/gen/com/starry/magic/R.java") > "$STAGE_ROOT/srcs.txt"
+(find "$STAGE_ROOT/src" -name '*.java'; printf '%s\n' "$STAGE_ROOT/gen/com/starry/magic/R.java" "$STAGE_ROOT/gen/com/starry/magic/BuildConfig.java") > "$STAGE_ROOT/srcs.txt"
 : > "$STAGE_ROOT/argv.txt"
 while IFS= read -r f; do printf '\"%s\"\n' "$(w "$f")" >> "$STAGE_ROOT/argv.txt"; done < "$STAGE_ROOT/srcs.txt"
 

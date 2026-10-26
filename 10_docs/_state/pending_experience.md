@@ -152,3 +152,14 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
      （源码 line 5021 的「`KILLDEAD ok=1` 真死」不是有效证据）。按该游戏硬约束 #7③
      **只加双读探针、未改判据**（切 `+0x10` 会让秒杀兜底一个候选都锁不上 ⇒ 落点语义变更，须授权 + 实测轮）；
      源码已改、**未装机 / 未实测**（定案需 `MXYTZ_VERBOSE=1` 诊断档一次装机）。
+
+## 候选：可逆写入的「还原路径」禁止对可能已回收的对象调 il2cpp 反射 API
+
+- 状态：候选（2026-10-26 冒险与征途 v60 真机血证；落点建议 `skill/re-implement/hook-rules.md`「可逆写入/清理」节 + `il2cpp-abi-pitfalls.md`）
+- 证据（实测，可复现）：用户关掉 #3 开关后 0.58 s，UnityMain SIGSEGV；tombstone 帧序 `#00-#02 libil2cpp.so+0x205aa5c` ← `#03-#07 libstarry_magic.so`，`fault addr 0xffffff00000166`、`x0=0x00ffffff00000030`（垃圾指针）。反汇编定案：崩点在我们按名解析缓存的入口 `Off()` → `api.FieldOffset(klass, name)`，而 `klass` 来自 `api.object_class(已回收的配置对象)`。
+- 结论：**记录下来的对象指针只保证「当时有效」**。任何延迟写入/还原/补偿路径（开关关闭还原、ForceClear、超时回滚、批量撤销）都必须：
+  ① 写入时同时记录 `klass` 与字段偏移（不要还原时再按名解析）；
+  ② 还原前 `Il2Cpp::IsReadableRange` 探一次可读（冷路径，允许 maps 查询）；
+  ③ 裸比对对象首字 `klass` 与记录值一致，不一致 = 已回收/复用 ⇒ 直接放弃，不写。
+  ④ 兜底再给所有「按名解析」入口加零 API 自证：`klass` 与 `klass+0x10`（Klass::name）都必须在用户态，否则返回 0（fail-safe）。
+- 反例（本轮修掉）：`RestoreProj` 里 `api.object_class(slot.data)` + `Off("_count")`；`RestoreInvulnBits` 直接写记录地址（现已加可读性闸）。

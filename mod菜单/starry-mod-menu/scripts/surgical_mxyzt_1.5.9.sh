@@ -49,7 +49,7 @@ bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "${STARRY_SRC}/templat
 }
 
 DEX_SRC="${STARRY_SRC}/templates/mxyzt_menu_current/classes4.dex"
-DEX_SHA256="69af7b77e4ff881aa569deeb4ba4e9b85f5cd3a5e47368ab77126f24981d2ae6"
+DEX_SHA256="b7a5d73b8ddfb35cac89e6af4c44ddbf2a5dc6c68b6561fb107afb25025ddd6c"  # 2026-10-26 重编（源码已引 BuildConfig/R 新符号）
 SO_SRC="${STARRY_SRC}/libs_mxyzt/arm64-v8a/libstarry_magic.so"
 # ★FW-16（2026-10-16 优化会话）：so 的 size/sha256 **不再手抄** —— 手抄值每次「只换 so」交付后都会过期
 #   （v46b 的 2223040/f08deb3b… 被 v52 的 2264760/560b562f… 取代后无人更新 ⇒ 要么在校验处 FAIL，
