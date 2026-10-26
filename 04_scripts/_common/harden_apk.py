@@ -373,6 +373,35 @@ def c9(rep):
             % ((d.get("registered_sha") or "")[:16], sha[:16]))
     _remind_block(game, sha, d.get("registered_sha") or "")
 
+
+def write_stamp(apk, rep):
+    """加固门禁通过后写凭证：09_test/<游戏>/harden/<apk_md5>.stamp
+    装机闸门（pre_install_gate 查11）据此判定"这个包过没过加固门禁"。"""
+    import time as _t
+    game = os.path.basename(os.path.dirname(os.path.abspath(apk))) or "unknown"
+    d = os.path.join(ROOT, "09_test", game, "harden")
+    try:
+        os.makedirs(d, exist_ok=True)
+    except Exception:
+        return
+    m = md5_of(apk)
+    p = os.path.join(d, m + ".stamp")
+    lines = [
+        "apk=%s" % os.path.basename(apk),
+        "md5=%s" % m,
+        "game=%s" % game,
+        "ts=%s" % _t.strftime("%Y-%m-%d %H:%M:%S"),
+        "items=%d" % len(rep.items),
+    ]
+    lines += ["%s=%s" % (n, "PASS" if ok else "FAIL") for n, ok, _ in rep.items]
+    try:
+        io.open(p, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
+        print("加固凭证: %s" % p)
+    except Exception as e:  # noqa: BLE001
+        print("（写凭证失败：%s）" % e)
+
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["check", "redteam", "publish"])
@@ -399,7 +428,10 @@ def main():
     c7(rep, a.apk)
     c8(rep, a.apk)
     c9(rep)
-    return rep.summary()
+    rc = rep.summary()
+    if rc == 0:
+        write_stamp(a.apk, rep)
+    return rc
 
 
 

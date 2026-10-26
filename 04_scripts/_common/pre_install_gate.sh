@@ -71,7 +71,7 @@ fail=0; pass=0; warn=0; skip=0
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
 runtime_menu_json=""; apk_file=""; base_apk=""; expect_so=""; expect_md=""; menu_dex=""; menu_dex_name=""
-game=""; rounds_threshold=2; allow_rounds=""
+game=""; rounds_threshold=2; allow_rounds=""; allow_no_harden=""
 NEEDLES="$TMPDIR_PF/needles.txt"; : > "$NEEDLES"
 
 while [ $# -gt 0 ]; do
@@ -92,6 +92,7 @@ while [ $# -gt 0 ]; do
     --game)        game="$2"; shift 2 ;;
     --rounds-threshold) rounds_threshold="$2"; shift 2 ;;
     --allow-rounds) allow_rounds="1"; shift ;;
+    --allow-no-harden) allow_no_harden="1"; shift ;;
     --needle)      printf '%s\n' "$2" >> "$NEEDLES"; shift 2 ;;
     --needle-file)
       if [ ! -f "$2" ]; then echo "✗ 门禁串清单缺失: $2"; exit 1; fi
@@ -557,6 +558,30 @@ if [ -n "$menu_dex" ]; then
       echo "- SKIP  [菜单新鲜度] --menu-dex 只接受成品 APK（模板目录请直接用 menu_tpl_gate.sh --tpl）"
       skip=$((skip + 1)) ;;
   esac
+fi
+
+# ---------- 查11 加固门禁凭证关（2026-10-27；用户定「所有游戏默认必须加固」）----------
+# 背景：加固（授权链/载荷加密/诱饵/去路标）此前只有勇士之心接了门禁，其余游戏出包完全不查。
+# 用户定方案 B（直接硬）：**装机前必须有与当前 APK md5 对应的加固凭证**，否则拦。
+# 凭证由 `python 04_scripts/_common/harden_apk.py check --apk <成品apk>` PASS 后自动写入
+#   09_test/<游戏>/harden/<apk_md5>.stamp
+# 逃生门：--allow-no-harden（日志留 WARN，报告须写明理由），或 STAGE_NEXT_FORCE=1。
+if [ -n "$apk_file" ] && [ -f "$apk_file" ]; then
+  G11_GAME="$(basename "$(dirname "$apk_file")")"
+  G11_MD5="$(md5sum "$apk_file" 2>/dev/null | awk '{print $1}')"
+  G11_STAMP="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/09_test/$G11_GAME/harden/$G11_MD5.stamp"
+  if [ -n "$G11_MD5" ] && [ -f "$G11_STAMP" ]; then
+    echo "✓ PASS  [加固凭证] 该包已过加固门禁（${G11_MD5:0:12}…）"
+    pass=$((pass + 1))
+  elif [ -n "$allow_no_harden" ] || [ "${STAGE_NEXT_FORCE:-}" = "1" ]; then
+    echo "- WARN  [加固凭证] 缺加固凭证，已显式放行（--allow-no-harden / STAGE_NEXT_FORCE=1）：交班须写明理由"
+    warn=$((warn + 1))
+  else
+    echo "✗ FAIL  [加固凭证] 这个包没有加固门禁凭证（09_test/$G11_GAME/harden/${G11_MD5:0:12}….stamp 不存在）"
+    echo "        ⇒ 先跑：python 04_scripts/_common/harden_apk.py check --apk \"$apk_file\""
+    echo "        ⇒ 加固是新游戏默认要求（AGENTS.md §6）；未接入的游戏按 10_docs/防御加固_通用路线图.md §2 九步接入"
+    fail=$((fail + 1))
+  fi
 fi
 
 # ---------- 汇总 ----------

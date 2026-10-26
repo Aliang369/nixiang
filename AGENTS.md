@@ -87,6 +87,13 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
 - **操作二分**：机械操作（拆/打/注/移/签/装/清理）只走统一管线入口（见 §3.2）；分析操作照常自由推理，产出落 `10_docs/`。完整动词表、阶段定义、失败恢复、装机前产物四查、`preflight` 声明与出包门禁见 `04_scripts/_common/stages.md`；**命令行为以脚本实现与门禁测试为准**。
 - **改完任何文件必跑机器关**：`bash 04_scripts/_common/preflight.sh <改过的文件...>`（`.sh`→`bash -n` + bash 3.2 兼容门禁、`.py`→compile、`.js`→`node --check`、`.json`→json.tool；`.cpp/.mk`→REMIND，须重跑管线构建阶段）。**preflight 没跑 / 没过，修改就不算完成**；无参 `--sweep` 可全仓扫描。
 - **管线与指纹锁**：`pipeline.sh` / `_common/pipeline.lock` 禁随手改、禁只改一边；确需改按 `stages.md` 文末「真要改 `pipeline.sh` 时的跨机姿势」（同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push）。
+- **加固门禁默认全局强制（2026-10-27 用户定，方案 B「直接硬」）**：**所有游戏**出包必须过
+  `python 04_scripts/_common/harden_apk.py check --apk <成品APK>`（C1 公钥 / C2 清单 / C3 去路标 / C4 产物同一 /
+  C6 载荷密文新鲜 / C7 载荷层已编译 / C8 无明文泄漏 / C9 服务端载荷已登记），PASS 后自动写凭证
+  `09_test/<游戏>/harden/<apk_md5>.stamp`；装机闸门 `pre_install_gate.sh` **查11** 校验该凭证，缺失即 FAIL 拦装机
+  （逃生门 `--allow-no-harden` 或 `STAGE_NEXT_FORCE=1`，用了必须在报告里写明理由）。
+  新游戏与存量游戏接入按 `10_docs/防御加固_通用路线图.md` §2 九步；**跨游戏细节只写该文件，本行只作强制规则**。
+  载荷 sha 变更或新游戏会被生成器横幅 + C9 主动提示「去后台登记」；改 sha 会让该游戏旧包全部失效。
 - **删除禁通配符**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库脚本，靠 `git checkout` 才救回）；批量清理优先 `04_scripts/_common/trash_paths.sh`（默认 dry-run）。
 - **审查**：改完代码或用户要求「按边界审 / 自查」⇒ 按 `skill/re-implement/code-review-checklist.md` 走一轮（①改动范围 → ②四条闪退红线 → ③按改动类型查维度 → ④证据门禁）；纯文档修改只核对范围/链接/规则冲突/授权。一轮输出结论即停，不借审查扩大任务；仅修已确认问题，修复后复查该问题与直接影响面。
 - **分阶段与验收结论**：装机前「可测试」门禁＝静态·构建检查 + 包结构与签名 + 测试授权 + 证据采集 + 恢复方案，**已知阻断问题不得装机**。「运行验证」以目标版本实际日志、功能开关与回归结果判定；「可交付」须满足对应运行证据，**不以构建成功替代**；缺证据列 CLAIM / VERDICT / EVIDENCE。**阶段闸门**：收到用户明确「开始做功能」口令前，**禁止启动** IL2CPP 符号恢复 / RVA 定位 / metadata 类型字段枚举 / ABI 分析 / 玩法 hook 派生分析。
