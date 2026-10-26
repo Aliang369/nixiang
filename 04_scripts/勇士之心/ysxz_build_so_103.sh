@@ -110,7 +110,9 @@ if [[ "$FW_OVERLAY" == "1" ]]; then
   for f in MainModern.cpp Main.cpp Includes/SgAuth.h Includes/sg_rsa_verify.h Includes/sg_pubkey.h \
            Includes/SgIntegrity.h Includes/sg_integ.h Includes/SgZip.h Includes/SgBuildManifest.h \
            Includes/SgPayload.h Includes/SgPayloadJs.h Includes/sg_payload_enc.h Games/YsxzDecoyJs.h \
-           Games/SignalQuarantine.h Games/NoAceStubs.cpp; do
+           Games/SignalQuarantine.h Games/NoAceStubs.cpp \
+           Includes/Utils.cpp Includes/Utils.hpp Includes/StarryStamp.h \
+           Includes/obfuscate.h; do
     src="$STARRY_SRC/app/src/main/jni/$f"
     [[ -f "$src" ]] || { echo "ERROR: 工作区缺框架文件 ${f}（P1 加固必需）" >&2; exit 1; }
     mkdir -p "$(dirname "$JNIW/$f")"
@@ -147,8 +149,26 @@ if "SG_HAVE_ZLIB" not in s:
     s = re.sub(r"^LOCAL_C(PP)?FLAGS\s*:=.*$", addflag, s, flags=re.M)
     s = re.sub(r"^(LOCAL_LDLIBS\s*:=.*)$", r"\1 -lz", s, flags=re.M)
     print("[103] mk += -DSG_HAVE_ZLIB -DSG_REQUIRE_INTEGRITY -DSG_PAYLOAD_ENC / -lz")
+
 else:
     print("[103] mk 已含 SG_HAVE_ZLIB")
+
+# 构建戳保留（装机闸门「查8」）：modern 入口零引用 kStarryBuildStamp，
+# 不加 --undefined 会被 --gc-sections 回收 ⇒ so 里没有 STARRYSTAMP1:EPOCH=
+# ⇒ 覆盖安装后不清玩家旧 OTA so（2026-10-27 勇士之心实测缺戳，本补丁修）
+if "kStarryBuildStamp" not in s:
+    s2 = re.sub(r"^(LOCAL_LDFLAGS\s*:=.*)$",
+                r"\1 -Wl,--undefined=kStarryBuildStamp", s, count=1, flags=re.M)
+    if s2 != s:
+        s = s2
+        print("[103] mk += -Wl,--undefined=kStarryBuildStamp（OTA 守卫构建戳）")
+    else:
+        # 兜底：没有 LOCAL_LDFLAGS:= 行就自己加一行
+        s = re.sub(r"^(LOCAL_LDLIBS\s*:=.*)$",
+                   r"\1\nLOCAL_LDFLAGS += -Wl,--undefined=kStarryBuildStamp", s, count=1, flags=re.M)
+        print("[103] mk 新增 LOCAL_LDFLAGS 行（OTA 守卫构建戳）")
+else:
+    print("[103] mk 已含构建戳链接标志")
 
 io.open(p, "w", encoding="utf-8", newline="\n").write(s)
 PY
@@ -177,6 +197,29 @@ io.open(p, "w", encoding="utf-8", newline="\n").write(s)
 print("[103] APP_ABI := " + abis)
 PY
 fi
+
+# ---------- 2.44 构建戳：确保暂存 Application.mk 会注入 STARRY_BUILD_EPOCH ----------
+# 1.0.3 基线 Application.mk 没有 APP_CPPFLAGS 那行 ⇒ STARRY_BUILD_EPOCH 永远走兜底值
+# 1790184000 ⇒ 装机闸门「查8 构建戳」FAIL（2026-10-27 实测：戳印出来是兜底值）。
+python3 - "$JNIW/Application.mk" <<'PY'
+import io, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+if "STARRY_BUILD_EPOCH" in s and "APP_CPPFLAGS" in s:
+    print("[103] Application.mk 已注入 STARRY_BUILD_EPOCH")
+else:
+    add = []
+    if "STARRY_BUILD_EPOCH ?=" not in s:
+        add.append('STARRY_BUILD_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null | tr -cd "0-9")')
+        add.append('ifeq ($(strip $(STARRY_BUILD_EPOCH)),)')
+        add.append('STARRY_BUILD_EPOCH := 1790184000')
+        add.append('endif')
+    if "-DSTARRY_BUILD_EPOCH" not in s:
+        add.append('APP_CPPFLAGS += -DSTARRY_BUILD_EPOCH=$(STARRY_BUILD_EPOCH)')
+    s = s.rstrip("\n") + "\n" + "\n".join(add) + "\n"
+    io.open(p, "w", encoding="utf-8", newline="\n").write(s)
+    print("[103] Application.mk += APP_CPPFLAGS -DSTARRY_BUILD_EPOCH（构建戳必需）")
+PY
 
 # ---------- 2.45 去掉误链的 arm-only 预编译库（2026-10-26 多 ABI 必踩）----------
 # 1.0.3 基线 Android_ysxz.mk 里 `LOCAL_STATIC_LIBRARIES := Dobby wxsj_dll`，而
@@ -209,6 +252,15 @@ mkdir -p "$OUT_LIBS"
 [[ -f "$BOOT_HDR" ]] || { echo "ERROR: 自举头未生成 $BOOT_HDR" >&2; exit 1; }
 
 # ---------- 3. 构建 ----------
+# 构建戳（OTA 守卫）取**仓库**的 git commit 时间：暂存目录 .ysxz_103_build 不是 git 仓库，
+# Application.mk 里的 `git log` 会失败并回落兜底值 1790184000（装机闸门查8 会拦）。
+if [[ -z "${STARRY_BUILD_EPOCH:-}" ]]; then
+  STARRY_BUILD_EPOCH="$(git -C "$NIXIANG" log -1 --format=%ct 2>/dev/null | tr -cd '0-9')"
+fi
+[[ -n "${STARRY_BUILD_EPOCH:-}" ]] || STARRY_BUILD_EPOCH=1790184000
+export STARRY_BUILD_EPOCH
+echo "[103] STARRY_BUILD_EPOCH = ${STARRY_BUILD_EPOCH}（构建戳）"
+
 if [[ "$_IS_WIN" == "1" ]]; then
   echo "[103] win 分支: cmd //c ndk-build.cmd -C $W_WIN/jni"
   ( cd "$W_WIN/jni" && cmd //c "$(cygpath -w "$NDKBIN")" -C "$W_WIN/jni" \
@@ -217,6 +269,7 @@ if [[ "$_IS_WIN" == "1" ]]; then
       NDK_APPLICATION_MK="./Application.mk" \
       NDK_OUT="$W_WIN/obj" \
       NDK_LIBS_OUT="$W_WIN/libs" \
+      STARRY_BUILD_EPOCH="$STARRY_BUILD_EPOCH" \
       -j"$JOBS" )
 else
   "$NDKBIN" -C "$W_WIN/jni" \
@@ -225,6 +278,7 @@ else
     NDK_APPLICATION_MK="./Application.mk" \
     NDK_OUT="$W_WIN/obj" \
     NDK_LIBS_OUT="$W_WIN/libs" \
+    STARRY_BUILD_EPOCH="$STARRY_BUILD_EPOCH" \
     -j"$JOBS"
 fi
 

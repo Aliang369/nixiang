@@ -32,6 +32,11 @@ LOCAL_MODULE    := starry_magic
 LOCAL_CFLAGS    := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
 LOCAL_CPPFLAGS  := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
+# 构建戳保留（OTA 守卫判新旧用）：modern 入口零引用 kStarryBuildStamp，
+# 不加这条会被 --gc-sections 整段回收 ⇒ so 里没有 STARRYSTAMP1:EPOCH=…
+# ⇒ 覆盖安装后不清玩家旧的 OTA so（跑旧 so 崩）。见 Includes/Utils.cpp 注释与
+# 装机闸门「查8 构建戳」（2026-10-27 勇士之心实测缺戳，本行修）。
+LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid -lz
 
 LOCAL_ARM_MODE  := arm
