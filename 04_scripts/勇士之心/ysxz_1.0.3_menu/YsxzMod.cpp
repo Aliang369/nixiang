@@ -26,8 +26,21 @@
                    跳过 Application.onCreate ⇒ bingo SDK 未初始化 ⇒ AppInfo.parameters NPE。
                    在 1.0.3 明文包上找不到 libsecret.so 会自动退化为 idle，无副作用。
    YsxzExitTrace —— 退出点只观测（打印调用点），不改行为。 */
-#include "Games/YsxzSecShell.h"
-#include "Games/YsxzExitTrace.h"
+#if defined(__has_include)
+#  if __has_include("Games/YsxzSecShell.h")
+#    include "Games/YsxzSecShell.h"
+#    define YSXZ_HAVE_SECSHELL 1
+#  endif
+#  if __has_include("Games/YsxzExitTrace.h")
+#    include "Games/YsxzExitTrace.h"
+#    define YSXZ_HAVE_EXITTRACE 1
+#  endif
+#else
+#  include "Games/YsxzSecShell.h"
+#  include "Games/YsxzExitTrace.h"
+#  define YSXZ_HAVE_SECSHELL 1
+#  define YSXZ_HAVE_EXITTRACE 1
+#endif
 
 #include <atomic>
 #include <cstdint>
@@ -267,29 +280,66 @@ static void* BootSelfHealThread(void* arg) {
     return nullptr;
 }
 
-static bool HookEvalString() {
-    if (g_hooked.load()) return true;
-    const char* lib = kTargetLib();
-    if (!isLibraryLoaded(lib)) return false;
+/* 2026-10-26 1.0.3（vc3 / TapTap .tt1 底包）实测：
+ *   本包 libcocos2djs.so **导出**了 _ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_
+ *   （.dynsym -> .text，1488 B）；而静态 RVA 0x3138e4 上放的是普通字符串
+ *   （"internal40Load_G"）⇒ 老守卫必然失配、原生 splice 永不挂上（伤害/技能/无敌全灭）。
+ *   按 hook-rules §24「不写死会被重编挪走的定位」改成
+ *   **动态符号候选优先 + RVA/序言兜底**：符号命中就用符号（跨版本最稳），
+ *   命不中再走老 RVA 路径，两条都不通才放弃（此时只能靠 main.js 自举路线）。
+ *   1.0.6（加密壳代）符号被 strip，自然落到 RVA 分支，行为与原来一致。 */
+static const char* kEvalSyms[] = {
+    "_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_",   // (const char*, long, Value*, Value*)
+    "_ZN2se12ScriptEngine10evalStringEPKcmPNS_5ValueES2_",   // (const char*, unsigned long, Value*, Value*)
+    "_ZN2se12ScriptEngine10evalStringEPKcPNS_5ValueES3_",    // (const char*, Value*, Value*)
+    "_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_b",  // 尾参 bool 变体
+};
+static const char* kEvalSymJni =
+    "Java_org_cocos2dx_lib_Cocos2dxJavascriptJavaBridge_evalString";  // 仅佐证，不作 splice 点
 
-    bool viaReadable = false;
-    void* va = FileOffToVa(lib, kEvalRva, &viaReadable);
-    if (!va) {
-        LOGW("%s evalString rva 0x%lX not mapped", YSXZ_LOG, (unsigned long)kEvalRva);
-        return false;
+static void* ResolveEvalString(const char* lib, const char** via, bool* viaReadable) {
+    if (via) *via = "rva";
+    if (viaReadable) *viaReadable = false;
+    for (const char* sym : kEvalSyms) {
+        void* p = getSymAddress(lib, sym, false);
+        if (!p) continue;
+        if (via) *via = "dynsym";
+        LOGI("%s evalString resolved by dynsym: %s", YSXZ_LOG, sym);
+        return p;
     }
+    if (getSymAddress(lib, kEvalSymJni, false)) {
+        LOGI("%s note: JNI evalString bridge present (不用作 splice 点)", YSXZ_LOG);
+    }
+    void* va = FileOffToVa(lib, kEvalRva, viaReadable);
+    if (!va) return nullptr;
     uint32_t got = 0;
     memcpy(&got, va, sizeof(got));
     if (got != kEvalInsn) {
-        // 1.0.6（加密壳代）的 libcocos2djs.so 重编后 se::evalString 已不在 kEvalRva 上，
-        // 本守卫必然失配 ⇒ 原生 splice 路线不挂，改由 JS 自举路线（files/res/main.js 尾部补丁）
-        // 生效。重试循环每秒会走很多次，日志必须限速，否则刷掉 L3 取证要看的行。
+        // 重编后 se::evalString 已不在 kEvalRva 上 ⇒ 原生 splice 不挂，改由 JS 自举路线
+        // （files/res/main.js 尾部补丁）生效。重试循环每秒走很多次，日志必须限速。
         static std::atomic<int> s_drift{0};
         const int n = ++s_drift;
         if (n <= 3 || (n % 200) == 0) {
             LOGW("%s evalString prologue drift got=0x%08X want=0x%08X (#%d, 本版走 JS 自举路线)",
                  YSXZ_LOG, got, kEvalInsn, n);
         }
+        return nullptr;
+    }
+    if (via) *via = (viaReadable && *viaReadable) ? "readable" : "rx";
+    return va;
+}
+
+static bool HookEvalString() {
+    if (g_hooked.load()) return true;
+    const char* lib = kTargetLib();
+    if (!isLibraryLoaded(lib)) return false;
+
+    const char* via = "rva";
+    bool viaReadable = false;
+    void* va = ResolveEvalString(lib, &via, &viaReadable);
+    if (!va) {
+        LOGW("%s evalString not found (dynsym + rva both miss, rva=0x%lX)", YSXZ_LOG,
+             (unsigned long)kEvalRva);
         return false;
     }
     if (DobbyHook(va, (dobby_dummy_func_t)HookedEvalString, (dobby_dummy_func_t*)&g_origSeEval) != 0) {
@@ -297,9 +347,8 @@ static bool HookEvalString() {
         return false;
     }
     g_hooked.store(true);
-    LOGI("%s SELFCHECK evalString va=%p rva=0x%lX via=%s rd=1 hook=1", YSXZ_LOG, va,
-         (unsigned long)kEvalRva, viaReadable ? "readable" : "rx");
-    LOGI("%s hooked se::evalString @%p rva=0x%lX", YSXZ_LOG, va, (unsigned long)kEvalRva);
+    LOGI("%s SELFCHECK evalString va=%p via=%s rd=1 hook=1", YSXZ_LOG, va, via);
+    LOGI("%s hooked se::evalString @%p via=%s", YSXZ_LOG, va, via);
     return true;
 }
 
@@ -483,8 +532,12 @@ void Ysxz_OnLoad(JavaVM* vm) {
     // 1.0.6 加密壳：退出点取证 + 壳状态净化。
     // 正常路径由 com.starry.magic.ysxz.YsxzAppComponentFactory 在 ~365ms（早于壳自检 413ms）
     // 先起一次；这里兜底，保证任何入口（含 OTA 热更 so / 直接 dlopen）都能起。
+#ifdef YSXZ_HAVE_EXITTRACE
     YsxzExitTrace_Start(vm);
+#endif
+#ifdef YSXZ_HAVE_SECSHELL
     YsxzSecShell_Start();
+#endif
     static std::atomic<bool> started{false};
     bool expected = false;
     if (!started.compare_exchange_strong(expected, true)) return;

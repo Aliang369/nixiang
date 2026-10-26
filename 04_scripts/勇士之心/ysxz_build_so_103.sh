@@ -45,6 +45,16 @@ done
 [[ -n "$NDK" ]] || { echo "ERROR: 找不到 NDK，请设 ANDROID_NDK_HOME（需要含 ndk-build 或 ndk-build.cmd）" >&2; exit 1; }
 if [[ -x "$NDK/ndk-build" ]]; then NDKBIN="$NDK/ndk-build"; else NDKBIN="$NDK/ndk-build.cmd"; fi
 
+# 2026-10-26：Windows 上必须用 build/ndk-build.cmd 驱动（NDK 给 make 发的是 cmd 批处理：
+# rem/del/copy/md，MSYS 的 /usr/bin/sh 不认 ⇒ `rem: command not found` + Error 127）。
+_IS_WIN=0
+case "$(uname -s 2>/dev/null || echo unknown)" in
+  MINGW*|MSYS*|CYGWIN*) _IS_WIN=1 ;;
+esac
+if [[ "$_IS_WIN" == "1" && -f "$NDK/build/ndk-build.cmd" ]]; then
+  NDKBIN="$NDK/build/ndk-build.cmd"
+fi
+
 JOBS="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 8)"
 # ndk-build.cmd 是 Windows 原生程序，路径必须用 Windows 形式
 W_WIN="$(cygpath -m "$WORK" 2>/dev/null || echo "$WORK")"
@@ -88,13 +98,24 @@ mkdir -p "$OUT_LIBS"
 [[ -f "$BOOT_HDR" ]] || { echo "ERROR: 自举头未生成 $BOOT_HDR" >&2; exit 1; }
 
 # ---------- 3. 构建 ----------
-"$NDKBIN" -C "$W_WIN/jni" \
-  NDK_PROJECT_PATH="$W_WIN" \
-  APP_BUILD_SCRIPT="./Android_ysxz.mk" \
-  NDK_APPLICATION_MK="./Application.mk" \
-  NDK_OUT="$W_WIN/obj" \
-  NDK_LIBS_OUT="$W_WIN/libs" \
-  -j"$JOBS"
+if [[ "$_IS_WIN" == "1" ]]; then
+  echo "[103] win 分支: cmd //c ndk-build.cmd -C $W_WIN/jni"
+  ( cd "$W_WIN/jni" && cmd //c "$(cygpath -w "$NDKBIN")" -C "$W_WIN/jni" \
+      NDK_PROJECT_PATH="$W_WIN" \
+      APP_BUILD_SCRIPT="./Android_ysxz.mk" \
+      NDK_APPLICATION_MK="./Application.mk" \
+      NDK_OUT="$W_WIN/obj" \
+      NDK_LIBS_OUT="$W_WIN/libs" \
+      -j"$JOBS" )
+else
+  "$NDKBIN" -C "$W_WIN/jni" \
+    NDK_PROJECT_PATH="$W_WIN" \
+    APP_BUILD_SCRIPT="./Android_ysxz.mk" \
+    NDK_APPLICATION_MK="./Application.mk" \
+    NDK_OUT="$W_WIN/obj" \
+    NDK_LIBS_OUT="$W_WIN/libs" \
+    -j"$JOBS"
+fi
 
 SO="$WORK/libs/arm64-v8a/libstarry_magic.so"
 [[ -f "$SO" ]] || { echo "ERROR: 构建产物缺失 $SO" >&2; exit 1; }
