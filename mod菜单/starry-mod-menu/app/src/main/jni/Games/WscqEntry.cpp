@@ -17,9 +17,7 @@ static const char* kWscq_Features[] = {
     "Category_战斗",              // 0
     "SeekBar_伤害倍率_1_1000_1",  // 1  WSCQ_FEAT_DMG（1 = 关，1000 = 千倍）
     "Toggle_玩家无敌",            // 2  WSCQ_FEAT_INV
-    "SeekBar_战斗加速_1_10_1",    // 3  WSCQ_FEAT_SPEED（1 = 关）
-    "Toggle_怪物BOSS瞬刷",        // 4  WSCQ_FEAT_REFRESH
-    "Toggle_全屏攻击",            // 5  WSCQ_FEAT_AOE
+    "Toggle_全屏攻击",            // 3  WSCQ_FEAT_AOE
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

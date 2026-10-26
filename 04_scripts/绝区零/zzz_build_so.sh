@@ -22,12 +22,12 @@ SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="${NIXIANG:-$(cd "$SELF_DIR/../.." && pwd)}"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 JNI="$STARRY_SRC/app/src/main/jni"
-OUT_LIBS="$STARRY_SRC/libs_zzz"
-OBJ="$STARRY_SRC/obj_zzz"
+OUT_LIBS="${ZZZ_OUT_LIBS:-$STARRY_SRC/libs_zzz}"
+OBJ="${ZZZ_OBJ:-$STARRY_SRC/obj_zzz}"
 SO="$OUT_LIBS/arm64-v8a/libstarry_magic.so"
-MK="$JNI/Android_zzz.mk"
+MK="${ZZZ_MK:-$JNI/Android_zzz.mk}"
 APP_MK="$JNI/Application.mk"
-TAG="zzz"
+TAG="${ZZZ_TAG:-zzz}"
 
 hash256() { if command -v sha256sum >/dev/null 2>&1; then sha256sum | awk '{print $1}'; else shasum -a 256 | awk '{print $1}'; fi; }
 md5f()    { if command -v md5sum   >/dev/null 2>&1; then md5sum "$1" | awk '{print $1}'; else md5 -q "$1"; fi; }
@@ -93,7 +93,7 @@ if [ "$STAGED" = "1" ]; then
   echo "[build_so] 路径非 ASCII → ASCII 暂存构建：$STAGE_ROOT"
   mkdir -p "$BUILD_JNI"
   cp -a "$JNI"/. "$BUILD_JNI"/
-  BUILD_MK="$BUILD_JNI/Android_zzz.mk"; BUILD_APP_MK="$BUILD_JNI/Application.mk"
+  BUILD_MK="$BUILD_JNI/$(basename "$MK")"; BUILD_APP_MK="$BUILD_JNI/Application.mk"
 else
   BUILD_MK="$MK"; BUILD_APP_MK="$APP_MK"
 fi

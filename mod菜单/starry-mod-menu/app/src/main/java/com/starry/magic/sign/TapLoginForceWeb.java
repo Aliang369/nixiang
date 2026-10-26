@@ -241,7 +241,25 @@ public final class TapLoginForceWeb {
                     //   → JuHeSDK「TapTap CONFIG_ERROR … 包名、签名错误」→ TapTapException: SDK not initialized。
                     // 该检查读本地 PackageManager 签名 ⇒ 由 SignSpoof 回灌官方证书（CN=QT, O=GD）解决；
                     // 本白名单负责「即使 SSO 可用也强制走内嵌网页」，避免拉起 TapTap 客户端做真签校验。
-                    "com.bwxrk.yqmy.ty4"));
+                    "com.bwxrk.yqmy.ty4",
+                    // 绿梦：时空之声（com.zhuziplay.lvmengnew.op）TapTap 渠道原版 1.0.5/vc12035：
+                    // 包内 TapSDK 为旧版 loginHandlers 数组路由 —— classes2.dex 含
+                    // com.taptap.sdk.login.ui.TapTapLoginActivity + loginHandlers 字段
+                    // + internal/handlers/{client/ClientLoginHandler,cloud/CloudLoginHandler}
+                    // + internal/handlers/web/WebLoginFragment（OLD_WEB_LOGIN_FRAGMENT 路径）。
+                    // 设备已装 TapTap 客户端时 ClientLoginHandler.canHandle 恒 true（SSO 校验真签必失败），
+                    // 改签包必须强制内嵌网页：sanitize 把 client/phone handler 换成 canHandle 恒 false 的代理，
+                    // onCreate 遍历一个都不命中 → 落 SDK 自带 fallbackToWeb（WebLoginFragment）。
+                    "com.zhuziplay.lvmengnew.op",
+                    // 勇士之心（com.fightingstars.games.warrior）TapTap 渠道 1.0.6 / vc6：
+                    // assets/YMengSdkMsdk.ini 里配了 taptap_clientId/taptap_clientToken ⇒ 登录入口
+                    // 会走 TapSDK 客户端 SSO；改签包被 TapTap 客户端按包名/签名拒绝（用户实测弹窗）。
+                    // 注意：本作 TapSDK 的类**不在 classes.dex**（`Lcom/taptap/sdk/*` 计数 0），
+                    // TapSDK 与游戏主体一起在加密 payload 内、运行时由壳解密后走 Anonymous-DexFile
+                    // 装载 ⇒ 无法用 smali 改 ClientLoginUtils。故此处只登记白名单，交给本类的
+                    // 反射路径（旧版 loginHandlers 清洗 / 新版 request.loginType=embedded_web 两种都试）
+                    // 在 Activity 生命周期窗口内强制内嵌网页登录。
+                    "com.fightingstars.games.warrior"));
 
     private TapLoginForceWeb() {}
 

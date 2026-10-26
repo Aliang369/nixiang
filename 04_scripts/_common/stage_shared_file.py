@@ -20,6 +20,16 @@
 
   去掉 --dry-run 才真正写索引；随后用 `archive_scoped_git.sh --staged-only` 提交。
 
+  「他人改行」场景（如 current.md 索引行被别会话缩短）用 `--restore-head-pattern`：
+  命中该正则的工作区行会被 HEAD 里命中同一正则的行**替换**（恢复旧版），而非 `--drop-pattern`
+  的「整行删除」。例：
+    --restore-head-pattern '生存33天|弓箭传说2国际版|迷雾大陆' \
+    --own-pattern '炁术行者' --dry-run
+  （2026-10-18 炁术行者会话实测：current.md 5 处他人改行 + 1 处本轮改行，用 restore 恢复他人行、
+  own-pattern 校验本轮行，一次写索引，不再手动构造 content。）
+  ★ 每个 --restore-head-pattern 必须是**单一关键词**（如 `--restore-head-pattern '生存33天'` 可重复传），
+  勿用 `|` 组合（如 `'生存33天|迷雾大陆'`）：组合正则会让「HEAD 第一个命中任一关键词的行」错配到别行。
+
 验证铁律（2026-09-30 实际漏过一次，16 行）：
   **禁止用「grep 标记串 = 0」代替逐行核对**。他人改动常含**无标记的续行**
   （例：伊莫会话的 `YIMO_CERT_B64 =` 后跟 15 行 base64 字符串续行，续行里既没有
@@ -151,6 +161,12 @@ def main() -> int:
         default=[],
         help="正则：相对 HEAD 的**每一条改动行**都必须命中其中之一，否则中止（逐行归属校验，防混入别会话行）",
     )
+    ap.add_argument(
+        "--restore-head-pattern",
+        action="append",
+        default=[],
+        help="正则：命中该正则的工作区行，用 HEAD 里命中同一正则的行替换（他人改行→恢复 HEAD 旧版，而非删除；可重复）",
+    )
     ap.add_argument("--expect-present", action="append", default=[], help="结果中必须出现的字面串（可重复，失败即中止）")
     ap.add_argument("--dry-run", action="store_true", help="只打印将要暂存的内容与差异，不写索引")
     ap.add_argument(
@@ -207,6 +223,22 @@ def main() -> int:
         if any(re.search(p, line) for p in args.drop_pattern):
             dropped.append(("pattern", idx, line))
             dropped_idx.add(idx)
+            continue
+        # --restore-head-pattern：他人改行 → 用 HEAD 里命中同一正则的行替换（而非删除）。
+        # 供 current.md 等共享文件「别会话改行」场景：把该行恢复成 HEAD 旧版，工作区原样保留。
+        restored = False
+        for p in args.restore_head_pattern:
+            if re.search(p, line):
+                head_line = next((h for h in (base or []) if re.search(p, h)), None)
+                if head_line is not None:
+                    kept.append(head_line)          # 恢复 HEAD 旧版
+                    restored = True
+                else:
+                    dropped.append(("restore-no-head", idx, line))  # HEAD 无对应行（他人新增）→ 丢弃
+                    dropped_idx.add(idx)
+                    restored = True
+                break
+        if restored:
             continue
         kept.append(line)
 

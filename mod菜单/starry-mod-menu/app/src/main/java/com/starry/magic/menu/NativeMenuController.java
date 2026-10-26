@@ -104,6 +104,23 @@ public final class NativeMenuController {
     private final Context appContext;
     private final Handler mainHandler = new MenuSafeHandler(TAG);
     private final ExecutorService authExec = Executors.newSingleThreadExecutor();
+
+    /**
+     * ★r24 防闪退：线程池任务体纳入 Throwable 兜底。
+     * 为什么必须包：`ThreadPoolExecutor` 把任务抛出的 Throwable 重新抛给线程 ⇒ 线程终止 ⇒
+     * 触发 Thread 的未捕获异常处理 ⇒ 我们的 CrashHandler 记录后又交回系统默认处理 ⇒
+     * **整个游戏进程被杀**。也就是说「后台一个 OTA/授权任务出异常 = 玩家闪退」。
+     * 包一层后失败只记日志，任务本身作废、进程继续。
+     */
+    private void runAuth(Runnable body) {
+        authExec.execute(() -> {
+            try {
+                body.run();
+            } catch (Throwable t) {
+                Log.e(TAG, "authExec task failed (isolated, 进程继续)", t);
+            }
+        });
+    }
     private final ModBridge bridge;
 
     private FrameLayout root;
@@ -1454,7 +1471,7 @@ public final class NativeMenuController {
         }
         if (btn != null) btn.setEnabled(false);
         showToast("正在检查游戏补丁…");
-        authExec.execute(() -> {
+        runAuth(() -> {
             PlayOtaManager.CheckResult cr = PlayOtaManager.check(appContext);
             mainHandler.post(() -> {
                 if (btn != null) btn.setEnabled(true);
@@ -1490,7 +1507,7 @@ public final class NativeMenuController {
         if (btn != null) btn.setEnabled(false);
         showToast("正在下载游戏补丁…");
         final long[] lastPct = {-2L};
-        authExec.execute(() -> {
+        runAuth(() -> {
             PlayOtaManager.ApplyResult ar = PlayOtaManager.downloadAndApply(appContext, manifest,
                     (done, total) -> {
                         if (btn == null) return;
@@ -1534,7 +1551,7 @@ public final class NativeMenuController {
 
     private void doClearPlayOta() {
         showToast("正在清除…");
-        authExec.execute(() -> {
+        runAuth(() -> {
             PlayOtaManager.ClearResult r = PlayOtaManager.clearLocalOta(appContext);
             mainHandler.post(() -> showToast(r.message == null
                     ? (r.ok ? "已清除" : "清除失败") : r.message));
@@ -2700,7 +2717,7 @@ public final class NativeMenuController {
             return;
         }
         showToast("解绑中…", "info");
-        authExec.execute(() -> {
+        runAuth(() -> {
             try {
                 JSONObject body = new JSONObject();
                 body.put("device_id", Preferences.getOrCreateDeviceId());
@@ -2736,7 +2753,7 @@ public final class NativeMenuController {
     private void fetchBootstrapOnce() {
         if (bootstrapFetched) return;
         bootstrapFetched = true;
-        authExec.execute(() -> {
+        runAuth(() -> {
             try {
                 ModBridge.syncAuthGameIdFromNative();
                 String deviceId = Preferences.getOrCreateDeviceId();
@@ -3176,7 +3193,7 @@ public final class NativeMenuController {
         }
         grantRenewInFlight = true;
         final String why = reason != null ? reason : "renew";
-        authExec.execute(() -> {
+        runAuth(() -> {
             try {
                 ModBridge.syncAuthGameIdFromNative();
                 String deviceId = Preferences.getOrCreateDeviceId();
@@ -3504,7 +3521,7 @@ public final class NativeMenuController {
      * 非致命失败（网络/网关）只记日志，交给冷启动重试循环。
      */
     private void authLoginWithCard(final String card, final boolean silent) {
-        authExec.execute(() -> {
+        runAuth(() -> {
             try {
                 ModBridge.syncAuthGameIdFromNative();
                 String deviceId = Preferences.getOrCreateDeviceId();

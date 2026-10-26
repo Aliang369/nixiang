@@ -327,6 +327,10 @@ def report(m: dict, top: int) -> tuple[str, list[str]]:
         A("## 单文件触达 Top（read/edit/bash 参数中的路径）")
         for f, c in m["hot_top"]:
             A("- %d 次  `%s`" % (c, f))
+        hot_hint = [f for f, c in m["hot_top"] if c >= 15]
+        if hot_hint:
+            A("  ⚠ 单文件触达 ≥15 次（%s）：若是多处 edit，考虑「先读全再一次 write 覆盖」（AGENTS.md §5 同文件串行编辑段）"
+              % ", ".join(hot_hint[:3]))
 
     A("")
     A("## D5 入父上下文体量")

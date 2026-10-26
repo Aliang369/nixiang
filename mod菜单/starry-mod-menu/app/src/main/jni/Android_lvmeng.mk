@@ -47,7 +47,7 @@ LOCAL_ARM_MODE  := arm
 # 源文件三件套：现代入口 + 游戏 Mod + 注册表 Entry
 # Unity il2cpp 系保持下面默认（含 Il2CppApi）；
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
-LOCAL_SRC_FILES := MainModern.cpp Games/LvmengMod.cpp Games/LvmengEntry.cpp Unity/Il2CppApi.cpp
+LOCAL_SRC_FILES := MainModern.cpp Games/LvmengMod.cpp Games/LvmengEntry.cpp Games/LvmengSeccomp.cpp Unity/Il2CppApi.cpp
 
 # MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
 # FgoBoot_InjectEarlyFromOnLoad，不加本文件即 ld.lld: undefined symbol。

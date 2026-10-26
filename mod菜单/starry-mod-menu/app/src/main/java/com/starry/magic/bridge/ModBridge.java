@@ -256,6 +256,22 @@ public class ModBridge {
         }
     }
 
+    /**
+     * 与 safeCall 同保护，但把成败告诉调用方（★r24 防闪退 + 防脏态）：
+     * 旧写法只要 native 推送抛异常也 `return true` ⇒ 界面显示「已开」、native 其实没收到、
+     * 偏好还写了 ON —— 下次冷启就变成「开关是开的但不生效」。现在返回 false，
+     * 菜单侧（NativeMenuController 的开关/滑块监听器）会回弹并提示。
+     */
+    private static boolean tryCall(Runnable action) {
+        try {
+            action.run();
+            return true;
+        } catch (Throwable e) {
+            Log.w(TAG, "menu state push failed (→ UI rollback): " + e);
+            return false;
+        }
+    }
+
     /** 功能项需 native session 活着（登录后不过期，直到进程重启） */
     private boolean requireAuthForFeature(int featNum) {
         if (isUiFeature(featNum)) return true;
@@ -316,7 +332,12 @@ public class ModBridge {
         safeCall(() -> Preferences.changeFeatureBool(featName, featNum, enabled));
         if (!isUiFeature(featNum)) {
             StateMirror.mirror(featNum, enabled ? 1 : 0);
-            safeCall(() -> nativeSetFeature(featNum, featName, enabled));
+            if (!tryCall(() -> nativeSetFeature(featNum, featName, enabled))) {
+                // ★r24：native 没接收到 ⇒ 偏好回写旧值 + 镜像回退，UI 依 contract 回弹
+                safeCall(() -> Preferences.changeFeatureBool(featName, featNum, !enabled));
+                safeCall(() -> StateMirror.mirror(featNum, enabled ? 0 : 1));
+                return false;
+            }
         }
         return true;
     }
@@ -332,7 +353,7 @@ public class ModBridge {
         safeCall(() -> Preferences.changeFeatureInt(featName, featNum, value));
         if (!isUiFeature(featNum)) {
             StateMirror.mirror(featNum, value);
-            safeCall(() -> nativeSetValue(featNum, featName, value));
+            if (!tryCall(() -> nativeSetValue(featNum, featName, value))) return false;   // ★r24
         }
         return true;
     }
@@ -346,7 +367,7 @@ public class ModBridge {
         }
         if (!requireAuthForFeature(featNum)) return false;
         safeCall(() -> Preferences.changeFeatureInt(featName, featNum, 0));
-        safeCall(() -> nativeExecButton(featNum, featName));
+        if (!tryCall(() -> nativeExecButton(featNum, featName))) return false;   // ★r24
         return true;
     }
 
@@ -361,7 +382,7 @@ public class ModBridge {
         safeCall(() -> Preferences.changeFeatureInt(featName, featNum, position));
         if (!isUiFeature(featNum)) {
             StateMirror.mirror(featNum, position);
-            safeCall(() -> nativeSetValue(featNum, featName, position));
+            if (!tryCall(() -> nativeSetValue(featNum, featName, position))) return false;   // ★r24
         }
         return true;
     }
@@ -376,7 +397,7 @@ public class ModBridge {
         }
         safeCall(() -> Preferences.changeFeatureString(featName, featNum, text));
         if (!isUiFeature(featNum)) {
-            safeCall(() -> nativeSetText(featNum, featName, text));
+            if (!tryCall(() -> nativeSetText(featNum, featName, text))) return false;   // ★r24
         }
         return true;
     }

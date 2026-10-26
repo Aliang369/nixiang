@@ -3,16 +3,13 @@
  *
  *  ⚠️ 防闪退设施已内置为代码，删任何一节都可能复现历史闪退：
  *    默认 0 hook（懒装）/ 双路径挂点 / RVA 漂移拒绝 / 幂等安装
- *    orig 必调 / reenter 防递归 / SafeWrite 校验写 / 类名缓存 / Tick 轻量
+ *    orig 必调 / reenter 防递归 / 类名缓存 / Tick 轻量
  *  铁律全文：docs/GAME_MOD_GUIDE.md + skill/re-implement/hook-rules.md
  *
  *  功能清单（下标 = WscqMod.h 的 enum）：
  *    1 伤害倍率（滑块 1..1000，1=关）  → Enemy::GetHurt 入口乘倍率
  *    2 玩家无敌                        → PlayerCtr::GetHurt 负伤改 0
- *    3 战斗加速（滑块 1..10，1=关）    → Time::set_timeScale 钉住 + FixedUpdate 心跳
- *    4 怪物BOSS瞬刷                    → EnemiesCtr::FixedUpdate 倒计时写 0
- *                                        + EnemiesCtr::复活BOSS 借出复活 CD
- *    5 全屏攻击                        → EnemyCtr2::FixedUpdate 登记活体
+ *    3 全屏攻击                        → EnemyCtr2::FixedUpdate 登记活体
  *                                        + Enemy::GetHurt 扩散同一份伤害
  *
  *  锚点（file_off，原版 libil2cpp.so md5 563b40a81370833858ef2d4452f8dc3f，
@@ -20,10 +17,8 @@
  *    10_docs/圣翼传说/斌哥hook锚点_20260924.json
  *    va = file_off + 0x4000（本 so 实测：vaddr = file + 0x4000）
  *
- *  反作弊组（仅战斗加速 ON 时安装）：掐掉 EnemiesCtr 的
- *  <检测是否使用变速器>d__60 协程 + CameraCtr 封杀退出空操作。
- *  斌哥其余 6 处桩（Q群/微信屏蔽、OpenURL 品牌拦截、五秒检测自愈）与本作
- *  功能无关，一律不装。
+ *  20261026 用户实测后收窄：删除战斗加速、怪物/BOSS瞬刷及其反作弊组；
+ *  只保留上述 3 项。锚点档案可以保留历史超集，本模块只安装实际使用槽。
  * ================================================================ */
 
 #include "WscqMod.h"
@@ -55,105 +50,44 @@ static std::atomic<bool> g_anyHooked{false};
 // 功能开关（Tick 只同步这几个原子，禁重活）
 static std::atomic<int>  g_dmgMul{1};    // 1 = 关；1000 = 百倍以上
 static std::atomic<bool> g_inv{false};
-static std::atomic<int>  g_speed{1};     // 1 = 关；最大 10
-static std::atomic<bool> g_refresh{false};
 static std::atomic<bool> g_aoe{false};
 
 // 运行期辅助状态
 static std::atomic<bool> g_aoeReenter{false};     // AOE 扩散防递归
-static std::atomic<bool> g_needRestoreScale{false};// 关加速后把 timeScale 还原成 1
-static std::atomic<int>  g_prevSpeed{1};
-static std::atomic<void*> g_miSetTimeScale{nullptr};// 运行期捕获的真实 MethodInfo*
 
 // orig
 typedef void (*EnemyGetHurt_t)(void* self, int64_t blood, uint8_t is吸血, uint8_t is真伤,
                                uint8_t is暴击, void* fx, void* mi);
 typedef void (*PlayerGetHurt_t)(void* self, float hurt, void* color, void* mi);
-typedef void (*SetTimeScale_t)(float v, void* mi);
 typedef void (*VoidSelf_t)(void* self, void* mi);
-typedef bool (*BoolSelf_t)(void* self, void* mi);
 
 static EnemyGetHurt_t  g_origEnemyGetHurt  = nullptr;
 static PlayerGetHurt_t g_origPlayerGetHurt = nullptr;
-static SetTimeScale_t  g_origSetTimeScale  = nullptr;
-// 只做幂等凭据（hook 内不调用 orig）：掐变速检测协程 / 屏蔽封杀并退出游戏
-static void* g_origAntiSpeed = nullptr;
-static void* g_origBan1      = nullptr;
-static void* g_origBan2      = nullptr;
 static VoidSelf_t      g_origPlayerFixed   = nullptr;
-static VoidSelf_t      g_origEnemiesFixed  = nullptr;
-static VoidSelf_t      g_origReviveBoss    = nullptr;
 static VoidSelf_t      g_origEnemyCtr2Fix  = nullptr;
 
 // ============================================================
 // ② 字段偏移与 file_off（实测，禁止猜；换包必须重新抓点）
 // ============================================================
-enum : size_t {
-    kOffEnemiesCreatTime = 0x20,  // EnemiesCtr.float CreatTime（刷怪倒计时）
-    kOffEnemiesMapData   = 0x38,  // EnemiesCtr.mapconfig mapData
-    kOffMapBossCd        = 0x48,  // mapconfig 内 float BOSS 复活 CD
-};
-
 enum : uintptr_t {
-    kFoEnemyGetHurt      = 0x132BC80,
-    kFoPlayerGetHurt     = 0x13C3318,
-    kFoSetTimeScale      = 0x2680AA8,
-    kFoPlayerFixedUpdate = 0x13C51A0,
-    kFoEnemiesFixed      = 0x13283D8,
-    kFoReviveBoss        = 0x1326C34,
-    kFoEnemyCtr2Fixed    = 0x13852D8,
-    kFoAntiSpeedMoveNext = 0x132A634,
-    kFoBan1              = 0x11CE26C,  // CameraCtr::公用封杀并退出游戏
-    kFoBan2              = 0x11CE61C,  // CameraCtr::封杀并退出游戏
+    kFoEnemyGetHurt      = 0x13240B4,
+    kFoPlayerGetHurt     = 0x13C82C8,
+    kFoPlayerFixedUpdate = 0x13CA180,
+    kFoEnemyCtr2Fixed    = 0x138A280,
 };
 
 // 序言首 4 字节（小端）= 原版磁盘 so 实测值，防版本漂移挂错地址
 enum : uint32_t {
     kInsEnemyGetHurt  = 0xFC170FEC,
     kInsPlayerGetHurt = 0x6DB92BEB,
-    kInsSetTimeScale  = 0xFC1E0FE8,
     kInsPlayerFixed   = 0x6DBB23E9,
-    kInsEnemiesFixed  = 0xFC1E0FE8,
-    kInsReviveBoss    = 0xD101C3FF,
     kInsEnemyCtr2Fix  = 0x6DBA33ED,
-    kInsAntiSpeed     = 0xF81D0FFE,
-    kInsBan1          = 0xD10143FF,
-    kInsBan2          = 0xD10183FF,
 };
 
 // ============================================================
 // ③ 安全助手（防闪退核心，勿删；新代码禁止绕开它们裸读写内存）
 // ============================================================
 static bool OkPtr(void* p) { return p && Il2Cpp::IsValidHeapPtr(p); }
-
-static void SafeWriteI32(void* obj, size_t off, int32_t v) {
-    if (OkPtr(obj)) Il2Cpp::WriteI32(obj, off, v);
-}
-
-static void SafeWriteF32(void* obj, size_t off, float v) {
-    if (OkPtr(obj)) memcpy(reinterpret_cast<uint8_t*>(obj) + off, &v, sizeof(v));
-}
-
-static int32_t SafeReadI32(void* obj, size_t off, int32_t defv) {
-    if (!OkPtr(obj)) return defv;
-    int32_t v = defv;
-    memcpy(&v, reinterpret_cast<uint8_t*>(obj) + off, sizeof(v));
-    return v;
-}
-
-static float SafeReadF32(void* obj, size_t off, float defv) {
-    if (!OkPtr(obj)) return defv;
-    float v = defv;
-    memcpy(&v, reinterpret_cast<uint8_t*>(obj) + off, sizeof(v));
-    return v;
-}
-
-static void* SafeReadPtr(void* obj, size_t off) {
-    if (!OkPtr(obj)) return nullptr;
-    void* v = nullptr;
-    memcpy(&v, reinterpret_cast<uint8_t*>(obj) + off, sizeof(v));
-    return v;
-}
 
 static int ClampI(int v, int lo, int hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
@@ -399,61 +333,10 @@ static void Hooked_PlayerGetHurt(void* self, float hurt, void* color, void* mi) 
     g_origPlayerGetHurt(self, hurt, color, mi);
 }
 
-// 战斗加速：#14 Time::set_timeScale —— 绝对钉住；0/负值（暂停/冻结）吞掉
-static void Hooked_SetTimeScale(float v, void* mi) {
-    if (!g_origSetTimeScale) return;
-    if (mi && !g_miSetTimeScale.load()) g_miSetTimeScale.store(mi);  // 备心跳复用
-    const int sp = g_speed.load();
-    if (sp > 1) {
-        if (!(v > 0.0f)) {
-            LOGI(TPL_LOG " swallow timeScale=%.2f (speed %d)", v, sp);
-            return;
-        }
-        v = static_cast<float>(sp);
-    }
-    g_origSetTimeScale(v, mi);
-}
-
-// 帧心跳：#12 PlayerCtr::FixedUpdate —— 帧计数 + 钉住/还原 timeScale
+// 帧序：#12 PlayerCtr::FixedUpdate —— 仅供全屏攻击判断敌人是否仍在最近帧活跃
 static void Hooked_PlayerFixedUpdate(void* self, void* mi) {
     g_frameTick.fetch_add(1);
-    const int sp = g_speed.load();
-    if (sp > 1) {
-        if (g_origSetTimeScale) g_origSetTimeScale(static_cast<float>(sp), g_miSetTimeScale.load());
-    } else if (g_needRestoreScale.exchange(false)) {
-        if (g_origSetTimeScale) {
-            g_origSetTimeScale(1.0f, g_miSetTimeScale.load());
-            LOGI(TPL_LOG " timeScale restored to 1.0");
-        }
-    }
     if (g_origPlayerFixed) g_origPlayerFixed(self, mi);
-}
-
-// 怪物瞬刷：#7 EnemiesCtr::FixedUpdate —— 刷怪倒计时归零
-static void Hooked_EnemiesFixedUpdate(void* self, void* mi) {
-    if (g_refresh.load() && OkPtr(self)) {
-        const float t = SafeReadF32(self, kOffEnemiesCreatTime, 0.0f);
-        if (t > 0.0f) SafeWriteF32(self, kOffEnemiesCreatTime, 0.0f);
-    }
-    if (g_origEnemiesFixed) g_origEnemiesFixed(self, mi);
-}
-
-// BOSS 瞬刷：#6 EnemiesCtr::复活BOSS —— 借出复活 CD（写 -1）→ 调原函数 → 同步归还
-static void Hooked_ReviveBoss(void* self, void* mi) {
-    if (!g_origReviveBoss) return;
-    if (g_refresh.load() && OkPtr(self)) {
-        void* mapData = SafeReadPtr(self, kOffEnemiesMapData);
-        if (OkPtr(mapData)) {
-            const float cd = SafeReadF32(mapData, kOffMapBossCd, 0.0f);
-            if (cd > 0.0f) {
-                SafeWriteF32(mapData, kOffMapBossCd, -1.0f);
-                g_origReviveBoss(self, mi);
-                SafeWriteF32(mapData, kOffMapBossCd, cd);
-                return;
-            }
-        }
-    }
-    g_origReviveBoss(self, mi);
 }
 
 // 全屏攻击：#10 EnemyCtr2::FixedUpdate —— 无条件登记活体（桶 #10 同款）
@@ -462,45 +345,19 @@ static void Hooked_EnemyCtr2FixedUpdate(void* self, void* mi) {
     if (g_origEnemyCtr2Fix) g_origEnemyCtr2Fix(self, mi);
 }
 
-// 反作弊：#8 <检测是否使用变速器>d__60::MoveNext —— 直接结束协程（不调 orig）
-static bool Hooked_AntiSpeedMoveNext(void* /*self*/, void* /*mi*/) {
-    return false;
-}
-
-// 反作弊：#1/#2 CameraCtr 封杀退出 —— 空操作（防变速检测误伤踢下线）
-static void Hooked_BanNoop(void* /*self*/, void* /*mi*/) {
-    LOGW(TPL_LOG " ban-and-exit suppressed");
-}
-
 static const HookSlot kSlots[] = {
     {"EnemyGetHurt",   kFoEnemyGetHurt,      kInsEnemyGetHurt,  "", "Enemy", "GetHurt", 5,
      (void*)Hooked_EnemyGetHurt, (void**)&g_origEnemyGetHurt},
     {"PlayerGetHurt",  kFoPlayerGetHurt,     kInsPlayerGetHurt, "", "PlayerCtr", "GetHurt", 2,
      (void*)Hooked_PlayerGetHurt, (void**)&g_origPlayerGetHurt},
-    {"SetTimeScale",   kFoSetTimeScale,      kInsSetTimeScale,  "UnityEngine", "Time", "set_timeScale", 1,
-     (void*)Hooked_SetTimeScale, (void**)&g_origSetTimeScale},
     {"PlayerFixed",    kFoPlayerFixedUpdate, kInsPlayerFixed,   "", "PlayerCtr", "FixedUpdate", 0,
      (void*)Hooked_PlayerFixedUpdate, (void**)&g_origPlayerFixed},
-    {"EnemiesFixed",   kFoEnemiesFixed,      kInsEnemiesFixed,  "", "EnemiesCtr", "FixedUpdate", 0,
-     (void*)Hooked_EnemiesFixedUpdate, (void**)&g_origEnemiesFixed},
-    {"ReviveBoss",     kFoReviveBoss,        kInsReviveBoss,    "", "EnemiesCtr", "复活BOSS", 0,
-     (void*)Hooked_ReviveBoss, (void**)&g_origReviveBoss},
     {"EnemyCtr2Fixed", kFoEnemyCtr2Fixed,    kInsEnemyCtr2Fix,  "", "EnemyCtr2", "FixedUpdate", 0,
      (void*)Hooked_EnemyCtr2FixedUpdate, (void**)&g_origEnemyCtr2Fix},
-    // 下面三个 hook 不调 orig（掐协程 / 屏蔽封杀），但 origPtr 必须指向真实变量：
-    // HookSlotInstall 的幂等判据是 *origPtr 非空，传 nullptr 会导致每个 Tick 重复
-    // DobbyHook 同一地址 → 叠钩 SIGSEGV。
-    {"AntiSpeed",      kFoAntiSpeedMoveNext, kInsAntiSpeed,     "", "<检测是否使用变速器>d__60", "MoveNext", 0,
-     (void*)Hooked_AntiSpeedMoveNext, (void**)&g_origAntiSpeed},
-    {"Ban1",           kFoBan1,              kInsBan1,          "", "CameraCtr", "公用封杀并退出游戏", 0,
-     (void*)Hooked_BanNoop, (void**)&g_origBan1},
-    {"Ban2",           kFoBan2,              kInsBan2,          "", "CameraCtr", "封杀并退出游戏", 0,
-     (void*)Hooked_BanNoop, (void**)&g_origBan2},
 };
 
 enum : int {
-    kSlotEnemyHurt = 0, kSlotPlayerHurt, kSlotSetTimeScale, kSlotPlayerFixed, kSlotEnemiesFixed,
-    kSlotReviveBoss, kSlotEnemyCtr2Fixed, kSlotAntiSpeed, kSlotBan1, kSlotBan2,
+    kSlotEnemyHurt = 0, kSlotPlayerHurt, kSlotPlayerFixed, kSlotEnemyCtr2Fixed,
 };
 
 // ============================================================
@@ -515,29 +372,16 @@ static bool InstallSlot(int i) {
 static void SyncHooks() {
     if (!g_libReady.load()) return;
 
-    const int  sp  = g_speed.load();
     const bool inv = g_inv.load();
-    const bool ref = g_refresh.load();
     const bool aoe = g_aoe.load();
     const bool dmg = g_dmgMul.load() > 1;
 
-    // 关加速 → 记一次还原（在帧心跳里执行）
-    if (g_prevSpeed.exchange(sp) > 1 && sp <= 1) g_needRestoreScale.store(true);
-
     if (dmg || aoe) InstallSlot(kSlotEnemyHurt);          // 倍率 / 全屏攻击共用入口
     if (inv)        InstallSlot(kSlotPlayerHurt);
-    if (sp > 1 || aoe) InstallSlot(kSlotPlayerFixed);      // 帧计数（AOE 活跃判据）+ 心跳
-    if (sp > 1) {
-        InstallSlot(kSlotSetTimeScale);
-        InstallSlot(kSlotAntiSpeed);                      // 掐变速检测协程
-        InstallSlot(kSlotBan1);
-        InstallSlot(kSlotBan2);
+    if (aoe) {
+        InstallSlot(kSlotPlayerFixed);                     // AOE 活跃判据
+        InstallSlot(kSlotEnemyCtr2Fixed);
     }
-    if (ref) {
-        InstallSlot(kSlotEnemiesFixed);
-        InstallSlot(kSlotReviveBoss);
-    }
-    if (aoe) InstallSlot(kSlotEnemyCtr2Fixed);
 }
 
 // ============================================================
@@ -546,14 +390,11 @@ static void SyncHooks() {
 static void SyncAllFromMenu(const bool* features, const int* values) {
     if (features) {
         g_inv.store(features[WSCQ_FEAT_INV]);
-        g_refresh.store(features[WSCQ_FEAT_REFRESH]);
         g_aoe.store(features[WSCQ_FEAT_AOE]);
     }
     if (values) {
         const int m = values[WSCQ_FEAT_DMG];
         if (m > 0) g_dmgMul.store(ClampI(m, 1, 1000));
-        const int s = values[WSCQ_FEAT_SPEED];
-        if (s > 0) g_speed.store(ClampI(s, 1, 10));
     }
 }
 
@@ -562,14 +403,12 @@ bool Wscq_TryInit(JavaVM* /*vm*/) {
     if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
 #ifdef WSCQ_SMOKE_ALL_ON
     // ★ 仅本机冒烟测试用（Android_wscq.mk 的 ifdef WSCQ_SMOKE_ALL_ON 开，正式包永不含）：
-    // 绕过菜单/卡密把 5 个功能强制 ON，用于验证 10 处 Dobby 挂点安装后不闪退。
+    // 绕过菜单/卡密把 3 个功能强制 ON，用于验证实际 4 处 Dobby 挂点安装后不闪退。
     static bool smokeDone = false;
     if (!smokeDone) {
         smokeDone = true;
         g_dmgMul.store(101);
         g_inv.store(true);
-        g_speed.store(3);
-        g_refresh.store(true);
         g_aoe.store(true);
         LOGW(TPL_LOG " SMOKE ALL-ON（冒烟测试构建，勿发布）");
     }
@@ -585,7 +424,6 @@ bool Wscq_IsReady() { return g_libReady.load(); }
 void Wscq_OnFeatureChanged(int featNum, bool enabled) {
     switch (featNum) {
         case WSCQ_FEAT_INV:     g_inv.store(enabled); break;
-        case WSCQ_FEAT_REFRESH: g_refresh.store(enabled); break;
         case WSCQ_FEAT_AOE:     g_aoe.store(enabled); break;
         default: break;
     }
@@ -596,7 +434,6 @@ void Wscq_OnFeatureChanged(int featNum, bool enabled) {
 void Wscq_OnValueChanged(int featNum, int value) {
     switch (featNum) {
         case WSCQ_FEAT_DMG:   g_dmgMul.store(ClampI(value, 1, 1000)); break;
-        case WSCQ_FEAT_SPEED: g_speed.store(ClampI(value, 1, 10)); break;
         default: break;
     }
     SyncHooks();
@@ -615,9 +452,6 @@ void Wscq_Tick(const bool* features, const int* values) {
 void Wscq_ForceClear() {
     g_dmgMul.store(1);
     g_inv.store(false);
-    g_speed.store(1);
-    g_refresh.store(false);
     g_aoe.store(false);
     g_aoeCount.store(0);
-    if (g_origSetTimeScale) g_needRestoreScale.store(true);  // 帧心跳里还原 timeScale
 }

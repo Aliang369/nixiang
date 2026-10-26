@@ -123,6 +123,10 @@ public final class PlayOtaManager {
         }
         try {
             return downloadAndApplyLocked(ctx, man, progress);
+        } catch (Throwable t) {
+            // ★r24 防闪退：这里原来只有 finally（异常会一路冒到线程池 ⇒ 进程被杀）
+            Log.e(TAG, "downloadAndApply failed (isolated)", t);
+            return new ApplyResult(false, "OTA 应用失败：" + t, 0);
         } finally {
             IN_FLIGHT.set(false);
         }

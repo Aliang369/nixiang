@@ -48,6 +48,12 @@ DobbyHook(target, replacement, &orig);
 // replacement 默认按真实 ABI 转发到 orig，保留必要副作用。
 ```
 
+> ⚠️ **Dobby 入口 16 字节窗口「邻居入口」铁律（2026-10-17 弓箭传说2国际版 E1 ＋ 霓虹深渊2 r7/r12，跨游戏复发）**
+> Dobby 在 arm64 上固定改写方法入口 **16 字节**。装钩前必须确认这 16 字节窗口内**没有其他方法入口**——「函数体 ≥ 16 字节」≠「窗口干净」：
+> - 热更 / IL2CPP 小方法（如 4 字节转发器 `b <real>`、8 字节 veneer `mov w1,#imm; b <impl>`）的邻居方法入口紧挨在 `+0x4`/`+0x8`/`+0xc`，Dobby 会把邻居入口写成野指令 ⇒ 之后调用邻居即乱跳/未定义指令。
+> - 判据＝入口 16 字节窗口内有外来方法入口 ⇒ **跳过该槽位**，或改 veneer **入口 4 字节**补丁（`PatchEntryBranch4`）并直接调真实现；转发器链（`ResolveBranchForwarders` ≤4 跳）命中已挂钩实现 ⇒ 判冗余跳过。
+> - 反例锚点：`HotFix.Common.AttributeData.GetAttackSpeed`（弓箭 E1，取值口恒返 0 ⇒ 玩家完全不攻击）；`Attri.get_Item` 4 字节转发器（nhsy2 r7）；`Res_CrystalCountImpl` veneer 窗口内另有 `GetCustomSpriteTypeCount`（nhsy2 r12）。
+
 ## 2. base_va 计算（三种方式）
 
 | 方式 | 公式 | 适用条件 |
@@ -806,6 +812,8 @@ bash 04_scripts/_common/code_locate.sh <文件> '<正则>' --ctx 3
 1. **先取证再改码**：任何「按偏移改写内存」的功能，改功能代码前必须先有一条**类布局证据行**落到日志/磁盘（运行时字段偏移 + 槽长 + 类名确认），证据不在手上不许动功能分支。工具：`bash 04_scripts/_common/new_hypothesis.sh --game <游戏> --hypothesis "…" --verdict "<可 grep 的判定行>" --reject "<什么算否证>"`（假设先写死，避免事后改判据）。
 2. **静态偏移只作文档**：编译期常量一律 `*_DOC_ONLY`，改写的偏移必须来自运行时（`il2cpp_field_get_offset`）；版本漂移是常态（本作 `SYS_MATK 0xD0→0xD8`、`SYS_FDAMAGE 0xD8→0xE0`）。
 3. **有疑问就安全退回**：布局自校验不过 ⇒ 只打告警（`hotpath: layout not ok — 跳过改写（功能暂不生效）`）**不写内存**。宁可「功能暂时无效」，绝不「写坏内存 + 崩溃」，因为崩溃取证与重装一轮的成本远高于无效一轮。
+
+> **取证三要素（2026-10-17 弓箭传说2国际版 E7/E10 补）**：按偏移直写**数值**前，原始样本必须同时取到 **①符号（正/负）②宽度（int32/int64/float/double）③量级** 三要素。反例：`TakeDamageData.HurtValue@0x30` 是 int64 且**伤害存负值**（游戏按 `Hp += HurtValue` 结算），写 `+99999999` 等于给怪物回血；把 int64 写到 float 字段读出 ≈1e-36（正是「有伤害不掉血」）。对象池复用的字段取「游戏原始值」必须让对应功能处于**关闭态**（弓箭 E9）。
 
 **推荐的取证顺序（照抄即可）**：
 

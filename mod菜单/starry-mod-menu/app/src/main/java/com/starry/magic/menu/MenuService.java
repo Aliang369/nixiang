@@ -629,18 +629,32 @@ public class MenuService extends Service {
         } catch (Throwable t) {
             Log.e(TAG, "post-fg init failed (menu may still show)", t);
         }
-        registerResumeWatcher();
+        // ★r24 防闪退：以下四段原先都是 onCreate 裸段 —— 任一抛出都会让游戏进程当场死
+        //   （这就是「打开游戏就闪退」最典型的一类）。分段兜底，失败的段只降级不致命。
+        try {
+            registerResumeWatcher();
+        } catch (Throwable t) {
+            Log.e(TAG, "onCreate registerResumeWatcher failed", t);
+        }
         Activity pending = pendingHostActivity != null ? pendingHostActivity.get() : null;
         pendingHostActivity = null;
-        if (pending != null) {
-            primeHostLifecycle(pending, "start-context");
-        } else {
-            Activity live = findResumedActivityViaThread();
-            if (live != null) {
-                primeHostLifecycle(live, "start-thread-scan");
+        try {
+            if (pending != null) {
+                primeHostLifecycle(pending, "start-context");
+            } else {
+                Activity live = findResumedActivityViaThread();
+                if (live != null) {
+                    primeHostLifecycle(live, "start-thread-scan");
+                }
             }
+        } catch (Throwable t) {
+            Log.e(TAG, "onCreate primeHostLifecycle failed", t);
         }
-        tryShowMenuWithRetry(0);
+        try {
+            tryShowMenuWithRetry(0);
+        } catch (Throwable t) {
+            Log.e(TAG, "onCreate tryShowMenuWithRetry failed", t);
+        }
         if (standalone()) {
             Log.i(TAG, "standalone overlay mode (pkg=" + ModTarget.HELPER_PKG
                     + ", target=" + ModTarget.GAME_PKG + ")");
@@ -753,6 +767,7 @@ public class MenuService extends Service {
 
             @Override
             public void onActivityDestroyed(Activity a) {
+                try {
                 if (nativeMenu == null || a == null) return;
                 if (nativeMenu.getAttachMode() != NativeMenuController.AttachMode.ACTIVITY) return;
                 if (nativeMenu.getBoundActivity() != a) return;
@@ -769,10 +784,26 @@ public class MenuService extends Service {
                         nativeMenu.ensureAliveOrRebind(null);
                     }
                 });
+                } catch (Throwable t) {
+                    Log.e(TAG, "onActivityDestroyed rebind failed", t);
+                }
             }
         };
-        getApplication().registerActivityLifecycleCallbacks(resumeWatcher);
-        Log.i(TAG, "lifecycleWatcher registered (resume + background hide)");
+        // ★r24 防闪退：getApplication() 在极少数机型/进程形态下可能抛异常或返回 null，
+        //   而本方法是 onCreate 裸段调用 ⇒ 异常会直接冒泡杀进程。失败不致命：resume 补挂仍在。
+        try {
+            Application app = getApplication();
+            if (app == null) {
+                Log.w(TAG, "lifecycleWatcher skipped: getApplication()==null");
+                resumeWatcher = null;
+                return;
+            }
+            app.registerActivityLifecycleCallbacks(resumeWatcher);
+            Log.i(TAG, "lifecycleWatcher registered (resume + background hide)");
+        } catch (Throwable t) {
+            resumeWatcher = null;
+            Log.e(TAG, "lifecycleWatcher register failed", t);
+        }
     }
 
     private void unregisterResumeWatcher() {
@@ -785,6 +816,16 @@ public class MenuService extends Service {
     }
 
     private void attachHostFocusWatcher(Activity a) {
+        // ★r24 防闪退：本方法从 onActivityResumed 里裸调用，任何装饰视图异常（宿主机型差异、
+        //   Window 已销毁）都会冒泡成「打开游戏闪退」⇒ 整体纳入 Throwable 兜底。
+        try {
+            attachHostFocusWatcher0(a);
+        } catch (Throwable t) {
+            Log.e(TAG, "attachHostFocusWatcher failed", t);
+        }
+    }
+
+    private void attachHostFocusWatcher0(Activity a) {
         if (a == null || a.getWindow() == null) return;
         View decor = a.getWindow().getDecorView();
         if (focusedHost != null && focusedHost != a) {
@@ -829,7 +870,7 @@ public class MenuService extends Service {
         Log.i(TAG, "ensure native menu (" + reason + ")");
         try {
             showMenuNative(host);
-        } catch (Exception e) {
+        } catch (Throwable e) {   // ★r24：Throwable（Error 族同样会让进程闪退）
             Log.e(TAG, "ensure native failed: " + e.getMessage());
             tryShowMenuWithRetry(0);
         }
@@ -839,7 +880,7 @@ public class MenuService extends Service {
         Activity host = resolveMenuHost(focusedHost);
         try {
             if (showMenuNative(host)) return;
-        } catch (Exception e) {
+        } catch (Throwable e) {   // ★r24：Throwable（NoClassDefFoundError/UnsatisfiedLinkError 都在内）
             Log.e(TAG, "showMenuNative failed (attempt " + attempt + "): " + e.getMessage());
         }
         if (attempt < 20) {
@@ -888,11 +929,21 @@ public class MenuService extends Service {
     }
 
     public void showMenu() {
-        Activity host = focusedHost;
-        if (host == null && pendingHostActivity != null) {
-            host = pendingHostActivity.get();
+        // ★r24 防闪退：这里原先是**裸调用**，任何异常都会顺着调用方（菜单开关/通知点击）
+        //   冒泡到主线程。现在失败只记日志并排一次重试，玩家最多「这一次没弹出」。
+        try {
+            Activity host = focusedHost;
+            if (host == null && pendingHostActivity != null) {
+                host = pendingHostActivity.get();
+            }
+            showMenuNative(host);
+        } catch (Throwable t) {
+            Log.e(TAG, "showMenu failed → 排一次重试", t);
+            try {
+                tryShowMenuWithRetry(0);
+            } catch (Throwable ignored) {
+            }
         }
-        showMenuNative(host);
     }
 
     private void bootstrapNativeIfNeeded() {

@@ -25,6 +25,7 @@
 #include <cstdarg>
 #include <cstdint>
 #include <sys/stat.h>
+#include <sys/system_properties.h>
 #include <errno.h>
 #include <dlfcn.h>
 #include "Dobby/dobby.h"
@@ -32,14 +33,60 @@
 /* ===== Stage 7（2026-10-20）：吞掉 FairGuard 对 UnityMain 发的 SIGILL =====
  * 实测：102–157 s 由别的线程 tgkill(UnityMain, SIGILL) 打死；handler 直接返回即吞掉。 */
 #include <signal.h>
-static void Starry_SigillSwallow(int, siginfo_t*, void*) { /* 返回即继续执行 */ }
+#include <sys/syscall.h>
+/* 2026-10-20 05:5x（兜底轮）：CrashSight 在 ~12 s 装自己的 SIGILL 处理器，把我们的顶掉；
+ * 于是 FairGuard 的 tgkill(UnityMain,SIGILL) 变成「上报 → uploadFinished → Java finish 回桌面」。
+ * 本版：① **全吞**（含 ILL_ILLOPC —— 05:5x 实测把真故障交回原处理器会让进程在 ~38 s 被打死，
+ *          而旧「全吞」版能活 318 s：滚动变换的非法字是瞬态，返回后重执行即可恢复）；
+ *       ② 每 500 ms 抢回一次 SIGILL 处理器，让 CrashSight 再也接不到那一发（不再上报 → Java 不 finish）；
+ *       ③ 只计数（SI_TKILL 记「伪造」、其余记「瞬态」），不改变行为。 */
+static struct sigaction g_saSigillOur;
+static struct sigaction g_saSigillOld;
+static volatile int g_haveSigillOld = 0;
+static volatile int g_sigillSwallowed = 0;
+static volatile int g_sigillReal = 0;
+static volatile int g_sigillReArmed = 0;
+
+static void Starry_SigillSwallow(int sig, siginfo_t* si, void* uc) {
+    (void)sig; (void)uc;
+    if (si && si->si_code == SI_TKILL)
+        __atomic_fetch_add(&g_sigillSwallowed, 1, __ATOMIC_RELAXED);   /* 伪造投递 */
+    else
+        __atomic_fetch_add(&g_sigillReal, 1, __ATOMIC_RELAXED);        /* 滚动变换瞬态非法字 */
+    return;   /* 全吞：返回后内核重执行该指令，瞬态恢复即继续 */
+}
+
+/* L1 门禁要求：不出现裸 __android_log_print（用宏包装，与 Seccomp 的 SE_LOG* 同款） */
+#define LM_LOGI(...) __android_log_print(ANDROID_LOG_INFO, "StarryLvmeng", __VA_ARGS__)
+#define LM_LOGW(...) __android_log_print(ANDROID_LOG_WARN, "StarryLvmeng", __VA_ARGS__)
+
+static void* Starry_SigillRearmWorker(void*) {
+    for (int i = 0; i < 3600; i++) {               /* 30 min 上限 */
+        usleep(500 * 1000);
+        struct sigaction cur;
+        if (sigaction(SIGILL, nullptr, &cur) != 0) continue;
+        if (cur.sa_sigaction != Starry_SigillSwallow) {
+            __atomic_fetch_add(&g_sigillReArmed, 1, __ATOMIC_RELAXED);
+            sigaction(SIGILL, &g_saSigillOur, nullptr);
+            LM_LOGW("SIGILL 处理器被覆盖(现=%p) -> 已抢回(第 %d 次)",
+                    (void*)cur.sa_sigaction, g_sigillReArmed);
+        }
+        if ((i % 20) == 0 && (g_sigillSwallowed || g_sigillReal))
+            LM_LOGI("SIGILL 统计：吞伪造=%d 转交真故障=%d 抢回=%d",
+                    g_sigillSwallowed, g_sigillReal, g_sigillReArmed);
+    }
+    return nullptr;
+}
+
 __attribute__((constructor)) static void Starry_InstallSigillHandler() {
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
-    sa.sa_sigaction = Starry_SigillSwallow;
-    sa.sa_flags = SA_SIGINFO | SA_RESTART;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGILL, &sa, nullptr);
+    memset(&g_saSigillOur, 0, sizeof(g_saSigillOur));
+    g_saSigillOur.sa_sigaction = Starry_SigillSwallow;
+    g_saSigillOur.sa_flags = SA_SIGINFO | SA_RESTART | SA_NODEFER;
+    sigemptyset(&g_saSigillOur.sa_mask);
+    if (sigaction(SIGILL, &g_saSigillOur, &g_saSigillOld) == 0 && g_saSigillOld.sa_sigaction)
+        g_haveSigillOld = 1;
+    pthread_t th;
+    if (pthread_create(&th, nullptr, Starry_SigillRearmWorker, nullptr) == 0) pthread_detach(th);
 }
 
 namespace fgspoof {
@@ -59,11 +106,21 @@ static ssize_t (*o_readlink)(const char*, char*, size_t)  = nullptr;
 static bool g_ready = false;
 static uintptr_t g_fg_lo = 0, g_fg_hi = 0;
 static int  g_hits = 0;
+/* --- 伪装轮（2026-10-20 05:2x）：把 FairGuard 的 open(base.apk) 换成原厂包 ---
+ * 依据：cert_reader_mode7_20261020.md —— FairGuard 只读「EOCD 窗口 278B + 签名块 footer 24B
+ * + 整个 APK Sig Block 4096B」三段（自有 svc 桩，files 里的 3 条 lseek），然后从 v2 块里取出
+ * 证书 DER 送去比对；真比对在混淆解释器里（4 路表派发），不适合直接改码。
+ * 换成原厂包后，这三段读到的都是「原厂签名块 + 原厂证书」⇒ 比对自然为真，且不碰 FairGuard 任何页
+ * （避开 ≤0.3 s 的完整性反制）。prop debug.starry.lvmeng_fgspoof=0 可退回「只记录不替换」。 */
+static int  g_spoofFd = -1;
+static int  g_spoofOn = 1;
+static char g_apkPath[512] = { 0 };
+static int  (*o_stat)(const char*, struct stat*) = nullptr;
 
 void logger(const char* fmt, ...) {
     char b[512];
     va_list ap; va_start(ap, fmt); vsnprintf(b, sizeof(b), fmt, ap); va_end(ap);
-    __android_log_print(ANDROID_LOG_INFO, "StarryLvmeng", "%s", b);
+    LM_LOGI("%s", b);
     FILE* f = fopen(kLogPath, "ab");
     if (f) { fprintf(f, "[fgspoof] %s\n", b); fclose(f); }
 }
@@ -177,7 +234,17 @@ static bool is_target(const char* path) { return path && strstr(path, "base.apk"
 static int my_open(const char* path, int flags, ...) {
     void* ra = __builtin_return_address(0);
     if (g_ready && is_target(path) && ra_in_fg(ra)) {
-        /* Stage 7：判定轮 —— 不替换 fd，只记录，让 FairGuard 读真实 base.apk */
+        if (g_spoofOn) {
+            /* 伪装：fd 指向 /data/data/<pkg>/files/fg_orig.apk（完整原厂 base.apk） */
+            int sfd = o_open(kSpoofPath, flags & ~(O_CREAT | O_EXCL | O_TRUNC));
+            if (sfd >= 0) {
+                g_spoofFd = sfd;
+                int n = ++g_hits;
+                if (n <= 12) logger("FG open(SPOOF) #%d %s -> fd=%d ra=%p", n, path, sfd, ra);
+                return sfd;
+            }
+            logger("FG open(SPOOF) 失败 errno=%d ⇒ 回退真实 base.apk", errno);
+        }
         int n = ++g_hits;
         if (n <= 12) logger("FG open(real) #%d %s ra=%p", n, path, ra);
     }
@@ -229,15 +296,40 @@ static int my_fstat(int fd, struct stat* st) {
 static ssize_t my_readlink(const char* p, char* b, size_t n) {
     void* ra = __builtin_return_address(0);
     ssize_t r = o_readlink(p, b, n);
+    /* 伪装一致性：fd 反查路径时把 fg_orig.apk 报回成真实 base.apk */
+    if (r > 0 && g_spoofOn && p && strstr(p, "/proc/self/fd/") && strstr(b, "fg_orig.apk") &&
+        g_apkPath[0]) {
+        snprintf(b, n, "%s", g_apkPath);
+        r = (ssize_t)strlen(b);
+        logger("FG readlink fd 伪装 -> base.apk ra=%p", ra);
+        return r;
+    }
     if (ra_in_fg(ra)) logger("FG readlink %s => %s ra=%p", p ? p : "(null)", r > 0 ? b : "-", ra);
     return r;
+}
+static int my_stat(const char* path, struct stat* st) {
+    void* ra = __builtin_return_address(0);
+    if (g_spoofOn && g_ready && is_target(path) && ra_in_fg(ra) && o_stat) {
+        int r = o_stat(kSpoofPath, st);
+        logger("FG stat(SPOOF) %s rc=%d size=%lld ra=%p", path, r,
+               st ? (long long)st->st_size : -1, ra);
+        return r;
+    }
+    return o_stat ? o_stat(path, st) : -1;
 }
 
 static void* worker(void*) {
     char apk[512] = { 0 };
     for (int i = 0; i < 200; i++) { if (findApkPath(apk, sizeof(apk))) break; usleep(50 * 1000); }
     if (!apk[0]) { logger("apk path not found in maps; spoof disabled"); return nullptr; }
+    snprintf(g_apkPath, sizeof(g_apkPath), "%s", apk);
     logger("apk=%s", apk);
+    {   /* 伪装开关：prop debug.starry.lvmeng_fgspoof=0 退回「只记录不替换」 */
+        char pb[PROP_VALUE_MAX] = { 0 };
+        if (__system_property_get("debug.starry.lvmeng_fgspoof", pb) > 0 && pb[0] == '0')
+            g_spoofOn = 0;
+        logger("fgspoof=%s", g_spoofOn ? "ON(替换为原厂包)" : "OFF(只记录)");
+    }
 
     struct stat st;
     long long want = -1;
@@ -266,6 +358,10 @@ static void* worker(void*) {
     DobbyHook((void*)dlsym(RTLD_DEFAULT, "mmap"),      (void*)my_mmap,      (void**)&o_mmap);
     DobbyHook((void*)dlsym(RTLD_DEFAULT, "fstat"),     (void*)my_fstat,     (void**)&o_fstat);
     DobbyHook((void*)dlsym(RTLD_DEFAULT, "readlink"),  (void*)my_readlink,  (void**)&o_readlink);
+    {   /* stat 伪装：FairGuard 若用 stat(path) 探尺寸，也要看到原厂包 */
+        void* sym_stat = (void*)dlsym(RTLD_DEFAULT, "stat");
+        if (sym_stat) DobbyHook(sym_stat, (void*)my_stat, (void**)&o_stat);
+    }
     logger("hooks installed (open=%p openat=%p)", (void*)o_open, (void*)o_openat);
     g_ready = true;
     // 轮询等 libFairGuard 出现在 maps（最多 60 s），拿到范围后伪装立即生效

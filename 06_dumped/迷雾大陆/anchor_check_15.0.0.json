@@ -1,18 +1,28 @@
 {
   "ok": true,
   "version": "15.0.0",
-  "code_version": "a1e47",
-  "code_size": 6743502,
-  "code_md5": "21a4ff6b94b83f4dfd4bf9feb71a5c91",
+  "code_version": "bffa2",
+  "code_size": 6867542,
+  "code_md5": "eb40baaac75516b54b7a8511a566e622",
   "checks": {
     "damage_anchor": 1,
     "speed_anchor": 1,
     "tick_anchor": 2,
     "cheat_anchor": 1,
-    "enum_ow": 1,
-    "attr_RS": 5,
+    "enum_gA": 1,
+    "attr_PS": 5,
     "sourceUnit": 1
   },
-  "patched_size": 6744620,
+  "scope": {
+    "enum_depth": 1,
+    "anchor_depth": 2,
+    "next_enum_use_delta": 7270
+  },
+  "cpp_hook_parity": {
+    "kKhHook": 437,
+    "kSpdRepl": 370,
+    "kTickHook": 390
+  },
+  "patched_size": 6868660,
   "node_check": "ok"
 }

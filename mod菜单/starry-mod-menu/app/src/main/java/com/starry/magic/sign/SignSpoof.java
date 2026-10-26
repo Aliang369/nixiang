@@ -1212,6 +1212,52 @@ public final class SignSpoof {
                     + "SSCEa5EGGVnucE92ZdGECP8CAwEAAaMhMB8wHQYDVR0OBBYEFECqGuenxMt4eewkS7Gy70ghdQmmMA0GCSqGSIb3DQEBCwUAA4IBAQCWrphzHtIqjs5xPuZLBn7igqGj54CWS3z3MJ18oSXzLGzHefGdCi+777vTdhbVGRsLB/lNCXJI8FAq"
                     + "r/PRBXbdv4CeQPTVDzVhmUtxuA9yCUIooaqpVPOcMWMMac/QyRsA+rhK/YhJ2eprxKDkv1cPGXwGD84Hi/U4oLTZf2po14uyY0RFxhGNCjDuQLKxRXD0sVvHBPNZHl0mm+KmQ8ZcmeD+jDOS1JudTMtqp+BgvyzP2kc7nKrP7rm/6sC1NV41"
                     + "AzXOMsvphP6xbhk7prIrGW9iCw4jayz4UHXwMb7MN/bwL+4mS//tGccTpI5DiS2zixkgMuXN9G4Fc0QrRgza";
+    /** 绿梦：时空之声（com.zhuziplay.lvmengnew.op 1.0.5）原版签名 CN=lvmeng / SHA256=cb41e01e…（2026-10-19 追加） */
+    private static final String LVMENG_PKG = "com.zhuziplay.lvmengnew.op";
+    private static final String LVMENG_CERT_B64 =
+            "MIIDOjCCAiICAQEwDQYJKoZIhvcNAQELBQAwYjEPMA0GA1UEAwwGbHZtZW5nMQsw" +
+            "CQYDVQQLDAJsbTEPMA0GA1UECgwGYmFtYm9vMREwDwYDVQQHDAhzaGFuZ2hhaTER" +
+            "MA8GA1UECAwIc2hhbmdoYWkxCzAJBgNVBAYTAjg2MCAXDTI2MDMxOTA4MTgzOVoY" +
+            "DzIwNTAwMzEzMDgxODM5WjBiMQ8wDQYDVQQDDAZsdm1lbmcxCzAJBgNVBAsMAmxt" +
+            "MQ8wDQYDVQQKDAZiYW1ib28xETAPBgNVBAcMCHNoYW5naGFpMREwDwYDVQQIDAhz" +
+            "aGFuZ2hhaTELMAkGA1UEBhMCODYwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK" +
+            "AoIBAQD0AYmajlp0jcfwZhv5DLSDCA9dPGCoji6XK8gqryzWmqfscQh2xY8ZJOaB" +
+            "8IxbR3tiGpwGi/md2I7v38sQ7/6q4S1OhFCTMJ76BZAsuuv4RBbDcSEikGWFzVLk" +
+            "+VoUrxcUOei8gRaPOWMjGP0Iug8kCs91UaQLfBPWzORV6utbyqDGuaEccoD/8e+2" +
+            "b/4LtZp7fvR+uTmF2RzV44ZSWAqqvTbcLBHt8rBD46mknWj4Diq1qkKkjTiI70X3" +
+            "ujwXzSPmlPJCJHOYZ9HxTz/lzOrdUf6nOJmogkKl2Ix1tZByHxJujBqw9il0VceB" +
+            "Z74EZN0VpDPoE9YCZgFMfCh+XOyPAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAOST" +
+            "ZqL4kP4jb19t0R0PsxUWvjVQCwID6q+wyKOLPzUdCfxN4OdoF91kfbwchj6nb3Ad" +
+            "1WgO2Z96C4QbW2CAj4ixOJWyZydNfxRY+ee2wdR4Tzuk0tpmvb0ZrzTPYTHADtTK" +
+            "r7mAyNoZ22YzI89y3YV0gcvJhmn3q/ceP2LW5DAdFjjGI3Lqhx0KTpP18z7aGbHe" +
+            "SDsw7d3f627TA+1dl0bBDSw7tQziZdwkuJtmxY6BV3azOrby3IPX4YYLIciZQREw" +
+            "Pmaomu7VDsBbM+X43VwqJ2qVtBACM+Aipm//2FRJh4OzU+HgSGQZyZqFTyGA9cbQ" +
+            "Ifr0rhKvrSIBYhfAtlg=";
+
+    /** 绝区零 com.miHoYo.Nap 原版（TapTap 渠道打包，CN=nap / OU=mihoyo；
+     *  官方签名块 META-INF/HOYOVERS.RSA 导出：SHA-256=5aacc92b… / SHA-1=bf5c470b… / MD5=2b490eff…
+     *  2026-10-22 从真机 3.3.0 (vc438) base.apk 提取，用于过 TapSDK「包名、签名错误」） */
+    private static final String ZZZ_PKG = "com.miHoYo.Nap";
+    private static final String ZZZ_CERT_B64 =
+            "MIIDZTCCAk2gAwIBAgIERCk/hDANBgkqhkiG9w0BAQsFADBjMQswCQYDVQQGEwJV" +
+            "UzERMA8GA1UECBMIc2hhbmdoYWkxETAPBgNVBAcTCHNoYW5naGFpMQ8wDQYDVQQK" +
+            "EwZtaWhveW8xDzANBgNVBAsTBm1paG95bzEMMAoGA1UEAxMDbmFwMB4XDTIzMDIx" +
+            "MzA4MDIyMFoXDTQ4MDIwNzA4MDIyMFowYzELMAkGA1UEBhMCVVMxETAPBgNVBAgT" +
+            "CHNoYW5naGFpMREwDwYDVQQHEwhzaGFuZ2hhaTEPMA0GA1UEChMGbWlob3lvMQ8w" +
+            "DQYDVQQLEwZtaWhveW8xDDAKBgNVBAMTA25hcDCCASIwDQYJKoZIhvcNAQEBBQAD" +
+            "ggEPADCCAQoCggEBAJpYDks/SzNi5AduTqTqUOMyvlXWgev/me0EHTG62zAkzTYq" +
+            "5JIAu1SRFVMFBwlgsMtrCYZ5d8kMWim2Og1RctGneXah0VtCQMTm2ea3e2O1Z5ki" +
+            "au0qDUzkJq4EFSjBWVwao4jFNuAC1hzDaJ9OUGIflUG3+7P0tQYeA/35/6/GCuD9" +
+            "KtjP4Told8A75jPzN08WJ4V7n/Nu/rwl6Q9FTQpy0AKlK3g5IXx5X0g+/PkPagg2" +
+            "6gudNSpuKnUPoxFycYrOhvBO0fk27xa77He9mzx5vzLChT9ubNd1H6BZAXM+jCSB" +
+            "tUdKFKtxVzX4aKO9SSCEa5EGGVnucE92ZdGECP8CAwEAAaMhMB8wHQYDVR0OBBYE" +
+            "FECqGuenxMt4eewkS7Gy70ghdQmmMA0GCSqGSIb3DQEBCwUAA4IBAQCWrphzHtIq" +
+            "js5xPuZLBn7igqGj54CWS3z3MJ18oSXzLGzHefGdCi+777vTdhbVGRsLB/lNCXJI" +
+            "8FAqr/PRBXbdv4CeQPTVDzVhmUtxuA9yCUIooaqpVPOcMWMMac/QyRsA+rhK/YhJ" +
+            "2eprxKDkv1cPGXwGD84Hi/U4oLTZf2po14uyY0RFxhGNCjDuQLKxRXD0sVvHBPNZ" +
+            "Hl0mm+KmQ8ZcmeD+jDOS1JudTMtqp+BgvyzP2kc7nKrP7rm/6sC1NV41AzXOMsvp" +
+            "hP6xbhk7prIrGW9iCw4jayz4UHXwMb7MN/bwL+4mS//tGccTpI5DiS2zixkgMuXN" +
+            "9G4Fc0QrRgza";
 
     public static void install() {
         if (sInstalled) return;
@@ -1290,6 +1336,8 @@ public final class SignSpoof {
                 fakes.put(BWXRK_PKG, new Signature(Base64.decode(BWXRK_CERT_B64, Base64.DEFAULT)));
                 fakes.put(KDJXSF_PKG, new Signature(Base64.decode(KDJXSF_CERT_B64, Base64.DEFAULT)));
                 fakes.put(NAP_PKG, new Signature(Base64.decode(NAP_CERT_B64, Base64.DEFAULT)));
+                fakes.put(LVMENG_PKG, new Signature(Base64.decode(LVMENG_CERT_B64, Base64.DEFAULT)));
+                fakes.put(ZZZ_PKG, new Signature(Base64.decode(ZZZ_CERT_B64, Base64.DEFAULT)));
                 killPm(fakes);
                 sInstalled = true;
                 Log.i(TAG, "installed pkgs=" + fakes.keySet());

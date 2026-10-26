@@ -83,12 +83,21 @@ public class StarryInitProvider extends ContentProvider {
                 @Override
                 public void onActivityPreCreated(android.app.Activity a, android.os.Bundle s) {
                     // TapTap 强制内嵌网页登录：onCreate 前 handler 遍历未发生，窗口正好
-                    TapLoginForceWeb.onPreCreated(a);
+                    // ★r24 防闪退：生命周期回调裸调用 ⇒ 任何异常都是「打开游戏闪退」，逐个兜底
+                    try {
+                        TapLoginForceWeb.onPreCreated(a);
+                    } catch (Throwable t) {
+                        Log.e(TAG, "TapLoginForceWeb.onPreCreated failed", t);
+                    }
                 }
 
                 @Override
                 public void onActivityCreated(android.app.Activity a, android.os.Bundle s) {
-                    TapLoginForceWeb.onCreated(a);
+                    try {
+                        TapLoginForceWeb.onCreated(a);
+                    } catch (Throwable t) {
+                        Log.e(TAG, "TapLoginForceWeb.onCreated failed", t);
+                    }
                 }
 
                 @Override public void onActivityStarted(android.app.Activity a) {}
