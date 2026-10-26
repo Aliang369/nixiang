@@ -84,6 +84,41 @@ cp -f "$MENU_DIR/YsxzMod.h"     "$JNIW/Games/YsxzMod.h"
 cp -f "$MENU_DIR/YsxzPatchJs.h" "$JNIW/Games/YsxzPatchJs.h"
 cp -f "$MENU_DIR/YsxzMod.cpp"   "$JNIW/Games/YsxzMod.cpp"
 
+# ---------- 2.4 多 ABI（2026-10-26 雷电轮）----------
+# 默认沿用底包的 Application.mk（APP_ABI := arm64-v8a）。用户要求以雷电模拟器为验证环境，
+# 该实例是 x86_64 + Houdini，但游戏自带 lib/x86 原生库 ⇒ 只有把 so 也编成 x86，应用才会
+# 走原生 x86 路径（不走 Houdini 翻译）。用 YSXZ_ABIS="arm64-v8a x86" 覆盖。
+if [[ -n "${YSXZ_ABIS:-}" ]]; then
+  python3 - "$JNIW/Application.mk" "$YSXZ_ABIS" <<'PY'
+import io, re, sys
+p, abis = sys.argv[1], sys.argv[2]
+s = io.open(p, encoding="utf-8").read()
+if re.search(r"^APP_ABI\s*:?=", s, re.M):
+    s = re.sub(r"^APP_ABI\s*:?=.*$", "APP_ABI := %s" % abis, s, count=1, flags=re.M)
+else:
+    s += "\nAPP_ABI := %s\n" % abis
+io.open(p, "w", encoding="utf-8", newline="\n").write(s)
+print("[103] APP_ABI := " + abis)
+PY
+fi
+
+# ---------- 2.45 去掉误链的 arm-only 预编译库（2026-10-26 多 ABI 必踩）----------
+# 1.0.3 基线 Android_ysxz.mk 里 `LOCAL_STATIC_LIBRARIES := Dobby wxsj_dll`，而
+# Games/WxsjPatchedDll.a 是别的游戏的 arm 专用产物；编 x86 时链接器直接报
+#   ld.lld: error: ./Games/WxsjPatchedDll.a(...) is incompatible with elf_i386
+# 勇士之心根本不用它（1.0.6 的 Android_ysxz.mk 早已去掉）⇒ 统一摘掉。
+python3 - "$JNIW/Android_ysxz.mk" <<'PY'
+import io, re, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+s2 = re.sub(r"^LOCAL_STATIC_LIBRARIES\s*:?=.*$", "LOCAL_STATIC_LIBRARIES := Dobby", s, count=1, flags=re.M)
+if s2 != s:
+    io.open(p, "w", encoding="utf-8", newline="\n").write(s2)
+    print("[103] Android_ysxz.mk: LOCAL_STATIC_LIBRARIES := Dobby（摘掉 arm-only wxsj_dll）")
+else:
+    print("[103] Android_ysxz.mk: 已是纯 Dobby 静态库")
+PY
+
 # ---------- 2.5 生成「模拟器自举」素材（JS 驱动 + 加密 main.js + so 内嵌 C 头） ----------
 # 背景（2026-10-05 实测）：MuMu(Houdini) 下原生 inline hook 装得上但从不命中，
 # 自举 JS 在运行时接管 files/res/main.js；两条路线靠 files/ysxz_native_ok 判据互斥，
@@ -117,8 +152,14 @@ else
     -j"$JOBS"
 fi
 
+ABIS_BUILT=""
+for _abi_dir in "$WORK"/libs/*/; do
+  [[ -f "$_abi_dir/libstarry_magic.so" ]] && ABIS_BUILT="$ABIS_BUILT $(basename "$_abi_dir")"
+done
+[[ -n "$ABIS_BUILT" ]] || { echo "ERROR: 构建产物缺失（$WORK/libs/*/libstarry_magic.so）" >&2; exit 1; }
+echo "[103] abis =$ABIS_BUILT"
 SO="$WORK/libs/arm64-v8a/libstarry_magic.so"
-[[ -f "$SO" ]] || { echo "ERROR: 构建产物缺失 $SO" >&2; exit 1; }
+[[ -f "$SO" ]] || SO="$(ls "$WORK"/libs/*/libstarry_magic.so | head -1)"
 
 # ---------- 4. 断言：必须带新菜单，绝不能带旧菜单 ----------
 for token in "Slider_伤害倍率:1:50:1" "Slider_移动速度:1:10:1" "Toggle_秒杀" "Toggle_无敌" "Toggle_无限技能" "Toggle_自动战斗"; do
@@ -161,8 +202,12 @@ echo "[103] sha256 = $SHA"
 
 # ---------- 5. 落回 1.0.3 出包脚本读取的预置 so 位置 ----------
 if [[ "${YSXZ_103_NO_COPY:-0}" != "1" ]]; then
-  mkdir -p "$OUT_LIBS/arm64-v8a"
-  cp -f "$SO" "$OUT_LIBS/arm64-v8a/libstarry_magic.so"
-  echo "[103] 已落 $OUT_LIBS/arm64-v8a/libstarry_magic.so"
+  for _abi_dir in "$WORK"/libs/*/; do
+    _abi="$(basename "$_abi_dir")"
+    [[ -f "$_abi_dir/libstarry_magic.so" ]] || continue
+    mkdir -p "$OUT_LIBS/$_abi"
+    cp -f "$_abi_dir/libstarry_magic.so" "$OUT_LIBS/$_abi/libstarry_magic.so"
+    echo "[103] 已落 $OUT_LIBS/$_abi/libstarry_magic.so"
+  done
 fi
 echo "[103] done"

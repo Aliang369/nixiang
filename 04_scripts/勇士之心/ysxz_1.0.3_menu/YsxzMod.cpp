@@ -290,6 +290,7 @@ static void* BootSelfHealThread(void* arg) {
  *   1.0.6（加密壳代）符号被 strip，自然落到 RVA 分支，行为与原来一致。 */
 static const char* kEvalSyms[] = {
     "_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_",   // (const char*, long, Value*, Value*)
+    "_ZN2se12ScriptEngine10evalStringEPKciPNS_5ValueES2_",   // 32 位 ABI（x86/armv7）long=int 退化成 i；x86 libcocos2djs.so 实测导出此名
     "_ZN2se12ScriptEngine10evalStringEPKcmPNS_5ValueES2_",   // (const char*, unsigned long, Value*, Value*)
     "_ZN2se12ScriptEngine10evalStringEPKcPNS_5ValueES3_",    // (const char*, Value*, Value*)
     "_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_b",  // 尾参 bool 变体
