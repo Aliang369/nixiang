@@ -67,6 +67,7 @@
       menu.innerHTML = `
         <div class="crm-item" data-act="edit">编辑</div>
         <div class="crm-item" data-act="features">功能管理</div>
+        <div class="crm-item" data-act="payload">载荷 sha</div>
         <div class="crm-item" data-act="card">${noCard ? '开卡密' : '关卡密'}</div>
         <div class="crm-item" data-act="portal">${hidden ? '前端展示' : '前端隐藏'}</div>
         <div class="crm-item" data-act="toggle">${disabled ? '启用' : '停用'}</div>
@@ -79,6 +80,7 @@
         closeGameRowMenu();
         if (act === 'edit') openGameModal(g);
         else if (act === 'features') goManageFeatures(g.game_id);
+        else if (act === 'payload') openGamePayloadModal(g.id);
         else if (act === 'card') toggleCardAuth(g.id, noCard);
         else if (act === 'portal') togglePortalVisible(g.id, hidden);
         else if (act === 'toggle') toggleGame(g.id, !disabled);
@@ -369,7 +371,75 @@
       } catch (e) { toast(e.message); }
     }
 
-    // 删除游戏：服务端有卡密引用时 409，提示后可强制（连同该游戏卡密一起删）
+    // ===== P2-2：该游戏的功能载荷 SHA256（按游戏维护，改完即时生效、无需重建镜像）=====
+    // 这个值决定服务端派生载荷密钥 K_build；库里没登记 = 该游戏不签 v3 票（客户端只剩诱饵）。
+    async function openGamePayloadModal(id) {
+      const g = gamesRows.find(x => x.id === id) || gamesCache.find(x => x.id === id);
+      if (!g) { toast('游戏数据不存在'); return; }
+      let info = {};
+      try {
+        const r = await api('/v1/admin/games/' + encodeURIComponent(g.game_id) + '/payload', { method: 'GET' });
+        info = r.data || r || {};
+      } catch (e) { toast('读取失败：' + e.message); return; }
+
+      openModal(`
+        <h3>载荷 SHA256 · ${escapeHtml(g.game_id)}</h3>
+        <p class="sub">该值用于服务端派生载荷密钥 K_build。<b>改它 = 旧包功能全部失效</b>，必须同步出新包。</p>
+        <div class="form-grid">
+          <div class="full"><label>当前状态</label>
+            <div class="sub">${info.v3_ready
+              ? '✅ 已登记，可签 v3 票（K_build 指纹 <code>' + escapeHtml(info.k_build_fp || '') + '</code>）'
+              : '⚠️ 未登记：该游戏目前不签 v3 票（客户端拿不到载荷，只剩诱饵）'}</div></div>
+          <div class="full"><label>载荷 SHA256</label>
+            <input id="m-g-payload-sha" value="${escapeHtml(info.payload_sha || '')}"
+              placeholder="64 位十六进制；留空并选文件可自动计算" /></div>
+          <div class="full"><label>或上传密文文件自动计算</label>
+            <input id="m-g-payload-file" type="file"
+              onchange="computePayloadSha(this)" /></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeModal()">取消</button>
+          <button class="btn ghost danger" onclick="clearGamePayload('${escapeHtml(g.game_id)}')">清空</button>
+          <button class="btn" onclick="saveGamePayload('${escapeHtml(g.game_id)}')">保存</button>
+        </div>`);
+    }
+
+    async function computePayloadSha(input) {
+      const f = input.files && input.files[0];
+      if (!f) return;
+      try {
+        const buf = await f.arrayBuffer();
+        const dig = await crypto.subtle.digest('SHA-256', buf);
+        const hex = Array.from(new Uint8Array(dig)).map(b => b.toString(16).padStart(2, '0')).join('');
+        document.getElementById('m-g-payload-sha').value = hex;
+        toast('已按文件计算 sha256');
+      } catch (e) { toast('计算失败：' + e.message); }
+    }
+
+    async function saveGamePayload(gameId) {
+      const sha = (document.getElementById('m-g-payload-sha').value || '').trim().toLowerCase();
+      if (!/^[0-9a-f]{64}$/.test(sha)) { toast('sha 必须是 64 位十六进制'); return; }
+      if (!confirm('确认保存？\n改这一项会让该游戏所有旧包功能失效，必须同步出新包。')) return;
+      try {
+        const r = await api('/v1/admin/games/' + encodeURIComponent(gameId) + '/payload?sha=' + sha, { method: 'PUT' });
+        const d = r.data || r || {};
+        toast(d.v3_ready ? '已保存，v3 票可用' : '已保存（服务端尚未就绪）');
+        closeModal();
+        await loadGames();
+      } catch (e) { toast(e.message); }
+    }
+
+    async function clearGamePayload(gameId) {
+      if (!confirm('清空后该游戏不再签 v3 票，客户端会退回诱饵。确认？')) return;
+      try {
+        await api('/v1/admin/games/' + encodeURIComponent(gameId) + '/payload?sha=clear', { method: 'PUT' });
+        toast('已清空');
+        closeModal();
+        await loadGames();
+      } catch (e) { toast(e.message); }
+    }
+
+
     async function delGame(id, gameId) {
       if (!confirm(`删除游戏「${gameId}」？\n将同时删除该游戏的功能门控、在线统计、授权事件与会话，不可恢复。\n建议先「停用」观察几天再删。`)) return;
       try {

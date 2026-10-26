@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>星光魔法 · 运营台</title>
+  <title>鏄熷厜榄旀硶 路 杩愯惀鍙?/title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -14,7 +14,7 @@
 </head>
 <body>
 
-  <!-- 星空底 -->
+  <!-- 鏄熺┖搴?-->
   <div class="sky" aria-hidden="true">
     <div class="sky-nebula"></div>
     <div class="sky-stars"></div>
@@ -35,13 +35,13 @@
       <svg class="login-ornament br" viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="32" r="28" stroke="rgba(180,154,232,.55)" stroke-width="1"/><circle cx="32" cy="32" r="18" stroke="rgba(180,154,232,.35)" stroke-width="1"/><path d="M32 8v8M32 48v8M8 32h8M48 32h8" stroke="rgba(220,200,255,.5)" stroke-width="1"/><circle cx="32" cy="32" r="3" fill="rgba(244,238,255,.8)"/></svg>
       <svg class="login-ornament tr" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F4EEFF" d="M12 2l2.94 6.26 6.86.99-4.96 4.83 1.17 6.82L12 17.77l-6.13 3.22 1.17-6.82L2.08 9.25l6.86-.99z"/></svg>
       <svg class="login-ornament bl" viewBox="0 0 24 24" aria-hidden="true"><path fill="#D4C4FF" d="M12 2l2.94 6.26 6.86.99-4.96 4.83 1.17 6.82L12 17.77l-6.13 3.22 1.17-6.82L2.08 9.25l6.86-.99z"/></svg>
-      <h1>星光魔法</h1>
-      <p>运营后台 · 自签证书请在浏览器点「继续访问」</p>
-      <label>用户名</label>
+      <h1>鏄熷厜榄旀硶</h1>
+      <p>杩愯惀鍚庡彴 路 鑷璇佷功璇峰湪娴忚鍣ㄧ偣銆岀户缁闂€?/p>
+      <label>鐢ㄦ埛鍚?/label>
       <input id="login-user" autocomplete="username" />
-      <label>密码</label>
+      <label>瀵嗙爜</label>
       <input id="login-pass" type="password" autocomplete="current-password" />
-      <div style="margin-top:18px"><button class="btn block" onclick="doLogin()">进入运营台</button></div>
+      <div style="margin-top:18px"><button class="btn block" onclick="doLogin()">杩涘叆杩愯惀鍙?/button></div>
     </div>
   </div>
 
@@ -61,40 +61,39 @@
           <path d="M32 25 35 29 39 32 35 35 32 39 29 35 25 32 29 29Z" fill="#F4EEFF"/>
         </svg>
         <div class="brand2-text">
-          <strong>星光魔法</strong>
-          <span>运营后台</span>
+          <strong>鏄熷厜榄旀硶</strong>
+          <span>杩愯惀鍚庡彴</span>
         </div>
       </div>
       <nav class="side-nav" id="side-nav">
-        <button class="active" data-page="dashboard">数据看板</button>
-        <button data-page="games">游戏列表</button>
-        <button data-page="templates">菜单模板</button>
-        <button data-page="cards">卡密管理</button>
-        <button data-page="announcements">远程公告</button>
-        <button data-page="ota">游戏补丁</button>
-        <button data-page="toasts">开屏Toast</button>
-        <button data-page="audit">操作日志</button>
-        <button data-page="settings">后台设置</button>
+        <button class="active" data-page="dashboard">鏁版嵁鐪嬫澘</button>
+        <button data-page="games">娓告垙鍒楄〃</button>
+        <button data-page="templates">鑿滃崟妯℃澘</button>
+        <button data-page="cards">鍗″瘑绠＄悊</button>
+        <button data-page="announcements">杩滅▼鍏憡</button>
+        <button data-page="ota">娓告垙琛ヤ竵</button>
+        <button data-page="toasts">寮€灞廡oast</button>
+        <button data-page="audit">鎿嶄綔鏃ュ織</button>
+        <button data-page="settings">鍚庡彴璁剧疆</button>
       </nav>
       <div class="side-foot">
         <div class="account-card" id="account-card">
           <button class="account-main" type="button" onclick="toggleAccountMenu(event)" aria-haspopup="true" aria-expanded="false">
             <span class="account-avatar" id="who-avatar">A</span>
             <span class="account-meta">
-              <strong id="who">—</strong>
-              <span class="account-role">超级管理员</span>
+              <strong id="who">鈥?/strong>
+              <span class="account-role">瓒呯骇绠＄悊鍛?/span>
             </span>
             <svg class="account-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="account-menu" id="account-menu" role="menu">
             <button class="account-menu-item" type="button" role="menuitem" onclick="openPasswordModal()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              修改密码
+              淇敼瀵嗙爜
             </button>
             <button class="account-menu-item danger" type="button" role="menuitem" onclick="logout()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
-              退出登录
-            </button>
+              閫€鍑虹櫥褰?            </button>
           </div>
         </div>
       </div>
@@ -107,27 +106,27 @@
         <div class="stats" id="stats-today"></div>
         <div class="panel">
           <div class="toolbar">
-            <h3>分游戏活跃</h3>
+            <h3>鍒嗘父鎴忔椿璺?/h3>
           </div>
           <div class="filters">
             <div class="field grow">
-              <label for="d-q">搜索</label>
-              <input id="d-q" placeholder="游戏名称 / game_id" onkeydown="if(event.key==='Enter')renderDashOnline()" />
+              <label for="d-q">鎼滅储</label>
+              <input id="d-q" placeholder="娓告垙鍚嶇О / game_id" onkeydown="if(event.key==='Enter')renderDashOnline()" />
             </div>
             <div class="field">
-              <label for="d-filter-game">游戏</label>
-              <div class="game-picker" data-gp="d-filter-game" data-empty="全部" data-allow-empty="1"></div>
+              <label for="d-filter-game">娓告垙</label>
+              <div class="game-picker" data-gp="d-filter-game" data-empty="鍏ㄩ儴" data-allow-empty="1"></div>
             </div>
-            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="renderDashOnline()">筛选</button></div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="renderDashOnline()">绛涢€?/button></div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>game_id</th><th>游戏</th><th>在线</th><th>卡密</th><th>游客</th><th>7日活跃</th><th>30日活跃</th><th>历史活跃</th></tr></thead>
-              <tbody id="online-by-game"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+              <thead><tr><th>game_id</th><th>娓告垙</th><th>鍦ㄧ嚎</th><th>鍗″瘑</th><th>娓稿</th><th>7鏃ユ椿璺?/th><th>30鏃ユ椿璺?/th><th>鍘嗗彶娲昏穬</th></tr></thead>
+              <tbody id="online-by-game"><tr><td colspan="8" class="empty">鍔犺浇涓€?/td></tr></tbody>
             </table>
           </div>
           <div class="pager" id="dash-pager"></div>
-          <p class="muted" style="margin:12px 0 0">按该游戏下去重设备统计。在线 = 近 90 秒有上报。7/30/历史 = 区间内打开过该游戏的设备数。默认按历史活跃排序。</p>
+          <p class="muted" style="margin:12px 0 0">鎸夎娓告垙涓嬪幓閲嶈澶囩粺璁°€傚湪绾?= 杩?90 绉掓湁涓婃姤銆?/30/鍘嗗彶 = 鍖洪棿鍐呮墦寮€杩囪娓告垙鐨勮澶囨暟銆傞粯璁ゆ寜鍘嗗彶娲昏穬鎺掑簭銆?/p>
         </div>
       </section>
 
@@ -135,71 +134,71 @@
       <section id="page-cards" class="hidden">
         <div class="panel">
           <div class="toolbar">
-            <h3>卡密列表</h3>
-            <button class="btn ghost" onclick="openCardCreateModal()">生成卡密</button>
+            <h3>鍗″瘑鍒楄〃</h3>
+            <button class="btn ghost" onclick="openCardCreateModal()">鐢熸垚鍗″瘑</button>
           </div>
           <div class="filters">
             <div class="field grow">
-              <label for="c-q">搜索</label>
-              <input id="c-q" placeholder="卡密关键字" onkeydown="if(event.key==='Enter'){cardsPage=1;loadCards()}" />
+              <label for="c-q">鎼滅储</label>
+              <input id="c-q" placeholder="鍗″瘑鍏抽敭瀛? onkeydown="if(event.key==='Enter'){cardsPage=1;loadCards()}" />
             </div>
             <div class="field">
-              <label for="c-status">状态</label>
+              <label for="c-status">鐘舵€?/label>
               <select id="c-status">
-                <option value="">全部</option>
-                <option value="unused">未使用</option>
-                <option value="active">使用中</option>
-                <option value="expired">已过期</option>
-                <option value="banned">已封禁</option>
-                <option value="exhausted">次数用尽</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="unused">鏈娇鐢?/option>
+                <option value="active">浣跨敤涓?/option>
+                <option value="expired">宸茶繃鏈?/option>
+                <option value="banned">宸插皝绂?/option>
+                <option value="exhausted">娆℃暟鐢ㄥ敖</option>
               </select>
             </div>
             <div class="field">
-              <label for="c-filter-scope">范围</label>
+              <label for="c-filter-scope">鑼冨洿</label>
               <select id="c-filter-scope">
-                <option value="">全部</option>
-                <option value="global">仅全游戏</option>
-                <option value="game">仅单游戏</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="global">浠呭叏娓告垙</option>
+                <option value="game">浠呭崟娓告垙</option>
               </select>
             </div>
             <div class="field">
-              <label for="c-filter-game">游戏</label>
-              <div class="game-picker" data-gp="c-filter-game" data-empty="全部" data-allow-empty="1"></div>
+              <label for="c-filter-game">娓告垙</label>
+              <div class="game-picker" data-gp="c-filter-game" data-empty="鍏ㄩ儴" data-allow-empty="1"></div>
             </div>
             <div class="field">
-              <label for="c-bound">绑定状态</label>
+              <label for="c-bound">缁戝畾鐘舵€?/label>
               <select id="c-bound">
-                <option value="">全部</option>
-                <option value="1">已绑定</option>
-                <option value="0">未绑定</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="1">宸茬粦瀹?/option>
+                <option value="0">鏈粦瀹?/option>
               </select>
             </div>
             <div class="field">
-              <label for="c-unbind">解绑过</label>
+              <label for="c-unbind">瑙ｇ粦杩?/label>
               <select id="c-unbind">
-                <option value="">全部</option>
-                <option value="1">是</option>
-                <option value="0">否</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="1">鏄?/option>
+                <option value="0">鍚?/option>
               </select>
             </div>
-            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="cardsPage=1;loadCards()">筛选</button></div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="cardsPage=1;loadCards()">绛涢€?/button></div>
           </div>
           <div class="batch-bar" id="card-batch-bar">
-            <span class="muted" id="card-batch-count">已选 0</span>
-            <button class="btn sm ghost" onclick="batchBanCards('banned')">批量封禁</button>
-            <button class="btn sm ghost" onclick="batchBanCards('active')">批量解封</button>
-            <button class="btn sm ghost" onclick="batchExtendCards(7)">批量+7天</button>
-            <button class="btn sm ghost" onclick="batchExtendCards(30)">批量+30天</button>
-            <button class="btn sm ghost" onclick="batchExportCards()">导出选中</button>
-            <button class="btn sm danger" onclick="batchDeleteCards()">批量删除</button>
-            <button class="btn sm ghost" onclick="clearCardSelection()">取消选择</button>
+            <span class="muted" id="card-batch-count">宸查€?0</span>
+            <button class="btn sm ghost" onclick="batchBanCards('banned')">鎵归噺灏佺</button>
+            <button class="btn sm ghost" onclick="batchBanCards('active')">鎵归噺瑙ｅ皝</button>
+            <button class="btn sm ghost" onclick="batchExtendCards(7)">鎵归噺+7澶?/button>
+            <button class="btn sm ghost" onclick="batchExtendCards(30)">鎵归噺+30澶?/button>
+            <button class="btn sm ghost" onclick="batchExportCards()">瀵煎嚭閫変腑</button>
+            <button class="btn sm danger" onclick="batchDeleteCards()">鎵归噺鍒犻櫎</button>
+            <button class="btn sm ghost" onclick="clearCardSelection()">鍙栨秷閫夋嫨</button>
           </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
                   <th style="width:36px"><input type="checkbox" id="c-check-all" onchange="toggleAllCards(this.checked)" /></th>
-                  <th>卡密</th><th>范围</th><th>游戏</th><th>类型</th><th>状态</th><th>到期</th><th>备注</th><th>设备</th><th>操作</th>
+                  <th>鍗″瘑</th><th>鑼冨洿</th><th>娓告垙</th><th>绫诲瀷</th><th>鐘舵€?/th><th>鍒版湡</th><th>澶囨敞</th><th>璁惧</th><th>鎿嶄綔</th>
                 </tr>
               </thead>
               <tbody id="cards-body"></tbody>
@@ -213,48 +212,48 @@
       <section id="page-announcements" class="hidden">
         <div class="panel">
           <div class="toolbar">
-            <h3>远程公告</h3>
-            <button class="btn ghost" onclick="openAnnModal()">发布公告</button>
+            <h3>杩滅▼鍏憡</h3>
+            <button class="btn ghost" onclick="openAnnModal()">鍙戝竷鍏憡</button>
           </div>
           <div class="filters">
             <div class="field grow">
-              <label for="a-q">搜索</label>
-              <input id="a-q" placeholder="标题 / 内容" onkeydown="if(event.key==='Enter'){annPage=1;loadAnnouncements()}" />
+              <label for="a-q">鎼滅储</label>
+              <input id="a-q" placeholder="鏍囬 / 鍐呭" onkeydown="if(event.key==='Enter'){annPage=1;loadAnnouncements()}" />
             </div>
             <div class="field">
-              <label for="a-filter-game">游戏</label>
-              <div class="game-picker" data-gp="a-filter-game" data-empty="全部" data-allow-empty="1"></div>
+              <label for="a-filter-game">娓告垙</label>
+              <div class="game-picker" data-gp="a-filter-game" data-empty="鍏ㄩ儴" data-allow-empty="1"></div>
             </div>
             <div class="field">
-              <label for="a-scope">范围</label>
+              <label for="a-scope">鑼冨洿</label>
               <select id="a-scope">
-                <option value="">全部</option>
-                <option value="global">全游戏</option>
-                <option value="game">单游戏</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="global">鍏ㄦ父鎴?/option>
+                <option value="game">鍗曟父鎴?/option>
               </select>
             </div>
             <div class="field">
-              <label for="a-enabled">状态</label>
+              <label for="a-enabled">鐘舵€?/label>
               <select id="a-enabled">
-                <option value="">全部</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="1">鍚敤</option>
+                <option value="0">鍋滅敤</option>
               </select>
             </div>
             <div class="field">
-              <label for="a-vis">可见性</label>
+              <label for="a-vis">鍙鎬?/label>
               <select id="a-vis">
-                <option value="">全部</option>
-                <option value="always">始终</option>
-                <option value="logged_out">仅未登录</option>
-                <option value="logged_in">仅已登录</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="always">濮嬬粓</option>
+                <option value="logged_out">浠呮湭鐧诲綍</option>
+                <option value="logged_in">浠呭凡鐧诲綍</option>
               </select>
             </div>
-            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="annPage=1;loadAnnouncements()">筛选</button></div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="annPage=1;loadAnnouncements()">绛涢€?/button></div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>标题</th><th>范围</th><th>可见性</th><th>弹出</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>鏍囬</th><th>鑼冨洿</th><th>鍙鎬?/th><th>寮瑰嚭</th><th>寮€濮嬫椂闂?/th><th>缁撴潫鏃堕棿</th><th>鐘舵€?/th><th>鎿嶄綔</th></tr></thead>
               <tbody id="ann-body"></tbody>
             </table>
           </div>
@@ -268,23 +267,23 @@
       <section id="page-templates" class="hidden">
         <div class="panel">
           <div class="toolbar">
-            <h3>菜单模板</h3>
+            <h3>鑿滃崟妯℃澘</h3>
             <div class="actions">
-              <button class="btn ghost" onclick="openTemplateJsonModal()">JSON 导入</button>
-              <button class="btn ghost" onclick="openTemplateModal()">新建模板</button>
+              <button class="btn ghost" onclick="openTemplateJsonModal()">JSON 瀵煎叆</button>
+              <button class="btn ghost" onclick="openTemplateModal()">鏂板缓妯℃澘</button>
             </div>
           </div>
-          <p class="muted" style="margin:0 0 12px">模板存在数据库，后台新建/编辑即时生效。导入/新建模板时会自动创建并绑定同 id 游戏（已存在的游戏只补绑定）。各游戏的开关/删除请到「游戏列表」点「功能管理」。</p>
+          <p class="muted" style="margin:0 0 12px">妯℃澘瀛樺湪鏁版嵁搴擄紝鍚庡彴鏂板缓/缂栬緫鍗虫椂鐢熸晥銆傚鍏?鏂板缓妯℃澘鏃朵細鑷姩鍒涘缓骞剁粦瀹氬悓 id 娓告垙锛堝凡瀛樺湪鐨勬父鎴忓彧琛ョ粦瀹氾級銆傚悇娓告垙鐨勫紑鍏?鍒犻櫎璇峰埌銆屾父鎴忓垪琛ㄣ€嶇偣銆屽姛鑳界鐞嗐€嶃€?/p>
           <div class="filters">
             <div class="field grow">
-              <label for="tpl-q">搜索</label>
-              <input id="tpl-q" placeholder="模板 id / 名称 / 包名" oninput="renderTemplatesTable()" />
+              <label for="tpl-q">鎼滅储</label>
+              <input id="tpl-q" placeholder="妯℃澘 id / 鍚嶇О / 鍖呭悕" oninput="renderTemplatesTable()" />
             </div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>模板 id</th><th>名称</th><th>包名</th><th>功能数</th><th>创建时间</th><th>操作</th></tr></thead>
-              <tbody id="tpl-body"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
+              <thead><tr><th>妯℃澘 id</th><th>鍚嶇О</th><th>鍖呭悕</th><th>鍔熻兘鏁?/th><th>鍒涘缓鏃堕棿</th><th>鎿嶄綔</th></tr></thead>
+              <tbody id="tpl-body"><tr><td colspan="6" class="empty">鍔犺浇涓€?/td></tr></tbody>
             </table>
           </div>
           <div class="pager" id="tpl-pager"></div>
@@ -295,40 +294,40 @@
       <section id="page-toasts" class="hidden">
         <div class="panel">
           <div class="toolbar">
-            <h3>开屏 Toast</h3>
-            <button class="btn ghost" onclick="openToastModal()">添加开屏提示</button>
+            <h3>寮€灞?Toast</h3>
+            <button class="btn ghost" onclick="openToastModal()">娣诲姞寮€灞忔彁绀?/button>
           </div>
-          <p class="muted" style="margin:0 0 12px">菜单启动时按排序依次弹出（当前星光 Toast 样式）。不配置则启动不显示 Toast。操作类提示（登录失败等）由客户端固定文案，无需在此配置。</p>
+          <p class="muted" style="margin:0 0 12px">鑿滃崟鍚姩鏃舵寜鎺掑簭渚濇寮瑰嚭锛堝綋鍓嶆槦鍏?Toast 鏍峰紡锛夈€備笉閰嶇疆鍒欏惎鍔ㄤ笉鏄剧ず Toast銆傛搷浣滅被鎻愮ず锛堢櫥褰曞け璐ョ瓑锛夌敱瀹㈡埛绔浐瀹氭枃妗堬紝鏃犻渶鍦ㄦ閰嶇疆銆?/p>
           <div class="filters">
             <div class="field grow">
-              <label for="t-q">搜索</label>
-              <input id="t-q" placeholder="内容关键字" onkeydown="if(event.key==='Enter'){toastPage=1;loadToasts()}" />
+              <label for="t-q">鎼滅储</label>
+              <input id="t-q" placeholder="鍐呭鍏抽敭瀛? onkeydown="if(event.key==='Enter'){toastPage=1;loadToasts()}" />
             </div>
             <div class="field">
-              <label for="t-filter-game">游戏</label>
-              <div class="game-picker" data-gp="t-filter-game" data-empty="全部" data-allow-empty="1"></div>
+              <label for="t-filter-game">娓告垙</label>
+              <div class="game-picker" data-gp="t-filter-game" data-empty="鍏ㄩ儴" data-allow-empty="1"></div>
             </div>
             <div class="field">
-              <label for="t-scope">范围</label>
+              <label for="t-scope">鑼冨洿</label>
               <select id="t-scope">
-                <option value="">全部</option>
-                <option value="global">全游戏</option>
-                <option value="game">单游戏</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="global">鍏ㄦ父鎴?/option>
+                <option value="game">鍗曟父鎴?/option>
               </select>
             </div>
             <div class="field">
-              <label for="t-enabled">状态</label>
+              <label for="t-enabled">鐘舵€?/label>
               <select id="t-enabled">
-                <option value="">全部</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="1">鍚敤</option>
+                <option value="0">鍋滅敤</option>
               </select>
             </div>
-            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="toastPage=1;loadToasts()">筛选</button></div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="toastPage=1;loadToasts()">绛涢€?/button></div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>排序</th><th>内容</th><th>范围</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>鎺掑簭</th><th>鍐呭</th><th>鑼冨洿</th><th>鐘舵€?/th><th>鎿嶄綔</th></tr></thead>
               <tbody id="toast-body"></tbody>
             </table>
           </div>
@@ -336,26 +335,26 @@
         </div>
       </section>
 
-      <!-- ota / 游戏补丁 -->
+      <!-- ota / 娓告垙琛ヤ竵 -->
       <section id="page-ota" class="hidden">
         <div class="panel">
           <div class="toolbar">
             <div class="toolbar-title">
-              <h3>游戏补丁</h3>
-              <p class="toolbar-sub">每游戏一份 latest；JSON 与 so 可共存；玩家设置里手动更新后须完全重启</p>
+              <h3>娓告垙琛ヤ竵</h3>
+              <p class="toolbar-sub">姣忔父鎴忎竴浠?latest锛汮SON 涓?so 鍙叡瀛橈紱鐜╁璁剧疆閲屾墜鍔ㄦ洿鏂板悗椤诲畬鍏ㄩ噸鍚?/p>
             </div>
-            <button class="btn ghost" onclick="openOtaPublishModal()">添加补丁</button>
+            <button class="btn ghost" onclick="openOtaPublishModal()">娣诲姞琛ヤ竵</button>
           </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>游戏</th>
-                  <th>版本</th>
+                  <th>娓告垙</th>
+                  <th>鐗堟湰</th>
                   <th>JSON</th>
                   <th>so</th>
-                  <th>说明</th>
-                  <th>操作</th>
+                  <th>璇存槑</th>
+                  <th>鎿嶄綔</th>
                 </tr>
               </thead>
               <tbody id="ota-body"></tbody>
@@ -368,35 +367,35 @@
       <section id="page-games" class="hidden">
         <div class="panel">
           <div class="toolbar">
-            <h3>游戏管理</h3>
-            <button class="btn ghost" onclick="openGameModal()">添加游戏</button>
+            <h3>娓告垙绠＄悊</h3>
+            <button class="btn ghost" onclick="openGameModal()">娣诲姞娓告垙</button>
           </div>
           <div class="filters">
             <div class="field grow">
-              <label for="g-q">搜索</label>
-              <input id="g-q" placeholder="名称 / game_id / 模板" onkeydown="if(event.key==='Enter'){gamesPage=1;loadGamesTable()}" />
+              <label for="g-q">鎼滅储</label>
+              <input id="g-q" placeholder="鍚嶇О / game_id / 妯℃澘" onkeydown="if(event.key==='Enter'){gamesPage=1;loadGamesTable()}" />
             </div>
             <div class="field">
-              <label for="g-enabled">状态</label>
+              <label for="g-enabled">鐘舵€?/label>
               <select id="g-enabled">
-                <option value="">全部</option>
-                <option value="1">启用</option>
-                <option value="0">停用</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="1">鍚敤</option>
+                <option value="0">鍋滅敤</option>
               </select>
             </div>
             <div class="field">
-              <label for="g-card-auth">卡密</label>
+              <label for="g-card-auth">鍗″瘑</label>
               <select id="g-card-auth">
-                <option value="">全部</option>
-                <option value="1">需卡密</option>
-                <option value="0">仅联网</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="1">闇€鍗″瘑</option>
+                <option value="0">浠呰仈缃?/option>
               </select>
             </div>
-            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="gamesPage=1;loadGamesTable()">筛选</button></div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="gamesPage=1;loadGamesTable()">绛涢€?/button></div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>game_id</th><th>名称</th><th>渠道</th><th>菜单模板</th><th>卡密</th><th>前端</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>game_id</th><th>鍚嶇О</th><th>娓犻亾</th><th>鑿滃崟妯℃澘</th><th>鍗″瘑</th><th>鍓嶇</th><th>鐘舵€?/th><th>鎿嶄綔</th></tr></thead>
               <tbody id="games-body"></tbody>
             </table>
           </div>
@@ -408,46 +407,46 @@
       <section id="page-audit" class="hidden">
         <div class="panel">
           <div class="toolbar">
-            <h3>管理审计日志</h3>
+            <h3>绠＄悊瀹¤鏃ュ織</h3>
           </div>
           <div class="filters">
             <div class="field grow">
-              <label for="au-q">搜索</label>
-              <input id="au-q" placeholder="管理员 / 动作 / 详情 / IP" onkeydown="if(event.key==='Enter'){auditPage=1;loadAudit()}" />
+              <label for="au-q">鎼滅储</label>
+              <input id="au-q" placeholder="绠＄悊鍛?/ 鍔ㄤ綔 / 璇︽儏 / IP" onkeydown="if(event.key==='Enter'){auditPage=1;loadAudit()}" />
             </div>
             <div class="field">
-              <label for="au-action">动作</label>
+              <label for="au-action">鍔ㄤ綔</label>
               <select id="au-action">
-                <option value="">全部</option>
-                <option value="cards.">卡密相关</option>
-                <option value="games.">游戏相关</option>
-                <option value="features.">功能相关</option>
-                <option value="announcements.">公告相关</option>
-                <option value="toasts.">Toast 相关</option>
-                <option value="admin.">管理员相关</option>
+                <option value="">鍏ㄩ儴</option>
+                <option value="cards.">鍗″瘑鐩稿叧</option>
+                <option value="games.">娓告垙鐩稿叧</option>
+                <option value="features.">鍔熻兘鐩稿叧</option>
+                <option value="announcements.">鍏憡鐩稿叧</option>
+                <option value="toasts.">Toast 鐩稿叧</option>
+                <option value="admin.">绠＄悊鍛樼浉鍏?/option>
               </select>
             </div>
             <div class="field">
-              <label>开始日期</label>
+              <label>寮€濮嬫棩鏈?/label>
               <span id="au-from-slot"></span>
             </div>
             <div class="field">
-              <label>结束日期</label>
+              <label>缁撴潫鏃ユ湡</label>
               <span id="au-to-slot"></span>
             </div>
-            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="auditPage=1;loadAudit()">筛选</button></div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="auditPage=1;loadAudit()">绛涢€?/button></div>
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>时间</th><th>管理员</th><th>动作</th><th>详情</th><th>IP</th></tr></thead>
-              <tbody id="audit-body"><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+              <thead><tr><th>鏃堕棿</th><th>绠＄悊鍛?/th><th>鍔ㄤ綔</th><th>璇︽儏</th><th>IP</th></tr></thead>
+              <tbody id="audit-body"><tr><td colspan="5" class="empty">鍔犺浇涓€?/td></tr></tbody>
             </table>
           </div>
           <div class="pager" id="audit-pager"></div>
         </div>
       </section>
 
-      <!-- settings：设置项暂空置 -->
+      <!-- settings锛氳缃」鏆傜┖缃?-->
       <section id="page-settings" class="hidden"></section>
     </main>
   </div>
@@ -461,7 +460,7 @@
   <script src="/admin/js/audit.js?v=2"></script>
   <script src="/admin/js/features.js?v=1"></script>
   <script src="/admin/js/dashboard.js?v=8"></script>
-  <script src="/admin/js/games.js?v=5"></script>
+  <script src="/admin/js/games.js?v=6"></script>
   <script src="/admin/js/cards.js?v=2"></script>
   <script src="/admin/js/announcements.js?v=2"></script>
   <script src="/admin/js/toasts_ota.js?v=1"></script>
@@ -483,13 +482,13 @@
       root.innerHTML = '';
     }
 
-    /** 可搜索 + 可滚动选择器；kind=games|templates */
+    /** 鍙悳绱?+ 鍙粴鍔ㄩ€夋嫨鍣紱kind=games|templates */
     function gamePickerMarkup(id, opts) {
-      const empty = (opts && opts.emptyLabel) || '请选择';
+      const empty = (opts && opts.emptyLabel) || '璇烽€夋嫨';
       const allowEmpty = !!(opts && opts.allowEmpty);
       const onchange = (opts && opts.onchange) || '';
       const kind = (opts && opts.kind) || 'games';
-      const ph = (opts && opts.searchPlaceholder) || (kind === 'templates' ? '搜索模板名称 / id' : '搜索名称 / game_id');
+      const ph = (opts && opts.searchPlaceholder) || (kind === 'templates' ? '鎼滅储妯℃澘鍚嶇О / id' : '鎼滅储鍚嶇О / game_id');
       return `<div class="game-picker" data-gp="${escapeHtml(id)}" data-kind="${escapeHtml(kind)}" data-empty="${escapeHtml(empty)}" data-allow-empty="${allowEmpty ? '1' : '0'}" data-search-ph="${escapeHtml(ph)}"${onchange ? ` data-onchange="${escapeHtml(onchange)}"` : ''}></div>`;
     }
 
@@ -527,7 +526,7 @@
         return menuTemplates.map(t => ({
           id: t.id,
           name: t.name,
-          sub: `${t.id} · ${t.feature_count || (t.features || []).length} 项`,
+          sub: `${t.id} 路 ${t.feature_count || (t.features || []).length} 椤筦,
           search: `${t.id} ${t.name} ${t.package || ''}`,
         }));
       }
@@ -541,7 +540,7 @@
 
     function refreshGamePickerLabel(root) {
       const val = root.dataset.value || '';
-      const empty = root.dataset.empty || '请选择';
+      const empty = root.dataset.empty || '璇烽€夋嫨';
       const label = root.querySelector('.gp-label');
       if (!label) return;
       if (!val) {
@@ -551,7 +550,7 @@
       }
       const item = pickerItems(root).find(x => x.id === val);
       label.textContent = item
-        ? (root.dataset.kind === 'templates' ? `${item.name}（${item.sub}）` : `${item.name} (${item.sub})`)
+        ? (root.dataset.kind === 'templates' ? `${item.name}锛?{item.sub}锛塦 : `${item.name} (${item.sub})`)
         : val;
       label.classList.remove('is-placeholder');
     }
@@ -590,7 +589,7 @@
       const trigger = root.querySelector('.game-picker-trigger');
       const panel = root._panel;
       if (!trigger || !panel) return;
-      // 挂到 body：modal/backdrop-filter 会让 fixed 相对错误容器，导致飞到右下角
+      // 鎸傚埌 body锛歮odal/backdrop-filter 浼氳 fixed 鐩稿閿欒瀹瑰櫒锛屽鑷撮鍒板彸涓嬭
       document.body.appendChild(panel);
       panel.classList.add('is-open');
       const rect = trigger.getBoundingClientRect();
@@ -602,8 +601,7 @@
       panel.style.top = top + 'px';
       panel.style.bottom = 'auto';
       panel.style.right = 'auto';
-      // 二次校正：贴边 / 向上翻
-      const pr = panel.getBoundingClientRect();
+      // 浜屾鏍℃锛氳创杈?/ 鍚戜笂缈?      const pr = panel.getBoundingClientRect();
       const pad = 8;
       if (pr.right > window.innerWidth - pad) {
         left = Math.max(pad, window.innerWidth - pr.width - pad);
@@ -625,7 +623,7 @@
       const list = panel && panel.querySelector('.game-picker-list');
       if (!list) return;
       const allowEmpty = root.dataset.allowEmpty === '1';
-      const emptyLabel = root.dataset.empty || '全部';
+      const emptyLabel = root.dataset.empty || '鍏ㄩ儴';
       const cur = root.dataset.value || '';
       const qq = (q || '').trim().toLowerCase();
       let rows = pickerItems(root);
@@ -639,7 +637,7 @@
           <span class="gp-name">${escapeHtml(it.name)}</span>
           <span class="gp-id">${escapeHtml(it.sub)}</span>
         </li>`).join('');
-      if (!rows.length) html += `<div class="gp-empty">无匹配项</div>`;
+      if (!rows.length) html += `<div class="gp-empty">鏃犲尮閰嶉」</div>`;
       list.innerHTML = html;
       list.querySelectorAll('li[data-v]').forEach(li => {
         li.onclick = (e) => {
@@ -661,11 +659,11 @@
       }
       root.dataset.ready = '1';
       if (!root.dataset.value) root.dataset.value = '';
-      const ph = root.dataset.searchPh || '搜索…';
+      const ph = root.dataset.searchPh || '鎼滅储鈥?;
       root.innerHTML = `
         <button type="button" class="game-picker-trigger">
-          <span class="gp-label is-placeholder">${escapeHtml(root.dataset.empty || '请选择')}</span>
-          <span class="gp-caret">▾</span>
+          <span class="gp-label is-placeholder">${escapeHtml(root.dataset.empty || '璇烽€夋嫨')}</span>
+          <span class="gp-caret">鈻?/span>
         </button>
         <div class="game-picker-panel">
           <input class="game-picker-search" type="search" placeholder="${escapeHtml(ph)}" autocomplete="off" />
@@ -711,7 +709,7 @@
     document.addEventListener('click', () => closeAllPickers());
     window.addEventListener('resize', () => closeAllPickers());
     document.addEventListener('scroll', (e) => {
-      // 列表内部滚动不关；页面滚动关掉，避免浮层错位
+      // 鍒楄〃鍐呴儴婊氬姩涓嶅叧锛涢〉闈㈡粴鍔ㄥ叧鎺夛紝閬垮厤娴眰閿欎綅
       if (e.target && e.target.closest && e.target.closest('.game-picker-list')) return;
       closeAllPickers();
     }, true);
@@ -726,7 +724,7 @@
     function switchPage(page) {
       if (page === 'features') {
         switchPage('games');
-        toast('请在游戏列表点「功能管理」');
+        toast('璇峰湪娓告垙鍒楄〃鐐广€屽姛鑳界鐞嗐€?);
         return;
       }
       currentPage = page;
@@ -765,7 +763,7 @@
       if (document.getElementById('feat-body') && selectedFeatGameId) {
         await loadFeaturesForGame(selectedFeatGameId);
       }
-      if (!silent) toast('已刷新');
+      if (!silent) toast('宸插埛鏂?);
     }
 
     async function loadMenuTemplates() {
@@ -775,10 +773,8 @@
       } catch (e) { menuTemplates = []; }
     }
 
-    // 服务端时间统一存 UTC；SQLite 经 isoformat() 输出无时区后缀的裸串，
-    // 直接 new Date() 会被当成浏览器本地时间 → 显示/回填都偏差 8 小时。
-    // 裸串一律补 Z 按 UTC 解析，再转浏览器本地显示（2026-09-05）。
-    function parseServerTime(v) {
+    // 鏈嶅姟绔椂闂寸粺涓€瀛?UTC锛汼QLite 缁?isoformat() 杈撳嚭鏃犳椂鍖哄悗缂€鐨勮８涓诧紝
+    // 鐩存帴 new Date() 浼氳褰撴垚娴忚鍣ㄦ湰鍦版椂闂?鈫?鏄剧ず/鍥炲～閮藉亸宸?8 灏忔椂銆?    // 瑁镐覆涓€寰嬭ˉ Z 鎸?UTC 瑙ｆ瀽锛屽啀杞祻瑙堝櫒鏈湴鏄剧ず锛?026-09-05锛夈€?    function parseServerTime(v) {
       if (!v) return null;
       let s = String(v).trim();
       if (!s) return null;
@@ -788,7 +784,7 @@
     }
     function fmtLocal(v) {
       const d = parseServerTime(v);
-      if (!d) return '—';
+      if (!d) return '鈥?;
       const p = n => String(n).padStart(2, '0');
       return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
     }
@@ -802,7 +798,7 @@
       renderTemplatesTable();
     }
 
-    let tplPage = 1; // 模板列表本地分页（20/页）
+    let tplPage = 1; // 妯℃澘鍒楄〃鏈湴鍒嗛〉锛?0/椤碉級
 
     function renderTemplatesTable() {
       const body = document.getElementById('tpl-body');
@@ -818,15 +814,15 @@
         <tr>
           <td><code>${escapeHtml(t.id)}</code></td>
           <td>${escapeHtml(t.name)}</td>
-          <td>${t.package ? `<code>${escapeHtml(t.package)}</code>` : '<span class="muted">—</span>'}</td>
+          <td>${t.package ? `<code>${escapeHtml(t.package)}</code>` : '<span class="muted">鈥?/span>'}</td>
           <td>${t.feature_count ?? (t.features || []).length}</td>
           <td class="muted">${escapeHtml(formatDateTime(t.created_at))}</td>
           <td class="row-actions">
-            <button class="btn sm ghost" onclick='copyTemplateJson(${JSON.stringify(t)})'>复制JSON</button>
-            <button class="btn sm ghost" onclick='openTemplateModal(${JSON.stringify(t)})'>编辑</button>
-            <button class="btn sm ghost" onclick="deleteTemplate('${escapeHtml(t.id)}')">删除</button>
+            <button class="btn sm ghost" onclick='copyTemplateJson(${JSON.stringify(t)})'>澶嶅埗JSON</button>
+            <button class="btn sm ghost" onclick='openTemplateModal(${JSON.stringify(t)})'>缂栬緫</button>
+            <button class="btn sm ghost" onclick="deleteTemplate('${escapeHtml(t.id)}')">鍒犻櫎</button>
           </td>
-        </tr>`).join('') || `<tr><td colspan="6" class="empty">${menuTemplates.length ? '无匹配模板' : '暂无模板，可点「新建模板」或「JSON 导入」'}</td></tr>`;
+        </tr>`).join('') || `<tr><td colspan="6" class="empty">${menuTemplates.length ? '鏃犲尮閰嶆ā鏉? : '鏆傛棤妯℃澘锛屽彲鐐广€屾柊寤烘ā鏉裤€嶆垨銆孞SON 瀵煎叆銆?}</td></tr>`;
       renderPager('tpl-pager', { total, page: tplPage, page_size: pageSize },
         `tplPage=${tplPage - 1};renderTemplatesTable()`,
         `tplPage=${tplPage + 1};renderTemplatesTable()`);
@@ -849,10 +845,10 @@
       const text = JSON.stringify(templateToJsonPayload(t), null, 2);
       try {
         await navigator.clipboard.writeText(text);
-        toast('已复制模板 JSON');
+        toast('宸插鍒舵ā鏉?JSON');
       } catch (_) {
         openTemplateJsonModal(text);
-        toast('已打开 JSON，请手动复制');
+        toast('宸叉墦寮€ JSON锛岃鎵嬪姩澶嶅埗');
       }
     }
 
@@ -863,12 +859,12 @@
   "package": "game.taptap.morizero.milthm",
   "source": "Games/MilthmMod.cpp AddJudge+ToStatistic",
   "features": [
-    {"feat_num": 1, "name": "自动跳舞"}
+    {"feat_num": 1, "name": "鑷姩璺宠垶"}
   ]
 }`;
       openModal(`
-        <h3>JSON 导入菜单模板</h3>
-        <p class="sub">粘贴单条对象，或 <code>[{...},{...}]</code> 数组批量导入。已存在的 <code>template_id</code> 会更新（PATCH），不存在则创建。</p>
+        <h3>JSON 瀵煎叆鑿滃崟妯℃澘</h3>
+        <p class="sub">绮樿创鍗曟潯瀵硅薄锛屾垨 <code>[{...},{...}]</code> 鏁扮粍鎵归噺瀵煎叆銆傚凡瀛樺湪鐨?<code>template_id</code> 浼氭洿鏂帮紙PATCH锛夛紝涓嶅瓨鍦ㄥ垯鍒涘缓銆?/p>
         <div class="form-grid">
           <div class="full"><label>JSON</label>
             <textarea id="m-tpl-json" rows="16" style="width:100%;font-family:ui-monospace,monospace;font-size:12px;line-height:1.45;padding:10px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);color:inherit"
@@ -876,27 +872,27 @@
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn ghost" onclick="closeModal()">取消</button>
-          <button class="btn" onclick="importTemplatesFromJson()">导入</button>
+          <button class="btn ghost" onclick="closeModal()">鍙栨秷</button>
+          <button class="btn" onclick="importTemplatesFromJson()">瀵煎叆</button>
         </div>`);
     }
 
     function normalizeTemplateJsonItem(raw) {
-      if (!raw || typeof raw !== 'object') throw new Error('每项须为 JSON 对象');
+      if (!raw || typeof raw !== 'object') throw new Error('姣忛」椤讳负 JSON 瀵硅薄');
       const template_id = String(raw.template_id || raw.id || '').trim();
       const name = String(raw.name || '').trim();
-      if (!template_id || !name) throw new Error('缺少 template_id / name');
+      if (!template_id || !name) throw new Error('缂哄皯 template_id / name');
       let features = raw.features;
       if (typeof features === 'string') {
         features = parseFeaturesTextarea(features);
       } else if (!Array.isArray(features) || !features.length) {
-        throw new Error(template_id + ': features 须为非空数组');
+        throw new Error(template_id + ': features 椤讳负闈炵┖鏁扮粍');
       } else {
         features = features.map((f, i) => {
           const feat_num = Number(f.feat_num ?? f.num ?? f.id);
           const fname = String(f.name || '').trim();
           if (!Number.isInteger(feat_num) || feat_num < 0 || !fname) {
-            throw new Error(template_id + `: features[${i}] 需要 feat_num + name`);
+            throw new Error(template_id + `: features[${i}] 闇€瑕?feat_num + name`);
           }
           return { feat_num, name: fname };
         });
@@ -913,10 +909,10 @@
     async function importTemplatesFromJson() {
       try {
         const rawText = document.getElementById('m-tpl-json').value.trim();
-        if (!rawText) { toast('请粘贴 JSON'); return; }
+        if (!rawText) { toast('璇风矘璐?JSON'); return; }
         let parsed = JSON.parse(rawText);
         if (!Array.isArray(parsed)) parsed = [parsed];
-        if (!parsed.length) { toast('JSON 为空'); return; }
+        if (!parsed.length) { toast('JSON 涓虹┖'); return; }
         let created = 0, updated = 0, linkedGames = 0;
         for (const item of parsed) {
           const body = normalizeTemplateJsonItem(item);
@@ -942,7 +938,7 @@
           }
         }
         closeModal();
-        toast(`导入完成：新建 ${created}，更新 ${updated}` + (linkedGames ? `，联动游戏 ${linkedGames}` : ''));
+        toast(`瀵煎叆瀹屾垚锛氭柊寤?${created}锛屾洿鏂?${updated}` + (linkedGames ? `锛岃仈鍔ㄦ父鎴?${linkedGames}` : ''));
         await loadTemplatesTable();
         if (linkedGames) await loadGamesCatalog();
       } catch (e) {
@@ -958,37 +954,37 @@
       const lines = (text || '').split('\n').map(s => s.trim()).filter(Boolean);
       const features = [];
       for (const line of lines) {
-        const m = line.match(/^(\d+)\s*[|：:]\s*(.+)$/);
-        if (!m) throw new Error('功能行格式应为：编号|名称，例如 1|无敌');
+        const m = line.match(/^(\d+)\s*[|锛?]\s*(.+)$/);
+        if (!m) throw new Error('鍔熻兘琛屾牸寮忓簲涓猴細缂栧彿|鍚嶇О锛屼緥濡?1|鏃犳晫');
         features.push({ feat_num: parseInt(m[1], 10), name: m[2].trim() });
       }
-      if (!features.length) throw new Error('至少填写 1 个功能');
+      if (!features.length) throw new Error('鑷冲皯濉啓 1 涓姛鑳?);
       return features;
     }
 
     function openTemplateModal(tpl) {
       const isEdit = !!(tpl && tpl.id);
       openModal(`
-        <h3>${isEdit ? '编辑菜单模板' : '新建菜单模板'}</h3>
-        <p class="sub">功能列表格式：每行 <code>编号|名称</code>，与客户端 feat_num 对齐。保存后立刻生效，无需重启。</p>
+        <h3>${isEdit ? '缂栬緫鑿滃崟妯℃澘' : '鏂板缓鑿滃崟妯℃澘'}</h3>
+        <p class="sub">鍔熻兘鍒楄〃鏍煎紡锛氭瘡琛?<code>缂栧彿|鍚嶇О</code>锛屼笌瀹㈡埛绔?feat_num 瀵归綈銆備繚瀛樺悗绔嬪埢鐢熸晥锛屾棤闇€閲嶅惎銆?/p>
         <div class="form-grid">
-          <div class="full"><label>模板 id</label>
+          <div class="full"><label>妯℃澘 id</label>
             <input id="m-tpl-id" value="${escapeHtml(tpl?.id || '')}" ${isEdit ? 'disabled' : ''}
-              placeholder="如 blzz，建议与 game_id 同名" /></div>
-          <div class="full"><label>名称</label>
-            <input id="m-tpl-name" value="${escapeHtml(tpl?.name || '')}" placeholder="如 堡垒之战" /></div>
-          <div class="full"><label>包名（可选）</label>
+              placeholder="濡?blzz锛屽缓璁笌 game_id 鍚屽悕" /></div>
+          <div class="full"><label>鍚嶇О</label>
+            <input id="m-tpl-name" value="${escapeHtml(tpl?.name || '')}" placeholder="濡?鍫″瀿涔嬫垬" /></div>
+          <div class="full"><label>鍖呭悕锛堝彲閫夛級</label>
             <input id="m-tpl-pkg" value="${escapeHtml(tpl?.package || '')}" placeholder="com.xxx.yyy" /></div>
-          <div class="full"><label>备注/来源（可选）</label>
+          <div class="full"><label>澶囨敞/鏉ユ簮锛堝彲閫夛級</label>
             <input id="m-tpl-src" value="${escapeHtml(tpl?.source || '')}" placeholder="Games/XxxMod.h" /></div>
-          <div class="full"><label>功能列表</label>
+          <div class="full"><label>鍔熻兘鍒楄〃</label>
             <textarea id="m-tpl-feats" rows="8" style="width:100%;font-family:ui-monospace,monospace;font-size:13px;line-height:1.5;padding:10px;border-radius:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);color:inherit"
-              placeholder="1|无敌&#10;2|十倍攻击">${escapeHtml(featuresToTextarea(tpl?.features))}</textarea>
+              placeholder="1|鏃犳晫&#10;2|鍗佸€嶆敾鍑?>${escapeHtml(featuresToTextarea(tpl?.features))}</textarea>
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn ghost" onclick="closeModal()">取消</button>
-          <button class="btn" onclick="saveTemplate(${isEdit ? `'${escapeHtml(tpl.id)}'` : 'null'})">保存</button>
+          <button class="btn ghost" onclick="closeModal()">鍙栨秷</button>
+          <button class="btn" onclick="saveTemplate(${isEdit ? `'${escapeHtml(tpl.id)}'` : 'null'})">淇濆瓨</button>
         </div>`);
     }
 
@@ -999,19 +995,19 @@
         const packageName = document.getElementById('m-tpl-pkg').value.trim() || null;
         const source = document.getElementById('m-tpl-src').value.trim() || null;
         const features = parseFeaturesTextarea(document.getElementById('m-tpl-feats').value);
-        if (!template_id || !name) { toast('请填写模板 id 与名称'); return; }
+        if (!template_id || !name) { toast('璇峰～鍐欐ā鏉?id 涓庡悕绉?); return; }
         if (editId) {
           await api('/v1/admin/menu-templates/' + encodeURIComponent(editId), {
             method: 'PATCH',
             body: JSON.stringify({ name, package: packageName, source, features })
           });
-          toast('模板已更新');
+          toast('妯℃澘宸叉洿鏂?);
         } else {
           const r = await api('/v1/admin/menu-templates', {
             method: 'POST',
             body: JSON.stringify({ template_id, name, package: packageName, source, features })
           });
-          toast(r.message || '模板已创建');
+          toast(r.message || '妯℃澘宸插垱寤?);
           if (r.data?.linkage?.game_created) await loadGamesCatalog();
         }
         closeModal();
@@ -1020,17 +1016,17 @@
     }
 
     async function deleteTemplate(id) {
-      if (!confirm('删除模板「' + id + '」？\n若有游戏绑定，请先解绑或确认强制删除。')) return;
+      if (!confirm('鍒犻櫎妯℃澘銆? + id + '銆嶏紵\n鑻ユ湁娓告垙缁戝畾锛岃鍏堣В缁戞垨纭寮哄埗鍒犻櫎銆?)) return;
       try {
         await api('/v1/admin/menu-templates/' + encodeURIComponent(id), { method: 'DELETE' });
-        toast('已删除');
+        toast('宸插垹闄?);
         await loadTemplatesTable();
       } catch (e) {
-        if (String(e.message || '').includes('仍有')) {
-          if (confirm(e.message + '\n\n是否强制删除并清空这些游戏的模板绑定？')) {
+        if (String(e.message || '').includes('浠嶆湁')) {
+          if (confirm(e.message + '\n\n鏄惁寮哄埗鍒犻櫎骞舵竻绌鸿繖浜涙父鎴忕殑妯℃澘缁戝畾锛?)) {
             try {
               await api('/v1/admin/menu-templates/' + encodeURIComponent(id) + '?force=true', { method: 'DELETE' });
-              toast('已强制删除');
+              toast('宸插己鍒跺垹闄?);
               await loadTemplatesTable();
             } catch (e2) { toast(e2.message); }
           }
@@ -1039,9 +1035,9 @@
     }
 
     function templateOptionsHtml(selected) {
-      let html = '<option value="">不绑定（稍后手动同步）</option>';
+      let html = '<option value="">涓嶇粦瀹氾紙绋嶅悗鎵嬪姩鍚屾锛?/option>';
       menuTemplates.forEach(t => {
-        html += `<option value="${escapeHtml(t.id)}" ${selected === t.id ? 'selected' : ''}>${escapeHtml(t.name)}（${escapeHtml(t.id)} · ${t.feature_count} 项）</option>`;
+        html += `<option value="${escapeHtml(t.id)}" ${selected === t.id ? 'selected' : ''}>${escapeHtml(t.name)}锛?{escapeHtml(t.id)} 路 ${t.feature_count} 椤癸級</option>`;
       });
       return html;
     }
@@ -1050,8 +1046,8 @@
       const box = document.getElementById('m-g-preview');
       if (!box) return;
       const t = menuTemplates.find(x => x.id === templateId);
-      if (!t) { box.innerHTML = '<span class="muted">不绑定模板则不会自动写入功能</span>'; return; }
-      box.innerHTML = `<div class="muted" style="margin-bottom:6px">将自动写入：</div>` +
+      if (!t) { box.innerHTML = '<span class="muted">涓嶇粦瀹氭ā鏉垮垯涓嶄細鑷姩鍐欏叆鍔熻兘</span>'; return; }
+      box.innerHTML = `<div class="muted" style="margin-bottom:6px">灏嗚嚜鍔ㄥ啓鍏ワ細</div>` +
         t.features.map(f => `<code>#${f.feat_num}</code> ${escapeHtml(f.name)}`).join('<br/>');
     }
 
@@ -1068,7 +1064,7 @@
       refreshAll(true).then(() => switchPage('dashboard'));
     }
 
-    /** 页面静态区域的时间选择器挂载（弹窗内的由 openModal → initTimePickers 负责） */
+    /** 椤甸潰闈欐€佸尯鍩熺殑鏃堕棿閫夋嫨鍣ㄦ寕杞斤紙寮圭獥鍐呯殑鐢?openModal 鈫?initTimePickers 璐熻矗锛?*/
     function initStaticTimePickers() {
       const slots = [
         ['au-from-slot', 'au-from', {}],
@@ -1095,19 +1091,19 @@
         localStorage.setItem('sg_admin_user', data.data.username);
         localStorage.setItem('sg_admin_user_saved', data.data.username);
         document.getElementById('login-pass').value = '';
-        toast('登录成功');
+        toast('鐧诲綍鎴愬姛');
         showApp();
       } catch (e) { toast(e.message); }
     }
 
-    /** 退出登录：先二次确认，确认后由 doLogout 真正执行 */
+    /** 閫€鍑虹櫥褰曪細鍏堜簩娆＄‘璁わ紝纭鍚庣敱 doLogout 鐪熸鎵ц */
     function logout() {
       openModal(`
-        <h3>退出登录</h3>
-        <p class="muted">确定要退出当前账号吗？</p>
+        <h3>閫€鍑虹櫥褰?/h3>
+        <p class="muted">纭畾瑕侀€€鍑哄綋鍓嶈处鍙峰悧锛?/p>
         <div class="modal-actions">
-          <button class="btn ghost" onclick="closeModal()">取消</button>
-          <button class="btn danger" onclick="doLogout()">退出</button>
+          <button class="btn ghost" onclick="closeModal()">鍙栨秷</button>
+          <button class="btn danger" onclick="doLogout()">閫€鍑?/button>
         </div>`);
     }
 
@@ -1117,7 +1113,7 @@
       location.reload();
     }
 
-    /** 左下角账号卡片下拉菜单 */
+    /** 宸︿笅瑙掕处鍙峰崱鐗囦笅鎷夎彍鍗?*/
     function toggleAccountMenu(e) {
       e.stopPropagation();
       const card = document.getElementById('account-card');

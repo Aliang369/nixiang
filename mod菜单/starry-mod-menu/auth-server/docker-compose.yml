@@ -43,6 +43,8 @@ services:
       - "8000"
     volumes:
       - ./data/ota:/data/ota
+      - ./keys:/app/keys:ro          # P1/P2-2 私钥与载荷主密钥（600，不入库）
+      - ./static:/app/static:ro      # 后台前端：改页面不用重建镜像（2026-10-27）
     restart: unless-stopped
 
   nginx:
