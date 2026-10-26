@@ -187,3 +187,15 @@ _install_stage/
 
 # pipeline device_ready 阶段留痕（本机运行时状态，2026-10-12 霓虹深渊2 复盘 P0-1）
 04_scripts/*/.device_ready.txt
+
+# ===== 2026-10-26：构建机 / 授权私钥（仓外 ~/.starry-keys，绝不入库）=====
+# rsa2048.txt        = 星光授权票签名私钥（与客户端 sg_pubkey.h 成对）
+# payload_master.txt = 载荷主密钥（与服务端 PAYLOAD_MASTER_PATH 同一份，派生 K_build）
+# build_key.txt      = 构建机查后台的 BUILD_API_KEY（服务端 .env 同名项）
+# 取法见 04_scripts/双机协作/fetch_starry_keys.sh（SSH 直连授权服务器，不走 git——
+# 提交后即使下次提交删除，blob 仍永久留在历史里，清理要 filter-repo + 强推，属禁区）。
+rsa2048.txt
+payload_master.txt
+build_key.txt
+starry-keys/
+.starry-keys/
