@@ -1,0 +1,64 @@
+{
+  "template_id": "wxsjdz2",
+  "name": "无限升级12定制版",
+  "package": "com.xingzuodaoshi.infinityUpgrade",
+  "source": "12.10701/vc1644 线；client: Games/Wxsjdz2Entry.cpp GameMod_Get @ 12 线复刻（A 线 11 项）+ 2026-10-27 用户点名新增 3 项（13 技能投掷物倍数 / 14 技能伤害倍数 / 15 转生无条件升级）；game_id 独立开号 wxsjdz2（不复用 wxsj / wxsjdz1）；feat 3 为 Category_ 分组行，无功能",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 2,
+      "name": "秒杀"
+    },
+    {
+      "feat_num": 4,
+      "name": "免广告"
+    },
+    {
+      "feat_num": 5,
+      "name": "物品不减"
+    },
+    {
+      "feat_num": 6,
+      "name": "技能免费升级"
+    },
+    {
+      "feat_num": 7,
+      "name": "广告奖励翻倍"
+    },
+    {
+      "feat_num": 8,
+      "name": "物品翻倍"
+    },
+    {
+      "feat_num": 9,
+      "name": "无限挑战秘境"
+    },
+    {
+      "feat_num": 10,
+      "name": "皮肤全解锁"
+    },
+    {
+      "feat_num": 11,
+      "name": "功能全解锁"
+    },
+    {
+      "feat_num": 12,
+      "name": "经验倍率"
+    },
+    {
+      "feat_num": 13,
+      "name": "技能投掷物倍数"
+    },
+    {
+      "feat_num": 14,
+      "name": "技能伤害倍数"
+    },
+    {
+      "feat_num": 15,
+      "name": "转生无条件升级"
+    }
+  ]
+}

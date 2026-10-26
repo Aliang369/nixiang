@@ -111,6 +111,39 @@ GAMES = {
             "lib/arm64-v8a/libstarry_magic.so": "%s/app/src/libs_wxsj_vc1637/arm64-v8a/libstarry_magic.so" % JNI_ROOT,
         },
     },
+    # 2026-10-27：12 线定制号（12.10701/vc1644，14 项功能）。
+    # 🔴 2026-10-27 用户纠正：本号最初被我登记成 payload=False（"native 型"）以沿用 12 线明文口径，
+    #    这是**自我豁免**——AGENTS §6 的加固门禁是全局强制，逃生门是 --allow-no-harden + 写明理由，
+    #    不是改登记表。现改为真载荷登记：载荷只以密文进包，密钥由「后台登记的载荷 sha + v3 票」派生
+    #    ⇒ 后台不登记 sha / 无票 ⇒ 落防封基线（功能无效、不崩）。
+    "无限升级_wxsjdz2": {
+        "tag": "wxsjdz2",
+        "integ": None,             # 未启用完整性清单 ⇒ C2/C5 记 N/A（同 v11 段）
+        "mk": "Android_wxsjdz2.mk",
+        "game_id": "wxsjdz2",      # 2026-10-27 用户定：12 线定制版独立开号
+        "payload": True,
+        "payload_kind": "bins",    # 载荷 = 两份补丁 DLL 按序拼接（无 JS 载荷）
+        "payload_header": "Includes/sg_payload_enc_wxsjdz2.h",
+        "payload_blobs": [
+            {"name": "live", "sym": "Live",
+             "plain": "07_patched/无限升级/targetfuntional_wxsjdz2_patched.dll",
+             "enc": "%s/app/src/main/jni/targetfuntional_dll_wxsjdz2.enc.bin" % JNI_ROOT},
+            {"name": "hf2", "sym": "Hf2",
+             "plain": "07_patched/无限升级/targetfuntional_wxsjdz2_hf2_patched.dll",
+             "enc": "%s/app/src/main/jni/targetfuntional_dll_wxsjdz2_hf2.enc.bin" % JNI_ROOT},
+        ],
+        "sym_prefix": "kWxsjdz2",
+        # 防封基线（无票路径）：官方 + 上报/执法屏蔽，不含任何功能代码；密钥只由载荷 sha 派生。
+        "antiban": {
+            "plain": "07_patched/无限升级/targetfuntional_wxsjdz2_antiban.dll",
+            "enc": "%s/app/src/main/jni/targetfuntional_dll_wxsjdz2_antiban.enc.bin" % JNI_ROOT,
+            "sym": "Antiban",
+        },
+        "artifacts": {
+            "classes2.dex": "%s/templates/wxsj_menu_current/classes2.dex" % JNI_ROOT,
+            "lib/arm64-v8a/libstarry_magic.so": "%s/app/src/libs_wxsjdz2/arm64-v8a/libstarry_magic.so" % JNI_ROOT,
+        },
+    },
 }
 
 
