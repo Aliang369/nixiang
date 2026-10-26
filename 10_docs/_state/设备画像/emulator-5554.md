@@ -1,28 +1,28 @@
 # 设备画像 — emulator-5554
 
-- 生成: 2026-10-07 13:32:51（主机 MSYS_NT-10.0-19045）/ 脚本 `04_scripts/_common/device_profile.sh`
-- **静态预判: 进程里【没有 libil2cpp.so】⇒ 未进入 IL2CPP 层**（运行时真值仍以三行自检 + 菜单 SELFCHECK 行为准，见文末）
-- 复现命令: `bash 04_scripts/_common/device_profile.sh --serial emulator-5554 --pkg com.miHoYo.Nap --rva vicmid=0x147716F0 --rva victail=0x14771758 --rva dmgsettle=0x14785078`
+- 生成: 2026-10-26 21:35:57（主机 MINGW64_NT-10.0-19045）/ 脚本 `04_scripts/_common/device_profile.sh`
+- **静态预判: 进程未运行 ⇒ 映射层未探测（加 --launch 冷启后再跑）**（运行时真值仍以三行自检 + 菜单 SELFCHECK 行为准，见文末）
+- 复现命令: `bash 04_scripts/_common/device_profile.sh --serial emulator-5554 --pkg com.mxyzt.gzmy`
 
 ## 1. 设备与系统
 
 | 项 | 值 |
 |---|---|
-| 型号/厂商 | HBP-AL00 / HUAWEI |
-| Android / SDK | 15 / 35 |
-| ABI / abilist | x86_64 / x86_64,arm64-v8a,x86 |
-| 内核 | 6.1.90-perf+ |
+| 型号/厂商 | 2509FPN0BC / XIAOMI |
+| Android / SDK | 14 / 34 |
+| ABI / abilist | x86_64 / x86_64,arm64-v8a,x86,armeabi-v7a,armeabi |
+| 内核 | 5.15.178+ |
 | 页大小 | 4096  |
 | ro.kernel.qemu | （空=不是 qemu/模拟器） |
-| 物理内存 | MemTotal:        6084732 kB |
-| fingerprint | HUAWEI/HapburnP/HapburnP:15/V417IR/1100:user/release-keys |
-| 容器/虚拟化线索 | ro.boot.hardware=kona ro.product.board=HBP-AL00 |
+| 物理内存 | MemTotal:        6086764 kB |
+| fingerprint | Xiaomi/unicorn/unicorn:14/UQ1A.240205.10211507/ucsm.20261021.150701:user/release-keys |
+| 容器/虚拟化线索 | ro.boot.hardware=qcom ro.product.board=2509FPN0BC |
 
 ## 2. root 与注入条件
 
 | 项 | 值 |
 |---|---|
-| root 形态 | su -c 不可用 ⇒ /proc/<pid>/mem 与 /data/app 读取会失败 |
+| root 形态 | su -c 可用（KSU/Magisk 等） |
 | adb 身份 | uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid),3012(readtracefs) context=u:r:shell:s0 |
 | ptrace_scope | （空）（空=内核无 yama/未启用；1/2 会影响 frida 附加） |
 
@@ -30,11 +30,11 @@
 
 | 项 | 值 |
 |---|---|
-| 包名 / 版本 | com.miHoYo.Nap / 3.2.0 |
-| base.apk | /data/app/~~fPsCHPUkLzOuMiQGNAZE0A==/com.miHoYo.Nap-R1DcyEq6QM5-1VFJJ9yt3A==/base.apk |
-| 进程 pid | 10542 |
-| apk 大小 | 492288387 |
-| 已装菜单 so | 该目录 31 个 .so（starry*=1 il2cpp*=1）⇒ **lib 已展开到磁盘**，extractNativeLibs 应为 true |
+| 包名 / 版本 | com.mxyzt.gzmy / 1.5.9 |
+| base.apk | /data/app/~~qB-jzkc-tBZokraT7e2Psw==/com.mxyzt.gzmy-Cs8DTZdIYKIeFmDfetvEgg==/base.apk |
+| 进程 pid | （未运行） |
+| apk 大小 | 885371839 |
+| 已装菜单 so | 该目录 21 个 .so（starry*=1 il2cpp*=1）⇒ **lib 已展开到磁盘**，extractNativeLibs 应为 true |
 
 ## 4. libil2cpp 映射分组（★设备差异核心判据）
 
@@ -66,6 +66,6 @@
 ## 8. 原始证据
 
 ```
-(pidof com.miHoYo.Nap) = 10542
+(pidof com.mxyzt.gzmy) = 空
 
 ```
