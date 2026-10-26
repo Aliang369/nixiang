@@ -308,13 +308,27 @@ def c9(rep):
         rep.add("C9 载荷已登记", False, "读不到 sg_payload_enc.h 里的载荷 sha")
         return
 
-    game = (os.environ.get("SG_GAME_ID") or "yszzx").strip()
-    base = (os.environ.get("SG_API_BASE") or "").strip()
-    key = (os.environ.get("SG_BUILD_KEY") or "").strip()
+    def _secret(name, default=""):
+        v = (os.environ.get(name) or "").strip()
+        if v:
+            return v
+        f = os.path.join(os.path.expanduser("~"), ".starry-keys",
+                         {"SG_BUILD_KEY": "build_key.txt", "SG_API_BASE": "api_base.txt",
+                          "SG_GAME_ID": "game_id.txt"}[name])
+        try:
+            if os.path.exists(f):
+                return io.open(f, "r", encoding="utf-8").read().strip()
+        except Exception:
+            pass
+        return default
+
+    game = _secret("SG_GAME_ID", "yszzx")
+    base = _secret("SG_API_BASE", "https://47.100.216.101:8443")
+    key = _secret("SG_BUILD_KEY", "")
 
     if not (base and key):
         rep.add("C9 载荷已登记", True,
-                "⚠️ 未配 SG_API_BASE/SG_BUILD_KEY ⇒ 未联网校验（记得后台登记 %s…）" % sha[:16])
+                "⚠️ 没有构建机 key（~/.starry-keys/build_key.txt）⇒ 未联网校验（记得后台登记 %s…）" % sha[:16])
         _remind_block(game, sha)
         return
 
