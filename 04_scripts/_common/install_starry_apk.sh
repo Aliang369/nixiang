@@ -173,8 +173,23 @@ fi
 echo "== 安装 =="
 REMOTE="/data/local/tmp/$(basename "$APK")"
 if adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c id" 2>/dev/null | grep -q "uid=0"; then
-  adbx push "$APK" "$REMOTE"
-  adbsu "pm install -r -d --user 0 \"${REMOTE}\" && rm -f \"${REMOTE}\""
+  # ★2026-10-27（雷电14 实测）：Git Bash/MSYS 会把**设备侧**绝对路径 "/data/local/tmp/…"
+  #   当成主机路径改写成 "C:/Program Files/Git/data/local/tmp/…" ⇒ push 必然 failed to copy。
+  #   真机那次走的是「无 root 流式安装」分支所以没暴露，凡**有 root 的模拟器**必踩。
+  #   ⇒ 设备侧路径相关的两条命令显式关掉路径转换。
+  MSYS_NO_PATHCONV=1 adbx push "$APK" "$REMOTE"
+  # ★2026-10-27（雷电14 实测）：有 root 的模拟器上 `pm install` 装 /data/local/tmp 的包会
+  #   报 `INSTALL_FAILED_MEDIA_UNAVAILABLE: Failed to restorecon`（SELinux 对 tmp 目录的
+  #   restorecon 失败），真机不会。⇒ 失败即回退 adb 流式安装（与无 root 分支同一条路）。
+  _pm_out="$(MSYS_NO_PATHCONV=1 adbsu "pm install -r -d --user 0 \"${REMOTE}\"" 2>&1)" || true
+  printf '%s\n' "$_pm_out" | tail -3
+  if printf '%s\n' "$_pm_out" | grep -q "^Success"; then
+    MSYS_NO_PATHCONV=1 adbsu "rm -f \"${REMOTE}\"" >/dev/null 2>&1 || true
+  else
+    echo "  ! 设备侧 pm install 未成功 ⇒ 回退 adb 流式安装（模拟器 tmp 目录 restorecon 失败时必走这条）"
+    adbx install -r -d "$APK"
+    MSYS_NO_PATHCONV=1 adbsu "rm -f \"${REMOTE}\"" >/dev/null 2>&1 || true
+  fi
 else
   echo "  (设备无 root ⇒ 走 adb install 流式安装，不做 /data/local/tmp 预推，避免重推 1.7GB)"
   adbx install -r -d "$APK"

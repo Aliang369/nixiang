@@ -614,26 +614,45 @@ public class Preferences {
     public static boolean isFeaturesAllowed() {
         if (!isMenuEnabled()) return false;
         if (!isAuthSessionValid()) return false;
-        String grant = getAuthGrant();
-        return grant != null && !grant.isEmpty();
+        return isValidGrant(getAuthGrant());
+    }
+
+    /** 这张「票」是否像一张真票：非空、且不是 JSON null 被 optString 变成的字符串 "null"。
+     *
+     *  ★2026-10-27 修（小米真机实测 m039 轮）：服务端对**没登记载荷 sha 的游戏**返回
+     *    `"grant3": null`（`mint_grant_v3()` 返回 None）。Android 的
+     *    `JSONObject.optString(k, "")` 不会把 JSON null 变成空串，而是走
+     *    `JSON.toString(JSONObject.NULL)` → **字符串 "null"** ⇒ 旧实现把 "null" 当票
+     *    交给 native ⇒ `sgauth::apply()` 找不到 '.' 直接失败 ⇒ 日志 `[V2] r=0`
+     *    ⇒ 玩家看到「登录提示成功、功能一个都没授权」。凡未登记载荷的游戏（＝除勇士之心
+     *    以外的新接入游戏）都会中这一枪，故判据收在这里一处。 */
+    public static boolean isValidGrant(String grant) {
+        if (grant == null) return false;
+        String s = grant.trim();
+        if (s.isEmpty()) return false;
+        return !"null".equalsIgnoreCase(s);
     }
 
     /** P1/P2：优先 v3（grant3，带载荷密钥），其次 v2（grant2），最后回落 v1（grant）。全端唯一入口。 */
     public static String pickGrant(org.json.JSONObject data) {
         if (data == null) return "";
-        try {
-            String g3 = data.optString("grant3", "");
-            if (g3 != null && !g3.isEmpty()) return g3;
-            String g2 = data.optString("grant2", "");
-            if (g2 != null && !g2.isEmpty()) return g2;
-        } catch (Throwable ignored) {
+        String[] order = {"grant3", "grant2", "grant"};
+        for (int i = 0; i < order.length; i++) {
+            try {
+                String g = data.optString(order[i], "");
+                if (isValidGrant(g)) return g.trim();
+            } catch (Throwable ignored) {
+            }
         }
-        return data.optString("grant", "");
+        return "";
     }
 
     public static String getAuthGrant() {
         with(null);
-        return sharedPreferences.getString(KEY_AUTH_GRANT, "");
+        // 旧包曾把 "null"（JSON null 经 optString 的产物）落进 prefs ⇒ 读侧一并净化，
+        // 免得修好 pickGrant 之后仍被历史脏值卡住（小米真机 2026-10-27 即此状态）。
+        String g = sharedPreferences.getString(KEY_AUTH_GRANT, "");
+        return isValidGrant(g) ? g : "";
     }
 
     public static String getAuthExpireAt() {

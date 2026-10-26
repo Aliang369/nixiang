@@ -177,3 +177,15 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 结论（可外推）：本仓一切文件改写走 ① `edit`/`write` 工具 ② Git Bash + Python 字节级读写。
   **禁止** PowerShell 的 `Get-Content`/`Set-Content`/`-replace`/`>` 重定向参与文本改写；
   校验必须比字节数 + 关键中文串（`"...".encode("utf-8") in b`），不能只看 PowerShell 打印。
+
+## 候选：JSON null 经 `org.json` `optString` 会变成字符串 `"null"`（授权链静默失败）
+
+- 状态：候选（2026-10-27 冒险与征途加固轮实测；落点建议 `skill/re-starry`/`starry-mod` 授权链章节 + `10_docs/防御加固_通用路线图.md` §2 第 6/7 步）
+- 事实：服务端 FastAPI 对 `None` 字段输出 `"grant3": null`；Android `JSONObject.optString(k, "")`
+  走 `JSON.toString(JSONObject.NULL)` → **字符串 `"null"`（非空）**，不是空串、也不等于 `null` 引用。
+- 后果：客户端把 `"null"` 当票交给 native ⇒ `sgauth::apply()` 找不到 `.` 分隔的签名 ⇒ 直接 false
+  ⇒ 菜单 UI 说「登录成功」、功能一个都不授权（日志 `[V2] r=0`）。**所有没登记载荷 sha 的游戏**都会中
+  （`mint_grant_v3()` 无载荷钥时返回 None ⇒ grant3 恒为 null）。
+- 判据/修法：所有「多版本字段回退」取值一律过 `isValidGrant()`（非空 && 不等于 `"null"`），
+  且**读侧**（从 prefs 读历史值）也要过滤，否则修好写入仍被脏值卡住。
+- 反例：修复前 `pickGrant` 用 `g3 != null && !g3.isEmpty()` 判断，看着对、跑起来全游戏登录失效。
