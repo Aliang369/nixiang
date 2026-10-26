@@ -16,3 +16,8 @@ static const char* kWxsjvcHf4PlainSha = "d87a7f9419f8049fe0cae723356e4635f99e7f4
 static const uint32_t kWxsjvcHf3PayloadLen = 2025984u;
 static const uint8_t kWxsjvcHf3PayloadMac[32] = {182,221,164,180,194,76,150,155,71,175,14,11,234,127,47,51,114,160,92,138,133,9,32,201,143,2,182,106,177,49,197,122};
 static const char* kWxsjvcHf3PlainSha = "a5f5402960498a0ca0a8d3d809610b78a0dedcebc80a3c83027cfb5a11b80408";
+
+/* 防封基线（无票也生效，不含任何作弊功能代码）：07_patched/无限升级/targetfuntional_vc1637_antiban.dll  2021376 B */
+static const uint32_t kWxsjvcAntibanLen = 2021376u;
+static const uint8_t kWxsjvcAntibanMac[32] = {236,90,98,195,244,96,84,78,46,252,122,40,49,202,226,131,20,166,122,91,185,41,24,130,70,129,145,146,133,147,219,54};
+static const char* kWxsjvcAntibanSha = "0a468226870d02e83ecd72cb3db42adec76d94f7a7fcf376ed8190174540381d";

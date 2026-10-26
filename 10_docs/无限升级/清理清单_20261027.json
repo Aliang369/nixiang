@@ -1,0 +1,22 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_wxsj-antiban-closeout_20261027_003752",
+  "timestamp": "20261027_003752",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "mod菜单/starry-mod-menu/app/build",
+      "type": "dir",
+      "size_kib": 56816,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/build",
+      "quarantine": "/Users/aliang/.Trash/nixiang_wxsj-antiban-closeout_20261027_003752/mod菜单/starry-mod-menu/app/build"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/app/src/obj_wxsj_vc1637",
+      "type": "dir",
+      "size_kib": 11408,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/obj_wxsj_vc1637",
+      "quarantine": "/Users/aliang/.Trash/nixiang_wxsj-antiban-closeout_20261027_003752/mod菜单/starry-mod-menu/app/src/obj_wxsj_vc1637"
+    }
+  ]
+}

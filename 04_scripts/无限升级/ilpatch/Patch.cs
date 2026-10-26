@@ -28,8 +28,18 @@ internal static class Patcher
 
         BuildStarryConfig();
 
+        // 2026-10-26「防封基线」模式（WXSJ_ANTIBAN_ONLY=1）：只保留「六、上报屏蔽」段，
+        // 跳过后面全部功能段 ⇒ 产物**不含任何作弊功能代码**，可以无条件随 so 分发
+        // （用户要求：防封随菜单 so 一起加载、不需要登录卡密）。默认不带该变量 = 原全量口径。
+        bool antibanOnly = System.Environment.GetEnvironmentVariable("WXSJ_ANTIBAN_ONLY") == "1";
+        bool featureSection = false;
+        if (antibanOnly) Console.WriteLine("[mode] ANTIBAN-ONLY：只打上报/执法屏蔽段");
+
         int patched = 0;
-        void P(Action f, string name) { f(); Console.WriteLine($"[patch] {name}"); patched++; }
+        void P(Action f, string name) {
+            if (antibanOnly && featureSection) { Console.WriteLine($"[skip] {name}"); return; }
+            f(); Console.WriteLine($"[patch] {name}"); patched++;
+        }
 
         // ===== 六、上报屏蔽（key=block_report）=====
         P(() => EarlyReturnVoid(FindM(mod.GetType("InfinityCore.ItemUseAnomalyMonitor"), "CheckAmount"), "block_report"), "上报 ItemUseAnomalyMonitor.CheckAmount");
@@ -45,6 +55,8 @@ internal static class Patcher
         P(() => SendRTBlacklist(FindM(mod.GetType("AccountMgr.LoginScene.AccountMgrClient"), "SendRT", 3)), "上报 AccountMgrClient.SendRT(byte,string,object[]) 黑名单(10 fun)");
         P(() => EarlyReturnVoid(FindM(mod.GetType("InfinityCoreNormal.NetConver"), "ForceBanGameAciton"), "block_report"), "上报 NetConver.ForceBanGameAciton");
         // 注：COS 直传杀 / 实时云存档 no-op / 排行与数据同步拦截 均在 ilpatch_delta（v7.x 层）维护，本层不重复。
+
+        featureSection = true;
 
         // ===== 五、七项功能 =====
         P(() => EarlyReturnVoid(FindM(mod.GetType("PlayerMgr"), "OnHit"), "god"), "无敌 PlayerMgr.OnHit 入口返回");

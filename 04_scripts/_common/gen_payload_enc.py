@@ -147,7 +147,13 @@ def emit_js(g, ct, mac, sha):
     return "\n".join(lines) + "\n"
 
 
-def emit_bins(g, encs, sha, total):
+def antiban_key(sha_hex):
+    """防封基线密钥 = sha256("starry-antiban-v1|" || payload_sha_hex)。
+    与票无关（so 侧同名派生），故意的：基线不含功能代码，只要求「不以明文进包」。"""
+    return hashlib.sha256(b"starry-antiban-v1|" + sha_hex.encode("ascii")).digest()
+
+
+def emit_bins(g, encs, sha, total, antiban=None):
     pre = g["sym_prefix"]
     lines = [
         "#pragma once",
@@ -165,6 +171,14 @@ def emit_bins(g, encs, sha, total):
         lines.append("static const uint8_t %sPayloadMac[32] = {%s};"
                      % (sym, ",".join("%d" % b for b in e["mac"])))
         lines.append('static const char* %sPlainSha = "%s";' % (sym, e["sha"]))
+    if antiban:
+        # 防封基线（无票路径）：官方 + 上报/执法屏蔽，不含任何功能代码；密钥由 payload sha 派生
+        lines.append("")
+        lines.append("/* 防封基线（无票也生效，不含任何作弊功能代码）：%s  %d B */" % (antiban["plain"], antiban["len"]))
+        lines.append("static const uint32_t %sAntibanLen = %du;" % (pre, antiban["len"]))
+        lines.append("static const uint8_t %sAntibanMac[32] = {%s};"
+                     % (pre, ",".join("%d" % b for b in antiban["mac"])))
+        lines.append('static const char* %sAntibanSha = "%s";' % (pre, antiban["sha"]))
     return "\n".join(lines) + "\n"
 
 
@@ -252,6 +266,18 @@ def main(argv=None):
                 if back != p["data"]:
                     print("FAIL %s 解回来的明文与当前载荷不一致（换过 master 或旧密文）" % p["name"])
                     return 1
+        spec = g.get("antiban")
+        if spec:
+            abp = rel(spec["plain"])
+            abep = rel(spec["enc"])
+            if not (os.path.exists(abp) and os.path.exists(abep)):
+                print("FAIL 防封基线产物缺失：%s / %s" % (spec["plain"], spec["enc"]))
+                return 1
+            abd = io.open(abp, "rb").read()
+            if keystream_xor(antiban_key(sha), io.open(abep, "rb").read()) != abd:
+                print("FAIL 防封基线密文与当前基线明文不一致（重跑生成器）")
+                return 1
+            print("PASS 防封基线密文与明文一致 %d B" % len(abd))
         print("PASS 载荷密文与当前明文一致 sha=%s…" % sha[:16])
         remind_register(g, sha, write=False)
         return 0
@@ -272,8 +298,23 @@ def main(argv=None):
             encs.append(dict(sym=p["sym"], name=p["name"], plain=p["plain"], len=len(ct),
                              mac=mac, sha=hashlib.sha256(p["data"]).hexdigest()))
             total += len(ct)
+        ab = None
+        spec = g.get("antiban")
+        if spec:
+            abp = rel(spec["plain"])
+            if not os.path.exists(abp):
+                raise SystemExit("防封基线明文缺失：%s（先跑 WXSJ_ANTIBAN_ONLY=1 的 ilpatch / ilpatch_delta）"
+                                 % spec["plain"])
+            abd = io.open(abp, "rb").read()
+            abct, abmac = enc(antiban_key(sha), abd)
+            abep = rel(spec["enc"])
+            os.makedirs(os.path.dirname(abep), exist_ok=True)
+            io.open(abep, "wb").write(abct)
+            ab = dict(plain=spec["plain"], len=len(abct), mac=abmac,
+                      sha=hashlib.sha256(abd).hexdigest())
+            print("  防封基线 %-58s %8d B（独立密钥，无票也解）" % (spec["plain"], ab["len"]))
         os.makedirs(os.path.dirname(out), exist_ok=True)
-        io.open(out, "w", encoding="utf-8", newline="\n").write(emit_bins(g, encs, sha, total))
+        io.open(out, "w", encoding="utf-8", newline="\n").write(emit_bins(g, encs, sha, total, ab))
         detail = "%d 段明文共 %d B  →  密文共 %d B" % (len(encs), len(payload), total)
         for e in encs:
             print("  %-4s %-58s %8d B" % (e["name"], e["plain"], e["len"]))

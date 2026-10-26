@@ -99,6 +99,16 @@ for row in "${VARIANTS[@]}"; do
   echo "[vc1637-so]   $lib data check ok"
 done
 
+# 防封基线（无票也生效的那份）：同样只以密文进包
+AB_BIN="targetfuntional_dll_vc1637_antiban.enc.bin"
+AB_LIB="Games/WxsjVc1637AntibanDll.a"
+[[ -f "$JNI/$AB_BIN" ]] || { echo "ERROR: 缺防封基线密文 $JNI/$AB_BIN"; exit 1; }
+( cd "$JNI" && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 "$AB_BIN" "$AB_LIB" )
+if ! "$NM" "$JNI/$AB_LIB" 2>/dev/null | grep -q "_binary_targetfuntional_dll_vc1637_antiban_enc_bin_start"; then
+  echo "ERROR: 防封基线静态库符号名不对"; exit 1
+fi
+echo "[vc1637-so]   $AB_LIB data check ok（防封基线）"
+
 echo "[vc1637-so 3/5] ndk-build"
 rm -rf "$OBJ" "$LIBS"
 mkdir -p "$OBJ" "$LIBS"
@@ -132,8 +142,9 @@ REQ_STRS=(
   'Toggle_商店广告无限'
   'Toggle_物品使用反增'
   'InputValue_1000:物品反增倍率'
-  'Toggle_防封'
-  'Toggle_转生时间无限制'
+  'Toggle_转生时间无限制'          # 防封已撤出菜单（2026-10-26），改由 so 侧基线无条件生效
+  'antiban baseline unsealed'
+  'starry-antiban-v1|'
   'ads_reward_x'
   'item_double_x'
   'exp_multi'
@@ -150,6 +161,7 @@ BAN_STRS=(
   'Slider_经验倍率'
   'Toggle_物品翻倍'
   'Toggle_广告奖励翻倍'
+  'Toggle_防封'      # 旧菜单项不许再出现（防封不在菜单里）
 )
 for s in "${BAN_STRS[@]}"; do
   if LC_ALL=C grep -aq -- "$s" "$OUT"; then echo "ERROR: so still carries old [$s]"; exit 1; fi

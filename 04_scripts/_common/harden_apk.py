@@ -99,6 +99,13 @@ GAMES = {
              "enc": "%s/app/src/main/jni/targetfuntional_dll_vc1637_hf3.enc.bin" % JNI_ROOT},
         ],
         "sym_prefix": "kWxsjvc",
+        # 防封基线（无票路径）：官方 + 上报/执法屏蔽，**不含任何作弊功能代码**；
+        # 由 so 用「payload sha 派生的独立密钥」解封 ⇒ 与票无关，打开游戏即防封。
+        "antiban": {
+            "plain": "07_patched/无限升级/targetfuntional_vc1637_antiban.dll",
+            "enc": "%s/app/src/main/jni/targetfuntional_dll_vc1637_antiban.enc.bin" % JNI_ROOT,
+            "sym": "Antiban",
+        },
         "artifacts": {
             "classes4.dex": "%s/templates/wxsj_menu_vc1637/classes4.dex" % JNI_ROOT,
             "lib/arm64-v8a/libstarry_magic.so": "%s/app/src/libs_wxsj_vc1637/arm64-v8a/libstarry_magic.so" % JNI_ROOT,

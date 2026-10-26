@@ -1,14 +1,14 @@
 game        : wxsj (无限升级)
-built_at    : 2026-10-26 21:25:58
+built_at    : 2026-10-26 23:33:09
 gradle_task : assembleRelease
 apk         : /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/build/outputs/apk/release/app-release.apk
 source      : /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java
-source_commit: ff08a68e14778b0f7be59b07b4b6389ccdabfff8
-source_sha256: 1672b274c1bd86a41ae47f11e029ff023c93179752f14f5135aa56dcd1c18676
+source_commit: bb09dbd79180b2bb7f0167d9751d8b6a6d3575d0
+source_sha256: 24a2f113103add59874530ab90a4b7bb8401deb1437f2dd79a7760feb3491fc1
 derived     : 由 refresh 直接从 gradle 产物 com/starry 组装（StarryApp.super→易盾壳类）
 dex         : classes4.dex
 derived_from: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/templates/wxsj_menu_current
-derived_at  : 2026-10-26 21:25:59
+derived_at  : 2026-10-26 23:33:11
 derived_note: StarryApp.super→android.app.Application（vc1637 无易盾壳类）
-dex_sha256  : fa6b879ff7df90e28d35c78cadf5940473c8e957657a452d240c46f44db1798c
-stamp       : starry-menu:ff08a68e1477
+dex_sha256  : 2d732703d2ced1c9a4dec61789358059924982c4024f8300402ee75a64c88ddd
+stamp       : starry-menu:bb09dbd79180

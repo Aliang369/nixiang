@@ -68,18 +68,28 @@ struct DllVariant {
     const uint8_t* ct;      // 密文起始（objcopy 内嵌的 .enc.bin 段）
     uint32_t ctLen;         // 密文长度（= 明文长度，生成器写死在密文头里）
     const uint8_t* mac;     // Encrypt-then-MAC 的 32B MAC
+    // **防封基线**（无票路径用）：官方 + 上报/执法屏蔽，**不含任何作弊功能代码**。
+    // 密钥由包内 payload sha 派生（非秘密）⇒ 与票无关，so 加载即生效。
+    const uint8_t* abCt;
+    uint32_t abLen;
+    const uint8_t* abMac;
 };
 extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_enc_bin_start[];
 extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_enc_bin_start[];
 extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_enc_bin_start[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_antiban_enc_bin_start[];
 
 /* 票派生密钥（实现在 MainModern.cpp：SgAuth 的 static 状态每 TU 一份，必须跨 TU 取） */
 extern "C" int sgp_payload_key(uint8_t out[32]);
+/* 原生 toast（实现在 MainModern.cpp）——防封基线路径要给用户一句可读提示 */
+extern "C" void StarryShowToast(const char* text);
 
+// 防封基线只备现网这一版（2028544 / fnv 0x1bf6c08f1ba38809）；旧热更变体没有基线 ⇒ 无票时仍 PASSTHROUGH。
 static const DllVariant kDllVariants[] = {
-    {2030080, 0x91f9acbd064fa875ULL, "hf2", _binary_targetfuntional_dll_vc1637_hf2_enc_bin_start, kWxsjvcHf2PayloadLen, kWxsjvcHf2PayloadMac},
-    {2028544, 0x1bf6c08f1ba38809ULL, "hf4", _binary_targetfuntional_dll_vc1637_hf4_enc_bin_start, kWxsjvcHf4PayloadLen, kWxsjvcHf4PayloadMac},
-    {2028544, 0x43df8d0d87bf08b2ULL, "hf3", _binary_targetfuntional_dll_vc1637_hf3_enc_bin_start, kWxsjvcHf3PayloadLen, kWxsjvcHf3PayloadMac},
+    {2030080, 0x91f9acbd064fa875ULL, "hf2", _binary_targetfuntional_dll_vc1637_hf2_enc_bin_start, kWxsjvcHf2PayloadLen, kWxsjvcHf2PayloadMac, nullptr, 0, nullptr},
+    {2028544, 0x1bf6c08f1ba38809ULL, "hf4", _binary_targetfuntional_dll_vc1637_hf4_enc_bin_start, kWxsjvcHf4PayloadLen, kWxsjvcHf4PayloadMac,
+     _binary_targetfuntional_dll_vc1637_antiban_enc_bin_start, kWxsjvcAntibanLen, kWxsjvcAntibanMac},
+    {2028544, 0x43df8d0d87bf08b2ULL, "hf3", _binary_targetfuntional_dll_vc1637_hf3_enc_bin_start, kWxsjvcHf3PayloadLen, kWxsjvcHf3PayloadMac, nullptr, 0, nullptr},
 };
 static constexpr int kDllVariantCount = (int)(sizeof(kDllVariants) / sizeof(kDllVariants[0]));
 
@@ -104,6 +114,19 @@ static std::string g_plain;                 // 最近一次成功解封的补丁
 static const DllVariant* g_plainFor = nullptr;
 static std::atomic<int> g_decoyHits{0};
 
+/* 防封基线密钥：sha256("starry-antiban-v1|" || payload_sha_hex)。
+   ★ 这份密文**不是秘密**（攻击者能自己推出密钥）——它的作用是让基线 DLL 不以明文出现在包里
+     （C8「无明文载荷泄漏」照旧 0 命中）；安全面靠它**不含任何作弊功能代码**，
+     作弊功能仍然只在票控载荷里。 */
+static void AntibanKey(uint8_t out[32]) {
+    char buf[sizeof("starry-antiban-v1|") - 1 + 64];
+    const size_t n = sizeof("starry-antiban-v1|") - 1;
+    memcpy(buf, "starry-antiban-v1|", n);
+    memcpy(buf + n, kWxsjvcPayloadSha, 64);
+    sha256((const uint8_t*)buf, n + 64, out);
+    memset(buf, 0, sizeof(buf));
+}
+
 /* 解封进调用方自己的 buffer（不用返回内部指针：别的线程换变体时会把它换掉）。
    成功返回 true 且 out 已填；失败返回 false ⇒ 调用方落诱饵。 */
 static bool GetPatchedPlain(const DllVariant* v, std::string* out) {
@@ -114,7 +137,40 @@ static bool GetPatchedPlain(const DllVariant* v, std::string* out) {
     }
 
     uint8_t pk[32];
-    if (!sgp_payload_key(pk)) {
+    bool haveKey = sgp_payload_key(pk) != 0;
+    if (!haveKey) {
+        // 等票（最多 3s）：Java 侧 bootstrap 把 v3 票交到 native 往往比程序集装载晚几百 ms~几秒。
+        // 不等就落基线，会出现「票其实马上就绪、整局却只有防封没功能」的假故障
+        // （2026-10-27 用户实测：登录后首次启动 ⇒ 功能全失效，根因即此）。
+        for (int i = 0; i < 60 && !haveKey; i++) {
+            usleep(50 * 1000);
+            haveKey = sgp_payload_key(pk) != 0;
+            if (haveKey) LOGI(WXSJVC_LOG " payload key arrived after %d ms wait (%s)", (i + 1) * 50, v->name);
+        }
+    }
+    if (!haveKey) {
+        // 无票：**先走防封基线**（2026-10-26 用户定「防封随菜单 so 加载、不要卡密」）。
+        // 基线 = 官方 DLL + 上报/执法屏蔽（无任何功能代码）⇒ 防封照常生效、功能仍锁在票控载荷里。
+        if (v->abCt && v->abLen) {
+            uint8_t ak[32];
+            AntibanKey(ak);
+            std::string ab;
+            const bool abOk = sgpayload::unseal(v->abCt, (size_t)v->abLen, v->abMac, ak, &ab);
+            memset(ak, 0, sizeof(ak));
+            if (abOk && !ab.empty()) {
+                LOGI(WXSJVC_LOG " antiban baseline unsealed %zu B (%s): 防封 on / 功能 off (no v3 ticket)",
+                     ab.size(), v->name);
+                static std::atomic<int> s_abNotice{0};
+                if (s_abNotice.fetch_add(1) == 0) {
+                    StarryShowToast("[无限升级] 防封已生效；功能需登录卡密后重启游戏一次");
+                }
+                g_plain = ab;
+                g_plainFor = v;
+                out->swap(ab);
+                return true;
+            }
+            LOGW(WXSJVC_LOG " antiban baseline unseal failed (%s) -> decoy", v->name);
+        }
         const int n = g_decoyHits.fetch_add(1) + 1;
         LOGW(WXSJVC_LOG " payload key absent -> decoy (%d)", n);
         return false;
@@ -297,12 +353,15 @@ static bool TryHookOnce() {
         memset(pkProbe, 0, sizeof(pkProbe));
         LOGI(WXSJVC_LOG " payload key ready (v3 ticket) -> real patch on next assembly load");
     } else {
-        LOGW(WXSJVC_LOG " payload key absent at arm time -> decoy until v3 ticket arrives");
+        LOGW(WXSJVC_LOG " payload key absent at arm time -> uses antiban baseline (防封 on, 功能等 v3 ticket)%s",
+             kWxsjvcAntibanLen ? "" : " / no baseline for this variant");
     }
 
-    // 防封（block_report）默认关：每次冷启动显式落 0，只有用户在菜单里点开「防封」才生效。
-    // 旧版本这里是「缺键就补 block_report=1」（无条件常开），已按用户要求改为开关控制。
-    WriteConfigKey("block_report", "0");
+    // 防封常开（2026-10-26 用户定：撤出菜单、随 so 加载即生效、不需要卡密）：
+    // ① 有票 ⇒ 全量补丁 DLL 里的上报/执法屏蔽按 block_report 门控生效，这里落 1 保证开着；
+    // ② 无票 ⇒ 走 GetPatchedPlain 里的「防封基线」（不含任何功能代码，同样按此键生效）。
+    // 菜单已无「防封」开关，玩家无法关闭（ini 手改下轮冷启动也会被这行覆盖回 1）。
+    WriteConfigKey("block_report", "1");
     return true;
 }
 
@@ -428,9 +487,6 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJVC_FEAT_ITEMREVERSE: WriteConfigKey("item_reverse", on); break;
     // 转生时间无限制（默认关）：开=取消转生 1 小时客户端冷却（按钮常亮、文案常「轮回」）。
     case WXSJVC_FEAT_ZHUANSHENG: WriteConfigKey("zhuansheng_free", on); break;
-    // 防封（默认关）：开=拦 上报/云存档/COS 直传/腾讯 CLS/排行同步/作弊监控/封号执法；
-    // 关=完全回落到官方行为（含官方封号处置）。版本拦截与救档链恒常开，不随此键。
-    case WXSJVC_FEAT_ANTIBAN:    WriteConfigKey("block_report", on); break;
     default: break;
     }
 }

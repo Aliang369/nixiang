@@ -2,7 +2,7 @@
   "template_id": "wxsjdz1",
   "name": "无限升级11",
   "package": "com.xingzuodaoshi.infinityUpgrade",
-  "source": "Games/WxsjVc1637Entry.cpp GameMod_Get @ 11.266018/vc1637；game_id 独立为 wxsjdz1（2026-10-26 用户为「11 线加固包」单独开号，12.x 继续用 wxsj，两者互不影响）",
+  "source": "Games/WxsjVc1637Entry.cpp GameMod_Get @ 11.266018/vc1637；game_id 独立为 wxsjdz1（2026-10-26 用户为「11 线加固包」单独开号，12.x 继续用 wxsj，两者互不影响）；2026-10-26 防封撤出菜单（改随 so 无条件生效的基线），转生时间无限制 17→16",
   "features": [
     {
       "feat_num": 1,
@@ -62,10 +62,6 @@
     },
     {
       "feat_num": 16,
-      "name": "防封"
-    },
-    {
-      "feat_num": 17,
       "name": "转生时间无限制"
     }
   ]

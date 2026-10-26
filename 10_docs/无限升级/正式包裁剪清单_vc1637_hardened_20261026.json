@@ -1,30 +1,15 @@
 {
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级",
   "keep": "无限升级_11.266018_vc1637_hardened-releaseSigned.apk",
-  "keep_size": 119865049,
-  "keep_md5": "cb64bea8b92e7a662fe3601cdd2e1fd1",
+  "keep_size": 121888473,
+  "keep_md5": "e64407a0959fd79ee7ede5a24704054f",
   "mode": "--apply",
   "removed": [
     {
-      "name": "无限升级_11.266018_vc1637_starry-releaseSigned.apk.idsig",
-      "size": 923163,
-      "md5": "188e1983638bba90c9015c9cbaeb3d21"
-    },
-    {
-      "name": "无限升级_12.10701_surgical-final-releaseSigned.apk",
-      "size": 122062727,
-      "md5": "d868ba9c68cdfe94ac632147d55e7b83"
-    },
-    {
       "name": "无限升级_11.266018_vc1637_hardened-releaseSigned.apk.idsig",
-      "size": 951835,
-      "md5": "069a2dfc5be1e5bd84eb14c58d550bcd"
-    },
-    {
-      "name": "无限升级_11.266018_vc1637_starry-releaseSigned.apk",
-      "size": 115961561,
-      "md5": "2002fdac6e7c290e5d33ec8e2f02653f"
+      "size": 968219,
+      "md5": "1c9e6a60a514addbd3f643c4a3f6cbd6"
     }
   ],
-  "removed_count": 4
+  "removed_count": 1
 }

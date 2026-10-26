@@ -32,6 +32,9 @@ using System.Linq;
 // SRC = 用当前官方 dll 重打出的 v1（31 patches）；DST = 最终补丁 dll（必须 ≤ kOrigDllLen=2030080）
 // 2026-10-26：官方又换代（同长度 2028544 / 新 fnv 0x1bf6c08f1ba38809）⇒ 允许环境变量指定输入输出，
 // 默认值保持原样（不改既有复现口径）。用法：WXSJ_SRC=<新官方 v1> WXSJ_DST=<产物> dotnet run
+// 2026-10-26「防封基线」模式（WXSJ_ANTIBAN_ONLY=1）：只打 ①②③⑦（上报/执法/COS 杀/静默防封），
+// 跳过 ⑤ AdsFree、⑥ CheckOnLine 两个功能项 ⇒ 产物可无条件随 so 分发。
+bool antibanOnly = System.Environment.GetEnvironmentVariable("WXSJ_ANTIBAN_ONLY") == "1";
 var SRC = System.Environment.GetEnvironmentVariable("WXSJ_SRC")
           ?? "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260927_hotfix3.dll";
 var DST = System.Environment.GetEnvironmentVariable("WXSJ_DST")
@@ -377,8 +380,12 @@ ThrowOnEntry(FindM("GameDatas.MainSaveCosUploadTool", "UploadMainSaveAsync", 1),
 ThrowOnEntry(FindM("GameDatas.MainSaveCosUploadTool", "UploadBanSaveAsync", 1), "UploadBanSaveAsync(封号存档直传)");
 
 // ⑤⑥
-AdsFreeOffline();
-CheckOnLineLocal();
+if (!antibanOnly) {
+    AdsFreeOffline();
+    CheckOnLineLocal();
+} else {
+    Console.WriteLine("[mode] ANTIBAN-ONLY：跳过 ⑤ AdsFree / ⑥ CheckOnLine");
+}
 
 // ⑦ 静默防封：全部出站通道（SendRT / Send / SendBA 的 string func 重载族）插白名单门
 int gateN = 0;

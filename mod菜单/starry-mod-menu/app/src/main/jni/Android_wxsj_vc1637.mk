@@ -24,6 +24,11 @@ LOCAL_SRC_FILES := Games/WxsjVc1637Hf4Dll.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := wxsj_vc1637_dll_antiban
+LOCAL_SRC_FILES := Games/WxsjVc1637AntibanDll.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_vc1637_dll_hf3
 LOCAL_SRC_FILES := Games/WxsjVc1637Hf3Dll.a
 include $(PREBUILT_STATIC_LIBRARY)
@@ -68,6 +73,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby wxsj_vc1637_dll_hf2 wxsj_vc1637_dll_hf4 wxsj_vc1637_dll_hf3
+LOCAL_STATIC_LIBRARIES := Dobby wxsj_vc1637_dll_hf2 wxsj_vc1637_dll_hf4 wxsj_vc1637_dll_hf3 wxsj_vc1637_dll_antiban
 
 include $(BUILD_SHARED_LIBRARY)
