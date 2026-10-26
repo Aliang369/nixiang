@@ -59,3 +59,12 @@ scripts/**/*.pyc
 # 构建产物再排除（根 .gitignore 的 .gradle/ 规则被上面的 !*.gradle 覆盖：
 # !*.gradle 的 * 可匹配空串，于是把名为 .gradle 的缓存目录本身也重新纳入）
 .gradle/
+
+# 载荷类可再生产物（2026-10-27 用户定「同类堆积一起清理」）：
+#   · *.enc.bin  = P2-2 载荷密文，gen_payload_enc.py 生成（确定性 XOR-HMAC，master 相同则逐字节复现）
+#   · Games/*.a  = 载荷预编译库，各 *_so_only.sh 第 3 步 objcopy 生成
+# 二者都不入库：出包时生成 → 门禁 C6 跑完 → 收尾删；跨机重建先跑一遍对应 so 脚本。
+# ⚠️ 必须写在本文件末尾：本文件前部的 `!app/src/**` 会把根 .gitignore 的排除反向覆盖
+#    （同上方 `app/src/**/obj*/` 那条的成因）
+app/src/main/jni/*.enc.bin
+app/src/main/jni/Games/*.a
