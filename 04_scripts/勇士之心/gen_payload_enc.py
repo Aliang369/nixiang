@@ -94,6 +94,50 @@ def emit(ct, mac, plain_sha):
     io.open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
 
 
+
+GAME_ID = "yszzx"          # 服务端 games.game_id
+GAME_NAME = "勇士之心"
+LAST_FILE = os.path.join(KEYDIR, GAME_ID + ".last")
+
+
+def remind_register(sha, write=True):
+    """载荷 sha 变了/新游戏时，打一段**必须处理**的提醒。"""
+    old = ""
+    if os.path.exists(LAST_FILE):
+        try:
+            old = io.open(LAST_FILE, "r", encoding="ascii").read().strip().lower()
+        except Exception:
+            old = ""
+
+    line = "=" * 68
+    if old == sha:
+        if write:
+            pass
+        return 0
+    kind = "新游戏（首次加密，服务端还没有这条登记）" if not old else "载荷变了（当前出包 sha 与服务端上次登记的不同）"
+    print("")
+    print(line)
+    print("⚠️  %s" % kind)
+    print("    游戏：%s（game_id=%s）" % (GAME_NAME, GAME_ID))
+    print("    新 sha：%s" % sha)
+    if old:
+        print("    旧 sha：%s" % old)
+    print("")
+    print("    👉 必须去后台点一次，否则这版包在真机上功能全失效（只剩诱饵）：")
+    print("       后台 → 游戏列表 → %s → 操作 ▾ → 「载荷 sha」→ 粘贴上面的 sha → 保存" % GAME_NAME)
+    print("       （或选密文文件让后台自动算；等价接口）")
+    print("       PUT /v1/admin/games/%s/payload?sha=%s" % (GAME_ID, sha))
+    print("")
+    print("    ⚠️  改 sha 会让该游戏**所有旧包**功能失效，记得同步发新包。")
+    print(line)
+    print("")
+    if write:
+        try:
+            io.open(LAST_FILE, "w", encoding="ascii", newline="\n").write(sha + "\n")
+        except Exception as e:  # noqa: BLE001
+            print("（写 %s 失败：%s）" % (LAST_FILE, e))
+    return 0
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
@@ -113,6 +157,7 @@ def main():
             print("FAIL 密文头与当前载荷不一致（sha %s 不在头里）—— 载荷改过但没重新加密" % sha[:16])
             return 1
         print("PASS 载荷密文与当前明文一致 sha=%s…" % sha[:16])
+        remind_register(sha, write=False)
         return 0
 
     ct, mac = enc(key, payload)
@@ -124,6 +169,7 @@ def main():
     print("载荷 sha256 = %s" % sha)
     print("K_build 已写: %s（服务器签发 v3 票要用它算 kx）" % kf)
     print("密文头已写: %s" % OUT)
+    remind_register(sha, write=True)
     return 0
 
 

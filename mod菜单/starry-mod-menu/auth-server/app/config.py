@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     payload_master_path: str = ""
     # P2-2：当前在售 build 的明文载荷 sha256（改了载荷必须同步改这里，否则 v3 不签发）
     payload_sha: str = ""
+    # 构建机专用：出包门禁查询"该游戏载荷 sha 是否已登记"用；留空=该接口关闭
+    build_api_key: str = ""
     # 管理端 IP 白名单，逗号分隔；空=不限制（仅建议生产配置你家宽带 IP）
     admin_allow_ips: str = ""
     # 管理登录失败限流：窗口秒数内最多失败次数

@@ -93,6 +93,14 @@ cp -f "$MENU_DIR/YsxzMod.cpp"   "$JNIW/Games/YsxzMod.cpp"
 # 2026-10-27 踩过：mod菜单 与 ysxz_1.0.3_menu 下各有一份同名 YsxzPatchJs.h（内容不同，
 # 分属 1.0.4/1.0.6 线与 1.0.3 复刻线），加密时取错了源头 ⇒ 注入旧载荷、部分功能失效。
 # ⇒ 这里在编译前**强制**按本脚本刚拷贝的那份重新生成密文，物理上不可能再错源头。
+# C9：把"该游戏 + 构建机 key"交给出包门禁，让 harden 直接问服务端
+# 「这个游戏的载荷 sha 登记了吗」——不一致就 FAIL 并打出后台操作步骤。
+export SG_GAME_ID=yszzx
+export SG_API_BASE="${SG_API_BASE:-https://47.100.216.101:8443}"
+if [ -z "${SG_BUILD_KEY:-}" ] && [ -f "$HOME/.starry-keys/build_key.txt" ]; then
+  export SG_BUILD_KEY="$(cat "$HOME/.starry-keys/build_key.txt")"
+fi
+
 python3 "$NIXIANG/04_scripts/勇士之心/gen_payload_enc.py" >/tmp/payload_gen.log 2>&1 || {
   echo "ERROR: 载荷加密失败（gen_payload_enc.py）" >&2; tail -5 /tmp/payload_gen.log >&2; exit 1; }
 echo "[103] payload = $(wc -c < "$JNIW/Games/YsxzPatchJs.h") B（加密源 == 编译源，已强制对齐）"

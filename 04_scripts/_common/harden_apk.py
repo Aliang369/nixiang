@@ -267,6 +267,98 @@ def c8(rep, apk):
         rep.add("C8 无明文载荷泄漏", False, "读取失败: %s" % e)
 
 
+
+def _payload_sha_local():
+    """从生成的密文头里读载荷明文 sha（各游戏同一个字段名后缀 PayloadSha）。"""
+    import re as _re
+    h = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "jni",
+                     "Includes", "sg_payload_enc.h")
+    if not os.path.exists(h):
+        return ""
+    m = _re.search(r'PayloadSha\s*=\s*"([0-9a-f]{64})"', io.open(h, "r", encoding="utf-8").read())
+    return m.group(1) if m else ""
+
+
+def _remind_block(game, sha, registered=""):
+    print("")
+    print("=" * 68)
+    if registered:
+        print("⚠️  服务端登记的载荷 sha 与本次出包不一致")
+        print("    服务端：%s" % (registered[:64] or "(空)"))
+    else:
+        print("⚠️  服务端尚未登记这个游戏的载荷 sha")
+    print("    游戏：%s   本次 sha：%s" % (game, sha))
+    print("")
+    print("    👉 去后台点一次（否则这版包真机功能全失效，只剩诱饵）：")
+    print("       后台 → 游戏列表 → 该游戏 → 操作 ▾ → 「载荷 sha」→ 粘贴上面的 sha → 保存")
+    print("       PUT /v1/admin/games/%s/payload?sha=%s" % (game, sha))
+    print("    ⚠️  改 sha 会让该游戏所有旧包功能失效，记得同步发新包。")
+    print("=" * 68)
+    print("")
+
+
+def c9(rep):
+    """C9：服务端是否已登记当前载荷 sha（防"载荷变了没去后台改"）。"""
+    import ssl
+    import urllib.request
+    import urllib.error
+
+    sha = _payload_sha_local()
+    if not sha:
+        rep.add("C9 载荷已登记", False, "读不到 sg_payload_enc.h 里的载荷 sha")
+        return
+
+    game = (os.environ.get("SG_GAME_ID") or "yszzx").strip()
+    base = (os.environ.get("SG_API_BASE") or "").strip()
+    key = (os.environ.get("SG_BUILD_KEY") or "").strip()
+
+    if not (base and key):
+        rep.add("C9 载荷已登记", True,
+                "⚠️ 未配 SG_API_BASE/SG_BUILD_KEY ⇒ 未联网校验（记得后台登记 %s…）" % sha[:16])
+        _remind_block(game, sha)
+        return
+
+    url = "%s/v1/build/payload-status?game_id=%s&sha=%s" % (base.rstrip("/"), game, sha)
+    ctx = None
+    cert = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "assets",
+                        "certs", "starlight.crt")
+    try:
+        ctx = ssl.create_default_context(cafile=cert) if os.path.exists(cert) else ssl._create_unverified_context()
+        req = urllib.request.Request(url, headers={"X-Build-Key": key})
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as r:
+            import json as _json
+            d = _json.loads(r.read().decode() or "{}")
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode("utf-8", "replace")[:120]
+        except Exception:
+            pass
+        if e.code == 403:
+            rep.add("C9 载荷已登记", False, "SG_BUILD_KEY 不正确（服务端 403）")
+        elif e.code == 404:
+            rep.add("C9 载荷已登记", False,
+                    "后台没有这个游戏或接口未启用（404：%s）⇒ 先在后台建游戏再登记载荷" % body)
+            _remind_block(game, sha)
+        else:
+            rep.add("C9 载荷已登记", True, "⚠️ 联网校验跳过（HTTP %s）⇒ 请自行确认后台已登记 %s…"
+                    % (e.code, sha[:16]))
+            _remind_block(game, sha)
+        return
+    except Exception as e:  # noqa: BLE001
+        rep.add("C9 载荷已登记", True, "⚠️ 联网校验跳过（%s）⇒ 请自行确认后台已登记 %s…"
+                % (type(e).__name__, sha[:16]))
+        _remind_block(game, sha)
+        return
+
+    if d.get("match"):
+        rep.add("C9 载荷已登记", True, "一致 | v3_ready=%s | k_fp=%s"
+                % (d.get("v3_ready"), d.get("k_build_fp")))
+        return
+    rep.add("C9 载荷已登记", False, "不一致 | 服务端=%s… 本次=%s…"
+            % ((d.get("registered_sha") or "")[:16], sha[:16]))
+    _remind_block(game, sha, d.get("registered_sha") or "")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["check", "redteam", "publish"])
@@ -292,6 +384,7 @@ def main():
     c6(rep)
     c7(rep, a.apk)
     c8(rep, a.apk)
+    c9(rep)
     return rep.summary()
 
 

@@ -29,6 +29,13 @@ services:
       DATABASE_URL: postgresql+psycopg2://starlight:starlight@db:5432/starlight
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
       GRANT_HMAC_SECRET: ${GRANT_HMAC_SECRET:-sg-grant-v1-7f3a9c2e}
+      # P1 加固：v2 非对称票私钥（只读挂载；留空=只发 v1）
+      GRANT_RSA_KEY_PATH: ${GRANT_RSA_KEY_PATH:-/app/keys/rsa2048.txt}
+      # P2-2：功能载荷加密（v3 票带 kx 包裹密钥）
+      PAYLOAD_MASTER_PATH: ${PAYLOAD_MASTER_PATH:-/app/keys/payload_master.txt}
+      PAYLOAD_SHA: ${PAYLOAD_SHA:-}
+      # 构建机查询载荷登记状态用（留空=接口关闭）
+      BUILD_API_KEY: ${BUILD_API_KEY:-}
       CARD_LOGIN_MAX_FAILS: ${CARD_LOGIN_MAX_FAILS:-12}
       CARD_LOGIN_WINDOW_SECONDS: ${CARD_LOGIN_WINDOW_SECONDS:-600}
       OFFLINE_CACHE_SECONDS: ${OFFLINE_CACHE_SECONDS:-600}
@@ -43,8 +50,8 @@ services:
       - "8000"
     volumes:
       - ./data/ota:/data/ota
-      - ./keys:/app/keys:ro          # P1/P2-2 私钥与载荷主密钥（600，不入库）
-      - ./static:/app/static:ro      # 后台前端：改页面不用重建镜像（2026-10-27）
+      - ./keys:/app/keys:ro
+      - ./static:/app/static:ro   # 后台前端：改页面不用重建镜像（2026-10-27）
     restart: unless-stopped
 
   nginx:
