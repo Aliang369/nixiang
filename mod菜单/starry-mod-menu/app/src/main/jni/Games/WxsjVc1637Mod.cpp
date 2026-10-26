@@ -129,6 +129,30 @@ static void AntibanKey(uint8_t out[32]) {
 
 /* 解封进调用方自己的 buffer（不用返回内部指针：别的线程换变体时会把它换掉）。
    成功返回 true 且 out 已填；失败返回 false ⇒ 调用方落诱饵。 */
+/* 防封基线（官方 DLL + 上报/执法屏蔽，无任何功能代码）。
+ * 密钥只由载荷 sha 派生（sha256("starry-antiban-v1|"+sha)），**与票/卡密无关** ⇒ 无票、旧票、票解不开时都能生效。
+ * 2026-10-27 用户指正：防封不允许被授权链牵连；只要全量载荷解不开就必须先落到这里，再谈诱饵。 */
+static bool TryAntibanBaseline(const DllVariant* v, std::string* out) {
+    if (!v->abCt || !v->abLen) return false;
+    uint8_t ak[32];
+    AntibanKey(ak);
+    std::string ab;
+    const bool abOk = sgpayload::unseal(v->abCt, (size_t)v->abLen, v->abMac, ak, &ab);
+    memset(ak, 0, sizeof(ak));
+    if (!abOk || ab.empty()) {
+        LOGW(WXSJVC_LOG " antiban baseline unseal failed (%s)", v->name);
+        return false;
+    }
+    LOGI(WXSJVC_LOG " antiban baseline unsealed %zu B (%s): 防封 on / 功能 off", ab.size(), v->name);
+    static std::atomic<int> s_abNotice{0};
+    if (s_abNotice.fetch_add(1) == 0)
+        StarryShowToast("[无限升级] 防封已生效；功能需登录卡密后重启游戏一次");
+    g_plain = ab;
+    g_plainFor = v;
+    out->swap(ab);
+    return true;
+}
+
 static bool GetPatchedPlain(const DllVariant* v, std::string* out) {
     std::lock_guard<std::mutex> lk(g_plainMtx);
     if (g_plainFor == v && !g_plain.empty()) {
@@ -151,26 +175,7 @@ static bool GetPatchedPlain(const DllVariant* v, std::string* out) {
     if (!haveKey) {
         // 无票：**先走防封基线**（2026-10-26 用户定「防封随菜单 so 加载、不要卡密」）。
         // 基线 = 官方 DLL + 上报/执法屏蔽（无任何功能代码）⇒ 防封照常生效、功能仍锁在票控载荷里。
-        if (v->abCt && v->abLen) {
-            uint8_t ak[32];
-            AntibanKey(ak);
-            std::string ab;
-            const bool abOk = sgpayload::unseal(v->abCt, (size_t)v->abLen, v->abMac, ak, &ab);
-            memset(ak, 0, sizeof(ak));
-            if (abOk && !ab.empty()) {
-                LOGI(WXSJVC_LOG " antiban baseline unsealed %zu B (%s): 防封 on / 功能 off (no v3 ticket)",
-                     ab.size(), v->name);
-                static std::atomic<int> s_abNotice{0};
-                if (s_abNotice.fetch_add(1) == 0) {
-                    StarryShowToast("[无限升级] 防封已生效；功能需登录卡密后重启游戏一次");
-                }
-                g_plain = ab;
-                g_plainFor = v;
-                out->swap(ab);
-                return true;
-            }
-            LOGW(WXSJVC_LOG " antiban baseline unseal failed (%s) -> decoy", v->name);
-        }
+        if (TryAntibanBaseline(v, out)) return true;
         const int n = g_decoyHits.fetch_add(1) + 1;
         LOGW(WXSJVC_LOG " payload key absent -> decoy (%d)", n);
         return false;
@@ -179,6 +184,9 @@ static bool GetPatchedPlain(const DllVariant* v, std::string* out) {
     const bool ok = sgpayload::unseal(v->ct, (size_t)v->ctLen, v->mac, pk, &real);
     memset(pk, 0, sizeof(pk));
     if (!ok) {
+        // 票在但解不开（票是旧 payload sha 铸的 / 已吊销 / 损坏）⇒ 先落防封基线，防封不许被授权链牵连。
+        LOGW(WXSJVC_LOG " payload unseal failed with ticket (%s) -> try antiban baseline", v->name);
+        if (TryAntibanBaseline(v, out)) return true;
         const int n = g_decoyHits.fetch_add(1) + 1;
         LOGW(WXSJVC_LOG " payload unseal failed -> decoy (%d)", n);
         return false;

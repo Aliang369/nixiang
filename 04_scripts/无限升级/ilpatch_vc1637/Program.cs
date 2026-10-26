@@ -186,13 +186,42 @@ internal static class Program
             if (newSites == 0 && bodyFix == 0 && anti == 0 && !banChanged && !expChanged
                 && !shopChanged && !verChanged && !dblChanged && !zsChanged)
             {
-                // 幂等：产物已经带门，原样复制（不重写，避免字节漂移）。
-                asmI.Dispose();
-                File.Copy(src, dst, overwrite: true);
-                Console.WriteLine("[done] 全部补丁均已是目标形态，原样复制（幂等跳过）");
+                // 幂等：产物已经带门。但仍要做一次跳转放宽——旧产物可能带着越界短跳转的坏操作数
+                // （2026-10-27 御灵升级闪退根因）；无越界才原样复制，保持字节稳定。
+                int relaxedIdem = 0;
+                for (int pass = 0; pass < 5; pass++)
+                {
+                    using (var ms = new MemoryStream()) asmI.Write(ms);
+                    int nI = BranchRelax.WidenOutOfRange(asmI.MainModule);
+                    if (nI == 0) break;
+                    relaxedIdem += nI;
+                }
+                if (relaxedIdem > 0)
+                {
+                    asmI.Write(dst);
+                    asmI.Dispose();
+                    Console.WriteLine($"[relax] 幂等产物内短跳转越界已修：{relaxedIdem} 处（重写产物）");
+                }
+                else
+                {
+                    asmI.Dispose();
+                    File.Copy(src, dst, overwrite: true);
+                    Console.WriteLine("[done] 全部补丁均已是目标形态，原样复制（幂等跳过）");
+                }
             }
             else
             {
+                // 插入指令会改变后续偏移：短跳转（brfalse.s ±127）越界会被 Cecil 写成坏操作数 ⇒
+                // 运行时跳进指令中间执行乱码（SIGSEGV、只有 1 帧）。先干写取真实 Offset，再把越界的升级成长跳转。
+                int relaxedI = 0;
+                for (int pass = 0; pass < 5; pass++)
+                {
+                    using (var ms = new MemoryStream()) asmI.Write(ms);
+                    int nI = BranchRelax.WidenOutOfRange(asmI.MainModule);
+                    if (nI == 0) break;
+                    relaxedI += nI;
+                }
+                if (relaxedI > 0) Console.WriteLine($"[relax] 短跳转越界升级为长跳转：{relaxedI} 处");
                 asmI.Write(dst);
                 asmI.Dispose();
             }
@@ -243,6 +272,18 @@ internal static class Program
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
+        // 插入指令会改变后续指令偏移：短跳转（brfalse.s 等 ±127）一旦越界，Cecil 会写出错误操作数
+        // ⇒ 运行时跳到指令中间执行乱码（SIGSEGV / 只有 1 帧 / 寄存器变垃圾）。
+        // 2026-10-27 实测：AngleDetialWindow::Upgrade（御灵升级）官方 brfalse.s 位移 +126，插入 23 B 后 +149 越界 ⇒ 点升级必闪退。
+        int relaxed = 0;
+        for (int pass = 0; pass < 5; pass++)
+        {
+            using (var ms = new MemoryStream()) asm.Write(ms);   // 干写一次，让 Cecil 算出真实 Offset
+            int n = BranchRelax.WidenOutOfRange(asm.MainModule);
+            if (n == 0) break;
+            relaxed += n;
+        }
+        if (relaxed > 0) Console.WriteLine($"[relax] 短跳转越界升级为长跳转：{relaxed} 处");
         asm.Write(dst);
         asm.Dispose();
 
@@ -1668,4 +1709,68 @@ internal static class Program
         if (matches.Count == 0) throw new Exception($"verify: 类型不存在 {name}");
         throw new Exception($"verify: 类型不唯一 {name}");
     }
+
+/// <summary>
+/// 跳转放宽：把插入指令后可能越界的「短跳转」升级为长跳转形式，迭代到偏移稳定。
+/// 只放宽真正越界的那些，避免整体膨胀（载荷槽余量仅 ~2.5 KB）。
+/// </summary>
+static class BranchRelax
+{
+    static readonly Dictionary<Code, OpCode> Long = new Dictionary<Code, OpCode>
+    {
+        { Code.Br_S, OpCodes.Br }, { Code.Brfalse_S, OpCodes.Brfalse }, { Code.Brtrue_S, OpCodes.Brtrue },
+        { Code.Beq_S, OpCodes.Beq }, { Code.Bge_S, OpCodes.Bge }, { Code.Bgt_S, OpCodes.Bgt },
+        { Code.Ble_S, OpCodes.Ble }, { Code.Blt_S, OpCodes.Blt }, { Code.Bne_Un_S, OpCodes.Bne_Un },
+        { Code.Bge_Un_S, OpCodes.Bge_Un }, { Code.Bgt_Un_S, OpCodes.Bgt_Un },
+        { Code.Ble_Un_S, OpCodes.Ble_Un }, { Code.Blt_Un_S, OpCodes.Blt_Un },
+        { Code.Leave_S, OpCodes.Leave },
+    };
+
+    /// <summary>
+    /// 用 Cecil 干写后的真实 Offset 判定越界短跳转并升级为长跳转。返回改动处数（调用方循环到 0）。
+    /// 只动真正越界的：载荷槽余量只有 ~2.5 KB，不能整体放宽。
+    /// </summary>
+    public static int WidenOutOfRange(ModuleDefinition mod)
+    {
+        int total = 0;
+        foreach (var t in All(mod.Types))
+            foreach (var m in t.Methods)
+            {
+                if (!m.HasBody) continue;
+                var ins = m.Body.Instructions;
+                if (ins.Count < 2) continue;
+                var repl = new Dictionary<Instruction, Instruction>();
+                foreach (var i in ins)
+                {
+                    if (!Long.ContainsKey(i.OpCode.Code)) continue;
+                    if (i.Operand is not Instruction tgt) continue;
+                    int next = i.Offset + i.GetSize();
+                    int delta = tgt.Offset - next;
+                    if (delta >= -128 && delta <= 127) continue;
+                    repl[i] = Instruction.Create(Long[i.OpCode.Code], tgt);
+                }
+                if (repl.Count == 0) continue;
+                for (int k = 0; k < ins.Count; k++)
+                {
+                    var i = ins[k];
+                    if (i.Operand is Instruction o && repl.TryGetValue(o, out var no)) i.Operand = no;
+                    if (i.Operand is Instruction[] oa)
+                        for (int j = 0; j < oa.Length; j++) if (repl.TryGetValue(oa[j], out var no2)) oa[j] = no2;
+                }
+                for (int k = 0; k < ins.Count; k++)
+                    if (repl.TryGetValue(ins[k], out var ni)) ins[k] = ni;
+                total += repl.Count;
+            }
+        return total;
+    }
+
+    static IEnumerable<TypeDefinition> All(IEnumerable<TypeDefinition> types)
+    {
+        foreach (var t in types)
+        {
+            yield return t;
+            foreach (var n in All(t.NestedTypes)) yield return n;
+        }
+    }
+}
 }

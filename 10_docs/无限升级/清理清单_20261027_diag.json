@@ -1,0 +1,15 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_wxsj-crash-diag-clean_20261027_012702",
+  "timestamp": "20261027_012702",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "07_patched/无限升级/hf4_noreverse.dll",
+      "type": "file",
+      "size_kib": 1980,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/无限升级/hf4_noreverse.dll",
+      "quarantine": "/Users/aliang/.Trash/nixiang_wxsj-crash-diag-clean_20261027_012702/07_patched/无限升级/hf4_noreverse.dll"
+    }
+  ]
+}
