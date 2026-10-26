@@ -26,6 +26,7 @@
 #      --menu-json <菜单模板.json> --cpp <含getVal/getRet调用的源码>
 #      --runtime-menu-json <运行时控件清单.json>  # 可选；允许 Slider_/Toggle_ 等运行时名称，只用于控件类型检查
 #      --apk <目标APK> --needle '<门禁串>' [--needle '...'...]  # 查5；也可 --dex 当目标
+#      --menu-dex <成品APK> [--menu-dex-name classes4.dex]  # 查10 菜单 dex 新鲜度（2026-10-26）
 #      --apk <目标APK> --base-apk <官方底包>                     # 查9 so/metadata 配套关（IL2CPP 直装包建议必传）
 #      [--expect-so-sha256 <sha>] [--expect-metadata-sha256 <sha>]  # 查9 精确断言（可选，优先级高于底包比对）
 #      --needle-file <门禁串清单.txt>            # 查5；每行一条，'#' 开头的整行注释被跳过
@@ -69,7 +70,7 @@ fail=0; pass=0; warn=0; skip=0
 
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
-runtime_menu_json=""; apk_file=""; base_apk=""; expect_so=""; expect_md=""
+runtime_menu_json=""; apk_file=""; base_apk=""; expect_so=""; expect_md=""; menu_dex=""; menu_dex_name=""
 game=""; rounds_threshold=2; allow_rounds=""
 NEEDLES="$TMPDIR_PF/needles.txt"; : > "$NEEDLES"
 
@@ -84,6 +85,8 @@ while [ $# -gt 0 ]; do
     --runtime-menu-json) runtime_menu_json="$2"; shift 2 ;;
     --apk)         apk_file="$2"; shift 2 ;;
     --base-apk)    base_apk="$2"; shift 2 ;;
+    --menu-dex)      menu_dex="$2"; shift 2 ;;
+    --menu-dex-name) menu_dex_name="$2"; shift 2 ;;
     --expect-so-sha256)       expect_so="$2"; shift 2 ;;
     --expect-metadata-sha256) expect_md="$2"; shift 2 ;;
     --game)        game="$2"; shift 2 ;;
@@ -523,6 +526,37 @@ if [ -n "$apk_file" ] && [ "${SO_META_CHECK:-1}" = "1" ]; then
       fail=$((fail+1))
     fi
   fi
+fi
+
+# ---------- 查10 菜单 dex 新鲜度（2026-10-26）----------
+# 背景：出包脚本「模板优先」，菜单 dex 只要模板在就永不重编 ⇒ 改过的 Java 进不了包。
+# 无限升级 vc1637 与 镇邪人 7f94233e 同一根因（旧 dex 早于 2026-10-07 的偏好清理修复）。
+# 判据 = dex 内构建戳 starry-menu:<commit> 必须等于当前 Java 源码 HEAD（戳由刷新脚本注入）。
+if [ -n "$menu_dex" ]; then
+  GATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  GATE="$GATE_DIR/menu_tpl_gate.sh"
+  case "$menu_dex" in
+    *.apk)
+      if [ ! -s "$menu_dex" ]; then
+        echo "✗ FAIL  [菜单新鲜度] 目标 APK 不存在/为空: $menu_dex"; fail=$((fail + 1))
+      elif [ ! -f "$GATE" ]; then
+        echo "- SKIP  [菜单新鲜度] 缺 $GATE"; skip=$((skip + 1))
+      else
+        GATE_ARGS=(--apk "$menu_dex")
+        [ -n "$menu_dex_name" ] && GATE_ARGS+=(--dex-name "$menu_dex_name")
+        if bash "$GATE" "${GATE_ARGS[@]}" --quiet; then
+          echo "✓ PASS  [菜单新鲜度] dex 构建戳与当前 Java 源码 HEAD 一致"
+          pass=$((pass + 1))
+        else
+          echo "✗ FAIL  [菜单新鲜度] 菜单 dex 落后于源码（改了 Java 没重编 dex）"
+          echo "        ⇒ bash mod菜单/starry-mod-menu/scripts/wxsj_refresh_menu_tpl.sh（+ vc1637 派生脚本）"
+          fail=$((fail + 1))
+        fi
+      fi ;;
+    *)
+      echo "- SKIP  [菜单新鲜度] --menu-dex 只接受成品 APK（模板目录请直接用 menu_tpl_gate.sh --tpl）"
+      skip=$((skip + 1)) ;;
+  esac
 fi
 
 # ---------- 汇总 ----------

@@ -88,6 +88,25 @@ bash 04_scripts/_common/pre_install_gate.sh \
   （`VERIFY_MODE=sig`：`dumpsys package` 里本包独有组件 + 打印 `versionName=`/`signatures=`）；
   序列号支持 `SERIAL` 环境变量覆盖，便于临时装到第二台测试机而不改 `.device_serial`。
 
+### 菜单 dex 新鲜度门禁（2026-10-26 起，出包阶段必过）
+
+**背景**：出包脚本「模板优先」——模板在就跳过 apktool/smali 现编。模板一旦停在旧日期，改过的 Java 永远
+进不了包（无限升级 vc1637「重启后功能全关」、镇邪人 `7f94233e`／`a3748024`，两天三次同一根因）。
+
+```bash
+# 1) 改过 app/src/main/java 后必刷（release 现编 + 注入构建戳 + 写 build_info.txt）
+bash mod菜单/starry-mod-menu/scripts/wxsj_refresh_menu_tpl.sh          # → templates/wxsj_menu_current/
+# 2) 派生字体线模板（如 vc1637）
+bash mod菜单/starry-mod-menu/scripts/wxsj_vc1637_menu_tpl.sh
+# 3) 出包前/装机前任一时刻校验（模板或成品包都行）
+bash 04_scripts/_common/menu_tpl_gate.sh --tpl <模板目录> --dex-name classes4.dex
+bash 04_scripts/_common/pre_install_gate.sh --apk <成品APK> --menu-dex <成品APK> --menu-dex-name classes4.dex
+```
+
+判据：`build_info.txt` 的 `source_commit` 与 dex 内 `starry-menu:<commit12>` 都必须等于
+`git log -1 -- app/src/main/java` 的提交。`menu_tpl_gate.sh` 退出码 1 = 过期（禁止出包）；
+`--allow-stale` 仅用于复现历史产物，用了必须在汇报里写明。
+
 ### 装机验收口径：干净安装（2026-10-19 起，install 阶段必做）
 
 > 依据：我的勇者 7.6.3 —— 2026-10-18 只在「已热更过的旧机」做同签名**覆盖安装**验证通过就交付，

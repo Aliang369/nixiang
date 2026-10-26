@@ -1,8 +1,0 @@
-game      : 绝区零 (zzz)
-dex       : classes6.dex
-built_at  : 2026-10-07 01:42:51
-javac     : C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/javac.exe
-d8        : C:\Users\Administrator\AppData\Local/Android/Sdk/build-tools/35.0.0/d8.bat
-androidjar: /c/Users/Administrator/AppData/Local/Android/Sdk/platforms/android-36/android.jar
-source    : /e/nixiang/mod菜单/starry-mod-menu/app/src/main/java
-sha256    : 6ce243b73821ea77894627350c7d43a4b68442c6b8115bc5d5c175ba7b0a23c6

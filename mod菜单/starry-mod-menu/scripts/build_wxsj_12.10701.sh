@@ -151,9 +151,14 @@ echo "  official dex count = $OFFICIAL_DEX_COUNT ($(printf '%s ' $OFFICIAL_DEX_N
 #   （09-23 那次「重建就变样」的根因是**当时源码本身缺**这些绘制类，现源码已补齐。）
 # 模板目录内 classes2.dex 已含 StarryInitProvider 且 StarryApp.super 已改易盾壳类，故走模板时
 # 跳过 apktool/smali 组装与相关断言；libc++_shared.so / starlight.crt 也取自同一模板。
-MENU_TPL_DIR="${WXSJ_MENU_TPL:-$NIXIANG/mod菜单/starry-mod-menu/templates/wxsj_menu_20260926}"
+# 2026-10-26：默认改指向去日期化的 wxsj_menu_current（旧默认 wxsj_menu_20260926 已停在 09-26，
+# 用它出包 = 出旧菜单：无限升级 vc1637 / 镇邪人 7f94233e 同一根因）。
+MENU_TPL_DIR="${WXSJ_MENU_TPL:-$NIXIANG/mod菜单/starry-mod-menu/templates/wxsj_menu_current}"
 MENU_FROM_TPL=0
 if [[ -s "$MENU_TPL_DIR/$STARRY_DEX" ]]; then
+  # 菜单模板新鲜度门禁：模板优先时也必须证明 dex 与当前 Java 源码同步（否则 FAIL，不静默降级）
+  bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "$MENU_TPL_DIR" --dex-name "$STARRY_DEX" --require-stamp \
+    || { echo "ERROR: 菜单模板过期 ⇒ bash mod菜单/starry-mod-menu/scripts/wxsj_refresh_menu_tpl.sh"; exit 1; }
   MENU_FROM_TPL=1
   cp -f "$MENU_TPL_DIR/$STARRY_DEX" "$WORK/stage/$STARRY_DEX"
   echo "  menu dex: 仓库模板 $MENU_TPL_DIR/$STARRY_DEX ($(stat -f %z "$WORK/stage/$STARRY_DEX") B，跳过 apktool/smali 组装)"

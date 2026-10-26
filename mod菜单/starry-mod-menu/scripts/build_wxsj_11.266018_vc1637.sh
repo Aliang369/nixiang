@@ -50,6 +50,15 @@ fi
 LC_ALL=C grep -aq 'com/starry/magic/StarryInitProvider' "$MENU_TPL_DIR/$STARRY_DEX" \
   || { echo "ERROR: $STARRY_DEX 缺 StarryInitProvider"; exit 1; }
 
+# ---- 菜单模板新鲜度（2026-10-26 新增，防「用旧菜单 dex 出包」）----
+# 模板优先 = 只要模板在就永远不重编；模板一旦停在旧日期，改过的 Java 永远进不了包
+# （用户报障「重启后发现还是默认全关」；同源事故见 镇邪人 7f94233e）。
+# 判据：模板 build_info.txt 的 source_commit 与 dex 内构建戳都必须等于当前源码 HEAD。
+bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "$MENU_TPL_DIR" --dex-name "$STARRY_DEX" --require-stamp \
+  || { echo "ERROR: 菜单模板过期 ⇒ 先重编两次:"; \
+       echo "  bash mod菜单/starry-mod-menu/scripts/wxsj_refresh_menu_tpl.sh"; \
+       echo "  bash mod菜单/starry-mod-menu/scripts/wxsj_vc1637_menu_tpl.sh"; exit 1; }
+
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 

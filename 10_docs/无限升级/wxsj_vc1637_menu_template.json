@@ -2,22 +2,71 @@
   "template_id": "wxsj",
   "name": "无限升级",
   "package": "com.xingzuodaoshi.infinityUpgrade",
-  "source": "Games/WxsjVc1637Entry.cpp GameMod_Get @ 11.266018/vc1637",
+  "source": "Games/WxsjVc1637Entry.cpp GameMod_Get @ 11.266018/vc1637（2026-10-26 重出：feat 7/8/12 改数值输入框，新增 feat 17 转生时间无限制）",
   "features": [
-    {"feat_num": 1, "name": "无敌"},
-    {"feat_num": 2, "name": "秒杀"},
-    {"feat_num": 4, "name": "免广告"},
-    {"feat_num": 5, "name": "物品不减"},
-    {"feat_num": 6, "name": "技能免费升级"},
-    {"feat_num": 7, "name": "广告奖励翻倍"},
-    {"feat_num": 8, "name": "物品翻倍"},
-    {"feat_num": 9, "name": "无限挑战秘境"},
-    {"feat_num": 10, "name": "皮肤全解锁"},
-    {"feat_num": 11, "name": "功能全解锁"},
-    {"feat_num": 12, "name": "经验倍率"},
-    {"feat_num": 13, "name": "商店广告无限"},
-    {"feat_num": 14, "name": "物品使用反增"},
-    {"feat_num": 15, "name": "物品反增倍率"},
-    {"feat_num": 16, "name": "防封"}
+    {
+      "feat_num": 1,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 2,
+      "name": "秒杀"
+    },
+    {
+      "feat_num": 4,
+      "name": "免广告"
+    },
+    {
+      "feat_num": 5,
+      "name": "物品不减"
+    },
+    {
+      "feat_num": 6,
+      "name": "技能免费升级"
+    },
+    {
+      "feat_num": 7,
+      "name": "广告奖励倍数"
+    },
+    {
+      "feat_num": 8,
+      "name": "物品倍数"
+    },
+    {
+      "feat_num": 9,
+      "name": "无限挑战秘境"
+    },
+    {
+      "feat_num": 10,
+      "name": "皮肤全解锁"
+    },
+    {
+      "feat_num": 11,
+      "name": "功能全解锁"
+    },
+    {
+      "feat_num": 12,
+      "name": "经验倍数"
+    },
+    {
+      "feat_num": 13,
+      "name": "商店广告无限"
+    },
+    {
+      "feat_num": 14,
+      "name": "物品使用反增"
+    },
+    {
+      "feat_num": 15,
+      "name": "物品反增倍率"
+    },
+    {
+      "feat_num": 16,
+      "name": "防封"
+    },
+    {
+      "feat_num": 17,
+      "name": "转生时间无限制"
+    }
   ]
 }

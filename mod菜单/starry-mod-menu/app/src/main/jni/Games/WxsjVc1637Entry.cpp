@@ -15,16 +15,17 @@ static const char* kWxsjVc1637_Features[] = {
     "Toggle_免广告",                 // 4  WXSJVC_FEAT_FREEADS
     "Toggle_物品不减",               // 5  WXSJVC_FEAT_ITEMKEEP
     "Toggle_技能免费升级",           // 6  WXSJVC_FEAT_SKILLFREE
-    "Toggle_广告奖励翻倍",           // 7  WXSJVC_FEAT_ADSREWARD
-    "Toggle_物品翻倍",               // 8  WXSJVC_FEAT_ITEMDOUBLE
+    "InputValue_1:广告奖励倍数",     // 7  WXSJVC_FEAT_ADSREWARD（输入框，写 ads_reward_x，默认 1=不放大）
+    "InputValue_1:物品倍数",         // 8  WXSJVC_FEAT_ITEMDOUBLE（输入框，写 item_double_x，默认 1=不放大）
     "Toggle_无限挑战秘境",           // 9  WXSJVC_FEAT_MIJINGFREE
     "Toggle_皮肤全解锁",             // 10 WXSJVC_FEAT_SKINUNLOCK
     "Toggle_功能全解锁",             // 11 WXSJVC_FEAT_FUNCUNLOCK
-    "Slider_经验倍率:1:1000",        // 12 WXSJVC_FEAT_EXPMULTI（滑块 1..1000，默认 1=不放大，写 exp_multi）
+    "InputValue_1:经验倍数",         // 12 WXSJVC_FEAT_EXPMULTI（输入框，写 exp_multi，默认 1=不放大）
     "Toggle_商店广告无限",           // 13 WXSJVC_FEAT_SHOPADS
     "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×倍率）
     "InputValue_1000:物品反增倍率",  // 15 WXSJVC_FEAT_ITEMREVERSEX（输入框，写 item_reverse_x）
     "Toggle_防封",                   // 16 WXSJVC_FEAT_ANTIBAN（默认关；开=拦上报/云存档/排行/封号执法）
+    "Toggle_转生时间无限制",         // 17 WXSJVC_FEAT_ZHUANSHENG（默认关；开=取消转生 1 小时冷却）
 };
 
 static bool WxsjVc1637_TryInitEntry(JavaVM* /*vm*/) {

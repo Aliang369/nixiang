@@ -5,7 +5,7 @@
 #   - 本机没有 gradle 发行版（~/.gradle 无 wrapper/dists，仓库 gradle-wrapper.jar 缺失）
 #   - 本机没有 smali/baksmali / apktool（01_tools 下只有 phantom-frida）
 #   - 但本机有 JDK17 + build-tools 36.1.0 的 d8 → 走 javac + d8 全离线路线
-# 产物：mod菜单/starry-mod-menu/templates/mxyzt_menu_20261002/classes4.dex
+# 产物：mod菜单/starry-mod-menu/templates/mxyzt_menu_current/classes4.dex
 #   （dex 名必须是 base.apk 里的最小空闲下标：官包 classes.dex/1/2/3 → 我们 = classes4.dex）
 #
 # 用法：bash 04_scripts/冒险与征途/mxyzt_build_dex.sh
@@ -19,7 +19,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 STAR="$NIXIANG_ROOT/mod菜单/starry-mod-menu"
 SRC="$STAR/app/src/main/java"
-TPL_DIR="$STAR/templates/mxyzt_menu_20261002"
+TPL_DIR="$STAR/templates/mxyzt_menu_current"
 DEX_NAME="classes4.dex"
 LOG="$NIXIANG_ROOT/06_dumped/冒险与征途/_dex_build.log"
 
@@ -169,9 +169,15 @@ PY
   echo "androidjar: $AJAR"
   echo "source    : $SRC"
   echo "sha256    : $(sha256sum "$TPL_DIR/$DEX_NAME" 2>/dev/null | cut -d' ' -f1)"
+  echo "source_commit: $(git -C "$NIXIANG_ROOT" log -1 --format=%H -- mod菜单/starry-mod-menu/app/src/main/java 2>/dev/null)"
 } > "$TPL_DIR/build_info.txt"
 cp -f "$STAGE_ROOT/d8.log" "$TPL_DIR/d8.log" 2>/dev/null || true
 mkdir -p "$(dirname "$LOG")"
 { echo "=== $(date '+%Y-%m-%d %H:%M:%S') ==="; cat "$TPL_DIR/build_info.txt"; } >> "$LOG"
 
 echo "OK → $TPL_DIR/$DEX_NAME"
+
+# 菜单模板新鲜度自检（2026-10-26 起）：build_info.source_commit 必须等于当前 Java 源码 HEAD
+bash "$NIXIANG_ROOT/04_scripts/_common/menu_tpl_gate.sh" --tpl "$TPL_DIR" || {
+  echo "ERROR: 模板新鲜度门禁未过（build_info 与源码不符，先重跑本脚本）" >&2; exit 1
+}

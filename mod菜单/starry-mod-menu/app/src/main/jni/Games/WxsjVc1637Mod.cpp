@@ -43,11 +43,18 @@ static const uint8_t kExecPrologue[16] = {
 static const char kDllNameKey[] = "targetfuntional";
 static constexpr int32_t kOfficialDllLen = 1960960;  // 仅日志兜底用
 
-// ---- 三版本变体：按运行时下发的官方 DLL 长度/哈希选对应补丁 ----
+// ---- 四版本变体：按运行时下发的官方 DLL 长度/哈希选对应补丁 ----
 // 2026-09-29 真机实测：服务端给 vc1637 下发的是 hotfix2 2,030,080 B，不是分析期假设的
 // 1,960,960 B。ildiff 实测两版差 52 类型 / 512 方法（整个 MissionTree 系统），
 // 把 1960960 系补丁注入 2030080 官方包 = A 线当年「MissionTreeData 序列化异常 / 卡等待
 // 响应」的复现。无匹配变体时一律 PASSTHROUGH 官方版（宁可不生效，不能错版）。
+//
+// hf4 = 2026-10-26 现网热更（2,028,544 B / fnv 0x1bf6c08f1ba38809）。它与 hf3 同长度，
+// 靠 fnv 精确区分；同长度回退时必须优先 hf4（最近一次现网基线），故排在 hf3 之前。
+//
+// 2026-10-26 起不再内置 base（1,960,960 = 2026-09-22 之前的官方 DLL）：那份基线还没有
+// 2026-09-23 二次热更引入的 AddItem(string,long,bool,string) 形态，物品倍数/转生无限两项
+// 物理上装不进去，留着只会产出「菜单有开关但无效」的错版。未知长度/哈希一律 PASSTHROUGH。
 struct DllVariant {
     int32_t officialLen;
     uint64_t officialHash;
@@ -57,16 +64,17 @@ struct DllVariant {
 };
 extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_bin_start[];
 extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_bin_end[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_bin_start[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_bin_end[];
 extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_bin_start[];
 extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_bin_end[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_bin_start[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_bin_end[];
 
 static const DllVariant kDllVariants[] = {
     {2030080, 0x91f9acbd064fa875ULL, "hf2",  _binary_targetfuntional_dll_vc1637_hf2_bin_start, _binary_targetfuntional_dll_vc1637_hf2_bin_end},
+    {2028544, 0x1bf6c08f1ba38809ULL, "hf4",  _binary_targetfuntional_dll_vc1637_hf4_bin_start, _binary_targetfuntional_dll_vc1637_hf4_bin_end},
     {2028544, 0x43df8d0d87bf08b2ULL, "hf3",  _binary_targetfuntional_dll_vc1637_hf3_bin_start, _binary_targetfuntional_dll_vc1637_hf3_bin_end},
-    {1960960, 0x6f07494d17997a03ULL, "base", _binary_targetfuntional_dll_vc1637_bin_start,     _binary_targetfuntional_dll_vc1637_bin_end},
 };
+static constexpr int kDllVariantCount = (int)(sizeof(kDllVariants) / sizeof(kDllVariants[0]));
 
 static const DllVariant* PickDllVariant(int32_t len, uint64_t h) {
     for (const auto& v : kDllVariants) {
@@ -94,13 +102,13 @@ static std::string PkgName();
 static std::string ConfigPath();
 static void WriteConfigKey(const char* key, const std::string& val);
 
-// 与 DLL 内 kItemReverseMinX / kItemReverseMaxX 保持一致（两边都夹取，防手改配置溢出）
+// 数值输入框（feat 7 广告奖励倍数 / 8 物品倍数 / 12 经验倍数 / 15 物品反增倍率）
+// 统一夹取 1..1000000，与 DLL 内 kItemReverseMinX/MaxX 口径一致（两边都夹，防手改配置溢出）。
+// 缺省一律 1 = 官方原样（不放大）。
 static const long long kWxsjItemReverseMinX = 1;
 static const long long kWxsjItemReverseMaxX = 1000000;
-
-// 与 DLL 内 kExpMultiDefault = 1000 保持一致（输入框缺省值 / 夹取上限）
-static const long long kWxsjExpMultiMin = 1;
-static const long long kWxsjExpMultiMax = 1000;
+static const long long kWxsjValueMin = 1;
+static const long long kWxsjValueMax = 1000000;
 
 // ★设备无关修正：真机（arm64 + Android 12+）堆指针带 TBI 标签（形如 0xb4000076…），
 //   原先对原始指针判 <0x800000000000 会把合法对象判否 ⇒ 真机功能静默失效。
@@ -222,14 +230,11 @@ static bool TryHookOnce() {
     g_hooked.store(true);
     g_replaceArmed.store(true);
 
-    size_t pLen = (size_t)(_binary_targetfuntional_dll_vc1637_bin_end
-                         - _binary_targetfuntional_dll_vc1637_bin_start);
-    (void)pLen;
-    LOGI(WXSJVC_LOG " hook installed @base=%p +0x%zx orig=%p variants=hf2:%zuB+hf3:%zuB+base:%zuB",
-         (void*)base, kExecRva, orig,
-         (size_t)(kDllVariants[0].end - kDllVariants[0].start),
-         (size_t)(kDllVariants[1].end - kDllVariants[1].start),
-         (size_t)(kDllVariants[2].end - kDllVariants[2].start));
+    LOGI(WXSJVC_LOG " hook installed @base=%p +0x%zx orig=%p variants=%d(hf2:%zuB hf4:%zuB hf3:%zuB)",
+         (void*)base, kExecRva, orig, kDllVariantCount,
+         (size_t)(_binary_targetfuntional_dll_vc1637_hf2_bin_end - _binary_targetfuntional_dll_vc1637_hf2_bin_start),
+         (size_t)(_binary_targetfuntional_dll_vc1637_hf4_bin_end - _binary_targetfuntional_dll_vc1637_hf4_bin_start),
+         (size_t)(_binary_targetfuntional_dll_vc1637_hf3_bin_end - _binary_targetfuntional_dll_vc1637_hf3_bin_start));
 
     // 防封（block_report）默认关：每次冷启动显式落 0，只有用户在菜单里点开「防封」才生效。
     // 旧版本这里是「缺键就补 block_report=1」（无条件常开），已按用户要求改为开关控制。
@@ -352,13 +357,13 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJVC_FEAT_FREEADS:    WriteConfigKey("free_ads", on); break;
     case WXSJVC_FEAT_ITEMKEEP:   WriteConfigKey("item_keep", on); break;
     case WXSJVC_FEAT_SKILLFREE:  WriteConfigKey("skill_free", on); break;
-    case WXSJVC_FEAT_ADSREWARD:  WriteConfigKey("ads_reward_x", enabled ? "2" : "1"); break;
-    case WXSJVC_FEAT_ITEMDOUBLE: WriteConfigKey("item_double", on); break;
     case WXSJVC_FEAT_MIJINGFREE: WriteConfigKey("mijing_free", on); break;
     case WXSJVC_FEAT_SKINUNLOCK: WriteConfigKey("skin_unlock", on); break;
     case WXSJVC_FEAT_FUNCUNLOCK: WriteConfigKey("func_unlock", on); break;
     case WXSJVC_FEAT_SHOPADS:    WriteConfigKey("shop_ads_unlimited", on); break;
     case WXSJVC_FEAT_ITEMREVERSE: WriteConfigKey("item_reverse", on); break;
+    // 转生时间无限制（默认关）：开=取消转生 1 小时客户端冷却（按钮常亮、文案常「轮回」）。
+    case WXSJVC_FEAT_ZHUANSHENG: WriteConfigKey("zhuansheng_free", on); break;
     // 防封（默认关）：开=拦 上报/云存档/COS 直传/腾讯 CLS/排行同步/作弊监控/封号执法；
     // 关=完全回落到官方行为（含官方封号处置）。版本拦截与救档链恒常开，不随此键。
     case WXSJVC_FEAT_ANTIBAN:    WriteConfigKey("block_report", on); break;
@@ -366,15 +371,19 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     }
 }
 
-// 输入框回调：feat 15 物品反增倍率 -> item_reverse_x（DLL 缺省 1000）。
-// InputValue_ 控件不走 nativeSetValue，冷启动不会覆写 ini，用户填的值能留住。
-// （feat 12 经验倍率是滑块，走 OnValueChanged -> exp_multi）
+// 输入框回调：feat 7 广告奖励倍数 -> ads_reward_x
+//               feat 8 物品倍数     -> item_double_x
+//               feat 12 经验倍数    -> exp_multi
+//               feat 15 物品反增倍率 -> item_reverse_x
+// InputValue_ 控件不走 nativeSetValue，冷启动只推空串（native 收到空串直接 return）⇒ 用户填的值能留住。
+// 缺省一律 1 = 官方原样（DLL 侧 GetInt 缺键亦为 1）；用户填 N 才放大 N 倍。
 void WxsjVc1637_OnInputChanged(int featNum, const char* text) {
     const char* key = nullptr;
-    long long lo = 1, hi = 1;
     switch (featNum) {
-    case WXSJVC_FEAT_ITEMREVERSEX:
-        key = "item_reverse_x"; lo = kWxsjItemReverseMinX; hi = kWxsjItemReverseMaxX; break;
+    case WXSJVC_FEAT_ADSREWARD:   key = "ads_reward_x"; break;
+    case WXSJVC_FEAT_ITEMDOUBLE:  key = "item_double_x"; break;
+    case WXSJVC_FEAT_EXPMULTI:    key = "exp_multi"; break;
+    case WXSJVC_FEAT_ITEMREVERSEX: key = "item_reverse_x"; break;
     default:
         return;
     }
@@ -384,24 +393,15 @@ void WxsjVc1637_OnInputChanged(int featNum, const char* text) {
         if (*p < '0' || *p > '9') return;
     }
     long long v = strtoll(text, nullptr, 10);
-    if (v < lo) v = lo;
-    if (v > hi) v = hi;
+    if (v < kWxsjValueMin) v = kWxsjValueMin;
+    if (v > kWxsjValueMax) v = kWxsjValueMax;
     char buf[24];
     snprintf(buf, sizeof(buf), "%lld", v);
     WriteConfigKey(key, buf);
 }
 
+// 滑块回调：本轮菜单已无滑块（feat 12 经验倍率改为输入框），保留空实现给注册表用。
 void WxsjVc1637_OnValueChanged(int featNum, int value) {
-    switch (featNum) {
-    case WXSJVC_FEAT_EXPMULTI: {
-        // 滑块 1..1000（Entry 串声明默认 1000；启动时 Java 会把这个默认/上次值推下来）
-        if (value < (int)kWxsjExpMultiMin) value = (int)kWxsjExpMultiMin;
-        if (value > (int)kWxsjExpMultiMax) value = (int)kWxsjExpMultiMax;
-        char buf[8];
-        snprintf(buf, sizeof(buf), "%d", value);
-        WriteConfigKey("exp_multi", buf);
-        break;
-    }
-    default: break;
-    }
+    (void)featNum;
+    (void)value;
 }

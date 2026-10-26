@@ -69,6 +69,17 @@ internal static class Program
             OfficialArrayLen = 2028544,
             FullPatchSet = false,
         },
+        // 2026-10-26 现网热更（fnv 0x1bf6c08f1ba38809 / 2,028,544 B）的 A 线 v1+δ 产物做基线，
+        // 再补 vc1637 专属项（item_reverse / shop_ads_unlimited / 版本钉死 / item_double_x / zhuansheng_free）。
+        new VariantSpec
+        {
+            Name = "hf4",
+            Src = PatchDir + "/newdump_20261026/patched_new.dll",
+            Dst = PatchDir + "/targetfuntional_vc1637_hf4_patched.dll",
+            ExpectedSrcLen = 2022912,
+            OfficialArrayLen = 2028544,
+            FullPatchSet = false,
+        },
     };
 
     static VariantSpec FindVariant(string name)
@@ -156,20 +167,29 @@ internal static class Program
             var asmI = AssemblyDefinition.ReadAssembly(src);
             mod = asmI.MainModule;
             Console.WriteLine($"[load] {src} ({srcLen} B)");
-            Console.WriteLine($"[mode] incremental：只追加 item_reverse，其余补丁不动");
-            ResolveStarryOnly();
+            Console.WriteLine($"[mode] incremental：补 vc1637 专属项（item_reverse / shop_ads / 版本钉死 / item_double_x / zhuansheng_free / 防封开关）");
+            // 基线长度校验：只接受 [spec] 的基线长度；若传进来的已经是本变体产物（重跑）则放行走幂等。
+            if (srcLen != spec.ExpectedSrcLen
+                && !(File.Exists(spec.Dst) && new FileInfo(spec.Dst).Length == srcLen))
+                throw new InvalidDataException($"输入 DLL 长度不是 [{spec.Name}] 基线的 {spec.ExpectedSrcLen}：{srcLen}");
+            ResolveCommonRefs();   // 含 StarryConfig 引用 + GameData/dailyData（shop_ads 清零要用）
             int newSites = PatchItemReverse(allowExisting: true);
             int bodyFix = PatchMinusItemBody(allowExisting: true);
             int anti = PatchAntiBanToggle();
             bool banChanged = PatchBanGame();
             bool expChanged = PatchExpMulti();   // 12.x 基线缺省是 1，这里原地升到 1000
+            bool shopChanged = PatchShopAdsUnlimited();
+            bool verChanged = PatchVersionPin();
+            bool dblChanged = PatchItemDoubleMultiplier();
+            bool zsChanged = PatchZhuanShengFree();
             Directory.CreateDirectory(Path.GetDirectoryName(dst)!);
-            if (newSites == 0 && bodyFix == 0 && anti == 0 && !banChanged && !expChanged)
+            if (newSites == 0 && bodyFix == 0 && anti == 0 && !banChanged && !expChanged
+                && !shopChanged && !verChanged && !dblChanged && !zsChanged)
             {
                 // 幂等：产物已经带门，原样复制（不重写，避免字节漂移）。
                 asmI.Dispose();
                 File.Copy(src, dst, overwrite: true);
-                Console.WriteLine("[done] item_reverse / anti-ban / exp_multi 均已是目标形态，原样复制（幂等跳过）");
+                Console.WriteLine("[done] 全部补丁均已是目标形态，原样复制（幂等跳过）");
             }
             else
             {
@@ -186,6 +206,7 @@ internal static class Program
             if (!ExpMultiDefaultIs(kExpMultiDefault))
                 throw new Exception($"[verify] {dst}: exp_multi 缺省不是 {kExpMultiDefault}");
             Console.WriteLine($"[verify] exp_multi 缺省 ×{kExpMultiDefault}(默认 1=不放大)");
+            VerifyItemDoubleAndZhuanSheng(dst);
             return 0;
         }
 
@@ -205,6 +226,8 @@ internal static class Program
         PatchVersionPin();
         PatchBanGame();
         PatchAntiBanToggle();
+        PatchItemDoubleMultiplier();   // 物品倍数（item_double_x，缺省 1=不放大）
+        PatchZhuanShengFree();         // 转生时间无限制（zhuansheng_free）
         if (spec.FullPatchSet)
         {
             PatchExpMulti();
@@ -232,6 +255,7 @@ internal static class Program
         if (!noReverse) VerifyMinusItemReverseBodyAt(dst);
         VerifyAntiBan(dst);
         Verify(dst);
+        VerifyItemDoubleAndZhuanSheng(dst);
         return 0;
     }
 
@@ -908,15 +932,27 @@ internal static class Program
             ?? throw new Exception("GameData.dailyData 类型无法解析");
     }
 
-    static void PatchShopAdsUnlimited()
+    static bool PatchShopAdsUnlimited()
     {
         var show = FindM(FindType("AdsManager/ShowAdsNewFlow"), "Show");
-        InsertConfigGate(show, "shop_ads_unlimited", ZeroDailyAdCounters());
-        Console.WriteLine("[patch] shop_ads_unlimited -> AdsManager.ShowAdsNewFlow.Show 清零每日广告计数");
+        bool a = InsertConfigGateOnce(show, "shop_ads_unlimited", ZeroDailyAdCounters, "AdsManager.ShowAdsNewFlow.Show 清零每日广告计数");
 
         var refresh = FindM(FindType("ShopWindow"), "Refresh", 0);
-        InsertConfigGate(refresh, "shop_ads_unlimited", ZeroDailyAdCounters());
-        Console.WriteLine("[patch] shop_ads_unlimited -> ShopWindow.Refresh 清零每日广告计数");
+        bool b = InsertConfigGateOnce(refresh, "shop_ads_unlimited", ZeroDailyAdCounters, "ShopWindow.Refresh 清零每日广告计数");
+        return a || b;
+    }
+
+    // 幂等版 InsertConfigGate：方法里已有同键门就跳过（重跑不会重复插门）。
+    static bool InsertConfigGateOnce(MethodDefinition m, string key, Func<List<Instruction>> body, string tag)
+    {
+        if (m.Body.Instructions.Any(i => i.OpCode.Code == Code.Ldstr && (string)i.Operand == key))
+        {
+            Console.WriteLine($"[patch] {key} -> {tag}（已有门，幂等跳过）");
+            return false;
+        }
+        InsertConfigGate(m, key, body());
+        Console.WriteLine($"[patch] {key} -> {tag}");
+        return true;
     }
 
     static List<Instruction> ZeroDailyAdCounters()
@@ -1035,8 +1071,174 @@ internal static class Program
         return ni.OpCode == OpCodes.Ldc_I4 && ni.Operand is int v && v == want;
     }
 
-    static void PatchVersionPin()
+    // =====================================================================
+    // 物品倍数（菜单 feat 8 输入框 → starry_config.ini 的 item_double_x）
+    //
+    // 12.x 基线里 AddItem 的入口是硬编码 ×2：
+    //     0 ldstr "item_double" / 1 call GetBool / 2 brfalse L
+    //     3 ldarg.2(amount) / 4 ldc.i8 2 / 5 mul / 6 starg.s amount / 7 L: …
+    // 目标形态（任意倍数，1 = 官方原样）：
+    //     int v = StarryConfig.GetInt("item_double_x", 1);
+    //     if (v > 1) amount *= v;
+    // 幂等：入口已是 ldstr "item_double_x" 即跳过（重复插入会二次放大）。
+    // =====================================================================
+    const int kItemDoubleDefaultX = 1;   // 默认 1 = 不放大（官方行为）；倍数由菜单输入框下发
+
+    // 真实主路径：AddItem(string itemId, long amount, bool ?, string source)（另一 4 参版只是转发壳）
+    static MethodDefinition FindAddItemMain()
     {
+        var gd = FindType("GameData");
+        var list = gd.Methods.Where(x => x.Name == "AddItem"
+            && x.Parameters.Count == 4
+            && x.Parameters[1].ParameterType.FullName == "System.Int64"
+            && x.Parameters[2].ParameterType.FullName == "System.Boolean"
+            && x.HasBody && x.Body.Instructions.Count > 40).ToList();
+        if (list.Count != 1)
+            throw new Exception($"GameData::AddItem(string,long,bool,string) 主路径命中 {list.Count} 个（基线变了？）");
+        return list[0];
+    }
+
+    static bool PatchItemDoubleMultiplier()
+    {
+        var m = FindAddItemMain();
+        var il = m.Body.Instructions;
+        if (il[0].OpCode.Code == Code.Ldstr && (string)il[0].Operand == "item_double_x")
+        {
+            Console.WriteLine("[patch] item_double_x -> 已是最新形态（幂等跳过）");
+            return false;
+        }
+        if (!(il[0].OpCode.Code == Code.Ldstr && (string)il[0].Operand == "item_double"))
+            throw new Exception($"GameData::AddItem 头部不是 item_double 门（实际 {il[0].OpCode.Name}），基线变了？");
+        if (!(il[1].OpCode.Code == Code.Call && il[1].Operand is MethodReference gb && gb.Name == "GetBool"))
+            throw new Exception($"AddItem 头部第 2 条不是 GetBool（实际 {il[1].OpCode.Name}）");
+        if (il[2].OpCode.Code != Code.Brfalse && il[2].OpCode.Code != Code.Brfalse_S)
+            throw new Exception($"AddItem 头部第 3 条不是 brfalse（实际 {il[2].OpCode.Name}）");
+        if (!(il[4].OpCode.Code == Code.Ldc_I8 && il[4].Operand is long two && two == 2))
+            throw new Exception($"AddItem 头部第 5 条不是 ldc.i8 2（实际 {il[4].OpCode.Name}）");
+        if (il[5].OpCode != OpCodes.Mul || (il[6].OpCode != OpCodes.Starg && il[6].OpCode != OpCodes.Starg_S))
+            throw new Exception($"AddItem 头部不是 mul+starg 形态（实际 {il[5].OpCode.Name}/{il[6].OpCode.Name}）");
+        var target = il[2].Operand as Instruction
+            ?? throw new Exception("AddItem 的 item_double 门 brfalse 目标缺失");
+
+        var vX = new VariableDefinition(mod.TypeSystem.Int32);
+        m.Body.Variables.Add(vX);
+        m.Body.InitLocals = true;
+
+        // 删掉旧门 7 条（0..6），保留 IL_001C 起的方法体
+        for (int k = 0; k < 7; k++) il.RemoveAt(0);
+
+        InsertAtStart(m, new List<Instruction>
+        {
+            Instruction.Create(OpCodes.Ldstr, "item_double_x"),
+            Instruction.Create(OpCodes.Ldc_I4, kItemDoubleDefaultX),
+            Instruction.Create(OpCodes.Call, mGetInt),
+            Instruction.Create(OpCodes.Stloc, vX),
+            Instruction.Create(OpCodes.Ldloc, vX),
+            Instruction.Create(OpCodes.Ldc_I4_1),
+            Instruction.Create(OpCodes.Ble, target),
+            Instruction.Create(OpCodes.Ldarg, m.Parameters[1]),
+            Instruction.Create(OpCodes.Ldloc, vX),
+            Instruction.Create(OpCodes.Conv_I8),
+            Instruction.Create(OpCodes.Mul),
+            Instruction.Create(OpCodes.Starg, m.Parameters[1]),
+        });
+        m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 3);
+        Console.WriteLine($"[patch] item_double_x -> GameData.AddItem 数量 ×N（缺省 ×{kItemDoubleDefaultX}(默认 1=不放大)）");
+        return true;
+    }
+
+    // =====================================================================
+    // 转生时间无限制（菜单 feat 17「转生时间无限制」→ starry_config.ini 的 zhuansheng_free）
+    //
+    // 客户端 1 小时冷却全在 LunHuiWindow::WindowOpen()：
+    //   turnBtn.SetMode((Now-lastLunHuiTime).TotalHours >= 1.0)
+    //   if ((Now-lastLunHuiTime).TotalHours >= 1.0) { btnText="轮回"; turnBtn.interactable=true; return; }
+    //   else { interactable=false; btnText="转生冷却中"+FormatTime(60-TotalMinutes); }
+    // 两处比较常量都是 `ldc.r8 1`（IL_0037 / IL_008E，前一条都是 TimeSpan::get_TotalHours）。
+    // 目标形态：常量换成 `zhuansheng_free ? -1.0 : 1.0` ⇒ TotalHours >= -1 恒真，按钮常亮、文案常「轮回」；
+    // 开关关掉时值仍为 1.0，与原版逐位等价。
+    // 幂等：方法内已有 "zhuansheng_free" 即跳过。
+    // =====================================================================
+    static bool PatchZhuanShengFree()
+    {
+        var m = FindM(FindType("LunHuiWindow"), "WindowOpen", 0);
+        var il = m.Body.Instructions;
+        if (il.Any(x => x.OpCode.Code == Code.Ldstr && (string)x.Operand == "zhuansheng_free"))
+        {
+            Console.WriteLine("[patch] zhuansheng_free -> 已是最新形态（幂等跳过）");
+            return false;
+        }
+
+        var sites = new List<Instruction>();
+        for (int i = 1; i < il.Count; i++)
+        {
+            if (il[i].OpCode != OpCodes.Ldc_R8) continue;
+            if (!(il[i].Operand is double d) || d != 1.0) continue;
+            if (!(il[i - 1].OpCode.Code == Code.Call && il[i - 1].Operand is MethodReference mr
+                  && mr.Name == "get_TotalHours")) continue;
+            sites.Add(il[i]);
+        }
+        if (sites.Count != 2)
+            throw new Exception($"LunHuiWindow::WindowOpen 的 TotalHours>=1 比较点命中 {sites.Count} 处（应为 2，基线变了？）");
+
+        foreach (var site in sites)
+        {
+            int idx = il.IndexOf(site);
+            var neg = Instruction.Create(OpCodes.Ldc_R8, -1.0);
+            var cont = Instruction.Create(OpCodes.Nop);
+            il.Insert(idx, Instruction.Create(OpCodes.Ldstr, "zhuansheng_free"));
+            il.Insert(idx + 1, Instruction.Create(OpCodes.Call, mGetBool));
+            il.Insert(idx + 2, Instruction.Create(OpCodes.Brtrue, neg));
+            // idx+3 = 原 ldc.r8 1（关态路径）
+            il.Insert(idx + 4, Instruction.Create(OpCodes.Br, cont));
+            il.Insert(idx + 5, neg);
+            il.Insert(idx + 6, cont);
+        }
+        m.Body.MaxStackSize = Math.Max(m.Body.MaxStackSize, 3);
+        Console.WriteLine($"[patch] zhuansheng_free -> LunHuiWindow.WindowOpen 取消 1 小时转生冷却（{sites.Count} 处比较点）");
+        return true;
+    }
+
+    static void VerifyItemDoubleAndZhuanSheng(string path)
+    {
+        var asm = AssemblyDefinition.ReadAssembly(path);
+        mod = asm.MainModule;
+        try
+        {
+            ResolveStarryOnly();
+            var m = FindAddItemMain();
+            var il = m.Body.Instructions;
+            if (!(il[0].OpCode.Code == Code.Ldstr && (string)il[0].Operand == "item_double_x"))
+                throw new Exception("[verify] AddItem 入口未带 item_double_x 门");
+            int nX = il.Count(x => x.OpCode.Code == Code.Ldstr && (string)x.Operand == "item_double_x");
+            if (nX != 1)
+                throw new Exception($"[verify] item_double_x 门出现 {nX} 次（重复打补丁会二次放大）");
+            if (il.Any(x => x.OpCode.Code == Code.Ldstr && (string)x.Operand == "item_double"))
+                throw new Exception("[verify] AddItem 仍残留旧的 item_double 硬编码门");
+
+            var z = FindM(FindType("LunHuiWindow"), "WindowOpen", 0);
+            int nZ = z.Body.Instructions.Count(x => x.OpCode.Code == Code.Ldstr && (string)x.Operand == "zhuansheng_free");
+            if (nZ != 2)
+                throw new Exception($"[verify] LunHuiWindow::WindowOpen 的 zhuansheng_free 门 {nZ} 处（应为 2）");
+            Console.WriteLine("[verify] item_double_x 门 1 处（缺省默认 1=不放大）；zhuansheng_free 门 2 处（1 小时冷却已取消）");
+        }
+        finally { asm.Dispose(); }
+    }
+
+    // 返回是否发生改动（给 --incremental 判幂等）。
+    // 幂等判据：ResVersionApi.GetVersion 已经是 `ldc.i8 MaxValue; ret` —— 它是整组补丁的最后一步，
+    // 出现即说明整组已打（否则重跑时 ReplaceApplicationVersion 找不到 get_version 会抛错）。
+    static bool PatchVersionPin()
+    {
+        {
+            var gv0 = FindM(FindType("ResVersionApi"), "GetVersion", 0);
+            var g0 = gv0.Body.Instructions;
+            if (g0.Count >= 2 && g0[0].OpCode == OpCodes.Ldc_I8 && g0[1].OpCode == OpCodes.Ret)
+            {
+                Console.WriteLine("[patch] version pin -> 已是目标形态（幂等跳过）");
+                return false;
+            }
+        }
         NoOpAlways(FindM(FindType("NetWorkPlayerMgr"), "Vch", 0), "NetWorkPlayerMgr.Vch");
         NoOpAlways(FindM(FindType("NetWorkPlayerMgr"), "BlockVersion", 0), "NetWorkPlayerMgr.BlockVersion");
         NoOpAlways(FindM(FindType("InfinityCore.NetDataCalculater"), "CurrentVersion", 1), "InfinityCore.NetDataCalculater.CurrentVersion");
@@ -1052,6 +1254,7 @@ internal static class Program
         ReplaceApplicationVersion(FindM(FindType("NetWorkPlayerMgr"), "UpDatePlayerData", 7));
         ReplaceApplicationVersion(FindM(FindType("NetWorkPlayerMgr"), "UpDatePlayerMainData", 1));
         Console.WriteLine("[patch] version pin -> 屏蔽强制更新/版本封锁/推荐更新链路");
+        return true;
     }
 
     // =====================================================================

@@ -3,7 +3,7 @@
 #
 # 底包：02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk（官方 com.mxyzt.gzmy 1.5.9）
 # 注入（五件）：
-#   1) classes4.dex                        → templates/mxyzt_menu_20261002/classes4.dex（javac+d8 产出）
+#   1) classes4.dex                        → templates/mxyzt_menu_current/classes4.dex（javac+d8 产出）
 #   2) lib/arm64-v8a/libstarry_magic.so     → libs_mxyzt/arm64-v8a/（mxyzt_build_so.sh）
 #   3) lib/arm64-v8a/libc++_shared.so       → 同上（官方包无此 so，必须补）
 #   4) assets/certs/starlight.crt           → templates/wxsj_menu_*/starlight.crt（AuthClient 证书钉扎）
@@ -40,7 +40,15 @@ SERIAL="${SERIAL:-127.0.0.1:16384}"
 
 ORIG_APK="${NIXIANG}/02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk"
 ORIG_SIZE=883770021
-DEX_SRC="${STARRY_SRC}/templates/mxyzt_menu_20261002/classes4.dex"
+
+# 菜单模板新鲜度门禁（2026-10-26 起）：模板必须与当前 Java 源码 HEAD 同步，
+# 否则复制的就是旧菜单 dex（无限升级 vc1637 / 镇邪人 7f94233e 同一根因）。
+bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "${STARRY_SRC}/templates/mxyzt_menu_current" || {
+  echo "ERROR: 菜单模板过期 ⇒ 先重跑: bash 04_scripts/冒险与征途/mxyzt_build_dex.sh" >&2
+  exit 1
+}
+
+DEX_SRC="${STARRY_SRC}/templates/mxyzt_menu_current/classes4.dex"
 DEX_SHA256="69af7b77e4ff881aa569deeb4ba4e9b85f5cd3a5e47368ab77126f24981d2ae6"
 SO_SRC="${STARRY_SRC}/libs_mxyzt/arm64-v8a/libstarry_magic.so"
 # ★FW-16（2026-10-16 优化会话）：so 的 size/sha256 **不再手抄** —— 手抄值每次「只换 so」交付后都会过期

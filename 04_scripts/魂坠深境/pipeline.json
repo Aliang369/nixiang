@@ -22,18 +22,18 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex"
+          "path": "../../mod菜单/starry-mod-menu/templates/hzsj_menu_current/classes6.dex"
         },
         {
           "type": "file_contains",
-          "path": "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex",
+          "path": "../../mod菜单/starry-mod-menu/templates/hzsj_menu_current/classes6.dex",
           "pattern": "StarryInitProvider"
         }
       ],
       "status": "done",
       "done_at": "2026-10-07 22:10:28",
       "artifacts": {
-        "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex": {
+        "../../mod菜单/starry-mod-menu/templates/hzsj_menu_current/classes6.dex": {
           "md5": "9cd0474f2390b33f9edc399aada947da"
         }
       }
@@ -90,7 +90,7 @@
         }
       },
       "inputs": {
-        "../../mod菜单/starry-mod-menu/templates/hzsj_menu_20261007/classes6.dex": "9cd0474f2390b33f9edc399aada947da"
+        "../../mod菜单/starry-mod-menu/templates/hzsj_menu_current/classes6.dex": "9cd0474f2390b33f9edc399aada947da"
       }
     },
     {

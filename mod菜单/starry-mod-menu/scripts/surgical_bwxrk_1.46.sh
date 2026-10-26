@@ -63,7 +63,15 @@ CACHE_DIR="${NIXIANG}/07_patched/${GAME}/surgical"
 CACHE_CLS5=""
 CACHE_MF="${CACHE_DIR}/AndroidManifest.xml"
 
-DEX6_SRC="${STARRY_SRC}/templates/bwxrk_menu_20261015/${DEX_ADD_NAME}"
+
+# 菜单模板新鲜度门禁（2026-10-26 起）：模板必须与当前 Java 源码 HEAD 同步，
+# 否则复制的就是旧菜单 dex（无限升级 vc1637 / 镇邪人 7f94233e 同一根因）。
+bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "${STARRY_SRC}/templates/bwxrk_menu_current" || {
+  echo "ERROR: 菜单模板过期 ⇒ 先重跑: bash 04_scripts/保卫向日葵/bwxrk_build_dex.sh" >&2
+  exit 1
+}
+
+DEX6_SRC="${STARRY_SRC}/templates/bwxrk_menu_current/${DEX_ADD_NAME}"
 
 KS="${STARRY_KS:-${NIXIANG}/01_tools/starry_release.jks}"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"

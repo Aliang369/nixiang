@@ -19,7 +19,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 STAR="$NIXIANG_ROOT/mod菜单/starry-mod-menu"
 SRC="$STAR/app/src/main/java"
-TPL_DIR="$STAR/templates/hzsj_menu_20261007"
+TPL_DIR="$STAR/templates/hzsj_menu_current"
 DEX_NAME="${HZSJ_DEX_NAME:-classes5.dex}"
 LOG="$NIXIANG_ROOT/06_dumped/魂坠深境/_dex_build.log"
 
@@ -205,9 +205,15 @@ PY
   echo "androidjar: $AJAR"
   echo "source    : $SRC"
   echo "sha256    : $( (sha256sum "$TPL_DIR/$DEX_NAME" 2>/dev/null || shasum -a 256 "$TPL_DIR/$DEX_NAME") | cut -d' ' -f1)"
+  echo "source_commit: $(git -C "$NIXIANG_ROOT" log -1 --format=%H -- mod菜单/starry-mod-menu/app/src/main/java 2>/dev/null)"
 } > "$TPL_DIR/build_info.txt"
 cp -f "$STAGE_ROOT/d8.log" "$TPL_DIR/d8.log" 2>/dev/null || true
 mkdir -p "$(dirname "$LOG")"
 { echo "=== $(date '+%Y-%m-%d %H:%M:%S') ==="; cat "$TPL_DIR/build_info.txt"; } >> "$LOG"
 
 echo "OK → $TPL_DIR/$DEX_NAME"
+
+# 菜单模板新鲜度自检（2026-10-26 起）：build_info.source_commit 必须等于当前 Java 源码 HEAD
+bash "$NIXIANG_ROOT/04_scripts/_common/menu_tpl_gate.sh" --tpl "$TPL_DIR" || {
+  echo "ERROR: 模板新鲜度门禁未过（build_info 与源码不符，先重跑本脚本）" >&2; exit 1
+}

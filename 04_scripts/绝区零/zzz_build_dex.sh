@@ -4,7 +4,7 @@
 # 路线依据（照 2026-10-02 冒险与征途 win 本机实测）：
 #   - 本机无 gradle 发行版；01_tools 有 apktool/smali，但 javac+d8 更短更快
 #   - JDK17 + build-tools d8 全离线
-# 产物：mod菜单/starry-mod-menu/templates/zzz_menu_20261005/classes6.dex
+# 产物：mod菜单/starry-mod-menu/templates/zzz_menu_current/classes6.dex
 #   （官包 classes.dex…classes5.dex ⇒ 星光 = classes6.dex，next_free_dex.py 复核）
 #
 # 用法：bash 04_scripts/绝区零/zzz_build_dex.sh
@@ -16,7 +16,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 STAR="$NIXIANG_ROOT/mod菜单/starry-mod-menu"
 SRC="$STAR/app/src/main/java"
-TPL_DIR="$STAR/templates/zzz_menu_20261005"
+TPL_DIR="$STAR/templates/zzz_menu_current"
 DEX_NAME="classes6.dex"
 LOG="$NIXIANG_ROOT/06_dumped/绝区零/_dex_build.log"
 
@@ -67,27 +67,44 @@ mkdir -p "$STAGE_ROOT/src" "$STAGE_ROOT/gen/com/starry/magic" "$STAGE_ROOT/class
 echo "[1/5] 源拷贝 → $STAGE_ROOT/src（ASCII 路径）"
 cp -a "$SRC/." "$STAGE_ROOT/src/" || die "源拷贝失败"
 
-# --- 3. 生成 R 桩（本机无 aapt2 资源编译；仅 MainActivity 用 3 个 id + 1 layout）---
-cat > "$STAGE_ROOT/gen/com/starry/magic/R.java" <<'EOF'
-package com.starry.magic;
-/** 构建期 R 桩：本机无 aapt2 资源编译。仅 MainActivity 引用（游戏内不启动该 Activity）。 */
-public final class R {
-    private R() {}
-    public static final class layout {
-        private layout() {}
-        public static final int activity_main = 0x7f010001;
-    }
-    public static final class id {
-        private id() {}
-        public static final int btn_pass_through_test = 0x7f020001;
-        public static final int tv_pass_through_count  = 0x7f020002;
-        public static final int btn_request_overlay    = 0x7f020003;
-    }
-}
-EOF
+# --- 3. 生成 R 桩 + BuildConfig（本机无 aapt2 资源编译）---
+# 2026-10-22 修正：旧桩只写死 4 个 id，源码已引用 16 个 id / 2 drawable / 3 attr / 4 string
+# 且 Diag 引用 BuildConfig ⇒ javac 16 个错误。改为**扫描源码引用 + layout 里的 @+id** 自动生成。
+# 注意：这些都是编译期占位值（游戏内不启动 MainActivity），运行时用不到真实资源 id。
+res_dir="$(cd "$SRC/.." && pwd)/res"
+"${NIXIANG_PYTHON:-python}" - "$STAGE_ROOT/src" "$res_dir" "$STAGE_ROOT/gen/com/starry/magic" <<'PY'
+import re, sys, pathlib
+src, res, out = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2]), pathlib.Path(sys.argv[3])
+refs = set()
+for f in src.rglob('*.java'):
+    refs |= set(re.findall(r'\bR\.([a-z][a-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)', f.read_text(encoding='utf-8', errors='replace')))
+lay = res / 'layout'
+if lay.is_dir():
+    for f in lay.glob('*.xml'):
+        refs |= {('id', m) for m in re.findall(r'@\+id/([A-Za-z_][A-Za-z0-9_]*)', f.read_text(encoding='utf-8', errors='replace'))}
+by = {}
+for t, n in refs:
+    by.setdefault(t, set()).add(n)
+lines = ['package com.starry.magic;', '', '/** 构建期 R 桩（无 aapt2）：扫描源码引用生成 */', 'public final class R {']
+for ti, (t, names) in enumerate(sorted(by.items())):
+    lines.append('    public static final class %s {' % t)
+    for ni, n in enumerate(sorted(names)):
+        lines.append('        public static final int %s = 0x%08x;' % (n, 0x7f000000 + ti * 0x10000 + ni + 1))
+    lines.append('    }')
+lines.append('}')
+(out / 'R.java').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+print('      R.java: %d 类 / %d 字段' % (len(by), sum(len(v) for v in by.values())))
+(out / 'BuildConfig.java').write_text(
+    'package com.starry.magic;\n\npublic final class BuildConfig {\n'
+    '    public static final boolean DEBUG = false;\n'
+    '    public static final String APPLICATION_ID = "com.starry.magic";\n'
+    '    public static final String VERSION_NAME = "starry-zzz-3.3.0";\n'
+    '    public static final int VERSION_CODE = 1;\n'
+    '}\n', encoding='utf-8')
+PY
 
 echo "[2/5] javac 编译"
-(find "$STAGE_ROOT/src" -name '*.java'; printf '%s\n' "$STAGE_ROOT/gen/com/starry/magic/R.java") > "$STAGE_ROOT/srcs.txt"
+(find "$STAGE_ROOT/src" -name '*.java'; printf '%s\n' "$STAGE_ROOT/gen/com/starry/magic/R.java" "$STAGE_ROOT/gen/com/starry/magic/BuildConfig.java") > "$STAGE_ROOT/srcs.txt"
 : > "$STAGE_ROOT/argv.txt"
 while IFS= read -r f; do printf '"%s"\n' "$(w "$f")" >> "$STAGE_ROOT/argv.txt"; done < "$STAGE_ROOT/srcs.txt"
 
@@ -159,9 +176,15 @@ PY
   echo "androidjar: $AJAR"
   echo "source    : $SRC"
   echo "sha256    : $(sha256sum "$TPL_DIR/$DEX_NAME" 2>/dev/null | cut -d' ' -f1)"
+  echo "source_commit: $(git -C "$NIXIANG_ROOT" log -1 --format=%H -- mod菜单/starry-mod-menu/app/src/main/java 2>/dev/null)"
 } > "$TPL_DIR/build_info.txt"
 cp -f "$STAGE_ROOT/d8.log" "$TPL_DIR/d8.log" 2>/dev/null || true
 mkdir -p "$(dirname "$LOG")"
 { echo "=== $(date '+%Y-%m-%d %H:%M:%S') ==="; cat "$TPL_DIR/build_info.txt"; } >> "$LOG"
 
 echo "OK → $TPL_DIR/$DEX_NAME"
+
+# 菜单模板新鲜度自检（2026-10-26 起）：build_info.source_commit 必须等于当前 Java 源码 HEAD
+bash "$NIXIANG_ROOT/04_scripts/_common/menu_tpl_gate.sh" --tpl "$TPL_DIR" || {
+  echo "ERROR: 模板新鲜度门禁未过（build_info 与源码不符，先重跑本脚本）" >&2; exit 1
+}

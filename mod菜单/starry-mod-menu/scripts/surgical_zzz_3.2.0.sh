@@ -3,7 +3,7 @@
 #
 # 底包：$TEMP/nx_zzz_starry_20261005/base_official.apk（MuMu 官包只读拉取，md5 校验）
 # 注入（三件，其余条目字节保真）：
-#   1) classes6.dex                        → templates/zzz_menu_20261005/classes6.dex（javac+d8）
+#   1) classes6.dex                        → templates/zzz_menu_current/classes6.dex（javac+d8）
 #   2) lib/arm64-v8a/libstarry_magic.so    → libs_zzz/arm64-v8a/（zzz_build_so.sh）
 #   3) AndroidManifest.xml                 → 07_patched/绝区零/surgical/AndroidManifest.xml
 #
@@ -45,7 +45,15 @@ ORIG_APK="${ZZZ_BASE_APK:-${BASE_DIR_DEFAULT}/base_official.apk}"
 ORIG_MD5="${ZZZ_BASE_MD5:-e94dfa2893b924272b66003f224f5831}"
 
 DEX_NAME="classes6.dex"
-DEX_SRC="${STARRY_SRC}/templates/zzz_menu_20261005/${DEX_NAME}"
+
+# 菜单模板新鲜度门禁（2026-10-26 起）：模板必须与当前 Java 源码 HEAD 同步，
+# 否则复制的就是旧菜单 dex（无限升级 vc1637 / 镇邪人 7f94233e 同一根因）。
+bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "${STARRY_SRC}/templates/zzz_menu_current" || {
+  echo "ERROR: 菜单模板过期 ⇒ 先重跑: bash 04_scripts/绝区零/zzz_build_dex.sh" >&2
+  exit 1
+}
+
+DEX_SRC="${STARRY_SRC}/templates/zzz_menu_current/${DEX_NAME}"
 SO_SRC="${STARRY_SRC}/libs_zzz/arm64-v8a/libstarry_magic.so"
 # 池鸳同款保护层手术：libtersafe2.so 置零 12B（file 0xa24bc），可选件
 TERSAFE_SRC="${ZZZ_TERSAFE_SO:-${STARRY_SRC}/libs_zzz/arm64-v8a/libtersafe2.so}"

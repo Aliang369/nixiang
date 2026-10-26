@@ -69,8 +69,8 @@
       "preflight": ["$NIXIANG/04_scripts/冒险与征途/mxyzt_build_dex.sh"],
       "command": "bash \"$NIXIANG/04_scripts/冒险与征途/mxyzt_build_dex.sh\"",
       "verify": [
-        {"type": "file_exists", "path": "$NIXIANG/mod菜单/starry-mod-menu/templates/mxyzt_menu_20261002/classes4.dex"},
-        {"type": "file_contains", "path": "$NIXIANG/mod菜单/starry-mod-menu/templates/mxyzt_menu_20261002/classes4.dex", "pattern": "com/mxyzt/gzmy"}
+        {"type": "file_exists", "path": "$NIXIANG/mod菜单/starry-mod-menu/templates/mxyzt_menu_current/classes4.dex"},
+        {"type": "file_contains", "path": "$NIXIANG/mod菜单/starry-mod-menu/templates/mxyzt_menu_current/classes4.dex", "pattern": "com/mxyzt/gzmy"}
       ],
       "status": "pending"
     },

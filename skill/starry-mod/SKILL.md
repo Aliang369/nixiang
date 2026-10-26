@@ -125,6 +125,23 @@ STARRY_INSTALL_ONLY=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/sur
 
 > 先例（脚本六段实例、宿主改写目标、反例记录）：`10_docs/独奏骑士/技能先例.md`。
 
+★ **菜单 dex 新鲜度铁律**（2026-10-26 起，出包阶段必过）：出包脚本是「**模板优先，缺了才现编**」——
+只要 `templates/<tpl>/classesN.dex` 还在，菜单 dex 就**永远不会重编**，改过的 Java 进不了包。
+两天内同源三起（无限升级 vc1637「重启后功能全关」／镇邪人 `7f94233e`／`a3748024`），根因都是模板停在旧日期。
+
+1. **模板目录去日期化**：统一 `templates/<game>_current/`，刷新即覆盖。刷新脚本默认输出就是它，
+   出包脚本默认指向它（旧日期目录只许当 `WXSJ_TPL_PREV` 对照用，不许当出包输入）。
+2. **刷新脚本产出的模板必带两个身份**：`build_info.txt`（`source_commit` = `git log -1 -- app/src/main/java`、
+   源树 sha256、built_at、gradle 任务）＋ dex 内构建戳 `starry-menu:<commit12>`（注入到 `BuildConfig.smali`，
+   release 的 `-dontobfuscate` + `-keep com.starry.magic.**` 保证类名与常量都在）。
+3. **出包/装机两道机器关都会拦**：`bash 04_scripts/_common/menu_tpl_gate.sh --tpl <模板目录> --dex-name classesN.dex`
+   （模板分支）与 `pre_install_gate.sh --menu-dex <成品APK> --menu-dex-name classesN.dex`（查10）。
+   判据只有一条：**dex 构建戳 == 当前 Java 源码 HEAD**。不相等 ⇒ 先刷新再出包，禁止 `--allow-stale` 出正式包。
+4. **现编必须用 release**：`MainActivity` 的自检入口由 `if (BuildConfig.DEBUG && …starry_selftest…)` 守卫，
+   debug 包会带上该串，被 `check_release_apk` 判「调试脚手架」拦（实测踩过）。`WXSJ_GRADLE_TASK=assembleDebug`
+   只做取证，不出正式包。
+5. 刷新前先看 `git status -- app/src/main/java`：脏工作区会把别人未提交的 Java 打进 dex（脚本会 WARN）。
+
 **已注册管线的一律走 `04_scripts/pipeline.sh`**（status/next/reset/verify/verify --set），自动防旧产物直装：上游产物变化 → 过期下游阶段自动回退 pending；过期链路上 `run` 下游会被陈旧度门禁拒绝。构建后端四件套（绝对路径/obj stamp/链接活动保险/菜单串字节校验）范本见 `04_scripts/_common/stages.md`；install 阶段末尾接 `04_scripts/_common/verify_installed_apk.sh` 校验设备包 md5 == 本地 APK。
 
 ★ **外科组装 dex 落位铁律**：新增 smali 编出的 dex 名必须是 base.apk 里**最小的空闲下标**（单 dex 官包 → `classes2.dex`）。写死大下标时 ART 的 `BaseDexClassLoader` 从 `classes.dex` 顺序扫、遇到第一个缺口即停止 → 星光 dex 永不加载 → 入口类 `ClassNotFoundException` **启动即崩**。

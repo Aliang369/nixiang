@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# 无限升级 11.266018 / vc1637 — 专用 so 构建（三版本变体）
+# 无限升级 11.266018 / vc1637 — 专用 so 构建（四版本变体）
 #
 # 输入：07_patched/无限升级/targetfuntional_vc1637_v711.bin（base 基线）
 #       07_patched/无限升级/targetfuntional_v719_hotfix{2,3}_patched.dll（hf2/hf3 基线）
+#       07_patched/无限升级/newdump_20261026/patched_new.dll（hf4 基线 = 2026-10-26 现网热更的 A 线补丁产物）
 # 产物：app/src/libs_wxsj_vc1637/arm64-v8a/libstarry_magic.so
 #
 # 2026-09-29 真机实测服务端下发 2,030,080（hotfix2），不是分析期假设的 1,960,960。
-# ildiff 实测两版差 52 类型 / 512 方法（整个 MissionTree 系统）⇒ 必须三版本都内置，
-# 按运行时长度/哈希选；无匹配则 PASSTHROUGH 官方版（宁可不生效，不能错版）。
+# ildiff 实测两版差 52 类型 / 512 方法（整个 MissionTree 系统）⇒ 必须按运行时长度/哈希选变体；
+# 无匹配则 PASSTHROUGH 官方版（宁可不生效，不能错版）。
+# 2026-10-26：现网热更换成 2,028,544 B / fnv 0x1bf6c08f1ba38809（与 hf3 同长），新增 hf4 变体。
 #
 # 不覆盖 12.x 的 app/src/libs/arm64-v8a/libstarry_magic.so。
 set -euo pipefail
@@ -28,22 +30,35 @@ PDIR="$ROOT/07_patched/无限升级"
 [[ -x "$OBJCOPY" ]] || { echo "ERROR: llvm-objcopy missing at $OBJCOPY"; exit 1; }
 
 # 变体表：name|official_len|patched_dll|bin_name|static_lib|baseline
-# baseline = 该变体的「未打补丁入口 DLL」。base 有（v7.11）；hf2/hf3 的 12.x v7.19 基线
-# 已随工作区瘦身丢失（git 里从来没有过），只能对 07_patched 里既有的补丁产物做增量补丁。
+# baseline = 该变体的「未打补丁入口 DLL」。hf2/hf3 的 12.x v7.19 基线已随工作区瘦身丢失
+# （git 里从来没有过），只能对 07_patched 里既有的补丁产物做增量补丁。
+# baseline 写成 INCR:<path> = 该基线本身已是补丁产物（A 线 v1+δ 输出），必须走增量补丁。
+#
+# 已停用 base（1,960,960）：那份官方 DLL 早于 2026-09-23 二次热更，没有 AddItem 4 参形态，
+# 物品倍数/转生无限两项物理装不进去；未知长度/哈希由 so 侧 PASSTHROUGH 兜底。
 VARIANTS=(
-  "v1960960|1960960|$PDIR/targetfuntional_vc1637_patched.dll|targetfuntional_dll_vc1637.bin|Games/WxsjVc1637PatchedDll.a|$PDIR/targetfuntional_vc1637_v711.bin"
   "hf2|2030080|$PDIR/targetfuntional_vc1637_hf2_patched.dll|targetfuntional_dll_vc1637_hf2.bin|Games/WxsjVc1637Hf2Dll.a|$PDIR/targetfuntional_v719_hotfix2_patched.dll"
+  "hf4|2028544|$PDIR/targetfuntional_vc1637_hf4_patched.dll|targetfuntional_dll_vc1637_hf4.bin|Games/WxsjVc1637Hf4Dll.a|INCR:$PDIR/newdump_20261026/patched_new.dll"
   "hf3|2028544|$PDIR/targetfuntional_vc1637_hf3_patched.dll|targetfuntional_dll_vc1637_hf3.bin|Games/WxsjVc1637Hf3Dll.a|$PDIR/targetfuntional_v719_hotfix3_patched.dll"
 )
 
-echo "[vc1637-so 1/5] IL patch（三变体）"
+echo "[vc1637-so 1/5] IL patch（三变体：hf2 / hf4 / hf3）"
 for row in "${VARIANTS[@]}"; do
   IFS='|' read -r name off dll bin lib base_in <<< "$row"
-  [[ -f "$dll" ]] || { echo "ERROR: missing $dll"; exit 1; }
-  if [[ -f "$base_in" ]]; then
+  if [[ "$base_in" == INCR:* ]]; then
+    # 基线本身已是补丁产物（A 线 v1+δ）→ 只做 vc1637 增量（幂等，已带门时原样保留）
+    base_src="${base_in#INCR:}"
+    [[ -f "$base_src" ]] || { echo "ERROR: missing baseline $base_src"; exit 1; }
+    echo "[vc1637-so]   ${name} 增量补丁（基线 ${base_src}）"
+    INCR="$(mktemp -t wxsj_vc1637_incr)"
+    dotnet run --project "$PATCHER" --configuration Release -- --variant "$name" --incremental "$base_src" "$INCR" >/dev/null
+    cp -f "$INCR" "$dll"
+    rm -f "$INCR"
+  elif [[ -f "$base_in" ]]; then
     dotnet run --project "$PATCHER" --configuration Release -- --variant "$name" >/dev/null
   else
     # 基线缺失（hf2/hf3）：对既有补丁产物做增量补丁（幂等，已带门时原样保留）。
+    [[ -f "$dll" ]] || { echo "ERROR: missing $dll"; exit 1; }
     echo "[vc1637-so]   ${name} 基线缺失（${base_in}）→ 增量补丁既有产物"
     INCR="$(mktemp -t wxsj_vc1637_incr)"
     cp -f "$dll" "$INCR"
@@ -92,14 +107,47 @@ mkdir -p "$OBJ" "$LIBS"
 [[ -f "$OUT" ]] || { echo "ERROR: missing $OUT"; exit 1; }
 
 echo "[vc1637-so 4/5] so assertions"
-LC_ALL=C grep -aq '\[WxsjVC1637\]' "$OUT" || { echo "ERROR: so missing [WxsjVC1637]"; exit 1; }
-LC_ALL=C grep -aq 'Toggle_商店广告无限' "$OUT" || { echo "ERROR: so missing Toggle_商店广告无限"; exit 1; }
-LC_ALL=C grep -aq 'InputValue_1000:物品反增倍率' "$OUT" || { echo "ERROR: so missing InputValue_1000:物品反增倍率"; exit 1; }
-LC_ALL=C grep -aq 'Slider_经验倍率:1:1000' "$OUT" || { echo "ERROR: so missing Slider_经验倍率:1:1000:1000"; exit 1; }
-LC_ALL=C grep -aq 'item_reverse_x' "$OUT" || { echo "ERROR: so missing item_reverse_x"; exit 1; }
-LC_ALL=C grep -aq 'exp_multi' "$OUT" || { echo "ERROR: so missing exp_multi"; exit 1; }
-LC_ALL=C grep -aq 'Toggle_防封' "$OUT" || { echo "ERROR: so missing Toggle_防封"; exit 1; }
-LC_ALL=C grep -aq 'targetfuntional' "$OUT" || { echo "ERROR: so missing targetfuntional"; exit 1; }
+# 必须有
+REQ_STRS=(
+  '[WxsjVC1637]'
+  'Category_战斗'
+  'Toggle_无敌'
+  'Toggle_秒杀'
+  'Toggle_免广告'
+  'Toggle_物品不减'
+  'Toggle_技能免费升级'
+  'InputValue_1:广告奖励倍数'
+  'InputValue_1:物品倍数'
+  'Toggle_无限挑战秘境'
+  'Toggle_皮肤全解锁'
+  'Toggle_功能全解锁'
+  'InputValue_1:经验倍数'
+  'Toggle_商店广告无限'
+  'Toggle_物品使用反增'
+  'InputValue_1000:物品反增倍率'
+  'Toggle_防封'
+  'Toggle_转生时间无限制'
+  'ads_reward_x'
+  'item_double_x'
+  'exp_multi'
+  'item_reverse_x'
+  'zhuansheng_free'
+  'shop_ads_unlimited'
+  'targetfuntional'
+)
+for s in "${REQ_STRS[@]}"; do
+  LC_ALL=C grep -aq -- "$s" "$OUT" || { echo "ERROR: so missing [$s]"; exit 1; }
+done
+# 必须没有（旧控件/旧硬编码键；残留即说明菜单或 DLL 没换过来）
+BAN_STRS=(
+  'Slider_经验倍率'
+  'Toggle_物品翻倍'
+  'Toggle_广告奖励翻倍'
+)
+for s in "${BAN_STRS[@]}"; do
+  if LC_ALL=C grep -aq -- "$s" "$OUT"; then echo "ERROR: so still carries old [$s]"; exit 1; fi
+done
+echo "[vc1637-so]   assertions ok: ${#REQ_STRS[@]} required / ${#BAN_STRS[@]} forbidden"
 
 python3 - "$OUT" "${VARIANTS[@]}" <<'PY'
 import sys

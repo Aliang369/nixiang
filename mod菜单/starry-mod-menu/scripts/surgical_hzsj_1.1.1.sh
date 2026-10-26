@@ -15,7 +15,7 @@
 #   0) 【仅 VERSION=1.1.1】classes5.dex 重建为「去 com/starry」（baksmali→删→smali；
 #      旧星光底包把 127 个旧菜单类混在此 dex）→ 缓存复用
 #      【VERSION=1.1.2 跳过】：官方包全 4 dex 内 `com/starry` 命中 0，无需清理
-#   1) 新菜单 dex 新增（templates/hzsj_menu_20261007，hzsj_build_dex.sh 产）；
+#   1) 新菜单 dex 新增（templates/hzsj_menu_current，hzsj_build_dex.sh 产）；
 #      名字 = 包内最大 classesN.dex 的下一位（1.1.1 ⇒ classes6.dex，1.1.2 ⇒ classes5.dex）
 #   2) AndroidManifest.xml 加 <provider com.starry.magic.StarryInitProvider>
 #      + <service MenuService>(foregroundServiceType=specialUse) + 两条权限
@@ -87,7 +87,15 @@ CACHE_DIR="${NIXIANG}/07_patched/${GAME}/surgical${LEGACY_MENU_DEX:+_1.1.1}"
 CACHE_CLS5="${CACHE_DIR}/classes5_nostarry.dex"
 CACHE_MF="${CACHE_DIR}/AndroidManifest.xml"
 
-DEX6_SRC="${STARRY_SRC}/templates/hzsj_menu_20261007/${DEX_ADD_NAME}"
+
+# 菜单模板新鲜度门禁（2026-10-26 起）：模板必须与当前 Java 源码 HEAD 同步，
+# 否则复制的就是旧菜单 dex（无限升级 vc1637 / 镇邪人 7f94233e 同一根因）。
+bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "${STARRY_SRC}/templates/hzsj_menu_current" || {
+  echo "ERROR: 菜单模板过期 ⇒ 先重跑: bash 04_scripts/魂坠深境/hzsj_build_dex.sh" >&2
+  exit 1
+}
+
+DEX6_SRC="${STARRY_SRC}/templates/hzsj_menu_current/${DEX_ADD_NAME}"
 
 KS="${STARRY_KS:-${NIXIANG}/01_tools/starry_release.jks}"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"

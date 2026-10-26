@@ -11,15 +11,16 @@ LOCAL_MODULE := Dobby
 LOCAL_SRC_FILES := Dobby/$(TARGET_ARCH_ABI)/libdobby.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := wxsj_vc1637_dll
-LOCAL_SRC_FILES := Games/WxsjVc1637PatchedDll.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-# 三版本变体（2026-09-29）：base=1960960 / hf2=2030080 / hf3=2028544
+# 三变体（2026-10-26）：hf2=2030080 / hf4=2028544(现网 1bf6c08f) / hf3=2028544
+# 已停用 base=1960960（2026-09-23 之前的官方 DLL，无 AddItem 4 参形态，承载不了新功能）
 include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_vc1637_dll_hf2
 LOCAL_SRC_FILES := Games/WxsjVc1637Hf2Dll.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := wxsj_vc1637_dll_hf4
+LOCAL_SRC_FILES := Games/WxsjVc1637Hf4Dll.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -67,6 +68,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby wxsj_vc1637_dll wxsj_vc1637_dll_hf2 wxsj_vc1637_dll_hf3
+LOCAL_STATIC_LIBRARIES := Dobby wxsj_vc1637_dll_hf2 wxsj_vc1637_dll_hf4 wxsj_vc1637_dll_hf3
 
 include $(BUILD_SHARED_LIBRARY)
