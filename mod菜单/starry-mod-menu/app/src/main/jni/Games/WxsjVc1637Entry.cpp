@@ -35,7 +35,7 @@ static bool WxsjVc1637_TryInitEntry(JavaVM* /*vm*/) {
 extern "C" const StarryGameMod* const GameMod_Get() {
     static const StarryGameMod mod = {
         .tag = "wxsj_vc1637",
-        .authGameId = "wxsj",
+        .authGameId = "wxsjdz1",   // 2026-10-26 独立开号：11 线加固包与 12.x(wxsj) 分游戏，载荷 sha 互不影响
         .featureList = kWxsjVc1637_Features,
         .featureCount = (int)(sizeof(kWxsjVc1637_Features) / sizeof(kWxsjVc1637_Features[0])),
 

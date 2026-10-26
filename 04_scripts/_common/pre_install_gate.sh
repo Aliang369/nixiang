@@ -578,7 +578,8 @@ if [ -n "$apk_file" ] && [ -f "$apk_file" ]; then
     warn=$((warn + 1))
   else
     echo "✗ FAIL  [加固凭证] 这个包没有加固门禁凭证（09_test/$G11_GAME/harden/${G11_MD5:0:12}….stamp 不存在）"
-    echo "        ⇒ 先跑：python 04_scripts/_common/harden_apk.py check --apk \"$apk_file\""
+    echo "        ⇒ 先跑：python 04_scripts/_common/harden_apk.py check --game <tag> --apk \"$apk_file\""
+    echo "          （<tag> 见 04_scripts/_common/sg_games.py 登记表；不带 --game 会按勇士之心口径误判）"
     echo "        ⇒ 加固是新游戏默认要求（AGENTS.md §6）；未接入的游戏按 10_docs/防御加固_通用路线图.md §2 九步接入"
     fail=$((fail + 1))
   fi

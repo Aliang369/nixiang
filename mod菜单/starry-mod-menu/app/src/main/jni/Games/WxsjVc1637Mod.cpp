@@ -31,6 +31,11 @@
 #include "Includes/Logger.h"
 #include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 
+// P2-2 载荷加密层（跨游戏共享件 SgPayload.h + 本游戏密文头）：
+// 内嵌的不再是补丁 DLL 明文，而是密文段；运行时用票里的 kx 还原 K_build 再解封。
+#include "Includes/SgPayload.h"
+#include "Includes/sg_payload_enc_wxsj_vc1637.h"
+
 #define WXSJVC_LOG "[WxsjVC1637]"
 
 // vc1637 / 11.266018 真机运行时映射实锤。
@@ -55,24 +60,26 @@ static constexpr int32_t kOfficialDllLen = 1960960;  // 仅日志兜底用
 // 2026-10-26 起不再内置 base（1,960,960 = 2026-09-22 之前的官方 DLL）：那份基线还没有
 // 2026-09-23 二次热更引入的 AddItem(string,long,bool,string) 形态，物品倍数/转生无限两项
 // 物理上装不进去，留着只会产出「菜单有开关但无效」的错版。未知长度/哈希一律 PASSTHROUGH。
+// 每段补丁：上游 DLL 身份 + 它在 so 里的**密文**位置。明文只在运行时解封，绝不进包。
 struct DllVariant {
     int32_t officialLen;
     uint64_t officialHash;
     const char* name;
-    const uint8_t* start;
-    const uint8_t* end;
+    const uint8_t* ct;      // 密文起始（objcopy 内嵌的 .enc.bin 段）
+    uint32_t ctLen;         // 密文长度（= 明文长度，生成器写死在密文头里）
+    const uint8_t* mac;     // Encrypt-then-MAC 的 32B MAC
 };
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_bin_start[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_bin_end[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_bin_start[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_bin_end[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_bin_start[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_bin_end[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_enc_bin_start[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_enc_bin_start[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_enc_bin_start[];
+
+/* 票派生密钥（实现在 MainModern.cpp：SgAuth 的 static 状态每 TU 一份，必须跨 TU 取） */
+extern "C" int sgp_payload_key(uint8_t out[32]);
 
 static const DllVariant kDllVariants[] = {
-    {2030080, 0x91f9acbd064fa875ULL, "hf2",  _binary_targetfuntional_dll_vc1637_hf2_bin_start, _binary_targetfuntional_dll_vc1637_hf2_bin_end},
-    {2028544, 0x1bf6c08f1ba38809ULL, "hf4",  _binary_targetfuntional_dll_vc1637_hf4_bin_start, _binary_targetfuntional_dll_vc1637_hf4_bin_end},
-    {2028544, 0x43df8d0d87bf08b2ULL, "hf3",  _binary_targetfuntional_dll_vc1637_hf3_bin_start, _binary_targetfuntional_dll_vc1637_hf3_bin_end},
+    {2030080, 0x91f9acbd064fa875ULL, "hf2", _binary_targetfuntional_dll_vc1637_hf2_enc_bin_start, kWxsjvcHf2PayloadLen, kWxsjvcHf2PayloadMac},
+    {2028544, 0x1bf6c08f1ba38809ULL, "hf4", _binary_targetfuntional_dll_vc1637_hf4_enc_bin_start, kWxsjvcHf4PayloadLen, kWxsjvcHf4PayloadMac},
+    {2028544, 0x43df8d0d87bf08b2ULL, "hf3", _binary_targetfuntional_dll_vc1637_hf3_enc_bin_start, kWxsjvcHf3PayloadLen, kWxsjvcHf3PayloadMac},
 };
 static constexpr int kDllVariantCount = (int)(sizeof(kDllVariants) / sizeof(kDllVariants[0]));
 
@@ -84,6 +91,47 @@ static const DllVariant* PickDllVariant(int32_t len, uint64_t h) {
         if (v.officialLen == len) return &v;
     }
     return nullptr;
+}
+
+// ============================================================
+//  P2-2 解封：拿到本变体的补丁明文。
+//    成功 ⇒ 缓存（后续装载复用，避免每轮 2 MB 解封）
+//    失败 ⇒ 返回 nullptr，调用方 PASSTHROUGH 官方 DLL = **诱饵**（静默无效、不崩不闪退）
+//    诱饵结果**不缓存**：v3 票可能比这次程序集装载晚到，下一个装载点还能重试。
+// ============================================================
+static std::mutex g_plainMtx;
+static std::string g_plain;                 // 最近一次成功解封的补丁明文（缓存）
+static const DllVariant* g_plainFor = nullptr;
+static std::atomic<int> g_decoyHits{0};
+
+/* 解封进调用方自己的 buffer（不用返回内部指针：别的线程换变体时会把它换掉）。
+   成功返回 true 且 out 已填；失败返回 false ⇒ 调用方落诱饵。 */
+static bool GetPatchedPlain(const DllVariant* v, std::string* out) {
+    std::lock_guard<std::mutex> lk(g_plainMtx);
+    if (g_plainFor == v && !g_plain.empty()) {
+        out->assign(g_plain);
+        return true;
+    }
+
+    uint8_t pk[32];
+    if (!sgp_payload_key(pk)) {
+        const int n = g_decoyHits.fetch_add(1) + 1;
+        LOGW(WXSJVC_LOG " payload key absent -> decoy (%d)", n);
+        return false;
+    }
+    std::string real;
+    const bool ok = sgpayload::unseal(v->ct, (size_t)v->ctLen, v->mac, pk, &real);
+    memset(pk, 0, sizeof(pk));
+    if (!ok) {
+        const int n = g_decoyHits.fetch_add(1) + 1;
+        LOGW(WXSJVC_LOG " payload unseal failed -> decoy (%d)", n);
+        return false;
+    }
+    LOGI(WXSJVC_LOG " payload decrypted %zu B (%s)", real.size(), v->name);
+    g_plain = real;
+    g_plainFor = v;
+    out->swap(real);
+    return true;
 }
 
 typedef uint8_t (*Exec_t)(void* self, void* data, void* outP, void* mi);
@@ -185,20 +233,28 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
                      len, (unsigned long long)h);
                 return orig(self, data, outP, mi);
             }
-            const size_t pLen = (size_t)(v->end - v->start);
-            if (pLen == 0 || pLen > (size_t)len) {
+            // 载荷必须先解封：拿不到（没有 v3 票 / 无钥 / 密文被改）⇒ 落诱饵
+            // = 官方 DLL 原样执行（功能静默无效，不崩、不闪退、不弹错）。
+            std::string plain;
+            if (!GetPatchedPlain(v, &plain) || plain.empty()) {
+                LOGW(WXSJVC_LOG " variant %s payload unavailable -> PASSTHROUGH official (decoy, no inject)",
+                     v->name);
+                return orig(self, data, outP, mi);
+            }
+            const size_t pLen = plain.size();
+            if (pLen > (size_t)len) {
                 LOGE(WXSJVC_LOG " variant %s patched %zuB > loaded %dB: PASSTHROUGH official",
                      v->name, pLen, len);
                 return orig(self, data, outP, mi);
             }
             // 幂等：同一装载缓冲区被二次执行（换号 / 重登录 / 程序集重装载）时，
             // 缓冲区里已经是我们这一版补丁，直接放行，不重复覆写。
-            if (memcmp(bytes, v->start, pLen) == 0) {
+            if (memcmp(bytes, plain.data(), pLen) == 0) {
                 LOGI(WXSJVC_LOG " buffer already carries %s patch (hit#%d fnv=%016llx) -> passthrough",
                      v->name, g_hits.load(), (unsigned long long)h);
                 return orig(self, data, outP, mi);
             }
-            memcpy((void*)bytes, v->start, pLen);
+            memcpy((void*)bytes, plain.data(), pLen);
             memset((void*)(bytes + pLen), 0, (size_t)len - pLen);
             g_lastVariant = v->name;
             int n = g_hits.fetch_add(1) + 1;
@@ -230,11 +286,19 @@ static bool TryHookOnce() {
     g_hooked.store(true);
     g_replaceArmed.store(true);
 
-    LOGI(WXSJVC_LOG " hook installed @base=%p +0x%zx orig=%p variants=%d(hf2:%zuB hf4:%zuB hf3:%zuB)",
+    LOGI(WXSJVC_LOG " hook installed @base=%p +0x%zx orig=%p variants=%d(enc hf2:%uB hf4:%uB hf3:%uB)",
          (void*)base, kExecRva, orig, kDllVariantCount,
-         (size_t)(_binary_targetfuntional_dll_vc1637_hf2_bin_end - _binary_targetfuntional_dll_vc1637_hf2_bin_start),
-         (size_t)(_binary_targetfuntional_dll_vc1637_hf4_bin_end - _binary_targetfuntional_dll_vc1637_hf4_bin_start),
-         (size_t)(_binary_targetfuntional_dll_vc1637_hf3_bin_end - _binary_targetfuntional_dll_vc1637_hf3_bin_start));
+         (unsigned)kWxsjvcHf2PayloadLen, (unsigned)kWxsjvcHf4PayloadLen, (unsigned)kWxsjvcHf3PayloadLen);
+
+    // arm 时先探一次票里的载荷密钥：没票也能装 hook（诱饵 = 官方 DLL 原样跑），
+    // 有票才注入补丁。这条日志是「授权墙生效」与「诱饵层生效」的分界证据。
+    uint8_t pkProbe[32];
+    if (sgp_payload_key(pkProbe)) {
+        memset(pkProbe, 0, sizeof(pkProbe));
+        LOGI(WXSJVC_LOG " payload key ready (v3 ticket) -> real patch on next assembly load");
+    } else {
+        LOGW(WXSJVC_LOG " payload key absent at arm time -> decoy until v3 ticket arrives");
+    }
 
     // 防封（block_report）默认关：每次冷启动显式落 0，只有用户在菜单里点开「防封」才生效。
     // 旧版本这里是「缺键就补 block_report=1」（无条件常开），已按用户要求改为开关控制。

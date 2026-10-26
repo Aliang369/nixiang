@@ -19,6 +19,8 @@
   也可 `--game mxyzt` 用 tag 指定；每个游戏的产物路径 / 清单头 / 是否有 JS 载荷
   都在下面 `GAMES` 表里，**新增游戏只加表项，不改检查逻辑**。
   没有 JS 载荷的 native 型游戏（如冒险与征途）：C6/C7/C8/C9 记 `N/A`（不计入 FAIL）。
+  **有载荷但形态不是 JS**（如无限升级 v11：载荷 = 内嵌补丁 DLL）：`payload=True` +
+  `payload_kind=bins`，C6/C8 走同一套生成器/样本，`gen_payload_enc.py --game <tag>` 读同一段配置。
 """
 import argparse
 import hashlib
@@ -52,6 +54,13 @@ GAMES = {
         "mk": "Android_ysxz.mk",
         "game_id": "yszzx",
         "payload": True,
+        # 载荷形态（P2-2）：js = 头文件里的 R"MARK(...)MARK" 明文段；
+        # bins = 若干二进制补丁按序拼接（如内嵌 DLL）。gen_payload_enc.py --game <tag> 读同一段配置。
+        "payload_kind": "js",
+        "payload_header": "Includes/sg_payload_enc.h",
+        "payload_src": "04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h",
+        "payload_marker": "YSXZJS",
+        "sym_prefix": "kYsxz",
         "artifacts": {
             "classes4.dex": "%s/libs_ysxz/classes4.dex" % JNI_ROOT,
             "lib/arm64-v8a/libstarry_magic.so": "%s/libs_ysxz/arm64-v8a/libstarry_magic.so" % JNI_ROOT,
@@ -68,6 +77,31 @@ GAMES = {
         "artifacts": {
             "classes4.dex": "%s/templates/mxyzt_menu_current/classes4.dex" % JNI_ROOT,
             "lib/arm64-v8a/libstarry_magic.so": "%s/libs_mxyzt/arm64-v8a/libstarry_magic.so" % JNI_ROOT,
+        },
+    },
+    "无限升级": {
+        "tag": "wxsj_vc1637",
+        "integ": None,             # 本版未启用完整性清单 ⇒ C2/C5 记 N/A（详见落档 §6）
+        "mk": "Android_wxsj_vc1637.mk",
+        "game_id": "wxsjdz1",      # 11 线独立开号（12.x 仍 wxsj）
+        "payload": True,
+        "payload_kind": "bins",    # 载荷 = 三份补丁 DLL 按序拼接（无 JS 载荷）
+        "payload_header": "Includes/sg_payload_enc_wxsj_vc1637.h",
+        "payload_blobs": [
+            {"name": "hf2", "sym": "Hf2",
+             "plain": "07_patched/无限升级/targetfuntional_vc1637_hf2_patched.dll",
+             "enc": "%s/app/src/main/jni/targetfuntional_dll_vc1637_hf2.enc.bin" % JNI_ROOT},
+            {"name": "hf4", "sym": "Hf4",
+             "plain": "07_patched/无限升级/targetfuntional_vc1637_hf4_patched.dll",
+             "enc": "%s/app/src/main/jni/targetfuntional_dll_vc1637_hf4.enc.bin" % JNI_ROOT},
+            {"name": "hf3", "sym": "Hf3",
+             "plain": "07_patched/无限升级/targetfuntional_vc1637_hf3_patched.dll",
+             "enc": "%s/app/src/main/jni/targetfuntional_dll_vc1637_hf3.enc.bin" % JNI_ROOT},
+        ],
+        "sym_prefix": "kWxsjvc",
+        "artifacts": {
+            "classes4.dex": "%s/templates/wxsj_menu_vc1637/classes4.dex" % JNI_ROOT,
+            "lib/arm64-v8a/libstarry_magic.so": "%s/app/src/libs_wxsj_vc1637/arm64-v8a/libstarry_magic.so" % JNI_ROOT,
         },
     },
 }
@@ -153,6 +187,9 @@ def c1(rep):
 
 
 def c2(rep, cfg):
+    if not cfg.get("integ"):
+        rep.skip("C2 清单一致", "N/A：该游戏本版未启用完整性清单（mk 无 -DSG_REQUIRE_INTEGRITY）")
+        return
     rc, out = _run_check("gen_integ_header.py", ["--game", cfg["tag"]])
     t = integ_table(cfg)
     ok = (rc == 0) and t is not None and len(t[0]) > 0 and len(t[1]) == 512
@@ -194,6 +231,9 @@ def c4(rep, apk, cfg):
 
 def c5(rep, apk, work, cfg):
     """红队：改动该游戏清单里的 dex 一个字节 ⇒ 明文哈希必须与清单不符（= 一定能被抓到）"""
+    if not cfg.get("integ"):
+        rep.skip("C5 红队可检测", "N/A：该游戏本版未启用完整性清单")
+        return
     t = integ_table(cfg)
     if not t:
         rep.add("C5 红队可检测", False, "缺清单 %s" % cfg["integ"])
@@ -230,13 +270,14 @@ def c5(rep, apk, work, cfg):
             os.remove(tmp)
 
 
-def check_payload_fresh():
+def check_payload_fresh(cfg):
     """C6：明文载荷改了但没重新加密 ⇒ 密文头与实物不一致，必须拦下。"""
     import subprocess, sys as _sys
-    gen = os.path.join(ROOT, "04_scripts", "勇士之心", "gen_payload_enc.py")
+    gen = os.path.join(HERE, "gen_payload_enc.py")
     if not os.path.exists(gen):
         return "SKIP", "无 gen_payload_enc.py"
-    r = subprocess.run([_sys.executable, gen, "--check"], capture_output=True, text=True,
+    r = subprocess.run([_sys.executable, gen, "--game", cfg["tag"], "--check"],
+                       capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
     if r.returncode == 0:
         last = (r.stdout or "").strip().splitlines()
@@ -245,8 +286,8 @@ def check_payload_fresh():
     return "FAIL", (last[-1][:90] if last else "check failed")
 
 
-def c6(rep):
-    st, msg = check_payload_fresh()
+def c6(rep, cfg):
+    st, msg = check_payload_fresh(cfg)
     if st != "SKIP":
         rep.add("C6 载荷密文新鲜", st == "PASS", msg)
 
@@ -278,22 +319,35 @@ def c7(rep, apk):
         rep.add("C7 载荷层已编译", False, "读取失败: %s" % e)
 
 
-def _payload_plain_samples(n=12, win=48):
+def _payload_plain_blobs(cfg):
+    """该游戏载荷的明文分段（取不到返回 []）。js=单段；bins=按登记顺序的各段补丁。"""
+    if cfg.get("payload_kind") == "js":
+        h = _local(cfg.get("payload_src", ""))
+        if not h or not os.path.exists(h):
+            return []
+        mk = cfg.get("payload_marker", "")
+        m = re.search(r'R"%s\((.*)\)%s"' % (mk, mk),
+                      io.open(h, "r", encoding="utf-8", errors="surrogateescape").read(), re.S)
+        return [m.group(1).encode("utf-8")] if m else []
+    if cfg.get("payload_kind") == "bins":
+        out = []
+        for b in cfg.get("payload_blobs", []):
+            f = _local(b.get("plain", ""))
+            if os.path.exists(f):
+                out.append(io.open(f, "rb").read())
+        return out
+    return []
+
+
+def _payload_plain_samples(cfg, n=12, win=48):
     """从明文载荷里取指纹片段（失败返回空列表）。"""
-    import re as _re
-    h = os.path.join(ROOT, "04_scripts", "勇士之心", "ysxz_1.0.3_menu", "YsxzPatchJs.h")
-    if not os.path.exists(h):
-        return []
-    txt = io.open(h, "r", encoding="utf-8", errors="surrogateescape").read()
-    m = _re.search(r'R"YSXZJS\((.*)\)YSXZJS"', txt, _re.S)
-    if not m:
-        return []
-    body = m.group(1)
-    step = max(1, len(body) // (n * 3))
-    out, i = [], 0
-    while len(out) < n and i + win < len(body):
-        out.append(body[i:i + win].encode("utf-8"))
-        i += step
+    out = []
+    for body in _payload_plain_blobs(cfg):
+        step = max(1, len(body) // (n * 3))
+        i = 0
+        while len(out) < n and i + win < len(body):
+            out.append(body[i:i + win])
+            i += step
     return out
 
 
@@ -308,7 +362,7 @@ def c8(rep, apk, cfg):
             enc_on = False
     if not enc_on:
         return                      # 明文构建（回滚路径），不检查
-    fps = _payload_plain_samples()
+    fps = _payload_plain_samples(cfg)
     if not fps:
         rep.add("C8 无明文载荷泄漏", False, "取不到载荷指纹片段")
         return
@@ -324,17 +378,19 @@ def c8(rep, apk, cfg):
                 rep.add("C8 无明文载荷泄漏", False, "；".join(bad[:3]))
             else:
                 rep.add("C8 无明文载荷泄漏", True,
-                        "%d 个片段 × 3 ABI 全部 0 命中（载荷确为密文）" % len(fps))
+                        "%d 个片段 × 全部 so 均 0 命中（载荷确为密文）" % len(fps))
     except Exception as e:  # noqa: BLE001
         rep.add("C8 无明文载荷泄漏", False, "读取失败: %s" % e)
 
 
 
-def _payload_sha_local():
-    """从生成的密文头里读载荷明文 sha（各游戏同一个字段名后缀 PayloadSha）。"""
+def _payload_sha_local(cfg):
+    """从该游戏生成的密文头里读载荷明文 sha（各游戏同一个字段名后缀 PayloadSha）。"""
     import re as _re
-    h = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "jni",
-                     "Includes", "sg_payload_enc.h")
+    hdr = cfg.get("payload_header", "")
+    if not hdr:
+        return ""
+    h = os.path.join(JNI, hdr)
     if not os.path.exists(h):
         return ""
     m = _re.search(r'PayloadSha\s*=\s*"([0-9a-f]{64})"', io.open(h, "r", encoding="utf-8").read())
@@ -365,9 +421,9 @@ def c9(rep, cfg):
     import urllib.request
     import urllib.error
 
-    sha = _payload_sha_local()
+    sha = _payload_sha_local(cfg)
     if not sha:
-        rep.add("C9 载荷已登记", False, "读不到 sg_payload_enc.h 里的载荷 sha")
+        rep.add("C9 载荷已登记", False, "读不到 %s 里的载荷 sha" % cfg.get("payload_header"))
         return
 
     def _secret(name, default=""):
@@ -493,7 +549,7 @@ def main():
     if a.cmd == "redteam":
         c5(rep, a.apk, a.work, cfg)
     if cfg["payload"]:
-        c6(rep)
+        c6(rep, cfg)
         c7(rep, a.apk)
         c8(rep, a.apk, cfg)
         c9(rep, cfg)

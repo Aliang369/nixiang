@@ -37,9 +37,9 @@ PDIR="$ROOT/07_patched/无限升级"
 # 已停用 base（1,960,960）：那份官方 DLL 早于 2026-09-23 二次热更，没有 AddItem 4 参形态，
 # 物品倍数/转生无限两项物理装不进去；未知长度/哈希由 so 侧 PASSTHROUGH 兜底。
 VARIANTS=(
-  "hf2|2030080|$PDIR/targetfuntional_vc1637_hf2_patched.dll|targetfuntional_dll_vc1637_hf2.bin|Games/WxsjVc1637Hf2Dll.a|$PDIR/targetfuntional_v719_hotfix2_patched.dll"
-  "hf4|2028544|$PDIR/targetfuntional_vc1637_hf4_patched.dll|targetfuntional_dll_vc1637_hf4.bin|Games/WxsjVc1637Hf4Dll.a|INCR:$PDIR/newdump_20261026/patched_new.dll"
-  "hf3|2028544|$PDIR/targetfuntional_vc1637_hf3_patched.dll|targetfuntional_dll_vc1637_hf3.bin|Games/WxsjVc1637Hf3Dll.a|$PDIR/targetfuntional_v719_hotfix3_patched.dll"
+  "hf2|2030080|$PDIR/targetfuntional_vc1637_hf2_patched.dll|targetfuntional_dll_vc1637_hf2.enc.bin|Games/WxsjVc1637Hf2Dll.a|$PDIR/targetfuntional_v719_hotfix2_patched.dll"
+  "hf4|2028544|$PDIR/targetfuntional_vc1637_hf4_patched.dll|targetfuntional_dll_vc1637_hf4.enc.bin|Games/WxsjVc1637Hf4Dll.a|INCR:$PDIR/newdump_20261026/patched_new.dll"
+  "hf3|2028544|$PDIR/targetfuntional_vc1637_hf3_patched.dll|targetfuntional_dll_vc1637_hf3.enc.bin|Games/WxsjVc1637Hf3Dll.a|$PDIR/targetfuntional_v719_hotfix3_patched.dll"
 )
 
 echo "[vc1637-so 1/5] IL patch（三变体：hf2 / hf4 / hf3）"
@@ -69,14 +69,21 @@ for row in "${VARIANTS[@]}"; do
   if (( PLEN > off )); then
     echo "ERROR: [$name] patched DLL $PLEN > official $off"; exit 1
   fi
-  cp -f "$dll" "$JNI/$bin"
   echo "[vc1637-so]   $name official=$off patched=$PLEN margin=$((off - PLEN))"
 done
 
-echo "[vc1637-so 2/5] rebuild embedded static libraries"
-# 必须在 $JNI 下用相对文件名，符号名才是 _binary_<bin>_start
+echo "[vc1637-so 2/5] 载荷加密（P2-2）+ rebuild embedded static libraries"
+# 明文补丁**不再进 jni**：先由共享生成器把三份明文加密成 <name>.enc.bin（密文 + 32B MAC），
+# 再 objcopy 成静态库内嵌。运行时用 v3 票里的 kx 还原 K_build 才解得开，解不开落诱饵。
+# 文件名必须与 04_scripts/_common/sg_games.py 的 wxsj_vc1637 登记一致。
+python3 "$ROOT/04_scripts/_common/gen_payload_enc.py" --game wxsj_vc1637 >/tmp/wxsj_vc1637_payload.log 2>&1 || {
+  echo "ERROR: 载荷加密失败（gen_payload_enc.py --game wxsj_vc1637）" >&2
+  tail -20 /tmp/wxsj_vc1637_payload.log >&2; exit 1; }
+grep -E "载荷 sha256|密文头已写" /tmp/wxsj_vc1637_payload.log || true
+# 必须在 $JNI 下用相对文件名，符号名才是 _binary_<encbin>_start
 for row in "${VARIANTS[@]}"; do
   IFS='|' read -r name off dll bin lib base_in <<< "$row"
+  [[ -f "$JNI/$bin" ]] || { echo "ERROR: 缺密文段 $JNI/$bin"; exit 1; }
   ( cd "$JNI" && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 "$bin" "$lib" )
   sym="_binary_$(echo "$bin" | tr '.' '_')_start"
   if ! "$NM" "$JNI/$lib" 2>/dev/null | grep -q "$sym"; then
@@ -149,16 +156,26 @@ for s in "${BAN_STRS[@]}"; do
 done
 echo "[vc1637-so]   assertions ok: ${#REQ_STRS[@]} required / ${#BAN_STRS[@]} forbidden"
 
-python3 - "$OUT" "${VARIANTS[@]}" <<'PY'
+python3 - "$OUT" "$JNI" "${VARIANTS[@]}" <<'PY'
 import sys
 so = open(sys.argv[1], 'rb').read()
-for row in sys.argv[2:]:
+jni = sys.argv[2]
+bad = 0
+for row in sys.argv[3:]:
     name, off, dll, binname, lib = row.split('|')[:5]
-    dll_bytes = open(dll, 'rb').read()
-    pos = so.find(dll_bytes)
+    ct = open(jni + '/' + binname, 'rb').read()
+    plain = open(dll, 'rb').read()
+    pos = so.find(ct)
     if pos < 0:
-        raise SystemExit("ERROR: embedded %s bytes not found in so" % name)
-    print("in-so OK: %-4s %s (%d B) offset=%d" % (name, dll, len(dll_bytes), pos))
+        raise SystemExit("ERROR: 密文段 %s（%s）未内嵌进 so" % (name, binname))
+    leak = so.find(plain)
+    if leak >= 0:
+        bad += 1
+        print("LEAK %-4s 补丁明文出现在 so 偏移 %d（载荷没加密！）" % (name, leak))
+    print("in-so OK: %-4s cipher=%d B offset=%d | plaintext_absent=%s"
+          % (name, len(ct), pos, "no" if leak >= 0 else "yes"))
+if bad:
+    raise SystemExit("ERROR: %d 段补丁明文泄漏进 so（P2-2 失败）" % bad)
 PY
 
 echo "[vc1637-so 5/5] done"

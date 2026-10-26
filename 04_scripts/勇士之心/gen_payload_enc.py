@@ -1,177 +1,47 @@
 # -*- coding: utf-8 -*-
-"""把功能载荷（Games/YsxzPatchJs.h 里的明文 JS）加密成密文头（P2-2 第一层）。
+"""兼容壳（保留文件名）——正式实现已抽成跨游戏共享件 `04_scripts/_common/gen_payload_enc.py`。
 
-设计要点：
-  · K_build 由主密钥 + 载荷内容 sha256 派生 ⇒ 同一个载荷永远同一把钥（可复现），
-    但**不写进头文件**（只写 ct/mac/len），钥存到 ~/.starry-keys/payload/<sha>.key。
-  · 运行时用票里的 kx 还原 K_build（kx = K_build XOR sha256("sgpay"||sig)），
-    这一步在服务器 v3 票里；本脚本只负责出密文 + 生成钥。
-  · 默认不改变现有构建：产物头需显式 -DSG_PAYLOAD_ENC 才被 YsxzMod.cpp 使用。
+为什么留这一层：`04_scripts/勇士之心/ysxz_build_so_103.sh` 与出包门禁 C6 都按这个路径调用，
+改名会动到已交付游戏的构建链。内容只有一行转发（`--game yszxz`），算法与产物逐字节不变
+（2026-10-27 抽取后实测：重生成 `Includes/sg_payload_enc.h` 与旧文件 md5 一致）。
 
-用法：
-  python gen_payload_enc.py            # 生成 Includes/sg_payload_enc.h + 钥文件
-  python gen_payload_enc.py --check     # 校验现有头与当前载荷是否一致（打包门禁用）
+用法（与旧脚本完全一致）：
+  python 04_scripts/勇士之心/gen_payload_enc.py           # 生成密文头 + 钥
+  python 04_scripts/勇士之心/gen_payload_enc.py --check    # 新鲜度校验
 """
-import argparse
 import hashlib
-import hmac
-import io
 import os
-import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
-JNI = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "jni")
-# 必须与构建脚本用的**同一份**（ysxz_build_so_103.sh 里 MENU_DIR 指向它；
-# 2026-10-27 踩过：mod菜单 下同名文件内容不同（113,060 vs 120,057 B），加密错源头
-# ⇒ 注入的是旧载荷，部分功能失效）
-SRC = os.path.join(ROOT, "04_scripts", "勇士之心", "ysxz_1.0.3_menu", "YsxzPatchJs.h")
-OUT = os.path.join(JNI, "Includes", "sg_payload_enc.h")
-MASTER = os.path.join(os.path.expanduser("~"), ".starry-keys", "payload_master.txt")
-KEYDIR = os.path.join(os.path.expanduser("~"), ".starry-keys", "payload")
+sys.path.insert(0, os.path.join(HERE, "..", "_common"))
+import gen_payload_enc as G  # noqa: E402
 
-
-def load_master(create=True):
-    if os.path.exists(MASTER):
-        txt = io.open(MASTER, "r", encoding="ascii").read().strip()
-        if len(txt) >= 32:
-            return bytes.fromhex(txt[:64])
-    if not create:
-        raise SystemExit("主密钥缺失：%s" % MASTER)
-    os.makedirs(os.path.dirname(MASTER), exist_ok=True)
-    k = os.urandom(32)
-    io.open(MASTER, "w", encoding="ascii", newline="\n").write(k.hex() + "\n")
-    print("已生成主密钥（务必与服务器共用同一份）：%s" % MASTER)
-    return k
+# ---- 旧模块级 API（**兼容壳契约**）----
+# 有外部脚本把本文件当模块 import 用（`04_scripts/双机协作/fetch_starry_keys.sh`
+# 的自证 B 就是 `m.extract_payload() / m.load_master() / m.build_key()`）。
+# 抽实现时这里必须保留同名函数，否则跨机自证脚本会 AttributeError。
 
 
 def extract_payload():
-    s = io.open(SRC, "r", encoding="utf-8", errors="surrogateescape").read()
-    m = re.search(r'R"YSXZJS\((.*)\)YSXZJS"', s, re.S)
-    if not m:
-        raise SystemExit("载荷头里没找到 R\"YSXZJS(...)YSXZJS\" 段")
-    return m.group(1).encode("utf-8", "surrogateescape")
+    """勇士之心当前明文载荷（等价于旧实现的 R"YSXZJS(...)" 段）。"""
+    payload, _ = G.load_unit(G.cfg_of("ysxz"))
+    return payload
+
+
+def load_master(create=True):
+    return G.load_master(create=create)
 
 
 def build_key(master, payload):
+    """旧签名：payload 进 → (K_build, sha256(payload))。"""
     digest = hashlib.sha256(payload).digest()
-    return hmac.new(master, b"sgpay-build|" + digest, hashlib.sha256).digest(), digest
-
-
-def keystream_xor(key, data):
-    out = bytearray(data)
-    ctr = 0
-    for off in range(0, len(out), 32):
-        blk = hmac.new(key, b"sgp1" + ctr.to_bytes(4, "big"), hashlib.sha256).digest()
-        m = min(32, len(out) - off)
-        for i in range(m):
-            out[off + i] ^= blk[i]
-        ctr += 1
-    return bytes(out)
+    return G.build_key(master, digest), digest
 
 
 def enc(key, plain):
-    ct = keystream_xor(key, plain)
-    mac = hmac.new(key, b"sgm1" + ct, hashlib.sha256).digest()
-    return ct, mac
-
-
-def emit(ct, mac, plain_sha):
-    lines = [
-        "#pragma once",
-        "/* 自动生成，勿手改：python 04_scripts/勇士之心/gen_payload_enc.py */",
-        "/* 明文载荷 sha256 = %s，密文 %d B（K_build 不在此文件内）*/" % (plain_sha, len(ct)),
-        "#include <stdint.h>",
-        "static const uint32_t kYsxzPayloadLen = %du;" % len(ct),
-        "static const uint8_t kYsxzPayloadMac[32] = {%s};" % ",".join("%d" % b for b in mac),
-        "static const uint8_t kYsxzPayloadCt[%d] = {" % len(ct),
-    ]
-    for i in range(0, len(ct), 16):
-        lines.append("    " + ",".join("%d" % b for b in ct[i:i + 16]) + ",")
-    lines.append("};")
-    lines.append('static const char* kYsxzPayloadSha = "%s";' % plain_sha)
-    io.open(OUT, "w", encoding="utf-8", newline="\n").write("\n".join(lines) + "\n")
-
-
-
-GAME_ID = "yszzx"          # 服务端 games.game_id
-GAME_NAME = "勇士之心"
-LAST_FILE = os.path.join(KEYDIR, GAME_ID + ".last")
-
-
-def remind_register(sha, write=True):
-    """载荷 sha 变了/新游戏时，打一段**必须处理**的提醒。"""
-    old = ""
-    if os.path.exists(LAST_FILE):
-        try:
-            old = io.open(LAST_FILE, "r", encoding="ascii").read().strip().lower()
-        except Exception:
-            old = ""
-
-    line = "=" * 68
-    if old == sha:
-        if write:
-            pass
-        return 0
-    kind = "新游戏（首次加密，服务端还没有这条登记）" if not old else "载荷变了（当前出包 sha 与服务端上次登记的不同）"
-    print("")
-    print(line)
-    print("⚠️  %s" % kind)
-    print("    游戏：%s（game_id=%s）" % (GAME_NAME, GAME_ID))
-    print("    新 sha：%s" % sha)
-    if old:
-        print("    旧 sha：%s" % old)
-    print("")
-    print("    👉 必须去后台点一次，否则这版包在真机上功能全失效（只剩诱饵）：")
-    print("       后台 → 游戏列表 → %s → 操作 ▾ → 「载荷 sha」→ 粘贴上面的 sha → 保存" % GAME_NAME)
-    print("       （或选密文文件让后台自动算；等价接口）")
-    print("       PUT /v1/admin/games/%s/payload?sha=%s" % (GAME_ID, sha))
-    print("")
-    print("    ⚠️  改 sha 会让该游戏**所有旧包**功能失效，记得同步发新包。")
-    print(line)
-    print("")
-    if write:
-        try:
-            io.open(LAST_FILE, "w", encoding="ascii", newline="\n").write(sha + "\n")
-        except Exception as e:  # noqa: BLE001
-            print("（写 %s 失败：%s）" % (LAST_FILE, e))
-    return 0
-
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--check", action="store_true")
-    a = ap.parse_args()
-
-    payload = extract_payload()
-    master = load_master(create=not a.check)
-    key, digest = build_key(master, payload)
-    sha = digest.hex()
-
-    if a.check:
-        if not os.path.exists(OUT):
-            print("FAIL 缺少 sg_payload_enc.h（未跑 gen_payload_enc.py）")
-            return 1
-        head = io.open(OUT, "r", encoding="utf-8").read()
-        if sha not in head:
-            print("FAIL 密文头与当前载荷不一致（sha %s 不在头里）—— 载荷改过但没重新加密" % sha[:16])
-            return 1
-        print("PASS 载荷密文与当前明文一致 sha=%s…" % sha[:16])
-        remind_register(sha, write=False)
-        return 0
-
-    ct, mac = enc(key, payload)
-    os.makedirs(KEYDIR, exist_ok=True)
-    kf = os.path.join(KEYDIR, sha + ".key")
-    io.open(kf, "w", encoding="ascii", newline="\n").write(key.hex() + "\n")
-    emit(ct, mac, sha)
-    print("明文 %d B  →  密文 %d B" % (len(payload), len(ct)))
-    print("载荷 sha256 = %s" % sha)
-    print("K_build 已写: %s（服务器签发 v3 票要用它算 kx）" % kf)
-    print("密文头已写: %s" % OUT)
-    remind_register(sha, write=True)
-    return 0
+    return G.enc(key, plain)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(G.main(["--game", "ysxz"] + sys.argv[1:]))

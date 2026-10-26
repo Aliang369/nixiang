@@ -210,3 +210,9 @@ print("  dex4 %d B sha256=%s" % (len(dx), hashlib.sha256(dx).hexdigest()[:32]))
 PY
 ls -lh "$OUT"
 shasum -a 256 "$OUT"
+
+echo
+echo "[harden] 加固门禁（C1–C9；AGENTS.md §6 全局强制，所有游戏出包必过）"
+# 统一入口：游戏归属按 08_output/<游戏>/ 目录名自动判定（= 无限升级 ⇒ tag wxsj_vc1637）
+bash "$NIXIANG/04_scripts/_common/harden_gate.sh" "$OUT" --game wxsj_vc1637 \
+  || { echo "ERROR: 加固门禁未通过 ⇒ 这个包不允许交付（先处理上面 FAIL 项）"; exit 1; }

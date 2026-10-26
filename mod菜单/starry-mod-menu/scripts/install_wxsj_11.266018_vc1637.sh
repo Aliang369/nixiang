@@ -23,11 +23,11 @@ NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-APK="$NIXIANG/08_output/无限升级/无限升级_11.266018_vc1637_starry-releaseSigned.apk"
-EXPECT_SHA="ba64abd7790f8bc6243b772ee8d0f387305cfdba78828e52038da526f237f69a"
+APK="${WXSJ_APK:-$NIXIANG/08_output/无限升级/无限升级_11.266018_vc1637_starry-releaseSigned.apk}"
+EXPECT_SHA="${WXSJ_APK_SHA:-ba64abd7790f8bc6243b772ee8d0f387305cfdba78828e52038da526f237f69a}"
 SO="$STARRY_SRC/app/src/libs_wxsj_vc1637/arm64-v8a/libstarry_magic.so"
 CPP="$STARRY_SRC/app/src/main/jni/Games/WxsjVc1637Mod.cpp"
-MENU_JSON="$NIXIANG/10_docs/无限升级/wxsj_vc1637_menu_template.json"
+MENU_JSON="${WXSJ_MENU_JSON:-$NIXIANG/10_docs/无限升级/wxsjdz1_menu_template.json}"
 REMOTE="/data/local/tmp/starry_wxsj_vc1637.apk"
 
 DO_UNINSTALL=0
