@@ -26,7 +26,7 @@
 /* P2-2/P2-3：功能载荷改成"票派生密钥加密 + 诱饵层"。
    拿不到正确密钥（改包、无票、伪造票）⇒ 只喂诱饵，功能静默无效、不闪退。 */
 #include "YsxzDecoyJs.h"
-#include "Includes/SgPayload.h"
+#include "Includes/SgPayloadJs.h"
 #include "Includes/sg_payload_enc.h"
 extern "C" int sgp_payload_key(uint8_t out[32]);
 #endif
@@ -376,42 +376,10 @@ static bool PatchRegistryCall(std::string* src) {
     return true;
 }
 
-/* 要拼进游戏 bundle 的功能载荷：默认明文常量；开 SG_PAYLOAD_ENC 后
-   "解密成功才用真载荷，否则喂诱饵"。缓存一次，避免反复解密。 */
-#ifdef SG_PAYLOAD_ENC
-static std::string g_patchJsCache;
-static int g_payloadDecoy = 0;
-
+/* 取功能载荷：逻辑在 Includes/SgPayloadJs.h（跨游戏共享），本文件只传本游戏的密文/诱饵 */
 static const std::string& GetPatchJs() {
-    if (!g_patchJsCache.empty()) return g_patchJsCache;
-    uint8_t pk[32];
-    if (!sgp_payload_key(pk)) {
-        ++g_payloadDecoy;
-        LOGW("%s payload key absent -> decoy (%d)", YSXZ_LOG, g_payloadDecoy);
-        /* 不缓存诱饵：票可能比 bundle 晚到，下一次 eval 还能拿到真载荷 */
-        static const std::string decoy_a(kYsxzDecoyJs);
-        return decoy_a;
-    }
-    std::string out;
-    if (!sgpayload::unseal(kYsxzPayloadCt, kYsxzPayloadLen, kYsxzPayloadMac,
-                           pk, &out)) {
-        memset(pk, 0, sizeof(pk));
-        ++g_payloadDecoy;
-        LOGW("%s payload unseal failed -> decoy (%d)", YSXZ_LOG, g_payloadDecoy);
-        static const std::string decoy_b(kYsxzDecoyJs);
-        return decoy_b;
-    }
-    memset(pk, 0, sizeof(pk));
-    LOGI("%s payload decrypted %zu B", YSXZ_LOG, out.size());
-    g_patchJsCache.swap(out);
-    return g_patchJsCache;
+    return sgpjs::get(kYsxzPayloadCt, kYsxzPayloadLen, kYsxzPayloadMac, kYsxzDecoyJs);
 }
-#else
-static const std::string& GetPatchJs() {
-    static const std::string s(kYsxzPatchJs, strlen(kYsxzPatchJs));
-    return s;
-}
-#endif
 
 static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,
                              const char* fileName) {

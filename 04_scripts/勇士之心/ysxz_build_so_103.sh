@@ -101,7 +101,7 @@ FW_OVERLAY="${YSXZ_FW_OVERLAY:-1}"
 if [[ "$FW_OVERLAY" == "1" ]]; then
   for f in MainModern.cpp Main.cpp Includes/SgAuth.h Includes/sg_rsa_verify.h Includes/sg_pubkey.h \
            Includes/SgIntegrity.h Includes/sg_integ.h Includes/SgZip.h Includes/SgBuildManifest.h \
-           Includes/SgPayload.h Includes/sg_payload_enc.h Games/YsxzDecoyJs.h \
+           Includes/SgPayload.h Includes/SgPayloadJs.h Includes/sg_payload_enc.h Games/YsxzDecoyJs.h \
            Games/SignalQuarantine.h Games/NoAceStubs.cpp; do
     src="$STARRY_SRC/app/src/main/jni/$f"
     [[ -f "$src" ]] || { echo "ERROR: 工作区缺框架文件 ${f}（P1 加固必需）" >&2; exit 1; }
