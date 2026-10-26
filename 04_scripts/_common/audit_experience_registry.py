@@ -12,6 +12,9 @@ from pathlib import Path
 
 REQUIRED = ("experience_id", "status", "scope", "source", "evidence", "targets")
 STATUSES = {"candidate", "approved", "merged", "rejected", "stale"}
+# class 见 10_docs/_templates/经验候选卡.md §0：tech 可自动合并，policy 只能提案。
+CLASSES = {"tech", "policy"}
+POLICY_REQUIRES_USER = True
 APPROVAL_REQUIRED = {"approved", "merged"}
 ID_RE = __import__("re").compile(r"^exp-[0-9]{8}-[a-z0-9]+(?:-[a-z0-9]+)*$")
 
@@ -85,6 +88,13 @@ def audit(path):
                                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except (OSError, subprocess.CalledProcessError):
                 issues.append(f"merged_commit 不是当前仓库可解析的 commit: {commit}")
+    kind = data.get("class")
+    if kind and kind not in CLASSES:
+        issues.append(f"class 无效: {kind}（只能是 tech / policy）")
+    if kind == "policy" and data.get("status") in ("approved", "merged"):
+        ref = data.get("approval_ref", "")
+        if not __import__("re").search(r"m\d{4,5}|用户", ref):
+            issues.append("policy 类经验不得自批/自动合并：approval_ref 必须指向用户指令（消息号或「用户…」）")
     targets = data.get("targets", "")
     if targets and targets.lower() in {"none", "无", "待定"}:
         issues.append("targets 不能使用占位值")

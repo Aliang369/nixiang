@@ -240,6 +240,147 @@ def sha256_value(value):
     return value.lower()
 
 
+CONSTRAINT_FILES = '10_docs/*/硬约束.md'
+CONSTRAINT_REQUIRED_COLS = ('类别', '强度', '原话', '可执行含义', '适用范围', '例外', '状态', '证据')
+CONSTRAINT_CLASSES = ('A', 'B', 'C', 'D', 'E', 'F')
+COUNT_LINE = re.compile(r'行数：\s*A=(\d+)\s*/\s*B=(\d+)\s*/\s*D=(\d+)\s*/\s*E=(\d+)\s*/\s*F=(\d+)')
+
+
+def constraint_tables(lines):
+    """Split a game constraint file into (heading, header, rows) table blocks."""
+    tables = []
+    heading = ''
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith('#'):
+            heading = line.lstrip('# ').strip()
+        if line.startswith('|') and '|' in line[1:]:
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            if i + 1 < len(lines) and re.fullmatch(r'\s*\|[-:|\s]+\|?\s*', lines[i + 1]):
+                rows = []
+                j = i + 2
+                while j < len(lines) and lines[j].startswith('|'):
+                    rows.append((j + 1, [c.strip() for c in lines[j].strip().strip('|').split('|')]))
+                    j += 1
+                tables.append((i + 1, heading, cells, rows))
+                i = j
+                continue
+        i += 1
+    return tables
+
+
+def audit_constraints(path):
+    """Structural check of one game-level 硬约束.md (see 10_docs/_templates/硬约束.md).
+
+    Errors block; warnings are reported for progressive migration of legacy files.
+    """
+    errors, warnings = [], []
+
+    def issue(bucket, line, kind, message):
+        bucket.append({'path': str(path.resolve()), 'line': line,
+                       'kind': kind, 'message': message})
+
+    try:
+        text = path.read_text(encoding='utf-8-sig')
+    except (OSError, UnicodeError) as exc:
+        issue(errors, 0, 'read-error', str(exc))
+        return errors, warnings
+    lines = text.splitlines()
+    tables = constraint_tables(lines)
+    if not tables:
+        issue(errors, 1, 'missing-table', '没有找到任何约束表（见模板 §5 骨架）')
+        return errors, warnings
+
+    heads = [line.lstrip('# ').strip() for line in lines if line.startswith('#')]
+    for needed, label in (('元信息', '元信息'), ('当前生效', 'A/B 当前生效'), ('待核验', 'E 待核验'), ('历史', 'F 历史与失效')):
+        if not any(needed in h for h in heads) and not (needed == '当前生效' and any('A' in h and 'B' in h for h in heads)):
+            issue(warnings, 1, 'missing-section', f'缺少分区「{label}」')
+
+    counted = {'A': 0, 'B': 0, 'D': 0, 'E': 0, 'F': 0}
+    seen_modern = False
+    for line_no, heading, header, rows in tables:
+        is_e = bool(re.match(r'^E[.、： ]', heading)) or '待核验' in heading
+        is_f = bool(re.match(r'^F[.、： ]', heading)) or '历史与失效' in heading
+        is_d = bool(re.match(r'^D[.、： ]', heading)) or '技术事实' in heading
+        if is_d and not is_e and not is_f:
+            counted['D'] += sum(1 for _, cells in rows if any(cells))
+            continue
+        if is_e or is_f:
+            counted['E' if is_e else 'F'] += sum(1 for _, cells in rows if any(cells))
+            if is_f:
+                for row_no, cells in rows:
+                    if not any(cells):
+                        continue
+                    joined = ' '.join(cells)
+                    if re.search(r'\|\s*生效\s*\|', joined) or cells[-1].strip() == '生效':
+                        issue(errors, row_no, 'history-row-effective',
+                              'F 区行的状态像「生效」：' + joined[:60])
+            continue
+        if '类别' not in ' '.join(header):
+            if header and header[0].strip() == '#' and any(k in ' '.join(header) for k in ('原话', '约束', '红线')):
+                issue(warnings, line_no, 'legacy-format',
+                      '旧格式表（无 类别/适用范围 列），按模板 §7 迁移')
+            continue
+        seen_modern = True
+        missing = [c for c in CONSTRAINT_REQUIRED_COLS if not any(c in h for h in header)]
+        if missing:
+            issue(errors, line_no, 'missing-column', '表头缺列: ' + ','.join(missing))
+
+        def col(name, cells):
+            for idx, cell in enumerate(header):
+                if name in cell:
+                    return cells[idx] if idx < len(cells) else ''
+            return ''
+
+        for row_no, cells in rows:
+            if not any(cells):
+                continue
+            cls = col('类别', cells).strip().upper()[:1]
+            if '待核验' in heading:
+                counted['E'] += 1
+                continue
+            if '历史' in heading or '失效' in heading:
+                counted['F'] += 1
+                state = col('状态', cells)
+                if state and not re.search(r'失效|作废|替代|取代|完成|履行|执行|满足', state):
+                    issue(errors, row_no, 'history-row-effective',
+                          'F 区行的状态不像失效/被替代：' + state[:60])
+                continue
+            if cls not in CONSTRAINT_CLASSES:
+                issue(errors, row_no, 'bad-class', f'类别必须是 A/B/C/D，实际: {cls or "<空>"}')
+                continue
+            counted[cls if cls in counted else 'A'] += 1
+            for name in ('强度', '原话', '可执行含义', '适用范围', '例外', '状态'):
+                if not col(name, cells).strip():
+                    issue(errors, row_no, 'missing-field', f'缺字段: {name}')
+
+    if not seen_modern:
+        issue(warnings, 1, 'legacy-file', '本文件尚未迁移到新结构（只有旧格式表）')
+
+    declared = COUNT_LINE.search(text)
+    if declared:
+        want = dict(zip('ABDEF', (int(x) for x in declared.groups())))
+        diff = {k: (want[k], counted[k]) for k in want if want[k] != counted[k]}
+        if diff:
+            issue(warnings, 1, 'count-drift',
+                  '元信息行数与实际不一致: ' + ', '.join(f'{k} 声明{want[k]}/实际{counted[k]}' for k in diff))
+    return errors, warnings
+
+
+def audit_constraint_files(root):
+    errors, warnings = [], []
+    paths = sorted(p for p in Path(root).glob(CONSTRAINT_FILES) if p.parent.name != '_templates')
+    if not paths:
+        errors.append({'path': str(root / CONSTRAINT_FILES), 'line': 0,
+                       'kind': 'missing-group', 'message': '未找到任何 10_docs/*/硬约束.md'})
+    for path in paths:
+        errs, warns = audit_constraints(path)
+        errors.extend(errs)
+        warnings.extend(warns)
+    return paths, errors, warnings
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command')
@@ -259,10 +400,23 @@ def main(argv=None):
                             help='Maximum total bytes of the cross-game index')
     audit.add_argument('paths', nargs='*', type=Path,
                        help='Override default files; relative paths resolve against root')
+    cons = commands.add_parser('constraints',
+                               help='Audit 10_docs/*/硬约束.md structure (template 10_docs/_templates/硬约束.md)')
+    cons.add_argument('--root', type=Path, default=Path(__file__).resolve().parents[2])
+    cons.add_argument('--strict', action='store_true',
+                      help='Treat legacy-format warnings as errors (default: progressive)')
     file_parser = commands.add_parser('artifact', help='JSON file bytes only; no APK signature or build identity proof')
     file_parser.add_argument('path', type=Path)
     file_parser.add_argument('--expect-sha256', type=sha256_value)
     args = parser.parse_args(argv)
+    if args.command == 'constraints':
+        root = args.root.expanduser().resolve()
+        paths, errors, warnings = audit_constraint_files(root)
+        for item in errors + warnings:
+            print('{path}:{line}: {kind}: {message}'.format(**item))
+        print(f'硬约束结构审计: files={len(paths)} errors={len(errors)} warnings={len(warnings)}'
+              '（旧格式只警告，不阻断；--strict 可升级为失败）')
+        return 1 if errors or (args.strict and warnings) else 0
     if args.command == 'artifact':
         result, code = artifact(args.path, args.expect_sha256)
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))

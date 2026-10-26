@@ -2,6 +2,7 @@
 
 > 📍 `skill/re-lessons/SKILL.md`
 > 📖 原始文档在 `10_docs/_templates/`
+> 📌 状态取值与合并门槛的唯一正文＝`10_docs/_templates/经验候选卡.md`（`class: tech` 可自动合并、`class: policy` 只能提案）；登记在 `_state/pending_experience.md`。本文件只是索引，不定义生命周期。
 
 ---
 

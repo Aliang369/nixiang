@@ -10,11 +10,5 @@ alwaysApply: true
 
 按需来源（正文各自唯一）：
 
-| 需要什么 | 去哪里 |
-|---|---|
-| 读取顺序、任务路由、授权与安全边界、双机协作、全局门禁 | `AGENTS.md` |
-| 机械操作管线（拆包/打包/注入/移植/签名/装机/清理）与阶段表 | `04_scripts/_common/stages.md` |
-| 新游戏接手 / 日常流程 / 工具与目录 | `PLAYBOOK.md` / `WORKFLOW.md` / `TOOLBOOK.md` |
-| 按需知识索引 | `skill/SKILL.md` |
-| 当前游戏状态 | `10_docs/_state/current.md` → `10_docs/_state/games/{游戏}.md` |
-| 规范变更经过与历史正文 | `10_docs/_state/规范变更日志.md` |
+- **路由表唯一正文＝`AGENTS.md` §7「现行专题文档与历史归档指针」**（本文件不复制该表，避免两处维护后漂移）。
+- 快速记忆：通用政策 → `AGENTS.md`；机械管线 → `04_scripts/_common/stages.md`；接手/日常/工具 → `PLAYBOOK.md` / `WORKFLOW.md` / `TOOLBOOK.md`；技能索引 → `skill/SKILL.md`；当前状态 → `10_docs/_state/current.md` → `games/{游戏}.md`；历史与变更经过 → `10_docs/_state/规范变更日志.md`。
