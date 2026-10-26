@@ -429,6 +429,27 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
         return g_origSeEval(thiz, script, length, ret, fileName);
     }
 
+    /* 2026-10-27（「卸载重装 ⇒ 卡在正在为您加载游戏资源」事故 · 修法 B）：
+     * 真载荷拿不到时（无票 / 无钥 / MAC 不符）**完全不 splice、原样放行**。
+     * 因为 splice 会把注册表调用改写成 `}(window.__starry_capture({ … }), {}, [ …`，
+     * 只要注入体里没有这个函数，主 bundle 立刻 `TypeError: window.__starry_capture
+     * is not a function` ⇒ `ScriptEngine::evalString … failed` ⇒ `Failed to invoke
+     * require` ⇒ 引擎永远停在加载页。修法 A 已给诱饵补了透传，这里再加一层保险：
+     * 解不开就干脆不改写 bundle，最坏情况只是「没注入」，功能静默无效、游戏照常进。
+     * 语义不变（诱饵层设计约束①「合法 JS、不闪退、不阻断游戏」）。 */
+    const std::string& patchJs = GetPatchJs();
+#ifdef SG_PAYLOAD_ENC
+    if (!sgpjs::ready()) {
+        static std::atomic<int> s_noPayload{0};
+        const int m = ++s_noPayload;
+        if (m <= 3 || (m % 100) == 0) {
+            LOGW("%s payload unavailable -> skip splice #%d file=%s (inject=%zu B, 不改写 bundle)",
+                 YSXZ_LOG, m, fileName ? fileName : "(null)", patchJs.size());
+        }
+        return g_origSeEval(thiz, script, length, ret, fileName);
+    }
+#endif
+
     std::string patched;
     try {
         std::string source(script, (size_t)n);
@@ -437,8 +458,8 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
              fileName ? fileName : "(null)", n);
             return g_origSeEval(thiz, script, length, ret, fileName);
         }
-        patched.reserve(source.size() + GetPatchJs().size() + 64);
-        patched.assign(GetPatchJs());
+        patched.reserve(source.size() + patchJs.size() + 64);
+        patched.assign(patchJs);
         patched += "\n";
         patched += source;
     } catch (...) {

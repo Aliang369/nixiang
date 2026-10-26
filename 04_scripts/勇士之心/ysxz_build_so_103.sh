@@ -72,6 +72,13 @@ done
 [[ -n "$PY" ]] || { echo "ERROR: 找不到 python3.11/python3（自举素材生成需要）" >&2; exit 1; }
 [[ -f "$MENU_DIR/boot_ids.json" ]] || { echo "ERROR: 缺 $MENU_DIR/boot_ids.json" >&2; exit 1; }
 
+# ---------- 0. 诱饵层契约门禁（2026-10-27「卸载重装卡加载页」事故后新增）----------
+# splice 会把 bundle 改写成 }(window.__starry_capture({…}))，任何注入体（真载荷/诱饵）
+# 都必须定义它并 return reg。诱饵曾经漏了 ⇒ 无票路径直接把主 bundle 打死。
+# 这里在编译前跑：语法合法 + 透传在位 + node 契约仿真 + 负向对照 + 修法 B 在位。
+"$PY" "$NIXIANG/04_scripts/勇士之心/check_decoy_js.py" || {
+  echo "ERROR: 诱饵层契约门禁 FAIL（禁止出包）" >&2; exit 1; }
+
 # ---------- 1. 从 1.0.3 源码提交导出 jni（落到 ASCII 路径，避免中文路径进 clang） ----------
 rm -rf "$WORK"
 mkdir -p "$WORK"
@@ -339,5 +346,13 @@ if [[ "${YSXZ_103_NO_COPY:-0}" != "1" ]]; then
     cp -f "$_abi_dir/libstarry_magic.so" "$OUT_LIBS/$_abi/libstarry_magic.so"
     echo "[103] 已落 $OUT_LIBS/$_abi/libstarry_magic.so"
   done
+  # ---------- 5.1 产物级门禁：每份 so 里必须有诱饵透传**明文** ----------
+  # 真载荷是密文（C8 查的是"没有明文"），诱饵是明文 ⇒ 用反转的指纹证明
+  # 「诱饵层这次真的编进这份 so 了」，不再靠"包能出"推断。
+  "$PY" "$NIXIANG/04_scripts/勇士之心/check_decoy_js.py" --quiet \
+    --so "$OUT_LIBS/arm64-v8a/libstarry_magic.so" \
+         "$OUT_LIBS/x86/libstarry_magic.so" \
+         "$OUT_LIBS/armeabi-v7a/libstarry_magic.so" || {
+    echo "ERROR: so 里没有诱饵透传明文（诱饵层未编进包）" >&2; exit 1; }
 fi
 echo "[103] done"

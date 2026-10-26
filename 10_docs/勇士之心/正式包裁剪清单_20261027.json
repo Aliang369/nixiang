@@ -1,0 +1,15 @@
+{
+  "game_dir": "E:/nixiang/08_output/勇士之心",
+  "keep": "勇士之心_1.0.3_starry-final-releaseSigned.apk",
+  "keep_size": 76278863,
+  "keep_md5": "cd971850c4ddff30005f968580168f06",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "勇士之心_1.0.3_starry-final-releaseSigned.apk.idsig",
+      "size": 611867,
+      "md5": "3a53b619c0804a78c7f2bb92d3521e39"
+    }
+  ],
+  "removed_count": 1
+}

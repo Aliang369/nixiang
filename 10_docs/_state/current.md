@@ -68,7 +68,7 @@
 | 黑暗领域 | 2026-09-15 | 已收尾 | [摘要](games/黑暗领域.md) |
 | 追迹迷城 | 2026-10-10 | ✅ 已收尾交付；L2/L3 全通过（用户确认五功能与 TapTap 登录正常） | [摘要](games/追迹迷城.md) |
 | 无悔华夏4399 | 2026-09-23 | ✅ 已同步九游本轮成果并覆盖装机（保留存档）；菜单 dex 已换新 | [摘要](games/无悔华夏4399.md) |
-- **勇士之心**（2026-10-27）：**P2-2 载荷加密+诱饵层已上线并由用户双机实测通过**（12 项+授权墙无碍）；成品包 md5 `fee4b2c7`、包内构建戳 `1793017606`；加固门禁 C1–C9 全 PASS、装机门禁全绿；服务端载荷 sha 改为按 game_id 落库+后台维护（C9 会拦未登记）；加固已升级为**所有游戏默认强制**。详见 [games/勇士之心.md](games/勇士之心.md)
+- **勇士之心**（2026-10-27）：✅ **「卸载重装卡加载页」已修并装机验证**——根因＝诱饵层没定义 `window.__starry_capture`（bundle 被 splice 成 `}(window.__starry_capture({…}))`）⇒ 无票即 TypeError ⇒ `evalString failed` ⇒ 卡死；A 诱饵补透传＋B 解不开就不 splice，新增 `check_decoy_js.py` 门禁（含负向对照）已接进构建。产物 md5 `cd971850`，覆盖安装保数据，预检 PASS_TO_HUMAN，无票冷启能进 `JoyoSdkActivity`。**顺带修好服务端 `heartbeat` 500**（部署不一致：`schemas.HeartbeatRequest` 与 `auth_service.heartbeat` 是旧版 ⇒ `AttributeError`，影响所有游戏续票）：补最小 diff + 重建 api 容器，假 token 转 401、真 token 200 带 grant3、设备冷启 `renew ok (cold-start)`。**✅ 2026-10-27 用户终审「功能都没问题」（L3 通过），本轮已收尾。** 详见 [games/勇士之心.md](games/勇士之心.md)
 | 偶像梦幻祭2 | 2026-09-15 | 已交付/待核验 | [摘要](games/偶像梦幻2.md) |
 | 大话蜀山 | 2026-09-14 | 已交付/待核验 | [摘要](games/大话蜀山.md) |
 | 凡尘西游修真记 | 2026-09-14 | 已收尾 | [摘要](games/凡尘西游修真记.md) |
