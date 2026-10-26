@@ -1,0 +1,22 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "C:/Users/Administrator/.Trash/nixiang_ysxz_20261026_20261026_160934",
+  "timestamp": "20261026_160934",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "_codex_tmp",
+      "type": "dir",
+      "size_kib": 553142,
+      "source": "/e/nixiang/_codex_tmp",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang_ysxz_20261026_20261026_160934/_codex_tmp"
+    },
+    {
+      "path": ".ysxz_103_build",
+      "type": "dir",
+      "size_kib": 59204,
+      "source": "/e/nixiang/.ysxz_103_build",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang_ysxz_20261026_20261026_160934/.ysxz_103_build"
+    }
+  ]
+}
