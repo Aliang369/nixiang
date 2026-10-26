@@ -23,7 +23,14 @@ MENU_TPL_DIR="${WXSJ_MENU_TPL:-$STARRY/templates/wxsj_menu_vc1637}"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"
-OUT="${WXSJ_OUT:-$NIXIANG/08_output/无限升级/无限升级_11.266018_vc1637_starry-releaseSigned.apk}"
+# 产物名按形态自标注（2026-10-27 用户定：一眼能分辨）：
+#   WXSJ_ANTIBAN_MENU=1 ⇒ 正常版（菜单保留「防封」）；否则 ⇒ 屏蔽版（防封常开、撤出菜单）
+if [[ -n "${WXSJ_ANTIBAN_MENU:-}" ]]; then
+  DEFAULT_OUT="$NIXIANG/08_output/无限升级/无限升级_正常版_11.266018_vc1637.apk"
+else
+  DEFAULT_OUT="$NIXIANG/08_output/无限升级/无限升级_屏蔽版_11.266018_vc1637.apk"
+fi
+OUT="${WXSJ_OUT:-$DEFAULT_OUT}"
 STARRY_DEX="classes4.dex"
 
 for f in "$ORIG_APK" "$FINAL_SO" "$KS" "$MENU_TPL_DIR/$STARRY_DEX" \
