@@ -226,7 +226,10 @@ push_selftest() {
 
 push_main() {
   local branch="main" attempts="${PUSH_MAX_ATTEMPTS:-6}" wait_s="${PUSH_WAIT_SECS:-20}" i=0
-  local routes route tried first_err ahead pending mirror_ok=0 selftest=0
+  # first_err 必须显式初始化：本文件被 archive_scoped_git.sh（set -u）source，
+  # 第 276 行 [ -z "$first_err" ] 在首轮失败分支裸展开未赋值变量 ⇒ unbound variable，
+  # 整条失败分支被 set -u 打断、真实通道错误被吞掉只剩 exit 1。
+  local routes route tried first_err="" ahead pending mirror_ok=0 selftest=0
   while [ $# -gt 0 ]; do
     case "$1" in
       --attempts) [ $# -ge 2 ] || { echo "[push] --attempts 缺少数值"; _pg_usage; return 2; }
