@@ -10,10 +10,15 @@
   C5 红队可检测   复制一份 APK 改动 classes4.dex 一个字节 ⇒ 其明文哈希必须与清单不符
                   （即：破解者的"删我卡密 dex 重打包"一定能被 native 的完整性校验抓到）
 
-用法：
-  python 04_scripts/_common/harden_apk.py check --apk <apk>
+  用法：
+  python 04_scripts/_common/harden_apk.py check --apk <apk> [--game <游戏名或tag>]
   python 04_scripts/_common/harden_apk.py redteam --apk <apk> [--work <dir>]
-退出码：0 全过 / 1 有 FAIL
+  退出码：0 全过 / 1 有 FAIL
+
+  按游戏（2026-10-27 通用化）：游戏名默认取 `--apk` 所在目录名（`08_output/<游戏>/…`），
+  也可 `--game mxyzt` 用 tag 指定；每个游戏的产物路径 / 清单头 / 是否有 JS 载荷
+  都在下面 `GAMES` 表里，**新增游戏只加表项，不改检查逻辑**。
+  没有 JS 载荷的 native 型游戏（如冒险与征途）：C6/C7/C8/C9 记 `N/A`（不计入 FAIL）。
 """
 import argparse
 import hashlib
@@ -24,7 +29,7 @@ import shutil
 import sys
 import zipfile
 
-ROOT = r"E:\nixiang"
+ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 HERE = os.path.dirname(os.path.abspath(__file__))
 SGPKI = os.path.join(HERE, "sg_pki")
 JNI = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "jni")
@@ -32,6 +37,57 @@ LIBS = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "libs_ysxz")
 sys.path.insert(0, SGPKI)
 
 BANNED = [b"grant ok", b"grant rejected", "[验证]".encode("utf-8"), b"sg-grant-v1"]
+
+# ============================================================
+#  按游戏配置（新增游戏只加这里；门禁不再写死勇士之心）
+#    artifacts：APK 内条目 -> 仓库内本地产物（C4「产物同一」比对用）
+#    integ    ：该游戏的完整性清单头（gen_integ_header.py --game <tag> 生成）
+#    payload  ：是否有 JS 功能载荷（P2-2 加密层）；False ⇒ C6/C7/C8/C9 记 N/A
+# ============================================================
+JNI_ROOT = "mod菜单/starry-mod-menu"
+GAMES = {
+    "勇士之心": {
+        "tag": "ysxz",
+        "integ": "sg_integ.h",
+        "mk": "Android_ysxz.mk",
+        "game_id": "yszzx",
+        "payload": True,
+        "artifacts": {
+            "classes4.dex": "%s/libs_ysxz/classes4.dex" % JNI_ROOT,
+            "lib/arm64-v8a/libstarry_magic.so": "%s/libs_ysxz/arm64-v8a/libstarry_magic.so" % JNI_ROOT,
+            "lib/x86/libstarry_magic.so": "%s/libs_ysxz/x86/libstarry_magic.so" % JNI_ROOT,
+            "lib/armeabi-v7a/libstarry_magic.so": "%s/libs_ysxz/armeabi-v7a/libstarry_magic.so" % JNI_ROOT,
+        },
+    },
+    "冒险与征途": {
+        "tag": "mxyzt",
+        "integ": "sg_integ_mxyzt.h",
+        "mk": "Android_mxyzt.mk",
+        "game_id": "mxyzt",
+        "payload": False,          # native 型：无 boot js / 无功能载荷
+        "artifacts": {
+            "classes4.dex": "%s/templates/mxyzt_menu_current/classes4.dex" % JNI_ROOT,
+            "lib/arm64-v8a/libstarry_magic.so": "%s/libs_mxyzt/arm64-v8a/libstarry_magic.so" % JNI_ROOT,
+        },
+    },
+}
+
+
+def _local(rel):
+    return os.path.join(ROOT, rel)
+
+
+def game_of(apk, explicit=""):
+    """解析该 APK 属于哪个游戏：--game（游戏名或 tag）优先，否则取 APK 所在目录名。"""
+    key = explicit or os.path.basename(os.path.dirname(os.path.abspath(apk)))
+    for name, cfg in GAMES.items():
+        if key == name or key == cfg["tag"]:
+            c = dict(cfg)
+            c["name"] = name
+            return c
+    raise SystemExit("ERROR: 未登记的游戏「%s」（来源：%s）。"
+                     "新增游戏请在 harden_apk.py 的 GAMES 表里加一段配置。"
+                     % (key, "--game" if explicit else "APK 所在目录名"))
 
 
 class Report:
@@ -41,6 +97,10 @@ class Report:
     def add(self, name, ok, detail=""):
         self.items.append((name, ok, detail))
         print("%-14s %s  %s" % (name, "PASS" if ok else "FAIL", detail))
+
+    def skip(self, name, detail=""):
+        """不适用于该游戏（例如 native 型游戏没有 JS 载荷）⇒ 打印 N/A，不计入 PASS/FAIL。"""
+        print("%-14s N/A   %s" % (name, detail))
 
     def ok(self):
         return all(ok for _, ok, _ in self.items)
@@ -61,9 +121,9 @@ def md5_of(path):
     return h.hexdigest()
 
 
-def integ_table():
-    """从 sg_integ.h 里读回 (path, size, sha256hex, sig)"""
-    p = os.path.join(JNI, "Includes", "sg_integ.h")
+def integ_table(cfg):
+    """从该游戏的清单头（cfg['integ']）里读回 (path, size, sha256hex, sig)"""
+    p = os.path.join(JNI, "Includes", cfg["integ"])
     if not os.path.exists(p):
         return None
     s = io.open(p, "r", encoding="utf-8").read()
@@ -79,10 +139,10 @@ def integ_table():
     return entries, sig
 
 
-def _run_check(script):
+def _run_check(script, extra=None):
     """直接跑子脚本的 --check，用 subprocess（不用 os.system：Windows 下 rc 编码不可靠）。"""
     import subprocess
-    r = subprocess.run([sys.executable, os.path.join(SGPKI, script), "--check"],
+    r = subprocess.run([sys.executable, os.path.join(SGPKI, script), "--check"] + list(extra or []),
                        capture_output=True, text=True, encoding="utf-8", errors="replace")
     return r.returncode, (r.stdout or "").strip()
 
@@ -92,12 +152,13 @@ def c1(rep):
     rep.add("C1 公钥一致", rc == 0, out.splitlines()[-1] if out else "gen_pubkey_header 无输出")
 
 
-def c2(rep):
-    rc, out = _run_check("gen_integ_header.py")
-    t = integ_table()
+def c2(rep, cfg):
+    rc, out = _run_check("gen_integ_header.py", ["--game", cfg["tag"]])
+    t = integ_table(cfg)
     ok = (rc == 0) and t is not None and len(t[0]) > 0 and len(t[1]) == 512
     rep.add("C2 清单一致", ok,
-            ("%d 条 / 签名 %s…" % (len(t[0]), t[1][:12])) if t else "缺 sg_integ.h")
+            ("%s：%d 条 / 签名 %s…" % (cfg["integ"], len(t[0]), t[1][:12])) if t
+            else "缺 %s（先跑 gen_integ_header.py --game %s）" % (cfg["integ"], cfg["tag"]))
 
 
 def c3(rep, apk):
@@ -112,37 +173,39 @@ def c3(rep, apk):
     rep.add("C3 去路标", not hit, ("命中 %s" % hit) if hit else "%d 个 so 无门禁路标" % len(so_names))
 
 
-def c4(rep, apk):
+def c4(rep, apk, cfg):
     problems = []
     with zipfile.ZipFile(apk) as z:
-        for abi in ("arm64-v8a", "x86", "armeabi-v7a"):
-            name = "lib/%s/libstarry_magic.so" % abi
-            local = os.path.join(LIBS, abi, "libstarry_magic.so")
-            if name not in z.namelist():
-                problems.append("%s 缺失" % abi)
+        names = set(z.namelist())
+        for entry, rel in sorted(cfg["artifacts"].items()):
+            local = _local(rel)
+            if entry not in names:
+                problems.append("%s 缺失" % entry)
                 continue
-            in_apk = hashlib.md5(z.read(name)).hexdigest()
-            if os.path.exists(local):
-                if md5_of(local) != in_apk:
-                    problems.append("%s 与本地不一致" % abi)
-        if "classes4.dex" in z.namelist():
-            if os.path.exists(os.path.join(LIBS, "classes4.dex")):
-                if hashlib.md5(z.read("classes4.dex")).hexdigest() != md5_of(os.path.join(LIBS, "classes4.dex")):
-                    problems.append("classes4.dex 与本地不一致")
-        else:
-            problems.append("classes4.dex 缺失")
-    rep.add("C4 产物同一", not problems, ("；".join(problems)) if problems else "3 ABI so + dex 均与本地一致")
+            if not os.path.exists(local):
+                problems.append("%s 缺本地产物 %s" % (entry, rel))
+                continue
+            if md5_of(local) != hashlib.md5(z.read(entry)).hexdigest():
+                problems.append("%s 与本地不一致" % entry)
+    rep.add("C4 产物同一", not problems,
+            ("；".join(problems)) if problems else
+            "%d 项本地产物（%s）与包内逐项一致" % (len(cfg["artifacts"]), cfg["tag"]))
 
 
-def c5(rep, apk, work):
-    """红队：改动 classes4.dex 一个字节 ⇒ 明文哈希必须与清单不符（= 一定能被抓到）"""
-    t = integ_table()
+def c5(rep, apk, work, cfg):
+    """红队：改动该游戏清单里的 dex 一个字节 ⇒ 明文哈希必须与清单不符（= 一定能被抓到）"""
+    t = integ_table(cfg)
     if not t:
-        rep.add("C5 红队可检测", False, "缺清单")
+        rep.add("C5 红队可检测", False, "缺清单 %s" % cfg["integ"])
         return
     expected = {p: (s, h) for p, s, h in t[0]}
-    if "classes4.dex" not in expected:
-        rep.add("C5 红队可检测", False, "清单里没有 classes4.dex")
+    dex = ""
+    for p in expected:
+        if p.endswith(".dex"):
+            dex = p
+            break
+    if not dex:
+        rep.add("C5 红队可检测", False, "清单里没有 .dex 条目")
         return
     os.makedirs(work, exist_ok=True)
     tmp = os.path.join(work, "redteam.apk")
@@ -150,14 +213,14 @@ def c5(rep, apk, work):
         with zipfile.ZipFile(apk) as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
             for it in zin.infolist():
                 data = zin.read(it.filename)
-                if it.filename == "classes4.dex":
+                if it.filename == dex:
                     b = bytearray(data)
                     b[len(b) // 2] ^= 0x01        # 改动 1 字节（模拟"删/改卡密 dex"）
                     data = bytes(b)
                 zout.writestr(it, data)
         with zipfile.ZipFile(tmp) as z:
-            tampered = z.read("classes4.dex")
-        want_size, want_hash = expected["classes4.dex"]
+            tampered = z.read(dex)
+        want_size, want_hash = expected[dex]
         got_hash = hashlib.sha256(tampered).hexdigest()
         detected = (got_hash != want_hash)
         rep.add("C5 红队可检测", detected,
@@ -234,10 +297,9 @@ def _payload_plain_samples(n=12, win=48):
     return out
 
 
-def c8(rep, apk):
+def c8(rep, apk, cfg):
     """C8：开了 -DSG_PAYLOAD_ENC 时，包内 so 不得含载荷明文片段。"""
-    mk = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "jni",
-                      "Android_ysxz.mk")
+    mk = os.path.join(JNI, cfg["mk"])
     enc_on = False
     if os.path.exists(mk):
         try:
@@ -297,7 +359,7 @@ def _remind_block(game, sha, registered=""):
     print("")
 
 
-def c9(rep):
+def c9(rep, cfg):
     """C9：服务端是否已登记当前载荷 sha（防"载荷变了没去后台改"）。"""
     import ssl
     import urllib.request
@@ -322,7 +384,7 @@ def c9(rep):
             pass
         return default
 
-    game = _secret("SG_GAME_ID", "yszzx")
+    game = _secret("SG_GAME_ID", cfg["game_id"])
     base = _secret("SG_API_BASE", "https://47.100.216.101:8443")
     key = _secret("SG_BUILD_KEY", "")
 
@@ -409,25 +471,35 @@ def main():
                                                   "勇士之心_1.0.3_starry-final-releaseSigned.apk"))
     ap.add_argument("--work", default=os.path.join(os.environ.get("TEMP", "."), "sg_redteam"))
     ap.add_argument("--key", default=os.path.join(os.path.expanduser("~"), ".starry-keys", "rsa2048.txt"))
+    ap.add_argument("--game", default="",
+                    help="游戏名或 tag（省略则取 --apk 所在目录名；已登记：%s）"
+                         % ", ".join("%s/%s" % (k, v["tag"]) for k, v in GAMES.items()))
     a = ap.parse_args()
 
     if not os.path.exists(a.apk):
         print("APK 不存在: %s" % a.apk)
         return 1
 
+    cfg = game_of(a.apk, a.game)
+    print("== 加固门禁：%s（tag=%s，payload=%s）=="
+          % (cfg["name"], cfg["tag"], "有" if cfg["payload"] else "无"))
     rep = Report()
     c1(rep)
-    c2(rep)
+    c2(rep, cfg)
     c3(rep, a.apk)
-    c4(rep, a.apk)
+    c4(rep, a.apk, cfg)
     if a.cmd == "publish":
         return cmd_publish(a)
     if a.cmd == "redteam":
-        c5(rep, a.apk, a.work)
-    c6(rep)
-    c7(rep, a.apk)
-    c8(rep, a.apk)
-    c9(rep)
+        c5(rep, a.apk, a.work, cfg)
+    if cfg["payload"]:
+        c6(rep)
+        c7(rep, a.apk)
+        c8(rep, a.apk, cfg)
+        c9(rep, cfg)
+    else:
+        for n in ("C6 载荷密文新鲜", "C7 载荷层已编译", "C8 无明文载荷泄漏", "C9 载荷已登记"):
+            rep.skip(n, "N/A：native 型游戏（无 JS 功能载荷，密码学面由 C1/C2 覆盖）")
     rc = rep.summary()
     if rc == 0:
         write_stamp(a.apk, rep)

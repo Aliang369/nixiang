@@ -106,9 +106,21 @@ else
   BUILD_MK="$MK"; BUILD_APP_MK="$APP_MK"
 fi
 
+# ---- 构建戳 EPOCH（2026-10-27 加固轮）----
+# Application.mk 里 `STARRY_BUILD_EPOCH ?= $(shell git log …)` 是在**构建目录**求值的，
+# 而本机路径含中文 ⇒ 构建在 ASCII 暂存目录里跑（不是 git 仓库）⇒ 永远落兜底值 1790184000，
+# 该戳比玩家已下载的 OTA so 还旧 ⇒ 覆盖安装不清旧 OTA so + 装机闸门「查8」不可信。
+# 修法与勇士之心一致：在**仓库根**取 commit 时间后导出。
+if [ -z "${STARRY_BUILD_EPOCH:-}" ]; then
+  STARRY_BUILD_EPOCH="$(git -C "$NIXIANG" log -1 --format=%ct 2>/dev/null | tr -cd '0-9')"
+fi
+[ -n "${STARRY_BUILD_EPOCH:-}" ] || STARRY_BUILD_EPOCH=1790184000
+export STARRY_BUILD_EPOCH
+echo "[build_so] EPOCH = ${STARRY_BUILD_EPOCH}（构建戳，OTA 守卫/装机闸门查8）"
+
 # ---- obj stamp ----
-CFG_HASH="$( (cat "$MK" "$APP_MK"; printf 'PROBE=%s\nTRACE=%s\nDIAG=%s\n' \
-  "${STARRY_MXYTZ_PROBE:-}" "${STARRY_TRACE:-}" "${STARRY_DIAG:-}") | hash256 )"
+CFG_HASH="$( (cat "$MK" "$APP_MK"; printf 'PROBE=%s\nTRACE=%s\nDIAG=%s\nEPOCH=%s\n' \
+  "${STARRY_MXYTZ_PROBE:-}" "${STARRY_TRACE:-}" "${STARRY_DIAG:-}" "${STARRY_BUILD_EPOCH}") | hash256 )"
 STAMP="$OBJ/.build_stamp"
 if [ -f "$STAMP" ] && [ "$(cat "$STAMP" 2>/dev/null)" != "$CFG_HASH" ]; then
   echo "[stamp] 构建配置变化（mk/开关）→ 清 obj 强制全量重编"

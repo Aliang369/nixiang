@@ -29,10 +29,18 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := starry_magic
 
-LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
-LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
+# 防御加固（2026-10-27 接入；AGENTS.md §6「加固门禁默认全局强制」）：
+#   -DSG_HAVE_ZLIB=1         → 打开 SgZip / SgIntegrity / SgBuildManifest（需 -lz）
+#   -DSG_REQUIRE_INTEGRITY=1 → 授权链第三判据：完整性未过 ⇒ 会话不成立（fail-closed）
+#   -DSG_INTEG_HEADER_FILE   → 本游戏清单头（gen_integ_header.py --game mxyzt 生成）
+#   本作是 native 型（无 boot js）⇒ **不开** -DSG_PAYLOAD_ENC（无功能载荷加密层）。
+LOCAL_CFLAGS    := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_INTEG_HEADER_FILE='"sg_integ_mxyzt.h"' -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
+LOCAL_CPPFLAGS  := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_INTEG_HEADER_FILE='"sg_integ_mxyzt.h"' -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
-LOCAL_LDLIBS    := -llog -landroid
+# 构建戳保留（OTA 守卫判新旧用，装机闸门「查8」认它）：modern 入口零引用
+# kStarryBuildStamp ⇒ 不加 --undefined 会被 --gc-sections 整段回收，so 里查不到戳。
+LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
+LOCAL_LDLIBS    := -llog -landroid -lz
 
 LOCAL_ARM_MODE  := arm
 

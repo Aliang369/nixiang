@@ -21,6 +21,11 @@
 //  失败行为：**静默降级**（功能 no-op，不闪退、不弹窗）——闪退等于告诉破解者"你被识别了"。
 //
 //  仅在定义 SG_HAVE_ZLIB 的游戏里启用（需要 -lz）。
+//
+//  按游戏选清单（2026-10-27 通用化）：清单头由
+//    `gen_integ_header.py --game <tag>` 生成 `sg_integ_<tag>.h`，
+//    该游戏 mk 里加 `-DSG_INTEG_HEADER_FILE='"sg_integ_<tag>.h"'` 指过来；
+//    不定义宏 ⇒ 用历史全局名 `sg_integ.h`（勇士之心旧构建链，勿删）。
 // ============================================================
 
 #ifdef SG_HAVE_ZLIB
@@ -33,7 +38,11 @@
 
 #include "hmac_sha256.h"
 #include "sg_rsa_verify.h"
+#ifdef SG_INTEG_HEADER_FILE
+#include SG_INTEG_HEADER_FILE
+#else
 #include "sg_integ.h"
+#endif
 #include "SgZip.h"
 #include "SgAuth.h"
 

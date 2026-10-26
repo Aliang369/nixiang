@@ -17,7 +17,7 @@
 #   脚本对「清单里 app 名与组件工厂是否仍是原值」做断言，防止误用换 Application 的文本清单变体。
 #
 # 签名：01_tools/starry_release.jks（CN=StarryMagic，alias starry，pass starry2026）。
-#   本机（win）当前**没有**该密钥库 ⇒ 未提供时脚本在 [4/6] 停下并把合并包留在
+#   本机（win）当前**没有**该密钥库 ⇒ 未提供时脚本在 [4/7] 停下并把合并包留在
 #     08_output/冒险与征途/冒险与征途_1.5.9_starry-merged-unsigned.apk（可复现、可后补签）。
 #     绝不能用其它证书出正式包：菜单 v5 设备指纹只用 SSAID，SSAID 按签名证书隔离，
 #     换证书 = 换设备 → 卡密 403「已绑定其他设备」。
@@ -49,7 +49,11 @@ bash "$NIXIANG/04_scripts/_common/menu_tpl_gate.sh" --tpl "${STARRY_SRC}/templat
 }
 
 DEX_SRC="${STARRY_SRC}/templates/mxyzt_menu_current/classes4.dex"
-DEX_SHA256="b7a5d73b8ddfb35cac89e6af4c44ddbf2a5dc6c68b6561fb107afb25025ddd6c"  # 2026-10-26 重编（源码已引 BuildConfig/R 新符号）
+# ★2026-10-27（加固轮）：dex 指纹不再手抄（同一坑：手抄值每轮都会过期 ⇒ 要么在校验处 FAIL，
+#   要么被人绕过断言把旧 dex 拼进新包）。改为**现算 + 打印**；要锁死某版时设
+#   `DEX_SHA256_EXPECT=<sha256>`。模板新鲜度另由 menu_tpl_gate.sh 对 Java 源码 HEAD 把关。
+DEX_SHA256="$("${NIXIANG_PYTHON:-python}" -c 'import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' "${DEX_SRC}" 2>/dev/null || true)"
+DEX_SHA256_EXPECT="${DEX_SHA256_EXPECT:-}"
 SO_SRC="${STARRY_SRC}/libs_mxyzt/arm64-v8a/libstarry_magic.so"
 # ★FW-16（2026-10-16 优化会话）：so 的 size/sha256 **不再手抄** —— 手抄值每次「只换 so」交付后都会过期
 #   （v46b 的 2223040/f08deb3b… 被 v52 的 2264760/560b562f… 取代后无人更新 ⇒ 要么在校验处 FAIL，
@@ -67,7 +71,9 @@ CXX_SRC="${STARRY_SRC}/libs_mxyzt/arm64-v8a/libc++_shared.so"
 MF_SRC="${NIXIANG}/07_patched/冒险与征途/surgical/AndroidManifest.xml"
 MF_SIZE=39148
 OUT_DIR="${NIXIANG}/08_output/冒险与征途"
-FINAL="${OUT_DIR}/冒险与征途_1.5.9_starry-final-releaseSigned.apk"
+# 2026-10-27（加固轮）：允许另存，别覆盖上一版已验证的正式包（留可回滚）：
+#   MXYZT_FINAL_APK="$OUT_DIR/冒险与征途_1.5.9_harden-releaseSigned.apk" bash ...
+FINAL="${MXYZT_FINAL_APK:-${OUT_DIR}/冒险与征途_1.5.9_starry-final-releaseSigned.apk}"
 MERGED="${OUT_DIR}/冒险与征途_1.5.9_starry-merged-unsigned.apk"
 KS="${STARRY_KS:-${NIXIANG}/01_tools/starry_release.jks}"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
@@ -117,7 +123,7 @@ mkdir -p "${OUT_DIR}"
 WORK="$(cd "${OUT_DIR}" && mktemp -d "$(pwd)/.mxyzt_surgical.XXXXXX")"
 mkdir -p "${WORK}"
 
-echo "[1/6] input checks"
+echo "[1/7] input checks"
 osize="$(wc -c <"${ORIG_APK}" | tr -d ' ')"
 [[ "${osize}" == "${ORIG_SIZE}" ]] || die "官方底包体积不符：期望 ${ORIG_SIZE} 实得 ${osize}（底包被换过？禁止继续）"
 ssize="$(wc -c <"${SO_SRC}" | tr -d ' ')"
@@ -125,13 +131,17 @@ ssize="$(wc -c <"${SO_SRC}" | tr -d ' ')"
 (( ssize > 1000000 && ssize < 8000000 )) || die "so 体积异常：${ssize} B（预期 1–8 MB 量级的菜单 so；是不是拼到了别的 .so？）"
 msize="$(wc -c <"${MF_SRC}" | tr -d ' ')"
 [[ "${msize}" == "${MF_SIZE}" ]] || die "补丁清单体积不符：期望 ${MF_SIZE} 实得 ${msize}"
-"${PY}" -c "
+if [[ -n "${DEX_SHA256_EXPECT}" ]]; then
+  "${PY}" -c "
 import hashlib,sys
 h=hashlib.sha256(open(sys.argv[1],'rb').read()).hexdigest()
 if h!=sys.argv[2]:
     print('dex sha256 mismatch: %s'%h); sys.exit(1)
-print('dex sha256 ok')
-" "${DEX_SRC}" "${DEX_SHA256}" || die "菜单 dex 指纹不符（重跑 mxyzt_build_dex.sh）"
+print('dex sha256 ok（强校验：== DEX_SHA256_EXPECT）')
+" "${DEX_SRC}" "${DEX_SHA256_EXPECT}" || die "菜单 dex 指纹不符：期望 ${DEX_SHA256_EXPECT}（重跑 mxyzt_build_dex.sh）"
+else
+  echo "[check] 菜单 dex sha256（现算）= ${DEX_SHA256}  ← 需要锁定时设 DEX_SHA256_EXPECT=<sha256>"
+fi
 if [[ -n "${SO_SHA256_EXPECT}" ]]; then
   "${PY}" -c "
 import hashlib,sys
@@ -152,7 +162,7 @@ LC_ALL=C grep -aq '\[mxyzt\]' "${SO_SRC}" || die "so 缺少 [mxyzt] 标签"
 LC_ALL=C grep -aq 'libil2cpp.so' "${SO_SRC}" || die "so 缺少 libil2cpp.so 等待库名"
 echo "[check] 底包 ${osize} B / so ${ssize} B / 清单 ${msize} B / dex 指纹 ok / so 现算（见上） / 四条菜单串 ok"
 
-echo "[2/6] merge (python zipfile, 官方非注入条目字节保真)"
+echo "[2/7] merge (python zipfile, 官方非注入条目字节保真)"
 "${PY}" - "${ORIG_APK}" "${WORK}/merged.apk" "${MF_SRC}" "${DEX_SRC}" "${SO_SRC}" "${CXX_SRC}" "${CRT_SRC}" <<'PYEOF'
 import sys, zipfile, os
 
@@ -239,7 +249,7 @@ print("[merge] added: %s" % ','.join(added))
 print("[merge] out size = %d B" % os.path.getsize(out))
 PYEOF
 
-echo "[3/6] zipalign -f -p 4"
+echo "[3/7] zipalign -f -p 4"
 "${ZIPALIGN}" -f -p 4 "${WORK}/merged.apk" "${WORK}/aligned.apk"
 [[ -f "${WORK}/aligned.apk" ]] || die "zipalign failed"
 
@@ -253,11 +263,11 @@ if [[ ! -f "${KS}" ]]; then
   echo "    ★不要用其它证书出正式包：SSAID 按签名证书隔离，换证书 = 换设备 → 卡密 403。"
   echo "────────────────────────────────────────────────────────────"
   cp -f "${WORK}/aligned.apk" "${MERGED}"
-  ls -l "${MERGED}" | awk '{print "[4/6] unsigned merged -> "$NF" ("$5" B)"}'
+  ls -l "${MERGED}" | awk '{print "[4/7] unsigned merged -> "$NF" ("$5" B)"}'
   exit 3
 fi
 
-echo "[4/6] apksigner sign (CN=StarryMagic)"
+echo "[4/7] apksigner sign (CN=StarryMagic)"
 rm -f "${FINAL}"
 "${APKSIGNER}" sign \
   --ks "${KS}" --ks-key-alias "${KS_ALIAS}" \
@@ -266,7 +276,7 @@ rm -f "${FINAL}"
   --out "${FINAL}" "${WORK}/aligned.apk"
 [[ -f "${FINAL}" ]] || die "apksigner produced nothing"
 
-echo "[5/6] verify"
+echo "[5/7] verify"
 rm -f "${MERGED}"
 CERTINFO="$("${APKSIGNER}" verify --print-certs "${FINAL}" | head -6)"
 echo "${CERTINFO}"
@@ -280,8 +290,12 @@ h=hashlib.sha256(open(sys.argv[1],'rb').read())
 print('sha256 %s' % h.hexdigest())
 " "${FINAL}"
 
+echo "[6/7] 加固门禁（所有游戏默认强制，见 AGENTS.md §6）"
+bash "${NIXIANG}/04_scripts/_common/harden_gate.sh" "${FINAL}" --game 冒险与征途 || die "加固门禁未过 ⇒ 拒绝交付该包"
+echo "      ↑ 凭证：09_test/冒险与征途/harden/<apk_md5>.stamp（装机闸门查11 认这个）"
+
 if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
-  echo "[6/6] install -> ${SERIAL}（同签 -r 覆盖保数据；官方签必须先卸载并会清数据）"
+  echo "[7/7] install -> ${SERIAL}（同签 -r 覆盖保数据；官方签必须先卸载并会清数据）"
   ADB="${ADB:-adb}"
   INSTALL_SRC="${FINAL}"
   if [[ "${NIXIANG_HOST}" == "win" ]] && command -v cygpath >/dev/null 2>&1; then
@@ -292,5 +306,5 @@ if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
   "${ADB}" -s "${SERIAL}" shell "dumpsys package ${PKG} | grep -E 'signatures|versionName|lastUpdateTime'"
   echo "[install] 签名哈希应为星光 [6f4dda0b]（若显示官方 [948ce3aa] 说明仍是官方包）"
 else
-  echo "[6/6] skip install (STARRY_INSTALL=1 才装)"
+  echo "[7/7] skip install (STARRY_INSTALL=1 才装)"
 fi
