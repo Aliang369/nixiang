@@ -26,6 +26,10 @@ class Game(Base):
     download_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
     # 游戏来源渠道（TapTap/九游/4399/好游快爆/B站/国际服，选「其它」存自定义文本）；空=未设置
     channel: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # P2-2：该游戏当前在售包的**明文载荷 sha256**（服务端据此派生载荷密钥 K_build）。
+    # 后台可改，改完下一次发票即生效（无需重建镜像）；留空 = 该游戏不签 v3 票（只发 v1/v2）。
+    # ⚠️ 改这一项会让该游戏所有旧包的 K_build 变化 ⇒ 必须同步出新包。
+    payload_sha: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     # 最近编辑时间（后台每次修改游戏自动刷新）；门户页「最新」排序依据
     updated_at: Mapped[Optional[datetime]] = mapped_column(

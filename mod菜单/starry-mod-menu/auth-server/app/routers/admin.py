@@ -1389,3 +1389,64 @@ def delete_toast(
     )
     db.commit()
     return {"ok": True, "message": "开屏 Toast 已删除"}
+
+
+# ---------------- P2-2：载荷 sha（按游戏维护，改完无需重建镜像） ----------------
+
+@router.get("/games/{game_id}/payload")
+def get_game_payload(game_id: str, db: Session = Depends(get_db), _: dict = Depends(require_admin)):
+    from ..services import grant_service as gs
+    row = db.query(Game).filter(Game.game_id == game_id).first()
+    if not row:
+        raise HTTPException(404, "游戏不存在")
+    return {
+        "game_id": row.game_id,
+        "payload_sha": row.payload_sha or "",
+        "env_fallback": (gs.get_settings().payload_sha or ""),
+        "v3_ready": gs.payload_ready(row.game_id),
+        "k_build_fp": (gs.payload_build_key(row.game_id) or b"").hex()[:16],
+        "warning": "改 payload_sha 会改变该游戏载荷密钥 K_build ⇒ 所有旧包功能失效，必须同步出新包",
+    }
+
+
+@router.put("/games/{game_id}/payload")
+async def put_game_payload(
+    game_id: str,
+    request: Request,
+    sha: str = Query("", description="直接给出 64 位 sha256；留空则从上传文件计算"),
+    db: Session = Depends(get_db),
+    admin: dict = Depends(require_admin),
+):
+    import hashlib
+    row = db.query(Game).filter(Game.game_id == game_id).first()
+    if not row:
+        raise HTTPException(404, "游戏不存在")
+
+    value = (sha or "").strip().lower()
+    if not value:
+        form = await request.form()
+        up = form.get("file")
+        if up is None or not hasattr(up, "read"):
+            raise HTTPException(400, "需要 sha 参数或上传 file 字段")
+        data = await up.read()
+        if not data:
+            raise HTTPException(400, "上传文件为空")
+        value = hashlib.sha256(data).hexdigest()
+
+    if value == "clear":
+        row.payload_sha = None
+    else:
+        if len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+            raise HTTPException(400, "payload_sha 必须是 64 位十六进制")
+        row.payload_sha = value
+    db.commit()
+
+    from ..services import grant_service as gs
+    gs._SHA_CACHE.pop(game_id, None)          # 立刻失效缓存
+    return {
+        "ok": True,
+        "game_id": game_id,
+        "payload_sha": row.payload_sha or "",
+        "v3_ready": gs.payload_ready(game_id),
+        "reminder": "请同步出新包，旧包的 K_build 已失效",
+    }

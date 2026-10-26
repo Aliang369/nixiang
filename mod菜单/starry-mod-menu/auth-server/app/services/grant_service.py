@@ -1,11 +1,8 @@
-"""客户端授权短票（v1 = HMAC-SHA256 过渡 / **v2 = RSA-2048 非对称，P1 起主用**）。
+"""客户端授权短票（HMAC-SHA256）。
 
-v2 格式: 2|device|game|exp|feat_mask|kid.<512hex RSA 签名>
-  - feat_mask: per-feature 位掩码（bit i = 功能 i），0 = 停用
-  - 客户端 so 里只有公钥 ⇒ 剥出来也签不出票（这是「二次加卡密倒卖」的物理拦截）
-
-v1 格式（保留一版过渡，旧包还能用）: 1|device|game|exp|menu|card|kid.<hex_hmac>
-
+格式: 1|device|game|exp|menu|card|kid.<hex_hmac>
+- exp: unix 秒，覆盖离线缓存窗口
+- kid: token 指纹前 8 位，或 open（关卡密联网模式）
 客户端 Java/Native 双端验签；无有效票则功能不生效。
 """
 from __future__ import annotations
@@ -21,8 +18,9 @@ from . import sg_rsa
 GRANT_VERSION = "1"
 GRANT_VERSION_V2 = "2"
 
-# feat_mask 上限：客户端只认前 32 位（SgAuth.h: feat_ok 的 idx 0..31）
-FEAT_MASK_ALL = 0xFFFFFFFF
+# ---------------- v2：非对称票（P1，2026-10-27 加固） ----------------
+# 私钥只在服务器 / 出包机；客户端 so 里只有公钥 ⇒ 破解者签不出票。
+FEAT_MASK_ALL = 0xFFFFFFFF          # 客户端只认前 32 位（SgAuth.h: feat_ok 的 idx 0..31）
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +41,7 @@ def rsa_ready() -> bool:
     return _rsa_key() is not None
 
 
-def rsa_fingerprint() -> str | None:
+def rsa_fingerprint():
     key = _rsa_key()
     return sg_rsa.key_fingerprint(key) if key else None
 
@@ -54,25 +52,23 @@ def mint_grant_v2(
     game_id: str,
     offline_cache_seconds: int,
     feat_mask: int = FEAT_MASK_ALL,
-    token: str | None = None,
-) -> str | None:
-    """签发 v2 非对称票。私钥不可用时返回 None（客户端继续用 v1）。"""
+    token=None,
+):
+    """签发 v2 非对称票；私钥不可用时返回 None（客户端继续用 v1）。"""
     key = _rsa_key()
     if key is None:
         return None
     ttl = max(int(offline_cache_seconds or 180), 60)
     exp = int(time.time()) + ttl
     mask = int(feat_mask) & FEAT_MASK_ALL
-    body = "|".join(
-        [
-            GRANT_VERSION_V2,
-            (device_id or "").strip(),
-            (game_id or "").strip(),
-            str(exp),
-            str(mask),
-            token_kid(token),
-        ]
-    )
+    body = "|".join([
+        "2",
+        (device_id or "").strip(),
+        (game_id or "").strip(),
+        str(exp),
+        str(mask),
+        token_kid(token),
+    ])
     try:
         sig = sg_rsa.sign_hex(body.encode("utf-8"), key)
     except Exception as e:  # noqa: BLE001
@@ -99,10 +95,40 @@ def _payload_master():
         return None
 
 
-def payload_build_key():
+_SHA_CACHE = {}          # game_id -> (sha, ts)
+_SHA_TTL = 60.0
+
+
+def _game_payload_sha(game_id):
+    """按 game_id 从库里取载荷 sha（60s 缓存）；取不到回退全局配置（老部署兼容）。"""
+    import time as _t
+    gid = (game_id or "").strip()
+    if gid:
+        hit = _SHA_CACHE.get(gid)
+        now = _t.time()
+        if hit and (now - hit[1]) < _SHA_TTL:
+            return hit[0]
+        try:
+            from ..database import SessionLocal
+            from ..models import Game
+            db = SessionLocal()
+            try:
+                row = db.query(Game).filter(Game.game_id == gid).first()
+                sha = (row.payload_sha or "").strip().lower() if row else ""
+            finally:
+                db.close()
+            _SHA_CACHE[gid] = (sha, now)
+            return sha          # 库里没有就是没有：**不回退全局**，避免所有游戏共用一把 sha
+        except Exception as e:  # noqa: BLE001
+            log.warning("读 games.payload_sha 失败（%s）：本游戏不签 v3", e)
+            return ""
+    return (get_settings().payload_sha or "").strip().lower()   # 仅 game_id 为空时走 env（内部调用）
+
+
+def payload_build_key(game_id=None):
     """K_build = HMAC(master, "sgpay-build|" + sha256(明文载荷))；没配好就返回 None。"""
     master = _payload_master()
-    sha = (get_settings().payload_sha or "").strip().lower()
+    sha = _game_payload_sha(game_id)
     if not master or len(sha) != 64:
         return None
     try:
@@ -112,15 +138,15 @@ def payload_build_key():
     return hmac.new(master, b"sgpay-build|" + digest, hashlib.sha256).digest()
 
 
-def payload_ready():
-    return _rsa_key() is not None and payload_build_key() is not None
+def payload_ready(game_id=None):
+    return _rsa_key() is not None and payload_build_key(game_id) is not None
 
 
 def mint_grant_v3(*, device_id, game_id, offline_cache_seconds,
                   feat_mask=FEAT_MASK_ALL, token=None):
     """签发 v3 票（带载荷密钥包裹）。私钥或载荷钥缺一不可，否则返回 None。"""
     key = _rsa_key()
-    kb = payload_build_key()
+    kb = payload_build_key(game_id)
     if key is None or kb is None:
         return None
     ttl = max(int(offline_cache_seconds or 180), 60)
@@ -173,14 +199,8 @@ def verify_grant_v3(grant, *, device_id, game_id, skew_seconds=45):
 
 
 
-def verify_grant_v2(
-    grant: str,
-    *,
-    device_id: str,
-    game_id: str,
-    skew_seconds: int = 45,
-) -> dict | None:
-    """服务端自测/调试用（客户端以 native 验签为准）。"""
+def verify_grant_v2(grant: str, *, device_id: str, game_id: str, skew_seconds: int = 45):
+    """服务端自测用（客户端以 native 验签为准）。"""
     key = _rsa_key()
     if key is None or not grant or "." not in grant:
         return None
@@ -188,7 +208,7 @@ def verify_grant_v2(
     if not sg_rsa.verify_hex(body.encode("utf-8"), sig, key):
         return None
     parts = body.split("|")
-    if len(parts) != 6 or parts[0] != GRANT_VERSION_V2:
+    if len(parts) != 6 or parts[0] != "2":
         return None
     try:
         exp = int(parts[3])
@@ -200,6 +220,7 @@ def verify_grant_v2(
     if parts[1] != (device_id or "").strip() or parts[2] != (game_id or "").strip():
         return None
     return {"exp": exp, "feat_mask": mask, "kid": parts[5]}
+
 
 
 def _secret() -> bytes:
