@@ -38,6 +38,8 @@ LOCAL_ARM_MODE  := arm
 # Unity il2cpp 系保持下面默认（含 Il2CppApi）；
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
 LOCAL_SRC_FILES := MainModern.cpp Games/DkzjMod.cpp Games/DkzjSfEntry.cpp Unity/Il2CppApi.cpp
+# 私服最新底包 1.2.1：DkzjMod.cpp 按该宏选择 1.2.1 锚点表。
+LOCAL_CPPFLAGS  += -DDKZJ_TARGET_1_2_1
 
 # MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad
 # （2026-09-22 起）。弹壳战机无 ACE（无 libtprt.so）且菜单 dex 已打包进 APK，

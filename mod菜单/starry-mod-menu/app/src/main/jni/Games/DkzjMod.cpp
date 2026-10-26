@@ -1,5 +1,7 @@
 /* ================================================================
- *  蛋壳战机 1.1.8 (vc35) — 星光 Mod
+ *  蛋壳战机 1.1.8 / 私服 1.2.1 (vc35) — 星光 Mod
+ *  私服 1.2.1 通过 Android_dkzjsf.mk 的 DKZJ_TARGET_1_2_1 选择新锚点；
+ *  官方/旧私服 1.1.8 仍走原锚点（同一份源码，两个版本表）。
  *
  *  固定 file offset 只适用于 1.1.8。RVA = file offset + 0x4000。
  *
@@ -9,8 +11,8 @@
  *    当前菜单 = 攻击倍率 / 上帝模式 / 偷盗技能 / 免广告 四项，
  *    外加**常开注入**的拦截上报（BattleRecordManager.IsNeedUploadSaveData）。
  *
- *  1.1.8 锚点重定位（Il2CppDumper dump.cs，delta 仍为 0x4000，四个 hook 点
- *  序言 4 字节与 1.1.7 完全一致）：见下方 kFile* 常量注释。
+ *  锚点按版本分组：1.1.8 与私服 1.2.1 都是 Il2CppDumper dump.cs 实测，delta 0x4000；
+ *  1.2.1 的 12 个 hook 序言与 1.1.8 相同，但 file offset 全部平移。
  *
  *  授予链：
  *    SelectSlotCommand.Exec
@@ -61,10 +63,28 @@ constexpr int kMaxDiagnosticLogs = 32;
 // 每候选诊断日志单独放宽（升级链排查需要看到每一次选择的每个候选，32 条会被前几局吃光）
 constexpr uint32_t kMaxCandLogs = 200;
 
-// 蛋壳战机 1.1.8 (vc35): libil2cpp file offsets. RVA = file offset + 0x4000.
-// 1.1.7 旧值（仅供对照，禁用）：EntityCharacter 0x6C31EC0 / EntityHero 0x6D1C3E4 /
-// CheckAndPlayVideo 0x77E2EF8 / PostProcessLearnedSkill 0x6EDE058 /
-// AddSkillToCharacter 0x6ECE6AC / GetSkill_Main 0x68D88A0 / Game.get_Table 0x75B5390
+// 蛋壳战机 libil2cpp file offsets. RVA = file offset + 0x4000.
+// 1.2.1 与 1.1.8 的 code layout 不同；由 Android_dkzjsf.mk 选择 1.2.1 表。
+#if defined(DKZJ_TARGET_1_2_1)
+// 私服 1.2.1 (vc35): libil2cpp sha256 ff308eea… / metadata def5f032…
+constexpr uintptr_t kFileEntityCharacterChangeHp = 0x6D1B118;   // RVA 0x6D1F118
+constexpr uintptr_t kFileEntityHeroChangeHp = 0x6E13D30;        // RVA 0x6E17D30
+constexpr uintptr_t kFileCheckAndPlayVideo = 0x78E1148;         // RVA 0x78E5148
+constexpr uintptr_t kFilePostProcessLearnedSkill = 0x6FD7A08;   // RVA 0x6FDBA08
+constexpr uintptr_t kFileAddSkillToCharacter = 0x6FC7BDC;       // RVA 0x6FCBBDC
+constexpr uintptr_t kFileGetSkillMain = 0x69C231C;              // RVA 0x69C631C
+constexpr uintptr_t kFileGameGetTable = 0x76F9B58;              // RVA 0x76FDB58
+constexpr uintptr_t kFileSetShowSkillsRandom = 0x6DF7784;      // RVA 0x6DFB784
+constexpr uintptr_t kFileSetShowSkillsAngle = 0x7A51BD8;       // RVA 0x7A55BD8
+constexpr uintptr_t kFileSetShowSkillsContract = 0x7B3168C;    // RVA 0x7B3568C
+constexpr uintptr_t kFileSetShowSkillsPunchboard = 0x7FB7B1C;  // RVA 0x7FBBB1C
+constexpr uintptr_t kFileIsNeedUploadSaveData = 0x7623018;     // RVA 0x7627018
+constexpr uintptr_t kFileHurtBaseFinalizeAttackResult = 0x6E2E404;  // RVA 0x6E32404
+constexpr uintptr_t kFileEntityHeroSetCurrentHp = 0x6E16390;  // RVA 0x6E1A390
+constexpr uintptr_t kFileAdsMgrCheckAndPlayVideo = 0x4457058;  // RVA 0x445B058
+constexpr size_t kOffCharCurrentHp = 0x1A0;    // EntityCharacter._currentHp (1.2.1)
+#else
+// 官方/私服 1.1.8 (vc35): 旧锚点表（保留用于旧包回退）
 constexpr uintptr_t kFileEntityCharacterChangeHp = 0x6C2A314;   // RVA 0x6C2E314
 constexpr uintptr_t kFileEntityHeroChangeHp = 0x6D20180;        // RVA 0x6D24180
 constexpr uintptr_t kFileCheckAndPlayVideo = 0x77E7A98;         // RVA 0x77EBA98
@@ -72,33 +92,21 @@ constexpr uintptr_t kFilePostProcessLearnedSkill = 0x6EE4654;   // RVA 0x6EE8654
 constexpr uintptr_t kFileAddSkillToCharacter = 0x6ED4CA8;       // RVA 0x6ED8CA8
 constexpr uintptr_t kFileGetSkillMain = 0x68DBBD0;              // RVA 0x68DFBD0
 constexpr uintptr_t kFileGameGetTable = 0x75B9F30;              // RVA 0x75BDF30
-// 候选快照来源：各 ISkillSelectData 实现的 set_ShowSkills(List<int>)。
-// 1.1.8 里四处序言都是 0xF81D0FFE（str x30, [sp, #-0x30]!）。
-constexpr uintptr_t kFileSetShowSkillsRandom = 0x6D03FE4;       // RVA 0x6D07FE4 RandomSkillResult
-constexpr uintptr_t kFileSetShowSkillsAngle = 0x790F48C;        // RVA 0x791348C AngleViewData
-constexpr uintptr_t kFileSetShowSkillsContract = 0x79D4C2C;     // RVA 0x79D8C2C ContractDevilData
-constexpr uintptr_t kFileSetShowSkillsPunchboard = 0x7E19A10;   // RVA 0x7E1DA10 PunchboardViewData
-
-// 拦截上报（星空新增）锚点：BattleRecordManager.IsNeedUploadSaveData() 私有静态，
-// 返回 false 时游戏走自带合法分支 SkippedNotNeeded=2（不上传存档录像，不触发对账）。
-constexpr uintptr_t kFileIsNeedUploadSaveData = 0x74E1900;    // RVA 0x74E5900
-constexpr uint32_t kInsnIsNeedUploadSaveData = 0xA9BE57FE;
-
-// ── 卡密包（DSHK / libunityhelper.so）挂点对齐（1.1.8 落点）──
-// 依据：10_docs/蛋壳战机/卡密包拆解/03_卡密包挂点还原与1.1.8映射_20261014.md
-// 卡密包把伤害倍率挂在「攻击结算」而不是扣血处；FP 是 16.16 定点（RAW_ONE=65536），
-// 返回值就是最终攻击值 ⇒ 直接乘倍率即等价于 1.1.7 mod 的做法（它用的就是同一挂点 + 上限 100×）。
+constexpr uintptr_t kFileSetShowSkillsRandom = 0x6D03FE4;       // RVA 0x6D07FE4
+constexpr uintptr_t kFileSetShowSkillsAngle = 0x790F48C;        // RVA 0x791348C
+constexpr uintptr_t kFileSetShowSkillsContract = 0x79D4C2C;     // RVA 0x79D8C2C
+constexpr uintptr_t kFileSetShowSkillsPunchboard = 0x7E19A10;   // RVA 0x7E1DA10
+constexpr uintptr_t kFileIsNeedUploadSaveData = 0x74E1900;      // RVA 0x74E5900
 constexpr uintptr_t kFileHurtBaseFinalizeAttackResult = 0x6D39C44;  // RVA 0x6D3DC44
+constexpr uintptr_t kFileEntityHeroSetCurrentHp = 0x6D227E0;  // RVA 0x6D267E0
+constexpr uintptr_t kFileAdsMgrCheckAndPlayVideo = 0x43C9720;  // RVA 0x43CD720
+constexpr size_t kOffCharCurrentHp = 0x198;    // EntityCharacter._currentHp (1.1.8)
+#endif
+constexpr uint32_t kInsnIsNeedUploadSaveData = 0xA9BE57FE;
 constexpr uint32_t kInsnHurtBaseFinalizeAttackResult = 0xF81D0FFE;
 constexpr size_t kOffHurtEntity = 0x60;        // HurtBase.Entity（被击中方）
 constexpr int64_t kFpRawOne = 65536;           // FP.RAW_ONE
-// 上帝模式：卡密包同时锁 ChangeHp 与 CurrentHp 属性 setter（后者星光版之前没挂）。
-constexpr uintptr_t kFileEntityHeroSetCurrentHp = 0x6D227E0;  // RVA 0x6D267E0
 constexpr uint32_t kInsnEntityHeroSetCurrentHp = 0xF81D0FFE;
-constexpr size_t kOffCharCurrentHp = 0x198;    // EntityCharacter._currentHp
-// 免广告：卡密包挂在 Framework 层 4 参 CheckAndPlayVideo（比 ADModuleMgr 更低，
-// 所有广告入口都过这里），做法＝不播广告，直接反射调用 onShow() 与 onClose(true)。
-constexpr uintptr_t kFileAdsMgrCheckAndPlayVideo = 0x43C9720;  // RVA 0x43CD720
 constexpr uint32_t kInsnAdsMgrCheckAndPlayVideo = 0xD10183FF;
 
 constexpr uint32_t kInsnEntityCharacterChangeHp = 0xA9BB6FFE;

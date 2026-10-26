@@ -1,0 +1,64 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123",
+  "timestamp": "20261026_134123",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "06_dumped/蛋壳战机/il2cpp_dump_1.2.1",
+      "type": "dir",
+      "size_kib": 443476,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.2.1",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/06_dumped/蛋壳战机/il2cpp_dump_1.2.1"
+    },
+    {
+      "path": "06_dumped/蛋壳战机/il2cpp_dump_1.2.1.tool",
+      "type": "dir",
+      "size_kib": 736,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.2.1.tool",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/06_dumped/蛋壳战机/il2cpp_dump_1.2.1.tool"
+    },
+    {
+      "path": "06_dumped/蛋壳战机/static_inspect_1.2.1",
+      "type": "dir",
+      "size_kib": 224184,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/蛋壳战机/static_inspect_1.2.1",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/06_dumped/蛋壳战机/static_inspect_1.2.1"
+    },
+    {
+      "path": "07_patched/蛋壳战机",
+      "type": "dir",
+      "size_kib": 636,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/蛋壳战机",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/07_patched/蛋壳战机"
+    },
+    {
+      "path": "09_test/蛋壳战机",
+      "type": "dir",
+      "size_kib": 2080,
+      "source": "/Users/aliang/Documents/nixiang/09_test/蛋壳战机",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/09_test/蛋壳战机"
+    },
+    {
+      "path": "09_test/_recorder/20261026_133340",
+      "type": "dir",
+      "size_kib": 8,
+      "source": "/Users/aliang/Documents/nixiang/09_test/_recorder/20261026_133340",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/09_test/_recorder/20261026_133340"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/libs_dkzjsf",
+      "type": "dir",
+      "size_kib": 1956,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dkzjsf",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/mod菜单/starry-mod-menu/libs_dkzjsf"
+    },
+    {
+      "path": "mod菜单/starry-mod-menu/obj_dkzjsf",
+      "type": "dir",
+      "size_kib": 5760,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/obj_dkzjsf",
+      "quarantine": "/Users/aliang/.Trash/nixiang_dkzj_sf_1.2.1_20261026_20261026_134123/mod菜单/starry-mod-menu/obj_dkzjsf"
+    }
+  ]
+}

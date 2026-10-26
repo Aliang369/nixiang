@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 弹壳战机私服（com.wxdmxga.dkzj）— 星光 native 构建（tag=dkzjsf，复用 DkzjMod）。
+# 弹壳战机私服（com.wxdmxga.dkzj）1.2.1 — 星光 native 构建（tag=dkzjsf，复用 DkzjMod）。
 #
 # 与 dkzj_build_so.sh 的差异：
 #   构建脚本 Android_dkzjsf.mk（入口 Games/DkzjSfEntry.cpp）、输出 libs_dkzjsf、obj_dkzjsf；
@@ -16,6 +16,10 @@ OUT_LIBS="$STARRY_SRC/libs_dkzjsf"
 SO="$OUT_LIBS/arm64-v8a/libstarry_magic.so"
 
 [[ -x "$NDK/ndk-build" ]] || { echo "ERROR: ndk-build missing at $NDK" >&2; exit 1; }
+LC_ALL=C grep -q -- "-DDKZJ_TARGET_1_2_1" "$JNI/Android_dkzjsf.mk" \
+  || { echo "ERROR: Android_dkzjsf.mk 缺 -DDKZJ_TARGET_1_2_1（会误用 1.1.8 锚点）" >&2; exit 1; }
+LC_ALL=C grep -q -- "kFileEntityCharacterChangeHp = 0x6D1B118" "$JNI/Games/DkzjMod.cpp" \
+  || { echo "ERROR: DkzjMod.cpp 缺 1.2.1 锚点表" >&2; exit 1; }
 for f in "$JNI/Android_dkzjsf.mk" "$JNI/Games/DkzjMod.cpp" "$JNI/Games/DkzjSfEntry.cpp"; do
   [[ -f "$f" ]] || { echo "ERROR: missing $f" >&2; exit 1; }
 done
@@ -66,5 +70,6 @@ for bad in "Toggle_宝箱全拿" "Toggle_拿全部技能" "Slider_伤害倍率:1
   [[ "$HIT" -eq 0 ]] || { echo "ERROR: $SO 含越界菜单串 $bad" >&2; exit 1; }
 done
 
+echo "[build_so sf] target=1.2.1"
 echo "[build_so sf] done → $SO ($(md5 -q "$SO"))"
 echo "[build_so sf] size = $(stat -f '%z' "$SO")"

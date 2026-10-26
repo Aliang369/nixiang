@@ -1,0 +1,34 @@
+# 蛋壳战机私服 1.2.1 星空版 L2 决定性证据（2026-10-26）
+# 来源: 09_test/蛋壳战机/precheck_20261026_132606/logcat.txt
+# 设备: f9a116a2  Android 16  arm64-v8a
+
+== 初始化 ==
+10-26 13:26:10.537 30596 30596 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-26 13:26:10.652 30596 30596 I ModBridge: auth game_id synced from native: dkzjsf
+10-26 13:26:10.653 30596 30596 I ModBridge: auth game_id synced from native: dkzjsf
+10-26 13:26:10.653 30596 30596 I ModBridge: auth game_id synced from native: dkzjsf
+10-26 13:26:10.653 30596 30596 I ModBridge: auth game_id synced from native: dkzjsf
+10-26 13:26:10.670 30596 30596 I MenuService: native menu shown mode=ACTIVITY
+10-26 13:26:10.670 30596 30646 I ModBridge: auth game_id synced from native: dkzjsf
+10-26 13:26:12.203 30596 30647 I Mod_Menu: [dkzj] AddSkillToCharacter resolved @0x736a2b7bdc
+10-26 13:26:12.204 30596 30647 I Mod_Menu: [dkzj] GetSkill_Main resolved @0x7369cb231c
+10-26 13:26:12.205 30596 30647 I Mod_Menu: [dkzj] Game.get_Table resolved @0x736a9e9b58
+10-26 13:26:12.205 30596 30647 I Mod_Menu: [dkzj] lib ready; hooks file-offset + by-name fallback
+10-26 13:26:12.205 30596 30647 I StarryMagic: [dkzjsf] 初始化成功
+
+== 12/12 hook 命中（全部为 1.2.1 新 file offset）==
+10-26 13:26:12.178 30596 30647 I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked file=0x6D1B118
+10-26 13:26:12.182 30596 30647 I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked file=0x6E13D30
+10-26 13:26:12.185 30596 30647 I Mod_Menu: [dkzj] HurtBase.FinalizeAttackResult hooked file=0x6E2E404
+10-26 13:26:12.188 30596 30647 I Mod_Menu: [dkzj] EntityHero.set_CurrentHp hooked file=0x6E16390
+10-26 13:26:12.190 30596 30647 I Mod_Menu: [dkzj] GameAdsManager.CheckAndPlayVideo hooked file=0x4457058
+10-26 13:26:12.192 30596 30647 I Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill hooked file=0x6FD7A08
+10-26 13:26:12.195 30596 30647 I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked file=0x78E1148
+10-26 13:26:12.197 30596 30647 I Mod_Menu: [dkzj] RandomSkillResult.set_ShowSkills hooked file=0x6DF7784
+10-26 13:26:12.198 30596 30647 I Mod_Menu: [dkzj] AngleViewData.set_ShowSkills hooked file=0x7A51BD8
+10-26 13:26:12.199 30596 30647 I Mod_Menu: [dkzj] ContractDevilData.set_ShowSkills hooked file=0x7B3168C
+10-26 13:26:12.200 30596 30647 I Mod_Menu: [dkzj] PunchboardViewData.set_ShowSkills hooked file=0x7FB7B1C
+10-26 13:26:12.201 30596 30647 I Mod_Menu: [dkzj] BattleRecordManager.IsNeedUploadSaveData hooked file=0x7623018
+
+== 崩溃判定（应为 0）==
+FATAL/SIGSEGV/tombstone/ANR 命中: 0
