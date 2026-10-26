@@ -163,3 +163,17 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   ③ 裸比对对象首字 `klass` 与记录值一致，不一致 = 已回收/复用 ⇒ 直接放弃，不写。
   ④ 兜底再给所有「按名解析」入口加零 API 自证：`klass` 与 `klass+0x10`（Klass::name）都必须在用户态，否则返回 0（fail-safe）。
 - 反例（本轮修掉）：`RestoreProj` 里 `api.object_class(slot.data)` + `Off("_count")`；`RestoreInvulnBits` 直接写记录地址（现已加可读性闸）。
+
+## 候选：改含中文的文件**禁用 PowerShell 文本管道**（会按代码页/UTF-16 转码）
+
+- 状态：候选（2026-10-27 勇士之心会话实证事故；落点建议 `AGENTS.md` §5「中文路径乱码」邻近 + `TOOLBOOK.md`）
+- 事故：给后台 `static/admin/index.html` 改一行版本号，用
+  `(Get-Content -Raw) -replace ... | Set-Content -NoNewline -Encoding UTF8` ⇒ 整个文件 227 增 / 231 删，
+  中文被按系统代码页读出再以 UTF-8 写回，**全页乱码**（无 U+FFFD、无 ???，字符数只差 502，肉眼与门禁都不报错）。
+  补救时 `git show HEAD~1:path > file` 又踩第二次：PowerShell 重定向默认写 **UTF-16LE**（51,070 B → 98,836 B）。
+- 正确姿势（已实施）：`git checkout HEAD~1 -- <path>` 还原字节 → **Python 字节级**替换
+  `io.open(p,"rb").read().replace(b"v=5", b"v=6")` → `io.open(p,"wb").write(...)`。
+  结果 diff 从 227/231 降到 **1 行**，文件 51,070 字节与原文件完全一致。
+- 结论（可外推）：本仓一切文件改写走 ① `edit`/`write` 工具 ② Git Bash + Python 字节级读写。
+  **禁止** PowerShell 的 `Get-Content`/`Set-Content`/`-replace`/`>` 重定向参与文本改写；
+  校验必须比字节数 + 关键中文串（`"...".encode("utf-8") in b`），不能只看 PowerShell 打印。
