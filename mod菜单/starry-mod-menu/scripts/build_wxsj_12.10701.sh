@@ -32,7 +32,9 @@ case "$PHASE" in
   *) echo "ERROR: WXSJ_PHASE 只接受 diag|release（当前 '$PHASE'）"; exit 1 ;;
 esac
 
-for f in "$ORIG_APK" "$STARRY_APK" "$FINAL_SO" "$KS"; do
+# STARRY_APK（gradle debug 包）只在「无仓库菜单模板、需要现场 smali 组装」时用到；
+# 模板存在（默认路径）时不参与组装，故不列入硬性前置（2026-10-26：app/build 清理后模板模式仍可出包）。
+for f in "$ORIG_APK" "$FINAL_SO" "$KS"; do
   [[ -f "$f" ]] || { echo "ERROR: missing $f"; exit 1; }
 done
 
@@ -156,6 +158,8 @@ if [[ -s "$MENU_TPL_DIR/$STARRY_DEX" ]]; then
   cp -f "$MENU_TPL_DIR/$STARRY_DEX" "$WORK/stage/$STARRY_DEX"
   echo "  menu dex: 仓库模板 $MENU_TPL_DIR/$STARRY_DEX ($(stat -f %z "$WORK/stage/$STARRY_DEX") B，跳过 apktool/smali 组装)"
 else
+
+[[ -f "$STARRY_APK" ]] || { echo "ERROR: 无模板且缺 gradle debug 包 ${STARRY_APK}（跑 gradlew assembleDebug 或提供 WXSJ_MENU_TPL）"; exit 1; }
 
 # 只装 com/starry：易盾壳主 dex 不动，避免模板整包 10 dex 干扰壳的 dex 校验/加载序。
 apktool d -f -o "$WORK/starry_dec" "$STARRY_APK" >/dev/null

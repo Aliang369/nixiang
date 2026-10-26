@@ -51,7 +51,12 @@ static const uint8_t kExecPrologue[16] = {
     0xfe, 0x0f, 0x1c, 0xf8, 0xf8, 0x5f, 0x01, 0xa9,
     0xf6, 0x57, 0x02, 0xa9, 0xf4, 0x4f, 0x03, 0xa9,
 };
-// ---- v7.19 双版本：hotfix2 2030080 + hotfix3 2028544，按运行时长度/哈希自动选 ----
+// ---- 双版本表：hotfix2 2030080 + hotfix3 2028544（按运行时长度/哈希自动选）----
+// 2026-10-26：官方热更又换代 —— 长度仍是 2028544，整包 fnv1a64 由 0x43df8d0d87bf08b2
+//   变为 0x1bf6c08f1ba38809（真机 Exec call 实锤；同长不同字节）。已用 DIAG 包重抓官方 dll
+//   （2,028,544 B / sha256 eb149a78…）→ v1 31 patches + δ 全链重放 → 补丁 dll 仍是 2,022,912 B。
+//   新哈希为「当前官方」主行；旧哈希保留一行指向同一份内嵌补丁（服务端若回滚到旧 hf3，
+//   照旧识别为已知底包，不再弹「已忽略本次游戏热更」提示）。
 static const char kDllNameKey[] = "targetfuntional";
 struct DllVariant {
     int32_t officialLen;
@@ -66,7 +71,8 @@ extern "C" const uint8_t _binary_wxsj_hf3_start[];
 extern "C" const uint8_t _binary_wxsj_hf3_end[];
 static constexpr DllVariant kDllVariants[] = {
     {2030080, 0x91f9acbd064fa875ULL, 0x839daa17e05c50ceULL, _binary_wxsj_hf2_start, _binary_wxsj_hf2_end},
-    {2028544, 0x43df8d0d87bf08b2ULL, 0x8104d06951efb074ULL, _binary_wxsj_hf3_start, _binary_wxsj_hf3_end},
+    {2028544, 0x1bf6c08f1ba38809ULL, 0x816bab7dd2d7e4abULL, _binary_wxsj_hf3_start, _binary_wxsj_hf3_end},
+    {2028544, 0x43df8d0d87bf08b2ULL, 0x816bab7dd2d7e4abULL, _binary_wxsj_hf3_start, _binary_wxsj_hf3_end},
 };
 static const DllVariant* PickDllVariant(int32_t len, uint64_t h) {
     for (const auto& v : kDllVariants) {

@@ -276,8 +276,9 @@ LOCAL_ARM_MODE  := arm
 # 2026-10-14 从真机 1.0.3 官方包重新取证：函数入口/两处 bl/帧压入 stp 与 1.0.2 同址同目标
 #   （唯一版本相关常量 FILE_ENTER_INTERP 未变）；CstjjsMod 的 Il2CppReady gating 原样复用
 # 历史：1.0.2 2026-09-29 / 1.0.1 file 0x2657084 / 0.9.10 file 0x2656920
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
-LOCAL_SRC_FILES := Main.cpp Games/CstjjsMod.cpp Unity/Il2CppApi.cpp
+# 2026-10-26 切走（无限升级 12.10701 vc1644 星空版复刻出包），恢复时取消下面两行注释
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_CSTJJS
+# LOCAL_SRC_FILES := Main.cpp Games/CstjjsMod.cpp Unity/Il2CppApi.cpp
 # 偶像梦幻祭2 4.4.8684 — Es2Mod 探测 v1（dump-only：il2cpp 全量枚举→判定函数定位）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ES2
 # ifdef STARRY_TRACE
@@ -299,9 +300,9 @@ ifdef STARRY_GAME_DZQS
 LOCAL_CFLAGS    := $(filter-out -DSTARRY_GAME_WDYZ,$(LOCAL_CFLAGS)) -DENABLE_UNITY_HOOK -DSTARRY_GAME_DZQS
 LOCAL_SRC_FILES := Main.cpp Games/DzqsMod.cpp Unity/Il2CppApi.cpp
 endif
-# 无限升级 12.10701 / vc1644 — 2026-10-14 切走（长生天机降世 1.0.3 出包），恢复时取消下面两行注释
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
-# LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
+# 无限升级 12.10701 / vc1644 — 2026-10-26 激活（官方原版 12.10701 复刻星空版；走 scripts/wxsj_so_only.sh）
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
+LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
 # 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
 # 20260908 SIGABRT 修复：类查齐后隔轮再读 offsets（热更 layout 中途 field_get_offset 必崩）
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR

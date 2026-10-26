@@ -30,8 +30,12 @@ using System.Linq;
 
 // 2026-09-27 晚间回滚适配：官方 dll 从 2028544 回滚到 2030080（fnv1a64 0x91f9acbd064fa875）。
 // SRC = 用当前官方 dll 重打出的 v1（31 patches）；DST = 最终补丁 dll（必须 ≤ kOrigDllLen=2030080）
-const string SRC = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260927_hotfix3.dll";
-const string DST = "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional.dll";
+// 2026-10-26：官方又换代（同长度 2028544 / 新 fnv 0x1bf6c08f1ba38809）⇒ 允许环境变量指定输入输出，
+// 默认值保持原样（不改既有复现口径）。用法：WXSJ_SRC=<新官方 v1> WXSJ_DST=<产物> dotnet run
+var SRC = System.Environment.GetEnvironmentVariable("WXSJ_SRC")
+          ?? "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional_v1_20260927_hotfix3.dll";
+var DST = System.Environment.GetEnvironmentVariable("WXSJ_DST")
+          ?? "/Users/aliang/Documents/nixiang/07_patched/无限升级/targetfuntional.dll";
 
 string[] Blacklist = {
     "CheckBan", "CheckBanReport", "AddPlayerReport", "RecordItemUseAnomaly",
