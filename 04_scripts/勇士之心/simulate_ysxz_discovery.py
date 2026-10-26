@@ -24,6 +24,9 @@ from pathlib import Path
 
 MOD_SPLIT = re.compile(r"\n([A-Za-z_$][\w$]*): \[ function\((\w+), (\w+), (\w+)\) \{")
 ANCHORS = ("maxApDefRate", "lockMinHP", "hitPauseTimeScale", "AUTO_BATTLE")
+# 2026-10-26：采集阶段的“战斗明文”锚点集（只用于排序，不用于筛掉模块）
+HANCHORS = ("maxApDefRate", "baseCritDamage", "atkEntity", "lockMinHP",
+            "hitPauseTimeScale", "isPlayerCamp")
 RE_APPLY = re.compile(r"(\w+)\.(\w+)\s*=\s*Math\.max\(\1\.\2\s*-\s*\w+,\s*\1\.lockMinHP\)")
 RE_ISPLAYER = re.compile(r'case\s*["\']isPlayer["\']\s*:\s*return\s+\w+\.(\w+)\.(\w+)\s*[;,}]')
 RE_CAMP = re.compile(r"\w+\.(\w+)\.(\w+)\s*===\s*\w+\s*!==\s*\w+\.isPlayerCamp")
@@ -88,57 +91,81 @@ def simulate(root: Path, auto_mode: str = "NEW") -> dict:
                "assets/battleRender/index.js", "assets/main/index.js"]
     auto_test = RE_AUTO_NEW if auto_mode == "NEW" else RE_AUTO_OLD
     out: dict = {"root": str(root), "auto_fp": auto_mode, "bundles": {}}
-    names: dict = {}
-    order: list[tuple[str, str]] = []
+    # ★ 2026-10-26（res 1.1.10.0 实机取证）：运行时 MOD_boot 的 N 是 **per-bundle** 的
+    #   （每个包调一次 MOD_boot 就新建一份），且采集范围已从“只含伤害公式三指纹的模块”放宽到
+    #   “本包全部模块，含战斗明文的排前面”。这里必须照着做，否则又会得出
+    #   “camp/hp/ctx/world 全 undefined ⇒ isMine 恒 false” 的假结论（四项功能因此被判死）。
+    mods_by_bundle: dict[str, list[tuple[str, str]]] = {}
     for rel in bundles:
-        p = root / rel
-        if not p.exists():
+        pth = root / rel
+        if not pth.exists():
             out["bundles"][rel] = {"error": "missing"}
             continue
-        mods = extract_modules(p.read_text(encoding="utf-8", errors="replace"))
+        mods = extract_modules(pth.read_text(encoding="utf-8", errors="replace"))
         out["bundles"][rel] = {"modules": len(mods)}
-        for name, src in mods:
-            order.append((f"{rel}::{name}", src))
+        mods_by_bundle[rel] = mods
 
-    # 1) harvestA / harvestB（按注册顺序，命中即锁定）
-    for key, src in order:
-        if "hx" not in names:
-            m = RE_ISPLAYER.search(src)
-            if m:
-                names.update(hx=m.group(1), isPlayer=m.group(2), hx_mod=key)
-        if "hD" not in names:
-            m = RE_CAMP.search(src)
-            if m:
-                names.update(hD=m.group(1), camp=m.group(2), hD_mod=key)
-        if "ctxKey" not in names:
-            m = RE_CTX.search(src)
-            if m:
-                names.update(ctxKey=m.group(1), teams=m.group(2), teamCamp=m.group(3), ctx_mod=key)
-        if "hp" not in names:
-            m = RE_HP.search(src)
-            if m:
-                names.update(hp=m.group(2), hp_mod=key)
-    if "ctxKey" in names and "world" not in names:
-        for key, src in order:
-            if "lockMinHP" not in src:
-                continue
-            re_world = re.compile(r"this\.([A-Za-z_$][\w$]*)\." + names["ctxKey"] + r"\.")
-            for m in re_world.finditer(src):
-                if m.group(1) != "context":
-                    names.update(world=m.group(1), world_mod=key)
+    def harvest(mods: list[tuple[str, str]]) -> dict:
+        n: dict = {}
+        anchored = [s for _, s in mods if any(a in s for a in HANCHORS)]
+        rest = [s for _, s in mods if not any(a in s for a in HANCHORS)]
+        for src in anchored + rest:
+            if "hx" not in n:
+                m = RE_ISPLAYER.search(src)
+                if m:
+                    n.update(hx=m.group(1), isPlayer=m.group(2))
+            if "hD" not in n:
+                m = RE_CAMP.search(src)
+                if m:
+                    n.update(hD=m.group(1), camp=m.group(2))
+            if "ctxKey" not in n:
+                m = RE_CTX.search(src)
+                if m:
+                    n.update(ctxKey=m.group(1), teams=m.group(2), teamCamp=m.group(3))
+            if "hp" not in n:
+                m = RE_HP.search(src)
+                if m:
+                    n.update(hp=m.group(2))
+        if "ctxKey" in n and "world" not in n:
+            for src in anchored + rest:
+                for pat in (re.compile(r"this\.([A-Za-z_$][\w$]*)\." + n["ctxKey"] + r"\."),
+                            re.compile(r"[\w$)\]]\.([A-Za-z_$][\w$]*)\." + n["ctxKey"] + r"\.")):
+                    for m in pat.finditer(src):
+                        if m.group(1) != "context":
+                            n["world"] = m.group(1)
+                            break
+                    if "world" in n:
+                        break
+                if "world" in n:
                     break
-            if "world" in names:
-                break
+        return n
+
+    # 运行时“发现名”的取值者 = 战斗包那一次 MOD_boot（钩子全在这里装）
+    names = harvest(mods_by_bundle.get(bundles[0], []))
+    out["names_scope"] = bundles[0]
+    for rel in bundles:
+        if rel in mods_by_bundle:
+            out["bundles"][rel]["names"] = harvest(mods_by_bundle[rel])
     out["names"] = names
 
-    # 2) 目标模块 = 源码含 4 个锚点之一的模块
-    targets = [(k, s) for k, s in order if any(a in s for a in ANCHORS)]
+    # 2) 目标模块（运行时 = 源码含 maxApDefRate|lockMinHP|hitPauseTimeScale|AUTO_BATTLE）
+    #    与 3) 指纹发现，都在**战斗包自己**的模块集合里做（与运行时共用同一份 N）。
+    targets = [(f"{bundles[0]}::{k}", s) for k, s in mods_by_bundle.get(bundles[0], [])
+               if any(a in s for a in ANCHORS)]
     out["target_modules"] = [k for k, _ in targets]
 
-    # 3) tryLogic / tryEntity / trySystem：运行时对目标模块的“导出函数”逐个 findFn。
-    #    离线拿不到 exports，用模块内函数体集合（超集）近似，粒度仍是函数级。
     found: dict = {}
-    for key, src in targets:
+    # 运行时每个包各自 scan 自己的 exports，用自己那份 N；这里同样逐包跑，再合并结果
+    all_targets: list[tuple[str, str, dict]] = []
+    for rel in bundles:
+        if rel not in mods_by_bundle:
+            continue
+        bn = harvest(mods_by_bundle[rel])
+        for k, s in mods_by_bundle[rel]:
+            if any(a in s for a in ANCHORS):
+                all_targets.append((f"{rel}::{k}", s, bn))
+    out["target_modules"] = [k for k, _, _ in all_targets]
+    for key, src, names in all_targets:
         bodies = extract_function_bodies(src)
         if "kill_formula" not in found and any(RE_KILL_FP(b) for b in bodies):
             found["kill_formula"] = key

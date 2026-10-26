@@ -661,7 +661,9 @@
  * 另外每 tick 计数，第 15 / 60 tick 各打一张状态快照；`window.__AUTO_STATE__()` 随时可读。
  * ========================================================================== */
 ;(function () {
-  var AUTO_VER = 4;   /* 4 = 2026-10-25：补回 autoBattleTick() 驱动调用（3 = 自动化四项改挂官方口 + 结算面板时机） */
+  var AUTO_VER = 5;   /* 5 = 2026-10-26：res 1.1.10.0 短名换语义 ⇒ 全部改明文锚点/结构指纹发现，
+                       *     面板时机改吃 baseline 的 window.__starry_fin 事件；出售/分解/穿戴改用
+                       *     游戏自己的「一键」口（bag 按品质批量、equip 一键穿戴）。 */
   if (typeof window === "undefined") return;
   var _prev = window.__starry_auto;
   if (_prev && (_prev.__v | 0) >= AUTO_VER) return;
@@ -704,6 +706,8 @@
     acTickSeen: 0, evGold: 0, evRepeat: 0, evClean: 0, evWear: 0, sdProbe: 0,
     errN: 0, lastErr: "", note: "", loopStarted: false, warnN: 0
   };
+  /* 发现缓存（1.1.10.0）：三个 API 表都是“第一次用的时候在真实对象上按指纹找”，不写死短名 */
+  A.lmApi = null; A.bagApi = null; A.eqApi = null; A.finSeen = 0;
 
   /* ------------------------------------------------------------------ 基础 -- */
   function MOD() { try { return window.MOD || null; } catch (e) { return null; } }
@@ -720,6 +724,54 @@
     var s = tag + ": " + msgOf(e);
     A.lastErr = s;
     if (A.errN <= 6) log("ERR " + s);
+  }
+
+  /* ---------------------------------------------- 1.1.10.0 发现层（不写死短名）--
+   * res 1.1.10.0 把本层依赖的短名整体**换了语义**（不是改名）：
+   *   bag.bZw / bag.bZv      -> 变成无参的“背包/红点检查”（不发协议）
+   *   localMgr.coe / cof     -> 变成音效/音乐音量；localMgr.cod -> 城镇显示人数
+   *   equip.fFu              -> 变成“宝石镶嵌”（fCV/fCW 同理换了靶子）
+   *   fguiMgr.cUU.bdG        -> 整条“按名取面板实例”链消失
+   * 所以本层不再写死任何短名，一律用【明文锚点 + 结构指纹】在真实对象上找：
+   *   存档字段名 autoBattleFlag / autoSellEquipFlag / autoDecomposeEquipFlag（混淆器不动）；
+   *   协议负载明文 num: / gridList / items:；UI 子节点名 btn_again / btn_toNext。
+   * 找不到就 miss() 一条日志，绝不静默。 */
+  function srcOf(f) { try { return Function.prototype.toString.call(f); } catch (e) { return ""; } }
+  function findFnOn(obj, arity, test) {
+    if (!obj) return null;
+    for (var k in obj) {
+      var v;
+      try { v = obj[k]; } catch (e) { continue; }
+      if (typeof v !== "function") continue;
+      if (arity !== null && (v.length | 0) !== arity) continue;
+      var s = srcOf(v);
+      if (test(s)) return k;
+    }
+    return null;
+  }
+  /* localMgr 的自动开关口（1.1.10.0 实测语义，均按存档字段名柄指纹）：
+   *   1 参 + autoBattleFlag           = 读重复挑战位
+   *   2 参 + autoBattleFlag           = 写重复挑战位(idx,on)
+   *   1 参 + autoSellEquipFlag        = 读自动出售品质位(q)
+   *   1 参 + autoDecomposeEquipFlag   = 读自动分解品质位(q)
+   *   2 参 + 两个 flag 同时出现         = 整体写两套品质位( sellArr, decoArr ) */
+  function LM() {
+    var z = F(), lm = z && z.localMgr;
+    if (!lm) return null;
+    if (!A.lmApi) {
+      var d = {};
+      d.repRead = findFnOn(lm, 1, function (s) { return s.indexOf("autoBattleFlag") >= 0; });
+      d.repWrite = findFnOn(lm, 2, function (s) { return s.indexOf("autoBattleFlag") >= 0; });
+      d.sellRead = findFnOn(lm, 1, function (s) { return s.indexOf("autoSellEquipFlag") >= 0; });
+      d.decoRead = findFnOn(lm, 1, function (s) { return s.indexOf("autoDecomposeEquipFlag") >= 0; });
+      d.qualWrite = findFnOn(lm, 2, function (s) {
+        return s.indexOf("autoSellEquipFlag") >= 0 && s.indexOf("autoDecomposeEquipFlag") >= 0;
+      });
+      A.lmApi = d;
+      log("localMgr api: repeatRead=" + d.repRead + " repeatWrite=" + d.repWrite +
+          " sellRead=" + d.sellRead + " decoRead=" + d.decoRead + " qualWrite=" + d.qualWrite);
+    }
+    return A.lmApi;
   }
 
   /* 战斗信号。两条独立通道取【或】：
@@ -1178,9 +1230,10 @@
    * （说明游戏自己那一路被前置条件挡住），才替它点一次「再次挑战」
    * （面板方法 ekx = btn_again 的 onClick 绑定，1.1.9.1 已核 game@52255）。
    */
-  var REPEAT_IDX = 1;          /* $OY.b；对应位 = 1<<1 = 2 */
+  var REPEAT_IDX = 1;          /* 结算面板 wA 读的同一位（$OY.b = 1） */
   function repeatRead(lm) {
-    try { if (lm && typeof lm.coc === "function") return !!lm.coc(REPEAT_IDX); } catch (e) {}
+    var api = LM();
+    try { if (api && api.repRead) return !!lm[api.repRead](REPEAT_IDX); } catch (e) {}
     return null;
   }
   function repeatFlagSync() {
@@ -1188,114 +1241,57 @@
     try {
       var z = F(), lm = z && z.localMgr;
       if (!lm) return;                                  /* $eZ 还没加载：不算缺失，别误报 */
-      var holder = lm.cnh || lm.cms || null;            /* 1.1.9.1 = cnh */
-      if (!holder) {
-        if (on) miss("rflag", "自动重复挑战: localMgr 下没有 autoBattleFlag 容器（cnh/cms 都不在）");
+      var api = LM();
+      if (!api || !api.repWrite) {
+        if (on) miss("rflag", "自动重复挑战: localMgr 上找不到 autoBattleFlag 写入口 —— 该功能不会生效");
         return;
       }
-      var via = "";
-      if (typeof lm.cod === "function") {
-        try { lm.cod(REPEAT_IDX, on); via = "cod"; } catch (e) { err("repeat/cod", e); }
-      }
-      if (!via) {                                       /* 兜底：直接写位（公式同 cod） */
-        var mask = 1 << REPEAT_IDX, f = Number(holder.autoBattleFlag) || 0;
-        var want = on ? (f | mask) : (f & ~mask);
-        if (want !== f) holder.autoBattleFlag = want;
-        via = "flag";
-      }
+      /* 写入口会触发存档，只在读取值与开关不一致时写一次 */
+      var cur = repeatRead(lm);
+      if (cur === on) { A.repeatLast = on; return; }
+      lm[api.repWrite](REPEAT_IDX, on);
       var now = repeatRead(lm);
-      if (A.repeatLast !== now) {
-        A.repeatLast = now;
-        A.repeatFlagSync++;
-        if (A.repeatFlagSync <= 3) {
-          log("repeat: 自动重复挑战位 " + via + " 置" + (on ? "1" : "0")
-              + " -> 读回 coc(1)=" + now + " flag=" + (Number(holder.autoBattleFlag) || 0));
-        }
+      A.repeatLast = now;
+      A.repeatFlagSync++;
+      if (A.repeatFlagSync <= 3) {
+        log("repeat: autoBattleFlag 位 " + REPEAT_IDX + " 置" + (on ? 1 : 0) + " -> 读回=" + now);
       }
     } catch (e) { err("repeat/flag", e); }
   }
 
   /* ============================================ (3)(4) 自动出售 / 自动分解 ===
-   * 2026-10-25（res 1.1.9.1 反查，修「开关开着却没效果」）：
-   * 旧实现调的 bag.bYK / bag.bYJ 在这一版**是判定函数**——
-   *   bYK(node) = 能否分解（EquipTable.decompose 非空）
-   *   bYJ(node) = 是否带融合石
-   * 把品质数组传进去只会返回布尔值，一个协议都不会发。这一版必须用官方自己的
-   * 两条批量口（结算面板 wA 里游戏自己也是这么调的，game@52122-52131）：
-   *   bag.bZw([quality..])  按品质批量出售（内部 pg 协议）
-   *   bag.bZv([quality..])  按品质批量分解（内部 bXM 协议；自带 isLock + bYK 过滤）
-   * 品质勾选读 localMgr.coe / localMgr.cof（自动出售 / 自动分解的品质位），
-   * 游戏内一个都没勾时兜底 [1,2,3]（照卡密包 v33N：否则开了等于空转）。
-   * 兜底两条（bZw/bZv 改名时用）：bag.bXJ(200,[{gridId,num}]) / bag.bXM({bagType,gridList})。
-   */
-  var EQUIP_BAG = 200;
-  var WORE_BAG = 500;
-  function equipNodes(bag) {
+   * 2026-10-26（res 1.1.10.0 反查）：游戏自己在 AdventureFinishPanel.wA 里就是这么做的——
+   *   x=[COMMON,SENIOR,RARE]; N=x.filter(q=>localMgr.<读 autoSellEquipFlag 位>(q));
+   *   N.length && $eZ.bag.<按品质批量出售>(N);
+   *   L=x.filter(q=>localMgr.<读 autoDecomposeEquipFlag 位>(q)); L.length && $eZ.bag.<按品质批量分解>(L);
+   * 所以只需（a）按存档字段名找到那两个「按品质批量口」，（b）品质位从 autoSellEquipFlag /
+   * autoDecomposeEquipFlag 读，游戏内一个都没勾时用默认 [1,2,3]（同卡密包 v33N）。
+   * 1.1.9.1 时代的 bZw/bZv 在 1.1.10.0 已经变成无参的背包检查函数，直接调等于空转。 */
+  var QUAL_DEF = [1, 2, 3];        /* COMMON / SENIOR / RARE */
+  function BAGAPIS() {
+    var z = F(), bag = z && z.bag;
+    if (!bag) return null;
+    if (!A.bagApi) {
+      var d = {};
+      /* 出售：单参、内部拼 {gridId, num: amount} 并走 pg 协议，还带 quality 过滤 */
+      d.sell = findFnOn(bag, 1, function (s) {
+        return s.indexOf("num:") >= 0 && s.indexOf(".pg(") >= 0 && s.indexOf("quality") >= 0;
+      });
+      /* 分解：单参、内部拼 gridList，自带 isLock + 可分解过滤 */
+      d.deco = findFnOn(bag, 1, function (s) {
+        return s.indexOf("gridList") >= 0 && s.indexOf("quality") >= 0 && s.indexOf("isLock") >= 0;
+      });
+      A.bagApi = d;
+      log("bag api: sellByQuality=" + d.sell + " decomposeByQuality=" + d.deco);
+    }
+    return A.bagApi;
+  }
+  function qualitiesOf(lm, api, which) {
     var out = [];
-    try {
-      var c = typeof bag.bXW === "function" ? bag.bXW(EQUIP_BAG) : null;
-      if (c && c.d && typeof c.d.bdL === "function") {
-        c.d.bdL(function (n) { if (n && n.itemId && n.amount > 0) out.push(n); });
-        return out;
-      }
-    } catch (e) {}
-    try {
-      var q = typeof bag.bYZ === "function" ? bag.bYZ(EQUIP_BAG) : null;
-      var arr = (q && q.c) || [];
-      for (var i = 0; i < arr.length; i++) if (arr[i] && arr[i].itemId && arr[i].amount > 0) out.push(arr[i]);
-    } catch (e) {}
+    var fn = api ? (which === "sell" ? api.sellRead : api.decoRead) : null;
+    if (!fn) return out;
+    for (var q = 1; q <= 6; q++) { try { if (lm[fn](q)) out.push(q); } catch (e) {} }
     return out;
-  }
-  function qualitiesOf(lm, useSell) {
-    var set = {};
-    /* 1.1.9.1：coe = 自动出售品质位，cof = 自动分解品质位；cnp/cnq 为旧版名 */
-    var names = useSell ? ["coe", "cnp"] : ["cof", "cnq"];
-    for (var i = 0; i < names.length; i++) {
-      var fn = lm && lm[names[i]];
-      if (typeof fn !== "function") continue;
-      for (var q = 1; q <= 6; q++) { try { if (fn.call(lm, q)) set[q] = 1; } catch (e) {} }
-      break;
-    }
-    return Object.keys(set).map(Number).filter(function (x) { return x >= 1 && x <= 6; })
-                 .sort(function (a, b) { return a - b; });
-  }
-  function itemQuality(bag, node) {
-    try {
-      var i = bag.bYG ? bag.bYG(node.itemId) : null;
-      var cfg = i && i.cfg;
-      return cfg && cfg.quality !== undefined ? (cfg.quality | 0) : null;
-    } catch (e) { return null; }
-  }
-  function manualSell(bag, nodes, qs) {
-    var list = [];
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
-      if (!n || !n.gridId) continue;
-      if (n.equip && n.equip.isLock) continue;
-      var q = itemQuality(bag, n);
-      if (q === null || qs.indexOf(q) < 0) continue;
-      list.push({ gridId: n.gridId, num: n.amount });
-    }
-    if (!list.length) return 0;
-    bag.bXJ(EQUIP_BAG, list);
-    return list.length;
-  }
-  function manualDeco(bag, nodes, qs) {
-    var gids = [];
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
-      if (!n || !n.gridId) continue;
-      if (n.equip && n.equip.isLock) continue;
-      var ok = false;
-      try { ok = typeof bag.bYK === "function" ? !!bag.bYK(n) : true; } catch (e) {}
-      if (!ok) continue;
-      var q = itemQuality(bag, n);
-      if (q === null || qs.indexOf(q) < 0) continue;
-      gids.push(n.gridId);
-    }
-    if (!gids.length) return 0;
-    bag.bXM({ bagType: EQUIP_BAG, gridList: gids });
-    return gids.length;
   }
   function cleanupSellDeco() {
     var wantSell = FEAT(8), wantDeco = FEAT(9);
@@ -1303,167 +1299,133 @@
     try {
       var z = F(), bag = z && z.bag, lm = z && z.localMgr;
       if (!bag) { miss("sd.bag", "出售/分解: $eZ.bag 不存在 —— 该功能不会生效"); return false; }
-      var nodes = equipNodes(bag);
-      A.sdTotal = nodes.length;
-      if (!nodes.length) {
-        if (A.evClean < 3) { A.evClean++; log("[sd] 背包(" + EQUIP_BAG + ") 里没有装备 —— 本次不发协议（数据未加载或真为空）"); }
-        return false;
-      }
-      var sellQ = wantSell ? qualitiesOf(lm, true) : [];
-      var decoQ = wantDeco ? qualitiesOf(lm, false) : [];
-      if (wantSell && !sellQ.length) {
-        sellQ = [1, 2, 3];
-        if (!A.sellDef) { A.sellDef = 1; log("[sd] 出售品质为空(游戏内未勾选) -> 兜底 [1,2,3]"); }
-      }
-      if (wantDeco && !decoQ.length) {
-        decoQ = [1, 2, 3];
-        if (!A.decoDef) { A.decoDef = 1; log("[sd] 分解品质为空(游戏内未勾选) -> 兜底 [1,2,3]"); }
-      }
-      var did = "";
+      var api = BAGAPIS(), lma = LM();
+      var did = "", sellQ = [], decoQ = [];
       if (wantSell) {
-        var n1 = -1;
-        if (typeof bag.bZw === "function") { try { bag.bZw(sellQ); n1 = -2; } catch (e) { err("sell", e); } }
-        else if (typeof bag.bXJ === "function") { try { n1 = manualSell(bag, nodes, sellQ); } catch (e) { err("sell/manual", e); } }
-        else miss("sell.api", "自动出售: bag.bZw / bag.bXJ 都不可用 —— 该功能不会生效");
-        if (n1 !== -1 && n1 !== 0) {
-          A.sellN++; A.lastSellQ = sellQ.join(",");
-          did += "出售[" + A.lastSellQ + (n1 > 0 ? " x" + n1 : "") + "] ";
-        } else if (n1 === 0) { did += "出售[无可售件] "; }
+        if (!api || !api.sell) miss("sell.api", "自动出售: bag 上找不到「按品质批量出售」口 —— 该功能不会生效");
+        else {
+          sellQ = lma ? qualitiesOf(lm, lma, "sell") : [];
+          if (!sellQ.length) {
+            sellQ = QUAL_DEF.slice();
+            if (!A.sellDef) { A.sellDef = 1; log("[sd] 游戏内未勾选出售品质 -> 用默认 [1,2,3]"); }
+          }
+          try { bag[api.sell](sellQ); A.sellN++; A.lastSellQ = sellQ.join(","); did += "出售[" + A.lastSellQ + "] "; }
+          catch (e) { err("sell", e); }
+        }
       }
       if (wantDeco) {
-        var n2 = -1;
-        if (typeof bag.bZv === "function") { try { bag.bZv(decoQ); n2 = -2; } catch (e) { err("deco", e); } }
-        else if (typeof bag.bXM === "function") { try { n2 = manualDeco(bag, nodes, decoQ); } catch (e) { err("deco/manual", e); } }
-        else miss("deco.api", "自动分解: bag.bZv / bag.bXM 都不可用 —— 该功能不会生效");
-        if (n2 !== -1 && n2 !== 0) {
-          A.decoN++; A.lastDecoQ = decoQ.join(",");
-          did += "分解[" + A.lastDecoQ + (n2 > 0 ? " x" + n2 : "") + "]";
-        } else if (n2 === 0) { did += "分解[无符合件]"; }
+        if (!api || !api.deco) miss("deco.api", "自动分解: bag 上找不到「按品质批量分解」口 —— 该功能不会生效");
+        else {
+          decoQ = lma ? qualitiesOf(lm, lma, "deco") : [];
+          if (!decoQ.length) {
+            decoQ = QUAL_DEF.slice();
+            if (!A.decoDef) { A.decoDef = 1; log("[sd] 游戏内未勾选分解品质 -> 用默认 [1,2,3]"); }
+          }
+          try { bag[api.deco](decoQ); A.decoN++; A.lastDecoQ = decoQ.join(","); did += "分解[" + A.lastDecoQ + "]"; }
+          catch (e) { err("deco", e); }
+        }
       }
       if (A.evClean < 3) {
         A.evClean++;
-        log("[sd] 清理 #" + A.evClean + " 装备 " + nodes.length + " 件 | 开关 出售=" + (wantSell ? "开" : "关")
-            + " 分解=" + (wantDeco ? "开" : "关") + " | 品质 出售[" + sellQ.join(",") + "] 分解[" + decoQ.join(",")
-            + "] | 结果:" + (did || "无动作"));
+        log("[sd] 清理 #" + A.evClean + " | 开关 出售=" + (wantSell ? "开" : "关") + " 分解=" + (wantDeco ? "开" : "关")
+            + " | 品质 出售[" + sellQ.join(",") + "] 分解[" + decoQ.join(",") + "] | 结果:" + (did || "无动作"));
       }
       return !!did;
     } catch (e) { err("sell/deco", e); return false; }
   }
 
   /* ==================================================== (5) 自动穿戴 ======
-   * 2026-10-25（res 1.1.9.1 反查）：旧实现 equip.ftA / equip.fvH 在这一版不存在
-   * （ftA 是 UI 控件名，不是 API）。这一版走官方「装备」按钮 dHi 的三段口径：
-   *   equip.fCV(node) -> {code,errMsg}     穿戴资格（0 = 可穿；1 职业不匹配 / 2 等级不足）
-   *   equip.fCW(node) -> boolean           是否比当前同部位更强（或可便捷继承）
-   *   equip.fFu(itemUid) -> promise{code}  穿戴提交
-   * 逐个串行、一次最多 6 件；缺失 API 一律留一条 miss 日志，不静默。
+   * 2026-10-26（res 1.1.10.0 反查）：1.1.9.1 的 equip.fCV/fCW/fFu 在这一版**换了靶子**
+   * （fFu 现在是“宝石镶嵌”，体里是 gemInfoCfg / “当前能量已满”；fCV 是强化材料适用性）
+   * ⇒ 旧实现只会报“不是函数/永远不会成功”。这一版直接用游戏自己的「一键穿戴」两口：
+   *   equip.<候选列表>()   -> [itemUid,...]   更优且可穿的装备（内部按部位比强度、排已穿）
+   *   equip.<批量穿戴>(uids) -> promise<件数>  内部按 10 件一批发协议
+   * 指纹：候选 = 0 参 + 明文 WORE_EQUIP + new Map() 且不含 SOUL（那是魂魄那一路）；
+   *       批量 = 1 参 + 明文 items: + .slice( + “+ 10”（分片）。
+   * 缺失 API 一律留一条 miss 日志，不静默。
    */
+  function EQAPI() {
+    var z = F(), eq = z && z.equip;
+    if (!eq) return null;
+    if (!A.eqApi) {
+      var d = {};
+      /* itemUid 是协议负载明文；SOUL 那条是“一键穿戴魂魄”，不能算进来 */
+      d.cands = findFnOn(eq, 0, function (s) {
+        return s.indexOf("WORE_EQUIP") >= 0 && s.indexOf("new Map()") >= 0 &&
+               s.indexOf("itemUid") >= 0 && s.indexOf("SOUL") < 0;
+      });
+      d.wear = findFnOn(eq, 1, function (s) {
+        return s.indexOf("items:") >= 0 && s.indexOf(".slice(") >= 0 && s.indexOf("+ 10") >= 0;
+      });
+      A.eqApi = d;
+      log("equip api: candidates=" + d.cands + " wearAll=" + d.wear);
+    }
+    return A.eqApi;
+  }
   function wearBest() {
     try {
       var z = F();
       if (!z) return false;
-      var eq = z.equip, bag = z.bag;
+      var eq = z.equip;
       if (!eq) { miss("wear.eq", "自动穿戴: $eZ.equip 不存在 —— 该功能不会生效"); return false; }
-      if (typeof eq.fFu !== "function") { miss("wear.fFu", "自动穿戴: equip.fFu 不是函数（本版改名了）—— 该功能不会生效"); return false; }
-      if (!bag) { miss("wear.bag", "自动穿戴: $eZ.bag 不存在"); return false; }
-      var nodes = equipNodes(bag);
-      var cands = [];
-      for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i];
-        if (!n || !n.itemUid) continue;
-        try { if (typeof bag.bYB === "function" && bag.bYB(n.itemUid, WORE_BAG)) continue; } catch (e) {}
-        if (n.equip && n.equip.isLock) continue;          /* 上锁 = 玩家想留着 */
-        var ok = true;
-        if (typeof eq.fCV === "function") {
-          var chk = null;
-          try { chk = eq.fCV(n); } catch (e) {}
-          if (!chk || chk.code !== 0) ok = false;
-        }
-        if (ok && typeof eq.fCW === "function") {
-          try { if (!eq.fCW(n)) ok = false; } catch (e) {}
-        }
-        if (ok) cands.push(n);
-      }
-      if (!cands.length) {
-        A.wearEmptyN++;
-        if (A.evWear < 3) { A.evWear++; log("穿戴: 当前没有更优装备（装备 " + nodes.length + " 件，候选 0）"); }
+      var api = EQAPI();
+      if (!api || !api.cands || !api.wear) {
+        miss("wear.api", "自动穿戴: equip 上找不到「一键穿戴」口 —— 该功能不会生效");
         return false;
       }
-      var lim = Math.min(cands.length, 6);
-      if (A.evWear < 3) { A.evWear++; log("穿戴: 待换 " + cands.length + " 件，先提交 " + lim + " 件 -> equip.fFu"); }
-      var idx = 0;
-      var step = function () {
-        if (idx >= lim) return;
-        var n = cands[idx++];
-        var pr = null;
-        try { pr = eq.fFu(n.itemUid); } catch (e) { err("wear/fu", e); setTimeout(step, 300); return; }
-        A.wearN++;
-        if (!pr || !pr.then) { A.wearOkN++; setTimeout(step, 300); return; }
-        pr.then(function (res) {
-          var code = res && res.code;
-          if (code === 0 || code === undefined) {
-            A.wearOkN++;
-            if ((A.evWearOk | 0) < 3) { A.evWearOk = (A.evWearOk | 0) + 1; log("穿戴: 成功 itemUid=" + n.itemUid); }
-          } else {
-            A.wearLastCode = code;
-            err("wear/code", "code=" + code + " itemUid=" + n.itemUid);
-          }
-          setTimeout(step, 350);
-        }, function () { err("wear/reject", "promise rejected"); setTimeout(step, 350); });
+      var uids = null;
+      try { uids = eq[api.cands]() || []; } catch (eC) { err("wear/cands", eC); return false; }
+      if (!uids.length) {
+        A.wearEmptyN++;
+        if (A.evWear < 3) { A.evWear++; log("穿戴: 当前没有更优装备"); }
+        return false;
+      }
+      if (A.evWear < 3) { A.evWear++; log("穿戴: 待换 " + uids.length + " 件 -> 一键穿戴"); }
+      A.wearN++;
+      var pr = null;
+      try { pr = eq[api.wear](uids); } catch (e) { err("wear/submit", e); return false; }
+      var okN = function (n) {
+        A.wearOkN++;
+        if ((A.evWearOk | 0) < 3) { A.evWearOk = (A.evWearOk | 0) + 1; log("穿戴: 成功 " + (n | 0) + " 件"); }
       };
-      step();
+      if (pr && pr.then) pr.then(function (n) { okN(n); }, function () { err("wear/reject", "promise rejected"); });
+      else okN(uids.length);
       return true;
     } catch (e) { err("wear", e); return false; }
   }
 
   /* =============================================== 驱动 / 结算面板时机 =====
-   * 2026-10-25：旧的「战斗→城镇」latch 换成**结算面板打开那一刻**——和游戏自己的
-   * 自动出售/分解同一个时机（AdventureFinishPanel.wA，game@52119）。
+   * 2026-10-26（res 1.1.10.0）：旧的 fguiMgr.cUU.bdG(name) 查询链整条消失（cUU 已改作他用），
+   * 实测表现 = panels 恒 0、自动出售/分解/穿戴永不触发。改吃 baseline 的事件：
+   *   baseline 钩住面板自己的打开方法（指纹 btnList/btn_again/btn_toNext），
+   *   命中后写 window.__starry_fin = {n, t, inst, again}；本层每秒读一次序号变化。
    * 时序照卡密包：面板打开 +0.4s 出售/分解 → +1.6s 穿戴 → +6.5s 重复挑战兜底。
-   * 面板实例来源：fguiMgr.cUU.bdG(name) -> {cWn: fgui 组件}（1.1.9.1 已核）。
    */
-  var RESULT_PANELS = ["AdventureFinishPanel", "AdventureResultPanel", "AdventureSpeResultPanel"];
-  function panelEntry(name) {
-    try {
-      var fgm = F() && F().fguiMgr;
-      if (!fgm) return null;
-      if (!fgm.cUU || typeof fgm.cUU.bdG !== "function") {
-        miss("panel.api", "结算面板: fguiMgr.cUU.bdG 不可用 —— 拿不到结算时机");
-        return null;
-      }
-      return fgm.cUU.bdG(name) || null;
-    } catch (e) { return null; }
-  }
   function panelTick() {
-    var inst = null, name = "";
-    for (var i = 0; i < RESULT_PANELS.length; i++) {
-      var e = panelEntry(RESULT_PANELS[i]);
-      var c = e && e.cWn;
-      /* cXg 是面板状态（main/index.js $to：0 初始 / 1 打开中 / 2 已打开 / 3 关闭中 / 4 关闭）。
-         只认 1/2：关闭后面包仍可能留在 cUU 里，拿旧实例会在错时机发协议。 */
-      var st = c ? (c.cXg | 0) : -1;
-      if (c && (st === 1 || st === 2)) { inst = c; name = RESULT_PANELS[i]; break; }
-    }
-    if (!inst) {
-      if (A.finInst) { A.finInst = null; A.finName = ""; A.finToken = (A.finToken | 0) + 1; }
+    var fin = null;
+    try { fin = window.__starry_fin; } catch (e) {}
+    if (!fin || !fin.inst) {
+      if (FEAT(7) || FEAT(8) || FEAT(9) || FEAT(10)) {
+        miss("panel.hook", "结算面板时机: baseline 没钩到面板打开方法（btnList/btn_again/btn_toNext）—— 自动化四项都不会触发");
+      }
       return;
     }
-    if (A.finInst === inst) return;
-    A.finInst = inst; A.finName = name;
-    onResultPanel(inst, name);
+    if (A.finSeen === fin.n) return;
+    A.finSeen = fin.n;
+    A.finInst = fin.inst;
+    onResultPanel(fin.inst, fin.again || "");
   }
-  function onResultPanel(inst, name) {
+  function onResultPanel(inst, againKey) {
     var token = A.finToken = (A.finToken | 0) + 1;
     A.finN = (A.finN | 0) + 1;
     if ((A.evFin | 0) < 4) {
       A.evFin = (A.evFin | 0) + 1;
-      var gold = null, c1 = null, ba = null, bn = null;
-      try { var mc = F().monCard; gold = mc && mc.fNc && typeof mc.fNc.fMR === "function" ? mc.fNc.fMR("gold") : "?"; } catch (e) {}
+      var c1 = null, ba = null, bn = null;
       try { c1 = repeatRead(F().localMgr); } catch (e) {}
-      try { ba = inst.btn_again ? !!inst.btn_again.visible : "无"; } catch (e) {}
-      try { bn = inst.btn_toNext ? !!inst.btn_toNext.visible : "无"; } catch (e) {}
-      log("[fin] " + name + " #" + A.finN + " 打开 | 自动挑战位=" + c1 + " 金卡=" + gold
-          + " btn_again=" + ba + " btn_toNext=" + bn
+      try { ba = inst && inst.btn_again ? !!inst.btn_again.visible : "无"; } catch (e) {}
+      try { bn = inst && inst.btn_toNext ? !!inst.btn_toNext.visible : "无"; } catch (e) {}
+      log("[fin] #" + A.finN + " 结算面板打开 | 自动挑战位=" + c1 + " btn_again=" + ba
+          + " btn_toNext=" + bn + " againApi=" + (againKey || "无")
           + " | 自动化 重复=" + FEAT(7) + " 出售=" + FEAT(8) + " 分解=" + FEAT(9) + " 穿戴=" + FEAT(10));
     }
     setTimeout(function () {
@@ -1479,21 +1441,16 @@
     setTimeout(function () {
       if (token !== A.finToken) return;
       if (!FEAT(7)) return;
-      if (name !== "AdventureFinishPanel") return;       /* 只有这张面板带「再次挑战」 */
-      var e2 = panelEntry(name), cur = e2 && e2.cWn;
-      if (!cur || cur !== inst) return;                  /* 面板已关/已换 => 游戏自己走了 */
-      var cst = cur.cXg | 0;
-      if (cst !== 1 && cst !== 2) return;                /* 已进入关闭中/关闭 => 别补点 */
-      if (typeof inst.ekx !== "function") {
-        miss("repeat.ekx", "自动重复挑战: 结算面板没有 ekx（再次挑战）方法 —— 兜底点击不可用");
+      if (!againKey) {
+        miss("repeat.api", "自动重复挑战: 结算面板上没有「再次挑战」倒计时方法 —— 兜底点击不可用（游戏自带位见 repeat 日志）");
         return;
       }
       try {
-        inst.ekx();
+        inst[againKey]();
         A.repeatClickN++;
         if (A.evRepeat < 3) {
           A.evRepeat++;
-          log("repeat: 游戏自带重复 6.5s 未触发 -> 兜底点击「再次挑战」ekx() (第 " + A.repeatClickN + " 次)");
+          log("repeat: 游戏自带重复 6.5s 未触发 -> 兜底点一次「再次挑战」(" + againKey + ") 第 " + A.repeatClickN + " 次");
         }
       } catch (e) { err("repeat/click", e); }
     }, 6500);
@@ -1523,8 +1480,9 @@
       v: A.__v,
       gold: A.goldHooked, goldKey: A.goldKey, goldN: A.goldAllowN,
       repeatFlag: A.repeatFlagSync, repeatClicks: A.repeatClickN, repeatOn: A.repeatLast,
-      panels: A.finN | 0, panelName: A.finName || "",
-      sell: A.sellN, deco: A.decoN, sellQ: A.lastSellQ, decoQ: A.lastDecoQ, equipN: A.sdTotal | 0,
+      panels: A.finN | 0,
+      sell: A.sellN, deco: A.decoN, sellQ: A.lastSellQ, decoQ: A.lastDecoQ,
+      api: { lm: A.lmApi || 0, bag: A.bagApi || 0, eq: A.eqApi || 0 },
       wear: A.wearN, wearOk: A.wearOkN, wearEmpty: A.wearEmptyN, wearCode: A.wearLastCode,
       tcPatched: TC.patched, tcFlips: TC.flipN, tcCode: TC.flipCode,
       ticks: A.tickN, errs: A.errN, lastErr: A.lastErr, warns: A.warnN
@@ -1543,7 +1501,7 @@
   }
 
   window.__starry_auto = A;
-  log("auto layer v3 loaded (gold / auto-repeat(设置位 cod) / auto-sell(bZw) / auto-decompose(bZv) / auto-wear(fFu); 开关读 MOD.feature6..10)");
+  log("auto layer v" + AUTO_VER + " loaded (gold / repeat(autoBattleFlag 位) / sell+decompose(bag 按品质批量口) / wear(equip 一键穿戴) / 面板时机=window.__starry_fin; 开关读 MOD.feature6..10)");
 })();
 ;(function () {
   var H = "com.starry.magic.cocos.YsxzHooks";
@@ -1647,19 +1605,40 @@ function MOD_boot(REG) {
     /* 需要先有 ctxKey, 故第二遍再扫: 实体 → 世界 的属性名 */
     function harvestB(s) {
         if (N.world || !N.ctxKey) return;
-        if (s.indexOf("lockMinHP") < 0) return;           /* 只认实体/属性模块 */
+        /* 2026-10-26（res 1.1.10.0 静态取证）：旧版要求本模块含 lockMinHP 才扫，而实体模块
+         * 不一定带这个明文（世界引用出现在别的模块）⇒ N.world 恒 undefined ⇒ myCamp 只能降级。
+         * 现在只认结构「<变量>.<世界名>.bou.」且前缀不限定 this.（实体侧写法是 e.hj.bou.）。 */
         /* 必须遍历所有匹配: 同一模块里可能先出现 this.context.<ctx>(系统的写法) */
         var re = new RegExp("this\\.([A-Za-z_$][\\w$]*)\\." + N.ctxKey + "\\.", "g"), m;
         while ((m = re.exec(s)) !== null) {
+            if (m[1] !== "context") { N.world = m[1]; return; }
+        }
+        var re2 = new RegExp("[\\w$)\\]]\\.([A-Za-z_$][\\w$]*)\\." + N.ctxKey + "\\.", "g");
+        while ((m = re2.exec(s)) !== null) {
             if (m[1] !== "context") { N.world = m[1]; return; }
         }
     }
 
     /* ---------- 2. 敌我判定(全部基于发现到的名字, 带降级) ---------- */
     function ctxOf(ent) {
-        var w = N.world && ent ? ent[N.world] : null;
+        if (!ent) return CTX;
+        var w = N.world ? ent[N.world] : null;
         var c = w ? w[N.ctxKey] : null;
-        return c || CTX;
+        if (c) return c;
+        /* 结构兜底（不写死短名）：实体上任意组件只要带 <ctxKey> 且里面有 teams 数组，
+           那就是世界/上下文对象。每个实体最多试 3 次，命中即缓存槽名。 */
+        if (N.ctxKey && N.teams && (!N.wTries || N.wTries < 3)) {
+            N.wTries = (N.wTries || 0) + 1;
+            for (var k in ent) {
+                var v;
+                try { v = ent[k]; } catch (e5) { continue; }
+                if (!v || typeof v !== "object") continue;
+                var cc = null;
+                try { cc = v[N.ctxKey]; } catch (e4) { continue; }
+                if (cc && cc[N.teams]) { N.world = k; log("world comp resolved by structure = ent." + k); return cc; }
+            }
+        }
+        return CTX;
     }
     function myCamp(ent) {
         var c = ctxOf(ent);
@@ -1668,32 +1647,50 @@ function MOD_boot(REG) {
         if (typeof v === "number" && v >= 0) return v;
         return 1;                 /* 降级: 本作阵营 1 = 我方(gF() 取 camp!=1 当敌人) */
     }
-    /* 2026-10-25（雷电 1.1.9.1 实机取证）：采集到的 camp=blx 在阵营对象上**不存在** ——
-     * 实机 sideKeys=[blW,blX,blY,constructor,lT,lU]，真名是 blW ⇒ isMine 恒 false ⇒
-     * 伤害倍率/秒杀/无敌/无限技能四项静默全灭（dmg hit pending=none、无敌不挡）。
-     * 改成「候选键 + 类型校验」：按顺序取第一个**在真实对象上是数字**的键。 */
+    /* 2026-10-26（res 1.1.10.0 静态取证）：阵营字段从 bundle 源码唯一命中 hE.bma
+     * （锚点 x.<hD>.<camp> === y !== z.isPlayerCamp，y 来自 this.context.bou.fF[0].dga）。
+     * 旧版写死的 blW/blX/blY 是 1.1.9.x 遗留候选，在 1.1.10.0 完全不存在（hook-rules §24
+     * 禁止写死混淆短名），换成“类型校验 + 用世界里的队伍阵营值做结构对拍”的兜底。 */
     function campOf(ent) {
         if (!ent || !N.hD) return null;
         var h = ent[N.hD];
         if (!h) return null;
-        var cands = [N.camp, "blW", "blX", "blY"];
-        for (var i = 0; i < cands.length; i++) {
-            var k = cands[i];
-            if (!k) continue;
-            var v = h[k];
-            if (typeof v === "number") return v;
+        var v = N.camp ? h[N.camp] : null;
+        if (typeof v === "number") return v;
+        /* 结构兜底：世界上各队伍的阵营值是“真值集合”，在 h 上找值落在集合里的数字字段 */
+        var set = [];
+        try {
+            var c = ctxOf(ent);
+            var ts = c && N.teams ? c[N.teams] : null;
+            if (ts) for (var i = 0; i < ts.length; i++) {
+                var cv = ts[i] && N.teamCamp ? ts[i][N.teamCamp] : null;
+                if (typeof cv === "number") set.push(cv);
+            }
+        } catch (e1) {}
+        if (set.length) {
+            for (var k in h) {
+                var w2;
+                try { w2 = h[k]; } catch (e2) { continue; }
+                if (typeof w2 !== "number") continue;
+                for (var j = 0; j < set.length; j++) {
+                    if (w2 === set[j]) { N.camp = k; log("camp field resolved by structure = " + N.hD + "." + k + "=" + w2); return w2; }
+                }
+            }
+        }
+        if (!N.dbgCamp) {
+            N.dbgCamp = 1;
+            var ks = [];
+            try { for (var kk in h) ks.push(kk + ":" + (typeof h[kk])); } catch (e3) {}
+            log("!! camp probe fail: ent." + N.hD + " keys=[" + ks.slice(0, 40).join(",") + "] world=" + N.world + " teams=" + N.teams);
         }
         return null;
     }
     function campProbe(ent) {
-        var out = [];
+        var out = ["hD=" + N.hD, "camp=" + N.camp, "world=" + N.world];
         try {
             var h = ent && N.hD ? ent[N.hD] : null;
-            var cands = [N.camp, "blW", "blX", "blY"];
-            for (var i = 0; i < cands.length; i++) {
-                var k = cands[i];
-                if (h && k) out.push(k + "=" + (typeof h[k]) + ":" + h[k]);
-            }
+            if (h && N.camp) out.push("val=" + (typeof h[N.camp]) + ":" + h[N.camp]);
+            out.push("my=" + (ent ? myCamp(ent) : "?"));
         } catch (e) {}
         return out.join(" ");
     }
@@ -1706,9 +1703,11 @@ function MOD_boot(REG) {
         if (!isMine(ent) || !N.hx) return false;
         var x = ent[N.hx];
         if (!x) return false;
-        /* 2026-10-25（1.1.9.1）：采集名 bmN 未必等于英雄信息对象上的真名（实机同 camp 那次
-         * 就采错过 blx）。改成候选键 + **严格真值**校验：只认 true/1，避免把别的布尔当命中。 */
-        var cands = [N.isPlayer, "bmN", "bnm", "isPlayer"];
+        /* 2026-10-26（res 1.1.10.0）：只信 bundle 源码采集到的 isPlayer 字段名
+         * （唯一命中 `case "isPlayer": return t.hy.bnq` ⇒ N.hx=hy / N.isPlayer=bnq）；
+         * 1.1.9.x 的写死候选 bmN/bnm 已不存于本版（hook-rules §24）。
+         * 仍保留**严格真值**校验：只认 true/1，避免把别的布尔当命中。 */
+        var cands = [N.isPlayer];
         for (var i = 0; i < cands.length; i++) {
             var k = cands[i];
             if (!k) continue;
@@ -2063,6 +2062,40 @@ function MOD_boot(REG) {
 
 
     /* ---------- 7. 启动: 先扫全部模块源码取名, 再懒包装目标模块 ---------- */
+
+    /* ---------- 6c. 结算面板打开时机（自动出售/分解/穿戴/兵底重复的触发器） ----------
+     * 2026-10-26（res 1.1.10.0）：fguiMgr 的「按名取面板实例」链已完全消失
+     * （main 包里 cUU.bdG 那个短名已改作它用）⇒ 旧轮询方式只能永远拿到 null
+     * （实机表现：panels=0，自动出售/分解/穿戴永不触发，自动重复仅靠游戏自带设置位）。
+     * 改成钩【面板自己的打开方法】：指纹只用 fgui 子节点名 btnList/btn_again/btn_toNext
+     * （这些名字写在 UI 资产里，混淆器不动）。命中后往 window.__starry_fin 写一个事件，
+     * 自动化层（auto_layer.js）只读这个事件，不再自己去翻 UI 管理器。 */
+    var PANEL_N = 0;
+    var PANEL_HOOKED = 0;
+    function tryPanel(Cls) {
+        if (!Cls || !Cls.prototype || Cls.__starryPanelHooked) return;
+        var op = findFn(Cls.prototype, function (s) {
+            /* battleMgr 是明文管理器名：同模块的 onUILoad 也带三个 btn 名，只有打开方法带它 */
+            return s.indexOf("battleMgr") >= 0 && s.indexOf("btn_toNext") >= 0 &&
+                   s.indexOf("btn_again") >= 0 && s.indexOf("btnList") >= 0;
+        });
+        if (!op) return;
+        var orig = Cls.prototype[op];
+        if (typeof orig !== "function") return;
+        try { Cls.__starryPanelHooked = 1; } catch (e0) {}
+        PANEL_HOOKED = 1;
+        Cls.prototype[op] = function () {
+            var r = orig.apply(this, arguments);
+            try {
+                PANEL_N++;
+                var tk = null;
+                try { tk = findFn(this, function (s) { return s.indexOf("auto_btn_again") >= 0; }); } catch (e2) {}
+                window.__starry_fin = { n: PANEL_N, t: Date.now(), inst: this, again: tk || "" };
+            } catch (e) {}
+            return r;
+        };
+        log("result panel open hook = .prototype." + op + " (btnList/btn_again/btn_toNext)");
+    }
     var srcs = {}, id, nmod = 0;
     for (id in REG) {
         if (!REG[id] || typeof REG[id][0] !== "function") continue;
@@ -2074,13 +2107,22 @@ function MOD_boot(REG) {
      * 同名形态抢走（本轮实测采到 hx=hy.bmN / camp=hE.blx / ctx=bnR.../hp=bhd，而战斗包真名是
      * hy.bnm / hE.blW / boq.../bhC）⇒ isMine() 判反 ⇒ 伤害倍率/秒杀/无敌/无限技能全部静默失效
      * （dmg hit pending=none 就是这个）。这里只从含「伤害公式三指纹」的模块采集，采不到再回退全局。 */
-    var harvestIds = [];
+    /* 2026-10-26（res 1.1.10.0 静态取证 + 实机 ld8 日志）：上面那条「只看三指纹模块」的规则
+     * 在 1.1.10.0 上适得其反 —— 伤害公式模块只剩 atkEntity，实体/阵营/血量/世界引用全在
+     * **别的模块**里（实测 harvest scope=$KC 单个模块 ⇒ names: camp/hp/ctx/world 全 undefined
+     * ⇒ isMine 恒 false，四项静默全灭）。
+     * 现在改成：本 bundle 内**全量模块**两轮采集，含战斗明文的模块排前面（防串类）。
+     * N 是 per-bundle 的（MOD_boot 每次被某个包调用就新建一份），所以全量扫也不会把
+     * game/main 包里的同名形态采进战斗包这一份（跨包串名才是 2026-10-25 那次真因）。 */
+    var harvestIds = [], _restIds = [];
     for (id in srcs) {
         var _hs = srcs[id];
-        if (_hs.indexOf("maxApDefRate") >= 0 && _hs.indexOf("baseCritDamage") >= 0 &&
-            _hs.indexOf("atkEntity") >= 0) harvestIds.push(id);
+        if (_hs.indexOf("maxApDefRate") >= 0 || _hs.indexOf("baseCritDamage") >= 0 ||
+            _hs.indexOf("atkEntity") >= 0 || _hs.indexOf("lockMinHP") >= 0 ||
+            _hs.indexOf("hitPauseTimeScale") >= 0 || _hs.indexOf("isPlayerCamp") >= 0) harvestIds.push(id);
+        else _restIds.push(id);
     }
-    if (!harvestIds.length) { for (id in srcs) harvestIds.push(id); }
+    harvestIds = harvestIds.concat(_restIds);
     for (var _hi = 0; _hi < harvestIds.length; _hi++) harvestA(srcs[harvestIds[_hi]]);
     for (var _hj = 0; _hj < harvestIds.length; _hj++) harvestB(srcs[harvestIds[_hj]]);
     log("harvest scope: " + harvestIds.join(","));
@@ -2119,6 +2161,7 @@ function MOD_boot(REG) {
             try { tryEntity(V); } catch (e) { log("tryEntity ERR: " + e); }
             try { trySystem(V); } catch (e) { log("trySystem ERR: " + e); }
             try { tryAuto(V); } catch (e) { log("tryAuto ERR: " + e); }
+            try { tryPanel(V); } catch (e) { log("tryPanel ERR: " + e); }
         }
     }
     /* 过检测: main bundle 独有明文 sealMethods(实测仅 main/index.js 命中, 宿主模块 $LZ),
@@ -2130,10 +2173,14 @@ function MOD_boot(REG) {
     var targets = [];
     for (id in srcs) {
         var s = srcs[id];
+        /* 2026-10-26：结算面板模块（自动出售/分解/穿戴/兵底重复的触发时机）只带 fgui 子节点名
+         * btn_toNext，四个战斗明文一个都没有 ⇒ 过滤里必须加上它，否则面板永远进不了扫描列表。 */
         if (_gateOnly) {
             /* main 包: 只包装含闸门明文(sealMethods 是 main 独有标记)的模块 */
             if (s.indexOf("sealMethods") < 0 && s.indexOf("ANTI_CHEAT_ENABLED") < 0) continue;
-        } else if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 && s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
+        } else if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 &&
+            s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
+            s.indexOf("btn_toNext") < 0 &&
             s.indexOf("ANTI_CHEAT_ENABLED") < 0 && s.indexOf("finalHurtValue") < 0) continue;
         targets.push(id);
         (function (mid, entry) {
@@ -2154,7 +2201,8 @@ function MOD_boot(REG) {
     try {
         setTimeout(function () {
             log("REPORT  formula=" + N.FV + " apply=" + N.hX + " gate=" + N.Ff +
-                " cost=" + N.Fg + " death=" + N.GJ + " movesys=" + (N.sysDone ? "yes" : "NO") + " auto=" + (N.autoDone ? "yes" : "NO"));
+                " cost=" + N.Fg + " death=" + N.GJ + " movesys=" + (N.sysDone ? "yes" : "NO") +
+                " auto=" + (N.autoDone ? "yes" : "NO") + " panelHook=" + (PANEL_HOOKED ? "yes" : "NO"));
             log("REPORT  MOD=" + (typeof MOD === "undefined" ? "undefined" :
                 ("f1=" + MOD.feature1 + " f2=" + MOD.feature2 + " f3=" + MOD.feature3 + " f4=" + MOD.feature4 + " f5=" + MOD.feature5 + " dmg=" + MOD.damage)));
         }, 3000);

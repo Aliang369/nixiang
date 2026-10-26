@@ -372,14 +372,40 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
     if (!g_origSeEval) return false;
     /* 真的截获到了 ⇒ 原生路线在这台机器上有效；写 pid 证明给 main.js 里的自举驱动看 */
     if (!g_proofWritten.exchange(true)) YsxzWriteNativeProof();
-    if (!script || t_inSplice) return g_origSeEval(thiz, script, length, ret, fileName);
+    /* 2026-10-26 雷电池：原先 `!script || t_inSplice` 会把「我们正在 eval 一个已打补丁的
+     * bundle 期间，引擎又同步 eval 另一个 bundle」的嵌套调用整段静默跳过（连探针都不打）。
+     * 实测探针 #1..#6 只有 jsb-builtin / cocos2d-jsb / jsb-engine / fairygui / main / game，
+     * 战斗域 bundle 全程缺席 —— 高度吻合「game bundle 执行期间同步拉 battleLogic」。
+     * 改为只靠补丁自带的 starry_ysxz_v1 内容标记去重（见下方 FindBytes 判定），
+     * 嵌套的**他人脚本**照常注入。 */
+    if (!script) return g_origSeEval(thiz, script, length, ret, fileName);
 
     long n = length;
     if (n < 0) n = (long)strlen(script);
     if (n < kBundleMinLen || n > kBundleMaxLen) {
         return g_origSeEval(thiz, script, length, ret, fileName);
     }
-    if (!IsTargetBundle(fileName)) {
+    /* 2026-10-26 雷电实测：main / game 两个 bundle 都以
+     *   file=assets/main/index.js  /  file=assets/game/index.js
+     * 正常 splice（#1/#2），但**战斗域所在的 battleLogic bundle 从未出现 splice**，
+     * 于是扫描结果 names: camp=undefined hp=undefined ⇒ 伤害倍率/秒杀/无敌/无限技能/
+     * 移动速度五项全灭，而只依赖引擎层与金卡判定的「战斗加速」「自动战斗」照常可用。
+     * 故把判定从「只看文件名」放宽为「文件名命中 **或** 内容命中」：
+     *   内容判据 = window.__require + atkEntity + maxApDefRate 同时出现
+     *   （battleLogic/index.js 实测 atkEntity×10 / maxApDefRate×1；main/game/main.js
+     *    各自也命中，不会漏）。真正的落地仍由 PatchRegistryCall 的精确尾串把关，
+     *   认不出注册表尾就原样放行，不会误伤。 */
+    const bool byName = IsTargetBundle(fileName);
+    static std::atomic<int> s_probe{0};
+    const int probeN = ++s_probe;
+    const bool hasAtk = FindBytes(script, (size_t)n, "atkEntity");
+    if (probeN <= 24) {
+        LOGI("%s evalString probe #%d len=%ld file=%s name=%d atk=%d", YSXZ_LOG, probeN, n,
+             fileName ? fileName : "(null)", byName ? 1 : 0, hasAtk ? 1 : 0);
+    }
+    const bool byBody = FindBytes(script, (size_t)n, "window.__require") && hasAtk &&
+                        FindBytes(script, (size_t)n, "maxApDefRate");
+    if (!byName && !byBody) {
         return g_origSeEval(thiz, script, length, ret, fileName);
     }
     if (!FindBytes(script, (size_t)n, "window.__require") ||
@@ -393,7 +419,8 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
     try {
         std::string source(script, (size_t)n);
         if (!PatchRegistryCall(&source)) {
-            LOGW("%s registry call pattern missing in bundle=%s", YSXZ_LOG, fileName);
+            LOGW("%s registry call pattern missing in bundle=%s (len=%ld)", YSXZ_LOG,
+             fileName ? fileName : "(null)", n);
             return g_origSeEval(thiz, script, length, ret, fileName);
         }
         patched.reserve(source.size() + strlen(kYsxzPatchJs) + 64);

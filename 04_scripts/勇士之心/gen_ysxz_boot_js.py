@@ -63,6 +63,7 @@ SCAN_BLOCK = '''    function scan(exp) {
             try { tryEntity(V); } catch (e) { log("tryEntity ERR: " + e); }
             try { trySystem(V); } catch (e) { log("trySystem ERR: " + e); }
             try { tryAuto(V); } catch (e) { log("tryAuto ERR: " + e); }
+            try { tryPanel(V); } catch (e) { log("tryPanel ERR: " + e); }
         }
     }'''
 
@@ -83,6 +84,7 @@ NEW_SCAN = '''    /* scan 必须递归: 模块 exports 常是 { default: Class }
         try { tryEntity(V); } catch (e) { log("tryEntity ERR: " + e); }
         try { trySystem(V); } catch (e) { log("trySystem ERR: " + e); }
         try { tryAuto(V); } catch (e) { log("tryAuto ERR: " + e); }
+        try { tryPanel(V); } catch (e) { log("tryPanel ERR: " + e); }
     }
     function scanObj(exp, depth, seen) {
         if (!exp) return;
@@ -148,13 +150,15 @@ NEW_SEC7_HEAD = '''    /* ---------- 7. 模拟器路线: 无 REG 可用, 改从 
         (nmod > 0 ? "OK" : "UNAVAILABLE — 自愈无法工作"));
     /* 2026-10-25：短名只在**战斗包**里采（含伤害公式三指纹的模块）。全局采会被 game/main
        包的同名形态抢走 ⇒ isMine() 判反 ⇒ 伤害倍率/秒杀/无敌/无限技能全部静默失效。 */
-    var harvestIds = [];
+    var harvestIds = [], _restIds = [];
     for (id in srcs) {
         var _hs = srcs[id];
-        if (_hs.indexOf("maxApDefRate") >= 0 && _hs.indexOf("baseCritDamage") >= 0 &&
-            _hs.indexOf("atkEntity") >= 0) harvestIds.push(id);
+        if (_hs.indexOf("maxApDefRate") >= 0 || _hs.indexOf("baseCritDamage") >= 0 ||
+            _hs.indexOf("atkEntity") >= 0 || _hs.indexOf("lockMinHP") >= 0 ||
+            _hs.indexOf("hitPauseTimeScale") >= 0 || _hs.indexOf("isPlayerCamp") >= 0) harvestIds.push(id);
+        else _restIds.push(id);
     }
-    if (!harvestIds.length) { for (id in srcs) harvestIds.push(id); }
+    harvestIds = harvestIds.concat(_restIds);
     for (var _hi = 0; _hi < harvestIds.length; _hi++) harvestA(srcs[harvestIds[_hi]]);
     for (var _hj = 0; _hj < harvestIds.length; _hj++) harvestB(srcs[harvestIds[_hj]]);
     log("harvest scope: " + harvestIds.join(","));

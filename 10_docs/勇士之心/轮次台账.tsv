@@ -43,3 +43,12 @@
 2026-10-25 22:11	11	5	自动出售：旧 bag.bYK(品质数组) 在本版是判定函数（不发协议）→ 改挂官方批量口 bag.bZw([品质])	pipeline.log	有效
 2026-10-25 22:11	12	2	自动分解：旧 bag.bYJ 同上 → 改挂官方批量口 bag.bZv([品质])（自带 isLock+bYK 过滤）	pipeline.log	有效
 2026-10-25 22:11	13	2	自动穿戴：旧 equip.ftA/fvH 本版不存在 → 改挂 equip.fCV(资格)+fCW(更优)+fFu(提交)	pipeline.log	有效
+2026-10-26 15:49	1	4	res 1.1.10.0 短名换语义轮：改明文锚点+结构指纹发现，isMine 现为 hE.bma=1（出售=bZA 分解=bZz）	pipeline.log	有效
+2026-10-26 15:49	2	3	res 1.1.10.0 短名换语义轮：改明文锚点+结构指纹发现，isMine 现为 hE.bma=1（出售=bZA 分解=bZz）	pipeline.log	有效
+2026-10-26 15:49	3	2	res 1.1.10.0 短名换语义轮：改明文锚点+结构指纹发现，isMine 现为 hE.bma=1（出售=bZA 分解=bZz）	pipeline.log	有效
+2026-10-26 15:49	4	3	res 1.1.10.0 短名换语义轮：改明文锚点+结构指纹发现，isMine 现为 hE.bma=1（出售=bZA 分解=bZz）	pipeline.log	有效
+2026-10-26 15:49	5	2	res 1.1.10.0 短名换语义轮：改明文锚点+结构指纹发现，isMine 现为 hE.bma=1（出售=bZA 分解=bZz）	pipeline.log	有效
+2026-10-26 15:49	11	6	res 1.1.10.0 短名换语义轮：改明文锚点+结构指纹发现，isMine 现为 hE.bma=1（出售=bZA 分解=bZz）	pipeline.log	有效
+2026-10-26 15:49	12	3	res 1.1.10.0 短名换语义轮：改明文锚点+结构指纹发现，isMine 现为 hE.bma=1（出售=bZA 分解=bZz）	pipeline.log	有效
+2026-10-26 15:49	10	3	自动重复挑战：autoBattleFlag 位 cog/coh 置位，游戏自身倒计时生效；6.5s 兜底在面板已销毁时会抛 _renderFlag（已记待修）	pipeline.log	有效
+2026-10-26 15:49	13	3	自动穿戴：本场无更优装备（候选 0），接口已发现 fDb/fFP，待有可换装备时复核	pipeline.log	未测

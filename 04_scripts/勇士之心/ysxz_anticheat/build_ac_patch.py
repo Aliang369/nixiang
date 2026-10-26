@@ -82,11 +82,15 @@ EDITS: list[tuple[str, str, str]] = [
     ),
     (
         "E3 目标模块判定: 追加 ANTI_CHEAT_ENABLED(闸门层要拿到那个模块); main 包只认闸门相关模块",
-        """        if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 && s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0) continue;""",
+        """        if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 &&
+            s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
+            s.indexOf("btn_toNext") < 0) continue;""",
         """        if (_gateOnly) {
             /* main 包: 只包装含闸门明文(sealMethods 是 main 独有标记)的模块 */
             if (s.indexOf("sealMethods") < 0 && s.indexOf("ANTI_CHEAT_ENABLED") < 0) continue;
-        } else if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 && s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
+        } else if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 &&
+            s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
+            s.indexOf("btn_toNext") < 0 &&
             s.indexOf("ANTI_CHEAT_ENABLED") < 0 && s.indexOf("finalHurtValue") < 0) continue;""",
     ),
     (
@@ -279,22 +283,24 @@ def main() -> int:
         ("goldAcceptBool" in combined and 'typeof r === "boolean"' in combined,
          "解锁金卡: 行为甄别(只认返回 boolean 的持有判定)"),
         ('cardType === "gold"' in combined, "解锁金卡: 只放行 gold 卡类型"),
-        ("sellQ = [1, 2, 3];" in combined and "decoQ = [1, 2, 3];" in combined, "品质空兜底 [1,2,3] 保留"),
+        ("sellQ = QUAL_DEF.slice();" in combined and "decoQ = QUAL_DEF.slice();" in combined, "品质空兜底 QUAL_DEF [1,2,3] 保留"),
         ("A.tickN === 15 || A.tickN === 60" in combined, "automation 两张一次性状态快照保留"),
-        ("lm.cod(REPEAT_IDX, on)" in combined, "自动重复挑战: 点亮游戏内自动挑战位(localMgr.cod)"),
+        ("lm[api.repWrite](REPEAT_IDX, on)" in combined, "自动重复挑战: 按 autoBattleFlag 指纹发现的写入口置位"),
         ("autoBattleFlag" in combined, "自动重复挑战: 游戏内挑战位同步"),
-        ("fgm.cUU.bdG(name)" in combined, "结算面板时机: fguiMgr.cUU.bdG"),
-        ("inst.ekx();" in combined, "自动重复挑战: 仅游戏自带未触发时兜底点 ekx()"),
-        ("bag.bZw(sellQ)" in combined, "自动出售: bag.bZw(官方按品质批量出售)"),
-        ("bag.bZv(decoQ)" in combined, "自动分解: bag.bZv(官方按品质批量分解)"),
-        ("useSell ? [\"coe\", \"cnp\"]" in combined, "出售/分解品质取自游戏内勾选(coe/cof)"),
-        ("eq.fFu(n.itemUid)" in combined, "自动穿戴: equip.fFu(穿戴提交)"),
-        ("eq.fCV(n)" in combined and "eq.fCW(n)" in combined, "自动穿戴: fCV 资格 + fCW 更优判定"),
+        ("window.__starry_fin" in combined and "againKey" in combined, "结算面板时机: 改吃 baseline 的 window.__starry_fin 事件"),
+        ("inst[againKey]();" in combined, "自动重复挑战: 仅游戏自带未触发时兜底点一次(发现到的倒计时方法)"),
+        ("bag[api.sell](sellQ)" in combined, "自动出售: bag 按品质批量出售口(指纹发现)"),
+        ("bag[api.deco](decoQ)" in combined, "自动分解: bag 按品质批量分解口(指纹发现)"),
+        ("autoSellEquipFlag" in combined and "autoDecomposeEquipFlag" in combined, "出售/分解品质取自存档字段 autoSellEquipFlag/autoDecomposeEquipFlag"),
+        ("eq[api.wear](uids)" in combined, "自动穿戴: equip 一键穿戴提交口(指纹发现)"),
+        ("d.cands = findFnOn(eq, 0" in combined and "WORE_EQUIP" in combined, "自动穿戴: 候选列表口(0 参 + WORE_EQUIP + itemUid)"),
         ("}, 400);" in combined and "}, 1600);" in combined and "}, 6500);" in combined,
          "错峰 400ms 出售分解 / 1600ms 穿戴 / 6500ms 重复兜底"),
         ("try { autoBattleTick(); }" in combined, "自动战斗解锁: 驱动里显式调用 autoBattleTick()(防再漏)"),
-        ("AUTO_VER = 4" in combined, "automation 版本仲裁 AUTO_VER = 4"),
+        ("AUTO_VER = 5" in combined, "automation 版本仲裁 AUTO_VER = 5"),
         ("FEAT(6)" in combined and "FEAT(10)" in combined, "automation 开关走 FEAT(6)..FEAT(10)"),
+        ("btn_toNext" in combined and "tryPanel" in combined, "结算面板模块已纳入扫描(tryPanel + btn_toNext 过滤)"),
+        ("findFnOn(bag, 1" in combined and "findFnOn(lm, 1" in combined, "自动化发现层: 明文锚点 + 结构指纹(不写死短名)"),
     ]
     bad = [msg for ok, msg in checks if not ok]
     if bad:

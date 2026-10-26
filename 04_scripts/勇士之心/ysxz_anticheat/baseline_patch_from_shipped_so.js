@@ -90,19 +90,40 @@ function MOD_boot(REG) {
     /* 需要先有 ctxKey, 故第二遍再扫: 实体 → 世界 的属性名 */
     function harvestB(s) {
         if (N.world || !N.ctxKey) return;
-        if (s.indexOf("lockMinHP") < 0) return;           /* 只认实体/属性模块 */
+        /* 2026-10-26（res 1.1.10.0 静态取证）：旧版要求本模块含 lockMinHP 才扫，而实体模块
+         * 不一定带这个明文（世界引用出现在别的模块）⇒ N.world 恒 undefined ⇒ myCamp 只能降级。
+         * 现在只认结构「<变量>.<世界名>.bou.」且前缀不限定 this.（实体侧写法是 e.hj.bou.）。 */
         /* 必须遍历所有匹配: 同一模块里可能先出现 this.context.<ctx>(系统的写法) */
         var re = new RegExp("this\\.([A-Za-z_$][\\w$]*)\\." + N.ctxKey + "\\.", "g"), m;
         while ((m = re.exec(s)) !== null) {
+            if (m[1] !== "context") { N.world = m[1]; return; }
+        }
+        var re2 = new RegExp("[\\w$)\\]]\\.([A-Za-z_$][\\w$]*)\\." + N.ctxKey + "\\.", "g");
+        while ((m = re2.exec(s)) !== null) {
             if (m[1] !== "context") { N.world = m[1]; return; }
         }
     }
 
     /* ---------- 2. 敌我判定(全部基于发现到的名字, 带降级) ---------- */
     function ctxOf(ent) {
-        var w = N.world && ent ? ent[N.world] : null;
+        if (!ent) return CTX;
+        var w = N.world ? ent[N.world] : null;
         var c = w ? w[N.ctxKey] : null;
-        return c || CTX;
+        if (c) return c;
+        /* 结构兜底（不写死短名）：实体上任意组件只要带 <ctxKey> 且里面有 teams 数组，
+           那就是世界/上下文对象。每个实体最多试 3 次，命中即缓存槽名。 */
+        if (N.ctxKey && N.teams && (!N.wTries || N.wTries < 3)) {
+            N.wTries = (N.wTries || 0) + 1;
+            for (var k in ent) {
+                var v;
+                try { v = ent[k]; } catch (e5) { continue; }
+                if (!v || typeof v !== "object") continue;
+                var cc = null;
+                try { cc = v[N.ctxKey]; } catch (e4) { continue; }
+                if (cc && cc[N.teams]) { N.world = k; log("world comp resolved by structure = ent." + k); return cc; }
+            }
+        }
+        return CTX;
     }
     function myCamp(ent) {
         var c = ctxOf(ent);
@@ -111,32 +132,50 @@ function MOD_boot(REG) {
         if (typeof v === "number" && v >= 0) return v;
         return 1;                 /* 降级: 本作阵营 1 = 我方(gF() 取 camp!=1 当敌人) */
     }
-    /* 2026-10-25（雷电 1.1.9.1 实机取证）：采集到的 camp=blx 在阵营对象上**不存在** ——
-     * 实机 sideKeys=[blW,blX,blY,constructor,lT,lU]，真名是 blW ⇒ isMine 恒 false ⇒
-     * 伤害倍率/秒杀/无敌/无限技能四项静默全灭（dmg hit pending=none、无敌不挡）。
-     * 改成「候选键 + 类型校验」：按顺序取第一个**在真实对象上是数字**的键。 */
+    /* 2026-10-26（res 1.1.10.0 静态取证）：阵营字段从 bundle 源码唯一命中 hE.bma
+     * （锚点 x.<hD>.<camp> === y !== z.isPlayerCamp，y 来自 this.context.bou.fF[0].dga）。
+     * 旧版写死的 blW/blX/blY 是 1.1.9.x 遗留候选，在 1.1.10.0 完全不存在（hook-rules §24
+     * 禁止写死混淆短名），换成“类型校验 + 用世界里的队伍阵营值做结构对拍”的兜底。 */
     function campOf(ent) {
         if (!ent || !N.hD) return null;
         var h = ent[N.hD];
         if (!h) return null;
-        var cands = [N.camp, "blW", "blX", "blY"];
-        for (var i = 0; i < cands.length; i++) {
-            var k = cands[i];
-            if (!k) continue;
-            var v = h[k];
-            if (typeof v === "number") return v;
+        var v = N.camp ? h[N.camp] : null;
+        if (typeof v === "number") return v;
+        /* 结构兜底：世界上各队伍的阵营值是“真值集合”，在 h 上找值落在集合里的数字字段 */
+        var set = [];
+        try {
+            var c = ctxOf(ent);
+            var ts = c && N.teams ? c[N.teams] : null;
+            if (ts) for (var i = 0; i < ts.length; i++) {
+                var cv = ts[i] && N.teamCamp ? ts[i][N.teamCamp] : null;
+                if (typeof cv === "number") set.push(cv);
+            }
+        } catch (e1) {}
+        if (set.length) {
+            for (var k in h) {
+                var w2;
+                try { w2 = h[k]; } catch (e2) { continue; }
+                if (typeof w2 !== "number") continue;
+                for (var j = 0; j < set.length; j++) {
+                    if (w2 === set[j]) { N.camp = k; log("camp field resolved by structure = " + N.hD + "." + k + "=" + w2); return w2; }
+                }
+            }
+        }
+        if (!N.dbgCamp) {
+            N.dbgCamp = 1;
+            var ks = [];
+            try { for (var kk in h) ks.push(kk + ":" + (typeof h[kk])); } catch (e3) {}
+            log("!! camp probe fail: ent." + N.hD + " keys=[" + ks.slice(0, 40).join(",") + "] world=" + N.world + " teams=" + N.teams);
         }
         return null;
     }
     function campProbe(ent) {
-        var out = [];
+        var out = ["hD=" + N.hD, "camp=" + N.camp, "world=" + N.world];
         try {
             var h = ent && N.hD ? ent[N.hD] : null;
-            var cands = [N.camp, "blW", "blX", "blY"];
-            for (var i = 0; i < cands.length; i++) {
-                var k = cands[i];
-                if (h && k) out.push(k + "=" + (typeof h[k]) + ":" + h[k]);
-            }
+            if (h && N.camp) out.push("val=" + (typeof h[N.camp]) + ":" + h[N.camp]);
+            out.push("my=" + (ent ? myCamp(ent) : "?"));
         } catch (e) {}
         return out.join(" ");
     }
@@ -149,9 +188,11 @@ function MOD_boot(REG) {
         if (!isMine(ent) || !N.hx) return false;
         var x = ent[N.hx];
         if (!x) return false;
-        /* 2026-10-25（1.1.9.1）：采集名 bmN 未必等于英雄信息对象上的真名（实机同 camp 那次
-         * 就采错过 blx）。改成候选键 + **严格真值**校验：只认 true/1，避免把别的布尔当命中。 */
-        var cands = [N.isPlayer, "bmN", "bnm", "isPlayer"];
+        /* 2026-10-26（res 1.1.10.0）：只信 bundle 源码采集到的 isPlayer 字段名
+         * （唯一命中 `case "isPlayer": return t.hy.bnq` ⇒ N.hx=hy / N.isPlayer=bnq）；
+         * 1.1.9.x 的写死候选 bmN/bnm 已不存于本版（hook-rules §24）。
+         * 仍保留**严格真值**校验：只认 true/1，避免把别的布尔当命中。 */
+        var cands = [N.isPlayer];
         for (var i = 0; i < cands.length; i++) {
             var k = cands[i];
             if (!k) continue;
@@ -494,6 +535,40 @@ function MOD_boot(REG) {
 
 
     /* ---------- 7. 启动: 先扫全部模块源码取名, 再懒包装目标模块 ---------- */
+
+    /* ---------- 6c. 结算面板打开时机（自动出售/分解/穿戴/兵底重复的触发器） ----------
+     * 2026-10-26（res 1.1.10.0）：fguiMgr 的「按名取面板实例」链已完全消失
+     * （main 包里 cUU.bdG 那个短名已改作它用）⇒ 旧轮询方式只能永远拿到 null
+     * （实机表现：panels=0，自动出售/分解/穿戴永不触发，自动重复仅靠游戏自带设置位）。
+     * 改成钩【面板自己的打开方法】：指纹只用 fgui 子节点名 btnList/btn_again/btn_toNext
+     * （这些名字写在 UI 资产里，混淆器不动）。命中后往 window.__starry_fin 写一个事件，
+     * 自动化层（auto_layer.js）只读这个事件，不再自己去翻 UI 管理器。 */
+    var PANEL_N = 0;
+    var PANEL_HOOKED = 0;
+    function tryPanel(Cls) {
+        if (!Cls || !Cls.prototype || Cls.__starryPanelHooked) return;
+        var op = findFn(Cls.prototype, function (s) {
+            /* battleMgr 是明文管理器名：同模块的 onUILoad 也带三个 btn 名，只有打开方法带它 */
+            return s.indexOf("battleMgr") >= 0 && s.indexOf("btn_toNext") >= 0 &&
+                   s.indexOf("btn_again") >= 0 && s.indexOf("btnList") >= 0;
+        });
+        if (!op) return;
+        var orig = Cls.prototype[op];
+        if (typeof orig !== "function") return;
+        try { Cls.__starryPanelHooked = 1; } catch (e0) {}
+        PANEL_HOOKED = 1;
+        Cls.prototype[op] = function () {
+            var r = orig.apply(this, arguments);
+            try {
+                PANEL_N++;
+                var tk = null;
+                try { tk = findFn(this, function (s) { return s.indexOf("auto_btn_again") >= 0; }); } catch (e2) {}
+                window.__starry_fin = { n: PANEL_N, t: Date.now(), inst: this, again: tk || "" };
+            } catch (e) {}
+            return r;
+        };
+        log("result panel open hook = .prototype." + op + " (btnList/btn_again/btn_toNext)");
+    }
     var srcs = {}, id, nmod = 0;
     for (id in REG) {
         if (!REG[id] || typeof REG[id][0] !== "function") continue;
@@ -505,13 +580,22 @@ function MOD_boot(REG) {
      * 同名形态抢走（本轮实测采到 hx=hy.bmN / camp=hE.blx / ctx=bnR.../hp=bhd，而战斗包真名是
      * hy.bnm / hE.blW / boq.../bhC）⇒ isMine() 判反 ⇒ 伤害倍率/秒杀/无敌/无限技能全部静默失效
      * （dmg hit pending=none 就是这个）。这里只从含「伤害公式三指纹」的模块采集，采不到再回退全局。 */
-    var harvestIds = [];
+    /* 2026-10-26（res 1.1.10.0 静态取证 + 实机 ld8 日志）：上面那条「只看三指纹模块」的规则
+     * 在 1.1.10.0 上适得其反 —— 伤害公式模块只剩 atkEntity，实体/阵营/血量/世界引用全在
+     * **别的模块**里（实测 harvest scope=$KC 单个模块 ⇒ names: camp/hp/ctx/world 全 undefined
+     * ⇒ isMine 恒 false，四项静默全灭）。
+     * 现在改成：本 bundle 内**全量模块**两轮采集，含战斗明文的模块排前面（防串类）。
+     * N 是 per-bundle 的（MOD_boot 每次被某个包调用就新建一份），所以全量扫也不会把
+     * game/main 包里的同名形态采进战斗包这一份（跨包串名才是 2026-10-25 那次真因）。 */
+    var harvestIds = [], _restIds = [];
     for (id in srcs) {
         var _hs = srcs[id];
-        if (_hs.indexOf("maxApDefRate") >= 0 && _hs.indexOf("baseCritDamage") >= 0 &&
-            _hs.indexOf("atkEntity") >= 0) harvestIds.push(id);
+        if (_hs.indexOf("maxApDefRate") >= 0 || _hs.indexOf("baseCritDamage") >= 0 ||
+            _hs.indexOf("atkEntity") >= 0 || _hs.indexOf("lockMinHP") >= 0 ||
+            _hs.indexOf("hitPauseTimeScale") >= 0 || _hs.indexOf("isPlayerCamp") >= 0) harvestIds.push(id);
+        else _restIds.push(id);
     }
-    if (!harvestIds.length) { for (id in srcs) harvestIds.push(id); }
+    harvestIds = harvestIds.concat(_restIds);
     for (var _hi = 0; _hi < harvestIds.length; _hi++) harvestA(srcs[harvestIds[_hi]]);
     for (var _hj = 0; _hj < harvestIds.length; _hj++) harvestB(srcs[harvestIds[_hj]]);
     log("harvest scope: " + harvestIds.join(","));
@@ -550,12 +634,17 @@ function MOD_boot(REG) {
             try { tryEntity(V); } catch (e) { log("tryEntity ERR: " + e); }
             try { trySystem(V); } catch (e) { log("trySystem ERR: " + e); }
             try { tryAuto(V); } catch (e) { log("tryAuto ERR: " + e); }
+            try { tryPanel(V); } catch (e) { log("tryPanel ERR: " + e); }
         }
     }
     var targets = [];
     for (id in srcs) {
         var s = srcs[id];
-        if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 && s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0) continue;
+        /* 2026-10-26：结算面板模块（自动出售/分解/穿戴/兵底重复的触发时机）只带 fgui 子节点名
+         * btn_toNext，四个战斗明文一个都没有 ⇒ 过滤里必须加上它，否则面板永远进不了扫描列表。 */
+        if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 &&
+            s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
+            s.indexOf("btn_toNext") < 0) continue;
         targets.push(id);
         (function (mid, entry) {
             var orig = entry[0];
@@ -571,7 +660,8 @@ function MOD_boot(REG) {
     try {
         setTimeout(function () {
             log("REPORT  formula=" + N.FV + " apply=" + N.hX + " gate=" + N.Ff +
-                " cost=" + N.Fg + " death=" + N.GJ + " movesys=" + (N.sysDone ? "yes" : "NO") + " auto=" + (N.autoDone ? "yes" : "NO"));
+                " cost=" + N.Fg + " death=" + N.GJ + " movesys=" + (N.sysDone ? "yes" : "NO") +
+                " auto=" + (N.autoDone ? "yes" : "NO") + " panelHook=" + (PANEL_HOOKED ? "yes" : "NO"));
             log("REPORT  MOD=" + (typeof MOD === "undefined" ? "undefined" :
                 ("f1=" + MOD.feature1 + " f2=" + MOD.feature2 + " f3=" + MOD.feature3 + " f4=" + MOD.feature4 + " f5=" + MOD.feature5 + " dmg=" + MOD.damage)));
         }, 3000);
