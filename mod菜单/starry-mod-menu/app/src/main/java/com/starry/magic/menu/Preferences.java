@@ -618,6 +618,17 @@ public class Preferences {
         return grant != null && !grant.isEmpty();
     }
 
+    /** P1：优先 v2 非对称票（grant2），缺失时回落 v1（grant）。全端唯一入口。 */
+    public static String pickGrant(org.json.JSONObject data) {
+        if (data == null) return "";
+        try {
+            String g2 = data.optString("grant2", "");
+            if (g2 != null && !g2.isEmpty()) return g2;
+        } catch (Throwable ignored) {
+        }
+        return data.optString("grant", "");
+    }
+
     public static String getAuthGrant() {
         with(null);
         return sharedPreferences.getString(KEY_AUTH_GRANT, "");

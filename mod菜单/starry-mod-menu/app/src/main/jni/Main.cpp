@@ -46,6 +46,7 @@
 #include "Includes/Macros.h"   // HOOK / PATCH / RESTORE 宏
 #include "Includes/obfuscate.h"
 #include "Includes/hmac_sha256.h"
+#include "Includes/SgAuth.h"   // 授权链单一实现（P1：非对称票 / 掩码 / 三判据）
 #include "Dobby/dobby.h"       // DobbyCodePatch (P-05，明确依赖)
 
 #include "xDL/xdl.h"
@@ -259,9 +260,10 @@ static bool g_rt_ok        = false;    // 服务端短票验签通过
 // ===== 按钮触发标志 =====
 static bool g_btnTrigger[64] = {false};
 
-// 须与 auth-server GRANT_HMAC_SECRET / grant_hmac_secret 默认一致
+// 旧 v1(HMAC) 票密钥：逻辑已收进 Includes/SgAuth.h::legacy_pepper()
+//（过渡期保留一版，退役时连同服务端 grant_hmac_secret 一起删）
 static const char* grant_pepper() {
-    return OBFUSCATE("sg-grant-v1-7f3a9c2e");
+    return sgauth::legacy_pepper();
 }
 
 static bool hex_eq_ci(const char* hex, const uint8_t* dig, size_t n) {
@@ -286,11 +288,14 @@ static bool hex_eq_ci(const char* hex, const uint8_t* dig, size_t n) {
  * 只在 clear_runtime_session()（进程重启 / nativeClearGrant）时清零。
  */
 static bool session_live() {
-    return g_rt_ok;
+    // 三条独立判据（票标志 / 票派生密钥自检 / 完整性摘要）都在 SgAuth.h。
+    // 单点改一个 bool 不再能全开 —— 这是 P1 要拆掉的那个「一个点断卡密」。
+    return sgauth::live();
 }
 
 
 static void clear_runtime_session() {
+    sgauth::reset();      // 先清授权链状态（单一实现）
     g_rt_ok = false;
     g_authorized = false;
     for (int i = 0; i < 64; i++) {
@@ -455,49 +460,16 @@ static void clear_runtime_session() {
 #endif
 }
 
-/** grant 格式: 1|device|game|exp|menu|card|kid.hexsig */
+/** 票格式与验签逻辑的**单一实现**在 Includes/SgAuth.h：
+ *    v2: 2|device|game|exp|mask|kid.<512hex RSA 签名>   ← so 里只有公钥，签不出来
+ *    v1: 1|device|game|exp|menu|card|kid.<64hex HMAC>   ← 过渡期兼容，一版后退役
+ *  这里只做委托，任何新逻辑都写进 SgAuth.h，不要在这两个主文件里再复制一份。
+ */
 static bool apply_grant_utf8(const char* grant, const char* device, const char* game) {
-    if (!grant || !device || !game || !*grant) return false;
-    const char* dot = strrchr(grant, '.');
-    if (!dot || dot == grant || !*(dot + 1)) return false;
-    size_t body_len = (size_t)(dot - grant);
-    if (body_len < 8 || body_len > 512) return false;
-    char body[520];
-    memcpy(body, grant, body_len);
-    body[body_len] = 0;
-    const char* sig = dot + 1;
-
-    uint8_t mac[32];
-    const char* pepper = grant_pepper();
-    hmac_sha256((const uint8_t*)pepper, strlen(pepper),
-                (const uint8_t*)body, body_len, mac);
-    if (!hex_eq_ci(sig, mac, 32)) return false;
-
-    // parse fields
-    char tmp[520];
-    memcpy(tmp, body, body_len + 1);
-    char* save = nullptr;
-    char* ver = strtok_r(tmp, "|", &save);
-    char* d = strtok_r(nullptr, "|", &save);
-    char* g = strtok_r(nullptr, "|", &save);
-    char* exp_s = strtok_r(nullptr, "|", &save);
-    char* menu_s = strtok_r(nullptr, "|", &save);
-    char* card_s = strtok_r(nullptr, "|", &save);
-    char* kid = strtok_r(nullptr, "|", &save);
-    if (!ver || !d || !g || !exp_s || !menu_s || !card_s || !kid) return false;
-    if (strcmp(ver, "1") != 0) return false;
-    if (strcmp(d, device) != 0 || strcmp(g, game) != 0) return false;
-    int64_t exp = (int64_t)atoll(exp_s);
-    int64_t now = (int64_t)time(nullptr);
-    // 首次验签检查过期（登录后不过期，但首次不能接受已过期的票）
-    if (now > exp + 45) return false;
-    if (menu_s[0] == '0') return false; // 游戏停用票不放行
-
-    LOGI("[验证] grant ok exp=%lld", (long long)exp);
-    g_rt_ok = true;
-    g_authorized = true; // 同步诱饵，避免只改诱饵造成错觉
-    (void)card_s;
-    (void)kid;
+    if (!sgauth::apply(grant, device, game)) return false;
+    g_rt_ok = true;       // 旧标志位保留：只作诱饵装饰，放行只看 sgauth::live()
+    g_authorized = true;  // 同步诱饵开关，避免「只改诱饵就能开」的错觉
+    LOGI("[V2] s=1 m=%x", (unsigned)sgauth::feature_mask());
     return true;
 }
 
@@ -2369,9 +2341,11 @@ static void mb_nativeSetFeature(JNIEnv* env, jclass clazz,
         jint featNum, jstring featName, jboolean enabled) {
 
     const char* name = env->GetStringUTFChars(featName, nullptr);
-    // 未授权时禁止开启；关闭始终允许（用于 lock / OnFeatureChanged 回落）
-    if (enabled && !session_live()) {
-        LOGW("[开关] 拒绝开启 #%d %s（未授权）", featNum, name ? name : "");
+    // 未授权时禁止开启；关闭始终允许（用于 lock / OnFeatureChanged 回落）。
+    // P1-4：判据从「会话活」升级到「该功能位被这张票授权」（feat_ok），
+    // 掩码默认全开 ⇒ 现网行为不变；后台可按功能单独关。
+    if (enabled && !sgauth::feat_ok((int)featNum)) {
+        LOGW("[SW] d #%d", featNum);
         env->ReleaseStringUTFChars(featName, name);
         return;
     }
@@ -2473,7 +2447,7 @@ static void mb_nativeSetAuthorized(JNIEnv* env, jclass clazz,
     if (!authorized) {
         clear_runtime_session();
     }
-    LOGI("[验证] flag=%s live=%s", authorized ? "true" : "false", session_live() ? "1" : "0");
+    LOGI("[V2] f=%d l=%d", authorized ? 1 : 0, session_live() ? 1 : 0);
 }
 
 // ===== 短票验签并激活运行时会话 =====
@@ -2491,12 +2465,8 @@ static jboolean mb_nativeApplyGrant(JNIEnv* env, jclass clazz,
     env->ReleaseStringUTFChars(jDevice, device);
     env->ReleaseStringUTFChars(jGame, game);
     if (!ok) {
-        if (wasLive) {
-            LOGW("[验证] grant rejected (session kept)");
-        } else {
-            clear_runtime_session();
-            LOGW("[验证] grant rejected");
-        }
+        if (!wasLive) clear_runtime_session();
+        LOGW("[V2] r=%d", wasLive ? 1 : 0);
         return JNI_FALSE;
     }
     return JNI_TRUE;

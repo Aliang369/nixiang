@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     offline_cache_seconds: int = 86400  # grant 票 TTL=离线宽限 1 天：断网重开可玩；封禁等卡密控制下次冷启动续票时生效
     # 客户端授权短票 HMAC 密钥（须与 APK native 内置一致；生产务必改掉）
     grant_hmac_secret: str = "sg-grant-v1-7f3a9c2e"
+    # 授权票 v2 非对称签名私钥路径（RSA-2048 PKCS#1 v1.5，文件为 n/e/d=hex）。
+    # 留空 = 只发 v1(HMAC) 票。生产必须配置，且**绝不入库**。
+    grant_rsa_key_path: str = ""
     # 管理端 IP 白名单，逗号分隔；空=不限制（仅建议生产配置你家宽带 IP）
     admin_allow_ips: str = ""
     # 管理登录失败限流：窗口秒数内最多失败次数

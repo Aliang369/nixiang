@@ -71,6 +71,8 @@ public class StarryInitProvider extends ContentProvider {
             SignSpoof.install();
             boolean ok = StarryNativeLoad.ensureLoaded(application);
             Log.i(TAG, "native ensureLoaded=" + ok + " path=" + StarryNativeLoad.loadedPath());
+            // P1-6：把自身 APK 路径交给 native，立刻跑一次自完整性校验
+            com.starry.magic.bridge.ModBridge.setApkPath(application);
             // 签名回灌（TapSignKit 进程内 PM 查询拿官方签名）+ TapTap 强制网页登录
             application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
                 @Override

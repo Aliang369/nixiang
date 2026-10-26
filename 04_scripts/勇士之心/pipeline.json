@@ -350,6 +350,20 @@
       "note": "2026-09-21 热更重抓轮重签：md5=4175178fe6f9663556efe21541726f6e，sha256=2846e57b0577bd4561a387d56b7e8ce1f98d6a5a3e4ed31c1df20427eea93a8d，size=64642859，签名 CN=StarryMagic；unsigned 中间包已按收官口令裁剪。\n2026-09-30 1.0.4 复刻轮：pipeline.json 对齐 1.0.4 链路（build_so 产物校验由误配的 not_exists 改为 file_exists + md5；surgical/sign/install 由 1.0.3 脚本切到 1.0.4 脚本与产物名）。"
     },
     {
+      "id": "harden",
+      "name": "加固出包门禁（P1-7）：公钥一致 / 清单一致 / 去路标 / 产物同一 / 红队可检测",
+      "requires": [
+        "sign"
+      ],
+      "command": "python3.11 04_scripts/_common/harden_apk.py redteam",
+      "preflight": [
+        "04_scripts/_common/harden_apk.py"
+      ],
+      "verify": [],
+      "status": "done",
+      "note": "2026-10-27 防御加固 P1-7 新增：五条断言任一 FAIL 即非 0 退出，拒绝交付。C1 客户端公钥==私钥 / C2 完整性清单与当前 dex+main.js+证书 相符 / C3 包内 so 无 [验证]·grant ok·grant rejected 明文 / C4 包内 so+dex md5 == 本地产物 / C5 改 1 字节后哈希必变（红队可检测）。assemble 脚本结尾也会自动跑一次（同一条门禁）。\n2026-10-27 标记 done：本轮出包链路共 5 次 `harden_apk.py check` 全 PASS（最新 precheck_20261026_173929 / 包 df5001842cc8713efdddd5362d468d0b）。"
+    },
+    {
       "id": "install",
       "name": "覆盖安装星光包到 root 真机 + 设备 MD5 校验",
       "requires": [

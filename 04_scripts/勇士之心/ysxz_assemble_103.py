@@ -364,6 +364,14 @@ def main() -> int:
         print("  dex  : %s" % hashlib.md5(dexblob).hexdigest())
         for abi in abis:
             print("  so[%s] : %s" % (abi, hashlib.md5((libroot / abi / "libstarry_magic.so").read_bytes()).hexdigest()))
+        # P1-7：加固门禁（每次打包自带；不通过就拒绝交付）
+        print("[9/9] 加固门禁 harden_apk.py")
+        gate = subprocess.run([sys.executable, str(root / "04_scripts/_common/harden_apk.py"),
+                               "check", "--apk", str(signed)])
+        if gate.returncode != 0:
+            print("✗ 加固门禁未通过 —— 拒绝交付该包（详见上方 C1~C4）")
+            return 1
+        print("[9/9] 加固门禁 PASS")
         print("[8/8] done")
         return 0
     finally:

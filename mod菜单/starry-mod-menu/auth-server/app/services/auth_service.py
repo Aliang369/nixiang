@@ -23,7 +23,7 @@ from ..models import (
     ToastMessage,
 )
 from ..security import add_duration, utcnow
-from .grant_service import mint_grant
+from .grant_service import mint_grant, mint_grant_v2, FEAT_MASK_ALL
 
 
 def _gen_key(prefix: str = "SG", length: int = 16) -> str:
@@ -310,6 +310,14 @@ def login_card(
         card_auth_enabled=True,
         token=token,
     )
+    # v2 非对称票（P1）：so 里只有公钥 ⇒ 破解者剥出来也签不出票
+    grant2 = mint_grant_v2(
+        device_id=device_id,
+        game_id=game_id,
+        offline_cache_seconds=settings.offline_cache_seconds,
+        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        token=token,
+    )
     return {
         "token": token,
         "expires_at": expires_at.isoformat(),
@@ -317,6 +325,7 @@ def login_card(
         "card": serialize_card_public(card),
         "bootstrap": boot,
         "grant": grant,
+        "grant2": grant2,
     }
 
 
@@ -454,6 +463,14 @@ def heartbeat(
         card_auth_enabled=True,
         token=session.token,
     )
+    # v2 非对称票（P1）：so 里只有公钥 ⇒ 破解者剥出来也签不出票
+    grant2 = mint_grant_v2(
+        device_id=device_id,
+        game_id=game_id,
+        offline_cache_seconds=settings.offline_cache_seconds,
+        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        token=session.token,
+    )
     return {
         "token": session.token,
         "expires_at": session.expires_at.isoformat(),
@@ -461,6 +478,7 @@ def heartbeat(
         "card": serialize_card_public(card),
         "bootstrap": boot,
         "grant": grant,
+        "grant2": grant2,
         "authorized": True,
     }
 
@@ -648,4 +666,14 @@ def bootstrap_with_grant(
                 card_auth_enabled=False,
                 token=None,
             )
+            # v2 对等：关卡密也不该是「无票自由发挥」，同样发掩码票
+            _g2 = mint_grant_v2(
+                device_id=did,
+                game_id=game_id,
+                offline_cache_seconds=int(boot.get("offline_cache_seconds") or 180),
+                feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+                token=None,
+            )
+            if _g2:
+                boot["grant2"] = _g2
     return boot

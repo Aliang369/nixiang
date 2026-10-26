@@ -2,6 +2,8 @@
   "template_id": "yszzx",
   "name": "勇士之心",
   "package": "com.fightingstars.games.warrior",
+  "package_install": "com.fightingstars.games.warrior.tt1",
+  "package_note": "1.0.3 TapTap 底包是 .tt1 变体：装机器/预检请用 package_install（post_install_precheck.sh --pkg com.fightingstars.games.warrior.tt1）；package 字段保持后端卡密/菜单匹配用的历史值。",
   "source": "Games/YsxzEntry.cpp kYsxz_Features（14 项：序号 0/9 为 Category 占位 + 12 个功能；2026-10-24 战斗加速排在基础功能第 6 位）",
   "features": [
     {

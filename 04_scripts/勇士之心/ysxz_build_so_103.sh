@@ -84,6 +84,65 @@ cp -f "$MENU_DIR/YsxzMod.h"     "$JNIW/Games/YsxzMod.h"
 cp -f "$MENU_DIR/YsxzPatchJs.h" "$JNIW/Games/YsxzPatchJs.h"
 cp -f "$MENU_DIR/YsxzMod.cpp"   "$JNIW/Games/YsxzMod.cpp"
 
+# ---------- 2.1 框架层用**工作区现行**覆盖（2026-10-26 防御加固 P1）----------
+# 上面第 1 步是从 1.0.3 基线提交导出的「游戏菜单基线」，但框架层（授权链 / JNI 入口）
+# 现在由 Includes/SgAuth.h 统一承载、并且要随每轮加固演进。若仍用基线提交的那份，
+# 任何加固改动都得先提交才能编译，且容易把旧授权链又编回包里。
+# ⇒ 框架层文件一律用工作区现行版本覆盖（缺一个就报错，不静默降级）。
+FW_OVERLAY="${YSXZ_FW_OVERLAY:-1}"
+if [[ "$FW_OVERLAY" == "1" ]]; then
+  for f in MainModern.cpp Main.cpp Includes/SgAuth.h Includes/sg_rsa_verify.h Includes/sg_pubkey.h \
+           Includes/SgIntegrity.h Includes/sg_integ.h Includes/SgZip.h Includes/SgBuildManifest.h \
+           Games/SignalQuarantine.h Games/NoAceStubs.cpp; do
+    src="$STARRY_SRC/app/src/main/jni/$f"
+    [[ -f "$src" ]] || { echo "ERROR: 工作区缺框架文件 ${f}（P1 加固必需）" >&2; exit 1; }
+    mkdir -p "$(dirname "$JNIW/$f")"
+    cp -f "$src" "$JNIW/$f"
+  done
+  # 1.0.3 基线 mk 不认后来新增的框架源文件 ⇒ 补进 LOCAL_SRC_FILES（幂等）
+  # 同时补 P1-6 需要的编译宏与链接库（**必须加在这里**：真正编译的是 $JNIW 里这份
+  # 基线导出的 mk，改工作区那份没用 —— 2026-10-26 已踩过：宏没进包 ⇒ 完整性校验整体
+  # 没编进去，日志里看不到 [V2] g=1）。
+  python3 - "$JNIW/Android_ysxz.mk" <<'PY'
+import io, re, sys
+p = sys.argv[1]
+s = io.open(p, encoding="utf-8").read()
+
+# (a) 补源文件
+if "Games/NoAceStubs.cpp" in s:
+    print("[103] mk 已含 NoAceStubs.cpp")
+else:
+    out, done = [], False
+    for line in s.splitlines(True):
+        if not done and line.strip().startswith("include $(BUILD_SHARED_LIBRARY)"):
+            out.append("LOCAL_SRC_FILES += Games/NoAceStubs.cpp\n")
+            done = True
+        out.append(line)
+    if not done:
+        raise SystemExit("ERROR: Android_ysxz.mk 里找不到 include $(BUILD_SHARED_LIBRARY)")
+    s = "".join(out)
+    print("[103] mk += Games/NoAceStubs.cpp")
+
+# (b) P1-6 宏 + zlib
+if "SG_HAVE_ZLIB" not in s:
+    def addflag(m):
+        return m.group(0) + " -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1"
+    s = re.sub(r"^LOCAL_C(PP)?FLAGS\s*:=.*$", addflag, s, flags=re.M)
+    s = re.sub(r"^(LOCAL_LDLIBS\s*:=.*)$", r"\1 -lz", s, flags=re.M)
+    print("[103] mk += -DSG_HAVE_ZLIB -DSG_REQUIRE_INTEGRITY / -lz")
+else:
+    print("[103] mk 已含 SG_HAVE_ZLIB")
+
+io.open(p, "w", encoding="utf-8", newline="\n").write(s)
+PY
+  # 断言：编进包的必须是委托版（不是基线的复制版），否则加固等于没做
+  if ! grep -q 'sgauth::apply' "$JNIW/MainModern.cpp"; then
+    echo "ERROR: 覆盖后 MainModern.cpp 里没有 sgauth::apply 委托 —— 拒绝用旧授权链出包" >&2
+    exit 1
+  fi
+  echo "[103] 框架层覆盖：Main{Modern,}.cpp + SgAuth/sg_rsa_verify/sg_pubkey + SignalQuarantine（已断言 sgauth::apply）"
+fi
+
 # ---------- 2.4 多 ABI（2026-10-26 雷电轮）----------
 # 默认沿用底包的 Application.mk（APP_ABI := arm64-v8a）。用户要求以雷电模拟器为验证环境，
 # 该实例是 x86_64 + Houdini，但游戏自带 lib/x86 原生库 ⇒ 只有把 so 也编成 x86，应用才会

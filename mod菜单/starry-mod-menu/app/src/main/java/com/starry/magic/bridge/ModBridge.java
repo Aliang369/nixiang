@@ -138,6 +138,18 @@ public class ModBridge {
     private static native boolean nativeIsGameLibLoaded();
     private static native void nativeSetAuthorized(boolean authorized);
     private static native boolean nativeApplyGrant(String grant, String deviceId, String gameId);
+
+    /** P1-6：把自身 APK 路径交给 native 做自完整性校验 */
+    private static native void nativeSetApkPath(String apkPath);
+
+    /** 入口：进程起来时调一次（native 会立刻校验并影响 session） */
+    public static void setApkPath(android.content.Context ctx) {
+        try {
+            if (ctx != null) nativeSetApkPath(ctx.getPackageCodePath());
+        } catch (Throwable ignored) {
+            // 旧 so 没有该导出：静默跳过（不能因此崩进程）
+        }
+    }
     private static native boolean nativeHasLiveSession();
     private static native void nativeClearGrant();
     /** 编译期注入：GameConfig.h 由 STARRY_GAME_* 映射的 game_id */

@@ -2564,7 +2564,7 @@ public final class NativeMenuController {
         boolean menuEnabled = data.has("menu_enabled")
                 ? data.optBoolean("menu_enabled", true) : prevMenu;
         int cacheSec = data.optInt("offline_cache_seconds", 600);
-        String grant = data.optString("grant", "");
+        String grant = Preferences.pickGrant(data);
         String bootJson = data.toString();
 
         Preferences.saveBootstrapJson(bootJson);
@@ -3242,7 +3242,7 @@ public final class NativeMenuController {
                     }
                     return;
                 }
-                String grant = data.optString("grant", "");
+                String grant = Preferences.pickGrant(data);
                 if (grant.isEmpty()) {
                     Log.w(TAG, "renew no grant (" + why + ")");
                     return;
@@ -3557,7 +3557,7 @@ public final class NativeMenuController {
                     cardExpire = cardObj.optString("expire_at", "");
                     if ("null".equals(cardExpire)) cardExpire = "";
                 }
-                String grant = data.optString("grant", "");
+                String grant = Preferences.pickGrant(data);
                 int cacheSec = data.optInt("offline_cache_seconds", data.optInt("cache_sec", 600));
 
                 JSONObject bootData = data.optJSONObject("bootstrap");
@@ -3575,7 +3575,8 @@ public final class NativeMenuController {
                 }
                 if (bootData != null) {
                     if (grant.isEmpty()) {
-                        grant = bootData.optString("grant", bootData.optString("feature_grant", ""));
+                        grant = Preferences.pickGrant(bootData);
+                        if (grant.isEmpty()) grant = bootData.optString("feature_grant", "");
                     }
                     if (bootData.has("card_auth_enabled")) {
                         Preferences.setCardAuthRequired(bootData.optBoolean("card_auth_enabled", true));
@@ -3594,7 +3595,8 @@ public final class NativeMenuController {
                     JSONObject gJson = new JSONObject(gRes);
                     JSONObject gData = gJson.has("data") ? gJson.optJSONObject("data") : gJson;
                     if (gData != null) {
-                        grant = gData.optString("grant", gData.optString("token", ""));
+                        grant = Preferences.pickGrant(gData);
+                        if (grant.isEmpty()) grant = gData.optString("token", "");
                     }
                 }
                 Preferences.saveAuthSession(token, card, System.currentTimeMillis(),
