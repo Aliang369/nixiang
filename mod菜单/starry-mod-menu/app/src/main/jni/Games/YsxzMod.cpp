@@ -21,6 +21,15 @@
    kYsxzBootPatched/_len  = 同一明文 + 自举补丁后重新加密
    生成命令见 ysxz_build_so_103.sh；缺这个头文件就编不过（故意如此，防拿旧产物出包）。 */
 #include "YsxzBootBlob.h"
+
+#ifdef SG_PAYLOAD_ENC
+/* P2-2/P2-3：功能载荷改成"票派生密钥加密 + 诱饵层"。
+   拿不到正确密钥（改包、无票、票被伪造）⇒ 只喂诱饵，功能静默无效、不闪退。 */
+#include "YsxzDecoyJs.h"
+#include "Includes/SgPayload.h"
+#include "Includes/sg_payload_enc.h"
+#include "Includes/SgAuth.h"
+#endif
 /* 1.0.6（加密壳代）追加：
    YsxzSecShell —— 每 1ms 把壳的 dirty/failedMask 归零，避免重签+外科导致壳自检失败后
                    跳过 Application.onCreate ⇒ bingo SDK 未初始化 ⇒ AppInfo.parameters NPE。
@@ -317,6 +326,39 @@ static bool PatchRegistryCall(std::string* src) {
     return true;
 }
 
+/* 要拼进游戏 bundle 的功能载荷：默认是明文常量；开 SG_PAYLOAD_ENC 后改为
+   "解密成功才用真载荷，否则喂诱饵"。缓存一次，避免反复解密。 */
+#ifdef SG_PAYLOAD_ENC
+static std::string g_patchJsCache;
+static int g_payloadDecoy = 0;
+
+static const std::string& GetPatchJs() {
+    if (!g_patchJsCache.empty()) return g_patchJsCache;
+    if (!sgauth::payload_key_ready()) {
+        ++g_payloadDecoy;
+        LOGW("%s payload key absent -> decoy (%d)", YSXZ_LOG, g_payloadDecoy);
+        g_patchJsCache.assign(kYsxzDecoyJs);
+        return g_patchJsCache;
+    }
+    std::string out;
+    if (!sgpayload::unseal(kYsxzPayloadCt, kYsxzPayloadLen, kYsxzPayloadMac,
+                           sgauth::payload_key(), &out)) {
+        ++g_payloadDecoy;
+        LOGW("%s payload unseal failed -> decoy (%d)", YSXZ_LOG, g_payloadDecoy);
+        g_patchJsCache.assign(kYsxzDecoyJs);
+        return g_patchJsCache;
+    }
+    LOGI("%s payload decrypted %zu B", YSXZ_LOG, out.size());
+    g_patchJsCache.swap(out);
+    return g_patchJsCache;
+}
+#else
+static const std::string& GetPatchJs() {
+    static const std::string s(kYsxzPatchJs, strlen(kYsxzPatchJs));
+    return s;
+}
+#endif
+
 static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,
                              const char* fileName) {
     if (!g_origSeEval) return false;
@@ -346,8 +388,9 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
             LOGW("%s registry call pattern missing in bundle=%s", YSXZ_LOG, fileName);
             return g_origSeEval(thiz, script, length, ret, fileName);
         }
-        patched.reserve(source.size() + strlen(kYsxzPatchJs) + 64);
-        patched.assign(kYsxzPatchJs, strlen(kYsxzPatchJs));
+        const std::string& payload = GetPatchJs();
+        patched.reserve(source.size() + payload.size() + 64);
+        patched.assign(payload);
         patched += "\n";
         patched += source;
     } catch (...) {

@@ -167,6 +167,106 @@ def c5(rep, apk, work):
             os.remove(tmp)
 
 
+def check_payload_fresh():
+    """C6：明文载荷改了但没重新加密 ⇒ 密文头与实物不一致，必须拦下。"""
+    import subprocess, sys as _sys
+    gen = os.path.join(ROOT, "04_scripts", "勇士之心", "gen_payload_enc.py")
+    if not os.path.exists(gen):
+        return "SKIP", "无 gen_payload_enc.py"
+    r = subprocess.run([_sys.executable, gen, "--check"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    if r.returncode == 0:
+        last = (r.stdout or "").strip().splitlines()
+        return "PASS", (last[-1][:70] if last else "ok")
+    last = (r.stdout or r.stderr or "").strip().splitlines()
+    return "FAIL", (last[-1][:90] if last else "check failed")
+
+
+def c6(rep):
+    st, msg = check_payload_fresh()
+    if st != "SKIP":
+        rep.add("C6 载荷密文新鲜", st == "PASS", msg)
+
+
+def c7(rep, apk):
+    """C7：载荷加密层是否真的编进 so（防"门禁全绿但载荷其实没加密"）。"""
+    need = [b"payload decrypted", b"-> decoy"]
+    leak = b"__starry_layer_ready"   # 诱饵独有：有它说明走的是诱饵分支代码（合法），仅作参考
+    try:
+        with zipfile.ZipFile(apk) as z:
+            names = [n for n in z.namelist() if n.endswith("libstarry_magic.so")]
+            if not names:
+                rep.add("C7 载荷层已编译", False, "包里没有 libstarry_magic.so")
+                return
+            miss = []
+            for n in names:
+                blob = z.read(n)
+                for k in need:
+                    if k not in blob:
+                        miss.append("%s 缺 %s" % (n, k.decode()))
+            if miss:
+                rep.add("C7 载荷层已编译", False, "；".join(miss[:3]))
+                return
+            rep.add("C7 载荷层已编译", True,
+                    "%d 个 so 均含解密/诱饵分支（%s 仅调试用：%s）" % (
+                        len(names), "decoy-marker",
+                        "有" if leak else "无"))
+    except Exception as e:  # noqa: BLE001
+        rep.add("C7 载荷层已编译", False, "读取失败: %s" % e)
+
+
+def _payload_plain_samples(n=12, win=48):
+    """从明文载荷里取指纹片段（失败返回空列表）。"""
+    import re as _re
+    h = os.path.join(ROOT, "04_scripts", "勇士之心", "ysxz_1.0.3_menu", "YsxzPatchJs.h")
+    if not os.path.exists(h):
+        return []
+    txt = io.open(h, "r", encoding="utf-8", errors="surrogateescape").read()
+    m = _re.search(r'R"YSXZJS\((.*)\)YSXZJS"', txt, _re.S)
+    if not m:
+        return []
+    body = m.group(1)
+    step = max(1, len(body) // (n * 3))
+    out, i = [], 0
+    while len(out) < n and i + win < len(body):
+        out.append(body[i:i + win].encode("utf-8"))
+        i += step
+    return out
+
+
+def c8(rep, apk):
+    """C8：开了 -DSG_PAYLOAD_ENC 时，包内 so 不得含载荷明文片段。"""
+    mk = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "jni",
+                      "Android_ysxz.mk")
+    enc_on = False
+    if os.path.exists(mk):
+        try:
+            enc_on = "-DSG_PAYLOAD_ENC" in io.open(mk, "r", encoding="utf-8").read()
+        except Exception:
+            enc_on = False
+    if not enc_on:
+        return                      # 明文构建（回滚路径），不检查
+    fps = _payload_plain_samples()
+    if not fps:
+        rep.add("C8 无明文载荷泄漏", False, "取不到载荷指纹片段")
+        return
+    try:
+        with zipfile.ZipFile(apk) as z:
+            bad = []
+            for n in [x for x in z.namelist() if x.endswith("libstarry_magic.so")]:
+                blob = z.read(n)
+                hits = sum(1 for f in fps if f in blob)
+                if hits:
+                    bad.append("%s 命中 %d/%d 片段" % (n, hits, len(fps)))
+            if bad:
+                rep.add("C8 无明文载荷泄漏", False, "；".join(bad[:3]))
+            else:
+                rep.add("C8 无明文载荷泄漏", True,
+                        "%d 个片段 × 3 ABI 全部 0 命中（载荷确为密文）" % len(fps))
+    except Exception as e:  # noqa: BLE001
+        rep.add("C8 无明文载荷泄漏", False, "读取失败: %s" % e)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["check", "redteam", "publish"])
@@ -189,6 +289,9 @@ def main():
         return cmd_publish(a)
     if a.cmd == "redteam":
         c5(rep, a.apk, a.work)
+    c6(rep)
+    c7(rep, a.apk)
+    c8(rep, a.apk)
     return rep.summary()
 
 

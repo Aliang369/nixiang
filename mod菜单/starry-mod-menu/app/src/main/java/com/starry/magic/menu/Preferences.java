@@ -618,10 +618,12 @@ public class Preferences {
         return grant != null && !grant.isEmpty();
     }
 
-    /** P1：优先 v2 非对称票（grant2），缺失时回落 v1（grant）。全端唯一入口。 */
+    /** P1/P2：优先 v3（grant3，带载荷密钥），其次 v2（grant2），最后回落 v1（grant）。全端唯一入口。 */
     public static String pickGrant(org.json.JSONObject data) {
         if (data == null) return "";
         try {
+            String g3 = data.optString("grant3", "");
+            if (g3 != null && !g3.isEmpty()) return g3;
             String g2 = data.optString("grant2", "");
             if (g2 != null && !g2.isEmpty()) return g2;
         } catch (Throwable ignored) {

@@ -172,6 +172,15 @@ static void ShowToast(const char* text) {
 }
 
 // 导出给 Games/*Mod（如失配保护）崩溃前提示复用
+/* P2-2：SgAuth.h 是 header-only，static 状态每 TU 一份。
+   载荷密钥在 apply() 所在的这个 TU 里，经此函数对外提供。 */
+extern "C" int sgp_payload_key(uint8_t out[32]) {
+    if (!out) return 0;
+    if (!sgauth::payload_key_ready()) { memset(out, 0, 32); return 0; }
+    memcpy(out, sgauth::payload_key(), 32);
+    return 1;
+}
+
 extern "C" void StarryShowToast(const char* text) { ShowToast(text); }
 
 // ============================================================

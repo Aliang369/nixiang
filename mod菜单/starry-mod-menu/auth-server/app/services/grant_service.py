@@ -80,6 +80,98 @@ def mint_grant_v2(
         return None
     return f"{body}.{sig}"
 
+def payload_wrap_key(device_id, game_id, exp, mask, kid):
+    """v3 票里 kx 的包裹密钥：只依赖**被签名覆盖的字段**，避免与签名的循环依赖。"""
+    material = "sgpay|%s|%s|%s|%s|%s" % (
+        (device_id or "").strip(), (game_id or "").strip(), exp, mask, kid)
+    return hashlib.sha256(material.encode("utf-8")).digest()
+
+
+def _payload_master():
+    path = (get_settings().payload_master_path or "").strip()
+    if not path:
+        return None
+    try:
+        with open(path, "r", encoding="ascii") as f:
+            return bytes.fromhex(f.read().strip()[:64])
+    except Exception as e:  # noqa: BLE001
+        log.warning("payload_master 不可用（%s）：v3 票将不签发", e)
+        return None
+
+
+def payload_build_key():
+    """K_build = HMAC(master, "sgpay-build|" + sha256(明文载荷))；没配好就返回 None。"""
+    master = _payload_master()
+    sha = (get_settings().payload_sha or "").strip().lower()
+    if not master or len(sha) != 64:
+        return None
+    try:
+        digest = bytes.fromhex(sha)
+    except ValueError:
+        return None
+    return hmac.new(master, b"sgpay-build|" + digest, hashlib.sha256).digest()
+
+
+def payload_ready():
+    return _rsa_key() is not None and payload_build_key() is not None
+
+
+def mint_grant_v3(*, device_id, game_id, offline_cache_seconds,
+                  feat_mask=FEAT_MASK_ALL, token=None):
+    """签发 v3 票（带载荷密钥包裹）。私钥或载荷钥缺一不可，否则返回 None。"""
+    key = _rsa_key()
+    kb = payload_build_key()
+    if key is None or kb is None:
+        return None
+    ttl = max(int(offline_cache_seconds or 180), 60)
+    exp = int(time.time()) + ttl
+    mask = int(feat_mask) & FEAT_MASK_ALL
+    kid = token_kid(token)
+    wrap = payload_wrap_key(device_id, game_id, exp, mask, kid)
+    kx = bytes(a ^ b for a, b in zip(kb, wrap))
+    body = "|".join([
+        "3",
+        (device_id or "").strip(),
+        (game_id or "").strip(),
+        str(exp),
+        str(mask),
+        kid,
+        kx.hex(),
+    ])
+    try:
+        sig = sg_rsa.sign_hex(body.encode("utf-8"), key)
+    except Exception as e:  # noqa: BLE001
+        log.warning("v3 票签名失败（%s）", e)
+        return None
+    return f"{body}.{sig}"
+
+
+def verify_grant_v3(grant, *, device_id, game_id, skew_seconds=45):
+    """服务端自测用：验签 + 还原 K_build。"""
+    key = _rsa_key()
+    if key is None or not grant or "." not in grant:
+        return None
+    body, sig = grant.rsplit(".", 1)
+    if not sg_rsa.verify_hex(body.encode("utf-8"), sig, key):
+        return None
+    parts = body.split("|")
+    if len(parts) != 7 or parts[0] != "3":
+        return None
+    try:
+        exp = int(parts[3])
+        mask = int(parts[4])
+        kx = bytes.fromhex(parts[6])
+    except ValueError:
+        return None
+    if int(time.time()) > exp + skew_seconds:
+        return None
+    if parts[1] != (device_id or "").strip() or parts[2] != (game_id or "").strip():
+        return None
+    wrap = payload_wrap_key(parts[1], parts[2], exp, mask, parts[5])
+    return {"exp": exp, "feat_mask": mask, "kid": parts[5],
+            "k_build": bytes(a ^ b for a, b in zip(kx, wrap))}
+
+
 
 def verify_grant_v2(
     grant: str,

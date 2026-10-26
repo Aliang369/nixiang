@@ -29,8 +29,8 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := starry_magic
 
-LOCAL_CFLAGS    := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
-LOCAL_CPPFLAGS  := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
+LOCAL_CFLAGS    := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
+LOCAL_CPPFLAGS  := -w -s -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
 LOCAL_LDLIBS    := -llog -landroid -lz
 

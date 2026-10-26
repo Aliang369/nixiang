@@ -89,10 +89,19 @@ cp -f "$MENU_DIR/YsxzMod.cpp"   "$JNIW/Games/YsxzMod.cpp"
 # 现在由 Includes/SgAuth.h 统一承载、并且要随每轮加固演进。若仍用基线提交的那份，
 # 任何加固改动都得先提交才能编译，且容易把旧授权链又编回包里。
 # ⇒ 框架层文件一律用工作区现行版本覆盖（缺一个就报错，不静默降级）。
+# ---------- 2.05 P2-2：载荷密文必须与**刚拷进来的这份**一致 ----------
+# 2026-10-27 踩过：mod菜单 与 ysxz_1.0.3_menu 下各有一份同名 YsxzPatchJs.h（内容不同，
+# 分属 1.0.4/1.0.6 线与 1.0.3 复刻线），加密时取错了源头 ⇒ 注入旧载荷、部分功能失效。
+# ⇒ 这里在编译前**强制**按本脚本刚拷贝的那份重新生成密文，物理上不可能再错源头。
+python3 "$NIXIANG/04_scripts/勇士之心/gen_payload_enc.py" >/tmp/payload_gen.log 2>&1 || {
+  echo "ERROR: 载荷加密失败（gen_payload_enc.py）" >&2; tail -5 /tmp/payload_gen.log >&2; exit 1; }
+echo "[103] payload = $(wc -c < "$JNIW/Games/YsxzPatchJs.h") B（加密源 == 编译源，已强制对齐）"
+
 FW_OVERLAY="${YSXZ_FW_OVERLAY:-1}"
 if [[ "$FW_OVERLAY" == "1" ]]; then
   for f in MainModern.cpp Main.cpp Includes/SgAuth.h Includes/sg_rsa_verify.h Includes/sg_pubkey.h \
            Includes/SgIntegrity.h Includes/sg_integ.h Includes/SgZip.h Includes/SgBuildManifest.h \
+           Includes/SgPayload.h Includes/sg_payload_enc.h Games/YsxzDecoyJs.h \
            Games/SignalQuarantine.h Games/NoAceStubs.cpp; do
     src="$STARRY_SRC/app/src/main/jni/$f"
     [[ -f "$src" ]] || { echo "ERROR: 工作区缺框架文件 ${f}（P1 加固必需）" >&2; exit 1; }
@@ -126,10 +135,10 @@ else:
 # (b) P1-6 宏 + zlib
 if "SG_HAVE_ZLIB" not in s:
     def addflag(m):
-        return m.group(0) + " -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1"
+        return m.group(0) + " -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_PAYLOAD_ENC=1"
     s = re.sub(r"^LOCAL_C(PP)?FLAGS\s*:=.*$", addflag, s, flags=re.M)
     s = re.sub(r"^(LOCAL_LDLIBS\s*:=.*)$", r"\1 -lz", s, flags=re.M)
-    print("[103] mk += -DSG_HAVE_ZLIB -DSG_REQUIRE_INTEGRITY / -lz")
+    print("[103] mk += -DSG_HAVE_ZLIB -DSG_REQUIRE_INTEGRITY -DSG_PAYLOAD_ENC / -lz")
 else:
     print("[103] mk 已含 SG_HAVE_ZLIB")
 

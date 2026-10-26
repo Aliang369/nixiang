@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     # 授权票 v2 非对称签名私钥路径（RSA-2048 PKCS#1 v1.5，文件为 n/e/d=hex）。
     # 留空 = 只发 v1(HMAC) 票。生产必须配置，且**绝不入库**。
     grant_rsa_key_path: str = ""
+    # P2-2：载荷加密主密钥（与出包机 ~/.starry-keys/payload_master.txt 同一份）
+    payload_master_path: str = ""
+    # P2-2：当前在售 build 的明文载荷 sha256（改了载荷必须同步改这里，否则 v3 不签发）
+    payload_sha: str = ""
     # 管理端 IP 白名单，逗号分隔；空=不限制（仅建议生产配置你家宽带 IP）
     admin_allow_ips: str = ""
     # 管理登录失败限流：窗口秒数内最多失败次数

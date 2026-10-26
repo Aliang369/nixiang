@@ -23,7 +23,8 @@ from ..models import (
     ToastMessage,
 )
 from ..security import add_duration, utcnow
-from .grant_service import mint_grant, mint_grant_v2, FEAT_MASK_ALL
+from .grant_service import (mint_grant, mint_grant_v2, mint_grant_v3,
+                            FEAT_MASK_ALL)
 
 
 def _gen_key(prefix: str = "SG", length: int = 16) -> str:
@@ -318,6 +319,13 @@ def login_card(
         feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
         token=token,
     )
+    grant3 = mint_grant_v3(
+        device_id=device_id,
+        game_id=game_id,
+        offline_cache_seconds=settings.offline_cache_seconds,
+        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        token=None,
+    ) if 'mint_grant_v3' in globals() else None
     return {
         "token": token,
         "expires_at": expires_at.isoformat(),
@@ -326,6 +334,7 @@ def login_card(
         "bootstrap": boot,
         "grant": grant,
         "grant2": grant2,
+        "grant3": grant3,
     }
 
 
@@ -471,6 +480,13 @@ def heartbeat(
         feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
         token=session.token,
     )
+    grant3 = mint_grant_v3(
+        device_id=device_id,
+        game_id=game_id,
+        offline_cache_seconds=settings.offline_cache_seconds,
+        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        token=None,
+    ) if 'mint_grant_v3' in globals() else None
     return {
         "token": session.token,
         "expires_at": session.expires_at.isoformat(),
@@ -479,6 +495,7 @@ def heartbeat(
         "bootstrap": boot,
         "grant": grant,
         "grant2": grant2,
+        "grant3": grant3,
         "authorized": True,
     }
 
@@ -676,4 +693,13 @@ def bootstrap_with_grant(
             )
             if _g2:
                 boot["grant2"] = _g2
+            _g3 = mint_grant_v3(
+                device_id=did,
+                game_id=game_id,
+                offline_cache_seconds=int(boot.get("offline_cache_seconds") or 180),
+                feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+                token=None,
+            )
+            if _g3:
+                boot["grant3"] = _g3
     return boot

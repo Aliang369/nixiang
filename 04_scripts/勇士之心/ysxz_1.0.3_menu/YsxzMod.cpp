@@ -21,6 +21,15 @@
    kYsxzBootPatched/_len  = 同一明文 + 自举补丁后重新加密
    生成命令见 ysxz_build_so_103.sh；缺这个头文件就编不过（故意如此，防拿旧产物出包）。 */
 #include "YsxzBootBlob.h"
+
+#ifdef SG_PAYLOAD_ENC
+/* P2-2/P2-3：功能载荷改成"票派生密钥加密 + 诱饵层"。
+   拿不到正确密钥（改包、无票、伪造票）⇒ 只喂诱饵，功能静默无效、不闪退。 */
+#include "YsxzDecoyJs.h"
+#include "Includes/SgPayload.h"
+#include "Includes/sg_payload_enc.h"
+extern "C" int sgp_payload_key(uint8_t out[32]);
+#endif
 /* 1.0.6（加密壳代）追加：
    YsxzSecShell —— 每 1ms 把壳的 dirty/failedMask 归零，避免重签+外科导致壳自检失败后
                    跳过 Application.onCreate ⇒ bingo SDK 未初始化 ⇒ AppInfo.parameters NPE。
@@ -367,6 +376,43 @@ static bool PatchRegistryCall(std::string* src) {
     return true;
 }
 
+/* 要拼进游戏 bundle 的功能载荷：默认明文常量；开 SG_PAYLOAD_ENC 后
+   "解密成功才用真载荷，否则喂诱饵"。缓存一次，避免反复解密。 */
+#ifdef SG_PAYLOAD_ENC
+static std::string g_patchJsCache;
+static int g_payloadDecoy = 0;
+
+static const std::string& GetPatchJs() {
+    if (!g_patchJsCache.empty()) return g_patchJsCache;
+    uint8_t pk[32];
+    if (!sgp_payload_key(pk)) {
+        ++g_payloadDecoy;
+        LOGW("%s payload key absent -> decoy (%d)", YSXZ_LOG, g_payloadDecoy);
+        /* 不缓存诱饵：票可能比 bundle 晚到，下一次 eval 还能拿到真载荷 */
+        static const std::string decoy_a(kYsxzDecoyJs);
+        return decoy_a;
+    }
+    std::string out;
+    if (!sgpayload::unseal(kYsxzPayloadCt, kYsxzPayloadLen, kYsxzPayloadMac,
+                           pk, &out)) {
+        memset(pk, 0, sizeof(pk));
+        ++g_payloadDecoy;
+        LOGW("%s payload unseal failed -> decoy (%d)", YSXZ_LOG, g_payloadDecoy);
+        static const std::string decoy_b(kYsxzDecoyJs);
+        return decoy_b;
+    }
+    memset(pk, 0, sizeof(pk));
+    LOGI("%s payload decrypted %zu B", YSXZ_LOG, out.size());
+    g_patchJsCache.swap(out);
+    return g_patchJsCache;
+}
+#else
+static const std::string& GetPatchJs() {
+    static const std::string s(kYsxzPatchJs, strlen(kYsxzPatchJs));
+    return s;
+}
+#endif
+
 static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,
                              const char* fileName) {
     if (!g_origSeEval) return false;
@@ -423,8 +469,8 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
              fileName ? fileName : "(null)", n);
             return g_origSeEval(thiz, script, length, ret, fileName);
         }
-        patched.reserve(source.size() + strlen(kYsxzPatchJs) + 64);
-        patched.assign(kYsxzPatchJs, strlen(kYsxzPatchJs));
+        patched.reserve(source.size() + GetPatchJs().size() + 64);
+        patched.assign(GetPatchJs());
         patched += "\n";
         patched += source;
     } catch (...) {

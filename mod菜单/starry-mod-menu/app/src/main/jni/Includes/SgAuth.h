@@ -117,6 +117,29 @@ static inline void set_integrity(int v) { s_state.integ = v; }
 static inline int  integrity() { return s_state.integ; }
 static inline uint32_t feature_mask() { return s_state.mask; }
 
+/** 票派生密钥（32B，未验证票时为全 0）。
+ *  P2-2：功能载荷用它派生解密密钥 —— 签不出票就拿不到正确密钥，只能落到诱饵层。 */
+static inline const uint8_t* session_key() { return s_state.key; }
+static inline bool session_key_ready() {
+    uint8_t d = 0;
+    for (int i = 0; i < 32; i++) d |= s_state.key[i];
+    return d != 0;
+}
+
+// ---------------- P2-2 载荷密钥（由 v3 票的 kx 字段还原）----------------
+// K_build = kx XOR sha256("sgpay"||sig_hex)；只有验签通过的票才会写入这里，
+// 拿不到就返回 false ⇒ 上层落到诱饵层（静默无效）。
+static uint8_t s_paykey[32];
+static inline void set_payload_key(const uint8_t k[32]) {
+    if (k) memcpy(s_paykey, k, 32); else memset(s_paykey, 0, 32);
+}
+static inline const uint8_t* payload_key() { return s_paykey; }
+static inline bool payload_key_ready() {
+    uint8_t d = 0;
+    for (int i = 0; i < 32; i++) d |= s_paykey[i];
+    return d != 0;
+}
+
 static inline void reset() {
     s_state.ticket_ok = 0;
     memset(s_state.key, 0, sizeof(s_state.key));
@@ -163,7 +186,8 @@ static inline int apply(const char* ticket, const char* device, const char* game
     body[body_len] = 0;
     const char* sig_hex = dot + 1;
 
-    const int is_v2 = (body[0] == '2' && body[1] == '|');
+    const int is_v3 = (body[0] == '3' && body[1] == '|');
+    const int is_v2 = is_v3 || (body[0] == '2' && body[1] == '|');
 
     if (is_v2) {
         /* ---- v2：非对称验签（so 里没有私钥 ⇒ 签不出来） ---- */
@@ -192,6 +216,8 @@ static inline int apply(const char* ticket, const char* device, const char* game
     char* gm = strtok_r(nullptr, "|", &save);
     char* exp_s = strtok_r(nullptr, "|", &save);
     char* f5 = strtok_r(nullptr, "|", &save);
+    char* f6 = strtok_r(nullptr, "|", &save);   /* v3: kid */
+    char* f7 = strtok_r(nullptr, "|", &save);   /* v3: kx（载荷密钥包裹） */
     if (!ver || !dev || !gm || !exp_s || !f5) return 0;
     if (strcmp(dev, device) != 0 || strcmp(gm, game) != 0) return 0;
 
@@ -201,9 +227,10 @@ static inline int apply(const char* ticket, const char* device, const char* game
 
     uint32_t mask;
     if (is_v2) {
-        if (strcmp(ver, "2") != 0) return 0;
+        if (strcmp(ver, is_v3 ? "3" : "2") != 0) return 0;
         mask = (uint32_t)strtoul(f5, nullptr, 10);
         if (mask == 0) return 0;           /* 掩码 0 = 后台停用，不放行 */
+        if (is_v3 && (!f6 || !f7 || strlen(f7) != 64)) return 0;
     } else {
         if (strcmp(ver, "1") != 0) return 0;
         if (f5[0] == '0') return 0;        /* 旧票：menu=0 停用 */
@@ -218,6 +245,26 @@ static inline int apply(const char* ticket, const char* device, const char* game
     s_state.mask = mask;
     s_state.ticket_ok = 1;
     memset(k, 0, sizeof(k));
+
+    /* ---- P2-2：v3 票里带 kx，还原功能载荷密钥 K_build ----
+       wrap = sha256("sgpay|device|game|exp|mask|kid")（只依赖被签名覆盖的字段）
+       K_build = kx XOR wrap；拿不到就保持全 0 ⇒ 载荷层落诱饵。 */
+    if (is_v3) {
+        char wk[256];
+        int n = snprintf(wk, sizeof(wk), "sgpay|%s|%s|%s|%s|%s", dev, gm, exp_s, f5, f6);
+        if (n > 0 && (size_t)n < sizeof(wk)) {
+            uint8_t wrap[32], kx[32], kb[32];
+            sha256((const uint8_t*)wk, (size_t)n, wrap);
+            if (sg_hex2bin(f7, kx, sizeof(kx)) == 32) {
+                for (int i = 0; i < 32; i++) kb[i] = (uint8_t)(kx[i] ^ wrap[i]);
+                set_payload_key(kb);
+                memset(kb, 0, sizeof(kb));
+            }
+            memset(wrap, 0, sizeof(wrap));
+            memset(kx, 0, sizeof(kx));
+            memset(wk, 0, sizeof(wk));
+        }
+    }
     return 1;
 }
 
