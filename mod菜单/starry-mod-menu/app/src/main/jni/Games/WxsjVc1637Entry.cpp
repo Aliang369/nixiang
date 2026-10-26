@@ -24,8 +24,14 @@ static const char* kWxsjVc1637_Features[] = {
     "Toggle_商店广告无限",           // 13 WXSJVC_FEAT_SHOPADS
     "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×倍率）
     "InputValue_1000:物品反增倍率",  // 15 WXSJVC_FEAT_ITEMREVERSEX（输入框，写 item_reverse_x）
+#ifdef WXSJ_ANTIBAN_MENU
+    // 正常版：防封留在菜单（feat 16），由用户开关控制 block_report
+    "Toggle_防封",                   // 16 WXSJVC_FEAT_ANTIBAN（默认关；开=上报/执法屏蔽生效）
+    "Toggle_转生时间无限制",         // 17 WXSJVC_FEAT_ZHUANSHENG（默认关；开=取消转生 1 小时冷却）
+#else
     "Toggle_转生时间无限制",         // 16 WXSJVC_FEAT_ZHUANSHENG（默认关；开=取消转生 1 小时冷却）
-    // 注：防封**不进菜单**（2026-10-26 用户定）：随 so 一起加载、无条件生效，见 WxsjVc1637Mod.cpp 防封基线段。
+    // 注：屏蔽版防封**不进菜单**（2026-10-26 用户定）：随 so 一起加载、无条件生效，见 WxsjVc1637Mod.cpp 防封基线段。
+#endif
 };
 
 static bool WxsjVc1637_TryInitEntry(JavaVM* /*vm*/) {

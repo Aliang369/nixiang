@@ -38,6 +38,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := starry_magic
 
 LOCAL_CFLAGS    := -w -s -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
+# 双形态出包（2026-10-27 用户定）：
+#   默认（不传 WXSJ_ANTIBAN_MENU）＝ 屏蔽版：防封撤出菜单、随 so 常开（15 项，转生=16）
+#   WXSJ_ANTIBAN_MENU=1            ＝ 正常版：菜单保留「防封」开关（16 项，防封=16、转生=17）
+ifneq ($(WXSJ_ANTIBAN_MENU),)
+LOCAL_CFLAGS    += -DWXSJ_ANTIBAN_MENU
+endif
 LOCAL_CPPFLAGS  := -w -s -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
 LOCAL_LDLIBS    := -llog -landroid

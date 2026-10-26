@@ -25,7 +25,14 @@ enum WxsjVc1637Feat : int {
     WXSJVC_FEAT_ITEMREVERSE = 14, // Toggle_物品使用反增 -> item_reverse（使用 N 个反增 N×倍率）
     WXSJVC_FEAT_ITEMREVERSEX = 15, // InputValue_1000:物品反增倍率 -> item_reverse_x（缺省 1000，1..1000000）
     // 16 = 转生时间无限制（防封已撤出菜单，改为随 so 无条件生效的基线，见 .cpp）
+#ifdef WXSJ_ANTIBAN_MENU
+    // 正常版（菜单里保留「防封」按钮）：防封=16、转生=17
+    WXSJVC_FEAT_ANTIBAN = 16,     // Toggle_防封 -> block_report（开=上报/执法屏蔽生效）
+    WXSJVC_FEAT_ZHUANSHENG = 17,  // Toggle_转生时间无限制 -> zhuansheng_free
+#else
+    // 屏蔽版（防封撤出菜单、随 so 常开）：转生=16
     WXSJVC_FEAT_ZHUANSHENG = 16, // Toggle_转生时间无限制 -> zhuansheng_free（开=取消转生 1 小时客户端冷却）
+#endif
 };
 
 bool WxsjVc1637_TryInit();

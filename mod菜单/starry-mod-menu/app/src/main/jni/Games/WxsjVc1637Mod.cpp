@@ -369,7 +369,11 @@ static bool TryHookOnce() {
     // ① 有票 ⇒ 全量补丁 DLL 里的上报/执法屏蔽按 block_report 门控生效，这里落 1 保证开着；
     // ② 无票 ⇒ 走 GetPatchedPlain 里的「防封基线」（不含任何功能代码，同样按此键生效）。
     // 菜单已无「防封」开关，玩家无法关闭（ini 手改下轮冷启动也会被这行覆盖回 1）。
+#ifdef WXSJ_ANTIBAN_MENU
+    // 正常版：防封由菜单开关控制（缺键=false=关，与原定制版一致），这里不强制写。
+#else
     WriteConfigKey("block_report", "1");
+#endif
     return true;
 }
 
@@ -494,6 +498,9 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJVC_FEAT_SHOPADS:    WriteConfigKey("shop_ads_unlimited", on); break;
     case WXSJVC_FEAT_ITEMREVERSE: WriteConfigKey("item_reverse", on); break;
     // 转生时间无限制（默认关）：开=取消转生 1 小时客户端冷却（按钮常亮、文案常「轮回」）。
+#ifdef WXSJ_ANTIBAN_MENU
+    case WXSJVC_FEAT_ANTIBAN:    WriteConfigKey("block_report", on); break;
+#endif
     case WXSJVC_FEAT_ZHUANSHENG: WriteConfigKey("zhuansheng_free", on); break;
     default: break;
     }

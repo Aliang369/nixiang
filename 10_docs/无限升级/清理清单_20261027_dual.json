@@ -1,0 +1,15 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_wxsj-dual-clean_20261027_013438",
+  "timestamp": "20261027_013438",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "mod菜单/starry-mod-menu/app/src/obj_wxsj_vc1637",
+      "type": "dir",
+      "size_kib": 11424,
+      "source": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/obj_wxsj_vc1637",
+      "quarantine": "/Users/aliang/.Trash/nixiang_wxsj-dual-clean_20261027_013438/mod菜单/starry-mod-menu/app/src/obj_wxsj_vc1637"
+    }
+  ]
+}

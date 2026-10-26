@@ -161,8 +161,15 @@ BAN_STRS=(
   'Slider_经验倍率'
   'Toggle_物品翻倍'
   'Toggle_广告奖励翻倍'
-  'Toggle_防封'      # 旧菜单项不许再出现（防封不在菜单里）
 )
+# 双形态（2026-10-27 用户定）：默认=屏蔽版（防封撤出菜单）；WXSJ_ANTIBAN_MENU=1=正常版（菜单保留防封开关）
+if [[ -n "${WXSJ_ANTIBAN_MENU:-}" ]]; then
+  REQ_STRS+=('Toggle_防封')          # 正常版必须有防封行
+  echo "[vc1637-so]   flavor=正常版（菜单保留「防封」feat16，转生=17）"
+else
+  BAN_STRS+=('Toggle_防封')          # 屏蔽版不许出现
+  echo "[vc1637-so]   flavor=屏蔽版（防封撤出菜单，转生=16）"
+fi
 for s in "${BAN_STRS[@]}"; do
   if LC_ALL=C grep -aq -- "$s" "$OUT"; then echo "ERROR: so still carries old [$s]"; exit 1; fi
 done

@@ -1,8 +1,8 @@
 {
   "template_id": "wxsj",
-  "name": "无限升级",
+  "name": "无限升级（正常版·防封留菜单）",
   "package": "com.xingzuodaoshi.infinityUpgrade",
-  "source": "Games/WxsjVc1637Entry.cpp GameMod_Get @ 11.266018/vc1637（2026-10-26 重出：feat 7/8/12 改数值输入框，新增 feat 17 转生时间无限制）；2026-10-26 防封撤出菜单（改随 so 无条件生效的基线），转生时间无限制 17→16",
+  "source": "client: Games/WxsjVc1637Entry.cpp（-DWXSJ_ANTIBAN_MENU=1 正常版）",
   "features": [
     {
       "feat_num": 1,
@@ -62,6 +62,10 @@
     },
     {
       "feat_num": 16,
+      "name": "防封"
+    },
+    {
+      "feat_num": 17,
       "name": "转生时间无限制"
     }
   ]
