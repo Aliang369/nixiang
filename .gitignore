@@ -26,6 +26,9 @@
 .workbuddy/
 
 # ===== 可再生的滚动物（复测时管线 dump/surgical 阶段重建）=====
+# P2-2 载荷密文（每个游戏每轮 ~6 MB，构建期由 gen_payload_enc.py 重新生成，收尾即清）
+mod菜单/starry-mod-menu/app/src/main/jni/*.enc.bin
+
 03_decompiled/
 07_patched/
 09_test/
