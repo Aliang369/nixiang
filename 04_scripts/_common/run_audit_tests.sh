@@ -77,7 +77,8 @@ if [ "$HARDEN_STRICT" = "1" ]; then
   fi
   rm -f /tmp/harden_strict.$$
 else
-  echo "  （未启用 --harden-strict：本次只做回归，**不得**据此报告「全局加固已完成」）"
+  echo "  （未启用 --harden-strict：本次只做回归，**不得**据此报告「全局加固已完成」）
+  echo "  —— 单游戏限定验收：python3 -B harden_coverage.py check --strict --game <游戏名|tag>""
 fi
 
 echo

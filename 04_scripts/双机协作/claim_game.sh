@@ -90,15 +90,26 @@ if [ "$MODE" = "audit" ]; then
   rm -f /tmp/claim_multi.$$
   echo "-- 疑似过时（>7 天，仅提示，不代表对方已收工）--"
   now="$(date '+%s')"
+  stale_tmp="/tmp/claim_stale.$$"
+  bad_ts_tmp="/tmp/claim_badts.$$"
+  : > "$stale_tmp"; : > "$bad_ts_tmp"
   awk -F'\t' 'NF==4 {print $1"\t"$2"\t"$3}' "$TSV" | while IFS="$(printf '\t')" read -r g m t; do
     e="$(date -j -f '%Y-%m-%d %H:%M' "$t" '+%s' 2>/dev/null || date -d "$t" '+%s' 2>/dev/null || echo '')"
     if [ -n "$e" ]; then
       d=$(( (now - e) / 86400 ))
-      if [ "$d" -gt 7 ]; then echo "  ${g} (${m}) 已 ${d} 天: 需人工确认对方是否结束, 不得直接删他人行"; fi
+      if [ "$d" -gt 7 ]; then echo "  ${g} (${m}) 已 ${d} 天: 需人工确认对方是否结束, 不得直接删他人行" >> "$stale_tmp"; fi
     else
-      echo "  ${g} (${m}) 时间无法解析: '${t}'"
+      echo "  ${g} (${m}) 时间无法解析: '${t}'" >> "$bad_ts_tmp"
     fi
   done
+  if [ -s "$stale_tmp" ]; then cat "$stale_tmp"; fi
+  # 2026-10-27 第七轮：时间戳无法解析属实质异常，不得仍报「无冲突」并返回成功
+  if [ -s "$bad_ts_tmp" ]; then
+    echo "-- 时间戳异常（必须人工修正，属实质问题）--"
+    cat "$bad_ts_tmp"
+    problems=$((problems+1))
+  fi
+  rm -f "$stale_tmp" "$bad_ts_tmp"
   if [ "$problems" -gt 0 ]; then
     echo "== 结论: 发现 ${problems} 类问题（只读审计, 未修改任何行）=="
     exit 1

@@ -125,6 +125,14 @@ class ClaimTests(unittest.TestCase):
         self.assertIn('甲: 2 行', r.stdout)
         self.assertIn('乙: 由 2 台机器持有', r.stdout)
 
+    def test_audit_bad_timestamp_is_not_clean(self):
+        # 第七轮负例：时间戳无法解析必须算实质问题，不得报「无冲突」并返回 0
+        self.write_tsv(['甲\t%s\t坏时间\tabc' % HOST])
+        r = self.claim('--audit')
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn('时间无法解析', r.stdout)
+        self.assertNotIn('无冲突', r.stdout)
+
     def test_audit_clean_table_passes(self):
         self.write_tsv(['甲\t%s\t2026-10-27 10:00\tabc' % HOST])
         r = self.claim('--audit')
