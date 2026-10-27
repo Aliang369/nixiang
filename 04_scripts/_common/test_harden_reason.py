@@ -35,7 +35,11 @@ def run(args, env=None):
     e.pop('STAGE_NEXT_FORCE', None)
     if env:
         e.update(env)
-    return subprocess.run(args, capture_output=True, text=True, env=e, cwd=ROOT)
+    # 2026-10-27 双机：必须显式 utf-8。win 上不写 encoding 时按 cp936 解码子进程输出，
+    # 中文理由/报错会抛 UnicodeDecodeError（reader 线程死掉 → stdout/stderr 变 None），
+    # 5 个用例集体报 TypeError 而不是真实断言。
+    return subprocess.run(args, capture_output=True, text=True,
+                          encoding='utf-8', errors='replace', env=e, cwd=ROOT)
 
 
 class FinalizeReasonTests(unittest.TestCase):

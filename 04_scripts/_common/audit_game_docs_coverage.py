@@ -134,6 +134,13 @@ def render(rows):
 
 
 def main():
+    # 2026-10-27 双机：win 下 stdout 默认 cp936，打印 ✅ 会 UnicodeEncodeError 崩；
+    # 只调本进程自己的流，mac 侧无变化。
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            _s.reconfigure(encoding='utf-8')
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser()
     ap.add_argument('cmd', choices=['scan', 'check'])
     ap.add_argument('--root', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
@@ -153,7 +160,8 @@ def main():
             print(n, file=sys.stderr)
         if a.write:
             out = os.path.join(root, '10_docs', '_state', '游戏文档覆盖清单.md')
-            with open(out, 'w', encoding='utf-8') as f:
+            # 2026-10-27 双机：强制 LF，避免 win 侧生成物带上 CRLF（跨机逐字节不等）
+            with open(out, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(render(rows) + '\n')
             print(f'[written] {out}', file=sys.stderr)
         return 0

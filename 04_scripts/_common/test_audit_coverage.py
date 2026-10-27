@@ -90,7 +90,9 @@ class HardenCoverageTests(unittest.TestCase):
         data = harden_cov.scan(self.root)
         got = {x['script'] for x in data['entries'] if x['kind'] == 'final_apk'}
         self.assertTrue(any('mod菜单' in g for g in got), got)
-        self.assertTrue(any(os.path.join('deep', 'nested_sign.sh') in g for g in got), got)
+        # 2026-10-27 双机：入口路径已统一 POSIX 分隔符（harden_coverage 归一），
+        # 断言也写 '/'，否则 win 的 os.path.join 会拼成 'deep\nested_sign.sh' 而误报。
+        self.assertTrue(any('deep/nested_sign.sh' in g for g in got), got)
 
     # ---------- 注册表与漂移 ----------
     def test_wired_script_for_unregistered_game_fails(self):

@@ -8,6 +8,12 @@
 # 退出码：0 全过；1 有失败项；2 环境缺 python3。
 set -uo pipefail
 
+# 2026-10-27 双机：win(Git Bash) 下 python3 默认按 cp936 输出，而本脚本用 grep -c 匹配
+# 脚本里的 UTF-8 中文字面量 —— 编码不一致会让 grep 把输出判成 binary、计数恒为 0
+# （实测第 5 步把 250 个缺口报成 0）。统一强制 UTF-8；mac 侧默认即 UTF-8，无副作用。
+export PYTHONUTF8=1
+export PYTHONIOENCODING=utf-8
+
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 cd "$HERE" || exit 2
@@ -77,8 +83,8 @@ if [ "$HARDEN_STRICT" = "1" ]; then
   fi
   rm -f /tmp/harden_strict.$$
 else
-  echo "  （未启用 --harden-strict：本次只做回归，**不得**据此报告「全局加固已完成」）
-  echo "  —— 单游戏限定验收：python3 -B harden_coverage.py check --strict --game <游戏名|tag>""
+  echo "  （未启用 --harden-strict：本次只做回归，**不得**据此报告「全局加固已完成」）"
+  echo "  —— 单游戏限定验收：python3 -B harden_coverage.py check --strict --game <游戏名|tag>"
 fi
 
 echo

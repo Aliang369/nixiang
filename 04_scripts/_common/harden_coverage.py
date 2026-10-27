@@ -63,7 +63,11 @@ REASON = re.compile(r'--harden-reason|HARDEN_REASON')
 GATE_GAME = re.compile(r'--game\s+([^\s"\'<>）)]+)')
 APK_TOKEN = re.compile(r'[\w./\-*]+\.apk')
 GAMES_RE = re.compile(r'^    "([^"]+)": \{', re.M)
-SKIP_DIRS = {'.git', '01_tools', '06_dumped', '07_patched', '08_output', '09_test', '02_apks', '__pycache__'}
+SKIP_DIRS = {'.git', '01_tools', '06_dumped', '07_patched', '08_output', '09_test', '02_apks', '__pycache__',
+             # 2026-10-27 双机：本地虚拟环境/依赖树不是「入口」。mac 工作区里
+             # mod菜单/starry-mod-menu/auth-server/.venv 未入库，却被旧 SKIP_DIRS 扫进来，
+             # 使同一提交在两台机器上算出 2003 vs 1017 个入口（不可复现）。
+             '.venv', 'venv', 'site-packages', 'node_modules'}
 SKIP_FILES = {'04_scripts/_common/harden_coverage.py', '04_scripts/_common/harden_gate.sh',
               '04_scripts/_common/harden_apk.py', '04_scripts/_common/audit_rule_gate_map.py'}
 TOOL_DIRS = {'_common', '双机协作', ''}
@@ -157,7 +161,11 @@ def iter_entries(root):
             for f in sorted(fn):
                 if not f.endswith(('.sh', '.py')) or f.endswith('_test.py') or f.startswith('test_'):
                     continue
-                rel = os.path.relpath(os.path.join(dp, f), root)
+                # 2026-10-27 双机：入口路径统一用 POSIX 分隔符（mac 侧本来就是 '/'，
+                # 行为不变）。win 侧若不归一，`scan --write` 生成的登记表会带反斜杠，
+                # 与登记表/pipeline.json 里的 '04_scripts/x/...' 对不上，漂移检查误判、
+                # 且与 mac 生成的表逐行不等（跨机 churn）。
+                rel = os.path.relpath(os.path.join(dp, f), root).replace(os.sep, '/')
                 if rel in SKIP_FILES:
                     continue
                 yield rel
@@ -248,7 +256,9 @@ def norm_path(root, p):
             p = os.path.relpath(p, root)
         except ValueError:
             pass
-    return os.path.normpath(p)
+    # 2026-10-27 双机：统一 POSIX 分隔符再比较（pipeline.json / 登记表里都是 '/'）；
+    # mac 侧 normpath 本就是 '/'，此处无变化。
+    return os.path.normpath(p).replace(os.sep, '/')
 
 
 def stage_artifacts(root, stage, gt, is_harden=False):
@@ -340,8 +350,8 @@ def scan(root):
         code = code_only(raw)
         kind = classify(rel, raw)
         game_dir = ''
-        if rel.startswith('04_scripts' + os.sep) and rel.count(os.sep) > 1:
-            game_dir = rel.split(os.sep)[1]
+        if rel.startswith('04_scripts/') and rel.count('/') > 1:
+            game_dir = rel.split('/')[1]
         elif rel.startswith('mod菜单'):
             game_dir = 'mod菜单'
         pev = pipeline_evidence(root, game_dir, os.path.basename(rel), gt)
@@ -547,6 +557,14 @@ def render_islands(data):
 
 
 def main():
+    # 2026-10-27 双机：win 控制台/PIPE 默认 cp936，render() 里的 ✅/❌ 会
+    # UnicodeEncodeError 直接崩（实测 `scan --write` 在 win 上生成不了登记表）。
+    # 只调本进程自己的流；mac 侧本来就 UTF-8，无变化。
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            _s.reconfigure(encoding='utf-8')
+        except (AttributeError, ValueError):
+            pass
     ap = argparse.ArgumentParser()
     ap.add_argument('cmd', choices=['scan', 'check', 'islands'])
     ap.add_argument('--root', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
@@ -566,7 +584,9 @@ def main():
         print(json.dumps(data, ensure_ascii=False, indent=2) if a.json else render(data))
         if a.write:
             out = os.path.join(data['root'], '10_docs', '防御加固_覆盖登记.md')
-            with open(out, 'w', encoding='utf-8') as f:
+            # 2026-10-27 双机：强制 LF。win 上默认文本模式会把生成物写成 CRLF，
+            # 与 mac 生成的同内容文件逐字节不同（跨机 churn + twin_status CRLF 白名单告警）。
+            with open(out, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(render(data).rstrip('\n') + '\n')
             print(f'[written] {out}', file=sys.stderr)
         return 0

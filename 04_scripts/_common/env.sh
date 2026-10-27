@@ -72,6 +72,12 @@ if [ "$NIXIANG_HOST" = "win" ]; then
   done
   unset _pc _pv
   export NIXIANG_PYTHON
+  # 2026-10-27 双机：win 下 python3 默认按 ANSI 代码页(cp936)写 stdout，凡是
+  # `python3 ... | grep '<中文>'` 的脚本都会编码错位 —— grep 把输出判成 binary，
+  # 中文模式匹配恒失败（实测 run_audit_tests.sh 第 5 步把 250 个加固缺口报成 0）。
+  # 统一强制 UTF-8；mac 侧本来默认 UTF-8，不受影响。
+  export PYTHONUTF8=1
+  export PYTHONIOENCODING=utf-8
 elif [ -x /opt/homebrew/bin/python3.11 ]; then
   export NIXIANG_PYTHON=/opt/homebrew/bin/python3.11
 else

@@ -10,6 +10,7 @@
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -17,16 +18,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 TWIN = os.path.join(HERE, 'twin_status.sh')
 CLAIM = os.path.join(HERE, 'claim_game.sh')
-HOST = 'mac' if os.uname().sysname == 'Darwin' else 'win'
+# 2026-10-27 双机：os.uname() 只存在于 POSIX，win 上直接 AttributeError 导致整个
+# 模块 import 失败（discover 时 1 个用例都跑不起来）。改用 sys.platform 判定。
+HOST = 'mac' if sys.platform == 'darwin' else 'win'
 PEER = 'win' if HOST == 'mac' else 'mac'
 
 
 def run(args, env_extra=None):
     e = dict(os.environ)
     e.pop('STAGE_NEXT_FORCE', None)
+    # 2026-10-27 双机：win 的 ~/.bashrc 导出了 NIXIANG_ROOT=<真实仓库>，claim_game.sh
+    # 里 `ROOT="${NIXIANG_ROOT:-}"` 优先级高于 NIXIANG_CLAIM_ROOT ⇒ 测试夹具被短路，
+    # 用例会去写**真实** 10_docs/双机协作/本轮归属.tsv（实测被写入「某游戏」一行，已回滚）。
+    # 这里先清掉继承值，再由各用例显式指定夹具根，mac 侧无继承时是空操作。
+    e.pop('NIXIANG_ROOT', None)
+    e.pop('NIXIANG_CLAIM_ROOT', None)
     if env_extra:
         e.update(env_extra)
-    return subprocess.run(['bash'] + args, capture_output=True, text=True, env=e, cwd=ROOT)
+    # 2026-10-27 双机：win 上显式 utf-8，否则 cp936 解码中文输出会抛
+    # UnicodeDecodeError 并让 stdout/stderr 变 None。
+    return subprocess.run(['bash'] + args, capture_output=True, text=True,
+                          encoding='utf-8', errors='replace', env=e, cwd=ROOT)
 
 
 class HeartbeatTests(unittest.TestCase):
@@ -87,7 +99,9 @@ class ClaimTests(unittest.TestCase):
             f.write('\n'.join(rows) + '\n')
 
     def claim(self, *args):
-        return run([CLAIM] + list(args), {'NIXIANG_CLAIM_ROOT': self.tmp})
+        # 两个变量都给：脚本里 NIXIANG_ROOT 优先，只给 CLAIM_ROOT 会被真实仓库短路
+        return run([CLAIM] + list(args),
+                   {'NIXIANG_ROOT': self.tmp, 'NIXIANG_CLAIM_ROOT': self.tmp})
 
     def test_multi_host_conflict_blocks(self):
         other = 'win' if HOST == 'mac' else 'mac'
