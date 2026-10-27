@@ -22,6 +22,8 @@
 | **E 候选经验/待验证** | 有价值但证据、范围、反证不足 | 可检索可验证，**不得当硬约束执行** | `pending_experience.md`、`经验候选卡*` |
 | **F 历史与失效** | 旧做法、事故、被替代方案及失效依据 | 只用于追溯，**不默认继续生效** | 各文件历史分区、`规范变更日志.md` |
 
+**跨游戏默认偏好（C 类，2026-10-27 归位）**：① **直装优先**——出包形态默认先按直装版做，直装确实不可行时才考虑其他形态，偏离在报告里说明理由（源头：绿梦 #11 用户原话「我的所有游戏第一时间是按照直装版去做的」，游戏文档只留指针）；② **加固默认全开**——所有游戏出包默认加全套防御，不因技术经验豁免，执行门禁见 §6（源头：冒险与征途 #10「以后所有游戏默认都需要加这个防御」）。
+
 判定要点（语境 > 关键词）：
 
 - 「必须／禁止／永久」只表示**要求强度**，不表示**有效期**。范围词（这次／本轮／这个版本／先做这个／看看能不能／这台设备）是**提示**不是判据：要照原话所指的对象、时间与交付物判。**一句原话同时含长期要求与当轮要求时，必须拆成两行、各自写独立适用范围**，不得整句塞进 A 或整句塞进 B。
@@ -58,16 +60,12 @@
 
 ## 2. 开工状态检查与双机协作（每台机器、每轮第一步）
 
-本仓由 **mac 端**与 **Windows 端**共用同一仓库（`git@github.com:Aliang369/nixiang.git`，`main`）。细则（终端分流、兼容垫片、Syncthing 大头层同步、验收清单、心跳字段）见 `10_docs/_state/规范变更日志.md` §归档正文 F。
+本仓由 **mac 端**与 **Windows 端**共用同一仓库（`git@github.com:Aliang369/nixiang.git`，`main`）。**唯一详细正文＝`10_docs/双机协作/双机协作同步方案.md`**（终端分流、兼容垫片、Syncthing 大头层同步、验收清单、心跳字段）；`规范变更日志.md` 的旧「归档正文 F」只作历史追溯。
 
 ```bash
-cd "$NIXIANG_ROOT"                 # Win 端在 Git Bash；mac 端在 zsh
-bash 04_scripts/双机协作/twin_status.sh   # 双机体检：有 FAIL 先修再开工（同时自动重写本机心跳）
-git status -sb                     # 必须干净；不干净先报告处理，不要 pull
-git pull --rebase --autostash      # 拿到另一台机器已推送的提交
-sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 mac.md：超 7 天未更新或含 FAIL → 先提醒对方复检
+cd "$NIXIANG_ROOT"; bash 04_scripts/双机协作/twin_status.sh   # 双机体检：有 FAIL 先修再开工
+git status -sb; git pull --rebase --autostash                  # 先 status 后 pull，顺序不可颠倒
 ```
-
 - **顺序不可颠倒**：先 `status` 再 `pull`；工作区不干净时 pull/rebase 会把未提交改动卷进去。
 - **一机一游戏**：开工前先划定归属并 `bash 04_scripts/双机协作/claim_game.sh <游戏>`（收工 `--done` 释放，占用表 `10_docs/双机协作/本轮归属.tsv`）；pull 后发现对方已认领未释放的游戏**禁止写**。
 - **单一写者**：`10_docs/_state/current.md` 与 `games/{游戏}.md` 由本轮动了该游戏的那台机器写，另一台只读。跨机接手先核对 `games/{游戏}.md` 的「接手重建：」行（dump 产物不入库，按历史路径找会扑空）。
@@ -85,13 +83,13 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
    - **用户说「先过环境 / 先别直接做功能 / 菜单进游戏能正常玩才算完成」→ `skill/re-analyze/environment-min-path.md`**（环境阶段最小充分集五步 + 每步退出条件 + 推迟清单；别在第一阶段做 IL2CPP 符号/RVA/metadata 分析）
    - 已有包提取玩法 / 抓点 → `skill/re-extract/SKILL.md`
    - **已有星光包在跑、游戏内热更后功能失效 → `skill/re-extract/hotupdate-fingerprint-recheck.md`**（三查分流：热更资源版本 / 核心 so SHA / 玩法分包是否只在热更目录；确认 JS 指纹漂移再动手）
-   - 写功能 / Hook → `skill/re-implement/SKILL.md`（指纹铁律 `hook-rules.md` §24：禁止写死会被混淆器改名的短标识符；**挂点五步门禁 §22**，第 5 步＝`10_docs/{游戏}/路线锁定.md` 填满且无「未确认偏离」才准装机）；**动手前先扫 `10_docs/_state/pending_experience.md` 候选经验 + `bash 04_scripts/_common/prior_art.sh <关键词>`**（2026-10-19 我的勇者复盘根因：同类结论已在候选经验里，没扫 ⇒ 整轮重复推导）
+   - 写功能 / Hook → `skill/re-implement/SKILL.md`（指纹铁律 `hook-rules.md` §24：禁止写死会被混淆器改名的短标识符；**挂点五步门禁 §22**，第 5 步＝`10_docs/{游戏}/路线锁定.md` 填满且无「未确认偏离」才准装机）；**动手前先扫 `10_docs/_state/pending_experience.md` 候选经验 + `bash 04_scripts/_common/prior_art.sh <关键词>`**
    - 星光落地 / 切游戏 / 出包 → `skill/starry-mod/SKILL.md`（**已有星光包只重打 dex/APK/重装**：只改 Java/dex 不重编 native；复用正式包用 `STARRY_INSTALL_ONLY=1`；**直装包不得只换 `libil2cpp.so`**，验收须含一次干净安装——见该文件「分发与装机红线」两节）
    - **机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`**。第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在 → 走 `pipeline.sh` 原生动词 `bash 04_scripts/pipeline.sh <游戏> {status|rounds|next --loop N|log [N]|round <功能#> <有效|无效|未测> "摘要"|gate <阶段id>}`（旧 `_common/stage_next.sh <游戏> [status|next|auto N|rounds]` 仍是同义转发器）；不存在 → 用该游戏 `surgical_*/inject_*` 脚本。**两条路都禁直接敲 adb/apktool/zip/ndk-build/jarsigner**；分析操作照常推理，产出落 `10_docs/`。
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（按具体问题触发，不作无差别全扫）；经验查阅 → `skill/re-lessons/SKILL.md`
    - **先例检索（仓内 → 仓外）→ `bash 04_scripts/_common/prior_art.sh <关键词>`**；仓内零命中（rc=1）⇒ 按 `skill/diagnosis-index.md`「外部检索协议」≤3 次外部检索，结果落 `10_docs/_state/外部方案台账.md`
    - 纯评估 / 文档维护 → 只读待评估文档及直接引用，不自动进入游戏执行流程
-3. 流程细节按需读 `PLAYBOOK.md`（接手）、`WORKFLOW.md`（日常）、`TOOLBOOK.md`（工具/目录），**不是串行必读链**。
+3. 流程细节按需读 `PLAYBOOK.md`（接手）、`WORKFLOW.md`（日常）；工具/目录查 `TOOLBOOK.md`（短索引）→ 正文在 `10_docs/tools/01–07`。**不是串行必读链**。
 4. **动手前先查「现成能力」**：`ls 04_scripts/_common` + `grep -rn "<关键词>" skill/ 04_scripts/_common/`，命中就直接用，**禁止重造**。
 5. 禁止为「了解全仓」通读全部游戏摘要、完整 logcat 或 `06_dumped` dump。
 
@@ -99,7 +97,7 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
 
 - 以用户明确指定的目标、文件、设备、账户、版本和测试范围为边界；本地阅读、检索、构建、离线测试及范围内低成本可逆探索无需逐次请示。真机安装、运行、抓取仅在相应设备与测试范围已授权时开展；**文档/规范任务不自动授权真机操作**。
 - **破坏性操作等确认**：清数据、卸载、不可逆覆盖、影响其他游戏/设备/账户、外部发布/分发/上传或服务端写操作，须先说明具体范围、影响与恢复方案并取得确认；已有具体授权覆盖时不重复询问，**不从「修好/重装/出包」推定这些权限**，「声明过」不等于「已确认」。
-- **数据备份默认不做**：未当轮明确要求时，禁止创建 `09_test/**/backup_*` 或任何存档/数据备份，`install_*` 脚本默认不带备份步骤。**适用范围（2026-10-27 澄清）**：本条只约束**存档与测试数据**；签名密钥、被删后不可再取得的输入、未结故障的证据保全属「必须先保全」，见 `TOOLBOOK.md`「清理规则 · 备份与执行顺序」——两类不得互相套用。
+- **数据备份默认不做**：未当轮明确要求时，禁止创建 `09_test/**/backup_*` 或任何存档/数据备份，`install_*` 脚本默认不带备份步骤。**适用范围（2026-10-27 澄清）**：本条只约束**存档与测试数据**；签名密钥、被删后不可再取得的输入、未结故障的证据保全属「必须先保全」，见 `10_docs/tools/05_目录结构脚本环境与交付清理.md`「清理规则 · 备份与执行顺序」——两类不得互相套用。
 - **功能边界默认不扩张**：只实现用户当轮点名的功能与菜单项，禁止以「顺手 / 顺便 / 反正要做」为由新增未点名的功能；收尾时把 `10_docs/{游戏}/{id}_menu_template.json` 的功能集与用户点名单逐项对照，多一项即视为越界。
 - **跨渠道/新包 game_id 独立**：禁止复用其他渠道 game_id 省事（命名与映射见 `skill/starry-mod/SKILL.md`）。
 - 游戏 APK 默认外科 zip 组装；`apktool b` 游戏整包重建例外须取得针对该游戏/版本/改动的具体授权并提供原包与对照证据（细节见 `WORKFLOW.md` §4）。不默认清数据或卸载，大资源游戏优先覆盖安装；异签名无法覆盖时先报告，不自动转为卸载。**游戏级例外一律不写在本文件**，只写该游戏 `10_docs/{游戏}/硬约束.md`——本文件只承认「按该文件逐条生效、只对该游戏有效、不得外推」这一条通用规则。
@@ -115,12 +113,12 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
 - **证据分级**：区分实测事实 / 文档历史记录 / 证据支持的推断 / 待验证假设；未经实测的判断标「待验证」，注明来源与适用版本。推理＝有证据链（允许，标「推断」）；猜测＝无证据凭经验硬填（禁止）。数据不足时必须补数据、问用户或停下说明缺什么，**不许猜一个当真继续往下做**。
 - 收集、判断、验证可迭代；授权范围内以低成本可逆实验补证，不要求先证明运行效果才允许测试。每条路线明确问题、已有证据、预期新增信息、成本与停止条件；重复无信息增益时换方法或收窄范围，**不以固定方法数/步骤数/时长强制停工或询问**（本条限**路线级**：单个问题不机械停工；**会话级**预算触顶走 §6「会话规模、切点与效率硬指标」做**交接**，不是停工，两者不矛盾）。
 - **一轮一个变量、一轮只问一次**：同一轮只改一个自变量（多改则失败无法归因）；需要用户配合时一轮只发一张操作请求卡。
-- **读取体量纪律**（别把 MB 级文件灌进上下文；**凡「检索 / 读取」一律优先原生工具** `grep`/`glob`/`read`，不要把 bash 当检索器）：
+- **读取体量纪律**（MB 级文件禁整读；检索/读取优先原生工具 `grep`/`glob`/`read`）：
   - KB 级可整读：`10_docs/_state/games/{游戏}.md`、`skill/**/*.md`、`04_scripts/{游戏}/*.sh`。
   - MB / KB-heavy 级**禁整读**：`06_dumped/**/dump.cs`、`meta/dump_all.txt`、`meta/types.txt`、`pipeline.log`、原始 logcat、`_state/current.md` —— 一律 `rg -n -m <N>` 或 `sed -n 'A,Bp'` 按行切片；metadata 全量清单禁整读，只按 TYPE/类名片段取值。
   - 禁止 `cat 04_scripts/{游戏}/pipeline.json`（会把历史阶段一起灌入），只取目标 stage。`git status` / `git diff` 必须带游戏 pathspec，禁止裸跑后自行过滤。
   - **阈值**：同一 dump 每轮 grep ≤10 次、单条工具结果 ≤8 KB；长脚本/模板（`surgical_*.sh` 同限）先取大纲再切片。
-- **同文件串行编辑**：同一轮**禁止**对同一文件并行发多个 Edit —— 同消息/并行 Edit 是读-改-写竞争，会互相覆盖丢改动（历史事故×3）；不同文件可以并行。同一文件也不要同轮混用 bash 改写与 `edit`。**同一文件多处改动：先把目标区域一次读全再连续 edit**；`edit` 报 `file changed since it was read` 只表示**读态过期**（自己或他人刚写过），重读一次即可，不要当冲突反复排查；位置已知且改动较大时一次 `write` 覆盖更省（2026-10-16 实测：单会话因逐处「读→改」往返浪费 ≥10 次工具调用）。
+- **同文件串行编辑**：同一轮**禁止**对同一文件并行发多个 Edit（读-改-写竞争，历史事故×3）；不同文件可并行；同一文件多处改动先把目标区域一次读全再连续 edit，改动较大时一次 `write` 覆盖；`edit` 报 `file changed since it was read` 只需重读，不是冲突。
 - **提交 / 推送底线**：
   - **push 一律经 `push_main`**（`source 04_scripts/_common/git_push_main.sh && push_main main`；四通道自愈）。**禁裸 `git push` 盲等、禁 `--force`**；被拒 ⇒ `git pull --rebase --autostash` 再推。**判远端是否同步只看 `git status -sb` 的 ahead/behind，禁在会话中段裸跑 `git fetch`**（SSH 通道探测会挂 60 s+ 并转后台占坑；确需联网确认时套 `with_timeout.sh` 或复用 `push_main` 的通道逻辑）。
   - 收工走 `bash 04_scripts/_common/archive_scoped_git.sh` 白名单 add（**禁 `git add -A`**）——本仓长期多会话并行，全量 add 会把他人的半成品提交进去。add 前若 `status` 出现 `*.jks` / `*.keystore` / `.env` / 大文件（>50M），停下报告。
@@ -140,24 +138,19 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
   `09_test/<游戏>/harden/<apk_md5>.stamp`；装机闸门 `pre_install_gate.sh` **查11** 校验该凭证，缺失即 FAIL 拦装机
   （逃生门 `--allow-no-harden` 或 `STAGE_NEXT_FORCE=1`，用了必须在报告里写明理由）。
   新游戏与存量游戏接入按 `10_docs/防御加固_通用路线图.md` §2 九步；**跨游戏细节只写该文件，本行只作强制规则**。
-  **覆盖现状（2026-10-27 实测，勿当成全覆盖）**：`harden_apk.py` GAMES 表注册 4 个游戏（勇士之心 / 冒险与征途 / 无限升级 / 无限升级_wxsjdz2）、`gen_integ_header.py` 2 个（ysxz / mxyzt）、110 个 `surgical_*.sh` 中**仅 1 个**接了 `harden_gate.sh`，而 `pipeline.json` 覆盖 41 个游戏 ⇒ **规则是全局的，实装尚未全覆盖**。未注册游戏的出包脚本必须先接入（两处 GAMES + 脚本一行）再出包；缺口与排队见 `10_docs/防御加固_通用路线图.md` §7 与 `_state/规范普查_20261027.md` C6。
+  **覆盖现状与本轮实测缺口不复述在本文件**：唯一实测正文＝`10_docs/防御加固_通用路线图.md` §7（含逐入口登记与排队）。
+  **规则是全局的、实装尚未全覆盖**：未登记游戏的出包脚本必须先在两处 `GAMES` 表登记并接入 `harden_gate.sh` 再出包。
   载荷 sha 变更或新游戏会被生成器横幅 + C9 主动提示「去后台登记」；改 sha 会让该游戏旧包全部失效。
-  **出包脚本一行接入（2026-10-27 起）**：`bash 04_scripts/_common/harden_gate.sh <成品APK> [--game <名|tag>]`
-  —— 游戏归属按 `08_output/<游戏>/` 目录名自动判定；**native 型（无 JS 载荷）游戏 C6–C9 自动记 N/A**
-  （不计 FAIL，密码学面由 C1/C2/C5 覆盖）；新增游戏必须在 `harden_apk.py` 与 `gen_integ_header.py` 的
-  `GAMES` 表各加一段、并回填路线图 §7 登记表 —— 三处都不许漏。
+  **出包脚本一行接入**：`bash 04_scripts/_common/harden_gate.sh <成品APK> [--game <名|tag>]`（native 型 C6–C9 记 N/A），细节见路线图 §2/§7。
 - **删除禁通配符**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库脚本，靠 `git checkout` 才救回）；批量清理优先 `04_scripts/_common/trash_paths.sh`（默认 dry-run）。
-- **审查**：改完代码或用户要求「按边界审 / 自查」⇒ 按 `skill/re-implement/code-review-checklist.md` 走一轮（①改动范围 → ②四条闪退红线 → ③按改动类型查维度 → ④证据门禁）；纯文档修改只核对范围/链接/规则冲突/授权。一轮输出结论即停，不借审查扩大任务；仅修已确认问题，修复后复查该问题与直接影响面。
+- **审查**：改完代码或用户要求「按边界审 / 自查」⇒ 按 `skill/re-implement/code-review-checklist.md` 走一轮（四步见该文件）；纯文档修改只核对范围/链接/规则冲突/授权。一轮输出结论即停，不借审查扩大任务；仅修已确认问题，修复后复查该问题与直接影响面。
 - **分阶段与验收结论**：装机前「可测试」门禁＝静态·构建检查 + 包结构与签名 + 测试授权 + 证据采集 + 恢复方案，**已知阻断问题不得装机**。「运行验证」以目标版本实际日志、功能开关与回归结果判定；「可交付」须满足对应运行证据，**不以构建成功替代**；缺证据列 CLAIM / VERDICT / EVIDENCE。**阶段闸门**：收到用户明确「开始做功能」口令前，**禁止启动** IL2CPP 符号恢复 / RVA 定位 / metadata 类型字段枚举 / ABI 分析 / 玩法 hook 派生分析。
-- **装机预检闸门＋验收阶梯 L1/L2/L3**（`04_scripts/_common/`）：装机后、用户上手前先 `bash 04_scripts/_common/post_install_precheck.sh --game <游戏>`（机器只管装机层证据：包在不在、启动崩不崩、菜单 so 加载与弹出、授权墙发卡、空转不崩），**预检全过才请用户上手；挂了直接出 A/B 判定，不消耗用户实测轮**。三层走**同一个包**（同 so、同签名）：**L1 静态**（AI 出包前不碰设备；`check_release_clean.sh --tag <tag>` + 本地产物与包内 so md5 一致 + 菜单串自检）／**L2 机器**（AI 全自动跑模拟器：装机→预检→`flight_recorder.sh` 冷启→`device_profile.sh` 三行自检，自判 PASS/FAIL，**不打扰用户、不消耗实测轮**，通过也**不构成**再测理由）／**L3 人工**（用户唯一终审，AI 只发操作请求卡 + 收 logcat 定案）。**禁止为模拟器单独出包**；设备差异一律落运行时判据（`hook-rules.md` §31）。涉及 `libil2cpp` 基址/hook 的游戏装机前先 `device_profile.sh`（报告落 `_state/设备画像/<serial>.md`，rc=2 判据异常**就不装机**）；游玩取证、标记与切片见 `TOOLBOOK.md` 与 `hook-rules.md`。
-- **收尾与产物生命周期**：`02_apks/`、`06_dumped/` dump、`08_output/`、构建产物、热更样本、JS 解密产物的**保留与否、清理授权、入库规则**正文见 `10_docs/_state/规范变更日志.md` §归档正文 D（含「APK 不留本地」「dump 不入库」「`02_apks`/`08_output` 由用户手动管理、开工等用户声明」）。裁剪唯一正式包走 `prune_output_final.sh` / `finalize_game_delivery.sh`，**禁手工重造**；菜单模板 JSON 照抄 `10_docs/_templates/menu_template.example.json`，收尾按 `_templates/菜单模板_规范与示例.md` §3 自检字段集严格相等，不逐次询问用户。真机残留回收与设备清理见 §归档正文 D。
+- **装机预检闸门＋验收阶梯 L1/L2/L3**：装机后先 `bash 04_scripts/_common/post_install_precheck.sh --game <游戏>`，预检全过才请用户上手；三层走同一个包（同 so 同签名）：**L1 静态 / L2 机器 / L3 用户唯一终审**；**禁止为模拟器单独出包**，设备差异落运行时判据。命令、判据与取证细节见 `04_scripts/_common/stages.md`「装机预检与验收阶梯」与 `hook-rules.md` §31。
+- **收尾与产物生命周期**：`02_apks/`、dump、`08_output/`、构建产物、热更样本、JS 解密产物的保留/清理授权/入库规则正文＝`_state/规范变更日志.md` §归档正文 D；裁剪唯一正式包走 `prune_output_final.sh` / `finalize_game_delivery.sh`（**禁手工重造**）；菜单模板照抄 `_templates/menu_template.example.json`，收尾按 `_menu_template` 规范 §3 自检字段集严格相等。
 - **状态索引**：`10_docs/_state/current.md` 只保留跨游戏摘要索引 —— 每个游戏一行（最近更新 + 一句粗粒度状态 + `games/{游戏}.md` 链接）；**索引行硬上限 400 字符**，超出部分写进 `games/{游戏}.md`；该文件整体 **< 15 KB**；单游戏摘要 > 约 12 KB 时把旧轮次下沉 `10_docs/_state/history/`，当前摘要只留最近 1–2 轮。执行任务收尾或卡点变化时**先更新游戏摘要，再同步索引一行**，不把详细内容堆回索引；纯评估/文档维护不改游戏状态。
-- **经验生命周期**：状态用「候选 / 待验证 / 已合并 / 已否定 / 已过时」（卡 frontmatter 沿用 candidate/approved/merged/rejected/stale；`approved`＝证据齐＋落点明确、已自批待合并）。数据结构与判据唯一正文＝`10_docs/_templates/经验候选卡.md`，状态登记＝`_state/pending_experience.md`，索引＝`skill/re-lessons/SKILL.md`，机器检查＝`python3 -B 04_scripts/_common/audit_experience_registry.py`。
-  **自动合并只对技术类（`class: tech`）开放**：证据齐（实测行或反证排除）＋落点明确（目标规则文件＋节）＋无同义条目＋已查反例 ⇒ 优化会话直接合并并在 `pending_experience.md` 登记；不齐留候选，不腐烂也不自动提升。
-  **`class: policy`（会改变用户长期偏好、项目级硬约束、授权/安全边界、门禁强度）不得自动升格**：只能提出提案，须用户当轮明确指令后才写；技术经验证据充分也不是改政策的理由。
-  **"合并"只合并正文，不新造同类文件**：优先并入已有唯一权威章节；单游戏事实留该游戏文档，通用 Skill 只留抽象机制与适用条件。会话复盘/提案用 `10_docs/_templates/会话复盘模板.md`。
-- **会话规模、切点与效率硬指标**（长正文与实测数据在 `10_docs/_state/规范变更日志.md`）：单会话机械行为预算 ≈600 次工具调用 / ≈40 次装机 / ≈150K prune 阴影 token，任一触顶即**交接**（把「已确认事实 / 未决问题 / 下一步 / 证据落点」写进 `games/{游戏}.md` 后开新会话，不硬撑）。① 同一 step 内**下一步动作不依赖其返回**的独立调用必须合并发出（阈值 calls/step ≥1.6、单发占比 <60%）；② 子代理只用于「可独立落盘的深度探查」，不派「帮我统计 / 帮我找文件」类；**子代理不可访问会话历史工具（`session_event_search`/`session_event_read`/`session_trace` 等）——依赖会话历史/上下文的探查（含会话重建）必须主代理自己做，派给子代理必空转**（2026-10-18 实测 3/3 子代理在会话工具处失败、历史决策官会话子代理单条回传仅 53 字符）；③ 子代理回报只允许「结论 ≤20 行 + 落盘路径 + 行数/md5 + 未闭环项」，**单条入父 ≤3,000 字符**；④ 同一共享文件被触达 >10 次、或连续 3 个 step 单发，即先 `compress` / 写交接再继续；`compress` 触发点前移到上下文 ≈90 K，一个压缩条目只装一个主题；同一状态文件每会话触达 ≤4 次（结论变化 + 收尾各一次）。
-- **度量口（只读）**：`python3 04_scripts/_common/session_metrics.py --session-id <片段> --gate` 输出 calls/step、单发占比、bash 检索占比、单条 >8 KB 条数、单文件触达 top-N 与缓存命中率（违规 rc=3）——**收官时跑一次当前会话，别凭感觉汇报效率**。
+- **经验生命周期**：状态词、合并门槛与 `class: tech|policy` 判据的唯一正文＝`10_docs/_templates/经验候选卡.md`；登记＝`_state/pending_experience.md`，机器检查＝`python3 -B 04_scripts/_common/audit_experience_registry.py`。`class: tech` 证据齐+落点明确可自动合并；**`class: policy` 只提案，须用户当轮指令**（技术经验充分也不是改政策的理由）；「合并」只并入已有唯一权威章节，不新造同类文件；复盘结构见 `_templates/会话复盘模板.md`。
+- **会话规模与切点**：单会话 ≈600 次工具调用 / ≈40 次装机 / ≈150K prune token 任一触顶即**交接**（把「已确认事实/未决问题/下一步/证据落点」写进 `games/{游戏}.md` 后开新会话）。效率硬指标 calls/step ≥1.6、单发占比 <60%、子代理只做「可独立落盘的深度探查」且**不得依赖会话历史工具**（派了必空转）。阈值来源与实测见 `_state/规范变更日志.md` 归档；违规检测＝`session_metrics.py --gate`。
+- **度量口（只读）**：`python3 04_scripts/_common/session_metrics.py --session-id <片段> --gate` （违规 rc=3）——**收官时跑一次当前会话，别凭感觉汇报效率**。
 
 ## 7. 现行专题文档与历史归档指针
 
@@ -165,7 +158,8 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
 |---|---|
 | 通用授权、安全、协作底线、开工路由、全局门禁 | **本文件** |
 | 机械管线命令、阶段定义、失败恢复、`preflight`、装机与出包门禁 | `04_scripts/_common/stages.md` ＋真正执行这些规则的脚本/门禁 |
-| 新游戏接手全流程 / 日常逆向工作流 / 工具与目录 | `PLAYBOOK.md` / `WORKFLOW.md` / `TOOLBOOK.md` |
+| 新游戏接手全流程 / 日常逆向工作流 | `PLAYBOOK.md` / `WORKFLOW.md` |
+| 工具安装、命令、坑位、目录与清理 | `TOOLBOOK.md`（短索引）+ `10_docs/tools/01–07`（专题正文） |
 | 技能总索引（只作按需导航，不另设全局政策） | `skill/SKILL.md`；技术专项在 `skill/**/SKILL.md`、`hook-rules.md` 等 |
 | 单游戏必须/禁止事项、挂点对照、状态与证据 | `10_docs/{游戏}/硬约束.md`、`路线锁定.md`、`10_docs/_state/games/{游戏}.md` |
 | 跨游戏状态索引 | `10_docs/_state/current.md`（每个游戏只一行） |
@@ -179,4 +173,4 @@ sed -n '1,6p' "10_docs/_state/机器心跳/win.md" 2>/dev/null   # win 端看 ma
 
 - 历史、缘由、旧正文可归档进 `规范变更日志.md`，但**当前必须执行的规则必须留在本文件的精简强制条款、对应现行专题文档、或已生效的脚本/门禁中** —— 任何当前规则不得只存在于一个未被任务路由触发的历史日志段落。新增长正文（>约 3 KB）追加到该日志并在本文件留一行指针：**规则可下移，规则不得消失**。
 - **规范/技能优化会话全自动**（2026-10-04 用户定「不审批」；2026-10-15 m00005 定框架层范围）：以规范优化 / 复盘 / 文档维护为任务的**优化会话**可直接修改 `skill/`、`AGENTS.md`、`10_docs/_templates/`、`04_scripts/_common/`（`pipeline.sh` 仍走指纹锁跨机姿势）、`mod菜单/**` 的**文档与游戏私有脚本**（`surgical_<游戏>_*.sh`／`*_so_only.sh`／`Games/<Tag>Mod.*`）；**`Main.cpp`／`MainModern.cpp`／`GameConfig.h`／公共 `Android.mk` 仍禁改**；`SignSpoof.java` 禁改已有块、允许**纯追加**一款游戏的证书常量＋`fakes.put`。无须逐次请示；每笔改动必须 ① 按适用维度自查 `code-review-checklist.md` ② 跑 `preflight.sh` ③ 在《规范变更日志》追加一行（日期＋文件＋改动＋依据）。**游戏执行会话（拆包/hook/装机等日常任务）仍禁改上述文件**——撤的是审批流，不是防线；日志供用户抽查，不阻塞执行。
-- **编号规则（P1–P33 / D1–D8）**：编号全文与实测数据已归档在 `规范变更日志.md`（P 系列原文用 `grep -n '^- \*\*P2[0-9]'` 在该日志取）。**仍需每次会话主动遵守的阈值与触发条件已并入本文件 §5/§6**；由脚本/门禁强制执行的条目（轮次门禁 rc=3、装机闸门 rc=4、卸载语义 rc=66、`push_main` 四通道、`session_metrics --gate` rc=3、`preflight --sweep`）一律**以当前脚本实现为准**，本文件只说明入口与失败行为。
+- **编号规则（P1–P33 / D1–D8）**：编号索引（原文落点 / 已吸收 / 已替代 / 原文未恢复）＝`10_docs/_state/规则编号索引.md`；阈值与触达条件已并入本文件 §5/§6，脚本门禁以当前实现为准。

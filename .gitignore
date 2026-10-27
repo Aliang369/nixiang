@@ -22,7 +22,16 @@
 # ===== 本地工具 / 外部工具（重装麻烦或可重下，不入库）=====
 01_tools/
 .kilo/
-.cursor/
+# .cursor/ 选择性入库（2026-10-27 第五轮）：只共享规则与技能指针，私人配置/缓存/密钥继续忽略
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/*.mdc
+!.cursor/skills/
+!.cursor/skills/*/SKILL.md
+.cursor/mcp.json
+.cursor/**/*.log
+.cursor/**/cache/
+.cursor/**/state/
 .workbuddy/
 
 # ===== 可再生的滚动物（复测时管线 dump/surgical 阶段重建）=====

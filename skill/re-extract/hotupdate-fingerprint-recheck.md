@@ -17,8 +17,8 @@
 | 核心 so 是否同源 | 从当前安装包取 `libcocos2djs.so`（或 `libil2cpp.so`）算 SHA-256，比历史绑定表 | **相同 → native RVA/序言仍有效，别改 native** |
 | gameplay bundle 在不在 APK 里 | `unzip -l base.apk \| grep -E 'assets/assets/[a-z]+/index\.js'` | 只有 `internal`/`main` = 玩法分包**只能靠热更**，指纹输入就是热更产物 |
 
-勇士之心实测（2026-09-21）：so SHA-256 与 09-15 官方一致 → `kEvalRva=0x3138e4` /
-序言 `0xD10543FF` 继续有效；失效点全在 JS 指纹。
+> 先例：勇士之心 的实测基线（so 同源⇒RVA/序言仍有效、失效点全在 JS 指纹）见
+> `10_docs/勇士之心/技能先例.md` §1。
 
 ## 1. 只读重抓（先量后拉，禁止逐文件 exec-out）
 
@@ -33,15 +33,13 @@ tar -xf res_js.tar -C <out>
 - **只拉 `*.js` + 清单**（`version`、`.cocos-project.json`、`find -exec md5sum`）；
   `import/*.json` 是资源序列化数据，动辄两万个，不纳入分析拉取。
 - 拉完必须**逐文件比对设备端 md5**，数量与指纹全对上再往下走。
-- 实例脚本：`04_scripts/勇士之心/regrab_ysxz_hotupdate.sh`。
+- 重抓脚本按本作命名（先例：`10_docs/勇士之心/技能先例.md` §2）。
 
 ## 2. 解密（key 优先复用历史）
 
 - 先查该游戏 `10_docs/{游戏}/` 是否已记录热更解密链与 key，**不要重新逆**。
-- 勇士之心：头 `*ze*` + 1 字节 → XXTEA（Cocos 取 key 前 16 字节）
-  key `237GaogniB!@#$1sdf546685` → zlib 解压。
+- 解密链与 key 属单游戏事实（先例：`10_docs/勇士之心/技能先例.md` §2），技能里不复制。
 - 解密产物落 `06_dumped/{游戏}/{轮次}/`（文本，入 git，作为版本档案与指纹对照）。
-- 实例脚本：`04_scripts/勇士之心/decrypt_hotupdate_ysxz.py`。
 
 ## 3. 定位漂移：离线复现发现逻辑（**先校准基线**）
 
@@ -52,12 +50,9 @@ tar -xf res_js.tar -C <out>
 2. **粒度与运行时一致**：运行时 `findFn(exports)` 是**按函数**遍历源码字符串；
    离线按"整文件/整模块"判指纹会因为模块上万行而必然失败（长度约束、跨函数串味）。
 
-```bash
-python3.11 04_scripts/勇士之心/simulate_ysxz_discovery.py <解密目录> --auto-fp OLD   # 基线校准
-python3.11 04_scripts/勇士之心/simulate_ysxz_discovery.py <解密目录> --auto-fp NEW --fingerprints
-```
+> 先例：本作复现器命令与三组对照的真实输出见 `10_docs/勇士之心/技能先例.md` §1。
 
-判定表（勇士之心实例，三组对照一次定位根因）：
+判定表（三组对照一次定位根因）：
 
 | 输入 | 结果 | 含义 |
 |---|---|---|

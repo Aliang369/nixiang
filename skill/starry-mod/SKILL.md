@@ -214,7 +214,7 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 
 ## 授权会话（卡密）预置与诊断
 
-> 关键教训：**「官方包卸装后卡密会话丢失」的根因可以只是 Android SharedPreferences 的 `value=` 属性写法**（先做便宜的三步，别从命名空间/看门狗查起）。实证复盘：`10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`。
+> 关键教训：**「官方包卸装后卡密会话丢失」的根因可以只是 Android SharedPreferences 的 `value=` 属性写法**（先做便宜的三步，别从命名空间/看门狗查起）。实证复盘：`10_docs/_state/history/reviews/规范优化_20261015_霓虹深渊2r19会话复盘.md`。
 
 **症状 → 首查项**
 

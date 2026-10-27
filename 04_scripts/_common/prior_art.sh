@@ -62,7 +62,7 @@ for kw in $KWS; do
   done
   # shellcheck disable=SC2086
   out="$(grep -rn -I -F --include='*.md' --include='*.sh' --include='*.py' --include='*.json' --include='*.txt' \
-        --  "$kw" $files 2>/dev/null | grep -v '^10_docs/_state/规范优化_20261010' | head -"$MAX")"
+        --  "$kw" $files 2>/dev/null | grep -v '^10_docs/_state/history/reviews/规范优化_20261010' | head -"$MAX")"
   cnt="$(printf '%s' "$out" | grep -c . || true)"
   echo "══ 关键词「${kw}」命中 $cnt 条（显示前 ${MAX}）══"
   if [ "$cnt" = "0" ]; then

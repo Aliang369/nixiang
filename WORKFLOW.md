@@ -6,7 +6,7 @@
 
 ## 0. 执行政策入口
 
-通用政策见 `AGENTS.md`；本文件保留目录、构建、动态分析与验证细节。Cursor 指针见 `.cursor/rules/apk-build-surgical.mdc`、`.cursor/rules/self-hosted-trace.mdc`；接手阶段参考 `PLAYBOOK.md`，知识索引见 `skill/SKILL.md`，工具细节查 `TOOLBOOK.md`。
+通用政策见 `AGENTS.md`；本文件保留目录、构建、动态分析与验证细节。Cursor 指针见 `.cursor/rules/apk-build-surgical.mdc`、`.cursor/rules/self-hosted-trace.mdc`；接手阶段参考 `PLAYBOOK.md`，知识索引见 `skill/SKILL.md`，工具细节查 `TOOLBOOK.md` → `10_docs/tools/`。
 
 ---
 
@@ -172,7 +172,7 @@
 
 ### 6.2 会话结束/暂停/换游戏
 
-按 [TOOLBOOK.md](TOOLBOOK.md)「清理规则」「真机残留清理」完成收尾，填写 [游戏收尾与最小复现清单](10_docs/_templates/游戏收尾与最小复现清单.md)。设备动作按本次变更分责记录；现有清理脚本未改、不默认运行，无法约束范围时报告待处理。状态先写入 `10_docs/_state/games/{游戏}.md`，`current.md` 只同步一行；反复反馈的功能补 [功能验收卡](10_docs/_templates/功能验收卡.md)，长日志目录补 [证据索引 README](10_docs/_templates/证据索引README.md)。
+按 [《目录结构脚本环境与交付清理》](10_docs/tools/05_目录结构脚本环境与交付清理.md)「清理规则」「真机残留清理」完成收尾，填写 [游戏收尾与最小复现清单](10_docs/_templates/游戏收尾与最小复现清单.md)。设备动作按本次变更分责记录；现有清理脚本未改、不默认运行，无法约束范围时报告待处理。状态先写入 `10_docs/_state/games/{游戏}.md`，`current.md` 只同步一行；反复反馈的功能补 [功能验收卡](10_docs/_templates/功能验收卡.md)，长日志目录补 [证据索引 README](10_docs/_templates/证据索引README.md)。
 
 ### 6.3 文档必留
 

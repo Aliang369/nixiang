@@ -1,0 +1,7 @@
+---
+description: 星光菜单 game_id 命名、编译宏与存量映射来源指针
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`skill/starry-mod/SKILL.md` 的 game_id 命名与映射。

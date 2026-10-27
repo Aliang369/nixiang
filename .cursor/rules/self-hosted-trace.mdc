@@ -1,0 +1,7 @@
+---
+description: 动态分析、自注入 libstarry_magic.so Trace 与短时 Frida/Florida 探针来源指针
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`WORKFLOW.md` §5、`skill/re-lessons/SKILL.md`。

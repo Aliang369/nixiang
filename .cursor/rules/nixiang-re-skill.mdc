@@ -1,0 +1,7 @@
+---
+description: 本工作区 nixiang 安卓逆向任务入口与 skill/ 按需索引
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`skill/SKILL.md` 按需索引、`TOOLBOOK.md` 环境与脚本速查。

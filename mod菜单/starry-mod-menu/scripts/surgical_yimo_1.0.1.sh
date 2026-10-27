@@ -128,7 +128,7 @@ if [[ "$DIAG_MODE" == "1" ]]; then
   NDK_OBJ_DIR="$STARRY_SRC/obj_yimo_diag"
 fi
 # 注意：macOS bash 3.2 + set -u 下**空数组**的 "${arr[@]}" 会报 unbound variable，
-# 必须写成 ${arr[@]+"${arr[@]}"}（本仓库踩过同类坑，见 _state/规范优化_20260930_*
+# 必须写成 ${arr[@]+"${arr[@]}"}（本仓库踩过同类坑，见 _state/history/reviews/规范优化_20260930_*
 # 与会话复盘 P1-3）。
 (cd "$STARRY_SRC/app/src/main/jni" && \
   "$NDK/ndk-build" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_yimo.mk \
@@ -164,7 +164,7 @@ else
   elif grep -rq 'MOD_DIAG_LUA_TEXT' "$STARRY_SRC/app/src/main/jni/Games/${TAG}"*.cpp 2>/dev/null; then
     # 源码声明了要用诊断 chunk ⇒ so 里没有就是构建没生效（换模式没换 obj 目录是常见死因）
     echo "ERROR: 源码引用了 MOD_DIAG_LUA_TEXT，但 so 内无诊断 chunk —— 多半是 obj 目录串模式，"
-    echo "       删掉 \$NDK_OBJ_DIR（${NDK_OBJ_DIR}）重跑 STARRY_DIAG=1"; exit 1
+    echo "       删掉 \$NDK_OBJ_DIR 目录（${NDK_OBJ_DIR}）重跑 STARRY_DIAG=1"; exit 1
   else
     echo "  [diag] 提示：so 内未见诊断 chunk（本游戏未接入 ModDiagLua，可忽略）"
   fi

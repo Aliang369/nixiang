@@ -1,0 +1,7 @@
+---
+description: 真机逆向、Frida、补丁、试装结束后的残留清理来源指针
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`TOOLBOOK.md`「真机残留清理」、`10_docs/_templates/全游戏卡密_复现路径与防再发.md`。

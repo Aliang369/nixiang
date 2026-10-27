@@ -1,0 +1,7 @@
+---
+description: 代码审查、构建与装机分阶段门禁；prove-it 与 ast-grep 来源指针
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`skill/re-implement/code-review-checklist.md`；辅助来源 `.cursor/skills/trace-it/SKILL.md`、`.cursor/skills/prove-it/SKILL.md`、`.cursor/skills/loose-ends/SKILL.md`、`04_scripts/_common/scan_mod_cpp.sh`。

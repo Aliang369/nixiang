@@ -67,7 +67,7 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   target/handler 本就落在 ±4GB 内（∈同一片 0x4000 区），跳板转为安全冗余而非必需。
   待并入 `skill/re-implement/hook-rules.md`「模拟器/转译层」节 ＋ `skill/starry-mod/SKILL.md` 出包自检。
   证据＝`10_docs/绝区零/出包记录_20261006.md` §第三轮 ＋ `09_test/绝区零/precheck_20261006_010317/`
-- [追迹迷城 1.0.20261009 会话复盘 P0–P2 共 9 项全量落地（2026-10-10，用户 m01108「按照方案全量修改」）](规范优化_20261010_追迹迷城1.0.20261009会话复盘.md)：**已合并**——
+- [追迹迷城 1.0.20261009 会话复盘 P0–P2 共 9 项全量落地（2026-10-10，用户 m01108「按照方案全量修改」）](history/reviews/规范优化_20261010_追迹迷城1.0.20261009会话复盘.md)：**已合并**——
   ① 入口点靠试错（未先查框架先例）与 ② 判据顺序倒置（先上 frida/dumpsys，最后才用 `am start-foreground-service` 报错文本）
   两个黑洞的机制化对策已全部落入目标位置，合并 commit `ae8b3d56`：
   新建 `04_scripts/_common/framework_entry_audit.sh`（入口四路 + 六项审计，✗ 即禁出包）、`04_scripts/_common/axml_inspect.py`（AXML dump + `--assert-map` 真值断言）、
@@ -78,7 +78,7 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   `session_start.sh` 入口自检/审计/`device_profile.sh` 提示；`stages.md` 收官脚本参数契约表 + 三脚本 usage 补注；`TOOLBOOK.md` #52 补注与 #53–#55；`AGENTS.md` 变更日志 + 「push 一律经 `push_main`」。
   附带收益：用新工具复查已交付包，抓出 `MenuService` 的 `android:stopWithTask` res id 被凭记忆写成 `0x01010281`（真值 `0x0101036A`），已修 `04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py`（无功能影响，包不重出）。
   机器关：`preflight.sh` PASS=14 FAIL=0、`bash32_check.sh` 无硬错误、`axml_inspect.py` 跨游戏回归 6/6 rc=0、`trash_paths.sh` T1–T7 全绿、`push_main` 实跑 HTTPS 绕行成功。
-- [邂逅在迷宫 2.6.53 第二轮会话复盘 P17–P22（把纪律做成闸门，2026-10-10，用户「按照方案全量修改」）](规范优化_20261010_邂逅在迷宫会话复盘.md)：**已合并**，commit `e4336e75`（已推送）——
+- [邂逅在迷宫 2.6.53 第二轮会话复盘 P17–P22（把纪律做成闸门，2026-10-10，用户「按照方案全量修改」）](history/reviews/规范优化_20261010_邂逅在迷宫会话复盘.md)：**已合并**，commit `e4336e75`（已推送）——
   机制（P10 preflight / P13 方案选型卡 / P15 即时记账）**第一轮就存在却整段旁路**，故本轮不再加「请记住」型规则，改成**闸门 + 模板 + 快照**：
   ① 装机闸门：`session_start.sh` 落 `preflight_{游戏}.stamp`，`gradle_cycle.sh --install` 缺凭证/超 12h/硬约束 md5 变过 ⇒ **rc=4**（实测无凭证 rc=4、有凭证 dry-run 通过）；
   ② 出包即记账：`--game` 全量日志 `tee 09_test/{游戏}/logs/`、完成块打印完整 md5/大小/日志路径、成功自动 `gate_note.sh G2`（治「调用方 `| tail` 截断 ⇒ md5 永久丢失」）；
@@ -87,7 +87,7 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   ⑤ 模板/台账 `侦察笔记.md`、`轮次台账.tsv`（免广告面板 3 轮、菜单球 3 轮已回填）；
   ⑥ `硬约束.md` #13–#18（被提问不得擅自改动 / 不再管卡密 / 不做自启动 / 默认分发型交付 / 方案 A 授权 / 菜单必须同时存在）+ `games/邂逅在迷宫.md` 交接文件 + `current.md` 索引行 + AGENTS.md「增量（第二轮）」与变更日志。
   机器关：`preflight.sh` 五脚本 PASS=5 FAIL=0（首轮抓出 `finalize_game_delivery.sh` L385 `$USAGE_DOC）` 硬错误）、`bash32_check.sh` 五脚本全过、`gate_note.sh` 记 G1 一行。
-- [霓虹深渊2 会话 9a67c280 效率复盘 P0–P2 全量落地（2026-10-12，用户 m00133「按照方案全量修改」）](规范优化_20261012_霓虹深渊2会话效率复盘.md)：**已合并**——
+- [霓虹深渊2 会话 9a67c280 效率复盘 P0–P2 全量落地（2026-10-12，用户 m00133「按照方案全量修改」）](history/reviews/规范优化_20261012_霓虹深渊2会话效率复盘.md)：**已合并**——
   根因不是缺规则，而是**三条既有闸门全程 0 次调用**（`pre_install_gate.sh` / `install_guard.sh` / `rootcause_note.sh`），加上更隐蔽的一条：**旧台账列格式与门禁取列错配 ⇒ 门禁数学上不可能触发**。对策：
   ① 补 `04_scripts/霓虹深渊2/pipeline.json`（9 阶段 + `install_policy: overlay_only` + `rounds.threshold:3`；`workdir`=仓库根、`verify.path` 全部根相对 —— 实测 `pipeline.sh` verify 不展开 `$NIXIANG`，全仓同型隐患）；
   ② 台账 `轮次台账.tsv` 迁为 6 列正统的九列超集（22 行→40 行，无损校验）+ `rootcause_note.sh` 改按列名识别判定列、功能键精确匹配、`judged_rows()`、历史累计无效告警（真实台账：功能#4=8 轮、功能#11=8 轮；表头坏 ⇒ WARN「本节对本游戏失明」不再静默 PASS）；
@@ -99,7 +99,7 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 ## 2026-10-15 霓虹深渊2 r19 会话复盘（优化会话·已落地）
 
 - 规则目标位置：`skill/starry-mod/SKILL.md`（新增「授权会话（卡密）预置与诊断」小节）／`04_scripts/_common/stages.md`（收尾三条固定命令）／`10_docs/_templates/路线锁定.md`（回读时机第 5 条「数值来源纪律」）／`AGENTS.md`（一行指针，32,725 B ≤ 32,768）／`04_scripts/_common/starry_prefs_edit.sh`（新工具）。
-- 依据：`10_docs/_state/规范优化_20261015_霓虹深渊2r19会话复盘.md`；`session_metrics.py --gate` FAIL 5 项（calls/step 1.15、单发 85.9%、bash 检索 78.9%、单条 >8 KB 32 条、单条消息 33,093 字符）。
+- 依据：`10_docs/_state/history/reviews/规范优化_20261015_霓虹深渊2r19会话复盘.md`；`session_metrics.py --gate` FAIL 5 项（calls/step 1.15、单发 85.9%、bash 检索 78.9%、单条 >8 KB 32 条、单条消息 33,093 字符）。
 - 状态：**已合并**（证据＝本轮真机实测行 + 反证排除；落点＝上述文件；提交号见本轮 `archive_scoped_git.sh` 输出）。
 - 已合并（同日第二批「按照方案全量修改」）：① P2-2 会话切点硬阈值 → `AGENTS.md` D7；② `pipeline.sh status --brief` ＋ `verify <stage> --set` → `04_scripts/pipeline.sh`＋`_common/pipeline.lock`（指纹 `5efdea57…`）＋`stages.md` 收尾四条固定命令；③ 数值来源纪律 → `skill/re-implement/hook-rules.md` §5；④ `starry_prefs_edit.sh` 校验器改标签流解析。
 - 仍留候选：无（本批清空）。下一个观察口＝`session_metrics.py --gate` 在下一次会话是否把 calls/step、bash 检索占比、单条 >8 KB 三项拉回阈值内。

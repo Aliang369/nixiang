@@ -432,3 +432,12 @@ native 自读）、热重载做法、四条验收与可 grep 的日志锚点都�
   - 2026-10-03 实例（P1/P4/P5 并入 + UTF-8 垫片）：新指纹 `pipeline_sh_sha256=1bf3e07b9486b9a8b5b596df3823c78e65c4a58b2cffc31e5fd0a16d25233b42`（旧 `0a2e133157760ce0b4a715b293d3718574b495772a46b48cac81fc089f72a435`），`stage_next.sh` 同批缩为转发器；另一台机器拉取后先跑一次 `bash 04_scripts/pipeline.sh <游戏> status` 确认不再 die 即为同步成功。
   - 2026-10-15 实例（霓虹深渊2 r19 复盘：`status --brief` + `verify --set`）：新指纹 `pipeline_sh_sha256=5efdea573dc23c381e1f701369abff636afbea760a35fe383ad2b58f05a83029`（旧 `1bf3e07b…`）。同一提交内改 `pipeline.sh`（`status [--brief]`＝跳过 说明/阶段名/前置 与「硬约束+台账」回显；`verify <stage> [--set]`＝校验通过即 `set_status done`，用于「产物已在、状态需补」的收尾）＋刷新 `_common/pipeline.lock`。另一台机器 `git pull --rebase --autostash` 后先跑 `bash 04_scripts/pipeline.sh <游戏> status --brief` 验证不再 die。
   - 2026-10-15 实例二（规范去重：弱模型旧规则退役）：新指纹 `pipeline_sh_sha256=bf5eac4f6eee1da7ce1fb737d42e7bb32a98366733394f94e0f00c14b2a3aebd`（旧 `5efdea57…`）。改动**仅注释与 3 处 die 提示文案**（把原先按模型档次划分的「禁改」表述改成模型无关的变更纪律，指向本节），已用「剥注释逐行比对」证明可执行代码零差异；指纹门禁正/负例实测：刷新后 `status --brief` rc=0、把 lock 改成全 0 后 die `rc=1`。
+
+
+## 装机预检与验收阶梯（2026-10-27 从 `AGENTS.md` §6 移入，原文保留）
+
+- **装机预检闸门＋验收阶梯 L1/L2/L3**（`04_scripts/_common/`）：装机后、用户上手前先 `bash 04_scripts/_common/post_install_precheck.sh --game <游戏>`（机器只管装机层证据：包在不在、启动崩不崩、菜单 so 加载与弹出、授权墙发卡、空转不崩），**预检全过才请用户上手；挂了直接出 A/B 判定，不消耗用户实测轮**。三层走**同一个包**（同 so、同签名）：**L1 静态**（AI 出包前不碰设备；`check_release_clean.sh --tag <tag>` + 本地产物与包内 so md5 一致 + 菜单串自检）／**L2 机器**（AI 全自动跑模拟器：装机→预检→`flight_recorder.sh` 冷启→`device_profile.sh` 三行自检，自判 PASS/FAIL，**不打扰用户、不消耗实测轮**，通过也**不构成**再测理由）／**L3 人工**（用户唯一终审，AI 只发操作请求卡 + 收 logcat 定案）。**禁止为模拟器单独出包**；设备差异一律落运行时判据（`hook-rules.md` §31）。涉及 `libil2cpp` 基址/hook 的游戏装机前先 `device_profile.sh`（报告落 `_state/设备画像/<serial>.md`，rc=2 判据异常**就不装机**）；游玩取证、标记与切片见 `TOOLBOOK.md` 与 `hook-rules.md`。
+
+## 会话规模与效率阈值（2026-10-27 从 `AGENTS.md` §6 移入，原文保留）
+
+- **会话规模、切点与效率硬指标**（长正文与实测数据在 `10_docs/_state/规范变更日志.md`）：单会话机械行为预算 ≈600 次工具调用 / ≈40 次装机 / ≈150K prune 阴影 token，任一触顶即**交接**（把「已确认事实 / 未决问题 / 下一步 / 证据落点」写进 `games/{游戏}.md` 后开新会话，不硬撑）。① 同一 step 内**下一步动作不依赖其返回**的独立调用必须合并发出（阈值 calls/step ≥1.6、单发占比 <60%）；② 子代理只用于「可独立落盘的深度探查」，不派「帮我统计 / 帮我找文件」类；**子代理不可访问会话历史工具（`session_event_search`/`session_event_read`/`session_trace` 等）——依赖会话历史/上下文的探查（含会话重建）必须主代理自己做，派给子代理必空转**（2026-10-18 实测 3/3 子代理在会话工具处失败、历史决策官会话子代理单条回传仅 53 字符）；③ 子代理回报只允许「结论 ≤20 行 + 落盘路径 + 行数/md5 + 未闭环项」，**单条入父 ≤3,000 字符**；④ 同一共享文件被触达 >10 次、或连续 3 个 step 单发，即先 `compress` / 写交接再继续；`compress` 触发点前移到上下文 ≈90 K，一个压缩条目只装一个主题；同一状态文件每会话触达 ≤4 次（结论变化 + 收尾各一次）。

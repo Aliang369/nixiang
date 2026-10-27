@@ -115,19 +115,19 @@ Y.dmg = 100
 
 - 看符号尺寸：`nm -D -S libxlua.so`（`readelf` 在部分 NDK 环境不可用时就用它）。
 - **Dobby 在 arm64 上 inline patch 宽 16 字节 ⇒ 只 hook 本体 ≥ 16 字节的入口**，
-  否则会覆盖到下一个函数首部（伊莫实测 `lua_setglobal` 只有 **12 B**，绝不能 hook⇒SIGILL）：
+  否则会覆盖到下一个函数首部（短函数如 `lua_setglobal` 只有 12 B，hook 必 SIGILL）；
+  逐个符号的 `size` 必须照下表口径实测，不猜：
 
-  | 符号 | 偏移 | size | 可否 hook |
-  |------|------|------|-----------|
-  | `lua_pcall` | `0x1096dac` | `0xcc` | ✅ |
-  | `lua_gettop` | `0x1090be0` | `0x10` | ✅（恰好 16，下一符号 `lua_settop` 在 +16，不越界） |
-  | `luaL_loadbuffer` | `0x10a41a8` | — | （序言 `d103c3ff` 与斌哥壳指纹一致） |
-  | `lua_setglobal` | `0x9a8ed4` | 12 | ✗ 太短 |
-  | `lua_pcallk` | — | — | 未导出 |
+  | 符号 | 看什么 | 判据 |
+  |------|------|------|
+  | `lua_pcall` / `lua_gettop` / `luaL_loadbuffer` 等导出符号 | `nm -D -S` 的偏移与 size | `size ≥ 16` 才可 hook；恰好 16 时确认下一符号起点不重叠 |
+  | `lua_pcallk` 一类 | 是否出现 | 未导出 ⇒ 不走它 |
 
-- **ELF 取文件字节要减 LOAD2 的 `p_vaddr - p_offset`**：伊莫 `libxlua.so` 是
-  `vaddr = fileoff + 0x4000` ⇒ 想用反汇编里的地址去文件里对照，先 `-0x4000`。
-  直接按 vaddr 读文件会读到别的地方（本次踩过：三处全对不上）。
+  > 先例：伊莫 `libxlua.so` 的逐符号实测表（偏移/size/可否 hook）见 `10_docs/伊莫/技能先例.md` §1。
+
+- **ELF 取文件字节要减 LOAD2 的 `p_vaddr - p_offset`**：先看程序头算出该段的
+  `vaddr - fileoff` 差值，再按差值换算；直接按 vaddr 读文件会读到别的地方
+  （先例与实测差值见 `10_docs/伊莫/技能先例.md` §1）。
 - 反汇编定位引用时，`adrp+add` / `adrp+ldr` 要**从 `.text` 起始偏移开始反汇编**
   （从文件 0 开始会因 ELF 头错位，一条都对不上）。
 
@@ -166,18 +166,14 @@ Y.dmg = 100
 ## 十、RPC 重发式「伤害放大」（服务端权威游戏）
 
 数值类需求（伤害/倍率）在服务端权威游戏里**不能改客户端计算**，只能
-「让客户端把同一份上报多发几次」（伊莫 斌哥 `MOD.dmgMul` 的做法）：
+「让客户端把同一份上报多发几次」（先例：伊莫 斌哥 `MOD.dmgMul`，细节见
+`10_docs/伊莫/技能先例.md` §2）：
 
-- 抓「C→S 上报」入口：实体类的 `wrapServerMsg`（伊莫挂在
-  `ClientMainPlayer / ClientPet / ClientPuppet / ClientCreation` 四个类上），
-  在 `RPC_CS_*` 里按白名单重发 N 次；
-- **白名单必须只放「不带实例身份」的指令**：伊莫实测
-  `RPC_CS_ProjectileHitTarget` 第一个参数是投射物实例 id（且紧跟一条
-  `RPC_CS_ProjectileDestroy` 用同一个 id），服务端只认首次命中 ⇒ 重发 55 次纯属浪费网络；
-  可放大的是 `RPC_CS_DoActOnActorActions` / `RPC_CS_DoActOnSweepTargetsActions`
-  （`actionData.NodeID` 不自带身份）；
-- 伊莫结论：**宠物（ClientPet）才是主输出**，人物本体基本走投射物通道 ⇒
-  「伤害倍率对人物没效果」不是 bug，是通道决定的；
+- 抓「C→S 上报」入口：实体类的 `wrapServerMsg`，在 `RPC_CS_*` 里按白名单重发 N 次；
+- **白名单必须只放「不带实例身份」的指令**：携带实例 id 的指令服务端只认首次命中，
+  重发纯属浪费网络；筛选判据＝该指令参数里有没有「本次行为的实例 id」；
+- **先确认哪个实体才是主输出通道**：人物本体与宠物/召唤物常走不同上报通道
+  ⇒「倍率对人物没效果」可能是通道决定的，不是 hook 失败；先用诊断确认通道再改代码；
 - 别忘了「重发预算/秒」上限与运行时开关，别把网络打爆。
 
 ---

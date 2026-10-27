@@ -1,0 +1,7 @@
+---
+description: Frida / phantom-frida server 指针、版本对齐与残留清理
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`WORKFLOW.md` §5、`TOOLBOOK.md`「Frida — 动态 Hook」、`01_tools/phantom-frida/README.md`。

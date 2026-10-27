@@ -1,0 +1,7 @@
+---
+description: reverse-skill 通用安全任务路由（与 nixiang skill/ 协同）
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`skill/SKILL.md` 按需索引、`skill/ida-plugin-flow/references/ida-mcp-cheatsheet.md`（外部方法论择录；外部库本体不入库）。

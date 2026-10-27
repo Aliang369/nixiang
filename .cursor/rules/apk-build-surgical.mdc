@@ -1,0 +1,7 @@
+---
+description: APK 构建、外科 zip 组装与只换 so 的流程指针
+alwaysApply: true
+---
+
+先读 `AGENTS.md`，按其路由与授权边界执行。
+按需参考：`WORKFLOW.md` §4、`skill/starry-mod/surgical-build.md`、`WORKFLOW.md` §6。

@@ -1,6 +1,6 @@
 # PLAYBOOK.md — 新游戏接手标准流程
 
-> 📍 `PLAYBOOK.md`（相对仓库根）；🎯 AI 接手**新游戏/新版本**时读这个，日常操作读 `WORKFLOW.md`，工具用法查 `TOOLBOOK.md`。
+> 📍 `PLAYBOOK.md`（相对仓库根）；🎯 AI 接手**新游戏/新版本**时读这个，日常操作读 `WORKFLOW.md`，工具用法查 `TOOLBOOK.md`（短索引，正文在 `10_docs/tools/`）。
 > 读取、授权、协作与通用政策统一见 `AGENTS.md`；本书按任务查阅，不另设读取顺序。
 
 ---
@@ -218,7 +218,7 @@ adb logcat -s StarryTrace AuthClient DeviceFingerprint | grep -E \
 
 ### E2. 收尾
 
-按 [TOOLBOOK.md](TOOLBOOK.md)「清理规则」「真机残留清理」执行保留、隔离重建与授权流程，填写 [游戏收尾与最小复现清单](10_docs/_templates/游戏收尾与最小复现清单.md)。现有设备清理脚本未改，不默认运行；未处理项如实记录。
+按 [《目录结构脚本环境与交付清理》](10_docs/tools/05_目录结构脚本环境与交付清理.md)「清理规则」「真机残留清理」执行保留、隔离重建与授权流程，填写 [游戏收尾与最小复现清单](10_docs/_templates/游戏收尾与最小复现清单.md)。现有设备清理脚本未改，不默认运行；未处理项如实记录。
 
 ### E3. 产出：功能复用手册
 
