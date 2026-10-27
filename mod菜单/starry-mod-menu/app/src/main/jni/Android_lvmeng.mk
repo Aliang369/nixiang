@@ -20,10 +20,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 # Keystone 已移除（20260909 实测零调用死重 43KB：KittyAsm 是唯一使用者而其从未编译）。
 # 将来需要 KittyAsm 运行时汇编时再加回 prebuilt 声明并在下方 LOCAL_STATIC_LIBRARIES 加 Keystone。
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := wxsj_dll
-LOCAL_SRC_FILES := Games/WxsjPatchedDll.a
-include $(PREBUILT_STATIC_LIBRARY)
+# [lvmeng 2026-10-27] drop wxsj_dll prebuilt (missing on Windows, unused by this game)
 
 include $(CLEAR_VARS)
 
@@ -47,7 +44,7 @@ LOCAL_ARM_MODE  := arm
 # 源文件三件套：现代入口 + 游戏 Mod + 注册表 Entry
 # Unity il2cpp 系保持下面默认（含 Il2CppApi）；
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
-LOCAL_SRC_FILES := MainModern.cpp Games/LvmengMod.cpp Games/LvmengEntry.cpp Games/LvmengSeccomp.cpp Unity/Il2CppApi.cpp
+LOCAL_SRC_FILES := MainModern.cpp Games/LvmengMod.cpp Games/LvmengEntry.cpp Games/LvmengSeccomp.cpp Games/LvmengCage.cpp Unity/Il2CppApi.cpp
 
 # MainModern.cpp 的 JNI_OnLoad 无条件引用 SignalQuarantine_Start /
 # FgoBoot_InjectEarlyFromOnLoad，不加本文件即 ld.lld: undefined symbol。
@@ -89,6 +86,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby wxsj_dll
+LOCAL_STATIC_LIBRARIES := Dobby
 
 include $(BUILD_SHARED_LIBRARY)
