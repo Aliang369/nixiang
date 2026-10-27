@@ -550,6 +550,14 @@ void Lvmeng_Tick(const bool* features, const int* values) {
     if (!features || !values) return;
     std::lock_guard<std::mutex> lk(g_lock);
     for (int i = 0; i < LVMENG_FEAT_COUNT; i++) {
+        if (i == LVMENG_FEAT_HP) {
+            /* 2026-10-28 真机实测：InputValue 在框架菜单模型里的数值恒为 0（用户输入
+             * 走 onInputChanged），而 tick 每 200ms 整表覆盖 ⇒ 刚输入的「自定义血量」
+             * 29ms 后就被冲回 0，表现为"其它四项都有效、只有血量无效"。
+             * 这里只在 tick 给出非 0 时才采纳（既保住输入值，也保留框架持久化的非 0 值）。 */
+            if (values[i] > 0) { g_val[i] = values[i]; g_feat[i] = true; }
+            continue;
+        }
         g_feat[i] = features[i];
         g_val[i] = values[i];
     }
