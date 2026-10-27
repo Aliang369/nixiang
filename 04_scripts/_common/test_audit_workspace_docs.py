@@ -340,6 +340,39 @@ class ConstraintAuditTests(unittest.TestCase):
         self.assertEqual(len(paths), 1)
         self.assertEqual(errors, [])
 
+    def test_class_c_or_d_in_ab_table_is_error(self):
+        for klass in ('C', 'D'):
+            with self.subTest(klass=klass):
+                row = (f'| 1 | {klass} | 必须 | 「x」(m00001) | y | 范围 | 无 | 生效 | m00001 |\n')
+                self.write(constraint_file(ab_rows=row))
+                errors, _warnings = self.kinds()
+                self.assertIn('bad-class', errors)
+
+    def test_class_a_cannot_be_one_time(self):
+        row = '| 1 | A | 必须 | 「x」(m00001) | y | 范围 | 无 | 一次性 | m00001 |\n'
+        self.write(constraint_file(ab_rows=row))
+        errors, _warnings = self.kinds()
+        self.assertIn('status-class-conflict', errors)
+
+    def test_class_b_may_be_one_time(self):
+        row = '| 1 | B | 必须 | 「这次先这样」(m00001) | y | 该轮 | 无 | 一次性 | m00001 |\n'
+        self.write(constraint_file(ab_rows=row, counts='A=0 / B=1 / D=0 / E=0 / F=0'))
+        self.assertEqual(self.kinds(strict=True), ([], []))
+
+    def test_class_a_may_be_active(self):
+        row = '| 1 | A | 必须 | 「以后都这样」(m00001) | y | 长期 | 无 | 生效 | m00001 |\n'
+        self.write(constraint_file(ab_rows=row))
+        self.assertEqual(self.kinds(strict=True), ([], []))
+
+    def test_invalid_class_is_not_counted_as_a(self):
+        # 旧实现把未知类别记成 A，导致行数漂移误报；现在应报 bad-class 且不改变 A 计数
+        rows = ('| 1 | A | 必须 | 「a」(m00001) | x | 范围 | 无 | 生效 | m00001 |\n'
+                '| 2 | E | 必须 | 「b」(m00002) | y | 范围 | 无 | 生效 | m00002 |\n')
+        self.write(constraint_file(ab_rows=rows, counts='A=1 / B=0 / D=0 / E=0 / F=0'))
+        errors, warnings = self.kinds()
+        self.assertIn('bad-class', errors)
+        self.assertNotIn('count-drift', warnings)
+
 
 if __name__ == '__main__':
     unittest.main()

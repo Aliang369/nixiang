@@ -247,7 +247,8 @@ ZONE_COLS = {
     'E': ('内容（原文）', '不确定点', '已做的保守处置'),
     'F': ('原话/来源', '曾经的执行含义', '状态与失效依据', '日期'),
 }
-CONSTRAINT_CLASSES = ('A', 'B', 'C', 'D')
+CONSTRAINT_CLASSES = ('A', 'B')          # A/B 表只放 A/B；C/D 有自己的分区
+CLASS_ZONES = {'C': 'C. 默认偏好', 'D': 'D. 技术事实', 'E': 'E. 待核验', 'F': 'F. 历史与失效'}
 STATUS_BASES = ('生效', '一次性', '待核验', '已完成', '已失效', '已被', '已作废')
 ACTIVE_BASES = ('生效', '一次性')
 REQUIRED_SECTIONS = (('元信息', '元信息'), ('A/B', 'A/B 当前生效'), ('C. 默认偏好', 'C 默认偏好'),
@@ -379,9 +380,11 @@ def audit_constraints(path):
                         seen_ids[rid] = row_no
                 cls = col('类别', cells).strip().upper()[:1]
                 if cls not in CONSTRAINT_CLASSES:
-                    issue(errors, row_no, 'bad-class', f'类别必须是 A/B/C/D，实际: {cls or "<空>"}')
+                    where = CLASS_ZONES.get(cls)
+                    hint = f'：C/D/E/F 有独立分区，请移入「{where}」' if where else ''
+                    issue(errors, row_no, 'bad-class', f'类别必须是 A 或 B，实际: {cls or "<空>"}{hint}')
                     continue
-                counted[cls if cls in counted else 'A'] += 1
+                counted[cls] += 1
                 for name in ('强度', '原话', '可执行含义', '适用范围', '例外', '状态'):
                     if not col(name, cells).strip():
                         issue(errors, row_no, 'missing-field', f'{rid or "?"} 缺字段: {name}')
@@ -389,9 +392,12 @@ def audit_constraints(path):
                 if status and not any(status.startswith(b) for b in STATUS_BASES):
                     issue(errors, row_no, 'bad-status',
                           f'{rid or "?"} 状态值非法: {status}（允许 生效/一次性/待核验/已完成/已失效/已被 #N 替代）')
-                elif status and cls in ('A', 'B') and not any(status.startswith(b) for b in ACTIVE_BASES):
+                elif status and not any(status.startswith(b) for b in ACTIVE_BASES):
                     issue(errors, row_no, 'status-class-conflict',
                           f'{rid or "?"} 类别 {cls} 却标「{status}」：已完成/已失效的行应移入 F 区')
+                elif status and cls == 'A' and status.startswith('一次性'):
+                    issue(errors, row_no, 'status-class-conflict',
+                          f'{rid or "?"} A 类是长期硬约束，不能标「{status}」：一次性/当轮要求应记为 B 类')
             continue
 
         if zone in ZONE_COLS:
