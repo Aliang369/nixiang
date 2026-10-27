@@ -48,6 +48,9 @@ ESCAPE = re.compile(r'--allow-no-harden|STAGE_NEXT_FORCE=1')
 REASON = re.compile(r'--harden-reason|HARDEN_REASON')
 GAMES_RE = re.compile(r'^    "([^"]+)": \{', re.M)
 SKIP_DIRS = {'.git', '01_tools', '06_dumped', '07_patched', '08_output', '09_test', '02_apks', '__pycache__'}
+# 审计/门禁工具自身不是出包入口（否则会把正则里的门禁字符串误判成调用）
+SKIP_FILES = {'04_scripts/_common/harden_coverage.py', '04_scripts/_common/harden_gate.sh',
+              '04_scripts/_common/harden_apk.py', '04_scripts/_common/audit_rule_gate_map.py'}
 EXEMPTIONS = {
     '04_scripts/_common/pre_install_gate.sh': '装机侧查11 的显式逃生门；必须同时传 --harden-reason 才放行',
     '04_scripts/_common/finalize_game_delivery.sh': '交付侧显式逃生门；必须同时传 --harden-reason 才放行',
@@ -72,8 +75,12 @@ def iter_entries(root):
         for dp, dn, fn in os.walk(d):
             dn[:] = [x for x in dn if x not in SKIP_DIRS]
             for f in sorted(fn):
-                if f.endswith(('.sh', '.py')) and not f.endswith('_test.py') and not f.startswith('test_'):
-                    yield os.path.relpath(os.path.join(dp, f), root)
+                rel = os.path.relpath(os.path.join(dp, f), root)
+                if not f.endswith(('.sh', '.py')) or f.endswith('_test.py') or f.startswith('test_'):
+                    continue
+                if rel in SKIP_FILES:
+                    continue
+                yield rel
 
 
 def classify(rel, body):
