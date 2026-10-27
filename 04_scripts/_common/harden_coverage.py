@@ -40,6 +40,12 @@ import re
 import sys
 
 SIGN = re.compile(r'\bapksigner\b|\bjarsigner\b')
+# 第九轮：只有「真的产出签名包」才算正式入口；verify 只是校验
+# 产出证据：apksigner/（变量形式 $APKSIGNER）后出现 sign 子命令，或 jarsigner 非 -verify
+SIGN_PRODUCE = re.compile(
+    r'[\w$.{}\"\-]*(?:apksign(?:er)?|jarsigner)[\w.]*[\"\'\s,]+-{0,2}sign\b', re.I)
+JARSIGN_PRODUCE = re.compile(r'jarsigner[^\n]*', re.I)
+SIGN_VERIFY = re.compile(r'[\w$.{}\"\-]*(?:apksign(?:er)?|jarsigner)[\"\s]+-{0,2}verify\b', re.I)
 ASSEMBLE = re.compile(r'zip\s+[^\n]*\.apk|_assemble_|assemble_.*\.apk|cp\s+[^\n]*\.apk')
 OUT08 = re.compile(r'08_output')
 GATE_SH = re.compile(r'harden_gate\.sh|harden_apk\.py\s+check')
@@ -48,7 +54,9 @@ COMPONENT = re.compile(r'ndk-build|cmake\s+--build|javac\b|d8\s|dx\s|libs_[a-z0-
 DIAG = re.compile(r'^(dump_|check_|compare_|verify_|fetch_|install_|cleanup_|env|archive|case_)', re.I)
 PROBE_NAME = re.compile(r'(?:^|[_\-])probe(?:[_\-.]|$)', re.I)
 PROBE_TEXT = re.compile(r'探针包|不作交付|不用于交付')
-FINALIZER = re.compile(r'^[^#\n]*\b(?:bash|sh|python3?|\.)\s*[^\n]*finalize_game_delivery\.sh', re.M)
+FINALIZER = re.compile(
+    r'(?:^\s*|[;&|]\s*|\bthen\s+|\bdo\s+|\bexec\s+)'
+    r'(?:bash|sh|python3(?:\.\d+)?)\s+[^\n]*finalize_game_delivery\.sh', re.M)
 FINALIZE_VAR = re.compile(r'^\s*([A-Za-z_][A-Za-z0-9_]*)=["\']?[^\n#]*finalize_game_delivery\.sh', re.M)
 ESCAPE = re.compile(r'--allow-no-harden')
 REASON = re.compile(r'--harden-reason|HARDEN_REASON')
@@ -96,6 +104,25 @@ def flat_tokens(text):
     return re.sub(r'["\',()\[\]]', ' ', text)
 
 
+SH_CALL = re.compile(
+    r'(?:^\s*|[;&|]\s*|\bthen\s+|\bdo\s+|\(\s*|\bexec\s+)'
+    r'(?:bash|sh|source|\.)\s+[^\n]*?\b(harden_gate\.sh|harden_apk\.py)\b', re.M)
+SH_DIRECT = re.compile(r'^\s*(?:\./)?[\w./\-]*harden_gate\.sh\b', re.M)
+
+
+def sh_gate_call(code):
+    """Shell 里「真的执行门禁」：命令词必须在语句起始，echo/printf/字符串赋值一律不算。"""
+    if SH_DIRECT.search(code):
+        return True
+    for m in SH_CALL.finditer(code):
+        line_start = code.rfind('\n', 0, m.start()) + 1
+        line = code[line_start:code.find('\n', m.start()) if code.find('\n', m.start()) > 0 else len(code)]
+        if re.search(r'\b(?:echo|printf|cat|say|log)\b', line):
+            continue
+        return True
+    return False
+
+
 def has_gate_call(rel, code):
     """真实门禁调用判定（第八轮：区分注释/帮助文字/真执行）。
 
@@ -104,7 +131,7 @@ def has_gate_call(rel, code):
          `harden_apk.py`+`check`、以及 `--apk`；单纯字符串赋值/帮助文字不算。
     """
     if not rel.endswith('.py'):
-        return bool(GATE_SH.search(code))
+        return sh_gate_call(code)
     for m in PY_EXEC.finditer(code):
         # 取该执行调用起点后的一段（覆盖跨行参数列表），到下一个空行为止
         start = m.start()
@@ -142,20 +169,36 @@ def classify(rel, raw):
     code = code_only(raw)
     if PROBE_NAME.search(name) or PROBE_TEXT.search(raw):
         return 'probe'
-    signs = bool(SIGN.search(code))
-    out08 = bool(OUT08.search(code))
+    def _produce_lines(text):
+        for line in text.splitlines():
+            low = line.lower()
+            if 'verify' in low:
+                continue
+            if re.search(r'\b(?:echo|printf|cat|say|log)\b', low):
+                continue
+            if SIGN_PRODUCE.search(low) or re.search(r'jarsigner\s+(?!-verify)', low):
+                return True
+        return False
+
+    produce = _produce_lines(code) or bool(ASSEMBLE.search(code))
     asm = bool(ASSEMBLE.search(code))
+    verify_only = bool(SIGN_VERIFY.search(code)) and not produce
+    out08 = bool(OUT08.search(code))
     if name == 'finalize_game_delivery.sh':
         return 'finalizer'
-    if DIAG.match(name) and not (signs and out08):
-        return 'test_diag'
-    if signs and (out08 or asm):
+    if produce and out08:
         return 'final_apk'
+    # 只验签/裁剪已有 APK：公共交付辅助，不是新产出入口
+    if verify_only and (out08 or name == 'prune_output_final.sh'
+                        or re.search(r'prune|裁剪', code)):
+        return 'delivery_helper'
+    if DIAG.match(name) and not (produce and out08):
+        return 'test_diag'
     if asm and out08:
         return 'final_apk'
-    if COMPONENT.search(code) and not signs:
+    if COMPONENT.search(code) and not SIGN.search(code):
         return 'component'
-    if signs and not out08:
+    if verify_only:
         return 'test_diag'
     return 'other'
 
@@ -195,29 +238,49 @@ def canon_game(gt, wanted):
     return None
 
 
-def stage_apks(stage, gt, is_harden=False):
-    """取一个阶段涉及的 APK（命令 + verify 里的 file_exists 路径）。"""
-    paths = set()
+def norm_path(root, p):
+    """把产物路径规范化为相对仓库根的形式（不丢目录信息，第九轮：不再只比 basename）。"""
+    p = (p or '').strip().strip('"\'')
+    if not p:
+        return ''
+    if os.path.isabs(p):
+        try:
+            p = os.path.relpath(p, root)
+        except ValueError:
+            pass
+    return os.path.normpath(p)
+
+
+def stage_artifacts(root, stage, gt, is_harden=False):
+    """取一个阶段**声明的** APK 产物路径；返回 (paths, reason_if_unprovable)。"""
+    declared = set()
     cmd = str(stage.get('command', ''))
-    has_apk_flag = '--apk' in cmd
-    explicit = re.findall(r'--apk\s+([^\s"\']*\.apk)', cmd)
-    for p in explicit:
-        paths.add(os.path.basename(p))
-    # 命令里出现的 APK 路径（含 glob）都算候选；--apk 指向变量时靠这些 glob 证明同包
-    for p in APK_TOKEN.findall(cmd):
-        paths.add(os.path.basename(p))
     for v in (stage.get('verify') or []):
         if isinstance(v, dict) and str(v.get('type')) == 'file_exists':
-            p = str(v.get('path', ''))
+            p = norm_path(root, str(v.get('path', '')))
             if p.endswith('.apk'):
-                paths.add(os.path.basename(p))
-    if is_harden and not has_apk_flag and gt.get('default_apk'):
-        paths.add(os.path.basename(gt['default_apk']))
-    return paths
+                declared.add(p)
+    literal = [m.group(1) for m in re.finditer(r'--(?:apk|out)\s+([^\s"\']*\.apk)', cmd)]
+    for p in literal:
+        declared.add(norm_path(root, p))
+    reason = ''
+    if is_harden:
+        if '--apk' in cmd and not literal:
+            reason = 'harden 阶段 --apk 指向变量/运行时选取，无法静态证明同一产物'
+        elif re.search(r'\bls\s+-t\b|\|\s*head\s+-1|find\s+[^\n]*\.apk', cmd) and not literal:
+            reason = 'harden 阶段用 ls -t/head 运行时选取 APK，静态无法确认选中哪一份'
+        elif '--apk' not in cmd:
+            if gt.get('default_apk'):
+                declared.add(norm_path(root, gt['default_apk']))
+                reason = ('harden 阶段省略 --apk，实际按 harden_apk.py 默认值 '
+                          '`%s` 检查（不一定是本次产物）' % gt['default_apk'])
+            else:
+                reason = 'harden 阶段省略 --apk 且无法解析默认值'
+    return declared, reason
 
 
 def pipeline_evidence(root, game_dir, script_name, gt):
-    """同包证据：脚本被某阶段引用 + 其后有真调用门禁的 harden 阶段 + 两者指向同一 APK。"""
+    """同包证据：脚本被某阶段引用 + 其后有真门禁阶段 + 两者声明**完全同一路径**的 APK。"""
     if not game_dir or game_dir in TOOL_DIRS:
         return {}
     pipe = os.path.join(root, '04_scripts', game_dir, 'pipeline.json')
@@ -251,21 +314,17 @@ def pipeline_evidence(root, game_dir, script_name, gt):
     if harden_idx <= own_idx:
         out['unproven'] = 'harden 阶段在同包入口之前，无法证明覆盖'
         return out
-    produced = stage_apks(stages[own_idx], gt)
-    checked = stage_apks(stages[harden_idx], gt, is_harden=True)
+    produced, _ = stage_artifacts(root, stages[own_idx], gt)
+    checked, unprovable = stage_artifacts(root, stages[harden_idx], gt, is_harden=True)
     out['produced_apk'] = sorted(produced)
     out['checked_apk'] = sorted(checked)
-
-    def same_apk(a_set, b_set):
-        import fnmatch
-        for a in a_set:
-            for b in b_set:
-                if a == b or fnmatch.fnmatch(a, b) or fnmatch.fnmatch(b, a):
-                    return True
-        return False
-
-    if produced and checked and same_apk(produced, checked):
+    if unprovable:
+        out['unproven'] = '%s（产出 %s / 检查候选 %s）' % (
+            unprovable, sorted(produced) or ['(未声明)'], sorted(checked) or ['(未声明)'])
+        return out
+    if produced and checked and (produced & checked):
         out['protected'] = True
+        out['same_apk'] = sorted(produced & checked)
     else:
         out['unproven'] = ('同包证据不足：产出 %s / 门禁检查 %s'
                            % (sorted(produced) or ['(未声明)'], sorted(checked) or ['(未声明)']))
@@ -313,7 +372,7 @@ def scan(root):
     # 反向链条：被 finalize_game_delivery.sh 以真实调用行引用的交付辅助入口
     fin_body = code_only(read(os.path.join(root, '04_scripts', '_common', 'finalize_game_delivery.sh')))
     for e in entries:
-        if e['kind'] in ('final_apk', 'finalizer') and not e['protected']:
+        if e['kind'] in ('final_apk', 'finalizer', 'delivery_helper'):
             base = os.path.basename(e['script'])
             if base == 'finalize_game_delivery.sh':
                 continue
@@ -321,8 +380,10 @@ def scan(root):
                 r'(?:^\s*|[;&|]\s*|\bthen\s+|\bdo\s+)(?:bash|sh|python3(?:\.\d+)?)\b[^\n]*\b%s\b'
                 % re.escape(base), re.M)
             if call.search(fin_body):
-                e['protected'] = True
-                e['protected_by'] = 'called-by-finalizer'
+                e['called_by_finalizer'] = True
+                if e['kind'] in ('final_apk', 'finalizer'):
+                    e['protected'] = True
+                    e['protected_by'] = 'called-by-finalizer'
 
     pig = code_only(read(os.path.join(root, '04_scripts', '_common', 'pre_install_gate.sh')))
     return {
@@ -425,11 +486,14 @@ def summary(data):
     comps = [e for e in data['entries'] if e['kind'] == 'component']
     probes = [e for e in data['entries'] if e['kind'] == 'probe']
     diag = [e for e in data['entries'] if e['kind'] == 'test_diag']
-    return finals, prot, comps, probes, diag
+    helpers = [e for e in data['entries'] if e['kind'] == 'delivery_helper']
+    finishers = [e for e in data['entries'] if e['kind'] == 'finalizer']
+    others = [e for e in data['entries'] if e['kind'] == 'other']
+    return finals, prot, comps, probes, diag, helpers, finishers, others
 
 
 def render(data):
-    finals, prot, comps, probes, diag = summary(data)
+    finals, prot, comps, probes, diag, helpers, finishers, others = summary(data)
     gt = data['games']
     out = ['# 加固门禁覆盖登记（机器生成，勿手改）', '',
            '> 生成：`python3 -B 04_scripts/_common/harden_coverage.py scan --write`（第八轮：代码证据版）。',
@@ -439,7 +503,11 @@ def render(data):
            '## 1. 汇总（实测）', '',
            f'- 扫描入口总数：**{len(data["entries"])}**',
            f'- 正式 APK 入口（final_apk）：**{len(finals)}**，已保护 **{len(prot)}**、未接入 **{len(finals)-len(prot)}**',
-           f'- 组件构建 {len(comps)}｜探针（不作交付）{len(probes)}｜诊断/辅助 {len(diag)}',
+           f'- 组件构建 {len(comps)}｜探针（不作交付）{len(probes)}｜诊断/辅助 {len(diag)}｜'
+           f'交付辅助 {len(helpers)}｜最终化 {len(finishers)}｜其他 {len(others)}',
+           '- 分类加总校验：%d = 扫描入口 %d（七类之和须相等）'
+           % (len(finals)+len(comps)+len(probes)+len(diag)+len(helpers)+len(finishers)+len(others),
+              len(data['entries'])),
            f'- GAMES 登记 {len(gt["names"])} 个：' + '、'.join(f'`{n}`(tag `{gt["tags"].get(n,"?")}`)' for n in gt['names']),
            f'- `harden_apk.py` 默认 `--apk`：`{gt["default_apk"] or "(未解析)"}`（管线省略 --apk 时按此路径检查）',
            f'- 装机侧凭证校验（查11）：{"✅" if data["install_gate"] else "❌"}；理由强制：{"✅" if data["install_gate_reason"] else "❌"}',
@@ -457,13 +525,17 @@ def render(data):
     out += ['', '## 3. 组件构建入口（不计未接入）', '', '| 入口 | 游戏目录 |', '|---|---|']
     for e in comps:
         out.append(f"| `{e['script']}` | `{e['game_dir'] or '—'}` |")
-    out += ['', '## 4. 探针/诊断入口（非交付，不计未接入）', '',
+    out += ['', '## 4. 公共交付辅助（只验签/裁剪，不新产出 APK，不计未接入）', '',
+            '| 入口 | 被 finalize 调用 |', '|---|---|']
+    for e in helpers:
+        out.append('| `%s` | %s |' % (e['script'], '✅' if e.get('called_by_finalizer') else '—'))
+    out += ['', '## 5. 探针/诊断入口（非交付，不计未接入）', '',
             f'探针 {len(probes)} 个、诊断 {len(diag)} 个；逐项见 `scan --json`。', '']
     return '\n'.join(out)
 
 
 def render_islands(data):
-    finals, prot, _c, _p, _d = summary(data)
+    finals, prot, _c, _p, _d, _h, _f, _o = summary(data)
     out = ['未受加固保护的正式 APK 入口（`islands`）：', '']
     for e in finals:
         if not e['protected']:
@@ -515,12 +587,12 @@ def main():
         scoped = dict(data, entries=[e for e in data['entries'] if belongs(e, game, data['games'])]
                       + [e for e in data['entries'] if any(e['script'].endswith(x) for x in
                          ('finalize_game_delivery.sh', 'prune_output_final.sh', 'pre_install_gate.sh'))])
-        finals, prot, _c, _p, _d = summary(scoped)
+        finals, prot, _c, _p, _d, _h, _f, _o = summary(scoped)
         print(f'加固覆盖审计: scope={a.game}->{game} scope_final_apk={len(finals)} '
               f'scope_protected={len(prot)} scope_unprotected={len(finals)-len(prot)} '
               f'errors={len(errors)} warnings={len(warns)} strict={int(bool(a.strict))}')
     else:
-        finals, prot, _c, _p, _d = summary(data)
+        finals, prot, _c, _p, _d, _h, _f, _o = summary(data)
         print(f'加固覆盖审计: entries={len(data["entries"])} final_apk={len(finals)} '
               f'protected={len(prot)} unprotected={len(finals)-len(prot)} '
               f'errors={len(errors)} warnings={len(warns)} strict={int(bool(a.strict))}')

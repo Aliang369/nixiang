@@ -209,9 +209,11 @@ class HardenCoverageRound7Tests(unittest.TestCase):
         self.assertEqual(e['pipeline_harden_stage'], 'harden')
 
     def test_called_by_finalizer_is_protection(self):
+        # 第九轮：验签+裁剪类归 delivery_helper，不列入 final_apk；调用链关系单独记录
         data, e = self.entry('04_scripts/_common/prune_output_final.sh',
-                             'apksigner verify 08_output/x/a.apk\necho prune\n')
-        self.assertTrue(e['protected'])
+                             '"$APKSIGNER" verify 08_output/x/a.apk\necho prune\n')
+        self.assertEqual(e['kind'], 'delivery_helper')
+        self.assertTrue(e.get('called_by_finalizer'))
 
     # ---- mod菜单 注册表校验 ----
     def test_modmenu_unknown_game_fails(self):
@@ -276,18 +278,26 @@ class HardenCoverageRound8Tests(unittest.TestCase):
 
     # ---- 1. 名称/tag 等价 + 不漏检同目录入口 ----
     def test_name_and_tag_select_same_set(self):
+        # 一个入口不写 --game（靠目录归属），一个显式写 tag（mod菜单）
         w(os.path.join(self.root, '04_scripts/无限升级/wxsj_surgical.sh'),
-          'apksigner sign --out 08_output/无限升级/a.apk in.apk\n')   # 无显式 --game
+          'apksigner sign --out 08_output/无限升级/a.apk in.apk\n')
         w(os.path.join(self.root, 'mod菜单/starry-mod-menu/scripts/build_wxsj_11.sh'),
           'apksigner sign --out 08_output/无限升级/b.apk in.apk\n'
-          'bash 04_scripts/_common/harden_gate.sh b.apk --game wxsj_vc1637\n')  # 显式 tag
+          'bash 04_scripts/_common/harden_gate.sh b.apk --game wxsj_vc1637\n')
         data = self.scan()
         gt = data['games']
-        by_name = [e['script'] for e in data['entries'] if harden_cov.belongs(e, '无限升级', gt)]
-        by_tag = [e['script'] for e in data['entries'] if harden_cov.belongs(e, '无限升级', gt)]
-        self.assertEqual(sorted(by_name), sorted(by_tag))
-        self.assertIn('04_scripts/无限升级/wxsj_surgical.sh', by_name)      # 未显式 --game 也要选中
-        self.assertTrue(any('mod菜单' in x for x in by_name))               # tag 脚本归属该游戏
+        # 真实解析路径：名称→规范名、tag→规范名，二者必须一致
+        name_ok = harden_cov.canon_game(gt, '无限升级')
+        tag_ok = harden_cov.canon_game(gt, 'wxsj_vc1637')
+        self.assertEqual(name_ok, '无限升级')
+        self.assertEqual(tag_ok, '无限升级')
+        by_name = sorted(e['script'] for e in data['entries']
+                         if harden_cov.belongs(e, harden_cov.canon_game(gt, '无限升级'), gt))
+        by_tag = sorted(e['script'] for e in data['entries']
+                        if harden_cov.belongs(e, harden_cov.canon_game(gt, 'wxsj_vc1637'), gt))
+        self.assertEqual(by_name, by_tag, '名称与 tag 必须选中完全相同的入口集合')
+        self.assertIn('04_scripts/无限升级/wxsj_surgical.sh', by_name)
+        self.assertTrue(any('mod菜单' in x for x in by_name))
 
     def test_unprotected_entry_fails_for_both_name_and_tag(self):
         w(os.path.join(self.root, '04_scripts/无限升级/wxsj_surgical.sh'),
@@ -333,7 +343,7 @@ class HardenCoverageRound8Tests(unittest.TestCase):
         self.assertFalse(e['protected'])
         self.assertIn('同包证据不足', e['pipeline_evidence'])
 
-    def test_pipeline_matching_glob_apk_is_protected(self):
+    def test_pipeline_matching_glob_apk_is_unproven_after_round9(self):
         w(os.path.join(self.root, '04_scripts/无限升级/pipeline.json'),
           '{"stages":[{"id":"sign","command":"bash 04_scripts/无限升级/wxsj_sign.sh",'
           '"verify":[{"type":"file_exists","path":"08_output/无限升级/a_signed.apk"}]},'
@@ -342,7 +352,9 @@ class HardenCoverageRound8Tests(unittest.TestCase):
         w(os.path.join(self.root, '04_scripts/无限升级/wxsj_sign.sh'),
           'apksigner sign --out 08_output/无限升级/a_signed.apk in.apk\n')
         e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_sign.sh')][0]
-        self.assertTrue(e['protected'], e.get('pipeline_evidence'))
+        # 第九轮：`ls -t | head -1` 属运行时选取，静态无法证明同一产物 ⇒ unproven
+        self.assertFalse(e['protected'])
+        self.assertIn('无法静态证明', e['pipeline_evidence'])
 
     # ---- 4. 反向链条 ----
     def test_finalizer_comment_mention_is_not_protection(self):
@@ -356,10 +368,10 @@ class HardenCoverageRound8Tests(unittest.TestCase):
 
     def test_finalizer_real_call_is_protection(self):
         w(os.path.join(self.root, '04_scripts/_common/prune_output_final.sh'),
-          'apksigner verify 08_output/x/a.apk\n')
+          '"$APKSIGNER" verify 08_output/x/a.apk\n')
         e = [x for x in self.scan()['entries'] if x['script'].endswith('prune_output_final.sh')][0]
-        self.assertTrue(e['protected'])
-        self.assertEqual(e['protected_by'], 'called-by-finalizer')
+        self.assertEqual(e['kind'], 'delivery_helper')
+        self.assertTrue(e.get('called_by_finalizer'))
 
     # ---- 5. 分类只看代码 ----
     def test_comment_only_apksigner_not_final_apk(self):
@@ -375,6 +387,120 @@ class HardenCoverageRound8Tests(unittest.TestCase):
           '# 探针包，不作交付\napksigner sign --out 08_output/无限升级/p.apk in.apk\n')
         e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_metainf.sh')][0]
         self.assertEqual(e['kind'], 'probe')
+
+
+
+class HardenCoverageRound9Tests(unittest.TestCase):
+    """第九轮：验签/裁剪不算产出、同包必须同路径、Shell 调用上下文、分类加总。"""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.common = os.path.join(self.root, '04_scripts', '_common')
+        os.makedirs(self.common, exist_ok=True)
+        w(os.path.join(self.common, 'harden_apk.py'),
+          'GAMES = {\n    "游戏甲": {\n        "tag": "jia",\n    },\n'
+          '    "游戏乙": {\n        "tag": "yi",\n    },\n}\n')
+        w(os.path.join(self.common, 'pre_install_gate.sh'),
+          'python3 harden_apk.py check --apk "$APK" --harden-reason hi\nstamp=x\n')
+        w(os.path.join(self.common, 'finalize_game_delivery.sh'), 'echo fin\n')
+
+    def kind_of(self, rel, body):
+        w(os.path.join(self.root, rel), body)
+        data = harden_cov.scan(self.root)
+        return [e for e in data['entries'] if e['script'].endswith(os.path.basename(rel))][0]
+
+    # ---- 1. 分类 ----
+    def test_verify_only_is_delivery_helper(self):
+        e = self.kind_of('04_scripts/_common/prune_like.sh',
+                         'APKSIGNER=/x/apksigner\n"$APKSIGNER" verify 08_output/甲/a.apk || exit 1\n')
+        self.assertEqual(e['kind'], 'delivery_helper')
+        self.assertFalse(e['protected'])
+
+    def test_real_signing_entry_is_final_apk(self):
+        e = self.kind_of('04_scripts/游戏甲/jia_sign.sh',
+                         '_apksign() { "$APKS" "$@"; }\n_apksign sign --out 08_output/游戏甲/a.apk in.apk\n')
+        self.assertEqual(e['kind'], 'final_apk')
+
+    def test_verify_and_sign_mixed_is_final_apk(self):
+        e = self.kind_of('04_scripts/游戏甲/jia_both.sh',
+                         '"$APKSIGNER" sign --out 08_output/游戏甲/a.apk in.apk\n'
+                         '"$APKSIGNER" verify 08_output/游戏甲/a.apk\n')
+        self.assertEqual(e['kind'], 'final_apk')
+
+    def test_category_sum_matches_total(self):
+        w(os.path.join(self.root, '04_scripts/游戏甲/jia_sign.sh'),
+          '"$APKSIGNER" sign --out 08_output/游戏甲/a.apk in.apk\n')
+        data = harden_cov.scan(self.root)
+        parts = harden_cov.summary(data)
+        total = sum(len(x) for x in parts)
+        self.assertEqual(total, len(data['entries']))
+
+    # ---- 2. 同包证据必须同路径 ----
+    def _pipeline(self, sign_verify, harden_cmd):
+        w(os.path.join(self.root, '04_scripts/游戏甲/pipeline.json'),
+          '{"stages":[{"id":"sign","command":"bash 04_scripts/游戏甲/jia_sign.sh",'
+          '"verify":[{"type":"file_exists","path":"%s"}]},'
+          '{"id":"harden","command":"%s"}]}' % (sign_verify, harden_cmd))
+        w(os.path.join(self.root, '04_scripts/游戏甲/jia_sign.sh'),
+          '"$APKSIGNER" sign --out %s in.apk\n' % sign_verify)
+
+    def test_same_basename_different_dir_is_unproven(self):
+        self._pipeline('08_output/游戏甲/a.apk',
+                       'python3 04_scripts/_common/harden_apk.py check --apk 08_output/游戏乙/a.apk')
+        e = [x for x in harden_cov.scan(self.root)['entries'] if x['script'].endswith('jia_sign.sh')][0]
+        self.assertFalse(e['protected'])
+        self.assertIn('同包证据不足', e['pipeline_evidence'])
+
+    def test_runtime_ls_selection_is_unproven(self):
+        self._pipeline('08_output/游戏甲/a.apk',
+                       'APK=$(ls -t 08_output/游戏甲/*.apk | head -1); '
+                       'python3 04_scripts/_common/harden_apk.py check --apk $APK')
+        e = [x for x in harden_cov.scan(self.root)['entries'] if x['script'].endswith('jia_sign.sh')][0]
+        self.assertFalse(e['protected'])
+        self.assertIn('无法静态证明', e['pipeline_evidence'])
+
+    def test_explicit_same_path_is_protected(self):
+        self._pipeline('08_output/游戏甲/a.apk',
+                       'python3 04_scripts/_common/harden_apk.py check --apk 08_output/游戏甲/a.apk')
+        e = [x for x in harden_cov.scan(self.root)['entries'] if x['script'].endswith('jia_sign.sh')][0]
+        self.assertTrue(e['protected'])
+
+    def test_missing_apk_flag_uses_default_and_is_unproven(self):
+        self._pipeline('08_output/游戏甲/a.apk',
+                       'python3 04_scripts/_common/harden_apk.py redteam')
+        e = [x for x in harden_cov.scan(self.root)['entries'] if x['script'].endswith('jia_sign.sh')][0]
+        self.assertFalse(e['protected'])
+        self.assertTrue('默认值' in e['pipeline_evidence'] or '同包证据不足' in e['pipeline_evidence'])
+
+    # ---- 3. Shell 调用上下文 ----
+    def test_shell_echo_not_gate_call(self):
+        e = self.kind_of('04_scripts/游戏甲/jia_sign.sh',
+                         'echo "用法: bash 04_scripts/_common/harden_gate.sh <apk>"\n'
+                         '"$APKSIGNER" sign --out 08_output/游戏甲/a.apk in.apk\n')
+        self.assertFalse(e['gate_call'])
+
+    def test_shell_printf_and_var_not_gate_call(self):
+        e = self.kind_of('04_scripts/游戏甲/jia_sign2.sh',
+                         'HELP="bash 04_scripts/_common/harden_gate.sh x.apk"\n'
+                         'printf "%s\\n" "$HELP"\n'
+                         '"$APKSIGNER" sign --out 08_output/游戏甲/a.apk in.apk\n')
+        self.assertFalse(e['gate_call'])
+
+    def test_shell_real_gate_call_positive(self):
+        e = self.kind_of('04_scripts/游戏甲/jia_sign3.sh',
+                         '"$APKSIGNER" sign --out 08_output/游戏甲/a.apk in.apk\n'
+                         'bash 04_scripts/_common/harden_gate.sh 08_output/游戏甲/a.apk --game jia || exit 1\n')
+        self.assertTrue(e['gate_call'])
+        self.assertTrue(e['protected'])
+
+    def test_finalize_help_text_not_invocation(self):
+        w(os.path.join(self.root, '04_scripts/_common/prune_like.sh'),
+          '"$APKSIGNER" verify 08_output/甲/a.apk\n')
+        w(os.path.join(self.common, 'finalize_game_delivery.sh'),
+          'echo "用法: bash 04_scripts/_common/prune_like.sh <dir>"\n'
+          'printf "见 prune_like.sh\n"\n')
+        e = [x for x in harden_cov.scan(self.root)['entries'] if x['script'].endswith('prune_like.sh')][0]
+        self.assertFalse(e.get('called_by_finalizer'))
 
 
 class GameDocsCoverageTests(unittest.TestCase):
