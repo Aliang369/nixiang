@@ -71,7 +71,7 @@ fail=0; pass=0; warn=0; skip=0
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
 runtime_menu_json=""; apk_file=""; base_apk=""; expect_so=""; expect_md=""; menu_dex=""; menu_dex_name=""
-game=""; rounds_threshold=2; allow_rounds=""; allow_no_harden=""
+game=""; rounds_threshold=2; allow_rounds=""; allow_no_harden=""; harden_reason="${HARDEN_REASON:-}"
 NEEDLES="$TMPDIR_PF/needles.txt"; : > "$NEEDLES"
 
 while [ $# -gt 0 ]; do
@@ -93,6 +93,7 @@ while [ $# -gt 0 ]; do
     --rounds-threshold) rounds_threshold="$2"; shift 2 ;;
     --allow-rounds) allow_rounds="1"; shift ;;
     --allow-no-harden) allow_no_harden="1"; shift ;;
+    --harden-reason)  harden_reason="$2"; shift 2 ;;
     --needle)      printf '%s\n' "$2" >> "$NEEDLES"; shift 2 ;;
     --needle-file)
       if [ ! -f "$2" ]; then echo "✗ 门禁串清单缺失: $2"; exit 1; fi
@@ -574,8 +575,20 @@ if [ -n "$apk_file" ] && [ -f "$apk_file" ]; then
     echo "✓ PASS  [加固凭证] 该包已过加固门禁（${G11_MD5:0:12}…）"
     pass=$((pass + 1))
   elif [ -n "$allow_no_harden" ] || [ "${STAGE_NEXT_FORCE:-}" = "1" ]; then
-    echo "- WARN  [加固凭证] 缺加固凭证，已显式放行（--allow-no-harden / STAGE_NEXT_FORCE=1）：交班须写明理由"
-    warn=$((warn + 1))
+    # 2026-10-27 第六轮：逃生门必须带「非空理由」，否则不放行（机器强制，不再只靠人写报告）
+    case "$harden_reason" in
+      ""|" "*|*[[:space:]]) harden_reason_ok=0 ;;
+      *) harden_reason_ok=1 ;;
+    esac
+    if [ "${harden_reason_ok:-0}" != "1" ]; then
+      echo "✗ FAIL  [加固凭证] 用了逃生门（--allow-no-harden / STAGE_NEXT_FORCE=1）但没有有效理由"
+      echo "        ⇒ 必须同时传 --harden-reason "<为什么必须放行，谁授权的>"（或设 HARDEN_REASON 环境变量）"
+      echo "        ⇒ 理由不能为空/纯空白；正常交付不应使用逃生门"
+      fail=$((fail + 1))
+    else
+      echo "- WARN  [加固凭证] 缺加固凭证，已按理由放行：reason=${harden_reason}"
+      warn=$((warn + 1))
+    fi
   else
     echo "✗ FAIL  [加固凭证] 这个包没有加固门禁凭证（09_test/$G11_GAME/harden/${G11_MD5:0:12}….stamp 不存在）"
     echo "        ⇒ 先跑：python 04_scripts/_common/harden_apk.py check --game <tag> --apk \"$apk_file\""

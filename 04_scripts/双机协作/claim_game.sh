@@ -17,7 +17,7 @@ set -u
 
 ROOT="${NIXIANG_ROOT:-}"
 if [ -z "$ROOT" ]; then
-  ROOT="$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd -P)"
+  ROOT="${NIXIANG_CLAIM_ROOT:-$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd -P)}"
 fi
 
 case "$(uname -s)" in
@@ -54,11 +54,58 @@ for arg in "$@"; do
   case "$arg" in
     --done) MODE=done ;;
     --list) MODE=list ;;
+    --audit) MODE=audit ;;
     -h|--help) usage ;;
     --*) usage ;;
     *) GAME="$arg" ;;
   esac
 done
+
+if [ "$MODE" = "audit" ]; then
+  # 只读审计：重复行 / 多机持有 / 字段格式 / 疑似过时（>7 天，仅提示）
+  if [ ! -f "$TSV" ] || [ ! -s "$TSV" ]; then
+    echo "✓ 占用表为空或不存在，无冲突"
+    exit 0
+  fi
+  problems=0
+  echo "== 占用表审计 ($TSV) =="
+  echo "-- 字段格式（期望 4 列：游戏<TAB>机器<TAB>时间<TAB>HEAD）--"
+  bad_fmt="$(awk -F'\t' 'NF!=4 {printf "  行%d: %d 列: %s\n", NR, NF, $0}' "$TSV")"
+  if [ -n "$bad_fmt" ]; then printf '%s\n' "$bad_fmt"; problems=$((problems+1)); else echo "  ✓ 全部为 4 列"; fi
+  echo "-- 同一游戏多行（重复登记）--"
+  dup="$(awk -F'\t' '{c[$1]++} END{for (g in c) if (c[g]>1) printf "  %s: %d 行\n", g, c[g]}' "$TSV")"
+  if [ -n "$dup" ]; then printf '%s\n' "$dup"; problems=$((problems+1)); else echo "  ✓ 无重复"; fi
+  echo "-- 同一游戏多机持有（真冲突）--"
+  multi=0
+  awk -F'\t' '
+    { hosts[$1] = ($1 in hosts) ? hosts[$1] "|" $2 : $2 }
+    END {
+      for (g in hosts) {
+        n = split(hosts[g], a, "|"); delete seen; u = 0
+        for (i = 1; i <= n; i++) { if (!(a[i] in seen)) { seen[a[i]] = 1; u++ } }
+        if (u > 1) printf "  %s: 由 %d 台机器持有 (%s)\n", g, u, hosts[g]
+      }
+    }' "$TSV" > /tmp/claim_multi.$$
+  if [ -s /tmp/claim_multi.$$ ]; then cat /tmp/claim_multi.$$; multi=1; problems=$((problems+1)); else echo "  ✓ 无多机持有"; fi
+  rm -f /tmp/claim_multi.$$
+  echo "-- 疑似过时（>7 天，仅提示，不代表对方已收工）--"
+  now="$(date '+%s')"
+  awk -F'\t' 'NF==4 {print $1"\t"$2"\t"$3}' "$TSV" | while IFS="$(printf '\t')" read -r g m t; do
+    e="$(date -j -f '%Y-%m-%d %H:%M' "$t" '+%s' 2>/dev/null || date -d "$t" '+%s' 2>/dev/null || echo '')"
+    if [ -n "$e" ]; then
+      d=$(( (now - e) / 86400 ))
+      if [ "$d" -gt 7 ]; then echo "  ${g} (${m}) 已 ${d} 天: 需人工确认对方是否结束, 不得直接删他人行"; fi
+    else
+      echo "  ${g} (${m}) 时间无法解析: '${t}'"
+    fi
+  done
+  if [ "$problems" -gt 0 ]; then
+    echo "== 结论: 发现 ${problems} 类问题（只读审计, 未修改任何行）=="
+    exit 1
+  fi
+  echo "== 结论: 无冲突 =="
+  exit 0
+fi
 
 if [ "$MODE" = "list" ]; then
   if [ -f "$TSV" ] && [ -s "$TSV" ]; then
@@ -74,16 +121,29 @@ fi
 
 case "$MODE" in
   claim)
-    holder_row="$(row_of "$GAME" "")" || true
-    if [ -n "$holder_row" ]; then
-      holder="$(printf '%s\n' "$holder_row" | awk -F'\t' 'NR==1{print $2}')"
-      if [ "$holder" != "$HOST" ]; then
-        echo "✗ [${GAME}] 已被【${holder}】占用未释放, 本机(${HOST})禁止写:"
-        printf '%s\n' "$holder_row" | sed 's/^/       /'
+    # 2026-10-27 第六轮：检查该游戏的**全部**行（原来只取第一行，会漏掉多机持有/重复行）
+    all_rows="$(row_of "$GAME" "")" || true
+    if [ -n "$all_rows" ]; then
+      # 行数 >1 ⇒ 重复登记；任一行的机器不是本机 ⇒ 真冲突
+      row_n="$(printf '%s\n' "$all_rows" | grep -c . || true)"
+      other="$(printf '%s\n' "$all_rows" | awk -F'\t' -v h="$HOST" '$2 != h {print $2}' | sort -u | tr '\n' ' ')"
+      bad_fmt="$(printf '%s\n' "$all_rows" | awk -F'\t' 'NF!=4')"
+      if [ -n "$bad_fmt" ]; then
+        echo "✗ [${GAME}] 占用行格式错误（应为 4 列），先修表再认领:"
+        printf '%s\n' "$bad_fmt" | sed 's/^/       /'
+        echo "  → 用 bash 04_scripts/双机协作/claim_game.sh --audit 看完整诊断；不要手删他人行"
+        exit 3
+      fi
+      if [ -n "$other" ]; then
+        echo "✗ [${GAME}] 被【${other% }】占用未释放, 本机(${HOST})禁止写（该游戏共 ${row_n} 行）:"
+        printf '%s\n' "$all_rows" | sed 's/^/       /'
         echo "  → 先协调 (等对方 --done 或用户拍板); 确认要强占需用户当轮明确授权"
         exit 3
       fi
-      # 本机已持有 → 幂等刷新 (先删旧行, 下面重新 append)
+      if [ "$row_n" -gt 1 ]; then
+        echo "⚠ [${GAME}] 有 ${row_n} 行本机重复登记, 认领时将收敛为 1 行"
+      fi
+      # 全是本机持有 → 幂等刷新 (先删本机旧行, 下面重新 append)
     fi
     head_short="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     mkdir -p "$(dirname "$TSV")"

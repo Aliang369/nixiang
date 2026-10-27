@@ -136,7 +136,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
   `python 04_scripts/_common/harden_apk.py check --apk <成品APK>`（C1 公钥 / C2 清单 / C3 去路标 / C4 产物同一 /
   C6 载荷密文新鲜 / C7 载荷层已编译 / C8 无明文泄漏 / C9 服务端载荷已登记），PASS 后自动写凭证
   `09_test/<游戏>/harden/<apk_md5>.stamp`；装机闸门 `pre_install_gate.sh` **查11** 校验该凭证，缺失即 FAIL 拦装机
-  （逃生门 `--allow-no-harden` 或 `STAGE_NEXT_FORCE=1`，用了必须在报告里写明理由）。
+  （逃生门 `--allow-no-harden` 或 `STAGE_NEXT_FORCE=1`，**必须同时给 `--harden-reason "<理由>"`，空/纯空白被脚本拒绝并 exit 4**；放行时输出 `UNHARDENED`，不得在报告里写成加固 PASS）。
   新游戏与存量游戏接入按 `10_docs/防御加固_通用路线图.md` §2 九步；**跨游戏细节只写该文件，本行只作强制规则**。
   **覆盖现状与本轮实测缺口不复述在本文件**：唯一实测正文＝`10_docs/防御加固_通用路线图.md` §7（含逐入口登记与排队）。
   **规则是全局的、实装尚未全覆盖**：未登记游戏的出包脚本必须先在两处 `GAMES` 表登记并接入 `harden_gate.sh` 再出包。

@@ -310,6 +310,50 @@ HBEOF
 fi
 
 # --------------------------------------------------------------------------
+# 对方心跳检查 (2026-10-27 第六轮: 真正读取对方心跳; 缺失/过期/含 FAIL 都要判)
+peer=""
+[ "$HOST" = mac ] && peer=win
+[ "$HOST" = win ] && peer=mac
+if [ -n "$peer" ]; then
+  PEOF="$ROOT/10_docs/_state/机器心跳/${peer}.md"
+  if [ ! -f "$PEOF" ]; then
+    warn "对方(${peer})心跳缺失: 10_docs/_state/机器心跳/${peer}.md 不存在 ⇒ 不能假定对方环境正常, 先让对方跑 twin_status.sh"
+  else
+    peer_time="$(grep -m1 '体检时间' "$PEOF" 2>/dev/null | sed 's/.*: //')"
+    peer_res="$(grep -m1 '结果' "$PEOF" 2>/dev/null | sed 's/.*: //')"
+    if ! printf '%s' "$peer_time" | grep -Eq '^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]:[0-9][0-9]$'; then
+      fail "对方(${peer})心跳时间戳无效: '${peer_time}' (格式应为 YYYY-MM-DD HH:MM; 文件可能被手改或格式老化)"
+    else
+      peer_epoch="$(date -j -f '%Y-%m-%d %H:%M' "$peer_time" '+%s' 2>/dev/null || date -d "$peer_time" '+%s' 2>/dev/null || echo '')"
+      if [ -z "$peer_epoch" ]; then
+        warn "对方(${peer})心跳时间戳无法转换为时间: '${peer_time}' (本机 date 不支持该格式, 需人工核对)"
+      else
+        now_epoch="$(date '+%s')"
+        age_days=$(( (now_epoch - peer_epoch) / 86400 ))
+        if [ "$age_days" -gt 7 ]; then
+          warn "对方(${peer})心跳已 ${age_days} 天未更新 (>7 天) ⇒ 先提醒对方复检, 勿默认其环境正常"
+        else
+          pass "对方(${peer})心跳 ${age_days} 天前, 未过期"
+        fi
+      fi
+    fi
+    if [ -z "$peer_res" ]; then
+      warn "对方(${peer})心跳缺少「结果」行 ⇒ 无法判断对方上次是否全过"
+    else
+      peer_fail_n="$(printf '%s' "$peer_res" | sed -n 's/.*FAIL=\([0-9][0-9]*\).*/\1/p')"
+      peer_warn_n="$(printf '%s' "$peer_res" | sed -n 's/.*WARN=\([0-9][0-9]*\).*/\1/p')"
+      if [ -n "$peer_fail_n" ] && [ "$peer_fail_n" -gt 0 ]; then
+        fail "对方(${peer})最近一次体检有 ${peer_fail_n} 项 FAIL: ${peer_res} ⇒ 先让对方修完再开工"
+      elif [ -n "$peer_warn_n" ] && [ "$peer_warn_n" -gt 0 ]; then
+        warn "对方(${peer})最近一次体检有 ${peer_warn_n} 项 WARN (非 FAIL): ${peer_res}"
+      else
+        pass "对方(${peer})最近一次体检无 FAIL: ${peer_res}"
+      fi
+    fi
+  fi
+fi
+
+# --------------------------------------------------------------------------
 printf '\n== 汇总 ==\n'
 printf 'PASS=%s  WARN=%s  FAIL=%s\n' "$PASS_N" "$WARN_N" "$FAIL_N"
 if [ "$FAIL_N" -gt 0 ]; then

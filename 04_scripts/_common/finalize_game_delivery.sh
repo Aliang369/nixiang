@@ -18,7 +18,8 @@ MENU_TEMPLATE=""
 DATE="$(date +%Y%m%d)"
 MODE="dry-run"
 PRUNE=0
-ALLOW_NO_HARDEN=0   # 加固门禁逃生门：用了必须在收官报告写明理由（AGENTS.md §6）
+ALLOW_NO_HARDEN=0   # 加固门禁逃生门：必须同时给 --harden-reason（机器强制，2026-10-27 第六轮）
+HARDEN_REASON="${HARDEN_REASON:-}"
 SYNC_DOC=0
 ALLOW_LEGACY_TEMPLATE=0
 USAGE_DOC=""      # --usage-doc：复制为 delivery 目录里的「使用说明.md」（分发型交付必带，P20）
@@ -95,6 +96,7 @@ while [[ $# -gt 0 ]]; do
     --expect-icon) EXPECT_ICON=1; shift ;;
     --expect-menu-template) EXPECT_MENU_TEMPLATE=1; shift ;;
     --allow-no-harden) ALLOW_NO_HARDEN=1; shift ;;
+    --harden-reason)   HARDEN_REASON="$2"; shift 2 ;;
     --apply) MODE="apply"; shift ;;
     -h|--help) usage ;;
     *) echo "ERROR: 未知参数 $1" >&2; usage ;;
@@ -104,7 +106,37 @@ done
 [[ -n "$GAME" ]] || usage
 [[ "$DATE" =~ ^[0-9]{8}$ ]] || { echo "ERROR: --date 需为 YYYYMMDD" >&2; exit 2; }
 GAME_DIR="$ROOT/08_output/$GAME"
-[[ -d "$GAME_DIR" ]] || { echo "ERROR: 输出目录不存在: $GAME_DIR" >&2; exit 1; }
+# ── 加固门禁（2026-10-27 第五轮接入：交付前必须过 C1–C9；native 型 C6–C9 自动 N/A）──
+if [[ -f "$APK" ]]; then
+  if python3 "$ROOT/04_scripts/_common/harden_apk.py" check --apk "$APK" --game "$GAME" >/tmp/harden_finalize_$$.log 2>&1; then
+    echo "[finalize] harden_gate=PASS（凭证已写 09_test/$GAME/harden/）"
+  else
+    tail -20 /tmp/harden_finalize_$$.log | sed 's/^/  /' >&2
+    if [[ "$ALLOW_NO_HARDEN" == "1" ]]; then
+      # 理由必须非空且非纯空白，否则拒绝放行（机器强制）
+      if [[ -z "${HARDEN_REASON//[[:space:]]/}" ]]; then
+        echo "ERROR: --allow-no-harden 必须同时给 --harden-reason \"<理由>\"（不能为空/纯空白）。" >&2
+        echo "       正常交付应修好加固问题，逃生门只用于已说明理由的例外。" >&2
+        exit 4
+      fi
+      echo "[finalize] ⚠️ 加固门禁 FAIL，按理由放行：reason=$HARDEN_REASON" >&2
+      echo "[finalize] ⚠️ 交付状态＝UNHARDENED（不得在报告里写成加固 PASS）" >&2
+    else
+      echo "ERROR: 加固门禁未通过，禁止交付。修正后重跑，或用 --allow-no-harden 并写明理由。" >&2
+      exit 4
+    fi
+  fi
+  rm -f /tmp/harden_finalize_$$.log
+fi
+
+
+echo "[finalize] game=$GAME"
+echo "[finalize] apk=$APK"
+echo "[finalize] apk_md5=$(md5_of "$APK")"
+echo "[finalize] apk_sha256=$(sha256_of "$APK")"
+echo "[finalize] menu_template=${MENU_TEMPLATE:-（未提供，跳过菜单模板交付）}"
+echo "[finalize] usage_doc=${USAGE_DOC:-（未提供 —— 分发型交付应传 P20）}"
+echo "[finalize] copy_apk=$COPY_APK"
 
 abs_path() {
   local p="$1"
@@ -326,28 +358,8 @@ if [[ "$COPY_APK" == "1" ]]; then
   [[ -f "$APK" ]] || { echo "ERROR: --copy-apk 需要 --apk 指向真实文件: $APK" >&2; exit 1; }
 fi
 
-echo "[finalize] game=$GAME"
-echo "[finalize] apk=$APK"
-echo "[finalize] apk_md5=$(md5_of "$APK")"
-echo "[finalize] apk_sha256=$(sha256_of "$APK")"
-echo "[finalize] menu_template=${MENU_TEMPLATE:-（未提供，跳过菜单模板交付）}"
-echo "[finalize] usage_doc=${USAGE_DOC:-（未提供 —— 分发型交付应传 P20）}"
-echo "[finalize] copy_apk=$COPY_APK"
-# ── 加固门禁（2026-10-27 第五轮接入：交付前必须过 C1–C9；native 型 C6–C9 自动 N/A）──
-if [[ -f "$APK" ]]; then
-  if python3 "$ROOT/04_scripts/_common/harden_apk.py" check --apk "$APK" --game "$GAME" >/tmp/harden_finalize_$$.log 2>&1; then
-    echo "[finalize] harden_gate=PASS（凭证已写 09_test/$GAME/harden/）"
-  else
-    tail -20 /tmp/harden_finalize_$$.log | sed 's/^/  /' >&2
-    if [[ "$ALLOW_NO_HARDEN" == "1" ]]; then
-      echo "[finalize] ⚠️ harden_gate=FAIL 但已用 --allow-no-harden 放行（必须在报告写明理由）" >&2
-    else
-      echo "ERROR: 加固门禁未通过，禁止交付。修正后重跑，或用 --allow-no-harden 并写明理由。" >&2
-      exit 4
-    fi
-  fi
-  rm -f /tmp/harden_finalize_$$.log
-fi
+
+[[ -d "$GAME_DIR" ]] || { echo "ERROR: 输出目录不存在: $GAME_DIR" >&2; exit 1; }
 
 echo "[finalize] delivery=$DELIVERY"
 if [[ -n "$ICON_SOURCE" ]]; then

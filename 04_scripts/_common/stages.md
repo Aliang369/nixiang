@@ -85,7 +85,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 查8 | 包内 so 构建戳 `STARRYSTAMP1:EPOCH=`（缺戳 ⇒ 覆盖安装永不清 starry_ota 旧 so） | 2026-10-16 | `STAMP_CHECK=0` |
 | 查9 | so / metadata 配套（IL2CPP 直装包：只换一边 = 混搭 ⇒ FAIL） | 2026-10-19 | `SO_META_CHECK=0` |
 | 查10 | 菜单 dex 新鲜度（dex 内 `starry-menu:<commit>` 必须等于当前 Java 源码 HEAD） | 2026-10-26 | 见下方「菜单 dex 新鲜度门禁」 |
-| 查11 | **加固凭证**：`09_test/<游戏>/harden/<apk_md5>.stamp` 必须与当前 APK md5 对应 | 2026-10-27 | `--allow-no-harden` / `STAGE_NEXT_FORCE=1` |
+| 查11 | **加固凭证**：`09_test/<游戏>/harden/<apk_md5>.stamp` 必须与当前 APK md5 对应 | 2026-10-27 | `--allow-no-harden` / `STAGE_NEXT_FORCE=1`，**且必须同时给 `--harden-reason "<理由>"`（空/纯空白被拒，2026-10-27 第六轮机器强制）** |
 
 > 查11 的上游是 `bash 04_scripts/_common/harden_gate.sh <成品APK> [--game <名\|tag>]`（内部调 `harden_apk.py check`，PASS 才写凭证）；加固规则正文见 `AGENTS.md` §6 与 `10_docs/防御加固_通用路线图.md`。逃生门用了必须在装机报告写明理由。
 - 查4 局限：只抓字面量索引调用（`getRet(4)` 形式）；变量传参（`getRet(n)`）靠人工核对
