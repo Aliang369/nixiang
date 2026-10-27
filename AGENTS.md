@@ -63,7 +63,7 @@
 本仓由 **mac 端**与 **Windows 端**共用同一仓库（`git@github.com:Aliang369/nixiang.git`，`main`）。**唯一详细正文＝`10_docs/双机协作/双机协作同步方案.md`**（终端分流、兼容垫片、Syncthing 大头层同步、验收清单、心跳字段）；`规范变更日志.md` 的旧「归档正文 F」只作历史追溯。
 
 ```bash
-cd "$NIXIANG_ROOT"; bash 04_scripts/双机协作/twin_status.sh   # 双机体检：有 FAIL 先修再开工
+cd "$NIXIANG_ROOT"; bash 04_scripts/双机协作/twin_status.sh   # 双机体检：有 FAIL 先修再开工（设备项默认只 WARN，要做设备任务才加 --require-device）
 git status -sb; git pull --rebase --autostash                  # 先 status 后 pull，顺序不可颠倒
 ```
 - **顺序不可颠倒**：先 `status` 再 `pull`；工作区不干净时 pull/rebase 会把未提交改动卷进去。

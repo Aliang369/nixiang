@@ -2,8 +2,10 @@
 # ============================================================================
 # twin_status.sh - 双机协作一键体检 (mac / win 通用, bash 3.2 兼容)
 #
-# 用法:  bash 04_scripts/双机协作/twin_status.sh
+# 用法:  bash 04_scripts/双机协作/twin_status.sh [--require-device]
 # 退出码: 0 = 全绿 / 1 = 有 FAIL / 2 = 仅 WARN
+#        --require-device（或 NIXIANG_REQUIRE_DEVICE=1）：要做设备任务时才加 ——
+#        钉定的 ANDROID_SERIAL 不可达将从 WARN 升级为 FAIL（2026-10-27 用户口径）
 #
 # 覆盖: 仓库定位与兼容路径 / git 状态与远端 / 换行符白名单 / mac 命令垫片
 #       env.sh 六项 / python / adb 设备 / SMB 共享 / Syncthing 进程与 GUI
@@ -22,9 +24,19 @@ info() { printf '       %s\n' "$*"; }
 sect() { printf '\n== %s ==\n' "$*"; }
 
 if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
-  sed -n '2,12p' "$0"
+  sed -n '2,15p' "$0"
   exit 0
 fi
+
+# 2026-10-27 用户口径（原话「这种测试不应该是等我游戏需要的时候才测试吗？为什么下载乃
+# 就检查 mumu 连接？」）：设备(adb)是**真要做游戏任务时**才需要的条件项，不该在文档/
+# 规范/同步会话里拦开工。默认「钉定 serial 不可达」只记 WARN；确实要用设备时加
+# --require-device 或 NIXIANG_REQUIRE_DEVICE=1，才升级为 FAIL。
+REQUIRE_DEVICE="${NIXIANG_REQUIRE_DEVICE:-0}"
+for _a in "$@"; do
+  [ "$_a" = "--require-device" ] && REQUIRE_DEVICE=1
+done
+unset _a
 
 MAC_ROOT=/Users/aliang/Documents/nixiang
 SHA_X=2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881
@@ -183,8 +195,10 @@ if command -v adb >/dev/null 2>&1; then
     if [ -n "${ANDROID_SERIAL:-}" ]; then
       if (adb -s "$ANDROID_SERIAL" get-state >/dev/null 2>&1); then
         pass "ANDROID_SERIAL=$ANDROID_SERIAL 可达"
+      elif [ "$REQUIRE_DEVICE" = "1" ]; then
+        fail "ANDROID_SERIAL=$ANDROID_SERIAL 不可达 (要做设备任务，先 adb connect / 开模拟器)"
       else
-        fail "ANDROID_SERIAL=$ANDROID_SERIAL 不可达 (模拟器/adb server 重启后要先 adb connect)"
+        warn "ANDROID_SERIAL=$ANDROID_SERIAL 当前不可达（未做设备任务，不阻断开工；要做游戏任务时加 --require-device 复检）"
       fi
     fi
   else
