@@ -91,7 +91,10 @@ __attribute__((constructor)) static void Starry_InstallSigillHandler() {
 
 namespace fgspoof {
 
-const char* kSpoofPath = "/data/data/com.zhuziplay.lvmengnew.op/files/fg_orig.apk";
+/* 2026-10-28: FG readlinks the fd it opened; a differently-named file (fg_orig.apk)
+   is detected at once (ftrace: readlinkat /proc/self/fd/5 -> .../fg_orig.apk).
+   Keep the basename as base.apk so the fd target looks like the real package. */
+const char* kSpoofPath = "/data/data/com.zhuziplay.lvmengnew.op/files/base.apk";
 const char* kLogPath   = "/data/data/com.zhuziplay.lvmengnew.op/files/starry_loader.log";
 const char* kAssetName = "assets/lvmeng/fg_orig.apk";   /* 包内 STORED 的完整原厂 base.apk */
 
@@ -155,7 +158,10 @@ static bool findApkPath(char* out, size_t n) {
         if (!p) continue;
         char* q = strstr(p, "/base.apk");
         if (!q) continue;
-        char* e = p; while (*e && *e != '\n') e++;
+        /* 2026-10-28 real device: maps also lists "base.apk!classes4.dex"; that is not a
+           file path, and opening it fails with ENOENT (this was the real cause of
+           "extract: open apk failed 2"). Truncate at '!' and keep only ".../base.apk". */
+        char* e = q + 9;            /* strlen("/base.apk") */
         size_t len = (size_t)(e - p);
         if (len >= n) len = n - 1;
         memcpy(out, p, len); out[len] = 0;
@@ -166,9 +172,25 @@ static bool findApkPath(char* out, size_t n) {
 }
 
 /* 从"包内 STORED 资产"里抽出原厂 base.apk（最小 zip 解析：EOCD → 中央目录 → 本地头） */
+/* true while our own extraction code does file IO (hooks must pass through) */
+static __thread bool g_internalIo = false;
+static int g_fgIoLog = 0;  /* rate limit: at most 700 FG file-access lines */
+
 static bool extractAsset(const char* apk, const char* out, long long* outSize) {
+    /* internal IO guard: our own open/openat hooks must not redirect this */
+    struct InternalIoGuard { bool prev; InternalIoGuard() { prev = g_internalIo; g_internalIo = true; }
+                             ~InternalIoGuard() { g_internalIo = prev; } } _guard;
     int fd = ::open(apk, O_RDONLY | O_CLOEXEC);
-    if (fd < 0) { logger("extract: open apk failed %d", errno); return false; }
+    if (fd < 0) {
+        int e1 = errno;
+        struct stat sst; int srt = ::stat(apk, &sst);
+        int e2 = errno;
+        logger("extract: open apk failed errno=%d (len=%d) stat=%d/errno=%d path=%s",
+               e1, (int)strlen(apk), srt, e2, apk);
+        fd = ::openat(AT_FDCWD, apk, O_RDONLY | O_CLOEXEC);
+        if (fd < 0) { logger("extract: openat also failed errno=%d", errno); return false; }
+        logger("extract: openat fallback ok");
+    }
     struct stat st;
     if (fstat(fd, &st) != 0 || st.st_size < 1024) { logger("extract: fstat failed"); close(fd); return false; }
     long long fsz = (long long)st.st_size;
@@ -230,10 +252,49 @@ static bool ra_in_fg(void* ra) {
 }
 
 static bool is_target(const char* path) { return path && strstr(path, "base.apk") != nullptr; }
+/* Gate: only spoof calls that come from libFairGuard.  Frame-pointer chains are
+   unreliable on Android/il2cpp, so scan raw stack words for an FG-range value
+   (measured approach, 2026-10-20; Unity asset-install reads must NOT be spoofed
+   or Unity reports a bogus "Not enough storage space"). */
+static unsigned long cage_sp_val(void) {
+    unsigned long x;
+    __asm__ volatile("mov %0, sp" : "=r"(x));
+    return x;
+}
+static bool stack_has_fg(void) {
+    if (!g_fg_lo) return false;
+    const unsigned long* p = (const unsigned long*)cage_sp_val();
+    for (int i = 0; i < 256; i++) {
+        unsigned long v = p[i];
+        if (v >= g_fg_lo && v < g_fg_hi) return true;
+    }
+    return false;
+}
+/* 0/1 = fg only (default), 2 = spoof every base.apk open (old behaviour) */
+static bool from_fg(void* ra) {
+    static int mode = -1;
+    if (mode < 0) {
+        char pb[PROP_VALUE_MAX] = { 0 };
+        mode = (__system_property_get("debug.starry.lvmeng_openatall", pb) > 0 && pb[0] == '2') ? 2 : 1;
+    }
+    if (mode == 2) return true;
+    return ra_in_fg(ra) || stack_has_fg();
+}
+
+/* exact match: path ends with base.apk (excludes base.apk/assets/... read by Unity) */
+static bool is_apk_exact(const char* path) {
+    if (!path) return false;
+    const char* p = strstr(path, "base.apk");
+    return p != nullptr && p[8] == 0;
+}
 
 static int my_open(const char* path, int flags, ...) {
     void* ra = __builtin_return_address(0);
-    if (g_ready && is_target(path) && ra_in_fg(ra)) {
+    if (g_internalIo) {
+        if (flags & (O_CREAT | O_TMPFILE)) { va_list ap; va_start(ap, flags); int m = va_arg(ap, int); va_end(ap); return o_open(path, flags, m); }
+        return o_open(path, flags);
+    }
+    if (g_ready && is_apk_exact(path) && from_fg(ra)) {
         if (g_spoofOn) {
             /* 伪装：fd 指向 /data/data/<pkg>/files/fg_orig.apk（完整原厂 base.apk） */
             int sfd = o_open(kSpoofPath, flags & ~(O_CREAT | O_EXCL | O_TRUNC));
@@ -257,7 +318,26 @@ static int my_open(const char* path, int flags, ...) {
 
 static int my_openat(int dirfd, const char* path, int flags, ...) {
     void* ra = __builtin_return_address(0);
-    if (g_ready && is_target(path) && ra_in_fg(ra)) {
+    if (g_internalIo) {
+        if (flags & (O_CREAT | O_TMPFILE)) { va_list ap; va_start(ap, flags); int m = va_arg(ap, int); va_end(ap); return o_openat(dirfd, path, flags, m); }
+        return o_openat(dirfd, path, flags);
+    }
+    /* FairGuard reads base.apk via openat (syscall nr=257, measured 2026-10-28):
+       spoof here too, otherwise the cert check sees our re-signed package. */
+    if (g_spoofOn && g_fgIoLog < 700 && !is_apk_exact(path) && ra_in_fg(ra)) {
+        g_fgIoLog++;
+        logger("FG openat %s flags=0x%x", path ? path : "?", flags);
+    }
+    if (g_ready && is_apk_exact(path) && g_spoofOn && from_fg(ra)) {
+        int sfd = o_open(kSpoofPath, flags & ~(O_CREAT | O_EXCL | O_TRUNC));
+        if (sfd >= 0) {
+            g_spoofFd = sfd;
+            int n = ++g_hits;
+            if (n <= 12) logger("FG openat(SPOOF) #%d %s -> fd=%d ra=%p", n, path, sfd, ra);
+            return sfd;
+        }
+        logger("FG openat(SPOOF) failed errno=%d -> fallback", errno);
+    } else if (g_ready && is_target(path)) {
         int n = ++g_hits;
         if (n <= 12) logger("FG openat(real) #%d %s ra=%p", n, path, ra);
     }
@@ -297,7 +377,7 @@ static ssize_t my_readlink(const char* p, char* b, size_t n) {
     void* ra = __builtin_return_address(0);
     ssize_t r = o_readlink(p, b, n);
     /* 伪装一致性：fd 反查路径时把 fg_orig.apk 报回成真实 base.apk */
-    if (r > 0 && g_spoofOn && p && strstr(p, "/proc/self/fd/") && strstr(b, "fg_orig.apk") &&
+    if (r > 0 && g_spoofOn && p && strstr(p, "/proc/self/fd/") && strstr(b, "files/base.apk") &&
         g_apkPath[0]) {
         snprintf(b, n, "%s", g_apkPath);
         r = (ssize_t)strlen(b);
@@ -307,15 +387,35 @@ static ssize_t my_readlink(const char* p, char* b, size_t n) {
     if (ra_in_fg(ra)) logger("FG readlink %s => %s ra=%p", p ? p : "(null)", r > 0 ? b : "-", ra);
     return r;
 }
+static ssize_t (*o_readlinkat)(int, const char*, char*, size_t) = nullptr;
+static ssize_t my_readlinkat(int dirfd, const char* p, char* buf, size_t n) {
+    void* ra = __builtin_return_address(0);
+    ssize_t r = o_readlinkat(dirfd, p, buf, n);
+    /* FG checks /proc/self/fd/N to see where our spoofed fd really points */
+    if (r > 0 && g_spoofOn && p && strstr(p, "/proc/self/fd/") &&
+        strstr(buf, "files/base.apk") && g_apkPath[0]) {
+        snprintf(buf, n, "%s", g_apkPath);
+        r = (ssize_t)strlen(buf);
+        logger("FG readlinkat fd spoofed -> base.apk ra=%p", ra);
+        return r;
+    }
+    if (ra_in_fg(ra)) logger("FG readlinkat %s => %s ra=%p", p ? p : "(null)", r > 0 ? buf : "-", ra);
+    return r;
+}
 static int my_stat(const char* path, struct stat* st) {
     void* ra = __builtin_return_address(0);
-    if (g_spoofOn && g_ready && is_target(path) && ra_in_fg(ra) && o_stat) {
+    if (g_spoofOn && g_ready && is_apk_exact(path) && from_fg(ra) && o_stat) {
         int r = o_stat(kSpoofPath, st);
         logger("FG stat(SPOOF) %s rc=%d size=%lld ra=%p", path, r,
                st ? (long long)st->st_size : -1, ra);
         return r;
     }
-    return o_stat ? o_stat(path, st) : -1;
+    int rr = o_stat ? o_stat(path, st) : -1;
+    if (g_spoofOn && g_fgIoLog < 700 && ra_in_fg(ra)) {
+        g_fgIoLog++;
+        logger("FG stat %s rc=%d", path ? path : "?", rr);
+    }
+    return rr;
 }
 
 static void* worker(void*) {
@@ -333,7 +433,9 @@ static void* worker(void*) {
 
     struct stat st;
     long long want = -1;
-    bool have = (stat(kSpoofPath, &st) == 0 && st.st_size > 1024 * 1024);
+    /* must be the full 179 MB original APK; a smaller/partial file means a failed
+   earlier extraction (2026-10-28 real device left a 14 MB stub behind) */
+    bool have = (stat(kSpoofPath, &st) == 0 && st.st_size > 170LL * 1024 * 1024);
     if (!have) {
         long long got = 0;
         if (!extractAsset(apk, kSpoofPath, &got)) { logger("extract failed; spoof disabled"); return nullptr; }
@@ -358,6 +460,7 @@ static void* worker(void*) {
     DobbyHook((void*)dlsym(RTLD_DEFAULT, "mmap"),      (void*)my_mmap,      (void**)&o_mmap);
     DobbyHook((void*)dlsym(RTLD_DEFAULT, "fstat"),     (void*)my_fstat,     (void**)&o_fstat);
     DobbyHook((void*)dlsym(RTLD_DEFAULT, "readlink"),  (void*)my_readlink,  (void**)&o_readlink);
+    DobbyHook((void*)dlsym(RTLD_DEFAULT, "readlinkat"), (void*)my_readlinkat, (void**)&o_readlinkat);
     {   /* stat 伪装：FairGuard 若用 stat(path) 探尺寸，也要看到原厂包 */
         void* sym_stat = (void*)dlsym(RTLD_DEFAULT, "stat");
         if (sym_stat) DobbyHook(sym_stat, (void*)my_stat, (void**)&o_stat);

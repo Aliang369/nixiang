@@ -49,8 +49,10 @@ public final class LvmengPayloadProvider extends ContentProvider {
     private static final String TAG = "LvmengPayloadProvider";
 
     /** 现役 Dll bundle GUID（清单 Dll_prod_1.0.0_prod.a_39）。 */
-    private static final String BUNDLE_GUID = "e4d84398a9fd9d65fad71e4ed6612989";
-    private static final String GUID_DIR = "e4/" + BUNDLE_GUID;
+    /* 2026-10-28: v1.0.5 实测的 Dll bundle 是 f8124a60…（雷电 14 上 yoo/Dll/BundleFiles/f8/f8124a60… 的 __data
+       被游戏直接读取）。旧值 e4d84398… 是上一版，会让补丁 bundle 落到游戏不看的目录。 */
+    private static final String BUNDLE_GUID = "f8124a60540376c3583f7e7d15eaf9e0";
+    private static final String GUID_DIR = "f8/" + BUNDLE_GUID;
     private static final String MOD_DLL = "starry_lvmeng.dll";
     /** YooAsset CacheRecords.snapshot 的 RecordSnapshotMagic。 */
     private static final int SNAPSHOT_MAGIC = 1380270916;
@@ -130,7 +132,9 @@ public final class LvmengPayloadProvider extends ContentProvider {
         try {
             in = ctx.getAssets().open(asset);
             long avail = in.available();
-            if (dst.isFile() && avail > 0 && dst.length() == avail) {
+            // 2026-10-28: always refresh the payload. The device may re-download the
+            // official bundle over ours; re-copying on every launch self-heals that.
+            if (false && dst.isFile() && avail > 0 && dst.length() == avail) {
                 Log.i(TAG, "skip（已存在） " + dst + " (" + avail + " B)");
                 return;
             }
