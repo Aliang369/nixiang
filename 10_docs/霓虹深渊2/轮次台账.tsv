@@ -63,3 +63,5 @@
 2026-10-25 01:50	16	1	r24 vc646 阻断：dynsym 0 syms + 3 API miss ⇒ install pass 不出，启动 10–18s 被 themis 崩溃链带走（A/B 证与兜底改动无关）	pipeline.log	未测
 2026-10-25 16:46	16	2	r28：vc646 上 install pass ok=68/72+skip3、storm=0、grant ok、菜单正常；正式包 071e5c3a（so ccead68e）已覆盖装机，待用户 L3	pipeline.log	未测
 2026-10-25 16:52	16	3	r28 L3 通过：用户『所有功能都没问题』⇒ vc646 上 11 项功能整体结案（install pass ok=68/72+skip3、storm=0、正式包 071e5c3a、so ccead68e）	pipeline.log	有效
+2026-10-27 17:44	90	16	卸载理由登记（硬约束#6/#7 唯一允许场景）：设备现装官方 taptap 2026.10.26.76e6f5af89c/vc666（cert MD5 bbe1da85…，O=Veewo，2026-10-27 16:11 新装）→ 待装星光包 cert 161fca32…（CN=StarryMagic）；证书不同 ⇒ install_guard --allow-uninstall 放行卸载；/data/data 与 /sdcard/Android/data 本地数据随卸载清除，云端 TapTap 存档不受影响	pipeline.log	未测
+2026-10-27 19:41	6	2	r29g 武器满级：分解经验不放大，压 GetLevelUpRequireExp(Int32,UpgradeRules) 返回 1 → 一次分解从 1 级升到满级 9，属性按游戏规则提升；用户 L3 原话「ok，看到结果了，9 就是满，经验填满也不会升了」	pipeline.log	有效

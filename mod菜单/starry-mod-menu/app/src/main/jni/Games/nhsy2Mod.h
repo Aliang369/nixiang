@@ -54,17 +54,20 @@ enum nhsy2Feat : int {
     NHSY2_FEAT_FULL = 3,   // Toggle_全屏攻击（Attri 读点强制，§6.6z）
     NHSY2_FEAT_SPD  = 4,   // Slider_移速倍率:1:10:1
     NHSY2_FEAT_JUMP = 5,   // Toggle_无限跳
-    // ---- Category_资源 (6)：四项资源各自一个开关，1:1 白名单，互不牵连 ----
-    NHSY2_FEAT_STD     = 7,    // Toggle_解锁标准版
-    NHSY2_FEAT_BOMB    = 8,    // Toggle_无限手雷    -> CostType.Bomb
-    NHSY2_FEAT_COIN    = 9,    // Toggle_无限金币    -> CostType.Coin
-    NHSY2_FEAT_CRYSTAL = 10,   // Toggle_无限水晶    -> CostType.Crystal
-    NHSY2_FEAT_KEY     = 11,   // Toggle_无限钥匙        -> CostType.Key
-    NHSY2_FEAT_CKEY    = 12,   // Toggle_无限彩色钥匙    -> 原生 InfiniteKey(KeySuit) 通道
+    NHSY2_FEAT_WLV  = 6,   // Toggle_武器满级（★2026-10-27 新增：武器 Soul 等级 → 9，走游戏自身 LevelUpWeaponCore）
+    // ---- Category_资源 (7)：四项资源各自一个开关，1:1 白名单，互不牵连 ----
+    //  ★ 2026-10-27：新增「武器满级」放在战斗分类末尾（下标 6），资源分类整体后移一位
+    //    ⇒ 「解锁标准版」回到**槽 8**（硬约束 #3 的固定槽位口径重新对齐）。
+    NHSY2_FEAT_STD     = 8,    // Toggle_解锁标准版
+    NHSY2_FEAT_BOMB    = 9,    // Toggle_无限手雷    -> CostType.Bomb
+    NHSY2_FEAT_COIN    = 10,   // Toggle_无限金币    -> CostType.Coin
+    NHSY2_FEAT_CRYSTAL = 11,   // Toggle_无限水晶    -> CostType.Crystal
+    NHSY2_FEAT_KEY     = 12,   // Toggle_无限钥匙        -> CostType.Key
+    NHSY2_FEAT_CKEY    = 13,   // Toggle_无限彩色钥匙    -> 原生 InfiniteKey(KeySuit) 通道
 };
 
 // featureList 数组长度（必须与 nhsy2Entry.cpp 的数组长度一致）
-#define NHSY2_FEAT_COUNT 13
+#define NHSY2_FEAT_COUNT 14
 
 // 伤害倍率滑块上限（必须与 Slider_伤害倍率:1:100:1 一致）
 #define NHSY2_DMG_MUL_MAX 100

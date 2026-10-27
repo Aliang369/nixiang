@@ -91,6 +91,7 @@ static std::atomic<bool> g_std{false};      // 解锁标准版
 static std::atomic<bool> g_spd{false};      // 移速倍率（UI 只发 nativeSetValue ⇒ 本标志恒假）
 static std::atomic<int>  g_spdMul{1};       // 移速倍率（1..10，1=关）
 static std::atomic<bool> g_jump{false};     // 无限跳
+static std::atomic<bool> g_wlv{false};      // 武器满级（Soul 等级 → 9，走 LevelUpWeaponCore，§6.8）
 
 //  ---- ③.1「滑块项即开关」（★ 2026-10-11 真机实测修正） ----
 //  事故：真机把「移速倍率」从 1 拉到 10，日志只有
@@ -317,6 +318,23 @@ static const int kInfiniteAmount = 9999;
 //  ③ 安全助手（防闪退核心；新代码禁止绕开它们裸读写内存）
 // ============================================================================
 static bool OkPtr(void* p) { return p && Il2Cpp::IsValidHeapPtr(p); }
+
+// 裸地址读取（MethodInfo / 代码段用；调用方必须在 Guarded* 保护区内使用）
+static bool SafeReadU32Raw(uintptr_t addr, uint32_t* out) {
+    if (!addr || !out) return false;
+    *out = *reinterpret_cast<volatile uint32_t*>(addr);
+    return true;
+}
+static bool SafeReadI32Raw(uintptr_t addr, int32_t* out) {
+    if (!addr || !out) return false;
+    *out = *reinterpret_cast<volatile int32_t*>(addr);
+    return true;
+}
+static bool SafeReadU64Raw(uintptr_t addr, uintptr_t* out) {
+    if (!addr || !out) return false;
+    *out = *reinterpret_cast<volatile uintptr_t*>(addr);
+    return true;
+}
 
 static void SafeWriteI32(void* obj, size_t off, int32_t v) {
     if (!OkPtr(obj) || !off) return;
@@ -3488,6 +3506,252 @@ static float Hooked_AttriF(void* thiz, void* key, void* method) {
 
 // ---- 挂点表 ----
 // rva 一律 0：本游戏磁盘 so 的 dynsym 被加密，静态 RVA 不可得（见路线锁定.md）
+// ============================================================================
+//  ⑥.8 武器满级 —— 压缩「升级所需经验」，不动「分解给多少经验」（2026-10-27 r29d 定稿）
+// ============================================================================
+//  需求原话：「武器等级满级（…通过分解其他武器获得经验，然后提升武器的等级，最高级好像是9级，
+//            等级提升对应的那些属性也需要提升，不是单纯等级的ui改变）」
+//  真机反馈（r29c）：「分解后的经验会在游戏屏幕中显示导致整个游戏边卡，然后多了直接卡死，
+//                    看看可以不可以不改分解后的经验，改获得经验后的加成变多？」
+//
+//  离线取证（内存态 global-metadata + LibCpp2IL；见 10_docs/霓虹深渊2/武器满级_抓点_20261027.md）：
+//    等级/经验配置 = `NEON.Game.LootSystem.SoulLevelConfig`
+//        M GetDecomposeExp(Int32 weaponLevel) -> Int32        （分解一把给多少经验）
+//        M GetLevelUpRequireExp(Int32 weaponLevel[, …]) -> Int32   ← **本功能改写点**
+//        M GetMaxLevel() -> Int32  / IsMaxLevel(Int32) -> Boolean
+//        F _maxLevel / _levelIncrease / _expGainMultiplier / _expRequireMultiplier
+//    规则结构体 `UpgradeRules`（**值类型**）：MaxLevel / LevelIncrease / ExpGainMultiplier / ExpRequireMultiplier
+//    武器侧 `FirearmsPowerUp`：OnWeaponSoulDataChanged(weapon,Int32 newLevel,Int32 needExp,Int32 exp,…) 等
+//    ★ 真机实测：`SoulLevelConfig.GetMaxLevel() = 9` ⇒ 满级确实是 9。
+//
+//  ★ 三轮事故与定案
+//    r29a：强改 `LevelUpWeaponCore` 入参（第 2 参不是目标等级，+9 叠加出 10/19）+ 把值类型
+//          `UpgradeRules` 的装箱对象当指针传入 ⇒ 规则表读垃圾 ⇒ 分解即卡死。**该挂点已永久删除**。
+//    r29b：放大 `GetDecomposeExp` 到 200000 ⇒ 大数字上屏 + 连跳 ⇒ 主线程被拖死。
+//    r29d（本版，按用户指定方向）：**分解经验保持原样**（如 20），改「经验更值钱」：
+//          ① `GetLevelUpRequireExp(level)`：未满级 → 恒返回 1（每级只要 1 点经验）；
+//             满级(≥9) → 返回 int32 上限 ⇒ 任何 `while (exp >= req)` 形式的循环必然终止（防空转）。
+//          ② `UpgradeRules.get_ExpRequireMultiplier()`：float 标量，压到 ≤0.05 兜底（走规则对象的路径）。
+//          ③ 其余 3 个挂点纯只读探针（满级值 / 升级回调 newLevel / 武器初始化时机）。
+//        ⇒ 升级动作仍是**游戏自己的**（属性按它自己的规则算），我们只改了"多少经验升一级"这一个数。
+static std::atomic<uint32_t> g_hitWlvReqExp{0};   // 需求压缩命中
+static std::atomic<uint32_t> g_hitWlvReqCap{0};   // 满级护栏命中
+static std::atomic<uint32_t> g_hitWlvReqMul{0};   // 需求倍率压缩命中
+static std::atomic<uint32_t> g_hitWlvMaxLv{0};    // 满级探针
+static std::atomic<uint32_t> g_hitWlvChanged{0};  // 升级回调探针
+
+typedef void    (*WlvEnsure_t)(void* thiz, void* method);
+typedef void    (*WlvChanged_t)(void* thiz, void* weapon, int32_t newLevel, int32_t needExp,
+                                int32_t exp, void* showTip, void* method);
+typedef int32_t (*WlvIntGetter1_t)(void* thiz, void* a1, void* method);
+typedef int32_t (*WlvIntGetter0_t)(void* thiz, void* method);
+typedef float   (*WlvFloatGetter_t)(void* thiz, void* method);
+
+static WlvEnsure_t     g_origWlvEnsure     = nullptr;
+static WlvChanged_t    g_origWlvChanged    = nullptr;
+static WlvIntGetter1_t g_origWlvRequireExp = nullptr;
+static WlvIntGetter0_t g_origWlvMaxLevel   = nullptr;
+static WlvFloatGetter_t g_origWlvReqMul    = nullptr;
+
+// 本作真实满级：真机 `SoulLevelConfig.GetMaxLevel() = 9`（r29c 探针实测，2026-10-27）
+static const int32_t kWlvTargetLevel = 9;
+static const int32_t kWlvReqCap      = 0x7FFFFFF;   // 满级时的"升级需求"上限（循环终止护栏）
+
+// ---- ① 升级所需经验压缩（唯一改写点之一；纯 Int32 入/出，ABI 安全）----
+static int32_t Hooked_WlvRequireExp(void* thiz, void* a1, void* method) {
+    const int32_t r = GuardedOr<int32_t>("orig.Wlv.GetLevelUpRequireExp", 0, [&]{
+        return g_origWlvRequireExp ? g_origWlvRequireExp(thiz, a1, method) : 0;
+    });
+    if (!g_wlv.load(std::memory_order_relaxed)) return r;
+    const int32_t lv = (int32_t)(intptr_t)a1;     // a1 = weaponLevel（w1 原样转发）
+    if (lv >= kWlvTargetLevel) {
+        const uint32_t m = g_hitWlvReqCap.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (m <= 8)
+            LOGI(TPL_LOG " wlv: 满级需求护栏 level=%d req %d -> %d（第%u次）", lv, r, kWlvReqCap, m);
+        return kWlvReqCap;                        // 满级：需求顶到上限 ⇒ 升级循环必停
+    }
+    const uint32_t n = g_hitWlvReqExp.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 16) LOGI(TPL_LOG " wlv: 升级需求 %d -> 1（level=%d 第%u次）", r, lv, n);
+    return 1;                                     // 未满级：每级只要 1 点经验
+}
+
+// ---- ② 升级需求倍率压缩（UpgradeRules.get_ExpRequireMultiplier；float 出、无入参 ⇒ ABI 安全）----
+static float Hooked_WlvReqMul(void* thiz, void* method) {
+    const float r = GuardedOr<float>("orig.Wlv.get_ExpRequireMultiplier", 1.0f, [&]{
+        return g_origWlvReqMul ? g_origWlvReqMul(thiz, method) : 1.0f;
+    });
+    if (!g_wlv.load(std::memory_order_relaxed)) return r;
+    const float out = (r > 0.05f) ? 0.05f : r;    // 只降不升
+    const uint32_t n = g_hitWlvReqMul.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 8) LOGI(TPL_LOG " wlv: 升级需求倍率 %.3f -> %.3f（第%u次）", (double)r, (double)out, n);
+    return out;
+}
+
+// ---- ③ 满级值探针（只读）----
+static int32_t Hooked_WlvMaxLevel(void* thiz, void* method) {
+    const int32_t r = GuardedOr<int32_t>("orig.Wlv.GetMaxLevel", 0, [&]{
+        return g_origWlvMaxLevel ? g_origWlvMaxLevel(thiz, method) : 0;
+    });
+    const uint32_t n = g_hitWlvMaxLv.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 5) LOGI(TPL_LOG " wlv: SoulLevelConfig.GetMaxLevel() = %d（探针#%u）", r, n);
+    return r;
+}
+
+// ---- ④ 升级后回调（只读探针：newLevel 就是 L2 判据）----
+static void Hooked_WlvChanged(void* thiz, void* weapon, int32_t newLevel, int32_t needExp,
+                              int32_t exp, void* showTip, void* method) {
+    const uint32_t n = g_hitWlvChanged.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 24)
+        LOGI(TPL_LOG " wlv: OnWeaponSoulDataChanged level=%d needExp=%d exp=%d on=%d 命中#%u",
+             newLevel, needExp, exp, g_wlv.load(std::memory_order_relaxed) ? 1 : 0, n);
+    GuardedVoid("orig.Wlv.Changed", [&]{
+        if (g_origWlvChanged) g_origWlvChanged(thiz, weapon, newLevel, needExp, exp, showTip, method);
+    });
+}
+
+// ---- ⑤ 武器初始化（只读探针；不在此处升级）----
+static void Hooked_WlvEnsure(void* thiz, void* method) {
+    GuardedVoid("orig.Wlv.EnsureSoulData", [&]{ if (g_origWlvEnsure) g_origWlvEnsure(thiz, method); });
+}
+
+
+// ---- ⑥ 只读探针：把等级/经验相关方法的真实入口地址打出来（不挂钩、不改参数）----
+//  用法：adb shell setprop debug.starry.nhsy2_wlv_probe 1 → 冷启 → 日志里 `wlvprobe:` 行；
+//  随后用 root 从 /proc/<pid>/mem 按地址 dump 一段字节，本地反汇编判断"路线到底走哪个函数"。
+//  ★ 为什么需要它：r29d 实测 needExp 恒 60，说明游戏升级流程**没有**走
+//    SoulLevelConfig.GetLevelUpRequireExp(1) / UpgradeRules.get_ExpRequireMultiplier，
+//    继续猜只会浪费你的时间 ⇒ 先取真实地址，静态看清调用关系再改。
+static std::atomic<bool> g_wlvProbeDone{false};
+
+static void WlvProbeDump() {
+    auto& api = GetApi();
+    if (!api.ready) return;
+    struct Item { const char* ns; const char* cls; const char* m; int argc; };
+    static const Item items[] = {
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "GetDecomposeExp", 1},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "GetLevelUpRequireExp", 1},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "GetLevelUpRequireExp", 2},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "GetLevelUpRequireExp", 3},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "ProcessExpGain", 4},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "ProcessExpGain", 5},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "GetMaxLevel", 0},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "IsMaxLevel", 1},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "IsMaxLevel", 2},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "get_ExpRequireMultiplier", 0},
+        {"NEON.Game.LootSystem", "SoulLevelConfig", "get_LevelIncrease", 0},
+        {"NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "GetRequiredExpForNextLevel", 2},
+        {"NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "LevelUpWeapon", 2},
+        {"NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "LevelUpWeaponCore", 3},
+        {"NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "IsSoulMaxLevel", 1},
+        {"NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "EnsureSoulDataInitialized", 0},
+        {"", "UpgradeRules", "get_ExpRequireMultiplier", 0},
+        {"", "UpgradeRules", "get_MaxLevel", 0},
+    };
+    for (size_t i = 0; i < sizeof(items)/sizeof(items[0]); ++i) {
+        void* k = FindClassNs(items[i].ns, items[i].cls);
+        if (!OkPtr(k)) k = api.FindClassByShortName(items[i].cls);
+        if (!OkPtr(k)) { LOGW(TPL_LOG " wlvprobe: 类未找到 %s", items[i].cls); continue; }
+        void* mi = api.GetMethod(k, items[i].m, items[i].argc);
+        if (!OkPtr(mi)) { LOGW(TPL_LOG " wlvprobe: 方法未找到 %s.%s(%d)", items[i].cls, items[i].m, items[i].argc); continue; }
+        char offbuf[96];
+        ModOff(reinterpret_cast<uintptr_t>(mi), offbuf, sizeof(offbuf));
+        LOGI(TPL_LOG " wlvprobe: %s.%s(%d) mi=%p %s", items[i].cls, items[i].m, items[i].argc, mi, offbuf);
+    }
+}
+
+
+// ============================================================================
+//  ⑥.8b 精确挂点：`SoulLevelConfig.GetLevelUpRequireExp(Int32, UpgradeRules)`
+// ============================================================================
+//  依据（2026-10-27 真机反汇编，pid 7982，地址见 09_test 日志 `wlvprobe:`）：
+//    `ProcessExpGain(Int32 baseExp, Single pct, ref Int32 level, ref Int32 exp, UpgradeRules rules)`
+//    内部就是：
+//        newExp = *exp + (int)(baseExp * rules.ExpGainMultiplier)
+//        if (IsMaxLevel(level,…)) return false;
+//        needExp = max(1, (int)(GetLevelUpRequireExp(level, rules) * pct));   ← bl 到 0xc54 那个重载
+//        if (newExp < needExp) return false;  …再进入升级流程
+//  ⇒ 真正决定"几级"的是 **带 UpgradeRules 的那个重载**（argc=2 的第二个重载），
+//    只压 argc=1 的版本没有任何调用者（r29d 实测 needExp 恒 60 正是这个原因）。
+//  ABI：x0=this、w1=level、s0..s3=UpgradeRules(4×float)、x2=method
+//       ⇒ 钩子签名必须带 4 个 float 入参，原样转发，绝不能像 r29a 那样塞 void*。
+typedef int32_t (*WlvReqExp2_t)(void* thiz, int32_t level,
+                                float f0, float f1, float f2, float f3, void* method);
+static WlvReqExp2_t g_origWlvReqExp2 = nullptr;
+static std::atomic<bool> g_wlvReqExp2Tried{false};
+static std::atomic<int32_t> g_wlvMaxSeen{0};
+
+// 该武器配置的真实满级：`SoulLevelConfig.GetMaxLevel()` 的实现（真机反汇编 0x6d4）
+//   = `((List<SoulLevelEntry>*)[cfg+0x18])->_size + 1`
+// ⇒ **满级不是常数 9**，每把武器/每种品质的配置表长度不同，上限就不同。
+//   所以这里不再写死，按传入的 config 实例现算（读不到就退回 9）。
+static void WlvNoteMax(int32_t mx) {
+    int32_t prev = g_wlvMaxSeen.load(std::memory_order_relaxed);
+    if (mx > prev) {
+        g_wlvMaxSeen.store(mx, std::memory_order_relaxed);
+        LOGI(TPL_LOG " wlv: 武器配置上限 = %d 级（见过的最高）", mx);
+    }
+}
+
+static int32_t WlvMaxLevelOf(void* cfg) {
+    if (!OkPtr(cfg)) return 9;
+    uintptr_t list = 0;
+    if (!SafeReadU64Raw(reinterpret_cast<uintptr_t>(cfg) + 0x18, &list) || !list) return 9;
+    int32_t size = 0;
+    if (!SafeReadI32Raw(list + 0x18, &size)) return 9;
+    if (size < 1 || size > 200) return 9;          // 越界保护
+    return size + 1;
+}
+
+static int32_t Hooked_WlvReqExp2(void* thiz, int32_t level,
+                                 float f0, float f1, float f2, float f3, void* method) {
+    const int32_t r = GuardedOr<int32_t>("orig.Wlv.ReqExp2", 0, [&]{
+        return g_origWlvReqExp2 ? g_origWlvReqExp2(thiz, level, f0, f1, f2, f3, method) : 0;
+    });
+    if (!g_wlv.load(std::memory_order_relaxed)) return r;
+    // ★r29g：**不再自己判满级**。反汇编证明 `ProcessExpGain` 在算需求之前就先调
+    //   `IsMaxLevel(level, rules)`，已到该武器真实上限时根本走不到这里（直接 return false）。
+    //   ⇒ 我们返回 1 只会在"游戏认为还能升"的时候被用到，因此：
+    //      · 该武器还能升 ⇒ 一律 1 点经验一级（同等经验升更多级，符合用户「加成变多」的要求）；
+    //      · 游戏自己到顶 ⇒ 它自己收口，不会因为我们多给而乱跳。
+    //   之前按 `GetMaxLevel()` 现算上限再提前 return 原值，结果"9 级后需求突然变 400、剩余经验被吞"，
+    //   正是用户反馈的现象 ⇒ 删掉这段自造上限。
+    WlvNoteMax(WlvMaxLevelOf(thiz));                 // 仅作信息探针（该配置表长多少级）
+    const uint32_t n = g_hitWlvReqExp.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 16) LOGI(TPL_LOG " wlv: ReqExp2 需求 %d -> 1（level=%d 第%u次）", r, level, n);
+    return 1;                                        // 每级 1 点经验（是否到顶由游戏自己判）
+}
+
+// 在类方法表里按「名字 + 2 参数 + 序言特征」精确定位那个重载，然后直接 Dobby 挂钩。
+//   序言特征（真机实测）：0xD10103FF (sub sp,sp,#0x40) + 0x6D0123E9 (stp d9,d8,[sp,#0x10])
+static void WlvResolveReqExp2() {
+    auto& api = GetApi();
+    if (!api.ready || !api.class_methods || !api.method_get_name) return;
+    void* k = FindClassNs("NEON.Game.LootSystem", "SoulLevelConfig");
+    if (!OkPtr(k)) k = api.FindClassByShortName("SoulLevelConfig");
+    if (!OkPtr(k)) { LOGW(TPL_LOG " wlv: SoulLevelConfig 类未找到（ReqExp2 不装）"); return; }
+    void* iter = nullptr; void* mi = nullptr; uintptr_t target = 0;
+    while ((mi = api.class_methods(k, &iter)) != nullptr) {
+        const char* nm = api.method_get_name(mi);
+        if (!nm || std::strcmp(nm, "GetLevelUpRequireExp") != 0) continue;
+        if (api.method_param_count && api.method_param_count(mi) != 2) continue;
+        uintptr_t code = 0;
+        if (!SafeReadU64Raw(reinterpret_cast<uintptr_t>(mi), &code) || !code) continue;
+        uint32_t w0 = 0, w1 = 0;
+        if (!SafeReadU32Raw(code, &w0) || !SafeReadU32Raw(code + 4, &w1)) continue;
+        if (w0 == 0xD10103FFu && w1 == 0x6D0123E9u) { target = code; break; }
+    }
+    if (!target) { LOGW(TPL_LOG " wlv: ReqExp2 重载未匹配（序言不符）"); return; }
+    if (!DobbyHookGuarded("Wlv_ReqExp2", reinterpret_cast<void*>(target),
+                          reinterpret_cast<void*>(Hooked_WlvReqExp2),
+                          reinterpret_cast<void**>(&g_origWlvReqExp2))) {
+        LOGW(TPL_LOG " wlv: ReqExp2 Dobby 挂钩失败 target=0x%lx", (unsigned long)target);
+        return;
+    }
+    char offbuf[96];
+    ModOff(target, offbuf, sizeof(offbuf));
+    LOGI(TPL_LOG " wlv: ReqExp2 精确装钩 ok target=%s", offbuf);
+}
+
 static const HookSlot kSlots[] = {
     // 战斗
     {"Inv_DeductHP",   0, 0, "NEON.Game",         "Hearts",      "DeductHP", 2,
@@ -3674,6 +3938,20 @@ static const HookSlot kSlots[] = {
     //  真正的「无条件使用」在 Res_UseCrystal（不足即补 1 再重试）。
     {"Res_CrystalAdd",  0, 0, "NEON.Game", "SpriteManager", "AddCrystalSprite", 0,
      (void*)Hooked_AddCrystalSprite,      (void**)&g_origAddCrystalSprite},
+
+    // ────────────────────────────────────────────────────────────────────────
+    //  ★ 2026-10-27 r29d「武器满级」（§6.8）：只压缩"升级所需经验"，分解经验保持原样
+    // ────────────────────────────────────────────────────────────────────────
+    {"Wlv_ReqExp",     0, 0, "NEON.Game.LootSystem", "SoulLevelConfig", "GetLevelUpRequireExp", 1,
+     (void*)Hooked_WlvRequireExp,   (void**)&g_origWlvRequireExp},
+    {"Wlv_ReqMul",     0, 0, "", "UpgradeRules", "get_ExpRequireMultiplier", 0,
+     (void*)Hooked_WlvReqMul,       (void**)&g_origWlvReqMul},
+    {"Wlv_MaxLevel",   0, 0, "NEON.Game.LootSystem", "SoulLevelConfig", "GetMaxLevel", 0,
+     (void*)Hooked_WlvMaxLevel,     (void**)&g_origWlvMaxLevel},
+    {"Wlv_Changed",    0, 0, "NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "OnWeaponSoulDataChanged", 5,
+     (void*)Hooked_WlvChanged,      (void**)&g_origWlvChanged},
+    {"Wlv_EnsureInit", 0, 0, "NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "EnsureSoulDataInitialized", 0,
+     (void*)Hooked_WlvEnsure,       (void**)&g_origWlvEnsure},
 };
 
 // ★ 2026-10-12（r8c 根因）：`InstallAllHooks` 的循环是
@@ -3987,7 +4265,7 @@ static bool AnyFeatureOn() {
     return g_inv.load() || DmgMulActive()                           // 滑块项用 DmgMulActive（§③.1）
         || g_bomb.load() || g_coin.load() || g_crystal.load() || g_key.load() || g_ckey.load()
         || g_std.load() || g_full.load()                            // 全屏攻击：Attri 读点强制（§6.6z）
-        || SpdMulActive() || g_jump.load();
+        || SpdMulActive() || g_jump.load() || g_wlv.load();     // 武器满级（§6.8）
 }
 
 /* ★r20：把「首次装钩」推迟到启动后 N ms（`setprop debug.starry.nhsy2_hook_delay_ms`，默认 10000）。
@@ -5203,6 +5481,7 @@ void nhsy2_OnFeatureChanged(int featNum, bool enabled) {
         case NHSY2_FEAT_CKEY:    g_ckey.store(enabled);    break;
         case NHSY2_FEAT_SPD:  g_spd.store(enabled);  break;
         case NHSY2_FEAT_JUMP: g_jump.store(enabled); break;
+        case NHSY2_FEAT_WLV:  g_wlv.store(enabled);  break;   // 武器满级（§6.8）
         default: break;
     }
     LOGI(TPL_LOG " feature[%d] = %d", featNum, (int)enabled);
@@ -5240,6 +5519,7 @@ void nhsy2_Tick(const bool* features, const int* values) {
     g_ckey.store(features[NHSY2_FEAT_CKEY]);
     g_spd.store(features[NHSY2_FEAT_SPD]);
     g_jump.store(features[NHSY2_FEAT_JUMP]);
+    g_wlv.store(features[NHSY2_FEAT_WLV]);
 
     if (values) {
         int v = values[NHSY2_FEAT_DMG];
@@ -5253,6 +5533,20 @@ void nhsy2_Tick(const bool* features, const int* values) {
         g_spdMul.store(sv);
     }
 
+    // ★ r29f：武器满级开着时，精确装 ReqExp2（带 UpgradeRules 的重载）
+    if (g_wlv.load(std::memory_order_relaxed) && !g_wlvReqExp2Tried.load(std::memory_order_relaxed)) {
+        g_wlvReqExp2Tried.store(true, std::memory_order_relaxed);
+        GuardedVoid("wlv.resolveReqExp2", [&]{ WlvResolveReqExp2(); });
+    }
+    // ★ r29e 只读探针：按 prop 一次性打印等级/经验相关方法入口地址
+    if (!g_wlvProbeDone.load(std::memory_order_relaxed)) {
+        char pb[PROP_VALUE_MAX] = {0};
+        const int pn = __system_property_get("debug.starry.nhsy2_wlv_probe", pb);
+        if (pn > 0 && pb[0] != '0') {
+            g_wlvProbeDone.store(true, std::memory_order_relaxed);
+            GuardedVoid("wlv.probeDump", [&]{ WlvProbeDump(); });
+        }
+    }
     // 兜底：库晚于首帧映射时，这里补一次
     if (!g_libReady.load() && isLibraryLoaded(TPL_TARGET_LIB)) {
         InstallFaultGuard();
@@ -5298,5 +5592,6 @@ void nhsy2_ForceClear() {
     g_spd.store(false);
     g_spdMul.store(1);
     g_jump.store(false);
+    g_wlv.store(false);
     g_reenter.store(false);
 }

@@ -32,14 +32,15 @@ static const char* knhsy2_Features[] = {
     "Toggle_全屏攻击",            // 3  NHSY2_FEAT_FULL（Attri 读点强制，§6.6z）
     "Slider_移速倍率:1:10:1",     // 4  NHSY2_FEAT_SPD
     "Toggle_无限跳",              // 5  NHSY2_FEAT_JUMP
-    // ---- 下标 6..12：资源（一功能一开关，1:1，互不牵连）----
-    "Category_资源",              // 6
-    "Toggle_解锁标准版",          // 7  NHSY2_FEAT_STD
-    "Toggle_无限手雷",            // 8  NHSY2_FEAT_BOMB    CostType.Bomb
-    "Toggle_无限金币",            // 9  NHSY2_FEAT_COIN    CostType.Coin
-    "Toggle_无限水晶",            // 10 NHSY2_FEAT_CRYSTAL CostType.Crystal
-    "Toggle_无限钥匙",            // 11 NHSY2_FEAT_KEY     CostType.Key
-    "Toggle_无限彩色钥匙",        // 12 NHSY2_FEAT_CKEY    原生 InfiniteKey(KeySuit)
+    "Toggle_武器满级",            // 6  NHSY2_FEAT_WLV  ★2026-10-27 新增（战斗分类末尾）
+    // ---- 下标 7..13：资源（一功能一开关，1:1，互不牵连）----
+    "Category_资源",              // 7
+    "Toggle_解锁标准版",          // 8  NHSY2_FEAT_STD      ← 硬约束 #3 固定槽 8
+    "Toggle_无限手雷",            // 9  NHSY2_FEAT_BOMB    CostType.Bomb
+    "Toggle_无限金币",            // 10 NHSY2_FEAT_COIN    CostType.Coin
+    "Toggle_无限水晶",            // 11 NHSY2_FEAT_CRYSTAL CostType.Crystal
+    "Toggle_无限钥匙",            // 12 NHSY2_FEAT_KEY     CostType.Key
+    "Toggle_无限彩色钥匙",        // 13 NHSY2_FEAT_CKEY    原生 InfiniteKey(KeySuit)
 };
 static_assert((int)(sizeof(knhsy2_Features) / sizeof(knhsy2_Features[0])) == NHSY2_FEAT_COUNT,
               "featureList 长度必须等于 NHSY2_FEAT_COUNT");
