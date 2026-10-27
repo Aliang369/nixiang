@@ -96,7 +96,7 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
 1. `starry-mod/SKILL.md` — 切游戏+**jniLibs 强制刷新**+构建路径+过检清单+设备指纹+**分发与装机红线**+**装机前置检查**（防封/兜底审计、TapTap 三查、game_id 独立）
 2. `starry-mod/surgical-build.md` — 外科组装规则（含 so 自检）
 3. `starry-mod/auth-chain.md` — 授权链路+登录永不过期
-4. 装机前产物门禁：`bash 04_scripts/_common/pre_install_gate.sh`（**现 11 查**：JS 语法 / JNI 配套 / P-Invoke 符号 / 控件读取 / 门禁串 / 轮次根因 / Manifest 形态 / so 构建戳 / so-metadata 配套 / 菜单 dex 新鲜度 / 加固凭证；定义与逃生门见 `04_scripts/_common/stages.md`「查项总表」）
+4. 装机前产物门禁：`bash 04_scripts/_common/pre_install_gate.sh`（**现 10 查**：JS 语法 / JNI 配套 / P-Invoke 符号 / 控件读取 / 门禁串 / 轮次根因 / Manifest 形态 / so 构建戳 / so-metadata 配套 / 菜单 dex 新鲜度；原查11「加固凭证」已于 2026-10-27 按用户裁决下线。定义与逃生门见 `04_scripts/_common/stages.md`「查项总表」）
 
 ### 收尾与最小复现
 1. [TOOLBOOK.md](../TOOLBOOK.md)「清理规则」「真机残留清理」— 保留输入、隔离重建、授权执行与设备分责。

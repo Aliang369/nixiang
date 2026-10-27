@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# ⛔ 停用件（2026-10-27 用户裁决）：加固门禁不再被任何规则/装机门禁要求（AGENTS.md §6）。
+#    文件保留仅因三个已接入游戏的出包脚本仍在调用；各游戏去加固时摘掉调用后即可删除。
 # ================================================================
 #  harden_gate.sh — 出包加固门禁的**共享入口**（所有游戏默认强制）
 #
@@ -37,6 +39,14 @@ done
 
 [ -n "$APK" ] || { echo "ERROR: 缺成品 APK 参数（用法见文件头）" >&2; exit 2; }
 [ -f "$APK" ] || { echo "ERROR: APK 不存在：$APK" >&2; exit 2; }
+
+# ⛔ 2026-10-27 用户裁决：加固门禁已下线 ⇒ 默认不判定、不拦交付。
+#    保留本脚本只为兼容三个已接入游戏的出包脚本（它们仍在调用）；需要真跑时显式 HARDEN_GATE_ENABLED=1。
+if [ "${HARDEN_GATE_ENABLED:-}" != "1" ]; then
+  echo "⛔ 加固门禁已下线（2026-10-27 用户裁决）⇒ 不判定、不拦交付：$APK"
+  echo "   需要真跑：HARDEN_GATE_ENABLED=1 bash 04_scripts/_common/harden_gate.sh <apk> [--game <名|tag>]"
+  exit 0
+fi
 
 PY="${NIXIANG_PYTHON:-python}"
 [ -n "$PY" ] || { echo "ERROR: python 未解析（env.sh NIXIANG_PYTHON 为空）" >&2; exit 2; }

@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""补 P1-7 的两处收尾：
+"""⛔ 停用件（2026-10-27 用户裁决）：加固门禁已下线，**不要再跑本脚本**——
+它的第 1 项会把 harden 阶段重新写回 pipeline.json（与下线口径相反）。
+保留仅为历史追溯；需要真跑加固时用 `HARDEN_GATE_ENABLED=1 python 04_scripts/_common/harden_apk.py check`。
+
+补 P1-7 的两处收尾：
   1) pipeline.json 增加 harden 阶段（出包门禁进管线，而不只是藏在 assemble 里）
   2) 菜单模板补记真实装机包名（.tt1 变体）—— precheck 需要它，但不动后端已认的 package 字段
 两项都幂等，重复跑不会写脏。

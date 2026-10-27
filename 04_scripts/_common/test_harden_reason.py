@@ -16,6 +16,11 @@ import sys
 import tempfile
 import unittest
 
+# ⛔ 2026-10-27 用户裁决：加固门禁（harden_gate.sh / finalize 的 --allow-no-harden 逃生门 /
+#    查11 凭证关）已全量下线，本文件断言的行为**已被主动删除**（finalize 不再拦、gate 默认跳过）。
+#    保留文件为历史：文件末尾把全部用例类统一标 skip（模块级 raise SkipTest 会被 loader 当 import 错误）。
+_SKIP_REASON = '加固门禁已于 2026-10-27 下线（AGENTS.md §6）；本测试断言的强制行为已删除，保留仅作历史。'
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 FINALIZE = os.path.join(HERE, 'finalize_game_delivery.sh')
@@ -95,6 +100,11 @@ class InstallGateReasonTests(unittest.TestCase):
         r = run(['bash', GATE, '--apk', self.apk, '--game', '测试游戏', '--allow-no-harden'],
                 env={'HARDEN_REASON': '环境变量理由'})
         self.assertIn('环境变量理由', r.stdout + r.stderr)
+
+
+for _n, _o in list(globals().items()):
+    if isinstance(_o, type) and issubclass(_o, unittest.TestCase):
+        globals()[_n] = unittest.skip(_SKIP_REASON)(_o)
 
 
 if __name__ == '__main__':

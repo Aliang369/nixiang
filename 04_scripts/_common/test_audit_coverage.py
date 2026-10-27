@@ -6,6 +6,11 @@ import sys
 import tempfile
 import unittest
 
+# ⛔ 2026-10-27 用户裁决：被审计对象 harden_coverage.py（加固门禁覆盖率）已随加固强制面下线，
+#    `HardenCoverage*` 系列用例断言的政策已撤销 ⇒ 文件末尾只给这些类打 skip；
+#    文档覆盖类（audit_game_docs_coverage）仍是现行规则，照常跑。
+_SKIP_REASON = '加固门禁已于 2026-10-27 下线（AGENTS.md §6）；harden_coverage.py 为停用件，本组用例保留仅作历史。'
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
@@ -546,6 +551,11 @@ class GameDocsCoverageTests(unittest.TestCase):
         blockers, note, _notes = docs_cov.evaluate(rows)
         self.assertEqual(blockers, [])
         self.assertIn('不批量创建', note)
+
+
+for _n, _o in list(globals().items()):
+    if isinstance(_o, type) and issubclass(_o, unittest.TestCase) and _n.startswith('Harden'):
+        globals()[_n] = unittest.skip(_SKIP_REASON)(_o)
 
 
 if __name__ == '__main__':

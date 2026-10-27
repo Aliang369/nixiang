@@ -106,28 +106,9 @@ done
 [[ -n "$GAME" ]] || usage
 [[ "$DATE" =~ ^[0-9]{8}$ ]] || { echo "ERROR: --date 需为 YYYYMMDD" >&2; exit 2; }
 GAME_DIR="$ROOT/08_output/$GAME"
-# ── 加固门禁（2026-10-27 第五轮接入：交付前必须过 C1–C9；native 型 C6–C9 自动 N/A）──
-if [[ -f "$APK" ]]; then
-  if python3 "$ROOT/04_scripts/_common/harden_apk.py" check --apk "$APK" --game "$GAME" >/tmp/harden_finalize_$$.log 2>&1; then
-    echo "[finalize] harden_gate=PASS（凭证已写 09_test/$GAME/harden/）"
-  else
-    tail -20 /tmp/harden_finalize_$$.log | sed 's/^/  /' >&2
-    if [[ "$ALLOW_NO_HARDEN" == "1" ]]; then
-      # 理由必须非空且非纯空白，否则拒绝放行（机器强制）
-      if [[ -z "${HARDEN_REASON//[[:space:]]/}" ]]; then
-        echo "ERROR: --allow-no-harden 必须同时给 --harden-reason \"<理由>\"（不能为空/纯空白）。" >&2
-        echo "       正常交付应修好加固问题，逃生门只用于已说明理由的例外。" >&2
-        exit 4
-      fi
-      echo "[finalize] ⚠️ 加固门禁 FAIL，按理由放行：reason=$HARDEN_REASON" >&2
-      echo "[finalize] ⚠️ 交付状态＝UNHARDENED（不得在报告里写成加固 PASS）" >&2
-    else
-      echo "ERROR: 加固门禁未通过，禁止交付。修正后重跑，或用 --allow-no-harden 并写明理由。" >&2
-      exit 4
-    fi
-  fi
-  rm -f /tmp/harden_finalize_$$.log
-fi
+# ── 加固门禁：**2026-10-27 已下线**（用户裁决撤销加固强制；脚本与凭证体系保留为停用件）──
+# 原行为：交付前必须过 harden_apk.py check（C1–C9），FAIL 即 exit 4，逃生门 --allow-no-harden + --harden-reason。
+# 现在：不再调用、不再拦截；参数仍解析（兼容旧命令）。见 AGENTS.md §6 与 10_docs/_state/规范变更日志.md。
 
 
 echo "[finalize] game=$GAME"

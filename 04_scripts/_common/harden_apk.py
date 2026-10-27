@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""星光加固出包门禁（P1-7）——**每次打包自带**，不通过就不许交付。
+"""⛔ 停用件（2026-10-27 用户裁决）：加固门禁不再被任何规则/装机门禁要求（AGENTS.md §6）。
+文件保留仅因三个已接入游戏的出包脚本仍在调用；各游戏去加固时摘掉调用后即可删除。
+
+星光加固出包门禁（P1-7）——**每次打包自带**，不通过就不许交付。
 
 它把「加固是否真的生效」从"我记得做过"变成"机器断言过"：
 
@@ -571,6 +574,19 @@ def main():
                     help="游戏名或 tag（省略则取 --apk 所在目录名；已登记：%s）"
                          % ", ".join("%s/%s" % (k, v["tag"]) for k, v in GAMES.items()))
     a = ap.parse_args()
+
+    # ⛔ 2026-10-27 用户裁决：加固门禁已下线。默认**不判定、不拦包**（check/redteam 直接 PASS 退出），
+    #    保留仅为兼容三个已接入游戏仍在调用的出包脚本；需要真跑时显式 HARDEN_GATE_ENABLED=1。
+    if a.cmd in ("check", "redteam") and os.environ.get("HARDEN_GATE_ENABLED") != "1":
+        # Windows GBK 控制台可能编不出某些符号：先降级为 replace，绝不让提示文案把 rc 变成非 0
+        # （rc!=0 会被 ysxz_assemble_103.py 之类调用方误判成「门禁失败」）。
+        try:
+            sys.stdout.reconfigure(errors="replace")
+        except Exception:
+            pass
+        print("[已下线] 加固门禁已于 2026-10-27 按用户裁决停用，跳过 %s，不拦交付。" % a.cmd)
+        print("         需要真跑：HARDEN_GATE_ENABLED=1 python 04_scripts/_common/harden_apk.py %s --apk <apk>" % a.cmd)
+        return 0
 
     if not os.path.exists(a.apk):
         print("APK 不存在: %s" % a.apk)

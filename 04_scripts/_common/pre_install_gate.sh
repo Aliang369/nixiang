@@ -561,42 +561,11 @@ if [ -n "$menu_dex" ]; then
   esac
 fi
 
-# ---------- 查11 加固门禁凭证关（2026-10-27；用户定「所有游戏默认必须加固」）----------
-# 背景：加固（授权链/载荷加密/诱饵/去路标）此前只有勇士之心接了门禁，其余游戏出包完全不查。
-# 用户定方案 B（直接硬）：**装机前必须有与当前 APK md5 对应的加固凭证**，否则拦。
-# 凭证由 `python 04_scripts/_common/harden_apk.py check --apk <成品apk>` PASS 后自动写入
-#   09_test/<游戏>/harden/<apk_md5>.stamp
-# 逃生门：--allow-no-harden（日志留 WARN，报告须写明理由），或 STAGE_NEXT_FORCE=1。
-if [ -n "$apk_file" ] && [ -f "$apk_file" ]; then
-  G11_GAME="$(basename "$(dirname "$apk_file")")"
-  G11_MD5="$(md5sum "$apk_file" 2>/dev/null | awk '{print $1}')"
-  G11_STAMP="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/09_test/$G11_GAME/harden/$G11_MD5.stamp"
-  if [ -n "$G11_MD5" ] && [ -f "$G11_STAMP" ]; then
-    echo "✓ PASS  [加固凭证] 该包已过加固门禁（${G11_MD5:0:12}…）"
-    pass=$((pass + 1))
-  elif [ -n "$allow_no_harden" ] || [ "${STAGE_NEXT_FORCE:-}" = "1" ]; then
-    # 2026-10-27 第六轮：逃生门必须带「非空理由」，否则不放行（机器强制，不再只靠人写报告）
-    case "$harden_reason" in
-      ""|" "*|*[[:space:]]) harden_reason_ok=0 ;;
-      *) harden_reason_ok=1 ;;
-    esac
-    if [ "${harden_reason_ok:-0}" != "1" ]; then
-      echo "✗ FAIL  [加固凭证] 用了逃生门（--allow-no-harden / STAGE_NEXT_FORCE=1）但没有有效理由"
-      echo "        ⇒ 必须同时传 --harden-reason "<为什么必须放行，谁授权的>"（或设 HARDEN_REASON 环境变量）"
-      echo "        ⇒ 理由不能为空/纯空白；正常交付不应使用逃生门"
-      fail=$((fail + 1))
-    else
-      echo "- WARN  [加固凭证] 缺加固凭证，已按理由放行：reason=${harden_reason}"
-      warn=$((warn + 1))
-    fi
-  else
-    echo "✗ FAIL  [加固凭证] 这个包没有加固门禁凭证（09_test/$G11_GAME/harden/${G11_MD5:0:12}….stamp 不存在）"
-    echo "        ⇒ 先跑：python 04_scripts/_common/harden_apk.py check --game <tag> --apk \"$apk_file\""
-    echo "          （<tag> 见 04_scripts/_common/sg_games.py 登记表；不带 --game 会按勇士之心口径误判）"
-    echo "        ⇒ 加固是新游戏默认要求（AGENTS.md §6）；未接入的游戏按 10_docs/防御加固_通用路线图.md §2 九步接入"
-    fail=$((fail + 1))
-  fi
-fi
+# ---------- 查11 加固凭证关：**2026-10-27 已下线**（用户裁决撤销加固强制）----------
+# 原实现：装机前必须有与当前 APK md5 对应的加固凭证（09_test/<游戏>/harden/<md5>.stamp），
+# 由 `harden_apk.py check` PASS 后写入；缺失即 FAIL 拦装机（逃生门 --allow-no-harden + --harden-reason）。
+# 撤销理由与影响面见 AGENTS.md §6「加固门禁已下线」与 10_docs/_state/规范变更日志.md。
+# 脚本参数 --allow-no-harden / --harden-reason 仍被解析（兼容旧命令），但不再产生任何判定。
 
 # ---------- 汇总 ----------
 echo "────────────────────────────────"
