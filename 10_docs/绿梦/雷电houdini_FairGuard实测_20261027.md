@@ -341,3 +341,18 @@ $ python bundle_repack.py extract-stream assets/lvmeng/__data _verify_stream.bin
 
 **JNI 一致性**：`pre_install_gate.sh --cpp … --dex …` 因我们的注册表不是 `regOne` 形式而 SKIP；
 真正的证据是运行期 `StarryMagic: [桥接] RegisterNatives 19/19 全部成功`（真机与雷电都出现）⇒ dex 声明与 so 注册表一致。
+
+### 9.12 2026-10-28 02:4x 注入点 IL 级核对（`ilpatch dump`，交付 DLL）
+
+| 核对项 | 结果 |
+|---|---|
+| 引导挂点 | `Hello::Run` **IL_0000: call Hello::StarryBootstrap()`（注入在入口方法**首条指令**）✅ |
+| 引导三件套 | `Hello::StarryBootstrap()` (IL=40) / `Hello::StarryTryLoad(String)` (IL=75) / `Hello::StarryFileLog(String)` (IL=26) 全在 ✅ |
+| 程序集引用 | `Assembly-ACT` 引用 `StarryLvmeng 1.0.0.0`（原版无）✅ |
+| 战斗挂点（抽样） | `CompAbility` → `call Starry.Mod::OnSetHP(ACT.Battle.CompAbility)` ✅；`CompMotion` → `call Starry.Mod::OnRecoverMotion(ACT.Battle.CompMotion)` ✅ |
+| `StarryFileLog` 目标 | `/data/data/com.zhuziplay.lvmengnew.op/files/starry_loader.log`（与 Provider 落 dll 的 `/data/user/0/<pkg>/files/` 同一目录）✅ |
+
+**运行时探针（下次装机直接用）**：
+- `starry_loader.log` 里出现 **`[boot]`** 行 ⇒ `Hello.Run` 已执行、IL 引导落地（之前 01:00 那次有 `[boot] enter` → `[load] ok`）；
+  本轮各次启动该文件只有原生 fgspoof 行、**无 `[boot]`** ⇒ 还没进到 `Hello.Run`（=没进游戏），与"停在登录页"一致。
+- 再往下看 `starry_log.txt` 的 `stage2 init dir=… hp=… spd=…` ⇒ `Mod.Init` 读到状态并接管功能。
