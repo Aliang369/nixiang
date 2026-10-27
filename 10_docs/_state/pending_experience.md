@@ -193,3 +193,25 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 判据/修法：所有「多版本字段回退」取值一律过 `isValidGrant()`（非空 && 不等于 `"null"`），
   且**读侧**（从 prefs 读历史值）也要过滤，否则修好写入仍被脏值卡住。
 - 反例：修复前 `pickGrant` 用 `g3 != null && !g3.isEmpty()` 判断，看着对、跑起来全游戏登录失效。
+## 候选：往 18MB 加密脚本里 splice，必须过「括号配平 + node --check」双关
+
+- 状态：候选（2026-10-27 造梦无双 1.34 实测黑屏事故；落点建议 `skill/re-implement/hook-rules.md` 新增「JS splice 语法关」小节 + `04_scripts/_common/stages.md` 装机前产物门禁）
+- 事故：给 Cocos `index.jsc`（运行时解密成 17.98MB JS）注入「结算时长补齐」段时多打一个 `}`。
+  运行日志 **splice 全部成功**（`spliced starry_zmws_timepad …`、`combat splice #1 len …→…`），
+  但整段 eval 抛 SyntaxError ⇒ **引擎不渲染 = 黑屏**，用户看到的是「装完黑屏」，极易被误判为封号/加固/签名问题。
+- 双关（已实施）：
+  ① 运行期：注入串构建后先 `BracesBalanced()`（跳过字符串/注释、括号与花括号双重配平），**不配平就不注入**并 `LOGE ... brace check FAILED`；
+  ② 构建期：`04_scripts/造梦无双/zmws_splice_syntax_check.py` —— 从**已构建的 so** 里按注释标签把注入串原样抠出来（`%s`→真实包名），
+     按与 C++ 相同的锚点表插入**探针 dump 的明文脚本**，`node --check` 全量验语法。改 C++ 必须同步改脚本锚点表。
+- 可外推判据：任何「字符串拼接进加密/大体积 JS（Cocos jsc、Lua 字节码源、HybridCLR DLL）」的注入，
+  **日志 splice 成功 ≠ 脚本可执行**；装机前必须有「插入后的完整脚本过解释器语法检查」这一关。
+- 反例：只能靠用户说「黑屏」才发现——本轮已浪费用户一次配合与两轮热替换。
+
+## 候选：`pre_install_gate.sh` 查5 只查 dex，so 里的门禁串会假 FAIL
+
+- 状态：候选（2026-10-27 造梦无双实证；落点建议 `04_scripts/_common/stages.md` 门禁章节 + `pre_install_gate.sh` 用法注释）
+- 事实：`dex_literal_count` 对 `*.apk` 只 `unzip -p 'classes*.dex' | grep`，so 里的字面量（如 `starry_zmws_timepad`）永远查不到。
+  本轮把 so 侧注入标签当门禁串传给 `--apk` ⇒ 全项 FAIL 拦装机，但产物其实是好的。
+- 正确姿势（已在游戏文档记录并跑通）：拆两次
+  `--apk <apk> --needle '<dex 里的类名/方法名>'` + `--dex <so 文件> --needle '<so 里的字面量>'`。
+- 建议改法（未实施）：`--apk` 分支同时扫 `lib/**/libstarry_magic.so`，或新增 `--so-needle` 参数。

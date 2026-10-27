@@ -1,7 +1,7 @@
 {
   "game": "造梦无双",
-  "version": "1.33",
-  "notes": "2026-09-10 热更适配：APK 未变（md5 41065dcf… 与 8-14 一致），游戏内热更脚本包 260903143158（2026-09-03 推送，09-10 15:19 下载），assets/main/index.jsc 换新（eb84a20c…→cbea38bf…）→ ZmwsMod splice 锚点待运行时判定。本次迁移 modern 双轨：新增 Games/ZmwsEntry.cpp + Android_zmws.mk + surgical_zmws_1.33.sh（classes5.dex patch + classes7.dex 新增），共享文件零改动。设备=MuMu 127.0.0.1:5555。",
+  "version": "1.34",
+  "notes": "2026-10-27 1.34（vc77）复刻：底包=真机 pull 的 TapTap 渠道官方原包（CN=4399，SHA-1 8b20539b…，md5 71108bd6b79e0afcdf03db83777188ef，1.9GB），官包里 classes.dex~classes26.dex（classes7~10 多为 140B 空壳）。复刻沿用 ZmwsEntry/ZmwsMod 零源码改动，改动只在：私 mk 补 Games/NoAceStubs.cpp（MainModern 无条件引用 SignalQuarantine_Start/FgoBoot_InjectEarlyFromOnLoad）+ 新增 surgical_zmws_1.34.sh（attachBaseContext super 由 FNSDKLIbApplication 变 android/app/Application；starry dex 改名 classes27.dex 防重名；Manifest 用 apktool d -s --no-assets + sdkInfo 回填，min16/target30）。设备=真机 OnePlus OPD2404（Android 16，serial f9a116a2，已 root）；异签名 ⇒ 卸载重装（install_starry_apk.sh --clean）。运行时实证：hot update packageVer 261016094501 后 index.jsc 明文 18,246,298B，四锚点 sk/inv 运行时 splice 命中。",
   "params": {
     "game_id": "zmws",
     "package": "com.xm4399.zmws.m4399",
@@ -22,7 +22,7 @@
       "id": "check_apk",
       "name": "官包核对（从 MuMu 拉回的官方 1.33，与 8-14 登记 md5 一致）",
       "requires": [],
-      "command": "md5 -q \"$NIXIANG/02_apks/造梦无双/造梦无双_1.33_official_4399.apk\"",
+      "command": "md5 -q \"$NIXIANG/02_apks/造梦无双/造梦无双_1.34_taptap_official.apk\"",
       "verify": [
         {
           "type": "file_exists",
@@ -127,7 +127,7 @@
       "preflight": [
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zmws_1.33.sh"
       ],
-      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zmws_1.33.sh\"",
+      "command": "bash \"/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_zmws_1.34.sh\"",
       "verify": [
         {
           "type": "file_exists",
@@ -146,7 +146,7 @@
       "id": "device_ready",
       "name": "设备准备（MuMu 127.0.0.1:5555）",
       "requires": [],
-      "command": "adb connect $SERIAL; adb -s $SERIAL get-state",
+      "command": "adb -s $SERIAL get-state",
       "verify": [
         {
           "type": "file_exists",
@@ -163,7 +163,7 @@
         "surgical",
         "device_ready"
       ],
-      "command": "adb -s $SERIAL push \"$NIXIANG/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk\" /data/local/tmp/zmws_surgical.apk && adb -s $SERIAL shell am force-stop com.xm4399.zmws.m4399; adb -s $SERIAL shell \"pm install -r -d --user 0 /data/local/tmp/zmws_surgical.apk\" || { echo \"覆盖安装失败——不自动卸载，签名冲突需人工确认\"; exit 1; }; adb -s $SERIAL shell rm -f /data/local/tmp/zmws_surgical.apk && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.xm4399.zmws.m4399 \"$NIXIANG/08_output/造梦无双/造梦无双_1.33_surgical-releaseSigned.apk\"",
+      "command": "bash \"$NIXIANG/04_scripts/_common/install_starry_apk.sh\" --apk \"$NIXIANG/08_output/造梦无双/造梦无双_1.34_surgical-releaseSigned.apk\" --pkg com.xm4399.zmws.m4399 --so-tag \"com.xm4399.zmws.AppActivity\" --game-id zmws --serial f9a116a2 --clean",
       "verify": [
         {
           "type": "file_exists",

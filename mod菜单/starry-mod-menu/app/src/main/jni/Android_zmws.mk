@@ -33,6 +33,12 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系：MainModern 入口 + ZmwsMod + ZmwsEntry，无 Unity/Il2CppApi.cpp
 LOCAL_SRC_FILES := MainModern.cpp Games/ZmwsMod.cpp Games/ZmwsEntry.cpp
 
+# 非 ACE 游戏兜底（2026-10-27 1.34 重建时补）：MainModern.cpp:653/663 的 JNI_OnLoad 无条件引用
+# SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad，不加本文件即 ld.lld undefined symbol。
+# 造梦无双包内无 libtprt.so / libtersafe（官方原包仅 libsecsdk/turingmfa/smsdk 风控类），
+# 且菜单 dex（classes27.dex）已在 APK 内由 attachBaseContext loadLibrary 拉起 ⇒ B 类 no-op 桩。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

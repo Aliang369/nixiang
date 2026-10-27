@@ -127,6 +127,39 @@ static void SyncJavaRets() {
     if (detach) g_zmwsJvm->DetachCurrentThread();
 }
 
+// 注入串括号配平自检（2026-10-27 黑屏事故固化）：
+// 往 18MB 的 index.jsc 里插一段括号不配平的 JS ⇒ 整段 eval 抛 SyntaxError ⇒ 引擎不渲染 = 黑屏，
+// 而 splice 日志全是成功。宁可少注入一段功能，也不能把整包玩黑。
+static bool BracesBalanced(const char* s) {
+    int par = 0, cur = 0;
+    bool inStr = false, esc = false, lineCom = false, blockCom = false;
+    for (const char* p = s; p && *p; ++p) {
+        char c = *p, n = *(p + 1);
+        if (lineCom) {
+            if (c == '\n') lineCom = false;
+            continue;
+        }
+        if (blockCom) {
+            if (c == '*' && n == '/') { blockCom = false; ++p; }
+            continue;
+        }
+        if (inStr) {
+            if (esc) esc = false;
+            else if (c == '\\') esc = true;
+            else if (c == '"') inStr = false;
+            continue;
+        }
+        if (c == '/' && n == '/') { lineCom = true; ++p; continue; }
+        if (c == '/' && n == '*') { blockCom = true; ++p; continue; }
+        if (c == '"') { inStr = true; continue; }
+        if (c == '(') ++par;
+        else if (c == ')') { if (--par < 0) return false; }
+        else if (c == '{') ++cur;
+        else if (c == '}') { if (--cur < 0) return false; }
+    }
+    return par == 0 && cur == 0 && !inStr && !blockCom;
+}
+
 static std::string SpliceCombatJs(const char* src) {
     std::string s(src);
 
@@ -134,6 +167,9 @@ static std::string SpliceCombatJs(const char* src) {
     static char kFabaoHook[700];
     static char kAtkOutHook[700];
     static char kAtkInHook[900];
+    static char kNoCapHook[700];
+    static char kTimePadHook[1100];
+    static char kKillTimeHook[700];
     static bool once = false;
     if (!once) {
         // get_ret(1) 无限技能 — 锚在 isCanReleaseSkill 失败 return 之后
@@ -164,7 +200,66 @@ static std::string SpliceCombatJs(const char* src) {
             "if(_mp&&this.mCamp==_mp.mCamp){return 0;}"
             "}}catch(_zi){} ",
             kAct);
+        // ---- 数据正常化（2026-10-27）：秒杀不再上报天文数字伤害 / 结算时长补齐 ----
+        // ① 伤害不溢出：单次伤害最多打掉目标「当前血量」，让 mUidDamageRecord（结算上报 uidDamages）
+        //    等于「正常打死这只怪所需的伤害」，不再是 1e13 级天文数字。挂在 mUidDamageRecord 累加前。
+        snprintf(
+            kNoCapHook, sizeof(kNoCapHook),
+            "/*starry_zmws_nocap*/ try{if(-e>1048576){"
+            "if(jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",3)){"
+            "var _hp=this.mProp.getHp(); if(_hp>=0&&-e>_hp){e=-_hp; g=e;} }}}catch(_ncp){} ",
+            kAct);
+        // ② 结算时长补齐：gameSettle 入口把三个帧计数器同步补到「最短时长」，避免 3 秒通关直接撞风控。
+        //    三个计数器必须同步（time=mGameTimeSumFrame/30、settleTime=mGameTimeFrame/30、
+        //    dealFrameCount=mGameDealFrameCount），只改一个比不改更危险。
+        snprintf(
+            kTimePadHook, sizeof(kTimePadHook),
+            "/*starry_zmws_timepad*/ try{"
+            "if(typeof jsb!==\"undefined\"&&jsb.reflection&&"
+            "(jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",3)||"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",4))&&this.mGameLogic){"
+            "var _g9=this.mGameLogic,_min9=window.__starryZmwsMinSettle||90,"
+            "_cur9=Math.floor((_g9.mGameTimeSumFrame||0)/30);"
+            "if(_cur9<_min9){var _nd9=_min9*30-(_g9.mGameTimeSumFrame||0);"
+            "_g9.mGameTimeSumFrame=(_g9.mGameTimeSumFrame||0)+_nd9;"
+            "_g9.mGameTimeFrame=(_g9.mGameTimeFrame||0)+_nd9;"
+            "_g9.mGameDealFrameCount=(_g9.mGameDealFrameCount||0)+_nd9;"
+            "var _fr9=this.mSingleOperaReconrd;"
+            "if(_fr9&&_fr9.length<_min9*30){var _fp9=_min9*30-_fr9.length;"
+            "for(var _fi9=0;_fi9<_fp9;_fi9++){_fr9.push([]);}"
+            "console.log(\"[Zmws] frames pad +\"+_fp9+\" (\"+_fr9.length+\")\");}"
+            "console.log(\"[Zmws] timepad \"+_cur9+\"s -> \"+_min9+\"s\");}}"
+            "}catch(_tp9){} ",
+            kAct, kAct);
+        // ③ killTime 对齐：Boss 击杀时间不得远早于结算总时长（1 秒秒 Boss + 90 秒通关 自相矛盾）
+        //    顺带打一行结算摘要（只读日志，便于取证）：settleTime / killTime / 伤害 / 回放帧数
+        snprintf(
+            kKillTimeHook, sizeof(kKillTimeHook),
+            "/*starry_zmws_killtime*/ try{"
+            "var _st9=Math.floor(((this.mGameLogic&&this.mGameLogic.mGameTimeFrame)||0)/30);"
+            "if(jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",3)){"
+            "if(_st9>0){var _kt9=Math.floor(_st9*0.7);"
+            "if((e.killTime||0)<_kt9){e.killTime=_kt9;}}}"
+            "console.log(\"[Zmws] settle st=\"+e.settleTime+\" kt=\"+e.killTime+\" win=\"+e.win+"
+            "\" dmg=\"+JSON.stringify(e.uidDamages||{})+\" frames=\"+((e.frames&&e.frames.length)||0));"
+            "}catch(_ktx){} ",
+            kAct);
         once = true;
+    }
+
+    // 括号配平自检：任一串不配平就不注入（黑屏事故防线）
+    const bool okUls = BracesBalanced(kSkillHook);
+    const bool okFabao = BracesBalanced(kFabaoHook);
+    const bool okSk = BracesBalanced(kAtkOutHook);
+    const bool okInv = BracesBalanced(kAtkInHook);
+    const bool okNocap = BracesBalanced(kNoCapHook);
+    const bool okPad = BracesBalanced(kTimePadHook);
+    const bool okKt = BracesBalanced(kKillTimeHook);
+    if (!okUls || !okFabao || !okSk || !okInv || !okNocap || !okPad || !okKt) {
+        LOGE("[Zmws] hook brace check FAILED uls=%d fabao=%d sk=%d inv=%d nocap=%d pad=%d kt=%d"
+             " —— 不配平的注入段将被跳过",
+             okUls ? 1 : 0, okFabao ? 1 : 0, okSk ? 1 : 0, okInv ? 1 : 0,
+             okNocap ? 1 : 0, okPad ? 1 : 0, okKt ? 1 : 0);
     }
 
     static const char* kSkillAnchors[] = {
@@ -174,7 +269,7 @@ static std::string SpliceCombatJs(const char* src) {
         "isCanReleaseSkill())return\"1\";",
         nullptr,
     };
-    for (int i = 0; kSkillAnchors[i]; i++) {
+    for (int i = 0; okUls && kSkillAnchors[i]; i++) {
         size_t p = s.find(kSkillAnchors[i]);
         if (p == std::string::npos) continue;
         size_t end = p + strlen(kSkillAnchors[i]);
@@ -190,7 +285,7 @@ static std::string SpliceCombatJs(const char* src) {
         "var e=this.mPlayer.mProp.getMagicCurEneryCount()-1;",
         nullptr,
     };
-    for (int i = 0; kFabaoAnchors[i]; i++) {
+    for (int i = 0; okFabao && kFabaoAnchors[i]; i++) {
         size_t p = s.find(kFabaoAnchors[i]);
         if (p == std::string::npos) continue;
         size_t end = p + strlen(kFabaoAnchors[i]);
@@ -212,12 +307,12 @@ static std::string SpliceCombatJs(const char* src) {
     };
 
     // 秒杀：只挂 HitSystem 的 s.getAtk(e,i)，避免落到其它 getAtk
-    bool sk = spliceAfter("s.getAtk = function(e, i) {", "starry_zmws_sk", kAtkOutHook) ||
-              spliceAfter("getAtk = function(e, i) {", "starry_zmws_sk", kAtkOutHook);
+    bool sk = okSk && (spliceAfter("s.getAtk = function(e, i) {", "starry_zmws_sk", kAtkOutHook) ||
+                       spliceAfter("getAtk = function(e, i) {", "starry_zmws_sk", kAtkOutHook));
 
     // 无敌：承伤函数头（Zmxy 同构），禁止再挂 p.getAtk(e,t)
-    bool inv = spliceAfter("if (0 == e || this.isDead()) return 0;", "starry_zmws_inv", kAtkInHook) ||
-               spliceAfter("if(0==e||this.isDead())return 0;", "starry_zmws_inv", kAtkInHook);
+    bool inv = okInv && (spliceAfter("if (0 == e || this.isDead()) return 0;", "starry_zmws_inv", kAtkInHook) ||
+                         spliceAfter("if(0==e||this.isDead())return 0;", "starry_zmws_inv", kAtkInHook));
     if (!sk || !inv) {
         LOGW("[Zmws] combat splice sk=%d inv=%d", sk ? 1 : 0, inv ? 1 : 0);
     }
@@ -230,6 +325,22 @@ static std::string SpliceCombatJs(const char* src) {
         if (brace != std::string::npos) {
             s.insert(brace + 1, "/*starry_zmws_nocheat*/ return; ");
         }
+    }
+
+    // ---- 数据正常化三连（2026-10-27，结算/上报面）----
+    // ① 伤害不溢出：mUidDamageRecord 累加前把单次伤害夹到目标当前血量（结算 uidDamages 变合理）
+    bool nocap = okNocap && spliceAfter("var u = p.mData.uid;", "starry_zmws_nocap", kNoCapHook);
+    // ② 结算时长补齐：gameSettle 入口同步补三个帧计数器（time / settleTime / dealFrameCount）
+    bool timepad = okPad && spliceAfter("gameSettle: function(e, t, i, a) {", "starry_zmws_timepad",
+                                        kTimePadHook);
+    // ③ killTime 对齐：结算上报的 Boss 击杀时间不得远早于总时长
+    bool killtime = okKt && spliceAfter("e.killTime = this.mFightScene.mRecordKillTime || 0;",
+                                       "starry_zmws_killtime", kKillTimeHook);
+    if (!nocap || !timepad || !killtime) {
+        LOGW("[Zmws] antidetect splice nocap=%d timepad=%d killtime=%d", nocap ? 1 : 0,
+             timepad ? 1 : 0, killtime ? 1 : 0);
+    } else {
+        LOGI("[Zmws] antidetect spliced nocap/timepad/killtime");
     }
 
     return s;
@@ -281,29 +392,39 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
                   has("getAtk = function") || has("getAtk=function") ||
                   has("if (0 == e || this.isDead()) return 0") ||
                   has("copyHandler.addCheat");
-    if (!combat) {
-        return orig_seEval(thiz, script, length, ret, fileName);
-    }
 
 #ifdef STARRY_ZMWS_PROBE
-    // 探针模式（锚点重定位诊断用，正式构建不编译）：dump 命中 combat 门限的明文脚本
-    {
+    // 探针模式（诊断用，正式构建不编译）：dump 命中 combat 门限的明文脚本。
+    // 2026-10-27 起：文件名带脚本 basename（方便对号入座）+ 上限 16 份；
+    // 另加「配置类脚本」通道（consts/gm/replay），结算风控分析要看 gameConsts 里的 checkStageIds / killBossCheat。
+    bool wantExtra = fileName &&
+                     (strstr(fileName, "consts") || strstr(fileName, "gm") ||
+                      strstr(fileName, "replay"));
+    if (combat || wantExtra) {
         static std::atomic<int> probeIdx{0};
         int idx = ++probeIdx;
-        if (idx <= 6) {
-            char path[256];
+        if (idx <= 16) {
+            const char* base = fileName ? fileName : "null";
+            const char* slash = strrchr(base, '/');
+            if (slash) base = slash + 1;
+            char path[512];
             snprintf(path, sizeof(path),
-                     "/sdcard/Android/data/com.xm4399.zmws.m4399/files/starry_eval_%d.js", idx);
+                     "/sdcard/Android/data/com.xm4399.zmws.m4399/files/probe_%02d_%s.js",
+                     idx, base);
             FILE* f = fopen(path, "wb");
             if (f) {
                 fwrite(script, 1, (size_t)n, f);
                 fclose(f);
             }
-            LOGI("[Zmws] probe dump #%d len=%ld file=%s", idx, n,
-                 fileName ? fileName : "(null)");
+            LOGI("[Zmws] probe dump #%d len=%ld file=%s -> %s", idx, n,
+                 fileName ? fileName : "(null)", path);
         }
     }
 #endif
+
+    if (!combat) {
+        return orig_seEval(thiz, script, length, ret, fileName);
+    }
 
     std::string src(script, (size_t)n);
     std::string patched = SpliceCombatJs(src.c_str());
