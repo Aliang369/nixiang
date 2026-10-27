@@ -98,7 +98,7 @@ class HardenCoverageTests(unittest.TestCase):
           'apksigner sign --out 08_output/abc/out.apk in.apk\nbash 04_scripts/_common/harden_gate.sh out.apk\n')
         data = harden_cov.scan(self.root)
         errors, _ = harden_cov.check(data)
-        self.assertTrue(any('GAMES 登记' in e for e in errors))
+        self.assertTrue(any('未登记' in e for e in errors), errors)
 
     def test_registry_drift_fails(self):
         self.final_apk_script('04_scripts/勇士之心/ysxz_surgical_103.sh')
@@ -198,9 +198,11 @@ class HardenCoverageRound7Tests(unittest.TestCase):
         self.assertFalse(e['protected'])
 
     def test_pipeline_stage_before_harden_is_protection(self):
+        # 第八轮：不仅顺序正确，harden 阶段必须检查**同一份** APK
         w(os.path.join(self.root, '04_scripts/勇士之心/pipeline.json'),
-          '{"stages":[{"id":"sign","command":"bash 04_scripts/勇士之心/ysxz_sign.sh"},'
-          '{"id":"harden","command":"python3.11 04_scripts/_common/harden_apk.py redteam"}]}')
+          '{"stages":[{"id":"sign","command":"bash 04_scripts/勇士之心/ysxz_sign.sh",'
+          '"verify":[{"type":"file_exists","path":"08_output/勇士之心/s.apk"}]},'
+          '{"id":"harden","command":"python3.11 04_scripts/_common/harden_apk.py check --apk 08_output/勇士之心/s.apk"}]}')
         data, e = self.entry('04_scripts/勇士之心/ysxz_sign.sh',
                              'apksigner sign --out 08_output/勇士之心/s.apk in.apk\n')
         self.assertTrue(e['protected'])
@@ -252,6 +254,127 @@ class HardenCoverageRound7Tests(unittest.TestCase):
         data = harden_cov.scan(self.root)
         errors, _ = harden_cov.check(data, strict=True, only_game='勇士之心')
         self.assertTrue(any('ysxz_assemble_103.py' in x for x in errors), errors)
+
+
+
+class HardenCoverageRound8Tests(unittest.TestCase):
+    """第八轮：名称/tag 等价范围、Python 真门禁识别、同包证据、反向链条、分类用代码。"""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.common = os.path.join(self.root, '04_scripts', '_common')
+        os.makedirs(self.common, exist_ok=True)
+        w(os.path.join(self.common, 'harden_apk.py'),
+          'GAMES = {\n    "无限升级": {\n        "tag": "wxsj_vc1637",\n    },\n}\n')
+        w(os.path.join(self.common, 'pre_install_gate.sh'),
+          'python3 harden_apk.py check --apk "$APK" --harden-reason hi\nstamp=09_test/x/harden/1.stamp\n')
+        w(os.path.join(self.common, 'finalize_game_delivery.sh'),
+          'bash "$ROOT/04_scripts/_common/prune_output_final.sh" "$GAME_DIR"\n')
+
+    def scan(self):
+        return harden_cov.scan(self.root)
+
+    # ---- 1. 名称/tag 等价 + 不漏检同目录入口 ----
+    def test_name_and_tag_select_same_set(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_surgical.sh'),
+          'apksigner sign --out 08_output/无限升级/a.apk in.apk\n')   # 无显式 --game
+        w(os.path.join(self.root, 'mod菜单/starry-mod-menu/scripts/build_wxsj_11.sh'),
+          'apksigner sign --out 08_output/无限升级/b.apk in.apk\n'
+          'bash 04_scripts/_common/harden_gate.sh b.apk --game wxsj_vc1637\n')  # 显式 tag
+        data = self.scan()
+        gt = data['games']
+        by_name = [e['script'] for e in data['entries'] if harden_cov.belongs(e, '无限升级', gt)]
+        by_tag = [e['script'] for e in data['entries'] if harden_cov.belongs(e, '无限升级', gt)]
+        self.assertEqual(sorted(by_name), sorted(by_tag))
+        self.assertIn('04_scripts/无限升级/wxsj_surgical.sh', by_name)      # 未显式 --game 也要选中
+        self.assertTrue(any('mod菜单' in x for x in by_name))               # tag 脚本归属该游戏
+
+    def test_unprotected_entry_fails_for_both_name_and_tag(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_surgical.sh'),
+          'apksigner sign --out 08_output/无限升级/a.apk in.apk\n')
+        data = self.scan()
+        e1, _ = harden_cov.check(data, strict=True, only_game='无限升级')
+        e2, _ = harden_cov.check(data, strict=True, only_game='wxsj_vc1637')
+        self.assertTrue(any('wxsj_surgical.sh' in x for x in e1), e1)
+        self.assertTrue(any('wxsj_surgical.sh' in x for x in e2), e2)
+
+    def test_unknown_game_is_error(self):
+        errors, _ = harden_cov.check(self.scan(), strict=True, only_game='不存在的游戏')
+        self.assertTrue(errors and '未知游戏名或 tag' in errors[0])
+
+    # ---- 2. Python 真门禁 vs 注释/帮助 ----
+    def test_python_real_gate_call_detected(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_assemble.py'),
+          'import subprocess, sys\n'
+          'subprocess.run([sys.executable, "04_scripts/_common/harden_apk.py", "check", "--apk", out])\n'
+          'subprocess.run(["apksigner","sign","--out","08_output/无限升级/a.apk","b.apk"])\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_assemble.py')][0]
+        self.assertTrue(e['gate_call'])
+        self.assertTrue(e['protected'])
+
+    def test_python_comment_and_help_not_gate(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_assemble2.py'),
+          '# 用法：python3 04_scripts/_common/harden_apk.py check --apk xxx.apk\n'
+          'HELP = "先跑 harden_apk.py check --apk <apk>"\n'
+          'subprocess.run(["apksigner","sign","--out","08_output/无限升级/b.apk","c.apk"])\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_assemble2.py')][0]
+        self.assertFalse(e['gate_call'])
+        self.assertFalse(e['protected'])
+
+    # ---- 3. 同包证据 ----
+    def test_pipeline_mismatched_apk_is_unproven(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/pipeline.json'),
+          '{"stages":[{"id":"sign","command":"bash 04_scripts/无限升级/wxsj_sign.sh",'
+          '"verify":[{"type":"file_exists","path":"08_output/无限升级/a.apk"}]},'
+          '{"id":"harden","command":"python3.11 04_scripts/_common/harden_apk.py check --apk 08_output/无限升级/other.apk"}]}')
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_sign.sh'),
+          'apksigner sign --out 08_output/无限升级/a.apk in.apk\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_sign.sh')][0]
+        self.assertFalse(e['protected'])
+        self.assertIn('同包证据不足', e['pipeline_evidence'])
+
+    def test_pipeline_matching_glob_apk_is_protected(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/pipeline.json'),
+          '{"stages":[{"id":"sign","command":"bash 04_scripts/无限升级/wxsj_sign.sh",'
+          '"verify":[{"type":"file_exists","path":"08_output/无限升级/a_signed.apk"}]},'
+          '{"id":"harden","command":"APK=$(ls -t 08_output/无限升级/*_signed.apk | head -1); '
+          'python3.11 04_scripts/_common/harden_apk.py check --apk $APK"}]}')
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_sign.sh'),
+          'apksigner sign --out 08_output/无限升级/a_signed.apk in.apk\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_sign.sh')][0]
+        self.assertTrue(e['protected'], e.get('pipeline_evidence'))
+
+    # ---- 4. 反向链条 ----
+    def test_finalizer_comment_mention_is_not_protection(self):
+        w(os.path.join(self.common, 'finalize_game_delivery.sh'),
+          '# 说明：最终会调用 prune_output_final.sh 做裁剪（示例文字）\n'
+          'echo "用法：bash prune_output_final.sh <dir>"\n')
+        w(os.path.join(self.root, '04_scripts/_common/prune_output_final.sh'),
+          'apksigner verify 08_output/x/a.apk\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('prune_output_final.sh')][0]
+        self.assertFalse(e['protected'])
+
+    def test_finalizer_real_call_is_protection(self):
+        w(os.path.join(self.root, '04_scripts/_common/prune_output_final.sh'),
+          'apksigner verify 08_output/x/a.apk\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('prune_output_final.sh')][0]
+        self.assertTrue(e['protected'])
+        self.assertEqual(e['protected_by'], 'called-by-finalizer')
+
+    # ---- 5. 分类只看代码 ----
+    def test_comment_only_apksigner_not_final_apk(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_tool.sh'),
+          '# 示例：apksigner sign --out 08_output/x/a.apk in.apk\n'
+          '# cp foo.apk 08_output/x/\n'
+          'echo hello\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_tool.sh')][0]
+        self.assertNotEqual(e['kind'], 'final_apk')
+
+    def test_probe_declared_in_comment_still_probe(self):
+        w(os.path.join(self.root, '04_scripts/无限升级/wxsj_metainf.sh'),
+          '# 探针包，不作交付\napksigner sign --out 08_output/无限升级/p.apk in.apk\n')
+        e = [x for x in self.scan()['entries'] if x['script'].endswith('wxsj_metainf.sh')][0]
+        self.assertEqual(e['kind'], 'probe')
 
 
 class GameDocsCoverageTests(unittest.TestCase):

@@ -355,13 +355,13 @@
       "requires": [
         "sign"
       ],
-      "command": "python3.11 04_scripts/_common/harden_apk.py redteam",
+      "command": "APK=$(ls -t 08_output/勇士之心/*_surgical-releaseSigned.apk 2>/dev/null | head -1); [ -n \"$APK\" ] || { echo \"harden: 未找到本次签名的 releaseSigned APK\"; exit 1; }; python3.11 04_scripts/_common/harden_apk.py check --apk \"$APK\" --game ysxz",
       "preflight": [
         "04_scripts/_common/harden_apk.py"
       ],
       "verify": [],
       "status": "done",
-      "note": "2026-10-27 防御加固 P1-7 新增：五条断言任一 FAIL 即非 0 退出，拒绝交付。C1 客户端公钥==私钥 / C2 完整性清单与当前 dex+main.js+证书 相符 / C3 包内 so 无 [验证]·grant ok·grant rejected 明文 / C4 包内 so+dex md5 == 本地产物 / C5 改 1 字节后哈希必变（红队可检测）。assemble 脚本结尾也会自动跑一次（同一条门禁）。\n2026-10-27 标记 done：本轮出包链路共 5 次 `harden_apk.py check` 全 PASS（最新 precheck_20261026_173929 / 包 df5001842cc8713efdddd5362d468d0b）。"
+      "note": "2026-10-27 防御加固 P1-7 新增：五条断言任一 FAIL 即非 0 退出，拒绝交付。C1 客户端公钥==私钥 / C2 完整性清单与当前 dex+main.js+证书 相符 / C3 包内 so 无 [验证]·grant ok·grant rejected 明文 / C4 包内 so+dex md5 == 本地产物 / C5 改 1 字节后哈希必变（红队可检测）。assemble 脚本结尾也会自动跑一次（同一条门禁）。\n2026-10-27 标记 done：本轮出包链路共 5 次 `harden_apk.py check` 全 PASS（最新 precheck_20261026_173929 / 包 df5001842cc8713efdddd5362d468d0b）。 ｜ 2026-10-27 第八轮：改为显式检查**本次签名的** releaseSigned APK（原命令省略 --apk，harden_apk.py 默认指向 08_output/勇士之心/勇士之心_1.0.3_starry-final-releaseSigned.apk，与实际交付的 1.0.4 surgical 包不是同一份 ⇒ 门禁形同虚设）。VERSION 变更时本行无需改（用 glob 取最新）。"
     },
     {
       "id": "install",
