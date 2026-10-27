@@ -241,8 +241,9 @@ def sha256_value(value):
 
 
 CONSTRAINT_FILES = '10_docs/*/硬约束.md'
-AB_COLS = ('类别', '强度', '原话', '可执行含义', '适用范围', '例外', '状态', '证据')
+AB_COLS = ('#', '类别', '强度', '原话', '可执行含义', '适用范围', '例外', '状态', '证据')
 ZONE_COLS = {
+    'C': ('内容', '适用条件', '证据'),      # 默认偏好表：与 D 同构，行号同样必检
     'D': ('内容', '适用条件', '证据'),
     'E': ('内容（原文）', '不确定点', '已做的保守处置'),
     'F': ('原话/来源', '曾经的执行含义', '状态与失效依据', '日期'),
@@ -251,10 +252,12 @@ CONSTRAINT_CLASSES = ('A', 'B')          # A/B 表只放 A/B；C/D 有自己的�
 CLASS_ZONES = {'C': 'C. 默认偏好', 'D': 'D. 技术事实', 'E': 'E. 待核验', 'F': 'F. 历史与失效'}
 STATUS_BASES = ('生效', '一次性', '待核验', '已完成', '已失效', '已被', '已作废')
 ACTIVE_BASES = ('生效', '一次性')
+# F 区只接受这些历史状态词；其它（含任意散文）一律报错，不看是否非空
+HISTORY_BASES = ('已完成', '已失效', '已被', '已作废', '已废弃', '已执行', '已满足', '已履行', '已替代', '被取代', '范围已结束')
 REQUIRED_SECTIONS = (('元信息', '元信息'), ('A/B', 'A/B 当前生效'), ('C. 默认偏好', 'C 默认偏好'),
                      ('D. 技术事实', 'D 技术事实'), ('E. 待核验', 'E 待核验'), ('F. 历史与失效', 'F 历史与失效'))
 SEPARATOR = re.compile(r'\s*\|[-:|\s]+\|?\s*')
-COUNT_LINE = re.compile(r'行数：\s*A=(\d+)\s*/\s*B=(\d+)\s*/\s*D=(\d+)\s*/\s*E=(\d+)\s*/\s*F=(\d+)')
+COUNT_LINE = re.compile(r'行数：\s*A=(\d+)\s*/\s*B=(\d+)(?:\s*/\s*C=(\d+))?\s*/\s*D=(\d+)\s*/\s*E=(\d+)\s*/\s*F=(\d+)')
 
 
 def split_cells(line):
@@ -298,14 +301,15 @@ def zone_of(heading):
         return 'AB'
     if re.match(r'^[AB][.、： ]', heading):
         return 'AB'
-    for key in ('D. 技术事实', 'E. 待核验', 'F. 历史与失效'):
+    for key in ('C. 默认偏好', 'D. 技术事实', 'E. 待核验', 'F. 历史与失效'):
         if key in heading:
             return key[0]
     return ''
 
 
 def base_status(value):
-    return re.split(r'[（(]', (value or '').strip())[0].strip()
+    text = re.sub(r'[*`~\s]+', '', (value or ''))   # 去掉 **粗体** / `代码` / 空白
+    return re.split(r'[（(：:]', text)[0].strip()
 
 
 def audit_constraints(path):
@@ -342,7 +346,7 @@ def audit_constraints(path):
         if not ok:
             issue(errors, 1, 'missing-section', f'缺少分区「{label}」')
 
-    counted = {'A': 0, 'B': 0, 'D': 0, 'E': 0, 'F': 0}
+    counted = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0, 'F': 0}
     seen_ab = False
     seen_ids = {}
 
@@ -429,9 +433,14 @@ def audit_constraints(path):
                         issue(errors, row_no, 'missing-field', f'{rid} 缺字段: {name}')
                 if zone == 'F':
                     state = zcol('状态与失效依据', cells).strip()
-                    if state and base_status(state) in ACTIVE_BASES:
+                    base = base_status(state)
+                    if base in ACTIVE_BASES:
                         issue(errors, row_no, 'history-row-effective',
                               f'{rid} 在 F 区却标「{state}」：F 区只能放过期/被替代/已完成的行')
+                    elif base and not any(base.startswith(h) for h in HISTORY_BASES):
+                        issue(errors, row_no, 'bad-status',
+                              f'{rid} F 区状态词无法识别: {base}'
+                              f'（允许 已完成/已失效/已被 #N 替代/已作废/已废弃/已执行/被取代）')
                     if not zcol('日期', cells).strip():
                         issue(warnings, row_no, 'missing-date', f'{rid} 缺日期')
 
@@ -440,7 +449,11 @@ def audit_constraints(path):
 
     declared = COUNT_LINE.search(text)
     if declared:
-        want = dict(zip('ABDEF', (int(x) for x in declared.groups())))
+        groups = declared.groups()
+        want = {'A': int(groups[0]), 'B': int(groups[1]), 'D': int(groups[3]),
+                'E': int(groups[4]), 'F': int(groups[5])}
+        if groups[2] is not None:
+            want['C'] = int(groups[2])
         diff = {k: (want[k], counted[k]) for k in want if want[k] != counted[k]}
         if diff:
             issue(warnings, 1, 'count-drift',

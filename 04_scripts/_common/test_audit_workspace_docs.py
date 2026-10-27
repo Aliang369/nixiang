@@ -184,8 +184,8 @@ HEADER_AB = ('| # | 类别 | 强度 | 原话/来源（逐字，含出处） | �
              '例外/解除 | 状态 | 证据/权威落点 |\n|---|---|---|---|---|---|---|---|---|\n')
 
 
-def constraint_file(ab_rows=None, ab_table=None, d_rows='（无）', e_rows='（无）', f_rows='（无）',
-                    counts='A=1 / B=0 / D=0 / E=0 / F=0', meta=True, include_c=True):
+def constraint_file(ab_rows=None, ab_table=None, c_rows='（无）', d_rows='（无）', e_rows='（无）',
+                    f_rows='（无）', counts='A=1 / B=0 / D=0 / E=0 / F=0', meta=True, include_c=True):
     row = ('| 1 | A | 必须 | 「保持 1.0.3」(m00003) | 只维护 1.0.3 线 | 该版本 | 无 | 生效 | 变更记录 |\n'
            if ab_rows is None else ab_rows)
     parts = ['# 演示游戏 硬约束', '']
@@ -194,7 +194,7 @@ def constraint_file(ab_rows=None, ab_table=None, d_rows='（无）', e_rows='（
     parts += ['## A/B. 当前生效约束与一次性要求（开工必读）', '',
               HEADER_AB + row if ab_table is None else ab_table]
     if include_c:
-        parts += ['## C. 默认偏好', '', '（无）', '']
+        parts += ['## C. 默认偏好', '', c_rows, '']
     parts += ['## D. 技术事实与已验证经验', '', d_rows, '',
               '## E. 待核验（默认不生效）', '', e_rows, '',
               '## F. 历史与失效（保留原文，不默认生效）', '', f_rows, '']
@@ -372,6 +372,54 @@ class ConstraintAuditTests(unittest.TestCase):
         errors, warnings = self.kinds()
         self.assertIn('bad-class', errors)
         self.assertNotIn('count-drift', warnings)
+
+    def test_missing_id_column_is_error(self):
+        broken = ('| 类别 | 强度 | 原话/来源（逐字，含出处） | 可执行含义 | 适用范围与生效条件 | 例外/解除 | 状态 | 证据/权威落点 |\n'
+                  '|---|---|---|---|---|---|---|---|\n'
+                  '| A | 必须 | 「x」(m00001) | y | 范围 | 无 | 生效 | m00001 |\n')
+        self.write(constraint_file(ab_table=broken))
+        errors, _warnings = self.kinds()
+        self.assertIn('missing-column', errors)
+
+    def test_c_zone_missing_column_is_error(self):
+        c_rows = '| # | 内容 | 证据 |\n|---|---|---|\n| 1 | 优先复用现成脚本 | 2026-10-01 实测 |\n'
+        self.write(constraint_file(c_rows=c_rows, counts='A=1 / B=0 / C=1 / D=0 / E=0 / F=0'))
+        errors, _warnings = self.kinds()
+        self.assertIn('missing-column', errors)
+
+    def test_c_zone_rows_are_counted(self):
+        c_rows = '| # | 内容 | 适用条件 | 证据 |\n|---|---|---|---|\n| 11 | 优先复用现成脚本 | Unity 线 | 2026-10-01 |\n'
+        # 声明 C=0 但实际 1 行 ⇒ 应报行数漂移
+        self.write(constraint_file(c_rows=c_rows, counts='A=1 / B=0 / C=0 / D=0 / E=0 / F=0'))
+        errors, warnings = self.kinds()
+        self.assertEqual(errors, [])
+        self.assertIn('count-drift', warnings)
+        # 声明 C=1 ⇒ 干净
+        self.write(constraint_file(c_rows=c_rows, counts='A=1 / B=0 / C=1 / D=0 / E=0 / F=0'))
+        self.assertEqual(self.kinds(strict=True), ([], []))
+
+    def test_c_zone_missing_field_is_error(self):
+        c_rows = '| # | 内容 | 适用条件 | 证据 |\n|---|---|---|---|\n| 11 |  | Unity 线 | 2026-10-01 |\n'
+        self.write(constraint_file(c_rows=c_rows, counts='A=1 / B=0 / C=1 / D=0 / E=0 / F=0'))
+        errors, _warnings = self.kinds()
+        self.assertIn('missing-field', errors)
+
+    def test_f_zone_unknown_status_word_is_error(self):
+        # 非空但不是允许的历史状态词 ⇒ 必须报错，而不是「非空即放行」
+        f_rows = ('| # | 原话/来源 | 曾经的执行含义 | 状态与失效依据 | 日期 |\n|---|---|---|---|---|\n'
+                  '| 5 | 「x」 | y | 说不清什么状态 | 2026-10-01 |\n')
+        self.write(constraint_file(f_rows=f_rows, counts='A=1 / B=0 / C=0 / D=0 / E=0 / F=1'))
+        errors, _warnings = self.kinds()
+        self.assertIn('bad-status', errors)
+
+    def test_f_zone_accepts_known_history_words(self):
+        for word in ('已完成（该轮交付闭环）', '已失效（被 v2 取代）', '已被 #6 合并', '已作废（部分条款）',
+                     '**已失效**（绑定旧版本）', '已履行', '已满足'):
+            with self.subTest(word=word):
+                f_rows = ('| # | 原话/来源 | 曾经的执行含义 | 状态与失效依据 | 日期 |\n|---|---|---|---|---|\n'
+                          f'| 5 | 「x」 | y | {word} | 2026-10-01 |\n')
+                self.write(constraint_file(f_rows=f_rows, counts='A=1 / B=0 / C=0 / D=0 / E=0 / F=1'))
+                self.assertEqual(self.kinds(strict=True), ([], []))
 
 
 if __name__ == '__main__':
