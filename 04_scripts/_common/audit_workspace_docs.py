@@ -241,45 +241,81 @@ def sha256_value(value):
 
 
 CONSTRAINT_FILES = '10_docs/*/硬约束.md'
-CONSTRAINT_REQUIRED_COLS = ('类别', '强度', '原话', '可执行含义', '适用范围', '例外', '状态', '证据')
-CONSTRAINT_CLASSES = ('A', 'B', 'C', 'D', 'E', 'F')
+AB_COLS = ('类别', '强度', '原话', '可执行含义', '适用范围', '例外', '状态', '证据')
+ZONE_COLS = {
+    'D': ('内容', '适用条件', '证据'),
+    'E': ('内容（原文）', '不确定点', '已做的保守处置'),
+    'F': ('原话/来源', '曾经的执行含义', '状态与失效依据', '日期'),
+}
+CONSTRAINT_CLASSES = ('A', 'B', 'C', 'D')
+STATUS_BASES = ('生效', '一次性', '待核验', '已完成', '已失效', '已被', '已作废')
+ACTIVE_BASES = ('生效', '一次性')
+REQUIRED_SECTIONS = (('元信息', '元信息'), ('A/B', 'A/B 当前生效'), ('C. 默认偏好', 'C 默认偏好'),
+                     ('D. 技术事实', 'D 技术事实'), ('E. 待核验', 'E 待核验'), ('F. 历史与失效', 'F 历史与失效'))
+SEPARATOR = re.compile(r'\s*\|[-:|\s]+\|?\s*')
 COUNT_LINE = re.compile(r'行数：\s*A=(\d+)\s*/\s*B=(\d+)\s*/\s*D=(\d+)\s*/\s*E=(\d+)\s*/\s*F=(\d+)')
 
 
-def constraint_tables(lines):
-    """Split a game constraint file into (heading, header, rows) table blocks."""
-    tables = []
+def split_cells(line):
+    """按未转义的 `|` 切格；`\\|` 视为单元格内的字面竖线。"""
+    body = line.strip()
+    if body.startswith('|'):
+        body = body[1:]
+    if body.endswith('|'):
+        body = body[:-1]
+    return [c.strip().replace('\\|', '|') for c in re.split(r'(?<!\\)\|', body)]
+
+
+def scan_tables(lines):
+    """返回 [(line_no, heading, header, [(line_no, cells)])]；同时标出无表头的数据块。"""
+    tables, orphans = [], []
     heading = ''
     i = 0
     while i < len(lines):
         line = lines[i]
         if line.startswith('#'):
             heading = line.lstrip('# ').strip()
-        if line.startswith('|') and '|' in line[1:]:
-            cells = [c.strip() for c in line.strip().strip('|').split('|')]
-            if i + 1 < len(lines) and re.fullmatch(r'\s*\|[-:|\s]+\|?\s*', lines[i + 1]):
-                rows = []
-                j = i + 2
-                while j < len(lines) and lines[j].startswith('|'):
-                    rows.append((j + 1, [c.strip() for c in lines[j].strip().strip('|').split('|')]))
-                    j += 1
-                tables.append((i + 1, heading, cells, rows))
-                i = j
-                continue
-        i += 1
-    return tables
+        if not line.lstrip().startswith('|'):
+            i += 1
+            continue
+        start = i
+        while i < len(lines) and lines[i].lstrip().startswith('|'):
+            i += 1
+        block = lines[start:i]
+        has_header = len(block) > 1 and SEPARATOR.fullmatch(block[1])
+        if not has_header:
+            orphans.append((start + 1, block[0]))
+            continue
+        header = split_cells(block[0])
+        rows = [(start + 2 + k, split_cells(row)) for k, row in enumerate(block[2:])]
+        tables.append((start + 1, heading, header, rows))
+    return tables, orphans
+
+
+def zone_of(heading):
+    if 'A/B' in heading or ('A 区' in heading and 'B 区' in heading):
+        return 'AB'
+    if re.match(r'^[AB][.、： ]', heading):
+        return 'AB'
+    for key in ('D. 技术事实', 'E. 待核验', 'F. 历史与失效'):
+        if key in heading:
+            return key[0]
+    return ''
+
+
+def base_status(value):
+    return re.split(r'[（(]', (value or '').strip())[0].strip()
 
 
 def audit_constraints(path):
-    """Structural check of one game-level 硬约束.md (see 10_docs/_templates/硬约束.md).
+    """结构审计：分区齐全性、列齐全性、逐行必填、状态词表与 A/B 一致性、重复行号。
 
-    Errors block; warnings are reported for progressive migration of legacy files.
+    旧格式（无 类别 列）只警告，--strict 才升级为错误；结构断裂（缺表头）始终是错误。
     """
     errors, warnings = [], []
 
     def issue(bucket, line, kind, message):
-        bucket.append({'path': str(path.resolve()), 'line': line,
-                       'kind': kind, 'message': message})
+        bucket.append({'path': str(path.resolve()), 'line': line, 'kind': kind, 'message': message})
 
     try:
         text = path.read_text(encoding='utf-8-sig')
@@ -287,76 +323,114 @@ def audit_constraints(path):
         issue(errors, 0, 'read-error', str(exc))
         return errors, warnings
     lines = text.splitlines()
-    tables = constraint_tables(lines)
+    tables, orphans = scan_tables(lines)
+    for line_no, head in orphans:
+        issue(errors, line_no, 'orphan-rows', '表外数据行（该表缺表头或分隔线）：' + head[:60])
     if not tables:
-        issue(errors, 1, 'missing-table', '没有找到任何约束表（见模板 §5 骨架）')
+        issue(errors, 1, 'missing-table', '没有找到任何有效表格（见模板 §5 骨架）')
         return errors, warnings
 
-    heads = [line.lstrip('# ').strip() for line in lines if line.startswith('#')]
-    for needed, label in (('元信息', '元信息'), ('当前生效', 'A/B 当前生效'), ('待核验', 'E 待核验'), ('历史', 'F 历史与失效')):
-        if not any(needed in h for h in heads) and not (needed == '当前生效' and any('A' in h and 'B' in h for h in heads)):
-            issue(warnings, 1, 'missing-section', f'缺少分区「{label}」')
+    headings = [line.lstrip('# ').strip() for line in lines if line.startswith('#')]
+    for key, label in REQUIRED_SECTIONS:
+        if key == 'A/B':
+            ok = any('A/B' in h or re.match(r'^A[.、： ]', h) for h in headings)
+        elif key == '元信息':
+            ok = any('元信息' in h for h in headings)
+        else:
+            ok = any(h.startswith(key) for h in headings)
+        if not ok:
+            issue(errors, 1, 'missing-section', f'缺少分区「{label}」')
 
     counted = {'A': 0, 'B': 0, 'D': 0, 'E': 0, 'F': 0}
-    seen_modern = False
+    seen_ab = False
+    seen_ids = {}
+
     for line_no, heading, header, rows in tables:
-        is_e = bool(re.match(r'^E[.、： ]', heading)) or '待核验' in heading
-        is_f = bool(re.match(r'^F[.、： ]', heading)) or '历史与失效' in heading
-        is_d = bool(re.match(r'^D[.、： ]', heading)) or '技术事实' in heading
-        if is_d and not is_e and not is_f:
-            counted['D'] += sum(1 for _, cells in rows if any(cells))
+        zone = zone_of(heading)
+        joined = ' '.join(header)
+        if zone == 'AB':
+            missing = [c for c in AB_COLS if c not in joined]
+            if missing:
+                if '类别' in missing:
+                    issue(warnings, line_no, 'legacy-format',
+                          '旧格式 A/B 表（无 类别 列），按模板 §7 迁移：' + ','.join(missing))
+                    for row_no, cells in rows:
+                        if any(cells):
+                            counted['A'] += 1
+                    continue
+                issue(errors, line_no, 'missing-column', 'A/B 表头缺列: ' + ','.join(missing))
+            seen_ab = True
+
+            def col(name, cells):
+                for idx, cell in enumerate(header):
+                    if name in cell:
+                        return cells[idx] if idx < len(cells) else ''
+                return ''
+
+            for row_no, cells in rows:
+                if not any(cells):
+                    continue
+                rid = cells[0].strip()
+                if rid:
+                    if rid in seen_ids:
+                        issue(errors, row_no, 'duplicate-id',
+                              f'行号重复: {rid}（首次出现在第 {seen_ids[rid]} 行）')
+                    else:
+                        seen_ids[rid] = row_no
+                cls = col('类别', cells).strip().upper()[:1]
+                if cls not in CONSTRAINT_CLASSES:
+                    issue(errors, row_no, 'bad-class', f'类别必须是 A/B/C/D，实际: {cls or "<空>"}')
+                    continue
+                counted[cls if cls in counted else 'A'] += 1
+                for name in ('强度', '原话', '可执行含义', '适用范围', '例外', '状态'):
+                    if not col(name, cells).strip():
+                        issue(errors, row_no, 'missing-field', f'{rid or "?"} 缺字段: {name}')
+                status = base_status(col('状态', cells))
+                if status and not any(status.startswith(b) for b in STATUS_BASES):
+                    issue(errors, row_no, 'bad-status',
+                          f'{rid or "?"} 状态值非法: {status}（允许 生效/一次性/待核验/已完成/已失效/已被 #N 替代）')
+                elif status and cls in ('A', 'B') and not any(status.startswith(b) for b in ACTIVE_BASES):
+                    issue(errors, row_no, 'status-class-conflict',
+                          f'{rid or "?"} 类别 {cls} 却标「{status}」：已完成/已失效的行应移入 F 区')
             continue
-        if is_e or is_f:
-            counted['E' if is_e else 'F'] += sum(1 for _, cells in rows if any(cells))
-            if is_f:
-                for row_no, cells in rows:
-                    if not any(cells):
-                        continue
-                    joined = ' '.join(cells)
-                    if re.search(r'\|\s*生效\s*\|', joined) or cells[-1].strip() == '生效':
+
+        if zone in ZONE_COLS:
+            need = ZONE_COLS[zone]
+            missing = [c for c in need if c not in joined]
+            if missing:
+                issue(errors, line_no, 'missing-column', f'{zone} 区表头缺列: ' + ','.join(missing))
+                continue
+
+            def zcol(name, cells):
+                for idx, cell in enumerate(header):
+                    if name in cell:
+                        return cells[idx] if idx < len(cells) else ''
+                return ''
+
+            for row_no, cells in rows:
+                if not any(cells):
+                    continue
+                counted[zone] += 1
+                rid = cells[0].strip() or '?'
+                if rid != '?':
+                    if rid in seen_ids:
+                        issue(errors, row_no, 'duplicate-id',
+                              f'行号重复: {rid}（首次出现在第 {seen_ids[rid]} 行）')
+                    else:
+                        seen_ids[rid] = row_no
+                for name in need[:3]:
+                    if not zcol(name, cells).strip():
+                        issue(errors, row_no, 'missing-field', f'{rid} 缺字段: {name}')
+                if zone == 'F':
+                    state = zcol('状态与失效依据', cells).strip()
+                    if state and base_status(state) in ACTIVE_BASES:
                         issue(errors, row_no, 'history-row-effective',
-                              'F 区行的状态像「生效」：' + joined[:60])
-            continue
-        if '类别' not in ' '.join(header):
-            if header and header[0].strip() == '#' and any(k in ' '.join(header) for k in ('原话', '约束', '红线')):
-                issue(warnings, line_no, 'legacy-format',
-                      '旧格式表（无 类别/适用范围 列），按模板 §7 迁移')
-            continue
-        seen_modern = True
-        missing = [c for c in CONSTRAINT_REQUIRED_COLS if not any(c in h for h in header)]
-        if missing:
-            issue(errors, line_no, 'missing-column', '表头缺列: ' + ','.join(missing))
+                              f'{rid} 在 F 区却标「{state}」：F 区只能放过期/被替代/已完成的行')
+                    if not zcol('日期', cells).strip():
+                        issue(warnings, row_no, 'missing-date', f'{rid} 缺日期')
 
-        def col(name, cells):
-            for idx, cell in enumerate(header):
-                if name in cell:
-                    return cells[idx] if idx < len(cells) else ''
-            return ''
-
-        for row_no, cells in rows:
-            if not any(cells):
-                continue
-            cls = col('类别', cells).strip().upper()[:1]
-            if '待核验' in heading:
-                counted['E'] += 1
-                continue
-            if '历史' in heading or '失效' in heading:
-                counted['F'] += 1
-                state = col('状态', cells)
-                if state and not re.search(r'失效|作废|替代|取代|完成|履行|执行|满足', state):
-                    issue(errors, row_no, 'history-row-effective',
-                          'F 区行的状态不像失效/被替代：' + state[:60])
-                continue
-            if cls not in CONSTRAINT_CLASSES:
-                issue(errors, row_no, 'bad-class', f'类别必须是 A/B/C/D，实际: {cls or "<空>"}')
-                continue
-            counted[cls if cls in counted else 'A'] += 1
-            for name in ('强度', '原话', '可执行含义', '适用范围', '例外', '状态'):
-                if not col(name, cells).strip():
-                    issue(errors, row_no, 'missing-field', f'缺字段: {name}')
-
-    if not seen_modern:
-        issue(warnings, 1, 'legacy-file', '本文件尚未迁移到新结构（只有旧格式表）')
+    if not seen_ab:
+        issue(warnings, 1, 'legacy-file', '本文件尚无 9 列 A/B 表（未迁移到新结构）')
 
     declared = COUNT_LINE.search(text)
     if declared:
@@ -368,7 +442,7 @@ def audit_constraints(path):
     return errors, warnings
 
 
-def audit_constraint_files(root):
+def audit_constraint_files(root, strict=False):
     errors, warnings = [], []
     paths = sorted(p for p in Path(root).glob(CONSTRAINT_FILES) if p.parent.name != '_templates')
     if not paths:
@@ -378,6 +452,9 @@ def audit_constraint_files(root):
         errs, warns = audit_constraints(path)
         errors.extend(errs)
         warnings.extend(warns)
+    if strict:
+        errors.extend(warnings)
+        warnings = []
     return paths, errors, warnings
 
 
@@ -411,7 +488,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.command == 'constraints':
         root = args.root.expanduser().resolve()
-        paths, errors, warnings = audit_constraint_files(root)
+        paths, errors, warnings = audit_constraint_files(root, strict=args.strict)
         for item in errors + warnings:
             print('{path}:{line}: {kind}: {message}'.format(**item))
         print(f'硬约束结构审计: files={len(paths)} errors={len(errors)} warnings={len(warnings)}'

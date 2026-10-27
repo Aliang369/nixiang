@@ -180,5 +180,166 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(self.cli('--root', self.root).returncode, 1)
 
 
+HEADER_AB = ('| # | 类别 | 强度 | 原话/来源（逐字，含出处） | 可执行含义 | 适用范围与生效条件 | '
+             '例外/解除 | 状态 | 证据/权威落点 |\n|---|---|---|---|---|---|---|---|---|\n')
+
+
+def constraint_file(ab_rows=None, ab_table=None, d_rows='（无）', e_rows='（无）', f_rows='（无）',
+                    counts='A=1 / B=0 / D=0 / E=0 / F=0', meta=True, include_c=True):
+    row = ('| 1 | A | 必须 | 「保持 1.0.3」(m00003) | 只维护 1.0.3 线 | 该版本 | 无 | 生效 | 变更记录 |\n'
+           if ab_rows is None else ab_rows)
+    parts = ['# 演示游戏 硬约束', '']
+    if meta:
+        parts += ['## 0. 元信息', '', f'- 行数：{counts}', '']
+    parts += ['## A/B. 当前生效约束与一次性要求（开工必读）', '',
+              HEADER_AB + row if ab_table is None else ab_table]
+    if include_c:
+        parts += ['## C. 默认偏好', '', '（无）', '']
+    parts += ['## D. 技术事实与已验证经验', '', d_rows, '',
+              '## E. 待核验（默认不生效）', '', e_rows, '',
+              '## F. 历史与失效（保留原文，不默认生效）', '', f_rows, '']
+    return '\n'.join(parts)
+
+
+class ConstraintAuditTests(unittest.TestCase):
+    """10_docs/*/硬约束.md 结构审计：全部用临时文件，不碰真实游戏文档。"""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.path = self.root / '10_docs' / '演示游戏' / '硬约束.md'
+        self.path.parent.mkdir(parents=True)
+
+    def write(self, text):
+        self.path.write_text(text, encoding='utf-8')
+        return self.path
+
+    def cli(self, *args):
+        return subprocess.run(
+            [sys.executable, '-B', str(Path(audit.__file__).resolve()), *map(str, args)],
+            capture_output=True, text=True, check=False)
+
+    def kinds(self, strict=False):
+        _paths, errors, warnings = audit.audit_constraint_files(self.root, strict=strict)
+        return [i['kind'] for i in errors], [i['kind'] for i in warnings]
+
+    def test_valid_file_passes_clean_and_strict(self):
+        self.write(constraint_file())
+        self.assertEqual(self.kinds(), ([], []))
+        self.assertEqual(self.kinds(strict=True), ([], []))
+
+    def test_missing_c_row_lists_every_required_section(self):
+        self.write(constraint_file(include_c=False))
+        errors, _warnings = self.kinds()
+        self.assertIn('missing-section', errors)
+
+    def test_missing_meta_section_is_error(self):
+        self.write(constraint_file(meta=False))
+        errors, _warnings = self.kinds()
+        self.assertIn('missing-section', errors)
+
+    def test_missing_required_column_is_error(self):
+        broken = ('| # | 类别 | 强度 | 原话/来源（逐字，含出处） | 可执行含义 | 状态 |\n|---|---|---|---|---|---|\n'
+                  '| 1 | A | 必须 | 「x」(m00001) | y | 生效 |\n')
+        self.write(constraint_file(ab_table=broken))
+        errors, _warnings = self.kinds()
+        self.assertIn('missing-column', errors)
+
+    def test_completed_row_left_in_ab_is_conflict(self):
+        row = ('| 2 | A | 必须 | 「先过环境」(m00001) | 阶段闸门 | 该轮 | 无 | 已完成 | m00001 |\n')
+        self.write(constraint_file(ab_rows=row, counts='A=1 / B=0 / D=0 / E=0 / F=0'))
+        errors, _warnings = self.kinds()
+        self.assertIn('status-class-conflict', errors)
+
+    def test_invalid_status_word_is_reported(self):
+        row = ('| 1 | A | 必须 | 「重新出一版」(m00007) | 出包 | 该轮 | 无 | 进行中 | m00007 |\n')
+        self.write(constraint_file(ab_rows=row))
+        errors, _warnings = self.kinds()
+        self.assertIn('bad-status', errors)
+
+    def test_history_row_marked_effective_is_error(self):
+        f_rows = ('| # | 原话/来源 | 曾经的执行含义 | 状态与失效依据 | 日期 |\n|---|---|---|---|---|\n'
+                  '| 5 | 「x」 | y | 生效 | 2026-10-01 |\n')
+        self.write(constraint_file(f_rows=f_rows, counts='A=1 / B=0 / D=0 / E=0 / F=1'))
+        errors, _warnings = self.kinds()
+        self.assertIn('history-row-effective', errors)
+
+    def test_history_row_completed_passes(self):
+        f_rows = ('| # | 原话/来源 | 曾经的执行含义 | 状态与失效依据 | 日期 |\n|---|---|---|---|---|\n'
+                  '| 5 | 「x」 | y | 已完成（该轮交付闭环） | 2026-10-01 |\n')
+        self.write(constraint_file(f_rows=f_rows, counts='A=1 / B=0 / D=0 / E=0 / F=1'))
+        self.assertEqual(self.kinds(strict=True), ([], []))
+
+    def test_duplicate_row_id_is_error(self):
+        rows = ('| 1 | A | 必须 | 「a」(m00001) | x | 范围 | 无 | 生效 | m00001 |\n'
+                '| 1 | A | 必须 | 「b」(m00002) | y | 范围 | 无 | 生效 | m00002 |\n')
+        self.write(constraint_file(ab_rows=rows, counts='A=2 / B=0 / D=0 / E=0 / F=0'))
+        errors, _warnings = self.kinds()
+        self.assertIn('duplicate-id', errors)
+
+    def test_missing_required_field_is_error(self):
+        row = '| 1 | A | 必须 |  | x | 范围 | 无 | 生效 | m00001 |\n'
+        self.write(constraint_file(ab_rows=row))
+        errors, _warnings = self.kinds()
+        self.assertIn('missing-field', errors)
+
+    def test_orphan_rows_without_header_are_error(self):
+        text = constraint_file() + '\n## 落地检查\n\n| 9 | 「孤立行」 | 必须 | 说明 | 证据 | 生效 |\n'
+        self.write(text)
+        errors, _warnings = self.kinds()
+        self.assertIn('orphan-rows', errors)
+
+    def test_legacy_columns_warn_then_fail_under_strict(self):
+        legacy = ('| # | 原话（逐字） | 类型 | 可执行化 | 违反一次的实例 | 状态 |\n|---|---|---|---|---|---|\n'
+                  '| 1 | 「x」 | 必须 | y | — | 生效 |\n')
+        text = ('## 0. 元信息\n\n- 行数：A=1 / B=0 / D=0 / E=0 / F=0\n\n'
+                '## A/B. 当前生效约束与一次性要求（开工必读）\n\n' + legacy +
+                '\n## C. 默认偏好\n\n（无）\n\n## D. 技术事实与已验证经验\n\n（无）\n\n'
+                '## E. 待核验（默认不生效）\n\n（无）\n\n## F. 历史与失效（保留原文，不默认生效）\n\n（无）\n')
+        self.write(text)
+        errors, warnings = self.kinds()
+        self.assertEqual(errors, [])
+        self.assertIn('legacy-format', warnings)
+        self.assertIn('legacy-file', warnings)
+        strict_errors, strict_warnings = self.kinds(strict=True)
+        self.assertIn('legacy-format', strict_errors)
+        self.assertEqual(strict_warnings, [])
+
+    def test_count_drift_is_warning(self):
+        self.write(constraint_file(counts='A=0 / B=0 / D=0 / E=0 / F=0'))
+        errors, warnings = self.kinds()
+        self.assertIn('count-drift', warnings)
+        self.assertNotIn('count-drift', errors)
+
+    def test_escaped_pipe_does_not_shift_columns(self):
+        row = ('| 1 | A | 必须 | 「logcat 出现 `signal 6\\|FATAL`」(m00001) | x | 范围 | 无 | 生效 | m00001 |\n')
+        self.write(constraint_file(ab_rows=row))
+        self.assertEqual(self.kinds(strict=True), ([], []))
+
+    def test_empty_history_section_needs_no_table(self):
+        self.write(constraint_file(f_rows='（无）'))
+        self.assertEqual(self.kinds(strict=True), ([], []))
+
+    def test_cli_exit_codes(self):
+        self.write(constraint_file(include_c=False))
+        result = self.cli('constraints', '--root', self.root)
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn('missing-section', result.stdout)
+        self.write(constraint_file())
+        ok = self.cli('constraints', '--root', self.root, '--strict')
+        self.assertEqual(ok.returncode, 0, ok.stdout + ok.stderr)
+        self.assertIn('files=1', ok.stdout)
+
+    def test_template_file_is_not_audited(self):
+        template = self.root / '10_docs' / '_templates' / '硬约束.md'
+        template.parent.mkdir(parents=True)
+        template.write_text('# 模板（故意不完整）\n', encoding='utf-8')
+        self.write(constraint_file())
+        paths, errors, _warnings = audit.audit_constraint_files(self.root)
+        self.assertEqual(len(paths), 1)
+        self.assertEqual(errors, [])
+
+
 if __name__ == '__main__':
     unittest.main()

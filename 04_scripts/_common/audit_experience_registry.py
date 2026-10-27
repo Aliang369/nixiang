@@ -2,21 +2,30 @@
 """Audit the structured metadata of experience cards.
 
 Legacy cards without frontmatter are reported as legacy (not failed); new cards
-based on the template must carry the required registry fields.
+based on `10_docs/_templates/经验候选卡.md` must carry the required registry
+fields **including `class`** (tech / policy).
+
+class 语义（模板 §0）：`tech` 证据齐可由优化会话自动合并；`policy` 改的是用户长期
+偏好/项目硬约束/授权边界/门禁强度，**只能由用户当轮指令驱动**，脚本无法验证指令
+真伪，故除格式校验外还给 `manual-review` 提示，要求人工确认。
 """
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
 
-REQUIRED = ("experience_id", "status", "scope", "source", "evidence", "targets")
+REQUIRED = ("experience_id", "status", "class", "scope", "source", "evidence", "targets")
 STATUSES = {"candidate", "approved", "merged", "rejected", "stale"}
-# class 见 10_docs/_templates/经验候选卡.md §0：tech 可自动合并，policy 只能提案。
 CLASSES = {"tech", "policy"}
-POLICY_REQUIRES_USER = True
 APPROVAL_REQUIRED = {"approved", "merged"}
-ID_RE = __import__("re").compile(r"^exp-[0-9]{8}-[a-z0-9]+(?:-[a-z0-9]+)*$")
+# policy 类升格必须能指回用户指令；可校验格式只有两种：
+#   m00001           —— 会话消息号
+#   m00001@2026-10-27 —— 消息号 + 会话日期（同日多会话时用）
+POLICY_APPROVAL_RE = re.compile(r"^m\d{4,5}(?:@\d{4}-\d{2}-\d{2})?$")
+ID_RE = re.compile(r"^exp-[0-9]{8}-[a-z0-9]+(?:-[a-z0-9]+)*$")
+MANUAL_REVIEW = "policy 类升格需人工复核：确认 approval_ref 指向的消息确为用户当轮指令（脚本不能验证真伪）"
 
 
 def resolve_ref(root, value):
@@ -57,16 +66,47 @@ def frontmatter(path):
     return values
 
 
+def audit_class(data, issues, warnings):
+    """class 必填且只能是 tech / policy —— 现代卡缺字段不得静默通过。"""
+    kind = (data.get("class") or "").strip()
+    if not kind:
+        issues.append("缺少 class（新格式卡必须写 class: tech 或 class: policy，见模板 §0）")
+        return None
+    if kind not in CLASSES:
+        issues.append(f"class 无效: {kind}（只能是 tech / policy）")
+        return None
+    return kind
+
+
+def audit_policy_approval(data, kind, issues, warnings):
+    """policy 类：approved / merged 必须有可校验的用户指令引用，且留人工复核提示。"""
+    if kind != "policy":
+        return
+    status = data.get("status")
+    if status not in APPROVAL_REQUIRED:
+        return
+    ref = (data.get("approval_ref") or "").strip()
+    if not ref:
+        issues.append(f"policy 类 {status} 必须有 approval_ref（可校验格式：m00001 或 m00001@2026-10-27）")
+    elif not POLICY_APPROVAL_RE.fullmatch(ref):
+        issues.append(f"approval_ref 格式无效: {ref}（只接受 m00001 或 m00001@2026-10-27；"
+                      "「用户说过」「已批准」等散文不算可校验引用）")
+    else:
+        warnings.append(MANUAL_REVIEW)
+
+
 def audit(path):
     data = frontmatter(path)
     if data is None:
-        return {"path": str(path), "status": "legacy", "issues": []}
+        return {"path": str(path), "status": "legacy", "issues": [], "warnings": []}
     issues = []
+    warnings = []
     if "_error" in data:
         issues.append(data["_error"])
-        return {"path": str(path), "status": "invalid", "issues": issues}
+        return {"path": str(path), "status": "invalid", "issues": issues, "warnings": warnings}
     missing = [key for key in REQUIRED if not data.get(key)]
-    issues.extend(f"缺少 {key}" for key in missing)
+    issues.extend(f"缺少 {key}" for key in missing if key != "class")
+    kind = audit_class(data, issues, warnings)
     if data.get("status") not in STATUSES:
         issues.append(f"status 无效: {data.get('status', '<missing>')}")
     if data.get("experience_id") and not ID_RE.fullmatch(data["experience_id"]):
@@ -88,17 +128,12 @@ def audit(path):
                                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except (OSError, subprocess.CalledProcessError):
                 issues.append(f"merged_commit 不是当前仓库可解析的 commit: {commit}")
-    kind = data.get("class")
-    if kind and kind not in CLASSES:
-        issues.append(f"class 无效: {kind}（只能是 tech / policy）")
-    if kind == "policy" and data.get("status") in ("approved", "merged"):
-        ref = data.get("approval_ref", "")
-        if not __import__("re").search(r"m\d{4,5}|用户", ref):
-            issues.append("policy 类经验不得自批/自动合并：approval_ref 必须指向用户指令（消息号或「用户…」）")
+    audit_policy_approval(data, kind, issues, warnings)
     targets = data.get("targets", "")
     if targets and targets.lower() in {"none", "无", "待定"}:
         issues.append("targets 不能使用占位值")
-    return {"path": str(path), "status": "ok" if not issues else "invalid", "issues": issues}
+    return {"path": str(path), "status": "ok" if not issues else "invalid",
+            "issues": issues, "warnings": warnings}
 
 
 def audit_registry(root):
@@ -115,7 +150,8 @@ def audit_registry(root):
                 item["status"] = "invalid"
     invalid = [item for item in results if item["status"] == "invalid"]
     return {"cards": len(results), "legacy": sum(x["status"] == "legacy" for x in results),
-            "invalid": len(invalid), "results": results}
+            "invalid": len(invalid),
+            "manual_review": sum(1 for x in results if x.get("warnings")), "results": results}
 
 
 def main(argv=None):
@@ -128,9 +164,13 @@ def main(argv=None):
     if args.as_json:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
-        print(f"经验卡审计: cards={payload['cards']} legacy={payload['legacy']} invalid={payload['invalid']}")
+        print(f"经验卡审计: cards={payload['cards']} legacy={payload['legacy']} "
+              f"invalid={payload['invalid']} manual_review={payload['manual_review']}")
         for item in invalid:
             print(f"FAIL {item['path']}: {'; '.join(item['issues'])}")
+        for item in payload["results"]:
+            for warning in item.get("warnings", []):
+                print(f"REVIEW {item['path']}: {warning}")
     return 1 if invalid else 0
 
 
