@@ -645,55 +645,82 @@ static void ApplyItems() {
 // 运行时该 tag 下 165 条 enum 名条目已由游戏自建 ⇒ 不需要 HeroSkinName 枚举→名字映射；
 // 旧路径在 3.7.0 必败（il2cpp_field_get_value_object 对解释器类枚举字面量返回空 →
 // 日志「皮肤枚举映射 0 项 / 名字缺失=165」，实测）。
+// 皮肤解锁（3.7.0 v3）：判持有统一为
+//   ResourceDic.GetResourceCount(ResourceTag.HeroSkin=1, HeroSkinName.ToString()) > 0
+// v2 只写"内层字典里已存在的条目" —— 清档后内层字典为 0 条，重放等于空转
+// （实测日志 `皮肤重放：内层条目非法 iEntries=0x0 iCount=0`）⇒ 现在改为
+// **按 HeroSkinName 枚举字段名逐条建条目**（il2cpp_class_get_fields 只为解释器类
+// 返回 FieldInfo，名字可用；枚举"值"仍取不到，但这里只要名字）。
 static void ApplySkin() {
     auto& api = GetApi();
     const EvOff* e = ActiveEv();
     if (!e) return;
-    void* dic = api.StaticRefField(g_playerArchive, GameUnity::Fields::PA_RESOURCE_DIC);
-    if (!OkPtr(dic)) return;
-    void* entries = nullptr;
-    int32_t count = 0;
-    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(dic) + 0x18, &entries)) return;
-    if (!SafeReadI32(reinterpret_cast<uint8_t*>(dic) + 0x20, &count)) return;
-    if (!OkPtr(entries) || count <= 0 || count > 512) return;
-    void* inner = nullptr;
-    for (int32_t i = 0; i < count; i++) {
-        const uint8_t* entry =
-            reinterpret_cast<uint8_t*>(entries) + 0x20 + static_cast<size_t>(i) * 0x18;
-        int32_t key = -1;
-        void* val = nullptr;
-        if (!SafeReadI32(entry + 0x8, &key)) continue;
-        if (!SafeReadPtr(entry + 0x10, &val)) continue;
-        if (key == 1 /* ResourceTag.HeroSkin */ && OkPtr(val)) {
-            inner = val;
-            break;
+    int ok = 0, fail = 0, total = 0;
+
+    // ① 首选：枚举字段名（清档/新号场景唯一可靠的名字来源）
+    if (g_skinEnumClass && api.class_fields && api.field_name) {
+        void* iter = nullptr;
+        while (void* f = api.class_fields(g_skinEnumClass, &iter)) {
+            const char* nm = api.field_name(f);
+            if (!nm || !*nm) continue;
+            if (!strcmp(nm, "value__") || !strcmp(nm, "default_skin") || !strcmp(nm, "Empty"))
+                continue;
+            total++;
+            if (ApplyDicItems(1 /* HeroSkin */, nm, kSkinValue) == 1) ok++;
+            else fail++;
         }
     }
-    if (!inner) {
-        LOGW(ZHMR_LOG " 皮肤重放：tag=1(HeroSkin) 字典缺失");
-        return;
-    }
-    void* iEntries = nullptr;
-    int32_t iCount = 0;
-    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(inner) + 0x18, &iEntries)) return;
-    if (!SafeReadI32(reinterpret_cast<uint8_t*>(inner) + 0x20, &iCount)) return;
-    if (!OkPtr(iEntries) || iCount <= 0 || iCount > 1024) {
-        LOGW(ZHMR_LOG " 皮肤重放：内层条目非法 iEntries=%p iCount=%d", iEntries, iCount);
-        return;
-    }
-    int ok = 0, fail = 0;
-    for (int32_t i = 0; i < iCount; i++) {
-        const uint8_t* entry =
-            reinterpret_cast<uint8_t*>(iEntries) + 0x20 + static_cast<size_t>(i) * 0x18;
-        void* ev = nullptr;
-        if (!SafeReadPtr(entry + 0x10, &ev) || !OkPtr(ev)) {
-            fail++;
-            continue;
+
+    // ② 兜底：枚举拿不到（g_skinEnumClass 未解析）就沿用内层字典现有条目
+    if (total == 0) {
+        void* dic = api.StaticRefField(g_playerArchive, GameUnity::Fields::PA_RESOURCE_DIC);
+        if (!OkPtr(dic)) return;
+        void* entries = nullptr;
+        int32_t count = 0;
+        if (!SafeReadPtr(reinterpret_cast<uint8_t*>(dic) + 0x18, &entries)) return;
+        if (!SafeReadI32(reinterpret_cast<uint8_t*>(dic) + 0x20, &count)) return;
+        if (!OkPtr(entries) || count <= 0 || count > 512) return;
+        void* inner = nullptr;
+        for (int32_t i = 0; i < count; i++) {
+            const uint8_t* entry =
+                reinterpret_cast<uint8_t*>(entries) + 0x20 + static_cast<size_t>(i) * 0x18;
+            int32_t key = -1;
+            void* val = nullptr;
+            if (!SafeReadI32(entry + 0x8, &key)) continue;
+            if (!SafeReadPtr(entry + 0x10, &val)) continue;
+            if (key == 1 && OkPtr(val)) {
+                inner = val;
+                break;
+            }
         }
-        if (EvWrite(ev, kSkinValue, *e)) ok++;
-        else fail++;
+        if (!inner) {
+            LOGW(ZHMR_LOG " 皮肤重放：tag=1(HeroSkin) 字典缺失且枚举不可用");
+            return;
+        }
+        void* iEntries = nullptr;
+        int32_t iCount = 0;
+        if (!SafeReadPtr(reinterpret_cast<uint8_t*>(inner) + 0x18, &iEntries)) return;
+        if (!SafeReadI32(reinterpret_cast<uint8_t*>(inner) + 0x20, &iCount)) return;
+        if (!OkPtr(iEntries) || iCount <= 0 || iCount > 1024) {
+            LOGW(ZHMR_LOG " 皮肤重放：内层条目非法 iEntries=%p iCount=%d", iEntries, iCount);
+            return;
+        }
+        for (int32_t i = 0; i < iCount; i++) {
+            const uint8_t* entry =
+                reinterpret_cast<uint8_t*>(iEntries) + 0x20 + static_cast<size_t>(i) * 0x18;
+            void* ev = nullptr;
+            if (!SafeReadPtr(entry + 0x10, &ev) || !OkPtr(ev)) {
+                fail++;
+                continue;
+            }
+            if (EvWrite(ev, kSkinValue, *e)) ok++;
+            else fail++;
+        }
+        total = iCount;
     }
-    LOGI(ZHMR_LOG " 皮肤重放(直写dic) ok=%d 失败=%d 总数=%d", ok, fail, iCount);
+
+    LOGI(ZHMR_LOG " 皮肤重放(枚举建条目) ok=%d 失败=%d 总数=%d 枚举类=%s",
+         ok, fail, total, g_skinEnumClass ? "ok" : "null");
 }
 
 // ============================================================
