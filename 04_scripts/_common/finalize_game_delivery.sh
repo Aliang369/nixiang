@@ -22,8 +22,7 @@ ALLOW_NO_HARDEN=0   # 加固门禁逃生门：必须同时给 --harden-reason（
 HARDEN_REASON="${HARDEN_REASON:-}"
 SYNC_DOC=0
 ALLOW_LEGACY_TEMPLATE=0
-USAGE_DOC=""      # --usage-doc：复制为 delivery 目录里的「使用说明.md」（分发型交付必带，P20）
-COPY_APK=0        # --copy-apk：把正式 APK 也复制进 delivery 目录
+USAGE_DOC=""      # --usage-doc：可选，把说明文档复制进 delivery 目录
 # 口令点名即必须交付（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
 # 用户在当轮口令里点名要 icon / 菜单模板时，必须显式传 --icon-source / --menu-template，
 # 漏传一律 rc=1（以前只打一行 NOTE 就放过去了 —— 那次用户追问了两次「菜单模版 json 为什么
@@ -40,7 +39,6 @@ usage() {
     [--icon-source /path/app_icon.png] \
     [--menu-template 10_docs/潮汐守望者/cxswz_menu_template.json] \
     [--usage-doc 10_docs/潮汐守望者/使用说明.md] \
-    [--copy-apk] \
     [--date YYYYMMDD] \
     [--prune] \
     [--sync-doc] \
@@ -65,13 +63,7 @@ usage() {
   - 菜单模板自检含分组行门禁（features 不得出现 Category_* 或纯分组名）+ feat_num 升序/去重/
     缺口提示，依据 `10_docs/_templates/菜单模板_规范与示例.md` §2。遗留模板确实带分组行时
     可加 --allow-legacy-template 把该门禁降级为 WARN。
-  - --usage-doc <md> 复制一份为 delivery 目录里的「使用说明.md」。分发型交付（要把 App 发给
-    别人）**必带**：模板 `10_docs/_templates/使用说明_分发型.md`，替换占位符后传入；
-    文档里还留着 `{占位符}` 直接 FAIL（防把模板原文发出去）。
-  - --copy-apk 把 --apk 复制进 delivery 目录（要「一个文件夹直接发出去」时用；默认不复制，
-    正式 APK 仍留在 08_output/{游戏}/）。
-  - 2026-10-10 第二轮复盘 P20：分发型交付默认 `--usage-doc … --copy-apk`；
-    别再手搓 delivery 目录与《使用说明.md》。
+  - --usage-doc <md> 可选：把说明文档复制为 delivery 目录里的「使用说明.md」。
   - --expect-icon / --expect-menu-template（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
     **用户口令里点名要什么，就传哪个守卫**。传了守卫却没传对应内容 ⇒ rc=1（不再静默跳过）。
     传 --expect-menu-template 时会把模板 JSON **原文打到终端**，供直接复制发给用户；
@@ -87,7 +79,6 @@ while [[ $# -gt 0 ]]; do
     --icon-source) ICON_SOURCE="${2:-}"; shift 2 ;;
     --menu-template) MENU_TEMPLATE="${2:-}"; shift 2 ;;
     --usage-doc) USAGE_DOC="${2:-}"; shift 2 ;;
-    --copy-apk) COPY_APK=1; shift ;;
     --date) DATE="${2:-}"; shift 2 ;;
     --prune) PRUNE=1; shift ;;
     --sync-doc) SYNC_DOC=1; shift ;;
@@ -131,8 +122,7 @@ echo "[finalize] apk=$APK"
 echo "[finalize] apk_md5=$(md5_of "$APK")"
 echo "[finalize] apk_sha256=$(sha256_of "$APK")"
 echo "[finalize] menu_template=${MENU_TEMPLATE:-（未提供，跳过菜单模板交付）}"
-echo "[finalize] usage_doc=${USAGE_DOC:-（未提供 —— 分发型交付应传 P20）}"
-echo "[finalize] copy_apk=$COPY_APK"
+echo "[finalize] usage_doc=${USAGE_DOC:-（未提供）}"
 
 if [[ -z "$APK" ]]; then
   apks=()
@@ -317,29 +307,17 @@ if [[ -n "$USAGE_DOC" ]]; then
     DELIVERY_ASSETS_DESC="使用说明.md"
   fi
 fi
-if [[ "$COPY_APK" == "1" ]]; then
-  if [[ -n "$DELIVERY_ASSETS" ]]; then
-    DELIVERY_ASSETS="${DELIVERY_ASSETS} + $(basename "$APK")"
-    DELIVERY_ASSETS_DESC="${DELIVERY_ASSETS_DESC} + $(basename "$APK")"
-  else
-    DELIVERY_ASSETS="$(basename "$APK")"
-    DELIVERY_ASSETS_DESC="$(basename "$APK")"
-  fi
-fi
 
-# ---------- 使用说明自检（P20 门禁）----------
+# ---------- 使用说明自检----------
 if [[ -n "$USAGE_DOC" ]]; then
   [[ -f "$USAGE_DOC" ]] || { echo "ERROR: --usage-doc 不存在: $USAGE_DOC" >&2; exit 1; }
   PLACEHOLDERS="$(grep -oE '\{[^}]{1,24}\}' "$USAGE_DOC" 2>/dev/null | sort -u | tr '\n' ' ' || true)"
   case "$PLACEHOLDERS" in
     *'{'*)
       echo "ERROR: --usage-doc 还留着未替换的占位符: $PLACEHOLDERS" >&2
-      echo "       ⇒ 按 10_docs/_templates/使用说明_分发型.md 逐项替换后再传（别把模板原文发给用户）" >&2
+      echo "       ⇒ 把 {占位符} 全部替换成实际内容后再传。"
       exit 1 ;;
   esac
-fi
-if [[ "$COPY_APK" == "1" ]]; then
-  [[ -f "$APK" ]] || { echo "ERROR: --copy-apk 需要 --apk 指向真实文件: $APK" >&2; exit 1; }
 fi
 
 
@@ -420,9 +398,6 @@ if [[ "$SYNC_DOC" == "1" ]]; then
   if [[ -n "$USAGE_DOC" ]]; then
     echo "#   - 08_output/${GAME}/delivery_${DATE}/使用说明.md（内容来自 ${USAGE_DOC}）"
   fi
-  if [[ "$COPY_APK" == "1" ]]; then
-    echo "#   - 08_output/${GAME}/delivery_${DATE}/$(basename "$APK")（正式包副本，md5 $(md5_of "$APK")）"
-  fi
   if [[ "$PRUNE" == "1" ]]; then
     echo "#   - 10_docs/${GAME}/正式包裁剪清单_${DATE}.json"
   fi
@@ -437,7 +412,7 @@ fi
 if [[ -n "$DELIVERY_ASSETS" ]]; then
   mkdir -p "$DELIVERY"
 else
-  echo "[finalize] 未传任何交付件参数（--icon-source/--menu-template/--usage-doc/--copy-apk）：跳过 delivery 目录（--prune/--sync-doc 照常）。"
+  echo "[finalize] 未传任何交付件参数（--icon-source/--menu-template/--usage-doc）：跳过 delivery 目录（--prune/--sync-doc 照常）。"
 fi
 if [[ -n "$ICON_SOURCE" ]]; then
   # 单张原图落盘：PNG 源直接逐字节复制（不重编码、不改像素）；其它格式转成 PNG 但保持原像素。
@@ -470,10 +445,6 @@ fi
 if [[ -n "$USAGE_DOC" ]]; then
   cp -f "$USAGE_DOC" "$DELIVERY/使用说明.md"
   echo "[finalize] + 使用说明.md（源 ${USAGE_DOC}）"
-fi
-if [[ "$COPY_APK" == "1" ]]; then
-  cp -f "$APK" "$DELIVERY/$(basename "$APK")"
-  echo "[finalize] + $(basename "$APK")（md5 $(md5_of "$APK")）"
 fi
 
 if [[ "$PRUNE" == "1" ]]; then

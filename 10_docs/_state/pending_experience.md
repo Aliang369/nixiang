@@ -82,10 +82,10 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   机制（P10 preflight / P13 方案选型卡 / P15 即时记账）**第一轮就存在却整段旁路**，故本轮不再加「请记住」型规则，改成**闸门 + 模板 + 快照**：
   ① 装机闸门：`session_start.sh` 落 `preflight_{游戏}.stamp`，`gradle_cycle.sh --install` 缺凭证/超 12h/硬约束 md5 变过 ⇒ **rc=4**（实测无凭证 rc=4、有凭证 dry-run 通过）；
   ② 出包即记账：`--game` 全量日志 `tee 09_test/{游戏}/logs/`、完成块打印完整 md5/大小/日志路径、成功自动 `gate_note.sh G2`（治「调用方 `| tail` 截断 ⇒ md5 永久丢失」）；
-  ③ 交付：`finalize_game_delivery.sh --usage-doc/--copy-apk`（`{占位符}` 残留即 rc=1，正反两路实测）+ 模板 `使用说明_分发型.md`；
+  ③ 交付：`finalize_game_delivery.sh --usage-doc`（`{占位符}` 残留即 rc=1，正反两路实测）；
   ④ 新工具 `code_locate.sh`（>200 行禁整读，直接给 `read offset/limit`）、`selftest_env.sh`（自测影响面 before/after 快照 + 需复原提示）；
   ⑤ 模板/台账 `侦察笔记.md`、`轮次台账.tsv`（免广告面板 3 轮、菜单球 3 轮已回填）；
-  ⑥ `硬约束.md` #13–#18（被提问不得擅自改动 / 不再管卡密 / 不做自启动 / 默认分发型交付 / 方案 A 授权 / 菜单必须同时存在）+ `games/邂逅在迷宫.md` 交接文件 + `current.md` 索引行 + AGENTS.md「增量（第二轮）」与变更日志。
+  ⑥ `硬约束.md` #13–#18（被提问不得擅自改动 / 不再管卡密 / 不做自启动 / 方案 A 授权 / 菜单必须同时存在）+ `games/邂逅在迷宫.md` 交接文件 + `current.md` 索引行 + AGENTS.md「增量（第二轮）」与变更日志。
   机器关：`preflight.sh` 五脚本 PASS=5 FAIL=0（首轮抓出 `finalize_game_delivery.sh` L385 `$USAGE_DOC）` 硬错误）、`bash32_check.sh` 五脚本全过、`gate_note.sh` 记 G1 一行。
 - [霓虹深渊2 会话 9a67c280 效率复盘 P0–P2 全量落地（2026-10-12，用户 m00133「按照方案全量修改」）](history/reviews/规范优化_20261012_霓虹深渊2会话效率复盘.md)：**已合并**——
   根因不是缺规则，而是**三条既有闸门全程 0 次调用**（`pre_install_gate.sh` / `install_guard.sh` / `rootcause_note.sh`），加上更隐蔽的一条：**旧台账列格式与门禁取列错配 ⇒ 门禁数学上不可能触发**。对策：
