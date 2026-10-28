@@ -2,7 +2,7 @@
 # ================================================================
 #  魂坠深境 (com.chillyroom.containerofsoul.yw) — 星光外科组装
 #  （新菜单 provider-only 路线，照 surgical_zzz_3.2.0.sh）；
-#  **同一脚本管两代底包：VERSION=1.1.1（旧星光底包）/ 1.1.2（官方 TapTap 原包）**
+#  **同一脚本管三代底包：VERSION=1.1.1（旧星光底包）/ 1.1.2 / 1.1.3（官方 TapTap 原包）**
 #
 #  背景：旧包（f191e461，2026-09-10 gradle+smali 注入路线）把菜单 smali 混进了
 #  classes5.dex，靠 Activity onCreate 插桩拉起。新路线改为「新菜单 dex + Manifest
@@ -53,7 +53,7 @@ source "${STARRY_SRC}/../../04_scripts/_common/env.sh"
 
 NIXIANG="${NIXIANG_ROOT}"
 GAME="魂坠深境"
-VERSION="${HZSJ_VERSION:-1.1.2}"
+VERSION="${HZSJ_VERSION:-1.1.3}"
 PKG="com.chillyroom.containerofsoul.yw"
 AUTHORITY="${PKG}.starryinit"
 SERIAL="${SERIAL:-127.0.0.1:16416}"
@@ -72,7 +72,17 @@ case "${VERSION}" in
     DEX_ADD_NAME="${HZSJ_DEX_NAME:-classes5.dex}"     # 官方原包只到 dex4
     LEGACY_MENU_DEX=""                                # 官方包无 com/starry，免清理
     ;;
-  *) echo "ERROR: 未知 HZSJ_VERSION=${VERSION}（只支持 1.1.1 / 1.1.2）" >&2; exit 1 ;;
+  1.1.3)
+    # 2026-10-28 官方 TapTap 1.1.3 / vc44（真机 f9a116a2 只读拉取）。
+    # 结构与 1.1.2 同型：4 个 dex（无 classes5）、com/starry 命中 0、无 libc++_shared.so、
+    # metadata v31（名字串加密，只能运行时按名解析）、manifest appComponentFactory 仍为
+    # androidx.core.app.CoreComponentFactory、extractNativeLibs=true ⇒ 组装路径零变化。
+    BASE_DEFAULT="${NIXIANG}/02_apks/${GAME}/${GAME}_1.1.3_device_official.apk"
+    BASE_MD5_EXPECT="${HZSJ_BASE_MD5:-0e4a80ea14e1c85fb3b09c03a421c46e}"
+    DEX_ADD_NAME="${HZSJ_DEX_NAME:-classes5.dex}"     # 官方原包只到 dex4
+    LEGACY_MENU_DEX=""                                # 官方包无 com/starry，免清理
+    ;;
+  *) echo "ERROR: 未知 HZSJ_VERSION=${VERSION}（只支持 1.1.1 / 1.1.2 / 1.1.3）" >&2; exit 1 ;;
 esac
 
 BASE_APK="${HZSJ_BASE_APK:-${BASE_DEFAULT}}"
@@ -85,7 +95,10 @@ FINAL="${OUT_DIR}/${GAME}_${VERSION}_starry-newmenu-releaseSigned.apk"
 # 一次性手术缓存（dex5 去菜单 / 二进制 Manifest）；缓存按"是否做 dex5 清理"分桶
 CACHE_DIR="${NIXIANG}/07_patched/${GAME}/surgical${LEGACY_MENU_DEX:+_1.1.1}"
 CACHE_CLS5="${CACHE_DIR}/classes5_nostarry.dex"
-CACHE_MF="${CACHE_DIR}/AndroidManifest.xml"
+# 二进制 Manifest 缓存**按底包版本分桶**（2026-10-28 修）：原为共用一个 AndroidManifest.xml，
+# 1.1.3 复用 1.1.2 的缓存会静默丢掉新版新增组件（实测 1.1.3 新增
+# com.chillyroom.sdk.wrapper.wxapi.WXEntryActivity，缓存里没有 ⇒ 覆盖安装即缺该组件）。
+CACHE_MF="${CACHE_DIR}/AndroidManifest_${VERSION}.xml"
 
 
 # 菜单模板新鲜度门禁（2026-10-26 起）：模板必须与当前 Java 源码 HEAD 同步，
