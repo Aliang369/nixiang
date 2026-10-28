@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/绝区零",
+  "keep": "绝区零_3.3.0_starry-releaseSigned.apk",
+  "keep_size": 594795046,
+  "keep_md5": "2f5b35df0e4df73bc15aac1161451c1c",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "绝区零_3.3.0_starry-so-only-releaseSigned.apk",
+      "size": 594807334,
+      "md5": "d0cf6a6043d6eded74f807ae8f540a40"
+    }
+  ],
+  "removed_count": 1
+}

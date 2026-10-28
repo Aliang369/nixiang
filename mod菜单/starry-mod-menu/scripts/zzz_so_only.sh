@@ -27,8 +27,13 @@ PKG="com.miHoYo.Nap"
 SERIAL="${SERIAL:-f9a116a2}"
 
 SO_SRC="${ZZZ_SO_SRC:-${STARRY_SRC}/libs_zzz/arm64-v8a/libstarry_magic.so}"
+# 2026-10-28：SignSpoof 下线后本包必须带「改包法」dex 补丁（TapTap 验签 + 网页登录）
+#   classes4.dex = 游戏侧 dex（TapSDK 门闩/登录 handler），由 zzz_tapsdk_dexpatch_3.3.0.py 产出
+#   classes6.dex = 星光菜单 dex（由 zzz_build_dex.sh 产出，已不含 SignSpoof）
+DEX4_SRC="${ZZZ_CLASSES4_DEX:-${NIXIANG}/07_patched/${GAME}/tapsdk_patch/classes4.dex}"
+DEX6_SRC="${ZZZ_CLASSES6_DEX:-${STARRY_SRC}/templates/zzz_menu_current/classes6.dex}"
 OUT_DIR="${NIXIANG}/08_output/${GAME}"
-FINAL="${OUT_DIR}/${GAME}_${VERSION}_starry-so-only-releaseSigned.apk"
+FINAL="${OUT_DIR}/${GAME}_${VERSION}_starry-releaseSigned.apk"
 
 KS="${STARRY_KS:-${NIXIANG}/01_tools/starry_release.jks}"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
@@ -56,6 +61,8 @@ mkdir -p "${BASE_DIR}" "${OUT_DIR}"
 BASE_APK="${ZZZ_BASE_APK:-${BASE_DIR}/base_starry.apk}"
 
 [[ -f "${SO_SRC}" ]] || die "缺 ${SO_SRC}（先跑 04_scripts/绝区零/zzz_build_so.sh）"
+[[ -f "${DEX4_SRC}" ]] || die "缺 ${DEX4_SRC}（先跑 python3 04_scripts/绝区零/zzz_tapsdk_dexpatch_3.3.0.py）"
+[[ -f "${DEX6_SRC}" ]] || die "缺 ${DEX6_SRC}（先跑 04_scripts/绝区零/zzz_build_dex.sh）"
 [[ -f "${KS}" ]]     || die "缺签名密钥 ${KS}"
 [[ -x "${ZIPALIGN}" ]] || die "缺 zipalign: ${ZIPALIGN}"
 [[ -x "${APKSIGNER}" || -f "${APKSIGNER}" ]] || die "缺 apksigner: ${APKSIGNER}"
@@ -70,17 +77,25 @@ fi
 [[ -f "${BASE_APK}" ]] || die "无可用底包 ${BASE_APK}"
 echo "  base = ${BASE_APK} ($(wc -c <"${BASE_APK}" | tr -d ' ') B)"
 echo "  so   = ${SO_SRC} ($(wc -c <"${SO_SRC}" | tr -d ' ') B, md5 $(md5f "${SO_SRC}"))"
+echo "  dex4 = ${DEX4_SRC} ($(wc -c <"${DEX4_SRC}" | tr -d ' ') B, md5 $(md5f "${DEX4_SRC}"))"
+echo "  dex6 = ${DEX6_SRC} ($(wc -c <"${DEX6_SRC}" | tr -d ' ') B, md5 $(md5f "${DEX6_SRC}"))"
 
 WORK="$(mktemp -d "${ASCII_ROOT}/zzz_so_only.XXXXXX")"
 trap 'rm -rf "${WORK}"' EXIT
 MERGED="${WORK}/merged.apk"
 
-echo "[1/5] 外科 zip-merge：仅替换 lib/arm64-v8a/libstarry_magic.so，其余条目字节保真"
-"${PY}" - "${BASE_APK}" "${WORK}" "${MERGED}" "${SO_SRC}" <<'PY'
-import os, sys, zipfile
+echo "[1/5] 外科 zip-merge：替换 so + classes4.dex（TapSDK 改包法）+ classes6.dex（菜单），其余条目字节保真"
+"${PY}" - "${BASE_APK}" "${MERGED}" \
+  "lib/arm64-v8a/libstarry_magic.so=${SO_SRC}" \
+  "classes4.dex=${DEX4_SRC}" \
+  "classes6.dex=${DEX6_SRC}" <<'PY'
+import sys, zipfile
 
-orig, work, out, so = sys.argv[1:5]
-KEY = 'lib/arm64-v8a/libstarry_magic.so'
+orig, out = sys.argv[1], sys.argv[2]
+repl = {}
+for spec in sys.argv[3:]:
+    k, _, v = spec.partition('=')
+    repl[k] = v
 
 def is_sig(n):
     u = n.upper()
@@ -90,10 +105,12 @@ def is_sig(n):
 
 zin = zipfile.ZipFile(orig, 'r')
 names = set(zin.namelist())
-if KEY not in names:
-    sys.exit('base apk 缺 %s（底包不是星光包？）' % KEY)
+missing = [k for k in repl if k not in names]
+if missing:
+    sys.exit('base apk 缺条目 %s（底包不对？）' % ', '.join(missing))
 
-n_sig = copied = replaced = 0
+n_sig = copied = 0
+replaced = []
 with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as zout:
     for item in zin.infolist():
         n = item.filename
@@ -106,20 +123,24 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as zout:
         zi.create_system = item.create_system
         zi.comment = item.comment
         zi.compress_type = item.compress_type
-        if n == KEY:
-            zout.writestr(zi, open(so, 'rb').read())
-            replaced += 1
+        if n in repl:
+            zout.writestr(zi, open(repl[n], 'rb').read())
+            replaced.append(n)
             continue
         zout.writestr(zi, zin.read(n))
         copied += 1
 
 z2 = zipfile.ZipFile(out, 'r')
-bad = [n for n in names if n != KEY and not is_sig(n)
+bad = [n for n in names if n not in repl and not is_sig(n)
        and (zin.getinfo(n).CRC != z2.getinfo(n).CRC or zin.getinfo(n).file_size != z2.getinfo(n).file_size)]
 if bad:
     sys.exit('passthrough mismatch (%d), first=%s' % (len(bad), bad[0]))
-print('  entries copied=%d replaced=%d dropped_sig=%d' % (copied, replaced, n_sig))
-print('  out size = %d B' % os.path.getsize(out))
+if sorted(replaced) != sorted(repl):
+    sys.exit('替换条目不全：%s' % ', '.join(replaced))
+for k in replaced:
+    print('  replaced %-38s %d B' % (k, len(repl[k]) and __import__('os').path.getsize(repl[k])))
+print('  entries copied=%d replaced=%d dropped_sig=%d' % (copied, len(replaced), n_sig))
+print('  out size = %d B' % __import__('os').path.getsize(out))
 PY
 
 echo "[2/5] zipalign -f -p 4"
@@ -135,13 +156,26 @@ rm -f "${FINAL}"
 cp -f "${WORK}/final.apk" "${FINAL}"
 [[ -f "${FINAL}" ]] || die "copy to ${FINAL} failed"
 
-echo "[4/5] 校验：包内 so md5 == 构建产物；签发证书 == StarryMagic"
-"${PY}" -c "import zipfile,sys;open(sys.argv[2],'wb').write(zipfile.ZipFile(sys.argv[1]).read('lib/arm64-v8a/libstarry_magic.so'))" "${FINAL}" "${WORK}/in_so.so"
-a="$(md5f "${SO_SRC}")"; b="$(md5f "${WORK}/in_so.so")"
-[[ "${a}" = "${b}" ]] || die "包内 so md5(${b}) != 构建产物(${a})"
+echo "[4/5] 校验：包内 so/dex md5 == 构建产物；签发证书 == StarryMagic"
+"${PY}" - "${FINAL}" "${WORK}" <<'PY'
+import sys, zipfile, hashlib
+apk, work = sys.argv[1], sys.argv[2]
+z = zipfile.ZipFile(apk)
+for key, name in (('lib/arm64-v8a/libstarry_magic.so', 'in_so.so'),
+                  ('classes4.dex', 'in_classes4.dex'),
+                  ('classes6.dex', 'in_classes6.dex')):
+    open(work + '/' + name, 'wb').write(z.read(key))
+PY
+for pair in "lib/arm64-v8a/libstarry_magic.so:${WORK}/in_so.so:${SO_SRC}" \
+            "classes4.dex:${WORK}/in_classes4.dex:${DEX4_SRC}" \
+            "classes6.dex:${WORK}/in_classes6.dex:${DEX6_SRC}"; do
+  key="${pair%%:*}"; rest="${pair#*:}"; got="${rest%%:*}"; want="${rest##*:}"
+  a="$(md5f "${want}")"; b="$(md5f "${got}")"
+  [[ "${a}" = "${b}" ]] || die "包内 ${key} md5(${b}) != 构建产物(${a})"
+  echo "  ${key} md5 ok = ${a}"
+done
 "${APKSIGNER}" verify --print-certs "${FINAL}" > "${WORK}/certs.txt" 2>&1 || true
 LC_ALL=C grep -qi "${CERT_SHA256}" "${WORK}/certs.txt" || die "签发证书 SHA-256 不符"
-echo "  so md5 ok = ${a}"
 echo "  apk md5   = $(md5f "${FINAL}")"
 echo "[done] ${FINAL} ($(wc -c <"${FINAL}" | tr -d ' ') B)"
 

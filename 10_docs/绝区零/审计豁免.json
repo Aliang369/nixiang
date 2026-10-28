@@ -1,0 +1,26 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "绝区零",
+  "package": "com.miHoYo.Nap",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "gameconfig_missing_branch",
+      "match": ["GameConfig.h 无 defined(STARRY_GAME_ZZZ)", "STARRY_AUTH_GAME_ID 未定义"],
+      "conclusion": "接受偏离",
+      "reason": "绝区零 native 入口走 modern 注册表：鉴权 game_id 由 Games/ZzzEntry.cpp 的 authGameId=\"jql\" 直接给出，构建走私有 Android_zzz.mk（LOCAL_SRC_FILES = MainModern.cpp + Games/ZzzMod.cpp + Games/ZzzEntry.cpp），完全不经过 GameConfig.h 的 legacy 映射与 :24 的 #error。审计该项只覆盖 legacy 路径，属误报。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/ZzzEntry.cpp（.authGameId = \"jql\"，.tag = \"jql\"）+ 04_scripts/绝区零/zzz_build_so.sh（ZZZ_MK=Android_zzz.mk）；构建日志 [check] 菜单串 OK: Toggle_无敌/Toggle_无限技能/Slider_伤害倍率/Toggle_定怪 各 x1（证明产物是本游戏的 so）；2026-10-22 探针真机 precheck 行 `auth game_id synced: jql`（10_docs/_state/games/绝区零.md §3.3.0 迁移轮）",
+      "date": "2026-10-28",
+      "review_by": "2027-01-28"
+    },
+    {
+      "id": "android_mk_branch",
+      "match": ["激活分支", "与 --game"],
+      "conclusion": "接受偏离",
+      "reason": "本游戏用私有 mk（Android_zzz.mk）直编，公共 Android.mk 的 legacy 激活分支（ZHMR）不参与本游戏构建，故不会编出别的游戏的 so。",
+      "evidence": "04_scripts/绝区零/zzz_build_so.sh（APP_BUILD_SCRIPT=./Android_zzz.mk，输出 libs_zzz/arm64-v8a/libstarry_magic.so）+ 2026-10-28 本轮产物 so md5 85572771dd87bbb4c45b597009a08ffc 含 4 个绝区零菜单串、无他游戏串",
+      "date": "2026-10-28",
+      "review_by": "2027-01-28"
+    }
+  ]
+}

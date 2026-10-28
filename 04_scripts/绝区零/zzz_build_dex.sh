@@ -153,7 +153,12 @@ need = [
     b'com/starry/magic/sign/StarryAppComponentFactory',
     b'com/starry/magic/ota/StarryNativeLoad',
 ]
+# 2026-10-28 用户定案：运行时签名伪装整体下线（sign/SignSpoof.java 已删）
+#   ⇒ 本项由「必须存在」翻转为「禁止存在」，TapTap 验签/网页登录改走改包法（dex 补丁）。
+#   机器关：04_scripts/_common/framework_entry_audit.sh [B] + pre_install_gate.sh 查12。
+forbid = [b'com/starry/magic/sign/SignSpoof']
 miss = [n.decode() for n in need if n not in b]
+bad = [n.decode() for n in forbid if n in b]
 print('file      : %s' % name)
 print('size      : %d B' % len(b))
 print('sha256    : %s' % hashlib.sha256(b).hexdigest())
@@ -164,6 +169,8 @@ for n in need:
     print('  %-42s %s' % (n.decode(), 'OK' if n in b else 'MISSING'))
 if miss:
     print('FAIL missing: %s' % ', '.join(miss)); sys.exit(1)
+if bad:
+    print('FAIL forbidden(已下线，dex 内不得出现): %s' % ', '.join(bad)); sys.exit(1)
 print('OK')
 PY
 
