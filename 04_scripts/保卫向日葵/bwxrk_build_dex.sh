@@ -178,7 +178,7 @@ need = [
     b'com/starry/magic/StarryInitProvider',
     b'com/starry/magic/menu/MenuService',
     b'com/starry/magic/bridge/ModBridge',
-    b'com/starry/magic/sign/SignSpoof',
+    b'com/starry/magic/sign/StarryAppComponentFactory',
     b'com/starry/magic/ota/StarryNativeLoad',
     b'com/starry/magic/StarryApp',
 ]

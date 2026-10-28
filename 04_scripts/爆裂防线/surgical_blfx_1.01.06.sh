@@ -5,7 +5,7 @@
 # 改动：
 #   - 改 AndroidManifest（原 <application> 无 android:name，保持默认 Application；
 #     appComponentFactory: androidx.core.app.CoreComponentFactory →
-#       com.starry.magic.sign.SignSpoofAppComponentFactory（冷启动即回灌官方签名）；
+#       com.starry.magic.sign.StarryAppComponentFactory（冷启动即回灌官方签名）；
 #     + StarryInitProvider + MenuService + 三条权限）
 #   - 新增 classes3.dex（星光 smali：StarryInitProvider / MenuService / SignSpoof /
 #     TapLoginForceWeb / ModBridge / OTA）。★本作底包是**双 dex**
@@ -181,7 +181,7 @@ SMALI_NEED=(
   "com/starry/magic/StarryInitProvider.smali"
   "com/starry/magic/menu/MenuService.smali"
   "com/starry/magic/sign/SignSpoof.smali"
-  "com/starry/magic/sign/SignSpoofAppComponentFactory.smali"
+  "com/starry/magic/sign/StarryAppComponentFactory.smali"
   "com/starry/magic/sign/TapLoginForceWeb.smali"
 )
 if [[ "${NEED_YNTT:-0}" == "1" ]]; then
@@ -258,7 +258,7 @@ if perms:
 
 # 冷启动即回灌官方证书（TapSDK 读签名早于 Provider.onCreate 的场景）
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
-new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
+new_factory = 'android:appComponentFactory="com.starry.magic.sign.StarryAppComponentFactory"'
 if new_factory not in t:
     if old_factory not in t:
         raise SystemExit("expected CoreComponentFactory not found")
@@ -320,7 +320,7 @@ PY
     || { echo "ERROR: 新 manifest 缺 MenuService" >&2; exit 1; }
   grep -q "android.permission.FOREGROUND_SERVICE_SPECIAL_USE" "$WORK/tree_new.txt" \
     || { echo "ERROR: 新 manifest 缺 FOREGROUND_SERVICE_SPECIAL_USE" >&2; exit 1; }
-  grep -q "com.starry.magic.sign.SignSpoofAppComponentFactory" "$WORK/tree_new.txt" \
+  grep -q "com.starry.magic.sign.StarryAppComponentFactory" "$WORK/tree_new.txt" \
     || { echo "ERROR: 新 manifest 未替换 appComponentFactory" >&2; exit 1; }
   # 本作官方 launcher activity = com.unity3d.player.MyMainActivity（团结引擎，非 PrivacyActivity）
   grep -q "com.unity3d.player.MyMainActivity" "$WORK/tree_new.txt" \

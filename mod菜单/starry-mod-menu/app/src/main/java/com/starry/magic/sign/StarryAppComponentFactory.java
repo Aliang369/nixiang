@@ -10,18 +10,20 @@ import android.content.Intent;
 import android.util.Log;
 
 /**
- * Installs the signature spoof before the game's real Application is created.
+ * 星光"早启动 AppComponentFactory"入口：保留游戏原本的 Application 类，
+ * 把所有非 Application 组件的实例化交给原厂 {@code androidx.core.app.CoreComponentFactory}。
  *
- * Provider.onCreate runs after Application.attachBaseContext and after other
- * providers have already started, which is too late for cold-start TapTap token
- * refresh. This factory preserves the original Application class and delegates
- * every non-Application component to the game's original CoreComponentFactory.
+ * <p><b>历史与现状（2026-10-28）</b>：本类原名为 {@code SignSpoofAppComponentFactory}，
+ * 唯一职责是在真实 Application 创建前安装运行时签名伪装（{@code SignSpoof.install()}）。
+ * 用户 2026-10-28 定案「TapTap 验签/登录一律改包法，不再用签名伪装」后，签名伪装已**整体删除**，
+ * 本类只作为"早于 Application 的 Java 入口"保留（勇士之心 1.0.4 的 SecShell 看门狗
+ * {@code ysxz/YsxzAppComponentFactory} 需要它；其它需要在 ~365ms 内跑代码的包也用它）。
  *
- * 非 final：勇士之心 1.0.4 用子类 {@code com.starry.magic.ysxz.YsxzAppComponentFactory}
- * 在本入口之上追加 SecShell 净化看门狗（必须早于壳自检，见该类注释）。
+ * <p><b>新包请优先用 {@code StarryInitProvider}（ContentProvider）做入口</b>；
+ * 只有在"必须早于 Application/壳自检"时才改 Manifest 的 {@code appComponentFactory} 到本类。
  */
-public class SignSpoofAppComponentFactory extends AppComponentFactory {
-    private static final String TAG = "StarrySignFactory";
+public class StarryAppComponentFactory extends AppComponentFactory {
+    private static final String TAG = "StarryAppFactory";
     private static final String ORIGINAL_FACTORY = "androidx.core.app.CoreComponentFactory";
 
     private volatile AppComponentFactory delegate;
@@ -48,12 +50,6 @@ public class SignSpoofAppComponentFactory extends AppComponentFactory {
     @Override
     public Application instantiateApplication(ClassLoader cl, String className)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        try {
-            SignSpoof.install();
-            Log.i(TAG, "SignSpoof installed before application=" + className);
-        } catch (Throwable t) {
-            Log.e(TAG, "SignSpoof pre-install failed", t);
-        }
         AppComponentFactory original = delegate(cl);
         return original != null
                 ? original.instantiateApplication(cl, className)

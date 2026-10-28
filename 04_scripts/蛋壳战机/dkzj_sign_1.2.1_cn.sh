@@ -5,7 +5,7 @@
 # 签完必须复核：包结构、包内 so == 构建产物、原包游戏本体逐字节不变、
 # classes5.dex 含本包名映射、签名 CN=StarryMagic。
 # 2026-10-28 起走 TapTap「改包法」：classes4.dex 是**故意修补**的（验签门闩恒 true / 登录恒 Web），
-# 因此该条从「零改动」断言改为「== 补丁产物」；并发伪装判据反向为「manifest 不得含 SignSpoofAppComponentFactory」。
+# 因此该条从「零改动」断言改为「== 补丁产物」；并发伪装判据反向为「manifest 不得含 StarryAppComponentFactory」。
 #
 # 跨机：优先用 build-tools 的 apksigner.jar（java -jar，mac/Win 同命令）。
 # 用法：bash 04_scripts/蛋壳战机/dkzj_sign_1.2.1_cn.sh
@@ -108,10 +108,10 @@ if b'com.survivor.acecn' not in dex:
     raise SystemExit('classes5.dex 缺 包名签名映射 com.survivor.acecn')
 if patched4:
     # 改包法（2026-10-28 起）：运行时签名伪装已停用 ⇒ 不再要求 gorilla 证书串生效，
-    # 反而必须断言 manifest 没挂 SignSpoofAppComponentFactory（旧法判据反向）。
-    if b'SignSpoofAppComponentFactory' in man:
-        raise SystemExit('manifest 仍挂 SignSpoofAppComponentFactory —— 改包法包不允许（旧运行时伪装已停用）')
-    print('  classes5.dex 包名映射 ok；manifest 未挂 SignSpoofAppComponentFactory（改包法）')
+    # 反而必须断言 manifest 没挂 StarryAppComponentFactory（旧法判据反向）。
+    if b'StarryAppComponentFactory' in man:
+        raise SystemExit('manifest 仍挂 StarryAppComponentFactory —— 改包法包不允许（旧运行时伪装已停用）')
+    print('  classes5.dex 包名映射 ok；manifest 未挂 StarryAppComponentFactory（改包法）')
 else:
     if b'MIICojCCAYqgAwIBAgIEbs5L8zAN' not in dex:
         raise SystemExit('classes5.dex 缺 gorilla 官方证书（旧签名伪装路线下必需）')

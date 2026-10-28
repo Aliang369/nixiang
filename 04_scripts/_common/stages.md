@@ -86,7 +86,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 查9 | so / metadata 配套（IL2CPP 直装包：只换一边 = 混搭 ⇒ FAIL） | 2026-10-19 | `SO_META_CHECK=0` |
 | 查10 | 菜单 dex 新鲜度（dex 内 `starry-menu:<commit>` 必须等于当前 Java 源码 HEAD） | 2026-10-26 | 见下方「菜单 dex 新鲜度门禁」 |
 | ~~查11~~ | ~~**加固凭证**：`09_test/<游戏>/harden/<apk_md5>.stamp` 必须与当前 APK md5 对应~~ | 2026-10-27 起 · **已下线（用户裁决）** | 不再判定；`harden_gate.sh`/`harden_apk.py` 默认跳过（需真跑给 `HARDEN_GATE_ENABLED=1`） |
-| 查12 | **TapTap 方案关**：① manifest 不得挂 `SignSpoofAppComponentFactory`（运行时签名伪装已停用）；② 底包含 `.../initializer/repository/GatekeeperRepository` 时，成品同名 dex **不得与底包逐字节相同**（＝必须已改包）；无该门闩类 ⇒ SKIP | 2026-10-28 | `TAP_MODE_CHECK=0`（须在装机报告写明理由） |
+| 查12 | **TapTap 方案关**：① manifest 不得挂 `SignSpoofAppComponentFactory`（该类 2026-10-28 已删，挂着必崩）；② 底包含 `.../initializer/repository/GatekeeperRepository` 时，成品同名 dex **不得与底包逐字节相同**（＝必须已改包）；无该门闩类 ⇒ SKIP | 2026-10-28 | `TAP_MODE_CHECK=0`（须在装机报告写明理由） |
 
 > 查11 已下线：加固门禁不再被任何规则/装机门禁要求，详见 `AGENTS.md` §6「加固门禁已下线」与 `_state/规范变更日志.md`（2026-10-27）。三款已接入游戏的去加固步骤见各游戏 `去加固_待办_20261027.md`。
 > 查12 依据 = 用户 2026-10-28 定案「TapTap 验签/网页登录一律改包法，不再用签名伪装」（`_state/规范变更日志.md` 同名条目）；落地起因＝蛋壳战机 1.2.1 首版误沿用旧伪装且当时没有任何机器关能发现「没改包」。

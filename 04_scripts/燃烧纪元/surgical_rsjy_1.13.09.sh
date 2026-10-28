@@ -80,7 +80,7 @@ if perms:
     t = t[:i] + "\n".join(perms) + "\n" + t[i:]
 
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
-new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
+new_factory = 'android:appComponentFactory="com.starry.magic.sign.StarryAppComponentFactory"'
 if new_factory not in t:
     if old_factory not in t:
         raise SystemExit("expected CoreComponentFactory not found")

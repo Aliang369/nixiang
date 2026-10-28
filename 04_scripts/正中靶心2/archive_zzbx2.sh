@@ -17,7 +17,7 @@ git add -- \
   "10_docs/_state/games/正中靶心2.md" \
   "10_docs/_state/current.md" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/StarryInitProvider.java" \
-  "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoofAppComponentFactory.java" \
+  "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/StarryAppComponentFactory.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/Zzbx2Hooks.java" \
@@ -46,7 +46,7 @@ while IFS= read -r path; do
     04_scripts/正中靶心2/*|10_docs/正中靶心2/*|\
     10_docs/_state/games/正中靶心2.md|10_docs/_state/current.md|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/StarryInitProvider.java|\
-    mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoofAppComponentFactory.java|\
+    mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/StarryAppComponentFactory.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/cocos/Zzbx2Hooks.java|\

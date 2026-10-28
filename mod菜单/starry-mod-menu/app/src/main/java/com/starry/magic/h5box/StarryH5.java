@@ -38,7 +38,7 @@ import java.lang.reflect.Method;
  * <p><b>为什么不 patch 游戏 classes.dex</b>：宿主 {@code MainActivity} 的 smali 注入
  * 需要 baksmali/smali 整包重建 classes.dex（7.7MB、多 dex 顶部，风险高）。
  * 改由 Manifest 声明两个 Provider（框架的 {@code StarryInitProvider} 负责
- * 加载 so + SignSpoof + 起菜单；本包的 {@code CzbhzH5Provider} 负责挂本类），
+ * 加载 so + 起菜单（运行时签名伪装 SignSpoof 已于 2026-10-28 删除）；本包的 {@code CzbhzH5Provider} 负责挂本类），
  * 于是 classes.dex / classes2.dex / classes3.dex 全部字节不变。
  *
  * <p><b>授权门控</b>：{@link #getState()} 的 {@code live} 为 0 时补丁侧一律不生效。

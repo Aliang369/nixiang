@@ -111,7 +111,7 @@ echo "[sign] 星光 dex = $DEX_NAME"
 unzip -p "$SIGNED" "$DEX_NAME" > "$WORK/starry.dex"
 for t in "com/starry/magic/StarryInitProvider" "com/starry/magic/menu/MenuService" \
          "$LOGIN_CARRIER" "com/starry/magic/cocos/GyzwHooks" \
-         "com/starry/magic/sign/SignSpoof"; do
+         "com/starry/magic/sign/StarryAppComponentFactory"; do
   LC_ALL=C grep -aqF "$t" "$WORK/starry.dex" || { echo "ERROR: $DEX_NAME 缺 $t" >&2; exit 1; }
 done
 
@@ -122,8 +122,8 @@ LC_ALL=C grep -aqF "GyzwHooks" "$WORK/c3.dex" \
 LC_ALL=C grep -aqF "shouldSkipAd" "$WORK/c3.dex" \
   || { echo "ERROR: classes3.dex 内无 shouldSkipAd 调用" >&2; exit 1; }
 
-# 两张表必须同步（SignSpoof 证书表 + TapLoginForceWeb 白名单）
-for t in "SignSpoof" "TapLoginForceWeb"; do
+# 2026-10-28：SignSpoof 证书表已删除，只剩 TapLoginForceWeb 白名单需要断言
+for t in "TapLoginForceWeb"; do
   LC_ALL=C grep -aqF "$t" "$WORK/starry.dex" || { echo "ERROR: $DEX_NAME 缺 $t" >&2; exit 1; }
 done
 

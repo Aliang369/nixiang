@@ -224,7 +224,7 @@ if new_app not in t:
     t = t.replace(old_app, new_app, 1)
 
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
-new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
+new_factory = 'android:appComponentFactory="com.starry.magic.sign.StarryAppComponentFactory"'
 if new_factory not in t:
     if old_factory not in t:
         raise SystemExit("expected CoreComponentFactory not found")

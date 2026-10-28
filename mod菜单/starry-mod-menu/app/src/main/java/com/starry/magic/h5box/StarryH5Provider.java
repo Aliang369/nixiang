@@ -21,7 +21,7 @@ import android.util.Log;
  * <p>职责边界：
  * <ul>
  *   <li>框架的 {@code StarryInitProvider}（同样在 Manifest 声明）负责
- *       加载 libstarry_magic.so、SignSpoof、起 MenuService；</li>
+ *       加载 libstarry_magic.so、起 MenuService（运行时签名伪装 SignSpoof 已于 2026-10-28 删除）；</li>
  *   <li>本类只负责在宿主 Activity 出现后，把 {@link StarryH5} 挂到它的
  *       游戏 WebView 上（找 WebView 与补丁资产定位都在 StarryH5 内，
  *       补丁资产按运行时 game_id 推导为 {@code assets/starry/<game_id>_patch.js}）。</li>

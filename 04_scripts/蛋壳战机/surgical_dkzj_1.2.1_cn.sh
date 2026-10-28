@@ -3,7 +3,7 @@
 #
 # 原包游戏本体不变：classes.dex..classes4.dex / resources.arsc / assets/** /
 # 原 lib so 逐字节保留。仅：
-#   - AndroidManifest.xml：appComponentFactory -> SignSpoofAppComponentFactory，
+#   - AndroidManifest.xml：appComponentFactory -> StarryAppComponentFactory，
 #     增加 StarryInitProvider、MenuService、前台服务权限
 #   - 新增 classes5.dex（星光 Java/smali，来自 menu APK 的 com/starry）
 #   - 新增 libstarry_magic.so + libc++_shared.so
@@ -100,14 +100,14 @@ done
 for need in \
   "com/starry/magic/StarryInitProvider.smali" \
   "com/starry/magic/menu/MenuService.smali" \
-  "com/starry/magic/sign/SignSpoof.smali" \
-  "com/starry/magic/sign/SignSpoofAppComponentFactory.smali" \
+  "com/starry/magic/sign/StarryAppComponentFactory.smali" \
   "com/starry/magic/sign/TapLoginForceWeb.smali"; do
   [ -f "$SMALI_ROOT/$need" ] || { echo "ERROR: $need missing" >&2; exit 1; }
 done
 
-# 【改包法】摘掉运行时签名伪装（dex 级，不动共享 Java 源码）：
-# StarryInitProvider 里对 SignSpoof.install() 的调用注释掉；SignSpoof 类仍在包内但不执行。
+# 【改包法】运行时签名伪装已于 2026-10-28 从源码整体删除（SignSpoof 类不再存在）。
+# 本段保留为"兜底断言"：万一 smali 树里又出现 SignSpoof.install() 生效调用（例如回滚到旧 Java），
+# 就地注释掉并告警；0 处是正常状态。
 "$PY" - "$SMALI_ROOT/com/starry/magic/StarryInitProvider.smali" <<'PY'
 import sys
 from pathlib import Path
@@ -115,16 +115,19 @@ p = Path(sys.argv[1])
 t = p.read_text(encoding="utf-8")
 needle = "Lcom/starry/magic/sign/SignSpoof;->install()V"
 n = t.count(needle)
-if n != 1:
-    raise SystemExit(f"StarryInitProvider 里 SignSpoof.install() 调用应为 1 处，实际 {n} 处")
+if n == 0:
+    print("  StarryInitProvider 无 SignSpoof.install()（源码已删，正常）")
+    sys.exit(0)
+if n > 1:
+    raise SystemExit(f"StarryInitProvider 里 SignSpoof.install() 出现 {n} 处（异常，人工核对）")
 out = []
 for line in t.splitlines():
     if needle in line and line.lstrip().startswith("invoke-static"):
-        out.append("    # 【改包法】运行时签名伪装已停用（用户 2026-10-28 定案）：" + line.strip())
+        out.append("    # 【改包法】运行时签名伪装已删除（用户 2026-10-28 定案）：" + line.strip())
         continue
     out.append(line)
 p.write_text("\n".join(out) + "\n", encoding="utf-8")
-print("  SignSpoof.install() 调用已注释（改包法）")
+print("  ⚠ 检测到遗留 SignSpoof.install() 调用，已就地注释（源码应为新版）")
 PY
 if LC_ALL=C grep -aqE '^[[:space:]]*invoke-static.*SignSpoof;->install\(\)V' "$SMALI_ROOT/com/starry/magic/StarryInitProvider.smali"; then
   echo "ERROR: SignSpoof.install() 仍在生效位置（应只剩注释）" >&2
@@ -190,7 +193,7 @@ if perms:
         raise SystemExit("no <uses-permission> in manifest")
     t = t[:i] + "\n".join(perms) + "\n" + t[i:]
 
-# 【改包法 2026-10-28】不再把 appComponentFactory 换成 SignSpoofAppComponentFactory：
+# 【改包法 2026-10-28】不再把 appComponentFactory 换成 StarryAppComponentFactory：
 # 该类自身的 instantiateApplication 会调 SignSpoof.install()（实测小米上 StarrySignSpoof 66 行、exemptHiddenApis 失败）。
 # 保留官方 androidx.core.app.CoreComponentFactory，注入入口只用 StarryInitProvider（其 install() 调用已在 dex 级注释）。
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
@@ -256,8 +259,8 @@ PY
     grep -q "$need" "$WORK/tree_new.txt" \
       || { echo "ERROR: 新 manifest 缺 $need" >&2; exit 1; }
   done
-  LC_ALL=C grep -q "com.starry.magic.sign.SignSpoofAppComponentFactory" "$WORK/tree_new.txt" && {
-    echo "ERROR: manifest 仍挂着 SignSpoofAppComponentFactory（改包法要求摘掉）" >&2; exit 1; }
+  LC_ALL=C grep -q "com.starry.magic.sign.StarryAppComponentFactory" "$WORK/tree_new.txt" && {
+    echo "ERROR: manifest 仍挂着 StarryAppComponentFactory（改包法要求摘掉）" >&2; exit 1; }
   sed -E 's/\(line=[0-9]+\)//' "$WORK/tree_orig.txt" > "$WORK/o.norm"
   sed -E 's/\(line=[0-9]+\)//' "$WORK/tree_new.txt" > "$WORK/n.norm"
   "$PY" - "$WORK/o.norm" "$WORK/n.norm" <<'PY'

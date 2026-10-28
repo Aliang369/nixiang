@@ -111,7 +111,7 @@ echo "  prompt = $(md5 -q "$TMP/package.so")"
 for needle in \
   'SjzzHooks' \
   'SignSpoof' \
-  'SignSpoofAppComponentFactory' \
+  'StarryAppComponentFactory' \
   'StarryInitProvider' \
   'MenuService'; do
   LC_ALL=C grep -aFq "$needle" "$TMP/classes3.dex" \

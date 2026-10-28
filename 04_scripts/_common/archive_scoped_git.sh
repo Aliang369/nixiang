@@ -20,6 +20,7 @@ REQUIRE_CLEAN_PATHS=0
 # 路径级 `git add` 会把别的会话未提交的改动一起带走（2026-09-30 实际发生过一次：
 # 提交 9aed48b9 混入伊莫会话 17 行证书常量），故这里做硬门禁，只允许内容级暂存。
 SHARED_FILES=(
+  # 2026-10-28 已随「删除运行时签名伪装」删除；条目保留无害（路径不存在 ⇒ 永不匹配），供历史对照。
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
   "10_docs/_state/current.md"
   "10_docs/_state/底包再获取台账.md"

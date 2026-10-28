@@ -12,7 +12,6 @@ import android.util.Log;
 
 import com.starry.magic.menu.MenuService;
 import com.starry.magic.ota.StarryNativeLoad;
-import com.starry.magic.sign.SignSpoof;
 import com.starry.magic.sign.TapLoginForceWeb;
 
 /**
@@ -67,13 +66,13 @@ public class StarryInitProvider extends ContentProvider {
                 Log.i(TAG, "skip native (proc=" + StarryApp.currentProcessName() + ")");
                 return true;
             }
-            // 先于其它 Provider/SDK 初始化回灌官方证书，避免 TapSignKit 读到缓存真签。
-            SignSpoof.install();
+            // 2026-10-28：运行时签名伪装（SignSpoof）已整体删除；TapTap 验签/登录改走
+            // 「改包法」（静态改游戏 dex 的门闩与登录入口，见 _templates/经验_TapTap改包法_…_20261028.md）。
             boolean ok = StarryNativeLoad.ensureLoaded(application);
             Log.i(TAG, "native ensureLoaded=" + ok + " path=" + StarryNativeLoad.loadedPath());
             // P1-6：把自身 APK 路径交给 native，立刻跑一次自完整性校验
             com.starry.magic.bridge.ModBridge.setApkPath(application);
-            // 签名回灌（TapSignKit 进程内 PM 查询拿官方签名）+ TapTap 强制网页登录
+            // TapTap 强制网页登录（旧机制，仅未迁移改包法的老包仍用）
             application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
                 @Override
                 public void onActivityResumed(android.app.Activity activity) {

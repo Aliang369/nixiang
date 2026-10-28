@@ -131,7 +131,7 @@ echo "[sign] 星光 dex = $DEX_NAME"
 unzip -p "$SIGNED" "$DEX_NAME" > "$WORK/starry.dex"
 for t in "com/starry/magic/StarryInitProvider" "com/starry/magic/menu/MenuService" \
          "com/starry/magic/bridge/ModBridge" "com/starry/magic/sign/SignSpoof" \
-         "com/starry/magic/sign/SignSpoofAppComponentFactory" \
+         "com/starry/magic/sign/StarryAppComponentFactory" \
          "$LOGIN_CARRIER" "$LOGIN_CARRIER_YNTT"; do
   LC_ALL=C grep -aqF "$t" "$WORK/starry.dex" || { echo "ERROR: $DEX_NAME 缺 $t" >&2; exit 1; }
 done

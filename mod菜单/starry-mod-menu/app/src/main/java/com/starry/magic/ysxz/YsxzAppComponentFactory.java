@@ -3,7 +3,7 @@ package com.starry.magic.ysxz;
 import android.app.Application;
 import android.util.Log;
 
-import com.starry.magic.sign.SignSpoofAppComponentFactory;
+import com.starry.magic.sign.StarryAppComponentFactory;
 
 import java.io.File;
 
@@ -21,11 +21,10 @@ import java.io.File;
  * 的唯一现成 Java 入口——StarryInitProvider.onCreate 要到 ~651ms，libstarry_magic.so 的
  * JNI_OnLoad 也随之太晚。
  *
- * <p>签名伪装仍由父类 {@link SignSpoofAppComponentFactory} 负责（壳用「签名 + 包名」派生
- * 密钥解密 assets/apksecurefile 与加密 cocos so），这里只追加 native 预备调用，
- * 不改父类行为。
+ * <p>2026-10-28：运行时签名伪装已整体删除，父类更名为 {@link StarryAppComponentFactory}，
+ * 只负责"保留原厂 Application 并委托 CoreComponentFactory"；本类只追加 native 预备调用。
  */
-public class YsxzAppComponentFactory extends SignSpoofAppComponentFactory {
+public class YsxzAppComponentFactory extends StarryAppComponentFactory {
     private static final String TAG = "YsxzAppFactory";
 
     /** Games/YsxzSecShell.cpp：Java_com_starry_magic_ysxz_YsxzAppComponentFactory_nativePrepareSecureShell */

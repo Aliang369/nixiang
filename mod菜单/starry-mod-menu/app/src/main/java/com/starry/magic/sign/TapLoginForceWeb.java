@@ -13,6 +13,12 @@ import java.lang.reflect.Method;
 /**
  * TapTap 强制内嵌网页登录（纯运行时反射，不改 dex —— ACE 校验官方 dex，字节级修改即闪退）。
  * <p>
+ * <b>2026-10-28 状态</b>：本类属**旧机制**，只服务"还没迁移到改包法"的老包；新包一律按
+ * {@code 10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md} 改游戏 dex
+ * （门闩恒放行 + 登录入口恒 Web）。同日起**运行时签名伪装 {@code SignSpoof} 已整体删除**，
+ * 下面各游戏注释里提到的「SignSpoof 回灌证书 / killPm / SignSpoofAppComponentFactory 早安装」
+ * 均为**历史原因记录**，不再有对应实现；需要"签名一致"能力的包必须走改包法。
+ * <p>
  * 旧版 TapSDK（终末地 4.7.0 内嵌版，loginHandlers 数组路由）：
  * {@code TapTapLoginActivity.<init>} new {@code LoginActivityImpl}，其
  * {@code loginHandlers} 固定为 [CloudLoginHandler, ClientLoginHandler]；onCreate 遍历

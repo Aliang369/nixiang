@@ -87,7 +87,7 @@ for need in \
   "com/starry/magic/StarryInitProvider.smali" \
   "com/starry/magic/menu/MenuService.smali" \
   "com/starry/magic/sign/SignSpoof.smali" \
-  "com/starry/magic/sign/SignSpoofAppComponentFactory.smali"; do
+  "com/starry/magic/sign/StarryAppComponentFactory.smali"; do
   [[ -f "$SMALI_ROOT/$need" ]] || { echo "ERROR: $need missing" >&2; exit 1; }
 done
 
@@ -191,7 +191,7 @@ if new_app in t:
     raise SystemExit("refusing manifest with replaced Application")
 
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
-new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
+new_factory = 'android:appComponentFactory="com.starry.magic.sign.StarryAppComponentFactory"'
 if old_factory not in t:
     raise SystemExit("expected CoreComponentFactory not found")
 if new_factory in t:
@@ -259,7 +259,7 @@ PY
   done
   for forbidden in \
     "com.starry.magic.StarryApp" \
-    "com.starry.magic.sign.SignSpoofAppComponentFactory"; do
+    "com.starry.magic.sign.StarryAppComponentFactory"; do
     if grep -q "$forbidden" "$WORK/tree_new.txt"; then
       echo "ERROR: 新 manifest 残留禁用组件 $forbidden" >&2
       exit 1

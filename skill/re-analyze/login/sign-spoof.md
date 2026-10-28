@@ -1,7 +1,14 @@
-# 运行时签名伪装（SignSpoof）
+# 运行时签名伪装（SignSpoof）— **已删除，禁止再使用**
+
+> 🚫 **2026-10-28 用户指令：`sign/SignSpoof.java` 与 `sign/SignSpoofAppComponentFactory.java` 已从源码整体删除。**
+> 本文件自此**只作历史机制参考**（理解老包为什么这样写、读懂旧日志），**不得再作为实施步骤**。
+> 现行做法＝**改包法**（静态改游戏 dex：门闩恒放行 + 弹窗 no-op + 登录入口恒 Web）：
+> 见 [`taptap-web-login.md`](taptap-web-login.md) 顶部「现行口径」与
+> `10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md`。
+> 机器关：`framework_entry_audit.sh [B]`（dex 不得含 `Lcom/starry/magic/sign/SignSpoof;`）+ `pre_install_gate.sh 查12`。
 
 > 📍 re-analyze/login/sign-spoof.md
-> 🎯 需要对本进程 PackageManager 查询返回原版签名，让游戏自检通过
+> 🎯 （历史）需要对本进程 PackageManager 查询返回原版签名，让游戏自检通过
 
 ---
 

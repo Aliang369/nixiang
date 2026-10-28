@@ -29,7 +29,6 @@ git -C "$NIXIANG" status --short -- \
   10_docs/偶像梦幻2 \
   10_docs/_state/games/偶像梦幻2.md \
   10_docs/_state/current.md \
-  mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java \
   mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java \
   mod菜单/starry-mod-menu/app/src/main/jni/Android_es2.mk \
   mod菜单/starry-mod-menu/app/src/main/jni/Games/Es2Mod.cpp \

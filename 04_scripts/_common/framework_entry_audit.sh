@@ -8,7 +8,9 @@
 #   下面这些坑都不会让构建报错，只会让装机后菜单不出现 / 登录不走指定渠道，且几乎零日志：
 #     a) TapLoginForceWeb.PKG_WHITELIST 漏配包名 ⇒ 5 处 `if (!PKG_WHITELIST.contains(...)) return;`
 #        静默 return（实测教训：漏配时 TapTap 被强制走网页登录，全程无日志）。
-#     b) SignSpoof 证书表漏配包名 ⇒ 渠道 SDK 在进程内读到原签名，SSO/校验失败。
+#     b) 运行时签名伪装残留：SignSpoof 已于 2026-10-28 整体删除 ⇒ 成品包不得再含该类
+#        （含则属历史产物：重打 dex 即消失；manifest 若仍挂已删除的 SignSpoofAppComponentFactory，
+#          装上必 ClassNotFoundException —— [G] 判 ✗）。
 #     c) GameConfig.h 漏映射 ⇒ STARRY_AUTH_GAME_ID 空/串号 ⇒ 授权校验失败。
 #     d) Android.mk 激活分支还停在上一个游戏 ⇒ 源码全对但编出别人的 so。
 #     e) 入口形态选错：1.0.20261009 实测 <application android:name> 平台不采用
@@ -68,7 +70,8 @@ fi
 JAVA_ROOT="$root/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic"
 JNI="$root/mod菜单/starry-mod-menu/app/src/main/jni"
 TAP="$JAVA_ROOT/sign/TapLoginForceWeb.java"
-SPOOF="$JAVA_ROOT/sign/SignSpoof.java"
+# 2026-10-28：sign/SignSpoof.java 已整体删除（用户定案：TapTap 验签/登录一律改包法）。
+# 下面 TAP_MODE 用「成品包 manifest 是否仍挂已删除的 SignSpoofAppComponentFactory」判老包。
 CFG="$JNI/GameConfig.h"
 MK="$JNI/Android.mk"
 
@@ -102,13 +105,9 @@ public class TapLoginForceWeb {
     }
 }
 EOF
-  cat > "$sc_j/sign/SignSpoof.java" <<'EOF'
-class SignSpoof {
-    private static final String ZJMC_PKG = "com.fixture.good";
-    private static final String ZJMC_CERT_B64 = "MIIFixtureCertificateBase64";
-    static void init(java.util.Map<String, android.content.pm.Signature> fakes) {
-        fakes.put(ZJMC_PKG, new android.content.pm.Signature(Base64.decode(ZJMC_CERT_B64, Base64.DEFAULT)));
-    }
+  cat > "$sc_j/sign/StarryAppComponentFactory.java" <<'EOF'
+package com.starry.magic.sign;
+public class StarryAppComponentFactory extends android.app.AppComponentFactory {
 }
 EOF
   cat > "$sc_j/StarryInitProvider.java" <<'EOF'
@@ -166,13 +165,14 @@ EOF
     printf '%s\n' "$sc_out" | grep '✗' | sed 's/^/      /'
     sc_bad=$((sc_bad + 1))
   fi
-  # 正控①：包名既不在白名单也不在证书表 ⇒ 必须抓出 ≥2 项 ✗
+  # 正控①：包名不在 TapLoginForceWeb 白名单 ⇒ 必须抓出 ≥1 项 ✗
+  # （2026-10-28 起 [B] 不再查 SignSpoof 证书表——该类已删除，正控改为只压 [A]）
   sc_out="$(bash "$SELF" --root "$sc_tmp" --game 追迹迷城 --pkg com.fixture.absent 2>&1)"; sc_rc=$?
   sc_cnt="$(printf '%s\n' "$sc_out" | grep -c '✗')"
-  if [ "$sc_rc" = 1 ] && [ "$sc_cnt" -ge 2 ]; then
+  if [ "$sc_rc" = 1 ] && [ "$sc_cnt" -ge 1 ]; then
     echo "  ✓ 正控①：漏配包名被判 ✗ ${sc_cnt} 项"
   else
-    echo "  ✗ 正控①失败：rc=${sc_rc}、✗ ${sc_cnt} 项（期望 rc=1 且 ≥2）"
+    echo "  ✗ 正控①失败：rc=${sc_rc}、✗ ${sc_cnt} 项（期望 rc=1 且 ≥1）"
     printf '%s\n' "$sc_out" | grep '✗' | sed 's/^/      /'
     sc_bad=$((sc_bad + 1))
   fi
@@ -238,9 +238,9 @@ echo "   APK  = ${APK:-（未提供 ⇒ 跳过 f 交付物断言）}"
 echo "================================================================"
 
 # ---------------- 现行 TapTap 方案判定（2026-10-28）----------------
-# 用户 2026-10-28 定案：TapTap 验签/网页登录一律「改包法」，停用运行时签名伪装。
-# 判据：成品包 manifest 是否仍挂 SignSpoofAppComponentFactory（挂=legacy，不挂=new）。
-# legacy 时 [A]/[B] 照旧检查；new 时 [A]/[B] 跳过（那两个 Java 入口不再参与执行）。
+# 用户 2026-10-28 定案：TapTap 验签/网页登录一律「改包法」，运行时签名伪装（SignSpoof）已整体删除。
+# 老包判据：manifest 仍挂已删除的 com.starry.magic.sign.SignSpoofAppComponentFactory。
+# legacy（老包）时 [A] 照旧查 PKG_WHITELIST；new 时 [A] 跳过（TapLoginForceWeb 不参与执行）。
 TAP_MODE="unknown"
 if [ -n "$APK" ] && [ -f "$APK" ]; then
   _PY="$(command -v python3 || command -v python || true)"
@@ -276,36 +276,22 @@ else
   fi
 fi
 
-# ---------------- B. SignSpoof 签名伪装证书表 ----------------
-hdr "[B] SignSpoof 签名伪装证书表（历史机制，2026-10-28 起停用）"
-if [ "$TAP_MODE" = "new" ]; then
-  ok "跳过：成品包已摘掉运行时签名伪装（SignSpoof 不执行，证书表无需登记）"
-elif [ ! -f "$SPOOF" ]; then
-  bad "缺文件 mod菜单/.../sign/SignSpoof.java"
+# ---------------- B. 运行时签名伪装必须不存在（2026-10-28 起 SignSpoof 已整体删除）----------------
+hdr "[B] 运行时签名伪装（SignSpoof）必须不存在"
+if [ -z "$APK" ] || [ ! -f "$APK" ]; then
+  note "未传 --apk ⇒ 跳过（本关看成品包 dex）"
+elif [ -n "${_PY:-}" ] && PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$_PY" - "$APK" 2>/dev/null <<'PY'
+import sys, zipfile
+NEEDLE = b'Lcom/starry/magic/sign/SignSpoof;'
+with zipfile.ZipFile(sys.argv[1]) as z:
+    hit = [n for n in z.namelist() if n.startswith('classes') and n.endswith('.dex') and NEEDLE in z.read(n)]
+print('   ' + ('命中: ' + ', '.join(hit) if hit else ''))
+sys.exit(0 if hit else 1)
+PY
+then
+  note "包内仍有 Lcom/starry/magic/sign/SignSpoof;（历史产物）：源码已于 2026-10-28 删除，重打 dex 即消失；不得再新增依赖"
 else
-  pl="$(grep -nF "\"$PKG\"" "$SPOOF" | head -1)"
-  pln="${pl%%:*}"; ptext="${pl#*:}"
-  [ "$pl" = "$pln" ] && ptext=""
-  ident="$(echo "$ptext" | sed 's/=.*//' | awk '{print $NF}')"
-  putcnt="$(grep -c 'fakes.put(' "$SPOOF")"
-  if [ -z "$pln" ]; then
-    bad "签名伪装证书表未含包名 \"${PKG}\" ⇒ 渠道 SDK 读到原签名，SSO/证书校验失败（表内现有 ${putcnt} 条）"
-  elif [ -n "$ident" ] && echo "$ptext" | grep -q '_PKG[[:space:]]*='; then
-    base="${ident%_PKG}"
-    cert="${base}_CERT_B64"
-    putln="$(grep -nF "fakes.put(${ident}," "$SPOOF" | head -1 | cut -d: -f1)"
-    certln="$(grep -nF "$cert" "$SPOOF" | head -1 | cut -d: -f1)"
-    if [ -n "$putln" ]; then
-      ok "fakes.put(${ident}, …) 已注册包名 \"${PKG}\"（常量 :${pln}，挂载 :${putln}，证书 Base64 ${cert} :${certln:-未找到}）"
-      [ -n "$certln" ] || note "证书常量 ${cert} 未找到（可能命名不同，请人工确认 Base64 证书非空）"
-    else
-      bad "常量 ${ident} = \"${PKG}\"（:${pln}）存在，但无 fakes.put(${ident}, …) 挂载 ⇒ 证书表实际未生效"
-    fi
-  elif grep -qF "fakes.put(\"$PKG\"" "$SPOOF"; then
-    ok "fakes.put(\"${PKG}\", …) 直接注册（:${pln}）"
-  else
-    bad "包名 \"${PKG}\"（:${pln}）未以 fakes.put(<常量>|字面量) 形式挂载到伪装表 ⇒ 伪装不生效"
-  fi
+  ok "包内无 Lcom/starry/magic/sign/SignSpoof;（签名伪装类已彻底不存在）"
 fi
 
 # ---------------- C. GameConfig.h 鉴权 / 包名 / 游戏名 ----------------
@@ -487,13 +473,13 @@ hdr "[G] TapTap 现行方案关（改包法，2026-10-28）"
 if [ -z "$APK" ] || [ ! -f "$APK" ]; then
   note "未传 --apk ⇒ 跳过（本关需成品包）"
 elif [ "$TAP_MODE" = "legacy" ]; then
-  bad "成品包 manifest 仍挂 SignSpoofAppComponentFactory ⇒ 仍在用已停用的运行时签名伪装（user 版真机必 exemptHiddenApis 失败）"
-  echo "      改法：manifest 恢复官方 androidx.core.app.CoreComponentFactory，入口只留 StarryInitProvider（并注释其 SignSpoof.install()），"
+  bad "成品包 manifest 仍挂 SignSpoofAppComponentFactory ⇒ 该类已于 2026-10-28 删除，装上会启动即 ClassNotFoundException"
+  echo "      改法：manifest 恢复官方 androidx.core.app.CoreComponentFactory，入口只留 StarryInitProvider（或 StarryAppComponentFactory，若需早于 Application），"
   echo "            验签/登录改用改包法锚点：InitializerServiceImpl.checkInitialize/checkLocalInitialize 恒 true、"
   echo "            GatekeeperRepository.isGatekeeperLoadedSuccessfully 恒 true + showErrorToast no-op、登录入口恒 Web。"
   echo "            配方：10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md"
 else
-  ok "manifest 未挂 SignSpoofAppComponentFactory（旧运行时伪装已摘）"
+  ok "manifest 未挂已删除的 SignSpoofAppComponentFactory"
   if [ -n "${_PY:-}" ] && PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$_PY" - "$APK" 2>/dev/null <<'PY'
 import sys, zipfile
 GATE = b'com/taptap/sdk/initializer/repository/GatekeeperRepository'

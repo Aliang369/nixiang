@@ -3,7 +3,7 @@
 #
 # 原包游戏本体不变：classes.dex..classes4.dex / resources.arsc /
 # assets/** / 原 lib so 逐字节保留。仅：
-#   - AndroidManifest.xml：appComponentFactory -> SignSpoofAppComponentFactory，
+#   - AndroidManifest.xml：appComponentFactory -> StarryAppComponentFactory，
 #     增加 StarryInitProvider、MenuService、前台服务权限
 #   - 新增 classes5.dex（星光 Java/smali）
 #   - 新增 libstarry_magic.so + libc++_shared.so
@@ -73,8 +73,7 @@ shopt -u nullglob
 for need in \
   "com/starry/magic/StarryInitProvider.smali" \
   "com/starry/magic/menu/MenuService.smali" \
-  "com/starry/magic/sign/SignSpoof.smali" \
-  "com/starry/magic/sign/SignSpoofAppComponentFactory.smali" \
+  "com/starry/magic/sign/StarryAppComponentFactory.smali" \
   "com/starry/magic/sign/TapLoginForceWeb.smali"; do
   [[ -f "$SMALI_ROOT/$need" ]] || { echo "ERROR: $need missing" >&2; exit 1; }
 done
@@ -136,7 +135,7 @@ if perms:
 # Original has no custom Application. Keep that attribute absent and inject
 # SignSpoof before application creation through AppComponentFactory.
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
-new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
+new_factory = 'android:appComponentFactory="com.starry.magic.sign.StarryAppComponentFactory"'
 if new_factory not in t:
     if old_factory not in t:
         raise SystemExit("expected CoreComponentFactory not found")
@@ -195,7 +194,7 @@ PY
   for need in \
     "com.starry.magic.StarryInitProvider" \
     "com.starry.magic.menu.MenuService" \
-    "com.starry.magic.sign.SignSpoofAppComponentFactory" \
+    "com.starry.magic.sign.StarryAppComponentFactory" \
     "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"; do
     grep -q "$need" "$WORK/tree_new.txt" \
       || { echo "ERROR: 新 manifest 缺 $need" >&2; exit 1; }

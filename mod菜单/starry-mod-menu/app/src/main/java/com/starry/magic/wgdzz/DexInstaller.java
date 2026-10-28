@@ -8,7 +8,6 @@ import android.util.Log;
 
 import com.starry.magic.menu.Preferences;
 import com.starry.magic.ota.PlayOtaPaths;
-import com.starry.magic.sign.SignSpoof;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,11 +28,7 @@ public final class DexInstaller {
     private DexInstaller() {}
 
     public static void boot(Context ctx, String dexPath) throws Exception {
-        try {
-            SignSpoof.install();
-        } catch (Throwable t) {
-            Log.w(TAG, "SignSpoof.install: " + t.getMessage());
-        }
+        // 2026-10-28：运行时签名伪装（SignSpoof）已整体删除，dex 注入不再前置安装伪装。
         File dex = new File(dexPath);
         if (!dex.isFile()) {
             throw new IllegalArgumentException("dex missing: " + dexPath);

@@ -6,7 +6,7 @@
 ## ⚠️ 现行口径（2026-10-28 用户定案，跨游戏长期，先读这一节）
 
 **TapTap 签名校验 + 网页强制登录 = 「改包法」（静态改游戏包体 dex）。**
-**禁止再用运行时签名伪装**（`SignSpoof` 白名单 + hook `PackageManager` + `exemptHiddenApis`）**与 `TapLoginForceWeb` 白名单那套。**
+**运行时签名伪装已整体删除**（`sign/SignSpoof.java` 与 `sign/SignSpoofAppComponentFactory.java` 于 2026-10-28 按用户指令删除，框架里已无该类；`TapLoginForceWeb` 白名单那套同样停用，仅服务未迁移的老包）。
 
 - 为什么停用：`SignSpoof` 依赖隐藏 API 豁免，**Android 14 user 版真机必失败**
   （小米 M2102K1AC 实测 `E StarrySignSpoof: exemptHiddenApis(meta) failed`；只有雷电 userdebug 能过）。
@@ -23,7 +23,7 @@
 | 1 | 验签/初始化门闩恒放行 | 绿梦 4.8.2：`InitializerServiceImpl.isGatekeeperLoadedSuccessfully` + `GatekeeperRepository`；蛋壳战机 `tap-login_release`：`InitializerServiceImpl.checkInitialize(Z)Z` / `checkLocalInitialize(Z)Z` 恒 true |
 | 2 | 验签失败弹窗掐掉 | `GatekeeperRepository.showErrorToast(TapNetworkException)` → `return-void`（保留原 `.registers`） |
 | 3 | 登录入口恒 Web | 绿梦：`LoginActivityImpl` 两处 handler → `WebHandler`；蛋壳战机：`DefaultTapLoginFragmentProvider.provide` 在 `aget v2,v3,v2` 后插 `const/4 v2, 0x3` |
-| 4 | 摘掉运行时伪装 | manifest 恢复官方 `androidx.core.app.CoreComponentFactory` + 注释 `StarryInitProvider` 里的 `SignSpoof.install()`（**工厂自己也调，只改 provider 不够**）；判据 `StarrySignSpoof` 日志 0 行 |
+| 4 | 确认伪装不存在（源码已删，无需再改） | manifest 不得挂已删除的 `SignSpoofAppComponentFactory`；判据＝dex 无 `Lcom/starry/magic/sign/SignSpoof;` 且 `StarrySignSpoof` 日志 0 行（`framework_entry_audit [B]` 已机器化） |
 
 > 下面「登录诊断与授权边界」「三种 SDK 版本」保留为历史/按版本核对材料；其中 `SignSpoof`、`ClientLoginUtils` 等固定改法
 > **不再作为新包的默认操作**，先看本节。
@@ -95,9 +95,9 @@ smali patch：恒抛 `ActivityNotFoundException("starry_force_web_login")`
 
 否则 SDK 内部签名校验仍会失败。
 
-## 证书回灌自检（SignSpoof，2026-10-15 起）— **历史/已停用（2026-10-28 起）**
+## 证书回灌自检（SignSpoof，2026-10-15 起）— **已删除（2026-10-28）**
 
-> ⚠️ 本节整套机制**已停用**（运行时签名伪装在 Android 14 user 版真机必失败）。
+> ⚠️ 本节整套机制**已从源码删除**（类文件不在了，运行时签名伪装在 Android 14 user 版真机也必失败）。
 > 新包一律按文件顶部「现行口径」用改包法；本节仅在**核对/迁移未迁移的老包**时作对照材料保留。
 > 判据换成：装机后 `StarrySignSpoof` 日志行数必须为 **0**。
 

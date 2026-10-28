@@ -86,6 +86,7 @@ TP runtime 对 libil2cpp.so 做三层手脚，`dlsym`/`xdl_sym`/readelf/IDA 全�
 - **`il2cpp_domain_get_assemblies` 被 TP 整条删除** → strtab 明文反查 + `il2cpp_domain_assembly_open` 按程序集名逐个开（11 个）兜底
 - **官方 dex 禁 patch**：baksmali 改 TapSDK smali 重组装 → 1.2s 闪退（进程都起不来）；回滚官方 dex 原样即正常
 - 签名/强制 TapTap 网页登录走运行时 hook：`SignSpoof.install()`（hook PackageInfo.CREATOR 回灌官方证书）+ `TapLoginForceWeb`（loginHandlers 换 CloudLoginHandler → fallbackToWeb）
+  — **⚠️ 2026-10-28 起 `SignSpoof` 已从源码删除**：ACE/TSS 这类"官方 dex 禁 patch"的包改包法要在 dex 侧动 SDK 门闩/登录入口（见 `login/taptap-web-login.md` 现行口径），本行保留为历史结论
 - 主线程 hook 回调零解引用 + 对象学习放专用学习线程（见 `re-implement/hook-rules.md` §20）
 
 ## 案例：雷霆战机

@@ -163,9 +163,9 @@ need = [
     b'com/starry/magic/StarryInitProvider',
     b'com/starry/magic/menu/MenuService',
     b'com/starry/magic/bridge/ModBridge',
-    b'com/starry/magic/sign/SignSpoof',
+    b'com/starry/magic/sign/StarryAppComponentFactory',
     b'com/starry/magic/ota/StarryNativeLoad',
-    b'com.mxyzt.gzmy',                 # SignSpoof 名单里必须有本作包名
+    b'com.mxyzt.gzmy',                 # TapLoginForceWeb 白名单里必须有本作包名
 ]
 miss = [n.decode() for n in need if n not in b]
 print('file      : %s' % name)
@@ -178,7 +178,7 @@ for n in need:
     print('  %-42s %s' % (n.decode(), 'OK' if n in b else 'MISSING'))
 if miss:
     print('FAIL missing: %s' % ', '.join(miss)); sys.exit(1)
-# 注意：不要做「本 dex 不许出现别家包名」的检查——SignSpoof 的名单本身就是
+# 注意：不要做「本 dex 不许出现别家包名」的检查——TapLoginForceWeb 的白名单就是
 # 多游戏共享的白名单（含 com.wjtxdtt.zy 等），出现别家包名是**预期**行为。
 print('OK')
 PY

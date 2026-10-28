@@ -3,9 +3,12 @@ package com.starry.magic.dwdlm;
 import android.content.Context;
 import android.util.Log;
 
-import com.starry.magic.sign.SignSpoof;
-
-/** Installs original-certificate spoofing before APKSecure starts signature checks. */
+/**
+ * 动物大联盟（APKSecure 壳）专用 Application。
+ *
+ * <p>2026-10-28：运行时签名伪装（{@code SignSpoof}）已整体删除，本类只保留壳前置 native 准备；
+ * 壳若仍需"签名一致"能力，须按改包法在游戏 dex 侧处理。
+ */
 public final class DwdlmApplication extends dev.mars.secure.ProxyApplication {
     static {
         System.loadLibrary("starry_magic");
@@ -21,12 +24,6 @@ public final class DwdlmApplication extends dev.mars.secure.ProxyApplication {
             Log.i(TAG, "secure shell integrity hook installed");
         } catch (Throwable t) {
             Log.e(TAG, "secure shell prepare failed", t);
-        }
-        try {
-            SignSpoof.install();
-            Log.i(TAG, "signature spoof installed before ProxyApplication");
-        } catch (Throwable t) {
-            Log.e(TAG, "signature spoof failed", t);
         }
         super.attachBaseContext(base);
     }

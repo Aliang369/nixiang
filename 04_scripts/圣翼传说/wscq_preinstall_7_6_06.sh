@@ -88,7 +88,7 @@ bash "$NIXIANG/04_scripts/_common/pre_install_gate.sh" \
   --menu-json "$MENU_JSON" \
   --needle 'com/starry/magic/StarryInitProvider' \
   --needle 'com/starry/magic/menu/MenuService' \
-  --needle 'com/starry/magic/sign/SignSpoof' \
+  --needle 'com/starry/magic/sign/StarryAppComponentFactory' \
   --needle 'com/starry/magic/sign/TapLoginForceWeb' \
   --needle 'com/starry/magic/sign/YnttLoginRequest' \
   --needle 'com/taptap/sdk/LoginRequest' \

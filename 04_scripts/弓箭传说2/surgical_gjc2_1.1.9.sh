@@ -4,7 +4,7 @@
 # 官包零改动：classes.dex/classes2.dex / resources.arsc / assets/** / lib/*.so（除新增）字节不变。
 # 改动：
 #   - AndroidManifest：Application → com.starry.magic.StarryApp（其 smali 已改 .super 为 HabbyApplication）
-#     + appComponentFactory → com.starry.magic.sign.SignSpoofAppComponentFactory（冷启动即回灌官方签名）
+#     + appComponentFactory → com.starry.magic.sign.StarryAppComponentFactory（冷启动即回灌官方签名）
 #     + StarryInitProvider + MenuService + FOREGROUND_SERVICE 权限
 #   - 改 classes3.dex：TapSignKit.getSign 直接返回官方签名 MD5（b298339c…）
 #   - 新增 classes4.dex（星光 smali：StarryApp / MenuService / SignSpoof / TapLoginForceWeb / OTA）
@@ -85,7 +85,7 @@ for need in \
   "com/starry/magic/StarryInitProvider.smali" \
   "com/starry/magic/menu/MenuService.smali" \
   "com/starry/magic/sign/SignSpoof.smali" \
-  "com/starry/magic/sign/SignSpoofAppComponentFactory.smali" \
+  "com/starry/magic/sign/StarryAppComponentFactory.smali" \
   "com/starry/magic/sign/TapLoginForceWeb.smali"; do
   [[ -f "$SMALI_ROOT/$need" ]] || { echo "ERROR: $need missing（Java 桥没编进 starry app）" >&2; exit 1; }
 done
@@ -238,7 +238,7 @@ if new_app not in t:
     t = t.replace(old_app, new_app, 1)
 
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
-new_factory = 'android:appComponentFactory="com.starry.magic.sign.SignSpoofAppComponentFactory"'
+new_factory = 'android:appComponentFactory="com.starry.magic.sign.StarryAppComponentFactory"'
 if new_factory not in t:
     if old_factory not in t:
         raise SystemExit("expected CoreComponentFactory not found")
@@ -299,7 +299,7 @@ PY
     "com.starry.magic.StarryInitProvider" \
     "com.starry.magic.menu.MenuService" \
     "android.permission.FOREGROUND_SERVICE_SPECIAL_USE" \
-    "com.starry.magic.sign.SignSpoofAppComponentFactory"; do
+    "com.starry.magic.sign.StarryAppComponentFactory"; do
     grep -q "$need" "$WORK/tree_new.txt" \
       || { echo "ERROR: 新 manifest 缺 $need" >&2; exit 1; }
   done

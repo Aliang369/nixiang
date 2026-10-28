@@ -96,7 +96,7 @@ shopt -u nullglob
 for need in \
   "com/starry/magic/StarryInitProvider.smali" \
   "com/starry/magic/menu/MenuService.smali" \
-  "com/starry/magic/sign/SignSpoof.smali"; do
+  "com/starry/magic/sign/StarryAppComponentFactory.smali"; do
   [[ -f "$SMALI_ROOT/$need" ]] || { echo "ERROR: $need missing" >&2; exit 1; }
 done
 "$SMALI_BIN" assemble -o "$WORK/$NEW_DEX" "$SMALI_ROOT"
@@ -161,10 +161,9 @@ if "com.starry.magic.menu.MenuService" not in t:
 '''
     t = t.replace("</application>", svc + "\n    </application>", 1)
 
-# 签名伪装：私服壳读 PackageManager 签名做完整性判定，异签必自退
-# ⇒ 走 SignSpoof（按包名回灌原厂证书），必须由 appComponentFactory 在
-#    Application 创建之前装上。原包无自定义 factory，这里安全接管。
-factory = "com.starry.magic.sign.SignSpoofAppComponentFactory"
+# 早启动入口：原包无自定义 factory，这里接管 appComponentFactory（保原 Application）。
+#   2026-10-28 起该类只做「委托 CoreComponentFactory」，不再安装签名伪装（SignSpoof 已删）。
+factory = "com.starry.magic.sign.StarryAppComponentFactory"
 if "appComponentFactory" not in t:
     i = t.find("<application")
     if i < 0:
@@ -173,7 +172,7 @@ if "appComponentFactory" not in t:
     t = t[:j] + ' android:appComponentFactory="%s"' % factory + t[j:]
 
 p.write_text(t, encoding="utf-8")
-print("  text Manifest patched (Application preserved, SignSpoof factory installed)")
+print("  text Manifest patched (Application preserved, early factory installed)")
 PY
   rm -rf "$WORK/orig_dec"/smali* 2>/dev/null || true
   apktool b -f "$WORK/orig_dec" -o "$WORK/mf_only.apk" >/dev/null

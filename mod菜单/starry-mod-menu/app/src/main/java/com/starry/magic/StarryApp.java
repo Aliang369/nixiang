@@ -11,7 +11,6 @@ import android.util.Log;
 
 import com.starry.magic.menu.MenuService;
 import com.starry.magic.ota.StarryNativeLoad;
-import com.starry.magic.sign.SignSpoof;
 import com.starry.magic.sign.TapLoginForceWeb;
 
 /**
@@ -58,11 +57,7 @@ public class StarryApp extends Application {
 
     @Override
     protected void attachBaseContext(Context base) {
-        try {
-            SignSpoof.install();
-        } catch (Throwable t) {
-            Log.e(TAG, "SignSpoof.install failed", t);
-        }
+        // 2026-10-28：运行时签名伪装（SignSpoof）已整体删除；TapTap 验签/登录改走改包法。
         super.attachBaseContext(base);
         // 必须用 this（已 attach）：传 base 时 getApplicationContext() 仍可能为 null → Preferences 崩
         try {

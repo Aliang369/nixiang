@@ -185,12 +185,12 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 
 - **Provider 顺序铁律**：必须排在其它 Provider（如 TapTap 的 `TapTapKitInitProvider`/`TapUpdateFileProvider`）**之前** —— Provider 顺序＝平台实例化顺序，先回灌官方证书再让 SDK 读。参考实现见 `04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py`。
 - **黑屏/无菜单先查入口三件事**（都不会让构建报错）① 入口类不在 dex（`ClassNotFoundException`）② Manifest 里没写进去（用 `aapt2 dump xmltree --file AndroidManifest.xml <apk>` 复读）③ 入口被壳的 Application 挂死。
-- **现有入口类清单**（`java/com/starry/magic/`）：`StarryInitProvider`（Provider，推荐）/ `StarryApp`（Application）/ `StarryAppCompFactory0`、`sign/SignSpoofAppComponentFactory`、`ysxz/YsxzAppComponentFactory`（Factory）/ `conch/DcslConchProvider`、`h5box/StarryH5Provider`、`h5box/CzbhzH5Provider`（壳专用 Provider）。
+- **现有入口类清单**（`java/com/starry/magic/`）：`StarryInitProvider`（Provider，推荐）/ `StarryApp`（Application）/ `StarryAppCompFactory0`、`sign/StarryAppComponentFactory`（早启动 AppComponentFactory，原 SignSpoofAppComponentFactory）、`ysxz/YsxzAppComponentFactory`（Factory）/ `conch/DcslConchProvider`、`h5box/StarryH5Provider`、`h5box/CzbhzH5Provider`（壳专用 Provider）。
 
 ## TapTap 接入检查表
 
 > **现行口径（2026-10-28 用户定案，跨游戏、长期）：TapTap 验签与网页强制登录一律「改包法」——静态改游戏包体 dex，
-> 禁止再用运行时签名伪装（`SignSpoof` + `SignSpoofAppComponentFactory`）与 `TapLoginForceWeb` 白名单那套。**
+> 运行时签名伪装（`SignSpoof` + `SignSpoofAppComponentFactory`）已于 2026-10-28 **从源码整体删除**；`TapLoginForceWeb` 白名单那套同样停用，只服务未迁移的老包。**
 > 配方／锚点／坑：`10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md`；
 > 机器关：`framework_entry_audit.sh` 的 **[G] TapTap 现行方案关** + `pre_install_gate.sh` 的 **查12**（底包有门闩类时要求「已改包」）。
 
@@ -202,14 +202,13 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 2. **登录入口恒 Web**：改「选 fragment/handler 的那处」，不是改 `instance-of`。
    已有两套实测锚点：绿梦 4.8.2（`LoginActivityImpl` 两处 handler → `WebHandler`）、
    蛋壳战机 `tap-login_release`（`DefaultTapLoginFragmentProvider.provide` 在 `aget v2,v3,v2` 后插 `const/4 v2, 0x3` ⇒ 恒 `WebLoginFragment`）。
-3. **运行时伪装必须摘干净**：只注释 `StarryInitProvider` 里的 `SignSpoof.install()` **不够** ——
-   `SignSpoofAppComponentFactory.instantiateApplication()` 自己也会调它（蛋壳战机实测仍刷 66 行 `StarrySignSpoof`）。
-   ⇒ manifest 的 `appComponentFactory` 恢复官方 `androidx.core.app.CoreComponentFactory`，入口只留 `StarryInitProvider`。
-   判据：装机后 `StarrySignSpoof` 行数必须为 **0**（旧法在 Android 14 user 版真机必 `exemptHiddenApis(meta) failed`）。
+3. **运行时伪装必须不存在**：`SignSpoof` / `SignSpoofAppComponentFactory` 已于 2026-10-28 从源码**整体删除**，本节从"怎么摘"变成"怎么验证没有"：
+   manifest 不得挂 `SignSpoofAppComponentFactory`（类不存在 ⇒ 启动即 ClassNotFoundException，`pre_install_gate` **查12** 会拦）；
+   dex 不得含 `Lcom/starry/magic/sign/SignSpoof;`（`framework_entry_audit [B]` 检查）；`StarrySignSpoof` 日志行数必须为 **0**。
+   需要在 Application 之前跑代码的包，用 `com.starry.magic.sign.StarryAppComponentFactory`（只委托 CoreComponentFactory，无伪装）。
 4. **判据：`AppSwitchEvent(targetName=com.taptap)` 出现＝仍走客户端 SSO**（说明条目 2 没生效）；网页登录成立＝
    `TapTapLoginActivity` + `WebView` 起、无 `AppSwitchEvent(com.taptap)`。
-5. **历史机制（仅在核对老包时用）**：`PKG_WHITELIST` 必须含包名、`SignSpoof` 证书表须有 `<TAG>_PKG` + `fakes.put`。
-   2026-10-28 起这两条**只对未迁移的旧包有意义**，新包出现它们即是走错路（审计 [A]/[B] 已自动判「改包法形态」并跳过）。
+5. **历史机制（仅核对老包）**：`TapLoginForceWeb` 的 `PKG_WHITELIST` 必须含包名；`SignSpoof` 证书表**已被删除**，老包里若还有该类属历史产物（重打 dex 即消失）。审计 [A] 只对老包形态生效，[B] 现在查"旧类必须不存在"。
 
 ---
 
@@ -276,9 +275,9 @@ bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [-
 4. **TapTap 渠道游戏三查（2026-10-28 改版）**：
    - 签名校验存在性：静态扫 `CheckSignature`/`getSign`/`getMD5`/`packageSign` 类入口，有则按**改包法**给对策（门闩恒放行 + 弹窗 no-op）
    - 登录入口恒 Web：定位该 SDK 版本的「选 fragment/handler」处改掉（不是改 `instance-of`）；锚点示例见本节 TapTap 接入检查表条目 2
-   - 运行时伪装必须不存在：manifest 无 `SignSpoofAppComponentFactory`、`StarrySignSpoof` 日志 0 行；
+   - 运行时伪装必须不存在：源码已删；manifest 无 `SignSpoofAppComponentFactory`、dex 无 `Lcom/starry/magic/sign/SignSpoof;`、`StarrySignSpoof` 日志 0 行；
      装机前跑 `pre_install_gate.sh --apk <成品> --base-apk <底包>`（**查12** 会自动判「底包有门闩类却没改包」）
-   - 旧口径 `SignSpoof` 证书表 / `TapLoginForceWeb` 白名单**仅用于核对未迁移的老包**，新包不得再走
+   - `TapLoginForceWeb` 白名单**仅用于核对未迁移的老包**，新包不得再走（`SignSpoof` 证书表已随该类删除）
 5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（历史事故：临时复用同 id 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）
 
 **收尾交付物（icon / 菜单模板为按需产出：新游戏首次交付或用户点名时才生成）**：

@@ -10,11 +10,12 @@
 #   - 改 AndroidManifest（保留原 application=com.moba.unityplugin.MobaGameApplication
 #     与 appComponentFactory；只 +StarryInitProvider + MenuService +
 #     SYSTEM_ALERT_WINDOW / FOREGROUND_SERVICE / FOREGROUND_SERVICE_SPECIAL_USE）
-#   - 新增 classes6.dex（星光 smali：StarryInitProvider / MenuService / SignSpoof）
+#   - 新增 classes6.dex（星光 smali：StarryInitProvider / MenuService / StarryAppComponentFactory）
 #     ★ 官方占用 classes.dex..classes5.dex，故新增下标必须是 6（比最大 dex 号 +1；
 #       本脚本用 04_scripts/_common/next_free_dex.py 动态取，缺口会截断 ART dex 扫描）
 #   - 新增 lib/arm64-v8a/libstarry_magic.so + libc++_shared.so + assets/certs/*
-#   - 去签名：删官方 META-INF/*.SF|*.RSA|*.DSA|*.EC（签名身份由 SignSpoof 运行时回灌官证 WOR_PKG）
+#   - 去签名：删官方 META-INF/*.SF|*.RSA|*.DSA|*.EC
+#     （2026-10-28：运行时签名伪装 SignSpoof 已删除；本作若需过壳验签须按改包法迁到 dex 侧）
 #
 # ★ 与国服母本的三点关键差异（勿照抄母本）：
 #   1) 不注入 TapLoginForceWeb：本作无 TapTap/QuickSDK/TapLoginForceWeb 需求。
@@ -163,7 +164,7 @@ WORK="$(mktemp -d /tmp/wor_surgical.XXXXXX)"
 trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK" "$(dirname "$MF_CACHE")"
 
-echo "[1/6] gradle assembleRelease（starry Java 桥，含 SignSpoof 的 WOR 证书改动）"
+echo "[1/6] gradle assembleRelease（starry Java 桥）"
 copy_tree() {  # $1=src $2=dst；有 rsync 用 rsync，否则用 tar 排除法
   if command -v rsync >/dev/null 2>&1; then
     rsync -a --delete \
@@ -243,8 +244,8 @@ shopt -u nullglob
   || { echo "ERROR: StarryInitProvider.smali missing（Java 桥没编进 starry app）" >&2; exit 1; }
 [[ -f "$SMALI_ROOT/com/starry/magic/menu/MenuService.smali" ]] \
   || { echo "ERROR: MenuService.smali missing" >&2; exit 1; }
-[[ -f "$SMALI_ROOT/com/starry/magic/sign/SignSpoof.smali" ]] \
-  || { echo "ERROR: SignSpoof.smali missing" >&2; exit 1; }
+[[ -f "$SMALI_ROOT/com/starry/magic/sign/StarryAppComponentFactory.smali" ]] \
+  || { echo "ERROR: StarryAppComponentFactory.smali missing" >&2; exit 1; }
 # WOR 只断言三类（TapLoginForceWeb 不参与本作；类文件存在与否都不影响）
 "$SMALI_BIN" assemble -o "$WORK/$NEW_DEX" "$SMALI_ROOT"
 ls -la "$WORK/$NEW_DEX"

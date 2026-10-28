@@ -54,7 +54,7 @@
 #                     可用 `--expect-so-sha256/--expect-metadata-sha256` 做精确断言。
 #                     逃生门：SO_META_CHECK=0（须在装机报告写明理由）。
 #    查12 TapTap 方案关（2026-10-28 补；蛋壳战机 1.2.1 误用旧伪装后落地）：`--apk` 时
-#                     ① manifest 仍挂 `SignSpoofAppComponentFactory` ⇒ FAIL（运行时签名伪装已停用）；
+#                     ① manifest 仍挂 `StarryAppComponentFactory` ⇒ FAIL（运行时签名伪装已停用）；
 #                     ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository` 而
 #                        成品包同名 dex 与底包**逐字节相同** ⇒ FAIL（该游戏根本没改包）。
 #                     判据来源：10_docs/_state/规范变更日志.md「2026-10-28 · TapTap 改包法」。
@@ -577,7 +577,8 @@ fi
 # 依据：用户 2026-10-28 定案「TapTap 签名校验/网页强制登录一律改包法，不再用运行时签名伪装」
 #      （10_docs/_state/规范变更日志.md 同名条目 + _templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md）
 # 判据（任一命中即 FAIL，拦装机）：
-#   ① 成品包 manifest 仍挂 `SignSpoofAppComponentFactory` ⇒ 还在用已停用的运行时伪装；
+#   ① 成品包 manifest 仍挂**已删除的** `com.starry.magic.sign.SignSpoofAppComponentFactory`
+#      （该类 2026-10-28 随签名伪装一起删除 ⇒ 装上必 ClassNotFoundException）；
 #   ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository`，而**成品包同名 dex 与底包逐字节相同**
 #      ⇒ 该游戏根本没改包（验签门闩/网页登录都没落），必然复现「弹窗/点了没反应」。
 # 非 TapTap/TapSDK 包 ⇒ SKIP。逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）。
@@ -596,7 +597,8 @@ import hashlib, sys, zipfile
 
 apk, base = sys.argv[1], (sys.argv[2] or "")
 GATE = b'com/taptap/sdk/initializer/repository/GatekeeperRepository'
-OLD = b'SignSpoofAppComponentFactory'
+OLD = b'SignSpoofAppComponentFactory'      # 已删除的旧工厂（2026-10-28）
+SPOOF_CLS = b'Lcom/starry/magic/sign/SignSpoof;'
 
 
 def dexes(z):
@@ -609,10 +611,15 @@ with zipfile.ZipFile(apk) as z:
     tgt = {n: z.read(n) for n in targets}
 
 if OLD in man:
-    print('   ✗ 成品包 manifest 仍挂 SignSpoofAppComponentFactory（运行时签名伪装已于 2026-10-28 停用）')
-    print('     改法：manifest 恢复官方 androidx.core.app.CoreComponentFactory，入口只用 StarryInitProvider，')
-    print('           并在 dex 级注释 StarryInitProvider 里的 SignSpoof.install()；验签/登录改用改包法锚点。')
+    print('   ✗ 成品包 manifest 仍挂 SignSpoofAppComponentFactory —— 该类已于 2026-10-28 删除，装上必 ClassNotFoundException')
+    print('     改法：manifest 恢复官方 androidx.core.app.CoreComponentFactory，入口只用 StarryInitProvider')
+    print('           （如需早于 Application，用 com.starry.magic.sign.StarryAppComponentFactory）；')
+    print('           验签/登录改用改包法锚点（门闩恒 true + 登录入口恒 Web）。')
     sys.exit(1)
+
+spoof_hits = [n for n in targets if SPOOF_CLS in tgt[n]]
+if spoof_hits:
+    print(f'   ⚠ 包内仍含 Lcom/starry/magic/sign/SignSpoof;（{", ".join(spoof_hits)}）：历史产物，源码已删除，重打 dex 即消失')
 
 tap_hits = [n for n in targets if GATE in tgt[n]]
 if not tap_hits:
