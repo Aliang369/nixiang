@@ -215,3 +215,19 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 正确姿势（已在游戏文档记录并跑通）：拆两次
   `--apk <apk> --needle '<dex 里的类名/方法名>'` + `--dex <so 文件> --needle '<so 里的字面量>'`。
 - 建议改法（未实施）：`--apk` 分支同时扫 `lib/**/libstarry_magic.so`，或新增 `--so-needle` 参数。
+
+## 候选：菜单框架里「持锁 + 无超时 `su` 兜底」= 点击即卡死（class: tech）
+
+- 状态：候选（2026-10-28 绿梦真机实证；落点建议 `skill/hook-rules.md` 或 `skill/starry-mod/SKILL.md` 的框架红线 +
+  `mod菜单/starry-mod-menu/.../DeviceFingerprint.java` 类注释已写死本轮结论）
+- 事实：`Preferences.getOrCreateDeviceId()` 原是 `static synchronized`，内部 `legacyCandidates()` 会 exec `su`；
+  在「有 `/system/bin/su` 但本 uid 未授权」（KernelSU/Magisk 未点允许）的机器上，`fork` 卡进 kernel D 态
+  （`wchan=kernel_clone`），`destroyForcibly()` 也杀不掉 ⇒ 类锁永不释放 ⇒ 主线程 `showMenuNative →
+  Preferences.with()` 永久 BLOCKED ⇒ `Input dispatching timed out` ANR ⇒ ColorOS `o-stop` 杀进程。
+  表象就是「点悬浮球直接卡死闪退」。
+- 判据（可复用）：`kill -3 <pid>` 拉 `/data/anr/trace_*`，查 `- locked <…> (a java.lang.Class<…>)` 那个线程的栈里
+  有没有 `java.lang.UNIXProcess.forkAndExec`；主线程若 BLOCKED 在同一把锁上，就是这类缺陷。
+- 正确姿势：① 所有外部进程调用 `exec` 只走一个带硬超时的封装（读 stdout 与等待都要能超时）；
+  ② 绝不在 `synchronized` 区内做 exec/慢 IO；③ 采集型兜底再加一层「旁路线程 + 总预算」，超时按空结果放行，
+  保证主身份/主流程先落盘；④ 无 root 设备上 `exec("su")` 会立刻失败，**别拿无 root 机器验收当"没问题"**。
+- 覆盖范围：所有用 starry-mod-menu 框架 + 会探测 root 的游戏；本次只修了框架源码，其它已出包游戏需重出包才带上。

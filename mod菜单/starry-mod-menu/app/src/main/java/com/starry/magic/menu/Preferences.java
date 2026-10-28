@@ -353,22 +353,39 @@ public class Preferences {
      *       {@code :292} 抛 IllegalStateException，云机上等于整条授权链路直接崩。</li>
      * </ol>
      */
-    public static synchronized String getOrCreateDeviceId() {
-        with(null);
-        String cached = sharedPreferences.getString(KEY_DEVICE_ID, "");
+    public static String getOrCreateDeviceId() {
+        // ★ 2026-10-28 修复（绿梦真机「点悬浮球即卡死闪退」，证据 /data/anr/trace_02）：
+        //   本方法原为 static synchronized，第 2/2b/3 步的 legacyCandidates() 会调
+        //   DeviceFingerprint 的 su 兜底（Runtime.exec）。KernelSU 未授权机型上 su 不返回
+        //   ⇒ 类锁被钉死 ⇒ 主线程 showMenuNative → Preferences.with() 永久 BLOCKED
+        //   ⇒ 输入派发超时 ANR ⇒ 系统杀进程。
+        //   现在：锁内只读已存值（零外呼），所有采集（可能 exec su）与落盘都在锁外做。
+        String cached;
+        String ver;
+        synchronized (Preferences.class) {
+            with(null);
+            cached = sharedPreferences.getString(KEY_DEVICE_ID, "");
+            ver = sharedPreferences.getString(KEY_DEVICE_ID_VERSION, "");
+        }
 
         // 1) 存了就必须认：持久化值即权威，绝不因当次重算而漂移
         if (DeviceFingerprint.isValidDevId(cached)) {
-            String ver = sharedPreferences.getString(KEY_DEVICE_ID_VERSION, "");
-            markDeviceIdSource("cached", ver);
+            markDeviceIdSource("cached", ver == null ? "" : ver);
             return cached;
         }
+        return resolveDeviceIdSlow(cached);
+    }
 
+    /**
+     * 无缓存时的采集路径：<b>锁外执行</b>（可能 exec su / 慢 IO / 落盘）。
+     * 任何新增采集逻辑都必须留在这里，禁止搬回 synchronized 区。
+     */
+    private static String resolveDeviceIdSlow(String cached) {
         // 2) 首次定身份：v5 优先
         String stable = DeviceFingerprint.get(appContext);
         if (DeviceFingerprint.isValidDevId(stable)) {
             saveDeviceId(stable, DeviceFingerprint.VERSION,
-                    legacyCandidates(cached, stable), "ssaid");
+                    legacyCandidatesWithTimeout(cached, stable), "ssaid");
             DeviceFingerprint.writeSeed(appContext, stable);
             return stable;
         }
@@ -377,7 +394,7 @@ public class Preferences {
         String v4 = DeviceFingerprint.getV4();
         if (DeviceFingerprint.isValidDevId(v4)) {
             saveDeviceId(v4, DeviceFingerprint.VERSION_LEGACY_V4,
-                    legacyCandidates(cached, v4), "v4");
+                    legacyCandidatesWithTimeout(cached, v4), "v4");
             DeviceFingerprint.writeSeed(appContext, v4);
             return v4;
         }
@@ -386,12 +403,65 @@ public class Preferences {
         Log.w(TAG, "v5/v4 均不可用 → 使用本地兜底设备号 source=local");
         String local = localFallbackDeviceId();
         saveDeviceId(local, DeviceFingerprint.VERSION_LOCAL,
-                legacyCandidates(cached, local), "local");
+                legacyCandidatesWithTimeout(cached, local), "local");
         return local;
     }
 
+    /** legacy 采集的总预算（毫秒）。含 su 兜底，超时就用空集合落盘，绝不阻塞调用方。 */
+    private static final long LEGACY_PROBE_BUDGET_MS = 2500L;
+
+    /**
+     * 在<b>独立线程</b>里跑 {@link #legacyCandidates}，最多等 {@link #LEGACY_PROBE_BUDGET_MS}。
+     *
+     * <p>★ 2026-10-28 补的第二道闸：`su` 的 fork 在本进程里可能是 kernel D 态
+     * （`kernel_clone`），连 `destroyForcibly()` 都杀不掉 ⇒ 单靠进程内超时仍可能让
+     * 「等采集」这条链路永远不返回。这里把整段采集挪到旁路线程，超时即放弃 legacy 列表
+     * （只作服务端绑定迁移的候选，缺失不影响本轮身份落盘），保证设备号一定被存下来、
+     * 后续调用走 cached 快路径、不再碰 su。
+     */
+    private static LinkedHashSet<String> legacyCandidatesWithTimeout(String cached, String preferred) {
+        final LinkedHashSet<String> out = new LinkedHashSet<>();
+        final Object lock = new Object();
+        final boolean[] done = {false};
+        Thread probe = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LinkedHashSet<String> r = null;
+                try {
+                    r = legacyCandidates(cached, preferred);
+                } catch (Throwable ignored) {
+                }
+                synchronized (lock) {
+                    if (r != null) out.addAll(r);
+                    done[0] = true;
+                    lock.notifyAll();
+                }
+            }
+        }, "starry-legacy-probe");
+        probe.setDaemon(true);
+        probe.start();
+        synchronized (lock) {
+            long deadline = System.currentTimeMillis() + LEGACY_PROBE_BUDGET_MS;
+            while (!done[0]) {
+                long left = deadline - System.currentTimeMillis();
+                if (left <= 0) break;
+                try {
+                    lock.wait(left);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+        if (!done[0]) {
+            Log.w(TAG, "legacy 采集超时（" + LEGACY_PROBE_BUDGET_MS
+                    + "ms，多数是 su 兜底卡住）→ 本次先落盘主身份，legacy 留空");
+            return new LinkedHashSet<>();
+        }
+        return out;
+    }
+
     /** 只在来源标记变化时落盘（cached 快路径：零 I/O）。 */
-    private static void markDeviceIdSource(String source, String version) {
+    private static synchronized void markDeviceIdSource(String source, String version) {
         lastDeviceIdSource = source;
         String cur = sharedPreferences.getString(KEY_DEVICE_ID_SOURCE, "");
         if (source.equals(cur)) return;
@@ -424,7 +494,7 @@ public class Preferences {
     }
 
     /** 本地兜底设备号：同一安装内稳定（持久化），仅作 v5/v4 均缺失时的最后手段。 */
-    private static String localFallbackDeviceId() {
+    private static synchronized String localFallbackDeviceId() {
         String stored = sharedPreferences.getString(KEY_DEVICE_ID_LOCAL, "");
         if (DeviceFingerprint.isValidDevId(stored)) return stored;
         String raw = java.util.UUID.randomUUID().toString().replace("-", "");
@@ -470,7 +540,7 @@ public class Preferences {
         legacy.remove(preferred);
         return legacy;
     }
-    private static void saveDeviceId(String id, String version, Set<String> legacy, String source) {
+    private static synchronized void saveDeviceId(String id, String version, Set<String> legacy, String source) {
         with(null);
         String curId = sharedPreferences.getString(KEY_DEVICE_ID, "");
         String curVer = sharedPreferences.getString(KEY_DEVICE_ID_VERSION, "");

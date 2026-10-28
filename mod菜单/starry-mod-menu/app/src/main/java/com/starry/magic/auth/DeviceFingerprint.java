@@ -37,6 +37,25 @@ public final class DeviceFingerprint {
     /** 共享种子文件名（与 ensure_starry_device_id_seed.sh / 旧客户端一致） */
     private static final String SEED_FILE = "device_id";
 
+    /**
+     * su 兜底单次硬超时（毫秒）。KernelSU/Magisk 在「未授权」或授权弹窗未决时，
+     * su 可能长时间不返回；所有 su 调用都必须有上限，且不得在持有其它锁时执行。
+     */
+    private static final long SU_TIMEOUT_MS = 1500L;
+
+    /** 本次进程内 su 已被证明不可用（超时/执行失败）⇒ 后续不再尝试，见 {@link #runSu} */
+    private static volatile boolean suBroken = false;
+
+    /**
+     * 当前是否有一次 su 调用尚未返回（毫秒时间戳，0=无）。
+     * fork 卡在 kernel D 态时线程永不返回、连 destroyForcibly 都没用 ⇒ 用它把「卡住的 su」
+     * 限制成最多一个，并把「超过 4s 还没回来」判定为 su 不可用（熔断）。
+     */
+    private static volatile long suInFlightSince = 0L;
+
+    /** su 单次调用超过这个时长仍未返回 ⇒ 判不可用并熔断 */
+    private static final long SU_HANG_SUSPECT_MS = 4000L;
+
 
     private static final String[] SHARED_REL_DIRS = {
             "Android/starry_magic",
@@ -145,15 +164,8 @@ public final class DeviceFingerprint {
             if (!pkg.contains("starry_magic") || pkg.contains("'") || pkg.contains("\n")) {
                 return false;
             }
-            try {
-                Process p = Runtime.getRuntime().exec(new String[]{
-                        "su", "-c", "mkdir -p '" + new File(pkg).getParent() + "' && echo -n '"
-                                + id + "' > '" + pkg + "'"
-                });
-                return p.waitFor() == 0;
-            } catch (Throwable ignored) {
-                return false;
-            }
+            return runSu("mkdir -p '" + new File(pkg).getParent() + "' && echo -n '"
+                    + id + "' > '" + pkg + "'", SU_TIMEOUT_MS, null) == 0;
         }
     }
 
@@ -202,28 +214,103 @@ public final class DeviceFingerprint {
 
     private static List<String> readIdsFromOtherPrefsViaSu() {
         List<String> ids = new ArrayList<>();
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{
-                    "su", "-c",
-                    "grep -h auth_device_id "
-                            + "/data/data/*/shared_prefs/starry_magic_prefs.xml "
-                            + "/data/user/0/*/shared_prefs/starry_magic_prefs.xml "
-                            + "2>/dev/null"
-            });
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String id = extractDevIdFromPrefsLine(line);
-                    if (isValidDevId(id) && !ids.contains(id)) {
-                        ids.add(id);
-                    }
-                }
+        List<String> lines = new ArrayList<>();
+        int code = runSu("grep -h auth_device_id "
+                + "/data/data/*/shared_prefs/starry_magic_prefs.xml "
+                + "/data/user/0/*/shared_prefs/starry_magic_prefs.xml "
+                + "2>/dev/null", SU_TIMEOUT_MS, lines);
+        if (code != 0) return ids;
+        for (String line : lines) {
+            String id = extractDevIdFromPrefsLine(line);
+            if (isValidDevId(id) && !ids.contains(id)) {
+                ids.add(id);
             }
-            p.waitFor();
-        } catch (Throwable ignored) {
         }
         return ids;
+    }
+
+    /**
+     * 带硬超时的 su 执行（唯一 su 入口）。
+     *
+     * <p>★ 2026-10-28 修复（绿梦真机「点悬浮球即卡死闪退」）：旧实现三处各写一遍
+     * {@code Runtime.exec + waitFor()}，<b>没有任何超时</b>。在装了 KernelSU 但未给本包
+     * 授权的机型上，{@code su} 会长时间不返回，而 {@code Preferences.getOrCreateDeviceId()}
+     * 当时是 {@code static synchronized} ⇒ <b>类锁被钉死</b> ⇒ 主线程
+     * {@code showMenuNative → Preferences.with()} 永久 BLOCKED ⇒ 输入超时 ANR ⇒ 进程被杀。
+     *
+     * <p>现在：① 读 stdout 与等待都用独立线程，超时到点 {@code destroyForcibly()}；
+     * ② 一旦本次进程内出现过超时/执行失败，<b>熔断</b>后续所有 su 尝试（{@code suBroken}），
+     * 避免每条路径都白等一轮；③ 只返回退出码与可选输出行，调用点不再自己 exec。
+     *
+     * @return 进程退出码；超时/不可用返回 -1（并置熔断）
+     */
+    private static int runSu(String shellCmd, long timeoutMs, List<String> sink) {
+        long now = System.currentTimeMillis();
+        long since = suInFlightSince;
+        if (since != 0L && now - since > SU_HANG_SUSPECT_MS) {
+            suBroken = true;   // 上一笔 su 至今没回来 ⇒ 卡死，熔断
+            Log.w(TAG, "上一次 su 调用 " + (now - since) + "ms 未返回 ⇒ 判定 su 不可用，本次进程内不再尝试");
+        }
+        if (suBroken) return -1;
+        suInFlightSince = now;
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec(new String[]{"su", "-c", shellCmd});
+        } catch (Throwable t) {
+            suBroken = true;
+            return -1;
+        }
+        final Process fp = p;
+        final List<String> out = sink != null ? sink : new ArrayList<String>();
+        Thread reader = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try (BufferedReader br = new BufferedReader(
+                        new InputStreamReader(fp.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    int n = 0;
+                    while ((line = br.readLine()) != null && n < 200) {
+                        out.add(line);
+                        n++;
+                    }
+                } catch (Throwable ignored) {
+                }
+                try { fp.getErrorStream().close(); } catch (Throwable ignored) { }
+            }
+        }, "starry-su-out");
+        reader.setDaemon(true);
+        reader.start();
+        Thread killer = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(timeoutMs);
+                } catch (InterruptedException e) {
+                    return;
+                }
+                try { fp.destroyForcibly(); } catch (Throwable ignored) { }
+            }
+        }, "starry-su-timeout");
+        killer.setDaemon(true);
+        killer.start();
+        int code;
+        try {
+            code = p.waitFor();
+        } catch (Throwable t) {
+            code = -1;
+        }
+        killer.interrupt();
+        try { reader.join(300L); } catch (InterruptedException ignored) { }
+        if (code == 0) suInFlightSince = 0L;
+        if (code != 0) {
+            // 137=SIGKILL(destroyForcibly)，-1=异常 ⇒ 判定 su 链路不可用并熔断
+            if (code == -1 || code == 137) {
+                suBroken = true;
+                Log.w(TAG, "su 调用超时/不可用（" + timeoutMs + "ms），本次进程内熔断后续 su 兜底");
+            }
+            return code;
+        }
+        return 0;
     }
 
     private static String extractDevIdFromPrefsLine(String line) {
@@ -241,22 +328,13 @@ public final class DeviceFingerprint {
         if (!path.contains("starry_magic") || path.contains("'") || path.contains("\n")) {
             return null;
         }
-        try {
-            Process p = Runtime.getRuntime().exec(new String[]{
-                    "su", "-c", "cat '" + path + "' 2>/dev/null"
-            });
-            String line;
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
-                line = br.readLine();
-            }
-            int code = p.waitFor();
-            if (code != 0 || line == null) return null;
-            line = line.trim();
-            return isValidDevId(line) ? line : null;
-        } catch (Throwable t) {
-            return null;
+        List<String> lines = new ArrayList<>();
+        if (runSu("cat '" + path + "' 2>/dev/null", SU_TIMEOUT_MS, lines) != 0) return null;
+        for (String raw : lines) {
+            String line = raw == null ? "" : raw.trim();
+            if (isValidDevId(line)) return line;
         }
+        return null;
     }
 
     private static String readFileTrimmed(File f) {
