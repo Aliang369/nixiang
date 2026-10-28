@@ -1,0 +1,15 @@
+{
+  "game_dir": "E:/nixiang/08_output/长生天机降世",
+  "keep": "长生天机降世_1.0.4_surgical-releaseSigned.apk",
+  "keep_size": 2275713348,
+  "keep_md5": "5e9caf7184e88e1fcc8f69bdff83fe9d",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "长生天机降世_1.0.4_starry-unsigned.apk",
+      "size": 2278932553,
+      "md5": "3d61a0cad38ce1ca87ce4384a1ddedaa"
+    }
+  ],
+  "removed_count": 1
+}

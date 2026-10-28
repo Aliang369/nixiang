@@ -1,0 +1,55 @@
+﻿static void cage_start_once(void) {
+    char v[PROP_VALUE_MAX] = {0};
+    if (__system_property_get("debug.starry.lvmeng_cage", v) > 0 && v[0] == '0') {
+        CAGE_LOGI("cage: disabled by property");
+        return;
+    }
+    cage_open_log();
+    cage_install_handler();
+    int before = cage_read_self_int("Seccomp_filters");
+    int mode_before = cage_read_self_int("Seccomp");
+    if (cage_install_filter() == 0) {
+        int after = cage_read_self_int("Seccomp_filters");
+        int nnp = cage_read_self_int("NoNewPrivs");
+        cage_write_str("[cage] installed (exit_group -> park)\n");
+        CAGE_LOGI("cage: installed filters %d->%d (mode_before=%d nnp=%d) pid=%d",
+                  before, after, mode_before, nnp, (int)getpid());
+        cage_write_str("[cage] filters before/after = ");
+        cage_write_dec(before);
+        cage_write_str("/");
+        cage_write_dec(after);
+        cage_write_str(" nnp=");
+        cage_write_dec(nnp);
+        cage_write_str("\n");
+    } else {
+        cage_write_str("[cage] install failed\n");
+    }
+    cage_start_sigsys_watchdog();
+    /* 每个新线程各自装一份过滤器（Android 14 上不能靠 TSYNC） */
+    cage_install_pthread_hook();
+    cage_install_libc_hooks();
+}
+
+/* so 被 dlopen 的那一刻就装：必须早于 FairGuard 的常驻判定线程（实测 12–47s 才发作） */
+
+--- handler ---
+static void cage_install_handler(void) {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = cage_sigsys_handler;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_NODEFER;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGSYS, &sa, NULL);
+}
+
+/*
+ * 两段独立过滤器（各自只认自己那个 arch，别的 arch 一律 ALLOW），叠加生效：
+ *   x86_64  : 231(exit_group) / 60(exit)
+ *   aarch64 : 94(exit_group) / 93(exit)
+ * 说明：houdini 翻译环境里 guest 的 exit_group 实测不走可被 seccomp 看见的 syscall
+ *      （2026-10-27 cagetest：arm64 版装完过滤器仍整进程退出，同源码 x86_64 原生版正确 TRAP），
+ *      所以这一层是给**真机/原生环境**用的；翻译环境要靠 libc 钩子那一层。两层都装，互不冲突。
+ */
+#define CAGE_ARCH_X86_64 0xC000003EU
+#define CAGE_ARCH_ARM64 0xC00000B7U
+#define CAGE_MKFILTER(A, G1,

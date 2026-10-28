@@ -1,0 +1,39 @@
+﻿===== static int my_stat( found
+static int my_stat(const char* path, struct stat* st) {
+    void* ra = __builtin_return_address(0);
+    if (g_spoofOn && g_ready && is_apk_exact(path) && from_fg(ra) && o_stat) {
+        int r = o_stat(kSpoofPath, st);
+        logger("FG stat(SPOOF) %s rc=%d size=%lld ra=%p", path, r,
+               st ? (long long)st->st_size : -1, ra);
+        return r;
+    }
+    return o_stat ? o_stat(path, st) : -1;
+}
+
+static void* worker(void*) {
+    char apk[512] = { 0 };
+    for (int i = 0; i < 200; i++)
+===== static int my_fstat( found
+static int my_fstat(int fd, struct stat* st) {
+    void* ra = __builtin_return_address(0);
+    int r = o_fstat(fd, st);
+    if (ra_in_fg(ra)) logger("FG fstat fd=%d rc=%d size=%lld ra=%p", fd, r, st ? (long long)st->st_size : -1, ra);
+    return r;
+}
+static ssize_t my_readlink(const char* p, char* b, size_t n) {
+    void* ra = __builtin_return_address(0);
+    ssize_t r = o_readlink(p, b, n);
+    /* 伪装一致性：fd 反查路径时把 fg_orig.apk 报回成真实 base.apk */
+    if (r > 0 && g_spoofOn && p && strstr(p, "/proc/
+===== static int my_read( MISSING
+===== static void* my_mmap( found
+static void* my_mmap(void* a, size_t l, int p, int fl, int fd, off_t off) {
+    void* ra = __builtin_return_address(0);
+    void* r = o_mmap(a, l, p, fl, fd, off);
+    if (ra_in_fg(ra)) logger("FG mmap fd=%d len=%zu prot=0x%x off=%lld => %p ra=%p", fd, l, p, (long long)off, r, ra);
+    return r;
+}
+static int my_fstat(int fd, struct stat* st) {
+    void* ra = __builtin_return_address(0);
+    int r = o_fstat(fd, st);
+    if (ra_in_fg(ra)) logger("FG fstat fd=%d rc=%d size=%lld ra=%p", fd, r, st ?

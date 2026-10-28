@@ -1,0 +1,36 @@
+﻿=== current start_once ===
+static void cage_start_once(void) {
+    char v[PROP_VALUE_MAX] = {0};
+    if (__system_property_get("debug.starry.lvmeng_cage", v) > 0 && v[0] == '0') {
+        CAGE_LOGI("cage: disabled by property");
+        return;
+    }
+    cage_open_log();
+    cage_install_handler();
+    int before = cage_read_self_int("Seccomp_filters");
+    int mode_before = cage_read_self_int("Seccomp");
+    if (cage_install_filter() == 0) {
+        int after = cage_read_self_int("Seccomp_filters");
+        int nnp = cage_read_self_int("NoNewPrivs");
+        cage_write_str("[cage] installed (exit_group -> park)\n");
+        CAGE_LOGI("cage: installed filters %d->%d (mode_before=%d nnp=%d) pid=%d",
+                  before, after, mode_before, nnp, (int)getpid());
+        char b[96];
+        int k = 0;
+        b[k++] = '['; /* 手工拼一行，避免信号上下文外的格式化依赖 */
+        (void)b;
+        cage_write_str("[cage] filters before/after = ");
+        cage_write_dec(before);
+        cage_write_str("/");
+        cage_write_dec(after);
+        cage_write_str(" nnp=");
+        cage_write_dec(nnp);
+        cage_write_str("\n");
+    } else {
+        cage_write_str("[cage] install failed\n");
+    }
+    cage_install_libc_hooks();
+    /* 本轮变量隔离：先关掉 svc 扫描（实测无效），只留 readlinkat 伪装 */
+}
+
+/* so 被 dlopen 的那一刻就装：必须早于 FairGuard 的常驻判定线程（实测 12–47s 才发作） */

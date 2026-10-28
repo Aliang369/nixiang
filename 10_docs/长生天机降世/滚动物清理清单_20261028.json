@@ -1,0 +1,71 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "E:/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021",
+  "timestamp": "20261028_222021",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "07_patched/长生天机降世",
+      "type": "dir",
+      "size_kib": 237018,
+      "source": "/e/nixiang/07_patched/长生天机降世",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/07_patched/长生天机降世"
+    },
+    {
+      "path": "06_dumped/长生天机降世/1.0.4/static",
+      "type": "dir",
+      "size_kib": 113636,
+      "source": "/e/nixiang/06_dumped/长生天机降世/1.0.4/static",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/06_dumped/长生天机降世/1.0.4/static"
+    },
+    {
+      "path": "06_dumped/长生天机降世/1.0.4/code_apk",
+      "type": "dir",
+      "size_kib": 15340,
+      "source": "/e/nixiang/06_dumped/长生天机降世/1.0.4/code_apk",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/06_dumped/长生天机降世/1.0.4/code_apk"
+    },
+    {
+      "path": "06_dumped/长生天机降世/1.0.4/code_hot",
+      "type": "dir",
+      "size_kib": 22048,
+      "source": "/e/nixiang/06_dumped/长生天机降世/1.0.4/code_hot",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/06_dumped/长生天机降世/1.0.4/code_hot"
+    },
+    {
+      "path": "06_dumped/长生天机降世/1.0.4/dump",
+      "type": "dir",
+      "size_kib": 38188,
+      "source": "/e/nixiang/06_dumped/长生天机降世/1.0.4/dump",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/06_dumped/长生天机降世/1.0.4/dump"
+    },
+    {
+      "path": "06_dumped/长生天机降世/1.0.4/manifests",
+      "type": "dir",
+      "size_kib": 1508,
+      "source": "/e/nixiang/06_dumped/长生天机降世/1.0.4/manifests",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/06_dumped/长生天机降世/1.0.4/manifests"
+    },
+    {
+      "path": "06_dumped/长生天机降世/1.0.4/classes.dex",
+      "type": "file",
+      "size_kib": 8928,
+      "source": "/e/nixiang/06_dumped/长生天机降世/1.0.4/classes.dex",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/06_dumped/长生天机降世/1.0.4/classes.dex"
+    },
+    {
+      "path": "06_dumped/长生天机降世/1.0.4/classes3.dex",
+      "type": "file",
+      "size_kib": 4884,
+      "source": "/e/nixiang/06_dumped/长生天机降世/1.0.4/classes3.dex",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/06_dumped/长生天机降世/1.0.4/classes3.dex"
+    },
+    {
+      "path": "09_test/长生天机降世",
+      "type": "dir",
+      "size_kib": 6049,
+      "source": "/e/nixiang/09_test/长生天机降世",
+      "quarantine": "/e/nixiang/99_archive/_trash_20261028/nixiang_cstjjs_20261028_20261028_222021/09_test/长生天机降世"
+    }
+  ]
+}

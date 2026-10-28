@@ -1,0 +1,56 @@
+﻿if (len >= n) len = n - 1;
+        memcpy(out, p, len); out[len] = 0;
+        ok = true; break;
+    }
+    fclose(f);
+    return ok;
+}
+
+/* 从"包内 STORED 资产"里抽出原厂 base.apk（最小 zip 解析：EOCD → 中央目录 → 本地头） */
+static bool extractAsset(const char* apk, const char* out, long long* outSize) {
+    int fd = ::open(apk, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) { logger("extract: open apk failed %d", errno); return false; }
+    struct stat st;
+    if (fstat(fd, &st) != 0 || st.st_size < 1024) { logger("extract: fstat failed"); close(fd); return false; }
+    long long fsz = (long long)st.st_size;
+    size_t tl = 66000; if ((long long)tl > fsz) tl = (size_t)fsz;
+    unsigned char* tail = (unsigned char*)malloc(tl);
+    if (!tail) { close(fd); return false; }
+    if (pread(fd, tail, tl, fsz - (long long)tl) != (ssize_t)tl) { logger("extract: tail read failed"); free(tail); close(fd); return false; }
+    long long eocd = -1;
+    for (long long i = (long long)tl - 22; i >= 0; i--) if (rd32(tail + i) == 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) { logger("extract: no EOCD"); free(tail); close(fd); return false; }
+    unsigned cnt = rd16(tail + eocd + 10);
+    uint32_t cdOff = rd32(tail + eocd + 16);
+    free(tail);
+    unsigned char hdr[46];
+    bool found = false;
+    long long dataOff = 0; long long usize = 0;
+    for (unsigned k = 0; k < cnt; k++) {
+        if (pread(fd, hdr, 46, (long long)cdOff) != 46) break;
+        if (rd32(hdr) != 0x02014b50) break;
+        unsigned nl = rd16(hdr + 28), el = rd16(hdr + 30), cl = rd16(hdr + 32);
+        uint32_t lo = rd32(hdr + 42);
+        long long us = (long long)rd32(hdr + 24);
+        unsigned method = rd16(hdr + 10);
+        char name[300];
+        memset(name, 0, sizeof(name));
+        unsigned want = nl < sizeof(name) - 1 ? nl : (unsigned)(sizeof(name) - 1);
+        pread(fd, name, want, (long long)cdOff + 46);
+        if (strcmp(name, kAssetName) == 0) {
+            if (method != 0) { logger("extract: asset not STORED (method=%u)", method); break; }
+            unsigned char lh[30];
+            if (pread(fd, lh, 30, (long long)lo) != 30 || rd32(lh) != 0x04034b50) { logger("extract: bad local header"); break; }
+            dataOff = (long long)lo + 30 + rd16(lh + 26) + rd16(lh + 28);
+            usize = us; found = true; break;
+        }
+        cdOff += 46 + nl + el + cl;
+    }
+    if (!found) { logger("extract: asset entry not found"); close(fd); return false; }
+    int ofd = ::open(out, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+    if (ofd < 0) { logger("extract: out open failed %d", errno); close(fd); return false; }
+    char* buf = (char*)malloc(1 << 20);
+    if (!buf) { close(ofd); close(fd); return false; }
+    long long off = dataOff, left = usize;
+    while (left > 0) {
+        size_t want = left > (lon

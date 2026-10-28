@@ -1,0 +1,55 @@
+﻿257:         if (!WIFSTOPPED(st)) continue;
+258:         int sig = WSTOPSIG(st);
+259:         if (sig == (SIGTRAP | 0x80)) {
+260:             struct user_regs_struct r;
+261:             struct iovec iov = { &r, sizeof(r) };
+262:             if (ptrace(PTRACE_GETREGSET, tid, (void *)1, &iov) == 0) {
+263:                 if ((long)r.rax == -38 /* -ENOSYS: syscall entry */) {
+264:                     long nr = (long)r.orig_rax;
+265:                     n_syscall++;
+266:                     if (logall || is_interesting(nr)) {
+267:                         logline("[%ld] tid=%d nr=%ld a0=%#llx a1=%#llx a2=%#llx\n",
+268:                                 (long)(time(NULL) - t0), tid, nr,
+269:                                 (unsigned long long)r.rdi, (unsigned long long)r.rsi,
+270:                                 (unsigned long long)r.rdx);
+271:                         log_paths(tid, nr, (unsigned long)r.rdi, (unsigned long)r.rsi);
+272:                         if (nr == 267) pend_set(tid, 267, (unsigned long)r.rdx, (unsigned long)r.r10);
+273:                         else if (nr == 89) pend_set(tid, 89, (unsigned long)r.rsi, (unsigned long)r.rdx);
+274:                     }
+275:                     if (cage && nr == 231 && tid != pid0) { /* 只拦非主线程的 exit_group：主线程正常退出放行 */
+276:                         n_blocked++;
+277:                         char cpath[64], comm[64] = "?";
+278:                         snprintf(cpath, sizeof(cpath), "/proc/%d/comm", tid);
+279:                         FILE *cf = fopen(cpath, "r");
+280:                         if (cf) { if (fgets(comm, sizeof(comm), cf)) { char *nl = strchr(comm, '\n'); if (nl) *nl = 0; } fclose(cf); }
+281:                         char mod[128]; mod_of(pid, (unsigned long)r.rip, mod, sizeof(mod));
+282:                         if (load_maps_once) { load_maps(pid); load_maps_once = 0; }
+283:                         dump_stack_hits(tid, (unsigned long)r.rsp, (unsigned long)r.rax /* placeholder */);
+284:                         logline("[BLOCK] t=%ld tid=%d comm=%s nr=%ld a0=%lld rip=%#llx mod=%s\n",
+285:                                 (long)(time(NULL) - t0), tid, comm, nr, (long long)r.rdi, (unsigned long long)r.rip, mod);
+286:                         set_orig_rax(tid, 34 /* pause：把自杀线程永久挂住，且不落回调用点后面的垃圾指令 */);
+287:                     }
+288:                 }
+289:             }
+290:             ptrace(PTRACE_SYSCALL, tid, 0, 0);
+291:         } else if (sig == SIGTRAP) {
+292:             /* clone/fork event: 新线程继承 trace，把它也纳入 */
+293:             unsigned long ev = (unsigned long)st >> 16;
+294:             if (ev == PTRACE_EVENT_CLONE || ev == PTRACE_EVENT_FORK || ev == PTRACE_EVENT_VFORK) {
+295:                 unsigned long newtid = 0;
+296:                 if (ptrace(PTRACE_GETEVENTMSG, tid, 0, &newtid) == 0 && newtid)
+297:                     add_tid((pid_t)newtid);
+298:             }
+299:             ptrace(PTRACE_SYSCALL, tid, 0, 0);
+300:         } else {
+301:             /* 把信号原样放回去（不能吞，否则改变行为） */
+302:             ptrace(PTRACE_SYSCALL, tid, 0, (void *)(long)sig);
+303:         }
+304:     }
+305:     logline("# done syscalls=%lu blocked=%lu\n", n_syscall, n_blocked);
+306:
+307:     /* detach：先全部脱离，让游戏自由跑 */
+308:     char path[128];
+309:     snprintf(path, sizeof(path), "/proc/%d/task", pid);
+310:     DIR *d = opendir(path);
+311:     if (d) {

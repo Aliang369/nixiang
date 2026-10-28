@@ -1,0 +1,60 @@
+226:
+227: static bool ra_in_fg(void* ra) {
+228:     uintptr_t a = (uintptr_t)ra;
+229:     return g_fg_lo != 0 && a >= g_fg_lo && a < g_fg_hi;
+230: }
+231:
+232: static bool is_target(const char* path) { return path && strstr(path, "base.apk") != nullptr; }
+233:
+234: static int my_open(const char* path, int flags, ...) {
+235:     void* ra = __builtin_return_address(0);
+236:     if (g_ready && is_target(path) && ra_in_fg(ra)) {
+237:         if (g_spoofOn) {
+238:             /* 伪装：fd 指向 /data/data/<pkg>/files/fg_orig.apk（完整原厂 base.apk） */
+239:             int sfd = o_open(kSpoofPath, flags & ~(O_CREAT | O_EXCL | O_TRUNC));
+240:             if (sfd >= 0) {
+241:                 g_spoofFd = sfd;
+242:                 int n = ++g_hits;
+243:                 if (n <= 12) logger("FG open(SPOOF) #%d %s -> fd=%d ra=%p", n, path, sfd, ra);
+244:                 return sfd;
+245:             }
+246:             logger("FG open(SPOOF) 失败 errno=%d ⇒ 回退真实 base.apk", errno);
+247:         }
+248:         int n = ++g_hits;
+249:         if (n <= 12) logger("FG open(real) #%d %s ra=%p", n, path, ra);
+250:     }
+251:     if (flags & (O_CREAT | O_TMPFILE)) {
+252:         va_list ap; va_start(ap, flags); int m = va_arg(ap, int); va_end(ap);
+253:         return o_open(path, flags, m);
+254:     }
+255:     return o_open(path, flags);
+256: }
+257:
+258: static int my_openat(int dirfd, const char* path, int flags, ...) {
+259:     void* ra = __builtin_return_address(0);
+260:     if (g_ready && is_target(path) && ra_in_fg(ra)) {
+261:         int n = ++g_hits;
+262:         if (n <= 12) logger("FG openat(real) #%d %s ra=%p", n, path, ra);
+263:     }
+264:     if (flags & (O_CREAT | O_TMPFILE)) {
+265:         va_list ap; va_start(ap, flags); int m = va_arg(ap, int); va_end(ap);
+266:         return o_openat(dirfd, path, flags, m);
+267:     }
+268:     return o_openat(dirfd, path, flags);
+269: }
+270:
+271: /* ---- 诊断钩子：只记 FairGuard 源的读取/探测，转发原函数 ---- */
+272: static ssize_t my_read(int fd, void* b, size_t n) {
+273:     void* ra = __builtin_return_address(0);
+274:     ssize_t r = o_read(fd, b, n);
+275:     if (ra_in_fg(ra) && r > 0) logger("FG read fd=%d n=%zd ra=%p", fd, r, ra);
+276:     return r;
+277: }
+278: static ssize_t my_pread64(int fd, void* b, size_t n, off64_t off) {
+279:     void* ra = __builtin_return_address(0);
+280:     ssize_t r = o_pread64(fd, b, n, off);
+281:     if (ra_in_fg(ra) && r > 0) logger("FG pread fd=%d off=%lld n=%zd ra=%p", fd, (long long)off, r, ra);
+282:     return r;
+283: }
+284: static void* my_mmap(void* a, size_t l, int p, int fl, int fd, off_t off) {
+285:     void* ra = __builtin_return_address(0);

@@ -1,0 +1,17 @@
+﻿static int my_openat(int dirfd, const char* path, int flags, ...) {
+    void* ra = __builtin_return_address(0);
+    if (g_internalIo) {
+        if (flags & (O_CREAT | O_TMPFILE)) { va_list ap; va_start(ap, flags); int m = va_arg(ap, int); va_end(ap); return o_openat(dirfd, path, flags, m); }
+        return o_openat(dirfd, path, flags);
+    }
+    /* FairGuard reads base.apk via openat (syscall nr=257, measured 2026-10-28):
+       spoof here too, otherwise the cert check sees our re-signed package. */
+    if (g_ready && is_apk_exact(path) && g_spoofOn && from_fg(ra)) {
+        int sfd = o_open(kSpoofPath, flags & ~(O_CREAT | O_EXCL | O_TRUNC));
+        if (sfd >= 0) {
+            g_spoofFd = sfd;
+            int n = ++g_hits;
+            if (n <= 12) logger("FG openat(SPOOF) #%d %s -> fd=%d ra=%p", n, path, sfd, ra);
+            return sfd;
+        }
+        logger("FG openat(SPOOF) failed

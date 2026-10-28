@@ -62,7 +62,7 @@ Mac 的 `scripts/surgical_lvmeng_1.0.5.sh` 在 Windows 上不可直接用（`/us
 
 1. **so**：`ndk-build NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_lvmeng.mk NDK_APPLICATION_MK=./Application.mk NDK_OUT=../../obj_lvmeng NDK_LIBS_OUT=../../libs_lvmeng STARRY_BUILD_EPOCH=<epoch>`（NDK 27；产物实际落在 `app/src/libs_lvmeng/arm64-v8a/`）。
    - ⚠ `Android_lvmeng.mk` 模板引用了 Windows 侧不存在的 `Games/WxsjPatchedDll.a`（只 Main.cpp 老入口用），已移除该预编译库声明。
-2. **菜单 dex**：项目路径含中文会被 AGP 拒（`non-ASCII path`）⇒ 复制到 ASCII 路径（如 `E:\_build\starry`）再 `gradlew assembleRelease`；`apktool d` → 收 `com/starry` smali → `java -jar smali-fat.jar assemble` → `classes4.dex`。
+2. **菜单 dex**：项目路径含中文会被 AGP 拒（`non-ASCII path`）⇒ 复制到 ASCII 路径（如 `mod菜单/starry-mod-menu`）再 `gradlew assembleRelease`；`apktool d` → 收 `com/starry` smali → `java -jar smali-fat.jar assemble` → `classes4.dex`。
 3. **binary Manifest**：`apktool d -f -s` 官方包 → 文本 manifest 加 3 权限 + `MenuService` + `StarryInitProvider` + `LvmengPayloadProvider` → `apktool b` → 取其中的 `AndroidManifest.xml`。
 4. **外科 zip**：以官方 `base.apk` 为底流式复制（丢 `META-INF/`），替换 manifest、追加 `classes4.dex`、`lib/arm64-v8a/{libstarry_magic.so,libc++_shared.so}`、`assets/lvmeng/*`（`fg_orig.apk` 必须 **STORED**）；自检：`classes.dex/classes2/classes3/resources.arsc` 四件 sha256 不变。
 5. **签名**：`zipalign -p 4` + `apksigner sign`（`01_tools/starry_release.jks` / `starry` / `starry2026`）。
@@ -278,7 +278,7 @@ $ python bundle_repack.py locate-pe assets/lvmeng/__data
 off=  2954896 size= 14583296 ?          <-- Assembly-ACT.dll 槽位（14,583,296 B）
 $ python bundle_repack.py extract-stream assets/lvmeng/__data _verify_stream.bin
 解压流 29329760 字节；node 声明 size = 29329760，一致=True
-比对：_build/ilpatch/Assembly-ACT.p2.dll（6 处注入）在流中逐字节存在 = True
+比对：04_scripts/绿梦/ilpatch/Assembly-ACT.p2.dll（6 处注入）在流中逐字节存在 = True
 ```
 
 ⇒ 「补丁 bundle 里装的就是打好 6 处注入的 Assembly-ACT.dll」这件事**已在交付物层面被证明**，不再依赖记忆或推断。
@@ -322,7 +322,7 @@ $ python bundle_repack.py extract-stream assets/lvmeng/__data _verify_stream.bin
    （打开这个伪路径必然 ENOENT）。改为在 `"/base.apk"` 末尾截断。
    - 实测：`apk=/data/app/~~Yp-PiQU5…/base.apk`（干净），`fgspoof=ON`、`spoof file already present (179649718 B)`。
 
-**当前交付候选 = `E:\_build\lvmeng\lvmeng_v24.apk`**（assemble → zipalign → apksigner 三连，包内 so 158,800 B 带 SIGSYS 诊断）。
+**当前交付候选 = `08_output/绿梦/_import_20261028/（v24 已不在磁盘；现存候选 lvmeng_v25/v32）`**（assemble → zipalign → apksigner 三连，包内 so 158,800 B 带 SIGSYS 诊断）。
 
 ### 9.11 2026-10-28 02:3x v24 正式包落地（含脚本偏离记录）
 
