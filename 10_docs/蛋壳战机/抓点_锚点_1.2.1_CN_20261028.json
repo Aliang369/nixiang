@@ -1,0 +1,256 @@
+{
+  "game": "蛋壳战机",
+  "actual_app_label": "蛋壳战机",
+  "package": "com.survivor.acecn",
+  "channel": "taptap",
+  "version_name": "1.2.1",
+  "version_code": 44,
+  "engine": "Unity IL2CPP",
+  "date": "2026-10-28",
+  "device": "emulator-5554 (雷电 LDPlayer，x86_64 + libhoudini arm64 转译)",
+  "note": "国服 1.2.1/vc44 底包（自模拟器 /data/app 只读拉取）锚点全量重定位；1.1.8 的 file offset 全部作废。实测 12 hook RVA 与 3 aux RVA 同私服 1.2.1/vc35 逐位一致。",
+  "apk": {
+    "path": "02_apks/蛋壳战机/蛋壳战机_1.2.1_official_vc44_from_emulator.apk",
+    "size": 207716117,
+    "md5": "075b9d6a84ad87679301eb94246f8b92",
+    "sha256": "46cd2c76682f38390646cf0e2ed527bff1c02e2a8fbc53b19c6885063cc3c182",
+    "signer": "O=gorilla",
+    "signature_sha1_prefix": "89279fb3",
+    "app_component_factory": "androidx.core.app.CoreComponentFactory",
+    "dex_entries": [
+      "classes.dex",
+      "classes2.dex",
+      "classes3.dex",
+      "classes4.dex"
+    ],
+    "free_dex_slot": "classes5.dex"
+  },
+  "elf": {
+    "file": "lib/arm64-v8a/libil2cpp.so",
+    "sha256": "c571d347620f484b958768c8473849b5dfb860f9d7d5ffc59464ceb3e5677d9f",
+    "rva_to_file_offset_delta": "0x4000",
+    "text_segment": {
+      "file_offset": "0x37004ac",
+      "va": "0x37044ac",
+      "size": "0x5af88f4"
+    }
+  },
+  "metadata": {
+    "sha256": "91c42a5c2bfd4ce9e2930312a7c38f9f56438b82fa16dd0bc701263d046967a3",
+    "version": 31
+  },
+  "core_entry_sha256": {
+    "lib/arm64-v8a/libil2cpp.so": "c571d347620f484b958768c8473849b5dfb860f9d7d5ffc59464ceb3e5677d9f",
+    "lib/arm64-v8a/libunity.so": "d419ae8ed7677c61b25e82173037546a7cb04cd2e57bb7fbc285a7c07262642a",
+    "lib/arm64-v8a/libmain.so": "9348cd29bcdec5b677c7124b111a2ebb285bfd6550282619c8fd178f2982eb5d",
+    "assets/bin/Data/Managed/Metadata/global-metadata.dat": "91c42a5c2bfd4ce9e2930312a7c38f9f56438b82fa16dd0bc701263d046967a3",
+    "classes.dex": "b3b2811beb849365056af1080a1394c4dbcc830fd1d1e3d9c0bd8a22d89ae577",
+    "classes2.dex": "52bd1e4b78bcd99c35212383d69893870a77f59a8e84ab04a1ad68d9c391f305",
+    "classes3.dex": "9269e185d306066718e88d89d9f8f5f0c8bdab3b08dc7011a6466ba76a5538da",
+    "classes4.dex": "882d65ef4b858df15dc7633082f06f58b39a046f9f3094253cceac924d4f101d",
+    "resources.arsc": "dfb1f9093294bb703c1d694126bf42dca17c6d24771ac2d08715b0078d6b5a07"
+  },
+  "resolved_by_name": [
+    {
+      "method": "HotFix.BattleLogic.BattleWorldContext.AddSkillToCharacter(EntityCharacter,int,bool)",
+      "rva": "0x6fcbbdc",
+      "file_offset": "0x6fc7bdc",
+      "prologue_word": "0xf81c0ffe",
+      "purpose": "偷盗技能回灌入口（file offset 直取）"
+    },
+    {
+      "method": "LocalModels.LocalModelManager.GetSkill_Main(int)",
+      "rva": "0x69c631c",
+      "file_offset": "0x69c231c",
+      "prologue_word": "0xf81d0ffe",
+      "purpose": "读 Skill_Main 升级链（file offset 直取）"
+    },
+    {
+      "method": "HotFix.Game.get_Table()",
+      "rva": "0x76fdb58",
+      "file_offset": "0x76f9b58",
+      "prologue_word": "0xf81e0ffe",
+      "purpose": "取 LocalModelManager 表入口（file offset 直取）"
+    }
+  ],
+  "field_offsets_verified_1_2_1_cn": {
+    "HurtBase.Entity": "0x60",
+    "EntityCharacter._currentHp": "0x1A0",
+    "HeroComponentRandomSkill._allSkills": "0x58",
+    "HeroComponentRandomSkill._randomSkillResult": "0x88",
+    "RandomSkillResult.<ShowSkills>k__BackingField": "0x60",
+    "Skill_Main.<IsUpgrade>k__BackingField": "0x28",
+    "Skill_Main.<UpgradeSkillId>k__BackingField": "0x30",
+    "Skill_Main.<MaxStar>k__BackingField": "0x40",
+    "Skill_Main.<CoverSkill>k__BackingField": "0x80",
+    "Skill_Main.<NextSkill>k__BackingField": "0x84",
+    "Skill_Main.<IsUpgrade_B>k__BackingField": "0x14C",
+    "Skill_Main.<UpgradeSkillId_B>k__BackingField": "0x150",
+    "Skill_Main.<UnlockUpgradeId>k__BackingField": "0x158",
+    "Skill_Main.<RepeatSkills>k__BackingField": "0x168"
+  },
+  "menu": {
+    "template": "10_docs/蛋壳战机/dkzj_menu_template.json",
+    "features": [
+      {
+        "button": "Slider_攻击倍率",
+        "feature": 1,
+        "name": "攻击倍率",
+        "type": "range",
+        "range": "1-100"
+      },
+      {
+        "button": "Toggle_上帝模式",
+        "feature": 2,
+        "name": "上帝模式",
+        "type": "toggle"
+      },
+      {
+        "button": "Toggle_偷盗技能",
+        "feature": 3,
+        "name": "偷盗技能",
+        "type": "toggle"
+      },
+      {
+        "button": "Toggle_免广告",
+        "feature": 4,
+        "name": "免广告",
+        "type": "toggle"
+      }
+    ]
+  },
+  "hooks": [
+    {
+      "method": "HotFix.BattleLogic.EntityCharacter.ChangeHp(long)",
+      "rva": "0x6d1f118",
+      "file_offset": "0x6d1b118",
+      "prologue_word": "0xa9bb6ffe",
+      "expected_prologue": "0xa9bb6ffe",
+      "prologue_ok": true,
+      "purpose": "攻击倍率旧层兜底 / 上帝模式 ChangeHp 路径",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.BattleLogic.EntityHero.ChangeHp(long)",
+      "rva": "0x6e17d30",
+      "file_offset": "0x6e13d30",
+      "prologue_word": "0xf81d0ffe",
+      "expected_prologue": "0xf81d0ffe",
+      "prologue_ok": true,
+      "purpose": "上帝模式：英雄扣血入口（t_heroDepth 标记）",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.BattleLogic.HurtBase.FinalizeAttackResult(FP)",
+      "rva": "0x6e32404",
+      "file_offset": "0x6e2e404",
+      "prologue_word": "0xf81d0ffe",
+      "expected_prologue": "0xf81d0ffe",
+      "prologue_ok": true,
+      "purpose": "攻击倍率主挂点：FP 16.16 攻击结算 ×N，被击方为 Hero/Follower 时跳过",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.BattleLogic.EntityHero.set_CurrentHp(long)",
+      "rva": "0x6e1a390",
+      "file_offset": "0x6e16390",
+      "prologue_word": "0xf81d0ffe",
+      "expected_prologue": "0xf81d0ffe",
+      "prologue_ok": true,
+      "purpose": "上帝模式补刀：拒绝向下写 CurrentHp；字段 _currentHp=0x1A0",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.BattleLogic.BattleWorldContext.PostProcessLearnedSkill(EntityCharacter,int,Skill_Main,bool,HeroComponentRandomSkill)",
+      "rva": "0x6fdba08",
+      "file_offset": "0x6fd7a08",
+      "prologue_word": "0xd10303ff",
+      "expected_prologue": "0xd10303ff",
+      "prologue_ok": true,
+      "purpose": "偷盗技能：三选一后补授其余候选",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.ADModuleMgr.CheckAndPlayVideo(string,Action<bool>)",
+      "rva": "0x78e5148",
+      "file_offset": "0x78e1148",
+      "prologue_word": "0xa9bc67fe",
+      "expected_prologue": "0xa9bc67fe",
+      "prologue_ok": true,
+      "purpose": "免广告旧层兜底：直接回调 onClose(true)",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "Framework.GameAdsManager.CheckAndPlayVideo(Action<bool>,Action,Action<string>,Func<string>)",
+      "rva": "0x445b058",
+      "file_offset": "0x4457058",
+      "prologue_word": "0xd10183ff",
+      "expected_prologue": "0xd10183ff",
+      "prologue_ok": true,
+      "purpose": "免广告框架层：不播广告，反射调 onShow/onClose(true)",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.BattleLogic.RandomSkillResult.set_ShowSkills(List<int>)",
+      "rva": "0x6dfb784",
+      "file_offset": "0x6df7784",
+      "prologue_word": "0xf81d0ffe",
+      "expected_prologue": "0xf81d0ffe",
+      "prologue_ok": true,
+      "purpose": "偷盗技能候选快照：普通三选一",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.AngleViewData.set_ShowSkills(List<int>)",
+      "rva": "0x7a55bd8",
+      "file_offset": "0x7a51bd8",
+      "prologue_word": "0xf81d0ffe",
+      "expected_prologue": "0xf81d0ffe",
+      "prologue_ok": true,
+      "purpose": "偷盗技能候选快照：角度选择",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.ContractDevilData.set_ShowSkills(List<int>)",
+      "rva": "0x7b3568c",
+      "file_offset": "0x7b3168c",
+      "prologue_word": "0xf81d0ffe",
+      "expected_prologue": "0xf81d0ffe",
+      "prologue_ok": true,
+      "purpose": "偷盗技能候选快照：契约恶魔",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.PunchboardViewData.set_ShowSkills(List<int>)",
+      "rva": "0x7fbbb1c",
+      "file_offset": "0x7fb7b1c",
+      "prologue_word": "0xf81d0ffe",
+      "expected_prologue": "0xf81d0ffe",
+      "prologue_ok": true,
+      "purpose": "偷盗技能候选快照：弹珠板",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    },
+    {
+      "method": "HotFix.BattleRecordManager.IsNeedUploadSaveData()",
+      "rva": "0x7627018",
+      "file_offset": "0x7623018",
+      "prologue_word": "0xa9be57fe",
+      "expected_prologue": "0xa9be57fe",
+      "prologue_ok": true,
+      "purpose": "拦截上报常开：返回 false，走 SkippedNotNeeded=2",
+      "source": "1.2.1(vc44) dump.cs 重定位"
+    }
+  ],
+  "dump": {
+    "dir": "06_dumped/蛋壳战机/il2cpp_dump_1.2.1_cn",
+    "dump_cs": "06_dumped/蛋壳战机/il2cpp_dump_1.2.1_cn/dump.cs",
+    "dump_cs_bytes": 62963944,
+    "metadata_version": 31
+  },
+  "build": {
+    "mk": "Android_dkzj121.mk",
+    "define": "-DDKZJ_TARGET_1_2_1",
+    "game_id": "dkzj"
+  },
+  "status": "锚点序言 12/12 静态核验通过；构建/组装/签名/装机详见 星空落地_1.2.1_CN_20261028.md"
+}

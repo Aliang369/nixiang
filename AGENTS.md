@@ -85,6 +85,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
    - **已有星光包在跑、游戏内热更后功能失效 → `skill/re-extract/hotupdate-fingerprint-recheck.md`**（三查分流：热更资源版本 / 核心 so SHA / 玩法分包是否只在热更目录；确认 JS 指纹漂移再动手）
    - 写功能 / Hook → `skill/re-implement/SKILL.md`（指纹铁律 `hook-rules.md` §24：禁止写死会被混淆器改名的短标识符；**挂点五步门禁 §22**，第 5 步＝`10_docs/{游戏}/路线锁定.md` 填满且无「未确认偏离」才准装机）；**动手前先扫 `10_docs/_state/pending_experience.md` 候选经验 + `bash 04_scripts/_common/prior_art.sh <关键词>`**
    - 星光落地 / 切游戏 / 出包 → `skill/starry-mod/SKILL.md`（**已有星光包只重打 dex/APK/重装**：只改 Java/dex 不重编 native；复用正式包用 `STARRY_INSTALL_ONLY=1`；**直装包不得只换 `libil2cpp.so`**，验收须含一次干净安装——见该文件「分发与装机红线」两节）
+   - **渠道包是 TapTap / TapSDK（验签弹窗、强制网页登录）→ 先读 `skill/re-analyze/login/taptap-web-login.md` 顶部「现行口径」**：一律**改包法**（改游戏 dex 门闩＋登录入口），**禁止运行时签名伪装**（`SignSpoof` / `SignSpoofAppComponentFactory` / `TapLoginForceWeb` 白名单）。机器关：`framework_entry_audit.sh [G]` + `pre_install_gate.sh 查12`（底包有 `GatekeeperRepository` 而成品同名 dex 与底包逐字节相同 ⇒ FAIL）
    - **机械操作（拆包/打包/注入/移植/签名/装机/清理）→ `04_scripts/_common/stages.md`**。第一步先 `ls 04_scripts/{游戏}/pipeline.json`：存在 → 走 `pipeline.sh` 原生动词 `bash 04_scripts/pipeline.sh <游戏> {status|rounds|next --loop N|log [N]|round <功能#> <有效|无效|未测> "摘要"|gate <阶段id>}`（旧 `_common/stage_next.sh <游戏> [status|next|auto N|rounds]` 仍是同义转发器）；不存在 → 用该游戏 `surgical_*/inject_*` 脚本。**两条路都禁直接敲 adb/apktool/zip/ndk-build/jarsigner**；分析操作照常推理，产出落 `10_docs/`。
    - 分析 `.so` → `skill/ida-plugin-flow/SKILL.md`（按具体问题触发，不作无差别全扫）；经验查阅 → `skill/re-lessons/SKILL.md`
    - **先例检索（仓内 → 仓外）→ `bash 04_scripts/_common/prior_art.sh <关键词>`**；仓内零命中（rc=1）⇒ 按 `skill/diagnosis-index.md`「外部检索协议」≤3 次外部检索，结果落 `10_docs/_state/外部方案台账.md`
@@ -129,7 +130,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
 
 ## 6. 全局门禁、收尾与状态维护
 
-- **操作二分**：机械操作（拆/打/注/移/签/装/清理）只走统一管线入口（见 §3.2）；分析操作照常自由推理，产出落 `10_docs/`。完整动词表、阶段定义、失败恢复、装机前产物门禁（**现为 10 查：查1–查10**；原查11「加固凭证关」已于 2026-10-27 下线）、`preflight` 声明与出包门禁见 `04_scripts/_common/stages.md`；**命令行为以脚本实现与门禁测试为准**。
+- **操作二分**：机械操作（拆/打/注/移/签/装/清理）只走统一管线入口（见 §3.2）；分析操作照常自由推理，产出落 `10_docs/`。完整动词表、阶段定义、失败恢复、装机前产物门禁（**现为 11 查：查1–查10 + 查12「TapTap 方案关」**〔2026-10-28 补：manifest 不得挂 `SignSpoofAppComponentFactory`；底包有 `GatekeeperRepository` 而成品同名 dex 与底包逐字节相同 ⇒ FAIL，逃生门 `TAP_MODE_CHECK=0`〕；原加固凭证关已于 2026-10-27 下线）、`preflight` 声明与出包门禁见 `04_scripts/_common/stages.md`；**命令行为以脚本实现与门禁测试为准**。
 - **改完任何文件必跑机器关**：`bash 04_scripts/_common/preflight.sh <改过的文件...>`（`.sh`→`bash -n` + bash 3.2 兼容门禁、`.py`→compile、`.js`→`node --check`、`.json`→json.tool；`.cpp/.mk`→REMIND，须重跑管线构建阶段）。**preflight 没跑 / 没过，修改就不算完成**；无参 `--sweep` 可全仓扫描。
 - **管线与指纹锁**：`pipeline.sh` / `_common/pipeline.lock` 禁随手改、禁只改一边；确需改按 `stages.md` 文末「真要改 `pipeline.sh` 时的跨机姿势」（同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push）。
 - **加固门禁已下线（2026-10-27 用户裁决撤销原「默认全局强制 / 方案 B 直接硬」）**：`harden_apk.py` / `harden_gate.sh` /

@@ -1,7 +1,10 @@
-# 蛋壳战机私服（com.wxdmxga.dkzj）预检标记 — post_install_precheck.sh 用
+# 蛋壳战机 国服（com.survivor.acecn）预检标记 — post_install_precheck.sh 用
 # 格式：类别|ERE（'#' 注释）；menu_load/crash/crash_ignore 走脚本默认值
-pkg|com.wxdmxga.dkzj
-hook_hit|hooked
-hook_hit|初始化成功
+# 历史：私服轮（com.wxdmxga.dkzj / game_id=dkzjsf）曾用本文件；2026-10-28 国服 1.2.1 轮切回国服。
+pkg|com.survivor.acecn
+hook_hit|\[dkzj\].*hooked file=
+hook_hit|\[dkzj\].*hooked by-name
+hook_hit|\[dkzj\] 初始化成功
+hook_hit|RegisterNatives
 menu_shown|native menu shown
-auth_ok|auth game_id synced from native: dkzjsf
+auth_ok|auth game_id synced from native: dkzj

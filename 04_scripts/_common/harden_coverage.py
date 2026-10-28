@@ -398,12 +398,17 @@ def scan(root):
                     e['protected'] = True
                     e['protected_by'] = 'called-by-finalizer'
 
-    pig = code_only(read(os.path.join(root, '04_scripts', '_common', 'pre_install_gate.sh')))
+    gate_raw = read(os.path.join(root, '04_scripts', '_common', 'pre_install_gate.sh'))
+    pig = code_only(gate_raw)
+    # 查11 加固凭证关已于 2026-10-27 按用户裁决下线（AGENTS.md §6）：门禁脚本里只剩注释说明。
+    # 该下线状态下「门禁无 harden_apk.py 调用」是**预期**，不再算错误（否则每次自检都报假 FAIL）。
+    harden_retired = ('查11' in gate_raw and '下线' in gate_raw)
     return {
         'root': root,
         'entries': entries,
         'games': gt,
         'install_gate': bool('harden_apk.py' in pig and 'stamp' in pig),
+        'install_gate_retired': harden_retired,
         'install_gate_reason': bool(REASON.search(pig)),
         'pipelines': sorted(os.path.basename(os.path.dirname(p))
                             for p in _pipelines(root)),
@@ -479,7 +484,7 @@ def check(data, strict=False, only_game=None):
             if e['script'] in EXEMPTIONS or e['has_reason']:
                 continue
             errors.append(f"{e['script']}: 使用 --allow-no-harden 但没有理由参数（--harden-reason / HARDEN_REASON）")
-    if not data['install_gate']:
+    if not data['install_gate'] and not data.get('install_gate_retired'):
         errors.append('pre_install_gate.sh 未校验加固凭证（查11 失效）')
     reg = read(os.path.join(data['root'], '10_docs', '防御加固_覆盖登记.md'))
     for line in reg.splitlines():
@@ -523,7 +528,7 @@ def render(data):
               len(data['entries'])),
            f'- GAMES 登记 {len(gt["names"])} 个：' + '、'.join(f'`{n}`(tag `{gt["tags"].get(n,"?")}`)' for n in gt['names']),
            f'- `harden_apk.py` 默认 `--apk`：`{gt["default_apk"] or "(未解析)"}`（管线省略 --apk 时按此路径检查）',
-           f'- 装机侧凭证校验（查11）：{"✅" if data["install_gate"] else "❌"}；理由强制：{"✅" if data["install_gate_reason"] else "❌"}',
+           f'- 装机侧凭证校验（查11）：{"已下线（2026-10-27 用户裁决）" if data.get("install_gate_retired") else ("✅" if data["install_gate"] else "❌")}；理由强制：{"✅" if data["install_gate_reason"] else "❌"}',
            f'- pipeline.json 数量：{len(data["pipelines"])}', '',
            '## 2. 正式 APK 入口（必须受门禁保护）', '',
            '| 入口 | 游戏目录 | 状态 | 保护依据 | 管线证据 |', '|---|---|---|---|---|']

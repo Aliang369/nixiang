@@ -206,6 +206,7 @@ std::atomic<GetSkillMainFn> g_fnGetSkillMainAtomic{nullptr};
 std::atomic<GameGetTableFn> g_fnGameGetTableAtomic{nullptr};
 std::atomic<void*> g_miAddSkillToCharacter{nullptr};
 std::atomic<void*> g_miGetSkillMain{nullptr};
+std::atomic<void*> g_miGameGetTable{nullptr};
 
 std::atomic<void*> g_actionBoolClass{nullptr};
 std::atomic<void*> g_miActionBoolInvoke{nullptr};
@@ -451,11 +452,76 @@ void* EnsureGetSkillMainMethodInfo() {
     if (cached) return cached;
     if (!AttachCurrentThreadToIl2Cpp()) return nullptr;
     void* methodInfo = nullptr;
-    ResolveMethodPtr("", "LocalModelManager", "GetSkill_Main", 1, &methodInfo);
+    // 1.2.1(vc44) dump.cs：LocalModels.LocalModelManager.GetSkill_Main(int)
+    if (!ResolveMethodPtr("LocalModels", "LocalModelManager", "GetSkill_Main", 1, &methodInfo)
+        || !methodInfo) {
+        ResolveMethodPtr("", "LocalModelManager", "GetSkill_Main", 1, &methodInfo);
+    }
     if (methodInfo) {
         g_miGetSkillMain.store(methodInfo, std::memory_order_release);
     }
     return methodInfo;
+}
+
+void* EnsureGameGetTableMethodInfo() {
+    void* cached = g_miGameGetTable.load(std::memory_order_acquire);
+    if (cached) return cached;
+    if (!AttachCurrentThreadToIl2Cpp()) return nullptr;
+    void* methodInfo = nullptr;
+    // 1.2.1(vc44) dump.cs：HotFix.Game.get_Table()
+    if (!ResolveMethodPtr("HotFix", "Game", "get_Table", 0, &methodInfo) || !methodInfo) {
+        ResolveMethodPtr("", "Game", "get_Table", 0, &methodInfo);
+    }
+    if (methodInfo) {
+        g_miGameGetTable.store(methodInfo, std::memory_order_release);
+    }
+    return methodInfo;
+}
+
+// ---------------------------------------------------------------------------
+// aux 三点的「无 RX 段」兜底（2026-10-28，雷电模拟器实测）：
+//   LDPlayer/MuMu 这类 x86_64 + libhoudini 环境里 libil2cpp.so **没有可执行段**
+//   （/proc/<pid>/maps 实测 r-xp=0）⇒ FileOffToVa() 恒 nullptr ⇒ AddSkillToCharacter /
+//   GetSkill_Main / get_Table 永不解析 ⇒ 偷盗技能报 `steal abort: AddSkillToCharacter
+//   fn unresolved`。主 hook 已能 by-name（il2cpp 反射解析）装成功，故 aux 同样走 by-name 兜底：
+//   先按 file offset（真机快路径，行为不变），失败再按名解析并回填缓存（每次调用都重试）。
+// ---------------------------------------------------------------------------
+void* MethodInfoToFn(void* methodInfo) {
+    return methodInfo ? *reinterpret_cast<void**>(methodInfo) : nullptr;
+}
+
+AddSkillToCharacterFn ResolveAddSkillFn() {
+    AddSkillToCharacterFn fn =
+        g_fnAddSkillToCharacterAtomic.load(std::memory_order_acquire);
+    if (fn) return fn;
+    void* p = MethodInfoToFn(EnsureAddSkillMethodInfo());
+    if (!OkPtr(p)) return nullptr;
+    fn = reinterpret_cast<AddSkillToCharacterFn>(p);
+    g_fnAddSkillToCharacterAtomic.store(fn, std::memory_order_release);
+    LOGI(DKZJ_LOG " AddSkillToCharacter resolved by-name @%p", p);
+    return fn;
+}
+
+GetSkillMainFn ResolveGetSkillMainFn() {
+    GetSkillMainFn fn = g_fnGetSkillMainAtomic.load(std::memory_order_acquire);
+    if (fn) return fn;
+    void* p = MethodInfoToFn(EnsureGetSkillMainMethodInfo());
+    if (!OkPtr(p)) return nullptr;
+    fn = reinterpret_cast<GetSkillMainFn>(p);
+    g_fnGetSkillMainAtomic.store(fn, std::memory_order_release);
+    LOGI(DKZJ_LOG " GetSkill_Main resolved by-name @%p", p);
+    return fn;
+}
+
+GameGetTableFn ResolveGameGetTableFn() {
+    GameGetTableFn fn = g_fnGameGetTableAtomic.load(std::memory_order_acquire);
+    if (fn) return fn;
+    void* p = MethodInfoToFn(EnsureGameGetTableMethodInfo());
+    if (!OkPtr(p)) return nullptr;
+    fn = reinterpret_cast<GameGetTableFn>(p);
+    g_fnGameGetTableAtomic.store(fn, std::memory_order_release);
+    LOGI(DKZJ_LOG " Game.get_Table resolved by-name @%p", p);
+    return fn;
 }
 
 void ResetHeroDepth() {
@@ -871,13 +937,14 @@ bool Hooked_IsNeedUploadSaveData(void* method) {
     return true;
 }
 
-void* ResolveGameTable() {    GameGetTableFn fn = g_fnGameGetTableAtomic.load(std::memory_order_acquire);
+void* ResolveGameTable() {
+    GameGetTableFn fn = ResolveGameGetTableFn();
     if (!fn) return nullptr;
     return fn();
 }
 
 void* ResolveSkillMain(int32_t skillId) {
-    GetSkillMainFn fn = g_fnGetSkillMainAtomic.load(std::memory_order_acquire);
+    GetSkillMainFn fn = ResolveGetSkillMainFn();
     if (!fn || skillId <= 0) return nullptr;
     void* table = ResolveGameTable();
     if (!OkPtr(table)) return nullptr;
@@ -1005,8 +1072,7 @@ bool GrantOne(void* self, void* entity, void* hrs, int32_t requestedId,
     const int32_t grantId = (skillMain && ownedAlready)
         ? ResolveGrantId(skillMain, requestedId, owned, ownedCount, &src)
         : requestedId;
-    AddSkillToCharacterFn fn =
-        g_fnAddSkillToCharacterAtomic.load(std::memory_order_acquire);
+    AddSkillToCharacterFn fn = ResolveAddSkillFn();
     if (!fn || grantId <= 0) return false;
     const bool granted = fn(self, entity, grantId, true, methodInfo);
     if (granted && grantedIdOut) *grantedIdOut = grantId;
@@ -1039,8 +1105,7 @@ void Hooked_PostProcessLearnedSkill(void* self, void* entity, int32_t skillId,
     if (t_stealDepth != 1) return;
     if (!g_stealSkill.load(std::memory_order_relaxed)) return;
 
-    AddSkillToCharacterFn fn =
-        g_fnAddSkillToCharacterAtomic.load(std::memory_order_acquire);
+    AddSkillToCharacterFn fn = ResolveAddSkillFn();
     if (!fn) {
         LOGW(DKZJ_LOG " steal abort: AddSkillToCharacter fn unresolved picked=%d",
              skillId);

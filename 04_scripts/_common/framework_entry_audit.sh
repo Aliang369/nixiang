@@ -237,9 +237,27 @@ echo "   包名 = ${PKG}"
 echo "   APK  = ${APK:-（未提供 ⇒ 跳过 f 交付物断言）}"
 echo "================================================================"
 
+# ---------------- 现行 TapTap 方案判定（2026-10-28）----------------
+# 用户 2026-10-28 定案：TapTap 验签/网页登录一律「改包法」，停用运行时签名伪装。
+# 判据：成品包 manifest 是否仍挂 SignSpoofAppComponentFactory（挂=legacy，不挂=new）。
+# legacy 时 [A]/[B] 照旧检查；new 时 [A]/[B] 跳过（那两个 Java 入口不再参与执行）。
+TAP_MODE="unknown"
+if [ -n "$APK" ] && [ -f "$APK" ]; then
+  _PY="$(command -v python3 || command -v python || true)"
+  if [ -n "$_PY" ] && PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$_PY" - "$APK" 2>/dev/null <<'PY'
+import sys, zipfile
+with zipfile.ZipFile(sys.argv[1]) as z:
+    man = z.read('AndroidManifest.xml')
+sys.exit(0 if b'SignSpoofAppComponentFactory' in man else 1)
+PY
+  then TAP_MODE="legacy"; else TAP_MODE="new"; fi
+fi
+
 # ---------------- A. TapTap 强制网页登录白名单 ----------------
-hdr "[A] TapTap 强制网页登录白名单 PKG_WHITELIST"
-if [ ! -f "$TAP" ]; then
+hdr "[A] TapTap 强制网页登录白名单 PKG_WHITELIST（历史机制）"
+if [ "$TAP_MODE" = "new" ]; then
+  ok "跳过：成品包已是「改包法」形态（TapLoginForceWeb 不参与执行，白名单无需登记）"
+elif [ ! -f "$TAP" ]; then
   bad "缺文件 mod菜单/.../sign/TapLoginForceWeb.java"
 else
   wl_start="$(grep -n 'PKG_WHITELIST' "$TAP" | head -1 | cut -d: -f1)"
@@ -259,8 +277,10 @@ else
 fi
 
 # ---------------- B. SignSpoof 签名伪装证书表 ----------------
-hdr "[B] SignSpoof 签名伪装证书表"
-if [ ! -f "$SPOOF" ]; then
+hdr "[B] SignSpoof 签名伪装证书表（历史机制，2026-10-28 起停用）"
+if [ "$TAP_MODE" = "new" ]; then
+  ok "跳过：成品包已摘掉运行时签名伪装（SignSpoof 不执行，证书表无需登记）"
+elif [ ! -f "$SPOOF" ]; then
   bad "缺文件 mod菜单/.../sign/SignSpoof.java"
 else
   pl="$(grep -nF "\"$PKG\"" "$SPOOF" | head -1)"
@@ -459,6 +479,33 @@ else
         fi
       done
     fi
+  fi
+fi
+
+# ---------------- G. TapTap 现行方案关（改包法，2026-10-28） ----------------
+hdr "[G] TapTap 现行方案关（改包法，2026-10-28）"
+if [ -z "$APK" ] || [ ! -f "$APK" ]; then
+  note "未传 --apk ⇒ 跳过（本关需成品包）"
+elif [ "$TAP_MODE" = "legacy" ]; then
+  bad "成品包 manifest 仍挂 SignSpoofAppComponentFactory ⇒ 仍在用已停用的运行时签名伪装（user 版真机必 exemptHiddenApis 失败）"
+  echo "      改法：manifest 恢复官方 androidx.core.app.CoreComponentFactory，入口只留 StarryInitProvider（并注释其 SignSpoof.install()），"
+  echo "            验签/登录改用改包法锚点：InitializerServiceImpl.checkInitialize/checkLocalInitialize 恒 true、"
+  echo "            GatekeeperRepository.isGatekeeperLoadedSuccessfully 恒 true + showErrorToast no-op、登录入口恒 Web。"
+  echo "            配方：10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md"
+else
+  ok "manifest 未挂 SignSpoofAppComponentFactory（旧运行时伪装已摘）"
+  if [ -n "${_PY:-}" ] && PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$_PY" - "$APK" 2>/dev/null <<'PY'
+import sys, zipfile
+GATE = b'com/taptap/sdk/initializer/repository/GatekeeperRepository'
+with zipfile.ZipFile(sys.argv[1]) as z:
+    hit = any(GATE in z.read(n) for n in z.namelist()
+              if n.startswith('classes') and n.endswith('.dex'))
+sys.exit(0 if hit else 1)
+PY
+  then
+    note "包内含 TapSDK 门闩类 GatekeeperRepository ⇒ 还需用 pre_install_gate.sh --apk <成品> --base-apk <底包> 复核「查12 已改包」（本脚本无底包参数，不做字节比对）"
+  else
+    ok "包内无 TapSDK 门闩类 ⇒ 非 TapTap/TapSDK 包，改包法不适用"
   fi
 fi
 

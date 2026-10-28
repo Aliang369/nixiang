@@ -53,6 +53,12 @@
 #                     旧机因 `files/update/current` 有配套副本（运行时根本不加载包内 so）才一直正常。
 #                     可用 `--expect-so-sha256/--expect-metadata-sha256` 做精确断言。
 #                     逃生门：SO_META_CHECK=0（须在装机报告写明理由）。
+#    查12 TapTap 方案关（2026-10-28 补；蛋壳战机 1.2.1 误用旧伪装后落地）：`--apk` 时
+#                     ① manifest 仍挂 `SignSpoofAppComponentFactory` ⇒ FAIL（运行时签名伪装已停用）；
+#                     ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository` 而
+#                        成品包同名 dex 与底包**逐字节相同** ⇒ FAIL（该游戏根本没改包）。
+#                     判据来源：10_docs/_state/规范变更日志.md「2026-10-28 · TapTap 改包法」。
+#                     逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）。
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
 #  注意: 与 preflight.sh 职责不同——preflight 管"改完源文件"的语法，
@@ -566,6 +572,85 @@ fi
 # 由 `harden_apk.py check` PASS 后写入；缺失即 FAIL 拦装机（逃生门 --allow-no-harden + --harden-reason）。
 # 撤销理由与影响面见 AGENTS.md §6「加固门禁已下线」与 10_docs/_state/规范变更日志.md。
 # 脚本参数 --allow-no-harden / --harden-reason 仍被解析（兼容旧命令），但不再产生任何判定。
+
+# ---------- 查12 TapTap 方案关（2026-10-28 补；蛋壳战机 1.2.1 误用旧伪装后落地） ----------
+# 依据：用户 2026-10-28 定案「TapTap 签名校验/网页强制登录一律改包法，不再用运行时签名伪装」
+#      （10_docs/_state/规范变更日志.md 同名条目 + _templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md）
+# 判据（任一命中即 FAIL，拦装机）：
+#   ① 成品包 manifest 仍挂 `SignSpoofAppComponentFactory` ⇒ 还在用已停用的运行时伪装；
+#   ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository`，而**成品包同名 dex 与底包逐字节相同**
+#      ⇒ 该游戏根本没改包（验签门闩/网页登录都没落），必然复现「弹窗/点了没反应」。
+# 非 TapTap/TapSDK 包 ⇒ SKIP。逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）。
+if [ -n "$apk_file" ] && [ "${TAP_MODE_CHECK:-1}" = "1" ]; then
+  if [ ! -f "$apk_file" ]; then
+    echo "✗ FAIL  [TapTap方案] 目标 APK 不存在: $apk_file"; fail=$((fail + 1))
+  else
+    PY_G="$(command -v python3 || command -v python || true)"
+    if [ -z "$PY_G" ]; then
+      echo "- SKIP  [TapTap方案] 无 python，无法读包内 dex/manifest"; skip=$((skip + 1))
+    else
+      TAP_RC=0
+      # Windows 控制台默认 GBK：本段 python 会打印 ⇒/✓ 等非 GBK 字符，必须强制 UTF-8 输出
+      PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$PY_G" - "$apk_file" "${base_apk:-}" <<'PY' || TAP_RC=$?
+import hashlib, sys, zipfile
+
+apk, base = sys.argv[1], (sys.argv[2] or "")
+GATE = b'com/taptap/sdk/initializer/repository/GatekeeperRepository'
+OLD = b'SignSpoofAppComponentFactory'
+
+
+def dexes(z):
+    return sorted(n for n in z.namelist() if n.startswith('classes') and n.endswith('.dex'))
+
+
+with zipfile.ZipFile(apk) as z:
+    man = z.read('AndroidManifest.xml')
+    targets = dexes(z)
+    tgt = {n: z.read(n) for n in targets}
+
+if OLD in man:
+    print('   ✗ 成品包 manifest 仍挂 SignSpoofAppComponentFactory（运行时签名伪装已于 2026-10-28 停用）')
+    print('     改法：manifest 恢复官方 androidx.core.app.CoreComponentFactory，入口只用 StarryInitProvider，')
+    print('           并在 dex 级注释 StarryInitProvider 里的 SignSpoof.install()；验签/登录改用改包法锚点。')
+    sys.exit(1)
+
+tap_hits = [n for n in targets if GATE in tgt[n]]
+if not tap_hits:
+    print('   （该包不含 TapSDK 门闩类 ⇒ 非 TapTap/TapSDK 包，跳过）')
+    sys.exit(2)
+
+print(f'   TapSDK 门闩类出现在 {", ".join(tap_hits)}')
+if not base:
+    print('   ⚠ 未传 --base-apk ⇒ 无法核对「是否真的改过包」（建议补 --base-apk 复核）')
+    sys.exit(0)
+
+with zipfile.ZipFile(base) as zb:
+    bdex = {n: zb.read(n) for n in dexes(zb)}
+bad = []
+for n in tap_hits:
+    if n not in bdex:
+        print(f'   ⚠ 底包没有 {n}（dex 布局变化）⇒ 该条人工确认')
+        continue
+    a = hashlib.md5(bdex[n]).hexdigest()
+    b = hashlib.md5(tgt[n]).hexdigest()
+    if a == b:
+        bad.append((n, a))
+    else:
+        print(f'   ✓ {n} 已改包（底包 {a[:12]}… → 成品 {b[:12]}…）')
+if bad:
+    for n, a in bad:
+        print(f'   ✗ {n} 与底包逐字节相同 ⇒ TapTap 门闩/网页登录**未改包**（md5 {a[:12]}…）')
+    sys.exit(1)
+sys.exit(0)
+PY
+      case "$TAP_RC" in
+        0) echo "✓ PASS  [TapTap方案] 无旧签名伪装，且 TapSDK dex 已按改包法修补"; pass=$((pass + 1)) ;;
+        2) echo "- SKIP  [TapTap方案] 非 TapTap/TapSDK 包"; skip=$((skip + 1)) ;;
+        *) echo "        逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）"; fail=$((fail + 1)) ;;
+      esac
+    fi
+  fi
+fi
 
 # ---------- 汇总 ----------
 echo "────────────────────────────────"

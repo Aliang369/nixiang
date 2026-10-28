@@ -1,0 +1,72 @@
+# 蛋壳战机 国服 1.2.1(vc44) L2 预检决定性行 — 2026-10-28
+# 设备 emulator-5554（雷电 LDPlayer，x86_64 + libhoudini ARM 转译）
+# 源：09_test/蛋壳战机/precheck_20261028_164602/logcat.txt
+
+## 1. 菜单层（PASS）
+10-28 16:46:05.645  6913  6913 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-28 16:46:05.785  6913  6913 I ModBridge: auth game_id synced from native: dkzj
+10-28 16:46:05.787  6913  6913 I ModBridge: auth game_id synced from native: dkzj
+10-28 16:46:05.787  6913  6913 I ModBridge: auth game_id synced from native: dkzj
+10-28 16:46:05.788  6913  6913 I ModBridge: auth game_id synced from native: dkzj
+10-28 16:46:05.805  6913  6945 I ModBridge: auth game_id synced from native: dkzj
+10-28 16:46:05.805  6913  6913 I MenuService: native menu shown mode=ACTIVITY
+10-28 16:46:17.379  6913  6946 I StarryMagic: [dkzj] 初始化成功
+10-28 16:46:17.379  6913  6946 I StarryMagic: MOD 已就绪 tag=dkzj ready=1
+10-28 16:46:22.366  6913  6913 D ProcessShanYanLogger: initCallBack code**1022**processName**1**CMCC**{"innerCode":1022,"innerDesc":"init success","message":"初始化成功"}**
+
+## 2. hook 层（12/12 全部未安装）
+10-28 16:46:17.341  6913  6946 W Mod_Menu: [dkzj] EntityCharacter.ChangeHp file offset 0x6D1B118 not in RX — try by-name
+10-28 16:46:17.341  6913  6946 W Mod_Menu: [dkzj] EntityCharacter.ChangeHp by-name deferred (il2cpp runtime not up)
+10-28 16:46:17.343  6913  6946 W Mod_Menu: [dkzj] EntityHero.ChangeHp file offset 0x6E13D30 not in RX — try by-name
+10-28 16:46:17.343  6913  6946 W Mod_Menu: [dkzj] EntityHero.ChangeHp by-name deferred (il2cpp runtime not up)
+10-28 16:46:17.346  6913  6946 W Mod_Menu: [dkzj] HurtBase.FinalizeAttackResult file offset 0x6E2E404 not in RX — try by-name
+10-28 16:46:17.346  6913  6946 W Mod_Menu: [dkzj] HurtBase.FinalizeAttackResult by-name deferred (il2cpp runtime not up)
+10-28 16:46:17.348  6913  6946 W Mod_Menu: [dkzj] EntityHero.set_CurrentHp file offset 0x6E16390 not in RX — try by-name
+10-28 16:46:17.348  6913  6946 W Mod_Menu: [dkzj] EntityHero.set_CurrentHp by-name deferred (il2cpp runtime not up)
+10-28 16:46:17.351  6913  6946 W Mod_Menu: [dkzj] GameAdsManager.CheckAndPlayVideo file offset 0x4457058 not in RX — try by-name
+10-28 16:46:17.351  6913  6946 W Mod_Menu: [dkzj] GameAdsManager.CheckAndPlayVideo by-name deferred (il2cpp runtime not up)
+10-28 16:46:17.354  6913  6946 W Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill file offset 0x6FD7A08 not in RX — try by-name
+10-28 16:46:17.354  6913  6946 W Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill by-name deferred (il2cpp runtime not up)
+10-28 16:46:17.356  6913  6946 W Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo file offset 0x78E1148 not in RX — try by-name
+10-28 16:46:17.356  6913  6946 W Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo by-name deferred (il2cpp runtime not up)
+10-28 16:46:17.358  6913  6946 W Mod_Menu: [dkzj] RandomSkillResult.set_ShowSkills file offset 0x6DF7784 not in RX — try by-name
+
+## 3. 判定
+hooked file= 行计数 = 0
+hooked by-name 行计数 = 0
+
+## 4. /proc/<pid>/maps：libil2cpp.so 无任何 r-xp 段（决定性）
+#   PID 10303 实测：4 段 r--p + 2 段 rw-p + 1 段 r--s，exec 段 0
+#   典型行：400026b04000-40002c5fd000 r--p 03700000 ... lib/arm64/libil2cpp.so   (RX 段 offset 0x37004AC 被映射成 r--p)
+# ⇒ houdini 不在 guest 页上执行，转译代码在私有缓存 ⇒ file-offset→VA 找不到 RX 段、Dobby inline hook 也无法生效
+
+## 5. by-name 全量命中（模拟器无 RX 段 ⇒ 走 il2cpp 反射解析；16:50:00 实测 12/12）
+10-28 16:55:18.502 13213 13245 I Mod_Menu: [dkzj] GameAdsManager.CheckAndPlayVideo hooked by-name GameAdsManager.CheckAndPlayVideo
+10-28 16:55:28.037 13213 13245 I Mod_Menu: [dkzj] RandomSkillResult.set_ShowSkills hooked by-name RandomSkillResult.set_ShowSkills
+10-28 16:55:28.370 13213 13245 I Mod_Menu: [dkzj] AngleViewData.set_ShowSkills hooked by-name AngleViewData.set_ShowSkills
+10-28 16:55:28.377 13213 13245 I Mod_Menu: [dkzj] ContractDevilData.set_ShowSkills hooked by-name ContractDevilData.set_ShowSkills
+10-28 16:55:28.382 13213 13245 I Mod_Menu: [dkzj] PunchboardViewData.set_ShowSkills hooked by-name PunchboardViewData.set_ShowSkills
+10-28 16:55:28.388 13213 13245 I Mod_Menu: [dkzj] BattleRecordManager.IsNeedUploadSaveData hooked by-name BattleRecordManager.IsNeedUploadSaveData
+10-28 16:55:28.563 13213 13245 I Mod_Menu: [dkzj] EntityCharacter.ChangeHp hooked by-name EntityCharacter.ChangeHp
+10-28 16:55:28.568 13213 13245 I Mod_Menu: [dkzj] EntityHero.ChangeHp hooked by-name EntityHero.ChangeHp
+10-28 16:55:28.573 13213 13245 I Mod_Menu: [dkzj] HurtBase.FinalizeAttackResult hooked by-name HurtBase.FinalizeAttackResult
+10-28 16:55:28.577 13213 13245 I Mod_Menu: [dkzj] EntityHero.set_CurrentHp hooked by-name EntityHero.set_CurrentHp
+10-28 16:55:28.583 13213 13245 I Mod_Menu: [dkzj] BattleWorldContext.PostProcessLearnedSkill hooked by-name BattleWorldContext.PostProcessLearnedSkill
+10-28 16:55:28.587 13213 13245 I Mod_Menu: [dkzj] ADModuleMgr.CheckAndPlayVideo hooked by-name ADModuleMgr.CheckAndPlayVideo
+
+## 6. aux by-name 兜底 + 偷盗技能授予（2026-10-28 16:5x 修后包 so md5 0c791a5b…）
+10-28 16:55:43.718 13213 13238 I Mod_Menu: [dkzj] AddSkillToCharacter resolved by-name @0x40002a3cbbdc
+10-28 16:55:52.538 13213 13238 I Mod_Menu: [dkzj] GetSkill_Main resolved by-name @0x400029dc631c
+10-28 16:55:52.539 13213 13238 I Mod_Menu: [dkzj] Game.get_Table resolved by-name @0x40002aafdb58
+10-28 16:55:52.541 13213 13238 I Mod_Menu: [dkzj] steal picked=10400101 granted=2 first=10000601 last=10001501 ids=[10000601,10001501] src=random read=pre
+
+## 7. 用户口述（2026-10-28，L3）
+# 「已实测，偷盗技能正常」⇒ 偷盗技能 = PASS（用户终审）
+
+## 8. TapTap 改包法前后（小米 96f0d883，2026-10-28）
+# 改前（旧签名伪装，包 2e0755e1…）：
+#   E StarrySignSpoof: exemptHiddenApis(meta) failed → InvocationTargetException
+#   （SignSpoof.install ← SignSpoofAppComponentFactory.instantiateApplication）
+# 改后（包 bafd52ca…，45s 冷启）：
+#   StarrySignSpoof 行数 = 0 ；hooked file= 12/12 ；native menu shown ；auth game_id synced: dkzj
+#   无 TapInitializer 报错 ；FATAL/SIGSEGV/ANR = 0

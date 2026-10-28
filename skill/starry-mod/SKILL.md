@@ -189,13 +189,27 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 
 ## TapTap 接入检查表
 
-> 五条全是**静默失败**：零日志、不崩、构建全绿，装机后才发现。
+> **现行口径（2026-10-28 用户定案，跨游戏、长期）：TapTap 验签与网页强制登录一律「改包法」——静态改游戏包体 dex，
+> 禁止再用运行时签名伪装（`SignSpoof` + `SignSpoofAppComponentFactory`）与 `TapLoginForceWeb` 白名单那套。**
+> 配方／锚点／坑：`10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md`；
+> 机器关：`framework_entry_audit.sh` 的 **[G] TapTap 现行方案关** + `pre_install_gate.sh` 的 **查12**（底包有门闩类时要求「已改包」）。
 
-1. **强制网页登录＝覆盖 intent extra**：要改的是登录 intent 里的 extra `loginType="embedded_web"`；改 `ClientLoginUtils.isClientLogin` 无效（它不参与该路径判断）。
-2. **`PKG_WHITELIST` 必须含目标包名**：`sign/TapLoginForceWeb.java` 的 `PKG_WHITELIST`（`java.util.Set` 字面量）漏配该包 ⇒ 多处 `if (!PKG_WHITELIST.contains(activity.getPackageName())) return;` 静默 return、**零日志**。先例：`10_docs/追迹迷城/技能先例.md` §3。
-3. **`SignSpoof` 证书表须有该包条目**：`sign/SignSpoof.java` 里 `<TAG>_PKG = "<包名>"` 常量与 `fakes.put(<TAG>_PKG, new Signature(Base64.decode(<TAG>_CERT_B64, Base64.DEFAULT)))` 两件齐备才算生效（只写了常量、漏 `fakes.put` ＝ 没有伪装）。
-4. **客户端 SSO 永不可用的判据**：`TapSignKit.getSign` 走 `PackageManager.getPackageInfo(pkg, 0x40)` 取签名 ⇒ 被 `killPm` 代理覆盖 ⇒ **进程内可过、系统侧过不了**，故不要指望客户端 SSO，能通的是网页登录那条路。
-5. **判据：`AppSwitchEvent(targetName=com.taptap)` 出现＝仍走客户端**（说明上面的覆盖没生效）。
+> 以下条目全是**静默失败**：零日志、不崩、构建全绿，装机后才发现。
+
+1. **验签门闩恒放行 + 弹窗掐掉**：改包体 dex —— 门闩类（各 SDK 版本不同，须现取：
+   `InitializerServiceImpl.checkInitialize/checkLocalInitialize` 或 `GatekeeperRepository.isGatekeeperLoadedSuccessfully`）
+   恒 `return true`，`showErrorToast` → `return-void`。**只掐 toast 不改门闩＝点了没反应**。
+2. **登录入口恒 Web**：改「选 fragment/handler 的那处」，不是改 `instance-of`。
+   已有两套实测锚点：绿梦 4.8.2（`LoginActivityImpl` 两处 handler → `WebHandler`）、
+   蛋壳战机 `tap-login_release`（`DefaultTapLoginFragmentProvider.provide` 在 `aget v2,v3,v2` 后插 `const/4 v2, 0x3` ⇒ 恒 `WebLoginFragment`）。
+3. **运行时伪装必须摘干净**：只注释 `StarryInitProvider` 里的 `SignSpoof.install()` **不够** ——
+   `SignSpoofAppComponentFactory.instantiateApplication()` 自己也会调它（蛋壳战机实测仍刷 66 行 `StarrySignSpoof`）。
+   ⇒ manifest 的 `appComponentFactory` 恢复官方 `androidx.core.app.CoreComponentFactory`，入口只留 `StarryInitProvider`。
+   判据：装机后 `StarrySignSpoof` 行数必须为 **0**（旧法在 Android 14 user 版真机必 `exemptHiddenApis(meta) failed`）。
+4. **判据：`AppSwitchEvent(targetName=com.taptap)` 出现＝仍走客户端 SSO**（说明条目 2 没生效）；网页登录成立＝
+   `TapTapLoginActivity` + `WebView` 起、无 `AppSwitchEvent(com.taptap)`。
+5. **历史机制（仅在核对老包时用）**：`PKG_WHITELIST` 必须含包名、`SignSpoof` 证书表须有 `<TAG>_PKG` + `fakes.put`。
+   2026-10-28 起这两条**只对未迁移的旧包有意义**，新包出现它们即是走错路（审计 [A]/[B] 已自动判「改包法形态」并跳过）。
 
 ---
 
@@ -259,10 +273,12 @@ bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [-
    - 门禁串写**类名时用斜杠形式**（`com/x/Y`）；写成点分名会被自动归一为斜杠并 WARN 放过。
 2. **防封/上报审计**：按 `../re-implement/anti-ban-analysis.md` 输出标准结论（上报链清单 + 量级线 + 服务端权威判定），无审计结论不装机
 3. **异常兜底审计**：战斗代码 + 菜单 Java 侧（`ModBridge.safeCall` 包裹、native 缺失/偏好类型不符的降级路径）都要有 try/catch 兜底结论；HybridCLR 游戏热更侧调 native 一律文件镜像通道（`starry_state.txt` 模式），桥接调用必须 try/catch
-4. **TapTap 渠道游戏三查**：
-   - 签名校验存在性：静态扫 `CheckSignature`/`getSign`/`getMD5`/`packageSign` 类入口，有则逐一给对策
-   - `SignSpoof` 证书回灌：官方证书 SHA 已嵌入（含 SDK 商签名映射，如 Openew/TapTap）
-   - `TapLoginForceWeb` 白名单含本包名；旧版 TapSDK（如 3.30.2）注意 `TapTapActivity` 客户端 SSO 分支需单独处理
+4. **TapTap 渠道游戏三查（2026-10-28 改版）**：
+   - 签名校验存在性：静态扫 `CheckSignature`/`getSign`/`getMD5`/`packageSign` 类入口，有则按**改包法**给对策（门闩恒放行 + 弹窗 no-op）
+   - 登录入口恒 Web：定位该 SDK 版本的「选 fragment/handler」处改掉（不是改 `instance-of`）；锚点示例见本节 TapTap 接入检查表条目 2
+   - 运行时伪装必须不存在：manifest 无 `SignSpoofAppComponentFactory`、`StarrySignSpoof` 日志 0 行；
+     装机前跑 `pre_install_gate.sh --apk <成品> --base-apk <底包>`（**查12** 会自动判「底包有门闩类却没改包」）
+   - 旧口径 `SignSpoof` 证书表 / `TapLoginForceWeb` 白名单**仅用于核对未迁移的老包**，新包不得再走
 5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（历史事故：临时复用同 id 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）
 
 **收尾交付物（icon / 菜单模板为按需产出：新游戏首次交付或用户点名时才生成）**：

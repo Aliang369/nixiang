@@ -1,0 +1,36 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "C:/Users/Administrator/.Trash/nixiang_dkzj121_20261028_175004",
+  "timestamp": "20261028_175004",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "06_dumped/蛋壳战机/static_inspect_1.2.1_cn",
+      "type": "dir",
+      "size_kib": 210264,
+      "source": "/e/nixiang/06_dumped/蛋壳战机/static_inspect_1.2.1_cn",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang_dkzj121_20261028_175004/06_dumped/蛋壳战机/static_inspect_1.2.1_cn"
+    },
+    {
+      "path": "06_dumped/蛋壳战机/il2cpp_dump_1.2.1_cn",
+      "type": "dir",
+      "size_kib": 61492,
+      "source": "/e/nixiang/06_dumped/蛋壳战机/il2cpp_dump_1.2.1_cn",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang_dkzj121_20261028_175004/06_dumped/蛋壳战机/il2cpp_dump_1.2.1_cn"
+    },
+    {
+      "path": "07_patched/蛋壳战机/tapsdk",
+      "type": "dir",
+      "size_kib": 6396,
+      "source": "/e/nixiang/07_patched/蛋壳战机/tapsdk",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang_dkzj121_20261028_175004/07_patched/蛋壳战机/tapsdk"
+    },
+    {
+      "path": "07_patched/蛋壳战机/tapsdk_patch/dec",
+      "type": "dir",
+      "size_kib": 54353,
+      "source": "/e/nixiang/07_patched/蛋壳战机/tapsdk_patch/dec",
+      "quarantine": "/c/Users/Administrator/.Trash/nixiang_dkzj121_20261028_175004/07_patched/蛋壳战机/tapsdk_patch/dec"
+    }
+  ]
+}

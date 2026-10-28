@@ -3,6 +3,31 @@
 > 📍 re-analyze/login/taptap-web-login.md
 > 🎯 改签后 TapTap 客户端 SSO 失败（签名不一致），需要强制走 WebView 网页登录
 
+## ⚠️ 现行口径（2026-10-28 用户定案，跨游戏长期，先读这一节）
+
+**TapTap 签名校验 + 网页强制登录 = 「改包法」（静态改游戏包体 dex）。**
+**禁止再用运行时签名伪装**（`SignSpoof` 白名单 + hook `PackageManager` + `exemptHiddenApis`）**与 `TapLoginForceWeb` 白名单那套。**
+
+- 为什么停用：`SignSpoof` 依赖隐藏 API 豁免，**Android 14 user 版真机必失败**
+  （小米 M2102K1AC 实测 `E StarrySignSpoof: exemptHiddenApis(meta) failed`；只有雷电 userdebug 能过）。
+  蛋壳战机 1.2.1 首版误用旧法，用户当场点出——不要再犯。
+- 配方与坑：`10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md`
+- 定案原文与落地记录：`10_docs/_state/规范变更日志.md`「2026-10-28 · TapTap 签名校验/登录改为「改包法」」
+- 机器关：`04_scripts/_common/framework_entry_audit.sh` **[G]** + `04_scripts/_common/pre_install_gate.sh` **查12**
+  （底包含 `GatekeeperRepository` 而成品同名 dex 与底包逐字节相同 ⇒ 直接 FAIL 拦装机）
+
+改包法四步（锚点必须按**当前 SDK 版本**现取，不能跨版本抄）：
+
+| # | 目标 | 已有实测锚点 |
+|---|---|---|
+| 1 | 验签/初始化门闩恒放行 | 绿梦 4.8.2：`InitializerServiceImpl.isGatekeeperLoadedSuccessfully` + `GatekeeperRepository`；蛋壳战机 `tap-login_release`：`InitializerServiceImpl.checkInitialize(Z)Z` / `checkLocalInitialize(Z)Z` 恒 true |
+| 2 | 验签失败弹窗掐掉 | `GatekeeperRepository.showErrorToast(TapNetworkException)` → `return-void`（保留原 `.registers`） |
+| 3 | 登录入口恒 Web | 绿梦：`LoginActivityImpl` 两处 handler → `WebHandler`；蛋壳战机：`DefaultTapLoginFragmentProvider.provide` 在 `aget v2,v3,v2` 后插 `const/4 v2, 0x3` |
+| 4 | 摘掉运行时伪装 | manifest 恢复官方 `androidx.core.app.CoreComponentFactory` + 注释 `StarryInitProvider` 里的 `SignSpoof.install()`（**工厂自己也调，只改 provider 不够**）；判据 `StarrySignSpoof` 日志 0 行 |
+
+> 下面「登录诊断与授权边界」「三种 SDK 版本」保留为历史/按版本核对材料；其中 `SignSpoof`、`ClientLoginUtils` 等固定改法
+> **不再作为新包的默认操作**，先看本节。
+
 > 如果登录已经进到游戏登录服务器并返回错误码，先看 [server-rejection-triage.md](server-rejection-triage.md)，不要先把问题归因到 TapTap SSO 或 root 检测。
 
 ---
@@ -70,7 +95,11 @@ smali patch：恒抛 `ActivityNotFoundException("starry_force_web_login")`
 
 否则 SDK 内部签名校验仍会失败。
 
-## 证书回灌自检（SignSpoof，2026-10-15 起）
+## 证书回灌自检（SignSpoof，2026-10-15 起）— **历史/已停用（2026-10-28 起）**
+
+> ⚠️ 本节整套机制**已停用**（运行时签名伪装在 Android 14 user 版真机必失败）。
+> 新包一律按文件顶部「现行口径」用改包法；本节仅在**核对/迁移未迁移的老包**时作对照材料保留。
+> 判据换成：装机后 `StarrySignSpoof` 日志行数必须为 **0**。
 
 改签包后 TapTap 用**本机 PackageManager 里的签名**去服务端核对，不一致即报：
 `TapInitializer: 应用的包名、签名（certificate fingerprint）未在 TapTap 开发者中心正确配置`

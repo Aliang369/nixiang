@@ -1,0 +1,26 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "蛋壳战机",
+  "package": "com.survivor.acecn",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "gameconfig_missing_branch",
+      "match": ["GameConfig.h 无 defined(STARRY_GAME_DKZJ)", "STARRY_AUTH_GAME_ID 未定义"],
+      "conclusion": "接受偏离",
+      "reason": "蛋壳战机 native 入口早已迁到 modern 注册表：鉴权 game_id 由 Games/DkzjEntry.cpp 的 authGameId=\"dkzj\" 直接给出，构建走私有 Android_dkzj121.mk（LOCAL_SRC_FILES 含 MainModern.cpp + Games/DkzjEntry.cpp），**完全不经过 GameConfig.h 的 legacy 映射与 :24 的 #error**。审计的 [C] 项只覆盖 legacy 路径，属误报。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp（.authGameId = \"dkzj\"）+ build 日志 so 含 [dkzj] 标签、不含 dkzjsf；L2 precheck 行 `auth game_id synced from native: dkzj`（10_docs/蛋壳战机/evidence_1.2.1_CN_20261028/README.md）",
+      "date": "2026-10-28",
+      "review_by": "2027-01-28"
+    },
+    {
+      "id": "android_mk_branch",
+      "match": ["激活分支", "与 --game"],
+      "conclusion": "接受偏离",
+      "reason": "本游戏用私有 mk（Android_dkzj121.mk / Android_dkzjsf.mk）编译，公共 Android.mk 的 legacy 激活分支（WXSJ）不参与本游戏构建，故不会编出别的游戏的 so。",
+      "evidence": "04_scripts/蛋壳战机/dkzj_build_so_1.2.1_cn.sh（APP_BUILD_SCRIPT=./Android_dkzj121.mk，含 -DDKZJ_TARGET_1_2_1 断言）+ 产物 so md5 d39b2041… 含 5 个菜单串与 [dkzj] 标签、反向坏串 4/4 = 0",
+      "date": "2026-10-28",
+      "review_by": "2027-01-28"
+    }
+  ]
+}
