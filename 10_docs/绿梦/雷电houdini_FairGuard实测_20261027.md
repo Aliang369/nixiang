@@ -333,7 +333,7 @@ $ python bundle_repack.py extract-stream assets/lvmeng/__data _verify_stream.bin
 | sha256 | `478f723db17de11020991155814e368d0fae4306b39e75e2a24fd4edfb3f92b0` |
 | 签名 | `CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN`（`apksigner verify --print-certs`） |
 | 对齐 | `zipalign -c -p 4` 通过 |
-| 分发目录 | `08_output/绿梦/delivery_20261028/`（正式包 + `使用说明.md`） |
+| 08 目录 | `08_output/绿梦/`：正式包 + `icon_绿梦_192.png`（无 delivery 目录） |
 
 **脚本偏离（必须记）**：`finalize_game_delivery.sh` 是 mac 专用（依赖 `md5_of`/`sha256_of` 函数与 POSIX 路径，
 且不接受 `E:\…` 形式），在本机直接 `command not found` ⇒ 本轮**手工做等价动作**（复制 + 计算 md5/sha256 + 建 delivery 目录 +

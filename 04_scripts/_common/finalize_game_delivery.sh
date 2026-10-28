@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
-# 收官交付物打包：唯一正式 APK、可选 icon（单张原图 icon_{游戏}_{边长}.png）、可选菜单模板副本、可选裁剪清单。
-# icon/菜单模板是**按需交付物**：只有显式传 --icon-source/--menu-template 才生成；两者都不传时
-# 不创建 delivery 目录。（使用时机：新游戏首次交付，或用户当轮明确说「图标和菜单模板」。2026-10-05 用户定）
-# ⚠️ 图标命名口径（2026-10-14 用户 m00631/m00668 定案，取代旧的 512+144 双档）：
-#   delivery 目录内**只放一张原图** `icon_{游戏}_{边长}.png`，边长＝源图自身像素（不做放大/缩小）；
-#   图标源没变时**不要重出**（沿用已有交付文件）。旧写法 `icon_{游戏}_512.png` / `_144.png` 已废弃。
-# 默认 dry-run；--apply 才写入 delivery 目录和裁剪 08_output。
+# 收官工具：裁剪唯一正式包（--prune）、打印文档同步片段（--sync-doc）、可选落一张原始 icon、
+# 菜单模板字段自检 + 原文打印。**不创建任何 delivery 目录**（2026-10-28 用户指令：交付目录整套废止）。
+# icon 可选：传 --icon-source 时按**原图像素**落 `08_output/{游戏}/icon_{游戏}_{边长}.png`
+# （不放大/不缩小；源与已有文件相同就别重出）。旧 `_512.png`/`_144.png` 双档已废弃。
+# 默认 dry-run；--apply 才写文件。
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -22,7 +20,6 @@ ALLOW_NO_HARDEN=0   # 加固门禁逃生门：必须同时给 --harden-reason（
 HARDEN_REASON="${HARDEN_REASON:-}"
 SYNC_DOC=0
 ALLOW_LEGACY_TEMPLATE=0
-USAGE_DOC=""      # --usage-doc：可选，把说明文档复制进 delivery 目录
 # 口令点名即必须交付（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
 # 用户在当轮口令里点名要 icon / 菜单模板时，必须显式传 --icon-source / --menu-template，
 # 漏传一律 rc=1（以前只打一行 NOTE 就放过去了 —— 那次用户追问了两次「菜单模版 json 为什么
@@ -38,7 +35,6 @@ usage() {
     [--apk 08_output/潮汐守望者/xxx.apk] \
     [--icon-source /path/app_icon.png] \
     [--menu-template 10_docs/潮汐守望者/cxswz_menu_template.json] \
-    [--usage-doc 10_docs/潮汐守望者/使用说明.md] \
     [--date YYYYMMDD] \
     [--prune] \
     [--sync-doc] \
@@ -49,21 +45,18 @@ usage() {
 
 说明:
   - 默认 dry-run，只检查并打印将生成的交付路径。
-  - --apply 才创建 08_output/{游戏}/delivery_{日期}/。
+  - --apply 才写文件（icon 落到 08_output/{游戏}/；裁剪仍只由 --prune 触发）。
   - --prune 才调用 prune_output_final.sh 裁剪 08_output/{游戏} 为唯一 APK。
   - --sync-doc 打印「粘到游戏摘要 + current.md」的文档同步片段（**只打印，不自动改文件**：
     `10_docs/_state/current.md` 与游戏摘要是多会话共享文件，须手工粘贴后按 AGENTS.md 内容级暂存）。
-  - icon/菜单模板为**按需交付物**：显式传 --icon-source / --menu-template 才生成与自检；
-    都不传 ⇒ 本次不创建 delivery 目录、不生成任何文件（也不再自动扫描 10_docs 下的模板）。
-    使用时机：**新游戏首次交付**（08_output/{游戏} 下还没有 delivery_*）或用户当轮明确说
-    「图标和菜单模板」；其余收尾默认不传，避免每次都生成不需要的交付物。
+  - icon/菜单模板为**按需**项：显式传 --icon-source / --menu-template 才处理；
+    都不传 ⇒ 本次不生成任何文件（也不再自动扫描 10_docs 下的模板）。
   - icon **只落一张原图** `icon_{游戏}_{边长}.png`（边长＝源图自身像素，2026-10-14 用户 m00631/m00668
-    定案，旧 `_512.png`/`_144.png` 双档已废弃）；图标源与已有交付件相同时**不要重出**。
-  - 传 --menu-template 时：字段严格自检 + 复制一份 menu_template.json 到 delivery 目录。
+    定案，旧 `_512.png`/`_144.png` 双档已废弃）；图标源与已有文件相同时**不要重出**。
+  - 传 --menu-template 时：字段严格自检 + 原文打到终端（供直接复制）。
   - 菜单模板自检含分组行门禁（features 不得出现 Category_* 或纯分组名）+ feat_num 升序/去重/
     缺口提示，依据 `10_docs/_templates/菜单模板_规范与示例.md` §2。遗留模板确实带分组行时
     可加 --allow-legacy-template 把该门禁降级为 WARN。
-  - --usage-doc <md> 可选：把说明文档复制为 delivery 目录里的「使用说明.md」。
   - --expect-icon / --expect-menu-template（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
     **用户口令里点名要什么，就传哪个守卫**。传了守卫却没传对应内容 ⇒ rc=1（不再静默跳过）。
     传 --expect-menu-template 时会把模板 JSON **原文打到终端**，供直接复制发给用户；
@@ -78,7 +71,6 @@ while [[ $# -gt 0 ]]; do
     --apk) APK="${2:-}"; shift 2 ;;
     --icon-source) ICON_SOURCE="${2:-}"; shift 2 ;;
     --menu-template) MENU_TEMPLATE="${2:-}"; shift 2 ;;
-    --usage-doc) USAGE_DOC="${2:-}"; shift 2 ;;
     --date) DATE="${2:-}"; shift 2 ;;
     --prune) PRUNE=1; shift ;;
     --sync-doc) SYNC_DOC=1; shift ;;
@@ -122,7 +114,6 @@ echo "[finalize] apk=$APK"
 echo "[finalize] apk_md5=$(md5_of "$APK")"
 echo "[finalize] apk_sha256=$(sha256_of "$APK")"
 echo "[finalize] menu_template=${MENU_TEMPLATE:-（未提供，跳过菜单模板交付）}"
-echo "[finalize] usage_doc=${USAGE_DOC:-（未提供）}"
 
 if [[ -z "$APK" ]]; then
   apks=()
@@ -228,7 +219,7 @@ if [[ -n "$ICON_SOURCE" ]]; then
     || { echo "ERROR: 无法读取 icon 源图边长（该文件不是可解析的图片？）: $ICON_SOURCE" >&2; exit 1; }
   ICON_NAME="icon_${GAME}_${ICON_EDGE}.png"
   # 「已有则不再生成」提示（历史事故：2026-10-14 底包迁移时把 r17 已交付的同一张图标又生成了一遍）
-  _prev_icon="$(ls -1 "$ROOT/08_output/$GAME"/delivery_*/icon_${GAME}_*.png 2>/dev/null | head -1 || true)"
+  _prev_icon="$(ls -1 "$ROOT/08_output/$GAME"/icon_${GAME}_*.png 2>/dev/null | head -1 || true)"
   if [[ -n "$_prev_icon" ]]; then
     echo "[finalize] NOTE: $GAME 已有交付图标 ${_prev_icon}；图标源未变时按「已有则不再生成」**不要重出**（不要传 --icon-source）。"
   fi
@@ -276,68 +267,36 @@ print('menu_template OK', d['template_id'], len(feats), '项', [x['name'] for x 
 PY
 fi
 
-DELIVERY="$GAME_DIR/delivery_$DATE"
-# 首次交付判据：08_output/{游戏} 下是否已有 delivery_* 目录（2026-10-05 用户定「icon/模板按需交付」）。
-HAS_PRIOR_DELIVERY=0
-for d in "$GAME_DIR"/delivery_*; do
-  if [[ -d "$d" ]]; then HAS_PRIOR_DELIVERY=1; break; fi
-done
-# 本次实际产出的交付件描述（两个都空 ⇒ 不建 delivery 目录、不生成任何文件）
-DELIVERY_ASSETS=""
-DELIVERY_ASSETS_DESC=""
+ICON_OUT="$GAME_DIR/$ICON_NAME"
+OUT_ASSETS=""
+OUT_ASSETS_DESC=""
 if [[ -n "$ICON_SOURCE" ]]; then
-  DELIVERY_ASSETS="icon ${ICON_EDGE}×${ICON_EDGE}（原图）"
-  DELIVERY_ASSETS_DESC="icon_${GAME}_${ICON_EDGE}.png"
+  OUT_ASSETS="icon ${ICON_EDGE}×${ICON_EDGE}（原图）"
+  OUT_ASSETS_DESC="$ICON_NAME"
 fi
 if [[ -n "$MENU_TEMPLATE" ]]; then
-  if [[ -n "$DELIVERY_ASSETS" ]]; then
-    DELIVERY_ASSETS="${DELIVERY_ASSETS} + menu_template.json"
-    DELIVERY_ASSETS_DESC="${DELIVERY_ASSETS_DESC} + menu_template.json"
+  if [[ -n "$OUT_ASSETS" ]]; then
+    OUT_ASSETS="${OUT_ASSETS} + 菜单模板自检/原文打印"
   else
-    DELIVERY_ASSETS="menu_template.json"
-    DELIVERY_ASSETS_DESC="menu_template.json"
-  fi
-fi
-if [[ -n "$USAGE_DOC" ]]; then
-  if [[ -n "$DELIVERY_ASSETS" ]]; then
-    DELIVERY_ASSETS="${DELIVERY_ASSETS} + 使用说明.md"
-    DELIVERY_ASSETS_DESC="${DELIVERY_ASSETS_DESC} + 使用说明.md"
-  else
-    DELIVERY_ASSETS="使用说明.md"
-    DELIVERY_ASSETS_DESC="使用说明.md"
+    OUT_ASSETS="菜单模板自检/原文打印"
   fi
 fi
 
-# ---------- 使用说明自检----------
-if [[ -n "$USAGE_DOC" ]]; then
-  [[ -f "$USAGE_DOC" ]] || { echo "ERROR: --usage-doc 不存在: $USAGE_DOC" >&2; exit 1; }
-  PLACEHOLDERS="$(grep -oE '\{[^}]{1,24}\}' "$USAGE_DOC" 2>/dev/null | sort -u | tr '\n' ' ' || true)"
-  case "$PLACEHOLDERS" in
-    *'{'*)
-      echo "ERROR: --usage-doc 还留着未替换的占位符: $PLACEHOLDERS" >&2
-      echo "       ⇒ 把 {占位符} 全部替换成实际内容后再传。"
-      exit 1 ;;
-  esac
-fi
 
 
 [[ -d "$GAME_DIR" ]] || { echo "ERROR: 输出目录不存在: $GAME_DIR" >&2; exit 1; }
 
-echo "[finalize] delivery=$DELIVERY"
+echo "[finalize] out_dir=$GAME_DIR"
 if [[ -n "$ICON_SOURCE" ]]; then
   echo "[finalize] icon_source=$ICON_SOURCE"
   echo "[finalize] icon_out=${ICON_NAME}（原图 ${ICON_EDGE}×${ICON_EDGE}，不放大/不缩小；旧 512/144 双档已废弃）"
 else
   echo "[finalize] icon_source=(未提供，跳过 icon 生成)"
 fi
-if [[ -n "$DELIVERY_ASSETS" ]]; then
-  echo "[finalize] delivery_assets=$DELIVERY_ASSETS"
+if [[ -n "$OUT_ASSETS" ]]; then
+  echo "[finalize] on_demand=$OUT_ASSETS"
 else
-  echo "[finalize] delivery_assets=(无：本次不创建 delivery 目录)"
-  if [[ "$HAS_PRIOR_DELIVERY" == "0" ]]; then
-    echo "[finalize] NOTE: 这是 ${GAME} 的首次收尾（08_output/${GAME} 下无 delivery_*），但本次未传 --icon-source/--menu-template。" >&2
-    echo "[finalize]       新游戏首交付若需要 icon/菜单模板，请补传这两个参数后重跑；不需要则忽略本提示。" >&2
-  fi
+  echo "[finalize] on_demand=(无：本次不生成 icon / 不处理菜单模板)"
 fi
 
 # ---------- 「口令点名即必须交付」门禁（2026-10-12 霓虹深渊2 会话复盘 P0-4）----------
@@ -371,32 +330,23 @@ if [[ "$SYNC_DOC" == "1" ]]; then
   APK_SIZE="$(stat -f%z "$APK" 2>/dev/null || stat -c%s "$APK")"
   echo "[finalize] ─── 文档同步片段（--sync-doc，仅打印；共享文件请手工粘贴后按 AGENTS.md 内容级暂存）───"
   echo "# ① 追加到 10_docs/_state/games/${GAME}.md 的「本地产物与关键输入」表："
-  if [[ -n "$DELIVERY_ASSETS" ]]; then
-    echo "| \`08_output/${GAME}/delivery_${DATE}/\` | 交付物：${DELIVERY_ASSETS_DESC} | 最终交付 |"
-  else
-    echo "#   （本次未生成 icon/菜单模板 ⇒ 不写 delivery 行，也不会创建 delivery 目录）"
+  if [[ -n "$OUT_ASSETS_DESC" ]]; then
+    echo "| \`08_output/${GAME}/${OUT_ASSETS_DESC}\` | icon（原始像素，未放大） | 按需交付 |"
   fi
   if [[ "$PRUNE" == "1" ]]; then
     echo "| \`10_docs/${GAME}/正式包裁剪清单_${DATE}.json\` | 裁剪清单（保留 ${APK_BASE}） | 最终交付 |"
   fi
   echo "# ② 追加到 10_docs/_state/current.md 该游戏行末尾（整行 ≤400 字符）："
-  if [[ -n "$DELIVERY_ASSETS" ]]; then
-    echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）+ delivery_${DATE}/（${DELIVERY_ASSETS}）"
-  else
-    echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）（本次未生成 icon/菜单模板）"
-  fi
+  echo "收尾已交付：唯一正式包 ${APK_BASE}（${APK_SIZE} B，sha256 ${APK_SHA:0:12}…）"
   echo "# ③ 回扫提示（--apply 会重写下列产物，请回头核对已写过的摘要行）："
   if [[ -n "$ICON_SOURCE" ]]; then
-    echo "#   - 08_output/${GAME}/delivery_${DATE}/${ICON_NAME}（原图 ${ICON_EDGE}×${ICON_EDGE}）"
+    echo "#   - 08_output/${GAME}/${ICON_NAME}（原图 ${ICON_EDGE}×${ICON_EDGE}）"
   fi
   if [[ -n "$MENU_TEMPLATE" ]]; then
-    echo "#   - 08_output/${GAME}/delivery_${DATE}/menu_template.json（内容来自 10_docs/${GAME}/$(basename "$MENU_TEMPLATE")）"
+    echo "#   - 菜单模板源：10_docs/${GAME}/$(basename "$MENU_TEMPLATE")（已自检并打印原文）"
     echo "#     ★ 若本次修正了源模板（增删功能项 / feat_num 变化 / source 改写），10_docs/_state/games/${GAME}.md 的"
     echo "#       「本地产物与关键输入」表里该模板行的「N 项」与指纹摘要已过期，必须同步改写。"
     echo "#       （历史事故：模板 17 项→15 项后 games/疾风骑士.md:39 仍写 17 项）"
-  fi
-  if [[ -n "$USAGE_DOC" ]]; then
-    echo "#   - 08_output/${GAME}/delivery_${DATE}/使用说明.md（内容来自 ${USAGE_DOC}）"
   fi
   if [[ "$PRUNE" == "1" ]]; then
     echo "#   - 10_docs/${GAME}/正式包裁剪清单_${DATE}.json"
@@ -409,20 +359,15 @@ if [[ "$MODE" != "apply" ]]; then
   exit 0
 fi
 
-if [[ -n "$DELIVERY_ASSETS" ]]; then
-  mkdir -p "$DELIVERY"
-else
-  echo "[finalize] 未传任何交付件参数（--icon-source/--menu-template/--usage-doc）：跳过 delivery 目录（--prune/--sync-doc 照常）。"
-fi
 if [[ -n "$ICON_SOURCE" ]]; then
   # 单张原图落盘：PNG 源直接逐字节复制（不重编码、不改像素）；其它格式转成 PNG 但保持原像素。
-  if [[ "$ICON_SOURCE" == "$DELIVERY/$ICON_NAME" ]]; then
-    echo "[finalize] icon 已在位（源==目标，跳过复制）: $DELIVERY/$ICON_NAME"
+  if [[ "$ICON_SOURCE" == "$ICON_OUT" ]]; then
+    echo "[finalize] icon 已在位（源==目标，跳过复制）: $ICON_OUT"
   elif [[ "$ICON_SOURCE" == *.png || "$ICON_SOURCE" == *.PNG ]]; then
-    cp -f "$ICON_SOURCE" "$DELIVERY/$ICON_NAME" || { echo "ERROR: icon 落盘失败: $DELIVERY/$ICON_NAME" >&2; exit 1; }
+    cp -f "$ICON_SOURCE" "$ICON_OUT" || { echo "ERROR: icon 落盘失败: $ICON_OUT" >&2; exit 1; }
     echo "[finalize] + ${ICON_NAME}（${ICON_EDGE}×${ICON_EDGE}，原图逐字节复制，未重编码）"
   elif command -v sips >/dev/null 2>&1; then
-    sips -s format png "$ICON_SOURCE" --out "$DELIVERY/$ICON_NAME" >/dev/null \
+    sips -s format png "$ICON_SOURCE" --out "$ICON_OUT" >/dev/null \
       || { echo "ERROR: icon 转 PNG 失败: $ICON_SOURCE" >&2; exit 1; }
     echo "[finalize] + ${ICON_NAME}（${ICON_EDGE}×${ICON_EDGE}，转 PNG，原像素未改）"
   else
@@ -430,7 +375,7 @@ if [[ -n "$ICON_SOURCE" ]]; then
     PYTHON="$(pick_py_with_pil)" \
       || { echo "ERROR: 无 sips 且无可用的 python+Pillow，无法生成 icon（可设 PYTHON=/path/to/python）" >&2; exit 1; }
     [[ "$PYTHON" == */* ]] && PYTHON="$(win_path "$PYTHON")"
-    "$PYTHON" - "$(win_path "$ICON_SOURCE")" "$(win_path "$DELIVERY/$ICON_NAME")" <<'PYEOF' || { echo "ERROR: icon 生成失败" >&2; exit 1; }
+    "$PYTHON" - "$(win_path "$ICON_SOURCE")" "$(win_path "$ICON_OUT")" <<'PYEOF' || { echo "ERROR: icon 生成失败" >&2; exit 1; }
 import sys
 from PIL import Image
 src, dst = sys.argv[1], sys.argv[2]
@@ -439,13 +384,6 @@ PYEOF
     echo "[finalize] + ${ICON_NAME}（${ICON_EDGE}×${ICON_EDGE}，原像素未改）"
   fi
 fi
-if [[ -n "$MENU_TEMPLATE" ]]; then
-  cp -f "$MENU_TEMPLATE" "$DELIVERY/menu_template.json"
-fi
-if [[ -n "$USAGE_DOC" ]]; then
-  cp -f "$USAGE_DOC" "$DELIVERY/使用说明.md"
-  echo "[finalize] + 使用说明.md（源 ${USAGE_DOC}）"
-fi
 
 if [[ "$PRUNE" == "1" ]]; then
   MANIFEST="$ROOT/10_docs/$GAME/正式包裁剪清单_${DATE}.json"
@@ -453,6 +391,6 @@ if [[ "$PRUNE" == "1" ]]; then
 fi
 
 echo "[finalize] done"
-if [[ -d "$DELIVERY" ]]; then
-  find "$DELIVERY" -maxdepth 1 -type f -print | sort
+if [[ -n "$ICON_SOURCE" && -f "$ICON_OUT" ]]; then
+  echo "$ICON_OUT"
 fi
