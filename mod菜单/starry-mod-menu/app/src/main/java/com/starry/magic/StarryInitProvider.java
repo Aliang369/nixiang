@@ -72,6 +72,8 @@ public class StarryInitProvider extends ContentProvider {
             Log.i(TAG, "native ensureLoaded=" + ok + " path=" + StarryNativeLoad.loadedPath());
             // P1-6：把自身 APK 路径交给 native，立刻跑一次自完整性校验
             com.starry.magic.bridge.ModBridge.setApkPath(application);
+            // 签名校验过检（B 轨：MT ApkSignatureKillerEx 形态；包内无 killer dex 时只打一行日志）
+            com.starry.magic.sign.SignatureKillerBootstrap.install(application);
             // TapTap 强制网页登录（旧机制，仅未迁移改包法的老包仍用）
             application.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
                 @Override
