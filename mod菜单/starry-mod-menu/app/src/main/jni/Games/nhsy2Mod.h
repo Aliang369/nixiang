@@ -54,7 +54,7 @@ enum nhsy2Feat : int {
     NHSY2_FEAT_FULL = 3,   // Toggle_全屏攻击（Attri 读点强制，§6.6z）
     NHSY2_FEAT_SPD  = 4,   // Slider_移速倍率:1:10:1
     NHSY2_FEAT_JUMP = 5,   // Toggle_无限跳
-    NHSY2_FEAT_WLV  = 6,   // Toggle_武器满级（★2026-10-27 新增：武器 Soul 等级 → 9，走游戏自身 LevelUpWeaponCore）
+    NHSY2_FEAT_WLV  = 6,   // Button_武器升级 ★2026-10-29 r31：点一次＝升一级（调游戏自己的 LevelUpWeapon(1,0)）
     // ---- Category_资源 (7)：四项资源各自一个开关，1:1 白名单，互不牵连 ----
     //  ★ 2026-10-27：新增「武器满级」放在战斗分类末尾（下标 6），资源分类整体后移一位
     //    ⇒ 「解锁标准版」回到**槽 8**（硬约束 #3 的固定槽位口径重新对齐）。

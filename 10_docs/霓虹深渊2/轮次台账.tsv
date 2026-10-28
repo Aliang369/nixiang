@@ -66,3 +66,5 @@
 2026-10-27 17:44	90	16	卸载理由登记（硬约束#6/#7 唯一允许场景）：设备现装官方 taptap 2026.10.26.76e6f5af89c/vc666（cert MD5 bbe1da85…，O=Veewo，2026-10-27 16:11 新装）→ 待装星光包 cert 161fca32…（CN=StarryMagic）；证书不同 ⇒ install_guard --allow-uninstall 放行卸载；/data/data 与 /sdcard/Android/data 本地数据随卸载清除，云端 TapTap 存档不受影响	pipeline.log	未测
 2026-10-27 19:41	6	2	r29g 武器满级：分解经验不放大，压 GetLevelUpRequireExp(Int32,UpgradeRules) 返回 1 → 一次分解从 1 级升到满级 9，属性按游戏规则提升；用户 L3 原话「ok，看到结果了，9 就是满，经验填满也不会升了」	pipeline.log	有效
 2026-10-29 00:35	2	1	r30 修「关无敌后仍无敌」：Hearts.isInvincible/UnKillable 只写不还 → 加 InvLatch 回滚（含 klass 校验），只换 so baa54a0d 装机，L2 全绿；等用户 L3 实测	pipeline.log	未测
+2026-10-29 00:44	2	2	r30 无敌回滚修复：用户 L3「无敌现在没问题了」（关掉后正常掉血，不再残留）	pipeline.log	有效
+2026-10-29 01:44	6	3	r31 槽6「武器满级」开关改为「武器升级」按钮：实证 LevelUpWeapon(Int32,Int32) 第一参=经验量（原传1只加1点经验，needExp=60 故等级不动）⇒ 改为 delta=needExp-exp 一次补满一级；武器实例走 object_class→class_parent 继承链+字段桥取 FirearmsPowerUp，点击时用 NEONPlayerState.GetAffixTargetWeapon()/get_GunCore() 现场问当前武器（换武器也对）；用户 L3「完美，功能没问题了」	pipeline.log	有效

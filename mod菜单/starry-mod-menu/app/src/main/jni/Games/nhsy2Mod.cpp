@@ -91,7 +91,26 @@ static std::atomic<bool> g_std{false};      // 解锁标准版
 static std::atomic<bool> g_spd{false};      // 移速倍率（UI 只发 nativeSetValue ⇒ 本标志恒假）
 static std::atomic<int>  g_spdMul{1};       // 移速倍率（1..10，1=关）
 static std::atomic<bool> g_jump{false};     // 无限跳
-static std::atomic<bool> g_wlv{false};      // 武器满级（Soul 等级 → 9，走 LevelUpWeaponCore，§6.8）
+static std::atomic<bool> g_wlv{false};      // ★r31「武器升级」按钮：点过一次即真（只做「装钩放行」用）
+// ★r31 按钮的跨线程状态（点击 → 主线程 Killable.Update 泵里执行）
+static std::atomic<int>       g_wlvClickPending{0};   // 1 = 有一次待执行的点击
+static std::atomic<int64_t>   g_wlvClickAtMs{0};      // 点击时刻（8s 内拿不到武器实例就放弃）
+static std::atomic<uintptr_t> g_wlvWeaponInst{0};     // 最近一次抓到的武器实例（已桥接到 FirearmsPowerUp）
+static std::atomic<uintptr_t> g_wlvWeaponKlass{0};    // 该实例的对象头 klass（执行前用它做存活校验）
+// ★r31c：玩家状态单例 + 它的「当前武器」getter（换武器也能拿到最新的那把）
+static std::atomic<uintptr_t> g_playerState{0};
+static void* g_clsPlayerState = nullptr;
+static void* g_miAffixTargetWeapon = nullptr;
+static void* g_codeAffixTargetWeapon = nullptr;
+static void* g_miGunCore = nullptr;          // NEONPlayerState.get_GunCore()（第二个"当前武器"候选）
+static void* g_codeGunCore = nullptr;
+static std::atomic<uint32_t>  g_wlvUpOk{0};           // 成功下发次数（判据）
+// ★r31d：升级链路已打通（真机实证 exp 每次 +1、level 不动）⇒ 原来传的 a=1 是**经验值**，不是"升几级"。
+//   要"点一次升一级"，就得喂够这一级所需的经验：delta = needExp - exp（−1 起保底）。
+static std::atomic<int32_t>   g_wlvLevel{0};          // 当前等级（来自 OnWeaponSoulDataChanged）
+static std::atomic<int32_t>   g_wlvNeedExp{0};        // 当前等级升级所需经验
+static std::atomic<int32_t>   g_wlvExp{0};            // 当前已累积经验
+static std::atomic<int32_t>   g_wlvMaxLevel{9};       // 满级（SoulLevelConfig.GetMaxLevel 实测 9）
 
 //  ---- ③.1「滑块项即开关」（★ 2026-10-11 真机实测修正） ----
 //  事故：真机把「移速倍率」从 1 拉到 10，日志只有
@@ -301,6 +320,11 @@ static std::atomic<size_t> g_offStdDlcOwned{0};     // LoginService._standardDlc
 
 // 类指针缓存（装钩时解析一次）
 static void* g_clsHearts      = nullptr;
+static void* g_clsFirearms    = nullptr;   // NEON.Game.PowerUps.ColdWeapon.FirearmsPowerUp（武器）
+static void* g_miWlvLevelUpWeapon = nullptr; // FirearmsPowerUp.LevelUpWeapon 的 MethodInfo（自带调用的实参）
+static void* g_clsUiWeaponLevel = nullptr;   // NEON.UI.UiWeaponLevel（HUD：唯一能随时问出"当前武器"的地方）
+static void* g_miUiGetHudWeapon = nullptr;   // UiWeaponLevel.GetCurrentHudWeapon 的 MethodInfo
+static std::atomic<uintptr_t> g_uiWeaponLevelInst{0};   // HUD 实例（OnEnable/Start 时抓）
 static void* g_clsDamageInfo  = nullptr;
 static void* g_clsPlayerActor = nullptr;
 static void* g_clsLoginSvc    = nullptr;
@@ -2029,7 +2053,31 @@ static void FullScreenTryApply(void* thiz) {
     }
 }
 
+static void WlvTryExecuteClick();                      // ★r31 定义在 §6.8 末尾
+static void* WlvResolveWeaponNow();                    // ★r31c 定义在 §6.8 末尾（只读自检也用）
+static void* WlvClassOf(void* obj);                    // ★r31c
+static const char* WlvKlassNameOf(void* klass);        // ★r31c
+
 static void Hooked_KillableUpdate(void* thiz, void* method) {
+    // ★r31「武器升级」按钮的主线程执行泵：Unity 对象只能在游戏线程碰 ⇒ 借这里下发
+    if (g_wlvClickPending.load(std::memory_order_relaxed)) WlvTryExecuteClick();
+    // ★r31c 只读自检（`setprop debug.starry.nhsy2_wlv_dbg 1`）：每 5 s 打一次"当前武器解析结果"，不升级
+    {
+        static std::atomic<int64_t> lastDbg{0};
+        const int64_t nowMs = NowMonoMs();
+        if (nowMs - lastDbg.load(std::memory_order_relaxed) > 5000) {
+            lastDbg.store(nowMs, std::memory_order_relaxed);
+            char db[PROP_VALUE_MAX] = {0};
+            if (__system_property_get("debug.starry.nhsy2_wlv_dbg", db) > 0 && db[0] == '1') {
+                void* w = WlvResolveWeaponNow();
+                LOGI(TPL_LOG " wlv: [自检] 当前武器=%p 玩家状态=%p HUD=%p 缓存=%p 类=%s",
+                     w, reinterpret_cast<void*>(g_playerState.load(std::memory_order_relaxed)),
+                     reinterpret_cast<void*>(g_uiWeaponLevelInst.load(std::memory_order_relaxed)),
+                     reinterpret_cast<void*>(g_wlvWeaponInst.load(std::memory_order_relaxed)),
+                     w ? WlvKlassNameOf(WlvClassOf(w)) : "-");
+            }
+        }
+    }
     const uint64_t until = g_fsUntilMs.load(std::memory_order_acquire);
     if (until) {                                        // 令牌未开时零额外开销
         if ((uint64_t)NowMonoMs() > until) g_fsUntilMs.store(0, std::memory_order_release);
@@ -2077,7 +2125,11 @@ static inline bool GateKey()     { return g_key.load(); }
 static inline bool GateCrystal() { return g_crystal.load(); }
 
 // get_Coin / get_MaxCoin / get_Key / get_CurrentSpriteCrystalCount / get_GitterCoin
+// ★r31c 前置声明：get_Coin 的 this 就是 NEONPlayerState 单例 ⇒ 顺手记下来（按钮要用它问"当前武器"）
+static void WlvRememberPlayerState(void* thiz);
+
 static int32_t Hooked_GetCoin(void* thiz, void* method) {
+    WlvRememberPlayerState(thiz);
     const int32_t r = GuardedOr<int32_t>("orig.get_Coin", 0, [&]{ return g_origGetCoin ? g_origGetCoin(thiz, method) : 0; });
     if (!GateCoin()) return r;
     const uint32_t n = g_hitCoin.fetch_add(1, std::memory_order_relaxed) + 1;
@@ -3682,25 +3734,343 @@ static int32_t Hooked_WlvMaxLevel(void* thiz, void* method) {
         return g_origWlvMaxLevel ? g_origWlvMaxLevel(thiz, method) : 0;
     });
     const uint32_t n = g_hitWlvMaxLv.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (r > 0) g_wlvMaxLevel.store(r, std::memory_order_relaxed);
     if (n <= 5) LOGI(TPL_LOG " wlv: SoulLevelConfig.GetMaxLevel() = %d（探针#%u）", r, n);
     return r;
 }
 
 // ---- ④ 升级后回调（只读探针：newLevel 就是 L2 判据）----
+// ★r31 前置声明：「武器升级」按钮的实例记录（定义在 §6.8 末尾）
+static void WlvRememberWeapon(void* inst);
 static void Hooked_WlvChanged(void* thiz, void* weapon, int32_t newLevel, int32_t needExp,
                               int32_t exp, void* showTip, void* method) {
     const uint32_t n = g_hitWlvChanged.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 24)
         LOGI(TPL_LOG " wlv: OnWeaponSoulDataChanged level=%d needExp=%d exp=%d on=%d 命中#%u",
              newLevel, needExp, exp, g_wlv.load(std::memory_order_relaxed) ? 1 : 0, n);
+    WlvRememberWeapon(weapon);        // ★r31：这里拿到的 weapon 就是刚升级的那把（最可靠的"当前武器"）
+    if (OkPtr(weapon)) {              // ★r31d：缓存等级/所需经验/已积累经验（按钮据此算"还差多少经验"）
+        g_wlvLevel.store(newLevel, std::memory_order_relaxed);
+        g_wlvNeedExp.store(needExp, std::memory_order_relaxed);
+        g_wlvExp.store(exp, std::memory_order_relaxed);
+    }
     GuardedVoid("orig.Wlv.Changed", [&]{
         if (g_origWlvChanged) g_origWlvChanged(thiz, weapon, newLevel, needExp, exp, showTip, method);
     });
 }
 
-// ---- ⑤ 武器初始化（只读探针；不在此处升级）----
+// ---- ④.5 ★r31「当前武器」捕获（只读）：HUD 是唯一"随时能拿到手上那把武器"的地方 ----
+//  依据（2026-10-29 探针 v3 真机枚举）：
+//    NEON.UI.UiWeaponLevel.GetCurrentHudWeapon() -> class          // 当前 HUD 武器
+//    NEON.UI.UiWeaponLevel.RefreshWeaponSoulExp(class)             // 入参就是那把武器
+//  两者都在主线程 ⇒ 既能拿实例，又能当「按钮执行泵」（Unity 对象只能在主线程碰）。
+typedef void* (*UiGetHudWeapon_t)(void* thiz, void* method);
+static UiGetHudWeapon_t g_origUiGetHudWeapon = nullptr;
+
+static void* Hooked_UiGetHudWeapon(void* thiz, void* method) {
+    void* r = GuardedOr<void*>("orig.Ui.GetCurrentHudWeapon", nullptr,
+                               [&]{ return g_origUiGetHudWeapon ? g_origUiGetHudWeapon(thiz, method) : nullptr; });
+    static std::atomic<uint32_t> nc{0};
+    const uint32_t n = nc.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 4) LOGI(TPL_LOG " wlv: HUD.GetCurrentHudWeapon 命中#%u -> %p", n, r);
+    WlvRememberWeapon(r);
+    return r;
+}
+
+typedef void (*UiRefreshSoulExp_t)(void* thiz, void* weapon, void* method);
+static UiRefreshSoulExp_t g_origUiRefreshSoulExp = nullptr;
+
+static void Hooked_UiRefreshSoulExp(void* thiz, void* weapon, void* method) {
+    static std::atomic<uint32_t> nc{0};
+    const uint32_t n = nc.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 4) LOGI(TPL_LOG " wlv: HUD.RefreshWeaponSoulExp 命中#%u weapon=%p", n, weapon);
+    WlvRememberWeapon(weapon);
+    if (g_wlvClickPending.load(std::memory_order_relaxed)) WlvTryExecuteClick();   // 主线程泵
+    if (!g_origUiRefreshSoulExp) return;
+    GuardedVoid("orig.Ui.RefreshWeaponSoulExp", [&]{ g_origUiRefreshSoulExp(thiz, weapon, method); });
+}
+
+typedef void (*UiVoid0_t)(void* thiz, void* method);
+static UiVoid0_t g_origUiOnEnable = nullptr;
+static UiVoid0_t g_origUiStart = nullptr;
+
+static bool UiIsAlive(void* inst) {
+    if (!OkPtr(inst) || !g_clsUiWeaponLevel) return false;
+    uintptr_t k = 0;
+    if (!SafeReadU64Raw(reinterpret_cast<uintptr_t>(inst), &k)) return false;
+    return reinterpret_cast<void*>(k) == g_clsUiWeaponLevel;
+}
+
+static void UiRememberHud(void* thiz) {
+    if (!UiIsAlive(thiz)) return;
+    const uintptr_t prev = g_uiWeaponLevelInst.exchange(reinterpret_cast<uintptr_t>(thiz), std::memory_order_relaxed);
+    if (prev != reinterpret_cast<uintptr_t>(thiz))
+        LOGI(TPL_LOG " wlv: 记下 HUD 实例=%p（武器升级按钮取「当前武器」用）", thiz);
+}
+
+static void Hooked_UiOnEnable(void* thiz, void* method) {
+    UiRememberHud(thiz);
+    if (g_origUiOnEnable) GuardedVoid("orig.Ui.OnEnable", [&]{ g_origUiOnEnable(thiz, method); });
+}
+
+static void Hooked_UiStart(void* thiz, void* method) {
+    UiRememberHud(thiz);
+    if (g_origUiStart) GuardedVoid("orig.Ui.Start", [&]{ g_origUiStart(thiz, method); });
+}
+
+// ---- ⑤ 武器初始化（只读探针；不在此处升级）----// ★r31 前置声明（「武器升级」按钮的实例记录/主线程执行泵，定义见本节末尾）
+static void WlvRememberWeapon(void* inst);
+
 static void Hooked_WlvEnsure(void* thiz, void* method) {
+    WlvRememberWeapon(thiz);
     GuardedVoid("orig.Wlv.EnsureSoulData", [&]{ if (g_origWlvEnsure) g_origWlvEnsure(thiz, method); });
+}
+
+// ============ ★r31 一次性取证（只读探针）：武器升级链路的真实入参 ============
+//  目的：把「点一次升一级」做成按钮前，先拿到游戏自己的两个事实：
+//    ① 当前武器实例 + 当前等级（HUD 每帧调 GetRequiredExpForNextLevel(actor, level) ⇒ 天然可得）
+//    ② 真正触发升级的 LevelUpWeapon(int,int) 两个入参到底是什么意思
+//  两者都只记录 + 原样转发，不改任何游戏状态。
+static std::atomic<uintptr_t> g_wlvWeapon{0};      // 最近一次 HUD 查询的武器实例
+static std::atomic<int32_t>   g_wlvCurLevel{0};    // 该武器当时的等级（HUD 传进来的）
+static std::atomic<uint32_t>  g_hitWlvReqNext{0};
+static std::atomic<uint32_t>  g_hitWlvLevelUp{0};
+
+typedef int32_t (*WlvReqNext_t)(void* thiz, void* actor, int32_t level, void* method);
+static WlvReqNext_t g_origWlvReqNext = nullptr;
+
+static int32_t Hooked_WlvReqNext(void* thiz, void* actor, int32_t level, void* method) {
+    if (OkPtr(thiz)) {
+        g_wlvWeapon.store(reinterpret_cast<uintptr_t>(thiz), std::memory_order_relaxed);
+        g_wlvCurLevel.store(level, std::memory_order_relaxed);
+        WlvRememberWeapon(thiz);
+    }
+    const uint32_t n = g_hitWlvReqNext.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 6) LOGI(TPL_LOG " wlv: ReqNext 命中#%u weapon=%p level=%d", n, thiz, level);
+    if (!g_origWlvReqNext) return 0;
+    bool ok = false; int32_t r = 0;
+    FS_GUARDED("orig.Wlv.ReqNext", ok, { r = g_origWlvReqNext(thiz, actor, level, method); });
+    return ok ? r : 0;
+}
+
+typedef void (*WlvLevelUpWeapon_t)(void* thiz, int32_t a, int32_t b, void* method);
+static WlvLevelUpWeapon_t g_origWlvLevelUpWeapon = nullptr;
+
+static void Hooked_WlvLevelUpWeapon(void* thiz, int32_t a, int32_t b, void* method) {
+    WlvRememberWeapon(thiz);          // ★r31：真升级时把实例记下来（最可靠）
+    const uint32_t n = g_hitWlvLevelUp.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 12) {
+        LOGI(TPL_LOG " wlv: LevelUpWeapon(a=%d b=%d) inst=%p 记下的curLevel=%d 命中#%u",
+             a, b, thiz, g_wlvCurLevel.load(std::memory_order_relaxed), n);
+    }
+    if (!g_origWlvLevelUpWeapon) return;
+    GuardedVoid("orig.Wlv.LevelUpWeapon", [&]{ g_origWlvLevelUpWeapon(thiz, a, b, method); });
+}
+
+// ============ ★r31「武器升级」按钮：点一次 = 升一级 ============
+//  取证（2026-10-29 真机，用户分解一把武器时的样本，pid 8734）：
+//      wlv: LevelUpWeapon(a=1 b=0) inst=0x751e66fd1540  ⇒  wlv: OnWeaponSoulDataChanged level=N+1
+//    连续命中的 5 次**全部**是 (a=1, b=0)，每次等级 +1
+//    ⇒ `LevelUpWeapon(1, 0)` 就是游戏自己的「升一级」调用（属性由游戏内部应用）。
+//  所以按钮不做任何「造经验/改字段」的花活：按游戏同样的入参、调同一个方法。
+//  线程纪律：Unity 对象不能从 mod 线程碰 ⇒ 借已在跑的主线程锚点 `Killable.Update()` 当泵执行。
+//  （跨线程状态 g_wlvClickPending / g_wlvWeaponInst 等定义在文件头 ③ 全局区）
+
+// ★r31c（用户原话：「这个游戏武器是可以换的，你如果只是记下一个没用，你需要找到的是我当前武器」）
+//   两条修正：
+//    ① **不猜类名、不要求 klass 完全等于 FirearmsPowerUp** —— 游戏里传出来的武器对象是**别的类**
+//       （实测 klass=0x751f5225eea0 ≠ FirearmsPowerUp 0x751f517bedd0，很可能就是武器实体／派生类）。
+//       改用两层判定：**类继承链**（object_class → class_parent 逐级比对）+ **组件字段桥**
+//       （实体上哪个字段的类型正好是 FirearmsPowerUp，就把它读出来）。
+//    ② **点击时现场问"当前武器"**，不用缓存：`NEONPlayerState.GetAffixTargetWeapon()`（get_Coin 的 this
+//       就是该单例，已被记住）。缓存只作兜底。
+static bool WlvDerivesFrom(void* klass, void* base) {
+    auto& api = GetApi();
+    if (!OkPtr(klass) || !OkPtr(base)) return false;
+    void* k = klass;
+    for (int i = 0; i < 12 && OkPtr(k); ++i) {
+        if (k == base) return true;
+        if (!api.class_parent) break;
+        void* p = api.class_parent(k);
+        if (!OkPtr(p) || p == k) break;
+        k = p;
+    }
+    return false;
+}
+
+static void* WlvClassOf(void* obj) {
+    auto& api = GetApi();
+    if (api.object_class && OkPtr(obj)) {
+        void* c = api.object_class(obj);
+        if (OkPtr(c)) return c;
+    }
+    uintptr_t k = 0;
+    if (SafeReadU64Raw(reinterpret_cast<uintptr_t>(obj), &k) && k) return reinterpret_cast<void*>(k);
+    return nullptr;
+}
+
+static const char* WlvKlassNameOf(void* klass) {
+    auto& api = GetApi();
+    return (api.class_name && OkPtr(klass)) ? api.class_name(klass) : "?";
+}
+
+// 把「游戏交给我们的武器相关对象」换成真正的 FirearmsPowerUp 实例：
+//   直接是/继承自 FirearmsPowerUp ⇒ 原样返回；否则在它的字段里找 FirearmsPowerUp 组件（最多上溯 3 层父类）。
+static void* WlvBridgeToPowerUp(void* obj) {
+    auto& api = GetApi();
+    if (!OkPtr(obj) || !OkPtr(g_clsFirearms)) return nullptr;
+    void* cls = WlvClassOf(obj);
+    if (WlvDerivesFrom(cls, g_clsFirearms)) return obj;
+    if (!api.class_fields || !api.field_type || !api.field_offset) return nullptr;
+    void* c = cls;
+    for (int depth = 0; depth < 3 && OkPtr(c); ++depth) {
+        void* iter = nullptr; void* fd = nullptr;
+        while ((fd = api.class_fields(c, &iter)) != nullptr) {
+            void* t = api.field_type(fd);
+            if (!OkPtr(t)) continue;
+            uintptr_t tc = 0;
+            if (!SafeReadU64Raw(reinterpret_cast<uintptr_t>(t), &tc) || !tc) continue;
+            if (!WlvDerivesFrom(reinterpret_cast<void*>(tc), g_clsFirearms)) continue;
+            const int off = static_cast<int>(api.field_offset(fd));
+            if (off <= 0 || off > 0x8000) continue;
+            uintptr_t v = 0;
+            if (!SafeReadU64Raw(reinterpret_cast<uintptr_t>(obj) + off, &v) || !v) continue;
+            void* comp = reinterpret_cast<void*>(v);
+            if (WlvDerivesFrom(WlvClassOf(comp), g_clsFirearms)) {
+                LOGI(TPL_LOG " wlv: 字段桥命中 %s+0x%x → FirearmsPowerUp=%p",
+                     api.field_name ? api.field_name(fd) : "?", off, comp);
+                return comp;
+            }
+        }
+        c = api.class_parent ? api.class_parent(c) : nullptr;
+    }
+    return nullptr;
+}
+
+static void WlvRememberWeapon(void* inst) {
+    if (!OkPtr(inst)) return;
+    void* comp = WlvBridgeToPowerUp(inst);
+    static std::atomic<uint32_t> nr{0};
+    const uint32_t n = nr.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (!comp) {
+        if (n <= 8)
+            LOGW(TPL_LOG " wlv: 收到对象 %p 类=%s（不是 FirearmsPowerUp，字段桥也没找到 ⇒ 丢弃，第%u次）",
+                 inst, WlvKlassNameOf(WlvClassOf(inst)), n);
+        return;
+    }
+    if (n <= 8)
+        LOGI(TPL_LOG " wlv: 记下武器组件=%p（来源对象 %p 类=%s，第%u次）",
+             comp, inst, WlvKlassNameOf(WlvClassOf(inst)), n);
+    g_wlvWeaponInst.store(reinterpret_cast<uintptr_t>(comp), std::memory_order_relaxed);
+    g_wlvWeaponKlass.store(reinterpret_cast<uintptr_t>(WlvClassOf(comp)), std::memory_order_relaxed);
+}
+
+static void WlvRememberPlayerState(void* thiz) {
+    if (!OkPtr(thiz) || !g_clsPlayerState) return;
+    if (!WlvDerivesFrom(WlvClassOf(thiz), g_clsPlayerState)) return;
+    const uintptr_t prev = g_playerState.exchange(reinterpret_cast<uintptr_t>(thiz), std::memory_order_relaxed);
+    if (prev != reinterpret_cast<uintptr_t>(thiz))
+        LOGI(TPL_LOG " wlv: 记下 NEONPlayerState=%p（点击时用它的 GetAffixTargetWeapon 问当前武器）", thiz);
+}
+
+// 实例存活校验：对象头 klass 必须与捕获时一致（防已释放/被复用的内存被当武器用）
+static bool WlvWeaponAlive(void* inst) {
+    if (!OkPtr(inst)) return false;
+    const uintptr_t want = g_wlvWeaponKlass.load(std::memory_order_relaxed);
+    uintptr_t klass = 0;
+    if (!SafeReadU64Raw(reinterpret_cast<uintptr_t>(inst), &klass)) return false;
+    if (!klass) return false;
+    return want ? (klass == want) : true;
+}
+
+// 主线程：现场问出「当前武器」（先玩家状态 getter，再 HUD getter，最后缓存兜底）
+static void* WlvResolveWeaponNow() {
+    auto& api = GetApi();
+    // ① NEONPlayerState.GetAffixTargetWeapon()
+    void* ps = reinterpret_cast<void*>(g_playerState.load(std::memory_order_relaxed));
+    if (OkPtr(ps) && g_miAffixTargetWeapon && g_codeAffixTargetWeapon && WlvDerivesFrom(WlvClassOf(ps), g_clsPlayerState)) {
+        typedef void* (*GetObj0_t)(void*, void*);
+        void* w = GuardedOr<void*>("ps.getAffixTargetWeapon", nullptr,
+                                   [&]{ return reinterpret_cast<GetObj0_t>(g_codeAffixTargetWeapon)(ps, g_miAffixTargetWeapon); });
+        if (OkPtr(w)) {
+            void* comp = WlvBridgeToPowerUp(w);
+            if (comp) { LOGI(TPL_LOG " wlv: 当前武器（玩家状态）=%p 源对象类=%s", comp, WlvKlassNameOf(WlvClassOf(w))); return comp; }
+        }
+    }
+    // ①b NEONPlayerState.get_GunCore()
+    if (OkPtr(ps) && g_miGunCore && g_codeGunCore && WlvDerivesFrom(WlvClassOf(ps), g_clsPlayerState)) {
+        typedef void* (*GetObj0b_t)(void*, void*);
+        void* w = GuardedOr<void*>("ps.get_GunCore", nullptr,
+                                   [&]{ return reinterpret_cast<GetObj0b_t>(g_codeGunCore)(ps, g_miGunCore); });
+        if (OkPtr(w)) {
+            void* comp = WlvBridgeToPowerUp(w);
+            if (comp) { LOGI(TPL_LOG " wlv: 当前武器（GunCore）=%p 源对象类=%s", comp, WlvKlassNameOf(WlvClassOf(w))); return comp; }
+        }
+    }
+    (void)api;
+    // ② HUD 的 GetCurrentHudWeapon()
+    void* ui = reinterpret_cast<void*>(g_uiWeaponLevelInst.load(std::memory_order_relaxed));
+    if (OkPtr(ui) && g_origUiGetHudWeapon && UiIsAlive(ui)) {
+        void* w = GuardedOr<void*>("ui.getCurrentHudWeapon", nullptr,
+                                   [&]{ return g_origUiGetHudWeapon(ui, g_miUiGetHudWeapon); });
+        void* comp = WlvBridgeToPowerUp(w);
+        if (comp) { LOGI(TPL_LOG " wlv: 当前武器（HUD）=%p", comp); return comp; }
+    }
+    // ③ 缓存兜底
+    void* cached = reinterpret_cast<void*>(g_wlvWeaponInst.load(std::memory_order_relaxed));
+    if (OkPtr(cached) && WlvDerivesFrom(WlvClassOf(cached), g_clsFirearms) && WlvWeaponAlive(cached)) return cached;
+    return nullptr;
+}
+
+// 只在主线程（Killable.Update / UiWeaponLevel.RefreshWeaponSoulExp 钩子体内）调用
+static void WlvTryExecuteClick() {
+    if (!g_wlvClickPending.load(std::memory_order_acquire)) return;
+    const int64_t now = NowMonoMs();
+    if (!g_origWlvLevelUpWeapon) {
+        if (now - g_wlvClickAtMs.load(std::memory_order_relaxed) > 30000) {
+            g_wlvClickPending.store(0, std::memory_order_release);
+            LOGW(TPL_LOG " wlv: 点击放弃（30s 内 trampoline 没就位）");
+        }
+        return;
+    }
+    void* inst = WlvResolveWeaponNow();
+    if (!inst) {
+        if (now - g_wlvClickAtMs.load(std::memory_order_relaxed) > 30000) {
+            g_wlvClickPending.store(0, std::memory_order_release);
+            LOGW(TPL_LOG " wlv: 点击放弃（30s 内没拿到武器）HUD实例=%p 缓存实例=%p clsFirearms=%p",
+                 reinterpret_cast<void*>(g_uiWeaponLevelInst.load(std::memory_order_relaxed)),
+                 reinterpret_cast<void*>(g_wlvWeaponInst.load(std::memory_order_relaxed)), g_clsFirearms);
+        }
+        return;
+    }
+    g_wlvClickPending.store(0, std::memory_order_release);
+    // ★r31d：实证 a=1 只是「加 1 点经验」⇒ 要升一级就必须喂够：delta = needExp - exp（至少 1）
+    const int32_t lvl = g_wlvLevel.load(std::memory_order_relaxed);
+    const int32_t need = g_wlvNeedExp.load(std::memory_order_relaxed);
+    const int32_t cur = g_wlvExp.load(std::memory_order_relaxed);
+    const int32_t maxLv = g_wlvMaxLevel.load(std::memory_order_relaxed);
+    if (maxLv > 0 && lvl >= maxLv) {
+        LOGI(TPL_LOG " wlv: 点击忽略 —— 已满级 level=%d/%d", lvl, maxLv);
+        return;
+    }
+    int32_t delta = (need > 0) ? (need - cur) : 1;
+    if (delta < 1) delta = 1;
+    if (delta > 100000) delta = 100000;
+    LOGI(TPL_LOG " wlv: 点击执行 → LevelUpWeapon(经验+%d, 0) inst=%p 当前 level=%d exp=%d/%d",
+         delta, inst, lvl, cur, need);
+    // ★沿用游戏自己那次调用的 MethodInfo（非 generic 方法，但给对总比给 nullptr 稳）
+    void* mi = g_miWlvLevelUpWeapon;
+    bool fired = false;
+    GuardedVoid("wlv.click.levelup", [&]{
+        g_origWlvLevelUpWeapon(inst, delta, 0, mi);
+        fired = true;
+    });
+    if (fired) {
+        const uint32_t n = g_wlvUpOk.fetch_add(1, std::memory_order_relaxed) + 1;
+        LOGI(TPL_LOG " wlv: 点击升级已下发 #%u（等 OnWeaponSoulDataChanged level=N+1）", n);
+    } else {
+        LOGW(TPL_LOG " wlv: 点击升级调用被护栏拦下（本次未生效）inst=%p", inst);
+    }
 }
 
 
@@ -3711,6 +4081,153 @@ static void Hooked_WlvEnsure(void* thiz, void* method) {
 //    SoulLevelConfig.GetLevelUpRequireExp(1) / UpgradeRules.get_ExpRequireMultiplier，
 //    继续猜只会浪费你的时间 ⇒ 先取真实地址，静态看清调用关系再改。
 static std::atomic<bool> g_wlvProbeDone{false};
+
+// ---- 只读探针 v2 的辅助：把 MethodInfo/FieldInfo 的签名渲染出来 ----
+//   Il2CppType 布局：+0 data / +8 位域(attrs:16, type:8, num_mods:6, byref:1, pinned:1)
+//   ⇒ type 枚举在 flags>>16 的低 8 位，byref 在 flags>>30。
+static const char* WlvTypeName(uint8_t t) {
+    switch (t) {
+        case 0x01: return "void";    case 0x02: return "bool";   case 0x03: return "char";
+        case 0x04: return "sbyte";   case 0x05: return "byte";   case 0x06: return "short";
+        case 0x07: return "ushort";  case 0x08: return "int";    case 0x09: return "uint";
+        case 0x0a: return "long";    case 0x0b: return "ulong";  case 0x0c: return "float";
+        case 0x0d: return "double";  case 0x0e: return "string"; case 0x0f: return "ptr";
+        case 0x10: return "byref";   case 0x11: return "struct"; case 0x12: return "class";
+        case 0x13: return "var";     case 0x14: return "array";  case 0x15: return "geninst";
+        case 0x18: return "intptr";  case 0x19: return "uintptr";case 0x1c: return "object";
+        case 0x1d: return "szarray"; case 0x1e: return "mvar";   default:   return "?";
+    }
+}
+
+static void WlvTypeBrief(void* t, char* out, size_t cap) {
+    if (!out || cap < 4) return;
+    out[0] = 0;
+    if (!t) { std::snprintf(out, cap, "-"); return; }
+    uint32_t flags = 0;
+    if (!SafeReadU32Raw(reinterpret_cast<uintptr_t>(t) + 8, &flags)) {
+        std::snprintf(out, cap, "raw=%x", (unsigned)flags);
+        return;
+    }
+    const uint8_t ty = static_cast<uint8_t>((flags >> 16) & 0xFF);
+    const bool byref = ((flags >> 30) & 1) != 0;
+    std::snprintf(out, cap, "%s%s", WlvTypeName(ty), byref ? "&" : "");
+}
+
+// 只读：把某个类的全部方法（名字 + 参数类型 + 参数个数）打进日志。
+//   ★不碰游戏状态、不调任何游戏方法；MethodInfo* 不是托管堆对象 ⇒ 只做裸读。
+// 只读：按关键词扫出类名（用于「先找到类，再 dump 它的方法」）
+static void WlvScanClasses(const char* key, int cap) {
+    auto& api = GetApi();
+    if (!api.ready || !api.domain_get || !api.domain_assemblies || !api.assembly_image
+        || !api.image_class_count || !api.image_class || !api.class_name) {
+        LOGW(TPL_LOG " wlvdump: 类扫描 API 不全，跳过（key=%s）", key ? key : "");
+        return;
+    }
+    void* dom = api.domain_get();
+    if (!OkPtr(dom)) { LOGW(TPL_LOG " wlvdump: domain 为空，跳过类扫描"); return; }
+    size_t asmN = 0;
+    void** asms = api.domain_assemblies(dom, &asmN);
+    int hit = 0, scanned = 0;
+    for (size_t a = 0; a < asmN && hit < cap; ++a) {
+        const void* img = api.assembly_image(asms[a]);
+        if (!img) continue;
+        const uint32_t cc = api.image_class_count(const_cast<void*>(img));
+        for (uint32_t i = 0; i < cc && hit < cap; ++i) {
+            void* k = api.image_class(const_cast<void*>(img), i);
+            if (!OkPtr(k)) continue;
+            const char* nm = api.class_name(k);
+            ++scanned;
+            if (nm && key && std::strstr(nm, key)) {
+                const char* nsp = api.class_namespace ? api.class_namespace(k) : "";
+                LOGI(TPL_LOG " wlvdump: CLASS %s.%s k=%p", nsp ? nsp : "", nm, k);
+                ++hit;
+            }
+        }
+    }
+    LOGI(TPL_LOG " wlvdump: 类扫描 key=%s 命中=%d 扫描类=%d 程序集=%zu", key ? key : "", hit, scanned, asmN);
+}
+
+// 只读：把某个方法的**代码字节**打进日志（本机读不到 /proc/pid/mem ⇒ 只能进程自报）。
+//   用法：本地用 capstone 反汇编这串 hex；`bl` 的目标是绝对地址，可与同样打印出来的
+//   `code=0x…` 相互对上 ⇒ 能确定「谁调谁」。
+static void WlvDumpCode(const char* ns, const char* clsName, const char* mName, int argc, int nbytes) {
+    auto& api = GetApi();
+    if (!api.ready) return;
+    void* k = FindClassNs(ns, clsName);
+    if (!OkPtr(k)) k = api.FindClassByShortName(clsName);
+    if (!OkPtr(k)) { LOGW(TPL_LOG " wlvcode: 类未找到 %s", clsName); return; }
+    void* mi = api.GetMethod(k, mName, argc);
+    if (!mi) { LOGW(TPL_LOG " wlvcode: 方法未找到 %s.%s(%d)", clsName, mName, argc); return; }
+    uintptr_t code = 0;
+    if (!SafeReadU64Raw(reinterpret_cast<uintptr_t>(mi), &code) || !code) {
+        LOGW(TPL_LOG " wlvcode: methodPointer 为空 %s.%s(%d)", clsName, mName, argc);
+        return;
+    }
+    char hex[1024];
+    int off = 0;
+    hex[0] = 0;
+    for (int i = 0; i < nbytes && off < (int)sizeof(hex) - 3; i += 4) {
+        uint32_t w = 0;
+        if (!SafeReadU32Raw(code + static_cast<uintptr_t>(i), &w)) break;
+        off += std::snprintf(hex + off, sizeof(hex) - static_cast<size_t>(off), "%08x", w);
+    }
+    LOGI(TPL_LOG " wlvcode: %s.%s(%d) code=0x%lx %s", clsName, mName, argc,
+         (unsigned long)code, hex);
+}
+
+static void WlvDumpMethods(const char* ns, const char* clsName, int cap) {
+    auto& api = GetApi();
+    if (!api.ready || !api.class_methods || !api.method_get_name) return;
+    void* k = FindClassNs(ns, clsName);
+    if (!OkPtr(k)) k = api.FindClassByShortName(clsName);
+    if (!OkPtr(k)) { LOGW(TPL_LOG " wlvdump: 类未找到 %s", clsName); return; }
+    void* iter = nullptr; void* mi = nullptr; int n = 0;
+    while ((mi = api.class_methods(k, &iter)) != nullptr && n < cap) {
+        const char* nm = api.method_get_name(mi);
+        const int pc = api.method_param_count ? static_cast<int>(api.method_param_count(mi)) : -1;
+        char sig[192];
+        int off = 0;
+        sig[0] = 0;
+        for (int i = 0; i < pc && i < 8; ++i) {
+            char tb[32];
+            WlvTypeBrief(api.method_param ? api.method_param(mi, static_cast<uint32_t>(i)) : nullptr,
+                         tb, sizeof(tb));
+            const int w = std::snprintf(sig + off, sizeof(sig) - static_cast<size_t>(off),
+                                        "%s%s", i ? "," : "", tb);
+            if (w > 0) off += w;
+            if (static_cast<size_t>(off) >= sizeof(sig) - 1) break;
+        }
+        char rt[32];
+        WlvTypeBrief(api.method_ret_type ? api.method_ret_type(mi) : nullptr, rt, sizeof(rt));
+        // ★MethodInfo+0 = methodPointer（代码地址）；用 ModOff 换成「模块+RVA」，
+        //   便于离线反汇编 —— 本机（雷电模拟器/ARM 翻译）**读不到 /proc/pid/mem**（EIO），
+        //   所以只能由进程自己把地址报出来，再按 RVA 反汇编磁盘上的 so。
+        uintptr_t code = 0;
+        char offbuf[96] = "-";
+        if (SafeReadU64Raw(reinterpret_cast<uintptr_t>(mi), &code) && code) ModOff(code, offbuf, sizeof(offbuf));
+        LOGI(TPL_LOG " wlvdump: %s %s.%s(%s) argc=%d mi=%p code=%s",
+             rt, clsName, nm ? nm : "?", sig, pc, mi, offbuf);
+        ++n;
+    }
+    LOGI(TPL_LOG " wlvdump: %s 方法总数(截断上限 %d)=%d", clsName, cap, n);
+}
+
+static void WlvDumpFields(const char* ns, const char* clsName, int cap) {
+    auto& api = GetApi();
+    if (!api.ready || !api.class_fields || !api.field_name) return;
+    void* k = FindClassNs(ns, clsName);
+    if (!OkPtr(k)) k = api.FindClassByShortName(clsName);
+    if (!OkPtr(k)) { LOGW(TPL_LOG " wlvdump: 类未找到 %s", clsName); return; }
+    void* iter = nullptr; void* fi = nullptr; int n = 0;
+    while ((fi = api.class_fields(k, &iter)) != nullptr && n < cap) {
+        const char* nm = api.field_name(fi);
+        char tb[32];
+        WlvTypeBrief(api.field_type ? api.field_type(fi) : nullptr, tb, sizeof(tb));
+        LOGI(TPL_LOG " wlvdump: F %s.%s : %s fi=%p", clsName, nm ? nm : "?", tb, fi);
+        ++n;
+    }
+    LOGI(TPL_LOG " wlvdump: %s 字段总数(截断上限 %d)=%d", clsName, cap, n);
+}
 
 static void WlvProbeDump() {
     auto& api = GetApi();
@@ -3745,6 +4262,40 @@ static void WlvProbeDump() {
         char offbuf[96];
         ModOff(reinterpret_cast<uintptr_t>(mi), offbuf, sizeof(offbuf));
         LOGI(TPL_LOG " wlvprobe: %s.%s(%d) mi=%p %s", items[i].cls, items[i].m, items[i].argc, mi, offbuf);
+    }
+
+    // ★r31 探针 v2（debug.starry.nhsy2_wlv_probe=2）：枚举方法/字段，
+    //   目的＝找「给武器加 Soul 经验」的那个入口（要标量参数、能安全跨 ABI 调）。
+    char pb2[PROP_VALUE_MAX] = {0};
+    const int pn2 = __system_property_get("debug.starry.nhsy2_wlv_probe", pb2);
+    const int lvl = (pn2 > 0) ? atoi(pb2) : 0;
+    if (lvl >= 2) {
+        WlvDumpMethods("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", 220);
+        WlvDumpFields ("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", 80);
+        WlvDumpMethods("NEON.Game.LootSystem", "SoulLevelConfig", 60);
+        WlvDumpFields ("NEON.Game.LootSystem", "SoulLevelConfig", 20);
+        // ★r31：找「给武器加 Soul 经验 / 触发升级」的入口 —— 先按类名扫，再逐个 dump 方法
+        WlvScanClasses("Soul", 60);
+    }
+    if (lvl >= 3) {
+        WlvDumpMethods("NEON.Game.LootSystem", "SoulGunLevelUpList", 80);
+        WlvDumpMethods("NEON.Game", "SoulRewardRoomManager", 80);
+        // ★r31：找「当前武器」的取法（按钮要拿到手上那把武器的实例）
+        WlvDumpMethods("NEON.Game.Managers", "NEONPlayerState", 300);
+        WlvDumpMethods("NEON.UI", "UiWeaponLevel", 40);
+    }
+    if (lvl >= 4) {
+        // 代码字节 dump（256 B / 方法）：本地 capstone 反汇编判定升级链路
+        WlvDumpCode("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "LevelUpWeapon", 2, 384);
+        WlvDumpCode("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "LevelUpWeaponCore", 3, 384);
+        WlvDumpCode("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "GetRequiredExpForNextLevel", 2, 256);
+        WlvDumpCode("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "IsSoulMaxLevel", 1, 192);
+        WlvDumpCode("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "OnWeaponSoulDataChanged", 5, 256);
+        WlvDumpCode("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "EnsureSoulDataInitialized", 0, 192);
+        WlvDumpCode("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "GetSoulUpgradeRules", 0, 192);
+        WlvDumpCode("NEON.Game.LootSystem", "SoulLevelConfig", "ProcessExpGain", 4, 384);
+        WlvDumpCode("NEON.Game.LootSystem", "SoulLevelConfig", "ProcessExpGain", 5, 512);
+        WlvDumpCode("NEON.Game.LootSystem", "SoulLevelConfig", "GetLevelUpRequireExp", 2, 192);
     }
 }
 
@@ -4029,18 +4580,30 @@ static const HookSlot kSlots[] = {
      (void*)Hooked_AddCrystalSprite,      (void**)&g_origAddCrystalSprite},
 
     // ────────────────────────────────────────────────────────────────────────
-    //  ★ 2026-10-27 r29d「武器满级」（§6.8）：只压缩"升级所需经验"，分解经验保持原样
+    //  ★ 2026-10-29 r31「武器升级」按钮（§6.8）：**只保留只读探针**
+    //     旧的「压升级所需经验」三件套（Wlv_ReqExp / Wlv_ReqMul / 动态 Wlv_ReqExp2）
+    //     随「武器满级」开关一起退役 —— 用户裁决「武器满级开关不要了」。
+    //     按钮走「按游戏同样入参调 LevelUpWeapon(1,0)」，不碰原版经验曲线。
     // ────────────────────────────────────────────────────────────────────────
-    {"Wlv_ReqExp",     0, 0, "NEON.Game.LootSystem", "SoulLevelConfig", "GetLevelUpRequireExp", 1,
-     (void*)Hooked_WlvRequireExp,   (void**)&g_origWlvRequireExp},
-    {"Wlv_ReqMul",     0, 0, "", "UpgradeRules", "get_ExpRequireMultiplier", 0,
-     (void*)Hooked_WlvReqMul,       (void**)&g_origWlvReqMul},
     {"Wlv_MaxLevel",   0, 0, "NEON.Game.LootSystem", "SoulLevelConfig", "GetMaxLevel", 0,
      (void*)Hooked_WlvMaxLevel,     (void**)&g_origWlvMaxLevel},
     {"Wlv_Changed",    0, 0, "NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "OnWeaponSoulDataChanged", 5,
      (void*)Hooked_WlvChanged,      (void**)&g_origWlvChanged},
     {"Wlv_EnsureInit", 0, 0, "NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "EnsureSoulDataInitialized", 0,
      (void*)Hooked_WlvEnsure,       (void**)&g_origWlvEnsure},
+    // ★r31 一次性取证（只读）：抓「武器升级」链路的真实入参
+    {"Wlv_HudWeapon",  0, 0, "NEON.UI", "UiWeaponLevel", "GetCurrentHudWeapon", 0,
+     (void*)Hooked_UiGetHudWeapon,  (void**)&g_origUiGetHudWeapon},
+    {"Wlv_HudExp",     0, 0, "NEON.UI", "UiWeaponLevel", "RefreshWeaponSoulExp", 1,
+     (void*)Hooked_UiRefreshSoulExp, (void**)&g_origUiRefreshSoulExp},
+    {"Wlv_UiOnEnable", 0, 0, "NEON.UI", "UiWeaponLevel", "OnEnable", 0,
+     (void*)Hooked_UiOnEnable,      (void**)&g_origUiOnEnable},
+    {"Wlv_UiStart",    0, 0, "NEON.UI", "UiWeaponLevel", "Start", 0,
+     (void*)Hooked_UiStart,         (void**)&g_origUiStart},
+    {"Wlv_ReqNext",    0, 0, "NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "GetRequiredExpForNextLevel", 2,
+     (void*)Hooked_WlvReqNext,      (void**)&g_origWlvReqNext},
+    {"Wlv_LevelUpWeapon", 0, 0, "NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp", "LevelUpWeapon", 2,
+     (void*)Hooked_WlvLevelUpWeapon, (void**)&g_origWlvLevelUpWeapon},
 };
 
 // ★ 2026-10-12（r8c 根因）：`InstallAllHooks` 的循环是
@@ -4112,6 +4675,42 @@ static void ResolveOffsetsAndEnums() {
         LOGW(TPL_LOG " class miss NEON.Game.Hearts — 无敌字段回写降级（仍返回 false）");
     }
 
+    // ★r31「武器升级」按钮：武器类 + LevelUpWeapon 的 MethodInfo（供自带调用时当第 4 参）
+    g_clsFirearms = FindClassNs("NEON.Game.PowerUps.ColdWeapon", "FirearmsPowerUp");
+    if (!OkPtr(g_clsFirearms)) g_clsFirearms = GetApi().FindClassByShortName("FirearmsPowerUp");
+    if (OkPtr(g_clsFirearms)) {
+        g_miWlvLevelUpWeapon = GetApi().GetMethod(g_clsFirearms, "LevelUpWeapon", 2);
+        LOGI(TPL_LOG " wlv: FirearmsPowerUp cls=%p LevelUpWeapon mi=%p（按钮升级用）",
+             g_clsFirearms, g_miWlvLevelUpWeapon);
+    } else {
+        LOGW(TPL_LOG " class miss FirearmsPowerUp — 武器升级按钮将无法执行（其余功能不受影响）");
+    }
+    // ★r31：HUD（唯一能随时问出「当前武器」的地方）
+    g_clsUiWeaponLevel = FindClassNs("NEON.UI", "UiWeaponLevel");
+    if (!OkPtr(g_clsUiWeaponLevel)) g_clsUiWeaponLevel = GetApi().FindClassByShortName("UiWeaponLevel");
+    if (OkPtr(g_clsUiWeaponLevel)) {
+        g_miUiGetHudWeapon = GetApi().GetMethod(g_clsUiWeaponLevel, "GetCurrentHudWeapon", 0);
+        LOGI(TPL_LOG " wlv: UiWeaponLevel cls=%p GetCurrentHudWeapon mi=%p", g_clsUiWeaponLevel, g_miUiGetHudWeapon);
+    }
+    // ★r31c：玩家状态单例 + 它的「当前武器」getter（get_Coin 钩子把单例记下来）
+    g_clsPlayerState = FindClassNs("NEON.Game.Managers", "NEONPlayerState");
+    if (!OkPtr(g_clsPlayerState)) g_clsPlayerState = GetApi().FindClassByShortName("NEONPlayerState");
+    if (OkPtr(g_clsPlayerState)) {
+        g_miAffixTargetWeapon = GetApi().GetMethod(g_clsPlayerState, "GetAffixTargetWeapon", 0);
+        uintptr_t code = 0;
+        if (OkPtr(g_miAffixTargetWeapon) && SafeReadU64Raw(reinterpret_cast<uintptr_t>(g_miAffixTargetWeapon), &code))
+            g_codeAffixTargetWeapon = reinterpret_cast<void*>(code);
+        LOGI(TPL_LOG " wlv: NEONPlayerState cls=%p GetAffixTargetWeapon mi=%p code=%p",
+             g_clsPlayerState, g_miAffixTargetWeapon, g_codeAffixTargetWeapon);
+        g_miGunCore = GetApi().GetMethod(g_clsPlayerState, "get_GunCore", 0);
+        uintptr_t gc = 0;
+        if (OkPtr(g_miGunCore) && SafeReadU64Raw(reinterpret_cast<uintptr_t>(g_miGunCore), &gc))
+            g_codeGunCore = reinterpret_cast<void*>(gc);
+        LOGI(TPL_LOG " wlv: NEONPlayerState.get_GunCore mi=%p code=%p", g_miGunCore, g_codeGunCore);
+    } else {
+        LOGW(TPL_LOG " class miss NEONPlayerState — 按钮只能退回 HUD/缓存取武器");
+    }
+
     g_clsDamageInfo = FindClassNs("NEON.Game", "DamageInfo");
     if (g_clsDamageInfo) {
         g_offDmgDamage.store(GetApi().FieldOffset(g_clsDamageInfo, "damage"));
@@ -4126,8 +4725,7 @@ static void ResolveOffsetsAndEnums() {
 
     // ★ r14 全屏攻击：Killable.faction（同阵营判据；拿不到就走类名闸，不猜偏移）
     {
-        void* clsK = FindClassNs("NEON.Game", "Killable");
-        if (!clsK) clsK = GetApi().FindClassByShortName("Killable");
+        void* clsK = FindClassNs("NEON.Game", "Killable");        if (!clsK) clsK = GetApi().FindClassByShortName("Killable");
         if (clsK) {
             const size_t fo = GetApi().FieldOffset(clsK, "faction");
             g_offKillableFaction.store(fo, std::memory_order_relaxed);
@@ -4350,11 +4948,14 @@ static int InstallAllHooks() {
     return ok;
 }
 
+extern "C" int nhsy2_EagerHooks();     // 定义在 nhsy2Entry.cpp（★r31：有按钮项 ⇒ 开机即装钩）
+
 static bool AnyFeatureOn() {
     return g_inv.load() || DmgMulActive()                           // 滑块项用 DmgMulActive（§③.1）
         || g_bomb.load() || g_coin.load() || g_crystal.load() || g_key.load() || g_ckey.load()
         || g_std.load() || g_full.load()                            // 全屏攻击：Attri 读点强制（§6.6z）
-        || SpdMulActive() || g_jump.load() || g_wlv.load();     // 武器满级（§6.8）
+        || SpdMulActive() || g_jump.load() || g_wlv.load()          // 武器升级按钮（§6.8）
+        || (nhsy2_EagerHooks() != 0);                               // ★r31：按钮类功能必须预先装钩
 }
 
 /* ★r20：把「首次装钩」推迟到启动后 N ms（`setprop debug.starry.nhsy2_hook_delay_ms`，默认 10000）。
@@ -5576,7 +6177,17 @@ void nhsy2_OnFeatureChanged(int featNum, bool enabled) {
         case NHSY2_FEAT_CKEY:    g_ckey.store(enabled);    break;
         case NHSY2_FEAT_SPD:  g_spd.store(enabled);  break;
         case NHSY2_FEAT_JUMP: g_jump.store(enabled); break;
-        case NHSY2_FEAT_WLV:  g_wlv.store(enabled);  break;   // 武器满级（§6.8）
+        case NHSY2_FEAT_WLV:   // ★r31「武器升级」按钮（Button_ 只送 enabled=true，一次=一级）
+            if (enabled) {
+                g_wlv.store(true);            // 放行 AnyFeatureOn ⇒ 确保钩子被装上（懒装）
+                g_wlvClickAtMs.store(static_cast<int64_t>(NowMonoMs()), std::memory_order_relaxed);
+                g_wlvClickPending.store(1, std::memory_order_release);
+                LOGI(TPL_LOG " wlv: 按钮点击 → 待执行「升一级」武器实例=%p tramp=%p",
+                     reinterpret_cast<void*>(g_wlvWeaponInst.load(std::memory_order_relaxed)),
+                     (void*)g_origWlvLevelUpWeapon);
+                GuardedVoid("wlv.syncHooks", [&]{ SyncHooks(); });   // 首点也保证钩子就位
+            }
+            break;
         default: break;
     }
     LOGI(TPL_LOG " feature[%d] = %d", featNum, (int)enabled);
@@ -5614,7 +6225,9 @@ void nhsy2_Tick(const bool* features, const int* values) {
     g_ckey.store(features[NHSY2_FEAT_CKEY]);
     g_spd.store(features[NHSY2_FEAT_SPD]);
     g_jump.store(features[NHSY2_FEAT_JUMP]);
-    g_wlv.store(features[NHSY2_FEAT_WLV]);
+    // ★r31：「武器升级」是**按钮**（Button_ 只送一次 onFeatureChanged(true)），
+    //   features[6] 在 prefs 里恒为 0 ⇒ 这里**绝不能**再拿它覆盖 g_wlv（否则每次都把功能关掉）。
+    //   g_wlv 由点击置真、只做「装钩放行」用。
 
     if (values) {
         int v = values[NHSY2_FEAT_DMG];
@@ -5628,11 +6241,7 @@ void nhsy2_Tick(const bool* features, const int* values) {
         g_spdMul.store(sv);
     }
 
-    // ★ r29f：武器满级开着时，精确装 ReqExp2（带 UpgradeRules 的重载）
-    if (g_wlv.load(std::memory_order_relaxed) && !g_wlvReqExp2Tried.load(std::memory_order_relaxed)) {
-        g_wlvReqExp2Tried.store(true, std::memory_order_relaxed);
-        GuardedVoid("wlv.resolveReqExp2", [&]{ WlvResolveReqExp2(); });
-    }
+    // ★ r29f 的「精确装 ReqExp2」已随「武器满级」开关一起退役（r31）。
     // ★ r29e 只读探针：按 prop 一次性打印等级/经验相关方法入口地址
     if (!g_wlvProbeDone.load(std::memory_order_relaxed)) {
         char pb[PROP_VALUE_MAX] = {0};
@@ -5681,6 +6290,7 @@ void nhsy2_ForceClear() {
     // ★r30：授权失效清场时同样要把无敌字段回滚（同 OnFeatureChanged 的理由）
     GuardedVoid("inv.unlatch.clear", [&]{ InvLatchRelease("force_clear"); });
     g_inv.store(false);
+    g_wlvClickPending.store(0, std::memory_order_release);   // ★r31：撤销未执行的点击
     g_dmg.store(false);
     g_dmgMul.store(1);
     g_full.store(false);

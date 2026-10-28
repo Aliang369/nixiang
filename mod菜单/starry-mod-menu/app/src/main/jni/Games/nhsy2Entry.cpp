@@ -24,6 +24,9 @@
 //   ★ 本轮删除「技能无CD」（用户原话：「技能无cd没用可以删除了」）⇒ 下标 3 起整体前移。
 //   注：NHY2 无独立「彩色钥匙」货币字段 ⇒ CKEY 走游戏原生 InfiniteKey(KeySuit) 通道
 //       （HUD 钥匙图标变彩色/∞，消耗全免），详见 nhsy2Mod.h 头注释。
+//   ★ 2026-10-29 r31（用户 m00002）：「武器满级」开关**不要了**，槽 6 换成「武器升级」按钮：
+//       点一次「执行」＝游戏自己的 LevelUpWeapon(1,0) ⇒ 升一级（属性由游戏应用）；
+//       槽位总数不变（14），「解锁标准版」仍固定槽 8（硬约束 #3）。
 static const char* knhsy2_Features[] = {
     // ---- 下标 0..5：战斗 ----
     "Category_战斗",              // 0
@@ -32,7 +35,7 @@ static const char* knhsy2_Features[] = {
     "Toggle_全屏攻击",            // 3  NHSY2_FEAT_FULL（Attri 读点强制，§6.6z）
     "Slider_移速倍率:1:10:1",     // 4  NHSY2_FEAT_SPD
     "Toggle_无限跳",              // 5  NHSY2_FEAT_JUMP
-    "Toggle_武器满级",            // 6  NHSY2_FEAT_WLV  ★2026-10-27 新增（战斗分类末尾）
+    "Button_武器升级",            // 6  NHSY2_FEAT_WLV  ★2026-10-29 r31：满级开关改为「执行」按钮（点一次升一级）
     // ---- 下标 7..13：资源（一功能一开关，1:1，互不牵连）----
     "Category_资源",              // 7
     "Toggle_解锁标准版",          // 8  NHSY2_FEAT_STD      ← 硬约束 #3 固定槽 8
@@ -44,6 +47,11 @@ static const char* knhsy2_Features[] = {
 };
 static_assert((int)(sizeof(knhsy2_Features) / sizeof(knhsy2_Features[0])) == NHSY2_FEAT_COUNT,
               "featureList 长度必须等于 NHSY2_FEAT_COUNT");
+
+// ★r31：槽 6 是「按钮」而不是开关 ⇒ 「有开着的功能才装钩」这条懒装策略对它不成立：
+//   按钮点击那一刻才装钩，就永远拿不到"点击之前"的武器实例/UI 实例。
+//   所以本模块声明「需要开机即装钩」（nhsy2Mod.cpp 的 AnyFeatureOn 会认这个返回值）。
+extern "C" int nhsy2_EagerHooks() { return 1; }
 
 extern "C" const StarryGameMod* const GameMod_Get() {
     static const StarryGameMod mod = {
