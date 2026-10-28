@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""把「敢达争锋对决」官包签名证书写进 SignSpoof.java（幂等，字节级替换，UTF-8 其余内容原样保留）。
+"""【已停用 2026-10-28】SignSpoof.java 已从源码删除，本工具随之作废（保留作历史参考）。
+
+把「敢达争锋对决」官包签名证书写进 SignSpoof.java（幂等，字节级替换，UTF-8 其余内容原样保留）。
 
 用法: patch_signspoof.py <SignSpoof.java> <cert_b64.txt>
 """

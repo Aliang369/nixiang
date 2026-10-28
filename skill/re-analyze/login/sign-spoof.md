@@ -12,7 +12,7 @@
 
 ---
 
-## 机制
+## 机制（历史，照做无效：类已删）
 
 `SignSpoof.install()` Hook `PackageInfo.CREATOR` 的反序列化过程：
 1. 当本进程调用 `PackageManager.getPackageInfo` 时
@@ -20,7 +20,7 @@
 3. SignSpoof 在反序列化层拦截，替换为原厂 DER 证书
 4. 本进程所有签名查询都看到原版签名
 
-## 安装时机
+## 安装时机（历史）
 
 **必须在 `StarryApp.attachBaseContext` 中最早执行**（super 之后立即 install）：
 
@@ -46,7 +46,7 @@ public class StarryApp extends Application {
 | 外部进程（QQ/微信）读签名 | ❌ 读真签，不受影响 |
 | native 层自检（如 ACE） | ❌ native 直接读文件，不受影响 |
 
-## 提取原版证书
+## 提取原版证书（证书指纹本身仍有记录价值，但**不要再塞进 SignSpoof**）
 
 ```bash
 keytool -exportcert -jarfile original.apk -rfc > orig.b64
@@ -66,7 +66,7 @@ keytool -exportcert -jarfile original.apk -rfc > orig.b64
 
 两者功能重叠，一般用其一即可。如果游戏已有 Killer，不需要再加 SignSpoof。
 
-## 验证方法
+## 验证方法（判据已换成「dex 不得含该类」+ `StarrySignSpoof` 日志 0 行）
 
 ```bash
 adb logcat -s StarrySignSpoof:V

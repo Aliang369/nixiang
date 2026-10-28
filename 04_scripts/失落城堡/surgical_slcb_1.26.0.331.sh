@@ -165,14 +165,8 @@ done
 shopt -u nullglob
 [[ -d "$SMALI_ROOT/com/starry/magic" ]] || { echo "ERROR: com/starry/magic smali missing"; exit 1; }
 [[ -f "$SMALI_ROOT/com/starry/magic/StarryInitProvider.smali" ]] || { echo "ERROR: StarryInitProvider.smali missing"; exit 1; }
-# 签名伪装自检：失落城堡官方证书常量必须已在 SignSpoof 里（smali 里包名是点号形式）
-SS_SMALI="$SMALI_ROOT/com/starry/magic/sign/SignSpoof.smali"
-[[ -f "$SS_SMALI" ]] || { echo "ERROR: $SS_SMALI missing（R8 改名或 SignSpoof 未参与编译）"; ls "$SMALI_ROOT/com/starry/magic/sign/" || true; exit 1; }
-if ! grep -aq -e "$PKG" -e "${PKG//./\/}" "$SS_SMALI"; then
-  echo "ERROR: SignSpoof.smali 内无 $PKG 证书常量（先补 SignSpoof.java 的 SLCB_PKG/SLCB_CERT_B64 再 gradle）"
-  grep -ao 'const-string[^,]*, "[A-Za-z0-9+/=]\{40,\}"' "$SS_SMALI" | head -3
-  exit 1
-fi
+# 2026-10-28：运行时签名伪装（SignSpoof）已从源码删除 ⇒ 不再做"证书常量已烘焙"自检。
+# 若要过本作的签名校验，按改包法在游戏 dex 侧处理。
 if ! grep -aq -e "$PKG" -e "${PKG//./\/}" "$SMALI_ROOT/com/starry/magic/sign/TapLoginForceWeb.smali"; then
   echo "ERROR: TapLoginForceWeb.smali 白名单缺 $PKG"
   exit 1

@@ -107,15 +107,13 @@ PY
 echo "[sign] 星光 dex = $DEX_NAME"
 unzip -p "$SIGNED" "$DEX_NAME" > "$WORK/starry.dex"
 for t in "com/starry/magic/StarryInitProvider" "com/starry/magic/menu/MenuService" \
-         "$LOGIN_CARRIER" "com/starry/magic/sign/SignSpoof"; do
+         "$LOGIN_CARRIER" "com/starry/magic/sign/StarryAppComponentFactory"; do
   LC_ALL=C grep -aqF "$t" "$WORK/starry.dex" || { echo "ERROR: $DEX_NAME 缺 $t" >&2; exit 1; }
 done
 
-# 两张表必须同步（SignSpoof 证书表 + TapLoginForceWeb 白名单）
-for f in SignSpoof TapLoginForceWeb; do
-  LC_ALL=C grep -aqF "$PKG" "$WORK/starry.dex" \
-    || { echo "ERROR: $DEX_NAME 缺 $f 的 $PKG 白名单/证书表" >&2; exit 1; }
-done
+# 2026-10-28：SignSpoof 证书表已删除，只剩 TapLoginForceWeb 白名单需要断言
+LC_ALL=C grep -aqF "$PKG" "$WORK/starry.dex" \
+  || { echo "ERROR: $DEX_NAME 缺 TapLoginForceWeb 的 $PKG 白名单" >&2; exit 1; }
 
 SO_MD5="$(md5 -q "$SO_BUILT")"
 IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"

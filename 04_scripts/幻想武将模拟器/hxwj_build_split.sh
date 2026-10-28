@@ -98,7 +98,7 @@ unzip -p "$PAYLOAD" lib/arm64-v8a/libc++_shared.so   > "$WORK/p/lib/arm64-v8a/li
 unzip -p "$PAYLOAD" assets/certs/starlight.crt       > "$WORK/p/assets/certs/starlight.crt"
 
 for t in "com/starry/magic/StarryInitProvider" "com/starry/magic/menu/MenuService" \
-         "com/starry/magic/sign/SignSpoof" "com/starry/magic/sign/TapLoginForceWeb"; do
+         "com/starry/magic/sign/StarryAppComponentFactory" "com/starry/magic/sign/TapLoginForceWeb"; do
   LC_ALL=C grep -aqF "$t" "$WORK/p/classes.dex" || { echo "ERROR: dex 缺 $t" >&2; exit 1; }
 done
 LC_ALL=C grep -aqF -- '[hxwj]' "$WORK/p/lib/arm64-v8a/libstarry_magic.so" \

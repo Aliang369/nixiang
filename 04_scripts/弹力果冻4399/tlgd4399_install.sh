@@ -66,7 +66,7 @@ bash "$NIXIANG/04_scripts/_common/pre_install_gate.sh" \
   --needle 'com/starry/magic/bridge/ModBridge' \
   --needle 'com/starry/magic/menu/MenuService' \
   --needle 'com/starry/magic/menu/NativeMenuController' \
-  --needle 'com/starry/magic/sign/SignSpoof' \
+  --needle 'com/starry/magic/sign/StarryAppComponentFactory' \
   --needle 'com/starry/magic/ota' \
   || { echo "ERROR: 装机前门禁 FAIL —— 禁止装机"; exit 1; }
 

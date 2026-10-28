@@ -29,12 +29,8 @@ def inject_activity(path: Path) -> None:
             head,
             count=1,
         )
-        if "SignSpoof;->install" not in head2:
-            early = "\n    invoke-static {}, Lcom/starry/magic/sign/SignSpoof;->install()V\n"
-            if "invoke-super" in head2:
-                head2 = head2.replace("invoke-super", early + "\n    invoke-super", 1)
-            else:
-                head2 += early
+        # 2026-10-28：SignSpoof 已从源码删除 ⇒ 不再注入 install()（注入会引用不存在的类，dex 运行期 NoClassDefFoundError）。
+        # 验签/登录改走改包法（TapSDK 门闩恒 true + 登录入口恒 Web）。
         inject = "\n    invoke-static {p0}, Lcom/starry/magic/menu/MenuService;->start(Landroid/content/Context;)V\n"
         text = text[:match.start(1)] + head2 + inject + text[match.start(2):]
         print(f"  hook {path.name}.onCreate")

@@ -74,7 +74,6 @@ shopt -u nullglob
 for need in \
   "com/starry/magic/StarryInitProvider.smali" \
   "com/starry/magic/menu/MenuService.smali" \
-  "com/starry/magic/sign/SignSpoof.smali" \
   "com/starry/magic/sign/StarryAppComponentFactory.smali" \
   "com/starry/magic/sign/TapLoginForceWeb.smali"; do
   [[ -f "$SMALI_ROOT/$need" ]] || { echo "ERROR: $need missing" >&2; exit 1; }

@@ -89,7 +89,7 @@ for d in "$WORK/starry_dec"/smali "$WORK/starry_dec"/smali_classes*; do
   rsync -a "$d/com/starry" "$SMALI_ROOT/com/"
 done
 shopt -u nullglob
-for cls in StarryInitProvider MenuService ModBridge SignSpoof TapLoginForceWeb; do
+for cls in StarryInitProvider MenuService ModBridge StarryAppComponentFactory TapLoginForceWeb; do
   find "$SMALI_ROOT/com" -type f -name "$cls.smali" -print -quit | grep -q . \
     || { echo "ERROR: starry class missing: $cls" >&2; exit 1; }
 done
@@ -298,7 +298,7 @@ rm -rf "$WORK/c3_check"
 unzip -p "$UNSIGNED" classes3.dex > "$WORK/classes3.check.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c3_check" "$WORK/classes3.check.dex" >/dev/null
 [[ -f "$WORK/c3_check/com/starry/magic/StarryInitProvider.smali" ]] || { echo "ERROR: classes3 missing provider" >&2; exit 1; }
-[[ -f "$WORK/c3_check/com/starry/magic/sign/SignSpoof.smali" ]] || { echo "ERROR: classes3 missing SignSpoof" >&2; exit 1; }
+[[ -f "$WORK/c3_check/com/starry/magic/sign/StarryAppComponentFactory.smali" ]] || { echo "ERROR: classes3 missing StarryAppComponentFactory" >&2; exit 1; }
 
 ls -lh "$UNSIGNED"
 md5 -q "$UNSIGNED" | sed 's/^/md5=/'

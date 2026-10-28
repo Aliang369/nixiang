@@ -96,8 +96,8 @@ shopt -u nullglob
   || { echo "ERROR: StarryInitProvider.smali missing（Java 桥没编进 starry app）" >&2; exit 1; }
 [[ -f "$SMALI_ROOT/com/starry/magic/menu/MenuService.smali" ]] \
   || { echo "ERROR: MenuService.smali missing" >&2; exit 1; }
-[[ -f "$SMALI_ROOT/com/starry/magic/sign/SignSpoof.smali" ]] \
-  || { echo "ERROR: SignSpoof.smali missing" >&2; exit 1; }
+[[ -f "$SMALI_ROOT/com/starry/magic/sign/StarryAppComponentFactory.smali" ]] \
+  || { echo "ERROR: StarryAppComponentFactory.smali missing" >&2; exit 1; }
 [[ -f "$SMALI_ROOT/com/starry/magic/sign/TapLoginForceWeb.smali" ]] \
   || { echo "ERROR: TapLoginForceWeb.smali missing" >&2; exit 1; }
 "$SMALI_BIN" assemble -o "$WORK/$NEW_DEX" "$SMALI_ROOT"
@@ -316,10 +316,10 @@ rm -rf "$WORK/c16_check"
 unzip -p "$UNSIGNED" "$NEW_DEX" > "$WORK/${NEW_DEX%.dex}_check.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c16_check" "$WORK/${NEW_DEX%.dex}_check.dex" >/dev/null
 for f in com/starry/magic/StarryInitProvider.smali com/starry/magic/menu/MenuService.smali \
-         com/starry/magic/sign/SignSpoof.smali com/starry/magic/sign/TapLoginForceWeb.smali; do
+         com/starry/magic/sign/StarryAppComponentFactory.smali com/starry/magic/sign/TapLoginForceWeb.smali; do
   [[ -f "$WORK/c16_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 ${f}（smali 未打进包）" >&2; exit 1; }
 done
-echo "[dex-verify] $NEW_DEX 含 StarryInitProvider / MenuService / SignSpoof / TapLoginForceWeb ✓"
+echo "[dex-verify] $NEW_DEX 含 StarryInitProvider / MenuService / StarryAppComponentFactory / TapLoginForceWeb ✓"
 
 ls -lh "$UNSIGNED"
 echo "DONE(unsigned): $UNSIGNED"

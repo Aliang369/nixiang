@@ -542,21 +542,12 @@ rm -rf "$WORK/c6_check"
 zipcat "$UNSIGNED" "$NEW_DEX" > "$WORK/${NEW_DEX%.dex}_check.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c6_check" "$WORK/${NEW_DEX%.dex}_check.dex" >/dev/null
 for f in com/starry/magic/StarryInitProvider.smali com/starry/magic/menu/MenuService.smali \
-         com/starry/magic/sign/SignSpoof.smali; do
+         com/starry/magic/sign/StarryAppComponentFactory.smali; do
   [[ -f "$WORK/c6_check/$f" ]] || { echo "ERROR: $NEW_DEX 缺 ${f}（smali 未打进包）" >&2; exit 1; }
 done
-# 包名在 smali 里是 const-string 常量 ⇒ **点分形式**（com.ap.watcherofrealms）；
-# 斜杠形式只在类型描述符 Lcom/ap/watcherofrealms/... 里出现，本处没有。两种都认。
-grep -qE -e 'com\.ap\.watcherofrealms' -e 'com/ap/watcherofrealms' \
-  "$WORK/c6_check/com/starry/magic/sign/SignSpoof.smali" \
-  || { echo "ERROR: SignSpoof.smali 里没有 WOR 包名（证书注册漏了？）" >&2; exit 1; }
-# 国服包名若出现只是提示（SignSpoof 表里本来就有 61 款游戏的注册项），不阻断。
-# 注意：set -e 下不能用 `grep ... && echo`（grep 失败会让整个 AND 列表返回 1 而退出）。
-if grep -qE -e 'com\.gf\.cxswz' -e 'com/gf/cxswz' \
-     "$WORK/c6_check/com/starry/magic/sign/SignSpoof.smali"; then
-  echo "  WARN: SignSpoof.smali 含 com.gf.cxswz（跨游戏注册表，正常）"
-fi
-echo "[dex-verify] $NEW_DEX 含 StarryInitProvider / MenuService / SignSpoof（含 WOR 证书）✓"
+# 2026-10-28：运行时签名伪装已删除 ⇒ 不再断言"dex 里有 WOR 证书常量"。
+# 本作要过壳验签须按改包法在游戏 dex 侧处理（见 skill/re-analyze/login/taptap-web-login.md）。
+echo "[dex-verify] $NEW_DEX 含 StarryInitProvider / MenuService / StarryAppComponentFactory ✓"
 
 ls -lh "$UNSIGNED" "$SPLIT_UNSIGNED"
 echo "DONE(unsigned base) : $UNSIGNED"

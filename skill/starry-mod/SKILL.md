@@ -276,6 +276,7 @@ bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [-
    - 签名校验存在性：静态扫 `CheckSignature`/`getSign`/`getMD5`/`packageSign` 类入口，有则按**改包法**给对策（门闩恒放行 + 弹窗 no-op）
    - 登录入口恒 Web：定位该 SDK 版本的「选 fragment/handler」处改掉（不是改 `instance-of`）；锚点示例见本节 TapTap 接入检查表条目 2
    - 运行时伪装必须不存在：源码已删；manifest 无 `SignSpoofAppComponentFactory`、dex 无 `Lcom/starry/magic/sign/SignSpoof;`、`StarrySignSpoof` 日志 0 行；
+     出包脚本/注入脚本**禁止再写** `invoke-static … SignSpoof;->install()V`（smali 汇编不校验类型存在性 ⇒ 不报错，装机才崩）——巡检：`bash 04_scripts/_common/check_deleted_class_injection.sh`；
      装机前跑 `pre_install_gate.sh --apk <成品> --base-apk <底包>`（**查12** 会自动判「底包有门闩类却没改包」）
    - `TapLoginForceWeb` 白名单**仅用于核对未迁移的老包**，新包不得再走（`SignSpoof` 证书表已随该类删除）
 5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（历史事故：临时复用同 id 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）

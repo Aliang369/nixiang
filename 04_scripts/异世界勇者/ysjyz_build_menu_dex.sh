@@ -42,7 +42,7 @@ done
 shopt -u nullglob
 for f in com/starry/magic/StarryApp.smali \
          com/starry/magic/cocos/YsjYzHooks.smali \
-         com/starry/magic/sign/SignSpoof.smali \
+         com/starry/magic/sign/StarryAppComponentFactory.smali \
          com/starry/magic/menu/MenuService.smali; do
   [[ -f "$WORK/smali_in/$f" ]] || { echo "ERROR: 框架缺 ${f}（Java 桥没编进 starry app）" >&2; exit 1; }
 done
@@ -57,7 +57,6 @@ chkcls() {
   grep -q -F "$sig" "$WORK/check/com/starry/$f" \
     || { echo "ERROR: classes3 缺 $f -> $sig" >&2; exit 1; }
 }
-chkcls magic/sign/SignSpoof.smali      '.method public static install()V'
 chkcls magic/menu/MenuService.smali    '.method public static start(Landroid/content/Context;)V'
 chkcls magic/menu/MenuService.smali    '.method public static notifyHostResumed(Landroid/app/Activity;)V'
 chkcls magic/menu/MenuService.smali    '.method public static notifyHostLeaving()V'

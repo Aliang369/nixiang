@@ -37,7 +37,7 @@
 |----|--------|--------------------------|-----------|
 | 1 | **底包身份** | 包名 / versionName / versionCode / ABI / 体积 / md5 / sha256 记录在案；判定是否 split、是否单 base.apk | `10_docs/_state/底包再获取台账.md` 一行 |
 | 2 | **壳与注入点判定** | 能否替换 `application@name`？有壳（易盾/ACE/TSS…）⇒ 走 ContentProvider 注入（`StarryInitProvider` + `android:initOrder="2147483647"`），**绝不改 `application@name`** | `10_docs/{游戏}/` 一段结论 + 依据 |
-| 3 | **签名伪造点** | 官方证书 MD5/SHA1/SHA256/DN 导出（`META-INF/*.RSA|EC|DSA` 走 `openssl pkcs7 -print_certs`，**`keytool -exportcert -jarfile` 对渠道包不可用**）+ 落进 `SignSpoof` | 日志 `StarrySignSpoof: spoof hit pkg=… md5=…` |
+| 3 | **签名信息采集**（记录用，不再做运行时伪造） | 官方证书 MD5/SHA1/SHA256/DN 导出（`META-INF/*.RSA|EC|DSA` 走 `openssl pkcs7 -print_certs`，**`keytool -exportcert -jarfile` 对渠道包不可用**）并落 `10_docs/{游戏}/` 记录；**2026-10-28 起运行时签名伪装 `SignSpoof` 已删除**，验签/登录一律走改包法（见 `login/taptap-web-login.md` 现行口径） | 证书指纹已入库 + 成品包 `framework_entry_audit.sh [B]` 判 `dex 无 Lcom/starry/magic/sign/SignSpoof;` |
 | 4 | **登录 patch 点** | 按 SDK 选 patch 类：TapTap → [login/taptap-web-login.md](login/taptap-web-login.md)；QQ/微信 → [login/qq-wechat-sso.md](login/qq-wechat-sso.md)。**只取「证书 + patch 类名」这两样** | 登录走到网页/豁免分支的日志 |
 | 5 | **组包装机** | `surgical_*` 出包 → 覆盖安装 → 菜单可见 → 能进游戏玩 | 用户口头确认「可以正常玩」 |
 

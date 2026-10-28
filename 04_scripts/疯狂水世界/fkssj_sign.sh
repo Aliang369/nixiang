@@ -45,7 +45,7 @@ NEED_CLASSES=(
   "com/starry/magic/StarryInitProvider"
   "com/starry/magic/menu/MenuService"
   "com/starry/magic/bridge/ModBridge"
-  "com/starry/magic/sign/SignSpoof"
+  "com/starry/magic/sign/StarryAppComponentFactory"
 )
 ORIG_DEXES=(classes.dex classes2.dex classes3.dex classes4.dex)
 
@@ -97,20 +97,8 @@ for c in "${NEED_CLASSES[@]}"; do
   LC_ALL=C grep -aq -- "$c" "$DW" || die "${NEW_DEX} 缺类 ${c}"
 done
 LC_ALL=C grep -aq -- "$PKG" "$DW" || die "${NEW_DEX} 缺包名串 ${PKG}"
-# dex 侧归属证明：dex 必须字面携带官方 changwan 证书（SignSpoof.FKSJ_CERT_B64 的 base64
-# 前缀）。★2026-10-12 修正：原先这里查字面量 "Fkssj"，但 [Fkssj] 是 **native so 的日志标签**，
-# dex 里根本没有（实测 Fkssj=0 / fkssj 仅 1 次且落在包名串内）⇒ 恒假失败。改查证书前缀：
-# 本作独有、别的游戏 dex 不可能有，且与 so 的 [Fkssj] 标签互补。证书从底包现场提取，不写死。
-CERT_HEAD="$(unzip -p "$BASE_APK" 'META-INF/*.RSA' 2>/dev/null \
-  | openssl pkcs7 -inform DER -print_certs -outform PEM 2>/dev/null \
-  | openssl x509 -outform DER 2>/dev/null | base64 | tr -d '\n' | cut -c1-48 || true)"
-if [[ -n "$CERT_HEAD" ]]; then
-  LC_ALL=C grep -aqF -- "$CERT_HEAD" "$DW" \
-    || die "${NEW_DEX} 未携带官方证书 base64 前缀（${CERT_HEAD}）——SignSpoof 本作条目缺失或别家 dex 混入"
-  printf '      dex 携带官方证书 base64 前缀 ✓\n'
-else
-  echo "WARN: 无法从底包提取证书（缺 openssl？）⇒ 跳过 dex 证书归属校验" >&2
-fi
+# 2026-10-28：SignSpoof 证书表已删除 ⇒ 不再做"dex 携带官方证书 base64 前缀"归属校验。
+# 归属改由上一条「dex 必含本作包名串」+ 星光类清单覆盖。
 
 step "[3/6] 官包零改动：${ORIG_DEXES[*]} + resources.arsc 逐条 md5 比对底包"
 for e in "${ORIG_DEXES[@]}" resources.arsc; do

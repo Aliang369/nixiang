@@ -172,8 +172,7 @@ if ! grep -q '^\.super Landroid/app/Application;' "$SMALI_ROOT/com/starry/magic/
   echo "ERROR: 官方无自定义 Application，StarryApp 必须 .super Landroid/app/Application;"
   exit 1
 fi
-grep -qE 'com[./]ginicat[./]sweet[./]m4399' "$SMALI_ROOT/com/starry/magic/sign/SignSpoof.smali" \
-  || { echo "ERROR: SignSpoof.smali 未含 4399 包名 com.ginicat.sweet.m4399"; exit 1; }
+# 2026-10-28：SignSpoof（含证书/包名表）已删除 ⇒ 不再断言 dex 内含 4399 包名映射。
 "$SMALI_BIN" assemble -o "$WORK/classes2.dex" "$SMALI_ROOT"
 ls -la "$WORK/classes2.dex"
 

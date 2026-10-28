@@ -110,7 +110,7 @@ echo "  prompt = $(md5 -q "$TMP/package.so")"
 
 for needle in \
   'SjzzHooks' \
-  'SignSpoof' \
+  'StarryAppComponentFactory' \
   'StarryAppComponentFactory' \
   'StarryInitProvider' \
   'MenuService'; do

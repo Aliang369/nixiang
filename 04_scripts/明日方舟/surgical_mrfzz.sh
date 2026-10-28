@@ -86,7 +86,6 @@ for need in \
   "com/starry/magic/StarryApp.smali" \
   "com/starry/magic/StarryInitProvider.smali" \
   "com/starry/magic/menu/MenuService.smali" \
-  "com/starry/magic/sign/SignSpoof.smali" \
   "com/starry/magic/sign/StarryAppComponentFactory.smali"; do
   [[ -f "$SMALI_ROOT/$need" ]] || { echo "ERROR: $need missing" >&2; exit 1; }
 done
@@ -129,10 +128,7 @@ PY
 
 "$SMALI_BIN" assemble -o "$WORK/classes6.dex" "$SMALI_ROOT"
 ls -la "$WORK/classes6.dex"
-LC_ALL=C grep -aqF "com.hypergryph.arknights" "$WORK/classes6.dex" \
-  || { echo "ERROR: classes6.dex 不含 HyperGryph SignSpoof 包名" >&2; exit 1; }
-LC_ALL=C grep -aqF "MIICMzCCAZyg" "$WORK/classes6.dex" \
-  || { echo "ERROR: classes6.dex 不含 HyperGryph 证书串" >&2; exit 1; }
+# 2026-10-28：SignSpoof 证书表已删除 ⇒ 不再断言 dex 内含 HyperGryph 包名/证书串。
 
 # dex ↔ ModBridge native 声明交叉校验
 MB_JAVA="$STARRY_SRC/app/src/main/java/com/starry/magic/bridge/ModBridge.java"

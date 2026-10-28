@@ -135,9 +135,9 @@ need = [
     b'com/starry/magic/StarryInitProvider',
     b'com/starry/magic/menu/MenuService',
     b'com/starry/magic/bridge/ModBridge',
-    b'com/starry/magic/sign/SignSpoof',
+    b'com/starry/magic/sign/StarryAppComponentFactory',
     b'com/starry/magic/ota/StarryNativeLoad',
-    b'com.kingnet.gundam.mg.normal',     # SignSpoof 名单里必须有本作包名
+    # 2026-10-28：SignSpoof 证书表已删除，dex 不再携带本作包名映射，故该断言一并移除。
 ]
 # 注：授权 game id "gdzfdj" 只存在于 native（MainModern.cpp 读 g_mod->authGameId），
 #     Java 桥侧不带该串，故不做断言。

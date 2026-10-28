@@ -155,12 +155,8 @@ done
   || { echo "ERROR: classes5.dex 与 ModBridge.java 声明不一致（$NATIVE_MISS/$NATIVE_TOTAL 缺失）" >&2; exit 1; }
 echo "  dex↔ModBridge native 声明校验通过（$NATIVE_TOTAL 项）"
 
-# 证书/包名映射（SignSpoof）
-LC_ALL=C grep -aq "com.survivor.acecn" "$WORK/classes5.dex" \
-  || { echo "ERROR: classes5.dex 缺本包名签名映射" >&2; exit 1; }
-LC_ALL=C grep -aq "MIICojCCAYqgAwIBAgIEbs5L8zAN" "$WORK/classes5.dex" \
-  || { echo "ERROR: classes5.dex 缺 gorilla 官方证书" >&2; exit 1; }
-echo "  SignSpoof 包名 + gorilla 证书串命中"
+# 2026-10-28：SignSpoof（含 gorilla 证书表）已从源码删除 ⇒ 不再断言 dex 内含包名/证书串。
+# 验签走改包法：TapSDK 门闩恒 true + 登录入口恒 Web（见 dkzj_tapsdk_dexpatch_1.2.1_cn.py）。
 
 echo "[2/6] binary AndroidManifest"
 if [ -n "${DKZJ_BINARY_MANIFEST:-}" ] && [ -f "${DKZJ_BINARY_MANIFEST:-}" ]; then
@@ -194,8 +190,8 @@ if perms:
     t = t[:i] + "\n".join(perms) + "\n" + t[i:]
 
 # 【改包法 2026-10-28】不再把 appComponentFactory 换成 StarryAppComponentFactory：
-# 该类自身的 instantiateApplication 会调 SignSpoof.install()（实测小米上 StarrySignSpoof 66 行、exemptHiddenApis 失败）。
-# 保留官方 androidx.core.app.CoreComponentFactory，注入入口只用 StarryInitProvider（其 install() 调用已在 dex 级注释）。
+# 旧工厂会在 instantiateApplication 里装签名伪装（已随 SignSpoof 一并删除）；现保留官方
+# androidx.core.app.CoreComponentFactory，注入入口只用 StarryInitProvider。
 old_factory = 'android:appComponentFactory="androidx.core.app.CoreComponentFactory"'
 if old_factory not in t:
     raise SystemExit("expected official CoreComponentFactory to be preserved")

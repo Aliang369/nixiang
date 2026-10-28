@@ -43,7 +43,6 @@ git add -- \
   "10_docs/蛋壳战机" \
   "10_docs/_state/games/蛋壳战机.md" \
   "10_docs/_state/current.md" \
-  "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp" \
@@ -69,7 +68,6 @@ while IFS= read -r path; do
     04_scripts/蛋壳战机/*|10_docs/蛋壳战机/*|\
     10_docs/_state/games/蛋壳战机.md|\
     10_docs/_state/current.md|06_dumped/蛋壳战机/*|\
-    mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java|\
     mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java|\
     mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk|\
     mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp|\
@@ -91,7 +89,6 @@ git diff --cached --check -- \
   "10_docs/蛋壳战机/*.json" \
   "10_docs/_state/games/蛋壳战机.md" \
   "10_docs/_state/current.md" \
-  "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java" \
   "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Android_dkzj.mk" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/DkzjEntry.cpp" \

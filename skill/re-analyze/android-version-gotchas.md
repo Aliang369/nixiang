@@ -10,7 +10,7 @@
 
 | 现象 | Android 16（SDK 36，OPD2404） | Android 14（SDK 34，小米） | 应对 |
 |------|------------------------------|---------------------------|------|
-| 隐藏 API 豁免 | 可豁免 | `E StarrySignSpoof: exemptHiddenApis(meta) failed … Caused by: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]` | 豁免失败**不一定致命**：本会话签名伪造仍生效（`spoof hit … md5=79a6a62f…` = 官方证书 MD5），壳照常解 payload。别把豁免失败当根因 |
+| 隐藏 API 豁免（历史：`SignSpoof` 的日志，该类 2026-10-28 已删，新包不再出现） | 可豁免 | `E StarrySignSpoof: exemptHiddenApis(meta) failed … Caused by: java.lang.NoSuchMethodException: dalvik.system.VMRuntime.setHiddenApiExemptions [class [Ljava.lang.String;]` | 豁免失败**不一定致命**：本会话签名伪造仍生效（`spoof hit … md5=79a6a62f…` = 官方证书 MD5），壳照常解 payload。别把豁免失败当根因 |
 | JNI 退出符号 | 部分可见 | Android 14 起 `Java_java_lang_System_exit__I`、`Runtime_exit__I`、`Runtime_exitInternal__I`、`Java_android_os_Process_killProcess__I` **不在 `libandroid_runtime.so` 导出表** | 探针打印「符号未找到」属正常；要拦退出就下沉到 syscall 层（见 `../re-implement/anti-cheat-pattern.md` 模式五） |
 | 进程退出日志 | `Zygote: Process N exited cleanly (0)` + `ActivityManager: … has died: fg TOP` | 同左 | 这两行**不等于崩溃**；有 Java 异常栈才是崩溃，无栈的 clean exit 优先怀疑主动 `exit(0)` |
 | 权限弹窗干扰 | 未响应权限弹窗会让进程约 12 s 后 clean exit | 同左 | 判定"主动退出"前先排除弹窗未响应 |

@@ -39,7 +39,6 @@ git add -- \
   "10_docs/弓箭传说2" \
   "10_docs/_state/games/弓箭传说2.md" \
   "10_docs/_state/current.md" \
-  "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp" \
@@ -57,7 +56,6 @@ while IFS= read -r path; do
   case "$path" in
     04_scripts/弓箭传说2/*|10_docs/弓箭传说2/*|\
     10_docs/_state/games/弓箭传说2.md|10_docs/_state/current.md|\
-    mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java|\
     mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk|\
     mod菜单/starry-mod-menu/app/src/main/jni/Games/Gjc2Entry.cpp|\
     mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp|\

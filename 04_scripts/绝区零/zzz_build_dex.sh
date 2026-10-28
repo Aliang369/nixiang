@@ -150,7 +150,7 @@ need = [
     b'com/starry/magic/StarryInitProvider',
     b'com/starry/magic/menu/MenuService',
     b'com/starry/magic/bridge/ModBridge',
-    b'com/starry/magic/sign/SignSpoof',
+    b'com/starry/magic/sign/StarryAppComponentFactory',
     b'com/starry/magic/ota/StarryNativeLoad',
 ]
 miss = [n.decode() for n in need if n not in b]

@@ -158,8 +158,8 @@ for d in "$WORK/starry_dec"/smali "$WORK/starry_dec"/smali_classes*; do
 done
 [ -f "$SMALI_ROOT/com/starry/magic/StarryApp.smali" ] || { echo "ERROR: StarryApp.smali missing" >&2; exit 1; }
 [ -f "$SMALI_ROOT/com/starry/magic/menu/MenuService.smali" ] || { echo "ERROR: MenuService.smali missing" >&2; exit 1; }
-[ -f "$SMALI_ROOT/com/starry/magic/sign/SignSpoof.smali" ] || { echo "ERROR: SignSpoof.smali missing" >&2; exit 1; }
-grep -q "$PKG" "$SMALI_ROOT/com/starry/magic/sign/SignSpoof.smali" || { echo "ERROR: SignSpoof 不含 $PKG" >&2; exit 1; }
+[ -f "$SMALI_ROOT/com/starry/magic/sign/StarryAppComponentFactory.smali" ] || { echo "ERROR: StarryAppComponentFactory.smali missing" >&2; exit 1; }
+# 2026-10-28：SignSpoof 证书表已删除 ⇒ 不再断言 smali 内包含本作包名。
 
 python3.11 - "$SMALI_ROOT" <<'PY'
 import sys, pathlib
@@ -348,8 +348,8 @@ with zipfile.ZipFile(OUTP, "r") as zf:
     if zf.getinfo("resources.arsc").compress_type != zipfile.ZIP_STORED:
         raise SystemExit("resources.arsc not STORED")
     b5 = zf.read(NEW_DEX)
-    if b"SignSpoof" not in b5:
-        raise SystemExit("SignSpoof missing in %s" % NEW_DEX)
+    if b"StarryAppComponentFactory" not in b5:
+        raise SystemExit("StarryAppComponentFactory missing in %s" % NEW_DEX)
     if b"MenuService" not in b5:
         raise SystemExit("MenuService missing in %s" % NEW_DEX)
     if b"notifyHostResumed" not in zf.read(PACT):

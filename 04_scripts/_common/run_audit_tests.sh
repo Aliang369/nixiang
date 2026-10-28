@@ -93,6 +93,10 @@ python3 -B audit_game_docs_coverage.py --root "$ROOT" check || rc=1
 python3 -B audit_rule_gate_map.py --root "$ROOT" check || rc=1
 
 echo
+echo "== 7/8 已删类注入巡检（运行时签名伪装 SignSpoof 已于 2026-10-28 删除） =="
+bash "$HERE/check_deleted_class_injection.sh" --root "$ROOT" | tail -4 || rc=1
+
+echo
 echo "== 8/8 补丁卫生：git diff --check + 脚本/配置 preflight =="
 git -C "$ROOT" diff --check || { echo "FAIL git diff --check"; rc=1; }
 bash "$HERE/preflight.sh" \
