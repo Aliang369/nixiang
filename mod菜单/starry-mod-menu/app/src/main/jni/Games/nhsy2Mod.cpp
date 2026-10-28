@@ -1669,13 +1669,98 @@ static bool HookSlotInstall(const HookSlot& s) {
 //        代码路径绕过 DeductHP），再直接返回 false（本帧不扣血）。
 //  为什么不是恒真谓词：DeductHP 是「执行扣血的行为方法」，返回 false = 不扣血，
 //  与 §28 禁止的「输入门禁恒真」（会表现为自动连发）不是一回事。
+//
+//  ★★ 2026-10-29 r30 修 bug「无敌关掉后角色仍一直无敌」（用户真机反馈）★★
+//  根因（代码级确定）：本钩子只在**开无敌**时把 `isInvincible`(=+0x138) /
+//    `UnKillable`(=+0x148) 写成 1，**全仓没有任何一处把它们写回**；
+//    `nhsy2_OnFeatureChanged`/`nhsy2_ForceClear` 只 `g_inv.store(false)`（钩子体内
+//    的开关），而钩子装上是**不卸载**的（SyncHooks 只装不删）。于是关掉开关后
+//    钩子只做转发，可那两个字段仍是 1 ⇒ **游戏自己的无敌判定**继续拦住扣血，
+//    表现为「关了也没用，直到换角色/重开一局」。
+//  修法：把「被我们改过的 Hearts 实例 + 改之前的原值」记进一张小表；
+//    关开关 / ForceClear / tick 兜底时写回原值，写前用**对象头 klass** 校验实例
+//    仍活着（防对已释放内存写）。回滚成功/失败均有日志，便于 L2 判据。
+static const int kInvLatchMax = 4;      // 正常只有一个玩家 Hearts，留余量
+
+struct InvLatch {
+    uintptr_t inst;       // Hearts 实例
+    uint8_t   origInv;    // 我们第一次写之前 isInvincible 的值
+    uint8_t   origUnk;    // 我们第一次写之前 UnKillable 的值
+};
+
+static InvLatch           g_invLatch[kInvLatchMax];
+static std::atomic<int>   g_invLatchCount{0};
+static std::atomic<uint32_t> g_hitInvPass{0};   // 关掉开关后「放行到原函数」的次数（判据）
+
+// 裸字节读（对象内字段；调用点都在「已确认 OkPtr」之后）
+static uint8_t ReadU8Field(void* obj, size_t off, uint8_t defv) {
+    if (!OkPtr(obj) || !off) return defv;
+    return *reinterpret_cast<volatile uint8_t*>(reinterpret_cast<uintptr_t>(obj) + off);
+}
+
+// 记录「这个实例被我们写过 1」，原值只认第一次（同实例重复写不覆盖原值）
+static void InvLatchRemember(void* thiz) {
+    const size_t offInv = g_offHeartsInv.load();
+    const size_t offUnk = g_offHeartsUnkill.load();
+    if (!OkPtr(thiz) || !offInv || !offUnk) return;
+    const uintptr_t p = reinterpret_cast<uintptr_t>(thiz);
+    const int n = g_invLatchCount.load(std::memory_order_relaxed);
+    for (int i = 0; i < n && i < kInvLatchMax; ++i)
+        if (g_invLatch[i].inst == p) return;
+    if (n >= kInvLatchMax) return;
+    g_invLatch[n].inst    = p;
+    g_invLatch[n].origInv = ReadU8Field(thiz, offInv, 0);
+    g_invLatch[n].origUnk = ReadU8Field(thiz, offUnk, 0);
+    g_invLatchCount.store(n + 1, std::memory_order_release);
+}
+
+// 回滚：把 isInvincible / UnKillable 写回「我们动手之前」的值。
+//   写前校验对象头 klass == NEON.Game.Hearts（实例被释放后内存会被复用 ⇒ 绝不能盲写）。
+//   调用点：开关关掉 / ForceClear / Tick 兜底（每 200 ms 一次，见 nhsy2_Tick）。
+static void InvLatchRelease(const char* why) {
+    const int n = g_invLatchCount.load(std::memory_order_acquire);
+    if (n <= 0) return;
+    const size_t offInv = g_offHeartsInv.load();
+    const size_t offUnk = g_offHeartsUnkill.load();
+    if (!offInv || !offUnk) { g_invLatchCount.store(0, std::memory_order_release); return; }
+    int released = 0;
+    for (int i = 0; i < n && i < kInvLatchMax; ++i) {
+        InvLatch& e = g_invLatch[i];
+        if (!e.inst) continue;
+        void* obj = reinterpret_cast<void*>(e.inst);
+        bool live = OkPtr(obj);
+        if (live && g_clsHearts) {
+            uintptr_t klass = 0;
+            if (!SafeReadU64Raw(e.inst, &klass) || reinterpret_cast<void*>(klass) != g_clsHearts)
+                live = false;                       // 内存已被复用 ⇒ 不是那个玩家 Hearts
+        }
+        if (!live) {
+            LOGW(TPL_LOG " inv: 残留回滚跳过（%s）实例已失效 inst=0x%lx", why, (unsigned long)e.inst);
+            e.inst = 0;
+            continue;
+        }
+        const uint8_t curInv = ReadU8Field(obj, offInv, 0);
+        const uint8_t curUnk = ReadU8Field(obj, offUnk, 0);
+        SafeWriteU8(obj, offInv, e.origInv);
+        SafeWriteU8(obj, offUnk, e.origUnk);
+        LOGI(TPL_LOG " inv: 无敌残留回滚（%s）inst=%p inv %u->%u unk %u->%u",
+             why, obj, (unsigned)curInv, (unsigned)e.origInv, (unsigned)curUnk, (unsigned)e.origUnk);
+        e.inst = 0;
+        ++released;
+    }
+    g_invLatchCount.store(0, std::memory_order_release);
+    LOGI(TPL_LOG " inv: 残留回滚完成（%s）回滚实例=%d", why, released);
+}
+
 static bool Hooked_Hearts_DeductHP(void* thiz, void* damage, int32_t count, void* method) {
     if (g_inv.load()) {
         if (OkPtr(thiz)) {
+            InvLatchRemember(thiz);
             SafeWriteU8(thiz, g_offHeartsInv.load(), 1);
             SafeWriteU8(thiz, g_offHeartsUnkill.load(), 1);
         }
-        g_hitInv.fetch_add(1, std::memory_order_relaxed);
+        const uint32_t n = g_hitInv.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (n <= 8) LOGI(TPL_LOG " inv: 挡下受伤 #%u inst=%p", n, thiz);
         return false;   // 不扣血
     }
     if (!g_origHeartsDeduct) return false;
@@ -1683,6 +1768,10 @@ static bool Hooked_Hearts_DeductHP(void* thiz, void* damage, int32_t count, void
     bool ok = false, r = false;
     FS_GUARDED("orig.Hearts.DeductHP", ok,
                { r = g_origHeartsDeduct(thiz, damage, count, method); });
+    //  ★ r30 判据：关掉无敌后这条「放行」必须出现（前 8 次留痕），否则说明仍被别的路径拦住
+    const uint32_t np = g_hitInvPass.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (np <= 8) LOGI(TPL_LOG " inv: 无敌已关，DeductHP 放行 #%u inst=%p orig_ok=%d r=%d",
+                      np, thiz, (int)ok, (int)r);
     return ok ? r : false;
 }
 
@@ -5471,7 +5560,13 @@ bool nhsy2_IsReady() {
 void nhsy2_OnFeatureChanged(int featNum, bool enabled) {
     switch (featNum) {
         case NHSY2_FEAT_DMG:  g_dmg.store(enabled);  break;
-        case NHSY2_FEAT_INV:  g_inv.store(enabled);  break;
+        case NHSY2_FEAT_INV:
+            // ★r30：关无敌时必须把「我们写进去的 isInvincible/UnKillable」回滚，
+            //   否则钩子虽然只做转发，游戏自身仍判玩家无敌（＝用户报的「关了还一直无敌」）。
+            if (!enabled && g_inv.load())
+                GuardedVoid("inv.unlatch.toggle", [&]{ InvLatchRelease("toggle_off"); });
+            g_inv.store(enabled);
+            break;
         case NHSY2_FEAT_FULL: g_full.store(enabled); break;   // Attri 读点强制（§6.6z）
         case NHSY2_FEAT_STD:  g_std.store(enabled);  break;
         case NHSY2_FEAT_BOMB:    g_bomb.store(enabled);    break;
@@ -5553,6 +5648,10 @@ void nhsy2_Tick(const bool* features, const int* values) {
         g_libReady.store(true);
         LOGI(TPL_LOG " lib ready (via Tick fallback)");
     }
+    // ★r30 兜底：开关已关但回滚表里还有「被我们写成 1」的 Hearts ⇒ 回滚（表空时零成本）。
+    //   覆盖「关开关事件没派发到 native」（如 Java 侧同步丢失/prefs 漂移）的漏网情形。
+    if (!g_inv.load() && g_invLatchCount.load(std::memory_order_relaxed) > 0)
+        GuardedVoid("inv.unlatch.tick", [&]{ InvLatchRelease("tick_guard"); });
     if (!(SafeMask() & 8)) GuardedVoid("tick.syncHooks", [&]{ SyncHooks(); });
     // ★r24：登录保命钩的补装也在 mod 线程里跑；解析/装钩崩了同样会带走整个进程 ⇒ 纳入保护区
     if (!(SafeMask() & 8))
@@ -5579,6 +5678,8 @@ void nhsy2_Tick(const bool* features, const int* values) {
 }
 
 void nhsy2_ForceClear() {
+    // ★r30：授权失效清场时同样要把无敌字段回滚（同 OnFeatureChanged 的理由）
+    GuardedVoid("inv.unlatch.clear", [&]{ InvLatchRelease("force_clear"); });
     g_inv.store(false);
     g_dmg.store(false);
     g_dmgMul.store(1);
