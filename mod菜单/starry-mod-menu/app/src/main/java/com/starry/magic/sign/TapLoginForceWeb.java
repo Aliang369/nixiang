@@ -113,6 +113,9 @@ public final class TapLoginForceWeb {
                     // TapCollections.tapLogin → TapTapLogin.loginWithScopes）。设备已装 com.taptap，
                     // 改签后客户端 SSO 必失败 ⇒ 强制 embedded_web 网页登录。
                     "com.leiting.lostcastle.leiting",
+                    // 失落城堡2（雷霆渠道 + 内置 TapSDK，2026-10-29 用户当轮指令「taptap登录没有给强制网页登录」）：
+                    // 改签包下客户端 SSO 必被真签校验拦（实测弹 TapSDK 包名/签名校验失败）⇒ 本作必须强制 embedded_web。
+                    "com.leiting.slcb2",
                     // 暗影格斗3：TapSDK 4.x（loginHandlers = {Cloud, Client, Phone} 数组路由）。
                     // 设备装了 TapTap 客户端时 ClientLoginHandler.canHandle 恒 true（SSO 校验真签必失败），
                     // PhoneLoginHandler 也可能为 true → sanitize 把两类都换成 canHandle 恒 false 的代理。

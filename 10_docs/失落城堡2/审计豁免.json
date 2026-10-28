@@ -1,0 +1,26 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "失落城堡2",
+  "package": "com.leiting.slcb2",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。本作从首包起即走 modern 注册表（私有 mk），从不使用公共 Android.mk 的 STARRY_GAME_* 分支与 GameConfig.h 宏映射，故 [C] 与「激活分支」两项对现代注册表属误报。",
+  "waivers": [
+    {
+      "id": "modern_registry_no_gameconfig_macro",
+      "match": ["GameConfig.h 无 defined(STARRY_GAME_SLCB2)"],
+      "conclusion": "接受偏离",
+      "reason": "失落城堡2 走 modern 注册表：鉴权 id 写在 Games/Slcb2Entry.cpp 的 .authGameId = \"slcb2\"，构建走私有 Android_slcb2.mk（APP_BUILD_SCRIPT 显式指定），完全不经过 GameConfig.h 的 STARRY_GAME_* 宏映射，因此该 profile 的 #error 不会触发。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/Slcb2Entry.cpp（.authGameId=\"slcb2\"）+ 04_scripts/失落城堡2/slcb2_build_so.sh（APP_BUILD_SCRIPT=./Android_slcb2.mk）+ 产物 so md5 2cbfa04bd623e20d9f50d9fa697cf138 含 Slcb2/slcb2/五个菜单串字节（build_so 内 check_str 全过）",
+      "date": "2026-10-29",
+      "review_by": "2026-12-29"
+    },
+    {
+      "id": "modern_registry_public_mk_branch",
+      "match": ["激活分支", "与 --game"],
+      "conclusion": "接受偏离",
+      "reason": "公共 Android.mk 当前激活分支是别的存量游戏（ZHMR legacy），本作私有 mk 独立构建，二者互不影响；私有 mk 产出的 so 已按字节校验含 [Slcb2] 标签与全部菜单串，且不含上一款游戏的标签。",
+      "evidence": "04_scripts/失落城堡2/slcb2_build_so.sh 的 check_str 段（Slcb2 / slcb2 / Toggle_百倍伤害 / Toggle_无敌 / Toggle_无限技能 / Toggle_无限魔铁锭 / Toggle_无限魂晶 / libil2cpp.so）+ 08_output/失落城堡2/失落城堡2_1.0.3_surgical-releaseSigned.apk 内 so md5 == 构建产物（surgical 脚本 [7/7] 断言输出）",
+      "date": "2026-10-29",
+      "review_by": "2026-12-29"
+    }
+  ]
+}
