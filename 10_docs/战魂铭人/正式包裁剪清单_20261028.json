@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/战魂铭人",
+  "keep": "战魂铭人_3.7.0_surgical-releaseSigned.apk",
+  "keep_size": 1053187252,
+  "keep_md5": "6b7f3688f46e5deec97a6e5365761572",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "战魂铭人_3.7.0_surgical-releaseSigned.apk.idsig",
+      "size": 8300059,
+      "md5": "771fb4ea9bdb3b308965b93833a662fc"
+    }
+  ],
+  "removed_count": 1
+}

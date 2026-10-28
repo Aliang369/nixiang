@@ -99,9 +99,20 @@ struct ArchiveOff {  // 解锁：HeroArchive
 struct EvOff {  // EncryptValue：三字段不变式 _showValue == mValue ^ encryptKey
     size_t ev_show, ev_m, ev_key;
 };
+// 3.7.0 战斗状态迁移：Character.isBlockDamage / currentHealth / currentShield 在
+// !hasOriginProperties 时全部转发到 NetworkBodyOwl 的同名字段（反编译 Character.cs
+// 780/807/827 行实锤）。单机也会起本地 host（isNetworkActive=true）⇒ 只写 Character
+// 本体的旧实现失效（用户实测：无敌/秒杀无效）。故 Character + NetworkBody 两条路径都写。
+struct NetOff {
+    size_t char_netbody;   // Character._networkBody
+    size_t nb_block;       // NetworkBodyOwl.isBlockDamage
+    size_t nb_hp;          // NetworkBodyOwl.currentHealth
+    size_t nb_shield;      // NetworkBodyOwl.currentShield
+};
 static CombatOff g_combat[2] = {};
 static ArchiveOff g_arch[2] = {};
 static EvOff g_ev[2] = {};
+static NetOff g_net[2] = {};
 static std::atomic<int> g_combatScheme{-1};
 static std::atomic<int> g_archScheme{-1};
 static std::atomic<int> g_evScheme{-1};
@@ -116,6 +127,8 @@ static void* g_charClass      = nullptr;
 static void* g_evClass        = nullptr;
 static void* g_dataManager    = nullptr;
 static void* g_skinEnumClass  = nullptr;  // HeroSkinConfig.HeroSkinName
+static void* g_netBodyClass   = nullptr;  // NetworkBodyOwl（3.7.0 战斗状态真身）
+static size_t g_char_camp     = 0;      // Character._camp（1=玩家侧 2=敌方）
 
 typedef uint8_t (*class_is_assignable_t)(void* klass, void* objklass);
 static class_is_assignable_t g_isAssignable = nullptr;
@@ -148,6 +161,8 @@ static const DicItem kDicItems[] = {
     {17, "PP_FoodCount"},         // petParadise 宠物食品
     {17, "PP_ToyCount"},          // petParadise 宠物玩具
     {47, "OrbRefineTicketCount"}, // SixCycleOrb 净化之水
+    // 3.7.0 新增（ActivityIntegrationComponent.SetGachaCoinAmount 实锤：tag=ActivityIntegration(50)）
+    {50, "GachaMachine202510_GachaCoinAmount"}, // 扭蛋币
 };
 
 static const int kCurrencyValue = 9999;  // anti-ban 安全线（3.4.0 终态值）
@@ -261,6 +276,32 @@ static const EvOff* ActiveEv() {
     return &g_ev[s ? 1 : 0];
 }
 
+// NetworkBody 偏移组按「与战斗组同一 bias 方案」取用（两组字段同源同名，实证一致）
+static const NetOff* ActiveNet() {
+    int s = g_combatScheme.load();
+    if (s < 0) s = 0;
+    return &g_net[s ? 1 : 0];
+}
+
+// 把 Character 上的免伤/血量同步到它的 NetworkBodyOwl（3.7.0 真正被读取的那份）
+static void SyncNetBody(void* ch, bool blockOn, float hpValue, bool setShieldZero) {
+    const NetOff* n = ActiveNet();
+    if (!n || !n->char_netbody) return;
+    void* nb = nullptr;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(ch) + n->char_netbody, &nb) || !OkPtr(nb)) {
+        static int s_nb = 0;
+        if (s_nb < 3) {
+            s_nb++;
+            LOGI(ZHMR_LOG " [链路] _networkBody 为空（hasOriginProperties=true，仅走本体字段）");
+        }
+        return;
+    }
+    if (n->nb_block) WriteU8(nb, n->nb_block, blockOn ? 1 : 0);
+    if (!blockOn && hpValue < 0.0f) return;   // 仅关免伤，不动血量
+    if (n->nb_hp) SafeWriteF32(nb, n->nb_hp, hpValue);
+    if (setShieldZero && n->nb_shield) SafeWriteF32(nb, n->nb_shield, 0.0f);
+}
+
 // 注意：不缓存 LevelProcess/Hero 单例实例——换角色/新开一局会换实例，
 // klass 校验无法发现（同类新实例），写旧对象=无效+内存腐蚀。
 // 每秒经 StaticRefField 重新解析（attach 后多会话 5s 频率实证稳定）。
@@ -323,6 +364,8 @@ static void ApplyGod(bool on) {
     if (!ValidateChain(*o, &ch)) return;
     if (o->char_block) WriteU8(ch, o->char_block, on ? 1 : 0);
     if (on && o->char_hp) SafeWriteF32(ch, o->char_hp, 999999.0f);
+    // 3.7.0：两份状态都写（Character 本体 + NetworkBodyOwl）
+    SyncNetBody(ch, on, on ? 999999.0f : -1.0f, false);
     static int s_log = 0;
     if (s_log < 3) {
         s_log++;
@@ -330,57 +373,91 @@ static void ApplyGod(bool on) {
     }
 }
 
-static void ApplyOneHit() {
-    const CombatOff* o = ActiveCombat();
-    if (!o || !o->lp_allmonster) return;
-    // AllMonster 是按房间重建的（进房换新 List），所以不能缓存 List 本身——
-    // 缓存 LevelProcess 实例（整关不变），每秒重读实例上的字段（纯安全读）。
-    auto& api = GetApi();
-    void* lp = api.StaticRefField(g_levelProcess, "singleton");
-    if (!OkPtr(lp)) {
-        static int s_a = 0;
-        if (s_a < 3) LOGI(ZHMR_LOG " [链路] LevelProcess.singleton=null（不在关卡内？）");
-        s_a++;
-        return;
+// 单个 Body → 杀伤：Character 本体与 NetworkBodyOwl 两处都写（3.7.0 状态拆分）
+static bool KillEnemyBody(void* body, const CombatOff& o) {
+    if (!IsKindOfCached(body, g_bodyClass)) return false;
+    void* ch = nullptr;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(body) + o.body_char, &ch) || !IsKindOfCached(ch, g_charClass))
+        return false;
+    // 敌我过滤：Character._camp（1=玩家侧 / 2=敌方）；读不到就按敌方处理（AllMonster 已由游戏过滤）
+    if (g_char_camp) {
+        int32_t camp = -1;
+        if (SafeReadI32(reinterpret_cast<uint8_t*>(ch) + g_char_camp, &camp) && camp >= 0 && camp < 2)
+            return false;
     }
-    void* list = nullptr;
-    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(lp) + o->lp_allmonster, &list) || !OkPtr(list)) {
-        static int s_b = 0;
-        if (s_b < 3) LOGI(ZHMR_LOG " [链路] AllMonster@%zu 读失败 list=%p", o->lp_allmonster, list);
-        s_b++;
-        return;
-    }
-    // List<T> 布局：klass@0 monitor@8 _items@0x10 _size@0x18；数组数据 @+0x20
+    if (o.char_hp) WriteF32(ch, o.char_hp, 0.1f);
+    if (o.char_shield) WriteF32(ch, o.char_shield, 0.0f);
+    SyncNetBody(ch, false, 0.1f, true);
+    return true;
+}
+
+// 遍历 List<T>（klass@0 monitor@8 _items@0x10 _size@0x18，数据@+0x20）
+static int KillBodiesInList(void* list, const CombatOff& o, int* outSize) {
     void* items = nullptr;
     int32_t size = 0;
-    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(list) + 0x10, &items)) return;
-    if (!SafeReadI32(reinterpret_cast<uint8_t*>(list) + 0x18, &size)) return;
-    if (!OkPtr(items) || size <= 0 || size > 500) {
-        static int s_c = 0;
-        if (++s_c % 10 == 1) LOGI(ZHMR_LOG " [链路] AllMonster items=%p size=%d", items, size);
-        return;
-    }
+    if (!OkPtr(list)) return -1;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(list) + 0x10, &items)) return -2;
+    if (!SafeReadI32(reinterpret_cast<uint8_t*>(list) + 0x18, &size)) return -3;
+    if (outSize) *outSize = size;
+    if (!OkPtr(items) || size <= 0 || size > 1000) return -4;
     int hit = 0;
     for (int32_t i = 0; i < size; i++) {
         void* body = nullptr;
-        if (!SafeReadPtr(reinterpret_cast<uint8_t*>(items) + 0x20 + static_cast<size_t>(i) * 8,
-                         &body))
+        if (!SafeReadPtr(reinterpret_cast<uint8_t*>(items) + 0x20 + static_cast<size_t>(i) * 8, &body))
             continue;
-        if (!IsKindOfCached(body, g_bodyClass)) continue;
-        void* ch = nullptr;
-        if (!SafeReadPtr(reinterpret_cast<uint8_t*>(body) + o->body_char, &ch) ||
-            !IsKindOfCached(ch, g_charClass))
-            continue;
-        if (o->char_hp) WriteF32(ch, o->char_hp, 0.1f);
-        if (o->char_shield) WriteF32(ch, o->char_shield, 0.0f);
-        hit++;
+        if (KillEnemyBody(body, o)) hit++;
     }
-    static int s_log = 0;
-    if (s_log < 3 || s_log % 20 == 0) {
-        s_log++;
-        LOGI(ZHMR_LOG " ApplyOneHit size=%d hit=%d", (int)size, hit);
+    return hit;
+}
+
+// 兜底来源：NetworkBodyOwl.netIDtoBody（Dictionary<uint, Body>，全局所有 Body，跨房间不丢）
+static int KillBodiesInNetDict(const CombatOff& o, int* outSize) {
+    if (!g_netBodyClass) return -1;
+    auto& api = GetApi();
+    void* dic = api.StaticRefField(g_netBodyClass, "netIDtoBody");
+    if (!OkPtr(dic)) return -2;
+    void* entries = nullptr;
+    int32_t count = 0;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(dic) + 0x18, &entries)) return -3;
+    if (!SafeReadI32(reinterpret_cast<uint8_t*>(dic) + 0x20, &count)) return -3;
+    if (outSize) *outSize = count;
+    if (!OkPtr(entries) || count <= 0 || count > 2000) return -4;
+    int hit = 0;
+    for (int32_t i = 0; i < count; i++) {
+        const uint8_t* entry =
+            reinterpret_cast<uint8_t*>(entries) + 0x20 + static_cast<size_t>(i) * 0x18;
+        int32_t hash = -1;
+        if (!SafeReadI32(entry, &hash) || hash < 0) continue;
+        void* body = nullptr;
+        if (!SafeReadPtr(entry + 0x10, &body)) continue;
+        if (KillEnemyBody(body, o)) hit++;
+    }
+    return hit;
+}
+
+static void ApplyOneHit() {
+    const CombatOff* o = ActiveCombat();
+    if (!o || !o->lp_allmonster) return;
+    auto& api = GetApi();
+    // ① 主路径：LevelProcess.singleton.<AllMonster>（游戏按房间重建）
+    void* lp = api.StaticRefField(g_levelProcess, "singleton");
+    int amSize = -1, amHit = -2;
+    if (OkPtr(lp)) {
+        void* list = nullptr;
+        if (SafeReadPtr(reinterpret_cast<uint8_t*>(lp) + o->lp_allmonster, &list) && OkPtr(list))
+            amHit = KillBodiesInList(list, *o, &amSize);
     } else {
-        s_log++;
+        amHit = -1;
+    }
+    // ② 兜底：netIDtoBody（AllMonster 为空/失效时仍能命中；含场上全部 Body）
+    int ndSize = -1, ndHit = -2;
+    if (amHit <= 0) ndHit = KillBodiesInNetDict(*o, &ndSize);
+    // 节流日志：首 3 次 + 每 5 次（≈5s）一条，带失败码，杜绝「静默失效」
+    static int s_log = 0;
+    s_log++;
+    if (s_log <= 3 || s_log % 5 == 0) {
+        LOGI(ZHMR_LOG " ApplyOneHit lp=%s allMonster(size=%d,hit=%d) netDict(size=%d,hit=%d)",
+             OkPtr(lp) ? "ok" : "null", amSize, amHit, ndSize, ndHit);
     }
 }
 
@@ -550,6 +627,8 @@ static void ApplyItems() {
     ApplyStaticEv("_exWeaponUpgradeTicket", kItemsValue);
     ApplyStaticEv("_exRebornCard", kItemsValue);
     ApplyStaticEv("_exProbationTicket", kItemsValue);
+    // 3.7.0 催熟剂：PlayerArchive.Fertilizer 属性读写 _fertilizer（反编译 Archive.cs:1364）
+    ApplyStaticEv("_fertilizer", kItemsValue);
     int ok = 0, miss = 0;
     for (const DicItem& it : kDicItems) {
         int r = ApplyDicItems(it.tag, it.id, kItemsValue);
@@ -559,111 +638,62 @@ static void ApplyItems() {
     LOGI(ZHMR_LOG " 道具重放(直写+建条目) ok=%d miss=%d/6 值=%d", ok, miss, kItemsValue);
 }
 
+// 皮肤解锁（3.7.0 重写）：直接遍历 _resourceDic[ResourceTag.HeroSkin=1] 的现有条目直写 value。
+// 依据（3.7.0 热更 DLL 反编译）：判持有统一为
+//   ResourceDic.GetResourceCount(ResourceTag.HeroSkin, HeroSkinName.ToString()) > 0
+//   （DailyChallengeManager.cs:2000/2049、SixCycleModeData.cs:759、HeroConfirmUI 授予同 key）
+// 运行时该 tag 下 165 条 enum 名条目已由游戏自建 ⇒ 不需要 HeroSkinName 枚举→名字映射；
+// 旧路径在 3.7.0 必败（il2cpp_field_get_value_object 对解释器类枚举字面量返回空 →
+// 日志「皮肤枚举映射 0 项 / 名字缺失=165」，实测）。
 static void ApplySkin() {
     auto& api = GetApi();
-    if (!g_dataManager || !g_skinEnumClass || !g_classGetFields || !g_fieldGetName ||
-        !g_fieldGetValue) {
-        LOGW(ZHMR_LOG " 皮肤配置枚举 API 不全");
-        return;
-    }
-    // HeroSkinName 枚举值→名字映射（一次构建；名字即 _resourceDic 的 id）
-    static int32_t s_vals[512];
-    static char s_names[512][40];
-    static int s_mapN = -1;
-    if (s_mapN < 0) {
-        s_mapN = 0;
-        void* iter = nullptr;
-        void* f = nullptr;
-        while (s_mapN < 512 && (f = g_classGetFields(g_skinEnumClass, &iter)) != nullptr) {
-            const char* n = g_fieldGetName(f);
-            if (!n || strcmp(n, "value__") == 0) continue;
-            void* boxed = g_fieldGetValue(f, nullptr);
-            int32_t v = -1;
-            if (!OkPtr(boxed) || !SafeReadI32(reinterpret_cast<uint8_t*>(boxed) + 0x10, &v))
-                continue;
-            strncpy(s_names[s_mapN], n, sizeof(s_names[s_mapN]) - 1);
-            s_vals[s_mapN] = v;
-            s_mapN++;
-        }
-        LOGI(ZHMR_LOG " [TRACE] 皮肤枚举映射 %d 项", s_mapN);
-        for (int k = 0; k < s_mapN && k < 12; k++)
-            LOGI(ZHMR_LOG " [映射采样] %d = %s", s_vals[k], s_names[k]);
-    }
-    void* cfg = api.StaticRefField(g_dataManager, GameUnity::Fields::DM_SKIN_CONFIG);
-    if (!OkPtr(cfg)) return;
+    const EvOff* e = ActiveEv();
+    if (!e) return;
+    void* dic = api.StaticRefField(g_playerArchive, GameUnity::Fields::PA_RESOURCE_DIC);
+    if (!OkPtr(dic)) return;
     void* entries = nullptr;
     int32_t count = 0;
-    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(cfg) + 0x18, &entries)) return;
-    if (!SafeReadI32(reinterpret_cast<uint8_t*>(cfg) + 0x20, &count)) return;
-    if (!OkPtr(entries) || count <= 0 || count > 1024) return;
-    // HeroSkinConfig 是 struct（值类型）→ Entry stride 不是 0x18（实测 0x60）。
-    // 步长自检：key0=0 在 +0x8，找 key1 定 stride，再按步长遍历。
-    int64_t stride = 0;
-    {
-        // 字典枚举顺序≠插入顺序，首 key 未必是 0。候选步长上做「key 全落在
-        // [0,1024) 且互不相同」的集合校验，首个通过的即真实步长。
-        const uint8_t* base = reinterpret_cast<uint8_t*>(entries) + 0x20;
-        for (int64_t s = 0x18; s <= 0x400; s += 4) {
-            bool okS = true;
-            static int32_t seen[512];
-            int seenN = 0;
-            for (int32_t i = 0; i < count && okS; i++) {
-                int32_t kv = -1;
-                if (!SafeReadI32(base + 0x8 + static_cast<int64_t>(i) * s, &kv) || kv < 0 ||
-                    kv >= 1024) {
-                    okS = false;
-                    break;
-                }
-                for (int q = 0; q < seenN; q++) {
-                    if (seen[q] == kv) {
-                        okS = false;
-                        break;
-                    }
-                }
-                if (seenN < 512) seen[seenN++] = kv;
-            }
-            if (okS && seenN == count) {
-                stride = s;
-                break;
-            }
-        }
-        if (stride <= 0x10) {
-            LOGI(ZHMR_LOG " 配置 stride 自检失败");
-            return;
-        }
-        LOGI(ZHMR_LOG " [TRACE] 配置 Entry stride=0x%llx count=%d", (long long)stride, count);
-    }
-    int ok = 0, nameMiss = 0, writeFail = 0;
-    char failNames[4][40] = {{0}};
-    int failN = 0;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(dic) + 0x18, &entries)) return;
+    if (!SafeReadI32(reinterpret_cast<uint8_t*>(dic) + 0x20, &count)) return;
+    if (!OkPtr(entries) || count <= 0 || count > 512) return;
+    void* inner = nullptr;
     for (int32_t i = 0; i < count; i++) {
         const uint8_t* entry =
-            reinterpret_cast<uint8_t*>(entries) + 0x20 + static_cast<size_t>(i) * stride;
-        int32_t skinVal = -1;
-        if (!SafeReadI32(entry + 0x8, &skinVal)) continue;
-        const char* name = nullptr;
-        for (int j = 0; j < s_mapN; j++) {
-            if (s_vals[j] == skinVal) {
-                name = s_names[j];
-                break;
-            }
-        }
-        if (!name) {
-            nameMiss++;
-            continue;
-        }
-        if (ApplyDicItems(1 /*ResourceTag.HeroSkin*/, name, kSkinValue) == 1) {
-            ok++;
-        } else {
-            writeFail++;
-            if (failN < 4) {
-                strncpy(failNames[failN], name, sizeof(failNames[failN]) - 1);
-                failN++;
-            }
+            reinterpret_cast<uint8_t*>(entries) + 0x20 + static_cast<size_t>(i) * 0x18;
+        int32_t key = -1;
+        void* val = nullptr;
+        if (!SafeReadI32(entry + 0x8, &key)) continue;
+        if (!SafeReadPtr(entry + 0x10, &val)) continue;
+        if (key == 1 /* ResourceTag.HeroSkin */ && OkPtr(val)) {
+            inner = val;
+            break;
         }
     }
-    LOGI(ZHMR_LOG " 皮肤重放 ok=%d 名字缺失=%d 写入失败=%d 例:%s/%s/%s",
-         ok, nameMiss, writeFail, failNames[0], failNames[1], failNames[2]);
+    if (!inner) {
+        LOGW(ZHMR_LOG " 皮肤重放：tag=1(HeroSkin) 字典缺失");
+        return;
+    }
+    void* iEntries = nullptr;
+    int32_t iCount = 0;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(inner) + 0x18, &iEntries)) return;
+    if (!SafeReadI32(reinterpret_cast<uint8_t*>(inner) + 0x20, &iCount)) return;
+    if (!OkPtr(iEntries) || iCount <= 0 || iCount > 1024) {
+        LOGW(ZHMR_LOG " 皮肤重放：内层条目非法 iEntries=%p iCount=%d", iEntries, iCount);
+        return;
+    }
+    int ok = 0, fail = 0;
+    for (int32_t i = 0; i < iCount; i++) {
+        const uint8_t* entry =
+            reinterpret_cast<uint8_t*>(iEntries) + 0x20 + static_cast<size_t>(i) * 0x18;
+        void* ev = nullptr;
+        if (!SafeReadPtr(entry + 0x10, &ev) || !OkPtr(ev)) {
+            fail++;
+            continue;
+        }
+        if (EvWrite(ev, kSkinValue, *e)) ok++;
+        else fail++;
+    }
+    LOGI(ZHMR_LOG " 皮肤重放(直写dic) ok=%d 失败=%d 总数=%d", ok, fail, iCount);
 }
 
 // ============================================================
@@ -937,6 +967,7 @@ static bool ResolveAll() {
     g_evClass       = api.FindClassByShortName(GameUnity::CLASS_ENCRYPT_VALUE);
     g_dataManager   = api.FindClassByShortName("DataManager");
     g_skinEnumClass = api.FindClassByShortName("HeroSkinName");
+    g_netBodyClass  = api.FindClassByShortName("NetworkBodyOwl");  // 3.7.0 战斗状态真身
     if (!g_heroClass || !g_levelProcess || !g_playerArchive || !g_archiveClass) {
         LOGI(ZHMR_LOG " 热更类未就绪（HybridCLR 未加载?）");
         return false;
@@ -977,12 +1008,23 @@ static bool ResolveAll() {
             g_ev[s].ev_m    = api.FieldOffset(g_evClass, EV_M, bias);
             g_ev[s].ev_key  = api.FieldOffset(g_evClass, EV_KEY, bias);
         }
+        // 3.7.0：Character._networkBody → NetworkBodyOwl.isBlockDamage/currentHealth/currentShield
+        if (g_charClass) g_net[s].char_netbody = api.FieldOffset(g_charClass, "_networkBody", bias);
+        if (g_charClass && s == 0) g_char_camp = api.FieldOffset(g_charClass, "_camp", 0);
+        if (g_netBodyClass) {
+            g_net[s].nb_block  = api.FieldOffset(g_netBodyClass, "isBlockDamage", bias);
+            g_net[s].nb_hp     = api.FieldOffset(g_netBodyClass, "currentHealth", bias);
+            g_net[s].nb_shield = api.FieldOffset(g_netBodyClass, "currentShield", bias);
+        }
     }
     LOGI(ZHMR_LOG " offsets raw: hero_body=%zu body_char=%zu block=%zu hp=%zu monsters=%zu "
          "unlock=%zu ev(show,m,key)=%zu,%zu,%zu",
          g_combat[0].hero_body, g_combat[0].body_char, g_combat[0].char_block,
          g_combat[0].char_hp, g_combat[0].lp_allmonster, g_arch[0].ha_unlock,
          g_ev[0].ev_show, g_ev[0].ev_m, g_ev[0].ev_key);
+    LOGI(ZHMR_LOG " offsets net: char_netbody=%zu nb(block,hp,shield)=%zu,%zu,%zu netCls=%p",
+         g_net[0].char_netbody, g_net[0].nb_block, g_net[0].nb_hp, g_net[0].nb_shield,
+         g_netBodyClass);
     return true;
 }
 
@@ -1092,6 +1134,14 @@ void Zhmr_Tick(const bool* features) {
     }
 
     DecideCombatSchemeIfNeeded();
+    // 诊断（约 10s 一条）：无敌/秒杀 ON 时暴露单例与 bias 方案，便于线上定位「开关开了没效果」
+    if ((g_god.load() || g_onehit.load()) && tick % 50 == 0) {
+        auto& api2 = GetApi();
+        void* hero = api2.StaticRefField(g_heroClass, "singleton");
+        void* lp = api2.StaticRefField(g_levelProcess, "singleton");
+        LOGI(ZHMR_LOG " [诊断] scheme=%d hero=%p lp=%p god=%d onehit=%d",
+             g_combatScheme.load(), hero, lp, g_god.load() ? 1 : 0, g_onehit.load() ? 1 : 0);
+    }
     if (g_god.load() && tick % 5 == 0) ApplyGod(true);
     if (g_heroReset.load()) {
         g_heroReset.store(false);
@@ -1103,7 +1153,7 @@ void Zhmr_Tick(const bool* features) {
         g_currencyPending.store(false);
         ApplyCurrency();
     }
-    if (g_items.load() && (g_itemsPending.load() || tick % 300 == 0)) {
+    if (g_items.load() && (g_itemsPending.load() || tick % 25 == 0)) {
         g_itemsPending.store(false);
         ApplyItems();
     }
@@ -1112,7 +1162,7 @@ void Zhmr_Tick(const bool* features) {
         // 持续重放：游戏打开选人/存档时可能从 CryptoPrefs 重载英雄字典，冲掉插入
         ApplyHeroSkills();
     }
-    if (g_skin.load() && (g_skinPending.load() || tick % 300 == 0)) {
+    if (g_skin.load() && (g_skinPending.load() || tick % 25 == 0)) {
         g_skinPending.store(false);
         ApplySkin();
     }

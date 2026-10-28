@@ -301,12 +301,14 @@ LOCAL_CFLAGS    := $(filter-out -DSTARRY_GAME_WDYZ,$(LOCAL_CFLAGS)) -DENABLE_UNI
 LOCAL_SRC_FILES := Main.cpp Games/DzqsMod.cpp Unity/Il2CppApi.cpp
 endif
 # 无限升级 12.10701 / vc1644 — 2026-10-26 激活（官方原版 12.10701 复刻星空版；走 scripts/wxsj_so_only.sh）
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
-LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
-# 战魂铭人 3.6.0 — 名称零漂移（06_dumped/战魂铭人_3.6.0 20260908），ZhmrMod 原样复用
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
+# LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
+# 战魂铭人 3.7.0 / vc20680 — 2026-10-28 激活（TapTap 官方原版复刻星空版）
+# 热更 GameLogic.dll 与 3.6.0 同一份（md5 7ecee205f25de60af3abec8796339994），依赖类/字段名全在位，
+# ZhmrMod.cpp 零改动复用；证据 10_docs/战魂铭人/战魂铭人_3.7.0_复刻记录_20261028.md
 # 20260908 SIGABRT 修复：类查齐后隔轮再读 offsets（热更 layout 中途 field_get_offset 必崩）
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
-# LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
+LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
 # ifdef STARRY_TRACE
 # LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 # endif
