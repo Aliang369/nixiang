@@ -128,11 +128,30 @@ def sid_of(p: Path) -> str:
     return p.parent.name.replace("session-", "")[:8]
 
 
+def _zstd_bytes(p: Path) -> bytes:
+    """解压 .jsonl.zstd。
+
+    优先 PATH 里的 zstd（mac/linux 常规）；Windows 端通常没有 zstd，
+    但本仓已装 7-Zip，用 `7z e -so` 解压等价（实测 7-Zip 26.03 可解 zstd 帧）。
+    两者都没有才报错，并把三平台安装命令一起写清楚。
+    """
+    zstd = shutil.which("zstd")
+    if zstd:
+        return subprocess.run([zstd, "-dc", str(p)], capture_output=True, check=True).stdout
+    cands = [shutil.which("7z"), shutil.which("7za"), r"C:\Program Files\7-Zip\7z.exe"]
+    for cand in cands:
+        if cand and Path(cand).exists():
+            return subprocess.run([cand, "e", "-so", str(p)], capture_output=True, check=True).stdout
+    raise SystemExit(
+        "需要解压 .jsonl.zstd：装 zstd（mac: brew install zstd / linux: apt install zstd / "
+        "win: winget install zstd），或装 7-Zip（Windows 端本仓已有 "
+        r"C:\Program Files\7-Zip\7z.exe）"
+    )
+
+
 def load_events(p: Path) -> list[dict]:
     if p.suffix == ".zstd":
-        if shutil.which("zstd") is None:
-            raise SystemExit("需要 zstd 解压 .jsonl.zstd（brew install zstd）")
-        raw = subprocess.run(["zstd", "-dc", str(p)], capture_output=True, check=True).stdout
+        raw = _zstd_bytes(p)
         lines = raw.decode("utf-8", "replace").splitlines()
     else:
         lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
