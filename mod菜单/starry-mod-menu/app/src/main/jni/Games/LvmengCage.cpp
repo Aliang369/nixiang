@@ -165,6 +165,9 @@ static void cage_install_handler(void) {
  */
 #define CAGE_ARCH_X86_64 0xC000003EU
 #define CAGE_ARCH_ARM64 0xC00000B7U
+/* 2026-10-28 [lvmeng] 雷电(LDPlayer14) houdini 走 32 位 i386 ABI：exit_group=252，
+ * 只匹配 x86_64(231)/arm64(94) 时整进程照样被 FG 带走（实测 33 s 干净退出）。 */
+#define CAGE_ARCH_I386   0x40000003U
 #define CAGE_MKFILTER(A, G1, G2) {                                            \
     BPF_STMT(BPF_LD | BPF_W | BPF_ABS, offsetof(struct seccomp_data, arch)),  \
     BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, (A), 0, 4),                           \
@@ -178,6 +181,7 @@ static void cage_install_handler(void) {
    exit() SIGSYS-kills every terminating thread (real device crash loop 2026-10-28). */
 static struct sock_filter g_cage_fx64[] = CAGE_MKFILTER(CAGE_ARCH_X86_64, 231, 231);
 static struct sock_filter g_cage_farm[] = CAGE_MKFILTER(CAGE_ARCH_ARM64, 94, 94);
+static struct sock_filter g_cagefi386[] = CAGE_MKFILTER(CAGE_ARCH_I386, 252, 252);
 
 static int cage_install_one(struct sock_filter *f, unsigned n, const char *tag) {
     struct sock_fprog prog;
@@ -199,6 +203,7 @@ static int cage_install_filter(void) {
     int rc = 0;
     rc |= cage_install_one(g_cage_fx64, (unsigned)(sizeof(g_cage_fx64) / sizeof(g_cage_fx64[0])), "x86_64");
     rc |= cage_install_one(g_cage_farm, (unsigned)(sizeof(g_cage_farm) / sizeof(g_cage_farm[0])), "aarch64");
+    rc |= cage_install_one(g_cagefi386, (unsigned)(sizeof(g_cagefi386) / sizeof(g_cagefi386[0])), "i386");
     CAGE_LOGI("cage: per-thread filters installed rc=%d", rc);
     return rc;
 }
