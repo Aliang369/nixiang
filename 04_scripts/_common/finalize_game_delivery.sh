@@ -111,14 +111,9 @@ GAME_DIR="$ROOT/08_output/$GAME"
 # 现在：不再调用、不再拦截；参数仍解析（兼容旧命令）。见 AGENTS.md §6 与 10_docs/_state/规范变更日志.md。
 
 
-echo "[finalize] game=$GAME"
-echo "[finalize] apk=$APK"
-echo "[finalize] apk_md5=$(md5_of "$APK")"
-echo "[finalize] apk_sha256=$(sha256_of "$APK")"
-echo "[finalize] menu_template=${MENU_TEMPLATE:-（未提供，跳过菜单模板交付）}"
-echo "[finalize] usage_doc=${USAGE_DOC:-（未提供 —— 分发型交付应传 P20）}"
-echo "[finalize] copy_apk=$COPY_APK"
-
+# 2026-10-28 修：下方 echo 行用到 md5_of/sha256_of，而函数原先定义在其后 ⇒
+# 每次运行都打印 `sha256_of: command not found` 且 apk_sha256 为空（裁剪清单/文档片段跟着缺指纹）。
+# 定义必须在使用点之前。
 abs_path() {
   local p="$1"
   if [[ "$p" == /* ]]; then printf '%s\n' "$p"; else printf '%s\n' "$ROOT/$p"; fi
@@ -130,6 +125,14 @@ md5_of() {
 sha256_of() {
   if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" | awk '{print $1}'; else sha256sum "$1" | awk '{print $1}'; fi
 }
+
+echo "[finalize] game=$GAME"
+echo "[finalize] apk=$APK"
+echo "[finalize] apk_md5=$(md5_of "$APK")"
+echo "[finalize] apk_sha256=$(sha256_of "$APK")"
+echo "[finalize] menu_template=${MENU_TEMPLATE:-（未提供，跳过菜单模板交付）}"
+echo "[finalize] usage_doc=${USAGE_DOC:-（未提供 —— 分发型交付应传 P20）}"
+echo "[finalize] copy_apk=$COPY_APK"
 
 if [[ -z "$APK" ]]; then
   apks=()
