@@ -231,3 +231,4 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   ② 绝不在 `synchronized` 区内做 exec/慢 IO；③ 采集型兜底再加一层「旁路线程 + 总预算」，超时按空结果放行，
   保证主身份/主流程先落盘；④ 无 root 设备上 `exec("su")` 会立刻失败，**别拿无 root 机器验收当"没问题"**。
 - 覆盖范围：所有用 starry-mod-menu 框架 + 会探测 root 的游戏；本次只修了框架源码，其它已出包游戏需重出包才带上。
+- [运行时签名替换挂载点 / dex 等长改包 / Windows so 构建三则（魂坠深境 1.1.3，2026-10-29）](../_templates/经验_运行时签名替换挂载点与dex等长改包_20261029.md)：**候选，未审批**——① MT killer 的安装全在 `<clinit>`，用 `appComponentFactory.instantiateApplication` 里 `Class.forName(...,true)` 触发等价且更早、官方 dex 零改动（3 次冷启 3/3 + L3 通过，单设备）；② 超大 dex 的改包法可用等长就地替换 + 重算 dex 头摘要，不必 baksmali/smali 整份（classes3.dex 10.4 MB 实测）；③ `Android_*.mk` 里 `wxsj_dll` 预编译残留会让 Windows `ndk-build` 直接 FAIL（`.a` 未入库），wildcard 守卫修法已落地，副作用是 so 少 2 MB 死载荷。拟落 `skill/re-analyze/login/taptap-web-login.md` 与经验卡 2026-10-29 增补节；跨样本（第二款游戏/真机）复现后再合并。

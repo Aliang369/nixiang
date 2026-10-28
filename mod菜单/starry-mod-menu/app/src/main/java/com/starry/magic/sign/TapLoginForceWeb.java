@@ -225,21 +225,15 @@ public final class TapLoginForceWeb {
                     // ⇒ 必须强制内嵌网页登录。签名侧另由 SignSpoof 的 killPm 覆盖
                     // TapSignKit.getSign(Context)（其实现＝pm.getPackageInfo(pkg, 0x40) → signatures[0] → MD5）。
                     "com.TeaMelo.DungeonChasers",
-                    // 魂坠深境（com.chillyroom.containerofsoul.yw）TapTap 渠道原版 1.1.2/vc43：
-                    // 2026-10-13 用户实测**漏配白名单**的后果同迷城 —— 本类入口各自
-                    // `if (!PKG_WHITELIST.contains(...)) return;` 静默返回、`StarryTapLogin` 零日志，
-                    // SDK 默认走 mobile_client 拉起 TapTap 客户端 SSO。
-                    // 包内实证 TapSDK **新版路径**（classes3.dex 字节命中）：
-                    // TapTapLoginActivity=7 / ClientLoginUtils=2 / com_taptap_sdk_login_request=1 /
-                    // embedded_web=1 / fallbackToWeb=1 / TapSignKit=2（无旧版 com.taptap.sdk.ui.TapTapActivity）
-                    // ⇒ 走 prepareNewImplRequest 固定 embedded_web + forceNewImplWeb 兜底。
-                    // 设备已装 TapTap 客户端，改签后客户端 SSO 必被 signature not match 拒绝
-                    // ⇒ 必须强制内嵌网页登录；签名侧由 SignSpoof 覆盖 TapSignKit.getSign(Context)
-                    // （pm.getPackageInfo(pkg, 0x40) → signatures[0] → MD5，官方 MD5 a3e3c07b81aa322215f6315d7e60b151）。
-                    // 入口时序：SignSpoof 的 PackageInfo.CREATOR 代理由 Manifest
-                    // appComponentFactory=com.starry.magic.sign.SignSpoofAppComponentFactory 在
-                    // Application 实例化前安装（Provider.onCreate 晚于 TapSDK 冷启动读取）。
-                    "com.chillyroom.containerofsoul.yw",
+                    // 【2026-10-29 移出白名单】魂坠深境（com.chillyroom.containerofsoul.yw）改按
+                    // 「双轨制」处理，不再走本类反射换 handler 的白名单路径：
+                    //  · 签名/完整性 = B 轨运行时替换（MT ApkSignatureKillerEx 形态，见
+                    //    StarryAppComponentFactory 的 killer 挂载 + killer dex）；
+                    //  · 登录方式   = A 轨静态改包法（classes3.dex 里
+                    //    com/taptap/sdk/login/impl/data/model/Actions$CN.getAction() 的
+                    //    "com.taptap.sdk.action" 改为不匹配值 ⇒ 客户端 SSO 恒不成立、落内嵌网页）。
+                    // 原白名单依据：2026-10-13 用户实测「漏配白名单 ⇒ SDK 默认 mobile_client 拉起
+                    // TapTap 客户端 SSO」；该症状现由 A 轨从 SDK 入口处消除，白名单不再需要。
                     // 保卫向日葵（com.bwxrk.yqmy.ty4）TapTap 渠道原版 1.46/vc46：
                     // 登录入口是 dodjoy 聚合壳 com.juhe.sdk.TapTapLoginActivity（它再调 TapSDK）；
                     // 2026-10-15 实测改签首装：TapInitializer 报

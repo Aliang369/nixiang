@@ -20,15 +20,16 @@
 #   2) AndroidManifest.xml 加 <provider com.starry.magic.StarryInitProvider>
 #      + <service MenuService>(foregroundServiceType=specialUse) + 两条权限
 #      **+ appComponentFactory: androidx.core.app.CoreComponentFactory
-#        → com.starry.magic.sign.SignSpoofAppComponentFactory**（application@name 零改动）
-#      【2026-10-13 修正】原为「Factory 零改动、签名只在 Provider.onCreate 装」，用户实测
-#      1.1.2 报「TapTap 签名校验没处理」：Provider.onCreate 晚于 Application 实例化与
-#      TapSDK 冷启动读取签名（TapSignKit.getSign → pm.getPackageInfo(pkg,0x40)），
-#      代理由此漏装 ⇒ 改由 AppComponentFactory.instantiateApplication 在 Application
-#      实例化前 install()（本仓库通用做法，见 surgical_gjc2_1.1.9.sh / surgical_mrfzz.sh）。
-#      SignSpoofAppComponentFactory 把非 Application 组件委托给原 CoreComponentFactory。
+#        → com.starry.magic.sign.StarryAppComponentFactory**（application@name 零改动）
+#      【2026-10-29「双轨制」】Factory 名从已删除的 SignSpoofAppComponentFactory 换成本类；
+#      本类不再装签名伪装，只在 instantiateApplication 里 Class.forName 触发随包注入的
+#      killer dex（B 轨运行时签名替换），登录侧由 classes3.dex 的 A 轨静态改包负责。
+#      历史（2026-10-13）：签名伪装原本只在 Provider.onCreate 装，晚于 Application 实例化
+#      与 TapSDK 冷启动读签名（TapSignKit.getSign → pm.getPackageInfo(pkg,0x40)），
+#      用户实测报「TapTap 签名校验没处理」⇒ 改由 AppComponentFactory.instantiateApplication
+#      在 Application 实例化前装（本仓库通用做法）。
 #      ★服务在前台跑需要 SYSTEM_ALERT_WINDOW（悬浮窗）+ FOREGROUND_SERVICE_SPECIAL_USE，
-#        旧星光底包已有，官方 1.1.2 原包**没有**，由本步补
+#        旧星光底包已有，官方 1.1.2+ 原包**没有**，由本步补
 #   3) lib/arm64-v8a/libstarry_magic.so 替换（libs_hzsj 产物，含设备无关指针判据）
 #   4) libc++_shared.so：新 so 的 DT_NEEDED 含 libc++_shared.so；旧星光底包自带，
 #      官方 1.1.2 原包**不带** ⇒ 底包缺则注入 NDK 构建产物同源副本（缺它 = 装载失败）
@@ -86,6 +87,27 @@ case "${VERSION}" in
 esac
 
 BASE_APK="${HZSJ_BASE_APK:-${BASE_DEFAULT}}"
+
+# ============================================================================
+#  2026-10-29「双轨制」新增件（用户口令「用新方法改」，口径见
+#  10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md 的 2026-10-29 增补节）
+#   B 轨（签名/完整性校验）= 运行时签名替换：注入 killer dex（MT ApkSignatureKillerEx 形态，
+#      <clinit> 里换 PackageInfo.CREATOR + 清 PackageManager.sPackageInfoCache /
+#      Parcel.mCreators / Parcel.sPairedCreators），由 StarryAppComponentFactory
+#      .instantiateApplication 在 Application 实例化前 Class.forName 触发 ⇒ 官方 dex 零改动。
+#   A 轨（登录方式/渠道分支）= 静态改包：TapSDK 客户端 SSO 的 action 常量改成不匹配值
+#      ⇒ 唤起 TapTap 客户端的 intent 恒 resolve 不到，登录自动落内嵌网页(H5)。
+#  两条轨**同一链条禁止双修**：不得再引入 SignSpoof / TapLoginForceWeb 白名单
+#  （后者已把本包移出 PKG_WHITELIST）。
+# ============================================================================
+KILLER_SMALI_DIR="${NIXIANG}/07_patched/${GAME}/surgical/killer_smali"
+DEX_KILLER_NAME="${HZSJ_KILLER_DEX_NAME:-classes6.dex}"
+KILLER_CLASS="bin.mt.signature.KillerApplication193"
+KILLER_CERT_MD5="a3e3c07b81aa322215f6315d7e60b151"   # 官方证书 DER（CN=O=Chillyroom）
+LOGIN_DEX_ENTRY="classes3.dex"                        # TapSDK 登录实现在 classes3.dex
+LOGIN_STR_OLD="com.taptap.sdk.action"                 # 21 字符：等长就地替换
+LOGIN_STR_NEW="com.taptap.sdk.act1on"                 # 21 字符：客户端 SSO 恒不匹配
+
 SO_SRC="${STARRY_SRC}/libs_hzsj/arm64-v8a/libstarry_magic.so"
 LIBCXX_SRC="${STARRY_SRC}/libs_hzsj/arm64-v8a/libc++_shared.so"
 
@@ -178,14 +200,17 @@ WORK="$(mktemp -d "${ASCII_ROOT}/hzsj_surgical.XXXXXX")"
 WORKW="$(cygpath -m "${WORK}" 2>/dev/null || printf '%s' "${WORK}")"
 MERGED="${WORK}/merged.apk"
 
-echo "[1/6] 输入检查"
+echo "[1/8] 输入检查"
 bsize="$(wc -c <"${BASE_APK}" | tr -d ' ')"
 bmd5="$(md5f "${BASE_APK}")"
 [[ "${bmd5}" == "${BASE_MD5_EXPECT}" ]] || die "底包指纹不符 ${bmd5}（期望 ${BASE_MD5_EXPECT}）"
-for s in 'com/starry/magic/StarryInitProvider' 'com/starry/magic/menu/MenuService'; do
+for s in 'com/starry/magic/StarryInitProvider' 'com/starry/magic/menu/MenuService' \
+         'com/starry/magic/sign/StarryAppComponentFactory' 'bin.mt.signature.KillerApplication193'; do
   c="$(LC_ALL=C grep -ac "$s" "${DEX6_SRC}" || true)"
   [[ "${c}" -ge 1 ]] || die "${DEX_ADD_NAME} 缺 ${s}"
 done
+[[ -d "${KILLER_SMALI_DIR}/bin/mt/signature" ]] \
+  || die "缺 killer smali 源 ${KILLER_SMALI_DIR}（07_patched/魂坠深境/surgical/killer_smali）"
 for s in 'Toggle_秒杀' 'Toggle_自动胜利' '[Hzsj]'; do
   LC_ALL=C grep -aq "$s" "${SO_SRC}" || die "so 缺 ${s}"
 done
@@ -204,7 +229,7 @@ so = 'lib/arm64-v8a/libstarry_magic.so'
 print('  底包结构 ok（无 %s；%s %s）' % (add, so, '可替换' if so in names else '待新增'))
 PY
 
-echo "[2/6] 旧菜单清理（仅 VERSION=1.1.1 底包需要：classes5.dex 去 com/starry）"
+echo "[2/8] 旧菜单清理（仅 VERSION=1.1.1 底包需要：classes5.dex 去 com/starry）"
 if [[ -z "${LEGACY_MENU_DEX}" ]]; then
   # 官方 1.1.2 原包：4 个 dex 内 com/starry 命中 0（已核，见 10_docs/魂坠深境/重构_1.1.2_*.md）
   # ⇒ 无旧菜单可清；同时确认底包确实没有 classes5.dex（否则 DEX_ADD_NAME 会撞名）
@@ -244,7 +269,67 @@ else
   fi
 fi
 
-echo "[3/6] 二进制 Manifest（+StarryInitProvider；appComponentFactory → SignSpoofAppComponentFactory）"
+echo "[3/8] B 轨：killer dex（${DEX_KILLER_NAME}）—运行时签名替换"
+cp -R "${KILLER_SMALI_DIR}" "${WORK}/killer_smali" || die "复制 killer smali 失败"
+smali a -o "${WORKW}/${DEX_KILLER_NAME}" "${WORKW}/killer_smali" >"${WORK}/smali_killer.log" 2>&1 \
+  || { tail -20 "${WORK}/smali_killer.log" >&2; die "killer smali 汇编失败"; }
+[[ -f "${WORK}/${DEX_KILLER_NAME}" ]] || die "killer smali 未产出 dex"
+"${PY}" - "${WORK}/${DEX_KILLER_NAME}" "${KILLER_CLASS//\//.}" "${PKG}" "${KILLER_CERT_MD5}" <<'PY' \
+  || die "killer dex 回读断言不过"
+import base64, hashlib, re, sys
+p, cls, pkg, cert_md5 = sys.argv[1:5]
+d = open(p, 'rb').read()
+cls_desc = ('L%s;' % cls.replace('.', '/')).encode()
+assert cls_desc in d, 'killer dex 缺 %s' % cls_desc
+assert pkg.encode() in d, 'killer dex 缺包名 %s' % pkg
+assert b'com/wanda' not in d, 'killer dex 仍引用 sina/壳类（父类未改干净）'
+assert b'Landroid/app/Application;' in d, 'killer 父类不是 android.app.Application'
+# 证书：从 dex 里取出折行 base64（含 \n）解码回 DER 并核 md5
+i = d.find(b'MIIC')
+assert i > 0, 'killer dex 里找不到证书 base64'
+j = i
+while j < len(d) and (chr(d[j]).isalnum() or d[j] in b'+/=\n'):
+    j += 1
+b64 = re.sub(rb'[^A-Za-z0-9+/=]', b'', d[i:j])
+der = base64.b64decode(b64)
+got = hashlib.md5(der).hexdigest()
+assert got == cert_md5, 'killer 证书 DER md5=%s（期望 %s）' % (got, cert_md5)
+print('  killer dex ok: %s / pkg=%s / 官方证书 DER %d B md5=%s'
+      % (cls, pkg, len(der), got))
+PY
+
+echo "[4/8] A 轨：${LOGIN_DEX_ENTRY} 登录改包（TapSDK client-SSO action 等长就地替换）"
+"${PY}" - "${BASE_APK}" "${LOGIN_DEX_ENTRY}" "${WORKW}/login_orig.dex" "${WORKW}/login_patched.dex" \
+  "${LOGIN_STR_OLD}" "${LOGIN_STR_NEW}" <<'PY' || die "登录改包失败"
+import hashlib, sys, zipfile, zlib
+apk, entry, orig_out, patched_out, old, new = sys.argv[1:7]
+old_b, new_b = old.encode(), new.encode()
+assert len(old_b) == len(new_b), '替换必须等长（%d vs %d）' % (len(old_b), len(new_b))
+d = bytearray(zipfile.ZipFile(apk).read(entry))
+open(orig_out, 'wb').write(d)
+assert d[:8] == b'dex\n035\x00' or d[:4] == b'dex\n', '不是 dex 文件'
+n_old = d.count(old_b)
+if n_old != 1:
+    sys.exit('%s 里 "%s" 命中 %d 次（期望 1，锚点漂移）' % (entry, old, n_old))
+if d.count(new_b):
+    sys.exit('%s 里已存在 "%s"（重复打补丁？）' % (entry, new))
+d = d.replace(old_b, new_b, 1)
+# dex 头两个摘要字段按规范重算：signature = SHA-1(bytes[32:])，checksum = adler32(bytes[12:])
+d[12:32] = hashlib.sha1(bytes(d[32:])).digest()
+d[8:12] = zlib.adler32(bytes(d[12:])).to_bytes(4, 'little')
+open(patched_out, 'wb').write(d)
+# 回读断言
+v = open(patched_out, 'rb').read()
+assert len(v) == len(zipfile.ZipFile(apk).read(entry)), 'dex 尺寸变化（等长替换失败）'
+assert v.count(new_b) == 1 and v.count(old_b) == 0, '回读断言失败'
+assert v[12:32] == hashlib.sha1(v[32:]).digest(), 'dex signature 未更新'
+assert int.from_bytes(v[8:12], 'little') == zlib.adler32(v[12:]), 'dex checksum 未更新'
+print('  %s: "%s" → "%s"（等长 %d B 就地替换，dex %d B，头部摘要已重算）'
+      % (entry, old, new, len(old_b), len(v)))
+PY
+
+
+echo "[5/8] 二进制 Manifest（+StarryInitProvider；appComponentFactory → StarryAppComponentFactory）"
 if [[ ! -f "${CACHE_MF}" ]]; then
   apktool d -f -s --no-assets -o "${WORK}/mf_dec" "${BASE_APK}" >"${WORK}/apktool_d.log" 2>&1 \
     || { tail -20 "${WORK}/apktool_d.log" >&2; die "apktool d 失败"; }
@@ -254,7 +339,7 @@ import sys
 p = Path(sys.argv[1]); authority = sys.argv[2]
 t = p.read_text(encoding='utf-8')
 OLD_FACTORY = 'androidx.core.app.CoreComponentFactory'
-NEW_FACTORY = 'com.starry.magic.sign.SignSpoofAppComponentFactory'
+NEW_FACTORY = 'com.starry.magic.sign.StarryAppComponentFactory'
 if NEW_FACTORY in t:
     print('  manifest 已是星光 Factory，跳过替换')
 elif 'android:appComponentFactory="%s"' % OLD_FACTORY in t:
@@ -297,7 +382,7 @@ if "com.starry.magic.menu.MenuService" not in t:
 '''
     t = t.replace("</application>", svc + "\n    </application>", 1)
 p.write_text(t, encoding='utf-8')
-print('  manifest patched (provider+service+perms+SignSpoof Factory)，application@name 零改动')
+print('  manifest patched (provider+service+perms+Starry Factory)，application@name 零改动')
 PY
   rm -rf "${WORK}/mf_dec"/smali* 2>/dev/null || true
   apktool b -f "${WORK}/mf_dec" -o "${WORK}/mf_only.apk" >"${WORK}/apktool_b.log" 2>&1 \
@@ -305,10 +390,10 @@ PY
   unzip -p "${WORK}/mf_only.apk" AndroidManifest.xml > "${CACHE_MF}" || die "提取二进制 manifest 失败"
   echo "  缓存 ${CACHE_MF} ($(wc -c <"${CACHE_MF}" | tr -d ' ') B)"
 else
-  echo "  缓存命中 ${CACHE_MF}（若为 2026-10-13 前的旧缓存，[4/6] 的 Factory 断言会失败；删缓存重跑即可）"
+  echo "  缓存命中 ${CACHE_MF}（若为 2026-10-29 前的旧缓存，[6/8] 的 Factory 断言会失败；删缓存重跑即可）"
 fi
 
-echo "[4/6] 二进制 Manifest 回读校验（aapt2）"
+echo "[6/8] 二进制 Manifest 回读校验（aapt2）"
 "${PY}" - "${CACHE_MF}" "${WORKW}/mf_check.apk" <<'PY'
 import sys, zipfile
 z = zipfile.ZipFile(sys.argv[2], "w")
@@ -322,24 +407,30 @@ PY
 for need in \
   "com.starry.magic.StarryInitProvider" \
   "com.starry.magic.menu.MenuService" \
-  "com.starry.magic.sign.SignSpoofAppComponentFactory" \
+  "com.starry.magic.sign.StarryAppComponentFactory" \
   "android.permission.SYSTEM_ALERT_WINDOW" \
   "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"; do
   grep -q "$need" "${WORK}/tree_new.txt" || die "新 manifest 缺 $need"
 done
 echo "  manifest ok（provider/service/Factory/权限均在）"
 
-echo "[5/6] surgical zip merge（manifest + ${DEX_ADD_NAME} 新增 + so${LEGACY_MENU_DEX:+ + dex5 重建}）"
-"${PY}" - "${BASE_APK}" "${CACHE_CLS5}" "${CACHE_MF}" "${DEX6_SRC}" "${DEX_ADD_NAME}" "${SO_SRC}" "${LIBCXX_SRC}" "${MERGED}" <<'PY'
+echo "[7/8] surgical zip merge（manifest + ${DEX_ADD_NAME}/${DEX_KILLER_NAME} 新增 + ${LOGIN_DEX_ENTRY} 登录改包 + so${LEGACY_MENU_DEX:+ + dex5 重建}）"
+"${PY}" - "${BASE_APK}" "${CACHE_CLS5}" "${CACHE_MF}" "${DEX6_SRC}" "${DEX_ADD_NAME}" "${SO_SRC}" "${LIBCXX_SRC}" "${MERGED}" \
+  "${WORKW}/${DEX_KILLER_NAME}" "${DEX_KILLER_NAME}" "${WORKW}/login_patched.dex" "${LOGIN_DEX_ENTRY}" "${LEGACY_MENU_DEX}" <<'PY'
 import os, sys, zipfile
 
-orig, cls5, mf, dex_src, dex_name, so, libcxx, out = sys.argv[1:9]
-LEGACY = bool(cls5) and os.path.isfile(cls5)
+orig, cls5, mf, dex_src, dex_name, so, libcxx, out, \
+    killer_dex, killer_name, login_dex, login_entry, legacy_flag = sys.argv[1:14]
+# LEGACY 只能由 VERSION 分支决定（LEGACY_MENU_DEX 非空）。
+# 2026-10-29 修：原写法用「CACHE_CLS5 文件是否存在」推断，Windows 树里 1.1.1 时代遗留的
+# classes5_nostarry.dex 会让 1.1.2/1.1.3 误判成 LEGACY ⇒ 「底包缺条目 classes5.dex」。
+LEGACY = bool(legacy_flag)
 
 REPL = {
     'AndroidManifest.xml': mf,
+    login_entry: login_dex,          # A 轨：TapSDK client-SSO action 等长替换后的 classes3.dex
 }
-ADD = {dex_name: dex_src}
+ADD = {dex_name: dex_src, killer_name: killer_dex}   # 菜单 dex + B 轨 killer dex
 if LEGACY:
     REPL['classes5.dex'] = cls5
 
@@ -351,8 +442,9 @@ def is_sig(name):
 
 zin = zipfile.ZipFile(orig, 'r')
 names = set(zin.namelist())
-if dex_name in names:
-    sys.exit('底包已含 %s（重复注入嫌疑）—— 请核对底包或改名' % dex_name)
+for nm in (dex_name, killer_name):
+    if nm in names:
+        sys.exit('底包已含 %s（重复注入嫌疑）—— 请核对底包或改名' % nm)
 
 # so（注入目标）：底包已有 = 替换（1.1.1 星光底包）；没有 = 新增（官方原包）
 SO_ENTRY = 'lib/arm64-v8a/libstarry_magic.so'
@@ -418,7 +510,7 @@ print('  passthrough CRC verified: %d entries' % copied)
 print('  out size = %d B' % os.path.getsize(out))
 PY
 
-echo "[6/6] zipalign + apksigner + 校验"
+echo "[8/8] zipalign + apksigner + 校验"
 "${ZIPALIGN}" -f -p 4 "${MERGED}" "${WORK}/aligned.apk" || die "zipalign failed"
 rm -f "${FINAL}"
 "${APKSIGNER}" sign \
@@ -431,10 +523,11 @@ cp -f "${WORK}/final.apk" "${FINAL}"
 "${APKSIGNER}" verify --print-certs "${FINAL}" > "${WORK}/certs.txt" 2>&1 || true
 LC_ALL=C grep -qi "${CERT_SHA256}" "${WORK}/certs.txt" || die "签发证书 SHA-256 不符"
 
-"${PY}" - "${FINAL}" "${SO_SRC}" "${LIBCXX_SRC}" "${CACHE_CLS5}" "${DEX_ADD_NAME}" "${AAPT2}" <<'PY'
-import sys, zipfile, hashlib, os, subprocess
-apk, so, libcxx, cls5, dex_name, aapt2 = sys.argv[1:7]
-legacy = bool(cls5) and os.path.isfile(cls5)
+"${PY}" - "${FINAL}" "${SO_SRC}" "${LIBCXX_SRC}" "${CACHE_CLS5}" "${DEX_ADD_NAME}" "${AAPT2}" \
+  "${DEX_KILLER_NAME}" "${LOGIN_DEX_ENTRY}" "${LOGIN_STR_OLD}" "${LOGIN_STR_NEW}" "${KILLER_CERT_MD5}" "${LEGACY_MENU_DEX}" <<'PY'
+import base64, sys, zipfile, hashlib, os, re, subprocess
+apk, so, libcxx, cls5, dex_name, aapt2, killer_name, login_entry, login_old, login_new, cert_md5, legacy_flag = sys.argv[1:13]
+legacy = bool(legacy_flag)   # 2026-10-29 修：同样改为按 VERSION 分支判定，不看缓存文件是否存在
 z = zipfile.ZipFile(apk)
 md5b = lambda b: hashlib.md5(b).hexdigest()
 in_so = md5b(z.read('lib/arm64-v8a/libstarry_magic.so'))
@@ -446,6 +539,30 @@ for s in (b'StarryInitProvider', b'com/starry/magic/menu/MenuService',
           b'com/starry/magic/bridge/ModBridge', b'com/starry/magic/ota/StarryNativeLoad'):
     assert s in d, '%s missing %s' % (dex_name, s.decode())
 msg = 'so md5=%s / %s 含新菜单' % (in_so, dex_name)
+
+# ---- 2026-10-29 双轨制：B 轨 killer dex 包内回读 ----
+names = set(z.namelist())
+assert killer_name in names, '%s 未进包（B 轨缺失）' % killer_name
+kd = z.read(killer_name)
+assert b'bin/mt/signature/KillerApplication193' in kd, '%s 缺 KillerApplication193' % killer_name
+assert b'bin.mt.signature.KillerApplication193' in d, '%s 未引用 killer（挂载点缺失）' % dex_name
+assert b'SignSpoof' not in d, '%s 仍含 SignSpoof（旧法残留）' % dex_name
+i = kd.find(b'MIIC')
+assert i > 0, '%s 缺官方证书 base64' % killer_name
+j = i
+while j < len(kd) and (chr(kd[j]).isalnum() or kd[j] in b'+/=\n'):
+    j += 1
+der = base64.b64decode(re.sub(rb'[^A-Za-z0-9+/=]', b'', kd[i:j]))
+assert hashlib.md5(der).hexdigest() == cert_md5, '%s 证书 DER md5 不符' % killer_name
+msg += ' / B 轨 killer=%s（官方证书 %d B md5=%s）' % (killer_name, len(der), cert_md5)
+
+# ---- A 轨：classes3.dex 登录改包回读 ----
+ld = z.read(login_entry)
+old_b, new_b = login_old.encode(), login_new.encode()
+assert ld.count(old_b) == 0, '%s 仍含 "%s"（A 轨未生效）' % (login_entry, login_old)
+assert ld.count(new_b) == 1, '%s 未含 "%s"（A 轨未生效）' % (login_entry, login_new)
+msg += ' / A 轨 %s "%s"→"%s"' % (login_entry, login_old, login_new)
+
 # appComponentFactory 改写是 2026-10-13「TapTap 签名校验时机」修复的核心；最终包内回读确认。
 # 注：二进制 AXML 的字符串池是 UTF-16，不能按 bytes 搜 ASCII —— 用 aapt2 dump 成文本再断言。
 os.makedirs('/tmp/hzsj_mfchk', exist_ok=True)
@@ -459,10 +576,12 @@ r = subprocess.run([aapt2, 'dump', 'xmltree', '--file', 'AndroidManifest.xml', m
                    capture_output=True, text=True)
 assert r.returncode == 0, 'aapt2 dump 失败: %s' % r.stderr[-300:]
 tree = r.stdout
-assert 'com.starry.magic.sign.SignSpoofAppComponentFactory' in tree, \
-    'manifest 未换 SignSpoofAppComponentFactory（签名伪装会晚于 TapSDK 冷启动）'
+assert 'com.starry.magic.sign.StarryAppComponentFactory' in tree, \
+    'manifest 未换 StarryAppComponentFactory（killer 挂载点缺失）'
+assert 'com.starry.magic.sign.SignSpoofAppComponentFactory' not in tree, \
+    'manifest 仍挂已删的 SignSpoofAppComponentFactory（pre_install_gate 查12 会 FAIL）'
 assert 'com.starry.magic.StarryInitProvider' in tree, 'manifest 缺 StarryInitProvider'
-msg += ' / manifest Factory=SignSpoof'
+msg += ' / manifest Factory=StarryAppFactory'
 if legacy:
     d5 = z.read('classes5.dex')
     assert b'com/starry/magic' not in d5, 'classes5.dex still has com/starry'

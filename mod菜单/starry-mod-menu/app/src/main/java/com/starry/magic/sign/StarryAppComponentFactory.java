@@ -26,6 +26,32 @@ public class StarryAppComponentFactory extends AppComponentFactory {
     private static final String TAG = "StarryAppFactory";
     private static final String ORIGINAL_FACTORY = "androidx.core.app.CoreComponentFactory";
 
+    /**
+     * 2026-10-29「双轨制」签名轨（B）：MT ApkSignatureKillerEx 形态的运行时签名替换
+     * （{@code bin.mt.signature.KillerApplication193}，其 {@code <clinit>} 完成
+     * 换 {@code PackageInfo.CREATOR} + 清 {@code PackageManager.sPackageInfoCache}
+     * / {@code Parcel.mCreators} / {@code Parcel.sPairedCreators}）。
+     *
+     * <p>挂载点选这里而不是改游戏 Application 父类：{@code instantiateApplication} 早于
+     * 真实 Application 的 {@code attachBaseContext/onCreate} 与一切 ContentProvider，
+     * 且**官方 dex 一个字节都不用动**。killer 类是随包注入的独立 dex，包内没有该类时
+     * 本方法静默跳过（对其余游戏零影响）。
+     */
+    private static final String KILLER_CLASS = "bin.mt.signature.KillerApplication193";
+    private static volatile boolean killerMounted;
+
+    private static void mountSignatureKiller(ClassLoader cl) {
+        if (killerMounted) return;
+        try {
+            // initialize=true ⇒ 立即跑 KillerApplication193.<clinit>（安装动作全在那里）
+            Class.forName(KILLER_CLASS, true, cl);
+            killerMounted = true;
+            Log.i(TAG, "SignatureKiller mounted: PackageInfo.CREATOR replaced, PM/Parcel caches cleared");
+        } catch (Throwable t) {
+            Log.i(TAG, "SignatureKiller absent, skip: " + t.getClass().getSimpleName());
+        }
+    }
+
     private volatile AppComponentFactory delegate;
 
     private AppComponentFactory delegate(ClassLoader cl) {
@@ -50,6 +76,8 @@ public class StarryAppComponentFactory extends AppComponentFactory {
     @Override
     public Application instantiateApplication(ClassLoader cl, String className)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+        // 必须早于 Application 实例化（TapSDK/风控在 Application 与 Provider 阶段就开始读签名）
+        mountSignatureKiller(cl);
         AppComponentFactory original = delegate(cl);
         return original != null
                 ? original.instantiateApplication(cl, className)

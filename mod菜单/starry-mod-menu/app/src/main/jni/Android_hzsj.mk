@@ -13,10 +13,17 @@ LOCAL_MODULE := Dobby
 LOCAL_SRC_FILES := Dobby/$(TARGET_ARCH_ABI)/libdobby.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+# 【2026-10-29 Windows 构建修复】wxsj_dll 是「无限升级 patched targetfunctional.dll」静态库的
+# 复制粘贴残留（同一残留散落在 ~40 个 Android_*.mk 里，见 Android.mk 头部注释）；魂坠深境源码
+# 不引用它的任何符号。而 Games/WxsjPatchedDll.a **未被 git 跟踪**（只在跑过 wxsj 构建的机器上存在），
+# 于是 Windows 侧 ndk-build 直接 `LOCAL_SRC_FILES points to a missing file` 中止。
+# ⇒ wildcard 守卫：有该 .a 时行为与原先完全一致（mac 侧不受影响），没有时整体跳过。
+ifneq ($(wildcard $(LOCAL_PATH)/Games/WxsjPatchedDll.a),)
 include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_dll
 LOCAL_SRC_FILES := Games/WxsjPatchedDll.a
 include $(PREBUILT_STATIC_LIBRARY)
+endif
 
 include $(CLEAR_VARS)
 
@@ -65,6 +72,10 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory \
                     $(LOCAL_PATH)/xDL
 
+ifneq ($(wildcard $(LOCAL_PATH)/Games/WxsjPatchedDll.a),)
 LOCAL_STATIC_LIBRARIES := Dobby wxsj_dll
+else
+LOCAL_STATIC_LIBRARIES := Dobby
+endif
 
 include $(BUILD_SHARED_LIBRARY)
