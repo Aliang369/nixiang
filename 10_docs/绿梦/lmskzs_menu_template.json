@@ -1,0 +1,13 @@
+{
+  "template_id": "lmskzs",
+  "name": "绿梦：时空之声",
+  "package": "com.zhuziplay.lvmengnew.op",
+  "source": "Games/LvmengEntry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "自定义血量"},
+    {"feat_num": 2, "name": "全局变速"},
+    {"feat_num": 3, "name": "伤害倍率"},
+    {"feat_num": 4, "name": "无限技能"},
+    {"feat_num": 5, "name": "无限跳跃"}
+  ]
+}
