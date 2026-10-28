@@ -52,10 +52,9 @@ while IFS= read -r s; do
   [[ "$HIT" -ge 1 ]] || { echo "ERROR: $SO 不含菜单串 $s" >&2; exit 1; }
 done <<'STRINGS'
 Category_功能
-Slider_伤害倍率:1:10:1
+Slider_伤害倍率:1:100:1
 Toggle_上帝模式
 Slider_战斗速度:1:10:1
-Toggle_无限体力
 STRINGS
 for bad in "Slider_攻击倍率" "Slider_战斗加速" "Toggle_百倍伤害" "Toggle_免广告"; do
   HIT=$(LC_ALL=C grep -ac "$bad" "$SO" || true)

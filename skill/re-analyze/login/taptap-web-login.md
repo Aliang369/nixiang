@@ -3,9 +3,11 @@
 > 📍 re-analyze/login/taptap-web-login.md
 > 🎯 改签后 TapTap 客户端 SSO 失败（签名不一致），需要强制走 WebView 网页登录
 
-## ⚠️ 现行口径（2026-10-28 用户定案，跨游戏长期，先读这一节）
+## ⚠️ 现行口径（2026-10-29 起为「双轨制」，本节为摘要；正文＝`10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md` 的 2026-10-29 增补节）
 
-**TapTap 签名校验 + 网页强制登录 = 「改包法」（静态改游戏包体 dex）。**
+**签名/完整性校验 → 运行时签名替换（换 `PackageInfo.CREATOR` 的「签名杀手」形态，改 `MultiDexApplication.super` 挂载 + 清 `Parcel.mCreators`/`sPairedCreators`/`PackageManager.sPackageInfoCache`）；登录方式/渠道分支 → 改包法（如改 `IntentHelper` 的 action 走网页登录）；加固壳与「直读 APK 文件／签名块摘要」类校验 → 仍走改包法。同一链条禁止双修。**
+
+（2026-10-28 原文：**TapTap 签名校验 + 网页强制登录 = 「改包法」（静态改游戏包体 dex）。** 该口径已被上句替代，保留下方文字作历史与「为什么放弃 SignSpoof」的依据。）
 **运行时签名伪装已整体删除**（`sign/SignSpoof.java` 与 `sign/SignSpoofAppComponentFactory.java` 于 2026-10-28 按用户指令删除，框架里已无该类；`TapLoginForceWeb` 白名单那套同样停用，仅服务未迁移的老包）。
 
 - 为什么停用：`SignSpoof` 依赖隐藏 API 豁免，**Android 14 user 版真机必失败**

@@ -38,10 +38,17 @@ rm -f "$INSTALL_OK"
 APK_MD5="$(md5 -q "$APK")"
 echo "[install] local apk md5=$APK_MD5"
 adb -s "$SERIAL" get-state >/dev/null
-adb -s "$SERIAL" shell pm path "$PKG" >/dev/null 2>&1 \
-  || { echo "ERROR: 设备上未安装 ${PKG}（原包已卸载？先确认状态再装）" >&2; exit 1; }
+# 设备状态：已安装＝覆盖安装（保数据）；未安装（如已按授权卸载）＝需 SF3_ALLOW_UNINSTALL=1 才全新安装
+INSTALLED=1
+adb -s "$SERIAL" shell pm path "$PKG" >/dev/null 2>&1 || INSTALLED=0
+if [[ "$INSTALLED" != "1" && "${SF3_ALLOW_UNINSTALL:-0}" != "1" ]]; then
+  echo "ERROR: 设备上未安装 ${PKG}（原包已卸载？先确认状态再装；已获卸载授权时用 SF3_ALLOW_UNINSTALL=1 全新安装）" >&2
+  exit 1
+fi
 
-adb -s "$SERIAL" shell am force-stop "$PKG" || true
+if [[ "$INSTALLED" == "1" ]]; then
+  adb -s "$SERIAL" shell am force-stop "$PKG" || true
+fi
 
 echo "[install] push $APK → $REMOTE"
 adb -s "$SERIAL" push "$APK" "$REMOTE" >/dev/null
@@ -49,6 +56,10 @@ adb -s "$SERIAL" push "$APK" "$REMOTE" >/dev/null
 # 管线会把失败的装机误标 done（2026-09-19 暗影格斗3 实测踩坑）。
 trap 'rc=$?; adb -s "$SERIAL" shell rm -f "$REMOTE" >/dev/null 2>&1 || true; exit $rc' EXIT
 
+if [[ "$INSTALLED" != "1" ]]; then
+  echo "[install] 设备上无包：按授权直接全新安装（pm install --user 0）"
+  adb -s "$SERIAL" shell pm install --user 0 "$REMOTE"
+else
 echo "[install] 同签名覆盖安装（保留数据）"
 if ! adb -s "$SERIAL" shell pm install -r -d --user 0 "$REMOTE"; then
   if [[ "${SF3_ALLOW_UNINSTALL:-0}" != "1" ]]; then
@@ -65,6 +76,7 @@ EOM
   echo "[install] 已授权卸载：pm uninstall --user 0 ${PKG}（数据将被清除）"
   adb -s "$SERIAL" shell pm uninstall --user 0 "$PKG" >/dev/null
   adb -s "$SERIAL" shell pm install --user 0 "$REMOTE"
+fi
 fi
 
 echo "[install] 闭环校验：设备 base.apk == 本地产物"

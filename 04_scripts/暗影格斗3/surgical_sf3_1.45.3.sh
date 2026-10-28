@@ -108,10 +108,109 @@ mkdir -p "$STAGE_DIR"
 cp -f "$WORK/classes8.dex" "$STAGE_DIR/classes8.dex"
 echo "  classes8.dex → $STAGE_DIR/classes8.dex ($(md5 -q "$STAGE_DIR/classes8.dex"))"
 
+# ---- 改包法（2026-10-28 定案·斌哥包对照结论）：TapTap 登录只改一个 action 常量 ----
+# 真机对照样本（CN=binge2.keystore）把
+#   com/taptap/sdk/login/internal/handlers/client/IntentHelper 里的
+#   "com.taptap.sdk.action" 改成 "com.tap12tap.sdk.action"：
+# 唤起 TapTap 客户端的 intent 永远匹配不到 ⇒ 登录入口自动落到网页(H5)登录，
+# 也就避开了 TapTap 客户端侧的调用方签名校验。改动面比换 WebHandler 更小、不动 handler 语义。
+# 签名校验（hoolai / C# 常量 / 服务端）不在这里处理——由 classes8.dex 里的
+# com.starry.magic.sign.SignatureKiller 在 StarryInitProvider 阶段换 PackageInfo.CREATOR 解决。
+BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
+[[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN" >&2; exit 1; }
+echo "[2.5/6] 游戏 dex 补丁（TapTap 强制网页登录；classes.dex / IntentHelper action 改名）"
+unzip -o -q "$ORIG_APK" classes.dex -d "$WORK/dexsrc1"
+cp -f "$WORK/dexsrc1/classes.dex" "$STAGE_DIR/orig_classes.dex"
+DEX1_SMALI="$WORK/dex1_smali"
+mkdir -p "$DEX1_SMALI"
+"$BAKSMALI_BIN" d "$WORK/dexsrc1/classes.dex" -o "$DEX1_SMALI"
+INTENT_HELPER="$DEX1_SMALI/com/taptap/sdk/login/internal/handlers/client/IntentHelper.smali"
+[[ -f "$INTENT_HELPER" ]] || { echo "ERROR: IntentHelper.smali 缺失（TapSDK 版本漂移，锚点须现取）" >&2; exit 1; }
+python3 - "$INTENT_HELPER" <<'PATCH_INTENT_PY'
+import sys
+p = sys.argv[1]
+t = open(p, encoding='utf-8').read()
+OLD = 'const-string p1, "com.taptap.sdk.action"'
+NEW = 'const-string p1, "com.tap12tap.sdk.action"'
+n = t.count(OLD)
+if n != 1:
+    raise SystemExit('补丁锚点漂移：com.taptap.sdk.action 出现 %d 次（期望 1 次）' % n)
+open(p, 'w', encoding='utf-8').write(t.replace(OLD, NEW, 1))
+print('  smali 补丁完成：IntentHelper action → com.tap12tap.sdk.action（强制网页登录）')
+PATCH_INTENT_PY
+"$SMALI_BIN" assemble -o "$WORK/classes.dex" "$DEX1_SMALI"
+VERIFY1_DIR="$WORK/dex1_verify"
+mkdir -p "$VERIFY1_DIR"
+"$BAKSMALI_BIN" d "$WORK/classes.dex" -o "$VERIFY1_DIR"
+V_INTENT="$VERIFY1_DIR/com/taptap/sdk/login/internal/handlers/client/IntentHelper.smali"
+grep -q 'com.tap12tap.sdk.action' "$V_INTENT" \
+  || { echo "ERROR: 回读校验失败：IntentHelper action 未改名" >&2; exit 1; }
+if grep -q 'com.taptap.sdk.action' "$V_INTENT"; then
+  echo "ERROR: 回读校验失败：仍残留原 action 常量" >&2; exit 1
+fi
+rm -rf "$VERIFY1_DIR"
+cp -f "$WORK/classes.dex" "$STAGE_DIR/classes.dex"
+echo "  classes.dex(patched) → $STAGE_DIR/classes.dex ($(md5 -q "$STAGE_DIR/classes.dex"))"
+# ---- 签名校验：直接采用斌哥包里的「MT ApkSignatureKillerEx」（改父类注入，真机连续 3 次启动实测通过）----
+# 2026-10-29 实测教训：自研 SignatureKiller（只换 PackageInfo.CREATOR）只能撑住「首启」，
+#   第二次启动 hoolai SDK 在 Application 阶段就取签名（frida 实测 appSignatures 仍返回星空证书
+#   SHA-1 82:1C:92:E4:…），说明 CREATOR 替换被 Parcel 的 creator 缓存/时机吃掉；
+#   而斌哥包（CN=binge2）连续 3 次启动都 InitSuccessCallBack。
+# 于是照抄其机制：
+#   ① 把 androidx/multidex/MultiDexApplication 的父类改成 bin.mt.signature.KillerApplication193
+#      （游戏 Application = com.accesssdkwrapper.AccessSDKApplicationWrapper → MultiDexApplication，
+#        改父类即可在 Application 构造期装好签名替换器，Manifest 一点不用动）；
+#   ② KillerApplication193 的静态块 killPM(包名, 官方证书 base64) + killOpen(...)，
+#      内部还清 PackageManager.sPackageInfoCache 与 Parcel.mCreators / sPairedCreators
+#      —— 这正是我们自己那版缺的一环；
+#   ③ 该类原父类是斌哥菜单里的壳 com.wanda.sf3.wd.PkjNluikmwxGUJv，我们改成 android.app.Application。
+# 产物 dex 名用 classes9.dex（classes8.dex 已被星光菜单占用）。
+echo "[2.6/6] 签名校验（MT ApkSignatureKillerEx 改父类；classes5.dex + classes9.dex）"
+unzip -o -q "$ORIG_APK" classes5.dex -d "$WORK/dexsrc5"
+cp -f "$WORK/dexsrc5/classes5.dex" "$STAGE_DIR/orig_classes5.dex"
+DEX5_SMALI="$WORK/dex5_smali"
+mkdir -p "$DEX5_SMALI"
+"$BAKSMALI_BIN" d "$WORK/dexsrc5/classes5.dex" -o "$DEX5_SMALI"
+MULTIDEX="$DEX5_SMALI/androidx/multidex/MultiDexApplication.smali"
+[[ -f "$MULTIDEX" ]] || { echo "ERROR: MultiDexApplication.smali 缺失（底包结构漂移）" >&2; exit 1; }
+python3 - "$MULTIDEX" <<'PATCH_MULTIDEX_PY'
+import sys
+p = sys.argv[1]
+t = open(p, encoding='utf-8').read()
+OLD = '.super Landroid/app/Application;'
+NEW = '.super Lbin/mt/signature/KillerApplication193;'
+n = t.count(OLD)
+if n != 1:
+    raise SystemExit('补丁锚点漂移：MultiDexApplication 的 .super 出现 %d 次（期望 1 次）' % n)
+open(p, 'w', encoding='utf-8').write(t.replace(OLD, NEW, 1))
+print('  smali 补丁完成：MultiDexApplication.super → bin.mt.signature.KillerApplication193')
+PATCH_MULTIDEX_PY
+"$SMALI_BIN" assemble -o "$WORK/classes5.dex" "$DEX5_SMALI"
+VERIFY5_DIR="$WORK/dex5_verify"
+mkdir -p "$VERIFY5_DIR"
+"$BAKSMALI_BIN" d "$WORK/classes5.dex" -o "$VERIFY5_DIR"
+grep -q 'Lbin/mt/signature/KillerApplication193;' "$VERIFY5_DIR/androidx/multidex/MultiDexApplication.smali" \
+  || { echo "ERROR: 回读校验失败：MultiDexApplication 父类未改" >&2; exit 1; }
+rm -rf "$VERIFY5_DIR"
+cp -f "$WORK/classes5.dex" "$STAGE_DIR/classes5.dex"
+echo "  classes5.dex(patched) → $STAGE_DIR/classes5.dex ($(md5 -q "$STAGE_DIR/classes5.dex"))"
 
-mkdir -p "$WORK/lib/arm64-v8a"
-cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/"
-[[ -f "$NDK_CXX" ]] && cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so"
+# Killer dex：源码来自斌哥包内 classes8.dex（MT ApkSignatureKillerEx），父类改回 android.app.Application
+KILLER_SMALI="$NIXIANG/07_patched/$GAME/surgical/killer_smali"
+[[ -d "$KILLER_SMALI" ]] || { echo "ERROR: 缺 killer smali 源目录 $KILLER_SMALI" >&2; exit 1; }
+"$SMALI_BIN" assemble -o "$WORK/classes9.dex" "$KILLER_SMALI"
+VERIFY9_DIR="$WORK/dex9_verify"
+mkdir -p "$VERIFY9_DIR"
+"$BAKSMALI_BIN" d "$WORK/classes9.dex" -o "$VERIFY9_DIR"
+K9="$VERIFY9_DIR/bin/mt/signature/KillerApplication193.smali"
+[[ -f "$K9" ]] || { echo "ERROR: 回读校验失败：classes9.dex 缺 KillerApplication193" >&2; exit 1; }
+grep -q '^.super Landroid/app/Application;' "$K9" || { echo "ERROR: KillerApplication193 父类非 Application" >&2; exit 1; }
+LC_ALL=C grep -aq 'MIIDSTCCAjGgAwIBAgIEJhYcejAN' "$WORK/classes9.dex" \
+  || { echo "ERROR: classes9.dex 缺官方证书 base64" >&2; exit 1; }
+rm -rf "$VERIFY9_DIR"
+cp -f "$WORK/classes9.dex" "$STAGE_DIR/classes9.dex"
+echo "  classes9.dex(killer) → $STAGE_DIR/classes9.dex ($(md5 -q "$STAGE_DIR/classes9.dex"))"
+
 
 echo "[3/6] binary AndroidManifest（保留原 Application；换 appComponentFactory + provider/service/权限）"
 if [[ -n "${SF3_BINARY_MANIFEST:-}" && -f "${SF3_BINARY_MANIFEST:-}" ]]; then
@@ -273,6 +372,14 @@ manifest = (work / 'AndroidManifest.xml').read_bytes()
 classes8 = (work / 'classes8.dex').read_bytes()
 
 replace = {'AndroidManifest.xml': manifest}
+dex1_path = work / 'classes.dex'
+if dex1_path.exists():
+    replace['classes.dex'] = dex1_path.read_bytes()
+dex5_path = work / 'classes5.dex'
+if dex5_path.exists():
+    replace['classes5.dex'] = dex5_path.read_bytes()
+classes9 = (work / 'classes9.dex')
+classes9 = classes9.read_bytes() if classes9.exists() else None
 extras = {
     'classes8.dex': classes8,
     'lib/arm64-v8a/libstarry_magic.so': so,
@@ -295,6 +402,8 @@ with zipfile.ZipFile(src, 'r') as zin, zipfile.ZipFile(dst, 'w') as zout:
         info.external_attr = item.external_attr
         info.create_system = 3
         zout.writestr(info, data)
+    if classes9 is not None:
+        extras['classes9.dex'] = classes9
     for name, data in extras.items():
         info = zipfile.ZipInfo(name)
         info.compress_type = zipfile.ZIP_STORED if name.startswith('lib/') and name.endswith('.so') else zipfile.ZIP_DEFLATED
@@ -317,6 +426,24 @@ with zipfile.ZipFile(src, 'r') as zin, zipfile.ZipFile(dst, 'r') as zout:
             raise SystemExit(f'{n} missing from output')
     if 'classes8.dex' not in out_names:
         raise SystemExit('classes8.dex missing')
+    if 'classes5.dex' in replace:
+        pkg_d5 = zout.read('classes5.dex')
+        if hashlib.sha256(pkg_d5).digest() != hashlib.sha256(replace['classes5.dex']).digest():
+            raise SystemExit('packaged classes5.dex != patched classes5.dex')
+        if b'bin/mt/signature/KillerApplication193' not in pkg_d5:
+            raise SystemExit('packaged classes5.dex missing KillerApplication super patch')
+    if classes9 is not None:
+        pkg_d9 = zout.read('classes9.dex')
+        if hashlib.sha256(pkg_d9).digest() != hashlib.sha256(classes9).digest():
+            raise SystemExit('packaged classes9.dex != killer dex')
+        if b'bin/mt/signature/KillerApplication193' not in pkg_d9:
+            raise SystemExit('packaged classes9.dex missing KillerApplication193')
+    if 'classes.dex' in replace:
+        pkg_d1 = zout.read('classes.dex')
+        if hashlib.sha256(pkg_d1).digest() != hashlib.sha256(replace['classes.dex']).digest():
+            raise SystemExit('packaged classes.dex != patched classes.dex')
+        if b'com.tap12tap.sdk.action' not in pkg_d1:
+            raise SystemExit('packaged classes.dex missing IntentHelper action patch')
     pkg_so = zout.read('lib/arm64-v8a/libstarry_magic.so')
     if hashlib.sha256(pkg_so).digest() != hashlib.sha256(so).digest():
         raise SystemExit('packaged libstarry_magic.so != build output')

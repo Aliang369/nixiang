@@ -2,12 +2,13 @@
  *  星光菜单游戏模块 — 暗影格斗3（com.wanda.sf3.wd / TapTap 1.45.3）
  *
  *  四项功能（featureList 下标 = featNum，见 Sf3Entry.cpp）：
- *    1 Slider_伤害倍率:1:10:1  IKHOBFONGIE.OGFLOMPOMCI 伤害容器 ×倍率（斌哥同款入口）
+ *    1 Slider_伤害倍率:1:100:1 IKHOBFONGIE.OGFLOMPOMCI 伤害容器 ×倍率（斌哥同款入口）
  *    2 Toggle_上帝模式         同入口，玩家受击伤害清零（斌哥同款入口）
  *    3 Slider_战斗速度:1:10:1  UnityEngine.Time.set_timeScale
- *    4 Toggle_无限体力         IGCAMALALAJ 体力 API
+ *  （原 #4 Toggle_定怪 已于 2026-10-29 按用户指令整体删除：多轮挂点实测均无法真正冻住敌方）
  *
  *  2026-09-19：无限货币已按用户实测（假 UI 无效）删除，不再实现。
+ *  2026-10-28：伤害倍率上限 10→100；无限体力按用户要求整体删除，改「定怪」。
  *
  *  防闪退设施（骨架强制，勿删）：
  *    默认 0 hook（懒装）/ 双路径挂点 / RVA 漂移拒绝 / 幂等安装
@@ -21,10 +22,9 @@
 
 // 功能位号：必须与 Sf3Entry.cpp 的 featureList 数组下标一一对应
 enum Sf3Feat : int {
-    SF3_FEAT_DMG   = 1,  // Slider_伤害倍率:1:10:1（1=原伤害，2..10=倍率）
-    SF3_FEAT_GOD   = 2,  // Toggle_上帝模式
-    SF3_FEAT_SPEED = 3,  // Slider_战斗速度:1:10:1（1=原速，2..10=倍率）
-    SF3_FEAT_ENERGY = 4, // Toggle_无限体力
+    SF3_FEAT_DMG    = 1,  // Slider_伤害倍率:1:100:1（1=原伤害，2..100=倍率）
+    SF3_FEAT_GOD    = 2,  // Toggle_上帝模式
+    SF3_FEAT_SPEED  = 3,  // Slider_战斗速度:1:10:1（1=原速，2..10=倍率）
 };
 
 // 签名与 ModEntry.h 回调一致（Unity 系忽略 vm）

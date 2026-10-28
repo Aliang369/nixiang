@@ -1,28 +1,53 @@
 {
-  "template_id": "sf3",
-  "name": "暗影格斗3",
-  "package": "com.wanda.sf3.wd",
-  "source": "Games/Sf3Entry.cpp kSf3_Features",
-  "features": [
-    {
-      "feat_num": 1,
-      "name": "伤害倍率",
-      "type": "slider",
-      "min": 1,
-      "max": 10,
-      "default": 1,
-      "note": "1=原伤害，2..10=最终伤害倍率；对应 Slider_伤害倍率:1:10:1"
-    },
-    {"feat_num": 2, "name": "上帝模式"},
-    {
-      "feat_num": 3,
-      "name": "战斗速度",
-      "type": "slider",
-      "min": 1,
-      "max": 10,
-      "default": 1,
-      "note": "1=原速，2..10=战斗倍速；对应 Slider_战斗速度:1:10:1"
-    },
-    {"feat_num": 4, "name": "无限体力"}
-  ]
+ "template_id": "sf3",
+ "name": "暗影格斗3",
+ "package": "com.wanda.sf3.wd",
+ "source": "Games/Sf3Entry.cpp kSf3_Features",
+ "features": [
+  {
+   "feat_num": 1,
+   "name": "伤害倍率",
+   "type": "slider",
+   "min": 1,
+   "max": 100,
+   "default": 1,
+   "note": "1=原伤害，2..100=最终伤害倍率；对应 Slider_伤害倍率:1:100:1（2026-10-28 用户口径上限改 100）"
+  },
+  {
+   "feat_num": 2,
+   "name": "上帝模式",
+   "type": "toggle",
+   "default": false,
+   "note": "玩家受击把伤害值清零；对应 Toggle_上帝模式"
+  },
+  {
+   "feat_num": 3,
+   "name": "战斗速度",
+   "type": "slider",
+   "min": 1,
+   "max": 10,
+   "default": 1,
+   "note": "1=原速，2..10=战斗倍速；对应 Slider_战斗速度:1:10:1"
+  }
+ ],
+ "removed": [
+  {
+   "feat_num": 4,
+   "name": "定怪",
+   "removed_at": "2026-10-29",
+   "reason": "用户指令删除：MoveTo 原语/状态机 tick/位移施加/actor 逐帧/Transform 坐标锁 多轮挂点真机实测均无法真正冻住敌方（逻辑体与视图体分离，位移走动画层），且拦截 actor 逐帧曾 SIGSEGV"
+  },
+  {
+   "feat_num": 5,
+   "name": "无限货币",
+   "removed_at": "2026-09-19",
+   "reason": "实测假 UI 无效"
+  },
+  {
+   "feat_num": 5,
+   "name": "无限体力",
+   "removed_at": "2026-10-28",
+   "reason": "用户要求删除"
+  }
+ ]
 }

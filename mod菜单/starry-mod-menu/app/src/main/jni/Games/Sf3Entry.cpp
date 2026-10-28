@@ -5,10 +5,10 @@
  *
  *  菜单（数组下标 = featNum）：
  *    0  Category_功能
- *    1  Slider_伤害倍率:1:10:1   SF3_FEAT_DMG
+ *    1  Slider_伤害倍率:1:100:1  SF3_FEAT_DMG
  *    2  Toggle_上帝模式          SF3_FEAT_GOD
  *    3  Slider_战斗速度:1:10:1   SF3_FEAT_SPEED
- *    4  Toggle_无限体力          SF3_FEAT_ENERGY
+ *  （原 #4 Toggle_定怪 已于 2026-10-29 按用户指令删除：多轮挂点实测均无法真正冻住敌方）
  *  （原 #5 Toggle_无限货币已于 2026-09-19 删除：实测假 UI 无效）
  *
  *  铁律：改菜单/初始化节奏/回调只改本文件；
@@ -20,10 +20,9 @@
 
 static const char* kSf3_Features[] = {
     "Category_功能",               // 0（占位）
-    "Slider_伤害倍率:1:10:1",       // 1  SF3_FEAT_DMG
+    "Slider_伤害倍率:1:100:1",      // 1  SF3_FEAT_DMG
     "Toggle_上帝模式",             // 2  SF3_FEAT_GOD
     "Slider_战斗速度:1:10:1",       // 3  SF3_FEAT_SPEED
-    "Toggle_无限体力",             // 4  SF3_FEAT_ENERGY
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
@@ -40,7 +39,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .tickIntervalMs = 200000,
 
         // EarlyHook：只用来尽早挂 HNAccessCore::checkCopyright 版权补丁
-        // （登录可用性，与功能开关无关）；四项玩法仍是懒装 Dobby hook。
+        // （登录可用性，与功能开关无关）；三项玩法仍是懒装 Dobby hook。
         .onLoad = Sf3_OnLoad,
         .tryInit = Sf3_TryInit,
         .isReady = Sf3_IsReady,

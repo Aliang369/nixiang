@@ -1,8 +1,8 @@
 /* ================================================================
  *  Sf3Mod.cpp — 暗影格斗3 (com.wanda.sf3.wd / TapTap 1.45.3 / vc907)
  *
- *  四项功能（2026-09-19 按用户实测反馈删除无限货币：假 UI 无效）：
- *    1 伤害倍率(1-10)  IKHOBFONGIE.OGFLOMPOMCI           file 0x5F51968
+ *  三项功能（2026-10-29 用户口径：定怪整体删除，见下）：
+ *    1 伤害倍率(1-100) IKHOBFONGIE.OGFLOMPOMCI           file 0x5F51968
  *                      —— 斌哥改包同款挂点：受作用单位 == self+0x68(玩家)
  *                         / self+0x70(敌人) 时改「伤害值容器」LJMJLLJNEMK；
  *                         容器值 XOR 加密，必须走 getter/setter，禁止直写 +0x10。
@@ -10,13 +10,14 @@
  *    3 战斗速度(1-10)  UnityEngine.Time.set_timeScale  file 0x6BB5C6C
  *                      —— 游戏自带时间管理器只允许 [0,1]（减速），故 hook 底层
  *                         setter；value==0（暂停）原样放行，滑块变更时用 orig 重放。
- *    4 无限体力        IGCAMALALAJ.{HJJFFHOJJFB,OBPEJEPEJMF,EIPOOCIBMBO}
- *                      file 0x6012A88 / 0x6012CF0 / 0x6012BAC
+ *    无限体力已于 2026-10-28 按用户要求整体删除（IGCAMALALAJ 三处钩子与代码全清）。
+ *    定怪已于 2026-10-29 按用户要求整体删除：多轮挂点（MoveTo 原语 / 状态机 tick
+ *    FOMCOJAKEGK / 位移施加 LKLGGGOLEOK / actor 逐帧 GHEEBIDJCCH / Transform 坐标锁）
+ *    真机实测均无法真正冻住敌方（逻辑体 HJGEAPMLNAF 与视图体 Model 分离，位移走
+ *    动画/骨骼层），且移动逻辑体曾导致 SIGSEGV，故整块代码与菜单项一并删除。
  *
  *  边界（已验证 / 未验证）：
  *    - 两包同源实锤（libil2cpp.so md5 53345cdb… 与原版逐字节一致）⇒ RVA 通用
- *    - 体力是服务端下发的本地镜像，本实现只保证「客户端口径」；
- *      服务端是否认账 = NOT PROVEN，不做任何服务端写操作。
  *
  *  设计铁律：
  *    - RVA 优先 + 序言校验；校验失败才按类名/方法名回退
@@ -57,11 +58,9 @@ using Il2Cpp::GetApi;
 static std::atomic<bool> g_libReady{false};
 static std::atomic<bool> g_damageHooked{false};
 static std::atomic<bool> g_speedHooked{false};
-static std::atomic<bool> g_energyHooked{false};
-static std::atomic<int>  g_dmgMult{1};    // Slider: 1=原伤害, 2..10=倍率
+static std::atomic<int>  g_dmgMult{1};    // Slider: 1=原伤害, 2..100=倍率
 static std::atomic<bool> g_god{false};
 static std::atomic<int>  g_speed{1};      // Slider: 1=原速, 2..10=倍率
-static std::atomic<bool> g_energy{false};
 static std::atomic<int64_t> g_lastInstallMs{0};
 static std::mutex g_installMutex;
 
@@ -95,15 +94,10 @@ typedef void  (*ChangeLife_t)(void* self, void* a1, void* a2, void* unit, void* 
 typedef float (*ValueGet_t)(void* self, void* method);
 typedef void  (*ValueSet_t)(void* self, float value, void* method);
 typedef void  (*SetTimeScale_t)(float value, void* method);
-typedef int64_t (*EnergyCurrent_t)(void* self, void* method);
-typedef bool  (*EnergyEnough_t)(void* self, int64_t cost, void* method);
-typedef bool  (*EnergyRegen_t)(void* self, void* method);
 
 static ChangeLife_t    g_origChangeLife = nullptr;
 static SetTimeScale_t  g_origSetTimeScale = nullptr;
-static EnergyCurrent_t g_origEnergyCurrent = nullptr;
-static EnergyEnough_t  g_origEnergyEnough = nullptr;
-static EnergyRegen_t   g_origEnergyRegen = nullptr;
+
 
 // 伤害值容器 getter/setter（不 hook，只当函数指针调用；XOR 解密由游戏自己做）
 static ValueGet_t g_valueGet = nullptr;
@@ -125,9 +119,16 @@ enum : uintptr_t {
     kFileValueGet     = 0x5F3AAE8,   // LJMJLLJNEMK.JDMGBLEBMAJ           (vaddr 0x5F3EAE8)
     kFileValueSet     = 0x5F3AB5C,   // LJMJLLJNEMK.JBEFILOFEKD           (vaddr 0x5F3EB5C)
     kFileSetTimeScale = 0x6BB5C6C,   // UnityEngine.Time.set_timeScale    (vaddr 0x6BB9C6C)
-    kFileEnergyNow    = 0x6012A88,   // IGCAMALALAJ.HJJFFHOJJFB           (vaddr 0x6016A88)
-    kFileEnergyEnough = 0x6012CF0,   // IGCAMALALAJ.OBPEJEPEJMF(long)     (vaddr 0x6016CF0)
-    kFileEnergyRegen  = 0x6012BAC,   // IGCAMALALAJ.EIPOOCIBMBO()         (vaddr 0x6016BAC)
+    kFileMoveTo       = 0x6267D0C,   // HJGEAPMLNAF.OCKKGGKHNIP(Vector3,string) (vaddr 0x626BD0C)
+    kFileFightHud     = 0x5AFFCB4,   // BattleInterface.InitializeFightHud      (vaddr 0x5B03CB4)
+    kFilePlayerHud    = 0x5BA19F8,   // NativePlayerHUD.Setup(HJGEAPMLNAF, ...) (vaddr 0x5BA59F8)
+    kFileUnitTick     = 0x624AE9C,   // HHMOEJIHADJ.FOMCOJAKEGK(in AJJGHOHIMGI) 单位状态机 tick (vaddr 0x624EE9C)
+    kFileUnitMove     = 0x624B598,   // HHMOEJIHADJ.LKLGGGOLEOK(float,bool,bool,float) 位移施加 (vaddr 0x624F598)
+    kFileActorUpdate  = 0x62709D0,   // HJGEAPMLNAF.GHEEBIDJCCH(float)   actor 逐帧 (vaddr 0x62749D0)
+    kFileActorInput   = 0x6271254,   // HJGEAPMLNAF.INHGOFJJPIB(AJJGHOHIMGI,bool,float,bool) 指令/输入施加 (vaddr 0x6275254)
+    kFileActorTick1   = 0x6271540,   // HJGEAPMLNAF.LMCFAKNGBCN(float)   (vaddr 0x6275540)
+    kFileActorTick2   = 0x6274950,   // HJGEAPMLNAF.JAMIMDGMHEC(float)   (vaddr 0x6278950)
+    kFileActorTick3   = 0x62759EC,   // HJGEAPMLNAF.AOOFGEDOPHN(float)   (vaddr 0x62799EC)
 };
 
 // 序言首字（llvm-objdump 原样值，小端读入即此值；不匹配 = 版本漂移，拒绝挂）
@@ -136,18 +137,21 @@ enum : uint32_t {
     kInsValueGet     = 0xA9BE57FE,
     kInsValueSet     = 0xFC1D0FE8,
     kInsSetTimeScale = 0xFC1E0FE8,
-    kInsEnergyNow    = 0xA9BD5FFE,
-    kInsEnergyEnough = 0xA9BF4FFE,
-    kInsEnergyRegen  = 0xA9BF4FFE,
+    kInsMoveTo       = 0xFC1B0FEA,   // stp x28, x6, [sp, #-0x10]!
+    kInsFightHud     = 0xD10183FF,   // sub sp, sp, #0x60
+    kInsPlayerHud    = 0xA9BA7BFD,   // stp x29, x30, [sp, #-0x60]!
+    kInsUnitTick     = 0xA9BE57FE,   // stp x30, x21, [sp, #-0x20]!
+    kInsUnitMove     = 0x6DBB23E9,   // stp d9, d8, [sp, #-0x50]!
+    kInsActorUpdate  = 0xFC1E0FE8,   // str d8, [sp, #-0x20]!
+    kInsActorInput   = 0xD10103FF,   // sub sp, sp, #0x40
+    kInsActorTick1   = 0xBD00D800,   // str s0, [sp, #0xd8]
+    kInsActorTick2   = 0xBD009C00,   // str s0, [sp, #0x9c]
+    kInsActorTick3   = 0xF81F0FFE,   // str x30, [sp, #-0x10]!
 };
 
 // 伤害入口完整 12 字节序言（ff8303d1 e83b00fd fd7b08a9）
 static const uint8_t kPrologueChangeLife[12] = {
     0xFF, 0x83, 0x03, 0xD1, 0xE8, 0x3B, 0x00, 0xFD, 0xFD, 0x7B, 0x08, 0xA9,
-};
-
-enum : int64_t {
-    kEnergyValue = 9999,
 };
 
 enum : uint64_t {
@@ -334,6 +338,8 @@ static void InstallTable(const HookSlot* slots, size_t count) {
 //  故恒定返回 1 = 让所有设备复现「干净安装」的行为，不引入新语义。
 //
 //  注：本 hook 是登录补丁不是玩法开关，不随菜单开关装卸。
+//  2026-10-28：新增 Sf3PreloadLibcpp() —— 真机实测「提示/SDK init error」弹窗，
+//  根因是 libcpp.so 由 AccessSDK 自己 dlopen，钩子晚于 checkCopyright（窗口约 40ms）。
 // ============================================================
 static std::atomic<bool> g_copyrightHooked{false};
 static std::atomic<bool> g_copyrightThreadStarted{false};
@@ -374,12 +380,33 @@ static int Hooked_CheckCopyright(void* self) {
     return 1;   // 真品：与原版「沙箱无指纹文件」时的返回值一致
 }
 
+// 2026-10-28 实测：AccessSDK 的 init 在 Unity 首帧后 ~42ms 就完成 checkCopyright，
+// 而 libcpp.so 通常由 SDK 自己 dlopen —— 等 SDK 载入后再挂钩子已经晚一步
+// （真机现象：弹「提示 / SDK init error」，点「继续」游戏退出）。
+// 故在 mod 加载时先按本 so 所在目录 dlopen(libcpp.so)，把库提前映射，钩子先于 SDK 就位。
+static bool Sf3PreloadLibcpp() {
+    const char* lib = Sf3LibCpp();
+    if (isLibraryLoaded(lib)) return true;
+    const std::string self = Sf3MappedLibPath("libstarry_magic.so");
+    if (self.empty()) return false;
+    const size_t slash = self.rfind('/');
+    if (slash == std::string::npos) return false;
+    const std::string abs = self.substr(0, slash + 1) + "libcpp.so";
+    void* h = dlopen(abs.c_str(), RTLD_NOW);
+    if (!h) {
+        LOGW(SF3_LOG " preload %s failed", abs.c_str());
+        return false;
+    }
+    LOGI(SF3_LOG " preload %s ok (early hook window)", abs.c_str());
+    return true;
+}
+
 static void TryInstallCopyrightHook() {
     if (g_copyrightHooked.load(std::memory_order_acquire)) return;
     // 上限防御：库始终不出现时，Tick 兜底路径不会无限扫 maps
     if (g_copyrightAttempts.fetch_add(1, std::memory_order_relaxed) >= 2000) return;
     const char* lib = Sf3LibCpp();
-    if (!isLibraryLoaded(lib)) return;
+    if (!isLibraryLoaded(lib) && !Sf3PreloadLibcpp()) return;
     void* h = dlopen(lib, RTLD_NOW);
     if (!h) {
         const std::string abs = Sf3MappedLibPath(lib);
@@ -406,7 +433,14 @@ static void TryInstallCopyrightHook() {
 // libcpp.so 可能比 il2cpp 更早载入，也可能晚；独立轮询线程保证在
 // AccessSDK 跑 InitServerCfg 之前挂上（不能等 initDelayMs=5s 的 tryInit）。
 static void* CopyrightPatchThread(void* /*arg*/) {
-    for (int i = 0; i < 900; i++) {          // 约 90s
+    // 前 10s 用 5ms 快轮询：AccessSDK 的 init 只有 ~40ms 窗口（2026-10-28 真机实测），
+    // 100ms 轮询会正好错过 checkCopyright；10s 之后退回 100ms（约 90s 总预算）。
+    for (int i = 0; i < 2000; i++) {
+        TryInstallCopyrightHook();
+        if (g_copyrightHooked.load(std::memory_order_acquire)) return nullptr;
+        usleep(5 * 1000);
+    }
+    for (int i = 0; i < 800; i++) {          // 约 80s
         TryInstallCopyrightHook();
         if (g_copyrightHooked.load(std::memory_order_acquire)) return nullptr;
         usleep(100 * 1000);
@@ -418,6 +452,9 @@ static void* CopyrightPatchThread(void* /*arg*/) {
 void Sf3_OnLoad(JavaVM* /*vm*/) {
     bool expected = false;
     if (!g_copyrightThreadStarted.compare_exchange_strong(expected, true)) return;
+    // 尽早：先把 libcpp.so 拉进进程并挂上 checkCopyright（SDK init 只有 ~40ms 窗口）
+    Sf3PreloadLibcpp();
+    TryInstallCopyrightHook();
     pthread_t th {};
     if (pthread_create(&th, nullptr, CopyrightPatchThread, nullptr) == 0) {
         pthread_detach(th);
@@ -489,22 +526,6 @@ static void Hooked_SetTimeScale(float value, void* method) {
     if (g_origSetTimeScale) g_origSetTimeScale(value, method);
 }
 
-static int64_t Hooked_EnergyCurrent(void* self, void* method) {
-    if (g_energy.load(std::memory_order_relaxed) && OkPtr(self)) return kEnergyValue;
-    return g_origEnergyCurrent ? g_origEnergyCurrent(self, method) : 0;
-}
-
-static bool Hooked_EnergyEnough(void* self, int64_t cost, void* method) {
-    if (g_energy.load(std::memory_order_relaxed) && OkPtr(self)) return true;
-    return g_origEnergyEnough ? g_origEnergyEnough(self, cost, method) : true;
-}
-
-static bool Hooked_EnergyRegen(void* self, void* method) {
-    if (g_energy.load(std::memory_order_relaxed) && OkPtr(self)) return false;
-    return g_origEnergyRegen ? g_origEnergyRegen(self, method) : false;
-}
-
-
 static const HookSlot kDamageSlots[] = {
     {"ChangeLife(OGFLOMPOMCI)", kFileChangeLife, kInsChangeLife, "", "IKHOBFONGIE", "OGFLOMPOMCI", 5,
      (void*)Hooked_ChangeLife, (void**)&g_origChangeLife},
@@ -513,15 +534,6 @@ static const HookSlot kDamageSlots[] = {
 static const HookSlot kSpeedSlots[] = {
     {"Time.set_timeScale", kFileSetTimeScale, kInsSetTimeScale, "UnityEngine", "Time", "set_timeScale", 1,
      (void*)Hooked_SetTimeScale, (void**)&g_origSetTimeScale},
-};
-
-static const HookSlot kEnergySlots[] = {
-    {"Energy.HJJFFHOJJFB", kFileEnergyNow, kInsEnergyNow, "", "IGCAMALALAJ", "HJJFFHOJJFB", 0,
-     (void*)Hooked_EnergyCurrent, (void**)&g_origEnergyCurrent},
-    {"Energy.OBPEJEPEJMF", kFileEnergyEnough, kInsEnergyEnough, "", "IGCAMALALAJ", "OBPEJEPEJMF", 1,
-     (void*)Hooked_EnergyEnough, (void**)&g_origEnergyEnough},
-    {"Energy.EIPOOCIBMBO", kFileEnergyRegen, kInsEnergyRegen, "", "IGCAMALALAJ", "EIPOOCIBMBO", 0,
-     (void*)Hooked_EnergyRegen, (void**)&g_origEnergyRegen},
 };
 
 // ============================================================
@@ -599,10 +611,6 @@ static void SyncHooks(bool force) {
         g_speedHooked.store(g_origSetTimeScale != nullptr);
         ApplyTimeScaleNow();
     }
-    if (g_energy.load()) {
-        InstallTable(kEnergySlots, sizeof(kEnergySlots) / sizeof(kEnergySlots[0]));
-        g_energyHooked.store(g_origEnergyCurrent != nullptr);
-    }
 }
 
 // ============================================================
@@ -633,7 +641,6 @@ void Sf3_OnFeatureChanged(int featNum, bool enabled) {
             g_speed.store(enabled ? (cur > 1 ? cur : 5) : 1);
             break;
         }
-        case SF3_FEAT_ENERGY: g_energy.store(enabled); break;
         default: break;
     }
     SyncHooks(true);
@@ -642,7 +649,7 @@ void Sf3_OnFeatureChanged(int featNum, bool enabled) {
 void Sf3_OnValueChanged(int featNum, int value) {
     if (featNum == SF3_FEAT_DMG) {
         if (value < 1) value = 1;
-        if (value > 10) value = 10;
+        if (value > 100) value = 100;
         g_dmgMult.store(value);
         LOGI(SF3_LOG " damage slider=%d", value);
         SyncHooks(true);
@@ -665,7 +672,7 @@ void Sf3_Tick(const bool* features, const int* values) {
         if (values && values[SF3_FEAT_DMG] > 0) {
             int mult = values[SF3_FEAT_DMG];
             if (mult < 1) mult = 1;
-            if (mult > 10) mult = 10;
+            if (mult > 100) mult = 100;
             g_dmgMult.store(mult);
         }
         g_god.store(features[SF3_FEAT_GOD]);
@@ -675,7 +682,6 @@ void Sf3_Tick(const bool* features, const int* values) {
             if (speed > 10) speed = 10;
             g_speed.store(speed);
         }
-        g_energy.store(features[SF3_FEAT_ENERGY]);
     }
     if (!g_libReady.load() && isLibraryLoaded(SF3_TARGET_LIB)) g_libReady.store(true);
     SyncHooks(false);
@@ -686,7 +692,6 @@ void Sf3_ForceClear() {
     g_dmgMult.store(1);
     g_god.store(false);
     g_speed.store(1);
-    g_energy.store(false);
     if (g_origSetTimeScale) {
         float base = g_lastBaseScale.load();
         if (!(base >= 0.0f) || base >= 1000.0f) base = 1.0f;

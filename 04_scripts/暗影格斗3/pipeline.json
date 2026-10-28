@@ -1,7 +1,7 @@
 {
   "game": "暗影格斗3",
   "version": "1.45.3",
-  "notes": "2026-09-19 原版（TapTap 渠道，用户真机手装）已到位：斌哥包抓点 + 原版锚点复核完成（两包 libil2cpp.so / global-metadata.dat 同哈希 ⇒ RVA 通用）。星光实现=菜单 4 项（Slider_伤害倍率:1:10:1 / Toggle_上帝模式 / Slider_战斗速度:1:10:1 / Toggle_无限体力）+ SignSpoof 回灌官方证书 + TapLoginForceWeb 强制网页登录。pre_install_gate 已通过：2026-09-19 按用户选择删掉共用骨架 MainModern.cpp 里废弃的 Preferences.Changes 静态导出后，重跑 impl_mod→build_so→surgical→sign→pre_install_gate（包 md5 717535d4…，so 9b1623e4…，dex 3e8f4362…）；门禁的 JNI配套 项对 sf3 记 SKIP（正则读不到 OBFUSCATE 包裹的注册名），已用源级比对补证：C 侧 19 个 regOne 与 ModBridge.java 19 个 native 声明名/签名全同。2026-09-19 14:17 install 已完成：用户授权 SF3_ALLOW_UNINSTALL=1，卸载官方包+清数据后全新安装并闭环校验（设备 base.apk md5==717535d4…，firstInstallTime=lastUpdateTime=14:17:09）。14:20 冷启动：libstarry_magic.so 已加载进进程、starry_magic_prefs.xml 写入 auth_game_id=sf3/auth_menu_enabled=true/menu_enabled=true、logcat 无 FATAL/SIGSEGV；截屏停在启动公告弹窗，悬浮球/菜单可见性待用户推进后验收。2026-09-19 晚：按用户实测反馈删除无限货币（假 UI 无效，钱包钩子代码一并删除），并修伤害 hook 重复落值 bug（敌人两层倍率=平方）；重编 so→外科→签名→装机后待真机验收。",
+  "notes": "2026-10-29 现状：菜单三项（Slider_伤害倍率:1:100:1 / Toggle_上帝模式 / Slider_战斗速度:1:10:1），定怪已按用户指令整体删除（代码级清除，见 10_docs/_state/规范变更日志.md 2026-10-29 02:4x 条）。过验签＝双轨：签名走运行时替换（MT ApkSignatureKillerEx 形态，改 MultiDexApplication.super 挂 killer，killer dex=classes9.dex，源在 07_patched/暗影格斗3/surgical/killer_smali）+ 登录走改包法（classes.dex 的 IntentHelper action 改名 → 网页登录）。libil2cpp.so / global-metadata.dat / libaccess.so / libcpp.so / libcore.so 全部官方零改动（sign 阶段硬断言）。验收基线：连续 3 次冷启 InitSuccessCallBack + LoginSuccessCallBack。",
   "params": {
     "game_id": "sf3",
     "package": "com.wanda.sf3.wd",
@@ -80,7 +80,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-19 00:52:38",
+      "done_at": "2026-10-28 21:35:33",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/02_apks/暗影格斗3/暗影格斗3_1.45.3_taptap_official_from_device.apk": {
           "md5": "7ac7591436e92136f22b715c91b5b930"
@@ -128,16 +128,12 @@
         }
       ],
       "status": "done",
+      "done_at": "2026-10-28 21:51:55",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/10_docs/暗影格斗3/斌哥包抓点_20260919.md": {
           "md5": "2095f059d183409fd8b96f7abc40d36c"
         }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/暗影格斗3/static_inspect/zip_entries.txt": "c67fee409345f53ad2d06d49540f2156",
-        "/Users/aliang/Documents/nixiang/06_dumped/暗影格斗3/static_inspect/static_identity.json": "aa007259ad2879f15c328b2e7d9782ed"
-      },
-      "done_at": "2026-09-19 00:37:29"
+      }
     },
     {
       "id": "anchor_official",
@@ -197,15 +193,6 @@
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp"
         },
         {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
-        },
-        {
-          "type": "file_contains",
-          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java",
-          "pattern": "com.wanda.sf3.wd"
-        },
-        {
           "type": "file_contains",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java",
           "pattern": "com.wanda.sf3.wd"
@@ -213,7 +200,7 @@
         {
           "type": "file_contains",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Entry.cpp",
-          "pattern": "Slider_伤害倍率:1:10:1"
+          "pattern": "Slider_伤害倍率:1:100:1"
         },
         {
           "type": "file_contains",
@@ -223,29 +210,26 @@
         {
           "type": "file_contains",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Entry.cpp",
-          "pattern": "Toggle_无限体力"
+          "pattern": "Toggle_定怪"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-19 14:53:31",
+      "done_at": "2026-10-28 23:45:24",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp": {
-          "md5": "556e8d0c5c79b83b62b6a2576a10b6db"
+          "md5": "49abdbc3cfd14a9d48fc4e4dd58fb76f"
         },
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.h": {
-          "md5": "1541b49c2d1b63909b79b4d36079b6f5"
+          "md5": "77f1a2387331dd70f324ccdd8793ec32"
         },
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Entry.cpp": {
-          "md5": "7f24471257383d0e6e5184b45265fa2d"
+          "md5": "029cf1fc6b3ac7af89fb9f6050f69e89"
         },
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_sf3.mk": {
-          "md5": "8c23e63ee732b08dec32e3e90281bd00"
+          "md5": "1918595053194d789c6d26015d058294"
         },
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp": {
-          "md5": "bdf44f0c676570735b826a51e4ad12a9"
-        },
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": {
-          "md5": "c5174bb137dbe5706a3c0bc9f5369fa3"
+          "md5": "d29a3e2196c7c2c44d69de03d85be06d"
         }
       },
       "inputs": {
@@ -268,53 +252,80 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so"
-        },
-        {
-          "type": "not_exists",
+          "type": "file_contains",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so",
-          "pattern": "Slider_伤害倍率:1:10:1"
+          "pattern": "Slider_伤害倍率:1:100:1"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-20 20:14:34",
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so; 原 md5=62218946c5d81557d0996e0ba926288e",
+      "done_at": "2026-10-29 02:31:20",
+      "artifacts": {},
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp": "66bc137c6d00f71370b31f30f12e0fdc",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.h": "e0377fe22f38c69eee8bb8f356a96fe1",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Entry.cpp": "4309a347d93d1e5ba9fb9c2ad629844b",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_sf3.mk": "8c23e63ee732b08dec32e3e90281bd00",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp": "bdf44f0c676570735b826a51e4ad12a9",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": "77216953ad0280ef10b3c1e6b8f49757"
-      },
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_sf3/arm64-v8a/libstarry_magic.so; 原 md5=62218946c5d81557d0996e0ba926288e"
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.cpp": "747fa2fce50c322c4deface5286fdc72",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Mod.h": "6b747a1bcf3e7db577d54138de9d9abe",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Sf3Entry.cpp": "a273a0be11627fc07da5b7483762e19f",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_sf3.mk": "1918595053194d789c6d26015d058294",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp": "d29a3e2196c7c2c44d69de03d85be06d"
+      }
     },
     {
       "id": "surgical",
-      "name": "外科组装（Manifest factory/provider/service + classes8.dex + starry so）",
+      "name": "外科组装（Manifest + classes8.dex + 游戏 dex 改包法补丁 + starry so）",
       "requires": [
         "build_so"
       ],
-      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_so_only.sh'",
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/surgical_sf3_1.45.3.sh'",
       "preflight": [
-        "/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/sf3_so_only.sh"
+        "/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/surgical_sf3_1.45.3.sh"
       ],
-      "note": "2026-09-20 切 so-only 后端（_common/stages.md「调试内循环」允许 per-game 声明）：本次只改 native（HNAccessCore::checkCopyright 版权补丁），且原版 TapTap 包已被清理、02_apks 只剩真机拉回的上一版正式包。底包=暗影格斗3_1.45.3_starry_from_device.apk（md5 fcb6c4f3…，== 已发布 releaseSigned），只换 lib/arm64-v8a/libstarry_magic.so 重签；原 dex/arsc/assets/其余 so 逐字节不变（脚本内硬校验）。需要重跑完整外科（改 manifest/dex）时，把 command 换回 surgical_sf3_1.45.3.sh 并先归位原版包。2026-09-20 清理：unsigned 中间包已删（md5 6cc756a29e820a5cfe991716c24ade42 / 2,714,874,521B，入库清单 10_docs/暗影格斗3/正式包裁剪清单 同规则），verify 由 file_exists 改 not_exists 正向留档，下游 sign.inputs 同步移除该条目。",
+      "note": "2026-10-28 切回完整外科后端（上游 build_so/anchor 已重跑、原版 TapTap 包已在 02_apks 归位）：本次除 native 外还要改 dex —— TapTap 登录入口按「改包法」把 LoginActivityImpl 的 ClientLoginHandler/PhoneLoginHandler 换成 WebHandler（classes4.dex），并在 zip merge 里对「未被替换的条目」逐条 sha256 硬校验字节不变。so-only 后端 sf3_so_only.sh 仍保留，只改 native 的迭代可换回。",
       "verify": [
-        {
-          "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-unsigned.apk"
-        },
         {
           "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes.dex"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/orig_classes.dex"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes5.dex"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes9.dex"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/orig_classes5.dex"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-20 20:15:12",
+      "done_at": "2026-10-29 02:32:33",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex": {
-          "md5": "1a53a0dedd3b9a1df4b688e9556d1cc7"
+          "md5": "bae75d2311b2460189d13c01ac05312c"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes.dex": {
+          "md5": "1ce45282a0d80b610e1232bd04789a76"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/orig_classes.dex": {
+          "md5": "1209ce4cc88fb29872e6fdb1896eb78d"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes5.dex": {
+          "md5": "c51323c4e2e2e1def039e85271b9fa14"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes9.dex": {
+          "md5": "a48292257a37369ae91c6b4c88a56849"
+        },
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/orig_classes5.dex": {
+          "md5": "37525995a2468019a1763f3752fd51aa"
         }
       }
     },
@@ -335,14 +346,19 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-20 20:17:41",
+      "done_at": "2026-10-29 02:34:41",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk": {
-          "md5": "ae42b36dded2ab783522dfe8fe7798ce"
+          "md5": "64241211eb06c32ca09d06e84efd7e65"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex": "1a53a0dedd3b9a1df4b688e9556d1cc7"
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes8.dex": "bae75d2311b2460189d13c01ac05312c",
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes.dex": "1ce45282a0d80b610e1232bd04789a76",
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/orig_classes.dex": "1209ce4cc88fb29872e6fdb1896eb78d",
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes5.dex": "c51323c4e2e2e1def039e85271b9fa14",
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/classes9.dex": "a48292257a37369ae91c6b4c88a56849",
+        "/Users/aliang/Documents/nixiang/07_patched/暗影格斗3/surgical/orig_classes5.dex": "37525995a2468019a1763f3752fd51aa"
       }
     },
     {
@@ -360,14 +376,14 @@
       ],
       "status": "done",
       "note": "唯一 FAIL 是已知豁免项：so 保留的历史静态导出 Java_com_starry_magic_menu_Preferences_Changes（Java 侧 Preferences.Changes 已删除，空实现仅防旧 so/反射残留调用崩溃；当前 dex 无任何调用点）。门禁文本自身要求此种情形“在装机报告中说明并经用户确认后才可放行”，故 install 前必须用户确认。真正的动态注册面（19 个 nativeXxx）由 surgical 阶段的 dex↔ModBridge 交叉校验覆盖——pre_install_gate 的 regex 抓不到 MainModern.cpp 里 OBFUSCATE(...) 包裹的方法名，这一点已在文档里写明。",
-      "done_at": "2026-09-20 20:18:06",
+      "done_at": "2026-10-29 02:34:50",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk": {
-          "md5": "ae42b36dded2ab783522dfe8fe7798ce"
+          "md5": "64241211eb06c32ca09d06e84efd7e65"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk": "ae42b36dded2ab783522dfe8fe7798ce"
+        "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk": "64241211eb06c32ca09d06e84efd7e65"
       }
     },
     {
@@ -388,14 +404,14 @@
       ],
       "status": "done",
       "note": "2026-09-19 14:02 首跑假 done（`$PKG（` 多字节变量名 bug + EXIT trap 吞码），修复后 14:17 经授权 SF3_ALLOW_UNINSTALL=1 卸载安装成功；v2（删无限货币+修伤害平方 bug）于 15:05 同签名覆盖安装 Success，设备 base.apk md5 fcb6c4f32a0a804a38567b142ffa7e93 == 产物，冷启动无崩溃。本阶段 verify 已改为 .install_ok 成功戳，成功戳由 sf3_install.sh 在闭环校验通过后写入。收尾口令执行后保持 done。",
-      "done_at": "2026-09-20 20:20:31",
+      "done_at": "2026-10-29 02:36:49",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/暗影格斗3/.install_ok": {
-          "md5": "f9d948d3ceff4c2299206189f1f95a55"
+          "md5": "8265065f26e523b53c86b04e6b537921"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk": "ae42b36dded2ab783522dfe8fe7798ce"
+        "/Users/aliang/Documents/nixiang/08_output/暗影格斗3/暗影格斗3_1.45.3_surgical-releaseSigned.apk": "64241211eb06c32ca09d06e84efd7e65"
       }
     },
     {
