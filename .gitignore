@@ -179,6 +179,9 @@ starry_link/
 # 正式脚本一律落 04_scripts/{游戏}/，例如 _tmp_e2launch.sh 已正式化为
 # 04_scripts/境界守望者/wor_launch.sh（真机冒烟 + 双路 logcat 取证）。
 _tmp_*.sh
+# 同上，临时 python 探针/补丁脚本（2026-10-28 补：此前只 ignore 了 .sh，导致 12 个
+# _tmp_*.py 冒进 git status 进而在仓库根堆积；临时脚本用完即删，勿留仓根）。
+_tmp_*.py
 
 # ===== 2026-10-04：勇士之心构建中间物与安装暂存（可再生）=====
 # .ysxz_menu_dex/：ysxz_build_menu_dex.sh 的 gradle/apktool/smali 工作区（解包 smali、
