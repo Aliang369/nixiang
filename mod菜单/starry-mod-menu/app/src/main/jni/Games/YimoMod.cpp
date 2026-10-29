@@ -27,6 +27,7 @@
 #include "YimoMod.h"
 
 #include <atomic>
+#include <thread>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -523,6 +524,30 @@ end)
 ---------------------------------------------------------------------
 -- ⑤ 无限体力（拦截消耗，放行恢复）
 ---------------------------------------------------------------------
+-- ② 移速 xN（1.1.0 版：两个属性入口都乘）
+-- ★2026-10-29 取证：1.1.0 里 getAttribValue(351) 是最高频读法（avH: 351x54），
+--   而 getAttribRatioValue(351) 次数少得多 ⇒ 1.1.0 的运动数学改从 getAttribValue 取比率，
+--   只挂 getAttribRatioValue（1.0.1 的做法）就「乘法生效但没人用」。
+--   两个入口都乘（同一属性不会被同一次计算读两遍，实测取 1→6 线性，无双乘现象）。
+patchLite(ACA, "getAttribValue", function(orig)
+  return function(self, attributeId)
+    local v = orig(self, attributeId)
+    if YM.diag then
+      local h = YM.avH
+      if type(h) ~= "table" then h = {}; YM.avH = h end
+      local k = tostring(attributeId)
+      h[k] = (h[k] or 0) + 1
+    end
+    local m = YM.spd
+    if type(m) == "number" and m ~= 1 and attributeId == LOAD_ADJ
+       and isMine(self and self.entity) then
+      if YM.diag then YM.avMul = (YM.avMul or 0) + 1 end
+      return v * m
+    end
+    return v
+  end
+end)
+
 -- 诊断：getRawAttribValue 被要了哪些 id（移速真实读数很可能走这里）
 patchLite(ACA, "getRawAttribValue", function(orig)
   return function(self, attributeId)
@@ -1016,6 +1041,104 @@ static const char* YimoPatchText() { return kYimoPatch; }
 
 #if MOD_DIAG_LUA
 /* ============================================================
+ * 诊断：从**进程内存**里扒出已解密的 global-metadata.dat
+ *
+ * 背景（2026-10-29 伊莫 1.1.0）：APK 里的 global-metadata.dat 被易盾加密
+ * （Il2CppDumper 直接报 "Metadata file not found or encrypted"），且这个
+ * libil2cpp.so 的动态符号里**一个 il2cpp_* 都没有导出**（dynsym 3155 条、含
+ * il2cpp 0 条），所以既不能静态 dump、也不能 dlsym IL2CPP API。
+ * 唯一可行路线：等游戏把 metadata 解密进内存后，按魔数 0xFAB11BAF 扫出来落盘，
+ * 再喂 Il2CppDumper 拿 RVA，最后按 RVA + 序言指纹挂 Dobby。
+ * ============================================================ */
+#include <sys/mman.h>
+
+static const char* kMetaDumpPath =
+    "/sdcard/Android/data/com.x.yimoo.official/files/meta_dump.bin";
+
+static bool YimoWriteBuf(const char* path, const void* data, size_t len) {
+    FILE* f = fopen(path, "wb");
+    if (!f) return false;
+    const size_t w = fwrite(data, 1, len, f);
+    fclose(f);
+    return w == len;
+}
+
+/* 解析 /proc/self/maps，在「libil2cpp 映射范围 ± 大匿名区」里按魔数扫描 */
+static void YimoDumpIl2CppMetadata() {
+    FILE* m = fopen("/proc/self/maps", "r");
+    if (!m) return;
+    static int s_round = 0;
+    ++s_round;
+    char line[512];
+    uintptr_t lo_img = ~(uintptr_t)0, hi_img = 0;
+    /* 先定 libil2cpp 的地址范围 */
+    while (fgets(line, sizeof(line), m)) {
+        if (strstr(line, "libil2cpp.so")) {
+            uintptr_t a = 0, b = 0;
+            if (sscanf(line, "%lx-%lx", &a, &b) == 2) {
+                if (a < lo_img) lo_img = a;
+                if (b > hi_img) hi_img = b;
+            }
+        }
+    }
+    rewind(m);
+    const uint32_t kMagic = 0xFAB11BAFu;
+    int dumped = 0;
+    int scanned = 0;
+    struct Blk { uintptr_t addr; size_t len; };
+    Blk top[5] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+    while (fgets(line, sizeof(line), m) && dumped < 4) {
+        uintptr_t a = 0, b = 0;
+        char perms[8] = {0};
+        if (sscanf(line, "%lx-%lx %7s", &a, &b, perms) != 3) continue;
+        if (perms[0] != 'r') continue;
+        const size_t len = (size_t)(b - a);
+        /* 记录最大 5 个可读区，便于判断「是不是被尺寸过滤掉了」 */
+        if (len > top[4].len) {
+            top[4].len = len; top[4].addr = a;
+            for (int k = 4; k > 0 && top[k].len > top[k - 1].len; --k) {
+                Blk tmp = top[k]; top[k] = top[k - 1]; top[k - 1] = tmp;
+            }
+        }
+        if (len < (1u << 20) || len > (4096ull << 20)) continue;
+        ++scanned;
+        const bool near = (hi_img && a >= lo_img && a <= hi_img + 0x30000000ull);
+        const bool bigEnough = (len >= (16u << 20));
+        if (!near && !bigEnough) continue;
+        const uint8_t* p = (const uint8_t*)a;
+        for (size_t off = 0; off + 64 < len; off += 8) {
+            uint32_t v = 0;
+            memcpy(&v, p + off, 4);
+            if (v != kMagic) continue;
+            int32_t ver = 0;
+            memcpy(&ver, p + off + 4, 4);
+            if (ver < 20 || ver > 40) continue;
+            /* 头部 sanity：stringLiteralOffset 应 > 0 且 < 块长 */
+            int32_t slOff = 0;
+            memcpy(&slOff, p + off + 8, 4);
+            if (slOff <= 0 || (size_t)slOff >= len - off) continue;
+            size_t dumpLen = len - off;
+            if (dumpLen > (128u << 20)) dumpLen = 128u << 20;
+            char path[256];
+            if (dumped == 0) {
+                snprintf(path, sizeof(path), "%s", kMetaDumpPath);
+            } else {
+                snprintf(path, sizeof(path), "%s.%d", kMetaDumpPath, dumped);
+            }
+            const bool ok = YimoWriteBuf(path, p + off, dumpLen);
+            DLOG("meta candidate #%d at %p off=%zu ver=%d sl=%d len=%zu ok=%d",
+                 dumped, (void*)(p + off), off, ver, slOff, dumpLen, (int)ok);
+            dumped++;
+            break;   /* 每块只取第一个候选 */
+        }
+    }
+    fclose(m);
+    DLOG("meta scan #%d: regions=%d dumped=%d img=%p..%p top=%zu/%zu/%zu/%zu/%zu",
+         s_round, scanned, dumped, (void*)lo_img, (void*)hi_img,
+         top[0].len, top[1].len, top[2].len, top[3].len, top[4].len);
+}
+
+/* ============================================================
  * 诊断期 Lua 模块转储（照 口袋觉醒/Match2Mod.cpp 的成熟做法搬过来）
  *
  * 目的：1.1.0 里「移速/无敌/精灵攻击秒杀」三项失效，靠猜挂点已反复落空；
@@ -1133,7 +1256,47 @@ if type(rh) == "table" then
   for i = 1, math.min(6, #arr) do top[#top+1] = arr[i].k .. "x" .. arr[i].n end
   parts[#parts+1] = "rawH[" .. table.concat(top, ",") .. "]"
 end
-Y.diagAll = true   -- 诊断实验：所有属性比率都乘（正式包无此键）
+-- 运动组件持有者勘察：1.0.1 的 ClientMotionComponent 在 1.1.0 挂在谁身上
+do
+  local probe = {}
+  local cands = { pawn = pw, me = me,
+                  emodel = (type(pw) == "table") and rg(pw, "eModel") or nil,
+                  ctrl = (type(pw) == "table") and rg(pw, "controller") or nil }
+  for name, obj in pairs(cands) do
+    if type(obj) == "table" then
+      local ks = {}
+      for k, v in pairs(obj) do
+        if type(k) == "string" then
+          local lk = k:lower()
+          if lk:find("motion") or lk:find("speed") or lk:find("component") then
+            ks[#ks+1] = k .. ":" .. type(v)
+            if #ks >= 6 then break end
+          end
+        end
+      end
+      table.sort(ks)
+      probe[#probe+1] = name .. "{" .. table.concat(ks, ",") .. "}"
+    else
+      probe[#probe+1] = name .. "=" .. type(obj)
+    end
+  end
+  parts[#parts+1] = "OWNER[" .. table.concat(probe, " ") .. "]"
+end
+if type(pw) == "table" then
+  local CC = package.loaded["Common.Const.Const"]
+  parts[#parts+1] = string.format("API getComponent=%s COMPONENT_MOTION=%s",
+      type(rg(pw, "getComponent")),
+      tostring(type(CC) == "table" and rg(CC, "COMPONENT_MOTION") or nil))
+end
+local ah = Y.avH
+if type(ah) == "table" then
+  local arr = {}
+  for k, n in pairs(ah) do arr[#arr+1] = { k = k, n = n } end
+  table.sort(arr, function(x, y) return x.n > y.n end)
+  local top = {}
+  for i = 1, math.min(6, #arr) do top[#top+1] = arr[i].k .. "x" .. arr[i].n end
+  parts[#parts+1] = "avH[" .. table.concat(top, ",") .. "]"
+end
 if type(pw) == "table" then
   local out = {}
   for k, v in pairs(pw) do
@@ -1478,6 +1641,18 @@ static bool InstallLuaHooks() {
          (void*)g_origPcall, (void*)g_origGettop);
 #if MOD_DIAG_LUA
     InstallLuaDumpHook();   /* 诊断包：把游戏加载的 Lua 模块落盘，用于定挂点 */
+    /* metadata 解密发生在 libil2cpp 起来之后：等 8 s 再扒一次（只诊断包） */
+    static std::atomic<bool> s_metaTried{false};
+    if (!s_metaTried.exchange(true)) {
+        std::thread([] {
+            for (int i = 0; i < 6; ++i) {
+                struct timespec ts{30, 0};
+                nanosleep(&ts, nullptr);
+                YimoDumpIl2CppMetadata();
+                if (access(kMetaDumpPath, F_OK) == 0) break;
+            }
+        }).detach();
+    }
 #endif
     g_hooksInstalled = true;
     g_ready.store(true);
