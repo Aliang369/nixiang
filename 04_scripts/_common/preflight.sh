@@ -37,6 +37,9 @@
 #    .js   → node --check     （node 缺失则 SKIP 提示）
 #    .json → json.tool 校验
 #    .cpp/.cc/.c/.h/.hpp/.mk → ⚠ 无独立语法检查器：必须重跑管线构建阶段验证
+#    .md（仅 AGENTS.md）→ 入口体量：>30720 B REMIND（30 KB 工作上限）/ >32768 B FAIL（D6 闸门）
+#            2026-10-30 补：D6 原先只在 twin_status 查，等于"撞线才清"；这里提前预警，
+#            配合 AGENTS.md §1「入口增量纪律」把清理成本摊到每次改动。
 #    其他  → PASS（跳过）
 #
 #  退出码: 0=全部通过/SKIP/REMIND；1=存在 FAIL（必须修复后再继续）
@@ -136,6 +139,29 @@ check_one() {
           remind=$((remind+1))
         fi
       fi
+      ;;
+    md)
+      # 入口体量关（2026-10-30）：只查 AGENTS.md —— 入口文件边界要求它只放通用规则与路由，
+      # 单游戏/日志/渠道正文不属于这里。30 KB 是工作上限（预警），32 KB 是 D6 硬闸（与
+      # twin_status.sh 同源同值），两者都在改完当场给出，不等到双机体检。
+      case "$f" in
+        *AGENTS.md|AGENTS.md)
+          _esz=$(wc -c < "$f" | tr -d ' ')
+          if [ "${_esz:-0}" -gt 32768 ]; then
+            echo "✗ FAIL  [入口体量] ${f} ${_esz} B > 32768（D6 闸门）：按 §1「入口文件边界」把单游戏/渠道/日志正文迁出，只留指针"
+            fail=$((fail+1))
+          elif [ "${_esz:-0}" -gt 30720 ]; then
+            echo "⚠ REMIND [入口体量] ${f} ${_esz} B > 30720（30 KB 工作上限；D6 硬闸 32768）：新增前先迁出等量旧正文（§1 入口增量纪律）"
+            remind=$((remind+1))
+          else
+            echo "✓ PASS  [入口体量] ${f} ${_esz} B <= 30720（距 D6 硬闸还有 $((32768 - _esz)) B）"
+            pass=$((pass+1))
+          fi
+          ;;
+        *)
+          echo "✓ PASS  [跳过] ${f}（md 只对入口文件查体量）"; pass=$((pass+1))
+          ;;
+      esac
       ;;
     *)
       echo "✓ PASS  [跳过] ${f}（类型无检查器）"; pass=$((pass+1))
