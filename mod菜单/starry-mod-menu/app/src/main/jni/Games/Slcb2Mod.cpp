@@ -267,7 +267,36 @@ static const HookSlot kSlots[] = {
     { "SkillMp",   0x118dd824UL, SLCB2_FEAT_SKILL,   K_RESULT,     0x118DD904UL, 0x1A890100u, 0x2A1F03E0u },
     { "GetIron",   0x114d97d0UL, SLCB2_FEAT_IRON,    K_STUB9999,   0,          0,          0          },
     { "GetCrystal",0x114ca960UL, SLCB2_FEAT_CRYSTAL, K_STUB9999,   0,          0,          0          },
-    { "Appearance",0x11944af8UL, SLCB2_FEAT_SKIN,    K_STUB_TRUE,  0,          0,          0          },
+    { "Appearance",0x11944af8UL, SLCB2_FEAT_SKIN,    K_STUB_TRUE,  0,          0xD10183FFu, 0         },
+
+    // ── 全装扮（2026-10-30 重建）：上面那颗只影响「详情面板锁图标 / 套装部件判定」，
+    //    图鉴式列表（装扮仓库 AppearanceInventoryUI）与装扮页（AppearanceUI）的灰显/过滤
+    //    都不走它，而是走各自 InitInventoryData 里「已获得记录 vs 配置项」的合并结果：
+    //        item+0x38 = mObtained（bool）   item+0x60 = mShowLockCover（bool，构建时恒置 1）
+    //        卡片取锁 = mShowLockCover && !mObtained ⇒ 置 mObtained=1 即全解锁
+    //    两处合并都是「遍历账号已获得记录、String.Equals 比 itemCode」，故只把
+    //    「是否命中记录」与「记录里的 obtained 位」两步改成恒真，字段仍从真实记录拷，
+    //    避免 mObtainedTime / mSource 留空导致的空引用。
+    //      InvUI 0x11940D94 tbnz w0,#0,+6  → b +6（无条件进「命中」分支）
+    //      InvUI 0x11940DAC ldrb w8,[x23,#0x10] → mov w8,#1
+    //      UI    0x1194AFD8 tbz  w0,#0,+6  → nop（顺序落到下一条）
+    //      UI    0x1194AFDC ldrb w8,[x24,#0x10] → mov w8,#1
+    { "SkinInvHit", 0x11940D94UL, SLCB2_FEAT_SKIN, K_RESULT, 0x11940D94UL, 0x370000C0u, 0x14000006u },
+    { "SkinInvOb",  0x11940DACUL, SLCB2_FEAT_SKIN, K_RESULT, 0x11940DACUL, 0x394042E8u, 0x52800028u },
+    { "SkinUiHit",  0x1194AFD8UL, SLCB2_FEAT_SKIN, K_RESULT, 0x1194AFD8UL, 0x36000060u, 0xD503201Fu },
+    { "SkinUiOb",   0x1194AFDCUL, SLCB2_FEAT_SKIN, K_RESULT, 0x1194AFDCUL, 0x39404308u, 0x52800028u },
+
+    // ── 全装扮 正主（2026-10-30 二次定位）：装扮解锁的**唯一权威**是哥布林商人解锁表
+    //      CampMgr.GoblinMerchant_GetSkinIsUnlock(code) → 本地/服务端下发的解锁记录里
+    //      「有没有 (flag@+0x10 && code@+0x30) 这条」。全部锁态都问它：
+    //        StylistUIMobileInteraction.IsUnitItemUnlocked (B 尾调，手机端入口)
+    //        StylistItemUnitUI.SetStylistDataScrollUnit / RefreshUsedState_Skin
+    //        StylistUI.UpdateSkinPreview / OpenUnitPanel_Skin / HideUnitPanel_Skin
+    //        AppearanceUnlockData.TryGetLockedContent
+    //      ⇒ 读取侧钉 true 即全解锁（不改解锁表、不写存档、不上报）。
+    //      GetIsUnlockTransmog 同理（幻化类装扮，ShowMenuPage/TryGetLockedContent 用）。
+    { "SkinUnlock", 0x119C345CUL, SLCB2_FEAT_SKIN, K_STUB_TRUE,  0,          0xF81D0FFEu, 0         },
+    { "TransUnlock",0x119C5100UL, SLCB2_FEAT_SKIN, K_STUB_TRUE,  0,          0xF81D0FFEu, 0         },
 };
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
@@ -335,6 +364,9 @@ static bool PatchJumpSlot(int i) {
 
     // ---- 常量 stub ----
     if (sl.kind == K_STUB_TRUE || sl.kind == K_STUB9999) {
+        // 可选入口指纹（hook-rules §22 第 4 步）：oldW 非 0 时必须与现读字面量一致，
+        // 否则判为版本漂移/页面未解密，本拍不装（绝不盲改）。
+        if (sl.oldW && w0 != sl.oldW) return false;
         void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
         if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
         g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
