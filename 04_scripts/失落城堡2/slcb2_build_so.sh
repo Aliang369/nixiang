@@ -56,8 +56,13 @@ check_str() {  # check_str <字节串> <说明>
 }
 check_str "Slcb2"             "游戏标签 Slcb2"
 check_str "slcb2"             "auth game_id slcb2"
-check_str "Toggle_百倍伤害"   "菜单串 Toggle_百倍伤害"
+check_str "Slider_伤害倍率:1:100" "菜单串 Slider_伤害倍率:1:100"
 check_str "Toggle_无敌"       "菜单串 Toggle_无敌"
+# 2026-10-29 22:00：货币改为「MethodInfo 反查拿到 RVA 后做图片内常量 stub」，按名抓点已弃用，
+# 指纹改查新抓点 tag（字符串仍由 sl.tag 编进 so）
+check_str "GetIron"           "抓点 GetIron（get_IronPowder 0x114d97d0）"
+check_str "GetCrystal"        "抓点 GetCrystal（get_Crystal 0x114ca960）"
+check_str "DmgMul"            "抓点 DmgMul"
 check_str "Toggle_无限技能"   "菜单串 Toggle_无限技能"
 check_str "Toggle_无限魔铁锭" "菜单串 Toggle_无限魔铁锭"
 check_str "Toggle_无限魂晶"   "菜单串 Toggle_无限魂晶"

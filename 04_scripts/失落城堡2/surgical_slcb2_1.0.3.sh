@@ -243,6 +243,13 @@ if perms:
     if i < 0:
         i = t.find("<application")
     t = t[:i] + "\n".join(perms) + "\n" + t[i:]
+# ★照抄斌哥包配置（2026-10-29）：斌哥包 AndroidManifest 带 android:debuggable="true"
+#   （aapt2 实证）。debuggable 让本进程拿到 debug seinfo ⇒ SELinux 放行可执行匿名内存，
+#   这正是他的 Dobby 跳板（trampoline）能跑、而我们之前必崩的差异点。1:1 照抄，不自创。
+t = t.replace('android:debuggable="false"', 'android:debuggable="true"')
+if 'android:debuggable' not in t:
+    t = t.replace("<application ", '<application android:debuggable="true" ', 1)
+
 # ★ 易盾铁律：声明位置保持追加在 </application> 之前，只加 initOrder=MAX
 prov = f'''
         <provider
