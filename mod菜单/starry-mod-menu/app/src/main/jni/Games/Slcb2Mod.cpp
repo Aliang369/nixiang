@@ -29,6 +29,15 @@
 #include <cstdio>
 #include <cstring>
 
+#include <sys/mman.h> // 自建代码页补丁（mprotect）
+#include <sys/wait.h>  // fork 子进程做 trampoline 自检
+#include <unistd.h>
+#include <fcntl.h>
+#include <ucontext.h>   // sysconf(_SC_PAGESIZE)
+#include <pthread.h>
+#include <dlfcn.h>
+#include <sys/syscall.h>
+#include <time.h>
 #include <mutex>      // §④ 装钩互斥
 #include <setjmp.h>   // §④ sigsetjmp 保护区
 #include <signal.h>   // §④ 致命信号兜底
@@ -54,127 +63,44 @@ using Il2Cpp::GetApi;
 // ============================================================================
 static std::atomic<bool> g_libReady{false};
 static std::atomic<bool> g_anyHooked{false};
-static std::atomic<bool> g_dmg{false};
-static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_reenter{false};
-
-typedef void (*TakeDamage_t)(void* self, void* damageData, void* method);
-static TakeDamage_t g_origTakeDamage = nullptr;
-
-// ============================================================================
-//  ② 字段偏移与 RVA
-//     TODO：全部来自 dump.cs / IDA / Trace 实测，禁止猜；换包必须重 dump。
-// ============================================================================
-enum : size_t {
-    kOffHurtValue = 0x30,   // 示例：伤害字段偏移（本游戏实测后改）
-};
+static std::atomic<bool> g_dmg{false};      // 伤害倍率「功能开启」（滑块值 >1 才算生效）
+static std::atomic<bool> g_inv{false};
+static std::atomic<bool> g_skill{false};    // 无限技能（免CD + 不耗蓝）
+static std::atomic<bool> g_iron{false};     // 无限魔铁锭
+static std::atomic<bool> g_crystal{false};  // 无限魂晶
+static std::atomic<int>  g_mult{1};         // 伤害倍率 1..100（1 = 关闭）
+static std::atomic<bool> g_skin{false};     // 全装扮解锁
 
 // ============================================================================
-//  ③ 安全助手（防闪退核心；新代码禁止绕开它们裸读写内存）
+//  ④ 致命信号兜底（sigsetjmp 保护区 + sigaltstack）—— 原样重建自本机模板
 // ============================================================================
-static bool OkPtr(void* p) { return p && Il2Cpp::IsValidHeapPtr(p); }
-
-static void SafeWriteI32(void* obj, size_t off, int32_t v) {
-    if (!OkPtr(obj)) return;
-    Il2Cpp::WriteI32(obj, off, v);
-}
-
-static void SafeWriteF32(void* obj, size_t off, float v) {
-    if (!OkPtr(obj)) return;
-    Il2Cpp::WriteF32(obj, off, v);
-}
-
-static int32_t SafeReadI32(void* obj, size_t off, int32_t defv) {
-    if (!OkPtr(obj)) return defv;
-    return Il2Cpp::ReadI32(obj, off);
-}
-
-// 类名缓存：热路径禁止每帧 object_class + class_name 解析（类指针不变就不重取）
-struct ClassNameCache {
-    void* klass = nullptr;
-    char  name[40] = {};
-    bool  valid = false;
-};
-
-static const char* CacheClassName(ClassNameCache& cache, void* obj) {
-    if (!OkPtr(obj)) return "";
-    void* k = GetApi().object_class(obj);
-    if (!k) return "";
-    if (cache.valid && cache.klass == k) return cache.name;
-    const char* n = GetApi().class_name(k);
-    cache.klass = k;
-    cache.valid = true;
-    std::snprintf(cache.name, sizeof(cache.name), "%s", n ? n : "");
-    return cache.name;
-}
-
-static bool NameHas(const char* got, const char* needle) {
-    if (!got || !needle || !*needle) return false;
-    return std::strstr(got, needle) != nullptr;
-}
-
-// ============================================================================
-//  ④ 并发 + 致命信号兜底 + 槽位熔断（v3.1 新增，来自疾风骑士 60.0.1 实战）
-//
-//  为什么需要（三段真实事故，删任一段都会复现）：
-//    (1) 并发装钩竞态：UI 线程与游戏线程同时进入 SyncHooks()，
-//        HookSlotInstall 的「幂等」判断是 check-then-act 非原子
-//        ⇒ 同一地址被 DobbyHook 两次 ⇒ DobbyCodePatch 越界 memcpy
-//        ⇒ SIGSEGV(SEGV_ACCERR)，栈：
-//           __memcpy_aarch64_simd ← DobbyCodePatch+96 ← DobbyHook+216
-//        修法：g_installMutex 串行化 + double-check。
-//    (2) DobbyHook 返回码接不住 Dobby 内部的进程级 SIGSEGV：
-//        必须用 sigsetjmp 保护区把「装钩」和「读序言」包起来，
-//        炸了就跳过该槽位、游戏继续跑。
-//    (3) hook 体内会执行游戏/第三方代码（例如免广告直接 Invoke 游戏发奖回调，
-//        回调里可能读到尚未填充的字段 ⇒ null-deref）：
-//        用 RunGuarded 包住回调，炸了吞掉 + 记日志，不整包崩。
-//
-//  sigaltstack 是 per-thread 的，备用栈必须 thread_local；
-//  故障态同理必须 thread_local（hook 体会在 UI 线程 / 游戏线程 / SDK 回调线程并发执行）。
-// ============================================================================
-
-// ---- 4.1 互斥：装钩串行 ----
 static std::mutex g_installMutex;   // 保护「装钩全过程」，只在 SyncHooks 里取
-static std::mutex g_guardMutex;     // 只保护一次性「安装信号处理器」动作
+static std::mutex g_guardMutex;
 
-// ---- 4.2 本线程故障态（thread_local：hook 体在多线程并发） ----
 static thread_local sigjmp_buf              t_faultJmp;
-static thread_local volatile sig_atomic_t   t_inGuard    = 0;   // 是否正在保护区内
-static thread_local volatile sig_atomic_t   t_faultDepth = 0;   // 保护区嵌套/连炸计数
-static thread_local volatile int            t_faultSig   = 0;   // 最近一次致命信号号
-static thread_local volatile void*          t_faultAddr  = nullptr; // 最近一次故障地址
-
-// 备用信号栈（SIGSEGV 时原栈可能已不可用）；64KB/线程，per-thread 必须 thread_local
+static thread_local volatile sig_atomic_t   t_inGuard    = 0;
+static thread_local volatile sig_atomic_t   t_faultDepth = 0;
+static thread_local volatile int            t_faultSig   = 0;
+static thread_local volatile void*          t_faultAddr  = nullptr;
 static thread_local char t_altStack[65536];
 static thread_local bool t_altStackSet = false;
 
-// ---- 4.3 被链式接管的旧处理器 ----
 static struct sigaction g_oldSegv;
 static struct sigaction g_oldBus;
 static struct sigaction g_oldIll;
 static std::atomic<bool> g_guardArmed{false};
-// 装钩期是否发生过致命信号：只在 g_installMutex 保护下读写
 static bool g_lastFatal = false;
 
-// ---- 4.4 故障处理器 ----
 static void TplFaultHandler(int sig, siginfo_t* si, void* /*uc*/) {
     if (t_inGuard) {
-        // 保护区内连炸：说明保护区本身不可靠，交回系统默认行为（宁可崩，不要死循环）
-        if (++t_faultDepth > 4) {
-            signal(sig, SIG_DFL);
-            raise(sig);
-            return;
-        }
+        if (++t_faultDepth > 4) { signal(sig, SIG_DFL); raise(sig); return; }
         t_faultSig  = sig;
         t_faultAddr = si ? si->si_addr : nullptr;
-        siglongjmp(t_faultJmp, 1);   // 永不返回
+        siglongjmp(t_faultJmp, 1);
     }
-
-    // 保护区外：链回旧处理器，再走默认
     const struct sigaction* old = (sig == SIGSEGV) ? &g_oldSegv
-                               : (sig == SIGBUS)  ? &g_oldBus
-                                                  : &g_oldIll;
+                               : (sig == SIGBUS)  ? &g_oldBus : &g_oldIll;
     if (old->sa_sigaction && old->sa_sigaction != TplFaultHandler) {
         old->sa_sigaction(sig, si, nullptr);
         return;
@@ -183,66 +109,29 @@ static void TplFaultHandler(int sig, siginfo_t* si, void* /*uc*/) {
     raise(sig);
 }
 
-// ---- 4.5 为本线程挂上备用信号栈（懒执行，失败降级为无备用栈） ----
 static void ArmFaultGuardForThread() {
     if (t_altStackSet) return;
     t_altStackSet = true;
-    stack_t ss;
-    std::memset(&ss, 0, sizeof(ss));
-    ss.ss_sp    = t_altStack;
-    ss.ss_size  = sizeof(t_altStack);
-    ss.ss_flags = 0;
-    if (sigaltstack(&ss, nullptr) != 0) {
-        LOGW(TPL_LOG " sigaltstack failed — 兜底降级为无备用栈");
-    }
+    stack_t ss; std::memset(&ss, 0, sizeof(ss));
+    ss.ss_sp = t_altStack; ss.ss_size = sizeof(t_altStack); ss.ss_flags = 0;
+    if (sigaltstack(&ss, nullptr) != 0) LOGW(TPL_LOG " sigaltstack failed — 降级为无备用栈");
 }
 
-// ---- 4.6 一次性安装进程级处理器 ----
 static void InstallFaultGuard() {
     if (g_guardArmed.load()) return;
     std::lock_guard<std::mutex> lk(g_guardMutex);
     if (g_guardArmed.load()) return;
-
-    struct sigaction sa;
-    std::memset(&sa, 0, sizeof(sa));
+    struct sigaction sa; std::memset(&sa, 0, sizeof(sa));
     sa.sa_sigaction = TplFaultHandler;
     sa.sa_flags     = SA_SIGINFO | SA_ONSTACK | SA_NODEFER;
     sigemptyset(&sa.sa_mask);
-
     sigaction(SIGSEGV, &sa, &g_oldSegv);
     sigaction(SIGBUS,  &sa, &g_oldBus);
     sigaction(SIGILL,  &sa, &g_oldIll);
-
     g_guardArmed.store(true);
-    LOGI(TPL_LOG " fault guard armed (SIGSEGV/SIGBUS/SIGILL, altstack=%zu)",
-         sizeof(t_altStack));
+    LOGI(TPL_LOG " fault guard armed（SIGSEGV/SIGBUS/SIGILL）");
 }
 
-// ---- 4.7 保护区包装器 ----
-// 装钩：Dobby 内部崩（返回码接不住的那种）⇒ 返回 false + 置 g_lastFatal
-static bool DobbyHookGuarded(const char* tag, void* target, void* hook, void** orig) {
-    ArmFaultGuardForThread();
-    t_faultDepth = 0;
-    if (sigsetjmp(t_faultJmp, 1) == 0) {
-        t_inGuard = 1;
-        int rc = DobbyHook(target, hook, orig);
-        t_inGuard = 0;
-        if (rc != 0) {
-            LOGW(TPL_LOG " %s dobby fail rc=%d", tag, rc);
-            return false;
-        }
-        return true;
-    }
-    // longjmp 回来：保护区内的致命信号已被吞掉
-    t_inGuard = 0;
-    g_lastFatal = true;
-    LOGW(TPL_LOG " %s dobby SIG(%d) @%p — 槽位熔断，游戏继续",
-         tag, (int)t_faultSig, (void*)t_faultAddr);
-    if (orig) *orig = nullptr;   // ★ 必须清掉可能被半写的 orig，否则后续调用跳到野指针
-    return false;
-}
-
-// 读序言（RVA 漂移校验）：读坏页也会炸，同样走保护区
 static bool ReadU32Guarded(const char* tag, const void* p, uint32_t* out) {
     ArmFaultGuardForThread();
     t_faultDepth = 0;
@@ -253,12 +142,10 @@ static bool ReadU32Guarded(const char* tag, const void* p, uint32_t* out) {
         return true;
     }
     t_inGuard = 0;
-    LOGW(TPL_LOG " %s prologue read SIG(%d) @%p — 跳过该槽位",
-         tag, (int)t_faultSig, (void*)t_faultAddr);
+    LOGW(TPL_LOG " %s 读序言 SIG(%d) @%p — 跳过该槽位", tag, (int)t_faultSig, (void*)t_faultAddr);
     return false;
 }
 
-// 跑第三方代码（游戏回调 / SDK 回调）：炸了吞掉，只记日志
 static bool RunGuarded(const char* tag, void (*fn)(void*), void* arg) {
     ArmFaultGuardForThread();
     t_faultDepth = 0;
@@ -269,206 +156,379 @@ static bool RunGuarded(const char* tag, void (*fn)(void*), void* arg) {
         return true;
     }
     t_inGuard = 0;
-    LOGW(TPL_LOG " %s 回调内 SIG(%d) @%p — 已吞掉，游戏继续",
-         tag, (int)t_faultSig, (void*)t_faultAddr);
+    LOGW(TPL_LOG " %s 回调内 SIG(%d) @%p — 已吞掉", tag, (int)t_faultSig, (void*)t_faultAddr);
     return false;
 }
 
-// ---- 4.8 槽位熔断 ----
-// 装钩期炸过的槽位，本次会话不再重试（否则 Tick 每轮再炸一次 ⇒ 每轮一次闪退）
-static const int kSlotsMax = 64;
-static bool g_slotDead[kSlotsMax];                    // 只在 g_installMutex 下读写
-static std::atomic<int> g_installedCount{0};
-
-// ============================================================================
-//  ⑤ 双路径挂点机器（提炼自 WhrhxMod 实测；禁 base+RVA、禁全 RX 盲扫）
-// ============================================================================
+// ---- file_off → 运行时 VA（分段映射，禁 base+RVA） ----
 static bool IsLibMapLine(const char* line, const char* lib) {
     return std::strstr(line, lib) != nullptr && std::strstr(line, ".so") != nullptr;
 }
 
-// file_off → 运行时 VA：libil2cpp 是分段映射，base+RVA 会挂到错误地址，
-// 必须扫 /proc/self/maps 只取可执行段，并在覆盖该 file_off 的段里取最大 span。
 static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
     FILE* fp = std::fopen("/proc/self/maps", "r");
     if (!fp) return nullptr;
-
     char line[768];
-    void* best = nullptr;
-    uintptr_t bestSpan = 0;
-
+    void* best = nullptr; uintptr_t bestSpan = 0;
     while (std::fgets(line, sizeof(line), fp)) {
         if (!IsLibMapLine(line, lib)) continue;
-
-        uintptr_t start = 0, end = 0, off = 0;
-        char perm[8] = {};
+        uintptr_t start = 0, end = 0, off = 0; char perm[8] = {};
         if (std::sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
-        if (!std::strchr(perm, 'x')) continue;   // 只要可执行段
+        if (!std::strchr(perm, 'x')) continue;
         if (end <= start) continue;
-
         uintptr_t span = end - start;
-        if (fileOff >= off && fileOff < off + span) {
-            if (span > bestSpan) {
-                bestSpan = span;
-                best = reinterpret_cast<void*>(start + (fileOff - off));
-            }
+        if (fileOff >= off && fileOff < off + span && span > bestSpan) {
+            bestSpan = span;
+            best = reinterpret_cast<void*>(start + (fileOff - off));
         }
     }
     std::fclose(fp);
     return best;
 }
 
-static bool HookAtRva(const char* tag, uintptr_t rva, uint32_t expectInsn,
-                      void* hook, void** orig) {
-    void* va = FileOffToVa(TPL_TARGET_LIB, rva);
-    if (!va) {
-        LOGW(TPL_LOG " %s rva 0x%lX not in RX — try by-name", tag, (unsigned long)rva);
-        return false;
-    }
-    if (expectInsn) {
-        uint32_t got = 0;
-        if (!ReadU32Guarded(tag, va, &got)) return false;   // 读序言也走保护区
-        if (got == 0 || got == 0xFFFFFFFFu || got != expectInsn) {
-            LOGW(TPL_LOG " %s rva drift got=0x%08X want=0x%08X — try by-name",
-                 tag, got, expectInsn);
-            return false;
-        }
-    }
-    if (!DobbyHookGuarded(tag, va, hook, orig)) {
-        LOGW(TPL_LOG " %s dobby fail @rva 0x%lX", tag, (unsigned long)rva);
-        return false;
-    }
-    LOGI(TPL_LOG " %s hooked @rva 0x%lX", tag, (unsigned long)rva);
+// ---- 代码写：/proc/self/mem + pwrite（不 mprotect(RW)，不留页属性痕迹） ----
+static bool WriteCode(void* addr, const void* data, size_t n) {
+    static int fd = -1;
+    if (fd < 0) fd = ::open("/proc/self/mem", O_RDWR);
+    if (fd < 0) return false;
+    if (::pwrite(fd, data, n, (off_t)(uintptr_t)addr) != (ssize_t)n) return false;
+    __builtin___clear_cache((char*)addr, (char*)addr + n);
     return true;
 }
 
-static bool EnsureApi() {
-    if (GetApi().ready) return true;
-    return GetApi().Load(TPL_TARGET_LIB);
-}
+// ---- code cave 分配（16B 对齐 + 区间登记防重叠） ----
+static const int kCaveCap = 32;
+static uintptr_t g_caveAddr[kCaveCap];
+static size_t    g_caveLen[kCaveCap];
+static int       g_caveUsed = 0;
 
-static void* FindClassNs(const char* ns, const char* name) {
-    size_t n = 0;
-    void** asms = GetApi().Assemblies(&n);
-    for (size_t i = 0; asms && i < n; ++i) {
-        void* img = GetApi().ImageOf(asms[i]);
-        if (!img) continue;
-        void* k = GetApi().ClassFromName(img, ns, name);
-        if (k) return k;
+static bool CaveOverlaps(uintptr_t a, size_t n) {
+    for (int i = 0; i < g_caveUsed; ++i) {
+        uintptr_t b = g_caveAddr[i], e = b + g_caveLen[i];
+        if (a < e && b < a + n) return true;
+    }
+    return false;
+}
+static void CaveReserve(uintptr_t a, size_t n) {
+    if (g_caveUsed < kCaveCap) { g_caveAddr[g_caveUsed] = a; g_caveLen[g_caveUsed] = n; ++g_caveUsed; }
+}
+static void* FindCodeCave(void* near, size_t need) {
+    FILE* fp = std::fopen("/proc/self/maps", "r");
+    if (!fp) return nullptr;
+    char line[768]; uintptr_t lo = 0, hi = 0, cur = (uintptr_t)near;
+    while (std::fgets(line, sizeof(line), fp)) {
+        uintptr_t s = 0, e = 0; char perm[8] = {};
+        if (std::sscanf(line, "%lx-%lx %7s", &s, &e, perm) != 3) continue;
+        if (cur >= s && cur < e && std::strchr(perm, 'x')) { lo = s; hi = e; break; }
+    }
+    std::fclose(fp);
+    if (!hi) return nullptr;
+    // 先在后面找，再在前面找
+    for (int pass = 0; pass < 2; ++pass) {
+        uintptr_t from = pass == 0 ? (cur + 0x1000) : (lo + 0x10);
+        uintptr_t to   = pass == 0 ? hi : cur;
+        for (uintptr_t a = (from + 15) & ~(uintptr_t)15; a + need <= to; a += 16) {
+            if (a + need > hi) break;
+            if (CaveOverlaps(a, need)) continue;
+            const volatile uint8_t* p = (const volatile uint8_t*)a;
+            size_t k = 0;
+            for (; k < need; ++k) if (p[k] != 0x00 && p[k] != 0xFF) break;
+            if (k == need) return (void*)a;
+        }
     }
     return nullptr;
 }
 
-// 类/方法缺失只记日志降级，绝不让整包失败（hook-rules §17）
-static bool HookByName(const char* tag, const char* ns, const char* cls,
-                       const char* method, int argc, void* hook, void** orig) {
-    if (!EnsureApi()) {
-        LOGW(TPL_LOG " %s api not ready — will retry via Tick", tag);
-        return false;
-    }
-
-    void* k = FindClassNs(ns, cls);
-    if (!k) k = GetApi().FindClassByShortName(cls);
-    if (!k) {
-        LOGW(TPL_LOG " %s class miss %s — degrade", tag, cls);
-        return false;
-    }
-
-    void* mi = GetApi().GetMethod(k, method, argc);
-    if (!mi) {
-        LOGW(TPL_LOG " %s method miss %s.%s(argc=%d) — degrade, install others",
-             tag, cls, method, argc);
-        return false;
-    }
-
-    void* fn = *reinterpret_cast<void**>(mi);
-    if (!OkPtr(fn)) {
-        LOGW(TPL_LOG " %s bad method ptr %s.%s", tag, cls, method);
-        return false;
-    }
-
-    if (!DobbyHookGuarded(tag, fn, hook, orig)) return false;
-    LOGI(TPL_LOG " %s hooked by-name %s.%s(argc=%d)", tag, cls, method, argc);
-    return true;
-}
+// ============================================================================
+//  ⑤ 槽位表：全部图片内补丁（零外部调用），kind 决定补丁形态
+// ============================================================================
+enum SlotKind {
+    K_SCALE_DMG = 0,   // 入口 → cave：乘倍率后回放序言（伤害倍率）
+    K_SCALE_INV,       // 入口 → cave：乘 0（无敌）
+    K_RESULT,          // 只改结果指令（免CD / 不耗蓝）
+    K_STUB9999,        // 入口 → cave：mov w0,#9999; ret（货币）
+    K_STUB_TRUE,       // 入口 → cave：mov w0,#1; ret（装扮判定）
+};
 
 struct HookSlot {
     const char* tag;
-    uintptr_t   rva;          // 0 = 只走按名
-    uint32_t    expectInsn;   // 0 = 不校验序言；实测后回填
-    const char* ns;
-    const char* cls;
-    const char* method;
-    int         argc;
-    void*       hookFn;
-    void**      origPtr;
+    uintptr_t   rva;      // 入口（结果类槽位仅作就绪判断）
+    int         feat;
+    SlotKind    kind;
+    uintptr_t   rva2;     // 结果指令地址（仅 K_RESULT）
+    uint32_t    oldW;     // 期望原字
+    uint32_t    newW;     // 目标字
 };
 
-// 幂等安装（防同址双 Dobby 叠钩 SIGSEGV）→ RVA 优先 → 失败转按名
-static bool HookSlotInstall(const HookSlot& s) {
-    if (s.origPtr && *s.origPtr) return true;
-    if (s.rva && HookAtRva(s.tag, s.rva, s.expectInsn, s.hookFn, s.origPtr)) return true;
-    return HookByName(s.tag, s.ns, s.cls, s.method, s.argc, s.hookFn, s.origPtr);
-}
-
-// ============================================================================
-//  ⑥ hook 函数与挂点表
-//     铁律：一个具体方法一个槽；绝不 hook 共享 invoke 入口。
-// ============================================================================
-static void Hooked_TakeDamage(void* self, void* damageData, void* method) {
-    // 铁律：先调 orig（唯一例外见 hook-rules §28「状态门禁不可恒真」的说明）
-    if (g_origTakeDamage) g_origTakeDamage(self, damageData, method);
-
-    if (g_reenter.load()) return;
-    if (!g_dmg.load() && !g_inv.load()) return;   // 开关全关不动数据
-    if (!OkPtr(damageData)) return;
-
-    g_reenter.store(true);
-    SafeWriteI32(damageData, kOffHurtValue, g_dmg.load() ? 999999 : 0);
-    g_reenter.store(false);
-}
-
-// TODO：rva/expectInsn 由 dump.cs / IDA 实测后回填（0 = 仅按名）
 static const HookSlot kSlots[] = {
-    {"TakeDamage", 0x0, 0x0, "HotFix.BattleLogic", "BattleCharacter", "TakeDamage",
-     2, (void*)Hooked_TakeDamage, (void**)&g_origTakeDamage},
+    { "DmgMul",    0x110829a0UL, SLCB2_FEAT_DMG,     K_SCALE_DMG,  0,          0,          0          },
+    { "Inv",       0x110649ccUL, SLCB2_FEAT_INV,     K_SCALE_INV,  0,          0,          0          },
+    { "SkillCd",   0x10ce8c24UL, SLCB2_FEAT_SKILL,   K_RESULT,     0x10CE8C80UL, 0x1A9FB7E0u, 0x52800020u },
+    { "SkillMp",   0x118dd824UL, SLCB2_FEAT_SKILL,   K_RESULT,     0x118DD904UL, 0x1A890100u, 0x2A1F03E0u },
+    { "GetIron",   0x114d97d0UL, SLCB2_FEAT_IRON,    K_STUB9999,   0,          0,          0          },
+    { "GetCrystal",0x114ca960UL, SLCB2_FEAT_CRYSTAL, K_STUB9999,   0,          0,          0          },
+    { "Appearance",0x11944af8UL, SLCB2_FEAT_SKIN,    K_STUB_TRUE,  0,          0,          0          },
 };
-
-// ============================================================================
-//  ⑦ 分组安装 + 懒装（全开关关 = 0 hook）
-// ============================================================================
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
-static int InstallBattleHooks() {
-    int ok = 0, dead = 0;
-    for (int i = 0; i < kSlotsCount && i < kSlotsMax; ++i) {
-        if (g_slotDead[i]) { ++dead; continue; }        // 熔断，跳过
-        g_lastFatal = false;
-        if (HookSlotInstall(kSlots[i])) {
-            ++ok;
-        } else if (g_lastFatal) {
-            g_slotDead[i] = true;                       // 永久拉黑（本次会话）
-            LOGW(TPL_LOG " slot[%d] %s 已熔断（装钩期致命信号），本次会话不再重试",
-                 i, kSlots[i].tag);
-        }
+static const int kSlotCap = 16;
+static void*         g_slotTarget[kSlotCap]    = {};
+static bool          g_slotInstalled[kSlotCap] = {};
+static bool          g_slotPatched[kSlotCap]   = {};
+static unsigned char g_slotSaved[kSlotCap][4]  = {};
+static void*         g_slotCave[kSlotCap]      = {};
+static void*         g_lastHookTarget          = nullptr;
+static int           g_lastWant = -1, g_lastHave = -1;
+static std::atomic<int> g_installedCount{0};
+static const int kSlotsMax = 64;
+static bool g_slotDead[kSlotsMax];
+
+static bool FeatOn(int feat) {
+    switch (feat) {
+        case SLCB2_FEAT_DMG:     return g_mult.load() > 1;
+        case SLCB2_FEAT_INV:     return g_inv.load();
+        case SLCB2_FEAT_SKILL:   return g_skill.load();
+        case SLCB2_FEAT_IRON:    return g_iron.load();
+        case SLCB2_FEAT_CRYSTAL: return g_crystal.load();
+        case SLCB2_FEAT_SKIN:    return g_skin.load();
+        default: return false;
     }
-    LOGI(TPL_LOG " install pass: ok=%d dead=%d/%d", ok, dead, kSlotsCount);
-    if (ok > 0) g_anyHooked.store(true);
+}
+
+// 伤害倍率字面量刷新（cave+40）
+static void RefreshScaleLiteral() {
+    for (int i = 0; i < kSlotsCount; ++i) {
+        if (kSlots[i].kind != K_SCALE_DMG) continue;
+        if (!g_slotInstalled[i] || !g_slotCave[i]) return;
+        float m = (float)g_mult.load();
+        WriteCode((char*)g_slotCave[i] + 40, &m, 4);
+        return;
+    }
+}
+
+
+// 入口 4B 补丁 → cave（各形态）
+static bool PatchJumpSlot(int i) {
+    const HookSlot& sl = kSlots[i];
+    void* va = FileOffToVa(TPL_TARGET_LIB, sl.rva);
+    if (!va) return false;
+
+    // ---- 结果指令类：只改一条指令 ----
+    if (sl.kind == K_RESULT) {
+        void* pa = FileOffToVa(TPL_TARGET_LIB, sl.rva2);
+        if (!pa) return false;
+        uint32_t now = 0;
+        if (!ReadU32Guarded(sl.tag, pa, &now)) return false;
+        if (now == sl.newW) { g_slotTarget[i] = pa; g_lastHookTarget = pa; return true; }
+        if (now != sl.oldW) { return false; }            // 页面未解密或版本不符 → 下一拍再试
+        memcpy(g_slotSaved[i], &now, 4);
+        if (!WriteCode(pa, &sl.newW, 4)) return false;
+        g_slotTarget[i] = pa; g_lastHookTarget = pa;
+        LOGI(TPL_LOG " slot[%d] %s 结果指令已改：@rva 0x%lX 0x%08X → 0x%08X",
+             i, sl.tag, (unsigned long)sl.rva2, sl.oldW, sl.newW);
+        return true;
+    }
+
+    uint32_t w0 = 0;
+    if (!ReadU32Guarded(sl.tag, va, &w0)) return false;
+    if ((w0 & 0xFC000000u) == 0x14000000u) return false;   // 已是 b（我们或跳板）→ 稍后再判
+
+    // ---- 常量 stub ----
+    if (sl.kind == K_STUB_TRUE || sl.kind == K_STUB9999) {
+        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
+        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
+        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
+        uint32_t imm = (sl.kind == K_STUB_TRUE) ? 1u : 9999u;
+        uint32_t code[2];
+        code[0] = 0x52800000u | ((imm & 0xFFFFu) << 5) | 0u;   // mov w0, #imm
+        code[1] = 0xD65F03C0u;                                  // ret
+        if (!WriteCode(sc, code, 8)) return false;
+        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
+        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
+        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+        memcpy(g_slotSaved[i], &w0, 4);
+        if (!WriteCode(va, &bi, 4)) return false;
+        g_slotTarget[i] = va; g_lastHookTarget = va;
+        LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（mov w0,#%u; ret）",
+             i, sl.tag, bi, sc, imm);
+        return true;
+    }
+
+    // ---- 缩放类（伤害/无敌）：乘倍率 + 回放 4 条序言 + 跳回 entry+0x10 ----
+    uint32_t orig[4];
+    orig[0] = w0;
+    for (int k = 1; k < 4; ++k)
+        if (!ReadU32Guarded(sl.tag, (const char*)va + 4 * k, &orig[k])) return false;
+
+    void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 48);
+    if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 48B cave", i, sl.tag); return false; }
+    g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 48);
+
+    float mult = (sl.kind == K_SCALE_INV) ? 0.0f : (float)g_mult.load();
+    unsigned char b[48]; std::memset(b, 0, sizeof b);
+    uint32_t cw[7];
+    cw[0] = 0x1C000141u;   // ldr  s1, [pc, #40]   → +40
+    cw[1] = 0x1E210800u;   // fmul s0, s0, s1
+    cw[2] = orig[0]; cw[3] = orig[1]; cw[4] = orig[2]; cw[5] = orig[3];
+    cw[6] = 0x58000051u;   // ldr  x17, #8         → +32
+    memcpy(b, cw, sizeof cw);
+    uint32_t br = 0xD61F0220u; memcpy(b + 28, &br, 4);
+    uint64_t back = (uint64_t)(uintptr_t)((const char*)va + 16);
+    memcpy(b + 32, &back, 8);
+    memcpy(b + 40, &mult, 4);
+    if (!WriteCode(sc, b, sizeof b)) return false;
+
+    int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
+    if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
+    uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+    memcpy(g_slotSaved[i], &w0, 4);
+    if (!WriteCode(va, &bi, 4)) return false;
+    g_slotTarget[i] = va; g_lastHookTarget = va;
+    LOGI(TPL_LOG " slot[%d] %s 缩放 stub 已装：入口 0x%08X → cave %p（×%.2f）", i, sl.tag, bi, sc, (double)mult);
+    return true;
+}
+
+static bool InstallSlot(int i) {
+    if (i < 0 || i >= kSlotsCount) return false;
+    if (g_slotInstalled[i]) return true;
+    if (i < kSlotsMax && g_slotDead[i]) return false;
+    g_lastFatal = false;
+    g_lastHookTarget = nullptr;
+    g_slotPatched[i] = true;
+    bool ok = PatchJumpSlot(i);
+    if (!ok) g_slotPatched[i] = false;
+    if (ok) g_slotInstalled[i] = true;
     return ok;
 }
 
-static bool AnyFeatureOn() {
-    return g_dmg.load() || g_inv.load();
+static void UninstallSlot(int i) {
+    if (i < 0 || i >= kSlotsCount) return;
+    if (!g_slotInstalled[i] || !g_slotTarget[i]) return;
+    WriteCode(g_slotTarget[i], g_slotSaved[i], 4);
+    g_slotInstalled[i] = false;
+    g_slotPatched[i] = false;
+    LOGI(TPL_LOG " slot[%d] %s 已还原", i, kSlots[i].tag);
+}
+
+// 洗校验：易盾可能把我们的补丁刷回去 → 发现不符就标未装，下一拍重装
+static void WashCheckSlots() {
+    for (int i = 0; i < kSlotsCount; ++i) {
+        if (!g_slotInstalled[i] || !g_slotTarget[i]) continue;
+        uint32_t now = 0;
+        if (!ReadU32Guarded(kSlots[i].tag, g_slotTarget[i], &now)) continue;
+        uint32_t want = 0;
+        if (kSlots[i].kind == K_RESULT) want = kSlots[i].newW;
+        else {
+            int64_t d = (int64_t)((uintptr_t)g_slotCave[i] - (uintptr_t)g_slotTarget[i]);
+            if (!(d & 3)) want = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+        }
+        if (want && now != want) {
+            LOGW(TPL_LOG " slot[%d] %s 补丁被刷回（0x%08X）→ 下一拍重装", i, kSlots[i].tag, now);
+            g_slotInstalled[i] = false;
+            g_slotPatched[i] = false;
+        }
+    }
+}
+
+// 页面健康检查（保留接口：当前只做一次读校验）
+static void HealCodePage(const char* why, void* p) {
+    uint32_t t = 0;
+    if (!ReadU32Guarded("HealCodePage", p, &t))
+        LOGW(TPL_LOG " 代码页读取失败（%s）@%p", why, p);
+}
+
+// 自检自检：不再做 fork 子进程 trampoline 自检（历史已验证会污染 maps）
+static void TrampolineProbe() {}
+
+// ============================================================================
+//  ⑫ 数据侧写 moveScaleX：先确认「这个控制器挂在 Hero 身上」，再把 0x1e0 写成倍率。
+//     全程在 RunGuarded 里跑，任何野指针都只吞掉不炸游戏。
+// ============================================================================
+static void LoadOwnPrefs() {
+    FILE* f = std::fopen("/data/user/0/com.leiting.slcb2/shared_prefs/starry_magic_prefs.xml", "r");
+    if (!f) { LOGW(TPL_LOG " 读不到 prefs，沿用框架回调状态"); return; }
+    char line[512];
+    int nSet = 0;
+    while (std::fgets(line, sizeof line, f)) {
+        int idx = -1, val = 0; char bv[8] = {0};
+        if (std::sscanf(line, " <int name=\"%d\" value=\"%d\"", &idx, &val) == 2) {
+            if (idx == SLCB2_FEAT_DMG && val >= 1 && val <= 100) { g_mult.store(val); ++nSet; }
+        } else if (std::sscanf(line, " <boolean name=\"%d\" value=\"%7[a-z]\"", &idx, bv) == 2) {
+            const bool on = (bv[0] == 't');
+            switch (idx) {
+                case SLCB2_FEAT_INV:     g_inv.store(on);     ++nSet; break;
+                case SLCB2_FEAT_SKILL:   g_skill.store(on);   ++nSet; break;
+                case SLCB2_FEAT_IRON:    g_iron.store(on);    ++nSet; break;
+                case SLCB2_FEAT_CRYSTAL: g_crystal.store(on); ++nSet; break;
+                case SLCB2_FEAT_SKIN:    g_skin.store(on);    ++nSet; break;
+                default: break;
+            }
+        }
+    }
+    std::fclose(f);
+    LOGI(TPL_LOG " 自行读 prefs：恢复 %d 项（多=%d 无敌=%d 技能=%d 魔铁=%d 魂晶=%d 装扮=%d）",
+         nSet, g_mult.load(), (int)g_inv.load(), (int)g_skill.load(),
+         (int)g_iron.load(), (int)g_crystal.load(), (int)g_skin.load());
+}
+
+static void SyncHooks();
+
+// ============================================================================
+//  ⑨ 早装线程：lib 映射后自带重试（易盾会在启动后重写/解密代码页，必须反复试）
+// ============================================================================
+static std::atomic<bool> g_stopEarly{false};
+static std::atomic<bool> g_earlyStarted{false};
+
+static void* EarlyHookThread(void*) {
+    int waits = 0;
+    while (!g_stopEarly.load()) {
+        if (!isLibraryLoaded(TPL_TARGET_LIB)) {
+            if (++waits > 20000) break;
+            usleep(2000);
+            continue;
+        }
+        InstallFaultGuard();
+        g_libReady.store(true);
+        LOGI(TPL_LOG " 早装线程：lib 已映射 → 进入懒装重试循环");
+        int tickCount = 0;
+        for (;;) {
+            usleep(500000);
+            if (g_stopEarly.load()) return nullptr;
+            SyncHooks();
+            if (tickCount == 2) { LoadOwnPrefs(); SyncHooks(); }   // 1s 后按 prefs 自身状态对齐
+            ++tickCount;
+        }
+    }
+    return nullptr;
+}
+
+void Slcb2_StartEarlyHook() {
+    if (g_earlyStarted.exchange(true)) return;
+    pthread_t t;
+    if (pthread_create(&t, nullptr, EarlyHookThread, nullptr) == 0) {
+        pthread_detach(t);
+        LOGI(TPL_LOG " 早装线程已启动");
+    }
 }
 
 static void SyncHooks() {
     if (!g_libReady.load()) return;
-    if (!AnyFeatureOn()) return;                        // 全关：不装、也不卸载
-    if (g_installedCount.load() >= kSlotsCount) return; // 快路径：已装齐
-
-    std::lock_guard<std::mutex> lk(g_installMutex);     // ★ 串行化，防并发双挂
-    if (g_installedCount.load() >= kSlotsCount) return; // double-check
-    g_installedCount.store(InstallBattleHooks());
+    std::lock_guard<std::mutex> lk(g_installMutex);
+    WashCheckSlots();
+    int want = 0, have = 0;
+    for (int i = 0; i < kSlotsCount && i < kSlotsMax; ++i) {
+        if (FeatOn(kSlots[i].feat)) {
+            ++want;
+            if (InstallSlot(i)) ++have;
+        } else {
+            UninstallSlot(i);
+        }
+    }
+    g_installedCount.store(have);
+    if (want != g_lastWant || have != g_lastHave) {
+        LOGI(TPL_LOG " hook 状态: want=%d have=%d/%d", want, have, kSlotsCount);
+        g_lastWant = want; g_lastHave = have;
+    }
 }
 
 // ============================================================================
@@ -481,6 +541,8 @@ bool Slcb2_TryInit(JavaVM* /*vm*/) {
     InstallFaultGuard();          // §④ 先装兜底，再装钩
     g_libReady.store(true);
     SyncHooks();                  // 已 ON 的开关立即装；全关保持 0 hook
+    static std::atomic<bool> probed{false};
+    if (!probed.exchange(true)) TrampolineProbe();
     LOGI(TPL_LOG " lib ready (dual-path, lazy hooks)");
     return true;
 }
@@ -491,22 +553,55 @@ bool Slcb2_IsReady() {
 
 void Slcb2_OnFeatureChanged(int featNum, bool enabled) {
     switch (featNum) {
-        case SLCB2_FEAT_DMG: g_dmg.store(enabled); break;
-        case SLCB2_FEAT_INV: g_inv.store(enabled); break;
+        case SLCB2_FEAT_DMG:     g_dmg.store(enabled); break;
+        case SLCB2_FEAT_INV:     g_inv.store(enabled); break;
+        case SLCB2_FEAT_SKILL:   g_skill.store(enabled); break;
+        case SLCB2_FEAT_IRON:    g_iron.store(enabled); break;
+        case SLCB2_FEAT_CRYSTAL: g_crystal.store(enabled); break;
+        case SLCB2_FEAT_SKIN:    g_skin.store(enabled); break;
         default: break;
     }
     SyncHooks();
 }
 
-void Slcb2_OnValueChanged(int /*featNum*/, int /*value*/) {
-    // 滑块类功能在此钳制并存入原子量（语义：1 = 关闭）
+void Slcb2_OnValueChanged(int featNum, int value) {
+    if (featNum != SLCB2_FEAT_DMG) return;
+    int m = value;
+    if (m < 1) m = 1;
+    if (m > 100) m = 100;
+    g_mult.store(m);
+    g_dmg.store(m > 1);
+    LOGI(TPL_LOG " 伤害倍率 = x%d", m);
+    SyncHooks();
+    RefreshScaleLiteral();          // 已装则把新倍率写进 cave 字面量
 }
 
-void Slcb2_Tick(const bool* features, const int* /*values*/) {
+void Slcb2_Tick(const bool* features, const int* values) {
     if (!features) return;
 
-    g_dmg.store(features[SLCB2_FEAT_DMG]);
+    // ★滑块类功能：菜单里 features[] 对它恒为 false，真正的开关语义在 values[] 上。
+    //   首版把 g_dmg 直接写 features[] ⇒ 每 200ms 被冲成 false、OnValueChanged 又置 true，
+    //   形成「装了又拆」抖动（实测日志：hooked → 已拆钩 → hooked 反复），战斗里表现为没效果/崩。
+    if (values) {
+        int m = values[SLCB2_FEAT_DMG];
+        if (m < 1) m = 1;
+        if (m > 100) m = 100;
+        g_mult.store(m);
+    }
+    {
+        static std::atomic<int> tk{0};
+        if ((tk.fetch_add(1) % 10) == 0) {
+            WashCheckSlots();
+            if (g_slotInstalled[0] && g_slotTarget[0]) HealCodePage("运行中", g_slotTarget[0]);
+        }
+    }
+    g_dmg.store(g_mult.load() > 1);
     g_inv.store(features[SLCB2_FEAT_INV]);
+    g_skill.store(features[SLCB2_FEAT_SKILL]);
+    g_iron.store(features[SLCB2_FEAT_IRON]);
+    g_crystal.store(features[SLCB2_FEAT_CRYSTAL]);
+    g_skin.store(features[SLCB2_FEAT_SKIN]);
+
 
     // 兜底：库晚于首帧映射时，这里补一次
     if (!g_libReady.load() && isLibraryLoaded(TPL_TARGET_LIB)) {
@@ -522,6 +617,9 @@ void Slcb2_Tick(const bool* features, const int* /*values*/) {
 void Slcb2_ForceClear() {
     g_dmg.store(false);
     g_inv.store(false);
+    g_skill.store(false);
+    g_iron.store(false);
+    g_crystal.store(false);
+    g_mult.store(1);
     g_reenter.store(false);
-    // TODO：新增开关一并复位
 }

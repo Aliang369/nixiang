@@ -6,7 +6,7 @@
  *  引擎：Unity IL2CPP metadata v31 + HybridCLR；易盾 4.23 + 乐变 LBApplication。
  *
  *  功能位号（下标 = featNum，与 Slcb2Mod.h 的 enum 一一对齐）：
- *    0 Category_战斗 / 1 百倍伤害 / 2 无敌 / 3 无限技能
+ *    0 Category_战斗 / 1 伤害倍率(滑块1-100) / 2 无敌 / 3 无限技能
  *    4 Category_资源 / 5 无限魔铁锭（IronPowder）/ 6 无限魂晶（Crystal）
  *
  *  ⚠️ 本版为**环境阶段**：菜单先出，hook 一律未实现（0 hook，绝不改游戏行为）。
@@ -20,18 +20,25 @@ static void Slcb2_TickAdapter(const bool* features, const int* values) {
     Slcb2_Tick(features, values);
 }
 
+static void Slcb2_OnLoadAdapter(JavaVM* /*vm*/) {
+    // ★照抄斌哥时序：他的 loader 随包启动，在易盾建立代码校验基线之前就打好补丁。
+    //   我们在 JNI_OnLoad 这里起一个高频轮询线程，一发现目标页被解密成原文就立刻装钩。
+    Slcb2_StartEarlyHook();
+}
+
 static bool Slcb2_TryInitAdapter(JavaVM* /*vm*/) {
     return Slcb2_TryInit(nullptr);
 }
 
 static const char* kSlcb2Features[] = {
     "Category_战斗",        // 0（占位）
-    "Toggle_百倍伤害",      // 1  SLCB2_FEAT_DMG
+    "Slider_伤害倍率:1:100",  // 1  SLCB2_FEAT_DMG（1=关，2..100=倍率）
     "Toggle_无敌",          // 2  SLCB2_FEAT_INV
     "Toggle_无限技能",      // 3  SLCB2_FEAT_SKILL
     "Category_资源",        // 4（占位）
     "Toggle_无限魔铁锭",    // 5  SLCB2_FEAT_IRON
     "Toggle_无限魂晶",      // 6  SLCB2_FEAT_CRYSTAL
+    "Toggle_全装扮",        // 7  SLCB2_FEAT_SKIN（含装扮附带特效）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
@@ -47,7 +54,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
-        .onLoad = nullptr,
+        .onLoad = Slcb2_OnLoadAdapter,
         .tryInit = Slcb2_TryInitAdapter,
         .isReady = Slcb2_IsReady,
         .tick = Slcb2_TickAdapter,

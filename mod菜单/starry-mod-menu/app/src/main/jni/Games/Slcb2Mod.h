@@ -27,6 +27,7 @@ enum Slcb2Feat : int {
     SLCB2_FEAT_SKILL = 3,    // Toggle_无限技能（免CD 0x10ce8c24 / 不耗蓝 0x118dd824）
     SLCB2_FEAT_IRON = 5,     // Toggle_无限魔铁锭（LC2.BagSystem::get_IronPowder）
     SLCB2_FEAT_CRYSTAL = 6,  // Toggle_无限魂晶（LC2.BagSystem::get_Crystal）
+    SLCB2_FEAT_SKIN = 7,     // Toggle_全装扮（AppearanceMgr.IsAppearanceItemUnlocked 0x11944af8）
 };
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）
@@ -36,5 +37,6 @@ void Slcb2_OnFeatureChanged(int featNum, bool enabled);
 void Slcb2_OnValueChanged(int featNum, int value);
 void Slcb2_Tick(const bool* features, const int* values);
 void Slcb2_ForceClear();
+void Slcb2_StartEarlyHook();   // 抢在易盾校验基线之前装钩（由 onLoad 调用）
 
 #endif  // STARRY_SLCB2_MOD_H

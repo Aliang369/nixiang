@@ -1,0 +1,14 @@
+{
+  "template_id": "slcb2",
+  "name": "失落城堡2",
+  "package": "com.leiting.slcb2",
+  "source": "Games/Slcb2Entry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "伤害倍率"},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "无限技能"},
+    {"feat_num": 5, "name": "无限魔铁锭"},
+    {"feat_num": 6, "name": "无限魂晶"},
+    {"feat_num": 7, "name": "全装扮"}
+  ]
+}
