@@ -103,6 +103,42 @@ static lua_gettop_t      g_origGettop = nullptr;
 static bool              g_hooksInstalled = false;
 static std::atomic<uint32_t> g_hookCalls{0};
 
+/* ---------------------------------------------------------------
+ * ★多 lua_State 跟踪（2026-10-29 伊莫 1.1.0 实测：菜单 ON 但游戏里不生效 /
+ *   无敌一直开着、菜单关不掉）
+ *
+ * 老实现只有一个**全局一次性**标志 g_wantSync：谁先触发 hook 谁把它消费掉，
+ * 于是「写开关」只在那个 state 上跑一次。游戏若有多个 lua_State（加载 VM ≠ 战斗 VM），
+ * 战斗 VM 里的 YM 就永远停在首次写入的旧值 —— 菜单看着能点、游戏里不变。
+ *
+ * 现在：每个 state 记「已应用序号」，开关一变 g_syncSeq++，各 state 下次进 hook
+ * 时各自补写一遍，与有几个 VM、谁先触发无关。
+ * --------------------------------------------------------------- */
+static constexpr int kMaxStates = 8;
+static lua_State* g_states[kMaxStates] = {nullptr};
+static uint32_t   g_stateApplied[kMaxStates] = {0};
+static std::atomic<int> g_stateCount{0};
+static std::atomic<uint32_t> g_syncSeq{1};
+
+static int StateSlot(lua_State* L) {
+    const int n = g_stateCount.load(std::memory_order_acquire);
+    for (int i = 0; i < n; ++i) {
+        if (g_states[i] == L) return i;
+    }
+    if (n >= kMaxStates) return -1;
+    g_states[n] = L;
+    g_stateApplied[n] = 0;
+    g_stateCount.store(n + 1, std::memory_order_release);
+    DLOG("state registered slot=%d state=%p", n, (void*)L);
+    return n;
+}
+
+/* 开关/数值变了：序号 +1，并要求各 state 补写 */
+static inline void BumpSync() {
+    g_syncSeq.fetch_add(1, std::memory_order_relaxed);
+    g_wantSync.store(true, std::memory_order_relaxed);
+}
+
 /* ----------------------------------------------------------------
  * 序言指纹（本作 libxlua.so 实测；只在 HookAt 前做一次校验，
  * 不匹配 = 换了包/换了版本 → 拒绝挂，宁可没有功能也不挂错地址闪退）
@@ -278,6 +314,18 @@ local function isMyActorId(id)
   return false
 end
 
+-- 发送者判定：投射物/子弹的 self 不是实体本体，要顺着 owner/srcEntity 找
+local function senderIsMine(s)
+  if isMine(s) then return true end
+  if type(s) ~= "table" then return false end
+  local o = _rg(s, "owner") or _rg(s, "ownerEntity") or _rg(s, "caster")
+              or _rg(s, "srcEntity") or _rg(s, "entity")
+  if isMine(o) then return true end
+  local oid = _rg(s, "ownerActorId") or _rg(s, "srcActorId")
+  if oid ~= nil and isMyActorId(oid) then return true end
+  return false
+end
+
 -- LiteClass / 普通模块表：直接赋值
 local function patchLite(cls, key, wrap)
   if type(cls) ~= "table" then return nil end
@@ -360,8 +408,19 @@ local function wrapServerMsg(orig)
       end
     end
 
+    -- 诊断计数（仅 YM.diag 为真；正式包该键恒 nil ⇒ 不执行、无副作用）
+    if YM.diag then
+      YM.calls = (YM.calls or 0) + 1
+      if DMG_OUT[name] then YM.callsOut = (YM.callsOut or 0) + 1 end
+      if senderIsMine(self) then YM.callsMine = (YM.callsMine or 0) + 1 end
+      local nm = YM.names
+      if type(nm) ~= "table" then nm = {}; YM.names = nm end
+      local k = tostring(name)
+      nm[k] = (nm[k] or 0) + 1
+    end
+
     local m = YM.dmg
-    if type(m) == "number" and m > 1 and DMG_OUT[name] and isMine(self) then
+    if type(m) == "number" and m > 1 and DMG_OUT[name] and senderIsMine(self) then
       local n = math.floor(m) - 1
       for _ = 1, n do
         if _castResend >= MAX_RESEND_PER_SEC then break end
@@ -383,12 +442,17 @@ local function fullWrap(cls)
     if ok and type(t) == "table" then vt = t end
   end
   -- ★必须退回 __index 拿继承的那份，否则漏掉 ClientPet（而宠物才是本作主输出）
-  local target = rawget(vt, "serverMsg") or cls.serverMsg
-  if type(target) ~= "function" then return end
-  if _wrapMark[target] then return end
-  local wrapped = wrapServerMsg(target)
-  _wrapMark[wrapped] = true
-  pcall(function() vt.serverMsg = wrapped end)
+  -- ★1.1.0：弹道命中上报（RPC_CS_ProjectileHitTarget / RPC_CS_NotifyProjHit）走
+  --   serverMsgNoGC 而不是 serverMsg（dump: @GameApp/Ability/ClientProjectile）
+  --   ⇒ 两个入口都要包，只包 serverMsg 会「装上但一封命中包都看不到」。
+  for _, key in ipairs({ "serverMsg", "serverMsgNoGC" }) do
+    local target = rawget(vt, key) or cls[key]
+    if type(target) == "function" and not _wrapMark[target] then
+      local wrapped = wrapServerMsg(target)
+      _wrapMark[wrapped] = true
+      pcall(function() vt[key] = wrapped end)
+    end
+  end
 end
 
 fullWrap(L("Entities.SpaceEntities.ClientMainPlayer"))
@@ -429,7 +493,25 @@ local LOAD_ADJ = ATTR.speed_ratio_load_adjustment_v
 patchLite(ACA, "getAttribRatioValue", function(orig)
   return function(self, attributeId)
     local v = orig(self, attributeId)
+    -- 诊断：游戏到底向这个函数要了哪些 attributeId（仅 YM.diag）
+    if YM.diag then
+      local h = YM.gvH
+      if type(h) ~= "table" then h = {}; YM.gvH = h end
+      local k = tostring(attributeId)
+      h[k] = (h[k] or 0) + 1
+      if attributeId == LOAD_ADJ then
+        if isMine(self and self.entity) then
+          YM.laMine = (YM.laMine or 0) + 1
+        else
+          YM.laOther = (YM.laOther or 0) + 1
+        end
+      end
+    end
     local m = YM.spd
+    -- ★2026-10-29 1.1.0 实测：这条乘法**确实生效**（A/B 同一 id 取到 1 vs 6），但游戏里
+    --   速度不变；连「所有属性比率都乘」也不变 ⇒ 1.1.0 主角色移动速度不由 Lua 属性
+    --   getter 驱动（pawn 上取不到 motion 组件，onMotionAttrChange 调了也不重算）。
+    --   移速在 1.1.0 暂未生效；保留此乘法（无害）供后续接原生层时复用。
     if type(m) == "number" and m ~= 1 and attributeId == LOAD_ADJ
        and isMine(self and self.entity) then
       return v * m
@@ -441,6 +523,20 @@ end)
 ---------------------------------------------------------------------
 -- ⑤ 无限体力（拦截消耗，放行恢复）
 ---------------------------------------------------------------------
+-- 诊断：getRawAttribValue 被要了哪些 id（移速真实读数很可能走这里）
+patchLite(ACA, "getRawAttribValue", function(orig)
+  return function(self, attributeId)
+    local v = orig(self, attributeId)
+    if YM.diag then
+      local h = YM.rawH
+      if type(h) ~= "table" then h = {}; YM.rawH = h end
+      local k = tostring(attributeId)
+      h[k] = (h[k] or 0) + 1
+    end
+    return v
+  end
+end)
+
 patchLite(ACA, "changeStamina", function(orig)
   return function(self, value)
     local ent = self and self.entity
@@ -458,11 +554,19 @@ end)
 local function hookCheckValidTarget(U)
   if type(U) ~= "table" or type(U.checkValidTarget) ~= "function" then return end
   local orig = U.checkValidTarget
+  if YM.diag then YM.cvtWrap = (YM.cvtWrap or 0) + 1 end
   U.checkValidTarget = function(target, owner)
+    if YM.diag then
+      YM.cvt = (YM.cvt or 0) + 1
+      if YM.inv then YM.cvtInv = (YM.cvtInv or 0) + 1 end
+    end
     if YM.inv and owner ~= nil and isMine(target) and not isMine(owner)
        and type(U.isEnemy) == "function" then
       local ok, en = pcall(U.isEnemy, owner, target)
-      if ok and en == true then return false end
+      if ok and en == true then
+        if YM.diag then YM.cvtBlock = (YM.cvtBlock or 0) + 1 end
+        return false
+      end
     end
     return orig(target, owner)
   end
@@ -481,6 +585,43 @@ patchEntityClass(L("Entities.SpaceEntities.ClientSpace"), "checkImmuneFallDamage
   end
 end)
 
+-- ③-b 1.1.0 新通道：AbilityUtils 用 invalidTargetMap/setAbilityInvalidTarget 记录
+--     「技能不可选中」实体（dump: @Common/Utils/AbilityUtils）。
+--     1.0.1 用的 Utils.checkValidTarget 在 1.1.0 战斗路径已不被调用（实测 cvt=nil）。
+local AU = L("Common.Utils.AbilityUtils")
+local function markInvalidTarget(on)
+  if type(AU) ~= "table" or type(AU.setAbilityInvalidTarget) ~= "function" then return end
+  local tgt = pg.pawn or pg.me
+  if type(tgt) ~= "table" then return end
+  local ok = pcall(AU.setAbilityInvalidTarget, tgt, on ~= false)
+  if YM.diag then
+    if ok then YM.ait = (YM.ait or 0) + 1 else YM.aitErr = (YM.aitErr or 0) + 1 end
+  end
+end
+
+-- 关掉时要「真的清掉」：实测（2026-10-29）setAbilityInvalidTarget(t,true) 生效后，
+-- 只传 false 清不干净 ⇒ 菜单关掉仍然一直无敌。这里把三条存储都清一遍并兜底删 map 键。
+local function clearInvalidTarget()
+  local tgt = pg.pawn or pg.me
+  if type(tgt) ~= "table" then return end
+  if type(AU) == "table" then
+    if type(AU.setAbilityInvalidTarget) == "function" then pcall(AU.setAbilityInvalidTarget, tgt, false) end
+    if type(AU.setAbilityInvalidLock) == "function" then pcall(AU.setAbilityInvalidLock, tgt, false) end
+    local aid = _rg(tgt, "actorId")
+    for _, mapName in ipairs({ "invalidTargetMap", "invalidLockMap" }) do
+      local m = _rg(AU, mapName)
+      if type(m) == "table" then
+        pcall(function() m[tgt] = nil end)
+        if aid ~= nil then pcall(function() m[aid] = nil end) end
+      end
+    end
+  end
+  pcall(function() tgt.dialoguePauseInvincibleEndTs = 0 end)
+  local m2 = pg.me
+  if type(m2) == "table" then pcall(function() m2.dialoguePauseInvincibleEndTs = 0 end) end
+  if YM.diag then YM.clr = (YM.clr or 0) + 1 end
+end
+
 local function markInvincible()
   local v = YM.inv and 4e12 or 0
   local list = { pg.me, pg.pawn }
@@ -496,12 +637,44 @@ local function markInvincible()
   end
 end
 
+-- 速度重算：属性 getter 被乘不会自动生效，必须让运动组件重算缓存
+-- （dump: @Entities/SpaceEntities/CommonComponent/ClientMotionComponent 有
+--   onMotionAttrChange / refreshWalkSpeed / refreshRunSpeed / refreshSprintSpeed…）
+local MOTION_KEY = (CONST and CONST.COMPONENT_MOTION) or "COMPONENT_MOTION"
+local function motionComp()
+  local p = pg.pawn or pg.me
+  if type(p) ~= "table" then return nil end
+  local c = _rg(p, "motionComponent")
+  if type(c) == "table" then return c end
+  if type(p.getComponent) == "function" then
+    local ok, v = pcall(p.getComponent, p, MOTION_KEY)
+    if ok and type(v) == "table" then return v end
+  end
+  local comps = _rg(p, "components")
+  if type(comps) == "table" then
+    local v = comps[MOTION_KEY] or comps.motion
+    if type(v) == "table" then return v end
+  end
+  return nil
+end
+
 local function refreshSpeed()
-  local me = pg.pawn or pg.me
-  if not me then return end
-  if me.onMotionAttrChange then pcall(function() me:onMotionAttrChange() end) end
-  local AICU = L("Common.Utils.AIControllerUtils")
-  if AICU and AICU.refreshAllSpeed then pcall(AICU.refreshAllSpeed, me) end
+  local c = motionComp()
+  if type(c) == "table" then
+    if YM.diag then YM.motComp = (YM.motComp or 0) + 1 end
+    if type(c.onMotionAttrChange) == "function" then pcall(c.onMotionAttrChange, c) end
+    for _, fn in ipairs({ "refreshWalkSpeed", "refreshRunSpeed", "refreshSprintSpeed",
+                          "refreshSwimSpeed", "refreshGlideSpeed" }) do
+      local f = c[fn]
+      if type(f) == "function" then pcall(f, c) end
+    end
+    return
+  end
+  local p = pg.pawn or pg.me
+  if type(p) == "table" and type(p.onMotionAttrChange) == "function" then
+    if YM.diag then YM.motPawn = (YM.motPawn or 0) + 1 end
+    pcall(p.onMotionAttrChange, p)
+  end
 end
 
 local function topUpStamina()
@@ -805,7 +978,13 @@ Yimo.v = 1
 Yimo.tick = function()
   if _rg(_G, "__YM_V") == nil then return end
   _castResend = 0            -- 安全阀：每秒清一次重发预算
-  if YM.inv then markInvincible() end
+  if YM.inv then
+    markInvincible()
+    markInvalidTarget(true)
+  else
+    markInvalidTarget(false)
+    clearInvalidTarget()
+  end
   if YM.spd ~= 1 then refreshSpeed() end
   if YM.stam then topUpStamina() end
   tpVerify()                 -- ⑥ 瞬移落点复查 + 自适应距离上限
@@ -836,6 +1015,284 @@ static bool IsTableGlobal(lua_State* L, const char* name) {
 static const char* YimoPatchText() { return kYimoPatch; }
 
 #if MOD_DIAG_LUA
+/* ============================================================
+ * 诊断期 Lua 模块转储（照 口袋觉醒/Match2Mod.cpp 的成熟做法搬过来）
+ *
+ * 目的：1.1.0 里「移速/无敌/精灵攻击秒杀」三项失效，靠猜挂点已反复落空；
+ *       把游戏实际 loadbuffer 进来的 Lua 模块全量落盘，直接读代码定挂点。
+ * 路径：/sdcard/Android/data/<pkg>/files/starry_lua_dump（App 自有目录，无需存储权限）
+ * 只在 STARRY_DIAG=1 的诊断包里存在，正式包零代码。
+ * ============================================================ */
+#include <sys/stat.h>
+#include <unistd.h>
+
+static const char* kYimoDumpDir =
+    "/sdcard/Android/data/com.x.yimoo.official/files/starry_lua_dump";
+
+static uint32_t YimoPathHash32(const char* s) {
+    uint32_t h = 2166136261u;
+    if (!s) return h;
+    for (; *s; s++) { h ^= (uint8_t)*s; h *= 16777619u; }
+    return h;
+}
+
+static bool YimoWriteDump(const char* path, const uint8_t* data, size_t len) {
+    if (!path || !path[0] || !data || !len || len > (2 << 20)) return false;
+    mkdir(kYimoDumpDir, 0777);
+    char fp[384];
+    snprintf(fp, sizeof(fp), "%s/m_%08x.bin", kYimoDumpDir, YimoPathHash32(path));
+    if (access(fp, F_OK) == 0) return true;
+    FILE* f = fopen(fp, "wb");
+    if (!f) return false;
+    const size_t w = fwrite(data, 1, len, f);
+    fclose(f);
+    if (w != len) return false;
+    char mp[384];
+    snprintf(mp, sizeof(mp), "%s/m_%08x.path", kYimoDumpDir, YimoPathHash32(path));
+    FILE* m = fopen(mp, "w");
+    if (m) { fprintf(m, "%s\n%zu\n", path, len); fclose(m); }
+    static std::atomic<uint32_t> s_cnt{0};
+    const uint32_t n = ++s_cnt;
+    if (n <= 30 || (n % 500) == 0) DLOG("dump #%u %s (%zu B)", n, path, len);
+    return true;
+}
+
+typedef int (*luaL_loadbuffer_t2)(lua_State*, const char*, size_t, const char*);
+typedef int (*luaL_loadbufferx_t2)(lua_State*, const char*, size_t, const char*, const char*);
+static luaL_loadbuffer_t2  g_origLoadBuf  = nullptr;
+static luaL_loadbufferx_t2 g_origLoadBufx = nullptr;
+
+static int Hooked_luaL_loadbuffer2(lua_State* L, const char* buff, size_t sz, const char* name) {
+    if (name && buff && sz >= 16) YimoWriteDump(name, (const uint8_t*)buff, sz);
+    return g_origLoadBuf ? g_origLoadBuf(L, buff, sz, name) : -1;
+}
+
+static int Hooked_luaL_loadbufferx2(lua_State* L, const char* buff, size_t sz,
+                                   const char* name, const char* mode) {
+    if (name && buff && sz >= 16) YimoWriteDump(name, (const uint8_t*)buff, sz);
+    return g_origLoadBufx ? g_origLoadBufx(L, buff, sz, name, mode) : -1;
+}
+
+static void InstallLuaDumpHook() {
+    if (g_origLoadBuf || g_origLoadBufx) return;
+    void* h = dlopen(YIMO_LUA_LIB, RTLD_NOW);
+    if (!h) h = dlopen(YIMO_LUA_LIB, RTLD_NOLOAD | RTLD_NOW);
+    if (!h) return;
+    void* s1 = dlsym(h, "luaL_loadbuffer");
+    if (s1 && DobbyHook(s1, (void*)Hooked_luaL_loadbuffer2, (void**)&g_origLoadBuf) == 0)
+        DLOG("lua dump hook: luaL_loadbuffer @ %p", s1);
+    void* s2 = dlsym(h, "luaL_loadbufferx");
+    if (s2 && DobbyHook(s2, (void*)Hooked_luaL_loadbufferx2, (void**)&g_origLoadBufx) == 0)
+        DLOG("lua dump hook: luaL_loadbufferx @ %p", s2);
+}
+
+/* 诊断复读：让 Lua 把「这个 lua_State 眼里」的关键对象/开关值格式化成**字符串返回**，
+ * 由 native 用 DLOG 打到 logcat（Lua 侧 io.open 写 /sdcard 在 Android 14 无权限，2026-10-29 实测写不进去）。
+ * 判据用途：
+ *   ① YM 值没写进来（写开关落到别的 state / 写失败）
+ *   ② 值对但挂点变了（ACA / ATTR / loadadj 类型异常）
+ *   ③ 值与类都对，但游戏不走这个入口 */
+static const char kYimoStateProbe[] = R"LUA(
+local G, rg = _G, rawget
+local Y  = rg(G, "YM") or {}
+Y.diag = true
+local PM = rg(G, "pg")
+local me = (type(PM) == "table") and rg(PM, "me") or nil
+local pw = (type(PM) == "table") and rg(PM, "pawn") or nil
+local ACA  = package.loaded["Common.Ability.Attribute.ActorCombatAttribute"]
+local ATTR = package.loaded["Common.Const.AttributeConst"]
+local gv  = (type(ACA) == "table") and rg(ACA, "getAttribRatioValue") or nil
+local la  = (type(ATTR) == "table") and rg(ATTR, "speed_ratio_load_adjustment_v") or nil
+local parts = {}
+parts[#parts+1] = string.format("sw dmg=%s spd=%s inv=%s jump=%s stam=%s tp=%s seq=%s",
+    tostring(Y.dmg), tostring(Y.spd), tostring(Y.inv), tostring(Y.jump),
+    tostring(Y.stam), tostring(Y.tp), tostring(rg(G, "__YM_SEQ")))
+if type(me) == "table" and type(gv) == "function" and la ~= nil then
+  local a = rg(me, "actorCombatAttribute") or me
+  local keep = Y.spd
+  Y.spd = 1; local _, v1 = pcall(gv, a, la)
+  Y.spd = keep; local _, v2 = pcall(gv, a, la)
+  parts[#parts+1] = string.format("spdAB spd1=%s spd%s=%s laMine=%s laOther=%s",
+      tostring(v1), tostring(keep), tostring(v2), tostring(Y.laMine), tostring(Y.laOther))
+end
+local gh = Y.gvH
+if type(gh) == "table" then
+  local arr = {}
+  for k, n in pairs(gh) do arr[#arr+1] = { k = k, n = n } end
+  table.sort(arr, function(x, y) return x.n > y.n end)
+  local top = {}
+  for i = 1, math.min(6, #arr) do top[#top+1] = arr[i].k .. "x" .. arr[i].n end
+  parts[#parts+1] = "gvH[" .. table.concat(top, ",") .. "]"
+end
+local rh = Y.rawH
+if type(rh) == "table" then
+  local arr = {}
+  for k, n in pairs(rh) do arr[#arr+1] = { k = k, n = n } end
+  table.sort(arr, function(x, y) return x.n > y.n end)
+  local top = {}
+  for i = 1, math.min(6, #arr) do top[#top+1] = arr[i].k .. "x" .. arr[i].n end
+  parts[#parts+1] = "rawH[" .. table.concat(top, ",") .. "]"
+end
+Y.diagAll = true   -- 诊断实验：所有属性比率都乘（正式包无此键）
+if type(pw) == "table" then
+  local out = {}
+  for k, v in pairs(pw) do
+    if type(k) == "string" then
+      local lk = k:lower()
+      if lk:find("speed") or lk:find("motion") then
+        out[#out+1] = k .. "=" .. tostring(v)
+        if #out >= 12 then break end
+      end
+    end
+  end
+  parts[#parts+1] = "PAWN[" .. table.concat(out, ",") .. "]"
+end
+local au = package.loaded["Common.Utils.AbilityUtils"]
+local mtm = (type(au) == "table") and rg(au, "invalidTargetMap") or nil
+local ntm = 0
+if type(mtm) == "table" then for _ in pairs(mtm) do ntm = ntm + 1 end end
+local tgt = pw or me
+local isinv = "n/a"
+if type(au) == "table" and type(rg(au, "isAbilityInvalidTarget")) == "function" and type(tgt) == "table" then
+  local ok, v = pcall(rg(au, "isAbilityInvalidTarget"), tgt)
+  isinv = tostring(ok and v or "err")
+end
+parts[#parts+1] = string.format("INV mapN=%s isInv=%s ts_pawn=%s ts_me=%s ait=%s clr=%s",
+    tostring(ntm), isinv,
+    tostring(type(pw) == "table" and rg(pw, "dialoguePauseInvincibleEndTs") or nil),
+    tostring(type(me) == "table" and rg(me, "dialoguePauseInvincibleEndTs") or nil),
+    tostring(Y.ait), tostring(Y.clr))
+parts[#parts+1] = string.format("inv cvt=%s inv=%s block=%s wrap=%s ait=%s aitErr=%s motComp=%s motPawn=%s",
+    tostring(Y.cvt), tostring(Y.cvtInv), tostring(Y.cvtBlock), tostring(Y.cvtWrap),
+    tostring(Y.ait), tostring(Y.aitErr), tostring(Y.motComp), tostring(Y.motPawn))
+parts[#parts+1] = string.format("dmg calls=%s out=%s mine=%s", tostring(Y.calls),
+    tostring(Y.callsOut), tostring(Y.callsMine))
+return table.concat(parts, " || ")
+)LUA";
+
+/* 主题探测：把类/实例上「像目标过滤、像伤害上报、像速度刷新」的键名列出来，
+ * 供精确定位 1.1.0 的真实挂点（每行 < 1 KB，避免 liblog 截断）。 */
+static const char kYimoSurveyMe[] = R"LUA(
+local G, rg = _G, rawget
+local PM = rg(G, "pg")
+local me = (type(PM) == "table") and rg(PM, "me") or nil
+if type(me) ~= "table" then return "me=nil" end
+local KEEP = { "target", "immune", "invinc", "damage", "hurt", "hit", "attack" }
+local out = {}
+local n = 0
+for k, v in pairs(me) do
+  if type(k) == "string" then
+    local lk = k:lower()
+    for _, w in ipairs(KEEP) do
+      if lk:find(w, 1, true) then
+        out[#out+1] = k .. ":" .. type(v); n = n + 1; break
+      end
+    end
+  end
+  if n > 28 then break end
+end
+return "ME[" .. table.concat(out, ",") .. "]"
+)LUA";
+
+static const char kYimoSurveyCls[] = R"LUA(
+local G, rg = _G, rawget
+local PM = rg(G, "pg")
+local me = (type(PM) == "table") and rg(PM, "me") or nil
+if type(me) ~= "table" then return "me=nil" end
+local cls = nil
+if type(rg(me, "getVtbl")) == "function" then
+  local ok, v = pcall(rg(me, "getVtbl"), me)
+  if ok then cls = v end
+end
+if type(cls) ~= "table" then cls = me end
+local KEEP = { "target", "immune", "invinc", "damage", "hurt", "msg", "send", "report", "rpc" }
+local out, n = {}, 0
+for k, v in pairs(cls) do
+  if type(k) == "string" then
+    local lk = k:lower()
+    for _, w in ipairs(KEEP) do
+      if lk:find(w, 1, true) then out[#out+1] = k .. ":" .. type(v); n = n + 1; break end
+    end
+  end
+  if n > 34 then break end
+end
+return "CLS[" .. table.concat(out, ",") .. "]"
+)LUA";
+
+static const char kYimoSurveyNet[] = R"LUA(
+local out = {}
+for _, mn in ipairs({ "Utils.LuaMsgUtils", "Core.Net.Client" }) do
+  local m = package.loaded[mn]
+  if type(m) == "table" then
+    local ks = {}
+    for k, v in pairs(m) do
+      if type(v) == "function" then ks[#ks+1] = k end
+      if #ks > 14 then break end
+    end
+    table.sort(ks)
+    out[#out+1] = mn .. "{" .. table.concat(ks, ",") .. "}"
+  else
+    out[#out+1] = mn .. "=" .. type(m)
+  end
+end
+return "NET[" .. table.concat(out, " ") .. "]"
+)LUA";
+
+static const char kYimoSurveyUtil[] = R"LUA(
+local out = {}
+for _, mn in ipairs({ "Common.Utils.Utils", "Utils.Utils" }) do
+  local m = package.loaded[mn]
+  if type(m) == "table" then
+    local ks = {}
+    for k, v in pairs(m) do
+      if type(k) == "string" then
+        local lk = k:lower()
+        if lk:find("target", 1, true) or lk:find("invalid", 1, true)
+           or lk:find("enemy", 1, true) or lk:find("immune", 1, true) then
+          ks[#ks+1] = k .. ":" .. type(v)
+          if #ks > 12 then break end
+        end
+      end
+    end
+    table.sort(ks)
+    out[#out+1] = mn .. "{" .. table.concat(ks, ",") .. "}"
+  else
+    out[#out+1] = mn .. "=" .. type(m)
+  end
+end
+return "UTIL[" .. table.concat(out, " ") .. "]"
+)LUA";
+
+static const char kYimoSurveyMod[] = R"LUA(
+local G, rg = _G, rawget
+local out, n = {}, 0
+for name, v in pairs(package.loaded) do
+  if type(name) == "string" and type(v) == "table" then
+    local ln = name:lower()
+    if ln:find("rpc", 1, true) or ln:find("msg", 1, true) or ln:find("hub", 1, true)
+       or ln:find("net", 1, true) then
+      out[#out+1] = name; n = n + 1
+      if n > 12 then break end
+    end
+  end
+end
+return "MOD[" .. table.concat(out, ",") .. "]"
+)LUA";
+
+/* 诊断 chunk（占位保持顺序）：独立、一次性、失败绝不影响功能补丁。 */
+
+/* 诊断：跑一段返回字符串的 Lua，把结果拷进 out（失败返回 false，绝不影响功能） */
+static bool RunLuaStrRet(lua_State* L, const char* code, char* out, int cap) {
+    if (out && cap > 0) out[0] = 0;
+    if (!p_luaL_loadstring || !p_lua_pcall || !p_lua_tolstring || !p_lua_settop) return false;
+    if (p_luaL_loadstring(L, code) != 0) { p_lua_settop(L, -2); return false; }
+    if (p_lua_pcall(L, 0, 1, 0) != 0) { p_lua_settop(L, -2); return false; }
+    const char* s = p_lua_tolstring(L, -1, nullptr);
+    if (s && out && cap > 0) snprintf(out, (size_t)cap, "%s", s);
+    p_lua_settop(L, -2);
+    return s != nullptr;
+}
+
 /* 诊断 chunk：独立、一次性、失败绝不影响功能补丁。仅 STARRY_DIAG=1 构建存在。 */
 static void RunDiagChunk(lua_State* L) {
     static bool s_diagDone = false;
@@ -885,8 +1342,41 @@ static void SyncOnLua(lua_State* L) {
              stam ? "true" : "false", tp ? "true" : "false");
     if (!RunLua(L, buf)) return;
 
+    const int slot = StateSlot(L);
+    const uint32_t seqNow = g_syncSeq.load(std::memory_order_relaxed);
+    if (slot >= 0) g_stateApplied[slot] = seqNow;
+
 #if MOD_DIAG_LUA
     RunDiagChunk(L);   /* 诊断 chunk（仅诊断构建存在；失败不影响上面两步功能） */
+    {
+        static uint64_t s_lastProbe = 0;
+        struct timespec tsp;
+        clock_gettime(CLOCK_MONOTONIC, &tsp);
+        const uint64_t nowP = (uint64_t)tsp.tv_sec * 1000ull + (uint64_t)tsp.tv_nsec / 1000000ull;
+        if (s_lastProbe == 0 || (nowP - s_lastProbe) >= 3000) {
+            s_lastProbe = nowP;
+            char got[3000];
+            {
+                static uint64_t s_lastSurvey = 0;
+                if (s_lastSurvey == 0 || (nowP - s_lastSurvey) >= 5000) {
+                    s_lastSurvey = nowP;
+                    char sv[1200];
+                    if (RunLuaStrRet(L, kYimoSurveyMe, sv, (int)sizeof(sv)))  DLOG("survey %s", sv);
+                    if (RunLuaStrRet(L, kYimoSurveyCls, sv, (int)sizeof(sv))) DLOG("survey %s", sv);
+                    if (RunLuaStrRet(L, kYimoSurveyMod, sv, (int)sizeof(sv))) DLOG("survey %s", sv);
+                    if (RunLuaStrRet(L, kYimoSurveyNet, sv, (int)sizeof(sv)))  DLOG("survey %s", sv);
+                    if (RunLuaStrRet(L, kYimoSurveyUtil, sv, (int)sizeof(sv))) DLOG("survey %s", sv);
+                }
+            }
+            if (RunLuaStrRet(L, kYimoStateProbe, got, (int)sizeof(got))) {
+                DLOG("probe slot=%d st=%p calls=%u seq=%u | %s", slot, (void*)L,
+                     (unsigned)g_hookCalls.load(std::memory_order_relaxed),
+                     (unsigned)seqNow, got);
+            } else {
+                DLOG("probe failed slot=%d st=%p", slot, (void*)L);
+            }
+        }
+    }
 #endif
 
     if (!g_patched) {
@@ -933,6 +1423,15 @@ static inline void SyncFromLuaEntry(lua_State* L) {
         const uint64_t nowMs = YimoNowMs();
         if (c >= 20 && (nowMs - s_lastTryMs) >= 500) { s_lastTryMs = nowMs; want = true; }
     }
+#if MOD_DIAG_LUA
+    /* 诊断构建：补丁装上后 g_wantSync 会被清掉、SyncOnLua 不再被调用，
+     * 探针就哑了 ⇒ 每 3 s 强制同步一次（仅诊断包）。 */
+    if (!want) {
+        static uint64_t s_lastForce = 0;
+        const uint64_t nowMsF = YimoNowMs();
+        if (s_lastForce == 0 || (nowMsF - s_lastForce) >= 3000) { s_lastForce = nowMsF; want = true; }
+    }
+#endif
     if (want) {
         /* ★整体同步限流：最多每 100 ms 一次（Yimo_Tick 每个框架 tick 都会把
          *   g_wantSync 置真，不限流就是每 tick 一次 19 KB loadstring）。 */
@@ -977,9 +1476,12 @@ static bool InstallLuaHooks() {
     }
     DLOG("hooks installed pcall_orig=%p gettop_orig=%p",
          (void*)g_origPcall, (void*)g_origGettop);
+#if MOD_DIAG_LUA
+    InstallLuaDumpHook();   /* 诊断包：把游戏加载的 Lua 模块落盘，用于定挂点 */
+#endif
     g_hooksInstalled = true;
     g_ready.store(true);
-    g_wantSync.store(true);
+    BumpSync();
     return true;
 }
 
@@ -1004,7 +1506,7 @@ void Yimo_OnFeatureChanged(int featNum, bool enabled) {
         case YIMO_FEAT_SPD:  break;
         default: break;
     }
-    g_wantSync.store(true);
+    BumpSync();
 }
 
 void Yimo_OnValueChanged(int featNum, int value) {
@@ -1015,11 +1517,38 @@ void Yimo_OnValueChanged(int featNum, int value) {
         if (value < 1) value = 1;
         if (value > 10) value = 10;
         g_spdMult.store(value);
-        g_wantSync.store(true);
+        BumpSync();
     }
 }
 
 void Yimo_Tick(const bool* features, const int* values) {
+    /* ★2026-10-29 实测补丁：菜单改了开关/数值，Lua 侧却一直是旧值
+     *   （logcat: 菜单 #3 玩家无敌 ON / 移速 10，而 Lua 里 YM.inv=false、YM.spd=6）。
+     *   原因：写开关只发生在 SyncOnLua 里，而 SyncOnLua 由 g_wantSync 驱动；
+     *   实时点菜单走的是「每 tick 传 features[]/values[]」这条路，过去不改 wantSync
+     *   ⇒ 只有「初次装载 via OnFeatureChanged」那一次会写，之后菜单怎么动都不同步。
+     *   修法：Tick 里对比上一轮的开关/数值，有变化就 BumpSync()（序号+1，各 state 补写）。 */
+    {
+        static bool sLastF[16] = {false};
+        static int  sLastV[16] = {0};
+        static bool sInit = false;
+        if (features) {
+            bool changed = !sInit;
+            for (int i = 0; i < 16; ++i) {
+                if (features[i] != sLastF[i]) { sLastF[i] = features[i]; changed = true; }
+            }
+            if (values) {
+                for (int i = 0; i < 16; ++i) {
+                    if (values[i] != sLastV[i]) { sLastV[i] = values[i]; changed = true; }
+                }
+            }
+            if (changed) {
+                sInit = true;
+                DLOG("tick detected feature change → BumpSync");
+                BumpSync();
+            }
+        }
+    }
     // initRetryMax=0 → 框架不会调 tryInit（"Tick 懒加载"合同），必须由 Tick 自己补
     if (!g_ready.load()) {
         static int s_lazy = 0;
