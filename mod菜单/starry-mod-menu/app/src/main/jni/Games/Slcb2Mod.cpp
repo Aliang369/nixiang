@@ -71,7 +71,6 @@ static std::atomic<bool> g_iron{false};     // 无限魔铁锭
 static std::atomic<bool> g_crystal{false};  // 无限魂晶
 static std::atomic<int>  g_mult{1};         // 伤害倍率 1..100（1 = 关闭）
 static std::atomic<bool> g_skin{false};     // 全装扮解锁
-static std::atomic<bool> g_noad{false};     // 免广告（关闭广告入口 + 播放直接返回）
 
 // ============================================================================
 //  ④ 致命信号兜底（sigsetjmp 保护区 + sigaltstack）—— 原样重建自本机模板
@@ -249,8 +248,6 @@ enum SlotKind {
     K_RESULT,          // 只改结果指令（免CD / 不耗蓝）
     K_STUB9999,        // 入口 → cave：mov w0,#9999; ret（货币）
     K_STUB_TRUE,       // 入口 → cave：mov w0,#1; ret（装扮判定）
-    K_STUB_FALSE,      // 入口 → cave：mov w0,#0; ret（广告可用判定）
-    K_STUB_VOID,       // 入口 → cave：ret（广告播放，直接返回不播）
 };
 
 struct HookSlot {
@@ -271,8 +268,6 @@ static const HookSlot kSlots[] = {
     { "GetIron",   0x114d97d0UL, SLCB2_FEAT_IRON,    K_STUB9999,   0,          0,          0          },
     { "GetCrystal",0x114ca960UL, SLCB2_FEAT_CRYSTAL, K_STUB9999,   0,          0,          0          },
     { "Appearance",0x11944af8UL, SLCB2_FEAT_SKIN,    K_STUB_TRUE,  0,          0,          0          },
-    { "AdAvailable",0x113a549cUL, SLCB2_FEAT_NOAD,   K_STUB_FALSE, 0,          0,          0          },
-    { "PlayRewardVideo",0x113a57d4UL, SLCB2_FEAT_NOAD, K_STUB_VOID,  0,          0,          0          },
 };
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
@@ -296,7 +291,6 @@ static bool FeatOn(int feat) {
         case SLCB2_FEAT_IRON:    return g_iron.load();
         case SLCB2_FEAT_CRYSTAL: return g_crystal.load();
         case SLCB2_FEAT_SKIN:    return g_skin.load();
-        case SLCB2_FEAT_NOAD:    return g_noad.load();
         default: return false;
     }
 }
@@ -340,27 +334,23 @@ static bool PatchJumpSlot(int i) {
     if ((w0 & 0xFC000000u) == 0x14000000u) return false;   // 已是 b（我们或跳板）→ 稍后再判
 
     // ---- 常量 stub ----
-    if (sl.kind == K_STUB_TRUE || sl.kind == K_STUB9999 || sl.kind == K_STUB_FALSE || sl.kind == K_STUB_VOID) {
+    if (sl.kind == K_STUB_TRUE || sl.kind == K_STUB9999) {
         void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
         if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
         g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
-        uint32_t imm = (sl.kind == K_STUB_TRUE) ? 1u
-                     : (sl.kind == K_STUB_FALSE) ? 0u : 9999u;
-        uint32_t nInsn = (sl.kind == K_STUB_VOID) ? 1u : 2u;
+        uint32_t imm = (sl.kind == K_STUB_TRUE) ? 1u : 9999u;
         uint32_t code[2];
-        code[0] = (sl.kind == K_STUB_VOID) ? 0xD65F03C0u                       // ret
-                                           : (0x52800000u | ((imm & 0xFFFFu) << 5));  // mov w0, #imm
-        code[1] = 0xD65F03C0u;                                                  // ret
-        if (!WriteCode(sc, code, nInsn * 4)) return false;
+        code[0] = 0x52800000u | ((imm & 0xFFFFu) << 5);   // mov w0, #imm
+        code[1] = 0xD65F03C0u;                             // ret
+        if (!WriteCode(sc, code, 8)) return false;
         int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
         if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
         uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
         memcpy(g_slotSaved[i], &w0, 4);
         if (!WriteCode(va, &bi, 4)) return false;
         g_slotTarget[i] = va; g_lastHookTarget = va;
-        LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（%s）",
-             i, sl.tag, bi, sc,
-             sl.kind == K_STUB_VOID ? "ret（直接返回）" : (sl.kind == K_STUB_FALSE ? "mov w0,#0; ret" : "mov w0,#imm; ret"));
+        LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（mov w0,#%u; ret）",
+             i, sl.tag, bi, sc, imm);
         return true;
     }
 
@@ -471,15 +461,14 @@ static void LoadOwnPrefs() {
                 case SLCB2_FEAT_IRON:    g_iron.store(on);    ++nSet; break;
                 case SLCB2_FEAT_CRYSTAL: g_crystal.store(on); ++nSet; break;
                 case SLCB2_FEAT_SKIN:    g_skin.store(on);    ++nSet; break;
-                case SLCB2_FEAT_NOAD:    g_noad.store(on);    ++nSet; break;
                 default: break;
             }
         }
     }
     std::fclose(f);
-    LOGI(TPL_LOG " 自行读 prefs：恢复 %d 项（多=%d 无敌=%d 技能=%d 魔铁=%d 魂晶=%d 装扮=%d 免广告=%d）",
+    LOGI(TPL_LOG " 自行读 prefs：恢复 %d 项（多=%d 无敌=%d 技能=%d 魔铁=%d 魂晶=%d 装扮=%d）",
          nSet, g_mult.load(), (int)g_inv.load(), (int)g_skill.load(),
-         (int)g_iron.load(), (int)g_crystal.load(), (int)g_skin.load(), (int)g_noad.load());
+         (int)g_iron.load(), (int)g_crystal.load(), (int)g_skin.load());
 }
 
 static void SyncHooks();
@@ -570,7 +559,6 @@ void Slcb2_OnFeatureChanged(int featNum, bool enabled) {
         case SLCB2_FEAT_IRON:    g_iron.store(enabled); break;
         case SLCB2_FEAT_CRYSTAL: g_crystal.store(enabled); break;
         case SLCB2_FEAT_SKIN:    g_skin.store(enabled); break;
-        case SLCB2_FEAT_NOAD:    g_noad.store(enabled); break;
         default: break;
     }
     SyncHooks();
@@ -613,7 +601,6 @@ void Slcb2_Tick(const bool* features, const int* values) {
     g_iron.store(features[SLCB2_FEAT_IRON]);
     g_crystal.store(features[SLCB2_FEAT_CRYSTAL]);
     g_skin.store(features[SLCB2_FEAT_SKIN]);
-    g_noad.store(features[SLCB2_FEAT_NOAD]);
 
 
     // 兜底：库晚于首帧映射时，这里补一次
