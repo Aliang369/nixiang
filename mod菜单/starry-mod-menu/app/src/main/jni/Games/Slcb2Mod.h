@@ -28,6 +28,7 @@ enum Slcb2Feat : int {
     SLCB2_FEAT_IRON = 5,     // Toggle_无限魔铁锭（LC2.BagSystem::get_IronPowder）
     SLCB2_FEAT_CRYSTAL = 6,  // Toggle_无限魂晶（LC2.BagSystem::get_Crystal）
     SLCB2_FEAT_SKIN = 7,     // Toggle_全装扮（AppearanceMgr.IsAppearanceItemUnlocked 0x11944af8）
+    SLCB2_FEAT_NOAD = 8,     // Toggle_免广告（RechargeShopMgr.CheckRewardVideoAvailable 0x113a549c）     // Toggle_全装扮（AppearanceMgr.IsAppearanceItemUnlocked 0x11944af8）
 };
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）

@@ -39,6 +39,7 @@ static const char* kSlcb2Features[] = {
     "Toggle_无限魔铁锭",    // 5  SLCB2_FEAT_IRON
     "Toggle_无限魂晶",      // 6  SLCB2_FEAT_CRYSTAL
     "Toggle_全装扮",        // 7  SLCB2_FEAT_SKIN（含装扮附带特效）
+    "Toggle_免广告",        // 8  SLCB2_FEAT_NOAD（广告入口关闭 + 播放直接返回）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
