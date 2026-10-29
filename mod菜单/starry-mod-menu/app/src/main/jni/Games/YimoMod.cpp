@@ -548,6 +548,7 @@ patchLite(ACA, "getAttribValue", function(orig)
   end
 end)
 
+
 -- 诊断：getRawAttribValue 被要了哪些 id（移速真实读数很可能走这里）
 patchLite(ACA, "getRawAttribValue", function(orig)
   return function(self, attributeId)
@@ -1051,92 +1052,1229 @@ static const char* YimoPatchText() { return kYimoPatch; }
  * 再喂 Il2CppDumper 拿 RVA，最后按 RVA + 序言指纹挂 Dobby。
  * ============================================================ */
 #include <sys/mman.h>
+#include <cerrno>
+#include <cstdlib>
+#include <strings.h>
+#include <fcntl.h>
+#include <unistd.h>
 
+/* ★2026-10-29 第二轮改造（采集器「可知化」，只影响 STARRY_DIAG 诊断包）：
+ *   前两版的失败都是「没有任何输出」——分不清线程没起来 / 扫到一半卡死 / 区块被过滤，
+ *   所以这一版把三件事补齐：
+ *     ① 入口无条件心跳（线程刚起来就打，成功失败都打）；
+ *     ② 每次 fopen 失败都带 errno 落日志，不再静默 return；
+ *     ③ 把「被过滤掉的区块」按原因分类统计（非可读 / 太小 / 超大 / 超扫描预算）。
+ *   另外新增**命令文件** meta_cmd.txt：不用重编译重装，就能让进程按需把任意地址区间
+ *   落盘（dump / findstr / big / maps / scan）。离线迭代走它，装机成本降到 0。 */
+static const char* kMetaDir =
+    "/sdcard/Android/data/com.x.yimoo.official/files";
 static const char* kMetaDumpPath =
     "/sdcard/Android/data/com.x.yimoo.official/files/meta_dump.bin";
+static const char* kMetaCmdPath =
+    "/sdcard/Android/data/com.x.yimoo.official/files/meta_cmd.txt";
+static const char* kMetaMapsPath =
+    "/sdcard/Android/data/com.x.yimoo.official/files/meta_maps.txt";
 
 static bool YimoWriteBuf(const char* path, const void* data, size_t len) {
     FILE* f = fopen(path, "wb");
-    if (!f) return false;
+    if (!f) { DLOG("meta write FAIL open %s errno=%d", path, errno); return false; }
     const size_t w = fwrite(data, 1, len, f);
     fclose(f);
-    return w == len;
+    if (w != len) {
+        DLOG("meta write SHORT %s w=%zu want=%zu", path, w, len);
+        return false;
+    }
+    return true;
 }
 
-/* 解析 /proc/self/maps，在「libil2cpp 映射范围 ± 大匿名区」里按魔数扫描 */
-static void YimoDumpIl2CppMetadata() {
-    FILE* m = fopen("/proc/self/maps", "r");
-    if (!m) return;
-    static int s_round = 0;
-    ++s_round;
-    char line[512];
-    uintptr_t lo_img = ~(uintptr_t)0, hi_img = 0;
-    /* 先定 libil2cpp 的地址范围 */
-    while (fgets(line, sizeof(line), m)) {
-        if (strstr(line, "libil2cpp.so")) {
-            uintptr_t a = 0, b = 0;
-            if (sscanf(line, "%lx-%lx", &a, &b) == 2) {
-                if (a < lo_img) lo_img = a;
-                if (b > hi_img) hi_img = b;
-            }
+/* ---- /proc/self/maps 解析 ---- */
+struct YimoRegion {
+    uintptr_t a;
+    uintptr_t b;
+    char perms[8];
+    char name[256];   /* ★256：80 字节会把 /data/app/~~.../lib/arm64/libil2cpp.so
+                       * 截断成「...com.x.yimoo.official-1vcyqI9btT9MidyWEca」，
+                       * 导致 strstr(name,"libil2cpp") 永远不命中（实测踩过） */
+};
+
+/* maps 第 6 个字段起是映射名（路径或 [anon:...]），可能为空 */
+static void YimoRegionName(const char* line, char* dst, size_t cap) {
+    dst[0] = 0;
+    int field = 0;
+    const char* p = line;
+    while (*p) {
+        while (*p == ' ' || *p == '\t') ++p;
+        if (!*p || *p == '\n') break;
+        const char* s = p;
+        while (*p && *p != ' ' && *p != '\t' && *p != '\n') ++p;
+        if (field >= 5) {
+            size_t len = (size_t)(p - s);
+            if (len >= cap) len = cap - 1;
+            memcpy(dst, s, len);
+            dst[len] = 0;
+            return;
         }
+        ++field;
     }
-    rewind(m);
-    const uint32_t kMagic = 0xFAB11BAFu;
-    int dumped = 0;
-    int scanned = 0;
-    struct Blk { uintptr_t addr; size_t len; };
-    Blk top[5] = {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
-    while (fgets(line, sizeof(line), m) && dumped < 4) {
-        uintptr_t a = 0, b = 0;
-        char perms[8] = {0};
-        if (sscanf(line, "%lx-%lx %7s", &a, &b, perms) != 3) continue;
-        if (perms[0] != 'r') continue;
-        const size_t len = (size_t)(b - a);
-        /* 记录最大 5 个可读区，便于判断「是不是被尺寸过滤掉了」 */
-        if (len > top[4].len) {
-            top[4].len = len; top[4].addr = a;
-            for (int k = 4; k > 0 && top[k].len > top[k - 1].len; --k) {
-                Blk tmp = top[k]; top[k] = top[k - 1]; top[k - 1] = tmp;
-            }
-        }
-        if (len < (1u << 20) || len > (4096ull << 20)) continue;
-        ++scanned;
-        const bool near = (hi_img && a >= lo_img && a <= hi_img + 0x30000000ull);
-        const bool bigEnough = (len >= (16u << 20));
-        if (!near && !bigEnough) continue;
-        const uint8_t* p = (const uint8_t*)a;
-        for (size_t off = 0; off + 64 < len; off += 8) {
-            uint32_t v = 0;
-            memcpy(&v, p + off, 4);
-            if (v != kMagic) continue;
-            int32_t ver = 0;
-            memcpy(&ver, p + off + 4, 4);
-            if (ver < 20 || ver > 40) continue;
-            /* 头部 sanity：stringLiteralOffset 应 > 0 且 < 块长 */
-            int32_t slOff = 0;
-            memcpy(&slOff, p + off + 8, 4);
-            if (slOff <= 0 || (size_t)slOff >= len - off) continue;
-            size_t dumpLen = len - off;
-            if (dumpLen > (128u << 20)) dumpLen = 128u << 20;
-            char path[256];
-            if (dumped == 0) {
-                snprintf(path, sizeof(path), "%s", kMetaDumpPath);
-            } else {
-                snprintf(path, sizeof(path), "%s.%d", kMetaDumpPath, dumped);
-            }
-            const bool ok = YimoWriteBuf(path, p + off, dumpLen);
-            DLOG("meta candidate #%d at %p off=%zu ver=%d sl=%d len=%zu ok=%d",
-                 dumped, (void*)(p + off), off, ver, slOff, dumpLen, (int)ok);
-            dumped++;
-            break;   /* 每块只取第一个候选 */
-        }
+}
+
+static int YimoReadMaps(YimoRegion* out, int cap) {
+    FILE* m = fopen("/proc/self/maps", "r");
+    if (!m) { DLOG("meta maps FAIL open /proc/self/maps errno=%d", errno); return -1; }
+    char line[600];
+    int n = 0;
+    while (fgets(line, sizeof(line), m)) {
+        if (n >= cap) break;
+        YimoRegion r{};
+        if (sscanf(line, "%lx-%lx %7s", &r.a, &r.b, r.perms) != 3) continue;
+        YimoRegionName(line, r.name, sizeof(r.name));
+        out[n++] = r;
     }
     fclose(m);
-    DLOG("meta scan #%d: regions=%d dumped=%d img=%p..%p top=%zu/%zu/%zu/%zu/%zu",
-         s_round, scanned, dumped, (void*)lo_img, (void*)hi_img,
-         top[0].len, top[1].len, top[2].len, top[3].len, top[4].len);
+    return n;
 }
+
+/* 把 /proc/self/maps 原样落盘（几 KB，离线看布局用） */
+static void YimoMetaDumpMaps() {
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) { DLOG("meta mapsnap FAIL open /proc/self/maps errno=%d", errno); return; }
+    FILE* o = fopen(kMetaMapsPath, "wb");
+    if (!o) { DLOG("meta mapsnap FAIL open %s errno=%d", kMetaMapsPath, errno); fclose(f); return; }
+    char buf[4096];
+    size_t n = 0, tot = 0;
+    while ((n = fread(buf, 1, sizeof(buf), f)) > 0) tot += fwrite(buf, 1, n, o);
+    fclose(f);
+    fclose(o);
+    DLOG("meta mapsnap -> %s (%zu B)", kMetaMapsPath, tot);
+}
+
+/* ---- 魔数 / 头部启发式扫描 ---- */
+static const uint32_t kMetaMagic = 0xFAB11BAFu;
+
+/* ★安全读：直接解引用整个区域会在「maps 快照过期 / 页被 munmap」时吃 SIGSEGV，
+ * 上一版 ptrscan 就是这么把采集线程打死的（logcat: CRASH Forwarding signal 11）。
+ * 改走 pread(/proc/self/mem)：坏页只返回 EIO/short read，不崩进程。 */
+static int YimoSelfMemFd() {
+    static int s_fd = -1;
+    if (s_fd < 0) s_fd = open("/proc/self/mem", O_RDONLY | O_CLOEXEC);
+    return s_fd;
+}
+
+/* 读 [addr, addr+len) 到 dst；返回实际读到的字节数（坏页处会 short） */
+static size_t YimoSafeRead(uintptr_t addr, void* dst, size_t len) {
+    const int fd = YimoSelfMemFd();
+    if (fd < 0) return 0;
+    uint8_t* out = (uint8_t*)dst;
+    size_t done = 0;
+    while (done < len) {
+        const ssize_t r = pread(fd, out + done, len - done, (off_t)(addr + done));
+        if (r <= 0) break;
+        done += (size_t)r;
+    }
+    return done;
+}
+
+/* ★2026-10-29 实测：Android 14 + 易盾进程里 pread(/proc/self/mem) 可能整体失败
+ * （现象：ptrscan 10 s 就「扫完」7 GB 且 0 命中，连 metadata 指针都找不到）。
+ * 所以先自检：拿一个「必定可读」的地址试读 16 B；不行就退回直读。 */
+static bool s_directRead = false;   /* true = 直读（有 SIGSEGV 风险，仅诊断包） */
+static const char* s_readerName = "?";
+
+static void YimoReaderProbe(uintptr_t knownGood) {
+    if (s_readerName[0] != '?') return;
+    const int fd = YimoSelfMemFd();
+    uint8_t t[16] = {0};
+    const size_t got = YimoSafeRead(knownGood, t, sizeof(t));
+    if (fd >= 0 && got == sizeof(t)) {
+        s_directRead = false;
+        s_readerName = "pread(/proc/self/mem)";
+        DLOG("meta reader: pread 可用 fd=%d 试读 %p -> %zu B", fd, (void*)knownGood, got);
+    } else {
+        s_directRead = true;
+        s_readerName = "直接解引用";
+        DLOG("meta reader: pread 不可用（fd=%d got=%zu errno=%d）→ 退回直接解引用",
+             fd, got, errno);
+        errno = 0;
+    }
+}
+
+/* 统一的按块读取：按 s_directRead 选择 pread 或直接解引用 */
+static size_t YimoReadChunk(uintptr_t addr, void* dst, size_t len) {
+    if (!s_directRead) {
+        const size_t got = YimoSafeRead(addr, dst, len);
+        if (got) return got;
+        s_directRead = true;   /* 中途失效：之后的块改直读 */
+        DLOG("meta reader: pread 中途失效 -> 转直读");
+        errno = 0;
+    }
+    memcpy(dst, (const void*)addr, len);
+    return len;
+}
+
+/* metadata 体量约 29.85 MB；用「落盘一个候选」的公共出口，带完整日志 */
+static void YimoMetaSave(const char* kind, int idx, const uint8_t* p, size_t len,
+                         size_t capBytes) {
+    if (len > capBytes) len = capBytes;
+    char path[256];
+    snprintf(path, sizeof(path), "%s/meta_%s_%d.bin", kMetaDir, kind, idx);
+    const bool ok = YimoWriteBuf(path, p, len);
+    DLOG("meta %s #%d @%p len=%zu ok=%d", kind, idx, (const void*)p, len, (int)ok);
+}
+
+/* 扫描：魔数命中优先；magic 被抹掉（易盾反 dump 常见）时靠头部字段形状兜底 */
+static size_t YimoMetaScanMagic(const YimoRegion* R, int n, size_t budgetBytes,
+                                int* pScanned, int* pSkippedBudget, int* pCand) {
+    size_t used = 0;
+    int scanned = 0, skipped = 0, cand = 0, heur = 0;
+    for (int i = 0; i < n; ++i) {
+        const YimoRegion& r = R[i];
+        if (r.perms[0] != 'r') continue;                  /* 已在统计里计过 */
+        const size_t len = (size_t)(r.b - r.a);
+        if (len < (256u << 10)) continue;                 /* 同上：已计过 */
+        if (used >= budgetBytes) { ++skipped; continue; }
+        size_t lim = len;
+        if (lim > budgetBytes - used) lim = budgetBytes - used;
+        used += lim;
+        ++scanned;
+        const uint8_t* p = (const uint8_t*)r.a;
+        bool tookThis = false;
+        for (size_t off = 0; off + 64 <= lim; off += 4) {
+            uint32_t v = 0;
+            memcpy(&v, p + off, 4);
+            if (v == kMetaMagic) {
+                int32_t ver = 0;
+                memcpy(&ver, p + off + 4, 4);
+                int32_t slOff = 0;
+                memcpy(&slOff, p + off + 8, 4);
+                DLOG("meta MAGIC @%p off=%zu region=%p+%zu ver=%d sl=%d name=%s",
+                     (const void*)(p + off), off, (const void*)r.a, off, ver, slOff,
+                     r.name);
+                YimoMetaSave("dump", cand, p + off, len - off, 48u << 20);
+                ++cand;
+                tookThis = true;
+                break;
+            }
+            /* 头部启发式：v 是 sanity 被清零/改写后的样子，看 version + 偏移链 */
+            if (v <= 1u && heur < 4) {
+                int32_t w2 = 0, w3 = 0, w4 = 0, w6 = 0;
+                memcpy(&w2, p + off + 8, 4);
+                memcpy(&w3, p + off + 12, 4);
+                memcpy(&w4, p + off + 16, 4);
+                memcpy(&w6, p + off + 24, 4);
+                int32_t ver = 0;
+                memcpy(&ver, p + off + 4, 4);
+                if (ver >= 19 && ver <= 32 &&
+                    w2 >= 0x40 && w2 <= 0x2000 &&
+                    w3 > 0 && (w3 % 4) == 0 && w3 <= (8 << 20) &&
+                    w4 > w2 && w4 <= (48 << 20) &&
+                    w6 > w4 && w6 <= (48 << 20)) {
+                    DLOG("meta HEUR @%p off=%zu region=%p+%zu ver=%d w=[%u,%d,%d,%d,%d] name=%s",
+                         (const void*)(p + off), off, (const void*)r.a, off, ver,
+                         v, w2, w3, w4, w6, r.name);
+                    YimoMetaSave("heur", heur, p + off, len - off, 48u << 20);
+                    ++heur;
+                    if (heur >= 4) break;
+                }
+            }
+        }
+        if (tookThis && cand >= 4) break;
+    }
+    if (pScanned) *pScanned = scanned;
+    if (pSkippedBudget) *pSkippedBudget = skipped;
+    if (pCand) *pCand = cand + heur;
+    return used;
+}
+
+/* 按字符串在可读区里定位（判断「明文 metadata 到底在不在内存里」最直接的证据） */
+static void YimoMetaFindStr(const char* pat, const YimoRegion* R, int n, int maxHits) {
+    const size_t plen = strlen(pat);
+    if (plen < 4) { DLOG("meta findstr: pattern too short"); return; }
+    int hits = 0;
+    size_t scannedMB = 0;
+    for (int i = 0; i < n && hits < maxHits; ++i) {
+        const YimoRegion& r = R[i];
+        if (r.perms[0] != 'r') continue;
+        const size_t len = (size_t)(r.b - r.a);
+        if (len < plen) continue;
+        scannedMB += len >> 20;
+        const uint8_t* h = (const uint8_t*)r.a;
+        const uint8_t* end = h + (len - plen);
+        const uint8_t c0 = (uint8_t)pat[0];
+        for (const uint8_t* p = h; p <= end;) {
+            const uint8_t* q = (const uint8_t*)memchr(p, c0, (size_t)(end - p) + 1);
+            if (!q) break;
+            if (memcmp(q, pat, plen) == 0) {
+                DLOG("meta findstr '%s' @%p region=%p+%zu name=%s",
+                     pat, (const void*)q, (const void*)r.a, (size_t)(q - h), r.name);
+                ++hits;
+                if (hits >= maxHits) break;
+                p = q + 1;
+            } else {
+                p = q + 1;
+            }
+        }
+    }
+    if (!hits) DLOG("meta findstr '%s': 0 hits (scanned %zu MB)", pat, scannedMB);
+}
+
+/* 把指定尺寸窗口内的 rw 匿名块整体落盘（metadata 解密缓冲大概率就在这个尺寸段） */
+static void YimoMetaDumpBig(const YimoRegion* R, int n, size_t minB, size_t maxB,
+                            int maxCount, size_t capBytes) {
+    int done = 0;
+    for (int i = 0; i < n && done < maxCount; ++i) {
+        const YimoRegion& r = R[i];
+        if (r.perms[0] != 'r' || r.perms[1] != 'w') continue;
+        const size_t len = (size_t)(r.b - r.a);
+        if (len < minB || len > maxB) continue;
+        DLOG("meta big cand #%d region=%p..%p len=%zu name=%s",
+             done, (void*)r.a, (void*)r.b, len, r.name);
+        YimoMetaSave("big", done, (const uint8_t*)r.a, len, capBytes);
+        ++done;
+    }
+    DLOG("meta big: done=%d (窗口 %zu..%zu B)", done, minB, maxB);
+}
+
+/* ---- 指针扫描（安全读版）：找「一串指向 .text 的指针」= methodPointers 数组 ----
+ * 快筛：方法指针高 32 位恒为 so 基址高 32 位（0x00004000），
+ * 先比 u32 再验全值，比逐槽 64 位比较快一倍多。 */
+static void YimoMetaPtrScan(const YimoRegion* R, int n, uintptr_t lo, uintptr_t hi,
+                            size_t minBytes) {
+    const uint32_t kHi32 = (uint32_t)(lo >> 32);
+    const size_t kChunk = 1u << 18;                 /* 256KB/次 pread */
+    uint8_t* buf = (uint8_t*)malloc(kChunk + 8);
+    if (!buf) { DLOG("meta ptrscan: malloc 失败"); return; }
+    YimoReaderProbe(lo);                            /* ★先自检读取方式 */
+    DLOG("meta ptrscan [%p,%p) 开始（min=%zuB, reader=%s）", (void*)lo, (void*)hi, minBytes,
+         s_readerName);
+    int regHits = 0, regScanned = 0, regSkip = 0;
+    size_t total = 0, bytesRead = 0;
+    uintptr_t bestRunAddr = 0;
+    size_t bestRunLen = 0;
+    for (int i = 0; i < n; ++i) {
+        const YimoRegion& r = R[i];
+        if (r.perms[0] != 'r') continue;
+        const size_t len = (size_t)(r.b - r.a);
+        if (len < minBytes) { ++regSkip; continue; }
+        ++regScanned;
+        size_t hits = 0, run = 0;
+        uintptr_t runStart = 0;
+        for (size_t base = 0; base < len; base += kChunk) {
+            size_t want = len - base;
+            if (want > kChunk) want = kChunk;
+            const size_t got = YimoReadChunk(r.a + base, buf, want);
+            bytesRead += got;
+            if (got < 8) continue;
+            for (size_t off = 0; off + 8 <= got; off += 8) {
+                uint32_t hi32 = 0;
+                memcpy(&hi32, buf + off + 4, 4);
+                if (hi32 != kHi32) { run = 0; continue; }
+                uintptr_t v = 0;
+                memcpy(&v, buf + off, 8);
+                if (v >= lo && v < hi) {
+                    ++hits;
+                    if (run == 0) runStart = r.a + base + off;
+                    ++run;
+                    if (run > bestRunLen) { bestRunLen = run; bestRunAddr = runStart; }
+                } else {
+                    run = 0;
+                }
+            }
+        }
+        if (hits) {
+            ++regHits;
+            total += hits;
+            DLOG("meta ptrscan region=%p..%p len=%zu hits=%zu name=%s",
+                 (void*)r.a, (void*)r.b, len, hits, r.name);
+        }
+    }
+    free(buf);
+    DLOG("meta ptrscan 完成: scanned=%d skip(minB)=%d 有命中区=%d hits=%zu read=%zuMB "
+         "bestRun=[%p x %zu]",
+         regScanned, regSkip, regHits, total, bytesRead >> 20, (void*)bestRunAddr, bestRunLen);
+}
+
+/* 反查「哪个 8 字节槽等于这个值」（安全读版） */
+static void YimoMetaFindVal(const YimoRegion* R, int n, uintptr_t want, int maxHits) {
+    const size_t kChunk = 1u << 18;
+    uint8_t* buf = (uint8_t*)malloc(kChunk);
+    if (!buf) { DLOG("meta findval: malloc 失败"); return; }
+    YimoReaderProbe(want);                          /* 自检（want 本身不一定可读，仅用于日志） */
+    int hits = 0;
+    size_t bytesRead = 0;
+    for (int i = 0; i < n && hits < maxHits; ++i) {
+        const YimoRegion& r = R[i];
+        if (r.perms[0] != 'r') continue;
+        const size_t len = (size_t)(r.b - r.a);
+        if (len < 8) continue;
+        for (size_t base = 0; base < len && hits < maxHits; base += kChunk) {
+            size_t wantLen = len - base;
+            if (wantLen > kChunk) wantLen = kChunk;
+            const size_t got = YimoReadChunk(r.a + base, buf, wantLen);
+            bytesRead += got;
+            for (size_t off = 0; off + 8 <= got; off += 8) {
+                uintptr_t v = 0;
+                memcpy(&v, buf + off, 8);
+                if (v == want) {
+                    DLOG("meta findval %p -> slot=%p region=%p name=%s",
+                         (void*)want, (void*)(r.a + base + off), (void*)r.a, r.name);
+                    if (++hits >= maxHits) break;
+                }
+            }
+        }
+    }
+    free(buf);
+    if (!hits) DLOG("meta findval %p: 0 hits (read %zu MB, reader=%s)", (void*)want,
+                    bytesRead >> 20, s_readerName);
+}
+
+/* ---- 字符串索引表搜索 ----
+ * 背景：这块 metadata 的「串数据块」是完整明文（6 MB ASCII），但**索引表不在
+ * metadata 文件里**——易盾把它拆到别处，只在运行时存在。没有索引表就没法把
+ * method/type 的 nameIndex 还原成名字，所以必须在内存里把它找出来。
+ * 判据：一张 u32 表，每个元素都 < 串块大小，且指向的位置恰好是一个「串起点」
+ * （前一字节是 NUL、首字节可打印）。 */
+static void YimoMetaStrTab(const YimoRegion* R, int n, uintptr_t dataVa, size_t limit,
+                           int minRun) {
+    if (limit == 0 || limit > (64u << 20)) { DLOG("meta strtab: limit %zu 不合理", limit); return; }
+    uint8_t* data = (uint8_t*)malloc(limit);
+    uint8_t* valid = (uint8_t*)calloc(limit, 1);
+    uint8_t* buf = (uint8_t*)malloc(1u << 18);
+    if (!data || !valid || !buf) {
+        DLOG("meta strtab: malloc 失败");
+        free(data); free(valid); free(buf);
+        return;
+    }
+    size_t gotAll = 0;
+    for (size_t base = 0; base < limit; base += (1u << 18)) {
+        size_t want = limit - base;
+        if (want > (1u << 18)) want = (1u << 18);
+        const size_t got = YimoReadChunk(dataVa + base, data + base, want);
+        gotAll += got;
+        if (got < want) break;
+    }
+    if (gotAll != limit) {
+        DLOG("meta strtab: 串数据块只读到 %zu/%zu B，放弃", gotAll, limit);
+        free(data); free(valid); free(buf);
+        return;
+    }
+    for (size_t i = 0; i < limit; ++i) {
+        const uint8_t b = data[i];
+        if (b >= 32 && b < 127 && (i == 0 || data[i - 1] == 0)) valid[i] = 1;
+    }
+    YimoReaderProbe(dataVa);
+    DLOG("meta strtab: 串块 %zu B @%p 合法串起点读完，开始扫表（reader=%s）",
+         limit, (void*)dataVa, s_readerName);
+    int regHits = 0, bestRegIdx = -1;
+    size_t totalSlots = 0;
+    uintptr_t bestAddr = 0;
+    size_t bestRun = 0;
+    for (int i = 0; i < n; ++i) {
+        const YimoRegion& r = R[i];
+        if (r.perms[0] != 'r') continue;
+        const size_t len = (size_t)(r.b - r.a);
+        if (len < 4096) continue;
+        size_t hits = 0, run = 0;
+        uintptr_t runStart = 0;
+        for (size_t base = 0; base < len; base += (1u << 18)) {
+            size_t want = len - base;
+            if (want > (1u << 18)) want = (1u << 18);
+            const size_t got = YimoReadChunk(r.a + base, buf, want);
+            if (got < 4) continue;
+            for (size_t off = 0; off + 4 <= got; off += 4) {
+                uint32_t v = 0;
+                memcpy(&v, buf + off, 4);
+                if (v < limit && valid[v]) {
+                    ++hits;
+                    if (run == 0) runStart = r.a + base + off;
+                    ++run;
+                    if (run > bestRun) { bestRun = run; bestAddr = runStart; bestRegIdx = i; }
+                } else {
+                    run = 0;
+                }
+            }
+        }
+        if (hits) {
+            ++regHits;
+            totalSlots += hits;
+            DLOG("meta strtab region=%p..%p len=%zu 命中槽=%zu name=%s",
+                 (void*)r.a, (void*)r.b, len, hits, r.name);
+        }
+    }
+    DLOG("meta strtab 完成: 命中区=%d 命中槽=%zu bestRun=[%p x %zu] 区#%d",
+         regHits, totalSlots, (void*)bestAddr, bestRun, bestRegIdx);
+    if (bestRun >= (size_t)minRun) {
+        /* 把「最长连续表」整段落盘（向后多给 4 倍余量，防止表被截断） */
+        const size_t dumpLen = bestRun * 4 + (1u << 20);
+        char path[256];
+        snprintf(path, sizeof(path), "%s/meta_strtab.bin", kMetaDir);
+        DLOG("meta strtab: 落盘 %p len=%zu -> %s", (void*)bestAddr, dumpLen, path);
+        YimoWriteBuf(path, (const void*)bestAddr, dumpLen);
+    }
+    free(data); free(valid); free(buf);
+}
+
+/* ---- 命令文件：meta_cmd.txt（离线下发，避免每次重装） ---- */
+static void YimoMetaExecCmd(const YimoRegion* R, int n) {
+    FILE* f = fopen(kMetaCmdPath, "r");
+    if (!f) {
+        static bool s_logged = false;
+        if (!s_logged) { s_logged = true; DLOG("meta cmd: 无 %s（首装正常态）", kMetaCmdPath); }
+        return;
+    }
+    char buf[8192];
+    size_t got = fread(buf, 1, sizeof(buf) - 1, f);
+    fclose(f);
+    buf[got] = 0;
+    uint32_t h = 2166136261u;
+    for (size_t i = 0; i < got; ++i) { h ^= (uint8_t)buf[i]; h *= 16777619u; }
+    static uint32_t s_last = 0;
+    if (h == s_last) return;                  /* 内容没变：不重复执行 */
+    s_last = h;
+    DLOG("meta cmd: 执行新命令 hash=%08x (%zu B)", h, got);
+
+    char* save = nullptr;
+    for (char* ln = strtok_r(buf, "\n", &save); ln; ln = strtok_r(nullptr, "\n", &save)) {
+        while (*ln == ' ' || *ln == '\t') ++ln;
+        if (!*ln || *ln == '#') continue;
+        char verb[32] = {0};
+        char a1[128] = {0}, a2[64] = {0}, a3[128] = {0};
+        const int nf = sscanf(ln, "%31s %127s %63s %127s", verb, a1, a2, a3);
+        if (nf < 1) continue;
+        if (strcmp(verb, "maps") == 0) {
+            YimoMetaDumpMaps();
+        } else if (strcmp(verb, "scan") == 0) {
+            size_t mb = nf >= 2 ? (size_t)strtoul(a1, nullptr, 0) : 256;
+            int sc = 0, sk = 0, cand = 0;
+            const size_t used = YimoMetaScanMagic(R, n, mb << 20, &sc, &sk, &cand);
+            DLOG("meta cmd scan: budget=%zuMB used=%zuMB regions=%d skipped=%d cand=%d",
+                 mb, used >> 20, sc, sk, cand);
+        } else if (strcmp(verb, "dump") == 0 && nf >= 4) {
+            const uintptr_t a = (uintptr_t)strtoull(a1, nullptr, 16);
+            const size_t len = (size_t)strtoull(a2, nullptr, 16);
+            char path[256];
+            snprintf(path, sizeof(path), "%s/meta_%s.bin", kMetaDir, a3);
+            DLOG("meta cmd dump: %p len=%zu -> %s", (void*)a, len, path);
+            if (len && len <= (256u << 20)) {
+                YimoWriteBuf(path, (const void*)a, len);
+            } else {
+                DLOG("meta cmd dump: 长度 %zu 超限（<=256MB）", len);
+            }
+        } else if (strcmp(verb, "findstr") == 0) {
+            const int mx = nf >= 3 ? atoi(a2) : 20;
+            YimoMetaFindStr(a1, R, n, mx > 0 ? mx : 20);
+        } else if (strcmp(verb, "big") == 0) {
+            const size_t minB = (size_t)((nf >= 2 ? strtoul(a1, nullptr, 0) : 24) << 20);
+            const size_t maxB = (size_t)((nf >= 3 ? strtoul(a2, nullptr, 0) : 48) << 20);
+            const int cnt = nf >= 4 ? atoi(a3) : 4;
+            YimoMetaDumpBig(R, n, minB, maxB, cnt > 0 ? cnt : 4, maxB);
+        } else if (strcmp(verb, "ptrscan") == 0 && nf >= 3) {
+            /* 扫可读区：8 字节槽里有多少值落在 [lo,hi)，并报最长连续指针串。
+             * 用途：找 il2cpp 的 methodPointers 数组（一长串指向 .text 的指针）。
+             * 第 3 个参数可选：最小区域字节数（默认 64KB）。 */
+            const uintptr_t lo = (uintptr_t)strtoull(a1, nullptr, 16);
+            const uintptr_t hi = (uintptr_t)strtoull(a2, nullptr, 16);
+            const size_t minB = nf >= 4 ? (size_t)strtoull(a3, nullptr, 0) : (64u << 10);
+            YimoMetaPtrScan(R, n, lo, hi, minB);
+        } else if (strcmp(verb, "findval") == 0 && nf >= 2) {
+            /* 找「哪个 8 字节槽等于这个值」（反查谁引用了某地址） */
+            const uintptr_t want = (uintptr_t)strtoull(a1, nullptr, 16);
+            int mx = nf >= 3 ? atoi(a2) : 20;
+            if (mx <= 0) mx = 20;
+            YimoMetaFindVal(R, n, want, mx);
+        } else if (strcmp(verb, "strtab") == 0 && nf >= 3) {
+            /* strtab <串数据块运行时地址> <串块大小> [最小连续表长度] */
+            const uintptr_t dataVa = (uintptr_t)strtoull(a1, nullptr, 16);
+            const size_t limit = (size_t)strtoull(a2, nullptr, 0);
+            const int minRun = nf >= 4 ? atoi(a3) : 1000;
+            YimoMetaStrTab(R, n, dataVa, limit, minRun > 0 ? minRun : 1000);
+        } else {
+            DLOG("meta cmd: 未知动作 '%s'", verb);
+        }
+    }
+}
+
+/* ---- 每一轮：心跳 + 统计 + 现场 ---- */
+static void YimoMetaRound(int round) {
+    DLOG("meta round #%d begin (pid up, tid tick)", round);
+    const int kCap = 4096;
+    YimoRegion* R = (YimoRegion*)calloc((size_t)kCap, sizeof(YimoRegion));
+    if (!R) { DLOG("meta round #%d: calloc 失败", round); return; }
+    const int n = YimoReadMaps(R, kCap);
+    if (n <= 0) {
+        DLOG("meta round #%d: maps 读取失败 n=%d", round, n);
+        free(R);
+        return;
+    }
+    /* 分类统计（这一步就是上一版缺的「可知性」：被过滤掉多少、为什么） */
+    int nonRead = 0, small = 0, huge = 0, ok = 0, rwBig = 0;
+    size_t bytesReadable = 0;
+    uintptr_t imgLo = ~(uintptr_t)0, imgHi = 0;
+    for (int i = 0; i < n; ++i) {
+        const YimoRegion& r = R[i];
+        if (strstr(r.name, "libil2cpp")) {
+            if (r.a < imgLo) imgLo = r.a;
+            if (r.b > imgHi) imgHi = r.b;
+        }
+        if (r.perms[0] != 'r') { ++nonRead; continue; }
+        const size_t len = (size_t)(r.b - r.a);
+        bytesReadable += len;
+        if (r.perms[1] == 'w' && len >= (8u << 20)) ++rwBig;
+        if (len < (256u << 10)) { ++small; continue; }
+        if (len > (512ull << 20)) { ++huge; continue; }
+        ++ok;
+    }
+    DLOG("meta round #%d: maps=%d readable=%d/%d (%.0f MB) eligible=%d "
+         "skip{nonRead=%d,small=%d,huge=%d} rw>=8MB=%d img=%p..%p",
+         round, n, n - nonRead, n, (double)bytesReadable / (1024.0 * 1024.0), ok,
+         nonRead, small, huge, rwBig, (void*)imgLo, (void*)imgHi);
+
+    if (round == 1) {
+        YimoMetaDumpMaps();
+        int sc = 0, sk = 0, cand = 0;
+        const size_t used = YimoMetaScanMagic(R, n, 256u << 20, &sc, &sk, &cand);
+        DLOG("meta round #1 scan: used=%zuMB regions=%d skippedBudget=%d cand=%d",
+             used >> 20, sc, sk, cand);
+        /* metadata 量级（≈29.85 MB）的 rw 块直接落盘：一次拿全，离线慢慢裁 */
+        YimoMetaDumpBig(R, n, 24u << 20, 48u << 20, 4, 48u << 20);
+    }
+    YimoMetaExecCmd(R, n);
+    free(R);
+    DLOG("meta round #%d end", round);
+}
+
+/* 采集线程主体：入口无条件心跳，之后每 20 s 一轮（最多 120 轮 ≈ 40 分钟） */
+static void YimoSpdProbeInstall();      /* 定义在下方「移速挂点命中验证」段 */
+static void YimoSpdMulWatcher();
+static void YimoMetaWorker() {
+    DLOG("meta worker ENTER —— 采集线程已启动（改造版，可观测）");
+    struct timespec s0{8, 0};
+    nanosleep(&s0, nullptr);
+    /* 诊断期：装移速挂点探针（只计数）+ 起 spd_mul 只读监视线程 */
+    YimoSpdProbeInstall();
+    std::thread([] { YimoSpdMulWatcher(); }).detach();
+    for (int round = 1; round <= 120; ++round) {
+        YimoMetaRound(round);
+        struct timespec ts{20, 0};
+        nanosleep(&ts, nullptr);
+    }
+    DLOG("meta worker EXIT after 120 rounds");
+}
+
+/* ============================================================
+ * 诊断：移速挂点「命中验证」（★只计数 + 只打印，绝不修改返回值/入参）
+ *
+ * 依据（2026-10-29 离线定位，证据链见
+ *   10_docs/伊莫/移速_原生路线_侦察_20261029.md）：
+ *   · 类 FunPlus.WorldX.Entities.Components.MotionComponent（游戏主程序集
+ *     FunPlus.WorldX.Scripts.dll，非 Lua 绑定层）
+ *   · GetAttributeSpeedRatio  RVA 0x0435378c  —— 速度倍率入口候选
+ *       str x30,[sp,#-0x10]! ; ldr x8,[x0,#0x18] ; cbz ; ldr x0,[x8,#0xa8] ...
+ *       尾巴调用（b）到泛型实例，返回值经 s0 透传
+ *   · ChangeMoveStateSpeed    RVA 0x043533fc  —— 按移动状态改速度
+ *       str d8,[sp,#-0x40]! ; stp x30,x23 ; cbz x1 ; ... 一连串标志位→速度常量
+ *   · set_GmMoveSpeed 里 `STR S0,[X19,#0xB0]` ⇒ 该组件 this+0xB0 是 float 速度字段
+ *
+ * 挂点铁律：**先验序言指纹，不匹配就拒挂**（宁可没数据也不挂错地址）。
+ * ============================================================ */
+#define YIMO_RVA_ABSR 0x0435378cu
+#define YIMO_RVA_CMSS 0x043533fcu
+static const char* kSpdMulPath =
+    "/sdcard/Android/data/com.x.yimoo.official/files/spd_mul.txt";
+
+static float (*g_origAbsr)(void*, void*) = nullptr;
+static void  (*g_origCmss)(void*, void*) = nullptr;
+static std::atomic<uint64_t> g_absrHits{0};
+static std::atomic<uint64_t> g_cmssHits{0};
+static std::atomic<int> g_spdMul{6};   /* ★本轮固定 6（诊断包硬编码默认；1=关闭） */
+static std::atomic<int> g_spdMode{0};  /* 0=GM 倍率位(+0xB0)，1=缩放速度向量(arg1) */
+static std::atomic<bool> g_spdCycle{false};
+
+struct YimoSpdSelfRec { void* p; uint64_t hits; };
+static YimoSpdSelfRec g_spdSelves[3];
+static std::atomic<int> g_spdSelfN{0};
+
+static float YimoReadF32(const void* base, size_t off) {
+    float v = 0.0f;
+    memcpy(&v, (const uint8_t*)base + off, 4);
+    return v;
+}
+
+/* 记录最多 3 个不同的 this（第一次出现就打一条，含 this+0xB0） */
+static void YimoSpdNoteSelf(void* self, const char* tag, uint64_t hits) {
+    if (!self) return;
+    const int n = g_spdSelfN.load(std::memory_order_relaxed);
+    for (int i = 0; i < n; ++i) {
+        if (g_spdSelves[i].p == self) { g_spdSelves[i].hits = hits; return; }
+    }
+    if (n >= 3) return;
+    g_spdSelves[n].p = self;
+    g_spdSelves[n].hits = hits;
+    g_spdSelfN.store(n + 1, std::memory_order_relaxed);
+    DLOG("spd %s NEW this=%p hits=%llu this+0xB0=%.3f", tag, self,
+         (unsigned long long)hits, YimoReadF32(self, 0xB0));
+}
+
+static float Hook_Absr(void* self, void* a1) {
+    const uint64_t n = g_absrHits.fetch_add(1, std::memory_order_relaxed) + 1;
+    const float ret = g_origAbsr ? g_origAbsr(self, a1) : 0.0f;
+    if (n <= 3 || (n % 60) == 0) {
+        DLOG("spd ABSR #%llu this=%p ret=%.4f this+0xB0=%.3f mul=%d",
+             (unsigned long long)n, self, ret, self ? YimoReadF32(self, 0xB0) : 0.0f,
+             g_spdMul.load());
+    }
+    YimoSpdNoteSelf(self, "ABSR", n);
+    return ret;   /* ★原样返回，不改 */
+}
+
+static void Hook_Cmss(void* self, void* a1) {
+    const uint64_t n = g_cmssHits.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (g_origCmss) g_origCmss(self, a1);
+    if (n <= 5 || (n % 20) == 0) {
+        DLOG("spd CMSS #%llu this=%p arg1=%p this+0xB0=%.3f mul=%d",
+             (unsigned long long)n, self, a1, self ? YimoReadF32(self, 0xB0) : 0.0f,
+             g_spdMul.load());
+    }
+    YimoSpdNoteSelf(self, "CMSS", n);
+}
+
+/* libil2cpp 基址：maps 里 offset==0 的那条 libil2cpp 映射 */
+static uintptr_t YimoSoBase() {
+    FILE* m = fopen("/proc/self/maps", "r");
+    if (!m) { DLOG("spd probe: maps 打不开 errno=%d", errno); return 0; }
+    char line[600];
+    uintptr_t base = 0;
+    while (fgets(line, sizeof(line), m)) {
+        if (!strstr(line, "libil2cpp.so")) continue;
+        uintptr_t a = 0, b = 0, off = 0;
+        if (sscanf(line, "%lx-%lx %*s %lx", &a, &b, &off) == 3 && off == 0) { base = a; break; }
+    }
+    fclose(m);
+    return base;
+}
+
+static bool YimoFpOk(uintptr_t addr, const uint32_t* fp) {
+    if (!addr) return false;
+    uint32_t w[4] = {0, 0, 0, 0};
+    memcpy(w, (const void*)addr, sizeof(w));
+    const bool ok = (w[0] == fp[0] && w[1] == fp[1] && w[2] == fp[2] && w[3] == fp[3]);
+    DLOG("spd probe: fp@%p = %08X %08X %08X %08X · 期望 %08X %08X %08X %08X ⇒ %s",
+         (void*)addr, w[0], w[1], w[2], w[3], fp[0], fp[1], fp[2], fp[3],
+         ok ? "匹配" : "不符");
+    return ok;
+}
+
+/* ---- 第三个点：MotionComponent.UpdateVelocity(this, arg1, float dt) ----
+ * 反汇编（0x0435b884）：sub sp,#0x110 ; fmov s8,s0 ; mov x20,x1 ; mov x19,x0
+ * ⇒ 带一个 float 参数（dt），几乎必然是每帧速度更新入口。
+ * 只计数 + 打印 this 附近若干 float，供离线判断"实时速度字段"在哪。 */
+static void (*g_origUV)(void*, void*, float) = nullptr;
+static std::atomic<uint64_t> g_uvHits{0};
+
+/* ★2026-10-29 第三轮：认主 + 生效。
+ * 硬证据（UpdateVelocity 内部，rva 0x0435bb8c 起）：
+ *     ldr  s0, [x19, #0xb0]        ; s0 = this->GmMoveSpeed
+ *     fcmp s0, #0.0
+ *     b.le skip                    ; <=0 不生效（默认 -1）
+ *     ldr  d1, [x20]  / ldr s2, [x20, #8]      ; 速度向量 xy / z
+ *     fmul v1.2s, v1.2s, v0.s[0]   ; xy *= 该值
+ *     fmul s0, s0, s2              ; z  *= 该值
+ *     str  d1, [x20] / str s0, [x20, #8]       ; 写回速度
+ * ⇒ this+0xB0 是**逐帧速度乘法倍率**（>0 生效）。不需要改任何指令，
+ *   只要对主角的组件写这个 float 就能改移速；改回 -1 即恢复。
+ *
+ * 认主：CharacterControllerComponent.get_InputMove 只有本地玩家会调；
+ * 链路（见 SetVelocity 反汇编 `ldr x8,[x0,#0x18] ; ldr x0,[x8,#0xd0]`）：
+ *   ccc(CCC 组件) -+0x18-> entity  -+0xD0-> MotionComponent
+ */
+#define YIMO_RVA_INPUTMOVE 0x04305828u
+static const uint32_t kFpInputMove[4] = {0xA9BE57FEu, 0xA9014FF4u, 0xD00332F5u, 0xD00332F4u};
+static uint64_t (*g_origInputMove)(void*) = nullptr;
+static std::atomic<uint64_t> g_imHits{0};
+static void* volatile g_playerCcc = nullptr;
+static void* volatile g_playerEntity = nullptr;
+static void* volatile g_playerMotion = nullptr;
+static std::atomic<int> g_spdApplied{0};
+
+/* 判断 [addr, addr+len) 是否完整落在一个可读映射里（用 /proc/self/maps，2 s 缓存）。
+ * 比"猜地址范围"靠谱：arg1 这种 Vector3* 常常是调用方栈上的临时量。 */
+static bool YimoRangeReadable(const void* addr, size_t len, char* nameOut, size_t nameLen) {
+    static char s_maps[768 * 1024];   /* ★实测该进程 maps 约 380 KB，96 KB 会截断导致查不到 */
+    static uint64_t s_ts = 0;
+    struct timespec t{};
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    const uint64_t now = (uint64_t)t.tv_sec;
+    if (now - s_ts >= 2 || s_maps[0] == '\0') {
+        FILE* f = fopen("/proc/self/maps", "r");
+        size_t got = 0;
+        if (f) {
+            got = fread(s_maps, 1, sizeof(s_maps) - 1, f);
+            fclose(f);
+        }
+        s_maps[got] = '\0';
+        s_ts = now;
+    }
+    const uintptr_t a = (uintptr_t)addr;
+    const uintptr_t b = a + len;
+    const char* p = s_maps;
+    while (*p) {
+        uintptr_t lo = 0, hi = 0;
+        char perms[8] = {0};
+        int off = 0;
+        if (sscanf(p, "%lx-%lx %7s %n", &lo, &hi, perms, &off) >= 3) {
+            if (a >= lo && b <= hi) {
+                const char* nl = strchr(p, '\n');
+                if (nameOut && nameLen) {
+                    const char* nm = p + off;
+                    size_t k = 0;
+                    while (nm < (nl ? nl : p + strlen(p)) && k + 1 < nameLen &&
+                           *nm != '\n') {
+                        nameOut[k++] = *nm++;
+                    }
+                    nameOut[k] = '\0';
+                }
+                return perms[0] == 'r';
+            }
+        }
+        p = strchr(p, '\n');
+        if (!p) break;
+        ++p;
+    }
+    return false;
+}
+
+static bool YimoPtrSane(const void* p) {
+    const uintptr_t v = (uintptr_t)p;
+    /* 注意两点（都踩过）：
+     *  · Vector3* 之类常常只有 4 字节对齐，不能要求 8 字节对齐；
+     *  · 这台设备的堆地址形如 0x4000_xxxx_xxxx（≈7.0e13），比 0x8000000000 大得多，
+     *    早期上限写成 0x8000000000 导致所有实体指针都被误判非法。 */
+    return v > 0x10000ull && (v & 3) == 0 && v < 0x7fffffffffffULL;
+}
+
+static uint64_t Hook_InputMove(void* self) {
+    const uint64_t r = g_origInputMove ? g_origInputMove(self) : 0;
+    const uint64_t n = g_imHits.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (self && !g_playerEntity) {
+        void* ent = nullptr;
+        memcpy(&ent, (const uint8_t*)self + 0x18, sizeof(ent));
+        if (YimoPtrSane(ent)) {
+            g_playerCcc = self;
+            g_playerEntity = ent;          /* 只要 entity，MotionComponent 由 UV 侧比对认领 */
+            DLOG("spd OWNER 候选 ccc=%p entity=%p（inputMove 第 %llu 次，等 MotionComponent 比对）",
+                 self, ent, (unsigned long long)n);
+        } else {
+            DLOG("spd OWNER inputMove this=%p 的 +0x18 不像实体指针，忽略", self);
+        }
+    }
+    return r;
+}
+
+/* ---- 认主点 B：CharacterControllerComponent.CheckSprint ----
+ * 冲刺键必然来自真人输入，AI 不会按冲刺键 ⇒ 它的 this 就是玩家。
+ * 反汇编（0x0430b0d4）：stp x30,x23 / stp x20,x19 / cmp w0,#0x14 / mov x19,x0
+ *   签名按 (void* self, int key, void* extra) 保守转发（w0=按键值）。 */
+#define YIMO_RVA_CHECKSPRINT 0x0430b0d4u
+static const uint32_t kFpCheckSprint[4] = {0xA9BE57FEu, 0xA9014FF4u, 0x7100503Fu, 0xAA0003F3u};
+static uint64_t (*g_origCheckSprint)(void*, int, void*) = nullptr;
+static std::atomic<uint64_t> g_csHits{0};
+
+static void YimoSpdLockOwner(void* ccc, const char* tag, uint64_t n) {
+    /* 只做记录，不直接锁主：锁定统一由 UV 侧「entity 指针比对」完成，
+     * 避免把"会冲刺的 NPC"误当玩家。 */
+    if (!ccc || g_playerMotion) return;
+    void* ent = nullptr;
+    memcpy(&ent, (const uint8_t*)ccc + 0x18, sizeof(ent));
+    DLOG("spd OWNER(%s#%llu) ccc=%p entity=%p（仅供参考，锁定由 UV 侧比对决定）", tag,
+         (unsigned long long)n, ccc, ent);
+}
+
+static uint64_t Hook_CheckSprint(void* self, int key, void* extra) {
+    const uint64_t n = g_csHits.fetch_add(1, std::memory_order_relaxed) + 1;
+    const uint64_t r = g_origCheckSprint ? g_origCheckSprint(self, key, extra) : 0;
+    if (n <= 20) DLOG("spd CS #%llu this=%p key=%d ret=%llu", (unsigned long long)n, self,
+                      key, (unsigned long long)r);
+    YimoSpdLockOwner(self, "CS", n);
+    return r;   /* ★原样透传返回值（可能是 bool） */
+}
+
+/* ---- 认主点 C/D：CCC.OnHandleMove / CCC.get_MoveAxis3D ----
+ * 这两个点承载"按键输入"，只有本地玩家才有非零输入 ⇒ 用来拿 entity。
+ * 结构校验：只要求首指令像 AArch64 序言（stp/sub/str 压栈），并把真实 4 字打进
+ * 日志，便于后续固化成精确指纹（本轮先用结构校验，因为要在装机后才能读到运行时代码）。 */
+#define YIMO_RVA_ONHANDLEMOVE 0x043079e0u
+#define YIMO_RVA_MOVEAXIS3D   0x0430598cu
+struct YimoVec3 { float x, y, z; };
+static YimoVec3 (*g_origMoveAxis3D)(void*, void*, void*) = nullptr;
+static std::atomic<uint64_t> g_ohmHits{0};
+static std::atomic<uint64_t> g_maHits{0};
+
+static bool YimoPrologueSane(uintptr_t addr, const char* tag) {
+    uint32_t w[4] = {0, 0, 0, 0};
+    memcpy(w, (const void*)addr, sizeof(w));
+    /* 判据（实测校准过两次）：
+     *  · 叶子存取器不一定有栈帧 —— get_MoveAxis3D 是 `movi d1,#0 ; ldp s0,s1,[x0,#0x48] ; ret`
+     *    （3 条指令、无 prologue）；OnHandleMove 是 `stp d13,d12,[sp,#-0x60]!`（FP 压栈）；
+     *  · 文件里 .text 是密文，填充模式为 `a1 00 00 00` 重复 ⇒ 用它当"未解密/挂错"的判据；
+     *  · 这 4 个字一律打进日志，供事后固化成精确指纹。 */
+    const bool filler = (w[0] == 0x000000A1u || w[0] == 0xA1000000u) &&
+                        (w[1] == 0x000000A1u || w[1] == 0xA1000000u);
+    const bool nonzero = (w[0] | w[1] | w[2] | w[3]) != 0;
+    const bool ok = nonzero && !filler;
+    DLOG("spd probe: %s @%p 首4字 = %08X %08X %08X %08X（filler=%d ⇒ %s）", tag, (void*)addr,
+         w[0], w[1], w[2], w[3], (int)filler, ok ? "已解密代码，允许挂" : "拒绝挂");
+    return ok;
+}
+
+/* 从 CCC 组件拿 entity，交给 UV 侧用 MotionComponent+0x18 比对锁定 */
+static void YimoSpdOwnerFromCcc(void* ccc, const char* tag, uint64_t n) {
+    if (!ccc || g_playerMotion) return;
+    void* ent = nullptr;
+    memcpy(&ent, (const uint8_t*)ccc + 0x18, sizeof(ent));
+    if (!YimoPtrSane(ent)) {
+        DLOG("spd OWNER2(%s#%llu) ccc=%p 的 +0x18=%p 不像实体，忽略", tag,
+             (unsigned long long)n, ccc, ent);
+        return;
+    }
+    if (!g_playerEntity) {
+        g_playerEntity = ent;
+        g_playerCcc = ccc;
+        DLOG("spd OWNER2(%s#%llu) 记录玩家 entity=%p（来自 ccc=%p），等 MotionComponent 比对",
+             tag, (unsigned long long)n, ent, ccc);
+    }
+}
+
+
+static YimoVec3 Hook_MoveAxis3D(void* self, void* a1, void* a2) {
+    YimoVec3 r{0.0f, 0.0f, 0.0f};
+    if (g_origMoveAxis3D) r = g_origMoveAxis3D(self, a1, a2);
+    const uint64_t n = g_maHits.fetch_add(1, std::memory_order_relaxed) + 1;
+    const float m = r.x * r.x + r.y * r.y + r.z * r.z;
+    if (n <= 8 || m > 0.01f) {
+        DLOG("spd MAXIS #%llu this=%p axis=(%.3f,%.3f,%.3f) |a|=%.3f", (unsigned long long)n,
+             self, r.x, r.y, r.z, sqrtf(m));
+    }
+    /* 只有"有按键输入"（轴非零）才认主：AI 的输入通常为 0，能排除 NPC */
+    if (m > 0.01f) YimoSpdOwnerFromCcc(self, "MAXIS", n);
+    return r;
+}
+
+
+#define YIMO_SPD_ENTS 64
+#define YIMO_SPD_W0   0x60      /* 扫描窗口起点 */
+#define YIMO_SPD_WORDS 64       /* 0x60..0x160，共 64 个 32 位字 */
+
+struct YimoSpdEnt { void* p; uint64_t hits; uint32_t snap[YIMO_SPD_WORDS]; bool inited; };
+static YimoSpdEnt g_spdEnts[YIMO_SPD_ENTS];
+static std::atomic<int> g_spdEntN{0};
+
+static void YimoSpdTrackAndDiff() {
+    /* 每 1 s 一次；对每个已知组件读窗口并和上次快照比对，只打变化 */
+    static uint64_t s_lastMs = 0;
+    struct timespec ts{};
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    const uint64_t nowMs = (uint64_t)ts.tv_sec * 1000ull + ts.tv_nsec / 1000000ull;
+    if (nowMs - s_lastMs < 1000ull) return;
+    s_lastMs = nowMs;
+
+    const int n = g_spdEntN.load(std::memory_order_relaxed);
+    int changedEnts = 0;
+    for (int i = 0; i < n; ++i) {
+        YimoSpdEnt& e = g_spdEnts[i];
+        if (!e.p) continue;
+        uint32_t cur[YIMO_SPD_WORDS];
+        memcpy(cur, (const uint8_t*)e.p + YIMO_SPD_W0, sizeof(cur));
+        if (!e.inited) {
+            memcpy(e.snap, cur, sizeof(cur));
+            e.inited = true;
+            continue;
+        }
+        int diffs = 0;
+        char line[700];
+        int o = 0;
+        for (int k = 0; k < YIMO_SPD_WORDS && diffs < 8; ++k) {
+            if (cur[k] == e.snap[k]) continue;
+            float fo, fn;
+            memcpy(&fo, &e.snap[k], 4);
+            memcpy(&fn, &cur[k], 4);
+            o += snprintf(line + o, sizeof(line) - o, " +%#04x:%.3f->%.3f",
+                          YIMO_SPD_W0 + k * 4, fo, fn);
+            ++diffs;
+        }
+        if (diffs) {
+            ++changedEnts;
+            if (changedEnts <= 3) {
+                DLOG("spd CHG this=%p%s", e.p, line);
+            }
+            memcpy(e.snap, cur, sizeof(cur));
+        }
+    }
+    static int s_tick = 0;
+    if (++s_tick % 5 == 0) {
+        DLOG("spd TICK tracked=%d changed=%d uvHits=%llu owner=%p entity=%p mul=%d",
+             n, changedEnts, (unsigned long long)g_uvHits.load(), (void*)g_playerMotion,
+             (void*)g_playerEntity, g_spdMul.load());
+    }
+}
+
+static void Hook_UV(void* self, void* a1, float dt) {
+    const uint64_t n = g_uvHits.fetch_add(1, std::memory_order_relaxed) + 1;
+    const int mul = g_spdMul.load(std::memory_order_relaxed);
+
+    /* ---- 认主（实体指针比对）：MotionComponent+0x18 → entity ----
+     * 依据：UpdateVelocity 里 `ldr x9,[x19,#0x18] ; ldr x21,[x9,#0xc8]`、
+     *       GetAttributeSpeedRatio 里 `ldr x8,[x0,#0x18] ; ldr x0,[x8,#0xa8]`
+     *       ⇒ 组件 +0x18 就是 entity。get_InputMove 已经给出玩家 entity，
+     *       哪个 MotionComponent 的 +0x18 等于它，哪个就是主角。 */
+    if (!g_playerMotion && g_playerEntity && self) {
+        void* myEnt = nullptr;
+        memcpy(&myEnt, (const uint8_t*)self + 0x18, sizeof(myEnt));
+        if (myEnt && myEnt == g_playerEntity) {
+            g_playerMotion = self;
+            DLOG("spd OWNER 锁定主角 MotionComponent=%p（entity=%p 指针比对一致）"
+                 " this+0xB0=%.3f", self, myEnt, YimoReadF32(self, 0xB0));
+        }
+    }
+
+    /* ★模式 0（默认）：走游戏自带的 GM 倍率位 this+0xB0 —— 原函数在 +0308 处读它，
+     *   用它乘速度向量。这是游戏自己的 cheat 通路，语义最可靠，且在调用【之前】写。 */
+    const bool isPlayerPre = (self && (void*)self == g_playerMotion);
+    if (g_spdMode.load() == 0 && isPlayerPre) {
+        const float want = (mul == 1) ? -1.0f : (float)mul;
+        float cur = 0.0f;
+        memcpy(&cur, (const uint8_t*)self + 0xB0, 4);
+        if (cur != want) {
+            memcpy((uint8_t*)self + 0xB0, &want, 4);
+            DLOG("spd APPLY 主角 this=%p +0xB0: %.3f -> %.3f (mul=%d)", self, cur, want, mul);
+        }
+    }
+
+    /* ★判据日志：pre（调用原函数前）/ post（调用原函数后）三轴数值 + 当场倍率位。
+     * 机制若成立，post 的幅值应≈ pre 的 6 倍（游戏自己在 +0314..+0328 乘这个位）。 */
+    const bool a1ok = (a1 && YimoRangeReadable(a1, 12, nullptr, 0));
+    float pre3[3] = {0.0f, 0.0f, 0.0f};
+    float gmBefore = 0.0f;
+    if (a1ok) memcpy(pre3, a1, sizeof(pre3));
+    if (self) gmBefore = YimoReadF32(self, 0xB0);
+
+    if (g_origUV) g_origUV(self, a1, dt);
+
+    if (a1ok) {
+        float post3[3] = {0.0f, 0.0f, 0.0f};
+        memcpy(post3, a1, sizeof(post3));
+        const bool isPlayerNow = (self && (void*)self == g_playerMotion);
+        static uint64_t s_velMs = 0;
+        static std::atomic<int> s_velN{0};
+        struct timespec tv{};
+        clock_gettime(CLOCK_MONOTONIC, &tv);
+        const uint64_t nowMs = (uint64_t)tv.tv_sec * 1000ull + tv.tv_nsec / 1000000ull;
+        if (isPlayerNow ? (nowMs - s_velMs >= 500ull) : (s_velN.load() < 4)) {
+            if (isPlayerNow) s_velMs = nowMs; else s_velN.fetch_add(1);
+            const float lp = sqrtf(pre3[0] * pre3[0] + pre3[1] * pre3[1] + pre3[2] * pre3[2]);
+            const float lo = sqrtf(post3[0] * post3[0] + post3[1] * post3[1] +
+                                   post3[2] * post3[2]);
+            DLOG("spd VEL%s this=%p mul=%d pre=(%.3f,%.3f,%.3f) gm=%.3f "
+                 "post=(%.3f,%.3f,%.3f) |pre|=%.3f |post|=%.3f post/pre=%.2f",
+                 isPlayerNow ? " 主角" : " 采样", self, mul, pre3[0], pre3[1], pre3[2],
+                 gmBefore, post3[0], post3[1], post3[2], lp, lo,
+                 (lp > 1e-4f ? lo / lp : 0.0f));
+        }
+    }
+
+    /* ★模式 1（a6 这种写法）：post-call 直接把速度向量 xyz 各乘 mul。
+     * 为什么不用 +0x1B0..+0x1BC：反汇编显示那 4 个 float 是与 [+0x44]/[+0x4C] 点乘后
+     * 取 fmin(fabs,1) 再和阈值比较 —— 是**法线/方向**（坡度限制），不是速度。
+     * 真正的速度向量 = 本函数第二参 arg1（`mov x20,x1` 之后
+     *   `ldp s0,s1,[x20] ; ldr s2,[x20,#8]` 读、`str d1,[x20]/str s0,[x20,#8]` 写），
+     *   游戏自己的 GM 倍率分支也是拿 +0xB0 乘这个向量。 */
+    if (g_spdMode.load() == 1 && mul != 1 && a1 && YimoRangeReadable(a1, 12, nullptr, 0)) {
+        float v[3];
+        memcpy(v, a1, sizeof(v));
+        const bool finite = (v[0] == v[0] && v[1] == v[1] && v[2] == v[2]) &&
+                            (v[0] < 1e5f && v[0] > -1e5f) && (v[1] < 1e5f && v[1] > -1e5f) &&
+                            (v[2] < 1e5f && v[2] > -1e5f);
+        const float mag = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        const bool isPlayer = (self && (void*)self == g_playerMotion);
+        /* 未认主时做最多 5 次「对照实验」：对正在动的单位缩放一次，证明写入真的生效 */
+        static std::atomic<int> s_ctrl{0};
+        const bool control = !isPlayer && !g_playerMotion && mag > 0.04f &&
+                             s_ctrl.load() < 5;
+        if (finite && (isPlayer || control)) {
+            float out[3] = {v[0] * (float)mul, v[1] * (float)mul, v[2] * (float)mul};
+            memcpy(a1, out, sizeof(out));
+            static uint64_t s_lastMs = 0;
+            struct timespec ts{};
+            clock_gettime(CLOCK_MONOTONIC, &ts);
+            const uint64_t nowMs = (uint64_t)ts.tv_sec * 1000ull + ts.tv_nsec / 1000000ull;
+            if (control || nowMs - s_lastMs >= 1000ull) {
+                s_lastMs = nowMs;
+                if (control) s_ctrl.fetch_add(1);
+                DLOG("spd APPLY%s this=%p mul=%d arg1=%p 速度(前) %.3f,%.3f,%.3f -> (后) "
+                     "%.3f,%.3f,%.3f | |v| %.3f -> %.3f",
+                     isPlayer ? " 主角" : " 对照", self, mul, a1, v[0], v[1], v[2],
+                     out[0], out[1], out[2], sqrtf(mag),
+                     sqrtf(out[0] * out[0] + out[1] * out[1] + out[2] * out[2]));
+            }
+        }
+    }
+    if (!self) return;
+    /* 注册新组件（最多 64 个；满了就挤掉命中次数最少的那个，保证"活着的"单位都在） */
+    const int en = g_spdEntN.load(std::memory_order_relaxed);
+    int idx = -1;
+    for (int i = 0; i < en; ++i) if (g_spdEnts[i].p == self) { idx = i; break; }
+    if (idx >= 0) {
+        ++g_spdEnts[idx].hits;
+    } else {
+        int slot = (en < YIMO_SPD_ENTS) ? en : 0;
+        if (en < YIMO_SPD_ENTS) {
+            g_spdEntN.store(en + 1, std::memory_order_relaxed);
+        } else {
+            uint64_t minHits = ~0ull;
+            for (int i = 0; i < en; ++i) {
+                if (g_spdEnts[i].hits < minHits) { minHits = g_spdEnts[i].hits; slot = i; }
+            }
+        }
+        g_spdEnts[slot].p = self;
+        g_spdEnts[slot].hits = 1;
+        g_spdEnts[slot].inited = false;
+        DLOG("spd REG #%d this=%p dt=%.4f (累计命中 %llu)", slot, self, dt,
+             (unsigned long long)n);
+    }
+    YimoSpdTrackAndDiff();
+}
+
+static void YimoSpdProbeInstall() {
+    const uintptr_t base = YimoSoBase();
+    DLOG("spd probe: so_base=%p（ABSR=%p CMSS=%p）", (void*)base,
+         (void*)(base + YIMO_RVA_ABSR), (void*)(base + YIMO_RVA_CMSS));
+    if (!base) { DLOG("spd probe: 找不到 libil2cpp 基址，放弃挂点"); return; }
+
+    static const uint32_t kFpAbsr[4] = {0xF81F0FFEu, 0xF9400C08u, 0xB4000148u, 0xF9405500u};
+    static const uint32_t kFpCmss[4] = {0xFC1C0FE8u, 0xA9015FFEu, 0xA90257F6u, 0xA9034FF4u};
+    static const uint32_t kFpUV[4]   = {0xD10443FFu, 0x6D083BEFu, 0x6D0933EDu, 0x6D0A2BEBu};
+    const uintptr_t aUV = base + 0x0435b884u;
+
+    if (YimoFpOk(base + YIMO_RVA_ABSR, kFpAbsr)) {
+        const int rc = DobbyHook((void*)(base + YIMO_RVA_ABSR), (void*)Hook_Absr,
+                                 (void**)&g_origAbsr);
+        DLOG("spd probe: DobbyHook ABSR rc=%d orig=%p", rc, (void*)g_origAbsr);
+    } else {
+        DLOG("spd probe: ABSR 指纹不符 ⇒ 拒挂（宁可不改也不挂错）");
+    }
+    if (YimoFpOk(base + YIMO_RVA_CMSS, kFpCmss)) {
+        const int rc = DobbyHook((void*)(base + YIMO_RVA_CMSS), (void*)Hook_Cmss,
+                                 (void**)&g_origCmss);
+        DLOG("spd probe: DobbyHook CMSS rc=%d orig=%p", rc, (void*)g_origCmss);
+    } else {
+        DLOG("spd probe: CMSS 指纹不符 ⇒ 拒挂");
+    }
+    if (YimoFpOk(aUV, kFpUV)) {
+        const int rc = DobbyHook((void*)aUV, (void*)Hook_UV, (void**)&g_origUV);
+        DLOG("spd probe: DobbyHook UV rc=%d orig=%p", rc, (void*)g_origUV);
+    } else {
+        DLOG("spd probe: UV 指纹不符 ⇒ 拒挂");
+    }
+    /* 认主点：get_InputMove（只有本地玩家调） */
+    if (YimoFpOk(base + YIMO_RVA_INPUTMOVE, kFpInputMove)) {
+        const int rc = DobbyHook((void*)(base + YIMO_RVA_INPUTMOVE), (void*)Hook_InputMove,
+                                 (void**)&g_origInputMove);
+        DLOG("spd probe: DobbyHook InputMove rc=%d orig=%p", rc, (void*)g_origInputMove);
+    } else {
+        DLOG("spd probe: InputMove 指纹不符 ⇒ 拒挂（主角将无法认出，移速不会生效）");
+    }
+    /* 认主点 B：CheckSprint（真人按冲刺键才会走这里） */
+    if (YimoFpOk(base + YIMO_RVA_CHECKSPRINT, kFpCheckSprint)) {
+        const int rc = DobbyHook((void*)(base + YIMO_RVA_CHECKSPRINT),
+                                 (void*)Hook_CheckSprint, (void**)&g_origCheckSprint);
+        DLOG("spd probe: DobbyHook CheckSprint rc=%d orig=%p", rc, (void*)g_origCheckSprint);
+    } else {
+        DLOG("spd probe: CheckSprint 指纹不符 ⇒ 拒挂（主角认不出来）");
+    }
+    /* 认主点 C/D：OnHandleMove（记录用）/ get_MoveAxis3D（有按键输入时认主） */
+    if (YimoPrologueSane(base + YIMO_RVA_MOVEAXIS3D, "get_MoveAxis3D")) {
+        const int rc = DobbyHook((void*)(base + YIMO_RVA_MOVEAXIS3D),
+                                 (void*)Hook_MoveAxis3D, (void**)&g_origMoveAxis3D);
+        DLOG("spd probe: DobbyHook MoveAxis3D rc=%d orig=%p", rc, (void*)g_origMoveAxis3D);
+    }
+    DLOG("spd probe: 装点完成 absr=%p cmss=%p uv=%p inputmove=%p checksprint=%p maxis=%p",
+         (void*)g_origAbsr, (void*)g_origCmss, (void*)g_origUV,
+         (void*)g_origInputMove, (void*)g_origCheckSprint,
+         (void*)g_origMoveAxis3D);
+}
+
+/* spd_mul.txt：每 1 s 读一次。支持三种写法：
+ *   纯数字 N        → 走"游戏自带 GM 倍率位"：给主角 this+0xB0 写 N（N=1 ⇒ 写 -1 关闭）
+ *   a<N>（如 a6）   → 走"直接缩放速度向量"：post-call 把 arg1 的 xyz 各乘 N
+ *   cycle           → 自动翻牌：每 10 s 在 6 与 1 之间切换（免对时的 A/B）
+ * 无论哪种模式，都只在【主角】上生效；未认主时宁可不写。 */
+static void YimoSpdMulWatcher() {
+    DLOG("spd mul watcher ENTER（数字=GM倍率位 / a6=缩放向量 / cycle=自动翻牌）");
+    int last = -1;
+    bool lastCycle = false;
+    int cycleIdx = 0;
+    uint64_t cycleStartMs = 0;
+    for (int i = 0; i < 3600; ++i) {          /* ≈1 小时 */
+        FILE* f = fopen(kSpdMulPath, "r");
+        char buf[64] = {0};
+        bool got = false;
+        if (f) {
+            if (fgets(buf, sizeof(buf), f)) got = true;
+            fclose(f);
+        }
+        if (got) {
+            if (strstr(buf, "cycle")) {
+                struct timespec ts{};
+                clock_gettime(CLOCK_MONOTONIC, &ts);
+                const uint64_t nowMs = (uint64_t)ts.tv_sec * 1000ull + ts.tv_nsec / 1000000ull;
+                if (!lastCycle) {
+                    lastCycle = true;
+                    g_spdCycle.store(true);
+                    g_spdMode.store(0);
+                    cycleIdx = 0;
+                    cycleStartMs = nowMs;
+                    DLOG("spd mul -> cycle 模式开始（每 10 s 翻 6 / 1）");
+                }
+                if (nowMs - cycleStartMs >= 10000ull) {
+                    cycleStartMs = nowMs;
+                    ++cycleIdx;
+                }
+                const int want = (cycleIdx % 2 == 0) ? 6 : 1;
+                if (want != last) {
+                    last = want;
+                    g_spdMul.store(want);
+                    g_spdMult.store(want);   /* 诊断覆盖值 -> 同一实现的倍率源 */
+                    DLOG("spd mul -> %d（cycle 第 %d 段）", want, cycleIdx + 1);
+                }
+            } else {
+                if (lastCycle) {
+                    lastCycle = false;
+                    g_spdCycle.store(false);
+                    DLOG("spd mul -> 退出 cycle 模式");
+                }
+                int mode = 0;
+                const char* p = buf;
+                while (*p == ' ' || *p == '\t') ++p;
+                if (*p == 'a' || *p == 'A') { mode = 1; ++p; }
+                const int v = atoi(p);
+                if (v >= 0 && v <= 100) {
+                    if (mode != g_spdMode.load()) {
+                        g_spdMode.store(mode);
+                        DLOG("spd mul 模式 -> %s", mode ? "缩放速度向量" : "GM 倍率位");
+                    }
+                    if (v != last) {
+                        last = v;
+                        g_spdMul.store(v);
+                        g_spdMult.store(v);   /* 诊断覆盖值 -> 同一实现的倍率源 */
+                        DLOG("spd mul -> %d（只作用于主角；1 = 关闭）", v);
+                    }
+                }
+            }
+        }
+        struct timespec ts{1, 0};
+        nanosleep(&ts, nullptr);
+    }
+    DLOG("spd mul watcher EXIT");
+}
+
 
 /* ============================================================
  * 诊断期 Lua 模块转储（照 口袋觉醒/Match2Mod.cpp 的成熟做法搬过来）
@@ -1325,6 +2463,8 @@ parts[#parts+1] = string.format("INV mapN=%s isInv=%s ts_pawn=%s ts_me=%s ait=%s
     tostring(type(pw) == "table" and rg(pw, "dialoguePauseInvincibleEndTs") or nil),
     tostring(type(me) == "table" and rg(me, "dialoguePauseInvincibleEndTs") or nil),
     tostring(Y.ait), tostring(Y.clr))
+parts[#parts+1] = string.format("CMC hits=%s mine=%s scaled=%s", tostring(Y.cmcHits),
+    tostring(Y.cmcMine), tostring(Y.cmcScaled))
 parts[#parts+1] = string.format("inv cvt=%s inv=%s block=%s wrap=%s ait=%s aitErr=%s motComp=%s motPawn=%s",
     tostring(Y.cvt), tostring(Y.cvtInv), tostring(Y.cvtBlock), tostring(Y.cvtWrap),
     tostring(Y.ait), tostring(Y.aitErr), tostring(Y.motComp), tostring(Y.motPawn))
@@ -1464,6 +2604,210 @@ static void RunDiagChunk(lua_State* L) {
     s_diagDone = true;
 }
 #endif
+
+/* ============================================================
+ * 移速（原生 / il2cpp 路线）—— 正式包实现
+ *
+ * 原理（2026-10-30 日志证明，见 10_docs/伊莫/移速_原生路线_侦察_20261029.md §13/§14）：
+ *   MotionComponent::SetVelocity(this, int kind, Vector3 v) 会把 v 写进
+ *   "目标速度表" this+0x1E8[kind*12 + 0x20]（反汇编 +0054 stp s0,s1,[x10,#0x20]
+ *   / +0058 str s2,[x10,#0x28]）。把 v 乘 N 再调原函数 ⇒ 玩家移动真的 N 倍
+ *   （实测 in|4.014| → out|24.087|，下一帧 UpdateVelocity 的 arg1 幅值升到 11.9~16）。
+ *
+ * 只挂 2 个点，先验序言指纹；不匹配就静默退化（移速无效，绝不崩）：
+ *   · MotionComponent.SetVelocity               RVA 0x04351a88  ← 功能
+ *   · CharacterControllerComponent.OnHandleMove RVA 0x043079e0  ← 认主
+ * 认主链：OnHandleMove 的 this(CCC) +0x18 → entity；与 MotionComponent +0x18 比对，
+ *         命中即锁定（先到先得，之后不再改）。
+ * ============================================================ */
+#define YIMO_SPD_RVA_SETVEL   0x04351a88u
+#define YIMO_SPD_RVA_ONHANDLE 0x043079e0u
+static const uint32_t kYimoSpdFpSetVel[4]   = {0xD10283FFu, 0xFD002BEAu, 0x6D0623E9u,
+                                               0xA9075FFEu};
+static const uint32_t kYimoSpdFpOnHandle[4] = {0x6DBA33EDu, 0x6D012BEBu, 0x6D0223E9u,
+                                               0xF9001BFEu};
+
+struct YimoSpdVec3 { float x, y, z; };
+static uint64_t (*g_yimoOrigSetVel)(void*, int, YimoSpdVec3) = nullptr;
+static void*    (*g_yimoOrigOnHandle)(void*, void*, void*) = nullptr;
+static std::atomic<void*>     g_yimoPlayerMotion{nullptr};
+static std::atomic<void*>     g_yimoPlayerEntity{nullptr};
+static std::atomic<uint32_t>  g_yimoSpdHookMask{0};   /* bit0=SetVelocity bit1=OnHandleMove */
+static std::atomic<bool>      g_yimoSpdAnchor{false};
+
+static bool YimoSpdPtrOk(const void* p) {
+    const uintptr_t v = (uintptr_t)p;
+    /* 8 字节对齐 + 落在用户态范围（本机堆地址形如 0x4000_xxxx_xxxx） */
+    return v > 0x10000ull && (v & 7) == 0 && v < 0x7fffffffffffULL;
+}
+
+static void* YimoSpdEntOf(const void* comp) {
+    void* e = nullptr;
+    if (comp) memcpy(&e, (const uint8_t*)comp + 0x18, sizeof(e));
+    return YimoSpdPtrOk(e) ? e : nullptr;
+}
+
+/* 功能点：只对已锁定主角、只对移动档（kind==1），把目标速度三轴乘 mul */
+static uint64_t YimoSpdHookSetVel(void* self, int kind, YimoSpdVec3 v) {
+    if (!g_yimoOrigSetVel) return 0;
+    const int mul = g_forceOff.load(std::memory_order_relaxed)
+                        ? 1
+                        : g_spdMult.load(std::memory_order_relaxed);
+    void* pm = g_yimoPlayerMotion.load(std::memory_order_acquire);
+    if (!pm) {
+        /* entity 已知但 MotionComponent 未锁定 ⇒ 用 +0x18 对撞认领 */
+        const void* want = g_yimoPlayerEntity.load(std::memory_order_acquire);
+        if (want && self && YimoSpdEntOf(self) == want) {
+            g_yimoPlayerMotion.store(self, std::memory_order_release);
+            pm = self;
+#if MOD_DIAG_LUA
+            g_playerMotion = self;      /* 诊断侧共用同一份认主结果 */
+            DLOG("spd OWNER 锁定主角 MotionComponent=%p（entity=%p 比对一致）", self, want);
+#endif
+        }
+    }
+    if (!pm || self != pm || kind != 1 || mul <= 1) {
+#if MOD_DIAG_LUA
+        /* 诊断：把"为什么没放大"打清楚（前 3 条 + 每 2 s 一条） */
+        static uint64_t s_skipMs = 0;
+        static std::atomic<int> s_skipN{0};
+        struct timespec ts0{};
+        clock_gettime(CLOCK_MONOTONIC, &ts0);
+        const uint64_t nowMs0 = (uint64_t)ts0.tv_sec * 1000ull + ts0.tv_nsec / 1000000ull;
+        if (s_skipN.load() < 3 || nowMs0 - s_skipMs >= 2000ull) {
+            s_skipMs = nowMs0;
+            s_skipN.fetch_add(1);
+            DLOG("spd SETV 跳过 this=%p locked=%p kind=%d mul=%d in=(%.3f,%.3f,%.3f)",
+                 self, pm, kind, mul, v.x, v.y, v.z);
+        }
+#endif
+        return g_yimoOrigSetVel(self, kind, v);        /* 完全原样透传 */
+    }
+    /* 反野指针：每次校验 +0x18 仍是那个 entity，不一致就解锁并停止写入 */
+    const void* want = g_yimoPlayerEntity.load(std::memory_order_acquire);
+    if (want && YimoSpdEntOf(self) != want) {
+        g_yimoPlayerMotion.store(nullptr, std::memory_order_release);
+        return g_yimoOrigSetVel(self, kind, v);
+    }
+    const YimoSpdVec3 out{v.x * (float)mul, v.y * (float)mul, v.z * (float)mul};
+    const uint64_t r = g_yimoOrigSetVel(self, kind, out);
+    if (!g_yimoSpdAnchor.exchange(true, std::memory_order_relaxed)) {
+        LOGI(YIMO_LOG " speed native ok (mul=%d)", mul);      /* 唯一成功锚点 */
+    }
+#if MOD_DIAG_LUA
+    {   /* 诊断：in/out/落库回读（0.5 s 节流） */
+        static uint64_t s_lastMs = 0;
+        struct timespec ts{};
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        const uint64_t nowMs = (uint64_t)ts.tv_sec * 1000ull + ts.tv_nsec / 1000000ull;
+        if (nowMs - s_lastMs >= 500ull) {
+            s_lastMs = nowMs;
+            const float li = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+            const float lo = sqrtf(out.x * out.x + out.y * out.y + out.z * out.z);
+            float st[3] = {0.0f, 0.0f, 0.0f};
+            bool stOk = false;
+            void* tab = nullptr;
+            memcpy(&tab, (const uint8_t*)self + 0x1E8, sizeof(tab));
+            if (YimoSpdPtrOk(tab)) {
+                int cnt = 0;
+                memcpy(&cnt, (const uint8_t*)tab + 0x18, sizeof(cnt));
+                if (kind >= 0 && kind < cnt) {
+                    memcpy(st, (const uint8_t*)tab + kind * 12 + 0x20, sizeof(st));
+                    stOk = true;
+                }
+            }
+            DLOG("spd SETV 主角 this=%p kind=%d mul=%d in=(%.3f,%.3f,%.3f) |in|=%.3f "
+                 "out=(%.3f,%.3f,%.3f) |out|=%.3f stored=%s(%.3f,%.3f,%.3f)",
+                 self, kind, mul, v.x, v.y, v.z, li, out.x, out.y, out.z, lo,
+                 stOk ? "Y" : "N", st[0], st[1], st[2]);
+        }
+    }
+#endif
+    return r;
+}
+
+/* 认主点：只有本地玩家会处理"按键移动"，取它的 entity */
+static void* YimoSpdHookOnHandle(void* self, void* a1, void* a2) {
+    if (!g_yimoOrigOnHandle) return nullptr;
+    if (self && !g_yimoPlayerEntity.load(std::memory_order_acquire)) {
+        void* ent = YimoSpdEntOf(self);
+        if (ent) {
+            g_yimoPlayerEntity.store(ent, std::memory_order_release);
+#if MOD_DIAG_LUA
+            g_playerEntity = ent;   /* 诊断侧共用 */
+            DLOG("spd OWNER2(OHM) 记录玩家 entity=%p（来自 ccc=%p）", ent, self);
+#endif
+        }
+    }
+    return g_yimoOrigOnHandle(self, a1, a2);
+}
+
+/* libil2cpp 基址（maps 里 offset==0 的那条映射）
+ * ★坑：必须**逐行**判断文件名。早先用 strstr(p,"libil2cpp.so") 跨行匹配，
+ *   某条 offset==0 的其它映射（APK/houdini 等）也会命中 ⇒ 返回错误基址 ⇒
+ *   指纹永远不符 ⇒ 静默不挂（正式包"完全没效果"就是这个原因）。 */
+static uintptr_t YimoSpdSoBase() {
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) return 0;
+    static char buf[768 * 1024];        /* 实测该进程 maps ≈380 KB，别再用 96 KB */
+    const size_t got = fread(buf, 1, sizeof(buf) - 1, f);
+    fclose(f);
+    buf[got] = '\0';
+    const char* p = buf;
+    while (p && *p) {
+        const char* nl = strchr(p, '\n');
+        const size_t len = nl ? (size_t)(nl - p) : strlen(p);
+        bool hit = false;
+        for (size_t i = 0; i + 12 <= len; ++i) {
+            if (memcmp(p + i, "libil2cpp.so", 12) == 0) { hit = true; break; }
+        }
+        if (hit) {
+            uintptr_t a = 0, off = 0;
+            if (sscanf(p, "%lx-%*lx %*s %lx", &a, &off) == 2 && off == 0) return a;
+        }
+        if (!nl) break;
+        p = nl + 1;
+    }
+    return 0;
+}
+
+/* 后台安装：il2cpp 代码页可能尚未解密 ⇒ 指纹不符就退避重试（最多约 2 分钟） */
+static void YimoSpdInstallWorker() {
+    for (int i = 0; i < 60; ++i) {
+        const uintptr_t base = YimoSpdSoBase();
+        if (base) {
+            if (!(g_yimoSpdHookMask.load(std::memory_order_relaxed) & 1)) {
+                uint32_t w[4] = {0, 0, 0, 0};
+                memcpy(w, (const void*)(base + YIMO_SPD_RVA_SETVEL), sizeof(w));
+                if (w[0] == kYimoSpdFpSetVel[0] && w[1] == kYimoSpdFpSetVel[1] &&
+                    w[2] == kYimoSpdFpSetVel[2] && w[3] == kYimoSpdFpSetVel[3]) {
+                    if (DobbyHook((void*)(base + YIMO_SPD_RVA_SETVEL),
+                                  (void*)YimoSpdHookSetVel, (void**)&g_yimoOrigSetVel) == 0) {
+                        g_yimoSpdHookMask.fetch_or(1, std::memory_order_relaxed);
+                        DLOG("speed hook SetVelocity ok orig=%p", (void*)g_yimoOrigSetVel);
+                    }
+                }
+            }
+            if (!(g_yimoSpdHookMask.load(std::memory_order_relaxed) & 2)) {
+                uint32_t w[4] = {0, 0, 0, 0};
+                memcpy(w, (const void*)(base + YIMO_SPD_RVA_ONHANDLE), sizeof(w));
+                if (w[0] == kYimoSpdFpOnHandle[0] && w[1] == kYimoSpdFpOnHandle[1] &&
+                    w[2] == kYimoSpdFpOnHandle[2] && w[3] == kYimoSpdFpOnHandle[3]) {
+                    if (DobbyHook((void*)(base + YIMO_SPD_RVA_ONHANDLE),
+                                  (void*)YimoSpdHookOnHandle,
+                                  (void**)&g_yimoOrigOnHandle) == 0) {
+                        g_yimoSpdHookMask.fetch_or(2, std::memory_order_relaxed);
+                        DLOG("speed hook OnHandleMove ok orig=%p", (void*)g_yimoOrigOnHandle);
+                    }
+                }
+            }
+            if (g_yimoSpdHookMask.load() == 3) return;
+        }
+        struct timespec ts{2, 0};
+        nanosleep(&ts, nullptr);
+    }
+    DLOG("speed hooks 未全部装上（指纹不符或代码页未解密）⇒ 移速退化为无效");
+}
 
 static void SyncOnLua(lua_State* L) {
     if (!g_luaReady.load() || !L) return;
@@ -1644,16 +2988,18 @@ static bool InstallLuaHooks() {
     /* metadata 解密发生在 libil2cpp 起来之后：等 8 s 再扒一次（只诊断包） */
     static std::atomic<bool> s_metaTried{false};
     if (!s_metaTried.exchange(true)) {
-        std::thread([] {
-            for (int i = 0; i < 6; ++i) {
-                struct timespec ts{30, 0};
-                nanosleep(&ts, nullptr);
-                YimoDumpIl2CppMetadata();
-                if (access(kMetaDumpPath, F_OK) == 0) break;
-            }
-        }).detach();
+        /* 2026-10-29 改造：由「6 次 × 30 s 静默重试」换成带心跳/统计/命令文件的
+         * 采集线程（见 YimoMetaWorker）。它自己会打入口心跳 + 每轮统计，
+         * 所以这里不再需要 access() 探针判断跑没跑。 */
+        std::thread([] { YimoMetaWorker(); }).detach();
     }
 #endif
+    /* 移速（原生）后台安装线程：正式包与诊断包同一套代码（两点：SetVelocity + OnHandleMove），
+     * 指纹不符/代码页未解密就静默退化（最多重试约 2 分钟）。 */
+    static std::atomic<bool> s_spdTried{false};
+    if (!s_spdTried.exchange(true)) {
+        std::thread([] { YimoSpdInstallWorker(); }).detach();
+    }
     g_hooksInstalled = true;
     g_ready.store(true);
     BumpSync();
