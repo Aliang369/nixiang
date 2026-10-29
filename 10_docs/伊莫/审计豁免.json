@@ -1,0 +1,26 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "伊莫",
+  "package": "com.x.yimoo.official",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "gameconfig_modern_registry",
+      "match": ["GameConfig.h 无 defined", "STARRY_AUTH_GAME_ID"],
+      "conclusion": "接受偏离",
+      "reason": "本作走 modern 注册表：authGameId 在 Games/YimoEntry.cpp 的 StarryGameMod 表里写死为 \"ym\"（后台 games.game_id 同值），不经过 GameConfig.h 的 legacy 宏映射，故该文件里没有 STARRY_GAME_YIMO 分支是设计如此。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/YimoEntry.cpp:27 .authGameId = \"ym\"；构建走私有 mk（04_scripts/伊莫/build_so_yimo_win.sh APP_BUILD_SCRIPT=./Android_yimo.mk）；产物 09_test/_modlibs_yimo/arm64-v8a/libstarry_magic.so md5 865f9d79… 内含 [Yimo] 标签 + 六项菜单串（构建日志 [OK]×7）",
+      "date": "2026-10-29",
+      "review_by": "2027-01-31"
+    },
+    {
+      "id": "android_mk_branch_private_mk",
+      "match": ["激活分支", "与 --game"],
+      "conclusion": "接受偏离",
+      "reason": "本游戏 so 用私有 mk Android_yimo.mk 隔离构建（APP_BUILD_SCRIPT=./Android_yimo.mk，独立 obj_yimo/libs_yimo 目录），公共 Android.mk 里残留的 STARRY_GAME_ZHMR 激活分支不参与本包构建，不会编出别的游戏的 so。",
+      "evidence": "04_scripts/伊莫/build_so_yimo_win.sh（NDK_OUT=09_test/_modobj_yimo、APP_BUILD_SCRIPT=./Android_yimo.mk，含 Games/YimoMod.cpp+YimoEntry.cpp+NoAceStubs.cpp）；产物 so 自检：tag [Yimo] 在、六款其它游戏标签全不在、六项中文菜单串齐全",
+      "date": "2026-10-29",
+      "review_by": "2027-01-31"
+    }
+  ]
+}

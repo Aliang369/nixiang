@@ -123,7 +123,16 @@ static bool LoadLuaApi() {
     if (p_luaL_loadstring && p_lua_pcall) return true;
     void* h = dlopen(YIMO_LUA_LIB, RTLD_NOW);
     if (!h) h = dlopen(YIMO_LUA_LIB, RTLD_NOLOAD | RTLD_NOW);
-    if (!h) return false;
+    if (!h) {
+        /* 正式包静默（DLOG 编译期清空）；诊断包才出日志。
+         * ★这里原本完全静默，2026-10-29 伊莫 1.1.0 排查时「什么都没打」无法区分
+         *   「dlopen 失败」与「pg 未就绪」，故加诊断通道（release 零影响）。 */
+        DLOG("dlopen(%s) failed", YIMO_LUA_LIB);
+        static int s_dlFail = 0;
+        if (++s_dlFail == 1) LOGW(YIMO_LOG " dlopen libxlua 失败（hooks 未装）");
+        return false;
+    }
+    DLOG("dlopen(%s) ok handle=%p", YIMO_LUA_LIB, h);
     p_luaL_loadstring = (luaL_loadstring_t)dlsym(h, "luaL_loadstring");
     p_lua_pcall       = (lua_pcall_t)dlsym(h, "lua_pcall");
     p_lua_tolstring   = (lua_tolstring_t)dlsym(h, "lua_tolstring");
@@ -140,6 +149,9 @@ static bool LoadLuaApi() {
              (void*)p_lua_tolstring, (void*)p_lua_settop);
         return false;
     }
+    DLOG("lua api ok loadstring=%p pcall=%p gettop=%p getglobal=%p type=%p",
+         (void*)p_luaL_loadstring, (void*)p_lua_pcall, (void*)p_lua_gettop,
+         (void*)p_lua_getglobal, (void*)p_lua_type);
     g_luaReady.store(true);
     return true;
 }
@@ -835,7 +847,20 @@ static void RunDiagChunk(lua_State* L) {
 
 static void SyncOnLua(lua_State* L) {
     if (!g_luaReady.load() || !L) return;
-    if (!IsTableGlobal(L, "pg")) return;   // 游戏环境未就绪，下次再试
+    if (!IsTableGlobal(L, "pg")) {
+        /* 诊断：pg 不是 table 时原本完全静默（正式包也一样），
+         * 排查「补丁没装上」必须能区分「hook 没触发/没装上」与「pg 名变了」。 */
+        static uint64_t s_lastPgLog = 0;
+        struct timespec ts0;
+        clock_gettime(CLOCK_MONOTONIC, &ts0);
+        const uint64_t nowMs0 = (uint64_t)ts0.tv_sec * 1000ull + (uint64_t)ts0.tv_nsec / 1000000ull;
+        if (s_lastPgLog == 0 || (nowMs0 - s_lastPgLog) >= 5000) {
+            s_lastPgLog = nowMs0;
+            DLOG("pg gate miss state=%p hookCalls=%u", (void*)L,
+                 (unsigned)g_hookCalls.load(std::memory_order_relaxed));
+        }
+        return;   // 游戏环境未就绪，下次再试
+    }
 
     /* ① 守卫式安装：每次同步都跑。游戏换场景/换战斗时若重建了实体类表，
      *    我们的包装会随之丢失，这里自动重新包装（一次性安装会静默失效）。
@@ -950,6 +975,8 @@ static bool InstallLuaHooks() {
         LOGE(YIMO_LOG " lua hook 全部失败");
         return false;
     }
+    DLOG("hooks installed pcall_orig=%p gettop_orig=%p",
+         (void*)g_origPcall, (void*)g_origGettop);
     g_hooksInstalled = true;
     g_ready.store(true);
     g_wantSync.store(true);
