@@ -232,3 +232,36 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   保证主身份/主流程先落盘；④ 无 root 设备上 `exec("su")` 会立刻失败，**别拿无 root 机器验收当"没问题"**。
 - 覆盖范围：所有用 starry-mod-menu 框架 + 会探测 root 的游戏；本次只修了框架源码，其它已出包游戏需重出包才带上。
 - [运行时签名替换挂载点 / dex 等长改包 / Windows so 构建三则（魂坠深境 1.1.3，2026-10-29）](../_templates/经验_运行时签名替换挂载点与dex等长改包_20261029.md)：**候选，未审批**——① MT killer 的安装全在 `<clinit>`，用 `appComponentFactory.instantiateApplication` 里 `Class.forName(...,true)` 触发等价且更早、官方 dex 零改动（3 次冷启 3/3 + L3 通过，单设备）；② 超大 dex 的改包法可用等长就地替换 + 重算 dex 头摘要，不必 baksmali/smali 整份（classes3.dex 10.4 MB 实测）；③ `Android_*.mk` 里 `wxsj_dll` 预编译残留会让 Windows `ndk-build` 直接 FAIL（`.a` 未入库），wildcard 守卫修法已落地，副作用是 so 少 2 MB 死载荷。拟落 `skill/re-analyze/login/taptap-web-login.md` 与经验卡 2026-10-29 增补节；跨样本（第二款游戏/真机）复现后再合并。
+
+## 候选：`post_install_precheck.sh` 的裸 `tombstone` 关键字在 MIUI 上稳定误报（class: tech）
+
+- 状态：候选（2026-10-31 绿梦 r7 装机实测，同一台小米 M2102K1AC 连误报 3 次）
+- 事实：`RE_CRASH='FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|tombstone'` 里的**裸 `tombstone`** 会命中三类非崩溃行：
+  ① 其他进程 `E libc: failed to connect to tombstoned: Permission denied`；② 本框架装了崩溃拦截器后系统打
+  `W tombstoned: pid <n> already intercepted, type 2`；③ SELinux `avc: denied { write } … name="tombstoned_crash"`。
+  三次都被判成「判定段=A 运行中崩溃」，而进程存活、菜单已弹、`logcat -b crash` 无本包记录。
+- 现状处置：不支持改 `_common` 的会话（游戏执行会话）只能在 `10_docs/{游戏}/预检标记.txt` 用 `crash_ignore|…` 逐条兜掉
+  （绿梦已兜 3 条）；新游戏首次预检大概率重复踩。
+- 建议修法（未实施）：把裸 `tombstone` 收紧为 `tombstoned:.*(crash|signal)|tombstone file written`，
+  或把 `failed to connect to tombstoned` / `already intercepted` / `tombstoned_crash` 直接并入默认 `RE_CRASH_IGNORE`。
+  落点：`skill/re-implement/hook-rules.md` §31 或 `stages.md`「装机预检与验收阶梯」+ 脚本本身。
+
+## 候选：热更复现链依赖现场编译，SDK/工具缺位会整轮卡死（class: tech）
+
+- 状态：候选（2026-10-31 绿梦 r7；本机 `C:\Program Files\dotnet\sdk` 为空，只剩运行时，`dotnet --info` 报 No SDKs）
+- 事实：`ilpatch`（IL 注入）与 `StarryLvmeng.dll`（mod 程序集）都**没有入库二进制**，全靠源码现场编译；
+  SDK 不在时 `dotnet build` 直接不可用，而这条链是热更修复的必经步骤 ⇒ 整轮停摆。
+- 口径：工具装 `01_tools/`（`.gitignore` 已忽略「本地工具」），不要照 mac 文档的 `~/.dotnet` 口径装到用户目录；
+  本轮已落 `01_tools/dotnet-sdk8`（8.0.404）。
+- 建议做进流程（未实施）：热更修复脚本开头加一次 `01_tools/dotnet-sdk8/dotnet.exe --list-sdks` 预检，
+  缺失即提示补装（`https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.404/dotnet-sdk-8.0.404-win-x64.zip`，
+  下载约 10 分钟、解压到 `01_tools/` 即用）。落点：`skill/re-extract/hotupdate-fingerprint-recheck.md` 或 `TOOLBOOK.md`。
+
+## 候选：bundle 内 PE 偏移每轮都变，`locate-pe` 必须重跑（class: tech）
+
+- 状态：候选（2026-10-31 绿梦实测：`Assembly-ACT` 由上一轮 `off=6711832` 变为 `off=10150544`，长度同为 14,587,904）
+- 事实：Dll bundle 的块表/解压流布局随任一程序集体积变化整体平移；沿用上轮偏移会切出错位数据
+  （本轮直接对比误切片段，得「13,352,046 字节全不同」的假结论，属对照方法错误）。
+- 判据：`bundle_repack.py locate-pe` 输出的名字列在**未装 `dnfile`** 时全是 `?`，只有长度可信；
+  必须 `pip install dnfile` 后再定位，否则容易按长度猜错程序集。
+- 落点：`skill/re-extract/hotupdate-fingerprint-recheck.md` §2 附加一句 + 绿梦文档 §8.2 已记。

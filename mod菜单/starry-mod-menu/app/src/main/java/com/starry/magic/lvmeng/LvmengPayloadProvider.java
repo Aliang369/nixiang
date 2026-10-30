@@ -48,11 +48,13 @@ public final class LvmengPayloadProvider extends ContentProvider {
 
     private static final String TAG = "LvmengPayloadProvider";
 
-    /** 现役 Dll bundle GUID（清单 Dll_prod_1.0.0_prod.a_56，游戏构建时间 2026/10/29 19:05:22）。 */
-    /* 2026-10-30: 热更把 Dll bundle 换成 17d93118…（目录 17/），旧值 f8124a60…（f8/）是上一版，
-       会让补丁 bundle 落到游戏不看的目录 ⇒ 五项功能全失效。见 10_docs/绿梦/热更20261030_修复.md */
-    private static final String BUNDLE_GUID = "17d93118365e63ab20bf267703295779";
-    private static final String GUID_DIR = "17/" + BUNDLE_GUID;
+    /** 现役 Dll bundle GUID（清单 Dll_prod_1.0.0_prod.a_57，游戏构建时间 2026/10/30 19:35）。 */
+    /* 2026-10-30b：当晚再次热更，GUID 17d93118…（目录 17/）→ c9e46c6e…（目录 c9/），旧目录被游戏清空
+       ⇒ 补丁 bundle 不被加载、五项功能全失效。同因已连续两轮（a_55→a_56、a_56→a_57）；
+       根治方向＝启动时从 CacheRecords.snapshot 动态取 GUID，见 10_docs/绿梦/热更20261030_修复.md §8.6。
+       注意：线上 r7 的 dex 是**外科改 smali**所得、未整包重编（保住 desugaring 形态），本常量只保证源码与产物一致。 */
+    private static final String BUNDLE_GUID = "c9e46c6e213e2d705366b41cddf59809";
+    private static final String GUID_DIR = "c9/" + BUNDLE_GUID;
     private static final String MOD_DLL = "starry_lvmeng.dll";
     /** YooAsset CacheRecords.snapshot 的 RecordSnapshotMagic。 */
     private static final int SNAPSHOT_MAGIC = 1380270916;

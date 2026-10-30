@@ -1,0 +1,20 @@
+{
+  "game_dir": "E:/nixiang/08_output/绿梦",
+  "keep": "绿梦_1.0.5_starry-r7-releaseSigned.apk",
+  "keep_size": 371117718,
+  "keep_md5": "08e67a9df7145c87251f6250f4c14410",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "绿梦_1.0.5_starry-r6-releaseSigned.apk",
+      "size": 371109526,
+      "md5": "450a0de5ddeb3a905514eae788695596"
+    },
+    {
+      "name": "绿梦_1.0.5_starry-r7-releaseSigned.apk.idsig",
+      "size": 2930203,
+      "md5": "04e8518193ff9f4219492d84e219480a"
+    }
+  ],
+  "removed_count": 2
+}

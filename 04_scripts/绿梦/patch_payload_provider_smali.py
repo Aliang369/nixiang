@@ -49,12 +49,13 @@ def main():
         return 2
     s = s.replace(a.old_guid, a.new_guid)
 
-    # GUID_DIR 常量 "f8/<guid>" 与建目录用的完整路径串 "yoo/Dll/BundleFiles/f8/<guid>"
+    # GUID_DIR 常量 "<前2位>/<guid>" 与建目录用的完整路径串 "yoo/Dll/BundleFiles/<前2位>/<guid>"
+    # 前缀一律从 --old-guid 推导（2026-10-30b 热更：17→c9，写死 f8 会整轮改不动）
     old_pfx = a.old_guid[:2]
     new_pfx = a.new_guid[:2]
     for pat, rep in (
-        ('"f8/', '"%s/' % new_pfx),
-        ("BundleFiles/f8/", "BundleFiles/%s/" % new_pfx),
+        ('"%s/' % old_pfx, '"%s/' % new_pfx),
+        ("BundleFiles/%s/" % old_pfx, "BundleFiles/%s/" % new_pfx),
     ):
         s = s.replace(pat, rep)
     print("GUID 替换 %d 处；目录前缀 %s → %s" % (n, old_pfx, new_pfx))
@@ -68,8 +69,9 @@ def main():
         )
         print("snapshot 早退 if-eqz → goto（每次重写）")
     else:
-        sys.stderr.write("ERROR: 找不到 snapshot 早退分支（if-eqz v1, :cond_28）—— dex 结构变了，先重新反编译确认\n")
-        return 2
+        # r4 起（su 修复轮）LvmengPayloadProvider 由源码重编，源码本身已是无条件写，
+        # 部署 dex 里根本不存在「snapshot 已存在就 return」的早退分支 ⇒ 无锚点属正常形态。
+        print("未见 snapshot 早退分支（源码已无条件写）⇒ 无需改，跳过")
 
     with io.open(a.smali, "w", encoding="utf-8", newline="\n") as f:
         f.write(s)

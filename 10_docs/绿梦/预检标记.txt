@@ -1,0 +1,11 @@
+# 绿梦 1.0.5（vc12035）装机后预检标记 —— 2026-10-30b 热更（bundle c9e46c6e…）轮
+pkg|com.zhuziplay.lvmengnew.op
+menu_load|StarryMagic
+hook_hit|LvmengPayloadProvider.*snapshot ->
+auth_ok|\[V2\] s=1
+# 误报兜底（本包实测，均为框架/系统侧噪声，pid 属本包但不是崩溃）：
+#  ① RE_CRASH 的裸 `tombstone` 命中 MIUI 其他进程的 `E libc: failed to connect to tombstoned: Permission denied`（00:10 实测）
+#  ② 本框架装了崩溃拦截器 ⇒ tombstoned 打 `pid <n> already intercepted, type 2`（00:13 实测，进程存活、菜单已弹、授权已过）
+crash_ignore|failed to connect to tombstoned
+crash_ignore|already intercepted
+crash_ignore|tombstoned_crash
