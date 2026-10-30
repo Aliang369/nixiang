@@ -376,7 +376,17 @@
           "path": "10_docs/一念通天/收尾与最小复现清单_768_20261030.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-10-30 20:08:04",
+      "artifacts": {
+        "10_docs/一念通天/收尾与最小复现清单_768_20261030.md": {
+          "md5": "3ba009b847e2b534e2cbb20b11f3761a"
+        }
+      },
+      "inputs": {
+        "04_scripts/一念通天/cleanup_summary.json": "0b25b77393ad014708a27d6d6b1d2fed",
+        "06_dumped/一念通天/official_768/rva_targets.json": "52b34cf0b6399c31fae654f4281c6d42"
+      }
     }
   ]
 }
