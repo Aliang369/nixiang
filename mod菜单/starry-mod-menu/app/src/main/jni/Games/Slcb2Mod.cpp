@@ -1,25 +1,28 @@
 // ============================================================================
-//  星光菜单游戏模块 — 标准骨架 v3.1（注册表版，复制后按 TODO 填空）
+//  星光菜单游戏模块 — 失落城堡2（`com.leiting.slcb2`）1.0.3 / vc10
 //
-//  生成：bash mod菜单/starry-mod-menu/scripts/new_game_mod.sh {Game}
-//        → 四件套 {Game}Mod.h/.cpp + {Game}Entry.cpp + Android_{tag}.mk
-//        入口走 MainModern.cpp 注册表（不改 Main.cpp / GameConfig.h / 公共 Android.mk）
+//  底包：**官方原版**（`CN=lt`，`libil2cpp.so` md5 `9aede69e…`，metadata md5 `6e94e96b…`）
+//  引擎：Unity IL2CPP metadata v31 + HybridCLR；保护＝网易易盾 4.23 + 乐变 LBApplication
+//
+//  功能集（5 项，用户 2026-10-30 定稿）：
+//    1 伤害倍率（滑块 1-100，1＝关）  2 无敌  3 无限技能（免CD + 不耗蓝）
+//    5 无限魔铁锭                    6 无限魂晶
+//    ⚠️ 2026-10-30 用户明令：「菜单内的全装扮部分给相关代码都删除掉」⇒ 本文件
+//       **不含** SLCB2_FEAT_SKIN / 装扮相关槽位；也**不含**任何诊断探针
+//       （K_COUNT / K_MIDPROBE / K_PROBE_LR）、frida-gadget 装载、现场指令自证等
+//       测试脚手架。要复现当时的取证形态请查 git 历史（a5e9a46e 及更早）。
 //
 //  ★ 内置防闪退设施是「代码」不是「文档约定」，删任何一节都可能复现历史闪退：
-//      默认 0 hook（懒装） / 双路径挂点 / RVA 漂移拒绝 / 幂等安装 /
-//      orig 必调 / reenter 防递归 / SafeWrite 校验写 / 类名缓存 / Tick 轻量
-//    v3.1（2026-10-02，疾风骑士 60.0.1 实战下沉）另加三件，见 §④：
-//      并发装钩互斥 / 致命信号兜底（sigsetjmp 保护区 + sigaltstack） / 槽位熔断
+//      默认 0 hook（懒装） / RVA 漂移拒绝 / 幂等安装 / reenter 防递归 /
+//      SafeWrite 校验写 / Tick 轻量 / 并发装钩互斥 / 致命信号兜底 / 槽位熔断
 //
+//  ★ 本作铁律（`10_docs/失落城堡2/路线锁定.md` §11/§12）：
+//      ①功能一律做「**图片内自足补丁**」——入口 4B `b` → libil2cpp 自己的 code cave
+//        里改 s0/w0 再跳回；**禁止跳进 libstarry_magic.so**（实测：任何进我们 so 的
+//        形态都会在挂钩命中后 ~390ms 崩）。
+//      ②Dobby trampoline 在本包不可用（匿名非执行页）⇒ **禁止回跳 orig**，
+//        带副作用的函数**禁止整段跳过函数体**，只改需要的那一处。
 //  铁律全文：docs/GAME_MOD_GUIDE.md + skill/re-implement/hook-rules.md
-//
-//  功能实现分层（定稿 2026-09-09，详见 GAME_MOD_GUIDE.md）：
-//    数据型（无敌=HP回写 / 属性增益 / 资源锁定）
-//        → 偏移定位 + SafeWrite 直写，Tick 轮询维持（零 hook 痕迹，防封首选；
-//          开关全关 = 零改写）
-//    行为型（改判定 / 伤害结算 / 拦截上报）
-//        → Dobby hook：RVA 优先（序言校验），RVA 失效自动转按名（本骨架 HookSlot 双路径）
-//    字节 patch 改函数 → 默认禁用（E15–E18 死路清单）
 // ============================================================================
 
 #include "Slcb2Mod.h"
@@ -29,40 +32,28 @@
 #include <cstdio>
 #include <cstring>
 
-#include <sys/mman.h> // 自建代码页补丁（mprotect）
-#include <sys/wait.h>  // fork 子进程做 trampoline 自检
 #include <unistd.h>
 #include <fcntl.h>
-#include <ucontext.h>   // sysconf(_SC_PAGESIZE)
 #include <pthread.h>
-#include <dlfcn.h>
-#include <sys/syscall.h>
-#include <time.h>
 #include <mutex>      // §④ 装钩互斥
 #include <setjmp.h>   // §④ sigsetjmp 保护区
 #include <signal.h>   // §④ 致命信号兜底
 
-#include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
 #include "Includes/SecStrings.hpp"
-#include "Unity/Il2CppApi.h"
 
-using Il2Cpp::GetApi;
-
-// 生成器把 [Slcb2] 替换为本游戏标签（如 [jfqs]），日志过滤用 adb logcat -s Mod_Menu
+// 日志过滤：adb logcat -d | grep "\[Slcb2\]"
 #define TPL_LOG "[Slcb2]"
 
-// 注册表模式不依赖 GameConfig.h（legacy 配置中心）。
-// Cocos 系生成后把下面这处（含各 hook 内引用）统一换成目标库名。
+// 目标库名（易盾壳下同失落城堡 1：模块名不带明文全称，走 SecStrings）
 #define TPL_TARGET_LIB sec_lib_il2cpp()
 
 // ============================================================================
-//  ① 开关与 orig 指针
-//     g_libReady = 「库已映射」≠「已挂钩」；全开关关闭时应当保持 0 个 hook。
+//  ① 开关与状态
+//     g_libReady = 「库已映射」≠「已挂钩」；全开关关闭时保持 0 个补丁。
 // ============================================================================
 static std::atomic<bool> g_libReady{false};
-static std::atomic<bool> g_anyHooked{false};
 static std::atomic<bool> g_reenter{false};
 static std::atomic<bool> g_dmg{false};      // 伤害倍率「功能开启」（滑块值 >1 才算生效）
 static std::atomic<bool> g_inv{false};
@@ -70,10 +61,9 @@ static std::atomic<bool> g_skill{false};    // 无限技能（免CD + 不耗蓝�
 static std::atomic<bool> g_iron{false};     // 无限魔铁锭
 static std::atomic<bool> g_crystal{false};  // 无限魂晶
 static std::atomic<int>  g_mult{1};         // 伤害倍率 1..100（1 = 关闭）
-static std::atomic<bool> g_skin{false};     // 全装扮解锁
 
 // ============================================================================
-//  ④ 致命信号兜底（sigsetjmp 保护区 + sigaltstack）—— 原样重建自本机模板
+//  ④ 致命信号兜底（sigsetjmp 保护区 + sigaltstack）
 // ============================================================================
 static std::mutex g_installMutex;   // 保护「装钩全过程」，只在 SyncHooks 里取
 static std::mutex g_guardMutex;
@@ -90,7 +80,6 @@ static struct sigaction g_oldSegv;
 static struct sigaction g_oldBus;
 static struct sigaction g_oldIll;
 static std::atomic<bool> g_guardArmed{false};
-static bool g_lastFatal = false;
 
 static void TplFaultHandler(int sig, siginfo_t* si, void* /*uc*/) {
     if (t_inGuard) {
@@ -143,20 +132,6 @@ static bool ReadU32Guarded(const char* tag, const void* p, uint32_t* out) {
     }
     t_inGuard = 0;
     LOGW(TPL_LOG " %s 读序言 SIG(%d) @%p — 跳过该槽位", tag, (int)t_faultSig, (void*)t_faultAddr);
-    return false;
-}
-
-static bool RunGuarded(const char* tag, void (*fn)(void*), void* arg) {
-    ArmFaultGuardForThread();
-    t_faultDepth = 0;
-    if (sigsetjmp(t_faultJmp, 1) == 0) {
-        t_inGuard = 1;
-        fn(arg);
-        t_inGuard = 0;
-        return true;
-    }
-    t_inGuard = 0;
-    LOGW(TPL_LOG " %s 回调内 SIG(%d) @%p — 已吞掉", tag, (int)t_faultSig, (void*)t_faultAddr);
     return false;
 }
 
@@ -240,18 +215,14 @@ static void* FindCodeCave(void* near, size_t need) {
 }
 
 // ============================================================================
-//  ⑤ 槽位表：全部图片内补丁（零外部调用），kind 决定补丁形态
+//  ⑤ 槽位表（**本版唯一权威**，与 `10_docs/失落城堡2/路线锁定.md` §1 一一对应）
+//     全部图片内补丁、零外部调用；kind 决定补丁形态。
 // ============================================================================
 enum SlotKind {
-    K_SCALE_DMG = 0,   // 入口 → cave：乘倍率后回放序言（伤害倍率）
-    K_SCALE_INV,       // 入口 → cave：乘 0（无敌）
-    K_RESULT,          // 只改结果指令（免CD / 不耗蓝）
-    K_STUB9999,        // 入口 → cave：mov w0,#9999; ret（货币）
-    K_STUB_TRUE,       // 入口 → cave：mov w0,#1; ret（装扮判定）
-    K_SKIN_OBTAINED,   // 入口 → cave：item.mObtained=1 后跳回循环尾（装扮仓库「未获得」分支）
-    K_COUNT,           // 入口 → cave：只给命中计数 +1（诊断探针，不记参数、不改行为）
-    K_MIDPROBE,        // 中段 → cave：记录 x8 指针及其 +0x38/+0x60 两个字节后原样续跑（诊断）
-    K_PROBE_LR,        // 入口 → cave：记录命中数 + 调用方 LR + 第一参数（诊断调用链）
+    K_SCALE_DMG = 0,   // 入口 → cave：乘倍率后回放序言（伤害倍率 0x110829A0）
+    K_SCALE_INV,       // 入口 → cave：乘 0 后回放序言（无敌 0x110649CC）
+    K_RESULT,          // 只改结果指令（免CD / 不耗蓝，带副作用的函数禁止整段跳过）
+    K_STUB9999,        // 入口 → cave：mov w0,#9999; ret（货币读侧 pin）
 };
 
 struct HookSlot {
@@ -260,81 +231,27 @@ struct HookSlot {
     int         feat;
     SlotKind    kind;
     uintptr_t   rva2;     // 结果指令地址（仅 K_RESULT）
-    uint32_t    oldW;     // 期望原字
+    uint32_t    oldW;     // 期望原字（0＝不做指纹校验）
     uint32_t    newW;     // 目标字
 };
 
-// 诊断探针计数（cave 直接写这里；放我们自己的 .bss，绝不写 r-x 段）
-static volatile uint32_t g_probeCnt[24];
-
-// LR 探针记录：{命中数, _, 调用方LR, 第一参数}
-struct LrProbeRec { volatile uint32_t n; volatile uint32_t pad; volatile uint64_t lr0; volatile uint64_t lr1; volatile uint64_t lr2; volatile uint64_t a1; };
-static LrProbeRec g_lrProbe[24];
-
-// 中段探针记录：{命中数, item+0x38, item+0x60, _, item指针}
-struct MidProbeRec { volatile uint32_t n; volatile uint32_t f38; volatile uint32_t f60; volatile uint32_t pad; volatile uint64_t item; };
-static MidProbeRec g_midProbe[2];
-
 static const HookSlot kSlots[] = {
-    { "DmgMul",    0x110829a0UL, SLCB2_FEAT_DMG,     K_SCALE_DMG,  0,          0,          0          },
-    { "Inv",       0x110649ccUL, SLCB2_FEAT_INV,     K_SCALE_INV,  0,          0,          0          },
-    { "SkillCd",   0x10ce8c24UL, SLCB2_FEAT_SKILL,   K_RESULT,     0x10CE8C80UL, 0x1A9FB7E0u, 0x52800020u },
-    { "SkillMp",   0x118dd824UL, SLCB2_FEAT_SKILL,   K_RESULT,     0x118DD904UL, 0x1A890100u, 0x2A1F03E0u },
-    { "GetIron",   0x114d97d0UL, SLCB2_FEAT_IRON,    K_STUB9999,   0,          0,          0          },
-    { "GetCrystal",0x114ca960UL, SLCB2_FEAT_CRYSTAL, K_STUB9999,   0,          0,          0          },
-    { "Appearance",0x11944af8UL, SLCB2_FEAT_SKIN,    K_STUB_TRUE,  0,          0xD10183FFu, 0         },
-
-    // ── 全装扮（2026-10-30 重建）：上面那颗只影响「详情面板锁图标 / 套装部件判定」，
-    //    图鉴式列表（装扮仓库 AppearanceInventoryUI）与装扮页（AppearanceUI）的灰显/过滤
-    //    都不走它，而是走各自 InitInventoryData 里「已获得记录 vs 配置项」的合并结果：
-    //        item+0x38 = mObtained（bool）   item+0x60 = mShowLockCover（bool，构建时恒置 1）
-    //        卡片取锁 = mShowLockCover && !mObtained ⇒ 置 mObtained=1 即全解锁
-    //    两处合并都是「遍历账号已获得记录、String.Equals 比 itemCode」，故只把
-    //    「是否命中记录」与「记录里的 obtained 位」两步改成恒真，字段仍从真实记录拷，
-    //    避免 mObtainedTime / mSource 留空导致的空引用。
-    //      InvUI 0x11940D94 tbnz w0,#0,+6  → b +6（无条件进「命中」分支）
-    //      InvUI 0x11940DAC ldrb w8,[x23,#0x10] → mov w8,#1
-    //      UI    0x1194AFD8 tbz  w0,#0,+6  → nop（顺序落到下一条）
-    //      UI    0x1194AFDC ldrb w8,[x24,#0x10] → mov w8,#1
-    // 2026-10-30 12:xx 三改：上面两条结果补丁只在「账号已获得记录非空」时才走得到；
-    // 而 AppearanceInventoryUI.GetAccountNewData → ServerModule_Friend.GetAppearanceWarehouse
-    // 取不到列表时，0x11940D54 `cbz x19` 会**直接 return**（整页保持全未获得）。
-    // 改成入口补丁：每个配置项取出来后直接 item+0x38=1，再跳回循环尾（0x11940DDC）。
-    { "SkinInvLock", 0x11940D54UL, SLCB2_FEAT_SKIN, K_SKIN_OBTAINED, 0x11940DDCUL, 0xB40004B3u, 0 },
-    { "SkinUiHit",  0x1194AFD8UL, SLCB2_FEAT_SKIN, K_RESULT, 0x1194AFD8UL, 0x36000060u, 0xD503201Fu },
-    { "SkinUiOb",   0x1194AFDCUL, SLCB2_FEAT_SKIN, K_RESULT, 0x1194AFDCUL, 0x39404308u, 0x52800028u },
-
-    // ── 全装扮 正主（2026-10-30 二次定位）：装扮解锁的**唯一权威**是哥布林商人解锁表
-    //      CampMgr.GoblinMerchant_GetSkinIsUnlock(code) → 本地/服务端下发的解锁记录里
-    //      「有没有 (flag@+0x10 && code@+0x30) 这条」。全部锁态都问它：
-    //        StylistUIMobileInteraction.IsUnitItemUnlocked (B 尾调，手机端入口)
-    //        StylistItemUnitUI.SetStylistDataScrollUnit / RefreshUsedState_Skin
-    //        StylistUI.UpdateSkinPreview / OpenUnitPanel_Skin / HideUnitPanel_Skin
-    //        AppearanceUnlockData.TryGetLockedContent
-    //      ⇒ 读取侧钉 true 即全解锁（不改解锁表、不写存档、不上报）。
-    //      GetIsUnlockTransmog 同理（幻化类装扮，ShowMenuPage/TryGetLockedContent 用）。
-    { "SkinUnlock", 0x119C345CUL, SLCB2_FEAT_SKIN, K_STUB_TRUE,  0,          0xF81D0FFEu, 0         },
-    { "TransUnlock",0x119C5100UL, SLCB2_FEAT_SKIN, K_STUB_TRUE,  0,          0xF81D0FFEu, 0         },
-
-    // ── 卡片侧总闸（2026-10-30 13:30）：探针实证「页面确实走 AppearanceInventoryUI +
-    //    AppearanceCardUnitUI」，但数据侧置 mObtained=1 画面仍全灰 ⇒ 灰显由卡片自己重算：
-    //      x8 = cardData->item;  w9 = ldrb [x8,#0x60]（mShowLockCover）
-    //      if (w9) w21 = ldrb [x8,#0x38] ^ 1   ← w21 = 未获得
-    //      [x19+0x78].SetActive(w21); [x19+0x38].tint(w21); SetSuitItemsAllObtainedLockState(x19,w21)
-    //    该 refresh 只在 AppearanceCardUnitUI（LC2 内部命名空间，属未命名大模块）里，
-    //    调 AppearanceMgr.GetSprite/GetName ⇒ 只服务装扮卡，不会误伤物品卡。
-    //    把 0x9AFD8A0 `cbz w9,+0x10` 改成无条件 `b +0x10` ⇒ w21 恒 0（不显示锁、不着灰）。
-    { "CardUnlock", 0x9AFD8A0UL, SLCB2_FEAT_SKIN, K_RESULT, 0x9AFD8A0UL, 0x34000089u, 0x14000004u },
-    // 锁态总成整个掐死：SetSuitItemsAllObtainedLockState 是全二进制里唯一会调 SetImageColor(0x1193AB40)
-    // 的地方（也是唯一给卡片上锁图标的地方），直接 ret ⇒ 卡片保持预制体默认外观。
-    { "NoLockVis", 0x1193AA90UL, SLCB2_FEAT_SKIN, K_STUB_TRUE, 0, 0xF81D0FFEu, 0 },
-    // 逐项显隐的真正开关：控制器里 `SetActive([x19+0x90], item.mObtained)`（0x9AFDA80 读 +0x38）。
-    // 该函数头 170 条指令里没有任何 +0x38/+0x60 分支 ⇒ 图标/灰显不靠锁态分支，而靠这处显隐。
-    // 把 读取改成 mov w1,#1 ⇒ 恒按「已获得」显示。
-    { "SkinIconOn", 0x9AFDA80UL, SLCB2_FEAT_SKIN, K_RESULT, 0x9AFDA80UL, 0x3940E101u, 0x52800021u },
-
-
-
+    // ── 1 伤害倍率：怪物掉血函数入口。ABI `float f(void* self, u64, u64, u64, void*, float dmg)`
+    //    首浮点参数在 s0；cave 里 `fmul s0, s0, 倍率` 后回放 4 条序言再跳回 entry+0x10。
+    //    倍率字面量在 cave+40，滑块变化由 RefreshScaleLiteral() 原地刷新（不重装）。
+    { "DmgMul",     0x110829A0UL, SLCB2_FEAT_DMG,     K_SCALE_DMG, 0,            0,          0          },
+    // ── 2 无敌：玩家受伤函数入口，同上形状（入口 `fmov s8,s0`），cave 里乘 0.0f ⇒ 返 0。
+    { "Inv",        0x110649CCUL, SLCB2_FEAT_INV,     K_SCALE_INV, 0,            0,          0          },
+    // ── 3 无限技能·免CD：返回 bool（尾部 `cset w0,ge`）；把结果指令改成 `mov w0,#1`。
+    { "SkillCd",    0x10CE8C24UL, SLCB2_FEAT_SKILL,   K_RESULT,    0x10CE8C80UL, 0x1A9FB7E0u, 0x52800020u },
+    // ── 3 无限技能·不耗蓝：返回 int32（尾部 `csel w0,w8,w9,eq`，**不是 float**；
+    //    首版按 float 返 w0 垃圾 ⇒ 战斗闪退，勿回退）。结果指令改 `mov w0,wzr`。
+    { "SkillMp",    0x118DD824UL, SLCB2_FEAT_SKILL,   K_RESULT,    0x118DD904UL, 0x1A890100u, 0x2A1F03E0u },
+    // ── 5 无限魔铁锭：`LC2.BagSystem::get_IronPowder`（rva_map: 0x06001659 / 0x114d97d0）
+    //    读侧 pin，不写 Obscured 字段、不进 RPC（ACTk ObscuredCheatingDetector 只抓混淆字段被写）。
+    { "GetIron",    0x114D97D0UL, SLCB2_FEAT_IRON,    K_STUB9999,  0,            0,          0          },
+    // ── 6 无限魂晶：`LC2.BagSystem::get_Crystal`（rva_map: 0x06001657 / 0x114ca960）
+    { "GetCrystal", 0x114CA960UL, SLCB2_FEAT_CRYSTAL, K_STUB9999,  0,            0,          0          },
 };
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
@@ -357,7 +274,6 @@ static bool FeatOn(int feat) {
         case SLCB2_FEAT_SKILL:   return g_skill.load();
         case SLCB2_FEAT_IRON:    return g_iron.load();
         case SLCB2_FEAT_CRYSTAL: return g_crystal.load();
-        case SLCB2_FEAT_SKIN:    return g_skin.load();
         default: return false;
     }
 }
@@ -372,7 +288,6 @@ static void RefreshScaleLiteral() {
         return;
     }
 }
-
 
 // 入口 4B 补丁 → cave（各形态）
 static bool PatchJumpSlot(int i) {
@@ -400,17 +315,17 @@ static bool PatchJumpSlot(int i) {
     if (!ReadU32Guarded(sl.tag, va, &w0)) return false;
     if ((w0 & 0xFC000000u) == 0x14000000u) return false;   // 已是 b（我们或跳板）→ 稍后再判
 
-    // ---- 常量 stub ----
-    if (sl.kind == K_STUB_TRUE || sl.kind == K_STUB9999) {
-        // 可选入口指纹（hook-rules §22 第 4 步）：oldW 非 0 时必须与现读字面量一致，
+    // ---- 常量 stub（货币：mov w0,#9999; ret）----
+    if (sl.kind == K_STUB9999) {
+        // 入口指纹（hook-rules §22 第 4 步）：oldW 非 0 时必须与现读字面量一致，
         // 否则判为版本漂移/页面未解密，本拍不装（绝不盲改）。
         if (sl.oldW && w0 != sl.oldW) return false;
         void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
         if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
         g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
-        uint32_t imm = (sl.kind == K_STUB_TRUE) ? 1u : 9999u;
+        const uint32_t imm = 9999u;
         uint32_t code[2];
-        code[0] = 0x52800000u | ((imm & 0xFFFFu) << 5);   // mov w0, #imm
+        code[0] = 0x52800000u | ((imm & 0xFFFFu) << 5);   // mov w0, #9999
         code[1] = 0xD65F03C0u;                             // ret
         if (!WriteCode(sc, code, 8)) return false;
         int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
@@ -421,143 +336,6 @@ static bool PatchJumpSlot(int i) {
         g_slotTarget[i] = va; g_lastHookTarget = va;
         LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（mov w0,#%u; ret）",
              i, sl.tag, bi, sc, imm);
-        return true;
-    }
-
-    // ---- LR 探针：记录命中数 + x30 + 两层帧指针回溯 + x1，回放入口指令后跳回 entry+4 ----
-    if (sl.kind == K_PROBE_LR) {
-        if (sl.oldW && w0 != sl.oldW) return false;
-        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 80);
-        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 80B cave", i, sl.tag); return false; }
-        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 80);
-        LrProbeRec* rec = &g_lrProbe[i];
-        unsigned char b[72]; std::memset(b, 0, sizeof b);
-        uint32_t cw[14];
-        cw[0]  = w0;            // +0  回放入口原指令
-        cw[1]  = 0x580001E9u;   // +4  ldr x9,[pc,#60] → cave+64（记录地址）
-        cw[2]  = 0xB940012Au;   // +8  ldr w10,[x9]
-        cw[3]  = 0x1100054Au;   // +12 add w10,w10,#1
-        cw[4]  = 0xB900012Au;   // +16 str w10,[x9]
-        cw[5]  = 0xF900053Eu;   // +20 str x30,[x9,#8]   帧0（直接调用者）
-        cw[6]  = 0xAA1D03EBu;   // +24 mov x11,x29
-        cw[7]  = 0xB40000EBu;   // +28 cbz x11,+28 → +56
-        cw[8]  = 0xF940056Cu;   // +32 ldr x12,[x11,#8]  帧1
-        cw[9]  = 0xF900092Cu;   // +36 str x12,[x9,#16]
-        cw[10] = 0xF940016Bu;   // +40 ldr x11,[x11]
-        cw[11] = 0xB400004Bu;   // +44 cbz x11,+8 → +52
-        cw[12] = 0xF940056Cu;   // +48 ldr x12,[x11,#8]  帧2
-        cw[13] = 0xF9000D2Cu;   // +52 str x12,[x9,#24]
-        memcpy(b, cw, 56);
-        int64_t d2 = (int64_t)((uintptr_t)va + 4 - ((uintptr_t)sc + 56));
-        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
-        uint32_t bx = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));
-        memcpy(b + 56, &bx, 4);            // +56 b entry+4
-        uint64_t paddr = (uint64_t)(uintptr_t)rec;
-        memcpy(b + 64, &paddr, 8);         // +64 字面量
-        if (!WriteCode(sc, b, 72)) return false;
-        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
-        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
-        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
-        memcpy(g_slotSaved[i], &w0, 4);
-        if (!WriteCode(va, &bi, 4)) return false;
-        g_slotTarget[i] = va; g_lastHookTarget = va;
-        LOGI(TPL_LOG " slot[%d] %s LR探针(v2)已装：入口 0x%08X → cave %p", i, sl.tag, bi, sc);
-        return true;
-    }
-
-    // ---- 中段探针：记录 x8 与其两个字段，再原样续跑 ----
-    if (sl.kind == K_MIDPROBE) {
-        if (sl.oldW && w0 != sl.oldW) return false;
-        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 64);
-        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 64B cave", i, sl.tag); return false; }
-        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 64);
-        MidProbeRec* rec = &g_midProbe[(i < 2) ? i : 0];
-        unsigned char b[64]; std::memset(b, 0, sizeof b);
-        uint32_t cw[10];
-        cw[0] = 0x58000189u;   // ldr  x9, [pc, #48]   → cave+48（记录地址字面量）
-        cw[1] = 0xB940012Au;   // ldr  w10, [x9]
-        cw[2] = 0x1100054Au;   // add  w10, w10, #1
-        cw[3] = 0xB900012Au;   // str  w10, [x9]
-        cw[4] = 0xF9000928u;   // str  x8,  [x9, #16]
-        cw[5] = 0x3940E10Bu;   // ldrb w11, [x8, #0x38]
-        cw[6] = 0xB900052Bu;   // str  w11, [x9, #4]
-        cw[7] = 0x3941810Bu;   // ldrb w11, [x8, #0x60]
-        cw[8] = 0xB900092Bu;   // str  w11, [x9, #8]
-        cw[9] = w0;            // 回放原指令
-        memcpy(b, cw, sizeof cw);
-        int64_t d2 = (int64_t)((uintptr_t)va + 4 - ((uintptr_t)sc + 40));
-        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
-        uint32_t bx = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));
-        memcpy(b + 40, &bx, 4);
-        uint64_t paddr = (uint64_t)(uintptr_t)rec;
-        memcpy(b + 48, &paddr, 8);
-        if (!WriteCode(sc, b, sizeof b)) return false;
-        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
-        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
-        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
-        memcpy(g_slotSaved[i], &w0, 4);
-        if (!WriteCode(va, &bi, 4)) return false;
-        g_slotTarget[i] = va; g_lastHookTarget = va;
-        LOGI(TPL_LOG " slot[%d] %s 中段探针已装：@rva 0x%lX → cave %p", i, sl.tag, (unsigned long)sl.rva, sc);
-        return true;
-    }
-
-    // ---- 诊断探针：命中计数 +1，回放入口指令后跳回 entry+4 ----
-    if (sl.kind == K_COUNT) {
-        if (sl.oldW && w0 != sl.oldW) return false;
-        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 32);
-        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 32B cave", i, sl.tag); return false; }
-        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 32);
-        uint32_t code[6];
-        code[0] = w0;              // 回放入口原指令
-        code[1] = 0x580000A9u;     // ldr  x9, [pc, #0x14]  → cave+0x18（计数地址字面量）
-        code[2] = 0xB940012Au;     // ldr  w10, [x9]
-        code[3] = 0x1100052Au;     // add  w10, w10, #1
-        code[4] = 0xB900012Au;     // str  w10, [x9]
-        int64_t d2 = (int64_t)((uintptr_t)va + 4 - ((uintptr_t)sc + 20));
-        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
-        code[5] = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));   // b entry+4
-        unsigned char b[32]; std::memset(b, 0, sizeof b);
-        memcpy(b, code, 24);
-        uint64_t paddr = (uint64_t)(uintptr_t)&g_probeCnt[i];
-        memcpy(b + 24, &paddr, 8);
-        if (!WriteCode(sc, b, sizeof b)) return false;
-        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
-        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
-        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
-        memcpy(g_slotSaved[i], &w0, 4);
-        if (!WriteCode(va, &bi, 4)) return false;
-        g_slotTarget[i] = va; g_lastHookTarget = va;
-        LOGI(TPL_LOG " slot[%d] %s 探针已装：入口 0x%08X → cave %p", i, sl.tag, bi, sc);
-        return true;
-    }
-
-    // ---- 装扮仓库：item.mObtained=1，然后跳回循环尾继续下一项 ----
-    //     入口 x22 = 当前 AppearanceItemData*（0x11940D4C `mov x22,x0` 已证），
-    //     mObtained 在 +0x38（卡片取锁 = mShowLockCover(+0x60) && !mObtained）。
-    //     跳回 0x11940DDC：`ldr x0,[x20,#0x120]; add w21,#1; cbnz x0 → 循环头`。
-    if (sl.kind == K_SKIN_OBTAINED) {
-        if (sl.oldW && w0 != sl.oldW) return false;      // 入口指纹：cbz x19
-        void* resume = FileOffToVa(TPL_TARGET_LIB, sl.rva2);
-        if (!resume) return false;
-        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
-        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
-        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
-        uint32_t code[3];
-        code[0] = 0x52800028u;   // mov  w8, #1
-        code[1] = 0x3900E2C8u;   // strb w8, [x22, #0x38]
-        int64_t d2 = (int64_t)((uintptr_t)resume - ((uintptr_t)sc + 8));
-        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
-        code[2] = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));   // b resume
-        if (!WriteCode(sc, code, 12)) return false;
-        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
-        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
-        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
-        memcpy(g_slotSaved[i], &w0, 4);
-        if (!WriteCode(va, &bi, 4)) return false;
-        g_slotTarget[i] = va; g_lastHookTarget = va;
-        LOGI(TPL_LOG " slot[%d] %s 已获得 stub 已装：入口 0x%08X → cave %p（mObtained=1; b 0x%lX）",
-             i, sl.tag, bi, sc, (unsigned long)sl.rva2);
         return true;
     }
 
@@ -599,7 +377,6 @@ static bool InstallSlot(int i) {
     if (i < 0 || i >= kSlotsCount) return false;
     if (g_slotInstalled[i]) return true;
     if (i < kSlotsMax && g_slotDead[i]) return false;
-    g_lastFatal = false;
     g_lastHookTarget = nullptr;
     g_slotPatched[i] = true;
     bool ok = PatchJumpSlot(i);
@@ -637,19 +414,8 @@ static void WashCheckSlots() {
     }
 }
 
-// 页面健康检查（保留接口：当前只做一次读校验）
-static void HealCodePage(const char* why, void* p) {
-    uint32_t t = 0;
-    if (!ReadU32Guarded("HealCodePage", p, &t))
-        LOGW(TPL_LOG " 代码页读取失败（%s）@%p", why, p);
-}
-
-// 自检自检：不再做 fork 子进程 trampoline 自检（历史已验证会污染 maps）
-static void TrampolineProbe() {}
-
 // ============================================================================
-//  ⑫ 数据侧写 moveScaleX：先确认「这个控制器挂在 Hero 身上」，再把 0x1e0 写成倍率。
-//     全程在 RunGuarded 里跑，任何野指针都只吞掉不炸游戏。
+//  ⑫ 自行读 prefs（框架回调晚于首帧时对齐开关状态）
 // ============================================================================
 static void LoadOwnPrefs() {
     FILE* f = std::fopen("/data/user/0/com.leiting.slcb2/shared_prefs/starry_magic_prefs.xml", "r");
@@ -667,15 +433,14 @@ static void LoadOwnPrefs() {
                 case SLCB2_FEAT_SKILL:   g_skill.store(on);   ++nSet; break;
                 case SLCB2_FEAT_IRON:    g_iron.store(on);    ++nSet; break;
                 case SLCB2_FEAT_CRYSTAL: g_crystal.store(on); ++nSet; break;
-                case SLCB2_FEAT_SKIN:    g_skin.store(on);    ++nSet; break;
                 default: break;
             }
         }
     }
     std::fclose(f);
-    LOGI(TPL_LOG " 自行读 prefs：恢复 %d 项（多=%d 无敌=%d 技能=%d 魔铁=%d 魂晶=%d 装扮=%d）",
+    LOGI(TPL_LOG " 自行读 prefs：恢复 %d 项（倍率=%d 无敌=%d 技能=%d 魔铁=%d 魂晶=%d）",
          nSet, g_mult.load(), (int)g_inv.load(), (int)g_skill.load(),
-         (int)g_iron.load(), (int)g_crystal.load(), (int)g_skin.load());
+         (int)g_iron.load(), (int)g_crystal.load());
 }
 
 static void SyncHooks();
@@ -736,85 +501,19 @@ static void SyncHooks() {
         LOGI(TPL_LOG " hook 状态: want=%d have=%d/%d", want, have, kSlotsCount);
         g_lastWant = want; g_lastHave = have;
     }
-    // 现场自证：每 ~60 拍打印一次关键补丁点的真实指令字（防「装了但没生效」再误判）
-    {
-        static int tick0 = 0;
-        if (++tick0 % 60 == 0) {
-            struct { const char* n; uintptr_t rva; uint32_t want; } kChk[] = {
-                { "CardUnlock@0x9AFD8A0", 0x9AFD8A0UL, 0x14000004u },
-                { "NoLockVis@0x1193AA90", 0x1193AA90UL, 0 },
-            };
-            for (auto& c : kChk) {
-                void* p = FileOffToVa(TPL_TARGET_LIB, c.rva);
-                uint32_t w = 0;
-                if (p && ReadU32Guarded("live", p, &w)) {
-                    if (c.want && w != c.want)
-                        LOGW(TPL_LOG " 现场指令字 %s = 0x%08X（期望 0x%08X）", c.n, w, c.want);
-                    else if (!c.want && (w & 0xFC000000u) != 0x14000000u)
-                        LOGW(TPL_LOG " 现场指令字 %s = 0x%08X（非 b，补丁已丢）", c.n, w);
-                }
-            }
-        }
-    }
-
-    // LR 探针打印（诊断用）：每 ~60 拍打一次，lr 以 base+rva 形式输出
-    {
-        static int tickLr = 0;
-        if (++tickLr % 60 == 0) {
-            uintptr_t base = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, 0);
-            for (int i = 0; i < kSlotsCount; ++i) {
-                if (kSlots[i].kind != K_PROBE_LR) continue;
-                if (i >= 24) continue;
-                const LrProbeRec& r = g_lrProbe[i];
-                if (!r.n) continue;
-                LOGI(TPL_LOG " LR %s n=%u f0=0x%lX f1=0x%lX f2=0x%lX base=0x%lX",
-                     kSlots[i].tag, r.n,
-                     (unsigned long)r.lr0, (unsigned long)r.lr1,
-                     (unsigned long)r.lr2, (unsigned long)base);
-            }
-        }
-    }
-
-    // 探针计数（诊断用）：每 ~60 拍打一次，读的是 cave 直接累加的 .bss 计数
-    {
-        static int tick = 0;
-        if (++tick % 60 == 0) {
-            char buf[256]; int n = 0;
-            for (int i = 0; i < kSlotsCount && n < (int)sizeof(buf) - 40; ++i) {
-                if (kSlots[i].kind != K_COUNT) continue;
-                n += snprintf(buf + n, sizeof(buf) - n, "%s=%u ", kSlots[i].tag, g_probeCnt[i]);
-            }
-            if (n) LOGI(TPL_LOG " 探针计数: %s", buf);
-            LOGI(TPL_LOG " 卡片item探针: n=%u mObtained=%u mShowLockCover=%u item=%p",
-                 g_midProbe[0].n, g_midProbe[0].f38, g_midProbe[0].f60, (void*)(uintptr_t)g_midProbe[0].item);
-        }
-    }
 }
 
 // ============================================================================
 //  ⑧ 对外接口（ModEntry.h 注册表契约，签名不可改）
 // ============================================================================
 bool Slcb2_TryInit(JavaVM* /*vm*/) {
-    // ── 分析模式：APK 内若随包带了 frida-gadget（libgadget.so），加载它 ──
-    // 正式包不带该文件 ⇒ dlopen 失败，静默跳过，零副作用。
-    {
-        static bool tried = false;
-        if (!tried) {
-            tried = true;
-            void* g = dlopen("libdcmplugin.so", RTLD_NOW);
-            LOGI(TPL_LOG " gadget: %s", g ? "libdcmplugin.so 已加载（分析模式）" : "未随包（正式模式）");
-        }
-    }
-
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
 
     InstallFaultGuard();          // §④ 先装兜底，再装钩
     g_libReady.store(true);
     SyncHooks();                  // 已 ON 的开关立即装；全关保持 0 hook
-    static std::atomic<bool> probed{false};
-    if (!probed.exchange(true)) TrampolineProbe();
-    LOGI(TPL_LOG " lib ready (dual-path, lazy hooks)");
+    LOGI(TPL_LOG " lib ready (lazy hooks, in-image cave patches)");
     return true;
 }
 
@@ -829,7 +528,6 @@ void Slcb2_OnFeatureChanged(int featNum, bool enabled) {
         case SLCB2_FEAT_SKILL:   g_skill.store(enabled); break;
         case SLCB2_FEAT_IRON:    g_iron.store(enabled); break;
         case SLCB2_FEAT_CRYSTAL: g_crystal.store(enabled); break;
-        case SLCB2_FEAT_SKIN:    g_skin.store(enabled); break;
         default: break;
     }
     SyncHooks();
@@ -861,18 +559,13 @@ void Slcb2_Tick(const bool* features, const int* values) {
     }
     {
         static std::atomic<int> tk{0};
-        if ((tk.fetch_add(1) % 10) == 0) {
-            WashCheckSlots();
-            if (g_slotInstalled[0] && g_slotTarget[0]) HealCodePage("运行中", g_slotTarget[0]);
-        }
+        if ((tk.fetch_add(1) % 10) == 0) WashCheckSlots();
     }
     g_dmg.store(g_mult.load() > 1);
     g_inv.store(features[SLCB2_FEAT_INV]);
     g_skill.store(features[SLCB2_FEAT_SKILL]);
     g_iron.store(features[SLCB2_FEAT_IRON]);
     g_crystal.store(features[SLCB2_FEAT_CRYSTAL]);
-    g_skin.store(features[SLCB2_FEAT_SKIN]);
-
 
     // 兜底：库晚于首帧映射时，这里补一次
     if (!g_libReady.load() && isLibraryLoaded(TPL_TARGET_LIB)) {

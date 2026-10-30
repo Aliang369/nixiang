@@ -5,12 +5,10 @@
  *        metadata md5 6e94e96b…（与斌哥包字节相同 ⇒ 抓点可直接复用）。
  *  引擎：Unity IL2CPP metadata v31 + HybridCLR；易盾 4.23 + 乐变 LBApplication。
  *
- *  功能位号（下标 = featNum，与 Slcb2Mod.h 的 enum 一一对齐）：
+ *  功能集（5 项，2026-10-30 用户定稿；「全装扮」已按用户指令删除，位号 7 废弃）：
  *    0 Category_战斗 / 1 伤害倍率(滑块1-100) / 2 无敌 / 3 无限技能
  *    4 Category_资源 / 5 无限魔铁锭（IronPowder）/ 6 无限魂晶（Crystal）
- *
- *  ⚠️ 本版为**环境阶段**：菜单先出，hook 一律未实现（0 hook，绝不改游戏行为）。
- *     功能实现见 10_docs/失落城堡2/移植方案_两项货币与反作弊_20261029.md。
+ *  挂点对照：10_docs/失落城堡2/路线锁定.md §1（与本文件 featureList 严格一一对应）。
  * ================================================================
  */
 #include "ModEntry.h"
@@ -38,7 +36,6 @@ static const char* kSlcb2Features[] = {
     "Category_资源",        // 4（占位）
     "Toggle_无限魔铁锭",    // 5  SLCB2_FEAT_IRON
     "Toggle_无限魂晶",      // 6  SLCB2_FEAT_CRYSTAL
-    "Toggle_全装扮",        // 7  SLCB2_FEAT_SKIN（含装扮附带特效）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

@@ -21,14 +21,13 @@
 #include <jni.h>
 
 // 功能位号：必须与 {Game}Entry.cpp 的 featureList 数组下标一一对应
+// ⚠️ 2026-10-30 用户明令删除「全装扮」⇒ 位号 7 已废弃，不要复用（prefs 里可能留旧键）。
 enum Slcb2Feat : int {
-    SLCB2_FEAT_DMG = 1,      // Toggle_百倍伤害（斌哥桩 RVA 0x110829a0）
-    SLCB2_FEAT_INV = 2,      // Toggle_无敌（RVA 0x110649cc）
+    SLCB2_FEAT_DMG = 1,      // Slider_伤害倍率:1:100（怪伤入口 RVA 0x110829a0）
+    SLCB2_FEAT_INV = 2,      // Toggle_无敌（玩家受伤入口 0x110649cc）
     SLCB2_FEAT_SKILL = 3,    // Toggle_无限技能（免CD 0x10ce8c24 / 不耗蓝 0x118dd824）
-    SLCB2_FEAT_IRON = 5,     // Toggle_无限魔铁锭（LC2.BagSystem::get_IronPowder）
-    SLCB2_FEAT_CRYSTAL = 6,  // Toggle_无限魂晶（LC2.BagSystem::get_Crystal）
-    SLCB2_FEAT_SKIN = 7,     // Toggle_全装扮（5 槽位：IsAppearanceItemUnlocked 恒 true
-                             //   + InvUI/装扮页两处「已获得」合并恒真，见 .cpp kSlots）
+    SLCB2_FEAT_IRON = 5,     // Toggle_无限魔铁锭（LC2.BagSystem::get_IronPowder 0x114d97d0）
+    SLCB2_FEAT_CRYSTAL = 6,  // Toggle_无限魂晶（LC2.BagSystem::get_Crystal 0x114ca960）
 };
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）

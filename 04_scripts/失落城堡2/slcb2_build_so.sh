@@ -68,5 +68,17 @@ check_str "Toggle_无限魔铁锭" "菜单串 Toggle_无限魔铁锭"
 check_str "Toggle_无限魂晶"   "菜单串 Toggle_无限魂晶"
 check_str "libil2cpp.so"      "waitLib libil2cpp.so"
 
+# ---- 交付口径提示（**只告警、永不阻断**）----
+# 2026-10-30 用户当轮要求：「菜单内的全装扮部分给相关代码都删除掉」「不要被一堆测试代码污染」。
+# 这只描述**本轮交付物**不含什么，**不是**永久封禁：功能随时可以按用户新指令加回，
+# 加回后本条告警自然消失（或按需删掉本段）。故此处一律 WARN，不设 ERROR/exit。
+warn_if_present() {  # warn_if_present <字节串> <说明>
+  local n
+  n=$(LC_ALL=C grep -ac -- "$1" "$SO" || true)
+  [[ "${n:-0}" -eq 0 ]] || echo "  [warn] $SO 含 $2（本轮交付口径是不含它；若是故意恢复功能，忽略本行）"
+}
+warn_if_present "全装扮"       "全装扮功能串（本轮 2026-10-30 已按用户指令删除）"
+warn_if_present "libdcmplugin" "frida-gadget 分析装载器（测试脚手架；分析模式才需要）"
+
 echo "[build_so] done → $SO"
 md5 -q "$SO"
