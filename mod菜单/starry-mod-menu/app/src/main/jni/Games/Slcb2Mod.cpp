@@ -320,6 +320,9 @@ static const HookSlot kSlots[] = {
     //    调 AppearanceMgr.GetSprite/GetName ⇒ 只服务装扮卡，不会误伤物品卡。
     //    把 0x9AFD8A0 `cbz w9,+0x10` 改成无条件 `b +0x10` ⇒ w21 恒 0（不显示锁、不着灰）。
     { "CardUnlock", 0x9AFD8A0UL, SLCB2_FEAT_SKIN, K_RESULT, 0x9AFD8A0UL, 0x34000089u, 0x14000004u },
+    // 锁态总成整个掐死：SetSuitItemsAllObtainedLockState 是全二进制里唯一会调 SetImageColor(0x1193AB40)
+    // 的地方（也是唯一给卡片上锁图标的地方），直接 ret ⇒ 卡片保持预制体默认外观。
+    { "NoLockVis", 0x1193AA90UL, SLCB2_FEAT_SKIN, K_STUB_TRUE, 0, 0xF81D0FFEu, 0 },
 
 
 
@@ -683,6 +686,27 @@ static void SyncHooks() {
         LOGI(TPL_LOG " hook 状态: want=%d have=%d/%d", want, have, kSlotsCount);
         g_lastWant = want; g_lastHave = have;
     }
+    // 现场自证：每 ~60 拍打印一次关键补丁点的真实指令字（防「装了但没生效」再误判）
+    {
+        static int tick0 = 0;
+        if (++tick0 % 60 == 0) {
+            struct { const char* n; uintptr_t rva; uint32_t want; } kChk[] = {
+                { "CardUnlock@0x9AFD8A0", 0x9AFD8A0UL, 0x14000004u },
+                { "NoLockVis@0x1193AA90", 0x1193AA90UL, 0 },
+            };
+            for (auto& c : kChk) {
+                void* p = FileOffToVa(TPL_TARGET_LIB, c.rva);
+                uint32_t w = 0;
+                if (p && ReadU32Guarded("live", p, &w)) {
+                    if (c.want && w != c.want)
+                        LOGW(TPL_LOG " 现场指令字 %s = 0x%08X（期望 0x%08X）", c.n, w, c.want);
+                    else if (!c.want && (w & 0xFC000000u) != 0x14000000u)
+                        LOGW(TPL_LOG " 现场指令字 %s = 0x%08X（非 b，补丁已丢）", c.n, w);
+                }
+            }
+        }
+    }
+
     // 探针计数（诊断用）：每 ~60 拍打一次，读的是 cave 直接累加的 .bss 计数
     {
         static int tick = 0;
