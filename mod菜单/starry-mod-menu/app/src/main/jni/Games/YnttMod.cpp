@@ -80,21 +80,29 @@ static void* g_onADSuccessMethod = nullptr;
 static WbarrierSetField_t g_wbarrierSetField = nullptr;
 
 // ============================================================
-// ② 字段偏移与 RVA（759 dump.cs / 序言实测；换包必须重 dump）
+// ② 字段偏移与 RVA（768 dump.cs / 序言实测；换包必须重 dump）
 // 重定位工具：python3 04_scripts/一念通天/yntt_rva_extract.py（--prev 对照打印漂移）
-// 759 复核结论：9 个挂点 RVA 相对 747 全部漂移，但 8 个在用挂点序言首指令与 747 完全一致 ⇒ kIns* 无需改动；
-//              字段仅 GameRuning.adRequest 0x450→0x458；ABI 序言 mov w26,w3 / w22,w2 / w21,w2 亦同 747，
-//              方法签名（monster 4 参 / Npc 3 参）逐字相同 ⇒ 函数指针类型不动。
+// 768 复核结论（2026-10-30）：9 个挂点 RVA 相对 759 全部漂移；**序言首指令有 6 条变化**（759 只需换 RVA，
+//   768 必须同步改 kIns*，否则 HookAtRva 序言校验不过会静默回退按名）：
+//   MonsterReduce 0xD10303FF→0xD102C3FF、NpcReduce 0xD102C3FF→0xD10283FF、
+//   MonsterDot 0xD103C3FF→0xD10443FF、PlayerDamage 0xD10343FF→0xD102C3FF、
+//   GameUpdate 0xF81D0FF6→0xD100C3FF；NpcDot / SetTimeScale / ShowAD 三条与 759 相同。
+//   字段 7 项变化：gas 0xA8→0xB0、tili 0xB0→0xB8、lingshi 0xB8→0xC0、money 0xC0→0xC8、
+//   NPCData 0x2E8→0x2F0、fumodata 0x2F0→0x2F8、adRequest 0x458→0x470；**NpcStatus.type 0x18→0x20**（ENEMY 仍 =2）。
+//   ABI 未变：Monster `mov w21,w3`(zhanlijue)+`mov w22,w2`(isAreaDamge)、Npc `mov w21,w2`、
+//   OnDamageBuff `mov w22,w2`/`mov w26,w1`、onDamage `x1→x22,x2→x23` ⇒ 函数指针类型不动。
+//   ⚠ 768 起 `.text` 段 p_offset≠p_vaddr（差 0x4000）：kRva* 是 **file offset**（HookAtRva 走 FileOffToVa），
+//     必须取 dump.cs 的 Offset 列，不是 RVA/VA 列。
 // ============================================================
 enum : size_t {
-    kOffNpcType       = 0x18,
-    kOffGas           = 0xA8,
-    kOffTili          = 0xB0,
-    kOffLingShi       = 0xB8,
-    kOffMoney         = 0xC0,
-    kOffNpcData       = 0x2E8,
-    kOffFuMoData      = 0x2F0,
-    kOffAdRequest     = 0x458,   // 759 变更：747 为 0x450
+    kOffNpcType       = 0x20,    // 768 变更：759 为 0x18
+    kOffGas           = 0xB0,    // 768 变更：759 为 0xA8
+    kOffTili          = 0xB8,    // 768 变更：759 为 0xB0
+    kOffLingShi       = 0xC0,    // 768 变更：759 为 0xB8
+    kOffMoney         = 0xC8,    // 768 变更：759 为 0xC0
+    kOffNpcData       = 0x2F0,   // 768 变更：759 为 0x2E8
+    kOffFuMoData      = 0x2F8,   // 768 变更：759 为 0x2F0
+    kOffAdRequest     = 0x470,   // 768 变更：759 为 0x458
     kOffFuMoTili      = 0x28,
     kOffFuMoTiliZq    = 0x48,
     kOffFuMoTiliGq    = 0x80,
@@ -102,24 +110,24 @@ enum : size_t {
 };
 
 enum : uintptr_t {
-    kRvaMonsterReduce = 0x12CF77C,
-    kRvaNpcReduce     = 0x101F734,
-    kRvaMonsterDot    = 0x12C0FDC,
-    kRvaNpcDot        = 0x1014ACC,
-    kRvaPlayerDamage  = 0x1147DE8,
-    kRvaSetTimeScale  = 0x2E9B868,
-    kRvaGameUpdate    = 0x1261440,
-    kRvaShowAD        = 0x125FA5C,
+    kRvaMonsterReduce = 0x24F61D4,
+    kRvaNpcReduce     = 0x223FFF4,
+    kRvaMonsterDot    = 0x24E6C30,
+    kRvaNpcDot        = 0x223567C,
+    kRvaPlayerDamage  = 0x23709A8,
+    kRvaSetTimeScale  = 0x462C89C,
+    kRvaGameUpdate    = 0x248494C,
+    kRvaShowAD        = 0x2482EAC,
 };
 
 enum : uint32_t {
-    kInsMonsterReduce = 0xD10303FF,
-    kInsNpcReduce     = 0xD102C3FF,
-    kInsMonsterDot    = 0xD103C3FF,
+    kInsMonsterReduce = 0xD102C3FF,   // 768 变更：759 为 0xD10303FF
+    kInsNpcReduce     = 0xD10283FF,   // 768 变更：759 为 0xD102C3FF
+    kInsMonsterDot    = 0xD10443FF,   // 768 变更：759 为 0xD103C3FF
     kInsNpcDot        = 0xD10383FF,
-    kInsPlayerDamage  = 0xD10343FF,
+    kInsPlayerDamage  = 0xD102C3FF,   // 768 变更：759 为 0xD10343FF
     kInsSetTimeScale  = 0xFC1E0FE8,
-    kInsGameUpdate    = 0xF81D0FF6,
+    kInsGameUpdate    = 0xD100C3FF,   // 768 变更：759 为 0xF81D0FF6
     kInsShowAD        = 0xD10183FF,
 };
 

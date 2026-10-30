@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """一念通天 RVA 重定位提取器（换包必跑）。
 
-一次扫描 dump.cs，打印/落盘固定挂点集的「类::方法 + Offset(RVA) + 序言首指令 + 字段偏移」，
-供 YnttMod.cpp 的 kRva*/kIns*/kOff* 回填。序言从同一份 libil2cpp.so 的文件偏移实测
-（本作 p_offset==p_vaddr==RVA，见 rva_targets.json 的 address_convention）。
+一次扫描 dump.cs，打印/落盘固定挂点集的「类::方法 + Offset(file offset) + VA + 序言首指令 + 字段偏移」，
+供 YnttMod.cpp 的 kRva*/kIns*/kOff* 回填。序言从同一份 libil2cpp.so 的 **file offset** 实测。
+注意（2026-10-30 实测，768 起）：本作 `.text` 段 p_offset≠p_vaddr（768 差 0x4000），
+dump.cs 的「Offset / RVA / VA」三列不再相等；`HookAtRva` 走 `FileOffToVa()`（按 file offset
+查 /proc/self/maps 换算 VA），因此 **kRva* 必须填 Offset 列**（json 里的 `file_offset`/`rva`）。
 
 用法:
   python3 04_scripts/一念通天/yntt_rva_extract.py \
@@ -57,7 +59,7 @@ def read_prologue(so_path, off, n=4):
 
 
 def parse_dump(path):
-    """→ {class: {'ns':str,'line':int,'fields':{name:(off,line)},'methods':{name:(rva,line,sig)}}}"""
+    """→ {class: {'ns':str,'line':int,'fields':{name:(off,line)},'methods':{name:((rva,off,va,line),sig)}}}"""
     want_cls = {c for _, c, _, _ in TARGETS} | {c for c, _ in FIELDS}
     want_m = {}
     for _, c, m, _ in TARGETS:
@@ -110,7 +112,8 @@ def parse_dump(path):
                 nm = met.group(1)
                 cname = _clsname(out, cur)
                 if nm in want_m.get(cname, set()) and pending_rva:
-                    cur["methods"][nm] = (pending_rva[1], pending_rva[3], line.strip())
+                    # 整条注释三元组原样带出：(dump RVA, dump Offset, dump VA, dump 行号)
+                    cur["methods"][nm] = (pending_rva, line.strip())
                 pending_rva = None
     return out
 
@@ -143,16 +146,27 @@ def main():
             print("[MISS] %s :: %s.%s" % (tag, cls, meth), file=sys.stderr)
             targets.append({"tag": tag, "class": cls, "method": meth, "role": role, "status": "MISSING"})
             continue
-        rva_s, lineno, sig = c["methods"][meth]
-        rva = int(rva_s, 16)
-        pro_le, pro_bytes = read_prologue(a.so, rva)
+        rva_comment, sig = c["methods"][meth]
+        dump_rva_s, dump_off_s, dump_va_s = rva_comment[0], rva_comment[1], rva_comment[2]
+        lineno = rva_comment[3]
+        # 关键：YnttMod.cpp 的 HookAtRva 用 FileOffToVa()（/proc/self/maps 的 file offset → VA），
+        # 所以 kRva* 必须填 **dump.cs 的 Offset 列**，不是 RVA/VA 列。768 起 Offset≠VA（.text 段
+        # p_offset 0x1bbeb9c / p_vaddr 0x1bc2b9c，差 0x4000），填错会 0x4000 偏移挂空页。
+        off = int(dump_off_s, 16)
+        va = int(dump_va_s, 16)
+        pro_le, pro_bytes = read_prologue(a.so, off)
         argc = sig.count(",") + 1 if "(" in sig and sig.split("(", 1)[1].strip().startswith((")",)) is False else 0
         if "(" in sig:
             inner = sig.split("(", 1)[1].rsplit(")", 1)[0].strip()
             argc = 0 if inner == "" else len(inner.split(","))
         item = {
             "tag": tag, "class": cls, "method": meth, "argc": argc,
-            "managed_sig": sig, "offset": rva_s, "rva": rva_s,
+            "managed_sig": sig,
+            "file_offset": dump_off_s,   # = YnttMod.cpp kRva*（钩子真实取值）
+            "rva": dump_off_s,           # 历史字段名，语义同 file_offset（勿与 dump_rva 混用）
+            "dump_rva": dump_rva_s,      # dump.cs「RVA」列 = 运行时 VA
+            "va": dump_va_s,             # dump.cs「VA」列 = so 基址 + va
+            "seg_delta": "0x%X" % (va - off),
             "prologue_le": ("0x%08X" % pro_le) if pro_le is not None else None,
             "prologue_bytes": pro_bytes, "role": role, "dump_line": lineno,
         }
@@ -160,7 +174,7 @@ def main():
         if p:
             item["prev_rva"] = p.get("rva")
             item["prev_prologue_le"] = p.get("prologue_le")
-            item["drift"] = (p.get("rva") != rva_s) or (p.get("prologue_le") != item["prologue_le"])
+            item["drift"] = (p.get("rva") != dump_off_s) or (p.get("prologue_le") != item["prologue_le"])
         targets.append(item)
 
     fields = {}
@@ -183,12 +197,21 @@ def main():
             f.write("\n")
         print("written: %s" % a.out)
 
-    print("\n%-24s %-12s %-6s %-12s %-8s %s" % ("tag", "rva", "argc", "prologue", "drift", "fields/prev"))
+    print("\n%-24s %-12s %-12s %-6s %-12s %-8s %s" % ("tag", "kRva(=Offset)", "va", "argc", "prologue", "drift", "prev_kRva"))
+    deltas = set()
     for t in targets:
-        print("%-24s %-12s %-6s %-12s %-8s %s" % (
-            t["tag"], t.get("rva", "-"), t.get("argc", "-"), t.get("prologue_le", "-"),
+        if t.get("status") == "MISSING":
+            print("%-24s MISSING" % t["tag"])
+            continue
+        deltas.add(t["seg_delta"])
+        print("%-24s %-12s %-12s %-6s %-12s %-8s %s" % (
+            t["tag"], t["file_offset"], t["va"], t.get("argc", "-"), t.get("prologue_le", "-"),
             ("YES" if t.get("drift") else "no") if "drift" in t else "-",
             t.get("prev_rva", "")))
+    if deltas != {"0x0"}:
+        print("\n[警告] dump Offset 与 VA 不等（seg_delta=%s）：kRva* 填 **file_offset** 列"
+              "（HookAtRva 走 FileOffToVa 按 file offset 解析），填 va 会整体偏移挂空页。"
+              % ",".join(sorted(deltas)))
     print("\nfield_offsets (new / prev):")
     for k, v in fields.items():
         pv = prev_f.get(k)
