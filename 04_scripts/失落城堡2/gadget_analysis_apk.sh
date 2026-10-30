@@ -6,8 +6,10 @@
 set -euo pipefail
 NIXIANG="${NIXIANG:-$(cd "$(dirname "$0")/../.." && pwd)}"
 PORT="${1:-39123}"
+MODE="${2:-listen}"   # listen | script
 SRC_APK="$NIXIANG/08_output/失落城堡2/失落城堡2_1.0.3_surgical-releaseSigned.apk"
-GADGET="$NIXIANG/07_tools/frida_gadget/gadget.so"
+GADGET="${GADGET_SO:-$NIXIANG/07_tools/frida_gadget/gadget_stealth.so}"
+[[ -f "$GADGET" ]] || GADGET="$NIXIANG/07_tools/frida_gadget/gadget.so"
 OUTDIR="$NIXIANG/09_test/失落城堡2/gadget_pack"
 WORK="$OUTDIR/work"
 BT="${NIXIANG_BUILD_TOOLS:-$HOME/Library/Android/sdk/build-tools/35.0.0}"
@@ -20,9 +22,13 @@ OUT="$OUTDIR/失落城堡2_1.0.3_gadget.apk"
 [[ -d "$BT"       ]] || { echo "ERROR: 找不到 build-tools: $BT"; exit 1; }
 mkdir -p "$WORK"; rm -f "$WORK"/*.apk
 
-echo "[1/4] 准备 gadget + 配置（端口 ${PORT}）"
+echo "[1/4] 准备 gadget + 配置（模式 ${MODE}，端口 ${PORT}）"
 cp -f "$GADGET" "$WORK/libdcmplugin.so"
-printf '{"interaction":{"type":"listen","address":"127.0.0.1","port":%s},"log":"info"}' "$PORT" > "$WORK/libdcmplugin.config.so"
+if [[ "$MODE" == "script" ]]; then
+  printf '{"interaction":{"type":"script","path":"/data/data/com.leiting.slcb2/files/g.js"}}' > "$WORK/libdcmplugin.config.so"
+else
+  printf '{"interaction":{"type":"listen","address":"127.0.0.1","port":%s},"log":"info"}' "$PORT" > "$WORK/libdcmplugin.config.so"
+fi
 
 echo "[2/4] 并入 APK lib/arm64-v8a（不压缩）"
 cp -f "$SRC_APK" "$WORK/merged.apk"
