@@ -30,6 +30,12 @@ LOCAL_ARM_MODE  := arm
 # Unity IL2CPP 系：MainModern + Sf3Mod + Sf3Entry + Il2CppApi
 LOCAL_SRC_FILES := MainModern.cpp Games/Sf3Mod.cpp Games/Sf3Entry.cpp Unity/Il2CppApi.cpp
 
+# 非 ACE 游戏兜底桩（2026-10-28 补）：MainModern.cpp 的 JNI_OnLoad 无条件引用
+# SignalQuarantine_Start / FgoBoot_InjectEarlyFromOnLoad，不加本文件即
+# ld.lld undefined symbol。本包无 libtprt.so（保护 = 图灵盾 libturingad.so +
+# libthemis.so），菜单在 classes8.dex 由 Manifest 的 StarryInitProvider 拉起 ⇒ no-op 桩。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif
