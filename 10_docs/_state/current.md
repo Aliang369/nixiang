@@ -10,7 +10,7 @@
 | 游戏 | 最近更新 | 状态 | 详情 |
 |---|---|---|---|
 | 口袋觉醒 | 2026-10-19 | ⛔ 已收尾：私服战斗服务端演算，客户端功能不可实现；仅战斗加速可做 | [摘要](games/口袋觉醒.md) |
-| 绿梦 | 2026-10-30 | ✅ r5 登录链路打通（唯一正式包 `绿梦_1.0.5_starry-r5-releaseSigned.apk` md5 `3e8c2d41` / sha256 `0a4980ba…`）：昨日包漏并 r3 su 修复→点悬浮球闪退，r4 外科替换三类补上；再查出 `DeviceFingerprint.runSu()` 的 `p.waitFor()` 无超时把 authExec 单线程池首个任务钉死→点登录只弹「登录中…」零请求，改为旁路线程 join+熔断后实测 `POST /v1/auth/login ← 200` + `grant s=1 m=ffffffff`。同类缺陷已回写 `skill/starry-mod/auth-chain.md` 红线 | [摘要](games/绿梦.md) |
+| 绿梦 | 2026-10-30 | ✅ r6 真修好登录链路（唯一正式包 `绿梦_1.0.5_starry-r6-releaseSigned.apk` md5 `450a0de5` / sha256 `f081094d…`）：r5 只给 waitFor 加超时、没盖住 `Runtime.exec` 本身 ⇒ 清数据冷启又卡死；r6 删掉 seed 的 su 兜底 + exec/读/wait 全塞工作线程（调用方 join 必返回），实测冷启 bootstrap 200、点登录 `POST /v1/auth/login ← 200` → `[V2] s=1 m=ffffffff`。红线已并入 `skill/starry-mod/auth-chain.md` | [摘要](games/绿梦.md) |
 | 保卫向日葵 | 2026-10-23 | ✅ r2 热更换构建出包＋L3 通过；正式包 md5 e9ae99f5 | [摘要](games/保卫向日葵.md) |
 | 疯狂水世界 | 2026-10-13 | ✅ 三功能交付收官（实测有效）；限制＝服务端权威 | [摘要](games/疯狂水世界.md) |
 | 崩坏3 | 2026-10-11 | ✅ 已交付结项（CTF 逆向）；后续移植暂不做 | [摘要](games/崩坏3.md) |

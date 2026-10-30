@@ -144,12 +144,7 @@ public final class DeviceFingerprint {
         if (!isValidDevId(id)) return;
         int written = 0;
         for (String path : legacySeedPaths()) {
-            long t0 = System.currentTimeMillis();
-            boolean ok = writeSeedFile(path, id);
-            // 诊断留痕（2026-10-30）：这条链是「登录点了没反应」的嫌疑卡点，逐条记录耗时与结果
-            Log.i(TAG, "seed 写入 " + path + " → " + (ok ? "ok" : "fail")
-                    + " (" + (System.currentTimeMillis() - t0) + "ms)");
-            if (ok) written++;
+            if (writeSeedFile(path, id)) written++;
         }
         Log.i(TAG, "seed write id=" + id + " files=" + written);
     }
@@ -164,13 +159,12 @@ public final class DeviceFingerprint {
             }
             return true;
         } catch (Throwable t) {
-            String pkg = path == null ? "" : path;
-            // 直接写入失败时退到 su（仅作可选加速，云机无 su 就自然放弃）
-            if (!pkg.contains("starry_magic") || pkg.contains("'") || pkg.contains("\n")) {
-                return false;
-            }
-            return runSu("mkdir -p '" + new File(pkg).getParent() + "' && echo -n '"
-                    + id + "' > '" + pkg + "'", SU_TIMEOUT_MS, null) == 0;
+            // ★ 2026-10-30 二次修复：这里原来失败会再走一次 su 兜底写种子，而 su 的 exec 会卡住
+            //   调用线程（清数据后的冷启正是在这一步把授权线程钉死 ⇒ 点登录只弹「登录中…」）。
+            //   种子文件只是「prefs 被清后找回同一身份」的可选加速：绿梦实测清数据后 SSAID 不变、
+            //   设备号仍能正确重建（dev_1f09f3e6…），所以直接放弃 su 兜底，写不进去就写不进去。
+            Log.i(TAG, "seed 文件不可写（跳过 su 兜底）：" + path);
+            return false;
         }
     }
 
@@ -260,68 +254,58 @@ public final class DeviceFingerprint {
         suInFlightSince = now;
         Log.i(TAG, "su 尝试(" + timeoutMs + "ms 上限): "
                 + (shellCmd.length() > 48 ? shellCmd.substring(0, 48) + "…" : shellCmd));
-        Process p;
-        try {
-            p = Runtime.getRuntime().exec(new String[]{"su", "-c", shellCmd});
-        } catch (Throwable t) {
-            suBroken = true;
-            return -1;
-        }
-        final Process fp = p;
+        // ★ 2026-10-30 二次修复（清数据后冷启又卡住，实测抓到卡点就在下面这行 exec 之前/之中）：
+        //   `Runtime.exec` 的 forkAndExec 本身也会不返回（子进程被 seccomp 笼子/不可中断状态停住时，
+        //   父进程读 errno 管道永远等不到结果）⇒ 只给 waitFor 加超时治不好。
+        //   现在 exec、读 stdout、waitFor **全部塞进工作线程**，调用方只 join(timeoutMs)，
+        //   到点无条件返回 -1 并熔断。调用线程（含 authExec 单线程池）在任何情况下都不会被拖住。
         final List<String> out = sink != null ? sink : new ArrayList<String>();
-        Thread reader = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try (BufferedReader br = new BufferedReader(
-                        new InputStreamReader(fp.getInputStream(), StandardCharsets.UTF_8))) {
-                    String line;
-                    int n = 0;
-                    while ((line = br.readLine()) != null && n < 200) {
-                        out.add(line);
-                        n++;
-                    }
-                } catch (Throwable ignored) {
-                }
-                try { fp.getErrorStream().close(); } catch (Throwable ignored) { }
-            }
-        }, "starry-su-out");
-        reader.setDaemon(true);
-        reader.start();
-        // ★ 2026-10-30 修复（绿梦真机「菜单点登录只弹『登录中…』、一个请求都不发」）：
-        //   原来这里直接 p.waitFor() 无超时，靠旁路线程到点 destroyForcibly() 兜底。
-        //   但 destroyForcibly 对卡在不可中断状态（D 态 / 被 seccomp 笼子停住的子进程）根本不生效
-        //   ⇒ waitFor() 永久阻塞 ⇒ 卡住的是**调用线程本身**。绿梦实测这条链挂在 fetchBootstrapOnce
-        //   （authExec 单线程池的首个任务）：getOrCreateDeviceId → writeSeed → runSu → waitFor()
-        //   永不返回 ⇒ 后续所有授权任务（含点「登录」）在队列里排到死，日志上只有「登录中…」toast。
-        //   现在：waitFor 挪进旁路线程，主调方 join(timeoutMs) 到点即返回 -1 并熔断，调用方不再被拖死。
+        final Process[] pref = {null};
         final int[] rc = {-1};
-        Thread waiter = new Thread(new Runnable() {
+        Thread worker = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    rc[0] = fp.waitFor();
-                } catch (Throwable ignored) { }
+                    Process p = Runtime.getRuntime().exec(new String[]{"su", "-c", shellCmd});
+                    pref[0] = p;
+                    try (BufferedReader br = new BufferedReader(
+                            new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8))) {
+                        String line;
+                        int n = 0;
+                        while ((line = br.readLine()) != null && n < 200) {
+                            out.add(line);
+                            n++;
+                        }
+                    } catch (Throwable ignored) { }
+                    try { p.getErrorStream().close(); } catch (Throwable ignored) { }
+                    rc[0] = p.waitFor();
+                } catch (Throwable t) {
+                    rc[0] = -1;
+                }
             }
-        }, "starry-su-wait");
-        waiter.setDaemon(true);
-        waiter.start();
+        }, "starry-su-worker");
+        worker.setDaemon(true);
+        worker.start();
         try {
-            waiter.join(timeoutMs);
+            worker.join(timeoutMs);
         } catch (InterruptedException ignored) { }
-        if (waiter.isAlive()) {
-            try { fp.destroyForcibly(); } catch (Throwable ignored) { }
+        if (worker.isAlive()) {
+            Process p = pref[0];
+            if (p != null) {
+                try { p.destroyForcibly(); } catch (Throwable ignored) { }
+            }
             suBroken = true;
-            Log.w(TAG, "su 调用 " + timeoutMs + "ms 未返回 ⇒ 本次进程内熔断 su 兜底（调用方不再等待）");
+            suInFlightSince = 0L;
+            Log.w(TAG, "su 调用 " + timeoutMs + "ms 未返回 ⇒ 本次进程内熔断 su 兜底（调用方已放行）");
             return -1;
         }
         int code = rc[0];
-        try { reader.join(300L); } catch (InterruptedException ignored) { }
         if (code == 0) suInFlightSince = 0L;
         if (code != 0) {
             // 137=SIGKILL(destroyForcibly)，-1=异常 ⇒ 判定 su 链路不可用并熔断
             if (code == -1 || code == 137) {
                 suBroken = true;
-                Log.w(TAG, "su 调用超时/不可用（" + timeoutMs + "ms），本次进程内熔断后续 su 兜底");
+                Log.w(TAG, "su 调用失败/不可用（" + timeoutMs + "ms），本次进程内熔断后续 su 兜底");
             }
             return code;
         }

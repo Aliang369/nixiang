@@ -204,8 +204,7 @@ public final class LvmengPayloadProvider extends ContentProvider {
 
     // ------------------------------------------------------------------ snapshot
     /** 每次都重写（2026-10-30 起）：游戏会用自己下载的官方 crc/size 记录判「缓存是否仍有效」，
-     *  我们补丁 bundle 的大小与官方不同 ⇒ 不覆盖就会判失效、删档重下，把补丁冲掉。
-     *  Dll 包清单只含一个 bundle（见 Dll_prod_*.bytes），所以「只写我们自己那一条」是自洽的。 */
+     *  我们补丁 bundle 的大小与官方不同 ⇒ 不覆盖就会判失效、删档重下，把补丁冲掉。 */
     private static void writeSnapshotIfAbsent(Context ctx, File ext, File bdir) throws IOException {
         File mfDir = new File(ext, "yoo/Dll/ManifestFiles");
         File snapshot = new File(mfDir, "CacheRecords.snapshot");
