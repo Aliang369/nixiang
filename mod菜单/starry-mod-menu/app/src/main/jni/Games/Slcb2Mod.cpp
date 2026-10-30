@@ -321,30 +321,8 @@ static const HookSlot kSlots[] = {
     //    把 0x9AFD8A0 `cbz w9,+0x10` 改成无条件 `b +0x10` ⇒ w21 恒 0（不显示锁、不着灰）。
     { "CardUnlock", 0x9AFD8A0UL, SLCB2_FEAT_SKIN, K_RESULT, 0x9AFD8A0UL, 0x34000089u, 0x14000004u },
 
-    // 【行为型判定 · 2026-10-30 13:55】探针计数机制输出不可信（数值非计数），改用"把函数掐死"
-    //  看用户界面是否变化来判定代码归属：UpdateList 若真是仓库格子的填充者，掐死后列表必空。
-    //  这是不依赖任何计数正确性的是非题。
-    { "InvNoFill", 0x1194181CUL, SLCB2_FEAT_SKIN, K_STUB_TRUE, 0, 0xD101C3FFu, 0 },
 
-    // 中段探针：卡片 refresh 里 x8 = cardData->item，此处读 mShowLockCover。
-    // 记录 item+0x38(mObtained)/+0x60(mShowLockCover) 的真实值，判定「数据侧到底有没有生效」。
-    { "CardItem", 0x9AFD89CUL, SLCB2_FEAT_SKIN, K_MIDPROBE, 0, 0x39418109u, 0 },
 
-    // ── 诊断探针（2026-10-30 13:2x）：连续三版 UI 补丁装机生效但画面零变化 ⇒ 不再靠猜，
-    //    先数清「哪条链真的在跑」。每个探针只把命中数 +1 写到我们 so 的 .bss，不记参数、
-    //    不改任何寄存器语义（x9/x10 是 AAPCS 易失寄存器，入口处可自由使用），命中数每 60 拍打印。
-    //      InvUI.Init      AppearanceInventoryUI.InitInventoryData   仓库数据构建
-    //      InvUI.Cb        AppearanceInventoryUI.GetAccountNewDataCallback  仓库服务端回调
-    //      CardLock        AppearanceCardUnitUI.SetSuitItemsAllObtainedLockState  仓库卡片锁态
-    //      StyUnit         StylistItemUnitUI.SetStylistDataScrollUnit  衣柜/换装格子
-    //      AppUi.Init      AppearanceUI.InitInventoryData             装扮页数据构建
-    //      Passport.Init   PassportUI.InitInventoryData               名片装扮汇总
-    { "InvUI.Init",   0x1193FFD0UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xD104C3FFu, 0 },
-    { "InvUI.Cb",     0x1193FDA0UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xF81C0FFEu, 0 },
-    { "CardLock",     0x1193AA90UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xF81D0FFEu, 0 },
-    { "StyUnit",      0x11AE075CUL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xF81D0FFEu, 0 },
-    { "AppUi.Init",   0x1194A0DCUL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xD10503FFu, 0 },
-    { "Passport.Init",0x11955080UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xD104C3FFu, 0 },
 };
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
