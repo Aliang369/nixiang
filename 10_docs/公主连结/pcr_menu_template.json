@@ -1,0 +1,18 @@
+{
+  "template_id": "pcr",
+  "name": "公主连结",
+  "package": "com.bilibili.priconne",
+  "source": "Main.cpp 内 #elif defined(STARRY_GAME_PCR) 的 feature 表（legacy 入口）",
+  "features": [
+    {"feat_num": 0, "name": "分类：属性"},
+    {"feat_num": 1, "name": "开启属性修改"},
+    {"feat_num": 2, "name": "修改属性（输入框 1–999999）"},
+    {"feat_num": 3, "name": "分类：速度"},
+    {"feat_num": 4, "name": "全局变速（1–10）"}
+  ],
+  "notes": [
+    "本轮（2026-10-31 雷电 x86_64 适配）未增删任何菜单项，只改 native 实现与出包形态（双 ABI）。",
+    "能量/波次/恢复率这类 getter 已改为 passthrough（不在菜单暴露），用于修『自动大招连放』。",
+    "属性开启时进地下城会被服务端判 205（已知限制，见 地下城205_定位与回退_20261031.md）。"
+  ]
+}

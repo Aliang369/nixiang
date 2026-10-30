@@ -9,6 +9,17 @@
 #      APP_BUILD_SCRIPT=./Android_<tag>.mk NDK_APPLICATION_MK=./Application.mk \
 #      NDK_OUT=../../obj_<tag> NDK_LIBS_OUT=../../libs_<tag> -j
 #  切游戏永远不需要清共享 app/obj（各游戏独立 obj_<tag>/）
+#
+#  ★ABI（2026-10-31 公主连结雷电轮定，默认双 ABI 就绪）
+#    出包前先问底包：python3 04_scripts/_common/detect_abis.py <底包.apk>  →  例 "arm64-v8a x86_64"
+#    然后把该结果原样喂给 APP_ABI="<结果>"（一次构建同时产出两套 so）：
+#      · 底包带 lib/x86_64 ⇒ 雷电/模拟器**原生 x86_64** 直跑，必须出 x86_64 so，
+#        否则进程内 dlopen("libstarry_magic.so") 恒失败 → 菜单显示「暂无功能列表（native 未就绪）」
+#        （2026-10-31 PCR 实证：UnsatifsfiedLinkError: dlopen failed: library "libstarry_magic.so" not found）
+#      · 底包只有 arm64 ⇒ 只出 arm64；雷电用 houdini 转译执行 arm64，能跑但 Dobby inline hook
+#        稳定性不保证（无限升级崩、伊莫「能装但长期性未知」）⇒ 这类不要承诺「模拟器自动适配」
+#    so 落位：每个 ABI 各自 `app/src/main/jniLibs/<abi>/libstarry_magic.so`（Gradle 只打包 jniLibs）
+#    可移植性前提：挂点必须**by-name / RVA-free**（写死 RVA、KittyAsm 运行时汇编的 Mod 换 ABI 即废）
 # ============================================================
 LOCAL_PATH := $(call my-dir)
 
@@ -20,10 +31,9 @@ include $(PREBUILT_STATIC_LIBRARY)
 # Keystone 已移除（20260909 实测零调用死重 43KB：KittyAsm 是唯一使用者而其从未编译）。
 # 将来需要 KittyAsm 运行时汇编时再加回 prebuilt 声明并在下方 LOCAL_STATIC_LIBRARIES 加 Keystone。
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := wxsj_dll
-LOCAL_SRC_FILES := Games/WxsjPatchedDll.a
-include $(PREBUILT_STATIC_LIBRARY)
+# wxsj_dll prebuilt 已移除（2026-10-31）：`Games/WxsjPatchedDll*.a` 只属于无限升级，
+# 且被 .gitignore 忽略、大多数 checkout 里没有 ⇒ 模板一被复制就 "LOCAL_SRC_FILES points to a
+# missing file" 直接 abort（绿梦当年只得手工删掉这一段）。需要它的游戏自己加回。
 
 include $(CLEAR_VARS)
 
@@ -95,6 +105,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby wxsj_dll
+LOCAL_STATIC_LIBRARIES := Dobby
 
 include $(BUILD_SHARED_LIBRARY)

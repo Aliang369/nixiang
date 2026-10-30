@@ -27,6 +27,39 @@
 
 ---
 
+## ABI（真机 arm64 / 雷电 x86_64，2026-10-31 定）
+
+**先看底包带哪些 ABI，再决定出几套 so**（不要写死 `arm64-v8a`）：
+
+```bash
+python3 04_scripts/_common/detect_abis.py <底包.apk>          # → "arm64-v8a x86_64" 之类
+python3 04_scripts/_common/detect_abis.py <底包.apk> --all     # 底包内全部 ABI
+python3 04_scripts/_common/detect_abis.py <底包.apk> --check x86_64   # rc=0 表示带
+# 出包：ndk-build APP_ABI="<上面结果>"，每套 so 各自进 app/src/main/jniLibs/<abi>/
+```
+
+两种执行形态必须分清：
+
+| 底包形态 | 雷电里怎么跑 | 该出哪些 so | 能不能承诺「mac 改一次、雷电自动适配」 |
+|---|---|---|---|
+| 带 `lib/x86_64`（PCR、境界刀鸣、元启世界这类） | **原生 x86_64 直跑**，不经 houdini | `arm64-v8a` + `x86_64` | ✅ 能。一个包同签两端通用，不许为模拟器单出包 |
+| 只有 arm64/armeabi（多数） | houdini 把 arm64 翻译成 x86 | 只 `arm64-v8a` | ⚠️ 不能。houdini 下 Dobby inline hook 不稳（无限升级崩、伊莫「能装但长期性未知」、敢达只能降级 by-name），要另做设计 |
+
+**症状对照**（2026-10-31 PCR 实证）：底包有 x86_64 而只注入 arm64 so 时，雷电上
+
+```
+E StarryNativeLoad: java.lang.UnsatisfiedLinkError: dlopen failed: library "libstarry_magic.so" not found
+I StarryApp: native ensureLoaded=false
+```
+
+菜单照弹、功能列表空 ⇒ 界面显示「暂无功能列表（native 未就绪）」。**这不是菜单版本问题**，改菜单源码无效；`/proc/<pid>/maps` 里也不会有 `libstarry_magic.so`。
+
+可移植性前提：挂点必须 **by-name / RVA-free**（il2cpp API + Dobby）。写死 RVA、KittyAsm 运行时汇编的 Mod 换 ABI 就等于换二进制，RVA 全废。
+
+构建侧约定：私有 mk（`Android_<tag>.mk`）默认带 `-fno-emulated-tls` + `-Wl,--exclude-libs,ALL`；x86_64 侧游戏包通常**没有** `libc++_shared.so`，必须自己带一份进 `lib/x86_64/`，且必须先在 `nativeLibraryDir` 里 preload 它再 dlopen 本 so。
+
+---
+
 ## 打包细节
 
 1. `resources.arsc` 必须 **STORED**（zip 默认 DEFLATE 会被系统 AfkAssets 拒）

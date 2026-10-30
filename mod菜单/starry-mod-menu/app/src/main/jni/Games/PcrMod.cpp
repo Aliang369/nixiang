@@ -16,6 +16,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -304,15 +305,47 @@ static float Hooked_get_deltaTime(void* method) {
     return v;
 }
 
+// ============================================================
+// 属性 getter 挂点表（2026-10-31 雷电适配轮追加）
+//   boost=true  → 返回菜单数值（原「属性 9999」功能）
+//   boost=false → 只装钩子做**命中计数并透传原值**，不改战斗数值。
+//   为什么要有 passthrough 档：Total* 里混着「倍率/恢复/TP 消耗」型属性
+//   （TotalEnergyRecoveryRate=TP上昇、TotalEnergyReduceRate=TP消費軽減、
+//    TotalWaveEnergyRecovery=波次间TP回复 …）。PCR 的自动大招＝TP 满即放，
+//   把 TP 上昇/消費軽減 拉成 9999 等于每次放完立刻回满 ⇒ **自动大招连放**
+//   （用户 2026-10-31 复现）；地下城模式同样吃这些能量/波次属性。
+//   实测确认走 Pcr_Tick 的 attrHit 汇总（每 2s 一行）。
+// ============================================================
+static constexpr int kI32Slots = 16;
+static constexpr int kI64Slots = 4;
+
+static const char* g_i32Name[kI32Slots] = {};
+static bool g_i32Boost[kI32Slots] = {};
+static std::atomic<uint32_t> g_i32Hits[kI32Slots];
+static const char* g_i64Name[kI64Slots] = {};
+static bool g_i64Boost[kI64Slots] = {};
+static std::atomic<uint32_t> g_i64Hits[kI64Slots];
+
+struct AttrSpec {
+    const char* name;
+    bool boost;
+};
+
+// 2026-10-31：曾加过「地下城守门」（检测 DungeonBattleProcessor → 该场战斗不叠加属性），
+// 实测**仍报 205**（用户复现）。守门钩子 4/4 装上、标记也置位，说明 205 不是「当前战斗数值」
+// 单点问题，回退保干净。地下城相关结论见 10_docs/公主连结/地下城205_定位与回退_20261031.md。
+
 #define PCR_I32(N)                                                                             \
     static I32Getter0_t g_origI32_##N = nullptr;                                                \
     static int32_t Hooked_I32_##N(void* self, void* method) {                                   \
         int32_t v = g_origI32_##N ? g_origI32_##N(self, method) : 0;                           \
-        if (!g_attrOn.load() || !ShouldBoostUnit(self)) return v;                              \
+        uint32_t n = g_i32Hits[N].fetch_add(1, std::memory_order_relaxed) + 1;                  \
+        if (!g_i32Boost[N] || !g_attrOn.load() || !ShouldBoostUnit(self)) return v;             \
         int32_t out = g_attrVal.load();                                                        \
-        uint32_t n = g_hitsAttr.fetch_add(1) + 1;                                              \
+        g_hitsAttr.fetch_add(1, std::memory_order_relaxed);                                     \
         if (n <= 6 || (n % 200) == 0)                                                          \
-            LOGI("[Pcr] attr i32 hit#%u %d->%d sides=%d", n, v, out, g_sideN.load());         \
+            LOGI("[Pcr] attr %s hit#%u %d->%d sides=%d",                                      \
+                 g_i32Name[N] ? g_i32Name[N] : "?", n, v, out, g_sideN.load());                \
         return out;                                                                            \
     }
 
@@ -320,12 +353,14 @@ static float Hooked_get_deltaTime(void* method) {
     static I64Getter0_t g_origI64_##N = nullptr;                                                \
     static int64_t Hooked_I64_##N(void* self, void* method) {                                   \
         int64_t v = g_origI64_##N ? g_origI64_##N(self, method) : 0;                           \
-        if (!g_attrOn.load() || !ShouldBoostUnit(self)) return v;                              \
+        uint32_t n = g_i64Hits[N].fetch_add(1, std::memory_order_relaxed) + 1;                  \
+        if (!g_i64Boost[N] || !g_attrOn.load() || !ShouldBoostUnit(self)) return v;             \
         int64_t out = (int64_t)g_attrVal.load();                                               \
-        uint32_t n = g_hitsAttr.fetch_add(1) + 1;                                              \
+        g_hitsAttr.fetch_add(1, std::memory_order_relaxed);                                     \
         if (n <= 6 || (n % 200) == 0)                                                          \
-            LOGI("[Pcr] attr i64 hit#%u %lld->%lld sides=%d", n, (long long)v,                \
-                 (long long)out, g_sideN.load());                                              \
+            LOGI("[Pcr] attr %s hit#%u %lld->%lld sides=%d",                                   \
+                 g_i64Name[N] ? g_i64Name[N] : "?", n, (long long)v, (long long)out,           \
+                 g_sideN.load());                                                              \
         return out;                                                                            \
     }
 
@@ -353,31 +388,35 @@ static void* g_i64Hooks[] = {
     (void*)Hooked_I64_0, (void*)Hooked_I64_1, (void*)Hooked_I64_2, (void*)Hooked_I64_3,
 };
 
-static bool HookI32(void* klass, const char* name, int slot) {
-    if (slot < 0 || slot >= (int)(sizeof(g_i32Hooks) / sizeof(g_i32Hooks[0]))) return false;
+static bool HookI32(void* klass, int slot, const AttrSpec& spec) {
+    if (slot < 0 || slot >= kI32Slots) return false;
     auto& api = GetApi();
-    void* mi = api.GetMethod(klass, name, 0);
+    void* mi = api.GetMethod(klass, spec.name, 0);
     void* fn = MethodPointer(mi);
     if (!fn || !Il2Cpp::IsValidHeapPtr(fn)) return false;
     if (DobbyHook(fn, g_i32Hooks[slot], (void**)g_i32Origs[slot]) != 0) {
         *g_i32Origs[slot] = nullptr;
         return false;
     }
-    LOGI("[Pcr] hooked i32 %s", name);
+    g_i32Name[slot] = spec.name;
+    g_i32Boost[slot] = spec.boost;
+    LOGI("[Pcr] hooked i32 %s (%s)", spec.name, spec.boost ? "boost" : "passthrough");
     return true;
 }
 
-static bool HookI64(void* klass, const char* name, int slot) {
-    if (slot < 0 || slot >= (int)(sizeof(g_i64Hooks) / sizeof(g_i64Hooks[0]))) return false;
+static bool HookI64(void* klass, int slot, const AttrSpec& spec) {
+    if (slot < 0 || slot >= kI64Slots) return false;
     auto& api = GetApi();
-    void* mi = api.GetMethod(klass, name, 0);
+    void* mi = api.GetMethod(klass, spec.name, 0);
     void* fn = MethodPointer(mi);
     if (!fn || !Il2Cpp::IsValidHeapPtr(fn)) return false;
     if (DobbyHook(fn, g_i64Hooks[slot], (void**)g_i64Origs[slot]) != 0) {
         *g_i64Origs[slot] = nullptr;
         return false;
     }
-    LOGI("[Pcr] hooked i64 %s", name);
+    g_i64Name[slot] = spec.name;
+    g_i64Boost[slot] = spec.boost;
+    LOGI("[Pcr] hooked i64 %s (%s)", spec.name, spec.boost ? "boost" : "passthrough");
     return true;
 }
 
@@ -444,35 +483,41 @@ static bool InstallHooks() {
 
     // 3) 属性 Total*
     int ok = 0, s64 = 0, s32 = 0;
-    static const char* kI64[] = {"get_TotalHp", "get_TotalHpWithoutExtra"};
-    for (const char* n : kI64) {
-        if (s64 >= (int)(sizeof(g_i64Hooks) / sizeof(g_i64Hooks[0]))) break;
-        if (HookI64(g_unitDataKlass, n, s64)) {
+    static const AttrSpec kI64Specs[] = {
+        {"get_TotalHp", true},
+        {"get_TotalHpWithoutExtra", true},
+    };
+    for (const AttrSpec& sp : kI64Specs) {
+        if (s64 >= kI64Slots) break;
+        if (HookI64(g_unitDataKlass, s64, sp)) {
             s64++;
             ok++;
         }
     }
-    static const char* kI32[] = {
-        "get_TotalAtk",
-        "get_TotalDef",
-        "get_TotalMagicAtk",
-        "get_TotalMagicDef",
-        "get_TotalCritical",
-        "get_TotalMagicCritical",
-        "get_TotalDodge",
-        "get_TotalAccuracy",
-        "get_TotalPhysicalPenetrate",
-        "get_TotalMagicPenetrate",
-        "get_TotalLifeSteal",
-        "get_TotalHpRecoveryRate",
-        "get_TotalEnergyRecoveryRate",
-        "get_TotalEnergyReduceRate",
-        "get_TotalWaveHpRecovery",
-        "get_TotalWaveEnergyRecovery",
+    static const AttrSpec kI32Specs[] = {
+        // —— 真·战斗数值：boost（菜单数值覆盖）——
+        {"get_TotalAtk", true},
+        {"get_TotalDef", true},
+        {"get_TotalMagicAtk", true},
+        {"get_TotalMagicDef", true},
+        {"get_TotalCritical", true},
+        {"get_TotalMagicCritical", true},
+        {"get_TotalDodge", true},
+        {"get_TotalAccuracy", true},
+        {"get_TotalPhysicalPenetrate", true},
+        {"get_TotalMagicPenetrate", true},
+        {"get_TotalLifeSteal", true},
+        // —— 倍率/恢复/TP 消耗：passthrough（只计数，不改值）——
+        // 改成 9999 会把战斗能量循环打爆（TP 满即放 ⇒ 自动大招连放；地下城同样吃这几项）
+        {"get_TotalHpRecoveryRate", false},
+        {"get_TotalEnergyRecoveryRate", false},
+        {"get_TotalEnergyReduceRate", false},
+        {"get_TotalWaveHpRecovery", false},
+        {"get_TotalWaveEnergyRecovery", false},
     };
-    for (const char* n : kI32) {
-        if (s32 >= (int)(sizeof(g_i32Hooks) / sizeof(g_i32Hooks[0]))) break;
-        if (HookI32(g_unitDataKlass, n, s32)) {
+    for (const AttrSpec& sp : kI32Specs) {
+        if (s32 >= kI32Slots) break;
+        if (HookI32(g_unitDataKlass, s32, sp)) {
             s32++;
             ok++;
         }
@@ -491,6 +536,39 @@ static bool InstallHooks() {
 bool Pcr_IsReady() { return g_ready.load(); }
 
 bool Pcr_TryInit() { return InstallHooks(); }
+
+/** 属性挂点命中汇总（诊断）：开属性时每 2s 一行，列出本轮涨过的挂点。
+ *  用途＝定位「开属性后自动大招连放 / 地下城打不了」到底读的是哪个 Total*：
+ *  boost 档是本体功能，passthrough 档若高频命中就是能量/波次循环被读的证据。 */
+static void DumpAttrHitmap() {
+    static std::atomic<int64_t> lastMs{0};
+    int64_t now = NowMs();
+    int64_t prev = lastMs.load(std::memory_order_relaxed);
+    if (now - prev < 2000) return;
+    if (!lastMs.compare_exchange_strong(prev, now, std::memory_order_relaxed)) return;
+
+    char buf[768];
+    int off = snprintf(buf, sizeof(buf), "[Pcr] attrHit");
+    for (int i = 0; i < kI64Slots; i++) {
+        const char* nm = g_i64Name[i];
+        if (!nm) continue;
+        uint32_t n = g_i64Hits[i].load(std::memory_order_relaxed);
+        if (n == 0) continue;
+        off += snprintf(buf + (off < (int)sizeof(buf) ? off : (int)sizeof(buf) - 1),
+                        sizeof(buf) > (size_t)off ? sizeof(buf) - off : 1, " %s%s=%u",
+                        g_i64Boost[i] ? "" : "*", nm, n);
+    }
+    for (int i = 0; i < kI32Slots; i++) {
+        const char* nm = g_i32Name[i];
+        if (!nm) continue;
+        uint32_t n = g_i32Hits[i].load(std::memory_order_relaxed);
+        if (n == 0) continue;
+        off += snprintf(buf + (off < (int)sizeof(buf) ? off : (int)sizeof(buf) - 1),
+                        sizeof(buf) > (size_t)off ? sizeof(buf) - off : 1, " %s%s=%u",
+                        g_i32Boost[i] ? "" : "*", nm, n);
+    }
+    LOGI("%s (*=passthrough 未改值)", buf);
+}
 
 void Pcr_OnFeatureChanged(int featNum, bool enabled) {
     if (featNum == PCR_FEAT_ATTR_ON) {
@@ -541,4 +619,5 @@ void Pcr_Tick(const bool* features) {
     if (!on && g_attrOn.load()) ClearSides();
     g_attrOn.store(on);
     if (!g_ready.load()) InstallHooks();
+    if (on && g_ready.load()) DumpAttrHitmap();
 }

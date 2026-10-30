@@ -95,13 +95,17 @@ cat <<EOF
     - surgical 脚本末尾加包内 so md5 == 构建产物校验
 
 手工验证构建（仅调试用，正式出包走管线）:
+  # ABI 先按底包实况定：python3 04_scripts/_common/detect_abis.py <底包.apk>
+  #   底包带 lib/x86_64 ⇒ APP_ABI 里带上 x86_64（雷电原生直跑）；只出 arm64 时雷电靠 houdini 转译
   cd ${JNI_DIR_ABS} && ndk-build NDK_PROJECT_PATH=../.. \\
     APP_BUILD_SCRIPT=./Android_${LOWERTAG}.mk NDK_APPLICATION_MK=./Application.mk \\
+    APP_ABI="arm64-v8a x86_64" \\
     NDK_OUT=${STARRY_SRC}/obj_${LOWERTAG} NDK_LIBS_OUT=${STARRY_SRC}/libs_${LOWERTAG}
   （NDK_OUT/LIBS_OUT 必须绝对路径：相对路径会被 -C 解析到 app/ 下 → 旧 so 顶包假成功）
 
 然后填 ${GAME}Mod.cpp 的 TODO 区:
   ① 开关/orig  ② 偏移与 RVA  ⑤ hook 函数与挂点表  ⑥ 功能组
-构建前自检（按字节搜，strings 不认 UTF-8 中文菜单串）:
+构建前自检（按字节搜，strings 不认 UTF-8 中文菜单串；出了几个 ABI 就查几份）:
   LC_ALL=C grep -ac '${TAG}' ${STARRY_SRC}/libs_${LOWERTAG}/arm64-v8a/libstarry_magic.so
+  LC_ALL=C grep -ac '${TAG}' ${STARRY_SRC}/libs_${LOWERTAG}/x86_64/libstarry_magic.so
 EOF
