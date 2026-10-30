@@ -144,7 +144,12 @@ public final class DeviceFingerprint {
         if (!isValidDevId(id)) return;
         int written = 0;
         for (String path : legacySeedPaths()) {
-            if (writeSeedFile(path, id)) written++;
+            long t0 = System.currentTimeMillis();
+            boolean ok = writeSeedFile(path, id);
+            // 诊断留痕（2026-10-30）：这条链是「登录点了没反应」的嫌疑卡点，逐条记录耗时与结果
+            Log.i(TAG, "seed 写入 " + path + " → " + (ok ? "ok" : "fail")
+                    + " (" + (System.currentTimeMillis() - t0) + "ms)");
+            if (ok) written++;
         }
         Log.i(TAG, "seed write id=" + id + " files=" + written);
     }
@@ -253,6 +258,8 @@ public final class DeviceFingerprint {
         }
         if (suBroken) return -1;
         suInFlightSince = now;
+        Log.i(TAG, "su 尝试(" + timeoutMs + "ms 上限): "
+                + (shellCmd.length() > 48 ? shellCmd.substring(0, 48) + "…" : shellCmd));
         Process p;
         try {
             p = Runtime.getRuntime().exec(new String[]{"su", "-c", shellCmd});
@@ -280,26 +287,34 @@ public final class DeviceFingerprint {
         }, "starry-su-out");
         reader.setDaemon(true);
         reader.start();
-        Thread killer = new Thread(new Runnable() {
+        // ★ 2026-10-30 修复（绿梦真机「菜单点登录只弹『登录中…』、一个请求都不发」）：
+        //   原来这里直接 p.waitFor() 无超时，靠旁路线程到点 destroyForcibly() 兜底。
+        //   但 destroyForcibly 对卡在不可中断状态（D 态 / 被 seccomp 笼子停住的子进程）根本不生效
+        //   ⇒ waitFor() 永久阻塞 ⇒ 卡住的是**调用线程本身**。绿梦实测这条链挂在 fetchBootstrapOnce
+        //   （authExec 单线程池的首个任务）：getOrCreateDeviceId → writeSeed → runSu → waitFor()
+        //   永不返回 ⇒ 后续所有授权任务（含点「登录」）在队列里排到死，日志上只有「登录中…」toast。
+        //   现在：waitFor 挪进旁路线程，主调方 join(timeoutMs) 到点即返回 -1 并熔断，调用方不再被拖死。
+        final int[] rc = {-1};
+        Thread waiter = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(timeoutMs);
-                } catch (InterruptedException e) {
-                    return;
-                }
-                try { fp.destroyForcibly(); } catch (Throwable ignored) { }
+                    rc[0] = fp.waitFor();
+                } catch (Throwable ignored) { }
             }
-        }, "starry-su-timeout");
-        killer.setDaemon(true);
-        killer.start();
-        int code;
+        }, "starry-su-wait");
+        waiter.setDaemon(true);
+        waiter.start();
         try {
-            code = p.waitFor();
-        } catch (Throwable t) {
-            code = -1;
+            waiter.join(timeoutMs);
+        } catch (InterruptedException ignored) { }
+        if (waiter.isAlive()) {
+            try { fp.destroyForcibly(); } catch (Throwable ignored) { }
+            suBroken = true;
+            Log.w(TAG, "su 调用 " + timeoutMs + "ms 未返回 ⇒ 本次进程内熔断 su 兜底（调用方不再等待）");
+            return -1;
         }
-        killer.interrupt();
+        int code = rc[0];
         try { reader.join(300L); } catch (InterruptedException ignored) { }
         if (code == 0) suInFlightSince = 0L;
         if (code != 0) {

@@ -1,0 +1,20 @@
+{
+  "game_dir": "E:/nixiang/08_output/绿梦",
+  "keep": "绿梦_1.0.5_starry-r4-releaseSigned.apk",
+  "keep_size": 371109526,
+  "keep_md5": "c6df1a7765b833cf8c2e3fa0c79fd4de",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "绿梦_1.0.5_starry-hotfix20261030-releaseSigned.apk",
+      "size": 371109526,
+      "md5": "e32c2916626904584163e34c2d91ddf6"
+    },
+    {
+      "name": "绿梦_1.0.5_starry-r4-releaseSigned.apk.idsig",
+      "size": 2930203,
+      "md5": "7643baca9250b7f6879bea27e0132b30"
+    }
+  ],
+  "removed_count": 2
+}

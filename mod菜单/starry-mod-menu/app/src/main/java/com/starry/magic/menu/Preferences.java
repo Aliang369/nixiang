@@ -381,12 +381,17 @@ public class Preferences {
      * 任何新增采集逻辑都必须留在这里，禁止搬回 synchronized 区。
      */
     private static String resolveDeviceIdSlow(String cached) {
+        // 诊断留痕（2026-10-30）：这条慢路径会碰 su，是「登录点了没反应」的嫌疑卡点，逐段打点
+        Log.i(TAG, "设备号采集开始（无有效缓存，走慢路径）");
         // 2) 首次定身份：v5 优先
         String stable = DeviceFingerprint.get(appContext);
+        Log.i(TAG, "step2 ssaid=" + (DeviceFingerprint.isValidDevId(stable) ? stable : "invalid"));
         if (DeviceFingerprint.isValidDevId(stable)) {
             saveDeviceId(stable, DeviceFingerprint.VERSION,
                     legacyCandidatesWithTimeout(cached, stable), "ssaid");
+            Log.i(TAG, "step2 身份已落盘 → 开始写 seed");
             DeviceFingerprint.writeSeed(appContext, stable);
+            Log.i(TAG, "step2 seed 写完 → 设备号定案");
             return stable;
         }
 

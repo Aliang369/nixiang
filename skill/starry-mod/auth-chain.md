@@ -115,6 +115,20 @@ bash 04_scripts/_common/ensure_starry_device_id_seed.sh
 
 详见经验卡：`10_docs/_templates/经验_卡密设备指纹跨包一致.md` 和 `10_docs/_templates/全游戏卡密_复现路径与防再发.md`
 
+### ⛔ 红线：su / 外部进程调用**绝不能阻塞调用线程**（2026-10-30 实测）
+
+`Runtime.exec("su")` 的 `p.waitFor()` 若**没有超时**，`destroyForcibly()` 对 D 态或被 seccomp 笼子停住的子进程
+无效，`waitFor()` 会永久阻塞**调用线程本身**。而设备号采集常常跑在 `authExec`（`newSingleThreadExecutor`）上
+（`fetchBootstrapOnce` → `getOrCreateDeviceId` → `writeSeed` → `runSu`），一旦卡死：
+**后续所有授权任务（含用户点「登录」）在队列里排到死**，表现是「只弹『登录中…』、`AuthClient` 一行日志都没有」。
+
+- 正确形态（`DeviceFingerprint.runSu` 现行实现）：`waitFor` 放旁路线程 `starry-su-wait`，主调方
+  `join(SU_TIMEOUT_MS)` 到点即返回 `-1` 并置 `suBroken` 熔断；调用方永远拿到返回值。
+- 判据：日志出现 `su 调用 1500ms 未返回 ⇒ 本次进程内熔断` ⇒ su 链路不可用但流程继续；
+  出现 `seed 写入 <path> → ok/fail (Nms)` ⇒ 采集路径的耗时点可见。
+- 排查口诀：**点登录只有 toast、零请求 ⇒ 先怀疑授权线程被上一个任务钉死**，别先去查服务器/设备指纹。
+  实测记录：`10_docs/绿梦/热更20261030_修复.md` §7.2。
+
 ---
 
 ## 机器恢复（card_key 直登，无需走 App UI）
