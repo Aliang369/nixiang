@@ -1,1 +1,775 @@
-{"version":"1.0.0.06","platform":"Android","cdnRemoteUrl":"https://bszzcdn.acingame.com/gow/TapTap/Production90800/","cdnHotVRootUrl":"https://bszzcdn.acingame.com/gow/HotUpdate/1.0.0.06/","files":[{"path":"Android/3/AdventurersPath.unity3d","hash":"5fa97af3404c21d7cb75e5f3dc22d6a7","size":3864571},{"path":"Android/3/AlchemyLab.unity3d","hash":"6a267c50d722aa8d0c1542a34f72066f","size":1151519},{"path":"Android/3/Armour1.unity3d","hash":"64aedeaa13eea100adabbaae08a24d85","size":945897},{"path":"Android/3/Banners.unity3d","hash":"8b7914c55d4da5f4da8be838603b64d4","size":3454250},{"path":"Android/3/Base.unity3d","hash":"d8debb3eefaf75e1db6367a3e77c1975","size":5000354},{"path":"Android/3/Chat.unity3d","hash":"85b8e82664c3cde717602788f57b28b1","size":8062206},{"path":"Android/3/CommonResources.unity3d","hash":"125e079246bd3d9ceddbb910f4d41ad4","size":3416961},{"path":"Android/3/Dungeon.unity3d","hash":"904389d065f46b5e478f3d5be365478b","size":1174715},{"path":"Android/3/F1.unity3d","hash":"408f8bb429da1c15989c8df3cbdf9cf2","size":597167},{"path":"Android/3/GuildShields.unity3d","hash":"16868175b9b57fbda55228aead7c1b61","size":1641485},{"path":"Android/3/HeroBackdrop_K00.unity3d","hash":"f3af9222bb3e0a61647d182bb5673b6c","size":141428},{"path":"Android/3/HeroBackdrop_K06.unity3d","hash":"985c5e8a6e6a9e5f71bb71058050a7f0","size":142509},{"path":"Android/3/HeroBackdrop_K15.unity3d","hash":"715332a681f83077fdd315d48334af3d","size":142018},{"path":"Android/3/K00.unity3d","hash":"0ce1cde347dea3d60d91451abef299a7","size":3227391},{"path":"Android/3/K01.unity3d","hash":"a756bf7a06666973111f29b6745c2a2b","size":3238959},{"path":"Android/3/K02.unity3d","hash":"9df02258b4d729e4e805615fca342a9d","size":3300304},{"path":"Android/3/K03.unity3d","hash":"0c56237045c3f0f29424b1d27cef7484","size":3129362},{"path":"Android/3/K04.unity3d","hash":"6feea7db430e93fe6a511f0a3a555c97","size":3279656},{"path":"Android/3/K05.unity3d","hash":"de2d414eba08683b014ffbe915cdfcdc","size":3366776},{"path":"Android/3/K06.unity3d","hash":"864e452a66a53d75a4760030595df7d6","size":3333195},{"path":"Android/3/K07.unity3d","hash":"ba76a8d538e9763a25a2a2c748b0f716","size":3225587},{"path":"Android/3/K08.unity3d","hash":"7f19aa579cad9b5d200afcb41f5ff57a","size":3387420},{"path":"Android/3/K09.unity3d","hash":"1e2ee6f55f60c8547b0a89bda249f0fa","size":3340400},{"path":"Android/3/K10.unity3d","hash":"a53d22e94bc382c92dcfa6eaaede258e","size":4585769},{"path":"Android/3/K11.unity3d","hash":"4abf6da676fb96e219fa00b20eb11b9f","size":3369016},{"path":"Android/3/K12.unity3d","hash":"7f032b19c6ae449ae9c560352807c33e","size":3290570},{"path":"Android/3/K13.unity3d","hash":"e4e003675bdd3aa1ef031bff831567a6","size":3194962},{"path":"Android/3/K14.unity3d","hash":"faba5652afcad239b1d0a93511298904","size":3436994},{"path":"Android/3/K15.unity3d","hash":"e7be11908c5747848ccc128050004c6f","size":3479916},{"path":"Android/3/K16.unity3d","hash":"08eb86a96f1145b50a753e3f6ec91b6d","size":3494681},{"path":"Android/3/K17.unity3d","hash":"127cd2e01224a68b72b6eab6cc3ed82b","size":3379662},{"path":"Android/3/K18.unity3d","hash":"f8b3799f8440d6eca73c5ae1f8c45fb3","size":3639157},{"path":"Android/3/K19.unity3d","hash":"a255d6a72712af21f7287b746a65983c","size":3972861},{"path":"Android/3/K20.unity3d","hash":"0b35d3c429c6d1de5bc2c4d4cbeb6c7c","size":4677259},{"path":"Android/3/K21.unity3d","hash":"473c00fe0736b8d63f25a6386d64c317","size":3382443},{"path":"Android/3/K22.unity3d","hash":"8c4e8782ebda6a2270a3f677ed15a05f","size":3293788},{"path":"Android/3/K23.unity3d","hash":"7a20c34cbcfe5092218d2158a676a857","size":3503115},{"path":"Android/3/K24.unity3d","hash":"af873a7659c6b0e28753acae225f8c6e","size":3270270},{"path":"Android/3/K25.unity3d","hash":"04f3a68ca85d10b34af0e0942e8779b5","size":3262105},{"path":"Android/3/K26.unity3d","hash":"293243d8696e5e4489b0fe14de7b9ec2","size":2270890},{"path":"Android/3/K27.unity3d","hash":"b434b148fefb36010623f2b5b7b518dd","size":3478782},{"path":"Android/3/K28.unity3d","hash":"0d732b0b92c2ceadaa2de0748657d68f","size":3571637},{"path":"Android/3/K29.unity3d","hash":"12591792005dcdbfea229ef7a4788f31","size":4286476},{"path":"Android/3/K30.unity3d","hash":"f2228d86ea34a1052e722203b8259683","size":3436364},{"path":"Android/3/K31.unity3d","hash":"d93c931fbe83c2716958f6f17c59a4b5","size":3396422},{"path":"Android/3/K32.unity3d","hash":"34ad0fcb3ed9a36bdf989063cc2dad2b","size":2484174},{"path":"Android/3/K34.unity3d","hash":"149eaf80face829cc5554551ee9d8f04","size":3914391},{"path":"Android/3/K35.unity3d","hash":"c3eadf2e6a1672c3c64f0757f41c3516","size":3184806},{"path":"Android/3/K45.unity3d","hash":"d4d775fbf3ec042d6146c29eeaa5cf60","size":2866985},{"path":"Android/3/K70.unity3d","hash":"a914de32f6012444f6f10bd0404cd7a1","size":2444228},{"path":"Android/3/K72.unity3d","hash":"a756e3f864982ae793079b0887402d83","size":3420132},{"path":"Android/3/K74.unity3d","hash":"3e69547fa6523a91c4d47ae8601190d1","size":2239316},{"path":"Android/3/KingdomQuestMaps.unity3d","hash":"1ce85fc97c580bf0ba705ea051814115","size":3218171},{"path":"Android/3/Locations.unity3d","hash":"0d833ac837cb2d1c1c39899fe6b95729","size":3996110},{"path":"Android/3/M2.unity3d","hash":"722fe77a7c1cdb8dea9d6dbc871116bd","size":575826},{"path":"Android/3/M3.unity3d","hash":"c73f2ecf02886c763687fc272c5cdd53","size":1189927},{"path":"Android/3/MissingTroopDataAssets.unity3d","hash":"42a2aae6307bcdfc799e41f04fe42f09","size":128048309},{"path":"Android/3/Music.unity3d","hash":"9e5e6dfc13bf76d7948c3e7cdd2ff0d3","size":7979805},{"path":"Android/3/Prison.unity3d","hash":"04da20def0b52488fa731f25e7bace68","size":1158313},{"path":"Android/3/Roles.unity3d","hash":"32a774c506314055f510cf6267540d24","size":92256},{"path":"Android/3/Ship.unity3d","hash":"8599df3b4731909648e9ec84fb5f56ae","size":1144560},{"path":"Android/3/Tavern.unity3d","hash":"2a4a2ad72677cca365e177071862c162","size":1099683},{"path":"Android/3/TowerOfDoom.unity3d","hash":"2a9d0837bacfcc0037c256783446dc0a","size":1066929},{"path":"Android/3/Troop_Boss_K24.unity3d","hash":"30db7bb2e6d5c5aa7520ed4e0bb03b69","size":441001},{"path":"Android/3/Troop_CastSpell.unity3d","hash":"af3172b18e13b584da0246b49f5a9f18","size":91317},{"path":"Android/3/Troop_Death.unity3d","hash":"4dd46a8e3161a5d08f3060b7148f92d6","size":1019387},{"path":"Android/3/Troop_K00_00.unity3d","hash":"7f06f1f586b6d52cb34f4ae617941828","size":515011},{"path":"Android/3/Troop_K00_03.unity3d","hash":"afcd4634294dbf5496dae44e23fe72d9","size":505210},{"path":"Android/3/Troop_K00_08.unity3d","hash":"aa4ed2402e0fce40e19ae02f453c45e3","size":548365},{"path":"Android/3/Troop_K14_06.unity3d","hash":"8efe678959096412c54465374e322b18","size":1157420},{"path":"Android/3/Troop_K14_26.unity3d","hash":"9a119a632306c4e8aa63e89666d2cc26","size":516564},{"path":"Android/3/Troop_K14_27.unity3d","hash":"cea8ac07ef9b1764ef08f3033737832b","size":590577},{"path":"Android/3/Troop_K14_28.unity3d","hash":"a51b7f7ec624049d92d1345a4921c90f","size":550666},{"path":"Android/3/Troop_K14_29.unity3d","hash":"5fd896564897cc42f5c4bacc3dc5aae3","size":444013},{"path":"Android/3/Troop_K24_01.unity3d","hash":"aef117c5ecc5620248f03ce5755e6a59","size":525185},{"path":"Android/3/Troop_K24_03.unity3d","hash":"714a7541ada5d46af50bbfc598be089d","size":469447},{"path":"Android/3/Troop_K29_10.unity3d","hash":"fd7f42f5a080b63ab39203138e46824b","size":427992},{"path":"Android/3/Troop_Quest_K00.unity3d","hash":"cb2c195edd8243618311ac7a3f23aeb1","size":849516},{"path":"Android/3/Troop_Select.unity3d","hash":"161b3d03236494856351468f8f699d9a","size":4363139},{"path":"Android/3/Troop_Spell.unity3d","hash":"171d1458b468c389043c20a39e6ab572","size":4913502},{"path":"Android/3/Tutorials.unity3d","hash":"f3305509695fe6c5fa8d30ae48af0c9b","size":1754226},{"path":"Android/3/UncommonTroopCards.unity3d","hash":"bfa33122792207f902e947f9b426350e","size":1330404},{"path":"Android/3/Vault.unity3d","hash":"2c1a6120cf2eaff7d5e615421ca1d05c","size":1161503},{"path":"Android/3/Voice.unity3d","hash":"94190044cf7b10a7b9c1ab81ab41c8d4","size":133374},{"path":"Android/3/Weapons16.unity3d","hash":"e1d7f6e48f5431c46fb48178657ca511","size":695663},{"path":"Android/3/WorldMap_Main.unity3d","hash":"406769a65ada724518ac23904a53fb85","size":9669125},{"path":"Android/Dlls/AOTMetadata.json","hash":"0ce57c1e4a9b8ce35d1ec53c01d7a4aa","size":335},{"path":"Android/Dlls/Cinemachine.dll.bytes","hash":"361c7f16c72dbff94f321326eb58a996","size":270336},{"path":"Android/Dlls/NGUI.dll.bytes","hash":"6405ca2c9052989f3403f32ef701145a","size":413696},{"path":"Android/Dlls/Newtonsoft.Json.dll.bytes","hash":"e58420fae3efc4beea3781b36d17e7dc","size":600576},{"path":"Android/Dlls/System.Core.dll.bytes","hash":"e280d51269a2228c536741b7d316b8e6","size":449536},{"path":"Android/Dlls/System.Network.dll.bytes","hash":"f982199e1e575218f40b54e701ad7921","size":8632832},{"path":"Android/Dlls/System.Platform.dll.bytes","hash":"48affeb9135d9b412ba8de59c3aaed03","size":36864},{"path":"Android/Dlls/UnityEngine.AndroidJNIModule.dll.bytes","hash":"15a41e607df77b35d85ca4492d244f93","size":78336},{"path":"Android/Dlls/UnityEngine.AnimationModule.dll.bytes","hash":"229a6ecc954b4c231732de219a93bae3","size":63488},{"path":"Android/Dlls/UnityEngine.AssetBundleModule.dll.bytes","hash":"2d851648fc34b5bdb569447b9bb18041","size":19968},{"path":"Android/Dlls/UnityEngine.CoreModule.dll.bytes","hash":"4ebdd00a1fac822d25bbf17bd84301de","size":724480},{"path":"Android/Dlls/UnityEngine.JSONSerializeModule.dll.bytes","hash":"73f4b71519141a7fbec32863bfc7dcc8","size":11264},{"path":"Android/Dlls/mscorlib.dll.bytes","hash":"f36d39f6e49e9ac961e6bdbecd0f6378","size":2596352},{"path":"Android/Main.unity3d","hash":"f9a530050435ed4e027785a8f3ec8edb","size":26294},{"path":"Android/MainContent.unity3d","hash":"9a1834a2bc75833016eb67bda29aad4b","size":99524},{"path":"Android/RuntimeAssembliesReceipt.json","hash":"c764d1b123f5f541e20c9b4d134b7253","size":7158},{"path":"Android/UiAdventureAssets.unity3d","hash":"b1384644b17a5e09c20ceb277855e8e8","size":565435},{"path":"Android/UiAdventurePrefabs.unity3d","hash":"e09051bf0609bd55e12ba4c649b8624b","size":473258},{"path":"Android/UiAdventurersPathAssets.unity3d","hash":"e3d722221afba427c896c048c06160d6","size":96999},{"path":"Android/UiAdventurersPathPrefabs.unity3d","hash":"4172a7fef41193620e8bc5543cc536c3","size":314043},{"path":"Android/UiBattleAssets.unity3d","hash":"df8e37d5d21fecf9217253329837ae79","size":166665},{"path":"Android/UiBattlePrefabs.unity3d","hash":"c463ab78f416abc9b6a5066d1661fd40","size":121463},{"path":"Android/UiCampaignAssets.unity3d","hash":"6433d8a6e23d54ca99bee02e38221a5e","size":95445},{"path":"Android/UiCampaignPrefabs.unity3d","hash":"81711c140903186a7af7c7a1899816a7","size":208056},{"path":"Android/UiCollectionAssets.unity3d","hash":"24f552f958beb58c6dcd5d4d1146aba0","size":964679},{"path":"Android/UiCollectionPrefabs.unity3d","hash":"52bfad94f91a64d78838175e8a7801c8","size":1178196},{"path":"Android/UiCommonAssets.unity3d","hash":"707b94a26360817de16c95876ae551dd","size":886568},{"path":"Android/UiCommonPrefabs.unity3d","hash":"7a17e16322b631896987cd8f26f39fb2","size":763914},{"path":"Android/UiCoreAssets.unity3d","hash":"6d3bdb4e32aa6c0fc119e34b47d81fc0","size":1131496},{"path":"Android/UiCorePrefabs.unity3d","hash":"740ebde76e0c355580dc200bc382b8ad","size":871409},{"path":"Android/UiEventsAssets.unity3d","hash":"bb134a06777b3df20317cc5fdf5f7725","size":950762},{"path":"Android/UiEventsPrefabs.unity3d","hash":"41fb72bdeff8a1f339b8c8e7c79188e0","size":1290491},{"path":"Android/UiGuildAssets.unity3d","hash":"54ba4faae1f0446d041cc9aadfb69b66","size":387301},{"path":"Android/UiGuildPrefabs.unity3d","hash":"319411a83426778349fe8e9681f3c704","size":641087},{"path":"Android/UiPrefabs.unity3d","hash":"bb5c4cc1fe29f2c839aa7f85829d290d","size":1833},{"path":"Android/UiPvpAssets.unity3d","hash":"9c7e4e20ec387f848b5c33d33e37d656","size":474666},{"path":"Android/UiPvpPrefabs.unity3d","hash":"11fbe22d0f16dd9d36ab92b6a010f7ca","size":862319},{"path":"Android/UiShared.unity3d","hash":"ae78efa873f1e89911107fb336229742","size":3355790},{"path":"Android/UiSharedTextures_0.unity3d","hash":"766e3c8d0b42ea2acc649618ca2add4c","size":3903768},{"path":"Android/UiSharedTextures_1.unity3d","hash":"3983914ff95b1e8c2447e10ecb76784c","size":6350223},{"path":"Android/UiSharedTextures_2.unity3d","hash":"02dc51e9b3c783c0654db3f58307af59","size":6807204},{"path":"Android/UiSharedTextures_3.unity3d","hash":"1ef653b8a9dee8ad17343803114b0d59","size":5597286},{"path":"Android/UiSharedTextures_4.unity3d","hash":"e027d95ee3a727b85945db4dbde7827e","size":2113645},{"path":"Android/UiSharedTextures_5.unity3d","hash":"64803ef751b631264a3bd01cca12724d","size":9927101},{"path":"Android/UiSharedTextures_6.unity3d","hash":"03078a3f0b5831018966ded75b541768","size":6921012},{"path":"Android/UiSharedTextures_7.unity3d","hash":"c2e4baf14dd1aa9d18b00202cb0aeba8","size":14643366},{"path":"Android/UiShopAssets.unity3d","hash":"f73c4037b1bac94ff524950ad5ded2dd","size":487873},{"path":"Android/UiShopPrefabs.unity3d","hash":"b74851f76934e4edd78485009481f3c0","size":525322},{"path":"Android/UiSocialAssets.unity3d","hash":"f3300e35f41c631b6c79f685c5c3295d","size":53660},{"path":"Android/UiSocialPrefabs.unity3d","hash":"f44936d2f32ab0c601630b4ca38d1f1e","size":195167},{"path":"Android/UiStartupAssets.unity3d","hash":"57d719732715961820e17b159553fcf0","size":1501945},{"path":"Android/UiUnderspireAssets.unity3d","hash":"ece2f7bbbd5647daf71dc473bd2336d2","size":319965},{"path":"Android/UiUnderspirePrefabs.unity3d","hash":"5c3d699a97531e8ca61fb419623a551a","size":205541},{"path":"Android/UiWorldMapAssets.unity3d","hash":"7b8df59335d8936036c9b09a98cd7bc2","size":2150463},{"path":"Android/UiWorldMapPrefabs.unity3d","hash":"9dd80596225c7ba86c91d53651e39ddd","size":453695},{"path":"Android/WorldMapClouds.unity3d","hash":"717927ade57489213429764008427450","size":4375399}],"startupFiles":["Android/Dlls/AOTMetadata.json","Android/Dlls/Cinemachine.dll.bytes","Android/Dlls/NGUI.dll.bytes","Android/Dlls/Newtonsoft.Json.dll.bytes","Android/Dlls/System.Core.dll.bytes","Android/Dlls/System.Network.dll.bytes","Android/Dlls/System.Platform.dll.bytes","Android/Dlls/UnityEngine.AndroidJNIModule.dll.bytes","Android/Dlls/UnityEngine.AnimationModule.dll.bytes","Android/Dlls/UnityEngine.AssetBundleModule.dll.bytes","Android/Dlls/UnityEngine.CoreModule.dll.bytes","Android/Dlls/UnityEngine.JSONSerializeModule.dll.bytes","Android/Dlls/mscorlib.dll.bytes","Android/Main.unity3d","Android/MainContent.unity3d","Android/RuntimeAssembliesReceipt.json","Android/UiAdventureAssets.unity3d","Android/UiAdventurePrefabs.unity3d","Android/UiAdventurersPathAssets.unity3d","Android/UiAdventurersPathPrefabs.unity3d","Android/UiBattleAssets.unity3d","Android/UiBattlePrefabs.unity3d","Android/UiCampaignAssets.unity3d","Android/UiCampaignPrefabs.unity3d","Android/UiCollectionAssets.unity3d","Android/UiCollectionPrefabs.unity3d","Android/UiCommonAssets.unity3d","Android/UiCommonPrefabs.unity3d","Android/UiCoreAssets.unity3d","Android/UiCorePrefabs.unity3d","Android/UiEventsAssets.unity3d","Android/UiEventsPrefabs.unity3d","Android/UiGuildAssets.unity3d","Android/UiGuildPrefabs.unity3d","Android/UiPrefabs.unity3d","Android/UiPvpAssets.unity3d","Android/UiPvpPrefabs.unity3d","Android/UiShared.unity3d","Android/UiSharedTextures_0.unity3d","Android/UiSharedTextures_1.unity3d","Android/UiSharedTextures_2.unity3d","Android/UiSharedTextures_3.unity3d","Android/UiSharedTextures_4.unity3d","Android/UiSharedTextures_5.unity3d","Android/UiSharedTextures_6.unity3d","Android/UiSharedTextures_7.unity3d","Android/UiShopAssets.unity3d","Android/UiShopPrefabs.unity3d","Android/UiSocialAssets.unity3d","Android/UiSocialPrefabs.unity3d","Android/UiStartupAssets.unity3d","Android/UiUnderspireAssets.unity3d","Android/UiUnderspirePrefabs.unity3d","Android/UiWorldMapAssets.unity3d","Android/UiWorldMapPrefabs.unity3d"]}
+{
+  "version": "1.0.0.11",
+  "platform": "Android",
+  "cdnRemoteUrl": "",
+  "cdnHotVRootUrl": "https://bszzcdn.acingame.com/gow/HotUpdate/1.0.0.11/",
+  "files": [
+    {
+      "path": "Android/3/AdventurersPath.unity3d",
+      "hash": "5fa97af3404c21d7cb75e5f3dc22d6a7",
+      "size": 3864571
+    },
+    {
+      "path": "Android/3/AlchemyLab.unity3d",
+      "hash": "6a267c50d722aa8d0c1542a34f72066f",
+      "size": 1151519
+    },
+    {
+      "path": "Android/3/Armour1.unity3d",
+      "hash": "64aedeaa13eea100adabbaae08a24d85",
+      "size": 945897
+    },
+    {
+      "path": "Android/3/Banners.unity3d",
+      "hash": "8b7914c55d4da5f4da8be838603b64d4",
+      "size": 3454250
+    },
+    {
+      "path": "Android/3/Base.unity3d",
+      "hash": "d8debb3eefaf75e1db6367a3e77c1975",
+      "size": 5000354
+    },
+    {
+      "path": "Android/3/Chat.unity3d",
+      "hash": "85b8e82664c3cde717602788f57b28b1",
+      "size": 8062206
+    },
+    {
+      "path": "Android/3/CommonResources.unity3d",
+      "hash": "b68dcb5bf7de9f8ed224b28627b3f4e9",
+      "size": 3645561
+    },
+    {
+      "path": "Android/3/Dungeon.unity3d",
+      "hash": "904389d065f46b5e478f3d5be365478b",
+      "size": 1174715
+    },
+    {
+      "path": "Android/3/F1.unity3d",
+      "hash": "408f8bb429da1c15989c8df3cbdf9cf2",
+      "size": 597167
+    },
+    {
+      "path": "Android/3/GuildShields.unity3d",
+      "hash": "16868175b9b57fbda55228aead7c1b61",
+      "size": 1641485
+    },
+    {
+      "path": "Android/3/HeroBackdrop_K00.unity3d",
+      "hash": "f3af9222bb3e0a61647d182bb5673b6c",
+      "size": 141428
+    },
+    {
+      "path": "Android/3/HeroBackdrop_K06.unity3d",
+      "hash": "985c5e8a6e6a9e5f71bb71058050a7f0",
+      "size": 142509
+    },
+    {
+      "path": "Android/3/HeroBackdrop_K15.unity3d",
+      "hash": "715332a681f83077fdd315d48334af3d",
+      "size": 142018
+    },
+    {
+      "path": "Android/3/K00.unity3d",
+      "hash": "0ce1cde347dea3d60d91451abef299a7",
+      "size": 3227391
+    },
+    {
+      "path": "Android/3/K01.unity3d",
+      "hash": "a756bf7a06666973111f29b6745c2a2b",
+      "size": 3238959
+    },
+    {
+      "path": "Android/3/K02.unity3d",
+      "hash": "e532d3e29d7dab5a91a7fbc377eecb47",
+      "size": 3253388
+    },
+    {
+      "path": "Android/3/K03.unity3d",
+      "hash": "0c56237045c3f0f29424b1d27cef7484",
+      "size": 3129362
+    },
+    {
+      "path": "Android/3/K04.unity3d",
+      "hash": "6feea7db430e93fe6a511f0a3a555c97",
+      "size": 3279656
+    },
+    {
+      "path": "Android/3/K05.unity3d",
+      "hash": "de2d414eba08683b014ffbe915cdfcdc",
+      "size": 3366776
+    },
+    {
+      "path": "Android/3/K06.unity3d",
+      "hash": "864e452a66a53d75a4760030595df7d6",
+      "size": 3333195
+    },
+    {
+      "path": "Android/3/K07.unity3d",
+      "hash": "ba76a8d538e9763a25a2a2c748b0f716",
+      "size": 3225587
+    },
+    {
+      "path": "Android/3/K08.unity3d",
+      "hash": "7f19aa579cad9b5d200afcb41f5ff57a",
+      "size": 3387420
+    },
+    {
+      "path": "Android/3/K09.unity3d",
+      "hash": "1e2ee6f55f60c8547b0a89bda249f0fa",
+      "size": 3340400
+    },
+    {
+      "path": "Android/3/K10.unity3d",
+      "hash": "a53d22e94bc382c92dcfa6eaaede258e",
+      "size": 4585769
+    },
+    {
+      "path": "Android/3/K11.unity3d",
+      "hash": "4abf6da676fb96e219fa00b20eb11b9f",
+      "size": 3369016
+    },
+    {
+      "path": "Android/3/K12.unity3d",
+      "hash": "7f032b19c6ae449ae9c560352807c33e",
+      "size": 3290570
+    },
+    {
+      "path": "Android/3/K13.unity3d",
+      "hash": "e4e003675bdd3aa1ef031bff831567a6",
+      "size": 3194962
+    },
+    {
+      "path": "Android/3/K14.unity3d",
+      "hash": "faba5652afcad239b1d0a93511298904",
+      "size": 3436994
+    },
+    {
+      "path": "Android/3/K15.unity3d",
+      "hash": "e7be11908c5747848ccc128050004c6f",
+      "size": 3479916
+    },
+    {
+      "path": "Android/3/K16.unity3d",
+      "hash": "08eb86a96f1145b50a753e3f6ec91b6d",
+      "size": 3494681
+    },
+    {
+      "path": "Android/3/K17.unity3d",
+      "hash": "127cd2e01224a68b72b6eab6cc3ed82b",
+      "size": 3379662
+    },
+    {
+      "path": "Android/3/K18.unity3d",
+      "hash": "f8b3799f8440d6eca73c5ae1f8c45fb3",
+      "size": 3639157
+    },
+    {
+      "path": "Android/3/K19.unity3d",
+      "hash": "a255d6a72712af21f7287b746a65983c",
+      "size": 3972861
+    },
+    {
+      "path": "Android/3/K20.unity3d",
+      "hash": "0b35d3c429c6d1de5bc2c4d4cbeb6c7c",
+      "size": 4677259
+    },
+    {
+      "path": "Android/3/K21.unity3d",
+      "hash": "473c00fe0736b8d63f25a6386d64c317",
+      "size": 3382443
+    },
+    {
+      "path": "Android/3/K22.unity3d",
+      "hash": "02c8373b7bd45f414ecee7c95c87bff4",
+      "size": 3234788
+    },
+    {
+      "path": "Android/3/K23.unity3d",
+      "hash": "7a20c34cbcfe5092218d2158a676a857",
+      "size": 3503115
+    },
+    {
+      "path": "Android/3/K24.unity3d",
+      "hash": "af873a7659c6b0e28753acae225f8c6e",
+      "size": 3270270
+    },
+    {
+      "path": "Android/3/K25.unity3d",
+      "hash": "04f3a68ca85d10b34af0e0942e8779b5",
+      "size": 3262105
+    },
+    {
+      "path": "Android/3/K26.unity3d",
+      "hash": "293243d8696e5e4489b0fe14de7b9ec2",
+      "size": 2270890
+    },
+    {
+      "path": "Android/3/K27.unity3d",
+      "hash": "b434b148fefb36010623f2b5b7b518dd",
+      "size": 3478782
+    },
+    {
+      "path": "Android/3/K28.unity3d",
+      "hash": "0d732b0b92c2ceadaa2de0748657d68f",
+      "size": 3571637
+    },
+    {
+      "path": "Android/3/K29.unity3d",
+      "hash": "12591792005dcdbfea229ef7a4788f31",
+      "size": 4286476
+    },
+    {
+      "path": "Android/3/K30.unity3d",
+      "hash": "f2228d86ea34a1052e722203b8259683",
+      "size": 3436364
+    },
+    {
+      "path": "Android/3/K31.unity3d",
+      "hash": "d93c931fbe83c2716958f6f17c59a4b5",
+      "size": 3396422
+    },
+    {
+      "path": "Android/3/K32.unity3d",
+      "hash": "34ad0fcb3ed9a36bdf989063cc2dad2b",
+      "size": 2484174
+    },
+    {
+      "path": "Android/3/K34.unity3d",
+      "hash": "149eaf80face829cc5554551ee9d8f04",
+      "size": 3914391
+    },
+    {
+      "path": "Android/3/K35.unity3d",
+      "hash": "c3eadf2e6a1672c3c64f0757f41c3516",
+      "size": 3184806
+    },
+    {
+      "path": "Android/3/K45.unity3d",
+      "hash": "d4d775fbf3ec042d6146c29eeaa5cf60",
+      "size": 2866985
+    },
+    {
+      "path": "Android/3/K70.unity3d",
+      "hash": "8edbe4d18bccf085f1d17c8a41070430",
+      "size": 2367644
+    },
+    {
+      "path": "Android/3/K72.unity3d",
+      "hash": "a756e3f864982ae793079b0887402d83",
+      "size": 3420132
+    },
+    {
+      "path": "Android/3/K74.unity3d",
+      "hash": "3e69547fa6523a91c4d47ae8601190d1",
+      "size": 2239316
+    },
+    {
+      "path": "Android/3/KingdomQuestMaps.unity3d",
+      "hash": "1ce85fc97c580bf0ba705ea051814115",
+      "size": 3218171
+    },
+    {
+      "path": "Android/3/Locations.unity3d",
+      "hash": "0d833ac837cb2d1c1c39899fe6b95729",
+      "size": 3996110
+    },
+    {
+      "path": "Android/3/M2.unity3d",
+      "hash": "722fe77a7c1cdb8dea9d6dbc871116bd",
+      "size": 575826
+    },
+    {
+      "path": "Android/3/M3.unity3d",
+      "hash": "c73f2ecf02886c763687fc272c5cdd53",
+      "size": 1189927
+    },
+    {
+      "path": "Android/3/MissingTroopDataAssets.unity3d",
+      "hash": "56a6c045af68734e6cd87b2e7eb7f80d",
+      "size": 127797011
+    },
+    {
+      "path": "Android/3/Music.unity3d",
+      "hash": "9e5e6dfc13bf76d7948c3e7cdd2ff0d3",
+      "size": 7979805
+    },
+    {
+      "path": "Android/3/Prison.unity3d",
+      "hash": "04da20def0b52488fa731f25e7bace68",
+      "size": 1158313
+    },
+    {
+      "path": "Android/3/Roles.unity3d",
+      "hash": "32a774c506314055f510cf6267540d24",
+      "size": 92256
+    },
+    {
+      "path": "Android/3/Ship.unity3d",
+      "hash": "8599df3b4731909648e9ec84fb5f56ae",
+      "size": 1144560
+    },
+    {
+      "path": "Android/3/Tavern.unity3d",
+      "hash": "2a4a2ad72677cca365e177071862c162",
+      "size": 1099683
+    },
+    {
+      "path": "Android/3/TowerOfDoom.unity3d",
+      "hash": "2a9d0837bacfcc0037c256783446dc0a",
+      "size": 1066929
+    },
+    {
+      "path": "Android/3/Troop_Boss_K24.unity3d",
+      "hash": "30db7bb2e6d5c5aa7520ed4e0bb03b69",
+      "size": 441001
+    },
+    {
+      "path": "Android/3/Troop_CastSpell.unity3d",
+      "hash": "af3172b18e13b584da0246b49f5a9f18",
+      "size": 91317
+    },
+    {
+      "path": "Android/3/Troop_Death.unity3d",
+      "hash": "4dd46a8e3161a5d08f3060b7148f92d6",
+      "size": 1019387
+    },
+    {
+      "path": "Android/3/Troop_K00_00.unity3d",
+      "hash": "7f06f1f586b6d52cb34f4ae617941828",
+      "size": 515011
+    },
+    {
+      "path": "Android/3/Troop_K00_03.unity3d",
+      "hash": "afcd4634294dbf5496dae44e23fe72d9",
+      "size": 505210
+    },
+    {
+      "path": "Android/3/Troop_K00_08.unity3d",
+      "hash": "aa4ed2402e0fce40e19ae02f453c45e3",
+      "size": 548365
+    },
+    {
+      "path": "Android/3/Troop_K14_06.unity3d",
+      "hash": "8efe678959096412c54465374e322b18",
+      "size": 1157420
+    },
+    {
+      "path": "Android/3/Troop_K14_26.unity3d",
+      "hash": "9a119a632306c4e8aa63e89666d2cc26",
+      "size": 516564
+    },
+    {
+      "path": "Android/3/Troop_K14_27.unity3d",
+      "hash": "cea8ac07ef9b1764ef08f3033737832b",
+      "size": 590577
+    },
+    {
+      "path": "Android/3/Troop_K14_28.unity3d",
+      "hash": "a51b7f7ec624049d92d1345a4921c90f",
+      "size": 550666
+    },
+    {
+      "path": "Android/3/Troop_K14_29.unity3d",
+      "hash": "5fd896564897cc42f5c4bacc3dc5aae3",
+      "size": 444013
+    },
+    {
+      "path": "Android/3/Troop_K24_01.unity3d",
+      "hash": "aef117c5ecc5620248f03ce5755e6a59",
+      "size": 525185
+    },
+    {
+      "path": "Android/3/Troop_K24_03.unity3d",
+      "hash": "714a7541ada5d46af50bbfc598be089d",
+      "size": 469447
+    },
+    {
+      "path": "Android/3/Troop_K29_10.unity3d",
+      "hash": "7a11e59f621eded4d1db15bd507ef7af",
+      "size": 458879
+    },
+    {
+      "path": "Android/3/Troop_Quest_K00.unity3d",
+      "hash": "c4aa14164ca28968087a6316294159c0",
+      "size": 903885
+    },
+    {
+      "path": "Android/3/Troop_Select.unity3d",
+      "hash": "161b3d03236494856351468f8f699d9a",
+      "size": 4363139
+    },
+    {
+      "path": "Android/3/Troop_Spell.unity3d",
+      "hash": "171d1458b468c389043c20a39e6ab572",
+      "size": 4913502
+    },
+    {
+      "path": "Android/3/Tutorials.unity3d",
+      "hash": "f3305509695fe6c5fa8d30ae48af0c9b",
+      "size": 1754226
+    },
+    {
+      "path": "Android/3/UncommonTroopCards.unity3d",
+      "hash": "bfa33122792207f902e947f9b426350e",
+      "size": 1330404
+    },
+    {
+      "path": "Android/3/Vault.unity3d",
+      "hash": "2c1a6120cf2eaff7d5e615421ca1d05c",
+      "size": 1161503
+    },
+    {
+      "path": "Android/3/Voice.unity3d",
+      "hash": "94190044cf7b10a7b9c1ab81ab41c8d4",
+      "size": 133374
+    },
+    {
+      "path": "Android/3/Weapons16.unity3d",
+      "hash": "e1d7f6e48f5431c46fb48178657ca511",
+      "size": 695663
+    },
+    {
+      "path": "Android/3/WorldMap_Main.unity3d",
+      "hash": "406769a65ada724518ac23904a53fb85",
+      "size": 9669125
+    },
+    {
+      "path": "Android/Dlls/AOTMetadata.json",
+      "hash": "0ce57c1e4a9b8ce35d1ec53c01d7a4aa",
+      "size": 335
+    },
+    {
+      "path": "Android/Dlls/Cinemachine.dll.bytes",
+      "hash": "361c7f16c72dbff94f321326eb58a996",
+      "size": 270336
+    },
+    {
+      "path": "Android/Dlls/NGUI.dll.bytes",
+      "hash": "6405ca2c9052989f3403f32ef701145a",
+      "size": 413696
+    },
+    {
+      "path": "Android/Dlls/Newtonsoft.Json.dll.bytes",
+      "hash": "e58420fae3efc4beea3781b36d17e7dc",
+      "size": 600576
+    },
+    {
+      "path": "Android/Dlls/System.Core.dll.bytes",
+      "hash": "e280d51269a2228c536741b7d316b8e6",
+      "size": 449536
+    },
+    {
+      "path": "Android/Dlls/System.Network.dll.bytes",
+      "hash": "77b588deff563b660ed58085d3be8567",
+      "size": 8877056
+    },
+    {
+      "path": "Android/Dlls/System.Platform.dll.bytes",
+      "hash": "48affeb9135d9b412ba8de59c3aaed03",
+      "size": 36864
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.AndroidJNIModule.dll.bytes",
+      "hash": "15a41e607df77b35d85ca4492d244f93",
+      "size": 78336
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.AnimationModule.dll.bytes",
+      "hash": "229a6ecc954b4c231732de219a93bae3",
+      "size": 63488
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.AssetBundleModule.dll.bytes",
+      "hash": "2d851648fc34b5bdb569447b9bb18041",
+      "size": 19968
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.CoreModule.dll.bytes",
+      "hash": "4ebdd00a1fac822d25bbf17bd84301de",
+      "size": 724480
+    },
+    {
+      "path": "Android/Dlls/UnityEngine.JSONSerializeModule.dll.bytes",
+      "hash": "73f4b71519141a7fbec32863bfc7dcc8",
+      "size": 11264
+    },
+    {
+      "path": "Android/Dlls/mscorlib.dll.bytes",
+      "hash": "f36d39f6e49e9ac961e6bdbecd0f6378",
+      "size": 2596352
+    },
+    {
+      "path": "Android/Main.unity3d",
+      "hash": "f9a530050435ed4e027785a8f3ec8edb",
+      "size": 26294
+    },
+    {
+      "path": "Android/MainContent.unity3d",
+      "hash": "82fc261debeb569385e9399ea791b233",
+      "size": 102135
+    },
+    {
+      "path": "Android/RuntimeAssembliesReceipt.json",
+      "hash": "59628b513bbc40560cdbe32a17bfe9f6",
+      "size": 7160
+    },
+    {
+      "path": "Android/UiAdventureAssets.unity3d",
+      "hash": "63c95b7597261313131c1acfaf652638",
+      "size": 1069726
+    },
+    {
+      "path": "Android/UiAdventurePrefabs.unity3d",
+      "hash": "11015793e654dcb8ed61be7f89a44805",
+      "size": 498835
+    },
+    {
+      "path": "Android/UiAdventurersPathAssets.unity3d",
+      "hash": "e3d722221afba427c896c048c06160d6",
+      "size": 96999
+    },
+    {
+      "path": "Android/UiAdventurersPathPrefabs.unity3d",
+      "hash": "4172a7fef41193620e8bc5543cc536c3",
+      "size": 314043
+    },
+    {
+      "path": "Android/UiBattleAssets.unity3d",
+      "hash": "df8e37d5d21fecf9217253329837ae79",
+      "size": 166665
+    },
+    {
+      "path": "Android/UiBattlePrefabs.unity3d",
+      "hash": "c463ab78f416abc9b6a5066d1661fd40",
+      "size": 121463
+    },
+    {
+      "path": "Android/UiCampaignAssets.unity3d",
+      "hash": "6433d8a6e23d54ca99bee02e38221a5e",
+      "size": 95445
+    },
+    {
+      "path": "Android/UiCampaignPrefabs.unity3d",
+      "hash": "81711c140903186a7af7c7a1899816a7",
+      "size": 208056
+    },
+    {
+      "path": "Android/UiCollectionAssets.unity3d",
+      "hash": "76537280c9ec3d8064ec85840f2e30a2",
+      "size": 981432
+    },
+    {
+      "path": "Android/UiCollectionPrefabs.unity3d",
+      "hash": "b50030bb6ca65f582e6dafba289d9081",
+      "size": 1208164
+    },
+    {
+      "path": "Android/UiCommonAssets.unity3d",
+      "hash": "707b94a26360817de16c95876ae551dd",
+      "size": 886568
+    },
+    {
+      "path": "Android/UiCommonPrefabs.unity3d",
+      "hash": "7a17e16322b631896987cd8f26f39fb2",
+      "size": 763914
+    },
+    {
+      "path": "Android/UiCoreAssets.unity3d",
+      "hash": "285c5d89fcf4c384696cfcc70f83b552",
+      "size": 1133478
+    },
+    {
+      "path": "Android/UiCorePrefabs.unity3d",
+      "hash": "7568250b667b392bd9f3abbf96f910bb",
+      "size": 884958
+    },
+    {
+      "path": "Android/UiEventsAssets.unity3d",
+      "hash": "0e2b0cb8859272fbcc63ce6254bebd5a",
+      "size": 968445
+    },
+    {
+      "path": "Android/UiEventsPrefabs.unity3d",
+      "hash": "03f76634efd697637c9e50a6169a7750",
+      "size": 1420889
+    },
+    {
+      "path": "Android/UiGuildAssets.unity3d",
+      "hash": "54ba4faae1f0446d041cc9aadfb69b66",
+      "size": 387301
+    },
+    {
+      "path": "Android/UiGuildPrefabs.unity3d",
+      "hash": "319411a83426778349fe8e9681f3c704",
+      "size": 641087
+    },
+    {
+      "path": "Android/UiPrefabs.unity3d",
+      "hash": "bb5c4cc1fe29f2c839aa7f85829d290d",
+      "size": 1833
+    },
+    {
+      "path": "Android/UiPvpAssets.unity3d",
+      "hash": "2c0174e689b865b98ac49c5d11ab63ac",
+      "size": 474694
+    },
+    {
+      "path": "Android/UiPvpPrefabs.unity3d",
+      "hash": "ae197fe211a81f50d8304ecfde025306",
+      "size": 865115
+    },
+    {
+      "path": "Android/UiShared.unity3d",
+      "hash": "eda4de8b5b8751df5b985fbf7ceb0e52",
+      "size": 3374183
+    },
+    {
+      "path": "Android/UiSharedTextures_0.unity3d",
+      "hash": "2aa3da44fb3c3112c5fabfde4d0e8a5b",
+      "size": 6578757
+    },
+    {
+      "path": "Android/UiSharedTextures_1.unity3d",
+      "hash": "3983914ff95b1e8c2447e10ecb76784c",
+      "size": 6350223
+    },
+    {
+      "path": "Android/UiSharedTextures_2.unity3d",
+      "hash": "d73666d55c623cc6328ff186a5720a01",
+      "size": 8453703
+    },
+    {
+      "path": "Android/UiSharedTextures_3.unity3d",
+      "hash": "7693a33a8bb68d27855819e1a0fbd8f8",
+      "size": 5690318
+    },
+    {
+      "path": "Android/UiSharedTextures_4.unity3d",
+      "hash": "e027d95ee3a727b85945db4dbde7827e",
+      "size": 2113645
+    },
+    {
+      "path": "Android/UiSharedTextures_5.unity3d",
+      "hash": "64803ef751b631264a3bd01cca12724d",
+      "size": 9927101
+    },
+    {
+      "path": "Android/UiSharedTextures_6.unity3d",
+      "hash": "afa65fdf9f913d66dd6f8ff00a8a5330",
+      "size": 6951185
+    },
+    {
+      "path": "Android/UiSharedTextures_7.unity3d",
+      "hash": "c2e4baf14dd1aa9d18b00202cb0aeba8",
+      "size": 14643366
+    },
+    {
+      "path": "Android/UiShopAssets.unity3d",
+      "hash": "24ed55a09f8e1212c0dad709d96e2cff",
+      "size": 482772
+    },
+    {
+      "path": "Android/UiShopPrefabs.unity3d",
+      "hash": "9a0012fa166da98c70ed8008a03a2e70",
+      "size": 545273
+    },
+    {
+      "path": "Android/UiSocialAssets.unity3d",
+      "hash": "f3300e35f41c631b6c79f685c5c3295d",
+      "size": 53660
+    },
+    {
+      "path": "Android/UiSocialPrefabs.unity3d",
+      "hash": "f44936d2f32ab0c601630b4ca38d1f1e",
+      "size": 195167
+    },
+    {
+      "path": "Android/UiStartupAssets.unity3d",
+      "hash": "333cc808c182eb7b7a7c4986480732cf",
+      "size": 1517637
+    },
+    {
+      "path": "Android/UiUnderspireAssets.unity3d",
+      "hash": "ece2f7bbbd5647daf71dc473bd2336d2",
+      "size": 319965
+    },
+    {
+      "path": "Android/UiUnderspirePrefabs.unity3d",
+      "hash": "5c3d699a97531e8ca61fb419623a551a",
+      "size": 205541
+    },
+    {
+      "path": "Android/UiWorldMapAssets.unity3d",
+      "hash": "dcea6fac42bcabbd1df0f5a2e2355933",
+      "size": 2142618
+    },
+    {
+      "path": "Android/UiWorldMapPrefabs.unity3d",
+      "hash": "cf1e659ba55187589490232840353a1f",
+      "size": 460651
+    },
+    {
+      "path": "Android/WorldMapClouds.unity3d",
+      "hash": "717927ade57489213429764008427450",
+      "size": 4375399
+    }
+  ],
+  "startupFiles": [
+    "Android/Dlls/AOTMetadata.json",
+    "Android/Dlls/Cinemachine.dll.bytes",
+    "Android/Dlls/NGUI.dll.bytes",
+    "Android/Dlls/Newtonsoft.Json.dll.bytes",
+    "Android/Dlls/System.Core.dll.bytes",
+    "Android/Dlls/System.Network.dll.bytes",
+    "Android/Dlls/System.Platform.dll.bytes",
+    "Android/Dlls/UnityEngine.AndroidJNIModule.dll.bytes",
+    "Android/Dlls/UnityEngine.AnimationModule.dll.bytes",
+    "Android/Dlls/UnityEngine.AssetBundleModule.dll.bytes",
+    "Android/Dlls/UnityEngine.CoreModule.dll.bytes",
+    "Android/Dlls/UnityEngine.JSONSerializeModule.dll.bytes",
+    "Android/Dlls/mscorlib.dll.bytes",
+    "Android/Main.unity3d",
+    "Android/MainContent.unity3d",
+    "Android/RuntimeAssembliesReceipt.json",
+    "Android/UiAdventureAssets.unity3d",
+    "Android/UiAdventurePrefabs.unity3d",
+    "Android/UiAdventurersPathAssets.unity3d",
+    "Android/UiAdventurersPathPrefabs.unity3d",
+    "Android/UiBattleAssets.unity3d",
+    "Android/UiBattlePrefabs.unity3d",
+    "Android/UiCampaignAssets.unity3d",
+    "Android/UiCampaignPrefabs.unity3d",
+    "Android/UiCollectionAssets.unity3d",
+    "Android/UiCollectionPrefabs.unity3d",
+    "Android/UiCommonAssets.unity3d",
+    "Android/UiCommonPrefabs.unity3d",
+    "Android/UiCoreAssets.unity3d",
+    "Android/UiCorePrefabs.unity3d",
+    "Android/UiEventsAssets.unity3d",
+    "Android/UiEventsPrefabs.unity3d",
+    "Android/UiGuildAssets.unity3d",
+    "Android/UiGuildPrefabs.unity3d",
+    "Android/UiPrefabs.unity3d",
+    "Android/UiPvpAssets.unity3d",
+    "Android/UiPvpPrefabs.unity3d",
+    "Android/UiShared.unity3d",
+    "Android/UiSharedTextures_0.unity3d",
+    "Android/UiSharedTextures_1.unity3d",
+    "Android/UiSharedTextures_2.unity3d",
+    "Android/UiSharedTextures_3.unity3d",
+    "Android/UiSharedTextures_4.unity3d",
+    "Android/UiSharedTextures_5.unity3d",
+    "Android/UiSharedTextures_6.unity3d",
+    "Android/UiSharedTextures_7.unity3d",
+    "Android/UiShopAssets.unity3d",
+    "Android/UiShopPrefabs.unity3d",
+    "Android/UiSocialAssets.unity3d",
+    "Android/UiSocialPrefabs.unity3d",
+    "Android/UiStartupAssets.unity3d",
+    "Android/UiUnderspireAssets.unity3d",
+    "Android/UiUnderspirePrefabs.unity3d",
+    "Android/UiWorldMapAssets.unity3d",
+    "Android/UiWorldMapPrefabs.unity3d"
+  ]
+}
