@@ -27,8 +27,13 @@ Base URL：`http://<服务器IP>:8000`
 ```
 
 `legacy_device_ids` 可选，仅用于 v4 → v5 自动迁移。服务端只有当任一候选命中
-`card_keys.device_id` 或该卡已保留的旧绑定时才允许迁移，否则仍返回原 403。
+该卡已绑定的设备（`card_devices`）时，才认定为「同一台机器换了号」并原位换号，
+否则按新设备处理；名额已满则返回 403「卡密绑定设备已达上限（N 台），请先在原设备解绑或联系管理员」。
 迁移成功后旧 ID 会保存在 `card_keys.legacy_device_ids`，供过渡期旧客户端继续登录。
+
+设备绑定（2026-10-31 一码多设备）：一张卡最多 `max_devices` 台（`0`=不限）；
+绑定关系存 `card_devices`，`card_keys.device_id` 只是「首绑设备」兼容字段，
+客户端仍按 `card.device_bound` / `card.can_unbind` 判断即可。
 
 成功 `data`：
 
@@ -117,11 +122,20 @@ Base URL：`http://<服务器IP>:8000`
 
 `duration_type`：`hour|day|month|year|permanent|count`  
 次数卡必须 `max_uses > 0`。
+`max_devices`（新）：设备上限，`1`=一机一码（默认）、`N`=最多 N 台、`0`=不限台数。
+满员后新设备登录被拒，不会顶替已绑定设备。
 
 ### 修改卡密 `PATCH /v1/admin/cards/{id}`
 
-可改 `expire_at`、`status`、`max_uses`、`used_count` 等。  
-`force_unbind: true` 清除设备绑定；`reset_unbind: true` 重置自助解绑次数。
+可改 `expire_at`、`status`、`max_uses`、`used_count`、`max_devices` 等。
+`force_unbind: true` **整卡**清除全部设备绑定（后台操作一律整卡）；`reset_unbind: true` 重置自助解绑状态。
+`max_devices` 改小只拦「新设备登录」，不主动踢已绑定设备——要立刻收回用 `force_unbind`。
+
+### 列表筛选 `GET /v1/admin/cards`
+
+`q` / `status` / `scope` / `game_id` / `duration_type` / `bound` / `unbind_used` / `page` / `page_size`。
+`duration_type` 支持 `hour|day|month|year|permanent|count`（2026-10-31 新增）。
+每行额外返回 `devices`（绑定设备列表：`device_id` / `bound_at` / `last_seen_at`）、`device_count`、`max_devices`。
 
 ---
 

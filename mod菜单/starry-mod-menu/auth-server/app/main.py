@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from .config import get_settings
 from .database import Base, SessionLocal, engine
-from .models import AdminUser, FeatureFlag, Game
+from .models import AdminUser, CardDevice, FeatureFlag, Game
 from .routers import admin, client, ota, portal
 from .security import hash_password
 from .services.feature_sync import sync_game_features
@@ -124,6 +124,10 @@ def ensure_schema() -> None:
             }
             if "legacy_device_ids" not in card_cols:
                 conn.execute(text("ALTER TABLE card_keys ADD COLUMN legacy_device_ids TEXT"))
+            if "max_devices" not in card_cols:
+                conn.execute(
+                    text("ALTER TABLE card_keys ADD COLUMN max_devices INTEGER DEFAULT 1")
+                )
             ann_cols = {
                 r[1] for r in conn.execute(text("PRAGMA table_info(announcements)")).fetchall()
             }
@@ -187,6 +191,9 @@ def ensure_schema() -> None:
                 text("ALTER TABLE card_keys ADD COLUMN IF NOT EXISTS legacy_device_ids TEXT")
             )
             conn.execute(
+                text("ALTER TABLE card_keys ADD COLUMN IF NOT EXISTS max_devices INTEGER DEFAULT 1")
+            )
+            conn.execute(
                 text(
                     "ALTER TABLE announcements ADD COLUMN IF NOT EXISTS "
                     "visibility VARCHAR(16) DEFAULT 'always'"
@@ -222,6 +229,19 @@ def ensure_schema() -> None:
                     "sort_order INTEGER DEFAULT 0"
                 )
             )
+
+        # 一码多设备（2026-10-31）：新表由 create_all 建好；这里兜底建一次并回填老数据
+        CardDevice.__table__.create(bind=conn, checkfirst=True)
+        conn.execute(
+            text(
+                "INSERT INTO card_devices (card_id, device_id, bound_at, last_seen_at) "
+                "SELECT c.id, c.device_id, "
+                "COALESCE(c.activated_at, c.created_at), "
+                "COALESCE(c.updated_at, c.activated_at, c.created_at) "
+                "FROM card_keys c WHERE c.device_id IS NOT NULL AND c.device_id <> '' "
+                "AND NOT EXISTS (SELECT 1 FROM card_devices d WHERE d.card_id = c.id)"
+            )
+        )
 
 
 def seed_db() -> None:

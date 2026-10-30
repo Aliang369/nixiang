@@ -15,6 +15,7 @@ from ..config import get_settings
 from .events import record_auth_event
 from ..models import (
     Announcement,
+    CardDevice,
     CardKey,
     FeatureFlag,
     Game,
@@ -92,19 +93,146 @@ def _store_legacy_device_ids(card: CardKey, ids: list[str]) -> None:
     )
 
 
-def _authorize_device_binding(
+def device_limit(card: CardKey) -> int:
+    """设备上限：0=不限台数；其余=最多可绑台数（旧数据/异常值按 1 台处理）。"""
+    try:
+        n = int(getattr(card, "max_devices", 1) or 0)
+    except (TypeError, ValueError):
+        return 1
+    return max(n, 0)
+
+
+def load_card_devices(db: Session, card: CardKey) -> list[CardDevice]:
+    """该卡已绑定设备（按绑定时间升序，首绑在前）。
+
+    老数据惰性回填：有 card.device_id 但还没有设备行时，把它登记成第一台。
+    """
+    rows = (
+        db.query(CardDevice)
+        .filter(CardDevice.card_id == card.id)
+        .order_by(CardDevice.bound_at.asc(), CardDevice.id.asc())
+        .all()
+    )
+    if not rows and card.device_id:
+        row = CardDevice(card_id=card.id, device_id=card.device_id, last_seen_at=utcnow())
+        db.add(row)
+        db.flush()
+        rows = [row]
+    return rows
+
+
+def count_card_devices(db: Session, card: CardKey) -> int:
+    return db.query(CardDevice).filter(CardDevice.card_id == card.id).count()
+
+
+def purge_card_devices(db: Session, card_id: int) -> int:
+    """删除卡密时清理绑定行（card_devices 无外键级联，必须显式删）。"""
+    return (
+        db.query(CardDevice)
+        .filter(CardDevice.card_id == card_id)
+        .delete(synchronize_session=False)
+    )
+
+
+def sync_primary_device(db: Session, card: CardKey) -> None:
+    """同步兼容字段 card.device_id = 最早绑定的一台（无设备时清空）。
+
+    客户端与旧后台只认 device_bound / can_unbind，这两个由本字段派生，
+    因此多设备下仍然语义正确：只要还有设备绑定即（可解绑）。
+    """
+    row = (
+        db.query(CardDevice)
+        .filter(CardDevice.card_id == card.id)
+        .order_by(CardDevice.bound_at.asc(), CardDevice.id.asc())
+        .first()
+    )
+    card.device_id = row.device_id if row else None
+
+
+def _match_drift_device(
     card: CardKey,
+    rows: list[CardDevice],
     device_id: str,
     legacy_device_ids: Optional[list[str]],
 ) -> Optional[str]:
-    """返回需要迁移的旧主绑定；None=无需迁移，不匹配则保持原 403 语义。"""
-    if not card.device_id or card.device_id == device_id:
-        return None
-    requested = _normalize_legacy_device_ids(legacy_device_ids)
+    """识别「同一台机器换了号」：自报历史候选命中卡内已绑设备时返回那个旧号。
+
+    命中就原位换号、不占新名额（云机 SSAID 漂移靠这条，否则一台机会吃掉 N 个名额）。
+    """
+    ids = [r.device_id for r in rows]
+    for cand in _normalize_legacy_device_ids(legacy_device_ids):
+        if cand in ids and cand != device_id:
+            return cand
     known = _load_legacy_device_ids(card)
-    if card.device_id in requested or device_id in known:
-        return card.device_id
-    raise HTTPException(403, "卡密已绑定其他设备，请先解绑")
+    for cand in known:
+        if cand in ids and cand != device_id:
+            return cand
+    # 单设备卡沿用旧语义：新号曾在本卡历史候选里即视为同一台（旧客户端可能不带上报列表）
+    if len(rows) <= 1 and rows and device_id in known:
+        return rows[0].device_id
+    return None
+
+
+def _authorize_device_binding(
+    db: Session,
+    card: CardKey,
+    device_id: str,
+    legacy_device_ids: Optional[list[str]],
+) -> tuple[str, Optional[str]]:
+    """登录前的设备资格校验（只读，不写库）。
+
+    返回 (kind, old_id)：same=本机已在卡内；drift=本机是已绑设备的漂移新号
+    （old_id=被替换的旧号，不占新名额）；new=新设备（名额已确认可用）。
+    名额已满且既非 same 也非 drift ⇒ 403，**不顶替任何已绑定设备**。
+    """
+    rows = load_card_devices(db, card)
+    ids = [r.device_id for r in rows]
+    if device_id in ids:
+        return "same", None
+    drift_old = _match_drift_device(card, rows, device_id, legacy_device_ids)
+    if drift_old:
+        return "drift", drift_old
+    limit = device_limit(card)
+    if limit and len(rows) >= limit:
+        raise HTTPException(
+            403, f"卡密绑定设备已达上限（{limit} 台），请先在原设备解绑或联系管理员"
+        )
+    return "new", None
+
+
+def _apply_device_binding(
+    db: Session,
+    card: CardKey,
+    device_id: str,
+    kind: str,
+    old_id: Optional[str],
+) -> None:
+    """把登录判定的结果落库；次数检查通过后才调用，避免留下半绑定状态。"""
+    if kind == "same":
+        row = (
+            db.query(CardDevice)
+            .filter(CardDevice.card_id == card.id, CardDevice.device_id == device_id)
+            .first()
+        )
+        if row:
+            row.last_seen_at = utcnow()
+    elif kind == "drift" and old_id:
+        row = (
+            db.query(CardDevice)
+            .filter(CardDevice.card_id == card.id, CardDevice.device_id == old_id)
+            .first()
+        )
+        if row:
+            row.device_id = device_id
+            row.last_seen_at = utcnow()
+        known = _load_legacy_device_ids(card)
+        _store_legacy_device_ids(
+            card, [old_id] + [x for x in known if x != device_id and x != old_id]
+        )
+    else:
+        db.add(CardDevice(card_id=card.id, device_id=device_id, last_seen_at=utcnow()))
+        db.flush()
+    sync_primary_device(db, card)
 
 
 def normalize_custom_keys(raw_keys: list[str]) -> list[str]:
@@ -227,8 +355,10 @@ def login_card(
 
     ensure_card_usable(card, game_id)
 
-    # 先验证迁移资格但不写库；后面次数检查失败时不能留下半迁移状态。
-    migration_from = _authorize_device_binding(card, device_id, legacy_device_ids)
+    # 先验证设备资格但不写库；后面次数检查失败时不能留下半绑定状态。
+    bind_kind, migration_from = _authorize_device_binding(
+        db, card, device_id, legacy_device_ids
+    )
 
     freshly_activated = activate_if_needed(card)
 
@@ -246,13 +376,8 @@ def login_card(
             if card.used_count >= card.max_uses:
                 card.status = "exhausted"
 
-    if not card.device_id:
-        card.device_id = device_id
-    elif migration_from:
-        known = _load_legacy_device_ids(card)
-        merged = [migration_from] + [x for x in known if x != device_id and x != migration_from]
-        _store_legacy_device_ids(card, merged)
-        card.device_id = device_id
+    # 次数检查已通过：落设备绑定（新设备占一个名额；漂移只换号不占名额）
+    _apply_device_binding(db, card, device_id, bind_kind, migration_from)
 
     if migration_from:
         # 主绑定迁移后旧设备会话全部失效，旧在线行不再挂这张卡。
@@ -330,7 +455,7 @@ def login_card(
         "token": token,
         "expires_at": expires_at.isoformat(),
         "offline_cache_seconds": settings.offline_cache_seconds,
-        "card": serialize_card_public(card),
+        "card": serialize_card_public(card, device_count=count_card_devices(db, card)),
         "bootstrap": boot,
         "grant": grant,
         "grant2": grant2,
@@ -339,14 +464,18 @@ def login_card(
 
 
 def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
-    """自助解绑（2026-09-06 改版）：不限次数；首次免费，之后每次扣 3 天有效期。
-    无到期时间的卡（永久/次数卡）不扣。管理员强制解绑不走这里、不扣时间。"""
+    """自助解绑（2026-10-31 一码多设备）：**只解绑本机**，同卡其它设备照常在线。
+
+    计费口径不变（按卡算）：不限次数；首次免费，之后每次从这张卡有效期扣 3 天。
+    无到期时间的卡（永久/次数卡）不扣。管理员整卡强制解绑不走这里、不扣时间。
+    """
     card = db.query(CardKey).filter(CardKey.key_code == card_key.strip()).first()
     if not card:
         raise HTTPException(404, "卡密不存在")
-    if not card.device_id:
+    bound_ids = [r.device_id for r in load_card_devices(db, card)]
+    if not bound_ids:
         raise HTTPException(400, "卡密尚未绑定设备")
-    if card.device_id != device_id:
+    if device_id not in bound_ids:
         raise HTTPException(403, "只能由当前绑定设备解绑")
 
     if card.unbind_used:
@@ -363,21 +492,30 @@ def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
         card.unbind_used = True
         deduct_msg = "（首次解绑不扣时间）"
 
-    card.device_id = None
-    card.legacy_device_ids = None
-    db.query(SessionToken).filter(SessionToken.card_id == card.id, SessionToken.revoked.is_(False)).update(
-        {"revoked": True}
+    # 只删本机这一行；旧号从历史候选里也去掉，免得下次被当作漂移旧号复活
+    db.query(CardDevice).filter(
+        CardDevice.card_id == card.id, CardDevice.device_id == device_id
+    ).delete(synchronize_session=False)
+    _store_legacy_device_ids(
+        card, [x for x in _load_legacy_device_ids(card) if x != device_id]
     )
-    # 解绑后该设备立刻算游客
-    db.query(OnlinePresence).filter(OnlinePresence.device_id == device_id).update(
-        {"card_id": None}
-    )
+    sync_primary_device(db, card)
+    # 只吊销本机会话（多设备：同卡其它设备不掉线）
+    db.query(SessionToken).filter(
+        SessionToken.card_id == card.id,
+        SessionToken.device_id == device_id,
+        SessionToken.revoked.is_(False),
+    ).update({"revoked": True})
+    # 解绑后本机立刻算游客
+    db.query(OnlinePresence).filter(
+        OnlinePresence.device_id == device_id, OnlinePresence.card_id == card.id
+    ).update({"card_id": None})
     record_auth_event(
         db, "unbind", card_id=card.id,
         detail=f"device={device_id} {deduct_msg.lstrip('，')}",
     )
     db.commit()
-    return {"message": "解绑成功" + deduct_msg}
+    return {"message": "已解绑本机" + deduct_msg}
 
 
 def heartbeat(
@@ -429,20 +567,39 @@ def heartbeat(
         session.revoked = True
         db.commit()
         raise
-    if card.device_id and card.device_id != device_id:
-        known = _load_legacy_device_ids(card)
-        migratable = device_drift and (
-            card.device_id == session.device_id or device_id in known
-        )
-        if not migratable:
+    # 一码多设备：本机号必须在卡内设备表里；不在时只有「会话原号仍在表内」的漂移可原位迁移
+    dev_row = (
+        db.query(CardDevice)
+        .filter(CardDevice.card_id == card.id, CardDevice.device_id == device_id)
+        .first()
+    )
+    if dev_row is None:
+        old_row = None
+        if device_drift:
+            old_row = (
+                db.query(CardDevice)
+                .filter(
+                    CardDevice.card_id == card.id,
+                    CardDevice.device_id == session.device_id,
+                )
+                .first()
+            )
+        if old_row is None:
             session.revoked = True
             db.commit()
             raise HTTPException(403, "设备绑定已变更，请重新登录")
-        # 原子迁移：卡密主绑定与会话设备号一起换成漂移后的新 ID，旧 ID 进历史列表
-        old_id = card.device_id
-        merged = [old_id] + [x for x in known if x != device_id and x != old_id]
-        _store_legacy_device_ids(card, merged)
-        card.device_id = device_id
+        # 原子迁移：漂移前的旧号原位换成新号（不占新名额），旧号进历史列表
+        old_id = old_row.device_id
+        old_row.device_id = device_id
+        old_row.last_seen_at = now
+        known = _load_legacy_device_ids(card)
+        _store_legacy_device_ids(
+            card, [old_id] + [x for x in known if x != device_id and x != old_id]
+        )
+        dev_row = old_row
+    else:
+        dev_row.last_seen_at = now
+    sync_primary_device(db, card)
     if device_drift:
         session.device_id = device_id
         # 审计：设备漂移迁移必须留痕（与客户端 [auth] store verdict 日志一一对应）。
@@ -491,7 +648,7 @@ def heartbeat(
         "token": session.token,
         "expires_at": session.expires_at.isoformat(),
         "offline_cache_seconds": settings.offline_cache_seconds,
-        "card": serialize_card_public(card),
+        "card": serialize_card_public(card, device_count=count_card_devices(db, card)),
         "bootstrap": boot,
         "grant": grant,
         "grant2": grant2,
@@ -530,8 +687,15 @@ def _upsert_presence(
         )
 
 
-def serialize_card_public(card: CardKey) -> dict[str, Any]:
+def serialize_card_public(
+    card: CardKey, device_count: Optional[int] = None
+) -> dict[str, Any]:
+    """卡密公开状态。device_count 传入实际绑定台数（0=允许不限台时前端显示用）。"""
     refresh_card_status(card)
+    limit = device_limit(card)
+    bound = (
+        device_count if device_count is not None else (1 if card.device_id else 0)
+    )
     remaining_uses = None
     if card.max_uses > 0:
         remaining_uses = max(card.max_uses - card.used_count, 0)
@@ -546,9 +710,11 @@ def serialize_card_public(card: CardKey) -> dict[str, Any]:
         "max_uses": card.max_uses,
         "used_count": card.used_count,
         "remaining_uses": remaining_uses,
-        "device_bound": bool(card.device_id),
+        "device_bound": bound > 0,
+        "device_count": bound,
+        "max_devices": limit,  # 0=不限台数
         "unbind_used": card.unbind_used,
-        "can_unbind": bool(card.device_id),  # 2026-09-06 解绑不限次数后：绑定的卡随时可自助解绑
+        "can_unbind": bound > 0,  # 2026-09-06 解绑不限次数后：绑定的卡随时可自助解绑（只解本机）
     }
 
 

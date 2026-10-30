@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, Integer, String, Text, UniqueConstraint, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -66,11 +66,36 @@ class CardKey(Base):
     device_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     # v5 迁移后的旧设备 ID 别名（JSON 数组字符串）；仅用于过渡期兼容，不参与当前主绑定
     legacy_device_ids: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # 设备上限（2026-10-31 一码多设备）：1=一机一码（默认，旧行为）；N=最多 N 台；0=不限台数
+    # 实际绑定关系存 card_devices；本字段只决定「能不能再绑下一台」
+    max_devices: Mapped[int] = mapped_column(
+        Integer, default=1, server_default=text("1"), nullable=False
+    )
     unbind_used: Mapped[bool] = mapped_column(Boolean, default=False)
     note: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class CardDevice(Base):
+    """卡密 ↔ 设备绑定（2026-10-31 一码多设备）。
+
+    一张卡最多 `CardKey.max_devices` 行（0=不限）。`card_keys.device_id` 降级为
+    「首绑设备」兼容字段（客户端 device_bound / can_unbind 仍读它），由
+    auth_service.sync_primary_device 维护，不再作为唯一绑定依据。
+    """
+
+    __tablename__ = "card_devices"
+    __table_args__ = (UniqueConstraint("card_id", "device_id", name="uq_card_device"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    card_id: Mapped[int] = mapped_column(Integer, index=True)
+    device_id: Mapped[str] = mapped_column(String(128), index=True)
+    bound_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )
 
 

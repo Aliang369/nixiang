@@ -33,6 +33,9 @@
               <option value="permanent">永久</option><option value="count">次数</option>
             </select></div>
           <div><label for="m-c-uses">次数上限（0=不限）</label><input id="m-c-uses" type="number" value="0" min="0" /></div>
+          <div><label for="m-c-maxdev">设备上限（1=一机一码，0=不限）</label>
+            <input id="m-c-maxdev" type="number" value="1" min="0" max="100" />
+            <p class="muted" style="margin:6px 0 0">1=只能绑 1 台（默认）；2/3=最多几台；0=不限台数。满员后新设备会被拒绝，需先解绑。</p></div>
           <div class="full"><label for="m-c-note">备注</label><input id="m-c-note" placeholder="可选，如批次号" /></div>
           <div class="full"><div class="muted">卡密预览</div><div class="prefix-preview" id="m-c-preview">SG-••••-••••</div></div>
         </div>
@@ -137,6 +140,8 @@
             <input id="m-e2-max" type="number" min="0" value="${Number(card.max_uses || 0)}" /></div>
           <div><label>已用次数</label>
             <input id="m-e2-used" type="number" min="0" value="${Number(card.used_count || 0)}" /></div>
+          <div><label>设备上限（0=不限，当前已绑 ${Number(card.device_count || 0)} 台）</label>
+            <input id="m-e2-maxdev" type="number" min="0" max="100" value="${Number(card.max_devices == null ? 1 : card.max_devices)}" /></div>
           <div class="full"><label>备注</label>
             <input id="m-e2-note" value="${escapeHtml(card.note || '')}" placeholder="可选，如批次号" /></div>
         </div>
@@ -156,7 +161,17 @@
       if (wrap) wrap.style.display = scope === 'game' ? '' : 'none';
     }
 
+    /** 设备上限输入解析：留空回落 fallback；0=不限台数，负数按 0 */
+    function readMaxDevices(elId, fallback) {
+      const raw = (document.getElementById(elId)?.value || '').toString().trim();
+      if (raw === '') return fallback;
+      const n = Number(raw);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.min(100, Math.max(0, Math.trunc(n)));
+    }
+
     async function saveCardEdit(id) {
+      const card = cardsCache.find(x => x.id === id) || {};
       try {
         const scope = document.getElementById('m-e2-scope').value;
         const body = {
@@ -166,6 +181,7 @@
           expire_at: tpISOString('m-e2-expire'),
           max_uses: Number(document.getElementById('m-e2-max').value || 0),
           used_count: Number(document.getElementById('m-e2-used').value || 0),
+          max_devices: readMaxDevices('m-e2-maxdev', card.max_devices == null ? 1 : Number(card.max_devices)),
           note: document.getElementById('m-e2-note').value.trim() || null,
         };
         if (body.scope === 'game' && !body.game_id) { toast('请选择游戏'); return; }
@@ -189,6 +205,7 @@
             ? (getGamePickerValue('m-c-game') || null) : null,
           duration_type: document.getElementById('m-c-type').value,
           max_uses: Number(document.getElementById('m-c-uses').value || 0),
+          max_devices: readMaxDevices('m-c-maxdev', 1),
           note: document.getElementById('m-c-note').value.trim() || null,
         };
         if (customMode) body.custom_keys = customKeys;
@@ -212,6 +229,7 @@
     async function loadCards() {
       const q = document.getElementById('c-q').value.trim();
       const status = document.getElementById('c-status').value;
+      const durationType = document.getElementById('c-type')?.value || '';
       const scope = document.getElementById('c-filter-scope')?.value || '';
       const game_id = getGamePickerValue('c-filter-game');
       const bound = document.getElementById('c-bound').value;
@@ -219,6 +237,7 @@
       const qs = new URLSearchParams();
       if (q) qs.set('q', q);
       if (status) qs.set('status', status);
+      if (durationType) qs.set('duration_type', durationType);
       if (scope) qs.set('scope', scope);
       if (game_id) qs.set('game_id', game_id);
       if (bound !== '') qs.set('bound', bound === '1' ? 'true' : 'false');
@@ -262,9 +281,15 @@
       document.getElementById('cards-body').innerHTML = cardsCache.map(c => {
         const exp = c.expire_at ? fmtLocal(c.expire_at) : (c.duration_type === 'permanent' ? '永久' : '-');
         const note = c.note ? escapeHtml(c.note) : '<span class="muted">点击添加</span>';
-        const deviceShort = c.device_id ? escapeHtml(c.device_id.slice(0, 12)) + '…' : '未绑定';
+        const devs = Array.isArray(c.devices) ? c.devices : [];
+        const devLimit = Number(c.max_devices || 0);
+        const devCount = c.device_count != null ? Number(c.device_count) : devs.length;
+        const limitText = devLimit === 0 ? '不限' : String(devLimit);
+        const deviceShort = devCount > 0 ? `${devCount}/${limitText} 台` : '未绑定';
         const deviceFull = expandedDevices.has(c.id)
-          ? `<div class="device-full">${escapeHtml(c.device_id || '')}</div>` : '';
+          ? `<div class="device-full">${devs.length
+              ? devs.map(d => `<div>${escapeHtml(d.device_id)}${d.last_seen_at ? ' · 最近 ' + fmtLocal(d.last_seen_at) : ''}</div>`).join('')
+              : '<div>（无绑定设备）</div>'}</div>` : '';
         const checked = selectedCardIds.has(c.id) ? 'checked' : '';
         return `
         <tr class="${checked ? 'is-selected' : ''}" data-id="${c.id}">

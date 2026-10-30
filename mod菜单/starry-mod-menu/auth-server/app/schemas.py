@@ -112,6 +112,8 @@ class CardCreate(BaseModel):
         default="day", pattern="^(hour|day|month|year|permanent|count)$"
     )
     max_uses: int = Field(default=0, ge=0)
+    # 设备上限（2026-10-31）：1=一机一码（默认）；N=最多 N 台；0=不限台数
+    max_devices: int = Field(default=1, ge=0, le=100)
     note: Optional[str] = None
     prefix: str = Field(default="SG", max_length=8)
     # 完全自定义卡密：提供时忽略 count/prefix，按输入原样创建（整批查重，重复即拒绝）
@@ -126,6 +128,8 @@ class CardUpdate(BaseModel):
     )
     max_uses: Optional[int] = Field(default=None, ge=0)
     used_count: Optional[int] = Field(default=None, ge=0)
+    # 设备上限：改小只拦新设备登录，不主动踢已绑定设备（要立刻收回用 force_unbind）
+    max_devices: Optional[int] = Field(default=None, ge=0, le=100)
     status: Optional[str] = Field(
         default=None, pattern="^(unused|active|expired|banned|exhausted)$"
     )

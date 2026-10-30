@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import func, or_
+from sqlalchemy import exists, func, or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -10,6 +10,7 @@ from ..models import (
     AdminAuditLog,
     Announcement,
     AuthEvent,
+    CardDevice,
     CardKey,
     FeatureFlag,
     Game,
@@ -43,6 +44,7 @@ from ..services.auth_service import (
     generate_card_keys,
     create_custom_card_keys,
     normalize_custom_keys,
+    purge_card_devices,
     refresh_card_status,
     revoke_card_sessions,
     serialize_card_public,
@@ -121,13 +123,26 @@ def _audit_dict(r: AdminAuditLog) -> dict:
     }
 
 
-def _card_dict(card: CardKey) -> dict:
-    base = serialize_card_public(card)
+def _device_dict(row: CardDevice) -> dict:
+    return {
+        "device_id": row.device_id,
+        "bound_at": row.bound_at.isoformat() if row.bound_at else None,
+        "last_seen_at": row.last_seen_at.isoformat() if row.last_seen_at else None,
+    }
+
+
+def _card_dict(card: CardKey, devices: list[dict] | None = None) -> dict:
+    """后台卡密行。devices 传该卡全部绑定设备（按绑定时间升序）。"""
+    devs = devices or []
+    base = serialize_card_public(
+        card, device_count=len(devs) if devices is not None else None
+    )
     base.update(
         {
             "id": card.id,
             "note": card.note,
             "device_id": card.device_id,
+            "devices": devs,
             "created_at": card.created_at.isoformat() if card.created_at else None,
         }
     )
@@ -637,7 +652,16 @@ def delete_game(
     evts = db.query(AuthEvent).filter(AuthEvent.game_id == gid).delete(synchronize_session=False)
     sess = db.query(SessionToken).filter(SessionToken.game_id == gid).delete(synchronize_session=False)
     cards = 0
+    devs = 0
     if force:
+        # 一码多设备：先清这些卡的设备行（card_devices 无外键级联）
+        card_pks = [r[0] for r in db.query(CardKey.id).filter(CardKey.game_id == gid).all()]
+        if card_pks:
+            devs = (
+                db.query(CardDevice)
+                .filter(CardDevice.card_id.in_(card_pks))
+                .delete(synchronize_session=False)
+            )
         cards = db.query(CardKey).filter(CardKey.game_id == gid).delete(synchronize_session=False)
 
     record_admin_audit(
@@ -646,7 +670,7 @@ def delete_game(
         "games.delete",
         detail=(
             f"游戏={gid} 功能={feats} 在线记录={pres} 事件={evts} 会话={sess}"
-            + (f" 卡密={cards}" if force else "")
+            + (f" 卡密={cards} 设备绑定={devs}" if force else "")
             + ("（强制）" if force else "")
         ),
         ip=_client_ip(request),
@@ -696,6 +720,7 @@ def list_cards(
     status: str | None = None,
     game_id: str | None = None,
     scope: str | None = None,
+    duration_type: str | None = None,
     bound: bool | None = None,
     unbind_used: bool | None = None,
     page: int = 1,
@@ -722,10 +747,15 @@ def list_cards(
         else:
             # 未指定 scope：该游戏单卡 + 全部全游戏卡（兼容旧行为）
             query = query.filter((CardKey.game_id == game_id) | (CardKey.scope == "global"))
+    # 类型筛选（hour/day/month/year/permanent/count）：后台列表原缺此项
+    if duration_type in ("hour", "day", "month", "year", "permanent", "count"):
+        query = query.filter(CardKey.duration_type == duration_type)
+    # 绑定状态按设备表判定（一码多设备后 card_keys.device_id 只是兼容字段）
+    has_device = exists().where(CardDevice.card_id == CardKey.id)
     if bound is True:
-        query = query.filter(CardKey.device_id.isnot(None))
+        query = query.filter(has_device)
     elif bound is False:
-        query = query.filter(CardKey.device_id.is_(None))
+        query = query.filter(~has_device)
     if unbind_used is not None:
         query = query.filter(CardKey.unbind_used.is_(unbind_used))
 
@@ -736,9 +766,20 @@ def list_cards(
         .limit(page_size)
         .all()
     )
+    # 一码多设备：本页所有卡的绑定设备一次性取回，避免 N+1
+    dev_map: dict[int, list[dict]] = {}
+    if rows:
+        card_ids = [c.id for c in rows]
+        for d in (
+            db.query(CardDevice)
+            .filter(CardDevice.card_id.in_(card_ids))
+            .order_by(CardDevice.bound_at.asc(), CardDevice.id.asc())
+            .all()
+        ):
+            dev_map.setdefault(d.card_id, []).append(_device_dict(d))
     return {
         "ok": True,
-        "data": [_card_dict(c) for c in rows],
+        "data": [_card_dict(c, dev_map.get(c.id, [])) for c in rows],
         "meta": {"total": total, "page": page, "page_size": page_size},
     }
 
@@ -759,6 +800,7 @@ def create_cards(
         game_id=body.game_id if body.scope == "game" else None,
         duration_type=body.duration_type,
         max_uses=body.max_uses,
+        max_devices=body.max_devices,  # 0=不限台数；1=一机一码
         note=body.note,
         status="unused",
     )
@@ -843,6 +885,7 @@ def batch_delete_cards(
         if not card:
             continue
         revoke_card_sessions(db, card.id)
+        purge_card_devices(db, card.id)
         db.delete(card)
         deleted += 1
     record_admin_audit(
@@ -883,6 +926,8 @@ def update_card(
     for k, v in data.items():
         setattr(card, k, v)
     if force_unbind:
+        # 后台强制解绑=整卡操作：清掉全部设备行与会话（与一码多设备前行为一致）
+        purge_card_devices(db, card.id)
         card.device_id = None
         card.legacy_device_ids = None
     if reset_unbind:
@@ -905,7 +950,14 @@ def update_card(
     )
     db.commit()
     db.refresh(card)
-    return {"ok": True, "message": "卡密已更新", "data": _card_dict(card)}
+    devs = [
+        _device_dict(d)
+        for d in db.query(CardDevice)
+        .filter(CardDevice.card_id == card.id)
+        .order_by(CardDevice.bound_at.asc(), CardDevice.id.asc())
+        .all()
+    ]
+    return {"ok": True, "message": "卡密已更新", "data": _card_dict(card, devs)}
 
 
 @router.delete("/cards/{card_id}")
@@ -920,6 +972,7 @@ def delete_card(
         raise HTTPException(404, "卡密不存在")
     key_code = card.key_code
     revoke_card_sessions(db, card.id)
+    purge_card_devices(db, card.id)
     db.delete(card)
     record_admin_audit(
         db,
