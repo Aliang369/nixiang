@@ -1,0 +1,338 @@
+10-30 20:39:41.033  3049  3049 I StarryAppFactory: SignatureKiller mounted: PackageInfo.CREATOR replaced, PM/Parcel caches cleared
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateApplication(SourceFile:2)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.app.Instrumentation.newApplication(Instrumentation.java:1367)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.app.LoadedApk.makeApplicationInner(LoadedApk.java:1579)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.app.LoadedApk.makeApplicationInner(LoadedApk.java:1492)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8614)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.034  3049  3049 W StarryAppFactory: 	... 17 more
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.036  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.039  3049  3049 W StarryMagic: [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+10-30 20:39:41.039  3049  3049 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-30 20:39:41.039  3049  3049 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=Bszz)
+10-30 20:39:41.040  3049  3049 I ModBridge: native via StarryNativeLoad: /data/app/~~BDdpP7mMPCLSRT7BPBVUGQ==/com.acing.gow.adv-CYCyotTjY1vjMLH04WWsbg==/lib/arm64/libstarry_magic.so
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.040  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.041  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateProvider(SourceFile:1)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installProvider(ActivityThread.java:9495)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.installContentProviders(ActivityThread.java:9015)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleBindApplication(ActivityThread.java:8645)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleBindApplication(Unknown Source:0)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2813)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.043  3049  3049 W StarryAppFactory: 	... 16 more
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateActivity(SourceFile:1)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.Instrumentation.newActivity(Instrumentation.java:1463)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4524)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4851)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:242)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:138)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:108)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:85)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:3131)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.081  3049  3049 W StarryAppFactory: 	... 19 more
+10-30 20:39:41.118  3049  3049 I StarryInitProvider: MenuService.start scheduled (activity-resumed)
+10-30 20:39:41.234  3049  3049 I MenuService: startService (plain, no-FGS)
+10-30 20:39:41.234  3049  3049 I StarryInitProvider: MenuService.start ok (activity-resumed)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateService(SourceFile:1)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleCreateService(ActivityThread.java:5656)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.-$$Nest$mhandleCreateService(Unknown Source:0)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2877)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:41.259  3049  3049 W StarryAppFactory: 	... 14 more
+10-30 20:39:41.272  3208  4365 I ActivityManager: Background started FGS: Allowed [callingPackage: com.acing.gow.adv; callingUid: 11128; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=com.acing.gow.adv/com.starry.magic.menu.MenuService mCallingUid=11128 }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:30; callerTargetSdkVersion:30; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-30 20:39:41.273  3049  3049 I MenuService: MenuService created
+10-30 20:39:41.273  3049  3049 I ModBridge: auth game_id synced from native: bszz
+10-30 20:39:41.273  3049  3049 I MenuService: auth game_id=bszz
+10-30 20:39:41.273  3049  3049 I MenuService: lifecycleWatcher registered (resume + background hide)
+10-30 20:39:41.273  3049  3049 I MenuService: host lifecycle primed (start-thread-scan) started=1 resumed=1
+10-30 20:39:41.274  3049  3049 I ModBridge: auth game_id synced from native: bszz
+10-30 20:39:41.277  3049  3049 I ModBridge: auth game_id synced from native: bszz
+10-30 20:39:41.277  3049  3049 I ModBridge: auth game_id synced from native: bszz
+10-30 20:39:41.303  3049  3049 I StarryMagic: ===== 星光魔法 MOD 菜单初始化（modern/Bszz）=====
+10-30 20:39:41.303  3049  3049 I MenuService: native menu shown mode=ACTIVITY
+10-30 20:39:41.303  3049  3513 I ModBridge: auth game_id synced from native: bszz
+10-30 20:39:41.304  3049  3514 I StarryMagic: MOD 后台线程已启动 tag=Bszz
+10-30 20:39:41.305  3049  3514 I StarryMagic: MOD 已就绪 tag=Bszz ready=1
+10-30 20:39:41.319  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:41.319  3049  3049 I MenuService: prime:start-thread-scan → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:39:41.431  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:41.431  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:39:41.541  3049  3513 W StarryMagic: [V2] r=0
+10-30 20:39:41.701  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:41.701  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:39:41.772  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:41.772  3049  3049 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:39:43.682  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:43.683  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:39:45.214  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:45.214  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:39:45.582  3049  3049 I MenuService: host focus lost ignored (ACTIVITY mode)
+10-30 20:39:45.631  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:45.631  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateActivity(SourceFile:1)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.Instrumentation.newActivity(Instrumentation.java:1463)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4524)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4851)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:242)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:138)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:108)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:85)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:3131)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:39:49.763  3049  3049 W StarryAppFactory: 	... 19 more
+10-30 20:39:49.849  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:49.849  3049  3049 I MenuService: activity-resumed:TapTapLoginActivity → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:39:49.913  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:49.913  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:39:50.249  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:50.249  3049  3049 I MenuService: resume delayed 400 → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:39:50.333  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:50.333  3049  3049 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:39:51.050  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:39:51.050  3049  3049 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:40:50.021  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:40:50.021  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:42:29.678  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:29.678  3049  3049 I MenuService: activity-resumed:U8UnityContext → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:42:29.775  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:29.775  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:42:30.079  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:30.079  3049  3049 I MenuService: resume delayed 400 → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: original factory unavailable, using framework default
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at java.lang.Class.classForName(Native Method)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at java.lang.Class.forName(Class.java:597)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.delegate(SourceFile:19)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at com.starry.magic.sign.StarryAppComponentFactory.instantiateActivity(SourceFile:1)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.Instrumentation.newActivity(Instrumentation.java:1463)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:4524)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:4851)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:242)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.executeNonLifecycleItem(TransactionExecutor.java:138)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.executeTransactionItems(TransactionExecutor.java:108)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:85)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:3131)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.os.Handler.dispatchMessage(Handler.java:115)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.os.Looper.loopOnce(Looper.java:302)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.os.Looper.loop(Looper.java:412)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at android.app.ActivityThread.main(ActivityThread.java:9998)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at java.lang.reflect.Method.invoke(Native Method)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: Caused by: java.lang.ClassNotFoundException: androidx.core.app.CoreComponentFactory
+10-30 20:42:30.373  3049  3049 W StarryAppFactory: 	... 19 more
+10-30 20:42:30.420  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:30.420  3049  3049 I MenuService: activity-resumed:TapTapLoginActivity → show ACTIVITY overlay host=TapTapLoginActivity alive=false
+10-30 20:42:30.519  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:30.519  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:42:30.821  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:30.822  3049  3049 I MenuService: resume delayed 400 → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:42:30.879  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:30.880  3049  3049 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:42:30.941  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:30.941  3049  3049 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:42:31.622  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:31.622  3049  3049 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:42:34.818  3049  3049 I MenuService: overlayVisible=true attached=true
+10-30 20:42:34.818  3049  3049 I MenuService: host layout changed → show ACTIVITY overlay host=TapTapLoginActivity alive=true

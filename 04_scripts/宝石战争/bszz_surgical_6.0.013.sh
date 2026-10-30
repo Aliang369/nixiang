@@ -27,6 +27,14 @@ PATCHED_ASSETS="$PATCHED_ROOT/assets/Android"
 FULL_HOTUPDATE_ROOT="${BSZZ_HOTUPDATE_FULL_ROOT:-$PATCHED_ROOT/official_hotupdate}"
 SO_PREBUILT="${BSZZ_SO:-$STARRY_SRC/libs_bszz/arm64-v8a/libstarry_magic.so}"
 MF_CACHE="$NIXIANG/07_patched/$GAME/surgical-$VERSION/AndroidManifest.xml"
+# TapTap 验签（双轨制 B 轨，2026-10-29 起现行）：MT ApkSignatureKillerEx 形态
+# bin.mt.signature.KillerApplication193 打成 classes4.dex，由 manifest 的
+# appComponentFactory=com.starry.magic.sign.StarryAppComponentFactory 在
+# instantiateApplication（早于真实 Application）触发其 <clinit>，换 PackageInfo.CREATOR
+# 并清 Parcel/PackageManager 缓存 ⇒ TapSDK 读到官方证书。官方 dex 一个字节不改。
+KILLER_SMALI="${BSZZ_KILLER_SMALI:-$PATCHED_ROOT/surgical/killer_smali}"
+OFFICIAL_CERT_DER="${BSZZ_OFFICIAL_CERT_DER:-$PATCHED_ROOT/surgical/official.der}"
+EXPECT_CERT_SHA256="${BSZZ_EXPECT_CERT_SHA256:-8943b31609712c8c7fdf583ce26b204ad8b01dad8eb09f4c7d1f276458985bb4}"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
@@ -95,6 +103,52 @@ for cls in StarryInitProvider MenuService ModBridge StarryAppComponentFactory Ta
 done
 "$SMALI_BIN" assemble -o "$WORK/classes3.dex" "$SMALI_ROOT"
 
+echo "[2b/6] MT killer -> classes4.dex（TapTap 验签 B 轨：运行时签名替换）"
+[[ -d "$KILLER_SMALI" ]] || { echo "ERROR: 缺 killer smali 源目录 $KILLER_SMALI" >&2; exit 1; }
+[[ -f "$OFFICIAL_CERT_DER" ]] || { echo "ERROR: 缺官方证书 DER $OFFICIAL_CERT_DER" >&2; exit 1; }
+CERT_SHA256="$(shasum -a 256 "$OFFICIAL_CERT_DER" | awk '{print $1}')"
+[[ "$CERT_SHA256" == "$EXPECT_CERT_SHA256" ]] || {
+  echo "ERROR: 官方证书 DER 指纹不符（实际 ${CERT_SHA256}，期望 ${EXPECT_CERT_SHA256}）" >&2
+  echo "       killer 喂错证书会静默不生效，拒绝打包" >&2
+  exit 1
+}
+rm -rf "$WORK/killer_smali" "$WORK/c4_check"
+cp -r "$KILLER_SMALI" "$WORK/killer_smali"
+rm -f "$WORK/killer_smali/bin/mt/signature/SgKillerApp.smali"
+python3 - "$WORK/killer_smali" "$OFFICIAL_CERT_DER" "$PKG" <<'PY'
+import base64, io, os, re, sys
+root, der_path, pkg = sys.argv[1], sys.argv[2], sys.argv[3]
+b64 = base64.b64encode(open(der_path, 'rb').read()).decode()
+wrapped = '\\n'.join(b64[i:i + 76] for i in range(0, len(b64), 76))
+p = os.path.join(root, 'bin/mt/signature/KillerApplication193.smali')
+t = io.open(p, encoding='utf-8').read()
+assert '.super Landroid/app/Application;' in t, 'killer 父类不是 android.app.Application（先规范化 killer_smali）'
+t, n = re.subn(r'const-string v1, "[^"]*"', 'const-string v1, "%s"' % pkg, t, count=1)
+assert n == 1, 'killer 包名锚点未命中'
+j = t.find('const-string v0, "MI')
+assert j >= 0, 'killer 证书锚点未命中'
+k = t.find('"', j + len('const-string v0, '))
+k2 = t.find('"', k + 1)
+t = t[:j] + 'const-string v0, "%s"' % wrapped + t[k2 + 1:]
+io.open(p, 'w', encoding='utf-8', newline='\n').write(t)
+print('  killer: 包名=%s，证书 base64 %d 字符' % (pkg, len(b64)))
+PY
+"$SMALI_BIN" assemble -o "$WORK/classes4.dex" "$WORK/killer_smali"
+"$BAKSMALI_BIN" d -o "$WORK/c4_check" "$WORK/classes4.dex" >/dev/null
+K4="$WORK/c4_check/bin/mt/signature/KillerApplication193.smali"
+[[ -f "$K4" ]] || { echo "ERROR: 回读失败：classes4.dex 缺 KillerApplication193" >&2; exit 1; }
+grep -q '^.super Landroid/app/Application;' "$K4" || { echo "ERROR: 回读失败：killer 父类异常" >&2; exit 1; }
+grep -q "const-string v1, \"${PKG}\"" "$K4" || { echo "ERROR: 回读失败：killer 包名未改" >&2; exit 1; }
+python3 - "$WORK/classes4.dex" "$OFFICIAL_CERT_DER" <<'PY'
+import base64, sys
+dex = open(sys.argv[1], 'rb').read()
+b64 = base64.b64encode(open(sys.argv[2], 'rb').read()).decode()
+head = b64[:48].encode()
+assert head in dex, 'classes4.dex 缺官方证书 base64（喂错证书 killer 静默失效）'
+print('  classes4.dex killer 证书锚点 ✓（%d B）' % len(dex))
+PY
+rm -rf "$WORK/c4_check"
+
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/libstarry_magic.so"
 [[ -f "$NDK_CXX" ]] && cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so"
@@ -119,6 +173,17 @@ if perms:
     if i < 0:
         raise SystemExit("no uses-permission")
     t = t[:i] + "\n".join(perms) + "\n" + t[i:]
+
+# TapTap 验签 B 轨挂载点：appComponentFactory 必须在真实 Application 之前跑起来
+# （底包无该属性 ⇒ 直接补；U8Application 与既有属性一字不动）。
+factory = "com.starry.magic.sign.StarryAppComponentFactory"
+if 'android:appComponentFactory="' in t:
+    raise SystemExit("底包已有 appComponentFactory，先人工确认挂载点再改本脚本")
+i = t.find("<application")
+if i < 0:
+    raise SystemExit("no <application>")
+j = i + len("<application")
+t = t[:j] + ' android:appComponentFactory="%s"' % factory + t[j:]
 if "com.starry.magic.StarryInitProvider" not in t:
     provider = f'''
         <provider
@@ -165,6 +230,7 @@ z.close()
 PY
   "$AAPT2" dump xmltree --file AndroidManifest.xml "$WORK/mf_check.apk" > "$WORK/tree_new.txt" 2>/dev/null
   grep -q 'com.u8.sdk.U8Application' "$WORK/tree_new.txt" || { echo "ERROR: lost U8Application" >&2; exit 1; }
+  grep -q 'com.starry.magic.sign.StarryAppComponentFactory' "$WORK/tree_new.txt" || { echo "ERROR: appComponentFactory 未挂上（TapTap 验签 B 轨会失效）" >&2; exit 1; }
   grep -q 'com.starry.magic.StarryInitProvider' "$WORK/tree_new.txt" || { echo "ERROR: provider missing" >&2; exit 1; }
   grep -q 'com.starry.magic.menu.MenuService' "$WORK/tree_new.txt" || { echo "ERROR: service missing" >&2; exit 1; }
 fi
@@ -176,6 +242,7 @@ from pathlib import Path
 src, work, patched_root, full_hotupdate_root, dst = map(Path, sys.argv[1:6])
 mf = (work / "AndroidManifest.xml").read_bytes()
 c3 = (work / "classes3.dex").read_bytes()
+c4 = (work / "classes4.dex").read_bytes()
 official_manifest_path = full_hotupdate_root / "Android/manifest.json"
 official_manifest_bytes = official_manifest_path.read_bytes()
 official_manifest = json.loads(official_manifest_bytes)
@@ -219,7 +286,7 @@ for item in zin.infolist():
         is_sig(name)
         or name.startswith("assets/Android/")
         or name in extras
-        or name == "classes3.dex"
+        or name in ("classes3.dex", "classes4.dex")
     ):
         continue
     data = mf if name == "AndroidManifest.xml" else zin.read(item)
@@ -242,6 +309,10 @@ info = zipfile.ZipInfo("classes3.dex")
 info.compress_type = zipfile.ZIP_DEFLATED
 info.create_system = 3
 zout.writestr(info, c3)
+info = zipfile.ZipInfo("classes4.dex")
+info.compress_type = zipfile.ZIP_DEFLATED
+info.create_system = 3
+zout.writestr(info, c4)
 for name, data in sorted(extras.items()):
     info = zipfile.ZipInfo(name)
     info.compress_type = zipfile.ZIP_DEFLATED
@@ -274,9 +345,11 @@ assert len(patched_network_bytes) > 0
 for name in kept_meta:
     assert name in zout2.namelist(), f"lost META-INF entry: {name}"
 assert "classes3.dex" in zout2.namelist()
+assert "classes4.dex" in zout2.namelist()
+assert zout2.read("classes4.dex") == c4, "classes4.dex 与工作副本不一致"
 assert "lib/arm64-v8a/libstarry_magic.so" in zout2.namelist()
 assert not any(n.upper().endswith((".SF", ".RSA", ".DSA", ".EC")) for n in zout2.namelist())
-print("  merged ok; complete HotUpdate assets + patched DLL + classes3/so verified")
+print("  merged ok; complete HotUpdate assets + patched DLL + classes3/classes4(so+killer) verified")
 zin2.close(); zout2.close()
 PY
 
@@ -299,6 +372,9 @@ unzip -p "$UNSIGNED" classes3.dex > "$WORK/classes3.check.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c3_check" "$WORK/classes3.check.dex" >/dev/null
 [[ -f "$WORK/c3_check/com/starry/magic/StarryInitProvider.smali" ]] || { echo "ERROR: classes3 missing provider" >&2; exit 1; }
 [[ -f "$WORK/c3_check/com/starry/magic/sign/StarryAppComponentFactory.smali" ]] || { echo "ERROR: classes3 missing StarryAppComponentFactory" >&2; exit 1; }
+unzip -p "$UNSIGNED" classes4.dex > "$WORK/classes4.check.dex"
+"$BAKSMALI_BIN" d -o "$WORK/c4_pkg_check" "$WORK/classes4.check.dex" >/dev/null
+[[ -f "$WORK/c4_pkg_check/bin/mt/signature/KillerApplication193.smali" ]] || { echo "ERROR: 成品包 classes4.dex 缺 KillerApplication193（TapTap 验签会继续失败）" >&2; exit 1; }
 
 ls -lh "$UNSIGNED"
 md5 -q "$UNSIGNED" | sed 's/^/md5=/'

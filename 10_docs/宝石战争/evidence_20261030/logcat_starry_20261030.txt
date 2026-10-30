@@ -1,0 +1,77 @@
+10-30 20:27:27.486 30133 30133 I StarryNativeLoad: preloaded /data/app/~~RhSH1Ey7Hr8Qqgs4zrJT0A==/com.acing.gow.adv-ipaaT4I1pS9VvYYGVnrGbw==/lib/arm64/libc++_shared.so
+10-30 20:27:27.486 30133 30133 W StarryMagic: [桥接] exempt hidden apis via JNI 失败（隐藏方法）
+10-30 20:27:27.486 30133 30133 I StarryMagic: [桥接] RegisterNatives 19/19 全部成功
+10-30 20:27:27.486 30133 30133 I StarryMagic: 星光魔法 MOD 菜单已加载 (MainModern tag=Bszz)
+10-30 20:27:27.486 30133 30133 I StarryNativeLoad: loaded apk lib-dir so: /data/app/~~RhSH1Ey7Hr8Qqgs4zrJT0A==/com.acing.gow.adv-ipaaT4I1pS9VvYYGVnrGbw==/lib/arm64/libstarry_magic.so
+10-30 20:27:27.486 30133 30133 I StarryInitProvider: native ensureLoaded=true path=/data/app/~~RhSH1Ey7Hr8Qqgs4zrJT0A==/com.acing.gow.adv-ipaaT4I1pS9VvYYGVnrGbw==/lib/arm64/libstarry_magic.so
+10-30 20:27:27.487 30133 30133 I ModBridge: native via StarryNativeLoad: /data/app/~~RhSH1Ey7Hr8Qqgs4zrJT0A==/com.acing.gow.adv-ipaaT4I1pS9VvYYGVnrGbw==/lib/arm64/libstarry_magic.so
+10-30 20:27:27.624 30133 30133 I StarryInitProvider: MenuService.start scheduled (activity-resumed)
+10-30 20:27:27.689 30133 30133 I MenuService: startService (plain, no-FGS)
+10-30 20:27:27.689 30133 30133 I StarryInitProvider: MenuService.start ok (activity-resumed)
+10-30 20:27:27.717  3208  3226 I ActivityManager: Background started FGS: Allowed [callingPackage: com.acing.gow.adv; callingUid: 11128; uidState: TOP ; uidBFSL: [BFSL]; intent: Intent { xflg=0x4 cmp=com.acing.gow.adv/com.starry.magic.menu.MenuService mCallingUid=11128 }; code:PROC_STATE_TOP; tempAllowListReason:<null>; allowWiu:12; targetSdkVersion:30; callerTargetSdkVersion:30; startForegroundCount:0; bindFromPackage:null: isBindService:false]
+10-30 20:27:27.723 30133 30133 I MenuService: MenuService created
+10-30 20:27:27.724 30133 30133 I ModBridge: auth game_id synced from native: bszz
+10-30 20:27:27.724 30133 30133 I MenuService: auth game_id=bszz
+10-30 20:27:27.724 30133 30133 I MenuService: lifecycleWatcher registered (resume + background hide)
+10-30 20:27:27.724 30133 30133 I MenuService: host lifecycle primed (start-thread-scan) started=1 resumed=1
+10-30 20:27:27.725 30133 30133 I ModBridge: auth game_id synced from native: bszz
+10-30 20:27:27.727 30133 30133 I ModBridge: auth game_id synced from native: bszz
+10-30 20:27:27.727 30133 30133 I ModBridge: auth game_id synced from native: bszz
+10-30 20:27:27.756 30133 30133 I StarryMagic: ===== 星光魔法 MOD 菜单初始化（modern/Bszz）=====
+10-30 20:27:27.756 30133 30224 I StarryMagic: MOD 后台线程已启动 tag=Bszz
+10-30 20:27:27.756 30133 30223 I ModBridge: auth game_id synced from native: bszz
+10-30 20:27:27.756 30133 30133 I MenuService: native menu shown mode=ACTIVITY
+10-30 20:27:27.756 30133 30224 I StarryMagic: MOD 已就绪 tag=Bszz ready=1
+10-30 20:27:27.758 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:27.758 30133 30133 I MenuService: prime:start-thread-scan → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:28.076 30133 30223 W StarryMagic: [V2] r=0
+10-30 20:27:28.359 30133 30133 I MenuService: app background ignored (ACTIVITY mode, view auto-hidden)
+10-30 20:27:29.785 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:29.785 30133 30133 I MenuService: activity-resumed:U8UnityContext → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:29.836 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:29.836 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:30.186 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:30.186 30133 30133 I MenuService: resume delayed 400 → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:30.665 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:30.665 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:30.866 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:30.866 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:30.964 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:30.965 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:30.999 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:30.999 30133 30133 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:31.015 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:31.016 30133 30133 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:32.998 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:32.998 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:36.032 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:36.032 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:36.380 30133 30133 I MenuService: host focus lost ignored (ACTIVITY mode)
+10-30 20:27:36.415 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:36.415 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:27:49.054 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:49.054 30133 30133 I MenuService: activity-resumed:TapTapLoginActivity → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:27:49.115 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:49.115 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:27:49.455 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:49.455 30133 30133 I MenuService: resume delayed 400 → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:27:49.532 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:49.532 30133 30133 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:27:50.254 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:27:50.254 30133 30133 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:28:49.132 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:28:49.132 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:29:05.684 30133 30133 I MenuService: host focus lost ignored (overlay IME)
+10-30 20:29:06.748 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:29:06.748 30133 30133 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:29:07.671 30133 30133 I MenuService: host focus lost ignored (overlay IME)
+10-30 20:29:08.757 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:29:08.757 30133 30133 I MenuService: host window focus gained (deferred) → show ACTIVITY overlay host=TapTapLoginActivity alive=true
+10-30 20:30:18.598 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:30:18.598 30133 30133 I MenuService: activity-resumed:U8UnityContext → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:30:18.679 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:30:18.679 30133 30133 I MenuService: host layout changed → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:30:18.998 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:30:18.998 30133 30133 I MenuService: resume delayed 400 → show ACTIVITY overlay host=U8UnityContext alive=true
+10-30 20:30:19.798 30133 30133 I MenuService: overlayVisible=true attached=true
+10-30 20:30:19.799 30133 30133 I MenuService: resume delayed 1200 → show ACTIVITY overlay host=U8UnityContext alive=true

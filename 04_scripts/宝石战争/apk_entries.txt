@@ -1003,6 +1003,7 @@ res/raw/music.wav
 res/xml/applog_devtools_provider_paths.xml
 res/xml/file_paths.xml
 res/xml/tapupdate_file_provider.xml
+lib/arm64-v8a/libBugly_Native.so
 lib/arm64-v8a/lib_burst_generated.so
 lib/arm64-v8a/libbacktrace-native.so
 lib/arm64-v8a/libcrashpad_handler.so
@@ -1022,6 +1023,7 @@ lib/arm64-v8a/libturingad.so
 lib/arm64-v8a/libxenv.so
 lib/arm64-v8a/libmsaoaidauth.so
 lib/arm64-v8a/libmsaoaidsec.so
+lib/armeabi-v7a/libBugly_Native.so
 lib/armeabi-v7a/lib_burst_generated.so
 lib/armeabi-v7a/libbacktrace-native.so
 lib/armeabi-v7a/libcrashpad_handler.so
@@ -1206,6 +1208,7 @@ assets/com.acing.gow.adv.cert.pem
 assets/u8_developer_config.properties
 assets/u8_plugin_config.xml
 androidsupportmultidexversion.txt
+com/qq/jce/wup/wup.properties
 META-INF/ANDROID_.SF
 META-INF/ANDROID_.RSA
 META-INF/MANIFEST.MF
