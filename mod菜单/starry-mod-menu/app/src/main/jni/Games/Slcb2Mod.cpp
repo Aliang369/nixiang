@@ -248,6 +248,7 @@ enum SlotKind {
     K_RESULT,          // 只改结果指令（免CD / 不耗蓝）
     K_STUB9999,        // 入口 → cave：mov w0,#9999; ret（货币）
     K_STUB_TRUE,       // 入口 → cave：mov w0,#1; ret（装扮判定）
+    K_SKIN_OBTAINED,   // 入口 → cave：item.mObtained=1 后跳回循环尾（装扮仓库「未获得」分支）
 };
 
 struct HookSlot {
@@ -281,8 +282,11 @@ static const HookSlot kSlots[] = {
     //      InvUI 0x11940DAC ldrb w8,[x23,#0x10] → mov w8,#1
     //      UI    0x1194AFD8 tbz  w0,#0,+6  → nop（顺序落到下一条）
     //      UI    0x1194AFDC ldrb w8,[x24,#0x10] → mov w8,#1
-    { "SkinInvHit", 0x11940D94UL, SLCB2_FEAT_SKIN, K_RESULT, 0x11940D94UL, 0x370000C0u, 0x14000006u },
-    { "SkinInvOb",  0x11940DACUL, SLCB2_FEAT_SKIN, K_RESULT, 0x11940DACUL, 0x394042E8u, 0x52800028u },
+    // 2026-10-30 12:xx 三改：上面两条结果补丁只在「账号已获得记录非空」时才走得到；
+    // 而 AppearanceInventoryUI.GetAccountNewData → ServerModule_Friend.GetAppearanceWarehouse
+    // 取不到列表时，0x11940D54 `cbz x19` 会**直接 return**（整页保持全未获得）。
+    // 改成入口补丁：每个配置项取出来后直接 item+0x38=1，再跳回循环尾（0x11940DDC）。
+    { "SkinInvLock", 0x11940D54UL, SLCB2_FEAT_SKIN, K_SKIN_OBTAINED, 0x11940DDCUL, 0xB40004B3u, 0 },
     { "SkinUiHit",  0x1194AFD8UL, SLCB2_FEAT_SKIN, K_RESULT, 0x1194AFD8UL, 0x36000060u, 0xD503201Fu },
     { "SkinUiOb",   0x1194AFDCUL, SLCB2_FEAT_SKIN, K_RESULT, 0x1194AFDCUL, 0x39404308u, 0x52800028u },
 
@@ -383,6 +387,35 @@ static bool PatchJumpSlot(int i) {
         g_slotTarget[i] = va; g_lastHookTarget = va;
         LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（mov w0,#%u; ret）",
              i, sl.tag, bi, sc, imm);
+        return true;
+    }
+
+    // ---- 装扮仓库：item.mObtained=1，然后跳回循环尾继续下一项 ----
+    //     入口 x22 = 当前 AppearanceItemData*（0x11940D4C `mov x22,x0` 已证），
+    //     mObtained 在 +0x38（卡片取锁 = mShowLockCover(+0x60) && !mObtained）。
+    //     跳回 0x11940DDC：`ldr x0,[x20,#0x120]; add w21,#1; cbnz x0 → 循环头`。
+    if (sl.kind == K_SKIN_OBTAINED) {
+        if (sl.oldW && w0 != sl.oldW) return false;      // 入口指纹：cbz x19
+        void* resume = FileOffToVa(TPL_TARGET_LIB, sl.rva2);
+        if (!resume) return false;
+        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
+        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
+        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
+        uint32_t code[3];
+        code[0] = 0x52800028u;   // mov  w8, #1
+        code[1] = 0x3900E2C8u;   // strb w8, [x22, #0x38]
+        int64_t d2 = (int64_t)((uintptr_t)resume - ((uintptr_t)sc + 8));
+        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
+        code[2] = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));   // b resume
+        if (!WriteCode(sc, code, 12)) return false;
+        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
+        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
+        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+        memcpy(g_slotSaved[i], &w0, 4);
+        if (!WriteCode(va, &bi, 4)) return false;
+        g_slotTarget[i] = va; g_lastHookTarget = va;
+        LOGI(TPL_LOG " slot[%d] %s 已获得 stub 已装：入口 0x%08X → cave %p（mObtained=1; b 0x%lX）",
+             i, sl.tag, bi, sc, (unsigned long)sl.rva2);
         return true;
     }
 
