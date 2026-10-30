@@ -64,7 +64,7 @@ KILLER_SMALI="${YIMO_KILLER_SMALI:-$NIXIANG/07_patched/魂坠深境/surgical/kil
 OUT="$NIXIANG/08_output/${GAME}"
 UNSIGNED="$OUT/${GAME}_${VER}_surgical${DIAG_SUFFIX}-unsigned.apk"
 SIGNED="$OUT/${GAME}_${VER}_surgical${DIAG_SUFFIX}-releaseSigned.apk"
-WORK="$NIXIANG/07_tmp/yimo_110"
+WORK="$NIXIANG/13_scratch/yimo_110"
 MF_CACHE="$NIXIANG/07_patched/${GAME}/surgical_${VER}/AndroidManifest.xml"
 
 JAVA_BIN="${JAVA_BIN:-java}"

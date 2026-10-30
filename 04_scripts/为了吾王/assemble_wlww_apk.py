@@ -48,8 +48,8 @@ def build_cxx_shared():
             return out
     raise SystemExit("找不到 NDK 的 libc++_shared.so，检查 ANDROID_NDK_HOME")
 
-BASE = r"E:\nixiang\07_tmp\ftk_orig4399\base.apk"
-MANIFEST = r"E:\nixiang\07_tmp\mani\patched_manifest.bin"
+BASE = r"E:\nixiang\13_scratch\ftk_orig4399\base.apk"
+MANIFEST = r"E:\nixiang\13_scratch\mani\patched_manifest.bin"
 MENU_APK = r"E:\nixiang\mod菜单\starry-mod-menu\app\build\outputs\apk\release\app-release.apk"
 SO = r"E:\nixiang\mod菜单\starry-mod-menu\libs_wlww\arm64-v8a\libstarry_magic.so"
 OUT = r"E:\nixiang\08_output\为了吾王\为了吾王_3.0.4_wlww_unsigned.apk"

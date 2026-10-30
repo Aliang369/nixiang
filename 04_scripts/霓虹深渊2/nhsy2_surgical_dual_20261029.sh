@@ -46,7 +46,7 @@ ORIG="${NHSY2_ORIG_APK:-}"
 MENU_APK="${NHSY2_MENU_APK:-}"
 KILLER_SMALI="${NHSY2_KILLER_SMALI:-}"
 SO_SRC="${NHSY2_SO:-$NIXIANG/mod菜单/starry-mod-menu/app/src/libs_nhsy2/arm64-v8a/libstarry_magic.so}"
-WORK="${NHSY2_WORK:-$NIXIANG/07_tmp/nhsy2_dual}"
+WORK="${NHSY2_WORK:-$NIXIANG/13_scratch/nhsy2_dual}"
 OUT="${NHSY2_OUT:-$NIXIANG/08_output/$GAME/${GAME}_${VER_SHORT}_dual-unsigned.apk}"
 SIGNED="${NHSY2_SIGNED:-$NIXIANG/08_output/$GAME/${GAME}_${VER_SHORT}_dual-releaseSigned.apk}"
 

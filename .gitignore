@@ -42,6 +42,10 @@
 11_proj_tools/
 05_ida/
 12_images/cache/
+# 13_scratch/：临时草稿区（2026-10-31 由 07_tmp 正名而来）——临时试包、一次性分析脚本的唯一合法落点，
+# 收尾必须清空，整目录不入库。同批撤销 07_tools/：其 frida_gadget/ 迁入 01_tools/frida_gadget/（已跟踪文件保持跟踪）。
+# 编号就此收敨为单义：07 只留 07_patched（改后待重打包）。
+13_scratch/
 
 # 99_archive 归档不入库；仅保留被 AGENTS.md 引用的历史快照（小）
 99_archive/*

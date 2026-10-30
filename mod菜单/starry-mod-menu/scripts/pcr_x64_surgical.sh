@@ -64,9 +64,9 @@ export PATH="$JAVA_HOME/bin:$PATH"
 export ANDROID_HOME="$(m "$SDK_HOME")"
 export ANDROID_SDK_ROOT="$ANDROID_HOME"
 
-# 工作目录放在仓内 07_tmp（Windows 程序看不到 MSYS 的 /tmp），并统一用混合路径
-mkdir -p "$NIXIANG/07_tmp" "$OUT"
-WORK="$(m "$(mktemp -d "$NIXIANG/07_tmp/pcr_x64.XXXXXX")")"
+# 工作目录放在仓内 13_scratch（Windows 程序看不到 MSYS 的 /tmp），并统一用混合路径
+mkdir -p "$NIXIANG/13_scratch" "$OUT"
+WORK="$(m "$(mktemp -d "$NIXIANG/13_scratch/pcr_x64.XXXXXX")")"
 trap 'rm -rf "$WORK"' EXIT
 echo "WORK=$WORK"
 

@@ -21,7 +21,9 @@ usage() {
 
 说明:
   - 默认 dry-run，只列出路径、大小和目标隔离位置。
-  - --apply 后移动到 ~/.Trash/nixiang_<tag>_<时间>/<仓库相对路径>。
+  - --apply 后移动到隔离区 nixiang_<tag>_<时间>/<仓库相对路径>。
+    隔离区父目录：mac/Linux 默认 ~/.Trash；Windows 默认 99_archive/_trash（禁止落 C 盘）；
+    两者都可用环境变量 NIXIANG_TRASH_DIR 覆盖。
   - 强制拒绝仓库根、.git、01_tools、02_apks、08_output。
   - 例外：01_tools 下工具自身的构建/运行输出按 TOOLS_REGEN_ALLOW 白名单放行（规则见 TOOLBOOK.md）。
   - --manifest 可指定 JSON 清单；apply 且未指定时写入隔离目录内的 manifest.json。
@@ -151,8 +153,28 @@ suggest_paths() {
 }
 
 STAMP="$(date '+%Y%m%d_%H%M%S')"
-TRASH_PARENT="${NIXIANG_TRASH_DIR:-$HOME/.Trash}"
+# 隔离区父目录（2026-10-31 修复）：
+#   旧实现 TRASH_PARENT="${NIXIANG_TRASH_DIR:-$HOME/.Trash}" 是按 macOS 写的。Windows/Git Bash 下
+#   $HOME=/c/Users/<用户>，隔离物全落 C:\Users\<用户>\.Trash —— 既吃掉系统盘（清理 E: 工作区却把
+#   几十 GB 搬进 C:，2026-10-30 一轮 wlww 试包隔离出 36 GB，C 盘可用从数十 GB 掉到 14.7 GB），
+#   又不是 Windows 真正的回收站（后者是 C:\$Recycle.Bin），「清空回收站」永远清不掉它。
+#   现口径：NIXIANG_TRASH_DIR 显式指定 > Windows 落 $ROOT/99_archive/_trash（与仓库同盘，且
+#   99_archive/* 已被 .gitignore 整目录忽略，隔离物不会误入库）> macOS/Linux 维持 $HOME/.Trash。
+if [[ -n "${NIXIANG_TRASH_DIR:-}" ]]; then
+  TRASH_PARENT="$NIXIANG_TRASH_DIR"
+else
+  case "$(uname -s 2>/dev/null || echo unknown)" in
+    MINGW*|MSYS*|CYGWIN*) TRASH_PARENT="$ROOT/99_archive/_trash" ;;
+    *)                    TRASH_PARENT="$HOME/.Trash" ;;
+  esac
+fi
 QUARANTINE="$TRASH_PARENT/nixiang_${TAG}_${STAMP}"
+# 兜底告警：隔离区若仍落在 C 盘，提示用户（不阻断，显式指定可能是有意的）
+case "$TRASH_PARENT" in
+  /[cC]/*|[cC]:*)
+    echo "[trash_paths] WARNING: 隔离区落在 C 盘（${TRASH_PARENT}）。清理工作区会把占用搬到系统盘，建议用 NIXIANG_TRASH_DIR 指向非 C 盘路径。" >&2
+    ;;
+esac
 
 is_banned_rel() {
   case "$1" in
