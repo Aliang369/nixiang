@@ -47,6 +47,15 @@
 # 编号就此收敨为单义：07 只留 07_patched（改后待重打包）。
 13_scratch/
 
+# ===== 2026-10-31：绿梦构建输入（本地保留、永不入库 —— 注意「不入库」≠「可删」）=====
+# `04_scripts/绿梦/build_inputs_20261028/`（20 MB / 205 文件）是绿梦的**复现链本体**，三条依据：
+#   ① `10_docs/绿梦/收官清理_20261028.md` 已定为「复现链本体，永留」；
+#   ② `04_scripts/绿梦/probes_20261028/assemble.py:12` 直接读其中的 `classes2_patched.dex` 等构建输入；
+#   ③ 兜底已不存在：`02_apks/` 无绿梦底包（历史在设备/网盘）、`08_output/绿梦/` 已空。
+# 之前漏进 git status 的只有 196 个 `*.smali` 与 `classes4.dex.bak2/.bak3`（规则未覆盖后缀），
+# 其余 `*.dex`/`*.bak`/`*.bin`/`*.so` 本就被通用规则挡住。此处整目录忽略，只为止住误提交风险。
+04_scripts/绿梦/build_inputs_20261028/
+
 # 99_archive 归档不入库；仅保留被 AGENTS.md 引用的历史快照（小）
 99_archive/*
 !99_archive/workspace_rules_backup_20260905_161706/
