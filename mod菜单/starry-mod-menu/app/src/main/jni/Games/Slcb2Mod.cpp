@@ -251,6 +251,7 @@ enum SlotKind {
     K_SKIN_OBTAINED,   // 入口 → cave：item.mObtained=1 后跳回循环尾（装扮仓库「未获得」分支）
     K_COUNT,           // 入口 → cave：只给命中计数 +1（诊断探针，不记参数、不改行为）
     K_MIDPROBE,        // 中段 → cave：记录 x8 指针及其 +0x38/+0x60 两个字节后原样续跑（诊断）
+    K_PROBE_LR,        // 入口 → cave：记录命中数 + 调用方 LR + 第一参数（诊断调用链）
 };
 
 struct HookSlot {
@@ -265,6 +266,10 @@ struct HookSlot {
 
 // 诊断探针计数（cave 直接写这里；放我们自己的 .bss，绝不写 r-x 段）
 static volatile uint32_t g_probeCnt[24];
+
+// LR 探针记录：{命中数, _, 调用方LR, 第一参数}
+struct LrProbeRec { volatile uint32_t n; volatile uint32_t pad; volatile uint64_t lr0; volatile uint64_t lr1; volatile uint64_t lr2; volatile uint64_t a1; };
+static LrProbeRec g_lrProbe[24];
 
 // 中段探针记录：{命中数, item+0x38, item+0x60, _, item指针}
 struct MidProbeRec { volatile uint32_t n; volatile uint32_t f38; volatile uint32_t f60; volatile uint32_t pad; volatile uint64_t item; };
@@ -323,6 +328,10 @@ static const HookSlot kSlots[] = {
     // 锁态总成整个掐死：SetSuitItemsAllObtainedLockState 是全二进制里唯一会调 SetImageColor(0x1193AB40)
     // 的地方（也是唯一给卡片上锁图标的地方），直接 ret ⇒ 卡片保持预制体默认外观。
     { "NoLockVis", 0x1193AA90UL, SLCB2_FEAT_SKIN, K_STUB_TRUE, 0, 0xF81D0FFEu, 0 },
+    // 逐项显隐的真正开关：控制器里 `SetActive([x19+0x90], item.mObtained)`（0x9AFDA80 读 +0x38）。
+    // 该函数头 170 条指令里没有任何 +0x38/+0x60 分支 ⇒ 图标/灰显不靠锁态分支，而靠这处显隐。
+    // 把 读取改成 mov w1,#1 ⇒ 恒按「已获得」显示。
+    { "SkinIconOn", 0x9AFDA80UL, SLCB2_FEAT_SKIN, K_RESULT, 0x9AFDA80UL, 0x3940E101u, 0x52800021u },
 
 
 
@@ -412,6 +421,47 @@ static bool PatchJumpSlot(int i) {
         g_slotTarget[i] = va; g_lastHookTarget = va;
         LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（mov w0,#%u; ret）",
              i, sl.tag, bi, sc, imm);
+        return true;
+    }
+
+    // ---- LR 探针：记录命中数 + x30 + 两层帧指针回溯 + x1，回放入口指令后跳回 entry+4 ----
+    if (sl.kind == K_PROBE_LR) {
+        if (sl.oldW && w0 != sl.oldW) return false;
+        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 80);
+        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 80B cave", i, sl.tag); return false; }
+        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 80);
+        LrProbeRec* rec = &g_lrProbe[i];
+        unsigned char b[72]; std::memset(b, 0, sizeof b);
+        uint32_t cw[14];
+        cw[0]  = w0;            // +0  回放入口原指令
+        cw[1]  = 0x580001E9u;   // +4  ldr x9,[pc,#60] → cave+64（记录地址）
+        cw[2]  = 0xB940012Au;   // +8  ldr w10,[x9]
+        cw[3]  = 0x1100054Au;   // +12 add w10,w10,#1
+        cw[4]  = 0xB900012Au;   // +16 str w10,[x9]
+        cw[5]  = 0xF900053Eu;   // +20 str x30,[x9,#8]   帧0（直接调用者）
+        cw[6]  = 0xAA1D03EBu;   // +24 mov x11,x29
+        cw[7]  = 0xB40000EBu;   // +28 cbz x11,+28 → +56
+        cw[8]  = 0xF940056Cu;   // +32 ldr x12,[x11,#8]  帧1
+        cw[9]  = 0xF900092Cu;   // +36 str x12,[x9,#16]
+        cw[10] = 0xF940016Bu;   // +40 ldr x11,[x11]
+        cw[11] = 0xB400004Bu;   // +44 cbz x11,+8 → +52
+        cw[12] = 0xF940056Cu;   // +48 ldr x12,[x11,#8]  帧2
+        cw[13] = 0xF9000D2Cu;   // +52 str x12,[x9,#24]
+        memcpy(b, cw, 56);
+        int64_t d2 = (int64_t)((uintptr_t)va + 4 - ((uintptr_t)sc + 56));
+        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
+        uint32_t bx = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));
+        memcpy(b + 56, &bx, 4);            // +56 b entry+4
+        uint64_t paddr = (uint64_t)(uintptr_t)rec;
+        memcpy(b + 64, &paddr, 8);         // +64 字面量
+        if (!WriteCode(sc, b, 72)) return false;
+        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
+        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
+        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+        memcpy(g_slotSaved[i], &w0, 4);
+        if (!WriteCode(va, &bi, 4)) return false;
+        g_slotTarget[i] = va; g_lastHookTarget = va;
+        LOGI(TPL_LOG " slot[%d] %s LR探针(v2)已装：入口 0x%08X → cave %p", i, sl.tag, bi, sc);
         return true;
     }
 
@@ -707,6 +757,24 @@ static void SyncHooks() {
         }
     }
 
+    // LR 探针打印（诊断用）：每 ~60 拍打一次，lr 以 base+rva 形式输出
+    {
+        static int tickLr = 0;
+        if (++tickLr % 60 == 0) {
+            uintptr_t base = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, 0);
+            for (int i = 0; i < kSlotsCount; ++i) {
+                if (kSlots[i].kind != K_PROBE_LR) continue;
+                if (i >= 24) continue;
+                const LrProbeRec& r = g_lrProbe[i];
+                if (!r.n) continue;
+                LOGI(TPL_LOG " LR %s n=%u f0=0x%lX f1=0x%lX f2=0x%lX base=0x%lX",
+                     kSlots[i].tag, r.n,
+                     (unsigned long)r.lr0, (unsigned long)r.lr1,
+                     (unsigned long)r.lr2, (unsigned long)base);
+            }
+        }
+    }
+
     // 探针计数（诊断用）：每 ~60 拍打一次，读的是 cave 直接累加的 .bss 计数
     {
         static int tick = 0;
@@ -727,6 +795,17 @@ static void SyncHooks() {
 //  ⑧ 对外接口（ModEntry.h 注册表契约，签名不可改）
 // ============================================================================
 bool Slcb2_TryInit(JavaVM* /*vm*/) {
+    // ── 分析模式：APK 内若随包带了 frida-gadget（libgadget.so），加载它 ──
+    // 正式包不带该文件 ⇒ dlopen 失败，静默跳过，零副作用。
+    {
+        static bool tried = false;
+        if (!tried) {
+            tried = true;
+            void* g = dlopen("libgadget.so", RTLD_NOW);
+            LOGI(TPL_LOG " gadget: %s", g ? "libgadget.so 已加载（分析模式）" : "未随包（正式模式）");
+        }
+    }
+
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
 
