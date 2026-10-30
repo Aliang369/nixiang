@@ -265,3 +265,28 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 判据：`bundle_repack.py locate-pe` 输出的名字列在**未装 `dnfile`** 时全是 `?`，只有长度可信；
   必须 `pip install dnfile` 后再定位，否则容易按长度猜错程序集。
 - 落点：`skill/re-extract/hotupdate-fingerprint-recheck.md` §2 附加一句 + 绿梦文档 §8.2 已记。
+
+## 候选：让补丁「跟着游戏自己的缓存索引走」= 热更换代免疫（class: tech）
+
+- 状态：候选（2026-10-31 绿梦 r8 实测；单游戏单设备，但机制与恢复判据完整）
+- 事实：绿梦的补丁 bundle 必须落进游戏 YooAsset 的 `BundleFiles/<xx>/<guid>/`，而 GUID 每轮热更都变
+  （`a_55→a_56→a_57` 连踩两轮）。把 GUID 写死 ⇒ 每次热更都要改 dex + 重打包。
+  改为**读游戏自己的 `ManifestFiles/CacheRecords.snapshot`**：取其中 `dataFilePath` 落在目标包缓存目录下的记录，
+  用记录路径的父目录作为落地目标，落完把**该记录**的 `crc/size` 改成我方值、其余记录逐字段保留、整份按原格式重写。
+- 判据（可复用）：① 真机日志必须出现「动态定位 records=N dllRecords=K 目标目录=M」与 `dynamic=true`；
+  ② 受控模拟＝把 snapshot 改成指向一个**不存在的新 GUID 目录**再冷启，看是否自动建目录+落载荷+改记录
+  （绿梦 r8 实测通过，随后原样恢复：删假目录 + 回滚 snapshot md5）。
+- 兜底纪律：解析失败/无匹配记录必须回退到硬编码值**并打出原因**（静默回退会让「没生效」变成无证据故障）。
+- 覆盖范围：只在「补丁以文件形式塞进游戏热更缓存」的形态成立（目前仓内只有绿梦）；
+  像无限升级那种 **so 内存注入 + 变体表**（`kDllVariants`）的热更免疫是另一条路，不要混用。
+- 落点建议：`skill/re-extract/hotupdate-fingerprint-recheck.md`（新增一节「缓存索引自愈」）+ 绿梦文档 §9 已记。
+
+## 候选：跨平台离线自测里别用 `getAbsolutePath()` 做路径判据（class: tech）
+
+- 状态：候选（2026-10-31 绿梦 r8 自测实际抓到）
+- 事实：Android 上 `/storage/emulated/0/Android/data/...` 是绝对路径，`File.getAbsolutePath()` 原样返回；
+  同一份代码在 Windows JVM 上会被改写成 `C:\storage\emulated\0\...`（含反斜杠）⇒ 拿它做
+  `indexOf("/yoo/Dll/BundleFiles/")` 之类的判据直接失效，而**真机是对的**，测试却红/绿颠倒。
+- 正确姿势：判据一律用**记录/输入里的原始路径串**（或统一规范化后再比），把 `File` 只当作 IO 句柄。
+- 适用：所有「真机 Android 路径 + 桌面 JVM 离线自测」的组合（SpringBoot/自研解析器/配置路径匹配都算）。
+- 落点建议：`skill/re-implement/code-review-checklist.md` 或 `stages.md` 的离线自测节。
