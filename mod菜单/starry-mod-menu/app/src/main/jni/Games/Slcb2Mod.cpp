@@ -249,6 +249,8 @@ enum SlotKind {
     K_STUB9999,        // 入口 → cave：mov w0,#9999; ret（货币）
     K_STUB_TRUE,       // 入口 → cave：mov w0,#1; ret（装扮判定）
     K_SKIN_OBTAINED,   // 入口 → cave：item.mObtained=1 后跳回循环尾（装扮仓库「未获得」分支）
+    K_COUNT,           // 入口 → cave：只给命中计数 +1（诊断探针，不记参数、不改行为）
+    K_MIDPROBE,        // 中段 → cave：记录 x8 指针及其 +0x38/+0x60 两个字节后原样续跑（诊断）
 };
 
 struct HookSlot {
@@ -260,6 +262,13 @@ struct HookSlot {
     uint32_t    oldW;     // 期望原字
     uint32_t    newW;     // 目标字
 };
+
+// 诊断探针计数（cave 直接写这里；放我们自己的 .bss，绝不写 r-x 段）
+static volatile uint32_t g_probeCnt[24];
+
+// 中段探针记录：{命中数, item+0x38, item+0x60, _, item指针}
+struct MidProbeRec { volatile uint32_t n; volatile uint32_t f38; volatile uint32_t f60; volatile uint32_t pad; volatile uint64_t item; };
+static MidProbeRec g_midProbe[2];
 
 static const HookSlot kSlots[] = {
     { "DmgMul",    0x110829a0UL, SLCB2_FEAT_DMG,     K_SCALE_DMG,  0,          0,          0          },
@@ -301,10 +310,45 @@ static const HookSlot kSlots[] = {
     //      GetIsUnlockTransmog 同理（幻化类装扮，ShowMenuPage/TryGetLockedContent 用）。
     { "SkinUnlock", 0x119C345CUL, SLCB2_FEAT_SKIN, K_STUB_TRUE,  0,          0xF81D0FFEu, 0         },
     { "TransUnlock",0x119C5100UL, SLCB2_FEAT_SKIN, K_STUB_TRUE,  0,          0xF81D0FFEu, 0         },
+
+    // ── 卡片侧总闸（2026-10-30 13:30）：探针实证「页面确实走 AppearanceInventoryUI +
+    //    AppearanceCardUnitUI」，但数据侧置 mObtained=1 画面仍全灰 ⇒ 灰显由卡片自己重算：
+    //      x8 = cardData->item;  w9 = ldrb [x8,#0x60]（mShowLockCover）
+    //      if (w9) w21 = ldrb [x8,#0x38] ^ 1   ← w21 = 未获得
+    //      [x19+0x78].SetActive(w21); [x19+0x38].tint(w21); SetSuitItemsAllObtainedLockState(x19,w21)
+    //    该 refresh 只在 AppearanceCardUnitUI（LC2 内部命名空间，属未命名大模块）里，
+    //    调 AppearanceMgr.GetSprite/GetName ⇒ 只服务装扮卡，不会误伤物品卡。
+    //    把 0x9AFD8A0 `cbz w9,+0x10` 改成无条件 `b +0x10` ⇒ w21 恒 0（不显示锁、不着灰）。
+    { "CardUnlock", 0x9AFD8A0UL, SLCB2_FEAT_SKIN, K_RESULT, 0x9AFD8A0UL, 0x34000089u, 0x14000004u },
+
+    // 【行为型判定 · 2026-10-30 13:55】探针计数机制输出不可信（数值非计数），改用"把函数掐死"
+    //  看用户界面是否变化来判定代码归属：UpdateList 若真是仓库格子的填充者，掐死后列表必空。
+    //  这是不依赖任何计数正确性的是非题。
+    { "InvNoFill", 0x1194181CUL, SLCB2_FEAT_SKIN, K_STUB_TRUE, 0, 0xD101C3FFu, 0 },
+
+    // 中段探针：卡片 refresh 里 x8 = cardData->item，此处读 mShowLockCover。
+    // 记录 item+0x38(mObtained)/+0x60(mShowLockCover) 的真实值，判定「数据侧到底有没有生效」。
+    { "CardItem", 0x9AFD89CUL, SLCB2_FEAT_SKIN, K_MIDPROBE, 0, 0x39418109u, 0 },
+
+    // ── 诊断探针（2026-10-30 13:2x）：连续三版 UI 补丁装机生效但画面零变化 ⇒ 不再靠猜，
+    //    先数清「哪条链真的在跑」。每个探针只把命中数 +1 写到我们 so 的 .bss，不记参数、
+    //    不改任何寄存器语义（x9/x10 是 AAPCS 易失寄存器，入口处可自由使用），命中数每 60 拍打印。
+    //      InvUI.Init      AppearanceInventoryUI.InitInventoryData   仓库数据构建
+    //      InvUI.Cb        AppearanceInventoryUI.GetAccountNewDataCallback  仓库服务端回调
+    //      CardLock        AppearanceCardUnitUI.SetSuitItemsAllObtainedLockState  仓库卡片锁态
+    //      StyUnit         StylistItemUnitUI.SetStylistDataScrollUnit  衣柜/换装格子
+    //      AppUi.Init      AppearanceUI.InitInventoryData             装扮页数据构建
+    //      Passport.Init   PassportUI.InitInventoryData               名片装扮汇总
+    { "InvUI.Init",   0x1193FFD0UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xD104C3FFu, 0 },
+    { "InvUI.Cb",     0x1193FDA0UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xF81C0FFEu, 0 },
+    { "CardLock",     0x1193AA90UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xF81D0FFEu, 0 },
+    { "StyUnit",      0x11AE075CUL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xF81D0FFEu, 0 },
+    { "AppUi.Init",   0x1194A0DCUL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xD10503FFu, 0 },
+    { "Passport.Init",0x11955080UL, SLCB2_FEAT_SKIN, K_COUNT, 0, 0xD104C3FFu, 0 },
 };
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
-static const int kSlotCap = 16;
+static const int kSlotCap = 24;
 static void*         g_slotTarget[kSlotCap]    = {};
 static bool          g_slotInstalled[kSlotCap] = {};
 static bool          g_slotPatched[kSlotCap]   = {};
@@ -387,6 +431,73 @@ static bool PatchJumpSlot(int i) {
         g_slotTarget[i] = va; g_lastHookTarget = va;
         LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（mov w0,#%u; ret）",
              i, sl.tag, bi, sc, imm);
+        return true;
+    }
+
+    // ---- 中段探针：记录 x8 与其两个字段，再原样续跑 ----
+    if (sl.kind == K_MIDPROBE) {
+        if (sl.oldW && w0 != sl.oldW) return false;
+        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 64);
+        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 64B cave", i, sl.tag); return false; }
+        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 64);
+        MidProbeRec* rec = &g_midProbe[(i < 2) ? i : 0];
+        unsigned char b[64]; std::memset(b, 0, sizeof b);
+        uint32_t cw[10];
+        cw[0] = 0x58000189u;   // ldr  x9, [pc, #48]   → cave+48（记录地址字面量）
+        cw[1] = 0xB940012Au;   // ldr  w10, [x9]
+        cw[2] = 0x1100054Au;   // add  w10, w10, #1
+        cw[3] = 0xB900012Au;   // str  w10, [x9]
+        cw[4] = 0xF9000928u;   // str  x8,  [x9, #16]
+        cw[5] = 0x3940E10Bu;   // ldrb w11, [x8, #0x38]
+        cw[6] = 0xB900052Bu;   // str  w11, [x9, #4]
+        cw[7] = 0x3941810Bu;   // ldrb w11, [x8, #0x60]
+        cw[8] = 0xB900092Bu;   // str  w11, [x9, #8]
+        cw[9] = w0;            // 回放原指令
+        memcpy(b, cw, sizeof cw);
+        int64_t d2 = (int64_t)((uintptr_t)va + 4 - ((uintptr_t)sc + 40));
+        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
+        uint32_t bx = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));
+        memcpy(b + 40, &bx, 4);
+        uint64_t paddr = (uint64_t)(uintptr_t)rec;
+        memcpy(b + 48, &paddr, 8);
+        if (!WriteCode(sc, b, sizeof b)) return false;
+        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
+        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
+        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+        memcpy(g_slotSaved[i], &w0, 4);
+        if (!WriteCode(va, &bi, 4)) return false;
+        g_slotTarget[i] = va; g_lastHookTarget = va;
+        LOGI(TPL_LOG " slot[%d] %s 中段探针已装：@rva 0x%lX → cave %p", i, sl.tag, (unsigned long)sl.rva, sc);
+        return true;
+    }
+
+    // ---- 诊断探针：命中计数 +1，回放入口指令后跳回 entry+4 ----
+    if (sl.kind == K_COUNT) {
+        if (sl.oldW && w0 != sl.oldW) return false;
+        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 32);
+        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 32B cave", i, sl.tag); return false; }
+        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 32);
+        uint32_t code[6];
+        code[0] = w0;              // 回放入口原指令
+        code[1] = 0x580000A9u;     // ldr  x9, [pc, #0x14]  → cave+0x18（计数地址字面量）
+        code[2] = 0xB940012Au;     // ldr  w10, [x9]
+        code[3] = 0x1100052Au;     // add  w10, w10, #1
+        code[4] = 0xB900012Au;     // str  w10, [x9]
+        int64_t d2 = (int64_t)((uintptr_t)va + 4 - ((uintptr_t)sc + 20));
+        if ((d2 & 3) || d2 > (128LL << 20) || d2 < -(128LL << 20)) return false;
+        code[5] = 0x14000000u | ((uint32_t)((d2 >> 2) & 0x03FFFFFFu));   // b entry+4
+        unsigned char b[32]; std::memset(b, 0, sizeof b);
+        memcpy(b, code, 24);
+        uint64_t paddr = (uint64_t)(uintptr_t)&g_probeCnt[i];
+        memcpy(b + 24, &paddr, 8);
+        if (!WriteCode(sc, b, sizeof b)) return false;
+        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
+        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
+        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+        memcpy(g_slotSaved[i], &w0, 4);
+        if (!WriteCode(va, &bi, 4)) return false;
+        g_slotTarget[i] = va; g_lastHookTarget = va;
+        LOGI(TPL_LOG " slot[%d] %s 探针已装：入口 0x%08X → cave %p", i, sl.tag, bi, sc);
         return true;
     }
 
@@ -593,6 +704,20 @@ static void SyncHooks() {
     if (want != g_lastWant || have != g_lastHave) {
         LOGI(TPL_LOG " hook 状态: want=%d have=%d/%d", want, have, kSlotsCount);
         g_lastWant = want; g_lastHave = have;
+    }
+    // 探针计数（诊断用）：每 ~60 拍打一次，读的是 cave 直接累加的 .bss 计数
+    {
+        static int tick = 0;
+        if (++tick % 60 == 0) {
+            char buf[256]; int n = 0;
+            for (int i = 0; i < kSlotsCount && n < (int)sizeof(buf) - 40; ++i) {
+                if (kSlots[i].kind != K_COUNT) continue;
+                n += snprintf(buf + n, sizeof(buf) - n, "%s=%u ", kSlots[i].tag, g_probeCnt[i]);
+            }
+            if (n) LOGI(TPL_LOG " 探针计数: %s", buf);
+            LOGI(TPL_LOG " 卡片item探针: n=%u mObtained=%u mShowLockCover=%u item=%p",
+                 g_midProbe[0].n, g_midProbe[0].f38, g_midProbe[0].f60, (void*)(uintptr_t)g_midProbe[0].item);
+        }
     }
 }
 
