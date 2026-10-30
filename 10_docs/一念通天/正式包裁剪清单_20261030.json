@@ -1,0 +1,9 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/一念通天",
+  "keep": "一念通天_768_surgical-releaseSigned.apk",
+  "keep_size": 436061161,
+  "keep_md5": "819b783493d460e095d8586627d52e33",
+  "mode": "--apply",
+  "removed": [],
+  "removed_count": 0
+}
