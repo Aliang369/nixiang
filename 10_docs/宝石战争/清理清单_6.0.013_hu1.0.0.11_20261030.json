@@ -1,0 +1,71 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359",
+  "timestamp": "20261030_210359",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "06_dumped/宝石战争/6.0.013/static/libil2cpp.so",
+      "type": "file",
+      "size_kib": 54068,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/static/libil2cpp.so",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/06_dumped/宝石战争/6.0.013/static/libil2cpp.so"
+    },
+    {
+      "path": "06_dumped/宝石战争/6.0.013/static/global-metadata.dat",
+      "type": "file",
+      "size_kib": 9800,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/static/global-metadata.dat",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/06_dumped/宝石战争/6.0.013/static/global-metadata.dat"
+    },
+    {
+      "path": "06_dumped/宝石战争/6.0.013/static/System.Network.dll",
+      "type": "file",
+      "size_kib": 8672,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/static/System.Network.dll",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/06_dumped/宝石战争/6.0.013/static/System.Network.dll"
+    },
+    {
+      "path": "06_dumped/宝石战争/6.0.013/static/System.Network.dll.bytes",
+      "type": "file",
+      "size_kib": 8672,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/static/System.Network.dll.bytes",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/06_dumped/宝石战争/6.0.013/static/System.Network.dll.bytes"
+    },
+    {
+      "path": "06_dumped/宝石战争/6.0.013/static/System.Platform.dll",
+      "type": "file",
+      "size_kib": 36,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/static/System.Platform.dll",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/06_dumped/宝石战争/6.0.013/static/System.Platform.dll"
+    },
+    {
+      "path": "06_dumped/宝石战争/6.0.013/static/System.Platform.dll.bytes",
+      "type": "file",
+      "size_kib": 36,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/static/System.Platform.dll.bytes",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/06_dumped/宝石战争/6.0.013/static/System.Platform.dll.bytes"
+    },
+    {
+      "path": "06_dumped/宝石战争/6.0.013/il2cpp_dump/DummyDll",
+      "type": "dir",
+      "size_kib": 16776,
+      "source": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/il2cpp_dump/DummyDll",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/06_dumped/宝石战争/6.0.013/il2cpp_dump/DummyDll"
+    },
+    {
+      "path": "07_patched/宝石战争/6.0.013/official_hotupdate",
+      "type": "dir",
+      "size_kib": 434656,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/宝石战争/6.0.013/official_hotupdate",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/07_patched/宝石战争/6.0.013/official_hotupdate"
+    },
+    {
+      "path": "07_patched/宝石战争/6.0.013/System.Network.patched.dll",
+      "type": "file",
+      "size_kib": 8596,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/宝石战争/6.0.013/System.Network.patched.dll",
+      "quarantine": "/Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210359/07_patched/宝石战争/6.0.013/System.Network.patched.dll"
+    }
+  ]
+}
