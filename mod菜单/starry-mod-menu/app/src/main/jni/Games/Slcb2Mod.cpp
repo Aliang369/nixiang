@@ -801,8 +801,8 @@ bool Slcb2_TryInit(JavaVM* /*vm*/) {
         static bool tried = false;
         if (!tried) {
             tried = true;
-            void* g = dlopen("libgadget.so", RTLD_NOW);
-            LOGI(TPL_LOG " gadget: %s", g ? "libgadget.so 已加载（分析模式）" : "未随包（正式模式）");
+            void* g = dlopen("libdcmplugin.so", RTLD_NOW);
+            LOGI(TPL_LOG " gadget: %s", g ? "libdcmplugin.so 已加载（分析模式）" : "未随包（正式模式）");
         }
     }
 
