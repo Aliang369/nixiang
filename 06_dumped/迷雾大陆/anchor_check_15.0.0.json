@@ -1,28 +1,34 @@
 {
   "ok": true,
   "version": "15.0.0",
-  "code_version": "bffa2",
-  "code_size": 6867542,
-  "code_md5": "eb40baaac75516b54b7a8511a566e622",
+  "code_version": "d8f3b",
+  "code_size": 6938602,
+  "code_md5": "614ea6c2e46db7ddb32ca2bbbf93c43f",
   "checks": {
     "damage_anchor": 1,
     "speed_anchor": 1,
     "tick_anchor": 2,
     "cheat_anchor": 1,
-    "enum_gA": 1,
-    "attr_PS": 5,
-    "sourceUnit": 1
+    "enum_decl": 1,
+    "attr_speed": 5,
+    "sourceUnit": 1,
+    "auto_fight": 1,
+    "af_guard": 1,
+    "pick_all": 2
   },
   "scope": {
     "enum_depth": 1,
     "anchor_depth": 2,
-    "next_enum_use_delta": 7270
+    "next_enum_use_delta": 7287
   },
   "cpp_hook_parity": {
-    "kKhHook": 437,
+    "kKhHook": 466,
     "kSpdRepl": 370,
-    "kTickHook": 390
+    "kTickHook": 390,
+    "kAutoFightRepl": 180,
+    "kAfGuardRepl": 199,
+    "kPickAllRepl": 173
   },
-  "patched_size": 6868660,
+  "patched_size": 6940191,
   "node_check": "ok"
 }

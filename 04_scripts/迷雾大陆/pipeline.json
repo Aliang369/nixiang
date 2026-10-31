@@ -33,7 +33,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:24:10",
+      "done_at": "2026-10-31 14:45:06",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/迷雾大陆_15.0.0_official.apk": {
           "md5": "a59d05317f18f1d6ef8629efc6da36d5"
@@ -67,10 +67,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 03:00:48",
+      "done_at": "2026-10-31 16:33:39",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": {
-          "md5": "ab9d16abccc9fb39ba2e76dd0814ff80"
+          "md5": "e0e40fa7f915ce40e361d41d13f028f5"
         }
       },
       "inputs": {
@@ -106,14 +106,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 02:52:11",
+      "done_at": "2026-10-31 16:33:50",
       "artifacts": {
         "../../libs_mwdl/arm64-v8a/libstarry_magic.so": {
-          "md5": "bf8d3b96ed77a1c132d6fa71588572b2"
+          "md5": "028734bb274a1baac62946be3ce61153"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": "ab9d16abccc9fb39ba2e76dd0814ff80"
+        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_15.0.0.json": "e0e40fa7f915ce40e361d41d13f028f5"
       }
     },
     {
@@ -133,14 +133,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 02:55:12",
+      "done_at": "2026-10-31 16:34:26",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": {
-          "md5": "05d9b2be3ca6cc32f21f18377684e82e"
+          "md5": "5529f09ba5f0db2f5b453cb5af4bcd97"
         }
       },
       "inputs": {
-        "../../libs_mwdl/arm64-v8a/libstarry_magic.so": "bf8d3b96ed77a1c132d6fa71588572b2"
+        "../../libs_mwdl/arm64-v8a/libstarry_magic.so": "028734bb274a1baac62946be3ce61153"
       }
     },
     {
@@ -155,7 +155,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-12 17:28:49",
+      "done_at": "2026-10-31 14:50:33",
       "artifacts": {}
     },
     {
@@ -172,7 +172,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 02:56:02",
+      "done_at": "2026-10-31 14:50:38",
       "artifacts": {}
     },
     {
@@ -191,14 +191,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 02:56:37",
+      "done_at": "2026-10-31 16:34:47",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": {
-          "md5": "05d9b2be3ca6cc32f21f18377684e82e"
+          "md5": "5529f09ba5f0db2f5b453cb5af4bcd97"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "05d9b2be3ca6cc32f21f18377684e82e"
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "5529f09ba5f0db2f5b453cb5af4bcd97"
       }
     },
     {
@@ -215,10 +215,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 02:56:39",
+      "done_at": "2026-10-31 16:34:50",
       "artifacts": {},
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "05d9b2be3ca6cc32f21f18377684e82e"
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "5529f09ba5f0db2f5b453cb5af4bcd97"
       }
     },
     {
@@ -235,14 +235,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-17 03:08:34",
+      "done_at": "2026-10-31 16:39:13",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/10_docs/迷雾大陆/星空落地_15.0.0_20260912.md": {
           "md5": "7172cad6c20148a4cc64ca3f7c5ab4b2"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "05d9b2be3ca6cc32f21f18377684e82e"
+        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_15.0.0_surgical-releaseSigned.apk": "5529f09ba5f0db2f5b453cb5af4bcd97"
       }
     }
   ]

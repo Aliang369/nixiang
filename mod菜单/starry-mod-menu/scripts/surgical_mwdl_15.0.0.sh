@@ -34,6 +34,14 @@ PKG="com.hortor.mwdl"
 SIGNED="$OUT/迷雾大陆_15.0.0_surgical-releaseSigned.apk"
 [[ "$BUILD_TYPE" == "debug" ]] && SIGNED="$OUT/迷雾大陆_15.0.0_surgical-debugSigned.apk"
 MF_CACHE="$NIXIANG/07_patched/迷雾大陆/surgical_15.0.0/AndroidManifest.xml"
+# 2026-10-31「双轨制」签名轨（B）：MT ApkSignatureKillerEx 形态的运行时签名替换。
+# 为什么需要：游戏平台服务器按客户端上报的**应用签名指纹**校验，非官方签名 → 登录返回
+#   errCode 10011 "[重定向请求返回业务失败] detail: 10045 指纹签名无效"（见
+#   10_docs/迷雾大陆/热更失效根因与修复_20260909.md §七）。SignSpoof 已于 2026-10-28 整体删除
+#   且禁止复活 ⇒ 改用 killer：换 PackageInfo.CREATOR + 清 PM/Parcel 缓存，dex 侧零改动。
+# 挂载点：Manifest <application android:appComponentFactory=StarryAppComponentFactory>，
+#   其 instantiateApplication 早于真实 Application 与一切 Provider。
+KILLER_SMALI="${MWDL_KILLER_SMALI:-$NIXIANG/07_patched/暗影格斗3/surgical/killer_smali}"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
@@ -74,6 +82,44 @@ STARRY_APK="$WORK/starry/app/build/outputs/apk/$BUILD_TYPE/$APK_NAME"
 echo "[2/6] apktool d starry → smali + so + certs"
 apktool d -f -o "$WORK/starry_dec" "$STARRY_APK" >/dev/null
 
+echo "[2b/6] 官方签名证书 DER（v2 签名块）→ 喂 killer"
+[[ -d "$KILLER_SMALI/bin/mt/signature" ]] || { echo "ERROR: missing killer smali $KILLER_SMALI"; exit 1; }
+python3.11 - "$ORIG_APK" "$WORK/official.der" <<'PYCERT'
+import struct, sys, hashlib
+apk, out = sys.argv[1], sys.argv[2]
+d = open(apk, 'rb').read()
+i = d.rfind(b'PK\x05\x06')
+assert i > 0, 'EOCD not found'
+cd_off = struct.unpack('<I', d[i + 16:i + 20])[0]
+blk_size = struct.unpack('<Q', d[cd_off - 24:cd_off - 16])[0]
+start = cd_off - blk_size - 8
+assert d[start:start + 8] == struct.pack('<Q', blk_size), 'APK Signing Block magic mismatch'
+pairs = d[start + 8:cd_off - 24]
+off, v2 = 0, None
+while off < len(pairs):
+    plen = struct.unpack('<Q', pairs[off:off + 8])[0]
+    pid = struct.unpack('<I', pairs[off + 8:off + 12])[0]
+    val = pairs[off + 12:off + 8 + plen]
+    if pid == 0x7109871a:
+        v2 = val
+    off += 8 + plen
+assert v2, 'v2 signature block (0x7109871a) not found'
+o = 4                                                    # signers seq len
+o += 4                                                   # signer len
+o += 4                                                   # signed-data len
+dg = struct.unpack('<I', v2[o:o + 4])[0]; o += 4 + dg     # digests
+o += 4                                                   # certificates seq len
+ln = struct.unpack('<I', v2[o:o + 4])[0]; o += 4
+der = v2[o:o + ln]
+assert der[:1] == b'\x30', 'certificate DER malformed'
+open(out, 'wb').write(der)
+print('  cert DER %d B md5 %s' % (len(der), hashlib.md5(der).hexdigest()))
+PYCERT
+SIGNER_MD5="$("$BT/apksigner" verify --print-certs "$ORIG_APK" 2>/dev/null | sed -n 's/^Signer #1 certificate MD5 digest: //p' | head -1 | tr -d '\r')"
+DER_MD5="$(md5 -q "$WORK/official.der" 2>/dev/null || md5sum "$WORK/official.der" | awk '{print $1}')"
+echo "  证书 DER md5=${DER_MD5}（apksigner 报 ${SIGNER_MD5:-无}）"
+[[ -z "$SIGNER_MD5" || "$DER_MD5" == "$SIGNER_MD5" ]] || { echo "ERROR: 证书 DER 与 apksigner 不一致 —— killer 喂错证书会静默不生效"; exit 1; }
+
 echo "[3/6] collect com/starry smali → classes5.dex"
 SMALI_ROOT="$WORK/smali_in"
 mkdir -p "$SMALI_ROOT"
@@ -85,6 +131,27 @@ done
 shopt -u nullglob
 [[ -f "$SMALI_ROOT/com/starry/magic/StarryApp.smali" ]] \
   || { echo "ERROR: StarryApp.smali missing"; exit 1; }
+# 签名轨：killer 并入同一个 classes5（包名/证书按本底包现改，不写死）
+rsync -a "$KILLER_SMALI/bin" "$SMALI_ROOT/"
+[[ -f "$SMALI_ROOT/bin/mt/signature/KillerApplication193.smali" ]] || { echo "ERROR: killer smali copy failed"; exit 1; }
+python3.11 - "$SMALI_ROOT" "$WORK/official.der" "$PKG" <<'PYKILLER'
+import base64, io, os, re, sys
+root, der_path, pkg = sys.argv[1], sys.argv[2], sys.argv[3]
+b64 = base64.b64encode(open(der_path, 'rb').read()).decode()
+wrapped = '\\n'.join(b64[i:i + 76] for i in range(0, len(b64), 76))
+p = os.path.join(root, 'bin/mt/signature/KillerApplication193.smali')
+t = io.open(p, encoding='utf-8').read()
+assert '.super Landroid/app/Application;' in t, 'killer 父类不是 android.app.Application'
+t, n = re.subn(r'const-string v1, "[^"]*"', 'const-string v1, "%s"' % pkg, t, count=1)
+assert n == 1, 'killer 包名锚点未命中'
+j = t.find('const-string v0, "MI')
+assert j >= 0, 'killer 证书锚点未命中'
+k = t.find('"', j + len('const-string v0, '))
+k2 = t.find('"', k + 1)
+t = t[:j] + 'const-string v0, "%s"' % wrapped + t[k2 + 1:]
+io.open(p, 'w', encoding='utf-8', newline='\n').write(t)
+print('  killer: pkg=%s cert_b64=%d chars' % (pkg, len(b64)))
+PYKILLER
 "$SMALI_BIN" assemble -o "$WORK/classes5.dex" "$SMALI_ROOT"
 ls -la "$WORK/classes5.dex"
 
@@ -98,7 +165,7 @@ if [[ -d "$WORK/starry_dec/assets/certs" ]]; then
   cp -R "$WORK/starry_dec/assets/certs/." "$WORK/assets/certs/"
 fi
 
-echo "[3b/6] patch classes3: GameApplication.attachBaseContext → SignSpoof + loadLibrary"
+echo "[3b/6] patch classes3: GameApplication.attachBaseContext → loadLibrary（只加载 so）"
 unzip -p "$ORIG_APK" classes3.dex > "$WORK/classes3_orig.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c3smali" "$WORK/classes3_orig.dex"
 python3.11 - "$WORK/c3smali" <<'PY'
@@ -106,7 +173,7 @@ from pathlib import Path
 import sys
 app = Path(sys.argv[1]) / "com/hortorgames/gamesdk/GameApplication.smali"
 t = app.read_text(encoding="utf-8")
-if "SignSpoof;->install" in t and "starry_magic" in t:
+if "starry_magic" in t and "SignSpoof" not in t:
     print("  GameApplication already patched")
 else:
     inject = """
@@ -116,12 +183,13 @@ else:
 
     invoke-super {p0, p1}, Landroidx/multidex/MultiDexApplication;->attachBaseContext(Landroid/content/Context;)V
 
-    # starry：先 loadLibrary → JNI_OnLoad 做 hidden-api 豁免，再装 SignSpoof（清缓存才有豁免可用）
+    # starry：只 loadLibrary → JNI_OnLoad 起菜单服务。
+    # 2026-10-28 用户指令已整体删除 sign/SignSpoof 且禁止复活（依赖隐藏 API 豁免，
+    # Android 14 user 版必失败）；此处**不得**再注入 SignSpoof->install —— 框架里已无该类，
+    # 注入即变成指向不存在类的硬引用，attachBaseContext 执行时 NoClassDefFoundError 启动崩溃。
     const-string v0, "starry_magic"
 
     invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V
-
-    invoke-static {}, Lcom/starry/magic/sign/SignSpoof;->install()V
 
     return-void
 .end method
@@ -132,7 +200,7 @@ else:
         raise SystemExit("GameApplication.onCreate missing")
     t = t.replace(marker, inject + marker, 1)
     app.write_text(t, encoding="utf-8")
-    print("  +attachBaseContext → SignSpoof + loadLibrary")
+    print("  +attachBaseContext → loadLibrary only (no SignSpoof)")
 PY
 "$SMALI_BIN" assemble -o "$WORK/classes3.dex" "$WORK/c3smali"
 ls -la "$WORK/classes3.dex"
@@ -339,8 +407,27 @@ if "com.starry.magic.menu.MenuService" not in t:
         </service>
 '''
     t = t.replace("</application>", svc + "\n    </application>", 1)
+# 签名轨挂载点：appComponentFactory 早于真实 Application 与一切 Provider，
+# 由它触发 bin.mt.signature.KillerApplication193.<clinit> 完成运行时签名替换。
+# 官方清单原本就挂 androidx.core.app.CoreComponentFactory ⇒ 必须**替换**（直接追加会被守卫跳过的坑）
+import re as _re
+FACTORY = "com.starry.magic.sign.StarryAppComponentFactory"
+if 'android:appComponentFactory="%s"' % FACTORY in t:
+    print("  appComponentFactory already set")
+elif 'android:appComponentFactory="' in t:
+    t2, _n = _re.subn(r'android:appComponentFactory="[^"]*"',
+                      'android:appComponentFactory="%s"' % FACTORY, t, count=1)
+    if _n != 1:
+        raise SystemExit("appComponentFactory replace failed")
+    t = t2
+else:
+    _m = _re.search(r"<application\b[^>]*>", t)
+    if not _m:
+        raise SystemExit("application tag not found")
+    _tag = _m.group(0)
+    t = t.replace(_tag, _tag[:-1] + '\n        android:appComponentFactory="%s">' % FACTORY, 1)
 p.write_text(t, encoding="utf-8")
-print("  text Manifest patched (keep GameApplication)")
+print("  text Manifest patched (keep GameApplication + appComponentFactory)")
 PY
   rm -rf "$WORK/orig_dec"/smali* 2>/dev/null || true
   apktool b -f "$WORK/orig_dec" -o "$WORK/mf_only.apk" >/dev/null
@@ -349,6 +436,15 @@ PY
   echo "  cached → $MF_CACHE"
 fi
 ls -la "$WORK/AndroidManifest.xml"
+# 硬自检：AXML 字符串池是 UTF-16LE，直接按字节找工厂类名
+python3.11 - "$WORK/AndroidManifest.xml" <<'PYMF'
+import sys
+b = open(sys.argv[1], 'rb').read()
+assert b[:4] == b'\x03\x00\x08\x00', 'manifest 不是二进制 AXML'
+need = 'com.starry.magic.sign.StarryAppComponentFactory'.encode('utf-16-le')
+assert need in b, 'appComponentFactory 未进 AXML（签名轨不会挂载）'
+print('  AXML appComponentFactory ✓（%d B）' % len(b))
+PYMF
 
 echo "[5/6] zip surgical merge"
 python3.11 - "$ORIG_APK" "$WORK" "$WORK/unsigned.apk" <<'PY'

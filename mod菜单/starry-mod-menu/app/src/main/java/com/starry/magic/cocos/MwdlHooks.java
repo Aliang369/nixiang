@@ -4,13 +4,13 @@ import android.util.Log;
 
 /**
  * 迷雾大陆：JS jsb.reflection
- * get_ret：1百倍伤害 2无敌 4无限技能
- * get_val：3移动速度倍率（1=关，&gt;1 生效）
+ * get_ret：2无敌 4无限技能 5自动挂机 6全图拾取
+ * get_val：1伤害倍率（1=原伤害）3移动速度倍率（1=关，&gt;1 生效）
  */
 public final class MwdlHooks {
     private static final String TAG = "Mwdl";
-    private static final boolean[] RET = new boolean[8];
-    private static final float[] VAL = new float[8];
+    private static final boolean[] RET = new boolean[16];
+    private static final float[] VAL = new float[16];
 
     static {
         for (int i = 0; i < VAL.length; i++) {

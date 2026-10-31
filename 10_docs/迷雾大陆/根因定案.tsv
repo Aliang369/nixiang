@@ -1,0 +1,4 @@
+# 根因定案 — 被轮次闸门拦住的功能必须先在这里留下「定案」（rootcause_note.sh 追加）
+# 规则：某功能连续 2 轮「无效」后，必须有一条「定案轮次 ≥ 最后一次无效轮次」的记录，否则 pre_install_gate 查6 拦截（STAGE_NEXT_FORCE=1 可强过，须说明）
+日期	功能#	定案轮次	根因（一句话，指向具体判据/代码行）	证据行	验证方法	记录人
+2026-10-31 15:54	5	3	自动挂机的走位来自 checkAutoFightSetting 的 AI 控制器（aiController.calculateInput），setAutoPlay 只给自动攻击；直接强开服务分支会在战后 tryFightNext→tryFightBonus 读 undefined.mode 每帧抛错卡死	code_index.d8f3b.js: checkAutoFightSetting 分支体（if(t.enabled){…aiController…tryFightNext()}）;logcat precheck_20261031_153605 之后：Uncaught TypeError: Cannot read property 'mode' of undefined @ t.tryFightBonus ← t.tryFightNext ← i.checkAutoFightSetting;MwdlMod.cpp kAutoFightRepl(强开分支) + kAfGuardRepl(finished()&&!get_ret(5) 才走 tryFightNext)	真机：开挂机角色自动满图跑 且 挑战成功不卡死（v3 已由用户确认「功能恢复了，没问题」）	AI

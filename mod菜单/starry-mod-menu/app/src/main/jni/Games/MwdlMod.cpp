@@ -3,6 +3,9 @@
  *  路径：se::ScriptEngine::evalString 运行时拼接（方案 B）
  *  15.0.0/bffa2：单位枚举 ow→gA、属性枚举 RS.MOV_SPEED→PS.MOV_SPEED，
  *                 伤害尾锚 i.target.damage=E} → i.target.damage=P}（局部变量名随混淆改名）
+ *  15.0.0/d8f3b（2026-10-31）：单位枚举 gA→CA、属性枚举 PS.MOV_SPEED→NS.MOV_SPEED，
+ *                 伤害尾锚回到 i.target.damage=E}（局部变量名又变回 E）；
+ *                 无限技能 / onStageCheat 两锚点文本未变。
  * ================================================================ */
 
 #include "MwdlMod.h"
@@ -34,9 +37,11 @@ static jmethodID g_hooksSetRet = nullptr;
 static jmethodID g_hooksSetVal = nullptr;
 static jmethodID g_hooksClear = nullptr;
 
-static volatile bool g_dmg100 = false;
+static volatile float g_dmgRate = 1.f;   // 伤害倍率（1=原伤害，最高 1000）
 static volatile bool g_inv = false;
 static volatile bool g_ultra = false;
+static volatile bool g_autoFight = false;
+static volatile bool g_pickAll = false;
 static volatile float g_speedMul = 1.f;  // 1=关，>1 倍率
 static std::atomic<int> g_spliceHits{0};
 
@@ -129,11 +134,13 @@ static void SyncJavaRets() {
     if (!env) return;
     CacheJava(env);
     if (g_hooksCls && g_hooksSetRet) {
-        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 1, g_dmg100 ? JNI_TRUE : JNI_FALSE);
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 2, g_inv ? JNI_TRUE : JNI_FALSE);
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 4, g_ultra ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 5, g_autoFight ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 6, g_pickAll ? JNI_TRUE : JNI_FALSE);
     }
     if (g_hooksCls && g_hooksSetVal) {
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetVal, 1, (jfloat)g_dmgRate);
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetVal, 3, (jfloat)g_speedMul);
     }
     if (detach) g_mwdlJvm->DetachCurrentThread();
@@ -142,41 +149,65 @@ static void SyncJavaRets() {
 static std::string SpliceCombatJs(const char* src) {
     std::string s(src);
 
-    static char kKhHook[1200];
+    static char kKhHook[1400];
     static char kSpdRepl[1400];
     static char kTickHook[900];
+    static char kAutoFightRepl[400];
+    static char kAfGuardRepl[400];
+    static char kPickAllRepl[700];
     static bool once = false;
     if (!once) {
-        // get_ret(1)+get_ret(2)：百倍伤害 / 无敌 — 15.0.0/bffa2 尾锚 i.target.damage=P}
+        // get_val(1) 伤害倍率滑块 + get_ret(2) 无敌 — 15.0.0/d8f3b 尾锚 i.target.damage=E}
         snprintf(
             kKhHook, sizeof(kKhHook),
-            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===gA.Hero||"
-            "_su.unitType===gA.Summon||_su.unitType===gA.Guardian||"
-            "_su.unitType===gA.Player||_su.unitType===gA.ParasyteGuardian)){"
-            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",1)&&(P*=100)}"
-            "if(_su&&_su.unitType===gA.Monster&&"
-            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){P=0}"
-            "i.target.damage=P}",
+            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===CA.Hero||"
+            "_su.unitType===CA.Summon||_su.unitType===CA.Guardian||"
+            "_su.unitType===CA.Player||_su.unitType===CA.ParasyteGuardian)){"
+            "var _dm=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",1);"
+            "_dm>1&&(E*=Math.min(_dm,1000))}"
+            "if(_su&&_su.unitType===CA.Monster&&"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){E=0}"
+            "i.target.damage=E}",
             kAct, kAct);
-        // get_val(3)：移速倍率 — MoveSpeed getter（15.0.0/bffa2 为 PS.MOV_SPEED）
+        // get_val(3)：移速倍率 — MoveSpeed getter（15.0.0/d8f3b 为 NS.MOV_SPEED）
         snprintf(
             kSpdRepl, sizeof(kSpdRepl),
             "/*starry_mwdl_spd*/function(n){try{var "
             "m=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",3);"
-            "m>1&&(this.unitType===gA.Hero||this.unitType===gA.Summon||"
-            "this.unitType===gA.Guardian||this.unitType===gA.Player||"
-            "this.unitType===gA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
-            "n}.call(this,this.AttributeComponent.getAttr(PS.MOV_SPEED)*t)}",
+            "m>1&&(this.unitType===CA.Hero||this.unitType===CA.Summon||"
+            "this.unitType===CA.Guardian||this.unitType===CA.Player||"
+            "this.unitType===CA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
+            "n}.call(this,this.AttributeComponent.getAttr(NS.MOV_SPEED)*t)}",
             kAct);
         // get_ret(4)：无限技能 — 插在 SkillComponent.tick 前
         snprintf(
             kTickHook, sizeof(kTickHook),
             "/*starry_mwdl_uls*/ jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===gA.Hero||"
-            "this.unitType===gA.Summon||this.unitType===gA.Guardian||"
-            "this.unitType===gA.Player||this.unitType===gA.ParasyteGuardian)&&"
+            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===CA.Hero||"
+            "this.unitType===CA.Summon||this.unitType===CA.Guardian||"
+            "this.unitType===CA.Player||this.unitType===CA.ParasyteGuardian)&&"
             "(this.SkillComponent.reduceAllSkillColdDown(1e9),"
             "this.ActiveSkillComponent&&this.ActiveSkillComponent.reduceAllSkillColdDown(1e9)), ",
+            kAct);
+        // 自动挂机：强开 autoFight 服务分支（AI 控制器负责自动走位/放技能），
+        // 但**必须**同时掐掉该分支里的战后结算 `tryFightNext()` —— 服务未真正开通时它会读
+        // 到 undefined.mode（tryFightBonus）并每帧抛 TypeError，把「挑战成功」卡死（2026-10-31 实测）。
+        snprintf(
+            kAutoFightRepl, sizeof(kAutoFightRepl),
+            "/*starry_mwdl_af*/checkAutoFightSetting=function(){var t=ix.getService(sT);if("
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",5)||t.enabled){",
+            kAct);
+        snprintf(
+            kAfGuardRepl, sizeof(kAfGuardRepl),
+            "/*starry_mwdl_afg*/if(this.aiController.finished()&&!"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",5))return "
+            "this._autoFightFinished=!0,void t.tryFightNext();",
+            kAct);
+        // 全图拾取：checkInRangeDropLoot 的「有宠物才全图」分支加开关（两处实现都改）
+        snprintf(
+            kPickAllRepl, sizeof(kPickAllRepl),
+            "/*starry_mwdl_pall*/if(jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",6)"
+            "||this._fight.getHasPet())this._inRangeDropLoots=this._loots;",
             kAct);
         once = true;
     }
@@ -185,19 +216,19 @@ static std::string SpliceCombatJs(const char* src) {
         return s.find(tag) != std::string::npos;
     };
 
-    // --- 伤害结算（百倍伤害 + 无敌）：15.0.0/bffa2 尾锚 i.target.damage=P} ---
-    // 注：该锚点尾部是混淆后的伤害局部变量名（a1e47 为 E，bffa2 为 P），
+    // --- 伤害结算（百倍伤害 + 无敌）：15.0.0/d8f3b 尾锚 i.target.damage=E} ---
+    // 注：该锚点尾部是混淆后的伤害局部变量名（a1e47=E / bffa2=P / d8f3b=E），
     //     与 hook 文本强耦合，不做旧锚回退（回退会拼出引用未声明变量的 JS）。
-    if (!already("starry_mwdl_kh") && s.find("i.target.damage=P}") != std::string::npos) {
-        size_t p = s.find("i.target.damage=P}");
-        s.replace(p, strlen("i.target.damage=P}"), kKhHook);
-        LOGI("[Mwdl] spliced damage (15.0.0/bffa2)");
+    if (!already("starry_mwdl_kh") && s.find("i.target.damage=E}") != std::string::npos) {
+        size_t p = s.find("i.target.damage=E}");
+        s.replace(p, strlen("i.target.damage=E}"), kKhHook);
+        LOGI("[Mwdl] spliced damage (15.0.0/d8f3b)");
     }
 
-    // --- MoveSpeed（移动速度：15.0.0/bffa2 为 PS.MOV_SPEED；旧枚举名为等价回退）---
+    // --- MoveSpeed（移动速度：15.0.0/d8f3b 为 NS.MOV_SPEED；旧枚举名为等价回退）---
     if (!already("starry_mwdl_spd")) {
         static const char* kSpdFroms[] = {
-            "this.AttributeComponent.getAttr(PS.MOV_SPEED)*t}",
+            "this.AttributeComponent.getAttr(NS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(RS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(vS.MOV_SPEED)*t}",
             nullptr,
@@ -229,6 +260,40 @@ static std::string SpliceCombatJs(const char* src) {
             LOGI("[Mwdl] spliced tick ultra skill");
             break;
         }
+    }
+
+    // --- 自动挂机：强开服务分支（AI 自动走位）+ 掐掉战后 tryFightNext（防 undefined.mode 卡死）---
+    if (!already("starry_mwdl_af")) {
+        const char* kAf =
+            "checkAutoFightSetting=function(){var t=ix.getService(sT);if(t.enabled){";
+        size_t p = s.find(kAf);
+        if (p != std::string::npos) {
+            s.replace(p, strlen(kAf), kAutoFightRepl);
+            LOGI("[Mwdl] spliced auto-fight (AI)");
+        }
+    }
+    if (!already("starry_mwdl_afg")) {
+        const char* kGuard =
+            "if(this.aiController.finished())return this._autoFightFinished=!0,void t.tryFightNext();";
+        size_t p = s.find(kGuard);
+        if (p != std::string::npos) {
+            s.replace(p, strlen(kGuard), kAfGuardRepl);
+            LOGI("[Mwdl] spliced auto-fight guard (no auto-next)");
+        }
+    }
+
+    // --- 全图拾取：两处 checkInRangeDropLoot 实现都改（get_ret 6）---
+    if (!already("starry_mwdl_pall")) {
+        const char* kPick =
+            "if(this._fight.getHasPet())this._inRangeDropLoots=this._loots;";
+        size_t p = 0;
+        int n = 0;
+        while ((p = s.find(kPick, p)) != std::string::npos) {
+            s.replace(p, strlen(kPick), kPickAllRepl);
+            p += strlen(kPickAllRepl);
+            n++;
+        }
+        if (n > 0) LOGI("[Mwdl] spliced pick-all x%d", n);
     }
 
     // --- 反作弊：按方法边界中和，避免依赖 15.0.0 内部变量名 ---
@@ -395,16 +460,23 @@ void Mwdl_StartEarlyHookThread(JavaVM* jvm) {
 bool Mwdl_IsReady() { return g_ready; }
 
 void Mwdl_OnFeatureChanged(int featNum, bool enabled) {
-    if (featNum == MWDL_FEAT_DMG100) g_dmg100 = enabled;
     if (featNum == MWDL_FEAT_INVINCIBLE) g_inv = enabled;
     if (featNum == MWDL_FEAT_ULTRA_SKILL) g_ultra = enabled;
+    if (featNum == MWDL_FEAT_AUTO_FIGHT) g_autoFight = enabled;
+    if (featNum == MWDL_FEAT_PICK_ALL) g_pickAll = enabled;
     SyncJavaRets();
-    LOGI("[Mwdl] feature #%d=%s dmg=%d inv=%d spd=%.1f uls=%d", featNum,
-         enabled ? "ON" : "OFF", g_dmg100 ? 1 : 0, g_inv ? 1 : 0, (double)g_speedMul,
-         g_ultra ? 1 : 0);
+    LOGI("[Mwdl] feature #%d=%s inv=%d spd=%.1f uls=%d af=%d pickall=%d", featNum,
+         enabled ? "ON" : "OFF", g_inv ? 1 : 0, (double)g_speedMul, g_ultra ? 1 : 0,
+         g_autoFight ? 1 : 0, g_pickAll ? 1 : 0);
 }
 
 void Mwdl_OnValueChanged(int featNum, int value) {
+    if (featNum == MWDL_FEAT_DMG_RATE) {
+        int v = value < 1 ? 1 : (value > 1000 ? 1000 : value);
+        g_dmgRate = (float)v;
+        SyncJavaRets();
+        LOGI("[Mwdl] damage rate x%d", v);
+    }
     if (featNum == MWDL_FEAT_MOVESPEED) {
         g_speedMul = (value <= 1) ? 1.f : (float)value;
         SyncJavaRets();
@@ -413,7 +485,9 @@ void Mwdl_OnValueChanged(int featNum, int value) {
 }
 
 void Mwdl_ForceClear() {
-    g_dmg100 = g_inv = g_ultra = false;
+    g_inv = g_ultra = false;
+    g_autoFight = g_pickAll = false;
+    g_dmgRate = 1.f;
     g_speedMul = 1.f;
     bool detach = false;
     JNIEnv* env = GetEnv(&detach);
@@ -426,9 +500,10 @@ void Mwdl_ForceClear() {
 
 void Mwdl_Tick(const bool* features) {
     if (!features) return;
-    g_dmg100 = features[MWDL_FEAT_DMG100];
     g_inv = features[MWDL_FEAT_INVINCIBLE];
     g_ultra = features[MWDL_FEAT_ULTRA_SKILL];
+    g_autoFight = features[MWDL_FEAT_AUTO_FIGHT];
+    g_pickAll = features[MWDL_FEAT_PICK_ALL];
     if (!g_ready) return;
     if (!g_evalHooked) TryHookEvalString();
     SyncJavaRets();

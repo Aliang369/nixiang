@@ -8,6 +8,9 @@ applies the same text replacements as MwdlMod.cpp and runs `node --check`.
 Bundle drift history (same game version 15.0.0, bundle token changes):
   a1e47  unit-enum `ow`  attr `RS.MOV_SPEED`  damage tail `i.target.damage=E}`
   bffa2  unit-enum `gA`  attr `PS.MOV_SPEED`  damage tail `i.target.damage=P}`
+  d8f3b  unit-enum `CA`  attr `NS.MOV_SPEED`  damage tail `i.target.damage=E}`
+         （2026-10-31；6,938,602 B / md5 614ea6c2e46db7ddb32ca2bbbf93c43f；
+          tick / onStageCheat 两锚点未变，计数仍 2 / 1）
 
 The damage tail anchor ends in the minified *local* variable name, so it is not
 interchangeable across tokens: a stale hook would emit JS referencing an
@@ -31,14 +34,24 @@ VERSION = "15.0.0"
 CDN = "https://poyun-mwdl-res-v1.hortorgames.com/taptap"
 ACTIVITY = "org.cocos2dx.javascript.AppActivity"
 
-UNIT_ENUM = "gA"
+UNIT_ENUM = "CA"
+ATTR_ENUM = "NS"
+DMG_VAR = "E"
 DECL_SUFFIX = f"||({UNIT_ENUM}={{}}))"
-DECL_CONSTRUCT = f"}}({UNIT_ENUM}{DECL_SUFFIX}"  # }(gA||(gA={}))
+DECL_CONSTRUCT = f"}}({UNIT_ENUM}{DECL_SUFFIX}"  # }(CA||(CA={}))
 
-DAMAGE_ANCHOR = "i.target.damage=P}"
-SPEED_ANCHOR = "this.AttributeComponent.getAttr(PS.MOV_SPEED)*t}"
+DAMAGE_ANCHOR = f"i.target.damage={DMG_VAR}}}"
+SPEED_ANCHOR = f"this.AttributeComponent.getAttr({ATTR_ENUM}.MOV_SPEED)*t}}"
 TICK_ANCHOR = "this.isDormant||(this.SkillComponent.tick(t)"
 CHEAT_ANCHOR = "t.prototype.onStageCheat=function(t){"
+# 自动挂机：游戏自带自动战斗开关（service.enabled）；把它改成 get_ret(5) || enabled
+AUTO_FIGHT_ANCHOR = "checkAutoFightSetting=function(){var t=ix.getService(sT);if(t.enabled){"
+# 战后结算：强开服务分支后它会读 undefined.mode（tryFightBonus）→ 必须掐掉
+AF_GUARD_ANCHOR = (
+    "if(this.aiController.finished())return this._autoFightFinished=!0,void t.tryFightNext();"
+)
+# 全图拾取：两处 checkInRangeDropLoot 都有「有宠物 ⇒ 全部战利品入列」分支
+PICK_ALL_ANCHOR = "if(this._fight.getHasPet())this._inRangeDropLoots=this._loots;"
 
 HERO_UNIT_TYPES = (
     f"{UNIT_ENUM}.Hero||"
@@ -140,7 +153,8 @@ def check_scope_reachability(text: str, anchor_pos: int) -> dict:
     depth 1 is the bundle-global scope and every nested function can see it.
     Calibrated A/B against the user-verified token a1e47 (unit enum `ow`):
     decl depth 1 / anchor depth 2 / nearest enum use 2199 B, vs bffa2 `gA`:
-    decl depth 1 / anchor depth 2 / nearest use 2162 B.
+    decl depth 1 / anchor depth 2 / nearest use 2162 B, vs d8f3b `CA`:
+    decl depth 1 / anchor depth 2 (同构，见 anchor_check_15.0.0.json scope 段).
     """
     decl_pos = text.find(DECL_CONSTRUCT)
     if decl_pos < 0:
@@ -172,10 +186,36 @@ def check_scope_reachability(text: str, anchor_pos: int) -> dict:
 def damage_hook() -> str:
     return (
         f"/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType==={HERO_UNIT_TYPES})){{"
-        + call("get_ret", "(I)Z", 1, "&&(P*=100)")
-        + f"}}if(_su&&_su.unitType==={UNIT_ENUM}.Monster&&"
-        + call("get_ret", "(I)Z", 2, "){P=0}")
-        + "i.target.damage=P}"
+        + f"var _dm={call('get_val', '(I)F', 1, '')};"
+        + f"_dm>1&&({DMG_VAR}*=Math.min(_dm,1000))}}"
+        + f"if(_su&&_su.unitType==={UNIT_ENUM}.Monster&&"
+        + call("get_ret", "(I)Z", 2, f"){{{DMG_VAR}=0}}")
+        + f"i.target.damage={DMG_VAR}}}"
+    )
+
+
+def auto_fight_hook() -> str:
+    # 强开 autoFight 服务分支：AI 控制器负责自动走位/放技能（这是"自动全图跑"的来源）。
+    # 战后结算由 af_guard_hook() 掐掉，否则 tryFightNext→tryFightBonus 读 undefined.mode 卡死。
+    return (
+        "/*starry_mwdl_af*/checkAutoFightSetting=function(){var t=ix.getService(sT);if("
+        + call("get_ret", "(I)Z", 5, "||t.enabled){")
+    )
+
+
+def af_guard_hook() -> str:
+    return (
+        "/*starry_mwdl_afg*/if(this.aiController.finished()&&!"
+        + call("get_ret", "(I)Z", 5, ")return ")
+        + "this._autoFightFinished=!0,void t.tryFightNext();"
+    )
+
+
+def pick_all_hook() -> str:
+    return (
+        "/*starry_mwdl_pall*/if("
+        + call("get_ret", "(I)Z", 6, "||this._fight.getHasPet())")
+        + "this._inRangeDropLoots=this._loots;"
     )
 
 
@@ -184,7 +224,7 @@ def speed_hook() -> str:
         "/*starry_mwdl_spd*/function(n){try{var m="
         + call("get_val", "(I)F", 3, ";")
         + f"m>1&&({SELF_UNIT_TYPES})&&(n*=m)}}catch(_e){{}}return "
-        "n}.call(this,this.AttributeComponent.getAttr(PS.MOV_SPEED)*t)}"
+        f"n}}.call(this,this.AttributeComponent.getAttr({ATTR_ENUM}.MOV_SPEED)*t)}}"
     )
 
 
@@ -225,6 +265,9 @@ def check_cpp_hook_parity() -> dict:
         ("kKhHook", damage_hook(), 2),
         ("kSpdRepl", speed_hook(), 1),
         ("kTickHook", tick_hook(), 1),
+        ("kAutoFightRepl", auto_fight_hook(), 1),
+        ("kAfGuardRepl", af_guard_hook(), 1),
+        ("kPickAllRepl", pick_all_hook(), 1),
     )
     report = {}
     for buffer, expected, arg_count in pairs:
@@ -260,6 +303,24 @@ def patch_code(text: str) -> str:
         raise RuntimeError("tick insertion point missing")
     text = text[: insert_at + 1] + tick_hook() + text[insert_at + 1 :]
 
+    if text.count(AUTO_FIGHT_ANCHOR) != 1:
+        raise RuntimeError(f"auto-fight anchor count={text.count(AUTO_FIGHT_ANCHOR)}")
+    text = text.replace(AUTO_FIGHT_ANCHOR, auto_fight_hook(), 1)
+
+    if text.count(AF_GUARD_ANCHOR) != 1:
+        raise RuntimeError(f"auto-fight guard count={text.count(AF_GUARD_ANCHOR)}")
+    text = text.replace(AF_GUARD_ANCHOR, af_guard_hook(), 1)
+
+    if text.count(PICK_ALL_ANCHOR) != 2:
+        raise RuntimeError(f"pick-all anchor count={text.count(PICK_ALL_ANCHOR)}")
+    text = text.replace(PICK_ALL_ANCHOR, pick_all_hook())
+
+    for _anchor, _hook, _name in (
+    ):
+        if text.count(_anchor) != 1:
+            raise RuntimeError(f"{_name} anchor count={text.count(_anchor)}")
+        text = text.replace(_anchor, _hook, 1)
+
     if text.count(CHEAT_ANCHOR) != 1:
         raise RuntimeError(f"cheat anchor count={text.count(CHEAT_ANCHOR)}")
     cheat_pos = text.find(CHEAT_ANCHOR)
@@ -287,18 +348,24 @@ def main() -> int:
         "speed_anchor": code_text.count(SPEED_ANCHOR),
         "tick_anchor": code_text.count(TICK_ANCHOR),
         "cheat_anchor": code_text.count(CHEAT_ANCHOR),
-        "enum_gA": code_text.count(DECL_CONSTRUCT),
-        "attr_PS": code_text.count("PS.MOV_SPEED"),
+        "enum_decl": code_text.count(DECL_CONSTRUCT),
+        "attr_speed": code_text.count(f"{ATTR_ENUM}.MOV_SPEED"),
         "sourceUnit": code_text.count("this.sourceUnit=t"),
+        "auto_fight": code_text.count(AUTO_FIGHT_ANCHOR),
+        "af_guard": code_text.count(AF_GUARD_ANCHOR),
+        "pick_all": code_text.count(PICK_ALL_ANCHOR),
     }
     expected = {
         "damage_anchor": 1,
         "speed_anchor": 1,
         "tick_anchor": 2,
         "cheat_anchor": 1,
-        "enum_gA": 1,
-        "attr_PS": 5,
+        "enum_decl": 1,
+        "attr_speed": 5,
         "sourceUnit": 1,
+        "auto_fight": 1,
+        "af_guard": 1,
+        "pick_all": 2,
     }
     if checks != expected:
         raise RuntimeError(f"anchor mismatch: got={checks} expected={expected}")

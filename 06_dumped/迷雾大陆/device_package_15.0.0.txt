@@ -2,7 +2,7 @@ serial=f9a116a2
 package=com.hortor.mwdl
 versionName=15.0.0
 versionCode=20
-remote_apk=/data/app/~~u2i5E88ACO_c2UAQrhqDMg==/com.hortor.mwdl-ppMwE_75Tyj__tzb3ZpDhA==/base.apk
+remote_apk=/data/app/~~4WMqv1thBtrZ58XXP03VdQ==/com.hortor.mwdl-gfETyZ6mW4SpXevjEeX-NQ==/base.apk
 local_apk=/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/迷雾大陆_15.0.0_official.apk
 size=42361771
 md5=a59d05317f18f1d6ef8629efc6da36d5
