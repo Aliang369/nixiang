@@ -1,0 +1,9 @@
+game      : 我本布衣世家录 (wbjy)
+dex       : classes4.dex
+built_at  : 2026-10-31 15:14:18
+javac     : C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/javac.exe
+d8        : C:\Users\Administrator\AppData\Local/Android/Sdk/build-tools/35.0.0/d8.bat
+androidjar: /c/Users/Administrator/AppData/Local/Android/Sdk/platforms/android-36/android.jar
+source    : /e/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256    : b38176e8837863578ef3b20b4551412feff3288b1210b135baada4fccc321172
+source_commit: e378be4bdc8f75bd7ec6bd7cc5384d9e2e9ff763

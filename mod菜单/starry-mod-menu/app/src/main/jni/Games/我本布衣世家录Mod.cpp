@@ -1,5 +1,15 @@
 /* ================================================================
- *  我本布衣世家录Mod.cpp — 我本布衣：世家录 (com.JAGames.TalesoftheClan / TapTap 1.1.56 / vc71)
+ *  我本布衣世家录Mod.cpp — 我本布衣：世家录 (com.JAGames.TalesoftheClan / TapTap 1.1.66 / vc94)
+ *
+ *  v5 版本更新重定位（2026-10-31，1.1.56/vc71 → 1.1.66/vc94）:
+ *  1. 新 so（sha256 ce2d6551…）与 1.1.56 so（8d27a4ff…）不同源 ⇒ 23 条 RVA 全部重取
+ *  2. 类/方法名逐条不变（ItemProtocol / ItemManager / RoleProtocol / RoleManager / MapProtocol /
+ *     Family / ScienceProtocol / AdEngine / GameLaunch），仅广告 SDK 类换名 ToBidAdSDK → TapAdnAdSDK
+ *  3. 序言交叉验证：21/23 与 1.1.56 逐字节相同；InitAd（0xF81D0FFE→0xA9BD5FFE）与
+ *     TapAdnAdSDK::ShowRewardAd（0xF81D0FFE→0xF81A0FFE）代码有变，按实测回填
+ *  4. ItemManager 新增第三重载 TryRemoveItem(int,int)（1.1.56 仅有 ItemPrice / (long,int)）
+ *     ⇒ 同功能补挂 1 条，防绕过扣费；功能集仍为 6 项，不新增菜单项
+ *  功能集与 hook 机制与 v4 完全一致（1:1 复刻，见 10_docs/我本布衣世家录/路线锁定.md）
  *
  *  v4 版本更新重定位（2026-10-08，1.1.46/vc55 → 1.1.56/vc71）:
  *  1. 旧 so（md5 6e6024a9…）与 1.1.56 so（sha256 8d27a4ff…）不同源，旧表 23 条 RVA 序言 23/23 DRIFT
@@ -59,38 +69,39 @@ static std::atomic<void*> g_actionIntClass{nullptr};
 static std::atomic<void*> g_actionIntInvoke{nullptr};
 
 // ============================================================
-// ② 锚点常量（1.1.56 / vc71）
-//    §23 绑定：libil2cpp.so SHA-256 8d27a4ff17b21083dc817a69e07f1f31a4e37ce7a84e5a01410c4273fda5e1eb
-//             global-metadata.dat SHA-256 8961e4a078bc9330b201efc54c7645d65944587a28190aa8e3e06c9cba18d988
+// ② 锚点常量（1.1.66 / vc94）
+//    §23 绑定：libil2cpp.so SHA-256 ce2d6551a1cabb46b274d0805c2c15d48252a6d4ae48607cb6575b7d18a0e57c
+//             global-metadata.dat SHA-256 b735fc1c8785b569aa57b528a2e756fd731bc32c5a2b67169795bf1f9db5fde0
 //    坐标系：dump.cs 的 RVA/VA 字段（= ELF VA），file offset = RVA − 0x4000
 //            （可执行段 p_vaddr−p_offset，实测程序头；非通用常数）
-//    重定位依据：1.1.46 旧表 23 条在本 so 上序言 23/23 DRIFT，按
-//    「类短名+方法名+参数个数」重新出 dump 取新值；序言为文件偏移处小端 uint32_t。
+//    重定位依据：1.1.56 旧表 23 条在本 so 上 RVA 全变；按「类短名+方法名+参数个数」重新出
+//    Il2CppDumper dump 取新值；序言为文件偏移处小端 uint32_t（21/23 与旧表一致）。
 // ============================================================
 enum : uintptr_t {
-    kRvaModifyResearch = 0x10E13F0,
-    kRvaForceRemoveMoney = 0x1474360,
-    kRvaForceRemoveCopper = 0x14743C4,
-    kRvaCheckItemEnough = 0x1463F7C,
-    kRvaItemManagerGetCount = 0x14674A0,
-    kRvaItemMgrInstCheckEnough = 0x14722A8,
-    kRvaItemMgrInstForceRemMoney = 0x147361C,
-    kRvaItemMgrInstForceRemCopper = 0x1473714,
-    kRvaItemMgrInstTryRemPrice = 0x14640E0,
-    kRvaItemMgrInstTryRemInt = 0x14732FC,
-    kRvaItemMoneyGetCount = 0x1471138,
-    kRvaItemMoneyForceRemove = 0x1470FC0,
-    kRvaGetMaxAP = 0x130A4E8,
-    kRvaIsApEnough = 0x130A8E4,
-    kRvaModifyAP = 0x130A938,
-    kRvaRoleModifyAP = 0x130E9B4,
-    kRvaRoleCheckMyApEnough = 0x130E670,
-    kRvaGetOwnPlotLimit = 0x14C2FCC,
-    kRvaCanAffordBuyLand = 0x145DCC0,
-    kRvaInitAd = 0x13BFBAC,
-    kRvaShowRewardAd = 0x13BFDDC,
-    kRvaToBidShowRewardAd = 0x13C0684,
-    kRvaOnLoginSuccess = 0x10B9324,
+    kRvaModifyResearch = 0x1100148,
+    kRvaForceRemoveMoney = 0x14D6F0C,
+    kRvaForceRemoveCopper = 0x14D6F70,
+    kRvaCheckItemEnough = 0x14CEBF8,
+    kRvaItemManagerGetCount = 0x14CAC30,
+    kRvaItemMgrInstCheckEnough = 0x14D4E54,
+    kRvaItemMgrInstForceRemMoney = 0x14D61C8,
+    kRvaItemMgrInstForceRemCopper = 0x14D62C0,
+    kRvaItemMgrInstTryRemPrice = 0x14CED5C,
+    kRvaItemMgrInstTryRemInt = 0x14D5EA8,
+    kRvaItemMgrInstTryRemTpl = 0x14D6050,
+    kRvaItemMoneyGetCount = 0x14D3CE4,
+    kRvaItemMoneyForceRemove = 0x14D3B6C,
+    kRvaGetMaxAP = 0x13317EC,
+    kRvaIsApEnough = 0x1331C54,
+    kRvaModifyAP = 0x1331CA8,
+    kRvaRoleModifyAP = 0x1336300,
+    kRvaRoleCheckMyApEnough = 0x1335FBC,
+    kRvaGetOwnPlotLimit = 0x11214B0,
+    kRvaCanAffordBuyLand = 0x14C0E94,
+    kRvaInitAd = 0x1411470,
+    kRvaShowRewardAd = 0x1424D50,
+    kRvaTapAdnShowRewardAd = 0x1425AB0,
+    kRvaOnLoginSuccess = 0x10EDDAC,
 };
 
 // 序言期望值：从 ELF 文件偏移（RVA - ΔPT_LOAD）读出的真实指令（小端 uint32_t）
@@ -105,6 +116,7 @@ enum : uint32_t {
     kInsItemMgrInstForceRemCopper = 0x2A0103E2,
     kInsItemMgrInstTryRemPrice = 0xF81F0FFE,
     kInsItemMgrInstTryRemInt = 0xD10183FF,
+    kInsItemMgrInstTryRemTpl = 0xD10103FF,
     kInsItemMoneyGetCount = 0xD10103FF,
     kInsItemMoneyForceRemove = 0xF81C0FFE,
     kInsGetMaxAP = 0xF81E0FFE,
@@ -114,9 +126,9 @@ enum : uint32_t {
     kInsRoleCheckMyApEnough = 0xF81D0FFE,
     kInsGetOwnPlotLimit = 0xF81D0FFE,
     kInsCanAffordBuyLand = 0xA9BD5FFE,
-    kInsInitAd = 0xF81D0FFE,
+    kInsInitAd = 0xA9BD5FFE,
     kInsShowRewardAd = 0xF81D0FFE,
-    kInsToBidShowRewardAd = 0xF81D0FFE,
+    kInsTapAdnShowRewardAd = 0xF81A0FFE,
     kInsOnLoginSuccess = 0xF81D0FFE,
 };
 
@@ -297,7 +309,7 @@ typedef int32_t (*GetOwnPlotLimit_t)(void* self, void* method);
 typedef bool (*CanAffordBuyLand_t)(int64_t familyId, int32_t posX, int32_t posY, int32_t posZ, void* method);
 typedef void (*InitAd_t)(void* self, void* method);
 typedef void (*ShowRewardAd_t)(void* self, void* onSuccess, void* onFailed, void* method);
-typedef void (*ToBidShowRewardAd_t)(void* self, void* onSuccess, void* onFailed, void* method);
+typedef void (*TapAdnShowRewardAd_t)(void* self, void* onSuccess, void* onFailed, void* method);
 typedef void (*OnLoginSuccess_t)(void* method);
 
 static ModifyResearch_t g_origModifyResearch = nullptr;
@@ -316,6 +328,7 @@ static InstForceRemMoney_t g_origItemMgrInstForceRemMoney = nullptr;
 static InstForceRemCopper_t g_origItemMgrInstForceRemCopper = nullptr;
 static InstTryRemovePrice_t g_origItemMgrInstTryRemPrice = nullptr;
 static InstTryRemoveInt_t g_origItemMgrInstTryRemInt = nullptr;
+static InstTryRemoveInt_t g_origItemMgrInstTryRemTpl = nullptr;
 static InstGetCount_t g_origItemMoneyGetCount = nullptr;
 static InstForceRemMoney_t g_origItemMoneyForceRemove = nullptr;
 static ItemManagerGetCount_t g_origItemManagerGetCount = nullptr;
@@ -328,7 +341,7 @@ static GetOwnPlotLimit_t g_origGetOwnPlotLimit = nullptr;
 static CanAffordBuyLand_t g_origCanAffordBuyLand = nullptr;
 static InitAd_t g_origInitAd = nullptr;
 static ShowRewardAd_t g_origShowRewardAd = nullptr;
-static ToBidShowRewardAd_t g_origToBidShowRewardAd = nullptr;
+static TapAdnShowRewardAd_t g_origTapAdnShowRewardAd = nullptr;
 static OnLoginSuccess_t g_origOnLoginSuccess = nullptr;
 
 // --- 科研点 ---
@@ -388,6 +401,12 @@ static bool Hooked_ItemMgrInstTryRemPrice(void* self, void* price, void* method)
 static bool Hooked_ItemMgrInstTryRemInt(void* self, int32_t templateId, int32_t count, void* method) {
     if ((g_copper.load() && templateId == 1) || (g_gold.load() && templateId == 2)) return true;
     return g_origItemMgrInstTryRemInt ? g_origItemMgrInstTryRemInt(self, templateId, count, method) : false;
+}
+
+// 1.1.66 新增重载 TryRemoveItem(int templateId, int count)
+static bool Hooked_ItemMgrInstTryRemTpl(void* self, int32_t templateId, int32_t count, void* method) {
+    if ((g_copper.load() && templateId == 1) || (g_gold.load() && templateId == 2)) return true;
+    return g_origItemMgrInstTryRemTpl ? g_origItemMgrInstTryRemTpl(self, templateId, count, method) : false;
 }
 
 static int32_t Hooked_ItemMoneyGetCount(void* self, int32_t templateId, void* method) {
@@ -461,16 +480,16 @@ static void Hooked_ShowRewardAd(void* self, void* onSuccess, void* onFailed, voi
     if (g_origShowRewardAd) g_origShowRewardAd(self, onSuccess, onFailed, method);
 }
 
-static void Hooked_ToBidShowRewardAd(void* self, void* onSuccess, void* onFailed, void* method) {
+static void Hooked_TapAdnShowRewardAd(void* self, void* onSuccess, void* onFailed, void* method) {
     if (g_ad.load() && !g_inAdHook.load()) {
         g_inAdHook.store(true);
-        LOGI(WBJY_LOG " ToBidShowRewardAd intercepted");
+        LOGI(WBJY_LOG " TapAdnShowRewardAd intercepted");
         bool ok = InvokeActionInt(onSuccess, 1);
         g_inAdHook.store(false);
         if (ok) return;
-        LOGW(WBJY_LOG " ToBid ad invoke failed, fallback orig");
+        LOGW(WBJY_LOG " TapAdn ad invoke failed, fallback orig");
     }
-    if (g_origToBidShowRewardAd) g_origToBidShowRewardAd(self, onSuccess, onFailed, method);
+    if (g_origTapAdnShowRewardAd) g_origTapAdnShowRewardAd(self, onSuccess, onFailed, method);
 }
 
 // --- 登录探针 ---
@@ -505,6 +524,8 @@ static const HookSlot kSlots[] = {
      (void*)Hooked_ItemMgrInstTryRemPrice, (void**)&g_origItemMgrInstTryRemPrice},
     {"ItemMgrInstTryRemInt", kRvaItemMgrInstTryRemInt, kInsItemMgrInstTryRemInt,  "Gameplay.Item",   "ItemManager",   "TryRemoveItem",       2,
      (void*)Hooked_ItemMgrInstTryRemInt, (void**)&g_origItemMgrInstTryRemInt},
+    {"ItemMgrInstTryRemTpl", kRvaItemMgrInstTryRemTpl, kInsItemMgrInstTryRemTpl,  "Gameplay.Item",   "ItemManager",   "TryRemoveItem",       2,
+     (void*)Hooked_ItemMgrInstTryRemTpl, (void**)&g_origItemMgrInstTryRemTpl},
     {"ItemMoneyGetCount", kRvaItemMoneyGetCount, kInsItemMoneyGetCount,   "Gameplay.Item",   "ItemMoneyComponent", "GetCount",       1,
      (void*)Hooked_ItemMoneyGetCount,   (void**)&g_origItemMoneyGetCount},
     {"ItemMoneyForceRemove", kRvaItemMoneyForceRemove, kInsItemMoneyForceRemove, "Gameplay.Item", "ItemMoneyComponent", "ForceRemove",  2,
@@ -530,8 +551,8 @@ static const HookSlot kSlots[] = {
      (void*)Hooked_InitAd,               (void**)&g_origInitAd},
     {"ShowRewardAd",     kRvaShowRewardAd,       kInsShowRewardAd,         "Core.Ad",          "AdEngine",         "ShowRewardAd",         2,
      (void*)Hooked_ShowRewardAd,         (void**)&g_origShowRewardAd},
-    {"ToBidShowRewardAd", kRvaToBidShowRewardAd, kInsToBidShowRewardAd,    "Core.Ad",          "ToBidAdSDK",       "ShowRewardAd",         2,
-     (void*)Hooked_ToBidShowRewardAd,    (void**)&g_origToBidShowRewardAd},
+    {"TapAdnShowRewardAd", kRvaTapAdnShowRewardAd, kInsTapAdnShowRewardAd,    "Core.Ad",          "TapAdnAdSDK",      "ShowRewardAd",         2,
+     (void*)Hooked_TapAdnShowRewardAd,    (void**)&g_origTapAdnShowRewardAd},
     // 登录探针
     {"OnLoginSuccess",   kRvaOnLoginSuccess,     kInsOnLoginSuccess,       nullptr,            "GameLaunch",       "OnLoginSuccess",       0,
      (void*)Hooked_OnLoginSuccess,       (void**)&g_origOnLoginSuccess},
@@ -558,6 +579,7 @@ static void SyncHooks() {
         InstallSlotByTag("ItemMgrInstForceRemCopper");
         InstallSlotByTag("ItemMgrInstTryRemPrice");
         InstallSlotByTag("ItemMgrInstTryRemInt");
+        InstallSlotByTag("ItemMgrInstTryRemTpl");
         InstallSlotByTag("ItemMoneyGetCount");
         InstallSlotByTag("ItemMoneyForceRemove");
     }
@@ -575,7 +597,7 @@ static void SyncHooks() {
     if (g_ad.load()) {
         InstallSlotByTag("InitAd");
         InstallSlotByTag("ShowRewardAd");
-        InstallSlotByTag("ToBidShowRewardAd");
+        InstallSlotByTag("TapAdnShowRewardAd");
     }
     // 登录探针始终安装
     InstallSlotByTag("OnLoginSuccess");

@@ -1,0 +1,59 @@
+# 我本布衣世家录 1.1.66 (vc94) L3 证据摘录 —— 雷电模拟器 emulator-5554 / 2026-10-31
+# 源：adb logcat -d；按消息去重（同一条 hook/菜单日志只留首次）。完整原文在本地 09_test/（不入库）
+
+10-31 15:35:25.814  5132  5179 I Mod_Menu: [wbjy] IL2CPP API proactively loaded ready=1
+10-31 15:35:25.814  5132  5179 I Mod_Menu: [wbjy] lib base=0x400022E00000
+10-31 15:35:25.816  5132  5179 W Mod_Menu: [wbjy] OnLoginSuccess rva 0x10EDDAC outside exec maps
+10-31 15:35:25.868  5132  5179 I Mod_Menu: [wbjy] OnLoginSuccess hooked GameLaunch.OnLoginSuccess @name
+10-31 15:35:25.868  5132  5179 I Mod_Menu: [wbjy] lib ready (load-bias RVA, lazy hooks)
+10-31 15:35:25.868  5132  5179 I StarryMagic: [wbjy] 初始化成功
+10-31 15:35:33.365  5132  5172 I Unity   : [TapTapEngine] SDK初始化成功，业务模块已就绪
+10-31 15:35:36.190  5132  5172 I Unity   : [TapTapEngine] 开始登录
+10-31 15:36:14.025  5132  5172 I Unity   : [TapTapEngine] 合规认证通过，进入游戏
+10-31 15:36:14.026  5132  5172 I Mod_Menu: [wbjy] OnLoginSuccess
+10-31 15:37:01.798  5132  5132 W Mod_Menu: [wbjy] InitAd rva 0x1411470 outside exec maps
+10-31 15:37:01.803  5132  5132 I Mod_Menu: [wbjy] InitAd hooked AdEngine.InitAd @name
+10-31 15:37:01.806  5132  5132 W Mod_Menu: [wbjy] ShowRewardAd rva 0x1424D50 outside exec maps
+10-31 15:37:01.808  5132  5132 I Mod_Menu: [wbjy] ShowRewardAd hooked AdEngine.ShowRewardAd @name
+10-31 15:37:01.811  5132  5132 W Mod_Menu: [wbjy] TapAdnShowRewardAd rva 0x1425AB0 outside exec maps
+10-31 15:37:01.812  5132  5132 I Mod_Menu: [wbjy] TapAdnShowRewardAd hooked TapAdnAdSDK.ShowRewardAd @name
+10-31 15:37:02.064  5132  5132 W Mod_Menu: [wbjy] ItemMgrGetCount rva 0x14CAC30 outside exec maps
+10-31 15:37:02.065  5132  5132 I Mod_Menu: [wbjy] ItemMgrGetCount hooked ItemManager.GetCount @name
+10-31 15:37:02.068  5132  5132 W Mod_Menu: [wbjy] ForceRemoveMoney rva 0x14D6F0C outside exec maps
+10-31 15:37:02.069  5132  5132 I Mod_Menu: [wbjy] ForceRemoveMoney hooked ItemProtocol.ForceRemoveMoney @name
+10-31 15:37:02.071  5132  5132 W Mod_Menu: [wbjy] ForceRemoveCopper rva 0x14D6F70 outside exec maps
+10-31 15:37:02.072  5132  5132 I Mod_Menu: [wbjy] ForceRemoveCopper hooked ItemProtocol.ForceRemoveCopper @name
+10-31 15:37:02.074  5132  5132 W Mod_Menu: [wbjy] CheckItemEnough rva 0x14CEBF8 outside exec maps
+10-31 15:37:02.075  5132  5132 I Mod_Menu: [wbjy] CheckItemEnough hooked ItemProtocol.CheckItemEnough @name
+10-31 15:37:02.077  5132  5132 W Mod_Menu: [wbjy] ItemMgrInstCheckEnough rva 0x14D4E54 outside exec maps
+10-31 15:37:02.078  5132  5132 I Mod_Menu: [wbjy] ItemMgrInstCheckEnough hooked ItemManager.CheckItemEnough @name
+10-31 15:37:02.080  5132  5132 W Mod_Menu: [wbjy] ItemMgrInstForceRemMoney rva 0x14D61C8 outside exec maps
+10-31 15:37:02.080  5132  5132 I Mod_Menu: [wbjy] ItemMgrInstForceRemMoney hooked ItemManager.ForceRemoveMoney @name
+10-31 15:37:02.083  5132  5132 W Mod_Menu: [wbjy] ItemMgrInstForceRemCopper rva 0x14D62C0 outside exec maps
+10-31 15:37:02.108  5132  5132 I Mod_Menu: [wbjy] ItemMgrInstForceRemCopper hooked ItemManager.ForceRemoveCopper @name
+10-31 15:37:02.111  5132  5132 W Mod_Menu: [wbjy] ItemMgrInstTryRemPrice rva 0x14CED5C outside exec maps
+10-31 15:37:02.111  5132  5132 I Mod_Menu: [wbjy] ItemMgrInstTryRemPrice hooked ItemManager.TryRemoveItem @name
+10-31 15:37:02.116  5132  5132 W Mod_Menu: [wbjy] ItemMgrInstTryRemInt rva 0x14D5EA8 outside exec maps
+10-31 15:37:02.118  5132  5132 I Mod_Menu: [wbjy] ItemMgrInstTryRemInt hooked ItemManager.TryRemoveItem @name
+10-31 15:37:02.120  5132  5132 W Mod_Menu: [wbjy] ItemMgrInstTryRemTpl rva 0x14D6050 outside exec maps
+10-31 15:37:02.122  5132  5132 W Mod_Menu: [wbjy] ItemMoneyGetCount rva 0x14D3CE4 outside exec maps
+10-31 15:37:02.122  5132  5132 I Mod_Menu: [wbjy] ItemMoneyGetCount hooked ItemMoneyComponent.GetCount @name
+10-31 15:37:02.125  5132  5132 W Mod_Menu: [wbjy] ItemMoneyForceRemove rva 0x14D3B6C outside exec maps
+10-31 15:37:02.126  5132  5132 I Mod_Menu: [wbjy] ItemMoneyForceRemove hooked ItemMoneyComponent.ForceRemove @name
+10-31 15:37:03.121  5132  5132 W Mod_Menu: [wbjy] GetMaxAP rva 0x13317EC outside exec maps
+10-31 15:37:03.121  5132  5132 I Mod_Menu: [wbjy] GetMaxAP hooked RoleManager.GetMaxAP @name
+10-31 15:37:03.122  5132  5132 W Mod_Menu: [wbjy] IsApEnough rva 0x1331C54 outside exec maps
+10-31 15:37:03.123  5132  5132 I Mod_Menu: [wbjy] IsApEnough hooked RoleManager.IsApEnough @name
+10-31 15:37:03.124  5132  5132 W Mod_Menu: [wbjy] ModifyAP rva 0x1331CA8 outside exec maps
+10-31 15:37:03.125  5132  5132 I Mod_Menu: [wbjy] ModifyAP hooked RoleManager.ModifyAP @name
+10-31 15:37:03.126  5132  5132 W Mod_Menu: [wbjy] RoleModifyAP rva 0x1336300 outside exec maps
+10-31 15:37:03.126  5132  5132 I Mod_Menu: [wbjy] RoleModifyAP hooked RoleProtocol.ModifyAP @name
+10-31 15:37:03.127  5132  5132 W Mod_Menu: [wbjy] RoleCheckMyApEnough rva 0x1335FBC outside exec maps
+10-31 15:37:03.127  5132  5132 I Mod_Menu: [wbjy] RoleCheckMyApEnough hooked RoleProtocol.CheckMyApEnough @name
+10-31 15:37:04.201  5132  5132 W Mod_Menu: [wbjy] ModifyResearch rva 0x1100148 outside exec maps
+10-31 15:37:04.201  5132  5132 I Mod_Menu: [wbjy] ModifyResearch hooked ScienceProtocol.ModifyResearchPoints @name
+10-31 15:37:04.533  5132  5132 W Mod_Menu: [wbjy] GetOwnPlotLimit rva 0x11214B0 outside exec maps
+10-31 15:37:04.533  5132  5132 I Mod_Menu: [wbjy] GetOwnPlotLimit hooked Family.GetOwnPlotLimit @name
+10-31 15:37:04.534  5132  5132 W Mod_Menu: [wbjy] CanAffordBuyLand rva 0x14C0E94 outside exec maps
+10-31 15:37:04.534  5132  5132 I Mod_Menu: [wbjy] CanAffordBuyLand hooked MapProtocol.CanAffordBuyLand @name
+10-31 15:37:14.792  5132  5172 I Mod_Menu: [wbjy] ShowRewardAd intercepted
