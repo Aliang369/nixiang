@@ -1,0 +1,20 @@
+{
+  "template_id": "byydxxzm2",
+  "name": "不一样的修仙宗门2",
+  "package": "com.gamebl.byydxxzm.xxt",
+  "source": "Games/Byydxxzm2Entry.cpp GameMod_Get",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "无限仙玉"
+    },
+    {
+      "feat_num": 2,
+      "name": "无限灵石"
+    },
+    {
+      "feat_num": 3,
+      "name": "免广告"
+    }
+  ]
+}

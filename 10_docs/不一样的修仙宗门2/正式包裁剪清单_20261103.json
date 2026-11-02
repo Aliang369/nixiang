@@ -1,0 +1,20 @@
+{
+  "game_dir": "E:/nixiang/08_output/不一样的修仙宗门2",
+  "keep": "不一样的修仙宗门2_1.1.8_byydxxzm2-releaseSigned.apk",
+  "keep_size": 70097210,
+  "keep_md5": "63b9e7fb849a3676688d6825c8e6ff44",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "不一样的修仙宗门2_1.1.8_byydxxzm2-releaseSigned.apk.idsig",
+      "size": 562715,
+      "md5": "c7a3e676ef4e55a5fb7d9e12caf9bfcd"
+    },
+    {
+      "name": "不一样的修仙宗门2_1.1.8_byydxxzm2-unsigned.apk",
+      "size": 69963104,
+      "md5": "77b6ceb0a6bd4a5856701aad4ec904bd"
+    }
+  ],
+  "removed_count": 2
+}
