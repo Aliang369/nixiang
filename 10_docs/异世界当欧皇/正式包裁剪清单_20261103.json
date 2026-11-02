@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/异世界当欧皇",
+  "keep": "异世界当欧皇_1.0.104_ysjdoh-releaseSigned.apk",
+  "keep_size": 103336514,
+  "keep_md5": "4c762bab2e4b67a3df101e6983a9fb33",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "异世界当欧皇_1.0.104_ysjdoh-releaseSigned.apk.idsig",
+      "size": 824859,
+      "md5": "ce505d293f0aa747d42514c134e3f256"
+    },
+    {
+      "name": "异世界当欧皇_1.0.104_ysjdoh-unsigned.apk",
+      "size": 102536991,
+      "md5": "617260c30b57dd9b64bf9f622b20f0af"
+    }
+  ],
+  "removed_count": 2
+}
