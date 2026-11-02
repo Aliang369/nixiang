@@ -1,0 +1,20 @@
+{
+  "template_id": "byyxy",
+  "name": "不一样西游",
+  "package": "com.wingjoy.toWest",
+  "source": "Games/BysxyEntry.cpp GameMod_Get",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "单次加成"
+    },
+    {
+      "feat_num": 2,
+      "name": "一键四维"
+    },
+    {
+      "feat_num": 3,
+      "name": "免广告"
+    }
+  ]
+}

@@ -308,3 +308,36 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   不要假定正向；`-1` 这种默认值几乎必然表示递减。
 - 落点建议：`skill/re-implement/hook-rules.md`（挂点/取值一节加一条「变化率字段先验符号」）
   + 游戏文档 `10_docs/不一样修仙2/路线锁定.md` 已记事故经过。
+
+## 候选：IL2CPP 游戏「属性上限槽」——写满值前必须先抬上限槽（class: tech）
+
+- 状态：候选（2026-11-02 不一样西游 1.0.40 真机实证，用户三次反馈收敛）
+- 事实：`CharacterLogic::GetAttrLimitValue()` 反汇编把槽号写死成 `w1=#4` ⇒ **t4 = 体力上限**；
+  `JudgeAttrHasLimit(int)` = `cmp w1,#2; cset w0,eq; ret` ⇒ **只有 t2（体力）有上限**，
+  且它唯一调用点在 `AttrInfo::RefreshInfo`（UI）⇒ **钩它不影响写值，只影响显示**。
+  实测：t2 加法 +99999 / 绝对赋值 100109 都被夹到 t4 的值（100→110），先写 t4 再写 t2 才成功。
+- 判据：某属性「怎么加都不动、但减一点能动」＝被上限夹住；此时**先找上限槽**
+  （看 `*LimitValue` / `GetAimAttrLimit` 一类小函数的 `mov wN,#k` 立即数，槽号就写在那儿）。
+- 落点建议：`skill/re-implement/hook-rules.md`「属性/数值类挂点」一节加「上限槽先抬」一条。
+
+## 候选：旧 TapTap SDK（`com.taptap.sdk.ui.Block` 系）A 轨唯一正确锚点（class: tech）
+
+- 状态：候选（2026-11-02 不一样西游，两次失败 + 一次成功实证）
+- 正确做法：`LoginBlock.onViewCreated` 里把 `new LoginClient(delegate) + sendLoginRequest(request)`
+  改成 `new WebViewHandler(delegate) + authorize(request)`（SDK 自带完整 web 通路：
+  `new WebBlock` + `setLoginCallback(WebViewHandler$1)` + `startBlock`）。TapSignKit 保持官方原样。
+- 两个错法（都会复现，别重犯）：
+  ① `LoginClient.sendLoginRequest` 里提前 `return` ⇒ 跳过 `cloudGameHandler` 的 bind 记账，
+     销毁时 `unbindService` 抛 `IllegalArgumentException: Service not registered` ⇒ 点开始游戏闪退；
+  ② `TapTapActivity` 里 `new LoginBlock` 换成 `new WebBlock` ⇒ 绕过 callback/startBlock ⇒ 登录页永远转圈。
+- 落点建议：`skill/re-analyze/login/taptap-web-login.md`「三种 SDK 版本」表加第 4 种（Block 系）。
+
+## 候选：委托参数顺序别猜——用 `LogSig` 打类型表（class: tech）
+
+- 状态：候选（2026-11-02 不一样西游免广告，一次猜错即用户可见故障）
+- 事实：`ShowAds` 真机 `LogSig` = `System.Action  System.Action  AdsPlatform.Runtime.RewardVideoPlayEvent`
+  ⇒ a1=成功(发奖)、a2=失败。先调 a2 时游戏直接弹「广告播放失败，请重试」——**猜错回调＝直接可感知的坏体验**。
+- 做法：任何要 `Invoke` 委托的 hook，先 `method_param_count/method_param/type_name` 打一遍签名，
+  再按类型定位成功/失败回调；泛型 `Action`1<结果>` 需要真实结果对象，**造不出来就不要硬调**，
+  宁可退回原流程（避免吞奖励）。
+- 落点建议：`skill/re-implement/hook-rules.md`「委托/回调类挂点」新增一节。
