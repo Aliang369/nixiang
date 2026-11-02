@@ -9,7 +9,7 @@
   4. 去掉官方 META-INF 签名条目
 然后用 apksigner 签名。
 
-用法：python 04_scripts/不一样修仙宗门2/byydxxzm2_surgical.py [--skip-sign]
+用法：python 04_scripts/不一样的修仙宗门2/byydxxzm2_surgical.py [--skip-sign]
 """
 import os, sys, shutil, subprocess, zipfile, hashlib
 from pathlib import Path
@@ -137,7 +137,11 @@ def main():
     jsc = ROOT / "13_scratch" / "byydxxzm2_js" / "project.jsc"
     if not jsc.exists():
         raise SystemExit("missing patched project.jsc (先跑 byydxxzm2_patch_js.py)")
-    extras = {"assets/src/project.jsc": jsc.read_bytes()}
+    patched_c1 = ROOT / "13_scratch" / "byydxxzm2_aa" / "classes_patched.dex"
+    if not patched_c1.exists():
+        raise SystemExit("missing classes_patched.dex (先跑 patch_antiaddiction_byydxxzm2.py)")
+    extras = {"assets/src/project.jsc": jsc.read_bytes(),
+              "classes.dex": patched_c1.read_bytes()}
     for f in SO_DIR.iterdir():
         if f.is_file() and f.suffix == ".so":
             extras["lib/arm64-v8a/" + f.name] = f.read_bytes()
@@ -187,7 +191,7 @@ def main():
     print("[4/5] assert untouched entries")
     zo = zipfile.ZipFile(ORIG)
     zn = zipfile.ZipFile(unsigned)
-    must_same = ["classes.dex", "classes2.dex", "classes3.dex", "classes4.dex", "classes5.dex",
+    must_same = ["classes2.dex", "classes3.dex", "classes4.dex", "classes5.dex",
                  "resources.arsc", "assets/src/settings.jsc",
                  "lib/arm64-v8a/libcocos2djs.so"]
     for m in must_same:

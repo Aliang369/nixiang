@@ -5,7 +5,7 @@
 都会在转译层 SIGSEGV（2026-11-02 实测两次）。改脚本 = 唯一稳定路径。
 
 流程：xxtea 解密 -> 解 zip -> 取 encrypt.js -> 末尾追加补丁 -> 重新 zip -> xxtea 加密
-用法：python 04_scripts/不一样修仙宗门2/byydxxzm2_patch_js.py
+用法：python 04_scripts/不一样的修仙宗门2/byydxxzm2_patch_js.py
 产物：13_scratch/byydxxzm2_js/project.jsc（由 surgical 脚本塞回 apk）
 """
 import io, os, struct, zipfile, hashlib
