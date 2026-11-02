@@ -341,3 +341,9 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
   再按类型定位成功/失败回调；泛型 `Action`1<结果>` 需要真实结果对象，**造不出来就不要硬调**，
   宁可退回原流程（避免吞奖励）。
 - 落点建议：`skill/re-implement/hook-rules.md`「委托/回调类挂点」新增一节。
+
+## 2026-11-02 · TapTap 防沉迷「快速认证」失败与客户端改判（class: tech，已合并）
+
+- 状态：**已合并** → `skill/re-analyze/antiaddiction-tapsdk-skip.md`（含链路、三处改判、`.registers` 事故）
+- 证据：我的技能无限触发 1.6.3 真机 f9a116a2 实测；`logcat -b crash` 的 NPE 栈 + 修复后用户「没问题了」
+- 边界：防沉迷门禁改动，须用户当轮点名；换版本重新取锚点

@@ -1,0 +1,32 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "我的技能无限触发",
+  "package": "com.SmallMill.EnMaster",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "gameconfig_modern_registry",
+      "match": [
+        "GameConfig.h 无 defined",
+        "STARRY_AUTH_GAME_ID"
+      ],
+      "conclusion": "接受偏离",
+      "reason": "本作走 modern 注册表：tag / authGameId 写在 Games/WdjnwcfEntry.cpp 的 StarryGameMod 表里（'wdjnwcf'，与后台 games.game_id 同名），不经过 GameConfig.h 的 legacy STARRY_GAME_* 宏映射，故该文件没有本作分支是设计如此；审计按文件名推断出的 STARRY_GAME_WDJNWCF 只是启发式猜测。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/WdjnwcfEntry.cpp（.tag=\"Wdjnwcf\" / .authGameId=\"wdjnwcf\" / .waitLib=\"libil2cpp.so\"）；构建走私有 mk：04_scripts/我的技能无限触发/wdjnwcf_build_so.sh → Android_wdjnwcf.mk + 独立 obj_wdjnwcf/libs_wdjnwcf，产物 so md5 5533f61924231af793a25b3539beb80d（96440 B，含 [wdjnwcf] 标签与 Category_功能 菜单串自检 PASS）",
+      "date": "2026-11-02",
+      "review_by": "2027-01-31"
+    },
+    {
+      "id": "android_mk_branch_private_mk",
+      "match": [
+        "激活分支",
+        "与 --game"
+      ],
+      "conclusion": "接受偏离",
+      "reason": "本游戏 so 用私有 mk Android_wdjnwcf.mk 隔离构建（APP_BUILD_SCRIPT=./Android_wdjnwcf.mk + 绝对路径 NDK_OUT/NDK_LIBS_OUT），公共 Android.mk 里残留的 STARRY_GAME_ZJMC 激活分支不参与本包构建，不会编出别的游戏的 so。",
+      "evidence": "04_scripts/我的技能无限触发/wdjnwcf_build_so.sh（绝对路径 NDK_OUT=starry/obj_wdjnwcf、NDK_LIBS_OUT=starry/libs_wdjnwcf）；so 自检：Wdjnwcf/wdjnwcf 标签命中、Category_功能 命中、其它游戏标签=0；构建日志 [selfcheck] so = .../libs_wdjnwcf/arm64-v8a/libstarry_magic.so (96440 B, md5=5533f61924231af793a25b3539beb80d)",
+      "date": "2026-11-02",
+      "review_by": "2027-01-31"
+    }
+  ]
+}

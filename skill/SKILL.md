@@ -55,6 +55,7 @@ IDE 无关——Cursor / Kilo Code / QClaw / 任何 AI 都可使用。
 3. `re-analyze/login/` — 登录与签名问题：
    - `taptap-web-login.md` — TapTap 强制网页登录（三种 SDK 版本）
    - `qq-wechat-sso.md` — QQ/微信 SSO 限制
+   - `antiaddiction-tapsdk-skip.md` — **TapTap 防沉迷「快速认证/实名」门禁改判**（点「使用」秒回＝运营商一键登录，改包救不了；要跳过须改 `$7.onSuccess`/`$7.onError` + `AntiAddictionImpl.login` 短路，含 `.registers` 血账）
    - `sign-spoof.md` — 运行时签名伪装（SignSpoof / MT Killer）
    - `server-rejection-triage.md` — 服务端拒绝/设备检测类提示的分流
 4. `re-analyze/native-probe-on-device.md` — **真机探针范式**（非 root 机跑不了 Frida 时：

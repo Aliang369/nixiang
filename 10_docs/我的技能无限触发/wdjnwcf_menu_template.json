@@ -1,0 +1,36 @@
+{
+  "template_id": "wdjnwcf",
+  "name": "我的技能无限触发",
+  "package": "com.SmallMill.EnMaster",
+  "source": "Games/WdjnwcfEntry.cpp kWdjnwcf_Features / Games/WdjnwcfMod.h WdjnwcfFeat / authGameId=wdjnwcf @ 1.6.3 (versionCode 163)",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 2,
+      "name": "伤害倍率"
+    },
+    {
+      "feat_num": 3,
+      "name": "加速"
+    },
+    {
+      "feat_num": 4,
+      "name": "金币"
+    },
+    {
+      "feat_num": 5,
+      "name": "钻石"
+    },
+    {
+      "feat_num": 6,
+      "name": "体力"
+    },
+    {
+      "feat_num": 7,
+      "name": "免广告"
+    }
+  ]
+}

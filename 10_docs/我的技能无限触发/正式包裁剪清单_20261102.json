@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/我的技能无限触发",
+  "keep": "我的技能无限触发_1.6.3_surgical-releaseSigned.apk",
+  "keep_size": 77763579,
+  "keep_md5": "bdd08c8f5f50cdfe65e2e624b22ae617",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "我的技能无限触发_1.6.3_surgical-releaseSigned.apk.idsig",
+      "size": 624155,
+      "md5": "887102117c1dfe4afa847265f3a705e9"
+    },
+    {
+      "name": "我的技能无限触发_1.6.3_surgical-unsigned.apk",
+      "size": 77699469,
+      "md5": "21b83a33b409d546a0b2e2af5748b38b"
+    }
+  ],
+  "removed_count": 2
+}

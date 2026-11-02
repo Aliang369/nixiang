@@ -21,7 +21,11 @@
 #        [--so-tag '[Endfield]'] [--game-id mrfzzmd] \
 #        [--serial f9a116a2] [--clean] [--allow-resource-loss] [--no-seed] [--dry-run]
 #
-#    --clean                 覆盖安装前先卸载（异签名必须；会先落备胎并核对非空）
+#    --clean                 覆盖安装前先卸载（**只在异签名时才会真卸**：先试覆盖安装，
+#                            系统报 UPDATE_INCOMPATIBLE 才走卸载；同签名自动跳过卸载。
+#                            2026-11-02 起 --clean ≠ 无条件卸载：事故＝我的技能无限触发
+#                            同签名三次 --clean，用户反复重登）
+#    --force-clean           真·卸载重装（绕过签名预判；只在确实要清数据/清 OTA so 时用）
 #    --allow-resource-loss   备胎失败时仍继续卸载（默认拒绝，退出码 3）—— 需显式承担重下代价
 #    --no-seed               不跑 ensure_starry_device_id_seed.sh
 #    --dry-run               只打印将执行的判定与命令，不做任何写操作（也不做备胎核对）
@@ -42,7 +46,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 APK="" PKG="" SO_TAG="" GAME_ID="" SERIAL="${DEV_SERIAL:-f9a116a2}"
-CLEAN=0 DRY=0 ALLOW_LOSS=0 SEED=1
+CLEAN=0 DRY=0 ALLOW_LOSS=0 SEED=1 FORCE_CLEAN=0 SKIP_INSTALL=0
 
 usage() { sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 while [[ $# -gt 0 ]]; do
@@ -53,6 +57,7 @@ while [[ $# -gt 0 ]]; do
     --game-id) GAME_ID="${2:-}"; shift 2 ;;
     --serial) SERIAL="${2:-}"; shift 2 ;;
     --clean) CLEAN=1; shift ;;
+    --force-clean) CLEAN=1; FORCE_CLEAN=1; shift ;;
     --dry-run) DRY=1; shift ;;
     --allow-resource-loss) ALLOW_LOSS=1; shift ;;
     --no-seed) SEED=0; shift ;;
@@ -125,6 +130,32 @@ APPEXT="/sdcard/Android/data/${PKG}"
 HAS_ROOT=0
 if adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c id" 2>/dev/null | grep -q "uid=0"; then HAS_ROOT=1; fi
 
+# ★ 签名预判（2026-11-02）：--clean 只在**异签名**时才卸载。
+#   同一证书自签包直接 pm install -r 即可覆盖，且保留登录态/存档/外置数据；
+#   以前无条件卸载 ⇒ 用户每次重登（我的技能无限触发 22:57/23:04/23:20 三次实证）。
+if [[ "$CLEAN" == 1 && "$FORCE_CLEAN" == 0 && "$DRY" == 1 ]]; then
+  echo "  [dry-run] 会先试覆盖安装；成功则跳过卸载，仅当系统报 UPDATE_INCOMPATIBLE 才卸载"
+fi
+
+if [[ "$CLEAN" == 1 && "$FORCE_CLEAN" == 0 && "$DRY" != 1 ]]; then
+  echo "== 预判：先试覆盖安装（用系统的签名校验当判据）=="
+  adbx shell am force-stop "$PKG" >/dev/null 2>&1 || true
+  adbx install -r -d "$APK" > "${TMP}/probe.txt" 2>&1 || true
+  tail -2 "${TMP}/probe.txt" || true
+  if grep -F -q "Success" "${TMP}/probe.txt"; then
+    echo "  ✓ 同签名 ⇒ 覆盖安装成功，已跳过卸载（登录态/存档/外置数据全部保留）"
+    CLEAN=0
+    SKIP_INSTALL=1
+  elif grep -F -q "INSTALL_FAILED_UPDATE_INCOMPATIBLE" "${TMP}/probe.txt" \
+    || grep -F -q "signatures do not match" "${TMP}/probe.txt"; then
+    echo "  ! 系统报签名不一致 ⇒ 确认异签名，按原流程卸载重装（先落备胎并核对非空）"
+  else
+    echo "ERROR: 覆盖安装失败且原因不是签名冲突；已停在预判步，**未做任何卸载**：" >&2
+    sed -n '1,6p' "${TMP}/probe.txt" >&2
+    exit 1
+  fi
+fi
+
 if [[ "$CLEAN" == 1 ]]; then
   echo "== 异签名卸载重装（先保护外置数据；root=$([ "$HAS_ROOT" == 1 ] && echo yes || echo no)）=="
   adbx shell am force-stop "$PKG" >/dev/null 2>&1 || true
@@ -171,6 +202,9 @@ else
 fi
 
 echo "== 安装 =="
+if [[ "$SKIP_INSTALL" == 1 ]]; then
+  echo "  已在上一步覆盖安装成功（同签名），跳过重复安装"
+else
 REMOTE="/data/local/tmp/$(basename "$APK")"
 if adb "${AEXP[@]+"${AEXP[@]}"}" shell "su -c id" 2>/dev/null | grep -q "uid=0"; then
   # ★2026-10-27（雷电14 实测）：Git Bash/MSYS 会把**设备侧**绝对路径 "/data/local/tmp/…"
@@ -194,6 +228,8 @@ else
   echo "  (设备无 root ⇒ 走 adb install 流式安装，不做 /data/local/tmp 预推，避免重推 1.7GB)"
   adbx install -r -d "$APK"
 fi
+
+fi   # SKIP_INSTALL
 
 if [[ "$CLEAN" == 1 && "$DRY" != 1 && "$HAS_ROOT" == 1 ]]; then
   echo "== 外置数据归位 =="

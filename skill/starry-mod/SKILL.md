@@ -328,6 +328,7 @@ bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [-
 - 只做覆盖安装时，交付结论必须标 `NOT PROVEN：仅覆盖安装验证`，不得写「用户实测通过 / 已交付」。
 - 卸载会清 `/sdcard/Android/data/<pkg>` 与 app 私有数据 ⇒ 先取得用户同意；无 root 机走 `adb uninstall`
   （`install_starry_apk.sh --clean` 自 2026-10-19 起自动降级，并明示「外置数据不可归位、重装需重下资源」）。
+  **2026-11-02 起 `--clean` 自带签名预判**：先试覆盖安装，成功即跳过卸载（同签名不丢登录态/存档）；只有系统报 `UPDATE_INCOMPATIBLE` 才真卸。要强制清数据用 `--force-clean`。
 
 ### MenuService 前台服务铁律（框架级，全游戏生效）
 
