@@ -47,7 +47,7 @@ mkdir -p "$OBJ" "$OUT_LIBS"
 STAMP="${OBJ}/.stamp"
 NEW_STAMP="$(cat "$MK" "$APP_MK" "$JNI/Games/AyxsMod.cpp" "$JNI/Games/AyxsMod.h" "$JNI/Games/AyxsEntry.cpp" | shasum -a 256 | cut -c1-64)"
 if [ -f "$STAMP" ] && [ "$(cat "$STAMP")" = "$NEW_STAMP" ] && [ -f "$SO" ]; then
-  echo "[build_so] 源码未变，复用已有 so（强制重编：rm -f $STAMP）"
+  echo "[build_so] 源码未变，复用已有 so（强制重编：rm -f ${STAMP}）"
 else
   echo "[build_so] 源码变化 → 清 obj 全量重编"
   rm -rf "$OBJ"
