@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/修仙王朝模拟器",
+  "keep": "修仙王朝模拟器_1.0.4_xxwc-releaseSigned.apk",
+  "keep_size": 149432995,
+  "keep_md5": "c741444a5a00f971f9283423f65d7608",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "修仙王朝模拟器_1.0.4_xxwc-unsigned.apk",
+      "size": 149230836,
+      "md5": "f48751e20b35e550e6f5ef9068e75f2f"
+    },
+    {
+      "name": "修仙王朝模拟器_1.0.4_xxwc-releaseSigned.apk.idsig",
+      "size": 1189403,
+      "md5": "baa685d9f3aeee203ddec7d6d0cca15a"
+    }
+  ],
+  "removed_count": 2
+}

@@ -1,0 +1,16 @@
+{
+  "template_id": "xxwc",
+  "name": "修仙王朝模拟器",
+  "package": "com.sky.xxwc.xxt",
+  "source": "Games/XxwcEntry.cpp GameMod_Get",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "免广告"
+    },
+    {
+      "feat_num": 2,
+      "name": "超级无敌(战斗必胜)"
+    }
+  ]
+}
