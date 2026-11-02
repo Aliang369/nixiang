@@ -96,6 +96,7 @@
 | 不一样修仙2 | 2026-11-02 | ✅ 1.4.135/vc1007 星空版收官（直装，官包 dex/arsc/so 逐字节未动、星光在 classes6.dex）；14 项全过，L3 用户「功能都没问题了」；含免广告（钩 JedgeCanBlockAd@0xF7A5C0）；md5 d29a7286…；遗留：修为/寿元受游戏上限封顶 | [摘要](games/不一样修仙2.md) |
 | 不一样的修仙宗门2 | 2026-11-02 | ✅ TapTap 1.1.8 星光版收官（外科：官方 dex/arsc/so/settings.jsc 逐字节未动，只换 project.jsc + 新增 classes6.dex/so）；无限仙玉/无限灵石/免广告，L3 用户「功能都没问题了」；关键结论：雷电 houdini 下 native hook 与 evalString 必 SIGSEGV，只能改 jsc；开关通道=jsb.sqlite；收尾已交付：唯一正式包（70097210 B, sha256 2ebf4635…）+ icon 192 + 菜单模板 3 项 | [摘要](games/不一样的修仙宗门2.md) |
 | 不一样西游 | 2026-11-02 | ✅ 1.0.40/vc622 星空版收官（外壳直装：classes/classes3/arsc/so 逐字节未动，星光+killer 在 classes4.dex，TapTap 双轨；一键四维先抬 t4 体力上限；免广告钩 ShowAds 只调 a1；md5 00bea313…；L3 用户「功能都没问题了」） | [摘要](games/不一样西游.md) |
+| 异世界当欧皇 | 2026-11-03 | ✅ 1.0.104 收官（md5 `4c762bab`，103,336,514 B）：Cocos jsc 四项补丁（伤害倍率1-100/无敌/加速5×/免广告）+ jsb.sqlite 通道 + TapTap 改包法强制网页登录；门禁 PASS、precheck 四项 ✓、用户「功能都没问题」；icon 与菜单模板已出 | [摘要](games/异世界当欧皇.md) | [摘要](games/异世界当欧皇.md) |
 | 我的技能无限触发 | 2026-11-02 | 收官 1.6.3：8 项菜单 L3 全过，正式包 md5 `bdd08c8f` | [摘要](games/我的技能无限触发.md) |
 
 ## 基础设施与经验
