@@ -1,0 +1,56 @@
+{
+  "template_id": "byyxx2",
+  "name": "不一样修仙2",
+  "package": "com.wingjoy.immortal2",
+  "source": "Games/Byyxx2Entry.cpp GameMod_Get",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "单次加成"
+    },
+    {
+      "feat_num": 2,
+      "name": "金币"
+    },
+    {
+      "feat_num": 3,
+      "name": "声望"
+    },
+    {
+      "feat_num": 4,
+      "name": "宗门贡献"
+    },
+    {
+      "feat_num": 5,
+      "name": "修为"
+    },
+    {
+      "feat_num": 6,
+      "name": "寿元"
+    },
+    {
+      "feat_num": 7,
+      "name": "一键全资源"
+    },
+    {
+      "feat_num": 9,
+      "name": "自增倍率"
+    },
+    {
+      "feat_num": 10,
+      "name": "金币自增"
+    },
+    {
+      "feat_num": 11,
+      "name": "修为自增"
+    },
+    {
+      "feat_num": 12,
+      "name": "寿元自增"
+    },
+    {
+      "feat_num": 13,
+      "name": "免广告"
+    }
+  ]
+}

@@ -292,3 +292,18 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 正确姿势：判据一律用**记录/输入里的原始路径串**（或统一规范化后再比），把 `File` 只当作 IO 句柄。
 - 适用：所有「真机 Android 路径 + 桌面 JVM 离线自测」的组合（SpringBoot/自研解析器/配置路径匹配都算）。
 - 落点建议：`skill/re-implement/code-review-checklist.md` 或 `stages.md` 的离线自测节。
+
+## 候选：`*IncSpeed` 类字段名不可信——可能是「流逝/递减速度」（class: tech）
+
+- 状态：候选（2026-11-02 不一样修仙2 1.4.135 真机事故 + 修复实证）
+- 事实：`Immortal.CharacterLogic::LifeTimeIncSpeed`（字段名直译「寿元增速」）**默认值是 -1**，
+  语义是「寿元**每秒减少**多少」；按名字当增速 ×1000 ⇒ 变 -1000 ⇒ 寿元几秒见底、角色暴死。
+  同一批 `MoneyIncSpeed` / `ExpIncSpeed` 默认值是 0，×倍率后为正才正常。
+- 判据（低成本、先做）：① 改之前先**读原值并打日志**（`orig=%.2f`），符号一眼可见；
+  ② 游戏自身往往也打一行确认（本作为 `陌杰 获得寿元自增速度 : -1000`），直接对照；
+  ③ 拿不准就**取绝对值放大**（`|orig|×mult`）而不是直接乘——把「减速」翻成「加速」，
+  且 OFF 时按 `orig` 精确还原；④ 目标值加 ±钳制防溢出。
+- 推广：凡是 `*Speed / *Rate / *Inc / *Delta` 一类「变化率」字段，都按「符号即方向」处理，
+  不要假定正向；`-1` 这种默认值几乎必然表示递减。
+- 落点建议：`skill/re-implement/hook-rules.md`（挂点/取值一节加一条「变化率字段先验符号」）
+  + 游戏文档 `10_docs/不一样修仙2/路线锁定.md` 已记事故经过。
