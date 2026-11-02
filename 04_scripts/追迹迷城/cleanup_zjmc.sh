@@ -13,18 +13,16 @@ cd "$NIXIANG_ROOT"
 
 [[ -d "02_apks/$GAME" ]] || { echo "错误: 缺少官方包目录 02_apks/$GAME" >&2; exit 1; }
 [[ -d "08_output/$GAME" ]] || { echo "错误: 缺少正式包目录 08_output/$GAME" >&2; exit 1; }
-[[ -f "06_dumped/$GAME/1.0.20260912_il2cpp/dump.cs" ]] || { echo "错误: 缺少需要保留的 dump.cs" >&2; exit 1; }
-[[ -f "06_dumped/$GAME/1.0.20260912_il2cpp/stringliteral.json" ]] || { echo "错误: 缺少需要保留的 stringliteral.json" >&2; exit 1; }
-[[ -f "06_dumped/$GAME/1.0.20260912_il2cpp/rva_targets.json" ]] || { echo "错误: 缺少需要保留的 rva_targets.json" >&2; exit 1; }
+# 2026-11-02（1.0.20261030）：dump 大件不入库；唯一要保活的文本证据＝rva_targets.json（已入库）
+KEEP_RVA="06_dumped/$GAME/1.0.20261030_il2cpp/rva_targets.json"
+[[ -f "$KEEP_RVA" ]] || { echo "错误: 缺少需要保留的 $KEEP_RVA" >&2; exit 1; }
 
 BEFORE_KB="$((du -sk 03_decompiled/$GAME 06_dumped/$GAME 07_patched/$GAME 2>/dev/null || true) | awk '{s+=$1} END {print s+0}')"
 BEFORE_AT="$(date '+%Y-%m-%d %H:%M:%S')"
 
-# Staged text survives scoped git clean below.
-git add -f \
-  "06_dumped/$GAME/1.0.20260912_il2cpp/dump.cs" \
-  "06_dumped/$GAME/1.0.20260912_il2cpp/stringliteral.json" \
-  "06_dumped/$GAME/1.0.20260912_il2cpp/rva_targets.json"
+# 已入库的 rva_targets.json 不受 git clean -xdf 影响（只删未跟踪文件），这里仍显式确认一次
+git ls-files --error-unmatch "$KEEP_RVA" >/dev/null 2>&1 \
+  || { echo "错误: $KEEP_RVA 未被 git 跟踪，清理会删掉它" >&2; exit 1; }
 
 echo "==> dry-run: 06_dumped/$GAME"
 git clean -xdn -- "06_dumped/$GAME" | sed -n '1,120p'
@@ -34,9 +32,7 @@ git clean -xdf -- "07_patched/$GAME"
 git clean -xdf -- "06_dumped/$GAME"
 git clean -xdf -- "09_test/$GAME" 2>/dev/null || true
 
-[[ -f "06_dumped/$GAME/1.0.20260912_il2cpp/dump.cs" ]] || { echo "错误: dump.cs 被误删" >&2; exit 1; }
-[[ -f "06_dumped/$GAME/1.0.20260912_il2cpp/stringliteral.json" ]] || { echo "错误: stringliteral.json 被误删" >&2; exit 1; }
-[[ -f "06_dumped/$GAME/1.0.20260912_il2cpp/rva_targets.json" ]] || { echo "错误: rva_targets.json 被误删" >&2; exit 1; }
+[[ -f "$KEEP_RVA" ]] || { echo "错误: $KEEP_RVA 被误删" >&2; exit 1; }
 [[ -d "02_apks/$GAME" ]] || { echo "错误: 02_apks 被误删" >&2; exit 1; }
 [[ -d "08_output/$GAME" ]] || { echo "错误: 08_output 被误删" >&2; exit 1; }
 

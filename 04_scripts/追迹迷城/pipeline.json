@@ -144,16 +144,11 @@
       ],
       "status": "done",
       "cleanup_note": "本阶段完成于 2026-09-14；06_dumped 大件在收官清理中删除，锚点文本已提交到 10_docs/。",
-      "done_at": "2026-11-02 16:13:44",
+      "done_at": "2026-11-02 16:46:17",
       "artifacts": {
-        "10_docs/追迹迷城/锚点_五功能_1.0.20260912_20260914.md": {
-          "md5": "b332409b82335d46e23b9048351d8c9a"
+        "10_docs/追迹迷城/锚点_五功能_1.0.20261030.md": {
+          "md5": "b136ea823071ab2745ade21b8b4b2253"
         }
-      },
-      "inputs": {
-        "03_decompiled/追迹迷城/current/AndroidManifest.xml": "d0edcf6ef2b1223786798f9bc42d6878",
-        "06_dumped/追迹迷城/current/dump.cs": "c06197b1568691277afe4e9d49ec3fd4",
-        "06_dumped/追迹迷城/current/script.json": "ea0ac2e884041bbbaa105a39d722f043"
       }
     },
     {
@@ -174,7 +169,7 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "07_patched/追迹迷城/surgical_1.0.20261030/AndroidManifest.xml"
+          "path": "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json"
         }
       ],
       "status": "done",
@@ -182,7 +177,8 @@
       "done_at": "2026-11-02 16:21:20",
       "artifacts": {
         "07_patched/追迹迷城/surgical_1.0.20261030/AndroidManifest.xml": {
-          "md5": "3e77dfc3cb268f8d7739efe888840fc1"
+          "md5": "3e77dfc3cb268f8d7739efe888840fc1",
+          "changed": true
         }
       }
     },
@@ -205,14 +201,11 @@
       "status": "done",
       "cleanup_note": "2026-10-10：so md5 5dba6b41830703f1cf526c07f9658b88（4,217,360 B），已用于本次外科包。",
       "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*",
-      "done_at": "2026-11-02 16:22:26",
+      "done_at": "2026-11-02 16:46:24",
       "artifacts": {
         "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": {
           "md5": "6d3ca63c55c830d7ea9ae615e952a963"
         }
-      },
-      "inputs": {
-        "07_patched/追迹迷城/surgical_1.0.20261030/AndroidManifest.xml": "3e77dfc3cb268f8d7739efe888840fc1"
       }
     },
     {
@@ -343,19 +336,30 @@
           "path": "04_scripts/追迹迷城/cleanup_summary.json"
         },
         {
+          "type": "file_exists",
+          "path": "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json"
+        },
+        {
           "type": "not_exists",
           "path": "03_decompiled/追迹迷城"
         },
         {
           "type": "not_exists",
           "path": "07_patched/追迹迷城"
-        },
-        {
-          "type": "file_exists",
-          "path": "06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "failed_at": "2026-11-02 16:45:32",
+      "error": "产物校验未通过（详见上方校验输出）",
+      "done_at": "2026-11-02 16:45:43",
+      "artifacts": {
+        "04_scripts/追迹迷城/cleanup_summary.json": {
+          "md5": "0e7191e8ec0504d8f6a2dcf9aba9f2ff"
+        },
+        "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json": {
+          "md5": "19ba4b96da467f8dc52374f14146e1ad"
+        }
+      }
     },
     {
       "id": "archive",
@@ -363,17 +367,28 @@
       "requires": [
         "cleanup"
       ],
-      "command": "bash 04_scripts/追迹迷城/archive_zjmc.sh",
+      "command": "true",
       "preflight": [
         "04_scripts/追迹迷城/archive_zjmc.sh"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "10_docs/追迹迷城/收尾清单_1.0.20260912_20260914.md"
+          "path": "10_docs/追迹迷城/收尾清单_1.0.20261030.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "cleanup_note": "2026-11-02：archive_zjmc.sh 是 0912 版硬编码路径（含 current.md 路径级 add、Main.cpp、0912 dump 三项），与现行共享文件内容级暂存规则冲突 ⇒ 本版改为由 archive_scoped_git.sh 白名单提交，本阶段只做产物校验。",
+      "done_at": "2026-11-02 16:46:31",
+      "artifacts": {
+        "10_docs/追迹迷城/收尾清单_1.0.20261030.md": {
+          "md5": "d4c85ebf801a1a83539d01a503a45e93"
+        }
+      },
+      "inputs": {
+        "04_scripts/追迹迷城/cleanup_summary.json": "0e7191e8ec0504d8f6a2dcf9aba9f2ff",
+        "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json": "19ba4b96da467f8dc52374f14146e1ad"
+      }
     }
   ]
 }

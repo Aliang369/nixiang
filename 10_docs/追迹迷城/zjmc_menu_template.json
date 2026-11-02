@@ -1,0 +1,28 @@
+{
+  "template_id": "zjmc",
+  "name": "追迹迷城",
+  "package": "com.TeaMelo.DungeonChasers",
+  "source": "Main.cpp g_featureList（ZJMC 块 552-556）+ Games/ZjmcMod.h enum ZjmcFeat",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "秒杀"
+    },
+    {
+      "feat_num": 2,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 3,
+      "name": "全屏秒杀"
+    },
+    {
+      "feat_num": 4,
+      "name": "无限技能"
+    },
+    {
+      "feat_num": 5,
+      "name": "免广告"
+    }
+  ]
+}

@@ -1,11 +1,10 @@
 {
   "game": "追迹迷城",
-  "before_kb": 3278643,
-  "after_kb": 46208,
-  "released_kb": 3232435,
-  "before_at": "2026-09-14 19:37:57",
-  "after_at": "2026-09-14 19:40:19",
-  "measure_note": "首次清理前 du -sh: 03=2.7G, 06=437M, 07=88K；清理后保留文本 45M。before_kb/released_kb 为按首次实测换算的近似值。",
+  "before_kb": 3541516,
+  "after_kb": 12,
+  "released_kb": 3541504,
+  "before_at": "2026-11-02 16:45:25",
+  "after_at": "2026-11-02 16:45:32",
   "kept": [
     "02_apks/追迹迷城",
     "08_output/追迹迷城",
