@@ -1,0 +1,100 @@
+{
+  "game": "暗影猎手",
+  "version": "30.125.2.0 / vc3012502",
+  "notes": "2026-11-02 首批星空版。底包=官方原版(02_apks/暗影猎手_官方_com.enigma.shadowhunter.m4399.apk)，与斌哥改包 libil2cpp/metadata/libunity 逐字节一致 ⇒ 抓点 RVA 直接通用。底包 2 个 dex(classes/classes2，另有 assets/39285EFA.dex 非顶层)，星光 smali 落新增 classes3.dex，官方 dex 与 resources.arsc 逐字节不动。Manifest 用二进制 AXML 结构化注入(Provider 入口 StarryInitProvider + MenuService + specialUse)。只出 arm64-v8a。装机前 pre_install_gate PASS=2/SKIP=2；装后 post_install_precheck PASS_TO_HUMAN。",
+  "params": {
+    "game_id": "ayxssldsj",
+    "package": "com.enigma.shadowhunter.m4399",
+    "tag": "Ayxs",
+    "serial": "f9a116a2",
+    "so_tag": "[Ayxs]"
+  },
+  "env": {},
+  "workdir": "04_scripts/暗影猎手",
+  "stages": [
+    {
+      "id": "build_so",
+      "name": "编译 libstarry_magic.so（modern 注册表，Android_ayxs.mk）",
+      "requires": [],
+      "preflight": [
+        "ayxs_build_so.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/暗影猎手/ayxs_build_so.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "../../mod菜单/starry-mod-menu/libs_ayxs/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-02 17:41:00"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（Manifest 注入 + classes3.dex + so）",
+      "requires": [
+        "build_so"
+      ],
+      "preflight": [
+        "ayxs_surgical.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/暗影猎手/ayxs_surgical.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "../../08_output/暗影猎手/暗影猎手_30.125.2.0_星空_20261102-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-02 17:45:00"
+    },
+    {
+      "id": "gate",
+      "name": "装机前门禁",
+      "requires": [
+        "surgical"
+      ],
+      "preflight": [],
+      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --apk \"$NIXIANG/08_output/暗影猎手/暗影猎手_30.125.2.0_星空_20261102-releaseSigned.apk\" --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp\" --so \"$NIXIANG/mod菜单/starry-mod-menu/libs_ayxs/arm64-v8a/libstarry_magic.so\" --needle com/starry/magic/StarryApp --needle com/starry/magic/menu/MenuService --needle com/starry/magic/StarryInitProvider",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-02 17:47:00"
+    },
+    {
+      "id": "install",
+      "name": "异签名卸载 + 装机（用户已确认可清存档）",
+      "requires": [
+        "gate"
+      ],
+      "preflight": [],
+      "command": "bash \"$NIXIANG/04_scripts/_common/install_starry_apk.sh\" --apk \"$NIXIANG/08_output/暗影猎手/暗影猎手_30.125.2.0_星空_20261102-releaseSigned.apk\" --pkg com.enigma.shadowhunter.m4399 --so-tag \"[Ayxs]\" --game-id ayxssldsj --serial f9a116a2 --allow-resource-loss",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-02 17:54:00"
+    },
+    {
+      "id": "l2_check",
+      "name": "装机后预检（so 加载/菜单弹出/授权 game_id）",
+      "requires": [
+        "install"
+      ],
+      "preflight": [],
+      "command": "bash \"$NIXIANG/04_scripts/_common/post_install_precheck.sh\" --game 暗影猎手 --pkg com.enigma.shadowhunter.m4399",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-02 17:54:12"
+    },
+    {
+      "id": "l3_user",
+      "name": "用户实测三个开关（人工终审）",
+      "requires": [
+        "l2_check"
+      ],
+      "preflight": [],
+      "command": "（人工）进战斗验证 超级定怪/超级恢复/超级秒杀",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-02 19:00"
+    }
+  ]
+}
