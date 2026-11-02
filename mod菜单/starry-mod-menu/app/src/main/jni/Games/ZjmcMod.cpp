@@ -1,13 +1,15 @@
 /* ================================================================
- *  追迹迷城 1.0.20261009 / vc101201（TapTap）
- *  RVA 来自官方包 Il2CppDumper（2026-10-10 重 dump：
- *  libil2cpp md5 d6d9b40da0e47d23ae2f87ec7e5188ec，metadata v31）。
- *  原四功能 13 个 HookOne 语义/签名不变；类内相对间距与上一版逐条一致
- *  （LocalPlayer Check1→Check2 +0xA8 / →Dodge +0x2C；Attack +0x1C；
- *   Partner +0x34；ATGameManager +0x17C/+0x24），确认是同源代码线性位移。
+ *  追迹迷城 1.0.20261030 / vc103301（TapTap）
+ *  RVA 来自官方包 Il2CppDumper（2026-11-02 重 dump：
+ *  libil2cpp md5 73f96ea8d0ee9ad8b2d8102e2078e6f0，metadata md5 8449bf95b021ab14d163e2016ab6d6a8）。
+ *  17 个目标按「命名空间.类.方法」全名重新命中（04_scripts/追迹迷城/find_rva_zjmc.py），
+ *  签名不变；跨版本恒定间距逐条相等（LP Dodge-Check2 +0x2C、Attack +0x1C、Partner +0x34、
+ *  ATGameManager +0x17C/+0x24）⇒ 同源代码线性位移，Hook 语义原样复用。
+ *  本版有两处函数体长度变化（只改间距、不改语义）：LP Check1→Check2 0xA8→0x2C、
+ *  Monster PDH→HP 0xA20→0x2444。
  *  免广告：ShowRewardADS 会内联计算 3 - GetFreeSkipAdsUsedCount()，因此同时 hook
  *  UsedCount / UseFreeSkipAds / RemainingCount 三个底层入口，持续复用官方免费跳过分发。
- *  ELF bias +0x4000（RX LOAD vaddr-file = 0x4000，新版实测不变），运行时用 maps file_off。
+ *  ELF bias +0x4000（RX LOAD vaddr-file = 0x4000，本版实测不变），运行时用 maps file_off。
  * ================================================================ */
 
 #include "ZjmcMod.h"
@@ -24,25 +26,26 @@
 
 enum : uintptr_t {
     ELF_BIAS = 0x4000,
-    // —— 1.0.20261009 / vc101201 重定位（2026-10-10 dump，旧值全部作废）——
-    RVA_BM_UPDATE            = 0x308C2D0,  // BattleManager$$FixedUpdate（AOE 用）
-    RVA_BM_GET_ALIVE         = 0x308FC58,  // BattleManager$$GetCurWaveAliveEnemyList
-    RVA_ATK_CAN_USE          = 0x30C87D4,  // AttackBattleData$$CheckCurrentIsCanUse
-    RVA_ATK_CUR_SP           = 0x30C87F0,  // AttackBattleData$$CheckCurSp
-    RVA_PARTNER_CAN_USE      = 0x30C8C28,  // MonsterPartnerSkillBattleData$$CheckCurrentIsCanUse
-    RVA_PARTNER_CUR_SP       = 0x30C8C5C,  // MonsterPartnerSkillBattleData$$CheckCurSp
-    RVA_LP_CHECK_1           = 0x3158EBC,  // LocalPlayer$$CheckSkillUse_1
-    RVA_LP_CHECK_2           = 0x3158F64,  // LocalPlayer$$CheckSkillUse_2
-    RVA_LP_CHECK_DODGE       = 0x3158F90,  // LocalPlayer$$CheckSkillUse_Dodge
-    RVA_LP_PROCESS_DMG       = 0x31593A8,  // LocalPlayer$$ProcessDamageOrHeal
-    RVA_LP_CHANGE_HP         = 0x31595A4,  // LocalPlayer$$ChangeHP（非 DisplayClass 闭包）
-    RVA_LP_CHECK_ACTION      = 0x315A6A0,  // LocalPlayer$$CheckSkillUse_ActionState
-    RVA_MONSTER_PROCESS_DMG  = 0x315D7B8,  // Monster$$ProcessDamageOrHeal
-    RVA_MONSTER_CHANGE_HP    = 0x315E1D8,  // Monster$$ChangeHP
-    RVA_GET_FREE_SKIP_ADS    = 0x2DF470C,  // ATGameManager$$GetFreeSkipAdsRemainingCount
-    RVA_GET_FREE_SKIP_ADS_USED = 0x2DF4888,  // ATGameManager$$GetFreeSkipAdsUsedCount
-    RVA_USE_FREE_SKIP_ADS    = 0x2DF48AC,  // ATGameManager$$UseFreeSkipAds
+    // —— 1.0.20261030 / vc103301 重定位（2026-11-02 dump，旧值全部作废）——
+    RVA_BM_UPDATE            = 0x30E8EA0,  // BattleManager$$FixedUpdate（AOE 用）
+    RVA_BM_GET_ALIVE         = 0x30ECD50,  // BattleManager$$GetCurWaveAliveEnemyList
+    RVA_ATK_CAN_USE          = 0x3125344,  // AttackBattleData$$CheckCurrentIsCanUse
+    RVA_ATK_CUR_SP           = 0x3125360,  // AttackBattleData$$CheckCurSp
+    RVA_PARTNER_CAN_USE      = 0x3125798,  // MonsterPartnerSkillBattleData$$CheckCurrentIsCanUse
+    RVA_PARTNER_CUR_SP       = 0x31257CC,  // MonsterPartnerSkillBattleData$$CheckCurSp
+    RVA_LP_CHECK_1           = 0x31B6FA0,  // LocalPlayer$$CheckSkillUse_1
+    RVA_LP_CHECK_2           = 0x31B6FCC,  // LocalPlayer$$CheckSkillUse_2
+    RVA_LP_CHECK_DODGE       = 0x31B6FF8,  // LocalPlayer$$CheckSkillUse_Dodge
+    RVA_LP_PROCESS_DMG       = 0x31B711C,  // LocalPlayer$$ProcessDamageOrHeal
+    RVA_LP_CHANGE_HP         = 0x31B7318,  // LocalPlayer$$ChangeHP（非 DisplayClass 闭包）
+    RVA_LP_CHECK_ACTION      = 0x31B8180,  // LocalPlayer$$CheckSkillUse_ActionState
+    RVA_MONSTER_PROCESS_DMG  = 0x31BDBC4,  // Monster$$ProcessDamageOrHeal
+    RVA_MONSTER_CHANGE_HP    = 0x31C0008,  // Monster$$ChangeHP
+    RVA_GET_FREE_SKIP_ADS    = 0x2E48B94,  // ATGameManager$$GetFreeSkipAdsRemainingCount
+    RVA_GET_FREE_SKIP_ADS_USED = 0x2E48D10,  // ATGameManager$$GetFreeSkipAdsUsedCount
+    RVA_USE_FREE_SKIP_ADS    = 0x2E48D34,  // ATGameManager$$UseFreeSkipAds
 };
+
 
 static std::atomic<bool> g_ready{false};
 static std::atomic<bool> g_seckill{false};

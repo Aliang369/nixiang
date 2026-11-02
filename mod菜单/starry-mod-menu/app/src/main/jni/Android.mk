@@ -260,11 +260,11 @@ LOCAL_ARM_MODE  := arm
 # Trace：ndk-build 传 STARRY_TRACE=1
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WGGLS
 # LOCAL_SRC_FILES += Main.cpp Games/WgglsMod.cpp Unity/Il2CppApi.cpp
-# 追迹迷城 1.0.20261009 / vc101201 TapTap（2026-10-10 重 dump＋RVA 重定位见 ZjmcMod.cpp）
+# 追迹迷城 1.0.20261030 / vc103301 TapTap（2026-11-02 重 dump＋RVA 重定位见 ZjmcMod.cpp 与 10_docs/追迹迷城/锚点_五功能_1.0.20261030.md）
 # 上一版 0912 的 RVA 已全部作废；五项功能与 17 个 Hook 目标签名未变
 # 2026-10-12 切走（无限升级 12.10701/vc1644 星空版出包），恢复时取消下面两行注释
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
-# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
 # 我的勇者 7.6.1（wdyz）— Battle 结算钩：五倍攻击(敌 ×5)/无敌(HeroSettle 0)
 # 2026-09-07 星光自注入验证（不用 frida；TryEnterCd 已证死路，勿挂技能簇）
 # 2026-09-20 7.6.1(vc203) 重 dump：RVA 全漂移 → 双路径按名兜底 + 新 RVA 回填
@@ -307,8 +307,9 @@ endif
 # 热更 GameLogic.dll 与 3.6.0 同一份（md5 7ecee205f25de60af3abec8796339994），依赖类/字段名全在位，
 # ZhmrMod.cpp 零改动复用；证据 10_docs/战魂铭人/战魂铭人_3.7.0_复刻记录_20261028.md
 # 20260908 SIGABRT 修复：类查齐后隔轮再读 offsets（热更 layout 中途 field_get_offset 必崩）
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
-LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
+# 2026-11-02 切走（追迹迷城 1.0.20261030 出包），恢复时取消下面两行注释
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
+# LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
 # ifdef STARRY_TRACE
 # LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 # endif

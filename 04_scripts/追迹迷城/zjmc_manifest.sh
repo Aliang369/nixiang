@@ -5,9 +5,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 META_FILE="$SCRIPT_DIR/official_apk.json"
-# v3（2026-10-10）：1.0.20261009 起穿山甲 33/34 字符 service 槽已从 Manifest 与全部 dex
-# 消失，v2 的等长槽替换路径必然失败 ⇒ 改为「凭空新增 <service> 元素」（见 v3 文件头）。
-PATCHER="$SCRIPT_DIR/patch_zjmc_binary_manifest_v3.py"
+# v4（2026-11-02，双轨制）：在 v3「凭空新增 <service>/<provider>」基础上，
+# ① 把 appComponentFactory 改指 com.starry.magic.sign.StarryAppComponentFactory（B 轨 killer 挂载点）
+# ② 不再注入 android:name=StarryApp（1.0.20261009 实测平台不采用）。
+PATCHER="$SCRIPT_DIR/patch_zjmc_binary_manifest_v4.py"
 
 [[ -f "$META_FILE" ]] || { echo "错误: 缺少 $META_FILE" >&2; exit 1; }
 [[ -f "$PATCHER" ]] || { echo "错误: 缺少 $PATCHER" >&2; exit 1; }
@@ -44,7 +45,8 @@ assert data[:4] == b"\x03\x00\x08\x00", data[:4].hex()
 
 # Minimal AXML validation: expected strings exist and forbidden original slot is gone.
 for text in (
-    "com.starry.magic.StarryApp",
+    "com.starry.magic.sign.StarryAppComponentFactory",
+    "androidx.core.app.CoreComponentFactory",
     "com.starry.magic.StarryInitProvider",
     "com.TeaMelo.DungeonChasers.starryinit",
     "com.starry.magic.menu.MenuService",
@@ -78,13 +80,17 @@ while t != 0x0180:  # RES_XML_RESOURCE_MAP_TYPE
     q += sz
     t, _hs, sz = struct.unpack_from("<HHI", data, q)
 rmap = [struct.unpack_from("<I", data, q + 8 + 4 * i)[0] for i in range((sz - 8) // 4)]
+# stopWithTask 的真值是 0x0101036A（aapt2 dump resources android.jar 实测）；旧写法 0x01010281
+# 是 android:glEsVersion，与补丁器 v3 已修正的取值不一致 ⇒ 2026-11-02 按补丁器口径对齐。
 for an, want in (("name", 0x01010003), ("exported", 0x01010010),
-                 ("foregroundServiceType", 0x01010599), ("stopWithTask", 0x01010281)):
+                 ("foregroundServiceType", 0x01010599), ("stopWithTask", 0x0101036A)):
     i = strs.index(an)
     got = rmap[i] if i < len(rmap) else 0
     assert got == want, f"resmap[{i}]={an} 得 0x{got:X}，期望 0x{want:X}"
 
-# 1.0.20261009 起壳内已无穿山甲 service 槽；此处只作「不应出现」的反向断言。
+# v4 反向断言：不得再注入 android:name，也不得挂已删除的 SignSpoof 工厂。
+assert "com.starry.magic.StarryApp\x00".encode("utf-16-le") not in data, "v4 不得注入 android:name=StarryApp"
+assert "SignSpoofAppComponentFactory".encode("utf-16-le") not in data, "不得挂已删除的 SignSpoof 工厂"
 assert "com.byazt.b.DownloadHandleService".encode("utf-16-le") not in data
 assert data.count("android.permission.SYSTEM_ALERT_WINDOW".encode("utf-16-le")) == 1
 assert data.count("com.starry.magic.menu.MenuService".encode("utf-16-le")) == 1

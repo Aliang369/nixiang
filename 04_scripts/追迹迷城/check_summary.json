@@ -1,14 +1,14 @@
 {
   "package": "com.TeaMelo.DungeonChasers",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20260912_official.apk",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20261030_official.apk",
   "serial": "f9a116a2",
-  "version_name": "1.0.20260912",
-  "version_code": 98503,
-  "apk_md5": "013749a32d1e9c660cb9ff05feeabf87",
-  "apk_sha256": "28ca13a77679319c9b20165a0f9899e4d929cc9687a30eeeeb54a65cadd32490",
+  "version_name": "1.0.20261030",
+  "version_code": 103301,
+  "apk_md5": "4078e9ba0c51ab843ff4d98f87d4cbbb",
+  "apk_sha256": "704a4e08b5a5ccb5a1aec22641eeeda0b93c9e53e80f22cc52e3c0d5c9f0c907",
   "signer_cert_md5": "4684a2b2249e978c74230f8895635894",
   "old_20260906_cert_md5": "4684a2b2249e978c74230f8895635894",
   "cert_changed_vs_20260906": false,
-  "libil2cpp_md5": "576537f8333dc98511e6bb19690a01ea",
-  "global_metadata_md5": "e22cd5a294ed6a9cc751b7269fc8fee0"
+  "libil2cpp_md5": "73f96ea8d0ee9ad8b2d8102e2078e6f0",
+  "global_metadata_md5": "8449bf95b021ab14d163e2016ab6d6a8"
 }

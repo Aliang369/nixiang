@@ -1,15 +1,14 @@
 {
   "package": "com.TeaMelo.DungeonChasers",
   "game": "追迹迷城",
-  "apk_path": "/tmp/zjmc_work/zjmc_official_1.0.20261009.apk",
-  "version_name": "1.0.20261009",
-  "version_code": 101201,
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20261030_official.apk",
+  "version_name": "1.0.20261030",
+  "version_code": 103301,
   "installer": "com.android.packageinstaller",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~i3yFeFIXU_qbuMKUNzSWFw==/com.TeaMelo.DungeonChasers-VnpAVYdzFEvGS56FCuu2qQ==/base.apk",
-  "size": 980531558,
-  "sha256": "ee8c917ab487ddeab4109d400d6d8b2036ef80f35fef952b78895819d1551505",
-  "md5": "70620b5fa10882816f225f9b818b51ea",
-  "note": "2026-10-10 真机 f9a116a2 只读拉取（官方 TapTap 渠道版，装机 <1 小时）。apk_path 是本轮 /tmp 临时副本（AGENTS：APK 不留本地）；设备被星光包覆盖后官方包不可再拉 ⇒ 再获取＝TapTap 重下 1.0.20261009，按上列 md5/sha256 核对。"
+  "remote_path": "/data/app/~~4YV6MfMzgGLCGHnZz04oWw==/com.TeaMelo.DungeonChasers-INMlSXrdzET_ki8zV0YqhA==/base.apk",
+  "size": 1105145509,
+  "sha256": "704a4e08b5a5ccb5a1aec22641eeeda0b93c9e53e80f22cc52e3c0d5c9f0c907",
+  "md5": "4078e9ba0c51ab843ff4d98f87d4cbbb"
 }
