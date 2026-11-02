@@ -1,7 +1,7 @@
 {
   "game": "爆裂防线",
   "version": "1.02.01",
-  "notes": "2026-10-23 星空版复刻 1.02.01。底包 = 官方原版 1.02.01（02_apks/爆裂防线/爆裂防线_1.02.01_original_from_device.apk，368,486,572 B md5 c4f293d9009e90aa7098e29acea2d053）。libil2cpp.so 与 global-metadata.dat 与 1.01.06 逐字节相同（30563544…/1712cdba…）；热更 DLL 更新（3a7a9bde…）。锚点复核结论：唯一变化 zbMonster.ChangeHp 参数 5→8（BlfxMod.cpp argc 已改），其余类/字段/zbSafeLong 布局不变，字段偏移运行时计算无需更新。★dex 落位仍 classes3.dex（底包双 dex）。★TapTap 新路径登录白名单硬门禁沿用。★install 签名冲突需用户授权卸载；卸载前自动保护外置数据（.nxreserve）。",
+  "notes": "★2026-11-02 Windows 侧重刻（签名轨换代，用户目标）：登录/验签门闩=改包法（classes.dex 四处 smali 补丁），签名读取=运行时签名替换（classes4.dex = KillerApplication193，包名+官方 CN=my 证书 Base64，父类改 Application）。本机执行链=04_scripts/爆裂防线/blfx_*_win.sh + blfx_patch_tapsdk_dex.py + blfx_build_killer_dex.py（原 mac 脚本未改）；正式包 md5 a015e72bfe49e8bb8b7c74101806a171 / 371,186,151 B；门禁 5/5、预检 PASS、L3 登录成功+三功能无问题。历史 2026-10-23 星空版复刻 1.02.01：底包 = 官方原版 1.02.01（02_apks/爆裂防线/爆裂防线_1.02.01_original_from_device.apk，368,486,572 B md5 c4f293d9009e90aa7098e29acea2d053）。libil2cpp.so 与 global-metadata.dat 与 1.01.06 逐字节相同（30563544…/1712cdba…）；热更 DLL 更新（3a7a9bde…）。锚点复核结论：唯一变化 zbMonster.ChangeHp 参数 5→8（BlfxMod.cpp argc 已改），其余类/字段/zbSafeLong 布局不变，字段偏移运行时计算无需更新。★dex 落位 classes3.dex（底包双 dex），classes4.dex=签名杀手。★install 签名冲突需用户授权卸载；卸载前自动保护外置数据（.nxreserve）。",
   "params": {
     "game_id": "blfx",
     "package": "com.muyegame.blfx",

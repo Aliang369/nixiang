@@ -31,6 +31,7 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - [证书嵌入 so 经验](../_templates/经验_证书嵌入so_20260906.md)：**已批准并合并**（2026-09-06）——证书固定改 so 烘焙（RegisterNatives 19/19），自测壳实测 200；已写入 SKILL.md 分发自检、surgical-build.md、auth-chain.md。跨样本 3 项 NOT PROVEN 随首个新游戏外科包回归，存量包/旧脚本不追溯。
 - 超维进化卡死、追迹迷城偶发闪退、无限升级运行与授权、旁路小屏验证：保留在各摘要，不自动恢复执行或操作设备。
 - [追迹迷城经验候选](games/追迹迷城.md#待审批经验索引)：classes7 自动发现失效与 classes4 合并、MenuService2 等长槽；待用户批准写入 skill，不能视为通用定律。
+- **killer dex 跨包复用必须改 `.super` ＋ native 层验签判定**（class: tech，2026-11-02 爆裂防线实测）：`merged` → 已并入 `10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md`「复用别的游戏的 killer dex 做模板」节。证据：改前 `SignatureKiller absent: ClassNotFoundException`、改后 `mounted`；dex 门闩补丁后仍 `E TapInitializer: TapSDK: 包名、签名错误`，补 killer 后归零。
 - [终末地已处理经验](games/终末地.md#经验索引)：历史记载已获批沉淀及补战报；本次未修改 skill。
 - [dump.cs 字段口径与序言校验（我的勇者 7.6.1）](../_templates/经验_dump偏移口径与序言校验_20260920.md)：**已合并**（提交 `e83da4f`，2026-09-20 用户明确授权）——`FileOffToVa` 收 file_off（dump.cs 的 `Offset`，本例 RVA−0x4000，常数须按 PT_LOAD 实测）；序言期望值按小端读成 u32；填错会静默退回按名，唯一判据是 logcat 的 `@rva`/`@by-name`。落地于 `skill/re-implement/version-update-relocate.md` §0.1 + `hook-rules.md` §6。
 - [收官工具链四处摩擦（2026-09-20）](../_templates/经验_收官工具链摩擦_20260920.md)：**已合并**（提交 `8d04780`，2026-09-20 用户「1234都改」）——落地于 `skill/starry-mod/SKILL.md`、`surgical-build.md`、`stages.md`、`pre_install_gate.sh` 和 `AGENTS.md`。
