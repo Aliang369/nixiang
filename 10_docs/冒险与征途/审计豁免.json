@@ -1,0 +1,26 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "冒险与征途",
+  "package": "com.mxyzt.gzmy",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "gameconfig_modern_registry",
+      "match": ["GameConfig.h 无 defined", "STARRY_AUTH_GAME_ID"],
+      "conclusion": "接受偏离",
+      "reason": "本作走 modern 注册表：tag / authGameId 都写在 Games/MxytzEntry.cpp 的 StarryGameMod 表里（'mxyzt'，与后台 games.game_id 同值），不经过 GameConfig.h 的 legacy STARRY_GAME_* 宏映射，故该文件里没有本作分支是设计如此。审计按文件名推断出的 STARRY_GAME_MXYTZBATTLE 只是启发式猜测（MxytzBattle.cpp），并不存在该宏。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/MxytzEntry.cpp:38-40 .tag=\"mxyzt\" / .authGameId=\"mxyzt\"；构建走私有 mk（04_scripts/冒险与征途/mxyzt_build_so.sh → Android_mxyzt.mk + 独立 obj_mxyzt/libs_mxyzt）；产物 so md5 4ee5abbe0d146ce031e7eb89ef597882 / sha256 10dc9780…，内含 [mxyzt] 标签 ×15 且 [zh]/[mrfzz]/[wxsj]/[gjc2]/[dwct]=0，四条中文菜单串各 ×1（构建日志 [check] 四行 OK）",
+      "date": "2026-11-02",
+      "review_by": "2027-01-31"
+    },
+    {
+      "id": "android_mk_branch_private_mk",
+      "match": ["激活分支", "与 --game"],
+      "conclusion": "接受偏离",
+      "reason": "本游戏 so 用私有 mk Android_mxyzt.mk 隔离构建（APP_BUILD_SCRIPT=./Android_mxyzt.mk，独立 NDK_OUT/NDK_LIBS_OUT），公共 Android.mk 里残留的 STARRY_GAME_ZHMR 激活分支不参与本包构建，不会编出别的游戏的 so。",
+      "evidence": "04_scripts/冒险与征途/mxyzt_build_so.sh（NDK_OUT/NDK_LIBS_OUT 绝对路径 + obj stamp + 链接活动保险 + 菜单串字节校验）；ASCII 暂存构建日志 '路径非 ASCII → ASCII 暂存构建：/tmp/mxyzt_build'；so 标签自检 [mxyzt]=15、其它游戏标签=0",
+      "date": "2026-11-02",
+      "review_by": "2027-01-31"
+    }
+  ]
+}

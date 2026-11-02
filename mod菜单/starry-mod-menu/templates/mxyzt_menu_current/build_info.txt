@@ -1,9 +1,9 @@
 game      : 冒险与征途 (mxyzt)
 dex       : classes4.dex
-built_at  : 2026-10-26 22:12:44
-javac     : C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/javac.exe
-d8        : C:\Users\Administrator\AppData\Local/Android/Sdk/build-tools/35.0.0/d8.bat
-androidjar: /c/Users/Administrator/AppData/Local/Android/Sdk/platforms/android-36/android.jar
-source    : /e/nixiang/mod菜单/starry-mod-menu/app/src/main/java
-sha256    : e42ea0f72032c911f4a1fff718e0ce8c89df65ef8b556c6543703c9dd354a89c
-source_commit: ff08a68e14778b0f7be59b07b4b6389ccdabfff8
+built_at  : 2026-11-02 13:50:56
+javac     : /Users/aliang/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home/bin/javac
+d8        : /Users/aliang/Library/Android/sdk/build-tools/36.0.0/d8
+androidjar: /Users/aliang/Library/Android/sdk/platforms/android-36/android.jar
+source    : /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256    : e3b3d67f2f1f04f5c64e58ae55e94a8cceb6a4d15b0d80f218d2f9d5c719016d
+source_commit: 9e57e1ddf2ed94b9f04abd4eb066c9a54c52905f

@@ -165,9 +165,16 @@ need = [
     b'com/starry/magic/bridge/ModBridge',
     b'com/starry/magic/sign/StarryAppComponentFactory',
     b'com/starry/magic/ota/StarryNativeLoad',
-    b'com.mxyzt.gzmy',                 # TapLoginForceWeb 白名单里必须有本作包名
+    # ★2026-11-02（1.5.9 复刻轮，TapTap 双轨制）：原断言「dex 必须含 com.mxyzt.gzmy（TapLoginForceWeb
+    #   白名单）」**已过期** —— 2026-10-29 现行口径把 TapLoginForceWeb 白名单列为**禁止复活**项
+    #   （签名/完整性走运行时签名替换，登录方式/渠道分支走改包法）。本作底包无 GatekeeperRepository，
+    #   查12 为 SKIP，故此处改断言新轨能力类：
+    b'com/starry/magic/sign/SignatureKillerBootstrap',
 ]
+# 反向断言（framework_entry_audit [B] 同口径）：已删除的运行时伪装类不得出现在 dex 里
+FORBID = [b'Lcom/starry/magic/sign/SignSpoof;']
 miss = [n.decode() for n in need if n not in b]
+bad = [n.decode() for n in FORBID if n in b]
 print('file      : %s' % name)
 print('size      : %d B' % len(b))
 print('sha256    : %s' % hashlib.sha256(b).hexdigest())
@@ -178,6 +185,8 @@ for n in need:
     print('  %-42s %s' % (n.decode(), 'OK' if n in b else 'MISSING'))
 if miss:
     print('FAIL missing: %s' % ', '.join(miss)); sys.exit(1)
+if bad:
+    print('FAIL forbidden present: %s' % ', '.join(bad)); sys.exit(1)
 # 注意：不要做「本 dex 不许出现别家包名」的检查——TapLoginForceWeb 的白名单就是
 # 多游戏共享的白名单（含 com.wjtxdtt.zy 等），出现别家包名是**预期**行为。
 print('OK')
