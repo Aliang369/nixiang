@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 正中靶心2 1.9 — 签名阶段。
+# 正中靶心2 1.9 — 签名阶段（2026-11-02 双轨制：killer dex + classes3 改包法）。
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
@@ -45,6 +45,17 @@ grep -q "classes5.dex" "$WORK/entries.txt" || { echo "ERROR: classes5.dex missin
 LC_ALL=C grep -aq "Toggle_解锁月卡特权" "$WORK/packed_starry.so" \
   || { echo "ERROR: signed apk so missing Toggle_解锁月卡特权" >&2; exit 1; }
 grep -q "lib/arm64-v8a/libstarry_magic.so" "$WORK/entries.txt" || { echo "ERROR: starry so missing" >&2; exit 1; }
+
+# 2026-11-02 双轨制：签名轨＝运行时 killer（classes6.dex），登录轨＝classes3.dex 改包法。
+# 旧版静态改 TapSignKit.getSign 已废弃，成品里不得再出现官方 MD5 常量。
+grep -q "classes6.dex" "$WORK/entries.txt" || { echo "ERROR: classes6.dex (signature killer) missing" >&2; exit 1; }
+unzip -p "$SIGNED" classes6.dex > "$WORK/killer.dex"
+LC_ALL=C grep -aq "KillerApplication193" "$WORK/killer.dex" || { echo "ERROR: classes6.dex 内无 KillerApplication193" >&2; exit 1; }
+LC_ALL=C grep -aq "com.openew.monster" "$WORK/killer.dex" || { echo "ERROR: killer dex 未烘焙包名" >&2; exit 1; }
+unzip -p "$SIGNED" classes3.dex > "$WORK/classes3.dex"
+if LC_ALL=C grep -aq "b9c07db608080d40b04254d32ac3fc5c" "$WORK/classes3.dex"; then
+  echo "ERROR: classes3.dex 仍含旧版静态签名常量 b9c07db6…（双轨制禁双修）" >&2; exit 1
+fi
 
 echo "[sign] done → $SIGNED"
 echo "[sign] md5=$(md5 -q "$SIGNED")"

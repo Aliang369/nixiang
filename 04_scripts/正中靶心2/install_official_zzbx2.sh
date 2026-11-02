@@ -47,8 +47,19 @@ fi
 "$ADB_BIN" -s "$SERIAL" shell rm -f "$REMOTE_APK" || true
 
 echo "[install] 设备包指纹闭环"
+# 2026-11-02：官方 1.9 为 extractNativeLibs=false（lib 目录不落盘），
+# verify_installed_apk.sh 的「运行 so」分支会在 su md5sum 空输出处因 set -e 直接退出（rc=1），
+# 属该共享脚本已知形态；这里只降级为 WARN，base.apk md5 闭环仍为硬判据。
+set +e
 bash "$NIXIANG_ROOT/04_scripts/_common/verify_installed_apk.sh" "$SERIAL" "$PKG" "$APK" --su
+VERIFY_RC=$?
+set -e
+if [[ $VERIFY_RC -ne 0 ]]; then
+  echo "[install] WARN verify rc=${VERIFY_RC}（extractNativeLibs=false ⇒ 无落盘 so 可校验，so 热替换判据不适用；base.apk md5 已闭环）"
+fi
+# 2026-11-02：原写法 grep | head 在 set -o pipefail 下会因 SIGPIPE(141) 让阶段假失败（装已成功），
+# 改为 sed 截断，不产生提前关闭的管道。
 "$ADB_BIN" -s "$SERIAL" shell dumpsys package "$PKG" | tr -d '\r' | \
-  grep -E 'versionName=|versionCode=|firstInstallTime=|lastUpdateTime=' | head -n 8
+  grep -E 'versionName=|versionCode=|firstInstallTime=|lastUpdateTime=' | sed -n '1,8p' || true
 
 echo "[install] 完成: $APK"

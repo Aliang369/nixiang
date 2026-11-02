@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 正中靶心2：按用户明确授权卸载官方 1.9（不保留本机数据）。
-# 授权来源：2026-09-26 用户原话「授权卸载安装」。
+# 授权来源：2026-09-26 与 2026-11-02 两次用户原话「授权卸载安装」。
 # 触发条件：AGENTS.md 要求异签名无法覆盖时先报告、不自动转卸载；
 #          已报告并获得授权，故本阶段单独存在、且必须显式带上确认变量。
 set -euo pipefail
@@ -38,7 +38,7 @@ fi
 AFTER="$("$ADB_BIN" -s "$SERIAL" shell pm path "$PKG" 2>/dev/null | tr -d '\r' || true)"
 [[ -z "$AFTER" ]] || { echo "错误: 卸载后仍能查到 $PKG: $AFTER" >&2; exit 1; }
 
-printf '{"serial":"%s","package":"%s","action":"uninstall_no_keep_data","authorized_by":"用户 2026-09-26「授权卸载安装」","at":"%s"}\n' \
+printf '{"serial":"%s","package":"%s","action":"uninstall_no_keep_data","authorized_by":"用户 2026-11-02「授权卸载安装」（本轮；官方 1.9 异签名迁移）","at":"%s"}\n' \
   "$SERIAL" "$PKG" "$(date '+%Y-%m-%d %H:%M:%S')" > "$SCRIPT_DIR/uninstall_done.json"
 
 cat <<EOF

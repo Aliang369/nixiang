@@ -26,6 +26,8 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 
 ## 现有候选/已合并记录
 
+- [killer dex 文本源码化 + 构建机烘焙（正中靶心2 1.9，2026-11-02）](../_templates/经验_killer_dex文本化重建_20261102.md)：**候选，未审批（class: tech）**——killer dex 以参数化 smali + 烘焙脚本入库（`*.dex` 被 .gitignore 排除，二进制从不入库）；证书 DER 直接取自官方底包 v2/v3 签名块；同源重建 md5 逐字节可复现。拟落 `taptap-web-login.md` 现行口径 + `经验_运行时签名替换挂载点与dex等长改包_20261029.md`。
+
 - [证书嵌入 so 经验](../_templates/经验_证书嵌入so_20260906.md)：**已批准并合并**（2026-09-06）——证书固定改 so 烘焙（RegisterNatives 19/19），自测壳实测 200；已写入 SKILL.md 分发自检、surgical-build.md、auth-chain.md。跨样本 3 项 NOT PROVEN 随首个新游戏外科包回归，存量包/旧脚本不追溯。
 - 超维进化卡死、追迹迷城偶发闪退、无限升级运行与授权、旁路小屏验证：保留在各摘要，不自动恢复执行或操作设备。
 - [追迹迷城经验候选](games/追迹迷城.md#待审批经验索引)：classes7 自动发现失效与 classes4 合并、MenuService2 等长槽；待用户批准写入 skill，不能视为通用定律。

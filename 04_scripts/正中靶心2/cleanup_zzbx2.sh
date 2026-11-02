@@ -9,7 +9,7 @@ VER="${ZZBX2_VER:-1.9}"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 SUMMARY="$SCRIPT_DIR/cleanup_summary.json"
 FINAL_APK="$NIXIANG_ROOT/08_output/$GAME/${GAME}_${VER}_starry-releaseSigned.apk"
-FINAL_MD5="${ZZBX2_FINAL_MD5:-01f214e8ea4d92fbe57204925d43602f}"
+FINAL_MD5="${ZZBX2_FINAL_MD5:-ee63733e8e2159e9b0f990ab63dfe0e4}"  # 2026-11-02 双轨制复刻版
 ADB_BIN="${ADB_BIN:-adb}"
 
 cd "$NIXIANG_ROOT"
@@ -18,15 +18,21 @@ cd "$NIXIANG_ROOT"
 [[ -f "$FINAL_APK" ]] || { echo "错误: 缺少正式包 $FINAL_APK" >&2; exit 1; }
 [[ "$(md5 -q "$FINAL_APK")" == "$FINAL_MD5" ]] || { echo "错误: 正式包指纹与收尾记录不符" >&2; exit 1; }
 
+# 2026-11-02：1.9 是本轮唯一底包 ⇒ 硬保留；1.7 属历史轮次，缺失只提示不拦（旧的 1.7 dump 已在前几轮清理掉）。
 KEEP_TEXTS=(
-  "06_dumped/$GAME/official_${VER}/decrypted_js/src/assets/Script/src/GameLogic.js"
   "06_dumped/$GAME/official_${VER}/decrypted_js/decrypt_summary.json"
   "06_dumped/$GAME/official_${VER}/zip_manifest.txt"
+)
+OPTIONAL_TEXTS=(
+  "06_dumped/$GAME/official_${VER}/decrypted_js/src/assets/Script/src/GameLogic.js"   # .gitignore 已把 06_dumped/**/*.js 排除入库 ⇒ 只能本地保留，清理时视为可再生
   "06_dumped/$GAME/official_1.7/decrypted_js/src/assets/Script/src/GameLogic.js"
   "06_dumped/$GAME/official_1.7/decrypted_js/decrypt_summary.json"
 )
 for keep in "${KEEP_TEXTS[@]}"; do
   [[ -f "$keep" ]] || { echo "错误: 缺少需保留文本 $keep" >&2; exit 1; }
+done
+for opt in "${OPTIONAL_TEXTS[@]}"; do
+  [[ -f "$opt" ]] || echo "  [note] 历史轮次文本已不存在，跳过保留校验: $opt"
 done
 
 BEFORE_KB="$( (du -sk "03_decompiled/$GAME" "06_dumped/$GAME" "07_patched/$GAME" 2>/dev/null || true) | awk '{s+=$1} END {print s+0}')"

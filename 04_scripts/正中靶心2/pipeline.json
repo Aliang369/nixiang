@@ -140,17 +140,7 @@
           "path": "06_dumped/正中靶心2/binge_1.6/decrypted_js/decrypt_summary.json"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-14 22:07:10",
-      "artifacts": {
-        "06_dumped/正中靶心2/binge_1.6/decrypted_js/decrypt_summary.json": {
-          "md5": "32584ad5146b22a68d1a657e505f7645"
-        }
-      },
-      "inputs": {
-        "06_dumped/正中靶心2/binge_1.6/apk_assets/assets/main.js": "d9a2a97e4c8001857129f2a040f290ac",
-        "06_dumped/正中靶心2/binge_1.6/summary.txt": "7370f776604eb3db6312a605af6c3374"
-      }
+      "status": "pending"
     },
     {
       "id": "runtime_diff",
@@ -290,10 +280,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 22:19:51",
+      "done_at": "2026-11-02 15:25:41",
       "artifacts": {
         "04_scripts/正中靶心2/official_apk.json": {
-          "md5": "6a8ad63c438e11ccbc2e402bbe8aa36e"
+          "md5": "ce769f907f37b47318cea07f89215830"
         }
       },
       "inputs": {
@@ -317,14 +307,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 22:20:02",
+      "done_at": "2026-11-02 15:30:48",
       "artifacts": {
         "04_scripts/正中靶心2/official_check.json": {
           "md5": "3da0c99cfded86fa3e2bed4564fbced4"
         }
       },
       "inputs": {
-        "04_scripts/正中靶心2/official_apk.json": "6a8ad63c438e11ccbc2e402bbe8aa36e"
+        "04_scripts/正中靶心2/official_apk.json": "ce769f907f37b47318cea07f89215830"
       }
     },
     {
@@ -344,7 +334,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 22:20:02",
+      "done_at": "2026-11-02 15:48:57",
       "artifacts": {
         "06_dumped/正中靶心2/official_1.9/apk_assets/assets/src/assets/Script/src/GameLogic.jsc": {
           "md5": "0c564e251b3fbb14ce169da33d474da6"
@@ -389,7 +379,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 22:27:11",
+      "done_at": "2026-11-02 15:49:15",
       "artifacts": {
         "04_scripts/正中靶心2/official_anchors.json": {
           "md5": "5725d887dcfd9e65eeae461394e6a8e2"
@@ -411,16 +401,21 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 23:54:10",
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so; 原 md5=6dad1ea1e46427b642a17ae357a79b83",
+      "done_at": "2026-11-02 15:49:17",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so": {
+          "md5": "fa56c5c4a068903f766c4793ad5d50f6"
+        }
+      },
       "inputs": {
         "04_scripts/正中靶心2/official_anchors.json": "5725d887dcfd9e65eeae461394e6a8e2"
-      },
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so; 原 md5=6dad1ea1e46427b642a17ae357a79b83"
+      }
     },
     {
       "id": "surgical_official",
@@ -428,9 +423,9 @@
       "requires": [
         "build_so_official"
       ],
-      "command": "bash 04_scripts/正中靶心2/surgical_zzbx2_1.9.sh",
+      "command": "bash 04_scripts/正中靶心2/surgical_zzbx2_1.9_dual.sh",
       "preflight": [
-        "04_scripts/正中靶心2/surgical_zzbx2_1.9.sh",
+        "04_scripts/正中靶心2/surgical_zzbx2_1.9_dual.sh",
         "04_scripts/正中靶心2/patch_main.js"
       ],
       "verify": [
@@ -440,11 +435,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 23:54:51",
+      "done_at": "2026-11-02 15:50:43",
       "artifacts": {
         "07_patched/正中靶心2/正中靶心2_1.9_starry-unsigned.apk": {
-          "md5": "ac29570456a71e48c4b7ead982d30b8a"
+          "md5": "21858735868b96dd35c13f1f721e3b55"
         }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_zzbx2/arm64-v8a/libstarry_magic.so": "fa56c5c4a068903f766c4793ad5d50f6"
       }
     },
     {
@@ -483,10 +481,10 @@
       ],
       "status": "done",
       "cleanup_note": "2026-09-26 用户授权卸载官方 1.9 且不保留数据；后续星空重建包为同签名覆盖安装，无需再次卸载。",
-      "done_at": "2026-09-26 22:59:50",
+      "done_at": "2026-11-02 15:37:30",
       "artifacts": {
         "04_scripts/正中靶心2/uninstall_done.json": {
-          "md5": "ea8e88e72c38c24408a673e0214a6a6e"
+          "md5": "7c2b0c3eceaf36774eb9f2978f14338b"
         }
       },
       "inputs": {
@@ -511,14 +509,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-26 23:55:09",
+      "done_at": "2026-11-02 15:51:09",
       "artifacts": {
         "08_output/正中靶心2/正中靶心2_1.9_starry-releaseSigned.apk": {
-          "md5": "01f214e8ea4d92fbe57204925d43602f"
+          "md5": "ee63733e8e2159e9b0f990ab63dfe0e4"
         }
       },
       "inputs": {
-        "08_output/正中靶心2/正中靶心2_1.9_starry-releaseSigned.apk": "01f214e8ea4d92fbe57204925d43602f",
+        "08_output/正中靶心2/正中靶心2_1.9_starry-releaseSigned.apk": "ee63733e8e2159e9b0f990ab63dfe0e4",
         "04_scripts/正中靶心2/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },
@@ -543,21 +541,21 @@
         },
         {
           "type": "file_exists",
-          "path": "06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/GameLogic.js"
+          "path": "06_dumped/正中靶心2/official_1.9/decrypted_js/decrypt_summary.json"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-27 00:02:22",
+      "done_at": "2026-11-02 15:54:44",
       "artifacts": {
         "04_scripts/正中靶心2/cleanup_summary.json": {
-          "md5": "ac3875abaff999decdb55b452ffbaca8"
+          "md5": "82e3bcf730567bddc6a6cbe9c7d31b0c"
         },
-        "06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/GameLogic.js": {
-          "md5": "1029bbd47ff049e578ee6fcce58b3fd8"
+        "06_dumped/正中靶心2/official_1.9/decrypted_js/decrypt_summary.json": {
+          "md5": "69acc0745105cf106758296a2cc2ee1a"
         }
       },
       "inputs": {
-        "08_output/正中靶心2/正中靶心2_1.9_starry-releaseSigned.apk": "01f214e8ea4d92fbe57204925d43602f"
+        "08_output/正中靶心2/正中靶心2_1.9_starry-releaseSigned.apk": "ee63733e8e2159e9b0f990ab63dfe0e4"
       }
     },
     {
@@ -576,17 +574,7 @@
           "path": "10_docs/正中靶心2/收尾与最小复现清单_1.9_20260926.md"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-27 00:02:42",
-      "artifacts": {
-        "10_docs/正中靶心2/收尾与最小复现清单_1.9_20260926.md": {
-          "md5": "d92d80df8e829f63928059ccd26b9b37"
-        }
-      },
-      "inputs": {
-        "04_scripts/正中靶心2/cleanup_summary.json": "ac3875abaff999decdb55b452ffbaca8",
-        "06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/GameLogic.js": "1029bbd47ff049e578ee6fcce58b3fd8"
-      }
+      "status": "pending"
     }
   ]
 }
