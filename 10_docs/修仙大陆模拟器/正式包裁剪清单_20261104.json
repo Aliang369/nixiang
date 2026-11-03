@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/修仙大陆模拟器",
+  "keep": "修仙大陆模拟器_1.0.5_xxdlmnq-releaseSigned.apk",
+  "keep_size": 114745766,
+  "keep_md5": "4ac296b1dd39b80fa571b3f1aeb824d1",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "修仙大陆模拟器_1.0.5_xxdlmnq-unsigned.apk",
+      "size": 114494088,
+      "md5": "7359779cc65cc020dd8b7a6485e087a3"
+    },
+    {
+      "name": "修仙大陆模拟器_1.0.5_xxdlmnq-releaseSigned.apk.idsig",
+      "size": 910875,
+      "md5": "3da521313d0b14dd4a7af91b507dbbf5"
+    }
+  ],
+  "removed_count": 2
+}

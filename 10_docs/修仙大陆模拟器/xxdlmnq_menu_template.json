@@ -1,0 +1,28 @@
+{
+  "template_id": "xxdlmnq",
+  "name": "修仙大陆模拟器",
+  "package": "com.sky.xxdl.dlt",
+  "source": "Games/XxdlEntry.cpp kXxdl_Features",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "资源+1000万"
+    },
+    {
+      "feat_num": 2,
+      "name": "灵石+1000万"
+    },
+    {
+      "feat_num": 3,
+      "name": "仙晶+100万"
+    },
+    {
+      "feat_num": 4,
+      "name": "体力回满"
+    },
+    {
+      "feat_num": 5,
+      "name": "免广告"
+    }
+  ]
+}

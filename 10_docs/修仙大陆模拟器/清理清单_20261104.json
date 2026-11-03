@@ -1,0 +1,29 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_xxdl_close_20261104_014209",
+  "timestamp": "20261104_014209",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "13_scratch/xxdl_probe",
+      "type": "dir",
+      "size_kib": 512308,
+      "source": "/Users/aliang/Documents/nixiang/13_scratch/xxdl_probe",
+      "quarantine": "/Users/aliang/.Trash/nixiang_xxdl_close_20261104_014209/13_scratch/xxdl_probe"
+    },
+    {
+      "path": "13_scratch/xxdl_surgical",
+      "type": "dir",
+      "size_kib": 538080,
+      "source": "/Users/aliang/Documents/nixiang/13_scratch/xxdl_surgical",
+      "quarantine": "/Users/aliang/.Trash/nixiang_xxdl_close_20261104_014209/13_scratch/xxdl_surgical"
+    },
+    {
+      "path": "13_scratch/xxdl_taptap",
+      "type": "dir",
+      "size_kib": 17864,
+      "source": "/Users/aliang/Documents/nixiang/13_scratch/xxdl_taptap",
+      "quarantine": "/Users/aliang/.Trash/nixiang_xxdl_close_20261104_014209/13_scratch/xxdl_taptap"
+    }
+  ]
+}
