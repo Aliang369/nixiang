@@ -1,7 +1,7 @@
 {
   "game": "明日方舟",
-  "version": "2.7.81",
-  "notes": "2026-10-10 轮：真机当前安装的 TapTap 官方 2.7.81 (vc200) 复刻为星光版。底包 02_apks/明日方舟/明日方舟_2.7.81_taptap_official_from_device.apk（1,861,520,898 B，md5=8fce1c45e189348db6f03a40d39fd6c8，signer_sha256=0c19c23babe855598f7424c180d930a231782f87b626bb3d55ca7335e13720af，确认 HyperGryph 官方签名）。沿用 2.7.71 的 provider-only 方案与七功能源码（未改 ArknightsMod.cpp），不重做斌哥包分析：本轮的斌哥阶段（fetch_binge/static_inspect/dump_runtime/anchor）已从管线移除，锚点核验改为对官方 2.7.81 运行时 metadata 的自研核验（anchor_check）。",
+  "version": "2.7.91",
+  "notes": "2026-11-03 轮：真机当前安装的 TapTap 官方 2.7.91 (vc210) 复刻为星光版。底包 02_apks/明日方舟/明日方舟_2.7.91_taptap_official_from_device.apk（1,934,225,109 B，md5=87d7616262f489409db57c46a6de3eb8，sha256=84e0a1c2e8318bdfd7283218a2d4a003cd8dd26625bd58d625582ae9a5ad9713，signer_sha256=0c19c23babe855598f7424c180d930a231782f87b626bb3d55ca7335e13720af，与 2.7.81 同为 HyperGryph 官方签名）。沿用 provider-only 方案与七功能源码（ArknightsMod.cpp 未改，按名解析零硬编码 RVA）；2.7.91 运行时 metadata 45,036,740 B，锚点核验 11/11 通过。本轮修订：删除已失效的 SignSpoof.java 预检项（该文件 2026-10-28 按用户指令整体删除）、verify 路径与 G1 期望版本随底包升级到 2.7.91/vc210。",
   "params": {
     "game_id": "mrfzz",
     "package": "com.hypergryph.arknights",
@@ -15,7 +15,7 @@
   "stages": [
     {
       "id": "device_ready",
-      "name": "真机锁定、root 检查与前台包解析（官方 2.7.81）",
+      "name": "真机锁定、root 检查与前台包解析（官方 2.7.91）",
       "requires": [],
       "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_ready_mrfzz.sh'",
       "preflight": [
@@ -32,20 +32,20 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:19",
+      "note": "设备 f9a116a2（OPD2404/Android 16/KernelSU root），前台包 com.hypergryph.arknights（官方与斌哥包同名，本轮为官方 2.7.91 vc210）。",
+      "done_at": "2026-11-03 15:07:30",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_info.json": {
-          "md5": "184bf21f8a5e239e51d4b77fc9d9099c"
+          "md5": "f24016ba69194a871fca806ec41b6510"
         },
         "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.device_package": {
           "md5": "885476714f02a7228bd4f2f17713d50c"
         }
-      },
-      "note": "设备 f9a116a2（OPD2404/Android 16/KernelSU root），前台包 com.hypergryph.arknights（官方与斌哥包同名，本轮为官方 2.7.81 vc200）。"
+      }
     },
     {
       "id": "fetch_official",
-      "name": "TapTap 官方 2.7.81 真机只读拉取",
+      "name": "TapTap 官方 2.7.91 真机只读拉取",
       "requires": [
         "device_ready"
       ],
@@ -60,13 +60,17 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:19",
+      "note": "本机 sha256 与设备 sha256sum 一致；apksigner 取证书确认为 HyperGryph 官方签名（signer_sha256=0c19c23babe855598f7424c180d930a231782f87b626bb3d55ca7335e13720af），非斌哥包。",
+      "done_at": "2026-11-03 15:09:17",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/official_apk.json": {
-          "md5": "b45366561a7ddf58484f9b813a4edabe"
+          "md5": "5d2c0cf84da3926298b0d60ba8a218e7"
         }
       },
-      "note": "本机 sha256 与设备 sha256sum 一致；apksigner 取证书确认为 HyperGryph 官方签名（signer_sha256=0c19c23babe855598f7424c180d930a231782f87b626bb3d55ca7335e13720af），非斌哥包。"
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/device_info.json": "f24016ba69194a871fca806ec41b6510",
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.device_package": "885476714f02a7228bd4f2f17713d50c"
+      }
     },
     {
       "id": "inspect_official",
@@ -89,19 +93,19 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:19",
+      "note": "libil2cpp.so=216,663,520 B；global-metadata.dat=44,172,880 B（静态首 8 字节 94437212184b9eec，非 af1bb1fa ⇒ 静态不可解析）；libSDKloading/libtoolChecker/libSRPatch 全空 ⇒ 确非斌哥包。脚本内的 rg 已修为 grep -E（本机无 ripgrep）。",
+      "done_at": "2026-11-03 15:09:31",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/zip_entries.txt": {
-          "md5": "0f927be3777ed206d4f04ffec33388bb"
+          "md5": "213ce881782e9706d953670e77e40e11"
         },
         "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/static_identity.json": {
-          "md5": "9924c785c604b5eb3a3355ab5d734846"
+          "md5": "6e749d1ec74700e640f53a07f10bee7b"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/official_apk.json": "b45366561a7ddf58484f9b813a4edabe"
-      },
-      "note": "libil2cpp.so=216,663,520 B；global-metadata.dat=44,172,880 B（静态首 8 字节 94437212184b9eec，非 af1bb1fa ⇒ 静态不可解析）；libSDKloading/libtoolChecker/libSRPatch 全空 ⇒ 确非斌哥包。脚本内的 rg 已修为 grep -E（本机无 ripgrep）。"
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/official_apk.json": "5d2c0cf84da3926298b0d60ba8a218e7"
+      }
     },
     {
       "id": "dump_official_runtime",
@@ -125,27 +129,24 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:19",
+      "note": "明文 metadata 驻留 ashmem 段 73e2531000-73e4f52000（44,175,360 B = 44,172,880 + 2,480 padding），首字段 sanity 被清零、version=24；导出 44,172,880 B 并生成补 magic 副本（af1bb1fa）。Il2CppDumper 对该 metadata 抛 KeyNotFoundException(kIl2CppMetadataUsageInvalid) ⇒ 本轮改用自研解析器（见台账「已否证」）。",
+      "done_at": "2026-11-03 15:10:48",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/runtime_metadata.json": {
-          "md5": "a51399525ca312caab58c7ef4b6b3919"
+          "md5": "bf19200a649dfb357bb2bf8e981d97d7"
         },
         "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.dat": {
-          "md5": "5825a30b8e594808b761da0f43940b89"
-        },
-        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.magicfixed.dat": {
-          "md5": "923ed4390c747a9123c0ec9161cee159"
+          "md5": "a6f47ac143938031ede633d625e5c8d1"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/zip_entries.txt": "0f927be3777ed206d4f04ffec33388bb",
-        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/static_identity.json": "9924c785c604b5eb3a3355ab5d734846"
-      },
-      "note": "明文 metadata 驻留 ashmem 段 73e2531000-73e4f52000（44,175,360 B = 44,172,880 + 2,480 padding），首字段 sanity 被清零、version=24；导出 44,172,880 B 并生成补 magic 副本（af1bb1fa）。Il2CppDumper 对该 metadata 抛 KeyNotFoundException(kIl2CppMetadataUsageInvalid) ⇒ 本轮改用自研解析器（见台账「已否证」）。"
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/zip_entries.txt": "213ce881782e9706d953670e77e40e11",
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/static_inspect/static_identity.json": "6e749d1ec74700e640f53a07f10bee7b"
+      }
     },
     {
       "id": "anchor_check",
-      "name": "2.7.81 锚点核验（11 条按名解析锚点，自研 metadata 解析器）",
+      "name": "2.7.91 锚点核验（11 条按名解析锚点，自研 metadata 解析器）",
       "requires": [
         "dump_official_runtime"
       ],
@@ -158,27 +159,26 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/10_docs/明日方舟/抓点_锚点_2.7.81.json"
+          "path": "/Users/aliang/Documents/nixiang/10_docs/明日方舟/抓点_锚点_2.7.91.json"
         },
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/10_docs/明日方舟/锚点核验_2.7.81.md"
+          "path": "/Users/aliang/Documents/nixiang/10_docs/明日方舟/锚点核验_2.7.91.md"
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:19:49",
+      "done_at": "2026-11-03 15:11:02",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/10_docs/明日方舟/抓点_锚点_2.7.81.json": {
-          "md5": "078bd3d22437874efc3cf3611ceeacff"
+        "/Users/aliang/Documents/nixiang/10_docs/明日方舟/抓点_锚点_2.7.91.json": {
+          "md5": "0c6b1981f196083c1644f3af0a8e1c97"
         },
-        "/Users/aliang/Documents/nixiang/10_docs/明日方舟/锚点核验_2.7.81.md": {
+        "/Users/aliang/Documents/nixiang/10_docs/明日方舟/锚点核验_2.7.91.md": {
           "md5": "2f089707bb826f97410b122b047b8b07"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/runtime_metadata.json": "a51399525ca312caab58c7ef4b6b3919",
-        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.dat": "5825a30b8e594808b761da0f43940b89",
-        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.magicfixed.dat": "923ed4390c747a9123c0ec9161cee159"
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/runtime_metadata.json": "bf19200a649dfb357bb2bf8e981d97d7",
+        "/Users/aliang/Documents/nixiang/06_dumped/明日方舟/official/runtime_current/global-metadata.runtime.dat": "a6f47ac143938031ede633d625e5c8d1"
       }
     },
     {
@@ -214,20 +214,20 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 06:19:51",
+      "done_at": "2026-11-03 15:11:15",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp": {
-          "md5": "dd9f31b99dd9451649cc75389c1b4e11"
+          "md5": "883613287cbd69aca1898c76de1fa812"
         },
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp": {
-          "md5": "2c25065ed7078e6a12737e0082ec5406"
+          "md5": "423c7b43ececb9be909f8bd33d501ded"
         },
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk": {
-          "md5": "9a6fc8e84928991e1853c22f18b12cfc"
+          "md5": "c274ea4f4495864155117d9e3a114708"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/10_docs/明日方舟/抓点_锚点_2.7.81.json": "078bd3d22437874efc3cf3611ceeacff"
+        "/Users/aliang/Documents/nixiang/10_docs/明日方舟/抓点_锚点_2.7.91.json": "0c6b1981f196083c1644f3af0a8e1c97"
       }
     },
     {
@@ -255,16 +255,16 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 15:38:12",
+      "done_at": "2026-11-03 15:11:22",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": {
-          "md5": "03ca9096fcf76255b551f31a42de2d0b"
+          "md5": "b10f930fc23200cd2fc431c6f7ff77b8"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp": "cdd60c5c6cb24b699289fb20824e954e",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp": "2c25065ed7078e6a12737e0082ec5406",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk": "5b8687e98f5723170f5b434f19be5357"
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsMod.cpp": "883613287cbd69aca1898c76de1fa812",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/ArknightsEntry.cpp": "423c7b43ececb9be909f8bd33d501ded",
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzz.mk": "c274ea4f4495864155117d9e3a114708"
       }
     },
     {
@@ -275,13 +275,12 @@
       ],
       "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/明日方舟/surgical_mrfzz.sh'",
       "preflight": [
-        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/surgical_mrfzz.sh",
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
+        "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/surgical_mrfzz.sh"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-unsigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-unsigned.apk"
         },
         {
           "type": "file_exists",
@@ -290,17 +289,17 @@
       ],
       "status": "done",
       "note": "manifest 必须保留官方 com.u8.sdk.U8Application 与 androidx.core.app.CoreComponentFactory（provider-only）；出现 StarryApp/SignSpoofAppComponentFactory 即 ACE 启动击杀（2.7.71 实测 12s SIGSEGV / 11s SIGBUS）。",
-      "done_at": "2026-10-10 15:39:17",
+      "done_at": "2026-11-03 15:14:20",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-unsigned.apk": {
-          "md5": "c26fead24ee11b74d688330f03356b32"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-unsigned.apk": {
+          "md5": "f366c675ffdab5b09122b6cf4ff59c45"
         },
         "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": {
-          "md5": "5c4b39bc76bd69282769e3891db0205a"
+          "md5": "2fb7c9da60d0987cefb801821fe8c252"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": "03ca9096fcf76255b551f31a42de2d0b"
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so": "b10f930fc23200cd2fc431c6f7ff77b8"
       }
     },
     {
@@ -316,19 +315,19 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 15:41:14",
+      "done_at": "2026-11-03 15:19:55",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": {
-          "md5": "310e1a74bd1d05392f7828e4ebbdf005"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk": {
+          "md5": "b689894c6e1bce62618bdf3b3592f820"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-unsigned.apk": "c26fead24ee11b74d688330f03356b32",
-        "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": "5c4b39bc76bd69282769e3891db0205a"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-unsigned.apk": "f366c675ffdab5b09122b6cf4ff59c45",
+        "/Users/aliang/Documents/nixiang/07_patched/明日方舟/surgical/classes6.dex": "2fb7c9da60d0987cefb801821fe8c252"
       }
     },
     {
@@ -337,25 +336,25 @@
       "requires": [
         "sign"
       ],
-      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/check_release_apk.sh' --apk '/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk' --game '明日方舟' --expect-vn '2.7.81' --expect-vc '200' && bash '/Users/aliang/Documents/nixiang/04_scripts/_common/gate_note.sh' 明日方舟 G1 通过 'check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.81/200）'",
+      "command": "bash '/Users/aliang/Documents/nixiang/04_scripts/_common/check_release_apk.sh' --apk '/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk' --game '明日方舟' --expect-vn '2.7.91' --expect-vc '210' && bash '/Users/aliang/Documents/nixiang/04_scripts/_common/gate_note.sh' 明日方舟 G1 通过 'check_release_apk: 非 debuggable、无诊断禁用串、versionName/versionCode 一致（2.7.91/210）'",
       "preflight": [
         "/Users/aliang/Documents/nixiang/04_scripts/_common/check_release_apk.sh"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-10-10 15:44:46",
+      "done_at": "2026-11-03 15:23:27",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": {
-          "md5": "310e1a74bd1d05392f7828e4ebbdf005"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk": {
+          "md5": "b689894c6e1bce62618bdf3b3592f820"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "310e1a74bd1d05392f7828e4ebbdf005"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk": "b689894c6e1bce62618bdf3b3592f820"
       }
     },
     {
@@ -368,19 +367,19 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
       "note": "2.7.71 轮：JNI 配套检查因 RegisterNatives 名称被 OBFUSCATE(...) 包裹而 SKIP，另用 llvm-nm -D 确认 so 导出 JNI_OnLoad，并逐项确认 ModBridge.java 的 19 个 native 声明均在 classes6.dex 中；运行时 19/19 注册仍是 G2 NOT PROVEN。",
-      "done_at": "2026-10-10 15:45:09",
+      "done_at": "2026-11-03 15:23:57",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": {
-          "md5": "310e1a74bd1d05392f7828e4ebbdf005"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk": {
+          "md5": "b689894c6e1bce62618bdf3b3592f820"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "310e1a74bd1d05392f7828e4ebbdf005"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk": "b689894c6e1bce62618bdf3b3592f820"
       }
     },
     {
@@ -401,14 +400,14 @@
       ],
       "status": "done",
       "note": "用户已授权（硬约束 ③）：官方包签名与我们的 starry 签名不一致 ⇒ 需 MRFZZ_ALLOW_UNINSTALL=1 走 pm uninstall --user 0 后重装，会清除游戏数据。装机后按 AGENTS 跑 post_install_precheck.sh + flight_recorder.sh，并请用户冷启动实测。",
-      "done_at": "2026-10-10 15:46:50",
+      "done_at": "2026-11-03 15:26:07",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/明日方舟/.install_ok": {
-          "md5": "9d0638f770da3bc0c51c840ad6cacc7b"
+          "md5": "09dafea222195dc2b05405fb25cbcb36"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.81_surgical-releaseSigned.apk": "310e1a74bd1d05392f7828e4ebbdf005"
+        "/Users/aliang/Documents/nixiang/08_output/明日方舟/明日方舟_2.7.91_surgical-releaseSigned.apk": "b689894c6e1bce62618bdf3b3592f820"
       }
     }
   ]

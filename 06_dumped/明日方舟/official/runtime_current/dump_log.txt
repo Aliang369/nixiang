@@ -1,7 +1,7 @@
--rw-r--r-- 1 root root 410386 2026-10-10 05:34 /data/local/tmp/mrfzz_official_metadata/maps.txt
--rw-r--r-- 1 root root 301 2026-10-10 05:35 /data/local/tmp/mrfzz_official_metadata/magic_hits.txt
--rw-r--r-- 1 root root 44172880 2026-10-10 05:35 /data/local/tmp/mrfzz_official_metadata/metadata_runtime_0x73e2531000.bin
+-rw-r--r-- 1 root root 490933 2026-11-03 15:09 /data/local/tmp/mrfzz_official_metadata/maps.txt
+-rw-r--r-- 1 root root 301 2026-11-03 15:10 /data/local/tmp/mrfzz_official_metadata/magic_hits.txt
+-rw-r--r-- 1 root root 45036740 2026-11-03 15:10 /data/local/tmp/mrfzz_official_metadata/metadata_runtime_0x774d30c000.bin
 /data/local/tmp/mrfzz_official_metadata/maps.txt
 /data/local/tmp/mrfzz_official_metadata/magic_hits.txt
-/data/local/tmp/mrfzz_official_metadata/metadata_runtime_0x73e2531000.bin
+/data/local/tmp/mrfzz_official_metadata/metadata_runtime_0x774d30c000.bin
 DONE

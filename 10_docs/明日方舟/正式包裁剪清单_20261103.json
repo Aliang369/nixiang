@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/明日方舟",
+  "keep": "明日方舟_2.7.91_surgical-releaseSigned.apk",
+  "keep_size": 1936483384,
+  "keep_md5": "b689894c6e1bce62618bdf3b3592f820",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "明日方舟_2.7.91_surgical-unsigned.apk",
+      "size": 1936104453,
+      "md5": "f366c675ffdab5b09122b6cf4ff59c45"
+    },
+    {
+      "name": "明日方舟_2.7.91_surgical-releaseSigned.apk.idsig",
+      "size": 15255067,
+      "md5": "a3471f800b07260a136fc402ed7cf5e0"
+    }
+  ],
+  "removed_count": 2
+}

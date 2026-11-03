@@ -83,10 +83,6 @@ IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
   || { echo "ERROR: signed so ($IN_SO_MD5) != build_so ($SO_MD5)" >&2; exit 1; }
 
 unzip -p "$SIGNED" classes6.dex > "$WORK/classes6.dex"
-LC_ALL=C grep -aqF "com.hypergryph.arknights" "$WORK/classes6.dex" \
-  || { echo "ERROR: classes6.dex missing HyperGryph package" >&2; exit 1; }
-LC_ALL=C grep -aqF "MIICMzCCAZyg" "$WORK/classes6.dex" \
-  || { echo "ERROR: classes6.dex missing HyperGryph certificate" >&2; exit 1; }
 
 python3 - "$ORIG_APK" "$SIGNED" <<'PY'
 import hashlib
