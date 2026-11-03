@@ -149,12 +149,12 @@ LOCAL_ARM_MODE  := arm
 # LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 # endif
 # LOCAL_SRC_FILES := Main.cpp Games/QlfhMod.cpp
-# 战魂铭人 3.5.0 TapTap · Unity IL2CPP + HybridCLR
-# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
-# ifdef STARRY_TRACE
-# LOCAL_CFLAGS    += -DSTARRY_TRACE=1
-# endif
-# LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
+# 战魂铭人 3.7.0 (vc20680) TapTap · Unity IL2CPP + HybridCLR（2026-11-03 激活）
+LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZHMR
+ifdef STARRY_TRACE
+LOCAL_CFLAGS    += -DSTARRY_TRACE=1
+endif
+LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
 # 公主连结 11.7.2 · GC 弱句柄敌我校验 + 属性 999999 输入框
 # LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_PCR
 # LOCAL_SRC_FILES := Main.cpp Games/PcrMod.cpp Unity/Il2CppApi.cpp
@@ -263,8 +263,9 @@ LOCAL_ARM_MODE  := arm
 # 追迹迷城 1.0.20261030 / vc103301 TapTap（2026-11-02 重 dump＋RVA 重定位见 ZjmcMod.cpp 与 10_docs/追迹迷城/锚点_五功能_1.0.20261030.md）
 # 上一版 0912 的 RVA 已全部作废；五项功能与 17 个 Hook 目标签名未变
 # 2026-10-12 切走（无限升级 12.10701/vc1644 星空版出包），恢复时取消下面两行注释
-LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
-LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
+# 2026-11-03 切走（战魂铭人 3.7.0 星空版新增两功能出包），恢复时取消下面两行注释
+# LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_ZJMC
+# LOCAL_SRC_FILES := Main.cpp Games/ZjmcMod.cpp
 # 我的勇者 7.6.1（wdyz）— Battle 结算钩：五倍攻击(敌 ×5)/无敌(HeroSettle 0)
 # 2026-09-07 星光自注入验证（不用 frida；TryEnterCd 已证死路，勿挂技能簇）
 # 2026-09-20 7.6.1(vc203) 重 dump：RVA 全漂移 → 双路径按名兜底 + 新 RVA 回填

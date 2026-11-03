@@ -6,9 +6,11 @@
   "features": [
     {"feat_num": 1, "name": "无敌（主角免伤锁血）"},
     {"feat_num": 2, "name": "秒杀（敌人0.1血+破盾）"},
-    {"feat_num": 4, "name": "无限货币"},
-    {"feat_num": 5, "name": "无限道具（高封号操作）"},
-    {"feat_num": 7, "name": "解锁全角色与技能"},
-    {"feat_num": 8, "name": "解锁全皮肤"}
+    {"feat_num": 3, "name": "无限技能（CD恒结束+次数补满）"},
+    {"feat_num": 4, "name": "局内无限金币（背包 coin_base 9999）"},
+    {"feat_num": 6, "name": "无限货币"},
+    {"feat_num": 7, "name": "无限道具（高封号操作）"},
+    {"feat_num": 9, "name": "解锁全角色与技能"},
+    {"feat_num": 10, "name": "解锁全皮肤"}
   ]
 }

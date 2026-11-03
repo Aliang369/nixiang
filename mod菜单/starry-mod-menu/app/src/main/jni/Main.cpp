@@ -784,12 +784,14 @@ static const char* g_featureList[] = {
     "Category_战斗",                     // 0
     "Toggle_无敌",                       // 1  ZHMR_FEAT_GOD
     "Toggle_秒杀",                       // 2  ZHMR_FEAT_ONEHIT
-    "Category_经济",                     // 3
-    "Toggle_无限货币",                   // 4  ZHMR_FEAT_CURRENCY 三石9999
-    "Toggle_无限道具",                   // 5  ZHMR_FEAT_ITEMS 其它999
-    "Category_角色",                     // 6
-    "Toggle_解锁全角色与技能",           // 7  ZHMR_FEAT_UNLOCK
-    "Toggle_解锁全皮肤",                 // 8  ZHMR_FEAT_SKIN
+    "Toggle_无限技能",                   // 3  ZHMR_FEAT_SKILL
+    "Toggle_局内无限金币",               // 4  ZHMR_FEAT_COIN
+    "Category_经济",                     // 5
+    "Toggle_无限货币",                   // 6  ZHMR_FEAT_CURRENCY 三石9999
+    "Toggle_无限道具",                   // 7  ZHMR_FEAT_ITEMS 其它999
+    "Category_角色",                     // 8
+    "Toggle_解锁全角色与技能",           // 9  ZHMR_FEAT_UNLOCK
+    "Toggle_解锁全皮肤",                 // 10 ZHMR_FEAT_SKIN
 #elif defined(STARRY_GAME_WDYZ)
     // 我的勇者（与 Games/WdyzMod.h 中 WDYZ_FEAT_* 对齐）
     "Category_战斗",                     // 0

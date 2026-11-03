@@ -54,6 +54,9 @@ static std::atomic<bool> g_currency{false};
 static std::atomic<bool> g_items{false};
 static std::atomic<bool> g_unlock{false};
 static std::atomic<bool> g_skin{false};
+// 2026-11-03 新增：无限技能 / 局内无限金币（3.7.0.3 真程序集：Skill.countdown + HeroRunningData.heroBackpack）
+static std::atomic<bool> g_skill{false};
+static std::atomic<bool> g_coin{false};
 static std::atomic<bool> g_ready{false};
 static std::atomic<bool> g_heroReset{false};  // 无敌关闭后下一 Tick 摘除免伤标志
 // 3.6.0 relaunch SIGABRT 根因（tombstone_04 + crash 缓冲 14:08:30，三次同型，
@@ -109,6 +112,32 @@ struct NetOff {
     size_t nb_hp;          // NetworkBodyOwl.currentHealth
     size_t nb_shield;      // NetworkBodyOwl.currentShield
 };
+// 无限技能：Body.skillList(List<Skill>) → Skill.<countdown>（Ive.Countdown 实例）
+// → m_LastFlushTime/m_Interval 直写（isCountdownOver = unscaledTime >= last+interval）
+struct SkillOff {
+    size_t body_skills = 0;   // Body.skillList
+    size_t sk_countdown = 0;  // Skill.<countdown>k__BackingField
+    size_t sk_cur = 0;        // Skill.<currentUseableCount>k__BackingField
+    size_t sk_max = 0;        // Skill.<maxUseableCount>k__BackingField
+    size_t cd_last = 0;       // Ive.Countdown.m_LastFlushTime
+    size_t cd_interval = 0;   // Ive.Countdown.m_Interval
+};
+// 局内无限金币：GameProcess.<heroRunningData> → HeroRunningData.heroBackpack
+// Dictionary<ItemID,int>，coin_base = 0
+struct CoinOff {
+    size_t hrd_backpack = 0;
+};
+static SkillOff g_skOff[2] = {};
+static CoinOff g_coinOff[2] = {};
+static std::atomic<int> g_skillScheme{-1};
+static std::atomic<int> g_coinScheme{-1};
+static void* g_skillClass     = nullptr;
+static void* g_countdownClass = nullptr;
+static void* g_gameProcClass  = nullptr;
+static void* g_hrdClass       = nullptr;
+static const int32_t kCoinValue = 9999;  // 局内金币（绝对值，不累加）
+static const int32_t kCoinBaseId = 0;    // ItemID.coin_base（枚举首项）
+
 static CombatOff g_combat[2] = {};
 static ArchiveOff g_arch[2] = {};
 static EvOff g_ev[2] = {};
@@ -729,6 +758,129 @@ static void ApplySkin() {
 //     配置源 Archive.HeroBodySkillNameLibrary / HeroSkillStyleNameLibrary
 //     （静态字段，游戏懒加载——先开一次选人界面再开开关）
 // ============================================================
+// ============================================================
+// ⑩ 无限技能（2026-11-03）：CD 恒结束 + 可用次数补满，0 hook 0 invoke
+//    Skill.countdown 为 Ive.Countdown 实例：
+//      isCountdownOver = Time.unscaledTime >= m_LastFlushTime + m_Interval
+//    ⇒ m_LastFlushTime 写极小值、m_Interval 写 0，任何时刻都判「冷却完毕」
+//    ⇒ 次数型技能（currentUseableCount）同步补到 maxUseableCount
+// ============================================================
+static void ApplySkills() {
+    const CombatOff* o = ActiveCombat();
+    if (!o) return;
+    int s = g_combatScheme.load();
+    if (s < 0) s = 0;
+    const SkillOff& so = g_skOff[s];
+    // cd_last 必须解析成功：偏移 0 会盖掉 Countdown 的 klass 指针（会崩）
+    if (!so.body_skills || !so.sk_countdown || !so.cd_last) return;
+    auto& api = GetApi();
+    void* hero = api.StaticRefField(g_heroClass, "singleton");
+    if (!OkPtr(hero)) return;
+    void* body = nullptr;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(hero) + o->hero_body, &body) || !OkPtr(body))
+        return;
+    void* list = nullptr;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(body) + so.body_skills, &list) || !OkPtr(list))
+        return;
+    void* items = nullptr;
+    int32_t n = 0;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(list) + 0x10, &items)) return;
+    if (!SafeReadI32(reinterpret_cast<uint8_t*>(list) + 0x18, &n)) return;
+    if (!OkPtr(items) || n <= 0 || n > 24) return;
+    int cdOk = 0, cntOk = 0;
+    for (int32_t i = 0; i < n; i++) {
+        void* sk = nullptr;
+        if (!SafeReadPtr(reinterpret_cast<uint8_t*>(items) + 0x20 + static_cast<size_t>(i) * 8,
+                         &sk))
+            continue;
+        if (!OkPtr(sk)) continue;
+        void* cd = nullptr;
+        if (SafeReadPtr(reinterpret_cast<uint8_t*>(sk) + so.sk_countdown, &cd) && OkPtr(cd)) {
+            // 只把「上次刷新时间」推到极早：isCountdownOver = NowTime >= last + interval 恒真；
+            // 不动 m_Interval（UI 进度条 timeLeftRatio 依赖它，且 0 值分支易踩）
+            SafeWriteF32(cd, so.cd_last, -1.0e7f);
+            cdOk++;
+        }
+        if (so.sk_cur && so.sk_max) {
+            int32_t mx = 0;
+            if (SafeReadI32(reinterpret_cast<uint8_t*>(sk) + so.sk_max, &mx) && mx > 0) {
+                int32_t want = mx;
+                memcpy(reinterpret_cast<uint8_t*>(sk) + so.sk_cur, &want, 4);
+                cntOk++;
+            }
+        }
+    }
+    static int s_log = 0;
+    if (s_log < 3) {
+        s_log++;
+        LOGI(ZHMR_LOG " 无限技能: skills=%d cd=%d 次数=%d", (int)n, cdOk, cntOk);
+    }
+}
+
+// ============================================================
+// ⑪ 局内无限金币（2026-11-03）：heroBackpack[ItemID.coin_base] 直写
+//    Dictionary 条目 stride 0x10（hash@0 next@4 key@8 value@0xC），hash<0 为空槽
+// ============================================================
+static bool ApplyCoinOne(int s) {
+    const CoinOff& co = g_coinOff[s];
+    if (!co.hrd_backpack || !g_gameProcClass) return false;
+    auto& api = GetApi();
+    void* hrd = api.StaticRefField(g_gameProcClass, "<heroRunningData>k__BackingField");
+    if (!OkPtr(hrd)) return false;
+    void* dic = nullptr;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(hrd) + co.hrd_backpack, &dic) || !OkPtr(dic))
+        return false;
+    void* entries = nullptr;
+    int32_t cnt = 0;
+    if (!SafeReadPtr(reinterpret_cast<uint8_t*>(dic) + 0x18, &entries)) return false;
+    if (!SafeReadI32(reinterpret_cast<uint8_t*>(dic) + 0x20, &cnt)) return false;
+    if (!OkPtr(entries) || cnt <= 0 || cnt > 1024) return false;
+    int hit = 0, wrote = 0;
+    for (int32_t i = 0; i < cnt; i++) {
+        uint8_t* e = reinterpret_cast<uint8_t*>(entries) + 0x20 + static_cast<size_t>(i) * 0x10;
+        int32_t hash = 0, key = -1, val = 0;
+        if (!SafeReadI32(e, &hash)) continue;
+        if (hash < 0) continue;
+        if (!SafeReadI32(e + 0x8, &key)) continue;
+        if (key != kCoinBaseId) continue;
+        if (!SafeReadI32(e + 0xC, &val)) continue;
+        hit++;
+        if (val >= kCoinValue) continue;
+        int32_t want = kCoinValue;
+        memcpy(e + 0xC, &want, 4);
+        wrote++;
+    }
+    static int s_log = 0;
+    if (hit == 0) {
+        static int s_miss = 0;
+        if (++s_miss % 50 == 1)
+            LOGI(ZHMR_LOG " 局内金币：heroBackpack 无 coin_base 条目 dic=%p cnt=%d bias=%d", dic,
+                 (int)cnt, s);
+        return false;
+    }
+    if (s_log < 3) {
+        s_log++;
+        LOGI(ZHMR_LOG " 局内金币: bias=%d 条目=%d 写入=%d 值=%d", s, hit, wrote, kCoinValue);
+    }
+    return true;
+}
+
+static void ApplyCoin() {
+    int s = g_coinScheme.load();
+    if (s >= 0) {
+        ApplyCoinOne(s);
+        return;
+    }
+    for (int i = 0; i < 2; i++) {
+        if (g_coinOff[i].hrd_backpack && ApplyCoinOne(i)) {
+            g_coinScheme.store(i);
+            LOGI(ZHMR_LOG " 金币 bias 方案实证: %s", i ? "raw+8" : "raw");
+            return;
+        }
+    }
+}
+
+
 static bool IntArrayGet(void* arr, int32_t idx, int32_t* out) {
     if (!OkPtr(arr)) return false;
     int32_t len = 0;
@@ -995,6 +1147,11 @@ static bool ResolveAll() {
     g_dataManager   = api.FindClassByShortName("DataManager");
     g_skinEnumClass = api.FindClassByShortName("HeroSkinName");
     g_netBodyClass  = api.FindClassByShortName("NetworkBodyOwl");  // 3.7.0 战斗状态真身
+    // 2026-11-03 新增功能所需（3.7.0.3 真程序集实测类名）
+    g_skillClass     = api.FindClassByShortName("Skill");
+    g_countdownClass = api.FindClassByShortName("Countdown");
+    g_gameProcClass  = api.FindClassByShortName("GameProcess");
+    g_hrdClass       = api.FindClassByShortName("HeroRunningData");
     if (!g_heroClass || !g_levelProcess || !g_playerArchive || !g_archiveClass) {
         LOGI(ZHMR_LOG " 热更类未就绪（HybridCLR 未加载?）");
         return false;
@@ -1043,6 +1200,22 @@ static bool ResolveAll() {
             g_net[s].nb_hp     = api.FieldOffset(g_netBodyClass, "currentHealth", bias);
             g_net[s].nb_shield = api.FieldOffset(g_netBodyClass, "currentShield", bias);
         }
+        // 无限技能
+        // 运行时实测：Body.<skillList>k__BackingField@296（属性 backing field，非 skillList）
+        if (g_bodyClass)
+            g_skOff[s].body_skills = api.FieldOffset(g_bodyClass, "<skillList>k__BackingField", bias);
+        if (g_skillClass) {
+            g_skOff[s].sk_countdown = api.FieldOffset(g_skillClass, "<countdown>k__BackingField", bias);
+            g_skOff[s].sk_cur       = api.FieldOffset(g_skillClass, "<currentUseableCount>k__BackingField", bias);
+            g_skOff[s].sk_max       = api.FieldOffset(g_skillClass, "<maxUseableCount>k__BackingField", bias);
+        }
+        if (g_countdownClass) {
+            // 运行时实测：Ive.Countdown 私有字段是 _m_LastFlushTime@16（带下划线前缀）
+            g_skOff[s].cd_last     = api.FieldOffset(g_countdownClass, "_m_LastFlushTime", bias);
+            g_skOff[s].cd_interval = api.FieldOffset(g_countdownClass, "m_Interval", bias);
+        }
+        // 局内无限金币
+        if (g_hrdClass) g_coinOff[s].hrd_backpack = api.FieldOffset(g_hrdClass, "heroBackpack", bias);
     }
     LOGI(ZHMR_LOG " offsets raw: hero_body=%zu body_char=%zu block=%zu hp=%zu monsters=%zu "
          "unlock=%zu ev(show,m,key)=%zu,%zu,%zu",
@@ -1119,6 +1292,8 @@ void Zhmr_OnFeatureChanged(int featNum, bool enabled) {
         case ZHMR_FEAT_ITEMS:    g_items.store(enabled); if (enabled) g_itemsPending.store(true); break;
         case ZHMR_FEAT_UNLOCK:   g_unlock.store(enabled); if (enabled) g_skillsPending.store(true); break;
         case ZHMR_FEAT_SKIN:     g_skin.store(enabled); if (enabled) g_skinPending.store(true); break;
+        case ZHMR_FEAT_SKILL:    g_skill.store(enabled); break;
+        case ZHMR_FEAT_COIN:     g_coin.store(enabled); break;
         default: break;
     }
 }
@@ -1133,6 +1308,8 @@ void Zhmr_Tick(const bool* features) {
     g_items.store(features[ZHMR_FEAT_ITEMS]);
     g_unlock.store(features[ZHMR_FEAT_UNLOCK]);
     g_skin.store(features[ZHMR_FEAT_SKIN]);
+    g_skill.store(features[ZHMR_FEAT_SKILL]);
+    g_coin.store(features[ZHMR_FEAT_COIN]);
     if (!g_ready.load()) return;
 
     static int tick = 0;
@@ -1193,6 +1370,10 @@ void Zhmr_Tick(const bool* features) {
         g_skinPending.store(false);
         ApplySkin();
     }
+    // 无限技能：CD 会被 Flush 重置，需高频重放（每 200ms 的 Tick 内 5 拍≈1s 太慢 ⇒ 每拍都写）
+    if (g_skill.load()) ApplySkills();
+    // 局内金币：捡钱/花钱都会改字典值，5s 重放与道具同频
+    if (g_coin.load() && tick % 25 == 0) ApplyCoin();
 }
 
 void Zhmr_ForceClear() {
@@ -1202,6 +1383,8 @@ void Zhmr_ForceClear() {
     g_items.store(false);
     g_unlock.store(false);
     g_skin.store(false);
+    g_skill.store(false);
+    g_coin.store(false);
     g_currencyPending.store(false);
     g_itemsPending.store(false);
     g_skinPending.store(false);

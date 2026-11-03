@@ -13,10 +13,13 @@
 enum ZhmrFeat : int {
     ZHMR_FEAT_GOD      = 1,  // Toggle_无敌
     ZHMR_FEAT_ONEHIT   = 2,  // Toggle_秒杀
-    ZHMR_FEAT_CURRENCY = 4,  // Toggle_无限货币（三石 9999）
-    ZHMR_FEAT_ITEMS    = 5,  // Toggle_无限道具（高封号操作，其它 999）
-    ZHMR_FEAT_UNLOCK   = 7,  // Toggle_解锁全角色与技能
-    ZHMR_FEAT_SKIN     = 8,  // Toggle_解锁全皮肤
+    // 2026-11-03 新增（3.7.0 / hotfix 3.7.0.3 真程序集定位）；按用户要求并入「战斗」分类
+    ZHMR_FEAT_SKILL    = 3,  // Toggle_无限技能（CD 恒结束 + 可用次数补满）
+    ZHMR_FEAT_COIN     = 4,  // Toggle_局内无限金币（heroBackpack[coin_base]）
+    ZHMR_FEAT_CURRENCY = 6,  // Toggle_无限货币（三石 9999）
+    ZHMR_FEAT_ITEMS    = 7,  // Toggle_无限道具（高封号操作，其它 999）
+    ZHMR_FEAT_UNLOCK   = 9,  // Toggle_解锁全角色与技能
+    ZHMR_FEAT_SKIN     = 10, // Toggle_解锁全皮肤
 };
 
 /** 等待 libil2cpp + 热更类就绪后按名解析类/方法/字段（一次性，SafeProbe 仅此处） */
