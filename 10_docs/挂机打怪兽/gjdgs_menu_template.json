@@ -1,0 +1,36 @@
+{
+  "template_id": "gjdgs",
+  "name": "挂机打怪兽",
+  "package": "org.cocos2d.guajidaguaishou.tap",
+  "source": "Games/GjdgsEntry.cpp kGjdgs_Features",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "金币满值"
+    },
+    {
+      "feat_num": 2,
+      "name": "宝石满值"
+    },
+    {
+      "feat_num": 3,
+      "name": "碎片满值"
+    },
+    {
+      "feat_num": 5,
+      "name": "战斗加速"
+    },
+    {
+      "feat_num": 6,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 7,
+      "name": "百倍伤害"
+    },
+    {
+      "feat_num": 8,
+      "name": "免广告"
+    }
+  ]
+}

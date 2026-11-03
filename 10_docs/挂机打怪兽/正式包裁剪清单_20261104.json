@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/挂机打怪兽",
+  "keep": "挂机打怪兽_1.1.65_gjdgs-releaseSigned.apk",
+  "keep_size": 56497509,
+  "keep_md5": "8fc7e873dbfe682f3229161f3f8f54a7",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "挂机打怪兽_1.1.65_gjdgs-unsigned.apk",
+      "size": 56242269,
+      "md5": "9b432506d48786744f2caad47a477f6a"
+    },
+    {
+      "name": "挂机打怪兽_1.1.65_gjdgs-releaseSigned.apk.idsig",
+      "size": 448027,
+      "md5": "b36c96bef619108756c50487c3730b90"
+    }
+  ],
+  "removed_count": 2
+}
