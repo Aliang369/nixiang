@@ -13,6 +13,8 @@ include $(PREBUILT_STATIC_LIBRARY)
 
 # 三变体（2026-10-26）：hf2=2030080 / hf4=2028544(现网 1bf6c08f) / hf3=2028544
 # 已停用 base=1960960（2026-09-23 之前的官方 DLL，无 AddItem 4 参形态，承载不了新功能）
+# 2026-11-04：无加固形态 —— 三份 .a 内嵌的是**明文**补丁 DLL（objcopy 自 .bin），
+#   不再有 .enc.bin / 防封基线 / 载荷 sha；由 04_scripts/无限升级/build_wxsj_vc1637_win.sh 生成。
 include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_vc1637_dll_hf2
 LOCAL_SRC_FILES := Games/WxsjVc1637Hf2Dll.a
@@ -24,11 +26,6 @@ LOCAL_SRC_FILES := Games/WxsjVc1637Hf4Dll.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := wxsj_vc1637_dll_antiban
-LOCAL_SRC_FILES := Games/WxsjVc1637AntibanDll.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_vc1637_dll_hf3
 LOCAL_SRC_FILES := Games/WxsjVc1637Hf3Dll.a
 include $(PREBUILT_STATIC_LIBRARY)
@@ -37,14 +34,14 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := starry_magic
 
-LOCAL_CFLAGS    := -w -s -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
+LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
 # 双形态出包（2026-10-27 用户定）：
 #   默认（不传 WXSJ_ANTIBAN_MENU）＝ 屏蔽版：防封撤出菜单、随 so 常开（15 项，转生=16）
 #   WXSJ_ANTIBAN_MENU=1            ＝ 正常版：菜单保留「防封」开关（16 项，防封=16、转生=17）
 ifneq ($(WXSJ_ANTIBAN_MENU),)
 LOCAL_CFLAGS    += -DWXSJ_ANTIBAN_MENU
 endif
-LOCAL_CPPFLAGS  := -w -s -DSG_PAYLOAD_ENC=1 -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
+LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
 LOCAL_LDLIBS    := -llog -landroid
 
@@ -79,6 +76,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby wxsj_vc1637_dll_hf2 wxsj_vc1637_dll_hf4 wxsj_vc1637_dll_hf3 wxsj_vc1637_dll_antiban
+LOCAL_STATIC_LIBRARIES := Dobby wxsj_vc1637_dll_hf2 wxsj_vc1637_dll_hf4 wxsj_vc1637_dll_hf3
 
 include $(BUILD_SHARED_LIBRARY)
