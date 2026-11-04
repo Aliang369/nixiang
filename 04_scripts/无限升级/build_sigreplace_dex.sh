@@ -8,12 +8,14 @@
 #   4) smali assemble → <out>/classes4.dex（供 pack_wxsj_vc1637_apk.py --dex 替换）
 #
 # 用法：bash 04_scripts/无限升级/build_sigreplace_dex.sh [底包apk] [输出dex]
-#   默认底包 = .local/wxsj_vc1637_base_20261104/base.apk（含 classes4.dex）
+#   默认底包 = 08_output 里已交付的 …feat22_sig…apk（含 classes4.dex，已插桩 ⇒ 幂等）
 #   默认输出 = .local/sigwork/classes4_sig.dex
 set -euo pipefail
 NIXIANG="$(cd "$(dirname "$0")/../.." && pwd)"
 SRC="$NIXIANG/04_scripts/无限升级/sigreplace/java"
-APK="${1:-$NIXIANG/.local/wxsj_vc1637_base_20261104/base.apk}"
+# 默认底包＝已交付的签名轨成品（其 classes4.dex 已含 SigReplace 与插桩；脚本对已有插桩是幂等的）。
+# 2026-11-04 收尾：旧底包副本已按「APK 不留本地」清理，别再把默认值指回 .local。
+APK="${1:-$NIXIANG/08_output/无限升级/无限升级_正常版_11.266018_vc1637_feat22_sig_20261104.apk}"
 OUT="${2:-$NIXIANG/.local/sigwork/classes4_sig.dex}"
 WORK="$NIXIANG/.local/sigwork"
 SMALI="$NIXIANG/01_tools/smali/smali"
