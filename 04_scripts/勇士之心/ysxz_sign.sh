@@ -6,8 +6,10 @@ NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 GAME="勇士之心"
 VERSION="${VERSION:-1.0.4}"
 OUT="$NIXIANG/08_output/$GAME"
-UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
-SIGNED="$OUT/${GAME}_${VERSION}_surgical-releaseSigned.apk"
+# 2026-11-04：允许外部指定输入/输出（加固下线轮以「设备现有包」为底座 repack，
+# 文件名不再是 *_surgical-*，但走的还是同一套 zipalign + apksigner + 证书指纹校验）。
+UNSIGNED="${YSXZ_UNSIGNED_APK:-$OUT/${GAME}_${VERSION}_surgical-unsigned.apk}"
+SIGNED="${YSXZ_SIGNED_APK:-$OUT/${GAME}_${VERSION}_surgical-releaseSigned.apk}"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"

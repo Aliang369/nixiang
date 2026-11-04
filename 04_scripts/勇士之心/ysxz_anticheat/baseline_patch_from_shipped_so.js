@@ -614,6 +614,15 @@ function MOD_boot(REG) {
         }
         log("auto-battle enum from src: " + (N.autoBattleEnum === undefined ? "NOT FOUND" : N.autoBattleEnum) +
             " monthCardOpen=" + (N.monthCardEnum === undefined ? "NOT FOUND" : N.monthCardEnum));
+
+    /* 2026-11-04：**导出给自动化层**。此前只打日志、没挂 window —— auto 层的
+       「MONTH_CARD_OPEN 放行」一路读到 undefined ⇒ 自动战斗按钮永远解不开。
+       每个 bundle 都会各跑一次 MOD_boot（main 能反查到 800/26，game 反查不到），
+       所以只写「本次确实取到值」的字段，禁止用 undefined 覆盖前一次成果。 */
+    try {
+        if (N.autoBattleEnum !== undefined) window.__starry_autoEnum = N.autoBattleEnum;
+        if (N.monthCardEnum !== undefined) window.__starry_monthCardEnum = N.monthCardEnum;
+    } catch (eExp) {}
     }
     log("names: hx=" + N.hx + "." + N.isPlayer + "  camp=" + N.hD + "." + N.camp +
         "  ctx=" + N.ctxKey + "/" + N.teams + "/" + N.teamCamp + "  hp=" + N.hp + "  world=" + N.world);

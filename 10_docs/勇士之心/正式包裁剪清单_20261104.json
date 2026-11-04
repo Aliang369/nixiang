@@ -1,0 +1,20 @@
+{
+  "game_dir": "E:/nixiang/08_output/勇士之心",
+  "keep": "勇士之心_1.0.3_starry-deharden-releaseSigned.apk",
+  "keep_size": 76000335,
+  "keep_md5": "8eacc4f331d297637633600256c1d323",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "勇士之心_1.0.3_starry-deharden-releaseSigned.apk.idsig",
+      "size": 607771,
+      "md5": "40e8ffd0625209b9947aa73e88833637"
+    },
+    {
+      "name": "勇士之心_1.0.3_starry-deharden-unsigned.apk",
+      "size": 75905765,
+      "md5": "2150b6d7f4263d73b7c4469672c005cd"
+    }
+  ],
+  "removed_count": 2
+}

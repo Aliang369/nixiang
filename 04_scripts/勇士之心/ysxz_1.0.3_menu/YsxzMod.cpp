@@ -23,13 +23,14 @@
 #include "YsxzBootBlob.h"
 
 #ifdef SG_PAYLOAD_ENC
-/* P2-2/P2-3：功能载荷改成"票派生密钥加密 + 诱饵层"。
-   拿不到正确密钥（改包、无票、伪造票）⇒ 只喂诱饵，功能静默无效、不闪退。 */
+/* 已下线（2026-11-04 用户指令）。保留这段只为「万一宏又被打开」时不至于静默变成明文。 */
 #include "YsxzDecoyJs.h"
 #include "Includes/SgPayloadJs.h"
 #include "Includes/sg_payload_enc.h"
 extern "C" int sgp_payload_key(uint8_t out[32]);
 #endif
+/* 会话判据：实现见 MainModern.cpp（apply() 所在的 TU），此文件只声明。 */
+extern "C" int StarrySessionLive(void);
 /* 1.0.6（加密壳代）追加：
    YsxzSecShell —— 每 1ms 把壳的 dirty/failedMask 归零，避免重签+外科导致壳自检失败后
                    跳过 Application.onCreate ⇒ bingo SDK 未初始化 ⇒ AppInfo.parameters NPE。
@@ -376,9 +377,11 @@ static bool PatchRegistryCall(std::string* src) {
     return true;
 }
 
-/* 取功能载荷：逻辑在 Includes/SgPayloadJs.h（跨游戏共享），本文件只传本游戏的密文/诱饵 */
+/* 2026-11-04（用户指令：加固/载 sha/v3 全部下线）：功能载荷改回**明文常量**随 so 进包。
+   不再有载荷加密、诱饵层、也不再有 v3 票送 kx 密钥。 */
 static const std::string& GetPatchJs() {
-    return sgpjs::get(kYsxzPayloadCt, kYsxzPayloadLen, kYsxzPayloadMac, kYsxzDecoyJs);
+    static const std::string s(kYsxzPatchJs, strlen(kYsxzPatchJs));
+    return s;
 }
 
 static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,
@@ -438,17 +441,20 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
      * 解不开就干脆不改写 bundle，最坏情况只是「没注入」，功能静默无效、游戏照常进。
      * 语义不变（诱饵层设计约束①「合法 JS、不闪退、不阻断游戏」）。 */
     const std::string& patchJs = GetPatchJs();
-#ifdef SG_PAYLOAD_ENC
-    if (!sgpjs::ready()) {
-        static std::atomic<int> s_noPayload{0};
-        const int m = ++s_noPayload;
+    /* 票门禁（P1 保留项）。没票就**完全不 splice、原样放行**：
+       注入体会把注册表调用改写成 `}(window.__starry_capture({ … }))`，
+       缺这个函数就是 TypeError ⇒ evalString failed ⇒ 卡加载页（2026-10-27 事故）。
+       2026-11-04：判据从「载荷密钥就绪」换成「会话有效」（加固下线后没有 payload key）。
+       跨 TU 必须走 MainModern 的导出函数，不能直调 sgauth::live()（header-only static 每 TU 一份）。 */
+    if (!StarrySessionLive()) {
+        static std::atomic<int> s_noTicket{0};
+        const int m = ++s_noTicket;
         if (m <= 3 || (m % 100) == 0) {
-            LOGW("%s payload unavailable -> skip splice #%d file=%s (inject=%zu B, 不改写 bundle)",
+            LOGW("%s no valid ticket -> skip splice #%d file=%s (inject=%zu B, 不改写 bundle)",
                  YSXZ_LOG, m, fileName ? fileName : "(null)", patchJs.size());
         }
         return g_origSeEval(thiz, script, length, ret, fileName);
     }
-#endif
 
     std::string patched;
     try {

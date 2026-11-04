@@ -23,6 +23,11 @@
 //  票格式：
 //    v2（新）: 2|device|game|exp|mask|kid.<512hex RSA 签名>
 //    v1（旧）: 1|device|game|exp|menu|card|kid.<64hex HMAC>   ← 过渡期兼容，一版后退役
+//    v3（载荷）: 3|...|kid|kx         ← 2026-11-04 起勇士之心不再使用（加固下线）
+//
+//  2026-11-04（用户指令「加固和载 sha 的都去掉，v3 也去掉」）：
+//    定义 SG_AUTH_V2_ONLY 的构建（勇士之心）**只认 v2 票**，v1/v3 代码由编译器剔除，
+//    so 里不留 "3|" 解析与 kx 载荷密钥链路；未定义的构建（无限升级等）行为不变。
 //
 //  状态寿命（沿用现网口径，别改）：登录成功后**进程内永不过期**，只有进程重启 /
 //    nativeClearGrant / 停用票才清 —— 玩家体验优先，破解窗口靠上面的加密层收。
@@ -52,9 +57,14 @@ struct State {
 
 static State s_state = {0, {0}, {0}, 0, -1};
 
-/** 旧 v1 票的 HMAC 密钥（过渡期保留；一版后连同服务端一起退役） */
+/** HMAC 密钥：v1 票已退役；OTA 清单签名仍在用这一把（P2-5 未接入，恒不放行）。
+ *  SG_AUTH_V2_ONLY 构建里不再出现旧票 pepper 字面量（验收：so 内 grep sg-grant-v1 = 0）。 */
 static inline const char* legacy_pepper() {
+#ifdef SG_AUTH_V2_ONLY
+    return OBFUSCATE("sg-ota-1-local");
+#else
     return OBFUSCATE("sg-grant-v1-7f3a9c2e");
+#endif
 }
 
 // ---------------- 小工具 ----------------
@@ -186,8 +196,13 @@ static inline int apply(const char* ticket, const char* device, const char* game
     body[body_len] = 0;
     const char* sig_hex = dot + 1;
 
+#ifdef SG_AUTH_V2_ONLY
+    const int is_v3 = 0;                                  /* 加固下线：v3 票不再接受 */
+    const int is_v2 = (body[0] == '2' && body[1] == '|');
+#else
     const int is_v3 = (body[0] == '3' && body[1] == '|');
     const int is_v2 = is_v3 || (body[0] == '2' && body[1] == '|');
+#endif
 
     if (is_v2) {
         /* ---- v2：非对称验签（so 里没有私钥 ⇒ 签不出来） ---- */
@@ -198,6 +213,11 @@ static inline int apply(const char* ticket, const char* device, const char* game
                                   (const uint8_t*)body, body_len)) {
             return 0;
         }
+#ifdef SG_AUTH_V2_ONLY
+    } else {
+        return 0;                       /* 加固下线：v1(HMAC) 票不再接受 */
+    }
+#else
     } else {
         /* ---- v1：旧 HMAC（过渡期），签名长度固定 64 hex ---- */
         uint8_t mac[32];
@@ -206,6 +226,7 @@ static inline int apply(const char* ticket, const char* device, const char* game
                     (const uint8_t*)body, body_len, mac);
         if (!sg_hex_eq(sig_hex, mac, 32)) return 0;
     }
+#endif
 
     /* ---- 字段校验（两种版本共用前四段：ver|device|game|exp） ---- */
     char tmp[648];
@@ -249,6 +270,7 @@ static inline int apply(const char* ticket, const char* device, const char* game
     /* ---- P2-2：v3 票里带 kx，还原功能载荷密钥 K_build ----
        wrap = sha256("sgpay|device|game|exp|mask|kid")（只依赖被签名覆盖的字段）
        K_build = kx XOR wrap；拿不到就保持全 0 ⇒ 载荷层落诱饵。 */
+#ifndef SG_AUTH_V2_ONLY
     if (is_v3) {
         char wk[256];
         int n = snprintf(wk, sizeof(wk), "sgpay|%s|%s|%s|%s|%s", dev, gm, exp_s, f5, f6);
@@ -265,6 +287,7 @@ static inline int apply(const char* ticket, const char* device, const char* game
             memset(wk, 0, sizeof(wk));
         }
     }
+#endif  /* SG_AUTH_V2_ONLY：勇士之心不走 v3/kx 载荷密钥链路 */
     return 1;
 }
 

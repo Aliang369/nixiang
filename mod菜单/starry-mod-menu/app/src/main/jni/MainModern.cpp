@@ -38,7 +38,10 @@
 #include "Includes/obfuscate.h"
 #include "Includes/hmac_sha256.h"
 #include "Includes/SgAuth.h"   // 授权链单一实现（P1：非对称票 / 掩码 / 三判据）
-#include "Includes/SgIntegrity.h"  // 自完整性校验（P1-6，仅 SG_HAVE_ZLIB 构建启用）
+#ifdef SG_HAVE_ZLIB
+#include "Includes/SgIntegrity.h"  // 自完整性校验（P1-6）。2026-11-04 加固下线后本作不再定义该宏，
+                                   // 不 include 也就不用把 SgIntegrity/SgZip/sg_integ 三件打进构建。
+#endif
 #include "Dobby/dobby.h"
 
 #include "xDL/xdl.h"
@@ -179,6 +182,13 @@ extern "C" int sgp_payload_key(uint8_t out[32]) {
     if (!sgauth::payload_key_ready()) { memset(out, 0, 32); return 0; }
     memcpy(out, sgauth::payload_key(), 32);
     return 1;
+}
+
+/* 2026-11-04（加固下线）：给 Games/*Mod.cpp 用的跨 TU 会话判据。
+   SgAuth.h 是 header-only，static 状态每 TU 一份；apply() 发生在**这个** TU，
+   所以门禁必须经此导出函数读，不能在 Mod.cpp 里直接调 sgauth::live()（会读到另一份空状态）。 */
+extern "C" int StarrySessionLive(void) {
+    return session_live() ? 1 : 0;
 }
 
 extern "C" void StarryShowToast(const char* text) { ShowToast(text); }

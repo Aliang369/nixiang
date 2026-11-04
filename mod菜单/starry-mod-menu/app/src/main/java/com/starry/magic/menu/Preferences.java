@@ -708,10 +708,12 @@ public class Preferences {
         return !"null".equalsIgnoreCase(s);
     }
 
-    /** P1/P2：优先 v3（grant3，带载荷密钥），其次 v2（grant2），最后回落 v1（grant）。全端唯一入口。 */
+    /** 2026-11-04（用户指令：加固/载 sha/v3 下线）：只认 **v2** 票（grant2），
+     *  v3（grant3，带载荷密钥 kx）与 v1（grant，HMAC）都不再取用。
+     *  服务端仍会下发 grant3 —— 忽略即可，grant2 是同一次登录里双签出来的。全端唯一入口。 */
     public static String pickGrant(org.json.JSONObject data) {
         if (data == null) return "";
-        String[] order = {"grant3", "grant2", "grant"};
+        String[] order = {"grant2"};
         for (int i = 0; i < order.length; i++) {
             try {
                 String g = data.optString(order[i], "");
@@ -727,7 +729,11 @@ public class Preferences {
         // 旧包曾把 "null"（JSON null 经 optString 的产物）落进 prefs ⇒ 读侧一并净化，
         // 免得修好 pickGrant 之后仍被历史脏值卡住（小米真机 2026-10-27 即此状态）。
         String g = sharedPreferences.getString(KEY_AUTH_GRANT, "");
-        return isValidGrant(g) ? g : "";
+        if (!isValidGrant(g)) return "";
+        // 历史上可能落过 v3 票（"3|…"）：新版 native 只认 v2，留着只会让玩家
+        // 每次启动都 [V2] r=0 且看不出原因 —— 直接判空，让上层重新取票。
+        if (g.trim().startsWith("3|") || g.trim().startsWith("1|")) return "";
+        return g;
     }
 
     public static String getAuthExpireAt() {

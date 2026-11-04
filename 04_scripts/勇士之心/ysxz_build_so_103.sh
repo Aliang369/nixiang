@@ -68,16 +68,23 @@ for f in YsxzEntry.cpp YsxzMod.h YsxzPatchJs.h YsxzMod.cpp; do
   [[ -f "$MENU_DIR/$f" ]] || { echo "ERROR: missing $MENU_DIR/$f" >&2; exit 1; }
 done
 
-[[ -f "$SRC_APK" ]] || { echo "ERROR: 缺底包 ${SRC_APK}（用于提取 pristine main.js）" >&2; exit 1; }
+# 自举素材只需要「官方加密态 assets/main.js」。官方底包若已不在仓内（2026-11-04 实测丢失），
+# 可用 YSXZ_PRISTINE 直接指定：从设备已装包里 unzip -p base.apk assets/main.js 取出即可
+# （assemble 从不动这个条目，取出来的就是官方原样）。
+PRISTINE="${YSXZ_PRISTINE:-}"
+if [[ -n "$PRISTINE" ]]; then
+  [[ -f "$PRISTINE" ]] || { echo "ERROR: YSXZ_PRISTINE 不存在: $PRISTINE" >&2; exit 1; }
+  echo "[103] pristine  = ${PRISTINE}（外部提供，跳过底包）"
+elif [[ ! -f "$SRC_APK" ]]; then
+  echo "ERROR: 缺底包 ${SRC_APK}（用于提取 pristine main.js）；也可设 YSXZ_PRISTINE=<加密态 assets/main.js>" >&2
+  exit 1
+fi
 [[ -n "$PY" ]] || { echo "ERROR: 找不到 python3.11/python3（自举素材生成需要）" >&2; exit 1; }
 [[ -f "$MENU_DIR/boot_ids.json" ]] || { echo "ERROR: 缺 $MENU_DIR/boot_ids.json" >&2; exit 1; }
 
-# ---------- 0. 诱饵层契约门禁（2026-10-27「卸载重装卡加载页」事故后新增）----------
-# splice 会把 bundle 改写成 }(window.__starry_capture({…}))，任何注入体（真载荷/诱饵）
-# 都必须定义它并 return reg。诱饵曾经漏了 ⇒ 无票路径直接把主 bundle 打死。
-# 这里在编译前跑：语法合法 + 透传在位 + node 契约仿真 + 负向对照 + 修法 B 在位。
-"$PY" "$NIXIANG/04_scripts/勇士之心/check_decoy_js.py" || {
-  echo "ERROR: 诱饵层契约门禁 FAIL（禁止出包）" >&2; exit 1; }
+# ---------- 0. （已撤）诱饵层契约门禁 ----------
+# 2026-11-04 加固下线：诱饵层与载荷加密一并移除，注入体改为明文常量随 so 进包，
+# 与之配套的 check_decoy_js.py 门禁不再适用（脚本保留，不再被本构建调用）。
 
 # ---------- 1. 从 1.0.3 源码提交导出 jni（落到 ASCII 路径，避免中文路径进 clang） ----------
 rm -rf "$WORK"
@@ -102,21 +109,15 @@ cp -f "$MENU_DIR/YsxzMod.cpp"   "$JNIW/Games/YsxzMod.cpp"
 # ⇒ 这里在编译前**强制**按本脚本刚拷贝的那份重新生成密文，物理上不可能再错源头。
 # C9：把"该游戏 + 构建机 key"交给出包门禁，让 harden 直接问服务端
 # 「这个游戏的载荷 sha 登记了吗」——不一致就 FAIL 并打出后台操作步骤。
-export SG_GAME_ID=yszzx
-export SG_API_BASE="${SG_API_BASE:-https://47.100.216.101:8443}"
-if [ -z "${SG_BUILD_KEY:-}" ] && [ -f "$HOME/.starry-keys/build_key.txt" ]; then
-  export SG_BUILD_KEY="$(cat "$HOME/.starry-keys/build_key.txt")"
-fi
-
-python3 "$NIXIANG/04_scripts/勇士之心/gen_payload_enc.py" >/tmp/payload_gen.log 2>&1 || {
-  echo "ERROR: 载荷加密失败（gen_payload_enc.py）" >&2; tail -5 /tmp/payload_gen.log >&2; exit 1; }
-echo "[103] payload = $(wc -c < "$JNIW/Games/YsxzPatchJs.h") B（加密源 == 编译源，已强制对齐）"
+# 2026-11-04 加固下线：不再生成载荷密文（gen_payload_enc.py 停用），
+# YsxzPatchJs.h 里的明文常量直接随 so 进包。C9 载荷 sha 登记也随之取消。
+echo "[103] patch js = $(wc -c < "$JNIW/Games/YsxzPatchJs.h") B（明文常量，无加密/无诱饵）"
 
 FW_OVERLAY="${YSXZ_FW_OVERLAY:-1}"
 if [[ "$FW_OVERLAY" == "1" ]]; then
+  # 2026-11-04：清单里已移除 SgIntegrity.h / sg_integ.h / SgZip.h / SgBuildManifest.h /
+  # SgPayload.h / SgPayloadJs.h / sg_payload_enc.h / YsxzDecoyJs.h（加固下线，不再进包）
   for f in MainModern.cpp Main.cpp Includes/SgAuth.h Includes/sg_rsa_verify.h Includes/sg_pubkey.h \
-           Includes/SgIntegrity.h Includes/sg_integ.h Includes/SgZip.h Includes/SgBuildManifest.h \
-           Includes/SgPayload.h Includes/SgPayloadJs.h Includes/sg_payload_enc.h Games/YsxzDecoyJs.h \
            Games/SignalQuarantine.h Games/NoAceStubs.cpp \
            Includes/Utils.cpp Includes/Utils.hpp Includes/StarryStamp.h \
            Includes/obfuscate.h; do
@@ -149,16 +150,15 @@ else:
     s = "".join(out)
     print("[103] mk += Games/NoAceStubs.cpp")
 
-# (b) P1-6 宏 + zlib
-if "SG_HAVE_ZLIB" not in s:
+# (b) 2026-11-04 加固下线：只注入 SG_AUTH_V2_ONLY（纯 v2 票），
+#     不再注入 SG_HAVE_ZLIB / SG_REQUIRE_INTEGRITY / SG_PAYLOAD_ENC，也不再链 -lz。
+if "SG_AUTH_V2_ONLY" not in s:
     def addflag(m):
-        return m.group(0) + " -DSG_HAVE_ZLIB=1 -DSG_REQUIRE_INTEGRITY=1 -DSG_PAYLOAD_ENC=1"
+        return m.group(0) + " -DSG_AUTH_V2_ONLY=1"
     s = re.sub(r"^LOCAL_C(PP)?FLAGS\s*:=.*$", addflag, s, flags=re.M)
-    s = re.sub(r"^(LOCAL_LDLIBS\s*:=.*)$", r"\1 -lz", s, flags=re.M)
-    print("[103] mk += -DSG_HAVE_ZLIB -DSG_REQUIRE_INTEGRITY -DSG_PAYLOAD_ENC / -lz")
-
+    print("[103] mk += -DSG_AUTH_V2_ONLY")
 else:
-    print("[103] mk 已含 SG_HAVE_ZLIB")
+    print("[103] mk 已含 SG_AUTH_V2_ONLY")
 
 # 构建戳保留（装机闸门「查8」）：modern 入口零引用 kStarryBuildStamp，
 # 不加 --undefined 会被 --gc-sections 回收 ⇒ so 里没有 STARRYSTAMP1:EPOCH=
@@ -254,8 +254,13 @@ BOOT_ENC="$OUT_LIBS/main.patched.enc.js"
 BOOT_HDR="$JNIW/Games/YsxzBootBlob.h"
 mkdir -p "$OUT_LIBS"
 "$PY" "$HERE/gen_ysxz_boot_js.py" --out "$BOOT_JS"
-"$PY" "$HERE/ysxz_mainjs_patch.py" --apk "$SRC_APK" --boot-js "$BOOT_JS" \
-      --out "$BOOT_ENC" --header "$BOOT_HDR"
+if [[ -n "$PRISTINE" ]]; then
+  "$PY" "$HERE/ysxz_mainjs_patch.py" --pristine "$PRISTINE" --boot-js "$BOOT_JS" \
+        --out "$BOOT_ENC" --header "$BOOT_HDR"
+else
+  "$PY" "$HERE/ysxz_mainjs_patch.py" --apk "$SRC_APK" --boot-js "$BOOT_JS" \
+        --out "$BOOT_ENC" --header "$BOOT_HDR"
+fi
 [[ -f "$BOOT_HDR" ]] || { echo "ERROR: 自举头未生成 $BOOT_HDR" >&2; exit 1; }
 
 # ---------- 3. 构建 ----------
@@ -346,13 +351,17 @@ if [[ "${YSXZ_103_NO_COPY:-0}" != "1" ]]; then
     cp -f "$_abi_dir/libstarry_magic.so" "$OUT_LIBS/$_abi/libstarry_magic.so"
     echo "[103] 已落 $OUT_LIBS/$_abi/libstarry_magic.so"
   done
-  # ---------- 5.1 产物级门禁：每份 so 里必须有诱饵透传**明文** ----------
-  # 真载荷是密文（C8 查的是"没有明文"），诱饵是明文 ⇒ 用反转的指纹证明
-  # 「诱饵层这次真的编进这份 so 了」，不再靠"包能出"推断。
-  "$PY" "$NIXIANG/04_scripts/勇士之心/check_decoy_js.py" --quiet \
-    --so "$OUT_LIBS/arm64-v8a/libstarry_magic.so" \
-         "$OUT_LIBS/x86/libstarry_magic.so" \
-         "$OUT_LIBS/armeabi-v7a/libstarry_magic.so" || {
-    echo "ERROR: so 里没有诱饵透传明文（诱饵层未编进包）" >&2; exit 1; }
+  # ---------- 5.1 （已撤）诱饵明文门禁 ----------
+  # 加固下线后没有诱饵层，改为反查「确实没有加固残留」：
+  # so 里不应再出现载荷密文标记与 v1 票 pepper（见验收判据）。
+  for _so in "$OUT_LIBS"/arm64-v8a/libstarry_magic.so \
+             "$OUT_LIBS"/x86/libstarry_magic.so \
+             "$OUT_LIBS"/armeabi-v7a/libstarry_magic.so; do
+    [[ -f "$_so" ]] || continue
+    if grep -aq "sg-grant-v1" "$_so"; then
+      echo "ERROR: $_so 仍含 v1 票 pepper（加固未去干净）" >&2; exit 1
+    fi
+  done
+  echo "[103] 门禁：so 内 v1 pepper = 0"
 fi
 echo "[103] done"

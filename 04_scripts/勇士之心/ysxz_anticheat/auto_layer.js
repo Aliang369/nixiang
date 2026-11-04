@@ -483,46 +483,97 @@
      所以我们只放行这两处判定：monCard.fNc.fMY() 与 funcOpen.chW(MONTH_CARD_OPEN)。
      菜单开关（FEAT(5)）关掉时全部条件原样透传，游戏行为不变。 */
   var unlockHooked = false;
+  /* 2026-11-04（热更 res 1.1.14.1 实测断链）：短名又整体漂移 ——
+       monCard.fNc.fMY → monCard.fSE.fSA（baseline 的 buff 钩子已覆盖这一半）；
+       funcOpen.chW    → funcOpen.cii（**本轮自动战斗失效的真因**：没人放行 ⇒ 按钮不可点）。
+     从此不写死任何短名，按「结构 + 明文」在真实对象上发现（hook-rules §24）：
+       ① monCard 及其子对象里，源码含明文 AUTO_BATTLE 且够短的判定函数 ⇒ 放行；
+       ② funcOpen 上带 FunctionUnlockTableEnum 语义的方法 ⇒ 入参 === MONTH_CARD_OPEN 时放行
+          （枚举数字由 baseline 从源码反查后挂在 window.__starry_N.monthCardEnum）。 */
+  function srcOfFn(f) { try { return Function.prototype.toString.call(f); } catch (e) { return ""; } }
+  function ownFnNames(o) {
+    var out = [];
+    try { for (var k in o) { try { if (typeof o[k] === "function") out.push(k); } catch (e) {} } } catch (e0) {}
+    return out;
+  }
   function unlockAutoBattle() {
     if (unlockHooked) return;
     try {
       var z = F();
       if (!z) return;
-      var okCount = 0;
-      /* ① monCard.fNc.fMY() -> true */
+      var mc = null;
       try {
-        var nc = z.monCard && z.monCard.fNc;
-        var proto = nc ? Object.getPrototypeOf(nc) : null;
-        if (proto && typeof proto.fMY === "function") {
-          var ofMY = proto.fMY;
-          proto.fMY = function () {
-            try { if (FEAT(5)) { if (!A.evUnlock1) { A.evUnlock1 = 1; log("auto-battle unlock: fMY() 放行 (AUTO_BATTLE 权益)"); } return true; } } catch (e) {}
-            return ofMY.apply(this, arguments);
-          };
-          okCount++;
+        if (typeof window.__starry_monthCardEnum === "number") mc = window.__starry_monthCardEnum;
+        else { var NN = window.__starry_N; if (NN && typeof NN.monthCardEnum === "number") mc = NN.monthCardEnum; }
+      } catch (eN) {}
+      var okCount = 0;
+
+      /* ① monCard.*.<fn>() 带明文 AUTO_BATTLE 的判定 */
+      try {
+        var hosts = [];
+        var mcard = z.monCard;
+        if (mcard) {
+          hosts.push(mcard);
+          for (var k1 in mcard) {
+            try { var sub = mcard[k1]; if (sub && (typeof sub === "object" || typeof sub === "function")) hosts.push(sub); } catch (e) {}
+          }
         }
-      } catch (e1) { err("unlock/fMY", e1); }
-      /* ② funcOpen.chW(MONTH_CARD_OPEN) -> true */
+        for (var hi = 0; hi < hosts.length && okCount === 0; hi++) {
+          var h = hosts[hi], proto = null;
+          try { proto = Object.getPrototypeOf(h); } catch (e) {}
+          var owner = proto || h;
+          var names = ownFnNames(owner);
+          for (var ni = 0; ni < names.length; ni++) {
+            var nm = names[ni], fn = owner[nm];
+            var sf = srcOfFn(fn);
+            if (!sf || sf.indexOf("AUTO_BATTLE") < 0 || sf.length > 900) continue;
+            (function (own2, nm2, orig) {
+              own2[nm2] = function () {
+                try { if (FEAT(5)) { if (!A.evUnlock1) { A.evUnlock1 = 1; log("auto-battle unlock: monCard." + nm2 + "() 放行 (AUTO_BATTLE, 结构发现)"); } return true; } } catch (e) {}
+                return orig.apply(this, arguments);
+              };
+            })(owner, nm, fn);
+            okCount++;
+            break;
+          }
+        }
+      } catch (e1) { err("unlock/auto-battle", e1); }
+
+      /* ② funcOpen.<任意>(MONTH_CARD_OPEN)（方法名每版都换 ⇒ 只认入参） */
       try {
         var fo = z.funcOpen;
-        var mc = null;
-        try { var NN = window.__starry_N; if (NN && typeof NN.monthCardEnum === "number") mc = NN.monthCardEnum; } catch (eN) {}
-        if (fo && typeof fo.chW === "function") {
-          var ochW = fo.chW;
-          fo.chW = function (id) {
-            try {
-              if (FEAT(5) && mc !== null && id === mc) {
-                if (!A.evUnlock2) { A.evUnlock2 = 1; log("auto-battle unlock: funcOpen.chW(MONTH_CARD_OPEN=" + mc + ") 放行"); }
-                return true;
-              }
-            } catch (e) {}
-            return ochW.apply(this, arguments);
-          };
-          okCount++;
-        } else if (!A.evNoChw) { A.evNoChw = 1; log("auto-battle unlock: funcOpen.chW 不存在（只放行 fMY）"); }
-      } catch (e2) { err("unlock/chW", e2); }
-      if (okCount > 0) { unlockHooked = true; log("auto-battle unlock: hooked " + okCount + " 处判定（菜单开关控制）"); }
-      else if (!A.evUnlockMiss) { A.evUnlockMiss = 1; log("auto-battle unlock: 两处判定都没找到（monCard.fNc/funcOpen 结构变了？）"); }
+        if (fo && mc !== null) {
+          var foNames = ownFnNames(fo);
+          var wrapped = 0;
+          for (var fi = 0; fi < foNames.length; fi++) {
+            var fname = foNames[fi], ofn = fo[fname];
+            /* 不再按函数体里出现 "FunctionUnlockTableEnum" 过滤 ——
+               1.1.14.1 的 funcOpen.cii 本体只有一句 `return this.cic.chV(t, e)`，
+               枚举名在调用方那一侧，按体过滤必然落空。
+               改为「包 funcOpen 上的判定方法，只在入参 === MONTH_CARD_OPEN 时放行」：
+               其它 id 一律原样透传，即使包装到别的方法也不会改变游戏行为。 */
+            var sf2 = srcOfFn(ofn);
+            if (!sf2 || sf2.length > 1200) continue;
+            (function (fo2, nm2, orig) {
+              fo2[nm2] = function (id) {
+                try {
+                  if (FEAT(5) && id === mc) {
+                    if (!A.evUnlock2) { A.evUnlock2 = 1; log("auto-battle unlock: funcOpen." + nm2 + "(MONTH_CARD_OPEN=" + mc + ") 放行"); }
+                    return true;
+                  }
+                } catch (e) {}
+                return orig.apply(this, arguments);
+              };
+            })(fo, fname, ofn);
+            wrapped++;
+          }
+          if (wrapped > 0) { okCount++; log("auto-battle unlock: funcOpen 包装 " + wrapped + " 个枚举判定"); }
+          else if (!A.evNoChw) { A.evNoChw = 1; log("auto-battle unlock: funcOpen 上没找到枚举判定方法（结构变了）"); }
+        }
+      } catch (e2) { err("unlock/funcOpen", e2); }
+
+      if (okCount > 0) { unlockHooked = true; log("auto-battle unlock: hooked " + okCount + " 类判定（菜单开关控制）"); }
+      else if (!A.evUnlockMiss) { A.evUnlockMiss = 1; log("auto-battle unlock: 两处判定都没找到（monCard/funcOpen 结构变了？）"); }
     } catch (e) { err("unlock", e); }
   }
 

@@ -1,0 +1,178 @@
+{
+  "errors": [],
+  "in_root": "E:\\nixiang\\09_test\\勇士之心\\regrab_20261104",
+  "out_root": "E:\\nixiang\\06_dumped\\勇士之心\\hotupdate_20261104",
+  "key_full": "237GaogniB!@#$1sdf546685",
+  "key_effective": "237GaogniB!@#$1s",
+  "count": 24,
+  "files": [
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\base\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\base\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\battleCommonRender\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\battleCommonRender\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\battleLogic\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\battleLogic\\index.js",
+      "encrypted_size": 71197,
+      "xxtea_size": 71186,
+      "plain_size": 312866
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\battleRender\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\battleRender\\index.js",
+      "encrypted_size": 62905,
+      "xxtea_size": 62894,
+      "plain_size": 299621
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\battleRes\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\battleRes\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\battleSound\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\battleSound\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\ccui\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\ccui\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\clientCfg\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\clientCfg\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\config\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\config\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\fgui\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\fgui\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\game\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\game\\index.js",
+      "encrypted_size": 1090801,
+      "xxtea_size": 1090792,
+      "plain_size": 6848738
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\internal\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\internal\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\main\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\main\\index.js",
+      "encrypted_size": 261453,
+      "xxtea_size": 261444,
+      "plain_size": 1138350
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\map\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\map\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\mcAtlas\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\mcAtlas\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\MiniGameXXL\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\MiniGameXXL\\index.js",
+      "encrypted_size": 14625,
+      "xxtea_size": 14616,
+      "plain_size": 65055
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\model\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\model\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\assets\\sproto\\index.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\assets\\sproto\\index.js",
+      "encrypted_size": 313,
+      "xxtea_size": 301,
+      "plain_size": 563
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\jsb-adapter\\jsb-builtin.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\jsb-adapter\\jsb-builtin.js",
+      "encrypted_size": 63625,
+      "xxtea_size": 63615,
+      "plain_size": 361613
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\jsb-adapter\\jsb-engine.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\jsb-adapter\\jsb-engine.js",
+      "encrypted_size": 37501,
+      "xxtea_size": 37489,
+      "plain_size": 228789
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\main.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\main.js",
+      "encrypted_size": 42769,
+      "xxtea_size": 42760,
+      "plain_size": 125299
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\src\\assets\\bingo\\src\\fgui\\fairygui.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\src\\assets\\bingo\\src\\fgui\\fairygui.js",
+      "encrypted_size": 78125,
+      "xxtea_size": 78113,
+      "plain_size": 420382
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\src\\cocos2d-jsb.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\src\\cocos2d-jsb.js",
+      "encrypted_size": 386345,
+      "xxtea_size": 386336,
+      "plain_size": 1684891
+    },
+    {
+      "src": "09_test\\勇士之心\\regrab_20261104\\src\\settings.js",
+      "dst": "06_dumped\\勇士之心\\hotupdate_20261104\\src\\settings.js",
+      "encrypted_size": 237,
+      "xxtea_size": 226,
+      "plain_size": 355
+    }
+  ]
+}
