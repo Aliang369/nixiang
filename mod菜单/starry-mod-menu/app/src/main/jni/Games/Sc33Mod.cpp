@@ -64,20 +64,20 @@ static std::atomic<int> g_spliceHits{0};
 static std::atomic<bool> g_evalDumped{false};
 
 static void TraceDumpEvalOnce(const char* script, long n, const char* fileName) {
-    if (g_evalDumped.exchange(true)) return;
     if (!script || n < 1024 * 1024) return;
-    static const char* kPaths[] = {
-        "/sdcard/Download/sc33_eval_main.js",
-        "/data/local/tmp/sc33_eval_main.js",
-    };
-    for (const char* path : kPaths) {
+    char name[64];
+    snprintf(name, sizeof name, "sc33_eval_%ld.js", n);
+    static const char* kDirs[] = {"/sdcard/Download/", "/data/local/tmp/"};
+    for (const char* d : kDirs) {
+        char path[160];
+        snprintf(path, sizeof path, "%s%s", d, name);
         FILE* f = fopen(path, "wb");
         if (!f) continue;
         size_t w = fwrite(script, 1, (size_t)n, f);
         fclose(f);
-        SC33_TRACE_LOG("dump eval %zu/%ld bytes → %s file=%s", w, n, path,
+        SC33_TRACE_LOG("dump eval %zu/%ld bytes -> %s file=%s", w, n, path,
                        fileName ? fileName : "(null)");
-        LOGI("[Sc33] trace dump %zu bytes → %s", w, path);
+        LOGI("[Sc33] trace dump %zu bytes -> %s", w, path);
         return;
     }
     SC33_TRACE_LOG("dump eval failed: no writable path");
@@ -433,31 +433,59 @@ static bool Sc33DeriveFightVars(const std::string& s, size_t& insertPos, std::st
     for (const std::string& p : ps) {
         if (!Sc33IsIdent(p)) return false;
     }
-    opts = ps[3];
     extra = ps[4];
+    const std::string dmg = ps[2];
 
-    size_t winEnd = std::min(s.size(), h + 4096);
+    size_t winEnd = std::min(s.size(), h + 16384);
     std::string win = s.substr(h, winEnd - h);
 
-    std::string pat = "var p = " + opts + " && " + opts + ".force, d = " + opts + " && " +
-                      opts + ".trueDmg, ";
-    size_t vp = win.find(pat);
+    /* 1) opts：`&& <X>.force` 后紧接 `= <X> && <X>.trueDmg`（不写死变量名，混淆器改名不影响） */
+    size_t vp = std::string::npos;
+    for (size_t fp = win.find("&& "); fp != std::string::npos; fp = win.find("&& ", fp + 1)) {
+        size_t b = fp + 3, e2 = b;
+        while (e2 < win.size() && Sc33IsIdentChar(win[e2])) ++e2;
+        std::string cand = win.substr(b, e2 - b);
+        if (cand.empty() || !Sc33IsIdent(cand)) continue;
+        std::string self = cand + ".force, ";
+        if (win.compare(fp + 3, self.size(), self) != 0) continue;
+        // 形如 `<id> = <cand> && <cand>.trueDmg`：先跳过被赋值的形参名（混淆器会改名）
+        size_t after = fp + 3 + self.size();
+        size_t idEnd = after;
+        while (idEnd < win.size() && Sc33IsIdentChar(win[idEnd])) ++idEnd;
+        if (idEnd == after) continue;
+        std::string tail = " = " + cand + " && " + cand + ".trueDmg";
+        if (win.compare(idEnd, tail.size(), tail) != 0) continue;
+        vp = fp;
+        opts = cand;
+        break;
+    }
     if (vp == std::string::npos) return false;
-    static const char* kTail = " = i < 0, _ = i > 0, m = 0;";
-    size_t q = win.find(kTail, vp + pat.size());
-    if (q == std::string::npos) return false;
-    neg = win.substr(vp + pat.size(), q - (vp + pat.size()));
+
+    /* 2) neg：`= <dmg> < 0,` 之前那个标识符 */
+    std::string negPat = "= " + dmg + " < 0,";
+    size_t np = win.find(negPat, vp);
+    if (np == std::string::npos) return false;
+    size_t e3 = np;
+    while (e3 > 0 && (win[e3 - 1] == ' ' || win[e3 - 1] == '\t' || win[e3 - 1] == '\n')) --e3;
+    size_t b2 = e3;
+    while (b2 > 0 && Sc33IsIdentChar(win[b2 - 1])) --b2;
+    neg = win.substr(b2, e3 - b2);
     if (!Sc33IsIdent(neg)) return false;
 
-    static const char* kEm = ".EntityManager.Inst()";
-    size_t e = win.find(kEm);
+    /* 3) 插入点 = 该 var 语句结束的 `;` 之后（不依赖尾项是哪一个 `= 0`） */
+    size_t semi = win.find(';', np);
+    if (semi == std::string::npos) return false;
+
+    /* 4) em：窗口内第一个 `<X>.EntityManager.Inst` 的 X */
+    static const char* kEmPat = ".EntityManager.Ins";
+    size_t e = win.find(kEmPat);
     if (e == std::string::npos) return false;
-    size_t b = e;
-    while (b > 0 && Sc33IsIdentChar(win[b - 1])) --b;
-    em = win.substr(b, e - b);
+    size_t b3 = e;
+    while (b3 > 0 && Sc33IsIdentChar(win[b3 - 1])) --b3;
+    em = win.substr(b3, e - b3);
     if (!Sc33IsIdent(em)) return false;
 
-    insertPos = h + q + strlen(kTail);
+    insertPos = h + semi + 1;
     return true;
 }
 
@@ -489,6 +517,7 @@ static bool TryInsert1023FightHooks(std::string& s) {
         const char* opts;
         const char* extra;
     } kVar[] = {
+        {"var f = n && n.force, _ = n && n.trueDmg, m = i < 0, v = i > 0, I = 0;", "h", "m", "n", "o"},  /* 2026-11-04 热更 */
         {"var p = n && n.force, d = n && n.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f", "n", "o"},
         {"var p = o && o.force, d = o && o.trueDmg, f = i < 0, _ = i > 0, m = 0;", "h", "f", "o", "n"},
         {"var p = o && o.force, d = o && o.trueDmg, h = i < 0, _ = i > 0, g = 0;", "f", "h", "o", "n"},

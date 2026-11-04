@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/生存33天",
+  "keep": "生存33天_1.0.24_hotfix1_surgical-releaseSigned.apk",
+  "keep_size": 1178526742,
+  "keep_md5": "4a9372de3bc484d5735e2199b22097a2",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "生存33天_1.0.24_surgical-releaseSigned.apk",
+      "size": 1178526742,
+      "md5": "e4e41744419e2a3b0086c277430b650a"
+    },
+    {
+      "name": "生存33天_1.0.24_hotfix1_surgical-trace-releaseSigned.apk",
+      "size": 1178514454,
+      "md5": "8869e434b7e5f3b9fe5e212498bd384d"
+    }
+  ],
+  "removed_count": 2
+}

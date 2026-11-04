@@ -1,0 +1,53 @@
+{
+  "game": "生存33天",
+  "package": "com.lgcb.scsst.sc33ttaptapwz37zgx3.dayssurvive",
+  "round": "20261104",
+  "why": "用户重装官方原版最新 APK 后复刻星空版；热更已推进到 v203，fight 锚点再次漂移（变量名重命名），取运行时明文做结构派生修正",
+
+  "bundle": {
+    "asset_path": "assets/main/index.jsc",
+    "hotupdate_version": 203,
+    "hotupdate_file_size": 5642508,
+    "runtime_plaintext_size": 32462496,
+    "prev_round_plaintext_size": 31206123,
+    "runtime_plaintext_sha256": "2ca4716a9372f418962bef6214d5ed06447accb5d99c5b6ebfd1184f761fb893",
+    "runtime_plaintext_local": "/tmp/sc33_hot1104/sc33_eval_main.js",
+    "local_note": "该 .js 被 .gitignore:64 `06_dumped/**/*.js` 硬排除，不入库；本 JSON 为入库锚点"
+  },
+
+  "how_obtained": {
+    "method": "mod 自带 TRACE 落盘（本轮冻结法失效：SIGSTOP 后 ≥16MB rw-p 匿名区全部未命中 needle）",
+    "change": "Sc33Mod.cpp TraceDumpEvalOnce 由「只 dump 首份」改为按长度分文件 /sdcard/Download/sc33_eval_<len>.js",
+    "build": "STARRY_TRACE=1 STARRY_ALLOW_ANY_BASE=1 bash mod菜单/starry-mod-menu/scripts/sc33_so_only.sh",
+    "files": ["sc33_eval_32462496.js"]
+  },
+
+  "anchors_20261104": {
+    "fight": {
+      "function": "prototype.FightChangeEntityHp = function(t, e, i, n, o)",
+      "var_stmt": "var f = n && n.force, _ = n && n.trueDmg, m = i < 0, v = i > 0, I = 0;",
+      "em": "h",
+      "neg": "m",
+      "opts": "n",
+      "extra": "o",
+      "derived_by": "Sc33DeriveFightVars 结构派生（去名字化重写）",
+      "insert_byte_offset_cpp": 9451233
+    },
+    "baseDmg": {
+      "anchor": "t = u.baseDmg;",
+      "function": "DamageCommonCalcFinal = function(t, e, i, n, o, a, r, s, l)",
+      "tgt": "a",
+      "caster": "o",
+      "byte_offset_cpp": 23585909
+    },
+    "atk": {"status": "命中未漂移"},
+    "splice_result": "fight=1 baseDmg=1 atk=1 viewAtk=1；32462496 -> 32464241 (+1745)"
+  },
+
+  "reproducer": "04_scripts/生存33天/sim_sc33_splice.py（拼接锚点离线复现 + node --check 预览）",
+  "scripts": {
+    "first_pkg_modern": "mod菜单/starry-mod-menu/scripts/sc33_first_pkg_modern_20261104.sh",
+    "so_only": "mod菜单/starry-mod-menu/scripts/sc33_so_only.sh"
+  }
+}
+
