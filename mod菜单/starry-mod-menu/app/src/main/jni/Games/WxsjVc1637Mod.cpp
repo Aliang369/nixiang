@@ -3,7 +3,7 @@
  *
  *  与 12.x 的 WxsjMod 完全隔离：
  *    - RuntimeAssemblyLoader::ExecuteRuntimeAssembly RVA = 0x2b3f3c4
- *    - 内嵌 targetfuntional_dll_vc1637.bin，装载时强制覆写
+ *    - 内嵌**明文**补丁 DLL（hf2/hf4/hf3 三变体），装载时强制覆写
  *    - 不匹配官方长度时也覆写（只要缓冲区容得下），实现版本钉死
  *
  *  功能开关由 DLL 内 StarryConfig 读取 starry_config.ini（2s 缓存）。
@@ -31,10 +31,9 @@
 #include "Includes/Logger.h"
 #include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
 
-// P2-2 载荷加密层（跨游戏共享件 SgPayload.h + 本游戏密文头）：
-// 内嵌的不再是补丁 DLL 明文，而是密文段；运行时用票里的 kx 还原 K_build 再解封。
-#include "Includes/SgPayload.h"
-#include "Includes/sg_payload_enc_wxsj_vc1637.h"
+// 无加固形态（2026-11-04 用户定：加固与载荷 sha 全去）：
+// so 内嵌**明文**补丁 DLL，没有密文段、没有票/密钥依赖、后台不需要登记载荷 sha。
+#include "Includes/sg_plain_wxsj_vc1637.h"
 
 #define WXSJVC_LOG "[WxsjVC1637]"
 
@@ -60,36 +59,42 @@ static constexpr int32_t kOfficialDllLen = 1960960;  // 仅日志兜底用
 // 2026-10-26 起不再内置 base（1,960,960 = 2026-09-22 之前的官方 DLL）：那份基线还没有
 // 2026-09-23 二次热更引入的 AddItem(string,long,bool,string) 形态，物品倍数/转生无限两项
 // 物理上装不进去，留着只会产出「菜单有开关但无效」的错版。未知长度/哈希一律 PASSTHROUGH。
-// 每段补丁：上游 DLL 身份 + 它在 so 里的**密文**位置。明文只在运行时解封，绝不进包。
+// 每段补丁：上游 DLL 身份 + 它在 so 里的**明文**位置（objcopy 内嵌 .bin）。
 struct DllVariant {
     int32_t officialLen;
     uint64_t officialHash;
     const char* name;
-    const uint8_t* ct;      // 密文起始（objcopy 内嵌的 .enc.bin 段）
-    uint32_t ctLen;         // 密文长度（= 明文长度，生成器写死在密文头里）
-    const uint8_t* mac;     // Encrypt-then-MAC 的 32B MAC
-    // **防封基线**（无票路径用）：官方 + 上报/执法屏蔽，**不含任何作弊功能代码**。
-    // 密钥由包内 payload sha 派生（非秘密）⇒ 与票无关，so 加载即生效。
-    const uint8_t* abCt;
-    uint32_t abLen;
-    const uint8_t* abMac;
+    const uint8_t* data;    // 明文补丁 DLL 起始（objcopy 内嵌的 .bin 段）
+    uint32_t len;           // 明文长度（gen_plain_header.py 按文件实测写入）
 };
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_enc_bin_start[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_enc_bin_start[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_enc_bin_start[];
-extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_antiban_enc_bin_start[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf2_bin_start[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf4_bin_start[];
+extern "C" const uint8_t _binary_targetfuntional_dll_vc1637_hf3_bin_start[];
 
-/* 票派生密钥（实现在 MainModern.cpp：SgAuth 的 static 状态每 TU 一份，必须跨 TU 取） */
-extern "C" int sgp_payload_key(uint8_t out[32]);
-/* 原生 toast（实现在 MainModern.cpp）——防封基线路径要给用户一句可读提示 */
+/* 原生 toast（实现在 MainModern.cpp）——热更版本未识别时给用户一句可读提示 */
 extern "C" void StarryShowToast(const char* text);
 
-// 防封基线只备现网这一版（2028544 / fnv 0x1bf6c08f1ba38809）；旧热更变体没有基线 ⇒ 无票时仍 PASSTHROUGH。
+/* ---- 2026-11-04 签名轨（运行时签名替换）----
+ * Android 的 sun.misc.Unsafe 没有 staticFieldOffset/staticFieldBase，Java 侧改不了
+ * PackageInfo.CREATOR 这个 static final；这里用 JNI 直接写（SetStaticObjectField 绕 final）。
+ * 调用方：Java com.starry.magic.sign.SigReplace.nativeSetStaticField（等 so 加载后调用）。 */
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_starry_magic_sign_SigReplace_nativeSetStaticField(JNIEnv* env, jclass, jclass declaring,
+                                                          jobject reflectedField, jobject value) {
+    if (!env || !declaring || !reflectedField) return JNI_FALSE;
+    jfieldID fid = env->FromReflectedField(reflectedField);
+    if (!fid) return JNI_FALSE;
+    env->SetStaticObjectField(declaring, fid, value);
+    if (env->ExceptionCheck()) { env->ExceptionClear(); return JNI_FALSE; }
+    return JNI_TRUE;
+}
+
+// 三变体：hf2=2030080 / hf4=2028544(现网 fnv 1bf6c08f) / hf3=2028544(旧 hf3 fnv 43df8d0d)。
+// 2026-11-04：三份都已叠上「投掷物倍数 / 技能伤害倍数 / 转生无条件升级」三项。
 static const DllVariant kDllVariants[] = {
-    {2030080, 0x91f9acbd064fa875ULL, "hf2", _binary_targetfuntional_dll_vc1637_hf2_enc_bin_start, kWxsjvcHf2PayloadLen, kWxsjvcHf2PayloadMac, nullptr, 0, nullptr},
-    {2028544, 0x1bf6c08f1ba38809ULL, "hf4", _binary_targetfuntional_dll_vc1637_hf4_enc_bin_start, kWxsjvcHf4PayloadLen, kWxsjvcHf4PayloadMac,
-     _binary_targetfuntional_dll_vc1637_antiban_enc_bin_start, kWxsjvcAntibanLen, kWxsjvcAntibanMac},
-    {2028544, 0x43df8d0d87bf08b2ULL, "hf3", _binary_targetfuntional_dll_vc1637_hf3_enc_bin_start, kWxsjvcHf3PayloadLen, kWxsjvcHf3PayloadMac, nullptr, 0, nullptr},
+    {2030080, 0x91f9acbd064fa875ULL, "hf2", _binary_targetfuntional_dll_vc1637_hf2_bin_start, kWxsjvcHf2PlainLen},
+    {2028544, 0x1bf6c08f1ba38809ULL, "hf4", _binary_targetfuntional_dll_vc1637_hf4_bin_start, kWxsjvcHf4PlainLen},
+    {2028544, 0x43df8d0d87bf08b2ULL, "hf3", _binary_targetfuntional_dll_vc1637_hf3_bin_start, kWxsjvcHf3PlainLen},
 };
 static constexpr int kDllVariantCount = (int)(sizeof(kDllVariants) / sizeof(kDllVariants[0]));
 
@@ -104,96 +109,28 @@ static const DllVariant* PickDllVariant(int32_t len, uint64_t h) {
 }
 
 // ============================================================
-//  P2-2 解封：拿到本变体的补丁明文。
-//    成功 ⇒ 缓存（后续装载复用，避免每轮 2 MB 解封）
-//    失败 ⇒ 返回 nullptr，调用方 PASSTHROUGH 官方 DLL = **诱饵**（静默无效、不崩不闪退）
-//    诱饵结果**不缓存**：v3 票可能比这次程序集装载晚到，下一个装载点还能重试。
+//  取本变体的补丁明文（无加固：直接就是内嵌明文，不加密、不依赖票）
+//    拿到 ⇒ 缓存（同一变体后续装载复用，省一次 2 MB 拷贝）
+//    拿不到 ⇒ 调用方 PASSTHROUGH 官方 DLL（不崩不闪退）
 // ============================================================
 static std::mutex g_plainMtx;
-static std::string g_plain;                 // 最近一次成功解封的补丁明文（缓存）
+static std::string g_plain;
 static const DllVariant* g_plainFor = nullptr;
-static std::atomic<int> g_decoyHits{0};
-
-/* 防封基线密钥：sha256("starry-antiban-v1|" || payload_sha_hex)。
-   ★ 这份密文**不是秘密**（攻击者能自己推出密钥）——它的作用是让基线 DLL 不以明文出现在包里
-     （C8「无明文载荷泄漏」照旧 0 命中）；安全面靠它**不含任何作弊功能代码**，
-     作弊功能仍然只在票控载荷里。 */
-static void AntibanKey(uint8_t out[32]) {
-    char buf[sizeof("starry-antiban-v1|") - 1 + 64];
-    const size_t n = sizeof("starry-antiban-v1|") - 1;
-    memcpy(buf, "starry-antiban-v1|", n);
-    memcpy(buf + n, kWxsjvcPayloadSha, 64);
-    sha256((const uint8_t*)buf, n + 64, out);
-    memset(buf, 0, sizeof(buf));
-}
-
-/* 解封进调用方自己的 buffer（不用返回内部指针：别的线程换变体时会把它换掉）。
-   成功返回 true 且 out 已填；失败返回 false ⇒ 调用方落诱饵。 */
-/* 防封基线（官方 DLL + 上报/执法屏蔽，无任何功能代码）。
- * 密钥只由载荷 sha 派生（sha256("starry-antiban-v1|"+sha)），**与票/卡密无关** ⇒ 无票、旧票、票解不开时都能生效。
- * 2026-10-27 用户指正：防封不允许被授权链牵连；只要全量载荷解不开就必须先落到这里，再谈诱饵。 */
-static bool TryAntibanBaseline(const DllVariant* v, std::string* out) {
-    if (!v->abCt || !v->abLen) return false;
-    uint8_t ak[32];
-    AntibanKey(ak);
-    std::string ab;
-    const bool abOk = sgpayload::unseal(v->abCt, (size_t)v->abLen, v->abMac, ak, &ab);
-    memset(ak, 0, sizeof(ak));
-    if (!abOk || ab.empty()) {
-        LOGW(WXSJVC_LOG " antiban baseline unseal failed (%s)", v->name);
-        return false;
-    }
-    LOGI(WXSJVC_LOG " antiban baseline unsealed %zu B (%s): 防封 on / 功能 off", ab.size(), v->name);
-    static std::atomic<int> s_abNotice{0};
-    if (s_abNotice.fetch_add(1) == 0)
-        StarryShowToast("[无限升级] 防封已生效；功能需登录卡密后重启游戏一次");
-    g_plain = ab;
-    g_plainFor = v;
-    out->swap(ab);
-    return true;
-}
 
 static bool GetPatchedPlain(const DllVariant* v, std::string* out) {
+    if (!v->data || !v->len) {
+        LOGE(WXSJVC_LOG " variant %s has no plaintext payload", v->name);
+        return false;
+    }
     std::lock_guard<std::mutex> lk(g_plainMtx);
     if (g_plainFor == v && !g_plain.empty()) {
         out->assign(g_plain);
         return true;
     }
-
-    uint8_t pk[32];
-    bool haveKey = sgp_payload_key(pk) != 0;
-    if (!haveKey) {
-        // 等票（最多 3s）：Java 侧 bootstrap 把 v3 票交到 native 往往比程序集装载晚几百 ms~几秒。
-        // 不等就落基线，会出现「票其实马上就绪、整局却只有防封没功能」的假故障
-        // （2026-10-27 用户实测：登录后首次启动 ⇒ 功能全失效，根因即此）。
-        for (int i = 0; i < 60 && !haveKey; i++) {
-            usleep(50 * 1000);
-            haveKey = sgp_payload_key(pk) != 0;
-            if (haveKey) LOGI(WXSJVC_LOG " payload key arrived after %d ms wait (%s)", (i + 1) * 50, v->name);
-        }
-    }
-    if (!haveKey) {
-        // 无票：**先走防封基线**（2026-10-26 用户定「防封随菜单 so 加载、不要卡密」）。
-        // 基线 = 官方 DLL + 上报/执法屏蔽（无任何功能代码）⇒ 防封照常生效、功能仍锁在票控载荷里。
-        if (TryAntibanBaseline(v, out)) return true;
-        const int n = g_decoyHits.fetch_add(1) + 1;
-        LOGW(WXSJVC_LOG " payload key absent -> decoy (%d)", n);
-        return false;
-    }
-    std::string real;
-    const bool ok = sgpayload::unseal(v->ct, (size_t)v->ctLen, v->mac, pk, &real);
-    memset(pk, 0, sizeof(pk));
-    if (!ok) {
-        // 票在但解不开（票是旧 payload sha 铸的 / 已吊销 / 损坏）⇒ 先落防封基线，防封不许被授权链牵连。
-        LOGW(WXSJVC_LOG " payload unseal failed with ticket (%s) -> try antiban baseline", v->name);
-        if (TryAntibanBaseline(v, out)) return true;
-        const int n = g_decoyHits.fetch_add(1) + 1;
-        LOGW(WXSJVC_LOG " payload unseal failed -> decoy (%d)", n);
-        return false;
-    }
-    LOGI(WXSJVC_LOG " payload decrypted %zu B (%s)", real.size(), v->name);
+    std::string real((const char*)v->data, (size_t)v->len);
     g_plain = real;
     g_plainFor = v;
+    LOGI(WXSJVC_LOG " payload ready %zu B (%s, plaintext inline)", real.size(), v->name);
     out->swap(real);
     return true;
 }
@@ -297,11 +234,11 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
                      len, (unsigned long long)h);
                 return orig(self, data, outP, mi);
             }
-            // 载荷必须先解封：拿不到（没有 v3 票 / 无钥 / 密文被改）⇒ 落诱饵
-            // = 官方 DLL 原样执行（功能静默无效，不崩、不闪退、不弹错）。
+            // 补丁 DLL 是明文内嵌（无加固、无票）⇒ 只有「变体没有载荷」这一种拿不到的情况，
+            // 那就 PASSTHROUGH 官方 DLL 原样执行（不崩、不闪退、不弹错）。
             std::string plain;
             if (!GetPatchedPlain(v, &plain) || plain.empty()) {
-                LOGW(WXSJVC_LOG " variant %s payload unavailable -> PASSTHROUGH official (decoy, no inject)",
+                LOGW(WXSJVC_LOG " variant %s payload unavailable -> PASSTHROUGH official (no inject)",
                      v->name);
                 return orig(self, data, outP, mi);
             }
@@ -350,24 +287,13 @@ static bool TryHookOnce() {
     g_hooked.store(true);
     g_replaceArmed.store(true);
 
-    LOGI(WXSJVC_LOG " hook installed @base=%p +0x%zx orig=%p variants=%d(enc hf2:%uB hf4:%uB hf3:%uB)",
+    LOGI(WXSJVC_LOG " hook installed @base=%p +0x%zx orig=%p variants=%d(plain hf2:%uB hf4:%uB hf3:%uB)",
          (void*)base, kExecRva, orig, kDllVariantCount,
-         (unsigned)kWxsjvcHf2PayloadLen, (unsigned)kWxsjvcHf4PayloadLen, (unsigned)kWxsjvcHf3PayloadLen);
-
-    // arm 时先探一次票里的载荷密钥：没票也能装 hook（诱饵 = 官方 DLL 原样跑），
-    // 有票才注入补丁。这条日志是「授权墙生效」与「诱饵层生效」的分界证据。
-    uint8_t pkProbe[32];
-    if (sgp_payload_key(pkProbe)) {
-        memset(pkProbe, 0, sizeof(pkProbe));
-        LOGI(WXSJVC_LOG " payload key ready (v3 ticket) -> real patch on next assembly load");
-    } else {
-        LOGW(WXSJVC_LOG " payload key absent at arm time -> uses antiban baseline (防封 on, 功能等 v3 ticket)%s",
-             kWxsjvcAntibanLen ? "" : " / no baseline for this variant");
-    }
+         (unsigned)kWxsjvcHf2PlainLen, (unsigned)kWxsjvcHf4PlainLen, (unsigned)kWxsjvcHf3PlainLen);
+    LOGI(WXSJVC_LOG " payload policy=%s -> patch injected on next assembly load", kWxsjvcPlainPolicy);
 
     // 防封常开（2026-10-26 用户定：撤出菜单、随 so 加载即生效、不需要卡密）：
-    // ① 有票 ⇒ 全量补丁 DLL 里的上报/执法屏蔽按 block_report 门控生效，这里落 1 保证开着；
-    // ② 无票 ⇒ 走 GetPatchedPlain 里的「防封基线」（不含任何功能代码，同样按此键生效）。
+    // 补丁 DLL 里的上报/执法屏蔽按 block_report 门控生效，这里落 1 保证开着。
     // 菜单已无「防封」开关，玩家无法关闭（ini 手改下轮冷启动也会被这行覆盖回 1）。
 #ifdef WXSJ_ANTIBAN_MENU
     // 正常版：防封由菜单开关控制（缺键=false=关，与原定制版一致），这里不强制写。
@@ -502,6 +428,12 @@ void WxsjVc1637_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJVC_FEAT_ANTIBAN:    WriteConfigKey("block_report", on); break;
 #endif
     case WXSJVC_FEAT_ZHUANSHENG: WriteConfigKey("zhuansheng_free", on); break;
+    // feat 转生无条件升级（默认关）：开=「轮回属性升级」不扣轮回点（转生动作/其他资源不动）
+    case WXSJVC_FEAT_LEGACYFREE: WriteConfigKey("zhuan_sheng_free_point", on); break;
+    // 三个倍数开关（2026-11-04 用户定）：输入框只存倍数，开关决定是否生效；关=按 1 倍
+    case WXSJVC_FEAT_ADSREWARD_ON:  WriteConfigKey("ads_reward_on", on); break;
+    case WXSJVC_FEAT_ITEMDOUBLE_ON: WriteConfigKey("item_double_on", on); break;
+    case WXSJVC_FEAT_EXPMULTI_ON:   WriteConfigKey("exp_multi_on", on); break;
     default: break;
     }
 }
@@ -535,8 +467,21 @@ void WxsjVc1637_OnInputChanged(int featNum, const char* text) {
     WriteConfigKey(key, buf);
 }
 
-// 滑块回调：本轮菜单已无滑块（feat 12 经验倍率改为输入框），保留空实现给注册表用。
+// 滑块回调（2026-11-04 新增两项）：
+//   技能投掷物倍数 -> skill_projectile_x（1..100，默认 1=官方原样）
+//   技能伤害倍数   -> skill_damage_x  （1..1000，默认 1=官方原样）
+// 夹取范围与菜单控件声明严格一致；缺键时 DLL 侧 GetInt 缺省也是 1。
 void WxsjVc1637_OnValueChanged(int featNum, int value) {
-    (void)featNum;
-    (void)value;
+    const char* key = nullptr;
+    int lo = 1, hi = 100;
+    switch (featNum) {
+    case WXSJVC_FEAT_PROJECTILE: key = "skill_projectile_x"; lo = 1; hi = 100; break;
+    case WXSJVC_FEAT_SKILLDMG:   key = "skill_damage_x";     lo = 1; hi = 1000; break;
+    default: return;
+    }
+    if (value < lo) value = lo;
+    if (value > hi) value = hi;
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", value);
+    WriteConfigKey(key, buf);
 }

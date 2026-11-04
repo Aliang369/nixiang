@@ -15,23 +15,31 @@ static const char* kWxsjVc1637_Features[] = {
     "Toggle_免广告",                 // 4  WXSJVC_FEAT_FREEADS
     "Toggle_物品不减",               // 5  WXSJVC_FEAT_ITEMKEEP
     "Toggle_技能免费升级",           // 6  WXSJVC_FEAT_SKILLFREE
-    "InputValue_1:广告奖励倍数",     // 7  WXSJVC_FEAT_ADSREWARD（输入框，写 ads_reward_x，默认 1=不放大）
-    "InputValue_1:物品倍数",         // 8  WXSJVC_FEAT_ITEMDOUBLE（输入框，写 item_double_x，默认 1=不放大）
-    "Toggle_无限挑战秘境",           // 9  WXSJVC_FEAT_MIJINGFREE
-    "Toggle_皮肤全解锁",             // 10 WXSJVC_FEAT_SKINUNLOCK
-    "Toggle_功能全解锁",             // 11 WXSJVC_FEAT_FUNCUNLOCK
-    "InputValue_1:经验倍数",         // 12 WXSJVC_FEAT_EXPMULTI（输入框，写 exp_multi，默认 1=不放大）
-    "Toggle_商店广告无限",           // 13 WXSJVC_FEAT_SHOPADS
-    "Toggle_物品使用反增",           // 14 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×倍率）
-    "InputValue_1000:物品反增倍率",  // 15 WXSJVC_FEAT_ITEMREVERSEX（输入框，写 item_reverse_x）
+    // ===== 三个倍率：开关在**输入框上面**（2026-11-04 用户定：输入框只存倍数，开关控制生效）=====
+    "Toggle_广告奖励倍数生效",       // 7  WXSJVC_FEAT_ADSREWARD_ON -> ads_reward_on
+    "InputValue_1:广告奖励倍数",     // 8  WXSJVC_FEAT_ADSREWARD    -> ads_reward_x
+    "Toggle_物品倍数生效",           // 9  WXSJVC_FEAT_ITEMDOUBLE_ON -> item_double_on
+    "InputValue_1:物品倍数",         // 10 WXSJVC_FEAT_ITEMDOUBLE    -> item_double_x
+    "Toggle_无限挑战秘境",           // 11 WXSJVC_FEAT_MIJINGFREE
+    "Toggle_皮肤全解锁",             // 12 WXSJVC_FEAT_SKINUNLOCK
+    "Toggle_功能全解锁",             // 13 WXSJVC_FEAT_FUNCUNLOCK
+    "Toggle_经验倍数生效",           // 14 WXSJVC_FEAT_EXPMULTI_ON   -> exp_multi_on
+    "InputValue_1:经验倍数",         // 15 WXSJVC_FEAT_EXPMULTI      -> exp_multi
+    "Toggle_商店广告无限",           // 16 WXSJVC_FEAT_SHOPADS
+    "Toggle_物品使用反增",           // 17 WXSJVC_FEAT_ITEMREVERSE（使用 N 个 → +N×倍率）
+    "InputValue_1000:物品反增倍率",  // 18 WXSJVC_FEAT_ITEMREVERSEX
 #ifdef WXSJ_ANTIBAN_MENU
-    // 正常版：防封留在菜单（feat 16），由用户开关控制 block_report
-    "Toggle_防封",                   // 16 WXSJVC_FEAT_ANTIBAN（默认关；开=上报/执法屏蔽生效）
-    "Toggle_转生时间无限制",         // 17 WXSJVC_FEAT_ZHUANSHENG（默认关；开=取消转生 1 小时冷却）
+    // 正常版：防封留在菜单（由用户开关控制 block_report）
+    "Toggle_防封",                   // 19 WXSJVC_FEAT_ANTIBAN（默认关；开=上报/执法屏蔽生效）
+    "Toggle_转生时间无限制",         // 20 WXSJVC_FEAT_ZHUANSHENG（默认关；开=取消转生 1 小时冷却）
 #else
-    "Toggle_转生时间无限制",         // 16 WXSJVC_FEAT_ZHUANSHENG（默认关；开=取消转生 1 小时冷却）
-    // 注：屏蔽版防封**不进菜单**（2026-10-26 用户定）：随 so 一起加载、无条件生效，见 WxsjVc1637Mod.cpp 防封基线段。
+    // 屏蔽版：防封**不进菜单**（2026-10-26 用户定）：随 so 加载即生效
+    "Toggle_转生时间无限制",         // 19 WXSJVC_FEAT_ZHUANSHENG（默认关；开=取消转生 1 小时冷却）
 #endif
+    // ===== 2026-11-04 新增三项（11 线口径与 12 线 wxsjdz2 逐字一致）=====
+    "Slider_技能投掷物倍数:1:100",   // WXSJVC_FEAT_PROJECTILE（1=官方原样；进阶技能加成同样放大）
+    "Slider_技能伤害倍数:1:1000",    // WXSJVC_FEAT_SKILLDMG（1=官方原样；反作弊基准同步乘）
+    "Toggle_转生无条件升级",         // WXSJVC_FEAT_LEGACYFREE（开=轮回属性升级不扣轮回点）
 };
 
 static bool WxsjVc1637_TryInitEntry(JavaVM* /*vm*/) {

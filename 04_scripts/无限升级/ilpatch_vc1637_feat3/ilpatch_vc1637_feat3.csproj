@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ilpatch_vc1637_feat3</AssemblyName>
+    <RootNamespace>ilpatch_vc1637_feat3</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+  </ItemGroup>
+</Project>
