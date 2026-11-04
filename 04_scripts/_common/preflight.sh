@@ -217,13 +217,15 @@ sweep_bash32() {
 #        —— 收官链在 Win 上曾被 apksigner/python3.11/stat 三个环境问题分三次打断。
 # --sweep：全仓 bash 3.2 扫描（无参数时也走这条 —— 见文件头"无参 / --sweep"）
 ENV_CHECK=0
+ENV_QUICK_OFF=0   # --no-env-quick：临时跳过自动工具链体检（本机没装也不耽误改文档）
 SWEEP_CHECK=0
 FILE_ARGS=0
 for _a in "$@"; do
   case "$_a" in
     --env)      ENV_CHECK=1 ;;
+    --no-env-quick) ENV_QUICK_OFF=1 ;;
     --sweep)    SWEEP_CHECK=1 ;;
-    -h|--help)  echo "用法: bash 04_scripts/_common/preflight.sh [--sweep] [--env] <文件...>（不给文件 = 全仓 bash 3.2 扫描）"; exit 0 ;;
+    -h|--help)  echo "用法: bash 04_scripts/_common/preflight.sh [--sweep] [--env] [--no-env-quick] <文件...>（不给文件 = 全仓 bash 3.2 扫描）"; exit 0 ;;
     --*)        echo "✗ FAIL  [参数] 未知选项 $_a"; exit 2 ;;
     *)          FILE_ARGS=$((FILE_ARGS+1)) ;;
   esac
@@ -241,6 +243,63 @@ fi
 for f in "$@"; do
   case "$f" in --*) continue ;; esac
   check_one "$f"
+done
+
+# ---------------------------------------------------------------
+# 自动闸门 ①：分析工具链体检（2026-11-04）
+#   每次都跑，不缓存：--quick 实测 1.3 s，换来"永远是最新状态"——
+#   刚装完 apktool 下一次 preflight 就能看见，不用等、不用记着加 --env。
+#   输出压成一行：全齐只打「✓ PASS [分析工具链] N 项就绪」，有缺才展开明细。
+#   要临时关：--no-env-quick
+# ---------------------------------------------------------------
+if [ "$FILE_ARGS" -ge 1 ] && [ "$ENV_CHECK" = "0" ] && [ "$ENV_QUICK_OFF" = "0" ] && [ -f "$SCRIPT_DIR/env_deps.sh" ]; then
+  _qout=$(bash "$SCRIPT_DIR/env_deps.sh" --quick 2>&1)
+  _qok=$(printf '%s\n' "$_qout" | grep -c '✓' || true)
+  _qwarn=$(printf '%s\n' "$_qout" | grep -c '⚠' || true)
+  _qbad=$(printf '%s\n' "$_qout" | grep -c '✗' || true)
+  if [ "${_qbad:-0}" -gt 0 ] || [ "${_qwarn:-0}" -gt 0 ]; then
+    echo
+    echo "── 分析工具链：${_qok:-0} 就绪 / ${_qwarn:-0} 按需缺 / ${_qbad:-0} 必需缺 ──"
+    printf '%s\n' "$_qout" | sed -n '/\[6\/7\]/,/\[7\/7\]/p' | sed '1d;$d'
+    if [ "${_qbad:-0}" -gt 0 ]; then
+      echo "⚠ REMIND [分析工具链] ${_qbad} 项必需工具缺失（apktool / jadx，拆包会直接断）。"
+      remind=$((remind+1))
+    else
+      echo "· 按需项缺失只在用到时才补（IDA / IL2CPP / ndk 等）。"
+    fi
+  else
+    echo "✓ PASS  [分析工具链] ${_qok:-0} 项就绪"
+    pass=$((pass+1))
+  fi
+fi
+
+# ---------------------------------------------------------------
+# 自动闸门 ②：验收卡空转检查（2026-11-04）
+#   只在本轮改动里出现 *验收卡*.md 时触发 —— 改了卡却没填 §3「已实证」等于卡开了一半。
+#   REMIND 级（卡是活文档，进行中本就可能空），但每轮都会冒出来，不会像以前那样"开了没人看见"。
+# ---------------------------------------------------------------
+for f in "$@"; do
+  case "$f" in *验收卡*.md) ;; *) continue ;; esac
+  [ -f "$f" ] || continue
+  _card_rows=$(awk '
+    /^##[[:space:]]*3\./ { in3=1; next }
+    /^##[[:space:]]*4\./ { in3=0 }
+    in3 && /^\|/ {
+      if ($0 ~ /^\|[[:space:]]*-/) next
+      if ($0 ~ /结论[[:space:]]*\|/) next
+      if ($0 ~ /示例/) next
+      if ($0 ~ /待填/) next
+      n++
+    }
+    END { print n+0 }
+  ' "$f" 2>/dev/null) || _card_rows=0
+  if [ "${_card_rows:-0}" -eq 0 ]; then
+    echo "⚠ REMIND [验收卡] ${f} 的 §3「已实证」为空 —— 收尾前补证据，或写进 §4 NOT PROVEN 说明缺什么。"
+    remind=$((remind+1))
+  else
+    echo "✓ PASS  [验收卡] ${f}（§3 已实证 ${_card_rows} 行）"
+    pass=$((pass+1))
+  fi
 done
 
 env_rc=0

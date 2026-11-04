@@ -13,6 +13,8 @@
 #    bash 04_scripts/_common/env_deps.sh          # 体检当前机器
 #    bash 04_scripts/_common/env_deps.sh -v        # 额外打印会话摘要
 #
+#    bash 04_scripts/_common/env_deps.sh --device   # 额外比对真机 frida-server 版本（默认不碰设备）
+#    bash 04_scripts/_common/env_deps.sh --quick    # 只跑分析工具链（第 6 节），供每轮开工 / preflight 自动调用
 #  退出码：0 = 无 FAIL（WARN 不算失败）；1 = 有 FAIL。
 #
 #  遵守本仓双机约定：
@@ -29,7 +31,17 @@ _HERE="$(cd "$(dirname "$0")" && pwd)"
 . "$_HERE/env.sh"
 
 VERBOSE=0
+DEVICE=0
+QUICK=0
 [ "${1:-}" = "-v" ] && VERBOSE=1
+
+for _arg in "$@"; do
+  case "$@" in
+    -v) VERBOSE=1 ;;
+    --device) DEVICE=1 ;;
+    --quick) QUICK=1 ;;
+  esac
+done
 
 _PASS=0; _FAIL=0; _WARN=0; _SKIP=0
 
@@ -44,9 +56,12 @@ echo "════════════════════════�
 echo " 环境依赖体检 — $(date '+%Y-%m-%d %H:%M:%S')"
 echo "════════════════════════════════════════════════════════════"
 
+# --quick：跳过 1-5 节，只查分析工具链（AI 每轮开工跑的那条快路径）
+if [ "$QUICK" = "0" ]; then
+
 # ---------------------------------------------------------------- 1. 主机/壳
 echo
-echo "[1/6] 主机与 shell"
+echo "[1/7] 主机与 shell"
 printf '  host = %s   bash = %s\n' "$NIXIANG_HOST" "$BASH_VERSION"
 printf '  root = %s\n' "$NIXIANG_ROOT"
 
@@ -73,7 +88,7 @@ esac
 
 # ---------------------------------------------------------------- 2. Python
 echo
-echo "[2/6] Python（RE 脚本主力）"
+echo "[2/7] Python（RE 脚本主力）"
 if [ -n "${NIXIANG_PYTHON:-}" ] && "$NIXIANG_PYTHON" -c 'pass' >/dev/null 2>&1; then
   ok "NIXIANG_PYTHON 可执行" "$("$NIXIANG_PYTHON" -c 'import sys;print(sys.version.split()[0])' 2>/dev/null)"
 else
@@ -129,7 +144,7 @@ fi
 
 # ---------------------------------------------------------------- 3. Java / SDK
 echo
-echo "[3/6] Java 与 Android SDK 工具"
+echo "[3/7] Java 与 Android SDK 工具"
 if [ -n "${NIXIANG_JAVA17:-}" ] && [ -x "$NIXIANG_JAVA17/bin/java" ]; then
   ok "NIXIANG_JAVA17" "$NIXIANG_JAVA17"
 elif [ -n "${NIXIANG_JAVA17:-}" ] && [ -f "$NIXIANG_JAVA17/bin/java.exe" ]; then
@@ -168,7 +183,7 @@ else             bad "adb" "不在 PATH 上（真机脚本全靠它）"; fi
 
 # ---------------------------------------------------------------- 4. 跨平台工具
 echo
-echo "[4/6] 跨平台命令（macOS 优先序不得写反）"
+echo "[4/7] 跨平台命令（macOS 优先序不得写反）"
 if has cygpath; then
   ok "cygpath" "$(command -v cygpath)"
   printf '    nixiang_win_path /e/x/a.apk -> %s\n' "$(nixiang_win_path /e/x/a.apk)"
@@ -205,7 +220,7 @@ fi
 
 # ---------------------------------------------------------------- 5. 本仓公共件
 echo
-echo "[5/6] 本仓公共件"
+echo "[5/7] 本仓公共件"
 for _f in env.sh preflight.sh bash32_check.sh; do
   if [ -f "$_HERE/$_f" ]; then ok "$_f" "$_HERE/$_f"
   else                         bad "$_f" "缺失"; fi
@@ -221,9 +236,196 @@ for _f in finalize_game_delivery.sh trash_paths.sh prune_output_final.sh; do
   else                         warn "$_f" "缺失（收官链会断）"; fi
 done
 
-# ---------------------------------------------------------------- 6. 摘要
+fi  # --quick 边界
+
+# ---------------------------------------------------------------- 6. 分析工具链
+# 2026-11-04 新增：env_deps 原先只管收官链（python/java/apksigner/跨平台命令），
+# 中间这层「逆向分析工具」一直没人管 —— 01_工具清单与安装状态.md 自己写明是历史观测。
+# 这里补上：apktool/jadx 属拆包主力（缺=FAIL），IDA/IL2CPP/ilspycmd/ndk 按需（缺=WARN）。
+# 只报「在不在、版本多少」，不判断「该用哪个工具」。
+#
+# ⚠ 双机现状（2026-11-04）：**本节只在本机（mac）验证过。win 的探测路径一条都没写。**
+# 在 mac 上猜 Windows 的安装位置就是编，交给 Win 端接入时自己补：
+#   Win 端第一次跑到这里，按本机实际补 case win) 分支，并把实测路径回填到
+#   10_docs/tools/01_工具清单与安装状态.md「双机差异」表。
+#   未补之前，win 上这些工具只能靠 PATH 命中，或在本机 04_scripts/_common/.env.local 里
+#   显式写 NIXIANG_*_BIN（不进 git、各机各写；模板见同目录 env.local.example）。
+# 跨平台通用、不依赖平台假设的部分：command -v 语义、$NIXIANG_ROOT/01_tools 下的仓内路径、
+#   环境变量 ANDROID_NDK_HOME / ANDROID_HOME / ANDROID_SDK_ROOT。
+# 默认不碰真机：frida 客户端↔服务端版本对齐必须显式加 --device 才查（AGENTS.md §4）。
 echo
-echo "[6/6] 摘要"
+echo "[6/7] 分析工具链（拆包 / 反编译 / Hook / IL2CPP）  host=${NIXIANG_HOST}"
+
+_ENV_LOCAL="${NIXIANG_ROOT}/04_scripts/_common/.env.local"   # 不进 git（.gitignore 已有 .env.*），各机各写
+if [ -f "$_ENV_LOCAL" ]; then
+  if . "$_ENV_LOCAL" 2>/dev/null; then
+    printf '  %-28s %s\n' "本机覆盖 .env.local" "已加载"
+  else
+    warn ".env.local" "加载失败：${_ENV_LOCAL}（本机覆盖未生效）"
+  fi
+fi
+
+_tool_ver() { "$@" 2>/dev/null | tr -d '\r' | grep -oE '[0-9]+(\.[0-9]+)+' | head -1; }
+
+# 逐个工具：本机覆盖变量 > PATH > 仓内 01_tools 常见落点
+_first_exist() {
+  for _c in "$@"; do
+    if [ -n "$_c" ] && [ -e "$_c" ]; then printf '%s' "$_c"; return 0; fi
+  done
+  return 1
+}
+
+# ---- apktool（拆/打 APK 主力：缺=FAIL）
+_apktool="${NIXIANG_APKTOOL_BIN:-}"
+if [ -z "$_apktool" ] || [ ! -e "$_apktool" ]; then
+  if has apktool; then _apktool="$(command -v apktool)"
+  else _apktool="$(_first_exist "$NIXIANG_ROOT/01_tools/apktool/apktool" "$NIXIANG_ROOT/01_tools/apktool.jar" || true)"; fi
+fi
+if [ -n "$_apktool" ]; then
+  case "$_apktool" in
+    *.jar) ok "apktool" "${_apktool}（jar，需 java -jar 或 .bat 包装）" ;;
+    *)     _v="$(_tool_ver "$_apktool" --version)"; ok "apktool" "$_apktool $_v" ;;
+  esac
+else
+  case "${NIXIANG_HOST}" in
+    mac) bad "apktool" "不在 PATH 上（brew install apktool），也没 .env.local 覆盖" ;;
+    win) bad "apktool" "不在 PATH 上；本机实际路径写 .env.local 的 NIXIANG_APKTOOL_BIN，并回来补 case win) 分支" ;;
+    *)   bad "apktool" "不在 PATH 上" ;;
+  esac
+fi
+
+# ---- jadx（Java 层反编译主力：缺=FAIL）
+_jadx="${NIXIANG_JADX_BIN:-}"
+if [ -z "$_jadx" ] || [ ! -e "$_jadx" ]; then
+  if has jadx; then _jadx="$(command -v jadx)"
+  else _jadx="$(_first_exist "$NIXIANG_ROOT/01_tools/jadx/bin/jadx" || true)"; fi
+fi
+if [ -n "$_jadx" ]; then
+  _v="$(_tool_ver "$_jadx" --version)"; ok "jadx" "$_jadx $_v"
+else
+  case "${NIXIANG_HOST}" in
+    mac) bad "jadx" "不在 PATH 上（brew install jadx），也没 .env.local 覆盖" ;;
+    win) bad "jadx" "不在 PATH 上；本机实际路径写 .env.local 的 NIXIANG_JADX_BIN，并回来补 case win) 分支" ;;
+    *)   bad "jadx" "不在 PATH 上" ;;
+  esac
+fi
+
+# ---- smali/baksmali（仓内通用，双机同一套）
+if [ -d "$NIXIANG_ROOT/01_tools/smali" ]; then
+  ok "smali/baksmali" "01_tools/smali"
+elif has baksmali; then
+  ok "smali/baksmali" "$(command -v baksmali)（PATH）"
+else
+  warn "smali/baksmali" "未找到（01_tools/smali 或 PATH）；只走 apktool 也能干"
+fi
+
+# ---- IL2CPP 三件套（按需：改 il2cpp 游戏才用）
+_have_il2cpp=0
+for _d in "$NIXIANG_ROOT/01_tools/Il2CppDumper" "$NIXIANG_ROOT/11_proj_tools/Il2CppDumper_v39" "$NIXIANG_ROOT/11_proj_tools/Il2CppDumper_v39_vmpp" "${NIXIANG_IL2CPP_DIR:-}"; do
+  if [ -n "$_d" ] && [ -d "$_d" ]; then _have_il2cpp=$((_have_il2cpp + 1)); fi
+done
+if [ "$_have_il2cpp" -gt 0 ]; then ok "Il2CppDumper" "$_have_il2cpp 套（01_tools / 11_proj_tools / env.local）"
+else                            warn "Il2CppDumper" "未找到（改 il2cpp 游戏才需要）"; fi
+
+if [ -d "$NIXIANG_ROOT/01_tools/Cpp2IL_bin" ] || [ -d "$NIXIANG_ROOT/01_tools/Cpp2IL" ]; then
+  ok "Cpp2IL" "01_tools/Cpp2IL*"
+else
+  warn "Cpp2IL" "未找到（il2cpp 备选路线，按需）"
+fi
+
+if has ilspycmd; then ok "ilspycmd" "$(command -v ilspycmd)"
+else                  warn "ilspycmd" "未找到（DummyDll → C# 需要；dotnet tool install -g ilspycmd）"; fi
+if has dotnet;  then ok "dotnet" "$(dotnet --version 2>/dev/null || echo '?')"
+else                  warn "dotnet" "未找到（ilspycmd / Il2CppDumper 的运行时依赖）"; fi
+
+# ---- IDA Pro（按需：只看 smali/JS 层可不装）
+_ida="${NIXIANG_IDA_HOME:-}"
+if [ -z "$_ida" ] || [ ! -d "$_ida" ]; then
+  _ida=""
+  case "${NIXIANG_HOST}" in
+    mac)
+      for _p in /Applications/IDA*.app; do
+        if [ -d "$_p" ]; then _ida="$_p"; break; fi
+      done
+      ;;
+    win)
+      # TODO(Win 端)：本机 IDA 装在哪由你实测后补这里（Program Files / 便携版 / 别的盘）。
+      #   补之前只用 .env.local 的 NIXIANG_IDA_HOME，否则这里报 WARN。
+      ;;
+    *)
+      for _p in "$NIXIANG_ROOT/01_tools/IDA"*; do
+        if [ -d "$_p" ]; then _ida="$_p"; break; fi
+      done
+      ;;
+  esac
+fi
+if [ -n "$_ida" ]; then ok "IDA Pro" "$_ida"
+else                     warn "IDA Pro" "未探测到（按需；便携版请在 env.local.sh 写 NIXIANG_IDA_HOME）"; fi
+
+# ---- frida 客户端（Hook / 动态取证）
+_frida="${NIXIANG_FRIDA_BIN:-}"
+if [ -z "$_frida" ] || [ ! -e "$_frida" ]; then
+  if has frida; then _frida="$(command -v frida)"; else _frida=""; fi
+fi
+if [ -n "$_frida" ]; then
+  _fv="$(_tool_ver "$_frida" --version)"
+  ok "frida 客户端" "$_frida $_fv"
+else
+  warn "frida 客户端" "不在 PATH 上（Hook / 动态取证全靠它；win 上 pip install frida-tools）"
+  _fv=""
+fi
+
+# ---- NDK（只有改 .so 才需要）
+_ndk="${NIXIANG_NDK_HOME:-}"
+if [ -n "$_ndk" ] && [ -d "$_ndk" ]; then
+  ok "ndk-build" "${_ndk}（来自 env.local.sh）"
+else
+  _ndk=""
+  if has ndk-build; then
+    _ndk="$(command -v ndk-build)"
+  else
+    for _sdk in "${ANDROID_NDK_HOME:-}" "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "$HOME/Library/Android/sdk"; do
+      [ -n "$_sdk" ] || continue
+      [ -d "$_sdk" ] || continue
+      for _d in "$_sdk"/ndk/*; do
+        if [ -d "$_d" ]; then _ndk="${_d}（未设 NIXIANG_NDK_HOME，用前 export）"; fi
+      done
+    done
+  fi
+  if [ -n "$_ndk" ]; then ok "ndk-build" "$_ndk"
+  else                    warn "ndk-build" "未找到（改 .so 才需要）；装 NDK，或 env.local.sh 写 NIXIANG_NDK_HOME"; fi
+fi
+
+# ---- 真机 frida-server（只在显式 --device 时碰设备）
+if [ "$DEVICE" = "1" ]; then
+  if has adb; then
+    _serial="$(adb get-serialno 2>/dev/null | tr -d '\r' | head -1)"
+    case "$_serial" in
+      ''|*error*|*unknown*|*offline*)
+        warn "真机 frida-server" "adb 无可用设备（先装机 / 授权 USB 调试）" ;;
+      *)
+        _srv="$(adb -s "$_serial" shell "frida-server --version 2>/dev/null || /data/local/tmp/frida-server --version 2>/dev/null" 2>/dev/null | tr -d '\r' | grep -oE '[0-9]+(\.[0-9]+)+' | head -1)"
+        if [ -z "$_srv" ]; then
+          warn "真机 frida-server" "设备 $_serial 取不到版本（未推 frida-server 或不可执行）"
+        elif [ -z "$_fv" ]; then
+          warn "真机 frida-server" "设备 ${_srv}（本机客户端未知，无法比对）"
+        elif [ "$_srv" = "$_fv" ]; then
+          ok "frida 版本对齐" "本机 = 设备 = $_srv"
+        else
+          bad "frida 版本对齐" "本机 $_fv ≠ 设备 ${_srv}（不同版本 hook 必失败）"
+        fi
+        ;;
+    esac
+  else
+    skip "真机 frida-server" "adb 不在 PATH"
+  fi
+else
+  skip "真机 frida-server" "未加 --device（默认不碰真机，遵守 AGENTS.md §4）"
+fi
+
+# ---------------------------------------------------------------- 7. 摘要
+echo
+echo "[7/7] 摘要"
 printf '  PASS=%d  FAIL=%d  WARN=%d  SKIP=%d\n' "$_PASS" "$_FAIL" "$_WARN" "$_SKIP"
 if [ "$VERBOSE" = "1" ]; then
   echo "  host=$NIXIANG_HOST  py=$NIXIANG_PYTHON"

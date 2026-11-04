@@ -20,6 +20,7 @@ ALLOW_NO_HARDEN=0   # 加固门禁逃生门：必须同时给 --harden-reason（
 HARDEN_REASON="${HARDEN_REASON:-}"
 SYNC_DOC=0
 ALLOW_LEGACY_TEMPLATE=0
+REQUIRE_CARD=1   # 验收卡门禁：默认开（卡存在但 §3 空即 rc=1）；逃生门 --allow-empty-card（2026-11-04）
 # 口令点名即必须交付（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
 # 用户在当轮口令里点名要 icon / 菜单模板时，必须显式传 --icon-source / --menu-template，
 # 漏传一律 rc=1（以前只打一行 NOTE 就放过去了 —— 那次用户追问了两次「菜单模版 json 为什么
@@ -57,6 +58,10 @@ usage() {
   - 菜单模板自检含分组行门禁（features 不得出现 Category_* 或纯分组名）+ feat_num 升序/去重/
     缺口提示，依据 `10_docs/_templates/菜单模板_规范与示例.md` §2。遗留模板确实带分组行时
     可加 --allow-legacy-template 把该门禁降级为 WARN。
+  - 验收卡门禁（2026-11-04）：本游戏若已有 10_docs/{游戏}/*验收卡*.md，但 §3「已实证」
+    仍是空的，默认 rc=1 中止（卡开着不填 = 收尾没收干净）。逃生门 --allow-empty-card
+    （仅当本轮明确不做实证时用，且必须在汇报里写明理由）。口径见 WORKFLOW.md 收尾段：
+    反复反馈的功能才补卡，不强制每单都建；没建卡不拦。
   - --expect-icon / --expect-menu-template（2026-10-12 霓虹深渊2 会话复盘 P0-4）：
     **用户口令里点名要什么，就传哪个守卫**。传了守卫却没传对应内容 ⇒ rc=1（不再静默跳过）。
     传 --expect-menu-template 时会把模板 JSON **原文打到终端**，供直接复制发给用户；
@@ -78,6 +83,8 @@ while [[ $# -gt 0 ]]; do
     # 「口令点名即必须交付」：这两个开关是**守卫**不是产出 —— 传了它却没传对应内容 = 直接 FAIL
     --expect-icon) EXPECT_ICON=1; shift ;;
     --expect-menu-template) EXPECT_MENU_TEMPLATE=1; shift ;;
+    --allow-empty-card) REQUIRE_CARD=0; shift ;;
+    --require-acceptance-card) REQUIRE_CARD=1; shift ;;
     --allow-no-harden) ALLOW_NO_HARDEN=1; shift ;;
     --harden-reason)   HARDEN_REASON="$2"; shift 2 ;;
     --apply) MODE="apply"; shift ;;
@@ -323,6 +330,56 @@ if [[ "$EXPECT_MENU_TEMPLATE" == "1" && -n "$MENU_TEMPLATE" ]]; then
   echo
 fi
 [[ "$EXPECT_FAIL" == "0" ]] || { echo "[finalize] 因本轮点名的交付物缺失而中止（未写任何文件）" >&2; exit 1; }
+
+# ---------- 验收卡空转检查（2026-11-04）----------
+# 背景：全仓 40+ 游戏只有 5 张验收卡，且多数 §3「已实证」停在「待填 / 示例」。
+# 卡片的意义是「下次接手 30 秒看懂结论」，空转的卡比没有更误导。
+# 口径（WORKFLOW.md 收尾段）：反复反馈的功能才补卡，**不强制每单建卡** ——
+# 所以默认只对「卡已存在却没填实证」告警，不阻断；--require-acceptance-card 才 FAIL。
+CARD_TOTAL=0
+CARD_EMPTY=0
+CARD_TEXT=""
+if [[ -d "$ROOT/10_docs/$GAME" ]]; then
+  for _card in "$ROOT/10_docs/$GAME"/*验收卡*.md; do
+    [[ -f "$_card" ]] || continue
+    CARD_TOTAL=$((CARD_TOTAL + 1))
+    # 只数 §3 已实证 表里的有效行：排除分隔线 / 表头 / 模板示例 / 待填
+    _rows=$(awk '
+      /^##[[:space:]]*3\./ { in3=1; next }
+      /^##[[:space:]]*4\./ { in3=0 }
+      in3 && /^\|/ {
+        if ($0 ~ /^\|[[:space:]]*-/) next
+        if ($0 ~ /结论[[:space:]]*\|/) next
+        if ($0 ~ /示例/) next
+        if ($0 ~ /待填/) next
+        n++
+      }
+      END { print n+0 }
+    ' "$_card" 2>/dev/null) || _rows=0
+    if [[ "${_rows:-0}" -eq 0 ]]; then
+      CARD_EMPTY=$((CARD_EMPTY + 1))
+      CARD_TEXT="${CARD_TEXT}  · ${_card#$ROOT/}（§3 已实证 为空）
+"
+    fi
+  done
+fi
+
+if [[ "$CARD_TOTAL" -eq 0 ]]; then
+  echo "[finalize] 验收卡：(无) 口径见 WORKFLOW.md 收尾段 —— 反复反馈的功能才补卡，不强制每单都建。"
+else
+  echo "[finalize] 验收卡：${CARD_TOTAL} 张，其中 ${CARD_EMPTY} 张 §3「已实证」为空"
+  if [[ "$CARD_EMPTY" -gt 0 ]]; then
+    printf '%s' "$CARD_TEXT"
+    echo "         动作：把决定性证据（evidence 入口 / 用户真机反馈 / 关键日志行）填进 §3；"
+    echo "               没有证据就写进 §4 NOT PROVEN 并说明缺什么。"
+    if [[ "$REQUIRE_CARD" == "1" ]]; then
+      echo "ERROR: 验收卡门禁：${CARD_EMPTY} 张卡的 §3「已实证」为空，收尾中止（未写任何文件）。" >&2
+      echo "       动作：补决定性证据进 §3；确实不做实证时加 --allow-empty-card，并在汇报里写明理由。" >&2
+      exit 1
+    fi
+  fi
+fi
+
 
 if [[ "$SYNC_DOC" == "1" ]]; then
   APK_BASE="$(basename "$APK")"

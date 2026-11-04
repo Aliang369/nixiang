@@ -82,6 +82,7 @@
     md5 -q $f; stat -f %z $f; shasum -a 256 $f; bash -c "md5 -q $f"; rm -f $f
     python3 --version
     adb devices
+    bash 04_scripts/_common/env_deps.sh --quick
 
 期望：① pwd 输出 `/Users/aliang/Documents/nixiang`（不是 No such file）② HEAD 与 mac 端一致
 （2026-10-01 交付时 Mac 端基线与跟踪文件数见文末「Mac 端基线值」；HEAD 会随新提交变化，以实时 `git rev-parse` 为准）、
@@ -94,6 +95,7 @@
 `shasum -a 256` 打印 sha256，**最后那条 `bash -c "md5 -q $f"` 也必须是同一串 32 位 hash**
 （证明 `export -f` 对非交互子 shell 生效；如果这条为空而前面有值，说明垫片没继承，停下报告）
 ⑦ python 可用 ⑧ 若本机不管设备，`adb devices` 显示空列表也算通过。
+⑨ **分析工具链体检能跑完**（最后一条命令，第 6 节应显示 host=win）。**这一节的 win 探测路径还没人写**（mac 端不猜 Windows 的安装位置）——你在本机实测工具装在哪之后，补 04_scripts/_common/env_deps.sh 里 case win) 分支，并把实测路径回填 10_docs/tools/01_工具清单与安装状态.md 的「双机差异」表。临时兜底：把路径写进本机 04_scripts/_common/.env.local（模板 env.local.example）。
 **任何一条不符：原文报告，不要"修复"后只报结果。**
 
 ### 步骤 5：配置本机设备归属（若本机要接手机）

@@ -280,6 +280,28 @@ kv "症状 → 外部关键词：见 skill/diagnosis-index.md「外部检索协�
 kv "通道（curl 直连，2026-10-15 实测全 200）：DuckDuckGo html 端点 / GitHub API / 看雪 bbs.kanxue.com / 吾爱 52pojie.cn / MT 论坛 bbs.binmt.cc（curl 走 Bing 不可用；web_search 常年不可用）"
 kv "纪律：报错原文加引号优先 · ≤3 次即止 · 未命中写台账「空结果」栏 · 外部结论先落「候选」，本仓实测通过才升「已合并」"
 
+# ---------- 查8 分析工具链（2026-11-04 新增，档1 自动化） ----------
+# 为什么要有这一查：01_工具清单与安装状态.md 自己写明「均为历史观测，不是实时事实」，
+# 而 apktool 大版本跃迁、frida 客户端↔设备服务端版本错配都是静默雷。
+# 只跑 env_deps --quick（分析工具链那一段），不碰真机；缺项不阻断开工，只记账。
+head_ "查8 分析工具链（apktool / jadx / IDA / IL2CPP / frida）"
+_ENVDEPS="${NIXIANG_ROOT}/04_scripts/_common/env_deps.sh"
+if [ -f "$_ENVDEPS" ]; then
+  _tool_out="$(bash "$_ENVDEPS" --quick 2>&1)"
+  printf '%s\n' "$_tool_out" | sed -n '/\[6\/7\]/,/\[7\/7\]/p' | sed '1d;$d'
+  _tool_bad="$(printf '%s' "$_tool_out" | grep -c '✗' || true)"
+  _tool_warn="$(printf '%s' "$_tool_out" | grep -c '⚠' || true)"
+  if [ "${_tool_bad:-0}" -gt 0 ]; then
+    note "分析工具链 ${_tool_bad} 项 FAIL（apktool / jadx 缺失会直接挡住拆包，见上）"
+  elif [ "${_tool_warn:-0}" -gt 0 ]; then
+    note "分析工具链 ${_tool_warn} 项 WARN（按需项缺失，只在用到时补）"
+  else
+    ok "分析工具链齐全"
+  fi
+else
+  note "未找到 04_scripts/_common/env_deps.sh，跳过工具链体检"
+fi
+
 # ---------- 出包前提示（2026-10-10 复盘 P0-1 / P2-1；只追加提示，不改退出码与既有结构） ----------
 kv "框架入口自检（入口类清单）：grep -rln --include='*.java' -E 'class [A-Za-z0-9_]+ extends (Application|ContentProvider|AppComponentFactory)' mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/"
 kv "出包前跑审计（任一 ✗ 禁止出包）：bash 04_scripts/_common/framework_entry_audit.sh --game <游戏> --pkg <包名> --apk <apk>；入口取舍见 skill/starry-mod/SKILL.md「入口点决策表」"
