@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/黎明前20分钟",
+  "keep": "黎明前20分钟_1.0.106_lmq20fz-releaseSigned.apk",
+  "keep_size": 125281205,
+  "keep_md5": "fa096e12923a319bc1da52639de52345",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "黎明前20分钟_1.0.106_lmq20fz-unsigned.apk",
+      "size": 124983887,
+      "md5": "7a827a34d3a3d1513f89a4495b6d007a"
+    },
+    {
+      "name": "黎明前20分钟_1.0.106_lmq20fz-releaseSigned.apk.idsig",
+      "size": 992795,
+      "md5": "0d6f57fccae131ab5914f991618508bf"
+    }
+  ],
+  "removed_count": 2
+}
