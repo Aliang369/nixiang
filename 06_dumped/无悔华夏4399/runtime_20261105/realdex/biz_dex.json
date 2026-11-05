@@ -1,0 +1,50 @@
+[
+  {
+    "name": "mem_6fd19c7ffc_8617588.dex",
+    "size": 8617588,
+    "ver": "035",
+    "classes": 8847,
+    "sha256": "b116a6ab15ada073f755975fda2bb8d137340e7757e37d6d9971c5200495891e",
+    "biz_hits": 3073
+  },
+  {
+    "name": "mem_6fd91db000_4343864.dex",
+    "size": 4343864,
+    "ver": "035",
+    "classes": 4255,
+    "sha256": "f9f02f28e0cd752439ac0318362a26d4e16a7cd1b8aa3c168d428412c27a44ba",
+    "biz_hits": 4118
+  },
+  {
+    "name": "mem_6fd841affc_1750380.dex",
+    "size": 1750380,
+    "ver": "035",
+    "classes": 1534,
+    "sha256": "2f2005fd3c467761fb718434341ba81ceb5ead100060a97dfa50047ac0eb0363",
+    "biz_hits": 706
+  },
+  {
+    "name": "mem_6fd9cf0ffc_1108844.dex",
+    "size": 1108844,
+    "ver": "035",
+    "classes": 1309,
+    "sha256": "7f1d1c33fcdc94955c3723d6e47f5deb299648e448dbae6efb069e4eda78a50d",
+    "biz_hits": 144
+  },
+  {
+    "name": "mem_714d3c0000_259568.dex",
+    "size": 259568,
+    "ver": "035",
+    "classes": 145,
+    "sha256": "d0484827822e28cc986e41b73425f621fd7966dcee8d270262ea541cfe7b99d0",
+    "biz_hits": 145
+  },
+  {
+    "name": "mem_6dc90f4c50_9340.dex",
+    "size": 9340,
+    "ver": "035",
+    "classes": 7,
+    "sha256": "f0cf2648fdc847316308ae5933ef4213ad1d4122909bb0e2d85e97937974d6db",
+    "biz_hits": 0
+  }
+]

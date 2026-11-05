@@ -1,6 +1,6 @@
 {
   "game": "无悔华夏4399",
-  "version": "3.8.280 / vc33",
+  "version": "3.8.305 / vc34",
   "notes": "4399 渠道 com.yhhy.whrhx.m4399 独立分析线。第一步只读提取真机现装单一 base APK；后续检查、dump、锚点与实现阶段按实际包分析结果追加。\n\n2026-09-23 续修：与九游同批——热更后科研立即完成修复（RVA 重校）、科研「资源不足」无条件执行（与 feat#9 同开关）、补做名臣科研、游戏内菜单换新版。4399 侧因真机已装星光包，改为「真机拉取底包 + 外科增量替换 classes4.dex 与 so」，运行时 libil2cpp.so 与九游同源 ⇒ RVA 直接复用。详见 10_docs/无悔华夏4399/实现进度_3.8.280_20260914.md §6。\n\n2026-09-23 22:52 装机后复查（本轮真机结论）：`install -r --no-incremental` 覆盖安装会让乐变**失效热更负载但不重下**，游戏退回映射 APK 内置 3.8.280 `libil2cpp.so`（199,563,384B md5 `d7c2b719a9e56d54479a017862751c57`）⇒ 全表失配（`whrhx_check_kexpect.py --so <内置so>` 命中 0 / 失配 46），`PolicyDataMgr.ExecutePolicy`/`UpdatePolicyTime`/`CountryData.GetResCnt`/`PolicyDataMgr.CheckPolicyDisable` 四方法按名亦失配 ⇒ 仅「立即完成」静默失效（不崩）。修复步骤：备份并重置 `/data/data/com.yhhy.whrhx.m4399/lebian/resourceInfo.cfg` 的 `currVer`(295→0) → force-stop + monkey 拉起**两次**（第一次只下到 1.8MB 的 `<md5>_file.zip` 会停）⇒ payload 重建：`lib/arm64/libil2cpp.so` 201,381,272B md5 `76e4418958efd53128d4eaeb4b7b4f60` ✓、`libstarry_magic.so` md5 `3ee2ed06b17f36e4eee64fe9cc067ee4` ✓、`resourceInfo.cfg` 回到 `currVer:295`。运行时复核（pid 27665）：maps 走 payload、`rva miss=0`、`eco hooks ready primary=4`、`policy panel gate ready tech=1 min=1 extra=1 res=1 can=1 disable=1 state=1`、`research hooks ready … execute=1 …` ⇒ 用户确认「功能没问题了」。详见 `10_docs/无悔华夏4399/实现进度_3.8.280_20260914.md` §7。",
   "params": {
     "game_id": "whhx4399",
@@ -25,7 +25,7 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk"
+          "path": "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.305_m4399_from_device.apk"
         },
         {
           "type": "file_exists",
@@ -33,13 +33,13 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 19:02:34",
+      "done_at": "2026-11-05 17:21:22",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk": {
-          "md5": "a208a1ea0438d34dbd50439935c05bd8"
+        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.305_m4399_from_device.apk": {
+          "md5": "d14e18439b6f4e4e2c28e4a2fcedb608"
         },
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": {
-          "md5": "d5069339674e4389ea542533e6d4d935"
+          "md5": "6d2547a8a28b9a77f1e30ff5b0b85962"
         }
       }
     },
@@ -60,15 +60,15 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 19:08:36",
+      "done_at": "2026-11-05 17:21:48",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/check_summary.json": {
-          "md5": "761f0b941e782cff7a381f134f3d9847"
+          "md5": "5d6953f5afe9a027b6c4fdc9652b980c"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk": "a208a1ea0438d34dbd50439935c05bd8",
-        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": "d5069339674e4389ea542533e6d4d935"
+        "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.305_m4399_from_device.apk": "d14e18439b6f4e4e2c28e4a2fcedb608",
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": "6d2547a8a28b9a77f1e30ff5b0b85962"
       }
     },
     {
@@ -211,38 +211,6 @@
       "notes": "本轮（2026-09-23）产物被 menu_latest_repack / install_menu_latest 取代：设备现装已是 09-15 的 whhx4399 无壳包，本轮走「真机拉取底包 + 外科增量」路线，未再卸载重装（改为 install -r 保留存档）。"
     },
     {
-      "id": "cleanup",
-      "name": "收官清理：删可再生的拆包/dump/热更大件，保留最终包与真实 DEX",
-      "requires": [
-        "install"
-      ],
-      "preflight": [
-        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_cleanup.sh"
-      ],
-      "command": "bash 04_scripts/无悔华夏4399/whrhx4399_cleanup.sh",
-      "verify": [
-        {
-          "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/03_decompiled/无悔华夏4399"
-        },
-        {
-          "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/base.odex.apk"
-        },
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20260914/inmemory_dex/inmemory_L4_e1_8621488.dex"
-        },
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.280_无壳七功能_whhx4399-releaseSigned.apk"
-        }
-      ],
-      "status": "done",
-      "done_at": "2026-09-23 22:56:48",
-      "notes": "收官清理：删 03_decompiled/无悔华夏4399、06_dumped/无悔华夏4399/3.8.280、runtime_20260914/{frida_dexdump,il2cpp_dump,base.odex.apk,global-metadata.runtime_hdd.dat,libil2cpp_hot.so,libunity_hot.so}、obj_whrhx4399；保留 inmemory_dex 三件套与 1.5G 底包（可复现）。另删 08_output/无悔华夏4399/*.idsig 与本会话 /tmp 残留（206M）。"
-    },
-    {
       "id": "menu_latest_repack",
       "name": "4399 同步九游本轮成果：新版菜单 dex（LBApplication 壳父类回改）+ 科研热更修复 so，外科增量重签",
       "requires": [
@@ -290,6 +258,123 @@
       },
       "notes": "Streamed Install Success；verify_installed_apk --su 设备 base.apk md5 == c8f5d8dd… ✓（未清数据）。装机后已加 Doze 白名单 + force-stop 重启，等乐变回填热更负载（libil2cpp.so md5 76e44189…、libstarry_magic.so md5 3ee2ed06…）；负载未回填前功能静默无效。",
       "verified_at": "2026-09-23 22:56:48"
+    },
+    {
+      "id": "fetch_runtime",
+      "name": "真机只读提取乐变运行时底包 base.odex.apk（含明文 libil2cpp + 热更资源）",
+      "requires": [
+        "check_apk"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_fetch_runtime.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_fetch_runtime.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/pkg/base.odex.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 17:24:00",
+      "notes": "底包内运行时 libil2cpp.so 204,509,528B sha256 af1e80fe… 与九游 3.8.305 完全一致 ⇒ RVA 全表复用。"
+    },
+    {
+      "id": "dump_dex",
+      "name": "从 /proc/<pid>/mem 精确导出业务 DEX（编译动态版 whrhx_mem_dex）",
+      "requires": [
+        "fetch_runtime"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_dump_dex.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_dump_dex.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/realdex/biz_dex.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 17:26:00",
+      "notes": "4399 与九游不同：业务 DEX 只有 6 份（035），主 dex 8,617,588B 含 com.tpf.sdk.TPFApplication + com.excelliance.open.LBApplication；61 个唯一候选中其余全是 Android 16 boot dex（039）。"
+    },
+    {
+      "id": "unshelled_305",
+      "name": "无壳外科重建 + 星光注入（7 份 dex + 4399 so + libc++_shared）",
+      "requires": [
+        "dump_dex",
+        "build_so"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_305_unshelled_repack.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_305_unshelled_repack.sh\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 17:29:00",
+      "notes": "manifest: MyApplication→StarryApp（父类 LBApplication）+ StarryInitProvider（authorities com.yhhy.whrhx.m4399.starryinit）+ MenuService；LEBIAN_APPLICATION 原样保留。"
+    },
+    {
+      "id": "install_305",
+      "name": "卸载重装 305 无壳星光包（硬约束 A#4：禁覆盖安装）",
+      "requires": [
+        "unshelled_305"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_clean_reinstall.sh"
+      ],
+      "command": "WHRHX_PKG=com.yhhy.whrhx.m4399 WHRHX_APK=\"$NIXIANG/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk\" WHRHX_SILENT=1 bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_clean_reinstall.sh\" --uninstall",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 17:32:00",
+      "notes": "复用九游的参数化清装脚本（WHRHX_PKG/WHRHX_APK 覆盖），设备 base.apk md5 与产物一致、运行 so md5 一致。"
+    },
+    {
+      "id": "cleanup",
+      "name": "收官清理：删可再生的拆包/dump/热更大件，保留最终包与真实 DEX",
+      "requires": [
+        "install_305"
+      ],
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/whrhx4399_cleanup.sh"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_cleanup.sh\"",
+      "verify": [
+        {
+          "type": "not_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/pkg/base.odex.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/realdex/biz_dex.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "notes": "收官清理（305 线）：删 06_dumped/无悔华夏4399/runtime_20261105/pkg（1.6G 底包，可从设备重拉）与非业务 boot dex，保留 realdex/biz_dex.json + 6 份业务 DEX、08_output 正式包、09_test 预检证据与验收日志。",
+      "done_at": "2026-11-05 17:49:35",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/realdex/biz_dex.json": {
+          "md5": "f880cb026519d9d3db047dcb447788b5"
+        },
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk": {
+          "md5": "b5a1bb3185594114fb18e151eeab365d"
+        }
+      }
     }
   ]
 }

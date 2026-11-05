@@ -1,16 +1,16 @@
 {
   "package": "com.yhhy.whrhx.m4399",
   "game": "无悔华夏4399",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.280_m4399_from_device.apk",
-  "version_name": "3.8.280",
-  "version_code": 33,
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.305_m4399_from_device.apk",
+  "version_name": "3.8.305",
+  "version_code": 34,
   "installer": "com.android.packageinstaller",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~qA68wjCeVVvFWL5Gvhehpg==/com.yhhy.whrhx.m4399-MWu9s0ilx215_HCzd-h_wA==/base.apk",
-  "first_install_time": "2026-09-14 17:20:31",
-  "last_update_time": "2026-09-14 17:20:31",
-  "size": 1593853086,
-  "sha256": "054056c6e6774ca485bc294586ae9f2729eff142ede578bef32cf9d5d7e92973",
-  "md5": "a208a1ea0438d34dbd50439935c05bd8"
+  "remote_path": "/data/app/~~AWh39tA5osN23E6VBXejtw==/com.yhhy.whrhx.m4399-KZGsrE-LFLNitomgNIZ5Vw==/base.apk",
+  "first_install_time": "2026-11-05 17:14:33",
+  "last_update_time": "2026-11-05 17:14:33",
+  "size": 1667035408,
+  "sha256": "d86b622bf3d495a879edc279f7bf6138a359b157947ad2ae04ccf7a596f1a165",
+  "md5": "d14e18439b6f4e4e2c28e4a2fcedb608"
 }

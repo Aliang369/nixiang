@@ -2,14 +2,60 @@
   "template_id": "whhx4399",
   "name": "无悔华夏4399",
   "package": "com.yhhy.whrhx.m4399",
+  "version": "3.8.305 / vc34",
   "source": "Games/WhrhxMod.h WHRHX_FEAT_* / Main.cpp STARRY_GAME_WHRHX + STARRY_GAME_WHRHX4399 / GameConfig.h game_id=whhx4399",
   "features": [
-    {"feat_num": 1, "name": "无限金币"},
-    {"feat_num": 2, "name": "无限食物"},
-    {"feat_num": 3, "name": "无限军队"},
-    {"feat_num": 4, "name": "无限人口"},
-    {"feat_num": 6, "name": "瞬间胜利"},
-    {"feat_num": 8, "name": "游戏加速", "type": "slider", "min": 1, "max": 5, "note": "1=关 2..5=倍速档"},
-    {"feat_num": 9, "name": "科研立即完成"}
+    {
+      "feat_num": 1,
+      "name": "无限金币"
+    },
+    {
+      "feat_num": 2,
+      "name": "无限食物"
+    },
+    {
+      "feat_num": 3,
+      "name": "无限军队"
+    },
+    {
+      "feat_num": 4,
+      "name": "无限人口"
+    },
+    {
+      "feat_num": 6,
+      "name": "瞬间胜利"
+    },
+    {
+      "feat_num": 8,
+      "name": "游戏加速",
+      "type": "slider",
+      "min": 1,
+      "max": 5,
+      "note": "1=关 2..5=倍速档"
+    },
+    {
+      "feat_num": 9,
+      "name": "科研立即完成"
+    },
+    {
+      "feat_num": 10,
+      "name": "政策技能无CD"
+    },
+    {
+      "feat_num": 11,
+      "name": "名臣好感度"
+    },
+    {
+      "feat_num": 12,
+      "name": "名臣技能无CD"
+    },
+    {
+      "feat_num": 13,
+      "name": "军队规模",
+      "type": "slider",
+      "min": 1,
+      "max": 100,
+      "note": "1=关 2..100=规模加成 +X%"
+    }
   ]
 }

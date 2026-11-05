@@ -36,7 +36,7 @@ PKG="$(printf '%s\n' "$BADGING" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" |
 VERSION_NAME="$(printf '%s\n' "$BADGING" | sed -n "s/^package:.* versionName='\([^']*\)'.*/\1/p" | head -1)"
 VERSION_CODE="$(printf '%s\n' "$BADGING" | sed -n "s/^package:.* versionCode='\([^']*\)'.*/\1/p" | head -1)"
 [[ "$PKG" = "com.yhhy.whrhx.m4399" ]] || { echo "错误: 包名不符: $PKG" >&2; exit 1; }
-[[ "$VERSION_NAME" = "3.8.280" && "$VERSION_CODE" = "33" ]] || {
+[[ "$VERSION_NAME" = "3.8.305" && "$VERSION_CODE" = "34" ]] || {
   echo "错误: 版本不符: $VERSION_NAME / $VERSION_CODE" >&2
   exit 1
 }
