@@ -318,11 +318,11 @@
       "command": "bash 04_scripts/我的修仙世界/wdxsj_build_so.sh",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so",
           "pattern": "wdxsj"
         }
@@ -336,7 +336,7 @@
         "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/TapLoginForceWeb.java": "a80443aeac6ebb4d96ed88d5aa8b240e",
         "mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/sign/SignSpoof.java": "4a87992c678ea4bd80d2cc12569fa461"
       },
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so; 原 md5=7b080c6876009ca1f09a3a36435f3f3c"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_wdxsj/arm64-v8a/libstarry_magic.so; 原 md5=7b080c6876009ca1f09a3a36435f3f3c\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，2 条）"
     },
     {
       "id": "surgical",

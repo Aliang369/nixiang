@@ -264,12 +264,12 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_dkzj/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "skipped",
-      "note": "收尾时删除构建输出 libstarry_magic.so（原 md5 aeff52ad9ca16975823f6a021f0c156a），可由 dkzj_build_so.sh 重编；正式包内仍保留同 md5 的 so。 ｜ [2026-10-14 1.1.8 轮] 本命令（dkzj_build_so.sh）在 1.1.8 轮已按重定位后的 DkzjMod.cpp 重跑成功（libstarry_magic.so md5 e30a36ae5cb447b2d8cbd52980a77c3a，174,040B，菜单串门禁全过）；inputs/artifacts 快照同步为现状。\n2026-10-26：1.2.1 新轮已取代此 1.1.8 旧阶段，本轮不再执行；历史产物记录见游戏摘要。"
+      "note": "收尾时删除构建输出 libstarry_magic.so（原 md5 aeff52ad9ca16975823f6a021f0c156a），可由 dkzj_build_so.sh 重编；正式包内仍保留同 md5 的 so。 ｜ [2026-10-14 1.1.8 轮] 本命令（dkzj_build_so.sh）在 1.1.8 轮已按重定位后的 DkzjMod.cpp 重跑成功（libstarry_magic.so md5 e30a36ae5cb447b2d8cbd52980a77c3a，174,040B，菜单串门禁全过）；inputs/artifacts 快照同步为现状。\n2026-10-26：1.2.1 新轮已取代此 1.1.8 旧阶段，本轮不再执行；历史产物记录见游戏摘要。\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）"
     },
     {
       "id": "surgical",
@@ -283,13 +283,13 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/08_output/蛋壳战机/蛋壳战机_1.1.5_starry-unsigned.apk"
         }
       ],
       "status": "skipped",
       "done_at": "2026-09-20 21:46:31",
-      "note": "收尾时删除 unsigned APK（原 md5 791e72768afe6a7ebdd15bfcaedbc8a7），可由 surgical_dkzj_1.1.5.sh 重跑再生；正式签名包保留。 ｜ [2026-10-14 1.1.8 轮] 本阶段属 1.1.5 轮，其产物（1.1.5 底包/08_output 正式包）已按分发红线删除、命令不可重跑，标 skipped 留档；不再参与下游陈旧度判定（后续各版本轮由 archive_<版本> 阶段自己串完整链）。"
+      "note": "收尾时删除 unsigned APK（原 md5 791e72768afe6a7ebdd15bfcaedbc8a7），可由 surgical_dkzj_1.1.5.sh 重跑再生；正式签名包保留。 ｜ [2026-10-14 1.1.8 轮] 本阶段属 1.1.5 轮，其产物（1.1.5 底包/08_output 正式包）已按分发红线删除、命令不可重跑，标 skipped 留档；不再参与下游陈旧度判定（后续各版本轮由 archive_<版本> 阶段自己串完整链）。\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）"
     },
     {
       "id": "sign",

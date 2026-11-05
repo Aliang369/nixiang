@@ -250,17 +250,22 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "08_output/一念通天/一念通天_779_surgical-unsigned.apk"
         }
       ],
       "status": "done",
-      "note": "2026-10-30 收尾清理: /Users/aliang/Documents/nixiang/08_output/一念通天/一念通天_768_surgical-unsigned.apk\n2026-10-30 收尾清理: 08_output/一念通天/一念通天_768_surgical-unsigned.apk; 原 md5=c9e35decaaf1fbae0fd372ea822e0bb4\n2026-11-05 收尾清理: /Users/aliang/Documents/nixiang/08_output/一念通天/一念通天_779_surgical-unsigned.apk\n2026-11-05 收尾清理: 08_output/一念通天/一念通天_779_surgical-unsigned.apk; 原 md5=279cd96dd25ccee8c89a771f80ab5543",
+      "note": "2026-10-30 收尾清理: /Users/aliang/Documents/nixiang/08_output/一念通天/一念通天_768_surgical-unsigned.apk\n2026-10-30 收尾清理: 08_output/一念通天/一念通天_768_surgical-unsigned.apk; 原 md5=c9e35decaaf1fbae0fd372ea822e0bb4\n2026-11-05 收尾清理: /Users/aliang/Documents/nixiang/08_output/一念通天/一念通天_779_surgical-unsigned.apk\n2026-11-05 收尾清理: 08_output/一念通天/一念通天_779_surgical-unsigned.apk; 原 md5=279cd96dd25ccee8c89a771f80ab5543\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）",
       "failed_at": "2026-11-05 14:18:58",
       "error": "产物校验未通过（详见上方校验输出）",
       "done_at": "2026-11-05 14:19:39",
       "inputs": {
         "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so": "84d585bf5b80ddd8aedd7c4fbe956b75"
+      },
+      "cleaned": {
+        "2026-11-05": [
+          "08_output/一念通天/一念通天_779_surgical-unsigned.apk"
+        ]
       }
     },
     {

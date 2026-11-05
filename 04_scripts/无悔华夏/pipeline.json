@@ -55,38 +55,38 @@
       "command": "bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_build_so.sh\"",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "GetCountryDataById"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "GetCityData"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "identity api ready"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "research hooks ready"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so",
           "pattern": "科研立即完成"
         }
       ],
       "status": "done",
       "done_at": "2026-09-23 20:09:08",
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so; 原 md5=c34f9dc0c8b7970a621551c9345d32ea"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx/arm64-v8a/libstarry_magic.so; 原 md5=c34f9dc0c8b7970a621551c9345d32ea\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，6 条）"
     },
     {
       "id": "research_pair",

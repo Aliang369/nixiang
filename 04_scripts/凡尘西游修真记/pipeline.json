@@ -192,7 +192,7 @@
       "command": "bash 04_scripts/凡尘西游修真记/fcxyxzj_build_so.sh",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so"
         }
       ],
@@ -203,7 +203,7 @@
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/FcxyxzjEntry.cpp": "02c3fd8503876ccaf10a611f7a549d4c",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android_fcxyxzj.mk": "2d6347510def9a1818acf0cca95adfdf"
       },
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so; 原 md5=c605bd6cc1a1fd8ffde06d2fad0a4b1f"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_fcxyxzj/arm64-v8a/libstarry_magic.so; 原 md5=c605bd6cc1a1fd8ffde06d2fad0a4b1f\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）"
     },
     {
       "id": "surgical",

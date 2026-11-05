@@ -169,16 +169,16 @@
       "command": "bash \"$NIXIANG/04_scripts/弹力果冻/tlgd_build_so.sh\"",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so",
           "pattern": "TLGDF"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so",
           "pattern": "JNI_OnLoad"
         }
@@ -190,7 +190,7 @@
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/TlgdTapTapEntry.cpp": "9ce1e0fae38ece7a2fc56b1dad97d25b",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_tlgd.mk": "689ce9c8d71bc05c0aa0f2bf3d10ef89"
       },
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so; 原 md5=ac8d82a249a50eb80f9dce85896625ff"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_tlgd/arm64-v8a/libstarry_magic.so; 原 md5=ac8d82a249a50eb80f9dce85896625ff\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，3 条）"
     },
     {
       "id": "surgical",

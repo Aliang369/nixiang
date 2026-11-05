@@ -118,23 +118,23 @@
       "command": "bash \"$NIXIANG/04_scripts/无悔华夏4399/whrhx4399_build_so.sh\"",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so",
           "pattern": "target=m4399"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so",
           "pattern": "[Whrhx]"
         }
       ],
       "status": "done",
       "done_at": "2026-09-15 20:48:09",
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so; 原 md5=947a5afe9e75e8cc60098ef3c0bd31e3"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so; 原 md5=947a5afe9e75e8cc60098ef3c0bd31e3\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，3 条）"
     },
     {
       "id": "surgical",

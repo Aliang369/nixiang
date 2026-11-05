@@ -292,7 +292,7 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "08_output/宝石战争/宝石战争_6.0.013_surgical-unsigned.apk"
         }
       ],
@@ -302,7 +302,7 @@
         "mod菜单/starry-mod-menu/libs_bszz/arm64-v8a/libstarry_magic.so": "794e166ee548be6bfe2f794e35f7cfef",
         "07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes": "a5f909793fb72f7ff669a000e8fe40a8"
       },
-      "note": "2026-10-30 收尾清理: /Users/aliang/Documents/nixiang/08_output/宝石战争/宝石战争_6.0.013_surgical-unsigned.apk\n2026-10-30 收尾清理: 08_output/宝石战争/宝石战争_6.0.013_surgical-unsigned.apk; 原 md5=df5418a86cd7bae616b8fdfae078c96d"
+      "note": "2026-10-30 收尾清理: /Users/aliang/Documents/nixiang/08_output/宝石战争/宝石战争_6.0.013_surgical-unsigned.apk\n2026-10-30 收尾清理: 08_output/宝石战争/宝石战争_6.0.013_surgical-unsigned.apk; 原 md5=df5418a86cd7bae616b8fdfae078c96d\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）"
     },
     {
       "id": "sign",

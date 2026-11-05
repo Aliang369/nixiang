@@ -143,13 +143,13 @@
       "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_hxwj_1.0.8.sh\"",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/08_output/幻想武将模拟器/幻想武将模拟器_1.0.8_surgical-unsigned.apk"
         }
       ],
       "status": "done",
       "done_at": "2026-09-27 17:17:49",
-      "note": "该中间包仅作 classes2.dex 与 Manifest 分支 B 的来源，本身不交付。classes2.dex = 455,816 B，含 MenuService FGS 权限降级 + StarryInitProvider + SignSpoof + TapLoginForceWeb + com.qxjc.hxwjmlq 白名单。单包构建脚本从中取出 classes2.dex 与官方壳 dex 一起 d8 合并，Manifest 取 07_patched/幻想武将模拟器/surgical/AndroidManifest.xml。\n2026-09-27 收尾清理: 08_output 中间包已按裁剪清单移入废纸篓"
+      "note": "该中间包仅作 classes2.dex 与 Manifest 分支 B 的来源，本身不交付。classes2.dex = 455,816 B，含 MenuService FGS 权限降级 + StarryInitProvider + SignSpoof + TapLoginForceWeb + com.qxjc.hxwjmlq 白名单。单包构建脚本从中取出 classes2.dex 与官方壳 dex 一起 d8 合并，Manifest 取 07_patched/幻想武将模拟器/surgical/AndroidManifest.xml。\n2026-09-27 收尾清理: 08_output 中间包已按裁剪清单移入废纸篓\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）"
     },
     {
       "id": "pre_install_gate",

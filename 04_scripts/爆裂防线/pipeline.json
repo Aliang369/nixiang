@@ -193,7 +193,7 @@
       "command": "bash \"$NIXIANG/04_scripts/爆裂防线/surgical_blfx_1.02.01.sh\"",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.02.01_surgical-unsigned.apk"
         },
         {
@@ -202,7 +202,7 @@
         }
       ],
       "status": "done",
-      "note": "底包 md5 硬校验 c4f293d9…；包内 libstarry_magic.so md5 == build_so 产物；原 dex/arsc/assets/lib 逐条 sha256 不变；dex 落位自动探测（双 dex ⇒ classes3.dex）。TapTap 新路径登录白名单硬门禁（TapLoginForceWeb.java 含 com.muyegame.blfx）。\n2026-10-23 收尾清理: /Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.02.01_surgical-unsigned.apk\n2026-10-23 收尾清理: /Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.02.01_surgical-unsigned.apk; 原 md5=8c0cb620094a0fe4f5556ccd01b15aee",
+      "note": "底包 md5 硬校验 c4f293d9…；包内 libstarry_magic.so md5 == build_so 产物；原 dex/arsc/assets/lib 逐条 sha256 不变；dex 落位自动探测（双 dex ⇒ classes3.dex）。TapTap 新路径登录白名单硬门禁（TapLoginForceWeb.java 含 com.muyegame.blfx）。\n2026-10-23 收尾清理: /Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.02.01_surgical-unsigned.apk\n2026-10-23 收尾清理: /Users/aliang/Documents/nixiang/08_output/爆裂防线/爆裂防线_1.02.01_surgical-unsigned.apk; 原 md5=8c0cb620094a0fe4f5556ccd01b15aee\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）",
       "done_at": "2026-10-23 01:12:22",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/07_patched/爆裂防线/surgical/AndroidManifest.xml": {
@@ -336,8 +336,7 @@
       "note": "在 archive 写回 done 之后运行，收口 pipeline.json 的状态变化（避免手工补第二次提交）。",
       "failed_at": "2026-10-23 01:32:03",
       "error": "命令退出码 1（详见日志尾部）",
-      "done_at": "2026-10-23 01:34:02",
-      "artifacts": {}
+      "done_at": "2026-10-23 01:34:02"
     }
   ]
 }

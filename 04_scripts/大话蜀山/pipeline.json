@@ -347,11 +347,11 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so",
           "pattern": "dhss"
         }
@@ -363,7 +363,7 @@
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/DhssEntry.cpp": "ffc96396c958238acfd4cbc840f84416",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android_dhss.mk": "b275a2304c70031e63c8a144c876cdee"
       },
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so; 原 md5=1f5edc634c85aeec0c4801503f42e657"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: mod菜单/starry-mod-menu/libs_dhss/arm64-v8a/libstarry_magic.so; 原 md5=1f5edc634c85aeec0c4801503f42e657\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，2 条）"
     },
     {
       "id": "surgical",

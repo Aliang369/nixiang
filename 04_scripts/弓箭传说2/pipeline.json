@@ -135,11 +135,11 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so",
           "pattern": "Toggle_拿全部技能"
         }
@@ -151,7 +151,7 @@
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Android_gjc2.mk": "9af61209d665f424ae3312be57ed9043",
         "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/jni/Games/Archero2Mod.cpp": "d1b18fb3932f4b03dba3abb485475b74"
       },
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so; 原 md5=8640fc04b57f79bf87fc62bc13b96c42"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gjc2/arm64-v8a/libstarry_magic.so; 原 md5=8640fc04b57f79bf87fc62bc13b96c42\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，2 条）"
     },
     {
       "id": "surgical",
@@ -165,21 +165,21 @@
       ],
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/08_output/弓箭传说2/弓箭传说2_1.1.9_surgical-unsigned.apk"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes4.dex"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/07_patched/弓箭传说2/surgical/classes3.dex"
         }
       ],
       "status": "done",
       "done_at": "2026-09-19 16:20:41",
-      "note": "收尾按清单清理了中间产物：unsigned apk md5=2558ec609a93751f50bf71a5202add74、classes3.dex md5=08790637c0d77ed51d690d7f7fc19cdc、classes4.dex md5=87b84afe0d524d7bd5b2946ecf57d39d。两个 dex 可从唯一正式包内 classes3.dex / classes4.dex 无损提取（2026-09-19 已实测 md5 一致），故留证删除不影响复现；本阶段 verify 改为 not_exists 以正向记录已清理。"
+      "note": "收尾按清单清理了中间产物：unsigned apk md5=2558ec609a93751f50bf71a5202add74、classes3.dex md5=08790637c0d77ed51d690d7f7fc19cdc、classes4.dex md5=87b84afe0d524d7bd5b2946ecf57d39d。两个 dex 可从唯一正式包内 classes3.dex / classes4.dex 无损提取（2026-09-19 已实测 md5 一致），故留证删除不影响复现；本阶段 verify 改为 not_exists 以正向记录已清理。\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，3 条）"
     },
     {
       "id": "sign",

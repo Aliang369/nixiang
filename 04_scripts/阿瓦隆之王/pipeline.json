@@ -118,23 +118,23 @@
       "command": "bash \"$NIXIANG/04_scripts/阿瓦隆之王/awlzw_build_so.sh\"",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_awlzw/arm64-v8a/libstarry_magic.so"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_awlzw/arm64-v8a/libstarry_magic.so",
           "pattern": "Awlzw"
         },
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_awlzw/arm64-v8a/libstarry_magic.so",
           "pattern": "JNI_OnLoad"
         }
       ],
       "status": "done",
       "done_at": "2026-09-11 01:25:00",
-      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_awlzw/arm64-v8a/libstarry_magic.so; 原 md5=0b9ea6eb70f176c6bec58ebe153336da"
+      "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_awlzw/arm64-v8a/libstarry_magic.so; 原 md5=0b9ea6eb70f176c6bec58ebe153336da\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，3 条）"
     },
     {
       "id": "surgical",

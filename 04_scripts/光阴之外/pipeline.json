@@ -46,8 +46,7 @@
       "verify": [],
       "status": "done",
       "done_at": "2026-10-02 22:30:00",
-      "note": "1.0.5 轮底包**无 02_apks 本地件**，由设备只读拉取（当时设备仍为官方包；装机后此路已断，再获取须走 TapTap 重下）。已登记 10_docs/_state/底包再获取台账.md（md5 f9013af0… / sha256 57cc3bcb…）。1.0.3 历史：官方原版 530,678,596 B md5 363ac0e6926b3b7a1ea71f804500d1fd + 斌哥改包 ebab193edc592b94e5c1e109ca93e36d（仅对照物，不得当底包）。",
-      "artifacts": {}
+      "note": "1.0.5 轮底包**无 02_apks 本地件**，由设备只读拉取（当时设备仍为官方包；装机后此路已断，再获取须走 TapTap 重下）。已登记 10_docs/_state/底包再获取台账.md（md5 f9013af0… / sha256 57cc3bcb…）。1.0.3 历史：官方原版 530,678,596 B md5 363ac0e6926b3b7a1ea71f804500d1fd + 斌哥改包 ebab193edc592b94e5c1e109ca93e36d（仅对照物，不得当底包）。"
     },
     {
       "id": "dump",
@@ -148,13 +147,13 @@
       "command": "bash \"$NIXIANG/04_scripts/光阴之外/gyzw_build_so.sh\"",
       "verify": [
         {
-          "type": "not_exists",
+          "type": "file_exists",
           "path": "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_gyzw/arm64-v8a/libstarry_magic.so"
         }
       ],
       "status": "done",
       "done_at": "2026-10-02 22:52:00",
-      "note": "产物 md5 5937f56b538f1c10f66f5ca71757c52f（2,159,720 B）。归属防呆：[Gyzw]/Category_战斗/百倍伤害/超级无敌/战斗加速/免广告/starry_gyzw_v1/gyzw_boot.js/BtConst.EUnitType 必须在；[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。★2026-10-02 修：负向检查方括号未转义 → grep 正则字符类恒真误报（`[Ysxz]` 匹配任意 Y/s/x/z 字节），已改为 `\\[Ysxz\\]` 等，见 04_scripts/光阴之外/gyzw_build_so.sh:63。构建后同步到 app/src/main/jniLibs、app/src/main/… 三处；`libs_gyzw/` 每轮清理后需重编。"
+      "note": "产物 md5 5937f56b538f1c10f66f5ca71757c52f（2,159,720 B）。归属防呆：[Gyzw]/Category_战斗/百倍伤害/超级无敌/战斗加速/免广告/starry_gyzw_v1/gyzw_boot.js/BtConst.EUnitType 必须在；[Ysxz]/[Dwct]/[Tlgd]/[Blfx] 必须不在。★2026-10-02 修：负向检查方括号未转义 → grep 正则字符类恒真误报（`[Ysxz]` 匹配任意 Y/s/x/z 字节），已改为 `\\[Ysxz\\]` 等，见 04_scripts/光阴之外/gyzw_build_so.sh:63。构建后同步到 app/src/main/jniLibs、app/src/main/… 三处；`libs_gyzw/` 每轮清理后需重编。\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，1 条）"
     },
     {
       "id": "surgical",

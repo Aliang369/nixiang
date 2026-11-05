@@ -315,7 +315,7 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
    - 看状态**用 `--brief`**（全量 `status` 会回显「硬约束生效条目全文 + 台账尾部」≈34 KB，整读等于白烧一次压缩；`--brief` 实测 0.9 KB）：
      `bash 04_scripts/pipeline.sh {游戏} status --brief`（要全量/要钉硬约束时才用不带 `--brief` 的 status）。
    - `next` 报 `missing …<某阶段产物>` 且该阶段**已经跑过**（典型：`archive` 的 prune 删掉了 `sign` 的输入 unsigned apk）⇒ 先按产物裁剪清单登记清理
-     `python3 04_scripts/_common/pipeline_record_cleanup.py --game {游戏} --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json [--apply]`（**先 dry-run**；它会把 `verify` 改 `not_exists` 并从快照里移除该产物/下游 inputs），
+     `python3 04_scripts/_common/pipeline_record_cleanup.py --game {游戏} --manifest 10_docs/{游戏}/正式包裁剪清单_日期.json [--apply]`（**先 dry-run**；它默认**不改写 `verify` 语义**（只从快照移除该产物/下游 inputs，并在该 stage 记 `cleaned` + `note`）；旧行为「把 `verify` 改 `not_exists`」需显式加 `--flip-verify`，见下方 2026-11-05 修正），
      再用 `bash 04_scripts/pipeline.sh {游戏} verify <stage> --set` 把「产物已在、状态需补」的阶段置回 done；**禁**手改 stage 的 `verify` 语义。
      （2026-10-15 实例：`sign` 因 prune 被标 failed 且一路留在台账里，`--brief` 一跑就暴露 ⇒ 登记清理 + 三个 `--set` 后 9/9 全绿、无 stale 标记。）
    - 真机残留清理：**已获当轮授权收尾**时才走现成脚本（**禁手打 rm 名单**：非 root 会静默删不动，实测 `su 0` 才删得掉）：
@@ -339,9 +339,15 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
      --game {游戏} --manifest {清理或裁剪清单}.json
    ```
 
-   核对输出后加 `--apply`。脚本会把命中的 `verify` 改为 `not_exists`、删除
-   对应 `artifacts`/下游 `inputs`，并把原 md5 追加到 stage `note`；`archive.verify`
-   仍应显式声明应清理的中间产物。**顺序：清理 → 脚本修快照 → 跑 `archive`**。
+   核对输出后加 `--apply`。脚本默认**保持 `verify` 的原类型**（真产物语义），只删除
+   对应 `artifacts`/下游 `inputs`、把原 md5 追加到 stage `note`，并写 `cleaned: {"日期": [路径]}` 说明「产物已在收尾清理中删除，属正常」。
+   `archive.verify` 仍应显式声明应清理的中间产物。**顺序：清理 → 脚本修快照 → 跑 `archive`**。
+
+   **2026-11-05 修正（一念通天 779 实测，根因修复）**：旧版脚本会把命中的 `verify` 一律改成 `not_exists`，
+   结果下一轮该阶段重跑时「产物刚生成就被 `not_exists` 判失败」，只能靠人记着翻回来 —— 等于把债转嫁给下一轮。
+   现默认不改写；已按旧行为改坏的条目用修复模式还原（只动生产阶段，不动 `cleanup`/`archive`）：
+   `python3 04_scripts/_common/pipeline_record_cleanup.py --game {游戏} --restore-verify [--stages build_so,surgical,sign,install] [--apply]`。
+   2026-11-05 已按此还原 24 个游戏共 54 条被改写条目（明细见《规范变更日志》同日条目）。
 
    **禁止手改 stage 的 `verify` 语义（2026-09-30 补，复盘 2.2，实测踩过）**：清理产物只能通过
    `pipeline_record_cleanup.py` 登记；`verify` 永远保持"该阶段的真产物"语义。清理后下游显示
