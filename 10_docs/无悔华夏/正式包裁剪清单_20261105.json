@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/无悔华夏",
+  "keep": "无悔华夏_3.8.305_无壳星光_20261105-releaseSigned.apk",
+  "keep_size": 1644774848,
+  "keep_md5": "2608af985de0067e513e104dea84d510",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "无悔华夏_3.8.305_无壳星光_20261105-releaseSigned.apk.idsig",
+      "size": 12961307,
+      "md5": "c2ea6d5571e09176cb4ac157d6467b94"
+    }
+  ],
+  "removed_count": 1
+}
