@@ -80,8 +80,10 @@ static void* g_onADSuccessMethod = nullptr;
 static WbarrierSetField_t g_wbarrierSetField = nullptr;
 
 // ============================================================
-// ② 字段偏移与 RVA（768 dump.cs / 序言实测；换包必须重 dump）
+// ② 字段偏移与 RVA（779 dump.cs / 序言实测；换包必须重 dump）
 // 重定位工具：python3 04_scripts/一念通天/yntt_rva_extract.py（--prev 对照打印漂移）
+// 779 复核结论（2026-11-05）：9 个挂点 file_offset 相对 768 全部漂移；**序言首指令 9 条全部未变**（kIns* 不动）；
+//   字段 12 项仅 adRequest 0x470→0x478（其余 11 项同 768）；参数个数 4/3/2/2/2/1/0/1 未变；.text 段仍 p_offset≠p_vaddr（差 0x4000）。
 // 768 复核结论（2026-10-30）：9 个挂点 RVA 相对 759 全部漂移；**序言首指令有 6 条变化**（759 只需换 RVA，
 //   768 必须同步改 kIns*，否则 HookAtRva 序言校验不过会静默回退按名）：
 //   MonsterReduce 0xD10303FF→0xD102C3FF、NpcReduce 0xD102C3FF→0xD10283FF、
@@ -95,14 +97,14 @@ static WbarrierSetField_t g_wbarrierSetField = nullptr;
 //     必须取 dump.cs 的 Offset 列，不是 RVA/VA 列。
 // ============================================================
 enum : size_t {
-    kOffNpcType       = 0x20,    // 768 变更：759 为 0x18
-    kOffGas           = 0xB0,    // 768 变更：759 为 0xA8
-    kOffTili          = 0xB8,    // 768 变更：759 为 0xB0
-    kOffLingShi       = 0xC0,    // 768 变更：759 为 0xB8
-    kOffMoney         = 0xC8,    // 768 变更：759 为 0xC0
-    kOffNpcData       = 0x2F0,   // 768 变更：759 为 0x2E8
-    kOffFuMoData      = 0x2F8,   // 768 变更：759 为 0x2F0
-    kOffAdRequest     = 0x470,   // 768 变更：759 为 0x458
+    kOffNpcType       = 0x20,    // 779 同 768（768 时由 0x18 变更）
+    kOffGas           = 0xB0,    // 779 同 768（768 时由 0xA8 变更）
+    kOffTili          = 0xB8,    // 779 同 768（768 时由 0xB0 变更）
+    kOffLingShi       = 0xC0,    // 779 同 768（768 时由 0xB8 变更）
+    kOffMoney         = 0xC8,    // 779 同 768（768 时由 0xC0 变更）
+    kOffNpcData       = 0x2F0,   // 779 同 768（768 时由 0x2E8 变更）
+    kOffFuMoData      = 0x2F8,   // 779 同 768（768 时由 0x2F0 变更）
+    kOffAdRequest     = 0x478,   // 779 变更：768 为 0x470
     kOffFuMoTili      = 0x28,
     kOffFuMoTiliZq    = 0x48,
     kOffFuMoTiliGq    = 0x80,
@@ -110,24 +112,24 @@ enum : size_t {
 };
 
 enum : uintptr_t {
-    kRvaMonsterReduce = 0x24F61D4,
-    kRvaNpcReduce     = 0x223FFF4,
-    kRvaMonsterDot    = 0x24E6C30,
-    kRvaNpcDot        = 0x223567C,
-    kRvaPlayerDamage  = 0x23709A8,
-    kRvaSetTimeScale  = 0x462C89C,
-    kRvaGameUpdate    = 0x248494C,
-    kRvaShowAD        = 0x2482EAC,
+    kRvaMonsterReduce = 0x254618C,   // 779 变更：768 为 0x24F61D4
+    kRvaNpcReduce     = 0x228169C,   // 779 变更：768 为 0x223FFF4
+    kRvaMonsterDot    = 0x2536BE8,   // 779 变更：768 为 0x24E6C30
+    kRvaNpcDot        = 0x2276D24,   // 779 变更：768 为 0x223567C
+    kRvaPlayerDamage  = 0x23D6DB8,   // 779 变更：768 为 0x23709A8
+    kRvaSetTimeScale  = 0x46A5F8C,   // 779 变更：768 为 0x462C89C
+    kRvaGameUpdate    = 0x24EB4F4,   // 779 变更：768 为 0x248494C
+    kRvaShowAD        = 0x24E9A54,   // 779 变更：768 为 0x2482EAC
 };
 
 enum : uint32_t {
-    kInsMonsterReduce = 0xD102C3FF,   // 768 变更：759 为 0xD10303FF
-    kInsNpcReduce     = 0xD10283FF,   // 768 变更：759 为 0xD102C3FF
-    kInsMonsterDot    = 0xD10443FF,   // 768 变更：759 为 0xD103C3FF
+    kInsMonsterReduce = 0xD102C3FF,   // 779 同 768（768 时由 0xD10303FF 变更）
+    kInsNpcReduce     = 0xD10283FF,   // 779 同 768（768 时由 0xD102C3FF 变更）
+    kInsMonsterDot    = 0xD10443FF,   // 779 同 768（768 时由 0xD103C3FF 变更）
     kInsNpcDot        = 0xD10383FF,
-    kInsPlayerDamage  = 0xD102C3FF,   // 768 变更：759 为 0xD10343FF
+    kInsPlayerDamage  = 0xD102C3FF,   // 779 同 768（768 时由 0xD10343FF 变更）
     kInsSetTimeScale  = 0xFC1E0FE8,
-    kInsGameUpdate    = 0xD100C3FF,   // 768 变更：759 为 0xF81D0FF6
+    kInsGameUpdate    = 0xD100C3FF,   // 779 同 768（768 时由 0xF81D0FF6 变更）
     kInsShowAD        = 0xD10183FF,
 };
 
