@@ -378,7 +378,19 @@
           "path": "10_docs/一念通天/收尾与最小复现清单_779_20261105.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "failed_at": "2026-11-05 14:41:48",
+      "error": "命令退出码 1（详见日志尾部）",
+      "done_at": "2026-11-05 14:42:20",
+      "artifacts": {
+        "10_docs/一念通天/收尾与最小复现清单_779_20261105.md": {
+          "md5": "2c1cec091c62ba0b6fb3a75c1d0e25fa"
+        }
+      },
+      "inputs": {
+        "04_scripts/一念通天/cleanup_summary.json": "1351dd39c880ad7b4bb77c0872ffd1cc",
+        "06_dumped/一念通天/official_779/rva_targets.json": "e8de8bab011f3bae95fba831bc53c262"
+      }
     }
   ]
 }
