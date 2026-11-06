@@ -21,7 +21,7 @@ SERIAL="${WHRHX_SERIAL:-f9a116a2}"
 PKG="${WHRHX_PKG:-com.yhhy.whrhx.aligames}"
 APK="${WHRHX_APK:-$NIXIANG/08_output/无悔华夏/无悔华夏_3.8.280_四新增功能R2_20261011-releaseSigned.apk}"
 RUNTIME_SO="$NIXIANG/06_dumped/无悔华夏/current_20261011/runtime/libil2cpp_runtime_20261011.so"
-EXPECT_SO_SHA="79adda770c528633213efe26bd084d14839c58a3a5382007de19cfc3d897aec9"
+EXPECT_SO_SHA="${WHRHX_EXPECT_SO_SHA:-79adda770c528633213efe26bd084d14839c58a3a5382007de19cfc3d897aec9}"
 LEBIAN_LIB="/data/data/$PKG/lebian/$PKG-1/lib/arm64/libil2cpp.so"
 
 MODE="${1:-}"

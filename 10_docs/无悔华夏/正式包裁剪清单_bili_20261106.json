@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/无悔华夏bili",
+  "keep": "无悔华夏bili_3.8.305_无壳星光_20261106-releaseSigned.apk",
+  "keep_size": 1662498838,
+  "keep_md5": "a5f42e3a628fcdec0fc07dd8b226d484",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "无悔华夏bili_3.8.305_无壳星光_20261106-releaseSigned.apk.idsig",
+      "size": 13096475,
+      "md5": "d104a6cfeef2e33d5fedfa14784efda2"
+    }
+  ],
+  "removed_count": 1
+}
