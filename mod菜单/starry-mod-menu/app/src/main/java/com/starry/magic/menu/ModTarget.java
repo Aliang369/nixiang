@@ -21,7 +21,7 @@ package com.starry.magic.menu;
 public final class ModTarget {
 
     /** 目标游戏包名。组装配新游戏时只改这一行。 */
-    public static final String GAME_PKG = "cn.alltune.endless";
+    public static final String GAME_PKG = "com.nekki.shadowfight3";
 
     /** 独立助手（免 root 直装形态）的包名，与 {@link #GAME_PKG} 必须不同。 */
     public static final String HELPER_PKG = "com.starry.magic";
