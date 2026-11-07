@@ -3,7 +3,7 @@
   "version": "1.48.211534",
   "notes": "2026-11-07 首次接入。国际服 com.bladetw.bd（GooglePlay 渠道，vc48，split 三件套），设备 96f0d883（Xiaomi M2102K1AC / Android 14 / 无 root），底包从真机 /data/app 直接 pull（三件均世界可读）。与国服 com.blade.bd 1.39 同源：libgame.so 的 lua_gettop=0x515e38 / lua_pcallk=0x518fec / luaL_loadstring=0x51bf04 逐一相同；hhld kill-switch 同崩 fault addr 0x18a44，本版 NOP 点 0x793b8（国服 0x5c270）。差异：base 带 requiredSplitTypes=base__abi 必须 install-multiple；Application 为 com.pairip.application.Application（PairIP 壳）保持不换，只加 StarryInitProvider + MenuService。功能=伤害倍率/无敌/无限技能，玩家实测全部生效。",
   "params": {
-    "game_id": "jjdm",
+    "game_id": "jjdmintl",
     "package": "com.bladetw.bd",
     "serial": "96f0d883"
   },
@@ -15,7 +15,7 @@
   },
   "workdir": "/Users/aliang/Documents/nixiang",
   "menu_template": {
-    "template_id": "jjdm",
+    "template_id": "jjdmintl",
     "name": "境界刀鸣国际",
     "package": "com.bladetw.bd",
     "features": [
@@ -35,7 +35,10 @@
     "json": "10_docs/境界刀鸣国际/jjdm_menu_template.json"
   },
   "final_artifact": {
-    "path": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣国际/境界刀鸣国际_1.48.211534_三功能_jjdm-releaseSigned.apk"
+    "path": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣国际/境界刀鸣国际_1.48.211534_三功能_jjdmintl_universal-releaseSigned.apk",
+    "md5": "db4049c418c5da14e4fb0ace1696142c",
+    "sha256": "67444b6319f4df0145c159dd42bc838b3c43a7682dfbbbf36e34f3ecbee2412a",
+    "size": 146759806
   },
   "stages": [
     {
@@ -90,7 +93,7 @@
       ],
       "status": "done",
       "done_at": "2026-11-07 19:39:00",
-      "notes": "dlsym 按名取 lua_gettop/lua_pcallk，不写死偏移；国际服符号地址与国服相同故零改动。so md5 0e2f6895c1bb93045e0d1ee38972cc25 / 2,189,760B"
+      "notes": "国际版独立 id（先例 gjc2 -> gjc2intl）：新增 Games/JjdmIntlEntry.cpp + Android_jjdmintl.mk，authGameId=jjdmintl；JjdmMod.cpp 零改动。so md5 076c97d5120ddc97fe1530ff36569a4e / 2,189,760B"
     },
     {
       "id": "surgical",
@@ -138,6 +141,26 @@
       "status": "done",
       "done_at": "2026-11-07 20:10:00",
       "notes": "08_output 顶层只留 base，split 两件落 split/ 子目录；对照实验包由 prune 清除"
+    },
+    {
+      "id": "universal",
+      "name": "统一单包合并（split 三件套 → 单 APK）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "true",
+      "preflight": [
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/scripts/surgical_jjdmintl_universal.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣国际/境界刀鸣国际_1.48.211534_三功能_jjdmintl_universal-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-07 20:03:00",
+      "notes": "删 manifest 的 isSplitRequired/requiredSplitTypes；把 split_config 的 70 个 so + installtime 的 assets(main.xpk/main/Md5List.txt) 并入 base；install -r 覆盖成功（同签名，5.5G 热更保留），pm path 只剩 base.apk"
     }
   ]
 }

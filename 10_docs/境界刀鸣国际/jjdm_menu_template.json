@@ -1,8 +1,8 @@
 {
-  "template_id": "jjdm",
+  "template_id": "jjdmintl",
   "name": "境界刀鸣国际",
   "package": "com.bladetw.bd",
-  "source": "Games/JjdmEntry.cpp kJjdm_Features / Games/JjdmMod.h enum JjdmFeat",
+  "source": "Games/JjdmIntlEntry.cpp kJjdmIntl_Features / Games/JjdmMod.h enum JjdmFeat",
   "features": [
     {
       "feat_num": 1,
