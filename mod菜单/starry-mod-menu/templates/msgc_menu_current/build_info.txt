@@ -1,0 +1,9 @@
+game      : 墨守孤城 (msgc)
+dex       : classes3.dex
+built_at  : 2026-11-07 14:25:35
+javac     : /c/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/javac.exe
+d8        : /c/Users/Administrator/AppData/Local/Android/Sdk/build-tools/35.0.0/d8.bat
+androidjar: /c/Users/Administrator/AppData/Local/Android/Sdk/platforms/android-36/android.jar
+source    : /e/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256    : f7457a942ad78278e5fa4ec1a91463d6eb9429abb040585c62ba4fa76eb7bc89
+source_commit: afe2a8f87446f6db879913e7edbebb76e722e292

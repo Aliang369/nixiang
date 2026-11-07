@@ -1,0 +1,32 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "墨守孤城",
+  "package": "com.chillyroom.inkvasion.yw",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。",
+  "waivers": [
+    {
+      "id": "gameconfig_missing_branch",
+      "match": [
+        "GameConfig.h 无 defined(STARRY_GAME_MSGC)",
+        "STARRY_AUTH_GAME_ID 未定义"
+      ],
+      "conclusion": "接受偏离",
+      "reason": "墨守孤城走 modern 注册表（2026-10-15 起的默认路线）：鉴权 game_id 由 Games/MsgcEntry.cpp 的 authGameId=\"msgc\" 直接给出，构建走私有 Android_msgc.mk（LOCAL_SRC_FILES 含 MainModern.cpp + Games/MsgcEntry.cpp），完全不经过 GameConfig.h 的 legacy 映射与 :24 的 #error。[C] 项只覆盖 legacy 路径，属误报。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/MsgcEntry.cpp（.authGameId=\"msgc\"）+ 04_scripts/墨守孤城/msgc_build_so.sh 产物 libs_msgc/arm64-v8a/libstarry_magic.so（含四个菜单串与 [msgc] 标签）；装机后判据 logcat `auth game_id synced from native: msgc`",
+      "date": "2026-11-07",
+      "review_by": "2027-02-07"
+    },
+    {
+      "id": "android_mk_branch",
+      "match": [
+        "激活分支",
+        "与 --game"
+      ],
+      "conclusion": "接受偏离",
+      "reason": "本游戏用私有 mk（Android_msgc.mk）编译，公共 Android.mk 的 legacy 激活分支不参与本游戏构建，故不会编出别的游戏的 so。",
+      "evidence": "04_scripts/墨守孤城/msgc_build_so.sh（APP_BUILD_SCRIPT=Android_msgc.mk）+ 产物 so 97072 B md5 b736592c… 含 Toggle_建造资源无限/无建造时间/建筑无限生命/部队无限生命 与 [msgc] 标签",
+      "date": "2026-11-07",
+      "review_by": "2027-02-07"
+    }
+  ]
+}
