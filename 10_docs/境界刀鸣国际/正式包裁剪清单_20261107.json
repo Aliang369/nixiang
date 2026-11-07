@@ -1,0 +1,45 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣国际",
+  "keep": "境界刀鸣国际_1.48.211534_三功能_jjdm-releaseSigned.apk",
+  "keep_size": 44210958,
+  "keep_md5": "f17216bf0b4b51e02f5dc7239d26f376",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "境界刀鸣国际_1.48.211534_resignsmoke_split_config.arm64_v8a.apk.idsig",
+      "size": 517659,
+      "md5": "60d70b605f8035b5e91b5e87fcd2da16"
+    },
+    {
+      "name": "境界刀鸣国际_1.48.211534_resignsmoke_split_config.arm64_v8a.apk",
+      "size": 65123796,
+      "md5": "b6406e8099fd7f186d3b1e293709f453"
+    },
+    {
+      "name": "境界刀鸣国际_1.48.211534_resignsmoke_split_installtime.apk.idsig",
+      "size": 300571,
+      "md5": "28296ec0cc9fe892a1246704ed979d6d"
+    },
+    {
+      "name": "境界刀鸣国际_1.48.211534_resignsmoke_base.apk.idsig",
+      "size": 333339,
+      "md5": "37ba580eaeec693ea49857762eac72b6"
+    },
+    {
+      "name": "境界刀鸣国际_1.48.211534_三功能_jjdmtw-releaseSigned.apk.idsig",
+      "size": 353819,
+      "md5": "8e30ef9ff2efb723d3445d93fd16ad02"
+    },
+    {
+      "name": "境界刀鸣国际_1.48.211534_resignsmoke_base.apk",
+      "size": 41820713,
+      "md5": "eea64f859bc0ba7dccb970e6b9e0f2de"
+    },
+    {
+      "name": "境界刀鸣国际_1.48.211534_hhldnop_split_config.arm64_v8a.apk.idsig",
+      "size": 517659,
+      "md5": "0013ea69b7cb597d50992620d8160b39"
+    }
+  ],
+  "removed_count": 7
+}
