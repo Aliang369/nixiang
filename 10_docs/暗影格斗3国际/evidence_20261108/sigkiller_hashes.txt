@@ -1,0 +1,12 @@
+11-08 16:31:15.251  4291  4494 I SoScUtils: monitorTransitionRequest mRequestOpenTransition:null mRequestOpenTriggerTask:-1 mRequestCloseTransition:null mRequestCloseTriggerTask:-1 mRequestCloseStageType:-1
+11-08 16:31:16.328  1971  7335 W WindowManager: Failed looking up window session=Session{b3a385a 7750:u0a10345} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:6665 com.android.server.wm.Session.updateRequestedVisibleTypes:707 android.view.IWindowSession$Stub.onTransact:1063 
+11-08 16:31:29.199  7750 19402 I Unity   : [Client SFS.send] cmd:<b>create_player</b> type:sf3DTO.CreatePlayerRequest session_request_id:4 extensible:
+11-08 16:31:29.237  7750 19402 I Unity   : CurrentQualityPreset: [high], CurrentDeviceType: [PHONE]
+11-08 16:31:30.367  7750 19402 E Unity   : Server Request Error: cmd=create_player error=<b>InvalidHashes</b> message=invalid hashes
+11-08 16:31:30.367  7750 19402 I Unity   : [Server Response] cmd:<b>create_player</b> type:sf3DTO.ExtendedPlayer session_request_id:4 extensible:
+11-08 16:31:30.376  7750 19402 I Unity   : Showing alert with title: |通知 (10005) and message: error_InvalidFingerprint
+11-08 16:31:30.402  7750 19402 I Unity   : Showing alert with title: |通知 (10005) and message: error_InvalidFingerprint
+11-08 16:31:33.718  9230  9527 I RCS_Service: RegisterCallback: get the message callback ,responseType:2006
+11-08 16:32:16.804  4291  4494 I SoScUtils: monitorTransitionRequest mRequestOpenTransition:null mRequestOpenTriggerTask:-1 mRequestCloseTransition:null mRequestCloseTriggerTask:-1 mRequestCloseStageType:-1
+11-08 16:32:16.978  4291  4494 D TransitionAnimationHelper:  overrideType == ANIM_FROM_STYLE 
+11-08 16:32:16.978  4291  4494 D TransitionAnimationHelper:  overrideType == ANIM_FROM_STYLE 
