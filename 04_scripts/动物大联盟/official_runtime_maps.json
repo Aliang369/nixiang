@@ -1,0 +1,15 @@
+{
+  "package": "com.fightingstars.games.animal",
+  "serial": "f9a116a2",
+  "probed_at": "2026-11-05 20:41:16",
+  "pid": 27292,
+  "running": true,
+  "maps_total_lines": 3597,
+  "filtered_lines": 15,
+  "libsecret_map_lines": 6,
+  "libcocos2djs_map_lines": 3,
+  "libstarry_magic_map_lines": 0,
+  "txt": "/Users/aliang/Documents/nixiang/04_scripts/动物大联盟/official_runtime_maps.txt",
+  "read_only": true,
+  "note": "只读 /proc/pid/maps 行级元数据；未读 mem、未注入、未启动、未改设备状态"
+}

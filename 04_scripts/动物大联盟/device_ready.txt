@@ -1,0 +1,6 @@
+serial=f9a116a2
+root=available
+root_id=uid=0(root) gid=0(root) groups=0(root) context=u:r:ksu:s0
+pkg=com.fightingstars.games.animal
+pkg_installed=com.fightingstars.games.animal
+state_file=/Users/aliang/Documents/nixiang/04_scripts/动物大联盟/.device_serial

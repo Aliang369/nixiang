@@ -1,0 +1,4 @@
+== 动物大联盟 clean-install mode=precheck serial=f9a116a2 ==
+[step] P1_preflight_local rc=0 apk+official+srcfp+cert+so 全一致
+[step] P2_preflight_device rc=0 online+root+space+official-installed+ext-before
+[step] P7_precheck_l2 rc=1 post_install_precheck --game 动物大联盟

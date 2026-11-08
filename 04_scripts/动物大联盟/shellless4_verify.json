@@ -1,0 +1,57 @@
+{
+  "apk": "08_output/动物大联盟/动物大联盟_1.0.25_shellless4-releaseSigned.apk",
+  "apk_size": 65499551,
+  "apk_sha256": "100635b92801bdeb82825045505c24944f2ca6d531b4fde7ac79d31aaceaccf3",
+  "base_shellless3_sha256": "d8cce35d008b1ea5638d2790c7dc8119beff4259b8eddd419b56ea1292fca660",
+  "official_sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+  "secret_so_sha256": "e0a31698b9c14fb7ba8e677a7af136551479ce0f203941437042a4fa7fb709ae",
+  "secret_so_size": 459344,
+  "secret_so_compress_type": 0,
+  "classes4_dex_sha256": "282a97c61582bd66d5dd7fb29e9b31b40026ae203f93b22c589c5e4a7d56b974",
+  "classes4_dex_size": 1284,
+  "classes4_has_clinit": true,
+  "arm64_so_count": 19,
+  "zip_entries": 2922,
+  "signer_dn": "CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN",
+  "signer_cert_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "zipalign_p4_ok": true,
+  "checks": [
+    {
+      "id": "V1",
+      "title": "arm64 so 共 19 个（基座 18 + libsecret.so）",
+      "ok": true,
+      "detail": "before=18 after=19 secret=True"
+    },
+    {
+      "id": "V2",
+      "title": "libsecret.so sha256 与官方包一致 + 压缩方式一致",
+      "ok": true,
+      "detail": "apk=e0a31698b9c14fb7ba8e677a7af136551479ce0f203941437042a4fa7fb709ae official=e0a31698b9c14fb7ba8e677a7af136551479ce0f203941437042a4fa7fb709ae size=459344 ct=0(官方0)"
+    },
+    {
+      "id": "V3",
+      "title": "classes4.dex 带 <clinit> + loadLibrary(\"secret\") + 仍只有 ShellGate",
+      "ok": true,
+      "detail": "clinit=True secret_str=True loadLibrary=True dex链=classes.dex,classes2.dex,classes3.dex,classes4.dex size=1284 sha256=282a97c61582bd66…"
+    },
+    {
+      "id": "V4",
+      "title": "Manifest 逐字节未变 + Application/launcher 未变",
+      "ok": true,
+      "detail": "manifest sha=0e89a9d23e701a03… vs base 0e89a9d23e701a03… | app=True launcher=True 无壳类=True | launchable-activity: name='org.cocos2dx.javascript.AppActivity'  label='动物大联盟' icon=''"
+    },
+    {
+      "id": "V5",
+      "title": "其余条目逐字节透传（唯一差异＝classes4.dex + libsecret.so）",
+      "ok": true,
+      "detail": "透传 2917/2917 一致 | 多出=[] | 缺失=[] | META-INF 签名条目重签 3 个"
+    },
+    {
+      "id": "V6",
+      "title": "签名 DN 含 StarryMagic",
+      "ok": true,
+      "detail": "DN=CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN | cert_sha256=83c5cc0be218d046…"
+    }
+  ],
+  "all_pass": true
+}

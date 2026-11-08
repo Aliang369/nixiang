@@ -1,0 +1,20 @@
+{
+  "dex_path": "/Users/aliang/Documents/nixiang/04_scripts/动物大联盟/build/menu_dex/classes5.dex",
+  "dex_size": 507396,
+  "dex_sha256": "a34e9d75ddf00d3d4771b41256c58e40052e72b17f4417960f226fb75d14b51e",
+  "class_defs_size": 207,
+  "smali_files": 207,
+  "so_profile": "env",
+  "so_sha256": "ea5ba32875e8cf0ed806aebf74dc647f033d523305d2d52b827ce1b059849d17",
+  "so_md5": "3afdae19bb56e5500e58e5aabdc6793b",
+  "contains": [
+    "com.starry.magic.StarryInitProvider",
+    "com.starry.magic.menu.MenuService",
+    "com.starry.magic.dwdlm.DwdlmAppComponentFactory",
+    "com.starry.magic.cocos.DwdlmHooks"
+  ],
+  "excludes": [
+    "bin/mt/**（签名杀手）",
+    "com.starry.magic.sign.SignSpoof"
+  ]
+}

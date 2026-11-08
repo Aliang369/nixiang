@@ -1,0 +1,67 @@
+{
+ "game": "动物大联盟",
+ "mode": "apply",
+ "serial": "f9a116a2",
+ "authorization": "2026-11-05 用户选中【允许干净安装，接受重新下载资源】",
+ "result": "INSTALLED_VERIFIED_NOT_LAUNCHED",
+ "steps": [
+  {
+   "step": "P1_preflight_local",
+   "rc": "0",
+   "detail": "apk+official+srcfp+cert+so 全一致"
+  },
+  {
+   "step": "P2_preflight_device",
+   "rc": "0",
+   "detail": "online+root+space+official-installed+ext-before"
+  },
+  {
+   "step": "P4_ext_data",
+   "rc": "0",
+   "detail": "removed KB"
+  },
+  {
+   "step": "P4_ext_obb",
+   "rc": "0",
+   "detail": "removed KB"
+  },
+  {
+   "step": "P5_install",
+   "rc": "0",
+   "detail": "Success"
+  },
+  {
+   "step": "P6_verify_installed",
+   "rc": "0",
+   "detail": "base.apk+so md5 == 本地"
+  }
+ ],
+ "facts": {
+  "game": "动物大联盟",
+  "mode": "apply",
+  "serial": "f9a116a2",
+  "apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_starry-env-releaseSigned.apk",
+  "apk_sha256": "8898e01dae6576a1866546b48dc67f2b26f15ea15f154003b1e91dbfd669c12f",
+  "apk_size": "85402750",
+  "official_apk": "/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk",
+  "official_sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+  "source_fingerprint": "6568893f6ac8f9a89ba25fa78584c80b75140e292866a41187c1d9ecdf6c4173",
+  "cert_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "device_model": "OPD2404",
+  "device_android": "16",
+  "device_sdk": "36",
+  "installed_before": "absent",
+  "installed_before_sha256": "",
+  "verify_installed": "PASS",
+  "result": "INSTALLED_VERIFIED_NOT_LAUNCHED"
+ },
+ "reconstructed": true,
+ "reconstructed_at": "2026-11-05 22:30",
+ "reconstruction_basis": [
+  "10_docs/动物大联盟/装机与启动取证_1.0.25_20261105.md §4（安装与核对步骤逐条）",
+  "04_scripts/动物大联盟/precheck_l2.json facts（同候选的 apk/official/srcfp/cert/设备字段）",
+  "04_scripts/动物大联盟/pipeline.json install_clean_apply.inputs（原 journal md5=add663bb5db582e9ccb4437d2dd0220d）",
+  "本次会话 22:1x 对原文件的两次读取（mode/result/steps 六条）"
+ ],
+ "loss_note": "原件在 2026-11-05 22:25 被执行 `clean_install_dwdlm.sh --plan` 时覆盖（该模式 finish() 仍写 journal，属脚本缺陷，已修）；覆盖后的内容已归档 09_test/动物大联盟/provideronly_20261105/clean_install_overwritten_by_planrun_20261105.json。本文件为**重建件**，不冒充原件；缺失字段（如 ext_*_before/after 明细）未补写。"
+}

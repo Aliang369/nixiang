@@ -1,0 +1,62 @@
+apk=/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk
+version=1.0.25/25
+sha256=2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539
+size=81191854 entries=2928 uncompressed=103606512
+abis=arm64-v8a,armeabi-v7a,x86 native_libs=37
+dex_count=1 first_free_dex=classes2.dex
+static_dex_probes=apksecure
+tap_gatekeeper_in_static_dex=0 dex=<none>
+shell_markers=libBugly.so,libEncryptorP.so,libluster.so,libsecret.so,libsgcore.so,libtapsdkcore.so,libterrain.so,libzeus_direct_dex.so
+assets_count=1020 jsc=3 js=0
+dex classes.dex size=1538536 class_defs=1152 ver=035 probes=apksecure
+shell_payload assets/1731500040 size=5792313 magic=504b030414000808 dex=0 zip=1 elf=0 encrypted=0 nested={'entries': 336, 'top_dirs': {'res': 302, 'lib': 14, 'assets': 14, 'META-INF': 3, 'AndroidManifest.xml': 1}, 'has_dex': True, 'has_so': True} probes=-
+shell_payload assets/apksecurefile size=9902944 magic=8bd9188c98d957d4 dex=0 zip=0 elf=0 encrypted=1 nested=- probes=-
+shell_payload assets/apksecuresolist size=54 magic=61726d36342d7638 dex=0 zip=0 elf=0 encrypted=1 nested=- probes=-
+packed_so assets/apksecuresolib/arm64-v8a/libcocos2djs.so size=15155616 elf=0
+packed_so assets/apksecuresolib/armeabi-v7a/libcocos2djs.so size=13806096 elf=0
+asset assets/app_info.json size=787
+asset assets/jsb-adapter/jsb-builtin.js size=338029
+asset assets/jsb-adapter/jsb-engine.js size=209060
+asset assets/main.js size=4988
+asset assets/project.json size=297
+asset assets/src/cocos2d-jsb.jsc size=385984
+asset assets/src/settings.jsc size=220
+asset assets/supplierconfig.json size=68
+asset assets/whiteList.json size=78
+so lib/arm64-v8a/libBugly.so size=190656 sha256=e914f5872310faf4
+so lib/arm64-v8a/libCtaApiLib.so size=502272 sha256=4e980c2b5159d872
+so lib/arm64-v8a/libEncryptorP.so size=75744 sha256=480a0d2c9a383680
+so lib/arm64-v8a/libgmefaad2.so size=452072 sha256=ef878096581ed91f
+so lib/arm64-v8a/libgmefdkaac.so size=828472 sha256=08a69a2a3c3843ac
+so lib/arm64-v8a/libgmelamemp3.so size=502864 sha256=674b98b4618f2f58
+so lib/arm64-v8a/libgmeogg.so size=1007224 sha256=7e100a738d1c8a1a
+so lib/arm64-v8a/libgmesdk.so size=5611040 sha256=bb58f15caf38654b
+so lib/arm64-v8a/libgmesoundtouch.so size=240696 sha256=ae8081deb4156e8e
+so lib/arm64-v8a/libluster.so size=39568 sha256=6ae37b5d197bc322
+so lib/arm64-v8a/libmsaoaidauth.so size=418952 sha256=2136875ef0b07ee0
+so lib/arm64-v8a/libmsaoaidsec.so size=686520 sha256=0cc46dd72e83ea1c
+so lib/arm64-v8a/libpangleflipped.so size=10064 sha256=f8bc883be882330c
+so lib/arm64-v8a/libsecret.so size=459344 sha256=e0a31698b9c14fb7
+so lib/arm64-v8a/libsgcore.so size=75888 sha256=3c816c4d355c9e07
+so lib/arm64-v8a/libtapsdkcore.so size=6106224 sha256=7af3008a3986bea7
+so lib/arm64-v8a/libterrain.so size=256176 sha256=101d4547d499dc8d
+so lib/arm64-v8a/libzeus_direct_dex.so size=14160 sha256=307385bcd8bdcf63
+so lib/armeabi-v7a/libBugly.so size=161532 sha256=193578557e9ba969
+so lib/armeabi-v7a/libCtaApiLib.so size=280448 sha256=1b2ea90cecd6db6b
+so lib/armeabi-v7a/libEncryptorP.so size=79480 sha256=7867a5033390542e
+so lib/armeabi-v7a/libgmefaad2.so size=346924 sha256=762fe86da0012bf0
+so lib/armeabi-v7a/libgmefdkaac.so size=718692 sha256=313126b821da0afd
+so lib/armeabi-v7a/libgmelamemp3.so size=384868 sha256=43d62e68b3c95f6a
+so lib/armeabi-v7a/libgmeogg.so size=760140 sha256=5111a8d8e3fc3720
+so lib/armeabi-v7a/libgmesdk.so size=3955400 sha256=1c0901397c4d478c
+so lib/armeabi-v7a/libgmesoundtouch.so size=124096 sha256=5bc517973cc779d9
+so lib/armeabi-v7a/libluster.so size=34836 sha256=ee33fde4c02533c5
+so lib/armeabi-v7a/libmsaoaidauth.so size=173644 sha256=a52a5fd6ab7685e5
+so lib/armeabi-v7a/libmsaoaidsec.so size=479552 sha256=bf002d22c8a4eba6
+so lib/armeabi-v7a/libpangleflipped.so size=9756 sha256=9a434ebb45ba20d5
+so lib/armeabi-v7a/libsecret.so size=291808 sha256=2f870a1d98163428
+so lib/armeabi-v7a/libsgcore.so size=91936 sha256=30509a1b462cf116
+so lib/armeabi-v7a/libtapsdkcore.so size=4434768 sha256=5d12494ba8f5bf37
+so lib/armeabi-v7a/libterrain.so size=149248 sha256=d3f9a129385e5c95
+so lib/armeabi-v7a/libzeus_direct_dex.so size=9756 sha256=4be8682cedc82ff2
+so lib/x86/libsecret.so size=464760 sha256=3de9d6c86bf3789e

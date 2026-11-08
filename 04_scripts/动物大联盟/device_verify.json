@@ -1,0 +1,23 @@
+{
+ "game": "动物大联盟",
+ "mode": "device_verify_readonly",
+ "at": "2026-11-05 22:22:41",
+ "facts": {
+  "serial": "f9a116a2",
+  "pkg": "com.fightingstars.games.animal",
+  "pm_path": "/data/app/~~WG706nvntG5DTAOgHqsz4w==/com.fightingstars.games.animal-Xm5Trxt6qVKogLaYfQ6lrA==/base.apk",
+  "versionCode": "25",
+  "versionName": "1.0.25",
+  "firstInstallTime": "2026-11-05 21:53:18",
+  "lastUpdateTime": "2026-11-05 22:14:39",
+  "device_apk_sha256": "9fd9fc0fdc4c4805d2b1e3bf34b1064bb40a84d72a7b54674e0976741647d5ad",
+  "local_apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_starry-env-provideronly-releaseSigned.apk",
+  "local_apk_sha256": "9fd9fc0fdc4c4805d2b1e3bf34b1064bb40a84d72a7b54674e0976741647d5ad",
+  "local_apk_size": "85402750",
+  "apk_match": "yes",
+  "device_so_sha256": "ea5ba32875e8cf0ed806aebf74dc647f033d523305d2d52b827ce1b059849d17",
+  "local_so_sha256": "ea5ba32875e8cf0ed806aebf74dc647f033d523305d2d52b827ce1b059849d17",
+  "so_match": "yes",
+  "process": "not-running"
+ }
+}

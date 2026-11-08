@@ -1,0 +1,15 @@
+{
+  "game": "动物大联盟",
+  "profile": "env",
+  "factory_mode": "factory",
+  "apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_starry-env-provideronly-releaseSigned.apk",
+  "apk_sha256": "e076e43a1402d742c6ae145accdc285012f3f3cca0f9f27fdeb4bb06411dbea0",
+  "gate_rc": 0,
+  "pass": 6,
+  "fail": 0,
+  "skip": 3,
+  "verdict": "PASS",
+  "gate_log": "/Users/aliang/Documents/nixiang/04_scripts/动物大联盟/gate_env.log",
+  "skip_note": "SKIP 不是证据：查10 走 REQUIRE_STAMP=0（本次现编 dex、无模板戳）；查9 对 Cocos 包无 il2cpp/metadata，按门禁自身判据 SKIP",
+  "at": "2026-11-08 19:07:45"
+}

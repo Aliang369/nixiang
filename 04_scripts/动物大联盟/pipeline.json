@@ -1,0 +1,423 @@
+{
+  "game": "动物大联盟",
+  "version": "1.0.25",
+  "install_policy": "overlay_only",
+  "install_policy_note": "同签名覆盖安装（install -r）；卸载/清数据须 --allow-uninstall 并在轮次台账留一行。依据：本作 81MB 底包+热更资源，卸载会丢账号态与已下资源；2026-11-05 第六轮对照为同签覆盖、明确不卸载。",
+  "notes": "阶段1（环境最小路径）私有管线：只读拉包 + 身份/签名/结构核对。2026-11-05 第二轮追加 build_so_env / assemble_env / probe_runtime（环境候选构建与只读运行期取证），均不涉及装机、启动、卸载、清数据。 2026-11-05 第三轮：新增 gate_pre_install / verify_artifact / install_dry_run 三阶段（门禁与核验注册进管线，install 默认零写 dry-run）。 2026-11-05 第五轮（装机）：新增 device_facts（只读设备身份）/ install_clean_apply（用户已授权的干净安装：卸载→仅本包残留清理→普通安装→核对）/ post_install_l2（冷启一次 + 预检）。安装走本游戏私有 clean_install_dwdlm.sh，不用共享 install_starry_apk.sh --clean（其默认 mv 外置目录=保资源路径，与本轮「从零资源」授权相反）。",
+  "params": {
+    "game_id": "dwdlm",
+    "package": "com.fightingstars.games.animal",
+    "serial": "f9a116a2"
+  },
+  "env": {
+    "PKG": "com.fightingstars.games.animal",
+    "GAME": "动物大联盟",
+    "SERIAL": "f9a116a2",
+    "EXPECTED_VERSION": "1.0.25",
+    "EXPECTED_VERSION_CODE": "25"
+  },
+  "workdir": "/Users/aliang/Documents/nixiang",
+  "stages": [
+    {
+      "id": "device_ready",
+      "name": "设备准备（唯一真机 + root 记录，只读）",
+      "requires": [],
+      "command": "bash 04_scripts/动物大联盟/device_ready_dwdlm.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/device_ready_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/.device_serial"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/device_ready.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 20:17:13",
+      "artifacts": {
+        "04_scripts/动物大联盟/.device_serial": {
+          "md5": "0bc47570b06495af1a544933783b7037"
+        },
+        "04_scripts/动物大联盟/device_ready.txt": {
+          "md5": "7d85567f978f840ca9c2edaeffe6ab03"
+        }
+      }
+    },
+    {
+      "id": "pull_official",
+      "name": "真机只读拉取 TapTap 官方 base APK（拒绝覆盖原输入）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/动物大联盟/fetch_official_dwdlm.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/fetch_official_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/动物大联盟/动物大联盟_1.0.25_official.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_apk.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_pull.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 20:17:19",
+      "artifacts": {
+        "02_apks/动物大联盟/动物大联盟_1.0.25_official.apk": {
+          "md5": "9c5d39360cb5d2789427c003183f6233"
+        },
+        "04_scripts/动物大联盟/official_apk.json": {
+          "md5": "395642c1fb5bebee3f752c8af39f61d3"
+        },
+        "04_scripts/动物大联盟/official_pull.txt": {
+          "md5": "c1139ac62e4b5dd21ed87f717c4eda5e"
+        }
+      },
+      "inputs": {
+        "04_scripts/动物大联盟/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/动物大联盟/device_ready.txt": "7d85567f978f840ca9c2edaeffe6ab03"
+      }
+    },
+    {
+      "id": "check_official",
+      "name": "核对包名/版本/SDK/ABI/split 与签名身份（DN + 三摘要）",
+      "requires": [
+        "pull_official"
+      ],
+      "command": "bash 04_scripts/动物大联盟/check_official_dwdlm.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/check_official_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_check.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_check.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 20:40:53",
+      "artifacts": {
+        "04_scripts/动物大联盟/official_check.json": {
+          "md5": "aec54a876984b87a1d954148d74d9f13"
+        },
+        "04_scripts/动物大联盟/official_check.txt": {
+          "md5": "adef3dc64cdc01e74ac4c8372d528e91"
+        }
+      },
+      "inputs": {
+        "02_apks/动物大联盟/动物大联盟_1.0.25_official.apk": "9c5d39360cb5d2789427c003183f6233",
+        "04_scripts/动物大联盟/official_apk.json": "f4cb228dff8f0b64be583423103a169b",
+        "04_scripts/动物大联盟/official_pull.txt": "c1139ac62e4b5dd21ed87f717c4eda5e"
+      }
+    },
+    {
+      "id": "scan_structure",
+      "name": "DEX/native/壳资源结构扫描（首个空闲 dex + Gatekeeper DEX）",
+      "requires": [
+        "check_official"
+      ],
+      "command": "python3 04_scripts/动物大联盟/scan_structure_dwdlm.py",
+      "preflight": [
+        "04_scripts/动物大联盟/scan_structure_dwdlm.py"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_structure.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_structure.txt"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 20:20:01",
+      "artifacts": {
+        "04_scripts/动物大联盟/official_structure.json": {
+          "md5": "7cc39534bca20cb81868a46d82547649"
+        },
+        "04_scripts/动物大联盟/official_structure.txt": {
+          "md5": "eaeb3a0ea5cd8e9dec1d238d7745521e"
+        }
+      },
+      "inputs": {
+        "04_scripts/动物大联盟/official_check.json": "aec54a876984b87a1d954148d74d9f13",
+        "04_scripts/动物大联盟/official_check.txt": "adef3dc64cdc01e74ac4c8372d528e91"
+      }
+    },
+    {
+      "id": "build_so_env",
+      "name": "环境候选 so 构建（ENV_ONLY+SHELL_ONLY，私有 obj/libs，生成链 patch_dwdlm.js→DwdlmPatchJs.h）",
+      "requires": [
+        "scan_structure"
+      ],
+      "command": "bash 04_scripts/动物大联盟/dwdlm_build_so.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/dwdlm_build_so.sh",
+        "04_scripts/动物大联盟/patch_dwdlm.js"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/libs_dwdlm/env/arm64-v8a/libstarry_magic.so"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/so_build_env.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 21:28:19",
+      "artifacts": {
+        "mod菜单/starry-mod-menu/libs_dwdlm/env/arm64-v8a/libstarry_magic.so": {
+          "md5": "3afdae19bb56e5500e58e5aabdc6793b"
+        },
+        "04_scripts/动物大联盟/so_build_env.json": {
+          "md5": "2aae645aac4aa62eb9f253a5e6241a6a"
+        }
+      },
+      "inputs": {
+        "04_scripts/动物大联盟/official_structure.json": "7cc39534bca20cb81868a46d82547649",
+        "04_scripts/动物大联盟/official_structure.txt": "eaeb3a0ea5cd8e9dec1d238d7745521e"
+      }
+    },
+    {
+      "id": "assemble_env",
+      "name": "外科组装 + 签名（保留 ProxyApplication + StarryInitProvider 注入，不装机）",
+      "requires": [
+        "build_so_env"
+      ],
+      "command": "bash 04_scripts/动物大联盟/surgical_dwdlm_1.0.25.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/surgical_dwdlm_1.0.25.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/动物大联盟/动物大联盟_1.0.25_starry-env-releaseSigned.apk"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/assemble_env.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-08 01:22:45",
+      "artifacts": {
+        "08_output/动物大联盟/动物大联盟_1.0.25_starry-env-releaseSigned.apk": {
+          "md5": "83287db0e8a208e0251d71f9eb5eede1"
+        },
+        "04_scripts/动物大联盟/assemble_env.json": {
+          "md5": "dc304bcc2eb1072b1933cb596eeffa42"
+        }
+      },
+      "inputs": {
+        "mod菜单/starry-mod-menu/libs_dwdlm/env/arm64-v8a/libstarry_magic.so": "4b0f2d2c109c209f1eaf2f36a9ebab13",
+        "04_scripts/动物大联盟/so_build_env.json": "56a5b08227f1467f96230db045519e1f"
+      }
+    },
+    {
+      "id": "probe_runtime",
+      "name": "原版包只读运行期结构取证（pid + /proc/pid/maps；不启动/不注入）",
+      "requires": [
+        "scan_structure"
+      ],
+      "command": "bash 04_scripts/动物大联盟/probe_official_maps_dwdlm.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/probe_official_maps_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_runtime_maps.txt"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/official_runtime_maps.json"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 20:41:16",
+      "artifacts": {
+        "04_scripts/动物大联盟/official_runtime_maps.txt": {
+          "md5": "62c78071948a6904bf540ec5d8bebc7c"
+        },
+        "04_scripts/动物大联盟/official_runtime_maps.json": {
+          "md5": "b9c20c4788b3470249ce01bc7d63b039"
+        }
+      },
+      "inputs": {
+        "04_scripts/动物大联盟/official_structure.json": "7cc39534bca20cb81868a46d82547649",
+        "04_scripts/动物大联盟/official_structure.txt": "eaeb3a0ea5cd8e9dec1d238d7745521e"
+      }
+    },
+    {
+      "id": "gate_pre_install",
+      "name": "装机前产物门禁（pre_install_gate 全查；--apk/--base-apk/--cpp/--dex/--menu-dex 全上下文，不省参数）",
+      "requires": [
+        "assemble_env"
+      ],
+      "command": "bash 04_scripts/动物大联盟/gate_dwdlm.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/gate_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_contains",
+          "path": "04_scripts/动物大联盟/gate_env.json",
+          "pattern": "\"verdict\": \"PASS\""
+        },
+        {
+          "type": "file_contains",
+          "path": "04_scripts/动物大联盟/gate_env.json",
+          "pattern": "\"fail\": 0"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-08 01:22:49",
+      "artifacts": {},
+      "inputs": {
+        "08_output/动物大联盟/动物大联盟_1.0.25_starry-env-releaseSigned.apk": "83287db0e8a208e0251d71f9eb5eede1",
+        "04_scripts/动物大联盟/assemble_env.json": "dc304bcc2eb1072b1933cb596eeffa42"
+      }
+    },
+    {
+      "id": "verify_artifact",
+      "name": "成品包独立核验（事后重读：透传/sha/证书/dex 工厂/Manifest/so .dynsym 三方一致）",
+      "requires": [
+        "gate_pre_install"
+      ],
+      "command": "python3 04_scripts/动物大联盟/verify_artifact_dwdlm.py",
+      "preflight": [
+        "04_scripts/动物大联盟/verify_artifact_dwdlm.py"
+      ],
+      "verify": [
+        {
+          "type": "file_contains",
+          "path": "04_scripts/动物大联盟/artifact_verify_env.json",
+          "pattern": "\"verdict\": \"PASS\""
+        },
+        {
+          "type": "file_contains",
+          "path": "04_scripts/动物大联盟/artifact_verify_env.json",
+          "pattern": "\"fail_count\": 0"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 21:31:08",
+      "artifacts": {}
+    },
+    {
+      "id": "install_dry_run",
+      "name": "装机脚本零写 dry-run（默认模式；不调用 adb，只打印 --apply 计划）",
+      "requires": [
+        "verify_artifact"
+      ],
+      "command": "bash 04_scripts/动物大联盟/install_dwdlm.sh --dry-run",
+      "preflight": [
+        "04_scripts/动物大联盟/install_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_contains",
+          "path": "04_scripts/动物大联盟/pipeline.log",
+          "pattern": "dry-run] 结论"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-05 21:31:29",
+      "artifacts": {}
+    },
+    {
+      "id": "device_facts",
+      "name": "设备真实身份只读探测（型号/Android/SDK/包状态/外置目录；纠正历史 Android13 误记）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/动物大联盟/probe_device_facts_dwdlm.sh",
+      "preflight": [
+        "04_scripts/动物大联盟/probe_device_facts_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/device_facts.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/device_facts.txt"
+        }
+      ],
+      "status": "done",
+      "failed_at": "2026-11-05 21:50:56",
+      "error": "preflight 机器关未通过（语法/格式错误，修复后重跑）",
+      "done_at": "2026-11-05 21:51:32",
+      "artifacts": {
+        "04_scripts/动物大联盟/device_facts.json": {
+          "md5": "4aaa793e1ca9514666b7d39b5e7e30f1"
+        },
+        "04_scripts/动物大联盟/device_facts.txt": {
+          "md5": "032d06988631165e3d8cbaff9f48455e"
+        }
+      },
+      "inputs": {
+        "04_scripts/动物大联盟/.device_serial": "0bc47570b06495af1a544933783b7037",
+        "04_scripts/动物大联盟/device_ready.txt": "7d85567f978f840ca9c2edaeffe6ab03"
+      }
+    },
+    {
+      "id": "install_clean_apply",
+      "name": "干净安装（已授权：卸载官方原版→仅本包外置残留清理→普通安装→装机核对）",
+      "requires": [
+        "verify_artifact",
+        "device_facts"
+      ],
+      "command": "bash 04_scripts/动物大联盟/clean_install_dwdlm.sh --apply",
+      "preflight": [
+        "04_scripts/动物大联盟/clean_install_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/clean_install.json"
+        }
+      ],
+      "status": "failed",
+      "failed_at": "2026-11-08 01:22:52",
+      "error": "命令退出码 1（详见日志尾部）"
+    },
+    {
+      "id": "post_install_l2",
+      "name": "L2 装机预检（post_install_precheck：冷启一次 + 崩溃/so 加载/菜单标记，rc 见产物）",
+      "requires": [
+        "install_clean_apply"
+      ],
+      "command": "bash 04_scripts/动物大联盟/clean_install_dwdlm.sh --precheck-only",
+      "preflight": [
+        "04_scripts/动物大联盟/clean_install_dwdlm.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/动物大联盟/precheck_l2.json"
+        }
+      ],
+      "status": "pending"
+    }
+  ]
+}

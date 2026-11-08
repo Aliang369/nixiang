@@ -1,0 +1,64 @@
+{
+ "game": "动物大联盟",
+ "mode": "overwrite",
+ "serial": "f9a116a2",
+ "authorization": "2026-11-05 用户选中【允许干净安装，接受重新下载资源】",
+ "result": "INSTALLED_VERIFIED_NOT_LAUNCHED",
+ "steps": [
+  {
+   "step": "P1_preflight_local",
+   "rc": "0",
+   "detail": "apk+official+srcfp+cert+so 全一致"
+  },
+  {
+   "step": "P2_preflight_device",
+   "rc": "0",
+   "detail": "online+root+space+official-installed+ext-before"
+  },
+  {
+   "step": "P3_uninstall",
+   "rc": "0",
+   "detail": "skipped(overwrite)"
+  },
+  {
+   "step": "P4_residual_clean",
+   "rc": "0",
+   "detail": "skipped(overwrite)"
+  },
+  {
+   "step": "P5_install",
+   "rc": "0",
+   "detail": "Success"
+  },
+  {
+   "step": "P6_verify_installed",
+   "rc": "0",
+   "detail": "base.apk+so md5 == 本地"
+  }
+ ],
+ "facts": {
+  "game": "动物大联盟",
+  "mode": "overwrite",
+  "serial": "f9a116a2",
+  "apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_starry-env-sigspoof-releaseSigned.apk",
+  "apk_sha256": "98360466f45eef4224c3a2525f75babf84365c17b7258ebd80aad720c0f53a72",
+  "apk_size": "85443710",
+  "official_apk": "/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk",
+  "official_sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+  "source_fingerprint": "da06567ec7730939480f4d05cb3e0097b4a3457a73d47fbbcfd1e83f2412413a",
+  "cert_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "device_model": "OPD2404",
+  "device_android": "16",
+  "device_sdk": "36",
+  "installed_before": "present",
+  "installed_before_sha256": "a19552391c7318a7b7e5c478d94f79757cc98337376a9806e8845b552447f98e",
+  "ext_data_before": "present:11",
+  "ext_obb_before": "absent:0",
+  "ext_data_after": "present:11",
+  "ext_obb_after": "absent:0",
+  "verify_installed": "PASS",
+  "precheck_rc": "not-run",
+  "result": "INSTALLED_VERIFIED_NOT_LAUNCHED"
+ },
+ "journal_at": "2026-11-08 00:53:20"
+}

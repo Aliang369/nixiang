@@ -1,0 +1,40 @@
+{
+  "game": "动物大联盟",
+  "package": "com.fightingstars.games.animal",
+  "kind": "official",
+  "channel": "taptap",
+  "channel_evidence": {
+    "installer_package_name": "com.android.packageinstaller",
+    "first_install_time": "2026-11-05 00:51:42",
+    "last_update_time": "2026-11-05 00:51:42",
+    "note": "installer 为空=手动/商店侧无记录；渠道以 installer + 包内 TapSDK/壳资源 markers 交叉判定（见 official_check.json）"
+  },
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk",
+  "version_name": "1.0.25",
+  "version_code": 25,
+  "primary_cpu_abi": "arm64-v8a",
+  "split": {
+    "pm_path_count": 1,
+    "splits_field": [
+      "base"
+    ],
+    "splits_normalized": [],
+    "is_single_base": true,
+    "rule": "dumpsys 对非 split 安装同样打印 splits=[base]；判单 base 必须先剔除 base 占位符",
+    "observed": {
+      "splits_field_raw": [
+        "base"
+      ],
+      "pm_path_count_raw": 1,
+      "is_single_base_raw": false
+    }
+  },
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/base.apk",
+  "pull_mode": "direct",
+  "size": 81191854,
+  "sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+  "md5": "9c5d39360cb5d2789427c003183f6233",
+  "app_flags": " HAS_CODE ALLOW_CLEAR_USER_DATA VM_SAFE_MODE ALLOW_BACKUP ",
+  "pulled_at": "2026-11-05 20:17:18"
+}

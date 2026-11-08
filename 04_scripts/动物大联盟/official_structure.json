@@ -1,0 +1,396 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk",
+  "version_name": "1.0.25",
+  "version_code": 25,
+  "sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+  "size": 81191854,
+  "entries_total": 2928,
+  "total_uncompressed": 103606512,
+  "top_dirs": {
+    "res": 1800,
+    "assets": 1034,
+    "META-INF": 43,
+    "lib": 37,
+    "kotlin": 7,
+    "com": 1,
+    "okhttp3": 1,
+    "org": 1
+  },
+  "dex": [
+    {
+      "name": "classes.dex",
+      "size": 1538536,
+      "sha256": "b0c3a365a27c2fe16f3525dd28d2e7f52acfda15dcbdd5519238ccd11e3a17f9",
+      "class_defs": 1152,
+      "dex_version": "035",
+      "string_ids": 14512,
+      "method_ids": 13871,
+      "probe_hits": [
+        "apksecure"
+      ]
+    }
+  ],
+  "dex_count": 1,
+  "dex_occupancy": {
+    "1": "classes.dex"
+  },
+  "first_free_dex": "classes2.dex",
+  "static_dex_probe_hits": [
+    "apksecure"
+  ],
+  "tap_gatekeeper": {
+    "present_in_static_dex": false,
+    "dex": [],
+    "tapsdk_dex": [],
+    "note": "静态 dex 未命中不等于运行时不存在：壳会把真实 dex 解密到内存（见 shell_payload / 1.0.23 内存 dump 先例）"
+  },
+  "native": [
+    {
+      "path": "lib/arm64-v8a/libBugly.so",
+      "abi": "arm64-v8a",
+      "size": 190656,
+      "sha256": "e914f5872310faf480b472ef5a4bfe56250ab712f7a4a6a958a2d85e8ae1bd95"
+    },
+    {
+      "path": "lib/arm64-v8a/libCtaApiLib.so",
+      "abi": "arm64-v8a",
+      "size": 502272,
+      "sha256": "4e980c2b5159d87218e872786fc84cb03796114b4e12b0826b15f73ce5c2b707"
+    },
+    {
+      "path": "lib/arm64-v8a/libEncryptorP.so",
+      "abi": "arm64-v8a",
+      "size": 75744,
+      "sha256": "480a0d2c9a3836806222e86f69c5139d9aca88b9e2593badfd98522eb2705822"
+    },
+    {
+      "path": "lib/arm64-v8a/libgmefaad2.so",
+      "abi": "arm64-v8a",
+      "size": 452072,
+      "sha256": "ef878096581ed91f656160eed4536dfcec126d92b37094653197fb788bdb6dad"
+    },
+    {
+      "path": "lib/arm64-v8a/libgmefdkaac.so",
+      "abi": "arm64-v8a",
+      "size": 828472,
+      "sha256": "08a69a2a3c3843ac3a5b1afda91cf8210dcc409bdfcee2899a7c1d7085329e19"
+    },
+    {
+      "path": "lib/arm64-v8a/libgmelamemp3.so",
+      "abi": "arm64-v8a",
+      "size": 502864,
+      "sha256": "674b98b4618f2f58075bf0c0b149b1b2923e27c4eca0a1eb753d822c9d72782a"
+    },
+    {
+      "path": "lib/arm64-v8a/libgmeogg.so",
+      "abi": "arm64-v8a",
+      "size": 1007224,
+      "sha256": "7e100a738d1c8a1a71acc3f3e57067fbbef2f94ee810572561b8f0afed6db9d1"
+    },
+    {
+      "path": "lib/arm64-v8a/libgmesdk.so",
+      "abi": "arm64-v8a",
+      "size": 5611040,
+      "sha256": "bb58f15caf38654b7298fdb20247306ab6eabb31e357e9280adba15537624e0b"
+    },
+    {
+      "path": "lib/arm64-v8a/libgmesoundtouch.so",
+      "abi": "arm64-v8a",
+      "size": 240696,
+      "sha256": "ae8081deb4156e8e83db10a6fc61d028b7972de6909d6f42a73b7a5ea904a9fd"
+    },
+    {
+      "path": "lib/arm64-v8a/libluster.so",
+      "abi": "arm64-v8a",
+      "size": 39568,
+      "sha256": "6ae37b5d197bc322043d9c38cd0677d6d935cc77b1e247fb67b364a5c9ab89a5"
+    },
+    {
+      "path": "lib/arm64-v8a/libmsaoaidauth.so",
+      "abi": "arm64-v8a",
+      "size": 418952,
+      "sha256": "2136875ef0b07ee06c30ee15e1239e2fdb5c13a069720ca2483b64c4d2ad6c80"
+    },
+    {
+      "path": "lib/arm64-v8a/libmsaoaidsec.so",
+      "abi": "arm64-v8a",
+      "size": 686520,
+      "sha256": "0cc46dd72e83ea1cc09b6a91d3991738e4cb09059c8fbe861d69982ef3375ec5"
+    },
+    {
+      "path": "lib/arm64-v8a/libpangleflipped.so",
+      "abi": "arm64-v8a",
+      "size": 10064,
+      "sha256": "f8bc883be882330cd919f94ab6aad4493a80004ef0ab77337c6bd727a514742d"
+    },
+    {
+      "path": "lib/arm64-v8a/libsecret.so",
+      "abi": "arm64-v8a",
+      "size": 459344,
+      "sha256": "e0a31698b9c14fb7ba8e677a7af136551479ce0f203941437042a4fa7fb709ae"
+    },
+    {
+      "path": "lib/arm64-v8a/libsgcore.so",
+      "abi": "arm64-v8a",
+      "size": 75888,
+      "sha256": "3c816c4d355c9e07a68fdb4d4b98c03ed574844eb232cbcafa3946019452b7d4"
+    },
+    {
+      "path": "lib/arm64-v8a/libtapsdkcore.so",
+      "abi": "arm64-v8a",
+      "size": 6106224,
+      "sha256": "7af3008a3986bea7b7ee76128c7bacacd51601fd74ad371d4f37ba0ef5b35fa0"
+    },
+    {
+      "path": "lib/arm64-v8a/libterrain.so",
+      "abi": "arm64-v8a",
+      "size": 256176,
+      "sha256": "101d4547d499dc8d19bace4a1e7287c97c9270e19f9d92f1647cb46376f3cb66"
+    },
+    {
+      "path": "lib/arm64-v8a/libzeus_direct_dex.so",
+      "abi": "arm64-v8a",
+      "size": 14160,
+      "sha256": "307385bcd8bdcf6314cc4d41eb72976a3b6cbc2569aaabe02fb59237da35a9d4"
+    },
+    {
+      "path": "lib/armeabi-v7a/libBugly.so",
+      "abi": "armeabi-v7a",
+      "size": 161532,
+      "sha256": "193578557e9ba9697075476e7dba2cf6a0ccd197fd90048965435ac95d8e0066"
+    },
+    {
+      "path": "lib/armeabi-v7a/libCtaApiLib.so",
+      "abi": "armeabi-v7a",
+      "size": 280448,
+      "sha256": "1b2ea90cecd6db6bf51091e6776ad9cc415741a9257217001199967a3ecf7afb"
+    },
+    {
+      "path": "lib/armeabi-v7a/libEncryptorP.so",
+      "abi": "armeabi-v7a",
+      "size": 79480,
+      "sha256": "7867a5033390542eafa44eca186f8215106a886e146a44c631b6c23134a35536"
+    },
+    {
+      "path": "lib/armeabi-v7a/libgmefaad2.so",
+      "abi": "armeabi-v7a",
+      "size": 346924,
+      "sha256": "762fe86da0012bf044d262776e53d7589e9e3c33a2dd0e571238bf69984d3ad7"
+    },
+    {
+      "path": "lib/armeabi-v7a/libgmefdkaac.so",
+      "abi": "armeabi-v7a",
+      "size": 718692,
+      "sha256": "313126b821da0afd3ed9a3e70754538e8745d5acc6c71045d51c44d50c6f744b"
+    },
+    {
+      "path": "lib/armeabi-v7a/libgmelamemp3.so",
+      "abi": "armeabi-v7a",
+      "size": 384868,
+      "sha256": "43d62e68b3c95f6ae523bb59a06d7530c4e3d8412a3045ca0047e56113610f9e"
+    },
+    {
+      "path": "lib/armeabi-v7a/libgmeogg.so",
+      "abi": "armeabi-v7a",
+      "size": 760140,
+      "sha256": "5111a8d8e3fc37201404b7ea8cbf3f5b6235a857c3a96ca32ff27c666163b1a0"
+    },
+    {
+      "path": "lib/armeabi-v7a/libgmesdk.so",
+      "abi": "armeabi-v7a",
+      "size": 3955400,
+      "sha256": "1c0901397c4d478c8df7119acc64d4ea2c90f97ebccf799f627bbfa472be9062"
+    },
+    {
+      "path": "lib/armeabi-v7a/libgmesoundtouch.so",
+      "abi": "armeabi-v7a",
+      "size": 124096,
+      "sha256": "5bc517973cc779d9502e210455009a4dd11e4ae8db0217ee707424e0a1581af1"
+    },
+    {
+      "path": "lib/armeabi-v7a/libluster.so",
+      "abi": "armeabi-v7a",
+      "size": 34836,
+      "sha256": "ee33fde4c02533c563aef48ba7e4f4415473c1d41d813f96440fee4352d271a4"
+    },
+    {
+      "path": "lib/armeabi-v7a/libmsaoaidauth.so",
+      "abi": "armeabi-v7a",
+      "size": 173644,
+      "sha256": "a52a5fd6ab7685e5e665779a4fd5525cab181ba2c697a6b103485edc9ddf055d"
+    },
+    {
+      "path": "lib/armeabi-v7a/libmsaoaidsec.so",
+      "abi": "armeabi-v7a",
+      "size": 479552,
+      "sha256": "bf002d22c8a4eba616b6eb7723ab9b28162b3ecca11b4b1b13dd1b2b4658fe3a"
+    },
+    {
+      "path": "lib/armeabi-v7a/libpangleflipped.so",
+      "abi": "armeabi-v7a",
+      "size": 9756,
+      "sha256": "9a434ebb45ba20d5648504f8103342f9e304f71e7146656ca604b4ad0ad3eec2"
+    },
+    {
+      "path": "lib/armeabi-v7a/libsecret.so",
+      "abi": "armeabi-v7a",
+      "size": 291808,
+      "sha256": "2f870a1d98163428a95691da98f2a8aa8c1d2ab56eb02f3745f7212f4023a221"
+    },
+    {
+      "path": "lib/armeabi-v7a/libsgcore.so",
+      "abi": "armeabi-v7a",
+      "size": 91936,
+      "sha256": "30509a1b462cf116e4063bd387379ba904bff373a2beffc2e0dcd58b90e0f6d1"
+    },
+    {
+      "path": "lib/armeabi-v7a/libtapsdkcore.so",
+      "abi": "armeabi-v7a",
+      "size": 4434768,
+      "sha256": "5d12494ba8f5bf377989f961907858e7ee403a0ba9ebba73f08760ae701bc8e8"
+    },
+    {
+      "path": "lib/armeabi-v7a/libterrain.so",
+      "abi": "armeabi-v7a",
+      "size": 149248,
+      "sha256": "d3f9a129385e5c95a3f5b35a7c079f906f99c270df27f533a1542a6f5fb52bb0"
+    },
+    {
+      "path": "lib/armeabi-v7a/libzeus_direct_dex.so",
+      "abi": "armeabi-v7a",
+      "size": 9756,
+      "sha256": "4be8682cedc82ff21fcd2e919b8d490cc82c023175f6bafec020ca5de2483ff2"
+    },
+    {
+      "path": "lib/x86/libsecret.so",
+      "abi": "x86",
+      "size": 464760,
+      "sha256": "3de9d6c86bf3789e0d0ca6159666ea121d19a65ea59efec6b1efeebd50a1e022"
+    }
+  ],
+  "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86"
+  ],
+  "shell_markers": {
+    "libBugly.so": "腾讯 Bugly",
+    "libEncryptorP.so": "加密/资源保护",
+    "libluster.so": "壳/反调试候选",
+    "libsecret.so": "APKSecure 状态机（1.0.23 实测 G2 关键，双映像归一化）",
+    "libsgcore.so": "SS 分包/加载候选",
+    "libtapsdkcore.so": "TapSDK native 核心",
+    "libterrain.so": "壳/插件引导候选",
+    "libzeus_direct_dex.so": "直接加载 dex 的引导库（壳侧）"
+  },
+  "shell_payload": [
+    {
+      "path": "assets/1731500040",
+      "size": 5792313,
+      "sha256": "1b7ef6f560fe8928dae27c99c665a64a89b81160203554c08acf93fd75b3c9e9",
+      "magic": "504b030414000808",
+      "has_dex_magic": false,
+      "is_zip": true,
+      "is_elf": false,
+      "encrypted_payload": false,
+      "nested": {
+        "entries": 336,
+        "top_dirs": {
+          "res": 302,
+          "lib": 14,
+          "assets": 14,
+          "META-INF": 3,
+          "AndroidManifest.xml": 1
+        },
+        "has_dex": true,
+        "has_so": true
+      },
+      "probe_hits": []
+    },
+    {
+      "path": "assets/apksecurefile",
+      "size": 9902944,
+      "sha256": "6c2dc9422a23cfee725ade1ad0d29b906df0ee35eb29726e4de4db0b9c811760",
+      "magic": "8bd9188c98d957d4",
+      "has_dex_magic": false,
+      "is_zip": false,
+      "is_elf": false,
+      "encrypted_payload": true,
+      "nested": null,
+      "probe_hits": []
+    },
+    {
+      "path": "assets/apksecuresolist",
+      "size": 54,
+      "sha256": "125fde1517043c4687ebac42f00aa8a52fad230df2720bf75b0f39f190e3bb6a",
+      "magic": "61726d36342d7638",
+      "has_dex_magic": false,
+      "is_zip": false,
+      "is_elf": false,
+      "encrypted_payload": true,
+      "nested": null,
+      "probe_hits": []
+    }
+  ],
+  "packed_native": [
+    {
+      "path": "assets/apksecuresolib/arm64-v8a/libcocos2djs.so",
+      "abi": "arm64-v8a",
+      "size": 15155616,
+      "sha256": "13f787ff567beb67639ed3344bce569db429c78348c9162bd0e4f1ee844b3b05",
+      "magic": "da1f8290",
+      "is_elf": false
+    },
+    {
+      "path": "assets/apksecuresolib/armeabi-v7a/libcocos2djs.so",
+      "abi": "armeabi-v7a",
+      "size": 13806096,
+      "sha256": "5229983c4cc311be334f417182f46b842e55fd8ea9c7cef86ff965a15929fa56",
+      "magic": "1f357794",
+      "is_elf": false
+    }
+  ],
+  "key_assets": [
+    {
+      "path": "assets/app_info.json",
+      "size": 787
+    },
+    {
+      "path": "assets/jsb-adapter/jsb-builtin.js",
+      "size": 338029
+    },
+    {
+      "path": "assets/jsb-adapter/jsb-engine.js",
+      "size": 209060
+    },
+    {
+      "path": "assets/main.js",
+      "size": 4988
+    },
+    {
+      "path": "assets/project.json",
+      "size": 297
+    },
+    {
+      "path": "assets/src/cocos2d-jsb.jsc",
+      "size": 385984
+    },
+    {
+      "path": "assets/src/settings.jsc",
+      "size": 220
+    },
+    {
+      "path": "assets/supplierconfig.json",
+      "size": 68
+    },
+    {
+      "path": "assets/whiteList.json",
+      "size": 78
+    }
+  ],
+  "assets": {
+    "count": 1020,
+    "jsc": 3,
+    "js": 0
+  }
+}

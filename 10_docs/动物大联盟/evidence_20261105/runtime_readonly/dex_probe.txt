@@ -1,0 +1,34 @@
+
+== base.vdex
+   size=1567316 sha256=3c06b7ab1a731e2f… magic=VDEX
+   embedded_dex_magic=1
+   miss GatekeeperRepository
+   miss isGatekeeperLoadedSuccessfully
+   miss IntentHelper
+   miss LoginActivityImpl
+   miss WebHandler
+   miss dev.mars.secure
+   -> needles_hit=0/6
+
+== Anonymous-DexFile@442084367.vdex
+   size=476960 sha256=fa8260bd0dce6a85… magic=VDEX
+   embedded_dex_magic=0
+   miss GatekeeperRepository
+   miss isGatekeeperLoadedSuccessfully
+   miss IntentHelper
+   miss LoginActivityImpl
+   miss WebHandler
+   miss dev.mars.secure
+   -> needles_hit=0/6
+
+== base.odex
+   size=33688 sha256=c9db615c10a6fd5e… magic=ELF
+   miss GatekeeperRepository
+   miss isGatekeeperLoadedSuccessfully
+   miss IntentHelper
+   miss LoginActivityImpl
+   miss WebHandler
+   miss dev.mars.secure
+   -> needles_hit=0/6
+
+TOTAL needles_hit=0

@@ -1,0 +1,18 @@
+apk=/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk
+package=com.fightingstars.games.animal
+versionName=1.0.25
+versionCode=25
+sdkVersion=21
+targetSdkVersion=33
+native-code='arm64-v8a' 'armeabi-v7a' 'x86'
+launchable-activity=dev.mars.secure.StubActivity
+split_entries=<none>
+is_single_base=1
+signerDN=CN=shan, OU=bingo, O=bingo, L=guangzhou, ST=guangdong, C=CN
+certSHA256=DE8A75D30A1831F3DDC83F38F285513110FDE9AB919FB4E471653F86B5083E0A
+certSHA1=33E2C8612B3EFBDBB1D0D5B18B7FEFBB8C9CC05D
+certMD5=79A6A62F1C189D911B2DFF8324BE384B
+apksigner_rc=0
+application_name=dev.mars.secure.ProxyApplication
+debuggable=false
+provider_count=18

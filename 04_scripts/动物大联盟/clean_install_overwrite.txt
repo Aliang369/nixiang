@@ -1,0 +1,7 @@
+== 动物大联盟 clean-install mode=overwrite serial=f9a116a2 ==
+[step] P1_preflight_local rc=0 apk+official+srcfp+cert+so 全一致
+[step] P2_preflight_device rc=0 online+root+space+official-installed+ext-before
+[step] P3_uninstall rc=0 skipped(overwrite)
+[step] P4_residual_clean rc=0 skipped(overwrite)
+[step] P5_install rc=0 Success
+[step] P6_verify_installed rc=0 base.apk+so md5 == 本地

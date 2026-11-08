@@ -1,0 +1,16 @@
+package=com.fightingstars.games.animal
+versionName=1.0.25
+versionCode=25
+installer=com.android.packageinstaller
+primaryCpuAbi=arm64-v8a
+firstInstallTime=2026-11-05 00:51:42
+lastUpdateTime=2026-11-05 00:51:42
+split_pm_path_count=1
+split_splits_field=base
+serial=f9a116a2
+remote_path=/data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/base.apk
+pull_mode=direct
+apk=/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk
+size=81191854
+sha256=2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539
+md5=9c5d39360cb5d2789427c003183f6233

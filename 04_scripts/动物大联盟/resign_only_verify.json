@@ -1,0 +1,65 @@
+{
+  "step": "E1 resign-only 静态验证",
+  "official": {
+    "path": "02_apks/动物大联盟/动物大联盟_1.0.25_official.apk",
+    "size": 81191854,
+    "sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+    "expected_size": 81191854,
+    "expected_sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+    "identity_ok": true
+  },
+  "zipalign": {
+    "cmd": "zipalign -c -v -p 4 official.apk",
+    "rc": 0,
+    "bad_entries": 0,
+    "verdict": "官方包已对齐，未做 zipalign -f"
+  },
+  "signed": {
+    "path": "08_output/动物大联盟/动物大联盟_1.0.25_resign-only-releaseSigned.apk",
+    "size": 81228714,
+    "sha256": "f6b91b198adbcccabcaddbc13621a2ca28ad3e99b73572bacd4538240edef7f3",
+    "size_delta": 36860
+  },
+  "cert": {
+    "dn": "CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN",
+    "sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+    "expected_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+    "dn_contains_StarryMagic": true,
+    "official_dn": "CN=shan, OU=bingo, O=bingo, L=guangzhou, ST=guangdong, C=CN"
+  },
+  "sign_schemes": {
+    "v1": true,
+    "v2": true,
+    "v3": true,
+    "v4": false,
+    "v4_note": "未内置 idsig；apksigner 另写了 .idsig 旁路文件，不影响装机"
+  },
+  "entries": {
+    "official_count": 2928,
+    "signed_count": 2928,
+    "common": 2926,
+    "only_in_official": [
+      "META-INF/BINGOGAM.RSA",
+      "META-INF/BINGOGAM.SF"
+    ],
+    "only_in_signed": [
+      "META-INF/STARRY.RSA",
+      "META-INF/STARRY.SF"
+    ],
+    "payload_mismatch": [],
+    "identical_payload": true,
+    "note": "2926 条载荷条目 CRC32/size/压缩方式逐条一致；唯一差异=2 个 v1 JAR 签名文件随换钥改名（BINGOGAM.*→STARRY.*），这是换签名密钥的必然结果，无法消除"
+  },
+  "banned": {
+    "present": [],
+    "clean": true
+  },
+  "gate": {
+    "resign_did_not_touch_payload": true,
+    "payload_identical": true,
+    "banned_absent": true,
+    "cert_ok": true,
+    "overall": "PASS（可装机）",
+    "caveat": "条目数/载荷一致；签名文件名差异 2 条属换钥固有"
+  }
+}

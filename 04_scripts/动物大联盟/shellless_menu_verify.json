@@ -1,0 +1,133 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_shellless-menu-releaseSigned.apk",
+  "apk_sha256": "60785496ebfdc50be53819e737c20b6dab916cab135263d7141d39232a64ca2b",
+  "apk_size": 66416893,
+  "official_sha256": "2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539",
+  "dex": [
+    {
+      "entry": "classes.dex",
+      "size": 7337840,
+      "zip_size": 7337840,
+      "magic": "dex\n035\u0000",
+      "file_size_hdr": 7337840,
+      "class_defs_size": 6389,
+      "n_classes_parsed": 6389,
+      "sha256": "d0c4b2acf192d46523fe0fd1ebdd977bae6be246faf341b680233e95209f7945"
+    },
+    {
+      "entry": "classes2.dex",
+      "size": 7802464,
+      "zip_size": 7802464,
+      "magic": "dex\n035\u0000",
+      "file_size_hdr": 7802464,
+      "class_defs_size": 8531,
+      "n_classes_parsed": 8531,
+      "sha256": "e89b04e9902eb0a42dffc3d5a2944dd4627e2266118ed5ed7439465951f7413c"
+    },
+    {
+      "entry": "classes3.dex",
+      "size": 8522380,
+      "zip_size": 8522380,
+      "magic": "dex\n035\u0000",
+      "file_size_hdr": 8522380,
+      "class_defs_size": 7776,
+      "n_classes_parsed": 7776,
+      "sha256": "7662fbad2aaaf138fe4cc8ff00e9b0e8a3f9c91b58bcd357313b51fcce32e2fa"
+    },
+    {
+      "entry": "classes4.dex",
+      "size": 852,
+      "zip_size": 852,
+      "magic": "dex\n035\u0000",
+      "file_size_hdr": 852,
+      "class_defs_size": 1,
+      "n_classes_parsed": 1,
+      "sha256": "2f57b7e31931c02e5d5b7f2839f2b86d11be22416e9d012f0c066f340ce7f36d"
+    },
+    {
+      "entry": "classes5.dex",
+      "size": 506656,
+      "zip_size": 506656,
+      "magic": "dex\n035\u0000",
+      "file_size_hdr": 506656,
+      "class_defs_size": 206,
+      "n_classes_parsed": 206,
+      "sha256": "ef8c7f335d8bf0d77193a36673653a0c945f3d017e98b9ec125e1f7af69ffb8a"
+    }
+  ],
+  "checks": [
+    {
+      "id": "C1",
+      "name": "Manifest 无壳引用 + 仅 ShellGate 空实现（SL2 口径）",
+      "pass": true,
+      "detail": "Manifest 无 dev.mars.secure/Stub*；壳类仅白名单 ['Ldev/mars/secure/ShellGate;'] 存在（[('classes4.dex', 'Ldev/mars/secure/ShellGate;')]）；非白名单壳类 0 个；残留 dev/mars/secure 字面量: classes3.dex x1, classes4.dex x1, classes5.dex x1"
+    },
+    {
+      "id": "C2",
+      "name": "application@name=BingoApplication 且无 appComponentFactory",
+      "pass": true,
+      "detail": "application@name=com.bingo.cocos.bridge.BingoApplication，无 appComponentFactory/ProxyApplication"
+    },
+    {
+      "id": "C3",
+      "name": "launchable=AppActivity(MAIN+LAUNCHER)，无 StubActivity",
+      "pass": true,
+      "detail": "launchable-activity=org.cocos2dx.javascript.AppActivity；同一 intent-filter 内 MAIN+LAUNCHER；无 StubActivity 元素"
+    },
+    {
+      "id": "C4",
+      "name": "18 官方 provider 不变 + 1 注入 provider",
+      "pass": true,
+      "detail": "官方 18 provider @name/authorities 逐条不变 + 注入 com.starry.magic.StarryInitProvider(authority=com.fightingstars.games.animal.starryinit)；19 条无重复"
+    },
+    {
+      "id": "C5",
+      "name": "dex 连续编号 + magic/file_size + dexdump -c",
+      "pass": true,
+      "detail": "classes.dex/classes2.dex/classes3.dex/classes4.dex/classes5.dex 连续无空洞；magic=dex035；file_size==zip 长度；dexdump -c 校验和全过；class_defs=[6389, 8531, 7776, 1, 206]"
+    },
+    {
+      "id": "C6",
+      "name": "真实 dex 定义 BingoApplication 与 AppActivity",
+      "pass": true,
+      "detail": "BingoApplication 定义在 classes3.dex；AppActivity 定义在 classes.dex（class_defs 级）"
+    },
+    {
+      "id": "C7",
+      "name": "无壳 so，libcocos2djs.so hash 对齐",
+      "pass": true,
+      "detail": "5 壳 so（arm64+v7a）+ lib/x86/libsecret.so 已删；lib/arm64-v8a/libcocos2djs.so sha256=dd3a0462…b44"
+    },
+    {
+      "id": "C8",
+      "name": "so 压缩方式 + zipalign 对齐",
+      "pass": true,
+      "detail": "包内 29 个 .so 压缩方式与官方逐条一致 {8: 29}（8=DEFLATED，实测；方案原文 compress=0 与实测不符）；zipalign -c -p 4 OK"
+    },
+    {
+      "id": "C9",
+      "name": "assets 去壳块、保 1731500040",
+      "pass": true,
+      "detail": "assets 无 apksecure*；1731500040 保留，sha256=1b7ef6f5… 与官方一致"
+    },
+    {
+      "id": "C10",
+      "name": "白名单 diff（arsc 与其余条目逐字节）",
+      "pass": true,
+      "detail": "白名单外 2868/2868 条目与官方逐字节同；resources.arsc sha256 与官方一致"
+    },
+    {
+      "id": "C11",
+      "name": "签名 v1/v2/v3 + 证书 + 无旧 v1",
+      "pass": true,
+      "detail": "v1/v2/v3 全 true；DN=CN=StarryMagic；无 BINGOGAM 旧 v1；dex 无 SignSpoof"
+    },
+    {
+      "id": "C12",
+      "name": "菜单注入点齐全（provider/service/dex/so/依赖）",
+      "pass": true,
+      "detail": "provider(exported=false, initOrder=2147483647) + MenuService 就位；classes5.dex 四类齐全；so sha256=ea5ba328… starry_dwdlm_v1=0 且 DWDLM_ENV_ONLY 在；libc++_shared.so 随包；全 5 份 dex 无 SignSpoof/bin/mt；Manifest 无 apksecure"
+    }
+  ],
+  "all_pass": true
+}

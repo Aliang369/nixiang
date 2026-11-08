@@ -1,0 +1,28 @@
+# 动物大联盟 设备事实（只读探测，2026-11-05 22:21:07）
+serial=f9a116a2
+root=available
+root_id=uid=0(root) gid=0(root) groups=0(root) context=u:r:ksu:s0
+model=OPD2404
+brand=OnePlus
+manufacturer=OnePlus
+device=OP5D77L1
+android_release=16
+sdk=36
+build_incremental=U.38edfdf-15fddd0-1656346
+build_type=user
+build_tags=release-keys
+cpu_abi=arm64-v8a
+page_size=
+fingerprint=OnePlus/OPD2404/OP5D77L1:16/UKQ1.231108.001/U.38edfdf-15fddd0-1656346:user/release-keys
+pkg=com.fightingstars.games.animal
+pkg_installed=yes
+pm_path=package:/data/app/~~WG706nvntG5DTAOgHqsz4w==/com.fightingstars.games.animal-Xm5Trxt6qVKogLaYfQ6lrA==/base.apk
+version=versionCode=25minSdk=21targetSdk=33
+versionName=1.0.25
+source_dir=codePath=/data/app/~~WG706nvntG5DTAOgHqsz4w==/com.fightingstars.games.animal-Xm5Trxt6qVKogLaYfQ6lrA==
+signatures=    signatures=PackageSignatures{678e083 version:3, signatures:[6f4dda0b], past signatures:[]}
+df_data=/dev/block/dm-72 230145084 105722068 124291944  46% /data/user/0
+df_sdcard=/dev/fuse      230145084 105722068 124291944  46% /storage/emulated
+df_tmp=/dev/block/dm-72 230145084 105722068 124291944  46% /data/user/0
+ext_data=absent (0 KB)
+ext_obb=absent (0 KB)

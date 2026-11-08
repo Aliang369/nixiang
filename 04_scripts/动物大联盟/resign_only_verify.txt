@@ -1,0 +1,19 @@
+E1 纯重签静态验证（动物大联盟 1.0.25 / com.fightingstars.games.animal）
+时间: 2026-11-05 设备: f9a116a2
+----------------------------------------------------------------------
+1) 官方底包身份: OK
+   size=81191854  sha256=2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539
+2) zipalign -c -v -p 4: rc=0 bad=0 => 已对齐，直接签名（未重排）
+3) 重签产物: 08_output/动物大联盟/动物大联盟_1.0.25_resign-only-releaseSigned.apk
+   size=81228714  (官方 81191854, 差值 +36860)
+   sha256=f6b91b198adbcccabcaddbc13621a2ca28ad3e99b73572bacd4538240edef7f3
+4) 证书 DN: CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN
+   cert sha256=83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d (与 clean_install 期望一致)
+5) 签名方案: v1=true v2=true v3=true v4=false
+6) 条目对比: 官方 2928 条 / 重签 2928 条 / 共有 2926 条
+   同名同大小同CRC 的差异条目: 无
+   官方独有: ['META-INF/BINGOGAM.RSA', 'META-INF/BINGOGAM.SF']
+   重签独有: ['META-INF/STARRY.RSA', 'META-INF/STARRY.SF']
+   禁项检查: classes2.dex / libstarry_magic.so / com.starry* => 全无（干净）
+7) 结论: PASS（可装机）
+   注: 2926 条载荷条目逐条 CRC 一致；仅 2 个 v1 签名文件名随换钥变更(BINGOGAM->STARRY)，属换钥必然

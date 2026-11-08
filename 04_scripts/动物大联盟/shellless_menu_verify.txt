@@ -1,0 +1,31 @@
+# 动物大联盟 1.0.25 无壳包 + 星光菜单 · 静态自检
+
+apk      : 动物大联盟_1.0.25_shellless-menu-releaseSigned.apk
+sha256   : 60785496ebfdc50be53819e737c20b6dab916cab135263d7141d39232a64ca2b
+size     : 66416893
+official : 2c9e85451b41b3bcb38148e488e28c85bcfba005db9c37743c926c0363c4f539
+
+| # | 项 | 结果 | 证据 |
+|---|---|---|---|
+| C1 | Manifest 无壳引用 + 仅 ShellGate 空实现（SL2 口径） | PASS | Manifest 无 dev.mars.secure/Stub*；壳类仅白名单 ['Ldev/mars/secure/ShellGate;'] 存在（[('classes4.dex', 'Ldev/mars/secure/ShellGate;')]）；非白名单壳类 0 个；残留 dev/mars/secure 字面量: classes3.dex x1, classes4.dex x1, classes5.dex x1 |
+| C2 | application@name=BingoApplication 且无 appComponentFactory | PASS | application@name=com.bingo.cocos.bridge.BingoApplication，无 appComponentFactory/ProxyApplication |
+| C3 | launchable=AppActivity(MAIN+LAUNCHER)，无 StubActivity | PASS | launchable-activity=org.cocos2dx.javascript.AppActivity；同一 intent-filter 内 MAIN+LAUNCHER；无 StubActivity 元素 |
+| C4 | 18 官方 provider 不变 + 1 注入 provider | PASS | 官方 18 provider @name/authorities 逐条不变 + 注入 com.starry.magic.StarryInitProvider(authority=com.fightingstars.games.animal.starryinit)；19 条无重复 |
+| C5 | dex 连续编号 + magic/file_size + dexdump -c | PASS | classes.dex/classes2.dex/classes3.dex/classes4.dex/classes5.dex 连续无空洞；magic=dex035；file_size==zip 长度；dexdump -c 校验和全过；class_defs=[6389, 8531, 7776, 1, 206] |
+| C6 | 真实 dex 定义 BingoApplication 与 AppActivity | PASS | BingoApplication 定义在 classes3.dex；AppActivity 定义在 classes.dex（class_defs 级） |
+| C7 | 无壳 so，libcocos2djs.so hash 对齐 | PASS | 5 壳 so（arm64+v7a）+ lib/x86/libsecret.so 已删；lib/arm64-v8a/libcocos2djs.so sha256=dd3a0462…b44 |
+| C8 | so 压缩方式 + zipalign 对齐 | PASS | 包内 29 个 .so 压缩方式与官方逐条一致 {8: 29}（8=DEFLATED，实测；方案原文 compress=0 与实测不符）；zipalign -c -p 4 OK |
+| C9 | assets 去壳块、保 1731500040 | PASS | assets 无 apksecure*；1731500040 保留，sha256=1b7ef6f5… 与官方一致 |
+| C10 | 白名单 diff（arsc 与其余条目逐字节） | PASS | 白名单外 2868/2868 条目与官方逐字节同；resources.arsc sha256 与官方一致 |
+| C11 | 签名 v1/v2/v3 + 证书 + 无旧 v1 | PASS | v1/v2/v3 全 true；DN=CN=StarryMagic；无 BINGOGAM 旧 v1；dex 无 SignSpoof |
+| C12 | 菜单注入点齐全（provider/service/dex/so/依赖） | PASS | provider(exported=false, initOrder=2147483647) + MenuService 就位；classes5.dex 四类齐全；so sha256=ea5ba328… starry_dwdlm_v1=0 且 DWDLM_ENV_ONLY 在；libc++_shared.so 随包；全 5 份 dex 无 SignSpoof/bin/mt；Manifest 无 apksecure |
+
+dex 明细:
+
+  classes.dex   size=7337840   hdr=7337840   class_defs=6389  sha256=d0c4b2acf192d465
+  classes2.dex  size=7802464   hdr=7802464   class_defs=8531  sha256=e89b04e9902eb0a4
+  classes3.dex  size=8522380   hdr=8522380   class_defs=7776  sha256=7662fbad2aaaf138
+  classes4.dex  size=852       hdr=852       class_defs=1     sha256=2f57b7e31931c02e
+  classes5.dex  size=506656    hdr=506656    class_defs=206   sha256=ef8c7f335d8bf0d7
+
+总判定: C1–C12 全部 PASS

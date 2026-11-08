@@ -1,0 +1,25 @@
+package=com.fightingstars.games.animal
+serial=f9a116a2
+probed_at=2026-11-05 20:41:16
+pid=27292
+maps_total_lines=3597
+filtered_lines=15
+libsecret_map_lines=6
+libcocos2djs_map_lines=3
+libstarry_magic_map_lines=0
+---- filtered maps ----
+6fc0055000-6fc0066000 r-xp 00000000 fe:48 670108                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libEncryptorP.so
+6fc0076000-6fc0077000 r--p 00011000 fe:48 670108                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libEncryptorP.so
+6fc0077000-6fc0078000 rw-p 00012000 fe:48 670108                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libEncryptorP.so
+6fc1c80000-6fc1ce3000 r-xp 00000000 fe:48 670118                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libsecret.so
+6fc1ce6000-6fc1cea000 r--p 00062000 fe:48 670118                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libsecret.so
+6fc1ced000-6fc1cf8000 rw-p 00065000 fe:48 670118                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libsecret.so
+6fd3a1d000-6fd5af2000 r-xp 00000000 fe:48 674934                         /data/data/com.fightingstars.games.animal/no_backup/mlib/arm64-v8a/libcocos2djs.so
+6fd5af3000-6fd5bf3000 r--p 020d5000 fe:48 674934                         /data/data/com.fightingstars.games.animal/no_backup/mlib/arm64-v8a/libcocos2djs.so
+6fd5bf3000-6fd5c46000 rw-p 021d5000 fe:48 674934                         /data/data/com.fightingstars.games.animal/no_backup/mlib/arm64-v8a/libcocos2djs.so
+70494a2000-7049594000 r--s 04bee000 fe:48 670030                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/base.apk
+7099087000-70990ea000 r-xp 00000000 fe:48 670118                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libsecret.so
+70990ed000-70990f1000 r--p 00062000 fe:48 670118                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libsecret.so
+70990f4000-70990ff000 rw-p 00065000 fe:48 670118                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/lib/arm64/libsecret.so
+7149200000-7149249000 r--s 04d26000 fe:48 670030                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/base.apk
+715080d000-7150856000 r--s 04d26000 fe:48 670030                         /data/app/~~xx_0v9N-fhVp7REGBZb1RQ==/com.fightingstars.games.animal-FJqCj8HWCgmfms5AcA_uHQ==/base.apk

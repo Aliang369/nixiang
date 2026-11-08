@@ -1,0 +1,11 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_shellless-menu-releaseSigned.apk",
+  "apk_sha256": "a19552391c7318a7b7e5c478d94f79757cc98337376a9806e8845b552447f98e",
+  "apk_size": 66420989,
+  "base_shellless2_sha256": "7f1b1ad2fa9c002e068b32dce30e6f57b9e678ba1901edc4aa10e2d73337cd18",
+  "menu_dex_sha256": "a34e9d75ddf00d3d4771b41256c58e40052e72b17f4417960f226fb75d14b51e",
+  "so_profile": "env",
+  "so_sha256": "fa9da2ec20250e28b89ad92bb8a97ad626b61bda51b73fda90e36e8e57523113",
+  "so_md5": "aa2354bff916a59cc1df534c33a8fc53",
+  "libcxx_shared_sha256": "46b51d661454b9cfaf42c1dc90893b5ad601b7a7ffc2e09d44bb3cc9d20e7ae2"
+}
