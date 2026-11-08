@@ -4,35 +4,27 @@
   "version": "6.0.013",
   "version_code": 6000013,
   "serial": "f9a116a2",
-  "remote_base_apk": "/data/app/~~pbzajlahzK_a7g1gbLVOhw==/com.acing.gow.adv-S9P5_7lT66qfSZdXkyqB6w==/base.apk",
+  "note": "2026-11-08 轮：按用户口径「直接拿真机的当底包」，底包=真机已装 10-30 成品包（非官方原版）",
+  "remote_base_apk": "/data/app/~~JodGn_EvZ-E-9wii-BSzRw==/com.acing.gow.adv-20_sOR7O_LiN8L1HmWY4cQ==/base.apk",
   "remote_hotupdate_dir": "/storage/emulated/0/Android/data/com.acing.gow.adv/files/HotUpdate/Android",
-  "hotupdate_manifest_version": "1.0.0.06",
+  "hotupdate_manifest_version": "1.0.0.14",
   "base_apk": "/Users/aliang/Documents/nixiang/06_dumped/宝石战争/6.0.013/current/base.apk",
   "base_apk_fingerprint": {
-    "size": 520621296,
-    "md5": "81472a9e8933d6563a243325a79277da",
-    "sha256": "bb589c636cd39fd5bffcc10a3e15154107079da5a31a3d4f317dc81f99556e1d"
+    "size": 526650899,
+    "md5": "35b40f7b86c29d3472a52707e1a8009a"
   },
   "hotupdate": {
     "system_network_bytes": {
-      "size": 8632832,
-      "md5": "f982199e1e575218f40b54e701ad7921",
-      "sha256": "278eaeafef20eb0ccfc9d1358400f15d1a78a5d267dd3efe200b3f507c1cf57b"
-    },
-    "system_platform_bytes": {
-      "size": 36864,
-      "md5": "48affeb9135d9b412ba8de59c3aaed03",
-      "sha256": "127586931d3751d5e150ef039bc11f93f962d0617b024368607daa43b43b93d4"
+      "size": 8881664,
+      "md5": "ddd03dad300487fe8e22d3bc75515584"
     },
     "manifest": {
-      "size": 15969,
-      "md5": "2abd1fda51dea9acf970ada0700ab415",
-      "sha256": "99ed325cf1bbfbbcec679b194fedef34d8f6c39f3ecd2bd2b09688f5c095c2c7"
+      "size": 15971,
+      "md5": "545fbbe3fee23328432bb48bccb6a83d"
     },
     "receipt": {
-      "size": 7158,
-      "md5": "c764d1b123f5f541e20c9b4d134b7253",
-      "sha256": "c85aa1f1f88cdc1a370875400a9e8f0b996ed0c83ad3b4d6199bb348d15e5afb"
+      "size": 7160,
+      "md5": "0009209355daf4f5514aa16114a1e168"
     }
   }
 }

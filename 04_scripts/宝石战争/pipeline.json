@@ -1,7 +1,7 @@
 {
   "game": "宝石战争",
   "version": "6.0.013",
-  "notes": "2026-09-23：官方已升级到 6.0.013（热更 1.0.0.04）。沿用 6.0.012 的外科路线复刻星光三项功能：全量 142 个 1.0.0.04 资源（114 个来自包内 1.0.0.01、28 个来自设备已下发的差分文件，逐条 md5 对齐官方 1.0.0.04 manifest），包内保留官方 manifest/receipt（版本 1.0.0.04、Network 官方 hash 3e49c9876a6c4b394c552f71adbebf9d），仅替换注入后的 System.Network.dll.bytes。\n\n2026-09-29：游戏内热更推进到 1.0.0.06 后三项功能全失效（外部官方 System.Network.dll.bytes 覆盖包内 1.0.0.04 补丁 DLL）；按 1.0.0.06 官方资产重注入（补丁 bytes 0f34ea7f…）并用 bszz_surgical_hotupdate_only.sh 只换热更资产重建，唯一正式包=宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…，520,625,392B）；同签覆盖安装未清数据，G2 ✓（用户实测三项功能没问题）。新增阶段 hotupdate_1.0.0.06_repair；设备侧两条轻量修复路径已被实测否定，细节见 10_docs/宝石战争/热更修复_1.0.0.06_20260929.md。\n\n收官（2026-09-29）：提交 70085f6 已推送 origin/main（7cc25ba..70085f6）；08_output 裁剪为唯一正式包 宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…）；06_dumped 633M→33M、07_patched 34M→16M（清理清单=10_docs/宝石战争/清理清单_6.0.013_hu1.0.0.06_20260929.json，Trash 隔离区 /Users/aliang/.Trash/nixiang______20260929_20260929_213952，618M 可恢复）；新增阶段 hotupdate_1.0.0.06_repair（done，产物指纹 ✓）。\n\n2026-10-30 收官：正式包 宝石战争_6.0.013_surgical-releaseSigned.apk（md5 35b40f7b…，526,650,899B）；icon 提取到 08_output/宝石战争/icon/（192x192，md5 4e3cbe86…，仓库副本 10_docs/宝石战争/icon/）；prune 删 unsigned+idsig（清单 正式包裁剪清单_6.0.013_hu1.0.0.11_20261030.json）；trash 清 9 项 ~546MB（清单 清理清单_6.0.013_hu1.0.0.11_20261030.json，隔离区 /Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210352）；06_dumped 116M→20M、07_patched 441M→8.6M、08_output 1.0G→514M；02_apks 官方底包保留可回退。",
+  "notes": "2026-09-23：官方已升级到 6.0.013（热更 1.0.0.04）。沿用 6.0.012 的外科路线复刻星光三项功能：全量 142 个 1.0.0.04 资源（114 个来自包内 1.0.0.01、28 个来自设备已下发的差分文件，逐条 md5 对齐官方 1.0.0.04 manifest），包内保留官方 manifest/receipt（版本 1.0.0.04、Network 官方 hash 3e49c9876a6c4b394c552f71adbebf9d），仅替换注入后的 System.Network.dll.bytes。\n\n2026-09-29：游戏内热更推进到 1.0.0.06 后三项功能全失效（外部官方 System.Network.dll.bytes 覆盖包内 1.0.0.04 补丁 DLL）；按 1.0.0.06 官方资产重注入（补丁 bytes 0f34ea7f…）并用 bszz_surgical_hotupdate_only.sh 只换热更资产重建，唯一正式包=宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…，520,625,392B）；同签覆盖安装未清数据，G2 ✓（用户实测三项功能没问题）。新增阶段 hotupdate_1.0.0.06_repair；设备侧两条轻量修复路径已被实测否定，细节见 10_docs/宝石战争/热更修复_1.0.0.06_20260929.md。\n\n收官（2026-09-29）：提交 70085f6 已推送 origin/main（7cc25ba..70085f6）；08_output 裁剪为唯一正式包 宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…）；06_dumped 633M→33M、07_patched 34M→16M（清理清单=10_docs/宝石战争/清理清单_6.0.013_hu1.0.0.06_20260929.json，Trash 隔离区 /Users/aliang/.Trash/nixiang______20260929_20260929_213952，618M 可恢复）；新增阶段 hotupdate_1.0.0.06_repair（done，产物指纹 ✓）。\n\n2026-10-30 收官：正式包 宝石战争_6.0.013_surgical-releaseSigned.apk（md5 35b40f7b…，526,650,899B）；icon 提取到 08_output/宝石战争/icon/（192x192，md5 4e3cbe86…，仓库副本 10_docs/宝石战争/icon/）；prune 删 unsigned+idsig（清单 正式包裁剪清单_6.0.013_hu1.0.0.11_20261030.json）；trash 清 9 项 ~546MB（清单 清理清单_6.0.013_hu1.0.0.11_20261030.json，隔离区 /Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210352）；06_dumped 116M→20M、07_patched 441M→8.6M、08_output 1.0G→514M；02_apks 官方底包保留可回退。\n\n2026-11-08：官方热更 1.0.0.11 → 1.0.0.14（真机 21:04 落地 9 个增量文件，Network DLL 8,881,664B md5 ddd03dad…）。用户口径「游戏热更了，直接拿真机的当底包」⇒ 底包＝真机已装 10-30 成品包（md5 35b40f7b…，526,650,899B），热更输入＝真机增量，不重下 TapTap 原包。解密明文 90ff3581…、4 锚点全命中、补丁 bytes f01a7e82…（8,806,400B）；surgical_hotupdate_only 142 资产＝9 delta+133 底包；唯一正式包＝宝石战争_6.0.013_hu1.0.0.14_surgical-releaseSigned.apk（md5 4a23163f545bc51f848be13053414963，526,663,187B）；覆盖安装保数据，预检 PASS_TO_HUMAN，G2 ✓（用户「功能没问题了」）；装机后删外部 files/HotUpdate 防官方未补丁 DLL 覆盖。文档=星光落地_6.0.013_hu1.0.0.14_20261108.md。",
   "params": {
     "game_id": "bszz",
     "package": "com.acing.gow.adv",
@@ -120,6 +120,11 @@
       "done_at": "2026-09-23 17:58:26",
       "inputs": {
         "04_scripts/宝石战争/.device_serial": "0bc47570b06495af1a544933783b7037"
+      },
+      "cleaned": {
+        "2026-11-08": [
+          "06_dumped/宝石战争/6.0.013/current/base.apk"
+        ]
       }
     },
     {
@@ -139,10 +144,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-30 20:20:38",
+      "done_at": "2026-11-08 21:15:00",
       "artifacts": {
         "06_dumped/宝石战争/6.0.013/static/static_inputs.json": {
-          "md5": "551e708870a5b3b6b9ce0cf0d3a3348d"
+          "md5": "69fc7dc1475f6e48e76ae467eabc4850"
         }
       }
     },
@@ -268,10 +273,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-30 20:22:32",
+      "done_at": "2026-11-08 21:16:00",
       "artifacts": {
         "07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes": {
-          "md5": "a5f909793fb72f7ff669a000e8fe40a8"
+          "md5": "f01a7e82f56c59a395d003472c92c416"
         }
       },
       "inputs": {
@@ -292,7 +297,7 @@
       ],
       "verify": [
         {
-          "type": "file_exists",
+          "type": "not_exists",
           "path": "08_output/宝石战争/宝石战争_6.0.013_surgical-unsigned.apk"
         }
       ],
@@ -317,15 +322,15 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk"
+          "path": "08_output/宝石战争/宝石战争_6.0.013_hu1.0.0.14_surgical-releaseSigned.apk"
         }
       ],
       "status": "done",
       "note": "2026-09-29 收尾清理: /Users/aliang/Documents/nixiang/08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk\n2026-09-29 收尾清理: 08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk; 原 md5=81472a9e8933d6563a243325a79277da",
-      "done_at": "2026-10-30 20:52:23",
+      "done_at": "2026-11-08 21:16:30",
       "artifacts": {
-        "08_output/宝石战争/宝石战争_6.0.013_surgical-releaseSigned.apk": {
-          "md5": "35b40f7b86c29d3472a52707e1a8009a"
+        "08_output/宝石战争/宝石战争_6.0.013_hu1.0.0.14_surgical-releaseSigned.apk": {
+          "md5": "4a23163f545bc51f848be13053414963"
         }
       }
     },
@@ -375,10 +380,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-10-30 20:52:57",
+      "done_at": "2026-11-08 21:17:00",
       "artifacts": {
         "04_scripts/宝石战争/install_result.txt": {
-          "md5": "39510cb636195abe849d192c7bdfb2f7"
+          "md5": "debe7f67ad291bae3870c6037b974a0f"
         }
       },
       "inputs": {
@@ -448,6 +453,30 @@
       ],
       "status": "skipped",
       "note": "对照/回退专用：只手动 run，不参与 next 自动推进。6.0.013 底包已存 02_apks/宝石战争/宝石战争_6.0.013_official_from_device.apk。"
+    },
+    {
+      "id": "hotupdate_1.0.0.14_repair",
+      "name": "热更 1.0.0.14 星空包替换（真机成品包当底包 + 真机增量，只换热更资产）",
+      "requires": [
+        "patch_dll"
+      ],
+      "command": "BSZZ_VERSION=6.0.013_hu1.0.0.14 BSZZ_BASE_APK=<真机成品包> BSZZ_BASE_APK_MD5=35b40f7b86c29d3472a52707e1a8009a BSZZ_HOTUPDATE_ROOT=06_dumped/宝石战争/6.0.013/hotupdate_1.0.0.14 BSZZ_EXPECT_HOTUPDATE_VERSION=1.0.0.14 BSZZ_PATCHED_NETWORK=07_patched/宝石战争/6.0.013/assets/Android/Dlls/System.Network.dll.bytes bash 04_scripts/宝石战争/bszz_surgical_hotupdate_only.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_surgical_hotupdate_only.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/宝石战争/宝石战争_6.0.013_hu1.0.0.14_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-08 21:16:30",
+      "artifacts": {
+        "08_output/宝石战争/宝石战争_6.0.013_hu1.0.0.14_surgical-releaseSigned.apk": {
+          "md5": "4a23163f545bc51f848be13053414963"
+        }
+      }
     }
   ]
 }
