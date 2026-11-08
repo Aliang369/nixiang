@@ -101,7 +101,7 @@
 | 我的技能无限触发 | 2026-11-02 | 收官 1.6.3：8 项菜单 L3 全过，正式包 md5 `bdd08c8f` | [摘要](games/我的技能无限触发.md) |
 | 梦幻回忆（梦幻封神） | 2026-11-03 | ⛔ 已收尾：服务端权威（ReqBattleCommand→服务端算→快照覆盖），客户端功能不可实现；四层防护（GDRC签名/protected_paths/12文件清单/base_id热更新）逐层实测 | [摘要](games/梦幻回忆.md) |
 | 境界刀鸣国际 | 2026-11-07 | 🟢 已交付：与国服**同源**（`libgame.so` 挂点逐一相同），hhld kill-switch NOP @`0x793b8`；**独立 id `jjdmintl`**（先例 `gjc2intl`），login 200 自愈成功；正式包已合并为**统一单包**（140 MB，删 `isSplitRequired`/`requiredSplitTypes` + 并入 70 个 so 与 `main.xpk`），`install -r` 覆盖成功、5.5G 热更保留 | [摘要](games/境界刀鸣国际.md) |
-| 境界刀鸣国际CR | 2026-11-08 | 🟢 Crunchyroll 渠道重做（脱离 Google 依赖）：`libgame.so` md5 与国服/GP 版全同 ⇒ 同源；无 hhld/PairIP/GSDK（19 so）；资源 1.47 GB 打在 installtime、无热更；**单包 1.5 GB 已装**，星光 `RegisterNatives 19/19`、`game_id=jjdmintl`、bootstrap 200，待登录验证三功能。坑：CR 版不自带 `libc++_shared.so`，已随包注入 | [摘要](games/境界刀鸣国际CR.md) |
+| 境界刀鸣国际CR | 2026-11-08 | 🟢 **已交付**（Crunchyroll 渠道，脱离 Google 依赖）：`libgame.so` md5 与国服/GP 全同 ⇒ 同源；无 hhld/PairIP/GSDK（19 so）；资源 1.47 GB 在 installtime、无热更；单包 1.5 GB（sha256 `3a66f590…`）已装，三功能玩家实测通过。坑：CR 不自带 `libc++_shared.so`，已注入 | [摘要](games/境界刀鸣国际CR.md) |
 
 ## 基础设施与经验
 

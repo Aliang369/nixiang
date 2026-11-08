@@ -1,0 +1,71 @@
+{
+  "game": "境界刀鸣国际CR",
+  "game_id": "jjdmintl",
+  "package": "com.crunchyroll.bleachsoulres",
+  "version": "1.50.212144",
+  "version_code": 50,
+  "channel": "crunchyroll",
+  "created_at": "2026-11-08",
+  "params": {
+    "game_id": "jjdmintl",
+    "base_pkg": "com.bladetw.bd"
+  },
+  "menu_template": {
+    "path": "10_docs/境界刀鸣国际CR/jjdmcr_menu_template.json",
+    "template_id": "jjdmintl",
+    "feature_count": 3
+  },
+  "final_artifact": {
+    "path": "/Users/aliang/Documents/nixiang/08_output/境界刀鸣国际CR/境界刀鸣国际CR_1.50.212144_三功能_jjdmintl_universal-releaseSigned.apk",
+    "size": 1565102147,
+    "md5": "ff7ff809be03aee178b95668aa2c1b63",
+    "sha256": "3a66f5905735278de9333e6be6408e40b97243bd5266079f33be9d56763c4dad"
+  },
+  "stages": [
+    {
+      "id": "pull",
+      "name": "真机拉官方三件套",
+      "status": "done",
+      "done_at": "2026-11-08 15:00",
+      "command": "adb pull <codePath>/{base,split_config.arm64_v8a,split_installtime}.apk",
+      "notes": "35,536,153 / 54,847,255 / 1,470,416,294 B；APKPure 缓存另有 _96f0ee07.apk + _9d42bf5b.xapk"
+    },
+    {
+      "id": "resignsmoke",
+      "name": "零注入重签冒烟",
+      "status": "done",
+      "done_at": "2026-11-08 15:05",
+      "command": "zipalign -p 4 + apksigner sign",
+      "notes": "实测可直接启动、无崩溃 ⇒ CR 版无 hhld kill-switch，GP 版的 NOP 0x793b8 不需要"
+    },
+    {
+      "id": "universal",
+      "name": "星光统一单包",
+      "status": "done",
+      "done_at": "2026-11-08 15:11",
+      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_jjdmcr_universal.sh",
+      "notes": "INJECT_DEX=classes6.dex；注入 19 so + 486 installtime assets + libstarry_magic.so(jjdmintl) + libc++_shared.so；删 isSplitRequired/requiredSplitTypes"
+    },
+    {
+      "id": "install",
+      "name": "装机",
+      "status": "done",
+      "done_at": "2026-11-08 15:12",
+      "command": "adb install -r -d <universal apk>",
+      "notes": "单包结构 pm path 只有 base.apk；覆盖安装 3 s 级"
+    },
+    {
+      "id": "verify",
+      "name": "功能验证",
+      "status": "done",
+      "done_at": "2026-11-08 15:35",
+      "command": "(用户实测)",
+      "notes": "RegisterNatives 19/19、game_id=jjdmintl、bootstrap 200；三功能用户确认生效"
+    }
+  ],
+  "known_pitfalls": [
+    "CR 版 split_config 无 libc++_shared.so（GP 版有），必须随包注入否则 libstarry_magic.so 加载失败",
+    "resources 在 split_installtime 1.47 GB，486/491 条目 STORED，合并需流式搬运",
+    "StarryInitProvider loadLibrary(\"luster\") 报 UnsatisfiedLinkError 属正常（有 catch，W 级）"
+  ]
+}

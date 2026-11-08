@@ -1,6 +1,6 @@
 # 境界刀鸣 国际服 Crunchyroll 渠道（com.crunchyroll.bleachsoulres）
 
-> 更新：2026-11-08 15:20。**星光单包已装、链路全通，待用户登录进游戏验证三功能**。
+> 更新：2026-11-08 15:40。**已交付**：星光单包 1.5 GB 已装，**三功能玩家实测通过**（用户原话「功能都没问题」）。
 > 与 GP 版（`com.bladetw.bd` 1.48）**同源但不同渠道**：`libgame.so` md5 完全相同。
 
 ## 1. 为什么重做（用户原话）
@@ -81,11 +81,20 @@ native menu shown mode=ACTIVITY
 - game_id 沿用 `jjdmintl`（用户明确「game_id 用相同的」），与 GP 版共用同一卡密池
 - `[Jjdm] lua hook` 暂无输出：游戏停在 `enter_game_login_view`（登录页），未进战斗，Lua 补丁面未触发 —— 非异常
 
-## 7. 待验证
+## 7. 功能验证（用户实测，2026-11-08 15:3x）
 
-1. 用户登录进主界面 → 菜单浮层是否出现、三项是否齐全
-2. 进战斗 → `[Jjdm] lua hook … patched=1`、`sync dmg/inv/nocd`
-3. 三项功能实战生效
+用户登录进游戏后三项全部生效：「功能都没问题」。
+- 菜单浮层正常出现，「伤害倍率 / 无敌 / 无限技能」三项齐全
+- 与 GP 版共用 `game_id=jjdmintl`，同一卡密直接可用、无需重输
+
+### 本地产物与关键输入
+
+| 文件 | 说明 | 阶段 |
+|---|---|---|
+| `02_apks/境界刀鸣国际CR/…_official_from_device_{base,split_config.arm64_v8a,split_installtime}.apk` | 真机拉的官方三件套（35.5 MB / 54.8 MB / 1.47 GB） | 输入 |
+| `10_docs/境界刀鸣国际CR/jjdmcr_menu_template.json` | 菜单模板，`template_id=jjdmintl`、`package=com.crunchyroll.bleachsoulres`、3 项 | 输入 |
+| `mod菜单/starry-mod-menu/scripts/surgical_jjdmcr_universal.sh` | 出包脚本（注入 `classes6.dex` + 星光 so + `libc++_shared.so`，删 split 属性） | 出包 |
+| `10_docs/境界刀鸣国际CR/正式包裁剪清单_20261108.json` | 裁剪清单（保留 universal 正式包） | 最终交付 |
 
 ## 8. 复现路径
 

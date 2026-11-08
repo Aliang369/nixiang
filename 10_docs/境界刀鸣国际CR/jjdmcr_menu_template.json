@@ -1,0 +1,20 @@
+{
+  "template_id": "jjdmintl",
+  "name": "境界刀鸣国际CR",
+  "package": "com.crunchyroll.bleachsoulres",
+  "source": "Games/JjdmMod.cpp 共用 JjdmFeat / Games/JjdmIntlEntry.cpp authGameId=jjdmintl",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "伤害倍率"
+    },
+    {
+      "feat_num": 2,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 3,
+      "name": "无限技能"
+    }
+  ]
+}
