@@ -2069,7 +2069,16 @@ public final class NativeMenuController {
         menu.measure(
                 View.MeasureSpec.makeMeasureSpec(finalW, View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-        PopupWindow pw = new PopupWindow(menu, finalW, menu.getMeasuredHeight(), true);
+        // 长列表（本游戏装备单类就到 21 项）必须能滚：外层包 ScrollView，高度封顶屏幕 60%
+        final int contentH = menu.getMeasuredHeight();
+        final int maxH = (int) (appContext.getResources().getDisplayMetrics().heightPixels * 0.6f);
+        ScrollView ddScroll = new ScrollView(appContext);
+        ddScroll.setVerticalScrollBarEnabled(true);
+        ddScroll.setFillViewport(false);
+        ddScroll.addView(menu, new ScrollView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        final int pwH = Math.min(contentH, maxH);
+        PopupWindow pw = new PopupWindow(ddScroll, finalW, pwH, true);
         pw.setBackgroundDrawable(new ColorDrawable(0x00000000));
         pw.setOutsideTouchable(true);
         pw.setFocusable(true);
