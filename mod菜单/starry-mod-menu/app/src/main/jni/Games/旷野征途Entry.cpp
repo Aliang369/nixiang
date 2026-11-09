@@ -23,6 +23,7 @@ static const char* k旷野征途_Features[] = {
     "Toggle_游戏加速",       // 5
     "Toggle_玩家无敌",       // 6
     "Toggle_百倍伤害",       // 7
+    "Toggle_免广告",         // 8
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

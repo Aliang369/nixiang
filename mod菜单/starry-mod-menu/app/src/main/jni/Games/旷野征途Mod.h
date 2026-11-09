@@ -28,6 +28,7 @@ enum 旷野征途Feat : int {
     旷野征途_FEAT_SPD = 5,      // Toggle_游戏加速
     旷野征途_FEAT_INV = 6,      // Toggle_玩家无敌
     旷野征途_FEAT_DMG = 7,      // Toggle_百倍伤害
+    旷野征途_FEAT_NOAD = 8,     // Toggle_免广告
 };
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）

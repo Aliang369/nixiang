@@ -28,6 +28,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <cstdarg>    // DbgLog 变参
+#include <cstdio>     // DbgLog 文件落盘
 
 #include <mutex>      // §④ 装钩互斥
 #include <setjmp.h>   // §④ sigsetjmp 保护区
@@ -52,11 +54,15 @@ using Il2Cpp::GetApi;
 //  ① 开关与 orig 指针
 //     g_libReady = 「库已映射」≠「已挂钩」；全开关关闭时应当保持 0 个 hook。
 // ============================================================================
+// 文件调试日志（定义在 §⑤-c）：logcat 环形缓冲仅 256KB，关键状态必须落盘
+static void DbgLog(const char* fmt, ...);
+
 static std::atomic<bool> g_libReady{false};
 static std::atomic<bool> g_anyHooked{false};
 static std::atomic<bool> g_dmg{false};
 static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_spd{false};
+static std::atomic<bool> g_noad{false};   // 免广告
 static std::atomic<bool> g_reenter{false};
 
 typedef void (*SetTimeScale_t)(float value, void* method);
@@ -70,6 +76,16 @@ static std::atomic<int>   g_tsCalls{0};          // 诊断：set_timeScale 被�
 // ============================================================================
 enum : size_t {
     kOffHurtValue = 0x30,   // 示例：伤害字段偏移（本游戏实测后改）
+
+    // —— 战斗功能实测偏移（1.8 / HotUpdate.dll，il2cpp_field_get_offset）
+    //    取证：10_docs/旷野征途/移植记录_星空版_1.8_20261109.md §9，禁止猜改
+    kOffRoleGroup    = 964,    // <group>k__BackingField Int32：玩家=0，怪=1
+    kOffRoleCurHp    = 1124,   // _curHp Int32
+    kOffRoleDead     = 968,    // _isDead Boolean
+    kOffDmgShield    = 48,     // BattleDamageResult.absorbedShield Single
+    kOffDmgIncoming  = 52,     // .incomingDamage Single
+    kOffDmgDmg       = 56,     // .dmg Single
+    kOffDmgReal      = 60,     // .reallyDmg Int32
 };
 
 // ============================================================================
@@ -326,6 +342,7 @@ static bool HookAtRva(const char* tag, uintptr_t rva, uint32_t expectInsn,
     void* va = FileOffToVa(TPL_TARGET_LIB, rva);
     if (!va) {
         LOGW(TPL_LOG " %s rva 0x%lX not in RX — try by-name", tag, (unsigned long)rva);
+        DbgLog("hook %s: FileOffToVa(0x%lX) -> null", tag, (unsigned long)rva);
         return false;
     }
     if (expectInsn) {
@@ -334,14 +351,17 @@ static bool HookAtRva(const char* tag, uintptr_t rva, uint32_t expectInsn,
         if (got == 0 || got == 0xFFFFFFFFu || got != expectInsn) {
             LOGW(TPL_LOG " %s rva drift got=0x%08X want=0x%08X — try by-name",
                  tag, got, expectInsn);
+            DbgLog("hook %s: rva drift at va=%p got=0x%08X want=0x%08X", tag, va, got, expectInsn);
             return false;
         }
     }
     if (!DobbyHookGuarded(tag, va, hook, orig)) {
         LOGW(TPL_LOG " %s dobby fail @rva 0x%lX", tag, (unsigned long)rva);
+        DbgLog("hook %s: DobbyHook fail va=%p", tag, va);
         return false;
     }
     LOGI(TPL_LOG " %s hooked @rva 0x%lX", tag, (unsigned long)rva);
+    DbgLog("hook %s: OK va=%p orig=%p", tag, va, orig ? *orig : nullptr);
     return true;
 }
 
@@ -415,6 +435,201 @@ static bool HookSlotInstall(const HookSlot& s) {
 }
 
 // ============================================================================
+//  ⑤-c 战斗功能：HybridCLR 解释器入口 hook（无敌 / 百倍伤害）
+//     关键结论（取证见移植记录 §9）：
+//       ApplyHp/AddHp 属于 HotUpdate.dll 的解释方法，methodPointer 全部指向同一
+//       解释器桩 ⇒ libil2cpp.so 里没有它们的函数体，Dobby 挂不到方法本身。
+//       唯一可挂的 native 点是 InterpFrameGroup::EnterFrameFromInterpreter：
+//         VA 0x198b6a8 / file 0x19876a8 / 序言 str x30,[sp,#-0x30]! = 0xF81D0FFE
+//       签名 (frameGroup, methodInfo, argsPkt)；argsPkt 槽位实测：
+//         +0 = this(受害者)  +8 = arg0(BattleRoleActor)  +16 = arg1(Int32 标志)
+//         +24 = arg2(BattleDamageResult)  +32 = arg3(Action 回调)
+//     实测：ApplyHp 是唯一落血点（AddHp 前后 _curHp 不变），玩家 group=0 / 怪 group=1。
+// ============================================================================
+typedef void* (*EnterInterp_t)(void* self, void* methodInfo, void* argsPkt);
+static EnterInterp_t g_origEnterInterp = nullptr;
+static std::atomic<void*> g_miApplyHp{nullptr};
+static std::atomic<int>   g_hpHits{0};
+
+// 文件调试日志：logcat main 环形缓冲仅 256KB，Unity 洪水会把 [KYZT] 整段冲掉，
+// 关键状态一律落盘，收尾用 adb pull 取，不再依赖 logcat 存活时间。
+static void DbgLog(const char* fmt, ...) {
+    FILE* f = std::fopen("/data/data/com.xf.kyzt/files/kyzt_dbg.log", "a");
+    if (!f) return;
+    va_list ap; va_start(ap, fmt);
+    std::vfprintf(f, fmt, ap);
+    va_end(ap);
+    std::fputc(10, f);
+    std::fclose(f);
+}
+
+static std::atomic<int> g_miTries{0};
+static std::atomic<int> g_tickSeq{0};
+
+// 解析 BattleRoleActor.ApplyHp：热更 dll 加载 + HybridCLR 注册后才可见，Tick 里节流重试
+// ⚠ FindClassByShortName 对热更类会退化到全 image 扫描（贵），绝不能每 Tick 无节流跑
+static void ResolveCombatMi() {
+    if (g_miApplyHp.load()) return;
+    if (g_miTries.load() > 40) return;
+    auto& api = GetApi();
+    if (!api.ready) { if (!api.Load(TPL_TARGET_LIB)) return; }
+    void* k = api.FindClassByShortName("BattleRoleActor");
+    if (!k) { DbgLog("resolve BRA -> null (try %d)", g_miTries.load()); return; }
+    void* mi = api.GetMethod(k, "ApplyHp", 4);
+    if (!mi) { DbgLog("resolve ApplyHp -> null (klass=%p)", k); return; }
+    g_miApplyHp.store(mi);
+    LOGI(TPL_LOG " combat: BattleRoleActor.ApplyHp mi=%p klass=%p", mi, k);
+    DbgLog("combat: ApplyHp mi=%p klass=%p", mi, k);
+}
+
+// ⚠ 关键：绝不能用全局 g_reenter 做去重。ApplyHp 绝大多数是被别的解释方法
+//   （技能/AI/伤害流程）内部调用的，那时外层方法已进过本 hook，全局标志会把内层的
+//   ApplyHp 整条挡掉 ⇒ 钩装上了却不生效（2026-11-09 实测踩坑）。
+//   只挡 ApplyHp 自身递归，用线程局部标记。
+static thread_local bool t_inApplyHp = false;
+
+static void* Hooked_EnterInterp(void* self, void* methodInfo, void* argsPkt) {
+    void* hpMi = g_miApplyHp.load();
+    if (!hpMi || methodInfo != hpMi || !argsPkt || t_inApplyHp) {
+        return g_origEnterInterp ? g_origEnterInterp(self, methodInfo, argsPkt) : nullptr;
+    }
+    t_inApplyHp = true;
+
+    void* victim = *(void**)argsPkt;
+    void* res = (void*)(*(uintptr_t*)((uintptr_t)argsPkt + 24));
+    const bool ok = OkPtr(victim);
+    const int32_t grp = ok ? SafeReadI32(victim, kOffRoleGroup, -1) : -1;
+    const bool isPlayer = (grp == 0);          // 实测：玩家 group=0，怪 group=1
+    const int32_t before = ok ? SafeReadI32(victim, kOffRoleCurHp, 0) : 0;
+    const bool inv = g_inv.load(), dmg = g_dmg.load();
+    if (g_hpHits.load() < 12) DbgLog("HIT applyhp g=%d hp=%d inv=%d dmg=%d res=%p", grp, before, (int)inv, (int)dmg, res);
+
+    // 主路径：入口改写 BattleDamageResult，让游戏自己结算（死亡判定/UI 都正常）
+    if (ok && OkPtr(res)) {
+        if (isPlayer && inv) {
+            SafeWriteI32(res, kOffDmgReal, 0);
+            SafeWriteF32(res, kOffDmgIncoming, 0.0f);
+            SafeWriteF32(res, kOffDmgDmg, 0.0f);
+            SafeWriteF32(res, kOffDmgShield, 0.0f);
+        } else if (!isPlayer && dmg) {
+            int32_t real = SafeReadI32(res, kOffDmgReal, 0);
+            SafeWriteI32(res, kOffDmgReal, real * 100);
+            SafeWriteF32(res, kOffDmgDmg, Il2Cpp::ReadF32(res, kOffDmgDmg) * 100.0f);
+            SafeWriteF32(res, kOffDmgIncoming, Il2Cpp::ReadF32(res, kOffDmgIncoming) * 100.0f);
+        }
+    }
+
+    void* r = g_origEnterInterp ? g_origEnterInterp(self, methodInfo, argsPkt) : nullptr;
+
+    // 兜底：出口校正 _curHp（若游戏内部没采用 result 里的值，靠这一步照样生效）
+    if (ok) {
+        const int32_t after = SafeReadI32(victim, kOffRoleCurHp, before);
+        const int n = g_hpHits.fetch_add(1);
+        if (isPlayer && inv && after < before) {
+            SafeWriteI32(victim, kOffRoleCurHp, before);
+            if (n < 20) LOGI(TPL_LOG " inv: hp %d -> %d 回滚(%d) v=%p", before, after, before, victim);
+        } else if (!isPlayer && dmg && after < before) {
+            const int32_t d = before - after;
+            int32_t want = before - d * 100;
+            if (want < 1) want = 1;            // 避免卡 0 血不死
+            SafeWriteI32(victim, kOffRoleCurHp, want);
+            if (n < 20) LOGI(TPL_LOG " dmg100: hp %d -> %d 放大(%d) v=%p", before, after, want, victim);
+        } else if (n < 8) {
+            LOGI(TPL_LOG " hp-pass: g=%d hp %d -> %d v=%p", grp, before, after, victim);
+        }
+    }
+    t_inApplyHp = false;
+    return r;
+}
+
+// ============================================================================
+//  ⑤-d 免广告：Dirichlet Ad 聚合 SDK（AOT 程序集，可 Dobby 直挂）
+//     链路取证（06_dumped/旷野征途/dump.cs → Dirichlet.Ad.Runtime.dll）：
+//       ET.TapTapAds.ShowRewardAsync → DirichletRewardVideoAd → DirichletRewardAdBase
+//       事件入口 DirichletRewardAdBase::HandleNativeEvent(DirichletNativeEvent)
+//         struct { string EventName@0; string AdType@8; DirichletNativeEventData* Data@0x10 }
+//         Data: RewardVerify@0x10 / RewardAmount@0x14 / RewardName@0x18 / Code@0x20 / Message@0x28
+//         事件名常量：show / click / close / reward / skip
+//     做法：拦 ShowInternal（真播广告的唯一出口）→ 不播，直接伪造 reward + close 事件，
+//           让游戏自己的奖励链路照常跑完（死亡判定/UI/发奖逻辑都不用重写）。
+//     RVA：ShowInternal 0x1C8E9AC(file 0x1C8A9AC) / HandleNativeEvent 0x1C8E724(file 0x1C8A724)
+// ============================================================================
+typedef bool (*ShowInternal_t)(void* self, void* options);
+typedef void* (*StrNew_t)(const char*);
+typedef void* (*ObjNew_t)(void*);
+
+static ShowInternal_t g_origShowInternal = nullptr;
+static void* g_pfnHandleNativeEvent = nullptr;
+static void* g_adEventDataKlass = nullptr;
+static StrNew_t g_strNew = nullptr;
+static ObjNew_t g_objNew = nullptr;
+static std::atomic<int> g_noAdHits{0};
+
+// 取 image（按程序集名），热更/ AOT 都适用
+static void* FindImageByName(const char* want) {
+    auto& api = GetApi();
+    size_t n = 0;
+    void** asms = api.Assemblies(&n);
+    if (!asms || !want) return nullptr;
+    typedef const char* (*ImgName_t)(const void*);
+    static ImgName_t fn = nullptr;
+    if (!fn) fn = (ImgName_t)Il2Cpp::ResolveExport("il2cpp_image_get_name");
+    if (!fn) return nullptr;
+    for (size_t i = 0; i < n; ++i) {
+        void* img = asms[i] ? api.ImageOf(asms[i]) : nullptr;
+        if (!img) continue;
+        const char* nm = fn(img);
+        if (nm && std::strcmp(nm, want) == 0) return img;
+    }
+    return nullptr;
+}
+
+static void ResolveAdGlobals() {
+    auto& api = GetApi();
+    if (!api.ready) { if (!api.Load(TPL_TARGET_LIB)) return; }
+    if (!g_strNew) g_strNew = (StrNew_t)Il2Cpp::ResolveExport("il2cpp_string_new");
+    if (!g_objNew) g_objNew = (ObjNew_t)Il2Cpp::ResolveExport("il2cpp_object_new");
+    if (!g_pfnHandleNativeEvent) {
+        g_pfnHandleNativeEvent = FileOffToVa(TPL_TARGET_LIB, 0x1C8A724);
+        DbgLog("noAd: HandleNativeEvent -> %p", g_pfnHandleNativeEvent);
+    }
+    if (!g_adEventDataKlass) {
+        void* img = FindImageByName("Dirichlet.Ad.Runtime.dll");
+        if (img) g_adEventDataKlass = api.ClassFromName(img, "Dirichlet.Ad", "DirichletNativeEventData");
+        DbgLog("noAd: image=%p klass=%p", img, g_adEventDataKlass);
+    }
+}
+
+static void EmitDirichletEvent(void* adObj, const char* evName, bool verified, int amount) {
+    if (!g_pfnHandleNativeEvent || !adObj) return;
+    void* sName = g_strNew ? g_strNew(evName) : nullptr;
+    void* sType = g_strNew ? g_strNew("rewardVideo") : nullptr;
+    void* data = nullptr;
+    if (g_adEventDataKlass && g_objNew) {
+        data = g_objNew(g_adEventDataKlass);
+        if (data) {
+            *(uint8_t*)((uintptr_t)data + 0x10) = verified ? 1 : 0;
+            *(int32_t*)((uintptr_t)data + 0x14) = amount;
+            *(void**)((uintptr_t)data + 0x18) = nullptr;
+            *(int32_t*)((uintptr_t)data + 0x20) = 0;
+            *(void**)((uintptr_t)data + 0x28) = nullptr;
+        }
+    }
+    void* evt[3] = { sName, sType, data };
+    ((void(*)(void*, void*))g_pfnHandleNativeEvent)(adObj, evt);
+}
+
+static bool Hooked_ShowInternal(void* self, void* options) {
+    if (!g_noad.load() || !self)
+        return g_origShowInternal ? g_origShowInternal(self, options) : false;
+    const int n = g_noAdHits.fetch_add(1);
+    EmitDirichletEvent(self, "reward", true, 1);
+    EmitDirichletEvent(self, "close", true, 0);
+    if (n < 10) DbgLog("noAd: fake reward+close #%d ad=%p hn=%p", n + 1, self, g_pfnHandleNativeEvent);
+    return true;   // 假装展示成功，不播真广告
+}
+
+// ============================================================================
 //  ⑥ hook 函数与挂点表
 //     铁律：一个具体方法一个槽；绝不 hook 共享 invoke 入口。
 // ============================================================================
@@ -430,6 +645,12 @@ static void Hooked_SetTimeScale(float value, void* method) {
 static const HookSlot kSlots[] = {
     {"TimeScale", 0x0, 0x0, "UnityEngine", "Time", "set_timeScale",
      1, (void*)Hooked_SetTimeScale, (void**)&g_origSetTimeScale},
+    // HybridCLR 解释器入口：无按名路径，纯 RVA + 序言校验（漂移即拒绝，不盲挂）
+    {"EnterInterp", 0x19876a8, 0xF81D0FFEu, "", "", "", -1,
+     (void*)Hooked_EnterInterp, (void**)&g_origEnterInterp},
+    // 免广告：DirichletRewardAdBase::ShowInternal（AOT，序言 str x30,[sp,#-0x20]!）
+    {"NoAd", 0x1C8A9AC, 0xF81E0FFEu, "", "", "", -1,
+     (void*)Hooked_ShowInternal, (void**)&g_origShowInternal},
 };
 
 // ============================================================================
@@ -778,17 +999,23 @@ static bool GrantItem(int id, int count) {
 }
 
 static bool AnyFeatureOn() {
-    return g_spd.load();
+    return g_spd.load() || g_dmg.load() || g_inv.load() || g_noad.load();
 }
+
+static std::atomic<int> g_syncTries{0};
 
 static void SyncHooks() {
     if (!g_libReady.load()) return;
     if (!AnyFeatureOn()) return;                        // 全关：不装、也不卸载
     if (g_installedCount.load() >= kSlotsCount) return; // 快路径：已装齐
+    if (g_syncTries.load() > 8) return;                 // 装不上就停：禁止每 Tick 反复 DobbyHook
 
     std::lock_guard<std::mutex> lk(g_installMutex);     // ★ 串行化，防并发双挂
     if (g_installedCount.load() >= kSlotsCount) return; // double-check
-    g_installedCount.store(InstallBattleHooks());
+    g_syncTries.fetch_add(1);
+    const int n = InstallBattleHooks();
+    g_installedCount.store(n);
+    DbgLog("install pass: ok=%d/%d (try %d) mi=%p", n, kSlotsCount, g_syncTries.load(), g_miApplyHp.load());
 }
 
 // ============================================================================
@@ -817,6 +1044,7 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
         case 旷野征途_FEAT_SPD: g_spd.store(enabled); break;
         case 旷野征途_FEAT_DMG: g_dmg.store(enabled); break;
         case 旷野征途_FEAT_INV: g_inv.store(enabled); break;
+        case 旷野征途_FEAT_NOAD: g_noad.store(enabled); break;
         default: break;
     }
     SyncHooks();
@@ -831,6 +1059,7 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
     g_spd.store(features[旷野征途_FEAT_SPD]);
     g_dmg.store(features[旷野征途_FEAT_DMG]);
     g_inv.store(features[旷野征途_FEAT_INV]);
+    g_noad.store(features[旷野征途_FEAT_NOAD]);
 
     if (g_libReady.load() && !g_diagDone.load()) {
         // il2cpp 要求线程 attach：Tick 跑在 Mod 后台线程，不 attach 则 domain 枚举返回 0
@@ -853,6 +1082,11 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
         g_libReady.store(true);
         LOGI(TPL_LOG " lib ready (via Tick fallback)");
     }
+    if (g_libReady.load() && !g_miApplyHp.load()) {
+        g_miTries.fetch_add(1);
+        if ((g_miTries.load() % 5) == 0) ResolveAdGlobals();
+        if ((g_tickSeq.fetch_add(1) % 25) == 0) ResolveCombatMi();   // 5s 一次，避免拖死 Tick
+    }
     SyncHooks();
 
     // 主动钉 timeScale：不依赖游戏主动调用 setter（本作可能在启动时只调一次）
@@ -872,6 +1106,7 @@ void 旷野征途_ForceClear() {
     g_spd.store(false);
     g_dmg.store(false);
     g_inv.store(false);
+    g_noad.store(false);
     g_reenter.store(false);
     // TODO：新增开关一并复位
 }

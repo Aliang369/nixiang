@@ -1,0 +1,17 @@
+{
+  "template_id": "kyzt",
+  "name": "旷野征途",
+  "package": "com.xf.kyzt",
+  "source": "Games/旷野征途Entry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 0, "name": "Category_资源"},
+    {"feat_num": 1, "name": "Button_金币+9999"},
+    {"feat_num": 2, "name": "Button_钻石+9999"},
+    {"feat_num": 3, "name": "Button_积分+9999"},
+    {"feat_num": 4, "name": "Category_战斗"},
+    {"feat_num": 5, "name": "Toggle_游戏加速"},
+    {"feat_num": 6, "name": "Toggle_玩家无敌"},
+    {"feat_num": 7, "name": "Toggle_百倍伤害"},
+    {"feat_num": 8, "name": "Toggle_免广告"}
+  ]
+}
