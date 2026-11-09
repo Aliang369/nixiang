@@ -20,6 +20,7 @@
 #include <dlfcn.h>
 #include <pthread.h>
 #include <string>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "Dobby/dobby.h"
@@ -206,16 +207,75 @@ static std::string SpliceSjzzJs(const char* src, size_t len) {
         "BattleMainPanel.GetPlaySpeed");
 
     // 加速开启时跳过倍速异常上报；关闭时保留原逻辑。
-    ReplaceOnce(
-        s,
-        "UploadPlaySpeed(){const e=m.type;",
-        "UploadPlaySpeed(){/*starry_sjzz_speed_report*/"
-        "if(jsb.reflection.callStaticMethod("
-        "\"com.starry.magic.cocos.SjzzHooks\",\"getRet\",\"(I)Z\",4))return;"
-        "const e=m.type;",
-        "BattleMainPanel.UploadPlaySpeed");
+    // 161 热更版把模块别名 m 换成 y：两个候选都试，全不中才记 warning。
+    if (!ReplaceOnce(
+            s,
+            "UploadPlaySpeed(){const e=y.type;",
+            "UploadPlaySpeed(){/*starry_sjzz_speed_report*/"
+            "if(jsb.reflection.callStaticMethod("
+            "\"com.starry.magic.cocos.SjzzHooks\",\"getRet\",\"(I)Z\",4))return;"
+            "const e=y.type;",
+            "BattleMainPanel.UploadPlaySpeed(y)")) {
+        ReplaceOnce(
+            s,
+            "UploadPlaySpeed(){const e=m.type;",
+            "UploadPlaySpeed(){/*starry_sjzz_speed_report*/"
+            "if(jsb.reflection.callStaticMethod("
+            "\"com.starry.magic.cocos.SjzzHooks\",\"getRet\",\"(I)Z\",4))return;"
+            "const e=m.type;",
+            "BattleMainPanel.UploadPlaySpeed(m)");
+    }
 
     return s;
+}
+
+// 采样：新版 JS 锚点可能漂移，命中不了旧锚点时把相关脚本明文落到 files/sjzz_js/
+// 供离线重定锚点（最多 kSjzzDumpMax 份，单份上限 32MB，进程内计数）。
+static const int kSjzzDumpMax = 12;
+static std::atomic<int> g_dumpCount{0};
+
+static void SjzzDumpJs(const char* data, size_t len, const char* fileName) {
+    if (g_dumpCount.load() >= kSjzzDumpMax) return;
+    if (len == 0 || len > 32u * 1024u * 1024u) return;
+    char pkg[256] = {0};
+    FILE* cf = fopen("/proc/self/cmdline", "rb");
+    if (!cf) return;
+    const size_t got = fread(pkg, 1, sizeof(pkg) - 1, cf);
+    fclose(cf);
+    if (got == 0) return;
+    for (size_t i = 0; i < got; i++) {
+        if (pkg[i] == ':') { pkg[i] = 0; break; }
+    }
+    // 正式包默认不写盘：仅当 files/sjzz_dump_on 存在时才采样（排障时手动 touch 即可）。
+    char flag[512];
+    snprintf(flag, sizeof(flag), "/data/data/%s/files/sjzz_dump_on", pkg);
+    if (access(flag, F_OK) != 0) return;
+
+    char dir[512];
+    snprintf(dir, sizeof(dir), "/data/data/%s/files/sjzz_js", pkg);
+    mkdir(dir, 0755);
+    char name[128] = {0};
+    const char* src = (fileName && *fileName) ? fileName : "anon";
+    size_t j = 0;
+    for (size_t i = 0; src[i] && j < sizeof(name) - 1; i++) {
+        const char c = src[i];
+        name[j++] = (c == '/' || c == '\\' || c == ':' || c == ' ') ? '_' : c;
+    }
+    char path[768];
+    snprintf(path, sizeof(path), "%s/%s.js", dir, name);
+    // 同一文件名只留一份（避免每次启动重复写 7MB）
+    struct stat st;
+    if (stat(path, &st) == 0 && static_cast<size_t>(st.st_size) == len) {
+        g_dumpCount.fetch_add(1);
+        return;
+    }
+    const int idx = g_dumpCount.fetch_add(1);
+    (void)idx;
+    FILE* out = fopen(path, "wb");
+    if (!out) return;
+    fwrite(data, 1, len, out);
+    fclose(out);
+    LOGI(SJZZ_LOG " dump %s (%zu B)", path, len);
 }
 
 typedef bool (*SeEvalString_t)(void*, const char*, long, void*, const char*);
@@ -268,11 +328,18 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return g_orig_seEval(thiz, script, length, ret, fileName);
     }
 
+    // 宽关键词采样：方法名在压缩后仍保留，锚点漂移时也能拿到明文
+    if (has("CheckSkipAd") || has("BeHurt(") || has("GetPlaySpeed") ||
+        has("UploadPlaySpeed")) {
+        SjzzDumpJs(script, static_cast<size_t>(n), fileName);
+    }
+
     const bool relevant =
         has("CheckSkipAd(){return y.GetPrivilegeValue(C.SkipAd)}") ||
         has("BeHurt(e,t=n()){") ||
         has("GetPlaySpeed(e){return $e.GetMonthSpeedData()[e]}") ||
-        has("UploadPlaySpeed(){const e=m.type;");
+        has("UploadPlaySpeed(){const e=m.type;") ||
+        has("UploadPlaySpeed(){const e=y.type;");
     if (!relevant) {
         return g_orig_seEval(thiz, script, length, ret, fileName);
     }

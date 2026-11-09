@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 我在神界刷装备 157.0 正式包验证（默认路径可由 --apk 覆盖）。
+# 我在神界刷装备 161.0 正式包验证（默认路径可由 --apk 覆盖）。
 #
 # 覆盖：
 #   1. APK/dex/so 指纹打印
@@ -11,7 +11,7 @@
 set -euo pipefail
 
 ROOT="/Users/aliang/Documents/nixiang"
-DEFAULT_APK="$ROOT/08_output/我在神界刷装备/我在神界刷装备_157.0_surgical-releaseSigned.apk"
+DEFAULT_APK="$ROOT/08_output/我在神界刷装备/我在神界刷装备_161.0_surgical-releaseSigned.apk"
 SO_BUILD="$ROOT/mod菜单/starry-mod-menu/libs_sjzz/arm64-v8a/libstarry_magic.so"
 MENU_JSON="$ROOT/10_docs/我在神界刷装备/wzsjszb_menu_template.json"
 CPP_MAIN="$ROOT/mod菜单/starry-mod-menu/app/src/main/jni/MainModern.cpp"
@@ -29,7 +29,7 @@ usage() {
   bash 04_scripts/我在神界刷装备/sjzz_verify.sh [APK] [--js 注入JS] [--skip-gate]
 
 默认 APK:
-  08_output/我在神界刷装备/我在神界刷装备_157.0_surgical-releaseSigned.apk
+  08_output/我在神界刷装备/我在神界刷装备_161.0_surgical-releaseSigned.apk
 EOF
   exit 2
 }
@@ -94,11 +94,13 @@ echo "  sha256 = $(shasum -a 256 "$APK" | awk '{print $1}')"
 
 unzip -Z1 "$APK" > "$TMP/entries.txt"
 grep -qx 'classes3.dex' "$TMP/entries.txt" || fail "APK 缺少 classes3.dex"
+grep -qx 'classes4.dex' "$TMP/entries.txt" || fail "APK 缺少 classes4.dex（签名杀手）"
 grep -qx 'lib/arm64-v8a/libstarry_magic.so' "$TMP/entries.txt" \
   || fail "APK 缺少 lib/arm64-v8a/libstarry_magic.so"
 unzip -p "$APK" classes3.dex > "$TMP/classes3.dex"
+unzip -p "$APK" classes4.dex > "$TMP/classes4.dex"
 unzip -p "$APK" lib/arm64-v8a/libstarry_magic.so > "$TMP/package.so"
-[[ -s "$TMP/classes3.dex" && -s "$TMP/package.so" ]] || fail "包内 classes3.dex/so 为空"
+[[ -s "$TMP/classes3.dex" && -s "$TMP/classes4.dex" && -s "$TMP/package.so" ]] || fail "包内 classes3/classes4/so 为空"
 
 echo "[identity] classes3.dex"
 echo "  size   = $(stat -f '%z' "$TMP/classes3.dex")"
@@ -111,13 +113,18 @@ echo "  prompt = $(md5 -q "$TMP/package.so")"
 for needle in \
   'SjzzHooks' \
   'StarryAppComponentFactory' \
-  'StarryAppComponentFactory' \
   'StarryInitProvider' \
   'MenuService'; do
   LC_ALL=C grep -aFq "$needle" "$TMP/classes3.dex" \
     || fail "classes3.dex 缺少字符串: $needle"
 done
-echo "[dex] 入口类字符串 5/5 命中"
+echo "[dex] 入口类字符串 4/4 命中"
+
+LC_ALL=C grep -aFq 'bin/mt/signature/KillerApplication193' "$TMP/classes4.dex" \
+  || fail "classes4.dex 缺少 bin.mt.signature.KillerApplication193"
+LC_ALL=C grep -aFq 'com.windforce.rg.offical' "$TMP/classes4.dex" \
+  || fail "classes4.dex 缺少烘焙包名"
+echo "[dex] classes4 签名杀手 2/2 命中"
 
 python3.11 - "$MENU_JSON" > "$TMP/menu.tsv" <<'PY'
 import json
