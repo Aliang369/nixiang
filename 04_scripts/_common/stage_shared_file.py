@@ -20,12 +20,13 @@
 
   去掉 --dry-run 才真正写索引；随后用 `archive_scoped_git.sh --staged-only` 提交。
 
-  「他人改行」场景（如 current.md 索引行被别会话缩短）用 `--restore-head-pattern`：
+  「他人改行」场景（如 `本轮归属.tsv` 某行被别会话改短；2026-11-09 前 `current.md` 是手写共享文件，
+  现在它是 `gen_state_index.py` 的生成物，冲突／漂移一律重跑生成器，不走本脚本）用 `--restore-head-pattern`：
   命中该正则的工作区行会被 HEAD 里命中同一正则的行**替换**（恢复旧版），而非 `--drop-pattern`
   的「整行删除」。例：
     --restore-head-pattern '生存33天|弓箭传说2国际版|迷雾大陆' \
     --own-pattern '炁术行者' --dry-run
-  （2026-10-18 炁术行者会话实测：current.md 5 处他人改行 + 1 处本轮改行，用 restore 恢复他人行、
+  （2026-10-18 炁术行者会话实测，当时 current.md 还是手写共享文件：5 处他人改行 + 1 处本轮改行，用 restore 恢复他人行、
   own-pattern 校验本轮行，一次写索引，不再手动构造 content。）
   ★ 每个 --restore-head-pattern 必须是**单一关键词**（如 `--restore-head-pattern '生存33天'` 可重复传），
   勿用 `|` 组合（如 `'生存33天|迷雾大陆'`）：组合正则会让「HEAD 第一个命中任一关键词的行」错配到别行。

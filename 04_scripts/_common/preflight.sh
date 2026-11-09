@@ -166,6 +166,13 @@ check_one() {
             # PYTHONUTF8=1：Win 端默认 cp936，print 中文会炸（与 stage_shared_file.py 同一处理）
             if _idx_out=$(PYTHONUTF8=1 "$_idx_py" "$SCRIPT_DIR/gen_state_index.py" --check 2>&1); then
               echo "✓ PASS  [状态索引] $f 索引与真源一致"
+              # 生成器 --check 通过时仍会吐「⚠ 挂起 / 超限」提示：这些行不在 current 里但不是错误，
+              # 若只 echo PASS 就被吞掉了（工作集不全没人知道）。透传前 2 行并计一次 REMIND。
+              _idx_notes=$(printf '%s\n' "$_idx_out" | grep '^⚠' | head -2)
+              if [ -n "$_idx_notes" ]; then
+                printf '%s\n' "$_idx_notes" | sed 's/^/       /'
+                remind=$((remind+1))
+              fi
               pass=$((pass+1))
             else
               echo "✗ FAIL  [状态索引] $f 与索引不一致 ——"

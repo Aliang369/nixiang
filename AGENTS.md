@@ -61,7 +61,7 @@
 
 ## 2. 开工状态检查与双机协作（每台机器、每轮第一步）
 
-本仓由 **mac 端**与 **Windows 端**共用同一仓库（`git@github.com:Aliang369/nixiang.git`，`main`）；**唯一详细正文＝`10_docs/双机协作/双机协作同步方案.md`**（终端分流、兼容垫片、Syncthing 大头层、验收清单、心跳字段），旧「归档正文 F」只作追溯。
+本仓由 **mac 端**与 **Windows 端**共用同一仓库（`git@github.com:Aliang369/nixiang.git`，`main`）；**唯一详细正文＝`10_docs/双机协作/双机协作同步方案.md`**（终端分流、垫片、Syncthing、验收清单、心跳），旧「归档正文 F」只作追溯。
 
 ```bash
 cd "$NIXIANG_ROOT"; bash 04_scripts/双机协作/twin_status.sh   # 体检：有 FAIL 先修再开工（设备项默认 WARN，做设备任务才加 --require-device）
@@ -70,7 +70,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
 - **顺序不可颠倒**：先 `status` 再 `pull`；工作区不干净时 pull/rebase 会把未提交改动卷进去。
 - **一机一游戏**：开工前先划定归属并 `bash 04_scripts/双机协作/claim_game.sh <游戏>`（收工 `--done` 释放，表 `10_docs/双机协作/本轮归属.tsv`）；pull 后发现对方已认领未释放的游戏**禁止写**。
 - **单一写者**：`games/{游戏}.md` 由本轮动了该游戏的那台机器写，另一台只读；`current.md` 是生成物不手写（改 frontmatter 后重跑生成器）。跨机接手先核对「接手重建：」行。
-- **共享文件不得吞入他人改动**：`current.md` 等用 `python3 04_scripts/_common/stage_shared_file.py`（Win 下 `PYTHONUTF8=1`）做内容级暂存，不直接 `git add`；提交前 `git diff --cached` 确认归属。
+- **共享文件不得吞入他人改动**：`本轮归属.tsv` 等共享文件用 `python3 04_scripts/_common/stage_shared_file.py`（Win 下 `PYTHONUTF8=1`）做内容级暂存，不直接 `git add`；提交前 `git diff --cached` 确认归属。
 - 多代理协作先划定文件归属与禁止修改项；不覆盖他人改动，跨归属改动先协调，最终汇总改动与证据。
 
 ## 3. 任务路由与最小读取顺序

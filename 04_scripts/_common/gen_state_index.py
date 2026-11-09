@@ -14,13 +14,17 @@
 用法：
     python3 04_scripts/_common/gen_state_index.py              # 重新生成两份索引
     python3 04_scripts/_common/gen_state_index.py --check      # 只校验是否为最新（不一致 rc=1）
-    python3 04_scripts/_common/gen_state_index.py --days 30 --limit 60
+    python3 04_scripts/_common/gen_state_index.py --days 30 --limit 60 --stale-days 60
 
 设计要点（2026-11-09，用户采纳 B 方案）：
   * current.md 是生成物，禁止手改；手改会被下次生成覆盖，preflight 用 --check 拦。
   * current.md 只放当前工作集（status=active/blocked 或近 --days 天有更新，最多 --limit 行），
     因此体积与游戏总数解耦：100 个游戏和 500 个游戏都是同一量级。
   * 全量恒在 archive_index.md ＋ games/*.md，随时可查、可重建；归档不等于删数据。
+  * 挂起闸（--stale-days，2026-11-09 补）：active/blocked 超该天数无更新即视为「挂起」，
+    不再顶格占工作集（旧行为下 9 月的 blocked 永久占据前几行，把近两周更新的游戏挤出 30 行配额）。
+  * 缺 frontmatter 是硬错误（--check rc=1）：否则新加的 games/x.md 忘写头部，会从两份索引双双
+    消失且无人发现。frontmatter 解析同时兼容 CRLF（Win 端编辑器存 CRLF 时只认 LF 会整篇失败）。
 """
 import argparse
 import datetime
@@ -35,7 +39,9 @@ CURRENT = STATE / "current.md"
 ARCHIVE = STATE / "archive_index.md"
 
 ICON = {"active": "🟡", "blocked": "⚠️", "delivered": "✅"}
-FM_RE = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+# 兼容 CRLF：Win 端编辑器把 games/*.md 存成 CRLF 时，只认 \n 的正则会整篇解析失败，该游戏随即
+# 静默掉出两份索引（.gitattributes 的 eol=lf 只在提交时归一化，救不了工作区里那一份）。
+FM_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.S)
 SKIP_FILES = {"README.md", "infrastructure.md"}  # 目录说明，不是游戏
 
 HEAD = """<!-- GENERATED: 由 04_scripts/_common/gen_state_index.py 生成，禁止手改 -->
@@ -44,7 +50,7 @@ HEAD = """<!-- GENERATED: 由 04_scripts/_common/gen_state_index.py 生成，禁
 
 > **本文件是生成物**：手工修改会在下次生成时被覆盖（`preflight` 用 `--check` 校验）。
 > 真源＝`10_docs/_state/games/*.md` 头部的 frontmatter（`game`/`status`/`updated`/`one_line`）。
-> 只放**当前工作集**：`status: active|blocked`，或近 {days} 天有更新，最多 {limit} 行 —— 体量与游戏总数无关。
+> 只放**当前工作集**：`status: active|blocked`（且未超 --stale-days 挂起闸），或近 {days} 天有更新，最多 {limit} 行。
 > 全量索引见 [`archive_index.md`](archive_index.md)（共 {total} 个游戏），逐个详情见 `games/{{游戏}}.md`。
 > 改状态＝改对应 `games/{{游戏}}.md` 的 frontmatter，然后跑：`python3 04_scripts/_common/gen_state_index.py`
 
@@ -54,8 +60,7 @@ HEAD = """<!-- GENERATED: 由 04_scripts/_common/gen_state_index.py 生成，禁
 |---|---|---|
 {rows}
 
-> 本表之外的游戏＝近 {days} 天无更新且非 active，全部在 [`archive_index.md`](archive_index.md)。
-"""
+{tail}"""
 
 ARCHIVE_HEAD = """<!-- GENERATED: 由 04_scripts/_common/gen_state_index.py 生成，禁止手改 -->
 
@@ -92,6 +97,7 @@ def parse_frontmatter(text):
         return None
     data = {}
     for raw in m.group(1).split("\n"):
+        raw = raw.rstrip("\r")
         if ":" not in raw:
             continue
         key, val = raw.split(":", 1)
@@ -140,7 +146,7 @@ def render_row(item):
     return "| [%s](games/%s) | %s | %s %s |" % (title, item["_file"], upd, icon, text)
 
 
-def build(items, days, limit):
+def build(items, days, limit, stale_days):
     dates = []
     for it in items:
         try:
@@ -153,31 +159,60 @@ def build(items, days, limit):
     base = max(dates) if dates else today
     cutoff = base - datetime.timedelta(days=days)
 
-    def in_window(it):
-        upd = it.get("updated", "")
-        if upd == "history":          # 无日期条目一律不进当前工作集，避免「历史」行常驻索引首位
-            return False
-        if it.get("status", "delivered") in ("active", "blocked"):
-            return True
+    def as_date(it):
         try:
-            return datetime.date.fromisoformat(upd) >= cutoff
+            return datetime.date.fromisoformat(it.get("updated", ""))
         except ValueError:
-            return False
+            return None
 
-    hot = sorted([i for i in items if in_window(i)], key=sort_key, reverse=True)
-    cold = sorted([i for i in items if not in_window(i)], key=sort_key, reverse=True)
-    shown = hot[:limit]
+    hot, stale = [], []
+    for it in items:
+        st = it.get("status", "delivered")
+        d = as_date(it)
+        if st in ("active", "blocked"):
+            # 挂起闸（2026-11-09）：有 active/blocked 标记但长期无更新，说明已经停在那里了。
+            # 仍留在 archive（可检索、可接手），只是不再占 current 的行位。
+            if d is None or (base - d).days > stale_days:
+                stale.append(it)
+            else:
+                hot.append(it)
+        elif d is not None and d >= cutoff:
+            hot.append(it)
+
+    hot_sorted = sorted(hot, key=sort_key, reverse=True)
+    shown = hot_sorted[:limit]
+    overflow = hot_sorted[limit:]
     rows_cur = "\n".join(render_row(i) for i in shown) or "| — | — | 当前没有活跃游戏 |"
     rows_all = "\n".join(render_row(i) for i in sorted(items, key=sort_key, reverse=True))
-    cur = HEAD.format(days=days, limit=limit, total=len(items), rows=rows_cur).rstrip("\n") + "\n" + FOOT
-    arc = ARCHIVE_HEAD.format(rows=rows_all).rstrip("\n") + "\n"
-    return cur, arc, shown, cold + hot[limit:]
 
+    def name_list(seq):
+        seq = sorted(seq, key=sort_key, reverse=True)
+        names = "、".join(i["game"] for i in seq[:6])
+        return names + ("…" if len(seq) > 6 else "")
+
+    notes = []
+    if stale:
+        notes.append("> ⏸ %d 个 active/blocked 已超 %d 天无更新，视为挂起、不进工作集：%s（详见 `archive_index.md`）"
+                     % (len(stale), stale_days, name_list(stale)))
+    if overflow:
+        notes.append("> ⏸ %d 个近 %d 天有更新但超出 %d 行上限，只在 `archive_index.md`：%s"
+                     % (len(overflow), days, limit, name_list(overflow)))
+    tail = "\n".join(notes)
+    tail = (tail + "\n\n") if tail else ""
+    tail += "> 本表之外的游戏＝近 %d 天无更新、超出 %d 行上限或已挂起，全部在 [`archive_index.md`](archive_index.md)。" % (days, limit)
+
+    cur = HEAD.format(days=days, limit=limit, total=len(items), rows=rows_cur, tail=tail).rstrip("\n") + "\n" + FOOT
+    arc = ARCHIVE_HEAD.format(rows=rows_all).rstrip("\n") + "\n"
+    return cur, arc, shown, overflow, stale
 
 def main():
     ap = argparse.ArgumentParser(description="生成跨游戏状态索引")
     ap.add_argument("--days", type=int, default=14, help="非 active 游戏的活跃窗口天数（默认 14）")
-    ap.add_argument("--limit", type=int, default=30, help="current.md 最多行数（默认 30）")
+    # 2026-11-09 用户定 A 方案：上限 30 → 50。30 是上一版按体积倒推拍的数（8.7 KB），14 天窗口
+    # 实际有 49 条时必然截断，19 个近两周更新的游戏只能去 archive 找。50 行 ≈ 13.3 KB，仍在 15 KB 内。
+    ap.add_argument("--limit", type=int, default=50, help="current.md 最多行数（默认 50，安全阀；体积上限见 AGENTS.md §6）")
+    ap.add_argument("--stale-days", type=int, default=45,
+                    help="active/blocked 超过该天数无更新即视为挂起、移出工作集（默认 45；0=停用挂起闸）")
     ap.add_argument("--check", action="store_true", help="只校验不写盘；不一致返回 1")
     args = ap.parse_args()
 
@@ -185,10 +220,17 @@ def main():
         print("ERROR: 找不到 %s" % GAMES, file=sys.stderr)
         return 2
     items, bad = load()
-    if bad:
-        print("⚠ 缺少 frontmatter（已跳过）：%s" % ", ".join(bad[:8]), file=sys.stderr)
 
-    cur, arc, shown, hidden = build(items, args.days, args.limit)
+    stale_days = args.stale_days if args.stale_days > 0 else 10 ** 6
+    cur, arc, shown, overflow, stale = build(items, args.days, args.limit, stale_days)
+
+    def report_notes():
+        if stale:
+            print("⚠ %d 个 active/blocked 超 %d 天无更新，已移出工作集（仍在 archive）：%s"
+                  % (len(stale), args.stale_days, "、".join(i["game"] for i in stale[:8])), file=sys.stderr)
+        if overflow:
+            print("⚠ %d 个近 %d 天有更新但超出 %d 行上限，只在 archive：%s"
+                  % (len(overflow), args.days, args.limit, "、".join(i["game"] for i in overflow[:8])), file=sys.stderr)
 
     if args.check:
         problems = []
@@ -200,15 +242,29 @@ def main():
             print("✗ 索引不是最新：%s 与 games/*.md 的 frontmatter 不一致" % ", ".join(problems), file=sys.stderr)
             print("  重建：python3 04_scripts/_common/gen_state_index.py", file=sys.stderr)
             return 1
+        if bad:
+            # 缺 frontmatter 不能只警告：该游戏会从 current/archive 双双消失，--check 若照样 rc=0，
+            # preflight 就永远发现不了（本次补闸的直接原因）。按硬错误处理。
+            print("✗ %d 个 games/*.md 缺 frontmatter，会从索引中静默消失：%s"
+                  % (len(bad), ", ".join(bad[:8]) + ("…" if len(bad) > 8 else "")), file=sys.stderr)
+            print("  补头部四行 game/status/updated/one_line（模板见 games/README.md）", file=sys.stderr)
+            return 1
+        report_notes()
         print("✓ 索引与真源一致（%d 个游戏，current %d 行）" % (len(items), len(shown)))
         return 0
 
-    CURRENT.write_text(cur, encoding="utf-8")
-    ARCHIVE.write_text(arc, encoding="utf-8")
+    # newline="" 保持字节级 LF：Path.write_text 在 Win 上按 os.linesep 写 CRLF，会让工作区文件
+    # 比 HEAD 多出 N 个字节（current 62 / archive 111），体积关虚高、两机工作区不一致。
+    # 不用 write_text(newline=...) 是因为它 3.10 才有，mac 侧可能是更老的 python3。
+    for path, text in ((CURRENT, cur), (ARCHIVE, arc)):
+        with open(str(path), "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(text)
     print("✓ %s：%d 行 / %d B" % (CURRENT.name, len(shown), len(cur.encode("utf-8"))))
     print("✓ %s：%d 行 / %d B" % (ARCHIVE.name, len(items), len(arc.encode("utf-8"))))
     n_act = len([i for i in items if i.get("status") in ("active", "blocked")])
-    print("  真源 %d 个游戏；active/blocked %d 个；窗口外 %d 个（在 archive）" % (len(items), n_act, len(hidden)))
+    print("  真源 %d 个游戏；active/blocked %d 个；挂起 %d 个；超限 %d 个（均在 archive）"
+          % (len(items), n_act, len(stale), len(overflow)))
+    report_notes()
     return 0
 
 

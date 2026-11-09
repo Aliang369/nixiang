@@ -190,8 +190,11 @@ check_staged_scope
 # （current.md 的「冒险与征途 v48」行随 d1905e3b 入库）。stage_shared_file.py --own-pattern
 # 做逐行归属校验；此处再加一道「提交前必须看过逐行差异」的闸门：只要共享文件在暂存区，
 # 就完整打印 git diff --cached，并要求 ACK_SHARED=1 才放行（--dry-run 只读，不拦）。
-DRY_CALL=0
-case " $* " in *" --dry-run "*) DRY_CALL=1 ;; esac
+# 2026-11-09 修：原实现用 `case " $* "` 判断是不是 dry-run，但 --dry-run 在参数解析阶段
+# 已被 `shift` 消费，走到这里 `$*` 恒为空 → 判定恒 false，--dry-run 仍会撞下面共享文件的
+# ACK 闸门并 exit 1（实测：bash -x 只见 `+ DRY_CALL=0`，随后仍打印 diff 要求 ACK_SHARED=1）。
+# 直接沿用解析出的 DRY_RUN，语义等价且不受参数消费影响。
+DRY_CALL="$DRY_RUN"
 if [[ "$DRY_CALL" == "0" ]]; then
   for path in "${SHARED_FILES[@]}"; do
     if [[ -n "$(git diff --cached --name-only -- "$path")" ]]; then
