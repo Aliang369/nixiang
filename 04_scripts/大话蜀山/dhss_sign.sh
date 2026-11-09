@@ -4,7 +4,7 @@ set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="大话蜀山"
-VERSION="2.5"
+VERSION="${DHSS_VERSION:-2.7}"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
 SIGNED="$OUT/${GAME}_${VERSION}_surgical-releaseSigned.apk"

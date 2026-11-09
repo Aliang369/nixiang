@@ -50,7 +50,7 @@ mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 # ---- 防呆：本游戏标签与菜单串必须编进 so（中文按字节搜，strings 默认 ASCII 会漏）----
 TAG_HITS=$(LC_ALL=C grep -ac "dhss" "$SO" || true)
 [[ "$TAG_HITS" -ge 1 ]] || { echo "ERROR: $SO 不含 dhss 标签（旧 so 混入或源码未编译）" >&2; exit 1; }
-for menu in "Toggle_秒杀" "Toggle_无敌" "Toggle_免广告" "ServerStep" "ApplyDamage" "OnGameAdNotify"; do
+for menu in "Toggle_秒杀" "Toggle_无敌" "Toggle_免广告" "Toggle_加速解锁" "ServerStep" "ApplyDamage" "OnGameAdNotify" "HasVipCardPrivilege"; do
   HITS=$(LC_ALL=C grep -ac "$menu" "$SO" || true)
   [[ "$HITS" -ge 1 ]] || { echo "ERROR: $SO 不含 ${menu}（源码未编译或挂点表缺失）" >&2; exit 1; }
 done

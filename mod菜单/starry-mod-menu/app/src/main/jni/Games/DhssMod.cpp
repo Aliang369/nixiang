@@ -48,6 +48,7 @@ static std::atomic<bool> g_libReady{false};
 static std::atomic<bool> g_kill{false};
 static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_noads{false};      // feat 3 免广告
+static std::atomic<bool> g_speed{false};      // feat 4 加速解锁（月卡 BattleSpeedX2）
 static thread_local bool g_inHook = false;
 
 static std::atomic<bool> g_stepHooked{false};
@@ -56,6 +57,8 @@ static std::atomic<bool> g_dmgHooked{false};
 static std::atomic<bool> g_adHooked{false};
 static std::atomic<bool> g_adFailed{false};
 static std::atomic<bool> g_dmgFailed{false};
+static std::atomic<bool> g_speedHooked{false};
+static std::atomic<bool> g_speedFailed{false};
 
 static std::atomic<bool> g_battleSeen{false};
 static std::atomic<int32_t> g_isSingle{-1};
@@ -87,6 +90,7 @@ enum : size_t {
 enum : int32_t {
     kCampMonster    = 0,
     kKillMultiplier = 100,
+    kPrivBattleSpeedX2 = 4,  // VipCardPrivilege.BattleSpeedX2
 };
 enum : uint64_t {
     kBattleTimeoutMs = 2000,   // ServerStep 2 秒没动 = 不在战斗
@@ -333,6 +337,27 @@ static bool HookResolved(const char* tag, void* fn, void* hook, void** orig) {
 // ============================================================
 // ⑥ hook 实现
 // ============================================================
+
+// ---- 加速解锁：VipCardManager 月卡特权判定对 BattleSpeedX2 恒放行 ----
+// 依据：VipCardPrivilege.BattleSpeedX2=4（dump.cs TypeDefIndex 1777；游戏内置仅此一档，无 X3/X4）。
+//       UI 可能走 HasVipCardPrivilege(4) 或 GetAvailableVipCardPrivilege() 位掩码，两处都补 4 位；
+//       不动 NoAD(1)/ResetPartnerLevel(2)/WorldBossFast(8)/InitialSkill(16)，避免连带解锁月卡其它权益。
+static bool (*g_origHasPriv)(void* self, int32_t privilege, void* method) = nullptr;
+static int32_t (*g_origAvailPriv)(void* self, void* method) = nullptr;
+
+static bool Hooked_HasVipCardPrivilege(void* self, int32_t privilege, void* method) {
+    if (privilege == kPrivBattleSpeedX2 && g_speed.load(std::memory_order_relaxed)) {
+        return true;
+    }
+    return g_origHasPriv ? g_origHasPriv(self, privilege, method) : false;
+}
+
+static int32_t Hooked_GetAvailableVipCardPrivilege(void* self, void* method) {
+    int32_t v = g_origAvailPriv ? g_origAvailPriv(self, method) : 0;
+    if (g_speed.load(std::memory_order_relaxed)) v |= kPrivBattleSpeedX2;
+    return v;
+}
+
 // ---- 免广告：钩 GamePlatformManager.OnGameAdNotify（服务端广告响应缓存点）----
 static std::atomic<void*> g_adAvoidField{nullptr};
 static std::atomic<uint32_t> g_adCount{0};
@@ -445,12 +470,14 @@ static void EnsureHooks() {
     if (!g_libReady.load()) return;
     const bool wantBattle = g_kill.load() || g_inv.load();
     const bool wantAd = g_noads.load();
-    if (!wantBattle && !wantAd) return;
+    const bool wantSpeed = g_speed.load();
+    if (!wantBattle && !wantAd && !wantSpeed) return;
     if (!ArmDue()) return;
     const bool battleSettled = (!wantBattle) || g_stepFailed.load() ||
                                (g_stepHooked.load() && (g_dmgHooked.load() || g_dmgFailed.load()));
     const bool adSettled = (!wantAd) || g_adHooked.load() || g_adFailed.load();
-    if (battleSettled && adSettled) return;
+    const bool speedSettled = (!wantSpeed) || g_speedHooked.load() || g_speedFailed.load();
+    if (battleSettled && adSettled && speedSettled) return;
 
     if (g_retry.load() >= kRetryMax) return;
     if (!g_api.ready && !LoadRtApi()) {
@@ -470,6 +497,19 @@ static void EnsureHooks() {
         } else {
             g_adFailed.store(true);
         }
+    }
+
+    // 加速解锁：月卡特权判定（UI 阶段就调用，不依赖战斗门控）
+    if (wantSpeed && !g_speedHooked.load() && !g_speedFailed.load()) {
+        bool any = false;
+        void* fn1 = ResolveMethodPtr("Cylj.Game", "VipCardManager", "HasVipCardPrivilege", 1);
+        if (fn1 && HookResolved("HasVipCardPrivilege", fn1,
+                                (void*)Hooked_HasVipCardPrivilege, (void**)&g_origHasPriv)) any = true;
+        void* fn2 = ResolveMethodPtr("Cylj.Game", "VipCardManager", "GetAvailableVipCardPrivilege", 0);
+        if (fn2 && HookResolved("GetAvailableVipCardPrivilege", fn2,
+                                (void*)Hooked_GetAvailableVipCardPrivilege, (void**)&g_origAvailPriv)) any = true;
+        if (any) { g_speedHooked.store(true); }
+        else     { g_speedFailed.store(true); LOGW(DHSS_LOG " speed: VipCardManager 特权钩子未装上（降级）"); }
     }
 
     // 步进钩子：只读 isSingle 与时间戳，不改业务数据
@@ -519,14 +559,17 @@ void Dhss_OnFeatureChanged(int featNum, bool enabled) {
         case DHSS_FEAT_KILL: g_kill.store(enabled); break;
         case DHSS_FEAT_INV:  g_inv.store(enabled);  break;
         case DHSS_FEAT_AD:   g_noads.store(enabled); break;
+        case DHSS_FEAT_SPEED: g_speed.store(enabled); break;
         default: return;
     }
     const char* name = featNum == DHSS_FEAT_KILL ? "kill"
-                     : featNum == DHSS_FEAT_INV ? "invincible" : "no-ads";
-    LOGI(DHSS_LOG " feat=%d %s -> %d (step=%d dmg=%d ad=%d scaled=%u blocked=%u)",
+                     : featNum == DHSS_FEAT_INV ? "invincible"
+                     : featNum == DHSS_FEAT_SPEED ? "speed-unlock" : "no-ads";
+    LOGI(DHSS_LOG " feat=%d %s -> %d (step=%d dmg=%d ad=%d speed=%d scaled=%u blocked=%u)",
          featNum, name, enabled ? 1 : 0,
          g_stepHooked.load() ? 1 : 0, g_dmgHooked.load() ? 1 : 0,
          g_adHooked.load() ? 1 : 0,
+         g_speedHooked.load() ? 1 : 0,
          g_scaled.load(std::memory_order_relaxed), g_blocked.load(std::memory_order_relaxed));
 }
 
@@ -538,6 +581,7 @@ void Dhss_Tick(const bool* features, const int* /*values*/) {
         g_kill.store(features[DHSS_FEAT_KILL]);
         g_inv.store(features[DHSS_FEAT_INV]);
         g_noads.store(features[DHSS_FEAT_AD]);
+        g_speed.store(features[DHSS_FEAT_SPEED]);
     }
     if (!g_libReady.load() && isLibraryLoaded(DHSS_TARGET_LIB)) {
         g_libReady.store(true);
@@ -550,6 +594,7 @@ void Dhss_ForceClear() {
     g_kill.store(false);
     g_inv.store(false);
     g_noads.store(false);
+    g_speed.store(false);
     g_isSingle.store(-1);
     g_lastStepMs.store(0);
 }

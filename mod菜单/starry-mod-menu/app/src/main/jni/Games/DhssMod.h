@@ -21,6 +21,7 @@ enum DhssFeat : int {
     DHSS_FEAT_KILL = 1,  // Toggle_秒杀（斌哥「百倍伤害」→ 怪物目标伤害 ×100）
     DHSS_FEAT_INV  = 2,  // Toggle_无敌（斌哥「玩家无敌」→ 玩家侧受伤置 0）
     DHSS_FEAT_AD   = 3,  // Toggle_免广告（跳过广告播放，直接走官方 avoidAd 完成分支）
+    DHSS_FEAT_SPEED = 4, // Toggle_加速解锁（月卡特权 BattleSpeedX2 恒放行，对局内 2 倍速直接可开）
 };
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）

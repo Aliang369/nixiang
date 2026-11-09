@@ -42,6 +42,9 @@ LOCAL_ARM_MODE  := arm
 # Cocos 系去掉 Unity/Il2CppApi.cpp，按需增 Games/LtzjAceSoft.cpp 等过检配套
 LOCAL_SRC_FILES := MainModern.cpp Games/DhssMod.cpp Games/DhssEntry.cpp Unity/Il2CppApi.cpp
 
+# MainModern.cpp 的 I2C 早期注入/信号隔离入口由 NoAceStubs 提供空桩（本作不用 ACE 壳）
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif

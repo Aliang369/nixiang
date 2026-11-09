@@ -19,6 +19,7 @@ static const char* kDhss_Features[] = {
     "Toggle_秒杀",        // 1  DHSS_FEAT_KILL（斌哥「百倍伤害」→ 怪物目标伤害 ×100）
     "Toggle_无敌",        // 2  DHSS_FEAT_INV（斌哥「玩家无敌」→ 玩家侧受伤置 0）
     "Toggle_免广告",      // 3  DHSS_FEAT_AD（跳过广告播放，走官方 avoidAd 分支）
+    "Toggle_加速解锁",    // 4  DHSS_FEAT_SPEED（月卡特权 BattleSpeedX2 放行，对局内 2 倍速直接可开）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

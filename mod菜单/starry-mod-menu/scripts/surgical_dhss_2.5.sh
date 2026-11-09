@@ -21,19 +21,29 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 GAME="大话蜀山"
-VERSION="2.5"
+VERSION="${DHSS_VERSION:-2.7}"
 PKG="com.cylj.rogue.tp479"
-ORIG_APK="$NIXIANG/02_apks/$GAME/${GAME}_2.5_taptap_official.apk"
-ORIG_MD5="774e107cde3e10b92d0ecdd1baec2813"
+ORIG_APK="${DHSS_ORIG_APK:-$NIXIANG/02_apks/$GAME/${GAME}_${VERSION}_taptap_official.apk}"
+# 底包指纹：优先环境变量，其次版本化 .md5 记录文件（首次运行自动锁定，TOFU）
+ORIG_MD5_FILE="$NIXIANG/02_apks/$GAME/${GAME}_${VERSION}_taptap_official.md5"
+if [[ -n "${DHSS_ORIG_MD5:-}" ]]; then
+  ORIG_MD5="$DHSS_ORIG_MD5"
+elif [[ -f "$ORIG_MD5_FILE" ]]; then
+  ORIG_MD5="$(tr -d '[:space:]' < "$ORIG_MD5_FILE")"
+else
+  ORIG_MD5="$(md5 -q "$ORIG_APK")"
+  printf '%s\n' "$ORIG_MD5" > "$ORIG_MD5_FILE"
+fi
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
-MF_CACHE="$NIXIANG/07_patched/$GAME/surgical/AndroidManifest.xml"
+MF_CACHE="$NIXIANG/07_patched/$GAME/surgical/AndroidManifest_${VERSION}.xml"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 AUTHORITY="$PKG.starryinit"
 NEW_DEX="classes5.dex"   # 官包已有 classes..classes4
+PATCHED_DEX2="${DHSS_PATCHED_DEX2:-$NIXIANG/07_patched/$GAME/surgical/classes2.dex}"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
@@ -42,6 +52,8 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
 [[ -x "$BAKSMALI_BIN" ]] || { echo "ERROR: missing $BAKSMALI_BIN" >&2; exit 1; }
 SO_PREBUILT="${DHSS_SO:-$STARRY_SRC/libs_dhss/arm64-v8a/libstarry_magic.so}"
+[[ -f "$PATCHED_DEX2" ]] \
+  || { echo "ERROR: 缺 A 轨 classes2.dex ${PATCHED_DEX2}（先跑 dhss_patch_tapsdk_dex.py）" >&2; exit 1; }
 [[ -f "$SO_PREBUILT" ]] \
   || { echo "ERROR: missing modern so ${SO_PREBUILT}（先跑 dhss_build_so.sh）" >&2; exit 1; }
 echo "[check] modern so = $SO_PREBUILT"
@@ -81,16 +93,26 @@ shopt -u nullglob
   || { echo "ERROR: StarryInitProvider.smali missing（Java 桥没编进 starry app）" >&2; exit 1; }
 [[ -f "$SMALI_ROOT/com/starry/magic/menu/MenuService.smali" ]] \
   || { echo "ERROR: MenuService.smali missing" >&2; exit 1; }
-[[ -f "$SMALI_ROOT/com/starry/magic/sign/SignSpoof.smali" ]] \
-  || { echo "ERROR: SignSpoof.smali missing" >&2; exit 1; }
-[[ -f "$SMALI_ROOT/com/starry/magic/sign/TapLoginForceWeb.smali" ]] \
-  || { echo "ERROR: TapLoginForceWeb.smali missing" >&2; exit 1; }
+# TapTap 双轨制（2026-10-29）：登录走 A 轨改包法（classes2.dex），关闭 TapLoginForceWeb 反射白名单
+TLFW_SMALI="$SMALI_ROOT/com/starry/magic/sign/TapLoginForceWeb.smali"
+if [[ -f "$TLFW_SMALI" ]]; then
+  python3.11 - "$TLFW_SMALI" "$PKG" <<'PY'
+import sys
+from pathlib import Path
+p = Path(sys.argv[1])
+pkg = sys.argv[2]
+t = p.read_text(encoding="utf-8")
+old = chr(34) + pkg + chr(34)
+if old not in t:
+    raise SystemExit("ERROR: TapLoginForceWeb 白名单未找到裸包名 " + old)
+p.write_text(t.replace(old, chr(34) + pkg + ".disabled" + chr(34)), encoding="utf-8")
+print("  TapLoginForceWeb 白名单已剔除本包（登录交给 A 轨 classes2.dex）")
+PY
+  if grep -q "\"$PKG\"" "$TLFW_SMALI"; then echo "ERROR: 白名单剔除失败（仍含裸包名）" >&2; exit 1; fi
+fi
 "$SMALI_BIN" assemble -o "$WORK/$NEW_DEX" "$SMALI_ROOT"
 ls -la "$WORK/$NEW_DEX"
 
-# TapTap 强制网页白名单自检：本作包名必须编进 dex（否则登录仍走客户端 SSO）
-LC_ALL=C grep -aq "$PKG" "$WORK/$NEW_DEX" \
-  || { echo "ERROR: $NEW_DEX 内无 ${PKG}（TapLoginForceWeb 白名单未编译进包）" >&2; exit 1; }
 
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/"
@@ -200,7 +222,7 @@ else
 fi
 
 echo "[5/6] zip surgical merge → $UNSIGNED"
-python3.11 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$NEW_DEX" <<'PY'
+python3.11 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$NEW_DEX" "$PATCHED_DEX2" <<'PY'
 import sys, zipfile, hashlib
 from pathlib import Path
 
@@ -208,6 +230,7 @@ src, work, dst, new_dex = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]
 mf = (work / "AndroidManifest.xml").read_bytes()
 cnew = (work / new_dex).read_bytes()
 extras = {}
+extras["classes2.dex"] = Path(sys.argv[5]).read_bytes()   # A 轨改包法
 for p in (work / "lib").rglob("*"):
     if p.is_file():
         extras["lib/" + str(p.relative_to(work / "lib")).replace("\\", "/")] = p.read_bytes()
@@ -218,7 +241,7 @@ if certs.is_dir():
             extras["assets/certs/" + str(p.relative_to(certs)).replace("\\", "/")] = p.read_bytes()
 
 SIG_NAMES = {"META-INF/MANIFEST.MF"}
-untouched = ["classes.dex", "classes2.dex", "classes3.dex", "classes4.dex",
+untouched = ["classes.dex", "classes3.dex", "classes4.dex",
              "resources.arsc",
              "lib/arm64-v8a/libil2cpp.so", "lib/arm64-v8a/libunity.so",
              "lib/arm64-v8a/libmain.so", "lib/arm64-v8a/libtapsdkcore.so",
@@ -294,6 +317,13 @@ zin2.close(); zout2.close()
 PY
 
 echo "[6/6] 闭环校验（包内 so == 构建产物；$NEW_DEX 含 StarryInitProvider）"
+IN_DEX2_MD5="$(unzip -p "$UNSIGNED" classes2.dex | md5 -q)"
+SRC_DEX2_MD5="$(md5 -q "$PATCHED_DEX2")"
+if [[ "$IN_DEX2_MD5" != "$SRC_DEX2_MD5" ]]; then
+  echo "ERROR: 包内 classes2.dex ($IN_DEX2_MD5) != A 轨补丁产物 ($SRC_DEX2_MD5)" >&2
+  exit 1
+fi
+echo "[dex2-verify] 包内 classes2.dex == 补丁产物 ($IN_DEX2_MD5) ok"
 IN_SO_MD5="$(unzip -p "$UNSIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 SRC_SO_MD5="$(md5 -q "$SO_PREBUILT")"
 if [[ "$IN_SO_MD5" != "$SRC_SO_MD5" ]]; then
