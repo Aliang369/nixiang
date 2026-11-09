@@ -923,6 +923,55 @@ static bool BumpIntField(void* obj, const char* field, int delta, const char* ta
     return true;
 }
 
+// 钻石：1.8 里钻石不是 AccountInfo 独立字段，而是背包物品（itemid = 2）。
+// 实测（2026-11-09，玩家背包 bag[17] itemid=2 count=19998）：
+//   AccountMgr.instance → +40 AccountInfo → +96 players(List<PlayerInfo>) → [0]
+//   → +272 saveBags(List<ItemSaveData>) → 遍历 baseItemid@164 == 2 → count@16 自增
+// List<T> 内存布局：+0x10 元素数组指针 / +0x18 size；数组 +0x20 起为元素指针。
+// 只在「已有条目」上自增，不造新物品（配置表接口 GetNewItem/SpawnItem 在注入环境一律 SIG）。
+static bool GrantDiamond(int delta) {
+    auto& api = GetApi();
+    if (!api.ready) { if (!api.Load(TPL_TARGET_LIB)) return false; }
+    void* mgrCls = api.FindClassByShortName("AccountMgr");
+    if (!mgrCls) { LOGW(TPL_LOG " 钻石: AccountMgr 未找到"); return false; }
+    void* mgr = api.StaticRefField(mgrCls, "instance");
+    if (!OkPtr(mgr)) { LOGW(TPL_LOG " 钻石: AccountMgr.instance 为空"); return false; }
+
+    void* info = *(void**)((uintptr_t)mgr + 40);
+    if (!OkPtr(info)) { LOGW(TPL_LOG " 钻石: AccountInfo 为空"); return false; }
+    void* players = *(void**)((uintptr_t)info + 96);
+    if (!OkPtr(players)) { LOGW(TPL_LOG " 钻石: players 为空"); return false; }
+    void* pArr = *(void**)((uintptr_t)players + 0x10);
+    const int32_t pCnt = *(int32_t*)((uintptr_t)players + 0x18);
+    if (!OkPtr(pArr) || pCnt <= 0) { LOGW(TPL_LOG " 钻石: players 空表(cnt=%d)", pCnt); return false; }
+    void* p0 = *(void**)((uintptr_t)pArr + 0x20);
+    if (!OkPtr(p0)) { LOGW(TPL_LOG " 钻石: player0 为空"); return false; }
+
+    void* saveBags = *(void**)((uintptr_t)p0 + 272);
+    if (!OkPtr(saveBags)) { LOGW(TPL_LOG " 钻石: saveBags 为空"); return false; }
+    void* items = *(void**)((uintptr_t)saveBags + 0x10);
+    const int32_t n = *(int32_t*)((uintptr_t)saveBags + 0x18);
+    if (!OkPtr(items) || n <= 0) { LOGW(TPL_LOG " 钻石: saveBags 空表(cnt=%d)", n); return false; }
+
+    int32_t hit = 0;
+    for (int32_t i = 0; i < n; ++i) {
+        void* it = *(void**)((uintptr_t)items + 0x20 + (uintptr_t)i * 8);
+        if (!OkPtr(it)) continue;
+        if (*(int32_t*)((uintptr_t)it + 164) != 2) continue;    // baseItemid == 钻石
+        const int32_t before = *(int32_t*)((uintptr_t)it + 16);
+        *(int32_t*)((uintptr_t)it + 16) = before + delta;
+        ++hit;
+        LOGI(TPL_LOG " 钻石: bag[%d] count %d -> %d", i, before, before + delta);
+        DbgLog("diamond: bag[%d] count %d -> %d", i, before, before + delta);
+    }
+    if (!hit) { LOGW(TPL_LOG " 钻石: 背包内无 itemid=2 条目（不凭空创建）"); return false; }
+
+    // 触发存档，否则读档回滚
+    size_t nOff = api.FieldOffset(mgrCls, "needSave");
+    if (nOff) { Il2Cpp::WriteU8(mgr, nOff, 1); LOGI(TPL_LOG " 钻石: needSave=1"); }
+    return true;
+}
+
 static bool GrantPoints(int delta) {
     return BumpAcctField("points", delta, "积分");
 }
@@ -1039,7 +1088,7 @@ bool 旷野征途_IsReady() {
 void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
     switch (featNum) {
         case 旷野征途_FEAT_GOLD:    if (enabled && !GrantGold(9999)) GrantItem(1, 9999); break;
-        case 旷野征途_FEAT_DIAMOND: if (enabled) GrantItem(2, 9999); break;
+        case 旷野征途_FEAT_DIAMOND: if (enabled && !GrantDiamond(9999)) GrantItem(2, 9999); break;
         case 旷野征途_FEAT_POINT:   if (enabled && !GrantPoints(9999)) GrantItem(3, 9999); break;
         case 旷野征途_FEAT_SPD: g_spd.store(enabled); break;
         case 旷野征途_FEAT_DMG: g_dmg.store(enabled); break;
