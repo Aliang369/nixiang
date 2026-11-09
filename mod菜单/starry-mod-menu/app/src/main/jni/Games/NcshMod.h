@@ -12,6 +12,7 @@ enum NcshFeat : int {
     NCSH_FEAT_DMG100 = 1,   // Toggle_百倍伤害
     NCSH_FEAT_INVULN = 2,   // Toggle_无敌
     NCSH_FEAT_SKILL  = 3,   // Toggle_无限技能
+    NCSH_FEAT_SPEED  = 4,   // Toggle_解锁加速
 };
 
 bool Ncsh_TryInit(JavaVM* vm);

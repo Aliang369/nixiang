@@ -9,6 +9,7 @@ static const char* kNcsh_Features[] = {
     "Toggle_百倍伤害",      // 1
     "Toggle_无敌",          // 2
     "Toggle_无限技能",      // 3
+    "Toggle_解锁加速",      // 4
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
