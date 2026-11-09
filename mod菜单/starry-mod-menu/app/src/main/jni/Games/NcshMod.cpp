@@ -358,15 +358,13 @@ static void PatchList(void* core, size_t listOff, size_t skillOff,
             }
         }
         if (doInv) {
+            /* ★2026-11-11 修正：不再抬高 _maxHp。
+             * 旧实现把 _maxHp/_curHp 都写成 1e8 —— maxHp 会被结算/评分/上报读到，
+             * 1 亿是明显异常值，怀疑导致战斗判定/结算异常（用户实测「打完没正常结算奖励」）。
+             * 现改为只把 _curHp 回填到 _maxHp（原值），上报数值全部保持游戏真实血量。 */
             int32_t mx = Il2Cpp::ReadI32(e, E_MAX_HP);
             int32_t hp = Il2Cpp::ReadI32(e, E_CUR_HP);
-            if (mx < kBigHp) {
-                EntRec* r = FindOrAddRec(e);
-                if (r && r->maxOrig == 0) r->maxOrig = mx;
-                Il2Cpp::WriteI32(e, E_MAX_HP, kBigHp);
-                Il2Cpp::WriteI32(e, E_CUR_HP, kBigHp);
-                (*nInv)++;
-            } else if (hp < mx) {
+            if (mx > 0 && mx < kBigHp && hp < mx) {
                 Il2Cpp::WriteI32(e, E_CUR_HP, mx);
                 (*nInv)++;
             }
@@ -390,6 +388,35 @@ static void PatchList(void* core, size_t listOff, size_t skillOff,
             }
         }
     }
+}
+
+/* 战斗统计（每 5 秒一条）：塔/英雄数量、首塔血量、存活怪数、逃跑怪数。
+ * 用途：区分「塔被打死」与「漏怪超限」两种失败原因。 */
+static void MaybeStats(void* core) {
+    if (!core) return;
+    static timespec last{};
+    timespec now{};
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    long ms = (now.tv_sec - last.tv_sec) * 1000L + (now.tv_nsec - last.tv_nsec) / 1000000L;
+    if (ms < 5000) return;
+    last = now;
+    int tw = ListSize(Il2Cpp::ReadPtr(core, FC_TOWER));
+    int hw = ListSize(Il2Cpp::ReadPtr(core, FC_HERO));
+    int cw = ListSize(Il2Cpp::ReadPtr(core, FC_CHILD));
+    int sw = ListSize(Il2Cpp::ReadPtr(core, FC_SUMMON));
+    void* mgr = Il2Cpp::ReadPtr(core, FC_MGR);
+    int am = -1, tm = -1;
+    if (mgr) { am = ListSize(Il2Cpp::ReadPtr(mgr, MGR_ALIVE_MON)); tm = ListSize(Il2Cpp::ReadPtr(mgr, MGR_ALL_MON)); }
+    int runaway = Il2Cpp::ReadI32(core, 388);
+    int thp = -1, tmax = -1;
+    void* tl = Il2Cpp::ReadPtr(core, FC_TOWER);
+    if (tl && tw > 0) {
+        void* it = ListItems(tl);
+        void* e0 = it ? ElemAt(it, 0) : nullptr;
+        if (e0) { thp = Il2Cpp::ReadI32(e0, E_CUR_HP); tmax = Il2Cpp::ReadI32(e0, E_MAX_HP); }
+    }
+    DbgLog("stats tower=%d hero=%d child=%d summon=%d mon(all=%d,alive=%d) runaway=%d tower0=%d/%d",
+           tw, hw, cw, sw, tm, am, runaway, thp, tmax);
 }
 
 static void ApplyAll(void* core) {
@@ -559,6 +586,7 @@ static void HandleHit(void* frameGroup, void* methodInfo, void* argsPkt) {
             DbgLog("selfcheck pending hit=%u core=%p", hit, core);
     }
     if (g_layoutOk) {
+        MaybeStats(core);
         bool go = (k == KIND_TICK);
         if (!go && (g_dmg.load() || g_inv.load() || g_skill.load()))
             go = ThrottleOk(8);          // 备路径：最多 120 次/秒
