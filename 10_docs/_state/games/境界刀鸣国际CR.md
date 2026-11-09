@@ -1,3 +1,10 @@
+---
+game: "境界刀鸣国际CR"
+status: delivered
+updated: "2026-11-08"
+one_line: "已交付（Crunchyroll 渠道，脱离 Google 依赖）：libgame.so 与国服/GP 全同 ⇒ 同源；无 hhld/PairIP/GSDK；单包全覆盖安装，三功能玩家实测通过。坑：CR 不自带 libc++_share…"
+---
+
 # 境界刀鸣 国际服 Crunchyroll 渠道（com.crunchyroll.bleachsoulres）
 
 > 更新：2026-11-08 15:40。**已交付**：星光单包 1.5 GB 已装，**三功能玩家实测通过**（用户原话「功能都没问题」）。

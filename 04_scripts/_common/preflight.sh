@@ -37,7 +37,9 @@
 #    .js   → node --check     （node 缺失则 SKIP 提示）
 #    .json → json.tool 校验
 #    .cpp/.cc/.c/.h/.hpp/.mk → ⚠ 无独立语法检查器：必须重跑管线构建阶段验证
-#    .md（仅 AGENTS.md）→ 入口体量：>30720 B REMIND（30 KB 工作上限）/ >32768 B FAIL（D6 闸门）
+#    .md（AGENTS.md）→ 入口体量：>30720 B REMIND（30 KB 工作上限）/ >32768 B FAIL（D6 闸门）
+#    .md（_state/current.md）→ §6 状态索引：>15360 B REMIND（15 KB 上限）/ >24576 B FAIL（应急闸）
+#            ＋单行 >1200 B（≈400 中文字符）REMIND。2026-11-09 起纳入机检。
 #            2026-10-30 补：D6 原先只在 twin_status 查，等于"撞线才清"；这里提前预警，
 #            配合 AGENTS.md §1「入口增量纪律」把清理成本摊到每次改动。
 #    其他  → PASS（跳过）
@@ -49,6 +51,16 @@
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# 解释器探测：沿用 prune_output_final.sh 的既有顺序，mac 走 brew python3.11 / 系统 python3，
+# Win 走 win_shims 的 python3.11 垫片或 py。两者都没有时返回 1，调用方降级为 WARN 而非 FAIL。
+idx_python() {
+  local c
+  for c in python3.11 python3 python py; do
+    if command -v "$c" >/dev/null 2>&1; then echo "$c"; return 0; fi
+  done
+  return 1
+}
 
 fail=0; pass=0; skip=0; remind=0; cpp_remind=0; sweep_files=0
 
@@ -141,10 +153,59 @@ check_one() {
       fi
       ;;
     md)
+      # 索引一致性关（2026-11-09）：current.md/archive_index.md 是 games/*.md frontmatter 的**投影**，
+      # 改任一侧都要求同步重生成，否则索引与实际状态漂移（旧的「手工加一行」模式已废除）。
+      case "$f" in
+        *10_docs/_state/games/*.md|*_state/current.md|*_state/archive_index.md)
+          # --check 一次扫全部 games/*.md，结果与文件名无关；本进程内只跑一次（否则 101 个游戏
+          # 文件就是 101 × 138 ms ≈ 14 s）。
+          if [ "${_IDX_CHECKED:-0}" = "1" ]; then
+            :
+          elif [ -f "$SCRIPT_DIR/gen_state_index.py" ] && _idx_py=$(idx_python); then
+            _IDX_CHECKED=1
+            # PYTHONUTF8=1：Win 端默认 cp936，print 中文会炸（与 stage_shared_file.py 同一处理）
+            if _idx_out=$(PYTHONUTF8=1 "$_idx_py" "$SCRIPT_DIR/gen_state_index.py" --check 2>&1); then
+              echo "✓ PASS  [状态索引] $f 索引与真源一致"
+              pass=$((pass+1))
+            else
+              echo "✗ FAIL  [状态索引] $f 与索引不一致 ——"
+              printf '%s\n' "$_idx_out" | sed 's/^/       /' | head -3
+              fail=$((fail+1))
+            fi
+          else
+            # 没有解释器时不能静默跳过：否则 Win 端这一关悄悄失效，谁都发现不了。
+            echo "⚠ REMIND [状态索引] 本机无可用 python（python3.11/python3/py 全缺），索引一致性关未生效"
+            echo "        Win 端请自行确认 win_shims 在 PATH 上（本关不代写 Windows 适配）"
+            remind=$((remind+1))
+            _IDX_CHECKED=1
+          fi
+          ;;
+      esac
       # 入口体量关（2026-10-30）：只查 AGENTS.md —— 入口文件边界要求它只放通用规则与路由，
       # 单游戏/日志/渠道正文不属于这里。30 KB 是工作上限（预警），32 KB 是 D6 硬闸（与
       # twin_status.sh 同源同值），两者都在改完当场给出，不等到双机体检。
       case "$f" in
+        *_state/current.md)
+          # §6「状态索引」（2026-11-09）：此前只有 AGENTS.md 有体量关，current.md 从 18 KB 一路涨到
+          # 21 KB 全程无人拦（preflight 全绿）。现按 §6 原文补机检：整文件 <15 KB、单行 ≈≤400 字符。
+          # 超出时先做去重 / 把 hash·包大小·挂点下沉到 games/{游戏}.md，再考虑改结构（分片或生成式索引）。
+          _csz=$(wc -c < "$f" | tr -d ' ')
+          _clong=$(LC_ALL=C awk 'length($0) > 1200 { printf "L%d(%dB) ", NR, length($0) }' "$f")
+          if [ "${_csz:-0}" -gt 24576 ]; then
+            echo "✗ FAIL  [状态索引] ${f} ${_csz} B > 24576（应急闸）：先把不活跃游戏行迁 _state/history/ 或改结构再提交"
+            fail=$((fail+1))
+          elif [ "${_csz:-0}" -gt 15360 ]; then
+            echo "⚠ REMIND [状态索引] ${f} ${_csz} B > 15360（§6 上限）：新增前先迁出等量旧行（去重、hash/包大小下沉 games/）"
+            remind=$((remind+1))
+          else
+            echo "✓ PASS  [状态索引] ${f} ${_csz} B <= 15360（距上限还有 $((15360 - _csz)) B）"
+            pass=$((pass+1))
+          fi
+          if [ -n "$_clong" ]; then
+            echo "⚠ REMIND [状态索引] 单行超 1200 B（≈400 中文字符）：${_clong}"
+            remind=$((remind+1))
+          fi
+          ;;
         *AGENTS.md|AGENTS.md)
           _esz=$(wc -c < "$f" | tr -d ' ')
           if [ "${_esz:-0}" -gt 32768 ]; then

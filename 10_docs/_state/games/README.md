@@ -8,7 +8,7 @@
   2. `## 本地产物与关键输入` —— 见下方专节。
   3. `## 历史记录` —— 旧轮次、迁移历史，只在摘要要求追溯时才读。
 - `../current.md` 只保留一行索引，不复制长结论。
-- 更新顺序：先改本目录的目标游戏摘要，再更新 `../current.md` 的最近日期和粗状态。
+- 更新顺序：先改本目录目标游戏摘要＋头部 frontmatter（`status`/`updated`/`one_line`），再跑 `python3 04_scripts/_common/gen_state_index.py` 重生成 `../current.md`（**生成物，禁手改**；`preflight --check` 校验）。
 - 单一功能反复反馈时，在游戏摘要中链接 `功能验收卡.md`；长日志目录补
   `README.md`，只列决定性证据和最短复现命令。
 

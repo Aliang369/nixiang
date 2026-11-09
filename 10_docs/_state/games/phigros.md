@@ -1,3 +1,11 @@
+---
+game: "phigros"
+title: "Phigros"
+status: delivered
+updated: "2026-09-21"
+one_line: "TapTap 网页登录已修复并实机跑通（出包待交付）"
+---
+
 # Phigros 状态摘要
 
 > 由 2026-09-20 `current.md` 索引拆分生成。后续只更新本文件；

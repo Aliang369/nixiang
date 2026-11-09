@@ -69,7 +69,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
 ```
 - **顺序不可颠倒**：先 `status` 再 `pull`；工作区不干净时 pull/rebase 会把未提交改动卷进去。
 - **一机一游戏**：开工前先划定归属并 `bash 04_scripts/双机协作/claim_game.sh <游戏>`（收工 `--done` 释放，表 `10_docs/双机协作/本轮归属.tsv`）；pull 后发现对方已认领未释放的游戏**禁止写**。
-- **单一写者**：`current.md` 与 `games/{游戏}.md` 由本轮动了该游戏的那台机器写，另一台只读；跨机接手先核对 `games/{游戏}.md` 的「接手重建：」行。
+- **单一写者**：`games/{游戏}.md` 由本轮动了该游戏的那台机器写，另一台只读；`current.md` 是生成物不手写（改 frontmatter 后重跑生成器）。跨机接手先核对「接手重建：」行。
 - **共享文件不得吞入他人改动**：`current.md` 等用 `python3 04_scripts/_common/stage_shared_file.py`（Win 下 `PYTHONUTF8=1`）做内容级暂存，不直接 `git add`；提交前 `git diff --cached` 确认归属。
 - 多代理协作先划定文件归属与禁止修改项；不覆盖他人改动，跨归属改动先协调，最终汇总改动与证据。
 
@@ -117,7 +117,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
 - **一轮一个变量、一轮只问一次**：同一轮只改一个自变量（多改则失败无法归因）；需要用户配合时一轮只发一张操作请求卡。
 - **读取体量纪律**（MB 级文件禁整读；检索/读取优先原生工具 `grep`/`glob`/`read`）：
   - KB 级可整读：`10_docs/_state/games/{游戏}.md`、`skill/**/*.md`、`04_scripts/{游戏}/*.sh`。
-  - MB / KB-heavy 级**禁整读**：`06_dumped/**/dump.cs`、`meta/dump_all.txt`、`meta/types.txt`、`pipeline.log`、原始 logcat、`_state/current.md` —— 一律 `rg -n -m <N>` 或 `sed -n 'A,Bp'` 切片；metadata 清单只按 TYPE/类名片段取值。
+  - MB / KB-heavy 级**禁整读**：`06_dumped/**/dump.cs`、`meta/dump_all.txt`、`meta/types.txt`、`pipeline.log`、原始 logcat —— 一律 `rg -n -m <N>` 或 `sed -n 'A,Bp'` 切片；metadata 清单只按 TYPE/类名片段取值。
   - 禁止 `cat 04_scripts/{游戏}/pipeline.json`（会把历史阶段一起灌入），只取目标 stage。`git status` / `git diff` 必须带游戏 pathspec，禁止裸跑后自行过滤。
   - **阈值**：同一 dump 每轮 grep ≤10 次、单条工具结果 ≤8 KB；长脚本/模板（`surgical_*.sh` 同限）先取大纲再切片。
 - **同文件串行编辑**：同一轮**禁止**对同一文件并行发多个 Edit（读-改-写竞争，事故×3）；不同文件可并行；同一文件多处改动先一次读全再连续 edit，改动大时一次 `write` 覆盖；`edit` 报 `file changed since it was read` 只需重读，不是冲突。
@@ -135,13 +135,13 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
 - **改完任何文件必跑机器关**：`bash 04_scripts/_common/preflight.sh <改过的文件...>`（`.sh`→`bash -n`+bash 3.2 兼容门禁、`.py`→compile、`.js`→node --check、`.json`→json.tool；`.cpp/.mk`→REMIND 须重跑管线构建；`AGENTS.md`→入口体量）。**preflight 没跑 / 没过，修改就不算完成**；无参 `--sweep` 全仓扫描。
 - **管线与指纹锁**：`pipeline.sh` / `_common/pipeline.lock` 禁随手改、禁只改一边；确需改按 `stages.md` 文末「真要改 `pipeline.sh` 时的跨机姿势」（同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push）。
 - **加固门禁已停用（2026-10-27 用户裁决撤销「默认全局强制」）**：`harden_apk.py` / `harden_gate.sh` / `harden_coverage.py` 与 `pre_install_gate.sh` 查11 **不再被任何规则要求**；脚本暂留（三款已接入游戏出包脚本仍调用，硬删断包）＝「停用件」，**新游戏不再要求加固**。
-  三款的去加固步骤各记 `10_docs/{游戏}/去加固_待办_20261027.md`；撤销缘由、原口径与影响范围见 `10_docs/_state/规范变更日志.md`。
+  三款的去加固步骤各记 `10_docs/{游戏}/去加固_待办_20261027.md`；撤销缘由见 `规范变更日志.md`。
 - **删除禁通配符**：删除一律写**显式名单**，先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（事故：误删 16 个已入库脚本，靠 `git checkout` 救回）；批量清理优先 `04_scripts/_common/trash_paths.sh`（默认 dry-run）。
 - **审查**：改完代码或用户要求「按边界审 / 自查」⇒ 按 `skill/re-implement/code-review-checklist.md` 走一轮；纯文档修改只核对范围/链接/规则冲突/授权。一轮输出结论即停，不借审查扩大任务；仅修已确认问题，修复后复查该问题与直接影响面。
 - **分阶段与验收结论**：装机前「可测试」门禁＝静态·构建检查 + 包结构与签名 + 测试授权 + 证据采集 + 恢复方案，**已知阻断问题不得装机**。「运行验证」以目标版本实际日志、功能开关与回归结果判定；「可交付」须满足对应运行证据，**不以构建成功替代**；缺证据列 CLAIM / VERDICT / EVIDENCE。**阶段闸门**：收到用户明确「开始做功能」口令前，**禁止启动** IL2CPP 符号恢复 / RVA 定位 / metadata 类型枚举 / ABI 分析 / 玩法 hook 派生分析。
 - **装机预检闸门＋验收阶梯 L1/L2/L3**：装机后先 `bash 04_scripts/_common/post_install_precheck.sh --game <游戏>`，预检全过才请用户上手；三层走同一个包（同 so 同签名）：**L1 静态 / L2 机器 / L3 用户唯一终审**；**禁止为模拟器单独出包**，设备差异落运行时判据。判据与取证见 `stages.md`「装机预检与验收阶梯」与 `hook-rules.md` §31。
 - **收尾与产物生命周期**：`02_apks/`、dump、`08_output/`、构建产物、热更样本、JS 解密产物的保留/清理/入库规则正文＝`_state/规范变更日志.md` §归档正文 D；裁剪唯一正式包走 `prune_output_final.sh` / `finalize_game_delivery.sh`（**禁手工重造**）；菜单模板照抄 `_templates/menu_template.example.json`，收尾按 `_menu_template` §3 自检字段集严格相等。
-- **状态索引**：`10_docs/_state/current.md` 只保留跨游戏摘要索引（每游戏一行：最近更新＋一句粗粒度状态＋`games/{游戏}.md` 链接），**索引行硬上限 400 字符**、整文件 **< 15 KB**，超出写进 `games/{游戏}.md`；单游戏摘要 > 约 12 KB 时旧轮次下沉 `10_docs/_state/history/`，只留最近 1–2 轮。收尾或卡点变化**先更新游戏摘要，再同步索引一行**；纯评估/文档维护不改游戏状态。
+- **状态索引**：`10_docs/_state/current.md` **是生成物、禁手改**——由 `gen_state_index.py` 从 `games/*.md` 头部 frontmatter（`status/updated/one_line`）生成，`preflight --check` 校验。只放当前工作集（窗口/行数/体积上限见脚本），全量在 `archive_index.md`。收尾改状态＝改该游戏 frontmatter 再重跑生成器；单游戏摘要 >12 KB 时旧轮次下沉 `history/`。纯评估/文档维护不改游戏状态。
 - **经验生命周期**：状态词、合并门槛与 `class: tech|policy` 判据的唯一正文＝`10_docs/_templates/经验候选卡.md`；登记＝`_state/pending_experience.md`，机器检查＝`04_scripts/_common/audit_experience_registry.py`。`class: tech` 证据齐+落点明确可自动合并；**`class: policy` 只提案，须用户当轮指令**；「合并」只并入已有唯一权威章节，不新造同类文件；复盘结构见 `_templates/会话复盘模板.md`。
 - **会话规模与切点**：单会话 ≈600 次工具调用 / ≈40 次装机 / ≈150K prune token 任一触顶即**交接**（把「已确认事实/未决问题/下一步/证据落点」写进 `games/{游戏}.md` 后开新会话）；效率硬指标 calls/step ≥1.6、单发占比 <60%；子代理只做「可独立落盘的深度探查」，不得依赖会话历史工具。阈值与实测见 `规范变更日志.md` 归档。
 - **度量口（只读）**：`python3 04_scripts/_common/session_metrics.py --session-id <片段> --gate` （违规 rc=3）——**收官时跑一次当前会话，别凭感觉汇报效率**。
@@ -156,7 +156,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
 | 工具安装、命令、坑位、目录与清理 | `TOOLBOOK.md`（短索引）+ `10_docs/tools/01–07`（正文） |
 | 技能导航（只作按需索引，不设全局政策） | `skill/SKILL.md`；技术专项 `skill/**/SKILL.md`、`hook-rules.md` |
 | 单游戏必须/禁止、挂点对照、状态与证据 | `10_docs/{游戏}/硬约束.md`、`路线锁定.md`、`_state/games/{游戏}.md` |
-| 跨游戏状态索引 | `10_docs/_state/current.md`（每游戏一行） |
+| 跨游戏状态索引 | `10_docs/_state/current.md`（生成物）＋`archive_index.md`（全量） |
 | 规范变更原因、事故、历史正文、落地证据 | `10_docs/_state/规范变更日志.md`（**只增不删、不重写历史**） |
 | 工具平台入口（Cursor / TRAE / CLAUDE 等） | 各平台规则文件的**短指针**，正文一律回本文件 |
 | 规则分类、生效原则、优先级、冲突处理 | **本文件 §1.1–§1.4**（其他文档只引用，不重写） |

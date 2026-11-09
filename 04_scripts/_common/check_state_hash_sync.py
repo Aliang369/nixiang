@@ -4,9 +4,9 @@
 清单/输入契约（2026-10-10 追迹迷城复盘 P0-4 补注）:
   --manifest 吃 prune 清单（removed:[{name,size,md5}]），必须含 md5 与 size，
   且 state 文件（10_docs/_state/games/{游戏}.md）须写出**完整** md5 + sha256；
-  10_docs/_state/current.md 的本游戏行须含 md5/sha256 的 **8 位前缀**，
-  且整行 ≤400 **字符**（不是字节）。缺 sha256 前缀 ⇒ 报
-  「hash sync failed: current sha256 prefix」。
+  索引（`_state/current.md` 或 `_state/archive_index.md`）里须有本游戏行，且整行 ≤400 **字符**（不是字节）。
+  2026-11-09 起索引改为由 `gen_state_index.py` 从 frontmatter 生成的**投影**，不再承载 hash：
+  原先的「current 行含 md5/sha256 8 位前缀」改为只查 state 文件（完整 hash 那里必须有）。
 """
 import argparse
 import hashlib
@@ -39,6 +39,7 @@ def main() -> int:
     ap.add_argument("--apk")
     ap.add_argument("--state")
     ap.add_argument("--current", default="10_docs/_state/current.md")
+    ap.add_argument("--archive", default="10_docs/_state/archive_index.md")
     args = ap.parse_args()
 
     root = Path(__file__).resolve().parents[2]
@@ -48,6 +49,9 @@ def main() -> int:
         current = root / current
     if not state.is_absolute():
         state = root / state
+    archive = Path(args.archive)
+    if not archive.is_absolute():
+        archive = root / archive
 
     apk = None
     keep_md5 = None
@@ -75,8 +79,10 @@ def main() -> int:
     if not state.exists():
         print(f"ERROR: state file not found: {state}", file=sys.stderr)
         return 1
-    if not current.exists():
-        print(f"ERROR: current index not found: {current}", file=sys.stderr)
+    # 索引是生成物：游戏完全可能只在 archive_index.md 里（跌出活跃窗口），此时 current 不存在
+    # 或没有该行都不算错——只要两份索引至少有一份存在、且能找到本游戏行即可。
+    if not current.exists() and not archive.exists():
+        print(f"ERROR: 索引都不存在: {current} / {archive}", file=sys.stderr)
         return 1
 
     actual_md5 = md5_file(apk)
@@ -90,14 +96,17 @@ def main() -> int:
         return 1
 
     state_text = state.read_text(encoding="utf-8")
-    current_text = current.read_text(encoding="utf-8")
     row = None
-    for line in current_text.splitlines():
-        if line.startswith(f"| {args.game} |"):
-            row = line
-            break
+    marker = f"](games/{args.game}.md)"
+    for path in (current, archive):
+        if row is not None or not path.exists():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if marker in line:
+                row = line
+                break
     if row is None:
-        print(f"ERROR: current.md has no row for {args.game}", file=sys.stderr)
+        print(f"ERROR: 索引（current/archive）里没有 {args.game} 的行", file=sys.stderr)
         return 1
     if len(row) > 400:
         print(f"ERROR: current row too long: {len(row)} > 400 chars", file=sys.stderr)
@@ -106,8 +115,7 @@ def main() -> int:
     checks = [
         ("state md5", actual_md5 in state_text),
         ("state sha256", actual_sha256 in state_text),
-        ("current md5 prefix", actual_md5[:8] in row),
-        ("current sha256 prefix", actual_sha256[:8] in row),
+        ("index row found", row is not None),
     ]
     failed = [name for name, ok in checks if not ok]
     if failed:
