@@ -37,7 +37,7 @@ fail=0
 hit() { echo "  ✗ $*" >&2; fail=1; }
 ok()  { [[ $VERBOSE -eq 1 ]] && echo "  ✓ $*"; return 0; }
 
-echo "[1/5] 框架层不得 import 具体游戏实现类"
+echo "[1/7] 框架层不得 import 具体游戏实现类"
 # 框架文件 = 除 core/games 之外的所有 .java；core 里也只查「具体类」引用
 # bash 3.2（macOS 自带）无 mapfile/readarray —— 用 while read 收集（AGENTS.md bash32 纪律）
 FRAMEWORK_FILES=()
@@ -58,7 +58,7 @@ else
   fi
 fi
 
-echo "[2/5] 框架层不得出现单游戏的历史临时目录"
+echo "[2/7] 框架层不得出现单游戏的历史临时目录"
 bad="$(grep -rn '/data/local/tmp/ltzj_st\|/data/local/tmp/[a-z]\{3,8\}_st' ${FRAMEWORK_FILES[@]+"${FRAMEWORK_FILES[@]}"} 2>/dev/null \
         | grep -v 'core/NativeLoader.java' || true)"
 if [[ -n "$bad" ]]; then
@@ -67,7 +67,7 @@ else
   ok "无单游戏临时目录"
 fi
 
-echo "[3/5] 框架层不得写死具体游戏包名"
+echo "[3/7] 框架层不得写死具体游戏包名"
 # 允许的：com.starry.magic（自身/助手包名）、android 系统包、以及 core/legacy 清单
 bad="$(grep -rnoE '"(com|cn|net|inland|game)\.[A-Za-z0-9_]+\.[A-Za-z0-9_.]+"' ${FRAMEWORK_FILES[@]+"${FRAMEWORK_FILES[@]}"} 2>/dev/null \
         | grep -vE 'com\.starry\.magic|com\.android|com\.google\.android|android\.' \
@@ -82,7 +82,7 @@ else
   ok "无写死的外部游戏包名"
 fi
 
-echo "[4/5] LegacyTapTapGames 清单只减不增"
+echo "[4/7] LegacyTapTapGames 清单只减不增"
 LEGACY="$JAVA/core/legacy/LegacyTapTapGames.java"
 BASELINE=8   # 2026-11-11 建立基线时的条目数；迁移一个游戏就减一，并同步改这里
 if [[ -f "$LEGACY" ]]; then
@@ -97,7 +97,7 @@ else
   ok "LegacyTapTapGames 已删除（全部迁移完成）"
 fi
 
-echo "[5/5] 每个 games/<id>/GameHookImpl 必须声明 targetPackage()"
+echo "[5/7] 每个 games/<id>/GameHookImpl 必须声明 targetPackage()"
 missing=0
 while IFS= read -r f; do
   [[ -z "$f" ]] && continue
@@ -108,19 +108,35 @@ while IFS= read -r f; do
 done < <(find "$JAVA/games" -name 'GameHookImpl.java' 2>/dev/null)
 [[ $missing -eq 0 ]] && ok "全部 GameHookImpl 都有 targetPackage()"
 
-echo "[6/6] TapLoginForceWeb 包名白名单只减不增"
-TLW="$JAVA/sign/TapLoginForceWeb.java"
-TLW_BASELINE=47   # 2026-11-11 建立基线时的条目数（迁移一个游戏就减一并改这里）
-if [[ -f "$TLW" ]]; then
-  n="$(sed -n '/PKG_WHITELIST =/,/));/p' "$TLW" | grep -cE '^\s*"(com|cn|net|inland)\.' || true)"
-  n="${n:-0}"
-  if [[ "$n" -gt "$TLW_BASELINE" ]]; then
-    hit "TapLoginForceWeb 白名单 $n > 基线 ${TLW_BASELINE}（只减不增：新游戏写进自己的 GameHookImpl）"
-  else
-    ok "TapLoginForceWeb 白名单 $n ≤ 基线 $TLW_BASELINE"
-  fi
+echo "[6/7] 两个 R8 规则文件必须同步（core/games 的 keep 规则）"
+# 为什么单列一项：2026-11-11 一念通天 784 轮实测事故 —— 只改了 inject-dex-rules.pro、
+# 漏了 proguard-rules.pro，走 gradle 路径的游戏 SPI 类被 R8 改名，
+# 反射装载 ClassNotFound，TapTap 网页登录从头到尾没被调过，直到用户提醒才查出来。
+# 判据：两个文件里 core.* / games.** 的 keep 条目集合必须一致。
+APP_RULES="$ROOT/mod菜单/starry-mod-menu/app"
+norm_rules() {
+  # 抽出 keep 行，去注释/空白，排序
+  grep -hE '^-keep' "$1" 2>/dev/null \
+    | sed -E 's/[[:space:]]+/ /g; s/ $//' \
+    | grep -E 'com\.starry\.magic\.(core|games)' \
+    | sort -u
+}
+A="$(norm_rules "$APP_RULES/proguard-rules.pro")"
+B="$(norm_rules "$APP_RULES/inject-dex-rules.pro")"
+if [[ -z "$A" || -z "$B" ]]; then
+  hit "缺 core/games 的 keep 规则（proguard=${#A} 行 / inject=${#B} 行）"
+elif [[ "$A" != "$B" ]]; then
+  hit "proguard-rules.pro 与 inject-dex-rules.pro 的 core/games keep 规则不一致："
+  diff <(printf '%s\n' "$A") <(printf '%s\n' "$B") | sed 's/^/      /' >&2
 else
-  ok "TapLoginForceWeb 已删除（全部迁移完成）"
+  ok "两个 R8 规则文件一致（$(printf '%s\n' "$A" | wc -l | tr -d ' ') 条）"
+fi
+
+echo "[7/7] 不得保留已废弃的兼容垫片"
+if [[ -e "$JAVA/core/legacy" ]]; then
+  hit "core/legacy/ 仍存在 —— 兼容垫片已按用户口径整体删除（每次改包都是全新流程）"
+else
+  ok "无兼容垫片残留"
 fi
 
 echo

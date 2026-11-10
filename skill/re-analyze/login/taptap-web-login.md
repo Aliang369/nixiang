@@ -3,16 +3,54 @@
 > 📍 re-analyze/login/taptap-web-login.md
 > 🎯 改签后 TapTap 客户端 SSO 失败（签名不一致），需要强制走 WebView 网页登录
 
-## ⚠️ 现行口径（2026-10-29 起为「双轨制」，本节为摘要；正文＝`10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md` 的 2026-10-29 增补节）
+## ⚠️ 现行口径（2026-11-11 重写）
 
-**签名/完整性校验 → 运行时签名替换（换 `PackageInfo.CREATOR` 的「签名杀手」形态，改 `MultiDexApplication.super` 挂载 + 清 `Parcel.mCreators`/`sPairedCreators`/`PackageManager.sPackageInfoCache`）；登录方式/渠道分支 → 改包法（如改 `IntentHelper` 的 action 走网页登录）；加固壳与「直读 APK 文件／签名块摘要」类校验 → 仍走改包法。同一链条禁止双修。**
+**先做判断，再选路线。两条路线按「包内有没有 TapSDK 类可达」二选一，不要两套都上。**
 
-（2026-10-28 原文：**TapTap 签名校验 + 网页强制登录 = 「改包法」（静态改游戏包体 dex）。** 该口径已被上句替代，保留下方文字作历史与「为什么放弃 SignSpoof」的依据。）
-**运行时签名伪装已整体删除**（`sign/SignSpoof.java` 与 `sign/SignSpoofAppComponentFactory.java` 于 2026-10-28 按用户指令删除，框架里已无该类；`TapLoginForceWeb` 白名单那套同样停用，仅服务未迁移的老包）。
+| 情况 | 路线 | 落点 |
+|---|---|---|
+| 包内 `Lcom/taptap/sdk/*` **可直接搜到**（未加密、未藏进 payload） | **改包法**：静态改游戏 dex 的验签门闩与登录入口 | 见下方「改包法四步」 |
+| TapSDK 在加密 payload / 壳内动态装载，**搜不到也改不了** | **运行时 SPI**：本游戏的 `GameHookImpl` 调 `TapLoginForceWeb` | `com.starry.magic.games/<game_id>/GameHookImpl.java` |
 
-- 为什么停用：`SignSpoof` 依赖隐藏 API 豁免，**Android 14 user 版真机必失败**
+**签名/完整性校验**：运行时签名伪装（`SignSpoof`）已于 2026-10-28 整体删除，不要复活。
+- 为什么删：它依赖隐藏 API 豁免，**Android 14 user 版真机必失败**
   （小米 M2102K1AC 实测 `E StarrySignSpoof: exemptHiddenApis(meta) failed`；只有雷电 userdebug 能过）。
   蛋壳战机 1.2.1 首版误用旧法，用户当场点出——不要再犯。
+- 现在验签门闩一律走**改包法**（静态改 dex）；底包无门闩类（如无 `GatekeeperRepository`）就不需要处理。
+
+### 走 SPI 路线时（唯一正路，无例外）
+
+```java
+// com/starry/magic/games/<game_id>/GameHookImpl.java
+public final class GameHookImpl implements GameHook {
+    private static final String PKG = "com.xxx.yyy";
+    @Override public void onActivityPreCreated(Activity a) {
+        if (PKG.equals(a.getPackageName())) TapLoginForceWeb.onPreCreated(a);
+    }
+    @Override public void onActivityCreated(Activity a) {
+        if (PKG.equals(a.getPackageName())) TapLoginForceWeb.onCreated(a);
+    }
+    @Override public String targetPackage() { return PKG; }
+}
+```
+
+**四条硬性要求**（缺任一条补丁都会静默失效，784 轮全部踩过）：
+
+1. **`app/proguard-rules.pro` 与 `app/inject-dex-rules.pro` 都必须有 `-keepnames class com.starry.magic.games.**`**。
+   少改一个 ⇒ R8 把类改名成 `com.starry.magic.o/a` ⇒ 反射 ClassNotFound ⇒ 补丁从未执行。
+   两个文件的一致性由 `check_framework_isolation.sh` 第 6 项机器校验。
+2. **不要改 `StarryApp`/`StarryInitProvider`**：框架层不许出现单游戏逻辑（第 1 项校验会挡）。
+3. **不要加任何包名白名单**：`TapLoginForceWeb` 的白名单已于 2026-11-11 整体删除。
+   生效判据唯一＝「谁的 `GameHookImpl` 调了它」。目标判断写在实现类自己的 `isTarget()` 里。
+4. **验证**：`logcat | grep -E 'game hook 已装载|game hook 未提供'`。
+   必须看到 `game hook 已装载: …games.<id>.GameHookImpl`；看到「未提供」就是第 1 条没做。
+
+### 正例
+
+- **一念通天 784**（TapSDK 3.30.2 在加密 payload 内，改不了 dex）→ `games/yntt/GameHookImpl`，
+  实测 `old-impl request forced -> client throws, web fallback`。
+- **农场守护者**（无 TapTap）→ 不写这个类，框架退回空实现，零开销。
+
 - 配方与坑：`10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md`
 - 定案原文与落地记录：`10_docs/_state/规范变更日志.md`「2026-10-28 · TapTap 签名校验/登录改为「改包法」」
 - 机器关：`04_scripts/_common/framework_entry_audit.sh` **[G]** + `04_scripts/_common/pre_install_gate.sh` **查12**

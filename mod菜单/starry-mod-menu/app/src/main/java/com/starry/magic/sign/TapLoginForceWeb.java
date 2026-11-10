@@ -62,219 +62,16 @@ public final class TapLoginForceWeb {
             "com.taptap.sdk.login.internal.handlers.web.WebLoginFragment";
     private static final String OLD_FRAGMENT_TAG = "login_fragment";
 
-    /** 包名白名单：只对这些游戏的 Tap 登录强制网页，其他星空包游戏不受影响。
+    /**
+     * <b>本类不再有任何包名白名单</b>（2026-11-11）。
      *
-     *  ★2026-11-11 定位变更：本类已从「框架生命周期无条件调用」降级为
-     *    **存量兼容垫片**（见 {@code core/legacy/LegacyTapTapGames}）。框架不再直接调它，
-     *    只有 {@code LegacyTapTapGames} 清单里的 game_id 才会走到这里。
+     * <p>为什么删：白名单是「该不该生效」的第二套判据，与 {@code games/<id>/GameHookImpl}
+     * 这套 SPI 并存时必然互相打架 —— 旧版文档写「本类已停用」，白名单里却还列着本包名，
+     * 模型只能靠人提醒才知道走哪条路。现在判据唯一：<b>谁的 GameHookImpl 调了本类，谁就生效</b>。
      *
-     *  ★铁律：本白名单**只减不增**。
-     *    新游戏要把登录强制成内嵌网页 → 在自己的 {@code games/<id>/GameHookImpl} 里
-     *    调 {@link #onPreCreated}/{@link #onCreated}，**不要**往这里加包名。
-     *    条目数由 {@code 04_scripts/_common/check_framework_isolation.sh} 按基线校验，变多即 FAIL。
-     *    迁移完一个游戏就从这里删掉对应行。
-     *
-     *  todo(框架收口)：本类最终应整体删除，逻辑分散到各游戏的 GameHookImpl 里。 */
-    private static final java.util.Set<String> PKG_WHITELIST =
-            new java.util.HashSet<>(java.util.Arrays.asList(
-                    // 绝区零（TapTap 渠道 3.2.0）：包内 TapSDK 为 loginHandlers 旧路径
-                    // （TapTapLoginActivity + LoginActivityImpl.loginHandlers=[Cloud,Client] +
-                    //   internal/handlers/web/WebLoginFragment），改签包必须强制内嵌网页，
-                    // 否则拉起 TapTap 客户端 SSO 会因签名不匹配失败。
-                    "com.miHoYo.Nap",
-                    // 境界刀鸣（taptap 渠道，TapSDK 版本待核）：登录改强制内嵌网页
-                    "com.blade.bd",
-                    "com.hypergryph.endfield",
-                    "com.rsg.wdyz",
-                    // 超维进化 TapSDK 4.9.3：路由为 LoginTypes.from(ClientLoginUtils.isClientLogin)
-                    // → DefaultTapLoginFragmentProvider 三分支，无 loginHandlers 数组（终末地 4.7.0 那套不存在）。
-                    // 4.9.3 的强制网页走 CwjhTapGate（smali 层 isClientLogin 恒 false + gatekeeper 放行），
-                    // 这里保留白名单以便将来同构版本复用反射方案。
-                    "com.grinning.beta.yszl",
-                    // 无尽探险队：TapSDK 新版（tap-login_release），见类头说明。
-                    "com.wjtxdtt.zy",
-                    // 凡尘西游修真记：TapSDK 4.10.7（TapLogin）。
-                    // 2026-09-13 核验包内：TapTapLoginActivity.EXTRAS_REQUEST=com_taptap_sdk_login_request、
-                    // model/LoginRequest.loginType、LoginTypes$WEB=embedded_web、fallbackToWeb(LoginRequest)、
-                    // DefaultTapLoginFragmentProvider → WebLoginFragment 全部存在，走新版反射路径。
-                    // 不加白名单时实测走 mobile_client（拉起 TapTap 客户端 SSO），改签包必失败。
-                    "com.qxjc.fcxyxzj",
-                    // 幻想武将模拟器：同一工作室的 TapSDK 新版路径（TapTapLoginActivity +
-                    // LoginRequest/loginType + fallbackToWeb + WebLoginFragment）。改签包固定走
-                    // embedded_web，避免拉起 TapTap 客户端 SSO 校验真签。
-                    "com.qxjc.hxwjmlq",
-                    // 我的修仙世界：TapSDK 4.7.0，LoginActivityImpl.loginHandlers
-                    // = [CloudLoginHandler, ClientLoginHandler]，走旧版 handler 清洗路径。
-                    "com.lingsi.xiuxiandanji",
-                    // 大话蜀山：TapSDK 4.9.0，TapTapLoginActivity 按 LoginRequest.loginType
-                    // 分流（DefaultTapLoginFragmentProvider）；preCreated 改 embedded_web 即直接进网页。
-                    "com.cylj.rogue.tp479",
-                    // 正中靶心2：TapSDK 新版，TapTapLoginActivity 按 LoginRequest.loginType
-                    // 分流；改签后直接走 embedded_web，避免客户端 SSO 校验真实签名。
-                    "com.openew.monster",
-                    // 一念通天：TapSDK + TapTap 登录；改签包固定走 embedded_web。
-                    "com.qinglv.Immortal",
-                    // 偶像梦幻祭2：TapTap 渠道原版；存在 TapTap 登录入口时固定走 embedded_web。
-                    "com.happyelements.es2",
-                    // 燃烧纪元：TapSDK modern 路径（TapTapLoginActivity、LoginRequest.loginType、
-                    // fallbackToWeb），改签包固定 embedded_web，避免客户端 SSO 校验真签。
-                    "com.rsjy.yf",
-                    // 宝石战争：TapTap 渠道原版；改签包固定走 embedded_web，避免客户端 SSO 校验真签。
-                    "com.acing.gow.adv",
-                    // 失落城堡：雷霆渠道包但内置 TapTap 登录（LeitingSdkUser.loginByTap →
-                    // TapCollections.tapLogin → TapTapLogin.loginWithScopes）。设备已装 com.taptap，
-                    // 改签后客户端 SSO 必失败 ⇒ 强制 embedded_web 网页登录。
-                    "com.leiting.lostcastle.leiting",
-                    // 失落城堡2（雷霆渠道 + 内置 TapSDK，2026-10-29 用户当轮指令「taptap登录没有给强制网页登录」）：
-                    // 改签包下客户端 SSO 必被真签校验拦（实测弹 TapSDK 包名/签名校验失败）⇒ 本作必须强制 embedded_web。
-                    "com.leiting.slcb2",
-                    // 暗影格斗3：TapSDK 4.x（loginHandlers = {Cloud, Client, Phone} 数组路由）。
-                    // 设备装了 TapTap 客户端时 ClientLoginHandler.canHandle 恒 true（SSO 校验真签必失败），
-                    // PhoneLoginHandler 也可能为 true → sanitize 把两类都换成 canHandle 恒 false 的代理。
-                    "com.wanda.sf3.wd",
-                    // 弹壳战机：TapTap 渠道原版；改签包固定走 embedded_web，避免客户端 SSO 校验真签。
-                    "com.survivor.acecn",
-                    // 霓虹深渊2（TapTap 渠道自发行）：包内 TapSDK 为 LoginTypes 新版路由
-                    // （ClientLoginUtils / TapSignKit / DefaultTapLoginFragmentProvider / LoginRequest.loginType
-                    //   / embedded_web / fallbackToWeb 均在 classes3.dex；旧类 TapTapActivity、
-                    //   login/internal/handlers/web/WebLoginFragment 全不在包内）。
-                    // 强制网页登录主路径由 dex 层实现（surgical 步骤 4：ClientLoginUtils.isClientLogin 恒 false），
-                    // 此处登记仅为纳入框架入口白名单；反射兜底路径仅在包内存在同构旧类名时才会生效。
-                    "com.veewo.neonabyss2",
-                    // Phigros（taptap 渠道 3.20.0 / vc154）：TapSDK 3.30.3 旧版路径
-                    // （com.taptap.sdk.ui.TapTapActivity + intent extra "request" + LoginClient 的 catch
-                    //   分支落 WebViewHandler）。2026-09-21 实测：游戏内「账号与统计 → TapTap 登录」走
-                    //   客户端 SSO 时被 TapTap 客户端以 signature not match 拒绝（code=-1，
-                    //   error=permission_result），游戏侧显示「登录失败，请检查网络」，且 LoginBlock
-                    //   收 resultCode=-1 后不降级网页 → 必须在此强制内嵌网页登录。
-                    "com.PigeonGames.Phigros",
-                    // 无限升级：TapSDK 4.7 旧版路径（TapTapLoginActivity.impl.loginHandlers
-                    // = [CloudLoginHandler, ClientLoginHandler]，sanitize 后自然回落 fallbackToWeb），
-                    // 改签包必须强制内嵌网页，避免拉起 TapTap 客户端 SSO 校验真签失败。
-                    "com.xingzuodaoshi.infinityUpgrade",
-                    // 圣翼传说：TapTap 旧版路径（包内 com.taptap/sdk/ui/TapTapActivity +
-                    //  UI/LoginClient/WebViewHandler 存在，TapSignKit 不存在）。玩家只会在
-                    //  「点击跳转」式 SSO 里被 signature not match 拦住 → 强制内嵌网页登录。
-                    "com.aiyue.wscq",
-                    // 爆裂防线：TapSDK 新版路径（TapTapLoginActivity + LoginRequest.loginType +
-                    //  DefaultTapLoginFragmentProvider + fallbackToWeb / embedded_web；包内无旧版
-                    //  com.taptap.sdk.ui.TapTapActivity）。改签包会被 TapTap 客户端 SSO 以
-                    //  signature not match 拒绝 → 必须强制内嵌网页登录。
-                    "com.muyegame.blfx",
-                    // 光阴之外（com.shbq.gyzw.ppyx）TapTap 渠道原版：
-                    // 包内实证走 TapSDK 新版路径 —— com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity
-                    // + LoginRequest(impl/data/model) + LoginTypes$WEB + DefaultTapLoginFragmentProvider
-                    // + WebLoginFragment + TapSignKit 全部存在，且无旧版 com.taptap.sdk.ui.TapTapActivity。
-                    // 改签包被 TapTap 客户端 SSO 以 signature not match 拒绝 ⇒ 固定 embedded_web。
-                    "com.shbq.gyzw.ppyx",
-                    // 我本布衣：世家录（com.JAGames.TalesoftheClan）TapTap 渠道原版：
-                    // TapSDK 新版路径（TapTapLoginActivity + LoginRequest + LoginTypes$WEB）。
-                    // 改签包固定 embedded_web，避免客户端 SSO 校验真签。
-                    "com.JAGames.TalesoftheClan",
-                    // 潮汐守望者（com.gf.cxswz）TapTap 渠道原版 1.2.56.375.3：
-                    // 包内实证 TapSDK 新版路径 —— com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity
-                    // + LoginRequest(impl/data/model) + LoginTypes$WEB + DefaultTapLoginFragmentProvider
-                    // + WebLoginFragment + TapSignKit 均存在，且无旧版 com.taptap.sdk.ui.TapTapActivity；
-                    // 设备已装 TapTap 客户端（com.taptap），改签后客户端 SSO 必失败 ⇒ 固定 embedded_web。
-                    "com.gf.cxswz",
-                    // 伊莫（com.x.yimoo.official）FunPlus + TapTap 渠道原版 1.0.1：
-                    // 包内实证 TapSDK 新版路径 —— AndroidManifest 含
-                    // com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity +
-                    // com.taptap.sdk.kit.internal.TapTapKitInitProvider +
-                    // com.taptap.sdk.themis.lite.ThemisProvider，且无旧版
-                    // com.taptap.sdk.ui.TapTapActivity；设备已装 TapTap 客户端（com.taptap），
-                    // 改签后客户端 SSO 必以 signature not match 拒绝 ⇒ 固定 embedded_web。
-                    "com.x.yimoo.official",
-                    // 消消英雄2（com.blina.match2.tt）TapTap 渠道原版 1.2.27/vc188：
-                    // 包内实证 TapSDK 新版路径 —— TapTapLoginActivity + LoginTypes$WEB +
-                    // WebLoginFragment + fallbackToWeb / embedded_web + TapSignKit 均存在
-                    // （classes.dex），无旧版 com.taptap.sdk.ui.TapTapActivity；设备已装
-                    // TapTap 客户端（com.taptap），改签后客户端 SSO 必被 signature not match
-                    // 拒绝 ⇒ 固定 embedded_web 网页登录。
-                    "com.blina.match2.tt",
-                    // 疾风骑士（com.emay.wxsy.topon）MAR SDK + TapTap 渠道原版 60.0.1/vc116：
-                    // 包内实证 TapSDK 新版路径 —— AndroidManifest 含
-                    // com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity +
-                    // com.taptap.sdk.kit.internal.TapTapKitInitProvider +
-                    // com.taptap.sdk.themis.lite.ThemisProvider；classes14.dex 含
-                    // TapSignKit + com.taptap.sdk.login.impl.utils.ClientLoginUtils +
-                    // impl/ui/fragment/WebLoginFragment，且**无**旧版
-                    // com.taptap.sdk.login.internal.handlers.client.ClientLoginHandler
-                    // 与 com.taptap.sdk.ui.TapTapActivity（⇒ ClientLoginUtils 版路径，
-                    // 已由 patch_jfqs_smali.py 把 isClientLogin 改恒 false 回落 WebLoginFragment）；
-                    // 设备已装 TapTap 客户端（com.taptap），改签后客户端 SSO 必被
-                    // signature not match 拒绝 ⇒ 固定 embedded_web 网页登录。
-                    "com.emay.wxsy.topon",
-                    // 仙逆：本尊（com.qqsy.xnbz）TapTap 渠道原版 0.0.14/vc14：
-                    // 包内实证 TapSDK 新版路径 —— classes7.dex 含 TapSignKit +
-                    // com.taptap.sdk.login.impl.utils.ClientLoginUtils + impl/ui/fragment/WebLoginFragment
-                    // + TapTapLoginActivity + LoginTypes + DefaultTapLoginFragmentProvider +
-                    // fallbackToWeb，且**无**旧版 ClientLoginHandler / com.taptap.sdk.ui.TapTapActivity
-                    // （⇒ ClientLoginUtils 版路径，由 patch_xnbz_smali.py 把 isClientLogin 改恒
-                    // false 回落 WebLoginFragment）；设备已装 TapTap 客户端（com.taptap），
-                    // 改签后客户端 SSO 必被 signature not match 拒绝 ⇒ 固定 embedded_web 网页登录。
-                    "com.qqsy.xnbz",
-                    // 鬼谷八荒（com.guigugame.guigubahuang）TapTap 渠道原版 1.1.329/vc329：
-                    // 包内实证 TapSDK **旧版路径** —— classes.dex 含
-                    // Lcom/taptap/sdk/ui/TapTapActivity; + Lcom/taptap/sdk/ui/LoginClient$1/$2
-                    // + Lcom/taptap/sdk/ui/WebViewHandler; + Lcom/taptap/sdk/TokenValidChecker;
-                    // + Lcom/taptap/sdk/ui/BlockActivity; + TapTapSignatureCheckException，
-                    // 且**无**新版 LoginActivityImpl / TapTapLoginActivity / ClientLoginHandler
-                    // （⇒ 与圣翼传说同构：无 loginType 分流，走 LoginClient + WebViewHandler）；
-                    // 设备已装 TapTap 客户端（com.taptap），改签后客户端 SSO 必被
-                    // signature not match 拒绝 ⇒ 固定 embedded_web 网页登录。特此列入白名单。
-                    "com.guigugame.guigubahuang",
-                    // 追迹迷城（com.TeaMelo.DungeonChasers）TapTap 渠道原版 1.0.20261009/vc101201：
-                    // 2026-10-10 真机实测**漏配白名单**的后果 —— 本类 5 个入口各自
-                    // `if (!PKG_WHITELIST.contains(...)) return;` 静默返回、`StarryTapLogin` 零日志，
-                    // SDK 默认走 mobile_client 拉起 TapTap 客户端：
-                    // `SceneSDK…AppSwitchEvent(targetName=com.taptap)` +
-                    // `DCSEX-AppSwitchManager: onAppEnter … exitActivity=com.taptap.common.account.ui.login.CheckOneKeyLoginActivity`，
-                    // 玩家侧活动 `com.taptap.sdk.login.impl.ui.activity.TapTapLoginActivity`，
-                    // 游戏内 `CheckLoginState：当前未登录`。
-                    // 包内实证 TapSDK **新版路径**（classes3.dex 字符串计数）：
-                    // com_taptap_sdk_login_request=1 / embedded_web=1 / loginType=2 / fallbackToWeb=1 /
-                    // WebLoginFragment=21 / DefaultTapLoginFragmentProvider=3 / TapTapLoginActivity=7
-                    // ⇒ 走 prepareNewImplRequest 固定 embedded_web + forceNewImplWeb 兜底。
-                    // 设备已装 TapTap 客户端，改签后客户端 SSO 必被 signature not match 拒绝
-                    // ⇒ 必须强制内嵌网页登录。签名侧另由 SignSpoof 的 killPm 覆盖
-                    // TapSignKit.getSign(Context)（其实现＝pm.getPackageInfo(pkg, 0x40) → signatures[0] → MD5）。
-                    "com.TeaMelo.DungeonChasers",
-                    // 【2026-10-29 移出白名单】魂坠深境（com.chillyroom.containerofsoul.yw）改按
-                    // 「双轨制」处理，不再走本类反射换 handler 的白名单路径：
-                    //  · 签名/完整性 = B 轨运行时替换（MT ApkSignatureKillerEx 形态，见
-                    //    StarryAppComponentFactory 的 killer 挂载 + killer dex）；
-                    //  · 登录方式   = A 轨静态改包法（classes3.dex 里
-                    //    com/taptap/sdk/login/impl/data/model/Actions$CN.getAction() 的
-                    //    "com.taptap.sdk.action" 改为不匹配值 ⇒ 客户端 SSO 恒不成立、落内嵌网页）。
-                    // 原白名单依据：2026-10-13 用户实测「漏配白名单 ⇒ SDK 默认 mobile_client 拉起
-                    // TapTap 客户端 SSO」；该症状现由 A 轨从 SDK 入口处消除，白名单不再需要。
-                    // 保卫向日葵（com.bwxrk.yqmy.ty4）TapTap 渠道原版 1.46/vc46：
-                    // 登录入口是 dodjoy 聚合壳 com.juhe.sdk.TapTapLoginActivity（它再调 TapSDK）；
-                    // 2026-10-15 实测改签首装：TapInitializer 报
-                    //   「应用的包名（package name）、签名（certificate fingerprint）未在 TapTap 开发者中心正确配置」
-                    //   → JuHeSDK「TapTap CONFIG_ERROR … 包名、签名错误」→ TapTapException: SDK not initialized。
-                    // 该检查读本地 PackageManager 签名 ⇒ 由 SignSpoof 回灌官方证书（CN=QT, O=GD）解决；
-                    // 本白名单负责「即使 SSO 可用也强制走内嵌网页」，避免拉起 TapTap 客户端做真签校验。
-                    "com.bwxrk.yqmy.ty4",
-                    // 绿梦：时空之声（com.zhuziplay.lvmengnew.op）TapTap 渠道原版 1.0.5/vc12035：
-                    // 包内 TapSDK 为旧版 loginHandlers 数组路由 —— classes2.dex 含
-                    // com.taptap.sdk.login.ui.TapTapLoginActivity + loginHandlers 字段
-                    // + internal/handlers/{client/ClientLoginHandler,cloud/CloudLoginHandler}
-                    // + internal/handlers/web/WebLoginFragment（OLD_WEB_LOGIN_FRAGMENT 路径）。
-                    // 设备已装 TapTap 客户端时 ClientLoginHandler.canHandle 恒 true（SSO 校验真签必失败），
-                    // 改签包必须强制内嵌网页：sanitize 把 client/phone handler 换成 canHandle 恒 false 的代理，
-                    // onCreate 遍历一个都不命中 → 落 SDK 自带 fallbackToWeb（WebLoginFragment）。
-                    "com.zhuziplay.lvmengnew.op",
-                    // 勇士之心（com.fightingstars.games.warrior）TapTap 渠道 1.0.6 / vc6：
-                    // assets/YMengSdkMsdk.ini 里配了 taptap_clientId/taptap_clientToken ⇒ 登录入口
-                    // 会走 TapSDK 客户端 SSO；改签包被 TapTap 客户端按包名/签名拒绝（用户实测弹窗）。
-                    // 注意：本作 TapSDK 的类**不在 classes.dex**（`Lcom/taptap/sdk/*` 计数 0），
-                    // TapSDK 与游戏主体一起在加密 payload 内、运行时由壳解密后走 Anonymous-DexFile
-                    // 装载 ⇒ 无法用 smali 改 ClientLoginUtils。故此处只登记白名单，交给本类的
-                    // 反射路径（旧版 loginHandlers 清洗 / 新版 request.loginType=embedded_web 两种都试）
-                    // 在 Activity 生命周期窗口内强制内嵌网页登录。
-                    "com.fightingstars.games.warrior"));
+     * <p>调用方负责判断目标（见 {@code games/yntt/GameHookImpl.isTarget()}）。
+     * 每次改包都是全新流程，不存在需要兼容的旧包。
+     */
 
     private TapLoginForceWeb() {}
 
@@ -302,7 +99,6 @@ public final class TapLoginForceWeb {
      */
     private static void forceOldImplWebEarly(Activity activity) {
         if (activity == null || !OLD_LOGIN_ACTIVITY.equals(activity.getClass().getName())) return;
-        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
         try {
             Intent it = activity.getIntent();
             if (it == null) return;
@@ -359,7 +155,6 @@ public final class TapLoginForceWeb {
     /** 新版路径①：onCreate 前改 intent extra 的 LoginRequest.loginType → embedded_web。 */
     private static void prepareNewImplRequest(Activity activity) {
         if (activity == null || !LOGIN_ACTIVITY_IMPL.equals(activity.getClass().getName())) return;
-        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
         try {
             Intent it = activity.getIntent();
             if (it == null) return;
@@ -383,7 +178,6 @@ public final class TapLoginForceWeb {
     /** 新版路径②：onCreate 后若当前 fragment 非 Web，反射调 fallbackToWeb(request)。 */
     private static void forceNewImplWeb(Activity activity) {
         if (activity == null || !LOGIN_ACTIVITY_IMPL.equals(activity.getClass().getName())) return;
-        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
         try {
             Field reqF = activity.getClass().getDeclaredField("request");
             reqF.setAccessible(true);
@@ -413,7 +207,6 @@ public final class TapLoginForceWeb {
     /** 旧版兜底：onCreate 后若当前 fragment 非 WebLoginFragment，直接调 impl.fallbackToWeb。 */
     private static void forceOldImplWeb(Activity activity) {
         if (activity == null || !LOGIN_ACTIVITY.equals(activity.getClass().getName())) return;
-        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
         try {
             android.app.FragmentManager fm = activity.getFragmentManager();
             if (fm != null) {
@@ -452,7 +245,6 @@ public final class TapLoginForceWeb {
     /** 旧版：loginHandlers 数组把 ClientLoginHandler 换成 CloudLoginHandler → 强制 fallbackToWeb。 */
     private static void sanitize(Activity activity) {
         if (activity == null || !LOGIN_ACTIVITY.equals(activity.getClass().getName())) return;
-        if (!PKG_WHITELIST.contains(activity.getPackageName())) return;
         try {
             Field implF = activity.getClass().getDeclaredField("impl");
             implF.setAccessible(true);

@@ -91,11 +91,9 @@ public final class GameHooks {
     }
 
     private static GameHook resolve(String gid) {
-        // 0) 存量兼容垫片：旧机制游戏（只减不增，见 LegacyTapTapGames 注释）
-        if (com.starry.magic.core.legacy.LegacyTapTapGames.uses(gid)) {
-            Log.i(TAG, "game hook 走存量兼容垫片: " + gid);
-            return com.starry.magic.core.legacy.LegacyTapTapGames.hook();
-        }
+        // 2026-11-11：兼容垫片（LegacyTapTapGames）已整体删除。
+        // 理由：每次改包都是全新流程，不存在需要兼容的旧包；两套判据并存只会让模型判断错。
+        // 现在唯一路径＝games/<game_id>/GameHookImpl，没有就是没有（退回空实现）。
         if (gid == null || gid.isEmpty()) return null;
         // game_id 只允许 [a-z0-9_]：防止 native 侧被改后反射到任意类
         for (int i = 0; i < gid.length(); i++) {

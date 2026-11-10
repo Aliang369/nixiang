@@ -55,6 +55,16 @@
 #       （2026-11-10 实测）
 -keep class com.starry.magic.BuildConfig { *; }
 
+# ---- 2c. core.*：框架内部按 Class.forName 字符串找的类，必须保原名 ----
+#      与 app/inject-dex-rules.pro 的 2b 节**必须保持一致**（check_framework_isolation.sh 校验）。
+#      NativeLinker / NativeLoader 是 so 加载链路的一环，改名后 Class.forName 拿到空、
+#      native 加载整条断（2026-11-11 实测）。
+-keep class com.starry.magic.core.GameHook { *; }
+-keep class com.starry.magic.core.GameHooks { *; }
+-keep class com.starry.magic.core.NativeLinker { *; }
+-keep class com.starry.magic.core.NativeLoader { *; }
+-keep,allowobfuscation class com.starry.magic.core.** { *; }
+
 # ---- 2b. 单游戏 SPI：框架用 Class.forName("com.starry.magic.games.<game_id>.GameHookImpl")
 #       反射装载（core/GameHooks.resolve）。类名是**按约定字符串找进来**的，改名即 ClassNotFound，
 #       该游戏的 Java 侧补丁会静默不生效 —— 本作 784 轮实测：只加 GameHookImpl 不补此规则时，

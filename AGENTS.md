@@ -86,7 +86,7 @@ git status -sb; git pull --rebase --autostash                  # 先 status 后 
 | 提取玩法 / 抓点 | `skill/re-extract/SKILL.md`；热更后失效 → `hotupdate-fingerprint-recheck.md` |
 | 写功能 / Hook | `skill/re-implement/SKILL.md`（挂点五步门禁 §22、指纹铁律 §24、`hook-rules.md`） |
 | 星光落地 / 出包 / 切游戏 | `skill/starry-mod/SKILL.md`（**已有星光包只重打 dex/APK**，只改 Java/dex 不重编 native；复用正式包 `STARRY_INSTALL_ONLY=1`；**直装包不得只换 `libil2cpp.so`**，验收含一次干净安装） |
-| 渠道包是 TapTap | **先读** `login/taptap-web-login.md` 顶部「现行口径」（2026-10-29 双轨制，同一链条禁双修；`SignSpoof` 系列**禁止复活**） |
+| 渠道包是 TapTap | **先读** `login/taptap-web-login.md` 顶部「现行口径」（2026-11-11 单轨：按包内 TapSDK 是否可达二选一）。强制网页登录走 `Games/<id>/GameHookImpl.java`（Java 侧 SPI），**禁加包名白名单、禁改 `StarryApp`/`StarryInitProvider`**；两个 R8 规则文件都要 `-keepnames com.starry.magic.games.**`（`check_framework_isolation.sh` 校验）。`SignSpoof` 系列**禁止复活** |
 | 分析 `.so` | `skill/ida-plugin-flow/SKILL.md`（按问题触发，不无差别全扫） |
 | 症状反查 / 经验 | `skill/diagnosis-index.md` → `skill/re-lessons/SKILL.md` |
 | 纯评估 / 文档维护 | 只读待评估文档及直接引用，不自动进入游戏执行流程 |
