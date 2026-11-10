@@ -545,6 +545,46 @@ function MOD_boot(REG) {
      * 自动化层（auto_layer.js）只读这个事件，不再自己去翻 UI 管理器。 */
     var PANEL_N = 0;
     var PANEL_HOOKED = 0;
+    /* 2026-11-10（res 1.1.18.0 实测）：**自污染修正**。
+     * 旧实现把 "auto_btn_again" 字面量写进了包装函数体，而被包装的正是面板打开方法 wz；
+     * 之后 findFn(this, …) 遍历原型时先命中「已被包装的 wz 自己」（它的源码里带着这个字面量）
+     * ⇒ againKey=wz ⇒ 自动化层的兜底调用 = 重新打开结算面板
+     * ⇒ 实测 [fin] #1→#4 每 6.5 秒一次、永远进不了下一关（用户报「自动重复挑战没做对」）。
+     * 修法：① 指纹字面量改成运行时拼接的 AGAIN_TAG，包装器源码里不再出现完整串；
+     *       ② 一律排除含 btnList 的方法（打开方法带 btnList，倒计时/再战方法不带）；
+     *       ③ 分开发现「启动 3 秒倒计时」与「每秒刷新按钮文字」两个方法，
+     *          自动化层兜底只调「启动」那一个 —— 与游戏自身同一机制，不代打。 */
+    var AGAIN_TAG = ["auto", "btn", "again"].join("_");
+    /* 【自污染防线 2.0 · 2026-11-10 小米机实测】
+     * Function.prototype.toString 会把**注释一起**返回：上一版把指纹字面量留在注释里，
+     * 于是包装器源码自己带着那个字面量 ⇒ findFn 命中"我们刚换上去的打开方法"⇒ againApi=wz
+     * ⇒ 兜底把结算面板重新打开（[fin] #1→#4 死循环）。
+     * 现在三道防线：① 测试里排除含我们标记（__starry_fin / __starryPnlWrap）的源码；
+     *              ② 发现动作放在【包装之前】对原型做，那时原型上还没有包装器；
+     *              ③ 注释里不出现完整指纹字面量。 */
+    function panelSkipOwn(s) {
+        return s.indexOf("__starry_fin") >= 0 || s.indexOf("__starryPnlWrap") >= 0;
+    }
+    /* 倒计时刷新方法（epY）：体内做 UI 文字更新（bBP）+ 倒计时自减，唯一引用那个 UI 名的函数 */
+    function findPanelAgain(obj) {
+        return findFn(obj, function (s) {
+            if (panelSkipOwn(s)) return false;
+            if (s.indexOf(AGAIN_TAG) < 0) return false;
+            if (s.indexOf("btnList") >= 0) return false;
+            return s.indexOf("bBP") >= 0;
+        });
+    }
+    /* 启动 3 秒倒计时的方法（epW）：体内不引用那个 UI 名（只调刷新方法），
+     * 所以 2026-11-10 小米机实测 againApi=无/epY —— 按 UI 名永远找不到它。
+     * 改用不随混淆漂移的字面量：定时器周期 1e3 + 重复次数 -1 + 调用刷新方法。 */
+    function findPanelStart(obj, tickKey) {
+        return findFn(obj, function (s) {
+            if (panelSkipOwn(s)) return false;
+            if (s.indexOf("btnList") >= 0) return false;
+            if (tickKey && s.indexOf(tickKey) < 0) return false;
+            return s.indexOf("1e3") >= 0 && s.indexOf(", -1") >= 0;
+        });
+    }
     function tryPanel(Cls) {
         if (!Cls || !Cls.prototype || Cls.__starryPanelHooked) return;
         var op = findFn(Cls.prototype, function (s) {
@@ -555,18 +595,25 @@ function MOD_boot(REG) {
         if (!op) return;
         var orig = Cls.prototype[op];
         if (typeof orig !== "function") return;
+        /* 包装**之前**先在原型上把两个方法定死（此时原型上还没有我们的包装器，天然不会自我命中） */
+        var pTick = null, pStart = null;
+        try { pTick = findPanelAgain(Cls.prototype); } catch (e1a) {}
+        try { pStart = findPanelStart(Cls.prototype, pTick); } catch (e1b) {}
         try { Cls.__starryPanelHooked = 1; } catch (e0) {}
         PANEL_HOOKED = 1;
-        Cls.prototype[op] = function () {
+        var wrapper = function () {
             var r = orig.apply(this, arguments);
             try {
                 PANEL_N++;
-                var tk = null;
-                try { tk = findFn(this, function (s) { return s.indexOf("auto_btn_again") >= 0; }); } catch (e2) {}
-                window.__starry_fin = { n: PANEL_N, t: Date.now(), inst: this, again: tk || "" };
+                var tk = pTick, st = pStart;
+                if (!tk) { try { tk = findPanelAgain(this); } catch (e2) {} }
+                if (!st && tk) { try { st = findPanelStart(this, tk); } catch (e3) {} }
+                window.__starry_fin = { n: PANEL_N, t: Date.now(), inst: this, again: tk || "", start: st || "" };
             } catch (e) {}
             return r;
         };
+        try { wrapper.__starryPnlWrap = 1; } catch (e0b) {}
+        Cls.prototype[op] = wrapper;
         log("result panel open hook = .prototype." + op + " (btnList/btn_again/btn_toNext)");
     }
     var srcs = {}, id, nmod = 0;

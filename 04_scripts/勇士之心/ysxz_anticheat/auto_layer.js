@@ -838,9 +838,19 @@
     if (A.finSeen === fin.n) return;
     A.finSeen = fin.n;
     A.finInst = fin.inst;
-    onResultPanel(fin.inst, fin.again || "");
+    onResultPanel(fin.inst, fin.again || "", fin.start || "");
   }
-  function onResultPanel(inst, againKey) {
+  /* 结算面板是否还在（游戏自带再战成功后 node 会失活/销毁） */
+  function panelAlive(inst) {
+    try {
+      if (!inst) return false;
+      var nd = inst.node;
+      if (nd && nd.activeInHierarchy === false) return false;
+      if (nd && nd.isValid === false) return false;
+      return true;
+    } catch (e) { return false; }
+  }
+  function onResultPanel(inst, againKey, startKey) {
     var token = A.finToken = (A.finToken | 0) + 1;
     A.finN = (A.finN | 0) + 1;
     if ((A.evFin | 0) < 4) {
@@ -850,7 +860,7 @@
       try { ba = inst && inst.btn_again ? !!inst.btn_again.visible : "无"; } catch (e) {}
       try { bn = inst && inst.btn_toNext ? !!inst.btn_toNext.visible : "无"; } catch (e) {}
       log("[fin] #" + A.finN + " 结算面板打开 | 自动挑战位=" + c1 + " btn_again=" + ba
-          + " btn_toNext=" + bn + " againApi=" + (againKey || "无")
+          + " btn_toNext=" + bn + " againApi=" + (startKey || "无") + "/" + (againKey || "无")
           + " | 自动化 重复=" + FEAT(7) + " 出售=" + FEAT(8) + " 分解=" + FEAT(9) + " 穿戴=" + FEAT(10));
     }
     setTimeout(function () {
@@ -866,18 +876,52 @@
     setTimeout(function () {
       if (token !== A.finToken) return;
       if (!FEAT(7)) return;
-      if (!againKey) {
-        miss("repeat.api", "自动重复挑战: 结算面板上没有「再次挑战」倒计时方法 —— 兜底点击不可用（游戏自带位见 repeat 日志）");
+      /* 2026-11-10：先判「面板还在不在」。游戏自带的自动重复是面板自己起 3 秒倒计时
+       * （AdventureFinishPanel 内部），到点后面板关闭并进入下一场；此时若还去点一次
+       * 就等于把已经关掉的结算面板重新打开。旧实现 6.5s 无条件点、且点到的是打开方法 wz
+       * ⇒ 实测 [fin] #1→#4 每 6.5 秒重开一次的死循环（用户报「自动重复挑战没做对」）。 */
+      if (!panelAlive(inst)) {
+        if ((A.evRepeat | 0) < 3) {
+          A.evRepeat = (A.evRepeat | 0) + 1;
+          log("repeat: 6.5s 结算面板已关闭 -> 游戏自带重复生效（不兜底）");
+        }
         return;
       }
-      try {
-        inst[againKey]();
-        A.repeatClickN++;
-        if (A.evRepeat < 3) {
-          A.evRepeat++;
-          log("repeat: 游戏自带重复 6.5s 未触发 -> 兜底点一次「再次挑战」(" + againKey + ") 第 " + A.repeatClickN + " 次");
+      if (!startKey) {
+        /* 2026-11-10（小米机实测：againApi=无/epY）：启动方法没发现时退化为
+         * 「驱动游戏自己的倒计时刷新方法」×3（等价 1s×3），仍不点按钮、不接管战斗。
+         * 日志里顺带打出倒计时剩余秒（**仅诊断**，判据不依赖这个短名）。 */
+        if (!againKey) {
+          miss("repeat.api", "自动重复挑战: 面板 6.5s 仍在且既无启动方法也无刷新方法 —— 兜底不可用");
+          return;
         }
-      } catch (e) { err("repeat/click", e); }
+        var cd0 = "?";
+        try { cd0 = String(inst.epU); } catch (e9) {}
+        for (var _k = 1; _k <= 3; _k++) {
+          (function (kk) {
+            setTimeout(function () {
+              if (token !== A.finToken) return;
+              if (!panelAlive(inst)) return;
+              try { inst[againKey](true); } catch (e8) { err("repeat/tick", e8); }
+            }, kk * 1000);
+          })(_k);
+        }
+        A.repeatClickN++;
+        if ((A.evRepeat | 0) < 3) {
+          A.evRepeat = (A.evRepeat | 0) + 1;
+          log("repeat: 面板 6.5s 仍在且无启动方法 -> 驱动 " + againKey + "(true) x3 | 倒计时字段=" + cd0);
+        }
+        return;
+      }
+      /* 兜底 = 让游戏自己跑它那套 3 秒倒计时（不代点按钮、不接管战斗） */
+      try {
+        inst[startKey]();
+        A.repeatClickN++;
+        if ((A.evRepeat | 0) < 3) {
+          A.evRepeat = (A.evRepeat | 0) + 1;
+          log("repeat: 面板 6.5s 仍在 -> 调游戏自带倒计时 " + startKey + "() 第 " + A.repeatClickN + " 次");
+        }
+      } catch (e) { err("repeat/start", e); }
     }, 6500);
   }
 

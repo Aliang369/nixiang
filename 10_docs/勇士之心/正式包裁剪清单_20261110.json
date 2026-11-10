@@ -1,0 +1,50 @@
+{
+  "game_dir": "E:/nixiang/08_output/勇士之心",
+  "keep": "勇士之心_1.0.3_gateA2-releaseSigned.apk",
+  "keep_size": 76008527,
+  "keep_md5": "d6f8ecf0b2dba9f7dda7a9188d876e69",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "勇士之心_1.0.3_gateA-releaseSigned.apk",
+      "size": 76004431,
+      "md5": "00574e80c4c4d16bcd81c1a90f017fab"
+    },
+    {
+      "name": "勇士之心_1.0.3_gateA-releaseSigned.apk.idsig",
+      "size": 607771,
+      "md5": "b064b4a361e79fe06951b1799348df58"
+    },
+    {
+      "name": "勇士之心_1.0.3_gateA-unsigned.apk",
+      "size": 75912577,
+      "md5": "84a9749c564d6fbe44755dd493b8eb1a"
+    },
+    {
+      "name": "勇士之心_1.0.3_gateA2-releaseSigned.apk.idsig",
+      "size": 607771,
+      "md5": "63fc4d4545ebf5d1d32f287e2b7bf6cd"
+    },
+    {
+      "name": "勇士之心_1.0.3_gateA2-unsigned.apk",
+      "size": 75914756,
+      "md5": "f854e9e43e2e3fec309045aeb1a782f8"
+    },
+    {
+      "name": "勇士之心_1.0.3_repeatfix-releaseSigned.apk",
+      "size": 76004431,
+      "md5": "c7a25d9b7b25d813b3a832bbfc2260bf"
+    },
+    {
+      "name": "勇士之心_1.0.3_repeatfix-releaseSigned.apk.idsig",
+      "size": 607771,
+      "md5": "17ec9c840889026ac06ab061fff3507b"
+    },
+    {
+      "name": "勇士之心_1.0.3_repeatfix-unsigned.apk",
+      "size": 75910769,
+      "md5": "87ca51d415b2ee0c878a49e986ebce78"
+    }
+  ],
+  "removed_count": 8
+}

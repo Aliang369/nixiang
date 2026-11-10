@@ -441,19 +441,26 @@ static bool HookedEvalString(void* thiz, const char* script, long length, void* 
      * 解不开就干脆不改写 bundle，最坏情况只是「没注入」，功能静默无效、游戏照常进。
      * 语义不变（诱饵层设计约束①「合法 JS、不闪退、不阻断游戏」）。 */
     const std::string& patchJs = GetPatchJs();
-    /* 票门禁（P1 保留项）。没票就**完全不 splice、原样放行**：
-       注入体会把注册表调用改写成 `}(window.__starry_capture({ … }))`，
-       缺这个函数就是 TypeError ⇒ evalString failed ⇒ 卡加载页（2026-10-27 事故）。
-       2026-11-04：判据从「载荷密钥就绪」换成「会话有效」（加固下线后没有 payload key）。
-       跨 TU 必须走 MainModern 的导出函数，不能直调 sgauth::live()（header-only static 每 TU 一份）。 */
-    if (!StarrySessionLive()) {
-        static std::atomic<int> s_noTicket{0};
-        const int m = ++s_noTicket;
-        if (m <= 3 || (m % 100) == 0) {
-            LOGW("%s no valid ticket -> skip splice #%d file=%s (inject=%zu B, 不改写 bundle)",
-                 YSXZ_LOG, m, fileName ? fileName : "(null)", patchJs.size());
-        }
+    /* 2026-11-10（用户选 A：「启动一律注入，功能由开关实时控制」，小米真机实测驱动）：
+     * 原实现是「无票 ⇒ 完全不 splice、原样放行」。后果：新设备冷启动时还没有票
+     * ⇒ 整轮不注入 ⇒ 用户登录卡密后功能仍然无效，**必须重启游戏**（第二次启动带票才注入）。
+     * 现在把「注入」与「票」解耦：splice 永远做，会话状态只用于日志；
+     * 功能是否生效由 Java 层实时决定（未授权时 ModBridge.lockAllFeatures() 把 1..13 号开关
+     * 全部强制关 + nativeSetAuthorized(false)，JS 侧 FEAT() 读到的全是 false）。
+     * 已知代价（用户已确认）：未授权启动时补丁 JS 也会随 bundle 进内存，可被 dump。
+     * 仍需保留的保险：patchJs 为空 / registry 调用形态缺失 ⇒ 原样放行（否则 TypeError 卡加载页）。 */
+    if (patchJs.empty()) {
+        LOGW("%s patch js empty -> passthrough file=%s", YSXZ_LOG, fileName ? fileName : "(null)");
         return g_origSeEval(thiz, script, length, ret, fileName);
+    }
+    {
+        static std::atomic<int> s_sess{0};
+        const int m = ++s_sess;
+        if (m <= 3 || (m % 100) == 0) {
+            LOGI("%s splice gate: session=%s inject=%zu B #%d file=%s（不阻断注入）",
+                 YSXZ_LOG, StarrySessionLive() ? "live" : "no-ticket", patchJs.size(), m,
+                 fileName ? fileName : "(null)");
+        }
     }
 
     std::string patched;

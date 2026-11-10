@@ -288,7 +288,14 @@ def main() -> int:
         ("lm[api.repWrite](REPEAT_IDX, on)" in combined, "自动重复挑战: 按 autoBattleFlag 指纹发现的写入口置位"),
         ("autoBattleFlag" in combined, "自动重复挑战: 游戏内挑战位同步"),
         ("window.__starry_fin" in combined and "againKey" in combined, "结算面板时机: 改吃 baseline 的 window.__starry_fin 事件"),
-        ("inst[againKey]();" in combined, "自动重复挑战: 仅游戏自带未触发时兜底点一次(发现到的倒计时方法)"),
+        # 2026-11-10：兜底语义改为「先判面板存活，再调游戏自带的 3 秒倒计时」，
+        # 且禁止再出现 inst[againKey]()（那是点按钮/打开方法的老路，会重开面板死循环）。
+        ("panelAlive(inst)" in combined, "自动重复挑战: 兜底前先判结算面板是否还活着"),
+        ("inst[startKey]();" in combined, "自动重复挑战: 兜底只调游戏自带的倒计时启动方法"),
+        ("findPanelStart" in combined, "结算面板钩: 启动倒计时方法按 1e3/-1 字面量发现(不写死短名)"),
+        ("inst[againKey](true)" in combined, "自动重复挑战: 无启动方法时退化为驱动刷新方法(仍不代点按钮)"),
+        ("inst[againKey]()" not in combined, "自动重复挑战: 不再直接调 againKey(防重开面板死循环)"),
+        ('["auto", "btn", "again"].join("_")' in combined, "结算面板钩: 指纹字面量运行期拼接(防包装器自污染)"),
         ("bag[api.sell](sellQ)" in combined, "自动出售: bag 按品质批量出售口(指纹发现)"),
         ("bag[api.deco](decoQ)" in combined, "自动分解: bag 按品质批量分解口(指纹发现)"),
         ("autoSellEquipFlag" in combined and "autoDecomposeEquipFlag" in combined, "出售/分解品质取自存档字段 autoSellEquipFlag/autoDecomposeEquipFlag"),
