@@ -36,6 +36,7 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/StarPtr.h"   // 设备无关指针判据（清 TBI/MTE 顶字节）
+#include <jni.h>                  // 2026-11-10 签名轨 JNI 导出（见文件末尾）
 
 #define WXSJ_LOG "[Wxsj]"
 #if defined(STARRY_TRACE) && STARRY_TRACE
@@ -71,6 +72,11 @@ extern "C" const uint8_t _binary_wxsj_hf3_start[];
 extern "C" const uint8_t _binary_wxsj_hf3_end[];
 static constexpr DllVariant kDllVariants[] = {
     {2030080, 0x91f9acbd064fa875ULL, 0x839daa17e05c50ceULL, _binary_wxsj_hf2_start, _binary_wxsj_hf2_end},
+    // 2026-11-10 现网换代：长度不变、整包 fnv 0x1bf6c08f… -> 0x1ce9b97a…（差异 172 万字节），
+    // DIAG 重抓官方明文（2,028,544 B / sha256 85e4d497…）后 v1 31 patches + delta 全链重放，
+    // 补丁 2,023,424 B（pad 5,120）⇒ patchedBufHash 换成 0xb7bd211de15e36f0。
+    {2028544, 0x1ce9b97aae2abca3ULL, 0xb7bd211de15e36f0ULL, _binary_wxsj_hf3_start, _binary_wxsj_hf3_end},
+    // 2026-10-26 旧现网（服务端回滚时仍识别为已知底包；同一份内嵌补丁）
     {2028544, 0x1bf6c08f1ba38809ULL, 0x816bab7dd2d7e4abULL, _binary_wxsj_hf3_start, _binary_wxsj_hf3_end},
     {2028544, 0x43df8d0d87bf08b2ULL, 0x816bab7dd2d7e4abULL, _binary_wxsj_hf3_start, _binary_wxsj_hf3_end},
 };
@@ -469,4 +475,22 @@ void Wxsj_OnValueChanged(int featNum, int value) {
     }
     default: break;
     }
+}
+
+/* ---- 2026-11-10 签名轨（运行时签名替换）----
+ * 12.10701 / vc1644 与 vc1637 同一官方证书（MD5 40fb0d3074290c0fd60a0dd5303b1757），
+ * 04_scripts/无限升级/sigreplace/java 的 SigReplace 直接复用；这里只提供它缺的那一半 native。
+ * Android 的 sun.misc.Unsafe 没有 staticFieldOffset/staticFieldBase（小米 Android 14 实测），
+ * Java 侧改不了 PackageInfo.CREATOR 这个 static final ⇒ 用 JNI SetStaticObjectField 绕 final。
+ * 调用方：Java com.starry.magic.sign.SigReplace.nativeSetStaticField（so 加载后轮询调用）。
+ * 详见 10_docs/无限升级/签名轨_运行时替换_20261104.md（vc1637 落地记录，机制同源）。 */
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_starry_magic_sign_SigReplace_nativeSetStaticField(JNIEnv* env, jclass, jclass declaring,
+                                                          jobject reflectedField, jobject value) {
+    if (!env || !declaring || !reflectedField) return JNI_FALSE;
+    jfieldID fid = env->FromReflectedField(reflectedField);
+    if (!fid) return JNI_FALSE;
+    env->SetStaticObjectField(declaring, fid, value);
+    if (env->ExceptionCheck()) { env->ExceptionClear(); return JNI_FALSE; }
+    return JNI_TRUE;
 }

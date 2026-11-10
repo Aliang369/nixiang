@@ -17,7 +17,9 @@
 set -euo pipefail
 
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
-ORIG_APK="$NIXIANG/07_patched/无限升级/installed_orig_20260922/base.apk"
+# 2026-11-10：底包路径参数化（WXSJ_ORIG_APK）。设备重装后底包目录随日期变化，硬编码
+# 09-22 目录会让「官方底包」指不到现装包。取值 md5 须与 10_docs/_state/底包再获取台账.md 一致。
+ORIG_APK="${WXSJ_ORIG_APK:-$NIXIANG/07_patched/无限升级/installed_orig_20260922/base.apk}"
 STARRY_APK="$NIXIANG/mod菜单/starry-mod-menu/app/build/outputs/apk/debug/app-debug.apk"
 FINAL_SO="$NIXIANG/mod菜单/starry-mod-menu/app/src/libs/arm64-v8a/libstarry_magic.so"
 JNILIBS_SO="$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so"

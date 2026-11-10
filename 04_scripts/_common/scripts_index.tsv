@@ -5,10 +5,10 @@ audit_experience_registry.py	py	7785	Audit the structured metadata of experience
 audit_game_docs_coverage.py	py	8636	-*- coding: utf-8 -*-	used	10
 audit_rule_gate_map.py	py	4762	-*- coding: utf-8 -*-	used	12
 audit_with_waivers.sh	sh	4859	audit_with_waivers.sh — 框架入口审计「已知豁免」包装器（2026-10-15 山海幻境 4.3 复盘 P0-4）	used	14
-audit_workspace_docs.py	py	24176	Read-only, standard-library documentation and file-byte audit.	used	44
+audit_workspace_docs.py	py	24176	Read-only, standard-library documentation and file-byte audit.	used	45
 axml_inspect.py	py	11423	-*- coding: utf-8 -*-	used	21
 bash32_check.sh	sh	8221	bash32_check.sh — macOS bash 3.2 兼容门禁（伊莫 1.0.1 会话复盘 P1-3）	used	54
-check_deleted_class_injection.sh	sh	3779	check_deleted_class_injection.sh — 已删除类"注入/硬依赖"巡检（2026-10-28 建）	used	8
+check_deleted_class_injection.sh	sh	3827	check_deleted_class_injection.sh — 已删除类"注入/硬依赖"巡检（2026-10-28 建）	used	8
 check_merge_markers.sh	sh	2960	check_merge_markers.sh — Git 冲突标记残留检查	used	9
 check_release_apk.sh	sh	6193	check_release_apk.sh — 出包门禁（Java/APK 侧，P6 的半步）	used	56
 check_release_clean.sh	sh	9854	check_release_clean.sh — 干净正式包门禁（诊断代码不许进正式包）	used	79
@@ -44,7 +44,7 @@ find_metadata_device.sh	sh	1079	扫进程 rw 段找解密后的 global-metadata 
 fix_bash32_var_brace.py	py	3642	-*- coding: utf-8 -*-	used	16
 fix_entry_units.py	py	2404	-*- coding: utf-8 -*-	used	6
 flight_recorder.sh	sh	13656	flight_recorder.sh — 飞行记录仪（游玩期连续取证＋用户口述标记）	used	27
-framework_entry_audit.sh	sh	25114	framework_entry_audit.sh — 出包前「入口点 + 渠道接入」静态审计（复盘 20261010 §4 P0-1）	used	55
+framework_entry_audit.sh	sh	25551	framework_entry_audit.sh — 出包前「入口点 + 渠道接入」静态审计（复盘 20261010 §4 P0-1）	used	55
 gate_note.sh	sh	3062	gate_note.sh — 门禁即时记账（P7）	used	20
 gen_game_doc_index.py	py	10348	生成/校验每个游戏目录的 `_index.md`：本目录有哪些文件、哪个是当前有效、哪些是历史。	used	233
 gen_payload_enc.py	py	15038	-*- coding: utf-8 -*-	used	43
@@ -68,7 +68,7 @@ menu_tpl_gate.sh	sh	6874	menu_tpl_gate.sh — 菜单模板/dex 新鲜度门禁�
 merge_gradle_wrapper.py	py	3527	把 gradle 发行版里的分片 jar 合并成项目用的 gradle-wrapper.jar。	used	2
 new_hypothesis.sh	sh	3862	new_hypothesis.sh — 「假设预注册」脚手架（改动前先写下「怎么算对」）	used	6
 next_free_dex.py	py	885	Print the smallest unused classesN.dex index for an APK.	used	22
-obfuscate_menu_dex.sh	sh	7595	obfuscate_menu_dex.sh — 给注入用 menu dex 做 R8 混淆	used	19
+obfuscate_menu_dex.sh	sh	7595	obfuscate_menu_dex.sh — 给注入用 menu dex 做 R8 混淆	used	20
 pipeline_record_cleanup.py	py	10384	Record already-performed cleanup in a game's pipeline.json.	used	41
 portable_users_path_migrate.py	py	8239	-*- coding: utf-8 -*-	used	2
 post_install_precheck.sh	sh	20093	post_install_precheck.sh — 装机预检闸门（装机后运行时证据关）	used	155

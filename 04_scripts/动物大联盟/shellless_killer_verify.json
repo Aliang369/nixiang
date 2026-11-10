@@ -1,0 +1,48 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_shellless-killer-releaseSigned.apk",
+  "apk_sha256": "ec72dcfc80ec0df79c65a3e24dc33dec68d0694c05b14f2709dec09bef740868",
+  "apk_size": 64901277,
+  "base": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_shellless2-releaseSigned.apk",
+  "base_sha256": "7f1b1ad2fa9c002e068b32dce30e6f57b9e678ba1901edc4aa10e2d73337cd18",
+  "checks": {
+    "dex_chain_to_6": true,
+    "classes5_has_killer_and_inner": true,
+    "classes6_has_factory": true,
+    "classes6_only_instantiateApplication": true,
+    "manifest_identical_except_factory": true,
+    "manifest_has_factory": true,
+    "application_unchanged": true,
+    "launcher_unchanged": true,
+    "no_shell_classes": true,
+    "no_signspoof": true,
+    "no_starry_provider": true,
+    "passthrough_identical": true,
+    "signed_dn_starry": true,
+    "apk_verify_ok": true
+  },
+  "raw": {
+    "dex_chain": [
+      "classes.dex",
+      "classes2.dex",
+      "classes3.dex",
+      "classes4.dex",
+      "classes5.dex",
+      "classes6.dex"
+    ],
+    "classes5_size": 13984,
+    "classes5_missing": [],
+    "classes5_has_official_pkg": true,
+    "classes6_size": 2016,
+    "classes6_other_overrides": [],
+    "manifest_added_lines": [
+      "A: http://schemas.android.com/apk/res/android:appComponentFactory(0x0101057a)=\"com.starry.magic.dwdlm.DwdlmKillerFactory\" (Raw: \"com.starry.magic.dwdlm.DwdlmKillerFactory\")"
+    ],
+    "application_name": "com.bingo.cocos.bridge.BingoApplication",
+    "passthrough_same": "2913/2913",
+    "passthrough_bad": [],
+    "removed_entries": [],
+    "cert_dn": "CN=StarryMagic, OU=Starry, O=Starry, L=Shanghai, ST=Shanghai, C=CN"
+  },
+  "ok": true,
+  "failed": []
+}

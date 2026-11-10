@@ -1,0 +1,8 @@
+[killer] base=/Users/aliang/Documents/nixiang/02_apks/动物大联盟/动物大联盟_1.0.25_official.apk
+[killer] pkg=com.fightingstars.games.animal expect_cert_sha256_upper=DE8A75D30A1831F3DDC83F38F285513110FDE9AB919FB4E471653F86B5083E0A
+  cert DER 877 B, SHA-256 de8a75d30a1831f3ddc83f38f285513110fde9ab919fb4e471653f86b5083e0a
+  cert base64 1172 字符，每 64 字符换行共 19 行
+  smali 烘焙完成: pkg=com.fightingstars.games.animal cert=1210 字符
+  verify ok: .super=Application / pkg 已烘焙 / 内部类 12 个 / 无 @@ 残留
+[killer] ok /Users/aliang/Documents/nixiang/04_scripts/动物大联盟/assets/dwdlm_signature_killer.dex (13984 B, md5 ec99da8bded10307714ca6d7c3a0c44f)
+  DWDLM_CERT_SHA256=DE8A75D30A1831F3DDC83F38F285513110FDE9AB919FB4E471653F86B5083E0A  DWDLM_KILLER_MD5=ec99da8bded10307714ca6d7c3a0c44f

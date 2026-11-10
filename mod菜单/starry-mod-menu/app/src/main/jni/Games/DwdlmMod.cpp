@@ -22,7 +22,12 @@
 #include "Includes/Logger.h"
 #include "Includes/SecStrings.hpp"
 #include "Includes/Utils.hpp"
+#ifndef DWDLM_ENV_ONLY
+// 玩法 JS 补丁（生成头 Games/DwdlmPatchJs.h）。
+// DWDLM_ENV_ONLY＝环境阶段构建：整条 evalString/runScript splice 通道在编译期剔除，
+// 故不引用该生成头，环境 so 内不含任何玩法补丁内容（功能未启用，不靠 g_feat 兜）。
 #include "DwdlmPatchJs.h"
+#endif
 
 #define DWDLM_LOG "[dwdlm]"
 
@@ -329,6 +334,10 @@ static void hooked_nativeRender(void* env, void* thiz) {
     }
 }
 
+#ifndef DWDLM_ENV_ONLY
+// ＝＝ 玩法 JS 补丁通道（环境阶段整体剔除）＝＝
+// DWDLM_ENV_ONLY 构建里以下入口判定与两个 splice 桩函数不编译，
+// 于是即便有人重新打开 EarlyHookThread，也没有可安装的玩法 hook。
 static bool HasMarker(const std::string& s) {
     return s.find("window.__require") != std::string::npos &&
            s.find("cc._RF.push") != std::string::npos;
@@ -402,6 +411,7 @@ static bool hooked_seEval(void* thiz, const char* script, long length, void* ret
         return g_origSeEval(thiz, script, length, ret, fileName);
     }
 }
+#endif  // DWDLM_ENV_ONLY（玩法 JS 补丁通道结束）
 
 // The APKSecure-protected image is the one whose executable mappings are
 // split at ELF PT_LOAD boundaries (0x1d000/0x1f000/0x20000/0x21000/0x3d000/
@@ -623,6 +633,7 @@ static bool TryHookNativeRender() {
     return true;
 }
 
+#ifndef DWDLM_ENV_ONLY
 static bool TryHookRunScript() {
     if (g_runScriptHooked.load()) return true;
     char mapLine[768] = {0};
@@ -638,6 +649,7 @@ static bool TryHookRunScript() {
          mapLine[0] ? mapLine : "(none)");
     return true;
 }
+#endif  // DWDLM_ENV_ONLY（hooked_seRunScript 已剔除）
 
 typedef int (*IntBoolFn_t)(void);
 typedef void (*VoidOneFn_t)(void*);
@@ -1299,6 +1311,7 @@ static void InstallUpdateCallbacksProbe() {
     }
 }
 
+#ifndef DWDLM_ENV_ONLY
 static bool TryHookEvalString() {
     if (g_evalHooked.load()) return true;
     const char* lib = kTargetLib();
@@ -1337,6 +1350,18 @@ static bool TryHookEvalString() {
          (unsigned long)kEvalFileOff, jni, mapLine[0] ? mapLine : "(none)");
     return true;
 }
+#else   // DWDLM_ENV_ONLY
+// 环境阶段：玩法入口（evalString splice）不安装，也不去解析 kEvalFileOff。
+// 返回值语义与 TryHookEvalString 对齐：true＝等待循环可以结束（转入壳/启动链 hook）。
+static bool TryHookEvalString() {
+    static std::atomic<bool> logged{false};
+    if (!logged.exchange(true)) {
+        LOGW("%s ENV_ONLY: 跳过玩法 evalString splice —— 六项功能在本包内未启用",
+             DWDLM_LOG);
+    }
+    return true;
+}
+#endif  // DWDLM_ENV_ONLY
 
 static void* EarlyHookThread(void* arg) {
 #ifdef DWDLM_SHELL_STATE_ONLY
@@ -1369,6 +1394,14 @@ static void* EarlyHookThread(void* arg) {
 #endif
 }
 
+#ifdef DWDLM_ENV_ONLY
+// 环境阶段：旧 boot-flow hook 线程（TryHookBootFlowFns 内 1.0.23 硬地址）不启动。
+// 编译期就不留调用面：Entry 的 ENV 分支不调它，这里再兜一层空实现。
+void Dwdlm_StartEarlyHookThread(JavaVM* vm) {
+    (void)vm;
+    LOGW("%s ENV_ONLY: 不启动早期 hook 线程（旧 1.0.23 boot hooks 链）", DWDLM_LOG);
+}
+#else
 void Dwdlm_StartEarlyHookThread(JavaVM* vm) {
     static std::atomic<bool> started{false};
     bool expected = false;
@@ -1377,6 +1410,7 @@ void Dwdlm_StartEarlyHookThread(JavaVM* vm) {
     if (pthread_create(&th, nullptr, EarlyHookThread, vm) == 0) pthread_detach(th);
     else started.store(false);
 }
+#endif  // DWDLM_ENV_ONLY（Dwdlm_StartEarlyHookThread）
 
 static bool IsReadableRange(uintptr_t addr, size_t size) {
     if (!addr || size == 0 || addr + size < addr) return false;
@@ -1522,6 +1556,15 @@ cleanup:
 }
 
 bool Dwdlm_TryInit(JavaVM* vm) {
+#ifdef DWDLM_ENV_ONLY
+    // 环境阶段：Entry 的 tryInit 已是 nullptr（框架根本调不到），这里再兜一层。
+    // 返回 false 是实情：本构建**没有**安装任何玩法 hook，不存在"已就绪"状态；
+    // 旧 ENV 桩返回 true 会让调用方误判 hook 已就位（误导），已改正。
+    (void)vm;
+    LOGW("%s ENV_ONLY: 无玩法初始化可做（六项功能在本包内未启用，未装任何玩法 hook）",
+         DWDLM_LOG);
+    return false;
+#else   // ---- 以下为 1.0.23 功能阶段原逻辑，仅供后续按 1.0.25 适配；ENV 不编译 ----
     LOGI("%s secureHook=%d evalSeen=%d runScript=%d stages=%d native=%d boot=%d path=%s", DWDLM_LOG,
          g_secureHookInstalled.load() ? 1 : 0, g_evalSeen.load(),
          g_runScriptHooked.load() ? 1 : 0, g_stageHooksInstalled.load() ? 1 : 0,
@@ -1534,6 +1577,7 @@ bool Dwdlm_TryInit(JavaVM* vm) {
     g_ready.store(true);
     SyncJavaRets();
     return true;
+#endif  // DWDLM_ENV_ONLY
 }
 
 bool Dwdlm_IsReady() { return g_ready.load(); }
@@ -2018,8 +2062,36 @@ static bool PatchSecretExitNop(uintptr_t fileOff, const char* name) {
     return true;
 }
 
-void Dwdlm_InstallPathProbe() { InstallPathProbe(); }
+void Dwdlm_LogEnvOnlyBanner(const char* where) {
+#ifdef DWDLM_ENV_ONLY
+    LOGW("%s ===== DWDLM_ENV_ONLY 环境构建 @%s：六项功能未启用，"
+         "未编译入玩法 JS 补丁，也未安装任何玩法 hook =====", DWDLM_LOG,
+         where ? where : "?");
+#else
+    (void)where;
+#endif
+}
 
+#ifdef DWDLM_ENV_ONLY
+// 环境阶段：旧 1.0.23 路径探针（fopen / AAssetManager_open 指纹写）不安装。
+// 该链会改壳可见的文件访问行为，1.0.25 未核，环境构建一律不碰。
+void Dwdlm_InstallPathProbe() {
+    LOGW("%s ENV_ONLY: 跳过 PathProbe（旧 1.0.23 指纹写链）", DWDLM_LOG);
+}
+#else
+void Dwdlm_InstallPathProbe() { InstallPathProbe(); }
+#endif  // DWDLM_ENV_ONLY（Dwdlm_InstallPathProbe）
+
+#ifdef DWDLM_ENV_ONLY
+// 环境阶段：旧 1.0.23 硬地址壳链（libsecret 0x20008 / 0x1D2AC / 0x3D59C…
+// 与状态字 0x70318/0x70328/0x7032C/0x70358）整段不执行。1.0.25 的 libsecret.so
+// 459344 B 与 1.0.23 不同构，这些偏移不可用；壳状态归一化改由独立模块
+// Games/DwdlmSecShell.cpp 从**当前映像**导出符号序言反推，且不 hook 任何函数。
+void Dwdlm_PrepareSecureShell() {
+    LOGW("%s ENV_ONLY: 跳过旧 1.0.23 壳 hook 链（壳侧改由 DwdlmSecShell 负责）",
+         DWDLM_LOG);
+}
+#else
 void Dwdlm_PrepareSecureShell() {
 #ifdef DWDLM_DATA_GUARD_ONLY
     LOGI("%s data-guard only: start shell state polling", DWDLM_LOG);
@@ -2088,7 +2160,12 @@ void Dwdlm_PrepareSecureShell() {
     g_secureHookInstalled.store(true);
     LOGI("%s secure override install complete", DWDLM_LOG);
 }
+#endif  // DWDLM_ENV_ONLY（Dwdlm_PrepareSecureShell）
 
+// 旧 Java 入口 com.starry.magic.dwdlm.DwdlmApplication.prepareSecureShell 的符号**保留**：
+// 本作直装包用的是官方 dev.mars.secure.ProxyApplication（不替换），该符号只是"若有人仍
+// 挂着旧 Application 也不至于 UnsatisfiedLinkError"；ENV 构建里它走到上面的空实现，
+// 只记一行日志，不装任何 hook。新接入面是 DwdlmAppComponentFactory.nativeEnvStart。
 extern "C" JNIEXPORT void JNICALL
 Java_com_starry_magic_dwdlm_DwdlmApplication_prepareSecureShell(JNIEnv*, jclass) {
     Dwdlm_PrepareSecureShell();

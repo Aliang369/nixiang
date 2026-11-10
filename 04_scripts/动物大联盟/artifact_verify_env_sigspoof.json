@@ -1,0 +1,118 @@
+{
+ "game": "动物大联盟",
+ "version": "1.0.25",
+ "profile": "env",
+ "factory_mode": "factory",
+ "apk": "/Users/aliang/Documents/nixiang/08_output/动物大联盟/动物大联盟_1.0.25_starry-env-sigspoof-releaseSigned.apk",
+ "apk_sha256": "98360466f45eef4224c3a2525f75babf84365c17b7258ebd80aad720c0f53a72",
+ "apk_size": 85443710,
+ "checks": [
+  {
+   "level": "PASS",
+   "check": "base",
+   "detail": "官方底包 81191854 B sha256=2c9e85451b41b3bc..."
+  },
+  {
+   "level": "PASS",
+   "check": "apk",
+   "detail": "动物大联盟_1.0.25_starry-env-sigspoof-releaseSigned.apk  85443710 B  sha256=98360466f45eef4224c3a2525f75babf84365c17b7258ebd80aad720c0f53a72"
+  },
+  {
+   "level": "PASS",
+   "check": "inject",
+   "detail": "classes2.dex 在位 520708 B（压缩后 242993 B）"
+  },
+  {
+   "level": "PASS",
+   "check": "sec.switch",
+   "detail": "lib/arm64-v8a/libsecret.so = 签名路径开关补丁版（v2块→PackageManager），有意变更"
+  },
+  {
+   "level": "PASS",
+   "check": "luster.patch",
+   "detail": "lib/arm64-v8a/libluster.so = JNI_OnLoad 去 RegisterNatives 版（classloader 退化为系统 loader 时的规避），有意变更"
+  },
+  {
+   "level": "PASS",
+   "check": "passthrough",
+   "detail": "官方条目 2922/2922 逐字节透传（只有 manifest/dex/so 三类被替换）"
+  },
+  {
+   "level": "PASS",
+   "check": "classes.dex",
+   "detail": "官方 classes.dex sha256 一致（壳 stub 未被改）"
+  },
+  {
+   "level": "PASS",
+   "check": "shell_payload",
+   "detail": "壳 payload / libsecret / libEncryptorP / libzeus 四条壳关键条目在位"
+  },
+  {
+   "level": "PASS",
+   "check": "dex.factory",
+   "detail": "Lcom/starry/magic/dwdlm/DwdlmAppComponentFactory; 在 classes2.dex 内"
+  },
+  {
+   "level": "PASS",
+   "check": "dex.jni",
+   "detail": "nativeEnvStart 在 classes2.dex 内（与 so 导出对应）"
+  },
+  {
+   "level": "PASS",
+   "check": "dex.sigspoof",
+   "detail": "bin/mt/signature/KillerApplication193 在 classes2.dex 内（运行时签名替换）"
+  },
+  {
+   "level": "PASS",
+   "check": "dex.forbidden",
+   "detail": "classes2.dex 无 SignSpoof"
+  },
+  {
+   "level": "SKIP",
+   "check": "dex.reuse",
+   "detail": "factory 模式不做 dex 复用比对；classes2.dex sha256=dc223f9307430baa"
+  },
+  {
+   "level": "PASS",
+   "check": "manifest",
+   "detail": "AXML 头 03000800；ProxyApplication + appComponentFactory + Provider + authority + MenuService 齐全"
+  },
+  {
+   "level": "PASS",
+   "check": "manifest.forbidden",
+   "detail": "无 SignSpoof / 未替换 DwdlmApplication"
+  },
+  {
+   "level": "PASS",
+   "check": "so.md5",
+   "detail": "包内 so md5=832b89c7dbc9974fa129c493f217168f 与 assemble 报告一致（2167120 B）"
+  },
+  {
+   "level": "PASS",
+   "check": "so.dynsym",
+   "detail": "导出定义 Java_com_starry_magic_dwdlm_DwdlmAppComponentFactory_nativeEnvStart"
+  },
+  {
+   "level": "PASS",
+   "check": "so.legacy",
+   "detail": "so 内无 check-report（旧 1.0.23 壳链未编入）"
+  },
+  {
+   "level": "PASS",
+   "check": "so.playpatch",
+   "detail": "so 内无 starry_dwdlm_v1（六项玩法未编入）"
+  },
+  {
+   "level": "PASS",
+   "check": "cert",
+   "detail": "证书 SHA-256=83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d（v2/v3=yes）"
+  },
+  {
+   "level": "PASS",
+   "check": "source",
+   "detail": "构建源码 == 当前源码（da06567ec7730939…），候选未过期"
+  }
+ ],
+ "fail_count": 0,
+ "verdict": "PASS"
+}

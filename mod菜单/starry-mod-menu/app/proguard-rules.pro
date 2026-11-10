@@ -50,6 +50,11 @@
 # ---- ② native 按类名找进来（so 里 OBFUSCATE 写死）----
 -keep class com.starry.magic.bridge.ModBridge { *; }
 
+# ---- ③ 构建脚本按名引用：刷新链要往 BuildConfig 注入 MENU_STAMP（starry-menu:<commit>）
+#       被 allowobfuscation+repackageclasses 改名成 com.starry.magic.o.a 后，注入脚本按名找不到 ⇒ 出包失败
+#       （2026-11-10 实测）
+-keep class com.starry.magic.BuildConfig { *; }
+
 # ---- 其余全部：保留（防 shrink 掉反射用到的），但**允许改名** ----
 -keep,allowobfuscation class com.starry.magic.** { *; }
 

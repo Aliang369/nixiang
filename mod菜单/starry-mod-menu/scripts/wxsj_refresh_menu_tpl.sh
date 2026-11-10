@@ -151,9 +151,14 @@ if [[ -s "$PREV/classes2.dex" ]]; then
   # 2026-10-26：`$$ExternalSyntheticLambda*` 与 `-IA;`（接口伴随类）是 D8/R8 的脱糖
   # 产物，重构后数量/编号会变（release 的 R8 还会合并），不算「丢类」。
   # 真类（控件/绘制/Service/Bridge…）丢失仍然硬拦——那才是「菜单外观变样」的来源。
+  # 2026-11-10：菜单 dex 改走 R8 混淆（proguard -repackageclasses 'com.starry.magic.o'）后，
+  # 类名整体重打包 ⇒ 「按名零删除」不再成立（实测 205 类里 141 个改名、误判 37 个丢类）。
+  # 混淆场景改判：① -keep 关键类按名必须存在 ② 总类数不得明显减少（外观回归仍拦）。
+  OBF=0
+  if grep -q '^Lcom/starry/magic/o/' "$WORK/new_cls.txt"; then OBF=1; fi
   grep -E '\$\$ExternalSyntheticLambda[0-9]+;|-IA;$' "$WORK/lost.txt" > "$WORK/lost_synth.txt" 2>/dev/null || true
   grep -vE '\$\$ExternalSyntheticLambda[0-9]+;|-IA;$' "$WORK/lost.txt" > "$WORK/lost_real.txt" 2>/dev/null || true
-  if [[ -s "$WORK/lost_real.txt" ]]; then
+  if [[ -s "$WORK/lost_real.txt" && "$OBF" != "1" ]]; then
     echo "ERROR: 新 dex 相对 $PREV 丢真类（会导致菜单缺控件/外观变样）："
     sed 's/^/    /' "$WORK/lost_real.txt"
     exit 1
@@ -161,7 +166,25 @@ if [[ -s "$PREV/classes2.dex" ]]; then
   if [[ -s "$WORK/lost_synth.txt" ]]; then
     echo "  合成类减少 $(wc -l < "$WORK/lost_synth.txt" | tr -d ' ') 个（脱糖/R8 合并所致，放行）"
   fi
+  if [[ "$OBF" == "1" ]]; then
+    MISSING_KEY=""
+    for k in Lcom/starry/magic/StarryInitProvider\; Lcom/starry/magic/StarryApp\; Lcom/starry/magic/menu/MenuService\; Lcom/starry/magic/bridge/ModBridge\; Lcom/starry/magic/BuildConfig\;; do
+      if ! grep -qxF "$k" "$WORK/new_cls.txt"; then MISSING_KEY="$MISSING_KEY $k;"; fi
+    done
+    if [[ -n "$MISSING_KEY" ]]; then
+      echo "ERROR: 混淆 dex 缺关键保留类（native/Manifest 按名引用，缺则启动即崩）：$MISSING_KEY"; exit 1
+    fi
+    PREV_N="$(wc -l < "$WORK/prev_cls.txt" | tr -d ' ')"
+    NEW_N="$(wc -l < "$WORK/new_cls.txt" | tr -d ' ')"
+    RENAMED="$(wc -l < "$WORK/lost_real.txt" | tr -d ' ')"
+    echo "  混淆 dex：关键保留类齐全 ✓；类数 旧 ${PREV_N} → 新 ${NEW_N}（R8 改名 ${RENAMED} 个，按名零删除不适用）"
+    if (( NEW_N + 8 < PREV_N )); then
+      echo "  WARN: 新 dex 类数比旧模板少 $((PREV_N - NEW_N)) 个 —— 查 proguard shrink 是否误删（外观回归风险）"
+    fi
+  fi
+  if [[ "$OBF" != "1" ]]; then
   echo "  旧模板 $(wc -l < "$WORK/prev_cls.txt" | tr -d ' ') 类 → 新 $(wc -l < "$WORK/new_cls.txt" | tr -d ' ') 类，真类零删除 ✓"
+  fi
   added="$(comm -13 "$WORK/prev_cls.txt" "$WORK/new_cls.txt" || true)"
   [[ -n "$added" ]] && { echo "  新增 $(printf '%s\n' "$added" | wc -l | tr -d ' ') 个（含合成类）"; }
 else

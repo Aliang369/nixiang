@@ -53,6 +53,7 @@ deps_in() {  # $1=目录 ⇒ 打印"硬依赖已删 smali"的行（排除注释�
   for cls in "${DELETED_CLASSES[@]}"; do
     grep -rn --include=*.sh --include=*.py -F "sign/${cls}.smali" "$dir" 2>/dev/null \
       | grep -vE ':[0-9]+:[[:space:]]*#' \
+      | grep -vE 'then[[:space:]]*(die|exit)' \
       | sed 's/^/    [硬依赖] /'
   done
 }

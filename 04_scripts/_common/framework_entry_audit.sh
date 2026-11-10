@@ -42,6 +42,7 @@ usage() {
   --pkg    目标渠道包名（例：com.TeaMelo.DungeonChasers）
   --apk    可选。给了才做交付物断言（dex/Manifest 里的入口类与服务）
   --macro  可选。直接指定 STARRY_GAME_* 宏名（推断失败时用）
+  --mk     可选。实际参与编译的 mk（默认 jni/Android.mk；走私有 Android_<tag>.mk 时必传）
   --root   可选。覆盖仓库根（自检夹具用）
   --selfcheck  本检查器自检：正控（该抓的一律抓出）+ 负控（干净夹具零 ✗），全绿才说明它的「通过」可信
 
@@ -55,6 +56,7 @@ while [ $# -gt 0 ]; do
     --pkg)   [ $# -ge 2 ] || { echo "--pkg 缺参数" >&2; exit 2; }; PKG="$2"; shift 2 ;;
     --apk)   [ $# -ge 2 ] || { echo "--apk 缺参数" >&2; exit 2; }; APK="$2"; shift 2 ;;
     --macro) [ $# -ge 2 ] || { echo "--macro 缺参数" >&2; exit 2; }; MACRO_ARG="$2"; shift 2 ;;
+    --mk)    [ $# -ge 2 ] || { echo "--mk 缺参数" >&2; exit 2; }; MK_ARG="$2"; shift 2 ;;
     --root)  [ $# -ge 2 ] || { echo "--root 缺参数" >&2; exit 2; }; ROOT_ARG="$2"; shift 2 ;;
     --selfcheck) SELFCHECK=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -73,7 +75,9 @@ TAP="$JAVA_ROOT/sign/TapLoginForceWeb.java"
 # 2026-10-28：sign/SignSpoof.java 已整体删除（用户定案：TapTap 验签/登录一律改包法）。
 # 下面 TAP_MODE 用「成品包 manifest 是否仍挂已删除的 SignSpoofAppComponentFactory」判老包。
 CFG="$JNI/GameConfig.h"
-MK="$JNI/Android.mk"
+# 2026-11-10：私有 mk（modern 路线 / 零接触公共 Android.mk）用 --mk 指定实际构建脚本，
+# 否则 [D] 段永远读公共 Android.mk 的切游戏残留分支，误判「会编出别的游戏的 so」。
+MK="${MK_ARG:-$JNI/Android.mk}"
 
 ok()    { echo "  ✓ $*"; }
 bad()   { echo "  ✗ $*"; fail=$((fail + 1)); }

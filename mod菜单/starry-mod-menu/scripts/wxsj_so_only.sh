@@ -18,15 +18,17 @@ OBJ="$STARRY_SRC/app/src/libs_wxsj_obj"
 LIBS="$STARRY_SRC/app/src/libs_wxsj_libs"
 
 [[ -x "$NDK/ndk-build" ]] || { echo "ERROR: ndk-build missing at $NDK"; exit 1; }
-[[ -f "$JNI/Android.mk" ]] || { echo "ERROR: missing $JNI/Android.mk"; exit 1; }
+# 2026-11-10：支持私有 mk（WXSJ_BUILD_MK），用于零接触公共 Android.mk 的 legacy 切游戏
+BUILD_MK="${WXSJ_BUILD_MK:-$JNI/Android.mk}"
+[[ -f "$BUILD_MK" ]] || { echo "ERROR: missing $BUILD_MK"; exit 1; }
 
-grep -qE '^[[:space:]]*LOCAL_CFLAGS[[:space:]]*\+=[[:space:]]*.*-DSTARRY_GAME_WXSJ' "$JNI/Android.mk" \
+grep -qE '^[[:space:]]*LOCAL_CFLAGS[[:space:]]*\+=[[:space:]]*.*-DSTARRY_GAME_WXSJ' "$BUILD_MK" \
   || { echo "ERROR: Android.mk 未激活 -DSTARRY_GAME_WXSJ（当前会编成别的游戏）"; exit 1; }
-grep -qE '^[[:space:]]*LOCAL_SRC_FILES[[:space:]]*:=.*WxsjMod\.cpp' "$JNI/Android.mk" \
+grep -qE '^[[:space:]]*LOCAL_SRC_FILES[[:space:]]*:=.*WxsjMod\.cpp' "$BUILD_MK" \
   || { echo "ERROR: Android.mk LOCAL_SRC_FILES 未含 Games/WxsjMod.cpp"; exit 1; }
 
 DIAG="0"
-grep -qE '^[[:space:]]*LOCAL_CFLAGS[[:space:]]*\+=[[:space:]]*.*-DWXSJ_DIAG_DUMP=1' "$JNI/Android.mk" && DIAG="1"
+grep -qE '^[[:space:]]*LOCAL_CFLAGS[[:space:]]*\+=[[:space:]]*.*-DWXSJ_DIAG_DUMP=1' "$BUILD_MK" && DIAG="1"
 if [[ "${WXSJ_DIAG:-0}" == "1" && "$DIAG" != "1" ]]; then
   echo "ERROR: 要编 DIAG so，但 Android.mk 缺 -DWXSJ_DIAG_DUMP=1"; exit 1
 fi
@@ -35,7 +37,7 @@ if [[ "${WXSJ_DIAG:-0}" != "1" && "$DIAG" == "1" ]]; then
 fi
 
 # obj 缓存按配置指纹失效（教训：make 只看 mtime，开关变化会漏旧 .o 进新 so）
-CFG_HASH=$( { cat "$JNI/Android.mk" "$JNI/Application.mk" 2>/dev/null; printf 'WXSJ_DIAG=%s\n' "$DIAG"; } | shasum -a 256 | awk '{print $1}' )
+CFG_HASH=$( { cat "$BUILD_MK" "$JNI/Application.mk" 2>/dev/null; printf 'WXSJ_DIAG=%s\n' "$DIAG"; } | shasum -a 256 | awk '{print $1}' )
 mkdir -p "$OBJ" "$LIBS"
 if [[ ! -f "$OBJ/.build_stamp" || "$(cat "$OBJ/.build_stamp" 2>/dev/null)" != "$CFG_HASH" ]]; then
   echo "[wxsj-so] 配置指纹变化 → 清 obj/libs 全量重编"
@@ -97,7 +99,7 @@ done
 echo "[wxsj-so 1/3] ndk-build arm64-v8a (DIAG=$DIAG)"
 "$NDK/ndk-build" -C "$JNI" \
   NDK_PROJECT_PATH="$STARRY_SRC/app" \
-  APP_BUILD_SCRIPT="$JNI/Android.mk" \
+  APP_BUILD_SCRIPT="$BUILD_MK" \
   NDK_APPLICATION_MK="$JNI/Application.mk" \
   APP_ABI=arm64-v8a \
   NDK_OUT="$OBJ" \
