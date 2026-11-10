@@ -429,6 +429,17 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 | `finalize_game_delivery.sh` | 收尾交付一键（delivery 目录 + prune + 文档片段） | 用户说「收尾」 |
 | `prune_output_final.sh` / `archive_scoped_git.sh` / `stage_shared_file.py` | 08 裁剪 / 白名单提交推送 / 共享文件入库 | 收尾 |
 | `trash_paths.sh` | 受控删除（**拒绝仓库根/.git/01_tools/02_apks/08_output**） | 清理 |
+| `dump_es2_ext.sh` / `dump_es2_ext_device.sh` | es2 补充 dump（宿主端 / 设备端）；`ANDROID_SERIAL` 选设备 | Unity es2 无法常规解包时 |
+| `scan_mod_cpp.sh` | 扫 `Games/*Mod.cpp`：ast-grep 规则 + 文本级硬禁项 | 新增/改动 Mod 后自查 |
+| `gradle_cn_mirrors.py` | 在 `build.gradle` 各 `repositories{}` 前插国内镜像（Gradle 下大 jar 挂 socket read 时） | Gradle daemon 卡 "Starting a Gradle Daemon" |
+| `merge_gradle_wrapper.py` | 把发行版分片 jar 合回 `gradle-wrapper.jar` | wrapper jar 缺失/损坏 |
+| `run_audit_tests.sh` ＋ `test_*.py` | 治理回归测试（链接/约束/经验卡/交付 manifest/`archive git` 退出码契约） | 改治理脚本后 `--docs-strict` |
+| `test_archive_git_exit.py` / `test_delivery_manifest.py` | 单项回归：`archive_*` 两入口的退出码契约 / manifest 生成（一次性临时仓库） | 改动这两个环节后 |
+| `workspace_health.sh` | **工作区一屏体检**：冲突标记 / 两个索引新鲜度 / 规则↔门禁映射 / 入口体量 / 文档覆盖率 / 摘要陈旧 / Git 状态 / 产物体积；**红线未过 rc=1** | 月度自查、收尾、或用户问「工作区现在什么状态」 |
+
+> **脚本可发现性**：`04_scripts/_common/scripts_index.tsv` 由 `gen_scripts_index.py` 生成，
+> 列出全部公共脚本的一句话用途与「是否孤儿」。**"孤儿"只表示没有任何规则/脚本/文档提到它，
+> 不代表可删** —— 处置只有两种：补进本表路由，或迁 `legacy_tools/`。`preflight` 会校验该索引新鲜度。
 
 **游戏侧「配置化 + 诊断分档」（C1/C2）的通用规范见 [`GAME_CONFIG_PATTERN.md`](GAME_CONFIG_PATTERN.md)**：
 C1 = 把「会变的数值」抽成设备侧配置文件（读不到就回内建默认；**加键仍要重编**，所以首次要抽全）；
@@ -450,3 +461,35 @@ native 自读）、热重载做法、四条验收与可 grep 的日志锚点都�
 ## 会话规模与效率阈值（2026-10-27 从 `AGENTS.md` §6 移入，原文保留）
 
 - **会话规模、切点与效率硬指标**（长正文与实测数据在 `10_docs/_state/规范变更日志.md`）：单会话机械行为预算 ≈600 次工具调用 / ≈40 次装机 / ≈150K prune 阴影 token，任一触顶即**交接**（把「已确认事实 / 未决问题 / 下一步 / 证据落点」写进 `games/{游戏}.md` 后开新会话，不硬撑）。① 同一 step 内**下一步动作不依赖其返回**的独立调用必须合并发出（阈值 calls/step ≥1.6、单发占比 <60%）；② 子代理只用于「可独立落盘的深度探查」，不派「帮我统计 / 帮我找文件」类；**子代理不可访问会话历史工具（`session_event_search`/`session_event_read`/`session_trace` 等）——依赖会话历史/上下文的探查（含会话重建）必须主代理自己做，派给子代理必空转**（2026-10-18 实测 3/3 子代理在会话工具处失败、历史决策官会话子代理单条回传仅 53 字符）；③ 子代理回报只允许「结论 ≤20 行 + 落盘路径 + 行数/md5 + 未闭环项」，**单条入父 ≤3,000 字符**；④ 同一共享文件被触达 >10 次、或连续 3 个 step 单发，即先 `compress` / 写交接再继续；`compress` 触发点前移到上下文 ≈90 K，一个压缩条目只装一个主题；同一状态文件每会话触达 ≤4 次（结论变化 + 收尾各一次）。
+
+## 入口 §5/§6 细则正文（2026-11-10 从 `AGENTS.md` 下移，原文保留）
+
+> `AGENTS.md` §5/§6 只留强制句 + 指向本节的指针。**改这些细则改本节，不要回填入口**（§1「入口增量纪律」）。
+> 下移理由：这些条目全部由脚本或固定动作执行，属于"怎么敲命令"而非"能做什么"；入口保留"必须/禁止"即可。
+
+### A. 读取体量纪律（原 `AGENTS.md` §5）
+
+- KB 级可整读：`10_docs/_state/games/{游戏}.md`、`skill/**/*.md`、`04_scripts/{游戏}/*.sh`。
+- MB / KB-heavy 级**禁整读**：`06_dumped/**/dump.cs`、`meta/dump_all.txt`、`pipeline.log`、原始 logcat —— 一律 `rg -n -m <N>` 或 `sed -n 'A,Bp'` 切片；metadata 清单只按 TYPE/类名片段取值。
+- **禁止 `cat 04_scripts/{游戏}/pipeline.json`**（会把历史阶段一起灌入），只取目标 stage。`git status` / `git diff` 必须带游戏 pathspec，禁止裸跑后自行过滤。
+- **阈值**：同一 dump 每轮 grep ≤10 次、单条工具结果 ≤8 KB；长脚本/模板（`surgical_*.sh` 同限）先取大纲再切片。
+
+### B. 提交与推送细则（原 `AGENTS.md` §5）
+
+- **push 一律经 `push_main`**：`source 04_scripts/_common/git_push_main.sh && push_main main`（四通道自愈）。**禁裸 `git push` 盲等、禁 `--force`**；被拒 ⇒ `git pull --rebase --autostash` 再推。**判远端是否同步只看 `git status -sb` 的 ahead/behind，禁在会话中段裸跑 `git fetch`**（SSH 探测会挂 60 s+ 并占坑；确需联网确认套 `with_timeout.sh` 或走 `push_main` 通道）。
+- **收工走白名单 add**：`bash 04_scripts/_common/archive_scoped_git.sh`（**禁 `git add -A`**）——本仓长期多会话并行，全量 add 会把他人的半成品提交进去。add 前若 `status` 出现 `*.jks` / `*.keystore` / `.env` / 大文件（>50M），停下报告。
+- **pre-push 机器关**：`core.hooksPath=04_scripts/_common/git-hooks`，本次 push 涉及的 `.sh` 自动过 `preflight.sh`，FAIL 即阻断（git 只吐 `failed to push some refs`，**真 FAIL 清单在 `git push --dry-run` 的输出里**）。逃生门 `git push --no-verify` 仅应急，**用了必须在汇报里写明**。
+- 中文路径乱码/八进制转义时先 `git config core.quotepath false` 再做路径匹配。
+- **危险 Git 命令禁令（碰了就是事故级）**：`reset --hard`、`checkout -- .`、`clean -fd`；`push -f` / `--force`；`filter-repo` / `filter-branch`；删除或重建 `.git/`；改 `.gitignore` 的例外规则；删 git 已跟踪文件来「省空间」；不检查就 `add -A`。以上除用户当轮明确要求并授权外一律禁止。
+
+### C. 门禁与收尾细则（原 `AGENTS.md` §6）
+
+- **`preflight.sh` 按扩展名路由**：`.sh`→`bash -n`+bash 3.2 兼容门禁+坑位 lint、`.py`→内存 compile、`.js`→`node --check`、`.json`→`json.tool`、`.cpp/.cc/.c/.h/.hpp/.mk`→REMIND（须重跑管线构建）、`AGENTS.md`→入口体量（30 KB 预警 / 32 KB 硬闸）、`_state/current.md`→15 KB 预警 / 24 KB 硬闸、状态索引→`--check` 一致性、**全仓→Git 冲突标记**（`check_merge_markers.sh`，2026-11-10 新增）。
+- **危险 Git 禁令之外，删除也只写显式名单**：先打印解析出的绝对路径复核、删后复扫一次；禁止 `_*.py`、`rm -rf <dir>/*` 这类会命中库内文件的通配符（历史事故：误删 16 个已入库脚本，靠 `git checkout` 救回）。批量清理优先 `04_scripts/_common/trash_paths.sh`（默认 dry-run，`--apply` 才进隔离区）。
+- **`pipeline.sh` 指纹锁**：`pipeline.sh` 与 `_common/pipeline.lock` 禁随手改、禁只改一边；改法见本文末节「真要改 `pipeline.sh` 时的跨机姿势」（同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push）。
+- **审查边界**：改完代码或用户要求「按边界审 / 自查」⇒ 按 `skill/re-implement/code-review-checklist.md` 走一轮；纯文档修改只核对范围/链接/规则冲突/授权。一轮输出结论即停，不借审查扩大任务；仅修已确认问题，修复后复查该问题与直接影响面。
+- **"可测试"装机门禁**：静态·构建检查 + 包结构与签名 + 测试授权 + 证据采集 + 恢复方案，**已知阻断问题不得装机**。「运行验证」以目标版本实际日志、功能开关与回归结果判定；「可交付」须满足对应运行证据，**不以构建成功替代**；缺证据列 CLAIM / VERDICT / EVIDENCE。
+- **产物生命周期**：`02_apks/`、dump、`08_output/`、构建产物、热更样本、JS 解密产物的保留/清理/入库规则正文＝`10_docs/_state/规范变更日志.md` §归档正文 D；裁剪唯一正式包走 `prune_output_final.sh` / `finalize_game_delivery.sh`（**禁手工重造**）；菜单模板照抄 `_templates/menu_template.example.json`，收尾按 `_menu_template` §3 自检字段集严格相等。
+- **状态索引维护**：`current.md` 是生成物，由 `gen_state_index.py` 从 `games/*.md` 头部 frontmatter（`status/updated/one_line`）生成，`preflight --check` 校验。只放当前工作集，全量在 `archive_index.md`。收尾改状态＝改该游戏 frontmatter 再重跑生成器；单游戏摘要 >12 KB 时旧轮次下沉 `history/`。纯评估/文档维护不改游戏状态。
+- **经验生命周期细化**：登记＝`_state/pending_experience.md`，机检＝`audit_experience_registry.py`；「合并」只并入已有唯一权威章节，不新造同类文件；复盘结构见 `_templates/会话复盘模板.md`。
+- **加固停用件清单**：`harden_apk.py` / `harden_gate.sh` / `harden_coverage.py` 与 `pre_install_gate.sh` 查11 已按 2026-10-27 用户裁决撤销强制；脚本暂留因三款已接入游戏的出包脚本仍调用（硬删断包），**新游戏不再要求加固**。

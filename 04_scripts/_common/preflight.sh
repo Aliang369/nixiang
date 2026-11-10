@@ -370,6 +370,94 @@ for f in "$@"; do
   fi
 done
 
+# ---------------------------------------------------------------
+# 自动闸门 ③：Git 冲突标记残留（2026-11-10）
+#   事故：`10_docs/_state/current.md`（**每次开局注入**的状态索引）带着
+#   `<<<<<<< HEAD` / `=======` / `>>>>>>> <hash>` 三行被 commit 进 main，
+#   而 preflight 全绿 —— 因为当时只有 frontmatter 关，没有标记扫描关。
+#   后果是每开会话 AI 读到的第一份全局状态就夹着垃圾。
+#   只扫 git 跟踪文件（未跟踪的临时产物不是我们的输出）；有参数时只扫本次改动文件。
+# ---------------------------------------------------------------
+if [ -f "$SCRIPT_DIR/check_merge_markers.sh" ]; then
+  if [ "$FILE_ARGS" -ge 1 ]; then
+    _mm_args=()
+    for f in "$@"; do case "$f" in --*) continue;; esac; [ -f "$f" ] && _mm_args+=("$f"); done
+    if [ "${#_mm_args[@]}" -gt 0 ]; then
+      _mm_out=$(bash "$SCRIPT_DIR/check_merge_markers.sh" "${_mm_args[@]}" 2>&1); _mm_rc=$?
+    else
+      _mm_out=$(bash "$SCRIPT_DIR/check_merge_markers.sh" 2>&1); _mm_rc=$?
+    fi
+  else
+    _mm_out=$(bash "$SCRIPT_DIR/check_merge_markers.sh" 2>&1); _mm_rc=$?
+  fi
+  if [ "$_mm_rc" != "0" ]; then
+    printf '%s\n' "$_mm_out" | sed 's/^/       /'
+    fail=$((fail+1))
+  fi
+fi
+
+# ---------------------------------------------------------------
+# 自动闸门 ④：游戏文档索引新鲜度（2026-11-10）
+#   每个 `10_docs/{游戏}/` 有生成物 `_index.md`，列出本目录文件并标出
+#   【当前】/【历史】。它解决「50 个文件平铺、AI 不知道哪 5 个是当前的」。
+#   只在「改动了游戏目录文件」或「改动了 _index.md 本身」时触发 ——
+#   否则每轮都跑一遍全库比对纯属浪费（全库 114 个目录约 0.5 s，触发时也不贵，
+#   但无谓地把无关轮次的输出撑长）。
+# ---------------------------------------------------------------
+if [ -f "$SCRIPT_DIR/gen_game_doc_index.py" ] && [ "$FILE_ARGS" -ge 1 ]; then
+  _gi_need=0
+  for f in "$@"; do
+    case "$f" in --*) continue;; esac
+    case "$f" in
+      */10_docs/_state/*|*/10_docs/_templates/*|*/10_docs/tools/*) ;;
+      */10_docs/*) _gi_need=1 ;;
+      *_index.md) _gi_need=1 ;;
+    esac
+  done
+  if [ "$_gi_need" = "1" ]; then
+    _gi_py=$(idx_python) || _gi_py=""
+    if [ -n "$_gi_py" ]; then
+      if _gi_out=$(PYTHONUTF8=1 "$_gi_py" "$SCRIPT_DIR/gen_game_doc_index.py" --check 2>&1); then
+        echo "✓ PASS  [游戏文档索引] _index.md 与目录内容一致"
+        pass=$((pass+1))
+      else
+        echo "✗ FAIL  [游戏文档索引] 有目录的 _index.md 缺失或过期 ——"
+        printf '%s\n' "$_gi_out" | sed 's/^/       /' | head -6
+        fail=$((fail+1))
+      fi
+    fi
+  fi
+
+# ---------------------------------------------------------------
+# 自动闸门 ⑤：公共脚本索引新鲜度（2026-11-10）
+#   `04_scripts/_common/scripts_index.tsv` 列出 105 个公共脚本的一句话用途与是否孤儿。
+#   它治的是「新会话不知道有这个脚本 ⇒ 重造」——实测 47 个脚本此前没有任何规则文档
+#   提到过（AGENTS §3.3 明令禁止重造）。只在改动 `04_scripts/_common/**` 时触发。
+# ---------------------------------------------------------------
+if [ -f "$SCRIPT_DIR/gen_scripts_index.py" ] && [ "$FILE_ARGS" -ge 1 ]; then
+  _si_need=0
+  for f in "$@"; do
+    case "$f" in --*) continue;; esac
+    case "$f" in
+      */04_scripts/_common/*|*_common/*) _si_need=1 ;;
+    esac
+  done
+  if [ "$_si_need" = "1" ]; then
+    _si_py=$(idx_python) || _si_py=""
+    if [ -n "$_si_py" ]; then
+      if _si_out=$(PYTHONUTF8=1 "$_si_py" "$SCRIPT_DIR/gen_scripts_index.py" --check 2>&1); then
+        echo "✓ PASS  [脚本索引] scripts_index.tsv 与 _common/ 一致"
+        pass=$((pass+1))
+      else
+        echo "✗ FAIL  [脚本索引] scripts_index.tsv 已过期 ——"
+        printf '%s\n' "$_si_out" | sed 's/^/       /' | head -4
+        fail=$((fail+1))
+      fi
+    fi
+  fi
+fi
+fi
+
 env_rc=0
 if [ "$ENV_CHECK" = "1" ]; then
   echo
