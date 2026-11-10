@@ -111,17 +111,20 @@ echo "[3/5] 打包 class → jar"
 "$JAR_BIN" cf "$(w "$STAGE_ROOT/classes.jar")" -C "$(w "$STAGE_ROOT/classes")" . \
   > "$STAGE_ROOT/jar.log" 2>&1 || { tail -20 "$STAGE_ROOT/jar.log" >&2; die "jar 失败"; }
 
-echo "[4/5] d8 → dex（min-api 23，原版 minSdk=23）"
-"$D8" --min-api 23 --release --lib "$(w "$AJAR")" \
-  --output "$(w "$STAGE_ROOT/out")" "$(w "$STAGE_ROOT/classes.jar")" \
-  > "$STAGE_ROOT/d8.log" 2>&1
-DRC=$?
-if [ $DRC -ne 0 ]; then
-  echo "--- d8 失败（尾部 40 行）---" >&2
-  tail -40 "$STAGE_ROOT/d8.log" >&2
-  die "d8 rc=$DRC"
+echo "[4/5] R8 混淆 → dex（min-api 23）"
+# 2026-11-10：原先裸 `d8 --release` 只去调试信息、不混淆 ⇒ 注入 dex 明文
+# （strings 可读 /v1/auth/grant、服务器 IP、AuthClient 等）。改走统一入口：
+#   组件类/native FindClass 目标留原名；业务类改名到 com/starry/magic/o/**（仍在
+#   com/starry 子树内，注入脚本 `cp -R com/starry` 拷得到）；-dontshrink 保按名入口。
+OBF="$NIXIANG_ROOT/04_scripts/_common/obfuscate_menu_dex.sh"
+[ -f "$OBF" ] || die "缺混淆脚本: $OBF"
+if ! bash "$OBF" "$(w "$STAGE_ROOT/classes.jar")" "$(w "$STAGE_ROOT/out/classes.dex")" \
+      > "$STAGE_ROOT/r8.log" 2>&1; then
+  echo "--- R8 失败（尾部 40 行）---" >&2
+  tail -40 "$STAGE_ROOT/r8.log" >&2
+  die "R8 混淆失败"
 fi
-[ -f "$STAGE_ROOT/out/classes.dex" ] || die "d8 未产出 classes.dex"
+[ -f "$STAGE_ROOT/out/classes.dex" ] || die "R8 未产出 classes.dex"
 
 echo "[5/5] 字节自检 + 发布"
 mkdir -p "$TPL_DIR"

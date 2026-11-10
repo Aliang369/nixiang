@@ -33,7 +33,7 @@ dump_binge_shell_mem_device.sh	sh	3186	On-device helper. Args: PID DEV_DIR	used	
 dump_es2_ext.sh	sh	1193	es2 补充 dump 宿主端。Usage: dump_es2_ext.sh PACKAGE OUTDIR （用 ANDROID_SERIAL 选设备）	used	2
 dump_es2_ext_device.sh	sh	2781	es2 补充 dump：壳载体 so 全段 + il2cpp/xlua 数据段 + 全部 anon .bss + rwx	used	5
 ensure_starry_device_id_seed.sh	sh	2524	全游戏卡密：统一 / 补齐 device_id 种子到全局可读位置。	used	32
-env.sh	sh	9453	nixiang shared env — source from other _common scripts	used	215
+env.sh	sh	10180	nixiang shared env — source from other _common scripts	used	219
 env_deps.sh	sh	19329	env_deps.sh — 环境依赖体检（双机：mac / win Git Bash）	used	22
 evidence.sh	sh	5039	evidence.sh — 参数化取证（把「现场 logcat 检索」收敛成一条命令）	used	9
 extract_il2cpp_preambles.py	py	12955	(无描述)	used	10
@@ -68,6 +68,7 @@ menu_tpl_gate.sh	sh	6874	menu_tpl_gate.sh — 菜单模板/dex 新鲜度门禁�
 merge_gradle_wrapper.py	py	3527	把 gradle 发行版里的分片 jar 合并成项目用的 gradle-wrapper.jar。	used	2
 new_hypothesis.sh	sh	3862	new_hypothesis.sh — 「假设预注册」脚手架（改动前先写下「怎么算对」）	used	6
 next_free_dex.py	py	885	Print the smallest unused classesN.dex index for an APK.	used	22
+obfuscate_menu_dex.sh	sh	7595	obfuscate_menu_dex.sh — 给注入用 menu dex 做 R8 混淆	used	16
 pipeline_record_cleanup.py	py	10384	Record already-performed cleanup in a game's pipeline.json.	used	41
 portable_users_path_migrate.py	py	8239	-*- coding: utf-8 -*-	used	2
 post_install_precheck.sh	sh	20093	post_install_precheck.sh — 装机预检闸门（装机后运行时证据关）	used	155

@@ -51,7 +51,7 @@ struct State {
     int      ticket_ok;   // ① 票验签通过（真票才置 1）
     uint8_t  key[32];     // ② 票派生密钥 K（全零 = 未授权）
     uint8_t  canary[8];   // ② K 的自检指纹（apply 时算，live 时重算比对）
-    uint32_t mask;        // per-feature 位掩码（bit i = 功能 i）
+    uint64_t mask;        // per-feature 位掩码（bit i = 功能 i；2026-11-10 由 32 位扩到 64 位）
     int      integ;       // ③ 完整性：1 通过 / 0 失败 / -1 还没检
 };
 
@@ -125,7 +125,7 @@ static inline void sg_derive_key(const char* sig_hex, const char* device,
 /** 完整性判据（③）。P1-6 由 SgIntegrity 模块写入；未接该模块的构建不过此判据。 */
 static inline void set_integrity(int v) { s_state.integ = v; }
 static inline int  integrity() { return s_state.integ; }
-static inline uint32_t feature_mask() { return s_state.mask; }
+static inline uint64_t feature_mask() { return s_state.mask; }
 
 /** 票派生密钥（32B，未验证票时为全 0）。
  *  P2-2：功能载荷用它派生解密密钥 —— 签不出票就拿不到正确密钥，只能落到诱饵层。 */
@@ -175,11 +175,14 @@ static inline bool live() {
     return true;
 }
 
-/** 功能级门禁：第 idx 位是否被这张票授权（idx 0..31） */
+/** 功能级门禁：第 idx 位是否被这张票授权（idx 0..63）
+ *  2026-11-10：掩码由 32 位扩到 64 位。原上限 31 与 `g_features[64]` 不一致 ——
+ *  功能数 >32 的游戏，第 33 项起永远拿不到授权（表现为"点了没反应"，易被误判成 hook 写错）。
+ *  存量 32 位票被老包 `(uint32_t)strtoul` 截断后仍是前 32 位全开 ⇒ 兼容。 */
 static inline bool feat_ok(int idx) {
-    if (idx < 0 || idx > 31) return false;
+    if (idx < 0 || idx > 63) return false;
     if (!live()) return false;
-    return ((s_state.mask >> idx) & 1u) != 0;
+    return ((s_state.mask >> idx) & 1ull) != 0;
 }
 
 /** 应用一张票：成功返回 1 并激活会话；失败返回 0 且**不清**已有会话（续票语义）。 */
@@ -246,16 +249,18 @@ static inline int apply(const char* ticket, const char* device, const char* game
     int64_t now = (int64_t)time(nullptr);
     if (now > exp + 45) return 0;          /* 首次验签不接受过期票 */
 
-    uint32_t mask;
+    uint64_t mask;
     if (is_v2) {
         if (strcmp(ver, is_v3 ? "3" : "2") != 0) return 0;
-        mask = (uint32_t)strtoul(f5, nullptr, 10);
+        /* 2026-11-10：掩码 32→64 位。用 strtoull 且 bit31 不参与符号位问题。
+           存量 32 位票（服务端旧版签的）解析出来仍是 0..0xFFFFFFFF，语义不变。 */
+        mask = (uint64_t)strtoull(f5, nullptr, 10);
         if (mask == 0) return 0;           /* 掩码 0 = 后台停用，不放行 */
         if (is_v3 && (!f6 || !f7 || strlen(f7) != 64)) return 0;
     } else {
         if (strcmp(ver, "1") != 0) return 0;
         if (f5[0] == '0') return 0;        /* 旧票：menu=0 停用 */
-        mask = 0xffffffffu;                /* 旧票无掩码 → 视作全开（兼容） */
+        mask = 0xffffffffull;              /* 旧票无掩码 → 视作全开（兼容；仍只覆盖 32 位） */
     }
 
     /* ---- 激活：三条判据的原料一次写全 ---- */

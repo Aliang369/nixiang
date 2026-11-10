@@ -20,7 +20,10 @@ GRANT_VERSION_V2 = "2"
 
 # ---------------- v2：非对称票（P1，2026-10-27 加固） ----------------
 # 私钥只在服务器 / 出包机；客户端 so 里只有公钥 ⇒ 破解者签不出票。
-FEAT_MASK_ALL = 0xFFFFFFFF          # 客户端只认前 32 位（SgAuth.h: feat_ok 的 idx 0..31）
+# 2026-11-10：客户端掩码由 32 位扩到 64 位（SgAuth.h feat_ok idx 0..63，与 g_features[64] 对齐）。
+# 兼容性：全开 64 位在**老包**里经 (uint32_t)strtoul 截断后仍是 0xFFFFFFFF ⇒ 前 32 位照常全开，
+# 不会让老包失效；只有"仅开高位"的票在老包里会被读成 0（老包本就没有那些功能，可接受）。
+FEAT_MASK_ALL = 0xFFFFFFFFFFFFFFFF
 
 log = logging.getLogger(__name__)
 

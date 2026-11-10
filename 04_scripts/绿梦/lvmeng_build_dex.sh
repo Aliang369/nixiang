@@ -152,13 +152,17 @@ if [ $? -ne 0 ]; then
 fi
 echo "      class 文件 $(find "$STAGE_ROOT/classes" -name '*.class' | wc -l | tr -d ' ') 个"
 
-echo "[4/6] jar + d8（min-api ${MIN_API}）"
+echo "[4/6] jar + R8 混淆（min-api ${MIN_API}）"
 "$JAR_BIN" cf "$(w "$STAGE_ROOT/classes.jar")" -C "$(w "$STAGE_ROOT/classes")" . \
   || die "jar 失败"
-"$D8" --min-api "$MIN_API" --release --lib "$(w "$AJAR")" \
-  --output "$(w "$STAGE_ROOT/out")" "$(w "$STAGE_ROOT/classes.jar")" \
-  > "$STAGE_ROOT/d8.log" 2>&1 || { tail -20 "$STAGE_ROOT/d8.log" >&2; die "d8 失败"; }
-[ -f "$STAGE_ROOT/out/classes.dex" ] || die "d8 未产出 classes.dex"
+# 2026-11-10：原先裸 `d8 --release` 只去调试信息、不混淆 ⇒ 注入 dex 明文。
+# 改走统一入口 obfuscate_menu_dex.sh：组件类留原名（Manifest/FindClass 按名找），
+# 业务类改名到 com/starry/magic/o/**（仍在 com/starry 子树内，`cp -R com/starry` 拷得到）。
+OBF="$NIXIANG_ROOT/04_scripts/_common/obfuscate_menu_dex.sh"
+[ -f "$OBF" ] || die "缺混淆脚本: $OBF"
+bash "$OBF" "$(w "$STAGE_ROOT/classes.jar")" "$(w "$STAGE_ROOT/out/classes.dex")" \
+  > "$STAGE_ROOT/r8.log" 2>&1 || { tail -20 "$STAGE_ROOT/r8.log" >&2; die "R8 混淆失败"; }
+[ -f "$STAGE_ROOT/out/classes.dex" ] || die "R8 未产出 classes.dex"
 EXTRA="$(ls "$STAGE_ROOT/out" | grep -c 'classes[0-9]*\.dex' || true)"
 [ "$EXTRA" = "1" ] || die "d8 产出多个 dex（$EXTRA 个）—— 需要调 --min-api 或拆 dex"
 

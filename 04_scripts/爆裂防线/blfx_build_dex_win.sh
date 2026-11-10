@@ -145,17 +145,20 @@ echo "[3/5] 打包 class → jar"
 "$JAR_BIN" cf "$(winpath "$STAGE_ROOT/classes.jar")" -C "$(winpath "$STAGE_ROOT/classes")" . \
   > "$STAGE_ROOT/jar.log" 2>&1 || { tail -20 "$STAGE_ROOT/jar.log" >&2; die "jar 失败"; }
 
-echo "[4/5] d8 → dex（min-api ${MIN_API}）"
+echo "[4/5] R8 混淆 → dex（min-api ${MIN_API}）"
+# 2026-11-10：原先裸 `d8 --release` 只去调试信息、不混淆 ⇒ 注入 dex 明文。
+# 改走统一入口 obfuscate_menu_dex.sh（组件类留原名 / 业务类改名到 com/starry/magic/o/**）。
+OBF="$NIXIANG_ROOT/04_scripts/_common/obfuscate_menu_dex.sh"
+[ -f "$OBF" ] || die "缺混淆脚本: $OBF"
 DRC=0
-"$D8" --min-api "$MIN_API" --release --lib "$(winpath "$AJAR")" \
-  --output "$(winpath "$STAGE_ROOT/out")" "$(winpath "$STAGE_ROOT/classes.jar")" \
-  > "$STAGE_ROOT/d8.log" 2>&1 || DRC=$?
+bash "$OBF" "$(winpath "$STAGE_ROOT/classes.jar")" "$(winpath "$STAGE_ROOT/out/classes.dex")" \
+  > "$STAGE_ROOT/r8.log" 2>&1 || DRC=$?
 if [ "$DRC" -ne 0 ]; then
-  echo "--- d8 失败（尾部 40 行）---" >&2
-  tail -40 "$STAGE_ROOT/d8.log" >&2
-  die "d8 rc=$DRC"
+  echo "--- R8 失败（尾部 40 行）---" >&2
+  tail -40 "$STAGE_ROOT/r8.log" >&2
+  die "R8 混淆失败 rc=$DRC"
 fi
-[ -f "$STAGE_ROOT/out/classes.dex" ] || die "d8 未产出 classes.dex"
+[ -f "$STAGE_ROOT/out/classes.dex" ] || die "R8 未产出 classes.dex"
 
 echo "[5/5] 字节自检 + 发布 → $SURGICAL_DIR/$DEX_NAME"
 mkdir -p "$SURGICAL_DIR"

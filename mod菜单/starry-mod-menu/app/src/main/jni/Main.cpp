@@ -469,7 +469,7 @@ static bool apply_grant_utf8(const char* grant, const char* device, const char* 
     if (!sgauth::apply(grant, device, game)) return false;
     g_rt_ok = true;       // 旧标志位保留：只作诱饵装饰，放行只看 sgauth::live()
     g_authorized = true;  // 同步诱饵开关，避免「只改诱饵就能开」的错觉
-    LOGI("[V2] s=1 m=%x", (unsigned)sgauth::feature_mask());
+    LOGI("[V2] s=1 m=%llx", (unsigned long long)sgauth::feature_mask());
     return true;
 }
 
@@ -2535,8 +2535,11 @@ static void mb_nativeSetValue(JNIEnv* env, jclass clazz,
         jint featNum, jstring featName, jint value) {
 
     const char* name = env->GetStringUTFChars(featName, nullptr);
-    if (!session_live()) {
-        LOGW("[数值] 拒绝 #%d（未授权）", featNum);
+    // P1-7（2026-11-10）：判据与 nativeSetFeature 对齐。
+    // 此前只查 session_live() ⇒ 后台把某功能位关掉后，玩家改用该功能的**滑块**照样能改值，
+    // 等于按功能粒度关停在滑块类功能上完全失效。掩码默认全开 ⇒ 现网行为不变。
+    if (!session_live() || !sgauth::feat_ok((int)featNum)) {
+        LOGW("[数值] 拒绝 #%d（未授权/该位未放行）", featNum);
         env->ReleaseStringUTFChars(featName, name);
         return;
     }
@@ -2590,6 +2593,11 @@ static void mb_nativeSetValue(JNIEnv* env, jclass clazz,
 // ===== nativeSetLongValue =====
 static void mb_nativeSetLongValue(JNIEnv* env, jclass clazz,
         jint featNum, jstring featName, jlong value) {
+    // P1-7（2026-11-10）：本入口此前**连 session_live 都没查**，是唯一完全无门禁的写入口。
+    if (!session_live() || !sgauth::feat_ok((int)featNum)) {
+        LOGW("[长整] 拒绝 #%d（未授权/该位未放行）", featNum);
+        return;
+    }
     LOGI("[长整] #%d = %lld", featNum, (long long)value);
 }
 
@@ -2600,8 +2608,9 @@ static void mb_nativeSetText(JNIEnv* env, jclass clazz,
     const char* name = env->GetStringUTFChars(featName, nullptr);
     const char* txt  = env->GetStringUTFChars(text, nullptr);
 
-    if (!session_live()) {
-        LOGW("[文本] 拒绝 #%d（未授权）", featNum);
+    // P1-7（2026-11-10）：文本框此前只查会话，不查功能位。
+    if (!session_live() || !sgauth::feat_ok((int)featNum)) {
+        LOGW("[文本] 拒绝 #%d（未授权/该位未放行）", featNum);
         env->ReleaseStringUTFChars(featName, name);
         env->ReleaseStringUTFChars(text, txt);
         return;
@@ -2624,8 +2633,10 @@ static void mb_nativeExecButton(JNIEnv* env, jclass clazz,
         jint featNum, jstring featName) {
 
     const char* name = env->GetStringUTFChars(featName, nullptr);
-    if (!session_live()) {
-        LOGW("[按钮] 拒绝 #%d %s（未授权）", featNum, name ? name : "");
+    // P1-7（2026-11-10）：判据与 nativeSetFeature 对齐。
+    // 按钮恰恰是「一键满级/一键解锁」这类最有价值的功能形态，按功能位关停必须同样生效。
+    if (!session_live() || !sgauth::feat_ok((int)featNum)) {
+        LOGW("[按钮] 拒绝 #%d %s（未授权/该位未放行）", featNum, name ? name : "");
         env->ReleaseStringUTFChars(featName, name);
         return;
     }

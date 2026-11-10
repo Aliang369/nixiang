@@ -138,6 +138,22 @@ else
   export NIXIANG_APKSIGNER="$(command -v apksigner || true)"
 fi
 
+# ===== R8（注入 dex 混淆用，2026-11-10）=====
+# build-tools 里只有 d8；`d8 --release` 只去调试信息、**不做混淆**，混淆引擎在
+# cmdline-tools 的 r8.jar 里。11 个 `*_build_dex.sh` 都要用，故解析一次放这里，
+# 各脚本读 NIXIANG_R8_JAR，不要各写一份探测逻辑。
+NIXIANG_R8_JAR=""
+_sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+[ -n "$_sdk_root" ] || _sdk_root="$HOME/Library/Android/sdk"
+[ -d "$_sdk_root" ] || _sdk_root="${LOCALAPPDATA:-$HOME}/Android/Sdk"
+for _r8 in \
+  "$_sdk_root/cmdline-tools/latest/lib/r8.jar" \
+  "$_sdk_root"/cmdline-tools/*/lib/r8.jar; do
+  [ -f "$_r8" ] && { NIXIANG_R8_JAR="$_r8"; break; }
+done
+export NIXIANG_R8_JAR
+unset _sdk_root _r8
+
 export NIXIANG_UBER_SIGNER="$NIXIANG_ROOT/01_tools/uber-apk-signer.jar"
 
 # Mod-menu / Gradle builds need JDK 17
