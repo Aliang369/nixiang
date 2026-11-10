@@ -57,6 +57,24 @@
 # ---- 2. native 按类名找进来（so 里 OBFUSCATE 写死，不能改） ----
 -keep class com.starry.magic.bridge.ModBridge { *; }
 
+# ---- 2b. 单游戏 SPI：框架用 Class.forName("...games.<game_id>.GameHookImpl") 反射装载 ----
+#      2026-11-11 新增。这两个包名/类名是「按约定名找进来」的又一类，必须保原名保结构，
+#      否则改名后 GameHooks.resolve() 永远 ClassNotFound ⇒ 该游戏的 Java 侧补丁静默不生效。
+#      注意：*只* 保留类名与无参构造，方法体照常可混淆（框架只通过 GameHook 接口调）。
+-keep class com.starry.magic.core.GameHook { *; }
+-keep class com.starry.magic.core.GameHooks { *; }
+-keep class com.starry.magic.core.legacy.** { *; }
+# ★ 这两个类**只能**按原名保留：框架用 Class.forName("<全名>") 字符串找它们，
+#   改名后字符串对不上 ⇒ so 加载链路整条断（2026-11-11 实测：改成 allowobfuscation 后
+#   dex 里连 `com/starry/magic/core/NativeLinker` 都搜不到，直接注入即 UnsatisfiedLinkError）。
+-keep class com.starry.magic.core.NativeLinker { *; }
+-keep class com.starry.magic.core.NativeLoader { *; }
+-keep,allowobfuscation class com.starry.magic.core.** { *; }
+-keepnames class com.starry.magic.games.** { *; }
+-keepclassmembers class com.starry.magic.games.** {
+    <init>();
+}
+
 # ---- 3. 反射 / 序列化 / JS 桥 ----
 -keepattributes JavascriptInterface
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod

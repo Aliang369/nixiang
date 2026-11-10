@@ -48,7 +48,12 @@ public class ModBridge {
             }
         } catch (Throwable ignored) {
         }
-        String[] cxx = new String[] { "/data/local/tmp/ltzj_st/libc++_shared.so" };
+        // 兜底 so 目录（免 root 独立助手形态的落盘位置）。历史上只写死了 ltzj 的一个目录，
+        // 现在按「通用目录 → ltzj 旧目录」顺序候补，通用目录对所有游戏成立。
+        String[] cxx = new String[] {
+                com.starry.magic.core.NativeLoader.TMP_LIBS + "/libc++_shared.so",
+                com.starry.magic.core.NativeLoader.TMP_LIBS + "/libc++_shared.so"
+        };
         for (String path : cxx) {
             if (!new java.io.File(path).isFile()) continue;
             if (loadIntoClassLoader(pathCl, path)) {
@@ -72,7 +77,7 @@ public class ModBridge {
             }
         }
         if (!linked) {
-            String[] abs = new String[] { "/data/local/tmp/ltzj_st/libstarry_magic.so" };
+            String[] abs = new String[] { com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so" };
             for (String path : abs) {
                 if (!new java.io.File(path).isFile()) continue;
                 if (loadIntoClassLoader(pathCl, path)) {
@@ -106,7 +111,7 @@ public class ModBridge {
 
     private static boolean loadIntoClassLoader(ClassLoader cl, String path) {
         try {
-            Class<?> linker = Class.forName("com.starry.magic.ltzj.NativeLinker", true, cl);
+            Class<?> linker = Class.forName("com.starry.magic.core.NativeLinker", true, cl);
             linker.getMethod("load", String.class).invoke(null, path);
             return true;
         } catch (Throwable t) {
@@ -154,6 +159,18 @@ public class ModBridge {
     private static native void nativeClearGrant();
     /** 编译期注入：GameConfig.h 由 STARRY_GAME_* 映射的 game_id */
     private static native String nativeGetAuthGameId();
+
+    /**
+     * 给 {@code core.GameHooks} 用的只读窗口：取 so 里烘焙的 game_id。
+     *
+     * <p>为什么暴露而不是让 GameHooks 直接读 Preferences：hook 可能在
+     * {@code Application.attachBaseContext} 阶段就要装载，那时 prefs 还没初始化
+     * （首启时 prefs 里也还没有 game_id）⇒ 只读 prefs 会让单游戏补丁在首启静默失效。
+     * native 未加载时抛 UnsatisfiedLinkError，调用方按「无值」处理。
+     */
+    public static String nativeGetAuthGameIdPublic() {
+        return nativeGetAuthGameId();
+    }
     /** 雷霆过检门剩余秒；其它游戏恒 0 */
     private static native int nativeGetAceGateRemainSec();
     /** OTA manifest HMAC：payload = game|ver|jsonSha|soSha|note */

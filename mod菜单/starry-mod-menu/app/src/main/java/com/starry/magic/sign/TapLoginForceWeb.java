@@ -62,7 +62,19 @@ public final class TapLoginForceWeb {
             "com.taptap.sdk.login.internal.handlers.web.WebLoginFragment";
     private static final String OLD_FRAGMENT_TAG = "login_fragment";
 
-    /** 包名白名单：只对这些游戏的 Tap 登录强制网页，其他星空包游戏不受影响。 */
+    /** 包名白名单：只对这些游戏的 Tap 登录强制网页，其他星空包游戏不受影响。
+     *
+     *  ★2026-11-11 定位变更：本类已从「框架生命周期无条件调用」降级为
+     *    **存量兼容垫片**（见 {@code core/legacy/LegacyTapTapGames}）。框架不再直接调它，
+     *    只有 {@code LegacyTapTapGames} 清单里的 game_id 才会走到这里。
+     *
+     *  ★铁律：本白名单**只减不增**。
+     *    新游戏要把登录强制成内嵌网页 → 在自己的 {@code games/<id>/GameHookImpl} 里
+     *    调 {@link #onPreCreated}/{@link #onCreated}，**不要**往这里加包名。
+     *    条目数由 {@code 04_scripts/_common/check_framework_isolation.sh} 按基线校验，变多即 FAIL。
+     *    迁移完一个游戏就从这里删掉对应行。
+     *
+     *  todo(框架收口)：本类最终应整体删除，逻辑分散到各游戏的 GameHookImpl 里。 */
     private static final java.util.Set<String> PKG_WHITELIST =
             new java.util.HashSet<>(java.util.Arrays.asList(
                     // 绝区零（TapTap 渠道 3.2.0）：包内 TapSDK 为 loginHandlers 旧路径

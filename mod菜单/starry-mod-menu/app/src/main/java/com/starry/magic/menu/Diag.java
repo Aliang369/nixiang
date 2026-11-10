@@ -172,7 +172,7 @@ public final class Diag {
         s.now = InjectJournal.fmt(System.currentTimeMillis());
         s.device = Build.MANUFACTURER + " " + Build.MODEL + " · Android "
                 + Build.VERSION.RELEASE + " · " + Build.DISPLAY;
-        s.gamePkg = ModTarget.GAME_PKG;
+        s.gamePkg = ModTarget.gamePackage(ctx);
         PackageManager pm = ctx.getPackageManager();
         try {
             PackageInfo pi = pm.getPackageInfo(s.gamePkg, 0);

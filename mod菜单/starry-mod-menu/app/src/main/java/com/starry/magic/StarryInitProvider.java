@@ -10,9 +10,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.starry.magic.core.GameHook;
+import com.starry.magic.core.GameHooks;
 import com.starry.magic.menu.MenuService;
 import com.starry.magic.ota.StarryNativeLoad;
-import com.starry.magic.sign.TapLoginForceWeb;
 
 /**
  * 星光无 Application 替换注入：终末地（ACE/TSS）实测 Manifest 的
@@ -54,7 +55,6 @@ public class StarryInitProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        patchPluginHelperApp(getContext());
         try { System.loadLibrary("luster"); Log.i(TAG, "nx: luster preloaded"); }
         catch (Throwable t) { Log.w(TAG, "nx: luster preload failed", t); }
         try {
@@ -86,21 +86,23 @@ public class StarryInitProvider extends ContentProvider {
 
                 @Override
                 public void onActivityPreCreated(android.app.Activity a, android.os.Bundle s) {
-                    // TapTap 强制内嵌网页登录：onCreate 前 handler 遍历未发生，窗口正好
+                    // 单游戏时机补丁：onCreate 前 handler 遍历未发生，窗口正好
                     // ★r24 防闪退：生命周期回调裸调用 ⇒ 任何异常都是「打开游戏闪退」，逐个兜底
+                    GameHook h = GameHooks.get();
                     try {
-                        TapLoginForceWeb.onPreCreated(a);
+                        h.onActivityPreCreated(a);
                     } catch (Throwable t) {
-                        Log.e(TAG, "TapLoginForceWeb.onPreCreated failed", t);
+                        Log.e(TAG, "GameHook.onActivityPreCreated failed", t);
                     }
                 }
 
                 @Override
                 public void onActivityCreated(android.app.Activity a, android.os.Bundle s) {
+                    GameHook h = GameHooks.get();
                     try {
-                        TapLoginForceWeb.onCreated(a);
+                        h.onActivityCreated(a);
                     } catch (Throwable t) {
-                        Log.e(TAG, "TapLoginForceWeb.onCreated failed", t);
+                        Log.e(TAG, "GameHook.onActivityCreated failed", t);
                     }
                 }
 
@@ -122,59 +124,4 @@ public class StarryInitProvider extends ContentProvider {
     @Override public Uri insert(Uri uri, ContentValues values) { return null; }
     @Override public int delete(Uri uri, String s, String[] a) { return 0; }
     @Override public int update(Uri uri, ContentValues values, String s, String[] a) { return 0; }
-
-    // 1.0.25 壳：真实 Application 未被创建 ⇒ PluginHelper.app 为 null ⇒ nativeInit 里
-    // CCAppInfo.getBingoAppId → PluginHelper.getAppInfo() 抛 NPE ⇒ 进程 8 s 后静默 exit(0)。
-    // 这里在 Provider 阶段起一个后台线程，等真实 dex 可由 Class.forName 看到后，把 Application 补上。
-    private static void patchPluginHelperApp(final Context ctx) {
-        final Application app = (Application) ctx.getApplicationContext();
-        if (app == null) {
-            return;
-        }
-        // 只对本游戏的 APKSecure 壳生效：别的游戏没有 com.bingo.sdklibs，免得白起一个 ~60 s 重试线程
-        try {
-            if (!"com.fightingstars.games.animal".equals(app.getPackageName())) {
-                return;
-            }
-        } catch (Throwable ignore) {
-            return;
-        }
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                // 壳在 [secure] phase app-ready 之后才把真实 dex 换进 PathClassLoader，因此：
-                // ① 必须用 Application 当前的 ClassLoader 取类（调用方 ClassLoader 是我们注入的 dex，
-                //    看不到壳动态加载的真实 dex）；② 窗口要覆盖首启解密（实测首启到 app-ready 可 > 20 s）。
-                for (int i = 0; i < 400; i++) {
-                    try {
-                        ClassLoader cl = app.getClassLoader();
-                        Class<?> c = null;
-                        if (cl != null) {
-                            try {
-                                c = Class.forName("com.bingo.sdklibs.utils.PluginHelper", false, cl);
-                            } catch (Throwable ignore) { }
-                        }
-                        if (c == null) {
-                            c = Class.forName("com.bingo.sdklibs.utils.PluginHelper");
-                        }
-                        java.lang.reflect.Field f = c.getDeclaredField("app");
-                        f.setAccessible(true);
-                        if (f.get(null) == null) {
-                            c.getMethod("initWithApplication", Application.class).invoke(null, app);
-                            Log.i(TAG, "PluginHelper.app filled at try=" + i + " loader=" + c.getClassLoader());
-                        } else {
-                            Log.i(TAG, "PluginHelper.app already set, skip");
-                        }
-                        return;
-                    } catch (Throwable e) {
-                        // 前 5 s 密集（100 × 50 ms），之后降到 5 Hz，最长 ~60 s
-                        try { Thread.sleep(i < 100 ? 50 : 200); } catch (InterruptedException ignore) { }
-                    }
-                }
-                Log.w(TAG, "PluginHelper.app fill failed after 400 tries");
-            }
-        }, "starry-ph");
-        t.setDaemon(true);
-        t.start();
-    }
 }

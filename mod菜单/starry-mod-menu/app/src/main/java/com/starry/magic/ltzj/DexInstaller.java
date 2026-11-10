@@ -76,7 +76,7 @@ public final class DexInstaller {
         String[] cxx = new String[] {
                 new File(ctx.getFilesDir(), "starry_native/libc++_shared.so").getAbsolutePath(),
                 new File(ctx.getApplicationInfo().nativeLibraryDir, "libc++_shared.so").getAbsolutePath(),
-                "/data/local/tmp/ltzj_st/libc++_shared.so",
+                com.starry.magic.core.NativeLoader.TMP_LIBS + "/libc++_shared.so",
         };
         for (String path : cxx) {
             if (!new File(path).isFile()) continue;
@@ -91,7 +91,7 @@ public final class DexInstaller {
         } else {
             candidates.add(new File(ctx.getFilesDir(), "starry_native/libstarry_magic.so").getAbsolutePath());
             candidates.add(new File(ctx.getApplicationInfo().nativeLibraryDir, "libstarry_magic.so").getAbsolutePath());
-            candidates.add("/data/local/tmp/ltzj_st/libstarry_magic.so");
+            candidates.add(com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so");
         }
         for (String path : candidates) {
             if (!new File(path).isFile()) continue;
@@ -115,7 +115,7 @@ public final class DexInstaller {
     /** 经 PathCL 加载 NativeLinker 再 System.load，避免绑到 DexCL。 */
     static boolean loadInto(ClassLoader pathCl, String path, String tag) {
         try {
-            Class<?> linker = Class.forName("com.starry.magic.ltzj.NativeLinker", true, pathCl);
+            Class<?> linker = Class.forName("com.starry.magic.core.NativeLinker", true, pathCl);
             linker.getMethod("load", String.class).invoke(null, path);
             Log.i(TAG, "System.load " + tag + " ok: " + path);
             return true;

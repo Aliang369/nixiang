@@ -46,8 +46,8 @@ LOCAL_MODULE    := starry_magic
 #   `StarryNativeLoad: loadLibrary starry_magic failed ... cannot locate symbol "__emutls_get_address"`）。
 #   自检：llvm-nm -D --undefined-only <so> | grep emutls（应为空）。
 # --exclude-libs,ALL 符号卫生（libChiy 类事故）：禁止静态库成员符号（Dobby* 等）进动态符号表。
-LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls
-LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls
+LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls -DSG_AUTH_V2_ONLY=1
+LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls -DSG_AUTH_V2_ONLY=1
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
 # FW-13（2026-10-16）：**必须强制保留** Includes/Utils.cpp 里烘焙的 OTA 构建戳。
 #   modern 入口 MainModern.cpp 零引用 kStarryBuildStamp（唯一引用者是 legacy Main.cpp），

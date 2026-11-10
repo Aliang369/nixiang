@@ -29,6 +29,21 @@ import java.util.Set;
 public class Preferences {
 
     private static final String PREFS_NAME = "starry_magic_prefs";
+
+    /**
+     * 离线宽限（秒）—— 客户端本地判定「会话还有效」的窗口。
+     *
+     * <p>必须与服务端 {@code offline_cache_seconds} 同量级：服务端跑 86400 时客户端只给 600，
+     * 会造成「断网 10 分钟后 H5/conch 补丁通道判死、native hook 还活着」的半死状态
+     * （2026-11-11 查出的三处不一致）。
+     *
+     * <p>安全口径不变：本地值永远是**上限**而不是延长依据 —— 真正把功能打开的是
+     * native 的票（{@code sgauth::apply()} 已验签并带 exp+45s 容忍），这里只决定
+     * 「UI 与 JS 通道要不要继续认为自己在线」。夹上限防的是本地篡改，不是防服务端。
+     */
+    private static final int OFFLINE_GRACE_DEFAULT_SEC = 600;
+    /** 本地可接受的最大宽限：1 天（= 服务端默认）。改这里必须同步 auth-server config.py。 */
+    private static final int OFFLINE_GRACE_MAX_SEC = 86400;
     private static final String TAG = "StarryPrefs";
     private static final String KEY_PERSIST_FEATURES = "persist_features";
     private static final String KEY_DEVICE_ID = "auth_device_id";
@@ -781,10 +796,14 @@ public class Preferences {
     public static boolean isAuthSessionValid() {
         with(null);
         long lastOk = sharedPreferences.getLong(KEY_AUTH_LAST_OK, 0L);
-        int cacheSec = sharedPreferences.getInt(KEY_AUTH_CACHE_SEC, 600);
-        if (cacheSec <= 0) cacheSec = 600;
-        // 防篡改：客户端缓存上限 600s
-        if (cacheSec > 600) cacheSec = 600;
+        int cacheSec = sharedPreferences.getInt(KEY_AUTH_CACHE_SEC, OFFLINE_GRACE_DEFAULT_SEC);
+        if (cacheSec <= 0) cacheSec = OFFLINE_GRACE_DEFAULT_SEC;
+        // 防篡改：本地不可信缓存值，上限夹到服务端口径（2026-11-11 修）
+        //   历史：这里与 saveAuthSession/saveNetworkBootstrap 三处都硬夹 600 s，
+        //   而服务端 offline_cache_seconds 默认 86400 —— 结果断网 10 分钟后
+        //   Java 侧 isFeaturesAllowed 判死，native 会话却还活着 ⇒
+        //   走 H5/conch 补丁通道的游戏「一半功能突然不能用」，走 native hook 的没事。
+        if (cacheSec > OFFLINE_GRACE_MAX_SEC) cacheSec = OFFLINE_GRACE_MAX_SEC;
         long now = System.currentTimeMillis();
         boolean within = lastOk > 0 && (now - lastOk) <= (cacheSec * 1000L);
         if (!within) return false;
@@ -817,8 +836,8 @@ public class Preferences {
     /** 关闭卡密模式：记录最近一次成功的联网配置拉取 */
     public static void saveNetworkBootstrap(int cacheSec, String bootstrapJson, String grant) {
         with(null);
-        int sec = cacheSec > 0 ? cacheSec : 600;
-        if (sec > 600) sec = 600;
+        int sec = cacheSec > 0 ? cacheSec : OFFLINE_GRACE_DEFAULT_SEC;
+        if (sec > OFFLINE_GRACE_MAX_SEC) sec = OFFLINE_GRACE_MAX_SEC;
         long nowMs = System.currentTimeMillis();
         SharedPreferences.Editor ed = sharedPreferences.edit()
                 .putBoolean(KEY_CARD_AUTH_REQUIRED, false)
@@ -898,8 +917,8 @@ public class Preferences {
     public static void saveAuthSession(String token, String cardKey, long lastOkAt, int cacheSec,
                                        String expireAt, String bootstrapJson, String grant) {
         with(null);
-        int sec = cacheSec > 0 ? cacheSec : 600;
-        if (sec > 600) sec = 600;
+        int sec = cacheSec > 0 ? cacheSec : OFFLINE_GRACE_DEFAULT_SEC;
+        if (sec > OFFLINE_GRACE_MAX_SEC) sec = OFFLINE_GRACE_MAX_SEC;
         SharedPreferences.Editor ed = sharedPreferences.edit()
                 .putBoolean(KEY_CARD_AUTH_REQUIRED, true)
                 .putString(KEY_AUTH_TOKEN, token == null ? "" : token)
@@ -1002,7 +1021,7 @@ public class Preferences {
             obj.put("token", sharedPreferences.getString(KEY_AUTH_TOKEN, ""));
             obj.put("card_key", sharedPreferences.getString(KEY_AUTH_CARD, ""));
             obj.put("last_ok_at", sharedPreferences.getLong(KEY_AUTH_LAST_OK, 0L));
-            obj.put("cache_sec", sharedPreferences.getInt(KEY_AUTH_CACHE_SEC, 600));
+            obj.put("cache_sec", sharedPreferences.getInt(KEY_AUTH_CACHE_SEC, OFFLINE_GRACE_DEFAULT_SEC));
             obj.put("expire_at", sharedPreferences.getString(KEY_AUTH_EXPIRE, ""));
             obj.put("card_auth_enabled", isCardAuthRequired());
             obj.put("menu_enabled", isMenuEnabled());

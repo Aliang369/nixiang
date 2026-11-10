@@ -25,6 +25,49 @@ GRANT_VERSION_V2 = "2"
 # 不会让老包失效；只有"仅开高位"的票在老包里会被读成 0（老包本就没有那些功能，可接受）。
 FEAT_MASK_ALL = 0xFFFFFFFFFFFFFFFF
 
+
+def compute_feat_mask(db, game_id: str, *, menu_enabled: bool = True) -> int:
+    """按后台 `feature_flags.enabled` 逐位算掩码（2026-11-11 起）。
+
+    <h3>为什么改</h3>
+    此前所有签发点都传 `FEAT_MASK_ALL if menu_enabled else 0` —— 管理端「功能开关」
+    只影响客户端 UI 显隐（`NativeMenuController.enforceServerFeatureFlags` 把行置灰），
+    <b>从不下发到掩码</b>。于是「后台关掉某功能」对已经拿到票的进程完全无效：
+    `feat_ok()` 仍返回 true，玩家改回开关照样生效。这是把 UI 开关当安全手段的典型误用。
+
+    <h3>兼容口径（关键）</h3>
+    逐位计算只对「后台确实有记录且被显式停用」的位清 0；**其余位一律保持 1**。
+    这样：
+    - 存量游戏（`feature_flags` 全是 enabled=true）→ 掩码仍是全 1，现网行为不变；
+    - 新游戏后台还没建功能记录 → 同上；
+    - 只有管理员主动停用某位 → 该位变 0，`feat_ok(i)` 拒绝，`nativeSetFeature` 也拒绝
+      （`MainModern.cpp` 的开关/滑块/按钮/文本四条入口都查 `feat_ok`）。
+    - `menu_enabled=false` → 整票掩码 0，客户端 `apply()` 拒绝（沿用原语义）。
+
+    老包（32 位截断）不受影响：只有 bit ≥ 32 被停用时它们才「看不见」这个限制，
+    而那些位在老包里本来就没有功能。
+    """
+    if not menu_enabled:
+        return 0
+    try:
+        from ..models import FeatureFlag  # 延迟导入，避免 models ↔ services 循环
+        rows = (
+            db.query(FeatureFlag)
+            .filter(FeatureFlag.game_id == game_id)
+            .all()
+        )
+    except Exception:  # noqa: BLE001
+        log.warning("compute_feat_mask 查询失败（%s）：退回全开", game_id, exc_info=True)
+        return FEAT_MASK_ALL
+    mask = FEAT_MASK_ALL
+    for r in rows:
+        n = int(r.feat_num)
+        if n < 0 or n > 63:
+            continue
+        if not bool(r.enabled):
+            mask &= ~(1 << n)
+    return mask & FEAT_MASK_ALL
+
 log = logging.getLogger(__name__)
 
 

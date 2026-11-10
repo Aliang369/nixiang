@@ -95,8 +95,8 @@ public class MenuService extends Service {
         } catch (Throwable ignored) {
         }
         String[] cxx = filesNative != null
-                ? new String[] { filesNative + "/libc++_shared.so", "/data/local/tmp/ltzj_st/libc++_shared.so" }
-                : new String[] { "/data/local/tmp/ltzj_st/libc++_shared.so" };
+                ? new String[] { filesNative + "/libc++_shared.so", com.starry.magic.core.NativeLoader.TMP_LIBS + "/libc++_shared.so" }
+                : new String[] { com.starry.magic.core.NativeLoader.TMP_LIBS + "/libc++_shared.so" };
         for (String path : cxx) {
             if (!new java.io.File(path).isFile()) continue;
             if (loadIntoClassLoader(pathCl, path)) {
@@ -122,8 +122,8 @@ public class MenuService extends Service {
         } catch (Throwable ignored) {
         }
         String[] abs = filesNative != null
-                ? new String[] { filesNative + "/libstarry_magic.so", "/data/local/tmp/ltzj_st/libstarry_magic.so" }
-                : new String[] { "/data/local/tmp/ltzj_st/libstarry_magic.so" };
+                ? new String[] { filesNative + "/libstarry_magic.so", com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so" }
+                : new String[] { com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so" };
         for (String path : abs) {
             if (!new java.io.File(path).isFile()) continue;
             if (loadIntoClassLoader(pathCl, path)) {
@@ -153,7 +153,7 @@ public class MenuService extends Service {
 
     private static boolean loadIntoClassLoader(ClassLoader cl, String path) {
         try {
-            Class<?> linker = Class.forName("com.starry.magic.ltzj.NativeLinker", true, cl);
+            Class<?> linker = Class.forName("com.starry.magic.core.NativeLinker", true, cl);
             linker.getMethod("load", String.class).invoke(null, path);
             return true;
         } catch (Throwable t) {
@@ -182,14 +182,15 @@ public class MenuService extends Service {
                 return false;
             }
             String pkg = ctx.getPackageName();
-            // 双保险：两个包名被组装脚本改成一样时（例如游戏本身就叫 com.starry.magic），
-            // 不能把游戏进程误判成独立助手 —— 那会让游戏内的菜单丢掉宿主、只剩悬浮窗。
-            if (ModTarget.HELPER_PKG.equals(ModTarget.GAME_PKG)) {
-                Log.w(TAG, "isStandaloneMode: HELPER_PKG == GAME_PKG ("
-                        + ModTarget.GAME_PKG + "), 判定为注入形态");
+            // 独立助手形态 = 自身包名就是 HELPER_PKG，且它与目标游戏包名不同。
+            // 目标包名现由运行时解析（ModTarget.gamePackage），不再写死具体游戏。
+            String gamePkg = ModTarget.gamePackage(ctx);
+            if (ModTarget.HELPER_PKG.equals(gamePkg)) {
+                Log.w(TAG, "isStandaloneMode: 目标包名 == HELPER_PKG ("
+                        + gamePkg + "), 判定为注入形态");
                 return false;
             }
-            return ModTarget.HELPER_PKG.equals(pkg) && !ModTarget.GAME_PKG.equals(pkg);
+            return ModTarget.HELPER_PKG.equals(pkg) && !gamePkg.isEmpty() && !gamePkg.equals(pkg);
         } catch (Throwable t) {
             return false;
         }
@@ -657,7 +658,7 @@ public class MenuService extends Service {
         }
         if (standalone()) {
             Log.i(TAG, "standalone overlay mode (pkg=" + ModTarget.HELPER_PKG
-                    + ", target=" + ModTarget.GAME_PKG + ")");
+                    + ", target=" + ModTarget.gamePackage(this) + ")");
             mainHandler.postDelayed(standaloneAttachRunnable, 1500L);
         }
         mainHandler.postDelayed(heartbeatRunnable, HEARTBEAT_INTERVAL_MS);

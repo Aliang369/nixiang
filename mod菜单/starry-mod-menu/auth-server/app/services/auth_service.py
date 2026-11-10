@@ -25,7 +25,7 @@ from ..models import (
 )
 from ..security import add_duration, utcnow
 from .grant_service import (mint_grant, mint_grant_v2, mint_grant_v3,
-                            FEAT_MASK_ALL)
+                            FEAT_MASK_ALL, compute_feat_mask)
 
 
 def _gen_key(prefix: str = "SG", length: int = 16) -> str:
@@ -441,14 +441,14 @@ def login_card(
         device_id=device_id,
         game_id=game_id,
         offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
         token=token,
     )
     grant3 = mint_grant_v3(
         device_id=device_id,
         game_id=game_id,
         offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
         token=None,
     ) if 'mint_grant_v3' in globals() else None
     return {
@@ -620,14 +620,14 @@ def heartbeat(
         device_id=device_id,
         game_id=game_id,
         offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
         token=session.token,
     )
     grant3 = mint_grant_v3(
         device_id=device_id,
         game_id=game_id,
         offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
         token=None,
     ) if 'mint_grant_v3' in globals() else None
     return {
@@ -840,7 +840,7 @@ def bootstrap_with_grant(
                 device_id=did,
                 game_id=game_id,
                 offline_cache_seconds=int(boot.get("offline_cache_seconds") or 180),
-                feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+                feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
                 token=None,
             )
             if _g2:
@@ -849,7 +849,7 @@ def bootstrap_with_grant(
                 device_id=did,
                 game_id=game_id,
                 offline_cache_seconds=int(boot.get("offline_cache_seconds") or 180),
-                feat_mask=(FEAT_MASK_ALL if bool(boot.get("menu_enabled", True)) else 0),
+                feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
                 token=None,
             )
             if _g3:

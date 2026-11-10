@@ -459,6 +459,23 @@ fi
 fi
 
 env_rc=0
+# ---- 框架隔离门禁（2026-11-11 起，每次 preflight 都跑）----
+#   判据唯一正文：mod菜单/starry-mod-menu/app/src/main/java/com/starry/magic/core/GameHook.java
+#   为什么放在这里而不是"改到才跑"：框架泄漏是**慢性**的 —— 某款游戏改一行共用类，
+#   一年后没人记得。全量跑的成本只有一次 find+grep，值得。
+if [ -f "$SCRIPT_DIR/check_framework_isolation.sh" ]; then
+  echo
+  echo "── 框架隔离门禁 ──"
+  iso_out=$(bash "$SCRIPT_DIR/check_framework_isolation.sh" 2>&1); iso_rc=$?
+  if [ "$iso_rc" -eq 0 ]; then
+    echo "✓ PASS  [框架隔离] 框架层无单游戏逻辑"
+    pass=$((pass+1))
+  else
+    printf '%s\n' "$iso_out" | sed 's/^/       /'
+    fail=$((fail+1))
+  fi
+fi
+
 if [ "$ENV_CHECK" = "1" ]; then
   echo
   if [ -f "$SCRIPT_DIR/env_deps.sh" ]; then

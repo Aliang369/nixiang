@@ -140,3 +140,84 @@ void Xxx_Tick(const bool* features) {
 | 掉帧卡顿 | 每帧 SafeProbe / 每帧 class_name 解析 | 4、5 |
 | 功能偶尔失效 | 偏移猜的 / 缓存满了被静默丢弃 | 7 |
 | 死循环 SIGSEGV | hook 函数里递归触发自己，无 reenter | 6 |
+
+---
+
+## 八、Java 侧单游戏差异：只写 `games/<game_id>/GameHookImpl`
+
+> 2026-11-11 起。判据唯一正文＝`app/src/main/java/com/starry/magic/core/GameHook.java`。
+
+**一句话**：native 侧的游戏差异在 `Games/{Game}Entry.cpp`；Java 侧的游戏差异在
+`app/src/main/java/com/starry/magic/games/<game_id>/GameHookImpl.java`。
+**除此之外，任何框架类都不许出现具体游戏的名字。**
+
+### 为什么（真实事故形态）
+
+| 形态 | 历史例子 | 后果 |
+|---|---|---|
+| 无条件调某游戏补丁 | `StarryApp.attachBaseContext` 里直接 `DwctIapGate.apply()` | 每款游戏启动都跑动物餐厅的 IAP 补丁 |
+| 写死单游戏临时目录 | `/data/local/tmp/ltzj_st/libstarry_magic.so` 出现在 `ModBridge`/`MenuService` | 雷霆战机的落盘路径成了全游戏的备选路径 |
+| 写死单游戏包名 | `ModTarget.GAME_PKG = "com.nekki.shadowfight3"`；`StarryNativeLoad` 里 `"com.qxjc.hxwjmlq".equals(...)` | 换游戏必须改框架文件 |
+| 平台级包名白名单 | `TapLoginForceWeb` 里 47 个包名 | 新游戏继承全部历史补丁 |
+
+### 怎么写（新游戏标准动作）
+
+```java
+package com.starry.magic.games.<game_id>;
+
+import android.app.Application;
+import com.starry.magic.core.GameHook;
+
+public final class GameHookImpl implements GameHook {
+
+    private static final String PKG = "com.example.game";   // 独立助手形态要用
+
+    @Override public String targetPackage() { return PKG; }   // ★ 必写
+
+    // 以下按需覆写，用不到就整个删掉（接口有默认空实现）
+    @Override public void onAttachBaseContext(Application app) { /* 最早的补丁 */ }
+    @Override public void onApplicationCreate(Application app) { /* native 已加载后 */ }
+    @Override public void onActivityPreCreated(android.app.Activity a) { /* 登录门闩等 */ }
+    @Override public void onActivityCreated(android.app.Activity a) { /* 兜底 */ }
+    @Override public boolean usesPackagedSoAlias() { return false; }  // SecShell 类壳才 true
+}
+```
+
+**框架怎么找到它**：`core/GameHooks.get()` 用
+`Class.forName("com.starry.magic.games." + game_id + ".GameHookImpl")` 反射装载，
+`game_id` 来自 native 烘焙值（`GameConfig.h ← Android_<tag>.mk`）。
+找不到 ⇒ 退回空实现，**不报错、不崩**。所以「本游戏不需要任何 Java 补丁」＝
+不写这个类，或者只写 `targetPackage()`。
+
+### 注入脚本怎么裁（隔离的关键一步）
+
+按 `game_id` 只拷两棵子树：
+
+```
+com/starry/magic/core/**            ← 框架，所有游戏都要
+com/starry/magic/games/<game_id>/** ← 只拷本游戏的
+```
+
+`games/` 下别的游戏目录**不要拷**。存量脚本仍整拷 `com/starry`（兼容期），
+新游戏脚本按上面裁。
+
+### 机器关
+
+```bash
+bash 04_scripts/_common/check_framework_isolation.sh --verbose
+```
+
+它在 `preflight.sh` 里自动跑（每次改完文件必过）。6 项检查：
+① 框架层无 `games.<id>.<Class>` 引用 ② 无单游戏临时目录 ③ 无写死的外部游戏包名
+④ `LegacyTapTapGames` 只减不增 ⑤ 每个 `GameHookImpl` 有 `targetPackage()`
+⑥ `TapLoginForceWeb` 白名单只减不增。
+
+### 存量兼容垫片（只减不增，迁移完即删）
+
+- `core/legacy/LegacyTapTapGames.java` —— 8 个 game_id 仍走旧的 TapTap 强制网页登录。
+  该游戏迁到自己的 `GameHookImpl` 后，从清单里删掉对应行并把基线数字减一。
+- `sign/TapLoginForceWeb.java` —— 47 项包名白名单，同上。
+- `ltzj/NativeLinker.java`、`ltzj/DexInstaller.java` —— 旧包还在引用，保留；
+  新代码用 `core/NativeLinker` / `core/NativeLoader`。
+
+> 这三个文件的存在本身就是「框架收口未完成」的进度条，条目数只许降。

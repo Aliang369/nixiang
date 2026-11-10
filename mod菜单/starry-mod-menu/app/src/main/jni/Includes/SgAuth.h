@@ -57,10 +57,23 @@ struct State {
 
 static State s_state = {0, {0}, {0}, 0, -1};
 
-/** HMAC 密钥：v1 票已退役；OTA 清单签名仍在用这一把（P2-5 未接入，恒不放行）。
- *  SG_AUTH_V2_ONLY 构建里不再出现旧票 pepper 字面量（验收：so 内 grep sg-grant-v1 = 0）。 */
+/** HMAC 密钥（现存唯一用途：OTA 清单签名；v1 票将在全量换代后彻底下线，见下）。
+
+ *  ★2026-11-11 解耦：历史上这里把两个**互不相关**的东西绑在同一个宏上 ——
+ *    `SG_AUTH_V2_ONLY` 既表示「只认 v2 票」又顺手把 OTA HMAC 密钥切成 "sg-ota-1-local"。
+ *    后果：勇士之心那个包签 OTA 用的是 sg-ota-1-local，而服务端 `ota_store.sign_payload`
+ *    用的是 `grant_hmac_secret`（线上 = "sg-grant-v1-7f3a9c2e"）⇒ 两边对不上，OTA 校验
+ *    必然失败。要么线上给这台机器改成 sg-ota-1-local（那会把**其它所有构件**的 v1 票废掉），
+ *    要么客户端跟着服务端走。这是「一款游戏的特殊配置污染共用密钥」的现成事故。
+
+ *  现在拆成两个宏，各管各的：
+ *    · `SG_AUTH_V2_ONLY`        —— 只影响**票**的版本接受范围（不含密钥选择）；
+ *    · `SG_OTA_HMAC_LOCAL`      —— 只影响 OTA 清单密钥，且**默认不开**（跟服务端一致）。
+ *    验收：定义 V2_ONLY 而未定义 OTA_HMAC_LOCAL 的构件，so 里 grep "sg-ota-1-local" = 0。
+ */
 static inline const char* legacy_pepper() {
-#ifdef SG_AUTH_V2_ONLY
+#ifdef SG_OTA_HMAC_LOCAL
+    /* 仅用于「出包机与服务器同机、离线自签自验」的极端场景，正常构建不开 */
     return OBFUSCATE("sg-ota-1-local");
 #else
     return OBFUSCATE("sg-grant-v1-7f3a9c2e");

@@ -10,6 +10,10 @@ bash mod菜单/starry-mod-menu/scripts/new_game_mod.sh <Game> [日志标签]
 
 # 2. 填 {Game}Entry.cpp 的 TODO（authGameId / waitLib / featureList）
 #    填 {Game}Mod.cpp 的 TODO（偏移/挂点/功能组）
+#    如需 Java 侧补丁：写 com/starry/magic/games/<game_id>/GameHookImpl.java
+#      —— 唯一允许出现单游戏逻辑的地方，见 docs/GAME_MOD_GUIDE.md §八
+#      框架类（StarryApp / StarryInitProvider / MenuService / ModBridge / ModTarget）
+#      一律不许出现本游戏的名字，check_framework_isolation.sh 会挡。
 
 # 3. 构建（独立 obj，并行会话互不踩，切游戏无须清共享 obj）
 #    NDK_OUT/LIBS_OUT 必须绝对路径：相对路径被 ndk-build -C 解析到 app/ 下 → 校验到旧 so 假成功（2026-09-10 事故）

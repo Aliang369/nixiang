@@ -85,11 +85,21 @@ public final class StarryNativeLoad {
      * package stores the statically-linked library under an existing x86-only
      * native entry instead; arm64 devices never load that entry through the
      * normal game path, so this alias keeps the APK single-file.
+     *
+     * <p>2026-11-11 框架收口：此前这里写死 {@code "com.qxjc.hxwjmlq".equals(pkg)}
+     * ——单游戏包名进了框架公共类。改为由该游戏自己的
+     * {@code games/<id>/GameHookImpl.usesPackagedSoAlias()} 声明，
+     * 框架不再知道任何具体游戏。
      */
     private static boolean tryLoadPackagedAlias(Context ctx) {
-        if (ctx == null || !"com.qxjc.hxwjmlq".equals(ctx.getPackageName())) {
+        if (ctx == null) return false;
+        boolean want;
+        try {
+            want = com.starry.magic.core.GameHooks.get().usesPackagedSoAlias();
+        } catch (Throwable t) {
             return false;
         }
+        if (!want) return false;
         try {
             System.loadLibrary("SecShell-x86");
             loadedPath = "loadLibrary(SecShell-x86)";

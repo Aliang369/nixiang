@@ -127,16 +127,16 @@ public class MainActivity extends Activity {
             Log.i(TAG, "SELFTEST isExternalStorageManager=" + esm
                     + " uid=" + android.os.Process.myUid());
             // 2) 逐个探测路径可写性（路径全部由 ModTarget 的目标包名拼出）
-            String gamePkg = com.starry.magic.menu.ModTarget.GAME_PKG;
+            String gamePkg = com.starry.magic.menu.ModTarget.gamePackage(this);
             String selfPkg = getPackageName();
             // 关键探测矩阵：目标游戏 Android/data 的各种等价路径都要试，
             // 因为 FUSE 的跨包隔离判定可能对 /sdcard、/storage/emulated/0、
             // /mnt/user/0/primary 走不同分支（历史上有过只有某一条能写的情况）。
             String[] probes = {
-                    com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[0],
+                    com.starry.magic.menu.ModTarget.externalDirs(this)[0],
                     "/storage/emulated/0/Android/media/" + selfPkg,
                     "/storage/emulated/0/Android/media",
-                    com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[1],
+                    com.starry.magic.menu.ModTarget.externalDirs(this)[1],
                     "/storage/emulated/0/Android/data/" + gamePkg,
                     "/storage/emulated/0/Android/data/" + gamePkg + "/files",
                     "/storage/emulated/0/Android/data/" + gamePkg + "/files/Bundles",
@@ -150,7 +150,7 @@ public class MainActivity extends Activity {
                     "/storage/emulated/0",
             };
             // 先尝试 mkdir（跨 App 创建 media 子目录）
-            java.io.File mk = new java.io.File(com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[0]);
+            java.io.File mk = new java.io.File(com.starry.magic.menu.ModTarget.externalDirs(this)[0]);
             Log.i(TAG, "SELFTEST mkdir game media = " + mk.mkdirs() + " isDir=" + mk.isDirectory());
             for (String dir : probes) {
                 java.io.File d = new java.io.File(dir);
@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
             //     说明 FUSE 至少有写权限（本机历史上 FUSE 不支持 symlink，仅作记录）
             try {
                 java.io.File link = new java.io.File(
-                        com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[0], "probe_link");
+                        com.starry.magic.menu.ModTarget.externalDirs(this)[0], "probe_link");
                 //noinspection ResultOfMethodCallIgnored
                 link.delete();
                 android.system.Os.symlink(
@@ -217,7 +217,7 @@ public class MainActivity extends Activity {
                 Log.e(TAG, "SELFTEST mirror failed", t);
             }
             java.io.File f = new java.io.File(
-                    com.starry.magic.menu.ModTarget.EXTERNAL_DIRS[1], "starry_state.txt");
+                    com.starry.magic.menu.ModTarget.externalDirs(this)[1], "starry_state.txt");
             String body = "<unreadable>";
             try (java.io.InputStream in = new java.io.FileInputStream(f)) {
                 byte[] b = new byte[64];
@@ -379,18 +379,18 @@ public class MainActivity extends Activity {
     private void launchGameForInjection() {
         try {
             Intent i = getPackageManager()
-                    .getLaunchIntentForPackage(com.starry.magic.menu.ModTarget.GAME_PKG);
+                    .getLaunchIntentForPackage(com.starry.magic.menu.ModTarget.gamePackage(this));
             if (i == null) {
-                Log.w(TAG, "cdn inject: 未找到 " + com.starry.magic.menu.ModTarget.GAME_PKG);
+                Log.w(TAG, "cdn inject: 未找到 " + com.starry.magic.menu.ModTarget.gamePackage(this));
                 Toast.makeText(this,
-                        "没找到游戏「邂逅在迷宫」：确认已安装且属同一渠道",
+                        "没找到目标游戏：确认已安装且属同一渠道",
                         Toast.LENGTH_LONG).show();
                 return;
             }
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(i);
             InjectJournal.note(this, InjectJournal.K_LAUNCH, "已拉起游戏（未强杀，可能只是把后台进程拉到前台）");
-            Log.i(TAG, "cdn inject: 自动拉起游戏 " + com.starry.magic.menu.ModTarget.GAME_PKG);
+            Log.i(TAG, "cdn inject: 自动拉起游戏 " + com.starry.magic.menu.ModTarget.gamePackage(this));
         } catch (Throwable t) {
             Log.w(TAG, "cdn inject: auto launch game failed: " + t);
         }

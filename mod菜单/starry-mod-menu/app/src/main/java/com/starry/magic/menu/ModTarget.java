@@ -1,46 +1,65 @@
 package com.starry.magic.menu;
 
+import android.content.Context;
+
 /**
- * 组装目标常量：这套「星光」外壳是所有游戏共用的，换游戏时只应该改这一个文件。
+ * 组装目标常量 —— <b>运行时解析</b>，不再写死任何具体游戏。
  *
- * <p>历史教训：早期把目标游戏包名（{@code cn.alltune.endless}）直接硬编码进了
- * {@link StateMirror} 的外部目录数组。结果是拿这套壳去装别的游戏时，助手仍然会往
- * 「邂逅在迷宫」的目录里写状态文件 —— 既写不到正确位置，又可能误改另一个游戏。
- * 现在统一从这里取值，杜绝散落各处的字符串字面量。
+ * <p>历史问题：本类曾把 {@code GAME_PKG} 写死成 {@code com.nekki.shadowfight3}（暗影格斗3）。
+ * 于是每一次换游戏都必须手工改这个共用文件 —— 正是「一款游戏的改动要动框架」的典型。
+ * 更早还写死过 {@code cn.alltune.endless}（邂逅在迷宫），导致助手往别的游戏目录写状态文件。
  *
- * <p>两种运行形态（互斥，靠包名区分）：
+ * <p>现在的口径：
  * <ul>
- *   <li><b>注入形态</b>：菜单跑在<b>游戏进程</b>里，助手包的 applicationId 就是游戏包名
- *       （{@link #GAME_PKG}）。此时 {@link MenuService} 能拿到宿主 Activity，
- *       走 ACTIVITY 挂载路径。</li>
- *   <li><b>独立助手形态（免 root 直装）</b>：助手是单独安装的普通应用，包名固定为
- *       {@link #HELPER_PKG}。它拿不到游戏进程的 Activity，只能走 OVERLAY 悬浮窗 +
- *       外部状态文件通道。</li>
+ *   <li><b>注入形态</b>（菜单跑在游戏进程内）：{@link #gamePackage(Context)} 直接返回
+ *       {@code ctx.getPackageName()}。零配置、零改文件，换游戏不用碰本类。</li>
+ *   <li><b>独立助手形态</b>（免 root 直装，助手=自己的包名）：目标游戏包名由
+ *       {@link com.starry.magic.core.GameHooks} 的实现类提供（{@code targetPackage()}），
+ *       没有实现类时返回空串 ⇒ 走「无外部目录」分支，不会误写别人的目录。</li>
  * </ul>
  */
 public final class ModTarget {
 
-    /** 目标游戏包名。组装配新游戏时只改这一行。 */
-    public static final String GAME_PKG = "com.nekki.shadowfight3";
-
-    /** 独立助手（免 root 直装形态）的包名，与 {@link #GAME_PKG} 必须不同。 */
+    /** 独立助手（免 root 直装形态）的包名，与应用自身包名一致。 */
     public static final String HELPER_PKG = "com.starry.magic";
 
-    /** 外部存储根，两个候选目录都挂在这下面。 */
     private static final String EXTERNAL_ROOT = "/storage/emulated/0";
+
+    private ModTarget() {}
+
+    /**
+     * 当前上下文里「游戏」的包名。
+     * <p>注入形态 = 自身包名；助手形态 = 显式配置的目标包名（可能为空）。
+     */
+    public static String gamePackage(Context ctx) {
+        if (ctx == null) return "";
+        try {
+            String self = ctx.getPackageName();
+            if (!HELPER_PKG.equals(self)) return self;   // 注入形态：自身就是游戏
+        } catch (Throwable ignored) {
+            return "";
+        }
+        // 助手形态：向 game hook 要目标包名（没实现可为空）
+        try {
+            String t = com.starry.magic.core.GameHooks.get().targetPackage();
+            return t == null ? "" : t.trim();
+        } catch (Throwable ignored) {
+            return "";
+        }
+    }
 
     /**
      * 助手写、游戏读的状态文件候选目录（按优先级）。
-     *
-     * <p>顺序理由见 {@link StateMirror} 类注释：Android 11+ 的 FUSE 只对
+     * <p>顺序理由见 {@link com.starry.magic.menu.StateMirror}：Android 11+ 的 FUSE 只对
      * {@code Android/data} 与 {@code Android/obb} 做跨包隔离，{@code Android/media/<pkg>}
-     * 不受限，所以 media 优先、data 次之。
+     * 不受限，所以 media 优先、data 次之。目标包名为空时返回空数组。
      */
-    public static final String[] EXTERNAL_DIRS = {
-            EXTERNAL_ROOT + "/Android/media/" + GAME_PKG,
-            EXTERNAL_ROOT + "/Android/data/" + GAME_PKG + "/files",
-    };
-
-    private ModTarget() {
+    public static String[] externalDirs(Context ctx) {
+        String pkg = gamePackage(ctx);
+        if (pkg.isEmpty()) return new String[0];
+        return new String[] {
+                EXTERNAL_ROOT + "/Android/media/" + pkg,
+                EXTERNAL_ROOT + "/Android/data/" + pkg + "/files",
+        };
     }
 }

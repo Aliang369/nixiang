@@ -81,7 +81,7 @@ public final class StateMirror {
      * 不再硬编码字面量，换游戏只改 {@link ModTarget}。
      */
     private static File externalStateFile() {
-        for (String dir : ModTarget.EXTERNAL_DIRS) {
+        for (String dir : ModTarget.externalDirs(context)) {
             File d = new File(dir);
             if (!d.isDirectory()) {
                 // media 目录可能尚未被游戏创建过，助手凭 All files access 直接建

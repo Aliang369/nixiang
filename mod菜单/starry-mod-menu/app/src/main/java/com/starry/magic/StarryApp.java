@@ -9,9 +9,10 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.starry.magic.core.GameHook;
+import com.starry.magic.core.GameHooks;
 import com.starry.magic.menu.MenuService;
 import com.starry.magic.ota.StarryNativeLoad;
-import com.starry.magic.sign.TapLoginForceWeb;
 
 /**
  * 星光入口 Application（外科包 smali 常改 .super 为官方/壳 App）。
@@ -60,11 +61,8 @@ public class StarryApp extends Application {
         // 2026-10-28：运行时签名伪装（SignSpoof）已整体删除；TapTap 验签/登录改走改包法。
         super.attachBaseContext(base);
         // 必须用 this（已 attach）：传 base 时 getApplicationContext() 仍可能为 null → Preferences 崩
-        try {
-            com.starry.magic.cocos.DwctIapGate.apply(this);
-        } catch (Throwable t) {
-            Log.e(TAG, "DwctIapGate.apply failed", t);
-        }
+        // 单游戏补丁一律走 SPI（框架不 import 任何 games.* 具体类，见 GameHooks 注释）
+        dispatchAttachBaseContext(this);
         // 子进程不加载 native（省事 + 避免误起菜单依赖）
         if (!isMainProcess(this)) {
             Log.i(TAG, "attachBaseContext skip native (proc=" + currentProcessName() + ")");
@@ -79,6 +77,7 @@ public class StarryApp extends Application {
     public void onCreate() {
         super.onCreate();
         com.starry.magic.crash.CrashHandler.init(this);  // 崩溃日志：自测壳
+        dispatchApplicationCreate(this);
         String proc = currentProcessName();
         Log.i(TAG, "onCreate proc=" + proc);
         // 乐变 overlay 的应用接管（LEBIAN_APPLICATION → StarryApp）实测只回调 onCreate、
@@ -101,18 +100,22 @@ public class StarryApp extends Application {
 
             @Override
             public void onActivityPreCreated(Activity a, Bundle s) {
-                // TapTap 强制内嵌网页登录：onCreate 前 handler 遍历未发生，窗口正好
+                // 单游戏时机补丁（如 TapTap 强制内嵌网页登录）：onCreate 前 handler 遍历未发生，窗口正好
+                GameHook h = GameHooks.get();
                 try {
-                    TapLoginForceWeb.onPreCreated(a);
-                } catch (Throwable ignored) {
+                    h.onActivityPreCreated(a);
+                } catch (Throwable t) {
+                    Log.w(TAG, "GameHook.onActivityPreCreated failed", t);
                 }
             }
 
             @Override
             public void onActivityCreated(Activity a, Bundle s) {
+                GameHook h = GameHooks.get();
                 try {
-                    TapLoginForceWeb.onCreated(a);
-                } catch (Throwable ignored) {
+                    h.onActivityCreated(a);
+                } catch (Throwable t) {
+                    Log.w(TAG, "GameHook.onActivityCreated failed", t);
                 }
             }
             @Override public void onActivityStarted(Activity a) {}
@@ -123,6 +126,27 @@ public class StarryApp extends Application {
         });
         // 兜底：极端无 Activity resume 时仍尝试（延迟，避开壳 onCreate 高峰）
         MAIN.postDelayed(() -> scheduleMenuStart(StarryApp.this, "fallback-5s"), 5000L);
+    }
+
+    /**
+     * 派发到当前游戏的 {@link GameHook}；本游戏没写实现时是一次空调用。
+     * <p>异常一律吞掉并记 WARN —— 单游戏补丁失败不得让框架（和别的游戏）跟着崩。
+     */
+    public static void dispatchAttachBaseContext(Application app) {
+        try {
+            GameHooks.get().onAttachBaseContext(app);
+        } catch (Throwable t) {
+            Log.w(TAG, "GameHook.onAttachBaseContext failed", t);
+        }
+    }
+
+    /** 同 {@link #dispatchAttachBaseContext}，时机在 {@code Application.onCreate} 之后。 */
+    public static void dispatchApplicationCreate(Application app) {
+        try {
+            GameHooks.get().onApplicationCreate(app);
+        } catch (Throwable t) {
+            Log.w(TAG, "GameHook.onApplicationCreate failed", t);
+        }
     }
 
     private static void scheduleMenuStart(Context ctx, String reason) {

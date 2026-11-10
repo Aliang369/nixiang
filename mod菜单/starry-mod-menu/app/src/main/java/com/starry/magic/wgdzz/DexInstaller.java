@@ -246,7 +246,7 @@ public final class DexInstaller {
 
     static boolean loadInto(ClassLoader pathCl, String path, String tag) {
         try {
-            Class<?> linker = Class.forName("com.starry.magic.ltzj.NativeLinker", true, pathCl);
+            Class<?> linker = Class.forName("com.starry.magic.core.NativeLinker", true, pathCl);
             linker.getMethod("load", String.class).invoke(null, path);
             Log.i(TAG, "System.load " + tag + " ok: " + path);
             return true;
