@@ -233,7 +233,6 @@
       const scope = document.getElementById('c-filter-scope')?.value || '';
       const game_id = getGamePickerValue('c-filter-game');
       const bound = document.getElementById('c-bound').value;
-      const unbind = document.getElementById('c-unbind').value;
       const qs = new URLSearchParams();
       if (q) qs.set('q', q);
       if (status) qs.set('status', status);
@@ -241,7 +240,6 @@
       if (scope) qs.set('scope', scope);
       if (game_id) qs.set('game_id', game_id);
       if (bound !== '') qs.set('bound', bound === '1' ? 'true' : 'false');
-      if (unbind !== '') qs.set('unbind_used', unbind === '1' ? 'true' : 'false');
       qs.set('page', String(cardsPage));
       qs.set('page_size', String(cardsPageSize));
       const data = await api('/v1/admin/cards?' + qs.toString());
@@ -303,7 +301,6 @@
           <td class="note-cell" onclick='editCardNote(${c.id}, ${JSON.stringify(c.note || '')})'>${note}</td>
           <td>
             <span style="cursor:pointer" onclick="toggleDevice(${c.id})">${deviceShort}</span>
-            ${c.unbind_used ? '<div class="muted">已解绑过</div>' : ''}
             ${deviceFull}
           </td>
           <td class="row-actions">
@@ -417,9 +414,9 @@
       } catch (e) { toast(e.message); }
     }
     async function forceUnbind(id) {
-      if (!confirm('强制解绑并重置自助解绑额度？')) return;
+      if (!confirm('强制解绑该卡全部设备？')) return;
       try {
-        await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ force_unbind: true, reset_unbind: true }) });
+        await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ force_unbind: true }) });
         toast('已强制解绑'); loadCards();
       } catch (e) { toast(e.message); }
     }

@@ -172,33 +172,6 @@ def mint_grant_v3(*, device_id, game_id, offline_cache_seconds,
     return f"{body}.{sig}"
 
 
-def verify_grant_v3(grant, *, device_id, game_id, skew_seconds=45):
-    """服务端自测用：验签 + 还原 K_build。"""
-    key = _rsa_key()
-    if key is None or not grant or "." not in grant:
-        return None
-    body, sig = grant.rsplit(".", 1)
-    if not sg_rsa.verify_hex(body.encode("utf-8"), sig, key):
-        return None
-    parts = body.split("|")
-    if len(parts) != 7 or parts[0] != "3":
-        return None
-    try:
-        exp = int(parts[3])
-        mask = int(parts[4])
-        kx = bytes.fromhex(parts[6])
-    except ValueError:
-        return None
-    if int(time.time()) > exp + skew_seconds:
-        return None
-    if parts[1] != (device_id or "").strip() or parts[2] != (game_id or "").strip():
-        return None
-    wrap = payload_wrap_key(parts[1], parts[2], exp, mask, parts[5])
-    return {"exp": exp, "feat_mask": mask, "kid": parts[5],
-            "k_build": bytes(a ^ b for a, b in zip(kx, wrap))}
-
-
-
 def verify_grant_v2(grant: str, *, device_id: str, game_id: str, skew_seconds: int = 45):
     """服务端自测用（客户端以 native 验签为准）。"""
     key = _rsa_key()

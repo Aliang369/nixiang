@@ -136,7 +136,6 @@ class CardUpdate(BaseModel):
     expire_at: Optional[datetime] = None
     note: Optional[str] = None
     force_unbind: bool = False
-    reset_unbind: bool = False
 
 
 class AnnouncementCreate(BaseModel):

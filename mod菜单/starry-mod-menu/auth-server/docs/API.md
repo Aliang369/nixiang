@@ -75,8 +75,8 @@ Base URL：`http://<服务器IP>:8000`
 }
 ```
 
-**2026-09-06 起不限次数**：首次免费；之后每次从剩余有效期**扣除 3 天**（剩余不足 3 天照扣，扣完即过期；无到期时间的永久/次数卡不扣）。
-仅当前绑定设备可解绑（403 保护）；管理员强制解绑（`force_unbind`）免费且不占首次额度。
+**2026-11-10 起解绑完全不扣时间**（原「非首次扣 3 天」已下线）：不限次数、不扣有效期、不改卡状态；只解除本机绑定（同卡其它设备照常在线）。
+仅当前绑定设备可解绑（403 保护）；管理员强制解绑（`force_unbind`）一直是整卡操作、不扣时间。
 
 ### 4. 启动配置 `GET /v1/bootstrap?game_id=zhmr&device_id=...`
 
@@ -128,12 +128,12 @@ Base URL：`http://<服务器IP>:8000`
 ### 修改卡密 `PATCH /v1/admin/cards/{id}`
 
 可改 `expire_at`、`status`、`max_uses`、`used_count`、`max_devices` 等。
-`force_unbind: true` **整卡**清除全部设备绑定（后台操作一律整卡）；`reset_unbind: true` 重置自助解绑状态。
+`force_unbind: true` **整卡**清除全部设备绑定（后台操作一律整卡）。
 `max_devices` 改小只拦「新设备登录」，不主动踢已绑定设备——要立刻收回用 `force_unbind`。
 
 ### 列表筛选 `GET /v1/admin/cards`
 
-`q` / `status` / `scope` / `game_id` / `duration_type` / `bound` / `unbind_used` / `page` / `page_size`。
+`q` / `status` / `scope` / `game_id` / `duration_type` / `bound` / `page` / `page_size`。
 `duration_type` 支持 `hour|day|month|year|permanent|count`（2026-10-31 新增）。
 每行额外返回 `devices`（绑定设备列表：`device_id` / `bound_at` / `last_seen_at`）、`device_count`、`max_devices`。
 

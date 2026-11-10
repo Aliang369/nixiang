@@ -722,7 +722,6 @@ def list_cards(
     scope: str | None = None,
     duration_type: str | None = None,
     bound: bool | None = None,
-    unbind_used: bool | None = None,
     page: int = 1,
     page_size: int = 50,
     _: dict = Depends(require_admin),
@@ -756,8 +755,6 @@ def list_cards(
         query = query.filter(has_device)
     elif bound is False:
         query = query.filter(~has_device)
-    if unbind_used is not None:
-        query = query.filter(CardKey.unbind_used.is_(unbind_used))
 
     total = query.count()
     rows = (
@@ -917,7 +914,6 @@ def update_card(
         raise HTTPException(404, "卡密不存在")
     data = body.model_dump(exclude_unset=True)
     force_unbind = data.pop("force_unbind", False)
-    reset_unbind = data.pop("reset_unbind", False)
     # 归一化/校验放在 setattr 之前：失败时不留脏的中间状态
     if data.get("scope") == "global":
         data["game_id"] = None
@@ -930,8 +926,6 @@ def update_card(
         purge_card_devices(db, card.id)
         card.device_id = None
         card.legacy_device_ids = None
-    if reset_unbind:
-        card.unbind_used = False
     refresh_card_status(card)
     # 封禁/过期/用尽/强制解绑：立即吊销在线会话，避免离线缓存窗口内继续使用
     if force_unbind or card.status in ("banned", "expired", "exhausted"):
@@ -943,7 +937,6 @@ def update_card(
         detail=(
             f"ID={card_id} 状态={card.status}"
             + (f" 强制解绑={'是' if force_unbind else '否'}")
-            + (f" 重置解绑={'是' if reset_unbind else '否'}")
         ),
         ip=_client_ip(request),
         commit=False,

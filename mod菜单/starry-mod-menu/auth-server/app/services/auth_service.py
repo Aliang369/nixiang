@@ -466,8 +466,9 @@ def login_card(
 def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
     """自助解绑（2026-10-31 一码多设备）：**只解绑本机**，同卡其它设备照常在线。
 
-    计费口径不变（按卡算）：不限次数；首次免费，之后每次从这张卡有效期扣 3 天。
-    无到期时间的卡（永久/次数卡）不扣。管理员整卡强制解绑不走这里、不扣时间。
+    2026-11-10 用户口径（原「非首次扣 3 天」整体下线）：**解绑不扣有效期、不限次数**。
+    根因：一码多设备下有人反复解绑，把整张卡的有效期扣光 ⇒ 同卡其它设备也跟着不能用。
+    现在解绑只解除本机绑定，卡的有效期与状态一律不动；管理员整卡强制解绑仍不走这里。
     """
     card = db.query(CardKey).filter(CardKey.key_code == card_key.strip()).first()
     if not card:
@@ -477,20 +478,6 @@ def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
         raise HTTPException(400, "卡密尚未绑定设备")
     if device_id not in bound_ids:
         raise HTTPException(403, "只能由当前绑定设备解绑")
-
-    if card.unbind_used:
-        # 非首次：扣 3 天。剩余不足 3 天则直接扣完（状态派生为已过期）
-        deduct_msg = "，已扣除 3 天有效期"
-        if card.expire_at is not None:
-            exp = card.expire_at
-            if exp.tzinfo is None:
-                exp = exp.replace(tzinfo=timezone.utc)
-            card.expire_at = exp - timedelta(days=3)
-        else:
-            deduct_msg = "（该卡无到期时间，不扣时间）"
-    else:
-        card.unbind_used = True
-        deduct_msg = "（首次解绑不扣时间）"
 
     # 只删本机这一行；旧号从历史候选里也去掉，免得下次被当作漂移旧号复活
     db.query(CardDevice).filter(
@@ -511,11 +498,10 @@ def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
         OnlinePresence.device_id == device_id, OnlinePresence.card_id == card.id
     ).update({"card_id": None})
     record_auth_event(
-        db, "unbind", card_id=card.id,
-        detail=f"device={device_id} {deduct_msg.lstrip('，')}",
+        db, "unbind", card_id=card.id, detail=f"device={device_id} 不扣有效期",
     )
     db.commit()
-    return {"message": "已解绑本机" + deduct_msg}
+    return {"message": "已解绑本机（不影响有效期）"}
 
 
 def heartbeat(
@@ -714,7 +700,7 @@ def serialize_card_public(
         "device_count": bound,
         "max_devices": limit,  # 0=不限台数
         "unbind_used": card.unbind_used,
-        "can_unbind": bound > 0,  # 2026-09-06 解绑不限次数后：绑定的卡随时可自助解绑（只解本机）
+        "can_unbind": bound > 0,  # 绑定的卡随时可自助解绑（只解本机）；2026-11-10 起解绑不再扣有效期
     }
 
 

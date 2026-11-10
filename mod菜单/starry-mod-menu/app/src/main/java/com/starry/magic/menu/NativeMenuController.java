@@ -2714,7 +2714,7 @@ public final class NativeMenuController {
             unbindArmed = true;
             mainHandler.removeCallbacks(unbindArmClear);
             mainHandler.postDelayed(unbindArmClear, 5000);
-            showToast("再点一次「解绑」确认（首次免费，之后每次扣 3 天）");
+            showToast("再点一次「解绑」确认（解绑不影响卡密有效期）");
             return;
         }
         unbindArmed = false;
