@@ -1,7 +1,7 @@
 {
   "game": "宝石战争",
   "version": "6.0.013",
-  "notes": "2026-09-23：官方已升级到 6.0.013（热更 1.0.0.04）。沿用 6.0.012 的外科路线复刻星光三项功能：全量 142 个 1.0.0.04 资源（114 个来自包内 1.0.0.01、28 个来自设备已下发的差分文件，逐条 md5 对齐官方 1.0.0.04 manifest），包内保留官方 manifest/receipt（版本 1.0.0.04、Network 官方 hash 3e49c9876a6c4b394c552f71adbebf9d），仅替换注入后的 System.Network.dll.bytes。\n\n2026-09-29：游戏内热更推进到 1.0.0.06 后三项功能全失效（外部官方 System.Network.dll.bytes 覆盖包内 1.0.0.04 补丁 DLL）；按 1.0.0.06 官方资产重注入（补丁 bytes 0f34ea7f…）并用 bszz_surgical_hotupdate_only.sh 只换热更资产重建，唯一正式包=宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…，520,625,392B）；同签覆盖安装未清数据，G2 ✓（用户实测三项功能没问题）。新增阶段 hotupdate_1.0.0.06_repair；设备侧两条轻量修复路径已被实测否定，细节见 10_docs/宝石战争/热更修复_1.0.0.06_20260929.md。\n\n收官（2026-09-29）：提交 70085f6 已推送 origin/main（7cc25ba..70085f6）；08_output 裁剪为唯一正式包 宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…）；06_dumped 633M→33M、07_patched 34M→16M（清理清单=10_docs/宝石战争/清理清单_6.0.013_hu1.0.0.06_20260929.json，Trash 隔离区 /Users/aliang/.Trash/nixiang______20260929_20260929_213952，618M 可恢复）；新增阶段 hotupdate_1.0.0.06_repair（done，产物指纹 ✓）。\n\n2026-10-30 收官：正式包 宝石战争_6.0.013_surgical-releaseSigned.apk（md5 35b40f7b…，526,650,899B）；icon 提取到 08_output/宝石战争/icon/（192x192，md5 4e3cbe86…，仓库副本 10_docs/宝石战争/icon/）；prune 删 unsigned+idsig（清单 正式包裁剪清单_6.0.013_hu1.0.0.11_20261030.json）；trash 清 9 项 ~546MB（清单 清理清单_6.0.013_hu1.0.0.11_20261030.json，隔离区 /Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210352）；06_dumped 116M→20M、07_patched 441M→8.6M、08_output 1.0G→514M；02_apks 官方底包保留可回退。\n\n2026-11-08：官方热更 1.0.0.11 → 1.0.0.14（真机 21:04 落地 9 个增量文件，Network DLL 8,881,664B md5 ddd03dad…）。用户口径「游戏热更了，直接拿真机的当底包」⇒ 底包＝真机已装 10-30 成品包（md5 35b40f7b…，526,650,899B），热更输入＝真机增量，不重下 TapTap 原包。解密明文 90ff3581…、4 锚点全命中、补丁 bytes f01a7e82…（8,806,400B）；surgical_hotupdate_only 142 资产＝9 delta+133 底包；唯一正式包＝宝石战争_6.0.013_hu1.0.0.14_surgical-releaseSigned.apk（md5 4a23163f545bc51f848be13053414963，526,663,187B）；覆盖安装保数据，预检 PASS_TO_HUMAN，G2 ✓（用户「功能没问题了」）；装机后删外部 files/HotUpdate 防官方未补丁 DLL 覆盖。文档=星光落地_6.0.013_hu1.0.0.14_20261108.md。",
+  "notes": "2026-09-23：官方已升级到 6.0.013（热更 1.0.0.04）。沿用 6.0.012 的外科路线复刻星光三项功能：全量 142 个 1.0.0.04 资源（114 个来自包内 1.0.0.01、28 个来自设备已下发的差分文件，逐条 md5 对齐官方 1.0.0.04 manifest），包内保留官方 manifest/receipt（版本 1.0.0.04、Network 官方 hash 3e49c9876a6c4b394c552f71adbebf9d），仅替换注入后的 System.Network.dll.bytes。\n\n2026-09-29：游戏内热更推进到 1.0.0.06 后三项功能全失效（外部官方 System.Network.dll.bytes 覆盖包内 1.0.0.04 补丁 DLL）；按 1.0.0.06 官方资产重注入（补丁 bytes 0f34ea7f…）并用 bszz_surgical_hotupdate_only.sh 只换热更资产重建，唯一正式包=宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…，520,625,392B）；同签覆盖安装未清数据，G2 ✓（用户实测三项功能没问题）。新增阶段 hotupdate_1.0.0.06_repair；设备侧两条轻量修复路径已被实测否定，细节见 10_docs/宝石战争/热更修复_1.0.0.06_20260929.md。\n\n收官（2026-09-29）：提交 70085f6 已推送 origin/main（7cc25ba..70085f6）；08_output 裁剪为唯一正式包 宝石战争_6.0.013_hu1.0.0.06_surgical-releaseSigned.apk（md5 de215c98…）；06_dumped 633M→33M、07_patched 34M→16M（清理清单=10_docs/宝石战争/清理清单_6.0.013_hu1.0.0.06_20260929.json，Trash 隔离区 /Users/aliang/.Trash/nixiang______20260929_20260929_213952，618M 可恢复）；新增阶段 hotupdate_1.0.0.06_repair（done，产物指纹 ✓）。\n\n2026-10-30 收官：正式包 宝石战争_6.0.013_surgical-releaseSigned.apk（md5 35b40f7b…，526,650,899B）；icon 提取到 08_output/宝石战争/icon/（192x192，md5 4e3cbe86…，仓库副本 10_docs/宝石战争/icon/）；prune 删 unsigned+idsig（清单 正式包裁剪清单_6.0.013_hu1.0.0.11_20261030.json）；trash 清 9 项 ~546MB（清单 清理清单_6.0.013_hu1.0.0.11_20261030.json，隔离区 /Users/aliang/.Trash/nixiang_bszz_close_20261030_20261030_210352）；06_dumped 116M→20M、07_patched 441M→8.6M、08_output 1.0G→514M；02_apks 官方底包保留可回退。\n\n2026-11-08：官方热更 1.0.0.11 → 1.0.0.14（真机 21:04 落地 9 个增量文件，Network DLL 8,881,664B md5 ddd03dad…）。用户口径「游戏热更了，直接拿真机的当底包」⇒ 底包＝真机已装 10-30 成品包（md5 35b40f7b…，526,650,899B），热更输入＝真机增量，不重下 TapTap 原包。解密明文 90ff3581…、4 锚点全命中、补丁 bytes f01a7e82…（8,806,400B）；surgical_hotupdate_only 142 资产＝9 delta+133 底包；唯一正式包＝宝石战争_6.0.013_hu1.0.0.14_surgical-releaseSigned.apk（md5 4a23163f545bc51f848be13053414963，526,663,187B）；覆盖安装保数据，预检 PASS_TO_HUMAN，G2 ✓（用户「功能没问题了」）；装机后删外部 files/HotUpdate 防官方未补丁 DLL 覆盖。文档=星光落地_6.0.013_hu1.0.0.14_20261108.md。\n\n2026-11-10 收尾：1.0.0.15 星光包已交付（md5 dfc6a705…，526,663,187B），G2 ✓（用户「功能都没问题了」）。同日评估抗热更方案：A（native methodPointer hook）实测失败——探针能按名定位热更类、hook 安装 rc=0，但 11 分钟含 3 次 battle_begin 命中恒 0；隔离包（官方未补丁 DLL + 仅 hook）用户实测「恢复正常了」，证实此前效果全部来自 IL 注入。机制：HybridCLR 解释器内部互调不经 MethodInfo->methodPointer。据用户「A 不成功退 C」，落地 bszz_hotfix_auto.sh（新增阶段 hotfix_auto_c）。现场已复原：BszzMod.cpp 回 HEAD、libs_bszz so 取回 794e166e…、临时 probe/isolate 包删除。08_output 裁为唯一正式包（删 unsigned 526,553,094B + idsig 4,154,907B）；06_dumped 21M、07_patched 8.6M（清单 清理清单_6.0.013_hu1.0.0.15_20261110.json，隔离区可恢复）。文档=抗热更路线评估_20261110.md。",
   "params": {
     "game_id": "bszz",
     "package": "com.acing.gow.adv",
@@ -477,6 +477,26 @@
           "md5": "4a23163f545bc51f848be13053414963"
         }
       }
+    },
+    {
+      "id": "hotfix_auto_c",
+      "name": "热更后一键重注脚本（C 方案；A 的 methodPointer hook 实测失败后落地）",
+      "requires": [
+        "device_ready"
+      ],
+      "command": "bash 04_scripts/宝石战争/bszz_hotfix_auto.sh",
+      "preflight": [
+        "04_scripts/宝石战争/bszz_hotfix_auto.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "04_scripts/宝石战争/bszz_hotfix_auto.sh"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-10 16:43",
+      "note": "版本比对→拉底包+增量→解密→4 锚点注入→外科组装→签名→覆盖安装→清外部→预检；幂等（版本相同直接退出）。2026-11-10 冒烟 exit 0。"
     }
   ]
 }
