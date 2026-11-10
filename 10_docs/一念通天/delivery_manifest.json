@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-30T12:11:44+00:00",
+  "generated_at": "2026-11-10T16:56:13+00:00",
   "game": "一念通天",
-  "version": "768",
+  "version": "784",
   "package": "com.qinglv.Immortal",
   "pipeline_state": "04_scripts/一念通天/pipeline.json",
   "pipeline_status": {
@@ -20,14 +20,14 @@
     "cleanup": "done",
     "archive": "done"
   },
-  "source_commit": "898556620667b3b192cc379438419e8276783023",
-  "source_tree": "159382ee376eb8fef676365b78eda04ea30e14f9",
+  "source_commit": "8f9161c12aa16c01e03065a762ebf2af9b595291",
+  "source_tree": "3cdce49dddd8ebb9e2c6421eda5e0d0b5f76cacd",
   "apk": {
-    "path": "08_output/一念通天/一念通天_768_surgical-releaseSigned.apk",
+    "path": "08_output/一念通天/一念通天_784_surgical-releaseSigned.apk",
     "available": true,
-    "size": 436061161,
-    "md5": "819b783493d460e095d8586627d52e33",
-    "sha256": "a68294e848a70f0181e91130f0e694b1ba3410120e1225b0b489a64528e42814"
+    "size": 435523872,
+    "md5": "7dcdc9be05ef7497c8c2db740f6d935b",
+    "sha256": "7f7c21a465100d594194dd36beca910e5cb7dba388dfc9f753108f588e084c16"
   },
   "artifacts": [
     {
@@ -114,64 +114,73 @@
     {
       "stage": "pull_official",
       "path": "04_scripts/一念通天/official_apk.json",
-      "recorded_md5": "4e3084f8ec8297378b7c18d49b331a41",
+      "recorded_md5": "8bde2c82e1eaf2d6121236b3e655b44d",
       "available": true,
-      "current_md5": "4e3084f8ec8297378b7c18d49b331a41",
-      "current_sha256": "c1336659c93880e19bbd0cafc82e4550231ee69d192a28965d73fb628ee80e72",
+      "current_md5": "8bde2c82e1eaf2d6121236b3e655b44d",
+      "current_sha256": "f25f333bafee86e6ff9ff6b3eaf8f2a30a9c96c40bc36c547ed60fd0bec1a20c",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "dump_official",
+      "path": "06_dumped/一念通天/official_784/rva_targets.json",
+      "recorded_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
+      "available": true,
+      "current_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
+      "current_sha256": "dc0ce0eb637ee0989a32bd64d5c9cc3a72958271601dbb20922487c7e97a290f",
       "matches_recorded_md5": true
     },
     {
       "stage": "build_so",
       "path": "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so",
-      "recorded_md5": "cdd67c35b718f47e79d543de15a48f7d",
+      "recorded_md5": "6152f4c67a1839aadf0e659a4a6c15e9",
       "available": true,
-      "current_md5": "cdd67c35b718f47e79d543de15a48f7d",
-      "current_sha256": "bace1e4066d2745f31c119c25d473b8b699e919a7bd250c0ee03ce08e93d6be3",
+      "current_md5": "6152f4c67a1839aadf0e659a4a6c15e9",
+      "current_sha256": "ddfd6f8ba9a8a6bee8dbdf93ce424dc870433dc7994bbd6d1052487fcbc8e549",
       "matches_recorded_md5": true
     },
     {
       "stage": "sign",
-      "path": "08_output/一念通天/一念通天_768_surgical-releaseSigned.apk",
-      "recorded_md5": "819b783493d460e095d8586627d52e33",
+      "path": "08_output/一念通天/一念通天_784_surgical-releaseSigned.apk",
+      "recorded_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
       "available": true,
-      "current_md5": "819b783493d460e095d8586627d52e33",
-      "current_sha256": "a68294e848a70f0181e91130f0e694b1ba3410120e1225b0b489a64528e42814",
+      "current_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
+      "current_sha256": "7f7c21a465100d594194dd36beca910e5cb7dba388dfc9f753108f588e084c16",
       "matches_recorded_md5": true
     },
     {
       "stage": "install",
-      "path": "08_output/一念通天/一念通天_768_surgical-releaseSigned.apk",
-      "recorded_md5": "819b783493d460e095d8586627d52e33",
+      "path": "08_output/一念通天/一念通天_784_surgical-releaseSigned.apk",
+      "recorded_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
       "available": true,
-      "current_md5": "819b783493d460e095d8586627d52e33",
-      "current_sha256": "a68294e848a70f0181e91130f0e694b1ba3410120e1225b0b489a64528e42814",
+      "current_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
+      "current_sha256": "7f7c21a465100d594194dd36beca910e5cb7dba388dfc9f753108f588e084c16",
       "matches_recorded_md5": true
     },
     {
       "stage": "cleanup",
       "path": "04_scripts/一念通天/cleanup_summary.json",
-      "recorded_md5": "0b25b77393ad014708a27d6d6b1d2fed",
+      "recorded_md5": "4e8d4c92d8007ebbd443ff68033b8588",
       "available": true,
-      "current_md5": "0b25b77393ad014708a27d6d6b1d2fed",
-      "current_sha256": "2f8e13842cbb0a4da9ce183986635e9758722dff13b89a521294265097af61fa",
+      "current_md5": "4e8d4c92d8007ebbd443ff68033b8588",
+      "current_sha256": "d5124e82f14a96f538dec289324ca141a7497378ffc93976a9627dc058e8e720",
       "matches_recorded_md5": true
     },
     {
       "stage": "cleanup",
-      "path": "06_dumped/一念通天/official_768/rva_targets.json",
-      "recorded_md5": "52b34cf0b6399c31fae654f4281c6d42",
+      "path": "06_dumped/一念通天/official_784/rva_targets.json",
+      "recorded_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
       "available": true,
-      "current_md5": "52b34cf0b6399c31fae654f4281c6d42",
-      "current_sha256": "34d27637a74568a3efaf78e18db8c8f40d9e7969bc80e9231d81cab9fddb13a5",
+      "current_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
+      "current_sha256": "dc0ce0eb637ee0989a32bd64d5c9cc3a72958271601dbb20922487c7e97a290f",
       "matches_recorded_md5": true
     },
     {
       "stage": "archive",
-      "path": "10_docs/一念通天/收尾与最小复现清单_768_20261030.md",
-      "recorded_md5": "3ba009b847e2b534e2cbb20b11f3761a",
+      "path": "10_docs/一念通天/收尾与最小复现清单_779_20261105.md",
+      "recorded_md5": "296f429fdd0e997528f5c9932e8d0ac5",
       "available": true,
-      "current_md5": "3ba009b847e2b534e2cbb20b11f3761a",
-      "current_sha256": "86e3bd61365ed6b26a0302d9b14adaf60b9c93f35afec11ae25922998e7d8ea2",
+      "current_md5": "296f429fdd0e997528f5c9932e8d0ac5",
+      "current_sha256": "e04eb56c089a522d81ad8e2952484cc0df41cee63da8e6bc43dd90809fb8d85f",
       "matches_recorded_md5": true
     }
   ],
