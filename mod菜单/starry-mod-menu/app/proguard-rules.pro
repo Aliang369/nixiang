@@ -55,6 +55,17 @@
 #       （2026-11-10 实测）
 -keep class com.starry.magic.BuildConfig { *; }
 
+# ---- 2b. 单游戏 SPI：框架用 Class.forName("com.starry.magic.games.<game_id>.GameHookImpl")
+#       反射装载（core/GameHooks.resolve）。类名是**按约定字符串找进来**的，改名即 ClassNotFound，
+#       该游戏的 Java 侧补丁会静默不生效 —— 本作 784 轮实测：只加 GameHookImpl 不补此规则时，
+#       dex 里连 com/starry/magic/games/ 都搜不到（全被 repackage 到 com.starry.magic.o/）。
+#       与 app/inject-dex-rules.pro 的 2b 节保持一致；那边服务 javac+d8 路径，这边服务 gradle 路径。
+#       只保类名与无参构造，方法体照常可混淆（框架只经 GameHook 接口调用）。
+-keepnames class com.starry.magic.games.** { *; }
+-keepclassmembers class com.starry.magic.games.** {
+    <init>();
+}
+
 # ---- 其余全部：保留（防 shrink 掉反射用到的），但**允许改名** ----
 -keep,allowobfuscation class com.starry.magic.** { *; }
 
