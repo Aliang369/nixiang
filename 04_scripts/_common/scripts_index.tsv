@@ -8,7 +8,7 @@ audit_with_waivers.sh	sh	4859	audit_with_waivers.sh — 框架入口审计「已
 audit_workspace_docs.py	py	24176	Read-only, standard-library documentation and file-byte audit.	used	45
 axml_inspect.py	py	11423	-*- coding: utf-8 -*-	used	21
 bash32_check.sh	sh	8221	bash32_check.sh — macOS bash 3.2 兼容门禁（伊莫 1.0.1 会话复盘 P1-3）	used	54
-check_deleted_class_injection.sh	sh	3827	check_deleted_class_injection.sh — 已删除类"注入/硬依赖"巡检（2026-10-28 建）	used	8
+check_deleted_class_injection.sh	sh	3827	check_deleted_class_injection.sh — 已删除类"注入/硬依赖"巡检（2026-10-28 建）	used	9
 check_merge_markers.sh	sh	2960	check_merge_markers.sh — Git 冲突标记残留检查	used	9
 check_release_apk.sh	sh	6193	check_release_apk.sh — 出包门禁（Java/APK 侧，P6 的半步）	used	56
 check_release_clean.sh	sh	9854	check_release_clean.sh — 干净正式包门禁（诊断代码不许进正式包）	used	79
@@ -44,7 +44,7 @@ find_metadata_device.sh	sh	1079	扫进程 rw 段找解密后的 global-metadata 
 fix_bash32_var_brace.py	py	3642	-*- coding: utf-8 -*-	used	16
 fix_entry_units.py	py	2404	-*- coding: utf-8 -*-	used	6
 flight_recorder.sh	sh	13656	flight_recorder.sh — 飞行记录仪（游玩期连续取证＋用户口述标记）	used	27
-framework_entry_audit.sh	sh	25551	framework_entry_audit.sh — 出包前「入口点 + 渠道接入」静态审计（复盘 20261010 §4 P0-1）	used	55
+framework_entry_audit.sh	sh	25551	framework_entry_audit.sh — 出包前「入口点 + 渠道接入」静态审计（复盘 20261010 §4 P0-1）	used	56
 gate_note.sh	sh	3062	gate_note.sh — 门禁即时记账（P7）	used	20
 gen_game_doc_index.py	py	10348	生成/校验每个游戏目录的 `_index.md`：本目录有哪些文件、哪个是当前有效、哪些是历史。	used	233
 gen_payload_enc.py	py	15038	-*- coding: utf-8 -*-	used	43
@@ -58,7 +58,7 @@ harden_apk.py	py	30171	-*- coding: utf-8 -*-	used	139
 harden_coverage.py	py	30741	-*- coding: utf-8 -*-	used	34
 harden_gate.sh	sh	3248	⛔ 停用件（2026-10-27 用户裁决）：加固门禁不再被任何规则/装机门禁要求（AGENTS.md §6）。	used	62
 install_guard.sh	sh	11684	install_guard.sh — 装机策略闸门（P1-⑥，2026-10-11 无悔华夏会话复盘）	used	30
-install_starry_apk.sh	sh	14452	install_starry_apk.sh — 星光包「只装机 / 异签名卸载重装」统一入口（2026-10-16）	used	77
+install_starry_apk.sh	sh	14452	install_starry_apk.sh — 星光包「只装机 / 异签名卸载重装」统一入口（2026-10-16）	used	78
 lint_mod_thread.sh	sh	17742	lint_mod_thread.sh — mod so 的「线程 / 装钩」静态检查（构建前闸门）	used	14
 lint_shell_traps.py	py	11729	-*- coding: utf-8 -*-	used	23
 lua_struct_check.py	py	5226	lua_struct_check.py — xLua 内嵌 Lua chunk 结构体检（非完整语法检查）	used	14
@@ -73,7 +73,7 @@ pipeline_record_cleanup.py	py	10384	Record already-performed cleanup in a game's
 portable_users_path_migrate.py	py	8239	-*- coding: utf-8 -*-	used	2
 post_install_precheck.sh	sh	20093	post_install_precheck.sh — 装机预检闸门（装机后运行时证据关）	used	155
 pre_install_gate.sh	sh	37842	pre_install_gate.sh — 装机前产物机器关（六查）	used	242
-preflight.sh	sh	24548	preflight.sh — 文件变更检查关（改完任何文件后必跑；全部会话/所有模型一体适用）	used	165
+preflight.sh	sh	24548	preflight.sh — 文件变更检查关（改完任何文件后必跑；全部会话/所有模型一体适用）	used	166
 prior_art.sh	sh	4325	prior_art.sh — 动手前 3 分钟先例检索（P11）	used	59
 prune_output_final.sh	sh	6171	将 08_output/<游戏> 裁剪为唯一正式 APK。	used	147
 rebuild_sign_install.sh	sh	3725	apktool 重建 → 对齐/签名 → 可选 adb 安装	used	5
