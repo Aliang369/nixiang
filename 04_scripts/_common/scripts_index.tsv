@@ -9,10 +9,10 @@ audit_workspace_docs.py	py	24176	Read-only, standard-library documentation and f
 axml_inspect.py	py	11423	-*- coding: utf-8 -*-	used	21
 bash32_check.sh	sh	8221	bash32_check.sh — macOS bash 3.2 兼容门禁（伊莫 1.0.1 会话复盘 P1-3）	used	54
 check_deleted_class_injection.sh	sh	3827	check_deleted_class_injection.sh — 已删除类"注入/硬依赖"巡检（2026-10-28 建）	used	9
-check_framework_isolation.sh	sh	6280	check_framework_isolation.sh — 框架层「不许出现单游戏逻辑」的机器关	used	3
+check_framework_isolation.sh	sh	7113	check_framework_isolation.sh — 框架层「不许出现单游戏逻辑」的机器关	used	10
 check_merge_markers.sh	sh	2960	check_merge_markers.sh — Git 冲突标记残留检查	used	9
 check_release_apk.sh	sh	6193	check_release_apk.sh — 出包门禁（Java/APK 侧，P6 的半步）	used	56
-check_release_clean.sh	sh	9854	check_release_clean.sh — 干净正式包门禁（诊断代码不许进正式包）	used	79
+check_release_clean.sh	sh	9854	check_release_clean.sh — 干净正式包门禁（诊断代码不许进正式包）	used	80
 check_state_hash_sync.py	py	5094	Check that game state/current index hashes match the final APK/prune manifest.	used	27
 classify_proc_gone.sh	sh	7513	classify_proc_gone.sh — 把「进程消失了」定性：ANR / native 崩溃 / 系统杀 / 我方 force-stop / 无痕	used	5
 cleanup_device_re_residue.sh	sh	7682	真机逆向残留一键清理（每次 Frida/补丁/注入/试装结束后必跑）	used	82
@@ -34,7 +34,7 @@ dump_binge_shell_mem_device.sh	sh	3186	On-device helper. Args: PID DEV_DIR	used	
 dump_es2_ext.sh	sh	1193	es2 补充 dump 宿主端。Usage: dump_es2_ext.sh PACKAGE OUTDIR （用 ANDROID_SERIAL 选设备）	used	2
 dump_es2_ext_device.sh	sh	2781	es2 补充 dump：壳载体 so 全段 + il2cpp/xlua 数据段 + 全部 anon .bss + rwx	used	5
 ensure_starry_device_id_seed.sh	sh	2524	全游戏卡密：统一 / 补齐 device_id 种子到全局可读位置。	used	32
-env.sh	sh	10180	nixiang shared env — source from other _common scripts	used	219
+env.sh	sh	10180	nixiang shared env — source from other _common scripts	used	221
 env_deps.sh	sh	19329	env_deps.sh — 环境依赖体检（双机：mac / win Git Bash）	used	22
 evidence.sh	sh	5039	evidence.sh — 参数化取证（把「现场 logcat 检索」收敛成一条命令）	used	9
 extract_il2cpp_preambles.py	py	12955	(无描述)	used	10
@@ -51,7 +51,7 @@ gen_game_doc_index.py	py	10348	生成/校验每个游戏目录的 `_index.md`：
 gen_payload_enc.py	py	15038	-*- coding: utf-8 -*-	used	43
 gen_state_index.py	py	12944	生成跨游戏状态索引：current.md（当前工作集）＋ archive_index.md（全量）。	used	15
 gen_util.py	py	1638	代码生成器公共工具：幂等写盘。	used	5
-git_push_main.sh	sh	16849	git_push_main.sh —— 推送到 origin/<branch> 的**四通道自适应 + 自愈重试**实现	used	34
+git_push_main.sh	sh	16849	git_push_main.sh —— 推送到 origin/<branch> 的**四通道自适应 + 自愈重试**实现	used	35
 gradle_cn_mirrors.py	py	2173	在 build.gradle 的每个 repositories{} 块最前面插入国内镜像仓库。	used	2
 gradle_cycle.sh	sh	18313	gradle_cycle.sh — 助手类（gradle 工程）一键出包链路（P5）	used	21
 gradle_localize.py	py	6943	把 starry-mod-menu 的临时构建副本"本地化"到本机 Android SDK + 国内镜像。	used	2
@@ -72,11 +72,11 @@ next_free_dex.py	py	885	Print the smallest unused classesN.dex index for an APK.
 obfuscate_menu_dex.sh	sh	7595	obfuscate_menu_dex.sh — 给注入用 menu dex 做 R8 混淆	used	20
 pipeline_record_cleanup.py	py	10384	Record already-performed cleanup in a game's pipeline.json.	used	41
 portable_users_path_migrate.py	py	8239	-*- coding: utf-8 -*-	used	2
-post_install_precheck.sh	sh	20093	post_install_precheck.sh — 装机预检闸门（装机后运行时证据关）	used	155
-pre_install_gate.sh	sh	37842	pre_install_gate.sh — 装机前产物机器关（六查）	used	242
-preflight.sh	sh	25319	preflight.sh — 文件变更检查关（改完任何文件后必跑；全部会话/所有模型一体适用）	used	167
+post_install_precheck.sh	sh	20093	post_install_precheck.sh — 装机预检闸门（装机后运行时证据关）	used	157
+pre_install_gate.sh	sh	37842	pre_install_gate.sh — 装机前产物机器关（六查）	used	244
+preflight.sh	sh	25319	preflight.sh — 文件变更检查关（改完任何文件后必跑；全部会话/所有模型一体适用）	used	168
 prior_art.sh	sh	4325	prior_art.sh — 动手前 3 分钟先例检索（P11）	used	59
-prune_output_final.sh	sh	6171	将 08_output/<游戏> 裁剪为唯一正式 APK。	used	147
+prune_output_final.sh	sh	6171	将 08_output/<游戏> 裁剪为唯一正式 APK。	used	148
 rebuild_sign_install.sh	sh	3725	apktool 重建 → 对齐/签名 → 可选 adb 安装	used	5
 rootcause_note.sh	sh	16461	rootcause_note.sh — 「根因定案」登记与闸门（2026-10-10 复盘 P1-3）	used	29
 run_audit_tests.sh	sh	5469	一条命令复跑「规则文档」相关的全部机器检查与单元测试（可在任意干净环境执行）。	used	31
@@ -104,6 +104,6 @@ test_delivery_manifest.py	py	2407	Offline tests for delivery manifest generation
 test_harden_reason.py	py	4973	-*- coding: utf-8 -*-	used	5
 test_push_main_rewrite.py	py	6173	Tests for git_push_main.sh's HTTPS-route URL rewrite. Run with python3 -B.	used	2
 trash_paths.sh	sh	12729	安全隔离清理：默认只预演；--apply 才把显式路径移动到 macOS Trash 下的隔离目录。	used	84
-verify_installed_apk.sh	sh	4680	verify_installed_apk.sh — 装机完整性校验（防"装了旧包"假成功）	used	155
+verify_installed_apk.sh	sh	4680	verify_installed_apk.sh — 装机完整性校验（防"装了旧包"假成功）	used	156
 with_timeout.sh	sh	2229	with_timeout.sh — 超时垫片（macOS 无 GNU `timeout`）	used	7
 workspace_health.sh	sh	6483	workspace_health.sh — 工作区一屏体检（月度/收尾时跑一次）	used	3
