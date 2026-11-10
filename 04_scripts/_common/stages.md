@@ -436,6 +436,7 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 | `run_audit_tests.sh` ＋ `test_*.py` | 治理回归测试（链接/约束/经验卡/交付 manifest/`archive git` 退出码契约） | 改治理脚本后 `--docs-strict` |
 | `test_archive_git_exit.py` / `test_delivery_manifest.py` | 单项回归：`archive_*` 两入口的退出码契约 / manifest 生成（一次性临时仓库） | 改动这两个环节后 |
 | `workspace_health.sh` | **工作区一屏体检**：冲突标记 / 两个索引新鲜度 / 规则↔门禁映射 / 入口体量 / 文档覆盖率 / 摘要陈旧 / Git 状态 / 产物体积；**红线未过 rc=1** | 月度自查、收尾、或用户问「工作区现在什么状态」 |
+| `obfuscate_menu_dex.sh` | **注入 dex 的 R8 混淆入口**：`<jar\|class目录> <输出.dex>`。组件类 / native `FindClass` 目标 / 注入脚本写进游戏 Manifest 的类保留原名，其余改名到 `com.starry.magic.o/**`（仍在 `com/starry` 子树内，`cp -R com/starry` 拷得到）。规则＝`mod菜单/starry-mod-menu/app/inject-dex-rules.pro` | **所有** `*_build_dex.sh` 的 dex 产出步骤（已 11/11 接入）；手工出 dex 时 |
 
 > **脚本可发现性**：`04_scripts/_common/scripts_index.tsv` 由 `gen_scripts_index.py` 生成，
 > 列出全部公共脚本的一句话用途与「是否孤儿」。**"孤儿"只表示没有任何规则/脚本/文档提到它，

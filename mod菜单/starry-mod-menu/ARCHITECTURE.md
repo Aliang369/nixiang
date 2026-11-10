@@ -53,6 +53,27 @@
 
 因此「每适配一个新游戏」在仓库多一份 `Games/XxxMod`，但**打进目标包的只有当前 mk 选中的那一份**。
 
+### 菜单 dex 的两条产出路径（2026-11-10 定）
+
+注入进游戏包的 menu dex 有两种来源，**两条都不经过 gradle**（所以 `app/build.gradle` 的
+`minifyEnabled true` 对它们完全无效）：
+
+| 路径 | 使用方 | 产出 | 混淆入口 |
+|---|---|---|---|
+| **A. apktool** | 57 个 `surgical_*` / `inject_*` 脚本 | `apktool d` 菜单 APK → 拷 `com/starry/**` smali → `apktool b` | 混淆在上游 APK 里完成（`app/proguard-rules.pro`） |
+| **B. javac+d8** | 11 个 `*_build_dex.sh` | 源码现场编译 → jar → dex 直塞 zip | `04_scripts/_common/obfuscate_menu_dex.sh`（R8） |
+
+**两条都必须混淆**。不混淆的实测后果：`strings classes2.dex` 直接读出
+`/v1/auth/grant`、`https://<服务器IP>`、`AuthClient`、`DeviceFingerprint`、
+`NativeMenuController` —— 卡密协议连同绕过方法一起交给破解者。
+
+**混淆契约（改任何一条前先读）**：必须保留原名的只有四类 ——
+① `AndroidManifest` 里的组件 ② native `FindClass`/`RegisterNatives` 目标
+③ 注入脚本写进**游戏** Manifest 的 Application/Provider/AppComponentFactory
+④ `*_build_dex.sh` 字节自检断言的类。
+其余一律 `-keep,allowobfuscation`；加 `-repackageclasses 'com.starry.magic.o'`
+保证被改名的类仍在 `com/starry` 子树内（路径 A 的 `cp -R com/starry` 才拷得到）。
+
 ### 数据流示例：用户开启"无限生命"
 
 ```

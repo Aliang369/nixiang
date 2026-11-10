@@ -189,6 +189,33 @@ Main.cpp
 5. UI 设置（featNum ≥ 50）仍不需要票。  
 6. 游戏具体修改代码（`Zhmr_Tick` 等）**不用改**；只是外面多包了一层「有票才进 Tick」。
 
+7. **★ 功能位门禁四个入口一个都不能漏**（2026-11-10 修，P1-7）：  
+   放行判据必须是 `session_live() && sgauth::feat_ok(featNum)`，**不是**只 `session_live()`。
+
+   | JNI 入口 | 控件类型 | 修正前 | 修正后 |
+   |---|---|---|---|
+   | `nativeSetFeature` | `Toggle_` 开关 | ✅ 有 feat_ok | ✅ |
+   | `nativeSetValue` | `Slider_` / `Spinner_` 滑块下拉 | ❌ 只查会话 | ✅ |
+   | `nativeSetText` | `InputText_` 输入框 | ❌ 只查会话 | ✅ |
+   | `nativeExecButton` | `Button_` 执行按钮 | ❌ 只查会话 | ✅ |
+   | `nativeSetLongValue` | 长整（当前无人调） | ❌ **连会话都不查** | ✅ |
+
+   漏一处 = 后台关掉那个功能位后，玩家换个控件形态照样能用（例如「伤害倍率」开关关了，
+   滑块还能拉）。两套入口都要改：`MainModern.cpp`（modern）**和** `Main.cpp`（legacy）。
+   **自检**：`grep -c 'feat_ok' app/src/main/jni/Main.cpp app/src/main/jni/MainModern.cpp`
+   应各 ≥5（4 处新控件 + 1 处 Toggle）。
+
+8. **★ 功能掩码是 64 位**（2026-11-10 扩，P1-8）：`feat_ok` 上限 `idx > 63`，
+   与 `g_features[64]` 对齐。服务端 `FEAT_MASK_ALL = 0xFFFFFFFFFFFFFFFF`（16 个 F）。
+   若只改一端：客户端 32 位上限 ⇒ 第 33 项起永远不授权（表现为「点了没反应」，
+   极易误判成 hook 写错）。**两端必须同批改**，且 `strtoull`/`%llx` 不能还留 32 位写法。
+
+9. **★ 注入 dex 必须过 R8 混淆**（2026-11-10，P1-9）：注入进游戏包的 menu dex
+   不走 gradle，`minifyEnabled` 对它无效；不过 R8 就是**明文**（能 strings 读出
+   `/v1/auth/grant`、服务器 IP、`AuthClient`）。用 `04_scripts/_common/obfuscate_menu_dex.sh`，
+   规则在 `app/inject-dex-rules.pro`。**保名清单只加不减**：新增任何被 Manifest / native
+   `FindClass` / 注入脚本按名引用的类，必须同步加 `-keep`，否则进游戏才 ClassNotFound。
+
 ### 3.5 相关文件清单（给 AI 搜索用）
 
 | 用途 | 路径 |

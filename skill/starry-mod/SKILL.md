@@ -168,6 +168,28 @@ cp -f app/src/libs/arm64-v8a/libstarry_magic.so app/src/main/jniLibs/arm64-v8a/
 
 优先用各游戏的 `scripts/surgical_*.sh` / `*_so_only.sh`（脚本内应已含拷贝与自检）。
 
+### 菜单 dex 必须混淆（2026-11-10，防「懂行的」）
+
+注入进游戏包的 menu dex 有两条路，**两条都不经过 gradle** ⇒ `app/build.gradle` 的
+`minifyEnabled true` 对它们无效，不额外处理就是**明文**
+（实测能 `strings` 读出 `/v1/auth/grant`、服务器 IP、`AuthClient`、`DeviceFingerprint`）：
+
+| 路径 | 工具 | 混淆入口 |
+|---|---|---|
+| `apktool d` → 拷 `com/starry/**` smali → `apktool b` | 57 个 `surgical_*` 脚本 | 上游 APK 已混（`app/proguard-rules.pro`） |
+| `javac + d8` 直出 | 11 个 `*_build_dex.sh` | **`04_scripts/_common/obfuscate_menu_dex.sh`**（R8） |
+
+```bash
+# javac 打完 jar 后，替代裸 d8 那一步：
+bash 04_scripts/_common/obfuscate_menu_dex.sh <classes.jar|class目录> <输出 classesN.dex>
+```
+
+**改规则的红线**（规则文件 `app/inject-dex-rules.pro`）：新增任何被
+**AndroidManifest / native `FindClass` / 注入脚本写进游戏 Manifest / 构建脚本字节自检**
+按名引用的类，必须同步加 `-keep`（不带 `allowobfuscation`），否则**进游戏才 ClassNotFound**。
+`-repackageclasses 'com.starry.magic.o'` 不能删 —— 删了类会被重打包到 `k/`、`d/` 这类顶层包，
+`cp -R com/starry` 就拷不到。`-dontshrink` 也不能删（注入包大量按名/反射入口静态不可达）。
+
 ---
 
 ## 入口点决策表

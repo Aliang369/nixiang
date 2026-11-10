@@ -13,6 +13,25 @@
 
 > 注入只拷 `com/starry/**` smali。ProGuard 禁止把菜单类改名成 `d.b` 这类短名，否则游戏会闪退（`ClassNotFoundException`）。规则见 `app/proguard-rules.pro`。
 
+> **⚠ 2026-11-10 更新：dex 混淆不是可选项**
+>
+> 注入链有**两条**产出 menu dex 的路，两条都**不经过 gradle**（`minifyEnabled` 对它们无效）：
+>
+> | 路径 | 用它的游戏 | dex 从哪来 |
+> |---|---|---|
+> | `apktool d` → 拷 `com/starry/**` smali → `apktool b` | 57 个存量脚本 | 上面 APK 里的 classesN.dex |
+> | `javac + d8` 直出 | 11 个 `*_build_dex.sh` | 源码现场编译 |
+>
+> 两条都必须过 R8 混淆（`04_scripts/_common/obfuscate_menu_dex.sh`，规则 `app/inject-dex-rules.pro`）。
+> 不混淆的后果是实测过的：`strings classes2.dex` 直接读出 `/v1/auth/grant`、`https://<服务器IP>`、
+> `AuthClient`、`DeviceFingerprint` —— 等于把卡密协议连同绕过方法一起发给破解者。
+>
+> **改规则的唯一红线**：新增任何被 **AndroidManifest / native `FindClass` / 注入脚本写进游戏
+> Manifest** 按名引用的类，必须同步加 `-keep`（不带 `allowobfuscation`），否则进游戏才 ClassNotFound。
+> 构建脚本的字节自检（`b'com/starry/magic/...'`）也是契约，同样要 keep。
+>
+> 详见 `04_scripts/_common/stages.md`「现有脚本资产的角色」表。
+
 发版顺序：**先更新验证服务器 → 再跑 inject（release）→ 玩家重装/更新后重新登录**。  
 详见 [GRANT_AUTH.md](auth-server/docs/GRANT_AUTH.md)、[SECURITY.md](auth-server/docs/SECURITY.md)。
 

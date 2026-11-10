@@ -68,7 +68,7 @@ menu_tpl_gate.sh	sh	6874	menu_tpl_gate.sh — 菜单模板/dex 新鲜度门禁�
 merge_gradle_wrapper.py	py	3527	把 gradle 发行版里的分片 jar 合并成项目用的 gradle-wrapper.jar。	used	2
 new_hypothesis.sh	sh	3862	new_hypothesis.sh — 「假设预注册」脚手架（改动前先写下「怎么算对」）	used	6
 next_free_dex.py	py	885	Print the smallest unused classesN.dex index for an APK.	used	22
-obfuscate_menu_dex.sh	sh	7595	obfuscate_menu_dex.sh — 给注入用 menu dex 做 R8 混淆	used	16
+obfuscate_menu_dex.sh	sh	7595	obfuscate_menu_dex.sh — 给注入用 menu dex 做 R8 混淆	used	19
 pipeline_record_cleanup.py	py	10384	Record already-performed cleanup in a game's pipeline.json.	used	41
 portable_users_path_migrate.py	py	8239	-*- coding: utf-8 -*-	used	2
 post_install_precheck.sh	sh	20093	post_install_precheck.sh — 装机预检闸门（装机后运行时证据关）	used	155
