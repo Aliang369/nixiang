@@ -66,6 +66,28 @@ def _client_ip(request: Request | None) -> str | None:
     return None
 
 
+def _fmt_expire(v) -> str:
+    """审计用到期时间格式（ISO 秒，UTC 原值）：只记时间，不写任何密钥/口令。"""
+    if v is None:
+        return "无"
+    try:
+        return v.isoformat(timespec="seconds")
+    except TypeError:
+        return str(v)
+
+
+# 可表示时间边界（aware，UTC）：延期结果越界一律 422，不让 OverflowError 变 500
+_DT_MIN = datetime.min.replace(tzinfo=timezone.utc)
+_DT_MAX = datetime.max.replace(tzinfo=timezone.utc)
+
+
+def _as_utc(v):
+    """DB 读回的 naive 时间按 UTC 解释（SQLite 无 tz；Postgres/TIMESTAMPTZ 本来 aware）。"""
+    if v is not None and v.tzinfo is None:
+        return v.replace(tzinfo=timezone.utc)
+    return v
+
+
 def _clamp_page(page: int, page_size: int, max_size: int = 200) -> tuple[int, int]:
     return max(page, 1), min(max(page_size, 1), max_size)
 
@@ -834,16 +856,52 @@ def batch_cards(
     if body.status is None and body.extend_days is None:
         raise HTTPException(400, "请至少指定 status 或 extend_days")
     now = utcnow()
+    # 先算后写（2026-11-12）：延期值越大越容易在 base+delta 处溢出 datetime，
+    # 一旦任何一张算不出结果就整批 422 —— 此时尚未改任何字段、未写审计、未 commit，
+    # 不会出现「前半批已延期、后半批失败」的半批状态。
+    delta = None
+    if body.extend_days is not None:
+        try:
+            delta = timedelta(days=body.extend_days)
+        except (OverflowError, ValueError, TypeError):
+            raise HTTPException(422, "延期天数超出可计算范围")
+    found = (
+        db.query(CardKey).filter(CardKey.id.in_(body.ids)).all() if body.ids else []
+    )
+    by_id = {c.id: c for c in found}
+    ordered = [by_id[i] for i in body.ids if i in by_id]
+    planned: dict[int, datetime] = {}
+    if delta is not None:
+        for card in ordered:
+            base = _as_utc(card.expire_at)
+            if base is None or base <= now:
+                base = now
+            try:
+                new_exp = base + delta
+            except (OverflowError, ValueError):
+                raise HTTPException(
+                    422, f"卡密 ID={card.id} 延期后超出可表示时间范围，整批未修改"
+                )
+            if new_exp < _DT_MIN or new_exp > _DT_MAX:
+                raise HTTPException(
+                    422, f"卡密 ID={card.id} 延期后超出可表示时间范围，整批未修改"
+                )
+            planned[card.id] = new_exp
     updated = 0
-    for card_id in body.ids:
-        card = db.query(CardKey).filter(CardKey.id == card_id).first()
-        if not card:
-            continue
+    expire_changed = 0
+    expire_samples: list[str] = []
+    for card in ordered:
         if body.status is not None:
             card.status = body.status
-        if body.extend_days is not None:
-            base = card.expire_at if card.expire_at and card.expire_at > now else now
-            card.expire_at = base + timedelta(days=body.extend_days)
+        if delta is not None:
+            old_expire = _as_utc(card.expire_at)
+            card.expire_at = planned[card.id]
+            if planned[card.id] != old_expire:
+                expire_changed += 1
+                if len(expire_samples) < 3:
+                    expire_samples.append(
+                        f"ID={card.id}:{_fmt_expire(old_expire)}->{_fmt_expire(planned[card.id])}"
+                    )
         refresh_card_status(card)
         if card.status in ("banned", "expired", "exhausted"):
             revoke_card_sessions(db, card.id)
@@ -856,6 +914,9 @@ def batch_cards(
             f"选中数量={len(body.ids)} 已更新={updated}"
             + (f" 状态={body.status}" if body.status is not None else "")
             + (f" 延期天数={body.extend_days}" if body.extend_days is not None else "")
+            + (f" 到期变更={expire_changed}张" if body.extend_days is not None else "")
+            + (f" 样本={'；'.join(expire_samples)}" if expire_samples else "")
+            + " 来源=admin.cards.batch"
         ),
         ip=_client_ip(request),
         commit=False,
@@ -919,6 +980,9 @@ def update_card(
         data["game_id"] = None
     if data.get("scope") == "game" and not data.get("game_id") and not card.game_id:
         raise HTTPException(400, "单游戏卡必须指定 game_id")
+    # 审计口径（2026-11-12）：改动前后到期时间都留痕，事后可还原"谁把它改早了/改晚了"
+    expire_sent = "expire_at" in data
+    old_expire = card.expire_at
     for k, v in data.items():
         setattr(card, k, v)
     if force_unbind:
@@ -937,6 +1001,8 @@ def update_card(
         detail=(
             f"ID={card_id} 状态={card.status}"
             + (f" 强制解绑={'是' if force_unbind else '否'}")
+            + (f" 到期={_fmt_expire(old_expire)}->{_fmt_expire(card.expire_at)}" if expire_sent else "")
+            + " 来源=admin.cards.update"
         ),
         ip=_client_ip(request),
         commit=False,

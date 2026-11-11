@@ -325,15 +325,35 @@ def revoke_card_sessions(db: Session, card_id: int) -> int:
 
 
 def activate_if_needed(card: CardKey) -> bool:
-    """返回是否本次新激活。"""
-    if card.status == "unused" or card.activated_at is None:
-        now = utcnow()
+    """返回是否本次新激活。
+
+    2026-11-12 修复「手设到期时间被首次激活覆盖」：旧逻辑只要 status=='unused'
+    或 activated_at 为空就 expire_at = now + 卡种时长，会把后台手设的到期时间
+    （例：设到 11-13 00:00）压成 now+1 天，表现为提前一两天到期。现口径：
+    - 只有 expire_at 为空时才按卡种默认时长从 now 计算；永久/次数卡不主动生成到期，
+      但若后台显式给永久/次数卡设了到期时间，同样按「显式优先」保留，不清成 NULL；
+    - 已有 expire_at（后台手设、已延期、已过期）一律不覆盖，不自动续期；
+    - activated_at 已有值时不改写；已过期（含手设过去时间）激活后仍判过期。
+    """
+    if card.status == "banned":
+        return False
+    if card.status != "unused" and card.activated_at is not None:
+        return False
+    now = utcnow()
+    # 先判过期、后写字段：过期卡直接拒绝且不改任何属性（调用方异常路径不 commit，
+    # 库内 status/expire_at 保持原值），避免"先置 active 再抛"留下半改状态。
+    exp = card.expire_at
+    if exp is not None:
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=timezone.utc)
+        if exp <= now:
+            raise HTTPException(403, "卡密已过期")
+    if card.activated_at is None:
         card.activated_at = now
-        if card.duration_type != "count":
-            card.expire_at = add_duration(now, card.duration_type)
-        card.status = "active"
-        return True
-    return False
+    if card.expire_at is None and card.duration_type != "count":
+        card.expire_at = add_duration(now, card.duration_type)
+    card.status = "active"
+    return True
 
 
 def login_card(

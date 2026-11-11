@@ -171,8 +171,9 @@ class AnnouncementUpdate(BaseModel):
 class CardBatchRequest(BaseModel):
     ids: list[int] = Field(min_length=1)
     status: Optional[str] = Field(default=None, pattern="^(unused|active|expired|banned|exhausted)$")
-    # 相对延期天数；可与 status 同时用
-    extend_days: Optional[float] = None
+    # 相对延期天数；可与 status 同时用。2026-11-12：禁止负数/NaN/Inf——
+    # 负数会把到期时间提前（等于扣时），0 表示只改状态不动时间（保留兼容）。
+    extend_days: Optional[float] = Field(default=None, ge=0, allow_inf_nan=False)
 
 
 class FeatureCreate(BaseModel):

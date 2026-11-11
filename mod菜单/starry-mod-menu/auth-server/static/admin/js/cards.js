@@ -170,6 +170,18 @@
       return Math.min(100, Math.max(0, Math.trunc(n)));
     }
 
+    /** 到期时间补丁值（2026-11-12）：未改时间不提交，改时间/清除才提交。
+     *  undefined = 不发送该字段（服务端原值连秒/微秒一起保留）；null = 明确清除（不限时）；
+     *  ISO 串 = 用户确实改了时间。判「没改」用分钟粒度——这是时间选择器能表达的精度。 */
+    function cardExpirePatch(originalIso, pickedIso) {
+      const orig = originalIso ? parseServerTime(originalIso) : null;
+      if (!pickedIso) return orig ? null : undefined;
+      const picked = parseServerTime(pickedIso);
+      if (!picked) return undefined;
+      if (orig && Math.floor(picked.getTime() / 60000) === Math.floor(orig.getTime() / 60000)) return undefined;
+      return pickedIso;
+    }
+
     async function saveCardEdit(id) {
       const card = cardsCache.find(x => x.id === id) || {};
       try {
@@ -178,12 +190,13 @@
           scope,
           game_id: scope === 'game' ? (getGamePickerValue('m-e2-game') || null) : null,
           duration_type: document.getElementById('m-e2-type').value,
-          expire_at: tpISOString('m-e2-expire'),
           max_uses: Number(document.getElementById('m-e2-max').value || 0),
           used_count: Number(document.getElementById('m-e2-used').value || 0),
           max_devices: readMaxDevices('m-e2-maxdev', card.max_devices == null ? 1 : Number(card.max_devices)),
           note: document.getElementById('m-e2-note').value.trim() || null,
         };
+        const expirePatch = cardExpirePatch(card.expire_at, tpISOString('m-e2-expire'));
+        if (expirePatch !== undefined) body.expire_at = expirePatch;
         if (body.scope === 'game' && !body.game_id) { toast('请选择游戏'); return; }
         await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify(body) });
         closeModal(); toast('已保存'); loadCards(); loadDashboard(true);

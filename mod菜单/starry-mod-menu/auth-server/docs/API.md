@@ -49,7 +49,7 @@ Base URL：`http://<服务器IP>:8000`
 规则摘要：
 
 - 单设备绑定；已绑其他设备且未命中合法 legacy 候选则拒绝
-- 首次激活按类型写 `expire_at`（永久/次数可为 null）
+- **显式设置的 `expire_at` 优先**（2026-11-12）：只有到期时间为空时才按卡种默认时长从"激活时刻"计算；后台手设的到期时间、已延期、已过期的卡都不会被首次激活覆盖（不自动续期）。永久/次数卡默认不产生到期时间（null）；若后台显式给它们设了到期时间，该值同样优先保留、不会被改为 null
 - `max_uses > 0` 或 `duration_type=count`：**每次登录扣 1 次**
 - `scope=global` 可用于任意 `game_id`；`scope=game` 仅匹配卡上的 `game_id`
 
@@ -128,6 +128,8 @@ Base URL：`http://<服务器IP>:8000`
 ### 修改卡密 `PATCH /v1/admin/cards/{id}`
 
 可改 `expire_at`、`status`、`max_uses`、`used_count`、`max_devices` 等。
+到期时间的改动会记入审计：`detail` 里带 `到期=<旧>-><新>`（ISO 秒、UTC），清除记 `->无`；未提交该字段则不记。
+批量 `POST /v1/admin/cards/batch` 的 `extend_days` 只接受有限非负数（0 表示只改状态不动时间）。
 `force_unbind: true` **整卡**清除全部设备绑定（后台操作一律整卡）。
 `max_devices` 改小只拦「新设备登录」，不主动踢已绑定设备——要立刻收回用 `force_unbind`。
 
