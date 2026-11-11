@@ -20,6 +20,7 @@ git add -- \
   "mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.cpp" \
   "mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.h" \
+  "mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh"
 
 git add -f -- \
   "mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so" \
@@ -44,6 +45,7 @@ while IFS= read -r path; do
     mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.h|\
     mod菜单/starry-mod-menu/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so|\
     mod菜单/starry-mod-menu/app/src/main/libs/arm64-v8a/libstarry_magic.so|\
+    mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20260912.sh|\
     06_dumped/追迹迷城/1.0.20260912_il2cpp/dump.cs|\
     06_dumped/追迹迷城/1.0.20260912_il2cpp/stringliteral.json|\
     06_dumped/追迹迷城/1.0.20260912_il2cpp/rva_targets.json)
