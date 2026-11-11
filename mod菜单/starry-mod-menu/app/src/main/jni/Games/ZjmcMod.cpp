@@ -1,12 +1,12 @@
 /* ================================================================
- *  追迹迷城 1.0.20261030 / vc103301（TapTap）
- *  RVA 来自官方包 Il2CppDumper（2026-11-02 重 dump：
- *  libil2cpp md5 73f96ea8d0ee9ad8b2d8102e2078e6f0，metadata md5 8449bf95b021ab14d163e2016ab6d6a8）。
+ *  追迹迷城 1.0.20261111 / vc104502（TapTap）
+ *  RVA 来自官方包 Il2CppDumper（2026-11-11 重 dump：
+ *  libil2cpp md5 180f301cbf4461e9aae12f0efe7e435d，metadata md5 dcc59335ab09d5d7565f6dec013f60c8）。
  *  17 个目标按「命名空间.类.方法」全名重新命中（04_scripts/追迹迷城/find_rva_zjmc.py），
  *  签名不变；跨版本恒定间距逐条相等（LP Dodge-Check2 +0x2C、Attack +0x1C、Partner +0x34、
  *  ATGameManager +0x17C/+0x24）⇒ 同源代码线性位移，Hook 语义原样复用。
- *  本版有两处函数体长度变化（只改间距、不改语义）：LP Check1→Check2 0xA8→0x2C、
- *  Monster PDH→HP 0xA20→0x2444。
+ *  本版函数体长度再次变化（只改间距、不改语义）：LP Check1→Check2 0xA8→0x2C（与 1030 版相同）、
+ *  Monster PDH→HP 0x2444→0xB68。
  *  免广告：ShowRewardADS 会内联计算 3 - GetFreeSkipAdsUsedCount()，因此同时 hook
  *  UsedCount / UseFreeSkipAds / RemainingCount 三个底层入口，持续复用官方免费跳过分发。
  *  ELF bias +0x4000（RX LOAD vaddr-file = 0x4000，本版实测不变），运行时用 maps file_off。
@@ -26,24 +26,24 @@
 
 enum : uintptr_t {
     ELF_BIAS = 0x4000,
-    // —— 1.0.20261030 / vc103301 重定位（2026-11-02 dump，旧值全部作废）——
-    RVA_BM_UPDATE            = 0x30E8EA0,  // BattleManager$$FixedUpdate（AOE 用）
-    RVA_BM_GET_ALIVE         = 0x30ECD50,  // BattleManager$$GetCurWaveAliveEnemyList
-    RVA_ATK_CAN_USE          = 0x3125344,  // AttackBattleData$$CheckCurrentIsCanUse
-    RVA_ATK_CUR_SP           = 0x3125360,  // AttackBattleData$$CheckCurSp
-    RVA_PARTNER_CAN_USE      = 0x3125798,  // MonsterPartnerSkillBattleData$$CheckCurrentIsCanUse
-    RVA_PARTNER_CUR_SP       = 0x31257CC,  // MonsterPartnerSkillBattleData$$CheckCurSp
-    RVA_LP_CHECK_1           = 0x31B6FA0,  // LocalPlayer$$CheckSkillUse_1
-    RVA_LP_CHECK_2           = 0x31B6FCC,  // LocalPlayer$$CheckSkillUse_2
-    RVA_LP_CHECK_DODGE       = 0x31B6FF8,  // LocalPlayer$$CheckSkillUse_Dodge
-    RVA_LP_PROCESS_DMG       = 0x31B711C,  // LocalPlayer$$ProcessDamageOrHeal
-    RVA_LP_CHANGE_HP         = 0x31B7318,  // LocalPlayer$$ChangeHP（非 DisplayClass 闭包）
-    RVA_LP_CHECK_ACTION      = 0x31B8180,  // LocalPlayer$$CheckSkillUse_ActionState
-    RVA_MONSTER_PROCESS_DMG  = 0x31BDBC4,  // Monster$$ProcessDamageOrHeal
-    RVA_MONSTER_CHANGE_HP    = 0x31C0008,  // Monster$$ChangeHP
-    RVA_GET_FREE_SKIP_ADS    = 0x2E48B94,  // ATGameManager$$GetFreeSkipAdsRemainingCount
-    RVA_GET_FREE_SKIP_ADS_USED = 0x2E48D10,  // ATGameManager$$GetFreeSkipAdsUsedCount
-    RVA_USE_FREE_SKIP_ADS    = 0x2E48D34,  // ATGameManager$$UseFreeSkipAds
+    // —— 1.0.20261111 / vc104502 重定位（2026-11-11 dump，旧值全部作废）——
+    RVA_BM_UPDATE              = 0x30FF1C4,  // BattleManager$$FixedUpdate（AOE 用）
+    RVA_BM_GET_ALIVE           = 0x3102CD0,  // BattleManager$$GetCurWaveAliveEnemyList
+    RVA_ATK_CAN_USE            = 0x31559E0,  // AttackBattleData$$CheckCurrentIsCanUse
+    RVA_ATK_CUR_SP             = 0x31559FC,  // AttackBattleData$$CheckCurSp
+    RVA_PARTNER_CAN_USE        = 0x3155E34,  // MonsterPartnerSkillBattleData$$CheckCurrentIsCanUse
+    RVA_PARTNER_CUR_SP         = 0x3155E68,  // MonsterPartnerSkillBattleData$$CheckCurSp
+    RVA_LP_CHECK_1             = 0x31CF3B4,  // LocalPlayer$$CheckSkillUse_1
+    RVA_LP_CHECK_2             = 0x31CF45C,  // LocalPlayer$$CheckSkillUse_2
+    RVA_LP_CHECK_DODGE         = 0x31CF488,  // LocalPlayer$$CheckSkillUse_Dodge
+    RVA_LP_PROCESS_DMG         = 0x31CF8A0,  // LocalPlayer$$ProcessDamageOrHeal
+    RVA_LP_CHANGE_HP           = 0x31CFA9C,  // LocalPlayer$$ChangeHP（非 DisplayClass 闭包）
+    RVA_LP_CHECK_ACTION        = 0x31D0B98,  // LocalPlayer$$CheckSkillUse_ActionState
+    RVA_MONSTER_PROCESS_DMG    = 0x31D3CB0,  // Monster$$ProcessDamageOrHeal
+    RVA_MONSTER_CHANGE_HP      = 0x31D4818,  // Monster$$ChangeHP
+    RVA_GET_FREE_SKIP_ADS      = 0x2E56640,  // ATGameManager$$GetFreeSkipAdsRemainingCount
+    RVA_GET_FREE_SKIP_ADS_USED = 0x2E567BC,  // ATGameManager$$GetFreeSkipAdsUsedCount
+    RVA_USE_FREE_SKIP_ADS      = 0x2E567E0,  // ATGameManager$$UseFreeSkipAds
 };
 
 

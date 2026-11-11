@@ -1,28 +1,31 @@
 #!/usr/bin/env bash
 # 追迹迷城：构建 libstarry_magic.so，强制刷新 jniLibs 并校验游戏标签。
+# 2026-11-11 起走**游戏私有 mk** Android_zjmc.mk 隔离构建：公共 Android.mk 的 ZJMC
+# 激活段是注释态且属受保护文件（游戏执行会话禁改），切公共 mk 还会波及其他游戏出包。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STARRY_SRC="$NIXIANG_ROOT/mod菜单/starry-mod-menu"
 JNI_DIR="$STARRY_SRC/app/src/main/jni"
-MK="$JNI_DIR/Android.mk"
+MK="$JNI_DIR/Android_zjmc.mk"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 NDK_BUILD="$NDK/ndk-build"
 OBJ_DIR="$STARRY_SRC/obj_zjmc"
 LIBS_DIR="$STARRY_SRC/libs_zjmc"
 
 [[ -x "$NDK_BUILD" ]] || { echo "错误: ndk-build 不存在: $NDK_BUILD" >&2; exit 1; }
+[[ -f "$MK" ]] || { echo "错误: 缺少私有构建脚本: $MK" >&2; exit 1; }
 grep -Eq '^[[:space:]]*LOCAL_CFLAGS[[:space:]]*\+=[[:space:]]*-DENABLE_UNITY_HOOK[[:space:]]+-DSTARRY_GAME_ZJMC' "$MK" \
-  || { echo "错误: Android.mk 未激活 STARRY_GAME_ZJMC" >&2; exit 1; }
+  || { echo "错误: Android_zjmc.mk 未激活 STARRY_GAME_ZJMC" >&2; exit 1; }
 grep -Eq '^[[:space:]]*LOCAL_SRC_FILES[[:space:]]*:=[[:space:]]*Main.cpp Games/ZjmcMod.cpp' "$MK" \
-  || { echo "错误: Android.mk 未编入 Games/ZjmcMod.cpp" >&2; exit 1; }
+  || { echo "错误: Android_zjmc.mk 未编入 Games/ZjmcMod.cpp" >&2; exit 1; }
 
 rm -rf "$OBJ_DIR" "$LIBS_DIR"
 (cd "$JNI_DIR" && \
   "$NDK_BUILD" \
     NDK_PROJECT_PATH="$STARRY_SRC/app" \
-    APP_BUILD_SCRIPT="$JNI_DIR/Android.mk" \
+    APP_BUILD_SCRIPT="$MK" \
     NDK_APPLICATION_MK="$JNI_DIR/Application.mk" \
     NDK_OUT="$OBJ_DIR" \
     NDK_LIBS_OUT="$LIBS_DIR" \

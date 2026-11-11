@@ -1,14 +1,14 @@
 {
   "package": "com.TeaMelo.DungeonChasers",
   "game": "追迹迷城",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20261030_official.apk",
-  "version_name": "1.0.20261030",
-  "version_code": 103301,
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20261111_official.apk",
+  "version_name": "1.0.20261111",
+  "version_code": 104502,
   "installer": "com.android.packageinstaller",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~4YV6MfMzgGLCGHnZz04oWw==/com.TeaMelo.DungeonChasers-INMlSXrdzET_ki8zV0YqhA==/base.apk",
-  "size": 1105145509,
-  "sha256": "704a4e08b5a5ccb5a1aec22641eeeda0b93c9e53e80f22cc52e3c0d5c9f0c907",
-  "md5": "4078e9ba0c51ab843ff4d98f87d4cbbb"
+  "remote_path": "/data/app/~~deMFPN6nm1Mh0EQxqxG8fg==/com.TeaMelo.DungeonChasers-3UmfR7JQh29oF3vEeChFnw==/base.apk",
+  "size": 1154529548,
+  "sha256": "b8ad4b889993acbfe0cda7e097455db8e42404822e4838484fd7349c54126a4a",
+  "md5": "7e9ca4066ee4a1e3f3da2080aa7b6eef"
 }

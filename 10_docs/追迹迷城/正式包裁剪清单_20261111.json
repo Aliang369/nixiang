@@ -1,0 +1,35 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/追迹迷城",
+  "keep": "追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk",
+  "keep_size": 1149664487,
+  "keep_md5": "ab8e788b161717ec67a19b447c44b28e",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk.idsig",
+      "size": 9061915,
+      "md5": "118a0a1a75f849ad23a76e6c56110409"
+    },
+    {
+      "name": "追迹迷城_1.0.20261111_surgical-releaseSigned.apk",
+      "size": 1149639952,
+      "md5": "ceb95acd3be4b94286968c61c392cff7"
+    },
+    {
+      "name": "追迹迷城_1.0.20261111_starry-singletrack-releaseSigned.apk.idsig",
+      "size": 9061915,
+      "md5": "70d63ea58eb0ed2b2f6247a1353535ec"
+    },
+    {
+      "name": "追迹迷城_1.0.20261111_surgical-releaseSigned.apk.idsig",
+      "size": 9061915,
+      "md5": "b013b6c46e898b37737700d6a26d0133"
+    },
+    {
+      "name": "追迹迷城_1.0.20261111_starry-singletrack-releaseSigned.apk",
+      "size": 1149635856,
+      "md5": "5273cf8c1972e8daa9ce2619841f2649"
+    }
+  ],
+  "removed_count": 5
+}

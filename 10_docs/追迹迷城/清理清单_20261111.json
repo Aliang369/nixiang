@@ -1,0 +1,20 @@
+{
+  "game": "追迹迷城",
+  "date": "2026-11-11",
+  "mode": "trash_paths --apply",
+  "quarantine": "/Users/aliang/.Trash/nixiang______20261111_20261111_212113",
+  "removed_roots": [
+    "03_decompiled/追迹迷城/apktool_1.0.20261111",
+    "03_decompiled/追迹迷城/jadx_1.0.20261111",
+    "06_dumped/追迹迷城/inputs"
+  ],
+  "removed_paths": [],
+  "freed_kib": 3324900,
+  "kept": [
+    "02_apks/追迹迷城/追迹迷城_1.0.20261111_official.apk",
+    "08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk",
+    "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json",
+    "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/",
+    "09_test/追迹迷城/precheck_20261111_210014/"
+  ]
+}

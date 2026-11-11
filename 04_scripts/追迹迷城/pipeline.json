@@ -1,7 +1,7 @@
 {
   "game": "追迹迷城",
-  "version": "1.0.20261030",
-  "notes": "1.0.20261009（vc101201，TapTap）星空包已收尾交付：重 dump 后 17 个目标 RVA 全部重定位；入口改走 ContentProvider（实测 <application android:name> 平台不采用，StarryApp 零实例化），星光 smali 合并进官方 classes4.dex，官方 classes.dex/classes2.dex/classes3.dex 与 resources.arsc 逐字节未改；Manifest 走 v3 补丁器（新增 MenuService + StarryInitProvider + FGS specialUse/悬浮窗权限，并修 resource map 追加基址 off-by-2）；免广告三入口策略已并入 so；TapTap 强制网页登录补 PKG_WHITELIST；hotfix/extract_ota 阶段作废。正式包 md5 4b5767c6bf96494a182b243d0a98a54e / sha256 f5990c41f15d7d200308104e24e40e56dfe3671461d9a4e7799fe4d15cc20f44，L2+L3 全通过。",
+  "version": "1.0.20261111",
+  "notes": "1.0.20261111（vc104502，TapTap）星空版重刻 · **单轨静态改包（当前口径）**：底包＝真机 f9a116a2 现装官方包（1,154,529,548 B，md5 7e9ca4066ee4a1e3f3da2080aa7b6eef，证书 MD5 4684a2b2… 未变，单 base APK 无 split）；IL2CPP 指纹全变（libil2cpp 180f301c…、metadata dcc59335…）⇒ 重 dump 后 17 目标按名重定位（find_rva_zjmc.py，5/5 恒定间距全等）；so 构建走游戏私有 mk Android_zjmc.mk（公共 Android.mk 的 ZJMC 激活段仍为注释态且属受保护文件，未改）；Manifest 走 **v5 最小补丁器**（zjmc_manifest_minimal.sh / patch_zjmc_binary_manifest_v5_minimal.py：只加首位 StarryInitProvider + MenuService(specialUse+property) + 两条权限 + resource map，**appComponentFactory 保持 androidx.core.app.CoreComponentFactory 不改**，不注入 android:name、不挂 killer/SignSpoof 工厂）；TapSDK 走 classes4 三处静态补丁；五项功能集不变（秒杀/无敌/全屏秒杀/无限技能/免广告）。2026-11-11 修复轮：surgical 不再 zip -d 'META-INF/*'（原实现误删官方 85 条 META-INF 业务条目：META-INF/services/*、kotlinx/androidx version、Unity Ads verification.properties），改为按显式顶层旧签名清单清理；成品改 …_starry-singletrack-final-releaseSigned.apk，旧候选保留作对照不覆盖。",
   "params": {
     "game_id": "zjmc",
     "package": "com.TeaMelo.DungeonChasers"
@@ -16,7 +16,7 @@
       "id": "device_ready",
       "name": "设备准备（自动识别唯一真机 + root 检查）",
       "requires": [],
-      "command": "bash 04_scripts/追迹迷城/device_ready_zjmc.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/device_ready_zjmc.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/device_ready_zjmc.sh"
       ],
@@ -27,7 +27,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-02 16:06:49",
+      "done_at": "2026-11-11 19:09:25",
       "artifacts": {
         "04_scripts/追迹迷城/.device_serial": {
           "md5": "0bc47570b06495af1a544933783b7037"
@@ -40,7 +40,7 @@
       "requires": [
         "device_ready"
       ],
-      "command": "bash 04_scripts/追迹迷城/fetch_installed_zjmc.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/fetch_installed_zjmc.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/fetch_installed_zjmc.sh"
       ],
@@ -51,10 +51,10 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-02 16:07:29",
+      "done_at": "2026-11-11 19:10:54",
       "artifacts": {
         "04_scripts/追迹迷城/official_apk.json": {
-          "md5": "2094cbd5a6225a57a8f2da219516c6d9"
+          "md5": "112f78b01be2a5c27951d3ec1ad1e083"
         }
       },
       "inputs": {
@@ -67,7 +67,7 @@
       "requires": [
         "pull_device"
       ],
-      "command": "bash 04_scripts/追迹迷城/check_zjmc_apk.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/check_zjmc_apk.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/check_zjmc_apk.sh"
       ],
@@ -78,14 +78,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-02 16:07:44",
+      "done_at": "2026-11-11 19:12:03",
       "artifacts": {
         "04_scripts/追迹迷城/check_summary.json": {
-          "md5": "f00136013cee44f03a389e2c86a9b2e4"
+          "md5": "43197748b70921e2bbecde3ae684596e"
         }
       },
       "inputs": {
-        "04_scripts/追迹迷城/official_apk.json": "2094cbd5a6225a57a8f2da219516c6d9"
+        "04_scripts/追迹迷城/official_apk.json": "112f78b01be2a5c27951d3ec1ad1e083"
       }
     },
     {
@@ -94,7 +94,7 @@
       "requires": [
         "check_apk"
       ],
-      "command": "bash 04_scripts/追迹迷城/dump_zjmc.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/dump_zjmc.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/dump_zjmc.sh"
       ],
@@ -113,25 +113,28 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-02 16:10:10",
+      "done_at": "2026-11-11 19:16:51",
       "artifacts": {
-        "03_decompiled/追迹迷城/current/AndroidManifest.xml": {
-          "md5": "d0edcf6ef2b1223786798f9bc42d6878"
-        },
         "06_dumped/追迹迷城/current/dump.cs": {
-          "md5": "c06197b1568691277afe4e9d49ec3fd4"
+          "md5": "d8d08dfcfc766f043f67c7af5946d6cb"
         },
         "06_dumped/追迹迷城/current/script.json": {
-          "md5": "ea0ac2e884041bbbaa105a39d722f043"
+          "md5": "7eea02a8677ff4d495e0875dc0b8fe0b"
         }
       },
       "inputs": {
-        "04_scripts/追迹迷城/check_summary.json": "f00136013cee44f03a389e2c86a9b2e4"
-      }
+        "04_scripts/追迹迷城/check_summary.json": "43197748b70921e2bbecde3ae684596e"
+      },
+      "cleaned": {
+        "2026-11-11": [
+          "03_decompiled/追迹迷城/apktool_1.0.20261111"
+        ]
+      },
+      "note": "2026-11-11 收尾清理: 03_decompiled/追迹迷城/current/AndroidManifest.xml; 原 md5=d0edcf6ef2b1223786798f9bc42d6878"
     },
     {
       "id": "anchor",
-      "name": "五功能锚点重定位（1.0.20261030：find_rva_zjmc.py 逐名命中 17 目标）",
+      "name": "五功能锚点重定位（1.0.20261111：find_rva_zjmc.py 逐名命中 17 目标）",
       "requires": [
         "dump"
       ],
@@ -139,46 +142,56 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "10_docs/追迹迷城/锚点_五功能_1.0.20261030.md"
+          "path": "10_docs/追迹迷城/锚点_五功能_1.0.20261111.md"
         }
       ],
       "status": "done",
       "cleanup_note": "本阶段完成于 2026-09-14；06_dumped 大件在收官清理中删除，锚点文本已提交到 10_docs/。",
-      "done_at": "2026-11-02 16:46:17",
+      "done_at": "2026-11-11 19:24:25",
       "artifacts": {
-        "10_docs/追迹迷城/锚点_五功能_1.0.20261030.md": {
-          "md5": "b136ea823071ab2745ade21b8b4b2253"
+        "10_docs/追迹迷城/锚点_五功能_1.0.20261111.md": {
+          "md5": "4afe20d41273d9a104e67da86a8a5b52"
         }
+      },
+      "inputs": {
+        "06_dumped/追迹迷城/current/dump.cs": "d8d08dfcfc766f043f67c7af5946d6cb",
+        "06_dumped/追迹迷城/current/script.json": "7eea02a8677ff4d495e0875dc0b8fe0b"
       }
     },
     {
       "id": "impl_mod",
-      "name": "功能实现（17 目标 RVA 重定位 + Manifest v3 补丁缓存）",
+      "name": "功能实现（17 目标 RVA 重定位 + 单轨最小 Manifest v5 缓存，不改 appComponentFactory）",
       "requires": [
         "anchor"
       ],
-      "command": "bash 04_scripts/追迹迷城/zjmc_manifest.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/zjmc_manifest_minimal.sh\"",
       "preflight": [
         "mod菜单/starry-mod-menu/app/src/main/jni/Main.cpp",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.cpp",
         "mod菜单/starry-mod-menu/app/src/main/jni/Games/ZjmcMod.h",
         "mod菜单/starry-mod-menu/app/src/main/jni/Android.mk",
-        "04_scripts/追迹迷城/zjmc_manifest.sh",
-        "04_scripts/追迹迷城/patch_zjmc_binary_manifest_v2.py"
+        "04_scripts/追迹迷城/zjmc_manifest_minimal.sh",
+        "04_scripts/追迹迷城/patch_zjmc_binary_manifest_v5_minimal.py"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json"
+          "path": "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json"
+        },
+        {
+          "type": "file_exists",
+          "path": "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/AndroidManifest.xml"
         }
       ],
       "status": "done",
-      "cleanup_note": "2026-10-10：ZjmcMod.cpp RVA 表按新 dump 全量替换（libil2cpp md5 d6d9b40da0e47d23ae2f87ec7e5188ec / metadata v31）；Manifest 缓存 07_patched/追迹迷城/surgical_1.0.20261009/AndroidManifest.xml（md5 6e75558d3b6ee930555e23d3cf5e9782）。",
-      "done_at": "2026-11-02 16:21:20",
+      "cleanup_note": "2026-11-11 单轨：Manifest 缓存改为 v5 最小补丁（Factory 保持 androidx.core.app.CoreComponentFactory），zjmc_manifest_minimal.sh → 07_patched/追迹迷城/surgical_1.0.20261111_singletrack/AndroidManifest.xml (md5 a9ba2949ea43e25ba84d0245f8a6f1df)。v3/v4 历史补丁器与其缓存保留不删。",
+      "done_at": "2026-11-11 19:57:22",
       "artifacts": {
-        "07_patched/追迹迷城/surgical_1.0.20261030/AndroidManifest.xml": {
-          "md5": "3e77dfc3cb268f8d7739efe888840fc1",
-          "changed": true
+        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": {
+          "md5": "9e5d9950e14331c4a5085441e9903445"
+        },
+        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/AndroidManifest.xml": {
+          "md5": "a9ba2949ea43e25ba84d0245f8a6f1df"
         }
       }
     },
@@ -188,7 +201,7 @@
       "requires": [
         "impl_mod"
       ],
-      "command": "bash 04_scripts/追迹迷城/zjmc_build_so.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/zjmc_build_so.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/zjmc_build_so.sh"
       ],
@@ -201,65 +214,78 @@
       "status": "done",
       "cleanup_note": "2026-10-10：so md5 5dba6b41830703f1cf526c07f9658b88（4,217,360 B），已用于本次外科包。",
       "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*",
-      "done_at": "2026-11-02 16:46:24",
+      "done_at": "2026-11-11 19:26:01",
       "artifacts": {
         "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": {
-          "md5": "6d3ca63c55c830d7ea9ae615e952a963"
+          "md5": "f0123ac41ea151f9c6e58b719289b19d"
         }
+      },
+      "inputs": {
+        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": "9e5d9950e14331c4a5085441e9903445"
       }
     },
     {
       "id": "surgical",
-      "name": "外科组装（星光 smali 合并进官方 classes4.dex + Manifest v3 补丁 + so；classes/2/3+arsc 零改动）",
+      "name": "单轨外科组装（TapSDK 三处静态补丁进 classes4 + 新增 classes6 仅星光无 killer + 最小 Manifest 不改 Factory；classes/2/3/5 + arsc 零改动）",
       "requires": [
         "build_so"
       ],
-      "command": "bash mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20261030.sh",
+      "command": "bash \"$NIXIANG/mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20261111.sh\"",
       "preflight": [
-        "mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20261030.sh",
-        "04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py"
+        "mod菜单/starry-mod-menu/scripts/surgical_zjmc_1.0.20261111.sh",
+        "04_scripts/追迹迷城/patch_zjmc_tapsdk_static.py",
+        "04_scripts/追迹迷城/patch_zjmc_binary_manifest_v5_minimal.py",
+        "04_scripts/追迹迷城/zjmc_manifest_minimal.sh"
       ],
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261030_surgical-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "cleanup_note": "2026-10-10 出包成功（v4：入口改 StarryInitProvider + 星光合并进 classes4.dex，classes4 method_ids 37691→39785、class_defs 5498→5685）；classes.dex/2/3 + resources.arsc sha256 全等（脚本内断言）；Manifest 缓存 07_patched/追迹迷城/surgical_1.0.20261009/AndroidManifest.xml md5 02afbafb5a600057b1a9d5a6a8950438",
-      "done_at": "2026-11-02 16:30:32",
+      "cleanup_note": "2026-11-11 单轨修复轮重出包：替代同日 20:01 的单轨候选（…_starry-singletrack-releaseSigned.apk，sha256 ba63f0aa… / md5 5273cf8c…，因 zip -d META-INF/* 误删官方 85 条业务条目作废，保留作对照不覆盖）；双轨中间包 …_surgical-releaseSigned.apk 同为对照保留。不注入 killer、Manifest 不改 Factory、TapSDK 改包法三处落 classes4；本包 META-INF 业务条目 85/85 保留且逐条 SHA256 相等。",
+      "done_at": "2026-11-11 20:02:01",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261030_surgical-releaseSigned.apk": {
-          "md5": "933f5ef6c689d1e98a10c0e5e1d1940b"
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk": {
+          "md5": "ab8e788b161717ec67a19b447c44b28e"
         }
       },
       "inputs": {
-        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": "6d3ca63c55c830d7ea9ae615e952a963"
+        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": "f0123ac41ea151f9c6e58b719289b19d"
       }
     },
     {
       "id": "sign",
-      "name": "签名产物复核（外科脚本已用 starry_release.jks 签名）",
+      "name": "成品包验收（verify_zjmc_singletrack.py：身份/外科铁证/TapSDK 三补丁/无 killer/Manifest/so 菜单 全项断言）",
       "requires": [
         "surgical"
       ],
-      "command": "true",
+      "command": "python3 \"$NIXIANG/04_scripts/追迹迷城/verify_zjmc_singletrack.py\" \"$NIXIANG/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk\" \"$NIXIANG/02_apks/追迹迷城/追迹迷城_1.0.20261111_official.apk\" \"$NIXIANG/07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json\"",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261030_surgical-releaseSigned.apk"
+          "path": "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json"
+        },
+        {
+          "type": "file_contains",
+          "path": "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json",
+          "pattern": "\"verdict\": \"PASS\""
         }
       ],
       "status": "done",
-      "cleanup_note": "2026-10-10：apksigner v3 方案验证通过（CN=StarryMagic，SHA-1 821c92e404ab5fdac8dbf157c2e467e71440917d）；APK 983,764,178 B / md5 b3aeba681ef98921f4ffe22d345ac526。",
-      "done_at": "2026-11-02 16:32:03",
+      "cleanup_note": "2026-11-11：sign 阶段改为真断言（原为 file_exists 占位）；签名与 zipalign 校验在 surgical 阶段执行并回显。",
+      "preflight": [
+        "04_scripts/追迹迷城/verify_zjmc_singletrack.py"
+      ],
+      "done_at": "2026-11-11 20:35:16",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261030_surgical-releaseSigned.apk": {
-          "md5": "933f5ef6c689d1e98a10c0e5e1d1940b"
+        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": {
+          "md5": "e7ebb4045746246c65785ebac220bcd9"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261030_surgical-releaseSigned.apk": "933f5ef6c689d1e98a10c0e5e1d1940b"
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk": "ab8e788b161717ec67a19b447c44b28e"
       }
     },
     {
@@ -269,7 +295,7 @@
         "sign",
         "device_ready"
       ],
-      "command": "bash 04_scripts/追迹迷城/uninstall_official_zjmc.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/uninstall_official_zjmc.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/uninstall_official_zjmc.sh"
       ],
@@ -281,14 +307,14 @@
       ],
       "status": "done",
       "cleanup_note": "2026-10-10 16:45 卸载官方包（异签名，覆盖安装不可行）；用户当轮确认不保留数据。",
-      "done_at": "2026-11-02 16:32:42",
+      "done_at": "2026-11-11 21:21:56",
       "artifacts": {
         "04_scripts/追迹迷城/uninstall_done.json": {
-          "md5": "1205ec965b62fa030218b881e457a5f5"
+          "md5": "155128297804ac584ab92f1dcee96123"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261030_surgical-releaseSigned.apk": "933f5ef6c689d1e98a10c0e5e1d1940b",
+        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": "e7ebb4045746246c65785ebac220bcd9",
         "04_scripts/追迹迷城/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },
@@ -299,7 +325,7 @@
         "uninstall_official",
         "sign"
       ],
-      "command": "bash 04_scripts/追迹迷城/install_zjmc.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/install_zjmc.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/install_zjmc.sh"
       ],
@@ -311,22 +337,22 @@
       ],
       "status": "done",
       "cleanup_note": "2026-10-10 16:45 安装完成（adb install 增量装，29.9 s）；设备 base.apk md5 == 本地包 md5 b3aeba681ef98921f4ffe22d345ac526。",
-      "done_at": "2026-11-02 16:34:01",
+      "done_at": "2026-11-11 21:21:59",
       "artifacts": {
         "04_scripts/追迹迷城/uninstall_done.json": {
-          "md5": "1205ec965b62fa030218b881e457a5f5"
+          "md5": "155128297804ac584ab92f1dcee96123"
         }
       },
       "inputs": {
-        "04_scripts/追迹迷城/uninstall_done.json": "1205ec965b62fa030218b881e457a5f5",
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261030_surgical-releaseSigned.apk": "933f5ef6c689d1e98a10c0e5e1d1940b"
+        "04_scripts/追迹迷城/uninstall_done.json": "155128297804ac584ab92f1dcee96123",
+        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": "e7ebb4045746246c65785ebac220bcd9"
       }
     },
     {
       "id": "cleanup",
       "name": "收官清理（本作可再生中间物 + 设备本次临时 APK）",
       "requires": [],
-      "command": "bash 04_scripts/追迹迷城/cleanup_zjmc.sh",
+      "command": "bash \"$NIXIANG/04_scripts/追迹迷城/cleanup_zjmc.sh\"",
       "preflight": [
         "04_scripts/追迹迷城/cleanup_zjmc.sh"
       ],
@@ -337,7 +363,7 @@
         },
         {
           "type": "file_exists",
-          "path": "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json"
+          "path": "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json"
         },
         {
           "type": "not_exists",
@@ -356,7 +382,7 @@
         "04_scripts/追迹迷城/cleanup_summary.json": {
           "md5": "0e7191e8ec0504d8f6a2dcf9aba9f2ff"
         },
-        "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json": {
+        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": {
           "md5": "19ba4b96da467f8dc52374f14146e1ad"
         }
       }
@@ -374,20 +400,20 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "10_docs/追迹迷城/收尾清单_1.0.20261030.md"
+          "path": "10_docs/追迹迷城/收尾清单_1.0.20261111.md"
         }
       ],
       "status": "done",
       "cleanup_note": "2026-11-02：archive_zjmc.sh 是 0912 版硬编码路径（含 current.md 路径级 add、Main.cpp、0912 dump 三项），与现行共享文件内容级暂存规则冲突 ⇒ 本版改为由 archive_scoped_git.sh 白名单提交，本阶段只做产物校验。",
-      "done_at": "2026-11-02 16:46:31",
+      "done_at": "2026-11-11 21:22:02",
       "artifacts": {
-        "10_docs/追迹迷城/收尾清单_1.0.20261030.md": {
-          "md5": "d4c85ebf801a1a83539d01a503a45e93"
+        "10_docs/追迹迷城/收尾清单_1.0.20261111.md": {
+          "md5": "1c4931d0b653d4cb6804ff99de0483e0"
         }
       },
       "inputs": {
         "04_scripts/追迹迷城/cleanup_summary.json": "0e7191e8ec0504d8f6a2dcf9aba9f2ff",
-        "06_dumped/追迹迷城/1.0.20261030_il2cpp/rva_targets.json": "19ba4b96da467f8dc52374f14146e1ad"
+        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": "9e5d9950e14331c4a5085441e9903445"
       }
     }
   ]
