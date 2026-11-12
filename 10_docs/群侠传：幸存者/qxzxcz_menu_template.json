@@ -1,0 +1,20 @@
+{
+  "template_id": "qxzxcz",
+  "name": "群侠传：幸存者",
+  "package": "com.nenlystudio.qunxiasurvivor.cn",
+  "source": "Games/QxzxczEntry.cpp kQxzxcz_Features",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "伤害倍率"
+    },
+    {
+      "feat_num": 2,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 3,
+      "name": "无限银钱"
+    }
+  ]
+}
