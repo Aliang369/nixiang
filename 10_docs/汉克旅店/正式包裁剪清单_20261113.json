@@ -1,0 +1,9 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/汉克旅店",
+  "keep": "汉克旅店_1.1.0_surgical-releaseSigned.apk",
+  "keep_size": 929220861,
+  "keep_md5": "03d3ec2ad30f2472a43bb9bdc19d2dba",
+  "mode": "--apply",
+  "removed": [],
+  "removed_count": 0
+}

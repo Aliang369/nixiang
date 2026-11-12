@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 汉克旅店 1.1.0（com.chillyroom.hanksbar.yw）热更程序集 IL 补丁器
+       源: 04_scripts/_templates/ilpatch（Cecil + TolerantRefs + 常量台账 + 意图断言） -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ilpatch_hkld</AssemblyName>
+    <RootNamespace>ilpatch_hkld</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+  </ItemGroup>
+</Project>
