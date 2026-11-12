@@ -14,7 +14,7 @@ check_merge_markers.sh	sh	2960	check_merge_markers.sh — Git 冲突标记残留
 check_release_apk.sh	sh	6193	check_release_apk.sh — 出包门禁（Java/APK 侧，P6 的半步）	used	57
 check_release_clean.sh	sh	9854	check_release_clean.sh — 干净正式包门禁（诊断代码不许进正式包）	used	80
 check_state_hash_sync.py	py	5094	Check that game state/current index hashes match the final APK/prune manifest.	used	27
-check_win_compat.sh	sh	1560	check_win_compat.sh — 扫描脚本里未豁免的 mac 专有写法（win 上会崩/静默降级）	used	2
+check_win_compat.sh	sh	1560	check_win_compat.sh — 扫描脚本里未豁免的 mac 专有写法（win 上会崩/静默降级）	used	3
 classify_proc_gone.sh	sh	7513	classify_proc_gone.sh — 把「进程消失了」定性：ANR / native 崩溃 / 系统杀 / 我方 force-stop / 无痕	used	5
 cleanup_device_re_residue.sh	sh	7682	真机逆向残留一键清理（每次 Frida/补丁/注入/试装结束后必跑）	used	82
 cocos_js_splice_check.py	py	5183	cocos_js_splice_check.py — 通用「离线复刻 C++ JS 拼接规则」核对器。	used	9
