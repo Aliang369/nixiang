@@ -3,6 +3,7 @@
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
+[ -f "$NIXIANG/04_scripts/_common/env.sh" ] && source "$NIXIANG/04_scripts/_common/env.sh"
 GAME="一念通天"
 VERSION="779"
 OUT="$NIXIANG/08_output/$GAME"
@@ -19,24 +20,26 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED" >&2; exit 1; }
 [[ -f "$KS" ]] || { echo "ERROR: missing keystore $KS" >&2; exit 1; }
 
-BT=""
-for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
-    BT="$HOME/Library/Android/sdk/build-tools/$v"; break
-  fi
-done
+BT="${NIXIANG_BUILD_TOOLS:-}"
+if [ -z "$BT" ]; then
+  for v in 36.0.0 35.0.0 34.0.0; do
+    if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
+      BT="$HOME/Library/Android/sdk/build-tools/$v"; break
+    fi
+  done
+fi
 
 WORK="$(mktemp -d /tmp/yntt_sign.XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 ALIGNED="$WORK/aligned.apk"
 
 if [[ -n "$BT" ]]; then
-  "$BT/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
-  "$BT/apksigner" sign \
+  "${NIXIANG_ZIPALIGN:-$BT/zipalign}" -f -p 4 "$UNSIGNED" "$ALIGNED"
+  "${NIXIANG_APKSIGNER:-$BT/apksigner}" sign \
     --ks "$KS" --ks-key-alias "$KS_ALIAS" \
     --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
     --out "$SIGNED" "$ALIGNED"
-  "$BT/apksigner" verify --print-certs "$SIGNED" 2>&1 | sed -n '1,6p' || true
+  "${NIXIANG_APKSIGNER:-$BT/apksigner}" verify --print-certs "$SIGNED" 2>&1 | sed -n '1,6p' || true
 fi
 
 if [[ ! -f "$SIGNED" ]]; then
@@ -50,7 +53,7 @@ fi
 
 [[ -f "$SIGNED" ]] || { echo "ERROR: sign failed" >&2; exit 1; }
 if [[ -n "$BT" ]]; then
-  "$BT/apksigner" verify "$SIGNED" >/dev/null || { echo "ERROR: apksigner verify failed" >&2; exit 1; }
+  "${NIXIANG_APKSIGNER:-$BT/apksigner}" verify "$SIGNED" >/dev/null || { echo "ERROR: apksigner verify failed" >&2; exit 1; }
 fi
 
 unzip -l "$SIGNED" > "$WORK/entries.txt"

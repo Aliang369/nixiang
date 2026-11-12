@@ -186,6 +186,22 @@ else
 fi
 
 # --------------------------------------------------------------------------
+sect "5b. win 兼容写死 (mac 专有写法)"
+if [ "$HOST" = win ]; then
+  wc_out="$(bash "$ROOT/04_scripts/_common/check_win_compat.sh" --all 2>&1 || true)"
+  wc_n="$(echo "$wc_out" | grep 'win-compat-hits=' | sed 's/.*win-compat-hits=//' | tail -1)"
+  if [ -n "$wc_n" ] && [ "$wc_n" -gt 0 ]; then
+    warn "win 不兼容写死 $wc_n 处 (mac 专有路径/命令/BSD sed，改到再修):"
+    echo "$wc_out" | grep -v 'win-compat-hits=' | head -5 | sed 's/^/       /'
+    [ "$wc_n" -gt 5 ] && info "       …(共 $wc_n 处；改脚本前可先 bash check_win_compat.sh <该脚本> 自查)"
+  else
+    pass "无 mac 专有写死"
+  fi
+else
+  info "本机为 mac，此项不适用（这些写法在 mac 上正确）"
+fi
+
+# --------------------------------------------------------------------------
 sect "6. 设备 (adb)"
 if command -v adb >/dev/null 2>&1; then
   info "ANDROID_SERIAL=${ANDROID_SERIAL:-<未设置>}"

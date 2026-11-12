@@ -86,7 +86,7 @@ HF3_SRC="$JNI/targetfuntional_dll_hotfix3.bin"
 for v in hf2 hf3; do
   BIN="targetfuntional_dll_hotfix${v#hf}.bin"
   ARCH="Games/WxsjPatchedDll_${v}.a"
-  TMP_CHECK="$(mktemp -t wxsj_a_check)"
+  TMP_CHECK="$(mktemp -t wxsj_a_check.XXXXXX)"
   if ! "$OBJCOPY" -O binary --only-section=.data "$JNI/$ARCH" "$TMP_CHECK" 2>/dev/null \
       || ! cmp -s "$TMP_CHECK" "$JNI/$BIN"; then
     echo "ERROR: $ARCH 的 .data ≠ $BIN"

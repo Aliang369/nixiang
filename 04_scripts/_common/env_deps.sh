@@ -298,7 +298,7 @@ fi
 _jadx="${NIXIANG_JADX_BIN:-}"
 if [ -z "$_jadx" ] || [ ! -e "$_jadx" ]; then
   if has jadx; then _jadx="$(command -v jadx)"
-  else _jadx="$(_first_exist "$NIXIANG_ROOT/01_tools/jadx/bin/jadx" || true)"; fi
+  else _jadx="$(_first_exist "$NIXIANG_ROOT/01_tools/jadx/bin/jadx" "$NIXIANG_ROOT/01_tools/jadx/bin/jadx.bat" || true)"; fi
 fi
 if [ -n "$_jadx" ]; then
   _v="$(_tool_ver "$_jadx" --version)"; ok "jadx" "$_jadx $_v"
@@ -349,8 +349,9 @@ if [ -z "$_ida" ] || [ ! -d "$_ida" ]; then
       done
       ;;
     win)
-      # TODO(Win 端)：本机 IDA 装在哪由你实测后补这里（Program Files / 便携版 / 别的盘）。
-      #   补之前只用 .env.local 的 NIXIANG_IDA_HOME，否则这里报 WARN。
+      for _p in "/d/Program Files/IDA"* "/c/Program Files/IDA"* "/c/Program Files (x86)/IDA"* "$NIXIANG_ROOT/01_tools/IDA"*; do
+        if [ -d "$_p" ]; then _ida="$_p"; break; fi
+      done
       ;;
     *)
       for _p in "$NIXIANG_ROOT/01_tools/IDA"*; do
@@ -384,7 +385,7 @@ else
   if has ndk-build; then
     _ndk="$(command -v ndk-build)"
   else
-    for _sdk in "${ANDROID_NDK_HOME:-}" "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "$HOME/Library/Android/sdk"; do
+    for _sdk in "${ANDROID_NDK_HOME:-}" "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "$HOME/Library/Android/sdk" "$NIXIANG_ROOT/01_tools/android-sdk"; do
       [ -n "$_sdk" ] || continue
       [ -d "$_sdk" ] || continue
       for _d in "$_sdk"/ndk/*; do

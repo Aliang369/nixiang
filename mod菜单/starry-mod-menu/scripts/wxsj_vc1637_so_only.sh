@@ -50,7 +50,7 @@ for row in "${VARIANTS[@]}"; do
     base_src="${base_in#INCR:}"
     [[ -f "$base_src" ]] || { echo "ERROR: missing baseline $base_src"; exit 1; }
     echo "[vc1637-so]   ${name} 增量补丁（基线 ${base_src}）"
-    INCR="$(mktemp -t wxsj_vc1637_incr)"
+    INCR="$(mktemp -t wxsj_vc1637_incr.XXXXXX)"
     dotnet run --project "$PATCHER" --configuration Release -- --variant "$name" --incremental "$base_src" "$INCR" >/dev/null
     cp -f "$INCR" "$dll"
     rm -f "$INCR"
@@ -60,7 +60,7 @@ for row in "${VARIANTS[@]}"; do
     # 基线缺失（hf2/hf3）：对既有补丁产物做增量补丁（幂等，已带门时原样保留）。
     [[ -f "$dll" ]] || { echo "ERROR: missing $dll"; exit 1; }
     echo "[vc1637-so]   ${name} 基线缺失（${base_in}）→ 增量补丁既有产物"
-    INCR="$(mktemp -t wxsj_vc1637_incr)"
+    INCR="$(mktemp -t wxsj_vc1637_incr.XXXXXX)"
     cp -f "$dll" "$INCR"
     dotnet run --project "$PATCHER" --configuration Release -- --variant "$name" --incremental "$INCR" "$dll" >/dev/null
     rm -f "$INCR"
@@ -89,7 +89,7 @@ for row in "${VARIANTS[@]}"; do
   if ! "$NM" "$JNI/$lib" 2>/dev/null | grep -q "$sym"; then
     echo "ERROR: $lib 符号名不是 ${sym}（objcopy 输入名不对）"; exit 1
   fi
-  TMP_CHECK="$(mktemp -t wxsj_vc1637_a_check)"
+  TMP_CHECK="$(mktemp -t wxsj_vc1637_a_check.XXXXXX)"
   if ! "$OBJCOPY" -O binary --only-section=.data "$JNI/$lib" "$TMP_CHECK" 2>/dev/null \
       || ! cmp -s "$TMP_CHECK" "$JNI/$bin"; then
     echo "ERROR: $lib .data != $bin"

@@ -122,11 +122,11 @@ shopt -u nullglob
 HE_APP="Lcom/happyelements/hei/android/HeSDKApplication;"
 STAR_SMALI="$SMALI_ROOT/com/starry/magic/StarryApp.smali"
 if ! grep -q "\.super $HE_APP" "$STAR_SMALI"; then
-  sed -i '' \
+  sed \
     -e "s|^.super Landroid/app/Application;$|.super $HE_APP|" \
     -e "s|Landroid/app/Application;->attachBaseContext(Landroid/content/Context;)V|$HE_APP->attachBaseContext(Landroid/content/Context;)V|" \
     -e "s|Landroid/app/Application;->onCreate()V|$HE_APP->onCreate()V|" \
-    "$STAR_SMALI"
+    "$STAR_SMALI" > "$STAR_SMALI.tmp" && mv -f "$STAR_SMALI.tmp" "$STAR_SMALI"
   grep -q "\.super $HE_APP" "$STAR_SMALI" \
     || { echo "ERROR: StarryApp .super patch failed"; exit 1; }
   grep -q "$HE_APP->attachBaseContext" "$STAR_SMALI" \

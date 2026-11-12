@@ -218,13 +218,13 @@ def main() -> int:
             if args.check:
                 stale_list.append(d.name)
                 continue
-            target.write_text(content, encoding="utf-8")
+            target.write_text(content, encoding="utf-8", newline="\n")
             updated += 1
         else:
             if args.check:
                 stale_list.append(d.name)
                 continue
-            target.write_text(content, encoding="utf-8")
+            target.write_text(content, encoding="utf-8", newline="\n")
             made += 1
 
     if args.check:

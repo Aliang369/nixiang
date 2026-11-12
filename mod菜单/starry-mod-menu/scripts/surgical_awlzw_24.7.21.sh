@@ -138,11 +138,11 @@ shopt -u nullglob
 FP_APP="Lcom/funplus/sdk/FunplusApplication;"
 STAR_SMALI="$SMALI_ROOT/com/starry/magic/StarryApp.smali"
 if ! grep -q "\.super $FP_APP" "$STAR_SMALI"; then
-  sed -i '' \
+  sed \
     -e "s|^.super Landroid/app/Application;$|.super $FP_APP|" \
     -e "s|Landroid/app/Application;->attachBaseContext(Landroid/content/Context;)V|$FP_APP->attachBaseContext(Landroid/content/Context;)V|" \
     -e "s|Landroid/app/Application;->onCreate()V|$FP_APP->onCreate()V|" \
-    "$STAR_SMALI"
+    "$STAR_SMALI" > "$STAR_SMALI.tmp" && mv -f "$STAR_SMALI.tmp" "$STAR_SMALI"
   grep -q "\.super $FP_APP" "$STAR_SMALI" \
     || { echo "ERROR: StarryApp .super patch failed"; exit 1; }
   grep -q "$FP_APP->attachBaseContext" "$STAR_SMALI" \

@@ -44,6 +44,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STARRY_SRC="$(cd "$SCRIPT_DIR/.." && pwd)"
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+[ -f "$NIXIANG/04_scripts/_common/env.sh" ] && source "$NIXIANG/04_scripts/_common/env.sh"
 
 VERSION="1.0.20261111"
 VC="104502"
@@ -56,8 +57,18 @@ fi
 OUT="$NIXIANG/08_output/追迹迷城"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
-NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
-NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
+if [ -n "${ANDROID_NDK_HOME:-}" ]; then
+  NDK="$ANDROID_NDK_HOME"
+elif [ "$NIXIANG_HOST" = "win" ]; then
+  NDK="$(ls -d "$NIXIANG/01_tools/android-sdk/ndk/"* 2>/dev/null | sort -V | tail -1 || true)"
+else
+  NDK="$HOME/Library/Android/sdk/ndk/27.0.12077973"
+fi
+case "$NIXIANG_HOST" in
+  win) NDK_PREBUILT="windows-x86_64" ;;
+  *)   NDK_PREBUILT="darwin-x86_64" ;;
+esac
+NDK_CXX="$NDK/toolchains/llvm/prebuilt/$NDK_PREBUILT/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 KS="$NIXIANG/01_tools/starry_release.jks"
 PKG="com.TeaMelo.DungeonChasers"
 SIGNED="$OUT/追迹迷城_${VERSION}_starry-singletrack-final-releaseSigned.apk"
@@ -69,15 +80,17 @@ TAPSDK_PATCHER="$NIXIANG/04_scripts/追迹迷城/patch_zjmc_tapsdk_static.py"
 MERGE_DEX="classes6.dex"
 SO_MD5_EXPECT="${ZJMC_SO_MD5:-}"
 
-export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
+export JAVA_HOME="${JAVA_HOME:-${NIXIANG_JAVA17:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
-BT=""
-for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
-    BT="$HOME/Library/Android/sdk/build-tools/$v"; break
-  fi
-done
+BT="${NIXIANG_BUILD_TOOLS:-}"
+if [ -z "$BT" ]; then
+  for v in 36.0.0 35.0.0 34.0.0; do
+    if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
+      BT="$HOME/Library/Android/sdk/build-tools/$v"; break
+    fi
+  done
+fi
 [[ -n "$BT" ]] || { echo "ERROR: 找不到 build-tools"; exit 1; }
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing ${ORIG_APK}（底包见 10_docs/_state/底包再获取台账.md）"; exit 1; }
@@ -363,16 +376,16 @@ PY
 
 echo "[8/8] zipalign + sign -> $SIGNED"
 ALIGNED="$WORK/aligned.apk"
-"$BT/zipalign" -f -p 4 "$WORK/unsigned.apk" "$ALIGNED"
+"${NIXIANG_ZIPALIGN:-$BT/zipalign}" -f -p 4 "$WORK/unsigned.apk" "$ALIGNED"
 rm -f "$WORK/unsigned.apk"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"
-"$BT/apksigner" sign \
+"${NIXIANG_APKSIGNER:-$BT/apksigner}" sign \
   --ks "$KS" --ks-key-alias "$KS_ALIAS" \
   --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
   --out "$SIGNED" "$ALIGNED"
-"$BT/zipalign" -c -p 4 "$SIGNED" && echo "  zipalign -c 4 PASS"
-"$BT/apksigner" verify --print-certs "$SIGNED" 2>&1 | head -8
+"${NIXIANG_ZIPALIGN:-$BT/zipalign}" -c -p 4 "$SIGNED" && echo "  zipalign -c 4 PASS"
+"${NIXIANG_APKSIGNER:-$BT/apksigner}" verify --print-certs "$SIGNED" 2>&1 | head -8
 
 python3 - "$SIGNED" "$MERGE_DEX" <<'PY'
 import sys, zipfile

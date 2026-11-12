@@ -85,7 +85,7 @@ for row in "targetfuntional_dll_wxsjdz2.enc.bin|Games/Wxsjdz2PayloadDll.a" \
   ( cd "$JNI" && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 "$bin" "$lib" )
   sym="_binary_$(echo "$bin" | tr '.' '_')_start"
   "$NM" "$JNI/$lib" 2>/dev/null | grep -q "$sym" || { echo "ERROR: $lib 符号名不是 $sym"; exit 1; }
-  TMP_CHECK="$(mktemp -t wxsjdz2_a_check)"
+  TMP_CHECK="$(mktemp -t wxsjdz2_a_check.XXXXXX)"
   "$OBJCOPY" -O binary --only-section=.data "$JNI/$lib" "$TMP_CHECK" 2>/dev/null || { rm -f "$TMP_CHECK"; echo "ERROR: $lib 抽 .data 失败"; exit 1; }
   cmp -s "$TMP_CHECK" "$JNI/$bin" || { rm -f "$TMP_CHECK"; echo "ERROR: $lib .data ≠ $bin"; exit 1; }
   rm -f "$TMP_CHECK"

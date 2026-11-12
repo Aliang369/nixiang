@@ -243,7 +243,7 @@ check_one() {
 # ---------------------------------------------------------------
 sweep_bash32() {
   local list="${PF_SWEEP_LIST:-20}"
-  local tmp; tmp=$(mktemp -t pf_sweep) || { echo "✗ FAIL  [全仓bash32] mktemp 失败"; fail=$((fail+1)); return; }
+  local tmp; tmp=$(mktemp "${TMPDIR:-/tmp}/pf_sweep.XXXXXX") || { echo "✗ FAIL  [全仓bash32] mktemp 失败"; fail=$((fail+1)); return; }
   for f in 04_scripts/*/*.sh 04_scripts/_common/*.sh mod菜单/*/scripts/*.sh mod菜单/*/scripts/_lib/*.sh; do
     [ -f "$f" ] || continue
     printf '%s\0' "$f" >> "$tmp"
