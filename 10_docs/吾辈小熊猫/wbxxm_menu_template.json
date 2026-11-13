@@ -1,0 +1,12 @@
+{
+  "template_id": "wbxxm",
+  "name": "吾辈小熊猫",
+  "package": "com.wbxxm.wbxxm",
+  "source": "Games/WbxxmEntry.cpp k_wbxxm_Features / Games/WbxxmMod.h WbxxmFeat",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "免广告"
+    }
+  ]
+}

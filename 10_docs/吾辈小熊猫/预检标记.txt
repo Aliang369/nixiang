@@ -1,0 +1,9 @@
+# 吾辈小熊猫（com.wbxxm.wbxxm）装机后预检标记｜2026-11-13 by installer
+# 每行 类别|ERE。RE 用 ERE：方括号必须转义，否则 [Wbxxm] 会被当字符类假命中。
+pkg|com.wbxxm.wbxxm
+menu_load|\[Wbxxm\]|StarryMagic
+menu_shown|native menu shown
+hook_hit|auth game_id synced from native
+auth_ok|auth game_id synced from native
+auth_fail|renew auth fail|authoritative=.*deny
+crash|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|tombstone

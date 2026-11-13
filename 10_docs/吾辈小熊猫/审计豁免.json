@@ -1,0 +1,32 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "吾辈小熊猫",
+  "package": "com.wbxxm.wbxxm",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "modern_registry_no_gameconfig",
+      "match": [
+        "GameConfig.h 无 defined(",
+        "STARRY_AUTH_GAME_ID 未定义"
+      ],
+      "conclusion": "接受偏离",
+      "reason": "本作走 modern 注册表入口：game_id 由 Games/WbxxmEntry.cpp 的 .authGameId=\"wbxxm\" 提供，构建用私有 Android_wbxxm.mk（APP_BUILD_SCRIPT=./Android_wbxxm.mk），公共 Android.mk 与 GameConfig.h 都不参与本包编译，:24 的 #error 不会被触发；审计按 legacy 形态推断 STARRY_GAME_WBXXM 宏，找不到属预期。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/WbxxmEntry.cpp（authGameId=\"wbxxm\"）+ Android_wbxxm.mk:66 LOCAL_SRC_FILES=MainModern.cpp Games/WbxxmMod.cpp Games/WbxxmEntry.cpp；构建产物 so md5 13fbd01f9259b66a2ae2086f3cf3f533（2026-11-13 删内购/体力后重编）含 [Wbxxm]×1、wbxxm×1、菜单串「Toggle_免广告」×1（内购/体力串已为 0）、无 qxzxcz/他包串（surgical_wbxxm_5.0.sh 0/7 段断言）",
+      "date": "2026-11-13",
+      "review_by": "2027-02-13"
+    },
+    {
+      "id": "android_mk_branch_modern",
+      "match": [
+        "激活分支",
+        "与 --game"
+      ],
+      "reason": "同上：so 从私有 Android_wbxxm.mk 构建（NDK_OUT/LIBS_OUT 独立 obj_wbxxm/libs_wbxxm），工作区公共 Android.mk 的 STARRY_GAME_ZHMR 激活分支与本游戏零接触，不可能编出别的游戏的 so；产物已按字节校验标签与菜单串（无 [Qxzxcz] 残留）。",
+      "conclusion": "接受偏离",
+      "evidence": "surgical_wbxxm_5.0.sh 0/7 段：LC_ALL=C grep -acF '[Wbxxm]' libs_wbxxm/arm64-v8a/libstarry_magic.so = 1、'[Qxzxcz]' = 0；ndk-build 日志 [arm64-v8a] Compile++ WbxxmMod.cpp → SharedLibrary libstarry_magic.so（91,976 B，md5 13fbd01f…，2026-11-13 重编）",
+      "date": "2026-11-13",
+      "review_by": "2027-02-13"
+    }
+  ]
+}
