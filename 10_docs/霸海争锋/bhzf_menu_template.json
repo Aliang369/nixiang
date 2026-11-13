@@ -1,0 +1,16 @@
+{
+  "template_id": "bhzf",
+  "name": "霸海争锋",
+  "package": "com.bhzf.zbml",
+  "source": "Games/BhzfEntry.cpp GameMod_Get",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "秒杀"
+    },
+    {
+      "feat_num": 2,
+      "name": "无敌"
+    }
+  ]
+}
