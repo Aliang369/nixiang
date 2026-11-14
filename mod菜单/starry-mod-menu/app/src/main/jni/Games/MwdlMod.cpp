@@ -6,6 +6,9 @@
  *  15.0.0/d8f3b（2026-10-31）：单位枚举 gA→CA、属性枚举 PS.MOV_SPEED→NS.MOV_SPEED，
  *                 伤害尾锚回到 i.target.damage=E}（局部变量名又变回 E）；
  *                 无限技能 / onStageCheat 两锚点文本未变。
+ *  16.0.0/c00f5（2026-11-14）：单位枚举 CA→FA、属性枚举 NS.MOV_SPEED→JS.MOV_SPEED，
+ *                 伤害尾锚 i.target.damage=E} → i.target.damage=P}；
+ *                 自动挂机 getService 服务单例 ix/sT → Sx/bT（本轮唯一改名的锚点）。
  * ================================================================ */
 
 #include "MwdlMod.h"
@@ -157,35 +160,35 @@ static std::string SpliceCombatJs(const char* src) {
     static char kPickAllRepl[700];
     static bool once = false;
     if (!once) {
-        // get_val(1) 伤害倍率滑块 + get_ret(2) 无敌 — 15.0.0/d8f3b 尾锚 i.target.damage=E}
+        // get_val(1) 伤害倍率滑块 + get_ret(2) 无敌 — 16.0.0/c00f5 尾锚 i.target.damage=P}
         snprintf(
             kKhHook, sizeof(kKhHook),
-            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===CA.Hero||"
-            "_su.unitType===CA.Summon||_su.unitType===CA.Guardian||"
-            "_su.unitType===CA.Player||_su.unitType===CA.ParasyteGuardian)){"
+            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===FA.Hero||"
+            "_su.unitType===FA.Summon||_su.unitType===FA.Guardian||"
+            "_su.unitType===FA.Player||_su.unitType===FA.ParasyteGuardian)){"
             "var _dm=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",1);"
-            "_dm>1&&(E*=Math.min(_dm,1000))}"
-            "if(_su&&_su.unitType===CA.Monster&&"
-            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){E=0}"
-            "i.target.damage=E}",
+            "_dm>1&&(P*=Math.min(_dm,1000))}"
+            "if(_su&&_su.unitType===FA.Monster&&"
+            "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){P=0}"
+            "i.target.damage=P}",
             kAct, kAct);
-        // get_val(3)：移速倍率 — MoveSpeed getter（15.0.0/d8f3b 为 NS.MOV_SPEED）
+        // get_val(3)：移速倍率 — MoveSpeed getter（16.0.0/c00f5 为 JS.MOV_SPEED）
         snprintf(
             kSpdRepl, sizeof(kSpdRepl),
             "/*starry_mwdl_spd*/function(n){try{var "
             "m=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",3);"
-            "m>1&&(this.unitType===CA.Hero||this.unitType===CA.Summon||"
-            "this.unitType===CA.Guardian||this.unitType===CA.Player||"
-            "this.unitType===CA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
-            "n}.call(this,this.AttributeComponent.getAttr(NS.MOV_SPEED)*t)}",
+            "m>1&&(this.unitType===FA.Hero||this.unitType===FA.Summon||"
+            "this.unitType===FA.Guardian||this.unitType===FA.Player||"
+            "this.unitType===FA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
+            "n}.call(this,this.AttributeComponent.getAttr(JS.MOV_SPEED)*t)}",
             kAct);
         // get_ret(4)：无限技能 — 插在 SkillComponent.tick 前
         snprintf(
             kTickHook, sizeof(kTickHook),
             "/*starry_mwdl_uls*/ jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===CA.Hero||"
-            "this.unitType===CA.Summon||this.unitType===CA.Guardian||"
-            "this.unitType===CA.Player||this.unitType===CA.ParasyteGuardian)&&"
+            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===FA.Hero||"
+            "this.unitType===FA.Summon||this.unitType===FA.Guardian||"
+            "this.unitType===FA.Player||this.unitType===FA.ParasyteGuardian)&&"
             "(this.SkillComponent.reduceAllSkillColdDown(1e9),"
             "this.ActiveSkillComponent&&this.ActiveSkillComponent.reduceAllSkillColdDown(1e9)), ",
             kAct);
@@ -194,7 +197,7 @@ static std::string SpliceCombatJs(const char* src) {
         // 到 undefined.mode（tryFightBonus）并每帧抛 TypeError，把「挑战成功」卡死（2026-10-31 实测）。
         snprintf(
             kAutoFightRepl, sizeof(kAutoFightRepl),
-            "/*starry_mwdl_af*/checkAutoFightSetting=function(){var t=ix.getService(sT);if("
+            "/*starry_mwdl_af*/checkAutoFightSetting=function(){var t=Sx.getService(bT);if("
             "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",5)||t.enabled){",
             kAct);
         snprintf(
@@ -216,18 +219,19 @@ static std::string SpliceCombatJs(const char* src) {
         return s.find(tag) != std::string::npos;
     };
 
-    // --- 伤害结算（百倍伤害 + 无敌）：15.0.0/d8f3b 尾锚 i.target.damage=E} ---
+    // --- 伤害结算（伤害倍率 + 无敌）：16.0.0/c00f5 尾锚 i.target.damage=P} ---
     // 注：该锚点尾部是混淆后的伤害局部变量名（a1e47=E / bffa2=P / d8f3b=E），
     //     与 hook 文本强耦合，不做旧锚回退（回退会拼出引用未声明变量的 JS）。
-    if (!already("starry_mwdl_kh") && s.find("i.target.damage=E}") != std::string::npos) {
-        size_t p = s.find("i.target.damage=E}");
-        s.replace(p, strlen("i.target.damage=E}"), kKhHook);
-        LOGI("[Mwdl] spliced damage (15.0.0/d8f3b)");
+    if (!already("starry_mwdl_kh") && s.find("i.target.damage=P}") != std::string::npos) {
+        size_t p = s.find("i.target.damage=P}");
+        s.replace(p, strlen("i.target.damage=P}"), kKhHook);
+        LOGI("[Mwdl] spliced damage (16.0.0/c00f5)");
     }
 
-    // --- MoveSpeed（移动速度：15.0.0/d8f3b 为 NS.MOV_SPEED；旧枚举名为等价回退）---
+    // --- MoveSpeed（移动速度：16.0.0/c00f5 为 JS.MOV_SPEED；旧枚举名仅作同代回退）---
     if (!already("starry_mwdl_spd")) {
         static const char* kSpdFroms[] = {
+            "this.AttributeComponent.getAttr(JS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(NS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(RS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(vS.MOV_SPEED)*t}",
@@ -265,7 +269,7 @@ static std::string SpliceCombatJs(const char* src) {
     // --- 自动挂机：强开服务分支（AI 自动走位）+ 掐掉战后 tryFightNext（防 undefined.mode 卡死）---
     if (!already("starry_mwdl_af")) {
         const char* kAf =
-            "checkAutoFightSetting=function(){var t=ix.getService(sT);if(t.enabled){";
+            "checkAutoFightSetting=function(){var t=Sx.getService(bT);if(t.enabled){";
         size_t p = s.find(kAf);
         if (p != std::string::npos) {
             s.replace(p, strlen(kAf), kAutoFightRepl);

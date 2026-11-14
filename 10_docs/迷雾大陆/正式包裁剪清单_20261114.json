@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/迷雾大陆",
+  "keep": "迷雾大陆_16.0.0_surgical-releaseSigned.apk",
+  "keep_size": 43076730,
+  "keep_md5": "a4e9411d17fb67dc22b3a1e92ab97c27",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "迷雾大陆_16.0.0_surgical-releaseSigned.apk.idsig",
+      "size": 345627,
+      "md5": "cd20223bf77a72dc6f2cb8b8f9839de6"
+    }
+  ],
+  "removed_count": 1
+}
