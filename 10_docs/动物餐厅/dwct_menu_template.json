@@ -1,0 +1,10 @@
+{
+  "template_id": "dwct",
+  "name": "动物餐厅",
+  "package": "inland.twgame.restaurant",
+  "source": "Games/Dwct1242Entry.cpp GameMod_Get",
+  "features": [
+    {"feat_num": 1, "name": "免广告"},
+    {"feat_num": 2, "name": "免内购"}
+  ]
+}

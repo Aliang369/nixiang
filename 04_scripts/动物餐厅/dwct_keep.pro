@@ -1,0 +1,3 @@
+-keep class com.starry.magic.cocos.DwctHooks { *; }
+-keep class com.starry.magic.cocos.DwctIapGate { *; }
+-keep class com.starry.magic.BuildConfig { *; }

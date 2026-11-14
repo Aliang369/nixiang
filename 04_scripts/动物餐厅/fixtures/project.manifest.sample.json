@@ -1,0 +1,25 @@
+{
+ "version": "11.29.2",
+ "packageUrl": "https://restaurant-1257666530.file.myqcloud.com/hotUpdate/file/",
+ "remoteManifestUrl": "https://restaurant-1257666530.file.myqcloud.com/hotUpdate/android/11.29.2/project.manifest",
+ "assets": {
+  "assets/main/index.jsc": {
+   "size": 425072,
+   "md5": "2d43ed99b590abd7221d38016eaec0a0",
+   "downloadState": 2
+  },
+  "assets/Script/index.jsc": {
+   "size": 2101576,
+   "md5": "81efd2b48e3e80a01c82660a305595f1",
+   "downloadState": 2
+  },
+  "assets/resources/config.json": {
+   "size": 2502216,
+   "md5": "b7ca53b66dc1ad04acb70182d4773b75",
+   "downloadState": 2
+  }
+ },
+ "searchPaths": [],
+ "sign": "H/mJhUCAJpwI/iuxabMV5mgI8J+lqkhPBvx2AoyecLAY+FBzrGtaulMb9lFfRUhvXiHfqBXNrCaAMZ9Ua78X3Q==",
+ "updating": true
+}

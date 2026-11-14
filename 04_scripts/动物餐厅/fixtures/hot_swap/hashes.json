@@ -1,0 +1,11 @@
+{
+ "original": [
+  "ff42fc6fe16da6346716a1b608ba1816e502dc18f792c9fd66a90cdfe3a2f645",
+  "f5ae4a4ce22343a7b46a4bc7811c9a1ce68edb1167f5ba1f6113fa36c9c50ea6"
+ ],
+ "patched": [
+  "1a6824aeeddd297da7c1601f947bc2f7a85098d26e86a84a9d5570877466f075",
+  "5ddd56014835fd88cb9b29b77f0071922b57e8b44c24be5585b78df17f527394"
+ ],
+ "note": "fixture 占位内容，不是真实 jsc；真实产物的哈希见 07_patched/动物餐厅/dwct1242/jsonly_devicehot/jsonly_patch_report.json"
+}

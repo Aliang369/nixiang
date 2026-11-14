@@ -1,0 +1,16 @@
+{
+  "template_id": "dwct",
+  "game_id": "dwct",
+  "features": [
+    {
+      "feat_num": 1,
+      "type": "toggle",
+      "name": "免广告"
+    },
+    {
+      "feat_num": 2,
+      "type": "toggle",
+      "name": "免内购"
+    }
+  ]
+}

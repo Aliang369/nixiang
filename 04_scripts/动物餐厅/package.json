@@ -1,0 +1,9 @@
+{
+  "name": "dwct-1242-private-build",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "pako": "2.1.0",
+    "xxtea-node": "1.0.0"
+  }
+}

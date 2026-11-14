@@ -1,0 +1,6 @@
+pkg|inland.twgame.restaurant
+menu_load|native ensureLoaded=true|星光魔法 MOD 菜单已加载
+menu_shown|native menu shown
+hook_hit|\[Dwct\] hooked evalString|\[Dwct\] init ok lib=libcocos2djs\.so
+auth_ok|renew ok|grant applied|authorized=true
+auth_fail|renew auth fail|authoritative=.*deny

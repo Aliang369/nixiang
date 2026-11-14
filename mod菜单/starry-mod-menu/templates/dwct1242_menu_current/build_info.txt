@@ -1,0 +1,9 @@
+game      : 动物餐厅 (dwct1242)
+dex       : menu.dex
+built_at  : 2026-11-14 21:52:49
+javac     : C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/javac.exe
+d8        : /c/Users/Administrator/AppData/Local/Android/Sdk/build-tools/35.0.0/d8.bat
+androidjar: /c/Users/Administrator/AppData/Local/Android/Sdk/platforms/android-36/android.jar
+source    : /e/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256    : cabd63d1f35778ee8a5c10351f8ff3fdf68e75c86833b1becfbbadbea642d0ae
+source_commit: 9d5786b716c1160e717d6e9d4622c0d9b9e4838b
