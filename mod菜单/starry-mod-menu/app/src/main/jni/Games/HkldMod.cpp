@@ -270,6 +270,12 @@ static void* HookAssemblyLoad(void* rawAssembly, const void* method) {
     const uint8_t* data = (const uint8_t*)rawAssembly + kArrDataOff;
     if (len < 2 || data[0] != 'M' || data[1] != 'Z') return orig(rawAssembly, method);   // 非 PE
 
+    // 版本辨识（2026-11-15 补）：**无条件**落一次「运行时原始程序集」诊断副本。
+    // 原先只在「未知长度」分支落盘 ⇒ 长度命中基线时反而不落，导致「热更基线 sha256 复核」
+    // 在真机上无证据可取（同长度不同内容的换版无法察觉）。DumpSeenOnce 自带 access() 守卫，
+    // 同长度只写一次、不覆盖；仅诊断用，不参与补丁决策。
+    DumpSeenOnce(data, (size_t)len);
+
     if ((uint32_t)len == kHkldPatchedLen) {
         LOGI(HKLD_LOG " 缓冲区已是补丁版（幂等放行）");
         return orig(rawAssembly, method);
@@ -350,15 +356,26 @@ void Hkld_OnFeatureChanged(int featNum, bool enabled) {
     case HKLD_FEAT_UNLOCK: WriteConfigKey("unlock_char", on); break;
     case HKLD_FEAT_MONEY:  WriteConfigKey("inf_money", on); break;
     case HKLD_FEAT_KEY:    WriteConfigKey("inf_key", on); break;
+    case HKLD_FEAT_INFMP:  WriteConfigKey("inf_mp", on); break;
     default: break;
     }
 }
 
 void Hkld_OnValueChanged(int featNum, int value) {
+    char buf[16];
+    if (featNum == HKLD_FEAT_MOVESPD) {
+        // 移动速度：整数百分比 100..300（100 = 原速 = 默认值，等价关闭）——范围必须与
+        // HkldEntry.cpp 的 "Slider_移动速度:100:300" 逐字一致；越界值在这里夹住，
+        // 防止 UI 传进来把移速放大到不可玩（Patch.cs 侧还有 999 结果上限兜底）
+        if (value < 100) value = 100;
+        if (value > 300) value = 300;
+        snprintf(buf, sizeof(buf), "%d", value);
+        WriteConfigKey("move_speed_x", buf);
+        return;
+    }
     if (featNum != HKLD_FEAT_DMGX) return;
     if (value < 1) value = 1;
     if (value > 100) value = 100;
-    char buf[16];
     snprintf(buf, sizeof(buf), "%d", value);
     WriteConfigKey("damage_x", buf);
 }
@@ -371,4 +388,7 @@ void Hkld_ForceClear() {
     WriteConfigKey("unlock_char", "0");
     WriteConfigKey("inf_money", "0");
     WriteConfigKey("inf_key", "0");
+    WriteConfigKey("inf_mp", "0");
+    // move_speed_x 与 damage_x 同口径：只清「开关」，滑块值保留（它只是倍率，
+    // 100 = 原速本身即零副作用；保留滑块值便于授权恢复后继续用同一档）
 }

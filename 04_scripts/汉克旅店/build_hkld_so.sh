@@ -45,7 +45,7 @@ done
 
 echo "[5/5] 产物自检"
 LC_ALL=C grep -a -q '\[Hkld\]' "$SO" || { echo "ERROR: so 无 [Hkld] 标签"; exit 1; }
-for s in 无敌 伤害倍率 无限技能 解锁角色 无限金币 无限钥匙; do
+for s in 无敌 伤害倍率 无限技能 解锁角色 无限金币 无限钥匙 移动速度 无限蓝; do
   LC_ALL=C grep -a -q "$s" "$SO" || { echo "ERROR: so 缺菜单串 $s"; exit 1; }
 done
 "$NM" -D --undefined-only "$SO" | grep -q emutls && { echo "ERROR: so 含 __emutls_* 未定义符号"; exit 1; }

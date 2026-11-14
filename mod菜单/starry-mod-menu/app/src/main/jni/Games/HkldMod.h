@@ -9,7 +9,7 @@
  *    文件镜像是本仓 HybridCLR 游戏既有口径：无限升级 / 境界死神激斗）。
  *
  *  配置键（与 04_scripts/汉克旅店/ilpatch/Patch.cs 逐字一致）：改一处必须改两处
- *    god / damage_x / inf_skill / unlock_char / inf_money / inf_key
+ *    god / damage_x / inf_skill / unlock_char / inf_money / inf_key / move_speed_x / inf_mp
  * ================================================================ */
 #ifndef STARRY_HKLD_MOD_H
 #define STARRY_HKLD_MOD_H
@@ -24,6 +24,8 @@ enum HkldFeat : int {
     HKLD_FEAT_UNLOCK  = 4,  // Toggle_解锁角色  -> unlock_char
     HKLD_FEAT_MONEY   = 5,  // Toggle_无限金币  -> inf_money
     HKLD_FEAT_KEY     = 6,  // Toggle_无限钥匙  -> inf_key
+    HKLD_FEAT_MOVESPD = 7,  // Slider_移动速度:100:300 -> move_speed_x（整数百分比，100 = 原速）
+    HKLD_FEAT_INFMP   = 8,  // Toggle_无限蓝    -> inf_mp（1 = 蓝条不掉）
 };
 
 bool Hkld_TryInit(JavaVM* vm);

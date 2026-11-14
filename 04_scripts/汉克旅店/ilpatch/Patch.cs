@@ -15,6 +15,8 @@ using Mono.Cecil.Cil;
 //   ④ 解锁角色  SaveDataManager.RepairSaveData()              末尾: Starry.HkldPatch.UnlockAll(this)
 //   ⑤ 无限金币  PlayerManager.RefreshMoney(bool)               入口: if(inf_money) curMoney=lastMoney=9999
 //   ⑥ 无限钥匙  PlayerManager.RefreshKeyCount()                入口: if(inf_key) keyCount=999
+//   ⑦ 移动速度  PlayerManager.GetRealMoveSpeed()               每个 ret 前: MoveMul(float) × move_speed_x(100..300%)
+//   ⑧ 无限蓝    PlayerManager.RefreshMP(bool)                   入口: MpFill(this) —— if(inf_mp) curMp=mp
 //
 // 铁律（skill/re-implement/hotfix-dll-replace-pattern.md §Cecil 检查清单）：
 //   1) 参数下标：Parameters 不含 this ⇒ SlotToParamIndex(slot)=HasThis?slot-1:slot；写回前断言参数名+类型
@@ -35,6 +37,13 @@ internal static class Patcher
     const string K_UNLOCK = "unlock_char";
     const string K_MONEY  = "inf_money";
     const string K_KEY    = "inf_key";
+    const string K_MOVESP = "move_speed_x";
+    // 移速百分比口径：move_speed_x = 100 表示原速（默认值 = 菜单 min ⇒ 缺键/关菜单零副作用），
+    // 200 = 2x、300 = 3x。结果再夹到 [MOVESP_MIN, MOVESP_MAX]，防属性叠加后高速穿透碰撞/触发体。
+    const int MOVESP_DEF = 100;
+    const float MOVESP_MIN = 1f;
+    const float MOVESP_MAX = 999f;
+    const string K_INFMP  = "inf_mp";
 
     static ModuleDefinition mod;
     static MethodReference mGetBool, mGetInt;
@@ -52,7 +61,11 @@ internal static class Patcher
         ("PlayerChoicePanel", "UpdateCharacter"),
         ("PlayerManager",     "RefreshMoney"),
         ("PlayerManager",     "RefreshKeyCount"),
+        ("PlayerManager",     "RefreshMP"),
+        ("PlayerManager",     "GetRealMoveSpeed"),
         ("Starry.HkldPatch",  "ForceUnlock"),
+        ("Starry.HkldPatch",  "MpFill"),
+        ("Starry.HkldPatch",  "MoveMul"),
     };
 
     public static void Run(string srcPath, string dstPath)
@@ -87,6 +100,8 @@ internal static class Patcher
         P(PatchForceUnlock,  "Save/MainCharacterInfo.isUnlock 全部读取点 [unlock_char]");
         P(PatchMoney,        "PlayerManager.RefreshMoney         [inf_money]");
         P(PatchKey,          "PlayerManager.RefreshKeyCount      [inf_key]");
+        P(PatchInfMp,        "PlayerManager.RefreshMP            [inf_mp]");
+        P(PatchMoveSpeed,    "PlayerManager.GetRealMoveSpeed     [move_speed_x]");
 
         var constantsBefore = ConstantAudit.Snapshot(mod);
         asm.Write(dstPath, new WriterParameters { WriteSymbols = false });
@@ -284,14 +299,7 @@ internal static class Patcher
 
     static MethodDefinition BuildForceUnlock()
     {
-        var t = mod.GetType("Starry.HkldPatch");
-        if (t == null)
-        {
-            t = new TypeDefinition("Starry", "HkldPatch",
-                TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
-                mod.TypeSystem.Object);
-            mod.Types.Add(t);
-        }
+        var t = GetOrCreateHkldType();
         var exist = t.Methods.FirstOrDefault(x => x.Name == "ForceUnlock");
         if (exist != null) return exist;
 
@@ -365,6 +373,158 @@ internal static class Patcher
         il.InsertBefore(first, Instruction.Create(OpCodes.Ldc_I4, 999));
         il.InsertBefore(first, Instruction.Create(OpCodes.Stfld, f));
         il.InsertBefore(first, skip);
+    }
+
+    // =====================================================================
+    //  ⑧ 无限蓝：RefreshMP 入口 MpFill(this) —— if(inf_mp) curMp = mp
+    //
+    //  为什么挂这里：全部扣蓝点都是 `PlayerManager.curMp -= X; PlayerManager.RefreshMP();`
+    //  （ItemControl.cs:494 / SkillUseManager.cs:7481 / AoeSkillControl.cs:587 /
+    //    JingAbilityControl.cs:1699 等 20+ 处，已抽样确认）。RefreshMP 内部原本就是
+    //  「curMp>mp ⇒ curMp=mp；curMp<0 ⇒ 0；conv.i4 取整；刷 mpText + mpImgObjList」，
+    //  所以入口把 curMp 抬到上限即可，蓝条会显示满、不需要另外写 UI。
+    //
+    //  副作用（已写进 10_docs/汉克旅店/路线锁定.md）：只保证蓝条不掉；
+    //  「有魔法宝石时技能消耗改扣血」是另一条 curHp 路径，不受本补丁影响。
+    //  入口插入即使命中 RefreshMP 开头的 curGameState==0 提前 return 也无害（只多写一次 curMp）。
+    // =====================================================================
+    static void PatchInfMp()
+    {
+        var t = NeedType("PlayerManager");
+        var m = NeedMethod(t, "RefreshMP", 1);
+        AssertParams(m, new[] { "isLoadSave" }, new[] { "Boolean" });
+        if (HasLdstr(m, K_INFMP)) { Console.WriteLine("[skip] RefreshMP 已含 " + K_INFMP); return; }
+        NeedField(t, "curMp", "Single");
+        NeedField(t, "mp", "Single");
+        var helper = BuildMpFill();
+
+        var il = m.Body.GetILProcessor();
+        var first = m.Body.Instructions[0];
+        il.InsertBefore(first, Instruction.Create(OpCodes.Ldarg_0));
+        il.InsertBefore(first, Instruction.Create(OpCodes.Call, helper));
+        Console.WriteLine("[patch] RefreshMP 入口已接 MpFill（" + m.Body.Instructions.Count + " 条 IL）");
+    }
+
+    // static void MpFill(PlayerManager pm) { if (GetBool("inf_mp")) pm.curMp = pm.mp; }
+    static MethodDefinition BuildMpFill()
+    {
+        var t = GetOrCreateHkldType();
+        var exist = t.Methods.FirstOrDefault(x => x.Name == "MpFill");
+        if (exist != null) return exist;
+        var pmType = NeedType("PlayerManager");
+        var fCur = NeedField(pmType, "curMp", "Single");
+        var fMax = NeedField(pmType, "mp", "Single");
+
+        var m = new MethodDefinition("MpFill",
+            MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig, mod.TypeSystem.Void);
+        m.Parameters.Add(new ParameterDefinition("pm", ParameterAttributes.None, pmType));
+        t.Methods.Add(m);
+        m.Body.InitLocals = true;
+        m.Body.MaxStackSize = 2;
+        var il = m.Body.GetILProcessor();
+        var ret = Instruction.Create(OpCodes.Ret);
+        il.Append(Instruction.Create(OpCodes.Ldstr, K_INFMP));
+        il.Append(Instruction.Create(OpCodes.Call, mGetBool));
+        il.Append(Instruction.Create(OpCodes.Brfalse, ret));
+        il.Append(Instruction.Create(OpCodes.Ldarg_0));
+        il.Append(Instruction.Create(OpCodes.Ldarg_0));
+        il.Append(Instruction.Create(OpCodes.Ldfld, fMax));
+        il.Append(Instruction.Create(OpCodes.Stfld, fCur));
+        il.Append(ret);
+        Console.WriteLine("[patch] Starry.HkldPatch.MpFill 已注入（if " + K_INFMP + " ⇒ pm.curMp = pm.mp）");
+        return m;
+    }
+
+    // =====================================================================
+    //  ⑦ 移动速度：GetRealMoveSpeed 的每个 ret 前接 MoveMul(float) —— v * move_speed_x/100（100..300%）
+    //
+    //  为什么挂这里：PlayerManager.GetRealMoveSpeed() 只有两条 return（GAME 态读
+    //  totalAttributes.moveSpeed/100f，非 GAME 态读 PlayerData.MoveSpeed/100f），
+    //  消费方全部收敛到它：PlayerSwipe.GetRealMoveSpeed()（PlayerJoystickControl.cs:227/236
+    //  摇杆位移）、PlayerAnimatorManager.cs:100（动画 MoveSpeed）。一个挂点同时覆盖位移与动画。
+    //  不改属性数值、不写存档 ⇒ 滑块拨回 1 立即恢复原速。
+    //  已知未覆盖（有意为之，写进路线锁定.md）：HuJiaoRollAbiltiyControl.cs:518/815 直接读
+    //  totalAttributes.moveSpeed 算翻滚系数，属技能内部公式，不受本补丁影响。
+    // =====================================================================
+    static void PatchMoveSpeed()
+    {
+        var t = NeedType("PlayerManager");
+        var m = NeedMethod(t, "GetRealMoveSpeed", 0);
+        if (m.ReturnType.Name != "Single") throw new Exception("GetRealMoveSpeed 返回类型=" + m.ReturnType.Name + " 期望 Single");
+        int already = m.Body.Instructions.Count(i => i.Operand is MethodReference r && r.Name == "MoveMul");
+        if (already > 0) { Console.WriteLine("[skip] GetRealMoveSpeed 已含 " + already + " 处 MoveMul"); return; }
+        var helper = BuildMoveMul();
+
+        var rets = m.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
+        if (rets.Count == 0) throw new Exception("GetRealMoveSpeed 没有 ret（方法体异常？）");
+        var il = m.Body.GetILProcessor();
+        foreach (var ret in rets) il.InsertBefore(ret, Instruction.Create(OpCodes.Call, helper));
+        if (m.Body.MaxStackSize < 2) m.Body.MaxStackSize = 2;
+        Console.WriteLine("[patch] GetRealMoveSpeed " + rets.Count + " 个 ret 前已接 MoveMul");
+    }
+
+    // static float MoveMul(float v)
+    // {
+    //     int x = GetInt("move_speed_x", 100);          // 100 = 原速（菜单 min = 默认值）
+    //     if (x <= 100) return v;                       // 缺键/关菜单/最小值 ⇒ 零副作用
+    //     float r = v * x / 100f;                       // 100..300 ⇒ 1x..3x
+    //     if (r > 999f) r = 999f;                       // 上限夹（防属性叠加后高速穿透）
+    //     if (r < 1f) return 1f;                        // 下界兜底
+    //     return r;
+    // }
+    static MethodDefinition BuildMoveMul()
+    {
+        var t = GetOrCreateHkldType();
+        var exist = t.Methods.FirstOrDefault(x => x.Name == "MoveMul");
+        if (exist != null) return exist;
+
+        var m = new MethodDefinition("MoveMul",
+            MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig, mod.TypeSystem.Single);
+        m.Parameters.Add(new ParameterDefinition("v", ParameterAttributes.None, mod.TypeSystem.Single));
+        t.Methods.Add(m);
+        var vM = new VariableDefinition(mod.TypeSystem.Int32);
+        var vR = new VariableDefinition(mod.TypeSystem.Single);
+        m.Body.Variables.Add(vM);
+        m.Body.Variables.Add(vR);
+        m.Body.InitLocals = true;
+        m.Body.MaxStackSize = 2;
+        var il = m.Body.GetILProcessor();
+        var keep = Instruction.Create(OpCodes.Ldarg_0);
+        var retF = Instruction.Create(OpCodes.Ldloc, vR);
+        // 下界夹的**比较操作数必须是 r（vR）**，不是入参 v。2026-11-15 Lead 审查发现：
+        // 首版把跳转标签直接做成 Ldarg_0（栈合法、Gate 也过），于是判的是 v >= 1 而不是 r >= 1 ⇒
+        // 基础速度 <1 的角色（MoveSpeed 90 ⇒ v=0.9）拖到 150% 时 r=1.35 被压回 1.0，倍率不对。
+        var clampLow = Instruction.Create(OpCodes.Ldloc, vR);
+        il.Append(Instruction.Create(OpCodes.Ldstr, K_MOVESP));
+        il.Append(Instruction.Create(OpCodes.Ldc_I4, MOVESP_DEF));
+        il.Append(Instruction.Create(OpCodes.Call, mGetInt));
+        il.Append(Instruction.Create(OpCodes.Stloc, vM));
+        il.Append(Instruction.Create(OpCodes.Ldloc, vM));
+        il.Append(Instruction.Create(OpCodes.Ldc_I4, MOVESP_DEF));
+        il.Append(Instruction.Create(OpCodes.Ble, keep));    // x <= 100 ⇒ 原值返回（缺键/默认/关）
+        il.Append(Instruction.Create(OpCodes.Ldarg_0));
+        il.Append(Instruction.Create(OpCodes.Ldloc, vM));
+        il.Append(Instruction.Create(OpCodes.Conv_R4));
+        il.Append(Instruction.Create(OpCodes.Mul));
+        il.Append(Instruction.Create(OpCodes.Ldc_R4, 100f));
+        il.Append(Instruction.Create(OpCodes.Div));          // r = v * x / 100
+        il.Append(Instruction.Create(OpCodes.Stloc, vR));
+        il.Append(Instruction.Create(OpCodes.Ldloc, vR));
+        il.Append(Instruction.Create(OpCodes.Ldc_R4, MOVESP_MAX));
+        il.Append(Instruction.Create(OpCodes.Ble, clampLow)); // r <= 999 ⇒ 再查下界
+        il.Append(Instruction.Create(OpCodes.Ldc_R4, MOVESP_MAX));
+        il.Append(Instruction.Create(OpCodes.Stloc, vR));     // r > 999 ⇒ 夹到 999（防高速穿透）
+        il.Append(clampLow);
+        il.Append(Instruction.Create(OpCodes.Ldc_R4, MOVESP_MIN));
+        il.Append(Instruction.Create(OpCodes.Bge, retF));     // r >= 1 ⇒ 直接返回
+        il.Append(Instruction.Create(OpCodes.Ldc_R4, MOVESP_MIN));
+        il.Append(Instruction.Create(OpCodes.Stloc, vR));     // r < 1 ⇒ 兜底 1（防 0/负速卡死）
+        il.Append(retF);
+        il.Append(Instruction.Create(OpCodes.Ret));
+        il.Append(keep);
+        il.Append(Instruction.Create(OpCodes.Ret));
+        Console.WriteLine("[patch] Starry.HkldPatch.MoveMul 已注入（v * " + K_MOVESP + "/100，默认 " + MOVESP_DEF + " = 原速）");
+        return m;
     }
 
     // =====================================================================
@@ -609,6 +769,78 @@ internal static class Patcher
         var rk = Need("PlayerManager", "RefreshKeyCount");
         A("钥匙门落在 RefreshKeyCount", Cnt(rk, K_KEY) == 1, K_KEY + " 出现 " + Cnt(rk, K_KEY) + " 次（期望 1）");
 
+        // 无限蓝：调用点计数 + 落点 + helper 语义复读
+        var rmp = Need("PlayerManager", "RefreshMP");
+        int mpSites = 0;
+        MethodDefinition mpHost = null;
+        foreach (var ty in mm.Types)
+            if (ty.HasMethods)
+                foreach (var meth in ty.Methods)
+                    if (meth.HasBody)
+                    {
+                        int c = meth.Body.Instructions.Count(i => i.Operand is MethodReference r0 && r0.Name == "MpFill");
+                        if (c > 0) { mpSites += c; mpHost = meth; }
+                    }
+        A("无限蓝：MpFill 调用点 == 1 处", mpSites == 1, "调用点 " + mpSites + " 处（期望 1）");
+        A("无限蓝：调用落在 PlayerManager.RefreshMP 入口处",
+            mpHost == rmp && rmp != null
+              && rmp.Body.Instructions.Take(2).Any(i => i.Operand is MethodReference r1 && r1.Name == "MpFill"),
+            "宿主 " + (mpHost == null ? "(无)" : mpHost.FullName) + "；RefreshMP 前 2 条 IL 内含 MpFill");
+        var mpFill = hp?.Methods.FirstOrDefault(x => x.Name == "MpFill");
+        A("Starry.HkldPatch.MpFill 签名 (PlayerManager)->Void",
+            mpFill != null && mpFill.Parameters.Count == 1
+              && mpFill.Parameters[0].ParameterType.Name == "PlayerManager"
+              && mpFill.ReturnType.Name == "Void",
+            "helper 存在且签名正确");
+        A("MpFill 语义 = if(inf_mp) pm.curMp = pm.mp",
+            mpFill != null && Cnt(mpFill, K_INFMP) == 1
+              && mpFill.Body.Instructions.Any(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference g && g.Name == "GetBool")
+              && mpFill.Body.Instructions.Any(i => i.OpCode == OpCodes.Ldfld && i.Operand is FieldReference fa && fa.Name == "mp")
+              && mpFill.Body.Instructions.Any(i => i.OpCode == OpCodes.Stfld && i.Operand is FieldReference fb && fb.Name == "curMp"),
+            "ldstr " + K_INFMP + " + GetBool + ldfld mp + stfld curMp 齐备");
+
+        // 移动速度：调用点计数 == ret 数（实测打印）+ 逐 ret 前置校验 + helper 语义复读
+        var gm = Need("PlayerManager", "GetRealMoveSpeed");
+        var gins = gm == null ? new List<Instruction>() : gm.Body.Instructions.ToList();
+        int gmRets = gins.Count(i => i.OpCode == OpCodes.Ret);
+        int gmCalls = gins.Count(i => i.Operand is MethodReference r5 && r5.Name == "MoveMul");
+        A("移动速度：MoveMul 调用点 == GetRealMoveSpeed 的 ret 数",
+            gmRets > 0 && gmCalls == gmRets, "调用点 " + gmCalls + " / 实测 ret " + gmRets);
+        bool everyRetCovered = gmRets > 0;
+        for (int i = 0; i < gins.Count; i++)
+        {
+            if (gins[i].OpCode != OpCodes.Ret) continue;
+            if (i == 0 || !(gins[i - 1].Operand is MethodReference r6) || r6.Name != "MoveMul") everyRetCovered = false;
+        }
+        A("移动速度：每个 ret 紧前一条都是 MoveMul（两条 return 都接）", everyRetCovered,
+            "逐 ret 前置校验 " + (everyRetCovered ? "全通过" : "有 ret 未接 MoveMul"));
+        var moveMul = hp?.Methods.FirstOrDefault(x => x.Name == "MoveMul");
+        A("Starry.HkldPatch.MoveMul 签名 (Single)->Single",
+            moveMul != null && moveMul.Parameters.Count == 1
+              && moveMul.Parameters[0].ParameterType.Name == "Single"
+              && moveMul.ReturnType.Name == "Single",
+            "helper 存在且签名正确");
+        A("MoveMul 语义 = x<=100 原值 : v * move_speed_x / 100（含上下界夹取）",
+            moveMul != null && Cnt(moveMul, K_MOVESP) == 1
+              && moveMul.Body.Instructions.Any(i => i.OpCode == OpCodes.Ldc_I4 && (int)i.Operand == MOVESP_DEF)
+              && moveMul.Body.Instructions.Any(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference g2 && g2.Name == "GetInt")
+              && moveMul.Body.Instructions.Any(i => i.OpCode == OpCodes.Ble)
+              && moveMul.Body.Instructions.Any(i => i.OpCode == OpCodes.Bge)
+              && moveMul.Body.Instructions.Any(i => i.OpCode == OpCodes.Conv_R4)
+              && moveMul.Body.Instructions.Any(i => i.OpCode == OpCodes.Mul)
+              && moveMul.Body.Instructions.Any(i => i.OpCode == OpCodes.Div),
+            "GetInt(def=" + MOVESP_DEF + ") + ble/bge + conv.r4 + mul + div 齐备");
+        // 防回归：这类「栈合法但操作数选错」的 bug 前几条断言抓不到 ⇒ 直接查「ldc.r4 1 前一条」
+        var moveIns = moveMul == null ? new List<Instruction>() : moveMul.Body.Instructions.ToList();
+        int iMin = moveIns.FindIndex(x => x.OpCode == OpCodes.Ldc_R4 && x.Operand is float f1 && f1 == MOVESP_MIN);
+        A("移动速度：MoveMul 下界夹比较的是 r（ldc.r4 1 前一条必须是 ldloc）",
+            iMin > 0 && moveIns[iMin - 1].OpCode == OpCodes.Ldloc,
+            iMin <= 0 ? "未找到 ldc.r4 " + MOVESP_MIN
+                      : "前一条 = " + moveIns[iMin - 1].OpCode + "（期望 ldloc）");
+        A("移动速度：GetRealMoveSpeed 方法体内无 stfld（未改成写属性字段）",
+            gm != null && !gins.Any(i => i.OpCode == OpCodes.Stfld),
+            "stfld 数 " + gins.Count(i => i.OpCode == OpCodes.Stfld) + "（期望 0）");
+
         // 反例断言：绝不能落到「Clamp 之后的 SetSkillCoolingTime 内」以外的错误点上
         A("SetSkillCoolingTime 的原 Clamp 指令仍在（未删改原 IL）",
             sc != null && sc.Body.Instructions.Any(i => i.Operand is MethodReference mr && mr.Name == "Clamp"),
@@ -640,6 +872,28 @@ internal static class Patcher
         if (m == null) throw new Exception("方法缺失: " + t.FullName + "::" + name + "/" + argc);
         if (!m.HasBody) throw new Exception("方法无 IL 体: " + t.FullName + "::" + name);
         return m;
+    }
+
+    // 取或建 Starry.HkldPatch 辅助类型（所有新 helper 都落这里）
+    static TypeDefinition GetOrCreateHkldType()
+    {
+        var t = mod.GetType("Starry.HkldPatch");
+        if (t != null) return t;
+        t = new TypeDefinition("Starry", "HkldPatch",
+            TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit,
+            mod.TypeSystem.Object);
+        mod.Types.Add(t);
+        return t;
+    }
+
+    // 字段名 + 类型双断言（跨类读写字段时字段丢了会静默出 nullref，必须先断）
+    static FieldDefinition NeedField(TypeDefinition t, string name, string typeName)
+    {
+        var f = t.Fields.FirstOrDefault(x => x.Name == name);
+        if (f == null) throw new Exception("字段缺失: " + t.FullName + "::" + name);
+        if (f.FieldType.Name != typeName)
+            throw new Exception(t.FullName + "::" + name + " 类型=" + f.FieldType.Name + " 期望 " + typeName);
+        return f;
     }
 
     // 参数名 + 参数类型双断言（hotfix 清单第 5 项：错位是静默的，签名合法/IL 合法/运行时才炸）

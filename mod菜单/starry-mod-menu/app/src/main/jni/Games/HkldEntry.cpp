@@ -18,6 +18,8 @@ static const char* kHkld_Features[] = {
     "Toggle_解锁角色",            // 4  HKLD_FEAT_UNLOCK -> unlock_char
     "Toggle_无限金币",            // 5  HKLD_FEAT_MONEY  -> inf_money
     "Toggle_无限钥匙",            // 6  HKLD_FEAT_KEY    -> inf_key
+    "Slider_移动速度:100:300",    // 7  HKLD_FEAT_MOVESPD -> move_speed_x（100 = 原速/默认，300 = 3x）
+    "Toggle_无限蓝",              // 8  HKLD_FEAT_INFMP  -> inf_mp
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

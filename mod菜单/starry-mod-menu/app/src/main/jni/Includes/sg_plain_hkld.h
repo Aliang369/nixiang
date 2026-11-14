@@ -16,6 +16,6 @@ static const char* kHkldOfficialSha = "263e11ebfca73cfc3a014a4dbae170ffafb20c0a3
 static const uint32_t kHkldBundledLen = 5328896u;
 static const char* kHkldBundledSha = "d2e7edf03f24f276db78d240e147ed3398263ee81923db47d9cb2e94ded33277";
 
-/* 补丁产物：5292544 B（比官方 -35840 B）sha256=c31decaa72b8efed10ad4f0981df277fcbc7878922f9f5c1ca4dfd7162eb9573 */
+/* 补丁产物：5292544 B（比官方 -35840 B）sha256=f1f698bd95ac9b23e88a00dcade3cc2ad6a210194b317f2f5b4d1508ccf1205b */
 static const uint32_t kHkldPatchedLen = 5292544u;
-static const char* kHkldPatchedSha = "c31decaa72b8efed10ad4f0981df277fcbc7878922f9f5c1ca4dfd7162eb9573";
+static const char* kHkldPatchedSha = "f1f698bd95ac9b23e88a00dcade3cc2ad6a210194b317f2f5b4d1508ccf1205b";
