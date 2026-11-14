@@ -1,0 +1,31 @@
+{
+  "package": "com.xf.kyzt",
+  "game": "旷野征途",
+  "channel": "taptap",
+  "kind": "official_from_device",
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/旷野征途/旷野征途_2.2_taptap_official.apk",
+  "apk_exists": true,
+  "version_name": "2.2",
+  "version_code": 22,
+  "installer": "com.android.packageinstaller",
+  "primary_cpu_abi": "arm64-v8a",
+  "serial": "f9a116a2",
+  "remote_path": "/data/app/~~FRPpMVsDqVM_n7f9Jij0jA==/com.xf.kyzt-2kiVRVOlgXkqPznxvhjrDw==/base.apk",
+  "size": 160641590,
+  "sha256": "8cb087ee44bb6183ebd3bf2f9afee5ae51ccccf88548814a89f289b5ef93e023",
+  "md5": "9eb2b562536d0eadf30cade26a23e3c9",
+  "signer_dn": "O=xiefeng",
+  "signer_sha256": "0a3b782591c7895437472a4768a4754e6487fd27cbe1887697ebc38de41a048f",
+  "signer_sha1": "9de90671cac0eea12092a81f9f4b0e237b9bf591",
+  "official_signer_sha256_baseline": "0a3b782591c7895437472a4768a4754e6487fd27cbe1887697ebc38de41a048f",
+  "cert_baseline_ok": true,
+  "no_starry_lib": true,
+  "starry_hits": [],
+  "so_count": 8,
+  "dex_count": 2,
+  "key_entry_sizes": {
+    "lib/arm64-v8a/libil2cpp.so": 65520080,
+    "lib/arm64-v8a/libunity.so": 25197712,
+    "assets/bin/Data/Managed/Metadata/global-metadata.dat": 11670528
+  }
+}

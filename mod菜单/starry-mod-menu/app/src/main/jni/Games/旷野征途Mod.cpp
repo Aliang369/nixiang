@@ -23,8 +23,11 @@
 // ============================================================================
 
 #include "旷野征途Mod.h"
+#include "旷野征途BattlePure.h"
+#include "旷野征途BattleFlow.h"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -38,6 +41,87 @@
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
+
+// ---------------------------------------------------------------------------
+//  资源三项 2.2 适配层（实现由 login-review 独占：Games/旷野征途Economy22.h）
+//
+//  设计（2026-11-14 第2轮）：
+//   · 头文件采用**硬断言**，不做「__has_include 悄悄漏编还宣称完成」：
+//     一旦构建声明要含该能力（KYZT_ECONOMY22_EXPECTED=1），缺头文件或版本标记即**编译失败**。
+//   · 未声明时保持现有失败关闭（2.2 禁 raw 旧偏移）。
+//   · 调用线程：只允许从菜单开关回调（Java UI 线程）进入；mod_thread 的 Tick 里禁止调
+//     （thread_local 标记 t_inModTick），避免从后台线程碰 Unity/il2cpp 对象。
+// ---------------------------------------------------------------------------
+#if defined(KYZT_ECONOMY22_EXPECTED) && KYZT_ECONOMY22_EXPECTED
+#  if !defined(__has_include)
+#    error "需要 __has_include 支持"
+#  endif
+#  if !__has_include("旷野征途Economy22.h")
+#    error "声明了 KYZT_ECONOMY22_EXPECTED 但缺 Games/旷野征途Economy22.h"
+#  endif
+   // Il2CppApi.h 的默认参数用 sec_lib_il2cpp()，必须先引入 SecStrings
+#  include "Includes/SecStrings.hpp"
+#  include "旷野征途Economy22.h"
+#  ifndef KYZT_ECONOMY22_API_VERSION
+#    error "旷野征途Economy22.h 缺版本标记 KYZT_ECONOMY22_API_VERSION"
+#  endif
+static_assert(KYZT_ECONOMY22_API_VERSION == 6, "Economy22 API 版本不匹配（期望 6 / KYZT22ECO-BUILD-6，2026-11-14 v6：before/after 读回 + bool=false→10 不重试）");
+#  define KYZT_HAS_ECONOMY22 1
+#else
+#  define KYZT_HAS_ECONOMY22 0
+#endif
+static thread_local bool t_inModTick = false;   // Tick 线程标记（禁止在 Tick 内调经济接口）
+
+// ---------------------------------------------------------------------------
+//  资源调用线程模型（2026-11-14 第3轮，按 lead 要求重做）
+//
+//  事实：框架内没有 Unity 线程派发器（grep UnityMain/runOnGameThread 命中 0）；
+//        Android 主线程 ≠ Unity 主线程（Unity 游戏循环通常独占 UnityMain）。
+//  结论：菜单回调只做「入队」，真正调用只发生在**游戏自己的帧回调**里：
+//        锚点 = ET.GameManagerMono.Update（AOT，dump.cs RVA 0x2AF53DC / file 0x2AF13DC，
+//        与相邻方法 RVA 各不相同、函数体 712 B ⇒ 非空实现、非解释器共用桩；全仓唯一）。
+//  线程实证：Hooked_SetTimeScale 一定跑在 Unity 线程（游戏自己调 Time.set_timeScale），
+//        在那里记 pthread_self()，与菜单回调线程比对后落盘，供 login-review 决定是否
+//        允许直调（KYZT22_THREAD_PROVEN）。
+// ---------------------------------------------------------------------------
+static void DbgLog(const char* fmt, ...);   // 前向声明（定义在本文件后段）
+static std::atomic<unsigned long> g_unityTid{0};
+static std::atomic<int>  g_tidProbe{0};        // 0=未测 1=相同 2=不同 3=无参照
+
+// 队列与线程判定全部由 Games/旷野征途Economy22.h（login-review 独占）实现：
+//   GrantX() 只在 UI 侧入队并立即返回 0（不碰托管对象）；
+//   OnUnityFrame() 由本模块在 AOT 帧回调里每帧调用，内部记录 pthread_self 并排空。
+// 本文件不再持有第二条队列，避免双缓冲/双 drain 造成重复发奖。
+
+// 帧锚点 hook：ET.GameManagerMono.Update（AOT，按名安装；orig 必调）
+typedef void (*GameUpdate_t)(void* self, void* method);
+static GameUpdate_t g_origGameUpdate = nullptr;
+static std::atomic<int> g_updCalls{0};
+
+static void Hooked_GameUpdate(void* self, void* method) {
+    const int n = g_updCalls.fetch_add(1) + 1;
+#if KYZT_HAS_ECONOMY22
+    // 隔离：h 内部若抛 C++ 异常，不得吞掉游戏自己的 Update。
+    // 注意：本隔离只兜 C++ 异常；托管异常由 runtime_invoke 的 exc 出参处理，
+    // SIGSEGV 由已装的保护区/信号兜底，**不能**靠 catch 捕。
+    try {
+        Kyzt22::log_fn() = DbgLog;    // 诊断钩子（2026-11-14 21:50）
+        Kyzt22::OnUnityFrame();      // h 内部：记录 Unity 线程 + 有界排空（每帧上限 4）
+    } catch (...) {
+        DbgLog("eco: OnUnityFrame threw (C++), orig 继续");
+    }
+    if ((n % 300) == 1) {
+        const unsigned pend = Kyzt22::PendingCount();
+        if (n == 1) DbgLog("eco: h=%s", Kyzt22::BuildMarker());
+        if (pend || n == 1)
+            DbgLog("eco: frame#%d tid=%lu pending=%u drained=%u last=%d",
+                   n, (unsigned long)pthread_self(), pend, Kyzt22::DrainedCount(), Kyzt22::LastRc());
+    }
+#else
+    if ((n % 600) == 1) DbgLog("update: frame hook #%d tid=%lu (Economy22.h 未编译)", n, (unsigned long)pthread_self());
+#endif
+    if (g_origGameUpdate) g_origGameUpdate(self, method);
+}
 #include "Includes/SecStrings.hpp"
 #include "Unity/Il2CppApi.h"
 
@@ -87,6 +171,56 @@ enum : size_t {
     kOffDmgDmg       = 56,     // .dmg Single
     kOffDmgReal      = 60,     // .reallyDmg Int32
 };
+
+// ============================================================================
+//  ②-b 版本自适应挂点地址（2026-11-14 起支持 1.8 / 2.2 双版本同一 so）
+//
+//  背景：2.2/vc22 底包（sha256 8cb087ee…e023）把 Dirichlet 广告类整体位移，
+//  ShowInternal file 由 0x1C8A9AC → 0x1CA9130（实测该处首指令仍为 0xF81E0FFE
+//  = `str x30,[sp,#-0x20]!`，与 1.8 序言一致，故同一 expectInsn 可校验）。
+//
+//  铁律（路线锁定 §7）：
+//   · 只认「实测 + 序言校验」的地址；查不到就置 0 走失败关闭，**不许填伪地址**。
+//   · HybridCLR 解释器入口（EnterFrameFromInterpreter）在 2.2 **尚未定位**
+//     （1.8 的 0x19876a8 已随 so 变化失效，65,520,080 B，签名扫描 0 命中）
+//     ⇒ 2.2 下 rva=0 且无按名路径 ⇒ 战斗两项自动失败关闭并落盘告警。
+// ============================================================================
+// 前向声明：②-b 段在 ⑤ 挂点机器之前，需先声明这两个底层助手
+static void* FileOffToVa(const char* lib, uintptr_t fileOff);
+static bool  ReadU32Guarded(const char* tag, const void* p, uint32_t* out);
+
+static uintptr_t kRvaShowInternal = 0x1C8A9AC;   // 1.8 实测（file）
+static uintptr_t kRvaHandleNative = 0x1C8A724;   // 1.8 实测（file，只调不挂）
+static uintptr_t kRvaEnterInterp  = 0x19876a8;   // 1.8 实测（file）
+static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2
+
+// 探针：用「首指令是否等于已知序言」判版本，不依赖包名/版本号字符串
+static int DetectLibVersion() {
+    struct Probe { int ver; uintptr_t off; };
+    static const Probe probes[] = {{22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
+    for (const auto& pr : probes) {
+        void* va = FileOffToVa(TPL_TARGET_LIB, pr.off);
+        if (!va) continue;
+        uint32_t insn = 0;
+        if (ReadU32Guarded("verprobe", va, &insn) && insn == 0xF81E0FFEu) {
+            g_libVer.store(pr.ver);
+            if (pr.ver == 22) {
+                kRvaShowInternal = 0x1CA9130u;
+                kRvaHandleNative = 0x1CA8EA8u;
+                kRvaEnterInterp  = 0u;         // 2.2 未定位 ⇒ 失败关闭，禁伪地址
+                LOGI(TPL_LOG " lib version probe: 2.2 (ShowInternal file=0x1CA9130, interp=未定位)");
+                DbgLog("verprobe: 2.2 showInternal=0x1CA9130 interp=UNRESOLVED");
+            } else {
+                LOGI(TPL_LOG " lib version probe: 1.8 (ShowInternal file=0x1C8A9AC)");
+                DbgLog("verprobe: 1.8");
+            }
+            return pr.ver;
+        }
+    }
+    LOGW(TPL_LOG " lib version probe: 未命中已知序言（未知版本）⇒ 仅按名路径");
+    DbgLog("verprobe: UNKNOWN patch-ready=no");
+    return 0;
+}
 
 // ============================================================================
 //  ③ 安全助手（防闪退核心；新代码禁止绕开它们裸读写内存）
@@ -409,6 +543,15 @@ static bool HookByName(const char* tag, const char* ns, const char* cls,
         LOGW(TPL_LOG " %s bad method ptr %s.%s", tag, cls, method);
         return false;
     }
+    // 2026-11-14：MethodInfo::methodPointer(offset 0) 对**解释器方法**可能是
+    // 0x400000000000 这类标记值（先例 WorMod.cpp:25-26 / Il2CppApi.h:190），
+    // 直接 DobbyHook 即致命。判据只有一条：IsExecutableRange 为 **false** 时拒绝；
+    // 合法可执行指针（含 AOT 方法）一律放行，不做任何「命中即拒绝」的额外拦阻。
+    if (!Il2Cpp::IsExecutableRange(reinterpret_cast<uintptr_t>(fn), 16)) {
+        LOGW(TPL_LOG " %s methodPointer 不在可执行段（解释器/标记值?）%s.%s → 拒绝 hook",
+             tag, cls, method);
+        return false;
+    }
 
     if (!DobbyHookGuarded(tag, fn, hook, orig)) return false;
     LOGI(TPL_LOG " %s hooked by-name %s.%s(argc=%d)", tag, cls, method, argc);
@@ -590,7 +733,7 @@ static void ResolveAdGlobals() {
     if (!g_strNew) g_strNew = (StrNew_t)Il2Cpp::ResolveExport("il2cpp_string_new");
     if (!g_objNew) g_objNew = (ObjNew_t)Il2Cpp::ResolveExport("il2cpp_object_new");
     if (!g_pfnHandleNativeEvent) {
-        g_pfnHandleNativeEvent = FileOffToVa(TPL_TARGET_LIB, 0x1C8A724);
+        g_pfnHandleNativeEvent = FileOffToVa(TPL_TARGET_LIB, kRvaHandleNative);
         DbgLog("noAd: HandleNativeEvent -> %p", g_pfnHandleNativeEvent);
     }
     if (!g_adEventDataKlass) {
@@ -635,6 +778,10 @@ static bool Hooked_ShowInternal(void* self, void* options) {
 // ============================================================================
 static void Hooked_SetTimeScale(float value, void* method) {
     g_tsMethod.store(method);
+    if (g_unityTid.load() == 0) {
+        g_unityTid.store((unsigned long)pthread_self());
+        DbgLog("tid: unity=%lu (from set_timeScale)", (unsigned long)pthread_self());
+    }
     const int n = g_tsCalls.fetch_add(1);
     if (n < 8) LOGI(TPL_LOG " set_timeScale call#%d arg=%.3f spd=%d", n + 1, value, (int)g_spd.load());
     const float v = g_spd.load() ? 1.8f : value;
@@ -642,14 +789,17 @@ static void Hooked_SetTimeScale(float value, void* method) {
 }
 
 // TODO：rva/expectInsn 由 dump.cs / IDA 实测后回填（0 = 仅按名）
-static const HookSlot kSlots[] = {
+static HookSlot kSlots[] = {
     {"TimeScale", 0x0, 0x0, "UnityEngine", "Time", "set_timeScale",
      1, (void*)Hooked_SetTimeScale, (void**)&g_origSetTimeScale},
     // HybridCLR 解释器入口：无按名路径，纯 RVA + 序言校验（漂移即拒绝，不盲挂）
-    {"EnterInterp", 0x19876a8, 0xF81D0FFEu, "", "", "", -1,
+    // 帧锚点：ET.GameManagerMono.Update（AOT / 私有 / argc=0），按名安装，无 RVA
+    {"GameUpdate", 0x0, 0x0u, "ET", "GameManagerMono", "Update", 0,
+     (void*)Hooked_GameUpdate, (void**)&g_origGameUpdate},
+    {"EnterInterp", 0x0, 0xF81D0FFEu, "", "", "", -1,   // rva 由 InitSlotAddrs() 按版本填；2.2 未定位＝0 ⇒ 失败关闭
      (void*)Hooked_EnterInterp, (void**)&g_origEnterInterp},
     // 免广告：DirichletRewardAdBase::ShowInternal（AOT，序言 str x30,[sp,#-0x20]!）
-    {"NoAd", 0x1C8A9AC, 0xF81E0FFEu, "", "", "", -1,
+    {"NoAd", 0x0, 0xF81E0FFEu, "", "", "", -1,  // rva 由 InitSlotAddrs() 按版本填
      (void*)Hooked_ShowInternal, (void**)&g_origShowInternal},
 };
 
@@ -658,7 +808,186 @@ static const HookSlot kSlots[] = {
 // ============================================================================
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
+// 把版本探测结果写进挂点表（幂等；探测失败则全部保持 0 ⇒ 仅按名或失败关闭）
+static void InitSlotAddrs() {
+    const int ver = (g_libVer.load() == 0) ? DetectLibVersion() : g_libVer.load();
+    // 未知版本（ver==0）没有指纹依据 ⇒ 所有 RVA 归零，只保留按名路径；禁止默认套 1.8 地址。
+    const uintptr_t interp = (ver == 18) ? 0x19876a8u : ((ver == 22) ? 0u : 0u);
+    const uintptr_t noad   = (ver == 18) ? 0x1C8A9ACu : ((ver == 22) ? 0x1CA9130u : 0u);
+    kRvaEnterInterp = interp;
+    kRvaShowInternal = noad;
+    kRvaHandleNative = (ver == 18) ? 0x1C8A724u : ((ver == 22) ? 0x1CA8EA8u : 0u);
+    for (auto& sl : kSlots) {
+        if (std::strcmp(sl.tag, "EnterInterp") == 0) sl.rva = interp;
+        else if (std::strcmp(sl.tag, "NoAd") == 0)   sl.rva = noad;
+    }
+    DbgLog("slot addrs: interp=0x%lX noad=0x%lX ver=%d",
+           (unsigned long)kRvaEnterInterp, (unsigned long)kRvaShowInternal, g_libVer.load());
+}
+
+// ============================================================================
+//  ④-b 战斗（2.2）：EnterFrame 入口按 MethodInfo 精确匹配 ApplyHp(argc=4)
+//  已证：EnterFrame=0x19a9004 (InterpFrameGroup*, MethodInfo*, StackObject*)->InterpFrame*
+//        ApplyHp 槽序 +0 this / +8 atker / +16 atkSeatNum / +24 dmgInfo / +32 OnDie
+//        伤害为负（IL add→set_curHp）；Mathf.Max 只用于 reallyDmg 上报
+//  行为：无敌=本机目标且 d<0 → d=0；百倍=本机输出且非本机目标且 d<0 → d*100（float 边界 clamp）
+//  orig 无条件调用；不读 WasApplied；不用 isGod；不碰审计/特权/检测。
+#ifndef KYZT_BATTLE_ENABLE
+#define KYZT_BATTLE_ENABLE 1
+#endif
+
+#if KYZT_BATTLE_ENABLE
+namespace kb {
+  // 合同常量（与 IL 交叉表一一对应，改动必须同步 check_battle_contract.py）
+  //   method_get_param 是 0 基且**不含 this**：0=atker 1=atkSeatNum 2=dmgInfo 3=OnDie
+  //   argBase 槽位是另一套编号：+0=this +8=atker +16=atkSeatNum +24=dmgInfo +32=OnDie
+  constexpr int kIdxAtker = 0;
+  constexpr int kIdxSeat  = 1;
+  constexpr int kIdxDmg   = 2;
+  constexpr int kIdxOnDie = 3;
+  constexpr int kSlotThis = 0;
+  constexpr int kSlotAtker= 8;
+  constexpr int kSlotDmg  = 24;
+  static_assert(kIdxAtker == 0 && kIdxSeat == 1 && kIdxDmg == 2 && kIdxOnDie == 3,
+                "param 索引必须 0 基且不含 this（atker=0/seat=1/dmg=2/onDie=3）");
+  static_assert(kSlotThis == 0 && kSlotAtker == 8 && kSlotDmg == 24,
+                "argBase 槽位必须 +0 this / +8 atker / +24 dmgInfo");
+  static_assert(kSlotDmg != kIdxDmg, "槽位编号与 param 索引是两套编号，禁止混用");
+  typedef void  (*fget_t)(void*, void*, void*);
+  typedef void  (*fset_t)(void*, void*, void*);
+  static fget_t p_fget = nullptr;
+  static fset_t p_fset = nullptr;
+  static void*  f_dmg = nullptr;
+  static void*  f_player = nullptr;
+  static void*  f_inst = nullptr;
+  static void*  clsDmg = nullptr;
+  static void*  clsRole = nullptr;
+  static void*  g_origEnter = nullptr;
+  typedef void* (*mget_class_t)(void*);
+  typedef void* (*mget_param_t)(void*, uint32_t);
+  typedef void* (*class_from_type_t)(void*);
+  static mget_class_t      p_mgetClass = nullptr;
+  static mget_param_t      p_mgetParam = nullptr;
+  static class_from_type_t p_classFromType = nullptr;
+  static thread_local bool t_inHook = false;
+  // RAII 再入 guard：覆盖 Init 与所有 il2cpp 查询；**不覆盖 orig 执行**（orig 在 scope 外唯一调用）
+  struct ReentryGuard {
+      bool prev;
+      ReentryGuard() : prev(t_inHook) { t_inHook = true; }
+      ~ReentryGuard() { t_inHook = prev; }
+  };
+  // 菜单开关（6=无敌 / 7=百倍），由 OnFeatureChanged 写入；未开启时 hook 命中也不改值
+  static std::atomic<bool> g_bGod{false};
+  static std::atomic<bool> g_bX100{false};
+  static std::atomic<bool> g_ready{false};
+  static std::mutex        g_initMtx;
+  static long long g_lastInitMs = 0;
+
+
+  static bool Init() {
+      if (g_ready.load(std::memory_order_acquire)) return true;
+      std::lock_guard<std::mutex> lk(g_initMtx);
+      // 失败可重试：首个 EnterFrame 可能早于 GetApi().Load() 完成，不能一次失败就永久关闭。
+      // 用单调时钟节流（500ms），不做次数上限 —— 启动慢也能恢复，且不会每帧解析导出。
+      const long long nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch()).count();
+      if (g_lastInitMs != 0 && (nowMs - g_lastInitMs) < 500) return false;
+      g_lastInitMs = nowMs;
+      auto& api = GetApi();
+      if (!api.ready) return false;
+      p_mgetClass    = (mget_class_t)Il2Cpp::ResolveExport("il2cpp_method_get_class");
+      p_mgetParam    = (mget_param_t)Il2Cpp::ResolveExport("il2cpp_method_get_param");
+      p_classFromType= (class_from_type_t)Il2Cpp::ResolveExport("il2cpp_class_from_type");
+      p_fget = (fget_t)Il2Cpp::ResolveExport("il2cpp_field_get_value");
+      p_fset = (fset_t)Il2Cpp::ResolveExport("il2cpp_field_set_value");
+      if (!p_fget || !p_fset || !api.class_get_field || !api.field_static_get || !api.object_class
+          || !p_mgetClass || !p_mgetParam || !p_classFromType) {
+          DbgLog("battle: init fail (api)"); return false;
+      }
+      clsDmg  = api.FindClassByShortName("BattleDamageResult");
+      clsRole = api.FindClassByShortName("BattleRoleActor");
+      void* mgr = api.FindClassByShortName("BattleRoleMgr");
+      if (!clsDmg || !clsRole || !mgr) { DbgLog("battle: init fail (class)"); return false; }
+      f_dmg  = api.class_get_field(clsDmg, "dmg");
+      // BattleRoleMgr.player 是自动属性，真实字段为私有 <player>k__BackingField（il.txt:95407，
+      // get_player(il.txt:95447) 就是 ldfld 它）；字面 "player" 属于另一个类 BattleMgr。
+      f_player = api.class_get_field(mgr, "<player>k__BackingField");
+      if (!f_player) { f_player = api.class_get_field(mgr, "player"); }
+      f_inst = api.class_get_field(mgr, "Instance");
+      if (!f_dmg || !f_player || !f_inst) { DbgLog("battle: init fail (fields)"); return false; }
+      g_ready.store(true, std::memory_order_release);
+      DbgLog("battle: init ok");
+#if KYZT_HAS_ECONOMY22
+      // 2026-11-14 22:05：探针从帧回调迁到 init（帧回调只在进战斗后才跑，拿不到存档结构）
+      Kyzt22::log_fn() = DbgLog;
+      Kyzt22::probe_once(api);
+#endif
+      return true;
+  }
+
+  static void* LocalPlayer() {
+      void* mgr = nullptr;
+      GetApi().field_static_get(f_inst, &mgr);
+      if (!mgr) return nullptr;
+      void* pl = nullptr;
+      p_fget(mgr, f_player, &pl);
+      return pl;
+  }
+}
+namespace kb { static void* Hooked_EnterFrame(void* self, void* mi, void* argBase); }
+namespace kb {
+  static void* Hooked_EnterFrame(void* self, void* mi, void* argBase) {
+      typedef void* (*enter_t)(void*, void*, void*);
+      enter_t orig = (enter_t)g_origEnter;
+      auto callOrig = [&]() -> void* { return orig ? orig(self, mi, argBase) : nullptr; };
+      auto work = [&]() {
+          if (!mi || !argBase) return;
+          auto& api = GetApi();
+          const char* nm = api.method_get_name ? api.method_get_name(mi) : nullptr;
+          uint8_t argc = api.method_param_count ? api.method_param_count(mi) : 0;
+          bool match = (nm && std::strcmp(nm, "ApplyHp") == 0 && argc == 4
+                        && p_mgetClass && p_mgetClass(mi) == clsRole);
+          if (match && p_mgetParam && p_classFromType) {
+              void* tA = p_mgetParam(mi, kIdxAtker);
+              void* tD = p_mgetParam(mi, kIdxDmg);
+              void* cA = tA ? p_classFromType(tA) : nullptr;
+              void* cD = tD ? p_classFromType(tD) : nullptr;
+              match = (cA == clsRole && cD == clsDmg);
+          } else {
+              match = false;
+          }
+          if (!match) return;
+          void* pThis = *(void**)((char*)argBase + kSlotThis);
+          void* pAtk  = *(void**)((char*)argBase + kSlotAtker);
+          void* pDmg  = *(void**)((char*)argBase + kSlotDmg);
+          if (!pThis || !pDmg) return;
+          if (api.object_class(pThis) != clsRole || api.object_class(pDmg) != clsDmg) return;
+          float d = 0.f;
+          p_fget(pDmg, f_dmg, &d);
+          void* lp = LocalPlayer();
+          BattleDecision dec = Decide(g_bGod.load(), g_bX100.load(), d,
+                                      (lp && pThis == lp), (lp && pAtk == lp));
+          if (dec.action == kBAGod) {
+              p_fset(pDmg, f_dmg, &dec.value);
+              DbgLog("battle: god self d=%.1f -> 0", (double)d);
+          } else if (dec.action == kBAX100) {
+              p_fset(pDmg, f_dmg, &dec.value);
+              DbgLog("battle: x100 d=%.1f -> %.1f", (double)d, (double)dec.value);
+          }
+      };
+      // 控制流统一走 BattleFlow.h 的 RunFrameFlow（与 battle_flow_test.cpp 共用同一模板）：
+      //   A 双开关关→orig；B 再入→orig；C guard 内 Init+查询+改写（scope 内不调 orig）；D scope 外唯一 orig。
+      return RunFrameFlow(g_bGod.load(std::memory_order_relaxed),
+                          g_bX100.load(std::memory_order_relaxed), t_inHook,
+                          [&]() { return g_ready.load(std::memory_order_acquire); },
+                          [&]() { return Init(); },
+                          work, callOrig);
+  }
+  }   // namespace kb
+#endif
+
 static int InstallBattleHooks() {
+    InitSlotAddrs();
     int ok = 0, dead = 0;
     for (int i = 0; i < kSlotsCount && i < kSlotsMax; ++i) {
         if (g_slotDead[i]) { ++dead; continue; }        // 熔断，跳过
@@ -671,6 +1000,21 @@ static int InstallBattleHooks() {
                  i, kSlots[i].tag);
         }
     }
+#if KYZT_BATTLE_ENABLE
+    // 2.2 帧入口（唯一：0x19a9004），序言 str x30,[sp,#-0x30]! = 0xF81D0FFE
+    if (g_libVer.load() == 22) {
+        // 注意：HookAtRva 的参数是 **file offset**（内部走 FileOffToVa），不是 VA。
+        // EnterFrameFromInterpreter VA=0x19a9004 ⇔ file=0x19a5004（va−file=0x4000）；
+        // 实测 file 0x19a5004 首指令 0xF81D0FFE（str x30,[sp,#-0x30]!），
+        // 而 0x19a9004 处为 0xB4052B20 ⇒ 传 VA 会序言校验失败（失败关闭，不会错挂）。
+        if (HookAtRva("Battle", 0x19a5004u, 0xF81D0FFEu,
+                      (void*)kb::Hooked_EnterFrame, &kb::g_origEnter)) {
+            ++ok;
+        } else {
+            DbgLog("battle: EnterFrame hook 未装上（失败关闭）");
+        }
+    }
+#endif
     LOGI(TPL_LOG " install pass: ok=%d dead=%d/%d", ok, dead, kSlotsCount);
     if (ok > 0) g_anyHooked.store(true);
     return ok;
@@ -1048,7 +1392,11 @@ static bool GrantItem(int id, int count) {
 }
 
 static bool AnyFeatureOn() {
-    return g_spd.load() || g_dmg.load() || g_inv.load() || g_noad.load();
+    bool q = false;
+#if KYZT_HAS_ECONOMY22
+    q = Kyzt22::PendingCount() > 0;   // 资源按钮按一下也要装帧锚点，否则队列永不排空
+#endif
+    return g_spd.load() || g_dmg.load() || g_inv.load() || g_noad.load() || q;
 }
 
 static std::atomic<int> g_syncTries{0};
@@ -1085,7 +1433,83 @@ bool 旷野征途_IsReady() {
     return g_libReady.load();
 }
 
+// 2.2 资源三项失败关闭：ItemSaveData.count / AccountInfo.points、gold 均为 XOR 编码
+// （MemoryValueEncoding.RotateKey，密钥每进程随机；取证见 login-review 2026-11-14 报告）。
+// ⇒ 1.8 的「直接写偏移」在 2.2 必然写坏存档/无效，故一律拒绝，不回落旧偏移。
+//   未实现的 setter 路径（il2cpp_runtime_invoke 属性 setter）另行适配，本轮不做。
+static bool ResRawWriteAllowed() {
+    if (g_libVer.load() == 0) DetectLibVersion();
+    // 只允许 1.8（18）：2.2 是 XOR 编码（写偏移必坏档），未知版本没有指纹依据 ⇒ 一律拒绝。
+    // 审查结论：旧实现「未知版本 fail-open」是错的，改 fail-closed（2026-11-14）。
+    if (g_libVer.load() != 18) {
+        DbgLog("res: DISABLED ver=%d (需要 ver==18 且旧指纹证据；2.2 为 xor 编码)", g_libVer.load());
+        return false;
+    }
+    return true;
+}
+
+// 资源三项 2.2 路径：只在「菜单开关回调（Java UI 线程）」上调用，Tick 线程一律拒绝。
+// 返回值：true=调用成功；false=未启用/线程不对/未就绪 ⇒ 调用方不得回退旧偏移。
+static bool Eco22Grant(int featNum) {
+#if KYZT_HAS_ECONOMY22
+    if (t_inModTick) {
+        DbgLog("eco: feat=%d refused (mod tick thread)", featNum);
+        return false;
+    }
+    int rc = -1;
+    switch (featNum) {
+        case 旷野征途_FEAT_GOLD:    rc = Kyzt22::GrantGold(9999);    break;
+        case 旷野征途_FEAT_DIAMOND: rc = Kyzt22::GrantDiamond(9999); break;
+        case 旷野征途_FEAT_POINT:   rc = Kyzt22::GrantPoints(9999);  break;
+        default: return false;
+    }
+    DbgLog("eco: feat=%d rc=%d", featNum, rc);
+    return rc == 0;
+#else
+    (void)featNum;
+    return false;
+#endif
+}
+
 void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
+#if KYZT_BATTLE_ENABLE
+    // 2.2 战斗开关：只写原子标志，真正生效在帧入口过滤 ApplyHp 时判断
+    if (featNum == 旷野征途_FEAT_INV) kb::g_bGod.store(enabled);
+    if (featNum == 旷野征途_FEAT_DMG) kb::g_bX100.store(enabled);
+#endif
+    if (enabled && (featNum == 旷野征途_FEAT_GOLD || featNum == 旷野征途_FEAT_DIAMOND ||
+                    featNum == 旷野征途_FEAT_POINT)) {
+        if (g_libVer.load() == 0) DetectLibVersion();
+        if (g_libVer.load() == 22) {
+            // 2.2：菜单回调（Java UI 线程）**只入队**，真正调用发生在 ET.GameManagerMono.Update
+            // （Unity 线程）里 drain —— 不在 UI 线程直接碰 il2cpp 对象。
+            const unsigned long ut = g_unityTid.load();
+            const unsigned long me = (unsigned long)pthread_self();
+            const int probe = (ut == 0) ? 3 : ((ut == me) ? 1 : 2);
+            if (g_tidProbe.load() != probe) {
+                g_tidProbe.store(probe);
+                DbgLog("tid: menu=%lu unity=%lu equal=%d (0=未知参照)", me, ut, probe == 1 ? 1 : 0);
+            }
+#if KYZT_HAS_ECONOMY22
+            int rc = -1;
+            // 2026-11-14 22:30：改「当场执行」，不再依赖 Unity 帧回调（主界面没有 Update 钩子）
+            {
+                Kyzt22::log_fn() = DbgLog;
+                const int kind = (featNum == 旷野征途_FEAT_GOLD) ? 1
+                               : (featNum == 旷野征途_FEAT_DIAMOND) ? 2 : 3;
+                rc = Kyzt22::RunNow(kind, 9999);
+            }
+            // 返回码分类（h v3）：100=已入队（≠成功）；0=成功；7=钻石id未证；8=保存失败；9=溢出；1/2/3/4/5/6=失败
+            const char* cls = (rc == 100) ? "QUEUED" : (rc == 0 ? "OK" : "FAIL");
+            DbgLog("eco: enqueue feat=%d rc=%d(%s) pending=%u", featNum, rc, cls, Kyzt22::PendingCount());
+#else
+            DbgLog("eco: feat=%d SKIPPED (Economy22.h 未编译进本构建)", featNum);
+#endif
+            SyncHooks();
+            return;
+        }
+        if (!ResRawWriteAllowed()) return;   // 1.8 以外（未知版本）仍失败关闭
+    }
     switch (featNum) {
         case 旷野征途_FEAT_GOLD:    if (enabled && !GrantGold(9999)) GrantItem(1, 9999); break;
         case 旷野征途_FEAT_DIAMOND: if (enabled && !GrantDiamond(9999)) GrantItem(2, 9999); break;
@@ -1104,6 +1528,7 @@ void 旷野征途_OnValueChanged(int /*featNum*/, int /*value*/) {
 
 void 旷野征途_Tick(const bool* features, const int* /*values*/) {
     if (!features) return;
+    struct TickScope { TickScope() { t_inModTick = true; } ~TickScope() { t_inModTick = false; } } _ts;
 
     g_spd.store(features[旷野征途_FEAT_SPD]);
     g_dmg.store(features[旷野征途_FEAT_DMG]);
@@ -1124,6 +1549,22 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
         if ((t % 5) == 0) DiagHotClasses();     // 每 1s 重试，热更 dll 加载后才有类
         if (t > 120) g_diagDone.store(true);    // 24s 后放弃
     }
+
+#if KYZT_HAS_ECONOMY22
+    // 2026-11-14 22:32：探针改从这里跑（Tick 常驻；battle init / 帧钩子都只在进战斗后才有）
+    if (g_libReady.load()) {
+        static int s_probeTry = 0;
+        if (s_probeTry < 600) {
+            ++s_probeTry;
+            {
+                auto& apiP = GetApi();
+                if (apiP.thread_attach) { void* dP = apiP.Domain(); if (dP) apiP.thread_attach(dP); }
+                Kyzt22::log_fn() = DbgLog;
+                Kyzt22::probe_once(apiP);
+            }
+        }
+    }
+#endif
 
     // 兜底：库晚于首帧映射时，这里补一次
     if (!g_libReady.load() && isLibraryLoaded(TPL_TARGET_LIB)) {

@@ -14,16 +14,26 @@
 #include "ModEntry.h"
 #include "旷野征途Mod.h"
 
+// menu 必须与 featNum 位置对齐（下标 = featNum，Category 占 0/4），
+// 所以不能删项缩表 —— 未适配项保留位置并在标签上标注，native 侧仍失败关闭。
+//
+// 2.2 状态：资源 3 项（XOR 编码，等 Economy22.h）与战斗 2 项（解释器入口未定位）未适配；
+// 加速 / 免广告 已实现（未上机验证）。Economy22 集成后把 KYZT_ECON_TAG 置空即可。
+// 资源 3 项：v5 已实现（含钻石 AddItem 创建+回读），但**未上机验证** ⇒ 标「2.2待验证」。
+// 战斗 2 项：解释器入口未定位 ⇒ 标「2.2未适配」。两类标签语义不同，不可混用。
+#define KYZT_ECON_TAG ""
+#define KYZT_BATTLE_TAG ""   // 2026-11-14 21:50：标签清空（用户要求菜单名干净）；验证状态改记文档
+
 static const char* k旷野征途_Features[] = {
-    "Category_资源",        // 0
-    "Button_金币+9999",     // 1
-    "Button_钻石+9999",     // 2
-    "Button_积分+9999",     // 3
-    "Category_战斗",        // 4
-    "Toggle_游戏加速",       // 5
-    "Toggle_玩家无敌",       // 6
-    "Toggle_百倍伤害",       // 7
-    "Toggle_免广告",         // 8
+    "Category_资源",                              // 0
+    "Button_金币+9999" KYZT_ECON_TAG,              // 1
+    "Button_钻石+9999" KYZT_ECON_TAG,              // 2
+    "Button_积分+9999" KYZT_ECON_TAG,              // 3
+    "Category_战斗",                              // 4
+    "Toggle_游戏加速",                             // 5
+    "Toggle_玩家无敌" KYZT_BATTLE_TAG,             // 6
+    "Toggle_百倍伤害" KYZT_BATTLE_TAG,             // 7
+    "Toggle_免广告",                               // 8
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

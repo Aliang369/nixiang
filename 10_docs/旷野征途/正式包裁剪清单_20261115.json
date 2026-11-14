@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/旷野征途",
+  "keep": "旷野征途_2.2_starry-releaseSigned.apk",
+  "keep_size": 163016140,
+  "keep_md5": "bb6c28bcd0672f30583c46ca5f4a1fcd",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "旷野征途_2.2_starry-unsigned.apk",
+      "size": 162992780,
+      "md5": "0103c2f57a001ebe0a8e3779e5b6f405"
+    },
+    {
+      "name": "旷野征途_2.2_starry-releaseSigned.apk.idsig",
+      "size": 1291803,
+      "md5": "b9e10dcf349d8f8902ebb33a1fc019ed"
+    }
+  ],
+  "removed_count": 2
+}

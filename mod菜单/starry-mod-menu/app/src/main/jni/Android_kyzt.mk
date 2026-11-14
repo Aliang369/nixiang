@@ -48,6 +48,11 @@ LOCAL_MODULE    := starry_magic
 # --exclude-libs,ALL 符号卫生（libChiy 类事故）：禁止静态库成员符号（Dobby* 等）进动态符号表。
 LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls
+# 2026-11-14：接入资源三项 2.2 适配层（Games/旷野征途Economy22.h，login-review 独占实现）。
+# 硬断言：缺头文件或缺 KYZT_ECONOMY22_API_VERSION 即编译失败，杜绝静默漏编。
+# 注意：h 内部 KYZT22_THREAD_PROVEN 默认 0 ⇒ 三入口返回 1（不执行），
+#       在拿到「菜单线程 == Unity 线程」的运行期证据之前，资源仍属待测/失败关闭。
+LOCAL_CPPFLAGS  += -DKYZT_ECONOMY22_EXPECTED=1
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
 # FW-13（2026-10-16）：**必须强制保留** Includes/Utils.cpp 里烘焙的 OTA 构建戳。
 #   modern 入口 MainModern.cpp 零引用 kStarryBuildStamp（唯一引用者是 legacy Main.cpp），
