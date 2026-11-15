@@ -1,0 +1,32 @@
+{
+  "template_id": "999mxcz",
+  "name": "999秒幸存者",
+  "package": "com.HaloGames.Survivors999",
+  "source": "Games/Mxcz999Entry.cpp kMxcz999_Features",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 2,
+      "name": "伤害倍率"
+    },
+    {
+      "feat_num": 3,
+      "name": "移动速度"
+    },
+    {
+      "feat_num": 4,
+      "name": "解锁所有皮肤"
+    },
+    {
+      "feat_num": 5,
+      "name": "无限解锁券"
+    },
+    {
+      "feat_num": 6,
+      "name": "免广告"
+    }
+  ]
+}

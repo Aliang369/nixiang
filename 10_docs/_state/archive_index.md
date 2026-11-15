@@ -17,6 +17,7 @@
 | [遗弃之地](games/遗弃之地.md) | 2026-09-21 | ⚠️ 用户决定终止：收尾＋清理全部产物只留 10_docs 文档；标准外科路线「有窄口径可能，未证明可行」 |
 | [百分之一](games/百分之一.md) | 2026-09-11 | ⚠️ 1.1.78/vc428：产物已清理（02_apks/03_decompiled 清空），分析结论见正文 |
 | [虚无之刃](games/虚无之刃.md) | 2026-09-09 | ⚠️ 1.39.160 未完成（20260909 盘点更正）：仅有 xwzr_so_only.sh 重编 so 塞已有外科签包 |
+| [999秒幸存者](games/999秒幸存者.md) | 2026-11-15 | ✅ V0.0866/vc866 星光版六项收官（用户 L3：全部功能正常）：无敌(hpcheck+enemyhurt/enemyhurtnotnac 拦截)/伤害倍率(nmhurte dimmul)/移速(player.move stat.sp)/解锁皮肤(onelock.haveac)/无限券(数据型 sd.unlockcoupon=0xBC=9999)/免广告(getadcheck 保链→LoadRewardAd 拦下直调 reward)；正式包 md5 77ee50fc…（95,421,205 B，so 044fdc0e→e8f37696）；真机 arm64 实测，雷电 houdini 下 RVA hook 不可用（so 全段 r--） |
 | [一念通天](games/一念通天.md) | 2026-11-15 | ✅ 789 收官：六项+TapTap 网页登录用户实测全通过；9 RVA 全漂移、序言 3 变 6 同、字段 0 变化；8/8 挂点日志留存 |
 | [无限升级](games/无限升级.md) | 2026-11-15 | ✅ 2026-11-15 断网版（第三方 infinityOffline/vc1647）交付：去卡密 + wxsjdz1 18 项星空菜单，正式包 md5 5dc48a42，L3「功能都没问题」；官方 12.10701 G 线与 vc1637 F 线仍为历史交付 |
 | [汉克旅店](games/汉克旅店.md) | 2026-11-15 | ✅ 1.1.0(vc337,TapTap) 星光版：IL2CPP+HybridCLR 热更程序集换字节，八项功能全部用户实测 PASS（⑦移动速度 ⑧无限蓝 于 2026-11-15 so-only 叠加后 L3 终审通过） |

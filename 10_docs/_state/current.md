@@ -5,7 +5,7 @@
 > **本文件是生成物**：手工修改会在下次生成时被覆盖（`preflight` 用 `--check` 校验）。
 > 真源＝`10_docs/_state/games/*.md` 头部的 frontmatter（`game`/`status`/`updated`/`one_line`）。
 > 只放**当前工作集**：`status: active|blocked`（且未超 --stale-days 挂起闸），或近 14 天有更新，最多 50 行。
-> 全量索引见 [`archive_index.md`](archive_index.md)（共 105 个游戏），逐个详情见 `games/{游戏}.md`。
+> 全量索引见 [`archive_index.md`](archive_index.md)（共 106 个游戏），逐个详情见 `games/{游戏}.md`。
 > 改状态＝改对应 `games/{游戏}.md` 的 frontmatter，然后跑：`python3 04_scripts/_common/gen_state_index.py`
 
 ## 当前工作集
@@ -17,6 +17,7 @@
 | [农场守护者](games/农场守护者.md) | 2026-11-11 | 🟡 2.1.21 星光包四项全通（md5 3a92930e / sha256 20124872）：百倍伤害=给怪补扣99Δ、无敌=回填curHp、无限技能=清CD、解锁加速=插Cid3月卡；四开战斗胜利+结算正常 |
 | [动物大联盟](games/动物大联盟.md) | 2026-11-08 | 🟡 壳已过（c2 证书指纹修正），改包仍卡「数据检查」：点同意不发起资源请求。apksecurefile 已全解（MDXZ+zstd+AES，3 dex 可反编译），但 0x66210 哈希是壳必需材料，改容器须重算 KEY（派生未逆出）… |
 | [消消英雄2](games/消消英雄2.md) | 2026-10-09 | 🟡 1.2.28 已出包装机；过检测与上报拦截实测通过 |
+| [999秒幸存者](games/999秒幸存者.md) | 2026-11-15 | ✅ V0.0866/vc866 星光版六项收官（用户 L3：全部功能正常）：无敌(hpcheck+enemyhurt/enemyhurtnotnac 拦截)/伤害倍率(nmhurte dimmul)/移速(player.move stat.sp)/解锁皮肤(onelock.haveac)/无限券(数据型 sd.unlockcoupon=0xBC=9999)/免广告(getadcheck 保链→LoadRewardAd 拦下直调 reward)；正式包 md5 77ee50fc…（95,421,205 B，so 044fdc0e→e8f37696）；真机 arm64 实测，雷电 houdini 下 RVA hook 不可用（so 全段 r--） |
 | [一念通天](games/一念通天.md) | 2026-11-15 | ✅ 789 收官：六项+TapTap 网页登录用户实测全通过；9 RVA 全漂移、序言 3 变 6 同、字段 0 变化；8/8 挂点日志留存 |
 | [无限升级](games/无限升级.md) | 2026-11-15 | ✅ 2026-11-15 断网版（第三方 infinityOffline/vc1647）交付：去卡密 + wxsjdz1 18 项星空菜单，正式包 md5 5dc48a42，L3「功能都没问题」；官方 12.10701 G 线与 vc1637 F 线仍为历史交付 |
 | [汉克旅店](games/汉克旅店.md) | 2026-11-15 | ✅ 1.1.0(vc337,TapTap) 星光版：IL2CPP+HybridCLR 热更程序集换字节，八项功能全部用户实测 PASS（⑦移动速度 ⑧无限蓝 于 2026-11-15 so-only 叠加后 L3 终审通过） |
