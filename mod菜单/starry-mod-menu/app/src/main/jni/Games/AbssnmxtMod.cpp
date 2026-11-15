@@ -277,6 +277,11 @@ static void InstallFaultGuard() {
     LOGI(ABS_LOG " fault guard armed（只接管保护区内）");
 }
 
+static std::atomic<bool> g_il2cppDead{false};   // v2.0.1：il2cpp 状态已损坏 ⇒ 之后不再调用任何 il2cpp API
+static std::atomic<int>  g_inInit{0};            // 是否处于初始化阶段（ApiLoad/ResolveAll 内）
+static std::atomic<int>  g_domainAttempts{0};    // domain_get 重试计数
+static std::atomic<uint64_t> g_lastDomainTry{0};
+
 template <typename F>
 static bool Guarded(const char* what, F fn) {
     ArmFaultGuardForThread();
@@ -289,6 +294,7 @@ static bool Guarded(const char* what, F fn) {
     }
     t_inGuard = 0;
     LOGW(ABS_LOG " fault at step=%d in=%s（已吞掉，降级）", g_step.load(), what);
+    if (g_inInit.load() > 0) g_il2cppDead.store(true);   // 初始化期 fault ⇒ 标记 il2cpp 已坏
     return false;
 }
 
@@ -404,9 +410,24 @@ static void* OpenImage(const char* name) {
     return img;
 }
 
+// v2.0.1：降级日志（只打一条；菜单全灰但进程继续活着）
+static void ApiDegraded(const char* why) {
+    static std::atomic<bool> logged{false};
+    if (logged.exchange(true)) return;
+    LOGW(ABS_LOG " api degraded reason=il2cpp-dead（菜单全灰，进程保持存活）why=%s", why);
+}
+
+// 初始化作用域：期间任何 fault 都会把 il2cpp 标记为 dead
+struct InitScope {
+    InitScope()  { g_inInit.fetch_add(1); }
+    ~InitScope() { g_inInit.fetch_sub(1); }
+};
+
 static bool ApiLoad() {
+    if (g_il2cppDead.load()) { ApiDegraded("api-load"); return false; }
     if (g_api.ready) return true;
     if (g_api.aborted) return false;
+    InitScope scope;                                   // 期间 fault ⇒ il2cpp_dead
 
     uintptr_t b = 0, e = 0;
     if (!LibRange(&b, &e)) return false;
@@ -447,18 +468,31 @@ static bool ApiLoad() {
     g_api.BindOpt("il2cpp_class_get_name", (void**)&g_api.class_name);
     LOGI(ABS_LOG " api step=1 ok（8 个符号全过落点校验，handle=%s）", g_api.handleHow);
 
-    // step=2：domain_get 连续两次同值非空（避免 runtime 半初始化）
+    // step=2：domain_get 连续两次同值非空；失败按 500ms 间隔重试，最多 10 次
     STEP_LOG(2, "domain_get");
     void* d1 = nullptr;
     void* d2 = nullptr;
-    if (!Guarded("domain_get#1", [&] { d1 = g_api.domain_get(); }) || !d1) {
-        g_api.Abort(2, "domain_get null"); return false;
+    {
+        const uint64_t nowMs = NowMs();
+        const int tried = g_domainAttempts.load();
+        if (tried > 0 && nowMs - g_lastDomainTry.load() < 500) return false;   // 节流：每 500ms 一次
+        g_lastDomainTry.store(nowMs);
+        bool ok1 = Guarded("domain_get#1", [&] { d1 = g_api.domain_get(); }) && d1 != nullptr;
+        bool ok2 = ok1 && Guarded("domain_get#2", [&] { d2 = g_api.domain_get(); }) && d2 == d1;
+        if (!ok1 || !ok2) {
+            int n = g_domainAttempts.fetch_add(1) + 1;
+            LOGW(ABS_LOG " api retry step=2 n=%d reason=%s", n,
+                 ok1 ? "domain unstable" : "domain_get null");
+            if (n >= 10 || g_il2cppDead.load()) {
+                g_il2cppDead.store(true);
+                g_api.aborted = true;
+                ApiDegraded("domain retry exhausted");
+            }
+            return false;
+        }
+        g_domainAttempts.store(0);
+        LOGI(ABS_LOG " api step=2 ok（domain=%p）", d1);
     }
-    if (!Guarded("domain_get#2", [&] { d2 = g_api.domain_get(); }) || d2 != d1) {
-        LOGI(ABS_LOG " domain 抖动（%p vs %p），稍后重试", d1, d2);
-        return false;
-    }
-    LOGI(ABS_LOG " api step=2 ok（domain=%p）", d1);
 
     // step=3：thread_attach 一次并缓存
     STEP_LOG(3, "thread_attach");
@@ -514,8 +548,10 @@ static bool ResolveFieldChecked(void* klass, const char* name, size_t dumpOff,
 }
 
 static bool ResolveAll() {
+    if (g_il2cppDead.load()) { ApiDegraded("resolve-all"); return false; }
     if (g_anchors.resolved) return true;
     if (!ApiLoad()) return false;
+    InitScope scope2;                                  // 解析期 fault 同样标记 dead
 
     STEP_LOG(4, "assembly_open Assembly-CSharp");
     void* img = OpenImage("Assembly-CSharp.dll");
@@ -2381,6 +2417,7 @@ static void DrvLogPass(const UnitSlot* us, int n, uint64_t now) {
 #endif  // 非探针版
 
 bool Abssnmxt_TryInit(JavaVM* /*vm*/) {
+    if (g_il2cppDead.load()) { ApiDegraded("try-init"); return false; }
     if (g_libReady.load()) return true;
     if (!isLibraryLoaded(sec_lib_il2cpp())) return false;
     InstallFaultGuard();
@@ -2431,10 +2468,14 @@ void Abssnmxt_Tick(const bool* features, const int* values) {
         g_speedX.store(ClampInt(values[ABSSNMXT_FEAT_SPEED], kSpeedXMin, kSpeedXMax));
     }
 
+    if (g_il2cppDead.load()) return;                   // v2.0.1：il2cpp 已坏，彻底静默
     if (!g_libReady.load()) {
         if (!isLibraryLoaded(sec_lib_il2cpp())) return;
         InstallFaultGuard();
-        if (!ResolveAll()) return;
+        if (!ResolveAll()) {
+            if (g_il2cppDead.load()) ApiDegraded("tick-resolve");
+            return;
+        }
         g_libReady.store(true);
         LOGI(ABS_LOG " lib ready (via Tick fallback)");
     }
