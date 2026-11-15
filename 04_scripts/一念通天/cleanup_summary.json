@@ -1,17 +1,17 @@
 {
   "game": "一念通天",
-  "version": "784",
-  "final_apk": "/Users/aliang/Documents/nixiang/08_output/一念通天/一念通天_784_surgical-releaseSigned.apk",
-  "before_kb": 359704,
-  "after_kb": 96,
-  "released_kb": 359608,
-  "before_at": "2026-11-11 00:53:15",
-  "after_at": "2026-11-11 00:53:15",
+  "version": "789",
+  "final_apk": "/Users/aliang/Documents/nixiang/08_output/一念通天/一念通天_789_surgical-releaseSigned.apk",
+  "before_kb": 357436,
+  "after_kb": 104,
+  "released_kb": 357332,
+  "before_at": "2026-11-15 18:13:00",
+  "after_at": "2026-11-15 18:13:00",
   "kept": [
     "02_apks/一念通天（用户管理，未动）",
     "08_output/一念通天（正式包由 prune_output_final.sh 单独裁剪）",
     "06_dumped/一念通天 git-tracked text archives",
-    "06_dumped/一念通天/official_784/rva_targets.json 锚点摘录",
+    "06_dumped/一念通天/official_789/rva_targets.json 锚点摘录",
     "09_test/一念通天（本轮证据）",
     "04_scripts/一念通天",
     "10_docs/一念通天",
@@ -20,7 +20,7 @@
   "removed_roots": [
     "03_decompiled/一念通天",
     "07_patched/一念通天",
-    "06_dumped/一念通天/official_784 ignored binaries (dump.cs/script.json/il2cpp.h/stringliteral.json/DummyDll)",
+    "06_dumped/一念通天/official_789 ignored binaries (dump.cs/script.json/il2cpp.h/stringliteral.json/DummyDll)",
     "tmp yntt analysis directories"
   ]
 }
