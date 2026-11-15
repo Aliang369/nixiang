@@ -46,6 +46,7 @@ enum Wxsjdz1Feat : int {
     WXSJ1_FEAT_PROJECTILE  = 17, // Slider_技能投掷物倍数:1:100  -> skill_projectile_x
     WXSJ1_FEAT_SKILLDMG    = 18, // Slider_技能伤害倍数:1:1000   -> skill_damage_x
     WXSJ1_FEAT_LEGACYFREE  = 19, // Toggle_转生无条件升级        -> zhuan_sheng_free_point
+    WXSJ1_FEAT_CHENGHAO   = 20, // Slider_称号等级:1:20        -> chenghao_lv（1..20，0=不改）
 };
 
 bool Wxsjdz1_TryInit();

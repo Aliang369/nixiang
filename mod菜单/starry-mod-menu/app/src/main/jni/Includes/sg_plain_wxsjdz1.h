@@ -7,9 +7,9 @@
 #include <stdint.h>
 static const char* kWxsjdz1PlainPolicy = "plain-inline-selfarray";
 
-/* 2010112 B，sha256 68424f32a49c5fd47ca7f7f916175a5849ea72411fd379c4e5869b3d381d75fb */
+/* 2010112 B，sha256 261b757671d4931b7286ffafabb63a3b118aee7a1623acff2e820dbd813cbe69 */
 static const uint32_t kWxsjdz1PayloadLen = 2010112u;
-static const char* kWxsjdz1PayloadSha = "68424f32a49c5fd47ca7f7f916175a5849ea72411fd379c4e5869b3d381d75fb";
-static const uint64_t kWXSJDZ1_PATCHED_FNV = 0x8090fba5d572d3eeULL;
+static const char* kWxsjdz1PayloadSha = "261b757671d4931b7286ffafabb63a3b118aee7a1623acff2e820dbd813cbe69";
+static const uint64_t kWXSJDZ1_PATCHED_FNV = 0xcf960027b43c1f36ULL;
 /* pad = 官方数组 - 补丁 = -14336（负数=需自建更大数组）*/
 static const int32_t kWxsjdz1PayloadPad = -14336;

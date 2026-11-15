@@ -38,6 +38,7 @@ static const char* kWxsjdz1_Features[] = {
     "Slider_技能投掷物倍数:1:100",        // 17 WXSJ1_FEAT_PROJECTILE -> skill_projectile_x
     "Slider_技能伤害倍数:1:1000",         // 18 WXSJ1_FEAT_SKILLDMG   -> skill_damage_x
     "Toggle_转生无条件升级",              // 19 WXSJ1_FEAT_LEGACYFREE -> zhuan_sheng_free_point
+    "Slider_称号等级:1:20",               // 20 WXSJ1_FEAT_CHENGHAO   -> chenghao_lv（等级 1-20）
 };
 
 static bool Wxsjdz1_TryInitEntry(JavaVM* /*vm*/) {

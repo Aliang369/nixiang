@@ -2,10 +2,10 @@
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级_断网版",
   "keep": "无限升级_12.10701_断网版_wxsjdz1-releaseSigned.apk",
   "keep_size": 124960214,
-  "keep_md5": "5dc48a42971f68ef442e6f55ab85255d",
+  "keep_md5": "84cf50ea3a75679bafc004d7647b0b3c",
   "mode": "--apply",
   "removed": [],
   "removed_count": 0,
-  "keep_sha256": "b8d66313161e718c1933fd224cac4cb570c12e08f0146e86207cf51e3ae62f11",
-  "note": "2026-11-15 22:40 终版：去卡密 + 18 项功能 + 过检测整段摘除；L3 通过"
+  "keep_sha256": "1ed961ee9e634520d3f6af34cda0063468b6d9c69db9ebc52a0cc96f8b4b0f0c",
+  "note": "2026-11-16 02:12 终版：去卡密 + 19 项功能（16 模板 + 技能投掷物/技能伤害/转生无条件 + 称号等级1-20）+ 过检测整段摘除；L3 通过"
 }

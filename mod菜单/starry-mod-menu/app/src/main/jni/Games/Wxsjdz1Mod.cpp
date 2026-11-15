@@ -464,6 +464,7 @@ void Wxsjdz1_OnValueChanged(int featNum, int value) {
     switch (featNum) {
     case WXSJ1_FEAT_PROJECTILE: key = "skill_projectile_x"; lo = 1; hi = 100;  break;
     case WXSJ1_FEAT_SKILLDMG:   key = "skill_damage_x";    lo = 1; hi = 1000; break;
+    case WXSJ1_FEAT_CHENGHAO:   key = "chenghao_lv";       lo = 1; hi = 20;   break;
     default: return;
     }
     if (value < lo) value = lo;
