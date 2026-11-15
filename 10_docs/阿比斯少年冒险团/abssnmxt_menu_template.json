@@ -1,0 +1,53 @@
+{
+  "template_id": "abssnmxt",
+  "name": "阿比斯少年冒险团",
+  "package": "com.wks.abyss",
+  "version": "2.36 (vc236) / TapTap",
+  "source": "Games/AbssnmxtEntry.cpp GameMod_Get + Games/AbssnmxtMod.cpp",
+  "note": "用户点名四项，一项不多（AGENTS §4 功能边界）。滑块 1 = 关闭；数值在 native 侧二次钳制。无限技能为纯 Toggle、固定攻速×3，与任何滑块解耦。",
+  "features": [
+    {
+      "feat_num": 0,
+      "name": "战斗强化",
+      "type": "category"
+    },
+    {
+      "feat_num": 1,
+      "name": "无敌",
+      "type": "toggle",
+      "key": "god",
+      "default": false,
+      "scope": "我方单位（敌方不受影响）；v1.5 基于 Unit+0x198，关闭开关后血量保持当前值、不退回旧值"
+    },
+    {
+      "feat_num": 2,
+      "name": "伤害倍率",
+      "type": "slider",
+      "key": "damage_x",
+      "min": 1,
+      "max": 100,
+      "default": 1,
+      "off_value": 1,
+      "scope": "放大敌方受到的伤害（Unit+0x198 补扣）；同一 tick ≥3 个敌方同 delta 的 AOE/环境伤害不放大"
+    },
+    {
+      "feat_num": 3,
+      "name": "无限技能",
+      "type": "toggle",
+      "key": "inf_skill",
+      "default": false,
+      "scope": "v1.5 暂不启用（写代码未编入 so，避免多变量干扰）"
+    },
+    {
+      "feat_num": 4,
+      "name": "移动速度",
+      "type": "slider",
+      "key": "speed_x",
+      "min": 1,
+      "max": 10,
+      "default": 1,
+      "off_value": 1,
+      "scope": "移动速度（oknd+0x48 float，1=关闭；写入前需连续 2 tick 稳定才锁定 base）"
+    }
+  ]
+}

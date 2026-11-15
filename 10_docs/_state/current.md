@@ -5,13 +5,14 @@
 > **本文件是生成物**：手工修改会在下次生成时被覆盖（`preflight` 用 `--check` 校验）。
 > 真源＝`10_docs/_state/games/*.md` 头部的 frontmatter（`game`/`status`/`updated`/`one_line`）。
 > 只放**当前工作集**：`status: active|blocked`（且未超 --stale-days 挂起闸），或近 14 天有更新，最多 50 行。
-> 全量索引见 [`archive_index.md`](archive_index.md)（共 104 个游戏），逐个详情见 `games/{游戏}.md`。
+> 全量索引见 [`archive_index.md`](archive_index.md)（共 105 个游戏），逐个详情见 `games/{游戏}.md`。
 > 改状态＝改对应 `games/{游戏}.md` 的 frontmatter，然后跑：`python3 04_scripts/_common/gen_state_index.py`
 
 ## 当前工作集
 
 | 游戏 | 最近更新 | 状态与摘要 |
 |---|---|---|
+| [阿比斯少年冒险团](games/阿比斯少年冒险团.md) | 2026-11-15 | 🟡 四项功能定稿并交付：无敌(values[62])/伤害倍率(BLKEJBDMGAB 三分量)/移速(oknd+0x48)/无限技能(5 个 bool 判定恒 true+energygate+补能量) ⇒ 正式包 abssnmxt_2.36_v2.0.apk md5 a5a2b09f…(1,133,643,062 B)，四项均已用户实测通过 |
 | [旷野征途](games/旷野征途.md) | 2026-11-14 | 🟡 2.2/vc22 收官：Tap 签名(killer)+网页登录实测通过；资源三项(金币/钻石/积分)按 AccountInfo/背包 编码字段直写，实测 rc=0 并落盘；正式包 sha256 e6dd4fb7…26a5；战斗 4 项钩子已装、未逐项验收 |
 | [农场守护者](games/农场守护者.md) | 2026-11-11 | 🟡 2.1.21 星光包四项全通（md5 3a92930e / sha256 20124872）：百倍伤害=给怪补扣99Δ、无敌=回填curHp、无限技能=清CD、解锁加速=插Cid3月卡；四开战斗胜利+结算正常 |
 | [动物大联盟](games/动物大联盟.md) | 2026-11-08 | 🟡 壳已过（c2 证书指纹修正），改包仍卡「数据检查」：点同意不发起资源请求。apksecurefile 已全解（MDXZ+zstd+AES，3 dex 可反编译），但 0x66210 哈希是壳必需材料，改容器须重算 KEY（派生未逆出）… |

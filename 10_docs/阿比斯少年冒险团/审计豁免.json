@@ -1,0 +1,42 @@
+{
+  "schema": "starry-audit-waivers/v1",
+  "game": "阿比斯少年冒险团",
+  "package": "com.wks.abyss",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离（modern 注册表 + 私有 mk）。命中则打 ✓豁免（附理由+证据），review_by 过期自动恢复 ✗。新增豁免必须带证据行，禁止只写结论。",
+  "waivers": [
+    {
+      "id": "modern_registry_no_gameconfig",
+      "match": [
+        "GameConfig.h 无 defined"
+      ],
+      "conclusion": "接受偏离",
+      "reason": "本游戏走 modern 注册表：game_id 在 Games/AbssnmxtEntry.cpp 的 authGameId=\"abssnmxt\" 里，入口是 MainModern.cpp，GameConfig.h 的 STARRY_GAME_* → STARRY_AUTH_GAME_ID 映射与 :24 的 #error 均不参与本包构建。审计按 legacy 推断宏名 STARRY_GAME_ABSSNMXT，属检测口径偏差。",
+      "evidence": "mod菜单/starry-mod-menu/app/src/main/jni/Games/AbssnmxtEntry.cpp（authGameId=abssnmxt）+ Android_abssnmxt.mk（LOCAL_SRC_FILES 含 MainModern.cpp，不含 GameConfig 依赖）；so 内 [Abssnmxt]/abssnmxt 标签自检通过（04_scripts/阿比斯少年冒险团/surgical_abssnmxt_2.36.sh 段6）",
+      "date": "2026-11-15",
+      "review_by": "2027-01-15"
+    },
+    {
+      "id": "android_mk_branch_modern",
+      "match": [
+        "激活分支",
+        "与 --game"
+      ],
+      "conclusion": "接受偏离",
+      "reason": "本游戏用私有构建文件 Android_abssnmxt.mk（APP_BUILD_SCRIPT 显式指定），公共 Android.mk 的激活分支（ZHMR）完全不参与编译；audit 检查的是公共 mk，故必然不一致，不会编出别的游戏的 so。",
+      "evidence": "surgical_abssnmxt_2.36.sh 段6：ndk-build APP_BUILD_SCRIPT=./Android_abssnmxt.mk + 产物 so 含 [Abssnmxt] 且不含 [Hkld]/[Tlgd]/[Sc33] 等旧标签",
+      "date": "2026-11-15",
+      "review_by": "2027-01-15"
+    },
+    {
+      "id": "taptap_gatekeeper_detect_gap",
+      "match": [
+        "包内无 TapSDK 门闩类"
+      ],
+      "conclusion": "接受偏离（检测口径缺口，另有等价门禁覆盖）",
+      "reason": "审计按固定类名 com/taptap/sdk/initializer/repository/GatekeeperRepository 探测 TapSDK；本包 TapSDK 版本的验签门闩是 TapGatekeeperManager.isSuccess + InitializerServiceImpl.checkInitialize（无 GatekeeperRepository 类），故被判成「非 TapTap 包」而跳过 [G]。真正判据由本游戏自带的 6 点断言承担。",
+      "evidence": "python 04_scripts/阿比斯少年冒险团/abssnmxt_tap_patch.py verify --apk <成品>：P1–P6 断言全过（P1 InitializerServiceImpl.checkInitialize 恒 true / P2 TapGatekeeperManager.isSuccess 恒 true / P3 showGatekeeperError→null / P4 LoginActivityImpl.onCreate→fallbackToWeb / P5 ClientLoginHandler.canHandle 恒 false / P6 TapSignKit.getSign→官方证书 MD5 87ef7a7d…）",
+      "date": "2026-11-15",
+      "review_by": "2027-01-15"
+    }
+  ]
+}
