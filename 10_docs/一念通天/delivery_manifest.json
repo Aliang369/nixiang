@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-11-10T16:56:13+00:00",
+  "generated_at": "2026-11-15T11:03:04+00:00",
   "game": "一念通天",
-  "version": "784",
+  "version": "789",
   "package": "com.qinglv.Immortal",
   "pipeline_state": "04_scripts/一念通天/pipeline.json",
   "pipeline_status": {
@@ -20,14 +20,14 @@
     "cleanup": "done",
     "archive": "done"
   },
-  "source_commit": "8f9161c12aa16c01e03065a762ebf2af9b595291",
-  "source_tree": "3cdce49dddd8ebb9e2c6421eda5e0d0b5f76cacd",
+  "source_commit": "50b19a0cd7b3631eb3b869a52e99a26792084039",
+  "source_tree": "a444eec62f995a1740c2c02103a128f67e5c7754",
   "apk": {
-    "path": "08_output/一念通天/一念通天_784_surgical-releaseSigned.apk",
+    "path": "08_output/一念通天/一念通天_789_surgical-releaseSigned.apk",
     "available": true,
-    "size": 435523872,
-    "md5": "7dcdc9be05ef7497c8c2db740f6d935b",
-    "sha256": "7f7c21a465100d594194dd36beca910e5cb7dba388dfc9f753108f588e084c16"
+    "size": 444510590,
+    "md5": "f7b64c0033e2dee7f8c1c6aac752ecf5",
+    "sha256": "0d0c25ae7cacb3748d7d70eae1e18a14fe25a35cbe855f6c3577cbdaef74593f"
   },
   "artifacts": [
     {
@@ -116,71 +116,71 @@
       "path": "04_scripts/一念通天/official_apk.json",
       "recorded_md5": "8bde2c82e1eaf2d6121236b3e655b44d",
       "available": true,
-      "current_md5": "8bde2c82e1eaf2d6121236b3e655b44d",
-      "current_sha256": "f25f333bafee86e6ff9ff6b3eaf8f2a30a9c96c40bc36c547ed60fd0bec1a20c",
-      "matches_recorded_md5": true
+      "current_md5": "7d8413a354b17aa5e2a5defeebcef709",
+      "current_sha256": "931881895dadc0b5d4a42b0ae8fd1d8ad7e05ef7a9775a5f079b01d4301ce4b0",
+      "matches_recorded_md5": false
     },
     {
       "stage": "dump_official",
-      "path": "06_dumped/一念通天/official_784/rva_targets.json",
-      "recorded_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
+      "path": "06_dumped/一念通天/official_789/rva_targets.json",
+      "recorded_md5": "1fff4ebca77f2e211b6d290f5b1d40d2",
       "available": true,
-      "current_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
-      "current_sha256": "dc0ce0eb637ee0989a32bd64d5c9cc3a72958271601dbb20922487c7e97a290f",
+      "current_md5": "1fff4ebca77f2e211b6d290f5b1d40d2",
+      "current_sha256": "fcea7ea06d82d1946eb9a05ecb79f2c915a1127d32bd6da0d0270451fa0bc336",
       "matches_recorded_md5": true
     },
     {
       "stage": "build_so",
       "path": "mod菜单/starry-mod-menu/libs_yntt/arm64-v8a/libstarry_magic.so",
-      "recorded_md5": "6152f4c67a1839aadf0e659a4a6c15e9",
+      "recorded_md5": "2eacc2ad7d7838bdc445bc37c336cd3d",
       "available": true,
-      "current_md5": "6152f4c67a1839aadf0e659a4a6c15e9",
-      "current_sha256": "ddfd6f8ba9a8a6bee8dbdf93ce424dc870433dc7994bbd6d1052487fcbc8e549",
+      "current_md5": "2eacc2ad7d7838bdc445bc37c336cd3d",
+      "current_sha256": "ed8dba724c0f3d6d20408d46b73f8c344eea974290ecf67223aefb21e3f496fd",
       "matches_recorded_md5": true
     },
     {
       "stage": "sign",
-      "path": "08_output/一念通天/一念通天_784_surgical-releaseSigned.apk",
-      "recorded_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
+      "path": "08_output/一念通天/一念通天_789_surgical-releaseSigned.apk",
+      "recorded_md5": "f7b64c0033e2dee7f8c1c6aac752ecf5",
       "available": true,
-      "current_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
-      "current_sha256": "7f7c21a465100d594194dd36beca910e5cb7dba388dfc9f753108f588e084c16",
+      "current_md5": "f7b64c0033e2dee7f8c1c6aac752ecf5",
+      "current_sha256": "0d0c25ae7cacb3748d7d70eae1e18a14fe25a35cbe855f6c3577cbdaef74593f",
       "matches_recorded_md5": true
     },
     {
       "stage": "install",
-      "path": "08_output/一念通天/一念通天_784_surgical-releaseSigned.apk",
-      "recorded_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
+      "path": "08_output/一念通天/一念通天_789_surgical-releaseSigned.apk",
+      "recorded_md5": "f7b64c0033e2dee7f8c1c6aac752ecf5",
       "available": true,
-      "current_md5": "7dcdc9be05ef7497c8c2db740f6d935b",
-      "current_sha256": "7f7c21a465100d594194dd36beca910e5cb7dba388dfc9f753108f588e084c16",
+      "current_md5": "f7b64c0033e2dee7f8c1c6aac752ecf5",
+      "current_sha256": "0d0c25ae7cacb3748d7d70eae1e18a14fe25a35cbe855f6c3577cbdaef74593f",
       "matches_recorded_md5": true
     },
     {
       "stage": "cleanup",
       "path": "04_scripts/一念通天/cleanup_summary.json",
-      "recorded_md5": "4e8d4c92d8007ebbd443ff68033b8588",
+      "recorded_md5": "9fa2940c67a72b476d532e577963bff2",
       "available": true,
-      "current_md5": "4e8d4c92d8007ebbd443ff68033b8588",
-      "current_sha256": "d5124e82f14a96f538dec289324ca141a7497378ffc93976a9627dc058e8e720",
+      "current_md5": "9fa2940c67a72b476d532e577963bff2",
+      "current_sha256": "c4e520ec202832b745bd8e5834f5ec9066dc46579a52300d6a2cda0728d8fb0a",
       "matches_recorded_md5": true
     },
     {
       "stage": "cleanup",
-      "path": "06_dumped/一念通天/official_784/rva_targets.json",
-      "recorded_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
+      "path": "06_dumped/一念通天/official_789/rva_targets.json",
+      "recorded_md5": "1fff4ebca77f2e211b6d290f5b1d40d2",
       "available": true,
-      "current_md5": "d6ef5a1d38fb555fe8e9759e27b8f4a3",
-      "current_sha256": "dc0ce0eb637ee0989a32bd64d5c9cc3a72958271601dbb20922487c7e97a290f",
+      "current_md5": "1fff4ebca77f2e211b6d290f5b1d40d2",
+      "current_sha256": "fcea7ea06d82d1946eb9a05ecb79f2c915a1127d32bd6da0d0270451fa0bc336",
       "matches_recorded_md5": true
     },
     {
       "stage": "archive",
-      "path": "10_docs/一念通天/收尾与最小复现清单_779_20261105.md",
-      "recorded_md5": "296f429fdd0e997528f5c9932e8d0ac5",
+      "path": "10_docs/一念通天/收尾与最小复现清单_789_20261115.md",
+      "recorded_md5": "9d5583044befd02828ac20c3ce77bcc1",
       "available": true,
-      "current_md5": "296f429fdd0e997528f5c9932e8d0ac5",
-      "current_sha256": "e04eb56c089a522d81ad8e2952484cc0df41cee63da8e6bc43dd90809fb8d85f",
+      "current_md5": "9d5583044befd02828ac20c3ce77bcc1",
+      "current_sha256": "e8dd7a869530aea41a2088c2e3e2e26eb3e403ff3695bce56bb5784e5df6b590",
       "matches_recorded_md5": true
     }
   ],
