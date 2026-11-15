@@ -205,7 +205,7 @@ bash 04_scripts/_common/obfuscate_menu_dex.sh <classes.jar|class目录> <输出 
 | appComponentFactory | `android:appComponentFactory="com.starry.magic.StarryAppCompFactory0"` | 宿主已自带 appComponentFactory 且可**等长替换**（`androidx.core.app.CoreComponentFactory`，38 字符） | ACE/TSS 类壳：替换 Application 会让 `AceApplication.initialize` 在 native 信号量上毒丸挂起（黑屏 Splash + 后续被击杀） |
 | 宿主 Activity 注入 | 借壳自己的入口类（`ysxz/`、`conch/`、`h5box/` 等分支） | 宿主已声明自家 Provider/Factory，或需挂在宿主 Activity 生命周期点上 | 需逐壳适配、换壳即失效，不作为跨游戏默认方案 |
 
-- **Provider 顺序铁律**：必须排在其它 Provider（如 TapTap 的 `TapTapKitInitProvider`/`TapUpdateFileProvider`）**之前** —— Provider 顺序＝平台实例化顺序，先回灌官方证书再让 SDK 读。参考实现见 `04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py`。
+- **Provider 顺序铁律**：必须排在其它 Provider（如 TapTap 的 `TapTapKitInitProvider`/`TapUpdateFileProvider`）**之前** —— Provider 顺序＝平台实例化顺序：先完成签名侧处理（改包法＝`TapSignKit.getSign` 回灌官方指纹；或该游戏的 B 轨运行时替换），再挂 Provider 让 SDK 读。参考实现见 `04_scripts/追迹迷城/patch_zjmc_binary_manifest_v3.py`。
 - **黑屏/无菜单先查入口三件事**（都不会让构建报错）① 入口类不在 dex（`ClassNotFoundException`）② Manifest 里没写进去（用 `aapt2 dump xmltree --file AndroidManifest.xml <apk>` 复读）③ 入口被壳的 Application 挂死。
 - **现有入口类清单**（`java/com/starry/magic/`）：`StarryInitProvider`（Provider，推荐）/ `StarryApp`（Application）/ `StarryAppCompFactory0`、`sign/StarryAppComponentFactory`（早启动 AppComponentFactory，原 SignSpoofAppComponentFactory）、`ysxz/YsxzAppComponentFactory`（Factory）/ `conch/DcslConchProvider`、`h5box/StarryH5Provider`、`h5box/CzbhzH5Provider`（壳专用 Provider）。
 

@@ -203,7 +203,7 @@ def main() -> int:
             if not (args.all or has_index):
                 skipped += 1
                 continue
-        elif not args.all and nfiles < args.min_files:
+        elif not args.all and nfiles < args.min_files and not has_index:
             skipped += 1
             continue
         content = build(d, args.stale_days)

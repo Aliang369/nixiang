@@ -3,7 +3,7 @@
 > 📍 re-analyze/login/taptap-web-login.md
 > 🎯 改签后 TapTap 客户端 SSO 失败（签名不一致），需要强制走 WebView 网页登录
 
-## ⚠️ 现行口径（2026-11-11 重写）
+## ⚠️ 现行口径
 
 **先做判断，再选路线。两条路线按「包内有没有 TapSDK 类可达」二选一，不要两套都上。**
 
@@ -12,11 +12,14 @@
 | 包内 `Lcom/taptap/sdk/*` **可直接搜到**（未加密、未藏进 payload） | **改包法**：静态改游戏 dex 的验签门闩与登录入口 | 见下方「改包法四步」 |
 | TapSDK 在加密 payload / 壳内动态装载，**搜不到也改不了** | **运行时 SPI**：本游戏的 `GameHookImpl` 调 `TapLoginForceWeb` | `com.starry.magic.games/<game_id>/GameHookImpl.java` |
 
-**签名/完整性校验**：运行时签名伪装（`SignSpoof`）已于 2026-10-28 整体删除，不要复活。
-- 为什么删：它依赖隐藏 API 豁免，**Android 14 user 版真机必失败**
-  （小米 M2102K1AC 实测 `E StarrySignSpoof: exemptHiddenApis(meta) failed`；只有雷电 userdebug 能过）。
-  蛋壳战机 1.2.1 首版误用旧法，用户当场点出——不要再犯。
-- 现在验签门闩一律走**改包法**（静态改 dex）；底包无门闩类（如无 `GatekeeperRepository`）就不需要处理。
+**签名/完整性校验**：签名处理统一走**改包法（静态改 dex）**。运行时签名伪装（`SignSpoof`）已于 2026-10-28 整体删除，**不要复活**——
+它依赖隐藏 API 豁免，**Android 14 user 版真机必失败**（小米 M2102K1AC 实测 `E StarrySignSpoof: exemptHiddenApis(meta) failed`；只有雷电 userdebug 能过）。
+蛋壳战机 1.2.1 首版误用旧法，用户当场点出——不要再犯。
+
+- **改包法里的签名回灌是必需步骤**：把 `TapSignKit.getSign(Context)Ljava/lang/String;` 整段替换成官方证书指纹常量（`const-string` 官方
+  `cert.der` 的 MD5），见下方四步表第 4 行。不回灌 ⇒ native `TapSDK-TapSdkCore` 初始化返回 1001「包名、签名错误」，登录链路直接断。
+- **判据**：`TapSignKit.getSign` 的返回值等于官方证书指纹（官方证书从原包 `META-INF` 取 DER 算 MD5，命令见本文「官方证书指纹提取」节）。
+- 底包无门闩类（如无 `GatekeeperRepository`、无 `TapSignKit`）就不需要处理。
 
 ### 走 SPI 路线时（唯一正路，无例外）
 
@@ -63,10 +66,10 @@ public final class GameHookImpl implements GameHook {
 | 1 | 验签/初始化门闩恒放行 | 绿梦 4.8.2：`InitializerServiceImpl.isGatekeeperLoadedSuccessfully` + `GatekeeperRepository`；蛋壳战机 `tap-login_release`：`InitializerServiceImpl.checkInitialize(Z)Z` / `checkLocalInitialize(Z)Z` 恒 true |
 | 2 | 验签失败弹窗掐掉 | `GatekeeperRepository.showErrorToast(TapNetworkException)` → `return-void`（保留原 `.registers`） |
 | 3 | 登录入口恒 Web | 绿梦：`LoginActivityImpl` 两处 handler → `WebHandler`；蛋壳战机：`DefaultTapLoginFragmentProvider.provide` 在 `aget v2,v3,v2` 后插 `const/4 v2, 0x3` |
-| 4 | 确认伪装不存在（源码已删，无需再改） | manifest 不得挂已删除的 `SignSpoofAppComponentFactory`；判据＝dex 无 `Lcom/starry/magic/sign/SignSpoof;` 且 `StarrySignSpoof` 日志 0 行（`framework_entry_audit [B]` 已机器化） |
+| 4 | 签名回灌（必需） | `TapSignKit.getSign(Context)Ljava/lang/String;` 整段替换为 `const-string vX, "<官方 cert.der 的 MD5>"`（官方证书从原包 META-INF 取）。实测：不回灌 ⇒ native `TapSDK-TapSdkCore` 初始化返回 1001「包名、签名错误」，登录链路直接断（群侠传：幸存者 0.2.3.10，2026-11-15）；回灌后复测结论写实测 |
 
 > 下面「登录诊断与授权边界」「三种 SDK 版本」保留为历史/按版本核对材料；其中 `SignSpoof`、`ClientLoginUtils` 等固定改法
-> **不再作为新包的默认操作**，先看本节。
+> **不再作为新包的默认操作**（签名回灌除外，它是必需步骤），先看本节。
 
 > 如果登录已经进到游戏登录服务器并返回错误码，先看 [server-rejection-triage.md](server-rejection-triage.md)，不要先把问题归因到 TapTap SSO 或 root 检测。
 
@@ -80,7 +83,7 @@ public final class GameHookImpl implements GameHook {
 - **诊断规则**：旧工具类仍存在不等于它参与执行。handler 路径须由当前构建的调用关系、选择条件和实际登录日志支持；仅搜到类名不能证明路由，证据不足为 **NOT PROVEN**。
 - **支持配置**：先核对实际 SDK 依赖、渠道初始化、应用标识、包名、开发者后台登记的签名与当前构建身份；再按对应版本的官方文档核对回调和官方支持的客户端/Web 登录选项。未确认该版本提供的配置项，不臆造开关；配置不匹配交由有权限的维护者修正。
 - **验证闭环**：在授权测试账户/构建上观察入口、路由、回调、成功与取消/失败结果及会话恢复。只看到 WebView 页面不等于登录成功，也不证明服务端授权有效。
-- **授权边界**：登录路由选择不替代正常身份认证、用户同意或服务端授权；不新增签名伪造、强制绕过登录或校验的操作。无法通过官方支持配置解决时保留失败证据并请求项目方支持。
+- **授权边界**：登录路由改造只解决渠道校验失败，不替代游戏自身的账号与授权流程；登录是否成功以官方账号体系返回的结果为准。无法通过官方支持配置解决时保留失败证据并请求项目方支持。
 - **旧文定位**：以下旧章节保留作历史材料，其中“必须 patch”“恒返回”等不是本次合并认可的通用操作指令；新任务以本节的诊断、官方配置和授权边界为准。“已合并”只表示经验已收录，不等于全部命题 PROVEN。
 
 ## 原因
@@ -131,23 +134,25 @@ smali patch：恒抛 `ActivityNotFoundException("starry_force_web_login")`
 
 ## 同时处理 TapSignKit
 
-**必须**同时 patch `TapSignKit.getSign` → 固定返回原版 cert MD5。
+**必须**同时 patch `TapSignKit.getSign` → 固定返回原版 cert MD5（＝顶部四步表第 4 步「签名回灌（必需）」）。
 
 否则 SDK 内部签名校验仍会失败。
 
-## 证书回灌自检（SignSpoof，2026-10-15 起）— **已删除（2026-10-28）**
+## 官方证书指纹提取（原 SignSpoof 自检流程，2026-10-15 起）— 运行时类已删除（2026-10-28）
 
-> ⚠️ 本节整套机制**已从源码删除**（类文件不在了，运行时签名伪装在 Android 14 user 版真机也必失败）。
-> 新包一律按文件顶部「现行口径」用改包法；本节仅在**核对/迁移未迁移的老包**时作对照材料保留。
-> 判据换成：装机后 `StarrySignSpoof` 日志行数必须为 **0**。
+> ⚠️ `SignSpoof` 的**运行时**机制已从源码删除（类文件不在了，Android 14 user 版真机也必失败），不得复活。
+> 但**官方证书指纹本身仍是改包法的必需输入**：第 4 步要把官方 `cert.der` 的 MD5 写进 `TapSignKit.getSign`，
+> 下面这套 `openssl` 命令就是取该 MD5 的标准手法，新包照用。
+> 另加一条判据：装机后 `StarrySignSpoof` 日志行数必须为 **0**（确认运行时伪装没有复活）。
 
 改签包后 TapTap 用**本机 PackageManager 里的签名**去服务端核对，不一致即报：
 `TapInitializer: 应用的包名、签名（certificate fingerprint）未在 TapTap 开发者中心正确配置`
 → `JuHeSDK TapTap CONFIG_ERROR: 包名、签名错误` → `TapTapException: SDK not initialized`。
 ⚠️ **症状里不出现「证书」字样**，只报 CONFIG_ERROR ⇒ 先自己验证书，别去查登录流程或服务端。
 
-机制：`SignSpoof` 按包名回灌官方证书 DER（每款游戏一段 `XXX_PKG` + `XXX_CERT_B64` + 一行 `fakes.put`）。
-**追加**证书块属允许的模式化操作（`AGENTS.md` 授权节），但**抄错一位就复现上面三条报错且极难定位**，故必须逐字节自检：
+历史形态（运行时）：`SignSpoof` 按包名回灌官方证书 DER（每款游戏一段 `XXX_PKG` + `XXX_CERT_B64` + 一行 `fakes.put`）。
+**现行形态（改包法）**：没有证书表，官方 MD5 直接写进 `TapSignKit.getSign` 的 `const-string`（四步表第 4 行）。
+**回灌的指纹抄错一位就复现上面三条报错且极难定位**，故必须逐字节自检（历史形态往证书表里**追加**证书块同属允许的模式化操作，`AGENTS.md` 授权节）：
 
 ```bash
 unzip -o -q <官方.apk> 'META-INF/*.RSA' -d /tmp/c
@@ -158,7 +163,7 @@ apksigner verify --print-certs <官方.apk> | grep "MD5 digest"    # ② 必须�
 # ③ Java 源里 XXX_CERT_B64 各段拼起来 base64 解码后的 md5 也必须相等
 ```
 
-装机后判据：`StarrySignSpoof: installed pkgs=[… <包名> …]` 且上述三条报错消失。
+装机后判据（改包法包）：`StarrySignSpoof` 日志 **0 行**（运行时伪装未复活），且上述三条报错消失、`TapSignKit.getSign` 返回值等于 ① 的 MD5。
 
 > 先例：见 `10_docs/保卫向日葵/审计_20261015.md` §3.3（727 B DER 逐字节相同，md5 `63e2fa89…`）。
 

@@ -6,7 +6,8 @@
 #         10_docs/_templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md §2026-10-29 增补
 #   分工：签名真伪 → B 轨（classes6.dex 的 MT KillerApplication193，改父类挂载）
 #         登录路由 → A 轨（classes3.dex 的 ClientLoginUtils.isClientLogin 恒 false）
-#         ★旧的 TapSignKit.getSign 回灌补丁**已删**（同一链条禁止双修）
+#         ★本游戏签名真伪由 B 轨（classes6 killer）运行时替换兜底，本包不叠加 TapSignKit.getSign 回灌补丁
+#           （同一链条禁止双修）；改包法本身仍以签名回灌为必需步骤，本包不用。SignSpoof 类已于 2026-10-28 删除
 #
 #   打包基座 = 已交付的 r29 成品（星光签名，已含 manifest 的 provider/service/权限注入与
 #              assets/certs/starlight.crt）；只是把 dex/so/manifest 换成新的一套。

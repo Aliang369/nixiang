@@ -14,8 +14,9 @@
 #       保留官方 appComponentFactory="androidx.core.app.CoreComponentFactory"）
 #   - classes3.dex（就地替换，只改 1 处方法体）：A 轨登录
 #       com/taptap/sdk/login/impl/utils/ClientLoginUtils.isClientLogin → 恒 false
-#     ★ 2026-10-29 起旧 `TapSignKit.getSign` 回灌补丁**已退役**（同一链条禁止双修），
-#       签名真伪一律走 B 轨（classes6 killer）。本脚本断言 classes3 内不得出现 starry_sign_bypass。
+#     ★ 本游戏签名真伪由 B 轨（classes6 killer）运行时替换兜底，故本包**不叠加** `TapSignKit.getSign` 回灌补丁
+#       （同一链条禁止双修）。改包法本身仍以签名回灌为必需步骤，本包不用；`SignSpoof` 类已于 2026-10-28 删除。
+#       本脚本断言 classes3 内不得出现 starry_sign_bypass。
 #   - classes5.dex：新增（星光 smali：StarryInitProvider / MenuService / TapLoginForceWeb / OTA）
 #   - classes6.dex：新增（B 轨 MT KillerApplication193 + 空壳 SgKillerApp，证书＝官方 DER base64）
 #   - lib/arm64-v8a/libstarry_magic.so：新增；官方包无 libc++_shared.so ⇒ 自带一份

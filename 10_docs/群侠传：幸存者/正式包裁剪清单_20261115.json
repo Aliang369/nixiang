@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/群侠传：幸存者",
+  "keep": "群侠传：幸存者_0.2.3.10_starry-menu-releaseSigned.apk",
+  "keep_size": 591383826,
+  "keep_md5": "38181b6973f0a3d389c7e994ade4e326",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "群侠传：幸存者_0.2.3.10_starry-menu-releaseSigned.apk.idsig",
+      "size": 4662811,
+      "md5": "86faa8176cfd710d16209725f42b0ac8"
+    }
+  ],
+  "removed_count": 1
+}

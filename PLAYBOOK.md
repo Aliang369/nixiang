@@ -189,7 +189,7 @@ LOCAL_CFLAGS += -DENABLE_UNITY_HOOK -DSTARRY_GAME_{GAME}
 
 | 项 | 方法 |
 |----|------|
-| 签名校验 | `SignSpoof`（运行时 hook `PackageInfo.CREATOR`，按包名回灌官方 DER；新游戏只需提取官方证书 DER/base64 加一条表项） |
+| 签名校验 | TapTap 签名校验走**改包法**：签名侧唯一落点＝`TapSignKit.getSign(Context)` 返回官方 `cert.der` 的 MD5（MD5 取自原包 `META-INF` 里的证书），详见 `skill/re-analyze/login/taptap-web-login.md` 改包法四步第 4 步。framework 的 `SignSpoof` 类已删除（2026-10-28），不要复活 |
 | TapTap 登录 | 改签后 SSO 必挂 → `TapLoginForceWeb`：`onActivityPreCreated` 反射把 `LoginActivityImpl.loginHandlers` 数组中的 `ClientLoginHandler` 换成 `CloudLoginHandler` → 全 canHandle=false → SDK 自带 `fallbackToWeb` 内嵌网页。**禁止 dex patch**（ACE 校验官方 dex，实证闪退） |
 | 完整性黑名单 | 搜热更代码中的黑名单路径 + 体积阈值，确保黑名单路径不存在 |
 | Root | RootBeer / KSU 隐藏 |
