@@ -2,10 +2,10 @@
   "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级_断网版",
   "keep": "无限升级_12.10701_断网版_wxsjdz1-releaseSigned.apk",
   "keep_size": 124960214,
-  "keep_md5": "ba452374af61d736a0bbd494690431b7",
+  "keep_md5": "5dc48a42971f68ef442e6f55ab85255d",
   "mode": "--apply",
   "removed": [],
   "removed_count": 0,
-  "keep_sha256": "075adc34c216bcd75120f4d808df11db449076c0637ebd762e01b83e0fc5f865",
-  "note": "2026-11-15 22:13 收尾终版：①补回INTERNET权限 ②StarryConfig硬编码改为infinityOffline ③按用户口径【过检测/防封整段摘除】（上报屏蔽11处 + delta 19出站门/CLS + native block_report 全部去掉，载荷 verify ldstr \"block_report\" x0）；L3 功能通过"
+  "keep_sha256": "b8d66313161e718c1933fd224cac4cb570c12e08f0146e86207cf51e3ae62f11",
+  "note": "2026-11-15 22:40 终版：去卡密 + 18 项功能 + 过检测整段摘除；L3 通过"
 }

@@ -10,7 +10,7 @@
  *  隔离方式与 wxsjdz2 / vc1637 一致：只走 MainModern.cpp 的 GameMod_Get() 注册表，
  *  不改 Main.cpp / MainModern.cpp / GameConfig.h / 公共 Android.mk。
  *
- *  菜单 17 个控件 = 15 项功能 + 2 个 Category_ 分组行（下标即 feat_num，feat 3 占位无功能）。
+ *  菜单 20 个控件 = 18 项功能 + 2 个 Category_ 分组行（下标即 feat_num，feat 3 占位无功能）。
  *  功能集唯一口径：10_docs/无限升级/wxsjdz1_menu_template.json（收尾须逐项对账）。
  * ================================================================ */
 #include "ModEntry.h"
@@ -35,6 +35,9 @@ static const char* kWxsjdz1_Features[] = {
     "Toggle_物品使用反增",                // 14 WXSJ1_FEAT_ITEMREVERSE -> item_reverse
     "InputValue_1000:物品反增倍率",       // 15 WXSJ1_FEAT_ITEMREVX -> item_reverse_x
     "Toggle_转生时间无限制",              // 16 WXSJ1_FEAT_ZHUANSHENG -> zhuansheng_free
+    "Slider_技能投掷物倍数:1:100",        // 17 WXSJ1_FEAT_PROJECTILE -> skill_projectile_x
+    "Slider_技能伤害倍数:1:1000",         // 18 WXSJ1_FEAT_SKILLDMG   -> skill_damage_x
+    "Toggle_转生无条件升级",              // 19 WXSJ1_FEAT_LEGACYFREE -> zhuan_sheng_free_point
 };
 
 static bool Wxsjdz1_TryInitEntry(JavaVM* /*vm*/) {
@@ -59,7 +62,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .isReady = Wxsjdz1_IsReady,
         .tick = nullptr,
         .onFeatureChanged = Wxsjdz1_OnFeatureChanged,
-        .onValueChanged = nullptr,       // 本号 16 项无 Slider_ 控件 ⇒ 不接（改口径须同步加接线）
+        .onValueChanged = Wxsjdz1_OnValueChanged,  // feat 18/19 两个 Slider
         .onInputChanged = Wxsjdz1_OnInputChanged,  // feat 7/8/12/15 四个 InputValue
         .forceClear = Wxsjdz1_ForceClear,
         .onApplyPlayPatch = nullptr,

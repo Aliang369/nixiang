@@ -1,6 +1,6 @@
 /* ================================================================
  *  无限升级 · 断网版 wxsjdz1 — 12.10701 / **vc1647**（第三方断网定制包）
- *  game_id = wxsjdz1｜tag = wxsjdz1｜菜单 16 项（feat 1–16，3 为 Category_ 占位）
+ *  game_id = wxsjdz1｜tag = wxsjdz1｜菜单 18 项（feat 1–19，3 为 Category_ 占位）
  *
  *  ★ 与另外两套严格分开，禁止混用 ★
  *    - wxsj    = 官方 12 线（vc1644）
@@ -42,12 +42,17 @@ enum Wxsjdz1Feat : int {
     WXSJ1_FEAT_ITEMREVERSE = 14, // Toggle_物品使用反增      -> item_reverse
     WXSJ1_FEAT_ITEMREVX    = 15, // InputValue_1000:物品反增倍率 -> item_reverse_x
     WXSJ1_FEAT_ZHUANSHENG  = 16, // Toggle_转生时间无限制    -> zhuansheng_free
+    // ===== 2026-11-15 补「更多功能」三项（与 11 线 2026-11-04 口径、wxsjdz2 逐字一致）=====
+    WXSJ1_FEAT_PROJECTILE  = 17, // Slider_技能投掷物倍数:1:100  -> skill_projectile_x
+    WXSJ1_FEAT_SKILLDMG    = 18, // Slider_技能伤害倍数:1:1000   -> skill_damage_x
+    WXSJ1_FEAT_LEGACYFREE  = 19, // Toggle_转生无条件升级        -> zhuan_sheng_free_point
 };
 
 bool Wxsjdz1_TryInit();
 bool Wxsjdz1_IsReady();
 void Wxsjdz1_OnFeatureChanged(int featNum, bool enabled);
 void Wxsjdz1_OnInputChanged(int featNum, const char* text);
+void Wxsjdz1_OnValueChanged(int featNum, int value);
 void Wxsjdz1_ForceClear();
 
 #endif  // STARRY_WXSJDZ1_MOD_H

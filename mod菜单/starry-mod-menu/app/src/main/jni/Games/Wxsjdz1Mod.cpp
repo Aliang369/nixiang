@@ -449,6 +449,7 @@ void Wxsjdz1_OnFeatureChanged(int featNum, bool enabled) {
     case WXSJ1_FEAT_SHOPADS:     WriteConfigKey("shop_ads_unlimited", on); break;
     case WXSJ1_FEAT_ITEMREVERSE: WriteConfigKey("item_reverse", on); break;
     case WXSJ1_FEAT_ZHUANSHENG:  WriteConfigKey("zhuansheng_free", on); break;
+    case WXSJ1_FEAT_LEGACYFREE:  WriteConfigKey("zhuan_sheng_free_point", on); break;
     default: break;
     }
 }
@@ -456,6 +457,22 @@ void Wxsjdz1_OnFeatureChanged(int featNum, bool enabled) {
 // ============================================================
 //  输入框回调（feat 7/8/12/15）：只收纯数字，1..1,000,000 夹取
 // ============================================================
+// 滑块回调（feat 18/19）：DLL 侧读 skill_projectile_x / skill_damage_x
+void Wxsjdz1_OnValueChanged(int featNum, int value) {
+    const char* key = nullptr;
+    int lo = 1, hi = 100;
+    switch (featNum) {
+    case WXSJ1_FEAT_PROJECTILE: key = "skill_projectile_x"; lo = 1; hi = 100;  break;
+    case WXSJ1_FEAT_SKILLDMG:   key = "skill_damage_x";    lo = 1; hi = 1000; break;
+    default: return;
+    }
+    if (value < lo) value = lo;
+    if (value > hi) value = hi;
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", value);
+    WriteConfigKey(key, buf);
+}
+
 void Wxsjdz1_OnInputChanged(int featNum, const char* text) {
     const char* key = nullptr;
     switch (featNum) {
