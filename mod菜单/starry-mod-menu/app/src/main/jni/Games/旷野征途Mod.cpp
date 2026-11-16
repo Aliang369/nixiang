@@ -192,24 +192,34 @@ static bool  ReadU32Guarded(const char* tag, const void* p, uint32_t* out);
 static uintptr_t kRvaShowInternal = 0x1C8A9AC;   // 1.8 实测（file）
 static uintptr_t kRvaHandleNative = 0x1C8A724;   // 1.8 实测（file，只调不挂）
 static uintptr_t kRvaEnterInterp  = 0x19876a8;   // 1.8 实测（file）
-static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2
+static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4
 
 // 探针：用「首指令是否等于已知序言」判版本，不依赖包名/版本号字符串
 static int DetectLibVersion() {
     struct Probe { int ver; uintptr_t off; };
-    static const Probe probes[] = {{22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
+    // 探针 = 各版本 ShowInternal(file) 首指令；三者互不误判（2.4 侧由 delta24 静态核验）：
+    //   2.4 独有探针 0x1CCE6CC 处 = 0xF81E0FFE（str x30,[sp,#-0x20]!）
+    //   2.4 在 2.2 探针 0x1CA9130 处 = 0xB4000D96（≠0xF81E0FFE，不会误判成 2.2）
+    //   2.4 在 1.8 探针 0x1C8A9AC 处 = 0x97F951DD（≠0xF81E0FFE）
+    static const Probe probes[] = {{24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
     for (const auto& pr : probes) {
         void* va = FileOffToVa(TPL_TARGET_LIB, pr.off);
         if (!va) continue;
         uint32_t insn = 0;
         if (ReadU32Guarded("verprobe", va, &insn) && insn == 0xF81E0FFEu) {
             g_libVer.store(pr.ver);
-            if (pr.ver == 22) {
+            if (pr.ver == 24) {
+                kRvaShowInternal = 0x1CCE6CCu;  // file；VA 0x1CD26CC
+                kRvaHandleNative = 0x1CCE444u;  // file；VA 0x1CD2444（仅记录，本轮不挂）
+                kRvaEnterInterp  = 0x19C9A78u;  // file；VA 0x19cda78，序言 0xF81D0FFE
+                LOGI(TPL_LOG " lib version probe: 2.4 (ShowInternal file=0x1CCE6CC, interp=0x19C9A78)");
+                DbgLog("verprobe: 2.4 showInternal=0x1CCE6CC interp=0x19C9A78");
+            } else if (pr.ver == 22) {
                 kRvaShowInternal = 0x1CA9130u;
                 kRvaHandleNative = 0x1CA8EA8u;
-                kRvaEnterInterp  = 0u;         // 2.2 未定位 ⇒ 失败关闭，禁伪地址
-                LOGI(TPL_LOG " lib version probe: 2.2 (ShowInternal file=0x1CA9130, interp=未定位)");
-                DbgLog("verprobe: 2.2 showInternal=0x1CA9130 interp=UNRESOLVED");
+                kRvaEnterInterp  = 0x19a5004u;  // file；VA 0x19a9004（原来只写在 InstallBattleHooks 里）
+                LOGI(TPL_LOG " lib version probe: 2.2 (ShowInternal file=0x1CA9130, interp=0x19a5004)");
+                DbgLog("verprobe: 2.2 showInternal=0x1CA9130 interp=0x19a5004");
             } else {
                 LOGI(TPL_LOG " lib version probe: 1.8 (ShowInternal file=0x1C8A9AC)");
                 DbgLog("verprobe: 1.8");
@@ -796,10 +806,14 @@ static HookSlot kSlots[] = {
     // 帧锚点：ET.GameManagerMono.Update（AOT / 私有 / argc=0），按名安装，无 RVA
     {"GameUpdate", 0x0, 0x0u, "ET", "GameManagerMono", "Update", 0,
      (void*)Hooked_GameUpdate, (void**)&g_origGameUpdate},
-    {"EnterInterp", 0x0, 0xF81D0FFEu, "", "", "", -1,   // rva 由 InitSlotAddrs() 按版本填；2.2 未定位＝0 ⇒ 失败关闭
+    {"EnterInterp", 0x0, 0xF81D0FFEu, "", "", "", -1,   // 1.8 由本槽位装；2.2/2.4 由 InstallBattleHooks 单点装（此处恒 0）
      (void*)Hooked_EnterInterp, (void**)&g_origEnterInterp},
     // 免广告：DirichletRewardAdBase::ShowInternal（AOT，序言 str x30,[sp,#-0x20]!）
-    {"NoAd", 0x0, 0xF81E0FFEu, "", "", "", -1,  // rva 由 InitSlotAddrs() 按版本填
+    // 2026-11-16：补**按名三要素**（Dirichlet.Ad / DirichletRewardAdBase / ShowInternal，argc=1）。
+    // 依据：2.4 dynsym 仍导出 241 个 il2cpp_*（class_from_name / class_get_method_from_name 全在），
+    // AOT 方法 methodPointer 是真实代码地址 ⇒ 按名可挂。缺三要素时一旦版本探测失配
+    // （ver=0 ⇒ rva 全 0），免广告就静默失败关闭 —— 这是实现缺口，不是能力缺口。
+    {"NoAd", 0x0, 0xF81E0FFEu, "Dirichlet.Ad", "DirichletRewardAdBase", "ShowInternal", 1,  // rva 由 InitSlotAddrs() 按版本填，失效即转按名
      (void*)Hooked_ShowInternal, (void**)&g_origShowInternal},
 };
 
@@ -812,13 +826,22 @@ static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 static void InitSlotAddrs() {
     const int ver = (g_libVer.load() == 0) ? DetectLibVersion() : g_libVer.load();
     // 未知版本（ver==0）没有指纹依据 ⇒ 所有 RVA 归零，只保留按名路径；禁止默认套 1.8 地址。
-    const uintptr_t interp = (ver == 18) ? 0x19876a8u : ((ver == 22) ? 0u : 0u);
-    const uintptr_t noad   = (ver == 18) ? 0x1C8A9ACu : ((ver == 22) ? 0x1CA9130u : 0u);
+    // 全部是 **file offset**（HookAtRva/FileOffToVa 口径，运行时走 /proc/self/maps；禁 base+RVA）。
+    const uintptr_t interp = (ver == 18) ? 0x19876a8u
+                           : (ver == 22) ? 0x19a5004u          // VA 0x19a9004
+                           : (ver == 24) ? 0x19C9A78u : 0u;    // 2.4 VA 0x19cda78
+    const uintptr_t noad   = (ver == 18) ? 0x1C8A9ACu
+                           : (ver == 22) ? 0x1CA9130u
+                           : (ver == 24) ? 0x1CCE6CCu : 0u;    // 2.4 VA 0x1CD26CC
     kRvaEnterInterp = interp;
     kRvaShowInternal = noad;
-    kRvaHandleNative = (ver == 18) ? 0x1C8A724u : ((ver == 22) ? 0x1CA8EA8u : 0u);
+    kRvaHandleNative = (ver == 18) ? 0x1C8A724u
+                     : (ver == 22) ? 0x1CA8EA8u
+                     : (ver == 24) ? 0x1CCE444u : 0u;      // 2.4 只记录不挂
     for (auto& sl : kSlots) {
-        if (std::strcmp(sl.tag, "EnterInterp") == 0) sl.rva = interp;
+        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4 由 InstallBattleHooks 单点显式装
+        // （同址双 Dobby 叠钩会 SIGSEGV ⇒ 这里绝不能重复填 rva）
+        if (std::strcmp(sl.tag, "EnterInterp") == 0) sl.rva = (ver == 18) ? interp : 0u;
         else if (std::strcmp(sl.tag, "NoAd") == 0)   sl.rva = noad;
     }
     DbgLog("slot addrs: interp=0x%lX noad=0x%lX ver=%d",
@@ -1001,17 +1024,19 @@ static int InstallBattleHooks() {
         }
     }
 #if KYZT_BATTLE_ENABLE
-    // 2.2 帧入口（唯一：0x19a9004），序言 str x30,[sp,#-0x30]! = 0xF81D0FFE
-    if (g_libVer.load() == 22) {
-        // 注意：HookAtRva 的参数是 **file offset**（内部走 FileOffToVa），不是 VA。
-        // EnterFrameFromInterpreter VA=0x19a9004 ⇔ file=0x19a5004（va−file=0x4000）；
-        // 实测 file 0x19a5004 首指令 0xF81D0FFE（str x30,[sp,#-0x30]!），
-        // 而 0x19a9004 处为 0xB4052B20 ⇒ 传 VA 会序言校验失败（失败关闭，不会错挂）。
-        if (HookAtRva("Battle", 0x19a5004u, 0xF81D0FFEu,
+    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 都从这里单点装，1.8 走 kSlots。
+    // 注意：HookAtRva 的参数是 **file offset**（内部走 FileOffToVa），不是 VA。
+    //   · 2.2：VA 0x19a9004 ⇔ file 0x19a5004（该 VA 处为 0xB4052B20 ⇒ 传 VA 必失败）
+    //   · 2.4：VA 0x19cda78 ⇔ file 0x19C9A78（序言 0xF81D0FFE = str x30,[sp,#-0x30]!）
+    // 地址一律取 InitSlotAddrs 填好的 kRvaEnterInterp（不在此写版本字面量）。
+    const int verHook = g_libVer.load();
+    if (verHook == 22 || verHook == 24) {
+        if (HookAtRva("Battle", kRvaEnterInterp, 0xF81D0FFEu,
                       (void*)kb::Hooked_EnterFrame, &kb::g_origEnter)) {
             ++ok;
         } else {
-            DbgLog("battle: EnterFrame hook 未装上（失败关闭）");
+            DbgLog("battle: EnterFrame hook 未装上 ver=%d rva=0x%lX（失败关闭）",
+                   verHook, (unsigned long)kRvaEnterInterp);
         }
     }
 #endif
@@ -1480,7 +1505,9 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
     if (enabled && (featNum == 旷野征途_FEAT_GOLD || featNum == 旷野征途_FEAT_DIAMOND ||
                     featNum == 旷野征途_FEAT_POINT)) {
         if (g_libVer.load() == 0) DetectLibVersion();
-        if (g_libVer.load() == 22) {
+        // 2.4 同口径：Economy22 的字段/属性/方法一律 il2cpp_field_get_offset 按名现取
+        //（delta24 已核 2.4 HotUpdate.dll 名字齐备）⇒ 字段常量零改动，只放行版本门。
+        if (g_libVer.load() == 22 || g_libVer.load() == 24) {
             // 2.2：菜单回调（Java UI 线程）**只入队**，真正调用发生在 ET.GameManagerMono.Update
             // （Unity 线程）里 drain —— 不在 UI 线程直接碰 il2cpp 对象。
             const unsigned long ut = g_unityTid.load();

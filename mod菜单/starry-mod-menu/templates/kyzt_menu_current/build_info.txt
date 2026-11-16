@@ -1,9 +1,9 @@
 game      : 旷野征途 (kyzt)
-dex       : classes3.dex
-built_at  : 2026-11-14 16:32:32
+dex       : classes9.dex
+built_at  : 2026-11-16 13:33:04
 javac     : /Users/aliang/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home/bin/javac
 d8        : /Users/aliang/Library/Android/sdk/build-tools/36.0.0/d8
 androidjar: /Users/aliang/Library/Android/sdk/platforms/android-36/android.jar
 source    : /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java
-sha256    : 292cf1896def24edf9f0c7e4f59521405b3d894b994e21f7b3ec02ff554211fc
-source_commit: 9d5786b716c1160e717d6e9d4622c0d9b9e4838b
+sha256    : 87e8ad56ab3300cd7a3846afafda4f65acf68a6bcb371ca177c27d5c0df760ee
+source_commit: 54c52ef6188dfcc27636cb4d91847df6a12f4364
