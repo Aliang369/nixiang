@@ -72,12 +72,12 @@ struct HookCfg { const char* tag; uintptr_t rva; int kind; int forceRet; };
 static const HookCfg kHookCfg[] = {
     // v2.0 正式版：只留真正生效的两组
     {"energygate", 0x3006D98, 4, 0xE8},   // kind4：ActionButton+0xE8=1（能量门禁恒过）
-    {"skidA",      0x35546B0, 2, 1},      // IAGGDOCLNND::OIKKANJOLNC（static bool）
+    {"skidA",      0x35546B0, 2, 1},      // OPFGEEDKKAM::OIKKANJOLNC（static bool，dump L167304 / IFix 0x1981）
     {"skidC",      0x3608534, 2, 1},      // IDNHEGOKGNA::OIKKANJOLNC
     {"skidD",      0x349EB1C, 2, 1},      // PFNDCCBPLGI::OIKKANJOLNC
     {"skidE",      0x359516C, 2, 1},      // POBKCDEHPNK::OIKKANJOLNC
     {"skidF",      0x35FD1E8, 2, 1},      // IDNHEGOKGNA::KFFALNFHHJL（含 float 参数）
-    {"skidB",      0x35547E4, 8, 0},      // FEJHANBJNCK（void：直接返回，不写冷却）
+    {"skidB",      0x35547E4, 8, 0},      // OPFGEEDKKAM::FEJHANBJNCK（static void，dump L167308 / IFix 0x971C；写冷却起点）
 };
 
 // 技能属性写入（v1.9.5 已证明写入成功且不被覆盖，留作对照，不再用于解释技能效果）
@@ -1293,6 +1293,7 @@ static int  g_grpBefore[6] = {0, 0, 0, 0, 0, 0};
 static bool g_grpHad[6]    = {false, false, false, false, false, false};
 static bool g_grpLogged   = false;
 static AttrSaved g_attrSaved;
+static uint64_t g_lastAttr62Log = 0;      // v2.1：attr62 每 tick 重写结果日志节流
 static uint64_t g_lastAttrViewLog = 0;
 static uint64_t g_lastHitViewLog = 0;
 
@@ -1353,17 +1354,25 @@ static void AttrApplyPass(const UnitSlot* us, int n, bool godOn, int dmgMult, bo
         AttrImplResolve(oknd);   // v1.9.1：实现类判别 + 方法解析
 
         // ---- 无敌：values[62] = 1（DAMAGE_GUARD，G6 静态已证是真正开关）----
+        // v2.1：oknd 是 PHBGLMHPMMC::IFEHBJOMMMB 返回的 state+0x58 —— **重算产物**。
+        //   脏标记 state+0x60 置位时 FGFFAOCKMEG 会用 state+0x50(基础)+0xC0(修正层)
+        //   合并出一个新容器写回 +0x58（0x36A2374 str x8,[x19,#0x58]），旧的写入随旧对象作废，
+        //   而伤害路径恰好"先重算(0x3642A2C)、再读 62(0x3646840)" ⇒ 偶发掉血的窗口一直存在。
+        //   因此这里每 tick **无条件重写** + 读回重试；真正的确定性拦截在 Stub_Dmg 的 god-block。
         if (godOn) {
             if (!g_attrSaved.has62) { int b0 = 0; if (AttrRwRead(oknd, 62, &b0)) { g_attrSaved.before62 = b0; g_attrSaved.has62 = true; } }
-            int before = 0;
-            if (!AttrRwRead(oknd, 62, &before)) {
-                LOGW(ABS_LOG " attr skip reason=id62 unreadable impl=%s", g_impl.name);
-            } else if (before != 1) {
-                AttrRwWrite(oknd, 62, 1, "attr62");
+            bool wrote = false;
+            int lastAfter = -999;
+            for (int tries = 0; tries < 3 && !wrote; ++tries) {
+                if (!AttrRwWrite(oknd, 62, 1, "attr62")) break;
                 int after = -999;
-                AttrRwRead(oknd, 62, &after);
-                if (after == 1) LOGI(ABS_LOG " attr62 set=%d before=%d after=%d", 1, before, after);
-                else LOGW(ABS_LOG " attr write-fail id=62 before=%d target=1 after=%d", before, after);
+                if (AttrRwRead(oknd, 62, &after) && after == 1) { wrote = true; lastAfter = after; }
+                else lastAfter = after;
+            }
+            if (now - g_lastAttr62Log > 5000) {
+                g_lastAttr62Log = now;
+                if (wrote) LOGI(ABS_LOG " attr62 tick-write=1 ok impl=%s", g_impl.name);
+                else LOGW(ABS_LOG " attr62 tick-write-fail impl=%s after=%d（容器被重算替换的典型表现）", g_impl.name, lastAfter);
             }
         } else if (g_attrSaved.has62) {
             AttrRwWrite(oknd, 62, g_attrSaved.before62, "attr62");
@@ -1426,7 +1435,7 @@ static void AttrApplyPass(const UnitSlot* us, int n, bool godOn, int dmgMult, bo
             }
         }
         AttrViewLog(u, oknd, now);
-        return;
+        // v2.1：v2.0 此处 return ⇒ 只处理第一个玩家单位；改为 continue 覆盖全部 faction==PLAYER
     }
 }
 
@@ -1908,6 +1917,7 @@ static void HookProbeRun() {
 
 static std::atomic<int>  g_dmgHookN{0};
 static uint64_t          g_lastDmgPayloadLog = 0;
+static uint64_t          g_lastGodDmgLog = 0;      // v2.1：无敌拦截日志节流
 static const uint64_t     kDmgLogInterval = 5000;   // v2.0：载荷日志 5s 节流
 typedef void (*fn_dmg_t)(void*, void*, void*, void*);
 static fn_dmg_t g_dmgOrig = nullptr;
@@ -1944,46 +1954,102 @@ static bool LooksLikeUnit(void* p) {
     return f >= 0 && f <= 2;
 }
 
+// v2.1：按载荷 +0x14 解析伤害来源。
+//   静态实证（12_修复_伤害倍率阵营.md）：BLKEJBDMGAB 的 this 是**受击者**
+//   （扣血落在 this+0x120 的 state 上：0x354B510 ldr x0,[x19,#0x120] → 0x354B51C/0x354B558）；
+//   来源 = payload+0x14 → Unit::BMNEKPDMFCK(0x3541284)（0x354B4A0 ldr w22,[x20,#0x14]
+//   → 0x354B4B8 bl → 0x354B4C4 mov x22,x0 → 0x354B4F8 mov x1,x19 作为 src 传给 JMIKMDBLCHB）。
+static void* ResolveUnitById(int32_t id) {
+    if (id <= 0) return nullptr;
+    static void* fn = nullptr;
+    static bool tried = false;
+    if (!tried) {
+        tried = true;
+        fn = ResolveMethodPtr(g_image, "Unit", "BMNEKPDMFCK", 0x3541284, "unitbyid");
+    }
+    if (!fn) return nullptr;
+    void* u = nullptr;
+    Guarded("dmg_unitbyid", [&] { u = ((void* (*)(int32_t))fn)(id); });
+    return OkPtr(u) ? u : nullptr;
+}
+
+static int UnitFactionOf(void* u) {
+    if (!OkPtr(u) || !g_anchors.faction.ok) return -1;
+    if (!RangePerm((uintptr_t)u + g_anchors.faction.off, 4, 1)) return -1;
+    int f = -1;
+    Guarded("dmg_faction", [&] { f = ReadI32(u, g_anchors.faction.off); });
+    return (f >= 0 && f <= 2) ? f : -1;
+}
+
 static void Stub_Dmg(void* a0, void* a1, void* a2, void* a3) {
     int n = ++g_dmgHookN;
     int mult = g_dmgX.load();
+    const bool godOn = g_god.load();
     // 载荷候选：成员函数时 a1 是载荷；非成员时 a0 是载荷。用「像不像 Unit」判定
     void* payload = nullptr;
     if (LooksLikeUnit(a0) && OkPtr(a1) && RangePerm((uintptr_t)a1 + 0x28, 8, 1)) payload = a1;
-    if (payload && mult > 1) {
+    if (!payload) {
+        if (n == 1 || (n % 50) == 0) LOGI(ABS_LOG " hook_ok dmg n=%d mult=%d payload=null", n, mult);
+        if (g_dmgOrig) g_dmgOrig(a0, a1, a2, a3);
+        return;
+    }
+
+    int32_t srcId = 0;
+    std::memcpy(&srcId, (const char*)payload + 0x14, 4);
+    void* attacker = ResolveUnitById(srcId);
+    const int af = attacker ? UnitFactionOf(attacker) : -1;
+    uint64_t now = NowMs();
+
+    // v2.1 无敌兜底：来源不是玩家（怪物/敌方技能）时本帧伤害清零。
+    //   不依赖 attr62 的写入窗口（state+0x58 是重算产物，见 13_修复_无敌.md），
+    //   清零范围与游戏自身 guard 分支一致（0x3646CFC +0x24 / 0x3646D04 +0x38）。
+    if (godOn && af >= 0 && af != kFactionPlayer) {
+        unsigned char zc[0x60];
+        std::memcpy(zc, payload, sizeof(zc));
+        int32_t z24 = 0;
+        int64_t z28 = 0, z38 = 0;
+        std::memcpy(zc + 0x24, &z24, 4);
+        std::memcpy(zc + 0x28, &z28, 8);
+        std::memcpy(zc + 0x38, &z38, 8);
+        if (now - g_lastGodDmgLog > 3000) {
+            g_lastGodDmgLog = now;
+            LOGI(ABS_LOG " dmgx god-block src_id=%d af=%d victim=%p n=%d", srcId, af, a0, n);
+        }
+        if (g_dmgOrig) g_dmgOrig(a0, zc, a2, a3);
+        return;
+    }
+
+    // v2.1 倍率：只对玩家来源生效；只乘 +0x28 / +0x38（delta 两分量）。
+    //   +0x24 是 KCIMFCENEIN 元素枚举（0..6），v2.0 误乘，会写坏元素类型 ⇒ 已移除。
+    if (af == kFactionPlayer && mult > 1) {
         if (mult > 100) mult = 100;                       // 上限钳制
         unsigned char copy[0x60];
         std::memcpy(copy, payload, sizeof(copy));
-        // 三分量：+0x24(int) / +0x28(long) / +0x38(long)；delta = +0x28 + +0x38
-        int32_t p24 = 0;
         int64_t p28 = 0, p38 = 0;
-        std::memcpy(&p24, copy + 0x24, 4);
         std::memcpy(&p28, copy + 0x28, 8);
         std::memcpy(&p38, copy + 0x38, 8);
-        const int32_t n24 = p24 * mult;
-        const int64_t n28 = p28 * (int64_t)mult;
-        const int64_t n38 = p38 * (int64_t)mult;
-        uint64_t now = NowMs();
-        if (p24 == 0 && p28 == 0 && p38 == 0) {
+        if (p28 == 0 && p38 == 0) {
             if (now - g_lastDmgPayloadLog > kDmgLogInterval) {
                 g_lastDmgPayloadLog = now;
-                LOGI(ABS_LOG " dmgx zero-payload skip=1 mult=%d n=%d（三分量全 0，不改）", mult, n);
+                LOGI(ABS_LOG " dmgx zero-payload skip=1 mult=%d n=%d（两分量全 0，不改）", mult, n);
             }
             if (g_dmgOrig) g_dmgOrig(a0, payload, a2, a3);
             return;
         }
-        std::memcpy(copy + 0x24, &n24, 4);
+        const int64_t n28 = p28 * (int64_t)mult;
+        const int64_t n38 = p38 * (int64_t)mult;
         std::memcpy(copy + 0x28, &n28, 8);
         std::memcpy(copy + 0x38, &n38, 8);   // +0x40(float) 不动（只用于表现）
         if (now - g_lastDmgPayloadLog > kDmgLogInterval) {
             g_lastDmgPayloadLog = now;
-            LOGI(ABS_LOG " dmgx payload-copy mult=%d p24=%d->%d p28=%lld->%lld p38=%lld->%lld copy=0x60 n=%d",
-                 mult, p24, n24, (long long)p28, (long long)n28, (long long)p38, (long long)n38, n);
+            LOGI(ABS_LOG " dmgx payload-copy mult=%d src_id=%d af=%d p28=%lld->%lld p38=%lld->%lld copy=0x60 n=%d",
+                 mult, srcId, af, (long long)p28, (long long)n28, (long long)p38, (long long)n38, n);
         }
         if (g_dmgOrig) g_dmgOrig(a0, copy, a2, a3);
         return;
     }
-    if (n == 1 || (n % 50) == 0) LOGI(ABS_LOG " hook_ok dmg n=%d mult=%d payload=%p", n, mult, payload);
+
+    if (n == 1 || (n % 100) == 0) LOGI(ABS_LOG " dmgx passthrough src_id=%d af=%d mult=%d god=%d", srcId, af, mult, (int)godOn);
     if (g_dmgOrig) g_dmgOrig(a0, a1, a2, a3);
 }
 
@@ -2030,15 +2096,33 @@ static int ForceRun(int i, void* a0, void* a1, void* a2, void* a3) {
     return s.forceRet;
 }
 
-// kind8：void 函数 —— 什么都不做直接返回（不调原函数）；日志 hookvoid
-static void VoidRun(int i) {
+typedef void (*fn_v4_t)(void*, void*, void*, void*);
+
+// kind8：void 函数 —— 开关开时直返（不写冷却起点），开关关时调原函数完全透传。
+//   v2.1：v2.0 这里**没有 g_skill 判定**，装上就恒生效 ⇒ 关掉菜单「无限技能」后
+//   0x35547E4(OPFGEEDKKAM::FEJHANBJNCK) 依旧不被调用、CD 起点永不记录，
+//   表现为"菜单按了没反应"（14_修复_无限技能.md）。
+static void VoidRun(int i, void* a0, void* a1, void* a2, void* a3) {
     HookSlot& s = g_hook[i];
+    if (!g_skill.load()) {                        // 开关关：调原函数，完全透传
+        if (s.orig) ((fn_v4_t)s.orig)(a0, a1, a2, a3);
+        return;
+    }
     int n = ++s.n;
     if (n == 1) LOGI(ABS_LOG " hook installed tag=%s（void 直返，首次）", s.tag);
 }
 
-static int SetByteRun(int i, void* a0) {
+// kind4：能量门禁（ActionButton+0xE8）
+//   v2.1：v2.0 同样没有 g_skill 判定 ⇒ 关掉菜单后 0x3006D98 依旧恒写 +0xE8=1、恒返回 1。
+static int SetByteRun(int i, void* a0, void* a1, void* a2, void* a3) {
     HookSlot& s = g_hook[i];
+    if (!g_skill.load()) {                        // 开关关：调原函数，完全透传
+        if (s.orig) return ((fn_i4_t)s.orig)(a0, a1, a2, a3);
+        // 无 orig（Dobby 未回填）时不能返回 1 —— 那等于"关闭态仍恒过门禁"，与关闭语义相反
+        static std::atomic<bool> warned{false};
+        if (!warned.exchange(true)) LOGW(ABS_LOG " hookset tag=%s 关闭态缺 orig，返回 0（不放行）", s.tag);
+        return 0;
+    }
     int n = ++s.n;
     if (a0 && s.forceRet > 0) {
         uint8_t* p = reinterpret_cast<uint8_t*>((uintptr_t)a0 + (uintptr_t)s.forceRet);
@@ -2066,8 +2150,8 @@ static UiObs g_ui[64];
 
 
 #define HOOK_STUB_R(k) static int  HookR##k(void* a, void* b, void* c, void* d) { return ForceRun(k, a, b, c, d); }
-#define HOOK_STUB_S(k) static int  HookS##k(void* a, void* b, void* c, void* d) { (void)b; (void)c; (void)d; return SetByteRun(k, a); }
-#define HOOK_STUB_V(k) static void HookV##k(void* a, void* b, void* c, void* d) { (void)a; (void)b; (void)c; (void)d; VoidRun(k); }
+#define HOOK_STUB_S(k) static int  HookS##k(void* a, void* b, void* c, void* d) { return SetByteRun(k, a, b, c, d); }
+#define HOOK_STUB_V(k) static void HookV##k(void* a, void* b, void* c, void* d) { VoidRun(k, a, b, c, d); }
 
 // v2.0：只保留正式版用到的三种桩（force/setbyte/void），每槽独立入口
 HOOK_STUB_R(0) HOOK_STUB_S(0) HOOK_STUB_V(0)

@@ -1,0 +1,20 @@
+{
+  "game_dir": "E:/nixiang/08_output/阿比斯少年冒险团",
+  "keep": "abssnmxt_2.36_v1.1.apk",
+  "keep_size": 1133647158,
+  "keep_md5": "33551ecbe54315c775348d132e46c9c5",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "abssnmxt_2.36_v1.1.apk.idsig",
+      "size": 8934939,
+      "md5": "b106b9f90d972da36a7db3dd31fcf067"
+    },
+    {
+      "name": "阿比斯少年冒险团_2.36_starry_signed.apk",
+      "size": 1133647158,
+      "md5": "cf4a08f4c3a49a12900da4a888527385"
+    }
+  ],
+  "removed_count": 2
+}
