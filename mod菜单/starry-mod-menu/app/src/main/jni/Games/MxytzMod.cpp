@@ -1838,6 +1838,10 @@ static void InterpFire(uint16_t kinds, uint8_t argBase, void* a0, void* a1, void
     if (kinds & K_DOATTACK) MxytzBattle::OnFrame(MxytzBattle::FRAME_DOATTACK, a1, argBase);
     if (kinds & K_PROJ) MxytzBattle::OnFrame(MxytzBattle::FRAME_PROJADD, a1, argBase);
     if (kinds & K_PROJEXEC) MxytzBattle::OnFrame(MxytzBattle::FRAME_PROJEXEC, a1, argBase);
+    /* v3（2026-11-16）：Character::Damage 帧转发给 MxytzBattle（#2 第二层：服务端同步伤害
+     * 路径不检查免疫位，见 MxytzBattle.cpp DamageFrame 头注释）。类/方法名与 kKinds 均未改，
+     * 只是把已存在的 K_DAMAGE 位从「仅取证」升级为「转发 + 取证」。 */
+    if (kinds & K_DAMAGE) MxytzBattle::OnFrame(MxytzBattle::FRAME_DAMAGE, a1, argBase);
     /* 免广告（#4）—— 逐字保留 v48~v52 已真机定案的三条落点 */
     if (kinds & K_ADRESULT) ForceTrueArg(a1, argBase, 0, "OnResult");
     if (kinds & K_ADREWARD) ForceTrueArg(a1, argBase, 1, "Dispatch");

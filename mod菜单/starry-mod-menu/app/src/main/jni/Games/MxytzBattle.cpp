@@ -172,6 +172,102 @@ static size_t OffAny(void* klass, const char* const* names, size_t n) {
     return 0;
 }
 
+/* ===== 沿父类链的字段解析（2026-11-16 v3，真机 ID ok=0 的根因修复）=====
+ * 实测根因（lead 的 verify 反编译结论，逐字字段名）：
+ *   il2cpp_class_get_field_from_name 只查**本类**字段，**不沿父类链**；而本作用到的关键字段
+ *   多数声明在基类：
+ *     _hitter        → InteractiveGameObject.cs:16（基类）
+ *     _state         → ActionGameObject.cs:20（protected，基类；公开访问器是属性 state）
+ *     _characterData → Character→SimpleCharacter→InteractiveGameObject→ActionGameObject 链上
+ *     _player        → GameObjectManager.cs:38（本类，下划线名；属性名才是 player）
+ *   v2 之前 Off 只查本类 ⇒ hitter/state/cdata 全解析不到 ⇒ 身份链恒空（真机一整局 ID ok=0）。
+ * 逐级向上最多 16 级防环；命中回填 depth（0 = 本类，1 = 父类 …）。失败返回 nullptr（fail-closed）。 */
+static void* FindFieldDeep(void* klass, const char* name, int* outDepth) {
+    if (outDepth) *outDepth = -1;
+    if (!klass || !name) return nullptr;
+    auto& api = GetApi();
+    if (!api.class_get_field) return nullptr;
+    void* k = klass;
+    for (int d = 0; d < 16 && k; d++) {
+        if (!starptr::InUserVa(reinterpret_cast<uintptr_t>(k))) return nullptr;
+        void* f = api.class_get_field(k, name);
+        if (f) {
+            if (outDepth) *outDepth = d;
+            return f;
+        }
+        if (!api.class_parent) return nullptr;
+        k = api.class_parent(k);
+    }
+    return nullptr;
+}
+
+struct DeepSlot {
+    const void* klass;
+    const char* name;
+    size_t off;
+    int depth;
+};
+static DeepSlot g_deep[32];
+static std::atomic<uint32_t> g_deepN{0};
+
+/** FindFieldDeep 的缓存版（缓存键 = klass + 名字；与 Off 同款「klass 自证」防野指针）。 */
+static size_t OffDeep(void* klass, const char* name, int* outDepth) {
+    if (outDepth) *outDepth = -1;
+    if (!klass || !name) return 0;
+    const void* kk = reinterpret_cast<const void*>(Un(klass));
+    if (!starptr::InUserVa(reinterpret_cast<uintptr_t>(kk))) return 0;
+    const uintptr_t kname = *reinterpret_cast<const uintptr_t*>(reinterpret_cast<uintptr_t>(kk) + 0x10);
+    if (!starptr::InUserVa(kname)) return 0;
+    const uint32_t n = g_deepN.load(std::memory_order_relaxed);
+    for (uint32_t i = 0; i < n && i < 32; i++)
+        if (g_deep[i].klass == kk && g_deep[i].name == name) {
+            if (outDepth) *outDepth = g_deep[i].depth;
+            return g_deep[i].off;
+        }
+    int d = -1;
+    void* f = FindFieldDeep(const_cast<void*>(kk), name, &d);
+    size_t o = 0;
+    if (f) {
+        auto& api = GetApi();
+        if (api.field_offset) {
+            o = api.field_offset(f);
+            if (o > 0x1000) o = 0;
+        }
+    }
+    if (n < 32) {
+        g_deep[n].klass = kk;
+        g_deep[n].name = name;
+        g_deep[n].off = o;
+        g_deep[n].depth = d;
+        g_deepN.store(n + 1, std::memory_order_relaxed);
+        if (o) BLOG(BT_LOG " 字段(深) %s +0x%zx @%d", name, o, d);
+    }
+    if (outDepth) *outDepth = d;
+    return o;
+}
+
+/** 多候选名 + 沿父类链（属性 ⇒ backing 字段命名不统一时的兜底）。 */
+static size_t OffDAny(void* klass, const char* const* names, size_t n, int* outDepth) {
+    for (size_t i = 0; i < n; i++) {
+        const size_t o = OffDeep(klass, names[i], outDepth);
+        if (o) return o;
+    }
+    return 0;
+}
+
+/** 静态字段（沿父类链）取值：field_static_get(FieldInfo, void* out)。 */
+static void* StaticFieldDeep(void* klass, const char* name, int* outDepth) {
+    int d = -1;
+    void* f = FindFieldDeep(klass, name, &d);
+    if (outDepth) *outDepth = d;
+    if (!f) return nullptr;
+    auto& api = GetApi();
+    if (!api.field_static_get) return nullptr;
+    void* v = nullptr;
+    api.field_static_get(f, &v);
+    return v;
+}
+
 static inline void* KOf(const void* obj) {
     auto& api = GetApi();
     if (!obj || !api.object_class) return nullptr;
@@ -191,7 +287,7 @@ static uint64_t RoleOf(void* obj) {
     if (!Plaus(obj)) return 0;
     void* k = KOf(obj);
     if (!k) return 0;
-    const size_t cdOff = OffAny(k, kCdataNames, sizeof(kCdataNames) / sizeof(kCdataNames[0]));
+    const size_t cdOff = OffDAny(k, kCdataNames, sizeof(kCdataNames) / sizeof(kCdataNames[0]), nullptr);
     if (!cdOff) return 0;
     void* cd = RefAt(Un(obj), cdOff);
     if (!cd) return 0;
@@ -208,7 +304,7 @@ static int32_t CtypeOf(void* obj) {
     if (!Plaus(obj)) return -1;
     void* k = KOf(obj);
     if (!k) return -1;
-    const size_t cdOff = OffAny(k, kCdataNames, sizeof(kCdataNames) / sizeof(kCdataNames[0]));
+    const size_t cdOff = OffDAny(k, kCdataNames, sizeof(kCdataNames) / sizeof(kCdataNames[0]), nullptr);
     if (!cdOff) return -1;
     void* cd = RefAt(Un(obj), cdOff);
     if (!cd) return -1;
@@ -224,7 +320,7 @@ static uintptr_t HitterOf(void* obj) {
     if (!Plaus(obj)) return 0;
     void* k = KOf(obj);
     if (!k) return 0;
-    const size_t ho = Off(k, "_hitter");
+    const size_t ho = OffDeep(k, "_hitter", nullptr);
     if (!ho) return 0;
     return Un(RefAt(Un(obj), ho));
 }
@@ -240,26 +336,74 @@ static int32_t CampOf(void* obj) {
     return I32At(h, co);
 }
 
+/* v3：管理器的**静态字段名**两个变体都试（属性 gameObjectManager 的 backing 可能是
+ * _gameObjectManager）；_player 走沿父类链解析。命中结果缓存，命中名回显进 IDFIX 日志。 */
+static const char* g_mgrFieldName = nullptr;
+static int g_mgrFieldDepth = -1;
+static size_t g_plOff = 0;
+static int g_plDepth = -1;
+static std::atomic<bool> g_idFixLogged{false};
+
+/** 一次性解析快照（每进程一条，不在热路径）。 */
+static void LogIdFixOnce(void* pl) {
+    if (g_idFixLogged.exchange(true, std::memory_order_relaxed)) return;
+    void* pk = pl ? KOf(pl) : nullptr;
+    if (!pk) pk = KC("Character");
+    int dH = -1, dS = -1, dC = -1;
+    const size_t ho = pk ? OffDeep(pk, "_hitter", &dH) : 0;
+    const size_t so = pk ? OffDeep(pk, "_state", &dS) : 0;
+    const size_t co = pk ? OffDAny(pk, kCdataNames, sizeof(kCdataNames) / sizeof(kCdataNames[0]), &dC) : 0;
+    LOGI(BT_LOG " IDFIX managerField=%s(@%d) playerOff=0x%zx(@%d) hitterOff=0x%zx(@%d) "
+                "stateOff=0x%zx(@%d) cdataOff=0x%zx(@%d)",
+         g_mgrFieldName ? g_mgrFieldName : "?", g_mgrFieldDepth, g_plOff, g_plDepth, ho, dH, so, dS,
+         co, dC);
+}
+
 static void RefreshPlayer() {
     auto& api = GetApi();
     if (!api.ready) return;
     void* bec = KC("BattleElementCenter");
     if (!bec) return;
-    void* gm = api.StaticRefField(bec, "gameObjectManager");
+    /* 静态字段名两变体：命中一次后固定用它（两个都记日志，避免下次再猜） */
+    void* gm = nullptr;
+    if (g_mgrFieldName) {
+        int d = -1;
+        gm = StaticFieldDeep(bec, g_mgrFieldName, &d);
+    } else {
+        static const char* const kMgrNames[] = {"gameObjectManager", "_gameObjectManager"};
+        for (size_t i = 0; i < 2 && !gm; i++) {
+            int d = -1;
+            void* v = StaticFieldDeep(bec, kMgrNames[i], &d);
+            if (Plaus(v)) {
+                gm = v;
+                g_mgrFieldName = kMgrNames[i];
+                g_mgrFieldDepth = d;
+                LOGI(BT_LOG " 管理器字段命中 %s(@%d) = %p", kMgrNames[i], d, v);
+            } else {
+                BLOG(BT_LOG " 管理器字段 %s 解析不到(@%d)", kMgrNames[i], d);
+            }
+        }
+    }
     if (!Plaus(gm)) {
         g_player.store(0, std::memory_order_relaxed);
+        LogIdFixOnce(nullptr);
         return;
     }
     void* gk = KOf(gm);
     if (!gk) return;
-    static size_t s_plOff = 0;
-    if (!s_plOff) {
-        s_plOff = Off(gk, "_player");
-        if (!s_plOff) return;
+    if (!g_plOff) {
+        g_plOff = OffDeep(gk, "_player", &g_plDepth);
+        if (!g_plOff) {
+            LogIdFixOnce(nullptr);
+            return;
+        }
     }
-    void* pl = RefAt(Un(gm), s_plOff);
+    void* pl = RefAt(Un(gm), g_plOff);
+    /* 解释器可能把槽里的引用打 tag（starptr::Untag 见 RefAt），这里再兜一次 */
+    if (!Plaus(pl)) pl = reinterpret_cast<void*>(Un(pl));
     if (!Plaus(pl)) {
         g_player.store(0, std::memory_order_relaxed);
+        LogIdFixOnce(nullptr);
         return;
     }
     const uintptr_t plU = Un(pl);
@@ -273,6 +417,7 @@ static void RefreshPlayer() {
         const uint64_t oldR = g_playerRole.exchange(r, std::memory_order_relaxed);
         if (oldR != r) LOGI(BT_LOG " 玩家 roleId=%llu（刷新）", static_cast<unsigned long long>(r));
     }
+    LogIdFixOnce(pl);
 }
 
 /** 这个对象是不是「玩家侧」（本体 / 同 roleId 的分身与战斗 Character / 同 `_hitter`）。
@@ -375,6 +520,79 @@ static bool ParaLayoutReady(void* para) {
     return true;
 }
 
+/* ================= BigInt 字段偏移：按名自证 + 回退（2026-11-16 B站 2.0.1 轮）=================
+ * 证据：10_docs/冒险与征途/bili_2.0.1_热更程序集对照.md
+ *   · 2.0.1 热更 dll 的 BigInt 字段名带 m_ 前缀（m_mantissa double / m_exponent int32）；
+ *     1.5.9 时代是 mantissa / exponent。
+ *   · 新版热更 dll 没有 FieldLayout（字段偏移全靠推断）⇒「+0 double / +8 int32」是布局假设。
+ *   做法：运行期拿 BigInt klass 后按名取两次（先 m_ 前缀，再旧名），两值都拿到且
+ *         mantOff<0x20 && expOff<0x20 && expOff>=mantOff+8 才采用，否则回退 +0/+8。
+ *   自证口径：日志一行 "BigInt off=mant+0x.. exp+0x.. (src=field|fallback)" 即可判来源。 */
+struct BigIntLayout {
+    size_t mantOff;
+    size_t expOff;
+    bool tried;
+    const char* src;
+    int vt;          /* 1 = 已做「值类型成员字段」校正（-0x10），0 = 未校正 */
+};
+static BigIntLayout g_bi{0, 8, false, "default", 0};
+
+static void EnsureBigIntLayout() {
+    if (g_bi.tried) return;
+    g_bi.tried = true;
+    auto& api = GetApi();
+    void* kb = KC("BigInt");   /* 无命名空间（_钩子目标与语义.md 类型表：BigInt 0x020000CB，struct） */
+    if (!Plaus(kb) || !api.class_get_field || !api.field_offset) {
+        LOGI(BT_LOG " BigInt off=mant+0x%zx exp+0x%zx (src=fallback:no-class)", g_bi.mantOff,
+             g_bi.expOff);
+        return;
+    }
+    /* 用 class_get_field + field_offset 而非 Api::FieldOffset：值类型 struct 的 mantissa
+     * 可能正好在 +0，而 FieldOffset 的 0 既表示「不存在」也表示「偏移 0」，必须区分。 */
+    auto foff = [&](const char* n) -> long {
+        void* f = api.class_get_field(kb, n);
+        if (!f) return -1;
+        return static_cast<long>(api.field_offset(f));
+    };
+    static const char* const kMant[] = {"m_mantissa", "mantissa"};
+    static const char* const kExp[] = {"m_exponent", "exponent"};
+    for (size_t i = 0; i < 2; i++) {
+        const long m = foff(kMant[i]);
+        const long e = foff(kExp[i]);
+        if (m < 0 || e < 0) continue;
+        if (m < 0x20 && e < 0x20 && e >= m + 8) {
+            g_bi.mantOff = static_cast<size_t>(m);
+            g_bi.expOff = static_cast<size_t>(e);
+            g_bi.src = "field";
+            break;
+        }
+    }
+    /* ★v2（2026-11-16 真机实测根因）：il2cpp_field_get_offset 对**值类型成员字段**返回的偏移
+     *   含对象头 0x10 ⇒ 实测日志出现 mant+0x10 / exp+0x18。而 BigInt 是内联在 CtagHurtHPPara
+     *   里的 struct，真实布局就是 mant+0 / exp+8（旧版硬编码 +0/+8 之所以有效的原因）。
+     *   不校正的后果：写到紧随其后的 m_llCalculateDamage，而结算走 GetValue()→m_llValue
+     *   ⇒ 改的是孤儿字段，功能静默无效（日志里「改前 m=2.8080」其实是 CalculateDamage 的值）。
+     *   判据（lead 定）：mantOff>=0x10 且 expOff==mantOff+8 ⇒ 视为值类型，两偏移各减 0x10；
+     *   减完必须正好是 0 / 8 才采信 src=field-vt，否则回退硬编码 0/8 并记 src=fallback。 */
+    if (g_bi.src && strcmp(g_bi.src, "field") == 0 && g_bi.mantOff >= 0x10 &&
+        g_bi.expOff == g_bi.mantOff + 8) {
+        const size_t m2 = g_bi.mantOff - 0x10;
+        const size_t e2 = g_bi.expOff - 0x10;
+        if (m2 == 0 && e2 == 8) {
+            g_bi.mantOff = m2;
+            g_bi.expOff = e2;
+            g_bi.src = "field-vt";
+            g_bi.vt = 1;
+        } else {
+            g_bi.mantOff = 0;
+            g_bi.expOff = 8;
+            g_bi.src = "fallback";
+        }
+    }
+    LOGI(BT_LOG " BigInt off=mant+0x%zx exp+0x%zx (src=%s vt=%d)", g_bi.mantOff, g_bi.expOff,
+         g_bi.src, g_bi.vt);
+}
+
 static void HurtFrame(void* a1, uint8_t argBase) {
     if (!Plaus(a1)) return;
     /* 静态方法（`Hurt` 是静态，PROVEN）：第一个 IL 参数在槽 `argBase`（=0）。 */
@@ -417,10 +635,11 @@ static void HurtFrame(void* a1, uint8_t argBase) {
     }
 
     /* ③ 改值：BigInt = mantissa(double) × 10^exponent。写前做值合理性闸（NaN/越界一律不写）。 */
+    EnsureBigIntLayout();
     const size_t vOff = pU + g_para.offValue;
     double mant = 0.0;
-    memcpy(&mant, reinterpret_cast<const void*>(vOff), 8);
-    int32_t exp = I32At(vOff, 8);
+    memcpy(&mant, reinterpret_cast<const void*>(vOff + g_bi.mantOff), 8);
+    int32_t exp = I32At(vOff, g_bi.expOff);
     if (!(mant >= 0.0) || !std::isfinite(mant) || mant > 1.0e9 || exp < -40 || exp > 60) {
         g_statKillSkip.fetch_add(1, std::memory_order_relaxed);
         return;
@@ -432,13 +651,24 @@ static void HurtFrame(void* a1, uint8_t argBase) {
         mant /= 10.0;
         exp += 1;
     }
-    memcpy(reinterpret_cast<void*>(vOff), &mant, 8);
-    SetI32(vOff, 8, exp);
+    memcpy(reinterpret_cast<void*>(vOff + g_bi.mantOff), &mant, 8);
+    SetI32(vOff, g_bi.expOff, exp);
 
     const uint32_t n = g_statKill.fetch_add(1, std::memory_order_relaxed) + 1;
     if (n <= 20 || (n % 200) == 0)
         LOGI(BT_LOG " 打怪#%u ctype=%d | 改前 m=%.4f e=%d → 改后 m=%.4f e=%d", n, ctype,
              oldMant, oldExp, mant, exp);
+    /* v2 诊断（首 20 次）：写后**双向读回** —— 同一次 Hurt 里 m_llValue 与 m_llCalculateDamage
+     * 各读一遍，用来确认我们到底改到了哪个字段（判 #1 是否真生效的唯一硬证据）。 */
+    if (n <= 20) {
+        double rdVal = 0.0;
+        double rdCalc = 0.0;
+        memcpy(&rdVal, reinterpret_cast<const void*>(vOff + g_bi.mantOff), 8);
+        memcpy(&rdCalc, reinterpret_cast<const void*>(vOff + 0x10 + g_bi.mantOff), 8);
+        LOGI(BT_LOG " RD#%u Value(+0x%zx) m=%.4f e=%d | Calc(+0x%zx) m=%.4f e=%d | offValue=0x%zx",
+             n, g_bi.mantOff, rdVal, I32At(vOff, g_bi.expOff), 0x10 + g_bi.mantOff, rdCalc,
+             I32At(vOff, 0x10 + g_bi.expOff), g_para.offValue);
+    }
 }
 
 /* ============================ §5 功能 2：无敌 ============================ */
@@ -458,6 +688,7 @@ struct InvBit {
 };
 static InvBit g_invBits[8];
 static std::atomic<uint32_t> g_invBitN{0};
+static std::atomic<uint32_t> g_statInvWrite{0};   /* v2 诊断：免疫位写入次数 */
 
 /** 维持玩家免疫位（每拍调）。只写 0/1，且只写「当前不是 1」的那些。 */
 static void EnsureInvulnBits() {
@@ -466,7 +697,7 @@ static void EnsureInvulnBits() {
     auto& api = GetApi();
     void* k = api.object_class(reinterpret_cast<void*>(pl));
     if (!Plaus(k)) return;
-    const size_t so = Off(k, "_state");
+    const size_t so = OffDeep(k, "_state", nullptr);
     if (!so) return;
     void* st = RefAt(pl, so);
     if (!st) return;
@@ -497,6 +728,15 @@ static void EnsureInvulnBits() {
         g_statInvState.fetch_add(1, std::memory_order_relaxed);
         if (g_statInvState.load(std::memory_order_relaxed) <= 6)
             LOGI(BT_LOG " 无敌 免疫位 %s +0x%zx → 1", kImmuneNames[i], o);
+        /* v2 诊断：写入对象是谁 —— ActionState 地址 / 其 klass 名 / 字段名 / 偏移 / 原值。
+         * 若这里的 cls 不是玩家自己的 state 类（或 state 地址每拍都变），就能立刻看出 #2 为什么无效。 */
+        const uint32_t wn = g_statInvWrite.fetch_add(1, std::memory_order_relaxed) + 1;
+        if (wn <= 20 || (wn % 200) == 0) {
+            const char* cls = (api.class_name && Plaus(sk)) ? api.class_name(sk) : "?";
+            LOGI(BT_LOG " IMMUNE state=%p cls=%s field=%s off=0x%zx old=%d",
+                 reinterpret_cast<void*>(Un(st)), cls ? cls : "?", kImmuneNames[i], o,
+                 static_cast<int>(cur));
+        }
     }
 }
 
@@ -516,6 +756,19 @@ static void RestoreInvulnBits() {
  *  官方现成路径（`_钩子目标与语义.md` §2.2，IL_0039-0044）：
  *    `if (accepter != null && accepter.interactiveGameObject == null) return;`
  *    ⇒ 置空等价于「本次命中作废」，不结算、不飘字、不触发死亡。 */
+/* v2 诊断计数器（lead 要求：#2 本轮不猜、只加观测） */
+static std::atomic<uint32_t> g_statDoAtkSeen{0};
+
+/** #2 诊断：DoAttack 帧的结构快照（首 20 次 + 每 200 次一条，热路径不刷屏）。
+ *  argc=7 是 StarsCollider::DoAttack(IAttack,IAccept,AttackData,AcceptData,Vector3,int,SynHitData)
+ *  的固定参数个数（MxytzMod.cpp:397 g_origDoAttack 注释 / :958 注册表 DoAttack7）。 */
+static void LogDoAttack(uintptr_t acc, uintptr_t ph, void* igo, bool hit) {
+    const uint32_t n = g_statDoAtkSeen.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 20 || (n % 200) == 0)
+        LOGI(BT_LOG " DOATTACK argc=7 accepter=%p vsHitter=%p igo=%p isPlayer=%d", (void*)acc,
+             (void*)ph, igo, hit ? 1 : 0);
+}
+
 static void DoAttackFrame(void* a1, uint8_t argBase) {
     if (!Plaus(a1)) return;
     const size_t slot = static_cast<size_t>(argBase + 1) * 8;  // IL 第 2 参 = accepter
@@ -525,18 +778,26 @@ static void DoAttackFrame(void* a1, uint8_t argBase) {
     const uintptr_t acc = Un(accepter);
     const uintptr_t ph = g_playerHitter.load(std::memory_order_relaxed);
     bool hit = (ph && acc == ph);
+    void* igo = nullptr;
     if (!hit) {
         auto& api = GetApi();
         void* k = api.object_class(accepter);
-        if (!Plaus(k)) return;
+        if (!Plaus(k)) {
+            LogDoAttack(acc, ph, nullptr, false);
+            return;
+        }
         static const char* const kIgoNames[] = {"_interactiveGameObject",
                                                 "<interactiveGameObject>k__BackingField",
                                                 "interactiveGameObject"};
         const size_t o = OffAny(k, kIgoNames, sizeof(kIgoNames) / sizeof(kIgoNames[0]));
-        if (!o) return;  // 认不出结构 ⇒ 一个字节都不动（写错槽 = 毁解释器帧）
-        void* igo = RefAt(acc, o);
+        if (!o) {  // 认不出结构 ⇒ 一个字节都不动（写错槽 = 毁解释器帧）
+            LogDoAttack(acc, ph, nullptr, false);
+            return;
+        }
+        igo = RefAt(acc, o);
         if (Plaus(igo) && IsPlayerSide(igo)) hit = true;
     }
+    LogDoAttack(acc, ph, igo, hit);
     if (!hit) return;
     *reinterpret_cast<uintptr_t*>(reinterpret_cast<uintptr_t>(a1) + slot) = 0;
     const uint32_t n = g_statInv.fetch_add(1, std::memory_order_relaxed) + 1;
@@ -602,9 +863,11 @@ static void RestoreProj(const char* why) {
      *  与记录值一致（不一致 = 已被回收/复用 ⇒ 直接放弃，不写）。全程不碰 il2cpp API。 */
     const uint32_t n = g_projSlotN.load(std::memory_order_relaxed);
     uint32_t restored = 0;
+    uint32_t attempted = 0;
     for (uint32_t i = 0; i < n && i < 32; i++) {
         ProjSlot& sl = g_proj[i];
         if (sl.data && sl.klass && sl.countOff && Plaus(sl.data)) {
+            attempted++;
             const uintptr_t base = Un(sl.data);
             const bool readable = Il2Cpp::IsReadableRange(base, sl.countOff + 4);
             const bool sameKlass =
@@ -625,6 +888,10 @@ static void RestoreProj(const char* why) {
         sl.wrote = 0;
     }
     g_projSlotN.store(0, std::memory_order_relaxed);
+    /* v3（lead 要求）：还原是否命中同一对象地址 —— n = 登记过的对象数，ok = 真写回成功的个数。
+     * n>0 且 ok==0 ⇒ 地址已被回收/复用（_count 是**共享配置对象**，跨场景会换新实例）；
+     * 这种情况下残留的放大值只能等游戏重建配置，报告里写明。 */
+    LOGI(BT_LOG " PROJ restore n=%u ok=%u why=%s", attempted, restored, why ? why : "-");
     if (restored) LOGI(BT_LOG " 投射物已还原 count（%s，共 %u 个对象）", why ? why : "-", restored);
 }
 
@@ -737,8 +1004,69 @@ static void ProjExecFrame(void* a1, uint8_t argBase) {
     SetI32(fp, 0, target);
     s->wrote = target;
     const uint32_t n = g_statProj.fetch_add(1, std::memory_order_relaxed) + 1;
-    if (n <= 20 || (n % 100) == 0)
-        LOGI(BT_LOG " 投射物#%u count %d→%d（base=%d，%s）", n, cur, target, s->base, dn);
+    /* v2 诊断：data 类名 / _count 偏移 / 原值 / 施法者指针 / 玩家侧判定 / 写入目标值。
+     * 用来判 #3：写进去的 _count 到底是不是「17 参 AddProjectile 的循环上界」那个对象。 */
+    if (n <= 20 || (n % 200) == 0)
+        LOGI(BT_LOG " PROJ dataCls=%s cntOff=0x%zx cnt=%d caster=%p playerSide=%d wrote=%d",
+             dn ? dn : "?", co, cur, reinterpret_cast<void*>(Un(caster)), playerCast ? 1 : 0,
+             static_cast<int>(target));
+}
+
+/* ============ #2 第二层：Character::Damage 帧（2026-11-16 v3，lead 硬结论） ============
+ * 为什么必须补：免疫位只挡「命中判定」两条读点（IsDamageImmune 读被打方 state.immuneDamage、
+ * HitTest 读 accept.state.invincible 且在 DoAttack 之前 continue），而
+ *   EffectToCast → CHitNotifier:485 → Character.Damage
+ * 这条**服务端同步伤害**路径完全不检查免疫 ⇒ 免疫位全开也可能被打死（v2 真机无敌=0 的真相：
+ * DoAttack 帧天然为 0，不是失效证据）。所以这里对 Damage 帧再挡一层。
+ *
+ * 落点：Character::Damage 两个重载都在 kKinds 里（K_DAMAGE，v3 起转发到本帧）：
+ *   Damage(BigInt damage, DamageEnumerate.DamageType, bool)   ← 主路径（_钩子目标与语义.md）
+ *   Damage(long   damage, DamageEnumerate.DamageType, bool)   ← 整数重载
+ * 槽约定（HybridCLR 入口，见 MxytzBattle.h）：实例方法 this 在槽 argBase-1，第 k 个参数在
+ * 槽 argBase+k。伤害值 = 第 0 参 ⇒ 槽 argBase。
+ *
+ * fail-closed 三条（任一不满足就不写）：
+ *   ① this（被打方 Character）判不出玩家侧 ⇒ 不写（宁可不生效，也不误挡敌人）；
+ *   ② 第 0 参槽值看起来像**指针**（BigInt 按值传参在解释器里可能是指针）⇒ 只零化其内容，
+ *      读不到/不像 BigInt 就整帧放弃（绝不把指针槽写成 0，否则解引用空指针 = 崩）；
+ *   ③ 槽值不像指针 ⇒ 当作内联 mantissa / long，直接写 0（BigInt 内联时首 8 字节 = mantissa）。 */
+static std::atomic<uint32_t> g_statDmgSeen{0};
+static std::atomic<uint32_t> g_statDmgBlock{0};
+
+static void DamageFrame(void* a1, uint8_t argBase) {
+    if (!Plaus(a1)) return;
+    if (argBase < 1) return;  /* Damage 是实例方法；this 占 1 槽 */
+    const uint32_t seen = g_statDmgSeen.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (seen <= 20 || (seen % 200) == 0)
+        LOGI(BT_LOG " DAMAGE seen n=%u argBase=%u（帧观测）", seen, static_cast<unsigned>(argBase));
+
+    void* self = reinterpret_cast<void*>(RawWord(a1, static_cast<size_t>(argBase - 1) * 8));
+    if (!Plaus(self)) return;
+    if (!IsPlayerSide(self)) return;  /* ① 只拦打在玩家侧的 */
+
+    const size_t dmgSlot = static_cast<size_t>(argBase) * 8;
+    const uintptr_t raw = RawWord(a1, dmgSlot);
+    const uintptr_t slotAddr = reinterpret_cast<uintptr_t>(a1) + dmgSlot;
+    int mode = 0;  /* 1 = 写槽为 0；2 = 零化 BigInt 内容 */
+    if (starptr::InUserVa(raw)) {
+        const uintptr_t bp = starptr::Untag(raw);
+        if (!Il2Cpp::IsReadableRange(bp, 16)) return;  /* ② 判不出就不写 */
+        double m = 0.0;
+        memcpy(&m, reinterpret_cast<const void*>(bp), 8);
+        const int32_t e = I32At(bp, 8);
+        if (!std::isfinite(m) || m < 0.0 || m > 1.0e15 || e < -40 || e > 60) return;
+        const double z = 0.0;
+        const int32_t ze = 0;
+        memcpy(reinterpret_cast<void*>(bp), &z, 8);
+        SetI32(bp, 8, ze);
+        mode = 2;
+    } else {
+        *reinterpret_cast<uintptr_t*>(slotAddr) = 0;
+        mode = 1;
+    }
+    const uint32_t n = g_statDmgBlock.fetch_add(1, std::memory_order_relaxed) + 1;
+    if (n <= 20 || (n % 200) == 0)
+        LOGI(BT_LOG " DAMAGEBLOCK n=%u mode=%d slot=+0x%zx self=%p", n, mode, dmgSlot, self);
 }
 
 /* ============================ §7 对外接口 ============================ */
@@ -769,6 +1097,24 @@ void OnTick() {
     if (last && now - last < 400ull) return;
     g_lastTickMs.store(now, std::memory_order_relaxed);
     RefreshPlayer();
+    /* v2 诊断（lead 要求）：身份链心跳 —— 玩家指针 / hitter / roleId 三个身份锚点是否都取到。
+     * 400ms 一拍（本函数已被 400ms 闸门限流）；#2 无效时先看这一行：ok=0 说明身份链断了。 */
+    {
+        const uintptr_t pl = g_player.load(std::memory_order_relaxed);
+        const uintptr_t hh = g_playerHitter.load(std::memory_order_relaxed);
+        const uint64_t rr = g_playerRole.load(std::memory_order_relaxed);
+        const int ok = (pl && hh) ? 1 : 0;
+        /* v3 限流（lead 要求）：每 400ms 一条太吵（约 1.5MB/分钟）⇒ 改成
+         * 「ok 变化时立刻打一条」+「稳定后每 2s 一条」。 */
+        static uint64_t s_lastIdMs = 0;
+        static int s_lastOk = -1;
+        if (ok != s_lastOk || s_lastIdMs == 0 || now - s_lastIdMs >= 2000ull) {
+            LOGI(BT_LOG " ID player=%p hitter=%p roleId=%llu ok=%d", reinterpret_cast<void*>(pl),
+                 reinterpret_cast<void*>(hh), static_cast<unsigned long long>(rr), ok);
+            s_lastIdMs = now;
+            s_lastOk = ok;
+        }
+    }
     if (g_inv.load(std::memory_order_relaxed)) EnsureInvulnBits();
 }
 
@@ -783,6 +1129,10 @@ void OnFrame(int frame, void* a1, uint8_t argBase) {
             break;
         case FRAME_PROJEXEC:
             if (g_skill.load(std::memory_order_relaxed)) ProjExecFrame(a1, argBase);
+            break;
+        case FRAME_DAMAGE:
+            /* #2 第二层（v3）：服务端同步伤害路径不看免疫位 ⇒ 这里把伤害实参挡成 0 */
+            if (g_inv.load(std::memory_order_relaxed)) DamageFrame(a1, argBase);
             break;
         case FRAME_PROJADD:
         default:

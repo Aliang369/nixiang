@@ -28,6 +28,7 @@ enum Frame : int {
     FRAME_DOATTACK = 1,  // StarsCollider::DoAttack            → #2 无敌（命中作废）
     FRAME_PROJADD = 2,   // ActionCommand_AddProjectile::AddProjectile → #3 只观测
     FRAME_PROJEXEC = 3,  // ActionCommand_AddProjectile::Execute        → #3 真正落点
+    FRAME_DAMAGE = 4,    // Character::Damage(long / BigInt)            → #2 第二层（挡服务端同步伤害）
 };
 
 /** 开关同步（Mxytz_Tick 每拍调；内部只在值变化时做动作）。 */
