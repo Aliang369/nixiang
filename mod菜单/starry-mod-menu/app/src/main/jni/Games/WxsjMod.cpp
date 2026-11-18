@@ -70,7 +70,14 @@ extern "C" const uint8_t _binary_wxsj_hf2_start[];
 extern "C" const uint8_t _binary_wxsj_hf2_end[];
 extern "C" const uint8_t _binary_wxsj_hf3_start[];
 extern "C" const uint8_t _binary_wxsj_hf3_end[];
+extern "C" const uint8_t _binary_wxsj_hf4_start[];
+extern "C" const uint8_t _binary_wxsj_hf4_end[];
 static constexpr DllVariant kDllVariants[] = {
+    // 2026-11-18 13.101 / vc1650 现网换代（运行时 /proc dump 实锤：段 0x76d0000000+0x36e62e0，
+    // MZ+PE+3 sections+BSJB@0x161fdc，Assembly=targetfuntional，2,738,688 B / fnv 0xd31dc94b29a8bb0d）。
+    // 补丁 2,749,952 B **大于**官方数组 ⇒ 运行时走 mode=selfarray（自建字节数组）；
+    // patchedBufHash 用补丁整包 fnv（selfarray 不改原数组，该行只作「已知补丁」兜底记录）。
+    {2738688, 0xd31dc94b29a8bb0dULL, 0x5fb46021fcc5a58bULL, _binary_wxsj_hf4_start, _binary_wxsj_hf4_end},
     {2030080, 0x91f9acbd064fa875ULL, 0x839daa17e05c50ceULL, _binary_wxsj_hf2_start, _binary_wxsj_hf2_end},
     // 2026-11-10 现网换代：长度不变、整包 fnv 0x1bf6c08f… -> 0x1ce9b97a…（差异 172 万字节），
     // DIAG 重抓官方明文（2,028,544 B / sha256 85e4d497…）后 v1 31 patches + delta 全链重放，
@@ -114,6 +121,10 @@ static std::atomic<int> g_hits{0};
 // v7.2 起：钩子装上即无条件武装（TryHookOnce 末尾 store(true)，本文件 :308 附近），与「玩家开不开功能」无关。
 // 玩家装包后打开游戏就生效，无需任何菜单操作 —— 不要照旧注释以为要先开个功能。
 static std::atomic<bool> g_replaceArmed{false};
+// 【2026-11-18 13.101】selfarray 注入缓存：补丁 > 官方数组时自建字节数组对象（malloc，非 GC 堆），
+// 只保留最近一份指针（活到进程结束；不 free，防被优化掉）。
+static void* g_swapArr = nullptr;
+static int32_t g_swapLen = 0;
 
 static bool ReadFileLines(const std::string& path, std::vector<std::string>* out);
 static std::string PkgName();
@@ -280,8 +291,35 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
                         }
                     }
                 }
+            } else if (pLen > 0) {
+                // 【2026-11-18 13.101】补丁比官方数组大 ⇒ 原地覆写物理上无解（memcpy 越界），
+                // 改走「自建同布局字节数组」（mode=selfarray），把新数组当形参传给原函数。
+                // 依据：wxsjdz1 断网版 2026-11-15 实测有效（补丁 2,011,648 B > 官方数组 1,995,776 B）。
+                //   64 位 il2cpp 对象布局：+0x00 klass / +0x08 monitor / +0x10 bounds /
+                //                          +0x18 max_length(int32) / +0x20 内联数据起点
+                //   头部 0x20 字节直接从官方数组拷（klass/monitor/bounds 原样），只改长度与数据区。
+                //   放 malloc 区（不在 GC 堆）：Boehm 保守 GC 不扫描/不回收；解释器按指针惰性读 IL
+                //   ⇒ 该内存必须活到进程结束（不 free，指针存在 g_swapArr 里）。
+                const int32_t pLen32 = (int32_t)pLen;
+                const size_t fakeSz = 0x20 + pLen + 8;
+                uint8_t* fake = (uint8_t*)malloc(fakeSz);
+                if (fake) {
+                    memcpy(fake, data, 0x20);
+                    memcpy(fake + 0x18, &pLen32, 4);
+                    memcpy(fake + 0x20, v->dataStart, pLen);
+                    g_swapArr = fake;
+                    g_swapLen = len;
+                    int n = g_hits.fetch_add(1) + 1;
+                    LOGI(WXSJ_LOG " patched dll injected (hit #%d mode=selfarray loaded=official-%d fnv=%016llx patched=%zu pad=%d buf=%p)",
+                         n, len, (unsigned long long)h, pLen,
+                         (int)((int64_t)pLen - (int64_t)len), (void*)fake);
+                    WXSJ_TRACE("dll replaced (selfarray)");
+                    return orig(self, fake, outP, mi);
+                }
+                LOGE(WXSJ_LOG " malloc(%zu) for self-array failed : PASSTHROUGH official", fakeSz);
+                g_hotfixForced.fetch_add(1);
             } else {
-                // 极端：官方 dll 比我们的补丁还小 —— memcpy 会越界，绝不覆盖；也绝不 BLOCK（丢档）。
+                // 极端：官方 dll 比我们的补丁还小且补丁为空 —— 不覆盖、不 BLOCK（丢档）。
                 // 放行官方版：玩家能玩、存档不丢；mod 功能本次失效，等人工出新包。
                 g_hotfixForced.fetch_add(1);
                 LOGE(WXSJ_LOG " embedded %zuB > array %d : PASSTHROUGH official"
@@ -300,6 +338,101 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
     return orig(self, data, outP, mi);
 }
 
+
+#if defined(WXSJ_PROBE)
+// ============================================================
+//  探针版（WXSJ_PROBE=1）：多候选挂点「记录型 hook」
+//  目的：一次装机判定「dll byte[] 到底从哪个入口进 il2cpp」。
+//  行为：只读 + 原样透传（不改参数、不改返回值语义），每候选只记首命中。
+//  候选 RVA 来自 2026-11-18 运行时 dump（base=0x7714d78000）：
+//    metadata(解密) → methodPointers 表(bss1 va=0x771a9bbde8) → VA - base。
+// ============================================================
+struct ProbeCand { uintptr_t rva; int gi; const char* name; };
+static const ProbeCand kProbeCands[] = {
+    {0x432bf14ULL, 16150, "RuntimeAssemblyLoader.ExecuteRuntimeAssembly"},
+    {0x41f36c0ULL, 11692, "Assembly.LoadFrom"},
+    {0x41f3358ULL, 11701, "Assembly.Load#1"},
+    {0x41f3828ULL, 11702, "Assembly.Load#2"},
+    {0x41f3330ULL, 11703, "Assembly.Load#3"},
+    {0x41f3c48ULL, 11704, "Assembly.Load#4"},
+    {0x41f3a14ULL, 11705, "Assembly.Load#5"},
+    {0x41f3e60ULL, 11706, "Assembly.Load#6"},
+    {0x41f3e4cULL, 11707, "Assembly.Load#7"},
+    {0x41f3e5cULL, 11708, "Assembly.Load#8"},
+    {0x41f3accULL, 11712, "Assembly.LoadWithPartialName"},
+};
+static const int kProbeCount = (int)(sizeof(kProbeCands) / sizeof(kProbeCands[0]));
+static void* g_probeOrig[kProbeCount] = {nullptr};
+static std::atomic<bool> g_probeHit[kProbeCount];
+
+static void ProbeDumpOne(int idx, const char* tag, void* p) {
+    if (!p || !starptr::LiveFast(p)) {
+        LOGI(WXSJ_LOG " probe cand=%d %s p=%p (not-live)", idx, tag, p);
+        return;
+    }
+    int32_t len = 0;
+    memcpy(&len, (const uint8_t*)p + 0x18, sizeof(len));
+    uint8_t head[8] = {0};
+    memcpy(head, (const uint8_t*)p + 0x20, 8);
+    uint8_t lraw[8] = {0};
+    memcpy(lraw, (const uint8_t*)p + 0x18, 8);
+    const bool isMz = (head[0] == 0x4d && head[1] == 0x5a && head[2] == 0x90 && head[3] == 0x00);
+    const bool inRange = (len > (1 << 20) && len < (4 << 20));
+    LOGI(WXSJ_LOG " probe cand=%d(%s) %s p=%p len=%d h18=%016llx h20=%016llx head=%02x%02x%02x%02x isMZ=%d lenIn1M4M=%d",
+         idx, kProbeCands[idx].name, tag, p, len,
+         (unsigned long long)(*(const uint64_t*)lraw),
+         (unsigned long long)(*(const uint64_t*)head),
+         head[0], head[1], head[2], head[3], isMz ? 1 : 0, inRange ? 1 : 0);
+}
+static void ProbeReport(int idx, void* a, void* b) {
+    if (g_probeHit[idx].exchange(true)) return;   // 每候选只记首命中
+    LOGI(WXSJ_LOG " ===== probe HIT cand=%d gi=%d %s rva=0x%zx x0=%p x1=%p",
+         idx, kProbeCands[idx].gi, kProbeCands[idx].name, (size_t)kProbeCands[idx].rva, a, b);
+    ProbeDumpOne(idx, "x0", a);
+    ProbeDumpOne(idx, "x1", b);
+}
+#define WXSJ_DEF_PROBE(N)                                                      \
+    static void* ProbeH##N(void* a, void* b, void* c, void* d) {                \
+        ProbeReport(N, a, b);                                                  \
+        if (g_probeOrig[N])                                                    \
+            return ((void* (*)(void*, void*, void*, void*))g_probeOrig[N])(a, b, c, d); \
+        return nullptr;                                                        \
+    }
+WXSJ_DEF_PROBE(0)  WXSJ_DEF_PROBE(1)  WXSJ_DEF_PROBE(2)  WXSJ_DEF_PROBE(3)
+WXSJ_DEF_PROBE(4)  WXSJ_DEF_PROBE(5)  WXSJ_DEF_PROBE(6)  WXSJ_DEF_PROBE(7)
+WXSJ_DEF_PROBE(8)  WXSJ_DEF_PROBE(9)  WXSJ_DEF_PROBE(10)
+static void* const kProbeFn[kProbeCount] = {
+    (void*)ProbeH0, (void*)ProbeH1, (void*)ProbeH2, (void*)ProbeH3, (void*)ProbeH4,
+    (void*)ProbeH5, (void*)ProbeH6, (void*)ProbeH7, (void*)ProbeH8, (void*)ProbeH9,
+    (void*)ProbeH10,
+};
+static std::atomic<bool> g_probeInstalled{false};
+static bool ProbeInstall() {
+    if (g_probeInstalled.load()) return true;
+    uintptr_t base = Il2CppBase();
+    if (!base) return false;
+    int ok = 0, enc = 0;
+    for (int i = 0; i < kProbeCount; i++) {
+        void* t = (void*)(base + kProbeCands[i].rva);
+        // 易盾壳按页按需解密：目标页还是 0xa1000000 填充 ⇒ 现在 hook 会挂在填充上，等下一页
+        uint32_t w = 0;
+        memcpy(&w, t, sizeof(w));
+        if (w == 0xa1000000u) { enc++; continue; }
+        if (g_probeOrig[i]) { ok++; continue; }   // 已装
+        void* orig = nullptr;
+        int r = DobbyHook(t, kProbeFn[i], &orig);
+        g_probeOrig[i] = orig;
+        LOGI(WXSJ_LOG " probe install cand=%d %s target=%p head=%08x -> ret=%d orig=%p",
+             i, kProbeCands[i].name, t, w, r, orig);
+        if (r == 0 && orig) ok++;
+    }
+    LOGI(WXSJ_LOG " probe installed %d/%d (encrypted-pages=%d) @base=%p",
+         ok, kProbeCount, enc, (void*)base);
+    if (ok > 0) g_probeInstalled.store(true);
+    return ok > 0;
+}
+#endif  // WXSJ_PROBE
+
 static bool TryHookOnce() {
     uintptr_t base = Il2CppBase();
     if (!base) return false;
@@ -317,8 +450,9 @@ static bool TryHookOnce() {
     g_hooked.store(true);
     size_t hf2Len = (size_t)(_binary_wxsj_hf2_end - _binary_wxsj_hf2_start);
     size_t hf3Len = (size_t)(_binary_wxsj_hf3_end - _binary_wxsj_hf3_start);
-    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p dual=hf2:%zuB+hf3:%zuB",
-         (void*)base, kExecRva, orig, hf2Len, hf3Len);
+    size_t hf4Len = (size_t)(_binary_wxsj_hf4_end - _binary_wxsj_hf4_start);
+    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p variants=hf2:%zuB+hf3:%zuB+hf4:%zuB",
+         (void*)base, kExecRva, orig, hf2Len, hf3Len, hf4Len);
     // v7.2：屏蔽封号执法为基线功能——无条件武装字节替换（清数据/首装同样生效）。
     // 旧逻辑「配置里有功能开启才武装」在清数据后导致原版 dll 运行，封号弹窗+COS上传全链复活。
     // ★玩家不需要任何操作：钩子装上即武装。触发链与菜单无关：
@@ -345,6 +479,9 @@ static bool TryHookOnce() {
 static void* FastRetryThread(void*) {
     // 热更装载在 libil2cpp 解密后 ~1.5s 内就开始（15:25 会话实测），必须 100ms 级重试
     for (int i = 0; i < 600 && !g_hooked.load(); i++) {
+#if defined(WXSJ_PROBE)
+        ProbeInstall();          // 探针：装到能装的全装（目标页未解密则下一轮再试）
+#endif
         if (TryHookOnce()) return nullptr;
         usleep(100 * 1000);
     }

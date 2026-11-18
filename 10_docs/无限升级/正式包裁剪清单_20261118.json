@@ -1,0 +1,55 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级",
+  "keep": "无限升级_13.101_unshelled-tapfix-releaseSigned.apk",
+  "keep_size": 138862964,
+  "keep_md5": "28c842ab7892f7bea9361964aa8024df",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "无限升级_13.101_unshelled-tapfix-releaseSigned_tapfix-releaseSigned.apk.idsig",
+      "size": 1103387,
+      "md5": "05fa4357939002ae9e39e0cb9c0cd971"
+    },
+    {
+      "name": "无限升级_12.10701_surgical-final-releaseSigned.apk.idsig",
+      "size": 1017371,
+      "md5": "05ba6d059114118bd146d63bef547b77"
+    },
+    {
+      "name": "无限升级_13.101_unshelled-smoke.apk",
+      "size": 138813812,
+      "md5": "f8fddf35c590ee31e4fac7b0821d5bbc"
+    },
+    {
+      "name": "无限升级_13.101_unshelled-tapfix-releaseSigned.apk.idsig",
+      "size": 1103387,
+      "md5": "c4d616f6e050ea3b9ad96d63cbd2b012"
+    },
+    {
+      "name": "无限升级_13.101_wxsj-releaseSigned.apk",
+      "size": 128102790,
+      "md5": "55e55ccd985ac0d0e2b32bbc83bad60d"
+    },
+    {
+      "name": "无限升级_13.101_diag.apk",
+      "size": 128098694,
+      "md5": "b73b3c51a6f43519a9e713e1c08058fa"
+    },
+    {
+      "name": "无限升级_12.10701_diag.apk.idsig",
+      "size": 1017371,
+      "md5": "579c92c78a761319d77794850d40135c"
+    },
+    {
+      "name": "无限升级_13.101_unshelled-smoke.apk.idsig",
+      "size": 1103387,
+      "md5": "43a14b8775800578aa6df0c4041087f8"
+    },
+    {
+      "name": "无限升级_13.101_diag_sig.apk",
+      "size": 128102790,
+      "md5": "0db91b037ba790c32cdd4d909414f74d"
+    }
+  ],
+  "removed_count": 9
+}

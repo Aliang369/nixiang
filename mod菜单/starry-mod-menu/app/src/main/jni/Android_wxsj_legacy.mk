@@ -51,6 +51,12 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_dll_hf3
 LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf3.a
 include $(PREBUILT_STATIC_LIBRARY)
+# 2026-11-18：13.101 现网热更 2,738,688 B（fnv 0x1d31… 见 WxsjMod.cpp kDllVariants）；
+# 补丁 2,749,952 B **大于**官方数组 ⇒ 运行时走 mode=selfarray（自建字节数组），不原地覆写。
+include $(CLEAR_VARS)
+LOCAL_MODULE := wxsj_dll_hf4
+LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf4.a
+include $(PREBUILT_STATIC_LIBRARY)
 
 # ============================================================
 #  星光魔法 MOD 菜单 — 主模块
@@ -313,6 +319,9 @@ endif
 # 无限升级 12.10701 / vc1644 — 2026-10-26 激活（官方原版 12.10701 复刻星空版；走 scripts/wxsj_so_only.sh）
 LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WXSJ
 LOCAL_SRC_FILES := Main.cpp Games/WxsjMod.cpp
+# 13.101 取证开关（DIAG 取证版由 scripts/wxsj_so_only.sh 用 WXSJ_DIAG=1 打开；正式包必须注释掉）
+# LOCAL_CFLAGS    += -DWXSJ_DIAG_DUMP=1
+# LOCAL_CFLAGS    += -DWXSJ_PROBE=1
 # 战魂铭人 3.7.0 / vc20680 — 2026-10-28 激活（TapTap 官方原版复刻星空版）
 # 热更 GameLogic.dll 与 3.6.0 同一份（md5 7ecee205f25de60af3abec8796339994），依赖类/字段名全在位，
 # ZhmrMod.cpp 零改动复用；证据 10_docs/战魂铭人/战魂铭人_3.7.0_复刻记录_20261028.md
@@ -358,6 +367,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll_hf2 wxsj_dll_hf3
+LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll_hf2 wxsj_dll_hf3 wxsj_dll_hf4
 
 include $(BUILD_SHARED_LIBRARY)
