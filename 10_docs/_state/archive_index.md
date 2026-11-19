@@ -17,7 +17,7 @@
 | [遗弃之地](games/遗弃之地.md) | 2026-09-21 | ⚠️ 用户决定终止：收尾＋清理全部产物只留 10_docs 文档；标准外科路线「有窄口径可能，未证明可行」 |
 | [百分之一](games/百分之一.md) | 2026-09-11 | ⚠️ 1.1.78/vc428：产物已清理（02_apks/03_decompiled 清空），分析结论见正文 |
 | [虚无之刃](games/虚无之刃.md) | 2026-09-09 | ⚠️ 1.39.160 未完成（20260909 盘点更正）：仅有 xwzr_so_only.sh 重编 so 塞已有外科签包 |
-| [无限升级](games/无限升级.md) | 2026-11-19 | ✅ 2026-11-19 交付 allfix（2,760,704 / 0xb849f6ff6ff453d4，31 条+delta 全含）；**秘境闪退已修复**——根因是补丁器短跳越界未升级（br 目标写成 −118），非官方缺陷；历史 hf5/hf6/hf7/hf7b/oneshotfix/oneshotfix2 全部作废；新增必过关 ilraw |
+| [无限升级](games/无限升级.md) | 2026-11-19 | ✅ 2026-11-19 交付 hotblock（=allfix 载荷 2,760,704 / 0xb849f6ff6ff453d4 + 禁热更失配钉死）；秘境闪退已修复——根因补丁器短跳越界未升级（br 目标 −118）；禁热更补强：未知官方版本(PINNED)仍注入已适配变体，不再 PASSTHROUGH；历史 hf5/hf6/hf7/hf7b/oneshotfix/oneshotfix2 作废；必过关 ilraw |
 | [冒险与征途](games/冒险与征途.md) | 2026-11-16 | ✅ B站渠道 2.0.1 四项功能用户全通（v2 交付 md5 52a9691e…，so 53d7e6c1…）；挂点 RVA 与 1.5.9 字节级一致；game_id=mxyztbili |
 | [999秒幸存者](games/999秒幸存者.md) | 2026-11-15 | ✅ V0.0866/vc866 星光版六项收官（用户 L3：全部功能正常）：无敌(hpcheck+enemyhurt/enemyhurtnotnac 拦截)/伤害倍率(nmhurte dimmul)/移速(player.move stat.sp)/解锁皮肤(onelock.haveac)/无限券(数据型 sd.unlockcoupon=0xBC=9999)/免广告(getadcheck 保链→LoadRewardAd 拦下直调 reward)；正式包 md5 77ee50fc…（95,421,205 B，so 044fdc0e→e8f37696）；真机 arm64 实测，雷电 houdini 下 RVA hook 不可用（so 全段 r--） |
 | [一念通天](games/一念通天.md) | 2026-11-15 | ✅ 789 收官：六项+TapTap 网页登录用户实测全通过；9 RVA 全漂移、序言 3 变 6 同、字段 0 变化；8/8 挂点日志留存 |
