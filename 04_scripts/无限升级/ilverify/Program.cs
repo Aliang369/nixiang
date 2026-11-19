@@ -53,7 +53,8 @@ Console.WriteLine($"== ilverify {Path.GetFileName(path)}  stage={stage}  types(t
 
 // ---------- A. StarryConfig 骨架 ----------
 Console.WriteLine("[A] StarryConfig 骨架");
-var cfg = mod.GetType("Starry.StarryConfig");
+// 2026-11-19：helper 宿主可能是官方已有类型（不新增类型）或历史新增类型，两种都接受
+var cfg = mod.GetType("Starry.StarryConfig") ?? mod.GetType("$Obfuz$ConstFieldHolder$0");
 if (cfg == null) No("StarryConfig 不存在");
 else
 {
@@ -66,6 +67,9 @@ else
     }
 }
 
+// ---------- B. ilpatch 31 条落点（stage=deltaonly 时不适用：该版**故意不注入** 31 条） ----------
+if (stage != "deltaonly")
+{
 // ---------- B. ilpatch 31 条：逐方法断言 key 标记 ----------
 Console.WriteLine("[B] ilpatch 31 条落点标记");
 // (typeFull, method, pc, key, 期望该方法内该 key 的出现次数)
@@ -79,8 +83,8 @@ var t31 = new (string T, string N, int? Pc, string Key, int Cnt)[]
     ("NetWorkPlayerMgr","CheckBan2",null,"block_report",1),
     ("NetWorkPlayerMgr","BanGameAciton",null,"block_report",1),
     ("NetWorkPlayerMgr","Report",null,"block_report",1),
-    ("NetBehaviour","SendRT",null,"CheckMMM",stage == "merged" ? 2 : 1),
-    ("AccountMgr.LoginScene.AccountMgrClient","SendRT",3,"CheckMMM",stage == "merged" ? 2 : 1),
+    ("NetBehaviour","SendRT",null,"CheckMMM",stage == "merged" || stage == "vtpin" ? 2 : 1),
+    ("AccountMgr.LoginScene.AccountMgrClient","SendRT",3,"CheckMMM",stage == "merged" || stage == "vtpin" ? 2 : 1),
     ("InfinityCoreNormal.NetConver","ForceBanGameAciton",null,"block_report",1),
     ("PlayerMgr","OnHit",null,"god",1),
     ("Enemy","OnHit",null,"oneshot",1),
@@ -122,9 +126,12 @@ foreach (var e in t31)
     if (c >= 1) Ok($"#22 免广告 AdsManager/ShowAdsNewFlow::Show  \"free_ads\"×{c}（merged 另含 AdsManager.AdsFree 直发，见 C 段）"); else No($"#22 ShowAdsNewFlow::Show free_ads 缺失");
 }
 
+}
+else Console.WriteLine("[B] 跳过（stage=deltaonly：本版不含功能补丁，按设计）");
+
 // ---------- C. delta 层断言 ----------
 Console.WriteLine($"[C] delta 层断言（stage={stage}）");
-if (stage == "merged")
+if (stage == "merged" || stage == "vtpin" || stage == "deltaonly")
 {
     var ndc = mod.GetType("InfinityCore.NetDataCalculater");
     var renamed = new (string New, string Old)[]
@@ -168,7 +175,9 @@ if (stage == "merged")
         else No($"无条件 no-op {T.Split('.').Last()}::{N}  首条={md.Body.Instructions[0].OpCode}");
     }
     // 静默防封闭环：StrictBlockedRpc 调用数
-    int gates = types.SelectMany(t => t.Methods).Count(m => HasCall(m, "StarryConfig", "StrictBlockedRpc"));
+    // 2026-11-19：宿主可能不是 StarryConfig（不新增类型方案），按实际宿主类型名统计
+    var hostName = cfg != null ? cfg.Name : "StarryConfig";
+    int gates = types.SelectMany(t => t.Methods).Count(m => HasCall(m, hostName, "StrictBlockedRpc"));
     if (gates == 19) Ok($"静默防封闭环 StarryConfig::StrictBlockedRpc 调用点 {gates} 个（历史口径 19）");
     else No($"静默防封闭环调用点 {gates} 个（期望 19）");
     // CLS 日志链
@@ -207,6 +216,55 @@ foreach (var (T, N, pc) in new (string, string, int?)[] { ("SkillAssets","GetBul
     if (md == null) { Console.WriteLine($"  [N/A ] {T}::{N}（新包不存在或签名变化，边界无需查）"); continue; }
     bool dirty = md.Body.Instructions.Any(i => i.OpCode.Code == Code.Ldstr && ((string)i.Operand).StartsWith("skill_"));
     if (!dirty) Ok($"{T}::{N} 未被 feat13/14 补丁污染"); else No($"{T}::{N} 出现 skill_* 键 —— 越界！");
+}
+
+// ---------- F. 版本钉死族（vtpin）：stage=vtpin 断言「已钉死」；stage=merged 断言「未被钉死」 ----------
+Console.WriteLine($"[F] 版本钉死族（stage={stage}）");
+{
+    bool pin = stage == "vtpin";
+    var gv = M("ResVersionApi", "GetVersion", 0);
+    if (gv == null) No("ResVersionApi::GetVersion() 未找到");
+    else
+    {
+        var i0 = gv.Body.Instructions[0]; var i1 = gv.Body.Instructions[1];
+        bool pinned = i0.OpCode.Code == Code.Ldc_I8 && (long)i0.Operand == long.MaxValue && i1.OpCode.Code == Code.Ret;
+        if (pin == pinned) Ok($"ResVersionApi.GetVersion() {(pin ? "已钉死 Int64.MaxValue" : "未钉死（基线口径）")}  ins={gv.Body.Instructions.Count}");
+        else No($"ResVersionApi.GetVersion() {(pin ? "未钉死" : "被意外钉死")}  首条={i0.OpCode} {i0.Operand}");
+    }
+    var anchors = new (string T, string N, int? Pc)[]
+    {
+        ("NetWorkPlayerMgr","Vch",0), ("NetWorkPlayerMgr","BlockVersion",0),
+        ("MainUIFuntions","ShowNewVersion",0), ("MainUIFuntions","OnNewVersionClick",0),
+        ("LowVersionMgr","NeedUpdate",0), ("LowVersionMgr","OpenUrl",1),
+        ("LowVersionMgr_InitScene","ShowOnShow",0), ("LowVersionMgr_InitScene","OnDownLoadClick",0),
+        ("InfinityCore.NetDataCalculater","$o",1),
+    };
+    foreach (var (T, N, Pc) in anchors)
+    {
+        var md = M(T, N, Pc);
+        if (md == null) { No($"版本门 {T}::{N} 未找到"); continue; }
+        bool isRet = md.Body.Instructions[0].OpCode.Code == Code.Ret;
+        if (pin == isRet) Ok($"版本门 {T.Split('.').Last()}::{N} {(pin ? "首条=ret（已 no-op）" : "未 no-op（基线）")}");
+        else No($"版本门 {T.Split('.').Last()}::{N} {(pin ? "首条非 ret" : "被意外 no-op")}");
+    }
+    var cur = M("InfinityCore.NetDataCalculater", "$o", 1);
+    if (cur == null) No("NetDataCalculater::$o 未找到（CurrentVersion 重定位失效）");
+    else if (HasCall(cur, "Application", "get_version")) Ok("CurrentVersion→$o 原体保留（含 Application.get_version，指纹仍可复核）");
+    else No("NetDataCalculater::$o 内未见 Application.get_version（指纹不符）");
+    var vtext = new (string T, string N, int? Pc)[]
+    {
+        ("InfinityCore.TransferHandler","CfgCallBack",1), ("NetWorkPlayerMgr","UpDatePlayerData",7), ("NetWorkPlayerMgr","UpDatePlayerMainData",1),
+    };
+    foreach (var (T, N, Pc) in vtext)
+    {
+        var md = M(T, N, Pc);
+        if (md == null) { No($"版本常量 {T}::{N} 未找到"); continue; }
+        int gvn = md.Body.Instructions.Count(i => i.Operand is MethodReference mr && mr.Name == "get_version" && mr.DeclaringType.FullName == "UnityEngine.Application");
+        int c999 = LdstrCount(md, "999999");
+        if (pin ? (gvn == 0 && c999 == 1) : (gvn == 1 && c999 == 0))
+            Ok($"Application.version {T.Split('.').Last()}::{N} {(pin ? "已换常量 999999" : "保持官方 get_version")}  (get_version={gvn}, 999999x{c999})");
+        else No($"Application.version {T.Split('.').Last()}::{N} 形态异常 (get_version={gvn}, 999999x{c999})");
+    }
 }
 
 // ---------- E. 结构完整性：分支目标必须落在本方法体内 ----------

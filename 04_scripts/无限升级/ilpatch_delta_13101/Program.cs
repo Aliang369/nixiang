@@ -1,7 +1,9 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 // 无限升级 targetfuntional.dll 增量补丁器（v7 全量单遍，2026-09-07）
 //
@@ -59,6 +61,9 @@ string[] Blacklist = {
 
 var asm = AssemblyDefinition.ReadAssembly(SRC);
 var mod = asm.MainModule;
+// 读入即快照（必须在任何补丁之前）：供 FinalizeChanged 判断哪些方法被改过
+var snapCounts = new Dictionary<MethodDefinition, int>();
+foreach (var _tt in mod.Types) foreach (var _mm in _tt.Methods) if (_mm.HasBody) snapCounts[_mm] = _mm.Body.Instructions.Count;
 Console.WriteLine($"[load] {mod.Types.Count} types");
 
 var tStr = mod.TypeSystem.String;
@@ -67,8 +72,10 @@ var tVoid = mod.TypeSystem.Void;
 var corlib = mod.AssemblyReferences.First(r => r.Name == "mscorlib");
 var tExc = new TypeReference("System", "Exception", mod, corlib);
 
-var cfgType = mod.Types.FirstOrDefault(t => t.Name == "StarryConfig")
-    ?? throw new Exception("StarryConfig 缺失（SRC 必须为 v1 补丁产物）");
+// 2026-11-19：helper 宿主改为官方已有的表尾类型（不新增类型）
+const string HostType = "$Obfuz$ConstFieldHolder$0";
+var cfgType = mod.Types.FirstOrDefault(t => t.FullName == HostType)
+    ?? throw new Exception($"{HostType} 缺失（SRC 必须为 v1 补丁产物）");
 var mGetBool = cfgType.Methods.First(x => x.Name == "GetBool");
 
 MethodReference StringEq()
@@ -198,6 +205,71 @@ void NoOpVoidAlways(MethodDefinition m, string tag)
 {
     m.Body.Instructions.Insert(0, Instruction.Create(OpCodes.Ret));
     Console.WriteLine($"[patch] {tag}: no-op(无条件)");
+}
+
+// ===== 版本钉死族（vtpin，2026-11-19；默认关闭，WXSJ_VTPIN=1 才执行）=====
+// 依据：10_docs/无限升级/13101_new_版本钉死方案_20261119.md
+// 与 vc1637 线《防封开关范围_20261003.md》§三「版本拦截族」同构，共 13 处：
+//   9 处入口 no-op + ResVersionApi.GetVersion→Int64.Max + 3 处 Application.get_version→"999999"
+void ReturnLongMax(MethodDefinition m, string tag)
+{
+    if (m.ReturnType.FullName != "System.Int64") throw new Exception($"{tag} 返回类型非 Int64，拒绝钉死");
+    m.Body.Instructions.Insert(0, Instruction.Create(OpCodes.Ret));
+    m.Body.Instructions.Insert(0, Instruction.Create(OpCodes.Ldc_I8, long.MaxValue));
+    Console.WriteLine($"[patch] vtpin {tag}: return Int64.MaxValue");
+}
+
+// 把方法体内所有 UnityEngine.Application::get_version 调用点换成常量串 "999999"
+void ReplaceApplicationVersion(MethodDefinition m, string tag)
+{
+    int n = 0;
+    foreach (var ins in m.Body.Instructions)
+        if ((ins.OpCode.Code == Code.Call || ins.OpCode.Code == Code.Callvirt)
+            && ins.Operand is MethodReference mr
+            && mr.Name == "get_version"
+            && mr.DeclaringType.FullName == "UnityEngine.Application")
+        { ins.OpCode = OpCodes.Ldstr; ins.Operand = "999999"; n++; }
+    if (n == 0) throw new Exception($"[vtpin] {tag} 未找到 Application.get_version（锚点失配，拒绝静默跳过）");
+    Console.WriteLine($"[patch] vtpin {tag}: Application.version -> \"999999\" ({n})");
+}
+
+// 按「外部引用指纹」定位被 Obfuz 改名的方法（缺一条引用直接抛，不硬塞）
+MethodDefinition FindMByFp(string typeFull, string newName, string[] mustRefs, int paramCount)
+{
+    var t = mod.GetType(typeFull) ?? throw new Exception($"[vtpin] {typeFull} 不存在");
+    var md = t.Methods.FirstOrDefault(x => x.Name == newName && x.Parameters.Count == paramCount)
+             ?? throw new Exception($"[vtpin] {typeFull}::{newName}({paramCount}p) 不存在");
+    var refs = ExtRefs(md);
+    var missing = mustRefs.Where(r => !refs.Contains(r)).ToList();
+    if (missing.Count > 0)
+        throw new Exception($"[vtpin] {typeFull}::{newName} 指纹不符，缺引用: {string.Join(", ", missing)}");
+    Console.WriteLine($"[relocate] vtpin {typeFull}::{newName}  ins={md.Body.Instructions.Count} 指纹 {mustRefs.Length}/{mustRefs.Length} 命中");
+    return md;
+}
+
+void PinVersion()
+{
+    // ① 唯一漏斗：GetVersion() 被 GetVersion(string)/UpDatePlayerMainData/StaticHeroLocalReport 共用
+    ReturnLongMax(FindM("ResVersionApi", "GetVersion", 0), "ResVersionApi.GetVersion()");
+    // ② 版本封锁/强制更新提示/商店更新链路 8 处（全按名命中，签名已核）
+    NoOpVoidAlways(FindM("NetWorkPlayerMgr", "Vch", 0), "vtpin Vch(版本低下→timeScale=0 冻结)");
+    NoOpVoidAlways(FindM("NetWorkPlayerMgr", "BlockVersion", 0), "vtpin BlockVersion(versionMask)");
+    NoOpVoidAlways(FindM("MainUIFuntions", "ShowNewVersion", 0), "vtpin ShowNewVersion(推荐更新按钮)");
+    NoOpVoidAlways(FindM("MainUIFuntions", "OnNewVersionClick", 0), "vtpin OnNewVersionClick(跳商店)");
+    NoOpVoidAlways(FindM("LowVersionMgr", "NeedUpdate", 0), "vtpin LowVersionMgr.NeedUpdate(TapTap 更新)");
+    NoOpVoidAlways(FindM("LowVersionMgr", "OpenUrl", 1), "vtpin LowVersionMgr.OpenUrl");
+    NoOpVoidAlways(FindM("LowVersionMgr_InitScene", "ShowOnShow", 0), "vtpin LowVersionMgr_InitScene.ShowOnShow");
+    NoOpVoidAlways(FindM("LowVersionMgr_InitScene", "OnDownLoadClick", 0), "vtpin LowVersionMgr_InitScene.OnDownLoadClick");
+    // ③ CurrentVersion(Single) 已被 Obfuz 改名 ⇒ 指纹重定位（Application.get_version 全模块唯一）
+    NoOpVoidAlways(FindMByFp("InfinityCore.NetDataCalculater", "$o", new[] {
+        "Application.get_version", "MonoSingleton`1.get_Instance", "MainUIFuntions.ShowNewVersion",
+        "Single.TryParse", "Single.ToString", "String.Concat", "Debug.Log" }, 1),
+        "vtpin CurrentVersion→NetDataCalculater::$o(推荐更新弹窗)");
+    // ④ 3 处 Application.version 常量（服务器侧客户端版本号）
+    ReplaceApplicationVersion(FindM("InfinityCore.TransferHandler", "CfgCallBack", 1), "TransferHandler.CfgCallBack");
+    ReplaceApplicationVersion(FindM("NetWorkPlayerMgr", "UpDatePlayerData", 7), "UpDatePlayerData");
+    ReplaceApplicationVersion(FindM("NetWorkPlayerMgr", "UpDatePlayerMainData", 1), "UpDatePlayerMainData");
+    Console.WriteLine("[patch] vtpin 版本钉死族 13 处全部命中");
 }
 
 // ②b bool 方法强制 false（v7.7 2026-09-23：断 [Rpc] 回调路径）
@@ -335,8 +407,10 @@ void AdsFreeOffline()
         ?? throw new Exception("OnAdsSuccessed 未找到");
     var invoke = new MethodReference("Invoke", tVoid, m.Parameters[0].ParameterType) { HasThis = true };
     var first = m.Body.Instructions[0];
-    var skipInv = Instruction.Create(OpCodes.Nop);
+    var afterInv = Instruction.Create(OpCodes.Nop);
     var orig = Instruction.Create(OpCodes.Nop);
+    // 2026-11-19 修栈不平衡（ilstack 实证）：旧写法 dup;brfalse 只弹掉副本，原件 action 残留
+    // ⇒ action==null 时 void 带 1 值 ret。改为「判空→取值→调用」，判空与取值各压一次。
     var seq = new List<Instruction>
     {
         Instruction.Create(OpCodes.Ldstr, "free_ads"),
@@ -346,10 +420,10 @@ void AdsFreeOffline()
         Instruction.Create(OpCodes.Ldarg_2),   // countAds（IL: this=0, action=1, countAds=2）
         Instruction.Create(OpCodes.Call, onSuccess),
         Instruction.Create(OpCodes.Ldarg_1),   // action
-        Instruction.Create(OpCodes.Dup),
-        Instruction.Create(OpCodes.Brfalse, skipInv),
+        Instruction.Create(OpCodes.Brfalse, afterInv),
+        Instruction.Create(OpCodes.Ldarg_1),   // action（再次压入，供 callvirt）
         Instruction.Create(OpCodes.Callvirt, invoke),
-        skipInv,
+        afterInv,
         Instruction.Create(OpCodes.Ret),
         orig,
     };
@@ -481,5 +555,28 @@ NoOpVoid(FindM("GameDatas.TencentClsLogService", "Enqueue", 1), "CLS日志 Enque
 FalseOnEntry(FindM("GameDatas.TencentClsLogService", "TryBeginFlush"), "CLS日志 TryBeginFlush(不启协程)");
 FalseOnEntry(FindM("GameDatas.TencentClsLogService", "ConsumeFlushRequest"), "CLS日志 ConsumeFlushRequest");
 
+// ===== 版本钉死（可选，WXSJ_VTPIN=1）：见 13101_new_版本钉死方案_20261119.md =====
+bool vtpin = System.Environment.GetEnvironmentVariable("WXSJ_VTPIN") == "1";
+if (vtpin) PinVersion();
+else Console.WriteLine("[mode] vtpin=0：未做版本钉死（保持历史口径，热更面未收紧）");
+
+FinalizeChanged(snapCounts);
 asm.Write(DST);
 Console.WriteLine($"[done] → {DST}");
+
+// 2026-11-19 修：Cecil 不会把插入后超范围的短跳自动升级为长形式（会静默写出溢出 sbyte 位移），
+// 故对所有被改过的方法在写盘前统一 SimplifyMacros + OptimizeMacros。
+static void FinalizeChanged(Dictionary<MethodDefinition, int> snap)
+{
+    int n = 0;
+    foreach (var kv in snap)
+    {
+        var m = kv.Key;
+        if (!m.HasBody) continue;
+        if (m.Body.Instructions.Count == kv.Value) continue;
+        m.Body.SimplifyMacros();
+        m.Body.OptimizeMacros();
+        n++;
+    }
+    Console.WriteLine($"[finalize] {n} 个被修改的方法已 SimplifyMacros+OptimizeMacros（短跳越界升级）");
+}

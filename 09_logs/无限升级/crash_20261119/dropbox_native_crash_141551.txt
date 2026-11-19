@@ -1,0 +1,40 @@
+SystemUptimeMs: 858810195
+Process: com.xingzuodaoshi.infinityUpgrade
+PID: 32636
+UID: 11157
+Frozen: false
+Flags: 0x38e83e44
+Package: com.xingzuodaoshi.infinityUpgrade v1650 (13.101)
+PID: 32636
+Foreground: Yes
+Process-Runtime: 462794
+Build: OnePlus/OPD2404/OP5D77L1:16/UKQ1.231108.001/U.38edfdf-15fddd0-1656346:user/release-keys
+Loading-Progress: 1.0
+Dropped-Count: 0
+
+Process name is com.xingzuodaoshi.infinityUpgrade, uid is 11157, not key_process
+keyProcess: 0
+*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+Build fingerprint: 'OnePlus/OPD2404/OP5D77L1:16/UKQ1.231108.001/U.38edfdf-15fddd0-1656346:user/release-keys'
+Revision: '0'
+ABI: 'arm64'
+Timestamp: 2026-11-19 14:15:50.706429640+0800
+Process uptime: 464s
+Cmdline: com.xingzuodaoshi.infinityUpgrade
+pid: 32636, tid: 32762, name: UnityMain  >>> com.xingzuodaoshi.infinityUpgrade <<<
+uid: 11157
+tagged_addr_ctrl: 0000000000000001 (PR_TAGGED_ADDR_ENABLE)
+pac_enabled_keys: 000000000000000f (PR_PAC_APIAKEY, PR_PAC_APIBKEY, PR_PAC_APDAKEY, PR_PAC_APDBKEY)
+signal 11 (SIGSEGV), code 2 (SEGV_ACCERR), fault addr 0x00000076d8000000
+    x0  00000076d6a36c18  x1  0000007713438b00  x2  000000781d362800  x3  0000000000000008
+    x4  0000000000000038  x5  b400007713fe4180  x6  00000076d6a368d0  x7  00000076d6a368d0
+    x8  00000000002b949a  x9  00000076d6a35b30  x10 0000000000001110  x11 00000000000000b4
+    x12 0000000000000000  x13 0000000000002980  x14 0000000000000000  x15 0000000000000020
+    x16 000000791b3d9828  x17 000000791b36d3ac  x18 00000076d1eb4a98  x19 00000077c09fdfc0
+    x20 00000077c09fdff0  x21 b400007713438b00  x22 00000000000001b3  x23 0000000000000020
+    x24 b4000077130b3960  x25 b400007713fe4188  x26 00000076d6a36c18  x27 0000000000000080
+    x28 b400007713fe4100  x29 00000000ffffff8a
+    lr  0000007732e83f6c  sp  00000077c09fdae0  pc  0000007732e84030  pst 0000000020001000
+1 total frames
+backtrace:
+      #00 pc 00000000029d6030  /data/app/~~w4-vOz6eRJC8QRU3eEq-1w==/com.xingzuodaoshi.infinityUpgrade-noGL44Pxk-VHROoIWPGnkA==/lib/arm64/libil2cpp.so (BuildId: c1be1ffba78fd6b6d68e279d5de79fd474dac23f)

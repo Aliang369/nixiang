@@ -1,5 +1,6 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 // 无限升级 targetfuntional.dll IL 注入（全量重建路径，输入=原始 dll）
 // 原则（铁律）：有过滤（全部经 StarryConfig 开关，配置缺失=原版行为）；调原函数（关→原 IL 原样执行）
@@ -32,6 +33,15 @@ internal static class Patcher
         // 跳过后面全部功能段 ⇒ 产物**不含任何作弊功能代码**，可以无条件随 so 分发
         // （用户要求：防封随菜单 so 一起加载、不需要登录卡密）。默认不带该变量 = 原全量口径。
         bool antibanOnly = System.Environment.GetEnvironmentVariable("WXSJ_ANTIBAN_ONLY") == "1";
+        // 2026-11-19 二分定位用：只建 helper（宿主类型上的 Get/GetBool/GetInt/NoteBlockedRpc/StrictBlockedRpc），
+        // **31 条功能补丁一条都不打**，供 delta-only 载荷使用（delta 依赖这组 helper 才能跑）。
+        if (System.Environment.GetEnvironmentVariable("WXSJ_HELPERS_ONLY") == "1")
+        {
+            FinalizeBodies();
+        asm.Write(dstPath);
+            Console.WriteLine($"[mode] HELPERS-ONLY：只建 cfg helper，31 条功能补丁全部跳过 → {dstPath}");
+            return;
+        }
         bool featureSection = false;
         if (antibanOnly) Console.WriteLine("[mode] ANTIBAN-ONLY：只打上报/执法屏蔽段");
 
@@ -191,6 +201,7 @@ internal static class Patcher
 
         var dir = Path.GetDirectoryName(dstPath)!;
         Directory.CreateDirectory(dir);
+        FinalizeBodies();
         asm.Write(dstPath);
         Console.WriteLine($"[done] {patched} patches → {dstPath}");
     }
@@ -220,6 +231,14 @@ internal static class Patcher
     // ---------- StarryConfig ----------
     // 文件：<Application.persistentDataPath>/starry_config.ini，每行 key=value
     // 文件不存在/解析异常 → 全默认（关）→ 与原版行为一致；2 秒缓存
+    const string HOST_TYPE = "$Obfuz$ConstFieldHolder$0";
+
+    static IEnumerable<TypeDefinition> AllTypesOf(TypeDefinition t)
+    {
+        yield return t;
+        foreach (var n in t.NestedTypes) foreach (var x in AllTypesOf(n)) yield return x;
+    }
+
     static void BuildStarryConfig()
     {
         tStr = mod.TypeSystem.String;
@@ -229,9 +248,20 @@ internal static class Patcher
         var tStrArr = new ArrayType(tStr);
         var tExc = new TypeReference("System", "Exception", mod, Corlib());
 
-        var cfgType = new TypeDefinition("Starry", "StarryConfig",
-            TypeAttributes.Public | TypeAttributes.Sealed | TypeAttributes.Abstract | TypeAttributes.BeforeFieldInit, tObj);
-        mod.Types.Add(cfgType);
+        // ===== 2026-11-19 实验（lead 批准）：**不新增类型** =====
+        // 宿主必须是 TypeDef / MethodDef / FieldDef 三张表的**表尾类型**，否则 Cecil 追加成员会让
+        // 其后所有行 RID 整体后移（我们把 RID 零位移当作不变量，不能主动破坏）。
+        // 官方 2,748,416 实测表尾：MethodDef 13415 / FieldDef 11631 / TypeDef 1944 全是 $Obfuz$ConstFieldHolder$0。
+        var cfgType = mod.Types.FirstOrDefault(x => x.FullName == HOST_TYPE)
+            ?? throw new Exception($"[host] 宿主类型 {HOST_TYPE} 不存在（不允许新建类型，拒绝回退）");
+        int maxTypeRid = mod.Types.SelectMany(AllTypesOf).Max(x => (int)x.MetadataToken.RID);
+        if ((int)cfgType.MetadataToken.RID != maxTypeRid)
+            throw new Exception($"[host] {HOST_TYPE} 不是 TypeDef 表尾（rid={cfgType.MetadataToken.RID} max={maxTypeRid}）⇒ 追加会造成 RID 位移，拒绝");
+        foreach (var x in mod.Types.SelectMany(AllTypesOf))
+        {
+            if ((int)x.MetadataToken.RID <= (int)cfgType.MetadataToken.RID) continue;
+            if (x.Fields.Count > 0 || x.Methods.Count > 0) throw new Exception($"[host] 表尾之后仍有成员类型 {x.FullName}，拒绝");
+        }
         var fLines = new FieldDefinition("lines", FieldAttributes.Static | FieldAttributes.Private, tStrArr);
         var fNext = new FieldDefinition("nextCheck", FieldAttributes.Static | FieldAttributes.Private, tI32);
         cfgType.Fields.Add(fLines);
@@ -258,16 +288,8 @@ internal static class Patcher
         var mParse = new MethodReference("Parse", tI32, mod.TypeSystem.Int32);
         mParse.Parameters.Add(new ParameterDefinition(tStr));
 
-        // .cctor
-        var cctor = new MethodDefinition(".cctor",
-            MethodAttributes.Static | MethodAttributes.Private | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-            mod.TypeSystem.Void);
-        cfgType.Methods.Add(cctor);
-        cctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ldc_I4_0));
-        cctor.Body.Instructions.Add(Instruction.Create(OpCodes.Stsfld, fNext));
-        cctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
-        cctor.Body.Instructions.Add(Instruction.Create(OpCodes.Stsfld, fLines));
-        cctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+        // 不生成 .cctor：宿主 $Obfuz$ConstFieldHolder$0 已有 .cctor（RID 13415），静态构造器不可重复。
+        // 惰性初始化由 Get() 自己完成：nextCheck 初值 0 ⇒ 首次 TickCount > 0 必刷新；lines 初值 null ⇒ 取不到就返回 null。
 
         // static string Get(string key)
         var mGet = new MethodDefinition("Get",
@@ -464,7 +486,7 @@ internal static class Patcher
         {
             TryStart = tNbApp, TryEnd = hNbApp, HandlerStart = hNbApp, HandlerEnd = nbRet, CatchType = tExc,
         });
-        Console.WriteLine("[cfg] StarryConfig created (2s cache, persistentDataPath/starry_config.ini)");
+        Console.WriteLine($"[cfg] helpers hosted on EXISTING type {HOST_TYPE} (no new type), 2s cache, starry_config.ini");
     }
 
     static AssemblyNameReference AsmRef(string name)
@@ -477,8 +499,27 @@ internal static class Patcher
     }
 
     // ---------- 通用注入 ----------
+    // 2026-11-19 修：Cecil 写回时不会把「插入后超范围」的短跳转自动升级为长形式，
+    // 会静默写出溢出的 sbyte 位移（+138 被写成 -118），目标变成 0xFFFFFF8A。
+    // 因此所有被改过的方法在写盘前统一 SimplifyMacros + OptimizeMacros，让短跳按最终偏移重选形态。
+    static readonly HashSet<MethodDefinition> Touched = new HashSet<MethodDefinition>();
+
+    static void FinalizeBodies()
+    {
+        int n = 0;
+        foreach (var m in Touched)
+        {
+            if (!m.HasBody) continue;
+            m.Body.SimplifyMacros();
+            m.Body.OptimizeMacros();
+            n++;
+        }
+        Console.WriteLine($"[finalize] {n} 个被修改的方法已 SimplifyMacros+OptimizeMacros（短跳越界升级）");
+    }
+
     static void InsertAt(MethodDefinition m, int index, IEnumerable<Instruction> seq)
     {
+        Touched.Add(m);
         var ins = m.Body.Instructions;
         int i = index;
         foreach (var x in seq) ins.Insert(i++, x);
@@ -577,8 +618,9 @@ internal static class Patcher
         return _eq;
     }
 
-    /// 秒杀：定位 [ldarg.0, ldarg.0, call get_Hp, ldloc targetD, call op_Subtraction, call set_Hp]
-    /// 开 → Hp -= Hp（原 OnDead 链照走）；关 → 原序列
+    /// 秒杀（2026-11-19 第三版）：**只放大伤害数值**，不 set_Hp 置 0、不跳过任何官方指令。
+    /// 目标语义：dmg' = hp + dmg ≥ hp ⇒ 官方管线的 hp-dmg' 自然 ≤ 0 ⇒ 死亡/记录/结算全部走官方路径。
+    /// 注入块末尾**不跳转**，直接落入官方序列起点；汇合点只有 brfalse 一处，栈深与官方相等。
     static void Oneshot(MethodDefinition m)
     {
         var ins = m.Body.Instructions;
@@ -594,23 +636,57 @@ internal static class Patcher
             }
         }
         if (idx < 0) throw new Exception($"{m.FullName}: 未找到 get_Hp/op_Subtraction/set_Hp 序列");
+
+        // 伤害局部变量 = op_Subtraction 前一条 ldloc 的目标（官方就是用它做被减数）
+        var dmgLoad = ins[idx + 2]; // idx+1=get_Hp, idx+2=ldloc(dmg), idx+3=op_Subtraction
+        if (dmgLoad.OpCode != OpCodes.Ldloc_S && dmgLoad.OpCode != OpCodes.Ldloc && dmgLoad.OpCode != OpCodes.Ldloc_0
+            && dmgLoad.OpCode != OpCodes.Ldloc_1 && dmgLoad.OpCode != OpCodes.Ldloc_2 && dmgLoad.OpCode != OpCodes.Ldloc_3)
+            throw new Exception($"{m.FullName}: op_Subtraction 前一条不是 ldloc（实际 {dmgLoad.OpCode}）");
+        int dmgIndex;
+        if (dmgLoad.OpCode == OpCodes.Ldloc_0) dmgIndex = 0;
+        else if (dmgLoad.OpCode == OpCodes.Ldloc_1) dmgIndex = 1;
+        else if (dmgLoad.OpCode == OpCodes.Ldloc_2) dmgIndex = 2;
+        else if (dmgLoad.OpCode == OpCodes.Ldloc_3) dmgIndex = 3;
+        else dmgIndex = ((VariableDefinition)dmgLoad.Operand).Index;
+        var dmgLocal = m.Body.Variables[dmgIndex];
+
+        // get_zero：从模块里已有的调用点复用（LargeNumber 是外部程序集类型，本模块无 TypeDef，不能自造引用）
+        var zeroR = FindCallRef(subOp.DeclaringType, "get_zero")
+            ?? throw new Exception($"{m.FullName}: 模块内找不到 {subOp.DeclaringType.FullName}::get_zero，拒绝自造引用");
+
         var seqStart = ins[idx];
-        var after = ins[idx + 5 + 1]; // set_Hp 之后
         var seq = new List<Instruction>
         {
             Instruction.Create(OpCodes.Ldstr, "oneshot"),
             Instruction.Create(OpCodes.Call, mGetBool),
-            Instruction.Create(OpCodes.Brfalse, seqStart),
+            Instruction.Create(OpCodes.Brfalse, seqStart),   // 关：直接进入官方序列
             Instruction.Create(OpCodes.Ldarg_0),
-            Instruction.Create(OpCodes.Ldarg_0),
-            Instruction.Create(OpCodes.Call, getHp),
-            Instruction.Create(OpCodes.Ldarg_0),
-            Instruction.Create(OpCodes.Call, getHp),
-            Instruction.Create(OpCodes.Call, subOp),
-            Instruction.Create(OpCodes.Call, setHp),
-            Instruction.Create(OpCodes.Br, after),
+            Instruction.Create(OpCodes.Call, getHp),         // hp
+            Instruction.Create(OpCodes.Call, zeroR),         // 0
+            Instruction.Create(OpCodes.Ldloc, dmgLocal),     // dmg（与官方同一局部变量）
+            Instruction.Create(OpCodes.Call, subOp),         // 0 - dmg = -dmg
+            Instruction.Create(OpCodes.Call, subOp),         // hp - (-dmg) = hp + dmg
+            Instruction.Create(OpCodes.Stloc, dmgLocal),     // 写回同一个局部变量
         };
+        // 不追加 Br：注入块结束后自然落入 seqStart（官方序列），栈深 1 = 进入时栈深 1
         InsertAt(m, idx, seq);
+    }
+
+    // 在模块已有 IL 里找一个指定名字的调用引用（用于复用外部程序集的方法签名）
+    static MethodReference FindCallRef(TypeReference declaring, string name)
+    {
+        foreach (var t in mod.Types.SelectMany(AllTypesOf))
+            foreach (var md in t.Methods)
+            {
+                if (!md.HasBody) continue;
+                foreach (var ci in md.Body.Instructions)
+                {
+                    if (ci.OpCode != OpCodes.Call && ci.OpCode != OpCodes.Callvirt) continue;
+                    if (ci.Operand is MethodReference r && r.Name == name &&
+                        r.DeclaringType.FullName == declaring.FullName) return r;
+                }
+            }
+        return null;
     }
 
     /// 物品翻倍：入口 target(arg2, long) ×2 后落入原逻辑

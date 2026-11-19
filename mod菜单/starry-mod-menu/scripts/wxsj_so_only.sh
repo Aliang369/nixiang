@@ -80,13 +80,19 @@ HF2_SRC="$JNI/targetfuntional_dll_hotfix2.bin"
 HF3_SRC="$JNI/targetfuntional_dll_hotfix3.bin"
 # 2026-11-18：13.101 现网热更 2,738,688 B 对应补丁（2,749,952 B，**超长** ⇒ 运行时 mode=selfarray）
 HF4_SRC="$JNI/targetfuntional_dll_hotfix4.bin"
+# 2026-11-19：官方再换代 2,746,368 B / fnv 0xd303f1e9c7154db9 对应补丁（2,759,168 B，**超长 +12,800** ⇒ selfarray）
+HF5_SRC="$JNI/targetfuntional_dll_hotfix5.bin"
+# 2026-11-19 14:23 官方再推一版 2,748,416 B / fnv 0x2ab99f0abb45f1ea 对应补丁（2,761,216 B，**超长 +12,800** ⇒ selfarray）
+HF6_SRC="$JNI/targetfuntional_dll_hotfix6.bin"
 [[ -f "$HF2_SRC" ]] || { echo "ERROR: 缺内嵌 dll $HF2_SRC"; exit 1; }
 [[ -f "$HF3_SRC" ]] || { echo "ERROR: 缺内嵌 dll $HF3_SRC"; exit 1; }
 [[ -f "$HF4_SRC" ]] || { echo "ERROR: 缺内嵌 dll $HF4_SRC"; exit 1; }
-( cd "$JNI/Games" && cp ../targetfuntional_dll_hotfix2.bin wxsj_hf2 && cp ../targetfuntional_dll_hotfix3.bin wxsj_hf3 && cp ../targetfuntional_dll_hotfix4.bin wxsj_hf4 && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf2 WxsjPatchedDll_hf2.a && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf3 WxsjPatchedDll_hf3.a && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf4 WxsjPatchedDll_hf4.a && rm wxsj_hf2 wxsj_hf3 wxsj_hf4 )
+[[ -f "$HF5_SRC" ]] || { echo "ERROR: 缺内嵌 dll $HF5_SRC"; exit 1; }
+[[ -f "$HF6_SRC" ]] || { echo "ERROR: 缺内嵌 dll $HF6_SRC"; exit 1; }
+( cd "$JNI/Games" && cp ../targetfuntional_dll_hotfix2.bin wxsj_hf2 && cp ../targetfuntional_dll_hotfix3.bin wxsj_hf3 && cp ../targetfuntional_dll_hotfix4.bin wxsj_hf4 && cp ../targetfuntional_dll_hotfix5.bin wxsj_hf5 && cp ../targetfuntional_dll_hotfix6.bin wxsj_hf6 && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf2 WxsjPatchedDll_hf2.a && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf3 WxsjPatchedDll_hf3.a && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf4 WxsjPatchedDll_hf4.a && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf5 WxsjPatchedDll_hf5.a && "$OBJCOPY" -I binary -O elf64-littleaarch64 -B aarch64 wxsj_hf6 WxsjPatchedDll_hf6.a && rm wxsj_hf2 wxsj_hf3 wxsj_hf4 wxsj_hf5 wxsj_hf6 )
 # 精确校验：从 .a 里把 .data 段抽回来与 bin 逐字节比对（.a 总大小的偏移量随符号名长度浮动，
 # 不能写死 +552 —— 2026-09-23 双版本血案就是踩了这个）
-for v in hf2 hf3 hf4; do
+for v in hf2 hf3 hf4 hf5 hf6; do
   BIN="targetfuntional_dll_hotfix${v#hf}.bin"
   ARCH="Games/WxsjPatchedDll_${v}.a"
   TMP_CHECK="$(mktemp -t wxsj_a_check.XXXXXX)"
@@ -136,7 +142,33 @@ fi
 if (( HF4_LEN > 2738688 )); then
   echo "[wxsj-so] hotfix4=$HF4_LEN > 官方数组 2738688 ⇒ 运行时 mode=selfarray（自建字节数组，预期行为）"
 fi
-echo "[wxsj-so] 多版本尺寸校验: hf2=$HF2_LEN ≤ 2030080, hf3=$HF3_LEN ≤ 2028544, hf4=$HF4_LEN (selfarray if >2738688) ✓"
+# hf5（2026-11-19 官方换代 2,746,368 / fnv 0xd303f1e9c7154db9）：
+#   补丁 ≤ 官方数组 ⇒ 原地 memcpy（必须**严格不越界**，多 1 字节即写坏堆）；补丁 > 官方数组 ⇒ selfarray。
+#   两种都合法，本处只判方向并记账，不 exit（体积门 1MB 兜底防错文件）。
+HF5_OFFICIAL=2746368
+HF5_LEN="$(stat -f%z "$HF5_SRC")"
+if (( HF5_LEN < 1048576 )); then
+  echo "ERROR: hotfix5 补丁 dll $HF5_LEN 异常（<1MB）"; exit 1
+fi
+if (( HF5_LEN > HF5_OFFICIAL )); then
+  echo "[wxsj-so] hotfix5=$HF5_LEN > 官方数组 ${HF5_OFFICIAL}（超 $((HF5_LEN - HF5_OFFICIAL))）⇒ 运行时 mode=selfarray"
+else
+  echo "[wxsj-so] hotfix5=$HF5_LEN ≤ 官方数组 $HF5_OFFICIAL ⇒ 运行时原地 memcpy，pad=$((HF5_OFFICIAL - HF5_LEN))"
+fi
+# hf6（2026-11-19 14:23 官方再推一版：2,748,416 B / fnv 0x2ab99f0abb45f1ea）：
+#   判据同 hf5 —— 补丁 ≤ 官方数组 ⇒ 原地 memcpy（必须严格不越界，多 1 字节即写坏堆）；
+#   补丁 > 官方数组 ⇒ selfarray。两种情况都合法，此处只判方向并记账，不 exit（<1MB 兜底防错文件）。
+HF6_OFFICIAL=2748416
+HF6_LEN="$(stat -f%z "$HF6_SRC")"
+if (( HF6_LEN < 1048576 )); then
+  echo "ERROR: hotfix6 补丁 dll $HF6_LEN 异常（<1MB）"; exit 1
+fi
+if (( HF6_LEN > HF6_OFFICIAL )); then
+  echo "[wxsj-so] hotfix6=$HF6_LEN > 官方数组 ${HF6_OFFICIAL}（超 $((HF6_LEN - HF6_OFFICIAL))）⇒ 运行时 mode=selfarray"
+else
+  echo "[wxsj-so] hotfix6=$HF6_LEN ≤ 官方数组 ${HF6_OFFICIAL} ⇒ 运行时原地 memcpy，pad=$((HF6_OFFICIAL - HF6_LEN))"
+fi
+echo "[wxsj-so] 多版本尺寸校验: hf2=$HF2_LEN ≤ 2030080, hf3=$HF3_LEN ≤ 2028544, hf4=$HF4_LEN (selfarray if >2738688), hf5=$HF5_LEN vs 官方 $HF5_OFFICIAL, hf6=$HF6_LEN vs 官方 $HF6_OFFICIAL ✓"
 
 # 🩸 哈希门常数交叉验证（v7.14 新增）：WxsjMod.cpp 的 kOrigDllHash 必须等于官方底包的
 # 整包 FNV-1a 64；常数写错 → 运行时永远走 PASSTHROUGH（补丁完全不生效却「看起来正常」）。
@@ -153,7 +185,7 @@ else
 fi
 POST_MD5="$(md5 -q "$BUILT")"
 # 🩸 终局断言：编译产物里必须**逐字节**含内嵌 dll（防 .a 过期 / 链接缓存复用旧数据）
-python3 - "$BUILT" "$HF2_SRC" "$HF3_SRC" "$HF4_SRC" <<'PY' || { echo "ERROR: so 内未找到内嵌 dll 的完整字节"; exit 1; }
+python3 - "$BUILT" "$HF2_SRC" "$HF3_SRC" "$HF4_SRC" "$HF5_SRC" "$HF6_SRC" <<'PY' || { echo "ERROR: so 内未找到内嵌 dll 的完整字节"; exit 1; }
 import sys
 so = open(sys.argv[1], 'rb').read()
 for p in sys.argv[2:]:

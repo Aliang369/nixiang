@@ -72,7 +72,23 @@ extern "C" const uint8_t _binary_wxsj_hf3_start[];
 extern "C" const uint8_t _binary_wxsj_hf3_end[];
 extern "C" const uint8_t _binary_wxsj_hf4_start[];
 extern "C" const uint8_t _binary_wxsj_hf4_end[];
+extern "C" const uint8_t _binary_wxsj_hf5_start[];
+extern "C" const uint8_t _binary_wxsj_hf5_end[];
+extern "C" const uint8_t _binary_wxsj_hf6_start[];
+extern "C" const uint8_t _binary_wxsj_hf6_end[];
 static constexpr DllVariant kDllVariants[] = {
+    // 2026-11-19 14:23 官方在 hf5 之后又推一版（DIAG 二次落盘实锤：files/wxsj_dump_2748416_4d5a9000.bin，
+    // 2,748,416 B / fnv 0x2ab99f0abb45f1ea / sha256 219926211e7d5e75…；BSJB@0x16317c、.text +0x800，属另一 build）。
+    // 补丁 2,761,216 B **大于**官方数组（+12,800）⇒ mode=selfarray。
+    // 2026-11-19 17:17 根因修复包（allfix，2,760,704 / pad 12,288）：patcher 短跳越界已修 + 全量重放。
+    // （旧值链：0x23558920cb29e5b2 → 0x4c9bde4d17b73974(hf7b) → 0xbbe1c05065ea0f8b(bisect1)
+    //   → 0x68c9cf9e8185fa5a(oneshotfix) → 0x82b47810c2009ed9(oneshotfix2) → 0xb849f6ff6ff453d4）
+    {2748416, 0x2ab99f0abb45f1eaULL, 0xb849f6ff6ff453d4ULL, _binary_wxsj_hf6_start, _binary_wxsj_hf6_end},
+    // 2026-11-19 官方再换代（DIAG 包运行时落盘实锤：wxsj_dump_2746368_4d5a9000.bin，
+    // MZ+PE+3 sections+BSJB@0x162f08，2,746,368 B / fnv 0xd303f1e9c7154db9 / sha256 ca87e40c…）。
+    // 补丁 2,759,168 B **大于**官方数组（+12,800）⇒ 走 mode=selfarray；
+    // patchedBufHash = 补丁整包 fnv（selfarray 不改原数组，此位只作「已知补丁」兜底放行）。
+    {2746368, 0xd303f1e9c7154db9ULL, 0x0ea61c6f23b620fdULL, _binary_wxsj_hf5_start, _binary_wxsj_hf5_end},
     // 2026-11-18 13.101 / vc1650 现网换代（运行时 /proc dump 实锤：段 0x76d0000000+0x36e62e0，
     // MZ+PE+3 sections+BSJB@0x161fdc，Assembly=targetfuntional，2,738,688 B / fnv 0xd31dc94b29a8bb0d）。
     // 补丁 2,749,952 B **大于**官方数组 ⇒ 运行时走 mode=selfarray（自建字节数组）；
@@ -186,6 +202,14 @@ static bool SkipHashGate() {
     return access(("/data/user/0/" + pkg + "/files/starry_skip_dll_hash").c_str(), F_OK) == 0;
 }
 
+// 【2026-11-19】PINNED 分支测试钩子：files/starry_pin_test 存在 ⇒ 强制走「未知版本」路径，
+// 用于真机验证钉死注入（日志应为 PINNED ... (hot-update blocked)）。
+static bool PinTest() {
+    std::string pkg = PkgName();
+    if (pkg.empty()) return false;
+    return access(("/data/user/0/" + pkg + "/files/starry_pin_test").c_str(), F_OK) == 0;
+}
+
 // ---- DIAG 取证模式（-DWXSJ_DIAG_DUMP=1）：只落盘官方运行时 DLL，不替换/不崩 ----
 #if defined(WXSJ_DIAG_DUMP) && WXSJ_DIAG_DUMP
 static std::atomic<int> g_diagCount{0};
@@ -230,12 +254,16 @@ static uint8_t HookExec(void* self, void* data, void* outP, void* mi) {
         if (g_replaceArmed.load(std::memory_order_relaxed) && isDll && ContainsDllNameKey(bytes, (size_t)len)) {
             const uint64_t h = Fnv1a64(bytes, (size_t)len);
             const DllVariant* v = PickDllVariant(len, h);
-            if (!v) {
-                LOGE(WXSJ_LOG " no variant for len=%d fnv=%016llx : PASSTHROUGH official", len, (unsigned long long)h);
-                if (g_hotfixForced.fetch_add(1) == 0) {
-                    StarryShowToast("[无限升级] 游戏热更版本未识别，本次以官方版本运行（存档安全）。新功能请等人工更新安装包");
-                }
-                return orig(self, data, outP, mi);
+            // 【2026-11-19 禁热更加固】官方换代长度每次都变（2,738,688→2,746,368→2,748,416），
+            // 旧逻辑只在「长度相同」时兜底命中；长度一变就落到 PASSTHROUGH 官方新版 ⇒
+            // 功能与防封同时失效（用户实测「13 版禁止热更失效」的根因）。
+            // 现改为钉死：未知版本一律注入最新已适配变体，热更不生效，等人工换包。
+            bool pinnedVariant = false;
+            if (!v || PinTest()) {
+                v = &kDllVariants[0];
+                pinnedVariant = true;
+                LOGE(WXSJ_LOG " PINNED unknown official len=%d fnv=%016llx -> officialLen=%d patched=%d (hot-update blocked)",
+                     len, (unsigned long long)h, v->officialLen, (int)(v->dataEnd - v->dataStart));
             }
             const size_t pLen = (size_t)(v->dataEnd - v->dataStart);
             // 【v7.16】同一装载缓冲区被二次执行：内容已经是我们的补丁（长度仍是官方 2030080，
@@ -451,8 +479,10 @@ static bool TryHookOnce() {
     size_t hf2Len = (size_t)(_binary_wxsj_hf2_end - _binary_wxsj_hf2_start);
     size_t hf3Len = (size_t)(_binary_wxsj_hf3_end - _binary_wxsj_hf3_start);
     size_t hf4Len = (size_t)(_binary_wxsj_hf4_end - _binary_wxsj_hf4_start);
-    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p variants=hf2:%zuB+hf3:%zuB+hf4:%zuB",
-         (void*)base, kExecRva, orig, hf2Len, hf3Len, hf4Len);
+    size_t hf5Len = (size_t)(_binary_wxsj_hf5_end - _binary_wxsj_hf5_start);
+    size_t hf6Len = (size_t)(_binary_wxsj_hf6_end - _binary_wxsj_hf6_start);
+    LOGI(WXSJ_LOG " hook installed @base=%p +0x%zx orig=%p variants=hf2:%zuB+hf3:%zuB+hf4:%zuB+hf5:%zuB+hf6:%zuB",
+         (void*)base, kExecRva, orig, hf2Len, hf3Len, hf4Len, hf5Len, hf6Len);
     // v7.2：屏蔽封号执法为基线功能——无条件武装字节替换（清数据/首装同样生效）。
     // 旧逻辑「配置里有功能开启才武装」在清数据后导致原版 dll 运行，封号弹窗+COS上传全链复活。
     // ★玩家不需要任何操作：钩子装上即武装。触发链与菜单无关：

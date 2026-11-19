@@ -57,6 +57,20 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := wxsj_dll_hf4
 LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf4.a
 include $(PREBUILT_STATIC_LIBRARY)
+# 2026-11-19：官方再换代 2,746,368 B / fnv 0xd303f1e9c7154db9（DIAG 落盘实锤，
+# 06_dumped/无限升级/13101_new/targetfuntional_official_20261119_2746368.dll）；
+# 补丁 2,759,168 B **大于**官方数组（+12,800）⇒ 同样走 mode=selfarray。
+include $(CLEAR_VARS)
+LOCAL_MODULE := wxsj_dll_hf5
+LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf5.a
+include $(PREBUILT_STATIC_LIBRARY)
+# 2026-11-19 14:23 官方在 hf5 之后又推一版：2,748,416 B / fnv 0x2ab99f0abb45f1ea
+# （DIAG 二次落盘：files/wxsj_dump_2748416_4d5a9000.bin，06_dumped/无限升级/13101_new/…2748416.dll）；
+# 补丁 2,761,216 B **大于**官方数组（+12,800）⇒ mode=selfarray。
+include $(CLEAR_VARS)
+LOCAL_MODULE := wxsj_dll_hf6
+LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf6.a
+include $(PREBUILT_STATIC_LIBRARY)
 
 # ============================================================
 #  星光魔法 MOD 菜单 — 主模块
@@ -367,6 +381,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll_hf2 wxsj_dll_hf3 wxsj_dll_hf4
+LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll_hf2 wxsj_dll_hf3 wxsj_dll_hf4 wxsj_dll_hf5 wxsj_dll_hf6
 
 include $(BUILD_SHARED_LIBRARY)
