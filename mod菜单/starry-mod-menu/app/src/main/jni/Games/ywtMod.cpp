@@ -404,7 +404,7 @@ end
 -- 反汇编 proto#50：OnJudgeResult 里 R2 先被 self.typeMode:AdjustJudge(R2) 的返回值覆盖
 -- （[3] CALL / [4] MOVE R2 R6），随机模式再覆盖一次 ⇒ 包 OnJudgeResult 的入参一定会被冲掉。
 -- typeMode 是 Mode 实例字段，我们从 OnUpdate(self) 就能拿到，不依赖找类表。
-local AJ = { cnt = 0, skip = 0, picks = {}, first = false }
+local AJ = { cnt = 0, skip = 0, picks = {}, first = false, obs = 0, norm = 0 }
 
 local function armAdjust(self)
   if type(self) ~= "table" then return false end
@@ -422,25 +422,47 @@ local function armAdjust(self)
   local vals = judgeVals()
   tm.AdjustJudge = function(tm2, judgeType, ...)
     local c = cfg()
+    local inType = judgeType
+    -- ★2026-11-20 task-5 ② 自动档归一：
+    --   117 UI_DanceRhythmMasterMode_Ctrl.AutoHitTap 把判定档硬编码成 7
+    --   (SuperPerfectPlusPlusAdd, __117:4237-4240)，而 016/020 的 calcReduceHp 用
+    --   judgeType 当 Judge_Basehp 的行键、缺行回退 Miss 行 ⇒ delta≈0 ⇒「自动跳舞不加血」。
+    --   自动跳舞开着时把 >=7 的入参降到 6 (SuperPerfectPlus)：与 015 AdjustJudge 对 1..5
+    --   的归一结果一致(__015:741-752)，也是手动能打到的最高有效档。
+    --   只改「送进原函数」的档位；judge_on 的伪档返回值不动（判定显示仍可高档）。
+    if c and c.auto_on and type(judgeType) == "number" and judgeType >= 7 then
+      judgeType = 6
+      AJ.norm = AJ.norm + 1
+    end
+    local v = nil
     if c and c.judge_on then
-      local v, i = pickJudge(c, vals)
+      local vv, i = pickJudge(c, vals)
+      v = vv
       if v ~= nil then
         AJ.cnt = AJ.cnt + 1
         AJ.picks[i] = (AJ.picks[i] or 0) + 1
         if not AJ.first then
           AJ.first = true
-          log(string.format("[Ywt] AJ pick=%s w=%d in=%s", ROWS[i].enum, i, tostring(judgeType)))
+          log(string.format("[Ywt] AJ pick=%s w=%d in=%s", ROWS[i].enum, i, tostring(inType)))
         end
-        if AJ.cnt % 50 == 0 then
-          log(string.format("[Ywt] AJ count=%d pick=SPP:%d,SP+:%d,SP:%d,Pf:%d,Gr:%d,Gd:%d skip=%d",
-              AJ.cnt, AJ.picks[1] or 0, AJ.picks[2] or 0, AJ.picks[3] or 0,
-              AJ.picks[4] or 0, AJ.picks[5] or 0, AJ.picks[6] or 0, AJ.skip))
-        end
-        return v
+      else
+        AJ.skip = AJ.skip + 1
       end
-      AJ.skip = AJ.skip + 1
     end
-    return aj(tm2, judgeType, ...)
+    -- ★2026-11-20 task-5 ③ 低频观测日志（每 50 次一条；真机验证 auto/judge 与归一结果）
+    AJ.obs = AJ.obs + 1
+    if AJ.obs % 50 == 0 then
+      log(string.format("[Ywt] AJ obs=%d auto=%s judge=%s in=%s use=%s norm=%d pick=%d skip=%d",
+          AJ.obs, tostring(c and c.auto_on or false), tostring(c and c.judge_on or false),
+          tostring(inType), tostring(judgeType), AJ.norm, AJ.cnt, AJ.skip))
+    end
+    -- ★2026-11-20 task-5 ① 先调原函数、再返回伪档：
+    --   原版在 judge_on 分支「pickJudge 后直接 return v」，把 aj() 整段跳过了；而
+    --   OnAdjustJudge（加血/护盾/OnAttrSyncMyBlood）与 AddMyEnergy（能量）全在这个原函数里
+    --   (__015:741-752) ⇒ 判定概率一开就「一定不加血、不加能量」。
+    local r = aj(tm2, judgeType, ...)
+    if v ~= nil then return v end
+    return r
   end
   pcall(rs, tm, "__ywt_aj", 1)
   log("[Ywt] AdjustJudge hooked src=typeMode")
