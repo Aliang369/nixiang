@@ -1,68 +1,158 @@
 {
   "template_id": "wxsjdz1",
-  "name": "无限升级11",
+  "tag": "wxsjdz1_new",
+  "name": "无限升级 星光版（21 槽）",
   "package": "com.xingzuodaoshi.infinityUpgrade",
-  "source": "Games/WxsjVc1637Entry.cpp GameMod_Get @ 11.266018/vc1637；game_id 独立为 wxsjdz1（2026-10-26 用户为「11 线加固包」单独开号，12.x 继续用 wxsj，两者互不影响）；2026-10-26 防封撤出菜单（改随 so 无条件生效的基线），转生时间无限制 17→16",
+  "game_version": "13.101 / vc1650（TapTap 官方包）",
+  "entry": "Games/Wxsjdz1NewEntry.cpp GameMod_Get @ mod菜单/starry-mod-menu/app/src/main/jni",
+  "build_mk": "Android_wxsjdz1new.mk",
+  "source": "2026-11-20 用户口径＝定制1（game_id=wxsjdz1）21 槽 = 19 项功能 + 2 个 Category 分组；文本逐字对齐 Games/Wxsjdz1Entry.cpp（断网版，仅文本可抄）；native 走 13.x 注入链（RVA 0x2b890d8 / 载荷 allfix）而非断网版载荷；feat 0/3 为 Category_ 分组行，无功能",
+  "feature_count": 21,
   "features": [
     {
+      "feat_num": 0,
+      "type": "category",
+      "menu": "Category_战斗",
+      "name": "战斗"
+    },
+    {
       "feat_num": 1,
-      "name": "无敌"
+      "type": "toggle",
+      "menu": "Toggle_无敌",
+      "name": "无敌",
+      "config_key": "god"
     },
     {
       "feat_num": 2,
-      "name": "秒杀"
+      "type": "toggle",
+      "menu": "Toggle_秒杀",
+      "name": "秒杀",
+      "config_key": "oneshot"
+    },
+    {
+      "feat_num": 3,
+      "type": "category",
+      "menu": "Category_功能",
+      "name": "功能"
     },
     {
       "feat_num": 4,
-      "name": "免广告"
+      "type": "toggle",
+      "menu": "Toggle_免广告",
+      "name": "免广告",
+      "config_key": "free_ads"
     },
     {
       "feat_num": 5,
-      "name": "物品不减"
+      "type": "toggle",
+      "menu": "Toggle_物品不减",
+      "name": "物品不减",
+      "config_key": "item_keep"
     },
     {
       "feat_num": 6,
-      "name": "技能免费升级"
+      "type": "toggle",
+      "menu": "Toggle_技能免费升级",
+      "name": "技能免费升级",
+      "config_key": "skill_free"
     },
     {
       "feat_num": 7,
-      "name": "广告奖励倍数"
+      "type": "input",
+      "menu": "InputValue_1:广告奖励倍数",
+      "name": "广告奖励倍数",
+      "config_key": "ads_reward_x"
     },
     {
       "feat_num": 8,
-      "name": "物品倍数"
+      "type": "input",
+      "menu": "InputValue_1:物品倍数",
+      "name": "物品倍数",
+      "config_key": "item_double_x"
     },
     {
       "feat_num": 9,
-      "name": "无限挑战秘境"
+      "type": "toggle",
+      "menu": "Toggle_无限挑战秘境",
+      "name": "无限挑战秘境",
+      "config_key": "mijing_free"
     },
     {
       "feat_num": 10,
-      "name": "皮肤全解锁"
+      "type": "toggle",
+      "menu": "Toggle_皮肤全解锁",
+      "name": "皮肤全解锁",
+      "config_key": "skin_unlock"
     },
     {
       "feat_num": 11,
-      "name": "功能全解锁"
+      "type": "toggle",
+      "menu": "Toggle_功能全解锁",
+      "name": "功能全解锁",
+      "config_key": "func_unlock"
     },
     {
       "feat_num": 12,
-      "name": "经验倍数"
+      "type": "input",
+      "menu": "InputValue_1:经验倍数",
+      "name": "经验倍数",
+      "config_key": "exp_multi"
     },
     {
       "feat_num": 13,
-      "name": "商店广告无限"
+      "type": "toggle",
+      "menu": "Toggle_商店广告无限",
+      "name": "商店广告无限",
+      "config_key": "shop_ads_unlimited"
     },
     {
       "feat_num": 14,
-      "name": "物品使用反增"
+      "type": "toggle",
+      "menu": "Toggle_物品使用反增",
+      "name": "物品使用反增",
+      "config_key": "item_reverse"
     },
     {
       "feat_num": 15,
-      "name": "物品反增倍率"
+      "type": "input",
+      "menu": "InputValue_1000:物品反增倍率",
+      "name": "物品反增倍率",
+      "config_key": "item_reverse_x"
     },
     {
       "feat_num": 16,
-      "name": "转生时间无限制"
+      "type": "toggle",
+      "menu": "Toggle_转生时间无限制",
+      "name": "转生时间无限制",
+      "config_key": "zhuansheng_free"
+    },
+    {
+      "feat_num": 17,
+      "type": "slider",
+      "menu": "Slider_技能投掷物倍数:1:100",
+      "name": "技能投掷物倍数",
+      "config_key": "skill_projectile_x"
+    },
+    {
+      "feat_num": 18,
+      "type": "slider",
+      "menu": "Slider_技能伤害倍数:1:1000",
+      "name": "技能伤害倍数",
+      "config_key": "skill_damage_x"
+    },
+    {
+      "feat_num": 19,
+      "type": "toggle",
+      "menu": "Toggle_转生无条件升级",
+      "name": "转生无条件升级",
+      "config_key": "zhuan_sheng_free_point"
+    },
+    {
+      "feat_num": 20,
+      "type": "slider",
+      "menu": "Slider_称号等级:1:20",
+      "name": "称号等级",
+      "config_key": "chenghao_lv"
     }
   ]
 }

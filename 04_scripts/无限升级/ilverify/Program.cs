@@ -5,6 +5,9 @@ using Mono.Cecil.Cil;
 // 用法: ilverify <dll> [v1|merged]
 var path = args[0];
 var stage = args.Length > 1 ? args[1] : "merged";
+// 2026-11-20：19 项载荷（_allfix_19feat）之后，D 段由「禁止」翻成「必须有」8 项。
+// 复核旧 11 项产物（如 allfix / hf6 / hf7）时传 --feat11 跳过该段，避免把正常产物判 FAIL。
+bool feat11 = args.Any(a => a == "--feat11");
 var asm = AssemblyDefinition.ReadAssembly(path);
 var mod = asm.MainModule;
 int pass = 0, fail = 0;
@@ -201,22 +204,57 @@ if (stage == "merged" || stage == "vtpin" || stage == "deltaonly")
         }
 }
 
-// ---------- D. 功能边界反查：禁止 feat13/14/15 ----------
-Console.WriteLine("[D] 功能边界反查（禁止 wxsjdz2 feat13/14/15）");
-foreach (var bad in new[] { "skill_projectile_x", "skill_damage_x", "legacy_cost_zero" })
+// ---------- D. 8 项增量（feat13-20）：stage=merged 时断言「必须有」 ----------
+// 2026-11-20 翻转：19 项载荷（..._allfix_19feat.dll）之后，原「禁止 skill_projectile_x / skill_damage_x /
+// legacy_cost_zero」的反查必须改成「必须有」，否则 8 项打完后本条必然 FAIL。
+Console.WriteLine($"[D] 8 项增量断言（feat13-20，stage={stage}{(feat11 ? "，--feat11 跳过" : "")}）");
+if (stage == "merged" && !feat11)
 {
-    int c = types.SelectMany(t => t.Methods).Count(m => LdstrCount(m, bad) > 0);
-    if (c == 0) Ok($"未见 {bad}（未带投掷物/技能伤害/转生归零）"); else No($"出现 {bad} ×{c} —— 越界！");
+    // (typeFull, method, pc, key, 期望次数)
+    var tFeat = new (string T, string N, int? Pc, string Key, int Cnt, string Tag)[]
+    {
+        ("AdsManager/ShowAdsNewFlow","Show",null,"shop_ads_unlimited",1,"feat13 商店广告无限（Show 入口清零）"),
+        ("ShopWindow","Refresh",0,"shop_ads_unlimited",1,"feat13 商店广告无限（Refresh 入口清零）"),
+        ("GameData","MinusItem",null,"item_reverse_x",1,"feat15 物品反增倍率（本体认负额）"),
+        ("LunHuiWindow","WindowOpen",0,"zhuansheng_free",2,"feat16 转生时间无限制（2 处比较点）"),
+        ("SkillAssets","GetBulletAmount",null,"skill_projectile_x",1,"feat17 技能投掷物倍数"),
+        ("SkillAssets","get_damage",null,"skill_damage_x",2,"feat18 技能伤害倍数（physic 分支 ret）"),
+        ("SkillAssets","GetSafeDamage",null,"skill_damage_x",2,"feat18 技能伤害倍数（skill 分支 ret）"),
+        ("PlayerGo","ChangeClothes",1,"chenghao_lv",1,"feat20 称号等级（开局/换装写入）"),
+        ("PlayerGo","FixedUpdate",0,"chenghao_lv",1,"feat20 称号等级（变化即重刷）"),
+    };
+    foreach (var e in tFeat)
+    {
+        var cands = Ms(e.T, e.N, e.Pc);
+        if (cands.Count == 0) { No($"{e.Tag}：{e.T}::{e.N} 方法未找到"); continue; }
+        var hit = cands.FirstOrDefault(x => LdstrCount(x, e.Key) == e.Cnt);
+        if (hit != null) Ok($"{e.Tag}：{e.Key} ×{e.Cnt}");
+        else No($"{e.Tag}：{e.Key} 期望 ×{e.Cnt}，实际 {string.Join("/", cands.Select(x => LdstrCount(x, e.Key)))}");
+    }
+    // feat14：全模块 item_reverse 门数（allfix 实测 136 处可打点；排除 8 处存档链/库存驱动循环）
+    // 门是按「MinusItem 调用点」插的，一个方法可能有多处（本包 136 门分布在 122 个方法里）⇒ 数指令不数方法
+    int rev = types.SelectMany(t => t.Methods).Sum(m => m.HasBody ? LdstrCount(m, "item_reverse") : 0);
+    // 137 = 136 个调用点门 + 1 处 MinusItem 本体里 item_reverse_x 取数块的 item_reverse 开关
+    if (rev == 137) Ok("feat14/15 物品使用反增：item_reverse 键 137 处（136 调用点 + 1 本体内）");
+    else No($"feat14 item_reverse 键 {rev} 处（期望 137 = 136 调用点 + 1 本体）");
+    // feat19：成本点归零 + helper
+    var cellT = mod.GetType("LegacySystem.LegacyCell");
+    int cost = cellT == null ? -1 : cellT.Methods.Where(m => m.HasBody)
+        .Sum(m => m.Body.Instructions.Count(i => i.Operand is MethodReference r && r.Name == "StarryCostZero"));
+    if (cost == 13) Ok("feat19 转生无条件升级：LegacyCell 成本点 13 处被 StarryCostZero 包裹（实测值）");
+    else No($"feat19 LegacyCell StarryCostZero 落点 {cost} 处（期望 13）");
+    bool helper = types.SelectMany(t => t.Methods).Any(m => m.Name == "StarryCostZero" && m.HasBody);
+    if (helper) Ok("feat19 helper StarryCostZero 已注入（宿主类型上，不新增类型）");
+    else No("feat19 helper StarryCostZero 缺失");
+    // 越界反查：11 线 feat3 的「倍数生效开关」键在本包不应存在（21 槽用 InputValue 语义，无 on 开关）
+    foreach (var bad in new[] { "skill_projectile_on", "skill_damage_on", "zhuan_sheng_free_point_on" })
+    {
+        int c = types.SelectMany(t => t.Methods).Count(m => LdstrCount(m, bad) > 0);
+        if (c == 0) Ok($"未见 {bad}（21 槽口径无「生效开关」）"); else No($"出现 {bad} ×{c} —— 越界！");
+    }
 }
-foreach (var (T, N, pc) in new (string, string, int?)[] { ("SkillAssets","GetBulletAmount",null), ("SkillAssets","get_damage",null), ("SkillAssets","GetSafeDamage",null), ("LegacySystem.LegacyCell",null,null) })
-{
-    if (N == null) continue;
-    var t = mod.GetType(T);
-    var md = t?.Methods.FirstOrDefault(x => x.Name == N && (pc == null || x.Parameters.Count == pc));
-    if (md == null) { Console.WriteLine($"  [N/A ] {T}::{N}（新包不存在或签名变化，边界无需查）"); continue; }
-    bool dirty = md.Body.Instructions.Any(i => i.OpCode.Code == Code.Ldstr && ((string)i.Operand).StartsWith("skill_"));
-    if (!dirty) Ok($"{T}::{N} 未被 feat13/14 补丁污染"); else No($"{T}::{N} 出现 skill_* 键 —— 越界！");
-}
+else if (feat11) Console.WriteLine("  [N/A ] --feat11：按 11 项旧口径复核，跳过 8 项断言");
+else Console.WriteLine("  [N/A ] 非 merged 产物：8 项增量按设计不在本 stage");
 
 // ---------- F. 版本钉死族（vtpin）：stage=vtpin 断言「已钉死」；stage=merged 断言「未被钉死」 ----------
 Console.WriteLine($"[F] 版本钉死族（stage={stage}）");

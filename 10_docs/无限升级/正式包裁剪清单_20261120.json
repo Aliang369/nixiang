@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/无限升级",
+  "keep": "无限升级_13.101_wxsjdz1_21slot-releaseSigned.apk",
+  "keep_size": 137384308,
+  "keep_md5": "9f210d9948e099b2f1f96ad71dbd1fc1",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "无限升级_13.101_vc1650_wxsjdz1new_dryrun.apk",
+      "size": 137384308,
+      "md5": "484b073aa4bceafb46db26e99a3d420b"
+    },
+    {
+      "name": "无限升级_13.101_wxsjdz1_diagdump.apk",
+      "size": 137384308,
+      "md5": "e50ebd88da0f51d2f6b14113a9ae3b0b"
+    }
+  ],
+  "removed_count": 2
+}
