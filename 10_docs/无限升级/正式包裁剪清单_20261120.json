@@ -3,6 +3,13 @@
   "keep": "无限升级_13.101_wxsjdz1_21slot-fix1-releaseSigned.apk",
   "keep_size": 137384308,
   "keep_md5": "ae3f8067d307d2f3a224e4e09292bd79",
+  "keep2": {
+    "name": "无限升级_13.101_wxsjdz1_full-antiban-releaseSigned.apk",
+    "size": 137388404,
+    "md5": "59666f42cb2ad419640a675d4fb7e361",
+    "note": "第二交付物（22 槽含 Toggle_防封，防封默认关；用户 2026-11-20 23:03 追加需求）。两个正式包并存，用户按需装。"
+  },
+  "keep2_note": "prune_output_final.sh 契约只支持单 keep（写 keep/keep_size/keep_md5 + removed[]，--apply 会删除 keep 之外的一切 APK 且断言剩余=1）。因此本文件用「keep=主交付(fix1) + keep2=并存变体」的写法：keep2 是**保留项、不是待删项**，故不能进 removed。⚠ 代价：若直接以本清单跑 prune_output_final.sh --apply，变体包会被删；要保留双包必须先把变体移出 08_output 目录，或改 keep 指向变体。",
   "mode": "--apply",
   "removed": [
     {
