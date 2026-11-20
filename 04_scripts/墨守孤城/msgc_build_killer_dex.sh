@@ -29,7 +29,7 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -d "$SMALI_SRC" ]] || { echo "ERROR: 缺少 smali 源码 $SMALI_SRC" >&2; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: 缺少 smali 工具 $SMALI_BIN" >&2; exit 1; }
 
-WORK="$NIXIANG/07_tmp/msgc_killer"
+WORK="$NIXIANG/13_scratch/msgc_killer"
 rm -rf "$WORK"
 mkdir -p "$WORK"
 trap 'rm -rf "$WORK"' EXIT   # 工作区内 ASCII 暂存（用户约束）

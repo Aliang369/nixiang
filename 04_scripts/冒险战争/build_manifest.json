@@ -1,0 +1,176 @@
+{
+  "game": "冒险战争",
+  "game_id": "mxzz",
+  "package": "com.mxzz.zbml",
+  "version": "1.1.036",
+  "version_code": 7,
+  "build_no": "b16",
+  "built_at": "2026-11-19T21:25+08:00",
+  "route": "HybridCLR 加载边界换程序集字节（离线 Cecil IL 补丁）+ 菜单 ini 开关；外科 zip 组装",
+  "artifacts": {
+    "base_apk": {
+      "path": "02_apks/冒险战争_1.1.036_7_orig.apk",
+      "size": 1507414974,
+      "sha256": "bfa8d753a7061d196ba81a7ac26019e5bd3b342463f098e7f63657c9a8264ab6"
+    },
+    "official_dev": {
+      "path": "07_patched/冒险战争/src/mygame_dev_1085_official.dll",
+      "size": 18826240,
+      "sha256": "9802e7ed91c9ec86a4cfc4862c30da7a79df346834b88411a59d5e5c206411a8",
+      "role": "input（热更 1.1.085 程序集，白名单键）"
+    },
+    "official_base": {
+      "path": "07_patched/冒险战争/src/mygame_base_official.dll",
+      "size": 18009088,
+      "sha256": "e58aa7ef725f776003404022f12a570eab33da32eb9fc83def44ada0f56d5bfb",
+      "role": "input（APK 基线程序集，白名单键）"
+    },
+    "patched_dev": {
+      "path": "07_patched/冒险战争/mygame_mxzz_dev_1085.dll",
+      "size": 18738688,
+      "sha256": "1777bd031f44603ff516451b409fa4cc9a7913832d6f6e233b2208d382dd2b26",
+      "role": "output（补丁体 dev）"
+    },
+    "patched_base": {
+      "path": "07_patched/冒险战争/mygame_mxzz_base.dll",
+      "size": 17925120,
+      "sha256": "f5adec68f7c40659fad31e0d68b0a9a229f57b7c7a5ee35ee03309ec9b50005d",
+      "role": "output（补丁体 base）"
+    },
+    "payload_a": {
+      "path": "mod菜单/starry-mod-menu/app/src/main/jni/libs_mxzz/MxzzPatchedDll.a",
+      "size": 36667272,
+      "sha256": "1afe3e42aab8235d07ce77d741251d823cb1a19fbb9a2b081d92c5113977ebb4",
+      "role": "output（objcopy 内嵌静态库）"
+    },
+    "so": {
+      "path": "mod菜单/starry-mod-menu/libs_mxzz/arm64-v8a/libstarry_magic.so",
+      "size": 36863752,
+      "sha256": "e8b3d1215cb8ba8ee76053aa9759035d55762f82286d9f939a74a86f7d1e3b13",
+      "role": "output（mod so，含 dev+base 两份载荷 + 补丁体自 sha 幂等表）"
+    },
+    "menu_dex": {
+      "path": "07_patched/冒险战争/menu_current/classes6.dex",
+      "size": 450640,
+      "sha256": "23141d5c008201a00e6def91ee300b15a30fb19393eebab6b2cdbaa34928495e",
+      "md5": "4a2f599809511b12d198599ac0ce2d86",
+      "role": "output（菜单 Java 桥 dex）"
+    },
+    "manifest": {
+      "path": "07_patched/冒险战争/AndroidManifest.xml",
+      "size": 71596,
+      "sha256": "df08661ed94a6b0d4cef1ea2addac9ff955751a4eaa385bd1ddc689a628ec65c",
+      "role": "output（二进制 AXML 补丁产物）"
+    },
+    "apk": {
+      "path": "08_output/冒险战争/冒险战争_1.1.036_b16.apk",
+      "size": 1519809682,
+      "sha256": "bb06d6cd2e637f38c7c4ebb213b0a68d10610dafac2736bbf21a7b92a2469087",
+      "md5": "70ced0972564a54b317e73c84aeb5f46"
+    },
+    "libcxx_shared": {
+      "path": "APK 内 lib/arm64-v8a/libc++_shared.so（源：09_test/冒险战争/static/ref_libc++_shared_92ee8da6.so）",
+      "size": 1292896,
+      "sha256": "92ee8da641b969254cc8723f64aa115d36c8ffa87115e38bc9cb89e3eefee839",
+      "role": "runtime dependency（b3 新增；b2 缺失导致 dlopen 失败）"
+    }
+  },
+  "commands": [
+    "cd <repo>; export NIXIANG_ROOT=E:\\\\nixiang",
+    "dotnet <SDK>/dotnet.exe build -c Release  # 04_scripts/冒险战争/ilpatch",
+    "dotnet <SDK>/dotnet.exe <ilpatch.dll> 07_patched/冒险战争/src/mygame_dev_1085_official.dll 07_patched/冒险战争/mygame_mxzz_dev_1085.dll",
+    "dotnet <SDK>/dotnet.exe <ilpatch.dll> 07_patched/冒险战争/src/mygame_base_official.dll 07_patched/冒险战争/mygame_mxzz_base.dll",
+    "dotnet <SDK>/dotnet.exe <ilpatch.dll> --cmp <official> <patched> Battle.Life AddHP   # 反推验证",
+    "bash 04_scripts/冒险战争/mxzz_build_so.sh",
+    "bash 04_scripts/冒险战争/mxzz_build_dex.sh",
+    "bash 04_scripts/冒险战争/mxzz_build_apk.sh"
+  ],
+  "gates": {
+    "ilpatch_const_ledger": "PASS（dev 14616 / base 14245 条真实默认值全保留）",
+    "ilpatch_intent_assertions": "PASS 15 项（StarryConfig/MxzzPatch〔含 LogD 双通道 + SetHP/ReceiveDamage 路径探针 + b10 四个静态计数 s_cAdd/s_cSet/s_cRecv/s_cAdj + b11 自检计数 s_cAwake/s_cStart（GTLauncher::Awake/Start）〕/AllOff 零 JInt/AdjustValue 单出口与签名/AddHP 前缀 255 条=245+10/全关短路/改写落回/参数对齐/局部类型/栈额/前缀无早退/引用卫生）",
+    "reverse_verify_cmp": "PASS（b11 两版：245→259，prefix=14〔4 计数 + 1 Enter + 9 语义前缀〕；比对 245 条〔分支 12 条〕差异 0；maxstack 8→8；locals 6→7；EH 0→0）",
+    "so_selfcheck": "PASS（[Mxzz] 标签 / Toggle_秒杀 / JNI_OnLoad 导出 / 无 emutls / 载荷符号未导出 / 双载荷符号齐 / 自 sha 表存在）",
+    "dex_selfcheck": "PASS（StarryInitProvider/MenuService/StarryNativeLoad/StarryApp 齐；364 类；编译期 stub 未作为类定义进入 dex）",
+    "manifest_selfcheck": "PASS（Application 未替换 / provider 首个子元素 / MenuService FGS specialUse / resmap 回读 / 权限 32 条）",
+    "pre_install_gate": "PASS=3 FAIL=0 WARN=0 SKIP=1（b11：构建戳 STARRYSTAMP1:EPOCH=1794998677 / so-metadata 均与底包一致 / 菜单新鲜度 PASS / Manifest 二进制 / TapTap 方案 SKIP 非 TapTap 包）",
+    "libclosure": "PASS（b11：arm64 全部 .so 闭包完整，含 libc++_shared.so）",
+    "entry_delta_vs_b2": "b10→b11：条目名集合完全一致（均 11660 条），内容差异仅 lib/arm64-v8a/libstarry_magic.so + META-INF/MANIFEST.MF、STARRY.SF、STARRY.RSA 三个签名文件",
+    "feat_index": "PASS（check_mxzz_feat_index.py：Toggle_秒杀->1 / Toggle_无敌->2）",
+    "hook_point": "ClientLife::set_HP + LogicRecord_HPValue::PerformDoRecord + ClientLife::{DoDead,set_LogicDead} 死亡拦截"
+  },
+  "not_proven": [
+    "运行期实际加载体与 1.1.085 热更程序集同一份（静态指向 container TZWD…，未运行期观测）",
+    "无敌/秒杀在真机战斗内的表现（未装机、未运行）",
+    "白名单外的其它热更版本一律 PASSTHROUGH（未命中即无功能，属设计）",
+    "服务端权威性、护盾/Deification/DESPERATION 对秒杀的拦截情况"
+  ],
+  "build_no_note": "b1（sha256 a14fccdd…）与中间态 b1（1234736b…）均已作废删除；原因：① 构建戳兜底值触发查8 FAIL；② 补丁体自 sha 幂等表缺失会误报「未知版本」。当前唯一正式包 = b11。",
+  "voided_builds": [
+    {
+      "build": "b1(中间态)",
+      "apk_sha256": "1234736b…（未留存）",
+      "reason": "构建戳取到兜底值 1790184000 ⇒ pre_install_gate 查8 FAIL",
+      "status": "void"
+    },
+    {
+      "build": "b1(a14fccdd)",
+      "apk_sha256": "a14fccdd220e8da0fbeb2fdf7101b569efef57fc2adca848d5dcb8f5c93842d5",
+      "reason": "补丁体自身 sha 不在载荷表 ⇒ 二次 Assembly.Load 会误报「未知版本」+ 误弹 toast（kMxzzSelfShas 幂等表缺失）",
+      "status": "void，文件已删除（2026-11-19 15:1x 复核 08_output 仅剩 b2）"
+    },
+    {
+      "build": "b2",
+      "apk_sha256": "b265646ab0cdef315819da217a36eaa67b49cfecbdc4b95c12a12977d05167c0",
+      "reason": "APK 内缺 lib/arm64-v8a/libc++_shared.so（libstarry_magic.so 的 DT_NEEDED 私有依赖）⇒ dlopen 失败 ⇒ 菜单「暂无功能列表（native 未就绪）」",
+      "status": "void（已被 b3 取代；同签可覆盖安装）"
+    },
+    {
+      "build": "b3",
+      "apk_sha256": "dea860afc479490703447c82cdd5ef3e19fd6c4230adc4a229b98facc1954a93",
+      "reason": "冷启 0.75s 崩：il2cpp_domain_get 在半初始化期被调用（libil2cpp 内空解引用）",
+      "status": "void（已被 b4 取代）"
+    },
+    {
+      "build": "b4",
+      "apk_sha256": "3a70641d19cf954cdceb24aac6938b8ce2f5d459a45631d5a5fe8b3356a982c7",
+      "reason": "il2cpp_init 钩成功、不再崩，但 methodPointer 判据用 IsExecutableRange(maps 'x') ⇒ houdini 下 libil2cpp 全段 r-- ⇒ 假阴性、装钩永久失败",
+      "status": "void（已被 b5 取代）"
+    },
+    {
+      "build": "b5",
+      "apk_sha256": "7006cff759733d99924419b20905a90ed90f6e6e3c261e35083ee4221e43af5b",
+      "reason": "featureList 缺 Category_ 占位 ⇒ Java 侧 0 基 featNum 与 MXZZ_FEAT_* 整体错位 1：开无敌发 1 命中 KILL（反而秒杀），开秒杀发 0 落 default（无效果）",
+      "status": "void（已被 b6 取代）"
+    },
+    {
+      "build": "b6",
+      "apk_sha256": "cc88a9fbf9c1824ae53f7ae229aa44d27a2cde015500f4482e7977980f80537b",
+      "reason": "补丁体无观测 ⇒ 无法定位两功能不生效；b7 仅加 [P] 诊断日志，功能语义不变",
+      "status": "void（已被 b7 取代）"
+    },
+    {
+      "build": "b7",
+      "apk_sha256": "564e2dd36c149497c40bdc23a5620d66ee0093bd23ddf5c160ee94f2cebed59b",
+      "reason": "b7 文件通道零产出，新增 logcat 通道以便区分 AddHP 未调用 vs 写文件失败",
+      "status": "void（已被 b8 取代）"
+    },
+    {
+      "build": "b8",
+      "apk_sha256": "7c9ba1c47accf4249317f6628fdb6a41b6a219302ad5c15c4b05654ee7b5f968",
+      "reason": "b8 双通道零产出：AddHP 未被调用或补丁体未执行，需路径探针定位",
+      "status": "void（已被 b9 取代）"
+    },
+    {
+      "build": "b9",
+      "apk_sha256": "3844bbe8207fc1bdf6d6a37a3415828b934a9d4d4bef62b5821d433328d3ce81",
+      "reason": "b9 双通道静默无输出，改为 native 直读计数器",
+      "status": "void（已被 b10 取代）"
+    },
+    {
+      "build": "b10",
+      "apk_sha256": "92b44a40c0523f7718f8a4d5753c8fb63841be6d01c8da02ba591e485f6ae9dc",
+      "reason": "native 直读计数通道首版；缺 cAwake/cStart 机制自检，无法区分「计数器读不到」与「AddHP 未被调用」",
+      "status": "void（已被 b11 取代）"
+    }
+  ]
+}

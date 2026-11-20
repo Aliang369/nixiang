@@ -419,7 +419,7 @@ def cmd_verify(a):
         apk = Path(a.apk).resolve()
         if not apk.is_file():
             die(f"APK 不存在：{apk}")
-        with tempfile.TemporaryDirectory(dir=str(ROOT / "07_tmp") if (ROOT / "07_tmp").is_dir() else None) as td:
+        with tempfile.TemporaryDirectory(dir=str(ROOT / "13_scratch") if (ROOT / "13_scratch").is_dir() else None) as td:
             tmp = Path(td)
             print(f"[1/3] 反汇编成品 dex（{apk.name}）")
             dec_root = baksmali_apk(apk, tmp)

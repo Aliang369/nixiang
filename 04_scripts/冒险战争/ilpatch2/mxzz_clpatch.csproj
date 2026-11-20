@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 冒险战争 (mxzz) IL 补丁器 v2：挂点从 Battle.Life::AddHP 改为 ClientLife::set_HP。
+       静态依据（2026-11-19，Cecil 全量扫描 mygame_dev_1085.dll）：
+         · newobj Battle.Life = 0 / call Life::.ctor = 0 / ldtoken Life = 0 / 无 Life 子类
+           ⇒ Life 实例在运行期不可构造 ⇒ AddHP 永不执行（与实测计数 cAdd=0 一致）
+         · ClientLife 是实战单位（campType/_curHp/_maxHP/buffDic/AttackManagers/doDead）
+         · ClientLife::_curHp 的唯一写点 = ClientLife::set_HP 的 IL@0002 stfld
+         · set_HP 调用方：LogicRecord_HPValue::PerformDoRecord / BattleConfLoaderAction::LifeDead /
+           ImmediatelyLifeDead / BattleReportPlayer::OnCreateSuspendPerformerLifeCallback -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>mxzz_clpatch</AssemblyName>
+    <RootNamespace>mxzz_clpatch</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 复用旧工程的写盘期宽容解析（TolerantAssemblyResolver / ShimFactory / ConstantAudit）：
+         本包有 67 处成员类型指向 Unity.ThirdParty / DOTween 等「没有引用集」的程序集，
+         Cecil 建 Param 表时对每个成员做 CheckedResolve，缺一个就整体中止写盘。 -->
+    <Compile Include="..\ilpatch\TolerantRefs.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,25 @@
+{
+  "game": "冒险战争",
+  "game_id": "mxzz",
+  "package": "com.mxzz.zbml",
+  "policy": "dev+base",
+  "_comment": "official_sha256 = 官方（未打补丁）程序集 sha256 —— 运行期白名单键。patched_dll = 本仓替换用补丁体。改任何一项都要重跑 mxzz_build_so.sh。",
+  "entries": [
+    {
+      "role": "dev",
+      "official_sha256": "9802e7ed91c9ec86a4cfc4862c30da7a79df346834b88411a59d5e5c206411a8",
+      "official_size": 18826240,
+      "official_source": "13_scratch/冒险战争/dll/mygame_dev_1085.dll（容器 TZWD9JF5UB5EGJALFIWMZ7C7GBCTPC76，热更 1.1.085）",
+      "patched_dll": "07_patched/冒险战争/mygame_mxzz_dev_1085.dll",
+      "blob": "mxzz_dev.bin"
+    },
+    {
+      "role": "base",
+      "official_sha256": "e58aa7ef725f776003404022f12a570eab33da32eb9fc83def44ada0f56d5bfb",
+      "official_size": 18009088,
+      "official_source": "13_scratch/冒险战争/dll/mygame.dll（APK 1.1.036 基线）",
+      "patched_dll": "07_patched/冒险战争/mygame_mxzz_base.dll",
+      "blob": "mxzz_base.bin"
+    }
+  ]
+}

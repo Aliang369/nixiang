@@ -58,10 +58,10 @@ case "$(uname -s)" in
   *) HOST=unix ;;
 esac
 if [ "$HOST" = "win" ]; then
-  STAGE_ROOT="$NIXIANG_ROOT/07_tmp/msgc_build/dex"   # 工作区内 ASCII 暂存（用户约束：不在工作区外写代码）
+  STAGE_ROOT="$NIXIANG_ROOT/13_scratch/msgc_build/dex"   # 工作区内 ASCII 暂存（用户约束：不在工作区外写代码）
   w() { cygpath -m "$1"; }
 else
-  STAGE_ROOT="$NIXIANG_ROOT/07_tmp/msgc_build/dex"
+  STAGE_ROOT="$NIXIANG_ROOT/13_scratch/msgc_build/dex"
   w() { printf '%s' "$1"; }
 fi
 rm -rf "$STAGE_ROOT"

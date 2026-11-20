@@ -280,6 +280,32 @@ sweep_bash32() {
 
 
 
+# ---------------------------------------------------------------
+# 布局闸门 ①：编号单义（2026-11-21 新增）
+#   依据：10_docs/tools/05 §13_scratch 专项说明「07 从此只对应 07_patched/」。
+#   为什么需要机器检查：2026-10-31 已把 07_tmp 改名 13_scratch，当时只做过一次人工
+#   grep 验证（规范变更日志 line 431「零命中」）；11 月新写的脚本又把 $ROOT/07_tmp
+#   写了回去，mkdir -p 在 11-04 19:14 把目录重建出来 —— 无检查者 ⇒ 回归无人拦。
+#   成本 2 次 test -d，故每次都跑（不放进 --sweep）。
+# ---------------------------------------------------------------
+check_legacy_layout() {
+  local _root _legacy _bad=0
+  _root=$(cd "$SCRIPT_DIR/../.." && pwd)
+  for _legacy in 07_tmp 07_tools; do
+    if [ -d "$_root/$_legacy" ]; then
+      echo "✗ FAIL  [编号单义] 仓库根存在 ${_legacy}/ —— 2026-10-31 起 07 只对应 07_patched/；临时试包与一次性脚本一律落 13_scratch/（依据 10_docs/tools/05 §13_scratch 专项说明）"
+      _bad=$((_bad+1))
+    fi
+  done
+  if [ "$_bad" = "0" ]; then
+    echo "✓ PASS  [编号单义] 无 07_tmp/ 或 07_tools/ 遗留目录"
+    pass=$((pass+1))
+    return 0
+  fi
+  fail=$((fail+_bad))
+  return 1
+}
+
 # --- 参数解析（bash 3.2 安全）---
 # --env：额外跑一遍环境依赖体检（env_deps.sh）。用于"动真格前先确认机器没问题"
 #        —— 收官链在 Win 上曾被 apksigner/python3.11/stat 三个环境问题分三次打断。
@@ -307,6 +333,8 @@ if [ "$SWEEP_CHECK" = "1" ]; then
   sweep_bash32
   [ "$FILE_ARGS" -ge 1 ] && echo
 fi
+
+check_legacy_layout || true
 
 for f in "$@"; do
   case "$f" in --*) continue ;; esac

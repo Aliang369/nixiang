@@ -137,7 +137,7 @@ apktool() { "$JAVA" -jar "${APKTOOL_JAR}" "$@"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
 md5f() { if command -v md5sum >/dev/null 2>&1; then md5sum "$1" | awk '{print $1}'; else md5 -q "$1"; fi; }
 
-ASCII_ROOT="$NIXIANG/07_tmp"   # 工作区内 ASCII 暂存（用户约束：不在工作区外写代码）
+ASCII_ROOT="$NIXIANG/13_scratch"   # 工作区内 ASCII 暂存（用户约束：不在工作区外写代码）
 if command -v cygpath >/dev/null 2>&1; then
   ASCII_ROOT="$(cygpath -u "${ASCII_ROOT}" 2>/dev/null || printf '%s' "${ASCII_ROOT}")"
 fi
@@ -154,7 +154,7 @@ mkdir -p "${ASCII_ROOT}" "${OUT_DIR}" "${CACHE_DIR}"
 [[ -x "${APKSIGNER}" || -f "${APKSIGNER}" ]] || die "缺 apksigner: ${APKSIGNER}"
 [[ -f "${AAPT2}" ]] || die "缺 aapt2: ${AAPT2}（build-tools）"
 
-LOCK_DIR="${NIXIANG}/07_tmp/msgc_surgical.lockdir"
+LOCK_DIR="${NIXIANG}/13_scratch/msgc_surgical.lockdir"
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
   die "lock ${LOCK_DIR} held（另一个外科进程在跑）"
 fi
@@ -535,8 +535,8 @@ msg += ' / A 轨 %s "%s"→"%s"' % (login_entry, login_old, login_new)
 
 # appComponentFactory 改写是 2026-10-13「TapTap 签名校验时机」修复的核心；最终包内回读确认。
 # 注：二进制 AXML 的字符串池是 UTF-16，不能按 bytes 搜 ASCII —— 用 aapt2 dump 成文本再断言。
-os.makedirs('${NIXIANG}/07_tmp/msgc_mfchk', exist_ok=True)
-mfx = '${NIXIANG}/07_tmp/msgc_mfchk/mf.zip'
+os.makedirs('${NIXIANG}/13_scratch/msgc_mfchk', exist_ok=True)
+mfx = '${NIXIANG}/13_scratch/msgc_mfchk/mf.zip'
 with zipfile.ZipFile(mfx, 'w', zipfile.ZIP_DEFLATED) as wz:
     wi = zipfile.ZipInfo('AndroidManifest.xml')
     wi.compress_type = zipfile.ZIP_DEFLATED

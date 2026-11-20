@@ -78,9 +78,9 @@ ndk_build() {
 BUILD_JNI="$JNI"; BUILD_OUT="$OBJ"; BUILD_LIBS="$OUT_LIBS"; STAGED=0
 if [ "$(printf '%s' "$JNI" | LC_ALL=C tr -d '\000-\177' | wc -c | tr -d ' ')" != "0" ]; then
   if command -v cygpath >/dev/null 2>&1; then
-    STAGE_ROOT="$NIXIANG/07_tmp/${TAG}_build/so"   # 工作区内 ASCII 暂存（用户约束）
+    STAGE_ROOT="$NIXIANG/13_scratch/${TAG}_build/so"   # 工作区内 ASCII 暂存（用户约束）
   else
-    STAGE_ROOT="$NIXIANG/07_tmp/${TAG}_build/so"
+    STAGE_ROOT="$NIXIANG/13_scratch/${TAG}_build/so"
   fi
   BUILD_JNI="$STAGE_ROOT/jni"; BUILD_OUT="$STAGE_ROOT/obj"; BUILD_LIBS="$STAGE_ROOT/libs"
   STAGED=1

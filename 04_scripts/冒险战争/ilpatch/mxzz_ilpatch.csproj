@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 冒险战争 (mxzz) 热更程序集 IL 补丁器。
+       从 04_scripts/_templates/ilpatch 派生；差异：
+         ① 目标框架 net8.0（本机 SDK 8.0.428；模板的 net10.0 在这台机器上起不来）
+         ② 路径全部来自命令行/环境变量，**不写死 mac 路径**
+         ③ 补丁语义留空并抛 StaticConclusionPending（静态结论落地前禁止产出"看起来成功"的空补丁）
+       InvariantGlobalization 必开：无 ICU 环境下省去全球化依赖。 -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>mxzz_ilpatch</AssemblyName>
+    <RootNamespace>mxzz_ilpatch</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+  </ItemGroup>
+</Project>

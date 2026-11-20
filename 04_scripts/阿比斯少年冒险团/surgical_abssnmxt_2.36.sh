@@ -26,7 +26,7 @@
 #  ⚠️ 本机（Windows / Git Bash）三条硬经验：
 #   a) ndk-build 的 NDK_OUT/NDK_LIBS_OUT **不能**放中文路径：GNU Make 4.3(Win32) 把
 #      "mod菜单" 转成 mod??，编译期报 "unable to open output file"。本脚本统一用
-#      07_tmp/abssnmxt_ndk/{obj,libs}（纯 ASCII），编完再拷回中文路径 jniLibs。
+#      13_scratch/abssnmxt_ndk/{obj,libs}（纯 ASCII），编完再拷回中文路径 jniLibs。
 #   b) 本机 NDK 只有 ndk-build.cmd，$(shell git log) 取不到 epoch ⇒ 显式传
 #      STARRY_BUILD_EPOCH=<git log -1 --format=%ct>（否则 pre_install_gate 查8 会拦）。
 #   c) java 工具（baksmali/smali/aapt2）一律在 ASCII 暂存目录跑，产物再拷回中文路径。
@@ -65,18 +65,18 @@ if [ "${ABC_SO_VARIANT:-normal}" = "probe" ]; then
 else
   OUTAPK="$OUTDIR/abssnmxt_2.36_${ABC_VER:-v1.1}.apk"
 fi
-JT="$ROOT/07_tmp/abssnmxt_work"
+JT="$ROOT/13_scratch/abssnmxt_work"
 # so 变体：normal = 功能版；probe = 探针版（-DSTARRY_PROBE=1，只解析+打日志不写内存）
 # 用法：ABC_SO_VARIANT=probe bash surgical_abssnmxt_2.36.sh（产物名带 _probe，不覆盖正式包）
 SO_VARIANT="${ABC_SO_VARIANT:-normal}"
 if [ "$SO_VARIANT" = "probe" ]; then
-  NDKOBJ="$ROOT/07_tmp/abssnmxt_ndk/obj_probe"
-  NDKLIB="$ROOT/07_tmp/abssnmxt_ndk/libs_probe"
+  NDKOBJ="$ROOT/13_scratch/abssnmxt_ndk/obj_probe"
+  NDKLIB="$ROOT/13_scratch/abssnmxt_ndk/libs_probe"
 else
-  NDKOBJ="$ROOT/07_tmp/abssnmxt_ndk/obj"
-  NDKLIB="$ROOT/07_tmp/abssnmxt_ndk/libs"
+  NDKOBJ="$ROOT/13_scratch/abssnmxt_ndk/obj"
+  NDKLIB="$ROOT/13_scratch/abssnmxt_ndk/libs"
 fi
-SHIM_SDK="$ROOT/07_tmp/sdk_shim"
+SHIM_SDK="$ROOT/13_scratch/sdk_shim"
 
 PY="${NIXIANG_PYTHON:-python}"
 JAVA17="${NIXIANG_JAVA17:-}"
@@ -347,7 +347,7 @@ PY
 # ===========================================================================
 # 段6 加 so（静态链 STL：libstarry_magic.so 单文件，不再依赖 libc++_shared.so）
 #   APP_STL 在 Application.mk 里是 app 级设置（c++_shared），本游戏不改共享文件 ⇒
-#   用 07_tmp 下的私有 app mk 覆盖成 c++_static（NDK_APPLICATION_MK 指绝对路径）。
+#   用 13_scratch 下的私有 app mk 覆盖成 c++_static（NDK_APPLICATION_MK 指绝对路径）。
 #   静态链后：llvm-readelf -d 的 NEEDED 只剩 liblog/libandroid/libc/libm/libdl，
 #   包内不需要 libc++_shared.so（底包本来也没有），杜绝 dlopen 找不到 STL 的风险。
 #   不动 libil2cpp.so（直装包只换能换的）。
@@ -362,7 +362,7 @@ step6() {
   say "  STARRY_BUILD_EPOCH=$EPOCH"
 
   # 私有 app mk：STL 静态链（共享的 Application.mk 不改）
-  local APPMK="$ROOT/07_tmp/app_abssnmxt_static.mk"
+  local APPMK="$ROOT/13_scratch/app_abssnmxt_static.mk"
   mkdir -p "$(dirname "$APPMK")"
   {
     echo "APP_ABI := arm64-v8a"

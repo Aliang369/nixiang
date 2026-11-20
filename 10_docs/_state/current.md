@@ -5,7 +5,7 @@
 > **本文件是生成物**：手工修改会在下次生成时被覆盖（`preflight` 用 `--check` 校验）。
 > 真源＝`10_docs/_state/games/*.md` 头部的 frontmatter（`game`/`status`/`updated`/`one_line`）。
 > 只放**当前工作集**：`status: active|blocked`（且未超 --stale-days 挂起闸），或近 14 天有更新，最多 50 行。
-> 全量索引见 [`archive_index.md`](archive_index.md)（共 106 个游戏），逐个详情见 `games/{游戏}.md`。
+> 全量索引见 [`archive_index.md`](archive_index.md)（共 107 个游戏），逐个详情见 `games/{游戏}.md`。
 > 改状态＝改对应 `games/{游戏}.md` 的 frontmatter，然后跑：`python3 04_scripts/_common/gen_state_index.py`
 
 ## 当前工作集
@@ -17,7 +17,8 @@
 | [农场守护者](games/农场守护者.md) | 2026-11-11 | 🟡 2.1.21 星光包四项全通（md5 3a92930e / sha256 20124872）：百倍伤害=给怪补扣99Δ、无敌=回填curHp、无限技能=清CD、解锁加速=插Cid3月卡；四开战斗胜利+结算正常 |
 | [动物大联盟](games/动物大联盟.md) | 2026-11-08 | 🟡 壳已过（c2 证书指纹修正），改包仍卡「数据检查」：点同意不发起资源请求。apksecurefile 已全解（MDXZ+zstd+AES，3 dex 可反编译），但 0x66210 哈希是壳必需材料，改容器须重算 KEY（派生未逆出）… |
 | [消消英雄2](games/消消英雄2.md) | 2026-10-09 | 🟡 1.2.28 已出包装机；过检测与上报拦截实测通过 |
-| [无限升级](games/无限升级.md) | 2026-11-20 | ✅ 2026-11-20 交付定制1（wxsjdz1）21 槽星光版＝19 功能 + 2 Category（注册表路线；载荷 19feat 2,764,288 / 0x2a37160e3bcf5b81，血统 2748416）；正式包 137,384,308 B / md5 9f210d99…，已卸装重装；登录＝改包法四步 + games/wxsjdz1 SPI；风险＝现网热更已到 2,768,896 / 0xe2ed46795c474666，靠 PINNED 强注入、未重放；L3 19 项未测 |
+| [冒险战争](games/冒险战争.md) | 2026-11-21 | ✅ 1.1.036/vc7 星光版（game_id=mxzz，包 com.mxzz.zbml）：HybridCLR 程序集离线 IL 补丁 + 外科 zip 组装，秒杀/无敌挂 ClientLife::set_HP + LogicRecord_HPValue::PerformDoRecord + 死亡拦截；**正式包＝b11**（用户 2026-11-21 定案）sha256 447b4f0f… / md5 7ef6774b…（1,519,809,682 B），存于 08_output/冒险战争；b16 文件已丢失不入库；真机战斗表现未记录（not_proven） |
+| [无限升级](games/无限升级.md) | 2026-11-20 | ✅ 2026-11-20 最终交付定制1（wxsjdz1）21 槽星光版 **fix1**＝19 功能 + 2 Category（注册表路线；feat8 物品倍数输入框已修好——载荷 P19 原读旧布尔 item_double、写死 ×2）；正式包 137,384,308 B / md5 ae3f8067…（fix1，已 install -r 未清数据）；载荷 19feat 2,764,288 / 0x768949eea17b309d，so 8fa896a3…；风险＝现网热更 2,768,896 / 0xe2ed46795c474666 仍未重放（靠 PINNED 强注入）、L3 19 项未测；另有正式版变体 full-antiban（22 槽含防封按钮，md5 59666f42…）已装机 |
 | [冒险与征途](games/冒险与征途.md) | 2026-11-16 | ✅ B站渠道 2.0.1 四项功能用户全通（v2 交付 md5 52a9691e…，so 53d7e6c1…）；挂点 RVA 与 1.5.9 字节级一致；game_id=mxyztbili |
 | [999秒幸存者](games/999秒幸存者.md) | 2026-11-15 | ✅ V0.0866/vc866 星光版六项收官（用户 L3：全部功能正常）：无敌(hpcheck+enemyhurt/enemyhurtnotnac 拦截)/伤害倍率(nmhurte dimmul)/移速(player.move stat.sp)/解锁皮肤(onelock.haveac)/无限券(数据型 sd.unlockcoupon=0xBC=9999)/免广告(getadcheck 保链→LoadRewardAd 拦下直调 reward)；正式包 md5 77ee50fc…（95,421,205 B，so 044fdc0e→e8f37696）；真机 arm64 实测，雷电 houdini 下 RVA hook 不可用（so 全段 r--） |
 | [一念通天](games/一念通天.md) | 2026-11-15 | ✅ 789 收官：六项+TapTap 网页登录用户实测全通过；9 RVA 全漂移、序言 3 变 6 同、字段 0 变化；8/8 挂点日志留存 |
@@ -35,7 +36,6 @@
 | [境界刀鸣国际](games/境界刀鸣国际.md) | 2026-11-07 | ✅ 已交付：与国服同源（libgame.so 挂点逐一相同），hhld kill-switch NOP；独立 id jjdmintl（先例 gjc2intl），login 200 自愈；正式包合并为统一单包（universal，删 spl… |
 | [墨守孤城](games/墨守孤城.md) | 2026-11-07 | ✅ ⛔ 收尾：Unity DOTS+Burst+HybridCLR 三层封死注入面，四项功能未实现；已出可玩包，全部地址/坑位已归档 |
 | [暗影格斗3国际](games/暗影格斗3国际.md) | 2026-11-07 | ✅ ⛔ 停做：Play 渠道服务端内容哈希。四条路线全失败（改包/frida/ptrace/内存读写），两次封号（1h/1d）。wrap 注入可让 hook 生效但必报 InvalidHashes，self-hide 两路无效 |
-| [无悔华夏](games/无悔华夏.md) | 2026-11-06 | ✅ 3.8.305 三渠道无壳星光全部验收（九游 13dex+重标RVA；4399 6dex；B站 6dex+RVA零重标），各 11 项 |
 
 > ⏸ 4 个 active/blocked 已超 45 天无更新，视为挂起、不进工作集：命运、遗弃之地、百分之一、虚无之刃（详见 `archive_index.md`）
 
