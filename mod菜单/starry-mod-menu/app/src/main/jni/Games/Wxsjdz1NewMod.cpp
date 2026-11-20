@@ -20,9 +20,9 @@
  *    ④ PINNED 兜底加长度下限 kPinnedMinLen：装载到的 DLL 明显不是 13.x 系（<2.6MB）时
  *       不硬塞 2.76MB 补丁，改为透传官方版（宁可本次无功能，不留错版崩溃）。
  *
- *  载荷已定稿（2026-11-20）：19 项 allfix
- *   official (2,748,416 B / fnv 0x2ab99f0abb45f1ea) → patched (2,764,288 B / fnv 0x2a37160e3bcf5b81
- *   / md5 3e725282…)，超长 +15,872 ⇒ 运行时恒走 mode=selfarray。
+ *  载荷已定稿（2026-11-20，fix1：修 feat8 键名错配 item_double→item_double_x）：19 项 allfix
+ *   official (2,748,416 B / fnv 0x2ab99f0abb45f1ea) → patched (2,764,288 B / fnv 0x768949eea17b309d
+ *   / md5 a184d32e…)，超长 +15,872 ⇒ 运行时恒走 mode=selfarray。
  *   .a 来源：Games/Wxsjdz1New19FeatDll.a（objcopy 自 07_patched/无限升级/13101_new/
  *   targetfuntional_13101new_allfix_19feat.dll）。换载荷只改：本文件两个符号名 + kDllVariants 首行 + mk 的模块源。
  * ================================================================ */
@@ -83,13 +83,13 @@ struct DllVariant {
 // 新版本走 PINNED（同样钉到本补丁 = 「不让游戏热更生效，等人工换包」，13.x 既定策略）。
 static const DllVariant kDllVariants[] = {
     // 【首行 = 本轮定稿载荷】官方 2026-11-19 14:23 版（DIAG 运行时落盘实锤：
-    //   2,748,416 B / fnv 0x2ab99f0abb45f1ea）→ 19 项 allfix 补丁
-    //   2,764,288 B / fnv 0x2a37160e3bcf5b81（超长 +15,872 ⇒ selfarray）
-    {2748416, 0x2ab99f0abb45f1eaULL, 0x2a37160e3bcf5b81ULL},
+    //   2,748,416 B / fnv 0x2ab99f0abb45f1ea）→ 19 项 allfix 补丁 fix1
+    //   2,764,288 B / fnv 0x768949eea17b309d（超长 +15,872 ⇒ selfarray；修 feat8 键名错配）
+    {2748416, 0x2ab99f0abb45f1eaULL, 0x768949eea17b309dULL},
     // 兜底：2026-11-19 更早一版（2,746,368 / 0xd303f1e9c7154db9）——同一份载荷钉死
-    {2746368, 0xd303f1e9c7154db9ULL, 0x2a37160e3bcf5b81ULL},
+    {2746368, 0xd303f1e9c7154db9ULL, 0x768949eea17b309dULL},
     // 兜底：2026-11-18 13.101 初版（2,738,688 / 0xd31dc94b29a8bb0d）——同一份载荷钉死
-    {2738688, 0xd31dc94b29a8bb0dULL, 0x2a37160e3bcf5b81ULL},
+    {2738688, 0xd31dc94b29a8bb0dULL, 0x768949eea17b309dULL},
 };
 // 低于此长度说明装载的不是 13.x 系 DLL（例如 12.x 的 2.02MB）⇒ 不钉，透传官方
 static constexpr int32_t kPinnedMinLen = 2600000;

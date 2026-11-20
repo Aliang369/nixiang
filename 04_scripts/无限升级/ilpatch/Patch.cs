@@ -689,20 +689,50 @@ internal static class Patcher
         return null;
     }
 
-    /// 物品翻倍：入口 target(arg2, long) ×2 后落入原逻辑
+    /// 物品倍数：入口 amount(arg2, long) ×N 后落入原逻辑
+    ///
+    /// 2026-11-20 修（用户实测「feat8 输入框写 100 无效」）：
+    ///   菜单 21 槽（Wxsjdz1NewMod.cpp:506）feat8 写的是 **int** `item_double_x`，而本函数原先只读
+    ///   **bool** `item_double`（12 线 Toggle 语义，写死 ×2）⇒ 键名不匹配，倍率等于没开。
+    ///   目标形态（与 feat7 ads_reward_x 的 ×N 语义对齐）：
+    ///     int x = GetInt("item_double_x", 0);
+    ///     if (x <= 1) x = GetBool("item_double") ? 2 : 1;   // 旧布尔路径逐位不变
+    ///     if (x > 1) amount *= x;                            // x<=1 走原逻辑
+    ///   ⇒ 11 项 legacy 线（item_double=true）仍得 ×2；21 槽线（item_double_x=100）得 ×100。
+    ///   两个键都不在（新包/未配置）⇒ x=0 ⇒ 完全原样，不产生任何影响。
     static void AddItemDouble(MethodDefinition m)
     {
         var first = m.Body.Instructions[0];
+        var vX = new VariableDefinition(tI32);
+        m.Body.Variables.Add(vX);
+        m.Body.InitLocals = true;
+
+        var afterLegacy = Instruction.Create(OpCodes.Nop);
         var seq = new List<Instruction>
         {
-            Instruction.Create(OpCodes.Ldstr, "item_double"),
+            Instruction.Create(OpCodes.Ldstr, "item_double_x"),
+            Instruction.Create(OpCodes.Ldc_I4_0),                 // 缺省 0 = 未配置
+            Instruction.Create(OpCodes.Call, mGetInt),
+            Instruction.Create(OpCodes.Stloc, vX),
+            Instruction.Create(OpCodes.Ldloc, vX),
+            Instruction.Create(OpCodes.Ldc_I4_1),
+            Instruction.Create(OpCodes.Bgt, afterLegacy),         // item_double_x > 1 ⇒ 直接用 N（不读旧布尔）
+            Instruction.Create(OpCodes.Ldstr, "item_double"),     // 旧 12 线 Toggle 语义（逐位保留）
             Instruction.Create(OpCodes.Call, mGetBool),
-            Instruction.Create(OpCodes.Brfalse, first),
+            Instruction.Create(OpCodes.Brfalse, first),           // 旧开关关 ⇒ 原逻辑
+            Instruction.Create(OpCodes.Ldc_I4_2),
+            Instruction.Create(OpCodes.Stloc, vX),                // 旧开关开 ⇒ ×2
+            afterLegacy,
+            Instruction.Create(OpCodes.Ldloc, vX),
+            Instruction.Create(OpCodes.Ldc_I4_1),
+            Instruction.Create(OpCodes.Ble, first),               // 倍率 <=1 ⇒ 原逻辑
             Instruction.Create(OpCodes.Ldarg_2),
-            Instruction.Create(OpCodes.Ldc_I8, 2L),
+            Instruction.Create(OpCodes.Ldloc, vX),
+            Instruction.Create(OpCodes.Conv_I8),
             Instruction.Create(OpCodes.Mul),
             Instruction.Create(OpCodes.Starg_S, m.Parameters[1]),
         };
+        if (m.Body.MaxStackSize < 2) m.Body.MaxStackSize = 2;
         InsertAt(m, 0, seq);
     }
 
