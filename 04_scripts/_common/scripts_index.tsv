@@ -13,7 +13,7 @@ check_framework_isolation.sh	sh	7113	check_framework_isolation.sh — 框架层�
 check_merge_markers.sh	sh	2960	check_merge_markers.sh — Git 冲突标记残留检查	used	9
 check_release_apk.sh	sh	6193	check_release_apk.sh — 出包门禁（Java/APK 侧，P6 的半步）	used	62
 check_release_clean.sh	sh	9854	check_release_clean.sh — 干净正式包门禁（诊断代码不许进正式包）	used	84
-check_source_refs.py	py	7737	check_source_refs.py — 跨目录源码引用完整性门禁（2026-11-21 建）	used	5
+check_source_refs.py	py	8038	check_source_refs.py — 跨目录源码引用完整性门禁（2026-11-21 建）	used	5
 check_state_hash_sync.py	py	5094	Check that game state/current index hashes match the final APK/prune manifest.	used	28
 check_win_compat.sh	sh	1560	check_win_compat.sh — 扫描脚本里未豁免的 mac 专有写法（win 上会崩/静默降级）	used	3
 classify_proc_gone.sh	sh	7513	classify_proc_gone.sh — 把「进程消失了」定性：ANR / native 崩溃 / 系统杀 / 我方 force-stop / 无痕	used	5

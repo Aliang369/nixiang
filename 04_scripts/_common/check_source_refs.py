@@ -86,12 +86,15 @@ def check_python(root: Path) -> dict[str, list[str]]:
                 target = Path(PY_ROOT) / mod.replace(".", "/")  # 项目绝对 import
             else:
                 continue  # 标准库/第三方（datetime / fastapi / sqlalchemy …）不在本门禁范围
-            cands = [str(target) + ".py", str(target / "__init__.py")]
+            # Windows 必须走 as_posix()：Path 的 str 是反斜杠，git 索引是正斜杠，
+            # 直接 str() 会让整份后台 import 全判悬空（2026-11-22 实测 93 条假 FAIL，
+            # 同一份代码在 mac 端通过、Windows 端必挂）。
+            cands = [target.as_posix() + ".py", (target / "__init__.py").as_posix()]
             if any(c in known for c in cands):
                 continue
             # `from . import x` / `from pkg import module` 形式：名字本身可能就是子模块
             names_list = [n.strip().split(" as ")[0].strip("() ") for n in names.split(",")]
-            if any(f"{target}/{n}.py" in known for n in names_list if n.isidentifier()):
+            if any(f"{target.as_posix()}/{n}.py" in known for n in names_list if n.isidentifier()):
                 continue
             dangling.setdefault(f"{Path(path).name} → {dots}{mod} import {names[:50].strip()}",
                                 []).append(path.replace(PY_ROOT + "/", ""))
