@@ -28,7 +28,10 @@ while read -r local_ref local_sha remote_ref remote_sha; do
   else
     base="$remote_sha"
   fi
-  files="$(git diff --name-only "$base" "$local_sha" -- '*.sh' 2>/dev/null)"
+  # --diff-filter=d 排除「本次删除的 .sh」：删除不是语法变更，
+  # 但 preflight 会把不存在的路径判成「缺失」FAIL 从而阻断整次 push
+  # （2026-11-22 实测：删除 publish_play_ota.sh 后 push 被自己的钩子挡住）。
+  files="$(git diff --name-only --diff-filter=d "$base" "$local_sha" -- '*.sh' 2>/dev/null)"
   if [ -n "$files" ]; then
     all_sh="$all_sh
 $files"
