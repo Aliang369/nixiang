@@ -1,9 +1,0 @@
-apk      : /Users/aliang/Documents/nixiang/08_output/无限升级/无限升级_13.101_wxsjdz1_full-antiban-releaseSigned.apk
-size     : 137388404
-md5      : 59666f42cb2ad419640a675d4fb7e361
-sha256   : 2e8d3a7c2501577c97c273a5b556989494c304b4ba406f3dfa76e628e1523bcd
-target   : classes.dex (md5 05cbff57e6a7558a327e1d50a20a5a15)
-menu_dex : classes5.dex
-so       : /Users/aliang/Documents/nixiang/08_output/无限升级/libstarry_magic_wxsjdz1full_13101_19feat_sync1_20261120.so (24ba7046814829061d48ad10be93beac)
-tapfix   : /Users/aliang/Documents/nixiang/07_patched/无限升级/13101/tapfix/tapfix.dex (05cbff57e6a7558a327e1d50a20a5a15)
-dryrun   : 0

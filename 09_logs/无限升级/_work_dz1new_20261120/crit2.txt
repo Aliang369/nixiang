@@ -1,2 +1,0 @@
-TARGET=classes.dex
-TARGET_MD5=05cbff57e6a7558a327e1d50a20a5a15

@@ -1,9 +1,0 @@
-apk      : /Users/aliang/Documents/nixiang/08_output/无限升级/无限升级_13.101_wxsjdz1_diagdump.apk
-size     : 137384308
-md5      : e50ebd88da0f51d2f6b14113a9ae3b0b
-sha256   : 82dbb54598a17f0ec8a80195575d7f6ee83c805b2bfb0e2bf40cc83ad5f73893
-target   : classes.dex (md5 05cbff57e6a7558a327e1d50a20a5a15)
-menu_dex : classes5.dex
-so       : /Users/aliang/Documents/nixiang/08_output/无限升级/libstarry_magic_wxsjdz1new_13101_diagdump_20261120.so (2b953fb27c10ba887cf54596ade65263)
-tapfix   : /Users/aliang/Documents/nixiang/07_patched/无限升级/13101/tapfix/tapfix.dex (05cbff57e6a7558a327e1d50a20a5a15)
-dryrun   : 0
