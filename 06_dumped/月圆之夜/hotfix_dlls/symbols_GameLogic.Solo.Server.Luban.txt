@@ -1,3 +1,0 @@
-Security.Permissions.SecurityPermissionAttribu
-SkipVerification
-WrapNonExceptionThrows
