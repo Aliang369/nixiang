@@ -55,7 +55,6 @@ public class Preferences {
     private static final String KEY_LEGACY_DEVICE_IDS = "auth_legacy_device_ids";
     /** 内存镜像：判定后立即可读，不必再落盘 */
     private static volatile String lastDeviceIdSource = "";
-    private static final String KEY_AUTH_BASE = "auth_base_url";
     private static final String KEY_AUTH_GAME_ID = "auth_game_id";
     private static final String KEY_AUTH_TOKEN = "auth_token";
     private static final String KEY_AUTH_CARD = "auth_card_key";
@@ -74,10 +73,6 @@ public class Preferences {
     private static final String KEY_AUTH_BACKUP_PREFIX = "auth_backup_";
     private static final String KEY_AUTH_BACKUP_AT = "auth_backup_at";
     private static final String KEY_AUTH_BACKUP_REASON = "auth_backup_reason";
-    /** 玩法 OTA 本地已应用版本：auth_ota_ver_{game_id} */
-    private static final String KEY_OTA_VER_PREFIX = "auth_ota_ver_";
-    /** 上次启动时记录的 APK lastUpdateTime；覆盖安装后变化则应清 starry_ota */
-    private static final String KEY_OTA_APK_LAST_UPDATE = "ota_apk_last_update_time";
     /** 后台「卡密启用」：true 需卡密；false 仅需联网 bootstrap */
     private static final String KEY_CARD_AUTH_REQUIRED = "auth_card_required";
     /** 后台游戏「启用」：false 时功能全关（设置 Tab 仍可用） */
@@ -86,8 +81,8 @@ public class Preferences {
     private static final String KEY_ANN_SEEN = "starry_ann_seen_v1";
     /** 上次见到的功能列表指纹（只有它变了才清功能偏好，见 clearFeaturePrefsIfListChanged） */
     private static final String KEY_FEATURE_SIG = "feature_list_sig";
-    /** 内置验证服务器（自签 HTTPS + 证书固定）；改服务器只改这里 */
-    public static final String DEFAULT_AUTH_BASE_URL = "https://47.100.216.101:8443";
+    /** 内置验证服务器（标准 CA HTTPS + 系统主机名校验）；改服务器只改这里 */
+    public static final String DEFAULT_AUTH_BASE_URL = "https://auth.xgmfyx.cn";
     private static final int UI_FEAT_MIN = 50;
 
     private static SharedPreferences sharedPreferences;
@@ -649,13 +644,13 @@ public class Preferences {
                 KEY_LEGACY_DEVICE_IDS, clean);
     }
 
+    /**
+     * 内置验证服务器地址：固定域名，不读任何持久化配置、不接受外部改写。
+     * 2026-11-21 迁移收口：旧的「自签 IP 端点 + prefs 覆盖 + 存量值迁移」三件一并删除；
+     * 旧键 `auth_base_url` 不再读取（存量值留在旧机器上也不会生效）。
+     */
     public static String getAuthBaseUrl() {
-        with(null);
-        String url = sharedPreferences.getString(KEY_AUTH_BASE, "");
-        if (url == null || url.isEmpty()) {
-            return DEFAULT_AUTH_BASE_URL;
-        }
-        return url;
+        return DEFAULT_AUTH_BASE_URL;
     }
 
     public static boolean isCardAuthRequired() {
@@ -707,25 +702,34 @@ public class Preferences {
         return isValidGrant(getAuthGrant());
     }
 
-    /** 这张「票」是否像一张真票：非空、且不是 JSON null 被 optString 变成的字符串 "null"。
+    /**
+     * 这张「票」是否**像一张 v2 票** —— 只做格式预筛，**不验签**；密码学一律由 native 完成。
      *
-     *  ★2026-10-27 修（小米真机实测 m039 轮）：服务端对**没登记载荷 sha 的游戏**返回
-     *    `"grant3": null`（`mint_grant_v3()` 返回 None）。Android 的
-     *    `JSONObject.optString(k, "")` 不会把 JSON null 变成空串，而是走
-     *    `JSON.toString(JSONObject.NULL)` → **字符串 "null"** ⇒ 旧实现把 "null" 当票
-     *    交给 native ⇒ `sgauth::apply()` 找不到 '.' 直接失败 ⇒ 日志 `[V2] r=0`
-     *    ⇒ 玩家看到「登录提示成功、功能一个都没授权」。凡未登记载荷的游戏（＝除勇士之心
-     *    以外的新接入游戏）都会中这一枪，故判据收在这里一处。 */
+     * <p>2026-11-21：判据由「任意非空且非 null 字符串」收紧为「必须是 v2 正向前缀」。
+     * 依据：v1(HMAC) 与 v3(载荷钥) 已在服务端与 native 双侧退役，native 的 apply() 对
+     * 非 {@code 2|} 前缀一律在验签前 return 0（见 SgAuth.h）。旧判据只黑名单排除 {@code 1|}/{@code 3|}，
+     * 其余任何脏值都会被当成票送进 native ⇒ 日志 {@code [V2] r=0} 而 UI 已显示登录成功。
+     * 这类「假票」现在在这一层一次性拦掉；段数、掩码、签名长度仍由 native 校验。
+     *
+     * <p>历史依据（保留）：服务端曾对未登记载荷的游戏返回 {@code "grant3": null}，
+     * Android 的 {@code JSONObject.optString} 会把它变成字符串 {@code "null"}，旧实现当票交出
+     * （小米真机 2026-10-27 实测 m039 轮）。该形态也被下面的 {@code "null"} 判定拦掉。
+     */
     public static boolean isValidGrant(String grant) {
         if (grant == null) return false;
         String s = grant.trim();
         if (s.isEmpty()) return false;
-        return !"null".equalsIgnoreCase(s);
+        if ("null".equalsIgnoreCase(s)) return false;
+        // 正向形态：只认 v2（2|device|game|exp|mask|kid.<hex>）。
+        // 只判前缀，不判段数/签名长度 —— 那是 native 的职责，避免这里改变「有效 v2 格式」的定义。
+        return s.startsWith("2|");
     }
 
-    /** 2026-11-04（用户指令：加固/载 sha/v3 下线）：只认 **v2** 票（grant2），
-     *  v3（grant3，带载荷密钥 kx）与 v1（grant，HMAC）都不再取用。
-     *  服务端仍会下发 grant3 —— 忽略即可，grant2 是同一次登录里双签出来的。全端唯一入口。 */
+    /** 取本次响应里的 **v2 票**（grant2）——全端唯一入口。
+     *
+     *  <p>2026-11-04 起 v3（grant3，载荷密钥 kx）与 v1（grant，HMAC）都不再取用；
+     *  2026-11-21 服务端三处签发（login / heartbeat / bootstrap）也只发 grant2。
+     *  旧注释里「grant2 与 grant3 是同一次登录双签出来的」已失效，随本轮一并删除。 */
     public static String pickGrant(org.json.JSONObject data) {
         if (data == null) return "";
         String[] order = {"grant2"};
@@ -741,14 +745,12 @@ public class Preferences {
 
     public static String getAuthGrant() {
         with(null);
-        // 旧包曾把 "null"（JSON null 经 optString 的产物）落进 prefs ⇒ 读侧一并净化，
-        // 免得修好 pickGrant 之后仍被历史脏值卡住（小米真机 2026-10-27 即此状态）。
         String g = sharedPreferences.getString(KEY_AUTH_GRANT, "");
+        // isValidGrant 现在只认 v2 正向前缀 ⇒ 历史落盘的 "null"、v1("1|…")、v3("3|…")
+        // 以及任何非 v2 脏值都判空，让上层重新取票；原来单列的黑名单因此冗余，删除。
         if (!isValidGrant(g)) return "";
-        // 历史上可能落过 v3 票（"3|…"）：新版 native 只认 v2，留着只会让玩家
-        // 每次启动都 [V2] r=0 且看不出原因 —— 直接判空，让上层重新取票。
-        if (g.trim().startsWith("3|") || g.trim().startsWith("1|")) return "";
-        return g;
+        // 返回去掉首尾空白的票：native 按最后一个 '.' 切签名，尾随空白会让签名长度校验失败。
+        return g.trim();
     }
 
     public static String getAuthExpireAt() {
@@ -857,11 +859,6 @@ public class Preferences {
         saveNetworkBootstrap(cacheSec, bootstrapJson, null);
     }
 
-    public static void setAuthBaseUrl(String url) {
-        with(null);
-        sharedPreferences.edit().putString(KEY_AUTH_BASE, url == null ? "" : url.trim()).apply();
-    }
-
     /**
      * 运行时 game_id 只认 so 烘焙值（GameConfig.h ← Android.mk 的 STARRY_GAME_*）。
      * 此处不再提供「默认游戏名」占位，避免切游戏后仍用错 id。
@@ -876,42 +873,6 @@ public class Preferences {
         with(null);
         String v = gameId == null ? "" : gameId.trim();
         sharedPreferences.edit().putString(KEY_AUTH_GAME_ID, v).apply();
-    }
-
-    public static int getOtaLocalVer(String gameId) {
-        with(null);
-        String gid = gameId == null ? "" : gameId.trim();
-        if (gid.isEmpty()) return 0;
-        return sharedPreferences.getInt(KEY_OTA_VER_PREFIX + gid, 0);
-    }
-
-    public static void setOtaLocalVer(String gameId, int ver) {
-        with(null);
-        String gid = gameId == null ? "" : gameId.trim();
-        if (gid.isEmpty()) return;
-        sharedPreferences.edit().putInt(KEY_OTA_VER_PREFIX + gid, Math.max(0, ver)).apply();
-    }
-
-    public static long getOtaApkLastUpdateTime() {
-        with(null);
-        return sharedPreferences.getLong(KEY_OTA_APK_LAST_UPDATE, 0L);
-    }
-
-    public static void setOtaApkLastUpdateTime(long lastUpdateTime) {
-        with(null);
-        sharedPreferences.edit().putLong(KEY_OTA_APK_LAST_UPDATE, Math.max(0L, lastUpdateTime)).apply();
-    }
-
-    /** 清除所有 game_id 的本地 OTA ver 记录（不清 KEY_OTA_APK_LAST_UPDATE，由调用方决定）。 */
-    public static void clearAllOtaLocalVers() {
-        with(null);
-        SharedPreferences.Editor ed = sharedPreferences.edit();
-        for (String k : sharedPreferences.getAll().keySet()) {
-            if (k != null && k.startsWith(KEY_OTA_VER_PREFIX)) {
-                ed.remove(k);
-            }
-        }
-        ed.apply();
     }
 
     public static void saveAuthSession(String token, String cardKey, long lastOkAt, int cacheSec,

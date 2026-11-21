@@ -40,9 +40,6 @@ LOCAL_MODULE    := starry_magic
 LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions
 LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all
-# 构建戳保留（OTA 守卫判新旧用，装机闸门「查8」认它）：modern 入口零引用
-# kStarryBuildStamp ⇒ 不加 --undefined 会被 --gc-sections 整段回收，so 里查不到戳。
-LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm

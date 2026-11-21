@@ -17,10 +17,10 @@
 #   bash 04_scripts/双机协作/fetch_starry_keys.sh --force      # 覆盖已存在的密钥
 #
 # 环境变量（一般不用改）：
-#   SG_SSH_HOST    授权服务器 SSH 目标     默认 root@47.100.216.101
-#   SG_SERVER_DIR  服务端 auth-server 目录  默认 /www/wwwroot/starlight-auth/auth-server
-#   SG_GAME        用于自证的 game_id       默认 yszzx（勇士之心）
-#   SG_API_BASE    v3/payload-status 基址   默认 https://47.100.216.101:8443
+#   SG_SSH_HOST    授权服务器 SSH 目标     默认 root@154.94.232.231
+#   SG_SERVER_DIR  服务端 auth-server 目录  默认 /www/wwwroot/starlight-mod-auth
+#   SG_GAME        用于自证的 game_id       默认 starry_self（星光自测）
+#   SG_API_BASE    v3/payload-status 基址   默认 https://auth.xgmfyx.cn
 #   SG_EXPECT_FP   期望公钥指纹             默认 25ba10e0faca3500
 #   SG_EXPECT_KFP  期望 K_build 指纹        默认 d63013cd39692ddd
 #
@@ -30,10 +30,10 @@
 # ============================================================================
 set -uo pipefail
 
-SSH_HOST="${SG_SSH_HOST:-root@47.100.216.101}"
-SERVER_DIR="${SG_SERVER_DIR:-/www/wwwroot/starlight-auth/auth-server}"
-GAME="${SG_GAME:-yszzx}"
-API_BASE="${SG_API_BASE:-https://47.100.216.101:8443}"
+SSH_HOST="${SG_SSH_HOST:-root@154.94.232.231}"
+SERVER_DIR="${SG_SERVER_DIR:-/www/wwwroot/starlight-mod-auth}"
+GAME="${SG_GAME:-starry_self}"
+API_BASE="${SG_API_BASE:-https://auth.xgmfyx.cn}"
 EXPECT_FP="${SG_EXPECT_FP:-25ba10e0faca3500}"
 EXPECT_KFP="${SG_EXPECT_KFP:-d63013cd39692ddd}"
 
@@ -235,13 +235,9 @@ elif ! command -v curl >/dev/null 2>&1; then
 else
   KEY="$(tr -d '\r\n' < "$KD/build_key.txt")"
   URL="$API_BASE/v1/build/payload-status?game_id=$GAME&sha=$PAYLOAD_SHA"
-  CERT="$ROOT/mod菜单/starry-mod-menu/app/src/main/assets/certs/starlight.crt"
-  if [ -f "$CERT" ]; then
-    BODY="$(curl -sS -m 12 --cacert "$CERT" -H "X-Build-Key: $KEY" "$URL" 2>&1)"
-  else
-    warn "仓内没有 starlight.crt ⇒ 本次跳过证书校验（-k）"
-    BODY="$(curl -sS -k -m 12 -H "X-Build-Key: $KEY" "$URL" 2>&1)"
-  fi
+  # 2026-11-21：自签证书（starlight.crt）已下线，服务器换发官方证书
+  # ⇒ 直接用系统 CA 校验证书，不再 --cacert 固定，也不再用 -k 跳过校验。
+  BODY="$(curl -sS -m 12 -H "X-Build-Key: $KEY" "$URL" 2>&1)"
   STATUS_OUT="$(printf '%s' "$BODY" | python3 -c '
 import json, sys
 try:

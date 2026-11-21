@@ -71,13 +71,11 @@ trap 'rm -rf "$WORK"' EXIT
 echo "WORK=$WORK"
 
 echo "[1/6] ndk-build（APP_ABI=${APP_ABIS}，源码 Android_pcr.mk）"
-EPOCH="$(cd "$NIXIANG" && git log -1 --format=%ct 2>/dev/null | tr -cd '0-9' || true)"
 ( cd "$STARRY_SRC/app/src/main/jni" && "$NDK_BIN" \
     NDK_PROJECT_PATH="$(m "$STARRY_SRC/app")" \
     APP_BUILD_SCRIPT=./Android_pcr.mk \
     NDK_APPLICATION_MK=./Application.mk \
     APP_ABI="$APP_ABIS" \
-    ${EPOCH:+STARRY_BUILD_EPOCH=$EPOCH} \
     NDK_OUT="$WORK/obj" NDK_LIBS_OUT="$WORK/libs" -j8 )
 
 mkdir -p "$WORK/lib"
@@ -89,7 +87,7 @@ for abi in $APP_ABIS; do
   if grep -a -qE '\[Gjc2\]|\[Dwct\]|\[Ltzj\]|\[Zhmr\]' "$SO"; then
     echo "ERROR: $abi so 仍含其他游戏标签"; exit 1
   fi
-  grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO" || { echo "ERROR: $abi so 缺构建戳"; exit 1; }
+  # 构建戳已随 OTA 下线退役（2026-11-21），不再断言 STARRYSTAMP1
   mkdir -p "$WORK/lib/$abi"
   cp -f "$SO" "$WORK/lib/$abi/libstarry_magic.so"
   CXX="$WORK/libs/$abi/libc++_shared.so"

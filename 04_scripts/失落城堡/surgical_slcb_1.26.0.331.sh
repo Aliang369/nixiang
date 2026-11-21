@@ -18,7 +18,6 @@
 #   classes2.dex                          （官方只有 classes.dex）
 #   lib/arm64-v8a/libstarry_magic.so      （Slcb 模块，环境阶段 kSlots=0 = 0 hook）
 #   lib/arm64-v8a/libc++_shared.so        （官方包内无，so 的 DT_NEEDED 需要）
-#   assets/certs/starlight.crt
 # 官方 classes.dex / resources.arsc / libil2cpp.so / global-metadata.dat 一律逐字节透传
 #
 # 底包：02_apks/失落城堡/失落城堡_1.26.0.331_leiting_original.apk（真机只读拉取）

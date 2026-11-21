@@ -57,7 +57,7 @@ echo "[sign 3/4] 包内容 + so 一致性回读"
 unzip -l "$SIGNED" > "$WORK/entries.txt"
 for e in "classes.dex" "classes2.dex" "classes3.dex" "classes4.dex" "classes5.dex" \
          "lib/arm64-v8a/libstarry_magic.so" "lib/arm64-v8a/libil2cpp.so" \
-         "assets/certs/starlight.crt"; do
+; do
   grep -q "$e" "$WORK/entries.txt" || { echo "ERROR: 缺 $e" >&2; exit 1; }
 done
 if [[ -f "$SO_SRC" ]]; then

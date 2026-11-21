@@ -27,8 +27,6 @@ LOCAL_MODULE    := starry_magic
 LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
-# FW-13：强制保留 Includes/Utils.cpp 烘焙的 OTA 构建戳（--gc-sections 会整段回收，加此兜底）
-LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm

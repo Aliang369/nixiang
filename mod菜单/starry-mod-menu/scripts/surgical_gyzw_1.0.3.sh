@@ -7,7 +7,6 @@
 #   classes5.dex                    星空菜单（com.starry.magic.**，含 GyzwHooks）
 #   lib/arm64-v8a/libstarry_magic.so   native：hook se::ScriptEngine::evalString，splice boot JS
 #   lib/arm64-v8a/libc++_shared.so
-#   assets/certs/starlight.crt
 #   AndroidManifest.xml             分支 B（StarryInitProvider，**不替换官方 Application**）
 #                                   + MenuService + SYSTEM_ALERT_WINDOW/FOREGROUND_SERVICE*
 #   classes3.dex                    ★唯一被改写的官方 dex：TapAdModImpl.getRewardVideo 前置免广告门控
@@ -141,7 +140,6 @@ if [[ -d "$WORK/starry_dec/assets/certs" ]]; then
   mkdir -p "$WORK/assets/certs"
   cp -R "$WORK/starry_dec/assets/certs/." "$WORK/assets/certs/"
 fi
-[[ -f "$WORK/assets/certs/starlight.crt" ]] || { echo "ERROR: starlight.crt missing" >&2; exit 1; }
 
 # ---------------------------------------------------------------- 3/6
 echo "[3/6] $TARGET_DEX 免广告门控（两层）"
@@ -602,7 +600,6 @@ for name in kept_meta:
     assert name in out_names, f"lost {name}"
 assert new_dex in out_names and target_dex in out_names and target_dex2 in out_names
 assert "lib/arm64-v8a/libstarry_magic.so" in out_names
-assert "assets/certs/starlight.crt" in out_names
 assert not any(x.upper().endswith(SIG_EXT) for x in out_names)
 assert "META-INF/MANIFEST.MF" not in out_names
 print(f"  merged ok; entries={n_written}; {new_dex}={len(cnew)}; {target_dex}={len(cpatched)}; {target_dex2}={len(cpatched2)}; untouched {len(UNTOUCHED)} verified")
@@ -612,7 +609,7 @@ PY
 PKG_SO_MD5="$(unzip -p "$UNSIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 [[ "$PKG_SO_MD5" == "$SO_MD5" ]] || { echo "ERROR: 包内 so md5=$PKG_SO_MD5 != $SO_MD5" >&2; exit 1; }
 unzip -Z1 "$UNSIGNED" > "$WORK/entries.txt"
-for e in "$NEW_DEX" "$TARGET_DEX" "lib/arm64-v8a/libstarry_magic.so" "assets/certs/starlight.crt" "classes.dex" "classes2.dex" "classes4.dex"; do
+for e in "$NEW_DEX" "$TARGET_DEX" "lib/arm64-v8a/libstarry_magic.so" "classes.dex" "classes2.dex" "classes4.dex"; do
   grep -q "^$e\$" "$WORK/entries.txt" || { echo "ERROR: $e missing" >&2; exit 1; }
 done
 echo "  包内 so md5 ok；$TARGET_DEX + $NEW_DEX 到位"

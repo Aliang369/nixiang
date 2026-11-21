@@ -22,6 +22,14 @@ from types import SimpleNamespace
 _TMP = tempfile.mkdtemp(prefix="auth-expiry-test-")
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{_TMP}/t.db")
 os.environ.setdefault("SECRET_KEY", "test-secret")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from _grant_testkey import make_test_key  # noqa: E402
+
+# 2026-11-21：授权票改 v2-only，签发必须有私钥，否则 login_card 直接 503；
+# 这里用临时测试密钥（现生成、随临时目录丢弃），不触碰任何真实私钥。
+os.environ.setdefault("GRANT_RSA_KEY_PATH", make_test_key(_TMP))
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fastapi import HTTPException  # noqa: E402
@@ -69,6 +77,16 @@ def _aware(dt):
     return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
 
 
+def _at(days: int, *, microsecond: int = 0) -> datetime:
+    """相对「现在」的 UTC 时刻（微秒默认归零）。
+
+    2026-11-21：本文件原先写死 2026-11/12 的具体日期，跑到该日期之后自然失效
+    （表现为「卡密已过期」）。改为相对时钟的偏移后，**只动测试数据**，
+    生产侧 activate_if_needed / ensure_card_usable / login_card 一行未改。
+    """
+    return (utcnow() + timedelta(days=days)).replace(microsecond=microsecond)
+
+
 class ActivationPolicyTest(unittest.TestCase):
     def setUp(self):
         self.db = SessionLocal()
@@ -77,12 +95,8 @@ class ActivationPolicyTest(unittest.TestCase):
         self.db.close()
 
     def test_preset_expire_survives_first_activation(self):
-        """有用未用 day 卡：后台手设了未来到期，首次登录不得被换成 now+1d。
-
-        2026-11-15 修复测试时间炸弹：原来写死 2026-11-12/13，日期一过就变「已过期」，
-        断言未改，只把基准改成相对当前时间的未来时刻。
-        """
-        preset = (utcnow() + timedelta(days=1, hours=2)).replace(microsecond=0)
+        """有用未用 day 卡：后台把到期时间设到未来，首次登录不得被换成 now+1d。"""
+        preset = _at(3)
         c = _card(self.db, status="unused", duration_type="day", expire_at=preset)
         self.assertTrue(activate_if_needed(c))
         self.assertEqual(_aware(c.expire_at), preset)
@@ -100,15 +114,15 @@ class ActivationPolicyTest(unittest.TestCase):
 
     def test_reset_to_unused_does_not_shrink_extended_card(self):
         """已延期卡被后台改回 unused（activated_at 保留）：激活不得缩时。"""
-        far = datetime(2027, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        far = _at(60)
         c = _card(self.db, status="unused", duration_type="day",
-                  expire_at=far, activated_at=datetime(2026, 10, 1, tzinfo=timezone.utc))
+                  expire_at=far, activated_at=_at(-30))
         self.assertTrue(activate_if_needed(c))
         self.assertEqual(_aware(c.expire_at), far)
 
     def test_past_expire_is_not_renewed(self):
         """手设过去时间：激活不得延长，且激活后仍判过期（抛 403）。"""
-        past = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        past = _at(-30)
         c = _card(self.db, status="unused", duration_type="day", expire_at=past)
         with self.assertRaises(HTTPException) as ctx:
             activate_if_needed(c)
@@ -117,7 +131,7 @@ class ActivationPolicyTest(unittest.TestCase):
 
     def test_past_expire_login_writes_nothing(self):
         """登录被拒时不得留半改状态：status/expire 不变，无 session/设备行。"""
-        past = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        past = _at(-30)
         c = _card(self.db, status="unused", duration_type="day", expire_at=past,
                   key_code="PAST-ZERO-WRITE")
         before_status, before_exp = c.status, _aware(c.expire_at)
@@ -135,7 +149,7 @@ class ActivationPolicyTest(unittest.TestCase):
 
     def test_login_keeps_preset_expire_and_issues_token(self):
         """unused + 未来手设到期：首登保留到期时间并发会话 token。"""
-        preset = (utcnow() + timedelta(days=1, hours=3)).replace(microsecond=0)
+        preset = _at(3)
         c = _card(self.db, status="unused", duration_type="day", expire_at=preset,
                   key_code="PRESET-OK")
         out = login_card(self.db, "PRESET-OK", "any_game", "dev_" + "1" * 32)
@@ -147,7 +161,7 @@ class ActivationPolicyTest(unittest.TestCase):
 
     def test_active_without_activated_at_is_filled_not_rewritten(self):
         """历史脏数据：status=active 但 activated_at 为空 → 补 activated_at，不动已有到期。"""
-        preset = datetime(2026, 12, 1, 0, 0, 0, tzinfo=timezone.utc)
+        preset = _at(20)
         c = _card(self.db, status="active", duration_type="day", expire_at=preset,
                   activated_at=None)
         self.assertTrue(activate_if_needed(c))
@@ -156,9 +170,9 @@ class ActivationPolicyTest(unittest.TestCase):
 
     def test_expired_card_rejected_before_activation(self):
         """已过期卡走 ensure_card_usable 先被拒，激活根本不会执行（顺序保证）。"""
-        past = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        past = _at(-30)
         c = _card(self.db, status="active", duration_type="day",
-                  expire_at=past, activated_at=datetime(2025, 12, 1, tzinfo=timezone.utc))
+                  expire_at=past, activated_at=_at(-60))
         with self.assertRaises(HTTPException) as ctx:
             ensure_card_usable(c, "any_game")
         self.assertEqual(ctx.exception.status_code, 403)
@@ -174,7 +188,7 @@ class ActivationPolicyTest(unittest.TestCase):
 
     def test_permanent_with_explicit_expire_is_preserved(self):
         """permanent/count 卡若被后台显式设了到期时间，激活不得清成 NULL（保留用户明确设置）。"""
-        preset = datetime(2026, 12, 31, 0, 0, 0, tzinfo=timezone.utc)
+        preset = _at(40)
         for dtype in ("permanent", "count"):
             c = _card(self.db, status="unused", duration_type=dtype, expire_at=preset,
                       max_uses=3 if dtype == "count" else 0)
@@ -205,20 +219,21 @@ class AdminAuditTest(unittest.TestCase):
         )
 
     def test_update_records_old_and_new_expire(self):
+        old_exp = _at(2)
         c = _card(self.db, status="active", duration_type="day",
-                  expire_at=datetime(2026, 11, 13, tzinfo=timezone.utc),
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
-        new_exp = datetime(2026, 12, 1, tzinfo=timezone.utc)
+                  expire_at=old_exp,
+                  activated_at=_at(-1))
+        new_exp = _at(10)
         update_card(c.id, CardUpdate(expire_at=new_exp), self.req, {"sub": "tester"}, self.db)
         row = self._last_audit("cards.update")
-        self.assertIn("2026-11-13T00:00:00", row.detail)
-        self.assertIn("->2026-12-01T00:00:00", row.detail)
+        self.assertIn(old_exp.strftime("%Y-%m-%dT%H:%M:%S"), row.detail)
+        self.assertIn("->" + new_exp.strftime("%Y-%m-%dT%H:%M:%S"), row.detail)
         self.assertIn("来源=admin.cards.update", row.detail)
 
     def test_note_only_patch_keeps_expire_untouched(self):
-        exact = datetime(2026, 11, 12, 16, 0, 0, 123456, tzinfo=timezone.utc)
+        exact = _at(3, microsecond=123456)
         c = _card(self.db, status="active", duration_type="day", expire_at=exact,
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  activated_at=_at(-1))
         update_card(c.id, CardUpdate(note="只改备注"), self.req, {"sub": "tester"}, self.db)
         self.db.refresh(c)
         self.assertEqual(_aware(c.expire_at), exact)
@@ -227,8 +242,8 @@ class AdminAuditTest(unittest.TestCase):
 
     def test_clearing_expire_sets_null_and_audits(self):
         c = _card(self.db, status="active", duration_type="day",
-                  expire_at=datetime(2026, 11, 13, tzinfo=timezone.utc),
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  expire_at=_at(2),
+                  activated_at=_at(-1))
         update_card(c.id, CardUpdate(expire_at=None), self.req, {"sub": "tester"}, self.db)
         self.db.refresh(c)
         self.assertIsNone(c.expire_at)
@@ -237,9 +252,9 @@ class AdminAuditTest(unittest.TestCase):
 
     def test_batch_zero_days_keeps_expire(self):
         """extend_days=0 + status：只改状态，到期时间不动。"""
-        exact = (utcnow() + timedelta(days=2)).replace(microsecond=123456)
+        exact = _at(2, microsecond=123456)
         c = _card(self.db, status="active", duration_type="day", expire_at=exact,
-                  activated_at=utcnow() - timedelta(days=3))
+                  activated_at=_at(-1))
         batch_cards(CardBatchRequest(ids=[c.id], extend_days=0, status="banned"),
                     self.req, {"sub": "tester"}, self.db)
         self.db.refresh(c)
@@ -248,7 +263,7 @@ class AdminAuditTest(unittest.TestCase):
 
     def test_batch_extend_audits_change(self):
         c = _card(self.db, status="active", duration_type="day", expire_at=None,
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  activated_at=_at(-1))
         batch_cards(CardBatchRequest(ids=[c.id], extend_days=3), self.req, {"sub": "tester"}, self.db)
         self.db.refresh(c)
         self.assertIsNotNone(c.expire_at)
@@ -305,27 +320,27 @@ class BatchOverflowTest(unittest.TestCase):
 
     def test_1e7_days_rejected_422(self):
         c = _card(self.db, status="active", duration_type="day", expire_at=None,
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  activated_at=_at(-1))
         self._assert_rejected_and_untouched(c, 1e7)
 
     def test_1e100_days_rejected_422(self):
         c = _card(self.db, status="active", duration_type="day", expire_at=None,
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  activated_at=_at(-1))
         self._assert_rejected_and_untouched(c, 1e100)
 
     def test_near_datetime_max_plus_one_day_rejected(self):
         c = _card(self.db, status="active", duration_type="day",
                   expire_at=datetime(9999, 12, 31, 0, 0, 0, tzinfo=timezone.utc),
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  activated_at=_at(-1))
         self._assert_rejected_and_untouched(c, 1)
 
     def test_mixed_batch_all_or_nothing(self):
         """只有后项越界时，前项也不能被延期；整批零写入、零审计。"""
         ok = _card(self.db, status="active", duration_type="day", expire_at=None,
-                   activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                   activated_at=_at(-1))
         near_max = _card(self.db, status="active", duration_type="day",
                          expire_at=datetime(9999, 12, 31, 0, 0, 0, tzinfo=timezone.utc),
-                         activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                         activated_at=_at(-1))
         ok_exp = _aware(ok.expire_at)
         audits = self._batch_audit_count()
         with self.assertRaises(HTTPException) as ctx:
@@ -340,7 +355,7 @@ class BatchOverflowTest(unittest.TestCase):
 
     def test_normal_extend_still_works(self):
         c = _card(self.db, status="active", duration_type="day", expire_at=None,
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  activated_at=_at(-1))
         batch_cards(CardBatchRequest(ids=[c.id], extend_days=3),
                     self.req, {"sub": "tester"}, self.db)
         self.db.refresh(c)

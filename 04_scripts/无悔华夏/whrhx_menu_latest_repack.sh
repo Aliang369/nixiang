@@ -163,7 +163,7 @@ unzip -p "$OUT_APK" "$SO_ENTRY" > "$WORK/final.so"
 cmp -s "$SO" "$WORK/final.so" || { echo "ERROR: packaged so differs from build output" >&2; exit 1; }
 unzip -p "$OUT_APK" "$DEX_ENTRY" > "$WORK/final.dex"
 cmp -s "$DEX" "$WORK/final.dex" || { echo "ERROR: packaged dex differs from menu dex" >&2; exit 1; }
-for d in classes.dex resources.arsc AndroidManifest.xml lib/arm64-v8a/libc++_shared.so assets/certs/starlight.crt; do
+for d in classes.dex resources.arsc AndroidManifest.xml lib/arm64-v8a/libc++_shared.so; do
   unzip -p "$BASE_APK" "$d" > "$WORK/base_only" 2>/dev/null || { echo "ERROR: base missing $d" >&2; exit 1; }
   unzip -p "$OUT_APK"  "$d" > "$WORK/out_only"  2>/dev/null || { echo "ERROR: out missing $d" >&2; exit 1; }
   cmp -s "$WORK/base_only" "$WORK/out_only" || { echo "ERROR: $d changed" >&2; exit 1; }

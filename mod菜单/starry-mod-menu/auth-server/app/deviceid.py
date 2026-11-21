@@ -25,7 +25,10 @@ import re
 from sqlalchemy import ColumnElement
 
 # 精确匹配：32 位或 40 位小写十六进制，前缀 dev_
-DEVICE_ID_PATTERN = r"^(?:dev_[0-9a-f]{32}|dev_[0-9a-f]{40})$"
+# 注意：必须用普通分组 (...) —— MySQL 5.7 的 REGEXP 不支持非捕获组 (?:...)，
+# 会直接抛 "Got error 'repetition-operator operand invalid' from regexp"，
+# 导致所有走 trusted_device_clause() 的统计接口 500。
+DEVICE_ID_PATTERN = r"^(dev_[0-9a-f]{32}|dev_[0-9a-f]{40})$"
 _DEVICE_ID_RE = re.compile(DEVICE_ID_PATTERN)
 
 # 卡密形态（SG-XXXX-XXXX-XXXX-XXXX / AL-...），用于把历史 detail 里的明文卡密脱敏

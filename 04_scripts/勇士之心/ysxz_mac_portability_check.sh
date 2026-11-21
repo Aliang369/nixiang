@@ -119,7 +119,7 @@ if [ -z "$EPOCH_RAW" ]; then
 else
   SANITIZED=1
   echo "$EPOCH_RAW" | LC_ALL=C grep -q "tr -cd\|tr -dc" || SANITIZED=0
-  g_r "STARRY_BUILD_EPOCH *?=" "$JNI_DIR" | grep -q . || SANITIZED=0
+  # 构建戳已随 OTA 下线退役（2026-11-21）：不再检查 Application.mk 的 STARRY_BUILD_EPOCH ?=
   if [ "$SANITIZED" = "1" ]; then
     c_ok "git log 结果已过滤/可覆盖（STARRY_BUILD_EPOCH ?= + tr -cd '0-9'）"
   else

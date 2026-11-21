@@ -70,10 +70,9 @@ public class MenuService extends Service {
         }
     }
 
-    /** 无 Application 时的兜底（仍优先 OTA 扫描）。 */
+    /** 无 Application 时的兜底（只走包内/落盘 so）。 */
     private static void loadStarryNativeLibraryFallback() {
         ClassLoader pathCl = resolveAppClassLoader();
-        // 尝试从常见 files 根扫 OTA
         try {
             Class<?> at = Class.forName("android.app.ActivityThread");
             Object app = at.getMethod("currentApplication").invoke(null);
@@ -104,23 +103,7 @@ public class MenuService extends Service {
                 break;
             }
         }
-        // 有 OTA 目录时禁止 loadLibrary
-        try {
-            Class<?> at = Class.forName("android.app.ActivityThread");
-            Object app = at.getMethod("currentApplication").invoke(null);
-            if (app instanceof android.content.Context) {
-                java.io.File ota = com.starry.magic.ota.StarryNativeLoad.findOtaSo((android.content.Context) app);
-                if (ota != null) {
-                    if (loadIntoClassLoader(pathCl, ota.getAbsolutePath())) {
-                        Log.i(TAG, "libstarry_magic OTA loaded: " + ota.getAbsolutePath());
-                        return;
-                    }
-                    Log.e(TAG, "OTA so exists but load failed, skip apk loadLibrary");
-                    return;
-                }
-            }
-        } catch (Throwable ignored) {
-        }
+        // 只按 files/starry_native 与 NativeLoader.TMP_LIBS 的包内 so 加载（无任何 OTA 扫描）。
         String[] abs = filesNative != null
                 ? new String[] { filesNative + "/libstarry_magic.so", com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so" }
                 : new String[] { com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so" };
@@ -964,18 +947,14 @@ public class MenuService extends Service {
                 Log.w(TAG, "nativeInit failed: " + e.getMessage());
             }
         }
-        // 每次开菜单都尝试应用本地 patch（幂等）；避免只跑一次时序错过
-        try {
-            com.starry.magic.ota.PlayOtaManager.applyLocalPatchIfAny(this);
-        } catch (Throwable t) {
-            Log.w(TAG, "applyLocalPatch: " + t.getMessage());
-        }
+        // 2026-11-21：OTA 热更体系下线 —— 本地补丁自动应用入口（applyLocalPatchIfAny）已删除。
     }
 
     private boolean showMenuNative(Activity host) {
         // 独立助手模式：强制走 OVERLAY（host=null → tryAttachActivity 直接 false → tryAttachOverlay）
         if (standalone()) host = null;
-        com.starry.magic.auth.AuthClient.init(this);
+        // 2026-11-21：移除 AuthClient.init() 调用 —— 它现在只打一行日志，无初始化副作用；
+        // TLS 由系统 CA + 平台主机名校验承担，无需在此装载任何信任材料。
         Preferences.with(this);
         ModBridge.syncAuthGameIdFromNative();
         if (nativeMenu == null) {

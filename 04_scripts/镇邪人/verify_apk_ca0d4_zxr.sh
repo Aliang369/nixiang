@@ -36,7 +36,6 @@ assert b"mod-menu-v2.html" not in c8, "classes8 仍是 WebView 菜单"
 so = z.read("lib/arm64-v8a/libstarry_magic.so")
 assert b"[Zxr]" in so and b"zxr\0" in so, "so 不是 ZXR"
 assert "lib/arm64-v8a/libc++_shared.so" in z.namelist()
-assert "assets/certs/starlight.crt" in z.namelist()
 mf = z.read("AndroidManifest.xml")   # 二进制 XML：字符串为 UTF-16LE 存储
 assert "com.starry.magic.menu.MenuService".encode("utf-16-le") in mf, "Manifest 缺 MenuService"
 print("  classes8=NativeMenu+ZxrHooks; so=[Zxr]+zxr; MenuService ok")

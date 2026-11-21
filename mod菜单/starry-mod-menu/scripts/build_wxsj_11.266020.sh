@@ -107,18 +107,10 @@ for dex in $(unzip -Z1 "$STARRY_APK" | grep -E '^classes[0-9]*\.dex$' | sort -V)
   unzip -p "$STARRY_APK" "$dex" > "$WORK/stage/classes${idx}.dex"
   idx=$((idx + 1))
 done
-unzip -p "$STARRY_APK" assets/certs/starlight.crt > "$WORK/stage/assets/starlight.crt"
-[[ -s "$WORK/stage/assets/starlight.crt" ]] || {
-  echo "ERROR: starry cert missing"; exit 1;
-}
-mkdir -p "$WORK/stage/assets/certs"
-mv "$WORK/stage/assets/starlight.crt" "$WORK/stage/assets/certs/starlight.crt"
-
 (cd "$WORK/stage" && zip -u "$WORK/unsigned.apk" \
   AndroidManifest.xml \
   lib/arm64-v8a/libstarry_magic.so \
   lib/arm64-v8a/libc++_shared.so \
-  assets/certs/starlight.crt \
   classes5.dex classes6.dex classes7.dex classes8.dex classes9.dex \
   classes10.dex classes11.dex classes12.dex classes13.dex classes14.dex) >/dev/null
 

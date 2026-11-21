@@ -44,8 +44,7 @@ ALLOW_ADD = {
     "classes6.dex",
     "lib/arm64-v8a/libstarry_magic.so",
     "lib/arm64-v8a/libc++_shared.so",
-    "assets/certs/starlight.crt",
-}
+    }
 # 顶层旧/新签名元数据形态（不含子目录 ⇒ services/kotlinx/androidx/Unity Ads 永不被放过）
 SIG_RE = re.compile(r"^META-INF/(?:MANIFEST[.]MF|[^/]+[.](?:SF|RSA|DSA|EC)|SIG-[^/]+)$")
 # 必须流式 SHA256 硬证的 7 项：官方 4 dex + resources.arsc + libil2cpp.so + global-metadata.dat
@@ -216,7 +215,7 @@ def main():
 
     new_sig = {n for n in added if SIG_RE.match(n)}
     unexpected_add = sorted(added - ALLOW_ADD - new_sig)
-    rep.check("B1b", "新增集合 ⊆ {classes6.dex, 两个 so, assets/certs/starlight.crt, 签名文件}",
+    rep.check("B1b", "新增集合 ⊆ {classes6.dex, 两个 so,, 签名文件}",
               not unexpected_add, "added=%s" % sorted(added))
     rep.check("B1c", "成品带新签名（META-INF/MANIFEST.MF + 至少一个 .SF/.RSA）",
               "META-INF/MANIFEST.MF" in names and

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.starry.magic.menu.Preferences;
-import com.starry.magic.ota.PlayOtaPaths;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,27 +81,17 @@ public final class DexInstaller {
             if (!new File(path).isFile()) continue;
             if (loadInto(pathCl, path, "cxx")) break;
         }
-        // 优先 OTA so；若 OTA 存在则不再 load 包内 nativeLibraryDir / loadLibrary
+        // 2026-11-21：OTA 载荷体系下线 —— 只按「私有落盘 → 包内 lib → loadLibrary」正常顺序加载。
         java.util.ArrayList<String> candidates = new java.util.ArrayList<>();
-        File ota = PlayOtaPaths.resolveOtaSo(ctx);
-        if (ota == null) ota = com.starry.magic.ota.StarryNativeLoad.findOtaSo(ctx);
-        if (ota != null) {
-            candidates.add(ota.getAbsolutePath());
-        } else {
-            candidates.add(new File(ctx.getFilesDir(), "starry_native/libstarry_magic.so").getAbsolutePath());
-            candidates.add(new File(ctx.getApplicationInfo().nativeLibraryDir, "libstarry_magic.so").getAbsolutePath());
-            candidates.add(com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so");
-        }
+        candidates.add(new File(ctx.getFilesDir(), "starry_native/libstarry_magic.so").getAbsolutePath());
+        candidates.add(new File(ctx.getApplicationInfo().nativeLibraryDir, "libstarry_magic.so").getAbsolutePath());
+        candidates.add(com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so");
         for (String path : candidates) {
             if (!new File(path).isFile()) continue;
             if (loadInto(pathCl, path, "magic")) {
                 Log.i(TAG, "System.load ok: " + path);
                 return;
             }
-        }
-        if (ota != null) {
-            Log.e(TAG, "OTA so present but load failed, skip apk loadLibrary");
-            return;
         }
         try {
             System.loadLibrary("starry_magic");

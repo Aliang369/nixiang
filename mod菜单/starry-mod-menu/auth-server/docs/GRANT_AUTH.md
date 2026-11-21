@@ -13,8 +13,8 @@
 
 1. **先更新服务器**（auth-server）  
    ```bash
-   cd /www/wwwroot/starlight-auth/auth-server   # 路径按你实际改
-   docker compose up -d --build
+   cd /www/wwwroot/starlight-mod-auth
+   systemctl restart starlight-mod-auth
    ```
 2. **再打手机 Release 包**（仓库一键脚本，**默认就是 release**）  
    ```bash
@@ -26,27 +26,22 @@
 
 ### 你几乎不用改的配置
 
-`.env` 里有（没有就抄 `env.example`）：
+`.env` 里有（生产值见 [DEPLOY.md](./DEPLOY.md)）：
 
 ```env
-GRANT_HMAC_SECRET=sg-grant-v1-7f3a9c2e
 OFFLINE_CACHE_SECONDS=86400  # 2026-09-06 起：票 TTL=离线宽限 1 天
 CARD_LOGIN_MAX_FAILS=12
 CARD_LOGIN_WINDOW_SECONDS=600
 ```
 
+> `GRANT_HMAC_SECRET` 已于 2026-11-21 随 OTA 下线删除（v1 HMAC 票同时退役）。
+
 **默认密钥已经和 APK 对上了。** 不改密钥就不用动 native。
 
 ### 什么时候才要改密钥？
 
-只有你觉得密钥泄露了、想换一把时：
-
-| 步骤 | 做什么 |
-|------|--------|
-| 1 | 改服务器 `.env` 的 `GRANT_HMAC_SECRET=新密钥` |
-| 2 | 改手机工程 `app/src/main/jni/Main.cpp` 里 `OBFUSCATE("旧密钥")` → 改成 **同一串新密钥** |
-| 3 | 服务器 `docker compose up -d --build` |
-| 4 | 重新打 **release** APK，让玩家更新 |
+> **已失效（2026-11-21）**：v1 HMAC 票已退役、`GRANT_HMAC_SECRET` 字段已随 OTA 体系删除。
+> 现在换密钥 = 换 `grant_rsa_key_path` 指向的 RSA 私钥，并重签全部票据（无需改 native 的 `grant_pepper`，它只服务已下线的 OTA 验签）。
 
 两边字符串必须完全一样，否则所有人登录后功能都开不了。
 
@@ -111,8 +106,8 @@ Native 验签字 + 是否过期 + 是否这个设备/游戏
 | kid | token 的 sha256 前 8 位，或 `open` |
 | hmac | HMAC-SHA256(密钥, 点号前整段 body) 的 hex |
 
-签发：`auth-server/app/services/grant_service.py` → `mint_grant()`  
-密钥：`Settings.grant_hmac_secret` / 环境变量 `GRANT_HMAC_SECRET`
+签发：`auth-server/app/services/grant_service.py` → `mint_grant_v2()`
+密钥：`Settings.grant_rsa_key_path`（RSA 私钥文件；`GRANT_HMAC_SECRET` 已随 OTA 下线删除）
 
 #### 3.1.1 `device_id` 指纹（全游戏卡密）
 
@@ -183,9 +178,7 @@ Main.cpp
 1. **不要**再只靠 `if (g_authorized)` 放行游戏逻辑；新逻辑用 `session_live()`。  
 2. **不要**在 JS 里伪造 grant；没有服务器密钥签不出来。  
 3. 改 `OFFLINE_CACHE_SECONDS`：服务器下发；客户端还卡了上限 600 秒。  
-4. 改密钥：必须同时改  
-   - `auth-server`：`GRANT_HMAC_SECRET` / `config.py` 默认  
-   - `app/.../Main.cpp`：`grant_pepper()` → `OBFUSCATE("...")`  
+4. ~~改 HMAC 密钥~~：**已失效**。v1 HMAC 票 2026-11-21 退役，`grant_hmac_secret` 字段随 OTA 下线一并删除；现在只签 v2 非对称票，改密钥 = 换 `grant_rsa_key_path` 指向的私钥。
 5. UI 设置（featNum ≥ 50）仍不需要票。  
 6. 游戏具体修改代码（`Zhmr_Tick` 等）**不用改**；只是外面多包了一层「有票才进 Tick」。
 

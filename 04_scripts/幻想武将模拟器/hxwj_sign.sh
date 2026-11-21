@@ -82,7 +82,7 @@ fi
 unzip -l "$SIGNED" > "$WORK/entries.txt"
 for e in "classes.dex" "classes2.dex" "lib/arm64-v8a/libstarry_magic.so" \
          "lib/arm64-v8a/libc++_shared.so" "lib/arm64-v8a/libil2cpp.so" \
-         "assets/certs/starlight.crt" "resources.arsc"; do
+ "resources.arsc"; do
   grep -q " $e\$" "$WORK/entries.txt" || { echo "ERROR: $e missing" >&2; exit 1; }
 done
 

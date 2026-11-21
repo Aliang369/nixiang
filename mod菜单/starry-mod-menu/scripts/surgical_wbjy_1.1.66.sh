@@ -13,7 +13,6 @@
 #   classes4.dex                       星空菜单（templates/wbjy_menu_current，javac+d8 产出）
 #   lib/arm64-v8a/libstarry_magic.so   native：6 功能 hook
 #   lib/arm64-v8a/libc++_shared.so     星空 so 依赖
-#   assets/certs/starlight.crt         星空证书
 #   AndroidManifest.xml                分支 B（StarryInitProvider + MenuService + FGS 权限）
 #                                      ★不替换官方 Application，也不改 appComponentFactory
 #
@@ -50,7 +49,6 @@ MF_CACHE="$NIXIANG/07_patched/$GAME/surgical/AndroidManifest.xml"
 SO_PREBUILT="${WBJY_SO:-$STARRY_SRC/libs_wbjy/arm64-v8a/libstarry_magic.so}"
 MENU_DEX="${WBJY_MENU_DEX:-$STARRY_SRC/templates/wbjy_menu_current/$NEW_DEX}"
 LOGIN_DEX="${WBJY_LOGIN_DEX:-$STARRY_SRC/templates/wbjy_menu_current/classes2_loginpatched.dex}"
-CERT_SRC="$STARRY_SRC/app/src/main/assets/certs/starlight.crt"
 
 JAVA_HOME="${JAVA_HOME:-/c/Program Files/Microsoft/jdk-17.0.20.101-hotspot}"
 
@@ -157,7 +155,6 @@ if [[ -n "$CXX_SHARED" ]]; then
 else
   echo "ERROR: 找不到 libc++_shared.so（NDK=${NDK}）" >&2; exit 1
 fi
-cp "$CERT_SRC" "$WORK/assets/certs/starlight.crt"
 ls -l "$WORK/$NEW_DEX" "$WORK/lib/arm64-v8a/" "$WORK/assets/certs/"
 
 # ---------------------------------------------------------------- 2/4
@@ -282,7 +279,6 @@ assert zo2.read("classes2.dex") == clogin, "classes2.dex 不是登录改包版"
 assert b"com.taptap.sdk.act1on" in zo2.read("classes2.dex"), "classes2.dex 缺 A 轨常量"
 assert "lib/arm64-v8a/libstarry_magic.so" in out_names
 assert "lib/arm64-v8a/libc++_shared.so" in out_names
-assert "assets/certs/starlight.crt" in out_names
 assert not any(x.upper().endswith(SIG_EXT) for x in out_names)
 assert "META-INF/MANIFEST.MF" not in out_names
 print(f"  merged ok; entries={n_written}; {new_dex}={len(cnew)}; untouched {len(UNTOUCHED)} verified")
@@ -293,7 +289,7 @@ PKG_SO_MD5="$(unzip -p "$UNSIGNED" lib/arm64-v8a/libstarry_magic.so | md5sum | a
 [[ "$PKG_SO_MD5" == "$SO_MD5" ]] || { echo "ERROR: 包内 so md5=$PKG_SO_MD5 != $SO_MD5" >&2; exit 1; }
 unzip -Z1 "$UNSIGNED" > "$WORK/entries.txt"
 for e in "$NEW_DEX" "classes.dex" "lib/arm64-v8a/libstarry_magic.so" \
-         "lib/arm64-v8a/libc++_shared.so" "assets/certs/starlight.crt"; do
+         "lib/arm64-v8a/libc++_shared.so"; do
   grep -q "^$e\$" "$WORK/entries.txt" || { echo "ERROR: $e missing" >&2; exit 1; }
 done
 echo "  包内 so md5 ok；$NEW_DEX 到位"

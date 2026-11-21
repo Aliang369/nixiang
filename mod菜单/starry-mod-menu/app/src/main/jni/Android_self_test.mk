@@ -275,6 +275,11 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll
+# 2026-11-21 self 验证：只面向自有悬浮 UI / 菜单数据 / 正常授权，
+# 不链第三方静态库（Dobby=函数 hook、Keystone=运行时汇编、wxsj_dll=游戏 dll 载荷）。
+# self 分支不调用它们（Main.cpp 唯一 Dobby 用法 writeMemory() 是未调用静态函数，
+# 靠 -ffunction-sections + --gc-sections 丢弃）。可逆：还原本行为原三件即可。
+# self 形态不链第三方静态库
+LOCAL_STATIC_LIBRARIES :=
 
 include $(BUILD_SHARED_LIBRARY)

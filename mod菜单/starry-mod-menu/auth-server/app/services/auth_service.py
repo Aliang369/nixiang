@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import secrets
 import string
@@ -26,8 +27,42 @@ from ..models import (
     ToastMessage,
 )
 from ..security import add_duration, utcnow
-from .grant_service import (mint_grant, mint_grant_v2, mint_grant_v3,
-                            FEAT_MASK_ALL, compute_feat_mask)
+from .grant_service import (GrantSigningError, compute_feat_mask,
+                            ensure_grant_signing_ready, mint_grant_v2_or_raise)
+
+log = logging.getLogger(__name__)
+
+
+def _grant_http_error(exc: Exception) -> HTTPException:
+    """签名层异常 → 对外只给通用文案（不拼异常细节），细节仅进服务端日志。"""
+    log.warning("授权票签发失败：%s", exc)
+    return HTTPException(503, "授权票签发失败，请稍后重试")
+
+
+def _require_signing_ready() -> None:
+    """签发前置检查：缺私钥时在写库之前就拒绝（fail closed）。"""
+    try:
+        ensure_grant_signing_ready()
+    except GrantSigningError as exc:
+        raise _grant_http_error(exc) from exc
+
+
+def _issue_menu_grant(db, *, device_id, game_id, boot, token, offline_cache_seconds) -> str:
+    """v2 授权票唯一签发入口；缺私钥或签名失败一律 503，不返回 None。"""
+    try:
+        return mint_grant_v2_or_raise(
+            device_id=device_id,
+            game_id=game_id,
+            offline_cache_seconds=offline_cache_seconds,
+            feat_mask=compute_feat_mask(
+                db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))
+            ),
+            token=token,
+        )
+    except GrantSigningError as exc:
+        # 未提交的事务整体回滚：不留新绑定/会话，也不延长既有会话或刷 presence
+        db.rollback()
+        raise _grant_http_error(exc) from exc
 
 
 def _gen_key(prefix: str = "SG", length: int = 16) -> str:
@@ -371,6 +406,7 @@ def login_card(
     # 这里放在业务最前面，避免污染 card_devices / presence，也让审计能记到明确原因。
     if not is_valid_device_id(device_id):
         raise HTTPException(400, "设备标识无效")
+    _require_signing_ready()
     card = (
         db.query(CardKey)
         .filter(CardKey.key_code == card_key.strip())
@@ -431,6 +467,16 @@ def login_card(
     )
     db.add(session)
     _upsert_presence(db, game_id, device_id, card.id)
+    # 先签票、后落库：签发失败整体回滚，不留绑定/会话/presence
+    boot = build_bootstrap(db, game_id, logged_in=True)
+    grant2 = _issue_menu_grant(
+        db,
+        device_id=device_id,
+        game_id=game_id,
+        boot=boot,
+        token=token,
+        offline_cache_seconds=settings.offline_cache_seconds,
+    )
     db.commit()
     db.refresh(card)
 
@@ -458,39 +504,13 @@ def login_card(
         detail=f"card#{card.id}", result="ok", request=request,
     )
 
-    boot = build_bootstrap(db, game_id, logged_in=True)
-    grant = mint_grant(
-        device_id=device_id,
-        game_id=game_id,
-        offline_cache_seconds=settings.offline_cache_seconds,
-        menu_enabled=bool(boot.get("menu_enabled", True)),
-        card_auth_enabled=True,
-        token=token,
-    )
-    # v2 非对称票（P1）：so 里只有公钥 ⇒ 破解者剥出来也签不出票
-    grant2 = mint_grant_v2(
-        device_id=device_id,
-        game_id=game_id,
-        offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
-        token=token,
-    )
-    grant3 = mint_grant_v3(
-        device_id=device_id,
-        game_id=game_id,
-        offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
-        token=None,
-    ) if 'mint_grant_v3' in globals() else None
     return {
         "token": token,
         "expires_at": expires_at.isoformat(),
         "offline_cache_seconds": settings.offline_cache_seconds,
         "card": serialize_card_public(card, device_count=count_card_devices(db, card)),
         "bootstrap": boot,
-        "grant": grant,
         "grant2": grant2,
-        "grant3": grant3,
     }
 
 
@@ -555,6 +575,7 @@ def heartbeat(
     settings = get_settings()
     if not is_valid_device_id(device_id):
         raise HTTPException(400, "设备标识无效")
+    _require_signing_ready()
     session = db.query(SessionToken).filter(SessionToken.token == token).first()
     if not session or session.revoked:
         raise HTTPException(401, "会话无效，请重新登录")
@@ -647,42 +668,26 @@ def heartbeat(
     session.last_seen_at = now
     session.expires_at = now + timedelta(minutes=settings.access_token_expire_minutes)
     _upsert_presence(db, game_id, device_id, card.id)
+    # 先签票、后落库：签发失败整体回滚，不延长会话、不刷 presence
+    boot = build_bootstrap(db, game_id, logged_in=True)
+    # v2 非对称票（P1）：so 里只有公钥 ⇒ 破解者剥出来也签不出票
+    grant2 = _issue_menu_grant(
+        db,
+        device_id=device_id,
+        game_id=game_id,
+        boot=boot,
+        token=session.token,
+        offline_cache_seconds=settings.offline_cache_seconds,
+    )
     db.commit()
     db.refresh(card)
-
-    boot = build_bootstrap(db, game_id, logged_in=True)
-    grant = mint_grant(
-        device_id=device_id,
-        game_id=game_id,
-        offline_cache_seconds=settings.offline_cache_seconds,
-        menu_enabled=bool(boot.get("menu_enabled", True)),
-        card_auth_enabled=True,
-        token=session.token,
-    )
-    # v2 非对称票（P1）：so 里只有公钥 ⇒ 破解者剥出来也签不出票
-    grant2 = mint_grant_v2(
-        device_id=device_id,
-        game_id=game_id,
-        offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
-        token=session.token,
-    )
-    grant3 = mint_grant_v3(
-        device_id=device_id,
-        game_id=game_id,
-        offline_cache_seconds=settings.offline_cache_seconds,
-        feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
-        token=None,
-    ) if 'mint_grant_v3' in globals() else None
     return {
         "token": session.token,
         "expires_at": session.expires_at.isoformat(),
         "offline_cache_seconds": settings.offline_cache_seconds,
         "card": serialize_card_public(card, device_count=count_card_devices(db, card)),
         "bootstrap": boot,
-        "grant": grant,
         "grant2": grant2,
-        "grant3": grant3,
         "authorized": True,
     }
 
@@ -849,7 +854,8 @@ def bootstrap_with_grant(
     """公开 bootstrap；带 device_id 时刷新在线（打开菜单即计总在线）。
 
     卡密在线由登录/心跳写入 card_id；退出登录或关卡密时清掉 card_id（游客）。
-    关卡密时额外下发 open 模式短票。
+    关卡密时额外下发 open 模式 v2 短票；签不出来就 503（fail closed），
+    不再回退对称票。
     """
     boot = build_bootstrap(db, game_id, logged_in=logged_in)
     did = (device_id or "").strip()
@@ -869,32 +875,15 @@ def bootstrap_with_grant(
             # 只能保留 bootstrap 观察值（明确标为不可信样本，看板不计入 verified）。
             # 需卡游戏一律不写：那是「未认证 bootstrap 计活跃」的灌水入口。
             touch_presence(db, game_id, did)  # 观察值：不写 card_id / 认证时间
-            db.commit()
-            boot["grant"] = mint_grant(
+            # 关卡密也不该是「无票自由发挥」：只发 v2 掩码票，签不出就 503
+            # 先签票、后落库：签发失败整体回滚，不刷 presence
+            boot["grant2"] = _issue_menu_grant(
+                db,
                 device_id=did,
                 game_id=game_id,
-                offline_cache_seconds=int(boot.get("offline_cache_seconds") or 180),
-                menu_enabled=bool(boot.get("menu_enabled", True)),
-                card_auth_enabled=False,
+                boot=boot,
                 token=None,
-            )
-            # v2 对等：关卡密也不该是「无票自由发挥」，同样发掩码票
-            _g2 = mint_grant_v2(
-                device_id=did,
-                game_id=game_id,
                 offline_cache_seconds=int(boot.get("offline_cache_seconds") or 180),
-                feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
-                token=None,
             )
-            if _g2:
-                boot["grant2"] = _g2
-            _g3 = mint_grant_v3(
-                device_id=did,
-                game_id=game_id,
-                offline_cache_seconds=int(boot.get("offline_cache_seconds") or 180),
-                feat_mask=compute_feat_mask(db, game_id, menu_enabled=bool(boot.get("menu_enabled", True))),
-                token=None,
-            )
-            if _g3:
-                boot["grant3"] = _g3
+        db.commit()
     return boot

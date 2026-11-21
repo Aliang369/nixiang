@@ -13,21 +13,24 @@
 //  相比旧实现改了四件事：
 //    ① 票改**非对称**（RSA-2048 PKCS#1 v1.5，见 sg_rsa_verify.h）：so 里只有公钥，
 //       剥出来也签不出票 ⇒ 破解者拿不到「铸币权」，二次加卡密卖不成立。
-//       旧 v1(HMAC) 票保留一个版本做过渡，由版本号前缀区分。
 //    ② 票里带 **per-feature 位掩码**：不再是「游戏开/关」一个开关，
 //       每个功能一位，`feat_ok(i)` 才是功能级门禁。
 //    ③ 门禁从「一个 bool」拆成**三条互不相同的判据**（票标志 / 票派生密钥 K 的自检 /
 //       完整性摘要），任一条不满足都不放行 —— 单点 patch 一个 bool 不再能全开。
 //    ④ 缺票/被篡改时 **静默失效**（不是闪退）：破解者得不到「你被发现了」的信号。
 //
-//  票格式：
-//    v2（新）: 2|device|game|exp|mask|kid.<512hex RSA 签名>
-//    v1（旧）: 1|device|game|exp|menu|card|kid.<64hex HMAC>   ← 过渡期兼容，一版后退役
-//    v3（载荷）: 3|...|kid|kx         ← 2026-11-04 起勇士之心不再使用（加固下线）
+//  票格式（**只有一种**）：
+//    v2: 2|device|game|exp|mask|kid.<512hex RSA 签名>
 //
-//  2026-11-04（用户指令「加固和载 sha 的都去掉，v3 也去掉」）：
-//    定义 SG_AUTH_V2_ONLY 的构建（勇士之心）**只认 v2 票**，v1/v3 代码由编译器剔除，
-//    so 里不留 "3|" 解析与 kx 载荷密钥链路；未定义的构建（无限升级等）行为不变。
+//  2026-11-21（用户指令「彻底移除历史 v1 对称票据的接受分支」）：
+//    · v1(HMAC) 票**不再被接受**：对称票的密钥必须同时存在于服务端与 so 里，
+//      剥出 pepper 就能自签，已无保留价值；分支连同 pepper 取值一起从 apply() 删除。
+//    · v3(载荷 kx) 票**一并不再接受**：服务端自 2026-11-21 起也只签 v2；
+//      非 "2|" 前缀一律在验签前拒绝，不存在任何版本回退。
+//    · SG_AUTH_V2_ONLY 由「只认 v2 的开关」变成**全构件默认行为**（宏仍可定义，
+//      但两条分支已合并，定义与否不影响票据接受范围）。
+//    · legacy_pepper() 保留：唯一用途是 OTA 清单 HMAC 验签（Main.cpp / MainModern.cpp），
+//      与授权票无关，不得随之删除。
 //
 //  状态寿命（沿用现网口径，别改）：登录成功后**进程内永不过期**，只有进程重启 /
 //    nativeClearGrant / 停用票才清 —— 玩家体验优先，破解窗口靠上面的加密层收。
@@ -57,7 +60,7 @@ struct State {
 
 static State s_state = {0, {0}, {0}, 0, -1};
 
-/** HMAC 密钥（现存唯一用途：OTA 清单签名；v1 票将在全量换代后彻底下线，见下）。
+/** HMAC 密钥（**唯一用途：OTA 清单签名**；v1 票已于 2026-11-21 从 apply() 移除，
 
  *  ★2026-11-11 解耦：历史上这里把两个**互不相关**的东西绑在同一个宏上 ——
  *    `SG_AUTH_V2_ONLY` 既表示「只认 v2 票」又顺手把 OTA HMAC 密钥切成 "sg-ota-1-local"。
@@ -212,39 +215,24 @@ static inline int apply(const char* ticket, const char* device, const char* game
     body[body_len] = 0;
     const char* sig_hex = dot + 1;
 
-#ifdef SG_AUTH_V2_ONLY
-    const int is_v3 = 0;                                  /* 加固下线：v3 票不再接受 */
-    const int is_v2 = (body[0] == '2' && body[1] == '|');
-#else
-    const int is_v3 = (body[0] == '3' && body[1] == '|');
-    const int is_v2 = is_v3 || (body[0] == '2' && body[1] == '|');
-#endif
+    /* ---- 只接受 v2：非 "2|" 前缀（含历史 v1 "1|" 与 v3 "3|"）一律拒绝 ----
+       这里没有任何回退分支：不接受对称票、不接受缺签名、不接受别的版本号。 */
+    if (body[0] != '2' || body[1] != '|') return 0;
 
-    if (is_v2) {
-        /* ---- v2：非对称验签（so 里没有私钥 ⇒ 签不出来） ---- */
-        uint8_t sig[SG_MAX_BYTES];
-        int sig_len = sg_hex2bin(sig_hex, sig, sizeof(sig));
-        if (sig_len != (int)sizeof(kSgPubN)) return 0;
-        if (!sg_rsa_verify_sha256(kSgPubN, sizeof(kSgPubN), sig, (size_t)sig_len,
-                                  (const uint8_t*)body, body_len)) {
-            return 0;
-        }
-#ifdef SG_AUTH_V2_ONLY
-    } else {
-        return 0;                       /* 加固下线：v1(HMAC) 票不再接受 */
-    }
-#else
-    } else {
-        /* ---- v1：旧 HMAC（过渡期），签名长度固定 64 hex ---- */
-        uint8_t mac[32];
-        const char* pepper = legacy_pepper();
-        hmac_sha256((const uint8_t*)pepper, strlen(pepper),
-                    (const uint8_t*)body, body_len, mac);
-        if (!sg_hex_eq(sig_hex, mac, 32)) return 0;
-    }
-#endif
+    /* 签名必须定长：RSA-2048 ⇒ 2*256 = 512 个 hex 字符。缺签名/截断/超长直接拒，
+       避免把长度不符的输入交给 bignum 解析。 */
+    if (strlen(sig_hex) != (size_t)sizeof(kSgPubN) * 2) return 0;
 
-    /* ---- 字段校验（两种版本共用前四段：ver|device|game|exp） ---- */
+    /* ---- v2：非对称验签（so 里没有私钥 ⇒ 签不出来） ---- */
+    uint8_t sig[SG_MAX_BYTES];
+    int sig_len = sg_hex2bin(sig_hex, sig, sizeof(sig));
+    if (sig_len != (int)sizeof(kSgPubN)) return 0;
+    if (!sg_rsa_verify_sha256(kSgPubN, sizeof(kSgPubN), sig, (size_t)sig_len,
+                              (const uint8_t*)body, body_len)) {
+        return 0;
+    }
+
+    /* ---- 字段校验（v2 固定 6 段：ver|device|game|exp|mask|kid） ---- */
     char tmp[648];
     memcpy(tmp, body, body_len + 1);
     char* save = nullptr;
@@ -252,29 +240,21 @@ static inline int apply(const char* ticket, const char* device, const char* game
     char* dev = strtok_r(nullptr, "|", &save);
     char* gm = strtok_r(nullptr, "|", &save);
     char* exp_s = strtok_r(nullptr, "|", &save);
-    char* f5 = strtok_r(nullptr, "|", &save);
-    char* f6 = strtok_r(nullptr, "|", &save);   /* v3: kid */
-    char* f7 = strtok_r(nullptr, "|", &save);   /* v3: kx（载荷密钥包裹） */
-    if (!ver || !dev || !gm || !exp_s || !f5) return 0;
+    char* f5 = strtok_r(nullptr, "|", &save);   /* v2: mask */
+    char* f6 = strtok_r(nullptr, "|", &save);   /* v2: kid */
+    char* extra = strtok_r(nullptr, "|", &save);/* v2 之后不许再有第 7 段 */
+    if (!ver || !dev || !gm || !exp_s || !f5 || !f6) return 0;
+    if (extra) return 0;                       /* 段数多于 6 ⇒ 形态非法 */
+    if (strcmp(ver, "2") != 0) return 0;       /* 版本号必须与签名口径一致 */
     if (strcmp(dev, device) != 0 || strcmp(gm, game) != 0) return 0;
 
     int64_t exp = (int64_t)atoll(exp_s);
     int64_t now = (int64_t)time(nullptr);
     if (now > exp + 45) return 0;          /* 首次验签不接受过期票 */
 
-    uint64_t mask;
-    if (is_v2) {
-        if (strcmp(ver, is_v3 ? "3" : "2") != 0) return 0;
-        /* 2026-11-10：掩码 32→64 位。用 strtoull 且 bit31 不参与符号位问题。
-           存量 32 位票（服务端旧版签的）解析出来仍是 0..0xFFFFFFFF，语义不变。 */
-        mask = (uint64_t)strtoull(f5, nullptr, 10);
-        if (mask == 0) return 0;           /* 掩码 0 = 后台停用，不放行 */
-        if (is_v3 && (!f6 || !f7 || strlen(f7) != 64)) return 0;
-    } else {
-        if (strcmp(ver, "1") != 0) return 0;
-        if (f5[0] == '0') return 0;        /* 旧票：menu=0 停用 */
-        mask = 0xffffffffull;              /* 旧票无掩码 → 视作全开（兼容；仍只覆盖 32 位） */
-    }
+    /* 2026-11-10：掩码 32→64 位。用 strtoull 且 bit31 不参与符号位问题。 */
+    uint64_t mask = (uint64_t)strtoull(f5, nullptr, 10);
+    if (mask == 0) return 0;               /* 掩码 0 = 后台停用，不放行 */
 
     /* ---- 激活：三条判据的原料一次写全 ---- */
     uint8_t k[32], canary[8];
@@ -285,27 +265,8 @@ static inline int apply(const char* ticket, const char* device, const char* game
     s_state.ticket_ok = 1;
     memset(k, 0, sizeof(k));
 
-    /* ---- P2-2：v3 票里带 kx，还原功能载荷密钥 K_build ----
-       wrap = sha256("sgpay|device|game|exp|mask|kid")（只依赖被签名覆盖的字段）
-       K_build = kx XOR wrap；拿不到就保持全 0 ⇒ 载荷层落诱饵。 */
-#ifndef SG_AUTH_V2_ONLY
-    if (is_v3) {
-        char wk[256];
-        int n = snprintf(wk, sizeof(wk), "sgpay|%s|%s|%s|%s|%s", dev, gm, exp_s, f5, f6);
-        if (n > 0 && (size_t)n < sizeof(wk)) {
-            uint8_t wrap[32], kx[32], kb[32];
-            sha256((const uint8_t*)wk, (size_t)n, wrap);
-            if (sg_hex2bin(f7, kx, sizeof(kx)) == 32) {
-                for (int i = 0; i < 32; i++) kb[i] = (uint8_t)(kx[i] ^ wrap[i]);
-                set_payload_key(kb);
-                memset(kb, 0, sizeof(kb));
-            }
-            memset(wrap, 0, sizeof(wrap));
-            memset(kx, 0, sizeof(kx));
-            memset(wk, 0, sizeof(wk));
-        }
-    }
-#endif  /* SG_AUTH_V2_ONLY：勇士之心不走 v3/kx 载荷密钥链路 */
+    /* v3 的 kx 载荷密钥链路已随 v3 票一并退役（2026-11-21）：
+       s_paykey 保持全 0 ⇒ 载荷层按既有「无密钥即诱饵」路径处理，行为不变。 */
     return 1;
 }
 

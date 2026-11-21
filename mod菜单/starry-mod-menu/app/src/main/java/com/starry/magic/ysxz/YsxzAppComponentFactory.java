@@ -5,8 +5,6 @@ import android.util.Log;
 
 import com.starry.magic.sign.StarryAppComponentFactory;
 
-import java.io.File;
-
 /**
  * 勇士之心 1.0.4 专用 appComponentFactory：在框架实例化真实 Application **之前**启动
  * SecShell 运行态净化看门狗（native 实现见 Games/YsxzSecShell.cpp）。
@@ -51,21 +49,11 @@ public class YsxzAppComponentFactory extends StarryAppComponentFactory {
     }
 
     /**
-     * 尽早把 libstarry_magic.so 载入：先按 OTA 语义找 {@code files/starry_ota/<name>/libstarry_magic.so}
-     * （本工厂运行时还没有 Context，只能按进程名拼路径直接扫，目录属本 uid），
-     * 找不到才 loadLibrary 包内 so。加载动作本身会跑 JNI_OnLoad → 注册桥接 + 游戏 onLoad。
+     * 尽早把 libstarry_magic.so 载入（只加载包内那一个）：
+     * 加载动作本身会跑 JNI_OnLoad → 注册桥接 + 游戏 onLoad。
+     * 2026-11-21：OTA 载荷体系下线 —— 不再扫描任何已下载补丁目录，只走包内路径。
      */
     private static void loadNativeEarly() {
-        try {
-            File ota = findOtaSo();
-            if (ota != null) {
-                System.load(ota.getAbsolutePath());
-                Log.i(TAG, "native so via OTA: " + ota);
-                return;
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "OTA native load failed: " + t);
-        }
         try {
             System.loadLibrary("starry_magic");
             Log.i(TAG, "native so via loadLibrary(starry_magic)");
@@ -74,37 +62,4 @@ public class YsxzAppComponentFactory extends StarryAppComponentFactory {
         }
     }
 
-    private static File findOtaSo() {
-        String pkg = currentPackage();
-        if (pkg == null || pkg.isEmpty()) return null;
-        File root = new File("/data/data/" + pkg + "/files/starry_ota");
-        File[] kids = root.listFiles();
-        if (kids == null) return null;
-        File best = null;
-        long bestModified = -1L;
-        for (File d : kids) {
-            if (!d.isDirectory()) continue;
-            File so = new File(d, "libstarry_magic.so");
-            if (!so.isFile()) continue;
-            long m = so.lastModified();
-            if (m >= bestModified) {
-                bestModified = m;
-                best = so;
-            }
-        }
-        return best;
-    }
-
-    private static String currentPackage() {
-        // ActivityThread 是 @hide，只能反射（与 bridge/ModBridge.java 同法）。
-        try {
-            Class<?> at = Class.forName("android.app.ActivityThread");
-            String proc = (String) at.getMethod("currentProcessName").invoke(null);
-            if (proc == null) return null;
-            int i = proc.indexOf(':');
-            return i > 0 ? proc.substring(0, i) : proc;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
 }

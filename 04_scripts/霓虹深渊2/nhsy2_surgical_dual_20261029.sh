@@ -10,7 +10,6 @@
 #           （同一链条禁止双修）；改包法本身仍以签名回灌为必需步骤，本包不用。SignSpoof 类已于 2026-10-28 删除
 #
 #   打包基座 = 已交付的 r29 成品（星光签名，已含 manifest 的 provider/service/权限注入与
-#              assets/certs/starlight.crt）；只是把 dex/so/manifest 换成新的一套。
 #              ⇒ 证书不变 ⇒ 装机是「同签覆盖」，不需要重新注入 manifest。
 #   官方底包只用于：① 取官方证书 DER（喂给 killer）② 门禁查12 的逐字节比对基准。
 #
@@ -295,7 +294,7 @@ zi, zo = zipfile.ZipFile(src), zipfile.ZipFile(dst)
 for n in UNTOUCHED:
     assert hashlib.sha256(zi.read(n)).hexdigest() == hashlib.sha256(zo.read(n)).hexdigest(), f"被改动: {n}"
 for n in ("classes3.dex", "classes5.dex", "classes6.dex",
-          "lib/arm64-v8a/libstarry_magic.so", "assets/certs/starlight.crt",
+          "lib/arm64-v8a/libstarry_magic.so",
           "META-INF/services/java.security.Provider"):
     assert n in zo.namelist(), f"缺 {n}"
 assert zo.read("classes6.dex") == c6

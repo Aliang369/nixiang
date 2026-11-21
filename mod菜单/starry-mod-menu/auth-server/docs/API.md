@@ -78,7 +78,7 @@ Base URL：`http://<服务器IP>:8000`
 **2026-11-10 起解绑完全不扣时间**（原「非首次扣 3 天」已下线）：不限次数、不扣有效期、不改卡状态；只解除本机绑定（同卡其它设备照常在线）。
 仅当前绑定设备可解绑（403 保护）；管理员强制解绑（`force_unbind`）一直是整卡操作、不扣时间。
 
-### 4. 启动配置 `GET /v1/bootstrap?game_id=zhmr&device_id=...`
+### 4. 启动配置 `GET /v1/bootstrap?game_id=starry_self&device_id=...`
 
 未登录也可拉公告等公开配置。建议带 `device_id`（关卡密时才能发 open 短票）。
 

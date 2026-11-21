@@ -5,7 +5,6 @@
 #   AndroidManifest.xml（仅加 provider/service/权限）
 #   lib/arm64-v8a/libstarry_magic.so（vc1637 专用，内嵌 vc1637 补丁 DLL）
 #   lib/arm64-v8a/libc++_shared.so
-#   assets/certs/starlight.crt
 #   classes4.dex（com/starry 菜单，官方 classes1-3 保持原样）
 # 注入方式：ContentProvider（com.starry.magic.StarryInitProvider），不替换 Application。
 #   官方 application 无 android:name（默认 android.app.Application），
@@ -34,7 +33,7 @@ OUT="${WXSJ_OUT:-$DEFAULT_OUT}"
 STARRY_DEX="classes4.dex"
 
 for f in "$ORIG_APK" "$FINAL_SO" "$KS" "$MENU_TPL_DIR/$STARRY_DEX" \
-         "$MENU_TPL_DIR/libc++_shared.so" "$MENU_TPL_DIR/starlight.crt"; do
+         "$MENU_TPL_DIR/libc++_shared.so"; do
   [[ -f "$f" ]] || { echo "ERROR: missing $f"; exit 1; }
 done
 
@@ -152,7 +151,6 @@ echo "[4/6] stage starry so/dex/assets"
 cp -f "$WORK/AndroidManifest.xml" "$WORK/stage/AndroidManifest.xml"
 cp -f "$FINAL_SO" "$WORK/stage/lib/arm64-v8a/libstarry_magic.so"
 cp -f "$MENU_TPL_DIR/libc++_shared.so" "$WORK/stage/lib/arm64-v8a/libc++_shared.so"
-cp -f "$MENU_TPL_DIR/starlight.crt" "$WORK/stage/assets/certs/starlight.crt"
 cp -f "$MENU_TPL_DIR/$STARRY_DEX" "$WORK/stage/$STARRY_DEX"
 
 cp -f "$ORIG_APK" "$WORK/unsigned.apk"
@@ -161,7 +159,6 @@ zip -d "$WORK/unsigned.apk" 'META-INF/*' >/dev/null || true
   AndroidManifest.xml \
   lib/arm64-v8a/libstarry_magic.so \
   lib/arm64-v8a/libc++_shared.so \
-  assets/certs/starlight.crt \
   "$STARRY_DEX") >/dev/null
 
 echo "[5/6] verify merged structure"

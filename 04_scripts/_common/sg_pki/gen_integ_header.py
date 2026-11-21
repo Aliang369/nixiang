@@ -54,8 +54,6 @@ GAMES = {
             {"apk": "classes4.dex",
              "src": "mod菜单/starry-mod-menu/libs_ysxz/classes4.dex"},
             {"apk": "assets/main.js", "from_base": True},
-            {"apk": "assets/certs/starlight.crt",
-             "src": "mod菜单/starry-mod-menu/app/src/main/assets/certs/starlight.crt"},
         ],
     },
     "mxyzt": {
@@ -65,8 +63,6 @@ GAMES = {
             # 本作是 native 型（无 boot js）：菜单 dex 由外科 zip 注入成 classes4.dex
             {"apk": "classes4.dex",
              "src": "mod菜单/starry-mod-menu/templates/mxyzt_menu_current/classes4.dex"},
-            {"apk": "assets/certs/starlight.crt",
-             "src": "mod菜单/starry-mod-menu/app/src/main/assets/certs/starlight.crt"},
         ],
     },
 }

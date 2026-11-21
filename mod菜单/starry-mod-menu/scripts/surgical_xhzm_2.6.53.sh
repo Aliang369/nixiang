@@ -23,7 +23,6 @@
 #   - lib/arm64-v8a/libc++_shared.so：新增 —— ⚠️ 本游戏**不自带** libc++_shared.so，
 #     而 libstarry_magic.so 的 DT_NEEDED 含它（游戏自带 so 全部只用 libstdc++.so，
 #     加 libc++ 不冲突），缺它则 dlopen 失败、菜单不出现。
-#   - assets/certs/starlight.crt：新增。
 #   - 保留官方 META-INF/services/**（ServiceLoader 清单），剔除 META-INF/*.SF/.RSA/MANIFEST.MF。
 #
 # 功能全在 IL 侧（07_patched/邂逅在迷宫/EndlessStrike.patched.dll → 重打包 bundle）：

@@ -11,7 +11,6 @@
 #                           + get_ret/set_ret/get_val/set_val 静态转发
 #    - classes7.dex  新增：com/starry/**（菜单 + ZmxyHooks）
 #    - lib/arm64-v8a 新增：libstarry_magic.so + libc++_shared.so
-#    - assets/certs  新增：starlight.crt（TLS pin，so 内已烘焙同名公钥）
 #    - AndroidManifest：加 SYSTEM_ALERT_WINDOW / FOREGROUND_SERVICE(_SPECIAL_USE)
 #                       + MenuService；**Application 保持 FNApplication**
 #    - resources.arsc / classes.dex,2,3,6 / 其余资产：字节不动（脚本内断言）
@@ -386,9 +385,6 @@ echo "[3d/8] 备齐 lib/ 与 assets/certs"
 mkdir -p "$WORK/lib/arm64-v8a" "$WORK/assets/certs"
 cp -f "$SO_BUILT" "$WORK/lib/arm64-v8a/libstarry_magic.so"
 [[ -f "$NDK_CXX" ]] && cp -f "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so"
-if [[ -f "$WORK/starry_dec/assets/certs/starlight.crt" ]]; then
-  cp -f "$WORK/starry_dec/assets/certs/starlight.crt" "$WORK/assets/certs/starlight.crt"
-fi
 ls -la "$WORK/lib/arm64-v8a" "$WORK/assets/certs"
 
 echo "[4/8] 二进制 AndroidManifest（保留 FNApplication + 加 MenuService/权限）"
@@ -530,7 +526,6 @@ assert hashlib.sha256(zout2.read("resources.arsc")).hexdigest() == orig["resourc
 assert new_dex in zout2.namelist()
 assert "lib/arm64-v8a/libstarry_magic.so" in zout2.namelist()
 assert "lib/arm64-v8a/libc++_shared.so" in zout2.namelist()
-assert "assets/certs/starlight.crt" in zout2.namelist()
 print("  合并 ok：改写 %d 项，新增 %s + %d 个附加文件；其余 %d 项逐字节一致"
       % (changed, new_dex, len(extras), len(orig) - changed))
 zin2.close(); zout2.close()

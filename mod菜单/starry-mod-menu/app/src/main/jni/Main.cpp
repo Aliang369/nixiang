@@ -94,7 +94,6 @@ void Blzz_ForceClear();
 bool Hzsj_IsReady();
 bool Hzsj_TryInit();
 void Hzsj_ForceClear();
-void Hzsj_ApplyPlayPatch(const char* json);
 #elif defined(STARRY_GAME_ZJMC)
 bool Zjmc_IsReady();
 bool Zjmc_TryInit();
@@ -2482,53 +2481,8 @@ static void mb_nativeClearGrant(JNIEnv* env, jclass clazz) {
     clear_runtime_session();
 }
 
-// ===== OTA manifest 验签：payload = game_id|ver|json_sha|so_sha|note =====
-// 与服务端 ota_store.sign_payload 一致（hmac_sha256(grant_hmac_secret, payload)）。
-static jboolean mb_nativeVerifyOtaSig(JNIEnv* env, jclass clazz,
-        jstring jPayload, jstring jSig) {
-    if (!jPayload || !jSig) return JNI_FALSE;
-    const char* payload = env->GetStringUTFChars(jPayload, nullptr);
-    const char* sig = env->GetStringUTFChars(jSig, nullptr);
-    if (!payload || !sig) {
-        if (payload) env->ReleaseStringUTFChars(jPayload, payload);
-        if (sig) env->ReleaseStringUTFChars(jSig, sig);
-        return JNI_FALSE;
-    }
-    uint8_t mac[32];
-    const char* pepper = grant_pepper();
-    hmac_sha256((const uint8_t*)pepper, strlen(pepper),
-                (const uint8_t*)payload, strlen(payload), mac);
-    bool ok = hex_eq_ci(sig, mac, 32);
-    env->ReleaseStringUTFChars(jPayload, payload);
-    env->ReleaseStringUTFChars(jSig, sig);
-    if (!ok) LOGW("[OTA] 补丁签名校验失败");
-    return ok ? JNI_TRUE : JNI_FALSE;
-}
 
-// ===== 构建戳：so 内烘焙的 epoch 字面量（OTA 守卫判包内 so / OTA so 新旧）=====
-// 格式 "STARRYSTAMP1:EPOCH=<秒>;"，Java 侧也直接扫 so 字节，这里给日志/自检用。
-static jstring mb_nativeGetBuildStamp(JNIEnv* env, jclass clazz) {
-    return env->NewStringUTF(starry_build_stamp_marker());
-}
 
-// ===== OTA patch.json 应用：按当前游戏分发到 Xxx_ApplyPlayPatch =====
-static void mb_nativeApplyPlayPatch(JNIEnv* env, jclass clazz,
-        jstring jJson) {
-    if (!jJson) return;
-    const char* json = env->GetStringUTFChars(jJson, nullptr);
-    if (!json || !*json) {
-        if (json) env->ReleaseStringUTFChars(jJson, json);
-        return;
-    }
-#if defined(ENABLE_UNITY_HOOK) && defined(STARRY_GAME_HZSJ)
-    Hzsj_ApplyPlayPatch(json);
-    LOGI("[OTA] 玩法 patch.json 已应用（hzsj）");
-#else
-    // 其余游戏暂未提供偏移热更入口：patch.json 下载后不改变 native 偏移。
-    LOGW("[OTA] 当前游戏未实现偏移热更，patch.json 已忽略");
-#endif
-    env->ReleaseStringUTFChars(jJson, json);
-}
 
 // ===== nativeSetValue (滑块/下拉) =====
 static void mb_nativeSetValue(JNIEnv* env, jclass clazz,
@@ -2872,11 +2826,8 @@ static bool registerBridgeNatives(JNIEnv* env) {
     ok = regOne(env, bridge, OBFUSCATE("nativeClearGrant"),        OBFUSCATE("()V"),                                                  (void*)mb_nativeClearGrant) && ok;
     ok = regOne(env, bridge, OBFUSCATE("nativeGetAuthGameId"),     OBFUSCATE("()Ljava/lang/String;"),                                 (void*)mb_nativeGetAuthGameId) && ok;
     ok = regOne(env, bridge, OBFUSCATE("nativeGetAceGateRemainSec"), OBFUSCATE("()I"),                                                (void*)mb_nativeGetAceGateRemainSec) && ok;
-    ok = regOne(env, bridge, OBFUSCATE("nativeVerifyOtaSig"),      OBFUSCATE("(Ljava/lang/String;Ljava/lang/String;)Z"),              (void*)mb_nativeVerifyOtaSig) && ok;
-    ok = regOne(env, bridge, OBFUSCATE("nativeApplyPlayPatch"),    OBFUSCATE("(Ljava/lang/String;)V"),                                (void*)mb_nativeApplyPlayPatch) && ok;
     ok = regOne(env, bridge, OBFUSCATE("nativeGetPinnedCert"),    OBFUSCATE("()[B"),                                                 (void*)mb_nativeGetPinnedCert) && ok;
     ok = regOne(env, bridge, OBFUSCATE("nativeBridgeRegistered"),  OBFUSCATE("()Z"),                                                  (void*)mb_bridgeRegistered) && ok;
-    ok = regOne(env, bridge, OBFUSCATE("nativeGetBuildStamp"),     OBFUSCATE("()Ljava/lang/String;"),                                 (void*)mb_nativeGetBuildStamp) && ok;
     if (ok) {
         done = true;
         g_bridge_registered_ok = true;

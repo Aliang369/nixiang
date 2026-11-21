@@ -22,6 +22,8 @@
 # ===== 本地工具 / 外部工具（重装麻烦或可重下，不入库）=====
 01_tools/
 .kilo/
+# 2026-11-22：本机运行状态目录（.local/state/gh/device-id、一次性探针与 sandbox 残留），永不入库
+.local/
 # .cursor/ 选择性入库（2026-10-27 第五轮）：只共享规则与技能指针，私人配置/缓存/密钥继续忽略
 .cursor/*
 !.cursor/rules/
@@ -103,6 +105,8 @@ mod菜单/**/.gradle-home/
 mod菜单/**/.externalNativeBuild/
 # 依赖缓存
 mod菜单/**/node_modules/
+# 2026-11-22：动物餐厅的 pako/xxtea-node 依赖目录同类处理（原只挡 mod菜单 下，漏了 04_scripts）
+04_scripts/**/node_modules/
 
 # ===== IDE / 系统杂项 =====
 .DS_Store

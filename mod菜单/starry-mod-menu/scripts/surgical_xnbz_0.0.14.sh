@@ -9,7 +9,6 @@
 #                                    / ModBridge / sign.SignSpoof / sign.TapLoginForceWeb）
 #   lib/arm64-v8a/libstarry_magic.so   native（本阶段零 hook 环境版：注册 XnbzEntry 菜单 + 信号兜底）
 #   lib/arm64-v8a/libc++_shared.so
-#   assets/certs/starlight.crt
 #   AndroidManifest.xml              分支 B（StarryInitProvider，**不替换官方 Application
 #                                    com.cocos.game.GameApplication**）
 #                                    + MenuService + SYSTEM_ALERT_WINDOW / FOREGROUND_SERVICE*
@@ -150,7 +149,6 @@ if [[ -d "$WORK/starry_dec/assets/certs" ]]; then
   mkdir -p "$WORK/assets/certs"
   cp -R "$WORK/starry_dec/assets/certs/." "$WORK/assets/certs/"
 fi
-[[ -f "$WORK/assets/certs/starlight.crt" ]] || { echo "ERROR: starlight.crt missing" >&2; exit 1; }
 
 # ---------------------------------------------------------------- 3/6
 # ★classes7.dex：TapTap SDK 新版路径两处改动
@@ -439,7 +437,6 @@ for name in kept_meta:
     assert name in out_names, f"lost {name}"
 assert new_dex in out_names and target_dex in out_names
 assert "lib/arm64-v8a/libstarry_magic.so" in out_names
-assert "assets/certs/starlight.crt" in out_names
 assert not any(x.upper().endswith(SIG_EXT) for x in out_names)
 assert "META-INF/MANIFEST.MF" not in out_names
 print(f"  merged ok; entries={n_written}; {new_dex}={len(cnew)}; {target_dex}={len(cpatched)}; untouched {len(UNTOUCHED)} verified")
@@ -449,7 +446,7 @@ PY
 PKG_SO_MD5="$(unzip -p "$UNSIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 [[ "$PKG_SO_MD5" == "$SO_MD5" ]] || { echo "ERROR: 包内 so md5=$PKG_SO_MD5 != $SO_MD5" >&2; exit 1; }
 unzip -Z1 "$UNSIGNED" > "$WORK/entries.txt"
-for e in "$NEW_DEX" "$TARGET_DEX" "lib/arm64-v8a/libstarry_magic.so" "assets/certs/starlight.crt" \
+for e in "$NEW_DEX" "$TARGET_DEX" "lib/arm64-v8a/libstarry_magic.so" \
          "classes.dex" "classes10.dex" "lib/arm64-v8a/libcocos.so"; do
   grep -q "^$e\$" "$WORK/entries.txt" || { echo "ERROR: $e missing" >&2; exit 1; }
 done

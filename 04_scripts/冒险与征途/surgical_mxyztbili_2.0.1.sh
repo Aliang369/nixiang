@@ -7,7 +7,6 @@
 #   1) classes4.dex                      新增（底包 classes/2/3 已占 ⇒ 最小空闲下标 4）
 #   2) lib/arm64-v8a/libstarry_magic.so  新增（libs_mxyztbili/arm64-v8a/，mxyztbili_build_so.sh）
 #   3) lib/arm64-v8a/libc++_shared.so    新增（底包无此 so，必须补；NDK 27 那份）
-#   4) assets/certs/starlight.crt        新增（AuthClient 证书钉扎）
 #   5) AndroidManifest.xml               替换（patch_mxyztbili_binary_manifest.py 产出：application@name→StarryApp、
 #                                        +StarryInitProvider、+MenuService、+FGS 权限；appComponentFactory 不动）
 #
@@ -90,8 +89,6 @@ omd5="$(md5f "$ORIG_APK")"
 [ -f "$DEX_SRC" ] || die "缺菜单 dex ${DEX_SRC}（先跑 mxyztbili_build_dex.sh）"
 [ -f "$SO_SRC" ]  || die "缺 so ${SO_SRC}（先跑 mxyztbili_build_so.sh）"
 [ -f "$CXX_SRC" ] || die "缺 libc++_shared.so ${CXX_SRC}（mxyztbili_build_so.sh 会装到 libs_mxyztbili）"
-CRT_SRC="$STAR/app/src/main/assets/certs/starlight.crt"
-[ -f "$CRT_SRC" ] || die "缺 starlight.crt $CRT_SRC"
 [ -f "$ZIPALIGN" ] || die "缺 zipalign $ZIPALIGN"
 [ -f "$APKSIGNER" ] || [ -x "$APKSIGNER" ] || die "缺 apksigner $APKSIGNER"
 say "      底包 $osize B md5=$omd5"
@@ -124,15 +121,14 @@ PY
 say "[3/8] 组装（python zipfile；官方条目字节保真，丢弃旧签名条目）"
 mkdir -p "$OUT_DIR"
 WORK="$SCRATCH/assemble"; rm -rf "$WORK"; mkdir -p "$WORK"
-"$PY" - "$ORIG_APK" "$WORK/merged.apk" "$MF_OUT" "$DEX_SRC" "$SO_SRC" "$CXX_SRC" "$CRT_SRC" "$DEX_NAME" <<'PY'
+"$PY" - "$ORIG_APK" "$WORK/merged.apk" "$MF_OUT" "$DEX_SRC" "$SO_SRC" "$CXX_SRC" "$DEX_NAME" <<'PY'
 import sys, zipfile, os
-orig, out, mf, dex, so, cxx, crt, dexname = sys.argv[1:9]
+orig, out, mf, dex, so, cxx, dexname = sys.argv[1:8]
 REPL = {
     'AndroidManifest.xml': mf,
     'classes4.dex': dex,
     'lib/arm64-v8a/libstarry_magic.so': so,
     'lib/arm64-v8a/libc++_shared.so': cxx,
-    'assets/certs/starlight.crt': crt,
 }
 def is_sig(name):
     u = name.upper()
@@ -226,7 +222,6 @@ so = z.read('lib/arm64-v8a/libstarry_magic.so')
 print('  libstarry_magic.so %d B md5=%s' % (len(so), md5(so)))
 print('  mxyztbili 命中:', len(re.findall(b'mxyztbili', so)))
 print('  libc++_shared.so', len(z.read('lib/arm64-v8a/libc++_shared.so')), 'B')
-print('  assets/certs/starlight.crt', len(z.read('assets/certs/starlight.crt')), 'B')
 print('  classes4.dex', len(z.read('classes4.dex')), 'B md5=%s' % md5(z.read('classes4.dex')))
 print('  total entries', len(names))
 PY

@@ -21,7 +21,7 @@
 #   - StarryApp.smali / StarryInitProvider.smali 必须存在，且 StarryApp.super 改易盾壳类
 #   - 新 dex 内必含 StarryInitProvider
 #   - 相对对照旧模板 **零删除**（严格超集）——防止又出现「绘制类丢失 → 菜单外观变样」
-#   - libc++_shared.so / starlight.crt 与对照旧模板逐字节比对（不一致只 WARN，不拦截）
+#   - libc++_shared.so 与对照旧模板逐字节比对（不一致只 WARN，不拦截）
 set -euo pipefail
 
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
@@ -193,7 +193,7 @@ fi
 
 mkdir -p "$OUT"
 cp -f "$WORK/classes2.dex" "$OUT/classes2.dex"
-# libc++_shared.so / starlight.crt：release/debug 包里不一定带这两个文件（实测都取不到），
+# libc++_shared.so：release/debug 包里不一定带（实测取不到），
 # 取不到就沿用对照模板的（框架配套件，与菜单代码无关）。
 unzip -p "$STARRY_APK" lib/arm64-v8a/libc++_shared.so > "$WORK/libcxx.so" 2>/dev/null || true
 if [[ -s "$WORK/libcxx.so" ]]; then
@@ -203,19 +203,9 @@ elif [[ -s "$PREV/libc++_shared.so" ]]; then
 else
   echo "ERROR: 取不到 libc++_shared.so（apk 与对照模板都没有）"; exit 1
 fi
-unzip -p "$STARRY_APK" assets/certs/starlight.crt > "$WORK/starlight.crt" 2>/dev/null || true
-if [[ -s "$WORK/starlight.crt" ]]; then
-  cp -f "$WORK/starlight.crt" "$OUT/starlight.crt"
-elif [[ -s "$PREV/starlight.crt" ]]; then
-  cp -f "$PREV/starlight.crt" "$OUT/starlight.crt"
-else
-  echo "ERROR: 取不到 starlight.crt（apk 与对照模板都没有）"; exit 1
-fi
 if [[ -s "$PREV/libc++_shared.so" ]]; then
   a=$(md5 -q "$PREV/libc++_shared.so"); b=$(md5 -q "$OUT/libc++_shared.so")
   [[ "$a" == "$b" ]] || echo "  WARN: libc++_shared.so 与旧模板不同（$a → ${b}）"
-  a=$(md5 -q "$PREV/starlight.crt"); b=$(md5 -q "$OUT/starlight.crt")
-  [[ "$a" == "$b" ]] || echo "  WARN: starlight.crt 与旧模板不同（$a → ${b}）"
 fi
 
 # ---- build_info.txt：模板身份（menu_tpl_gate.sh 的唯一判据来源）----

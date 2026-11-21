@@ -426,41 +426,14 @@ if [ -n "$game" ]; then
   fi
 fi
 
-# ---------- 查8：包内 so 构建戳关（2026-10-16 FW-13；终末地/小米 byron 事故） ----------
-# so 内必须带 OTA 守卫用的构建戳 STARRYSTAMP1:EPOCH=<秒>。缺戳 ⇒ Java OtaSoStamp.apkStamp()=0
-# ⇒ PlayOtaManager 的 `if (apkStamp > 0L && …)` 恒假 ⇒ **覆盖安装后永不清** starry_ota 旧 so
-# ⇒ 玩家继续跑旧 so（症状：新包装上了、跑的却是旧 so，一开就崩）。根因（modern 入口零引用
-# 被 --gc-sections 回收）已在共享 Includes/Utils.cpp 用 __attribute__((used, retain)) 修掉；
-# 本关防的是「改动回退 / 新 mk 漏带」。逃生门：STAMP_CHECK=0（须在装机报告写明理由）。
-if [ -n "$apk_file" ] && [ "${STAMP_CHECK:-1}" = "1" ]; then
-  # 先落盘再 grep（禁 `unzip -l | grep -q`：pipefail 下 SIGPIPE(141) 会让命中被判成未命中，
-  # 大 APK 的 listing 超管道缓冲时必现 ⇒ 本关会被静默跳过 = 假 PASS）
-  apk_entries="$TMPDIR_PF/apk_entries.txt"
-  unzip -l "$apk_file" > "$apk_entries" 2>/dev/null || true
-  if grep -q 'lib/arm64-v8a/libstarry_magic.so' "$apk_entries"; then
-    stamp="$(unzip -p "$apk_file" lib/arm64-v8a/libstarry_magic.so 2>/dev/null | grep -a -o 'STARRYSTAMP1:EPOCH=[0-9]*' | head -1)"
-    if [ -n "$stamp" ]; then
-      epoch="${stamp#STARRYSTAMP1:EPOCH=}"
-      if [ "$epoch" = "1790184000" ]; then
-        echo "- FAIL  [构建戳] 包内 so 的戳是**兜底值** ${stamp}（构建时未取到 git commit 时间）"
-        echo "        ⇒ OTA 守卫判新旧会失准：兜底值恒小于之后任何真戳 ⇒ 覆盖安装**不清** OTA so ⇒ 跑旧 so"
-        echo "        修：在能访问 git 的终端构建（Windows/Git Bash 需 git 在 PATH），或显式传 STARRY_BUILD_EPOCH=<秒>"
-        echo "        逃生门：STAMP_CHECK=0（须在装机报告写明理由）"
-        fail=$((fail+1))
-      else
-        echo "- PASS  [构建戳] 包内 so 含 ${stamp}（OTA 守卫可判新旧）"
-        pass=$((pass+1))
-      fi
-    else
-      echo "- FAIL  [构建戳] 包内 so 缺 STARRYSTAMP1:EPOCH=（OTA 守卫失效 ⇒ 覆盖安装后仍会优先跑玩家旧 OTA so）"
-      echo "        修：重跑 so 构建（mk 需带 -Wl,--undefined=kStarryBuildStamp；共享 Includes/Utils.cpp 已有 retain）"
-      echo "        逃生门：STAMP_CHECK=0（须在装机报告写明理由）"
-      fail=$((fail+1))
-    fi
-  else
-    echo "- SKIP  [构建戳] 包内无 lib/arm64-v8a/libstarry_magic.so（非星光包）"
-    skip=$((skip+1))
-  fi
+# ---------- 查8：包内 so 构建戳关 —— 2026-11-21 已退役（OTA 热更下线，戳无读者） ----------
+# 原判据：so 内必须有 STARRYSTAMP1:EPOCH=<秒>，供 Java OtaSoStamp.apkStamp() 判「包内 so 比
+#   玩家已下载的 OTA so 新」。OTA 体系下线后 OtaSoStamp/PlayOtaManager 已删、so 只按包内路径加载；
+#   烘焙（Utils.cpp）、注入（Application.mk）、34 个 Android_*.mk 的 --undefined 强制保留已一并移除。
+# 保留编号占位（仍计入 11 查），恒 SKIP，避免装机报告与门禁计数错位。
+if [ -n "$apk_file" ]; then
+  echo "- SKIP  [构建戳] 已退役（OTA 下线；so 不再需要 STARRYSTAMP1:EPOCH=）"
+  skip=$((skip+1))
 fi
 
 # ---------- 查9：so / metadata 配套关（2026-10-19 补；我的勇者 7.6.3「首装闪退」实证） ----------

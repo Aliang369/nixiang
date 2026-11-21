@@ -44,6 +44,12 @@ LOCAL_ARM_MODE  := arm
 # modern 注册表入口：MainModern + SelfEntry（无游戏 Mod）
 LOCAL_SRC_FILES := MainModern.cpp Games/SelfEntry.cpp
 
+# 2026-11-21：共享入口 MainModern.cpp 的 JNI_OnLoad 无条件引用
+#   SignalQuarantine_Start() / FgoBoot_InjectEarlyFromOnLoad(env)
+# 未加源文件时链接期必报 undefined symbol。self 形态没有 ACE 看门狗、也没有 payload 注入，
+# 按 NoAceStubs.cpp 头注释的 B 类修法接 no-op 桩（不含任何游戏注入逻辑）。
+LOCAL_SRC_FILES += Games/NoAceStubs.cpp
+
 LOCAL_SRC_FILES += xDL/xdl.c \
                    xDL/xdl_iterate.c \
                    xDL/xdl_linker.c \
@@ -62,6 +68,8 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby wxsj_dll
+# self 形态不链 Dobby / wxsj_dll：菜单/授权路径不调用任何 hook 或游戏 dll 载荷，
+# 链进来只会让 DobbyHook / DobbyInstrument 等 hook 框架符号出现在自有 so 里。
+LOCAL_STATIC_LIBRARIES :=
 
 include $(BUILD_SHARED_LIBRARY)

@@ -3,7 +3,7 @@
 #
 #  2026-10-30 对齐 Android_modern_template.mk（此前是 2026-09-20 的老副本，
 #  落后模板 5 项框架演进：-fno-emulated-tls / --exclude-libs,ALL /
-#  -Wl,--undefined=kStarryBuildStamp / Unity/Il2CppApi.cpp / Games/NoAceStubs.cpp）。
+#  Unity/Il2CppApi.cpp / Games/NoAceStubs.cpp；（构建戳那一项 2026-11-21 随 OTA 下线移除）。
 #  游戏另类差异：宝石战争属 B 类装配（无 libtprt.so / 无 ACE，菜单 dex 由 Manifest 的
 #  StarryInitProvider 拉起、外科 zip 组装）⇒ 用 NoAceStubs.cpp，不引 SignalQuarantine/
 #  FgoBoot。Unity il2cpp 系 ⇒ 保留 Unity/Il2CppApi.cpp。
@@ -38,11 +38,6 @@ LOCAL_MODULE    := starry_magic
 LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
-# FW-13（2026-10-16）：**必须强制保留** Includes/Utils.cpp 里烘焙的 OTA 构建戳。
-#   modern 入口 MainModern.cpp 零引用 kStarryBuildStamp（唯一引用者是 legacy Main.cpp），
-#   --gc-sections 会把它整段回收 ⇒ so 内没有 STARRYSTAMP1:EPOCH= ⇒ Java OtaSoStamp.apkStamp()=0
-#   ⇒ 覆盖安装后永不清 starry_ota 旧 so ⇒ 玩家跑旧 so。
-LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm

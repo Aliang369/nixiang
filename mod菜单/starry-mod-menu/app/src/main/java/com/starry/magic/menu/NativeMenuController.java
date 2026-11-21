@@ -44,7 +44,6 @@ import android.widget.Toast;
 
 import com.starry.magic.auth.AuthClient;
 import com.starry.magic.bridge.ModBridge;
-import com.starry.magic.ota.PlayOtaManager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -81,7 +80,7 @@ public final class NativeMenuController {
     private static final float FS_LOGIN_TITLE = 15f;
     private static final float FS_PRIMARY_BTN = 14f;
 
-    /** FAB：MagicRes.fabIcon() ← design/fab/fab_icon_q88.webp（Base64 内嵌） */
+    /** FAB：MagicRes.fabIcon() ← design/fab/fab_icon_logo_176.webp（Base64 内嵌；2026-11-22 换 logo，旧 q88 可回滚） */
     private static final int FAB_WM_DP = 72;
     private static final int FAB_ICON_DP = 72;
 
@@ -1137,6 +1136,7 @@ public final class NativeMenuController {
         }
     }
 
+
     private void addVineCorner(FrameLayout shell, int gravity) {
         ImageView iv = new ImageView(appContext);
         iv.setImageDrawable(MagicRes.vineCorner(appContext, gravity));
@@ -1408,21 +1408,8 @@ public final class NativeMenuController {
         dlp.bottomMargin = dp(SPACE);
         box.addView(disclaimer, dlp);
 
-        LinearLayout otaRow = addOptionRowShell(box, "游戏补丁");
-        TextView otaLab = (TextView) otaRow.getChildAt(0);
-        if (otaLab != null) {
-            String st = PlayOtaManager.localStatusText(appContext);
-            otaLab.setText("游戏补丁\n" + st);
-            otaLab.setLineSpacing(0f, 1.15f);
-        }
-        Button otaBtn = execButton("检查更新", false);
-        otaBtn.setOnClickListener(v -> startPlayOtaCheck(otaBtn));
-        otaRow.addView(otaBtn);
-
-        LinearLayout otaClearRow = addOptionRowShell(box, "清除游戏补丁");
-        Button otaClearBtn = execButton("清除", false);
-        otaClearBtn.setOnClickListener(v -> confirmClearPlayOta());
-        otaClearRow.addView(otaClearBtn);
+        // 2026-11-21：OTA 原生载荷永久移出 —— 「游戏补丁 / 检查更新 / 清除游戏补丁」三个入口不再显示。
+        // 设置页其余行（隐藏菜单等）保持原样。
 
         LinearLayout hideRow = addOptionRowShell(box, "隐藏菜单");
         TextView hideLab = (TextView) hideRow.getChildAt(0);
@@ -1457,106 +1444,9 @@ public final class NativeMenuController {
         }
     }
 
-    private org.json.JSONObject pendingOtaManifest;
-
-    /** 设置页：检查 / 下载玩法 OTA（JSON+so），成功后须完全重启。 */
-    private void startPlayOtaCheck(Button btn) {
-        if (btn != null && pendingOtaManifest != null
-                && "确认下载".contentEquals(btn.getText() == null ? "" : btn.getText())) {
-            org.json.JSONObject man = pendingOtaManifest;
-            pendingOtaManifest = null;
-            btn.setText("检查更新");
-            startPlayOtaDownload(btn, man);
-            return;
-        }
-        if (btn != null) btn.setEnabled(false);
-        showToast("正在检查游戏补丁…");
-        runAuth(() -> {
-            PlayOtaManager.CheckResult cr = PlayOtaManager.check(appContext);
-            mainHandler.post(() -> {
-                if (btn != null) btn.setEnabled(true);
-                if (!cr.ok) {
-                    showToast(cr.message == null ? "检查失败" : cr.message);
-                    return;
-                }
-                if (!cr.hasUpdate) {
-                    showToast(cr.message);
-                    return;
-                }
-                Activity host = focusedHostActivity();
-                if (host != null && !host.isFinishing()) {
-                    String body = "发现游戏补丁 v" + cr.remoteVer
-                            + (cr.note == null || cr.note.isEmpty() ? "" : ("\n" + cr.note))
-                            + "\n\n将合并覆盖本机补丁（JSON/so 可共存）。下载后须完全划掉游戏再开。";
-                    new AlertDialog.Builder(host)
-                            .setTitle("更新游戏补丁")
-                            .setMessage(body)
-                            .setNegativeButton("取消", null)
-                            .setPositiveButton("下载", (d, w) -> startPlayOtaDownload(btn, cr.manifest))
-                            .show();
-                    return;
-                }
-                pendingOtaManifest = cr.manifest;
-                if (btn != null) btn.setText("确认下载");
-                showToast("发现 v" + cr.remoteVer + "，再点「确认下载」。完成后请划掉游戏再开");
-            });
-        });
-    }
-
-    private void startPlayOtaDownload(Button btn, org.json.JSONObject manifest) {
-        if (btn != null) btn.setEnabled(false);
-        showToast("正在下载游戏补丁…");
-        final long[] lastPct = {-2L};
-        runAuth(() -> {
-            PlayOtaManager.ApplyResult ar = PlayOtaManager.downloadAndApply(appContext, manifest,
-                    (done, total) -> {
-                        if (btn == null) return;
-                        final long pct = (total > 0) ? (done * 100 / total) : -1L;
-                        if (pct == lastPct[0]) return;
-                        lastPct[0] = pct;
-                        mainHandler.post(() -> {
-                            btn.setEnabled(false);
-                            if (pct >= 0) {
-                                btn.setText("下载中 " + pct + "%");
-                            } else {
-                                btn.setText("下载中…");
-                            }
-                        });
-                    });
-            mainHandler.post(() -> {
-                if (btn != null) {
-                    btn.setEnabled(true);
-                    btn.setText("检查更新");
-                }
-                showToast(ar.message == null ? (ar.ok ? "完成" : "失败") : ar.message);
-            });
-        });
-    }
-
-    private void confirmClearPlayOta() {
-        Activity host = focusedHostActivity();
-        String body = "将删除本机已下载的游戏补丁（starry_ota），下次启动使用安装包内的 so。\n"
-                + "清除后须完全划掉游戏再开。";
-        if (host != null && !host.isFinishing()) {
-            new AlertDialog.Builder(host)
-                    .setTitle("清除游戏补丁")
-                    .setMessage(body)
-                    .setNegativeButton("取消", null)
-                    .setPositiveButton("清除", (d, w) -> doClearPlayOta())
-                    .show();
-            return;
-        }
-        doClearPlayOta();
-    }
-
-    private void doClearPlayOta() {
-        showToast("正在清除…");
-        runAuth(() -> {
-            PlayOtaManager.ClearResult r = PlayOtaManager.clearLocalOta(appContext);
-            mainHandler.post(() -> showToast(r.message == null
-                    ? (r.ok ? "已清除" : "清除失败") : r.message));
-        });
-    }
+    // 2026-11-21：OTA 热更体系整体下线 —— 设置页「游戏补丁 / 检查更新 / 清除游戏补丁」三个入口与
+    // 全部实现（PlayOtaManager / PlayOtaPaths / OtaSoStamp、覆盖安装守卫、本地 patch 自动应用）已删除。
+    // ota/StarryNativeLoad 保留：它只是 so 加载器（包内路径），与热更载荷无关。
 
     private Activity focusedHostActivity() {
         try {
@@ -3572,11 +3462,8 @@ public final class NativeMenuController {
                     return;
                 }
                 JSONObject cardObj = data.optJSONObject("card");
-                if (cardObj != null) {
-                    Preferences.saveAuthCardMeta(cardObj.toString());
-                } else {
-                    Preferences.saveAuthCardMeta("{}");
-                }
+                // 2026-11-21：卡密元数据**不再在这里写盘** —— 挪到下方「票缺失/原生拒票」判据之后，
+                // 避免登录最终失败却先污染缓存（UI 会按旧卡信息显示）。
                 // 卡密到期用 card.expire_at；顶层 expires_at 是短会话票，不能当卡密到期
                 String cardExpire = "";
                 if (cardObj != null) {
@@ -3601,8 +3488,10 @@ public final class NativeMenuController {
                 }
                 if (bootData != null) {
                     if (grant.isEmpty()) {
+                        // 2026-11-21：删掉 bootData.optString("feature_grant") 回退。
+                        // 后台三处签发只发 grant2（login / heartbeat / bootstrap.grant2），
+                        // feature_grant 无对应后端字段，留着只会让「取不到票」被一个恒空串掩盖。
                         grant = Preferences.pickGrant(bootData);
-                        if (grant.isEmpty()) grant = bootData.optString("feature_grant", "");
                     }
                     if (bootData.has("card_auth_enabled")) {
                         Preferences.setCardAuthRequired(bootData.optBoolean("card_auth_enabled", true));
@@ -3611,27 +3500,43 @@ public final class NativeMenuController {
                         Preferences.setMenuEnabled(bootData.optBoolean("menu_enabled", true));
                     }
                 }
-                if (grant.isEmpty()) {
-                    JSONObject gBody = new JSONObject();
-                    gBody.put("device_id", deviceId);
-                    gBody.put("game_id", gameId);
-                    String gRes = AuthClient.request(
-                            Preferences.getAuthBaseUrl(), "POST", "/v1/auth/grant",
-                            gBody.toString(), token);
-                    JSONObject gJson = new JSONObject(gRes);
-                    JSONObject gData = gJson.has("data") ? gJson.optJSONObject("data") : gJson;
-                    if (gData != null) {
-                        grant = Preferences.pickGrant(gData);
-                        if (grant.isEmpty()) grant = gData.optString("token", "");
+                // 2026-11-21：删掉「/v1/auth/grant + 把 token 当票」的旧回退。
+                // 理由：该端点服务端早已不存在（routers 只有 login/heartbeat/unbind/bootstrap），
+                // 每次登录都会白跑一次 404；而把 token 塞进 grant 必然验签失败，只会产生误导日志。
+                // 票的唯一来源是 login / bootstrap / heartbeat 响应里的 grant2（见 pickGrant）。
+                // 2026-11-21：先判「后端明确停用菜单」再决定要不要动票。
+                // 维护态服务端签的是 mask=0（grant_service.compute_feat_mask），而 native 侧
+                // SgAuth.h:257 明确拒绝 mask=0 ⇒ 若走下面的「缺票/坏票」判据，就会把原有的
+                // 「游戏维护中，功能已关闭」变成「授权票据校验未通过」，且旧的锁定/刷新语义不可达。
+                // 因此维护态：不尝试激活零掩码票、不把它当授权、不把它存成已授权会话。
+                boolean menuDisabled = !Preferences.isMenuEnabled();
+                if (menuDisabled) {
+                    Log.i(TAG, "[auth] menu disabled by server; skip grant activation (native rejects mask=0)");
+                } else {
+                    // 启用态才做严格判据：缺 v2 票 / 本次原生验签失败 一律不得报成功。
+                    // native 续票语义是「坏票不清已活会话」⇒ 事后 hasLiveNativeSession() 会把旧会话
+                    // 误当成本次成功，所以必须用本次 applyGrantNow 的布尔结果（UnsatisfiedLinkError 也算失败）。
+                    if (grant.isEmpty()) {
+                        Log.w(TAG, "[auth] login ok(token) but no v2 grant2; refuse to store session");
+                        handleAuthLoginFailure("授权票据缺失，请稍后重试或联系客服", silent, false);
+                        return;
+                    }
+                    if (!ModBridge.applyGrantNow(grant, deviceId, gameId)) {
+                        Log.w(TAG, "[auth] native rejected this grant2; refuse to store session");
+                        handleAuthLoginFailure("授权票据校验未通过，请稍后重试或联系客服", silent, false);
+                        return;
                     }
                 }
+                // 写盘：维护态把票存成空串 —— 零掩码票既不被 native 接受、也不该留下
+                // 「看似已授权」的存档；token/card 保留，维护解除后冷启动会重新取票。
+                Preferences.saveAuthCardMeta(cardObj != null ? cardObj.toString() : "{}");
                 Preferences.saveAuthSession(token, card, System.currentTimeMillis(),
-                        cacheSec, cardExpire, bootRes, grant);
-                if (!Preferences.isMenuEnabled()) {
+                        cacheSec, cardExpire, bootRes, menuDisabled ? "" : grant);
+                if (menuDisabled) {
                     bridge.lockAllFeatures();
-                } else {
-                    bridge.syncNativeAuthorizedPublic();
                 }
+                // 收敛双重 apply：启用态的 applyGrantNow 已用「同一张票 + 同一 device/game」
+                // 激活过本次会话，这里不再走 syncNativeAuthorizedPublic()（那是对同一张票的第二次 apply）。
                 mainHandler.post(() -> {
                     enforceServerFeatureFlags();
                     updateAccountTabVisibility();

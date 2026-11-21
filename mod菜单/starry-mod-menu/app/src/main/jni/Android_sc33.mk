@@ -28,9 +28,6 @@ LOCAL_MODULE    := starry_magic
 LOCAL_CFLAGS    := -w -s -Wno-error=format-security -fvisibility=hidden -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++17 -fpermissive -fexceptions -fno-emulated-tls
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
-# modern 入口零引用 kStarryBuildStamp（唯一引用者是 legacy Main.cpp），
-# 不 retain 会被 --gc-sections 回收 ⇒ Java OtaSoStamp.apkStamp()=0 ⇒ OTA 判据恒假。
-LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm

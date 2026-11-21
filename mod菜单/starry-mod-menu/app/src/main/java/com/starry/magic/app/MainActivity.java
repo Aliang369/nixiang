@@ -3,38 +3,30 @@ package com.starry.magic.app;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.net.VpnService;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.starry.magic.BuildConfig;
 import com.starry.magic.R;
-import com.starry.magic.menu.Diag;
-import com.starry.magic.menu.InjectJournal;
 import com.starry.magic.menu.MenuService;
-import com.starry.magic.menu.net.CdnVpnService;
 
 /**
- * 主 Activity — 应用入口
+ * 主 Activity —— 助手外壳。
  *
- * 原生菜单主路径不需要悬浮窗权限即可出球；备用 Overlay 可在菜单「设置」里开启。
+ * <p>本页只做两件事：申请「所有文件访问权限」「悬浮窗权限」，然后把 {@link MenuService}
+ * 拉起来显示悬浮菜单。菜单里的功能项与开关全部来自 native 侧下发的功能表，
+ * 本页不再承载任何针对具体游戏的引导、体检或注入入口。
  */
 public class MainActivity extends Activity {
 
     private static final String TAG = "StarryMagic";
     private static final int REQUEST_OVERLAY = 1001;
-    private static final int REQUEST_VPN = 1002;
     private static final int REQUEST_ALL_FILES = 1003;
     private static final String NATIVE_LIB_NAME = "starry_magic";
-
-    private TextView cdnStatus;
-    private TextView diagHeadline;
-    private TextView diagDetail;
 
     static {
         try {
@@ -106,7 +98,7 @@ public class MainActivity extends Activity {
             if (!sp.getBoolean("guide_done", false)) {
                 sp.edit().putBoolean("guide_done", true).apply();
                 Toast.makeText(this,
-                        "两步权限都就绪 ✓\n下一步：点「③ 一键注入」，游戏会自动打开",
+                        "两项权限都就绪 ✓ 菜单球会自动显示在游戏画面上",
                         Toast.LENGTH_LONG).show();
             }
         } catch (Throwable t) {
@@ -139,9 +131,7 @@ public class MainActivity extends Activity {
                     com.starry.magic.menu.ModTarget.externalDirs(this)[1],
                     "/storage/emulated/0/Android/data/" + gamePkg,
                     "/storage/emulated/0/Android/data/" + gamePkg + "/files",
-                    "/storage/emulated/0/Android/data/" + gamePkg + "/files/Bundles",
                     "/sdcard/Android/data/" + gamePkg + "/files",
-                    "/sdcard/Android/data/" + gamePkg + "/files/Bundles",
                     "/mnt/user/0/primary/Android/data/" + gamePkg + "/files",
                     "/mnt/user/0/emulated/0/Android/data/" + gamePkg + "/files",
                     "/data/media/0/Android/data/" + gamePkg + "/files",
@@ -230,7 +220,7 @@ public class MainActivity extends Activity {
         }, 1500L);
     }
 
-    /** 独立助手主页：① 悬浮窗权限 → ② 一键注入（注入后自动打开游戏）。 */
+    /** 独立助手主页：只保留两项权限入口，其余交给悬浮菜单。 */
     private void setupHomeUi() {
         Button overlay = findViewById(R.id.btn_request_overlay);
         if (overlay != null) {
@@ -250,165 +240,7 @@ public class MainActivity extends Activity {
                 }
             });
         }
-        cdnStatus = findViewById(R.id.tv_cdn_status);
-        Button cdn = findViewById(R.id.btn_cdn_inject);
-        if (cdn != null) {
-            cdn.setOnClickListener(v -> toggleCdnInject());
-        }
-        android.widget.CheckBox autoClose = findViewById(R.id.cb_cdn_auto_close);
-        if (autoClose != null) {
-            autoClose.setChecked(CdnVpnService.autoClosePref(this));
-            autoClose.setOnCheckedChangeListener((v, checked) -> {
-                CdnVpnService.setAutoClosePref(MainActivity.this, checked);
-                Log.i(TAG, "cdn inject: auto close = " + checked);
-            });
-        }
-        diagHeadline = findViewById(R.id.tv_diag_headline);
-        diagDetail = findViewById(R.id.tv_diag_detail);
-        Button diagRefresh = findViewById(R.id.btn_diag_refresh);
-        if (diagRefresh != null) {
-            diagRefresh.setOnClickListener(v -> {
-                refreshDiag();
-                Toast.makeText(this, "已重新体检", Toast.LENGTH_SHORT).show();
-            });
-        }
-        Button diagCopy = findViewById(R.id.btn_diag_copy);
-        if (diagCopy != null) {
-            diagCopy.setOnClickListener(v -> copyDiagReport());
-        }
-        Button diagShare = findViewById(R.id.btn_diag_share);
-        if (diagShare != null) {
-            diagShare.setOnClickListener(v -> shareDiagReport());
-        }
-
-        refreshCdnStatus();
         refreshPermissionStatus();
-        refreshDiag();
-    }
-
-    /** 体检面板：把「这条链路卡在哪一步」直接写在屏幕上（对方看不到日志，只能靠这个）。 */
-    private void refreshDiag() {
-        if (diagHeadline == null || diagDetail == null) {
-            return;
-        }
-        try {
-            String head = Diag.headline(this);
-            diagHeadline.setText(head);
-            // 全链路通了是绿字，卡住是红字：一眼看得出
-            diagHeadline.setTextColor(head.startsWith("✅") ? 0xFF7EE0A0 : 0xFFFF9E7E);
-            diagDetail.setText(Diag.report(this));
-        } catch (Throwable t) {
-            Log.w(TAG, "diag failed: " + t);
-            diagHeadline.setText("体检失败：" + t);
-            diagHeadline.setTextColor(0xFFFF9E7E);
-            diagDetail.setText("");
-        }
-    }
-
-    private void copyDiagReport() {
-        try {
-            String text = Diag.report(this);
-            android.content.ClipboardManager cm = (android.content.ClipboardManager)
-                    getSystemService(CLIPBOARD_SERVICE);
-            if (cm != null) {
-                cm.setPrimaryClip(android.content.ClipData.newPlainText("星光助手体检", text));
-                Toast.makeText(this, "体检报告已复制：粘到聊天里发回去即可", Toast.LENGTH_LONG).show();
-            }
-        } catch (Throwable t) {
-            Log.w(TAG, "copy diag failed: " + t);
-            Toast.makeText(this, "复制失败，请长按下面的文字手动选中复制", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void shareDiagReport() {
-        try {
-            Intent send = new Intent(Intent.ACTION_SEND);
-            send.setType("text/plain");
-            send.putExtra(Intent.EXTRA_SUBJECT, "星光助手体检报告");
-            send.putExtra(Intent.EXTRA_TEXT, Diag.report(this));
-            startActivity(Intent.createChooser(send, "把体检报告发给对方"));
-        } catch (Throwable t) {
-            Log.w(TAG, "share diag failed: " + t);
-            copyDiagReport();
-        }
-    }
-
-    /** 热更注入开关：点一下（必要时先过系统 VPN 授权）。注入完成后会自动关闭。 */
-    private void toggleCdnInject() {
-        InjectJournal.note(this, InjectJournal.K_CLICK);
-        if (CdnVpnService.isRunning()) {
-            Log.i(TAG, "cdn inject: stop requested by user");
-            CdnVpnService.stop(this);
-            Toast.makeText(this, "热更注入已关闭（游戏下次启动会回到官方数据）",
-                    Toast.LENGTH_LONG).show();
-            refreshCdnStatus();
-            return;
-        }
-        // 权限闸门：没开「所有文件访问权限」时注入也能成功，但菜单开关写不进游戏目录，
-        // 玩家看到的是「装好了、球也在、开关没反应」——先拦住，别让他白跑一趟。
-        if (!checkAllFilesAccess()) {
-            Log.w(TAG, "cdn inject: blocked, all files access missing");
-            InjectJournal.note(this, InjectJournal.K_BLOCKED, "缺「所有文件访问权限」");
-            Toast.makeText(this,
-                    "先开「所有文件访问权限」：不开的话注入会成功，但三个功能一个都不生效",
-                    Toast.LENGTH_LONG).show();
-            requestAllFilesAccess();
-            return;
-        }
-        Intent prep = VpnService.prepare(this);
-        if (prep != null) {
-            Log.i(TAG, "cdn inject: need vpn permission");
-            Toast.makeText(this, "请允许「星光助手」建立本地 VPN 连接", Toast.LENGTH_LONG).show();
-            startActivityForResult(prep, REQUEST_VPN);
-            return;
-        }
-        startCdnInject();
-    }
-
-    private void startCdnInject() {
-        InjectJournal.newSession(this);
-        CdnVpnService.start(this);
-        Toast.makeText(this,
-                "热更注入已开启：正在打开游戏，请照常进到主界面即可",
-                Toast.LENGTH_LONG).show();
-        refreshCdnStatus();
-        launchGameForInjection();
-    }
-
-    /** 通道就绪后自动拉起游戏：发给别人的包里不能让玩家自己找图标点进来。 */
-    private void launchGameForInjection() {
-        try {
-            Intent i = getPackageManager()
-                    .getLaunchIntentForPackage(com.starry.magic.menu.ModTarget.gamePackage(this));
-            if (i == null) {
-                Log.w(TAG, "cdn inject: 未找到 " + com.starry.magic.menu.ModTarget.gamePackage(this));
-                Toast.makeText(this,
-                        "没找到目标游戏：确认已安装且属同一渠道",
-                        Toast.LENGTH_LONG).show();
-                return;
-            }
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(i);
-            InjectJournal.note(this, InjectJournal.K_LAUNCH, "已拉起游戏（未强杀，可能只是把后台进程拉到前台）");
-            Log.i(TAG, "cdn inject: 自动拉起游戏 " + com.starry.magic.menu.ModTarget.gamePackage(this));
-        } catch (Throwable t) {
-            Log.w(TAG, "cdn inject: auto launch game failed: " + t);
-        }
-    }
-
-    private void refreshCdnStatus() {
-        if (cdnStatus == null) {
-            return;
-        }
-        cdnStatus.setText(CdnVpnService.isRunning()
-                ? CdnVpnService.statusText()
-                : "注入：未做过（做完一次就永久生效）");
-        Button b = findViewById(R.id.btn_cdn_inject);
-        if (b != null) {
-            b.setText(CdnVpnService.isRunning()
-                    ? "通道已开启（注入完成会自动关闭）"
-                    : "③ 一键注入并打开游戏（只需一次）");
-        }
     }
 
     private void startMenu() {
@@ -521,8 +353,6 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // 从系统设置页返回：所有权限态都可能变了，体检面板无条件重算一次
-        refreshDiag();
         if (requestCode == REQUEST_ALL_FILES) {
             boolean granted = checkAllFilesAccess();
             Log.i(TAG, "all files access granted=" + granted);
@@ -539,17 +369,8 @@ public class MainActivity extends Activity {
             refreshPermissionStatus();
         } else if (requestCode == REQUEST_OVERLAY) {
             Toast.makeText(this,
-                    checkOverlayPermission() ? "备用悬浮窗已开启" : "未开启备用权限（主路径仍可用）",
+                    checkOverlayPermission() ? "悬浮窗权限已开启" : "未开启悬浮窗权限（看不到菜单球）",
                     Toast.LENGTH_SHORT).show();
-        } else if (requestCode == REQUEST_VPN) {
-            if (resultCode == RESULT_OK) {
-                Log.i(TAG, "cdn inject: vpn permission granted");
-                startCdnInject();
-            } else {
-                Log.w(TAG, "cdn inject: vpn permission denied");
-                Toast.makeText(this, "未授权 VPN，无法注入热更数据", Toast.LENGTH_LONG).show();
-                refreshCdnStatus();
-            }
         }
     }
 
@@ -572,9 +393,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        refreshCdnStatus();
         refreshPermissionStatus();
-        refreshDiag();
         MenuService service = MenuService.getInstance();
         if (service != null && !gameActivity.isEmpty()) {
             finish();

@@ -68,7 +68,7 @@ public class StarryApp extends Application {
             Log.i(TAG, "attachBaseContext skip native (proc=" + currentProcessName() + ")");
             return;
         }
-        // 优先 OTA，避免后续 MenuService/ModBridge 静态块先 loadLibrary 钉死包内 so
+        // 尽早加载 native（只走包内 so）：避免后续 MenuService/ModBridge 静态块先 loadLibrary 钉死路径
         boolean ok = StarryNativeLoad.ensureLoaded(this);
         Log.i(TAG, "native ensureLoaded=" + ok + " path=" + StarryNativeLoad.loadedPath());
     }

@@ -89,7 +89,7 @@ import zipfile
 p, pin = sys.argv[1], sys.argv[2]
 z = zipfile.ZipFile(p); names = set(z.namelist())
 need = ["classes8.dex", "lib/arm64-v8a/libstarry_magic.so", "assets/jsb-adapter/jsb-engine.js",
-        "assets/main.js", "AndroidManifest.xml", "assets/certs/starlight.crt",
+        "assets/main.js", "AndroidManifest.xml",
         "assets/assets/src/index.d5507.jsc", "assets/assets/src/index.ca0d4.jsc",
         "assets/assets/src/index.e4278.jsc", "assets/assets/src/config.e4278.json"]
 miss = [n for n in need if n not in names]

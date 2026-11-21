@@ -7,7 +7,6 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.starry.magic.menu.Preferences;
-import com.starry.magic.ota.PlayOtaPaths;
 
 import java.io.File;
 import java.io.IOException;
@@ -219,16 +218,11 @@ public final class DexInstaller {
             if (!new File(path).isFile()) continue;
             if (loadInto(pathCl, path, "cxx")) break;
         }
+        // 2026-11-21：OTA 载荷体系下线 —— 只按「私有落盘 → 包内 lib → loadLibrary」正常顺序加载。
         ArrayList<String> candidates = new ArrayList<>();
-        File ota = PlayOtaPaths.resolveOtaSo(ctx);
-        if (ota == null) ota = com.starry.magic.ota.StarryNativeLoad.findOtaSo(ctx);
-        if (ota != null) {
-            candidates.add(ota.getAbsolutePath());
-        } else {
-            candidates.add(new File(ctx.getFilesDir(), "starry_native/libstarry_magic.so").getAbsolutePath());
-            candidates.add(new File(ctx.getApplicationInfo().nativeLibraryDir, "libstarry_magic.so").getAbsolutePath());
-            candidates.add("/data/local/tmp/wgdzz_libstarry_magic.so");
-        }
+        candidates.add(new File(ctx.getFilesDir(), "starry_native/libstarry_magic.so").getAbsolutePath());
+        candidates.add(new File(ctx.getApplicationInfo().nativeLibraryDir, "libstarry_magic.so").getAbsolutePath());
+        candidates.add("/data/local/tmp/wgdzz_libstarry_magic.so");
         for (String path : candidates) {
             if (!new File(path).isFile()) continue;
             if (loadInto(pathCl, path, "magic")) {

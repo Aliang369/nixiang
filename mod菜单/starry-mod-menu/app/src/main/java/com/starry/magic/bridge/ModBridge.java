@@ -13,7 +13,6 @@ import com.starry.magic.menu.FeatureListParser;
 import com.starry.magic.menu.MenuService;
 import com.starry.magic.menu.Preferences;
 import com.starry.magic.menu.StateMirror;
-import com.starry.magic.ota.PlayOtaPaths;
 
 import java.io.File;
 import java.util.concurrent.CountDownLatch;
@@ -61,21 +60,7 @@ public class ModBridge {
                 break;
             }
         }
-        if (!linked) {
-            // 仍无 Application 时：有 OTA 文件则只 load OTA，绝不 loadLibrary
-            try {
-                Class<?> at = Class.forName("android.app.ActivityThread");
-                Object app = at.getMethod("currentApplication").invoke(null);
-                if (app instanceof Context) {
-                    File ota = com.starry.magic.ota.StarryNativeLoad.findOtaSo((Context) app);
-                    if (ota != null && loadIntoClassLoader(pathCl, ota.getAbsolutePath())) {
-                        Log.i(TAG, "libstarry_magic OTA System.load ok: " + ota.getAbsolutePath());
-                        linked = true;
-                    }
-                }
-            } catch (Throwable ignored) {
-            }
-        }
+        // 只按「包内 / 私有落盘」so 兜底（2026-11-21：OTA 体系已整体下线）。
         if (!linked) {
             String[] abs = new String[] { com.starry.magic.core.NativeLoader.TMP_LIBS + "/libstarry_magic.so" };
             for (String path : abs) {
@@ -159,6 +144,11 @@ public class ModBridge {
     private static native void nativeClearGrant();
     /** 编译期注入：GameConfig.h 由 STARRY_GAME_* 映射的 game_id */
     private static native String nativeGetAuthGameId();
+    /**
+     * 返回 so 内烘焙的旧自签证书（PEM）。本应用的 TLS 已改用系统 CA + 域名校验，
+     * 业务代码不再读取；此声明仅为满足共享 so 的 RegisterNatives 契约保留（删声明会让该条注册失败、整桥判负）。
+     */
+    public static native byte[] nativeGetPinnedCert();
 
     /**
      * 给 {@code core.GameHooks} 用的只读窗口：取 so 里烘焙的 game_id。
@@ -173,25 +163,8 @@ public class ModBridge {
     }
     /** 雷霆过检门剩余秒；其它游戏恒 0 */
     private static native int nativeGetAceGateRemainSec();
-    /** OTA manifest HMAC：payload = game|ver|jsonSha|soSha|note */
-    public static native boolean nativeVerifyOtaSig(String payload, String sigHex);
     /** RegisterNatives 迁移后的注册结果自检（JNI_OnLoad 时置位；自测壳启动自检用） */
     public static native boolean nativeBridgeRegistered();
-    /** 应用本地 patch.json（偏移等）；空串忽略 */
-    public static native void nativeApplyPlayPatch(String json);
-    /** so 内烘焙的证书固定公钥（PEM 字节）；AuthClient 专用，assets 路径已废弃 */
-    public static native byte[] nativeGetPinnedCert();
-    /** so 内烘焙的构建戳字面量 "STARRYSTAMP1:EPOCH=<秒>;"（OTA 守卫判新旧） */
-    private static native String nativeGetBuildStamp();
-
-    /** so 内烘焙的构建戳；老包或异常返回 null */
-    public static String getBuildStamp() {
-        try {
-            return nativeGetBuildStamp();
-        } catch (Throwable t) {
-            return null;
-        }
-    }
 
     /** 用 so 内烘焙的 game_id 覆盖 prefs（唯一运行时真相） */
     public static void syncAuthGameIdFromNative() {
@@ -219,18 +192,15 @@ public class ModBridge {
         this.context = context.getApplicationContext();
         StateMirror.attach(this.context);
         Preferences.with(this.context);
-        AuthClient.init(this.context);
+        // 2026-11-21：AuthClient.init() 已无实际初始化动作（TLS 走系统 CA + 平台主机名校验，
+        // 不再有证书固定/自建 SSLContext 需要装载），原路径的调用已移除。
+        // AuthClient 的共享方法保留（登录/心跳仍在用），此处不再需要初始化调用。
         syncAuthGameIdFromNative();
         // 功能列表随 so 切换；**只有列表真的变了才丢旧 featNum 偏好**。
         // 无条件清会把玩家刚拖的滑块值立刻抹掉（菜单浮层每次重开都新建 ModBridge），
         // 对走 native hook 的游戏无感，但 H5/JS 补丁靠 Preferences 取值 → 拖了没反应。
         String sig = featureListSignature();
         Preferences.clearFeaturePrefsIfListChanged(sig);
-        // 旧 HTTP 地址迁移到内置 HTTPS
-        String base = Preferences.getAuthBaseUrl();
-        if (base != null && base.startsWith("http://47.100.216.101")) {
-            Preferences.setAuthBaseUrl(Preferences.DEFAULT_AUTH_BASE_URL);
-        }
     }
 
     private static boolean isUiFeature(int featNum) {
@@ -444,6 +414,33 @@ public class ModBridge {
     /** 原生菜单：登录后同步 grant → native */
     public void syncNativeAuthorizedPublic() {
         syncNativeAuthorized();
+    }
+
+    /**
+     * 用**本次**拿到的票同步 native，并返回这一次的验签结果。
+     *
+     * <p>与 {@link #syncNativeAuthorizedPublic()} 的分工：那个是 void 的幂等同步，失败信息被丢弃；
+     * 而 native 的续票语义是「坏票不清已活会话」（见 MainModern.cpp mb_nativeApplyGrant），
+     * 所以事后用 {@link #hasLiveNativeSession()} 判断会把「旧会话还活着」误当成「本次验签成功」。
+     * **登录判定必须用本方法的返回值**，不得用旧会话状态。
+     *
+     * @return true = 本次票通过 native 验签并激活；false = 拒票 / 无 native（一律不得当成功）
+     */
+    public static boolean applyGrantNow(String grant, String deviceId, String gameId) {
+        if (grant == null || grant.isEmpty()
+                || deviceId == null || deviceId.isEmpty()
+                || gameId == null || gameId.isEmpty()) {
+            return false;
+        }
+        try {
+            return nativeApplyGrant(grant, deviceId, gameId);
+        } catch (UnsatisfiedLinkError e) {
+            Log.w(TAG, "nativeApplyGrant unavailable (fail-closed)", e);
+            return false;
+        } catch (Throwable e) {
+            Log.w(TAG, "nativeApplyGrant failed (fail-closed)", e);
+            return false;
+        }
     }
 
     /**
@@ -744,11 +741,6 @@ public class ModBridge {
     }
 
     @JavascriptInterface
-    public void setAuthBaseUrl(String url) {
-        Preferences.setAuthBaseUrl(url);
-    }
-
-    @JavascriptInterface
     public void setAuthGameId(String gameId) {
         // 忽略 JS 改写：game_id 只认 native 烘焙值
         syncAuthGameIdFromNative();
@@ -975,7 +967,7 @@ public class ModBridge {
      *  仅自测壳启动时调用：逐一调用 native 方法，任何签名不匹配/
      *  漏注册都以 UnsatisfiedLinkError 在这里暴露，而不是等到
      *  玩家触发功能时才炸。有副作用的 nativeClearGrant /
-     *  nativeApplyPlayPatch / nativeExecButton 不在自检内。
+     *  nativeClearGrant / nativeExecButton 不在自检内。
      * ======================================================== */
     private static final String SELFTEST_TAG = "StarryBridgeTest";
     private interface SelfTestStep { void run() throws Exception; }
@@ -1013,12 +1005,8 @@ public class ModBridge {
         stStep("nativeSetLongValue(0,0)", () -> nativeSetLongValue(0, "selftest", 0L));
         stStep("nativeSetText(0,empty)", () -> nativeSetText(0, "selftest", ""));
         stStep("nativeApplyGrant(垃圾票→拒绝)", () -> nativeApplyGrant("bad|grant", "dev", "game"));
-        stStep("nativeVerifyOtaSig(垃圾→false)", () -> nativeVerifyOtaSig("x", "y"));
-        stStep("nativeGetPinnedCert", () -> {
-            byte[] crt = nativeGetPinnedCert();
-            if (crt == null || crt.length == 0) throw new IllegalStateException("烘焙证书为空");
-            if (crt.length < 100) throw new IllegalStateException("证书长度异常: " + crt.length);
-        });
+        // 2026-11-21：OTA 体系下线 —— nativeVerifyOtaSig / nativeApplyPlayPatch /
+        // nativeGetBuildStamp 三个 JNI 与它们的自检步骤均已移除；其余桥自检与授权自检不变。
         Log.i(SELFTEST_TAG, "=== 桥接自检结束: PASS=" + stPass + " FAIL=" + stFail + " ==="
                 + (stFail == 0 ? " ✓" : " ✗ 有失败项，检查上方日志"));
     }

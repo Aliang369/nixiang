@@ -13,13 +13,11 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./starlight.db"
     access_token_expire_minutes: int = 10080  # 7 天：避免杀进程后频繁重输卡密（心跳会续期）
     cors_origins: str = "*"
-    default_game_id: str = "zhmr"
-    default_game_name: str = "战魂铭人"
+    default_game_id: str = "starry_self"
+    default_game_name: str = "星光自测App"
     offline_cache_seconds: int = 86400  # grant 票 TTL=离线宽限 1 天：断网重开可玩；封禁等卡密控制下次冷启动续票时生效
-    # 客户端授权短票 HMAC 密钥（须与 APK native 内置一致；生产务必改掉）
-    grant_hmac_secret: str = "sg-grant-v1-7f3a9c2e"
     # 授权票 v2 非对称签名私钥路径（RSA-2048 PKCS#1 v1.5，文件为 n/e/d=hex）。
-    # 留空 = 只发 v1(HMAC) 票。生产必须配置，且**绝不入库**。
+    # 生产必须配置；留空 = 拒绝签发（503，fail closed），不再回退对称票。**绝不入库**。
     grant_rsa_key_path: str = ""
     # P2-2：载荷加密主密钥（与出包机 ~/.starry-keys/payload_master.txt 同一份）
     payload_master_path: str = ""
@@ -29,6 +27,8 @@ class Settings(BaseSettings):
     build_api_key: str = ""
     # 管理端 IP 白名单，逗号分隔；空=不限制（仅建议生产配置你家宽带 IP）
     admin_allow_ips: str = ""
+    # 是否对外暴露 /docs、/redoc、/openapi.json（生产默认关闭，避免泄露接口清单）
+    enable_docs: bool = False
     # 管理登录失败限流：窗口秒数内最多失败次数
     admin_login_max_fails: int = 5
     admin_login_window_seconds: int = 900
@@ -49,19 +49,6 @@ class Settings(BaseSettings):
     login_fail_max_keys_per_ip: int = 60
     # 事件保留天数（仅用于后台展示与人工清理脚本口径，不做自动删除）
     auth_event_retention_days: int = 90
-    # 玩法 OTA 落盘根目录（每 game_id/latest 一份）
-    ota_data_dir: str = ""
-    # OTA 按 IP 限流（滑动窗口内次数）
-    ota_manifest_max: int = 40
-    ota_manifest_window_seconds: int = 60
-    ota_json_max: int = 20
-    ota_json_window_seconds: int = 3600
-    ota_so_max: int = 8
-    ota_so_window_seconds: int = 3600
-    # so 下载是否要求有效卡密会话 token（仅联网无卡密游戏可设 false）
-    ota_so_require_token: bool = True
-    # patch.json 下载是否要求有效卡密会话 token（玩法偏移数据；默认要求）
-    ota_json_require_token: bool = True
 
 
 @lru_cache

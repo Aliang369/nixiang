@@ -26,7 +26,6 @@ LOCAL_CPPFLAGS  := -w -s -Wno-error=format-security -fvisibility=hidden -std=c++
 LOCAL_CFLAGS    += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
 LOCAL_CPPFLAGS  += -DENABLE_UNITY_HOOK -DSTARRY_GAME_WDYZ
 LOCAL_LDFLAGS   := -Wl,--gc-sections,--strip-all,--exclude-libs,ALL
-LOCAL_LDFLAGS   += -Wl,--undefined=kStarryBuildStamp
 LOCAL_LDLIBS    := -llog -landroid
 
 LOCAL_ARM_MODE  := arm

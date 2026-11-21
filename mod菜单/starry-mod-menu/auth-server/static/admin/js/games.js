@@ -36,14 +36,11 @@
           <td>${g.card_auth_enabled !== false
             ? '<span class="tag ok">需卡密</span>'
             : '<span class="tag warn">仅联网</span>'}</td>
-          <td>${g.portal_visible !== false
-            ? '<span class="tag ok">展示中</span>'
-            : '<span class="tag muted">已隐藏</span>'}</td>
           <td>${g.enabled ? statusTag('active') : statusTag('banned')}</td>
           <td class="row-actions">
             <button class="btn sm ghost" onclick="openGameRowMenu(event, ${g.id})">操作 ▾</button>
           </td>
-        </tr>`).join('') || '<tr><td colspan="8" class="empty">暂无游戏或无匹配项</td></tr>';
+        </tr>`).join('') || '<tr><td colspan="7" class="empty">暂无游戏或无匹配项</td></tr>';
       renderPager('games-pager', gamesMeta, `gamesPage=${gamesPage - 1};loadGamesTable()`, `gamesPage=${gamesPage + 1};loadGamesTable()`);
     }
 
@@ -59,7 +56,6 @@
       const g = gamesRows.find(x => x.id === id) || gamesCache.find(x => x.id === id);
       if (!g) { toast('游戏数据不存在'); return; }
       const noCard = g.card_auth_enabled === false;
-      const hidden = g.portal_visible === false;
       const disabled = !g.enabled;
       const menu = document.createElement('div');
       menu.className = 'card-row-menu';
@@ -69,7 +65,6 @@
         <div class="crm-item" data-act="features">功能管理</div>
         <div class="crm-item" data-act="payload">载荷 sha</div>
         <div class="crm-item" data-act="card">${noCard ? '开卡密' : '关卡密'}</div>
-        <div class="crm-item" data-act="portal">${hidden ? '前端展示' : '前端隐藏'}</div>
         <div class="crm-item" data-act="toggle">${disabled ? '启用' : '停用'}</div>
         <div class="crm-item crm-danger" data-act="del">删除</div>`;
       menu.addEventListener('click', e => e.stopPropagation());
@@ -82,7 +77,6 @@
         else if (act === 'features') goManageFeatures(g.game_id);
         else if (act === 'payload') openGamePayloadModal(g.id);
         else if (act === 'card') toggleCardAuth(g.id, noCard);
-        else if (act === 'portal') togglePortalVisible(g.id, hidden);
         else if (act === 'toggle') toggleGame(g.id, !disabled);
         else if (act === 'del') delGame(g.id, g.game_id);
       });
@@ -101,7 +95,7 @@
         <div class="form-grid">
           <div class="full"><label>game_id</label>
             <input id="m-g-id" value="${escapeHtml(game?.game_id || '')}" ${isEdit ? 'disabled' : ''}
-              placeholder="建议与模板同名，如 zhmr"
+              placeholder="建议与模板同名，如 starry_self"
               oninput="onGameIdInput(this.value)" /></div>
           <div class="full"><label>名称</label>
             <input id="m-g-name" value="${escapeHtml(game?.name || '')}" placeholder="如 战魂铭人"
@@ -149,7 +143,7 @@
       fillGameSelects();
       // 重置自动识别状态：弹窗打开时不预选模板、不预填名称、不封锁 game_id 自动识别。
       // 修复 2026-09-05：此前打开即调 onGameTemplateChange() 把 touched 置 1，
-      // 且创建模式固定猜测 zhmr → 自动识别永远失效。
+      // 且创建模式固定猜测默认模板 → 自动识别永远失效。
       const tplRoot = getPickerRoot('m-g-template');
       if (tplRoot) tplRoot.dataset.touched = '0';
       const nameEl = document.getElementById('m-g-name');
@@ -359,15 +353,6 @@
         await api('/v1/admin/games/' + id, { method: 'PATCH', body: JSON.stringify({ card_auth_enabled: enabled }) });
         await loadGames();
         toast(enabled ? '已开启卡密验证' : '已关闭卡密验证（仍需联网）');
-      } catch (e) { toast(e.message); }
-    }
-
-    /** 前端显隐切换：仅控制 /portal/ 展示，不影响客户端授权 */
-    async function togglePortalVisible(id, visible) {
-      try {
-        await api('/v1/admin/games/' + id, { method: 'PATCH', body: JSON.stringify({ portal_visible: visible }) });
-        await loadGames();
-        toast(visible ? '已在前端展示' : '已从前端隐藏（客户端不受影响）');
       } catch (e) { toast(e.message); }
     }
 

@@ -602,61 +602,6 @@
     .game-picker-list li .gp-id { color: var(--ink-3); font-size: 11px; font-family: ui-monospace, monospace; }
     .game-picker-list .gp-empty { padding: 14px; text-align: center; color: var(--ink-3); font-size: 12px; }
 
-    /* ===== 游戏补丁页 ===== */
-    .ota-layout {
-      display: grid; grid-template-columns: minmax(260px, 1fr) minmax(320px, 1.2fr);
-      gap: 14px; align-items: start;
-    }
-    @media (max-width: 900px) { .ota-layout { grid-template-columns: 1fr; } }
-    .ota-status {
-      padding: 14px; border-radius: 14px; border: 1px solid var(--line);
-      background: rgba(10,8,28,.35); font-size: 13px; line-height: 1.7; min-height: 120px;
-    }
-    .ota-status .ota-ver { font-size: 18px; font-family: var(--font-display); color: var(--ink); margin-bottom: 6px; }
-    .ota-drop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    @media (max-width: 640px) { .ota-drop-grid { grid-template-columns: 1fr; } }
-    .ota-drop {
-      position: relative; border: 1px dashed rgba(180,154,232,.35); border-radius: 14px;
-      padding: 16px 14px; background: rgba(180,154,232,.06); min-height: 120px;
-      display: flex; flex-direction: column; gap: 8px; transition: .15s var(--ease);
-    }
-    .ota-drop:hover, .ota-drop.dragover {
-      border-color: rgba(180,154,232,.7); background: rgba(180,154,232,.12);
-    }
-    .ota-drop h4 { margin: 0; font-size: 14px; color: var(--ink); }
-    .ota-drop p { margin: 0; font-size: 12px; color: var(--ink-3); line-height: 1.45; flex: 1; }
-    .ota-drop .ota-file-name {
-      font-size: 12px; color: var(--ink-3); word-break: break-all; min-height: 1.2em;
-    }
-    .ota-drop.has-file {
-      border-style: solid; border-color: rgba(180,154,232,.55);
-      background: rgba(180,154,232,.14);
-    }
-    .ota-drop.has-file .ota-file-name { color: var(--brand); font-weight: 600; }
-    /* 隐藏原生 file：由按钮 input.click() 触发；勿用透明全铺（会被全局 input 样式弄坏） */
-    .ota-drop input.ota-file-input {
-      position: absolute !important; left: 0; top: 0;
-      width: 1px !important; height: 1px !important; min-height: 0 !important;
-      padding: 0 !important; margin: 0 !important; border: 0 !important;
-      opacity: 0 !important; overflow: hidden; clip: rect(0,0,0,0);
-      pointer-events: none; appearance: auto; -webkit-appearance: initial;
-    }
-    .ota-drop .ota-pick {
-      align-self: flex-start;
-      height: 36px; min-height: 36px; padding: 0 14px; border-radius: 8px; font-size: 13px;
-      border: 1px solid var(--line); background: rgba(255,255,255,.08); color: var(--ink);
-      display: inline-flex; align-items: center; cursor: pointer; font: inherit;
-    }
-    .ota-drop .ota-pick:hover {
-      border-color: rgba(180,154,232,.55); background: rgba(180,154,232,.18);
-    }
-    .ota-drop.has-file .ota-pick {
-      border-color: rgba(180,154,232,.45); color: var(--ink); background: rgba(180,154,232,.18);
-    }
-    .ota-actions {
-      display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 14px;
-    }
-    .ota-actions .spacer { flex: 1; min-width: 8px; }
 
     .split {
       display: grid; grid-template-columns: 240px 1fr; gap: 14px;

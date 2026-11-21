@@ -135,9 +135,7 @@ echo "  字节数 : $LOCAL_SIZE"
 echo "  md5    : ${MD5:-unknown}"
 if [ -n "$STAMP" ]; then
   echo "  stamp=${STAMP};"
-else
-  echo "  ⚠ 未找到构建戳 ${STAMP_MARK}<n>（构建戳是仓库发布的必要门禁，OTA 守卫按它判新旧）；" >&2
-  echo "    若本轮只是诊断桩，可继续；正式出包必须先修构建戳（jni/Includes/StarryStamp.h）。" >&2
+  echo "  （构建戳已于 2026-11-21 随 OTA 下线退役；老 so 里仍有残余字符串，仅作版本线索）"
 fi
 
 # ---------------- 路径推导（乐变热更层，全部走变量，便于复用到其它乐变游戏） ----------------

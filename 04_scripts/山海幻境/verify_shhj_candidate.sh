@@ -113,7 +113,7 @@ unexpected_added = [
     x for x in added
     if x not in {
         "META-INF/STARRY.RSA", "META-INF/STARRY.SF",
-        "assets/certs/starlight.crt", "classes4.dex",
+        "classes4.dex",
         "lib/arm64-v8a/libc++_shared.so",
         "lib/arm64-v8a/libstarry_magic.so",
     }

@@ -10,7 +10,7 @@
   1. 底包若有 fancy/origin.apk（加固壳）→ 取出真实游戏 APK 当底包（脱壳）；
   2. apktool 解 AndroidManifest → 追加星光 provider/service/FGS 权限 → 回编 → 只取 manifest；
   3. zip 外科合并：换 manifest + 新增 classesN.dex + 每个 ABI 的 libstarry_magic.so /
-     libc++_shared.so + assets/certs/starlight.crt；其余条目逐字节保留（回读校验）；
+     libc++_shared.so；其余条目逐字节保留（回读校验）；
   4. zipalign -p + apksigner 同钥匙重签 + 证书指纹校验。
 
 用法：
@@ -82,7 +82,6 @@ def main() -> int:
     ap.add_argument("--orig-apk", default=str(root / "02_apks" / (GAME + ".apk")))
     ap.add_argument("--dex", default=str(root / "mod菜单/starry-mod-menu/libs_ysxz/classes4.dex"))
     ap.add_argument("--libroot", default=str(root / "mod菜单/starry-mod-menu/libs_ysxz"))
-    ap.add_argument("--certs", default=str(root / "mod菜单/starry-mod-menu/app/src/main/assets/certs/starlight.crt"))
     ap.add_argument("--abis", default="")
     ap.add_argument("--out", default=str(root / "08_output" / GAME))
     ap.add_argument("--keystore", default=str(root / "01_tools/starry_release.jks"))
@@ -117,10 +116,9 @@ def main() -> int:
     orig = Path(a.orig_apk)
     dex = Path(a.dex)
     libroot = Path(a.libroot)
-    cert = Path(a.certs)
     ks = Path(a.keystore)
     apktool = root / "01_tools" / "apktool" / "apktool.jar"
-    for p, what in ((orig, "底包"), (dex, "菜单 dex"), (cert, "授权证书"), (ks, "签名钥匙"), (apktool, "apktool.jar")):
+    for p, what in ((orig, "底包"), (dex, "菜单 dex"), (ks, "签名钥匙"), (apktool, "apktool.jar")):
         if not p.exists():
             die("缺%s: %s" % (what, p))
 
@@ -256,7 +254,6 @@ def main() -> int:
         for abi in abis:
             adds["lib/%s/libstarry_magic.so" % abi] = (libroot / abi / "libstarry_magic.so").read_bytes()
             adds["lib/%s/libc++_shared.so" % abi] = (prebuilt / CXX_DIR[abi] / "libc++_shared.so").read_bytes()
-        adds["assets/certs/starlight.crt"] = cert.read_bytes()
         for k in adds:
             if k in names:
                 die("底包已有条目 %s（不该覆盖）" % k)

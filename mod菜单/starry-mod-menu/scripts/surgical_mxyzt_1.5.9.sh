@@ -2,12 +2,11 @@
 # 冒险与征途 1.5.9 / vc159 — 星光外壳组装（provider-only 注入路线，分支 B）
 #
 # 底包：02_apks/冒险与征途/冒险与征途_1.5.9_official_base.apk（官方 com.mxyzt.gzmy 1.5.9）
-# 注入（五件）：
+# 注入（四件）：
 #   1) classes4.dex                        → templates/mxyzt_menu_current/classes4.dex（javac+d8 产出）
 #   2) lib/arm64-v8a/libstarry_magic.so     → libs_mxyzt/arm64-v8a/（mxyzt_build_so.sh）
 #   3) lib/arm64-v8a/libc++_shared.so       → 同上（官方包无此 so，必须补）
-#   4) assets/certs/starlight.crt           → templates/wxsj_menu_*/starlight.crt（AuthClient 证书钉扎）
-#   5) AndroidManifest.xml                  → 07_patched/冒险与征途/surgical/AndroidManifest.xml（二进制补丁器产出）
+#   4) AndroidManifest.xml                  → 07_patched/冒险与征途/surgical/AndroidManifest.xml（二进制补丁器产出）
 #
 # ★注入路线铁律（本作写死）：**不改 application@name、不改 appComponentFactory**
 #   官方 <application name="com.hdwj.afk.MainApplication"
@@ -89,12 +88,6 @@ if [[ -n "${NIXIANG_JAVA17:-}" ]]; then
   export PATH="${NIXIANG_JAVA17}/bin:${PATH}"
 fi
 
-# starlight.crt（任一模板目录即可，内容同源）
-CRT_SRC=""
-for d in "${STARRY_SRC}"/templates/*/; do
-  if [[ -f "${d}starlight.crt" ]]; then CRT_SRC="${d}starlight.crt"; break; fi
-done
-
 die() { echo "ERROR: $*" >&2; exit 1; }
 
 [[ -f "${ORIG_APK}" ]] || die "missing ${ORIG_APK}"
@@ -102,7 +95,6 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 [[ -f "${SO_SRC}" ]]   || die "missing ${SO_SRC}"
 [[ -f "${CXX_SRC}" ]]  || die "missing ${CXX_SRC} (rebuild via 04_scripts/冒险与征途/mxyzt_build_so.sh)"
 [[ -f "${MF_SRC}" ]]   || die "missing ${MF_SRC} (patched binary manifest)"
-[[ -n "${CRT_SRC}" ]]  || die "missing assets/certs/starlight.crt source under ${STARRY_SRC}/templates/*/"
 [[ -x "${ZIPALIGN}" ]] || die "missing zipalign: ${ZIPALIGN}"
 # Win 下 apksigner 是 apksigner.bat，MSYS 对 .bat 的 [ -x ] 恒为假 ⇒ 用 [ -f ] 判定
 [[ -x "${APKSIGNER}" || -f "${APKSIGNER}" ]] || die "missing apksigner: ${APKSIGNER}"
@@ -163,16 +155,15 @@ LC_ALL=C grep -aq 'libil2cpp.so' "${SO_SRC}" || die "so 缺少 libil2cpp.so 等�
 echo "[check] 底包 ${osize} B / so ${ssize} B / 清单 ${msize} B / dex 指纹 ok / so 现算（见上） / 四条菜单串 ok"
 
 echo "[2/7] merge (python zipfile, 官方非注入条目字节保真)"
-"${PY}" - "${ORIG_APK}" "${WORK}/merged.apk" "${MF_SRC}" "${DEX_SRC}" "${SO_SRC}" "${CXX_SRC}" "${CRT_SRC}" <<'PYEOF'
+"${PY}" - "${ORIG_APK}" "${WORK}/merged.apk" "${MF_SRC}" "${DEX_SRC}" "${SO_SRC}" "${CXX_SRC}" <<'PYEOF'
 import sys, zipfile, os
 
-orig, out, mf, dex, so, cxx, crt = sys.argv[1:8]
+orig, out, mf, dex, so, cxx = sys.argv[1:7]
 REPL = {
     'AndroidManifest.xml': mf,
     'classes4.dex': dex,
     'lib/arm64-v8a/libstarry_magic.so': so,
     'lib/arm64-v8a/libc++_shared.so': cxx,
-    'assets/certs/starlight.crt': crt,
 }
 
 def is_sig(name):
@@ -196,7 +187,7 @@ print("[merge] manifest ok: app=%s factory=CoreComponentFactory + provider + ser
 zin = zipfile.ZipFile(orig, 'r')
 names = zin.namelist()
 for k in REPL:
-    if k not in names and k.startswith('lib/') is False and k != 'classes4.dex' and k != 'assets/certs/starlight.crt':
+    if k not in names and k.startswith('lib/') is False and k != 'classes4.dex':
         sys.exit('unexpected replace key %s' % k)
 n_sig = 0
 copied = []

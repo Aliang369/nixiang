@@ -479,19 +479,6 @@ class LayeredActivityTest(unittest.TestCase):
         self.assertEqual(data["today_active_devices"], 0, "无认证证据的合法形态行不得计活跃")
         self.assertEqual(data["all_active_devices"], 0)
 
-    def test_portal_hot7d_uses_authenticated_activity(self):
-        from app.routers.portal import portal_games
-
-        now = utcnow()
-        self.db.add(
-            OnlinePresence(game_id=self.gid_card, device_id=DEV32, last_seen_at=now, created_at=now)
-        )
-        self.db.commit()
-        rows = portal_games(db=self.db)["data"]
-        mine = [r for r in rows if r["game_id"] == self.gid_card]
-        self.assertTrue(mine)
-        self.assertEqual(mine[0]["hot7d"], 0)
-
 class ClientIpTrustTest(unittest.TestCase):
     def setUp(self):
         self._orig = os.environ.get("TRUSTED_PROXY_IPS")

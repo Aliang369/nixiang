@@ -8,7 +8,6 @@
 #
 # 底包（只读）：07_patched/无限升级_断网版/无限升级_12.10701_断网版_去卡密.apk（md5 18de96…）
 # 方案：外科 zip 追加 —— classes4.dex（底包已占 classes/2/3）+ libstarry_magic.so(DIAG)
-#       + libc++_shared.so + assets/certs/starlight.crt + 二进制 AXML 补丁后的 AndroidManifest.xml
 #       官方 classes.dex/classes2/classes3/resources.arsc/libil2cpp.so 逐字节透传（脚本内有断言）
 # 禁止：apktool b 整包重建（10_docs/无限升级/硬约束.md A#10）
 #
@@ -39,7 +38,6 @@ die(){ printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 [[ -f "${PROBE_SO}" ]] || die "missing DIAG so: ${PROBE_SO}"
 [[ -f "${TPL_DIR}/classes2.dex" ]] || die "missing menu template dex"
 [[ -f "${TPL_DIR}/libc++_shared.so" ]] || die "missing libc++_shared.so"
-[[ -f "${TPL_DIR}/starlight.crt" ]] || die "missing starlight.crt"
 [[ -f "${KS}" ]] || die "missing keystore"
 
 BT=""
@@ -65,7 +63,6 @@ if grep -qx "${STARRY_DEX}" "${WORK}/base_list.txt"; then die "底包已存在 $
 cp -f "${WORK}/AndroidManifest.patched.xml" "${WORK}/stage/AndroidManifest.xml"
 cp -f "${PROBE_SO}"                         "${WORK}/stage/lib/arm64-v8a/libstarry_magic.so"
 cp -f "${TPL_DIR}/libc++_shared.so"         "${WORK}/stage/lib/arm64-v8a/libc++_shared.so"
-cp -f "${TPL_DIR}/starlight.crt"            "${WORK}/stage/assets/certs/starlight.crt"
 cp -f "${TPL_DIR}/classes2.dex"             "${WORK}/stage/${STARRY_DEX}"
 
 LC_ALL=C grep -aq 'com/starry/magic/StarryInitProvider' "${WORK}/stage/${STARRY_DEX}" || die "菜单 dex 缺 StarryInitProvider"
@@ -79,7 +76,6 @@ zip -d "${UNSIGNED}" 'META-INF/*' >/dev/null 2>&1 || true
     AndroidManifest.xml \
     lib/arm64-v8a/libstarry_magic.so \
     lib/arm64-v8a/libc++_shared.so \
-    assets/certs/starlight.crt \
     "${STARRY_DEX}" ) >/dev/null
 
 log "[4/6] 断言（官方文件逐字节 + manifest 形态 + dex/so 落位）"

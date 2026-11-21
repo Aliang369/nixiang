@@ -6,7 +6,7 @@
 #    ① javac 编 sigreplace/java 下的 SigReplace.java（含 android/* 桩类）
 #    ② d8 → dex → baksmali，只取 com/starry/magic/sign/SigReplace*.smali（桩类丢弃）
 #    ③ 并入模板 smali 树，在 StarryInitProvider.onCreate 最前面插 install()（幂等）
-#    ④ smali assemble → <tpl-out>/classes2.dex，并带 build_info.txt / libc++_shared.so / starlight.crt
+#    ④ smali assemble → <tpl-out>/classes2.dex，并带 build_info.txt / libc++_shared.so
 #
 #  为什么：2026-10-28 SignSpoof 整体删除后 TapSDK 验签改走「运行时签名替换」；
 #  菜单 dex 由仓库模板直接拷进包（不重编），所以插桩只能在模板层做一次。
@@ -97,7 +97,6 @@ mkdir -p "$TPL_OUT"
 "$SMALI" assemble -o "$TPL_OUT/$DEX_NAME" "$WORK/smali"
 cp -f "$TPL_IN/build_info.txt" "$TPL_OUT/" 2>/dev/null || true
 cp -f "$TPL_IN/libc++_shared.so" "$TPL_OUT/" 2>/dev/null || true
-cp -f "$TPL_IN/starlight.crt" "$TPL_OUT/" 2>/dev/null || true
 
 LC_ALL=C grep -aq 'SigReplace' "$TPL_OUT/$DEX_NAME" || { echo "ERROR: 产物缺 SigReplace" >&2; exit 1; }
 LC_ALL=C grep -aq 'nativeSetStaticField' "$TPL_OUT/$DEX_NAME" || { echo "ERROR: 产物缺 nativeSetStaticField" >&2; exit 1; }

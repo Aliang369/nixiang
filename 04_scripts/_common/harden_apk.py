@@ -484,7 +484,7 @@ def c9(rep, cfg):
         return default
 
     game = _secret("SG_GAME_ID", cfg["game_id"])
-    base = _secret("SG_API_BASE", "https://47.100.216.101:8443")
+    base = _secret("SG_API_BASE", "https://auth.xgmfyx.cn")
     key = _secret("SG_BUILD_KEY", "")
 
     if not (base and key):
@@ -495,10 +495,9 @@ def c9(rep, cfg):
 
     url = "%s/v1/build/payload-status?game_id=%s&sha=%s" % (base.rstrip("/"), game, sha)
     ctx = None
-    cert = os.path.join(ROOT, "mod菜单", "starry-mod-menu", "app", "src", "main", "assets",
-                        "certs", "starlight.crt")
     try:
-        ctx = ssl.create_default_context(cafile=cert) if os.path.exists(cert) else ssl._create_unverified_context()
+        # 2026-11-21：自签证书（starlight.crt）已下线，服务器改官方证书 ⇒ 走系统 CA，不再指定 cafile。
+        ctx = ssl.create_default_context()
         req = urllib.request.Request(url, headers={"X-Build-Key": key})
         with urllib.request.urlopen(req, timeout=8, context=ctx) as r:
             import json as _json
@@ -622,7 +621,7 @@ def main():
 # ---------------- P2-1：服务端签名的 build 清单 ----------------
 
 MANIFEST_DIR = os.path.join(ROOT, "10_docs", "勇士之心", "build_manifests")
-COVER = ["classes4.dex", "assets/main.js", "assets/certs/starlight.crt",
+COVER = ["classes4.dex", "assets/main.js",
          "lib/arm64-v8a/libstarry_magic.so", "lib/x86/libstarry_magic.so",
          "lib/armeabi-v7a/libstarry_magic.so"]
 

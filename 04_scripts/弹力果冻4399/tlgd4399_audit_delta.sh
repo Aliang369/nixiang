@@ -61,7 +61,7 @@ if bad_gone:
 # 2) 新增的条目
 added = sorted(set(no) - set(nb))
 ALLOW_ADDED = ({"classes2.dex", "lib/arm64-v8a/libstarry_magic.so",
-                "lib/arm64-v8a/libc++_shared.so", "assets/certs/starlight.crt"}
+                "lib/arm64-v8a/libc++_shared.so"}
                if OFFICIAL else set())
 bad_added = [a for a in added if not a.startswith("META-INF/") and a not in ALLOW_ADDED]
 print(f"[added] {len(added)} 条：{added}")

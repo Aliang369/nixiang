@@ -20,7 +20,6 @@
 #   - classes5.dex：新增（星光 smali：StarryInitProvider / MenuService / TapLoginForceWeb / OTA）
 #   - classes6.dex：新增（B 轨 MT KillerApplication193 + 空壳 SgKillerApp，证书＝官方 DER base64）
 #   - lib/arm64-v8a/libstarry_magic.so：新增；官方包无 libc++_shared.so ⇒ 自带一份
-#   - assets/certs/starlight.crt：新增
 #   - 保留官方 META-INF/services/**，剔除签名件（*.SF/*.RSA/MANIFEST.MF）
 #
 # 产物：08_output/霓虹深渊2/霓虹深渊2_2026.10.30_surgical-unsigned.apk
@@ -447,12 +446,6 @@ fi
 if [[ -d "$WORK/assets_certs_from_apk" ]]; then
   mkdir -p "$WORK/assets/certs"; cp -R "$WORK/assets_certs_from_apk/." "$WORK/assets/certs/"
 fi
-if [[ ! -f "$WORK/assets/certs/starlight.crt" ]]; then
-  SRC_CRT="$STARRY_SRC/app/src/main/assets/certs/starlight.crt"
-  [[ -f "$SRC_CRT" ]] || { echo "ERROR: 缺 assets/certs/starlight.crt（${SRC_CRT} ）" >&2; exit 1; }
-  mkdir -p "$WORK/assets/certs"; cp -f "$SRC_CRT" "$WORK/assets/certs/starlight.crt"
-  echo "  starlight.crt 取自源码树"
-fi
 
 python3 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$STARRY_DEX" "$KILLER_DEX" <<'PY'
 import sys, zipfile, hashlib
@@ -538,7 +531,7 @@ for name in ("META-INF/services/java.security.Provider",
     if name in zin2.namelist():
         assert name in zout2.namelist(), "lost %s" % name
 for name in (starry_dex, killer_dex, "classes3.dex", "lib/arm64-v8a/libstarry_magic.so",
-             "lib/arm64-v8a/libc++_shared.so", "assets/certs/starlight.crt"):
+             "lib/arm64-v8a/libc++_shared.so"):
     assert name in zout2.namelist(), "missing %s" % name
 assert zout2.read("classes3.dex") == c3
 assert zout2.read(starry_dex) == c5

@@ -160,23 +160,6 @@ if "SG_AUTH_V2_ONLY" not in s:
 else:
     print("[103] mk 已含 SG_AUTH_V2_ONLY")
 
-# 构建戳保留（装机闸门「查8」）：modern 入口零引用 kStarryBuildStamp，
-# 不加 --undefined 会被 --gc-sections 回收 ⇒ so 里没有 STARRYSTAMP1:EPOCH=
-# ⇒ 覆盖安装后不清玩家旧 OTA so（2026-10-27 勇士之心实测缺戳，本补丁修）
-if "kStarryBuildStamp" not in s:
-    s2 = re.sub(r"^(LOCAL_LDFLAGS\s*:=.*)$",
-                r"\1 -Wl,--undefined=kStarryBuildStamp", s, count=1, flags=re.M)
-    if s2 != s:
-        s = s2
-        print("[103] mk += -Wl,--undefined=kStarryBuildStamp（OTA 守卫构建戳）")
-    else:
-        # 兜底：没有 LOCAL_LDFLAGS:= 行就自己加一行
-        s = re.sub(r"^(LOCAL_LDLIBS\s*:=.*)$",
-                   r"\1\nLOCAL_LDFLAGS += -Wl,--undefined=kStarryBuildStamp", s, count=1, flags=re.M)
-        print("[103] mk 新增 LOCAL_LDFLAGS 行（OTA 守卫构建戳）")
-else:
-    print("[103] mk 已含构建戳链接标志")
-
 io.open(p, "w", encoding="utf-8", newline="\n").write(s)
 PY
   # 断言：编进包的必须是委托版（不是基线的复制版），否则加固等于没做
@@ -204,30 +187,6 @@ io.open(p, "w", encoding="utf-8", newline="\n").write(s)
 print("[103] APP_ABI := " + abis)
 PY
 fi
-
-# ---------- 2.44 构建戳：确保暂存 Application.mk 会注入 STARRY_BUILD_EPOCH ----------
-# 1.0.3 基线 Application.mk 没有 APP_CPPFLAGS 那行 ⇒ STARRY_BUILD_EPOCH 永远走兜底值
-# 1790184000 ⇒ 装机闸门「查8 构建戳」FAIL（2026-10-27 实测：戳印出来是兜底值）。
-python3 - "$JNIW/Application.mk" <<'PY'
-import io, sys
-p = sys.argv[1]
-s = io.open(p, encoding="utf-8").read()
-if "STARRY_BUILD_EPOCH" in s and "APP_CPPFLAGS" in s:
-    print("[103] Application.mk 已注入 STARRY_BUILD_EPOCH")
-else:
-    add = []
-    if "STARRY_BUILD_EPOCH ?=" not in s:
-        add.append('STARRY_BUILD_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null | tr -cd "0-9")')
-        add.append('ifeq ($(strip $(STARRY_BUILD_EPOCH)),)')
-        add.append('STARRY_BUILD_EPOCH := 1790184000')
-        add.append('endif')
-    if "-DSTARRY_BUILD_EPOCH" not in s:
-        add.append('APP_CPPFLAGS += -DSTARRY_BUILD_EPOCH=$(STARRY_BUILD_EPOCH)')
-    s = s.rstrip("\n") + "\n" + "\n".join(add) + "\n"
-    io.open(p, "w", encoding="utf-8", newline="\n").write(s)
-    print("[103] Application.mk += APP_CPPFLAGS -DSTARRY_BUILD_EPOCH（构建戳必需）")
-PY
-
 # ---------- 2.45 去掉误链的 arm-only 预编译库（2026-10-26 多 ABI 必踩）----------
 # 1.0.3 基线 Android_ysxz.mk 里 `LOCAL_STATIC_LIBRARIES := Dobby wxsj_dll`，而
 # Games/WxsjPatchedDll.a 是别的游戏的 arm 专用产物；编 x86 时链接器直接报

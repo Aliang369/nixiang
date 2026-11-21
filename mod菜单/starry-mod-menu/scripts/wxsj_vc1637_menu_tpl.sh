@@ -9,7 +9,7 @@
 #   触发 StarryApp 类初始化 → 解析父类失败 NoClassDefFoundError → 注入链全灭。
 #   故本脚本把 StarryApp.super 还原为 Landroid/app/Application;，其余类逐字节沿用。
 #
-# 产物：templates/wxsj_menu_vc1637/classes4.dex（+ libc++_shared.so + starlight.crt）
+# 产物：templates/wxsj_menu_vc1637/classes4.dex（+ libc++_shared.so）
 # 断言：类集合与 12.x 模板【完全一致】（只改父类引用，不增删类）
 set -euo pipefail
 
@@ -87,7 +87,6 @@ echo "  类集合一致 ✓（$(wc -l < "$WORK/new_cls.txt" | tr -d ' ') 类）"
 
 echo "[5/5] 复制 so/证书配套文件 + build_info（继承父模板身份）"
 cp -f "$SRC_TPL/libc++_shared.so" "$OUT/libc++_shared.so"
-cp -f "$SRC_TPL/starlight.crt" "$OUT/starlight.crt"
 if LC_ALL=C grep -aq 'starry_selftest' "$OUT/classes4.dex"; then
   echo "ERROR: classes4.dex 带调试脚手架 starry_selftest（父模板是 debug 包编的？）"; exit 1
 fi

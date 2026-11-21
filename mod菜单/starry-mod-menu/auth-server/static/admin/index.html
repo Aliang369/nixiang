@@ -71,7 +71,6 @@
         <button data-page="templates">菜单模板</button>
         <button data-page="cards">卡密管理</button>
         <button data-page="announcements">远程公告</button>
-        <button data-page="ota">游戏补丁</button>
         <button data-page="toasts">开屏Toast</button>
         <button data-page="events">设备日志</button>
         <button data-page="audit">操作日志</button>
@@ -341,33 +340,6 @@
         </div>
       </section>
 
-      <!-- ota / 游戏补丁 -->
-      <section id="page-ota" class="hidden">
-        <div class="panel">
-          <div class="toolbar">
-            <div class="toolbar-title">
-              <h3>游戏补丁</h3>
-              <p class="toolbar-sub">每游戏一份 latest；JSON 与 so 可共存；玩家设置里手动更新后须完全重启</p>
-            </div>
-            <button class="btn ghost" onclick="openOtaPublishModal()">添加补丁</button>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>游戏</th>
-                  <th>版本</th>
-                  <th>JSON</th>
-                  <th>so</th>
-                  <th>说明</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody id="ota-body"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
       <!-- games -->
       <section id="page-games" class="hidden">
@@ -401,7 +373,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>game_id</th><th>名称</th><th>渠道</th><th>菜单模板</th><th>卡密</th><th>前端</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>game_id</th><th>名称</th><th>渠道</th><th>菜单模板</th><th>卡密</th><th>状态</th><th>操作</th></tr></thead>
               <tbody id="games-body"></tbody>
             </table>
           </div>
@@ -521,12 +493,12 @@
   <script src="/admin/js/core.js?v=5"></script>
   <script src="/admin/js/audit.js?v=2"></script>
   <script src="/admin/js/events.js?v=5"></script>
-  <script src="/admin/js/features.js?v=1"></script>
+  <script src="/admin/js/features.js?v=2"></script>
   <script src="/admin/js/dashboard.js?v=9"></script>
-  <script src="/admin/js/games.js?v=6"></script>
+  <script src="/admin/js/games.js?v=7"></script>
   <script src="/admin/js/cards.js?v=3"></script>
   <script src="/admin/js/announcements.js?v=2"></script>
-  <script src="/admin/js/toasts_ota.js?v=1"></script>
+  <script src="/admin/js/toasts.js?v=1"></script>
   <script src="/admin/js/settings.js?v=2"></script>
   <script>
     /* -------- modal -------- */
@@ -800,7 +772,6 @@
       if (page === 'dashboard') loadDashboard();
       if (page === 'cards') loadCards();
       if (page === 'announcements') loadAnnouncements();
-      if (page === 'ota') loadOtaPage();
       if (page === 'toasts') loadToasts();
       if (page === 'games') loadGamesTable();
       if (page === 'templates') loadTemplatesTable();
@@ -823,7 +794,6 @@
       await Promise.all([loadGamesCatalog(), loadMenuTemplates()]);
       await Promise.all([loadDashboard(), loadCards(), loadAnnouncements(), loadToasts()]);
       if (currentPage === 'games') await loadGamesTable();
-      if (currentPage === 'ota') await loadOtaPage();
       if (currentPage === 'templates') renderTemplatesTable();
       if (document.getElementById('feat-body') && selectedFeatGameId) {
         await loadFeaturesForGame(selectedFeatGameId);
@@ -921,10 +891,10 @@
 
     function openTemplateJsonModal(preset) {
       const sample = preset || `{
-  "template_id": "milthm",
-  "name": "milthm",
-  "package": "game.taptap.morizero.milthm",
-  "source": "Games/MilthmMod.cpp AddJudge+ToStatistic",
+  "template_id": "starry_self",
+  "name": "星光自测",
+  "package": null,
+  "source": "Main.cpp STARRY_GAME_SELF",
   "features": [
     {"feat_num": 1, "name": "自动跳舞"}
   ]
@@ -1037,7 +1007,7 @@
         <div class="form-grid">
           <div class="full"><label>模板 id</label>
             <input id="m-tpl-id" value="${escapeHtml(tpl?.id || '')}" ${isEdit ? 'disabled' : ''}
-              placeholder="如 blzz，建议与 game_id 同名" /></div>
+              placeholder="如 starry_self，建议与 game_id 同名" /></div>
           <div class="full"><label>名称</label>
             <input id="m-tpl-name" value="${escapeHtml(tpl?.name || '')}" placeholder="如 堡垒之战" /></div>
           <div class="full"><label>包名（可选）</label>

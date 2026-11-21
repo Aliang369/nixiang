@@ -24,7 +24,6 @@
 # ---- ① 本项目 Manifest 组件 ----
 -keep class com.starry.magic.app.MainActivity { *; }
 -keep class com.starry.magic.menu.MenuService { *; }
--keep class com.starry.magic.menu.net.CdnVpnService { *; }
 -keep class com.starry.magic.StarryInitProvider { *; }
 -keep class com.starry.magic.boot.StarryInitProvider { *; }
 -keep class com.starry.magic.StarryApp { *; }

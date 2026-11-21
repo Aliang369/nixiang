@@ -105,7 +105,7 @@
       let menu_template = g?.menu_template || null;
       if (!menu_template) {
         const pick = menuTemplates.map(t => t.id).join(' / ');
-        const input = prompt('该游戏未绑定模板，输入模板 id：\n' + pick, menuTemplates[0]?.id || 'zhmr');
+        const input = prompt('该游戏未绑定模板，输入模板 id：\n' + pick, menuTemplates[0]?.id || 'starry_self');
         if (!input) return;
         menu_template = input.trim();
       }

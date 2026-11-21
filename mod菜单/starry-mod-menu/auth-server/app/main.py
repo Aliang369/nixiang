@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from sqlalchemy import text
@@ -12,13 +12,20 @@ from sqlalchemy import text
 from .config import get_settings
 from .database import Base, SessionLocal, engine
 from .models import AdminUser, CardDevice, FeatureFlag, Game
-from .routers import admin, client, ota, portal
+from .routers import admin, client
 from .security import hash_password
 from .services.feature_sync import sync_game_features
 from .services.menu_templates import resolve_template_id, seed_builtin_templates
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version="1.0.0", docs_url="/docs", redoc_url="/redoc")
+app = FastAPI(
+    title=settings.app_name,
+    version="1.0.0",
+    # 生产默认不暴露接口清单；本地调试可在 .env 设 ENABLE_DOCS=true
+    docs_url="/docs" if settings.enable_docs else None,
+    redoc_url="/redoc" if settings.enable_docs else None,
+    openapi_url="/openapi.json" if settings.enable_docs else None,
+)
 
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
 app.add_middleware(
@@ -151,10 +158,6 @@ def ensure_schema() -> None:
                 conn.execute(
                     text("ALTER TABLE games ADD COLUMN updated_at TIMESTAMP")
                 )
-            if "portal_visible" not in game_cols:
-                conn.execute(
-                    text("ALTER TABLE games ADD COLUMN portal_visible BOOLEAN DEFAULT 1")
-                )
             if "channel" not in game_cols:
                 conn.execute(text("ALTER TABLE games ADD COLUMN channel VARCHAR(64)"))
             card_cols = {
@@ -197,7 +200,10 @@ def ensure_schema() -> None:
                 conn.execute(
                     text("ALTER TABLE toast_messages ADD COLUMN sort_order INTEGER DEFAULT 0")
                 )
-        else:
+        elif dialect.startswith("postgres"):
+            # 注意：以下均为 PostgreSQL 专有语法（ADD COLUMN IF NOT EXISTS /
+            # ALTER COLUMN ... TYPE）。MySQL 不支持，会在启动时抛错。
+            # 全新 MySQL 库的表结构完全由 create_all 建立，无需补列，故仅限 PG。
             conn.execute(
                 text("ALTER TABLE games ADD COLUMN IF NOT EXISTS menu_template VARCHAR(64)")
             )
@@ -215,12 +221,6 @@ def ensure_schema() -> None:
             )
             conn.execute(
                 text("ALTER TABLE games ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ")
-            )
-            conn.execute(
-                text(
-                    "ALTER TABLE games ADD COLUMN IF NOT EXISTS "
-                    "portal_visible BOOLEAN DEFAULT TRUE"
-                )
             )
             conn.execute(
                 text("ALTER TABLE games ADD COLUMN IF NOT EXISTS channel VARCHAR(64)")
@@ -396,17 +396,10 @@ def on_startup():
 
 app.include_router(client.router)
 app.include_router(admin.router)
-app.include_router(portal.router)
-app.include_router(ota.client_router)
-app.include_router(ota.admin_router)
 
 static_dir = Path(__file__).resolve().parent.parent / "static" / "admin"
 if static_dir.exists():
     app.mount("/admin", StaticFiles(directory=str(static_dir), html=True), name="admin")
-
-portal_dir = Path(__file__).resolve().parent.parent / "static" / "portal"
-if portal_dir.exists():
-    app.mount("/portal", StaticFiles(directory=str(portal_dir), html=True), name="portal")
 
 
 @app.get("/health")
@@ -416,4 +409,5 @@ def health():
 
 @app.get("/")
 def root():
-    return RedirectResponse(url="/admin/")
+    # 故意不跳转后台：根路径一律 404，避免直接暴露管理入口
+    raise HTTPException(status_code=404, detail="Not Found")

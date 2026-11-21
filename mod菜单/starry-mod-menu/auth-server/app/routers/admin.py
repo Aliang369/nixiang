@@ -125,7 +125,6 @@ def _game_dict(g: Game, feature_count: int | None = None) -> dict:
         "name": g.name,
         "enabled": g.enabled,
         "card_auth_enabled": bool(getattr(g, "card_auth_enabled", True)),
-        "portal_visible": bool(getattr(g, "portal_visible", True)),
         "menu_template": g.menu_template,
         "download_url": getattr(g, "download_url", None),
         "channel": getattr(g, "channel", None),
@@ -631,7 +630,6 @@ def create_game(
         name=body.name,
         enabled=body.enabled,
         card_auth_enabled=body.card_auth_enabled,
-        portal_visible=body.portal_visible,
         menu_template=tid,
         download_url=body.download_url or None,
         channel=(body.channel or "").strip() or None,
@@ -688,8 +686,6 @@ def update_game(
         g.enabled = body.enabled
     if body.card_auth_enabled is not None:
         g.card_auth_enabled = body.card_auth_enabled
-    if body.portal_visible is not None:
-        g.portal_visible = body.portal_visible
     if body.menu_template is not None:
         g.menu_template = body.menu_template or None
     if body.download_url is not None:

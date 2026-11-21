@@ -13,8 +13,63 @@ _lock = Lock()
 # ip -> list[fail_timestamps]
 _login_fails: dict[str, list[float]] = defaultdict(list)
 _card_login_fails: dict[str, list[float]] = defaultdict(list)
-# OTA 请求计数：key -> list[timestamps]
-_ota_hits: dict[str, list[float]] = defaultdict(list)
+# 限流请求计数：key -> list[timestamps]（bootstrap 限流共用；原 OTA 限流已删）
+_rate_hits: dict[str, list[float]] = defaultdict(list)
+
+
+def _trusted_proxy_nets():
+    raw = (get_settings().trusted_proxy_ips or "").strip()
+    if not raw:
+        return []
+    nets = []
+    for item in raw.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        try:
+            nets.append(ipaddress.ip_network(item, strict=False))
+        except ValueError:
+            continue
+    return nets
+
+
+def _parse_ip(value: str | None) -> str | None:
+    """只接受可解析的 IP 字面量，返回规范化短串（<=45）；否则 None。"""
+    if not value:
+        return None
+    raw = value.strip()
+    if len(raw) > 45 or any(ch < " " for ch in raw):
+        return None
+    try:
+        return str(ipaddress.ip_address(raw))
+    except ValueError:
+        return None
+
+
+def resolve_client_ip(request: Request) -> tuple[str, str]:
+    """返回 (ip, source)。source: peer | x-real-ip | xff。
+
+    安全口径：只有 socket peer 命中 trusted_proxy_ips（精确 IP 或 CIDR）时才采信转发头；
+    否则一律以 peer 为准，客户端自带 X-Forwarded-For 无法伪造。转发值只取单个 IP 字面量
+    并做长度/格式校验，不保存任意长原文。
+    """
+    peer = "unknown"
+    if request.client and request.client.host:
+        peer = _parse_ip(request.client.host) or "unknown"
+    nets = _trusted_proxy_nets()
+    if not nets:
+        return peer, "peer"
+    try:
+        peer_ip = ipaddress.ip_address(peer)
+    except ValueError:
+        return peer, "peer"
+    if not any(peer_ip in net for net in nets):
+        return peer, "peer"
+    # 只认 nginx 覆盖写的 X-Real-IP；X-Forwarded-For 客户端可自传最左值，一律不采信。
+    xri = _parse_ip(request.headers.get("x-real-ip"))
+    if xri:
+        return xri, "x-real-ip"
+    return peer, "peer"
 
 
 def _trusted_proxy_nets():
@@ -144,27 +199,6 @@ def clear_card_login_failures(request: Request) -> None:
         _card_login_fails.pop(ip, None)
 
 
-def _assert_ota_rate(request: Request, kind: str, max_n: int, window: int) -> None:
-    """kind: manifest | json | so"""
-    max_n = max(int(max_n), 1)
-    window = max(int(window), 10)
-    ip = client_ip(request)
-    key = f"{kind}:{ip}"
-    now = time.time()
-    with _lock:
-        hits = [t for t in _ota_hits[key] if now - t < window]
-        if len(hits) >= max_n:
-            if window >= 3600:
-                tip = f"{window // 3600} 小时"
-            elif window >= 60:
-                tip = f"{window // 60} 分钟"
-            else:
-                tip = f"{window} 秒"
-            raise HTTPException(429, f"游戏补丁请求过于频繁，请 {tip} 后再试")
-        hits.append(now)
-        _ota_hits[key] = hits
-
-
 def assert_bootstrap_rate_allowed(request: Request) -> None:
     """公开 bootstrap 的可选限流（默认关闭：bootstrap_rate_max=0）。
 
@@ -179,26 +213,9 @@ def assert_bootstrap_rate_allowed(request: Request) -> None:
     key = f"bootstrap:{ip}"
     now = time.time()
     with _lock:
-        hits = [t for t in _ota_hits[key] if now - t < window]
+        hits = [t for t in _rate_hits[key] if now - t < window]
         if len(hits) >= max_n:
-            _ota_hits[key] = hits
+            _rate_hits[key] = hits
             raise HTTPException(429, "启动配置请求过于频繁，请稍后再试")
         hits.append(now)
-        _ota_hits[key] = hits
-
-
-def assert_ota_manifest_allowed(request: Request) -> None:
-    s = get_settings()
-    _assert_ota_rate(
-        request, "manifest", s.ota_manifest_max, s.ota_manifest_window_seconds
-    )
-
-
-def assert_ota_json_allowed(request: Request) -> None:
-    s = get_settings()
-    _assert_ota_rate(request, "json", s.ota_json_max, s.ota_json_window_seconds)
-
-
-def assert_ota_so_allowed(request: Request) -> None:
-    s = get_settings()
-    _assert_ota_rate(request, "so", s.ota_so_max, s.ota_so_window_seconds)
+        _rate_hits[key] = hits

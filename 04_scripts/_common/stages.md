@@ -82,7 +82,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 查5 | 门禁串字面量存在性（**禁用 smali `#` 注释当门禁串**，汇编器会丢弃） | 2026-10-02 | — |
 | 查6 | 轮次根因关：同功能连续 ≥2 轮无效必须留根因定案 | 2026-10-10 | `--allow-rounds` / `STAGE_NEXT_FORCE=1` |
 | 查7 | 包内 `AndroidManifest.xml` 二进制形态（真 AXML 头 `03000800`） | 2026-10-15 | — |
-| 查8 | 包内 so 构建戳 `STARRYSTAMP1:EPOCH=`（缺戳 ⇒ 覆盖安装永不清 starry_ota 旧 so） | 2026-10-16 | `STAMP_CHECK=0` |
+| 查8 | ~~包内 so 构建戳 `STARRYSTAMP1:EPOCH=`~~ **已于 2026-11-21 退役**（OTA 下线 → 戳无读者）；门禁保留编号、恒 SKIP | 2026-10-16 | 无 |
 | 查9 | so / metadata 配套（IL2CPP 直装包：只换一边 = 混搭 ⇒ FAIL） | 2026-10-19 | `SO_META_CHECK=0` |
 | 查10 | 菜单 dex 新鲜度（dex 内 `starry-menu:<commit>` 必须等于当前 Java 源码 HEAD） | 2026-10-26 | 见下方「菜单 dex 新鲜度门禁」 |
 | ~~查11~~ | ~~**加固凭证**：`09_test/<游戏>/harden/<apk_md5>.stamp` 必须与当前 APK md5 对应~~ | 2026-10-27 起 · **已下线（用户裁决）** | 不再判定；`harden_gate.sh`/`harden_apk.py` 默认跳过（需真跑给 `HARDEN_GATE_ENABLED=1`） |

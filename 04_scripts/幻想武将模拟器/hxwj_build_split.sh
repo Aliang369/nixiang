@@ -95,7 +95,6 @@ echo "[1/4] 从外科包取星光载荷"
 unzip -p "$PAYLOAD" classes2.dex > "$WORK/p/classes.dex"
 unzip -p "$PAYLOAD" lib/arm64-v8a/libstarry_magic.so > "$WORK/p/lib/arm64-v8a/libstarry_magic.so"
 unzip -p "$PAYLOAD" lib/arm64-v8a/libc++_shared.so   > "$WORK/p/lib/arm64-v8a/libc++_shared.so"
-unzip -p "$PAYLOAD" assets/certs/starlight.crt       > "$WORK/p/assets/certs/starlight.crt"
 
 for t in "com/starry/magic/StarryInitProvider" "com/starry/magic/menu/MenuService" \
          "com/starry/magic/sign/StarryAppComponentFactory" "com/starry/magic/sign/TapLoginForceWeb"; do
@@ -143,7 +142,7 @@ XML
 "$AAPT2" link -o "$WORK/split-unsigned.apk" --manifest "$WORK/AndroidManifest.xml" \
   -I "$AJ" --min-sdk-version 22 --target-sdk-version 35
 (cd "$WORK/p" && zip -X -q "$WORK/split-unsigned.apk" \
-  classes.dex lib/arm64-v8a/libstarry_magic.so lib/arm64-v8a/libc++_shared.so assets/certs/starlight.crt)
+  classes.dex lib/arm64-v8a/libstarry_magic.so lib/arm64-v8a/libc++_shared.so)
 "$BT/zipalign" -f -p 4 "$WORK/split-unsigned.apk" "$WORK/split-aligned.apk"
 rm -f "$SPLIT_OUT" "$SPLIT_OUT.idsig"
 "$BT/apksigner" sign --ks "$KS" --ks-key-alias "$KS_ALIAS" \

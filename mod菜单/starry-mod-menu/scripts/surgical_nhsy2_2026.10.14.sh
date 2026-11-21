@@ -17,7 +17,6 @@
 #     ⚠️ 本游戏已有 classes.dex..classes4.dex，故星光 dex 落位 **classes5.dex**。
 #   - lib/arm64-v8a/libstarry_magic.so：新增（本游戏已自带 libc++_shared.so 且导出符号全覆盖
 #     本 so 的全部 _Z 未定义符号 ⇒ **不替换游戏 libc++_shared.so**，避免打断 libil2cpp 链接）。
-#   - assets/certs/starlight.crt：新增。
 #   - 保留官方 META-INF/services/**（ServiceLoader 清单），剔除 META-INF/ANDROID-.SF/.RSA/MANIFEST.MF。
 #
 # 功能全在 native（Games/nhsy2Mod.cpp）：
@@ -469,7 +468,7 @@ for name in ("META-INF/services/java.security.Provider",
              "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory"):
     if name in zin2.namelist():
         assert name in zout2.namelist(), f"lost {name}"
-for name in (starry_dex, "classes3.dex", "lib/arm64-v8a/libstarry_magic.so", "assets/certs/starlight.crt"):
+for name in (starry_dex, "classes3.dex", "lib/arm64-v8a/libstarry_magic.so"):
     assert name in zout2.namelist(), f"missing {name}"
 assert not any(n.upper().endswith((".SF", ".RSA", ".DSA", ".EC")) for n in zout2.namelist()), "signature leftovers"
 assert "META-INF/MANIFEST.MF" not in zout2.namelist()

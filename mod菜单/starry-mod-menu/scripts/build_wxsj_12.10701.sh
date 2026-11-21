@@ -152,7 +152,6 @@ echo "  official dex count = $OFFICIAL_DEX_COUNT ($(printf '%s ' $OFFICIAL_DEX_N
 #   新增 GyzwHooks / OtaSoStamp；MagicRes$*Drawable 绘制类全在 ⇒ 无外观回归。
 #   （09-23 那次「重建就变样」的根因是**当时源码本身缺**这些绘制类，现源码已补齐。）
 # 模板目录内 classes2.dex 已含 StarryInitProvider 且 StarryApp.super 已改易盾壳类，故走模板时
-# 跳过 apktool/smali 组装与相关断言；libc++_shared.so / starlight.crt 也取自同一模板。
 # 2026-10-26：默认改指向去日期化的 wxsj_menu_current（旧默认 wxsj_menu_20260926 已停在 09-26，
 # 用它出包 = 出旧菜单：无限升级 vc1637 / 镇邪人 7f94233e 同一根因）。
 MENU_TPL_DIR="${WXSJ_MENU_TPL:-$NIXIANG/mod菜单/starry-mod-menu/templates/wxsj_menu_current}"
@@ -225,12 +224,9 @@ cp -f "$WORK/AndroidManifest.xml" "$WORK/stage/AndroidManifest.xml"
 cp -f "$FINAL_SO" "$WORK/stage/lib/arm64-v8a/libstarry_magic.so"
 if [[ "$MENU_FROM_TPL" == 1 ]]; then
   cp -f "$MENU_TPL_DIR/libc++_shared.so" "$WORK/stage/lib/arm64-v8a/libc++_shared.so"
-  cp -f "$MENU_TPL_DIR/starlight.crt" "$WORK/stage/assets/certs/starlight.crt"
 else
   unzip -p "$STARRY_APK" lib/arm64-v8a/libc++_shared.so > "$WORK/stage/lib/arm64-v8a/libc++_shared.so"
-  unzip -p "$STARRY_APK" assets/certs/starlight.crt > "$WORK/stage/assets/certs/starlight.crt"
 fi
-[[ -s "$WORK/stage/assets/certs/starlight.crt" ]] || { echo "ERROR: starry cert missing"; exit 1; }
 LC_ALL=C grep -aq 'com/starry/magic/StarryInitProvider' "$WORK/stage/$STARRY_DEX" \
   || { echo "ERROR: $STARRY_DEX 内缺 StarryInitProvider"; exit 1; }
 
@@ -238,7 +234,6 @@ LC_ALL=C grep -aq 'com/starry/magic/StarryInitProvider' "$WORK/stage/$STARRY_DEX
   AndroidManifest.xml \
   lib/arm64-v8a/libstarry_magic.so \
   lib/arm64-v8a/libc++_shared.so \
-  assets/certs/starlight.crt \
   "$STARRY_DEX") >/dev/null
 
 echo "[5/7] verify merged structure"

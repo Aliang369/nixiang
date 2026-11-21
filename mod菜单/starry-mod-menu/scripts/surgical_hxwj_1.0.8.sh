@@ -8,7 +8,6 @@
 #   classes2.dex                       星空菜单（com.starry.magic.**，含 SignSpoof/TapLoginForceWeb）
 #   lib/arm64-v8a/libstarry_magic.so   native：FightGwItem 秒杀 + Random.Range 掉落 + ToponVideo 免广告
 #   lib/arm64-v8a/libc++_shared.so     星空 so 依赖（原包无）
-#   assets/certs/starlight.crt         星空证书
 #   AndroidManifest.xml                分支 B（StarryInitProvider + MenuService + FGS 权限）
 #                                      ★不替换官方 Application com.SecShell.SecShell.AW
 #
@@ -137,7 +136,6 @@ if [[ -d "$WORK/starry_dec/assets/certs" ]]; then
   mkdir -p "$WORK/assets/certs"
   cp -R "$WORK/starry_dec/assets/certs/." "$WORK/assets/certs/"
 fi
-[[ -f "$WORK/assets/certs/starlight.crt" ]] || { echo "ERROR: starlight.crt missing" >&2; exit 1; }
 
 # ---------------------------------------------------------------- 3/5
 echo "[3/5] AndroidManifest：分支 B（StarryInitProvider）+ MenuService + FGS 权限"
@@ -313,7 +311,6 @@ for name in kept_meta:
 assert new_dex in out_names
 assert "lib/arm64-v8a/libstarry_magic.so" in out_names
 assert "lib/arm64-v8a/libc++_shared.so" in out_names
-assert "assets/certs/starlight.crt" in out_names
 assert not any(x.upper().endswith(SIG_EXT) for x in out_names)
 assert "META-INF/MANIFEST.MF" not in out_names
 print(f"  merged ok; entries={n_written}; {new_dex}={len(cnew)}; untouched {len(UNTOUCHED)} verified")
@@ -324,7 +321,7 @@ PKG_SO_MD5="$(unzip -p "$UNSIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
 [[ "$PKG_SO_MD5" == "$SO_MD5" ]] || { echo "ERROR: 包内 so md5=$PKG_SO_MD5 != $SO_MD5" >&2; exit 1; }
 unzip -Z1 "$UNSIGNED" > "$WORK/entries.txt"
 for e in "$NEW_DEX" "classes.dex" "lib/arm64-v8a/libstarry_magic.so" \
-         "lib/arm64-v8a/libc++_shared.so" "assets/certs/starlight.crt"; do
+         "lib/arm64-v8a/libc++_shared.so"; do
   grep -q "^$e\$" "$WORK/entries.txt" || { echo "ERROR: $e missing" >&2; exit 1; }
 done
 echo "  包内 so md5 ok；$NEW_DEX 到位"
