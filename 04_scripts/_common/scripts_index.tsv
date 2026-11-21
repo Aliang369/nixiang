@@ -106,7 +106,7 @@ test_delivery_manifest.py	py	2407	Offline tests for delivery manifest generation
 test_harden_reason.py	py	4973	-*- coding: utf-8 -*-	used	5
 test_push_main_rewrite.py	py	6173	Tests for git_push_main.sh's HTTPS-route URL rewrite. Run with python3 -B.	used	2
 test_script_governance.py	py	21983	Real Git fixtures for incremental script lifecycle governance; no devices/builds.	orphan	0
-trash_paths.sh	sh	12729	安全隔离清理：默认只预演；--apply 才把显式路径移动到 macOS Trash 下的隔离目录。	used	97
+trash_paths.sh	sh	14533	安全隔离清理：默认只预演；--apply 才把显式路径移动到 macOS Trash 下的隔离目录。	used	97
 verify_installed_apk.sh	sh	4680	verify_installed_apk.sh — 装机完整性校验（防"装了旧包"假成功）	used	170
 with_timeout.sh	sh	2229	with_timeout.sh — 超时垫片（macOS 无 GNU `timeout`）	used	7
 workspace_health.sh	sh	6483	workspace_health.sh — 工作区一屏体检（月度/收尾时跑一次）	used	4

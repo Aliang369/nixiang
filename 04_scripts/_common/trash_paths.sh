@@ -264,6 +264,27 @@ if [[ "$MODE" != "apply" ]]; then
 fi
 
 mkdir -p "$QUARANTINE"
+
+# ===== 2026-11-21 事故加固（P0）：隔离区必须"可写且可读回"才允许移动 =====
+# 事故经过：在 macOS 上把 03_decompiled/、07_patched/、09_test/、13_scratch/* 整目录
+#   `mv` 到 ~/.Trash/nixiang_*，mv 返回 0、脚本打印 moved，但随后：
+#     · `stat`/`ls`/Finder/Spotlight 全都找不到该隔离目录；
+#     · 仓库体积从 37G 掉到 11G，说明数据确实离开了仓库却没有留在可访问位置；
+#     · 无 Time Machine 本地快照 ⇒ 26G 产物与测试存档不可恢复。
+#   根因：~/.Trash 受 macOS TCC 保护，写入被重定向/静默丢弃时 mv 仍可返回 0，
+#   脚本却把"mv 没报错"当成"文件已安全隔离"，直接进入批量移动。
+# 修法：apply 前先做读写探针（写→读回→删），任何一步不通即拒绝执行；
+#   探针失败时**不允许**降级为继续移动，宁可一条都不动。
+PROBE="$QUARANTINE/.write_probe_$$"
+if ! { printf 'ok\n' > "$PROBE" 2>/dev/null && [[ "$(cat "$PROBE" 2>/dev/null)" == "ok" ]]; }; then
+  echo "[trash_paths] ✗ 隔离区不可用（写入后读不回）：$QUARANTINE" >&2
+  echo "[trash_paths]   多半是 macOS TCC 保护 ~/.Trash：终端需「完全磁盘访问权限」，" >&2
+  echo "[trash_paths]   或用 NIXIANG_TRASH_DIR 指向仓库同盘的可写目录（如 \$ROOT/99_archive/_trash）。" >&2
+  echo "[trash_paths]   已中止，未移动任何文件。" >&2
+  exit 1
+fi
+rm -f "$PROBE"
+
 [[ -n "$MANIFEST" ]] || MANIFEST="$QUARANTINE/manifest.json"
 if [[ "$MANIFEST" != /* ]]; then
   MANIFEST="$ROOT/$MANIFEST"
@@ -272,6 +293,12 @@ fi
 while IFS=$'\t' read -r rel kind size_kib abs dest; do
   mkdir -p "$(dirname "$dest")"
   mv -- "$abs" "$dest"
+  # 逐条回读校验：目标必须真实可见，否则立刻停手（后面的条目一个都不再动）
+  if [[ ! -e "$dest" ]]; then
+    echo "[trash_paths] ✗ 已移动但目标不可见：$dest" >&2
+    echo "[trash_paths]   源：$abs —— 请立刻检查 ${QUARANTINE}，后续条目已停止。" >&2
+    exit 1
+  fi
   echo "[trash_paths] moved: $rel"
 done < "$TMP"
 
