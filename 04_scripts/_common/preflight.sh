@@ -504,6 +504,28 @@ if [ -f "$SCRIPT_DIR/check_framework_isolation.sh" ]; then
   fi
 fi
 
+# ---- 源码引用完整性门禁（2026-11-21 起，每次 preflight 都跑）----
+#   判据正文：04_scripts/_common/check_source_refs.py（文件头有事故记录）
+#   为什么全量跑：2026-11-11 漏交 core/TapTapWebLogin.java，之后三次按 games/ 目录白名单
+#   提交都绿，Win 端却编译不进 —— 「只看本次暂存了什么」的校验结构上看不见这类缺口。
+if [ -f "$SCRIPT_DIR/check_source_refs.py" ]; then
+  echo
+  echo "── 源码引用完整性门禁 ──"
+  _sr_py=$(idx_python) || _sr_py=""
+  if [ -n "$_sr_py" ]; then
+    _sr_out=$(PYTHONUTF8=1 "$_sr_py" "$SCRIPT_DIR/check_source_refs.py" 2>&1); _sr_rc=$?
+    printf '%s\n' "$_sr_out" | sed 's/^/       /'
+    if [ "$_sr_rc" -eq 0 ]; then
+      pass=$((pass+1))
+    else
+      fail=$((fail+1))
+    fi
+  else
+    echo "⚠ REMIND [源码引用] 无可用 python（python3.11/python3/py 全缺），本关未生效"
+    remind=$((remind+1))
+  fi
+fi
+
 if [ "$ENV_CHECK" = "1" ]; then
   echo
   if [ -f "$SCRIPT_DIR/env_deps.sh" ]; then
