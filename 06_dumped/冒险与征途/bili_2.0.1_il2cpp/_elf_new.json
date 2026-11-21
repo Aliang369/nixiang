@@ -1,0 +1,401 @@
+{
+"entry": 30883980,
+"phoff": 64,
+"phnum": 10,
+"shoff": 87012128,
+"shnum": 29,
+"ph": [
+{
+"i": 0,
+"type": 6,
+"flags": 4,
+"off": 64,
+"vaddr": 64,
+"filesz": 560,
+"memsz": 560,
+"align": 8
+},
+{
+"i": 1,
+"type": 1,
+"flags": 4,
+"off": 0,
+"vaddr": 0,
+"filesz": 30879884,
+"memsz": 30879884,
+"align": 4096
+},
+{
+"i": 2,
+"type": 1,
+"flags": 5,
+"off": 30879884,
+"vaddr": 30883980,
+"filesz": 49852932,
+"memsz": 49852932,
+"align": 4096
+},
+{
+"i": 3,
+"type": 1,
+"flags": 6,
+"off": 80732816,
+"vaddr": 80741008,
+"filesz": 3437448,
+"memsz": 3437448,
+"align": 4096
+},
+{
+"i": 4,
+"type": 1,
+"flags": 6,
+"off": 84170264,
+"vaddr": 84182552,
+"filesz": 2841264,
+"memsz": 5137704,
+"align": 4096
+},
+{
+"i": 5,
+"type": 2,
+"flags": 6,
+"off": 83742064,
+"vaddr": 83750256,
+"filesz": 464,
+"memsz": 464,
+"align": 8
+},
+{
+"i": 6,
+"type": 1685382482,
+"flags": 4,
+"off": 80732816,
+"vaddr": 80741008,
+"filesz": 3437448,
+"memsz": 3439984,
+"align": 1
+},
+{
+"i": 7,
+"type": 1685382480,
+"flags": 4,
+"off": 19950032,
+"vaddr": 19950032,
+"filesz": 2356228,
+"memsz": 2356228,
+"align": 4
+},
+{
+"i": 8,
+"type": 1685382481,
+"flags": 6,
+"off": 0,
+"vaddr": 0,
+"filesz": 0,
+"memsz": 0,
+"align": 0
+},
+{
+"i": 9,
+"type": 4,
+"flags": 4,
+"off": 624,
+"vaddr": 624,
+"filesz": 176,
+"memsz": 176,
+"align": 4
+}
+],
+"sh": [
+{
+"i": 0,
+"name": "?",
+"type": 0,
+"flags": 0,
+"addr": 0,
+"off": 0,
+"size": 0,
+"entsize": 0
+},
+{
+"i": 1,
+"name": ".note.android.ident",
+"type": 7,
+"flags": 2,
+"addr": 624,
+"off": 624,
+"size": 152,
+"entsize": 0
+},
+{
+"i": 2,
+"name": ".note.gnu.build-id",
+"type": 7,
+"flags": 2,
+"addr": 776,
+"off": 776,
+"size": 24,
+"entsize": 0
+},
+{
+"i": 3,
+"name": ".dynsym",
+"type": 11,
+"flags": 2,
+"addr": 800,
+"off": 800,
+"size": 64632,
+"entsize": 24
+},
+{
+"i": 4,
+"name": ".gnu.version",
+"type": 1879048191,
+"flags": 2,
+"addr": 65432,
+"off": 65432,
+"size": 5386,
+"entsize": 2
+},
+{
+"i": 5,
+"name": ".gnu.version_r",
+"type": 1879048190,
+"flags": 2,
+"addr": 70820,
+"off": 70820,
+"size": 96,
+"entsize": 0
+},
+{
+"i": 6,
+"name": ".gnu.hash",
+"type": 1879048182,
+"flags": 2,
+"addr": 70920,
+"off": 70920,
+"size": 16052,
+"entsize": 0
+},
+{
+"i": 7,
+"name": ".hash",
+"type": 5,
+"flags": 2,
+"addr": 86972,
+"off": 86972,
+"size": 21552,
+"entsize": 4
+},
+{
+"i": 8,
+"name": ".dynstr",
+"type": 3,
+"flags": 2,
+"addr": 108524,
+"off": 108524,
+"size": 112251,
+"entsize": 0
+},
+{
+"i": 9,
+"name": ".rela.dyn",
+"type": 4,
+"flags": 2,
+"addr": 220776,
+"off": 220776,
+"size": 13214616,
+"entsize": 24
+},
+{
+"i": 10,
+"name": ".rela.plt",
+"type": 4,
+"flags": 66,
+"addr": 13435392,
+"off": 13435392,
+"size": 14400,
+"entsize": 24
+},
+{
+"i": 11,
+"name": ".rodata",
+"type": 1,
+"flags": 50,
+"addr": 13449792,
+"off": 13449792,
+"size": 5745899,
+"entsize": 0
+},
+{
+"i": 12,
+"name": ".gcc_except_table",
+"type": 1,
+"flags": 2,
+"addr": 19195692,
+"off": 19195692,
+"size": 754340,
+"entsize": 0
+},
+{
+"i": 13,
+"name": ".eh_frame_hdr",
+"type": 1,
+"flags": 2,
+"addr": 19950032,
+"off": 19950032,
+"size": 2356228,
+"entsize": 0
+},
+{
+"i": 14,
+"name": ".eh_frame",
+"type": 1,
+"flags": 2,
+"addr": 22306264,
+"off": 22306264,
+"size": 8573620,
+"entsize": 0
+},
+{
+"i": 15,
+"name": ".text",
+"type": 1,
+"flags": 6,
+"addr": 30883980,
+"off": 30879884,
+"size": 5580412,
+"entsize": 0
+},
+{
+"i": 16,
+"name": "il2cpp",
+"type": 1,
+"flags": 6,
+"addr": 36464392,
+"off": 36460296,
+"size": 44262880,
+"entsize": 0
+},
+{
+"i": 17,
+"name": ".plt",
+"type": 1,
+"flags": 6,
+"addr": 80727280,
+"off": 80723184,
+"size": 9632,
+"entsize": 0
+},
+{
+"i": 18,
+"name": ".data.rel.ro",
+"type": 1,
+"flags": 3,
+"addr": 80741008,
+"off": 80732816,
+"size": 3009000,
+"entsize": 0
+},
+{
+"i": 19,
+"name": ".fini_array",
+"type": 15,
+"flags": 3,
+"addr": 83750008,
+"off": 83741816,
+"size": 16,
+"entsize": 0
+},
+{
+"i": 20,
+"name": ".init_array",
+"type": 14,
+"flags": 3,
+"addr": 83750024,
+"off": 83741832,
+"size": 232,
+"entsize": 0
+},
+{
+"i": 21,
+"name": ".dynamic",
+"type": 6,
+"flags": 3,
+"addr": 83750256,
+"off": 83742064,
+"size": 464,
+"entsize": 16
+},
+{
+"i": 22,
+"name": ".got",
+"type": 1,
+"flags": 3,
+"addr": 83750720,
+"off": 83742528,
+"size": 422912,
+"entsize": 0
+},
+{
+"i": 23,
+"name": ".got.plt",
+"type": 1,
+"flags": 3,
+"addr": 84173632,
+"off": 84165440,
+"size": 4824,
+"entsize": 0
+},
+{
+"i": 24,
+"name": ".data",
+"type": 1,
+"flags": 3,
+"addr": 84182552,
+"off": 84170264,
+"size": 2841264,
+"entsize": 0
+},
+{
+"i": 25,
+"name": ".bss",
+"type": 8,
+"flags": 3,
+"addr": 87023824,
+"off": 87011528,
+"size": 2296432,
+"entsize": 0
+},
+{
+"i": 26,
+"name": ".comment",
+"type": 1,
+"flags": 48,
+"addr": 0,
+"off": 87011528,
+"size": 293,
+"entsize": 1
+},
+{
+"i": 27,
+"name": ".shstrtab",
+"type": 3,
+"flags": 0,
+"addr": 0,
+"off": 87011821,
+"size": 282,
+"entsize": 0
+},
+{
+"i": 28,
+"name": ".gnu_debuglink",
+"type": 1,
+"flags": 0,
+"addr": 0,
+"off": 87012104,
+"size": 24,
+"entsize": 0
+}
+]
+}

@@ -1,0 +1,26 @@
+{
+  "note": "设备侧热更变体（只读拉取）；APK 基线见 热更程序集_manifest.json",
+  "device": "f9a116a2",
+  "source_dir": "/sdcard/Android/data/com.bhzf.zbml/files",
+  "key": "UrxPJrPXEizyuegw",
+  "head": 33,
+  "variant": "device",
+  "entries": [
+    {
+      "device_file": "TZWD9JF5UB5EGJALFIWMZ7C7GBCTPC76",
+      "container_size": 18655777,
+      "container_sha256": "84f39694abdd2abb7b68cfcc1f8782db0659fc93ba1f42cb2c5d53913c5d52f8",
+      "decoded_size": 18655744,
+      "decoded_sha256": "f44f75b8fc2be6e14ea073ad8513ff167ec45ae4091cbce97c4359d6983429ea",
+      "is_pe": true
+    },
+    {
+      "device_file": "08N2B9GYSUBBOMHCKO9PECGXDJJG5QDR",
+      "container_size": 1276961,
+      "container_sha256": "20e9260a625c4ec2eb731aa9f7eabcd7301002e32c2e90bfd9cbc6a59e1b0240",
+      "decoded_size": 1276928,
+      "decoded_sha256": "477e4b5766f4c1f2bb0a3c01ab2b2f36152cc9523d1bd622972e65374c3327f2",
+      "is_pe": true
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+apk      : /Users/aliang/Documents/nixiang/08_output/无限升级/无限升级_13.101_wxsjdz1_21slot-fix1-releaseSigned.apk
+size     : 137384308
+md5      : ae3f8067d307d2f3a224e4e09292bd79
+sha256   : 33e582b7d6eb3650fd813b76321f2b02c9a4434678124f1eec58cea75f21c2d4
+target   : classes.dex (md5 05cbff57e6a7558a327e1d50a20a5a15)
+menu_dex : classes5.dex
+so       : /Users/aliang/Documents/nixiang/08_output/无限升级/libstarry_magic_wxsjdz1new_13101_19feat_fix1_20261120.so (8fa896a384c7fc41d4479b69b3be2619)
+tapfix   : /Users/aliang/Documents/nixiang/07_patched/无限升级/13101/tapfix/tapfix.dex (05cbff57e6a7558a327e1d50a20a5a15)
+dryrun   : 0

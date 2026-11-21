@@ -1,0 +1,183 @@
+{
+  "game": "追迹迷城",
+  "version_name": "",
+  "version_code": null,
+  "package": "com.TeaMelo.DungeonChasers",
+  "libil2cpp_md5": "",
+  "global_metadata_md5": "",
+  "elf_bias": "0x4000",
+  "source": "06_dumped/追迹迷城/1.0.20261111_il2cpp/dump.cs",
+  "targets": [
+    {
+      "constant": "RVA_BM_UPDATE",
+      "name": "Teamelo.ActionEngine.BattleManager.FixedUpdate",
+      "rva": "0x30FF1C4",
+      "offset": "0x30FB1C4",
+      "va": "0x30FF1C4",
+      "signature": "private void FixedUpdate()",
+      "line": 127367,
+      "role": "AOE hook(BattleManager$$FixedUpdate)"
+    },
+    {
+      "constant": "RVA_BM_GET_ALIVE",
+      "name": "Teamelo.ActionEngine.BattleManager.GetCurWaveAliveEnemyList",
+      "rva": "0x3102CD0",
+      "offset": "0x30FECD0",
+      "va": "0x3102CD0",
+      "signature": "public List<Monster> GetCurWaveAliveEnemyList()",
+      "line": 127448,
+      "role": "AOE helper"
+    },
+    {
+      "constant": "RVA_ATK_CAN_USE",
+      "name": "Teamelo.ActionEngine.AttackBattleData.CheckCurrentIsCanUse",
+      "rva": "0x31559E0",
+      "offset": "0x31519E0",
+      "va": "0x31559E0",
+      "signature": "public bool CheckCurrentIsCanUse()",
+      "line": 129253,
+      "role": "infinite skill"
+    },
+    {
+      "constant": "RVA_ATK_CUR_SP",
+      "name": "Teamelo.ActionEngine.AttackBattleData.CheckCurSp",
+      "rva": "0x31559FC",
+      "offset": "0x31519FC",
+      "va": "0x31559FC",
+      "signature": "public bool CheckCurSp()",
+      "line": 129256,
+      "role": "infinite skill"
+    },
+    {
+      "constant": "RVA_PARTNER_CAN_USE",
+      "name": "Teamelo.ActionEngine.MonsterPartnerSkillBattleData.CheckCurrentIsCanUse",
+      "rva": "0x3155E34",
+      "offset": "0x3151E34",
+      "va": "0x3155E34",
+      "signature": "public bool CheckCurrentIsCanUse()",
+      "line": 129311,
+      "role": "infinite skill"
+    },
+    {
+      "constant": "RVA_PARTNER_CUR_SP",
+      "name": "Teamelo.ActionEngine.MonsterPartnerSkillBattleData.CheckCurSp",
+      "rva": "0x3155E68",
+      "offset": "0x3151E68",
+      "va": "0x3155E68",
+      "signature": "public bool CheckCurSp()",
+      "line": 129314,
+      "role": "infinite skill"
+    },
+    {
+      "constant": "RVA_LP_CHECK_1",
+      "name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_1",
+      "rva": "0x31CF3B4",
+      "offset": "0x31CB3B4",
+      "va": "0x31CF3B4",
+      "signature": "public bool CheckSkillUse_1()",
+      "line": 139925,
+      "role": "infinite skill"
+    },
+    {
+      "constant": "RVA_LP_CHECK_2",
+      "name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_2",
+      "rva": "0x31CF45C",
+      "offset": "0x31CB45C",
+      "va": "0x31CF45C",
+      "signature": "public bool CheckSkillUse_2()",
+      "line": 139928,
+      "role": "infinite skill"
+    },
+    {
+      "constant": "RVA_LP_CHECK_DODGE",
+      "name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_Dodge",
+      "rva": "0x31CF488",
+      "offset": "0x31CB488",
+      "va": "0x31CF488",
+      "signature": "public bool CheckSkillUse_Dodge()",
+      "line": 139931,
+      "role": "infinite skill optional"
+    },
+    {
+      "constant": "RVA_LP_PROCESS_DMG",
+      "name": "Teamelo.ActionEngine.LocalPlayer.ProcessDamageOrHeal",
+      "rva": "0x31CF8A0",
+      "offset": "0x31CB8A0",
+      "va": "0x31CF8A0",
+      "signature": "public override bool ProcessDamageOrHeal(RoleUnit attacker, CombatResultData resultData)",
+      "line": 139898,
+      "role": "invincible"
+    },
+    {
+      "constant": "RVA_LP_CHANGE_HP",
+      "name": "Teamelo.ActionEngine.LocalPlayer.ChangeHP",
+      "rva": "0x31CFA9C",
+      "offset": "0x31CBA9C",
+      "va": "0x31CFA9C",
+      "signature": "public override float ChangeHP(float hp, bool isShowDamageText = False)",
+      "line": 139901,
+      "role": "invincible fallback"
+    },
+    {
+      "constant": "RVA_LP_CHECK_ACTION",
+      "name": "Teamelo.ActionEngine.LocalPlayer.CheckSkillUse_ActionState",
+      "rva": "0x31D0B98",
+      "offset": "0x31CCB98",
+      "va": "0x31D0B98",
+      "signature": "private bool CheckSkillUse_ActionState()",
+      "line": 139922,
+      "role": "infinite skill"
+    },
+    {
+      "constant": "RVA_MONSTER_PROCESS_DMG",
+      "name": "Teamelo.ActionEngine.Monster.ProcessDamageOrHeal",
+      "rva": "0x31D3CB0",
+      "offset": "0x31CFCB0",
+      "va": "0x31D3CB0",
+      "signature": "public override bool ProcessDamageOrHeal(RoleUnit attacker, CombatResultData resultData)",
+      "line": 140142,
+      "role": "one-hit kill fallback"
+    },
+    {
+      "constant": "RVA_MONSTER_CHANGE_HP",
+      "name": "Teamelo.ActionEngine.Monster.ChangeHP",
+      "rva": "0x31D4818",
+      "offset": "0x31D0818",
+      "va": "0x31D4818",
+      "signature": "public override float ChangeHP(float hp, bool isShowDamageText = False)",
+      "line": 140148,
+      "role": "one-hit kill"
+    },
+    {
+      "constant": "RVA_GET_FREE_SKIP_ADS",
+      "name": "Teamelo.ProjectAT.ATGameManager.GetFreeSkipAdsRemainingCount",
+      "rva": "0x2E56640",
+      "offset": "0x2E52640",
+      "va": "0x2E56640",
+      "signature": "public int GetFreeSkipAdsRemainingCount()",
+      "line": 72701,
+      "role": "no ad"
+    },
+    {
+      "constant": "RVA_GET_FREE_SKIP_ADS_USED",
+      "name": "Teamelo.ProjectAT.ATGameManager.GetFreeSkipAdsUsedCount",
+      "rva": "0x2E567BC",
+      "offset": "0x2E527BC",
+      "va": "0x2E567BC",
+      "signature": "public int GetFreeSkipAdsUsedCount()",
+      "line": 72698,
+      "role": "no ad"
+    },
+    {
+      "constant": "RVA_USE_FREE_SKIP_ADS",
+      "name": "Teamelo.ProjectAT.ATGameManager.UseFreeSkipAds",
+      "rva": "0x2E567E0",
+      "offset": "0x2E527E0",
+      "va": "0x2E567E0",
+      "signature": "private void UseFreeSkipAds()",
+      "line": 72704,
+      "role": "no ad"
+    }
+  ],
+  "problems": []
+}
