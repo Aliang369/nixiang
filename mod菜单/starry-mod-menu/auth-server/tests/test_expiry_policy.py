@@ -77,8 +77,12 @@ class ActivationPolicyTest(unittest.TestCase):
         self.db.close()
 
     def test_preset_expire_survives_first_activation(self):
-        """有用未用 day 卡：后台把到期时间设到 11-13，首次登录不得被换成 now+1d。"""
-        preset = datetime(2026, 11, 12, 16, 0, 0, tzinfo=timezone.utc)  # CST 11-13 00:00
+        """有用未用 day 卡：后台手设了未来到期，首次登录不得被换成 now+1d。
+
+        2026-11-15 修复测试时间炸弹：原来写死 2026-11-12/13，日期一过就变「已过期」，
+        断言未改，只把基准改成相对当前时间的未来时刻。
+        """
+        preset = (utcnow() + timedelta(days=1, hours=2)).replace(microsecond=0)
         c = _card(self.db, status="unused", duration_type="day", expire_at=preset)
         self.assertTrue(activate_if_needed(c))
         self.assertEqual(_aware(c.expire_at), preset)
@@ -118,7 +122,9 @@ class ActivationPolicyTest(unittest.TestCase):
                   key_code="PAST-ZERO-WRITE")
         before_status, before_exp = c.status, _aware(c.expire_at)
         with self.assertRaises(HTTPException) as ctx:
-            login_card(self.db, "PAST-ZERO-WRITE", "any_game", "dev_zero_write")
+            # 2026-11-15：设备号改为客户端真实形态（dev_+32 位十六进制），
+            # 服务端已收紧为精确形态校验；旧写法 "dev_zero_write" 不再被接受。
+            login_card(self.db, "PAST-ZERO-WRITE", "any_game", "dev_" + "0" * 32)
         self.assertEqual(ctx.exception.status_code, 403)
         self.db.rollback()
         self.db.refresh(c)
@@ -129,10 +135,10 @@ class ActivationPolicyTest(unittest.TestCase):
 
     def test_login_keeps_preset_expire_and_issues_token(self):
         """unused + 未来手设到期：首登保留到期时间并发会话 token。"""
-        preset = datetime(2026, 11, 12, 16, 0, 0, tzinfo=timezone.utc)
+        preset = (utcnow() + timedelta(days=1, hours=3)).replace(microsecond=0)
         c = _card(self.db, status="unused", duration_type="day", expire_at=preset,
                   key_code="PRESET-OK")
-        out = login_card(self.db, "PRESET-OK", "any_game", "dev_preset_ok")
+        out = login_card(self.db, "PRESET-OK", "any_game", "dev_" + "1" * 32)
         self.db.refresh(c)
         self.assertEqual(_aware(c.expire_at), preset)
         self.assertEqual(c.status, "active")
@@ -231,9 +237,9 @@ class AdminAuditTest(unittest.TestCase):
 
     def test_batch_zero_days_keeps_expire(self):
         """extend_days=0 + status：只改状态，到期时间不动。"""
-        exact = datetime(2026, 11, 13, 0, 0, 0, 123456, tzinfo=timezone.utc)
+        exact = (utcnow() + timedelta(days=2)).replace(microsecond=123456)
         c = _card(self.db, status="active", duration_type="day", expire_at=exact,
-                  activated_at=datetime(2026, 11, 10, tzinfo=timezone.utc))
+                  activated_at=utcnow() - timedelta(days=3))
         batch_cards(CardBatchRequest(ids=[c.id], extend_days=0, status="banned"),
                     self.req, {"sub": "tester"}, self.db)
         self.db.refresh(c)

@@ -45,6 +45,13 @@ services:
       DEFAULT_GAME_ID: starry_self
       DEFAULT_GAME_NAME: 星光自测App
       CORS_ORIGINS: "*"
+      # 可信反代网段（docker compose 默认 bridge 子网，实测 172.19.0.0/16）
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-172.19.0.0/16}
+      # 公开 bootstrap 限流（0=关闭）。300/min/IP 对 NAT 大出口仍宽松，可按需调低/调高
+      BOOTSTRAP_RATE_MAX: ${BOOTSTRAP_RATE_MAX:-300}
+      BOOTSTRAP_RATE_WINDOW_SECONDS: ${BOOTSTRAP_RATE_WINDOW_SECONDS:-60}
+    # uvicorn 不解析转发头，真实来源由应用层 trusted_proxy_ips + X-Real-IP 判定
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]
     # 仅容器内网，公网由 nginx:8443 反代
     expose:
       - "8000"
@@ -52,6 +59,11 @@ services:
       - ./data/ota:/data/ota
       - ./keys:/app/keys:ro
       - ./static:/app/static:ro   # 后台前端：改页面不用重建镜像（2026-10-27）
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
     restart: unless-stopped
 
   nginx:
@@ -64,6 +76,11 @@ services:
       - ./nginx/starlight.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certs/starlight.crt:/etc/nginx/certs/starlight.crt:ro
       - ./certs/starlight.key:/etc/nginx/certs/starlight.key:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
     restart: unless-stopped
 
 volumes:

@@ -1,3 +1,4 @@
+import uuid
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -27,6 +28,43 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    """为每个请求生成服务端 request_id，并回写响应头，便于日志串联。
+
+    不接受客户端自传的 X-Request-Id（可伪造），一律服务端生成。
+    """
+    rid = uuid.uuid4().hex[:32]
+    request.state.request_id = rid
+    response = await call_next(request)
+    response.headers["X-Request-Id"] = rid
+    return response
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exc_handler(request: Request, exc: RequestValidationError):
+    """Pydantic 校验失败（如缺字段/超长）也要留痕，避免「坏请求无审计」。"""
+    from .services.events import record_failure_event
+
+    db = SessionLocal()
+    try:
+        record_failure_event(
+            db,
+            "request_invalid",
+            device_id=None,
+            reason="validation_error",
+            request=request,
+        )
+    except Exception:  # 审计失败不得影响错误响应
+        db.rollback()
+    finally:
+        db.close()
+    return JSONResponse(
+        status_code=422,
+        content={"ok": False, "message": "请求参数不合法", "data": None},
+    )
 
 
 @app.exception_handler(HTTPException)
@@ -229,6 +267,72 @@ def ensure_schema() -> None:
                     "sort_order INTEGER DEFAULT 0"
                 )
             )
+
+        # 2026-11-15 遥测可信化：只做 additive 可空列（历史行保持 NULL = unknown，
+        # 不把「加列时刻」伪装成首次观察时间）。索引不在这里建：auth_events 已是百万级，
+        # 由 ops 用 CREATE INDEX CONCURRENTLY 单独执行，避免启动时锁表/超时。
+        if dialect == "sqlite":
+            pcols = {
+                r[1]
+                for r in conn.execute(text("PRAGMA table_info(online_presence)")).fetchall()
+            }
+            if "created_at" not in pcols:
+                conn.execute(text("ALTER TABLE online_presence ADD COLUMN created_at TIMESTAMP"))
+            if "card_verified_at" not in pcols:
+                conn.execute(
+                    text("ALTER TABLE online_presence ADD COLUMN card_verified_at TIMESTAMP")
+                )
+            if "last_authenticated_at" not in pcols:
+                conn.execute(
+                    text(
+                        "ALTER TABLE online_presence ADD COLUMN "
+                        "last_authenticated_at TIMESTAMP"
+                    )
+                )
+            ecols = {
+                r[1] for r in conn.execute(text("PRAGMA table_info(auth_events)")).fetchall()
+            }
+            for col, ddl in (
+                ("result", "VARCHAR(8)"),
+                ("reason", "VARCHAR(32)"),
+                ("ip", "VARCHAR(45)"),
+                ("ip_forwarded", "VARCHAR(45)"),
+                ("ua", "VARCHAR(120)"),
+                ("request_id", "VARCHAR(36)"),
+                ("suppressed", "INTEGER DEFAULT 0"),
+                ("last_occurred_at", "TIMESTAMP"),
+            ):
+                if col not in ecols:
+                    conn.execute(text(f"ALTER TABLE auth_events ADD COLUMN {col} {ddl}"))
+        elif dialect == "postgresql":
+            conn.execute(
+                text("ALTER TABLE online_presence ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ")
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE online_presence ADD COLUMN IF NOT EXISTS "
+                    "card_verified_at TIMESTAMPTZ"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE online_presence ADD COLUMN IF NOT EXISTS "
+                    "last_authenticated_at TIMESTAMPTZ"
+                )
+            )
+            for col, ddl in (
+                ("result", "VARCHAR(8)"),
+                ("reason", "VARCHAR(32)"),
+                ("ip", "VARCHAR(45)"),
+                ("ip_forwarded", "VARCHAR(45)"),
+                ("ua", "VARCHAR(120)"),
+                ("request_id", "VARCHAR(36)"),
+                ("suppressed", "INTEGER DEFAULT 0"),
+                ("last_occurred_at", "TIMESTAMPTZ"),
+            ):
+                conn.execute(
+                    text(f"ALTER TABLE auth_events ADD COLUMN IF NOT EXISTS {col} {ddl}")
+                )
 
         # 一码多设备（2026-10-31）：新表由 create_all 建好；这里兜底建一次并回填老数据
         CardDevice.__table__.create(bind=conn, checkfirst=True)

@@ -5,10 +5,11 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..deviceid import trusted_device_clause
 from ..models import FeatureFlag, Game, OnlinePresence
 
 router = APIRouter(prefix="/v1/portal", tags=["portal"])
@@ -80,13 +81,30 @@ def portal_games(db: Session = Depends(get_db)):
         feats_by_game.setdefault(f.game_id, []).append(
             {"feat_num": f.feat_num, "name": f.name}
         )
-    # 近 7 天活跃设备数（表上 (game_id, device_id) 唯一，count(id)=去重设备数）
+    # 近 7 天活跃设备数（表上 (game_id, device_id) 唯一，count(id)=去重设备数）。
+    # 2026-11-15：与看板同口径——只算已登记游戏 + 形态合法的设备号，避免公开热榜
+    # 被注入/测试串抬高（此接口公开，污染会直接对外可见）。
+    registered = [g.game_id for g in games]
+    # 与看板同口径：需卡游戏用「认证活动时间」，免卡游戏退回 last_seen 观测值
+    card_games = {g.game_id for g in games if getattr(g, "card_auth_enabled", True)}
+    activity_at = case(
+        (OnlinePresence.game_id.in_(card_games), OnlinePresence.last_authenticated_at),
+        else_=OnlinePresence.last_seen_at,
+    )
     hot7_cut = datetime.now(timezone.utc) - timedelta(days=7)
-    hot7 = dict(
-        db.query(OnlinePresence.game_id, func.count(OnlinePresence.id))
-        .filter(OnlinePresence.last_seen_at >= hot7_cut)
-        .group_by(OnlinePresence.game_id)
-        .all()
+    hot7 = (
+        dict(
+            db.query(OnlinePresence.game_id, func.count(OnlinePresence.id))
+            .filter(
+                activity_at >= hot7_cut,
+                OnlinePresence.game_id.in_(registered),
+                trusted_device_clause(OnlinePresence.device_id),
+            )
+            .group_by(OnlinePresence.game_id)
+            .all()
+        )
+        if registered
+        else {}
     )
     return {
         "ok": True,

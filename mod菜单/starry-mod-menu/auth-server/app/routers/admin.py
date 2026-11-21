@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import exists, func, or_
+from sqlalchemy import case, exists, func, or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -38,6 +38,9 @@ from ..schemas import (
 )
 from ..security import create_admin_token, hash_password, utcnow, verify_password
 from ..models import AdminUser
+from ..deviceid import mask_card_key, mask_device_id, trusted_device_clause
+from ..services.events import failure_overflow_since_start
+from ..services.presence import clear_card_presence
 from ..services.feature_sync import sync_game_features
 from ..services import menu_templates as menu_tpl
 from ..services.auth_service import (
@@ -241,12 +244,28 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
 
     # 只统计游戏列表里已登记的游戏：测试期客户端乱传的 game_id 不进看板
     registered_ids = {row[0] for row in db.query(Game.game_id).all()}
+    # 2026-11-15：只统计形态合法的设备号（^dev_[0-9a-f]{32}$ 或 40 位）。
+    trusted_device = trusted_device_clause(OnlinePresence.device_id)
+    # 2026-11-16 活动口径（不新增 tile / 不改字段名）：
+    # - 需卡游戏：活跃 = 服务端认证过的活动时间 last_authenticated_at（login/心跳成功写入，
+    #   解绑/撤销不清），未认证的 bootstrap 不再计入；
+    # - 免卡游戏：无认证链，沿用 last_seen_at 的观测值（明确不可信，但保留样本）。
+    card_games = {
+        gid
+        for gid, card_auth in db.query(Game.game_id, Game.card_auth_enabled).all()
+        if card_auth
+    }
+    activity_at = case(
+        (OnlinePresence.game_id.in_(card_games), OnlinePresence.last_authenticated_at),
+        else_=OnlinePresence.last_seen_at,
+    )
 
     def _online_devices(extra=None) -> int:
         """总在线按设备去重（同机多游戏只计 1）。"""
         q = db.query(func.count(func.distinct(OnlinePresence.device_id))).filter(
-            OnlinePresence.last_seen_at >= online_cut,
+            activity_at >= online_cut,
             OnlinePresence.game_id.in_(registered_ids),
+            trusted_device,
         )
         if extra is not None:
             q = q.filter(extra)
@@ -264,10 +283,13 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
     def _by_game_count(since=None, extra=None):
         """分游戏计数。表上 (game_id, device_id) 唯一，故 count(id)=该游戏下去重设备数。"""
         q = db.query(OnlinePresence.game_id, func.count(OnlinePresence.id)).filter(
-            OnlinePresence.game_id.in_(registered_ids)
+            OnlinePresence.game_id.in_(registered_ids),
+            trusted_device,
+            # 需卡游戏的历史活跃也只算有认证事实的行（all 窗口无 since，仍要排除 shape-only 行）
+            activity_at.isnot(None),
         )
         if since is not None:
-            q = q.filter(OnlinePresence.last_seen_at >= since)
+            q = q.filter(activity_at >= since)
         if extra is not None:
             q = q.filter(extra)
         return dict(q.group_by(OnlinePresence.game_id).all())
@@ -320,10 +342,12 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
 
         def _distinct(extra=None) -> int:
             q = db.query(func.count(func.distinct(OnlinePresence.device_id))).filter(
-                OnlinePresence.game_id.in_(registered_ids)
+                OnlinePresence.game_id.in_(registered_ids),
+                trusted_device,
+                activity_at.isnot(None),
             )
             if since is not None:
-                q = q.filter(OnlinePresence.last_seen_at >= since)
+                q = q.filter(activity_at >= since)
             if extra is not None:
                 q = q.filter(extra)
             return q.scalar() or 0
@@ -337,6 +361,35 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
     d7_active_devices, d7_card_devices, d7_guest_devices = _active_split(d7_start)
     d30_active_devices, d30_card_devices, d30_guest_devices = _active_split(d30_start)
     all_active_devices, all_card_devices, all_guest_devices = _active_split(None)
+
+    def _verified_devices(since) -> int:
+        """窗口内「成功验证过卡密」的设备：只认 login/heartbeat 写下的 card_verified_at。
+
+        与 observed 的关系：verified ⊆ observed；unverified = observed - verified（互斥，
+        不再用「card_verified_at IS NULL」单独判断，避免 stale 设备漏算）。
+        """
+        q = db.query(func.count(func.distinct(OnlinePresence.device_id))).filter(
+            OnlinePresence.game_id.in_(registered_ids),
+            trusted_device,
+            OnlinePresence.last_authenticated_at.isnot(None),
+        )
+        if since is not None:
+            q = q.filter(OnlinePresence.last_authenticated_at >= since)
+        return q.scalar() or 0
+
+    today_verified = _verified_devices(today_start)
+    d7_verified = _verified_devices(d7_start)
+    d30_verified = _verified_devices(d30_start)
+    all_verified = _verified_devices(None)
+
+    # 近 24 小时被拒的非法 device（只含 bad_ 指纹或计数，不含原始 payload）
+    last_24h = now - timedelta(hours=24)
+    untrusted_rejects_24h = (
+        db.query(func.count(AuthEvent.id))
+        .filter(AuthEvent.reason == "bad_device", AuthEvent.created_at >= last_24h)
+        .scalar()
+        or 0
+    )
 
     games_count = db.query(func.count(Game.id)).scalar() or 0
     return {
@@ -364,6 +417,24 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
             "all_active_devices": all_active_devices,
             "all_card_devices": all_card_devices,
             "all_guest_devices": all_guest_devices,
+            # ---- 2026-11-15 新增：可信口径（与上面旧字段并列，不替换） ----
+            "today_verified_devices": today_verified,
+            "today_unverified_devices": max(today_active_devices - today_verified, 0),
+            "d7_verified_devices": d7_verified,
+            "d7_unverified_devices": max(d7_active_devices - d7_verified, 0),
+            "d30_verified_devices": d30_verified,
+            "d30_unverified_devices": max(d30_active_devices - d30_verified, 0),
+            "all_verified_devices": all_verified,
+            "all_unverified_devices": max(all_active_devices - all_verified, 0),
+            "untrusted_rejects_24h": untrusted_rejects_24h,
+            "log_overflow_since_start": failure_overflow_since_start(),
+            "observed_definition": "格式合法设备号（dev_+32/40 位十六进制）且属已登记游戏",
+            "verified_definition": "同一窗口内由 token/卡密登录成功确认过的设备（card_verified_at）",
+            "data_note": (
+                "设备数≠人数；活跃=online_presence 最后出现时间快照，不能还原任意历史日期，"
+                "不声称严格 DAU；卡密关联设备/未关联设备是最后状态快照；"
+                "历史行 created_at/card_verified_at 为空表示无证据（unknown），不做推测填充。"
+            ),
         },
     }
 
@@ -1029,15 +1100,17 @@ def delete_card(
     card = db.query(CardKey).filter(CardKey.id == card_id).first()
     if not card:
         raise HTTPException(404, "卡密不存在")
-    key_code = card.key_code
     revoke_card_sessions(db, card.id)
     purge_card_devices(db, card.id)
+    # 删卡后在线行不再挂这张卡（否则看板仍把它算作「卡密关联设备」）
+    clear_card_presence(db, card.id)
     db.delete(card)
     record_admin_audit(
         db,
         payload.get("sub") or "unknown",
         "cards.delete",
-        detail=f"ID={card_id} 卡密={key_code}",
+        # 审计只记内部 ID：卡密明文不得进日志
+        detail=f"ID={card_id}",
         ip=_client_ip(request),
         commit=False,
     )
@@ -1182,6 +1255,198 @@ def delete_announcement(
     )
     db.commit()
     return {"ok": True, "message": "公告已删除"}
+
+
+# ----- device events (2026-11-15) -----
+def _card_key_map(db: Session, card_ids) -> dict[int, str]:
+    """按 card_id 批量取现存卡密明文（仅管理端；已删卡自然取不到）。"""
+    ids = {int(c) for c in card_ids if c}
+    if not ids:
+        return {}
+    return {
+        c.id: c.key_code
+        for c in db.query(CardKey).filter(CardKey.id.in_(ids)).all()
+    }
+
+
+def _event_dict(r: AuthEvent, card_keys: dict[int, str] | None = None) -> dict:
+    """事件对外表示：设备号打码、detail 再脱敏。
+
+    卡密明文单独从 card_keys 现查（require_admin 才可达），不写回事件表：
+    - card_key：现存卡密明文，便于管理员搜索/核对；
+    - card_deleted：card_id 有值但卡已删除（明文已不可回填，只能给内部 ID）。
+    """
+    key = (card_keys or {}).get(r.card_id) if r.card_id else None
+    return {
+        "id": r.id,
+        "created_at": r.created_at.isoformat() if r.created_at else None,
+        "last_occurred_at": r.last_occurred_at.isoformat() if getattr(r, "last_occurred_at", None) else None,
+        "event_type": r.event_type,
+        "game_id": r.game_id,
+        "device_id": mask_device_id(r.device_id),
+        # 完整值仅供管理端「详情」按钮回查（接口本身 require_admin）；列表展示仍用打码值
+        "device_id_full": r.device_id if (r.device_id or "").startswith("dev_") else None,
+        "device_id_masked": True,
+        "card_id": r.card_id,
+        "card_key": key,
+        "card_deleted": bool(r.card_id and key is None),
+        "result": r.result,
+        "reason": r.reason,
+        "detail": mask_card_key(r.detail),
+        "ip": r.ip,
+        "ip_forwarded": r.ip_forwarded,
+        "ua": r.ua,
+        "request_id": r.request_id,
+        "suppressed": int(getattr(r, "suppressed", 0) or 0),
+    }
+
+
+@router.get("/events")
+def list_events(
+    device_id: str | None = None,
+    card_id: int | None = None,
+    game_id: str | None = None,
+    event_type: str | None = None,
+    result: str | None = None,
+    from_at: str | None = None,
+    to_at: str | None = None,
+    page: int = 1,
+    page_size: int = 50,
+    _: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """按设备/游戏/类型/结果/时间查客户端事件（仅管理员）。
+
+    - device_id 需传**完整原值**过滤（返回体里打码，避免列表页泄露完整设备号）；
+    - detail 不返回卡密/密码/token，历史明文按掩码回显。
+    """
+    page, page_size = _clamp_page(page, page_size)
+    q = db.query(AuthEvent)
+    if device_id and device_id.strip():
+        q = q.filter(AuthEvent.device_id == device_id.strip())
+    # 只支持内部 card_id 过滤：卡密明文不进 URL（GET query 会落 nginx 访问日志）
+    if card_id:
+        q = q.filter(AuthEvent.card_id == int(card_id))
+    if game_id and game_id.strip():
+        q = q.filter(AuthEvent.game_id == game_id.strip())
+    if event_type and event_type.strip():
+        q = q.filter(AuthEvent.event_type == event_type.strip())
+    if result and result.strip():
+        q = q.filter(AuthEvent.result == result.strip())
+    start = _parse_iso_dt(from_at)
+    end = _parse_iso_dt(to_at, end_of_day=True)
+    if start is not None:
+        q = q.filter(AuthEvent.created_at >= start)
+    if end is not None:
+        q = q.filter(AuthEvent.created_at <= end)
+    total = q.count()
+    rows = (
+        q.order_by(AuthEvent.created_at.desc(), AuthEvent.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    keys = _card_key_map(db, [r.card_id for r in rows])
+    return {
+        "ok": True,
+        "data": [_event_dict(r, keys) for r in rows],
+        "meta": _page_meta(total, page, page_size),
+    }
+
+
+@router.get("/devices/{device_id}")
+def device_detail(
+    device_id: str,
+    _: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """单设备视图：当前在线行 + 卡绑定 + 最近成功/失败，便于按设备追溯。
+
+    只返回 card_id 与状态，不回传卡密明文。
+    """
+    did = (device_id or "").strip()
+    if not did:
+        raise HTTPException(400, "缺少 device_id")
+    # 在线判定与看板同口径：需卡用认证活动时间，免卡用观测 last_seen（90s 窗口）
+    game_modes = dict(db.query(Game.game_id, Game.card_auth_enabled).all())
+    now_utc = datetime.now(timezone.utc)
+
+    def _online(p) -> bool | None:
+        card_auth = game_modes.get(p.game_id)
+        if card_auth is None:
+            return None
+        ts = (
+            getattr(p, "last_authenticated_at", None)
+            if card_auth
+            else p.last_seen_at
+        )
+        if ts is None:
+            return False
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        return (now_utc - ts).total_seconds() <= 90
+
+    presences = [
+        {
+            "game_id": p.game_id,
+            "card_id": p.card_id,
+            "last_seen_at": p.last_seen_at.isoformat() if p.last_seen_at else None,
+            "last_authenticated_at": getattr(p, "last_authenticated_at", None).isoformat()
+            if getattr(p, "last_authenticated_at", None)
+            else None,
+            "card_auth_enabled": game_modes.get(p.game_id),
+            "is_online": _online(p),
+            "created_at": p.created_at.isoformat() if getattr(p, "created_at", None) else None,
+            "card_verified_at": p.card_verified_at.isoformat()
+            if getattr(p, "card_verified_at", None)
+            else None,
+        }
+        for p in db.query(OnlinePresence)
+        .filter(OnlinePresence.device_id == did)
+        .order_by(OnlinePresence.last_seen_at.desc())
+        .all()
+    ]
+    bindings = []
+    for b in (
+        db.query(CardDevice, CardKey)
+        .join(CardKey, CardKey.id == CardDevice.card_id)
+        .filter(CardDevice.device_id == did)
+        .all()
+    ):
+        card = b[1]
+        bindings.append(
+            {
+                "card_id": card.id,
+                "key_code": card.key_code,
+                "status": card.status,
+                "scope": card.scope,
+                "game_id": card.game_id,
+                "expire_at": card.expire_at.isoformat() if card.expire_at else None,
+                "bound_at": b[0].bound_at.isoformat() if b[0].bound_at else None,
+            }
+        )
+    events = (
+        db.query(AuthEvent)
+        .filter(AuthEvent.device_id == did)
+        .order_by(AuthEvent.created_at.desc(), AuthEvent.id.desc())
+        .limit(30)
+        .all()
+    )
+    last_ok = next(
+        (e for e in events if e.event_type == "login_ok" and (e.result or "ok") == "ok"), None
+    )
+    last_fail = next((e for e in events if (e.result or "") == "deny"), None)
+    return {
+        "ok": True,
+        "data": {
+            "device_id": mask_device_id(did),
+            "presences": presences,
+            "bindings": bindings,
+            "events": [_event_dict(e, _card_key_map(db, [e.card_id for e in events])) for e in events],
+            "last_success_at": last_ok.created_at.isoformat() if last_ok and last_ok.created_at else None,
+            "last_failure_at": last_fail.created_at.isoformat() if last_fail and last_fail.created_at else None,
+        },
+    }
 
 
 # ----- audit logs -----

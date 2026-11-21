@@ -205,6 +205,20 @@ class OnlinePresence(Base):
     device_id: Mapped[str] = mapped_column(String(128), index=True)
     card_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # 首次观察时间：**只有新写入的行才赋值**；加列前的历史行为 NULL（= unknown，不假装知道）
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # 最近一次「已认证」确认卡密关联的时间（login / heartbeat 成功才写）。
+    # NULL = 本服务从未记录到验证证据（历史行同样是 NULL），不等价于「游客」。
+    card_verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # 最近一次服务端认证通过的活动时间（login 成功 / 带 token 的 heartbeat 成功）。
+    # 与 card_verified_at 的区别：这是**活动事实**，解绑/撤销不会清空；
+    # 看板对需卡游戏用它做窗口筛选，避免未认证 bootstrap 灌水影响活跃。
+    # NULL = 无认证证据（历史行可为 NULL，不推测填充）。
+    last_authenticated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
 
 class AuthEvent(Base):
@@ -213,12 +227,28 @@ class AuthEvent(Base):
     __tablename__ = "auth_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    # login_ok | login_fail | activate | device_migrate
+    # login_ok | login_fail | activate | device_migrate | heartbeat_fail | bootstrap_reject
     event_type: Mapped[str] = mapped_column(String(32), index=True)
     game_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    # 合法设备号原样存；非法/可疑只存 deviceid.device_fingerprint() 的 bad_xxx
     device_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     card_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     detail: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # ok | deny | error —— 只有结果码，不放凭证
+    result: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    # bad_device | not_found | banned | expired | exhausted | device_mismatch | rate_limited | ...
+    reason: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    # 权威来源 = socket peer；ip_forwarded 仅在受信反代下采信，否则仅留档并标记未验证
+    ip: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    ip_forwarded: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    ua: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    request_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    # 同 (device, reason, ip) 在聚合窗口内被抑制的重复次数（保留首条，便于追溯且不刷爆）
+    suppressed: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"), nullable=False)
+    # 被抑制的重复失败最近一次发生时间（created_at 保留首条时间，便于"首条+抑制次数"口径）
+    last_occurred_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
 
 

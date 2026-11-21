@@ -10,6 +10,7 @@
       ota: ['游戏补丁', 'JSON + so 合并发布；每游戏只保留 latest'],
       toasts: ['开屏 Toast', '启动时依次弹出的提示'],
       audit: ['操作日志', '管理操作审计记录'],
+      events: ['设备日志', '按设备查看登录成功/失败与在线状态'],
       settings: ['后台设置', '设置项整理中'],
     };
     const STATUS_CN = { unused: '未使用', active: '使用中', expired: '已过期', banned: '已封禁', exhausted: '次数用尽' };

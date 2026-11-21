@@ -12,7 +12,9 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
+from ..deviceid import is_valid_device_id
 from .events import record_auth_event
+from .presence import clear_card_presence, touch_presence
 from ..models import (
     Announcement,
     CardDevice,
@@ -362,8 +364,13 @@ def login_card(
     game_id: str,
     device_id: str,
     legacy_device_ids: Optional[list[str]] = None,
+    request: Any = None,
 ) -> dict[str, Any]:
     settings = get_settings()
+    # 设备号形态校验：不合法直接拒绝（客户端只会发 dev_+32/40 位十六进制）。
+    # 这里放在业务最前面，避免污染 card_devices / presence，也让审计能记到明确原因。
+    if not is_valid_device_id(device_id):
+        raise HTTPException(400, "设备标识无效")
     card = (
         db.query(CardKey)
         .filter(CardKey.key_code == card_key.strip())
@@ -402,9 +409,8 @@ def login_card(
     if migration_from:
         # 主绑定迁移后旧设备会话全部失效，旧在线行不再挂这张卡。
         revoke_card_sessions(db, card.id)
-        db.query(OnlinePresence).filter(OnlinePresence.card_id == card.id).update(
-            {"card_id": None}, synchronize_session=False
-        )
+        # 显式解除旧设备关联（保留在线行，只清 card_id/verified，不把游客写成脏状态）
+        clear_card_presence(db, card.id)
     else:
         # 撤销同设备旧会话
         db.query(SessionToken).filter(
@@ -438,13 +444,18 @@ def login_card(
             device_id=device_id,
             card_id=card.id,
             detail=f"{migration_from} -> {device_id}",
+            result="ok",
+            request=request,
         )
+    # detail 只放内部标识：卡密明文不得入库（历史行已存在，脱敏属独立写操作）
     if freshly_activated:
         record_auth_event(
-            db, "activate", game_id=game_id, device_id=device_id, card_id=card.id, detail=card.key_code
+            db, "activate", game_id=game_id, device_id=device_id, card_id=card.id,
+            detail=f"card#{card.id}", result="ok", request=request,
         )
     record_auth_event(
-        db, "login_ok", game_id=game_id, device_id=device_id, card_id=card.id, detail=card.key_code
+        db, "login_ok", game_id=game_id, device_id=device_id, card_id=card.id,
+        detail=f"card#{card.id}", result="ok", request=request,
     )
 
     boot = build_bootstrap(db, game_id, logged_in=True)
@@ -483,7 +494,9 @@ def login_card(
     }
 
 
-def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
+def unbind_card(
+    db: Session, card_key: str, device_id: str, request: Any = None
+) -> dict[str, Any]:
     """自助解绑（2026-10-31 一码多设备）：**只解绑本机**，同卡其它设备照常在线。
 
     2026-11-10 用户口径（原「非首次扣 3 天」整体下线）：**解绑不扣有效期、不限次数**。
@@ -513,12 +526,19 @@ def unbind_card(db: Session, card_key: str, device_id: str) -> dict[str, Any]:
         SessionToken.device_id == device_id,
         SessionToken.revoked.is_(False),
     ).update({"revoked": True})
-    # 解绑后本机立刻算游客
+    # 解绑是显式业务动作：解除本机卡关联（同时清 verified，统计不会再把它算「已验证」）
     db.query(OnlinePresence).filter(
         OnlinePresence.device_id == device_id, OnlinePresence.card_id == card.id
-    ).update({"card_id": None})
+    ).update({"card_id": None, "card_verified_at": None}, synchronize_session=False)
+    # 成功事件同样要带来源元数据（后台按设备追溯）；detail 只放内部标识，不放卡密
     record_auth_event(
-        db, "unbind", card_id=card.id, detail=f"device={device_id} 不扣有效期",
+        db,
+        "unbind",
+        device_id=device_id,
+        card_id=card.id,
+        detail=f"card#{card.id}",
+        result="ok",
+        request=request,
     )
     db.commit()
     return {"message": "已解绑本机（不影响有效期）"}
@@ -530,8 +550,11 @@ def heartbeat(
     game_id: str,
     device_id: str,
     legacy_device_ids: Optional[list[str]] = None,
+    request: Any = None,
 ) -> dict[str, Any]:
     settings = get_settings()
+    if not is_valid_device_id(device_id):
+        raise HTTPException(400, "设备标识无效")
     session = db.query(SessionToken).filter(SessionToken.token == token).first()
     if not session or session.revoked:
         raise HTTPException(401, "会话无效，请重新登录")
@@ -617,6 +640,7 @@ def heartbeat(
             device_id=device_id,
             card_id=card.id,
             detail=f"session={getattr(session, 'id', None)} migrated",
+            request=request,
             commit=False,
         )
 
@@ -671,26 +695,18 @@ def _upsert_presence(
     *,
     update_card: bool = True,
 ) -> None:
-    """刷新在线心跳。update_card=False 时只续期 last_seen，保留原有 card_id（供 bootstrap 轮询）。"""
-    row = (
-        db.query(OnlinePresence)
-        .filter(OnlinePresence.game_id == game_id, OnlinePresence.device_id == device_id)
-        .first()
+    """刷新在线行（兼容旧调用名）。
+
+    2026-11-15 起语义收紧：只有 update_card=True 且调用方确已认证时才写 card_id 与
+    card_verified_at；update_card=False 只续 last_seen。非法 device_id 直接不写。
+    """
+    return touch_presence(
+        db,
+        game_id,
+        device_id,
+        card_id=card_id,
+        verified=bool(update_card),
     )
-    now = utcnow()
-    if row:
-        row.last_seen_at = now
-        if update_card:
-            row.card_id = card_id
-    else:
-        db.add(
-            OnlinePresence(
-                game_id=game_id,
-                device_id=device_id,
-                card_id=card_id if update_card else None,
-                last_seen_at=now,
-            )
-        )
 
 
 def serialize_card_public(
@@ -837,16 +853,23 @@ def bootstrap_with_grant(
     """
     boot = build_bootstrap(db, game_id, logged_in=logged_in)
     did = (device_id or "").strip()
+    # 防御性双保险：bootstrap 是所有入口里最容易被脚本打的一个，即使上层漏校验，
+    # 这里也不让非法串进在线表（touch_presence 内部同样有校验）。
+    if did and not is_valid_device_id(did):
+        did = ""
     if did:
         open_mode = not boot.get("card_auth_enabled", True)
-        if open_mode or not logged_in:
-            # 关卡密 / 已退出登录：记为游客，必须清掉残留 card_id
-            _upsert_presence(db, game_id, did, card_id=None, update_card=True)
-        else:
-            # 仍卡密登录：只续期 last_seen，保留心跳写入的 card_id
-            _upsert_presence(db, game_id, did, update_card=False)
-        db.commit()
+        # 2026-11-16 分层口径（lead 定）：
+        # - 需卡游戏：bootstrap 是未认证入口，**不得**写 presence；活跃只认
+        #   login 成功 / 带 token 的 heartbeat 成功（两者都写 card_verified_at）。
+        # - 免卡游戏：没有认证链，bootstrap 写下的只能算「观察值」，不冒充可信样本；
+        #   看板 verified 不计入，后续若要匿名可信采集需客户端配合（暂不做）。
         if open_mode:
+            # 免卡游戏（card_auth_enabled=false）没有 login/heartbeat 认证链，
+            # 只能保留 bootstrap 观察值（明确标为不可信样本，看板不计入 verified）。
+            # 需卡游戏一律不写：那是「未认证 bootstrap 计活跃」的灌水入口。
+            touch_presence(db, game_id, did)  # 观察值：不写 card_id / 认证时间
+            db.commit()
             boot["grant"] = mint_grant(
                 device_id=did,
                 game_id=game_id,

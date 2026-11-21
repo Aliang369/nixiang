@@ -73,6 +73,7 @@
         <button data-page="announcements">远程公告</button>
         <button data-page="ota">游戏补丁</button>
         <button data-page="toasts">开屏Toast</button>
+        <button data-page="events">设备日志</button>
         <button data-page="audit">操作日志</button>
         <button data-page="settings">后台设置</button>
       </nav>
@@ -409,6 +410,62 @@
       </section>
 
       <!-- audit -->
+      <section id="page-events" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>设备日志</h3>
+            <span class="muted" id="ev-note">仅管理员可见；设备号默认打码，卡密只显示内部编号</span>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="ev-device">设备号（完整值精确查询）</label>
+              <input id="ev-device" placeholder="dev_xxx（留空=全部）" onkeydown="if(event.key==='Enter'){eventsPage=1;loadEvents()}" />
+            </div>
+            <div class="field">
+              <label for="ev-card-id">卡内部 ID</label>
+              <input id="ev-card-id" placeholder="如 12（留空=全部）" onkeydown="if(event.key==='Enter'){eventsPage=1;loadEvents()}" />
+            </div>
+            <div class="field">
+              <label for="ev-type">事件</label>
+              <select id="ev-type">
+                <option value="">全部</option>
+                <option value="login_ok">登录成功</option>
+                <option value="login_fail">登录失败</option>
+                <option value="heartbeat_fail">心跳失败</option>
+                <option value="bootstrap_reject">启动配置被拒</option>
+                <option value="activate">激活</option>
+                <option value="device_migrate">设备迁移</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ev-result">结果</label>
+              <select id="ev-result">
+                <option value="">全部</option>
+                <option value="ok">成功</option>
+                <option value="deny">拒绝</option>
+                <option value="error">错误</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>开始时间</label>
+              <span id="ev-from-slot"></span>
+            </div>
+            <div class="field">
+              <label>结束时间</label>
+              <span id="ev-to-slot"></span>
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="eventsPage=1;loadEvents()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>时间</th><th>事件</th><th>结果</th><th>设备</th><th>游戏</th><th>卡密</th><th>原因</th><th>IP</th><th>重复</th><th></th></tr></thead>
+              <tbody id="events-body"><tr><td colspan="10" class="empty">加载中…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pager" id="events-pager"></div>
+        </div>
+      </section>
+
       <section id="page-audit" class="hidden">
         <div class="panel">
           <div class="toolbar">
@@ -461,10 +518,11 @@
   <div class="toast" id="toast"></div>
 
   <script src="/admin/js/time-picker.js?v=3"></script>
-  <script src="/admin/js/core.js?v=4"></script>
+  <script src="/admin/js/core.js?v=5"></script>
   <script src="/admin/js/audit.js?v=2"></script>
+  <script src="/admin/js/events.js?v=5"></script>
   <script src="/admin/js/features.js?v=1"></script>
-  <script src="/admin/js/dashboard.js?v=8"></script>
+  <script src="/admin/js/dashboard.js?v=9"></script>
   <script src="/admin/js/games.js?v=6"></script>
   <script src="/admin/js/cards.js?v=3"></script>
   <script src="/admin/js/announcements.js?v=2"></script>
@@ -747,6 +805,7 @@
       if (page === 'games') loadGamesTable();
       if (page === 'templates') loadTemplatesTable();
       if (page === 'audit') loadAudit();
+      if (page === 'events') loadEvents();
     }
 
     function goManageFeatures(gameId) {
@@ -1077,6 +1136,8 @@
       const slots = [
         ['au-from-slot', 'au-from', {}],
         ['au-to-slot', 'au-to', {}],
+        ['ev-from-slot', 'ev-from', {}],
+        ['ev-to-slot', 'ev-to', {}],
       ];
       let added = false;
       for (const [slotId, id, opts] of slots) {
@@ -1139,6 +1200,9 @@
 
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
+      // 弹窗优先：Escape 关闭 openModal 打开的弹层（与遮罩点击同一 closeModal）
+      const modal = document.getElementById('modal-root');
+      if (modal && !modal.classList.contains('hidden')) { closeModal(); return; }
       const card = document.getElementById('account-card');
       if (card && card.classList.contains('open')) {
         card.classList.remove('open');

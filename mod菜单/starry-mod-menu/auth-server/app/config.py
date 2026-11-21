@@ -35,6 +35,20 @@ class Settings(BaseSettings):
     # 玩家卡密登录限流（按 IP）
     card_login_max_fails: int = 12
     card_login_window_seconds: int = 600
+    # ---- 2026-11-15 遥测/审计可信化 ----
+    # 可信反代地址（逗号分隔，精确 IP 或 CIDR）。只有 peer 属于此列表才采信 X-Real-IP /
+    # X-Forwarded-For；默认空 = 一律用 socket peer，避免客户端伪造头部刷 IP。
+    # 生产在 nginx 反代场景下填反代容器/本机地址（如 127.0.0.1,172.18.0.0/16）。
+    trusted_proxy_ips: str = ""
+    # 公开 bootstrap 每 IP 滑动窗口上限；0=关闭（默认关闭，避免 NAT 大出口被误杀）
+    bootstrap_rate_max: int = 0
+    bootstrap_rate_window_seconds: int = 60
+    # 同一 (device, reason, ip) 的登录失败聚合窗口：窗口内只留首条并累加 suppressed
+    login_fail_dedupe_seconds: int = 600
+    # 每个 IP 在聚合窗口内最多记录多少条「不同」失败事件，超出只计一次 rate_limited 标记
+    login_fail_max_keys_per_ip: int = 60
+    # 事件保留天数（仅用于后台展示与人工清理脚本口径，不做自动删除）
+    auth_event_retention_days: int = 90
     # 玩法 OTA 落盘根目录（每 game_id/latest 一份）
     ota_data_dir: str = ""
     # OTA 按 IP 限流（滑动窗口内次数）

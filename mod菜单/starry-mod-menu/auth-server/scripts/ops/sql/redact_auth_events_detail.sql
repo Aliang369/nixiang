@@ -1,0 +1,1 @@
+-- 已废弃：改由 run_redact.sh 分批执行（见 redact_step_equal.sql / redact_step_substring.sql）
