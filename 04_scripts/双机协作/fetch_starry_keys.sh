@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # ============================================================================
-# fetch_starry_keys.sh — 新机器（mac）落地构建机密钥 + 三项自证（bash 3.2 兼容）
+# fetch_starry_keys.sh — 新机器（mac）落地构建机密钥 + 自证（bash 3.2 兼容）
 #
-# 背景：出包机必须持有 ~/.starry-keys/{rsa2048.txt,payload_master.txt,build_key.txt}
-#       才能算出与服务端**同一把** K_build / 签同一个公钥指纹。mac 端没有这三份
-#       ⇒ gen_payload_enc.py / gen_pubkey_header.py / harden_apk.py C9 全部不可用。
+# 背景：出包机持有 ~/.starry-keys/{rsa2048.txt,payload_master.txt,build_key.txt}；
+#       mac 端没有这三份 ⇒ gen_pubkey_header.py / payload 派生脚本在本机不可用。
+#       2026-11-22：v3 票退役，服务端 payload_sha / payload-status 已删除，
+#       payload_master.txt 仅历史遗留（老包复刻用），不再有服务端校验环节。
 #
 # 通道：**经 SSH 从授权服务器取，绝不走 git**。私钥入库后即使后续提交删除，
 #       blob 也永久留在历史里（两台机器 .git 各一份），清理要 filter-repo+强推，
 #       属 AGENTS.md §5 事故级禁区。
 #
 # 用法：
-#   bash 04_scripts/双机协作/fetch_starry_keys.sh              # 取 + 三项自证
+#   bash 04_scripts/双机协作/fetch_starry_keys.sh              # 取 + 自证
 #   bash 04_scripts/双机协作/fetch_starry_keys.sh --verify     # 只自证（已取过）
 #   bash 04_scripts/双机协作/fetch_starry_keys.sh --dry-run    # 只看要取什么
 #   bash 04_scripts/双机协作/fetch_starry_keys.sh --force      # 覆盖已存在的密钥
@@ -20,11 +21,10 @@
 #   SG_SSH_HOST    授权服务器 SSH 目标     默认 root@154.94.232.231
 #   SG_SERVER_DIR  服务端 auth-server 目录  默认 /www/wwwroot/starlight-mod-auth
 #   SG_GAME        用于自证的 game_id       默认 starry_self（星光自测）
-#   SG_API_BASE    v3/payload-status 基址   默认 https://auth.xgmfyx.cn
 #   SG_EXPECT_FP   期望公钥指纹             默认 25ba10e0faca3500
-#   SG_EXPECT_KFP  期望 K_build 指纹        默认 d63013cd39692ddd
+#   SG_EXPECT_KFP  期望 K_build 指纹        默认 d63013cd39692ddd（仅本机自算比对）
 #
-# 退出码：0 = 三项全 PASS / 1 = 有 FAIL / 2 = 只 WARN（未取齐但没硬错）
+# 退出码：0 = 自证全 PASS / 1 = 有 FAIL / 2 = 只 WARN（未取齐但没硬错）
 #
 # 安全：落地目录 700、文件 600；脚本不打印任何密钥内容，只打印指纹。
 # ============================================================================
@@ -222,60 +222,11 @@ PY
 fi
 
 # ---------------------------------------------------------------------------
-# 4) 自证 C：服务端 payload-status match=true 且 k_build_fp 一致
+# 4) 自证 C：已下线（2026-11-22）
 # ---------------------------------------------------------------------------
-sect "4/4 自证 C — 服务端 payload-status（需要网络 + build_key）"
-
-if [ ! -f "$KD/build_key.txt" ]; then
-  warn "缺 $KD/build_key.txt ⇒ 跳过联网校验（C9 也会跳过）"
-elif [ -z "$PAYLOAD_SHA" ]; then
-  warn "没有载荷 sha ⇒ 跳过联网校验"
-elif ! command -v curl >/dev/null 2>&1; then
-  warn "没有 curl ⇒ 跳过联网校验"
-else
-  KEY="$(tr -d '\r\n' < "$KD/build_key.txt")"
-  URL="$API_BASE/v1/build/payload-status?game_id=$GAME&sha=$PAYLOAD_SHA"
-  # 2026-11-21：自签证书（starlight.crt）已下线，服务器换发官方证书
-  # ⇒ 直接用系统 CA 校验证书，不再 --cacert 固定，也不再用 -k 跳过校验。
-  BODY="$(curl -sS -m 12 -H "X-Build-Key: $KEY" "$URL" 2>&1)"
-  STATUS_OUT="$(printf '%s' "$BODY" | python3 -c '
-import json, sys
-try:
-    d = json.load(sys.stdin)
-except Exception:
-    sys.exit("bad-json")
-if not isinstance(d, dict):
-    sys.exit("bad-json")
-print("match=%s" % d.get("match"))
-print("k_build_fp=%s" % d.get("k_build_fp", ""))
-print("v3_ready=%s" % d.get("v3_ready"))
-print("registered_sha=%s" % d.get("registered_sha", ""))
-' 2>&1)"
-  printf '%s\n' "$STATUS_OUT" | sed 's/^/       /'
-  case "$STATUS_OUT" in
-    *bad-json*)
-      fail "服务端返回非 JSON：$BODY"
-      info "403=build_key 不对；404=接口未启用/游戏不存在；compose 里 BUILD_API_KEY 是否为空"
-      ;;
-    *"match=True"*)
-      SRV_KFP="$(printf '%s\n' "$STATUS_OUT" | sed -n 's/^k_build_fp=//p' | head -1)"
-      if [ -n "$KFP" ] && [ "$SRV_KFP" = "$KFP" ]; then
-        pass "服务端 match=true，且 k_build_fp 与本机自算一致（${KFP}）"
-      else
-        fail "服务端 match=true 但 k_build_fp=$SRV_KFP ≠ 本机 $KFP ⇒ 两把不同的钥"
-      fi
-      case "$STATUS_OUT" in
-        *v3_ready=True*) pass "v3_ready=True（可签 v3 票）" ;;
-        *) warn "v3_ready=False ⇒ 服务端 payload_master 未配或该游戏未登记" ;;
-      esac
-      ;;
-    *)
-      fail "服务端 match 不是 true ⇒ 载荷 sha 未登记/不一致（去后台登记 ${PAYLOAD_SHA}）"
-      info "登记入口：后台 → 游戏列表 → 该游戏 → 载荷 sha；改 sha 会让旧包全失效"
-      ;;
-  esac
-  unset KEY BODY
-fi
+sect "4/4 自证 C — 服务端 payload-status（已下线）"
+info "2026-11-22：v3 票退役，后台 payload_sha 与 /v1/build/payload-status 一并删除"
+info "本步不再联网校验；K_build 指纹以第 3 步本机自算为准（不报 FAIL、不占 PASS 名额）"
 
 # ---------------------------------------------------------------------------
 # 汇总

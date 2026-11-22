@@ -163,6 +163,18 @@ class AdminUiWiringTest(unittest.TestCase):
         self.assertIn("REASON_BY_TYPE", self.events)
         self.assertIn("heartbeat_fail", self.events)
 
+    def test_events_device_cell_copies_full_id(self):
+        """2026-11-22：设备号列表仍打码，但点击可复制完整值（复用卡密 code.card-key 样式）。"""
+        self.assertIn("device_id_full", self.events)
+        self.assertIn('title="点击复制完整设备号"', self.events)
+        self.assertIn('data-copy="${escapeHtml(r.device_id_full)}', self.events)
+        # 列表照样渲染打码值，不能把完整号直接显示在表格里
+        self.assertIn("escapeHtml(r.device_id ||", self.events)
+        # 详情弹层标题给出完整号（可复制）
+        self.assertIn('data-copy="${escapeHtml(d.device_id_full)}', self.events)
+        # 不新增内联 onclick
+        self.assertNotIn('onclick="copyText', self.events)
+
     def test_card_key_rendered_plaintext_and_escaped(self):
         self.assertIn("card_key", self.events)
         self.assertIn("data-copy=", self.events)

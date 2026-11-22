@@ -229,8 +229,19 @@ class EventsApiTest(unittest.TestCase):
         self.assertEqual(out["meta"]["total"], 1)
         item = out["data"][0]
         self.assertNotIn(DEV32, item["device_id"])
+        # 2026-11-22：完整值放独立字段，供后台「点击复制」；列表展示仍是打码值
+        self.assertEqual(item["device_id_full"], DEV32)
         self.assertNotIn("SG-AAAA-BBBB-CCCC-DDDD", item["detail"])
         self.assertEqual(item["ua"], "UA/1.0")
+
+    def test_device_detail_returns_full_device_id(self):
+        record_auth_event(
+            self.db, "login_ok", game_id=self.gid, device_id=DEV32,
+            result="ok", request=_req(),
+        )
+        out = admin_router.device_detail(DEV32, _={}, db=self.db)
+        self.assertNotEqual(out["data"]["device_id"], DEV32)          # 展示仍是打码
+        self.assertEqual(out["data"]["device_id_full"], DEV32)        # 复制用完整值
 
     def test_event_detail_no_plaintext_but_card_key_field(self):
         key = "SG-" + uuid.uuid4().hex[:4].upper() + "-AAAA-BBBB-CCCC"

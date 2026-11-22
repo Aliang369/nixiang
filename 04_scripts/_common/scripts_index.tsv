@@ -50,14 +50,14 @@ flight_recorder.sh	sh	13656	flight_recorder.sh — 飞行记录仪（游玩期�
 framework_entry_audit.sh	sh	25551	framework_entry_audit.sh — 出包前「入口点 + 渠道接入」静态审计（复盘 20261010 §4 P0-1）	used	71
 gate_note.sh	sh	3062	gate_note.sh — 门禁即时记账（P7）	used	20
 gen_game_doc_index.py	py	10394	生成/校验每个游戏目录的 `_index.md`：本目录有哪些文件、哪个是当前有效、哪些是历史。	used	252
-gen_payload_enc.py	py	15038	-*- coding: utf-8 -*-	used	43
+gen_payload_enc.py	py	15038	-*- coding: utf-8 -*-	used	42
 gen_state_index.py	py	12944	生成跨游戏状态索引：current.md（当前工作集）＋ archive_index.md（全量）。	used	16
 gen_util.py	py	1638	代码生成器公共工具：幂等写盘。	used	5
 git_push_main.sh	sh	16849	git_push_main.sh —— 推送到 origin/<branch> 的**四通道自适应 + 自愈重试**实现	used	35
 gradle_cn_mirrors.py	py	2173	在 build.gradle 的每个 repositories{} 块最前面插入国内镜像仓库。	used	2
 gradle_cycle.sh	sh	18313	gradle_cycle.sh — 助手类（gradle 工程）一键出包链路（P5）	used	23
 gradle_localize.py	py	6943	把 starry-mod-menu 的临时构建副本"本地化"到本机 Android SDK + 国内镜像。	used	2
-harden_apk.py	py	30052	-*- coding: utf-8 -*-	used	139
+harden_apk.py	py	26191	-*- coding: utf-8 -*-	used	138
 harden_coverage.py	py	30741	-*- coding: utf-8 -*-	used	34
 harden_gate.sh	sh	3248	⛔ 停用件（2026-10-27 用户裁决）：加固门禁不再被任何规则/装机门禁要求（AGENTS.md §6）。	used	62
 install_guard.sh	sh	11684	install_guard.sh — 装机策略闸门（P1-⑥，2026-10-11 无悔华夏会话复盘）	used	31

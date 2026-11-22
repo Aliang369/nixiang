@@ -427,111 +427,16 @@ def c8(rep, apk, cfg):
 
 
 
-def _payload_sha_local(cfg):
-    """从该游戏生成的密文头里读载荷明文 sha（各游戏同一个字段名后缀 PayloadSha）。"""
-    import re as _re
-    hdr = cfg.get("payload_header", "")
-    if not hdr:
-        return ""
-    h = os.path.join(JNI, hdr)
-    if not os.path.exists(h):
-        return ""
-    m = _re.search(r'PayloadSha\s*=\s*"([0-9a-f]{64})"', io.open(h, "r", encoding="utf-8").read())
-    return m.group(1) if m else ""
-
-
-def _remind_block(game, sha, registered=""):
-    print("")
-    print("=" * 68)
-    if registered:
-        print("⚠️  服务端登记的载荷 sha 与本次出包不一致")
-        print("    服务端：%s" % (registered[:64] or "(空)"))
-    else:
-        print("⚠️  服务端尚未登记这个游戏的载荷 sha")
-    print("    游戏：%s   本次 sha：%s" % (game, sha))
-    print("")
-    print("    👉 去后台点一次（否则这版包真机功能全失效，只剩诱饵）：")
-    print("       后台 → 游戏列表 → 该游戏 → 操作 ▾ → 「载荷 sha」→ 粘贴上面的 sha → 保存")
-    print("       PUT /v1/admin/games/%s/payload?sha=%s" % (game, sha))
-    print("    ⚠️  改 sha 会让该游戏所有旧包功能失效，记得同步发新包。")
-    print("=" * 68)
-    print("")
-
-
 def c9(rep, cfg):
-    """C9：服务端是否已登记当前载荷 sha（防"载荷变了没去后台改"）。"""
-    import ssl
-    import urllib.request
-    import urllib.error
+    """C9：载荷 sha 登记 —— 2026-11-22 随 v3 票退役，本检查永久下线。
 
-    sha = _payload_sha_local(cfg)
-    if not sha:
-        rep.add("C9 载荷已登记", False, "读不到 %s 里的载荷 sha" % cfg.get("payload_header"))
-        return
-
-    def _secret(name, default=""):
-        v = (os.environ.get(name) or "").strip()
-        if v:
-            return v
-        f = os.path.join(os.path.expanduser("~"), ".starry-keys",
-                         {"SG_BUILD_KEY": "build_key.txt", "SG_API_BASE": "api_base.txt",
-                          "SG_GAME_ID": "game_id.txt"}[name])
-        try:
-            if os.path.exists(f):
-                return io.open(f, "r", encoding="utf-8").read().strip()
-        except Exception:
-            pass
-        return default
-
-    game = _secret("SG_GAME_ID", cfg["game_id"])
-    base = _secret("SG_API_BASE", "https://auth.xgmfyx.cn")
-    key = _secret("SG_BUILD_KEY", "")
-
-    if not (base and key):
-        rep.add("C9 载荷已登记", True,
-                "⚠️ 没有构建机 key（~/.starry-keys/build_key.txt）⇒ 未联网校验（记得后台登记 %s…）" % sha[:16])
-        _remind_block(game, sha)
-        return
-
-    url = "%s/v1/build/payload-status?game_id=%s&sha=%s" % (base.rstrip("/"), game, sha)
-    ctx = None
-    try:
-        # 2026-11-21：自签证书（starlight.crt）已下线，服务器改官方证书 ⇒ 走系统 CA，不再指定 cafile。
-        ctx = ssl.create_default_context()
-        req = urllib.request.Request(url, headers={"X-Build-Key": key})
-        with urllib.request.urlopen(req, timeout=8, context=ctx) as r:
-            import json as _json
-            d = _json.loads(r.read().decode() or "{}")
-    except urllib.error.HTTPError as e:
-        body = ""
-        try:
-            body = e.read().decode("utf-8", "replace")[:120]
-        except Exception:
-            pass
-        if e.code == 403:
-            rep.add("C9 载荷已登记", False, "SG_BUILD_KEY 不正确（服务端 403）")
-        elif e.code == 404:
-            rep.add("C9 载荷已登记", False,
-                    "后台没有这个游戏或接口未启用（404：%s）⇒ 先在后台建游戏再登记载荷" % body)
-            _remind_block(game, sha)
-        else:
-            rep.add("C9 载荷已登记", True, "⚠️ 联网校验跳过（HTTP %s）⇒ 请自行确认后台已登记 %s…"
-                    % (e.code, sha[:16]))
-            _remind_block(game, sha)
-        return
-    except Exception as e:  # noqa: BLE001
-        rep.add("C9 载荷已登记", True, "⚠️ 联网校验跳过（%s）⇒ 请自行确认后台已登记 %s…"
-                % (type(e).__name__, sha[:16]))
-        _remind_block(game, sha)
-        return
-
-    if d.get("match"):
-        rep.add("C9 载荷已登记", True, "一致 | v3_ready=%s | k_fp=%s"
-                % (d.get("v3_ready"), d.get("k_build_fp")))
-        return
-    rep.add("C9 载荷已登记", False, "不一致 | 服务端=%s… 本次=%s…"
-            % ((d.get("registered_sha") or "")[:16], sha[:16]))
-    _remind_block(game, sha, d.get("registered_sha") or "")
+    背景：payload_sha 只服务 v3 票（v3 = v2 + 载荷密钥包裹）。2026-11-21 v3 退役后，
+    后台 `games.payload_sha`、`/v1/admin/games/{id}/payload`、`/v1/build/payload-status`
+    于 2026-11-22 全部删除 ⇒ 本检查既无数据源也无接口，保留条目只为报告里写明原因，
+    不再发任何网络请求（旧实现在跑会恒 404 FAIL）。
+    """
+    rep.skip("C9 载荷已登记",
+             "已下线（2026-11-22：v3 票退役，后台 payload_sha / payload-status 接口已删除）")
 
 
 def write_stamp(apk, rep):

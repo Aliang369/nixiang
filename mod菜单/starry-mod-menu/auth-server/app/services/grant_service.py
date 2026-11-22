@@ -12,7 +12,6 @@ v1(HMAC) 不再签发、不再验证；服务端缺签名私钥或签名失败�
 from __future__ import annotations
 
 import hashlib
-import hmac
 import logging
 import time
 
@@ -27,7 +26,6 @@ from . import sg_rsa
 # 兼容性：全开 64 位在**老包**里经 (uint32_t)strtoul 截断后仍是 0xFFFFFFFF ⇒ 前 32 位照常全开，
 # 不会让老包失效；只有"仅开高位"的票在老包里会被读成 0（老包本就没有那些功能，可接受）。
 FEAT_MASK_ALL = 0xFFFFFFFFFFFFFFFF
-
 
 def compute_feat_mask(db, game_id: str, *, menu_enabled: bool = True) -> int:
     """按后台 `feature_flags.enabled` 逐位算掩码（2026-11-11 起）。
@@ -73,7 +71,6 @@ def compute_feat_mask(db, game_id: str, *, menu_enabled: bool = True) -> int:
 
 log = logging.getLogger(__name__)
 
-
 def _rsa_key():
     """私钥不可用（未配置/读失败）时返回 None —— 调用方必须 fail closed，不得退回对称票。"""
     path = (get_settings().grant_rsa_key_path or "").strip()
@@ -85,19 +82,15 @@ def _rsa_key():
         log.warning("grant_rsa_key 不可用（%s）：本次拒绝签发", e)
         return None
 
-
 def rsa_ready() -> bool:
     return _rsa_key() is not None
-
 
 def rsa_fingerprint():
     key = _rsa_key()
     return sg_rsa.key_fingerprint(key) if key else None
 
-
 class GrantSigningError(RuntimeError):
     """签名私钥缺失或签名失败 —— 调用方必须转成明确的对外错误（fail closed）。"""
-
 
 def ensure_grant_signing_ready() -> None:
     """签发前置检查：没有可用私钥就不往下走，避免先写库再失败。"""
@@ -105,7 +98,6 @@ def ensure_grant_signing_ready() -> None:
         raise GrantSigningError(
             "服务端未配置可用的签名私钥（grant_rsa_key_path），按 v2-only 策略拒绝签发授权票"
         )
-
 
 def mint_grant_v2_or_raise(*, device_id, game_id, offline_cache_seconds,
                            feat_mask=FEAT_MASK_ALL, token=None) -> str:
@@ -120,7 +112,6 @@ def mint_grant_v2_or_raise(*, device_id, game_id, offline_cache_seconds,
     if not grant:
         raise GrantSigningError("授权票签名失败（私钥不可用或签名异常）")
     return grant
-
 
 def mint_grant_v2(
     *,
@@ -152,65 +143,6 @@ def mint_grant_v2(
         return None
     return f"{body}.{sig}"
 
-def _payload_master():
-    path = (get_settings().payload_master_path or "").strip()
-    if not path:
-        return None
-    try:
-        with open(path, "r", encoding="ascii") as f:
-            return bytes.fromhex(f.read().strip()[:64])
-    except Exception as e:  # noqa: BLE001
-        log.warning("payload_master 不可用（%s）：v3 票将不签发", e)
-        return None
-
-
-_SHA_CACHE = {}          # game_id -> (sha, ts)
-_SHA_TTL = 60.0
-
-
-def _game_payload_sha(game_id):
-    """按 game_id 从库里取载荷 sha（60s 缓存）；取不到回退全局配置（老部署兼容）。"""
-    import time as _t
-    gid = (game_id or "").strip()
-    if gid:
-        hit = _SHA_CACHE.get(gid)
-        now = _t.time()
-        if hit and (now - hit[1]) < _SHA_TTL:
-            return hit[0]
-        try:
-            from ..database import SessionLocal
-            from ..models import Game
-            db = SessionLocal()
-            try:
-                row = db.query(Game).filter(Game.game_id == gid).first()
-                sha = (row.payload_sha or "").strip().lower() if row else ""
-            finally:
-                db.close()
-            _SHA_CACHE[gid] = (sha, now)
-            return sha          # 库里没有就是没有：**不回退全局**，避免所有游戏共用一把 sha
-        except Exception as e:  # noqa: BLE001
-            log.warning("读 games.payload_sha 失败（%s）：本游戏不签 v3", e)
-            return ""
-    return (get_settings().payload_sha or "").strip().lower()   # 仅 game_id 为空时走 env（内部调用）
-
-
-def payload_build_key(game_id=None):
-    """K_build = HMAC(master, "sgpay-build|" + sha256(明文载荷))；没配好就返回 None。"""
-    master = _payload_master()
-    sha = _game_payload_sha(game_id)
-    if not master or len(sha) != 64:
-        return None
-    try:
-        digest = bytes.fromhex(sha)
-    except ValueError:
-        return None
-    return hmac.new(master, b"sgpay-build|" + digest, hashlib.sha256).digest()
-
-
-def payload_ready(game_id=None):
-    return _rsa_key() is not None and payload_build_key(game_id) is not None
-
-
 def verify_grant_v2(grant: str, *, device_id: str, game_id: str, skew_seconds: int = 45):
     """服务端自测用（客户端以 native 验签为准）。"""
     key = _rsa_key()
@@ -232,8 +164,6 @@ def verify_grant_v2(grant: str, *, device_id: str, game_id: str, skew_seconds: i
     if parts[1] != (device_id or "").strip() or parts[2] != (game_id or "").strip():
         return None
     return {"exp": exp, "feat_mask": mask, "kid": parts[5]}
-
-
 
 def token_kid(token: str | None) -> str:
     if not token:

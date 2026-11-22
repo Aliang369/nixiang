@@ -29,6 +29,7 @@
 - 无斑马纹；th/td 水平居中；td `nowrap + ellipsis`（max-width 340）
 - **`.row-actions` 禁止改 td 的 display**（flex/block 会让 td 脱离 table-cell，行分隔线错位——已踩坑两次）；按钮 inline 排列 + `white-space: nowrap`，`td.row-actions { max-width: none }`，宽度不够靠 `.table-wrap` 横向滚动
 - 卡密/游戏操作列收缩为「操作 ▾」二级下拉（time-picker.css 的 `.card-row-menu` 紫色主题）
+- 设备日志「设备」列：**展示打码值、点击复制完整设备号**（复用卡密 `code.card-key` + `data-copy`，`title="点击复制完整设备号"`）；完整值走 API 的 `device_id_full`（仅管理员可读），列表绝不直接渲染完整号
 
 ## 账号与交互
 

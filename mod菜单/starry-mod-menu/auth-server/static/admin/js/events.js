@@ -89,7 +89,9 @@
               <td>${r.created_at ? escapeHtml(fmtLocal(r.created_at)) : '—'}</td>
               <td>${escapeHtml(formatEventType(r.event_type))}</td>
               <td>${escapeHtml(formatResult(r.result))}</td>
-              <td><code>${escapeHtml(r.device_id || '—')}</code></td>
+              <td>${r.device_id_full
+                ? `<code class="card-key" title="点击复制完整设备号" tabindex="0" data-copy="${escapeHtml(r.device_id_full)}">${escapeHtml(r.device_id || '')}</code>`
+                : `<code>${escapeHtml(r.device_id || '—')}</code>`}</td>
               <td>${escapeHtml(r.game_id || '—')}</td>
               <td>${cardCell(r)}</td>
               <td>${escapeHtml(formatReason(r.event_type, r.reason))}</td>
@@ -199,7 +201,10 @@
             <td>${e.card_key ? escapeHtml(e.card_key) : (e.card_id ? '已删除（card#' + e.card_id + '）' : '—')}</td></tr>`).join('');
           body.classList.remove('empty');
           body.innerHTML = `
-            <h3>设备 ${escapeHtml(d.device_id || '')}</h3>
+            <h3>设备 ${d.device_id_full
+              ? `<code class="card-key" title="点击复制完整设备号" tabindex="0" data-copy="${escapeHtml(d.device_id_full)}">${escapeHtml(d.device_id_full)}</code>`
+              : escapeHtml(d.device_id || '')}</h3>
+            <p class="sub">列表里设备号打码显示；点这里的设备号可复制完整值。</p>
             <p class="sub">最近成功：${d.last_success_at ? escapeHtml(fmtLocal(d.last_success_at)) : '—'} ·
                最近失败：${d.last_failure_at ? escapeHtml(fmtLocal(d.last_failure_at)) : '—'}</p>
             <div class="table-wrap"><table>

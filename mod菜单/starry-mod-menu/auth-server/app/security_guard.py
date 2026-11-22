@@ -46,59 +46,8 @@ def _parse_ip(value: str | None) -> str | None:
         return None
 
 
-def resolve_client_ip(request: Request) -> tuple[str, str]:
-    """返回 (ip, source)。source: peer | x-real-ip | xff。
-
-    安全口径：只有 socket peer 命中 trusted_proxy_ips（精确 IP 或 CIDR）时才采信转发头；
-    否则一律以 peer 为准，客户端自带 X-Forwarded-For 无法伪造。转发值只取单个 IP 字面量
-    并做长度/格式校验，不保存任意长原文。
-    """
-    peer = "unknown"
-    if request.client and request.client.host:
-        peer = _parse_ip(request.client.host) or "unknown"
-    nets = _trusted_proxy_nets()
-    if not nets:
-        return peer, "peer"
-    try:
-        peer_ip = ipaddress.ip_address(peer)
-    except ValueError:
-        return peer, "peer"
-    if not any(peer_ip in net for net in nets):
-        return peer, "peer"
-    # 只认 nginx 覆盖写的 X-Real-IP；X-Forwarded-For 客户端可自传最左值，一律不采信。
-    xri = _parse_ip(request.headers.get("x-real-ip"))
-    if xri:
-        return xri, "x-real-ip"
-    return peer, "peer"
 
 
-def _trusted_proxy_nets():
-    raw = (get_settings().trusted_proxy_ips or "").strip()
-    if not raw:
-        return []
-    nets = []
-    for item in raw.split(","):
-        item = item.strip()
-        if not item:
-            continue
-        try:
-            nets.append(ipaddress.ip_network(item, strict=False))
-        except ValueError:
-            continue
-    return nets
-
-
-def _parse_ip(value: str | None) -> str | None:
-    """只接受可解析的 IP 字面量，返回规范化短串（<=45）；否则 None。"""
-    if not value:
-        return None
-    raw = value.strip()
-    if len(raw) > 45 or any(ch < " " for ch in raw):
-        return None
-    try:
-        return str(ipaddress.ip_address(raw))
-    except ValueError:
-        return None
 
 
 def resolve_client_ip(request: Request) -> tuple[str, str]:

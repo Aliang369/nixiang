@@ -186,6 +186,26 @@ CREATE INDEX ix_auth_events_result ON auth_events (result);
 > `scripts/ops/sql/*.sql` 是 **PostgreSQL 语法**（`CONCURRENTLY`、`TIMESTAMPTZ` 等），
 > MySQL 环境**不能直接执行**，只作口径参考；MySQL 侧的清理/回填需另行改写。
 
+### 升级到 2026-11-22 版本（载荷 sha / v3 残留整体删除）
+
+v3 票已于 2026-11-21 退役（只发 v2 非对称票），其载荷体系本次一并删除：
+
+- 后台：游戏行「操作 ▾ → 载荷 sha」入口与弹窗；
+- 接口：`GET/PUT /v1/admin/games/{game_id}/payload`、`GET /v1/build/payload-status`；
+- 字段/配置：`games.payload_sha`、`PAYLOAD_MASTER_PATH`、`PAYLOAD_SHA`、`BUILD_API_KEY`；
+- 脚本：`harden_apk.py` 的 C9 与 `fetch_starry_keys.sh` 第 4 步自证 C 标「已下线」，不再联网。
+
+**MySQL 必须手工删列**（`create_all` 不会改已存在的表）：
+
+```sql
+-- 先备份 games 表：mysqldump --single-transaction <库> games > games_before_drop.sql
+ALTER TABLE games DROP COLUMN payload_sha;
+```
+
+`.env` 里残留的 `PAYLOAD_MASTER_PATH` / `BUILD_API_KEY` 不再被读取（pydantic `extra=ignore`），
+建议下次维护窗口一并删掉。**只动 bt（154.94.232.231），不动 starlight（47.100.216.101）。**
+
+
 ### 授权票 v2-only（重要）
 
 本版本的 `app/services/auth_service.py` 对**卡密登录 / 心跳 / 免卡 bootstrap** 采用
@@ -196,7 +216,7 @@ v2 非对称签名票，且 `grant_rsa_key_path` 为空时**直接拒绝签发�
 | 项目 | 值 |
 |---|---|
 | 私钥 | `/www/wwwroot/starlight-mod-auth/keys/rsa2048.txt`（600 / www:www） |
-| 载荷主密钥 | `/www/wwwroot/starlight-mod-auth/keys/payload_master.txt`（600 / www:www） |
+| 载荷主密钥 | ~~`keys/payload_master.txt`~~ **2026-11-22 起服务端不再读取**（v3 票退役，`payload_sha` 体系删除）；文件仅老包复刻留档 |
 | 公钥指纹 | `sha256(模数)[:16] = 25ba10e0faca3500` |
 | 客户端对应文件 | `app/src/main/jni/Includes/sg_pubkey.h` → `kSgPubN` / `kSgPubFp` |
 | 出包机私钥来源 | `C:\Users\Administrator\.starry-keys\rsa2048.txt` |
@@ -206,5 +226,5 @@ v2 非对称签名票，且 `grant_rsa_key_path` 为空时**直接拒绝签发�
 
 **客户端连接约束**：`AuthClient.java` 硬编码 `ALLOWED_HOST = "auth.xgmfyx.cn"`，
 只允许 HTTPS + 443，其他主机在发请求前即被拒绝。因此 APK 必然连本实例，
-出包机的 `~/.starry-keys/api_base.txt` 仅用于出包门禁查询 `/v1/build/payload-status`，
-不影响 APK 运行时连接。
+`/v1/build/payload-status` 已于 2026-11-22 删除，`~/.starry-keys/api_base.txt` 不再被任何门禁使用（历史遗留）。
+APK 运行时连接不受影响。
