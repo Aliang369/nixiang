@@ -70,9 +70,10 @@ public final class NativeMenuController {
 
     /**
      * 调试：后台没有公告时，注入一条本地演示公告，用于预览/调「公告卡边框」位置。
-     * 只影响调试预览，不动任何授权/公告判定；发版前置 false 即可。
+     * 只影响调试预览，不动任何授权/公告判定。
+     * 2026-11-23：按发版口径置 false（边框已定型，不再需要演示公告）。
      */
-    private static final boolean DEBUG_ANNOUNCE_PREVIEW = true;
+    private static final boolean DEBUG_ANNOUNCE_PREVIEW = false;
 
     /** 公告卡窗口留白直接取 MenuFrameRes.ANNOUNCE_GEO 的 px 值（单一来源，避免两处不同步） */
 
