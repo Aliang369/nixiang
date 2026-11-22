@@ -68,6 +68,14 @@ public final class NativeMenuController {
      */
     private static final float OVERLAY_SAFE_ALPHA = 1.0f;
 
+    /**
+     * 调试：后台没有公告时，注入一条本地演示公告，用于预览/调「公告卡边框」位置。
+     * 只影响调试预览，不动任何授权/公告判定；发版前置 false 即可。
+     */
+    private static final boolean DEBUG_ANNOUNCE_PREVIEW = true;
+
+    /** 公告卡窗口留白直接取 MenuFrameRes.ANNOUNCE_GEO 的 px 值（单一来源，避免两处不同步） */
+
     /** 字号阶梯（对齐旧 HTML 观感，略抬正文可读性） */
     private static final float FS_TITLE = 16f;
     private static final float FS_SECTION = 14f; // 分类标题（原 12）
@@ -88,10 +96,15 @@ public final class NativeMenuController {
     private static final int SPACE = 8;
     private static final int SPACE_TIGHT = 4;
     private static final int ROW_PAD_V = 7;
-    /** 花藤探出面板描边的外圈（dp）；与角饰尺寸配合形成内外缠绕 */
-    private static final int VINE_OVERHANG_DP = 22;
-    private static final int PANEL_INNER_W_DP = 312;
-    private static final int VINE_CORNER_DP = 112;
+    /** 面板外探量（dp）：外壳比卡片宽一圈，边框层靠它向外溢出绘制 */
+    private static final int OVERHANG_DP = 22;
+    private static final int PANEL_INNER_W_DP = 304;
+    /** 2026-11-22：面板顶部预留空白（dp），供边框层向上溢出，避免上移后被窗口裁掉 */
+    private static final int FRAME_TOP_PAD_DP = 7;
+    /** 2026-11-22：面板左右各留空白（dp），给四角外移做溢出空间 */
+    private static final int FRAME_SIDE_PAD_DP = 7;
+    /** 2026-11-22：面板底部留空白（dp），给下中边框下移溢出用（7dp=21px@3x） */
+    private static final int FRAME_BOTTOM_PAD_DP = 25;
     // 内容滚动区高度预算：正常屏上限 260dp；小屏（横屏/低分辨率/大显示缩放）按屏幕 dp 视口收缩
     private static final int PANEL_LIST_MAX_DP = 260;
     private static final int PANEL_LIST_MIN_DP = 110;
@@ -141,29 +154,6 @@ public final class NativeMenuController {
     private TextView tabFeat;
     private TextView tabAuth;
     private TextView tabSet;
-    private TextView statusLine;
-    private boolean aceGateTickerStarted;
-    private boolean aceGateWasBlocking;
-    private final Runnable aceGateTickRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                refreshAuthStatus();
-                int left = ModBridge.getAceGateRemainSec();
-                if (aceGateWasBlocking && left <= 0) {
-                    aceGateWasBlocking = false;
-                    refreshFeatures();
-                    showToast("过检完成，功能可用");
-                } else if (left > 0) {
-                    aceGateWasBlocking = true;
-                }
-            } finally {
-                if (aceGateTickerStarted) {
-                    mainHandler.postDelayed(this, 1000L);
-                }
-            }
-        }
-    };
     private TextView accountExpireTv;
     private TextView accountUsesTv;
     private Button accountUnbindBtn;
@@ -956,18 +946,23 @@ public final class NativeMenuController {
     }
 
     private View buildPanel() {
-        final int overhang = dp(VINE_OVERHANG_DP);
+        final int overhang = dp(OVERHANG_DP);
         FrameLayout shell = new FrameLayout(appContext);
-        // 外壳比面板宽一圈，给花藤探出边框的空间（窗口本身也会按此尺寸算）
+        // 外壳比面板宽一圈，给边框层外探留空间（窗口本身也会按此尺寸算）
         FrameLayout.LayoutParams plp = new FrameLayout.LayoutParams(
                 dp(PANEL_INNER_W_DP) + overhang * 2, ViewGroup.LayoutParams.WRAP_CONTENT);
+        // 2026-11-22 B 方案：顶部 + 左右留空白，给边框层向外溢出用
+        plp.topMargin = dp(FRAME_TOP_PAD_DP);
+        plp.bottomMargin = dp(FRAME_BOTTOM_PAD_DP);
+        plp.leftMargin = dp(FRAME_SIDE_PAD_DP);
+        plp.rightMargin = dp(FRAME_SIDE_PAD_DP);
         shell.setLayoutParams(plp);
         shell.setClipToPadding(false);
         shell.setClipChildren(false);
 
         FrameLayout card = new FrameLayout(appContext);
         card.setBackground(MagicRes.panelBg(appContext));
-        // elevation 会盖住同级无 elevation 的花藤内侧；阴影改挂外壳
+        // elevation 会盖住同级无 elevation 的边框层内侧；阴影改挂外壳
         card.setElevation(0f);
         card.setClipToPadding(true);
         card.setClipChildren(true);
@@ -987,11 +982,19 @@ public final class NativeMenuController {
         shell.addView(card, cardLp);
         shell.setElevation(dp(12));
 
-        // 花藤挂在外壳四角，横跨描边（外探 + 内侧压边）
-        addVineCorner(shell, Gravity.TOP | Gravity.START);
-        addVineCorner(shell, Gravity.TOP | Gravity.END);
-        addVineCorner(shell, Gravity.BOTTOM | Gravity.START);
-        addVineCorner(shell, Gravity.BOTTOM | Gravity.END);
+        // 2026-11-22 换新边框：九宫格素材层（四角框/上中/下中/侧边框2）
+        View frameLayer = new View(appContext);
+        frameLayer.setBackground(MenuFrameRes.frameBg());
+        frameLayer.setClickable(false);
+        frameLayer.setFocusable(false);
+        // 向上溢出到顶部空白里，边框上移时不会被窗口边界裁掉
+        FrameLayout.LayoutParams frameLp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        frameLp.topMargin = -dp(FRAME_TOP_PAD_DP);
+        frameLp.bottomMargin = -dp(FRAME_BOTTOM_PAD_DP);
+        frameLp.leftMargin = -dp(FRAME_SIDE_PAD_DP);
+        frameLp.rightMargin = -dp(FRAME_SIDE_PAD_DP);
+        shell.addView(frameLayer, frameLp);
 
         LinearLayout box = new LinearLayout(appContext);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -1032,17 +1035,6 @@ public final class NativeMenuController {
         title.setIncludeFontPadding(false);
         titleBlock.addView(title, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        statusLine = new TextView(appContext);
-        statusLine.setTextColor(MagicRes.INK_2);
-        setFs(statusLine, FS_STATUS);
-        statusLine.setGravity(Gravity.CENTER);
-        statusLine.setIncludeFontPadding(false);
-        statusLine.setAlpha(0.92f);
-        LinearLayout.LayoutParams statusLp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        statusLp.topMargin = dp(2);
-        titleBlock.addView(statusLine, statusLp);
 
         ImageView close = new ImageView(appContext);
         close.setImageDrawable(MagicRes.icCollapse(appContext));
@@ -1136,33 +1128,6 @@ public final class NativeMenuController {
         }
     }
 
-
-    private void addVineCorner(FrameLayout shell, int gravity) {
-        ImageView iv = new ImageView(appContext);
-        iv.setImageDrawable(MagicRes.vineCorner(appContext, gravity));
-        iv.setAlpha(0.98f);
-        iv.setScaleType(ImageView.ScaleType.FIT_XY);
-        // 上下外探维持；左右再往里一点
-        int overhang = dp(VINE_OVERHANG_DP);
-        int mV = overhang - dp(14);
-        int mH = overhang - dp(12); // 左右比「再往里」回调 2dp
-        int left = 0, top = 0, right = 0, bottom = 0;
-        if ((gravity & Gravity.START) == Gravity.START) left = mH;
-        if ((gravity & Gravity.END) == Gravity.END) right = mH;
-        if ((gravity & Gravity.TOP) == Gravity.TOP) top = mV;
-        if ((gravity & Gravity.BOTTOM) == Gravity.BOTTOM) bottom = mV;
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                dp(VINE_CORNER_DP), dp(VINE_CORNER_DP), gravity);
-        lp.setMargins(left, top, right, bottom);
-        shell.addView(iv, lp);
-        // 必须高于面板，否则 elevation/绘制顺序会把内侧藤蔓盖掉
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            iv.setTranslationZ(dp(16));
-            iv.setElevation(dp(16));
-        }
-        iv.bringToFront();
-    }
-
     private View makeHairline() {
         View line = new View(appContext);
         line.setBackground(MagicRes.statusDivider(appContext));
@@ -1211,7 +1176,7 @@ public final class NativeMenuController {
             }
             int width = layoutParams.width;
             if (width <= 0) {
-                width = dp(PANEL_INNER_W_DP + VINE_OVERHANG_DP * 2);
+                width = dp(PANEL_INNER_W_DP + OVERHANG_DP * 2 + FRAME_SIDE_PAD_DP * 2);
             }
             root.measure(
                     View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
@@ -1598,14 +1563,6 @@ public final class NativeMenuController {
     private boolean featureInteractable(int featNum) {
         if (ModBridge.getAceGateRemainSec() > 0) return false;
         return bridge.hasLiveNativeSession();
-    }
-
-    private void ensureAceGateTicker() {
-        if (aceGateTickerStarted) return;
-        if (!"ltzj".equals(Preferences.getAuthGameId())) return;
-        aceGateTickerStarted = true;
-        aceGateWasBlocking = ModBridge.getAceGateRemainSec() > 0;
-        mainHandler.post(aceGateTickRunnable);
     }
 
     private void addFeatureRow(FeatureListParser.Item item) {
@@ -2142,7 +2099,7 @@ public final class NativeMenuController {
             panel.setScaleX(0.92f);
             panel.setScaleY(0.92f);
             panel.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).start();
-            layoutParams.width = dp(PANEL_INNER_W_DP + VINE_OVERHANG_DP * 2);
+            layoutParams.width = dp(PANEL_INNER_W_DP + OVERHANG_DP * 2 + FRAME_SIDE_PAD_DP * 2);
             layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
             layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
             layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
@@ -2423,20 +2380,6 @@ public final class NativeMenuController {
     }
 
     private void refreshAuthStatus() {
-        if (statusLine == null) return;
-        ensureAceGateTicker();
-        int aceLeft = ModBridge.getAceGateRemainSec();
-        if (aceLeft > 0) {
-            statusLine.setText("过检测中 " + aceLeft + "s");
-            statusLine.setTextColor(0xFFE0C07E);
-        } else {
-            // 以 native session 为准（登录后不过期）
-            boolean ok = bridge.hasLiveNativeSession();
-            // 副标题只保留两态，其它提示走 Toast
-            statusLine.setText(ok ? "授权有效" : "未授权");
-            statusLine.setTextColor(ok ? MagicRes.OK : MagicRes.ERROR);
-        }
-
         boolean ok = bridge.hasLiveNativeSession();
         boolean cardAuth = Preferences.isCardAuthRequired();
         boolean sessionOk = ok;
@@ -2680,6 +2623,19 @@ public final class NativeMenuController {
                         if (a != null) annList.add(a);
                     }
                 }
+                if (annList.isEmpty() && DEBUG_ANNOUNCE_PREVIEW) {
+                    try {
+                        JSONObject demo = new JSONObject();
+                        demo.put("id", "debug-preview");
+                        demo.put("title", "边框定位预览");
+                        demo.put("content", "这是一条本地演示公告（不来自服务端），用来调整公告卡边框位置："
+                                + "四角、上中、下中、左右中与主面板共用同一套素材。");
+                        demo.put("popup_mode", "every_open");
+                        annList.add(demo);
+                    } catch (Exception ignored) {
+                    }
+                }
+
                 final List<String> toastTexts = new ArrayList<>();
                 if (toasts != null) {
                     for (int i = 0; i < toasts.length(); i++) {
@@ -2848,8 +2804,14 @@ public final class NativeMenuController {
         announceAttachRetry = 0;
         removeMagicAnnounce();
         try {
-            final int overhang = dp(VINE_OVERHANG_DP);
+            final int overhang = dp(OVERHANG_DP);
+            // 2026-11-22 公告卡挂同一套边框：窗口四周留白，给边框层溢出用。
+            // 数值一律取自 ANNOUNCE_GEO（px），绘制与窗口 padding 用同一份，杜绝 1dp 级错位
+            final int padSide = Math.round(MenuFrameRes.ANNOUNCE_GEO.padSide);
+            final int padTop = Math.round(MenuFrameRes.ANNOUNCE_GEO.padTop);
+            final int padBottom = Math.round(MenuFrameRes.ANNOUNCE_GEO.padBottom);
             FrameLayout shell = new FrameLayout(appContext);
+            shell.setPadding(padSide, padTop, padSide, padBottom);
             shell.setClipChildren(false);
             shell.setClipToPadding(false);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -2982,19 +2944,32 @@ public final class NativeMenuController {
                 actions.addView(goBtn, glp);
             }
 
+            // 先量卡片真实高度：窗口高度必须显式给出。否则边框层 MATCH_PARENT 会把
+            // WRAP_CONTENT 窗口撑满整屏（实测 3007px），边框坐标全部失真
+            card.measure(View.MeasureSpec.makeMeasureSpec(cardW, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            final int cardH = Math.max(1, card.getMeasuredHeight());
             FrameLayout.LayoutParams cardLp = new FrameLayout.LayoutParams(
                     cardW, ViewGroup.LayoutParams.WRAP_CONTENT);
             cardLp.setMargins(overhang, overhang, overhang, overhang);
             shell.addView(card, cardLp);
-            // 与主菜单同尺寸/同外探对齐
-            addVineCorner(shell, Gravity.TOP | Gravity.START);
-            addVineCorner(shell, Gravity.TOP | Gravity.END);
-            addVineCorner(shell, Gravity.BOTTOM | Gravity.START);
-            addVineCorner(shell, Gravity.BOTTOM | Gravity.END);
+
+            // 边框层：与主面板共用 MenuFrameRes（四角/上中/下中/左右中），负 margin 溢出到留白
+            View announceFrame = new View(appContext);
+            announceFrame.setBackground(MenuFrameRes.frameBg(MenuFrameRes.ANNOUNCE_GEO));
+            announceFrame.setClickable(false);
+            announceFrame.setFocusable(false);
+            FrameLayout.LayoutParams aflp = new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            aflp.topMargin = -padTop;
+            aflp.bottomMargin = -padBottom;
+            aflp.leftMargin = -padSide;
+            aflp.rightMargin = -padSide;
+            shell.addView(announceFrame, aflp);
 
             announceLp = new WindowManager.LayoutParams(
-                    cardW + overhang * 2,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    cardW + overhang * 2 + padSide * 2,
+                    cardH + overhang * 2 + padTop + padBottom,
                     0, 0,
                     layoutParams != null ? layoutParams.type : WindowManager.LayoutParams.TYPE_APPLICATION,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
@@ -3003,6 +2978,8 @@ public final class NativeMenuController {
                     PixelFormat.TRANSLUCENT
             );
             announceLp.gravity = Gravity.CENTER;
+            // 上下留白不等时，窗口居中会把卡片顶偏；补偿回来，卡片位置只由屏幕决定
+            announceLp.y = (padBottom - padTop) / 2;
             if (layoutParams != null) {
                 announceLp.token = layoutParams.token;
             }
@@ -3545,7 +3522,7 @@ public final class NativeMenuController {
                     // 登录即刚拿到新鲜 grant：不再触发冷启动对账，避免登录后立刻重复请求
                     grantRenewCycleDone = true;
                     if (silent) {
-                        // 静默自愈成功：不打扰用户，只留证据（云机第二次打开应直接回到「授权有效」）
+                        // 静默自愈成功：不打扰用户，只留证据（云机第二次打开应直接恢复会话）
                         Log.i(TAG, "[auth] cold-start self-heal ok, session restored silently");
                     } else if (!Preferences.isMenuEnabled()) {
                         showToast("游戏维护中，功能已关闭", "error");
