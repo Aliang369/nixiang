@@ -4,8 +4,11 @@ import android.app.AlertDialog;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Outline;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -23,12 +26,14 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
+import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -75,8 +80,6 @@ public final class NativeMenuController {
      */
     private static final boolean DEBUG_ANNOUNCE_PREVIEW = false;
 
-    /** 公告卡窗口留白直接取 MenuFrameRes.ANNOUNCE_GEO 的 px 值（单一来源，避免两处不同步） */
-
     /** 字号阶梯（对齐旧 HTML 观感，略抬正文可读性） */
     private static final float FS_TITLE = 16f;
     private static final float FS_SECTION = 14f; // 分类标题（原 12）
@@ -97,20 +100,13 @@ public final class NativeMenuController {
     private static final int SPACE = 8;
     private static final int SPACE_TIGHT = 4;
     private static final int ROW_PAD_V = 7;
-    /** 面板外探量（dp）：外壳比卡片宽一圈，边框层靠它向外溢出绘制 */
-    private static final int OVERHANG_DP = 22;
-    private static final int PANEL_INNER_W_DP = 304;
-    /** 2026-11-22：面板顶部预留空白（dp），供边框层向上溢出，避免上移后被窗口裁掉 */
-    private static final int FRAME_TOP_PAD_DP = 7;
-    /** 2026-11-22：面板左右各留空白（dp），给四角外移做溢出空间 */
-    private static final int FRAME_SIDE_PAD_DP = 7;
-    /** 2026-11-22：面板底部留空白（dp），给下中边框下移溢出用（7dp=21px@3x） */
-    private static final int FRAME_BOTTOM_PAD_DP = 25;
-    // 内容滚动区高度预算：正常屏上限 260dp；小屏（横屏/低分辨率/大显示缩放）按屏幕 dp 视口收缩
+    private static final int PANEL_CARD_PREFERRED_W_DP = 304;
+    private static final int PANEL_OVERHANG_DP = 22;
+    private static final int PANEL_SIDE_PAD_DP = 7;
     private static final int PANEL_LIST_MAX_DP = 260;
     private static final int PANEL_LIST_MIN_DP = 110;
-    // 滚动区之外的固定装饰高度（藤蔓外探44 + 上下padding32 + 标题栏约48 + 分割线约26 + tab栏44），实测估算
     private static final int PANEL_CHROME_H_DP = 190;
+    private static final int ANNOUNCE_BODY_PREFERRED_DP = 140;
 
     public enum AttachMode { ACTIVITY, OVERLAY, NONE }
 
@@ -140,6 +136,15 @@ public final class NativeMenuController {
     private FrameLayout fab;
     private ImageView fabIconView;
     private View panel;
+    private LinearLayout panelContent;
+    private FrameLayout panelHeader;
+    private View panelTitleBlock;
+    private ImageView panelClose;
+    private View panelTopDivider;
+    private View panelBottomDivider;
+    private View panelTabs;
+    private int panelBodyLimit;
+    private Runnable announceRelayout;
     private LinearLayout featureList;
     private LinearLayout currentCategoryBody;
     /** refreshFeatures 时递增；分类展开状态跨刷新保留 */
@@ -359,42 +364,93 @@ public final class NativeMenuController {
         if (ok && wasExpanded) {
             setExpanded(true);
             requestPanelRelayout();
-            clampWindowOnScreen();
         }
     }
 
-    /** 展开后坐标/高度越界时收进屏内，避免「裁掉一半且点不到」。 */
-    private void clampWindowOnScreen() {
-        if (layoutParams == null || windowManager == null || root == null || !attached) return;
-        try {
-            android.util.DisplayMetrics dm = appContext.getResources().getDisplayMetrics();
-            int screenW = dm.widthPixels;
-            int screenH = dm.heightPixels;
-            boolean heightClamped = false;
-            // 兜底：窗口高度超屏时压回屏内，否则底部 tab 栏出屏看不到也点不到
-            // （requestPanelRelayout 已按屏限高，此处防异常路径漏网，如重挂后 WRAP_CONTENT）
-            if (layoutParams.height > screenH) {
-                layoutParams.height = screenH;
-                heightClamped = true;
-                Log.i(TAG, "clampWindowOnScreen: height clamped to " + screenH);
+    // TOP|LEFT uses offsets local to the WindowManager's inset-fitted frame.
+    // Never write the screen-space origin of a freeform/split task into LayoutParams.
+    private Rect availableViewport(WindowManager wm, Activity host, View attachedView) {
+        if (Build.VERSION.SDK_INT >= 30 && (host != null || wm != null)) {
+            try {
+                WindowManager owner = host != null ? host.getWindowManager() : wm;
+                android.view.WindowMetrics metrics = owner.getCurrentWindowMetrics();
+                Rect bounds = metrics.getBounds();
+                android.graphics.Insets insets = metrics.getWindowInsets()
+                        .getInsetsIgnoringVisibility(fittedInsetTypes());
+                return new Rect(0, 0, Math.max(1, bounds.width() - insets.left - insets.right),
+                        Math.max(1, bounds.height() - insets.top - insets.bottom));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "WindowMetrics unavailable: " + e.getMessage());
             }
-            int w = layoutParams.width > 0 ? layoutParams.width : root.getWidth();
-            int h = layoutParams.height > 0 ? layoutParams.height : root.getHeight();
-            if (w <= 0) w = dp(FAB_WM_DP);
-            if (h <= 0) h = dp(FAB_WM_DP);
-            int maxX = Math.max(0, screenW - Math.min(w, screenW));
-            int maxY = Math.max(0, screenH - Math.min(h, screenH));
-            int nx = Math.max(0, Math.min(layoutParams.x, maxX));
-            int ny = Math.max(0, Math.min(layoutParams.y, maxY));
-            if (heightClamped || nx != layoutParams.x || ny != layoutParams.y) {
-                layoutParams.x = nx;
-                layoutParams.y = ny;
-                windowManager.updateViewLayout(root, layoutParams);
-                Log.i(TAG, "clampWindowOnScreen → (" + nx + "," + ny + ")");
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "clampWindowOnScreen: " + e.getMessage());
         }
+        View decor = host != null ? host.getWindow().getDecorView() : attachedView;
+        Rect visible = new Rect();
+        if (decor != null && decor.isAttachedToWindow()) {
+            decor.getWindowVisibleDisplayFrame(visible);
+            if (!visible.isEmpty()) {
+                return new Rect(0, 0, visible.width(), visible.height());
+            }
+        }
+        android.util.DisplayMetrics dm = new android.util.DisplayMetrics();
+        if (wm != null) {
+            wm.getDefaultDisplay().getMetrics(dm);
+        } else {
+            dm = appContext.getResources().getDisplayMetrics();
+        }
+        return new Rect(0, 0, Math.max(1, dm.widthPixels), Math.max(1, dm.heightPixels));
+    }
+
+    private static int fittedInsetTypes() {
+        return WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout();
+    }
+
+    private static void useFittedFrame(WindowManager.LayoutParams lp) {
+        lp.gravity = Gravity.TOP | Gravity.LEFT;
+        if (Build.VERSION.SDK_INT >= 30) {
+            lp.setFitInsetsTypes(fittedInsetTypes());
+            lp.setFitInsetsIgnoringVisibility(true);
+        }
+    }
+
+    private static void fitPosition(WindowManager.LayoutParams lp, Rect viewport) {
+        lp.x = Math.max(0, Math.min(lp.x, viewport.width() - lp.width));
+        lp.y = Math.max(0, Math.min(lp.y, viewport.height() - lp.height));
+    }
+
+    private void onViewportChanged() {
+        mainHandler.removeCallbacks(updateViewport);
+        mainHandler.post(updateViewport);
+    }
+
+    private void updateViewportLayout() {
+        if (!attached || windowManager == null) return;
+        if (root != null && root.getParent() != null) {
+            if (expanded) requestPanelRelayout();
+            else applyCollapsedGeometry();
+        }
+        if (announceOverlay != null && announceOverlay.getParent() != null && announceRelayout != null) {
+            announceRelayout.run();
+        }
+    }
+
+    private final Runnable updateViewport = this::updateViewportLayout;
+    private final View.OnLayoutChangeListener hostLayoutListener = (v, l, t, r, b, ol, ot, or, ob) -> {
+        if (r - l != or - ol || b - t != ob - ot) onViewportChanged();
+    };
+
+    private FrameLayout viewportRoot() {
+        FrameLayout view = new FrameLayout(appContext) {
+            @Override
+            protected void onConfigurationChanged(Configuration configuration) {
+                super.onConfigurationChanged(configuration);
+                onViewportChanged();
+            }
+        };
+        view.setOnApplyWindowInsetsListener((v, insets) -> {
+            onViewportChanged();
+            return insets;
+        });
+        return view;
     }
 
     /** 优先 Activity 窗；失败且有悬浮窗权限则 Overlay。 */
@@ -465,6 +521,13 @@ public final class NativeMenuController {
         fab = null;
         fabIconView = null;
         panel = null;
+        panelContent = null;
+        panelHeader = null;
+        panelTitleBlock = null;
+        panelClose = null;
+        panelTopDivider = null;
+        panelBottomDivider = null;
+        panelTabs = null;
         featureList = null;
         currentCategoryBody = null;
         authPane = null;
@@ -501,6 +564,7 @@ public final class NativeMenuController {
                     windowManager.addView(root, layoutParams);
                 }
                 root.setAlpha(1f);
+                onViewportChanged();
             } else {
                 if (root.getParent() != null) {
                     windowManager.removeView(root);
@@ -684,6 +748,7 @@ public final class NativeMenuController {
         String[] specs = bridge.getFeatureListRaw();
         if (specs == null) {
             addHint(featureList, "暂无功能列表（native 未就绪）");
+            requestPanelRelayout();
             return;
         }
         for (int i = 0; i < specs.length; i++) {
@@ -691,7 +756,9 @@ public final class NativeMenuController {
             addFeatureRow(item);
         }
         syncTrailingDividers(featureList);
+        relayoutFeatureListNow();
         scheduleDeferredRestore();
+        requestPanelRelayout();
     }
 
     private Runnable deferredRestoreRunnable;
@@ -794,6 +861,30 @@ public final class NativeMenuController {
         return false;
     }
 
+    /**
+     * 按最新测量值把功能列表重排一次（同步执行，不依赖窗口布局相位）。
+     *
+     * <p>分类收起/展开只改子视图可见性：GONE 的行立刻不再绘制，但父容器边界只在
+     * {@code View.layout()} 里才更新。面板窗口的布局相位并不总会因为子树内的
+     * 可见性变化而执行（见 {@code panelRelayout} 注释），所以这里自己补上
+     * measure + layout，保证下面各分类立刻跟随移动。
+     */
+    private void relayoutFeatureListNow() {
+        if (featureList == null) return;
+        int w = featureList.getWidth();
+        if (w <= 0 && featScroll != null) {
+            w = featScroll.getWidth() - featScroll.getPaddingLeft() - featScroll.getPaddingRight();
+        }
+        if (w <= 0) return;
+        featureList.measure(
+                View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        int left = featureList.getLeft();
+        int top = featureList.getTop();
+        featureList.layout(left, top, left + w, top + featureList.getMeasuredHeight());
+        if (featScroll != null) featScroll.invalidate();
+    }
+
     /** 当前分类内容容器；无分类时落到根列表 */
     private LinearLayout featureHost() {
         return currentCategoryBody != null ? currentCategoryBody : featureList;
@@ -825,6 +916,7 @@ public final class NativeMenuController {
             boundActivity = activity;
             attachMode = AttachMode.ACTIVITY;
             attached = true;
+            activity.getWindow().getDecorView().addOnLayoutChangeListener(hostLayoutListener);
             applyCollapsedGeometry();
             Log.i(TAG, "attached ACTIVITY host=" + activity.getClass().getSimpleName());
             return true;
@@ -838,6 +930,16 @@ public final class NativeMenuController {
         try {
             WindowManager wm = (WindowManager) appContext.getSystemService(Context.WINDOW_SERVICE);
             WindowManager.LayoutParams lp = baseLayoutParams();
+            if (Build.VERSION.SDK_INT >= 30) {
+                try {
+                    Display display = wm.getDefaultDisplay();
+                    Context windowContext = appContext.createDisplayContext(display)
+                            .createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, null);
+                    wm = (WindowManager) windowContext.getSystemService(Context.WINDOW_SERVICE);
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "overlay window context unavailable: " + e.getMessage());
+                }
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 lp.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
             } else {
@@ -860,6 +962,11 @@ public final class NativeMenuController {
     }
 
     void detachWindowOnly() {
+        mainHandler.removeCallbacks(updateViewport);
+        mainHandler.removeCallbacks(panelRelayout);
+        if (boundActivity != null) {
+            boundActivity.getWindow().getDecorView().removeOnLayoutChangeListener(hostLayoutListener);
+        }
         dismissMagicDropdown();
         removeWmToast();
         removeMagicAnnounce();
@@ -885,11 +992,10 @@ public final class NativeMenuController {
                 0, 0,
                 WindowManager.LayoutParams.TYPE_APPLICATION,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                 PixelFormat.TRANSLUCENT
         );
-        lp.gravity = Gravity.TOP | Gravity.START;
+        useFittedFrame(lp);
         lp.x = dp(12);
         lp.y = dp(120);
         return lp;
@@ -900,7 +1006,7 @@ public final class NativeMenuController {
     private void buildUiIfNeeded() {
         if (root != null) return;
         try {
-            root = new FrameLayout(appContext);
+            root = viewportRoot();
             root.setClipChildren(false);
             root.setClipToPadding(false);
 
@@ -947,57 +1053,30 @@ public final class NativeMenuController {
     }
 
     private View buildPanel() {
-        final int overhang = dp(OVERHANG_DP);
         FrameLayout shell = new FrameLayout(appContext);
-        // 外壳比面板宽一圈，给边框层外探留空间（窗口本身也会按此尺寸算）
-        FrameLayout.LayoutParams plp = new FrameLayout.LayoutParams(
-                dp(PANEL_INNER_W_DP) + overhang * 2, ViewGroup.LayoutParams.WRAP_CONTENT);
-        // 2026-11-22 B 方案：顶部 + 左右留空白，给边框层向外溢出用
-        plp.topMargin = dp(FRAME_TOP_PAD_DP);
-        plp.bottomMargin = dp(FRAME_BOTTOM_PAD_DP);
-        plp.leftMargin = dp(FRAME_SIDE_PAD_DP);
-        plp.rightMargin = dp(FRAME_SIDE_PAD_DP);
-        shell.setLayoutParams(plp);
         shell.setClipToPadding(false);
         shell.setClipChildren(false);
 
         FrameLayout card = new FrameLayout(appContext);
         card.setBackground(MagicRes.panelBg(appContext));
-        // elevation 会盖住同级无 elevation 的边框层内侧；阴影改挂外壳
         card.setElevation(0f);
         card.setClipToPadding(true);
         card.setClipChildren(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             card.setClipToOutline(true);
-            final float radius = dp(16);
             card.setOutlineProvider(new ViewOutlineProvider() {
                 @Override
                 public void getOutline(View view, Outline outline) {
-                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radius);
+                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), dp(16));
                 }
             });
         }
-        FrameLayout.LayoutParams cardLp = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        cardLp.setMargins(overhang, overhang, overhang, overhang);
-        shell.addView(card, cardLp);
+        shell.addView(card, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         shell.setElevation(dp(12));
 
-        // 2026-11-22 换新边框：九宫格素材层（四角框/上中/下中/侧边框2）
-        View frameLayer = new View(appContext);
-        frameLayer.setBackground(MenuFrameRes.frameBg());
-        frameLayer.setClickable(false);
-        frameLayer.setFocusable(false);
-        // 向上溢出到顶部空白里，边框上移时不会被窗口边界裁掉
-        FrameLayout.LayoutParams frameLp = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        frameLp.topMargin = -dp(FRAME_TOP_PAD_DP);
-        frameLp.bottomMargin = -dp(FRAME_BOTTOM_PAD_DP);
-        frameLp.leftMargin = -dp(FRAME_SIDE_PAD_DP);
-        frameLp.rightMargin = -dp(FRAME_SIDE_PAD_DP);
-        shell.addView(frameLayer, frameLp);
-
         LinearLayout box = new LinearLayout(appContext);
+        panelContent = box;
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(18), dp(16), dp(18), dp(16));
         card.addView(box, new FrameLayout.LayoutParams(
@@ -1005,6 +1084,7 @@ public final class NativeMenuController {
 
         // Header：标题 + 授权状态副标题；整块可拖
         FrameLayout header = new FrameLayout(appContext);
+        panelHeader = header;
         header.setPadding(0, dp(SPACE_TIGHT), 0, dp(SPACE_TIGHT));
         LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -1018,6 +1098,7 @@ public final class NativeMenuController {
         });
 
         LinearLayout titleBlock = new LinearLayout(appContext);
+        panelTitleBlock = titleBlock;
         titleBlock.setOrientation(LinearLayout.VERTICAL);
         titleBlock.setGravity(Gravity.CENTER_HORIZONTAL);
         titleBlock.setPadding(dp(36), 0, dp(36), 0);
@@ -1038,6 +1119,7 @@ public final class NativeMenuController {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
         ImageView close = new ImageView(appContext);
+        panelClose = close;
         close.setImageDrawable(MagicRes.icCollapse(appContext));
         close.setBackground(MagicRes.closeChipBg(appContext));
         close.setScaleType(ImageView.ScaleType.CENTER);
@@ -1049,7 +1131,8 @@ public final class NativeMenuController {
         close.setOnClickListener(v -> setExpanded(false));
         header.addView(close, closeLp);
 
-        box.addView(makeHairline(), hairlineLp(/*top*/ SPACE_TIGHT, /*bottom*/ SPACE));
+        panelTopDivider = makeHairline();
+        box.addView(panelTopDivider, hairlineLp(SPACE_TIGHT, SPACE));
 
         featureList = new LinearLayout(appContext);
         featureList.setOrientation(LinearLayout.VERTICAL);
@@ -1067,9 +1150,11 @@ public final class NativeMenuController {
         box.addView(setScroll);
 
         // 内容 ↔ 底栏：与状态分隔同一套间距
-        box.addView(makeHairline(), hairlineLp(SPACE, SPACE_TIGHT));
+        panelBottomDivider = makeHairline();
+        box.addView(panelBottomDivider, hairlineLp(SPACE, SPACE_TIGHT));
 
         LinearLayout tabs = new LinearLayout(appContext);
+        panelTabs = tabs;
         tabs.setOrientation(LinearLayout.HORIZONTAL);
         tabs.setGravity(Gravity.CENTER_VERTICAL);
         tabFeat = makeTab("功能", true);
@@ -1152,7 +1237,10 @@ public final class NativeMenuController {
     private TextView makeTab(String label, boolean selected) {
         TextView t = new TextView(appContext);
         t.setText(label);
-        t.setTextColor(MagicRes.INK);
+        // 银白文字；选中态只略微提亮，负责「选中」的是 tabBg 的星光紫底与品牌紫描边
+        t.setTextColor(new ColorStateList(
+                new int[][]{ {android.R.attr.state_selected}, new int[0] },
+                new int[]{ MagicRes.INK_HI, MagicRes.INK }));
         setFs(t, FS_TAB);
         t.setTypeface(Typeface.DEFAULT_BOLD);
         t.setIncludeFontPadding(false);
@@ -1171,53 +1259,116 @@ public final class NativeMenuController {
     /** 内容高度变化后按实测高度收紧窗口（WM 的 WRAP_CONTENT 经常不回缩） */
     private void requestPanelRelayout() {
         if (root == null || !expanded) return;
-        root.post(() -> {
-            if (root == null || layoutParams == null || windowManager == null || !attached || !expanded) {
-                return;
-            }
-            int width = layoutParams.width;
-            if (width <= 0) {
-                width = dp(PANEL_INNER_W_DP + OVERHANG_DP * 2 + FRAME_SIDE_PAD_DP * 2);
-            }
-            root.measure(
-                    View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-            int h = root.getMeasuredHeight();
-            if (h <= 0) return;
-            // 兜底：窗口总高不得超屏幕 9 成。内容区已按屏动态限高，此处防预算
-            // 偏差/异常装饰超高把底部 tab 栏挤出屏幕。
-            try {
-                int maxWinH = Math.round(appContext.getResources()
-                        .getDisplayMetrics().heightPixels * 0.9f);
-                if (h > maxWinH) h = maxWinH;
-            } catch (Throwable ignored) {}
-            layoutParams.width = width;
-            layoutParams.height = h;
-            try {
-                windowManager.updateViewLayout(root, layoutParams);
-                clampWindowOnScreen();
-            } catch (Exception e) {
-                Log.w(TAG, "requestPanelRelayout: " + e.getMessage());
-                String msg = e.getMessage() != null ? e.getMessage() : "";
-                if (msg.contains("token") || msg.contains("not attached")
-                        || msg.contains("BadToken") || msg.contains("dead")) {
-                    ensureAliveOrRebind(findResumedHint(boundActivity));
-                }
-            }
-        });
+        mainHandler.removeCallbacks(panelRelayout);
+        mainHandler.post(panelRelayout);
     }
 
-    /** 内容滚动区高度上限（px）：小屏（横屏/低分辨率/大显示缩放）按屏幕 dp 视口收缩，
-     *  正常屏维持 PANEL_LIST_MAX_DP，保证面板总高不超过屏幕高度的约 82%，
-     *  底部 tab 栏（功能/账号/设置）始终可见可点。onMeasure 时动态取值，
-     *  旋转/密度变化后重测自适应。 */
-    private int contentScrollMaxH() {
-        android.util.DisplayMetrics dm = appContext.getResources().getDisplayMetrics();
-        int screenHDp = Math.max(1, Math.round(dm.heightPixels / dm.density));
-        int budgetDp = Math.round(screenHDp * 0.82f) - PANEL_CHROME_H_DP;
-        if (budgetDp > PANEL_LIST_MAX_DP) budgetDp = PANEL_LIST_MAX_DP;
-        if (budgetDp < PANEL_LIST_MIN_DP) budgetDp = PANEL_LIST_MIN_DP;
-        return dp(budgetDp);
+    private final Runnable panelRelayout = () -> {
+        if (root == null || root.getParent() == null || layoutParams == null
+                || windowManager == null || !attached || !expanded) return;
+        try {
+            Rect viewport = availableViewport(windowManager, boundActivity, root);
+            int w = layoutParams.width, h = layoutParams.height, x = layoutParams.x, y = layoutParams.y;
+            applyPanelGeometry(viewport);
+            if (w != layoutParams.width || h != layoutParams.height
+                    || x != layoutParams.x || y != layoutParams.y) {
+                windowManager.updateViewLayout(root, layoutParams);
+            }
+            // 内容变化后必须推进一次「布局相位」：
+            //   updateViewLayout 走 setLayoutParams(newView=false)，只 scheduleTraversals()，
+            //   不置 ViewRootImpl.mLayoutRequested（见 framework :2227-2244 / :2600-2606），
+            //   performLayout 的闸门正是 mLayoutRequested（:3678 / :4215）；
+            //   而 measurePanelContent() 的手动 measure() 只更新测量值，不写子视图 top/bottom。
+            // 缺这一步时：分类收起/展开后，GONE 的行立刻不绘制（看起来收起了），
+            // 但父容器边界不重算 ⇒ 下面各分类卡在原地、留出等高空白，只有切 Tab 才恢复。
+            // 对窗口根发请求可绕过中间层「父级已请求布局就提前返回」的短路，直达 ViewRootImpl。
+            root.requestLayout();
+        } catch (Exception e) {
+            Log.w(TAG, "requestPanelRelayout: " + e.getMessage());
+            String msg = e.getMessage() != null ? e.getMessage() : "";
+            if (msg.contains("token") || msg.contains("not attached")
+                    || msg.contains("BadToken") || msg.contains("dead")) {
+                ensureAliveOrRebind(findResumedHint(boundActivity));
+            }
+        }
+    };
+
+    private void applyPanelGeometry(Rect viewport) {
+        MenuFrameRes.Frame frame = MenuFrameRes.menuFrame(
+                Math.min(dp(PANEL_CARD_PREFERRED_W_DP) + 2 * (dp(PANEL_OVERHANG_DP) + dp(PANEL_SIDE_PAD_DP)),
+                        viewport.width()));
+        int viewportHeight = viewport.height();
+        applyPanelChrome(false, false, frame.cardWidth(), viewportHeight);
+        measurePanelContent(frame.cardWidth(), 0);
+        int chromeHeight = panelContent.getMeasuredHeight();
+        boolean compact = chromeHeight + dp(24) > viewportHeight;
+        boolean closeOnly = false;
+        if (compact) {
+            applyPanelChrome(true, false, frame.cardWidth(), viewportHeight);
+            measurePanelContent(frame.cardWidth(), 0);
+            chromeHeight = panelContent.getMeasuredHeight();
+            if (chromeHeight > viewportHeight) {
+                closeOnly = true;
+                applyPanelChrome(true, true, frame.cardWidth(), viewportHeight);
+                measurePanelContent(frame.cardWidth(), 0);
+                chromeHeight = panelContent.getMeasuredHeight();
+            }
+        }
+        int maxHeight = compact ? viewportHeight : Math.min(viewportHeight, Math.max(
+                Math.round(viewportHeight * 0.9f), chromeHeight + dp(24)));
+        frame = frame.fitHeight(compact ? 0 : maxHeight - chromeHeight - dp(48));
+        int preferredBodyHeight = Math.min(dp(PANEL_LIST_MAX_DP), Math.max(dp(PANEL_LIST_MIN_DP),
+                Math.round(viewport.height() * 0.82f) - dp(PANEL_CHROME_H_DP)));
+        int bodyBudget = Math.max(0, maxHeight - chromeHeight - frame.top - frame.bottom);
+        measurePanelContent(frame.cardWidth(), closeOnly ? 0 : Math.min(preferredBodyHeight, bodyBudget));
+        applyFrame((FrameLayout) panel, frame);
+        layoutParams.width = frame.width;
+        layoutParams.height = Math.max(1, Math.min(maxHeight,
+                panelContent.getMeasuredHeight() + frame.top + frame.bottom));
+        fitPosition(layoutParams, viewport);
+    }
+
+    private void applyPanelChrome(boolean compact, boolean closeOnly, int cardWidth, int viewportHeight) {
+        int side = closeOnly ? Math.min(dp(18), cardWidth / 4) : dp(18);
+        int vertical = closeOnly ? 0 : dp(compact ? 4 : 16);
+        panelContent.setPadding(side, vertical, side, vertical);
+        int headerPad = compact ? 0 : dp(SPACE_TIGHT);
+        panelHeader.setPadding(0, headerPad, 0, headerPad);
+        int decoration = compact ? View.GONE : View.VISIBLE;
+        panelTitleBlock.setVisibility(decoration);
+        panelTopDivider.setVisibility(decoration);
+        panelBottomDivider.setVisibility(decoration);
+        panelTabs.setVisibility(closeOnly ? View.GONE : View.VISIBLE);
+        FrameLayout.LayoutParams closeLp = (FrameLayout.LayoutParams) panelClose.getLayoutParams();
+        int size = closeOnly ? Math.min(dp(32), Math.min(cardWidth - side * 2, viewportHeight)) : dp(32);
+        if (closeLp.width != size || closeLp.height != size) {
+            closeLp.width = size;
+            closeLp.height = size;
+            panelClose.setLayoutParams(closeLp);
+        }
+        int iconPad = closeOnly ? Math.min(dp(6), size / 6) : dp(6);
+        panelClose.setPadding(iconPad, iconPad, iconPad, iconPad);
+        panelClose.setScaleType(closeOnly ? ImageView.ScaleType.CENTER_INSIDE : ImageView.ScaleType.CENTER);
+    }
+
+    private void measurePanelContent(int cardWidth, int bodyLimit) {
+        panelBodyLimit = bodyLimit;
+        featScroll.forceLayout();
+        authScroll.forceLayout();
+        setScroll.forceLayout();
+        panelContent.forceLayout();
+        panelContent.measure(View.MeasureSpec.makeMeasureSpec(cardWidth, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+    }
+
+    private static void applyFrame(FrameLayout shell, MenuFrameRes.Frame frame) {
+        if (shell.getForeground() != null && shell.getPaddingLeft() == frame.side
+                && shell.getPaddingTop() == frame.top && shell.getPaddingBottom() == frame.bottom
+                && shell.getTag() instanceof Integer && (Integer) shell.getTag() == frame.width) return;
+        shell.setTag(frame.width);
+        shell.setPadding(frame.side, frame.top, frame.side, frame.bottom);
+        // Foreground overlays the card without taking part in its measurement.
+        shell.setForeground(frame.drawable());
     }
 
     private ScrollView wrapScroll(View child) {
@@ -1225,7 +1376,8 @@ public final class NativeMenuController {
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 // 上限动态取：小屏收缩防面板总高超屏裁掉底部 tab 栏
-                final int maxH = contentScrollMaxH();
+                final int maxH = MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED
+                        ? panelBodyLimit : Math.min(panelBodyLimit, MeasureSpec.getSize(heightMeasureSpec));
                 // 先测内容真实高度，矮则跟内容，高过 maxH 才定高滚动
                 if (getChildCount() == 0) {
                     setMeasuredDimension(
@@ -1524,6 +1676,13 @@ public final class NativeMenuController {
         setFs(b, FS_PRIMARY_BTN);
         b.setMinHeight(0);
         b.setMinimumHeight(0);
+        // 平台 Button 主题（DeviceDefault → Widget.Material.Button）的背景 9-patch 自带
+        // 内边距，换背景后这些内边距不会被清掉；高度又只有 34dp，扣掉上下内边距后
+        // 可绘制区装不下 14sp 的中文字形 ⇒ 文字贴边被裁、视觉上也不居中。
+        // 这里显式清零内边距并居中，问题消失（与背景圆角无关）。
+        b.setPadding(0, 0, 0, 0);
+        b.setGravity(Gravity.CENTER);
+        b.setSingleLine(true);
         b.setIncludeFontPadding(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             b.setStateListAnimator(null);
@@ -2059,6 +2218,7 @@ public final class NativeMenuController {
             header.setSelected(open[0]);
             chevron.animate().rotation(open[0] ? 0f : -90f).setDuration(160).start();
             syncTrailingDividers(featureList);
+            relayoutFeatureListNow();
             if (root != null) root.post(this::requestPanelRelayout);
             else requestPanelRelayout();
         });
@@ -2100,12 +2260,9 @@ public final class NativeMenuController {
             panel.setScaleX(0.92f);
             panel.setScaleY(0.92f);
             panel.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).start();
-            layoutParams.width = dp(PANEL_INNER_W_DP + OVERHANG_DP * 2 + FRAME_SIDE_PAD_DP * 2);
-            layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+
             layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
             layoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL;
-            // 展开后按内容写成确切高度，后续折叠才能回缩
-            requestPanelRelayout();
             maybeRenewGrant("expand");
         } else {
             panel.animate().cancel();
@@ -2124,8 +2281,10 @@ public final class NativeMenuController {
             layoutParams.alpha = OVERLAY_SAFE_ALPHA;
         }
         try {
+            Rect viewport = availableViewport(windowManager, boundActivity, root);
+            if (expand) applyPanelGeometry(viewport);
+            else fitCollapsed(viewport);
             windowManager.updateViewLayout(root, layoutParams);
-            if (expand) clampWindowOnScreen();
         } catch (Exception e) {
             Log.w(TAG, "updateLayout: " + e.getMessage());
             // BadToken / 宿主已销毁：强制换到当前 resumed Activity
@@ -2335,12 +2494,23 @@ public final class NativeMenuController {
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
     }
 
+    private void fitCollapsed(Rect viewport) {
+        int iconSize = Math.min(dp(FAB_WM_DP), Math.min(viewport.width(), viewport.height()));
+        layoutParams.width = iconSize;
+        layoutParams.height = iconSize;
+        fitPosition(layoutParams, viewport);
+    }
+
     private void applyCollapsedGeometry() {
-        if (layoutParams == null) return;
-        layoutParams.width = dp(FAB_WM_DP);
-        layoutParams.height = dp(FAB_WM_DP);
+        if (layoutParams == null || root == null || root.getParent() == null) return;
         try {
-            windowManager.updateViewLayout(root, layoutParams);
+            int width = layoutParams.width, height = layoutParams.height;
+            int x = layoutParams.x, y = layoutParams.y;
+            fitCollapsed(availableViewport(windowManager, boundActivity, root));
+            if (width != layoutParams.width || height != layoutParams.height
+                    || x != layoutParams.x || y != layoutParams.y) {
+                windowManager.updateViewLayout(root, layoutParams);
+            }
         } catch (Exception ignored) {}
     }
 
@@ -2805,14 +2975,7 @@ public final class NativeMenuController {
         announceAttachRetry = 0;
         removeMagicAnnounce();
         try {
-            final int overhang = dp(OVERHANG_DP);
-            // 2026-11-22 公告卡挂同一套边框：窗口四周留白，给边框层溢出用。
-            // 数值一律取自 ANNOUNCE_GEO（px），绘制与窗口 padding 用同一份，杜绝 1dp 级错位
-            final int padSide = Math.round(MenuFrameRes.ANNOUNCE_GEO.padSide);
-            final int padTop = Math.round(MenuFrameRes.ANNOUNCE_GEO.padTop);
-            final int padBottom = Math.round(MenuFrameRes.ANNOUNCE_GEO.padBottom);
-            FrameLayout shell = new FrameLayout(appContext);
-            shell.setPadding(padSide, padTop, padSide, padBottom);
+            FrameLayout shell = viewportRoot();
             shell.setClipChildren(false);
             shell.setClipToPadding(false);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -2823,16 +2986,8 @@ public final class NativeMenuController {
             card.setOrientation(LinearLayout.VERTICAL);
             card.setGravity(Gravity.CENTER_HORIZONTAL);
             card.setBackground(MagicRes.announceBg(appContext));
-            card.setPadding(dp(20), dp(16), dp(20), dp(14));
             card.setClickable(true);
             card.setElevation(0f);
-
-            // 先算内容宽，标题截断 / 正文行数对齐都依赖准确宽度
-            final int cardW = Math.min(dp(320),
-                    appContext.getResources().getDisplayMetrics().widthPixels - dp(32) - overhang * 2);
-            final int titleW = cardW - card.getPaddingLeft() - card.getPaddingRight();
-            final int bodyPadH = dp(14);
-            final int bodyW = Math.max(1, titleW - bodyPadH * 2);
 
             // eyebrow：与主菜单状态行同级，拉开「公告」与标题层级
             TextView eyebrow = new TextView(appContext);
@@ -2863,34 +3018,23 @@ public final class NativeMenuController {
             tlp.topMargin = dp(SPACE_TIGHT);
             card.addView(titleTv, tlp);
 
-            card.addView(makeHairline(), hairlineLp(SPACE_TIGHT, 0));
+            View divider = makeHairline();
+            card.addView(divider, hairlineLp(SPACE_TIGHT, 0));
 
             final String bodyText = content != null ? content.trim() : "";
-            if (!bodyText.isEmpty()) {
-                ScrollView scroll = new ScrollView(appContext);
-                // 外层卡片 + 标题 hairline 已分区，不再套正文灰底（盒中盒）
-                // 顶距压紧：靠 hairline 底=0 + 小 padding，避免与分割线空太大
-                scroll.setPadding(bodyPadH, dp(SPACE), bodyPadH, dp(SPACE));
-                scroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-                TextView bodyTv = new TextView(appContext);
+            final ScrollView bodyScroll = bodyText.isEmpty() ? null : new ScrollView(appContext);
+            final TextView bodyTv = bodyScroll == null ? null : new TextView(appContext);
+            if (bodyScroll != null) {
+                bodyScroll.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
                 bodyTv.setText(bodyText);
                 bodyTv.setTextColor(MagicRes.INK_2);
                 setFs(bodyTv, FS_BODY);
                 bodyTv.setLineSpacing(dp(3), 1f);
-                // 用 StaticLayout 按真实内容宽判行数，避免 ScrollView 里 post 误判
                 bodyTv.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
-                if (measureTextLineCount(bodyTv, bodyText, bodyW) > 1) {
-                    bodyTv.setGravity(Gravity.START | Gravity.TOP);
-                } else {
-                    bodyTv.setGravity(Gravity.CENTER_HORIZONTAL);
-                }
-                scroll.addView(bodyTv, new ScrollView.LayoutParams(
+                bodyScroll.addView(bodyTv, new ScrollView.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-                LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                slp.topMargin = 0;
-                slp.height = dp(140); // 保留固定高度，给藤蔓角饰留呼吸
-                card.addView(scroll, slp);
+                card.addView(bodyScroll, new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, 0));
             }
 
             LinearLayout actions = new LinearLayout(appContext);
@@ -2945,42 +3089,31 @@ public final class NativeMenuController {
                 actions.addView(goBtn, glp);
             }
 
-            // 先量卡片真实高度：窗口高度必须显式给出。否则边框层 MATCH_PARENT 会把
-            // WRAP_CONTENT 窗口撑满整屏（实测 3007px），边框坐标全部失真
-            card.measure(View.MeasureSpec.makeMeasureSpec(cardW, View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-            final int cardH = Math.max(1, card.getMeasuredHeight());
-            FrameLayout.LayoutParams cardLp = new FrameLayout.LayoutParams(
-                    cardW, ViewGroup.LayoutParams.WRAP_CONTENT);
-            cardLp.setMargins(overhang, overhang, overhang, overhang);
-            shell.addView(card, cardLp);
-
-            // 边框层：与主面板共用 MenuFrameRes（四角/上中/下中/左右中），负 margin 溢出到留白
-            View announceFrame = new View(appContext);
-            announceFrame.setBackground(MenuFrameRes.frameBg(MenuFrameRes.ANNOUNCE_GEO));
-            announceFrame.setClickable(false);
-            announceFrame.setFocusable(false);
-            FrameLayout.LayoutParams aflp = new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            aflp.topMargin = -padTop;
-            aflp.bottomMargin = -padBottom;
-            aflp.leftMargin = -padSide;
-            aflp.rightMargin = -padSide;
-            shell.addView(announceFrame, aflp);
-
+            shell.addView(card, new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
             announceLp = new WindowManager.LayoutParams(
-                    cardW + overhang * 2 + padSide * 2,
-                    cardH + overhang * 2 + padTop + padBottom,
-                    0, 0,
+                    1, 1, 0, 0,
                     layoutParams != null ? layoutParams.type : WindowManager.LayoutParams.TYPE_APPLICATION,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                            | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                             | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
                     PixelFormat.TRANSLUCENT
             );
-            announceLp.gravity = Gravity.CENTER;
-            // 上下留白不等时，窗口居中会把卡片顶偏；补偿回来，卡片位置只由屏幕决定
-            announceLp.y = (padBottom - padTop) / 2;
+            useFittedFrame(announceLp);
+            Runnable measure = () -> measureAnnouncement(
+                    shell, card, eyebrow, titleTv, divider, bodyScroll, bodyTv, actions, bodyText);
+            measure.run();
+            announceRelayout = () -> {
+                int w = announceLp.width, h = announceLp.height, x = announceLp.x, y = announceLp.y;
+                try {
+                    measure.run();
+                    if (w != announceLp.width || h != announceLp.height
+                            || x != announceLp.x || y != announceLp.y) {
+                        windowManager.updateViewLayout(shell, announceLp);
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "announce layout: " + e.getMessage());
+                }
+            };
             if (layoutParams != null) {
                 announceLp.token = layoutParams.token;
             }
@@ -2997,6 +3130,98 @@ public final class NativeMenuController {
             showToast((title != null ? title + "：" : "") + (content != null ? content : ""), "info");
             finishCurrentAnnounce();
         }
+    }
+
+    private void measureAnnouncement(FrameLayout shell, LinearLayout card, View eyebrow,
+            View title, View divider, ScrollView scroll, TextView body, LinearLayout actions, String text) {
+        Rect viewport = availableViewport(windowManager, boundActivity,
+                shell.isAttachedToWindow() ? shell : root);
+        // 真机 1440px @ 3.5× 的调参基准窗宽 1324px，沿用 116px 总外边距和首选宽度。
+        int outerGutter = Math.min(dp(116f / 3.5f), viewport.width() / 8);
+        int width = Math.max(1, Math.min(dp(1324f / 3.5f), viewport.width() - outerGutter));
+        MenuFrameRes.Frame frame = MenuFrameRes.announceFrame(width);
+        int cardWidth = frame.cardWidth();
+        int widthSpec = View.MeasureSpec.makeMeasureSpec(cardWidth, View.MeasureSpec.EXACTLY);
+        int naturalHeight = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED);
+        int side = Math.min(dp(20), cardWidth / 6);
+        card.setPadding(side, dp(16), side, dp(14));
+        eyebrow.setVisibility(View.VISIBLE);
+        title.setVisibility(View.VISIBLE);
+        divider.setVisibility(View.VISIBLE);
+        LinearLayout.LayoutParams actionsLp = (LinearLayout.LayoutParams) actions.getLayoutParams();
+        actionsLp.topMargin = dp(12);
+        Button close = (Button) actions.getChildAt(0);
+        ViewGroup.LayoutParams closeLp = close.getLayoutParams();
+        boolean wasHeightLimited = closeLp.height != ViewGroup.LayoutParams.WRAP_CONTENT;
+        closeLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        close.setPadding(0, dp(10), 0, dp(10));
+        setFs(close, 13f);
+        View secondaryAction = actions.getChildAt(1);
+        if (secondaryAction != null) secondaryAction.setVisibility(View.VISIBLE);
+        boolean wasUnreadable = shell.getForeground() != null && scroll != null
+                && (scroll.getVisibility() == View.GONE || scroll.getLayoutParams().height < dp(24));
+        if (scroll != null) scroll.setVisibility(View.GONE);
+        card.forceLayout();
+        card.measure(widthSpec, naturalHeight);
+        int chromeHeight = card.getMeasuredHeight();
+        int maxHeight = viewport.height();
+        int readableBody = scroll == null ? 0 : dp(24);
+        if (chromeHeight + readableBody > maxHeight) {
+            // 先省空隙和重复眉标，为操作行及至少一行正文留空间。
+            eyebrow.setVisibility(View.GONE);
+            divider.setVisibility(View.GONE);
+            actionsLp.topMargin = 0;
+            card.setPadding(side, 0, side, 0);
+            card.measure(widthSpec, naturalHeight);
+            chromeHeight = card.getMeasuredHeight();
+            if (chromeHeight + readableBody > maxHeight) {
+                title.setVisibility(View.GONE);
+                card.measure(widthSpec, naturalHeight);
+                chromeHeight = card.getMeasuredHeight();
+                if (chromeHeight > maxHeight && secondaryAction != null) {
+                    secondaryAction.setVisibility(View.GONE);
+                    card.measure(widthSpec, naturalHeight);
+                    chromeHeight = card.getMeasuredHeight();
+                }
+            }
+        }
+        if (chromeHeight > maxHeight) {
+            // 最后只保留有限高的关闭按钮。公告仍在展示，只有用户点击才确认已读。
+            close.setPadding(0, 0, 0, 0);
+            closeLp.height = maxHeight;
+            close.setLayoutParams(closeLp);
+            close.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                    Math.max(1f, Math.min(close.getTextSize(), maxHeight * 0.65f)));
+            card.measure(widthSpec, naturalHeight);
+            chromeHeight = card.getMeasuredHeight();
+        }
+        int minBody = scroll == null ? 0 : dp(48);
+        frame = frame.fitHeight(maxHeight - chromeHeight - minBody);
+        int bodyHeight = scroll == null ? 0 : Math.min(dp(ANNOUNCE_BODY_PREFERRED_DP),
+                Math.max(0, maxHeight - chromeHeight - frame.top - frame.bottom));
+        if ((scroll != null && bodyHeight < readableBody && !wasUnreadable)
+                || (chromeHeight >= maxHeight && closeLp.height == maxHeight && !wasHeightLimited)) {
+            Toast.makeText(appContext, "扩大窗口可继续查看公告", Toast.LENGTH_SHORT).show();
+        }
+        if (scroll != null && bodyHeight > 0) {
+            int bodyPad = Math.min(dp(14), Math.max(0, (cardWidth - side * 2) / 4));
+            int verticalPad = Math.min(dp(SPACE), bodyHeight / 4);
+            scroll.setPadding(bodyPad, verticalPad, bodyPad, verticalPad);
+            int bodyWidth = Math.max(1, cardWidth - side * 2 - bodyPad * 2);
+            body.setGravity(measureTextLineCount(body, text, bodyWidth) > 1
+                    ? Gravity.START | Gravity.TOP : Gravity.CENTER_HORIZONTAL);
+            ViewGroup.LayoutParams scrollLp = scroll.getLayoutParams();
+            scrollLp.height = bodyHeight;
+            scroll.setLayoutParams(scrollLp);
+            scroll.setVisibility(View.VISIBLE);
+        }
+        applyFrame(shell, frame);
+        announceLp.width = frame.width;
+        announceLp.height = Math.max(1, Math.min(maxHeight,
+                chromeHeight + bodyHeight + frame.top + frame.bottom));
+        announceLp.x = (viewport.width() - announceLp.width) / 2;
+        announceLp.y = (maxHeight - announceLp.height) / 2 + (frame.bottom - frame.top) / 2;
+        fitPosition(announceLp, viewport);
     }
 
     /** 公告待重显入口：detach/空窗期后按 currentAnnounce 重建，已在展示则跳过 */
@@ -3019,6 +3244,7 @@ public final class NativeMenuController {
         }
         announceOverlay = null;
         announceLp = null;
+        announceRelayout = null;
     }
 
     /** 按给定宽度测量正文会排成几行（ScrollView 内 getLineCount 不可靠） */
@@ -3606,7 +3832,7 @@ public final class NativeMenuController {
         return shortenToast(m);
     }
 
-    private int dp(int v) {
+    private int dp(float v) {
         return Math.round(TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, v, appContext.getResources().getDisplayMetrics()));
     }
